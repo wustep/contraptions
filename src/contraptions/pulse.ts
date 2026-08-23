@@ -8,6 +8,7 @@ export const pulse = defineContraption({
   label: 'Pulse',
   tags: ['grow'],
   rotations: [0],
+  fireAt: 0,
   mirror: false,
   setup: ({ color, rng }) => ({ color, rings: rng.pick([3, 4, 5]) }),
   draw: (p, s, { size, u, ink, weight }) => {

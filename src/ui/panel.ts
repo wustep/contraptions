@@ -91,6 +91,24 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
   })
   root.append(field('Stroke', stroke, strokeValue))
 
+  // Spans
+  const spansValue = el('b', {}, [initial.spans.toFixed(2)])
+  const spans = el('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(initial.spans) })
+  spans.addEventListener('input', () => {
+    spansValue.textContent = Number(spans.value).toFixed(2)
+    handlers.onChange({ spans: Number(spans.value) })
+  })
+  root.append(field('Multi-cell', spans, spansValue))
+
+  // Chains
+  const chainsValue = el('b', {}, [initial.chains.toFixed(2)])
+  const chains = el('input', { type: 'range', min: '0', max: '1', step: '0.05', value: String(initial.chains) })
+  chains.addEventListener('input', () => {
+    chainsValue.textContent = Number(chains.value).toFixed(2)
+    handlers.onChange({ chains: Number(chains.value) })
+  })
+  root.append(field('Wired chains', chains, chainsValue))
+
   // Pool filters
   const tagSelect = el('select', {}, options(
     [{ value: '', label: 'Every tag' }, ...allTags().map((t) => ({ value: t, label: t }))],
@@ -128,11 +146,13 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
   const statCells = el('b', {}, ['—'])
   const statKinds = el('b', {}, ['—'])
   const statLoop = el('b', {}, ['—'])
+  const statWires = el('b', {}, ['—'])
   root.append(
     el('div', { class: 'stats' }, [
       el('span', {}, ['cells']), statCells,
       el('span', {}, ['kinds']), statKinds,
       el('span', {}, ['loop']), statLoop,
+      el('span', {}, ['wires']), statWires,
     ]),
   )
 
@@ -169,6 +189,11 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
       statCells.textContent = String(comp.instances.length)
       statKinds.textContent = String(comp.used.length)
       statLoop.textContent = `${(comp.loop / FPS).toFixed(1)}s`
+      statWires.textContent = String(comp.wires.length)
+      spans.value = String(comp.options.spans)
+      spansValue.textContent = comp.options.spans.toFixed(2)
+      chains.value = String(comp.options.chains)
+      chainsValue.textContent = comp.options.chains.toFixed(2)
       pause.textContent = paused ? 'Play' : 'Pause'
       catalogOn = comp.options.catalog
       catalog.textContent = catalogOn ? 'Back to composition' : 'Catalog'

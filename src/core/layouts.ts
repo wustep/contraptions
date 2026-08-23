@@ -27,7 +27,7 @@ const cell = (
   row: number,
   index: number,
   depth = 0,
-): Cell => ({ x, y, size, col, row, index, depth })
+): Cell => ({ x, y, size, w: size, h: size, col, row, index, depth })
 
 /** Uniform res x res grid. The default, and what the reference sketch uses. */
 const grid: Layout = {

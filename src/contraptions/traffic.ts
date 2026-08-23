@@ -9,6 +9,7 @@ export const traffic = defineContraption({
   tags: ['sequence', 'ball'],
   rotations: [0, 1, 2, 3],
   mirror: false,
+  fireAt: 0,
   setup: ({ color, rng, theme }) => ({
     color,
     alt: rng.pick(theme.colors.filter((c) => c !== color)) ?? color,

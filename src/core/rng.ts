@@ -42,6 +42,8 @@ export interface Rng {
   weighted<T>(items: readonly T[], weight: (item: T) => number): T
   /** -1 or 1. */
   sign(): number
+  /** A shuffled copy of `items` (Fisher-Yates). */
+  shuffle<T>(items: readonly T[]): T[]
   /** A new independent stream, derived from this one's seed plus `salt`. */
   fork(salt: string): Rng
 }
@@ -66,6 +68,14 @@ export function makeRng(seed: string): Rng {
       return items[items.length - 1]
     },
     sign: () => (next() < 0.5 ? -1 : 1),
+    shuffle(items) {
+      const out = [...items]
+      for (let i = out.length - 1; i > 0; i--) {
+        const j = Math.floor(next() * (i + 1))
+        ;[out[i], out[j]] = [out[j], out[i]]
+      }
+      return out
+    },
     fork: (salt) => makeRng(`${seed}::${salt}`),
   }
   return rng

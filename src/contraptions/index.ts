@@ -1,18 +1,27 @@
 import type { Contraption } from '../core/types'
 
 import { abacus } from './abacus'
-import { boxStep } from './box-step'
+import { bell } from './bell'
+import { beltDrive } from './belt-drive'
 import { bouncingBalls } from './bouncing-balls'
+import { boxStep } from './box-step'
 import { bubble } from './bubble'
 import { conveyor } from './conveyor'
 import { dominoes } from './dominoes'
 import { elevator } from './elevator'
 import { flip } from './flip'
+import { gantry } from './gantry'
+import { gate } from './gate'
 import { gear } from './gear'
 import { hammer } from './hammer'
+import { lamp } from './lamp'
+import { marbleRun } from './marble-run'
 import { metronome } from './metronome'
+import { newtonsCradle } from './newtons-cradle'
 import { orbit } from './orbit'
+import { orrery } from './orrery'
 import { pendulum } from './pendulum'
+import { pendulumWave } from './pendulum-wave'
 import { pinwheel } from './pinwheel'
 import { pipe } from './pipe'
 import { piston } from './piston'
@@ -21,6 +30,7 @@ import { quadFade } from './quad-fade'
 import { rain } from './rain'
 import { ratchet } from './ratchet'
 import { seesaw } from './seesaw'
+import { siphon } from './siphon'
 import { slopeBall } from './slope-ball'
 import { spring } from './spring'
 import { sweep } from './sweep'
@@ -34,6 +44,8 @@ import { windmill } from './windmill'
  */
 export const registry: Contraption<any>[] = [
   abacus,
+  bell,
+  beltDrive,
   bouncingBalls,
   boxStep,
   bubble,
@@ -41,11 +53,18 @@ export const registry: Contraption<any>[] = [
   dominoes,
   elevator,
   flip,
+  gantry,
+  gate,
   gear,
   hammer,
+  lamp,
+  marbleRun,
   metronome,
+  newtonsCradle,
   orbit,
+  orrery,
   pendulum,
+  pendulumWave,
   pinwheel,
   pipe,
   piston,
@@ -54,6 +73,7 @@ export const registry: Contraption<any>[] = [
   rain,
   ratchet,
   seesaw,
+  siphon,
   slopeBall,
   spring,
   sweep,

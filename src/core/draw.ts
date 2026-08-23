@@ -8,10 +8,15 @@ import type p5 from 'p5'
  * discarded on the way out.
  */
 export function clipCell(p: p5, size: number, fn: () => void): void {
+  clipBox(p, size, size, fn)
+}
+
+/** Clip to a rectangular footprint. Use this for multi-cell machines. */
+export function clipBox(p: p5, w: number, h: number, fn: () => void): void {
   p.push()
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.beginPath()
-  ctx.rect(-size / 2, -size / 2, size, size)
+  ctx.rect(-w / 2, -h / 2, w, h)
   ctx.clip()
   fn()
   p.pop()

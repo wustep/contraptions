@@ -8,6 +8,8 @@ export const hammer = defineContraption({
   label: 'Hammer',
   tags: ['strike'],
   mirror: false,
+  // The moment the weight lands.
+  fireAt: 0.86,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {
     const d = size * 0.3

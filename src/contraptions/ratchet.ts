@@ -7,6 +7,7 @@ export const ratchet = defineContraption({
   name: 'ratchet',
   label: 'Ratchet',
   tags: ['step', 'spin'],
+  fireAt: 0,
   setup: ({ color, rng }) => ({ color, n: rng.pick([6, 8]), dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     const r = size * 0.25

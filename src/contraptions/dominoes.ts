@@ -8,6 +8,8 @@ export const dominoes = defineContraption({
   label: 'Dominoes',
   tags: ['sequence', 'step'],
   rotations: [0, 2],
+  // The first bar going over.
+  fireAt: 0.02,
   setup: ({ color, rng }) => ({ color, count: rng.pick([3, 4, 4]) }),
   draw: (p, s, { size, u, ink, weight }) => {
     const floorY = size * 0.46

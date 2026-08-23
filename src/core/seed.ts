@@ -23,7 +23,7 @@ export function randomSeed(): string {
   return `${pick(ADJECTIVES)}-${pick(NOUNS)}-${n}`
 }
 
-const NUMERIC: (keyof Options)[] = ['res', 'stroke']
+const NUMERIC: (keyof Options)[] = ['res', 'stroke', 'spans', 'chains']
 
 /** Read options out of the URL, falling back to defaults. */
 export function readUrl(): Options {

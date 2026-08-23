@@ -68,6 +68,17 @@ window.addEventListener('keydown', (e) => {
   }
 })
 
+// Dev handle for scripted capture: set options and read frames without
+// reloading the page. Used by the montage/export scripts.
+if (import.meta.env.DEV) {
+  ;(window as unknown as Record<string, unknown>).contraptions = {
+    apply,
+    engine,
+    options: () => options,
+    canvas: () => host.querySelector('canvas') as HTMLCanvasElement,
+  }
+}
+
 const tick = () => {
   panel.setProgress(engine.progress())
   requestAnimationFrame(tick)

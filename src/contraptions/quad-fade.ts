@@ -8,6 +8,7 @@ export const quadFade = defineContraption({
   label: 'Quad Fade',
   tags: ['square', 'sequence'],
   rotations: [0],
+  fireAt: 0,
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     const q = size / 2
