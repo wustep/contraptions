@@ -1,4 +1,6 @@
 import { defaultOptions, type Options } from './composition'
+import { layouts } from './layouts'
+import { themes } from './themes'
 
 const ADJECTIVES = [
   'brass', 'copper', 'quiet', 'idle', 'clever', 'stubborn', 'patient', 'restless',
@@ -21,6 +23,29 @@ export function randomSeed(): string {
     .toString()
     .padStart(3, '0')
   return `${pick(ADJECTIVES)}-${pick(NOUNS)}-${n}`
+}
+
+/**
+ * Roll the whole configuration, not just the seed. The dials are drawn from
+ * weighted tables rather than uniform ranges: a res of 4 or 30 is a corner
+ * someone steers into deliberately, not a place a dice roll should strand
+ * them, so the middle of each range carries most of the weight and the ends
+ * appear only as occasional visitors. Pool filters and catalog mode reset —
+ * a full roll means "show me a fresh piece".
+ */
+export function rollOptions(): Options {
+  const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+  return {
+    ...defaultOptions,
+    seed: randomSeed(),
+    theme: pick(themes).name,
+    layout: pick(layouts).name,
+    // Mostly 12-18 cells across; sometimes airy, sometimes dense, never extreme.
+    res: pick([9, 11, 12, 13, 14, 14, 15, 15, 16, 16, 17, 18, 20, 22]),
+    stroke: pick([0.85, 1, 1, 1, 1, 1.15, 1.3]),
+    spans: pick([0.2, 0.35, 0.5, 0.5, 0.65, 0.8]),
+    chains: pick([0.2, 0.35, 0.5, 0.5, 0.65, 0.8]),
+  }
 }
 
 const NUMERIC: (keyof Options)[] = ['res', 'stroke', 'spans', 'chains']

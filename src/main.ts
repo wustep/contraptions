@@ -2,7 +2,7 @@ import './ui/styles.css'
 import { build, type Options } from './core/composition'
 import { MIN_CANVAS } from './core/constants'
 import { createEngine } from './core/engine'
-import { randomSeed, readUrl, writeUrl } from './core/seed'
+import { randomSeed, readUrl, rollOptions, writeUrl } from './core/seed'
 import { createPanel } from './ui/panel'
 import { loadView, saveView, type ViewState } from './ui/view'
 
@@ -90,6 +90,7 @@ const panel = createPanel(panelRoot, options, view, {
   onChange: apply,
   onView: applyView,
   onReroll: () => apply({ seed: randomSeed() }),
+  onRollAll: () => apply(rollOptions()),
   onSave: save,
   onScrub: (u) => engine.setProgress(u),
   onStep: step,
@@ -115,7 +116,8 @@ window.addEventListener('keydown', (e) => {
     case ' ':
     case 'enter':
       e.preventDefault()
-      apply({ seed: randomSeed() })
+      if (e.shiftKey) apply(rollOptions())
+      else apply({ seed: randomSeed() })
       break
     case 'p':
       applyView({ paused: !view.paused })

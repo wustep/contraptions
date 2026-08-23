@@ -9,6 +9,8 @@ export interface PanelHandlers {
   onChange(patch: Partial<Options>): void
   onView(patch: Partial<ViewState>): void
   onReroll(): void
+  /** Roll the whole configuration — theme, layout, dials, and the seed. */
+  onRollAll(): void
   onSave(): void
   onScrub(u: number): void
   /** Nudge the clock a single frame. */
@@ -183,6 +185,8 @@ export function createPanel(
   seedInput.addEventListener('change', () => handlers.onChange({ seed: seedInput.value.trim() }))
   const reroll = el('button', { class: 'primary' }, ['Reroll', el('kbd', {}, ['space'])])
   reroll.addEventListener('click', () => handlers.onReroll())
+  const rollAll = el('button', { title: 'Roll theme, layout and every dial along with the seed (shift+space)' }, ['Roll all', el('kbd', {}, ['⇧'])])
+  rollAll.addEventListener('click', () => handlers.onRollAll())
   const copy = el('button', {}, ['Copy link'])
   copy.addEventListener('click', () => {
     handlers.onCopy()
@@ -197,7 +201,8 @@ export function createPanel(
     el('section', { class: 'seed-card' }, [
       el('div', { class: 'section-title' }, ['Seed']),
       seedInput,
-      el('div', { class: 'row' }, [reroll, copy]),
+      el('div', { class: 'row' }, [reroll, rollAll]),
+      copy,
     ]),
   )
 
@@ -296,6 +301,7 @@ export function createPanel(
 
   const keys: [string, string][] = [
     ['space', 'reroll seed'],
+    ['⇧spc', 'roll everything'],
     ['P', 'pause / play'],
     ['← →', 'step a frame'],
     ['⇧← →', 'jump a beat'],
