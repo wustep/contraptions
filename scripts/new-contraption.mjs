@@ -31,6 +31,9 @@ export const ${camel} = defineContraption({
   name: '${name}',
   label: '${label}',
   tags: [],
+  // span: [2, 1],     // footprint in cells, if this needs more than one
+  // fireAt: 0.5,      // where in the loop the notable moment falls
+  // rotations: [0],   // lock upright if the machine depends on gravity
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {
     const y = lerp(size * 0.3, -size * 0.3, pingPong(u))
