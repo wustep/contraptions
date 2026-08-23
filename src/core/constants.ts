@@ -12,8 +12,15 @@ export const LOOP = 240
 /** Nominal frame rate. Purely for reporting loop length in seconds. */
 export const FPS = 60
 
-/** Default canvas edge, in CSS pixels. */
+/**
+ * Fallback canvas edge in CSS pixels. The live canvas is sized to exactly fill
+ * its container instead, so it never gets resampled by CSS — see `measure()` in
+ * main.ts. This is the size used for headless builds and as a floor.
+ */
 export const CANVAS = 900
+
+/** Never build a composition smaller than this. */
+export const MIN_CANVAS = 360
 
 /** Fraction of the canvas the composition occupies, leaving a margin. */
 export const ART_INSET = 0.9

@@ -32,12 +32,9 @@ body {
   overflow: hidden;
 }
 
+/* The canvas is built at its display size, so it must never be scaled here. */
 #canvas-host canvas {
   display: block;
-  max-width: 100%;
-  max-height: calc(100vh - 48px);
-  height: auto;
-  width: auto;
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.55);
 }

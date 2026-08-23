@@ -73,15 +73,18 @@ function pool(options: Options): Contraption<unknown>[] {
   return registry
 }
 
-export function build(options: Options): Composition {
-  if (options.catalog) return buildCatalog(options)
+export function build(options: Options, canvas: number = CANVAS): Composition {
+  if (options.catalog) return buildCatalog(options, canvas)
 
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
   const rng = makeRng(options.seed)
 
-  const area = CANVAS * ART_INSET
-  const origin = (CANVAS - area) / 2
+  // Snap the art area to a whole number of cells so every cell edge, and so
+  // every rail drawn on one, lands on a whole pixel. Fractional cell sizes are
+  // what make a 2px line smear across three pixels.
+  const area = Math.floor((canvas * ART_INSET) / options.res) * options.res
+  const origin = Math.round((canvas - area) / 2)
   const cells = layout.build({
     x: origin,
     y: origin,
@@ -201,16 +204,16 @@ export function build(options: Options): Composition {
  * phase. This is the working view when you are building a new machine, and the
  * fastest way to see whether the set still hangs together as one language.
  */
-function buildCatalog(options: Options): Composition {
+function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(options.seed)
   const cols = Math.ceil(Math.sqrt(registry.length))
   const rows = Math.ceil(registry.length / cols)
-  const area = CANVAS * ART_INSET
+  const area = canvas * ART_INSET
   const slot = area / cols
   const box = slot * 0.74
-  const originX = (CANVAS - area) / 2
-  const originY = (CANVAS - rows * slot) / 2
+  const originX = (canvas - area) / 2
+  const originY = (canvas - rows * slot) / 2
 
   const cells: Cell[] = []
   const labels: Composition['labels'] = []

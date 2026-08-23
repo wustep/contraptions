@@ -6,13 +6,20 @@ import { FIRE_DECAY } from './wiring'
 
 export interface Engine {
   setComposition(next: Composition): void
+  /** Resize the canvas in place. The caller rebuilds the composition to match. */
+  resize(size: number): void
   setPaused(paused: boolean): void
   paused(): boolean
   setSpeed(speed: number): void
   /** Position within the master loop, 0..1. */
   progress(): number
   setProgress(u: number): void
-  savePng(filename: string): void
+  /**
+   * Save a PNG. `scale` supersamples: the canvas is redrawn at that pixel
+   * density for one frame, captured, and put back. 1 is what you see, 4 is
+   * print-sized.
+   */
+  savePng(filename: string, scale?: number): void
   destroy(): void
 }
 
@@ -69,18 +76,26 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
  * Wraps a p5 instance. The engine owns the clock; every contraption is a pure
  * function of it, so pausing, scrubbing, and exporting all fall out for free.
  */
-export function createEngine(host: HTMLElement, initial: Composition): Engine {
+export function createEngine(host: HTMLElement, initial: Composition, size = CANVAS): Engine {
   let comp = initial
   let frame = 0
   let speed = 1
   let paused = false
   let instance: p5 | null = null
+  let edge = size
+
+  /**
+   * One canvas pixel per device pixel. Anything else means the browser
+   * resamples the canvas on its way to the screen, which is what makes crisp
+   * 2px ink look like 3px of grey.
+   */
+  const density = () => window.devicePixelRatio || 1
 
   const sketch = (p: p5) => {
     p.setup = () => {
-      const canvas = p.createCanvas(CANVAS, CANVAS)
+      const canvas = p.createCanvas(edge, edge)
       canvas.parent(host)
-      p.pixelDensity(Math.min(2, window.devicePixelRatio || 1))
+      p.pixelDensity(density())
       p.rectMode(p.CENTER)
       p.angleMode(p.RADIANS)
       p.strokeCap(p.ROUND)
@@ -139,6 +154,11 @@ export function createEngine(host: HTMLElement, initial: Composition): Engine {
     setComposition(next) {
       comp = next
     },
+    resize(next) {
+      edge = next
+      instance?.resizeCanvas(next, next)
+      instance?.pixelDensity(density())
+    },
     setPaused(next) {
       paused = next
     },
@@ -150,8 +170,31 @@ export function createEngine(host: HTMLElement, initial: Composition): Engine {
     setProgress(u) {
       frame = u * comp.loop
     },
-    savePng(filename) {
-      instance?.saveCanvas(filename, 'png')
+    savePng(filename, scale = 1) {
+      if (!instance) return
+      // p5 exposes the element but @types/p5 does not declare it.
+      const el = (instance as unknown as { canvas: HTMLCanvasElement }).canvas
+      const wasPaused = paused
+      const before = density()
+      // Hold the clock so the capture matches what is on screen, redraw one
+      // frame at the requested density, then put everything back. toDataURL is
+      // synchronous, so nothing can change underneath it.
+      paused = true
+      if (scale !== 1) {
+        instance.pixelDensity(before * scale)
+        instance.redraw()
+      }
+      const url = el.toDataURL('image/png')
+      if (scale !== 1) {
+        instance.pixelDensity(before)
+        instance.redraw()
+      }
+      paused = wasPaused
+
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${filename}.png`
+      link.click()
     },
     destroy() {
       instance?.remove()
