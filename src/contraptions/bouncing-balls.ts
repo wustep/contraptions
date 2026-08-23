@@ -7,8 +7,6 @@ export const bouncingBalls = defineContraption({
   name: 'bouncing-balls',
   label: 'Bouncing Balls',
   tags: ['swap', 'ball'],
-  role: 'source',
-  fireAt: 0.5,
   period: 120,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {

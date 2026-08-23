@@ -135,19 +135,89 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   font-variant-numeric: tabular-nums;
 }
 
-select {
-  width: 100%;
+.note { color: var(--faint); font-size: 11px; margin: -6px 0 0; }
+
+/* ---- listbox --------------------------------------------------------- */
+
+.lb { position: relative; min-width: 0; }
+
+.lb-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: var(--raised);
   border: 1px solid var(--line);
   color: var(--text);
   border-radius: 6px;
   padding: 6px 8px;
-  font: inherit;
   font-size: 12px;
+  cursor: pointer;
+  user-select: none;
 }
-select:focus { outline: none; border-color: var(--accent); }
+.lb-trigger:hover { border-color: #363944; }
+.lb-trigger:focus-visible { outline: none; border-color: var(--accent); }
+.lb-trigger[aria-expanded='true'] { border-color: var(--accent); }
 
-.note { color: var(--faint); font-size: 11px; margin: -6px 0 0; }
+.lb-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.lb-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-value .lb-swatch { margin-left: auto; }
+
+.lb-chevron { width: 12px; height: 12px; flex: none; color: var(--dim); }
+.lb-chevron path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.lb-pop {
+  display: none;
+  position: fixed;
+  z-index: 40;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.lb-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lb-opt .lb-swatch { margin-left: auto; }
+.lb-opt.act { background: var(--raised); }
+.lb-opt.sel { color: var(--accent); }
+.lb-opt.sel .lb-glyph { color: var(--accent); }
+
+/* Palette pill: the theme's paper as the pill, its inks as the dots. */
+.lb-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  padding: 3px 5px;
+  border-radius: 999px;
+  border: 1px solid;
+}
+.lb-swatch i { width: 7px; height: 7px; border-radius: 50%; }
+
+.lb-glyph { width: 15px; height: 15px; flex: none; color: var(--dim); }
+.lb-glyph rect { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.lb-trigger .lb-glyph, .lb-opt.act .lb-glyph { color: var(--text); }
 
 /* ---- sliders -------------------------------------------------------- */
 

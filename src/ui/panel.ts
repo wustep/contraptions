@@ -227,43 +227,57 @@ export function createPanel(
 
   // Composition
   const composition = section('Composition')
-  const themeSelect = el('select', { 'aria-label': 'Theme' }, options(themes.map((t) => ({ value: t.name, label: t.label })), initial.theme))
+  const themeBox = createListbox({
+    items: themes.map((t) => ({
+      value: t.name,
+      label: t.label,
+      swatches: { colors: t.colors, bg: t.bg, ink: t.ink },
+    })),
+    value: initial.theme,
+    label: 'Theme',
+    onChange: (v) => handlers.onChange({ theme: v }),
+  })
   const themeNote = el('p', { class: 'note' }, [''])
-  themeSelect.addEventListener('change', () => handlers.onChange({ theme: themeSelect.value }))
-  const layoutSelect = el('select', { 'aria-label': 'Layout' }, options(layouts.map((l) => ({ value: l.name, label: l.label })), initial.layout))
+  const layoutBox = createListbox({
+    items: layouts.map((l) => ({ value: l.name, label: l.label, glyph: layoutGlyph(l.name) })),
+    value: initial.layout,
+    label: 'Layout',
+    onChange: (v) => handlers.onChange({ layout: v }),
+  })
   const layoutNote = el('p', { class: 'note' }, [''])
-  layoutSelect.addEventListener('change', () => handlers.onChange({ layout: layoutSelect.value }))
   const res = slider('Resolution', 4, 30, 1, initial.res, String, (v) => handlers.onChange({ res: v }))
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }))
   const spans = slider('Multi-cell', 0, 1, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }))
   const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }))
   composition.append(
-    field('Theme', themeSelect), themeNote,
-    field('Layout', layoutSelect), layoutNote,
+    field('Theme', themeBox.node), themeNote,
+    field('Layout', layoutBox.node), layoutNote,
     res.node, stroke.node, spans.node, chains.node,
   )
 
   // Explore
   const explore = section('Explore')
-  const tagSelect = el('select', { 'aria-label': 'Tag filter' }, options(
-    [{ value: '', label: 'Every tag' }, ...allTags().map((t) => ({ value: t, label: t }))],
-    initial.tag ?? '',
-  ))
-  tagSelect.addEventListener('change', () => handlers.onChange({ tag: tagSelect.value || null, solo: null }))
-  const soloSelect = el('select', { 'aria-label': 'Solo contraption' }, options(
-    [
+  const tagBox = createListbox({
+    items: [{ value: '', label: 'Every tag' }, ...allTags().map((t) => ({ value: t, label: t }))],
+    value: initial.tag ?? '',
+    label: 'Tag filter',
+    onChange: (v) => handlers.onChange({ tag: v || null, solo: null }),
+  })
+  const soloBox = createListbox({
+    items: [
       { value: '', label: 'All contraptions' },
       ...registry.map((c) => ({ value: c.name, label: c.label ?? c.name })),
     ],
-    initial.solo ?? '',
-  ))
-  soloSelect.addEventListener('change', () => handlers.onChange({ solo: soloSelect.value || null }))
+    value: initial.solo ?? '',
+    label: 'Solo contraption',
+    onChange: (v) => handlers.onChange({ solo: v || null }),
+  })
   const catalog = el('button', {}, ['Catalog'])
   catalog.addEventListener('click', () => handlers.onChange({ catalog: !(lastComp?.options.catalog ?? initial.catalog) }))
   const gridBtn = el('button', {}, ['Grid'])
   gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
   explore.append(
-    el('div', { class: 'row' }, [field('Tag', tagSelect), field('Solo', soloSelect)]),
+    el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)]),
     el('div', { class: 'row' }, [catalog, gridBtn]),
   )
 
@@ -347,10 +361,10 @@ export function createPanel(
       lastComp = comp
       lastView = view
       seedInput.value = comp.options.seed
-      themeSelect.value = comp.options.theme
-      layoutSelect.value = comp.options.layout
-      soloSelect.value = comp.options.solo ?? ''
-      tagSelect.value = comp.options.tag ?? ''
+      themeBox.set(comp.options.theme)
+      layoutBox.set(comp.options.layout)
+      soloBox.set(comp.options.solo ?? '')
+      tagBox.set(comp.options.tag ?? '')
       res.set(comp.options.res)
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
