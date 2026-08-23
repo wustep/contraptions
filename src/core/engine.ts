@@ -195,24 +195,34 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       const wasPaused = paused
       const before = density()
       // Hold the clock so the capture matches what is on screen, redraw one
-      // frame at the requested density, then put everything back. toDataURL is
-      // synchronous, so nothing can change underneath it.
+      // frame at the requested density, then put everything back. toBlob
+      // snapshots the bitmap synchronously at call time — only the PNG
+      // encoding is async — so the canvas can be restored immediately.
       paused = true
       if (scale !== 1) {
         instance.pixelDensity(before * scale)
         instance.redraw()
       }
-      const url = el.toDataURL('image/png')
+      el.toBlob((blob) => {
+        if (!blob) return
+        // A data: anchor is silently dropped by Chromium once the URL grows
+        // past a couple of MB, which every scaled export does. A Blob URL has
+        // no such cap. The anchor joins the document for Firefox's sake.
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${filename}.png`
+        document.body.append(link)
+        link.click()
+        link.remove()
+        // Leave the URL alive long enough for the download to begin.
+        window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      }, 'image/png')
       if (scale !== 1) {
         instance.pixelDensity(before)
         instance.redraw()
       }
       paused = wasPaused
-
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${filename}.png`
-      link.click()
     },
     destroy() {
       instance?.remove()

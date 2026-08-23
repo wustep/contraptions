@@ -8,6 +8,7 @@ import { boxStep } from './box-step'
 import { bubble } from './bubble'
 import { conveyor } from './conveyor'
 import { dominoes } from './dominoes'
+import { drip } from './drip'
 import { elevator } from './elevator'
 import { flip } from './flip'
 import { gantry } from './gantry'
@@ -27,13 +28,12 @@ import { pipe } from './pipe'
 import { piston } from './piston'
 import { pulse } from './pulse'
 import { quadFade } from './quad-fade'
-import { rain } from './rain'
 import { ratchet } from './ratchet'
 import { seesaw } from './seesaw'
-import { siphon } from './siphon'
 import { slopeBall } from './slope-ball'
 import { spring } from './spring'
 import { sweep } from './sweep'
+import { tippingBucket } from './tipping-bucket'
 import { traffic } from './traffic'
 import { wavy } from './wavy'
 import { windmill } from './windmill'
@@ -51,6 +51,7 @@ export const registry: Contraption<any>[] = [
   bubble,
   conveyor,
   dominoes,
+  drip,
   elevator,
   flip,
   gantry,
@@ -70,13 +71,12 @@ export const registry: Contraption<any>[] = [
   piston,
   pulse,
   quadFade,
-  rain,
   ratchet,
   seesaw,
-  siphon,
   slopeBall,
   spring,
   sweep,
+  tippingBucket,
   traffic,
   wavy,
   windmill,

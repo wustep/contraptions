@@ -1,18 +1,27 @@
 import { defineContraption } from '../core/define'
 import { floorRail, outline, solid } from '../core/draw'
+import { pendulum as pendulumTable, swing } from '../core/physics'
 
-/** An inverted pendulum ticking above its case. */
+/**
+ * An inverted pendulum ticking above its case. The bob rides part-way up the
+ * arm; sliding it changes the beat on a real metronome, so instances vary it.
+ */
 export const metronome = defineContraption({
   name: 'metronome',
   label: 'Metronome',
   tags: ['swing', 'tick'],
   period: 120,
   mirror: false,
-  setup: ({ color, rng }) => ({ color, bob: rng.range(0.3, 0.52) }),
+  fireAt: 0,
+  setup: ({ color, rng }) => ({
+    color,
+    bob: rng.range(0.32, 0.56),
+    table: pendulumTable(rng.range(0.3, 0.5)),
+  }),
   draw: (p, s, { size, u, ink, weight }) => {
     const pivotY = size * 0.34
     const arm = size * 0.76
-    const theta = 0.26 * Math.sin(u * Math.PI * 2)
+    const theta = swing(s.table, u)
     const tipX = arm * Math.sin(theta)
     const tipY = pivotY - arm * Math.cos(theta)
     const bobX = arm * s.bob * Math.sin(theta)
