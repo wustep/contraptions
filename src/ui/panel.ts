@@ -103,6 +103,28 @@ export function createPanel(
   let lastView = initialView
   let lastComp: Composition | null = null
 
+  // A wheel over a slider must scroll the panel, never nudge the value —
+  // browsers that edit ranges on wheel silently wreck a composition you were
+  // only scrolling past. The scroll is forwarded by hand because preventing
+  // the default suppresses it along with the edit.
+  const guardWheel = (input: HTMLInputElement) => {
+    input.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault()
+        if (root.scrollHeight > root.clientHeight) root.scrollBy({ top: e.deltaY })
+        else window.scrollBy({ top: e.deltaY })
+      },
+      { passive: false },
+    )
+  }
+
+  // Mouse clicks leave a button focused, and a focused button swallows the
+  // space shortcut. Keyboard activation reports detail 0 and keeps focus.
+  root.addEventListener('click', (e) => {
+    if (e.detail > 0 && e.target instanceof HTMLButtonElement) e.target.blur()
+  })
+
   const section = (title: string, cls = ''): HTMLElement => {
     const head = el('div', { class: 'section-title' }, [title])
     const node = el('section', { class: `group${cls ? ` ${cls}` : ''}` }, [head])
@@ -132,6 +154,7 @@ export function createPanel(
       readout.textContent = fmt(Number(input.value))
       apply(Number(input.value))
     })
+    guardWheel(input)
     return {
       node: field(labelText, input, readout),
       set(v: number) {
@@ -234,6 +257,7 @@ export function createPanel(
     scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
     handlers.onScrub(Number(scrub.value) / 1000)
   })
+  guardWheel(scrub)
   const back = el('button', { class: 'tbtn', title: 'Step back one frame (←)', 'aria-label': 'Step back one frame' }, [icon(ICON.back)])
   back.addEventListener('click', () => handlers.onStep(-1))
   const play = el('button', { class: 'tbtn play', title: 'Play / pause (P)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
