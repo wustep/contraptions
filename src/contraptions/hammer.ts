@@ -7,6 +7,7 @@ export const hammer = defineContraption({
   name: 'hammer',
   label: 'Hammer',
   tags: ['strike'],
+  role: 'source',
   mirror: false,
   // The moment the weight lands.
   fireAt: 0.86,

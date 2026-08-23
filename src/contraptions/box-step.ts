@@ -7,6 +7,8 @@ export const boxStep = defineContraption({
   name: 'box-step',
   label: 'Box Step',
   tags: ['step', 'square'],
+  role: 'source',
+  fireAt: 0.0,
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     const box = size / 3

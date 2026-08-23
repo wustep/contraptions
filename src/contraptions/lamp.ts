@@ -9,6 +9,7 @@ export const lamp = defineContraption({
   name: 'lamp',
   label: 'Lamp',
   tags: ['signal'],
+  role: 'sink',
   fireAt: 0,
   mirror: false,
   setup: ({ color }) => ({ color }),

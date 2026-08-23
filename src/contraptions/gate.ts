@@ -7,6 +7,7 @@ export const gate = defineContraption({
   name: 'gate',
   label: 'Gate',
   tags: ['signal', 'strike'],
+  role: 'sink',
   fireAt: 0,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight, fired }) => {

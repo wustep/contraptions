@@ -6,6 +6,7 @@ export const bell = defineContraption({
   name: 'bell',
   label: 'Bell',
   tags: ['signal', 'strike'],
+  role: 'sink',
   fireAt: 0,
   mirror: false,
   rotations: [0],

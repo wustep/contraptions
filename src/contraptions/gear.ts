@@ -6,6 +6,7 @@ export const gear = defineContraption({
   name: 'gear',
   label: 'Gear Pair',
   tags: ['spin', 'mesh'],
+  role: 'relay',
   rotations: [0, 1],
   setup: ({ color, rng }) => ({ color, dir: rng.sign(), n: rng.pick([6, 7, 8]) }),
   draw: (p, s, { size, u, ink, weight }) => {

@@ -7,6 +7,7 @@ export const abacus = defineContraption({
   name: 'abacus',
   label: 'Abacus',
   tags: ['step', 'slide'],
+  role: 'relay',
   rotations: [0, 1],
   setup: ({ color, rng }) => ({
     color,

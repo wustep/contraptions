@@ -7,6 +7,7 @@ export const wavy = defineContraption({
   name: 'wavy',
   label: 'Wavy',
   tags: ['wave'],
+  role: 'relay',
   setup: ({ color, rng }) => ({ color, cycles: rng.pick([1, 1, 2]), dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     const blockH = size * 0.2

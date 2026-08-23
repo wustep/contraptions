@@ -6,6 +6,7 @@ export const sweep = defineContraption({
   name: 'sweep',
   label: 'Sweep',
   tags: ['spin', 'sequence'],
+  role: 'relay',
   rotations: [0],
   setup: ({ color, rng }) => ({ color, dir: rng.sign(), trail: rng.range(0.5, 1.1) }),
   draw: (p, s, { size, u, ink, weight }) => {

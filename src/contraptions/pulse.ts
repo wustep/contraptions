@@ -7,6 +7,7 @@ export const pulse = defineContraption({
   name: 'pulse',
   label: 'Pulse',
   tags: ['grow'],
+  role: 'relay',
   rotations: [0],
   fireAt: 0,
   mirror: false,

@@ -6,6 +6,7 @@ export const orbit = defineContraption({
   name: 'orbit',
   label: 'Orbit',
   tags: ['spin', 'ball'],
+  role: 'relay',
   rotations: [0],
   setup: ({ color, rng }) => ({ color, dir: rng.sign(), moons: rng.pick([2, 3, 4]) }),
   draw: (p, s, { size, u, ink, weight }) => {

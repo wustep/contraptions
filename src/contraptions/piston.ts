@@ -6,6 +6,7 @@ export const piston = defineContraption({
   name: 'piston',
   label: 'Piston',
   tags: ['spin', 'slide'],
+  role: 'relay',
   rotations: [0, 1, 2, 3],
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {

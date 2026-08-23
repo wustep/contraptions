@@ -3,6 +3,7 @@ import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
 import type { Composition, Options } from '../core/composition'
+import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
 export interface PanelHandlers {
@@ -48,14 +49,6 @@ function field(labelText: string, control: HTMLElement, valueNode?: HTMLElement)
   return el('div', { class: 'field' }, [label, control])
 }
 
-function options(items: { value: string; label: string }[], selected: string): HTMLOptionElement[] {
-  return items.map((i) => {
-    const o = el('option', { value: i.value }, [i.label])
-    if (i.value === selected) o.selected = true
-    return o
-  })
-}
-
 function icon(paths: string[]): SVGSVGElement {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('viewBox', '0 0 24 24')
@@ -73,6 +66,32 @@ const ICON = {
   pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
   back: ['M7 5h2.2v14H7z', 'M18 5l-7.5 7L18 19z'],
   fwd: ['M14.8 5H17v14h-2.2z', 'M6 5l7.5 7L6 19z'],
+}
+
+/** Mini diagrams for the layout picker, one rect list per layout name. */
+const LAYOUT_GLYPHS: Record<string, [number, number, number, number][]> = {
+  grid: [[3, 3, 8, 8], [13, 3, 8, 8], [3, 13, 8, 8], [13, 13, 8, 8]],
+  bricks: [[3, 3, 10, 5], [15, 3, 6, 5], [3, 10, 5, 5], [10, 10, 11, 5], [3, 17, 10, 4], [15, 17, 6, 4]],
+  quads: [[3, 3, 18, 18], [12, 3, 9, 9], [16.5, 3, 4.5, 4.5]],
+  bands: [[3, 3, 4, 18], [9, 3, 8, 18], [19, 3, 2, 18]],
+}
+
+function layoutGlyph(name: string): SVGSVGElement | undefined {
+  const rects = LAYOUT_GLYPHS[name]
+  if (!rects) return undefined
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('viewBox', '0 0 24 24')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.classList.add('lb-glyph')
+  for (const [x, y, w, h] of rects) {
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+    r.setAttribute('x', String(x))
+    r.setAttribute('y', String(y))
+    r.setAttribute('width', String(w))
+    r.setAttribute('height', String(h))
+    svg.append(r)
+  }
+  return svg
 }
 
 /**

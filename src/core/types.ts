@@ -91,10 +91,18 @@ export interface Contraption<S = unknown> {
    */
   fireAt?: number
   /**
-   * Whether this machine can be wired into a chain. Defaults to true for
-   * single-cell machines whose period is the full loop.
+   * Where this machine can sit in a firing chain.
+   *
+   *   'source' — does something discrete that could plausibly set another
+   *              machine off: a strike, an arrival, a bucket going over
+   *   'relay'  — visibly conducts: something turns, slides, or passes along
+   *   'sink'   — visibly reacts when the signal arrives
+   *
+   * A machine with no role is never chained. Chains are built as
+   * source -> relay* -> sink, which is what makes them read as causal rather
+   * than as a line drawn through whatever happened to be adjacent.
    */
-  chainable?: boolean
+  role?: 'source' | 'relay' | 'sink'
   /** Relative likelihood of being picked. Defaults to 1. */
   weight?: number
   /** Allowed quarter-turns, as multiples of TAU/4. Defaults to [0, 1, 2, 3]. */
@@ -130,4 +138,6 @@ export interface Wire {
   /** Frame the downstream machine fires. The pulse travels between the two. */
   end: number
   color: string
+  /** True for the link into the last machine, which gets an end terminal. */
+  last: boolean
 }

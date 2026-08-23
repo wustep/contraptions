@@ -4,7 +4,7 @@ import { registry } from '../contraptions'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
-import { wire } from './wiring'
+import { chainPaths, wireChain } from './wiring'
 
 export interface Options {
   seed: string
@@ -39,6 +39,18 @@ export const defaultOptions: Options = {
   chains: 0.5,
 }
 
+export interface Caption {
+  x: number
+  /** Baseline of the name. The shelf rule sits just above it. */
+  y: number
+  text: string
+  /** Second line: footprint and role. */
+  sub: string
+  size: number
+  /** Width of the shelf rule the machine sits on. */
+  rule: number
+}
+
 export interface Composition {
   options: Options
   theme: Theme
@@ -48,8 +60,10 @@ export interface Composition {
   loop: number
   /** Distinct contraptions actually used, by name. */
   used: string[]
-  /** Caption positions, populated in catalog mode. */
-  labels: { x: number; y: number; text: string }[]
+  /** Captions under each machine, populated in catalog mode. */
+  captions: Caption[]
+  /** Single line across the top of the sheet, in catalog mode. */
+  header: string | null
   /** Visible links between machines that fire in sequence. */
   wires: Wire[]
 }
@@ -104,12 +118,12 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   const claimed = new Set<Cell>()
   const instances: Instance[] = []
 
-  const place = (contraption: Contraption<unknown>, cell: Cell, seed: string) => {
+  const place = (contraption: Contraption<unknown>, cell: Cell, seed: string): Instance => {
     const cellRng = rng.fork(seed)
     const rotations = contraption.rotations ?? (cell.w === cell.h ? [0, 1, 2, 3] : [0, 2])
     const period = contraption.period ?? LOOP
     const phase = cellRng.int(0, period)
-    instances.push({
+    const instance: Instance = {
       contraption,
       state: contraption.setup({
         rng: cellRng,
@@ -126,7 +140,9 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
       phase,
       period,
       fireFrame: Math.round(((contraption.fireAt ?? 0) * period - phase + LOOP * 4) % LOOP),
-    })
+    }
+    instances.push(instance)
+    return instance
   }
 
   /**
@@ -176,7 +192,33 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     }
   }
 
-  // Pass two: everything else fills the leftovers.
+  // Pass two: reserve runs and staff them by role, so a chain reads as
+  // source -> relay -> sink rather than as a line through whatever was next to
+  // what. Roles are picked from the filtered pool, falling back to the whole
+  // pool when a filter has emptied one (soloing a single machine, say).
+  const wires: Wire[] = []
+  const roleRng = rng.fork('roles')
+  const byRole = (role: Contraption<unknown>['role']) => {
+    const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
+    if (matching.length) return matching
+    const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
+    return anyRole.length ? anyRole : singles
+  }
+
+  if (options.chains > 0 && singles.length) {
+    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains)
+    for (const path of paths) {
+      const members = path.map((cell, k) => {
+        const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
+        const candidates = byRole(role)
+        const contraption = roleRng.weighted(candidates, (c) => c.weight ?? 1)
+        return place(contraption, cell, `cell:${cell.index}`)
+      })
+      wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))
+    }
+  }
+
+  // Pass three: everything else fills the leftovers.
   for (const cell of singles.length ? cells : []) {
     if (claimed.has(cell)) continue
     const cellRng = rng.fork(`pick:${cell.index}`)
@@ -185,8 +227,6 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     place(contraption, cell, `cell:${cell.index}`)
   }
 
-  const wires = wire(instances, rng.fork('wires'), options.chains)
-
   return {
     options,
     theme,
@@ -194,7 +234,8 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     instances,
     loop: LOOP,
     used: [...new Set(instances.map((i) => i.contraption.name))].sort(),
-    labels: [],
+    captions: [],
+    header: null,
     wires,
   }
 }
@@ -211,25 +252,40 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
   const rows = Math.ceil(registry.length / cols)
   const area = canvas * ART_INSET
   const slot = area / cols
-  const box = slot * 0.74
+  // Two lines of caption per slot, so the machine gets less of it than it would
+  // in a composition.
+  const box = slot * 0.6
+  const type = Math.max(8, slot * 0.088)
   const originX = (canvas - area) / 2
-  const originY = (canvas - rows * slot) / 2
+  const headroom = canvas * 0.05
+  const originY = headroom + (canvas - headroom - rows * slot) / 2
 
   const cells: Cell[] = []
-  const labels: Composition['labels'] = []
+  const captions: Caption[] = []
   const instances: Instance[] = registry.map((contraption, index) => {
     const col = index % cols
     const row = Math.floor(index / cols)
     const cx = originX + col * slot + slot / 2
-    const cy = originY + row * slot + slot / 2 - slot * 0.06
+    const shelf = originY + row * slot + slot * 0.66
     // Scale a multi-cell machine down so its whole footprint fits the slot.
     const span = contraption.span ?? [1, 1]
     const size = box / Math.max(span[0], span[1])
     const w = size * span[0]
     const h = size * span[1]
-    const cell: Cell = { x: cx, y: cy, size, w, h, col, row, index, depth: 0 }
+    const cell: Cell = { x: cx, y: shelf - h / 2, size, w, h, col, row, index, depth: 0 }
     cells.push(cell)
-    labels.push({ x: cx, y: cy + box / 2 + slot * 0.09, text: contraption.label ?? contraption.name })
+
+    const footprint = span[0] === 1 && span[1] === 1 ? '' : `${span[0]}×${span[1]}`
+    captions.push({
+      x: cx,
+      y: shelf + slot * 0.1,
+      text: contraption.label ?? contraption.name,
+      sub: [footprint, contraption.role].filter(Boolean).join(' · '),
+      size: type,
+      rule: box * 0.92,
+    })
+
+    const period = contraption.period ?? LOOP
     const cellRng = rng.fork(`catalog:${contraption.name}`)
     return {
       contraption,
@@ -245,8 +301,10 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
       cell,
       angle: 0,
       mirror: 1,
-      phase: 0,
-      period: contraption.period ?? LOOP,
+      // Stagger the phases. At phase 0 most machines sit at a turning point and
+      // the whole sheet reads as frozen, which is the opposite of useful.
+      phase: Math.round((index * 0.137 + 0.21) * period) % period,
+      period,
       fireFrame: 0,
     }
   })
@@ -258,7 +316,8 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
     instances,
     loop: LOOP,
     used: registry.map((c) => c.name).sort(),
-    labels,
+    captions,
+    header: `${registry.length} contraptions · ${theme.label}`,
     wires: [],
   }
 }

@@ -7,6 +7,7 @@ export const dominoes = defineContraption({
   name: 'dominoes',
   label: 'Dominoes',
   tags: ['sequence', 'step'],
+  role: 'source',
   rotations: [0, 2],
   // The first bar going over.
   fireAt: 0.02,

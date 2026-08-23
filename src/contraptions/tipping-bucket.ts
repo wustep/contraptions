@@ -14,6 +14,7 @@ export const tippingBucket = defineContraption({
   name: 'tipping-bucket',
   label: 'Tipping Bucket',
   tags: ['fill', 'strike'],
+  role: 'source',
   span: [1, 2],
   rotations: [0],
   fireAt: 0.88,

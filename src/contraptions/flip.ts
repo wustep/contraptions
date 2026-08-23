@@ -7,6 +7,8 @@ export const flip = defineContraption({
   name: 'flip',
   label: 'Flip',
   tags: ['square', 'turn'],
+  role: 'sink',
+  fireAt: 0.25,
   period: 120,
   mirror: false,
   setup: ({ color, rng, theme }) => ({

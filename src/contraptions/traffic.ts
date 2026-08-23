@@ -7,6 +7,7 @@ export const traffic = defineContraption({
   name: 'traffic',
   label: 'Signal',
   tags: ['sequence', 'ball'],
+  role: 'sink',
   rotations: [0, 1, 2, 3],
   mirror: false,
   fireAt: 0,

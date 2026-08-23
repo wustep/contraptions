@@ -7,6 +7,8 @@ export const conveyor = defineContraption({
   name: 'conveyor',
   label: 'Conveyor',
   tags: ['slide', 'square'],
+  role: 'relay',
+  fireAt: 0.0,
   rotations: [0, 1, 2, 3],
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {

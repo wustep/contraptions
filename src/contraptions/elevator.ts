@@ -7,6 +7,8 @@ export const elevator = defineContraption({
   name: 'elevator',
   label: 'Elevator',
   tags: ['lift', 'square'],
+  role: 'sink',
+  fireAt: 0.4,
   mirror: false,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {

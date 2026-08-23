@@ -14,6 +14,7 @@ export const drip = defineContraption({
   name: 'drip',
   label: 'Drip',
   tags: ['fall', 'ball'],
+  role: 'source',
   rotations: [0],
   mirror: false,
   // The break on the surface.

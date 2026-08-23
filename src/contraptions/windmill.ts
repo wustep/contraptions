@@ -6,6 +6,7 @@ export const windmill = defineContraption({
   name: 'windmill',
   label: 'Windmill',
   tags: ['spin'],
+  role: 'relay',
   mirror: false,
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {

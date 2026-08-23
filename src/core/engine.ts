@@ -56,11 +56,24 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   p.push()
   p.stroke(comp.theme.ink)
   p.strokeWeight(base)
+
+  // Junctions sit where the conduit crosses between two cells, not on the cell
+  // centres — a terminal drawn on a centre punches a hole through the machine
+  // it is supposed to be feeding.
   for (const w of comp.wires) {
     p.fill(comp.theme.bg)
-    p.circle(w.from.x, w.from.y, unit * 0.16)
-    p.circle(w.to.x, w.to.y, unit * 0.16)
+    p.circle((w.from.x + w.to.x) / 2, (w.from.y + w.to.y) / 2, unit * 0.17)
+    if (w.last) {
+      // A bar across the far end, so a run visibly terminates somewhere.
+      const dx = Math.sign(w.to.x - w.from.x)
+      const dy = Math.sign(w.to.y - w.from.y)
+      const at = 0.68
+      const cx = w.from.x + (w.to.x - w.from.x) * at
+      const cy = w.from.y + (w.to.y - w.from.y) * at
+      p.line(cx - dy * unit * 0.12, cy - dx * unit * 0.12, cx + dy * unit * 0.12, cy + dx * unit * 0.12)
+    }
   }
+
   for (const w of comp.wires) {
     const travel = mod(loopFrame - w.start, comp.loop) / (w.end - w.start)
     if (travel > 1) continue
@@ -71,6 +84,53 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
       unit * 0.26,
     )
   }
+  p.pop()
+}
+
+/** Type stack for the catalog sheet. Nothing else in the app draws text. */
+const CAPTION_FONT =
+  'Inter, "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'
+
+function drawCaptions(p: p5, comp: Composition): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const dim = p.color(comp.theme.ink)
+  dim.setAlpha(120)
+  const rule = p.color(comp.theme.ink)
+  rule.setAlpha(60)
+
+  p.push()
+  p.textFont(CAPTION_FONT)
+  p.textAlign(p.CENTER, p.TOP)
+
+  p.stroke(rule)
+  p.strokeWeight(1)
+  for (const c of comp.captions) {
+    // A shelf under each machine, so they all sit on the same ground line
+    // instead of floating at whatever height their drawing happens to end.
+    p.line(c.x - c.rule / 2, c.y - c.size * 0.55, c.x + c.rule / 2, c.y - c.size * 0.55)
+  }
+
+  p.noStroke()
+  for (const c of comp.captions) {
+    p.fill(comp.theme.ink)
+    p.textSize(c.size)
+    ctx.letterSpacing = '0.01em'
+    p.text(c.text, c.x, c.y)
+    if (!c.sub) continue
+    p.fill(dim)
+    p.textSize(c.size * 0.78)
+    ctx.letterSpacing = '0.07em'
+    p.text(c.sub.toUpperCase(), c.x, c.y + c.size * 1.25)
+  }
+
+  if (comp.header) {
+    p.fill(dim)
+    p.textSize(comp.captions[0].size * 0.9)
+    ctx.letterSpacing = '0.14em'
+    p.textAlign(p.CENTER, p.TOP)
+    p.text(comp.header.toUpperCase(), p.width / 2, p.height * 0.032)
+  }
+  ctx.letterSpacing = '0px'
   p.pop()
 }
 
@@ -148,16 +208,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
 
       drawSignals(p, comp, loopFrame)
 
-      if (comp.labels.length) {
-        p.push()
-        p.noStroke()
-        p.fill(theme.ink)
-        p.textAlign(p.CENTER, p.TOP)
-        p.textSize(Math.max(9, CANVAS * 0.0125))
-        p.textFont('ui-monospace, SFMono-Regular, Menlo, monospace')
-        for (const label of comp.labels) p.text(label.text, label.x, label.y)
-        p.pop()
-      }
+      if (comp.captions.length) drawCaptions(p, comp)
 
       if (!paused) frame += speed
     }

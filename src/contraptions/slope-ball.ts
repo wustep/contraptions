@@ -6,6 +6,8 @@ export const slopeBall = defineContraption({
   name: 'slope-ball',
   label: 'Slope Ball',
   tags: ['track', 'ball'],
+  role: 'source',
+  fireAt: 0.92,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {
     const d = size * 0.3

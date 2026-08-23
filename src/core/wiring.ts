@@ -1,103 +1,128 @@
 import { LOOP } from './constants'
 import type { Rng } from './rng'
-import type { Instance, Wire } from './types'
+import type { Cell, Instance, Wire } from './types'
 
-/** Frames between one machine firing and the next in its chain. */
+/** Frames between one machine firing and the next along a chain. */
 export const LINK_DELAY = 24
 
 /** How long `fired` takes to decay back to 0, in frames. */
 export const FIRE_DECAY = 16
 
-/** Shortest run of machines that still reads as a cascade rather than a pair. */
+/** Shorter than this and it reads as a pair, not a cascade. */
 const MIN_CHAIN = 3
-const MAX_CHAIN = 7
+const MAX_CHAIN = 5
 
 const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
 
-const colorOf = (inst: Instance): string => {
-  const state = inst.state as { color?: string } | null
-  return state?.color ?? '#000000'
-}
+const STEPS: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+  [0, -1],
+]
 
 /**
- * Wire adjacent machines into chains that fire in sequence.
+ * Reserve runs of free cells to build chains along.
  *
- * A chain is not a runtime dependency — nothing is evaluated in order at draw
- * time. It is purely a phase assignment: each machine's phase is chosen so its
- * firing moment lands `LINK_DELAY` frames after the one before it. The cascade
- * you see is real causality expressed as arithmetic, which is what lets every
- * contraption stay a pure function of its own `u`.
+ * Paths are grown in a mostly straight line with at most one turn. A random
+ * walk produces paths that double back and cross themselves, which reads as
+ * tangle rather than as a signal going somewhere; a straight run with one
+ * corner reads as plumbing.
  *
- * Only machines whose period is the full loop are eligible, so a chain never
- * has to reason about a member that fires twice per cycle.
+ * Cells returned here are marked in `taken` so the caller does not fill them
+ * with unrelated machines.
  */
-export function wire(instances: Instance[], rng: Rng, density: number): Wire[] {
+export function chainPaths(
+  cells: Cell[],
+  taken: Set<Cell>,
+  rng: Rng,
+  density: number,
+): Cell[][] {
   if (density <= 0) return []
 
-  const eligible = instances.filter(
-    (i) =>
-      i.period === LOOP &&
-      (i.contraption.chainable ?? true) &&
-      i.cell.w === i.cell.size &&
-      i.cell.h === i.cell.size,
-  )
-  if (eligible.length < MIN_CHAIN) return []
-
-  const byPos = new Map<string, Instance>()
-  for (const i of eligible) byPos.set(key(i.cell.x, i.cell.y), i)
-
-  const used = new Set<Instance>()
-  const wires: Wire[] = []
-  const budget = Math.max(1, Math.round((eligible.length / 24) * density))
-  let built = 0
-
-  const neighbours = (inst: Instance): Instance[] => {
-    const s = inst.cell.size
-    const steps: [number, number][] = [[s, 0], [-s, 0], [0, s], [0, -s]]
-    return steps
-      .map(([dx, dy]) => byPos.get(key(inst.cell.x + dx, inst.cell.y + dy)))
-      .filter((n): n is Instance => !!n && !used.has(n) && n.cell.size === s)
+  const byPos = new Map<string, Cell>()
+  for (const cell of cells) {
+    if (cell.w === cell.size && cell.h === cell.size) byPos.set(key(cell.x, cell.y), cell)
   }
 
-  for (const start of rng.shuffle(eligible)) {
-    if (built >= budget) break
-    if (used.has(start)) continue
+  const paths: Cell[][] = []
+  const budget = Math.max(1, Math.round((byPos.size / 26) * density * 2))
 
-    const chain = [start]
-    used.add(start)
+  for (const start of rng.shuffle([...byPos.values()])) {
+    if (paths.length >= budget) break
+    if (taken.has(start)) continue
+
     const target = rng.int(MIN_CHAIN, MAX_CHAIN + 1)
-    while (chain.length < target) {
-      const options = neighbours(chain[chain.length - 1])
-      if (!options.length) break
-      const next = rng.pick(options)
-      used.add(next)
-      chain.push(next)
+    const path = [start]
+    const claimed = new Set([start])
+    let [dx, dy] = rng.pick(STEPS)
+    let turns = 0
+
+    while (path.length < target) {
+      const head = path[path.length - 1]
+      const step = (sx: number, sy: number): Cell | undefined => {
+        const next = byPos.get(key(head.x + sx * head.size, head.y + sy * head.size))
+        if (!next || taken.has(next) || claimed.has(next) || next.size !== head.size) return undefined
+        return next
+      }
+
+      let next = step(dx, dy)
+      if (!next && turns < 1) {
+        // One corner is allowed, and only to get out of a dead end.
+        const turn = rng.shuffle(STEPS.filter(([sx, sy]) => sx !== dx || sy !== dy))
+        for (const [sx, sy] of turn) {
+          const candidate = step(sx, sy)
+          if (candidate) {
+            next = candidate
+            dx = sx
+            dy = sy
+            turns++
+            break
+          }
+        }
+      }
+      if (!next) break
+      claimed.add(next)
+      path.push(next)
     }
 
-    if (chain.length < MIN_CHAIN) {
-      for (const member of chain) used.delete(member)
-      continue
-    }
-
-    const base = rng.int(0, LOOP)
-    chain.forEach((inst, k) => {
-      const fireFrame = (base + k * LINK_DELAY) % LOOP
-      inst.fireFrame = fireFrame
-      // The phase that puts this machine's firing moment on that frame.
-      inst.phase = Math.round((inst.contraption.fireAt ?? 0) * inst.period - fireFrame)
-    })
-
-    for (let k = 0; k < chain.length - 1; k++) {
-      wires.push({
-        from: chain[k].cell,
-        to: chain[k + 1].cell,
-        start: chain[k].fireFrame,
-        end: chain[k].fireFrame + LINK_DELAY,
-        color: colorOf(chain[k]),
-      })
-    }
-    built++
+    if (path.length < MIN_CHAIN) continue
+    for (const cell of path) taken.add(cell)
+    paths.push(path)
   }
 
+  return paths
+}
+
+const colorOf = (inst: Instance): string =>
+  (inst.state as { color?: string } | null)?.color ?? '#000000'
+
+/**
+ * Space a chain's firing moments `LINK_DELAY` apart and return the links.
+ *
+ * Nothing here is evaluated at draw time. A chain is purely a phase assignment:
+ * each machine's phase is chosen so its own firing moment lands on the frame the
+ * cascade needs it to, which is how the piece can show causality while every
+ * contraption stays a pure function of its own `u`.
+ */
+export function wireChain(chain: Instance[], rng: Rng): Wire[] {
+  const base = rng.int(0, LOOP)
+  chain.forEach((inst, k) => {
+    const fireFrame = (base + k * LINK_DELAY) % LOOP
+    inst.fireFrame = fireFrame
+    inst.phase = Math.round((inst.contraption.fireAt ?? 0) * inst.period - fireFrame)
+  })
+
+  const wires: Wire[] = []
+  for (let k = 0; k < chain.length - 1; k++) {
+    wires.push({
+      from: chain[k].cell,
+      to: chain[k + 1].cell,
+      start: chain[k].fireFrame,
+      end: chain[k].fireFrame + LINK_DELAY,
+      color: colorOf(chain[k]),
+      last: k === chain.length - 2,
+    })
+  }
   return wires
 }

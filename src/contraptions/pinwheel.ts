@@ -6,6 +6,7 @@ export const pinwheel = defineContraption({
   name: 'pinwheel',
   label: 'Pinwheel',
   tags: ['spin'],
+  role: 'relay',
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
     outline(p, ink, weight)
