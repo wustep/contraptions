@@ -56,6 +56,18 @@ function step(dir: number) {
   engine.setProgress(engine.progress() + dir / comp.loop)
 }
 
+/**
+ * The skip buttons jump a beat — an eighth of the loop, snapped to the beat
+ * grid. A single frame out of 240 is invisible; half a second is a legible
+ * hop, and snapping makes repeated taps land on the same eight stations.
+ */
+const BEATS = 8
+
+function stepBeat(dir: number) {
+  if (!view.paused) applyView({ paused: true })
+  engine.setProgress((Math.round(engine.progress() * BEATS) + dir) / BEATS)
+}
+
 function save() {
   engine.savePng(`contraptions-${options.seed}`, view.exportScale)
 }
@@ -81,6 +93,7 @@ const panel = createPanel(panelRoot, options, view, {
   onSave: save,
   onScrub: (u) => engine.setProgress(u),
   onStep: step,
+  onBeat: stepBeat,
   onCopy: () => {
     void navigator.clipboard.writeText(location.href)
   },
@@ -117,10 +130,12 @@ window.addEventListener('keydown', (e) => {
       panel.toggle()
       break
     case 'arrowright':
-      step(1)
+      if (e.shiftKey) stepBeat(1)
+      else step(1)
       break
     case 'arrowleft':
-      step(-1)
+      if (e.shiftKey) stepBeat(-1)
+      else step(-1)
       break
   }
 })

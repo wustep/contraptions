@@ -11,7 +11,10 @@ export interface PanelHandlers {
   onReroll(): void
   onSave(): void
   onScrub(u: number): void
+  /** Nudge the clock a single frame. */
   onStep(dir: number): void
+  /** Jump a beat — an eighth of the loop, snapped to the beat grid. */
+  onBeat(dir: number): void
   onCopy(): void
   /** Pixel edge of a PNG exported at `scale`, for the export readout. */
   exportSize(scale: number): number
@@ -258,12 +261,12 @@ export function createPanel(
     handlers.onScrub(Number(scrub.value) / 1000)
   })
   guardWheel(scrub)
-  const back = el('button', { class: 'tbtn', title: 'Step back one frame (←)', 'aria-label': 'Step back one frame' }, [icon(ICON.back)])
-  back.addEventListener('click', () => handlers.onStep(-1))
+  const back = el('button', { class: 'tbtn', title: 'Back a beat — 1/8 loop (shift+←)', 'aria-label': 'Back one beat' }, [icon(ICON.back)])
+  back.addEventListener('click', () => handlers.onBeat(-1))
   const play = el('button', { class: 'tbtn play', title: 'Play / pause (P)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
-  const fwd = el('button', { class: 'tbtn', title: 'Step forward one frame (→)', 'aria-label': 'Step forward one frame' }, [icon(ICON.fwd)])
-  fwd.addEventListener('click', () => handlers.onStep(1))
+  const fwd = el('button', { class: 'tbtn', title: 'Forward a beat — 1/8 loop (shift+→)', 'aria-label': 'Forward one beat' }, [icon(ICON.fwd)])
+  fwd.addEventListener('click', () => handlers.onBeat(1))
   const speedSeg = segmented(SPEEDS, (v) => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`), (v) => handlers.onView({ speed: v }))
   transport.append(
     scrub,
@@ -295,6 +298,7 @@ export function createPanel(
     ['space', 'reroll seed'],
     ['P', 'pause / play'],
     ['← →', 'step a frame'],
+    ['⇧← →', 'jump a beat'],
     ['G', 'grid overlay'],
     ['S', 'save png'],
     ['H', 'hide panel'],
