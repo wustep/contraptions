@@ -16,9 +16,9 @@ export const orbit = defineContraption({
     const ma = a * s.moons
 
     outline(p, ink, weight)
-    for (let i = 0; i < 44; i++) {
-      const a0 = (i / 44) * Math.PI * 2
-      const a1 = a0 + Math.PI / 44
+    for (let i = 0; i < 14; i++) {
+      const a0 = (i / 14) * Math.PI * 2
+      const a1 = a0 + Math.PI / 14
       p.line(r * Math.cos(a0), r * Math.sin(a0), r * Math.cos(a1), r * Math.sin(a1))
     }
     dashed(p, 0, 0, x, y, size * 0.05)

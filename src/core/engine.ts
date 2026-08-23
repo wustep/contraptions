@@ -60,6 +60,17 @@ export function createEngine(host: HTMLElement, initial: Composition): Engine {
         p.pop()
       }
 
+      if (comp.labels.length) {
+        p.push()
+        p.noStroke()
+        p.fill(theme.ink)
+        p.textAlign(p.CENTER, p.TOP)
+        p.textSize(Math.max(9, CANVAS * 0.0125))
+        p.textFont('ui-monospace, SFMono-Regular, Menlo, monospace')
+        for (const label of comp.labels) p.text(label.text, label.x, label.y)
+        p.pop()
+      }
+
       if (!paused) frame += speed
     }
   }

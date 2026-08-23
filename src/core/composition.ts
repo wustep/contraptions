@@ -17,6 +17,8 @@ export interface Options {
   solo: string | null
   /** Restrict the pool to contraptions carrying this tag. */
   tag: string | null
+  /** Show one labelled instance of every contraption instead of a composition. */
+  catalog: boolean
 }
 
 export const defaultOptions: Options = {
@@ -27,6 +29,7 @@ export const defaultOptions: Options = {
   stroke: 1,
   solo: null,
   tag: null,
+  catalog: false,
 }
 
 export interface Composition {
@@ -38,6 +41,8 @@ export interface Composition {
   loop: number
   /** Distinct contraptions actually used, by name. */
   used: string[]
+  /** Caption positions, populated in catalog mode. */
+  labels: { x: number; y: number; text: string }[]
 }
 
 /**
@@ -60,6 +65,7 @@ function pool(options: Options): Contraption<unknown>[] {
 }
 
 export function build(options: Options): Composition {
+  if (options.catalog) return buildCatalog(options)
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
   const rng = makeRng(options.seed)
@@ -95,6 +101,62 @@ export function build(options: Options): Composition {
     instances,
     loop: LOOP,
     used: [...new Set(instances.map((i) => i.contraption.name))].sort(),
+    labels: [],
+  }
+}
+
+/**
+ * One labelled instance of every contraption, at rest orientation and zero
+ * phase. This is the working view when you are building a new machine, and the
+ * fastest way to see whether the set still hangs together as one language.
+ */
+function buildCatalog(options: Options): Composition {
+  const theme = themeByName(options.theme)
+  const rng = makeRng(options.seed)
+  const cols = Math.ceil(Math.sqrt(registry.length))
+  const rows = Math.ceil(registry.length / cols)
+  const area = CANVAS * ART_INSET
+  const slot = area / cols
+  const size = slot * 0.74
+  const originX = (CANVAS - area) / 2
+  const originY = (CANVAS - rows * slot) / 2
+
+  const cells: Cell[] = []
+  const labels: Composition['labels'] = []
+  const instances: Instance[] = registry.map((contraption, index) => {
+    const col = index % cols
+    const row = Math.floor(index / cols)
+    const cx = originX + col * slot + slot / 2
+    const cy = originY + row * slot + slot / 2 - slot * 0.06
+    const cell: Cell = { x: cx, y: cy, size, col, row, index, depth: 0 }
+    cells.push(cell)
+    labels.push({ x: cx, y: cy + size / 2 + slot * 0.11, text: contraption.label ?? contraption.name })
+    const cellRng = rng.fork(`catalog:${contraption.name}`)
+    return {
+      contraption,
+      state: contraption.setup({
+        rng: cellRng,
+        size,
+        theme,
+        cell,
+        color: cellRng.pick(theme.colors),
+      }),
+      cell,
+      angle: 0,
+      mirror: 1,
+      phase: 0,
+      period: contraption.period ?? LOOP,
+    }
+  })
+
+  return {
+    options,
+    theme,
+    cells,
+    instances,
+    loop: LOOP,
+    used: registry.map((c) => c.name).sort(),
+    labels,
   }
 }
 

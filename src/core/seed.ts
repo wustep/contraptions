@@ -37,6 +37,8 @@ export function readUrl(): Options {
       if (Number.isFinite(value)) (options[key] as number) = value
     } else if (key === 'solo' || key === 'tag') {
       options[key] = raw === '' ? null : raw
+    } else if (key === 'catalog') {
+      options.catalog = raw === '1' || raw === 'true'
     } else {
       ;(options[key] as string) = raw
     }
@@ -48,9 +50,9 @@ export function readUrl(): Options {
 export function writeUrl(options: Options): void {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(options)) {
-    if (value === null || value === '') continue
+    if (value === null || value === '' || value === false) continue
     if (value === defaultOptions[key as keyof Options] && key !== 'seed') continue
-    params.set(key, String(value))
+    params.set(key, value === true ? '1' : String(value))
   }
   const query = params.toString()
   history.replaceState(null, '', query ? `?${query}` : location.pathname)

@@ -109,6 +109,10 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
   soloSelect.addEventListener('change', () => handlers.onChange({ solo: soloSelect.value || null }))
   root.append(field('Solo', soloSelect))
 
+  const catalog = el('button', {}, ['Catalog'])
+  catalog.addEventListener('click', () => handlers.onChange({ catalog: !catalogOn }))
+  root.append(el('div', { class: 'row' }, [catalog]))
+
   // Transport
   const scrub = el('input', { type: 'range', min: '0', max: '1000', step: '1', value: '0' })
   scrub.addEventListener('input', () => handlers.onScrub(Number(scrub.value) / 1000))
@@ -143,6 +147,7 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
     el('div', { class: 'keys' }, keys.flatMap(([k, v]) => [el('kbd', {}, [k]), el('span', {}, [v])])),
   )
 
+  let catalogOn = initial.catalog
   let scrubbing = false
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
   window.addEventListener('pointerup', () => { scrubbing = false })
@@ -165,6 +170,9 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
       statKinds.textContent = String(comp.used.length)
       statLoop.textContent = `${(comp.loop / FPS).toFixed(1)}s`
       pause.textContent = paused ? 'Play' : 'Pause'
+      catalogOn = comp.options.catalog
+      catalog.textContent = catalogOn ? 'Back to composition' : 'Catalog'
+      catalog.className = catalogOn ? 'primary' : ''
     },
     setProgress(u) {
       if (!scrubbing) scrub.value = String(Math.round(u * 1000))
