@@ -11,6 +11,8 @@ export interface Engine {
   setPaused(paused: boolean): void
   paused(): boolean
   setSpeed(speed: number): void
+  /** Overlay faint cell outlines, for judging layouts and span placement. */
+  setGrid(on: boolean): void
   /** Position within the master loop, 0..1. */
   progress(): number
   setProgress(u: number): void
@@ -72,6 +74,17 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   p.pop()
 }
 
+function drawGrid(p: p5, comp: Composition): void {
+  const c = p.color(comp.theme.ink)
+  c.setAlpha(36)
+  p.push()
+  p.noFill()
+  p.stroke(c)
+  p.strokeWeight(1)
+  for (const cell of comp.cells) p.rect(cell.x, cell.y, cell.w, cell.h)
+  p.pop()
+}
+
 /**
  * Wraps a p5 instance. The engine owns the clock; every contraption is a pure
  * function of it, so pausing, scrubbing, and exporting all fall out for free.
@@ -81,6 +94,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
   let frame = 0
   let speed = 1
   let paused = false
+  let grid = false
   let instance: p5 | null = null
   let edge = size
 
@@ -107,6 +121,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       p.background(theme.bg)
       const loopFrame = mod(frame, comp.loop)
 
+      if (grid) drawGrid(p, comp)
       drawConduits(p, comp)
 
       for (const inst of comp.instances) {
@@ -165,6 +180,9 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
     paused: () => paused,
     setSpeed(next) {
       speed = next
+    },
+    setGrid(next) {
+      grid = next
     },
     progress: () => mod(frame, comp.loop) / comp.loop,
     setProgress(u) {

@@ -4,6 +4,7 @@ import { MIN_CANVAS } from './core/constants'
 import { createEngine } from './core/engine'
 import { randomSeed, readUrl, writeUrl } from './core/seed'
 import { createPanel } from './ui/panel'
+import { loadView, saveView, type ViewState } from './ui/view'
 
 const stage = document.getElementById('stage')!
 const host = document.getElementById('canvas-host')!
@@ -24,17 +25,39 @@ function measure(): number {
 }
 
 let options: Options = readUrl()
+let view: ViewState = loadView()
 let canvasSize = measure()
 let comp = build(options, canvasSize)
 
 const engine = createEngine(host, comp, canvasSize)
+engine.setSpeed(view.speed)
 
+/** Composition changes rebuild the piece and land in the URL. */
 function apply(patch: Partial<Options>) {
   options = { ...options, ...patch }
   comp = build(options, canvasSize)
   engine.setComposition(comp)
   writeUrl(options)
-  panel.sync(comp, engine.paused())
+  panel.sync(comp, view)
+}
+
+/** View changes only touch the engine's clock and dials; the piece survives. */
+function applyView(patch: Partial<ViewState>) {
+  view = { ...view, ...patch }
+  engine.setPaused(view.paused)
+  engine.setSpeed(view.speed)
+  engine.setGrid(view.grid)
+  saveView(view)
+  panel.sync(comp, view)
+}
+
+function step(dir: number) {
+  if (!view.paused) applyView({ paused: true })
+  engine.setProgress(engine.progress() + dir / comp.loop)
+}
+
+function save() {
+  engine.savePng(`contraptions-${options.seed}`, view.exportScale)
 }
 
 let resizeTimer = 0
@@ -47,29 +70,34 @@ window.addEventListener('resize', () => {
     engine.resize(next)
     comp = build(options, canvasSize)
     engine.setComposition(comp)
-    panel.sync(comp, engine.paused())
+    panel.sync(comp, view)
   }, 120)
 })
 
-const panel = createPanel(panelRoot, options, {
+const panel = createPanel(panelRoot, options, view, {
   onChange: apply,
+  onView: applyView,
   onReroll: () => apply({ seed: randomSeed() }),
-  onTogglePause: () => {
-    engine.setPaused(!engine.paused())
-    panel.sync(comp, engine.paused())
-  },
-  onSave: () => engine.savePng(`contraptions-${options.seed}`, 2),
+  onSave: save,
   onScrub: (u) => engine.setProgress(u),
+  onStep: step,
   onCopy: () => {
     void navigator.clipboard.writeText(location.href)
   },
+  exportSize: (scale) => Math.round(canvasSize * (window.devicePixelRatio || 1) * scale),
 })
 
-panel.sync(comp, engine.paused())
+panel.sync(comp, view)
 writeUrl(options)
 
 window.addEventListener('keydown', (e) => {
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return
+  // Never shadow browser chrome (cmd+S, ctrl+R, ...).
+  if (e.metaKey || e.ctrlKey || e.altKey) return
+  const t = e.target
+  // Typing in a field or nudging a slider owns the keyboard outright; a
+  // focused button keeps only its activation keys, so the rest still work.
+  if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
+  if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
   switch (e.key.toLowerCase()) {
     case ' ':
     case 'enter':
@@ -77,24 +105,22 @@ window.addEventListener('keydown', (e) => {
       apply({ seed: randomSeed() })
       break
     case 'p':
-      engine.setPaused(!engine.paused())
-      panel.sync(comp, engine.paused())
+      applyView({ paused: !view.paused })
+      break
+    case 'g':
+      applyView({ grid: !view.grid })
       break
     case 's':
-      engine.savePng(`contraptions-${options.seed}`, 2)
+      save()
       break
     case 'h':
       panel.toggle()
       break
     case 'arrowright':
-      engine.setPaused(true)
-      engine.setProgress(engine.progress() + 1 / comp.loop)
-      panel.sync(comp, true)
+      step(1)
       break
     case 'arrowleft':
-      engine.setPaused(true)
-      engine.setProgress(engine.progress() - 1 / comp.loop)
-      panel.sync(comp, true)
+      step(-1)
       break
   }
 })
@@ -104,8 +130,10 @@ window.addEventListener('keydown', (e) => {
 if (import.meta.env.DEV) {
   ;(window as unknown as Record<string, unknown>).contraptions = {
     apply,
+    applyView,
     engine,
     options: () => options,
+    view: () => view,
     canvas: () => host.querySelector('canvas') as HTMLCanvasElement,
   }
 }

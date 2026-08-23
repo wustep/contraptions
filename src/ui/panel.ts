@@ -3,18 +3,22 @@ import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
 import type { Composition, Options } from '../core/composition'
+import type { ViewState } from './view'
 
 export interface PanelHandlers {
   onChange(patch: Partial<Options>): void
+  onView(patch: Partial<ViewState>): void
   onReroll(): void
-  onTogglePause(): void
   onSave(): void
   onScrub(u: number): void
+  onStep(dir: number): void
   onCopy(): void
+  /** Pixel edge of a PNG exported at `scale`, for the export readout. */
+  exportSize(scale: number): number
 }
 
 export interface Panel {
-  sync(comp: Composition, paused: boolean): void
+  sync(comp: Composition, view: ViewState): void
   setProgress(u: number): void
   toggle(): void
 }
@@ -47,7 +51,13 @@ function options(items: { value: string; label: string }[], selected: string): H
   })
 }
 
-export function createPanel(root: HTMLElement, initial: Options, handlers: PanelHandlers): Panel {
+export function createPanel(
+  root: HTMLElement,
+  initial: Options,
+  initialView: ViewState,
+  handlers: PanelHandlers,
+): Panel {
+  let lastView = initialView
   const count = el('span', {}, ['—'])
   root.append(el('div', { class: 'brand' }, [el('h1', {}, ['contraptions']), count]))
 
@@ -137,7 +147,7 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
   root.append(field('Loop position', scrub))
 
   const pause = el('button', {}, ['Pause'])
-  pause.addEventListener('click', () => handlers.onTogglePause())
+  pause.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
   const save = el('button', {}, ['Save PNG'])
   save.addEventListener('click', () => handlers.onSave())
   root.append(el('div', { class: 'row' }, [pause, save]))
@@ -173,7 +183,8 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
   window.addEventListener('pointerup', () => { scrubbing = false })
 
   return {
-    sync(comp, paused) {
+    sync(comp, view) {
+      lastView = view
       seedInput.value = comp.options.seed
       themeSelect.value = comp.options.theme
       layoutSelect.value = comp.options.layout
@@ -194,7 +205,7 @@ export function createPanel(root: HTMLElement, initial: Options, handlers: Panel
       spansValue.textContent = comp.options.spans.toFixed(2)
       chains.value = String(comp.options.chains)
       chainsValue.textContent = comp.options.chains.toFixed(2)
-      pause.textContent = paused ? 'Play' : 'Pause'
+      pause.textContent = view.paused ? 'Play' : 'Pause'
       catalogOn = comp.options.catalog
       catalog.textContent = catalogOn ? 'Back to composition' : 'Catalog'
       catalog.className = catalogOn ? 'primary' : ''
