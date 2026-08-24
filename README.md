@@ -7,9 +7,12 @@ of scattering a few hundred of them across a grid.
 Built after [okazz](https://openprocessing.org/@okazz)'s modular sketches:
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
+**[Live →](https://contraptions-wustep.vercel.app)**
+
 ```bash
 npm install
 npm run dev      # http://localhost:8791
+npm run check    # headless smoke test of the pure core
 ```
 
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
@@ -102,8 +105,9 @@ Machines that depend on gravity — the crane, the chute, the tipping bucket —
 
 ## Wired chains
 
-Adjacent machines can be wired so they fire in sequence, and the wiring is drawn:
-a conduit runs under the cells, terminals and a travelling bead sit on top.
+Adjacent machines can be wired so they fire in sequence, and the wiring is
+drawn: a conduit runs under the cells, junctions and a travelling bead sit on
+top.
 
 Nothing is evaluated in order at draw time. A chain is purely a phase
 assignment — each machine's phase is chosen so its firing moment lands
@@ -111,17 +115,33 @@ assignment — each machine's phase is chosen so its firing moment lands
 causality expressed as arithmetic, which is what lets every contraption stay a
 pure function of its own `u`.
 
-Two hooks make a machine a good chain member:
+Chains have a grammar, and it is enforced by construction. Machines declare a
+`role`:
 
-- `fireAt` — where in the loop its notable moment falls (the strike, the
-  arrival, the click). Defaults to 0.
+| Role | Meaning |
+| --- | --- |
+| `source` | Does something discrete that could set another machine off — a strike, an arrival, a bucket going over |
+| `relay` | Visibly conducts: something turns, slides, or passes along |
+| `sink` | Visibly reacts when the signal arrives |
+
+Runs of free cells are reserved *before* machines are placed, then staffed
+`source -> relay* -> sink`. Drawing a line through cells that were already
+filled is what produced chains reading "gear → wavy → abacus", which says
+nothing. Paths grow in a mostly straight line with at most one corner; a random
+walk doubles back and crosses itself, which reads as tangle rather than as a
+signal going somewhere.
+
+A sink does not have to consult anything to read as caused — because phases are
+chosen so each machine's own `fireAt` lands on the frame the cascade needs, an
+elevator simply arrives at the top on cue. Two hooks go further:
+
+- `fireAt` — where in the loop the notable moment falls. Defaults to 0.
 - `fired` in the draw context — 1 at that instant, decaying to 0 shortly after.
-  It is derived from `u`, so using it costs no purity.
+  Derived from `u`, so using it costs no purity.
 
 `lamp`, `gate` and `bell` are built entirely around `fired`, and are what make a
-chain readable at a glance. Only machines whose period is the full loop are
-eligible, so a chain never has to reason about a member that fires twice per
-cycle.
+run legible at a glance. Only machines whose period is the full loop are
+eligible, so a chain never has to reason about a member firing twice per cycle.
 
 ## Options
 
