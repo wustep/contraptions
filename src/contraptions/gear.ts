@@ -18,8 +18,9 @@ export const gear = defineContraption({
     const rot = (u * (Math.PI * 2 / s.n) * 2) * s.dir
 
     outline(p, ink, weight)
-    // The shaft runs edge to edge, so neighbouring cells line up.
-    p.line(-size / 2, 0, size / 2, 0)
+    // A link bar between the two hubs — the pair reads as coupled without a
+    // shaft skewering both wheels edge to edge.
+    p.line(-gap, 0, gap, 0)
 
     for (const [cx, spin] of [[-gap, rot], [gap, -rot + Math.PI / s.n]] as const) {
       p.push()

@@ -33,7 +33,6 @@ import { seesaw } from './seesaw'
 import { slopeBall } from './slope-ball'
 import { spring } from './spring'
 import { sweep } from './sweep'
-import { tippingBucket } from './tipping-bucket'
 import { traffic } from './traffic'
 import { wavy } from './wavy'
 import { windmill } from './windmill'
@@ -76,7 +75,6 @@ export const registry: Contraption<any>[] = [
   slopeBall,
   spring,
   sweep,
-  tippingBucket,
   traffic,
   wavy,
   windmill,

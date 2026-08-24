@@ -3,12 +3,12 @@ import { clipBox, outline, solid } from '../core/draw'
 import { easeInOutCubic, easeOutQuad, lerp, seg } from '../core/ease'
 
 /**
- * A portal crane taking a crate off one stack and setting it on the other.
+ * A portal crane taking a crate off one pedestal and setting it on the other.
  *
- * The earlier version was all thin outline and read as architecture rather than
- * a machine. The frame is now drawn as box section — paired lines with a filled
- * beam — so it has enough mass to anchor a 2x2 footprint, and the load is big
- * enough to be the thing you watch.
+ * An earlier pass drew the frame as box section — doubled lines with braces —
+ * and it read as scribble at grid scale. Two single-stroke legs and one filled
+ * beam carry the same structure with half the ink; the moving crate is the
+ * thing you watch, so it and its two pedestals get everything else.
  */
 export const gantry = defineContraption({
   name: 'gantry',
@@ -28,7 +28,8 @@ export const gantry = defineContraption({
     const from = -leg * 0.62 * s.dir
     const to = leg * 0.62 * s.dir
     const high = beam + size * 0.62
-    const low = floor - crate / 2
+    // The crate rests on top of a pedestal crate, one clear course up.
+    const low = floor - crate / 2 - crate
 
     // lower, lift, traverse, lower, release, lift, return
     let x = from
@@ -57,15 +58,7 @@ export const gantry = defineContraption({
 
     clipBox(p, w, h, () => {
       outline(p, ink, weight)
-      // Box-section legs: two lines a post apart, braced top and bottom.
-      for (const side of [-1, 1]) {
-        const cx = side * leg
-        p.line(cx - post / 2, beam, cx - post / 2, floor)
-        p.line(cx + post / 2, beam, cx + post / 2, floor)
-        p.line(cx - post / 2, floor, cx + post / 2, floor)
-        p.line(cx - post * 1.8, beam + size * 0.34, cx + post * 1.8, beam + size * 0.34)
-        p.line(cx - side * post * 1.9, beam + size * 0.34, cx, beam + post)
-      }
+      for (const side of [-1, 1]) p.line(side * leg, beam, side * leg, floor)
 
       // The beam carries the load, so it gets the only ink fill in the machine.
       p.push()
@@ -83,12 +76,11 @@ export const gantry = defineContraption({
       solid(p, ink, weight, s.color)
       p.rect(x, beamY + post * 1.6, size * 0.34, size * 0.18)
 
-      // Stacks either side, so the crane is visibly moving stock between them.
+      // A pedestal crate either side, so the crane is visibly moving stock
+      // from one to the other.
       outline(p, ink, weight)
-      for (let i = 0; i < 2; i++) {
-        p.rect(from, low - i * crate, crate, crate)
-      }
-      p.rect(to, low, crate, crate)
+      p.rect(from, floor - crate / 2, crate, crate)
+      p.rect(to, floor - crate / 2, crate, crate)
 
       const crateX = carrying ? x : u < 0.14 ? from : to
       const crateY = carrying ? hook : low

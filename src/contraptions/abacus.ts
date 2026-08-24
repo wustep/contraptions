@@ -1,8 +1,14 @@
 import { defineContraption } from '../core/define'
 import { outline, solid } from '../core/draw'
-import { lerp, mod, stepEase } from '../core/ease'
+import { lerp, mod, pingPong } from '../core/ease'
 
-/** Beads clicking between stops on parallel rails. */
+/**
+ * Beads gliding between stops on parallel rails.
+ *
+ * Each bead makes a whole number of round trips per loop, so the cycle closes
+ * with matching position and velocity — an earlier stepped version snapped
+ * back to the start when the loop wrapped, and the jump was all you saw.
+ */
 export const abacus = defineContraption({
   name: 'abacus',
   label: 'Abacus',
@@ -12,7 +18,7 @@ export const abacus = defineContraption({
   setup: ({ color, rng }) => ({
     color,
     rows: rng.pick([3, 3, 4]),
-    steps: [rng.pick([2, 3]), rng.pick([3, 4]), rng.pick([2, 4]), rng.pick([3, 5])],
+    trips: [rng.pick([1, 2]), rng.pick([1, 2]), rng.pick([2, 3]), rng.pick([1, 3])],
     offsets: [0, rng.range(0.1, 0.5), rng.range(0.1, 0.9), rng.range(0.1, 0.9)],
   }),
   draw: (p, s, { size, u, ink, weight }) => {
@@ -23,7 +29,7 @@ export const abacus = defineContraption({
     for (let i = 0; i < s.rows; i++) {
       const y = -spread / 2 + (spread * i) / Math.max(1, s.rows - 1)
       const dir = i % 2 === 0 ? 1 : -1
-      const t = stepEase(mod(u + s.offsets[i], 1), s.steps[i], 0.45)
+      const t = pingPong(mod(u * s.trips[i] + s.offsets[i], 1))
       const x = lerp(-stop, stop, dir > 0 ? t : 1 - t)
 
       outline(p, ink, weight)

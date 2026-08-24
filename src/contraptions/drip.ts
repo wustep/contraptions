@@ -72,13 +72,16 @@ export const drip = defineContraption({
           p.line(bore * 0.2, nozzleY, bore * 0.2, y - d * 0.3)
         }
       } else {
-        // Two sheets thrown out sideways, opening and thinning as they go.
+        // Two droplets thrown out sideways, arcing up and shrinking — the
+        // splash stays the same substance as the pool instead of a loose wire.
         p.push()
-        p.stroke(s.color)
-        p.strokeWeight(weight * lerp(1.8, 0.5, splash))
-        p.noFill()
-        const r = full * lerp(0.5, 2.4, splash)
-        p.arc(0, surface, r * 2, r * 1.5, Math.PI * 1.12, Math.PI * 1.88)
+        p.noStroke()
+        p.fill(s.color)
+        const throwX = full * lerp(0.4, 1.7, splash)
+        const throwY = full * 1.1 * 4 * splash * (1 - splash)
+        const dd = full * lerp(0.5, 0.22, splash)
+        p.circle(-throwX, surface - throwY, dd)
+        p.circle(throwX, surface - throwY, dd)
         p.pop()
       }
 
