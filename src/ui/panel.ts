@@ -192,8 +192,7 @@ export function createPanel(
   }
 
   // Header
-  const count = el('span', {}, ['—'])
-  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), count]))
+  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions'])]))
 
   // Seed — the one control users actually play, so it gets the hero card.
   const seedInput = el('input', {
@@ -209,13 +208,13 @@ export function createPanel(
   reroll.addEventListener('click', () => handlers.onReroll())
   const rollAll = el('button', { title: 'Roll theme, layout and every dial along with the seed (shift+space)' }, ['Roll all', el('kbd', {}, ['⇧'])])
   rollAll.addEventListener('click', () => handlers.onRollAll())
-  const copy = el('button', {}, ['Copy link'])
+  const copy = el('button', { title: 'Copy a link to this exact composition' }, ['Copy'])
   copy.addEventListener('click', () => {
     handlers.onCopy()
     copy.textContent = 'Copied'
     copy.classList.add('ok')
     window.setTimeout(() => {
-      copy.textContent = 'Copy link'
+      copy.textContent = 'Copy'
       copy.classList.remove('ok')
     }, 1200)
   })
@@ -223,23 +222,10 @@ export function createPanel(
     el('section', { class: 'seed-card' }, [
       el('div', { class: 'section-title' }, ['Seed']),
       seedInput,
-      reroll,
-      el('div', { class: 'row' }, [rollAll, copy]),
+      // One row: the three things you do to a seed, in the order you do them.
+      el('div', { class: 'row seed-actions' }, [reroll, rollAll, copy]),
     ]),
   )
-
-  // Readouts sit directly under the seed: they are what the roll produced, and
-  // burying them beneath every input meant you never saw the result of your own
-  // action without scrolling.
-  const stat = (label: string) => {
-    const value = el('b', {}, ['—'])
-    return { value, node: el('div', { class: 'stat' }, [value, el('span', {}, [label])]) }
-  }
-  const statCells = stat('cells')
-  const statKinds = stat('kinds')
-  const statWires = stat('wires')
-  const statLoop = stat('loop')
-  root.append(el('div', { class: 'stats' }, [statCells.node, statKinds.node, statWires.node, statLoop.node]))
 
   // Composition
   const composition = section('Composition')
@@ -340,6 +326,14 @@ export function createPanel(
   exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save]))
 
 
+  const credit = el('a', {
+    class: 'credit',
+    href: 'https://x.com/okazz_/status/2090999902805393607',
+    target: '_blank',
+    rel: 'noreferrer',
+  }, ['Heavily inspired by Okazz'])
+  root.append(credit)
+
   let scrubbing = false
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
   window.addEventListener('pointerup', () => { scrubbing = false })
@@ -360,11 +354,6 @@ export function createPanel(
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
       chains.set(comp.options.chains)
-      count.textContent = `${registry.length} kinds · ${themes.length} themes`
-      statCells.value.textContent = String(comp.instances.length)
-      statKinds.value.textContent = String(comp.used.length)
-      statLoop.value.textContent = `${(comp.loop / FPS).toFixed(0)}s`
-      statWires.value.textContent = String(comp.wires.length)
       catalog.textContent = comp.options.catalog ? 'Exit catalog' : 'Catalog'
       catalog.classList.toggle('on', comp.options.catalog)
       gridBtn.classList.toggle('on', view.grid)

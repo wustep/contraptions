@@ -4,7 +4,7 @@ A generator for grids of tiny animated machines — each cell is a small,
 self-contained mechanism that loops forever, and the piece is whatever falls out
 of scattering a few hundred of them across a grid.
 
-Built after [okazz](https://openprocessing.org/@okazz)'s modular sketches:
+Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
 **[Live →](https://contraptions-wustep.vercel.app)**
