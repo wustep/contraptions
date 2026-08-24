@@ -22,13 +22,13 @@ export const pendulumWave = defineContraption({
   setup: ({ color, rng, theme }) => ({
     color,
     alt: rng.pick(theme.colors.filter((c) => c !== color)) ?? color,
-    count: rng.pick([9, 11]),
+    count: rng.pick([7, 9]),
     base: rng.int(4, 7),
     table: pendulumTable(0.42),
   }),
   draw: (p, s, { w, h, size, u, ink, weight }) => {
     const top = -h / 2
-    const bob = size * 0.13
+    const bob = size * 0.19
     const span = w * 0.9
 
     outline(p, ink, weight)
