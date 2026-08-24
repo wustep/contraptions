@@ -245,69 +245,128 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
  * phase. This is the working view when you are building a new machine, and the
  * fastest way to see whether the set still hangs together as one language.
  */
+/** Cell columns the catalog packs into. */
+const CATALOG_COLS = 10
+
 function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(options.seed)
-  const cols = Math.ceil(Math.sqrt(registry.length))
-  const rows = Math.ceil(registry.length / cols)
+
+  // Shelf-pack the machines by footprint rather than dropping each into an
+  // identical slot. A 2x2 shown at half scale so it fits a single-cell slot is
+  // the one thing a catalog must not do — you cannot judge a machine you are
+  // being shown smaller than it is drawn. Every machine here is at true
+  // relative scale, and the big ones simply take the room they need.
+  const ordered = [...registry].sort((a, b) => {
+    const areaOf = (c: typeof a) => {
+      const [w, h] = c.span ?? [1, 1]
+      return w * h
+    }
+    const diff = areaOf(b) - areaOf(a)
+    return diff === 0 ? a.name.localeCompare(b.name) : diff
+  })
+
+  type Shelf = { items: typeof ordered; used: number; height: number }
+  const shelves: Shelf[] = []
+  let shelf: Shelf = { items: [], used: 0, height: 1 }
+  for (const contraption of ordered) {
+    const [cw, ch] = contraption.span ?? [1, 1]
+    if (shelf.used + cw > CATALOG_COLS && shelf.items.length) {
+      shelves.push(shelf)
+      shelf = { items: [], used: 0, height: 1 }
+    }
+    shelf.items.push(contraption)
+    shelf.used += cw
+    shelf.height = Math.max(shelf.height, ch)
+  }
+  if (shelf.items.length) shelves.push(shelf)
+
+  const unitRows = shelves.reduce((sum, s) => sum + s.height, 0)
   const area = canvas * ART_INSET
-  const slot = area / cols
-  // Two lines of caption per slot, so the machine gets less of it than it would
-  // in a composition.
-  const box = slot * 0.6
-  const type = Math.max(8, slot * 0.088)
-  const originX = (canvas - area) / 2
-  const headroom = canvas * 0.05
-  const originY = headroom + (canvas - headroom - rows * slot) / 2
+  const headroom = canvas * 0.055
+  // Caption block under every shelf, sized off the column width so it tracks
+  // the drawing rather than the canvas. It has to clear two lines of type plus
+  // its offset, or a tall machine on the next shelf grows up through it — a
+  // 1x2 reaches a full two units above its own shelf line.
+  const byWidth = area / CATALOG_COLS
+  const capBlock = byWidth * 0.62
+  const byHeight = (canvas - headroom - canvas * 0.03 - shelves.length * capBlock) / unitRows
+  const unit = Math.min(byWidth, byHeight)
+  const cap = Math.min(capBlock, unit * 0.68)
+  const type = Math.max(7.5, unit * 0.125)
+
+  const blockH = unitRows * unit + shelves.length * cap
+  const originY = headroom + (canvas - headroom - blockH) / 2
 
   const cells: Cell[] = []
   const captions: Caption[] = []
-  const instances: Instance[] = registry.map((contraption, index) => {
-    const col = index % cols
-    const row = Math.floor(index / cols)
-    const cx = originX + col * slot + slot / 2
-    const shelf = originY + row * slot + slot * 0.66
-    // Scale a multi-cell machine down so its whole footprint fits the slot.
-    const span = contraption.span ?? [1, 1]
-    const size = box / Math.max(span[0], span[1])
-    const w = size * span[0]
-    const h = size * span[1]
-    const cell: Cell = { x: cx, y: shelf - h / 2, size, w, h, col, row, index, depth: 0 }
-    cells.push(cell)
+  const instances: Instance[] = []
+  let index = 0
+  let y = originY
 
-    const footprint = span[0] === 1 && span[1] === 1 ? '' : `${span[0]}×${span[1]}`
-    captions.push({
-      x: cx,
-      y: shelf + slot * 0.1,
-      text: contraption.label ?? contraption.name,
-      sub: [footprint, contraption.role].filter(Boolean).join(' · '),
-      size: type,
-      rule: box * 0.92,
-    })
+  for (const [row, current] of shelves.entries()) {
+    const usedWidth = current.items.reduce((sum, c) => sum + (c.span ?? [1, 1])[0], 0)
+    // Centre each shelf so a short last row does not hang off to one side.
+    let x = (canvas - usedWidth * unit) / 2
+    const shelfLine = y + current.height * unit
 
-    const period = contraption.period ?? LOOP
-    const cellRng = rng.fork(`catalog:${contraption.name}`)
-    return {
-      contraption,
-      state: contraption.setup({
-        rng: cellRng,
-        size,
+    for (const [col, contraption] of current.items.entries()) {
+      const [cw, ch] = contraption.span ?? [1, 1]
+      const w = cw * unit
+      const h = ch * unit
+      // Machines stand on the shelf line whatever their height.
+      const cell: Cell = {
+        x: x + w / 2,
+        y: shelfLine - h / 2,
+        size: unit,
         w,
         h,
-        theme,
+        col,
+        row,
+        index,
+        depth: 0,
+      }
+      cells.push(cell)
+
+      const footprint = cw === 1 && ch === 1 ? '' : `${cw}×${ch}`
+      captions.push({
+        x: cell.x,
+        y: shelfLine + cap * 0.28,
+        text: contraption.label ?? contraption.name,
+        sub: [footprint, contraption.role].filter(Boolean).join(' · '),
+        size: type,
+        rule: w * 0.9,
+      })
+
+      const period = contraption.period ?? LOOP
+      const cellRng = rng.fork(`catalog:${contraption.name}`)
+      instances.push({
+        contraption,
+        state: contraption.setup({
+          rng: cellRng,
+          size: unit,
+          w,
+          h,
+          theme,
+          cell,
+          color: cellRng.pick(theme.colors),
+        }),
         cell,
-        color: cellRng.pick(theme.colors),
-      }),
-      cell,
-      angle: 0,
-      mirror: 1,
-      // Stagger the phases. At phase 0 most machines sit at a turning point and
-      // the whole sheet reads as frozen, which is the opposite of useful.
-      phase: Math.round((index * 0.137 + 0.21) * period) % period,
-      period,
-      fireFrame: 0,
+        angle: 0,
+        mirror: 1,
+        // Stagger the phases. At phase 0 most machines sit at a turning point
+        // and the whole sheet reads as frozen, which is the opposite of useful.
+        phase: Math.round((index * 0.137 + 0.21) * period) % period,
+        period,
+        fireFrame: 0,
+      })
+
+      x += w
+      index++
     }
-  })
+
+    y = shelfLine + cap
+  }
 
   return {
     options,
