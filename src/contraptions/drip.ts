@@ -3,12 +3,12 @@ import { clipCell, outline, solid } from '../core/draw'
 import { easeInQuad, easeOutQuad, lerp, seg } from '../core/ease'
 
 /**
- * A drop swells at the nozzle until its own weight takes it, falls under
- * gravity, and breaks on the surface below.
+ * A drop swells at the nozzle until its own weight takes it, falls, and breaks
+ * on the pool below.
  *
- * The whole point is the arrival — the drop accelerates all the way down and
- * the splash is the only fast thing in the cell — so this makes a good source
- * for a chain.
+ * The pool is the machine's flat colour mass, which is what lets the cell hold
+ * its own next to the solid-filled machines around it; the drop is the same
+ * colour so you read it as the same substance arriving.
  */
 export const drip = defineContraption({
   name: 'drip',
@@ -18,58 +18,72 @@ export const drip = defineContraption({
   rotations: [0],
   mirror: false,
   // The break on the surface.
-  fireAt: 0.72,
+  fireAt: 0.7,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {
-    const spoutY = -size * 0.34
-    const pool = size * 0.3
+    const bore = size * 0.13
+    const nozzleY = -size * 0.16
+    const surface = size * 0.18
     const full = size * 0.19
 
-    const swelling = seg(u, 0, 0.4)
-    const falling = seg(u, 0.4, 0.72)
-    const splash = seg(u, 0.72, 0.94)
+    const swelling = easeOutQuad(seg(u, 0, 0.38))
+    const falling = easeInQuad(seg(u, 0.38, 0.7))
+    const splash = easeOutQuad(seg(u, 0.7, 0.94))
 
-    // The drop hangs and grows, then necks off and accelerates.
-    const d = u < 0.4 ? full * lerp(0.25, 1, easeOutQuad(swelling)) : full
-    const y = u < 0.4 ? spoutY + d / 2 : lerp(spoutY + d / 2, pool, easeInQuad(falling))
+    const d = u < 0.38 ? full * lerp(0.3, 1, swelling) : full
+    const y = u < 0.38 ? nozzleY + d * 0.4 : lerp(nozzleY + d * 0.4, surface - d * 0.3, falling)
 
     clipCell(p, size, () => {
-      outline(p, ink, weight)
-      // Spout: a stub of pipe with a lip, so the drop has somewhere to come from.
-      p.line(-size / 2, spoutY - size * 0.12, -size * 0.08, spoutY - size * 0.12)
-      p.line(-size / 2, spoutY, -size * 0.1, spoutY)
-      p.arc(-size * 0.09, spoutY - size * 0.06, size * 0.12, size * 0.12, -Math.PI / 2, Math.PI / 2)
+      // The pool, and the dip the impact puts in it.
+      const dip = u >= 0.7 ? size * 0.07 * (1 - splash) : 0
+      p.push()
+      p.noStroke()
+      p.fill(s.color)
+      p.beginShape()
+      p.vertex(-size / 2, surface)
+      p.bezierVertex(-size * 0.2, surface, -size * 0.12, surface + dip, 0, surface + dip)
+      p.bezierVertex(size * 0.12, surface + dip, size * 0.2, surface, size / 2, surface)
+      p.vertex(size / 2, size / 2)
+      p.vertex(-size / 2, size / 2)
+      p.endShape(p.CLOSE)
+      p.pop()
 
-      if (u < 0.72) {
+      outline(p, ink, weight)
+      p.beginShape()
+      p.vertex(-size / 2, surface)
+      p.bezierVertex(-size * 0.2, surface, -size * 0.12, surface + dip, 0, surface + dip)
+      p.bezierVertex(size * 0.12, surface + dip, size * 0.2, surface, size / 2, surface)
+      p.endShape()
+
+      // Supply pipe down from the top edge, necking into the nozzle.
+      p.line(-bore, -size / 2, -bore, nozzleY - size * 0.1)
+      p.line(bore, -size / 2, bore, nozzleY - size * 0.1)
+      p.line(-bore, nozzleY - size * 0.1, -bore * 0.42, nozzleY)
+      p.line(bore, nozzleY - size * 0.1, bore * 0.42, nozzleY)
+      p.line(-bore * 0.42, nozzleY, bore * 0.42, nozzleY)
+
+      if (u < 0.7) {
         solid(p, ink, weight, s.color)
         p.circle(0, y, d)
-        // The thread still connecting it to the lip, while it hangs.
-        if (u < 0.4) {
+        // Still necked onto the nozzle while it hangs.
+        if (u < 0.38) {
           outline(p, ink, weight)
-          p.line(0, spoutY, 0, y - d / 2)
+          p.line(-bore * 0.2, nozzleY, -bore * 0.2, y - d * 0.3)
+          p.line(bore * 0.2, nozzleY, bore * 0.2, y - d * 0.3)
         }
       } else {
-        // Two arcs thrown out sideways, opening and thinning as they go.
+        // Two sheets thrown out sideways, opening and thinning as they go.
         p.push()
         p.stroke(s.color)
-        p.strokeWeight(weight * lerp(1.6, 0.6, splash))
+        p.strokeWeight(weight * lerp(1.8, 0.5, splash))
         p.noFill()
-        const r = full * lerp(0.4, 2.2, easeOutQuad(splash))
-        p.arc(0, pool, r * 2, r * 1.3, Math.PI * 1.15, Math.PI * 1.85)
+        const r = full * lerp(0.5, 2.4, splash)
+        p.arc(0, surface, r * 2, r * 1.5, Math.PI * 1.12, Math.PI * 1.88)
         p.pop()
       }
 
-      // The surface it lands on, dipping under the impact.
       outline(p, ink, weight)
-      const dip = u >= 0.72 ? full * 0.3 * (1 - easeOutQuad(splash)) : 0
-      p.beginShape()
-      p.vertex(-size / 2, pool)
-      p.bezierVertex(-size * 0.18, pool, -size * 0.1, pool + dip, 0, pool + dip)
-      p.bezierVertex(size * 0.1, pool + dip, size * 0.18, pool, size / 2, pool)
-      p.endShape()
       p.line(-size / 2, size / 2, size / 2, size / 2)
-      p.line(-size / 2, pool, -size / 2, size / 2)
-      p.line(size / 2, pool, size / 2, size / 2)
     })
   },
 })
