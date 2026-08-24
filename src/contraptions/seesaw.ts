@@ -6,6 +6,8 @@ export const seesaw = defineContraption({
   name: 'seesaw',
   label: 'Seesaw',
   tags: ['tilt', 'ball'],
+  // Gravity gives this one an up.
+  rotations: [0],
   period: 120,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size, u, ink, weight }) => {

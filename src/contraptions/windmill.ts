@@ -6,6 +6,8 @@ export const windmill = defineContraption({
   name: 'windmill',
   label: 'Windmill',
   tags: ['spin'],
+  // Gravity gives this one an up.
+  rotations: [0],
   role: 'relay',
   mirror: false,
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),

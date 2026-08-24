@@ -9,6 +9,8 @@ export const lamp = defineContraption({
   name: 'lamp',
   label: 'Lamp',
   tags: ['signal'],
+  // Gravity gives this one an up.
+  rotations: [0],
   role: 'sink',
   fireAt: 0,
   mirror: false,

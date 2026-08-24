@@ -7,6 +7,8 @@ export const pendulum = defineContraption({
   name: 'pendulum',
   label: 'Pendulum',
   tags: ['swing'],
+  // Gravity gives this one an up.
+  rotations: [0],
   period: 120,
   mirror: false,
   fireAt: 0.25,

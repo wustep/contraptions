@@ -10,6 +10,8 @@ export const metronome = defineContraption({
   name: 'metronome',
   label: 'Metronome',
   tags: ['swing', 'tick'],
+  // Gravity gives this one an up.
+  rotations: [0],
   period: 120,
   mirror: false,
   fireAt: 0,

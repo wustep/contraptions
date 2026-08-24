@@ -1,23 +1,36 @@
 import { defineContraption } from '../core/define'
 import { floorRail, outline } from '../core/draw'
-import { easeInOutCubic, easeOutQuad, seg } from '../core/ease'
+import { clamp, easeInOutCubic, easeInQuad, seg } from '../core/ease'
 
 /**
  * A row of bars going over in sequence, then rewinding.
  *
- * The geometry is sized so the fallen run fits inside the cell: the last bar's
- * pivot sits at `SPAN/2` and it lies down across `HEIGHT * sin(FALLEN)`, and
- * those have to add up to less than half a cell or the end of the run gets
- * clipped off — which looked like a bug rather than a machine.
+ * Two things make the cascade read as physics rather than as a stagger.
  *
- * Bars stop at 0.9rad rather than flat, because real dominoes come to rest
- * leaning on each other, and the reset runs backwards down the line so the
- * rewind reads as deliberate instead of as a snap.
+ * A toppling bar accelerates: the torque on it grows with sin(theta), so it
+ * creeps off vertical and arrives fast. An ease-out — which is what this used
+ * to do — plays that backwards, and the row looked like it was being lowered
+ * rather than knocked over.
+ *
+ * And a bar does not wait a fixed interval before starting the next one; it
+ * starts it at the instant it touches, when h·sin(theta) covers the gap. That
+ * angle comes out of the geometry, and inverting the fall curve turns it into
+ * the moment the next bar lets go — so changing the count or the spacing
+ * retimes the whole run for free.
+ *
+ * Bars stop leaning on each other rather than flat, which is where real
+ * dominoes come to rest. The last one has nothing to lean on and goes further.
+ * The run is sized so even that one stays inside the cell.
  */
 const SPAN = 0.44
 const HEIGHT = 0.3
 const WIDTH = 0.08
-const FALLEN = 0.9
+/** Where a bar comes to rest against the next. */
+const REST = 0.85
+/** The last bar, with nothing to catch it. */
+const LAST = 1
+/** Fraction of the loop one bar takes to go over. */
+const FALL = 0.13
 
 export const dominoes = defineContraption({
   name: 'dominoes',
@@ -26,30 +39,36 @@ export const dominoes = defineContraption({
   role: 'source',
   // The first bar going over.
   fireAt: 0.02,
-  rotations: [0, 2],
+  // Gravity gives this one an up.
+  rotations: [0],
   setup: ({ color, rng }) => ({ color, count: rng.pick([4, 4, 5]) }),
   draw: (p, s, { size, u, ink, weight }) => {
     const floorY = size * 0.46
     const h = size * HEIGHT
     const w = size * WIDTH
     const span = size * SPAN
+    const gap = span / (s.count - 1)
+
+    // The angle at which a falling bar reaches the next one, and — inverting
+    // the fall curve — how far into its own fall that happens.
+    const contact = Math.asin(clamp(gap / h, 0, 1))
+    const lead = Math.sqrt(clamp(contact / REST, 0, 1))
 
     outline(p, ink, weight)
     floorRail(p, size)
 
     for (let i = 0; i < s.count; i++) {
-      const n = i / (s.count - 1)
-      // Nudge the row left so it is centred once fallen as well as standing.
-      const x = -span / 2 + span * n - size * 0.06
-      // Fall down the line, hold, then stand back up in reverse — the last bar
-      // to go over is the first to come back up. Both windows have to close
-      // before u = 1 or the loop does not join.
-      const drop = easeOutQuad(seg(u, n * 0.42, n * 0.42 + 0.18))
-      const rise = easeInOutCubic(seg(u, 0.72 + (1 - n) * 0.12, 0.86 + (1 - n) * 0.12))
+      const x = -span / 2 + gap * i - size * 0.06
+      const last = i === s.count - 1
+      const start = i * lead * FALL
+      const drop = easeInQuad(seg(u, start, start + FALL))
+      // Stand back up in reverse, the last bar to fall being the first to rise.
+      const riseAt = 0.72 + (s.count - 1 - i) * 0.035
+      const rise = easeInOutCubic(seg(u, riseAt, riseAt + 0.11))
 
       p.push()
       p.translate(x, floorY)
-      p.rotate(FALLEN * drop * (1 - rise))
+      p.rotate((last ? LAST : REST) * drop * (1 - rise))
       outline(p, ink, weight)
       p.fill(s.color)
       p.rect(0, -h / 2, w, h)

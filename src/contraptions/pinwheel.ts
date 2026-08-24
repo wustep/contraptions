@@ -6,6 +6,8 @@ export const pinwheel = defineContraption({
   name: 'pinwheel',
   label: 'Pinwheel',
   tags: ['spin'],
+  // Gravity gives this one an up.
+  rotations: [0],
   role: 'relay',
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size, u, ink, weight }) => {
