@@ -164,6 +164,7 @@ export function createPanel(
     value: number,
     fmt: (v: number) => string,
     apply: (v: number) => void,
+    hint = '',
   ) => {
     const readout = el('b', {}, [fmt(value)])
     const input = el('input', {
@@ -179,8 +180,10 @@ export function createPanel(
       apply(Number(input.value))
     })
     guardWheel(input)
+    const node = field(labelText, input, readout)
+    if (hint) node.title = hint
     return {
-      node: field(labelText, input, readout),
+      node,
       set(v: number) {
         input.value = String(v)
         readout.textContent = fmt(v)
@@ -220,10 +223,23 @@ export function createPanel(
     el('section', { class: 'seed-card' }, [
       el('div', { class: 'section-title' }, ['Seed']),
       seedInput,
-      el('div', { class: 'row' }, [reroll, rollAll]),
-      copy,
+      reroll,
+      el('div', { class: 'row' }, [rollAll, copy]),
     ]),
   )
+
+  // Readouts sit directly under the seed: they are what the roll produced, and
+  // burying them beneath every input meant you never saw the result of your own
+  // action without scrolling.
+  const stat = (label: string) => {
+    const value = el('b', {}, ['—'])
+    return { value, node: el('div', { class: 'stat' }, [value, el('span', {}, [label])]) }
+  }
+  const statCells = stat('cells')
+  const statKinds = stat('kinds')
+  const statWires = stat('wires')
+  const statLoop = stat('loop')
+  root.append(el('div', { class: 'stats' }, [statCells.node, statKinds.node, statWires.node, statLoop.node]))
 
   // Composition
   const composition = section('Composition')
@@ -237,21 +253,23 @@ export function createPanel(
     label: 'Theme',
     onChange: (v) => handlers.onChange({ theme: v }),
   })
-  const themeNote = el('p', { class: 'note' }, [''])
   const layoutBox = createListbox({
     items: layouts.map((l) => ({ value: l.name, label: l.label, glyph: layoutGlyph(l.name) })),
     value: initial.layout,
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const layoutNote = el('p', { class: 'note' }, [''])
-  const res = slider('Resolution', 4, 30, 1, initial.res, String, (v) => handlers.onChange({ res: v }))
-  const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }))
-  const spans = slider('Multi-cell', 0, 1, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }))
-  const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }))
+  const res = slider('Resolution', 4, 30, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
+    'Cells across the piece')
+  const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
+    'Multiplier on the ink weight')
+  const spans = slider('Multi-cell', 0, 1, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
+    'How eagerly machines larger than one cell are placed')
+  const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
+    'How much of the grid is wired into runs that fire in sequence')
   composition.append(
-    field('Theme', themeBox.node), themeNote,
-    field('Layout', layoutBox.node), layoutNote,
+    field('Theme', themeBox.node),
+    field('Layout', layoutBox.node),
     res.node, stroke.node, spans.node, chains.node,
   )
 
@@ -309,7 +327,7 @@ export function createPanel(
   transport.append(
     scrub,
     el('div', { class: 'deck' }, [back, play, fwd]),
-    field('Speed', speedSeg.node),
+    speedSeg.node,
   )
 
   // Export
@@ -319,35 +337,8 @@ export function createPanel(
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
   const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
   save.addEventListener('click', () => handlers.onSave())
-  exportSec.append(scaleSeg.node, save)
+  exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save]))
 
-  // Readouts
-  const stat = (label: string) => {
-    const value = el('b', {}, ['—'])
-    return { value, node: el('div', { class: 'stat' }, [value, el('span', {}, [label])]) }
-  }
-  const statCells = stat('cells')
-  const statKinds = stat('kinds')
-  const statWires = stat('wires')
-  const statLoop = stat('loop')
-  root.append(el('div', { class: 'stats' }, [statCells.node, statKinds.node, statWires.node, statLoop.node]))
-
-  const keys: [string, string][] = [
-    ['space', 'reroll seed'],
-    ['⇧spc', 'roll everything'],
-    ['P', 'pause / play'],
-    ['← →', 'step a frame'],
-    ['⇧← →', 'jump a beat'],
-    ['G', 'grid overlay'],
-    ['S', 'save png'],
-    ['H', 'hide panel'],
-  ]
-  root.append(
-    el('details', { class: 'keys' }, [
-      el('summary', {}, ['Shortcuts']),
-      el('div', { class: 'keys-grid' }, keys.flatMap(([k, v]) => [el('kbd', {}, [k]), el('span', {}, [v])])),
-    ]),
-  )
 
   let scrubbing = false
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
@@ -369,8 +360,6 @@ export function createPanel(
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
       chains.set(comp.options.chains)
-      themeNote.textContent = themes.find((t) => t.name === comp.options.theme)?.note ?? ''
-      layoutNote.textContent = layouts.find((l) => l.name === comp.options.layout)?.note ?? ''
       count.textContent = `${registry.length} kinds · ${themes.length} themes`
       statCells.value.textContent = String(comp.instances.length)
       statKinds.value.textContent = String(comp.used.length)
