@@ -25,11 +25,17 @@ export const newtonsCradle = defineContraption({
     const d = size * 0.26
     const len = h * 0.62
 
-    // The left ball owns the first half of the loop, the right ball the second.
-    // swing() run over a half-window gives out-and-back with the correct dwell
-    // at the top of the arc.
-    const left = u < 0.5 ? -Math.abs(swing(s.table, u * 0.5)) : 0
-    const right = u >= 0.5 ? Math.abs(swing(s.table, (u - 0.5) * 0.5)) : 0
+    // One ball is moving at a time and the other rests dead still at the
+    // bottom, because that is what the collision does — the momentum is handed
+    // straight across the stack rather than shared with it.
+    //
+    // swing() runs amplitude -> 0 -> -amplitude -> 0 -> amplitude over its
+    // argument. Entering it at 0.25 gives the half that starts and ends at the
+    // bottom, which is the excursion a struck ball actually makes: it leaves
+    // the stack, rises, and returns. Entering at 0 instead would start the ball
+    // already at full height, which is what made the handover look like a jump.
+    const right = u < 0.5 ? -swing(s.table, 0.25 + u) : 0
+    const left = u >= 0.5 ? swing(s.table, 0.25 + (u - 0.5)) : 0
 
     outline(p, ink, weight)
     p.line(-w / 2, top, w / 2, top)
