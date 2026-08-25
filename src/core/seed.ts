@@ -1,4 +1,4 @@
-import { defaultOptions, type Options } from './composition'
+import { MODES, defaultOptions, type Options } from './composition'
 import { layouts } from './layouts'
 import { themes } from './themes'
 
@@ -64,6 +64,9 @@ export function readUrl(): Options {
       options[key] = raw === '' ? null : raw
     } else if (key === 'catalog') {
       options.catalog = raw === '1' || raw === 'true'
+    } else if (key === 'mode') {
+      const mode = MODES.find((m) => m.name === raw)
+      if (mode) options.mode = mode.name
     } else {
       ;(options[key] as string) = raw
     }

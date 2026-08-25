@@ -2,7 +2,7 @@ import { registry, allTags } from '../contraptions'
 import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
-import type { Composition, Options } from '../core/composition'
+import { MODES, type Composition, type Mode, type Options } from '../core/composition'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
@@ -229,6 +229,12 @@ export function createPanel(
 
   // Composition
   const composition = section('Composition')
+  const modeBox = createListbox({
+    items: MODES.map((m) => ({ value: m.name, label: m.label })),
+    value: initial.mode,
+    label: 'Mode',
+    onChange: (v) => handlers.onChange({ mode: v as Mode }),
+  })
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -254,6 +260,7 @@ export function createPanel(
   const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
     'How much of the grid is wired into runs that fire in sequence')
   composition.append(
+    field('Mode', modeBox.node),
     field('Theme', themeBox.node),
     field('Layout', layoutBox.node),
     res.node, stroke.node, spans.node, chains.node,
@@ -346,6 +353,7 @@ export function createPanel(
       lastComp = comp
       lastView = view
       seedInput.value = comp.options.seed
+      modeBox.set(comp.options.mode)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
       soloBox.set(comp.options.solo ?? '')

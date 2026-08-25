@@ -36,6 +36,10 @@ src/
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
   contraptions/     one file per machine, plus the registry in index.ts
+  worlds/
+    lanes.ts        where tokens travel inside a cell, shared by both worlds
+    ports/          framework A: machines with typed edge ports, a chain solver
+    tracks/         framework B: a carved loop, balls drawn by the world, reactors
   ui/               the seed explorer
 ```
 
@@ -142,11 +146,42 @@ elevator simply arrives at the top on cue. Two hooks go further:
 run legible at a glance. Only machines whose period is the full loop are
 eligible, so a chain never has to reason about a member firing twice per cycle.
 
+## Modes
+
+Classic mode is the piece described above: independent machines, some of them
+wired into abstract firing chains. Two further modes rebuild the composition
+around machines that actually act on each other. Both keep the contract — every
+machine is still a pure function of its own `u` — and both live under `src/worlds/`.
+
+### Ports (framework A)
+
+A machine declares what crosses each of its edges: a **ball** rolling on the
+floor or falling down the middle, a **shaft** (a gear whose teeth reach the
+edge), or a **push** (a rod, a toppling bar). The composer grows chains by
+depth-first search, keeping a machine only if every out-port it insists on can
+be met by a neighbour, so nothing runs into nothing — chains end in a cup, a
+bell, or an idle gear. Phases are assigned afterwards so a ball leaves one cell
+on the exact frame it enters the next.
+
+Converters are what make it a Rube Goldberg machine: a paddle wheel turns a
+falling ball into rotation, a cam turns rotation into a push, a latch turns a
+push into a released ball.
+
+### Tracks (framework B)
+
+Built from what ports taught. The ball is drawn once, by the world, along a
+track that is carved first as a closed loop — runs zig-zagging down, a bucket
+lift back up — so the piece is a perpetual machine by construction. Machines
+along the track are reactors: each reaches a feeler into the track and is
+knocked by the ball as it passes. With N balls spaced evenly, every reactor sees
+a ball every 1/N of the loop, which is exactly the period the contract wants.
+
 ## Options
 
 | Control | Effect |
 | --- | --- |
 | Seed | Everything random derives from this string |
+| Mode | `classic`, `ports` (tokens handed across edges), `tracks` (balls circulating on a loop) |
 | Theme | 14 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) |
 | Resolution | Cells across the art area |

@@ -1,3 +1,4 @@
+import type p5 from 'p5'
 import { ART_INSET, CANVAS, LOOP } from './constants'
 import { layoutByName } from './layouts'
 import { registry } from '../contraptions'
@@ -5,11 +6,34 @@ import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
+import { buildPorts } from '../worlds/ports/build'
+import { buildTracks } from '../worlds/tracks/build'
+
+/**
+ * Which rules the piece is built under.
+ *
+ *   classic — independent machines, with abstract wired chains between some
+ *   ports   — machines pass real tokens (balls, rotation, pushes) across
+ *             their shared edges; nothing runs into nothing
+ *   tracks  — a closed track is carved first and the balls circulate on it;
+ *             machines are placed along it and react as the balls pass
+ */
+export type Mode = 'classic' | 'ports' | 'tracks'
+
+export const MODES: { name: Mode; label: string; note: string }[] = [
+  { name: 'classic', label: 'Classic', note: 'independent machines, wired' },
+  { name: 'ports', label: 'Ports', note: 'tokens handed across edges' },
+  { name: 'tracks', label: 'Tracks', note: 'balls circulating on a track' },
+]
+
+/** Something drawn over the whole piece, after the machines. */
+export type Overlay = (p: p5, loopFrame: number, ctx: { theme: Theme; weight: (size: number) => number }) => void
 
 export interface Options {
   seed: string
   theme: string
   layout: string
+  mode: Mode
   /** Cells across the art area. */
   res: number
   /** Multiplier on the computed stroke weight. */
@@ -30,6 +54,7 @@ export const defaultOptions: Options = {
   seed: '',
   theme: 'okazz',
   layout: 'grid',
+  mode: 'classic',
   res: 15,
   stroke: 1,
   solo: null,
@@ -66,6 +91,8 @@ export interface Composition {
   header: string | null
   /** Visible links between machines that fire in sequence. */
   wires: Wire[]
+  /** Layers drawn over every machine — the circulating balls in tracks mode. */
+  overlays: Overlay[]
 }
 
 /**
@@ -89,6 +116,8 @@ function pool(options: Options): Contraption<unknown>[] {
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
   if (options.catalog) return buildCatalog(options, canvas)
+  if (options.mode === 'ports') return buildPorts(options, canvas)
+  if (options.mode === 'tracks') return buildTracks(options, canvas)
 
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
@@ -237,6 +266,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     captions: [],
     header: null,
     wires,
+    overlays: [],
   }
 }
 
@@ -378,6 +408,7 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
     captions,
     header: `${registry.length} contraptions · ${theme.label}`,
     wires: [],
+    overlays: [],
   }
 }
 

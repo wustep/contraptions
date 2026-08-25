@@ -19,6 +19,7 @@ export const easeInSine = (x: number) => 1 - Math.cos((x * Math.PI) / 2)
 export const easeOutSine = (x: number) => Math.sin((x * Math.PI) / 2)
 export const easeInQuad = (x: number) => x * x
 export const easeOutQuad = (x: number) => 1 - (1 - x) * (1 - x)
+export const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3)
 export const easeInOutCubic = (x: number) =>
   x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2
 export const easeOutBack = (x: number) => {

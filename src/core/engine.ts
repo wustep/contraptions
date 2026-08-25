@@ -208,6 +208,13 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
 
       drawSignals(p, comp, loopFrame)
 
+      for (const overlay of comp.overlays) {
+        overlay(p, loopFrame, {
+          theme,
+          weight: (size) => strokeWeight(size, theme, comp.options.stroke),
+        })
+      }
+
       if (comp.captions.length) drawCaptions(p, comp)
 
       if (!paused) frame += speed
