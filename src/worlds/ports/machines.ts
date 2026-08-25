@@ -21,12 +21,19 @@ export const GN = 8
 /** Loop fraction to roll across one cell, and to fall through one. */
 const ROLL = 0.1
 const FALL = 0.06
+
 /**
- * Phases are whole frames, so a machine's u can land a hair past its exit time
- * on the very frame the neighbour takes over. Keep drawing that little longer,
- * or the ball loses half of itself for a frame at every seam.
+ * A ball is a quarter of a cell wide, so its leading half is across the edge
+ * before its centre is. Every machine therefore draws its ball from a little
+ * before it arrives to a little after it leaves, extrapolating the path past
+ * the edge; the clip keeps each cell to its own half of the seam.
  */
-const EPS = 0.006
+const LEAD = 0.02
+const TAIL = 0.02
+/** u with the end of the loop folded to just below zero, for the lead-in. */
+const near = (u: number) => (u > 0.5 ? u - 1 : u)
+/** Unclamped progress through [a, b]. */
+const lin = (u: number, a: number, b: number) => (u - a) / (b - a)
 
 type Ctx = { size: number; u: number; ink: string; weight: number; w: number; h: number }
 
@@ -55,6 +62,11 @@ function gear(p: p5, k: number, ink: string, weight: number, angle: number, spok
 
 const gearAngle = (link: Link, u: number) => (link.drive ? link.spin * link.drive(u) : 0) + link.mesh
 
+/** A fall from rest: quadratic to the edge, then on at the exit speed. */
+function drop(from: number, to: number, f: number): number {
+  return f <= 1 ? lerp(from, to, f * f) : to + (f - 1) * 2 * (to - from)
+}
+
 /**
  * A magazine of balls in a tube from the top edge. The bottom ball drops out at
  * `release`; the column shifts down after it and a fresh ball comes in under
@@ -71,8 +83,7 @@ function magazine(p: p5, link: Link, c: Ctx, release: number): void {
 
   const u = c.u
   if (u >= release && u < release + 0.16) {
-    const fall = easeInQuad(seg(u, release, release + FALL))
-    if (u < release + FALL + EPS) ball(p, link, k, c.ink, c.weight, 0, lerp(y0, 0.5, fall))
+    if (u < release + FALL + TAIL) ball(p, link, k, c.ink, c.weight, 0, drop(y0, 0.5, lin(u, release, release + FALL)))
     const shift = easeOutCubic(seg(u, release + 0.02, release + 0.16))
     for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, 0, y0 - D * (i + 1) + D * shift)
   } else {
@@ -119,12 +130,13 @@ export const roll = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       floorLine(p, k, -0.5, 0.5)
       p.line(-0.3 * k, FLOOR * k, -0.3 * k, 0.5 * k)
       p.line(0.3 * k, FLOOR * k, 0.3 * k, 0.5 * k)
-      if (c.u <= ROLL + EPS) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, clamp(c.u / ROLL)), BY)
+      if (u >= -LEAD && u <= ROLL + TAIL) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, u / ROLL), BY)
     })
   },
 })
@@ -139,6 +151,7 @@ export const conveyor = definePort({
   draw: (p, s, c) => {
     const k = c.size
     const r = 0.08
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       floorLine(p, k, -0.3, 0.3)
@@ -156,7 +169,7 @@ export const conveyor = definePort({
       // Ramps in and out so the belt joins the neighbours' floors.
       floorLine(p, k, -0.5, -0.3)
       floorLine(p, k, 0.3, 0.5)
-      if (c.u <= 0.12 + EPS) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, clamp(c.u / 0.12)), BY)
+      if (u >= -LEAD && u <= 0.12 + TAIL) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, u / 0.12), BY)
     })
   },
 })
@@ -171,13 +184,13 @@ export const landing = definePort({
   draw: (p, s, c) => {
     const k = c.size
     const R = 0.22
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       p.line(-0.12 * k, -0.5 * k, -0.12 * k, 0)
       p.arc(R * k, 0, (R + D / 2) * 2 * k, (R + D / 2) * 2 * k, Math.PI / 2, Math.PI)
       floorLine(p, k, R, 0.5)
-      const u = c.u
-      if (u <= 0.09 + EPS) {
+      if (u >= -LEAD && u <= 0.09 + TAIL) {
         let x = 0
         let y = 0
         if (u < 0.03) {
@@ -188,7 +201,7 @@ export const landing = definePort({
           x = R + R * Math.cos(a)
           y = R * Math.sin(a)
         } else {
-          x = lerp(R, 0.5, seg(u, 0.065, 0.09))
+          x = lerp(R, 0.5, lin(u, 0.065, 0.09))
           y = R
         }
         ball(p, s.link, k, c.ink, c.weight, x, y)
@@ -206,18 +219,18 @@ export const dropoff = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       floorLine(p, k, -0.5, -0.06)
       p.line(-0.06 * k, FLOOR * k, -0.06 * k, (FLOOR + 0.08) * k)
       p.line(-0.32 * k, FLOOR * k, -0.32 * k, 0.5 * k)
-      const u = c.u
-      if (u <= 0.09 + EPS) {
+      if (u >= -LEAD && u <= 0.09 + TAIL) {
         if (u < 0.044) {
           ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, -0.06, u / 0.044), BY)
         } else {
-          const f = seg(u, 0.044, 0.09)
-          ball(p, s.link, k, c.ink, c.weight, lerp(-0.06, 0, f), lerp(BY, 0.5, easeInQuad(f)))
+          const f = lin(u, 0.044, 0.09)
+          ball(p, s.link, k, c.ink, c.weight, lerp(-0.06, 0, Math.min(1, f)), drop(BY, 0.5, f))
         }
       }
     })
@@ -233,13 +246,14 @@ export const fall = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       p.line(-0.17 * k, -0.5 * k, -0.17 * k, 0.5 * k)
       p.line(0.17 * k, -0.5 * k, 0.17 * k, 0.5 * k)
       p.line(-0.24 * k, 0, -0.17 * k, 0)
       p.line(0.17 * k, 0, 0.24 * k, 0)
-      if (c.u <= FALL + EPS) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, clamp(c.u / FALL)))
+      if (u >= -LEAD && u <= FALL + TAIL) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, u / FALL))
     })
   },
 })
@@ -260,7 +274,7 @@ export const lift = definePort({
     const k = c.size
     const lowY = 0.5 + BY
     const highY = -0.5 + BY
-    const u = c.u
+    const u = near(c.u)
     let bx = 0
     let by = lowY
     let carY = lowY
@@ -269,8 +283,8 @@ export const lift = definePort({
     } else if (u < 0.28) {
       by = lerp(lowY, highY, easeInOutCubic(seg(u, 0.05, 0.28)))
       carY = by
-    } else if (u < 0.34) {
-      bx = lerp(0, 0.5, seg(u, 0.28, 0.34))
+    } else if (u <= 0.34 + TAIL) {
+      bx = lerp(0, 0.5, lin(u, 0.28, 0.34))
       by = highY
       carY = highY
     } else {
@@ -285,7 +299,7 @@ export const lift = definePort({
       floorLine(p, k, 0.2, 0.5, -0.5 + FLOOR)
       p.circle(0, -0.9 * k, 0.14 * k)
       p.line(0, -0.83 * k, 0, (carY - 0.2) * k)
-      if (u <= 0.34 + EPS) ball(p, s.link, k, c.ink, c.weight, bx, by)
+      if (u >= -LEAD && u <= 0.34 + TAIL) ball(p, s.link, k, c.ink, c.weight, bx, by)
       // The car is an open frame, so the ball shows through it.
       outline(p, c.ink, c.weight)
       p.rect(0, (carY - 0.075) * k, 0.36 * k, 0.25 * k)
@@ -323,8 +337,9 @@ export const paddle = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
-      if (c.u <= 0.1 + EPS) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, clamp(c.u / 0.1)))
+      if (u >= -LEAD && u <= 0.1 + TAIL) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, u / 0.1))
     })
     gear(p, k, c.ink, c.weight, gearAngle(s.link, c.u), 0)
     p.push()
@@ -410,8 +425,8 @@ export const cam = definePort({
     let delta = (pin - CAM_A) % (Math.PI * 2)
     if (delta > Math.PI) delta -= Math.PI * 2
     if (delta < -Math.PI) delta += Math.PI * 2
-    const near = clamp(1 - Math.abs(delta) / 0.45)
-    const ext = 0.12 * near * near * (3 - 2 * near)
+    const nearPin = clamp(1 - Math.abs(delta) / 0.45)
+    const ext = 0.12 * nearPin * nearPin * (3 - 2 * nearPin)
 
     gear(p, k, c.ink, c.weight, gearAngle(link, c.u))
     solid(p, c.ink, c.weight, s.color)
@@ -452,12 +467,12 @@ export const dominoes = definePort({
       const x = -0.38 + s.gap * i
       const last = i === s.count - 1
       const start = i * s.lead * DOM_FALL
-      const drop = easeInQuad(seg(c.u, start, start + DOM_FALL))
+      const fallen = easeInQuad(seg(c.u, start, start + DOM_FALL))
       const riseAt = 0.62 + (s.count - 1 - i) * 0.03
       const rise = easeInOutCubic(seg(c.u, riseAt, riseAt + 0.1))
       p.push()
       p.translate(x * k, FLOOR * k)
-      p.rotate((last ? 1 : DOM_REST) * drop * (1 - rise))
+      p.rotate((last ? 1 : DOM_REST) * fallen * (1 - rise))
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, (-DOM_H / 2) * k, DOM_W * k, DOM_H * k)
       p.pop()
@@ -535,18 +550,19 @@ export const cup = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const u = c.u
+    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       if (s.link.inSide === 'W') {
         floorLine(p, k, -0.5, -0.22)
-        if (u < 0.03) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, -0.28, u / 0.03), BY)
-        else if (u < 0.07) {
+        if (u >= -LEAD && u < 0.03) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, -0.28, u / 0.03), BY)
+        else if (u >= 0.03 && u < 0.07) {
           const f = seg(u, 0.03, 0.07)
           ball(p, s.link, k, c.ink, c.weight, lerp(-0.28, -0.05, f), lerp(BY, 0.18, f))
         }
-      } else if (u < 0.045) {
-        ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.16, easeInQuad(u / 0.045)))
+      } else if (u >= -LEAD && u < 0.045) {
+        const f = u / 0.045
+        ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.16, f < 0 ? f : 1 - (1 - f) * (1 - f)))
       }
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, 0.19 * k, 0.44 * k, 0.3 * k)

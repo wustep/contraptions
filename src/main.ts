@@ -154,6 +154,7 @@ if (import.meta.env.DEV) {
     engine,
     options: () => options,
     view: () => view,
+    comp: () => comp,
     canvas: () => host.querySelector('canvas') as HTMLCanvasElement,
   }
 }
