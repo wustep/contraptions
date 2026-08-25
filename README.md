@@ -18,7 +18,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-37 machines, 14 palettes, 4 layouts.
+36 machines, 14 palettes, 4 layouts.
 
 ## How it fits together
 
@@ -92,7 +92,6 @@ A contraption can declare a footprint larger than one cell:
 ```ts
 span: [3, 1]     // pendulum-wave: three cells wide, one tall
 span: [2, 2]     // gantry, marble-run, orrery
-span: [1, 2]     // tipping-bucket
 ```
 
 Placement runs in two passes. Spanning machines go first and claim contiguous
@@ -100,7 +99,7 @@ blocks of equal-sized free cells; single-cell machines then fill the leftovers.
 A layout whose rows do not line up (`bricks`) fails the block check and quietly
 gets all singles, which is the right fallback rather than a special case.
 
-Machines that depend on gravity — the crane, the chute, the tipping bucket — set
+Machines that depend on gravity — the crane, the chute, the drip — set
 `rotations: [0]` so they stay the right way up.
 
 ## Wired chains

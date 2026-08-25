@@ -16,14 +16,16 @@ export const marbleRun = defineContraption({
   tags: ['track', 'ball'],
   span: [2, 2],
   rotations: [0],
-  setup: ({ color, rng }) => ({ color, ramps: rng.pick([3, 3, 4]) }),
+  setup: ({ color, rng }) => ({ color, ramps: rng.pick([3, 4, 4]) }),
   draw: (p, s, { w, h, size, u, ink, weight }) => {
     const n = s.ramps
     const d = size * 0.4
     const edge = w / 2 - weight
     const travel = edge - d * 0.55
     const pitch = h / (n + 0.5)
-    const tilt = pitch * 0.44
+    // Steep enough that the switchback fills its square instead of reading as
+    // two long horizontals with air between them.
+    const tilt = pitch * 0.62
     const lip = d * 0.75
     /** Mid-height of ramp i. */
     const mid = (i: number) => -h / 2 + pitch * (i + 0.55)

@@ -4,3 +4,4 @@ dist
 *.log
 out/
 .vercel
+*.mp4

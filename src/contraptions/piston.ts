@@ -22,6 +22,9 @@ export const piston = defineContraption({
     outline(p, ink, weight)
     p.line(-size * 0.1, -block / 2, size / 2, -block / 2)
     p.line(-size * 0.1, block / 2, size / 2, block / 2)
+    // Capping the far end closes the guide into a cylinder, so the block
+    // reads as sliding inside a housing rather than floating between rails.
+    p.line(size / 2, -block / 2, size / 2, block / 2)
     p.circle(cx, 0, r * 2)
     p.line(px, py, bx, 0)
 
