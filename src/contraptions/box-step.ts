@@ -14,7 +14,9 @@ export const boxStep = defineContraption({
     const box = size / 3
     const reach = size / 2 - box / 2
     const phase = s.dir > 0 ? u : 1 - u
-    const leg = Math.floor(phase * 4)
+    // phase hits exactly 1 at the wrap when walking mirrored, and floor(4)
+    // would name a fifth leg — one flickered frame in the wrong corner.
+    const leg = Math.floor(phase * 4) % 4
     // Move for the first two thirds of each leg, then rest in the corner.
     const local = easeInOutSine(seg(phase * 4 - leg, 0, 0.66))
 

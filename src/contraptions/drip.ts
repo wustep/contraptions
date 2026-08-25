@@ -63,14 +63,15 @@ export const drip = defineContraption({
       p.line(-bore * 0.42, nozzleY, bore * 0.42, nozzleY)
 
       if (u < 0.7) {
-        solid(p, ink, weight, s.color)
-        p.circle(0, y, d)
-        // Still necked onto the nozzle while it hangs.
+        // Neck first, drop second, so the drop hangs in front of the nozzle
+        // rather than reading as caught behind it.
         if (u < 0.38) {
           outline(p, ink, weight)
           p.line(-bore * 0.2, nozzleY, -bore * 0.2, y - d * 0.3)
           p.line(bore * 0.2, nozzleY, bore * 0.2, y - d * 0.3)
         }
+        solid(p, ink, weight, s.color)
+        p.circle(0, y, d)
       } else {
         // Two droplets thrown out sideways, arcing up and shrinking — the
         // splash stays the same substance as the pool instead of a loose wire.
