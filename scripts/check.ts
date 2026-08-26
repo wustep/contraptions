@@ -12,6 +12,8 @@ import { LOOP } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
 import { registry } from '../src/contraptions'
 import type { Instance } from '../src/core/types'
+import { portMachines } from '../src/worlds/ports/machines'
+import type { Link } from '../src/worlds/ports/types'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -59,6 +61,28 @@ for (const role of ['source', 'relay', 'sink'] as const) {
   check(`the ${role} pool is not empty`, registry.some((c) => c.role === role))
 }
 
+/**
+ * Every machine owns its footprint outright; a span must not land on a cell
+ * another machine already claimed.
+ */
+function overlaps(comp: ReturnType<typeof build>): boolean {
+  const occupied = new Set<string>()
+  for (const inst of comp.instances) {
+    const { cell } = inst
+    for (let a = 0; a < Math.round(cell.w / cell.size); a++) {
+      for (let b = 0; b < Math.round(cell.h / cell.size); b++) {
+        const k = `${Math.round(cell.x - cell.w / 2 + (a + 0.5) * cell.size)}:${Math.round(cell.y - cell.h / 2 + (b + 0.5) * cell.size)}`
+        if (occupied.has(k)) return true
+        occupied.add(k)
+      }
+    }
+  }
+  return false
+}
+
+const fingerprint = (c: ReturnType<typeof build>) =>
+  JSON.stringify(c.instances.map((i) => [i.contraption.name, i.phase, i.angle, i.cell.x, i.cell.y]))
+
 console.log('\ncomposition')
 for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
   for (const res of [8, 12, 15, 20]) {
@@ -66,28 +90,90 @@ for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
     const comp = build(options, 900)
     const label = `${layout}@${res}`
     check(`${label} places machines`, comp.instances.length > 0)
-
-    // Every machine owns its footprint outright; a span must not land on a
-    // cell another machine already claimed.
-    const occupied = new Set<string>()
-    let overlap = false
-    for (const inst of comp.instances) {
-      const { cell } = inst
-      for (let a = 0; a < Math.round(cell.w / cell.size); a++) {
-        for (let b = 0; b < Math.round(cell.h / cell.size); b++) {
-          const k = `${Math.round(cell.x - cell.w / 2 + (a + 0.5) * cell.size)}:${Math.round(cell.y - cell.h / 2 + (b + 0.5) * cell.size)}`
-          if (occupied.has(k)) overlap = true
-          occupied.add(k)
-        }
-      }
-    }
-    check(`${label} has no overlapping machines`, !overlap)
-
-    const fingerprint = (c: ReturnType<typeof build>) =>
-      JSON.stringify(c.instances.map((i) => [i.contraption.name, i.phase, i.angle, i.cell.x, i.cell.y]))
+    check(`${label} has no overlapping machines`, !overlaps(comp))
     check(`${label} rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
   }
 }
+
+console.log('\nextremes')
+for (const mode of ['classic', 'ports', 'tracks'] as const) {
+  for (const res of [1, 2, 50]) {
+    let ok = true
+    let count = 0
+    try {
+      count = build({ ...defaultOptions, seed: 'edge', mode, res, spans: 3, chains: 3 }, 900).instances.length
+    } catch {
+      ok = false
+    }
+    check(`${mode}@${res} with the dials at full builds`, ok, `${count} machines`)
+  }
+}
+
+console.log('\nworlds')
+for (const mode of ['ports', 'tracks'] as const) {
+  for (const res of [8, 12, 16]) {
+    const options = { ...defaultOptions, seed: `${mode}-${res}`, mode, res, chains: 0.8 }
+    const comp = build(options, 900)
+    const label = `${mode}@${res}`
+    check(`${label} places machines`, comp.instances.length > 0)
+    check(`${label} has no overlapping machines`, !overlaps(comp))
+    check(`${label} rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
+    check(`${label} keeps every period a divisor of the loop`, comp.instances.every((i) => comp.loop % i.period === 0))
+  }
+}
+
+// In ports mode nothing may run into nothing: every out-port a machine
+// insists on has a neighbour wired to it, and every ball chain ends in a sink.
+const ports = build({ ...defaultOptions, seed: 'ports', mode: 'ports', res: 14, chains: 1 }, 900)
+const byName = new Map(portMachines.map((m) => [m.name, m]))
+check(
+  'ports: every required out-port is wired',
+  ports.instances.every((i) => {
+    const m = byName.get(i.contraption.name)!
+    const link = (i.state as { link: Link }).link
+    return m.pickOne ? link.outSides.length === 1 : link.outSides.length === m.outs.length
+  }),
+)
+check('ports: chains reach converters', ['paddle', 'cam', 'latch'].some((n) => ports.used.includes(n)), ports.used.join(','))
+check('ports: chains end in sinks', ['cup', 'bell'].every((n) => ports.used.includes(n)))
+// A gear train is padding: never more than three plain gears in a row.
+{
+  const gearAt = new Map(ports.instances.filter((i) => i.contraption.name === 'gear').map((i) => [`${i.cell.col}:${i.cell.row}`, i]))
+  let longest = 0
+  for (const i of gearAt.values()) {
+    for (const [dx, dy] of [[1, 0], [0, 1]] as const) {
+      let run = 1
+      let c = i.cell.col + dx
+      let r = i.cell.row + dy
+      while (gearAt.has(`${c}:${r}`)) {
+        run++
+        c += dx
+        r += dy
+      }
+      longest = Math.max(longest, run)
+    }
+  }
+  check('ports: gear trains stay short', longest <= 3, `longest ${longest}`)
+}
+
+console.log('\nmode catalogs')
+for (const mode of ['classic', 'ports', 'tracks'] as const) {
+  const sheet = build({ ...defaultOptions, seed: 'sheet', mode, catalog: true }, 900)
+  check(`${mode} catalog has machines`, sheet.instances.length > 0)
+  check(`${mode} catalog captions every machine`, sheet.captions.length === sheet.instances.length)
+  check(`${mode} catalog loop holds every period`, sheet.instances.every((i) => sheet.loop % i.period === 0))
+}
+check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'ports', catalog: true }, 900).used[0] !== build({ ...defaultOptions, seed: 'sheet', mode: 'classic', catalog: true }, 900).used[0])
+
+// In tracks mode every region's loop closes: one lift top per region, and the
+// balls are drawn by exactly one overlay per region.
+const tracks = build({ ...defaultOptions, seed: 'tracks', mode: 'tracks', res: 14 }, 900)
+const liftTops = tracks.instances.filter((i) => (i.state as { kind?: string }).kind === 'liftOut').length
+check('tracks: one closed loop per region', liftTops === tracks.overlays.length && liftTops > 0, `${liftTops} lifts, ${tracks.overlays.length} overlays`)
+check(
+  'tracks: every reactor fires at least twice a loop',
+  tracks.instances.filter((i) => i.contraption.name.startsWith('react-')).every((i) => i.period <= tracks.loop / 2),
+)
 
 console.log('\nchains')
 const wired = build({ ...defaultOptions, seed: 'chains', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)

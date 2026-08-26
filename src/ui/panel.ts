@@ -2,7 +2,7 @@ import { registry, allTags } from '../contraptions'
 import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
-import type { Composition, Options } from '../core/composition'
+import { MODES, type Composition, type Mode, type Options } from '../core/composition'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
@@ -229,6 +229,12 @@ export function createPanel(
 
   // Composition
   const composition = section('Composition')
+  const modeBox = createListbox({
+    items: MODES.map((m) => ({ value: m.name, label: m.label })),
+    value: initial.mode,
+    label: 'Mode',
+    onChange: (v) => handlers.onChange({ mode: v as Mode }),
+  })
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -245,17 +251,19 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const res = slider('Resolution', 4, 30, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
+  const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
     'Cells across the piece')
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
-  const spans = slider('Multi-cell', 0, 1, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
-    'How eagerly machines larger than one cell are placed')
-  const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
-    'How much of the grid is wired into runs that fire in sequence')
+  const spans = slider('Multi-cell', 0, 3, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
+    'How eagerly machines larger than one cell are placed; past 1 they crowd in')
+  const chains = slider('Wired chains', 0, 3, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
+    'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
+  const layoutField = field('Layout', layoutBox.node)
   composition.append(
+    field('Mode', modeBox.node),
     field('Theme', themeBox.node),
-    field('Layout', layoutBox.node),
+    layoutField,
     res.node, stroke.node, spans.node, chains.node,
   )
 
@@ -280,10 +288,22 @@ export function createPanel(
   catalog.addEventListener('click', () => handlers.onChange({ catalog: !(lastComp?.options.catalog ?? initial.catalog) }))
   const gridBtn = el('button', {}, ['Grid'])
   gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
-  explore.append(
-    el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)]),
-    el('div', { class: 'row' }, [catalog, gridBtn]),
-  )
+  const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
+  explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
+
+  /**
+   * The worlds build on a plain grid, place no multi-cell machines from the
+   * classic set, and have their own machine lists — so the controls for those
+   * things are hidden rather than left to do nothing. Ports keeps the chains
+   * dial, which sets how many chains it grows.
+   */
+  const showFor = (mode: Mode) => {
+    const classic = mode === 'classic'
+    layoutField.hidden = !classic
+    spans.node.hidden = !classic
+    chains.node.hidden = mode === 'tracks'
+    poolRow.hidden = !classic
+  }
 
   // Transport
   const transport = section('Transport', 'transport')
@@ -346,6 +366,8 @@ export function createPanel(
       lastComp = comp
       lastView = view
       seedInput.value = comp.options.seed
+      modeBox.set(comp.options.mode)
+      showFor(comp.options.mode)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
       soloBox.set(comp.options.solo ?? '')

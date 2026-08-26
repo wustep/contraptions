@@ -90,7 +90,7 @@ const panel = createPanel(panelRoot, options, view, {
   onChange: apply,
   onView: applyView,
   onReroll: () => apply({ seed: randomSeed() }),
-  onRollAll: () => apply(rollOptions()),
+  onRollAll: () => apply(rollOptions(options)),
   onSave: save,
   onScrub: (u) => engine.setProgress(u),
   onStep: step,
@@ -119,7 +119,7 @@ window.addEventListener('keydown', (e) => {
     case ' ':
     case 'enter':
       e.preventDefault()
-      if (e.shiftKey) apply(rollOptions())
+      if (e.shiftKey) apply(rollOptions(options))
       else apply({ seed: randomSeed() })
       break
     case 'p':
@@ -154,6 +154,7 @@ if (import.meta.env.DEV) {
     engine,
     options: () => options,
     view: () => view,
+    comp: () => comp,
     canvas: () => host.querySelector('canvas') as HTMLCanvasElement,
   }
 }
