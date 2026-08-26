@@ -117,18 +117,49 @@ check(
   ports.instances.every((i) => {
     const m = byName.get(i.contraption.name)!
     const link = (i.state as { link: Link }).link
-    return m.outsOptional || link.outSides.length === m.outs.length
+    return m.pickOne ? link.outSides.length === 1 : link.outSides.length === m.outs.length
   }),
 )
 check('ports: chains reach converters', ['paddle', 'cam', 'latch'].some((n) => ports.used.includes(n)), ports.used.join(','))
 check('ports: chains end in sinks', ['cup', 'bell'].every((n) => ports.used.includes(n)))
+// A gear train is padding: never more than three plain gears in a row.
+{
+  const gearAt = new Map(ports.instances.filter((i) => i.contraption.name === 'gear').map((i) => [`${i.cell.col}:${i.cell.row}`, i]))
+  let longest = 0
+  for (const i of gearAt.values()) {
+    for (const [dx, dy] of [[1, 0], [0, 1]] as const) {
+      let run = 1
+      let c = i.cell.col + dx
+      let r = i.cell.row + dy
+      while (gearAt.has(`${c}:${r}`)) {
+        run++
+        c += dx
+        r += dy
+      }
+      longest = Math.max(longest, run)
+    }
+  }
+  check('ports: gear trains stay short', longest <= 3, `longest ${longest}`)
+}
+
+console.log('\nmode catalogs')
+for (const mode of ['classic', 'ports', 'tracks'] as const) {
+  const sheet = build({ ...defaultOptions, seed: 'sheet', mode, catalog: true }, 900)
+  check(`${mode} catalog has machines`, sheet.instances.length > 0)
+  check(`${mode} catalog captions every machine`, sheet.captions.length === sheet.instances.length)
+  check(`${mode} catalog loop holds every period`, sheet.instances.every((i) => sheet.loop % i.period === 0))
+}
+check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'ports', catalog: true }, 900).used[0] !== build({ ...defaultOptions, seed: 'sheet', mode: 'classic', catalog: true }, 900).used[0])
 
 // In tracks mode every region's loop closes: one lift top per region, and the
 // balls are drawn by exactly one overlay per region.
 const tracks = build({ ...defaultOptions, seed: 'tracks', mode: 'tracks', res: 14 }, 900)
-const liftTops = tracks.instances.filter((i) => i.contraption.name === 'track-lift-out').length
+const liftTops = tracks.instances.filter((i) => (i.state as { kind?: string }).kind === 'liftOut').length
 check('tracks: one closed loop per region', liftTops === tracks.overlays.length && liftTops > 0, `${liftTops} lifts, ${tracks.overlays.length} overlays`)
-check('tracks: reactors fire on the ball interval', tracks.instances.filter((i) => i.contraption.name.startsWith('react-')).every((i) => i.period < tracks.loop))
+check(
+  'tracks: every reactor fires at least twice a loop',
+  tracks.instances.filter((i) => i.contraption.name.startsWith('react-')).every((i) => i.period <= tracks.loop / 2),
+)
 
 console.log('\nchains')
 const wired = build({ ...defaultOptions, seed: 'chains', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)

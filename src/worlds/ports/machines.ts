@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { clipBox, outline, solid, teeth } from '../../core/draw'
 import { clamp, easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BY, D, FLOOR, PY } from '../lanes'
+import { ARC_R, ARC_T, ARC_WALL, BY, D, FALL, FALL_V, FLOOR, LIFT_W, PY, ROLL, ROLL_V, TW } from '../lanes'
 import { definePort, type Link, type PortMachine } from './types'
 
 /**
@@ -9,42 +9,53 @@ import { definePort, type Link, type PortMachine } from './types'
  *
  * Lanes are fixed per kind so any out-port meets any in-port of the same kind
  * on the shared edge without negotiation:
- *   ball, sideways  — rolling on the floor, centre at BY
- *   ball, vertical  — falling down the middle, x = 0
+ *   ball, sideways  — rolling on the floor, centre at BY, at ROLL_V
+ *   ball, vertical  — falling down the middle, x = 0, at FALL_V
  *   push            — a rod or a toppling bar at PY
  *   shaft           — a gear centred in the cell whose teeth reach the edge
+ *
+ * A ball is drawn by whichever cell it is in, and a ball is a quarter of a
+ * cell wide, so each machine draws its ball from a little before it arrives to
+ * a little after it leaves, extending the path straight past the edge. The
+ * clip keeps each cell to its own side of the seam, and because both sides
+ * move the ball at the same speed there, the two halves line up.
  */
-export { BY, D, FLOOR, PY }
 const GR = 0.42
 const GT = 0.08
 export const GN = 8
-/** Loop fraction to roll across one cell, and to fall through one. */
-const ROLL = 0.1
-const FALL = 0.06
-
-/**
- * A ball is a quarter of a cell wide, so its leading half is across the edge
- * before its centre is. Every machine therefore draws its ball from a little
- * before it arrives to a little after it leaves, extrapolating the path past
- * the edge; the clip keeps each cell to its own half of the seam.
- */
 const LEAD = 0.02
 const TAIL = 0.02
+
 /** u with the end of the loop folded to just below zero, for the lead-in. */
 const near = (u: number) => (u > 0.5 ? u - 1 : u)
 /** Unclamped progress through [a, b]. */
 const lin = (u: number, a: number, b: number) => (u - a) / (b - a)
 
-type Ctx = { size: number; u: number; ink: string; weight: number; w: number; h: number }
+/**
+ * A fall from rest that leaves the edge at FALL_V: a parabola over `dist`
+ * cells, then straight on at the exit speed. Returns [time it takes, y at f].
+ */
+const dropTime = (dist: number) => (2 * dist) / FALL_V
+const drop = (from: number, dist: number, f: number) =>
+  f <= 1 ? from + dist * f * f : from + dist + 2 * dist * (f - 1)
 
-function ball(p: p5, link: Link, k: number, ink: string, weight: number, x: number, y: number): void {
+type Ctx = { size: number; u: number; ink: string; weight: number; w: number; h: number }
+type Pt = [number, number]
+
+function ball(p: p5, link: Link, k: number, ink: string, weight: number, [x, y]: Pt): void {
   solid(p, ink, weight, link.ball)
   p.circle(x * k, y * k, D * k)
 }
 
-function floorLine(p: p5, k: number, x1: number, x2: number, y = FLOOR): void {
-  p.line(x1 * k, y * k, x2 * k, y * k)
+/** Draw the ball along `path(u)` while u is inside [-LEAD, tOut + TAIL]. */
+function rolling(p: p5, s: { link: Link }, c: Ctx, tOut: number, path: (u: number) => Pt): void {
+  const u = near(c.u)
+  if (u >= -LEAD && u <= tOut + TAIL) ball(p, s.link, c.size, c.ink, c.weight, path(u))
 }
+
+const floorLine = (p: p5, k: number, x1: number, x2: number, y = FLOOR) =>
+  p.line(x1 * k, y * k, x2 * k, y * k)
+const wall = (p: p5, k: number, x: number, y1: number, y2: number) => p.line(x * k, y1 * k, x * k, y2 * k)
 
 /** A gear at the cell centre, turned to `angle`. */
 function gear(p: p5, k: number, ink: string, weight: number, angle: number, spokes = 3): void {
@@ -62,32 +73,35 @@ function gear(p: p5, k: number, ink: string, weight: number, angle: number, spok
 
 const gearAngle = (link: Link, u: number) => (link.drive ? link.spin * link.drive(u) : 0) + link.mesh
 
-/** A fall from rest: quadratic to the edge, then on at the exit speed. */
-function drop(from: number, to: number, f: number): number {
-  return f <= 1 ? lerp(from, to, f * f) : to + (f - 1) * 2 * (to - from)
-}
+/** Stacked balls resting in a tube from the top edge. */
+const MAG_Y = -0.02
+const MAG_T = dropTime(0.5 - MAG_Y)
 
 /**
- * A magazine of balls in a tube from the top edge. The bottom ball drops out at
- * `release`; the column shifts down after it and a fresh ball comes in under
- * the clip, so the supply never visibly pops into existence.
+ * A hopper of balls: a funnel from the top edge necking into a short tube.
+ * The bottom ball drops out at `release`; the column shifts down after it and
+ * a fresh ball comes in under the clip, so the supply never visibly pops into
+ * existence.
  */
 function magazine(p: p5, link: Link, c: Ctx, release: number): void {
   const k = c.size
-  const y0 = -0.02
   outline(p, c.ink, c.weight)
-  p.line(-0.16 * k, -0.5 * k, -0.16 * k, 0.1 * k)
-  p.line(0.16 * k, -0.5 * k, 0.16 * k, 0.1 * k)
-  p.line(-0.16 * k, 0.1 * k, -0.07 * k, 0.1 * k)
-  p.line(0.16 * k, 0.1 * k, 0.07 * k, 0.1 * k)
+  p.line(-0.34 * k, -0.5 * k, -TW * k, -0.14 * k)
+  p.line(0.34 * k, -0.5 * k, TW * k, -0.14 * k)
+  wall(p, k, -TW, -0.14, 0.1)
+  wall(p, k, TW, -0.14, 0.1)
+  p.line(-TW * k, 0.1 * k, -0.06 * k, 0.1 * k)
+  p.line(TW * k, 0.1 * k, 0.06 * k, 0.1 * k)
 
   const u = c.u
   if (u >= release && u < release + 0.16) {
-    if (u < release + FALL + TAIL) ball(p, link, k, c.ink, c.weight, 0, drop(y0, 0.5, lin(u, release, release + FALL)))
+    if (u < release + MAG_T + TAIL) {
+      ball(p, link, k, c.ink, c.weight, [0, drop(MAG_Y, 0.5 - MAG_Y, lin(u, release, release + MAG_T))])
+    }
     const shift = easeOutCubic(seg(u, release + 0.02, release + 0.16))
-    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, 0, y0 - D * (i + 1) + D * shift)
+    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, [0, MAG_Y - D * (i + 1) + D * shift])
   } else {
-    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, 0, y0 - D * i)
+    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, [0, MAG_Y - D * i])
   }
 }
 
@@ -97,27 +111,27 @@ export const hopper = definePort({
   label: 'Hopper',
   source: 3,
   ins: [],
-  outs: [{ side: 'S', kind: 'ball', t: FALL }],
+  outs: [{ side: 'S', kind: 'ball', t: MAG_T }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => clipBox(p, c.w, c.h, () => magazine(p, s.link, c, 0)),
 })
 
-/** A magazine held shut by a latch; a push from the side trips it. */
+/** A magazine held shut by a catch; a push from the side trips it. */
 export const latch = definePort({
   name: 'latch',
   label: 'Latch',
   ins: [{ side: 'W', kind: 'push', t: 0 }],
-  outs: [{ side: 'S', kind: 'ball', t: 0.03 + FALL }],
+  outs: [{ side: 'S', kind: 'ball', t: 0.03 + MAG_T }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
     // The catch slides in under the push and springs back once the ball is away.
-    const slide = 0.08 * (easeOutCubic(seg(c.u, 0, 0.04)) - easeInOutCubic(seg(c.u, 0.2, 0.35)))
+    const slide = 0.09 * (easeOutCubic(seg(c.u, 0, 0.04)) - easeInOutCubic(seg(c.u, 0.2, 0.35)))
     clipBox(p, c.w, c.h, () => magazine(p, s.link, c, 0.03))
     solid(p, c.ink, c.weight, s.color)
-    p.rect((-0.27 + slide) * k, PY * k, 0.2 * k, 0.07 * k)
+    p.rect((-0.29 + slide) * k, PY * k, 0.2 * k, 0.07 * k)
     outline(p, c.ink, c.weight)
-    p.line(-0.17 * k, (PY + 0.035) * k, -0.17 * k, 0.1 * k)
+    p.line((-0.19 + slide) * k, (PY + 0.035) * k, (-0.19 + slide) * k, 0.1 * k)
   },
 })
 
@@ -130,13 +144,11 @@ export const roll = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       floorLine(p, k, -0.5, 0.5)
-      p.line(-0.3 * k, FLOOR * k, -0.3 * k, 0.5 * k)
-      p.line(0.3 * k, FLOOR * k, 0.3 * k, 0.5 * k)
-      if (u >= -LEAD && u <= ROLL + TAIL) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, u / ROLL), BY)
+      wall(p, k, 0, FLOOR, 0.5)
+      rolling(p, s, c, ROLL, (u) => [-0.5 + u * ROLL_V, BY])
     })
   },
 })
@@ -146,12 +158,11 @@ export const conveyor = definePort({
   name: 'conveyor',
   label: 'Conveyor',
   ins: [{ side: 'W', kind: 'ball', t: 0 }],
-  outs: [{ side: 'E', kind: 'ball', t: 0.12 }],
+  outs: [{ side: 'E', kind: 'ball', t: ROLL }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
     const r = 0.08
-    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
       floorLine(p, k, -0.3, 0.3)
@@ -159,80 +170,75 @@ export const conveyor = definePort({
       for (const x of [-0.3, 0.3]) {
         p.push()
         p.translate(x * k, (FLOOR + r) * k)
-        p.rotate(c.u * Math.PI * 2 * 6)
+        p.rotate(c.u * Math.PI * 2 * 3)
         outline(p, c.ink, c.weight)
         p.circle(0, 0, r * 2 * k)
         p.line(-r * k, 0, r * k, 0)
         p.line(0, -r * k, 0, r * k)
         p.pop()
       }
-      // Ramps in and out so the belt joins the neighbours' floors.
+      // Short rails in and out so the belt joins the neighbours' floors.
       floorLine(p, k, -0.5, -0.3)
       floorLine(p, k, 0.3, 0.5)
-      if (u >= -LEAD && u <= 0.12 + TAIL) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, 0.5, u / 0.12), BY)
+      rolling(p, s, c, ROLL, (u) => [-0.5 + u * ROLL_V, BY])
     })
   },
 })
+
+const LAND_T1 = 0.5 / FALL_V
+const LAND_T2 = LAND_T1 + ARC_T
+const LAND_T3 = LAND_T2 + (0.5 - ARC_R) / ROLL_V
 
 /** A quarter-pipe: the ball falls in from above and is turned onto the floor. */
 export const landing = definePort({
   name: 'landing',
   label: 'Landing',
   ins: [{ side: 'N', kind: 'ball', t: 0 }],
-  outs: [{ side: 'E', kind: 'ball', t: 0.09 }],
+  outs: [{ side: 'E', kind: 'ball', t: LAND_T3 }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const R = 0.22
-    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
-      p.line(-0.12 * k, -0.5 * k, -0.12 * k, 0)
-      p.arc(R * k, 0, (R + D / 2) * 2 * k, (R + D / 2) * 2 * k, Math.PI / 2, Math.PI)
-      floorLine(p, k, R, 0.5)
-      if (u >= -LEAD && u <= 0.09 + TAIL) {
-        let x = 0
-        let y = 0
-        if (u < 0.03) {
-          y = lerp(-0.5, 0, u / 0.03)
-        } else if (u < 0.065) {
-          // Ball centre sweeps a quarter circle about (R, 0), from (0, 0) to (R, R).
-          const a = Math.PI - (Math.PI / 2) * seg(u, 0.03, 0.065)
-          x = R + R * Math.cos(a)
-          y = R * Math.sin(a)
-        } else {
-          x = lerp(R, 0.5, lin(u, 0.065, 0.09))
-          y = R
+      wall(p, k, -TW, -0.5, 0)
+      wall(p, k, TW, -0.5, -0.14)
+      p.arc(ARC_R * k, 0, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
+      floorLine(p, k, ARC_R, 0.5)
+      rolling(p, s, c, LAND_T3, (u) => {
+        if (u < LAND_T1) return [0, -0.5 + u * FALL_V]
+        if (u < LAND_T2) {
+          const a = Math.PI - (Math.PI / 2) * lin(u, LAND_T1, LAND_T2)
+          return [ARC_R + ARC_R * Math.cos(a), ARC_R * Math.sin(a)]
         }
-        ball(p, s.link, k, c.ink, c.weight, x, y)
-      }
+        return [ARC_R + (u - LAND_T2) * ROLL_V, BY]
+      })
     })
   },
 })
 
-/** The floor stops short and the ball goes over the edge. */
+const DROP_X = -0.1
+const DROP_T1 = (DROP_X + 0.5) / ROLL_V
+const DROP_T2 = DROP_T1 + dropTime(0.5 - BY)
+
+/** The floor stops short and the ball goes over the edge into a chute. */
 export const dropoff = definePort({
   name: 'dropoff',
   label: 'Drop',
   ins: [{ side: 'W', kind: 'ball', t: 0 }],
-  outs: [{ side: 'S', kind: 'ball', t: 0.09 }],
+  outs: [{ side: 'S', kind: 'ball', t: DROP_T2 }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
-      floorLine(p, k, -0.5, -0.06)
-      p.line(-0.06 * k, FLOOR * k, -0.06 * k, (FLOOR + 0.08) * k)
-      p.line(-0.32 * k, FLOOR * k, -0.32 * k, 0.5 * k)
-      if (u >= -LEAD && u <= 0.09 + TAIL) {
-        if (u < 0.044) {
-          ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, -0.06, u / 0.044), BY)
-        } else {
-          const f = lin(u, 0.044, 0.09)
-          ball(p, s.link, k, c.ink, c.weight, lerp(-0.06, 0, Math.min(1, f)), drop(BY, 0.5, f))
-        }
-      }
+      floorLine(p, k, -0.5, -TW)
+      wall(p, k, -TW, FLOOR, 0.5)
+      wall(p, k, TW, 0.12, 0.5)
+      rolling(p, s, c, DROP_T2, (u) => {
+        if (u < DROP_T1) return [-0.5 + u * ROLL_V, BY]
+        const f = lin(u, DROP_T1, DROP_T2)
+        return [lerp(DROP_X, 0, clamp(f)), drop(BY, 0.5 - BY, f)]
+      })
     })
   },
 })
@@ -246,17 +252,20 @@ export const fall = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
-      p.line(-0.17 * k, -0.5 * k, -0.17 * k, 0.5 * k)
-      p.line(0.17 * k, -0.5 * k, 0.17 * k, 0.5 * k)
-      p.line(-0.24 * k, 0, -0.17 * k, 0)
-      p.line(0.17 * k, 0, 0.24 * k, 0)
-      if (u >= -LEAD && u <= FALL + TAIL) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, u / FALL))
+      wall(p, k, -TW, -0.5, 0.5)
+      wall(p, k, TW, -0.5, 0.5)
+      p.line(-0.2 * k, 0, -TW * k, 0)
+      p.line(TW * k, 0, 0.2 * k, 0)
+      rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V])
     })
   },
 })
+
+const LIFT_IN = 0.5 / ROLL_V
+const LIFT_UP = 0.3
+const LIFT_OUT = LIFT_UP + 0.5 / ROLL_V
 
 /**
  * A two-cell elevator: the ball rolls onto the car at the bottom, rides up,
@@ -268,55 +277,51 @@ export const lift = definePort({
   label: 'Lift',
   span: [1, 2],
   ins: [{ side: 'W', kind: 'ball', t: 0, cell: [0, 1] }],
-  outs: [{ side: 'E', kind: 'ball', t: 0.34, cell: [0, 0] }],
+  outs: [{ side: 'E', kind: 'ball', t: LIFT_OUT, cell: [0, 0] }],
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
     const lowY = 0.5 + BY
     const highY = -0.5 + BY
     const u = near(c.u)
-    let bx = 0
-    let by = lowY
-    let carY = lowY
-    if (u < 0.05) {
-      bx = lerp(-0.5, 0, u / 0.05)
-    } else if (u < 0.28) {
-      by = lerp(lowY, highY, easeInOutCubic(seg(u, 0.05, 0.28)))
-      carY = by
-    } else if (u <= 0.34 + TAIL) {
-      bx = lerp(0, 0.5, lin(u, 0.28, 0.34))
-      by = highY
-      carY = highY
-    } else {
-      carY = lerp(highY, lowY, easeInOutCubic(seg(u, 0.36, 0.62)))
-    }
+    const carY =
+      u < LIFT_IN ? lowY
+      : u < LIFT_UP - 0.02 ? lerp(lowY, highY, easeInOutCubic(seg(u, LIFT_IN, LIFT_UP - 0.02)))
+      : u < LIFT_OUT + 0.04 ? highY
+      : lerp(highY, lowY, easeInOutCubic(seg(u, LIFT_OUT + 0.04, LIFT_OUT + 0.34)))
 
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
-      p.line(-0.26 * k, -0.9 * k, -0.26 * k, (0.5 + FLOOR) * k)
-      p.line(0.26 * k, -0.9 * k, 0.26 * k, (0.5 + FLOOR) * k)
-      floorLine(p, k, -0.5, -0.2, 0.5 + FLOOR)
-      floorLine(p, k, 0.2, 0.5, -0.5 + FLOOR)
-      p.circle(0, -0.9 * k, 0.14 * k)
-      p.line(0, -0.83 * k, 0, (carY - 0.2) * k)
-      if (u >= -LEAD && u <= 0.34 + TAIL) ball(p, s.link, k, c.ink, c.weight, bx, by)
-      // The car is an open frame, so the ball shows through it.
+      // The shaft, with a gap at the bottom left and the top right for the ball.
+      wall(p, k, -LIFT_W, -0.9, 0.5 + FLOOR - D - 0.05)
+      wall(p, k, LIFT_W, -0.9, -0.5 + FLOOR - D - 0.05)
+      wall(p, k, LIFT_W, -0.5 + FLOOR, 0.5 + FLOOR)
+      floorLine(p, k, -0.5, -LIFT_W, 0.5 + FLOOR)
+      floorLine(p, k, LIFT_W, 0.5, -0.5 + FLOOR)
+      p.circle(0, -0.9 * k, 0.16 * k)
+      p.line(0, -0.82 * k, 0, (carY - D / 2 - 0.08) * k)
+      rolling(p, s, c, LIFT_OUT, (u) => {
+        if (u < LIFT_IN) return [-0.5 + u * ROLL_V, lowY]
+        if (u < LIFT_UP) return [0, carY]
+        return [(u - LIFT_UP) * ROLL_V, highY]
+      })
+      // The car: a platform under the ball with an open frame around it.
       outline(p, c.ink, c.weight)
-      p.rect(0, (carY - 0.075) * k, 0.36 * k, 0.25 * k)
+      p.rect(0, (carY - 0.04) * k, 0.38 * k, (D + 0.08) * k)
       solid(p, c.ink, c.weight, s.color)
-      p.rect(0, (carY + 0.15) * k, 0.36 * k, 0.06 * k)
+      p.rect(0, (carY + D / 2 + 0.03) * k, 0.38 * k, 0.06 * k)
     })
   },
 })
 
 /** Kick-driven rotation: one full turn that spins up fast and coasts to rest. */
 const KICK = {
-  drive: (u: number) => Math.PI * 2 * easeOutCubic(seg(u, 0.03, 0.5)),
-  camAt: 0.14,
+  drive: (u: number) => Math.PI * 2 * easeOutCubic(seg(u, 0.02, 0.5)),
+  camAt: 0.12,
 }
 
 /** Steady rotation: one turn per loop. */
-const STEADY = {
+export const STEADY = {
   drive: (u: number) => Math.PI * 2 * u,
   camAt: 0.5,
 }
@@ -330,17 +335,14 @@ export const paddle = definePort({
   label: 'Paddle Wheel',
   ins: [{ side: 'N', kind: 'ball', t: 0 }],
   outs: [
-    { side: 'S', kind: 'ball', t: 0.1 },
+    { side: 'S', kind: 'ball', t: FALL },
     { side: 'E', kind: 'shaft', t: 0 },
   ],
   driver: KICK,
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
-    const u = near(c.u)
-    clipBox(p, c.w, c.h, () => {
-      if (u >= -LEAD && u <= 0.1 + TAIL) ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.5, u / 0.1))
-    })
+    clipBox(p, c.w, c.h, () => rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V]))
     gear(p, k, c.ink, c.weight, gearAngle(s.link, c.u), 0)
     p.push()
     p.rotate(s.link.spin * (s.link.drive?.(c.u) ?? 0))
@@ -384,14 +386,16 @@ export const windmill = definePort({
   },
 })
 
-/** A plain gear. Meshes with any neighbour on any side. */
+const SIDES = ['N', 'E', 'S', 'W'] as const
+
+/** A plain gear. Takes rotation in on any side and passes it on through one other. */
 export const gearWheel = definePort({
   name: 'gear',
   label: 'Gear',
   mirror: false,
-  ins: (['N', 'E', 'S', 'W'] as const).map((side) => ({ side, kind: 'shaft' as const, t: 0 })),
-  outs: (['N', 'E', 'S', 'W'] as const).map((side) => ({ side, kind: 'shaft' as const, t: 0 })),
-  outsOptional: true,
+  ins: SIDES.map((side) => ({ side, kind: 'shaft' as const, t: 0 })),
+  outs: SIDES.map((side) => ({ side, kind: 'shaft' as const, t: 0 })),
+  pickOne: true,
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
@@ -445,38 +449,77 @@ const DOM_H = 0.32
 const DOM_W = 0.08
 const DOM_FALL = 0.065
 const DOM_REST = 0.85
+const DOM_X0 = -0.36
+/** Time for a ball from the top edge to land on the first bar. */
+const DOM_LAND = (FLOOR - DOM_H - D / 2 + 0.5) / FALL_V
 
-/** A row of bars: pushed at the west edge, the last one falls out through the east. */
+/**
+ * A row of bars. Pushed at the west edge — or hit by a ball dropped on the
+ * first bar — they go over in sequence and the last one falls out through the
+ * east. A dropped ball rests beside the row until the reset, when a trapdoor
+ * lets it out. The converter from ball to push.
+ */
 export const dominoes = definePort({
   name: 'dominoes',
   label: 'Dominoes',
-  ins: [{ side: 'W', kind: 'push', t: 0 }],
-  outs: [{ side: 'E', kind: 'push', t: (s: { tOut: number }) => s.tOut }],
+  ins: [
+    { side: 'W', kind: 'push', t: 0 },
+    { side: 'N', kind: 'ball', t: 0 },
+  ],
+  outs: [{ side: 'E', kind: 'push', t: (s: { tOut: number; link: Link }) => s.tOut + (s.link.inSide === 'N' ? DOM_LAND : 0) }],
   setup: ({ color, rng }) => {
     const count = rng.pick([5, 6])
-    const gap = 0.74 / (count - 1)
+    const gap = 0.7 / (count - 1)
     const contact = Math.asin(clamp(gap / DOM_H, 0, 1))
     const lead = Math.sqrt(clamp(contact / DOM_REST, 0, 1))
     return { color, count, gap, lead, tOut: (count - 1) * lead * DOM_FALL + DOM_FALL * 0.9 }
   },
   draw: (p, s, c) => {
     const k = c.size
-    outline(p, c.ink, c.weight)
-    floorLine(p, k, -0.5, 0.5)
-    for (let i = 0; i < s.count; i++) {
-      const x = -0.38 + s.gap * i
-      const last = i === s.count - 1
-      const start = i * s.lead * DOM_FALL
-      const fallen = easeInQuad(seg(c.u, start, start + DOM_FALL))
-      const riseAt = 0.62 + (s.count - 1 - i) * 0.03
-      const rise = easeInOutCubic(seg(c.u, riseAt, riseAt + 0.1))
-      p.push()
-      p.translate(x * k, FLOOR * k)
-      p.rotate((last ? 1 : DOM_REST) * fallen * (1 - rise))
-      solid(p, c.ink, c.weight, s.color)
-      p.rect(0, (-DOM_H / 2) * k, DOM_W * k, DOM_H * k)
-      p.pop()
-    }
+    const byBall = s.link.inSide === 'N'
+    const start0 = byBall ? DOM_LAND : 0
+    const u = near(c.u)
+
+    clipBox(p, c.w, c.h, () => {
+      outline(p, c.ink, c.weight)
+      floorLine(p, k, -0.5, 0.5)
+      if (byBall) {
+        // Fall onto the first bar, roll off it as it tips, rest, then leave
+        // through the trapdoor just before the bars stand back up.
+        const restX = DOM_X0 - D / 2 - 0.01
+        const restY = BY
+        let pos: Pt | null = null
+        if (u >= -LEAD && u < DOM_LAND) pos = [DOM_X0, -0.5 + u * FALL_V]
+        else if (u < DOM_LAND + DOM_FALL) {
+          const f = easeInQuad(seg(u, DOM_LAND, DOM_LAND + DOM_FALL))
+          pos = [lerp(DOM_X0, restX, f), lerp(FLOOR - DOM_H - D / 2, restY, f)]
+        } else if (u < 0.6) pos = [restX, restY]
+        else if (u < 0.66) pos = [restX, drop(restY, 0.5 - restY, lin(u, 0.6, 0.64))]
+        if (pos) ball(p, s.link, k, c.ink, c.weight, pos)
+        // The trapdoor swings down and shuts again.
+        const open = easeOutCubic(seg(u, 0.6, 0.64)) - easeInOutCubic(seg(u, 0.68, 0.76))
+        p.push()
+        p.translate((restX + 0.14) * k, FLOOR * k)
+        p.rotate(open * 1.3)
+        outline(p, c.ink, c.weight)
+        p.line(0, 0, -0.28 * k, 0)
+        p.pop()
+      }
+      for (let i = 0; i < s.count; i++) {
+        const x = DOM_X0 + s.gap * i
+        const last = i === s.count - 1
+        const start = start0 + i * s.lead * DOM_FALL
+        const fallen = easeInQuad(seg(c.u, start, start + DOM_FALL))
+        const riseAt = 0.7 + (s.count - 1 - i) * 0.03
+        const rise = easeInOutCubic(seg(c.u, riseAt, riseAt + 0.1))
+        p.push()
+        p.translate(x * k, FLOOR * k)
+        p.rotate((last ? 1 : DOM_REST) * fallen * (1 - rise))
+        solid(p, c.ink, c.weight, s.color)
+        p.rect(0, (-DOM_H / 2) * k, DOM_W * k, DOM_H * k)
+        p.pop()
+      }
+    })
   },
 })
 
@@ -538,6 +581,9 @@ export const bell = definePort({
   },
 })
 
+const CUP_IN = (0.5 - 0.28) / ROLL_V
+const CUP_DROP = (0.16 + 0.5) / FALL_V
+
 /** A cup that keeps whatever rolls or drops into it. */
 export const cup = definePort({
   name: 'cup',
@@ -555,14 +601,14 @@ export const cup = definePort({
       outline(p, c.ink, c.weight)
       if (s.link.inSide === 'W') {
         floorLine(p, k, -0.5, -0.22)
-        if (u >= -LEAD && u < 0.03) ball(p, s.link, k, c.ink, c.weight, lerp(-0.5, -0.28, u / 0.03), BY)
-        else if (u >= 0.03 && u < 0.07) {
-          const f = seg(u, 0.03, 0.07)
-          ball(p, s.link, k, c.ink, c.weight, lerp(-0.28, -0.05, f), lerp(BY, 0.18, f))
+        if (u >= -LEAD && u < CUP_IN) ball(p, s.link, k, c.ink, c.weight, [-0.5 + u * ROLL_V, BY])
+        else if (u >= CUP_IN && u < CUP_IN + 0.04) {
+          const f = seg(u, CUP_IN, CUP_IN + 0.04)
+          ball(p, s.link, k, c.ink, c.weight, [lerp(-0.28, -0.05, f), lerp(BY, 0.18, f * f)])
         }
-      } else if (u >= -LEAD && u < 0.045) {
-        const f = u / 0.045
-        ball(p, s.link, k, c.ink, c.weight, 0, lerp(-0.5, 0.16, f < 0 ? f : 1 - (1 - f) * (1 - f)))
+      } else if (u >= -LEAD && u < CUP_DROP + 0.03) {
+        const y = u < CUP_DROP ? -0.5 + u * FALL_V : 0.16 - 0.05 * Math.sin(lin(u, CUP_DROP, CUP_DROP + 0.03) * Math.PI)
+        ball(p, s.link, k, c.ink, c.weight, [0, y])
       }
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, 0.19 * k, 0.44 * k, 0.3 * k)

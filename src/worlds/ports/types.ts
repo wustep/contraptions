@@ -60,8 +60,8 @@ export interface PortMachine<S = unknown> {
   mirror?: boolean
   ins: Port[]
   outs: Port[]
-  /** Outs are opportunities, not obligations — a gear is complete with any subset wired. */
-  outsOptional?: boolean
+  /** Exactly one of the outs is wired — a gear passes its rotation on one way. */
+  pickOne?: boolean
   /** Relative weight when picked to start a chain. Absent: never a source. */
   source?: number
   /** Shaft drivers: the rotation they impart and when a cam on the train should trip. */

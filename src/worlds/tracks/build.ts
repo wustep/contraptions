@@ -1,15 +1,28 @@
 import type p5 from 'p5'
 import { ART_INSET } from '../../core/constants'
 import { solid } from '../../core/draw'
-import { easeInQuad, mod } from '../../core/ease'
+import { mod } from '../../core/ease'
 import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName, type Theme } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
-import type { Composition, Options, Overlay } from '../../core/composition'
-import { BY, D } from '../lanes'
-import { reactors, type Face, type ReactorState } from './reactors'
-import { LAND_R, dropoff, fall, flat, landing, liftBottom, liftShaft, liftTop, type SegState } from './segments'
+import type { CatalogEntry, Composition, Options, Overlay } from '../../core/composition'
+import { D } from '../lanes'
+import { reactors, type Face, type Reactor, type ReactorState } from './reactors'
+import {
+  along,
+  bucket,
+  drawTrack,
+  duration,
+  kindOf,
+  pieces,
+  type Kind,
+  type Piece,
+  type SegState,
+  type Side,
+  type TrackCell,
+  type Variant,
+} from './track'
 
 /**
  * Framework B: tracks.
@@ -19,22 +32,21 @@ import { LAND_R, dropoff, fall, flat, landing, liftBottom, liftShaft, liftTop, t
  *  - Local edge contracts make continuity every machine's job. Fifteen
  *    machines each drew their own ball and agreed on a seam by convention; one
  *    bad constant and the ball would jump. Here the ball is drawn once, by the
- *    world, along a path that is the primary object. Machines never draw it.
+ *    world, along a path that is the primary object. Machines never draw it,
+ *    and the track cells draw *themselves* from the same path.
  *  - A chain grown by search ends wherever the search happens to fail; it
  *    cannot close. A track is carved as a loop before anything is placed, so
  *    the ball is lifted back to the top and goes round for ever — the piece
  *    is a perpetual machine by construction, and the loop closes without a
  *    cup swallowing anything.
  *  - Timing fell out of transit sums and had no global shape. Here the
- *    circuit is the loop: N balls spaced evenly means every machine on the
- *    track sees a ball every 1/N of the loop, which is exactly the period the
- *    contract wants.
+ *    circuit is the clock: with N balls evenly spaced going round m/N times
+ *    per loop, every machine on the track sees a ball every 1/m of the loop,
+ *    which is exactly the period the contract wants.
  *  - Causality needs contact. Reactors reach a feeler into the track and are
  *    knocked by the ball, rather than being told by a phase that it passed.
  */
 export const TRACKS_LOOP = 720
-
-type Side = 'N' | 'E' | 'S' | 'W'
 
 interface Region {
   c0: number
@@ -43,31 +55,25 @@ interface Region {
   r1: number
 }
 
-interface TrackCell {
-  col: number
-  row: number
-  in: Side
-  out: Side
-}
-
-/** A point on the ball's path, in cell units from the cell centre. */
-type Pt = [number, number]
-
 interface Segment {
   cell: Cell
   track: TrackCell
-  /** Polyline of the ball centre, in cell units, entry to exit. */
-  path: Pt[]
-  /** Fraction of the circuit spent here. */
-  duration: number
-  /** Circuit fraction at which the ball enters. */
+  kind: Kind
+  mirror: boolean
+  path: Piece[]
+  /** Circuit fraction at which the ball enters, and how long it stays. */
   start: number
-  /** True where the ball rides a bucket. */
-  lift: boolean
+  span: number
 }
 
 const OPP: Record<Side, Side> = { N: 'S', S: 'N', E: 'W', W: 'E' }
 const DELTA: Record<Side, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] }
+
+/** Frames a ball spends crossing one plain run cell. Sets the absolute pace. */
+const FRAMES_PER_CELL = 22
+
+/** Divisors of the loop, so a reactor period always closes. */
+const DIVISORS = Array.from({ length: TRACKS_LOOP }, (_, i) => i + 1).filter((d) => TRACKS_LOOP % d === 0)
 
 /** Cut the grid into a few regions, each of which gets its own loop. */
 function regions(res: number, rng: Rng): Region[] {
@@ -106,13 +112,15 @@ function carve(region: Region, rng: Rng): TrackCell[] | null {
   const lift = region.c0
   const near = region.c0 + 1
   const far = region.c1
-  const maxRuns = Math.min(6, 2 * Math.floor(h / 2))
-  const runOptions = [2, 4, 6].filter((n) => n <= maxRuns)
-  const runs = rng.weighted(runOptions, (n) => n * n)
+  // Runs on every second row, so each pair has a free row between for the
+  // reactors that hang under one and stand on the other. The count has to be
+  // even to come back to the lift, so the last interior row goes if it must.
   const interior: number[] = []
-  const pool = rng.shuffle(Array.from({ length: h - 2 }, (_, i) => region.r0 + 1 + i))
-  for (let i = 0; i < runs - 2; i++) interior.push(pool[i])
-  const rows = [region.r0, ...interior.sort((a, b) => a - b), region.r1]
+  for (let row = region.r0 + 2; row <= region.r1 - 1; row += 2) interior.push(row)
+  if (interior.length % 2 === 1) interior.pop()
+  const runs = interior.length + 2
+  if (h < 3) return carveFallback(region, rng, onRight)
+  const rows = [region.r0, ...interior, region.r1]
 
   const cells: TrackCell[] = []
   const push = (c: number, r: number, i: Side, o: Side) => cells.push({ col: col(c), row: r, in: side(i), out: side(o) })
@@ -122,7 +130,6 @@ function carve(region: Region, rng: Rng): TrackCell[] | null {
     const row = rows[i]
     const last = i === runs - 1
     if (i % 2 === 0) {
-      // Eastward. Run 0 arrives from the lift; later even runs land from above.
       if (i > 0) push(near, row, 'N', 'E')
       for (let c = i > 0 ? near + 1 : near; c < far; c++) push(c, row, 'W', 'E')
       push(far, row, 'W', 'S')
@@ -143,72 +150,38 @@ function carve(region: Region, rng: Rng): TrackCell[] | null {
   return cells
 }
 
-/** The ball's path through one cell and how long it takes, in canonical hand. */
-function geometry(t: TrackCell): { path: Pt[]; weight: number; lift: boolean } {
-  const horizontalIn = t.in === 'W' || t.in === 'E'
-  const sx = (x: number) => (t.in === 'E' || t.out === 'W' ? -x : x)
-  const arc = (from: number, to: number, n = 6): Pt[] =>
-    Array.from({ length: n }, (_, i) => {
-      const a = from + ((to - from) * (i + 1)) / n
-      return [LAND_R + LAND_R * Math.cos(a), LAND_R * Math.sin(a)] as Pt
-    })
-
-  if (horizontalIn && (t.out === 'E' || t.out === 'W')) {
-    return { path: [[sx(-0.5), BY], [sx(0.5), BY]], weight: 1, lift: false }
-  }
-  if (t.in === 'N' && (t.out === 'E' || t.out === 'W')) {
-    const flipX = t.out === 'W'
-    const path: Pt[] = [[0, -0.5], [0, 0], ...arc(Math.PI, Math.PI / 2), [0.5, BY]]
-    return { path: path.map(([x, y]) => [flipX ? -x : x, y]), weight: 0.85, lift: false }
-  }
-  if (horizontalIn && t.out === 'S') {
-    const flipX = t.in === 'E'
-    const path: Pt[] = [[-0.5, BY], [-0.06, BY], [-0.03, BY + 0.06], [0, 0.5]]
-    return { path: path.map(([x, y]) => [flipX ? -x : x, y]), weight: 0.8, lift: false }
-  }
-  if (t.in === 'N' && t.out === 'S') return { path: [[0, -0.5], [0, 0.5]], weight: 0.55, lift: false }
-  if (t.in === 'S' && t.out === 'N') return { path: [[0, 0.5], [0, -0.5]], weight: 1.8, lift: true }
-  if (horizontalIn && t.out === 'N') {
-    const flipX = t.in === 'W'
-    const path: Pt[] = [[0.5, BY], [0, BY], [0, -0.5]]
-    return { path: path.map(([x, y]) => [flipX ? -x : x, y]), weight: 1.6, lift: true }
-  }
-  // S -> E / W: the lift's top.
-  const flipX = t.out === 'W'
-  const path: Pt[] = [[0, 0.5], [0, BY], [0.5, BY]]
-  return { path: path.map(([x, y]) => [flipX ? -x : x, y]), weight: 1.4, lift: true }
+/** Two runs only — always fits. */
+function carveFallback(region: Region, rng: Rng, onRight: boolean): TrackCell[] {
+  void rng
+  const col = (c: number) => (onRight ? region.c1 - (c - region.c0) : c)
+  const side = (s: Side): Side => (onRight ? (s === 'E' ? 'W' : s === 'W' ? 'E' : s) : s)
+  const lift = region.c0
+  const near = region.c0 + 1
+  const far = region.c1
+  const cells: TrackCell[] = []
+  const push = (c: number, r: number, i: Side, o: Side) => cells.push({ col: col(c), row: r, in: side(i), out: side(o) })
+  push(lift, region.r0, 'S', 'E')
+  for (let c = near; c < far; c++) push(c, region.r0, 'W', 'E')
+  push(far, region.r0, 'W', 'S')
+  for (let r = region.r0 + 1; r < region.r1; r++) push(far, r, 'N', 'S')
+  push(far, region.r1, 'N', 'W')
+  for (let c = far - 1; c > near; c--) push(c, region.r1, 'E', 'W')
+  push(near, region.r1, 'E', 'W')
+  push(lift, region.r1, 'E', 'N')
+  for (let r = region.r1 - 1; r > region.r0; r--) push(lift, r, 'S', 'N')
+  return cells
 }
 
-/** Length of a polyline. */
-const length = (path: Pt[]) =>
-  path.slice(1).reduce((sum, [x, y], i) => sum + Math.hypot(x - path[i][0], y - path[i][1]), 0)
+/** Flip a canonical-hand path for a mirrored cell. */
+const handed = (path: Piece[], mirror: boolean): Piece[] =>
+  mirror ? path.map((piece) => ({ ...piece, from: [-piece.from[0], piece.from[1]], to: [-piece.to[0], piece.to[1]] })) : path
 
-/** Point at fraction `f` of a polyline's length. */
-function along(path: Pt[], f: number): Pt {
-  const total = length(path)
-  let want = f * total
-  for (let i = 1; i < path.length; i++) {
-    const [x0, y0] = path[i - 1]
-    const [x1, y1] = path[i]
-    const d = Math.hypot(x1 - x0, y1 - y0)
-    if (want <= d || i === path.length - 1) {
-      const t = d === 0 ? 0 : Math.min(1, want / d)
-      return [x0 + (x1 - x0) * t, y0 + (y1 - y0) * t]
-    }
-    want -= d
-  }
-  return path[path.length - 1]
-}
-
-/** Which contraption draws a track cell, and whether it is the mirrored hand. */
-function segmentFor(t: TrackCell): { contraption: Contraption<SegState>; mirror: boolean } {
-  if ((t.in === 'W' || t.in === 'E') && (t.out === 'E' || t.out === 'W')) return { contraption: flat, mirror: t.in === 'E' }
-  if (t.in === 'N' && (t.out === 'E' || t.out === 'W')) return { contraption: landing, mirror: t.out === 'W' }
-  if ((t.in === 'W' || t.in === 'E') && t.out === 'S') return { contraption: dropoff, mirror: t.in === 'E' }
-  if (t.in === 'N' && t.out === 'S') return { contraption: fall, mirror: false }
-  if (t.in === 'S' && t.out === 'N') return { contraption: liftShaft, mirror: false }
-  if (t.out === 'N') return { contraption: liftBottom, mirror: t.in === 'W' }
-  return { contraption: liftTop, mirror: t.out === 'W' }
+const trackContraption: Contraption<SegState> = {
+  name: 'track',
+  label: 'Track',
+  rotations: [0],
+  setup: ({ color }) => ({ color, kind: 'run', variant: 'rail' }),
+  draw: (p, s, { size, u, ink, weight }) => drawTrack(p, s, size, u, ink, weight),
 }
 
 export function buildTracks(options: Options, canvas: number): Composition {
@@ -231,89 +204,104 @@ export function buildTracks(options: Options, canvas: number): Composition {
     const track = carve(region, regionRng)
     if (!track) continue
     const color = regionRng.pick(theme.colors)
-    const balls = regionRng.pick([2, 2, 3, 3, 4])
 
-    // Schedule: the circuit is one loop, split by segment weight.
+    // The circuit, timed by its geometry, then fitted to the loop: with N
+    // balls going round m/N times per loop the piece repeats every loop and
+    // a ball passes any point every LOOP/m frames.
     const segments: Segment[] = track.map((t) => {
-      const g = geometry(t)
-      return { cell: cellAt(t.col, t.row)!, track: t, path: g.path, duration: g.weight, start: 0, lift: g.lift }
+      const { kind, mirror } = kindOf(t)
+      return { cell: cellAt(t.col, t.row)!, track: t, kind, mirror, path: handed(pieces(kind), mirror), start: 0, span: 0 }
     })
-    const total = segments.reduce((sum, s) => sum + s.duration, 0)
+    const unit = duration(pieces('run'))
+    const total = segments.reduce((sum, s) => sum + duration(s.path), 0)
+    const circuitFrames = (total / unit) * FRAMES_PER_CELL
+    // Enough balls that a reactor is passed at least twice a loop however
+    // long the circuit is, and never so many they crowd.
+    const balls = Math.min(6, Math.max(regionRng.pick([2, 3, 3, 4]), Math.ceil((2 * circuitFrames) / TRACKS_LOOP)))
+    const wantM = (TRACKS_LOOP / circuitFrames) * balls
+    const m = DIVISORS.reduce((best, d) => (Math.abs(d - wantM) < Math.abs(best - wantM) ? d : best), 1)
+    const period = TRACKS_LOOP / m
     let acc = 0
     for (const s of segments) {
-      s.duration /= total
+      s.span = duration(s.path) / total
       s.start = acc
-      acc += s.duration
+      acc += s.span
     }
+    /** Frame at which ball 0 reaches circuit fraction f. */
+    const passFrame = (f: number) => (f * balls * TRACKS_LOOP) / m
 
     // Track cells.
     for (const s of segments) {
-      const { contraption, mirror } = segmentFor(s.track)
       const cellRng = regionRng.fork(`cell:${s.cell.index}`)
-      const state = contraption.setup({ rng: cellRng, size, w: size, h: size, theme, cell: s.cell, color: cellRng.pick(theme.colors) })
-      let period = TRACKS_LOOP
+      const state = trackContraption.setup({ rng: cellRng, size, w: size, h: size, theme, cell: s.cell, color: cellRng.pick(theme.colors) })
+      state.kind = s.kind
       let phase = 0
-      if (contraption === flat) {
-        state.variant = cellRng.weighted(['rail', 'conveyor', 'gate'] as const, (v) => (v === 'rail' ? 3 : v === 'conveyor' ? 1.4 : 1))
+      let instPeriod = TRACKS_LOOP
+      if (s.kind === 'run') {
+        state.variant = cellRng.weighted(['rail', 'conveyor', 'gate'] as Variant[], (v) => (v === 'rail' ? 3.2 : v === 'conveyor' ? 1.2 : 1))
         if (state.variant === 'gate') {
-          // Local clock: a ball every 1/balls of the loop, u = 0 as it reaches the flap.
-          period = TRACKS_LOOP / balls
-          phase = mod(-Math.round((s.start + s.duration * 0.5) * TRACKS_LOOP), period)
+          instPeriod = period
+          phase = mod(-Math.round(passFrame(s.start + s.span * 0.4)), period)
         }
       }
       instances.push({
-        contraption: contraption as Contraption<unknown>,
+        contraption: trackContraption as Contraption<unknown>,
         state,
         cell: s.cell,
         angle: 0,
-        mirror: mirror ? -1 : 1,
+        mirror: s.mirror ? -1 : 1,
         phase,
-        period,
+        period: instPeriod,
         fireFrame: 0,
       })
       taken.add(s.cell)
     }
 
     // Reactors in the free cells alongside, touched off as the ball passes.
-    const trackAt = new Map(segments.map((s) => [`${s.track.col}:${s.track.row}`, s]))
+    // Each is picked to differ from any reactor already in a neighbouring
+    // cell, so a run does not end up lined with five of the same counter.
+    const placed = new Map<string, string>()
     for (const s of regionRng.shuffle(segments)) {
-      if (s.lift) continue
+      if (s.kind !== 'run' && s.kind !== 'fall') continue
       for (const face of regionRng.shuffle(['N', 'E', 'S', 'W'] as Side[])) {
         const [dx, dy] = DELTA[face]
         const col = s.track.col + dx
         const row = s.track.row + dy
         if (col < region.c0 || col > region.c1 || row < region.r0 || row > region.r1) continue
         const cell = cellAt(col, row)
-        if (!cell || taken.has(cell) || trackAt.has(`${col}:${row}`)) continue
-        // The reactor's feeler must reach the ball: above a run, beside a fall, below a run.
-        const runs = s.track.in !== 'N' && s.track.out !== 'S'
-        const falls = s.track.in === 'N' && s.track.out === 'S'
+        if (!cell || taken.has(cell)) continue
         const reactorFace = OPP[face] as Face
-        const pool = reactors.filter((r) => r.faces.includes(reactorFace) && ((reactorFace === 'S' || reactorFace === 'N') ? runs : falls))
-        if (!pool.length || !regionRng.bool(0.55)) continue
+        const vertical = reactorFace === 'N' || reactorFace === 'S'
+        if (vertical !== (s.kind === 'run')) continue
+        const around = [placed.get(`${col - 1}:${row}`), placed.get(`${col + 1}:${row}`), placed.get(`${col}:${row - 1}`), placed.get(`${col}:${row + 1}`)]
+        const pool = reactors.filter((r) => r.faces.includes(reactorFace) && !around.includes(r.name))
+        if (!pool.length || !regionRng.bool(0.6)) continue
         const reactor = regionRng.pick(pool)
         const cellRng = regionRng.fork(`react:${cell.index}`)
         const state = reactor.setup({ rng: cellRng, size, w: size, h: size, theme, cell, color: cellRng.pick(theme.colors) }) as ReactorState
         state.face = reactorFace
-        const period = TRACKS_LOOP / balls
-        const pass = Math.round((s.start + s.duration * 0.5) * TRACKS_LOOP)
+        state.dir = s.track.out === 'E' || s.track.out === 'S' ? 1 : -1
+        // Contact: a hanging feeler or pedal meets the ball mid-cell; a side
+        // arm meets it a third of the way down the tube.
+        const contact = s.start + s.span * (s.kind === 'run' ? 0.5 : 0.3)
+        const pass = passFrame(contact)
         instances.push({
           contraption: reactor as Contraption<unknown>,
           state,
           cell,
           angle: 0,
           mirror: 1,
-          phase: mod(-pass, period),
+          phase: mod(-Math.round(pass), period),
           period,
-          fireFrame: mod(pass, TRACKS_LOOP),
+          fireFrame: mod(Math.round(pass), TRACKS_LOOP),
         })
         taken.add(cell)
+        placed.set(`${col}:${row}`, reactor.name)
         break
       }
     }
 
-    // The balls, and the buckets that carry them up the lift.
-    overlays.push(drawBalls(segments, balls, color, size))
+    overlays.push(drawBalls(segments, balls, m, color, size))
   }
 
   return {
@@ -330,27 +318,126 @@ export function buildTracks(options: Options, canvas: number): Composition {
   }
 }
 
-function drawBalls(segments: Segment[], balls: number, color: string, size: number): Overlay {
-  const locate = (t: number): { x: number; y: number; lift: boolean } => {
-    const seg = segments.find((s) => t >= s.start && t < s.start + s.duration) ?? segments[segments.length - 1]
-    let f = (t - seg.start) / seg.duration
-    // Gravity: falls speed up, so the ball enters the next cell fast.
-    if (seg.track.in === 'N' && seg.track.out === 'S') f = easeInQuad(f)
-    const [px, py] = along(seg.path, f)
-    return { x: seg.cell.x + px * size, y: seg.cell.y + py * size, lift: seg.lift && Math.abs(px) < 0.01 }
+/** The balls of one region, and the buckets that carry them up the lift. */
+function drawBalls(segments: Segment[], balls: number, m: number, color: string, size: number): Overlay {
+  const locate = (t: number) => {
+    const seg = segments.find((s) => t >= s.start && t < s.start + s.span) ?? segments[segments.length - 1]
+    const f = (t - seg.start) / seg.span
+    const { x, y, lift } = along(seg.path, f)
+    return { x: seg.cell.x + x * size, y: seg.cell.y + y * size, lift }
   }
   return (p: p5, loopFrame: number, { theme, weight }: { theme: Theme; weight: (size: number) => number }) => {
     const w = weight(size)
     for (let j = 0; j < balls; j++) {
-      const t = mod(loopFrame / TRACKS_LOOP + j / balls, 1)
+      const t = mod((loopFrame / TRACKS_LOOP) * (m / balls) + j / balls, 1)
       const { x, y, lift } = locate(t)
-      if (lift) {
-        // A bucket under the ball while it rides the elevator.
-        solid(p, theme.ink, w, theme.bg)
-        p.rect(x, y + D * size * 0.62, D * size * 1.3, D * size * 0.3)
-      }
+      if (lift) bucket(p, size, theme.ink, w, theme.bg, x, y)
       solid(p, theme.ink, w, color)
       p.circle(x, y, D * size)
     }
+  }
+}
+
+/** Every track shape with a ball running through it, then every reactor. */
+export function tracksCatalog(): CatalogEntry[] {
+  const shapes: { kind: Kind; variant: Variant; label: string }[] = [
+    { kind: 'run', variant: 'rail', label: 'Run' },
+    { kind: 'run', variant: 'conveyor', label: 'Conveyor' },
+    { kind: 'run', variant: 'gate', label: 'Gate' },
+    { kind: 'landing', variant: 'rail', label: 'Landing' },
+    { kind: 'drop', variant: 'rail', label: 'Drop' },
+    { kind: 'fall', variant: 'rail', label: 'Tube' },
+    { kind: 'liftIn', variant: 'rail', label: 'Lift In' },
+    { kind: 'shaft', variant: 'rail', label: 'Lift' },
+    { kind: 'liftOut', variant: 'rail', label: 'Lift Out' },
+  ]
+  const period = TRACKS_LOOP / 4
+  const entries: CatalogEntry[] = shapes.map((shape) => ({
+    contraption: trackContraption as Contraption<unknown>,
+    label: shape.label,
+    sub: 'track',
+    period,
+    state: (state) => {
+      state.kind = shape.kind
+      state.variant = shape.variant
+    },
+    overlay: (cell, { color }) => {
+      const path = pieces(shape.kind)
+      // The ball takes as long as it would on a real track, then the cell rests.
+      const frames = (duration(path) / duration(pieces('run'))) * FRAMES_PER_CELL
+      return (p, loopFrame, { theme, weight }) => {
+        const f = mod(loopFrame, period) / frames
+        if (f > 1) return
+        const { x, y, lift } = along(path, f)
+        const px = cell.x + x * cell.size
+        const py = cell.y + y * cell.size
+        const w = weight(cell.size)
+        if (lift) bucket(p, cell.size, theme.ink, w, theme.bg, px, py)
+        solid(p, theme.ink, w, color)
+        p.circle(px, py, D * cell.size)
+      }
+    },
+    // A gate's clock starts as the ball reaches the flap, 40% of the way across.
+    phase: shape.variant === 'gate' ? -Math.round(FRAMES_PER_CELL * 0.4) : 0,
+  }))
+  for (const reactor of reactors) entries.push(reactorDemo(reactor, period))
+  return entries
+}
+
+/**
+ * A reactor shown with the piece of track it reacts to, and a ball going by:
+ * a two-cell composite, the reactor on the side its face says.
+ */
+function reactorDemo(reactor: Reactor, period: number): CatalogEntry {
+  const face = reactor.faces[0]
+  const vertical = face === 'N' || face === 'S'
+  const kind: Kind = vertical ? 'run' : 'fall'
+  const path = pieces(kind)
+  const contact = vertical ? 0.5 : 0.3
+  const frames = (duration(path) / duration(pieces('run'))) * FRAMES_PER_CELL
+  // Offsets of the reactor and the track cell from the composite's centre.
+  const r: [number, number] = face === 'S' ? [0, -0.5] : face === 'N' ? [0, 0.5] : face === 'W' ? [0.5, 0] : [-0.5, 0]
+  const t: [number, number] = [-r[0], -r[1]]
+
+  const demo: Contraption<ReactorState> = {
+    name: `demo-${reactor.name}`,
+    label: reactor.label,
+    span: vertical ? [1, 2] : [2, 1],
+    rotations: [0],
+    setup: (ctx) => {
+      const s = reactor.setup({ ...ctx, w: ctx.size, h: ctx.size })
+      s.face = face
+      s.dir = 1
+      return s
+    },
+    draw: (p, s, ctx) => {
+      const k = ctx.size
+      p.push()
+      p.translate(t[0] * k, t[1] * k)
+      drawTrack(p, { color: s.color, kind, variant: 'rail' }, k, ctx.u, ctx.ink, ctx.weight)
+      p.pop()
+      p.push()
+      p.translate(r[0] * k, r[1] * k)
+      reactor.draw(p, s, { ...ctx, w: k, h: k })
+      p.pop()
+    },
+  }
+
+  return {
+    contraption: demo as Contraption<unknown>,
+    label: reactor.label ?? reactor.name,
+    sub: 'reactor',
+    period,
+    overlay: (cell, { color }) => (p, loopFrame, { theme, weight }) => {
+      // The reactor's clock starts at contact, so the ball is at the contact
+      // point on frame 0 and approaches it from just before.
+      let local = mod(loopFrame, period)
+      if (local > period / 2) local -= period
+      const f = contact + local / frames
+      if (f < 0 || f > 1) return
+      const { x, y } = along(path, f)
+      solid(p, theme.ink, weight(cell.size), color)
+      p.circle(cell.x + (t[0] + x) * cell.size, cell.y + (t[1] + y) * cell.size, D * cell.size)
+    },
   }
 }

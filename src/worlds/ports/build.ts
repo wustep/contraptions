@@ -3,9 +3,9 @@ import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
-import type { Composition, Options } from '../../core/composition'
+import type { CatalogEntry, Composition, Options } from '../../core/composition'
 import { mod } from '../../core/ease'
-import { GN, portMachines } from './machines'
+import { GN, STEADY, portMachines } from './machines'
 import type { Link, Port, PortMachine, Side } from './types'
 
 /**
@@ -15,14 +15,14 @@ import type { Link, Port, PortMachine, Side } from './types'
  * machine's out-ports name what must be on the far side of each edge, and a
  * neighbour is chosen from the variants that accept exactly that. A machine is
  * kept only if every one of its out-ports can be satisfied in turn, so no chain
- * ever runs off into nothing: it ends in a cup, a bell, or an idle gear.
+ * ever runs off into nothing: it ends in a cup or a bell.
  *
  * Timing is assigned afterwards, exactly as classic chains do it: each
  * machine's phase is chosen so the token crosses each edge at the frame the
  * neighbour expects it. A shaft train shares one phase and one drive function
  * down its whole length, with the spin alternating at each mesh.
  */
-export const PORTS_LOOP = 480
+export const PORTS_LOOP = 240
 
 const DELTA: Record<Side, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] }
 const OPPOSITE: Record<Side, Side> = { N: 'S', S: 'N', E: 'W', W: 'E' }
@@ -70,11 +70,11 @@ const variants: Variant[] = portMachines.flatMap((machine) =>
       ],
 )
 
-const isSink = (m: PortMachine<any>) => m.outs.length === 0 && !m.outsOptional
+const isSink = (m: PortMachine<any>) => m.outs.length === 0
 
 /** Cache the engine-facing adapter per machine, so `used` and solo stay by name. */
 const adapters = new Map<PortMachine<any>, Contraption<unknown>>()
-function asContraption(machine: PortMachine<any>): Contraption<unknown> {
+export function asContraption(machine: PortMachine<any>): Contraption<unknown> {
   let c = adapters.get(machine)
   if (!c) {
     c = {
@@ -142,19 +142,22 @@ export function buildPorts(options: Options, canvas: number): Composition {
       .sort((a, b) => b.k - a.k)
       .map((e) => e.item)
 
-  const candidateWeight = (variant: Variant, depth: number): number => {
+  /**
+   * How much a machine wants to be next. `depth` is the chain so far and
+   * `gears` the run of plain gears just behind this slot: a gear train is
+   * padding, so it is allowed to be short and then must turn into something.
+   */
+  const candidateWeight = (variant: Variant, depth: number, gears: number): number => {
     const m = variant.machine
-    if (isSink(m)) return depth < 3 ? 0.02 : depth < 6 ? 0.35 : depth < 10 ? 1.2 : 5
-    if (depth >= 16) return m.outsOptional ? 0.5 : 0
-    // Idle gears are the one thing that can pad a chain without ending it, so
-    // they get less say than the machines that turn rotation into something.
-    if (m.outsOptional) return 0.55
-    if (m.name === 'cam') return 1.6
-    // A lift is the only way back up, and two cells of it is a lot of ink.
-    return m.span ? 0.7 : 1
+    if (isSink(m)) return depth < 4 ? 0.02 : depth < 7 ? 0.4 : depth < 10 ? 1.2 : 5
+    if (depth >= 16) return 0
+    if (m.pickOne) return gears >= 3 ? 0 : 0.8 * Math.pow(0.5, gears)
+    if (m.name === 'cam') return 1.2 + gears * 0.6
+    if (m.span) return 0.7
+    return 1
   }
 
-  function growFrom(out: VPort, fromAnchor: Cell, depth: number, r: Rng): Node | null {
+  function growFrom(out: VPort, fromAnchor: Cell, depth: number, gears: number, r: Rng): Node | null {
     const [dx, dy] = DELTA[out.side]
     const target = neighbour(fromAnchor, out.cell[0] + dx, out.cell[1] + dy)
     if (!target || claimed.has(target)) return null
@@ -167,37 +170,36 @@ export function buildPorts(options: Options, canvas: number): Composition {
         if (inPort.side === want && inPort.port.kind === out.port.kind) choices.push({ variant, inPort })
       }
     }
-    for (const choice of order(choices, (c) => candidateWeight(c.variant, depth), r)) {
+    for (const choice of order(choices, (c) => candidateWeight(c.variant, depth, gears), r)) {
       const anchor = neighbour(target, -choice.inPort.cell[0], -choice.inPort.cell[1])
       if (!anchor) continue
-      const node = grow(anchor, choice.variant, choice.inPort, depth, r)
+      const node = grow(anchor, choice.variant, choice.inPort, depth, gears, r)
       if (node) return node
     }
     return null
   }
 
-  function grow(anchor: Cell, variant: Variant, inPort: VPort | null, depth: number, r: Rng): Node | null {
+  function grow(anchor: Cell, variant: Variant, inPort: VPort | null, depth: number, gears: number, r: Rng): Node | null {
     const block = claimBlock(anchor, variant)
     if (!block) return null
     for (const cell of block) claimed.add(cell)
     const node: Node = { variant, anchor, block, inPort, children: [] }
+    const nextGears = variant.machine.pickOne ? gears + 1 : 0
 
     const outs = vports(variant, variant.machine.outs).filter((o) => o.side !== inPort?.side)
-    if (variant.machine.outsOptional) {
-      // A train of gears is padding; let it end here a fair share of the time,
-      // and always once the chain is long enough.
-      if (depth >= 20 || r.bool(0.3)) return node
+    if (variant.machine.pickOne) {
       for (const out of r.shuffle(outs)) {
-        const child = growFrom(out, anchor, depth + 1, r)
+        const child = growFrom(out, anchor, depth + 1, nextGears, r)
         if (child) {
           node.children.push({ out, node: child })
-          break
+          return node
         }
       }
-      return node
+      release(node)
+      return null
     }
     for (const out of r.shuffle(outs)) {
-      const child = growFrom(out, anchor, depth + 1, r)
+      const child = growFrom(out, anchor, depth + 1, nextGears, r)
       if (!child) {
         release(node)
         return null
@@ -212,15 +214,15 @@ export function buildPorts(options: Options, canvas: number): Composition {
   // Grow the chains.
   const roots: Node[] = []
   const sources = variants.filter((v) => v.machine.source)
-  const target = Math.max(1, Math.round((cells.length / 18) * (0.3 + options.chains * 1.4)))
+  const target = Math.max(1, Math.round((cells.length / 16) * (0.3 + options.chains * 1.4)))
   const growRng = rng.fork('grow')
   for (const start of growRng.shuffle(cells)) {
     if (roots.length >= target) break
     if (claimed.has(start)) continue
     const source = growRng.weighted(sources, (v) => v.machine.source ?? 0)
-    const root = grow(start, source, null, 0, growRng.fork(`chain:${start.index}`))
+    const root = grow(start, source, null, 0, 0, growRng.fork(`chain:${start.index}`))
     if (!root) continue
-    if (count(root) < 3) {
+    if (count(root) < 4) {
       release(root)
       continue
     }
@@ -304,4 +306,39 @@ export function buildPorts(options: Options, canvas: number): Composition {
     wires: [],
     overlays: [],
   }
+}
+
+/**
+ * One of everything, wired as if it sat in the middle of a chain. Shown at
+ * double speed so the ball comes round often enough to catch.
+ */
+export function portsCatalog(): CatalogEntry[] {
+  return portMachines.map((machine) => {
+    // What the machine turns its input into, in a word or two: a converter
+    // names its output, a carrier names what it carries.
+    const name = (k: string) => (k === 'shaft' ? 'gear' : k)
+    const inKind = machine.ins[0]?.kind
+    const outKind = machine.outs[0]?.kind
+    const sub = !inKind ? 'source' : !outKind ? 'sink' : inKind === outKind ? name(inKind) : `to ${name(outKind)}`
+    return {
+      contraption: asContraption(machine),
+      label: machine.label,
+      sub,
+      period: PORTS_LOOP / 2,
+      state: (state, { color }) => {
+        const inPort = machine.ins[0] ?? null
+        const shaft = machine.driver ?? (inPort?.kind === 'shaft' ? STEADY : null)
+        const link: Link = {
+          inSide: inPort?.side ?? null,
+          outSides: machine.pickOne ? ['E'] : machine.outs.map((o) => o.side),
+          ball: color,
+          drive: shaft?.drive ?? null,
+          spin: 1,
+          camAt: shaft?.camAt ?? 0,
+          mesh: 0,
+        }
+        state.link = link
+      },
+    }
+  })
 }

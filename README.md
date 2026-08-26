@@ -171,10 +171,16 @@ push into a released ball.
 
 Built from what ports taught. The ball is drawn once, by the world, along a
 track that is carved first as a closed loop — runs zig-zagging down, a bucket
-lift back up — so the piece is a perpetual machine by construction. Machines
-along the track are reactors: each reaches a feeler into the track and is
-knocked by the ball as it passes. With N balls spaced evenly, every reactor sees
-a ball every 1/N of the loop, which is exactly the period the contract wants.
+lift back up — so the piece is a perpetual machine by construction. The track
+cells draw themselves from the same path the ball follows, so lines and balls
+cannot disagree. Machines along the track are reactors: each reaches a feeler
+into the track as far as the ball and is knocked by it as it passes. With N
+balls spaced evenly going round m/N times per loop, every reactor sees a ball
+every 1/m of the loop, which is exactly the period the contract wants.
+
+Both worlds have their own **Catalog** sheet: ports shows each machine wired
+as if mid-chain, tracks shows each track shape with a ball running through it
+and each reactor beside the piece of track it reacts to.
 
 ## Options
 

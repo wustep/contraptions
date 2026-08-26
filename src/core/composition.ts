@@ -6,8 +6,8 @@ import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
-import { buildPorts } from '../worlds/ports/build'
-import { buildTracks } from '../worlds/tracks/build'
+import { buildPorts, portsCatalog } from '../worlds/ports/build'
+import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
  * Which rules the piece is built under.
@@ -28,6 +28,21 @@ export const MODES: { name: Mode; label: string; note: string }[] = [
 
 /** Something drawn over the whole piece, after the machines. */
 export type Overlay = (p: p5, loopFrame: number, ctx: { theme: Theme; weight: (size: number) => number }) => void
+
+/** One machine on the catalog sheet. Each mode lists its own. */
+export interface CatalogEntry {
+  contraption: Contraption<unknown>
+  label: string
+  sub: string
+  /** Period in frames. Defaults to the contraption's, or the loop. */
+  period?: number
+  /** Phase in frames, on top of the sheet's stagger. */
+  phase?: number
+  /** Finish the state after `setup` — worlds attach their links here. */
+  state?: (state: Record<string, unknown>, ctx: { color: string; theme: Theme }) => void
+  /** Drawn over the sheet, for worlds whose balls are not drawn by the machine. */
+  overlay?: (cell: Cell, ctx: { color: string }) => Overlay
+}
 
 export interface Options {
   seed: string
@@ -114,8 +129,25 @@ function pool(options: Options): Contraption<unknown>[] {
   return registry
 }
 
+/** One labelled instance of every machine in the classic set. */
+const classicCatalog = (): CatalogEntry[] =>
+  registry.map((c) => {
+    const [w, h] = c.span ?? [1, 1]
+    const footprint = w === 1 && h === 1 ? '' : `${w}×${h}`
+    return {
+      contraption: c,
+      label: c.label ?? c.name,
+      sub: [footprint, c.role].filter(Boolean).join(' · '),
+    }
+  })
+
 export function build(options: Options, canvas: number = CANVAS): Composition {
-  if (options.catalog) return buildCatalog(options, canvas)
+  if (options.catalog) {
+    const entries =
+      options.mode === 'ports' ? portsCatalog() : options.mode === 'tracks' ? tracksCatalog() : classicCatalog()
+    const label = MODES.find((m) => m.name === options.mode)?.label ?? 'Classic'
+    return buildCatalog(options, canvas, entries, label)
+  }
   if (options.mode === 'ports') return buildPorts(options, canvas)
   if (options.mode === 'tracks') return buildTracks(options, canvas)
 
@@ -278,7 +310,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
 /** Cell columns the catalog packs into. */
 const CATALOG_COLS = 10
 
-function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
+function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[], modeLabel: string): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(options.seed)
 
@@ -286,26 +318,28 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
   // identical slot. A 2x2 shown at half scale so it fits a single-cell slot is
   // the one thing a catalog must not do — you cannot judge a machine you are
   // being shown smaller than it is drawn. Every machine here is at true
-  // relative scale, and the big ones simply take the room they need.
-  const ordered = [...registry].sort((a, b) => {
-    const areaOf = (c: typeof a) => {
-      const [w, h] = c.span ?? [1, 1]
-      return w * h
-    }
-    const diff = areaOf(b) - areaOf(a)
-    return diff === 0 ? a.name.localeCompare(b.name) : diff
-  })
+  // relative scale, and the big ones simply take the room they need. The
+  // classic set sorts by size then name; a world's list is already in the
+  // order its author wants it read.
+  const areaOf = (e: CatalogEntry) => {
+    const [w, h] = e.contraption.span ?? [1, 1]
+    return w * h
+  }
+  const ordered =
+    options.mode === 'classic'
+      ? [...entries].sort((a, b) => areaOf(b) - areaOf(a) || a.label.localeCompare(b.label))
+      : [...entries].sort((a, b) => areaOf(b) - areaOf(a))
 
-  type Shelf = { items: typeof ordered; used: number; height: number }
+  type Shelf = { items: CatalogEntry[]; used: number; height: number }
   const shelves: Shelf[] = []
   let shelf: Shelf = { items: [], used: 0, height: 1 }
-  for (const contraption of ordered) {
-    const [cw, ch] = contraption.span ?? [1, 1]
+  for (const entry of ordered) {
+    const [cw, ch] = entry.contraption.span ?? [1, 1]
     if (shelf.used + cw > CATALOG_COLS && shelf.items.length) {
       shelves.push(shelf)
       shelf = { items: [], used: 0, height: 1 }
     }
-    shelf.items.push(contraption)
+    shelf.items.push(entry)
     shelf.used += cw
     shelf.height = Math.max(shelf.height, ch)
   }
@@ -331,16 +365,18 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
   const cells: Cell[] = []
   const captions: Caption[] = []
   const instances: Instance[] = []
+  const overlays: Overlay[] = []
   let index = 0
   let y = originY
 
   for (const [row, current] of shelves.entries()) {
-    const usedWidth = current.items.reduce((sum, c) => sum + (c.span ?? [1, 1])[0], 0)
+    const usedWidth = current.items.reduce((sum, e) => sum + (e.contraption.span ?? [1, 1])[0], 0)
     // Centre each shelf so a short last row does not hang off to one side.
     let x = (canvas - usedWidth * unit) / 2
     const shelfLine = y + current.height * unit
 
-    for (const [col, contraption] of current.items.entries()) {
+    for (const [col, entry] of current.items.entries()) {
+      const { contraption } = entry
       const [cw, ch] = contraption.span ?? [1, 1]
       const w = cw * unit
       const h = ch * unit
@@ -358,38 +394,36 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
       }
       cells.push(cell)
 
-      const footprint = cw === 1 && ch === 1 ? '' : `${cw}×${ch}`
       captions.push({
         x: cell.x,
         y: shelfLine + cap * 0.28,
-        text: contraption.label ?? contraption.name,
-        sub: [footprint, contraption.role].filter(Boolean).join(' · '),
+        text: entry.label,
+        sub: entry.sub,
         size: type,
         rule: w * 0.9,
       })
 
-      const period = contraption.period ?? LOOP
-      const cellRng = rng.fork(`catalog:${contraption.name}`)
+      const period = entry.period ?? contraption.period ?? LOOP
+      const cellRng = rng.fork(`catalog:${entry.label}`)
+      const color = cellRng.pick(theme.colors)
+      const state = contraption.setup({ rng: cellRng, size: unit, w, h, theme, cell, color }) as Record<string, unknown>
+      entry.state?.(state, { color, theme })
+      // Stagger the phases. At phase 0 most machines sit at a turning point
+      // and the whole sheet reads as frozen, which is the opposite of useful.
+      // Worlds whose balls are drawn by an overlay keep phase 0, so the
+      // machine and its ball agree on the clock.
+      const stagger = entry.overlay ? 0 : Math.round((index * 0.137 + 0.21) * period)
       instances.push({
         contraption,
-        state: contraption.setup({
-          rng: cellRng,
-          size: unit,
-          w,
-          h,
-          theme,
-          cell,
-          color: cellRng.pick(theme.colors),
-        }),
+        state,
         cell,
         angle: 0,
         mirror: 1,
-        // Stagger the phases. At phase 0 most machines sit at a turning point
-        // and the whole sheet reads as frozen, which is the opposite of useful.
-        phase: Math.round((index * 0.137 + 0.21) * period) % period,
+        phase: (((stagger + (entry.phase ?? 0)) % period) + period) % period,
         period,
         fireFrame: 0,
       })
+      if (entry.overlay) overlays.push(entry.overlay(cell, { color }))
 
       x += w
       index++
@@ -398,18 +432,24 @@ function buildCatalog(options: Options, canvas: number = CANVAS): Composition {
     y = shelfLine + cap
   }
 
+  // The sheet's loop must hold every period on it.
+  const loop = instances.reduce((l, i) => lcm(l, i.period), 1)
+
   return {
     options,
     theme,
     cells,
     instances,
-    loop: LOOP,
-    used: registry.map((c) => c.name).sort(),
+    loop,
+    used: [...new Set(entries.map((e) => e.contraption.name))].sort(),
     captions,
-    header: `${registry.length} contraptions · ${theme.label}`,
+    header: `${entries.length} contraptions · ${modeLabel} · ${theme.label}`,
     wires: [],
-    overlays: [],
+    overlays,
   }
 }
+
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+const lcm = (a: number, b: number) => (a * b) / gcd(a, b)
 
 export const strokeWeight = strokeFor
