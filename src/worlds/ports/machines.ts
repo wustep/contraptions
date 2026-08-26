@@ -82,20 +82,17 @@ const MAG_T = dropTime(0.5 - MAG_Y)
 const MAG_REFILL = 0.78
 
 /**
- * A lidded hopper holding two balls, fed by a pipe through the lid. The
- * bottom ball drops out at `release`, the one above rolls down to take its
- * place, and late in the loop a fresh ball comes down the feed pipe into the
- * empty seat — so the supply is seen to arrive rather than to appear.
+ * A closed hopper holding two balls. The bottom ball drops out at `release`
+ * and the one above rolls down to take its place; late in the loop a fresh
+ * ball is dispensed from under the lid into the empty seat, drawn only below
+ * the lid line so it emerges rather than appears.
  */
 function magazine(p: p5, link: Link, c: Ctx, release: number): void {
   const k = c.size
   outline(p, c.ink, c.weight)
-  p.line(-0.34 * k, MAG_LID * k, -TW * k, MAG_LID * k)
-  p.line(0.34 * k, MAG_LID * k, TW * k, MAG_LID * k)
+  p.line(-0.34 * k, MAG_LID * k, 0.34 * k, MAG_LID * k)
   p.line(-0.34 * k, MAG_LID * k, -TW * k, -0.14 * k)
   p.line(0.34 * k, MAG_LID * k, TW * k, -0.14 * k)
-  wall(p, k, -TW, -0.5, MAG_LID)
-  wall(p, k, TW, -0.5, MAG_LID)
   wall(p, k, -TW, -0.14, 0.1)
   wall(p, k, TW, -0.14, 0.1)
   p.line(-TW * k, 0.1 * k, -0.06 * k, 0.1 * k)
@@ -110,9 +107,15 @@ function magazine(p: p5, link: Link, c: Ctx, release: number): void {
     at(MAG_Y)
     if (u < release) at(MAG_Y2)
   }
-  if (u >= MAG_REFILL && u < MAG_REFILL + 0.06) {
-    at(drop(-0.5 - D / 2, MAG_Y2 + 0.5 + D / 2, lin(u, MAG_REFILL, MAG_REFILL + 0.06)))
-  } else if (u >= MAG_REFILL + 0.06 || u < release) {
+  if (u >= MAG_REFILL && u < MAG_REFILL + 0.08) {
+    p.push()
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.beginPath()
+    ctx.rect(-0.34 * k, MAG_LID * k, 0.68 * k, (0.5 - MAG_LID) * k)
+    ctx.clip()
+    at(lerp(MAG_LID - D / 2, MAG_Y2, easeOutCubic(seg(u, MAG_REFILL, MAG_REFILL + 0.08))))
+    p.pop()
+  } else if (u >= MAG_REFILL + 0.08 || u < release) {
     at(MAG_Y2)
   }
 }
@@ -467,8 +470,8 @@ const DOM_FALL = 0.065
 const DOM_REST = 0.85
 /** Time for a ball from the top edge to land on a bar. */
 const DOM_LAND = (FLOOR - DOM_H - D / 2 + 0.5) / FALL_V
-/** The bounce off the struck bar into the cup. */
-const DOM_BOUNCE = 0.05
+/** The ball's tumble off the struck bar into the cup. */
+const DOM_BOUNCE = 0.04
 const CUP_X = -0.31
 
 /** A row of bars from `x0`, and when its last one is over. */
@@ -517,13 +520,14 @@ export const dominoes = definePort({
     floorLine(p, k, -0.5, 0.5)
     if (byBall) {
       clipBox(p, c.w, c.h, () => {
-        // Straight down the centre lane onto the first bar, then off it into the cup.
+        // Straight down the centre lane onto the first bar, then tumbling
+        // off its near side into the cup — sideways and down, never up.
         const landY = FLOOR - DOM_H - D / 2
         let pos: Pt | null = null
         if (u >= -LEAD && u < DOM_LAND) pos = [0, -0.5 + u * FALL_V]
         else if (u < DOM_LAND + DOM_BOUNCE) {
           const f = lin(u, DOM_LAND, DOM_LAND + DOM_BOUNCE)
-          pos = [lerp(0, CUP_X, f), lerp(landY, 0.14, f * f) - 0.1 * Math.sin(f * Math.PI)]
+          pos = [lerp(0, CUP_X, f), lerp(landY, 0.14, f * f)]
         }
         if (pos) ball(p, s.link, k, c.ink, c.weight, pos)
         solid(p, c.ink, c.weight, s.color)
