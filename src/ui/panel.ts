@@ -251,14 +251,14 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const res = slider('Resolution', 4, 30, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
+  const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
     'Cells across the piece')
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
-  const spans = slider('Multi-cell', 0, 1, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
-    'How eagerly machines larger than one cell are placed')
-  const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
-    'How much of the grid is wired into runs that fire in sequence')
+  const spans = slider('Multi-cell', 0, 3, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
+    'How eagerly machines larger than one cell are placed; past 1 they crowd in')
+  const chains = slider('Wired chains', 0, 3, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
+    'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
   const layoutField = field('Layout', layoutBox.node)
   composition.append(
     field('Mode', modeBox.node),

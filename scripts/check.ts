@@ -95,6 +95,20 @@ for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
   }
 }
 
+console.log('\nextremes')
+for (const mode of ['classic', 'ports', 'tracks'] as const) {
+  for (const res of [1, 2, 50]) {
+    let ok = true
+    let count = 0
+    try {
+      count = build({ ...defaultOptions, seed: 'edge', mode, res, spans: 3, chains: 3 }, 900).instances.length
+    } catch {
+      ok = false
+    }
+    check(`${mode}@${res} with the dials at full builds`, ok, `${count} machines`)
+  }
+}
+
 console.log('\nworlds')
 for (const mode of ['ports', 'tracks'] as const) {
   for (const res of [8, 12, 16]) {
