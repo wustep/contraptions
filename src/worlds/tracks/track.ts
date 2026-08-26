@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
-import { ARC_R, ARC_WALL, BY, D, FALL_V, FLOOR, LIFT_W, ROLL_V, TW } from '../lanes'
+import { ARC_CY, ARC_R, ARC_WALL, BY, D, FALL_V, FLOOR, LIFT_W, ROLL_V, TW } from '../lanes'
 
 /**
  * Track cells. Each is one of seven shapes in a canonical hand — runs go west
@@ -192,9 +192,9 @@ export function drawTrack(
       return
     }
     case 'landing':
-      wall(p, k, -TW, -0.5, 0)
+      wall(p, k, -TW, -0.5, ARC_CY)
       wall(p, k, TW, -0.5, -0.14)
-      p.arc(ARC_R * k, 0, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
+      p.arc(ARC_R * k, ARC_CY * k, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
       floorLine(p, k, ARC_R, 0.5)
       return
     case 'drop':

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { clipBox, outline, solid, teeth } from '../../core/draw'
 import { clamp, easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { ARC_R, ARC_T, ARC_WALL, BY, D, FALL, FALL_V, FLOOR, LIFT_W, PY, ROLL, ROLL_V, TW } from '../lanes'
+import { ARC_CY, ARC_R, ARC_T, ARC_WALL, BY, D, FALL, FALL_V, FLOOR, LIFT_W, PY, ROLL, ROLL_V, TW } from '../lanes'
 import { definePort, type Link, type PortMachine } from './types'
 
 /**
@@ -73,35 +73,47 @@ function gear(p: p5, k: number, ink: string, weight: number, angle: number, spok
 
 const gearAngle = (link: Link, u: number) => (link.drive ? link.spin * link.drive(u) : 0) + link.mesh
 
-/** Stacked balls resting in a tube from the top edge. */
+/** The bottom ball's seat, the one above it, and the lid over both. */
 const MAG_Y = -0.02
+const MAG_Y2 = MAG_Y - D
+const MAG_LID = -0.42
 const MAG_T = dropTime(0.5 - MAG_Y)
+/** When the feed pipe tops the hopper back up. */
+const MAG_REFILL = 0.78
 
 /**
- * A hopper of balls: a funnel from the top edge necking into a short tube.
- * The bottom ball drops out at `release`; the column shifts down after it and
- * a fresh ball comes in under the clip, so the supply never visibly pops into
- * existence.
+ * A lidded hopper holding two balls, fed by a pipe through the lid. The
+ * bottom ball drops out at `release`, the one above rolls down to take its
+ * place, and late in the loop a fresh ball comes down the feed pipe into the
+ * empty seat — so the supply is seen to arrive rather than to appear.
  */
 function magazine(p: p5, link: Link, c: Ctx, release: number): void {
   const k = c.size
   outline(p, c.ink, c.weight)
-  p.line(-0.34 * k, -0.5 * k, -TW * k, -0.14 * k)
-  p.line(0.34 * k, -0.5 * k, TW * k, -0.14 * k)
+  p.line(-0.34 * k, MAG_LID * k, -TW * k, MAG_LID * k)
+  p.line(0.34 * k, MAG_LID * k, TW * k, MAG_LID * k)
+  p.line(-0.34 * k, MAG_LID * k, -TW * k, -0.14 * k)
+  p.line(0.34 * k, MAG_LID * k, TW * k, -0.14 * k)
+  wall(p, k, -TW, -0.5, MAG_LID)
+  wall(p, k, TW, -0.5, MAG_LID)
   wall(p, k, -TW, -0.14, 0.1)
   wall(p, k, TW, -0.14, 0.1)
   p.line(-TW * k, 0.1 * k, -0.06 * k, 0.1 * k)
   p.line(TW * k, 0.1 * k, 0.06 * k, 0.1 * k)
 
   const u = c.u
+  const at = (y: number) => ball(p, link, k, c.ink, c.weight, [0, y])
   if (u >= release && u < release + 0.16) {
-    if (u < release + MAG_T + TAIL) {
-      ball(p, link, k, c.ink, c.weight, [0, drop(MAG_Y, 0.5 - MAG_Y, lin(u, release, release + MAG_T))])
-    }
-    const shift = easeOutCubic(seg(u, release + 0.02, release + 0.16))
-    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, [0, MAG_Y - D * (i + 1) + D * shift])
+    if (u < release + MAG_T + TAIL) at(drop(MAG_Y, 0.5 - MAG_Y, lin(u, release, release + MAG_T)))
+    at(lerp(MAG_Y2, MAG_Y, easeOutCubic(seg(u, release + 0.02, release + 0.16))))
   } else {
-    for (let i = 0; i < 3; i++) ball(p, link, k, c.ink, c.weight, [0, MAG_Y - D * i])
+    at(MAG_Y)
+    if (u < release) at(MAG_Y2)
+  }
+  if (u >= MAG_REFILL && u < MAG_REFILL + 0.06) {
+    at(drop(-0.5 - D / 2, MAG_Y2 + 0.5 + D / 2, lin(u, MAG_REFILL, MAG_REFILL + 0.06)))
+  } else if (u >= MAG_REFILL + 0.06 || u < release) {
+    at(MAG_Y2)
   }
 }
 
@@ -200,9 +212,9 @@ export const landing = definePort({
     const k = c.size
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
-      wall(p, k, -TW, -0.5, 0)
+      wall(p, k, -TW, -0.5, ARC_CY)
       wall(p, k, TW, -0.5, -0.14)
-      p.arc(ARC_R * k, 0, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
+      p.arc(ARC_R * k, ARC_CY * k, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
       floorLine(p, k, ARC_R, 0.5)
       rolling(p, s, c, LAND_T3, (u) => {
         if (u < LAND_T1) return [0, -0.5 + u * FALL_V]
@@ -283,12 +295,14 @@ export const lift = definePort({
     const k = c.size
     const lowY = 0.5 + BY
     const highY = -0.5 + BY
-    const u = near(c.u)
+    // The car runs on the plain clock: its descent crosses the loop's
+    // midpoint, which the folded clock the ball uses would cut short.
+    const cu = c.u
     const carY =
-      u < LIFT_IN ? lowY
-      : u < LIFT_UP - 0.02 ? lerp(lowY, highY, easeInOutCubic(seg(u, LIFT_IN, LIFT_UP - 0.02)))
-      : u < LIFT_OUT + 0.04 ? highY
-      : lerp(highY, lowY, easeInOutCubic(seg(u, LIFT_OUT + 0.04, LIFT_OUT + 0.34)))
+      cu < LIFT_IN ? lowY
+      : cu < LIFT_UP - 0.02 ? lerp(lowY, highY, easeInOutCubic(seg(cu, LIFT_IN, LIFT_UP - 0.02)))
+      : cu < LIFT_OUT + 0.04 ? highY
+      : lerp(highY, lowY, easeInOutCubic(seg(cu, LIFT_OUT + 0.04, LIFT_OUT + 0.34)))
 
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)

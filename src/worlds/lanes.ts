@@ -35,6 +35,8 @@ export const FALL = 1 / FALL_V
  * ball's radius, which is what lets the tube wall run straight into it.
  */
 export const ARC_R = BY
-export const ARC_WALL = BY + D / 2
+export const ARC_WALL = ARC_R + TW
+/** Centre height of the wall's arc: it lands on the floor and meets the tube wall. */
+export const ARC_CY = FLOOR - ARC_WALL
 /** Loop fraction the arc takes: its length at a speed between fall and roll. */
 export const ARC_T = ((Math.PI / 2) * ARC_R) / ((ROLL_V + FALL_V) / 2)
