@@ -116,6 +116,8 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 /* ---- fields --------------------------------------------------------- */
 
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+/* Controls that do nothing in the current mode are hidden outright. */
+[hidden] { display: none !important; }
 .field > label {
   color: var(--dim);
   font-size: 11px;

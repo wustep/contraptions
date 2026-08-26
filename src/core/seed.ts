@@ -31,12 +31,14 @@ export function randomSeed(): string {
  * someone steers into deliberately, not a place a dice roll should strand
  * them, so the middle of each range carries most of the weight and the ends
  * appear only as occasional visitors. Pool filters and catalog mode reset —
- * a full roll means "show me a fresh piece".
+ * a full roll means "show me a fresh piece" — but the mode stays, since it is
+ * a choice of world rather than a dial on this one.
  */
-export function rollOptions(): Options {
+export function rollOptions(current: Options): Options {
   const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
   return {
     ...defaultOptions,
+    mode: current.mode,
     seed: randomSeed(),
     theme: pick(themes).name,
     layout: pick(layouts).name,

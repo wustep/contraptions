@@ -259,10 +259,11 @@ export function createPanel(
     'How eagerly machines larger than one cell are placed')
   const chains = slider('Wired chains', 0, 1, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
     'How much of the grid is wired into runs that fire in sequence')
+  const layoutField = field('Layout', layoutBox.node)
   composition.append(
     field('Mode', modeBox.node),
     field('Theme', themeBox.node),
-    field('Layout', layoutBox.node),
+    layoutField,
     res.node, stroke.node, spans.node, chains.node,
   )
 
@@ -287,10 +288,22 @@ export function createPanel(
   catalog.addEventListener('click', () => handlers.onChange({ catalog: !(lastComp?.options.catalog ?? initial.catalog) }))
   const gridBtn = el('button', {}, ['Grid'])
   gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
-  explore.append(
-    el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)]),
-    el('div', { class: 'row' }, [catalog, gridBtn]),
-  )
+  const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
+  explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
+
+  /**
+   * The worlds build on a plain grid, place no multi-cell machines from the
+   * classic set, and have their own machine lists — so the controls for those
+   * things are hidden rather than left to do nothing. Ports keeps the chains
+   * dial, which sets how many chains it grows.
+   */
+  const showFor = (mode: Mode) => {
+    const classic = mode === 'classic'
+    layoutField.hidden = !classic
+    spans.node.hidden = !classic
+    chains.node.hidden = mode === 'tracks'
+    poolRow.hidden = !classic
+  }
 
   // Transport
   const transport = section('Transport', 'transport')
@@ -354,6 +367,7 @@ export function createPanel(
       lastView = view
       seedInput.value = comp.options.seed
       modeBox.set(comp.options.mode)
+      showFor(comp.options.mode)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
       soloBox.set(comp.options.solo ?? '')
