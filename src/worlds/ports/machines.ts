@@ -437,11 +437,13 @@ export const cam = definePort({
     p.circle(Math.cos(pin) * GR * k, Math.sin(pin) * GR * k, 0.13 * k)
     p.circle(0, 0, 0.12 * k)
 
+    // The follower rides on the rim and, at full stroke, reaches just past
+    // the edge — far enough to touch the first thing in the next cell.
     outline(p, c.ink, c.weight)
     p.line(0.46 * k, (PY - 0.07) * k, 0.46 * k, (PY + 0.07) * k)
     solid(p, c.ink, c.weight, s.color)
-    p.rect((CAM_X + 0.05 + ext) * k, PY * k, 0.2 * k, 0.06 * k)
-    p.circle((CAM_X + 0.15 + ext) * k, PY * k, 0.06 * k)
+    p.rect((CAM_X - 0.01 + ext) * k, PY * k, 0.16 * k, 0.06 * k)
+    p.circle((CAM_X + 0.07 + ext) * k, PY * k, 0.06 * k)
   },
 })
 
@@ -449,15 +451,26 @@ const DOM_H = 0.32
 const DOM_W = 0.08
 const DOM_FALL = 0.065
 const DOM_REST = 0.85
-const DOM_X0 = -0.36
-/** Time for a ball from the top edge to land on the first bar. */
+/** Time for a ball from the top edge to land on a bar. */
 const DOM_LAND = (FLOOR - DOM_H - D / 2 + 0.5) / FALL_V
+/** The bounce off the struck bar into the cup. */
+const DOM_BOUNCE = 0.05
+const CUP_X = -0.31
+
+/** A row of bars from `x0`, and when its last one is over. */
+function domRow(x0: number, span: number, count: number) {
+  const gap = span / (count - 1)
+  const contact = Math.asin(clamp(gap / DOM_H, 0, 1))
+  const lead = Math.sqrt(clamp(contact / DOM_REST, 0, 1))
+  return { x0, count, gap, lead, tOut: (count - 1) * lead * DOM_FALL + DOM_FALL * 0.9 }
+}
 
 /**
- * A row of bars. Pushed at the west edge — or hit by a ball dropped on the
- * first bar — they go over in sequence and the last one falls out through the
- * east. A dropped ball rests beside the row until the reset, when a trapdoor
- * lets it out. The converter from ball to push.
+ * A row of bars that go over in sequence, the last falling out through the
+ * east. Pushed at the west edge, the row spans the cell. Struck by a ball
+ * from above, the first bar stands under the ball's lane at the centre and
+ * the row runs east from there; the ball bounces off it into a cup on the
+ * west side, which keeps it. The converter from ball to push.
  */
 export const dominoes = definePort({
   name: 'dominoes',
@@ -466,60 +479,59 @@ export const dominoes = definePort({
     { side: 'W', kind: 'push', t: 0 },
     { side: 'N', kind: 'ball', t: 0 },
   ],
-  outs: [{ side: 'E', kind: 'push', t: (s: { tOut: number; link: Link }) => s.tOut + (s.link.inSide === 'N' ? DOM_LAND : 0) }],
-  setup: ({ color, rng }) => {
-    const count = rng.pick([5, 6])
-    const gap = 0.7 / (count - 1)
-    const contact = Math.asin(clamp(gap / DOM_H, 0, 1))
-    const lead = Math.sqrt(clamp(contact / DOM_REST, 0, 1))
-    return { color, count, gap, lead, tOut: (count - 1) * lead * DOM_FALL + DOM_FALL * 0.9 }
-  },
+  outs: [
+    {
+      side: 'E',
+      kind: 'push',
+      t: (s: { byPush: { tOut: number }; byBall: { tOut: number }; link: Link }) =>
+        s.link.inSide === 'N' ? DOM_LAND + s.byBall.tOut : s.byPush.tOut,
+    },
+  ],
+  setup: ({ color, rng }) => ({
+    color,
+    byPush: domRow(-0.36, 0.7, rng.pick([5, 6])),
+    byBall: domRow(0, 0.36, 4),
+  }),
   draw: (p, s, c) => {
     const k = c.size
     const byBall = s.link.inSide === 'N'
+    const row = byBall ? s.byBall : s.byPush
     const start0 = byBall ? DOM_LAND : 0
     const u = near(c.u)
 
-    clipBox(p, c.w, c.h, () => {
-      outline(p, c.ink, c.weight)
-      floorLine(p, k, -0.5, 0.5)
-      if (byBall) {
-        // Fall onto the first bar, roll off it as it tips, rest, then leave
-        // through the trapdoor just before the bars stand back up.
-        const restX = DOM_X0 - D / 2 - 0.01
-        const restY = BY
+    outline(p, c.ink, c.weight)
+    floorLine(p, k, -0.5, 0.5)
+    if (byBall) {
+      clipBox(p, c.w, c.h, () => {
+        // Straight down the centre lane onto the first bar, then off it into the cup.
+        const landY = FLOOR - DOM_H - D / 2
         let pos: Pt | null = null
-        if (u >= -LEAD && u < DOM_LAND) pos = [DOM_X0, -0.5 + u * FALL_V]
-        else if (u < DOM_LAND + DOM_FALL) {
-          const f = easeInQuad(seg(u, DOM_LAND, DOM_LAND + DOM_FALL))
-          pos = [lerp(DOM_X0, restX, f), lerp(FLOOR - DOM_H - D / 2, restY, f)]
-        } else if (u < 0.6) pos = [restX, restY]
-        else if (u < 0.66) pos = [restX, drop(restY, 0.5 - restY, lin(u, 0.6, 0.64))]
+        if (u >= -LEAD && u < DOM_LAND) pos = [0, -0.5 + u * FALL_V]
+        else if (u < DOM_LAND + DOM_BOUNCE) {
+          const f = lin(u, DOM_LAND, DOM_LAND + DOM_BOUNCE)
+          pos = [lerp(0, CUP_X, f), lerp(landY, 0.14, f * f) - 0.1 * Math.sin(f * Math.PI)]
+        }
         if (pos) ball(p, s.link, k, c.ink, c.weight, pos)
-        // The trapdoor swings down and shuts again.
-        const open = easeOutCubic(seg(u, 0.6, 0.64)) - easeInOutCubic(seg(u, 0.68, 0.76))
-        p.push()
-        p.translate((restX + 0.14) * k, FLOOR * k)
-        p.rotate(open * 1.3)
-        outline(p, c.ink, c.weight)
-        p.line(0, 0, -0.28 * k, 0)
-        p.pop()
-      }
-      for (let i = 0; i < s.count; i++) {
-        const x = DOM_X0 + s.gap * i
-        const last = i === s.count - 1
-        const start = start0 + i * s.lead * DOM_FALL
-        const fallen = easeInQuad(seg(c.u, start, start + DOM_FALL))
-        const riseAt = 0.7 + (s.count - 1 - i) * 0.03
-        const rise = easeInOutCubic(seg(c.u, riseAt, riseAt + 0.1))
-        p.push()
-        p.translate(x * k, FLOOR * k)
-        p.rotate((last ? 1 : DOM_REST) * fallen * (1 - rise))
         solid(p, c.ink, c.weight, s.color)
-        p.rect(0, (-DOM_H / 2) * k, DOM_W * k, DOM_H * k)
-        p.pop()
-      }
-    })
+        p.rect(CUP_X * k, 0.19 * k, 0.3 * k, 0.3 * k)
+      })
+    }
+    // The bars are not clipped: the last one has to reach into the next cell
+    // to be seen hitting whatever is there.
+    for (let i = 0; i < row.count; i++) {
+      const x = row.x0 + row.gap * i
+      const last = i === row.count - 1
+      const start = start0 + i * row.lead * DOM_FALL
+      const fallen = easeInQuad(seg(c.u, start, start + DOM_FALL))
+      const riseAt = 0.7 + (row.count - 1 - i) * 0.03
+      const rise = easeInOutCubic(seg(c.u, riseAt, riseAt + 0.1))
+      p.push()
+      p.translate(x * k, FLOOR * k)
+      p.rotate((last ? 1 : DOM_REST) * fallen * (1 - rise))
+      solid(p, c.ink, c.weight, s.color)
+      p.rect(0, (-DOM_H / 2) * k, DOM_W * k, DOM_H * k)
+      p.pop()
+    }
   },
 })
 
@@ -567,17 +579,16 @@ export const bell = definePort({
     p.circle(0, (bh + 0.05) * k, 0.1 * k)
     p.pop()
 
-    // The striker: pushed at the floor, it pivots up into the bell's lip.
+    // The striker stands right at the edge, where a bar or a rod from the
+    // next cell can reach it, and pivots up into the bell's lip.
     p.push()
-    p.translate(-0.3 * k, FLOOR * k)
+    p.translate(-0.44 * k, FLOOR * k)
     p.rotate(arm)
     outline(p, c.ink, c.weight)
     p.line(0, 0, 0, -0.42 * k)
     solid(p, c.ink, c.weight, s.color)
     p.circle(0, -0.42 * k, 0.1 * k)
     p.pop()
-    outline(p, c.ink, c.weight)
-    p.line(-0.3 * k, FLOOR * k, -0.3 * k, (FLOOR - PY) * k)
   },
 })
 
