@@ -1,7 +1,7 @@
 import { registry, allTags } from '../contraptions'
 import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
-import { themes } from '../core/themes'
+import { themeByName, themes } from '../core/themes'
 import { MODES, type Composition, type Mode, type Options } from '../core/composition'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
@@ -98,11 +98,11 @@ function layoutGlyph(name: string): SVGSVGElement | undefined {
  * A one-hot row of buttons. Cheaper to reason about than a select for a dial
  * with three to five known stops, and it reads at a glance.
  */
-function segmented(
-  values: number[],
-  format: (v: number) => string,
-  onPick: (v: number) => void,
-): { node: HTMLElement; set(current: number): void } {
+function segmented<T extends string | number>(
+  values: readonly T[],
+  format: (v: T) => string,
+  onPick: (v: T) => void,
+): { node: HTMLElement; set(current: T): void } {
   const node = el('div', { class: 'seg', role: 'group' })
   const buttons = values.map((v) => {
     const b = el('button', { type: 'button' }, [format(v)])
@@ -117,6 +117,9 @@ function segmented(
     },
   }
 }
+
+const modeNoteFor = (mode: Mode) => MODES.find((m) => m.name === mode)?.note ?? ''
+const themeNoteFor = (name: string) => themeByName(name).note ?? ''
 
 export function createPanel(
   root: HTMLElement,
@@ -229,12 +232,15 @@ export function createPanel(
 
   // Composition
   const composition = section('Composition')
-  const modeBox = createListbox({
-    items: MODES.map((m) => ({ value: m.name, label: m.label })),
-    value: initial.mode,
-    label: 'Mode',
-    onChange: (v) => handlers.onChange({ mode: v as Mode }),
-  })
+  const modeSeg = segmented(
+    MODES.map((m) => m.name),
+    (v) => MODES.find((m) => m.name === v)?.label ?? v,
+    (v) => handlers.onChange({ mode: v }),
+  )
+  modeSeg.node.setAttribute('aria-label', 'Mode')
+  const modeNote = el('p', { class: 'note' }, [modeNoteFor(initial.mode)])
+  const modeField = field('Mode', modeSeg.node)
+  modeField.append(modeNote)
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -245,6 +251,9 @@ export function createPanel(
     label: 'Theme',
     onChange: (v) => handlers.onChange({ theme: v }),
   })
+  const themeNote = el('p', { class: 'note' }, [themeNoteFor(initial.theme)])
+  const themeField = field('Theme', themeBox.node)
+  themeField.append(themeNote)
   const layoutBox = createListbox({
     items: layouts.map((l) => ({ value: l.name, label: l.label, glyph: layoutGlyph(l.name) })),
     value: initial.layout,
@@ -261,8 +270,8 @@ export function createPanel(
     'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
   const layoutField = field('Layout', layoutBox.node)
   composition.append(
-    field('Mode', modeBox.node),
-    field('Theme', themeBox.node),
+    modeField,
+    themeField,
     layoutField,
     res.node, stroke.node, spans.node, chains.node,
   )
@@ -366,9 +375,11 @@ export function createPanel(
       lastComp = comp
       lastView = view
       seedInput.value = comp.options.seed
-      modeBox.set(comp.options.mode)
+      modeSeg.set(comp.options.mode)
+      modeNote.textContent = modeNoteFor(comp.options.mode)
       showFor(comp.options.mode)
       themeBox.set(comp.options.theme)
+      themeNote.textContent = themeNoteFor(comp.options.theme)
       layoutBox.set(comp.options.layout)
       soloBox.set(comp.options.solo ?? '')
       tagBox.set(comp.options.tag ?? '')

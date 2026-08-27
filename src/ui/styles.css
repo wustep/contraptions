@@ -135,6 +135,16 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   font-variant-numeric: tabular-nums;
 }
 
+/* One-line caption under a world or palette — the unused note on each Mode,
+   and the theme's own subtitle. Hidden fields already collapse: [hidden]
+   is display:none, so a dial showFor removes does not leave an empty slot. */
+.note {
+  margin: -1px 0 0;
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 
 /* ---- listbox --------------------------------------------------------- */
 
