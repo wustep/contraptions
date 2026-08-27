@@ -84,6 +84,20 @@ const fingerprint = (c: ReturnType<typeof build>) =>
   JSON.stringify(c.instances.map((i) => [i.contraption.name, i.phase, i.angle, i.cell.x, i.cell.y]))
 
 console.log('\ncomposition')
+{
+  const base = { ...defaultOptions, seed: 'stroke-draw', res: 12, spans: 0.8, chains: 1 }
+  check(
+    'stroke does not change placement',
+    fingerprint(build({ ...base, stroke: 0.4 }, 900)) === fingerprint(build({ ...base, stroke: 2.4 }, 900)),
+  )
+  for (const mode of ['ports', 'tracks'] as const) {
+    const a = { ...base, mode, chains: 0.8 }
+    check(
+      `stroke does not rebuild ${mode}`,
+      fingerprint(build({ ...a, stroke: 0.4 }, 900)) === fingerprint(build({ ...a, stroke: 2.4 }, 900)),
+    )
+  }
+}
 for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
   for (const res of [8, 12, 15, 20]) {
     const options = { ...defaultOptions, seed: `${layout}-${res}`, layout, res, spans: 0.8, chains: 1 }

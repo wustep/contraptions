@@ -165,6 +165,8 @@ export function createPanel(
     fmt: (v: number) => string,
     apply: (v: number) => void,
     hint = '',
+    /** When set, `input` waits this many ms (or the `change` event) before applying. */
+    debounceMs?: number,
   ) => {
     const readout = el('b', {}, [fmt(value)])
     const input = el('input', {
@@ -175,10 +177,26 @@ export function createPanel(
       value: String(value),
       'aria-label': labelText,
     })
+    let debounce = 0
+    let lastSent = value
+    const commit = () => {
+      window.clearTimeout(debounce)
+      debounce = 0
+      const v = Number(input.value)
+      if (v === lastSent) return
+      lastSent = v
+      apply(v)
+    }
     input.addEventListener('input', () => {
       readout.textContent = fmt(Number(input.value))
-      apply(Number(input.value))
+      if (debounceMs == null) {
+        apply(Number(input.value))
+        return
+      }
+      window.clearTimeout(debounce)
+      debounce = window.setTimeout(commit, debounceMs)
     })
+    if (debounceMs != null) input.addEventListener('change', commit)
     guardWheel(input)
     const node = field(labelText, input, readout)
     if (hint) node.title = hint
@@ -187,6 +205,7 @@ export function createPanel(
       set(v: number) {
         input.value = String(v)
         readout.textContent = fmt(v)
+        lastSent = v
       },
     }
   }
@@ -251,14 +270,18 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
+  // res / spans / chains recarve the piece (placement, ports DFS, tracks).
+  // Commit on release, or ~80ms after the last input so a drag still previews
+  // without rebuilding on every pointermove. Stroke is draw-time; keep it live.
+  const rebuildWait = 80
   const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
-    'Cells across the piece')
+    'Cells across the piece', rebuildWait)
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
   const spans = slider('Multi-cell', 0, 3, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
-    'How eagerly machines larger than one cell are placed; past 1 they crowd in')
+    'How eagerly machines larger than one cell are placed; past 1 they crowd in', rebuildWait)
   const chains = slider('Wired chains', 0, 3, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
-    'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
+    'How much of the grid is wired into runs that fire in sequence; past 1 they take over', rebuildWait)
   const layoutField = field('Layout', layoutBox.node)
   composition.append(
     field('Mode', modeBox.node),

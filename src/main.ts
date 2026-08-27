@@ -35,7 +35,15 @@ engine.setSpeed(view.speed)
 /** Composition changes rebuild the piece and land in the URL. */
 function apply(patch: Partial<Options>) {
   options = { ...options, ...patch }
-  comp = build(options, canvasSize)
+  // Stroke is a draw-time multiplier on ink weight. Rebuilding would
+  // re-place every machine and recarve ports/tracks for a value the next
+  // frame already reads off options.
+  const keys = Object.keys(patch) as (keyof Options)[]
+  if (keys.length === 1 && keys[0] === 'stroke') {
+    comp = { ...comp, options }
+  } else {
+    comp = build(options, canvasSize)
+  }
   engine.setComposition(comp)
   writeUrl(options)
   panel.sync(comp, view)
