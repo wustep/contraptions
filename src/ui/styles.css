@@ -116,6 +116,15 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 /* ---- fields --------------------------------------------------------- */
 
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field-head {
+  color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
 /* Controls that do nothing in the current mode are hidden outright. */
 [hidden] { display: none !important; }
 .field > label {
@@ -327,6 +336,7 @@ button.primary:hover { background: #ffc63d; border-color: #ffc63d; }
 button.primary kbd { background: rgba(0, 0, 0, 0.14); border-color: rgba(0, 0, 0, 0.25); color: #4d3c0e; }
 button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 button.ok { color: #8fd8a0; border-color: #3c5a44; }
+button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 
 /* ---- segmented ------------------------------------------------------ */
 

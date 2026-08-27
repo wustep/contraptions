@@ -239,8 +239,10 @@ export function createPanel(
   )
   modeSeg.node.setAttribute('aria-label', 'Mode')
   const modeNote = el('p', { class: 'note' }, [modeNoteFor(initial.mode)])
-  const modeField = field('Mode', modeSeg.node)
-  modeField.append(modeNote)
+  const catalog = el('button', { type: 'button', class: 'chip', title: 'One labelled instance of every machine' }, ['Catalog'])
+  catalog.addEventListener('click', () => handlers.onChange({ catalog: !(lastComp?.options.catalog ?? initial.catalog) }))
+  const modeHead = el('div', { class: 'field-head' }, [el('span', {}, ['Mode']), catalog])
+  const modeField = el('div', { class: 'field' }, [modeHead, modeSeg.node, modeNote])
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -293,25 +295,28 @@ export function createPanel(
     label: 'Solo contraption',
     onChange: (v) => handlers.onChange({ solo: v || null }),
   })
-  const catalog = el('button', {}, ['Catalog'])
-  catalog.addEventListener('click', () => handlers.onChange({ catalog: !(lastComp?.options.catalog ?? initial.catalog) }))
-  const gridBtn = el('button', {}, ['Grid'])
-  gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
   const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
-  explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
+  explore.append(poolRow)
 
   /**
    * The worlds build on a plain grid, place no multi-cell machines from the
    * classic set, and have their own machine lists — so the controls for those
    * things are hidden rather than left to do nothing. Ports keeps the chains
    * dial, which sets how many chains it grows.
+   *
+   * Catalog rebuilds the piece as a labelled sheet: resolution, layout, spans,
+   * chains, tag and solo are ignored, so they leave with the empty slot.
+   * Stroke still paints the sheet. Explore collapses when Tag/Solo do.
    */
-  const showFor = (mode: Mode) => {
-    const classic = mode === 'classic'
+  const showFor = (mode: Mode, catalogOn = false) => {
+    const compose = !catalogOn
+    const classic = mode === 'classic' && compose
     layoutField.hidden = !classic
     spans.node.hidden = !classic
-    chains.node.hidden = mode === 'tracks'
+    chains.node.hidden = !compose || mode === 'tracks'
+    res.node.hidden = !compose
     poolRow.hidden = !classic
+    explore.hidden = poolRow.hidden
   }
 
   // Transport
@@ -339,10 +344,13 @@ export function createPanel(
   const fwd = el('button', { class: 'tbtn', title: 'Forward a beat — 1/8 loop (shift+→)', 'aria-label': 'Forward one beat' }, [icon(ICON.fwd)])
   fwd.addEventListener('click', () => handlers.onBeat(1))
   const speedSeg = segmented(SPEEDS, (v) => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`), (v) => handlers.onView({ speed: v }))
+  const gridBtn = el('button', { type: 'button', title: 'Faint cell outlines (G)' }, ['Grid', el('kbd', {}, ['G'])])
+  gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
   transport.append(
     scrub,
     el('div', { class: 'deck' }, [back, play, fwd]),
     speedSeg.node,
+    gridBtn,
   )
 
   // Export
@@ -377,7 +385,7 @@ export function createPanel(
       seedInput.value = comp.options.seed
       modeSeg.set(comp.options.mode)
       modeNote.textContent = modeNoteFor(comp.options.mode)
-      showFor(comp.options.mode)
+      showFor(comp.options.mode, comp.options.catalog)
       themeBox.set(comp.options.theme)
       themeNote.textContent = themeNoteFor(comp.options.theme)
       layoutBox.set(comp.options.layout)
@@ -387,7 +395,6 @@ export function createPanel(
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
       chains.set(comp.options.chains)
-      catalog.textContent = comp.options.catalog ? 'Exit catalog' : 'Catalog'
       catalog.classList.toggle('on', comp.options.catalog)
       gridBtn.classList.toggle('on', view.grid)
       play.replaceChildren(view.paused ? playIcon : pauseIcon)
