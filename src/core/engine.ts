@@ -22,6 +22,8 @@ export interface Engine {
    * print-sized.
    */
   savePng(filename: string, scale?: number): void
+  /** Draw one frame at the current clock. Used by scripted capture. */
+  redraw(): void
   destroy(): void
 }
 
@@ -75,7 +77,8 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   }
 
   for (const w of comp.wires) {
-    const travel = mod(loopFrame - w.start, comp.loop) / (w.end - w.start)
+    const period = w.period ?? comp.loop
+    const travel = mod(loopFrame - w.start, period) / (w.end - w.start)
     if (travel > 1) continue
     p.fill(w.color)
     p.circle(
@@ -192,6 +195,10 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
         p.translate(cell.x, cell.y)
         p.rotate(inst.angle)
         p.scale(inst.mirror, 1)
+        // `fired` is derived from this machine's own `u`, so it peaks every
+        // period at `fireAt` even when the composition loop is a multiple.
+        const fireAt = contraption.fireAt ?? 0
+        const after = mod(u - fireAt, 1)
         contraption.draw(p, inst.state, {
           size: cell.size,
           w: cell.w,
@@ -201,7 +208,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
           u,
           weight: strokeWeight(cell.size, theme, comp.options.stroke),
           ink: theme.ink,
-          fired: Math.max(0, 1 - mod(loopFrame - inst.fireFrame, comp.loop) / FIRE_DECAY),
+          fired: Math.max(0, 1 - (after * inst.period) / FIRE_DECAY),
         })
         p.pop()
       }
@@ -245,6 +252,9 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
     progress: () => mod(frame, comp.loop) / comp.loop,
     setProgress(u) {
       frame = u * comp.loop
+    },
+    redraw() {
+      instance?.redraw()
     },
     savePng(filename, scale = 1) {
       if (!instance) return

@@ -1,6 +1,7 @@
 import { MODES, defaultOptions, type Options } from './composition'
 import { layouts } from './layouts'
 import { themes } from './themes'
+import { PIECES, pieceByName } from '../worlds/pieces'
 
 const ADJECTIVES = [
   'brass', 'copper', 'quiet', 'idle', 'clever', 'stubborn', 'patient', 'restless',
@@ -39,6 +40,7 @@ export function rollOptions(current: Options): Options {
   return {
     ...defaultOptions,
     mode: current.mode,
+    piece: current.piece,
     seed: randomSeed(),
     theme: pick(themes).name,
     layout: pick(layouts).name,
@@ -69,12 +71,25 @@ export function readUrl(): Options {
     } else if (key === 'mode') {
       const mode = MODES.find((m) => m.name === raw)
       if (mode) options.mode = mode.name
+    } else if (key === 'piece') {
+      options.piece = PIECES.some((p) => p.name === raw) ? raw : null
     } else {
       ;(options[key] as string) = raw
     }
   }
+  if (options.piece && params.get('theme') === null) {
+    const def = pieceByName(options.piece)
+    if (def) {
+      options.theme = def.theme
+      if (params.get('stroke') === null && def.stroke != null) options.stroke = def.stroke
+    }
+  }
   return options
 }
+
+/** Scatter dials that an authored piece ignores. Kept off the URL so a shared
+ *  piece link is just the piece, the theme, and the seed. */
+const SCATTER_KEYS = new Set(['mode', 'layout', 'res', 'spans', 'chains', 'solo', 'tag', 'catalog'])
 
 /** Mirror options into the address bar so any state is a shareable link. */
 export function writeUrl(options: Options): void {
@@ -82,6 +97,7 @@ export function writeUrl(options: Options): void {
   for (const [key, value] of Object.entries(options)) {
     if (value === null || value === '' || value === false) continue
     if (value === defaultOptions[key as keyof Options] && key !== 'seed') continue
+    if (options.piece && SCATTER_KEYS.has(key)) continue
     params.set(key, value === true ? '1' : String(value))
   }
   const query = params.toString()

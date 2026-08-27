@@ -18,7 +18,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-36 machines, 14 palettes, 4 layouts.
+36 machines, 14 palettes, 4 layouts, 3 authored pieces.
 
 ## How it fits together
 
@@ -40,6 +40,7 @@ src/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
+    pieces/         three authored Goldberg machines that use all three languages
   ui/               the seed explorer
 ```
 
@@ -182,11 +183,28 @@ Both worlds have their own **Catalog** sheet: ports shows each machine wired
 as if mid-chain, tracks shows each track shape with a ball running through it
 and each reactor beside the piece of track it reacts to.
 
+### Pieces
+
+Scatter is a generator. The Piece picker holds three authored Goldberg
+machines that use all three languages on one clock: port converters handing
+tokens across edges, balls circulating on a closed track, and a wired classic
+chain. `draw` is still a pure function of `u`. Share any of them with the URL
+(`?piece=alarm`). Classic, ports, and tracks are untouched.
+
+| Piece | Story |
+| --- | --- |
+| Alarm | A hopper drops a ball through a paddle wheel; the wheel's cam unlatches a second ball into a cup, and a circulating ball knocks a flag as a wired hammer rings the bell. |
+| Mill | A windmill turns a cam that trips a latch; the released ball falls through a paddle into a cup, while circulating balls knock a counter and a wired drip sends the elevator up. |
+| Cascade | A hopper at the top falls through tubes onto a paddle whose cam topples dominoes into a bell, and a lower loop of circulating balls knocks the flags home. |
+
+Each piece is a 12-second loop. Reroll shuffles the fills; the machines stay put.
+
 ## Options
 
 | Control | Effect |
 | --- | --- |
 | Seed | Everything random derives from this string |
+| Piece | `alarm`, `mill`, `cascade` — an authored Goldberg; empty is scatter |
 | Mode | `classic`, `ports` (tokens handed across edges), `tracks` (balls circulating on a loop) |
 | Theme | 14 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) |

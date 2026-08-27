@@ -115,6 +115,14 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 
 /* ---- fields --------------------------------------------------------- */
 
+.story {
+  margin: 0;
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.story[hidden] { display: none !important; }
+
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 /* Controls that do nothing in the current mode are hidden outright. */
 [hidden] { display: none !important; }

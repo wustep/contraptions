@@ -7,6 +7,7 @@ import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
+import { buildPiece } from '../worlds/pieces'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
@@ -63,6 +64,11 @@ export interface Options {
   spans: number
   /** How much of the grid to wire into firing chains, 0..1. */
   chains: number
+  /**
+   * An authored piece. When set, the scatter composer is skipped and this
+   * named composition is built instead. Classic / ports / tracks stay intact.
+   */
+  piece: string | null
 }
 
 export const defaultOptions: Options = {
@@ -77,6 +83,7 @@ export const defaultOptions: Options = {
   catalog: false,
   spans: 0.5,
   chains: 0.5,
+  piece: null,
 }
 
 export interface Caption {
@@ -142,6 +149,10 @@ const classicCatalog = (): CatalogEntry[] =>
   })
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
+  if (!options.catalog && options.piece) {
+    const authored = buildPiece(options, canvas)
+    if (authored) return authored
+  }
   if (options.catalog) {
     const entries =
       options.mode === 'ports' ? portsCatalog() : options.mode === 'tracks' ? tracksCatalog() : classicCatalog()

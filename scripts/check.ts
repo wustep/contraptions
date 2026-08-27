@@ -12,6 +12,7 @@ import { LOOP } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
 import { registry } from '../src/contraptions'
 import type { Instance } from '../src/core/types'
+import { PIECES, PIECE_LOOP } from '../src/worlds/pieces'
 import { portMachines } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 
@@ -217,6 +218,66 @@ check(
     return Math.abs(u - want) < 0.02 || Math.abs(u - want) > 0.98
   }),
 )
+
+console.log('\npieces')
+check('three authored pieces', PIECES.length === 3, `${PIECES.length}`)
+check(
+  'piece names are unique',
+  new Set(PIECES.map((p) => p.name)).size === PIECES.length,
+)
+for (const def of PIECES) {
+  const options = { ...defaultOptions, seed: def.name, piece: def.name, theme: def.theme }
+  let authored: ReturnType<typeof build> | null = null
+  let threw = ''
+  try {
+    authored = build(options, 900)
+  } catch (err) {
+    threw = err instanceof Error ? err.message : String(err)
+  }
+  check(`${def.label} builds`, Boolean(authored) && !threw, threw)
+  if (!authored) continue
+  check(`${def.label} uses its grid`, authored.options.res === def.res)
+  check(`${def.label} loops in ${PIECE_LOOP}`, authored.loop === PIECE_LOOP)
+  check(`${def.label} has no overlapping machines`, !overlaps(authored))
+  check(
+    `${def.label} rebuilds identically from its seed`,
+    fingerprint(authored) === fingerprint(build(options, 900)),
+  )
+  check(
+    `${def.label} keeps every period a divisor of the loop`,
+    authored.instances.every((i) => authored!.loop % i.period === 0),
+  )
+  const names = new Set(authored.used)
+  check(`${def.label} has a port converter`, ['paddle', 'cam', 'latch', 'dominoes'].some((n) => names.has(n)))
+  check(`${def.label} has a port sink`, ['cup', 'bell'].some((n) => names.has(n)))
+  check(`${def.label} has a circulating track`, names.has('track'))
+  check(`${def.label} has a reactor`, [...names].some((n) => n.startsWith('react-')))
+  check(`${def.label} has a wired chain`, authored.wires.length >= 2, `${authored.wires.length} links`)
+  check(`${def.label} draws balls over the track`, authored.overlays.length >= 1)
+  check(
+    `${def.label} wires join neighbours`,
+    authored.wires.every(
+      (w) =>
+        w.from.size === w.to.size &&
+        Math.abs(Math.hypot(w.to.x - w.from.x, w.to.y - w.from.y) - w.from.size) < 1,
+    ),
+  )
+}
+{
+  const unknown = build({ ...defaultOptions, seed: 'chains', piece: 'no-such-piece' }, 900)
+  check(
+    'unknown piece falls back to scatter',
+    unknown.overlays.length === 0 && unknown.instances.length > 0 && !unknown.used.includes('track'),
+  )
+}
+{
+  const classic = build({ ...defaultOptions, seed: 'chains', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
+  const withPieceNull = build(
+    { ...defaultOptions, seed: 'chains', layout: 'grid', res: 14, spans: 0.4, chains: 1, piece: null },
+    900,
+  )
+  check('classic scatter is unchanged by the piece field', fingerprint(classic) === fingerprint(withPieceNull))
+}
 
 console.log('\ncatalog')
 const catalog = build({ ...defaultOptions, seed: 'catalog', catalog: true }, 900)

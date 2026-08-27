@@ -3,6 +3,7 @@ import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
 import { MODES, type Composition, type Mode, type Options } from '../core/composition'
+import { PIECES, pieceByName } from '../worlds/pieces'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
@@ -229,11 +230,32 @@ export function createPanel(
 
   // Composition
   const composition = section('Composition')
+  const pieceBox = createListbox({
+    items: [{ value: '', label: 'Scatter' }, ...PIECES.map((p) => ({ value: p.name, label: p.label }))],
+    value: initial.piece ?? '',
+    label: 'Piece',
+    onChange: (v) => {
+      if (!v) {
+        handlers.onChange({ piece: null })
+        return
+      }
+      const def = pieceByName(v)
+      handlers.onChange({
+        piece: v,
+        catalog: false,
+        theme: def?.theme ?? initial.theme,
+        stroke: def?.stroke ?? initial.stroke,
+        res: def?.res ?? initial.res,
+      })
+    },
+  })
+  const story = el('p', { class: 'story' }, [pieceByName(initial.piece ?? '')?.story ?? ''])
+  if (!initial.piece) story.hidden = true
   const modeBox = createListbox({
     items: MODES.map((m) => ({ value: m.name, label: m.label })),
     value: initial.mode,
     label: 'Mode',
-    onChange: (v) => handlers.onChange({ mode: v as Mode }),
+    onChange: (v) => handlers.onChange({ mode: v as Mode, piece: null }),
   })
   const themeBox = createListbox({
     items: themes.map((t) => ({
@@ -260,8 +282,11 @@ export function createPanel(
   const chains = slider('Wired chains', 0, 3, 0.05, initial.chains, (v) => v.toFixed(2), (v) => handlers.onChange({ chains: v }),
     'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
   const layoutField = field('Layout', layoutBox.node)
+  const modeField = field('Mode', modeBox.node)
   composition.append(
-    field('Mode', modeBox.node),
+    field('Piece', pieceBox.node),
+    story,
+    modeField,
     field('Theme', themeBox.node),
     layoutField,
     res.node, stroke.node, spans.node, chains.node,
@@ -295,14 +320,22 @@ export function createPanel(
    * The worlds build on a plain grid, place no multi-cell machines from the
    * classic set, and have their own machine lists — so the controls for those
    * things are hidden rather than left to do nothing. Ports keeps the chains
-   * dial, which sets how many chains it grows.
+   * dial, which sets how many chains it grows. An authored piece hides the
+   * scatter dials outright; its grid is the design.
    */
-  const showFor = (mode: Mode) => {
-    const classic = mode === 'classic'
+  const showFor = (mode: Mode, piece: string | null) => {
+    const authored = Boolean(piece)
+    const classic = mode === 'classic' && !authored
+    const def = piece ? pieceByName(piece) : undefined
+    story.hidden = !authored
+    story.textContent = def?.story ?? ''
+    modeField.hidden = authored
     layoutField.hidden = !classic
+    res.node.hidden = authored
     spans.node.hidden = !classic
-    chains.node.hidden = mode === 'tracks'
+    chains.node.hidden = authored || mode === 'tracks'
     poolRow.hidden = !classic
+    catalog.hidden = authored
   }
 
   // Transport
@@ -366,8 +399,9 @@ export function createPanel(
       lastComp = comp
       lastView = view
       seedInput.value = comp.options.seed
+      pieceBox.set(comp.options.piece ?? '')
       modeBox.set(comp.options.mode)
-      showFor(comp.options.mode)
+      showFor(comp.options.mode, comp.options.piece)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
       soloBox.set(comp.options.solo ?? '')

@@ -140,4 +140,10 @@ export interface Wire {
   color: string
   /** True for the link into the last machine, which gets an end terminal. */
   last: boolean
+  /**
+   * Repeat the travelling bead every this many frames. Defaults to the
+   * composition loop. Authored pieces use a divisor so a 4s cascade still
+   * repeats inside a longer loop.
+   */
+  period?: number
 }
