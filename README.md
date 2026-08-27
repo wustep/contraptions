@@ -201,6 +201,10 @@ Playback speed, the scrub bar, export scale, and the grid overlay are view
 settings: they change how the piece is watched, never what it is, so they do
 not rebuild the composition and stay out of the URL.
 
+Export writes a PNG at the chosen scale, or a WebM of one loop at the current
+canvas size (capped at 12s). The clock is held for the encode the same way it
+is for PNG; progress is a view of the clock and never enters the URL.
+
 <kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>P</kbd> pause ·
 <kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>H</kbd> hide panel ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat

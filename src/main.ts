@@ -72,6 +72,10 @@ function save() {
   engine.savePng(`contraptions-${options.seed}`, view.exportScale)
 }
 
+function saveLoop() {
+  return engine.saveLoop(`contraptions-${options.mode}-${options.seed}`)
+}
+
 let resizeTimer = 0
 window.addEventListener('resize', () => {
   window.clearTimeout(resizeTimer)
@@ -92,6 +96,7 @@ const panel = createPanel(panelRoot, options, view, {
   onReroll: () => apply({ seed: randomSeed() }),
   onRollAll: () => apply(rollOptions(options)),
   onSave: save,
+  onSaveLoop: saveLoop,
   onScrub: (u) => engine.setProgress(u),
   onStep: step,
   onBeat: stepBeat,
