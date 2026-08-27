@@ -79,6 +79,27 @@ export const defaultOptions: Options = {
   chains: 0.5,
 }
 
+/**
+ * Slider limits are UI-only. Anything that accepts options — the URL, a
+ * programmatic build — has to enforce the same ranges, or `?res=0` divides
+ * the art area by zero and the rest of the dials can be walked off the map.
+ */
+const clamp = (value: number, min: number, max: number, fallback: number): number =>
+  Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
+
+const clampInt = (value: number, min: number, max: number, fallback: number): number =>
+  clamp(Math.round(value), min, max, fallback)
+
+export function sanitizeOptions(options: Options): Options {
+  return {
+    ...options,
+    res: clampInt(options.res, 1, 50, defaultOptions.res),
+    stroke: clamp(options.stroke, 0.4, 2.4, defaultOptions.stroke),
+    spans: clamp(options.spans, 0, 3, defaultOptions.spans),
+    chains: clamp(options.chains, 0, 3, defaultOptions.chains),
+  }
+}
+
 export interface Caption {
   x: number
   /** Baseline of the name. The shelf rule sits just above it. */
@@ -142,6 +163,7 @@ const classicCatalog = (): CatalogEntry[] =>
   })
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
+  options = sanitizeOptions(options)
   if (options.catalog) {
     const entries =
       options.mode === 'ports' ? portsCatalog() : options.mode === 'tracks' ? tracksCatalog() : classicCatalog()

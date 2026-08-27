@@ -7,13 +7,21 @@
  *
  *   npm run check
  */
+import type p5 from 'p5'
 import { build, defaultOptions } from '../src/core/composition'
 import { LOOP } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
+import { makeRng } from '../src/core/rng'
+import { parseOptions, rollOptions, serializeOptions } from '../src/core/seed'
+import { themeByName } from '../src/core/themes'
 import { registry } from '../src/contraptions'
-import type { Instance } from '../src/core/types'
-import { portMachines } from '../src/worlds/ports/machines'
+import type { Contraption, DrawCtx, Instance } from '../src/core/types'
+import { portsCatalog } from '../src/worlds/ports/build'
+import { portMachines, STEADY } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
+import { tracksCatalog } from '../src/worlds/tracks/build'
+import { reactors } from '../src/worlds/tracks/reactors'
+import { drawTrack, type Kind } from '../src/worlds/tracks/track'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -164,6 +172,23 @@ for (const mode of ['classic', 'ports', 'tracks'] as const) {
   check(`${mode} catalog loop holds every period`, sheet.instances.every((i) => sheet.loop % i.period === 0))
 }
 check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'ports', catalog: true }, 900).used[0] !== build({ ...defaultOptions, seed: 'sheet', mode: 'classic', catalog: true }, 900).used[0])
+check('ports catalog lists every port machine', portsCatalog().length === portMachines.length)
+{
+  const entries = tracksCatalog()
+  const kinds: Kind[] = ['run', 'landing', 'drop', 'fall', 'shaft', 'liftIn', 'liftOut']
+  const seen = new Set<string>()
+  const theme = themeByName('okazz')
+  for (const entry of entries) {
+    const state: Record<string, unknown> = {}
+    entry.state?.(state, { color: theme.colors[0], theme })
+    if (typeof state.kind === 'string') seen.add(state.kind)
+  }
+  check('tracks catalog covers the seven kinds', kinds.every((k) => seen.has(k)), [...seen].join(','))
+  check(
+    'tracks catalog covers every reactor',
+    reactors.every((r) => entries.some((e) => e.contraption.name === `demo-${r.name}`)),
+  )
+}
 
 // In tracks mode every region's loop closes: one lift top per region, and the
 // balls are drawn by exactly one overlay per region.
@@ -224,6 +249,141 @@ check('shows every machine', catalog.instances.length === registry.length)
 check('captions every machine', catalog.captions.length === registry.length)
 // At phase 0 most machines sit at a turning point and the sheet reads as frozen.
 check('staggers phases', new Set(catalog.instances.map((i) => i.phase)).size > registry.length * 0.7)
+
+console.log('\nurl codec')
+const seeded = { ...defaultOptions, seed: 'amber-flywheel-812' }
+check('omits default dials', serializeOptions(seeded) === 'seed=amber-flywheel-812')
+{
+  const params = new URLSearchParams(serializeOptions({ ...seeded, catalog: true, mode: 'ports' }))
+  check('writes catalog', params.get('catalog') === '1')
+  check('writes non-default mode', params.get('mode') === 'ports')
+  check('still omits default res', params.get('res') === null)
+}
+check('invalid mode falls back to classic', parseOptions('?mode=nope&seed=s').mode === 'classic')
+check('rollOptions keeps ports', rollOptions({ ...defaultOptions, mode: 'ports' }).mode === 'ports')
+check('rollOptions keeps tracks', rollOptions({ ...defaultOptions, mode: 'tracks' }).mode === 'tracks')
+check('rollOptions keeps classic', rollOptions({ ...defaultOptions, mode: 'classic' }).mode === 'classic')
+check('res=0 clamps to 1', parseOptions('?res=0').res === 1)
+check('res=99 clamps to 50', parseOptions('?res=99').res === 50)
+check('res is integerized', parseOptions('?res=12.7').res === 13)
+check('stroke clamps to the slider floor', parseOptions('?stroke=0').stroke === 0.4)
+check('spans clamp to the slider ceiling', parseOptions('?spans=9').spans === 3)
+check('build clamps res=0', build({ ...defaultOptions, seed: 'z', res: 0 }, 900).options.res === 1)
+
+/**
+ * A no-op p5 so `draw` can run without a canvas. Machines only call drawing
+ * methods and read a couple of constants / `drawingContext` for clips.
+ */
+function stubP5(): p5 {
+  const ctx = {
+    beginPath() {},
+    rect() {},
+    arc() {},
+    clip() {},
+    letterSpacing: '0px',
+  }
+  const stub: Record<string, unknown> = {
+    CLOSE: 'close',
+    PIE: 'pie',
+    CENTER: 'center',
+    TOP: 'top',
+    drawingContext: ctx,
+    color: () => ({ setAlpha() {} }),
+  }
+  const p = new Proxy(stub, {
+    get(target, prop) {
+      if (prop in target) return target[prop]
+      return () => p
+    },
+  })
+  return p as unknown as p5
+}
+
+const snapshot = (value: unknown): string =>
+  JSON.stringify(value, (_k, v) => (typeof v === 'function' ? '[fn]' : v))
+
+const DRAW_U = [0, 0.25, 0.5, 0.75, 1 - 1e-9]
+const drawTheme = themeByName('okazz')
+const drawRng = makeRng('draw-check')
+
+function drawCtx(u: number, size: number, w: number, h: number): DrawCtx {
+  return { size, theme: drawTheme, t: u * LOOP, u, weight: 2, ink: drawTheme.ink, w, h, fired: 0 }
+}
+
+function setupOf(contraption: Contraption<unknown>) {
+  const [cw, ch] = contraption.span ?? [1, 1]
+  const size = 60
+  const w = size * cw
+  const h = size * ch
+  return {
+    state: contraption.setup({
+      rng: drawRng.fork(contraption.name),
+      size,
+      w,
+      h,
+      theme: drawTheme,
+      cell: { x: 0, y: 0, size, w, h, col: 0, row: 0, index: 0, depth: 0 },
+      color: drawTheme.colors[0],
+    }),
+    size,
+    w,
+    h,
+  }
+}
+
+function runDraw(name: string, state: unknown, draw: (p: p5, u: number) => void): void {
+  const p = stubP5()
+  const before = snapshot(state)
+  try {
+    for (const u of DRAW_U) draw(p, u)
+  } catch (err) {
+    check(`draw ${name}`, false, err instanceof Error ? err.message : String(err))
+    return
+  }
+  check(`draw ${name}`, snapshot(state) === before)
+}
+
+console.log('\ndraw')
+for (const contraption of registry) {
+  const { state, size, w, h } = setupOf(contraption)
+  runDraw(contraption.name, state, (p, u) => contraption.draw(p, state, drawCtx(u, size, w, h)))
+}
+for (const machine of portMachines) {
+  const [cw, ch] = machine.span ?? [1, 1]
+  const size = 60
+  const w = size * cw
+  const h = size * ch
+  const state = machine.setup({
+    rng: drawRng.fork(`port:${machine.name}`),
+    size,
+    w,
+    h,
+    theme: drawTheme,
+    cell: { x: 0, y: 0, size, w, h, col: 0, row: 0, index: 0, depth: 0 },
+    color: drawTheme.colors[0],
+  }) as Record<string, unknown>
+  const inPort = machine.ins[0] ?? null
+  const shaft = machine.driver ?? (inPort?.kind === 'shaft' ? STEADY : null)
+  state.link = {
+    inSide: inPort?.side ?? null,
+    outSides: machine.pickOne ? ['E'] : machine.outs.map((o) => o.side),
+    ball: drawTheme.colors[0],
+    drive: shaft?.drive ?? null,
+    spin: 1,
+    camAt: shaft?.camAt ?? 0,
+    mesh: 0,
+  }
+  runDraw(`port:${machine.name}`, state, (p, u) => machine.draw(p, state as never, drawCtx(u, size, w, h)))
+}
+const TRACK_KINDS: Kind[] = ['run', 'landing', 'drop', 'fall', 'shaft', 'liftIn', 'liftOut']
+for (const kind of TRACK_KINDS) {
+  const state = { color: drawTheme.colors[0], kind, variant: 'rail' as const }
+  runDraw(`track:${kind}`, state, (p, u) => drawTrack(p, state, 60, u, drawTheme.ink, 2))
+}
+for (const reactor of reactors) {
+  const { state, size, w, h } = setupOf(reactor)
+  runDraw(`reactor:${reactor.name}`, state, (p, u) => reactor.draw(p, state, drawCtx(u, size, w, h)))
+}
 
 console.log(failures === 0 ? '\nall checks passed\n' : `\n${failures} check(s) failed\n`)
 process.exit(failures === 0 ? 0 : 1)
