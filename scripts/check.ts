@@ -292,7 +292,7 @@ function stubP5(): p5 {
   }
   const p = new Proxy(stub, {
     get(target, prop) {
-      if (prop in target) return target[prop]
+      if (typeof prop === 'string' && prop in target) return target[prop]
       return () => p
     },
   })
@@ -310,7 +310,7 @@ function drawCtx(u: number, size: number, w: number, h: number): DrawCtx {
   return { size, theme: drawTheme, t: u * LOOP, u, weight: 2, ink: drawTheme.ink, w, h, fired: 0 }
 }
 
-function setupOf(contraption: Contraption<unknown>) {
+function setupOf<S>(contraption: Contraption<S>) {
   const [cw, ch] = contraption.span ?? [1, 1]
   const size = 60
   const w = size * cw
