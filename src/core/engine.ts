@@ -4,8 +4,6 @@ import { mod } from './ease'
 import { strokeWeight, type Composition } from './composition'
 import { FIRE_DECAY } from './wiring'
 
-type CaptureTrack = MediaStreamTrack & { requestFrame?: () => void }
-
 function canvasOf(instance: p5): HTMLCanvasElement {
   // p5 exposes the element but @types/p5 does not declare it.
   return (instance as unknown as { canvas: HTMLCanvasElement }).canvas
@@ -324,15 +322,11 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
 
       try {
         const frames = Math.min(comp.loop, FPS * LOOP_EXPORT_MAX_SECONDS)
-        const probe = el.captureStream(0)
-        const probeTrack = probe.getVideoTracks()[0] as CaptureTrack
-        const manual = typeof probeTrack.requestFrame === 'function'
-        let stream = probe
-        if (!manual) {
-          for (const t of probe.getTracks()) t.stop()
-          stream = el.captureStream(FPS)
-        }
-        const track = stream.getVideoTracks()[0] as CaptureTrack
+        // captureStream(fps) timestamps from the live clock. Walking with
+        // requestFrame(0) is faster but Chrome writes a 0-duration file, which
+        // is a still by another name. Pace the walk at FPS so the WebM is a
+        // real 4s / 12s loop of what you see.
+        const stream = el.captureStream(FPS)
 
         const chunks: Blob[] = []
         const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 })
@@ -345,21 +339,18 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
         })
 
         recorder.start()
+        await waitFrame()
         const origin = performance.now()
         for (let i = 0; i < frames; i++) {
           // setProgress(i / comp.loop) — same clock, walked from the start
           // of the loop so the file closes on the same frame it opens.
           frame = i
           instance.redraw()
-          track.requestFrame?.()
-          if (manual) await waitFrame()
-          else {
-            const target = origin + ((i + 1) * 1000) / FPS
-            const delay = target - performance.now()
-            if (delay > 0) await new Promise<void>((resolve) => window.setTimeout(resolve, delay))
-          }
+          const target = origin + ((i + 1) * 1000) / FPS
+          const delay = target - performance.now()
+          if (delay > 0) await new Promise<void>((resolve) => window.setTimeout(resolve, delay))
         }
-        await waitFrame()
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 1000 / FPS))
         if (recorder.state === 'recording') recorder.requestData()
         recorder.stop()
         await stopped
