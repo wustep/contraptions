@@ -195,7 +195,31 @@ export function createPanel(
   }
 
   // Header
-  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions'])]))
+  const hideBtn = el('button', {
+    type: 'button',
+    class: 'chip',
+    title: 'Hide the panel (H)',
+    'aria-label': 'Hide panel',
+  }, ['Hide', el('kbd', {}, ['H'])])
+  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), hideBtn]))
+
+  const peek = el('button', {
+    type: 'button',
+    class: 'panel-peek',
+    title: 'Show the panel (H)',
+    'aria-label': 'Show panel',
+  }, ['Panel', el('kbd', {}, ['H'])])
+  document.body.append(peek)
+
+  const togglePanel = () => {
+    const hide = !document.body.classList.contains('hide-panel')
+    document.body.classList.toggle('hide-panel', hide)
+    // display:none on #panel is fine only because peek stays a target.
+    if (hide) peek.focus()
+    else hideBtn.focus()
+  }
+  hideBtn.addEventListener('click', togglePanel)
+  peek.addEventListener('click', togglePanel)
 
   // Seed — the one control users actually play, so it gets the hero card.
   const seedInput = el('input', {
@@ -415,7 +439,7 @@ export function createPanel(
       }
     },
     toggle() {
-      document.body.classList.toggle('hide-panel')
+      togglePanel()
     },
   }
 }

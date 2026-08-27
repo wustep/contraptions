@@ -48,6 +48,21 @@ body {
 body.hide-panel { grid-template-columns: 1fr 0; }
 body.hide-panel #panel { display: none; }
 
+/* Restore target when the panel is display:none. Stays out of the tab order
+   while hidden (display:none), then sits on the stage edge. */
+.panel-peek {
+  display: none;
+  position: fixed;
+  top: 18px;
+  right: 0;
+  z-index: 30;
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+  padding: 8px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+body.hide-panel .panel-peek { display: inline-flex; }
+
 #panel {
   background: var(--panel);
   border-left: 1px solid var(--line);
@@ -391,6 +406,16 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
   #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; }
+  .panel-peek {
+    top: auto;
+    right: auto;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    border-radius: 8px 8px 0 0;
+    border-right: 1px solid var(--line);
+    border-bottom: none;
+  }
 }
 
 /* Export puts the scale and the action on one line — two stacked full-width
