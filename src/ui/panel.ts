@@ -18,7 +18,7 @@ export interface PanelHandlers {
   onStep(dir: number): void
   /** Jump a beat — an eighth of the loop, snapped to the beat grid. */
   onBeat(dir: number): void
-  onCopy(): void
+  onCopy(): void | Promise<void>
   /** Pixel edge of a PNG exported at `scale`, for the export readout. */
   exportSize(scale: number): number
 }
@@ -231,19 +231,31 @@ export function createPanel(
     value: initial.seed,
   })
   seedInput.addEventListener('change', () => handlers.onChange({ seed: seedInput.value.trim() }))
+  const commitSeed = () => {
+    const next = seedInput.value.trim()
+    const current = lastComp?.options.seed ?? initial.seed
+    if (next && next !== current) handlers.onChange({ seed: next })
+  }
   const reroll = el('button', { class: 'primary' }, ['Reroll', el('kbd', {}, ['space'])])
-  reroll.addEventListener('click', () => handlers.onReroll())
+  reroll.addEventListener('click', () => {
+    commitSeed()
+    handlers.onReroll()
+  })
   const rollAll = el('button', { title: 'Roll theme, layout and every dial along with the seed (shift+space)' }, ['Roll all', el('kbd', {}, ['⇧'])])
   rollAll.addEventListener('click', () => handlers.onRollAll())
   const copy = el('button', { title: 'Copy a link to this exact composition' }, ['Copy'])
   copy.addEventListener('click', () => {
-    handlers.onCopy()
-    copy.textContent = 'Copied'
-    copy.classList.add('ok')
-    window.setTimeout(() => {
-      copy.textContent = 'Copy'
-      copy.classList.remove('ok')
-    }, 1200)
+    commitSeed()
+    void Promise.resolve(handlers.onCopy())
+      .then(() => {
+        copy.textContent = 'Copied'
+        copy.classList.add('ok')
+        window.setTimeout(() => {
+          copy.textContent = 'Copy'
+          copy.classList.remove('ok')
+        }, 1200)
+      })
+      .catch(() => {})
   })
   root.append(
     el('section', { class: 'seed-card' }, [
@@ -383,7 +395,16 @@ export function createPanel(
   exportSec.querySelector('.section-title')!.append(dims)
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
   const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
-  save.addEventListener('click', () => handlers.onSave())
+  save.addEventListener('click', () => {
+    commitSeed()
+    handlers.onSave()
+    save.classList.add('ok')
+    save.replaceChildren('Saved')
+    window.setTimeout(() => {
+      save.replaceChildren('Save PNG', el('kbd', {}, ['S']))
+      save.classList.remove('ok')
+    }, 1200)
+  })
   exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save]))
 
 
