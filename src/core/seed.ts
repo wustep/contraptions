@@ -1,4 +1,4 @@
-import { MODES, defaultOptions, type Options } from './composition'
+import { MODES, defaultOptions, modeInfo, type Options } from './composition'
 import { layouts } from './layouts'
 import { themes } from './themes'
 
@@ -36,12 +36,15 @@ export function randomSeed(): string {
  */
 export function rollOptions(current: Options): Options {
   const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
+  const { dials } = modeInfo(current.mode)
   return {
     ...defaultOptions,
     mode: current.mode,
     seed: randomSeed(),
     theme: pick(themes).name,
-    layout: pick(layouts).name,
+    // A world that builds its own floor does not honour the layout, so
+    // rolling one would only leave a dead word in the URL.
+    layout: dials.layout ? pick(layouts).name : current.layout,
     // Mostly 12-18 cells across; sometimes airy, sometimes dense, never extreme.
     res: pick([9, 11, 12, 13, 14, 14, 15, 15, 16, 16, 17, 18, 20, 22]),
     stroke: pick([0.85, 1, 1, 1, 1, 1.15, 1.3]),

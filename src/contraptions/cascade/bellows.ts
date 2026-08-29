@@ -87,8 +87,9 @@ export const bellows = defineContraption<Beat>({
       p.strokeWeight(weight)
       p.noFill()
       for (let i = 0; i < 3; i++) {
-        const x = Math.min(0.48, 0.36 + 0.12 * f + i * 0.04)
+        // The puff's far edge stops on the wall, not in the next cell.
         const r = (0.06 + 0.08 * f) * (1 - i * 0.2)
+        const x = Math.min(0.48 - r / 2, 0.36 + 0.12 * f + i * 0.04)
         p.arc(x * k, (top + 0.06) * k, r * k, r * k, -0.5, 0.5)
       }
       p.pop()

@@ -11,13 +11,22 @@ import { FLOOR, HALF, floor, heading, rollIn, rollOut, since, token, tokenColor,
  */
 const FIRE = 0.4
 const COUNT = 5
-const SPAN = 0.68
 const H = 0.3
 const W = 0.08
+/** The first bar stands a hair off the wall the ball rolls in through ... */
+const X0 = -0.5 + W / 2 + 0.02
+/** ... and the row stops short of centre-east, leaving the last bar room to fall. */
+const X1 = 0.2
+const SPAN = X1 - X0
 /** Fraction of the loop one bar takes to go over. */
 const FALL = 0.06
 /** Where a bar comes to rest against the next; the last has nothing to lean on. */
 const REST = 0.85
+/**
+ * How far the last bar falls: with nothing to lean on it goes over until its
+ * top corner lands on the wall, a hair past the others' rest.
+ */
+const LAST = Math.asin((0.48 - X1) / Math.hypot(W / 2, H)) - Math.atan2(W / 2, H)
 /** The ball reaches the first bar as it crosses the edge, half a link before the centre. */
 const START = FIRE - HALF
 
@@ -44,7 +53,7 @@ export const dominoes = defineContraption<Beat>({
     p.push()
     p.scale(heading(s.flow), 1)
     for (let i = 0; i < COUNT; i++) {
-      const x = -SPAN / 2 + gap * i
+      const x = X0 + gap * i
       const last = i === COUNT - 1
       const start = i * lead * FALL
       const fallen = easeInQuad(seg(t, start, start + FALL))
@@ -52,7 +61,7 @@ export const dominoes = defineContraption<Beat>({
       const rise = easeInOutCubic(seg(t, riseAt, riseAt + 0.1))
       p.push()
       p.translate(x * k, FLOOR * k)
-      p.rotate((last ? 1 : REST) * fallen * (1 - rise))
+      p.rotate((last ? LAST : REST) * fallen * (1 - rise))
       solid(p, ink, weight, s.color)
       p.rect(0, (-H / 2) * k, W * k, H * k)
       p.pop()

@@ -13,6 +13,8 @@ const CENTRE = -0.2
 const R = 0.2
 const BANG = 0.1
 const INFLATE = 0.3
+/** The scraps fly to just shy of the ceiling: the room above the balloon's centre, less its heavy stroke. */
+const SCATTER = 0.5 + CENTRE - 0.045
 
 export const balloon = defineContraption<Beat>({
   name: 'balloon',
@@ -63,7 +65,7 @@ export const balloon = defineContraption<Beat>({
       p.strokeWeight(weight * 1.6)
       p.noFill()
       for (let i = 0; i < 6; i++) {
-        const d = (R * 0.6 + R * 1.6 * f) * k
+        const d = (R * 0.6 + (SCATTER - R * 0.6) * f) * k
         p.arc(0, 0, d * 2, d * 2, -0.12, 0.12 + 0.2 * (1 - f))
         p.rotate(Math.PI / 3)
       }

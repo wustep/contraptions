@@ -37,7 +37,9 @@ export const lift = defineContraption<State>({
       counterweight(p, k, ink, weight, s.color, cwY)
     }
     let pos: [number, number] | null = null
-    if (ride.index === 0 && t < BOARD) pos = [-0.5 + t / BOARD * 0.5, 0.12]
+    // Starts tangent to the west wall and rolls to the cage: the roll happens
+    // in this cell, not half in the act next door.
+    if (ride.index === 0 && t < BOARD) pos = [-0.5 + P / 2 + (t / BOARD) * (0.5 - P / 2), 0.12]
     else if (y !== null) pos = [0, y]
     if (pos) performer(p, k, ink, weight, s.color, pos[0], pos[1])
   },

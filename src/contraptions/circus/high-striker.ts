@@ -60,7 +60,9 @@ export const highStriker = defineContraption({
     for (const side of [-1, 1]) stroke(p, k, TOWER_X + side * RAIL, 0.76, TOWER_X + side * RAIL, -0.76)
     for (let y = -0.55; y < 0.7; y += 0.25) stroke(p, k, TOWER_X - RAIL, y, TOWER_X + RAIL, y)
     stroke(p, k, TOWER_X - RAIL - 0.04, -0.76, TOWER_X + RAIL + 0.04, -0.76)
-    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.15, 0.2, ring, -Math.PI / 2, 2)
+    // The bell hangs against the top of the frame, so the sound bursts
+    // sideways into the room the cell actually has, not up through the edge.
+    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.15, 0.2, ring, 0, 2)
     rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.15, 0.2, ring, Math.PI, 1)
     bell(p, k, ink, weight, s.color, TOWER_X, BELL_TOP, BELL_W, BELL_H, 0.12 * shiver(u, 0.82, 0.16, 5))
 

@@ -1,18 +1,26 @@
 import { defineContraption } from '../../core/define'
 import { outline } from '../../core/draw'
 import { pendulum as pendulumTable, swing } from '../../core/physics'
-import { flight, ground, knob, performer, rope, since, stroke } from './circus'
+import { P, flight, ground, knob, performer, rope, since, stroke } from './circus'
 
 /**
  * Two trapezes swing in toward each other twice a loop; at the top of the
  * swing, where both hang still for an instant, the flyer lets go of one bar
  * and catches the other, and rides it out and back to be handed on again.
  */
-const ANCHOR = 0.62
 const ROPE = 0.6
 const BAR = 0.07
 const HANG = 0.13
-const AMP = 0.75
+/** Where the flyer hangs at the top of the inward swing: just short of the middle. */
+const MEET = 0.1
+/**
+ * The outward turning point mirrors the inward one about the anchor, so the
+ * flyer's far edge lands on the frame — 2 * ANCHOR - MEET + P / 2 = 0.97 of
+ * a two-cell half-width — instead of in the act next door.
+ */
+const ANCHOR = (0.97 + MEET - P / 2) / 2
+/** The swing that carries the flyer from that wall in to MEET. */
+const AMP = Math.asin((ANCHOR - MEET) / (ROPE + HANG))
 /** Half the hop, in loop time, either side of the meeting. */
 const H = 0.035
 

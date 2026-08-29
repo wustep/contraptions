@@ -82,7 +82,11 @@ export const hammer = defineContraption({
     solid(p, ink, weight, s.color)
     p.circle(0, PIVOT_Y * k, 0.07 * k)
 
-    sparks(p, k, s.color, HEAD_X + 0.08, BENCH - 0.08, u, 1, Math.max(0, 1 - seg(u, STRIKE, 0.97)) * (u >= STRIKE ? 1 : 0), 3, 4, 0.18)
-    sparks(p, k, s.color, HEAD_X - 0.08, BENCH - 0.08, u, -1, Math.max(0, 1 - seg(u, STRIKE, 0.97)) * (u >= STRIKE ? 1 : 0), 3, 4, 0.18)
+    // Chips off the anvil: the east fountain has the whole bench, the west
+    // one only the room to the wall, so its flight range is derived from it
+    // (longest arc = range * 1.2).
+    const on = Math.max(0, 1 - seg(u, STRIKE, 0.97)) * (u >= STRIKE ? 1 : 0)
+    sparks(p, k, s.color, HEAD_X + 0.04, BENCH - 0.08, u, 1, on, 3, 4, 0.18)
+    sparks(p, k, s.color, HEAD_X - 0.04, BENCH - 0.08, u, -1, on, 3, 4, 0.18, (0.48 + HEAD_X - 0.04) / 1.2)
   },
 })

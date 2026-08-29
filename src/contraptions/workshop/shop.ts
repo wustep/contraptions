@@ -235,9 +235,11 @@ export function burst(p: p5, k: number, color: string, weight: number, x: number
 /**
  * Sparks or chips thrown from a point: `n` motes on short arcs, each on its
  * own phase, `cycles` times a loop. `dir` is which way they fly, `lift` how
- * high. Periodic because every mote makes whole cycles.
+ * high, `range` how far the longest arc carries — a fountain near a wall
+ * passes the room it actually has. Periodic because every mote makes whole
+ * cycles.
  */
-export function sparks(p: p5, k: number, color: string, x: number, y: number, u: number, dir: number, on: number, n = 4, cycles = 3, lift = 0.16): void {
+export function sparks(p: p5, k: number, color: string, x: number, y: number, u: number, dir: number, on: number, n = 4, cycles = 3, lift = 0.16, range = 0.22): void {
   if (on <= 0.02) return
   p.push()
   p.noStroke()
@@ -245,7 +247,7 @@ export function sparks(p: p5, k: number, color: string, x: number, y: number, u:
   for (let j = 0; j < n; j++) {
     const t = mod(u * cycles + j / n, 1)
     const spread = 0.5 + (j % 3) * 0.35
-    const sx = x + dir * t * 0.22 * spread
+    const sx = x + dir * t * range * spread
     const sy = y - lift * spread * t + lift * 1.6 * t * t
     p.circle(sx * k, sy * k, k * 0.035 * (1 - t * 0.5) * on)
   }

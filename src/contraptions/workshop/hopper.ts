@@ -59,8 +59,10 @@ export const hopper = defineContraption({
     } else if (line && !line.out) {
       part(p, k, ink, weight, fill, 0, dropY)
     } else if (u < 0.47) {
+      // The blank rides the belt out through the seam; the bench east draws
+      // its own half of the hand-off, so this side is clipped at the wall.
       const x = Math.max(0, u - 0.16) * BELT_V
-      if (x <= 0.52) part(p, k, ink, weight, fill, x, dropY)
+      clipCell(p, k, () => part(p, k, ink, weight, fill, x, dropY))
     }
   },
 })

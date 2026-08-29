@@ -12,6 +12,14 @@ const FIRE = 0
 const BOX = 0.4
 const TOP = 0.08
 const HEAD = 0.22
+/** Head centre to the tip of the hat. */
+const HAT = HEAD / 2 + 0.14
+/** easeOutElastic's first crest, its highest overshoot (sin = 1 at x = 0.15). */
+const SPRINGY = easeOutElastic(0.15)
+/** The rise that puts the hat's tip on the ceiling at the crest of the spring. */
+const RISE = (TOP + 0.1 + 0.47 - HAT) / SPRINGY
+/** The lid on its hinge: it flings until its far edge lands on the wall at the back-ease's crest (1.1). */
+const FLING = Math.acos((BOX / 2 - 0.475) / BOX) / 1.1
 
 export const jack = defineContraption<Beat>({
   name: 'jack',
@@ -28,7 +36,7 @@ export const jack = defineContraption<Beat>({
     if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const open = easeOutBack(seg(t, 0, 0.1)) - easeInOutCubic(seg(t, 0.62, 0.8))
     const up = easeOutElastic(seg(t, 0.02, 0.24)) - easeInOutCubic(seg(t, 0.58, 0.74))
-    const headY = TOP + 0.1 - up * 0.5
+    const headY = TOP + 0.1 - up * RISE
 
     floor(p, k, ink, weight, s, BOX / 2 + 0.02)
     outline(p, ink, weight)
@@ -50,9 +58,10 @@ export const jack = defineContraption<Beat>({
     // The lid, hinged on the far side, and the latch on the near side.
     p.push()
     p.translate(h * (BOX / 2) * k, TOP * k)
-    p.rotate(-h * open * 2.3)
+    p.rotate(-h * open * FLING)
     solid(p, ink, weight, s.color)
-    p.rect(-h * (BOX / 2) * k, -0.03 * k, (BOX + 0.04) * k, 0.06 * k)
+    // Exactly the mouth wide: any longer and its tip drags below the box mid-swing.
+    p.rect(-h * (BOX / 2) * k, -0.03 * k, BOX * k, 0.06 * k)
     p.pop()
     p.push()
     p.translate(-h * (BOX / 2 + 0.02) * k, (TOP + 0.02) * k)

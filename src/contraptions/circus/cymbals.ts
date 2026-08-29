@@ -7,11 +7,17 @@ import { fade, ground, knob, rings, shiver, stroke } from './circus'
  * Two cymbals on arms lean slowly apart for the whole loop, and when the
  * signal arrives they clash together and shudder, and the sound goes up.
  */
-const PIVOT_X = 0.32
-const ARM = 0.55
-const CLASH = 0.62
-const RECOIL = 0.42
-const COCKED = -0.25
+const PIVOT_X = 0.28
+const ARM = 0.5
+/** The plates: wide axis when the arm is vertical. */
+const PLATE = 0.32
+/** Half the gap between the plate centres at the clash. */
+const MEET = 0.04
+/** The lean that carries each head in to the meeting point over the centre. */
+const CLASH = Math.asin((PIVOT_X - MEET) / ARM)
+const RECOIL = CLASH * 0.68
+/** Leaning apart, the plate's far edge stops on the wall: barely past vertical. */
+const COCKED = -0.08
 
 export const cymbals = defineContraption({
   name: 'cymbals',
@@ -36,15 +42,16 @@ export const cymbals = defineContraption({
 
     for (const side of [-1, 1]) {
       const px = side * PIVOT_X
-      const hx = px + side * ARM * Math.sin(angle)
+      // Positive angle leans the arm in toward the centre, where they meet.
+      const hx = px - side * ARM * Math.sin(angle)
       const hy = 0.5 - ARM * Math.cos(angle)
       outline(p, ink, weight)
       stroke(p, k, px, 0.5, hx, hy)
       p.push()
       p.translate(hx * k, hy * k)
-      p.rotate(side * angle)
+      p.rotate(-side * angle)
       solid(p, ink, weight, s.color)
-      p.ellipse(0, 0, 0.34 * k, 0.11 * k)
+      p.ellipse(0, 0, PLATE * k, 0.11 * k)
       p.pop()
       knob(p, k, ink, weight, s.color, hx, hy, 0.07)
       knob(p, k, ink, weight, s.color, px, 0.5, 0.06)

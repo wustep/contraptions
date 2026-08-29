@@ -8,11 +8,15 @@ import { P, block, ground, knob, performer, stroke } from './circus'
  * sagging under them as they cross and the balance pole rocking, then turns
  * round on the far platform and rides back.
  */
-const PLATFORM_X = 1.32
+/**
+ * On a platform the pole's knobbed tip must still land inside the three-cell
+ * frame: PLATFORM_X + POLE / 2 + the knob = 1.47.
+ */
+const PLATFORM_X = 1.16
 const ROPE_Y = -0.12
-const ANCHOR = 1.19
+const ANCHOR = PLATFORM_X - 0.13
 const WHEEL = 0.09
-const POLE = 0.7
+const POLE = 0.56
 const SAG = 0.1
 
 export const tightrope = defineContraption({

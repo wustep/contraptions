@@ -14,6 +14,12 @@ const BH = 0.32
 const CROWN = -0.42
 /** Where the clapper hangs from, inside the bell. */
 const HINGE = CROWN + BH * 0.4
+/** The rings of sound spread from the bell's rim ... */
+const RING_X = BW * 0.42
+/** ... and the widest ring's far edge lands on the wall, a stroke clear. */
+const RING_R = 0.47 - RING_X
+/** The widest the ring ladder below ever gets, for normalising against RING_R. */
+const RING_TOP = 0.9 + 2 * 0.3 + 0.25
 
 export const bell = defineContraption<Beat>({
   name: 'bell',
@@ -40,8 +46,8 @@ export const bell = defineContraption<Beat>({
       p.noFill()
       for (const side of [-1, 1]) {
         for (let i = 1; i <= 2; i++) {
-          const r = BW * (0.9 + i * 0.3 + hit * 0.25) * k
-          p.arc(side * BW * 0.42 * k, (CROWN + BH * 0.5) * k, r, r, side > 0 ? -0.55 : Math.PI - 0.55, side > 0 ? 0.55 : Math.PI + 0.55)
+          const r = 2 * RING_R * ((0.9 + i * 0.3 + hit * 0.25) / RING_TOP) * k
+          p.arc(side * RING_X * k, (CROWN + BH * 0.5) * k, r, r, side > 0 ? -0.55 : Math.PI - 0.55, side > 0 ? 0.55 : Math.PI + 0.55)
         }
       }
       p.pop()

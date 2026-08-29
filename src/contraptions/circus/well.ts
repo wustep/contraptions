@@ -34,8 +34,10 @@ export const well = defineContraption<State>({
     const cwY = carLocalY(ride.floors - travel, ride.index)
     if (cwY !== null) counterweight(p, k, ink, weight, s.color, cwY)
     let pos: [number, number] | null = null
-    if (t > CLEAR) pos = [(t - CLEAR) / 0.15 * 0.5, 0.12]
+    // Rolls out of the cage and waits tangent to the east wall for the next
+    // act, instead of rolling on into its cell.
+    if (t > CLEAR) pos = [Math.min(((t - CLEAR) / 0.15) * 0.5, 0.5 - P / 2), 0.12]
     else if (y !== null) pos = [0, y]
-    if (pos && pos[0] <= 0.56) performer(p, k, ink, weight, s.color, pos[0], pos[1])
+    if (pos) performer(p, k, ink, weight, s.color, pos[0], pos[1])
   },
 })
