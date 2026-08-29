@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, lineOf, part, rollers } from './shop'
+import { BELT_V, PART, PART_Y, belt, bench, lineOf, part } from './shop'
 
 /**
  * A gate slides open under a stack of blanks, the bottom blank drops onto the
@@ -27,7 +27,7 @@ export const hopper = defineContraption({
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
-      rollers(p, k, ink, weight, s.color, -0.24, 0.5, u * BELT_V)
+      belt(p, k, ink, weight, s.color, -0.12, 0.5, u * BELT_V)
 
       // The magazine: open at the top so it can be topped up, a gate track
       // at the bottom for the slide to run out along.

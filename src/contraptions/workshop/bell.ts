@@ -1,15 +1,17 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
-import { BENCH, HIT, bench, pulse } from './shop'
+import { BENCH, HIT, bench, lineOf, pulse } from './shop'
 
 /**
- * The striker rod shoots out of its solenoid and clips the lip of the bell,
- * and the bell rocks on its hanger and rings out.
+ * A bell over the end of the bench: the part trips the striker, the bell
+ * rings and rocks on a post that stands on the bench. It does not hang from
+ * the cell ceiling — that read as a floating ornament between rows.
  */
-const BELL_X = -0.12
-const BW = 0.4
-const BH = 0.3
+const BELL_X = -0.06
+const BW = 0.36
+const BH = 0.26
+const HANGER = BENCH - 0.38
 
 export const bell = defineContraption({
   name: 'bell',
@@ -20,12 +22,15 @@ export const bell = defineContraption({
   fireAt: HIT,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
+    const line = lineOf(s)
     const ring = pulse(u, HIT, 40)
     const swing = ring * 0.3 * Math.sin(ring * Math.PI * 5)
     const ext = 0.12 * (easeOutCubic(seg(u, HIT - 0.02, HIT)) - easeInOutCubic(seg(u, HIT + 0.04, HIT + 0.14)))
-    const lip = -0.5 + 0.08 + BH
+    const lip = HANGER + 0.08 + BH
+    const x0 = line?.in ? -0.5 : -0.36
+    const x1 = 0.1
 
-    bench(p, k, ink, weight)
+    bench(p, k, ink, weight, x0, x1)
 
     if (ring > 0.02) {
       p.push()
@@ -39,9 +44,13 @@ export const bell = defineContraption({
       p.pop()
     }
 
-    // The bell on its hanger.
+    // Post on the bench, hanger, bell.
+    outline(p, ink, weight)
+    p.line(0.22 * k, BENCH * k, 0.22 * k, HANGER * k)
+    p.line(BELL_X * k, HANGER * k, 0.22 * k, HANGER * k)
+
     p.push()
-    p.translate(BELL_X * k, -0.5 * k)
+    p.translate(BELL_X * k, HANGER * k)
     p.rotate(swing)
     outline(p, ink, weight)
     p.line(0, 0, 0, 0.08 * k)
@@ -56,10 +65,9 @@ export const bell = defineContraption({
     p.circle(0, (BH + 0.05) * k, 0.1 * k)
     p.pop()
 
-    // The solenoid on its post, and the striker it fires at the lip.
     outline(p, ink, weight)
     p.line(0.34 * k, (lip - 0.02) * k, 0.34 * k, BENCH * k)
-    p.rect(0.34 * k, (lip - 0.02) * k, 0.16 * k, 0.14 * k)
+    p.rect(0.34 * k, (lip - 0.02) * k, 0.14 * k, 0.12 * k)
     p.line((0.26 - ext) * k, (lip - 0.02) * k, 0.26 * k, (lip - 0.02) * k)
     solid(p, ink, weight, s.color)
     p.circle((0.23 - ext) * k, (lip - 0.02) * k, 0.08 * k)

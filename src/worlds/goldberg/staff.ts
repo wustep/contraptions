@@ -202,6 +202,14 @@ export function eastRows(cells: Cell[]): Cell[][] {
   return rows
 }
 
+/** A contiguous slice, centred, so thinning a floor does not split it. */
+export function takeBlock<T>(list: T[], n: number): T[] {
+  if (n <= 0) return []
+  if (n >= list.length) return list
+  const start = Math.floor((list.length - n) / 2)
+  return list.slice(start, start + n)
+}
+
 /**
  * Walk every leftover cell into a run. Starts at a dead-end (fewest unused
  * neighbours) and prefers to keep going straight, so a corridor becomes one

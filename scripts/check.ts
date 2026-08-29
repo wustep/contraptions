@@ -309,7 +309,7 @@ function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
 }
 
 console.log('\nworkshop floor')
-for (const seed of ['first-look', 'chains', 'workshop-12', 'rim']) {
+for (const seed of ['first-look', 'chains', 'workshop-12', 'rim', 'candid-gasket-468']) {
   for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
     const shop = build(
       { ...defaultOptions, seed, mode: 'workshop', layout, res: 12, spans: 0.3, chains: 0.7 },
@@ -317,15 +317,23 @@ for (const seed of ['first-look', 'chains', 'workshop-12', 'rim']) {
     )
     const label = `workshop ${seed} ${layout}`
     const errors = workshopLineErrors(shop)
-    check(`${label}: every 1×1 has a line`, shop.instances.filter(unitOf).every((i) => (i.state as { line?: Line }).line))
+    const isolated = shop.instances.filter((i) => {
+      const line = (i.state as { line?: Line }).line
+      return unitOf(i) && line && !line.in && !line.out
+    })
+    check(`${label}: every placed cell has a line`, shop.instances.filter(unitOf).every((i) => (i.state as { line?: Line }).line))
+    check(`${label}: every placed cell is on a run`, shop.instances.filter(unitOf).every((i) => {
+      const line = (i.state as { line?: Line }).line
+      return !!line && (line.in || line.out)
+    }))
+    check(`${label}: no leftover machines`, isolated.length === 0, `${isolated.length} leftovers`)
     check(`${label}: outlets meet an inlet`, errors.length === 0, errors.slice(0, 3).join(' | '))
     check(`${label}: no classic wires`, shop.wires.length === 0)
     if (layout === 'grid') {
-      const isolated = shop.instances.filter((i) => {
-        const line = (i.state as { line?: Line }).line
-        return unitOf(i) && line && !line.in && !line.out
-      })
-      check(`${label}: regular grid has no leftover singles`, isolated.length === 0, `${isolated.length} leftovers`)
+      const onBorder = shop.instances.some(
+        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
+      )
+      check(`${label}: rim stays empty`, !onBorder)
     }
   }
 }

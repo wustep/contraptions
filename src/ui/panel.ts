@@ -319,7 +319,7 @@ export function createPanel(
     ports: ['Wired chains', 'How many chains the solver grows'],
     tracks: ['Wired chains', ''],
     cascade: ['Cascade runs', 'How many inset eastbound sentences to staff; each one ends in a sink'],
-    workshop: ['Shop lines', 'Off (0) seals every cell; any amount above that staffs every eastbound row'],
+    workshop: ['Shop lines', 'How many inset shop lines to staff; each one ends in a bin, bell, or lamp'],
     circus: ['Drumroll', 'How much of the ring is wired so acts fire in sequence'],
   }
 

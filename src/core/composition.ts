@@ -84,7 +84,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'shop lines east to a bin, bell, or lamp',
+    note: 'shop lines that end in a bin, bell, or lamp',
     catalog: 'workshop',
     composer: 'workshop',
     dials: { layout: true, spans: false, chains: true, pool: true },

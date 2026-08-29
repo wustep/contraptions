@@ -159,7 +159,7 @@ each lives in its own folder, and each composer is the thesis of that set.
 Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
 a classic-like grid composer. Cascade and Workshop are their own worlds.
 Cascade staffs inset eastbound sentences that end in a sink and leaves the
-rest empty. Workshop staffs shop lines that end in a bin. Multi-cell spans
+rest empty. Workshop staffs inset shop lines that end in a bin, bell, or lamp. Multi-cell spans
 stay on the catalog sheet so they cannot punch holes in those runs.
 
 | Mode | Catalog | Composer |
@@ -168,7 +168,7 @@ stay on the catalog sheet so they cannot punch holes in those runs.
 | Ports | `src/worlds/ports/` | tokens handed across typed edges |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
 | Cascade | `src/contraptions/cascade/` | inset eastbound sentences that end in a sink |
-| Workshop | `src/contraptions/workshop/` | shop lines that run east into a bin, bell, or lamp |
+| Workshop | `src/contraptions/workshop/` | inset shop lines that end in a bin, bell, or lamp |
 | Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
 
 The Mode control lists all six with those notes. Catalog view shows the active
@@ -192,13 +192,15 @@ hand-off helpers, `heading(flow)`). The composer lives in
 
 ### Workshop
 
-One shop floor. Leftover cells are grouped into eastbound rows of equal-size
-neighbours. A shop line is feeder (`hopper` / `hoist` / `tipper`) → bench
-stations → a real ending (`bin`, `bell`, `lamp`). Lift, auger, chute, divert
-and arm stay off the line — they change height or open a gap. Every 1×1 bench
-gets a `line`: a closed outlet holds the part at centre, a closed inlet
-starts the part inside the cell. Press / punch / saw are stations, not
-termini. Classic wires are not used; travel times do not match `fireAt`
+One shop floor. The outer ring of cells stays empty. Interior equal-size
+neighbours become inset eastbound shop lines: feeder (`hopper` / `hoist` /
+`tipper`) → bench stations → a real ending (`bin`, `bell`, `lamp`) that
+sits on the bench and stops it. Unused cells get no machine. High res
+skips a row so the floor reads as lines, not wallpaper. Lift, auger,
+chute, divert, arm, press, scale and dip stay off the line — they change
+height or reach the row above. Every placed bench gets a `line`: a closed
+outlet holds the part at centre, a closed inlet starts the part inside
+the cell. Classic wires are not used; travel times do not match `fireAt`
 beads. Machines never mirror. `shop.ts` is the vocabulary every bench agrees
 on (`BENCH` is the same floor the ports and tracks worlds roll on). The
 composer lives in `src/worlds/goldberg/workshop.ts`.

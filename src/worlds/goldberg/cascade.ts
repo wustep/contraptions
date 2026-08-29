@@ -2,7 +2,7 @@ import { registry as cascadeRegistry } from '../../contraptions/cascade'
 import type { Composition, Options } from '../../core/composition'
 import type { Contraption, Instance } from '../../core/types'
 import { wireCascade } from '../../core/wiring'
-import { eastRows, finish, insetRing, leftoverCells, openFloor, placeSpans } from './staff'
+import { eastRows, finish, insetRing, leftoverCells, openFloor, placeSpans, takeBlock } from './staff'
 
 /**
  * Sinks that actually receive the ball. A flag / bell / cup at the end of an
@@ -20,13 +20,6 @@ const FEEDERS = new Set(['hopper', 'knocker', 'tipper', 'fuse'])
 const STATIONS = new Set(['belt', 'bellows', 'counter', 'dominoes', 'flap', 'paddle', 'seesaw'])
 
 const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter((c) => names.has(c.name))
-
-function takeBlock<T>(list: T[], n: number): T[] {
-  if (n <= 0) return []
-  if (n >= list.length) return list
-  const start = Math.floor((list.length - n) / 2)
-  return list.slice(start, start + n)
-}
 
 /**
  * Cascade world. Covering every leftover cell packed the floor with leftover

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, fold, lineOf, part, rollers } from './shop'
+import { BELT_V, PART, PART_Y, belt, bench, fold, lineOf, part } from './shop'
 
 /**
  * A hook lowers a blank from the bay above onto the bench, lets go, and hauls
@@ -33,7 +33,7 @@ export const hoist = defineContraption({
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
-      rollers(p, k, ink, weight, s.color, -0.24, 0.5, u * BELT_V)
+      belt(p, k, ink, weight, s.color, -0.12, 0.5, u * BELT_V)
 
       // Cable from the bay above, a lifting eye on the blank, a J of a hook.
       outline(p, ink, weight)

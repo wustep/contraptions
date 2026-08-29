@@ -1,13 +1,14 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, burst, lineOf, part, pulse, rollers } from './shop'
+import { BELT_V, BENCH, PART, PART_Y, belt, bench, burst, lineOf, part, pulse } from './shop'
 
 /**
- * The part rolls off the end of the shelf, tumbles into the bin, lands on the
- * pile with a puff, and settles down out of sight.
+ * The part rolls in on the bench, drops off the lip into the tote, lands on
+ * the pile with a puff, and settles. The tote sits on the bench so a belt
+ * in the cell to the west meets the mouth — no raised shelf, no gap.
  */
-const EDGE = -0.06
+const LIP = 0.02
 const LAND = 0.5
 
 export const bin = defineContraption({
@@ -21,37 +22,34 @@ export const bin = defineContraption({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const line = lineOf(s)
-    const inX = (line?.in ? -0.5 - PART / 2 : -0.12) + u * BELT_V
-    const fall = easeInQuad(seg(u, 0.31, LAND))
+    const start = line?.in ? -0.5 - PART / 2 : -0.22
+    const x = start + u * BELT_V
+    const fall = easeInQuad(seg(u, 0.32, LAND))
     const sink = easeInOutCubic(seg(u, LAND + 0.06, 0.8))
     let pos: [number, number] | null = null
     let angle = 0
-    if (u < 0.31) pos = [Math.min(0, inX), HIGH_Y]
+    if (u < 0.32) pos = [Math.min(LIP, x), PART_Y]
     else if (u < LAND) {
-      pos = [lerp(0, 0.22, seg(u, 0.31, LAND)), lerp(HIGH_Y, 0.02, fall)]
-      angle = 1.1 * seg(u, 0.31, LAND)
-    } else pos = [0.22, lerp(0.02, 0.3, sink)]
+      pos = [lerp(LIP, 0.22, fall), lerp(PART_Y, BENCH - 0.08, fall)]
+      angle = 1.1 * fall
+    } else pos = [0.22, lerp(BENCH - 0.08, BENCH + 0.06, sink)]
     if (u >= LAND) angle = 1.1
 
     clipCell(p, k, () => {
-      bench(p, k, ink, weight)
-      // The shelf, and the rollers that carry the part off its end.
-      outline(p, ink, weight)
-      p.line(-0.42 * k, SHELF * k, -0.42 * k, BENCH * k)
-      p.line(-0.12 * k, SHELF * k, -0.12 * k, BENCH * k)
-      rollers(p, k, ink, weight, s.color, -0.5, EDGE, u * BELT_V, SHELF)
+      const x0 = line?.in ? -0.5 : -0.4
+      bench(p, k, ink, weight, x0, LIP + 0.06)
+      belt(p, k, ink, weight, s.color, x0, LIP, u * BELT_V)
 
-      // The bin stands on the floor in front of the bench: its back, the
-      // pile in it, the part, then its front, which hides what has settled.
+      // Tote on the bench, mouth at the lip, bottom on the cell floor.
       outline(p, ink, weight)
-      p.rect(0.22 * k, ((-0.02 + 0.5) / 2) * k, 0.48 * k, 0.52 * k)
-      part(p, k, ink, weight, s.color, 0.12, 0.14, { angle: 0.4 })
-      part(p, k, ink, weight, s.color, 0.33, 0.17, { angle: -0.5 })
+      p.rect(0.24 * k, ((BENCH - 0.02 + 0.5) / 2) * k, 0.44 * k, (0.5 - (BENCH - 0.02)) * k)
+      part(p, k, ink, weight, s.color, 0.14, BENCH + 0.02, { angle: 0.4 })
+      part(p, k, ink, weight, s.color, 0.32, BENCH + 0.04, { angle: -0.5 })
       if (pos) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
       solid(p, ink, weight, s.color)
-      p.rect(0.22 * k, ((0.1 + 0.5) / 2) * k, 0.48 * k, 0.4 * k)
+      p.rect(0.24 * k, ((BENCH + 0.08 + 0.5) / 2) * k, 0.44 * k, (0.5 - (BENCH + 0.08)) * k)
 
-      burst(p, k, s.color, weight, 0.22, 0.0, pulse(u, LAND, 14), 0.16, 0.26, 5, -Math.PI / 2 - (Math.PI * 2) / 10)
+      burst(p, k, s.color, weight, 0.22, BENCH - 0.04, pulse(u, LAND, 14), 0.12, 0.22, 5, -Math.PI / 2 - (Math.PI * 2) / 10)
     })
   },
 })
