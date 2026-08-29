@@ -2,6 +2,9 @@ import type p5 from 'p5'
 import type { Rng } from './rng'
 import type { Theme } from './themes'
 
+/** An edge of a cell. */
+export type Side = 'N' | 'E' | 'S' | 'W'
+
 /** A slot in a layout, in absolute canvas coordinates. */
 export interface Cell {
   /** Center of the slot. */
@@ -103,6 +106,14 @@ export interface Contraption<S = unknown> {
    * than as a line drawn through whatever happened to be adjacent.
    */
   role?: 'source' | 'relay' | 'sink'
+  /**
+   * Which edges the token may come in and go out by when this machine is
+   * wired into a chain. Undefined means any. Chains are staffed to respect
+   * these, so a hopper is never asked to send its ball out through its own
+   * roof. Chained machines are drawn upright, whatever `rotations` allows.
+   */
+  inlets?: Side[]
+  outlets?: Side[]
   /** Relative likelihood of being picked. Defaults to 1. */
   weight?: number
   /** Allowed quarter-turns, as multiples of TAU/4. Defaults to [0, 1, 2, 3]. */

@@ -1,56 +1,73 @@
 import { defineContraption } from '../core/define'
-import { ceilRail, outline } from '../core/draw'
+import { outline, solid } from '../core/draw'
+import { seg } from '../core/ease'
+import { flick, floor, heading, since, type Beat } from './parts'
 
-/** A bell that rocks and rings out when its machine fires. */
-export const bell = defineContraption({
+/**
+ * A bell hung over the end of the line with its clapper down in the ball's
+ * way: the ball knocks the clapper, the bell rings and rocks on its yoke, and
+ * that is what everything before it was for.
+ */
+const FIRE = 0
+const BW = 0.48
+const BH = 0.32
+const CROWN = -0.42
+/** Where the clapper hangs from, inside the bell. */
+const HINGE = CROWN + BH * 0.4
+
+export const bell = defineContraption<Beat>({
   name: 'bell',
   label: 'Bell',
-  tags: ['signal', 'strike'],
+  tags: ['strike', 'signal'],
   role: 'sink',
-  fireAt: 0,
-  mirror: false,
+  inlets: ['E', 'W'],
   rotations: [0],
+  fireAt: FIRE,
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight, fired }) => {
-    void u
-    const top = -size / 2
-    const drop = size * 0.16
-    const bw = size * 0.44
-    const bh = size * 0.34
-    // A damped wobble: fast at the strike, settling as the signal decays.
-    const swing = fired * 0.34 * Math.sin(fired * Math.PI * 5)
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const h = heading(s.flow)
+    const t = since(u, FIRE)
+    const hit = 1 - seg(t, 0, 0.18)
+    const rock = h * hit * 0.22 * Math.sin(hit * Math.PI * 4)
 
-    outline(p, ink, weight)
-    ceilRail(p, size)
+    floor(p, k, ink, weight, s)
 
-    if (fired > 0.02) {
+    if (hit > 0.02) {
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
       p.noFill()
       for (const side of [-1, 1]) {
         for (let i = 1; i <= 2; i++) {
-          const r = bw * (0.8 + i * 0.3 + fired * 0.3)
-          p.arc(side * bw * 0.5, top + drop + bh * 0.5, r, r, side > 0 ? -0.6 : Math.PI - 0.6, side > 0 ? 0.6 : Math.PI + 0.6)
+          const r = BW * (0.9 + i * 0.3 + hit * 0.25) * k
+          p.arc(side * BW * 0.42 * k, (CROWN + BH * 0.5) * k, r, r, side > 0 ? -0.55 : Math.PI - 0.55, side > 0 ? 0.55 : Math.PI + 0.55)
         }
       }
       p.pop()
     }
 
     p.push()
-    p.translate(0, top + drop)
-    p.rotate(swing)
+    p.translate(0, -0.5 * k)
+    p.rotate(rock)
     outline(p, ink, weight)
-    p.line(0, -drop, 0, 0)
+    p.line(0, 0, 0, (CROWN + 0.5) * k)
     p.fill(s.color)
     p.beginShape()
-    p.vertex(-bw / 2, bh)
-    p.bezierVertex(-bw / 2, 0, -bw * 0.22, 0, 0, 0)
-    p.bezierVertex(bw * 0.22, 0, bw / 2, 0, bw / 2, bh)
+    p.vertex((-BW / 2) * k, (CROWN + 0.5 + BH) * k)
+    p.bezierVertex((-BW / 2) * k, (CROWN + 0.5) * k, -BW * 0.22 * k, (CROWN + 0.5) * k, 0, (CROWN + 0.5) * k)
+    p.bezierVertex(BW * 0.22 * k, (CROWN + 0.5) * k, (BW / 2) * k, (CROWN + 0.5) * k, (BW / 2) * k, (CROWN + 0.5 + BH) * k)
     p.endShape(p.CLOSE)
-    p.line(-bw / 2, bh, bw / 2, bh)
-    p.fill(s.color)
-    p.circle(0, bh + size * 0.06, size * 0.12)
+    p.line((-BW / 2) * k, (CROWN + 0.5 + BH) * k, (BW / 2) * k, (CROWN + 0.5 + BH) * k)
+    p.pop()
+
+    // The clapper, hinged inside the bell and hanging on down to the ball's line.
+    p.push()
+    p.translate(0, HINGE * k)
+    p.rotate(h * flick(t) * 0.7 + rock * 0.5)
+    outline(p, ink, weight)
+    p.line(0, 0, 0, -HINGE * k)
+    solid(p, ink, weight, s.color)
+    p.circle(0, -HINGE * k, 0.13 * k)
     p.pop()
   },
 })

@@ -1,44 +1,55 @@
 import { defineContraption } from '../core/define'
-import { floorRail, outline } from '../core/draw'
+import { floorRail, outline, solid } from '../core/draw'
+import { easeInQuad, seg } from '../core/ease'
+import { FLOOR, flick, floor, heading, since, type Beat } from './parts'
 
 /**
- * A bulb that lights when its machine fires. Wired into a chain, a row of these
- * reads as a signal running across the piece.
+ * A street lamp over a pedal in the line: the ball presses the pedal going
+ * under, the lamp comes on, and it fades as the loop runs down.
  */
-export const lamp = defineContraption({
+const FIRE = 0
+const BULB_Y = -0.22
+const BULB_D = 0.3
+const ARM_Y = -0.44
+
+export const lamp = defineContraption<Beat>({
   name: 'lamp',
   label: 'Lamp',
   tags: ['signal'],
-  // Gravity gives this one an up.
-  rotations: [0],
   role: 'sink',
-  fireAt: 0,
-  mirror: false,
+  rotations: [0],
+  fireAt: FIRE,
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight, fired }) => {
-    void u
-    const d = size * 0.36
-    const y = -size * 0.08
+  draw: (p, s, { size: k, u, ink, weight, theme }) => {
+    const h = heading(s.flow)
+    const t = since(u, FIRE)
+    const lit = 1 - easeInQuad(seg(t, 0.03, 0.6))
+    const press = flick(t, 0.04, 0.08, 0.2) * 0.05
 
+    floor(p, k, ink, weight, s, 0.12)
     outline(p, ink, weight)
-    floorRail(p, size)
-    p.line(0, size / 2, 0, y + d / 2)
-    p.line(-size * 0.11, y + d / 2, size * 0.11, y + d / 2)
+    floorRail(p, k)
+    // The post, the arm over the line, and the cord the bulb hangs on.
+    p.line(h * 0.32 * k, 0.5 * k, h * 0.32 * k, ARM_Y * k)
+    p.line(h * 0.32 * k, ARM_Y * k, 0, ARM_Y * k)
+    p.line(0, ARM_Y * k, 0, (BULB_Y - BULB_D / 2) * k)
+    // The pedal, on a stem.
+    p.line(0, (FLOOR + press) * k, 0, 0.5 * k)
+    solid(p, ink, weight, s.color)
+    p.rect(0, (FLOOR - 0.01 + press) * k, 0.2 * k, 0.05 * k)
 
-    if (fired > 0.02) {
+    if (lit > 0.02) {
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
-      const reach = d * (0.62 + fired * 0.35)
+      const reach = (BULB_D / 2) * (1.25 + lit * 0.5)
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2 + Math.PI / 8
-        p.line(Math.cos(a) * d * 0.6, y + Math.sin(a) * d * 0.6, Math.cos(a) * reach, y + Math.sin(a) * reach)
+        p.line(Math.cos(a) * BULB_D * 0.6 * k, (BULB_Y + Math.sin(a) * BULB_D * 0.6) * k, Math.cos(a) * reach * k, (BULB_Y + Math.sin(a) * reach) * k)
       }
       p.pop()
     }
-
-    outline(p, ink, weight)
-    if (fired > 0.02) p.fill(s.color)
-    p.circle(0, y, d)
+    solid(p, ink, weight, lit > 0.02 ? s.color : theme.bg)
+    p.circle(0, BULB_Y * k, BULB_D * k)
   },
 })

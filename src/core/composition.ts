@@ -4,8 +4,8 @@ import { layoutByName } from './layouts'
 import { registry } from '../contraptions'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
-import type { Cell, Contraption, Instance, Wire } from './types'
-import { chainPaths, wireChain } from './wiring'
+import type { Cell, Contraption, Instance, Side, Wire } from './types'
+import { chainPaths, sideOf, wireChain } from './wiring'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
@@ -259,11 +259,17 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   // pool when a filter has emptied one (soloing a single machine, say).
   const wires: Wire[] = []
   const roleRng = rng.fork('roles')
-  const byRole = (role: Contraption<unknown>['role']) => {
-    const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
-    if (matching.length) return matching
-    const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
-    return anyRole.length ? anyRole : singles
+  const chainable = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
+  // The right role with edges that suit the run's direction, then the right
+  // role at all, then anything chainable — a filter that has emptied a pool
+  // (soloing one machine, say) must not stall the chain.
+  const byRole = (role: Contraption<unknown>['role'], inSide: Side | null, outSide: Side | null) => {
+    const fits = (c: Contraption<unknown>) =>
+      (!inSide || !c.inlets || c.inlets.includes(inSide)) && (!outSide || !c.outlets || c.outlets.includes(outSide))
+    for (const pool of [chainable.filter((c) => c.role === role && fits(c)), chainable.filter((c) => c.role === role), chainable]) {
+      if (pool.length) return pool
+    }
+    return singles
   }
 
   if (options.chains > 0 && singles.length) {
@@ -271,8 +277,9 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     for (const path of paths) {
       const members = path.map((cell, k) => {
         const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
-        const candidates = byRole(role)
-        const contraption = roleRng.weighted(candidates, (c) => c.weight ?? 1)
+        const inSide = k > 0 ? sideOf(cell, path[k - 1]) : null
+        const outSide = k < path.length - 1 ? sideOf(cell, path[k + 1]) : null
+        const contraption = roleRng.weighted(byRole(role, inSide, outSide), (c) => c.weight ?? 1)
         return place(contraption, cell, `cell:${cell.index}`)
       })
       wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))

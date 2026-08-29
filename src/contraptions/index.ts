@@ -1,83 +1,55 @@
 import type { Contraption } from '../core/types'
 
-import { abacus } from './abacus'
+import { balloon } from './balloon'
 import { bell } from './bell'
-import { beltDrive } from './belt-drive'
-import { bouncingBalls } from './bouncing-balls'
-import { boxStep } from './box-step'
-import { bubble } from './bubble'
-import { conveyor } from './conveyor'
+import { bellows } from './bellows'
+import { belt } from './belt'
+import { counter } from './counter'
+import { cradle } from './cradle'
+import { cup } from './cup'
 import { dominoes } from './dominoes'
-import { drip } from './drip'
-import { elevator } from './elevator'
-import { flip } from './flip'
-import { gantry } from './gantry'
-import { gate } from './gate'
-import { gear } from './gear'
+import { flag } from './flag'
+import { flap } from './flap'
+import { fuse } from './fuse'
 import { hammer } from './hammer'
+import { hopper } from './hopper'
+import { jack } from './jack'
+import { knocker } from './knocker'
 import { lamp } from './lamp'
-import { marbleRun } from './marble-run'
-import { metronome } from './metronome'
-import { newtonsCradle } from './newtons-cradle'
-import { orbit } from './orbit'
-import { orrery } from './orrery'
-import { pendulum } from './pendulum'
-import { pendulumWave } from './pendulum-wave'
-import { pinwheel } from './pinwheel'
-import { pipe } from './pipe'
-import { piston } from './piston'
-import { pulse } from './pulse'
-import { quadFade } from './quad-fade'
-import { ratchet } from './ratchet'
+import { paddle } from './paddle'
 import { seesaw } from './seesaw'
-import { slopeBall } from './slope-ball'
-import { spring } from './spring'
-import { sweep } from './sweep'
-import { traffic } from './traffic'
-import { wavy } from './wavy'
-import { windmill } from './windmill'
+import { strip } from './strip'
+import { switchback } from './switchback'
+import { tipper } from './tipper'
+import { toaster } from './toaster'
 
 /**
  * The registry. Adding a contraption is: write the file, add it here.
  * `npm run new <name>` scaffolds both halves.
  */
 export const registry: Contraption<any>[] = [
-  abacus,
+  balloon,
   bell,
-  beltDrive,
-  bouncingBalls,
-  boxStep,
-  bubble,
-  conveyor,
+  bellows,
+  belt,
+  counter,
+  cradle,
+  cup,
   dominoes,
-  drip,
-  elevator,
-  flip,
-  gantry,
-  gate,
-  gear,
+  flag,
+  flap,
+  fuse,
   hammer,
+  hopper,
+  jack,
+  knocker,
   lamp,
-  marbleRun,
-  metronome,
-  newtonsCradle,
-  orbit,
-  orrery,
-  pendulum,
-  pendulumWave,
-  pinwheel,
-  pipe,
-  piston,
-  pulse,
-  quadFade,
-  ratchet,
+  paddle,
   seesaw,
-  slopeBall,
-  spring,
-  sweep,
-  traffic,
-  wavy,
-  windmill,
+  strip,
+  switchback,
+  tipper,
+  toaster,
 ]
 
 export const byName = (name: string): Contraption<any> | undefined =>

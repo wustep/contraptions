@@ -1,8 +1,8 @@
 # contraptions
 
-A generator for grids of tiny animated machines — each cell is a small,
-self-contained mechanism that loops forever, and the piece is whatever falls out
-of scattering a few hundred of them across a grid.
+A generator for grids of tiny animated machines — each cell is one beat in a
+chain reaction, and the piece is whatever falls out of wiring a few hundred of
+them across a grid so that a ball let go in one cell rings a bell in another.
 
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
@@ -18,7 +18,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-36 machines, 14 palettes, 4 layouts.
+22 machines, 14 palettes, 4 layouts.
 
 ## How it fits together
 
@@ -29,13 +29,14 @@ src/
     define.ts       defineContraption()
     composition.ts  seed + options -> a placed, oriented, phase-offset piece
     engine.ts       owns the clock, drives p5
-    wiring.ts       builds firing chains between neighbours
+    wiring.ts       builds firing chains between neighbours, tells each member its place
     layouts.ts      grid | bricks | quads | bands
     themes.ts       14 palettes
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
   contraptions/     one file per machine, plus the registry in index.ts
+    parts.ts        the cascade set's vocabulary: the token, its speed, hand-offs
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
@@ -60,24 +61,63 @@ A contraption fills one cell. Three rules:
    instances are offset.
 
 ```ts
-export const hammer = defineContraption({
+export const hammer = defineContraption<Beat>({
   name: 'hammer',
-  fireAt: 0.86,                       // the moment the weight lands
+  role: 'source',
+  fireAt: 0.86,                       // the moment the head lands on the anvil
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const y = u < 0.12
-      ? lerp(reach, -reach, easeOutSine(seg(u, 0, 0.12)))
-      : lerp(-reach, reach, easeInQuad(seg(u, 0.12, 0.86)))
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const t = since(u, 0.86)          // loop fraction since the blow
+    const y = t < 0.93
+      ? lerp(LOW, HIGH, easeInOutSine(seg(t, 0.14, 0.84)))   // winched up
+      : lerp(HIGH, LOW, easeInQuad(seg(t, 0.93, 1)))         // let go
     outline(p, ink, weight)
-    p.line(0, -size * 0.4, 0, size * 0.4)
+    p.line(0, -k / 2, 0, y * k)
     solid(p, ink, weight, s.color)
-    p.circle(0, y, size * 0.3)
+    p.rect(0, y * k, 0.36 * k, 0.24 * k)
   },
 })
 ```
 
 `seg(u, a, b)` renormalizes `u` against a sub-window and clamps — it is the
-workhorse for anything with stages.
+workhorse for anything with stages. `since(u, at)` is the loop fraction since
+the machine fired, so a reaction can be written on a clock that starts at the
+moment that matters.
+
+## The cascade set
+
+The catalog is one vocabulary: every machine is a beat in a chain reaction. A
+**source** lets a token go — a ball out of a hopper, the blow of a hammer, the
+bang of a keg. A **relay** is knocked by the token going through and passes it
+on — a seesaw tips, a paddle wheel spins, a row of dominoes goes over. A
+**sink** is where it ends — a bell, a cup, a lamp, the toast popping. Read a
+wired run left to right and it is a sentence.
+
+The token is the bead the engine runs along the wires, and it always passes
+through the centre of a cell, so that is where each machine keeps the part
+that gets hit. Between machines the wire draws it; a machine draws its own
+copy only on its own side of the hand-off — a hopper's ball until it reaches
+the floor, a cup's ball from the moment it drops in. A machine that is not
+wired runs the whole beat by itself, which is what the catalog sheet shows.
+
+Three things make a run read as one machine rather than a line through
+several:
+
+- `wireChain` tells each member its place — `state.flow` holds the side the
+  token comes in on, the side it leaves by, and the run's colour — and stands
+  it upright. A seesaw tips the way the ball is going; dominoes fall into the
+  next cell, not away from it; the ball is the same colour all the way down.
+- A machine declares `inlets` and `outlets`, and runs are staffed to respect
+  them, so a hopper is never asked to send its ball out through its own roof.
+- Runs never climb. Nothing in the set can lift a ball, so a chain goes
+  sideways or drops, and the one corner it is allowed is a drop off the end of
+  a floor or a landing at the foot of one.
+
+Two composite machines put the same pieces together inside one footprint,
+hard-wired: `strip` (3×1) is a hopper, a relay and an ending in a row, and
+`switchback` (2×2) is the same sentence with a drop in the middle, read round
+the square. They reuse the single-cell machines' own `draw`, each told it is
+chained and given its own clock, and draw the ball once themselves.
 
 ### Adding one
 
@@ -94,8 +134,9 @@ one while you work on it.
 A contraption can declare a footprint larger than one cell:
 
 ```ts
-span: [3, 1]     // pendulum-wave: three cells wide, one tall
-span: [2, 2]     // gantry, marble-run, orrery
+span: [3, 1]     // strip: three cells wide, one tall
+span: [2, 1]     // cradle
+span: [2, 2]     // switchback
 ```
 
 Placement runs in two passes. Spanning machines go first and claim contiguous
@@ -103,8 +144,9 @@ blocks of equal-sized free cells; single-cell machines then fill the leftovers.
 A layout whose rows do not line up (`bricks`) fails the block check and quietly
 gets all singles, which is the right fallback rather than a special case.
 
-Machines that depend on gravity — the crane, the chute, the drip — set
-`rotations: [0]` so they stay the right way up.
+Every machine in the set works under gravity, so all of them set
+`rotations: [0]` and stay the right way up; mirroring is still allowed, so a
+run can be read in either direction.
 
 ## Wired chains
 
@@ -135,16 +177,17 @@ walk doubles back and crosses itself, which reads as tangle rather than as a
 signal going somewhere.
 
 A sink does not have to consult anything to read as caused — because phases are
-chosen so each machine's own `fireAt` lands on the frame the cascade needs, an
-elevator simply arrives at the top on cue. Two hooks go further:
+chosen so each machine's own `fireAt` lands on the frame the cascade needs, the
+bell simply rings as the bead arrives. Two hooks go further:
 
 - `fireAt` — where in the loop the notable moment falls. Defaults to 0.
 - `fired` in the draw context — 1 at that instant, decaying to 0 shortly after.
-  Derived from `u`, so using it costs no purity.
+  Derived from `u`, so using it costs no purity. The cascade set mostly uses
+  `since(u, fireAt)` instead, which is the same clock but runs the whole loop,
+  so a reaction can have a long tail — a lamp fading, dominoes standing back up.
 
-`lamp`, `gate` and `bell` are built entirely around `fired`, and are what make a
-run legible at a glance. Only machines whose period is the full loop are
-eligible, so a chain never has to reason about a member firing twice per cycle.
+Only machines whose period is the full loop are eligible, so a chain never has
+to reason about a member firing twice per cycle.
 
 ## Modes
 

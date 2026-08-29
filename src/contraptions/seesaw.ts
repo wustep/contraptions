@@ -1,37 +1,56 @@
 import { defineContraption } from '../core/define'
-import { floorRail, outline, solid } from '../core/draw'
+import { clipCell, floorRail, outline, solid } from '../core/draw'
+import { easeInOutCubic, easeOutCubic, seg } from '../core/ease'
+import { floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
 
-/** A ball that dashes to whichever end of the beam is lower. */
-export const seesaw = defineContraption({
+/**
+ * A plank on a pivot resting with its near end down: the ball rolls up it,
+ * crosses the pivot, and its weight slams the far end down and sends it off
+ * faster than it came, while a counterweight hauls the plank back before the
+ * next one.
+ */
+const FIRE = 0.4
+const PIVOT = 0.17
+const HALF_LEN = 0.42
+const THICK = 0.07
+const TILT = 0.2
+
+export const seesaw = defineContraption<Beat>({
   name: 'seesaw',
   label: 'Seesaw',
-  tags: ['tilt', 'ball'],
-  // Gravity gives this one an up.
+  tags: ['ball', 'swing'],
+  role: 'relay',
+  inlets: ['E', 'W'],
+  outlets: ['E', 'W', 'S'],
   rotations: [0],
-  period: 120,
+  fireAt: FIRE,
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const pivotY = size * 0.2
-    const half = size * 0.46
-    const phase = Math.sin(u * Math.PI * 2)
-    const tilt = 0.22 * phase
-    // tanh parks the ball at one end for most of the cycle, then throws it
-    // across as the beam passes level.
-    const along = 0.82 * Math.tanh(2.6 * phase)
-    const cos = Math.cos(tilt)
-    const sin = Math.sin(tilt)
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const h = heading(s.flow)
+    const t = since(u, FIRE)
+    const tip = easeOutCubic(seg(t, 0, 0.06)) - easeInOutCubic(seg(t, 0.5, 0.85))
+    const angle = h * TILT * (2 * tip - 1)
 
+    floor(p, k, ink, weight, s, 0.44)
     outline(p, ink, weight)
-    floorRail(p, size)
-    p.line(-size * 0.13, size / 2, 0, pivotY)
-    p.line(size * 0.13, size / 2, 0, pivotY)
-    p.line(-half * cos, pivotY - half * sin, half * cos, pivotY + half * sin)
+    floorRail(p, k)
+    // The stand, and the stops each end of the plank comes down onto.
+    p.line(-0.14 * k, 0.5 * k, 0, PIVOT * k)
+    p.line(0.14 * k, 0.5 * k, 0, PIVOT * k)
+    for (const x of [-0.38, 0.38]) p.line(x * k, 0.5 * k, x * k, 0.3 * k)
 
-    // Sit the ball on the upper face of the beam, along its normal.
-    const d = size * 0.22
-    const bx = half * along * cos + (sin * d) / 2
-    const by = pivotY + half * along * sin - (cos * d) / 2
+    p.push()
+    p.translate(0, PIVOT * k)
+    p.rotate(angle)
     solid(p, ink, weight, s.color)
-    p.circle(bx, by, d)
+    p.rect(0, 0, HALF_LEN * 2 * k, THICK * k)
+    p.pop()
+    solid(p, ink, weight, s.color)
+    p.circle(0, PIVOT * k, 0.09 * k)
+
+    clipCell(p, k, () => {
+      const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
+      if (at) token(p, k, ink, weight, tokenColor(s), at)
+    })
   },
 })

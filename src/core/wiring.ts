@@ -1,6 +1,6 @@
 import { LOOP } from './constants'
 import type { Rng } from './rng'
-import type { Cell, Instance, Wire } from './types'
+import type { Cell, Instance, Side, Wire } from './types'
 
 /** Frames between one machine firing and the next along a chain. */
 export const LINK_DELAY = 24
@@ -12,13 +12,42 @@ export const FIRE_DECAY = 16
 const MIN_CHAIN = 3
 const MAX_CHAIN = 5
 
+/**
+ * A chained machine's place in the run: the side the token comes in on, the
+ * side it leaves by, and the token's colour. `wireChain` attaches this to the
+ * machine's state, so a machine can face its inlet and outlet, and draw its
+ * own copy of the token in the right colour on either side of the hand-off.
+ * Absent on a machine that is not chained, which then runs self-contained.
+ */
+export interface Flow {
+  in: Side | null
+  out: Side | null
+  color: string
+}
+
 const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
 
+/** Which side of `from` faces `to`. Chain links only ever join neighbours. */
+export const sideOf = (from: Cell, to: Cell): Side => {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'E' : 'W'
+  return dy > 0 ? 'S' : 'N'
+}
+
+/**
+ * Directions a run may grow in, which is the direction its token travels.
+ * Never up: the machines are built under gravity, and a ball that climbs a
+ * column with nothing lifting it is the one thing a Goldberg machine may not
+ * do. Sideways twice as often as down, so most runs read left to right like a
+ * strip and a drop is the punctuation.
+ */
 const STEPS: [number, number][] = [
   [1, 0],
   [-1, 0],
+  [1, 0],
+  [-1, 0],
   [0, 1],
-  [0, -1],
 ]
 
 /**
@@ -107,10 +136,25 @@ const colorOf = (inst: Instance): string =>
  */
 export function wireChain(chain: Instance[], rng: Rng): Wire[] {
   const base = rng.int(0, LOOP)
+  // One token runs the whole chain, so every link carries the source's colour.
+  const color = colorOf(chain[0])
   chain.forEach((inst, k) => {
     const fireFrame = (base + k * LINK_DELAY) % LOOP
     inst.fireFrame = fireFrame
     inst.phase = Math.round((inst.contraption.fireAt ?? 0) * inst.period - fireFrame)
+    // A chained machine stands upright and is told which way the run goes, so
+    // its inlet faces the machine before it and its outlet the one after. A
+    // random quarter-turn here would point a chute at a wall.
+    inst.angle = 0
+    inst.mirror = 1
+    if (inst.state && typeof inst.state === 'object') {
+      const flow: Flow = {
+        in: k > 0 ? sideOf(inst.cell, chain[k - 1].cell) : null,
+        out: k < chain.length - 1 ? sideOf(inst.cell, chain[k + 1].cell) : null,
+        color,
+      }
+      ;(inst.state as { flow?: Flow }).flow = flow
+    }
   })
 
   const wires: Wire[] = []
@@ -120,7 +164,7 @@ export function wireChain(chain: Instance[], rng: Rng): Wire[] {
       to: chain[k + 1].cell,
       start: chain[k].fireFrame,
       end: chain[k].fireFrame + LINK_DELAY,
-      color: colorOf(chain[k]),
+      color,
       last: k === chain.length - 2,
     })
   }

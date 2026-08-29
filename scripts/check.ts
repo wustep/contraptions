@@ -12,6 +12,7 @@ import { LOOP } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
 import { registry } from '../src/contraptions'
 import type { Instance } from '../src/core/types'
+import type { Flow } from '../src/core/wiring'
 import { portMachines } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 
@@ -215,6 +216,40 @@ check(
     const u = ((((i.fireFrame + i.phase) % i.period) + i.period) % i.period) / i.period
     const want = i.contraption.fireAt ?? 0
     return Math.abs(u - want) < 0.02 || Math.abs(u - want) > 0.98
+  }),
+)
+
+// The cascade contract. A chained machine is told which way its run goes and
+// stands upright to face it; the run is staffed so the token only ever
+// crosses edges a machine said it could; one token runs the whole chain, so
+// every link carries one colour; and a run never climbs, because nothing in
+// the set can lift a ball.
+console.log('\ncascade')
+const flowOf = (i: Instance) => (i.state as { flow?: Flow }).flow
+const chained = wired.instances.filter((i) => flowOf(i))
+const onWires = new Set(wired.wires.flatMap((w) => [w.from, w.to]))
+check('every wired machine knows its run', chained.length === onWires.size && chained.every((i) => onWires.has(i.cell)))
+check('every wired machine stands upright', chained.every((i) => i.angle === 0 && i.mirror === 1))
+check(
+  'every run enters and leaves by edges its machines allow',
+  chained.every((i) => {
+    const f = flowOf(i)!
+    const c = i.contraption
+    return (!f.in || !c.inlets || c.inlets.includes(f.in)) && (!f.out || !c.outlets || c.outlets.includes(f.out))
+  }),
+)
+check('every run has a source with no inlet and a sink with no outlet', heads.every((w) => flowOf(byPos.get(`${Math.round(w.from.x)}:${Math.round(w.from.y)}`)!)!.in === null))
+check('every run never climbs', wired.wires.every((w) => w.to.y >= w.from.y - 1))
+check(
+  'every run carries one colour',
+  heads.every((head) => {
+    let w = head
+    for (;;) {
+      const next = wired.wires.find((o) => o.from === w.to)
+      if (!next) return true
+      if (next.color !== head.color) return false
+      w = next
+    }
   }),
 )
 
