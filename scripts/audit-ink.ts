@@ -33,6 +33,7 @@ const frameEscapes: string[] = []
 const pageEscapes: string[] = []
 const collisions: string[] = []
 const emptyCells: string[] = []
+const blankFrames: string[] = []
 
 /** Local box -> world box, given a quarter turn and a mirror. */
 function toWorld(box: Box, angle: number, mirror: number, cx: number, cy: number): Box {
@@ -93,7 +94,10 @@ function measure(mode: string, options: Options): void {
         continue
       }
       const box = rec.ink
-      if (isEmpty(box)) continue
+      if (isEmpty(box)) {
+        blankFrames.push(`${label} ${contraption.name} draws nothing at u=${u.toFixed(2)}`)
+        continue
+      }
       const hw = cell.w / 2
       const hh = cell.h / 2
       for (const [side, amount] of [
@@ -167,7 +171,7 @@ for (const s of all.sort((a, b) => Math.max(a.spanX, a.spanY) - Math.max(b.spanX
 const tally = (label: string, list: string[]) => {
   const counts = new Map<string, number>()
   for (const line of list) {
-    const k = line.replace(/ by [\d.]+ cells/, '')
+    const k = line.replace(/ by [\d.]+ cells/, '').replace(/ at u=[\d.]+/, '')
     counts.set(k, (counts.get(k) ?? 0) + 1)
   }
   console.log(`\n== ${label} (${list.length}) ==`)
@@ -177,4 +181,5 @@ tally('ink leaving the art frame', frameEscapes)
 tally('ink running off the page', pageEscapes)
 tally('machines whose ink boxes collide', collisions)
 tally('cells that draw nothing', emptyCells)
+tally('frames that draw nothing', blankFrames)
 console.log(`\n${all.length} machine/mode pairs measured\n`)
