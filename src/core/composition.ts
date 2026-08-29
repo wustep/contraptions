@@ -270,7 +270,15 @@ const gridCatalog = (catalog: Contraption<unknown>[], mode: Mode): CatalogEntry[
       state:
         unit && mode === 'cascade'
           ? (state, { color }) => {
-              state.flow = { in: null, out: null, color }
+              // Show each beat as it stands on a line: a source with a rail
+              // running out east, a sink with one running in from the west, a
+              // relay with both. A closed flow drew no rail at all, so half
+              // the sheet floated with nothing under it.
+              state.flow = {
+                in: c.role === 'source' ? null : !c.inlets || c.inlets.includes('W') ? 'W' : null,
+                out: c.role === 'sink' ? null : !c.outlets || c.outlets.includes('E') ? 'E' : null,
+                color,
+              }
             }
           : unit && mode === 'workshop'
             ? (state, { color }) => {

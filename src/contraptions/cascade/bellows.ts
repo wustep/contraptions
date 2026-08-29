@@ -26,7 +26,11 @@ export const bellows = defineContraption<Beat>({
   draw: (p, s, { size: k, u, ink, weight }) => {
     const t = since(u, FIRE)
     const squash = easeOutCubic(seg(t, 0, 0.05)) - easeInOutCubic(seg(t, 0.12, 0.5))
-    const top = TOP + squash * 0.16
+    // Squash from the bottom board up. Dropping the top board opened a hole
+    // in the rail the token rolls along — the bellows asks `floor` for a gap
+    // so it can BE that stretch of floor, and a floor that sinks is a trap.
+    const top = TOP
+    const base = BOTTOM - squash * 0.16
     const fromAbove = s.flow?.in === 'N'
 
     if (fromAbove || rideOf(s)) {
@@ -57,11 +61,11 @@ export const bellows = defineContraption<Beat>({
     p.fill(s.color)
     p.beginShape()
     for (let i = 0; i <= PLEATS * 2; i++) {
-      const y = top + 0.04 + ((BOTTOM - 0.02 - top - 0.04) * i) / (PLEATS * 2)
+      const y = top + 0.04 + ((base - 0.02 - top - 0.04) * i) / (PLEATS * 2)
       p.vertex((i % 2 === 0 ? HALF_W - 0.04 : HALF_W) * k, y * k)
     }
     for (let i = PLEATS * 2; i >= 0; i--) {
-      const y = top + 0.04 + ((BOTTOM - 0.02 - top - 0.04) * i) / (PLEATS * 2)
+      const y = top + 0.04 + ((base - 0.02 - top - 0.04) * i) / (PLEATS * 2)
       p.vertex((i % 2 === 0 ? -HALF_W + 0.04 : -HALF_W) * k, y * k)
     }
     p.endShape(p.CLOSE)
@@ -70,7 +74,7 @@ export const bellows = defineContraption<Beat>({
     for (const side of [-1, 1]) {
       p.beginShape()
       for (let i = 0; i <= PLEATS * 2; i++) {
-        const y = top + 0.04 + ((BOTTOM - 0.02 - top - 0.04) * i) / (PLEATS * 2)
+        const y = top + 0.04 + ((base - 0.02 - top - 0.04) * i) / (PLEATS * 2)
         p.vertex(side * (i % 2 === 0 ? HALF_W - 0.04 : HALF_W) * k, y * k)
       }
       p.endShape()
@@ -78,7 +82,7 @@ export const bellows = defineContraption<Beat>({
     // The boards.
     solid(p, ink, weight, s.color)
     p.rect(0, (top + 0.02) * k, (HALF_W * 2 + 0.04) * k, 0.05 * k)
-    p.rect(0, (BOTTOM + 0.02) * k, (HALF_W * 2 + 0.04) * k, 0.05 * k)
+    p.rect(0, (base + 0.02) * k, (HALF_W * 2 + 0.04) * k, 0.05 * k)
 
     if (sideways && t > 0.01 && t < 0.2) {
       const f = seg(t, 0.01, 0.2)

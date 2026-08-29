@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
 import { LIP, cable, car, carLocalY, guides, sheave, shopBeat, shopTravel } from '../../worlds/goldberg/elevator'
-import { BELT_V, FEED_WEST, PART, PART_Y, belt, bench, lineOf, part } from './shop'
+import { BELT_V, BENCH, FEED_WEST, PART, PART_Y, belt, bench, lineOf, part } from './shop'
 
 /**
  * A V-funnel over the bench. One blank sits in the throat; the gate lets
@@ -39,6 +39,14 @@ export const hopper = defineContraption({
       p.line(mouth * k, -0.46 * k, W * k, 0.02 * k)
       p.line(-mouth * k, -0.46 * k, mouth * k, -0.46 * k)
       p.line((-W - 0.02) * k, 0.04 * k, (W + 0.18) * k, 0.04 * k)
+      // Legs down to the bench, splayed clear of the blank's path. Without
+      // them the funnel hangs a third of a cell over the rollers with
+      // nothing between, and reads as hovering rather than as feeding.
+      if (!dumping) {
+        for (const side of [-1, 1]) {
+          p.line(side * (W + 0.02) * k, 0.04 * k, side * 0.26 * k, BENCH * k)
+        }
+      }
       solid(p, ink, weight, s.color)
       p.rect(open * 0.22 * k, 0.02 * k, 2 * W * k, 0.045 * k)
     })
