@@ -5,6 +5,9 @@ import type { Contraption, Instance, Side } from '../../core/types'
 import { sideOf, wireCascade } from '../../core/wiring'
 import { budgetRuns, coverRuns, finish, leftoverCells, openFloor, placeSpans } from './staff'
 
+/** Leftover cells that still draw a travelling token or a nozzle to the edge. */
+const QUIET = new Set(['bell', 'lamp', 'flag'])
+
 /**
  * Cascade world. The classic sprinkle composer left most cells unchained, and
  * an unchained cascade machine draws its own token rolling off the cell edge.
@@ -17,8 +20,9 @@ import { budgetRuns, coverRuns, finish, leftoverCells, openFloor, placeSpans } f
  */
 export function buildCascade(options: Options, canvas: number): Composition {
   const floor = openFloor(options, canvas, cascadeRegistry)
-  const spanChance = floor.singles.length === 0 ? 1 : options.spans * 0.12
-  placeSpans(floor, spanChance)
+  // Spans punch holes that leftover flags then fill. Sentences take the
+  // whole floor; strip / switchback / cradle stay on the catalog sheet.
+  if (floor.singles.length === 0) placeSpans(floor, 1)
 
   const leftover = leftoverCells(floor)
   const runs = coverRuns(leftover, floor.rng.fork('paths'), true)
@@ -55,13 +59,16 @@ export function buildCascade(options: Options, canvas: number): Composition {
 
   const closed = floor.singles.filter((c) => c.role === 'sink')
   const notSource = floor.singles.filter((c) => c.role !== 'source')
-  const leftoverPool = closed.length ? closed : notSource.length ? notSource : floor.singles
+  const quiet = floor.singles.filter((c) => QUIET.has(c.name))
+  const leftoverPool = quiet.length ? quiet : closed.length ? closed : notSource.length ? notSource : floor.singles
 
   for (const cell of singles) {
     floor.claimed.add(cell)
     const cellRng = floor.rng.fork(`pick:${cell.index}`)
     const contraption = leftoverPool.length === 1 ? leftoverPool[0] : cellRng.weighted(leftoverPool, (c) => c.weight ?? 1)
     const inst = floor.place(contraption, cell, `cell:${cell.index}`)
+    inst.angle = 0
+    inst.mirror = 1
     const color = (inst.state as { color?: string }).color ?? cellRng.pick(floor.theme.colors)
     if (inst.state && typeof inst.state === 'object') {
       ;(inst.state as { flow?: { in: null; out: null; color: string } }).flow = { in: null, out: null, color }

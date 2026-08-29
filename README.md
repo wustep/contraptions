@@ -158,14 +158,16 @@ Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
 Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
 a classic-like grid composer. Cascade and Workshop are their own worlds:
-leftover cells close instead of dumping tokens off the frame.
+every neighbour run is a complete sentence or shop line; leftover isolates
+close instead of dumping tokens off the frame. Multi-cell spans stay on the
+catalog sheet so they cannot punch holes in those runs.
 
 | Mode | Catalog | Composer |
 | --- | --- | --- |
 | Classic | the original 36 toys | independent machines, abstract wires |
 | Ports | `src/worlds/ports/` | tokens handed across typed edges |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
-| Cascade | `src/contraptions/cascade/` | complete sentences that always end; leftovers stay closed |
+| Cascade | `src/contraptions/cascade/` | complete sentences; leftover isolates stay closed |
 | Workshop | `src/contraptions/workshop/` | shop lines that run east into a bin, bell, or lamp |
 | Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
 
@@ -177,10 +179,11 @@ mode's pieces. The URL stores the mode name (`?mode=cascade`).
 A token starts in one cell and every cell after it is a beat in a chain
 reaction. The cascade world covers leftover cells with complete sentences —
 source → relay* → sink, never climbing — and writes `flow` onto every 1×1
-machine. A leftover that is not on a run gets a closed flow so `rollOut` /
-`rollIn` / `fallIn` hide the token instead of rolling it off the cell. A cup
-only dumps when the run actually continues south. Classic wiring is left
-alone: a pendulum on main still rotates.
+machine. Neighbour runs are always staffed (`chains === 0` is the explicit
+all-closed stop). A leftover isolate gets a quiet sink and a closed flow so
+`rollOut` / `rollIn` / `fallIn` hide the token. A cup only dumps when the
+run actually continues south; a bellows only puffs when the run leaves
+sideways. Classic wiring is left alone: a pendulum on main still rotates.
 
 `src/contraptions/cascade/parts.ts` is the shared vocabulary (token size, the
 hand-off helpers, `heading(flow)`). The composer lives in
@@ -189,11 +192,12 @@ hand-off helpers, `heading(flow)`). The composer lives in
 ### Workshop
 
 One shop floor. Leftover cells are grouped into eastbound rows of equal-size
-neighbours. A shop line is feeder → stations → a real ending (`bin`, `bell`,
-`lamp`). Every 1×1 bench gets a `line`: a closed outlet holds the part at
-centre, a closed inlet starts the part inside the cell. Press / punch / saw
-are stations, not termini — they still roll a part east when they have a
-neighbour. Classic wires are not used; travel times do not match `fireAt`
+neighbours. A shop line is feeder (`hopper` / `hoist` / `tipper`) → bench
+stations → a real ending (`bin`, `bell`, `lamp`). Lift, auger, chute, divert
+and arm stay off the line — they change height or open a gap. Every 1×1 bench
+gets a `line`: a closed outlet holds the part at centre, a closed inlet
+starts the part inside the cell. Press / punch / saw are stations, not
+termini. Classic wires are not used; travel times do not match `fireAt`
 beads. Machines never mirror. `shop.ts` is the vocabulary every bench agrees
 on (`BENCH` is the same floor the ports and tracks worlds roll on). The
 composer lives in `src/worlds/goldberg/workshop.ts`.

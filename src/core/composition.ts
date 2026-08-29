@@ -76,18 +76,18 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'sentences that always end; leftovers stay closed',
+    note: 'complete sentences; no leftover dumps',
     catalog: 'cascade',
     composer: 'cascade',
-    dials: GRID_DIALS,
+    dials: { layout: true, spans: false, chains: true, pool: true },
   },
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'shop lines east to a bin; leftovers do not emit',
+    note: 'shop lines east to a bin, bell, or lamp',
     catalog: 'workshop',
     composer: 'workshop',
-    dials: GRID_DIALS,
+    dials: { layout: true, spans: false, chains: true, pool: true },
   },
   {
     name: 'circus',

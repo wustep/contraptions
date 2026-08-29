@@ -31,13 +31,18 @@ export const bellows = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, HALF_W + 0.02)
 
+    const sideways = !s.flow || s.flow.out === 'E' || s.flow.out === 'W'
+
     p.push()
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
     floorRail(p, k)
-    // The nozzle, from the top board out to the edge.
-    p.line(HALF_W * k, (top + 0.06) * k, 0.5 * k, (top + 0.02) * k)
-    p.line(HALF_W * k, (top + 0.12) * k, 0.5 * k, (top + 0.1) * k)
+    // The nozzle only when the run actually leaves sideways. A south drop
+    // or a closed leftover was drawing a spout and puff off the cell.
+    if (sideways) {
+      p.line(HALF_W * k, (top + 0.06) * k, 0.48 * k, (top + 0.02) * k)
+      p.line(HALF_W * k, (top + 0.12) * k, 0.48 * k, (top + 0.1) * k)
+    }
 
     // The pleats between the two boards.
     p.push()
@@ -68,16 +73,15 @@ export const bellows = defineContraption<Beat>({
     p.rect(0, (top + 0.02) * k, (HALF_W * 2 + 0.04) * k, 0.05 * k)
     p.rect(0, (BOTTOM + 0.02) * k, (HALF_W * 2 + 0.04) * k, 0.05 * k)
 
-    // The puff: three arcs racing out of the nozzle and thinning.
-    if (t > 0.01 && t < 0.2) {
+    if (sideways && t > 0.01 && t < 0.2) {
       const f = seg(t, 0.01, 0.2)
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
       p.noFill()
       for (let i = 0; i < 3; i++) {
-        const x = 0.52 + 0.3 * f + i * 0.05
-        const r = (0.08 + 0.2 * f) * (1 - i * 0.2)
+        const x = Math.min(0.48, 0.36 + 0.12 * f + i * 0.04)
+        const r = (0.06 + 0.08 * f) * (1 - i * 0.2)
         p.arc(x * k, (top + 0.06) * k, r * k, r * k, -0.5, 0.5)
       }
       p.pop()

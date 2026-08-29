@@ -19,7 +19,14 @@ import { budgetRuns, finish, leftoverCells, openFloor, placeSpans } from './staf
  */
 
 const ENDINGS = new Set(['bin', 'bell', 'lamp'])
-const FEEDERS = new Set(['hopper', 'hoist', 'tipper', 'hammer', 'timer'])
+/** Feeders that actually put a blank on the bench and send it east. */
+const FEEDERS = new Set(['hopper', 'hoist', 'tipper'])
+/**
+ * Stations that keep the part on the bench. Lift / auger / chute change
+ * height; divert dumps through the floor; an arm opens a gap. Any of those
+ * on a shop line reads as a dead end even when `line.out` is true.
+ */
+const STATIONS = new Set(['belt', 'mill', 'press', 'punch', 'saw', 'scale', 'dip', 'latch', 'counter'])
 
 function eastRows(cells: Cell[]): Cell[][] {
   const groups = new Map<string, Cell[]>()
@@ -49,8 +56,10 @@ const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter(
 
 export function buildWorkshop(options: Options, canvas: number): Composition {
   const floor = openFloor(options, canvas, workshopRegistry, { mirror: false })
-  const spanChance = floor.singles.length === 0 ? 1 : options.spans * 0.1
-  placeSpans(floor, spanChance)
+  // Spans punch holes in eastbound rows. A line / gantry on the rim also
+  // dumps a part off the art. Shop lines take the whole floor; spans stay
+  // on the catalog sheet.
+  if (floor.singles.length === 0) placeSpans(floor, 1)
 
   const leftover = leftoverCells(floor)
   const { keep, singles } = budgetRuns(eastRows(leftover), leftover.length, options.chains)
@@ -58,7 +67,7 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
 
   const feeders = named(floor.singles, FEEDERS)
   const endings = named(floor.singles, ENDINGS)
-  const stations = floor.singles.filter((c) => !FEEDERS.has(c.name) && !ENDINGS.has(c.name))
+  const stations = named(floor.singles, STATIONS)
 
   const from = (want: Contraption<unknown>[], fallback: Contraption<unknown>[]) => {
     if (want.length) return want

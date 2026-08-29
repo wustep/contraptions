@@ -173,9 +173,15 @@ export function coverRuns(cells: Cell[], rng: Rng, neverUp = false): Cell[][] {
   }
 
   while (unused.size) {
+    // A cell whose only unused neighbour is north has zero legal nexts
+    // under neverUp. If we claim it first, the cell above can never drop
+    // into it and the floor fills with leftover singles. Grow from cells
+    // that can actually take a step; true isolates go last.
+    const growable = [...unused].filter((c) => nexts(c).length > 0)
+    const pool = growable.length ? growable : [...unused]
     let best: Cell[] = []
     let bestN = Infinity
-    for (const cell of unused) {
+    for (const cell of pool) {
       const n = nexts(cell).length
       if (n < bestN) {
         bestN = n
@@ -206,22 +212,18 @@ export function coverRuns(cells: Cell[], rng: Rng, neverUp = false): Cell[][] {
 }
 
 /**
- * Keep the longest runs until `chains` of the leftover cells sit on a sentence.
- * The floor is high: even a modest chains setting covers most neighbours, so
- * the piece reads as one machine. `chains === 0` is the explicit "all closed"
- * stop. Isolated cells always become singles.
+ * Every leftover neighbour-run becomes a sentence. Isolated cells are the
+ * only singles. `chains === 0` is the explicit all-closed stop; otherwise
+ * leaving a connected corridor as leftovers is what made the grid read as
+ * a pile of parts.
  */
-export function budgetRuns(runs: Cell[][], leftoverCount: number, chains: number): { keep: Cell[][]; singles: Cell[] } {
-  const density = Math.max(0, Math.min(1, chains))
-  const want = density <= 0 ? 0 : leftoverCount * (0.72 + 0.26 * density)
+export function budgetRuns(runs: Cell[][], _leftoverCount: number, chains: number): { keep: Cell[][]; singles: Cell[] } {
+  if (chains <= 0) return { keep: [], singles: runs.flat() }
   const keep: Cell[][] = []
   const singles: Cell[] = []
-  let filled = 0
-  for (const run of [...runs].sort((a, b) => b.length - a.length)) {
-    if (run.length >= 2 && filled < want) {
-      keep.push(run)
-      filled += run.length
-    } else singles.push(...run)
+  for (const run of runs) {
+    if (run.length >= 2) keep.push(run)
+    else singles.push(...run)
   }
   return { keep, singles }
 }

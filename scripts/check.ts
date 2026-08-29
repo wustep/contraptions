@@ -319,6 +319,13 @@ for (const seed of ['first-look', 'chains', 'workshop-12', 'rim']) {
     check(`${label}: every 1×1 has a line`, shop.instances.filter(unitOf).every((i) => (i.state as { line?: Line }).line))
     check(`${label}: outlets meet an inlet`, errors.length === 0, errors.slice(0, 3).join(' | '))
     check(`${label}: no classic wires`, shop.wires.length === 0)
+    if (layout === 'grid') {
+      const isolated = shop.instances.filter((i) => {
+        const line = (i.state as { line?: Line }).line
+        return unitOf(i) && line && !line.in && !line.out
+      })
+      check(`${label}: regular grid has no leftover singles`, isolated.length === 0, `${isolated.length} leftovers`)
+    }
   }
 }
 
@@ -384,13 +391,15 @@ for (const seed of ['first-look', 'cascade-8', 'rim']) {
     )
     const label = `cascade ${seed} ${layout}`
     check(`${label}: every 1×1 has flow`, piece.instances.filter(unitOf).every((i) => flowOf(i)))
+    const leftover = piece.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
     check(
       `${label}: leftovers stay closed`,
-      piece.instances
-        .filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
-        .every((i) => i.contraption.role !== 'source'),
+      leftover.every((i) => i.contraption.role !== 'source'),
     )
     check(`${label}: chain grammar`, chainGrammar(piece).length === 0, chainGrammar(piece).slice(0, 3).join(' | '))
+    if (layout === 'grid') {
+      check(`${label}: regular grid has no leftover singles`, leftover.length === 0, `${leftover.length} leftovers`)
+    }
   }
 }
 
