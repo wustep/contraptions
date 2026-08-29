@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { LOOP } from '../../core/constants'
 import { outline, solid } from '../../core/draw'
-import { easeInOutCubic, mod, seg } from '../../core/ease'
+import { mod } from '../../core/ease'
 import { stopLane, type Lane, type LaneCtx } from '../../core/lane'
 import { FIRE_DECAY } from '../../core/wiring'
 import { BY, D, FLOOR } from '../../worlds/lanes'
@@ -69,23 +69,16 @@ export const ROLLER_R = 2 / (9 * Math.PI)
 export const TICK = 0.125
 
 /**
- * The station beat, shared by every machine that stops a part to work it: the
- * part rolls in from the west edge, waits under the tool, is struck, and rolls
- * out. Every station fires at HIT, so a chain of them reads at one tempo.
+ * The station beat: where in its own clock a bench strikes the part its lane
+ * is holding. Every station fires here, so a chain of them reads at one tempo.
  */
-export const ARRIVE = 0.31
 export const HIT = 0.42
-export const DEPART = 0.55
-export const GONE = DEPART + ARRIVE
 
 export type Mark = 'blank' | 'dot' | 'hole'
 
 /** 1 at `at`, decaying to 0 over `frames`. What `fired` is, derived from `u`. */
 export const pulse = (u: number, at: number, frames = FIRE_DECAY, period = LOOP) =>
   Math.max(0, 1 - (mod(u - at, 1) * period) / frames)
-
-/** `u` with the end of the loop folded to just below zero, for lead-ins. */
-export const fold = (u: number) => (u > 0.5 ? u - 1 : u)
 
 /**
  * A 1×1 bench's place on a shop line. The workshop composer writes this;
@@ -120,16 +113,20 @@ export const partLane = (ctx: LaneCtx, opts: { at?: number; time?: number; y?: n
   stopLane(ctx, BELT_V, opts)
 
 /**
- * Where a part used to be on the station beat, back when every bench drew its
- * own. The world draws the part now, so this carries nothing: an unconverted
- * bench keeps compiling and stops drawing a second part on top of the real one.
- *
- * @deprecated Declare a `lane` instead and delete the call.
+ * A station's lane: `partLane` with the fire moment placed inside the pause
+ * rather than at its start. `when` is which end of the pause the bench's
+ * `fireAt` names — 'in' the part arriving, 'mid' the tool working it, 'out'
+ * the bench letting it go. A feeder keeps its release.
  */
-export const shuttle = (_u: number, _arrive = ARRIVE, _depart = DEPART, _line?: Line): number | null => null
-
-/** @deprecated See `shuttle`. */
-export const keepX = (_x: number, _line?: Line): number | null => null
+export function workLane(
+  ctx: LaneCtx,
+  opts: { at?: number; time?: number; when?: 'in' | 'mid' | 'out' } = {},
+): Lane {
+  const lane = partLane(ctx, opts)
+  if (ctx.in === null) return lane
+  const share = opts.when === 'in' ? 0 : opts.when === 'out' ? 1 : 0.5
+  return { ...lane, fire: ((opts.at ?? 0) + 0.5) / BELT_V + (opts.time ?? 0) * share }
+}
 
 /** The bench line, with a leg at each end down to the floor. */
 export function bench(p: p5, k: number, ink: string, weight: number, x0 = -0.5, x1 = 0.5, legs = true): void {
@@ -246,11 +243,4 @@ export function sparks(p: p5, k: number, color: string, x: number, y: number, u:
     p.circle(sx * k, sy * k, k * 0.035 * (1 - t * 0.5) * on)
   }
   p.pop()
-}
-
-/** A ramp that moves in steps: `steps` moves a loop, each taking `dwell` of its slot. */
-export const indexed = (u: number, steps: number, dwell = 0.5) => {
-  const slot = u * steps
-  const i = Math.floor(slot)
-  return (i + easeInOutCubic(seg(slot - i, 0, 1 - dwell))) / steps
 }

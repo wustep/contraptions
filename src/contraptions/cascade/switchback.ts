@@ -9,7 +9,7 @@ import { lamp } from './lamp'
 import { paddle } from './paddle'
 import { FLOOR, LINK, SPEED, token, type Beat, type Pt } from './parts'
 import { seesaw } from './seesaw'
-import { drawMember, member } from './strip'
+import { drawMember, laneEnd, member } from './strip'
 import { toaster } from './toaster'
 
 /**
@@ -53,12 +53,20 @@ export const switchback = defineContraption<Beat & { members: ReturnType<typeof 
       p.line(0.5 * k, (0.5 + FLOOR) * k, -w / 2, (0.5 + FLOOR) * k)
       for (const m of s.members) drawMember(p, m, ctx)
 
+      // One ball for the whole loop, round the square: the hopper's throat,
+      // along the top, down the corner, back along the bottom, and at rest in
+      // whatever the ending holds it with.
       const t = u - START
-      let at: Pt | null = null
-      if (t >= 0 && t < LINK) at = [-0.5 + t * SPEED, -0.5]
-      else if (t >= LINK && t < LINK * 2) at = [0.5, -0.5 + (t - LINK) * SPEED]
-      else if (t >= LINK * 2 && t < LINK * 3) at = [0.5 - (t - LINK * 2) * SPEED, 0.5]
-      if (at) token(p, k, ink, weight, s.color, at)
+      const throat = laneEnd(s.members[0], 'in')
+      const rest = laneEnd(s.members[3], 'out')
+      let at: Pt
+      if (t < 0) at = throat
+      else if (t < LINK) at = [-0.5 + t * SPEED, -0.5]
+      else if (t < LINK * 2) at = [0.5, -0.5 + (t - LINK) * SPEED]
+      else if (t < LINK * 3) at = [0.5 + (rest[0] - 0.5) * ((t - LINK * 2) / LINK), rest[1]]
+      else at = rest
+      token(p, k, ink, weight, s.color, at)
+      for (const m of s.members) drawMember(p, m, ctx, 'over')
     })
   },
 })

@@ -1,16 +1,19 @@
 import { defineContraption } from '../../core/define'
 import { coil, outline, solid, teeth } from '../../core/draw'
 import { clamp } from '../../core/ease'
-import { BENCH, HIT, bench } from './shop'
+import { BENCH, HIT, PART_Y, bench, workLane } from './shop'
 
 /**
  * A peg on a slowly turning dial comes round under the follower and shoves
- * the plunger out through the east edge, where the spring snaps it back the
- * moment the peg has passed.
+ * the plunger east; the gauge finger hanging off it sweeps over the part
+ * waiting on the bench, and the spring snaps it back once the peg has passed.
  */
-const CX = -0.1
-const CY = -0.06
-const R = 0.24
+const CX = -0.32
+const CY = -0.14
+const R = 0.18
+const HOLD = 0.12
+/** The finger clears the part's face by a hair. */
+const FINGER = PART_Y - 0.12 - 0.04
 
 export const timer = defineContraption({
   name: 'timer',
@@ -19,6 +22,7 @@ export const timer = defineContraption({
   role: 'source',
   rotations: [0],
   fireAt: HIT,
+  lane: (ctx) => workLane(ctx, { time: HOLD }),
   setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const peg = s.dir * Math.PI * 2 * (u - HIT)
@@ -43,14 +47,16 @@ export const timer = defineContraption({
     p.circle(CX * k, CY * k, 0.09 * k)
     p.circle((CX + Math.cos(peg) * (R - 0.01)) * k, (CY + Math.sin(peg) * (R - 0.01)) * k, 0.08 * k)
 
-    // The plunger in its sleeve, sprung back against the dial's rim.
+    // The plunger in its sleeve, sprung back against the dial's rim, with
+    // the gauge finger that passes over the part.
     outline(p, ink, weight)
-    p.rect(0.4 * k, CY * k, 0.08 * k, 0.14 * k)
-    p.line(0.4 * k, (CY + 0.07) * k, 0.4 * k, BENCH * k)
-    p.line(tipX * k, CY * k, (0.58 + ext) * k, CY * k)
-    coil(p, (tipX + 0.06) * k, CY * k, 0.36 * k, CY * k, 4, 0.035 * k)
+    p.rect(0.3 * k, CY * k, 0.08 * k, 0.14 * k)
+    p.line(0.3 * k, (CY + 0.07) * k, 0.3 * k, BENCH * k)
+    p.line(tipX * k, CY * k, (0.34 + ext) * k, CY * k)
+    p.line((0.08 + ext) * k, CY * k, (0.08 + ext) * k, FINGER * k)
+    coil(p, (tipX + 0.05) * k, CY * k, 0.26 * k, CY * k, 4, 0.035 * k)
     solid(p, ink, weight, s.color)
-    p.rect((tipX + 0.03) * k, CY * k, 0.06 * k, 0.1 * k)
-    p.rect((0.56 + ext) * k, CY * k, 0.04 * k, 0.1 * k)
+    p.rect((tipX + 0.02) * k, CY * k, 0.05 * k, 0.1 * k)
+    p.rect((0.36 + ext) * k, CY * k, 0.04 * k, 0.1 * k)
   },
 })

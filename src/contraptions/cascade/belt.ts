@@ -1,10 +1,13 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
-import { FLOOR, floor, heading, rollIn, rollOut, token, tokenColor, type Beat } from './parts'
+import { outline, solid } from '../../core/draw'
+import { FLOOR, floor, rollLane, type Beat } from './parts'
 
 /**
  * A belt in the line running the run's way: the ball rides it across and the
  * rollers turn under it, a beat that hands on without changing anything.
+ *
+ * The belt's top run sits at rail height, so the ball crosses on the plain
+ * lane and the deck is simply what it crosses on.
  */
 const FIRE = 0.4
 const R = 0.09
@@ -20,10 +23,10 @@ export const belt = defineContraption<Beat>({
   outlets: ['E', 'W'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx) => rollLane(ctx),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const h = heading(s.flow)
-    const turn = h * u * Math.PI * 2 * 3
+    const turn = u * Math.PI * 2 * 3
 
     floor(p, k, ink, weight, s, SPAN)
     outline(p, ink, weight)
@@ -45,10 +48,5 @@ export const belt = defineContraption<Beat>({
       p.line(0, -R * 0.75 * k, 0, R * 0.75 * k)
       p.pop()
     }
-
-    clipCell(p, k, () => {
-      const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
-      if (at) token(p, k, ink, weight, tokenColor(s), at)
-    })
   },
 })

@@ -38,8 +38,8 @@ src/
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
   contraptions/     classic toys, plus one namespaced catalog per Goldberg mode
-    cascade/        22 beats that hand a token along a chain
-    workshop/       27 benches; shop.ts is the shared floor and part
+    cascade/        25 beats a token rolls through; parts.ts is the shared rail
+    workshop/       30 benches; shop.ts is the shared floor and part
     circus/         28 looping acts; circus.ts is the shared vocabulary
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
@@ -191,14 +191,17 @@ through a gap. Tracks reached the same conclusion first, with its balls.
 
 ### Cascade
 
-One token, one snake. The world lays its own grid across the frame and threads
-a single run through every cell of it: a feeder, then stations, then a sink,
-with two-cell elevator stacks where the run has to change floor. **Stations**
-is the fraction of that run which is machinery; the rest is plain rail, so the
-dial trades a dense chain of events against a long roll between them. The
-token itself is drawn by the world along the joined lane, and the elevator
-cars, cables and counterweights come off the same clock, so nothing that moves
-with the token is drawn by more than one thing.
+One snake. The world lays its own grid across the frame and threads a single
+run through every cell of it: a feeder, then stations, then a sink, with
+two-cell elevator stacks where the run has to change floor. The feeder lets a
+ball go once a loop, and the run is longer than a loop, so several balls are on
+it at once — each one continuous from throat to sink, and one always resting in
+the throat and one in the sink, because the next arrival replaces it at the
+same instant. **Stations** is the fraction of the run that is machinery; the
+rest is plain rail, so the dial trades a dense chain of events against a long
+roll between them. The balls are drawn by the world along the joined lane, and
+the elevator cars, cables and counterweights come off the same clock, so
+nothing that moves with a ball is drawn by more than one thing.
 
 `src/contraptions/cascade/parts.ts` is the shared vocabulary; the composer
 lives in `src/worlds/goldberg/cascade.ts`.
@@ -275,9 +278,10 @@ and each reactor beside the piece of track it reacts to.
 The resolution range is the mode's, not the slider's: a composer builds at the
 clamped value and the panel writes it back into the URL, so a link never shows
 you a res the piece was not built at. `quads` and `bands` mix two cell sizes
-and no more, differing by exactly 2 — the piece is drawn with one pen, so a
-cell four times its neighbour's size is four times the ink, and the small
-machines stop reading as artifacts beside the large ones.
+and no more, differing by exactly 2, and the whole piece is drawn with one pen
+(`Composition.unit`): a cell twice its neighbour's size is twice the drawing,
+not twice the ink, so small machines stop reading as artifacts beside large
+ones.
 
 Playback speed, the scrub bar, export scale, and the grid overlay are view
 settings: they change how the piece is watched, never what it is, so they do

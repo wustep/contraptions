@@ -14,15 +14,26 @@ import { FLOOR, SPEED, floor, rollLane, since, type Beat } from './parts'
  */
 const FIRE = 0.4
 const COUNT = 5
-const SPAN = 0.68
-const H = 0.3
+const SPAN = 0.6
+const H = 0.28
 const W = 0.08
-/** Fraction of the loop one bar takes to go over. */
-const FALL = 0.06
+/**
+ * The row sits west of centre, because the last bar falls out across it: at
+ * full stretch its tip must still be inside the cell, or the row spills into
+ * the next machine.
+ */
+const MID = -0.1
+const FIRST = MID - SPAN / 2
+/**
+ * Fraction of the loop one bar takes to go over. Short enough that the wave
+ * keeps pace with the ball — a bar the ball has already passed is a bar it
+ * went through.
+ */
+const FALL = 0.02
 /** Where a bar comes to rest against the next; the last has nothing to lean on. */
 const REST = 0.85
 /** The ball reaches the first bar before the centre, by that much rail. */
-const START = FIRE - SPAN / 2 / SPEED
+const START = FIRE + FIRST / SPEED
 
 export const dominoes = defineContraption<Beat>({
   name: 'dominoes',
@@ -46,7 +57,7 @@ export const dominoes = defineContraption<Beat>({
     floor(p, k, ink, weight, s)
 
     for (let i = 0; i < COUNT; i++) {
-      const x = -SPAN / 2 + gap * i
+      const x = FIRST + gap * i
       const last = i === COUNT - 1
       const start = i * lead * FALL
       const fallen = easeInQuad(seg(t, start, start + FALL))

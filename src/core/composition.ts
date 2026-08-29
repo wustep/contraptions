@@ -24,9 +24,9 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   classic  — the original toys; independent machines, abstract wires
  *   ports    — tokens handed across typed edges (own world, own catalog)
  *   tracks   — balls circulating on a carved loop (own world, own catalog)
- *   cascade  — complete sentences that always end; leftovers stay closed
- *   workshop — shop lines that run east into a bin; leftovers do not emit
- *   circus   — one programme of acts that snakes the ring and ends in a bow
+ *   cascade  — its own grid, one snake of stations, balls on world-drawn lanes
+ *   workshop — the same lane world read as a shop line, parts every half loop
+ *   circus   — its own grid of closed looping acts, wired as a drumroll
  */
 export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
 
@@ -88,7 +88,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'one drop-chain that rides elevators and ends in a sink',
+    note: 'one snake of stations; balls ride rails and elevators into a sink',
     catalog: 'cascade',
     composer: 'cascade',
     dials: { layout: false, spans: false, chains: true, pool: true },
@@ -97,7 +97,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'one shop bench that rides elevators and ends in a bin, bell, or lamp',
+    note: 'one shop line; parts ride belts and elevators into a bin, bell, or lamp',
     catalog: 'workshop',
     composer: 'workshop',
     dials: { layout: false, spans: false, chains: true, pool: true },

@@ -1,17 +1,28 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid, teeth } from '../../core/draw'
+import { outline, solid, teeth } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
-import { FLOOR, flick, floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
+import { FLOOR, dipLane, flick, floor, since, type Beat } from './parts'
 
 /**
  * A pedal in the line with a counter wheel under it: every ball that rolls
  * over the pedal presses it, the pawl clicks the wheel round one notch, and
  * the pointer shows how many have been by.
+ *
+ * The lane dips by exactly the pedal's travel over exactly its stroke, so the
+ * ball rides the pedal down and up instead of hanging above it.
  */
 const FIRE = 0.4
-const HUB = 0.3
-const R = 0.15
+/** The wheel hangs beside the pedal's stem, so both fit under the rail. */
+const HUB_X = 0.17
+const HUB_Y = 0.32
+const R = 0.12
 const NOTCHES = 8
+const PEDAL = -0.06
+/** The pedal's stroke, and the three stretches of it the ball shares. */
+const GIVE = 0.05
+const DOWN = 0.03
+const WAIT = 0.06
+const UP = 0.07
 
 export const counter = defineContraption<Beat>({
   name: 'counter',
@@ -22,41 +33,40 @@ export const counter = defineContraption<Beat>({
   outlets: ['E', 'W'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx) => dipLane(ctx, { at: PEDAL, by: GIVE, down: DOWN, wait: WAIT, up: UP }),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const h = heading(s.flow)
     const t = since(u, FIRE)
-    const press = flick(t, 0.04, 0.08, 0.2) * 0.05
+    const press = flick(t, DOWN, DOWN + WAIT, DOWN + WAIT + UP) * GIVE
     // One notch per pass; the wheel is eight-fold, so the loop closes.
-    const step = easeInOutCubic(seg(t, 0.03, 0.15))
-    const spin = (h * step * Math.PI * 2) / NOTCHES
+    const step = easeInOutCubic(seg(t, 0.02, 0.14))
+    const spin = (step * Math.PI * 2) / NOTCHES
 
-    floor(p, k, ink, weight, s, 0.12)
+    floor(p, k, ink, weight, s, 0.18)
 
-    // The pedal, on a stem down to the pawl.
+    // The pedal sits in the rail's gap with its stem down to the pawl. Lips
+    // just wider than the ball, so it reads as a treadle and not as rail.
     outline(p, ink, weight)
-    p.line(0, (FLOOR + press) * k, 0, (HUB - R - 0.06 + press) * k)
+    for (const side of [-1, 1]) {
+      p.line((PEDAL + side * 0.14) * k, (FLOOR + press) * k, (PEDAL + side * 0.14) * k, (FLOOR - 0.05 + press) * k)
+    }
     solid(p, ink, weight, s.color)
-    p.rect(0, (FLOOR - 0.01 + press) * k, 0.2 * k, 0.05 * k)
+    p.rect(PEDAL * k, (FLOOR + 0.025 + press) * k, 0.28 * k, 0.05 * k)
+    outline(p, ink, weight)
+    p.line(PEDAL * k, (FLOOR + 0.05 + press) * k, PEDAL * k, (FLOOR + 0.13 + press) * k)
+    // The pawl, hanging off the stem onto the teeth.
+    p.line(PEDAL * k, (FLOOR + 0.13 + press) * k, (PEDAL + 0.08) * k, (FLOOR + 0.17 + press) * k)
 
     // The wheel and its pointer.
     p.push()
-    p.translate(0, HUB * k)
+    p.translate(HUB_X * k, HUB_Y * k)
     p.rotate(spin)
     outline(p, ink, weight)
     p.circle(0, 0, R * 2 * k)
-    teeth(p, R * k, NOTCHES, 0.045 * k)
-    p.line(0, 0, 0, -R * 0.75 * k)
+    teeth(p, R * k, NOTCHES, 0.04 * k)
+    p.line(0, 0, 0, -R * 0.7 * k)
     p.pop()
     solid(p, ink, weight, s.color)
-    p.circle(0, HUB * k, 0.08 * k)
-    // The pawl, hanging from the pedal's stem onto the teeth.
-    outline(p, ink, weight)
-    p.line(0, (HUB - R - 0.06 + press) * k, h * 0.09 * k, (HUB - R + 0.01 + press) * k)
-
-    clipCell(p, k, () => {
-      const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
-      if (at) token(p, k, ink, weight, tokenColor(s), at)
-    })
+    p.circle(HUB_X * k, HUB_Y * k, 0.07 * k)
   },
 })
