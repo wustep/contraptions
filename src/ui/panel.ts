@@ -260,7 +260,10 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
+  // Three is the smallest floor a chain reaction can happen on, so it is the
+  // smallest the worlds will build; a dial with two dead stops at the bottom
+  // is promising something no mode can draw.
+  const res = slider('Resolution', 3, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
     'Cells across the piece')
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
