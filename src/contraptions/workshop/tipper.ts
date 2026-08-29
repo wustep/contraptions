@@ -47,7 +47,7 @@ export const tipper = defineContraption({
     }
 
     clipCell(p, k, () => {
-      bench(p, k, ink, weight, PIVOT[0] - 0.02, 0.5)
+      bench(p, k, ink, weight, PIVOT[0], 0.5, false)
       belt(p, k, ink, weight, s.color, 0.08, 0.5, u * BELT_V)
 
       // The post, the counterweight, and the tray on its pivot.

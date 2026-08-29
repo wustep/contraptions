@@ -9,8 +9,9 @@ import { floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } 
  * it coasts to rest with the next blade down, ready for the next one.
  */
 const FIRE = 0.4
-const HUB = -0.2
-const BLADE = 0.34
+const HUB = -0.18
+/** Short of the rail so the wheel is mounted over a continuous line. */
+const BLADE = 0.26
 
 export const paddle = defineContraption<Beat>({
   name: 'paddle',
@@ -27,10 +28,10 @@ export const paddle = defineContraption<Beat>({
     // a whole turn closes the loop.
     const spin = -h * Math.PI * 2 * easeOutCubic(seg(t, 0, 0.5))
 
-    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    p.line(-0.16 * k, -0.5 * k, 0, HUB * k)
-    p.line(0.16 * k, -0.5 * k, 0, HUB * k)
+    // A short A-frame over the hub — not a mast to the cell roof.
+    p.line(-0.14 * k, (HUB - 0.14) * k, 0, HUB * k)
+    p.line(0.14 * k, (HUB - 0.14) * k, 0, HUB * k)
 
     p.push()
     p.translate(0, HUB * k)
@@ -43,6 +44,9 @@ export const paddle = defineContraption<Beat>({
     p.pop()
     solid(p, ink, weight, s.color)
     p.circle(0, HUB * k, 0.12 * k)
+
+    // Rail last so the wheel sits on it instead of painting a hole through it.
+    floor(p, k, ink, weight, s)
 
     clipCell(p, k, () => {
       const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)

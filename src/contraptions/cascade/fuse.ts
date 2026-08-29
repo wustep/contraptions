@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
-import { bez, floor, heading, since, type Beat, type Pt } from './parts'
+import { FLOOR, bez, floor, heading, since, type Beat, type Pt } from './parts'
 
 /**
  * A powder keg with a fuse: the spark creeps along the fuse for most of the
@@ -47,7 +47,9 @@ export const fuse = defineContraption<Beat>({
     p.rect(0, kegY * k, KEG_W * k, KEG_H * k)
     for (const dy of [-0.11, 0.11]) p.line((-KEG_W / 2) * k, (kegY + dy) * k, (KEG_W / 2) * k, (kegY + dy) * k)
 
-    // The spool.
+    // The spool, on a stem to the rail.
+    outline(p, ink, weight)
+    p.line(SPOOL[0] * k, (SPOOL[1] + 0.08) * k, SPOOL[0] * k, FLOOR * k)
     solid(p, ink, weight, s.color)
     p.circle(SPOOL[0] * k, SPOOL[1] * k, 0.16 * k)
     p.fill(ink)

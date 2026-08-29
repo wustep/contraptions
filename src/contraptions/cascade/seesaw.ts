@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
-import { floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
+import { FLOOR, floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
 
 /**
  * A plank on a pivot resting with its near end down: the ball rolls up it,
@@ -31,12 +31,9 @@ export const seesaw = defineContraption<Beat>({
     const tip = easeOutCubic(seg(t, 0, 0.06)) - easeInOutCubic(seg(t, 0.5, 0.85))
     const angle = h * TILT * (2 * tip - 1)
 
-    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    // The stand, and the stops each end of the plank comes down onto.
-    p.line(-0.14 * k, 0.5 * k, 0, PIVOT * k)
-    p.line(0.14 * k, 0.5 * k, 0, PIVOT * k)
-    for (const x of [-0.38, 0.38]) p.line(x * k, 0.5 * k, x * k, 0.3 * k)
+    p.line(-0.14 * k, FLOOR * k, 0, PIVOT * k)
+    p.line(0.14 * k, FLOOR * k, 0, PIVOT * k)
 
     p.push()
     p.translate(0, PIVOT * k)
@@ -46,6 +43,8 @@ export const seesaw = defineContraption<Beat>({
     p.pop()
     solid(p, ink, weight, s.color)
     p.circle(0, PIVOT * k, 0.09 * k)
+
+    floor(p, k, ink, weight, s)
 
     clipCell(p, k, () => {
       const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)

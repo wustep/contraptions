@@ -26,7 +26,7 @@ export const hopper = defineContraption({
     const slot = (i: number) => -PART / 2 - 0.03 - i * (PART + 0.02)
 
     clipCell(p, k, () => {
-      bench(p, k, ink, weight, FEED_WEST, 0.5)
+      bench(p, k, ink, weight, FEED_WEST, 0.5, false)
       belt(p, k, ink, weight, s.color, FEED_WEST, 0.5, u * BELT_V)
 
       // The magazine: open at the top so it can be topped up, a gate track

@@ -16,6 +16,7 @@ const HIT = 0.43
 const COCKED = 1.5
 /** When the next ball arrives on the pedestal. */
 const FEED = 0.62
+const WINCH: [number, number] = [-0.28, -0.16]
 
 export const knocker = defineContraption<Beat>({
   name: 'knocker',
@@ -40,13 +41,15 @@ export const knocker = defineContraption<Beat>({
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
     // The pedestal.
-    p.line(0, 0.5 * k, 0, (FLOOR + 0.02) * k)
+    p.line(0, (FLOOR + 0.16) * k, 0, (FLOOR + 0.02) * k)
     p.line(-0.09 * k, (FLOOR + 0.02) * k, 0.09 * k, (FLOOR + 0.02) * k)
-    // The winch drum in the corner the mallet is hauled towards.
-    solid(p, ink, weight, s.color)
-    p.circle(-0.4 * k, -0.4 * k, 0.12 * k)
+    // The winch stands on the rail, not in the empty corner.
     outline(p, ink, weight)
-    p.line(-0.4 * k, -0.4 * k, -0.33 * k, -0.33 * k)
+    p.line(WINCH[0] * k, WINCH[1] * k, WINCH[0] * k, FLOOR * k)
+    solid(p, ink, weight, s.color)
+    p.circle(WINCH[0] * k, WINCH[1] * k, 0.12 * k)
+    outline(p, ink, weight)
+    p.line(WINCH[0] * k, WINCH[1] * k, (WINCH[0] + 0.08) * k, (WINCH[1] + 0.08) * k)
 
     clipCell(p, k, () => {
       const ball = tokenColor(s)
@@ -60,11 +63,11 @@ export const knocker = defineContraption<Beat>({
 
     // The mallet, hinged at the top of the cell.
     const hx = -Math.sin(angle) * ARM
-    const hy = -0.5 + Math.cos(angle) * ARM
+    const hy = -0.42 + Math.cos(angle) * ARM
     outline(p, ink, weight)
     // The rope, taut while the winch has it.
-    if (t >= 0.12 && t < 0.9) p.line(-0.4 * k, -0.4 * k, hx * k, hy * k)
-    p.line(0, -0.5 * k, hx * k, hy * k)
+    if (t >= 0.12 && t < 0.9) p.line(WINCH[0] * k, WINCH[1] * k, hx * k, hy * k)
+    p.line(0, -0.42 * k, hx * k, hy * k)
     p.push()
     p.translate(hx * k, hy * k)
     p.rotate(-angle)
@@ -72,7 +75,7 @@ export const knocker = defineContraption<Beat>({
     p.rect(0, 0, HEAD * k, HEAD * 0.7 * k)
     p.pop()
     solid(p, ink, weight, s.color)
-    p.circle(0, -0.5 * k, 0.08 * k)
+    p.circle(0, -0.42 * k, 0.08 * k)
     p.pop()
   },
 })
