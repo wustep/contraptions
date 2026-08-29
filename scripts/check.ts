@@ -275,6 +275,7 @@ const unitOf = (i: Instance) => {
   return w === 1 && h === 1
 }
 const ENDINGS = new Set(['bin', 'bell', 'lamp'])
+const CASCADE_ENDINGS = new Set(['bell', 'lamp', 'flag', 'cup', 'toaster', 'balloon', 'jack'])
 
 function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
   const errors: string[] = []
@@ -329,9 +330,8 @@ for (const seed of ['first-look', 'chains', 'workshop-12', 'rim']) {
   }
 }
 
-// Cascade: a chained machine is told which way its run goes and stands
-// upright; the run is staffed so the token only ever crosses edges a machine
-// said it could; one token runs the whole chain; a run never climbs.
+// Cascade: inset eastbound sentences that end in a real sink. Unused cells
+// stay empty. Wires exist for timing but are not drawn.
 console.log('\ncascade')
 const cascadeWired = build({ ...defaultOptions, seed: 'chains', mode: 'cascade', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
 check('cascade: builds chains', cascadeWired.wires.length > 0, `${cascadeWired.wires.length} links`)
@@ -345,12 +345,9 @@ const chained = cascadeWired.instances.filter((i) => onRun(flowOf(i)))
 const leftovers = cascadeWired.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
 const onWires = new Set(cascadeWired.wires.flatMap((w) => [w.from, w.to]))
 const cascadeHeads = cascadeWired.wires.filter((w) => !cascadeWired.wires.some((other) => other.to === w.from))
-check('every 1×1 cascade cell has flow', cascadeWired.instances.filter(unitOf).every((i) => flowOf(i)))
-check('every leftover flow is closed', leftovers.every((i) => flowOf(i)!.in === null && flowOf(i)!.out === null))
-check(
-  'leftovers are not sources',
-  leftovers.every((i) => i.contraption.role !== 'source'),
-)
+check('every placed cascade cell is on a run', cascadeWired.instances.filter(unitOf).every((i) => onRun(flowOf(i))))
+check('no leftover cascade machines', leftovers.length === 0, `${leftovers.length} leftovers`)
+check('cascade hides the conduit', cascadeWired.showWires === false)
 check('every wired machine knows its run', chained.length === onWires.size && chained.every((i) => onWires.has(i.cell)))
 check('every wired machine stands upright', chained.every((i) => i.angle === 0 && i.mirror === 1))
 check(
@@ -365,7 +362,21 @@ check(
   'every run has a source with no inlet',
   cascadeHeads.every((w) => flowOf(cascadeByPos.get(`${Math.round(w.from.x)}:${Math.round(w.from.y)}`)!)!.in === null),
 )
-check('every run never climbs', cascadeWired.wires.every((w) => w.to.y >= w.from.y - 1))
+check('every run only steps east', cascadeWired.wires.every((w) => w.to.x > w.from.x && Math.abs(w.to.y - w.from.y) < 1))
+check(
+  'every run ends in a receiver',
+  cascadeHeads.every((head) => {
+    let w = head
+    for (;;) {
+      const next = cascadeWired.wires.find((o) => o.from === w.to)
+      if (!next) {
+        const tail = cascadeByPos.get(`${Math.round(w.to.x)}:${Math.round(w.to.y)}`)
+        return !!tail && CASCADE_ENDINGS.has(tail.contraption.name)
+      }
+      w = next
+    }
+  }),
+)
 check(
   'every run carries one colour',
   cascadeHeads.every((head) => {
@@ -382,23 +393,31 @@ check(
   'classic wiring does not write flow',
   wired.instances.every((i) => !flowOf(i)),
 )
+{
+  const res = 14
+  const onBorder = cascadeWired.instances.some(
+    (i) => i.cell.col === 0 || i.cell.col === res - 1 || i.cell.row === 0 || i.cell.row === res - 1,
+  )
+  check('regular grid leaves the rim empty', !onBorder)
+}
 
-for (const seed of ['first-look', 'cascade-8', 'rim']) {
+for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
   for (const layout of ['grid', 'bricks', 'bands']) {
     const piece = build(
       { ...defaultOptions, seed, mode: 'cascade', layout, res: 12, spans: 0.25, chains: 0.7 },
       900,
     )
     const label = `cascade ${seed} ${layout}`
-    check(`${label}: every 1×1 has flow`, piece.instances.filter(unitOf).every((i) => flowOf(i)))
     const leftover = piece.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
-    check(
-      `${label}: leftovers stay closed`,
-      leftover.every((i) => i.contraption.role !== 'source'),
-    )
+    check(`${label}: every placed cell is on a run`, piece.instances.filter(unitOf).every((i) => onRun(flowOf(i))))
+    check(`${label}: no leftover machines`, leftover.length === 0, `${leftover.length} leftovers`)
     check(`${label}: chain grammar`, chainGrammar(piece).length === 0, chainGrammar(piece).slice(0, 3).join(' | '))
+    check(`${label}: hides the conduit`, piece.showWires === false)
     if (layout === 'grid') {
-      check(`${label}: regular grid has no leftover singles`, leftover.length === 0, `${leftover.length} leftovers`)
+      const onBorder = piece.instances.some(
+        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
+      )
+      check(`${label}: rim stays empty`, !onBorder)
     }
   }
 }

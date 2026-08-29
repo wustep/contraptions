@@ -182,7 +182,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       const loopFrame = mod(frame, comp.loop)
 
       if (grid) drawGrid(p, comp)
-      drawConduits(p, comp)
+      if (comp.showWires !== false) drawConduits(p, comp)
 
       for (const inst of comp.instances) {
         const { cell, contraption } = inst
@@ -206,7 +206,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
         p.pop()
       }
 
-      drawSignals(p, comp, loopFrame)
+      if (comp.showWires !== false) drawSignals(p, comp, loopFrame)
 
       for (const overlay of comp.overlays) {
         overlay(p, loopFrame, {

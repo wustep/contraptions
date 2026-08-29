@@ -318,7 +318,7 @@ export function createPanel(
     classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
     ports: ['Wired chains', 'How many chains the solver grows'],
     tracks: ['Wired chains', ''],
-    cascade: ['Cascade runs', 'Off (0) seals every cell; any amount above that staffs every neighbour run'],
+    cascade: ['Cascade runs', 'How many inset eastbound sentences to staff; each one ends in a sink'],
     workshop: ['Shop lines', 'Off (0) seals every cell; any amount above that staffs every eastbound row'],
     circus: ['Drumroll', 'How much of the ring is wired so acts fire in sequence'],
   }

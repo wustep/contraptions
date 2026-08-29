@@ -157,17 +157,17 @@ A mode picks **both a catalog and a composer**. That is what lets three
 Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
 Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
-a classic-like grid composer. Cascade and Workshop are their own worlds:
-every neighbour run is a complete sentence or shop line; leftover isolates
-close instead of dumping tokens off the frame. Multi-cell spans stay on the
-catalog sheet so they cannot punch holes in those runs.
+a classic-like grid composer. Cascade and Workshop are their own worlds.
+Cascade staffs inset eastbound sentences that end in a sink and leaves the
+rest empty. Workshop staffs shop lines that end in a bin. Multi-cell spans
+stay on the catalog sheet so they cannot punch holes in those runs.
 
 | Mode | Catalog | Composer |
 | --- | --- | --- |
 | Classic | the original 36 toys | independent machines, abstract wires |
 | Ports | `src/worlds/ports/` | tokens handed across typed edges |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
-| Cascade | `src/contraptions/cascade/` | complete sentences; leftover isolates stay closed |
+| Cascade | `src/contraptions/cascade/` | inset eastbound sentences that end in a sink |
 | Workshop | `src/contraptions/workshop/` | shop lines that run east into a bin, bell, or lamp |
 | Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
 
@@ -177,13 +177,14 @@ mode's pieces. The URL stores the mode name (`?mode=cascade`).
 ### Cascade
 
 A token starts in one cell and every cell after it is a beat in a chain
-reaction. The cascade world covers leftover cells with complete sentences —
-source → relay* → sink, never climbing — and writes `flow` onto every 1×1
-machine. Neighbour runs are always staffed (`chains === 0` is the explicit
-all-closed stop). A leftover isolate gets a quiet sink and a closed flow so
-`rollOut` / `rollIn` / `fallIn` hide the token. A cup only dumps when the
-run actually continues south; a bellows only puffs when the run leaves
-sideways. Classic wiring is left alone: a pendulum on main still rotates.
+reaction. The cascade world leaves the outer ring of cells empty, then
+staffs inset eastbound sentences — feeder → stations → a real ending
+(bell, cup, lamp, and the other catchers). Unused cells get no machine,
+so there is no leftover pile and nothing emits off an empty cell. The
+engine's conduit is hidden; each machine draws its own rail toward the
+ports that exist. A cup only dumps when the run actually continues south;
+a bellows only puffs when the run leaves sideways. Classic wiring is left
+alone: a pendulum on main still rotates.
 
 `src/contraptions/cascade/parts.ts` is the shared vocabulary (token size, the
 hand-off helpers, `heading(flow)`). The composer lives in

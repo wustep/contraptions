@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, floorRail, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { TOKEN, drop, fallIn, heading, since, token, tokenColor, type Beat } from './parts'
+import { TOKEN, drop, fallIn, floor, heading, rollIn, since, token, tokenColor, type Beat } from './parts'
 
 /**
  * A cup under the end of the line: the ball drops in and sits there, which is
@@ -30,6 +30,7 @@ export const cup = defineContraption<Beat>({
     const t = since(u, FIRE)
     const open = easeOutCubic(seg(t, DUMP, DUMP + 0.04)) - easeInOutCubic(seg(t, DUMP + 0.14, DUMP + 0.26))
 
+    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
     floorRail(p, k)
     for (const x of [-0.12, 0.12]) p.line(x * k, BASE * k, x * k, 0.5 * k)
@@ -47,8 +48,8 @@ export const cup = defineContraption<Beat>({
 
     clipCell(p, k, () => {
       const ball = tokenColor(s)
-      const falling = fallIn(s, u, FIRE)
-      if (falling) token(p, k, ink, weight, ball, falling)
+      const arriving = rollIn(s, u, FIRE) ?? fallIn(s, u, FIRE)
+      if (arriving) token(p, k, ink, weight, ball, arriving)
       let y: number | null = null
       if (t < 0.04) y = lerp(0, REST, easeInQuad(seg(t, 0, 0.04)))
       else if (t < 0.09) y = REST - 0.04 * Math.sin(seg(t, 0.04, 0.09) * Math.PI)

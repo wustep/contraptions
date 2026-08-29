@@ -76,7 +76,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'complete sentences; no leftover dumps',
+    note: 'inset sentences that end in a sink',
     catalog: 'cascade',
     composer: 'cascade',
     dials: { layout: true, spans: false, chains: true, pool: true },
@@ -202,6 +202,12 @@ export interface Composition {
   wires: Wire[]
   /** Layers drawn over every machine — the circulating balls in tracks mode. */
   overlays: Overlay[]
+  /**
+   * When false, wires still exist for timing but are not drawn. Cascade hides
+   * them so each machine draws its own rail; a centre-to-centre conduit was
+   * punching through paddles and running off the rim.
+   */
+  showWires?: boolean
 }
 
 /**

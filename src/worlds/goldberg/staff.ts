@@ -157,6 +157,51 @@ export function placeSpans(floor: Floor, chance: number): void {
 export const leftoverCells = (floor: Floor): Cell[] =>
   floor.cells.filter((c) => !floor.claimed.has(c) && c.w === c.size && c.h === c.size)
 
+/** Drop the outermost ring so a run cannot start or end on the art edge. */
+export function insetRing(cells: Cell[]): Cell[] {
+  const units = cells.filter((c) => c.w === c.size && c.h === c.size)
+  if (units.length < 9) return units
+  const left = Math.min(...units.map((c) => c.x - c.w / 2))
+  const right = Math.max(...units.map((c) => c.x + c.w / 2))
+  const top = Math.min(...units.map((c) => c.y - c.h / 2))
+  const bottom = Math.max(...units.map((c) => c.y + c.h / 2))
+  return units.filter((c) => {
+    const pad = c.size * 0.55
+    return (
+      c.x - c.w / 2 > left + pad &&
+      c.x + c.w / 2 < right - pad &&
+      c.y - c.h / 2 > top + pad &&
+      c.y + c.h / 2 < bottom - pad
+    )
+  })
+}
+
+/** Equal-size neighbours grouped into eastbound rows. */
+export function eastRows(cells: Cell[]): Cell[][] {
+  const groups = new Map<string, Cell[]>()
+  for (const cell of cells) {
+    const key = `${Math.round(cell.y)}|${Math.round(cell.size * 1000)}`
+    const g = groups.get(key) ?? []
+    g.push(cell)
+    groups.set(key, g)
+  }
+  const rows: Cell[][] = []
+  for (const group of groups.values()) {
+    group.sort((a, b) => a.x - b.x)
+    let cur: Cell[] = [group[0]]
+    for (let i = 1; i < group.length; i++) {
+      if (Math.abs(group[i].x - cur[cur.length - 1].x - group[i].size) < 1) cur.push(group[i])
+      else {
+        rows.push(cur)
+        cur = [group[i]]
+      }
+    }
+    rows.push(cur)
+  }
+  rows.sort((a, b) => a[0].y - b[0].y)
+  return rows
+}
+
 /**
  * Walk every leftover cell into a run. Starts at a dead-end (fewest unused
  * neighbours) and prefers to keep going straight, so a corridor becomes one
@@ -228,7 +273,13 @@ export function budgetRuns(runs: Cell[][], _leftoverCount: number, chains: numbe
   return { keep, singles }
 }
 
-export function finish(options: Options, floor: Floor, wires: Wire[], overlays: Overlay[] = []): Composition {
+export function finish(
+  options: Options,
+  floor: Floor,
+  wires: Wire[],
+  overlays: Overlay[] = [],
+  extras: { showWires?: boolean } = {},
+): Composition {
   return {
     options,
     theme: floor.theme,
@@ -240,5 +291,6 @@ export function finish(options: Options, floor: Floor, wires: Wire[], overlays: 
     header: null,
     wires,
     overlays,
+    showWires: extras.showWires,
   }
 }

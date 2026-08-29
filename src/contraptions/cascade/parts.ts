@@ -7,15 +7,16 @@ import { LINK_DELAY, type Flow } from '../../core/wiring'
 /**
  * The shared vocabulary of the cascade set.
  *
- * Every machine here is one beat in a chain reaction. A token — the bead the
- * engine runs along the wires — arrives at the cell's centre, the machine does
- * its one thing, and the token leaves. Between machines the wire draws it, so
- * a machine draws its own copy only on its own side of the hand-off: a source
- * before it fires, a sink after. Unchained, a machine runs the whole beat by
- * itself, so a lone cell and the catalog sheet still tell the story.
+ * Every machine here is one beat in a chain reaction. A token arrives at the
+ * cell's centre, the machine does its one thing, and the token leaves.
+ * Between machines each cell draws the token on its own side of the hand-off.
+ * The engine's conduit is hidden in this world — a centre-to-centre rail
+ * punched through paddles and ran off the rim. Unchained, a machine runs the
+ * whole beat by itself, so a lone cell and the catalog sheet still tell the
+ * story.
  *
  * Units are cells, y down, with the token's centre line through the cell's
- * centre, because that is where the wires meet.
+ * centre, because that is where the rails meet.
  */
 
 /** What every machine in the set keeps: its fill, and its place in a run if it has one. */
@@ -88,36 +89,50 @@ export function token(p: p5, k: number, ink: string, weight: number, color: stri
  * feed the machine supplies itself — or once it is outside the cell.
  */
 export function rollIn(s: Beat, u: number, at: number, own = false): Pt | null {
-  if (s.flow && !own) return null
+  const closed = !!s.flow && s.flow.in == null && s.flow.out == null
+  if ((closed || (s.flow && s.flow.in == null)) && !own) return null
+  if (s.flow?.in === 'N' || s.flow?.in === 'S') return null
   const t = until(u, at)
-  return t > HALF + OVER ? null : [-t * SPEED, 0]
+  if (t > HALF + OVER) return null
+  const dir = s.flow?.in === 'E' ? 1 : -1
+  return [dir * t * SPEED, 0]
 }
 
 /** The same token rolling on from the centre to the east edge after `at`. */
 export function rollOut(s: Beat, u: number, at: number): Pt | null {
-  if (s.flow) return null
+  if (s.flow && s.flow.out == null) return null
+  if (s.flow?.out === 'S' || s.flow?.out === 'N') return null
   const t = since(u, at)
-  return t > HALF + OVER ? null : [t * SPEED, 0]
+  if (t > HALF + OVER) return null
+  const dir = s.flow?.out === 'W' ? -1 : 1
+  return [dir * t * SPEED, 0]
 }
 
 /** A lone machine's own token falling in from the top edge to the centre, arriving at `at`. */
 export function fallIn(s: Beat, u: number, at: number): Pt | null {
-  if (s.flow) return null
+  if (s.flow && s.flow.in !== 'N') return null
   const t = until(u, at)
   return t > (0.5 + TOKEN / 2) / FALL_V ? null : [0, -t * FALL_V]
 }
 
 /**
- * The floor a lone machine's own token rolls along. Drawn only when the
- * machine is not chained: a chained machine's token rides the wire, and a
- * second rail under the conduit is clutter. `gap` clears the middle for a
- * machine that puts its own part there.
+ * The floor the token rolls along. A closed leftover (catalog, unused cell)
+ * draws none. On a run the rail only extends toward ports that exist, so a
+ * source does not stub west into the inset and a sink does not dump east
+ * off the end. `gap` clears the middle for a machine that puts its own
+ * part there.
  */
 export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, gap = 0): void {
-  if (s.flow) return
+  if (s.flow && s.flow.in == null && s.flow.out == null) return
+  let x0 = -0.5
+  let x1 = 0.5
+  if (s.flow) {
+    if (s.flow.in !== 'W' && s.flow.out !== 'W') x0 = gap > 0 ? -gap : -0.08
+    if (s.flow.in !== 'E' && s.flow.out !== 'E') x1 = gap > 0 ? gap : 0.08
+  }
   outline(p, ink, weight)
   if (gap > 0) {
-    p.line(-0.5 * k, FLOOR * k, -gap * k, FLOOR * k)
-    p.line(gap * k, FLOOR * k, 0.5 * k, FLOOR * k)
-  } else p.line(-0.5 * k, FLOOR * k, 0.5 * k, FLOOR * k)
+    if (x0 < -gap) p.line(x0 * k, FLOOR * k, -gap * k, FLOOR * k)
+    if (x1 > gap) p.line(gap * k, FLOOR * k, x1 * k, FLOOR * k)
+  } else p.line(x0 * k, FLOOR * k, x1 * k, FLOOR * k)
 }
