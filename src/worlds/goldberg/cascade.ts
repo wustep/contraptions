@@ -1,5 +1,6 @@
 import { registry as cascadeRegistry } from '../../contraptions/cascade'
-import type { Composition, Options } from '../../core/composition'
+import { FLOOR, SHAFT } from '../../contraptions/cascade/parts'
+import type { Composition, Options, Overlay } from '../../core/composition'
 import type { Contraption, Instance } from '../../core/types'
 import { wireCascade } from '../../core/wiring'
 import { finish, leftoverCells, openFloor, placeSpans, snakeRows, staffedBlock } from './staff'
@@ -65,5 +66,27 @@ export function buildCascade(options: Options, canvas: number): Composition {
   })
 
   const wires = wireCascade(members, floor.rng.fork(`chain:${path[0].index}`))
-  return finish(options, floor, wires, [], { showWires: false })
+  const color = (members[0].state as { flow?: { color?: string } }).flow?.color ?? floor.theme.colors[0]
+  const shafts: Overlay = (p, _, { theme, weight }) => {
+    for (let i = 0; i < path.length - 1; i++) {
+      const a = path[i]
+      const b = path[i + 1]
+      if (b.y <= a.y + a.size * 0.4 || Math.abs(b.x - a.x) > 1) continue
+      const top = a.y + FLOOR * a.size
+      const bot = b.y + FLOOR * b.size
+      const mid = (top + bot) / 2
+      p.push()
+      p.rectMode(p.CENTER)
+      p.noStroke()
+      p.fill(color)
+      p.rect(a.x, mid, a.size * SHAFT * 1.6, bot - top)
+      p.stroke(theme.ink)
+      p.strokeWeight(weight(a.size))
+      p.noFill()
+      p.line(a.x - SHAFT * a.size, top, a.x - SHAFT * a.size, bot)
+      p.line(a.x + SHAFT * a.size, top, a.x + SHAFT * a.size, bot)
+      p.pop()
+    }
+  }
+  return finish(options, floor, wires, [shafts], { showWires: false })
 }

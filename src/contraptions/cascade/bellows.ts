@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
-import { FLOOR, floor, heading, fallIn, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
+import { FLOOR, SHAFT, THROAT, floor, heading, fallIn, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
 
 /**
  * A bellows under the line: the ball's weight squashes it going over, and the
@@ -29,13 +29,25 @@ export const bellows = defineContraption<Beat>({
     const top = TOP + squash * 0.16
     const fromAbove = s.flow?.in === 'N'
 
-    floor(p, k, ink, weight, s, HALF_W + 0.02)
-
     if (fromAbove) {
+      const paint = s.flow?.color ?? s.color
+      floor(p, k, ink, weight, s)
+      p.push()
+      p.noStroke()
+      p.fill(paint)
+      p.quad((-SHAFT) * k, -0.5 * k, SHAFT * k, -0.5 * k, THROAT * k, FLOOR * k, (-THROAT) * k, FLOOR * k)
+      p.pop()
       outline(p, ink, weight)
-      p.line(-0.3 * k, -0.5 * k, -0.08 * k, FLOOR * k)
-      p.line(0.3 * k, -0.5 * k, 0.08 * k, FLOOR * k)
+      p.line((-SHAFT) * k, -0.5 * k, (-THROAT) * k, FLOOR * k)
+      p.line(SHAFT * k, -0.5 * k, THROAT * k, FLOOR * k)
+      clipCell(p, k, () => {
+        const at = fallIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
+        if (at) token(p, k, ink, weight, tokenColor(s), at)
+      })
+      return
     }
+
+    floor(p, k, ink, weight, s, HALF_W + 0.02)
 
     const sideways = !s.flow || s.flow.out === 'E' || s.flow.out === 'W'
 

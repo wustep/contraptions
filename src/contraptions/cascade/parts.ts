@@ -39,6 +39,10 @@ export const HALF = LINK / 2
 export const OVER = TOKEN / 2 / SPEED
 /** Top of the floor a rolling token sits on: its centre is the cell's. */
 export const FLOOR = TOKEN / 2
+/** Half-width of the drop shaft at the cell edge, so a cup and the catch line up. */
+export const SHAFT = 0.26
+/** Half-width of the drop shaft at the rail. */
+export const THROAT = 0.1
 /** A wall stands this far from the centre line, a hair clear of the token. */
 export const CLEAR = TOKEN / 2 + 0.05
 
