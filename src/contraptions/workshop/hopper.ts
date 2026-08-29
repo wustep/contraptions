@@ -27,7 +27,7 @@ export const hopper = defineContraption({
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
-      belt(p, k, ink, weight, s.color, -0.12, 0.5, u * BELT_V)
+      belt(p, k, ink, weight, s.color, -0.5, 0.5, u * BELT_V)
 
       // The magazine: open at the top so it can be topped up, a gate track
       // at the bottom for the slide to run out along.

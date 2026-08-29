@@ -1,17 +1,18 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
-import { BENCH, HIT, bench, lineOf, pulse } from './shop'
+import { BELT_V, BENCH, HIT, belt, bench, lineOf, pulse } from './shop'
 
 /**
- * A bell over the end of the bench: the part trips the striker, the bell
- * rings and rocks on a post that stands on the bench. It does not hang from
- * the cell ceiling — that read as a floating ornament between rows.
+ * A bell at the east end of the bench. The belt runs in and stops at the
+ * post; the bell hangs over that end from a hanger on the post. Nothing
+ * continues past it.
  */
-const BELL_X = -0.06
-const BW = 0.36
+const BELL_X = 0.16
+const BW = 0.34
 const BH = 0.26
 const HANGER = BENCH - 0.38
+const STOP = 0.08
 
 export const bell = defineContraption({
   name: 'bell',
@@ -25,12 +26,12 @@ export const bell = defineContraption({
     const line = lineOf(s)
     const ring = pulse(u, HIT, 40)
     const swing = ring * 0.3 * Math.sin(ring * Math.PI * 5)
-    const ext = 0.12 * (easeOutCubic(seg(u, HIT - 0.02, HIT)) - easeInOutCubic(seg(u, HIT + 0.04, HIT + 0.14)))
+    const ext = 0.1 * (easeOutCubic(seg(u, HIT - 0.02, HIT)) - easeInOutCubic(seg(u, HIT + 0.04, HIT + 0.14)))
     const lip = HANGER + 0.08 + BH
     const x0 = line?.in ? -0.5 : -0.36
-    const x1 = 0.1
 
-    bench(p, k, ink, weight, x0, x1)
+    bench(p, k, ink, weight, x0, STOP)
+    belt(p, k, ink, weight, s.color, x0, STOP, u * BELT_V)
 
     if (ring > 0.02) {
       p.push()
@@ -39,15 +40,14 @@ export const bell = defineContraption({
       p.noFill()
       for (let i = 1; i <= 2; i++) {
         const r = BW * (0.9 + i * 0.3 + ring * 0.3) * k
-        p.arc((BELL_X - BW * 0.4) * k, (lip - BH * 0.5) * k, r, r, Math.PI - 0.6, Math.PI + 0.6)
+        p.arc((BELL_X - BW * 0.35) * k, (lip - BH * 0.5) * k, r, r, Math.PI - 0.6, Math.PI + 0.6)
       }
       p.pop()
     }
 
-    // Post on the bench, hanger, bell.
     outline(p, ink, weight)
-    p.line(0.22 * k, BENCH * k, 0.22 * k, HANGER * k)
-    p.line(BELL_X * k, HANGER * k, 0.22 * k, HANGER * k)
+    p.line(0.36 * k, BENCH * k, 0.36 * k, HANGER * k)
+    p.line(BELL_X * k, HANGER * k, 0.36 * k, HANGER * k)
 
     p.push()
     p.translate(BELL_X * k, HANGER * k)
@@ -66,10 +66,10 @@ export const bell = defineContraption({
     p.pop()
 
     outline(p, ink, weight)
-    p.line(0.34 * k, (lip - 0.02) * k, 0.34 * k, BENCH * k)
-    p.rect(0.34 * k, (lip - 0.02) * k, 0.14 * k, 0.12 * k)
-    p.line((0.26 - ext) * k, (lip - 0.02) * k, 0.26 * k, (lip - 0.02) * k)
+    p.line(0.42 * k, lip * k, 0.42 * k, BENCH * k)
+    p.rect(0.42 * k, lip * k, 0.12 * k, 0.12 * k)
+    p.line((0.34 - ext) * k, lip * k, 0.34 * k, lip * k)
     solid(p, ink, weight, s.color)
-    p.circle((0.23 - ext) * k, (lip - 0.02) * k, 0.08 * k)
+    p.circle((0.32 - ext) * k, lip * k, 0.07 * k)
   },
 })

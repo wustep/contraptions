@@ -33,7 +33,7 @@ export const hoist = defineContraption({
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
-      belt(p, k, ink, weight, s.color, -0.12, 0.5, u * BELT_V)
+      belt(p, k, ink, weight, s.color, -0.5, 0.5, u * BELT_V)
 
       // Cable from the bay above, a lifting eye on the blank, a J of a hook.
       outline(p, ink, weight)

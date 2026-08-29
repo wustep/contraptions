@@ -8,7 +8,7 @@ import { BELT_V, BENCH, PART, PART_Y, belt, bench, burst, lineOf, part, pulse } 
  * the pile with a puff, and settles. The tote sits on the bench so a belt
  * in the cell to the west meets the mouth — no raised shelf, no gap.
  */
-const LIP = 0.02
+const LIP = 0.08
 const LAND = 0.5
 
 export const bin = defineContraption({
