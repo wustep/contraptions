@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, lerp, seg } from '../../core/ease'
-import { ARRIVE, BENCH, DEPART, HIT, PART, RAIL, bench, lineOf, part, shuttle } from './shop'
+import { ARRIVE, BENCH, bench, DEPART, HIT, lineOf, PART, part, partColor, RAIL, shuttle } from './shop'
 
 /**
  * A trolley carries the part in along the overhead rail, lowers it into the
@@ -23,7 +23,7 @@ export const dip = defineContraption({
     dye: rng.pick(theme.colors.filter((c) => c !== color)) ?? color,
   }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
+    const xs = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const y =
       u < 0.32 ? CARRY
       : u < 0.38 ? lerp(CARRY, SUNK, easeInOutCubic(seg(u, 0.32, 0.38)))
@@ -38,13 +38,13 @@ export const dip = defineContraption({
       outline(p, ink, weight)
       p.line(-0.5 * k, RAIL * k, 0.5 * k, RAIL * k)
       for (const hx of [-0.34, 0.34]) p.line(hx * k, -0.5 * k, hx * k, RAIL * k)
-      if (x !== null) {
+      for (const x of xs) {
         outline(p, ink, weight)
         p.line(x * k, RAIL * k, x * k, (y - PART / 2) * k)
         for (const wx of [-0.05, 0.05]) p.circle((x + wx) * k, RAIL * k, 0.05 * k)
         solid(p, ink, weight, s.color)
         p.rect(x * k, (RAIL - 0.055) * k, 0.16 * k, 0.05 * k)
-        part(p, k, ink, weight, dyed ? s.dye : s.color, x, y)
+        part(p, k, ink, weight, dyed ? s.dye : partColor(s), x, y)
         outline(p, ink, weight)
         p.circle(x * k, (y - PART / 2 - 0.02) * k, 0.05 * k)
         // Drips on the way out.

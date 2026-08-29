@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipBox, outline, solid } from '../../core/draw'
 import { mod } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, belt, part, roller } from './shop'
+import { belt, BELT_V, BENCH, HIGH_Y, PART, part, PART_Y, partColor, roller, SHELF } from './shop'
 
 /**
  * Three parts go round for ever: west along the low belt, up in the buckets
@@ -97,7 +97,7 @@ export const carousel = defineContraption({
       // The parts, evenly spaced round the circuit.
       for (let i = 0; i < BUCKETS; i++) {
         const [x, y] = locate(mod(u + i, CIRCUIT))
-        part(p, k, ink, weight, s.color, x, y)
+        part(p, k, ink, weight, partColor(s), x, y)
       }
     })
   },

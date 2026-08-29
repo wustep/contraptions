@@ -52,7 +52,12 @@ export const TICK = 0.125
  */
 export const ARRIVE = 0.31
 export const HIT = 0.42
-export const DEPART = 0.55
+/**
+ * When the part leaves the middle. Its journey then fills the loop exactly —
+ * it crosses the west edge at u = 0 and the east edge at u = 1 — so a line of
+ * benches never stands empty and the part on one seam is the part on the next.
+ */
+export const DEPART = 1 - (0.5 + PART / 2) / BELT_V
 export const GONE = DEPART + ARRIVE
 
 export type Mark = 'blank' | 'dot' | 'hole'
@@ -119,7 +124,7 @@ export function keepX(x: number, line?: Line): number | null {
  * centre between `arrive` and `depart`, leaving east. A closed outlet holds
  * the part at centre; a closed inlet starts the part inside the cell.
  */
-export function shuttle(u: number, arrive = ARRIVE, depart = DEPART, line?: Line): number | null {
+function shuttleAt(u: number, arrive: number, depart: number, line?: Line): number | null {
   const edge = 0.5 + PART / 2
   const cross = edge / BELT_V
   if (line && !line.in) {
@@ -133,6 +138,33 @@ export function shuttle(u: number, arrive = ARRIVE, depart = DEPART, line?: Line
   if (line && !line.out) return 0
   if (u < depart + cross) return (u - depart) * BELT_V
   return null
+}
+
+/**
+ * Where this bench's parts are, in cell units along the line.
+ *
+ * Every bench on a line runs off the same clock, so the part crossing a seam
+ * is drawn by the machine on each side — one of them at `x`, the other at
+ * `x` plus or minus a cell. Without the neighbouring copies each cell clipped
+ * its half of the part at the wall and the other half was never drawn, so a
+ * part crossing a seam looked like a box growing out of a post.
+ */
+export function shuttle(u: number, arrive = ARRIVE, depart = DEPART, line?: Line): number[] {
+  const at = shuttleAt(u, arrive, depart, line)
+  if (at === null) return []
+  const edge = 0.5 + PART / 2
+  return [at, at - 1, at + 1].filter((x) => Math.abs(x) < edge)
+}
+
+/**
+ * The colour of the thing being made. It belongs to the line, not to the
+ * bench: a part half-way across a seam is drawn by the machine on each side,
+ * and if each used its own colour the part came out in two.
+ */
+export function partColor(s: unknown): string {
+  const line = lineOf(s)
+  if (line) return line.color
+  return (s as { color?: string } | null)?.color ?? '#000000'
 }
 
 /** The bench line, with a leg at each end down to the floor. */

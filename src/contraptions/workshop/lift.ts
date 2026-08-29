@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, SHELF, bench, keepX, lineOf, part, rollers } from './shop'
+import { BELT_V, BENCH, bench, keepX, lineOf, PART, part, partColor, rollers, SHELF } from './shop'
 
 /**
  * The car takes a part off the rollers at bench height, hauls it up the
@@ -59,7 +59,7 @@ export const lift = defineContraption({
       solid(p, ink, weight, s.color)
       p.rect(0, (car + 0.025) * k, 0.36 * k, 0.05 * k)
 
-      if (px !== null) part(p, k, ink, weight, s.color, px, py)
+      if (px !== null) part(p, k, ink, weight, partColor(s), px, py)
     })
   },
 })

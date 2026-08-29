@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipBox, clipCell, outline } from '../../core/draw'
 import { mod } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, bench, keepX, lineOf, part, rollers } from './shop'
+import { BELT_V, BENCH, bench, HIGH_Y, keepX, lineOf, PART, part, PART_Y, partColor, rollers, SHELF } from './shop'
 
 /**
  * A part rolls in under the screw, the turning flights walk it up the tube,
@@ -52,7 +52,7 @@ export const auger = defineContraption({
         }
       })
 
-      if (px !== null) part(p, k, ink, weight, s.color, px, py)
+      if (px !== null) part(p, k, ink, weight, partColor(s), px, py)
     })
   },
 })

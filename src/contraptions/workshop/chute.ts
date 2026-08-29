@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline } from '../../core/draw'
 import { lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, bench, lineOf, part, rollers } from './shop'
+import { BELT_V, BENCH, bench, HIGH_Y, lineOf, PART, part, PART_Y, partColor, rollers, SHELF } from './shop'
 
 /**
  * A part comes along the high shelf from the west, tips onto the slide,
@@ -67,7 +67,7 @@ export const chute = defineContraption({
       p.line(X0 * k, SHELF * k, (X0 - nx * under) * k, (SHELF - ny * under) * k)
       p.line(0, lerp(SHELF, BENCH, 0.5) * k, 0, BENCH * k)
 
-      if (pos && pos[0] > -0.56 && pos[0] < 0.56) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
+      if (pos && pos[0] > -0.56 && pos[0] < 0.56) part(p, k, ink, weight, partColor(s), pos[0], pos[1], { angle })
     })
   },
 })

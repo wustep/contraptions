@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, belt, bench, lineOf, part } from './shop'
+import { belt, BELT_V, BENCH, bench, lineOf, PART, part, PART_Y, partColor } from './shop'
 
 /**
  * The east (or west) end of a bench opens into a chute. The part rolls in,
@@ -53,7 +53,7 @@ export const spill = defineContraption({
         p.circle(LIP * k, BENCH * k, 0.06 * k)
       }
 
-      if (pos) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
+      if (pos) part(p, k, ink, weight, partColor(s), pos[0], pos[1], { angle })
     })
   },
 })

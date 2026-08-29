@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipBox, outline, solid } from '../../core/draw'
 import { easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, belt, bench, part } from './shop'
+import { belt, BELT_V, BENCH, bench, PART, part, PART_Y, partColor } from './shop'
 
 /**
  * A part rides in on the low belt and stops at the block, the crane lowers
@@ -60,13 +60,13 @@ export const gantry = defineContraption({
       outline(p, ink, weight)
       for (const x of [0.46, 0.94]) p.line(x * k, (OUT_Y + 0.14) * k, x * k, LOW_Y * k)
       belt(p, k, ink, weight, s.color, 0.36, 1, u * BELT_V, OUT_Y)
-      part(p, k, ink, weight, s.color, 0.62, 0.5 + PART_Y, { mark: 'dot' })
-      part(p, k, ink, weight, s.color, 0.62, 0.5 + PART_Y - PART, { mark: 'dot' })
+      part(p, k, ink, weight, partColor(s), 0.62, 0.5 + PART_Y, { mark: 'dot' })
+      part(p, k, ink, weight, partColor(s), 0.62, 0.5 + PART_Y - PART, { mark: 'dot' })
 
-      if (lastX < 1.12) part(p, k, ink, weight, s.color, lastX, OUT_Y - PART / 2)
-      if (held) part(p, k, ink, weight, s.color, tx, tip + 0.02 + PART / 2)
-      else if (u < 0.46) part(p, k, ink, weight, s.color, inX, 0.5 + PART_Y)
-      else if (outX < 1.12) part(p, k, ink, weight, s.color, outX, OUT_Y - PART / 2)
+      if (lastX < 1.12) part(p, k, ink, weight, partColor(s), lastX, OUT_Y - PART / 2)
+      if (held) part(p, k, ink, weight, partColor(s), tx, tip + 0.02 + PART / 2)
+      else if (u < 0.46) part(p, k, ink, weight, partColor(s), inX, 0.5 + PART_Y)
+      else if (outX < 1.12) part(p, k, ink, weight, partColor(s), outX, OUT_Y - PART / 2)
 
       // The gantry: legs, beam, trolley, cable, hook.
       outline(p, ink, weight)

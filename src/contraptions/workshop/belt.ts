@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell } from '../../core/draw'
 import { mod } from '../../core/ease'
-import { BELT_V, PART_Y, belt, lineOf, part, type Mark } from './shop'
+import { belt, BELT_V, lineOf, part, PART_Y, partColor, type Mark } from './shop'
 
 /**
  * A belt carries a train of parts across the cell at shop speed, handing each
@@ -34,7 +34,7 @@ export const beltRun = defineContraption({
         if (line && !line.out && x > 0.15) continue
         if (line && !line.in && x < -0.15) continue
         if (x < -0.55 || x > 0.55) continue
-        part(p, k, ink, weight, s.color, x, PART_Y, { mark: s.mark, bg: s.bg })
+        part(p, k, ink, weight, partColor(s), x, PART_Y, { mark: s.mark, bg: s.bg })
       }
     })
   },

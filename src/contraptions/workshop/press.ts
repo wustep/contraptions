@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, burst, lineOf, part, pulse, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, bench, burst, DEPART, HIT, lineOf, part, PART_Y, partColor, pulse, rollers, shuttle } from './shop'
 
 /**
  * A blank rolls in and waits under the ram, the ram slams down and leaves its
@@ -25,14 +25,14 @@ export const press = defineContraption({
       : u < HIT ? lerp(REST, STRIKE, easeInQuad(seg(u, HIT - 0.06, HIT)))
       : u < HIT + 0.06 ? STRIKE
       : lerp(STRIKE, REST, easeOutCubic(seg(u, HIT + 0.06, HIT + 0.18)))
-    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
+    const xs = shuttle(u, ARRIVE, DEPART, lineOf(s))
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
       rollers(p, k, ink, weight, s.color, -0.5, -0.18, u * BELT_V)
       rollers(p, k, ink, weight, s.color, 0.18, 0.5, u * BELT_V)
 
-      if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y, { mark: u >= HIT ? 'dot' : 'blank' })
+      for (const x of xs) part(p, k, ink, weight, partColor(s), x, PART_Y, { mark: u >= HIT ? 'dot' : 'blank' })
 
       // The frame: two posts, a crossbar with the cylinder on top.
       outline(p, ink, weight)

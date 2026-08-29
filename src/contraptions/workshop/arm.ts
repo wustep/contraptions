@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { clamp, easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, keepX, lineOf, part, rollers } from './shop'
+import { BELT_V, bench, keepX, lineOf, PART, part, PART_Y, partColor, rollers } from './shop'
 
 /**
  * A part rolls in and stops, the arm comes down and closes on it, swings it
@@ -58,7 +58,7 @@ export const arm = defineContraption({
       rollers(p, k, ink, weight, s.color, -0.5, -0.14, u * BELT_V)
       rollers(p, k, ink, weight, s.color, 0.14, 0.5, u * BELT_V)
 
-      if (px < 0.56) part(p, k, ink, weight, s.color, px, py)
+      if (px < 0.56) part(p, k, ink, weight, partColor(s), px, py)
 
       // Mount, upper arm, forearm, hubs.
       outline(p, ink, weight)

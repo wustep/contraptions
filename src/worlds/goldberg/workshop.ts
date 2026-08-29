@@ -33,7 +33,7 @@ const south = (a: Cell, b: Cell) => b.y > a.y + a.size * 0.4 && Math.abs(b.x - a
  * a `line`, so a part is always in a machine — never gone because the run ran
  * out of floor.
  */
-function staffLine(floor: Floor, path: Cell[], seed: string): void {
+function staffLine(floor: Floor, path: Cell[], seed: string, color: string): void {
   if (path.length < 2) return
   const roleRng = floor.rng.fork(`roles:${seed}`)
   const feeders = named(floor.singles, FEEDERS)
@@ -48,8 +48,6 @@ function staffLine(floor: Floor, path: Cell[], seed: string): void {
     if (fallback.length) return fallback
     return floor.singles
   }
-
-  const color = floor.rng.fork(`line:${seed}`).pick(floor.theme.colors)
 
   for (let i = 0; i < path.length; i++) {
     const cell = path[i]
@@ -127,9 +125,15 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
     return finish(options, floor, [])
   }
 
+  // One colour per line, and never the same colour twice running: the shop
+  // reads as several lines making several things, not as one green floor.
+  const palette = floor.theme.colors
+  let turn = floor.rng.fork('lines').int(0, palette.length)
+  const nextColor = () => palette[turn++ % palette.length]
+
   const { band, rest } = programmeBand(floor.rows, options.chains)
-  if (band.length) staffLine(floor, snakeRows(band), `line:${band[0][0].index}`)
-  for (const row of rest) staffLine(floor, row, `row:${row[0].index}`)
+  if (band.length) staffLine(floor, snakeRows(band), `line:${band[0][0].index}`, nextColor())
+  for (const row of rest) staffLine(floor, row, `row:${row[0].index}`, nextColor())
 
   return finish(options, floor, [])
 }

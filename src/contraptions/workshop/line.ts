@@ -2,7 +2,7 @@ import { LOOP } from '../../core/constants'
 import { defineContraption } from '../../core/define'
 import { clipBox, outline, solid, teeth } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BENCH, PART, PART_Y, belt, burst, part, pulse } from './shop'
+import { belt, BENCH, burst, PART, part, PART_Y, partColor, pulse } from './shop'
 
 /**
  * A production line three benches long: the hopper drops a blank on the
@@ -48,15 +48,15 @@ export const line = defineContraption({
       for (const [station, mark] of [[HOP_X, 'blank'], [PRESS_X, 'dot'], [COUNT_X, 'dot']] as const) {
         const x = station + travel
         const marked = station === PRESS_X ? u >= STRIKE : mark === 'dot'
-        if (x < 1.62) part(p, k, ink, weight, s.color, x, PART_Y, { mark: marked ? 'dot' : 'blank' })
+        if (x < 1.62) part(p, k, ink, weight, partColor(s), x, PART_Y, { mark: marked ? 'dot' : 'blank' })
       }
 
       // Hopper: magazine, stack, the blank dropping, the gate.
       outline(p, ink, weight)
       for (const x of [HOP_X - 0.17, HOP_X + 0.17]) p.line(x * k, -0.5 * k, x * k, 0)
       p.line((HOP_X - 0.22) * k, 0.055 * k, (HOP_X + 0.49) * k, 0.055 * k)
-      for (let i = 0; i < 3; i++) part(p, k, ink, weight, s.color, HOP_X, slot(i + 1 - settle))
-      if (u >= 0.6) part(p, k, ink, weight, s.color, HOP_X, lerp(slot(0), PART_Y, easeInQuad(seg(u, 0.66, 0.76))))
+      for (let i = 0; i < 3; i++) part(p, k, ink, weight, partColor(s), HOP_X, slot(i + 1 - settle))
+      if (u >= 0.6) part(p, k, ink, weight, partColor(s), HOP_X, lerp(slot(0), PART_Y, easeInQuad(seg(u, 0.66, 0.76))))
       solid(p, ink, weight, s.color)
       p.rect((HOP_X + open * 0.3) * k, 0.025 * k, 0.34 * k, 0.05 * k)
 

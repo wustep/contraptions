@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, burst, lineOf, part, pulse, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, bench, burst, DEPART, HIT, lineOf, part, PART_Y, partColor, pulse, rollers, shuttle } from './shop'
 
 /**
  * The pin comes down through the blank and out the other side, the slug it
@@ -26,7 +26,7 @@ export const punch = defineContraption({
       : u < HIT ? lerp(REST, THROUGH, easeInQuad(seg(u, HIT - 0.06, HIT)))
       : u < HIT + 0.04 ? THROUGH
       : lerp(THROUGH, REST, easeOutCubic(seg(u, HIT + 0.04, HIT + 0.16)))
-    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
+    const xs = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const slug = u >= HIT && u < 0.62 ? lerp(BENCH, 0.46, easeInQuad(seg(u, HIT, HIT + 0.08))) : null
 
     clipCell(p, k, () => {
@@ -43,7 +43,7 @@ export const punch = defineContraption({
       solid(p, ink, weight, s.color)
       p.rect(0, 0.45 * k, 0.28 * k, 0.08 * k)
 
-      if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y, { mark: u >= HIT ? 'hole' : 'blank', bg: s.bg })
+      for (const x of xs) part(p, k, ink, weight, partColor(s), x, PART_Y, { mark: u >= HIT ? 'hole' : 'blank', bg: s.bg })
 
       // The C-frame, the sleeve, and the pin.
       outline(p, ink, weight)

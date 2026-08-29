@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, bench, keepX, lineOf, part, rollers } from './shop'
+import { BELT_V, BENCH, bench, keepX, lineOf, PART, part, PART_Y, partColor, rollers } from './shop'
 
 /**
  * Every other part rolls straight through; the trapdoor drops under the one
@@ -37,8 +37,8 @@ export const divert = defineContraption({
       p.line(-HALF * k, (BENCH + 0.04) * k, -HALF * k, 0.5 * k)
       p.line(HALF * k, (BENCH + 0.04) * k, HALF * k, 0.5 * k)
 
-      if (ax !== null) part(p, k, ink, weight, s.color, ax, PART_Y)
-      if (u >= 0.5 && by < 0.48 && bx !== null) part(p, k, ink, weight, s.color, bx, by, { angle: Math.min(flap, 0.35) * seg(u, OPEN, OPEN + 0.05) })
+      if (ax !== null) part(p, k, ink, weight, partColor(s), ax, PART_Y)
+      if (u >= 0.5 && by < 0.48 && bx !== null) part(p, k, ink, weight, partColor(s), bx, by, { angle: Math.min(flap, 0.35) * seg(u, OPEN, OPEN + 0.05) })
 
       // The door, hinged on the west.
       p.push()

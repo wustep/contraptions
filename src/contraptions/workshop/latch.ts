@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIT, PART_Y, belt, lineOf, part } from './shop'
+import { belt, BELT_V, BENCH, HIT, lineOf, part, PART_Y, partColor } from './shop'
 
 /**
  * The belt runs on under a queue held back by the stop; when the stop lifts,
@@ -28,9 +28,9 @@ export const latch = defineContraption({
 
     clipCell(p, k, () => {
       belt(p, k, ink, weight, s.color, -0.5, 0.5, travel)
-      if (gone < 0.52) part(p, k, ink, weight, s.color, gone, PART_Y)
-      part(p, k, ink, weight, s.color, FRONT - GAP + close, PART_Y)
-      part(p, k, ink, weight, s.color, FRONT - GAP * 2 + close, PART_Y)
+      if (gone < 0.52) part(p, k, ink, weight, partColor(s), gone, PART_Y)
+      part(p, k, ink, weight, partColor(s), FRONT - GAP + close, PART_Y)
+      part(p, k, ink, weight, partColor(s), FRONT - GAP * 2 + close, PART_Y)
 
       // The solenoid on its bracket, and the stop pin it lifts.
       outline(p, ink, weight)

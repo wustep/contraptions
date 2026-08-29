@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid, teeth } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART, PART_Y, bench, lineOf, part, rollers, shuttle, sparks } from './shop'
+import { ARRIVE, BELT_V, BENCH, bench, DEPART, HIT, lineOf, PART, part, PART_Y, partColor, rollers, shuttle, sparks } from './shop'
 
 /**
  * The blank rolls in under the blade, the spinning blade drops through it,
@@ -25,7 +25,7 @@ export const saw = defineContraption({
       : u < HIT + 0.02 ? lerp(UP, DOWN, easeInQuad(seg(u, HIT - 0.06, HIT + 0.02)))
       : u < HIT + 0.08 ? DOWN
       : lerp(DOWN, UP, easeOutCubic(seg(u, HIT + 0.08, HIT + 0.2)))
-    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
+    const xs = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const cutting = seg(u, HIT - 0.03, HIT) * (1 - seg(u, HIT + 0.02, HIT + 0.1))
 
     clipCell(p, k, () => {
@@ -33,13 +33,13 @@ export const saw = defineContraption({
       rollers(p, k, ink, weight, s.color, -0.5, -0.18, u * BELT_V)
       rollers(p, k, ink, weight, s.color, 0.18, 0.5, u * BELT_V)
 
-      if (x !== null) {
-        if (u < HIT) part(p, k, ink, weight, s.color, x, PART_Y)
+      for (const x of xs) {
+        if (u < HIT) part(p, k, ink, weight, partColor(s), x, PART_Y)
         else {
           const gap = 0.05 * seg(u, DEPART, DEPART + 0.15)
           const half = PART / 2 - 0.01
           for (const side of [-1, 1]) {
-            part(p, k, ink, weight, s.color, x + side * (half / 2 + 0.01 + gap / 2), PART_Y, { w: half })
+            part(p, k, ink, weight, partColor(s), x + side * (half / 2 + 0.01 + gap / 2), PART_Y, { w: half })
           }
         }
       }

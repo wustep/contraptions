@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, belt, bench, lineOf, part } from './shop'
+import { belt, BELT_V, BENCH, bench, lineOf, PART, part, PART_Y, partColor } from './shop'
 
 /**
  * A blank drops into a counterweighted tray, its weight tips the tray past
@@ -64,7 +64,7 @@ export const tipper = defineContraption({
       p.circle(-0.16 * k, 0, 0.12 * k)
       p.pop()
 
-      if (pos && pos[0] <= 0.52) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
+      if (pos && pos[0] <= 0.52) part(p, k, ink, weight, partColor(s), pos[0], pos[1], { angle })
       solid(p, ink, weight, s.color)
       p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.06 * k)
     })

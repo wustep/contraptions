@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeInOutCubic, lerp, seg } from '../../core/ease'
 import { cable, car, carLocalY, guides, shopBeat, shopTravel } from '../../worlds/goldberg/elevator'
-import { BELT_V, BENCH, PART, PART_Y, belt, bench, burst, lineOf, part, pulse } from './shop'
+import { belt, BELT_V, BENCH, bench, burst, lineOf, PART, part, PART_Y, partColor, pulse } from './shop'
 
 /**
  * The part rolls in on the bench, drops off the lip into the tote, lands on
@@ -62,8 +62,8 @@ export const bin = defineContraption({
       // Tote on the bench, mouth at the lip, bottom on the cell floor.
       outline(p, ink, weight)
       p.rect(0.24 * k, ((BENCH - 0.02 + 0.5) / 2) * k, 0.44 * k, (0.5 - (BENCH - 0.02)) * k)
-      part(p, k, ink, weight, s.color, 0.14, BENCH + 0.02, { angle: 0.4 })
-      part(p, k, ink, weight, s.color, 0.32, BENCH + 0.04, { angle: -0.5 })
+      part(p, k, ink, weight, partColor(s), 0.14, BENCH + 0.02, { angle: 0.4 })
+      part(p, k, ink, weight, partColor(s), 0.32, BENCH + 0.04, { angle: -0.5 })
       if (pos) part(p, k, ink, weight, fill, pos[0], pos[1], { angle })
       solid(p, ink, weight, s.color)
       p.rect(0.24 * k, ((BENCH + 0.08 + 0.5) / 2) * k, 0.44 * k, (0.5 - (BENCH + 0.08)) * k)

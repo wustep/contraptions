@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutBack, lerp, seg } from '../../core/ease'
-import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, lineOf, part, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, bench, DEPART, HIT, lineOf, part, PART_Y, partColor, rollers, shuttle } from './shop'
 
 /**
  * The part rolls onto the platform, the platform sinks and the needle swings
@@ -22,7 +22,7 @@ export const scale = defineContraption({
   fireAt: HIT,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
+    const xs = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const sit = easeOutBack(seg(u, 0.31, 0.44)) - easeInOutCubic(seg(u, DEPART, DEPART + 0.08))
     const f = seg(u, 0.32, 0.5)
     // A swing that overshoots and rings down onto the reading.
@@ -55,7 +55,7 @@ export const scale = defineContraption({
       // The platform gives under the part.
       solid(p, ink, weight, s.color)
       p.rect(0, (BENCH - 0.025 + dy) * k, 0.36 * k, 0.05 * k)
-      if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y - 0.05 + lerp(0.05, dy, Math.abs(x) < 0.16 ? 1 : 0))
+      for (const x of xs) part(p, k, ink, weight, partColor(s), x, PART_Y - 0.05 + lerp(0.05, dy, Math.abs(x) < 0.16 ? 1 : 0))
     })
   },
 })

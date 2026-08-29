@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipBox, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BENCH, PART_Y, bench, part, roller, sparks } from './shop'
+import { BENCH, bench, part, PART_Y, partColor, roller, sparks } from './shop'
 
 /**
  * The motor turns the line shaft along the ceiling, flat belts bring its
@@ -56,7 +56,7 @@ export const lineshaft = defineContraption({
       for (const side of [-PR, PR]) p.line((GRIND_X + side) * k, SHAFT * k, (GRIND_X + side) * k, 0.02 * k)
       p.line((GRIND_X - 0.29) * k, BENCH * k, (GRIND_X - 0.29) * k, 0.14 * k)
       p.line((GRIND_X - 0.36) * k, 0.14 * k, (GRIND_X - 0.22) * k, 0.14 * k)
-      part(p, k, ink, weight, s.color, GRIND_X - 0.29, 0.02)
+      part(p, k, ink, weight, partColor(s), GRIND_X - 0.29, 0.02)
       roller(p, k, ink, weight, s.color, GRIND_X, 0.02, 0.16, spin)
       sparks(p, k, s.color, GRIND_X - 0.17, -0.02, u, -1, 1, 4, 4, 0.2)
 
@@ -70,7 +70,7 @@ export const lineshaft = defineContraption({
       p.line(DRILL_X * k, quill * k, DRILL_X * k, (quill + 0.12) * k)
       solid(p, ink, weight, s.color)
       p.rect(DRILL_X * k, quill * k, chuck * k, 0.08 * k)
-      part(p, k, ink, weight, s.color, DRILL_X, PART_Y)
+      part(p, k, ink, weight, partColor(s), DRILL_X, PART_Y)
       sparks(p, k, s.color, DRILL_X + 0.03, PART_Y - 0.12, u, 1, drilling, 3, 6, 0.12)
       sparks(p, k, s.color, DRILL_X - 0.03, PART_Y - 0.12, u, -1, drilling, 3, 6, 0.12)
     })

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, belt, bench, fold, lineOf, part } from './shop'
+import { belt, BELT_V, bench, fold, lineOf, PART, part, PART_Y, partColor } from './shop'
 
 /**
  * A hook lowers a blank from the bay above onto the bench, lets go, and hauls
@@ -40,7 +40,7 @@ export const hoist = defineContraption({
       p.line(-0.1 * k, -0.5 * k, 0.1 * k, -0.5 * k)
       p.line(0, -0.5 * k, 0, tip * k)
       if (px < 0.52) {
-        part(p, k, ink, weight, s.color, px, py)
+        part(p, k, ink, weight, partColor(s), px, py)
         outline(p, ink, weight)
         p.circle(px * k, (py - PART / 2 - 0.02) * k, 0.06 * k)
       }
