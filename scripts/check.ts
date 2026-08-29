@@ -178,6 +178,38 @@ for (const res of [8, 12, 15]) {
     const covered = piece.instances.reduce((n, i) => n + Math.round((i.cell.w * i.cell.h) / (i.cell.size * i.cell.size)), 0)
     const share = covered / piece.cells.length
     check(`${label}: the sheet is neither bare nor packed`, share > 0.55 && share < 0.95, share.toFixed(2))
+    // Air between the chains is the idea; one hole a grid across is a wound.
+    const taken = new Set<string>()
+    for (const inst of piece.instances) {
+      const { cell } = inst
+      for (let a = 0; a < Math.round(cell.w / cell.size); a++) {
+        for (let b = 0; b < Math.round(cell.h / cell.size); b++) {
+          taken.add(`${cell.col + a}:${cell.row + b}`)
+        }
+      }
+    }
+    const seen = new Set<string>()
+    let biggest = 0
+    for (const cell of piece.cells) {
+      const start = `${cell.col}:${cell.row}`
+      if (taken.has(start) || seen.has(start)) continue
+      let n = 0
+      const stack = [[cell.col, cell.row]]
+      seen.add(start)
+      while (stack.length) {
+        const [c, r] = stack.pop()!
+        n++
+        for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const k = `${c + dc}:${r + dr}`
+          if (c + dc < 0 || r + dr < 0 || c + dc >= res || r + dr >= res) continue
+          if (taken.has(k) || seen.has(k)) continue
+          seen.add(k)
+          stack.push([c + dc, r + dr])
+        }
+      }
+      biggest = Math.max(biggest, n)
+    }
+    check(`${label}: no hole a grid across`, biggest <= res * 1.5, `${biggest} cells`)
   }
 }
 

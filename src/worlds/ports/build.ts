@@ -306,7 +306,7 @@ export function buildPorts(options: Options, canvas: number): Composition {
 
   const patchRng = rng.fork('patch')
   for (const blob of blobs()) {
-    if (blob.length < options.res) continue
+    if (blob.length < options.res * 0.7) continue
     const ranked = [...blob].sort((a, b) => openNeighbours(b) - openNeighbours(a) || a.index - b.index)
     for (const start of ranked.slice(0, 3)) {
       // Only here is a three-link chain enough: hopper into a landing into a
