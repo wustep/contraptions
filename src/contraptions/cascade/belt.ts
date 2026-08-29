@@ -25,7 +25,7 @@ export const belt = defineContraption<Beat>({
     const h = heading(s.flow)
     const turn = h * u * Math.PI * 2 * 3
 
-    floor(p, k, ink, weight, s, SPAN + R)
+    floor(p, k, ink, weight, s, SPAN)
     outline(p, ink, weight)
     p.line(-SPAN * k, FLOOR * k, SPAN * k, FLOOR * k)
     p.line(-SPAN * k, (AXLE + R) * k, SPAN * k, (AXLE + R) * k)
