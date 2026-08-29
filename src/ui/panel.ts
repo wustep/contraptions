@@ -305,11 +305,27 @@ export function createPanel(
   const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
   explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
 
+  const labelOf = (node: HTMLElement) => node.querySelector('label span') as HTMLElement | null
+  const SPAN_COPY: Record<Mode, [string, string]> = {
+    classic: ['Multi-cell', 'How eagerly machines larger than one cell are placed; past 1 they crowd in'],
+    ports: ['Multi-cell', ''],
+    tracks: ['Multi-cell', ''],
+    cascade: ['Multi-cell', 'How eagerly strip, switchback and cradle sentences are placed'],
+    workshop: ['Multi-cell', 'How eagerly the line, gantry, carousel and lineshaft are placed'],
+    circus: ['Multi-cell', 'How eagerly the big looping acts are placed — cannon, ferris, big-top'],
+  }
+  const CHAIN_COPY: Record<Mode, [string, string]> = {
+    classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
+    ports: ['Wired chains', 'How many chains the solver grows'],
+    tracks: ['Wired chains', ''],
+    cascade: ['Cascade runs', 'How much of the grid is one causal sentence; runs never climb'],
+    workshop: ['Shop lines', 'How much of the floor is a conveyor line; parts travel east'],
+    circus: ['Drumroll', 'How much of the ring is wired so acts fire in sequence'],
+  }
+
   /**
-   * Hide what the current mode ignores. Cascade / workshop / circus are
-   * classic-like composers with their own catalogs, so they keep layout,
-   * spans, chains, and the pool. Ports keeps the chains dial. Tracks hides
-   * every composition dial that does not feed its world.
+   * Hide what the current mode ignores, and retitle the dials that stay so
+   * they name what this composer actually does.
    */
   const showFor = (mode: Mode) => {
     const { dials } = modeInfo(mode)
@@ -317,6 +333,14 @@ export function createPanel(
     spans.node.hidden = !dials.spans
     chains.node.hidden = !dials.chains
     poolRow.hidden = !dials.pool
+    const [spanLabel, spanHint] = SPAN_COPY[mode]
+    const spanName = labelOf(spans.node)
+    if (spanName) spanName.textContent = spanLabel
+    spans.node.title = spanHint
+    const [chainLabel, chainHint] = CHAIN_COPY[mode]
+    const chainName = labelOf(chains.node)
+    if (chainName) chainName.textContent = chainLabel
+    chains.node.title = chainHint
   }
 
   // Transport

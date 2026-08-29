@@ -62,7 +62,6 @@ const STEPS_ALONG: [number, number][] = [
   [1, 0],
   [1, 0],
   [1, 0],
-  [-1, 0],
   [0, 1],
 ]
 

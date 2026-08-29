@@ -186,10 +186,11 @@ hand-off helpers, `heading(flow)`).
 
 One shop floor. Every cell is a bench at the same height; a part is received,
 worked, and handed to the next bench. Feeders let parts go, conveyors carry
-them, stations work them. Paths prefer east, like a line, and never climb —
-lifts and chutes are machines, not a chain stepping up. `shop.ts` is the
-vocabulary every bench agrees on (`BENCH` is the same floor the ports and
-tracks worlds roll on).
+them, stations work them. Paths run east (and may drop), never west or up —
+the machines draw parts going that way, so a random mirror would send a hopper
+into the press next door. Lifts and chutes are machines, not a chain stepping
+up. `shop.ts` is the vocabulary every bench agrees on (`BENCH` is the same
+floor the ports and tracks worlds roll on).
 
 ### Circus
 

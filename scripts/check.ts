@@ -268,6 +268,12 @@ for (const mode of ['workshop', 'circus'] as const) {
   check(`${mode}: builds chains`, run.wires.length > 0, `${run.wires.length} links`)
   check(`${mode}: chain grammar`, chainGrammar(run).length === 0, chainGrammar(run).slice(0, 3).join(' | '))
 }
+check(
+  'workshop: lines never climb or run west',
+  build({ ...defaultOptions, seed: 'chains', mode: 'workshop', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900).wires.every(
+    (w) => w.to.y >= w.from.y - 1 && w.to.x >= w.from.x - 1,
+  ),
+)
 
 // Cascade: a chained machine is told which way its run goes and stands
 // upright; the run is staffed so the token only ever crosses edges a machine

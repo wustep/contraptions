@@ -314,6 +314,9 @@ function buildGrid(
       period,
       fireFrame: Math.round(((contraption.fireAt ?? 0) * period - phase + LOOP * 4) % LOOP),
     }
+    // Workshop benches all face east — the machines draw parts going that
+    // way, so a random mirror would send a hopper into the press next door.
+    if (composer === 'workshop') instance.mirror = 1
     instances.push(instance)
     return instance
   }
@@ -337,7 +340,9 @@ function buildGrid(
 
   // Soloing a multi-cell machine leaves nothing for the second pass, so pack
   // the grid with it instead of sprinkling.
-  const spanChance = singles.length === 0 ? 1 : options.spans * 0.16
+  // Circus lives in its multi-cell acts (cannon, ferris, big-top); give them
+  // a little more room on the floor so the looping pieces actually show.
+  const spanChance = singles.length === 0 ? 1 : options.spans * (composer === 'circus' ? 0.28 : 0.16)
 
   // Pass one: multi-cell machines, which need contiguous room.
   if (spanning.length) {
