@@ -92,7 +92,7 @@ export const MODES: ModeInfo[] = [
     catalog: 'cascade',
     composer: 'cascade',
     dials: { layout: false, spans: false, chains: true, pool: true },
-    res: { min: 5, max: 9 },
+    res: { min: 4, max: 20 },
   },
   {
     name: 'workshop',
@@ -101,7 +101,7 @@ export const MODES: ModeInfo[] = [
     catalog: 'workshop',
     composer: 'workshop',
     dials: { layout: false, spans: false, chains: true, pool: true },
-    res: { min: 5, max: 9 },
+    res: { min: 4, max: 20 },
   },
   {
     name: 'circus',
@@ -110,7 +110,7 @@ export const MODES: ModeInfo[] = [
     catalog: 'circus',
     composer: 'circus',
     dials: { layout: false, spans: true, chains: true, pool: true },
-    res: { min: 4, max: 7 },
+    res: { min: 3, max: 12 },
   },
 ]
 

@@ -8,7 +8,7 @@ import { CASCADE_RIDE } from './elevator'
 import { buildLaneWorld, laneCatalog, type WorldSpec } from './laneworld'
 
 /**
- * Cascade: one ball, one snake, one sentence.
+ * Cascade: one snake, many balls, one sentence.
  *
  * The whole grid is the machine — east along a row, down an elevator at its
  * end, west along the next — from a feeder that lets a ball go once a loop to

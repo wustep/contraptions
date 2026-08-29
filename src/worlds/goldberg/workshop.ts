@@ -1,11 +1,11 @@
 import { registry as workshopRegistry } from '../../contraptions/workshop'
-import { BELT_V, PART, PART_Y, SHEAVE_Y } from '../../contraptions/workshop/shop'
+import { BELT_V, PART, PART_Y, SHEAVE_Y, type Mark } from '../../contraptions/workshop/shop'
 import { LOOP } from '../../core/constants'
 import type { CatalogEntry, Composition, Options } from '../../core/composition'
 import { solid } from '../../core/draw'
 import { themeByName, type Theme } from '../../core/themes'
 import { SHOP_RIDE } from './elevator'
-import { buildLaneWorld, laneCatalog, type WorldSpec } from './laneworld'
+import { buildLaneWorld, laneCatalog, type TokenLook, type WorldSpec } from './laneworld'
 
 /**
  * Workshop: one shop floor, one line through every bench of it.
@@ -46,9 +46,39 @@ export const WORKSHOP: WorldSpec = {
       ride: ctx.ride,
     },
   }),
-  token: (p, size, ink, weight, color, x, y) => {
-    solid(p, ink, weight, color)
-    p.rect(x, y, PART * size, PART * size, size * 0.02)
+  work: (name, state) => {
+    if (name === 'punch') return { mark: 'hole' as Mark, bg: typeof state.bg === 'string' ? state.bg : undefined }
+    if (name === 'press') return { mark: 'dot' as Mark }
+    if (name === 'saw') return { split: true }
+    if (name === 'dip' && typeof state.dye === 'string') return { color: state.dye }
+    if (name === 'mill') return { slim: true }
+    return undefined
+  },
+  token: (p, size, ink, weight, color, x, y, look?: TokenLook) => {
+    const mark = look?.mark ?? 'blank'
+    const slim = !!look?.slim
+    const w = slim ? PART * 1.35 : PART
+    const h = slim ? PART * 0.62 : PART
+    const stamp = (px: number, pw: number) => {
+      solid(p, ink, weight, color)
+      p.rect(px, y, pw * size, h * size, size * 0.02)
+      if (mark === 'dot') {
+        p.fill(ink)
+        p.circle(px, y, size * 0.07)
+      } else if (mark === 'hole') {
+        p.fill(look?.bg ?? color)
+        p.stroke(ink)
+        p.circle(px, y, size * 0.1)
+      }
+    }
+    if (look?.split) {
+      const half = w / 2 - 0.012
+      const gap = 0.045
+      stamp(x - (half / 2 + gap / 2) * size, half)
+      stamp(x + (half / 2 + gap / 2) * size, half)
+    } else {
+      stamp(x, w)
+    }
   },
 }
 

@@ -387,7 +387,7 @@ check('circus: the big acts get placed when spans is up', spanned > 0, `${spanne
   const circus = build({ ...defaultOptions, seed: 'chains', mode: 'circus', res: 14, spans: 0.4, chains: 1 }, 900)
   check('circus: builds chains', circus.wires.length > 0, `${circus.wires.length} links`)
   check('circus: chain grammar', chainGrammar(circus).length === 0, chainGrammar(circus).slice(0, 3).join(' | '))
-  check('circus: clamps res into its own range', circus.cells.length === 7 * 7, `${circus.cells.length} cells`)
+  check('circus: clamps res into its own range', circus.cells.length === 12 * 12, `${circus.cells.length} cells`)
   check(
     'circus: chains fire a beat apart',
     circus.wires.every((w) => ((w.end - w.start) + LOOP) % LOOP === LINK_DELAY || w.end - w.start === LINK_DELAY),
@@ -505,8 +505,11 @@ for (const mode of ['cascade', 'workshop'] as const) {
         const [x0, y0, x1, y1] = run.frame
         let last: { x: number; y: number } | null = null
         let jumped = 0
-        for (let s = 0; s <= 2000; s++) {
-          const at = run.at((s / 2000) * run.journey)
+        // Dense enough that a hoist (v=12) cannot skip half a cell between
+        // samples on a long high-res snake.
+        const samples = Math.max(2000, Math.ceil(run.journey / 0.035))
+        for (let s = 0; s <= samples; s++) {
+          const at = run.at((s / samples) * run.journey)
           if (at.x - r < x0 - 0.5 || at.x + r > x1 + 0.5 || at.y - r < y0 - 0.5 || at.y + r > y1 + 0.5) {
             fail(PROPS[3], `${label}: ${Math.round(at.x)},${Math.round(at.y)} outside ${x0}..${x1}`)
             break

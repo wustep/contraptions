@@ -17,7 +17,7 @@ import {
   type Pt,
 } from '../../core/lane'
 import { layoutByName } from '../../core/layouts'
-import { makeRng } from '../../core/rng'
+import { makeRng, type Rng } from '../../core/rng'
 import { themeByName, type Theme } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
 import { carCycle, carRig, carTravel, type RideTiming } from './elevator'
@@ -71,8 +71,22 @@ export interface WorldSpec {
   }
   /** The state this world stamps on a cell: cascade writes `flow`, workshop `line`. */
   state(role: CellRole, ctx: LaneCtx, color: string): Record<string, unknown>
-  /** One token, in canvas pixels. */
-  token(p: p5, size: number, ink: string, weight: number, color: string, x: number, y: number): void
+  /**
+   * What a station does to a part that has already fired here. Cascade
+   * leaves this off — a ball is a ball. Workshop writes marks, a split, a dye.
+   */
+  work?(name: string, state: Record<string, unknown>): Partial<TokenLook> | undefined
+  /** One token, in canvas pixels. `look` is the work accumulated so far. */
+  token(p: p5, size: number, ink: string, weight: number, color: string, x: number, y: number, look?: TokenLook): void
+}
+
+/** How a token looks after the stations it has already passed. */
+export type TokenLook = {
+  color: string
+  mark?: 'blank' | 'dot' | 'hole'
+  split?: boolean
+  slim?: boolean
+  bg?: string
 }
 
 /** One staffed cell of the snake, with its lane already in the cell's hand. */
@@ -88,6 +102,8 @@ export interface LaneCell {
   span: number
   /** Frame the token reaches this machine's fire point. */
   arrival: number
+  /** Machine state, so work() can read dye / tray colour. */
+  state: Record<string, unknown>
 }
 
 /** An elevator stack: two cells, one car. */
@@ -107,6 +123,8 @@ export interface LaneRun {
   journey: number
   /** Tokens in flight: the journey divided by the gap between them. */
   tokens: number
+  /** Colour of each token, in emit order. The feeder randomises; nothing locks one colour. */
+  colors: string[]
   cells: LaneCell[]
   stacks: LaneStack[]
   /** The art area in canvas pixels: x0, y0, x1, y1. */
@@ -238,7 +256,7 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
   const working = rng.fork('stations').shuffle(through).slice(0, Math.round(through.length * density))
   for (const i of working) roles[i] = 'station'
 
-  const color = rng.fork('token').pick(theme.colors)
+  const color = rng.fork('chrome').pick(theme.colors)
   const laneCells: LaneCell[] = []
   const stacks: LaneStack[] = []
   let acc = 0
@@ -302,7 +320,7 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
       period,
       fireFrame: mod(Math.round(arrival), LOOP),
     })
-    laneCells.push({ name: contraption.name, role, cell, mirror, lane, start: acc, span, arrival })
+    laneCells.push({ name: contraption.name, role, cell, mirror, lane, start: acc, span, arrival, state })
     // A car is drawn for a turn whose machine actually rides one. Solo a rail
     // onto the whole grid and the token drops down the turn on its own rather
     // than a cage appearing around a machine that never asked for one.
@@ -313,11 +331,14 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
   }
 
   const journey = acc
+  const tokens = Math.max(1, Math.ceil(journey / world.emit))
+  const colors = emitColors(rng, theme.colors, tokens)
   const run: LaneRun = {
     size,
     emit: world.emit,
     journey,
-    tokens: Math.max(1, Math.ceil(journey / world.emit)),
+    tokens,
+    colors,
     cells: laneCells,
     stacks,
     frame: [origin, origin, origin + area, origin + area],
@@ -340,15 +361,49 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
     },
   }
 
-  return { ...bare(), overlays: [drawRun(run, world, color)], lanes: run }
+  return { ...bare(), overlays: [drawRun(run, world)], lanes: run }
 }
 
 /**
  * The one drawing of everything that moves: every car (loaded or climbing back
  * empty) and then every token, from the same clock.
  */
-function drawRun(run: LaneRun, world: WorldSpec, color: string): Overlay {
-  const { size, emit, journey } = run
+function emitColors(rng: Rng, palette: string[], n: number): string[] {
+  const pick = rng.fork('emit')
+  const out: string[] = []
+  for (let i = 0; i < n; i++) {
+    const pool = palette.filter((c) => c !== out[i - 1])
+    out.push(pick.pick(pool.length ? pool : palette))
+  }
+  return out
+}
+
+function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): TokenLook {
+  const look: TokenLook = { color }
+  for (const cell of run.cells) {
+    if (t + 1e-6 < cell.start + laneFire(cell.lane)) break
+    const patch = world.work?.(cell.name, cell.state)
+    if (patch) Object.assign(look, patch)
+  }
+  return look
+}
+
+function riderColor(run: LaneRun, u: number, stack: LaneStack): string {
+  const { emit, journey, colors } = run
+  for (let j = 0; j < run.tokens; j++) {
+    const t = mod(u, emit) + j * emit
+    if (t > journey) continue
+    const here = run.at(t)
+    if (!here.ride) continue
+    if (Math.abs(here.x - stack.cell.x) < run.size * 0.8 && Math.abs(here.y - stack.cell.y) < run.size * 1.4) {
+      return colors[j] ?? colors[0]
+    }
+  }
+  return colors[0]
+}
+
+function drawRun(run: LaneRun, world: WorldSpec): Overlay {
+  const { size, emit, journey, colors } = run
   return (p: p5, loopFrame: number, { theme, weight }: { theme: Theme; weight: (size: number) => number }) => {
     const u = loopFrame / LOOP
     const w = weight(size)
@@ -358,7 +413,7 @@ function drawRun(run: LaneRun, world: WorldSpec, color: string): Overlay {
       p.push()
       p.translate(stack.cell.x, stack.cell.y)
       p.scale(stack.mirror, 1)
-      carRig(p, size, theme.ink, w, color, {
+      carRig(p, size, theme.ink, w, riderColor(run, u, stack), {
         floorY: world.floorY,
         sheaveY: world.sheaveY,
         travel,
@@ -371,7 +426,8 @@ function drawRun(run: LaneRun, world: WorldSpec, color: string): Overlay {
       const t = mod(u, emit) + j * emit
       if (t > journey) continue
       const { x, y } = run.at(t)
-      world.token(p, size, theme.ink, w, color, x, y)
+      const look = lookAt(run, world, t, colors[j] ?? colors[0])
+      world.token(p, size, theme.ink, w, look.color, x, y, look)
     }
   }
 }
@@ -498,7 +554,9 @@ export function laneCatalog(world: WorldSpec, theme: Theme): CatalogEntry[] {
           }
           if (t <= laneSpan) {
             const point = laneAt(lane, t)
-            world.token(p, cell.size, sheet.ink, pen, color, point.x * cell.size, point.y * cell.size)
+            const look: TokenLook = { color }
+            if (t >= laneFire(lane) && world.work) Object.assign(look, world.work(contraption.name, state) ?? {})
+            world.token(p, cell.size, sheet.ink, pen, look.color, point.x * cell.size, point.y * cell.size, look)
           }
         })
         p.pop()
