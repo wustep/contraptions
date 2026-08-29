@@ -9,7 +9,19 @@ const ENDINGS = new Set(['bin', 'bell', 'lamp'])
 const FEEDERS = new Set(['hopper', 'hoist', 'tipper'])
 const DROPS = new Set(['elevator'])
 const CATCHES = new Set(['well'])
-const STATIONS = new Set(['belt', 'mill', 'punch', 'saw', 'latch', 'counter'])
+/**
+ * What can stand mid-line. Six benches over thirteen courses read as
+ * wallpaper — the same belt, the same square, thirteen times. Everything
+ * here works on a part where it stands and hands it on. The machines that
+ * move a part somewhere else — the lift, the elevator, the chute, the auger,
+ * the well, the arm, the divert, the spill — belong only where the line
+ * actually steps; mid-line they reach into the course below and put the part
+ * down on nothing.
+ */
+const STATIONS = new Set([
+  'belt', 'mill', 'punch', 'saw', 'latch', 'counter',
+  'press', 'dip', 'scale', 'geneva',
+])
 
 const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter((c) => names.has(c.name))
 

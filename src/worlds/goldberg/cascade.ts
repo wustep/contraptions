@@ -8,7 +8,8 @@ import { CLEAR } from './elevator'
 import { finish, openFloor, placeSpans, programmeBand, snakeRows, type Floor } from './staff'
 
 const ENDINGS = new Set(['bell', 'lamp', 'flag', 'toaster', 'balloon', 'jack'])
-const FEEDERS = new Set(['hopper', 'knocker', 'tipper', 'fuse'])
+/** Everything that can start a sentence. The hammer was sitting the set out. */
+const FEEDERS = new Set(['hopper', 'knocker', 'tipper', 'fuse', 'hammer'])
 const DROPS = new Set(['lift'])
 const CATCHES = new Set(['well'])
 const STATIONS = new Set(['belt', 'bellows', 'counter', 'dominoes', 'flap', 'paddle', 'seesaw'])
