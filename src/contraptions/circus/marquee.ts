@@ -48,6 +48,9 @@ export const marquee = defineContraption({
   label: 'Marquee',
   tags: ['lights'],
   role: 'relay',
+  rotations: [0],
+  // Wallpaper, not an act: it turns up now and then between the real ones.
+  weight: 0.35,
   fireAt: 0,
   setup: ({ color, rng, theme }) => ({ color, alt: second(rng, theme, color) }),
   draw: (p, s, { size: k, u, ink, weight, fired }) => {

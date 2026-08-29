@@ -1,4 +1,5 @@
 import type p5 from 'p5'
+import type { Lane, LaneCtx } from './lane'
 import type { Rng } from './rng'
 import type { Theme } from './themes'
 
@@ -121,8 +122,19 @@ export interface Contraption<S = unknown> {
   rotations?: number[]
   /** Whether the instance may be mirrored on X. Defaults to true. */
   mirror?: boolean
+  /**
+   * How a token crosses this machine, for the worlds that draw tokens
+   * themselves (cascade, workshop). Undefined means the world's default: a
+   * straight roll along the catalog's floor. See `core/lane.ts`.
+   */
+  lane?(ctx: LaneCtx, state: S): Lane
   setup(ctx: SetupCtx): S
   draw(p: p5, state: S, ctx: DrawCtx): void
+  /**
+   * Drawn after the world's tokens, for parts that must sit in front of them:
+   * a tote's front wall, a cup's lip, a hoop's band. Same contract as `draw`.
+   */
+  over?(p: p5, state: S, ctx: DrawCtx): void
 }
 
 /** One placed, oriented, phase-offset copy of a contraption. */

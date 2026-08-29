@@ -8,11 +8,16 @@ import { P, block, ground, knob, performer, stroke } from './circus'
  * sagging under them as they cross and the balance pole rocking, then turns
  * round on the far platform and rides back.
  */
-const PLATFORM_X = 1.32
-const ROPE_Y = -0.12
-const ANCHOR = 1.19
+/**
+ * The rope is slung well inside the footprint: at the platforms the rider is
+ * as far out as they get, and the balance pole reaches half its length past
+ * them again. Both ends have to clear the next act's cell.
+ */
+const PLATFORM_X = 1.15
+const ROPE_Y = -0.06
+const ANCHOR = 1.02
 const WHEEL = 0.09
-const POLE = 0.7
+const POLE = 0.56
 const SAG = 0.1
 
 export const tightrope = defineContraption({

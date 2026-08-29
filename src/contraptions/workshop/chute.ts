@@ -1,21 +1,27 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline } from '../../core/draw'
-import { lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, bench, lineOf, part, rollers } from './shop'
+import { outline, solid } from '../../core/draw'
+import { easeInQuad, mod, seg } from '../../core/ease'
+import { BELT_SPAN, BENCH, PART, PART_Y, bench, rollers, workLane } from './shop'
 
 /**
- * A part comes along the high shelf from the west, tips onto the slide,
- * gathers speed down it, and levels out onto the rollers at the bottom.
+ * A chute down from the bay above, feeding the line. Blanks slide down the
+ * board, gather at its mouth, and one is tipped onto each part that stops
+ * under it before the rollers take it on.
+ *
+ * The chute is kept clear of the part's own height: the line runs under it,
+ * the chute delivers onto it. What slides down the board is the machine's own
+ * stock — the part on the bench belongs to the world.
  */
+const HIGH = -0.3
 const X0 = -0.3
-const X1 = 0.3
-const DROP = BENCH - SHELF
-const RAMP = Math.hypot(X1 - X0, DROP)
-const ANGLE = Math.atan2(DROP, X1 - X0)
-/** When the part reaches the top of the slide, the bottom, and the edge. */
-const T_TOP = (X0 + 0.5 + PART / 2) / BELT_V
-const T_BOTTOM = T_TOP + 0.28
-const T_GONE = T_BOTTOM + 0.115
+/** The mouth: over the part, clear of its face. */
+const X1 = 0.18
+const Y1 = 0.02
+const RAMP = Math.hypot(X1 - X0, Y1 - HIGH)
+const ANGLE = Math.atan2(Y1 - HIGH, X1 - X0)
+const DROP = 0.5
+const HOLD = 0.12
+const CHIP = 0.07
 
 export const chute = defineContraption({
   name: 'chute',
@@ -24,50 +30,44 @@ export const chute = defineContraption({
   role: 'relay',
   rotations: [0],
   weight: 1.2,
-  // Landing at the bottom of the slide.
-  fireAt: T_BOTTOM,
+  fireAt: DROP,
+  lane: (ctx) => workLane(ctx, { at: X1, time: HOLD }),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const nx = Math.sin(ANGLE)
     const ny = -Math.cos(ANGLE)
-    let pos: [number, number] | null = null
-    let angle = 0
-    const line = lineOf(s)
-    if (u < T_TOP) {
-      const x = -0.5 - PART / 2 + u * BELT_V
-      pos = line && !line.in ? [Math.max(-0.22, x), HIGH_Y] : [x, HIGH_Y]
-    } else if (u < T_BOTTOM) {
-      // Along the slide, starting at shelf speed and picking up.
-      const f = seg(u, T_TOP, T_BOTTOM)
-      const dist = RAMP * (0.72 * f + 0.28 * f * f)
-      const sx = X0 + Math.cos(ANGLE) * dist
-      const sy = SHELF + Math.sin(ANGLE) * dist
-      const blend = Math.min(seg(f, 0, 0.12), 1 - seg(f, 0.88, 1))
-      angle = ANGLE * blend
-      pos = [sx + nx * (PART / 2) * blend, sy + ny * (PART / 2) * blend - (PART / 2) * (1 - blend)]
-    } else if (u < T_GONE || (line && !line.out && u >= T_BOTTOM)) {
-      if (line && !line.out) pos = [X1, PART_Y]
-      else {
-        const f = seg(u, T_BOTTOM, T_GONE)
-        pos = [X1 + 0.32 * (1.29 * f - 0.29 * f * f), PART_Y]
-      }
+
+    bench(p, k, ink, weight)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.12, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, 0.32, 0.5, u * BELT_SPAN)
+
+    // The bay's shelf and its post, then the board on its strut.
+    outline(p, ink, weight)
+    p.line(-0.5 * k, HIGH * k, X0 * k, HIGH * k)
+    p.line(-0.44 * k, HIGH * k, -0.44 * k, BENCH * k)
+    const under = 0.06
+    p.line(X0 * k, HIGH * k, X1 * k, Y1 * k)
+    p.line((X0 - nx * under) * k, (HIGH - ny * under) * k, (X1 - nx * under) * k, (Y1 - ny * under) * k)
+    p.line(X0 * k, HIGH * k, (X0 - nx * under) * k, (HIGH - ny * under) * k)
+    p.line(X1 * k, Y1 * k, (X1 - nx * under) * k, (Y1 - ny * under) * k)
+    p.line(-0.06 * k, -0.12 * k, -0.06 * k, BENCH * k)
+
+    // Stock sliding down the board, one reaching the mouth every part.
+    solid(p, ink, weight, s.color)
+    const head = mod(u - DROP, 1)
+    for (let i = 0; i < 3; i++) {
+      const f = mod(head - i / 3, 1)
+      const d = RAMP * f
+      p.circle((X0 + Math.cos(ANGLE) * d - nx * CHIP * 0.5) * k, (HIGH + Math.sin(ANGLE) * d - ny * CHIP * 0.5) * k, CHIP * k)
     }
-
-    clipCell(p, k, () => {
-      bench(p, k, ink, weight)
-      rollers(p, k, ink, weight, s.color, X1, 0.5, u * BELT_V)
-
-      // The shelf and its post, then the slide: a board on a strut.
-      outline(p, ink, weight)
-      p.line(-0.5 * k, SHELF * k, X0 * k, SHELF * k)
-      p.line(-0.42 * k, SHELF * k, -0.42 * k, BENCH * k)
-      const under = 0.05
-      p.line(X0 * k, SHELF * k, X1 * k, BENCH * k)
-      p.line((X0 - nx * under) * k, (SHELF - ny * under) * k, (X1 - nx * under - Math.cos(ANGLE) * 0.06) * k, (BENCH - ny * under - Math.sin(ANGLE) * 0.06) * k)
-      p.line(X0 * k, SHELF * k, (X0 - nx * under) * k, (SHELF - ny * under) * k)
-      p.line(0, lerp(SHELF, BENCH, 0.5) * k, 0, BENCH * k)
-
-      if (pos && pos[0] > -0.56 && pos[0] < 0.56) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
-    })
+    // The one that is tipped out onto the part.
+    const fall = seg(u, DROP, DROP + 0.1)
+    if (fall > 0 && fall < 1) {
+      p.circle(
+        (X1 + 0.04 - nx * CHIP * 0.5) * k,
+        ((Y1 - ny * CHIP * 0.5) + (PART_Y - PART / 2 - Y1) * easeInQuad(fall)) * k,
+        CHIP * k,
+      )
+    }
   },
 })

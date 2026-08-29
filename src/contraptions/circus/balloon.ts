@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { lerp, seg, stepEase } from '../../core/ease'
 import { block, ground, knob, since, stroke } from './circus'
 
@@ -31,7 +31,6 @@ export const balloon = defineContraption({
     const handle = u < POP ? lerp(-0.02, 0.14, Math.sin(puff * Math.PI)) : -0.02
     const burst = since(u, POP)
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The pump: a cylinder, a rod, and the handle going up and down on it.
@@ -55,7 +54,9 @@ export const balloon = defineContraption({
       solid(p, ink, weight, s.color)
       p.circle(NOZZLE[0] * k, (NOZZLE[1] - r) * k, r * 2 * k)
     } else if (burst < 0.12) {
-      // Shreds thrown out from where it was.
+      // Shreds thrown out from where it was. They stay inside the cell and
+      // shrink to nothing rather than being cut off at the edge or blinking
+      // out at the end of the burst.
       const f = burst / 0.12
       p.push()
       p.noStroke()
@@ -63,10 +64,10 @@ export const balloon = defineContraption({
       const cy = NOZZLE[1] - R1
       for (let i = 0; i < 7; i++) {
         const a = (i / 7) * Math.PI * 2 + 0.4
-        const d = R1 * lerp(0.6, 1.9, f)
+        const d = R1 * lerp(0.5, 1.15, f)
         const x = NOZZLE[0] + Math.cos(a) * d
-        const y = cy + Math.sin(a) * d + 0.3 * f * f
-        const w = 0.07 * (1 - f * 0.6)
+        const y = Math.min(0.46, cy + Math.sin(a) * d + 0.2 * f * f)
+        const w = 0.075 * (1 - f)
         p.push()
         p.translate(x * k, y * k)
         p.rotate(a + f * 3)
@@ -75,6 +76,5 @@ export const balloon = defineContraption({
       }
       p.pop()
     }
-    })
   },
 })

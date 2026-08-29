@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutSine, easeInQuad, seg } from '../../core/ease'
 import { P, block, ground, knob, performer, splash, stroke } from './circus'
 
@@ -15,7 +15,7 @@ const DROPPED = 1.7
 const TANK_X = 0.02
 const TANK_TOP = 0.16
 const WATER = 0.22
-const TARGET: [number, number] = [-0.34, -0.16]
+const TARGET: [number, number] = [-0.26, -0.14]
 
 const rot = (x: number, y: number, a: number): [number, number] => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]
 
@@ -34,9 +34,8 @@ export const dunkTank = defineContraption({
       : u < 0.32 ? DROPPED
       : DROPPED * (1 - easeInOutSine(seg(u, 0.32, 0.9)))
     const [sx, sy] = rot(SEAT, -P / 2 - 0.02, angle)
-    const kick = -0.9 * fired
+    const kick = -0.6 * fired
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The target on its pole, and the rod that trips the seat.
@@ -68,6 +67,5 @@ export const dunkTank = defineContraption({
     outline(p, ink, weight)
     p.rect((TANK_X + (0.5 - TANK_X) / 2) * k, ((TANK_TOP + 0.5) / 2) * k, (0.5 - TANK_X) * k, (0.5 - TANK_TOP) * k)
     splash(p, k, s.color, 0.22, WATER, seg(u, 0.05, 0.26), 0.16)
-    })
   },
 })

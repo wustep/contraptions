@@ -7,15 +7,20 @@
  *
  *   npm run check
  */
-import { build, catalogFor, defaultOptions, MODES } from '../src/core/composition'
+import { build, catalogFor, clampRes, defaultOptions, modeInfo, MODES } from '../src/core/composition'
 import { LOOP } from '../src/core/constants'
+import { mod } from '../src/core/ease'
 import { pendulum, swing } from '../src/core/physics'
+import { rollOptions } from '../src/core/seed'
 import { registry } from '../src/contraptions'
 import type { Contraption, Instance } from '../src/core/types'
-import type { Flow } from '../src/core/wiring'
-import type { Line } from '../src/contraptions/workshop/shop'
+import { LINK_DELAY } from '../src/core/wiring'
 import { portMachines } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
+import { CASCADE } from '../src/worlds/goldberg/cascade'
+import { carCycle } from '../src/worlds/goldberg/elevator'
+import type { LaneCell } from '../src/worlds/goldberg/laneworld'
+import { WORKSHOP } from '../src/worlds/goldberg/workshop'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -91,6 +96,23 @@ function overlaps(comp: ReturnType<typeof build>): boolean {
 
 const fingerprint = (c: ReturnType<typeof build>) =>
   JSON.stringify(c.instances.map((i) => [i.contraption.name, i.phase, i.angle, i.cell.x, i.cell.y]))
+
+const isSingle = (c: Contraption<unknown>) => {
+  const [w, h] = c.span ?? [1, 1]
+  return w === 1 && h === 1
+}
+
+/** The rectangle the cells cover, in canvas pixels. */
+const bboxOf = (comp: ReturnType<typeof build>) => {
+  const left = Math.min(...comp.cells.map((c) => c.x - c.w / 2))
+  const right = Math.max(...comp.cells.map((c) => c.x + c.w / 2))
+  const top = Math.min(...comp.cells.map((c) => c.y - c.h / 2))
+  const bottom = Math.max(...comp.cells.map((c) => c.y + c.h / 2))
+  return { left, right, top, bottom, w: right - left, h: bottom - top }
+}
+
+/** Three seeds, so a check is about the composer and not about one draw. */
+const GOLDBERG_SEEDS = ['obtuse-plunger-408', 'first-look', 'paper-gantry-552']
 
 console.log('\ncomposition')
 for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
@@ -171,21 +193,49 @@ for (const { name: mode } of MODES) {
   check(`${mode} catalog has machines`, sheet.instances.length > 0)
   check(`${mode} catalog captions every machine`, sheet.captions.length === sheet.instances.length)
   check(`${mode} catalog loop holds every period`, sheet.instances.every((i) => sheet.loop % i.period === 0))
+  check(`${mode} catalog sets one pen for the sheet`, !!sheet.unit && sheet.unit > 0)
 }
 check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'ports', catalog: true }, 900).used[0] !== build({ ...defaultOptions, seed: 'sheet', mode: 'classic', catalog: true }, 900).used[0])
 check('cascade catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'cascade', catalog: true }, 900).used.includes('hopper'))
 check('workshop catalog differs from circus', !build({ ...defaultOptions, seed: 'sheet', mode: 'workshop', catalog: true }, 900).used.includes('trampoline'))
 check('shared names stay in their catalog', catalogFor('cascade').some((c) => c.name === 'hopper') && catalogFor('workshop').some((c) => c.name === 'hopper'))
 
+// The lane sheets run a token through every machine that has declared a lane,
+// the way the tracks sheet runs a ball through every track shape. A machine
+// that has not been converted yet is listed without one, because it is still
+// drawing its own and two would be worse than none.
+for (const mode of ['cascade', 'workshop'] as const) {
+  const sheet = build({ ...defaultOptions, seed: 'sheet', mode, catalog: true }, 900)
+  const laned = catalogFor(mode).filter((c) => c.lane && isSingle(c))
+  check(
+    `${mode} sheet runs a token through every lane machine`,
+    sheet.overlays.length === laned.length && laned.length > 0,
+    `${sheet.overlays.length} overlays, ${laned.length} lanes`,
+  )
+  check(`${mode} sheet closes inside the master loop`, sheet.loop <= LOOP, `${sheet.loop}`)
+}
+
 console.log('\ngrid modes')
 for (const mode of ['cascade', 'workshop', 'circus'] as const) {
-  for (const res of [8, 12, 15]) {
-    const options = { ...defaultOptions, seed: `${mode}-${res}`, mode, res, spans: 0.8, chains: 1 }
-    const comp = build(options, 900)
-    const label = `${mode}@${res}`
-    check(`${label} places machines`, comp.instances.length > 0)
-    check(`${label} has no overlapping machines`, !overlaps(comp))
-    check(`${label} rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
+  const { min, max } = modeInfo(mode).res
+  // Past the top of the range as well: the dial is clamped, not obeyed.
+  for (const res of [min, Math.round((min + max) / 2), max, max + 8]) {
+    for (const seed of GOLDBERG_SEEDS) {
+      const options = { ...defaultOptions, seed, mode, res, spans: 0.8, chains: 1 }
+      const comp = build(options, 900)
+      const label = `${mode} ${seed}@${res}`
+      const across = clampRes(mode, res)
+      check(`${label} places machines`, comp.instances.length > 0)
+      check(`${label} has no overlapping machines`, !overlaps(comp))
+      check(`${label} rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
+      check(`${label} sets one pen for the piece`, comp.unit === comp.cells[0].size)
+      // A cell is never smaller than the mode can be read at, and the grid
+      // fills the art area rather than floating in it.
+      const box = bboxOf(comp)
+      check(`${label} builds a ${across}-across grid`, comp.cells.length === across * across)
+      check(`${label} fills the frame`, box.w >= 900 * 0.86 && Math.abs(box.w - box.h) < 1, `${box.w}×${box.h}`)
+      check(`${label} keeps its cells legible`, comp.cells.every((c) => c.size >= box.w / modeInfo(mode).res.max - 1e-6))
+    }
   }
 }
 
@@ -264,209 +314,299 @@ function chainGrammar(comp: ReturnType<typeof build>): string[] {
   return errors
 }
 
+// ---------------------------------------------------------------- circus ---
+// The whole frame is the programme: the composer builds its own uniform grid
+// at clampRes('circus', res) and every cell of it carries exactly one act, big
+// acts included. Acts are closed loops, so nothing is handed across a cell
+// edge; the only thing the wires do is space the drumroll, and the conduit is
+// not drawn. Everything between this banner and the next one is circus.
+console.log('\ncircus')
+
+/** One key per grid cell an instance's footprint covers. */
+function circusCover(comp: ReturnType<typeof build>): string[] {
+  const keys: string[] = []
+  for (const { cell } of comp.instances) {
+    for (let a = 0; a < Math.round(cell.w / cell.size); a++) {
+      for (let b = 0; b < Math.round(cell.h / cell.size); b++) {
+        keys.push(
+          `${Math.round(cell.x - cell.w / 2 + (a + 0.5) * cell.size)}:${Math.round(cell.y - cell.h / 2 + (b + 0.5) * cell.size)}`,
+        )
+      }
+    }
+  }
+  return keys
+}
+
+const CIRCUS_SEEDS = ['first-look', 'obtuse-plunger-408', 'velvet-lever-559']
+const circusActs = catalogFor('circus')
+
+check('circus: no lift or well in the catalog', !circusActs.some((c) => c.name === 'lift' || c.name === 'well'))
+check(
+  'circus: the elevator is one closed two-cell act',
+  circusActs.some((c) => c.name === 'elevator' && c.span?.[0] === 1 && c.span?.[1] === 2),
+)
+// Gravity points the same way in every cell, so no act may be turned on its
+// side; mirroring is left free because every act is a left-right composition.
+check('circus: every act stands upright', circusActs.every((c) => c.rotations?.length === 1 && c.rotations[0] === 0))
+
+let spanned = 0
+for (const res of [4, 5, 7]) {
+  for (const seed of CIRCUS_SEEDS) {
+    const options = { ...defaultOptions, seed, mode: 'circus' as const, res, spans: 0.8, chains: 0.8 }
+    const comp = build(options, 900)
+    const label = `circus ${seed}@${res}`
+    const cover = circusCover(comp)
+    const cells = new Set(comp.cells.map((c) => `${Math.round(c.x)}:${Math.round(c.y)}`))
+
+    check(`${label}: builds its own ${res}x${res} grid`, comp.cells.length === res * res)
+    check(`${label}: sets the piece's unit`, !!comp.unit && Math.abs(comp.unit - comp.cells[0].size) < 1e-6)
+    check(`${label}: every cell carries an act`, cover.length === comp.cells.length, `${cover.length} of ${comp.cells.length}`)
+    check(`${label}: no cell carries two`, new Set(cover).size === cover.length)
+    check(`${label}: nothing is placed off the grid`, cover.every((k) => cells.has(k)))
+    check(`${label}: rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
+    check(`${label}: hides the drumroll conduit`, comp.showWires === false)
+    check(`${label}: no lift or well is placed`, !comp.used.includes('lift') && !comp.used.includes('well'))
+    check(`${label}: drumroll grammar`, chainGrammar(comp).length === 0, chainGrammar(comp).slice(0, 3).join(' | '))
+    check(
+      `${label}: every act's phase lands its own beat`,
+      comp.instances.every((i) => {
+        const u = ((((i.fireFrame + i.phase) % i.period) + i.period) % i.period) / i.period
+        const want = i.contraption.fireAt ?? 0
+        return Math.abs(u - want) < 0.02 || Math.abs(u - want) > 0.98
+      }),
+    )
+    if (comp.instances.some((i) => i.cell.w > i.cell.size || i.cell.h > i.cell.size)) spanned++
+  }
+}
+check('circus: the big acts get placed when spans is up', spanned > 0, `${spanned} of 9 pieces`)
+
+// The drumroll itself: chains exist, and a chain that fires in sequence is
+// what `chains` buys. res 14 is deliberately out of range — the composer must
+// clamp it rather than build a wall of specks.
 {
-  const circus = build({ ...defaultOptions, seed: 'chains', mode: 'circus', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
+  const circus = build({ ...defaultOptions, seed: 'chains', mode: 'circus', res: 14, spans: 0.4, chains: 1 }, 900)
   check('circus: builds chains', circus.wires.length > 0, `${circus.wires.length} links`)
   check('circus: chain grammar', chainGrammar(circus).length === 0, chainGrammar(circus).slice(0, 3).join(' | '))
+  check('circus: clamps res into its own range', circus.cells.length === 7 * 7, `${circus.cells.length} cells`)
+  check(
+    'circus: chains fire a beat apart',
+    circus.wires.every((w) => ((w.end - w.start) + LOOP) % LOOP === LINK_DELAY || w.end - w.start === LINK_DELAY),
+  )
+  const quiet = build({ ...defaultOptions, seed: 'chains', mode: 'circus', res: 5, spans: 0.4, chains: 0 }, 900)
+  check('circus: chains 0 leaves every act free-running', quiet.wires.length === 0 && quiet.instances.length > 0)
 }
+// -------------------------------------------------------------- end circus --
 
-const unitOf = (i: Instance) => {
-  const [w, h] = i.contraption.span ?? [1, 1]
-  return w === 1 && h === 1
-}
-const ENDINGS = new Set(['bin', 'bell', 'lamp'])
-const CASCADE_ENDINGS = new Set(['bell', 'lamp', 'flag', 'toaster', 'balloon', 'jack'])
+// ----------------------------------------------------------------- lanes ---
+/**
+ * Cascade and workshop are one composer: a uniform grid, a snake through every
+ * cell of it, and one token journey made by concatenating the lane each
+ * machine declares. Everything a viewer could catch — a ball cut in half at a
+ * seam, a car that arrives without its passenger, a part sliding off the paper
+ * — is a property of that single path, so these checks measure the path rather
+ * than trusting 27 machines to agree about it.
+ */
+console.log('\nlanes')
 
-function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
-  const errors: string[] = []
-  const units = comp.instances.filter(unitOf)
-  const at = new Map(units.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]))
-  const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
-  for (const inst of units) {
-    const line = (inst.state as { line?: Line }).line
-    if (!line) {
-      errors.push(`${inst.contraption.name} has no line`)
-      continue
-    }
-    if (!line.out) continue
-    const along = line.along ?? 1
-    const nextCell = line.drop
-      ? at.get(key(inst.cell.x, inst.cell.y + inst.cell.size))
-      : at.get(key(inst.cell.x + along * inst.cell.size, inst.cell.y))
-    const next = nextCell && (nextCell.state as { line?: Line }).line
-    if (!nextCell || !next?.in) errors.push(`${inst.contraption.name} dumps into nothing`)
-    else if (next.color !== line.color) errors.push(`${inst.contraption.name} colour break`)
+const LANE_WORLDS = { cascade: CASCADE, workshop: WORKSHOP } as const
+
+/** Where a lane starts and ends, in canvas pixels. A hold ends where it began. */
+const laneEnds = (lc: LaneCell, size: number) => {
+  const first = lc.lane.pieces[0]
+  const last = lc.lane.pieces[lc.lane.pieces.length - 1]
+  const tail = last.hold !== undefined ? last.from : last.to
+  return {
+    from: [lc.cell.x + first.from[0] * size, lc.cell.y + first.from[1] * size] as const,
+    to: [lc.cell.x + tail[0] * size, lc.cell.y + tail[1] * size] as const,
   }
-  if (!comp.options.solo && !comp.options.tag) {
-    for (const inst of units) {
-      const line = (inst.state as { line?: Line }).line
-      if (line && !line.out && !ENDINGS.has(inst.contraption.name)) {
-        errors.push(`terminus is ${inst.contraption.name}`)
+}
+
+const PROPS = [
+  'every cell of the grid is on the snake, once',
+  'the snake steps to a neighbour every time',
+  'lanes meet exactly at every seam',
+  'the joined path never leaves the art frame',
+  'the joined path never jumps',
+  'every phase lands its machine on the token',
+  'elevators are a lift over a well, at the row turns only',
+  'a ride is one speed across the seam',
+  'the token count is the journey over the gap',
+  'it rebuilds identically from its seed',
+  'every cell stands upright, mirrored by its row',
+  'the run ends in a real ending',
+]
+
+for (const mode of ['cascade', 'workshop'] as const) {
+  const world = LANE_WORLDS[mode]
+  const cycle = carCycle(world.ride)
+  check(
+    `${mode}: a car cycle fits between two tokens`,
+    cycle < world.emit,
+    `${cycle.toFixed(3)} of ${world.emit}`,
+  )
+
+  const fails: Record<string, string[]> = {}
+  const fail = (prop: string, detail: string) => (fails[prop] ??= []).push(detail)
+
+  for (const res of [5, 8, 15]) {
+    for (const seed of GOLDBERG_SEEDS) {
+      for (const chains of [0, 0.5, 1]) {
+        const options = { ...defaultOptions, seed, mode, res, chains }
+        const comp = build(options, 900)
+        const label = `${seed}@${res}/${chains}`
+        const run = comp.lanes
+        if (!run) {
+          fail(PROPS[0], `${label}: no lanes`)
+          continue
+        }
+        const across = clampRes(mode, res)
+        const size = run.size
+
+        // One snake, every cell, once.
+        const grid = new Set(comp.cells.map((c) => `${c.col}:${c.row}`))
+        const walked = new Set(run.cells.map((lc) => `${lc.cell.col}:${lc.cell.row}`))
+        if (run.cells.length !== comp.cells.length || walked.size !== run.cells.length) {
+          fail(PROPS[0], `${label}: ${walked.size} of ${comp.cells.length}`)
+        }
+        for (const k of walked) if (!grid.has(k)) fail(PROPS[0], `${label}: ${k} is off the grid`)
+
+        for (let i = 1; i < run.cells.length; i++) {
+          const a = run.cells[i - 1].cell
+          const b = run.cells[i].cell
+          if (Math.abs(Math.hypot(b.x - a.x, b.y - a.y) - a.size) > 1) {
+            fail(PROPS[1], `${label}: ${a.col},${a.row} to ${b.col},${b.row}`)
+          }
+        }
+
+        // Seams. Inside a lane every piece starts where the last one stopped;
+        // across a seam the two cells' lanes meet on the same canvas pixel.
+        for (const lc of run.cells) {
+          for (let i = 1; i < lc.lane.pieces.length; i++) {
+            const prev = lc.lane.pieces[i - 1]
+            const tail = prev.hold !== undefined ? prev.from : prev.to
+            const head = lc.lane.pieces[i].from
+            if (Math.hypot(tail[0] - head[0], tail[1] - head[1]) > 1e-6) {
+              fail(PROPS[2], `${label}: ${lc.name} piece ${i}`)
+            }
+          }
+        }
+        for (let i = 1; i < run.cells.length; i++) {
+          const a = laneEnds(run.cells[i - 1], size).to
+          const b = laneEnds(run.cells[i], size).from
+          if (Math.hypot(a[0] - b[0], a[1] - b[1]) > 1e-6) {
+            fail(PROPS[2], `${label}: ${run.cells[i - 1].name} to ${run.cells[i].name}`)
+          }
+        }
+
+        // The frame test. Sampling the joined path is the honest form of
+        // "no token ever leaves the art area": it is the same path the
+        // overlay draws, and the token's own body is allowed for.
+        const r = (world.tokenSize / 2) * size
+        const [x0, y0, x1, y1] = run.frame
+        let last: { x: number; y: number } | null = null
+        let jumped = 0
+        for (let s = 0; s <= 2000; s++) {
+          const at = run.at((s / 2000) * run.journey)
+          if (at.x - r < x0 - 0.5 || at.x + r > x1 + 0.5 || at.y - r < y0 - 0.5 || at.y + r > y1 + 0.5) {
+            fail(PROPS[3], `${label}: ${Math.round(at.x)},${Math.round(at.y)} outside ${x0}..${x1}`)
+            break
+          }
+          if (last) jumped = Math.max(jumped, Math.hypot(at.x - last.x, at.y - last.y))
+          last = at
+        }
+        if (jumped > size * 0.5) fail(PROPS[4], `${label}: ${jumped.toFixed(1)}px step`)
+
+        // A machine's own clock reads `fireAt` at the frame the token reaches
+        // its fire point, to within the frame the phase was rounded to.
+        const instAt = new Map(comp.instances.map((i) => [i.cell, i]))
+        for (const lc of run.cells) {
+          const inst = instAt.get(lc.cell)
+          if (!inst) continue
+          const u = mod(lc.arrival + inst.phase, inst.period) / inst.period
+          const want = inst.contraption.fireAt ?? 0
+          const off = Math.abs(u - want)
+          if (Math.min(off, 1 - off) > 1 / inst.period) {
+            fail(PROPS[5], `${label}: ${lc.name} at ${u.toFixed(3)} wants ${want}`)
+          }
+        }
+
+        // Elevators: exactly one stack per row turn, always a lift over a
+        // well, and the two halves of the descent at one speed so the car and
+        // its passenger cross the seam as one object.
+        if (run.stacks.length !== across - 1) {
+          fail(PROPS[6], `${label}: ${run.stacks.length} stacks for ${across} rows`)
+        }
+        for (const stack of run.stacks) {
+          const i = run.cells.findIndex((lc) => lc.cell === stack.cell)
+          const top = run.cells[i]
+          const bot = run.cells[i + 1]
+          if (!bot || top.role !== 'lift' || bot.role !== 'well') {
+            fail(PROPS[6], `${label}: stack at ${top.cell.col},${top.cell.row} is ${top.role}/${bot?.role}`)
+            continue
+          }
+          if (bot.cell.col !== top.cell.col || bot.cell.row !== top.cell.row + 1) {
+            fail(PROPS[6], `${label}: stack is not stacked`)
+          }
+          const turn = top.cell.row % 2 === 0 ? across - 1 : 0
+          if (top.cell.col !== turn) fail(PROPS[6], `${label}: a lift away from the row turn`)
+          if (top.name !== world.names.lift || bot.name !== world.names.well) {
+            fail(PROPS[6], `${label}: stack is ${top.name}/${bot.name}`)
+          }
+          const speeds = [...top.lane.pieces, ...bot.lane.pieces].filter((pc) => pc.ride).map((pc) => pc.v)
+          if (speeds.length < 2 || speeds.some((v) => Math.abs(v - speeds[0]) > 1e-9)) {
+            fail(PROPS[7], `${label}: ${speeds.join(',')}`)
+          }
+        }
+        for (const lc of run.cells) {
+          const shaft = lc.role === 'lift' || lc.role === 'well'
+          const named = lc.name === world.names.lift || lc.name === world.names.well
+          if (named !== shaft) fail(PROPS[6], `${label}: ${lc.name} as ${lc.role}`)
+        }
+
+        const want = Math.max(1, Math.ceil(run.journey / run.emit))
+        if (run.tokens !== want || run.tokens < 1) fail(PROPS[8], `${label}: ${run.tokens} of ${want}`)
+
+        if (fingerprint(comp) !== fingerprint(build(options, 900))) fail(PROPS[9], label)
+
+        for (const inst of comp.instances) {
+          if (inst.angle !== 0) fail(PROPS[10], `${label}: ${inst.contraption.name} turned`)
+          if (inst.mirror !== (inst.cell.row % 2 === 0 ? 1 : -1)) {
+            fail(PROPS[10], `${label}: ${inst.contraption.name} faces the wrong way`)
+          }
+        }
+
+        const head = run.cells[0]
+        const tail = run.cells[run.cells.length - 1]
+        if (head.role !== 'feeder' || !world.names.feeders.includes(head.name)) {
+          fail(PROPS[11], `${label}: starts with ${head.name}`)
+        }
+        if (tail.role !== 'sink' || !world.names.endings.includes(tail.name)) {
+          fail(PROPS[11], `${label}: ends with ${tail.name}`)
+        }
       }
-      if (line && !line.out && inst.contraption.role === 'source') {
-        errors.push(`source leftover ${inst.contraption.name}`)
-      }
     }
   }
-  return errors
-}
 
-console.log('\nworkshop floor')
-for (const seed of ['first-look', 'chains', 'workshop-12', 'rim', 'candid-gasket-468']) {
-  for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
-    const shop = build(
-      { ...defaultOptions, seed, mode: 'workshop', layout, res: 12, spans: 0.3, chains: 0.7 },
-      900,
-    )
-    const label = `workshop ${seed} ${layout}`
-    const errors = workshopLineErrors(shop)
-    const isolated = shop.instances.filter((i) => {
-      const line = (i.state as { line?: Line }).line
-      return unitOf(i) && line && !line.in && !line.out
-    })
-    check(`${label}: every placed cell has a line`, shop.instances.filter(unitOf).every((i) => (i.state as { line?: Line }).line))
-    check(`${label}: every placed cell is on a run`, shop.instances.filter(unitOf).every((i) => {
-      const line = (i.state as { line?: Line }).line
-      return !!line && (line.in || line.out)
-    }))
-    check(`${label}: no leftover machines`, isolated.length === 0, `${isolated.length} leftovers`)
-    check(`${label}: outlets meet an inlet`, errors.length === 0, errors.slice(0, 3).join(' | '))
-    check(`${label}: no classic wires`, shop.wires.length === 0)
-    if (layout === 'grid') {
-      const onBorder = shop.instances.some(
-        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
-      )
-      check(`${label}: rim stays empty`, !onBorder)
-    }
+  for (const prop of PROPS) {
+    check(`${mode}: ${prop}`, !fails[prop], (fails[prop] ?? []).slice(0, 2).join(' | '))
   }
-}
 
-// Cascade: inset eastbound sentences that end in a real sink. Unused cells
-// stay empty. Wires exist for timing but are not drawn.
-console.log('\ncascade')
-const cascadeWired = build({ ...defaultOptions, seed: 'chains', mode: 'cascade', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
-check('cascade: builds chains', cascadeWired.wires.length > 0, `${cascadeWired.wires.length} links`)
-check('cascade: chain grammar', chainGrammar(cascadeWired).length === 0, chainGrammar(cascadeWired).slice(0, 3).join(' | '))
-const flowOf = (i: Instance) => (i.state as { flow?: Flow }).flow
-const onRun = (f: Flow | undefined) => !!f && (f.in !== null || f.out !== null)
-const cascadeByPos = new Map<string, Instance>(
-  cascadeWired.instances.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]),
-)
-const chained = cascadeWired.instances.filter((i) => onRun(flowOf(i)))
-const leftovers = cascadeWired.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
-const onWires = new Set(cascadeWired.wires.flatMap((w) => [w.from, w.to]))
-const cascadeHeads = cascadeWired.wires.filter((w) => !cascadeWired.wires.some((other) => other.to === w.from))
-check('every placed cascade cell is on a run', cascadeWired.instances.filter(unitOf).every((i) => onRun(flowOf(i))))
-check('no leftover cascade machines', leftovers.length === 0, `${leftovers.length} leftovers`)
-check('cascade hides the conduit', cascadeWired.showWires === false)
-check('every wired machine knows its run', chained.length === onWires.size && chained.every((i) => onWires.has(i.cell)))
-check('every wired machine stands upright', chained.every((i) => i.angle === 0 && i.mirror === 1))
-check(
-  'every run enters and leaves by edges its machines allow',
-  chained.every((i) => {
-    const f = flowOf(i)!
-    const c = i.contraption
-    return (!f.in || !c.inlets || c.inlets.includes(f.in)) && (!f.out || !c.outlets || c.outlets.includes(f.out))
-  }),
-)
-check(
-  'every run has a source with no inlet',
-  cascadeHeads.every((w) => flowOf(cascadeByPos.get(`${Math.round(w.from.x)}:${Math.round(w.from.y)}`)!)!.in === null),
-)
-check(
-  'cascade is one snake',
-  cascadeHeads.length === 1,
-  `${cascadeHeads.length} heads`,
-)
-check(
-  'cascade steps to neighbours',
-  cascadeWired.wires.every(
-    (w) => Math.abs(Math.hypot(w.to.x - w.from.x, w.to.y - w.from.y) - w.from.size) < 1,
-  ),
-)
-check(
-  'cascade only drops south',
-  cascadeWired.wires.every((w) => w.to.y >= w.from.y - 1),
-)
-check(
-  'every run ends in a receiver',
-  cascadeHeads.every((head) => {
-    let w = head
-    for (;;) {
-      const next = cascadeWired.wires.find((o) => o.from === w.to)
-      if (!next) {
-        const tail = cascadeByPos.get(`${Math.round(w.to.x)}:${Math.round(w.to.y)}`)
-        return !!tail && CASCADE_ENDINGS.has(tail.contraption.name)
-      }
-      w = next
-    }
-  }),
-)
-check(
-  'every run carries one colour',
-  cascadeHeads.every((head) => {
-    let w = head
-    for (;;) {
-      const next = cascadeWired.wires.find((o) => o.from === w.to)
-      if (!next) return true
-      if (next.color !== head.color) return false
-      w = next
-    }
-  }),
-)
-check(
-  'classic wiring does not write flow',
-  wired.instances.every((i) => !flowOf(i)),
-)
-{
-  const res = 14
-  const onBorder = cascadeWired.instances.some(
-    (i) => i.cell.col === 0 || i.cell.col === res - 1 || i.cell.row === 0 || i.cell.row === res - 1,
-  )
-  check('regular grid leaves the rim empty', !onBorder)
-}
+  // `chains` is the station dial: none of the snake, half of it, all of it.
+  const at = (chains: number) =>
+    build({ ...defaultOptions, seed: 'first-look', mode, res: 8, chains }, 900)
+  const plain = at(0)
+  const busy = at(1)
+  const filler = (c: ReturnType<typeof build>) =>
+    c.instances.filter((i) => i.contraption.name === world.names.filler).length
+  check(`${mode}: chains 0 is all conveyance`, filler(plain) > filler(busy), `${filler(plain)} vs ${filler(busy)}`)
+  check(`${mode}: chains 1 leaves no filler between the machines`, filler(busy) === 0, `${filler(busy)} left`)
+  check(`${mode}: the conduit stays hidden`, plain.showWires === false && plain.wires.length === 0)
 
-for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
-  for (const layout of ['grid', 'bricks', 'bands']) {
-    const piece = build(
-      { ...defaultOptions, seed, mode: 'cascade', layout, res: 12, spans: 0.25, chains: 0.7 },
-      900,
-    )
-    const label = `cascade ${seed} ${layout}`
-    const leftover = piece.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
-    check(`${label}: every placed cell is on a run`, piece.instances.filter(unitOf).every((i) => onRun(flowOf(i))))
-    check(`${label}: no leftover machines`, leftover.length === 0, `${leftover.length} leftovers`)
-    check(`${label}: chain grammar`, chainGrammar(piece).length === 0, chainGrammar(piece).slice(0, 3).join(' | '))
-    check(`${label}: hides the conduit`, piece.showWires === false)
-    if (layout === 'grid') {
-      const onBorder = piece.instances.some(
-        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
-      )
-      check(`${label}: rim stays empty`, !onBorder)
-    }
-  }
-}
-
-{
-  const packed = build(
-    { ...defaultOptions, seed: 'first-look', mode: 'cascade', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
-    900,
-  )
-  const cols = packed.instances.map((i) => i.cell.col)
-  const rows = packed.instances.map((i) => i.cell.row)
-  check('cascade res=8 fills the width', cols.length > 0 && Math.min(...cols) <= 1 && Math.max(...cols) >= 6)
-  check('cascade res=8 fills the height', rows.length > 0 && Math.min(...rows) <= 1 && Math.max(...rows) >= 6)
-}
-
-{
-  const shop = build(
-    { ...defaultOptions, seed: 'velvet-lever-559', mode: 'workshop', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
-    900,
-  )
-  const onBorder = shop.instances.some(
-    (i) => i.cell.col === 0 || i.cell.col === 7 || i.cell.row === 0 || i.cell.row === 7,
-  )
-  check('workshop res=8 leaves the rim empty', !onBorder)
+  // Narrowing the pool must not break the snake: a soloed machine staffs every
+  // role, and the lanes still join.
+  const one = build({ ...defaultOptions, seed: 'first-look', mode, res: 6, solo: world.names.filler }, 900)
+  check(`${mode}: solo still builds one snake`, !!one.lanes && one.lanes.cells.length === one.cells.length)
+  check(`${mode}: solo keeps the path joined`, !!one.lanes && one.lanes.journey > 0)
 }
 
 console.log('\ncatalog')
@@ -475,6 +615,139 @@ check('shows every machine', catalog.instances.length === registry.length)
 check('captions every machine', catalog.captions.length === registry.length)
 // At phase 0 most machines sit at a turning point and the sheet reads as frozen.
 check('staggers phases', new Set(catalog.instances.map((i) => i.phase)).size > registry.length * 0.7)
+
+/**
+ * Layouts and scale.
+ *
+ * One pen draws the whole piece, so a cell four times the size of its
+ * neighbour is also four times the ink: every layout is held to two cell sizes
+ * at most, differing by exactly 2. And every composer builds at
+ * `clampRes(mode, res)`, so a cell is never smaller than the mode's machines
+ * can be read at and a piece never floats as a speck inside an empty frame.
+ */
+console.log('\nlayouts / scale')
+
+type Comp = ReturnType<typeof build>
+
+/** The rectangle the cells occupy, in canvas pixels. */
+function frameOf(comp: Comp) {
+  return {
+    left: Math.min(...comp.cells.map((c) => c.x - c.w / 2)),
+    right: Math.max(...comp.cells.map((c) => c.x + c.w / 2)),
+    top: Math.min(...comp.cells.map((c) => c.y - c.h / 2)),
+    bottom: Math.max(...comp.cells.map((c) => c.y + c.h / 2)),
+  }
+}
+
+const cellSizes = (comp: Comp) =>
+  [...new Set(comp.cells.map((c) => Math.round(c.size * 1e6) / 1e6))].sort((a, b) => a - b)
+
+/**
+ * Exact tiling: every unit square of the res grid is inside exactly one cell.
+ * Sums of areas would pass with a gap and an overlap that cancel.
+ */
+function tilingError(comp: Comp, res: number): string {
+  const { left, top, right } = frameOf(comp)
+  const unit = (right - left) / res
+  for (let col = 0; col < res; col++) {
+    for (let row = 0; row < res; row++) {
+      const x = left + (col + 0.5) * unit
+      const y = top + (row + 0.5) * unit
+      const over = comp.cells.filter(
+        (c) => Math.abs(c.x - x) < c.w / 2 && Math.abs(c.y - y) < c.h / 2,
+      ).length
+      if (over !== 1) return `unit ${col}:${row} covered ${over}x`
+    }
+  }
+  return ''
+}
+
+for (const seed of ['first-look', 'obtuse-plunger-408', 'paper-gantry-552', 'velvet-lever-559']) {
+  for (const res of [8, 12, 15, 21]) {
+    const grid = build({ ...defaultOptions, seed, layout: 'grid', res }, 900)
+    const bounds = frameOf(grid)
+    const unit = (bounds.right - bounds.left) / res
+
+    for (const layout of ['bricks', 'quads', 'bands']) {
+      const comp = build({ ...defaultOptions, seed, layout, res }, 900)
+      const label = `${layout} ${seed}@${res}`
+      const sizes = cellSizes(comp)
+      check(
+        `${label}: at most two cell sizes`,
+        sizes.length <= 2,
+        sizes.map((s) => s.toFixed(1)).join(','),
+      )
+      check(
+        `${label}: the two sizes differ by exactly 2`,
+        sizes.length < 2 || Math.abs(sizes[1] / sizes[0] - 2) < 1e-9,
+        sizes.map((s) => s.toFixed(1)).join(','),
+      )
+      check(
+        `${label}: every cell is inside the art area`,
+        comp.cells.every(
+          (c) =>
+            c.x - c.w / 2 >= bounds.left - 1e-6 &&
+            c.x + c.w / 2 <= bounds.right + 1e-6 &&
+            c.y - c.h / 2 >= bounds.top - 1e-6 &&
+            c.y + c.h / 2 <= bounds.bottom + 1e-6,
+        ),
+      )
+      if (layout !== 'bricks') {
+        // Bricks is a running bond: its offset courses are meant to be short.
+        check(`${label}: tiles the area exactly`, tilingError(comp, res) === '', tilingError(comp, res))
+      }
+    }
+
+    // Bands: columns one or two units wide, each filled to the bottom.
+    const bands = build({ ...defaultOptions, seed, layout: 'bands', res }, 900)
+    const widths = [...new Set(bands.cells.map((c) => Math.round(c.w / unit)))].sort()
+    check(`bands ${seed}@${res}: widths are 1 or 2 units`, widths.every((k) => k === 1 || k === 2), widths.join(','))
+    const byBand = new Map<number, number>()
+    for (const c of bands.cells) byBand.set(c.col, (byBand.get(c.col) ?? 0) + c.w * c.h)
+    const bandWidth = new Map<number, number>()
+    for (const c of bands.cells) bandWidth.set(c.col, Math.max(bandWidth.get(c.col) ?? 0, Math.round(c.w / unit)))
+    check(
+      `bands ${seed}@${res}: every band fills its column`,
+      [...byBand].every(([col, area]) => Math.abs(area - bandWidth.get(col)! * unit * res * unit) < 1e-3),
+    )
+  }
+}
+
+// Every mode builds inside its own res range, whatever the dial says.
+for (const { name: mode, res: range } of MODES) {
+  for (const dial of [1, 8, 15, 50]) {
+    const comp = build({ ...defaultOptions, seed: 'scale', mode, res: dial }, 900)
+    const label = `${mode}@${dial}`
+    if (!comp.cells.length) {
+      check(`${label} lays out cells`, false)
+      continue
+    }
+    const { left, right } = frameOf(comp)
+    const span = right - left
+    const sizes = comp.cells.map((c) => c.size)
+    check(
+      `${label}: no cell finer than ${range.max} across`,
+      Math.min(...sizes) >= span / range.max - 0.5,
+      `${Math.min(...sizes).toFixed(1)} vs ${(span / range.max).toFixed(1)}`,
+    )
+    check(
+      `${label}: no cell coarser than ${range.min} across`,
+      Math.max(...sizes) <= span / range.min + 0.5,
+      `${Math.max(...sizes).toFixed(1)} vs ${(span / range.min).toFixed(1)}`,
+    )
+    check(`${label}: sets one pen for the piece`, (comp.unit ?? 0) > 0)
+  }
+}
+
+// The roll never lands outside the range the composer would clamp it into.
+for (const { name: mode, res: range } of MODES) {
+  const rolled = Array.from({ length: 200 }, () => rollOptions({ ...defaultOptions, mode }).res)
+  check(
+    `${mode}: a full roll picks a res in range`,
+    rolled.every((r) => r >= range.min && r <= range.max),
+    `${Math.min(...rolled)}..${Math.max(...rolled)}`,
+  )
+}
 
 console.log(failures === 0 ? '\nall checks passed\n' : `\n${failures} check(s) failed\n`)
 process.exit(failures === 0 ? 0 : 1)

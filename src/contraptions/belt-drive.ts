@@ -11,7 +11,10 @@ export const beltDrive = defineContraption({
   setup: ({ color, rng }) => ({ color, dir: rng.sign(), spokes: rng.pick([3, 4]) }),
   draw: (p, s, { w, h, size, u, ink, weight }) => {
     const r = h * 0.3
-    const cx = w / 2 - r * 1.2
+    const mark = size * 0.16
+    // The marked link rides the outside of the belt, so the pulleys sit in far
+    // enough that it stays inside the footprint at the ends of its trip.
+    const cx = w / 2 - r * 1.2 - mark / 2
     const run = cx * 2
     const arc = Math.PI * r
     const perim = run * 2 + arc * 2
@@ -59,6 +62,6 @@ export const beltDrive = defineContraption({
       my = r * Math.sin(a)
     }
     solid(p, ink, weight, s.color)
-    p.circle(mx, my, size * 0.16)
+    p.circle(mx, my, mark)
   },
 })

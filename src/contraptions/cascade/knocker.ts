@@ -1,12 +1,15 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutSine, easeInQuad, lerp, seg } from '../../core/ease'
-import { FLOOR, floor, heading, rollIn, rollOut, since, token, tokenColor, until, type Beat } from './parts'
+import { FLOOR, floor, rollLane, since, type Beat } from './parts'
 
 /**
  * A mallet on a hinge over a ball on a pedestal: the winch hauls the mallet
  * up, the catch lets it go, it swings down and knocks the ball off its perch
  * and away down the run, and a fresh ball rolls in to take its place.
+ *
+ * The ball waits on the pedestal for exactly `emit` and leaves on the blow,
+ * so the perch is never empty and the mallet never swings through thin air.
  */
 const FIRE = 0.5
 const ARM = 0.36
@@ -14,8 +17,6 @@ const HEAD = 0.2
 /** Where the head meets the ball, and where the winch holds it. */
 const HIT = 0.43
 const COCKED = 1.5
-/** When the next ball arrives on the pedestal. */
-const FEED = 0.62
 const WINCH: [number, number] = [-0.28, -0.16]
 
 export const knocker = defineContraption<Beat>({
@@ -26,6 +27,7 @@ export const knocker = defineContraption<Beat>({
   outlets: ['E', 'W', 'S'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx) => rollLane(ctx),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const t = since(u, FIRE)
@@ -37,29 +39,16 @@ export const knocker = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, 0.1)
 
-    p.push()
-    p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
-    // The pedestal.
+    // The pedestal the ball waits on, a stub under the rail.
     p.line(0, (FLOOR + 0.16) * k, 0, (FLOOR + 0.02) * k)
     p.line(-0.09 * k, (FLOOR + 0.02) * k, 0.09 * k, (FLOOR + 0.02) * k)
     // The winch stands on the rail, not in the empty corner.
-    outline(p, ink, weight)
     p.line(WINCH[0] * k, WINCH[1] * k, WINCH[0] * k, FLOOR * k)
     solid(p, ink, weight, s.color)
     p.circle(WINCH[0] * k, WINCH[1] * k, 0.12 * k)
     outline(p, ink, weight)
     p.line(WINCH[0] * k, WINCH[1] * k, (WINCH[0] + 0.08) * k, (WINCH[1] + 0.08) * k)
-
-    clipCell(p, k, () => {
-      const ball = tokenColor(s)
-      // The ball waits on the pedestal from the moment it arrives to the knock.
-      const feed = rollIn(s, u, (FIRE + FEED) % 1, true)
-      if (feed) token(p, k, ink, weight, ball, feed)
-      else if (until(u, FIRE) <= 1 - FEED) token(p, k, ink, weight, ball, [0, 0])
-      const out = rollOut(s, u, FIRE)
-      if (out) token(p, k, ink, weight, ball, out)
-    })
 
     // The mallet, hinged at the top of the cell.
     const hx = -Math.sin(angle) * ARM
@@ -76,6 +65,5 @@ export const knocker = defineContraption<Beat>({
     p.pop()
     solid(p, ink, weight, s.color)
     p.circle(0, -0.42 * k, 0.08 * k)
-    p.pop()
   },
 })

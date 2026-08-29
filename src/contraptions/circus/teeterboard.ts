@@ -10,7 +10,7 @@ import { P, drop, ground, pedestal, performer, rise, second } from './circus'
  * one home.
  */
 const TOWER_X = 0.84
-const TOWER_TOP = -0.28
+const TOWER_TOP = -0.22
 const FULCRUM: [number, number] = [0, 0.3]
 const HALF = 0.48
 const TILT = 0.28

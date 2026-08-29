@@ -1,59 +1,58 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
-import { easeInQuad, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, belt, bench, lineOf, part } from './shop'
+import { outline } from '../../core/draw'
+import { seg } from '../../core/ease'
+import { BELT_SPAN, BENCH, bench, rollers, sparks, workLane } from './shop'
 
 /**
- * The east (or west) end of a bench opens into a chute. The part rolls in,
- * tips over the lip, and falls out the bottom of the cell onto the catch
- * below — the corner of the snake.
+ * A grate set into the bench over a swarf tray. The part stops on it, the
+ * chips and coolant it carried spill through into the tray, and it rolls on
+ * clean. What falls is the machine's; the part is the world's.
  */
-const LIP = 0.12
+const HALF = 0.17
+const HOLD = 0.14
+const SPILL = 0.5
+/** The tray under the grate: mouth, floor, and walls. */
+const TRAY = 0.46
 
 export const spill = defineContraption({
   name: 'spill',
-  label: 'Spill',
+  label: 'Swarf Grate',
   tags: ['convey'],
   role: 'relay',
   rotations: [0],
-  fireAt: 0.5,
+  fireAt: SPILL,
+  lane: (ctx) => workLane(ctx, { time: HOLD }),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const line = lineOf(s)
-    const through = !!(line?.catch && line?.drop)
-    const start = line?.in && !through ? -0.5 - PART / 2 : -0.2
-    const x = start + u * BELT_V
-    const fall = easeInQuad(seg(u, through ? 0.08 : 0.36, through ? 0.42 : 0.58))
-    let pos: [number, number] | null = null
-    let angle = 0
-    if (through) {
-      if (u < 0.5) {
-        pos = [0, lerp(-0.5, 0.55, easeInQuad(seg(u, 0, 0.42)))]
-        angle = 0.4 * fall
-      }
-    } else if (u < 0.36) pos = [Math.min(LIP, x), PART_Y]
-    else if (u < 0.72) {
-      pos = [lerp(LIP, 0.08, fall), lerp(PART_Y, 0.55, fall)]
-      angle = 1.2 * fall
+    const on = seg(u, SPILL - 0.16, SPILL - 0.06) * (1 - seg(u, SPILL + 0.1, SPILL + 0.22))
+
+    bench(p, k, ink, weight, -0.5, -HALF)
+    bench(p, k, ink, weight, HALF, 0.5)
+    rollers(p, k, ink, weight, s.color, -0.5, -HALF, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, HALF, 0.5, u * BELT_SPAN)
+
+    // The wash pipe over the grate, and its spray.
+    outline(p, ink, weight)
+    p.line(0, -0.5 * k, 0, -0.08 * k)
+    p.rect(0, -0.02 * k, 0.16 * k, 0.09 * k)
+    for (const dir of [-1, 1]) {
+      sparks(p, k, s.color, dir * 0.03, 0.04, u, dir * 0.5, on, 3, 4, -0.04)
     }
 
-    clipCell(p, k, () => {
-      if (through) {
-        outline(p, ink, weight)
-        p.line(-0.16 * k, -0.5 * k, -0.1 * k, 0.5 * k)
-        p.line(0.16 * k, -0.5 * k, 0.1 * k, 0.5 * k)
-      } else {
-        const x0 = line?.in ? -0.5 : -0.36
-        bench(p, k, ink, weight, x0, LIP + 0.08, false)
-        belt(p, k, ink, weight, s.color, x0, LIP, u * BELT_V)
-        outline(p, ink, weight)
-        p.line(LIP * k, BENCH * k, 0.22 * k, 0.5 * k)
-        p.line((LIP + 0.12) * k, BENCH * k, 0.34 * k, 0.5 * k)
-        solid(p, ink, weight, s.color)
-        p.circle(LIP * k, BENCH * k, 0.06 * k)
-      }
+    // The grate: the bench line carried across on slotted bars.
+    outline(p, ink, weight)
+    p.line(-HALF * k, BENCH * k, HALF * k, BENCH * k)
+    for (let x = -HALF + 0.04; x < HALF; x += 0.055) {
+      p.line(x * k, BENCH * k, x * k, (BENCH + 0.06) * k)
+    }
+    // The funnel it drains into, and its spout.
+    for (const side of [-1, 1]) {
+      p.line(side * HALF * k, (BENCH + 0.06) * k, side * 0.07 * k, TRAY * k)
+      p.line(side * 0.07 * k, TRAY * k, side * 0.07 * k, 0.5 * k)
+    }
 
-      if (pos) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
-    })
+    for (const dir of [-1, 1]) {
+      sparks(p, k, s.color, dir * 0.05, BENCH + 0.08, u, dir * 0.3, on, 3, 4, 0.05)
+    }
   },
 })

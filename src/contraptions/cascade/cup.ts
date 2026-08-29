@@ -1,56 +1,39 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
-import { FLOOR, THROAT, TOKEN, drawElevator, heading, rideOf, rideToken, rollIn, since, token, tokenColor, type Beat } from './parts'
+import { outline, solid } from '../../core/draw'
+import { FLOOR, dipLane, floor, type Beat } from './parts'
 
 /**
- * A sitting cup on the rail. On a run that drops south it is the catalog
- * stand-in for a lift — the snake itself uses the lift / well pair.
+ * A dished cup set into the rail: the ball drops into it, settles, and climbs
+ * back out the far side. The quietest beat in the set — nothing here moves
+ * but the ball, and the cup is what makes it dip.
  */
 const FIRE = 0
+const MOUTH = 0.34
+const DEEP = 0.15
 
 export const cup = defineContraption<Beat>({
   name: 'cup',
   label: 'Cup',
   tags: ['ball'],
   role: 'relay',
-  inlets: ['E', 'W', 'N'],
-  outlets: ['E', 'W', 'S'],
+  inlets: ['E', 'W'],
+  outlets: ['E', 'W'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx) => dipLane(ctx, { by: 0.09, down: 0.035, wait: 0.06, up: 0.055 }),
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size: k, u, ink, weight }) => {
-    const h = heading(s.flow)
-    const t = since(u, FIRE)
-    const ride = rideOf(s)
-    const dumping = !!ride || s.flow?.out === 'S'
-
-    if (dumping) {
-      p.push()
-      p.scale(h, 1)
-      const from = s.flow?.in === 'E' ? 0.5 : -0.5
-      outline(p, ink, weight)
-      p.line(from * k, FLOOR * k, -0.18 * k, FLOOR * k)
-      p.pop()
-      drawElevator(p, k, ink, weight, s, u)
-      const pos = rideToken(s, u, FIRE)
-      if (pos) token(p, k, ink, weight, tokenColor(s), pos)
-      return
-    }
-
-    let pos = rollIn(s, u, FIRE)
-    if (!pos && t < 0.45) pos = [0, FLOOR - TOKEN / 2]
-
-    p.push()
-    p.scale(h, 1)
-    outline(p, ink, weight)
-    const from = s.flow?.in === 'E' ? 0.5 : -0.5
-    p.line(from * k, FLOOR * k, THROAT * k, FLOOR * k)
+  draw: (p, s, { size: k, ink, weight }) => {
+    floor(p, k, ink, weight, s, MOUTH / 2)
     solid(p, ink, weight, s.color)
-    p.arc(0, FLOOR * k, 0.28 * k, 0.22 * k, 0, Math.PI)
-    p.pop()
-
-    clipCell(p, k, () => {
-      if (pos) token(p, k, ink, weight, tokenColor(s), pos)
-    })
+    p.arc(0, FLOOR * k, MOUTH * k, DEEP * 2 * k, 0, Math.PI)
+  },
+  // The near lip stands between the viewer and the ball in the dish, so it is
+  // drawn after the world's tokens: without it the ball reads as sitting on
+  // the cup rather than in it.
+  over: (p, _s, { size: k, ink, weight }) => {
+    outline(p, ink, weight)
+    for (const side of [-1, 1]) {
+      p.line(((side * MOUTH) / 2) * k, (FLOOR + 0.02) * k, ((side * MOUTH) / 2) * k, (FLOOR - 0.08) * k)
+    }
   },
 })

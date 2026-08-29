@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline } from '../../core/draw'
+import { outline } from '../../core/draw'
 import { seg } from '../../core/ease'
 import { P, drop, ground, pedestal, performer, rise, stroke } from './circus'
 
@@ -9,8 +9,9 @@ import { P, drop, ground, pedestal, performer, rise, stroke } from './circus'
  * be thrown back up onto the tall one — two bounces a loop, and the second
  * one has to be bigger.
  */
-const TALL: [number, number] = [-0.38, -0.34]
-const SHORT: [number, number] = [0.38, -0.08]
+/** Tower tops, set so a performer standing on the tall one clears the ceiling. */
+const TALL: [number, number] = [-0.38, -0.22]
+const SHORT: [number, number] = [0.38, 0.08]
 const BED = 0.27
 const BED_W = 0.24
 
@@ -45,7 +46,6 @@ export const trampoline = defineContraption({
       pos = [0, bed[1] + dip]
     } else if (u < 0.92) pos = rise(bed, tall, seg(u, 0.7, 0.92))
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The bed: legs, a frame, and the mat between, sagging under the landing.
@@ -62,6 +62,5 @@ export const trampoline = defineContraption({
     pedestal(p, k, ink, weight, s.color, TALL[0], TALL[1], 0.5, 0.2)
     pedestal(p, k, ink, weight, s.color, SHORT[0], SHORT[1], 0.5, 0.2)
     performer(p, k, ink, weight, s.color, pos[0], pos[1])
-    })
   },
 })

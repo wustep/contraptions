@@ -12,6 +12,7 @@ import { curtain } from './curtain'
 import { cymbals } from './cymbals'
 import { drumroll } from './drumroll'
 import { dunkTank } from './dunk-tank'
+import { elevator } from './elevator'
 import { ferris } from './ferris'
 import { globe } from './globe'
 import { gong } from './gong'
@@ -20,7 +21,6 @@ import { highStriker } from './high-striker'
 import { hoop } from './hoop'
 import { jackInTheBox } from './jack-in-the-box'
 import { juggler } from './juggler'
-import { lift } from './lift'
 import { marquee } from './marquee'
 import { monkeyBars } from './monkey-bars'
 import { spotlight } from './spotlight'
@@ -28,7 +28,6 @@ import { teeterboard } from './teeterboard'
 import { tightrope } from './tightrope'
 import { trampoline } from './trampoline'
 import { trapeze } from './trapeze'
-import { well } from './well'
 
 /**
  * The registry: the acts of the circus. Adding one is: write the file, add it
@@ -48,6 +47,7 @@ export const registry: Contraption<any>[] = [
   cymbals,
   drumroll,
   dunkTank,
+  elevator,
   ferris,
   globe,
   gong,
@@ -56,7 +56,6 @@ export const registry: Contraption<any>[] = [
   hoop,
   jackInTheBox,
   juggler,
-  lift,
   marquee,
   monkeyBars,
   spotlight,
@@ -64,7 +63,6 @@ export const registry: Contraption<any>[] = [
   tightrope,
   trampoline,
   trapeze,
-  well,
 ]
 
 export const byName = (name: string): Contraption<any> | undefined =>

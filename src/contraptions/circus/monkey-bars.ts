@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline } from '../../core/draw'
+import { outline } from '../../core/draw'
 import { pendulum as pendulumTable, swing } from '../../core/physics'
 import { P, block, ground, knob, performer, stroke } from './circus'
 
@@ -7,10 +7,13 @@ import { P, block, ground, knob, performer, stroke } from './circus'
  * The acrobat swings from the first rung, lets go at the top of the swing
  * exactly where the next rung is, swings on from that one, and at the far
  * end turns round and comes back the same way.
+ *
+ * One swing per rung each way, and the body reaches half a rung past the end
+ * rungs at the turns — that overhang is what has to stay inside the cell.
  */
-const RUNGS = [-0.42, -0.14, 0.14, 0.42]
+const RUNGS = [-0.27, -0.09, 0.09, 0.27]
 const BAR_Y = -0.4
-const ARM = 0.45
+const ARM = 0.62
 /** The swing that carries the hand from one rung to the next. */
 const AMP = Math.asin((RUNGS[1] - RUNGS[0]) / 2 / ARM)
 
@@ -23,18 +26,19 @@ export const monkeyBars = defineContraption({
   fireAt: 0,
   setup: ({ color }) => ({ color, table: pendulumTable(AMP) }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    // Three swings out, three swings back. Each is half a pendulum period,
-    // apex to apex, so the hand-off happens at the dwell.
+    // One swing per rung out, the same rungs back. Each is half a pendulum
+    // period, apex to apex, so the hand-off happens at the dwell — and the
+    // body ends each swing exactly where the next one starts it.
+    const n = RUNGS.length
     const out = u < 0.5
     const t = (out ? u : u - 0.5) * 2
-    const j = Math.min(2, Math.floor(t * 3))
-    const f = t * 3 - j
-    const rung = out ? RUNGS[j] : RUNGS[3 - j]
+    const j = Math.min(n - 1, Math.floor(t * n))
+    const f = t * n - j
+    const rung = out ? RUNGS[j] : RUNGS[n - 1 - j]
     const angle = (out ? -1 : 1) * swing(s.table, 0.5 * f)
     const x = rung + ARM * Math.sin(angle)
     const y = BAR_Y + ARM * Math.cos(angle)
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     stroke(p, k, -0.5, -0.5, 0.5, -0.5)
@@ -44,6 +48,5 @@ export const monkeyBars = defineContraption({
     outline(p, ink, weight)
     stroke(p, k, rung, BAR_Y + 0.04, x, y - P / 2 + 0.03)
     performer(p, k, ink, weight, s.color, x, y)
-    })
   },
 })

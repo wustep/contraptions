@@ -8,11 +8,14 @@ import { flight, ground, knob, performer, rope, since, stroke } from './circus'
  * swing, where both hang still for an instant, the flyer lets go of one bar
  * and catches the other, and rides it out and back to be handed on again.
  */
-const ANCHOR = 0.62
-const ROPE = 0.6
+/** The rig. At the top of the swing the flyer is ANCHOR + (ROPE + HANG)·sin(AMP)
+ *  from the middle, and that plus a performer has to fit the footprint. */
+const ANCHOR = 0.5
+const BEAM = -0.46
+const ROPE = 0.55
 const BAR = 0.07
-const HANG = 0.13
-const AMP = 0.75
+const HANG = 0.12
+const AMP = 0.5
 /** Half the hop, in loop time, either side of the meeting. */
 const H = 0.035
 
@@ -33,7 +36,7 @@ export const trapeze = defineContraption({
     /** Bar centre and the flyer's spot under it, for the left (-1) or right (1) trapeze. */
     const under = (side: number, ang: number): { bar: [number, number]; fly: [number, number]; dir: [number, number] } => {
       const dir: [number, number] = [-side * Math.sin(ang), Math.cos(ang)]
-      const bar: [number, number] = [side * ANCHOR + ROPE * dir[0], -0.5 + ROPE * dir[1]]
+      const bar: [number, number] = [side * ANCHOR + ROPE * dir[0], BEAM + ROPE * dir[1]]
       return { bar, fly: [bar[0] + HANG * dir[0], bar[1] + HANG * dir[1]], dir }
     }
 
@@ -46,7 +49,7 @@ export const trapeze = defineContraption({
 
     outline(p, ink, weight)
     ground(p, k, 2)
-    stroke(p, k, -1, -0.5, 1, -0.5)
+    stroke(p, k, -1, BEAM, 1, BEAM)
     rope(p, k, [-1, 0.4], [1, 0.4], 0.05)
     for (const t of [0.2, 0.4, 0.6, 0.8]) stroke(p, k, -1 + 2 * t, 0.41, -1 + 2 * t, 0.48)
 
@@ -55,11 +58,11 @@ export const trapeze = defineContraption({
       const bx = dir[1] * BAR
       const by = -dir[0] * BAR
       outline(p, ink, weight)
-      stroke(p, k, side * ANCHOR - 0.06, -0.5, bar[0] - bx, bar[1] - by)
-      stroke(p, k, side * ANCHOR + 0.06, -0.5, bar[0] + bx, bar[1] + by)
+      stroke(p, k, side * ANCHOR - 0.06, BEAM, bar[0] - bx, bar[1] - by)
+      stroke(p, k, side * ANCHOR + 0.06, BEAM, bar[0] + bx, bar[1] + by)
       p.strokeWeight(weight * 1.8)
       stroke(p, k, bar[0] - bx, bar[1] - by, bar[0] + bx, bar[1] + by)
-      knob(p, k, ink, weight, s.color, side * ANCHOR, -0.5, 0.06)
+      knob(p, k, ink, weight, s.color, side * ANCHOR, BEAM, 0.06)
     }
 
     performer(p, k, ink, weight, s.color, pos[0], pos[1])

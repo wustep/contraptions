@@ -196,7 +196,7 @@ export function hoop(
     for (let i = 0; i < n; i++) {
       const a = (i / n) * Math.PI * 2 + Math.PI / n
       const r0 = r + band
-      const r1 = r0 + (0.08 + 0.1 * flare) * (i % 2 === 0 ? 1 : 0.6)
+      const r1 = r0 + (0.05 + 0.06 * flare) * (i % 2 === 0 ? 1 : 0.6)
       const half = 0.16
       p.triangle(
         (x + Math.cos(a - half) * r0) * k,
