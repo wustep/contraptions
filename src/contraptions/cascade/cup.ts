@@ -32,10 +32,8 @@ export const cup = defineContraption<Beat>({
       p.line(from * k, FLOOR * k, -0.18 * k, FLOOR * k)
       p.pop()
       drawElevator(p, k, ink, weight, s, u)
-      clipCell(p, k, () => {
-        const pos = rideToken(s, u, FIRE)
-        if (pos) token(p, k, ink, weight, tokenColor(s), pos)
-      })
+      const pos = rideToken(s, u, FIRE)
+      if (pos) token(p, k, ink, weight, tokenColor(s), pos)
       return
     }
 

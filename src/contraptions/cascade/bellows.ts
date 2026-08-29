@@ -32,10 +32,8 @@ export const bellows = defineContraption<Beat>({
     if (fromAbove || rideOf(s)) {
       floor(p, k, ink, weight, s, 0.18)
       drawElevator(p, k, ink, weight, s, u)
-      clipCell(p, k, () => {
-        const at = rideOf(s) ? rideToken(s, u, FIRE) : fallIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
-        if (at) token(p, k, ink, weight, tokenColor(s), at)
-      })
+      const at = rideOf(s) ? rideToken(s, u, FIRE) : fallIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
+      if (at) token(p, k, ink, weight, tokenColor(s), at)
       return
     }
 

@@ -1,6 +1,6 @@
 import { defineContraption } from '../../core/define'
 import { BOARD, cable, car, carLocalY, counterweight, guides, landing, rideTravel, sheave } from '../../worlds/goldberg/elevator'
-import { P, performer, since } from './circus'
+import { P, ground, performer, since } from './circus'
 
 type State = { color: string; ride?: { index: number; floors: number; at: number } }
 
@@ -23,7 +23,8 @@ export const lift = defineContraption<State>({
     const t = since(u, ride.at)
     const travel = rideTravel(t, ride.floors)
     const y = carLocalY(travel, ride.index)
-    guides(p, k, ink, weight, -0.16, 0.55)
+    guides(p, k, ink, weight, -0.16, 0.5)
+    ground(p, k, 1)
     sheave(p, k, ink, weight, -0.16, travel * 6)
     landing(p, k, ink, weight, -0.5, -0.17, 0.12)
     if (y !== null) {

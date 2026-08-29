@@ -10,8 +10,8 @@ import { easeInOutCubic, seg } from '../../core/ease'
  */
 
 export const GUIDE = 0.17
-export const CAR_W = 0.28
-export const CAR_H = 0.28
+export const CAR_W = 0.3
+export const CAR_H = 0.36
 export const LIP = 0.18
 
 /** Cascade: one token rides once a loop, boarding just after the machine fires. */
@@ -83,23 +83,24 @@ export function landing(p: p5, k: number, ink: string, weight: number, fromX: nu
   p.line(fromX * k, y * k, toX * k, y * k)
 }
 
-/** Cage around a passenger at `y`. Platform under it, open sides, a roof, shoes on the guides. */
+/** Cage around a passenger at `y`. Thick deck, open sides, a roof, shoes on the guides. */
 export function car(p: p5, k: number, ink: string, weight: number, color: string, y: number, seat = 0.13): void {
   const floor = y + seat
   const roof = floor - CAR_H
   outline(p, ink, weight)
   for (const x of [-CAR_W / 2, CAR_W / 2]) {
     p.line(x * k, floor * k, x * k, roof * k)
-    p.line((x + Math.sign(x) * 0.025) * k, (floor - 0.02) * k, (x + Math.sign(x) * 0.025) * k, (roof + 0.02) * k)
+    p.line((x + Math.sign(x) * 0.03) * k, (floor - 0.02) * k, (x + Math.sign(x) * 0.03) * k, (roof + 0.02) * k)
   }
   p.line((-CAR_W / 2) * k, roof * k, (CAR_W / 2) * k, roof * k)
-  p.line((-CAR_W / 2 + 0.03) * k, (roof + CAR_H * 0.48) * k, (CAR_W / 2 - 0.03) * k, (roof + CAR_H * 0.48) * k)
+  p.line((-CAR_W / 2 + 0.03) * k, (roof + CAR_H * 0.42) * k, (CAR_W / 2 - 0.03) * k, (roof + CAR_H * 0.42) * k)
   for (const x of [-GUIDE, GUIDE]) {
-    p.line((x - 0.03) * k, (floor - 0.02) * k, (x + 0.03) * k, (floor - 0.02) * k)
-    p.line((x - 0.03) * k, (roof + 0.02) * k, (x + 0.03) * k, (roof + 0.02) * k)
+    p.line((x - 0.035) * k, (floor - 0.02) * k, (x + 0.035) * k, (floor - 0.02) * k)
+    p.line((x - 0.035) * k, (roof + 0.02) * k, (x + 0.035) * k, (roof + 0.02) * k)
   }
+  // The deck has to read at rest too — a 0.04 sliver vanishes under the token.
   solid(p, ink, weight, color)
-  p.rect(0, (floor + 0.02) * k, (CAR_W + 0.05) * k, 0.04 * k)
+  p.rect(0, (floor + 0.035) * k, (CAR_W + 0.06) * k, 0.07 * k)
 }
 
 export function counterweight(p: p5, k: number, ink: string, weight: number, color: string, y: number): void {

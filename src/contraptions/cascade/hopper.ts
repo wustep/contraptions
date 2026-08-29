@@ -50,11 +50,10 @@ export const hopper = defineContraption<Beat>({
     if (dumping) {
       p.pop()
       drawElevator(p, k, ink, weight, s, u)
-      clipCell(p, k, () => {
-        const at = rideToken(s, u, FIRE)
-        if (at) token(p, k, ink, weight, ball, at)
-        else if (w <= DROP) token(p, k, ink, weight, ball, [0, drop(SEAT, -SEAT, 1 - w / DROP)])
-      })
+      // Token rides the car across the seam — do not clip it to this cell.
+      const at = rideToken(s, u, FIRE)
+      if (at) token(p, k, ink, weight, ball, at)
+      else if (w <= DROP) token(p, k, ink, weight, ball, [0, drop(SEAT, -SEAT, 1 - w / DROP)])
       p.push()
       p.scale(heading(s.flow), 1)
     } else {
