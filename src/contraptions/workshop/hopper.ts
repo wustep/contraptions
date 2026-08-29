@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, part, rollers } from './shop'
+import { BELT_V, PART, PART_Y, bench, lineOf, part, rollers } from './shop'
 
 /**
  * A gate slides open under a stack of blanks, the bottom blank drops onto the
@@ -38,11 +38,15 @@ export const hopper = defineContraption({
       // The stack. The slot above the cell is where the next blank comes from.
       for (let i = 0; i < 3; i++) part(p, k, ink, weight, s.color, 0, slot(i + 1 - settle))
 
-      // The blank the gate lets go: straight down, then away on the rollers.
-      if (u < 0.47) {
-        const y = lerp(slot(0), PART_Y, easeInQuad(seg(u, 0.02, 0.12)))
+      // The blank the gate lets go: straight down, then away — or it sits if
+      // this hopper is a closed cell with nowhere east to hand off.
+      const line = lineOf(s)
+      const drop = lerp(slot(0), PART_Y, easeInQuad(seg(u, 0.02, 0.12)))
+      if (line && !line.out) {
+        part(p, k, ink, weight, s.color, 0, drop)
+      } else if (u < 0.47) {
         const x = Math.max(0, u - 0.16) * BELT_V
-        part(p, k, ink, weight, s.color, x, y)
+        if (x <= 0.52) part(p, k, ink, weight, s.color, x, drop)
       }
 
       solid(p, ink, weight, s.color)

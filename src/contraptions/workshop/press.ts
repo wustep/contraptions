@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIT, PART_Y, bench, burst, part, pulse, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, burst, lineOf, part, pulse, rollers, shuttle } from './shop'
 
 /**
  * A blank rolls in and waits under the ram, the ram slams down and leaves its
@@ -25,7 +25,7 @@ export const press = defineContraption({
       : u < HIT ? lerp(REST, STRIKE, easeInQuad(seg(u, HIT - 0.06, HIT)))
       : u < HIT + 0.06 ? STRIKE
       : lerp(STRIKE, REST, easeOutCubic(seg(u, HIT + 0.06, HIT + 0.18)))
-    const x = shuttle(u)
+    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)

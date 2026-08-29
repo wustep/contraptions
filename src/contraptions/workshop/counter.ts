@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid, teeth } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, PART_Y, bench, part, rollers } from './shop'
+import { BELT_V, BENCH, PART, PART_Y, bench, keepX, lineOf, part, rollers } from './shop'
 
 /**
  * The part rolling over the trip lever presses it down, the link pulls the
@@ -20,7 +20,7 @@ export const counter = defineContraption({
   fireAt: CLICK,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const x = -0.5 - PART / 2 + u * BELT_V
+    const x = keepX(-0.5 - PART / 2 + u * BELT_V, lineOf(s))
     const press = seg(u, 0.2, 0.24) - seg(u, 0.4, 0.44)
     const step = easeInOutCubic(seg(u, CLICK - 0.04, CLICK + 0.06))
     const angle = (step * Math.PI * 2) / 8
@@ -60,7 +60,7 @@ export const counter = defineContraption({
       solid(p, ink, weight, s.color)
       p.triangle(WHEEL[0] * k, (WHEEL[1] - R - 0.02) * k, (WHEEL[0] - 0.04) * k, (WHEEL[1] - R - 0.09) * k, (WHEEL[0] + 0.04) * k, (WHEEL[1] - R - 0.09) * k)
 
-      if (x < 0.62) part(p, k, ink, weight, s.color, x, PART_Y)
+      if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y)
     })
   },
 })

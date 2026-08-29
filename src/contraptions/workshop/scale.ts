@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutBack, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, DEPART, HIT, PART_Y, bench, part, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, lineOf, part, rollers, shuttle } from './shop'
 
 /**
  * The part rolls onto the platform, the platform sinks and the needle swings
@@ -22,7 +22,7 @@ export const scale = defineContraption({
   fireAt: HIT,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const x = shuttle(u)
+    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const sit = easeOutBack(seg(u, 0.31, 0.44)) - easeInOutCubic(seg(u, DEPART, DEPART + 0.08))
     const f = seg(u, 0.32, 0.5)
     // A swing that overshoots and rings down onto the reading.

@@ -44,6 +44,7 @@ src/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
+    goldberg/       cascade sentences and workshop shop-lines (own composers)
   ui/               the seed explorer
 ```
 
@@ -155,17 +156,17 @@ eligible, so a chain never has to reason about a member firing twice per cycle.
 A mode picks **both a catalog and a composer**. That is what lets three
 Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
-Classic / Ports / Tracks keep the original toys and the two worlds. Cascade,
-Workshop and Circus are classic-like grid composers — they still use layout,
-spans, wired chains and the pool filters — each with its own machines.
+Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
+a classic-like grid composer. Cascade and Workshop are their own worlds:
+leftover cells close instead of dumping tokens off the frame.
 
 | Mode | Catalog | Composer |
 | --- | --- | --- |
 | Classic | the original 36 toys | independent machines, abstract wires |
 | Ports | `src/worlds/ports/` | tokens handed across typed edges |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
-| Cascade | `src/contraptions/cascade/` | one causal sentence; token handoff; runs never climb |
-| Workshop | `src/contraptions/workshop/` | stations and conveyors; a shop line, mostly east |
+| Cascade | `src/contraptions/cascade/` | complete sentences that always end; leftovers stay closed |
+| Workshop | `src/contraptions/workshop/` | shop lines that run east into a bin, bell, or lamp |
 | Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
 
 The Mode control lists all six with those notes. Catalog view shows the active
@@ -174,23 +175,28 @@ mode's pieces. The URL stores the mode name (`?mode=cascade`).
 ### Cascade
 
 A token starts in one cell and every cell after it is a beat in a chain
-reaction. Sources let it go, relays pass it on, sinks are where it ends. The
-cascade composer writes `flow` onto each chained machine — inlet, outlet, and
-the run's colour — and stands it upright. Runs grow sideways or down, never
-up. Classic wiring is left alone: a pendulum on main still rotates.
+reaction. The cascade world covers leftover cells with complete sentences —
+source → relay* → sink, never climbing — and writes `flow` onto every 1×1
+machine. A leftover that is not on a run gets a closed flow so `rollOut` /
+`rollIn` / `fallIn` hide the token instead of rolling it off the cell. A cup
+only dumps when the run actually continues south. Classic wiring is left
+alone: a pendulum on main still rotates.
 
 `src/contraptions/cascade/parts.ts` is the shared vocabulary (token size, the
-hand-off helpers, `heading(flow)`).
+hand-off helpers, `heading(flow)`). The composer lives in
+`src/worlds/goldberg/cascade.ts`.
 
 ### Workshop
 
-One shop floor. Every cell is a bench at the same height; a part is received,
-worked, and handed to the next bench. Feeders let parts go, conveyors carry
-them, stations work them. Paths run east (and may drop), never west or up —
-the machines draw parts going that way, so a random mirror would send a hopper
-into the press next door. Lifts and chutes are machines, not a chain stepping
-up. `shop.ts` is the vocabulary every bench agrees on (`BENCH` is the same
-floor the ports and tracks worlds roll on).
+One shop floor. Leftover cells are grouped into eastbound rows of equal-size
+neighbours. A shop line is feeder → stations → a real ending (`bin`, `bell`,
+`lamp`). Every 1×1 bench gets a `line`: a closed outlet holds the part at
+centre, a closed inlet starts the part inside the cell. Press / punch / saw
+are stations, not termini — they still roll a part east when they have a
+neighbour. Classic wires are not used; travel times do not match `fireAt`
+beads. Machines never mirror. `shop.ts` is the vocabulary every bench agrees
+on (`BENCH` is the same floor the ports and tracks worlds roll on). The
+composer lives in `src/worlds/goldberg/workshop.ts`.
 
 ### Circus
 

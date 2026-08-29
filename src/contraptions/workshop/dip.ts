@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, lerp, seg } from '../../core/ease'
-import { BENCH, HIT, PART, RAIL, bench, part, shuttle } from './shop'
+import { ARRIVE, BENCH, DEPART, HIT, PART, RAIL, bench, lineOf, part, shuttle } from './shop'
 
 /**
  * A trolley carries the part in along the overhead rail, lowers it into the
@@ -23,7 +23,7 @@ export const dip = defineContraption({
     dye: rng.pick(theme.colors.filter((c) => c !== color)) ?? color,
   }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const x = shuttle(u)
+    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const y =
       u < 0.32 ? CARRY
       : u < 0.38 ? lerp(CARRY, SUNK, easeInOutCubic(seg(u, 0.32, 0.38)))

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, PART, SHELF, bench, part, rollers } from './shop'
+import { BELT_V, BENCH, PART, SHELF, bench, keepX, lineOf, part, rollers } from './shop'
 
 /**
  * The car takes a part off the rollers at bench height, hauls it up the
@@ -28,7 +28,8 @@ export const lift = defineContraption({
       : u < UP1 ? lerp(BENCH, SHELF, easeInOutCubic(seg(u, UP0, UP1)))
       : u < DOWN0 ? SHELF
       : lerp(SHELF, BENCH, easeInOutCubic(seg(u, DOWN0, DOWN1)))
-    const px = u < OUT ? Math.min(0, -0.5 - PART / 2 + u * BELT_V) : (u - OUT) * BELT_V
+    const raw = u < OUT ? Math.min(0, -0.5 - PART / 2 + u * BELT_V) : (u - OUT) * BELT_V
+    const px = keepX(raw, lineOf(s))
     const py = u < OUT ? car - PART / 2 : SHELF - PART / 2
 
     clipCell(p, k, () => {
@@ -58,7 +59,7 @@ export const lift = defineContraption({
       solid(p, ink, weight, s.color)
       p.rect(0, (car + 0.025) * k, 0.36 * k, 0.05 * k)
 
-      if (px < 0.62) part(p, k, ink, weight, s.color, px, py)
+      if (px !== null) part(p, k, ink, weight, s.color, px, py)
     })
   },
 })

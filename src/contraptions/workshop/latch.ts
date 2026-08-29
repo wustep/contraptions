@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIT, PART_Y, belt, part } from './shop'
+import { BELT_V, BENCH, HIT, PART_Y, belt, lineOf, part } from './shop'
 
 /**
  * The belt runs on under a queue held back by the stop; when the stop lifts,
@@ -23,12 +23,12 @@ export const latch = defineContraption({
   draw: (p, s, { size: k, u, ink, weight }) => {
     const travel = u * BELT_V
     const lift = 0.3 * (easeOutCubic(seg(u, HIT - 0.02, HIT + 0.03)) - easeInQuad(seg(u, 0.56, 0.6)))
-    const gone = u < HIT ? FRONT : FRONT + (u - HIT) * BELT_V
+    const gone = lineOf(s)?.out === false || u < HIT ? FRONT : FRONT + (u - HIT) * BELT_V
     const close = Math.min(GAP, Math.max(0, u - HIT) * BELT_V)
 
     clipCell(p, k, () => {
       belt(p, k, ink, weight, s.color, -0.5, 0.5, travel)
-      if (gone < 0.62) part(p, k, ink, weight, s.color, gone, PART_Y)
+      if (gone < 0.52) part(p, k, ink, weight, s.color, gone, PART_Y)
       part(p, k, ink, weight, s.color, FRONT - GAP + close, PART_Y)
       part(p, k, ink, weight, s.color, FRONT - GAP * 2 + close, PART_Y)
 

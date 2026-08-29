@@ -13,6 +13,7 @@ import { pendulum, swing } from '../src/core/physics'
 import { registry } from '../src/contraptions'
 import type { Contraption, Instance } from '../src/core/types'
 import type { Flow } from '../src/core/wiring'
+import type { Line } from '../src/contraptions/workshop/shop'
 import { portMachines } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 
@@ -263,17 +264,63 @@ function chainGrammar(comp: ReturnType<typeof build>): string[] {
   return errors
 }
 
-for (const mode of ['workshop', 'circus'] as const) {
-  const run = build({ ...defaultOptions, seed: 'chains', mode, layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
-  check(`${mode}: builds chains`, run.wires.length > 0, `${run.wires.length} links`)
-  check(`${mode}: chain grammar`, chainGrammar(run).length === 0, chainGrammar(run).slice(0, 3).join(' | '))
+{
+  const circus = build({ ...defaultOptions, seed: 'chains', mode: 'circus', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
+  check('circus: builds chains', circus.wires.length > 0, `${circus.wires.length} links`)
+  check('circus: chain grammar', chainGrammar(circus).length === 0, chainGrammar(circus).slice(0, 3).join(' | '))
 }
-check(
-  'workshop: lines never climb or run west',
-  build({ ...defaultOptions, seed: 'chains', mode: 'workshop', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900).wires.every(
-    (w) => w.to.y >= w.from.y - 1 && w.to.x >= w.from.x - 1,
-  ),
-)
+
+const unitOf = (i: Instance) => {
+  const [w, h] = i.contraption.span ?? [1, 1]
+  return w === 1 && h === 1
+}
+const ENDINGS = new Set(['bin', 'bell', 'lamp'])
+
+function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
+  const errors: string[] = []
+  const units = comp.instances.filter(unitOf)
+  const at = new Map(units.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]))
+  for (const inst of units) {
+    const line = (inst.state as { line?: Line }).line
+    if (!line) {
+      errors.push(`${inst.contraption.name} has no line`)
+      continue
+    }
+    if (!line.out) continue
+    const east = at.get(`${Math.round(inst.cell.x + inst.cell.size)}:${Math.round(inst.cell.y)}`)
+    const next = east && (east.state as { line?: Line }).line
+    if (!east || !next?.in) errors.push(`${inst.contraption.name} dumps east into nothing`)
+    else if (next.color !== line.color) errors.push(`${inst.contraption.name} colour break`)
+    if (east && east.cell.x < inst.cell.x - 1) errors.push(`${inst.contraption.name} runs west`)
+  }
+  if (!comp.options.solo && !comp.options.tag) {
+    for (const inst of units) {
+      const line = (inst.state as { line?: Line }).line
+      if (line && !line.out && !ENDINGS.has(inst.contraption.name)) {
+        errors.push(`terminus is ${inst.contraption.name}`)
+      }
+      if (line && !line.out && inst.contraption.role === 'source') {
+        errors.push(`source leftover ${inst.contraption.name}`)
+      }
+    }
+  }
+  return errors
+}
+
+console.log('\nworkshop floor')
+for (const seed of ['first-look', 'chains', 'workshop-12', 'rim']) {
+  for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
+    const shop = build(
+      { ...defaultOptions, seed, mode: 'workshop', layout, res: 12, spans: 0.3, chains: 0.7 },
+      900,
+    )
+    const label = `workshop ${seed} ${layout}`
+    const errors = workshopLineErrors(shop)
+    check(`${label}: every 1×1 has a line`, shop.instances.filter(unitOf).every((i) => (i.state as { line?: Line }).line))
+    check(`${label}: outlets meet an inlet`, errors.length === 0, errors.slice(0, 3).join(' | '))
+    check(`${label}: no classic wires`, shop.wires.length === 0)
+  }
+}
 
 // Cascade: a chained machine is told which way its run goes and stands
 // upright; the run is staffed so the token only ever crosses edges a machine
@@ -283,12 +330,20 @@ const cascadeWired = build({ ...defaultOptions, seed: 'chains', mode: 'cascade',
 check('cascade: builds chains', cascadeWired.wires.length > 0, `${cascadeWired.wires.length} links`)
 check('cascade: chain grammar', chainGrammar(cascadeWired).length === 0, chainGrammar(cascadeWired).slice(0, 3).join(' | '))
 const flowOf = (i: Instance) => (i.state as { flow?: Flow }).flow
+const onRun = (f: Flow | undefined) => !!f && (f.in !== null || f.out !== null)
 const cascadeByPos = new Map<string, Instance>(
   cascadeWired.instances.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]),
 )
-const chained = cascadeWired.instances.filter((i) => flowOf(i))
+const chained = cascadeWired.instances.filter((i) => onRun(flowOf(i)))
+const leftovers = cascadeWired.instances.filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
 const onWires = new Set(cascadeWired.wires.flatMap((w) => [w.from, w.to]))
 const cascadeHeads = cascadeWired.wires.filter((w) => !cascadeWired.wires.some((other) => other.to === w.from))
+check('every 1×1 cascade cell has flow', cascadeWired.instances.filter(unitOf).every((i) => flowOf(i)))
+check('every leftover flow is closed', leftovers.every((i) => flowOf(i)!.in === null && flowOf(i)!.out === null))
+check(
+  'leftovers are not sources',
+  leftovers.every((i) => i.contraption.role !== 'source'),
+)
 check('every wired machine knows its run', chained.length === onWires.size && chained.every((i) => onWires.has(i.cell)))
 check('every wired machine stands upright', chained.every((i) => i.angle === 0 && i.mirror === 1))
 check(
@@ -320,6 +375,24 @@ check(
   'classic wiring does not write flow',
   wired.instances.every((i) => !flowOf(i)),
 )
+
+for (const seed of ['first-look', 'cascade-8', 'rim']) {
+  for (const layout of ['grid', 'bricks', 'bands']) {
+    const piece = build(
+      { ...defaultOptions, seed, mode: 'cascade', layout, res: 12, spans: 0.25, chains: 0.7 },
+      900,
+    )
+    const label = `cascade ${seed} ${layout}`
+    check(`${label}: every 1×1 has flow`, piece.instances.filter(unitOf).every((i) => flowOf(i)))
+    check(
+      `${label}: leftovers stay closed`,
+      piece.instances
+        .filter((i) => unitOf(i) && flowOf(i) && !onRun(flowOf(i)))
+        .every((i) => i.contraption.role !== 'source'),
+    )
+    check(`${label}: chain grammar`, chainGrammar(piece).length === 0, chainGrammar(piece).slice(0, 3).join(' | '))
+  }
+}
 
 console.log('\ncatalog')
 const catalog = build({ ...defaultOptions, seed: 'catalog', catalog: true }, 900)

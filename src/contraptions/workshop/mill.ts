@@ -1,6 +1,6 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
-import { BELT_V, BENCH, PART, bench, roller, rollers } from './shop'
+import { BELT_V, BENCH, PART, bench, lineOf, roller, rollers } from './shop'
 
 /**
  * Two counter-turning rolls bite the blank as it arrives, and what comes out
@@ -26,8 +26,17 @@ export const mill = defineContraption({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     // Front and back edges of the blank, each at the speed of its own side.
-    const front = u < NIP ? (u - NIP) * V_IN : (u - NIP) * V_OUT
-    const back = u < NIP + BITE ? (u - NIP) * V_IN - T_IN : (u - NIP - BITE) * V_OUT
+    const line = lineOf(s)
+    let front = u < NIP ? (u - NIP) * V_IN : (u - NIP) * V_OUT
+    let back = u < NIP + BITE ? (u - NIP) * V_IN - T_IN : (u - NIP - BITE) * V_OUT
+    if (line && !line.out) {
+      front = Math.min(front, 0.18)
+      back = Math.min(back, 0.18)
+    }
+    if (line && !line.in) {
+      front = Math.max(front, -0.22)
+      back = Math.max(back, -0.22)
+    }
     const spin = u * Math.PI * 2 * 2
 
     clipCell(p, k, () => {
@@ -35,7 +44,7 @@ export const mill = defineContraption({
       rollers(p, k, ink, weight, s.color, -0.5, -0.3, u * V_IN)
       rollers(p, k, ink, weight, s.color, 0.3, 0.5, u * V_OUT)
 
-      if (back < 0.62) {
+      if (back < 0.55 && front > -0.55) {
         const slab = (x0: number, x1: number, t: number) => {
           if (x1 - x0 < 0.005) return
           solid(p, ink, weight, s.color)

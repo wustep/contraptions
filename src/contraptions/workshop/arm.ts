@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { clamp, easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, part, rollers } from './shop'
+import { BELT_V, PART, PART_Y, bench, keepX, lineOf, part, rollers } from './shop'
 
 /**
  * A part rolls in and stops, the arm comes down and closes on it, swings it
@@ -45,15 +45,20 @@ export const arm = defineContraption({
     const ex = SHOULDER[0] + Math.cos(a1) * L1
     const ey = SHOULDER[1] + Math.sin(a1) * L1
 
-    const px = held ? wx : u < 0.3 ? Math.min(-REACH, -0.5 - PART / 2 + u * BELT_V) : REACH + Math.max(0, u - 0.76) * BELT_V
+    const line = lineOf(s)
+    let px = held ? wx : u < 0.3 ? Math.min(-REACH, -0.5 - PART / 2 + u * BELT_V) : REACH + Math.max(0, u - 0.76) * BELT_V
     const py = held ? wy + GRIP + PART / 2 : PART_Y
+    if (!held) {
+      const kept = keepX(px, line)
+      px = kept === null ? 99 : kept
+    }
 
     clipCell(p, k, () => {
       bench(p, k, ink, weight)
       rollers(p, k, ink, weight, s.color, -0.5, -0.14, u * BELT_V)
       rollers(p, k, ink, weight, s.color, 0.14, 0.5, u * BELT_V)
 
-      if (px < 0.62) part(p, k, ink, weight, s.color, px, py)
+      if (px < 0.56) part(p, k, ink, weight, s.color, px, py)
 
       // Mount, upper arm, forearm, hubs.
       outline(p, ink, weight)

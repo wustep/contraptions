@@ -7,8 +7,10 @@ import { registry as workshopRegistry } from '../contraptions/workshop'
 import { registry as circusRegistry } from '../contraptions/circus'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
-import type { Cell, Contraption, Instance, Side, Wire } from './types'
-import { chainPaths, sideOf, wireCascade, wireChain, type PathStyle } from './wiring'
+import type { Cell, Contraption, Instance, Wire } from './types'
+import { chainPaths, wireChain } from './wiring'
+import { buildCascade } from '../worlds/goldberg/cascade'
+import { buildWorkshop } from '../worlds/goldberg/workshop'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
@@ -20,8 +22,8 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   classic  — the original toys; independent machines, abstract wires
  *   ports    — tokens handed across typed edges (own world, own catalog)
  *   tracks   — balls circulating on a carved loop (own world, own catalog)
- *   cascade  — one causal sentence; token handoff along a chain that never climbs
- *   workshop — stations and conveyors on one shop floor; the edge is the product
+ *   cascade  — complete sentences that always end; leftovers stay closed
+ *   workshop — shop lines that run east into a bin; leftovers do not emit
  *   circus   — looping acts that come back round; wire is the drumroll
  */
 export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
@@ -36,9 +38,8 @@ export interface ModeInfo {
   /** Which machine list the mode draws from. */
   catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
   /**
-   * How the piece is composed. Ports and tracks are their own worlds.
-   * Cascade / workshop / circus are classic-like grid composers with their
-   * own catalogs — they keep layout, spans, chains, and the pool filters.
+   * How the piece is composed. Ports, tracks, cascade and workshop are
+   * their own worlds. Circus is a classic-like grid composer.
    */
   composer: 'ports' | 'tracks' | Composer
   /** Panel controls this mode actually uses. Hidden otherwise. */
@@ -75,7 +76,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'one causal sentence; token handoff along a chain',
+    note: 'sentences that always end; leftovers stay closed',
     catalog: 'cascade',
     composer: 'cascade',
     dials: GRID_DIALS,
@@ -83,7 +84,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'stations and conveyors; the edge handoff is the product',
+    note: 'shop lines east to a bin; leftovers do not emit',
     catalog: 'workshop',
     composer: 'workshop',
     dials: GRID_DIALS,
@@ -223,14 +224,25 @@ function pool(options: Options, catalog: Contraption<unknown>[]): Contraption<un
 }
 
 /** One labelled instance of every machine in a grid catalog. */
-const gridCatalog = (catalog: Contraption<unknown>[]): CatalogEntry[] =>
+const gridCatalog = (catalog: Contraption<unknown>[], mode: Mode): CatalogEntry[] =>
   catalog.map((c) => {
     const [w, h] = c.span ?? [1, 1]
     const footprint = w === 1 && h === 1 ? '' : `${w}×${h}`
+    const unit = w === 1 && h === 1
     return {
       contraption: c,
       label: c.label ?? c.name,
       sub: [footprint, c.role].filter(Boolean).join(' · '),
+      state:
+        unit && mode === 'cascade'
+          ? (state, { color }) => {
+              state.flow = { in: null, out: null, color }
+            }
+          : unit && mode === 'workshop'
+            ? (state, { color }) => {
+                state.line = { in: false, out: false, color }
+              }
+            : undefined,
     }
   })
 
@@ -242,18 +254,19 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
         ? portsCatalog()
         : options.mode === 'tracks'
           ? tracksCatalog()
-          : gridCatalog(catalogFor(options.mode))
+          : gridCatalog(catalogFor(options.mode), options.mode)
     return buildCatalog(options, canvas, entries, info.label)
   }
   if (options.mode === 'ports') return buildPorts(options, canvas)
   if (options.mode === 'tracks') return buildTracks(options, canvas)
+  if (options.mode === 'cascade') return buildCascade(options, canvas)
+  if (options.mode === 'workshop') return buildWorkshop(options, canvas)
   return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
 }
 
 /**
- * Shared grid composer. Classic, cascade, workshop and circus all place
- * machines on a layout and optionally wire runs — the difference is which
- * catalog they staff from, how paths grow, and whether a run writes `flow`.
+ * Shared grid composer for Classic and Circus. Cascade and workshop have
+ * their own worlds — leftover cells there must close, not sprinkle.
  */
 function buildGrid(
   options: Options,
@@ -264,8 +277,6 @@ function buildGrid(
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
   const rng = makeRng(options.seed)
-  const pathStyle: PathStyle = composer === 'cascade' ? 'down' : composer === 'workshop' ? 'along' : 'any'
-  const useFlow = composer === 'cascade'
 
   // Snap the art area to a whole number of cells so every cell edge, and so
   // every rail drawn on one, lands on a whole pixel. Fractional cell sizes are
@@ -314,9 +325,6 @@ function buildGrid(
       period,
       fireFrame: Math.round(((contraption.fireAt ?? 0) * period - phase + LOOP * 4) % LOOP),
     }
-    // Workshop benches all face east — the machines draw parts going that
-    // way, so a random mirror would send a hopper into the press next door.
-    if (composer === 'workshop') instance.mirror = 1
     instances.push(instance)
     return instance
   }
@@ -376,38 +384,22 @@ function buildGrid(
   // pool when a filter has emptied one (soloing a single machine, say).
   const wires: Wire[] = []
   const roleRng = rng.fork('roles')
-  const chainable = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
-  const byRole = (role: Contraption<unknown>['role'], inSide: Side | null, outSide: Side | null) => {
-    if (!useFlow) {
-      const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
-      if (matching.length) return matching
-      const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
-      return anyRole.length ? anyRole : singles
-    }
-    const fits = (c: Contraption<unknown>) =>
-      (!inSide || !c.inlets || c.inlets.includes(inSide)) && (!outSide || !c.outlets || c.outlets.includes(outSide))
-    for (const next of [
-      chainable.filter((c) => c.role === role && fits(c)),
-      chainable.filter((c) => c.role === role),
-      chainable,
-    ]) {
-      if (next.length) return next
-    }
-    return singles
+  const byRole = (role: Contraption<unknown>['role']) => {
+    const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
+    if (matching.length) return matching
+    const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
+    return anyRole.length ? anyRole : singles
   }
 
   if (options.chains > 0 && singles.length) {
-    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains, pathStyle)
+    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains, 'any')
     for (const path of paths) {
       const members = path.map((cell, k) => {
         const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
-        const inSide = useFlow && k > 0 ? sideOf(cell, path[k - 1]) : null
-        const outSide = useFlow && k < path.length - 1 ? sideOf(cell, path[k + 1]) : null
-        const contraption = roleRng.weighted(byRole(role, inSide, outSide), (c) => c.weight ?? 1)
+        const contraption = roleRng.weighted(byRole(role), (c) => c.weight ?? 1)
         return place(contraption, cell, `cell:${cell.index}`)
       })
-      const seed = rng.fork(`chain:${path[0].index}`)
-      wires.push(...(useFlow ? wireCascade(members, seed) : wireChain(members, seed)))
+      wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))
     }
   }
 

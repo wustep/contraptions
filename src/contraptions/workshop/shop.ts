@@ -60,15 +60,60 @@ export const pulse = (u: number, at: number, frames = FIRE_DECAY, period = LOOP)
 export const fold = (u: number) => (u > 0.5 ? u - 1 : u)
 
 /**
- * Where a part is on the station beat: entering from the west, held at the
- * centre between `arrive` and `depart`, leaving east. Null once it is gone.
+ * A 1×1 bench's place on a shop line. The workshop composer writes this;
+ * without it a machine is treated as closed (no inbound, no outbound).
  */
-export function shuttle(u: number, arrive = ARRIVE, depart = DEPART): number | null {
+export type Line = { in: boolean; out: boolean; color: string }
+
+export function lineOf(s: unknown): Line | undefined {
+  if (!s || typeof s !== 'object' || !('line' in s)) return undefined
+  const line = (s as { line?: Line }).line
+  return line && typeof line.out === 'boolean' ? line : undefined
+}
+
+/** Draw a part only while its body still sits inside the cell. */
+export function showPart(
+  p: p5,
+  k: number,
+  ink: string,
+  weight: number,
+  fill: string,
+  x: number,
+  y: number,
+  opts: { mark?: Mark; angle?: number; bg?: string; w?: number; h?: number } = {},
+): void {
+  const hw = (opts.w ?? PART) / 2
+  const hh = (opts.h ?? PART) / 2
+  if (x < -0.5 - hw - 0.02 || x > 0.5 + hw + 0.02) return
+  if (y < -0.5 - hh - 0.02 || y > 0.5 + hh + 0.02) return
+  part(p, k, ink, weight, fill, x, y, opts)
+}
+
+/** Clamp a travelling x so a closed end holds at centre and nothing leaves the cell. */
+export function keepX(x: number, line?: Line): number | null {
+  if (line && !line.in && x < -0.4) return null
+  if (line && !line.out && x > 0.02) return 0
+  if (x < -0.56 || x > 0.56) return null
+  return x
+}
+
+/**
+ * Where a part is on the station beat: entering from the west, held at the
+ * centre between `arrive` and `depart`, leaving east. A closed outlet holds
+ * the part at centre; a closed inlet starts the part inside the cell.
+ */
+export function shuttle(u: number, arrive = ARRIVE, depart = DEPART, line?: Line): number | null {
   const edge = 0.5 + PART / 2
   const cross = edge / BELT_V
-  if (u < arrive - cross) return null
-  if (u < arrive) return -edge + (u - (arrive - cross)) * BELT_V
+  if (line && !line.in) {
+    if (u < arrive - 0.12) return null
+    if (u < arrive) return -0.18 + ((u - (arrive - 0.12)) / 0.12) * 0.18
+  } else {
+    if (u < arrive - cross) return null
+    if (u < arrive) return -edge + (u - (arrive - cross)) * BELT_V
+  }
   if (u < depart) return 0
+  if (line && !line.out) return 0
   if (u < depart + cross) return (u - depart) * BELT_V
   return null
 }

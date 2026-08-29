@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, PART, PART_Y, bench, fold, part, rollers } from './shop'
+import { BELT_V, PART, PART_Y, bench, fold, lineOf, part, rollers } from './shop'
 
 /**
  * A hook lowers a blank from the bay above onto the bench, lets go, and hauls
@@ -27,7 +27,8 @@ export const hoist = defineContraption({
       : lerp(down, hidden, easeInOutCubic(seg(f, 0.4, 0.74)))
     const release = easeOutCubic(seg(u, 0.3, 0.36)) - easeInOutCubic(seg(u, 0.74, 0.86))
     // The blank hangs from the hook until touchdown, then rolls away.
-    const px = Math.max(0, u - 0.42) * BELT_V
+    const line = lineOf(s)
+    const px = line && !line.out ? 0 : Math.max(0, u - 0.42) * BELT_V
     const py = f < 0.3 ? tip + 0.04 + PART / 2 : PART_Y
 
     clipCell(p, k, () => {
@@ -38,7 +39,7 @@ export const hoist = defineContraption({
       outline(p, ink, weight)
       p.line(-0.1 * k, -0.5 * k, 0.1 * k, -0.5 * k)
       p.line(0, -0.5 * k, 0, tip * k)
-      if (px < 0.62) {
+      if (px < 0.52) {
         part(p, k, ink, weight, s.color, px, py)
         outline(p, ink, weight)
         p.circle(px * k, (py - PART / 2 - 0.02) * k, 0.06 * k)

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline } from '../../core/draw'
 import { lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, bench, part, rollers } from './shop'
+import { BELT_V, BENCH, HIGH_Y, PART, PART_Y, SHELF, bench, lineOf, part, rollers } from './shop'
 
 /**
  * A part comes along the high shelf from the west, tips onto the slide,
@@ -32,8 +32,10 @@ export const chute = defineContraption({
     const ny = -Math.cos(ANGLE)
     let pos: [number, number] | null = null
     let angle = 0
+    const line = lineOf(s)
     if (u < T_TOP) {
-      pos = [-0.5 - PART / 2 + u * BELT_V, HIGH_Y]
+      const x = -0.5 - PART / 2 + u * BELT_V
+      pos = line && !line.in ? [Math.max(-0.22, x), HIGH_Y] : [x, HIGH_Y]
     } else if (u < T_BOTTOM) {
       // Along the slide, starting at shelf speed and picking up.
       const f = seg(u, T_TOP, T_BOTTOM)
@@ -43,9 +45,12 @@ export const chute = defineContraption({
       const blend = Math.min(seg(f, 0, 0.12), 1 - seg(f, 0.88, 1))
       angle = ANGLE * blend
       pos = [sx + nx * (PART / 2) * blend, sy + ny * (PART / 2) * blend - (PART / 2) * (1 - blend)]
-    } else if (u < T_GONE) {
-      const f = seg(u, T_BOTTOM, T_GONE)
-      pos = [X1 + 0.32 * (1.29 * f - 0.29 * f * f), PART_Y]
+    } else if (u < T_GONE || (line && !line.out && u >= T_BOTTOM)) {
+      if (line && !line.out) pos = [X1, PART_Y]
+      else {
+        const f = seg(u, T_BOTTOM, T_GONE)
+        pos = [X1 + 0.32 * (1.29 * f - 0.29 * f * f), PART_Y]
+      }
     }
 
     clipCell(p, k, () => {
@@ -62,7 +67,7 @@ export const chute = defineContraption({
       p.line(X0 * k, SHELF * k, (X0 - nx * under) * k, (SHELF - ny * under) * k)
       p.line(0, lerp(SHELF, BENCH, 0.5) * k, 0, BENCH * k)
 
-      if (pos) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
+      if (pos && pos[0] > -0.56 && pos[0] < 0.56) part(p, k, ink, weight, s.color, pos[0], pos[1], { angle })
     })
   },
 })

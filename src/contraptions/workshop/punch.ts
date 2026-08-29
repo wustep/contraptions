@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIT, PART_Y, bench, burst, part, pulse, rollers, shuttle } from './shop'
+import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, burst, lineOf, part, pulse, rollers, shuttle } from './shop'
 
 /**
  * The pin comes down through the blank and out the other side, the slug it
@@ -26,7 +26,7 @@ export const punch = defineContraption({
       : u < HIT ? lerp(REST, THROUGH, easeInQuad(seg(u, HIT - 0.06, HIT)))
       : u < HIT + 0.04 ? THROUGH
       : lerp(THROUGH, REST, easeOutCubic(seg(u, HIT + 0.04, HIT + 0.16)))
-    const x = shuttle(u)
+    const x = shuttle(u, ARRIVE, DEPART, lineOf(s))
     const slug = u >= HIT && u < 0.62 ? lerp(BENCH, 0.46, easeInQuad(seg(u, HIT, HIT + 0.08))) : null
 
     clipCell(p, k, () => {

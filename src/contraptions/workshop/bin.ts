@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInQuad, easeInOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, burst, part, pulse, rollers } from './shop'
+import { BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, burst, lineOf, part, pulse, rollers } from './shop'
 
 /**
  * The part rolls off the end of the shelf, tumbles into the bin, lands on the
@@ -20,7 +20,8 @@ export const bin = defineContraption({
   fireAt: LAND,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    const inX = -0.5 - PART / 2 + u * BELT_V
+    const line = lineOf(s)
+    const inX = (line?.in ? -0.5 - PART / 2 : -0.12) + u * BELT_V
     const fall = easeInQuad(seg(u, 0.31, LAND))
     const sink = easeInOutCubic(seg(u, LAND + 0.06, 0.8))
     let pos: [number, number] | null = null

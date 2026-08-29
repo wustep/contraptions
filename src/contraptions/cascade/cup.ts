@@ -52,8 +52,9 @@ export const cup = defineContraption<Beat>({
       let y: number | null = null
       if (t < 0.04) y = lerp(0, REST, easeInQuad(seg(t, 0, 0.04)))
       else if (t < 0.09) y = REST - 0.04 * Math.sin(seg(t, 0.04, 0.09) * Math.PI)
-      else if (t < DUMP) y = REST
-      else if (t < DUMP + 0.08) y = drop(REST, 0.5 + TOKEN / 2 - REST, seg(t, DUMP, DUMP + 0.08) * 1.3)
+      else if (s.flow?.out === 'S' && t >= DUMP && t < DUMP + 0.08) {
+        y = drop(REST, 0.5 + TOKEN / 2 - REST, seg(t, DUMP, DUMP + 0.08) * 1.3)
+      } else if (!(s.flow?.out === 'S' && t >= DUMP)) y = REST
       if (y !== null) token(p, k, ink, weight, ball, [0, y])
 
       // The flap, hinged on the far side so it swings down and away.
