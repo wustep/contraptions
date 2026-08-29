@@ -19,7 +19,8 @@ Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
 Six modes, 14 palettes, 4 layouts. Classic keeps the original 36 toys;
-Cascade, Workshop and Circus each bring their own catalog.
+Cascade, Workshop and Circus each bring their own catalog and build their own
+floor.
 
 ## How it fits together
 
@@ -31,7 +32,7 @@ src/
     composition.ts  seed + options -> a placed, oriented, phase-offset piece
     engine.ts       owns the clock, drives p5
     wiring.ts       builds firing chains between neighbours
-    layouts.ts      grid | bricks | quads | bands
+    layouts.ts      grid | bricks | quads | bands, all within one octave
     themes.ts       14 palettes
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
@@ -44,8 +45,11 @@ src/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
-    goldberg/       cascade sentences and workshop shop-lines (own composers)
+    goldberg/       staff.ts opens the square floor the three worlds staff
   ui/               the seed explorer
+scripts/
+  ink.ts            a p5 that draws nothing and remembers where the ink went
+  check.ts          the headless smoke test, including the ink invariants
 ```
 
 ## The contract
@@ -111,6 +115,38 @@ gets all singles, which is the right fallback rather than a special case.
 Machines that depend on gravity — the crane, the chute, the drip — set
 `rotations: [0]` so they stay the right way up.
 
+## Scale is a constraint
+
+A layout may mix tempos; it may not mix scales. The whole budget is **one
+octave** — the largest cell in a piece is at most twice the smallest
+(`SCALE_OCTAVE`) — and it is enforced where the cells are made, so no seed can
+break it. `quads` has exactly two tiers and clusters the big ones into slow
+pockets; `bands` is columns one or two units wide; multi-cell machines anchor
+on the base tier only, because a 2×2 on a 2× cell is a 4× footprint.
+
+Ink follows: **one pen per piece**. The base weight comes from the piece's own
+unit — the smallest cell the layout emitted — and a bigger cell gets at most a
+quarter more press, the way a hand leans on a bigger shape. On a uniform
+layout that is exactly the old number. Weight used to be a function of the
+cell alone, which put 2px ink and 9px ink on the same sheet.
+
+And a machine handed more room shows **more of itself, not a bigger version of
+itself**: `tiles(size, unit)` says how many base cells it got, and repeating
+texture multiplies by it. A belt twice as long carries twice as many crates.
+
+`scripts/ink.ts` is what makes all of this checkable. It is a p5 that draws
+nothing and remembers the box it painted into — transforms, primitives,
+shapes, and the 2D clip path — so `npm run check` can draw every machine in
+every mode at every resolution and assert three things no typecheck could:
+
+- nothing leaves the art frame
+- nothing leaves its own footprint past the `reach` it declares (a token
+  mid-hand-off and an elevator car straddling a seam are drawn by both cells,
+  so they may cross; everything else that crosses is drawn on top of the
+  machine next door)
+- every machine spans a fair share of the footprint it was given, so a toy
+  drawn for a small cell cannot turn into a speck in a large one
+
 ## Wired chains
 
 Adjacent machines can be wired so they fire in sequence, and the wiring is
@@ -156,19 +192,23 @@ eligible, so a chain never has to reason about a member firing twice per cycle.
 A mode picks **both a catalog and a composer**. That is what lets three
 Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
-Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
-a classic-like grid composer. Cascade and Workshop are their own worlds.
-Cascade staffs inset eastbound sentences that end in a sink and leaves the
-rest empty. Workshop staffs inset shop lines that end in a bin, bell, or lamp. Multi-cell spans
-stay on the catalog sheet so they cannot punch holes in those runs.
+Classic / Ports / Tracks keep the original toys and the two worlds.
+
+Cascade, Workshop and Circus **build their own floor**: a square of equal
+cells filling the art area, every one of them staffed. They cannot honour the
+Layout dial, because they staff a snake through cells that must be the same
+size and line up — on offset courses no two rows share a column, and the
+snake collapsed to a single row adrift on an empty page. So the dial is
+hidden for them, exactly as it already is for Ports and Tracks, and the URL's
+`layout` is simply ignored.
 
 | Mode | Catalog | Composer |
 | --- | --- | --- |
 | Classic | the original 36 toys | independent machines, abstract wires |
 | Ports | `src/worlds/ports/` | tokens handed across typed edges |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
-| Cascade | `src/contraptions/cascade/` | inset eastbound sentences that end in a sink |
-| Workshop | `src/contraptions/workshop/` | inset shop lines that end in a bin, bell, or lamp |
+| Cascade | `src/contraptions/cascade/` | a chain reaction along every course, one of them long |
+| Workshop | `src/contraptions/workshop/` | a shop line along every course, one of them long |
 | Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
 
 The Mode control lists all six with those notes. Catalog view shows the active
@@ -177,11 +217,16 @@ mode's pieces. The URL stores the mode name (`?mode=cascade`).
 ### Cascade
 
 A token starts in one cell and every cell after it is a beat in a chain
-reaction. The cascade world leaves the outer ring of cells empty, then
-staffs inset eastbound sentences — feeder → stations → a real ending
-(bell, cup, lamp, and the other catchers). Unused cells get no machine,
-so there is no leftover pile and nothing emits off an empty cell. The
-engine's conduit is hidden; each machine draws its own rail toward the
+reaction. Every course of the floor is one of those sentences — feeder →
+stations → a real ending (bell, cup, lamp, and the other catchers) — and
+the **Long chain** dial says how many consecutive courses are instead
+snaked into one very long sentence: east, elevator south, west, elevator,
+east, into a single sink. At 0 the floor is all short chains; at 1 it is
+one chain from corner to corner. Either way every cell is a beat, because
+a course left as paper is what made the piece read as a scrap adrift on
+the page.
+
+The engine's conduit is hidden; each machine draws its own rail toward the
 ports that exist. A cup only dumps when the run actually continues south;
 a bellows only puffs when the run leaves sideways. Classic wiring is left
 alone: a pendulum on main still rotates.
@@ -192,11 +237,11 @@ hand-off helpers, `heading(flow)`). The composer lives in
 
 ### Workshop
 
-One shop floor. The outer ring of cells stays empty. Interior equal-size
-neighbours become inset eastbound shop lines: feeder (`hopper` / `hoist` /
-`tipper`) → bench stations → a real ending (`bin`, `bell`, `lamp`) that
-sits on the bench and stops it. Unused cells get no machine. High res
-skips a row so the floor reads as lines, not wallpaper. Lift, auger,
+One shop floor, every course of it working. A course is a shop line:
+feeder (`hopper` / `hoist` / `tipper`) → bench stations → a real ending
+(`bin`, `bell`, `lamp`) that sits on the bench and stops it. The **Long
+line** dial says how many consecutive courses are snaked into one line
+instead, with an elevator at every south step. Lift, auger,
 chute, divert, arm, press, scale and dip stay off the line — they change
 height or reach the row above. Every placed bench gets a `line`: a closed
 outlet holds the part at centre, a closed inlet starts the part inside
@@ -210,7 +255,12 @@ composer lives in `src/worlds/goldberg/workshop.ts`.
 Every cell is a looping act. A performer that leaves a tower comes back to it
 by the end of the loop, and the stunt on the way fires again next lap. Timing
 is the joke: a lap ends and the same bell rings. Composition is classic-like
-— independent acts, some wired as a drumroll — on the circus catalog.
+— independent acts filling the ring, the showpieces (`ferris`, `big-top`,
+`cannon`, `tightrope`) taking the two or three cells they need, rigging
+towers pairing a `lift` over a `well` so one car travels between them, and
+short runs wired into a programme, the drumroll between one act and the next.
+A programme is a few acts in a row: snaking half the floor into one chain
+turned the ring into a band of the same four relays repeated a hundred times.
 `circus.ts` holds the shared props (performer, flight, knock, hoop, bell).
 
 ### Ports (framework A)
@@ -249,7 +299,7 @@ and each reactor beside the piece of track it reacts to.
 | Seed | Everything random derives from this string |
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus` |
 | Theme | 14 palettes, each a different mood |
-| Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) |
+| Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales). Classic only — the other five build their own floor |
 | Resolution | Cells across the art area |
 | Stroke | Multiplier on the computed line weight |
 | Multi-cell | How eagerly to place machines larger than one cell |

@@ -318,9 +318,9 @@ export function createPanel(
     classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
     ports: ['Wired chains', 'How many chains the solver grows'],
     tracks: ['Wired chains', ''],
-    cascade: ['Cascade runs', 'How much of the floor the drop-chain snakes through; it ends in one sink'],
-    workshop: ['Shop floor', 'How much of the floor the bench snakes through; it ends in a bin, bell, or lamp'],
-    circus: ['Drumroll', 'How much of the ring the programme snakes through; leftover cells stay empty'],
+    cascade: ['Long chain', 'How many courses the one long drop-chain takes; the rest are chains of their own'],
+    workshop: ['Long line', 'How many courses the one long shop line takes; the rest are lines of their own'],
+    circus: ['Drumroll', 'How much of the ring is wired into programmes; the rest are acts of their own'],
   }
 
   /**

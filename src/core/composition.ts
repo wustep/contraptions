@@ -23,9 +23,12 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   classic  — the original toys; independent machines, abstract wires
  *   ports    — tokens handed across typed edges (own world, own catalog)
  *   tracks   — balls circulating on a carved loop (own world, own catalog)
- *   cascade  — complete sentences that always end; leftovers stay closed
- *   workshop — shop lines that run east into a bin; leftovers do not emit
- *   circus   — one programme of acts that snakes the ring and ends in a bow
+ *   cascade  — a chain reaction along every course, one of them long
+ *   workshop — a shop line along every course, one of them long
+ *   circus   — a ring of looping acts, some wired into a programme
+ *
+ * The last three build their own square floor and staff all of it, so the
+ * Layout dial is not theirs to honour.
  */
 export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
 
