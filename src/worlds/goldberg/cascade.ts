@@ -21,15 +21,11 @@ const STATIONS = new Set(['belt', 'bellows', 'counter', 'dominoes', 'flap', 'pad
 
 const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter((c) => names.has(c.name))
 
-function pickEven<T>(list: T[], n: number): T[] {
+function takeBlock<T>(list: T[], n: number): T[] {
   if (n <= 0) return []
   if (n >= list.length) return list
-  if (n === 1) return [list[Math.floor(list.length / 2)]]
-  const out: T[] = []
-  for (let i = 0; i < n; i++) {
-    out.push(list[Math.round((i * (list.length - 1)) / (n - 1))])
-  }
-  return out
+  const start = Math.floor((list.length - n) / 2)
+  return list.slice(start, start + n)
 }
 
 /**
@@ -54,7 +50,7 @@ export function buildCascade(options: Options, canvas: number): Composition {
   const stride = options.res >= 12 ? 2 : 1
   const spaced = rows.filter((_, i) => i % stride === 0)
   const frac = density <= 0 ? 0 : options.res >= 12 ? 0.45 + 0.55 * density : 0.8 + 0.2 * density
-  const keep = density <= 0 ? [] : pickEven(spaced, Math.max(1, Math.round(spaced.length * frac)))
+  const keep = density <= 0 ? [] : takeBlock(spaced, Math.max(1, Math.round(spaced.length * frac)))
 
   const roleRng = floor.rng.fork('roles')
   const feeders = named(floor.singles, FEEDERS)
