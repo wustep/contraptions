@@ -567,10 +567,17 @@ console.log('\nink')
   const specks: string[] = []
   const octaves: string[] = []
 
+  // `SEEDS=40 npm run check` widens the sweep, for when a defect is rare
+  // enough that two seeds a layout will not find it.
+  const wide = Number(process.env.SEEDS ?? 0)
+  const seeds = wide > 0
+    ? Array.from({ length: wide }, (_, i) => `sweep-${i}`)
+    : ['first-look', 'amber-shuttle-417']
+
   for (const { name: mode } of MODES) {
     for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
       for (const res of [8, 12, 15]) {
-        for (const seed of ['first-look', 'amber-shuttle-417']) {
+        for (const seed of seeds) {
           const options = { ...defaultOptions, mode, layout, res, seed, spans: 0.6, chains: 0.7 }
           const comp = build(options, 900)
           const label = `${mode}/${layout}@${res}/${seed}`
