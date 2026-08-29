@@ -8,8 +8,9 @@
  *   npm run check
  */
 import { build, catalogFor, defaultOptions, MODES } from '../src/core/composition'
-import { LOOP } from '../src/core/constants'
+import { FILL, LOOP, REACH, SCALE_OCTAVE } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
+import { artFrame, inkOf } from './ink'
 import { registry } from '../src/contraptions'
 import type { Contraption, Instance } from '../src/core/types'
 import type { Flow } from '../src/core/wiring'
@@ -467,6 +468,58 @@ for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
     (i) => i.cell.col === 0 || i.cell.col === 7 || i.cell.row === 0 || i.cell.row === 7,
   )
   check('workshop res=8 leaves the rim empty', !onBorder)
+}
+
+/**
+ * Ink. Everything above reasons about where machines were placed; this
+ * reasons about where their ink actually lands, by drawing every one of them
+ * through a recording stand-in for p5 (scripts/ink.ts) and looking at the box
+ * it painted into. Three things have to hold, and none of them held before
+ * there was a way to measure them:
+ *
+ *   - nothing leaves the art frame
+ *   - nothing leaves its own footprint by more than the reach it declares
+ *   - every machine fills a fair share of the footprint it was given, so a
+ *     toy drawn for a small cell cannot turn into a speck in a large one
+ */
+console.log('\nink')
+{
+  const escapes: string[] = []
+  const spills: string[] = []
+  const specks: string[] = []
+  const octaves: string[] = []
+
+  for (const { name: mode } of MODES) {
+    for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
+      for (const res of [8, 12, 15]) {
+        for (const seed of ['first-look', 'amber-shuttle-417']) {
+          const options = { ...defaultOptions, mode, layout, res, seed, spans: 0.6, chains: 0.7 }
+          const comp = build(options, 900)
+          const label = `${mode}/${layout}@${res}/${seed}`
+          const sizes = comp.cells.map((c) => c.size)
+          const ratio = Math.max(...sizes) / Math.min(...sizes)
+          if (ratio > SCALE_OCTAVE + 1e-6) octaves.push(`${label} spans ${ratio.toFixed(2)}x`)
+          const frame = artFrame(options, 900)
+          for (const r of inkOf(comp, 16)) {
+            const slack = r.cell.size * REACH
+            const out = Math.max(
+              frame.x0 - r.world.x0, frame.y0 - r.world.y0,
+              r.world.x1 - frame.x1, r.world.y1 - frame.y1,
+            )
+            if (out > slack) escapes.push(`${label} ${r.name} by ${(out / r.cell.size).toFixed(2)}`)
+            const allowed = r.reach
+            if (r.over > allowed + 1e-6) spills.push(`${label} ${r.name} ${r.side} by ${r.over.toFixed(2)}`)
+            if (Math.max(r.spanX, r.spanY) < FILL) specks.push(`${label} ${r.name} spans ${r.spanX.toFixed(2)}x${r.spanY.toFixed(2)}`)
+          }
+        }
+      }
+    }
+  }
+  const few = (list: string[]) => [...new Set(list)].slice(0, 4).join(' | ')
+  check('every layout keeps its cells within one octave', octaves.length === 0, few(octaves))
+  check('no ink leaves the art frame', escapes.length === 0, `${escapes.length}: ${few(escapes)}`)
+  check('no machine spills past the reach it declares', spills.length === 0, `${spills.length}: ${few(spills)}`)
+  check('every machine fills the footprint it was given', specks.length === 0, `${specks.length}: ${few(specks)}`)
 }
 
 console.log('\ncatalog')

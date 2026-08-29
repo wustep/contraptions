@@ -20,8 +20,9 @@ export const ratchet = defineContraption({
     outline(p, ink, weight)
     ceilRail(p, size)
     // Pawl: hinged at the ceiling, resting on the rim.
-    p.line(pawlX, -size / 2, size * 0.04, -rim * 0.86)
-    p.circle(pawlX, -size / 2, size * 0.09)
+    const hinge = -size / 2 + size * 0.05
+    p.line(pawlX, hinge, size * 0.04, -rim * 0.86)
+    p.circle(pawlX, hinge, size * 0.09)
 
     p.push()
     p.rotate(rot)

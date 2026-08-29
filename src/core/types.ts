@@ -115,6 +115,15 @@ export interface Contraption<S = unknown> {
    */
   inlets?: Side[]
   outlets?: Side[]
+  /**
+   * How far past its own footprint this machine's ink may reach, as a fraction
+   * of a cell. A machine that hands a token across a seam — an elevator whose
+   * shaft runs from the rail above to the rail below, a row of dominoes that
+   * topples into the next cell — reaches over the line on purpose. Everything
+   * else that does is a clip, and `npm run check` says so. Defaults to
+   * `REACH`, which is about one stroke.
+   */
+  reach?: number
   /** Relative likelihood of being picked. Defaults to 1. */
   weight?: number
   /** Allowed quarter-turns, as multiples of TAU/4. Defaults to [0, 1, 2, 3]. */
@@ -134,6 +143,13 @@ export interface Instance {
   angle: number
   /** 1 or -1. */
   mirror: number
+  /**
+   * Reach granted by the composer, overriding the contraption's own. An
+   * elevator car is drawn by both cells it straddles so the seam never cuts
+   * it; the composer is the only thing that knows the cell next door is the
+   * same machine, so it is the thing that says the ink may cross.
+   */
+  reach?: number
   /** Frames added to the global counter before normalizing. */
   phase: number
   period: number

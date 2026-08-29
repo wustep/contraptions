@@ -1,4 +1,4 @@
-import { ART_INSET, LOOP } from '../../core/constants'
+import { ART_INSET, LOOP, SEAM_REACH } from '../../core/constants'
 import type { Composition, Options, Overlay } from '../../core/composition'
 import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
@@ -438,6 +438,29 @@ export function budgetRuns(runs: Cell[][], _leftoverCount: number, chains: numbe
   return { keep, singles }
 }
 
+/**
+ * A cell that shares an elevator shaft with the one above or below draws the
+ * car across the seam, so both halves agree and nothing is cut. Only the
+ * composer knows the neighbour is the same machine, so only the composer can
+ * say the ink may cross.
+ */
+function grantSeams(floor: Floor): void {
+  for (const inst of floor.instances) {
+    const state = inst.state as {
+      ride?: unknown
+      flow?: { in?: string | null; out?: string | null }
+      line?: { drop?: boolean; catch?: boolean }
+    }
+    const rides =
+      !!state.ride ||
+      state.flow?.out === 'S' ||
+      state.flow?.in === 'N' ||
+      !!state.line?.drop ||
+      !!state.line?.catch
+    if (rides) inst.reach = SEAM_REACH
+  }
+}
+
 export function finish(
   options: Options,
   floor: Floor,
@@ -445,6 +468,7 @@ export function finish(
   overlays: Overlay[] = [],
   extras: { showWires?: boolean } = {},
 ): Composition {
+  grantSeams(floor)
   return {
     options,
     theme: floor.theme,

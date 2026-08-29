@@ -29,7 +29,10 @@ export const pendulumWave = defineContraption({
   draw: (p, s, { w, h, size, u, ink, weight }) => {
     const top = -h / 2
     const bob = size * 0.19
-    const span = w * 0.9
+    // The end pendulums swing outward from their pivots, so the row of pivots
+    // has to stop short of the wall by a whole swing plus the bob's radius.
+    const swung = h * 0.74 * Math.sin(0.42) + bob / 2 + size * 0.03
+    const span = Math.min(w * 0.9, w - swung * 2)
 
     outline(p, ink, weight)
     p.line(-w / 2, top, w / 2, top)

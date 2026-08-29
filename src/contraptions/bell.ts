@@ -28,10 +28,11 @@ export const bell = defineContraption({
       p.stroke(s.color)
       p.strokeWeight(weight)
       p.noFill()
+      // The rings are the widest thing the bell draws; they stop at the wall.
       for (const side of [-1, 1]) {
         for (let i = 1; i <= 2; i++) {
-          const r = bw * (0.8 + i * 0.3 + fired * 0.3)
-          p.arc(side * bw * 0.5, top + drop + bh * 0.5, r, r, side > 0 ? -0.6 : Math.PI - 0.6, side > 0 ? 0.6 : Math.PI + 0.6)
+          const r = bw * (0.68 + i * 0.26 + fired * 0.24)
+          p.arc(side * bw * 0.34, top + drop + bh * 0.5, r, r, side > 0 ? -0.6 : Math.PI - 0.6, side > 0 ? 0.6 : Math.PI + 0.6)
         }
       }
       p.pop()

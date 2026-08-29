@@ -49,7 +49,13 @@ const grid: Layout = {
   },
 }
 
-/** Running bond: every other row slides half a cell sideways. */
+/**
+ * Running bond: every other course slides half a cell sideways. A brick that
+ * hung off the end used to be kept — its centre was inside the art area even
+ * though half of it was not — and the machine in it was drawn half off the
+ * page. A bricklayer with no half-bricks recesses the course instead, so the
+ * offset rows are one brick shorter and the wall keeps a straight edge.
+ */
 const bricks: Layout = {
   name: 'bricks',
   label: 'Bricks',
@@ -59,11 +65,13 @@ const bricks: Layout = {
     const cells: Cell[] = []
     let index = 0
     for (let row = 0; row < res; row++) {
-      const shift = row % 2 === 0 ? 0 : -size / 2
-      for (let col = 0; col <= res; col++) {
-        const cx = x + col * size + size / 2 + shift
-        if (cx - size / 2 >= x + area || cx + size / 2 <= x) continue
-        cells.push(cell(cx, y + row * size + size / 2, size, col, row, index++))
+      const offset = row % 2 === 1
+      const count = offset ? res - 1 : res
+      const shift = offset ? size / 2 : 0
+      for (let col = 0; col < count; col++) {
+        cells.push(
+          cell(x + col * size + size / 2 + shift, y + row * size + size / 2, size, col, row, index++),
+        )
       }
     }
     return cells
