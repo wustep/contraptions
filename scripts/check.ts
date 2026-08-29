@@ -132,6 +132,55 @@ for (const mode of ['ports', 'tracks'] as const) {
   }
 }
 
+/**
+ * Nothing stands alone. A machine whose four neighbours are all blank paper
+ * reads as debris however well its own chain is wired, and ports used to
+ * leave a lot of it about. This is the visual half of "nothing runs into
+ * nothing": the logical half is checked below.
+ */
+function loners(comp: ReturnType<typeof build>): string[] {
+  const owner = new Map<string, Instance>()
+  for (const inst of comp.instances) {
+    const { cell } = inst
+    for (let a = 0; a < Math.round(cell.w / cell.size); a++) {
+      for (let b = 0; b < Math.round(cell.h / cell.size); b++) {
+        const x = cell.x - cell.w / 2 + (a + 0.5) * cell.size
+        const y = cell.y - cell.h / 2 + (b + 0.5) * cell.size
+        owner.set(`${Math.round(x)}:${Math.round(y)}`, inst)
+      }
+    }
+  }
+  const alone: string[] = []
+  for (const inst of comp.instances) {
+    const { cell } = inst
+    let touched = false
+    for (let a = 0; a < Math.round(cell.w / cell.size) && !touched; a++) {
+      for (let b = 0; b < Math.round(cell.h / cell.size) && !touched; b++) {
+        const x = cell.x - cell.w / 2 + (a + 0.5) * cell.size
+        const y = cell.y - cell.h / 2 + (b + 0.5) * cell.size
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+          const n = owner.get(`${Math.round(x + dx * cell.size)}:${Math.round(y + dy * cell.size)}`)
+          if (n && n !== inst) touched = true
+        }
+      }
+    }
+    if (!touched) alone.push(`${inst.contraption.name}@${inst.cell.col},${inst.cell.row}`)
+  }
+  return alone
+}
+
+for (const res of [8, 12, 15]) {
+  for (const seed of ['ports', 'first-look', 'amber-shuttle-417']) {
+    const piece = build({ ...defaultOptions, seed, mode: 'ports', res, chains: 0.5 }, 900)
+    const label = `ports@${res}/${seed}`
+    const alone = loners(piece)
+    check(`${label}: no machine stands alone`, alone.length === 0, alone.slice(0, 4).join(' | '))
+    const covered = piece.instances.reduce((n, i) => n + Math.round((i.cell.w * i.cell.h) / (i.cell.size * i.cell.size)), 0)
+    const share = covered / piece.cells.length
+    check(`${label}: the sheet is neither bare nor packed`, share > 0.55 && share < 0.95, share.toFixed(2))
+  }
+}
+
 // In ports mode nothing may run into nothing: every out-port a machine
 // insists on has a neighbour wired to it, and every ball chain ends in a sink.
 const ports = build({ ...defaultOptions, seed: 'ports', mode: 'ports', res: 14, chains: 1 }, 900)
@@ -517,6 +566,31 @@ console.log('\nink')
   check('no ink leaves the art frame', escapes.length === 0, `${escapes.length}: ${few(escapes)}`)
   check('no machine spills past the reach it declares', spills.length === 0, `${spills.length}: ${few(spills)}`)
   check('every machine fills the footprint it was given', specks.length === 0, `${specks.length}: ${few(specks)}`)
+}
+
+/**
+ * Solo. Every machine is a pool of one at some point — that is what the Solo
+ * picker is for — and a composer that needs a source, a relay and a sink has
+ * to cope with a pool that has none of them. A crash here is a dead end in
+ * the UI, and an empty piece is a blank page.
+ */
+console.log('\nsolo')
+{
+  const broken: string[] = []
+  const empty: string[] = []
+  for (const { name: mode } of MODES) {
+    for (const c of catalogFor(mode)) {
+      const options = { ...defaultOptions, mode, solo: c.name, seed: 'solo', res: 10 }
+      try {
+        const piece = build(options, 900)
+        if (!piece.instances.length) empty.push(`${mode}/${c.name}`)
+      } catch (e) {
+        broken.push(`${mode}/${c.name}: ${(e as Error).message}`)
+      }
+    }
+  }
+  check('every machine can fill a piece on its own', broken.length === 0, broken.slice(0, 3).join(' | '))
+  check('soloing a machine never empties the page', empty.length === 0, empty.slice(0, 6).join(' | '))
 }
 
 console.log('\ncatalog')
