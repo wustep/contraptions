@@ -78,6 +78,8 @@ export type Line = {
   drop?: boolean
   /** This cell receives a part from the bench above. */
   catch?: boolean
+  /** Place on an elevator stack. The composer stamps this on the pair. */
+  ride?: { index: number; floors: number }
 }
 
 export function lineOf(s: unknown): Line | undefined {

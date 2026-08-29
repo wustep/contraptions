@@ -77,7 +77,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'one drop-chain that snakes and ends in a sink',
+    note: 'one drop-chain that rides elevators and ends in a sink',
     catalog: 'cascade',
     composer: 'cascade',
     dials: { layout: true, spans: false, chains: true, pool: true },
@@ -85,7 +85,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'one shop bench that snakes and ends in a bin, bell, or lamp',
+    note: 'one shop bench that rides elevators and ends in a bin, bell, or lamp',
     catalog: 'workshop',
     composer: 'workshop',
     dials: { layout: true, spans: false, chains: true, pool: true },

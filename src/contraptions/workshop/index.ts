@@ -9,6 +9,7 @@ import { carousel } from './carousel'
 import { chute } from './chute'
 import { counter } from './counter'
 import { dip } from './dip'
+import { elevator } from './elevator'
 import { divert } from './divert'
 import { gantry } from './gantry'
 import { geneva } from './geneva'
@@ -28,6 +29,7 @@ import { scale } from './scale'
 import { spill } from './spill'
 import { timer } from './timer'
 import { tipper } from './tipper'
+import { well } from './well'
 
 /**
  * The registry: one workshop. Feeders let parts go, conveyors carry them
@@ -46,6 +48,7 @@ export const registry: Contraption<any>[] = [
   chute,
   counter,
   dip,
+  elevator,
   divert,
   gantry,
   geneva,
@@ -65,6 +68,7 @@ export const registry: Contraption<any>[] = [
   spill,
   timer,
   tipper,
+  well,
 ]
 
 export const byName = (name: string): Contraption<any> | undefined =>

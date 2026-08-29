@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeOutCubic, seg } from '../../core/ease'
-import { flick, floor, heading, since, type Beat } from './parts'
+import { beat, drawElevator, drawRideToken, flick, floor, heading, rideOf, type Beat } from './parts'
 
 /**
  * A balloon tethered over the end of the line with a pin on a lever under it:
@@ -25,7 +25,8 @@ export const balloon = defineContraption<Beat>({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const h = heading(s.flow)
-    const t = since(u, FIRE)
+    const t = beat(s, u, FIRE)
+    if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const r = t < INFLATE ? 0 : R * easeOutCubic(seg(t, INFLATE, 0.95))
 
     floor(p, k, ink, weight, s, 0.2)
@@ -68,5 +69,6 @@ export const balloon = defineContraption<Beat>({
       }
       p.pop()
     }
+    if (rideOf(s)) drawRideToken(p, k, ink, weight, s, u, FIRE)
   },
 })

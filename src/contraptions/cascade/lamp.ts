@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInQuad, seg } from '../../core/ease'
-import { FLOOR, flick, floor, heading, since, type Beat } from './parts'
+import { FLOOR, beat, drawElevator, drawRideToken, flick, floor, heading, rideOf, type Beat } from './parts'
 
 /**
  * A street lamp over a pedal in the line: the ball presses the pedal going
@@ -17,12 +17,14 @@ export const lamp = defineContraption<Beat>({
   label: 'Lamp',
   tags: ['signal'],
   role: 'sink',
+  inlets: ['E', 'W', 'N'],
   rotations: [0],
   fireAt: FIRE,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight, theme }) => {
     const h = heading(s.flow)
-    const t = since(u, FIRE)
+    const t = beat(s, u, FIRE)
+    if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const lit = 1 - easeInQuad(seg(t, 0.03, 0.6))
     const press = flick(t, 0.04, 0.08, 0.2) * 0.05
 
@@ -51,5 +53,6 @@ export const lamp = defineContraption<Beat>({
     }
     solid(p, ink, weight, lit > 0.02 ? s.color : theme.bg)
     p.circle(0, BULB_Y * k, BULB_D * k)
+    if (rideOf(s)) drawRideToken(p, k, ink, weight, s, u, FIRE)
   },
 })

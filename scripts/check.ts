@@ -458,6 +458,17 @@ for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
   check('cascade res=8 fills the height', rows.length > 0 && Math.min(...rows) <= 1 && Math.max(...rows) >= 6)
 }
 
+{
+  const shop = build(
+    { ...defaultOptions, seed: 'velvet-lever-559', mode: 'workshop', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
+    900,
+  )
+  const onBorder = shop.instances.some(
+    (i) => i.cell.col === 0 || i.cell.col === 7 || i.cell.row === 0 || i.cell.row === 7,
+  )
+  check('workshop res=8 leaves the rim empty', !onBorder)
+}
+
 console.log('\ncatalog')
 const catalog = build({ ...defaultOptions, seed: 'catalog', catalog: true }, 900)
 check('shows every machine', catalog.instances.length === registry.length)

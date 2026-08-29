@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, lerp, seg } from '../../core/ease'
-import { TOKEN, drop, dropTime, fallIn, floor, heading, rollOut, since, token, tokenColor, until, type Beat, type Pt } from './parts'
+import { TOKEN, drawElevator, drop, dropTime, fallIn, floor, heading, rideOf, rideToken, rollOut, since, token, tokenColor, until, type Beat, type Pt } from './parts'
 
 /**
  * A V-funnel over the line: one ball sits in the throat, the gate slides,
@@ -36,7 +36,9 @@ export const hopper = defineContraption<Beat>({
       : w <= DROP + 0.03 ? easeOutCubic(1 - seg(w, DROP, DROP + 0.03))
       : 0
 
-    floor(p, k, ink, weight, s)
+    const ride = rideOf(s)
+    const dumping = !!ride || s.flow?.out === 'S'
+    floor(p, k, ink, weight, s, dumping ? 0.18 : 0)
 
     p.push()
     p.scale(heading(s.flow), 1)
@@ -45,6 +47,17 @@ export const hopper = defineContraption<Beat>({
     p.line(MOUTH * k, -0.46 * k, THROAT * k, GATE * k)
     p.line(-MOUTH * k, -0.46 * k, MOUTH * k, -0.46 * k)
 
+    if (dumping) {
+      p.pop()
+      drawElevator(p, k, ink, weight, s, u)
+      clipCell(p, k, () => {
+        const at = rideToken(s, u, FIRE)
+        if (at) token(p, k, ink, weight, ball, at)
+        else if (w <= DROP) token(p, k, ink, weight, ball, [0, drop(SEAT, -SEAT, 1 - w / DROP)])
+      })
+      p.push()
+      p.scale(heading(s.flow), 1)
+    } else {
     clipCell(p, k, () => {
       const out = rollOut(s, u, FIRE)
       if (out) token(p, k, ink, weight, ball, out)
@@ -55,6 +68,7 @@ export const hopper = defineContraption<Beat>({
         token(p, k, ink, weight, ball, bottom)
       }
     })
+    }
 
     outline(p, ink, weight)
     p.line(-THROAT * k, (GATE + 0.05) * k, 0.36 * k, (GATE + 0.05) * k)

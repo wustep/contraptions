@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { coil, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutBack, easeOutElastic, seg } from '../../core/ease'
-import { flick, floor, heading, since, type Beat } from './parts'
+import { beat, drawElevator, drawRideToken, flick, floor, heading, rideOf, type Beat } from './parts'
 
 /**
  * A jack-in-the-box at the end of the line: the ball trips the latch, the lid
@@ -18,12 +18,14 @@ export const jack = defineContraption<Beat>({
   label: 'Jack-in-the-box',
   tags: ['pop'],
   role: 'sink',
+  inlets: ['E', 'W', 'N'],
   rotations: [0],
   fireAt: FIRE,
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight, theme }) => {
     const h = heading(s.flow)
-    const t = since(u, FIRE)
+    const t = beat(s, u, FIRE)
+    if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const open = easeOutBack(seg(t, 0, 0.1)) - easeInOutCubic(seg(t, 0.62, 0.8))
     const up = easeOutElastic(seg(t, 0.02, 0.24)) - easeInOutCubic(seg(t, 0.58, 0.74))
     const headY = TOP + 0.1 - up * 0.5
@@ -59,5 +61,6 @@ export const jack = defineContraption<Beat>({
     p.line(0, 0, 0, -0.1 * k)
     p.line(0, -0.1 * k, h * 0.06 * k, -0.1 * k)
     p.pop()
+    if (rideOf(s)) drawRideToken(p, k, ink, weight, s, u, FIRE)
   },
 })

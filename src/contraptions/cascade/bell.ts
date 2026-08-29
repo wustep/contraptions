@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { seg } from '../../core/ease'
-import { flick, floor, heading, since, type Beat } from './parts'
+import { beat, drawElevator, drawRideToken, flick, floor, heading, rideOf, type Beat } from './parts'
 
 /**
  * A bell hung over the end of the line with its clapper down in the ball's
@@ -26,7 +26,8 @@ export const bell = defineContraption<Beat>({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const h = heading(s.flow)
-    const t = since(u, FIRE)
+    const t = beat(s, u, FIRE)
+    if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const hit = 1 - seg(t, 0, 0.18)
     const rock = h * hit * 0.22 * Math.sin(hit * Math.PI * 4)
 
@@ -69,5 +70,6 @@ export const bell = defineContraption<Beat>({
     solid(p, ink, weight, s.color)
     p.circle(0, -HINGE * k, 0.13 * k)
     p.pop()
+    if (rideOf(s)) drawRideToken(p, k, ink, weight, s, u, FIRE)
   },
 })

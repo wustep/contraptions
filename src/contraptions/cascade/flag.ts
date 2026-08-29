@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { clamp, easeInOutCubic, easeOutBack, lerp, seg } from '../../core/ease'
-import { FLOOR, flick, floor, heading, since, type Beat } from './parts'
+import { FLOOR, beat, drawElevator, drawRideToken, flick, floor, heading, rideOf, type Beat } from './parts'
 
 /**
  * A flag at the foot of its pole, held by a catch in the line: the ball trips
@@ -23,7 +23,8 @@ export const flag = defineContraption<Beat>({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const h = heading(s.flow)
-    const t = since(u, FIRE)
+    const t = beat(s, u, FIRE)
+    if (rideOf(s)) drawElevator(p, k, ink, weight, s, u)
     const y = lerp(DOWN, UP, clamp(easeOutBack(seg(t, 0, 0.09)) - easeInOutCubic(seg(t, 0.55, 0.9))))
 
     floor(p, k, ink, weight, s)
@@ -49,5 +50,6 @@ export const flag = defineContraption<Beat>({
     p.vertex(h * 0.34 * k, (y + 0.09) * k)
     p.vertex(0, (y + 0.09) * k)
     p.endShape(p.CLOSE)
+    if (rideOf(s)) drawRideToken(p, k, ink, weight, s, u, FIRE)
   },
 })

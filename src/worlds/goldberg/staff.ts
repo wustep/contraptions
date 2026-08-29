@@ -307,12 +307,18 @@ const cellsIn = (block: Cell[][]) => block.reduce((n, row) => n + row.length, 0)
  * courses, shared columns, no skip-row. Offset bricks have no south neighbour,
  * so they collapse to the longest single row. A lone band becomes a column.
  */
-export function staffedBlock(cells: Cell[], options: Options, density: number): Cell[][] {
+export function staffedBlock(
+  cells: Cell[],
+  options: Options,
+  density: number,
+  opts: { inset?: boolean } = {},
+): Cell[][] {
   const low = options.res < 12
   const units = cells.filter((c) => c.w === c.size && c.h === c.size)
-  const interior = low ? units : insetRing(units)
+  const inset = opts.inset === true || (!low && opts.inset !== false)
+  const interior = inset ? insetRing(units) : units
   if (density <= 0 || !interior.length) return []
-  const frac = low ? 1 : 0.65 + 0.35 * density
+  const frac = low && !opts.inset ? 1 : low ? 1 : 0.65 + 0.35 * density
 
   const candidates: Cell[][][] = []
   const rows = eastRows(interior).filter((row) => row.length >= 2)

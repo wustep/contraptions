@@ -16,12 +16,14 @@ import { hopper } from './hopper'
 import { jack } from './jack'
 import { knocker } from './knocker'
 import { lamp } from './lamp'
+import { lift } from './lift'
 import { paddle } from './paddle'
 import { seesaw } from './seesaw'
 import { strip } from './strip'
 import { switchback } from './switchback'
 import { tipper } from './tipper'
 import { toaster } from './toaster'
+import { well } from './well'
 
 /**
  * The registry. Adding a contraption is: write the file, add it here.
@@ -44,12 +46,14 @@ export const registry: Contraption<any>[] = [
   jack,
   knocker,
   lamp,
+  lift,
   paddle,
   seesaw,
   strip,
   switchback,
   tipper,
   toaster,
+  well,
 ]
 
 export const byName = (name: string): Contraption<any> | undefined =>

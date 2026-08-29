@@ -1,8 +1,21 @@
 import type p5 from 'p5'
 import { LOOP } from '../../core/constants'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, mod, seg } from '../../core/ease'
 import { LINK_DELAY, type Flow } from '../../core/wiring'
+import {
+  BOARD,
+  CLEAR as RIDE_CLEAR,
+  RIDE0,
+  RIDE1,
+  buffers,
+  cable,
+  car,
+  carLocalY,
+  guides,
+  rideTravel,
+  sheave,
+} from '../../worlds/goldberg/elevator'
 
 /**
  * The shared vocabulary of the cascade set.
@@ -19,10 +32,21 @@ import { LINK_DELAY, type Flow } from '../../core/wiring'
  * centre, because that is where the rails meet.
  */
 
+/** A cell's place on an elevator stack. The composer stamps this on the pair. */
+export type Ride = {
+  /** 0 at the top cell. */
+  index: number
+  /** How many cells the car descends. */
+  floors: number
+  /** Loop fraction the top machine fires — the shared clock. */
+  at: number
+}
+
 /** What every machine in the set keeps: its fill, and its place in a run if it has one. */
 export interface Beat {
   color: string
   flow?: Flow
+  ride?: Ride
 }
 
 export type Pt = [number, number]
@@ -39,10 +63,12 @@ export const HALF = LINK / 2
 export const OVER = TOKEN / 2 / SPEED
 /** Top of the floor a rolling token sits on: its centre is the cell's. */
 export const FLOOR = TOKEN / 2
-/** Half-width of the drop shaft at the cell edge, so a cup and the catch line up. */
-export const SHAFT = 0.26
-/** Half-width of the drop shaft at the rail. */
+/** Half-width of the old painted shaft — kept so the catalog cup still compiles. */
+export const SHAFT = 0.12
+/** Half-width of a cup mouth at the rail. */
 export const THROAT = 0.1
+
+export { BOARD, RIDE0, RIDE1, RIDE_CLEAR }
 /** A wall stands this far from the centre line, a hair clear of the token. */
 export const CLEAR = TOKEN / 2 + 0.05
 
@@ -54,6 +80,9 @@ export const drop = (from: number, dist: number, f: number) =>
 
 /** Loop fraction since the machine fired: 0 at the moment itself. */
 export const since = (u: number, at: number) => mod(u - at, 1)
+
+/** A sink on an elevator fires when the car arrives, not when the top boarded. */
+export const beat = (s: Beat, u: number, fire: number) => since(u, s.ride ? RIDE1 : fire)
 /** Loop fraction until it next fires. */
 export const until = (u: number, at: number) => mod(at - u, 1)
 
@@ -142,4 +171,60 @@ export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, ga
     if (x0 < -gap) p.line(x0 * k, FLOOR * k, -gap * k, FLOOR * k)
     if (hasE && x1 > gap) p.line(gap * k, FLOOR * k, x1 * k, FLOOR * k)
   } else p.line(x0 * k, FLOOR * k, x1 * k, FLOOR * k)
+}
+
+export function rideOf(s: Beat): Ride | undefined {
+  if (s.ride) return s.ride
+  if (s.flow?.out === 'S' && s.flow.in !== 'N') return { index: 0, floors: 1, at: 0 }
+  if (s.flow?.in === 'N' && s.flow.out !== 'S') return { index: 1, floors: 1, at: 0 }
+  if (s.flow?.in === 'N' && s.flow.out === 'S') return { index: 0, floors: 1, at: 0 }
+  return undefined
+}
+
+/** Passenger centre on this cell's car, or a roll on/off the rail. */
+export function rideToken(s: Beat, u: number, at: number): Pt | null {
+  const ride = rideOf(s)
+  if (!ride) return null
+  const t = since(u, ride.at)
+  const travel = rideTravel(t, ride.floors)
+  const y = carLocalY(travel, ride.index)
+  const top = ride.index === 0
+  const bot = ride.index === ride.floors
+
+  if (top && t < BOARD) return rollIn(s, u, at) ?? (y !== null ? [0, y] : [0, 0])
+  if (bot && t > RIDE_CLEAR) return rollOut(s, u, at) ?? (y !== null ? [0, 0] : null)
+  if (y === null) return null
+  return [0, y]
+}
+
+/** Guides, sheave, car. The token is drawn by the caller so sinks can hide it. */
+export function drawElevator(p: p5, k: number, ink: string, weight: number, s: Beat, u: number): number | null {
+  const ride = rideOf(s)
+  if (!ride) return null
+  const t = since(u, ride.at)
+  const travel = rideTravel(t, ride.floors)
+  const y = carLocalY(travel, ride.index)
+  const top = ride.index === 0
+  const bot = ride.index === ride.floors
+  const y0 = top ? -0.12 : -0.5
+  const y1 = bot ? FLOOR + 0.06 : 0.5
+  const paint = s.flow?.color ?? s.color
+
+  guides(p, k, ink, weight, y0, y1)
+  if (top) {
+    sheave(p, k, ink, weight, -0.14, travel * 6)
+    if (y !== null) cable(p, k, ink, weight, -0.14, y - 0.14)
+  } else if (y !== null) {
+    cable(p, k, ink, weight, -0.5, y - 0.14)
+  }
+  if (bot) buffers(p, k, ink, weight, FLOOR + 0.08)
+  if (y !== null) car(p, k, ink, weight, paint, y, TOKEN / 2)
+  return y
+}
+
+export function drawRideToken(p: p5, k: number, ink: string, weight: number, s: Beat, u: number, at: number): void {
+  clipCell(p, k, () => {
+    const pos = rideToken(s, u, at)
+    if (pos) token(p, k, ink, weight, tokenColor(s), pos)
+  })
 }

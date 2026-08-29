@@ -1,23 +1,59 @@
 import { registry as cascadeRegistry } from '../../contraptions/cascade'
-import { FLOOR, SHAFT } from '../../contraptions/cascade/parts'
-import type { Composition, Options, Overlay } from '../../core/composition'
+import type { Beat, Ride } from '../../contraptions/cascade/parts'
+import { LOOP } from '../../core/constants'
+import type { Composition, Options } from '../../core/composition'
 import type { Contraption, Instance } from '../../core/types'
-import { wireCascade } from '../../core/wiring'
+import { LINK_DELAY, wireCascade } from '../../core/wiring'
+import { CLEAR } from './elevator'
 import { finish, leftoverCells, openFloor, placeSpans, snakeRows, staffedBlock } from './staff'
 
 const ENDINGS = new Set(['bell', 'lamp', 'flag', 'toaster', 'balloon', 'jack'])
 const FEEDERS = new Set(['hopper', 'knocker', 'tipper', 'fuse'])
-const DROPS = new Set(['cup'])
-const CATCHES = new Set(['bellows'])
+const DROPS = new Set(['lift'])
+const CATCHES = new Set(['well'])
 const STATIONS = new Set(['belt', 'bellows', 'counter', 'dominoes', 'flap', 'paddle', 'seesaw'])
 
 const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter((c) => names.has(c.name))
 
+const south = (a: Instance, b: Instance) =>
+  b.cell.y > a.cell.y + a.cell.size * 0.4 && Math.abs(b.cell.x - a.cell.x) < 1
+
 /**
- * Cascade world. Parallel eastbound rows read as five machines. Here a
- * contiguous block is staffed and snaked: east, drop south, west, drop,
- * east, into one sink. Unused cells stay empty. Wires set fire times
- * but are not drawn — each machine draws its own rail so ports meet.
+ * One clock for every cell on a stack, then a pause long enough for the
+ * car to land before the next machine on the rail fires.
+ */
+function timeStacks(chain: Instance[]): void {
+  if (!chain.length) return
+  let frame = chain[0].fireFrame
+  let k = 0
+  while (k < chain.length) {
+    let end = k
+    while (end + 1 < chain.length && south(chain[end], chain[end + 1])) end++
+    const top = chain[k]
+    const at = top.contraption.fireAt ?? 0
+    const phase = Math.round(at * top.period - frame)
+    const floors = end - k
+    for (let i = k; i <= end; i++) {
+      chain[i].fireFrame = ((frame % LOOP) + LOOP) % LOOP
+      chain[i].phase = phase
+      if (floors > 0 && chain[i].state && typeof chain[i].state === 'object') {
+        const ride: Ride = { index: i - k, floors, at }
+        ;(chain[i].state as Beat).ride = ride
+      }
+    }
+    if (k === end) {
+      if (k + 1 < chain.length) frame = (frame + LINK_DELAY) % LOOP
+    } else {
+      frame = (frame + Math.round((CLEAR + 0.06) * LOOP)) % LOOP
+    }
+    k = end + 1
+  }
+}
+
+/**
+ * Cascade world. A contiguous block is snaked: east, elevator south, west,
+ * elevator, east, into one sink. Unused cells stay empty. Wires set fire
+ * times but are not drawn — each machine draws its own rail so ports meet.
  */
 export function buildCascade(options: Options, canvas: number): Composition {
   const floor = openFloor(options, canvas, cascadeRegistry)
@@ -33,6 +69,7 @@ export function buildCascade(options: Options, canvas: number): Composition {
   const drops = named(floor.singles, DROPS)
   const catches = named(floor.singles, CATCHES)
   const stations = named(floor.singles, STATIONS)
+  const northEndings = endings.filter((c) => !c.inlets || c.inlets.includes('N'))
 
   const from = (want: Contraption<unknown>[], fallback: Contraption<unknown>[]) => {
     if (want.length) return want
@@ -54,11 +91,11 @@ export function buildCascade(options: Options, canvas: number): Composition {
     const first = k === 0
     const last = k === path.length - 1
     const pool = last
-      ? from(endings, floor.singles.filter((c) => c.role === 'sink'))
-      : first
-        ? from(feeders, floor.singles.filter((c) => c.role === 'source'))
-        : dropping
-          ? from(drops, from(endings, floor.singles))
+      ? from(catching ? northEndings : endings, floor.singles.filter((c) => c.role === 'sink'))
+      : dropping && !first
+        ? from(drops, from(endings, floor.singles))
+        : first
+          ? from(feeders, floor.singles.filter((c) => c.role === 'source'))
           : catching
             ? from(catches, stations)
             : from(stations, floor.singles.filter((c) => c.role === 'relay'))
@@ -66,27 +103,6 @@ export function buildCascade(options: Options, canvas: number): Composition {
   })
 
   const wires = wireCascade(members, floor.rng.fork(`chain:${path[0].index}`))
-  const color = (members[0].state as { flow?: { color?: string } }).flow?.color ?? floor.theme.colors[0]
-  const shafts: Overlay = (p, _, { theme, weight }) => {
-    for (let i = 0; i < path.length - 1; i++) {
-      const a = path[i]
-      const b = path[i + 1]
-      if (b.y <= a.y + a.size * 0.4 || Math.abs(b.x - a.x) > 1) continue
-      const top = a.y + FLOOR * a.size
-      const bot = b.y + FLOOR * b.size
-      const mid = (top + bot) / 2
-      p.push()
-      p.rectMode(p.CENTER)
-      p.noStroke()
-      p.fill(color)
-      p.rect(a.x, mid, a.size * SHAFT * 1.6, bot - top)
-      p.stroke(theme.ink)
-      p.strokeWeight(weight(a.size))
-      p.noFill()
-      p.line(a.x - SHAFT * a.size, top, a.x - SHAFT * a.size, bot)
-      p.line(a.x + SHAFT * a.size, top, a.x + SHAFT * a.size, bot)
-      p.pop()
-    }
-  }
-  return finish(options, floor, wires, [shafts], { showWires: false })
+  timeStacks(members)
+  return finish(options, floor, wires, [], { showWires: false })
 }
