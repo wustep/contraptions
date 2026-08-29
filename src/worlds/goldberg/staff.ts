@@ -205,10 +205,15 @@ export function coverRuns(cells: Cell[], rng: Rng, neverUp = false): Cell[][] {
   return runs
 }
 
-/** Keep the longest runs until `chains` of the leftover cells sit on a sentence. */
+/**
+ * Keep the longest runs until `chains` of the leftover cells sit on a sentence.
+ * The floor is high: even a modest chains setting covers most neighbours, so
+ * the piece reads as one machine. `chains === 0` is the explicit "all closed"
+ * stop. Isolated cells always become singles.
+ */
 export function budgetRuns(runs: Cell[][], leftoverCount: number, chains: number): { keep: Cell[][]; singles: Cell[] } {
   const density = Math.max(0, Math.min(1, chains))
-  const want = density <= 0 ? 0 : leftoverCount * (0.22 + 0.73 * density)
+  const want = density <= 0 ? 0 : leftoverCount * (0.72 + 0.26 * density)
   const keep: Cell[][] = []
   const singles: Cell[] = []
   let filled = 0
