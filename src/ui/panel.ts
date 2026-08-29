@@ -1,8 +1,15 @@
-import { registry, allTags } from '../contraptions'
 import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
-import { MODES, type Composition, type Mode, type Options } from '../core/composition'
+import {
+  MODES,
+  catalogFor,
+  modeInfo,
+  tagsFor,
+  type Composition,
+  type Mode,
+  type Options,
+} from '../core/composition'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
@@ -230,11 +237,13 @@ export function createPanel(
   // Composition
   const composition = section('Composition')
   const modeBox = createListbox({
-    items: MODES.map((m) => ({ value: m.name, label: m.label })),
+    items: MODES.map((m) => ({ value: m.name, label: m.label, note: m.note })),
     value: initial.mode,
     label: 'Mode',
-    onChange: (v) => handlers.onChange({ mode: v as Mode }),
+    onChange: (v) => handlers.onChange({ mode: v as Mode, solo: null, tag: null }),
   })
+  const modeNote = el('p', { class: 'mode-note' }, [modeInfo(initial.mode).note])
+  const modeField = field('Mode', el('div', { class: 'mode-control' }, [modeBox.node, modeNote]))
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -261,7 +270,7 @@ export function createPanel(
     'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
   const layoutField = field('Layout', layoutBox.node)
   composition.append(
-    field('Mode', modeBox.node),
+    modeField,
     field('Theme', themeBox.node),
     layoutField,
     res.node, stroke.node, spans.node, chains.node,
@@ -269,17 +278,22 @@ export function createPanel(
 
   // Explore
   const explore = section('Explore')
+  const tagItems = (mode: Mode) => [
+    { value: '', label: 'Every tag' },
+    ...tagsFor(mode).map((t) => ({ value: t, label: t })),
+  ]
+  const soloItems = (mode: Mode) => [
+    { value: '', label: 'All contraptions' },
+    ...catalogFor(mode).map((c) => ({ value: c.name, label: c.label ?? c.name })),
+  ]
   const tagBox = createListbox({
-    items: [{ value: '', label: 'Every tag' }, ...allTags().map((t) => ({ value: t, label: t }))],
+    items: tagItems(initial.mode),
     value: initial.tag ?? '',
     label: 'Tag filter',
     onChange: (v) => handlers.onChange({ tag: v || null, solo: null }),
   })
   const soloBox = createListbox({
-    items: [
-      { value: '', label: 'All contraptions' },
-      ...registry.map((c) => ({ value: c.name, label: c.label ?? c.name })),
-    ],
+    items: soloItems(initial.mode),
     value: initial.solo ?? '',
     label: 'Solo contraption',
     onChange: (v) => handlers.onChange({ solo: v || null }),
@@ -292,17 +306,17 @@ export function createPanel(
   explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
 
   /**
-   * The worlds build on a plain grid, place no multi-cell machines from the
-   * classic set, and have their own machine lists — so the controls for those
-   * things are hidden rather than left to do nothing. Ports keeps the chains
-   * dial, which sets how many chains it grows.
+   * Hide what the current mode ignores. Cascade / workshop / circus are
+   * classic-like composers with their own catalogs, so they keep layout,
+   * spans, chains, and the pool. Ports keeps the chains dial. Tracks hides
+   * every composition dial that does not feed its world.
    */
   const showFor = (mode: Mode) => {
-    const classic = mode === 'classic'
-    layoutField.hidden = !classic
-    spans.node.hidden = !classic
-    chains.node.hidden = mode === 'tracks'
-    poolRow.hidden = !classic
+    const { dials } = modeInfo(mode)
+    layoutField.hidden = !dials.layout
+    spans.node.hidden = !dials.spans
+    chains.node.hidden = !dials.chains
+    poolRow.hidden = !dials.pool
   }
 
   // Transport
@@ -367,11 +381,12 @@ export function createPanel(
       lastView = view
       seedInput.value = comp.options.seed
       modeBox.set(comp.options.mode)
+      modeNote.textContent = modeInfo(comp.options.mode).note
       showFor(comp.options.mode)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
-      soloBox.set(comp.options.solo ?? '')
-      tagBox.set(comp.options.tag ?? '')
+      tagBox.setItems(tagItems(comp.options.mode), comp.options.tag ?? '')
+      soloBox.setItems(soloItems(comp.options.mode), comp.options.solo ?? '')
       res.set(comp.options.res)
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)

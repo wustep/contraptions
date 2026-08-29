@@ -18,7 +18,8 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-36 machines, 14 palettes, 4 layouts.
+Six modes, 14 palettes, 4 layouts. Classic keeps the original 36 toys;
+Cascade, Workshop and Circus each bring their own catalog.
 
 ## How it fits together
 
@@ -35,7 +36,10 @@ src/
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
-  contraptions/     one file per machine, plus the registry in index.ts
+  contraptions/     classic toys, plus one namespaced catalog per Goldberg mode
+    cascade/        22 beats that hand a token along a chain
+    workshop/       27 benches; shop.ts is the shared floor and part
+    circus/         27 looping acts; circus.ts is the shared vocabulary
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
@@ -148,10 +152,52 @@ eligible, so a chain never has to reason about a member firing twice per cycle.
 
 ## Modes
 
-Classic mode is the piece described above: independent machines, some of them
-wired into abstract firing chains. Two further modes rebuild the composition
-around machines that actually act on each other. Both keep the contract — every
-machine is still a pure function of its own `u` — and both live under `src/worlds/`.
+A mode picks **both a catalog and a composer**. That is what lets three
+Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
+each lives in its own folder, and each composer is the thesis of that set.
+Classic / Ports / Tracks keep the original toys and the two worlds. Cascade,
+Workshop and Circus are classic-like grid composers — they still use layout,
+spans, wired chains and the pool filters — each with its own machines.
+
+| Mode | Catalog | Composer |
+| --- | --- | --- |
+| Classic | the original 36 toys | independent machines, abstract wires |
+| Ports | `src/worlds/ports/` | tokens handed across typed edges |
+| Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
+| Cascade | `src/contraptions/cascade/` | one causal sentence; token handoff; runs never climb |
+| Workshop | `src/contraptions/workshop/` | stations and conveyors; a shop line, mostly east |
+| Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
+
+The Mode control lists all six with those notes. Catalog view shows the active
+mode's pieces. The URL stores the mode name (`?mode=cascade`).
+
+### Cascade
+
+A token starts in one cell and every cell after it is a beat in a chain
+reaction. Sources let it go, relays pass it on, sinks are where it ends. The
+cascade composer writes `flow` onto each chained machine — inlet, outlet, and
+the run's colour — and stands it upright. Runs grow sideways or down, never
+up. Classic wiring is left alone: a pendulum on main still rotates.
+
+`src/contraptions/cascade/parts.ts` is the shared vocabulary (token size, the
+hand-off helpers, `heading(flow)`).
+
+### Workshop
+
+One shop floor. Every cell is a bench at the same height; a part is received,
+worked, and handed to the next bench. Feeders let parts go, conveyors carry
+them, stations work them. Paths prefer east, like a line, and never climb —
+lifts and chutes are machines, not a chain stepping up. `shop.ts` is the
+vocabulary every bench agrees on (`BENCH` is the same floor the ports and
+tracks worlds roll on).
+
+### Circus
+
+Every cell is a looping act. A performer that leaves a tower comes back to it
+by the end of the loop, and the stunt on the way fires again next lap. Timing
+is the joke: a lap ends and the same bell rings. Composition is classic-like
+— independent acts, some wired as a drumroll — on the circus catalog.
+`circus.ts` holds the shared props (performer, flight, knock, hoop, bell).
 
 ### Ports (framework A)
 
@@ -187,7 +233,7 @@ and each reactor beside the piece of track it reacts to.
 | Control | Effect |
 | --- | --- |
 | Seed | Everything random derives from this string |
-| Mode | `classic`, `ports` (tokens handed across edges), `tracks` (balls circulating on a loop) |
+| Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus` |
 | Theme | 14 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) |
 | Resolution | Cells across the art area |

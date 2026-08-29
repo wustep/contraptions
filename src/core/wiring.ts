@@ -1,6 +1,6 @@
 import { LOOP } from './constants'
 import type { Rng } from './rng'
-import type { Cell, Instance, Wire } from './types'
+import type { Cell, Instance, Side, Wire } from './types'
 
 /** Frames between one machine firing and the next along a chain. */
 export const LINK_DELAY = 24
@@ -12,14 +12,62 @@ export const FIRE_DECAY = 16
 const MIN_CHAIN = 3
 const MAX_CHAIN = 5
 
+/**
+ * A chained cascade machine's place in the run: the side the token comes in
+ * on, the side it leaves by, and the token's colour. `wireCascade` attaches
+ * this to the machine's state. Absent on a machine that is not chained, which
+ * then runs self-contained. Classic wiring never writes this.
+ */
+export interface Flow {
+  in: Side | null
+  out: Side | null
+  color: string
+}
+
 const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
 
-const STEPS: [number, number][] = [
+/** Which side of `from` faces `to`. Chain links only ever join neighbours. */
+export const sideOf = (from: Cell, to: Cell): Side => {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  if (Math.abs(dx) > Math.abs(dy)) return dx > 0 ? 'E' : 'W'
+  return dy > 0 ? 'S' : 'N'
+}
+
+/**
+ * How a run may grow.
+ *
+ *   any   — classic: four ways, including up
+ *   down  — cascade: never up; sideways twice as often as a drop
+ *   along — workshop: a shop line, mostly east, never up
+ */
+export type PathStyle = 'any' | 'down' | 'along'
+
+const STEPS_ANY: [number, number][] = [
   [1, 0],
   [-1, 0],
   [0, 1],
   [0, -1],
 ]
+
+const STEPS_DOWN: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+]
+
+const STEPS_ALONG: [number, number][] = [
+  [1, 0],
+  [1, 0],
+  [1, 0],
+  [-1, 0],
+  [0, 1],
+]
+
+const stepsFor = (style: PathStyle): [number, number][] =>
+  style === 'down' ? STEPS_DOWN : style === 'along' ? STEPS_ALONG : STEPS_ANY
 
 /**
  * Reserve runs of free cells to build chains along.
@@ -37,9 +85,11 @@ export function chainPaths(
   taken: Set<Cell>,
   rng: Rng,
   density: number,
+  style: PathStyle = 'any',
 ): Cell[][] {
   if (density <= 0) return []
 
+  const STEPS = stepsFor(style)
   const byPos = new Map<string, Cell>()
   for (const cell of cells) {
     if (cell.w === cell.size && cell.h === cell.size) byPos.set(key(cell.x, cell.y), cell)
@@ -124,5 +174,30 @@ export function wireChain(chain: Instance[], rng: Rng): Wire[] {
       last: k === chain.length - 2,
     })
   }
+  return wires
+}
+
+/**
+ * Cascade wiring. Same phase arithmetic as `wireChain`, then the run stands
+ * upright, every machine is told which way the token travels, and one colour
+ * rides the whole chain. Classic `wireChain` is left alone so a random
+ * quarter-turn on a pendulum still reads as a pendulum.
+ */
+export function wireCascade(chain: Instance[], rng: Rng): Wire[] {
+  const wires = wireChain(chain, rng)
+  const color = colorOf(chain[0])
+  chain.forEach((inst, k) => {
+    inst.angle = 0
+    inst.mirror = 1
+    if (inst.state && typeof inst.state === 'object') {
+      const flow: Flow = {
+        in: k > 0 ? sideOf(inst.cell, chain[k - 1].cell) : null,
+        out: k < chain.length - 1 ? sideOf(inst.cell, chain[k + 1].cell) : null,
+        color,
+      }
+      ;(inst.state as { flow?: Flow }).flow = flow
+    }
+  })
+  for (const w of wires) w.color = color
   return wires
 }

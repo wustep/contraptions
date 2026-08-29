@@ -1,30 +1,123 @@
 import type p5 from 'p5'
 import { ART_INSET, CANVAS, LOOP } from './constants'
 import { layoutByName } from './layouts'
-import { registry } from '../contraptions'
+import { registry as classicRegistry } from '../contraptions'
+import { registry as cascadeRegistry } from '../contraptions/cascade'
+import { registry as workshopRegistry } from '../contraptions/workshop'
+import { registry as circusRegistry } from '../contraptions/circus'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
-import type { Cell, Contraption, Instance, Wire } from './types'
-import { chainPaths, wireChain } from './wiring'
+import type { Cell, Contraption, Instance, Side, Wire } from './types'
+import { chainPaths, sideOf, wireCascade, wireChain, type PathStyle } from './wiring'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
- * Which rules the piece is built under.
+ * A mode picks a catalog and a composer. That is the whole idea: three
+ * Goldberg catalogs can share names (hopper, bell, lamp) because each lives
+ * in its own folder, and each composer is the thesis of that catalog.
  *
- *   classic — independent machines, with abstract wired chains between some
- *   ports   — machines pass real tokens (balls, rotation, pushes) across
- *             their shared edges; nothing runs into nothing
- *   tracks  — a closed track is carved first and the balls circulate on it;
- *             machines are placed along it and react as the balls pass
+ *   classic  — the original toys; independent machines, abstract wires
+ *   ports    — tokens handed across typed edges (own world, own catalog)
+ *   tracks   — balls circulating on a carved loop (own world, own catalog)
+ *   cascade  — one causal sentence; token handoff along a chain that never climbs
+ *   workshop — stations and conveyors on one shop floor; the edge is the product
+ *   circus   — looping acts that come back round; wire is the drumroll
  */
-export type Mode = 'classic' | 'ports' | 'tracks'
+export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
 
-export const MODES: { name: Mode; label: string; note: string }[] = [
-  { name: 'classic', label: 'Classic', note: 'independent machines, wired' },
-  { name: 'ports', label: 'Ports', note: 'tokens handed across edges' },
-  { name: 'tracks', label: 'Tracks', note: 'balls circulating on a track' },
+/** How the grid of a catalog-mode is staffed and wired. */
+export type Composer = 'classic' | 'cascade' | 'workshop' | 'circus'
+
+export interface ModeInfo {
+  name: Mode
+  label: string
+  note: string
+  /** Which machine list the mode draws from. */
+  catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
+  /**
+   * How the piece is composed. Ports and tracks are their own worlds.
+   * Cascade / workshop / circus are classic-like grid composers with their
+   * own catalogs — they keep layout, spans, chains, and the pool filters.
+   */
+  composer: 'ports' | 'tracks' | Composer
+  /** Panel controls this mode actually uses. Hidden otherwise. */
+  dials: { layout: boolean; spans: boolean; chains: boolean; pool: boolean }
+}
+
+const GRID_DIALS = { layout: true, spans: true, chains: true, pool: true } as const
+
+export const MODES: ModeInfo[] = [
+  {
+    name: 'classic',
+    label: 'Classic',
+    note: 'independent machines, wired',
+    catalog: 'classic',
+    composer: 'classic',
+    dials: GRID_DIALS,
+  },
+  {
+    name: 'ports',
+    label: 'Ports',
+    note: 'tokens handed across edges',
+    catalog: 'ports',
+    composer: 'ports',
+    dials: { layout: false, spans: false, chains: true, pool: false },
+  },
+  {
+    name: 'tracks',
+    label: 'Tracks',
+    note: 'balls circulating on a track',
+    catalog: 'tracks',
+    composer: 'tracks',
+    dials: { layout: false, spans: false, chains: false, pool: false },
+  },
+  {
+    name: 'cascade',
+    label: 'Cascade',
+    note: 'one causal sentence; token handoff along a chain',
+    catalog: 'cascade',
+    composer: 'cascade',
+    dials: GRID_DIALS,
+  },
+  {
+    name: 'workshop',
+    label: 'Workshop',
+    note: 'stations and conveyors; the edge handoff is the product',
+    catalog: 'workshop',
+    composer: 'workshop',
+    dials: GRID_DIALS,
+  },
+  {
+    name: 'circus',
+    label: 'Circus',
+    note: 'looping acts that come back round',
+    catalog: 'circus',
+    composer: 'circus',
+    dials: GRID_DIALS,
+  },
 ]
+
+export const modeInfo = (mode: Mode): ModeInfo => MODES.find((m) => m.name === mode) ?? MODES[0]
+
+/** The contraption list a catalog-mode composes from. Ports/tracks return []. */
+export function catalogFor(mode: Mode): Contraption<unknown>[] {
+  switch (mode) {
+    case 'cascade':
+      return cascadeRegistry
+    case 'workshop':
+      return workshopRegistry
+    case 'circus':
+      return circusRegistry
+    case 'classic':
+      return classicRegistry
+    default:
+      return []
+  }
+}
+
+export const tagsFor = (mode: Mode): string[] =>
+  [...new Set(catalogFor(mode).flatMap((c) => c.tags ?? []))].sort()
 
 /** Something drawn over the whole piece, after the machines. */
 export type Overlay = (p: p5, loopFrame: number, ctx: { theme: Theme; weight: (size: number) => number }) => void
@@ -117,21 +210,21 @@ export interface Composition {
 const strokeFor = (size: number, theme: Theme, mult: number): number =>
   Math.max(0.75, size * 0.037) * (theme.weight ?? 1) * mult
 
-function pool(options: Options): Contraption<unknown>[] {
+function pool(options: Options, catalog: Contraption<unknown>[]): Contraption<unknown>[] {
   if (options.solo) {
-    const one = registry.find((c) => c.name === options.solo)
+    const one = catalog.find((c) => c.name === options.solo)
     if (one) return [one]
   }
   if (options.tag) {
-    const tagged = registry.filter((c) => c.tags?.includes(options.tag!))
+    const tagged = catalog.filter((c) => c.tags?.includes(options.tag!))
     if (tagged.length) return tagged
   }
-  return registry
+  return catalog
 }
 
-/** One labelled instance of every machine in the classic set. */
-const classicCatalog = (): CatalogEntry[] =>
-  registry.map((c) => {
+/** One labelled instance of every machine in a grid catalog. */
+const gridCatalog = (catalog: Contraption<unknown>[]): CatalogEntry[] =>
+  catalog.map((c) => {
     const [w, h] = c.span ?? [1, 1]
     const footprint = w === 1 && h === 1 ? '' : `${w}×${h}`
     return {
@@ -142,18 +235,37 @@ const classicCatalog = (): CatalogEntry[] =>
   })
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
+  const info = modeInfo(options.mode)
   if (options.catalog) {
     const entries =
-      options.mode === 'ports' ? portsCatalog() : options.mode === 'tracks' ? tracksCatalog() : classicCatalog()
-    const label = MODES.find((m) => m.name === options.mode)?.label ?? 'Classic'
-    return buildCatalog(options, canvas, entries, label)
+      options.mode === 'ports'
+        ? portsCatalog()
+        : options.mode === 'tracks'
+          ? tracksCatalog()
+          : gridCatalog(catalogFor(options.mode))
+    return buildCatalog(options, canvas, entries, info.label)
   }
   if (options.mode === 'ports') return buildPorts(options, canvas)
   if (options.mode === 'tracks') return buildTracks(options, canvas)
+  return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
+}
 
+/**
+ * Shared grid composer. Classic, cascade, workshop and circus all place
+ * machines on a layout and optionally wire runs — the difference is which
+ * catalog they staff from, how paths grow, and whether a run writes `flow`.
+ */
+function buildGrid(
+  options: Options,
+  canvas: number,
+  catalog: Contraption<unknown>[],
+  composer: Composer,
+): Composition {
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
   const rng = makeRng(options.seed)
+  const pathStyle: PathStyle = composer === 'cascade' ? 'down' : composer === 'workshop' ? 'along' : 'any'
+  const useFlow = composer === 'cascade'
 
   // Snap the art area to a whole number of cells so every cell edge, and so
   // every rail drawn on one, lands on a whole pixel. Fractional cell sizes are
@@ -168,7 +280,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     rng: rng.fork('layout'),
   })
 
-  const candidates = pool(options)
+  const candidates = pool(options, catalog)
   const singles = candidates.filter((c) => !c.span || (c.span[0] === 1 && c.span[1] === 1))
   const spanning = candidates.filter((c) => c.span && (c.span[0] > 1 || c.span[1] > 1))
 
@@ -259,23 +371,38 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   // pool when a filter has emptied one (soloing a single machine, say).
   const wires: Wire[] = []
   const roleRng = rng.fork('roles')
-  const byRole = (role: Contraption<unknown>['role']) => {
-    const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
-    if (matching.length) return matching
-    const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
-    return anyRole.length ? anyRole : singles
+  const chainable = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
+  const byRole = (role: Contraption<unknown>['role'], inSide: Side | null, outSide: Side | null) => {
+    if (!useFlow) {
+      const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
+      if (matching.length) return matching
+      const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
+      return anyRole.length ? anyRole : singles
+    }
+    const fits = (c: Contraption<unknown>) =>
+      (!inSide || !c.inlets || c.inlets.includes(inSide)) && (!outSide || !c.outlets || c.outlets.includes(outSide))
+    for (const next of [
+      chainable.filter((c) => c.role === role && fits(c)),
+      chainable.filter((c) => c.role === role),
+      chainable,
+    ]) {
+      if (next.length) return next
+    }
+    return singles
   }
 
   if (options.chains > 0 && singles.length) {
-    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains)
+    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains, pathStyle)
     for (const path of paths) {
       const members = path.map((cell, k) => {
         const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
-        const candidates = byRole(role)
-        const contraption = roleRng.weighted(candidates, (c) => c.weight ?? 1)
+        const inSide = useFlow && k > 0 ? sideOf(cell, path[k - 1]) : null
+        const outSide = useFlow && k < path.length - 1 ? sideOf(cell, path[k + 1]) : null
+        const contraption = roleRng.weighted(byRole(role, inSide, outSide), (c) => c.weight ?? 1)
         return place(contraption, cell, `cell:${cell.index}`)
       })
-      wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))
+      const seed = rng.fork(`chain:${path[0].index}`)
+      wires.push(...(useFlow ? wireCascade(members, seed) : wireChain(members, seed)))
     }
   }
 
@@ -325,10 +452,15 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     const [w, h] = e.contraption.span ?? [1, 1]
     return w * h
   }
-  const ordered =
-    options.mode === 'classic'
-      ? [...entries].sort((a, b) => areaOf(b) - areaOf(a) || a.label.localeCompare(b.label))
-      : [...entries].sort((a, b) => areaOf(b) - areaOf(a))
+  const roleRank = (e: CatalogEntry) =>
+    e.contraption.role === 'source' ? 0 : e.contraption.role === 'relay' ? 1 : e.contraption.role === 'sink' ? 2 : 3
+  const ordered = [...entries].sort((a, b) => {
+    const area = areaOf(b) - areaOf(a)
+    if (area) return area
+    if (options.mode === 'classic') return a.label.localeCompare(b.label)
+    if (options.mode === 'ports' || options.mode === 'tracks') return 0
+    return roleRank(a) - roleRank(b) || a.label.localeCompare(b.label)
+  })
 
   type Shelf = { items: CatalogEntry[]; used: number; height: number }
   const shelves: Shelf[] = []

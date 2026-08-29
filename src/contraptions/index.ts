@@ -38,8 +38,9 @@ import { wavy } from './wavy'
 import { windmill } from './windmill'
 
 /**
- * The registry. Adding a contraption is: write the file, add it here.
- * `npm run new <name>` scaffolds both halves.
+ * The classic registry. Adding a toy is: write the file, add it here.
+ * `npm run new <name>` scaffolds both halves into this catalog.
+ * Cascade, workshop and circus each have their own folder.
  */
 export const registry: Contraption<any>[] = [
   abacus,

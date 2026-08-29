@@ -7,11 +7,12 @@
  *
  *   npm run check
  */
-import { build, defaultOptions } from '../src/core/composition'
+import { build, catalogFor, defaultOptions, MODES } from '../src/core/composition'
 import { LOOP } from '../src/core/constants'
 import { pendulum, swing } from '../src/core/physics'
 import { registry } from '../src/contraptions'
-import type { Instance } from '../src/core/types'
+import type { Contraption, Instance } from '../src/core/types'
+import type { Flow } from '../src/core/wiring'
 import { portMachines } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 
@@ -49,16 +50,23 @@ check(
   `${realFraction.toFixed(3)} vs sine ${sineFraction.toFixed(3)}`,
 )
 
-console.log('\nregistry')
-check('every period divides the loop', registry.every((c) => LOOP % (c.period ?? LOOP) === 0))
-check('every fireAt is in [0, 1)', registry.every((c) => (c.fireAt ?? 0) >= 0 && (c.fireAt ?? 0) < 1))
-check('every name is unique', new Set(registry.map((c) => c.name)).size === registry.length)
-check(
-  'every chainable machine runs the full loop',
-  registry.every((c) => !c.role || (c.period ?? LOOP) === LOOP),
-)
-for (const role of ['source', 'relay', 'sink'] as const) {
-  check(`the ${role} pool is not empty`, registry.some((c) => c.role === role))
+function checkRegistry(label: string, list: Contraption<unknown>[]): void {
+  console.log(`\nregistry · ${label}`)
+  check(`${label}: every period divides the loop`, list.every((c) => LOOP % (c.period ?? LOOP) === 0))
+  check(`${label}: every fireAt is in [0, 1)`, list.every((c) => (c.fireAt ?? 0) >= 0 && (c.fireAt ?? 0) < 1))
+  check(`${label}: every name is unique`, new Set(list.map((c) => c.name)).size === list.length)
+  check(
+    `${label}: every chainable machine runs the full loop`,
+    list.every((c) => !c.role || (c.period ?? LOOP) === LOOP),
+  )
+  for (const role of ['source', 'relay', 'sink'] as const) {
+    check(`${label}: the ${role} pool is not empty`, list.some((c) => c.role === role))
+  }
+}
+
+checkRegistry('classic', registry)
+for (const mode of ['cascade', 'workshop', 'circus'] as const) {
+  checkRegistry(mode, catalogFor(mode))
 }
 
 /**
@@ -96,7 +104,7 @@ for (const layout of ['grid', 'bricks', 'quads', 'bands']) {
 }
 
 console.log('\nextremes')
-for (const mode of ['classic', 'ports', 'tracks'] as const) {
+for (const { name: mode } of MODES) {
   for (const res of [1, 2, 50]) {
     let ok = true
     let count = 0
@@ -157,13 +165,28 @@ check('ports: chains end in sinks', ['cup', 'bell'].every((n) => ports.used.incl
 }
 
 console.log('\nmode catalogs')
-for (const mode of ['classic', 'ports', 'tracks'] as const) {
+for (const { name: mode } of MODES) {
   const sheet = build({ ...defaultOptions, seed: 'sheet', mode, catalog: true }, 900)
   check(`${mode} catalog has machines`, sheet.instances.length > 0)
   check(`${mode} catalog captions every machine`, sheet.captions.length === sheet.instances.length)
   check(`${mode} catalog loop holds every period`, sheet.instances.every((i) => sheet.loop % i.period === 0))
 }
 check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'ports', catalog: true }, 900).used[0] !== build({ ...defaultOptions, seed: 'sheet', mode: 'classic', catalog: true }, 900).used[0])
+check('cascade catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'cascade', catalog: true }, 900).used.includes('hopper'))
+check('workshop catalog differs from circus', !build({ ...defaultOptions, seed: 'sheet', mode: 'workshop', catalog: true }, 900).used.includes('trampoline'))
+check('shared names stay in their catalog', catalogFor('cascade').some((c) => c.name === 'hopper') && catalogFor('workshop').some((c) => c.name === 'hopper'))
+
+console.log('\ngrid modes')
+for (const mode of ['cascade', 'workshop', 'circus'] as const) {
+  for (const res of [8, 12, 15]) {
+    const options = { ...defaultOptions, seed: `${mode}-${res}`, mode, res, spans: 0.8, chains: 1 }
+    const comp = build(options, 900)
+    const label = `${mode}@${res}`
+    check(`${label} places machines`, comp.instances.length > 0)
+    check(`${label} has no overlapping machines`, !overlaps(comp))
+    check(`${label} rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
+  }
+}
 
 // In tracks mode every region's loop closes: one lift top per region, and the
 // balls are drawn by exactly one overlay per region.
@@ -216,6 +239,80 @@ check(
     const want = i.contraption.fireAt ?? 0
     return Math.abs(u - want) < 0.02 || Math.abs(u - want) > 0.98
   }),
+)
+
+function chainGrammar(comp: ReturnType<typeof build>): string[] {
+  const at = new Map<string, Instance>(
+    comp.instances.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]),
+  )
+  const roleAt = (x: number, y: number) => at.get(`${Math.round(x)}:${Math.round(y)}`)?.contraption.role
+  const starts = comp.wires.filter((w) => !comp.wires.some((other) => other.to === w.from))
+  const errors: string[] = []
+  for (const head of starts) {
+    const chain = [head]
+    for (;;) {
+      const next = comp.wires.find((w) => w.from === chain[chain.length - 1].to)
+      if (!next) break
+      chain.push(next)
+    }
+    const roles = [chain[0].from, ...chain.map((w) => w.to)].map((c) => roleAt(c.x, c.y))
+    if (roles[0] !== 'source') errors.push(`head is ${roles[0]}`)
+    if (roles[roles.length - 1] !== 'sink') errors.push(`tail is ${roles[roles.length - 1]}`)
+    if (roles.slice(1, -1).some((r) => r !== 'relay')) errors.push(`middle has ${roles.slice(1, -1).join(',')}`)
+  }
+  return errors
+}
+
+for (const mode of ['workshop', 'circus'] as const) {
+  const run = build({ ...defaultOptions, seed: 'chains', mode, layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
+  check(`${mode}: builds chains`, run.wires.length > 0, `${run.wires.length} links`)
+  check(`${mode}: chain grammar`, chainGrammar(run).length === 0, chainGrammar(run).slice(0, 3).join(' | '))
+}
+
+// Cascade: a chained machine is told which way its run goes and stands
+// upright; the run is staffed so the token only ever crosses edges a machine
+// said it could; one token runs the whole chain; a run never climbs.
+console.log('\ncascade')
+const cascadeWired = build({ ...defaultOptions, seed: 'chains', mode: 'cascade', layout: 'grid', res: 14, spans: 0.4, chains: 1 }, 900)
+check('cascade: builds chains', cascadeWired.wires.length > 0, `${cascadeWired.wires.length} links`)
+check('cascade: chain grammar', chainGrammar(cascadeWired).length === 0, chainGrammar(cascadeWired).slice(0, 3).join(' | '))
+const flowOf = (i: Instance) => (i.state as { flow?: Flow }).flow
+const cascadeByPos = new Map<string, Instance>(
+  cascadeWired.instances.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]),
+)
+const chained = cascadeWired.instances.filter((i) => flowOf(i))
+const onWires = new Set(cascadeWired.wires.flatMap((w) => [w.from, w.to]))
+const cascadeHeads = cascadeWired.wires.filter((w) => !cascadeWired.wires.some((other) => other.to === w.from))
+check('every wired machine knows its run', chained.length === onWires.size && chained.every((i) => onWires.has(i.cell)))
+check('every wired machine stands upright', chained.every((i) => i.angle === 0 && i.mirror === 1))
+check(
+  'every run enters and leaves by edges its machines allow',
+  chained.every((i) => {
+    const f = flowOf(i)!
+    const c = i.contraption
+    return (!f.in || !c.inlets || c.inlets.includes(f.in)) && (!f.out || !c.outlets || c.outlets.includes(f.out))
+  }),
+)
+check(
+  'every run has a source with no inlet',
+  cascadeHeads.every((w) => flowOf(cascadeByPos.get(`${Math.round(w.from.x)}:${Math.round(w.from.y)}`)!)!.in === null),
+)
+check('every run never climbs', cascadeWired.wires.every((w) => w.to.y >= w.from.y - 1))
+check(
+  'every run carries one colour',
+  cascadeHeads.every((head) => {
+    let w = head
+    for (;;) {
+      const next = cascadeWired.wires.find((o) => o.from === w.to)
+      if (!next) return true
+      if (next.color !== head.color) return false
+      w = next
+    }
+  }),
+)
+check(
+  'classic wiring does not write flow',
+  wired.instances.every((i) => !flowOf(i)),
 )
 
 console.log('\ncatalog')
