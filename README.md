@@ -112,7 +112,7 @@ blocks of equal-sized free cells; single-cell machines then fill the leftovers.
 A layout whose rows do not line up (`bricks`) fails the block check and quietly
 gets all singles, which is the right fallback rather than a special case.
 
-Machines that depend on gravity — the crane, the chute, the drip — set
+Machines that depend on gravity — the drip, the marble run, the pendulum — set
 `rotations: [0]` so they stay the right way up.
 
 ## Scale is a constraint
@@ -241,14 +241,18 @@ One shop floor, every course of it working. A course is a shop line:
 feeder (`hopper` / `hoist` / `tipper`) → bench stations → a real ending
 (`bin`, `bell`, `lamp`) that sits on the bench and stops it. The **Long
 line** dial says how many consecutive courses are snaked into one line
-instead, with an elevator at every south step. Lift, auger,
-chute, divert, arm, press, scale and dip stay off the line — they change
-height or reach the row above. Every placed bench gets a `line`: a closed
-outlet holds the part at centre, a closed inlet starts the part inside
-the cell. Classic wires are not used; travel times do not match `fireAt`
-beads. Machines never mirror. `shop.ts` is the vocabulary every bench agrees
-on (`BENCH` is the same floor the ports and tracks worlds roll on). The
-composer lives in `src/worlds/goldberg/workshop.ts`.
+instead, with an elevator at every south step.
+
+A bench that works on a part where it stands and hands it on can stand
+anywhere on the line. The machines that move a part somewhere else — lift,
+elevator, chute, auger, well, arm, divert, spill — belong only where the
+line actually steps; mid-line they reach into the course below and set the
+part down on nothing. Every placed bench gets a `line`: a closed outlet holds
+the part at centre, a closed inlet starts the part inside the cell. Classic
+wires are not used; travel times do not match `fireAt` beads. Machines never
+mirror. `shop.ts` is the vocabulary every bench agrees on (`BENCH` is the
+same floor the ports and tracks worlds roll on). The composer lives in
+`src/worlds/goldberg/workshop.ts`.
 
 ### Circus
 
