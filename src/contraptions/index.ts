@@ -1,83 +1,68 @@
 import type { Contraption } from '../core/types'
 
-import { abacus } from './abacus'
+import { arm } from './arm'
+import { auger } from './auger'
 import { bell } from './bell'
-import { beltDrive } from './belt-drive'
-import { bouncingBalls } from './bouncing-balls'
-import { boxStep } from './box-step'
-import { bubble } from './bubble'
-import { conveyor } from './conveyor'
-import { dominoes } from './dominoes'
-import { drip } from './drip'
-import { elevator } from './elevator'
-import { flip } from './flip'
+import { beltRun } from './belt'
+import { bin } from './bin'
+import { carousel } from './carousel'
+import { chute } from './chute'
+import { counter } from './counter'
+import { dip } from './dip'
+import { divert } from './divert'
 import { gantry } from './gantry'
-import { gate } from './gate'
-import { gear } from './gear'
+import { geneva } from './geneva'
 import { hammer } from './hammer'
+import { hoist } from './hoist'
+import { hopper } from './hopper'
 import { lamp } from './lamp'
-import { marbleRun } from './marble-run'
-import { metronome } from './metronome'
-import { newtonsCradle } from './newtons-cradle'
-import { orbit } from './orbit'
-import { orrery } from './orrery'
-import { pendulum } from './pendulum'
-import { pendulumWave } from './pendulum-wave'
-import { pinwheel } from './pinwheel'
-import { pipe } from './pipe'
-import { piston } from './piston'
-import { pulse } from './pulse'
-import { quadFade } from './quad-fade'
-import { ratchet } from './ratchet'
-import { seesaw } from './seesaw'
-import { slopeBall } from './slope-ball'
-import { spring } from './spring'
-import { sweep } from './sweep'
-import { traffic } from './traffic'
-import { wavy } from './wavy'
-import { windmill } from './windmill'
+import { latch } from './latch'
+import { lift } from './lift'
+import { line } from './line'
+import { lineshaft } from './lineshaft'
+import { mill } from './mill'
+import { press } from './press'
+import { punch } from './punch'
+import { saw } from './saw'
+import { scale } from './scale'
+import { timer } from './timer'
+import { tipper } from './tipper'
 
 /**
- * The registry. Adding a contraption is: write the file, add it here.
- * `npm run new <name>` scaffolds both halves.
+ * The registry: one workshop. Feeders let parts go, conveyors carry them
+ * bench to bench, stations work them, and endings take them in or announce
+ * them. Adding a machine is: write the file, add it here. `npm run new <name>`
+ * scaffolds both halves, and `shop.ts` holds the heights and speeds every
+ * bench agrees on.
  */
 export const registry: Contraption<any>[] = [
-  abacus,
+  arm,
+  auger,
   bell,
-  beltDrive,
-  bouncingBalls,
-  boxStep,
-  bubble,
-  conveyor,
-  dominoes,
-  drip,
-  elevator,
-  flip,
+  beltRun,
+  bin,
+  carousel,
+  chute,
+  counter,
+  dip,
+  divert,
   gantry,
-  gate,
-  gear,
+  geneva,
   hammer,
+  hoist,
+  hopper,
   lamp,
-  marbleRun,
-  metronome,
-  newtonsCradle,
-  orbit,
-  orrery,
-  pendulum,
-  pendulumWave,
-  pinwheel,
-  pipe,
-  piston,
-  pulse,
-  quadFade,
-  ratchet,
-  seesaw,
-  slopeBall,
-  spring,
-  sweep,
-  traffic,
-  wavy,
-  windmill,
+  latch,
+  lift,
+  line,
+  lineshaft,
+  mill,
+  press,
+  punch,
+  saw,
+  scale,
+  timer,
+  tipper,
 ]
 
 export const byName = (name: string): Contraption<any> | undefined =>

@@ -1,96 +1,90 @@
 import { defineContraption } from '../core/define'
 import { clipBox, outline, solid } from '../core/draw'
-import { easeInOutCubic, easeOutQuad, lerp, seg } from '../core/ease'
+import { easeInOutCubic, lerp, seg } from '../core/ease'
+import { BELT_V, BENCH, PART, PART_Y, belt, bench, part } from './shop'
 
 /**
- * A portal crane shuttling a crate between two pads.
- *
- * The second half of the loop replays the first half backwards, so the crane
- * carries the crate out and then fetches it home — the loop closes without the
- * crate ever teleporting back to its starting pad. Pads are low plinths rather
- * than full-height stacks: the hook needs most of the frame's height to travel
- * through, or the pick-up and set-down stop reading as vertical moves at all.
+ * A part rides in on the low belt and stops at the block, the crane lowers
+ * its hook, lifts the part clear, runs it across the shop, and sets it on
+ * the high belt, which carries it off east.
  */
+const BEAM = -0.94
+const PICK_X = -0.5
+const DROP_X = 0.5
+const OUT_Y = -0.34
+const LOW_Y = 0.5 + BENCH
+const CARRY = -0.7
+const TIP_PICK = 0.5 + PART_Y - PART / 2 - 0.02
+const TIP_DROP = OUT_Y - PART - 0.02
+const RELEASE = 0.86
+
 export const gantry = defineContraption({
   name: 'gantry',
   label: 'Gantry',
-  tags: ['lift', 'square'],
+  tags: ['lift', 'line'],
   span: [2, 2],
   rotations: [0],
-  // The crate touching down on the far pad.
-  fireAt: 0.42,
-  setup: ({ color, rng }) => ({ color, dir: rng.sign() }),
-  draw: (p, s, { w, h, size, u, ink, weight }) => {
-    const beam = -h / 2 + size * 0.3
-    const floor = h / 2 - size * 0.14
-    const crate = size * 0.5
-    const leg = w / 2 - size * 0.2
-    const post = size * 0.11
-    const padH = size * 0.1
-    const a = -leg * 0.62 * s.dir
-    const b = leg * 0.62 * s.dir
-    // Crate-center heights: resting on a pad, and carried under the trolley.
-    const rest = floor - padH - crate / 2
-    const carry = beam + size * 0.62
+  fireAt: RELEASE,
+  setup: ({ color }) => ({ color }),
+  draw: (p, s, { w, h, size: k, u, ink, weight }) => {
+    // The trolley: across at 0.64, back through the top of the loop.
+    const back = u >= 0.92 ? u - 0.92 : u + 0.08
+    const tx =
+      u < 0.64 && u >= 0.2 ? PICK_X
+      : u < 0.8 && u >= 0.64 ? lerp(PICK_X, DROP_X, easeInOutCubic(seg(u, 0.64, 0.8)))
+      : u >= 0.8 && u < 0.92 ? DROP_X
+      : lerp(DROP_X, PICK_X, easeInOutCubic(seg(back, 0, 0.28)))
+    // The hook's tip.
+    const tip =
+      u < 0.32 ? CARRY
+      : u < 0.44 ? lerp(CARRY, TIP_PICK, easeInOutCubic(seg(u, 0.32, 0.44)))
+      : u < 0.48 ? TIP_PICK
+      : u < 0.64 ? lerp(TIP_PICK, CARRY, easeInOutCubic(seg(u, 0.48, 0.64)))
+      : u < 0.8 ? CARRY
+      : u < RELEASE ? lerp(CARRY, TIP_DROP, easeInOutCubic(seg(u, 0.8, RELEASE)))
+      : lerp(TIP_DROP, CARRY, easeInOutCubic(seg(u, RELEASE, 0.92)))
+    const held = u >= 0.46 && u < RELEASE
 
-    // Out and back: t runs the delivery forward, then in reverse.
-    const t = u < 0.5 ? u * 2 : (1 - u) * 2
-
-    // lower to grab, lift, traverse, lower, set down and raise clear
-    let x = a
-    let hook = carry
-    let carrying = false
-    if (t < 0.16) {
-      hook = lerp(carry, rest, easeInOutCubic(seg(t, 0, 0.16)))
-    } else if (t < 0.34) {
-      hook = lerp(rest, carry, easeInOutCubic(seg(t, 0.16, 0.34)))
-      carrying = true
-    } else if (t < 0.66) {
-      x = lerp(a, b, easeInOutCubic(seg(t, 0.34, 0.66)))
-      carrying = true
-    } else if (t < 0.84) {
-      x = b
-      hook = lerp(carry, rest, easeInOutCubic(seg(t, 0.66, 0.84)))
-      carrying = true
-    } else {
-      x = b
-      hook = lerp(rest, carry, easeInOutCubic(seg(t, 0.84, 1)))
-    }
-    // The whole frame flexes a little as the load lands.
-    const settle = easeOutQuad(seg(t, 0.84, 0.96)) * (1 - easeOutQuad(seg(t, 0.84, 0.96)))
+    // This loop's part: in along the low belt, on the hook, out along the
+    // high belt. Last loop's part is still leaving on the high belt.
+    const inX = Math.min(PICK_X, -1 - PART / 2 + u * BELT_V)
+    const outX = DROP_X + (u - RELEASE) * BELT_V
+    const lastX = DROP_X + (u + 1 - RELEASE) * BELT_V
 
     clipBox(p, w, h, () => {
+      // Low belt to the stop block; the high belt on its columns.
+      belt(p, k, ink, weight, s.color, -1, -0.38, u * BELT_V, LOW_Y)
+      solid(p, ink, weight, s.color)
+      p.rect(-0.35 * k, (LOW_Y - 0.1) * k, 0.04 * k, 0.2 * k)
+      bench(p, k, ink, weight, -0.3, 1)
       outline(p, ink, weight)
-      for (const side of [-1, 1]) p.line(side * leg, beam, side * leg, floor)
+      for (const x of [0.46, 0.94]) p.line(x * k, (OUT_Y + 0.14) * k, x * k, LOW_Y * k)
+      belt(p, k, ink, weight, s.color, 0.36, 1, u * BELT_V, OUT_Y)
+      part(p, k, ink, weight, s.color, 0.62, 0.5 + PART_Y, { mark: 'dot' })
+      part(p, k, ink, weight, s.color, 0.62, 0.5 + PART_Y - PART, { mark: 'dot' })
 
-      // The beam carries the load, so it gets the only ink fill in the machine.
+      if (lastX < 1.12) part(p, k, ink, weight, s.color, lastX, OUT_Y - PART / 2)
+      if (held) part(p, k, ink, weight, s.color, tx, tip + 0.02 + PART / 2)
+      else if (u < 0.46) part(p, k, ink, weight, s.color, inX, 0.5 + PART_Y)
+      else if (outX < 1.12) part(p, k, ink, weight, s.color, outX, OUT_Y - PART / 2)
+
+      // The gantry: legs, beam, trolley, cable, hook.
+      outline(p, ink, weight)
+      for (const x of [-0.9, 0.9]) p.line(x * k, BEAM * k, x * k, k)
       p.push()
-      p.stroke(ink)
-      p.strokeWeight(weight)
       p.fill(ink)
-      p.rect(0, beam + settle * size * 0.05, w - size * 0.16, post * 1.1)
+      p.rect(0, BEAM * k, 1.9 * k, 0.08 * k)
       p.pop()
-
-      const beamY = beam + settle * size * 0.05
       outline(p, ink, weight)
-      p.line(x, beamY + post, x, hook - crate / 2)
-      p.line(x - size * 0.11, hook - crate / 2, x + size * 0.11, hook - crate / 2)
-
+      p.line(tx * k, (BEAM + 0.1) * k, tx * k, (tip - 0.1) * k)
       solid(p, ink, weight, s.color)
-      p.rect(x, beamY + post * 1.6, size * 0.34, size * 0.18)
-
-      // The two pads the crate shuttles between.
+      p.rect(tx * k, (BEAM + 0.1) * k, 0.28 * k, 0.12 * k)
       outline(p, ink, weight)
-      p.rect(a, floor - padH / 2, crate * 1.2, padH)
-      p.rect(b, floor - padH / 2, crate * 1.2, padH)
-
-      const crateX = carrying ? x : t < 0.16 ? a : b
-      const crateY = carrying ? hook : rest
-      solid(p, ink, weight, s.color)
-      p.rect(crateX, crateY, crate, crate)
-
-      outline(p, ink, weight)
-      p.line(-w / 2, floor, w / 2, floor)
+      p.line(tx * k, (tip - 0.1) * k, tx * k, tip * k)
+      p.arc((tx - 0.035) * k, tip * k, 0.07 * k, 0.07 * k, 0, Math.PI)
+      const eyeY = held ? tip + 0.02 : u < 0.46 ? 0.5 + PART_Y - PART / 2 - 0.02 : OUT_Y - PART - 0.02
+      const eyeX = held ? tx : u < 0.46 ? inX : outX
+      if (eyeX < 1.12) p.circle(eyeX * k, eyeY * k, 0.06 * k)
     })
   },
 })

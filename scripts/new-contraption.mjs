@@ -23,27 +23,35 @@ if (existsSync(file)) {
 }
 
 writeFileSync(file, `import { defineContraption } from '../core/define'
-import { outline, rails, solid } from '../core/draw'
-import { lerp, pingPong } from '../core/ease'
+import { clipCell, outline, solid } from '../core/draw'
+import { easeInOutCubic, lerp, seg } from '../core/ease'
+import { BELT_V, HIT, PART_Y, bench, part, rollers, shuttle } from './shop'
 
-/** TODO: one line on what this machine does. */
+/** TODO: one sentence on what happens to the part here. */
 export const ${camel} = defineContraption({
   name: '${name}',
   label: '${label}',
-  tags: [],
-  // span: [2, 1],     // footprint in cells, if this needs more than one
-  // fireAt: 0.5,      // where in the loop the notable moment falls
-  // rotations: [0],   // lock upright if the machine depends on gravity
+  tags: ['work'],
+  role: 'sink',         // source: lets a part go · relay: carries it · sink: reacts to it
+  rotations: [0],       // the shop floor has a down
+  // span: [2, 1],      // footprint in cells, if this needs more than one
+  fireAt: HIT,          // the station beat: parts arrive, are worked at HIT, leave
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const y = lerp(size * 0.3, -size * 0.3, pingPong(u))
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const x = shuttle(u)
+    const tool = lerp(-0.2, 0.0, easeInOutCubic(seg(u, HIT - 0.06, HIT)) - easeInOutCubic(seg(u, HIT + 0.06, HIT + 0.16)))
 
-    outline(p, ink, weight)
-    rails(p, size)
-    p.line(0, -size / 2, 0, size / 2)
+    clipCell(p, k, () => {
+      bench(p, k, ink, weight)
+      rollers(p, k, ink, weight, s.color, -0.5, -0.18, u * BELT_V)
+      rollers(p, k, ink, weight, s.color, 0.18, 0.5, u * BELT_V)
+      if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y, { mark: u >= HIT ? 'dot' : 'blank' })
 
-    solid(p, ink, weight, s.color)
-    p.circle(0, y, size * 0.24)
+      outline(p, ink, weight)
+      p.line(0, -0.5 * k, 0, tool * k)
+      solid(p, ink, weight, s.color)
+      p.rect(0, tool * k, 0.3 * k, 0.1 * k)
+    })
   },
 })
 `)

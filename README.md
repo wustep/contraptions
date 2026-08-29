@@ -4,6 +4,12 @@ A generator for grids of tiny animated machines — each cell is a small,
 self-contained mechanism that loops forever, and the piece is whatever falls out
 of scattering a few hundred of them across a grid.
 
+The catalog is a workshop. Every cell is a bench on one shop floor; a part is
+received, worked, and handed to the next bench, and the handoff at the edge is
+the product: hoppers and hoists feed parts in, belts, chutes, lifts and arms
+carry them, presses, punches, saws and dip tanks work them, and bins, bells and
+stack lights take them in or announce them.
+
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
@@ -18,7 +24,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-36 machines, 14 palettes, 4 layouts.
+27 machines, 14 palettes, 4 layouts.
 
 ## How it fits together
 
@@ -35,7 +41,9 @@ src/
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
-  contraptions/     one file per machine, plus the registry in index.ts
+  contraptions/     one file per machine, the registry in index.ts, and
+                    shop.ts: the bench height, part size and belt speed every
+                    machine agrees on
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
@@ -60,18 +68,19 @@ A contraption fills one cell. Three rules:
    instances are offset.
 
 ```ts
-export const hammer = defineContraption({
-  name: 'hammer',
-  fireAt: 0.86,                       // the moment the weight lands
+export const press = defineContraption({
+  name: 'press',
+  role: 'sink',
+  rotations: [0],                     // the shop floor has a down
+  fireAt: HIT,                        // the moment the ram lands
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const y = u < 0.12
-      ? lerp(reach, -reach, easeOutSine(seg(u, 0, 0.12)))
-      : lerp(-reach, reach, easeInQuad(seg(u, 0.12, 0.86)))
-    outline(p, ink, weight)
-    p.line(0, -size * 0.4, 0, size * 0.4)
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const head = u < HIT ? lerp(REST, STRIKE, easeInQuad(seg(u, HIT - 0.06, HIT))) : REST
+    const x = shuttle(u)              // in from the west, held under the ram, out east
+    bench(p, k, ink, weight)
+    if (x !== null) part(p, k, ink, weight, s.color, x, PART_Y, { mark: u >= HIT ? 'dot' : 'blank' })
     solid(p, ink, weight, s.color)
-    p.circle(0, y, size * 0.3)
+    p.rect(0, head * k, 0.3 * k, 0.12 * k)
   },
 })
 ```
@@ -79,23 +88,37 @@ export const hammer = defineContraption({
 `seg(u, a, b)` renormalizes `u` against a sub-window and clamps — it is the
 workhorse for anything with stages.
 
+### The shop floor
+
+`shop.ts` is the vocabulary every machine draws with, so that benches line up
+across cells and a part looks the same wherever it is: `BENCH` is the line
+parts sit on (the same line the ports and tracks worlds roll their balls on,
+so all three modes share a floor), `PART` is the square blank, `SHELF` is the
+high lane lifts deliver to and chutes take from, `BELT_V` is how fast anything
+moves, and `ROLLER_R` is a roller radius chosen so four spokes close the loop
+exactly at that speed. Stations share one beat — `shuttle(u)` rolls a part in,
+holds it under the tool, fires at `HIT`, and rolls it out — so a chain of them
+reads at one tempo. Every machine locks `rotations: [0]`; that is what makes
+the grid read as one floor rather than a scatter of tiles.
+
 ### Adding one
 
 ```bash
 npm run new -- slot-machine
 ```
 
-Writes the file and registers it. Then hit **Catalog** in the panel to see it
-next to everything else, or use **Solo** to fill the whole grid with just that
-one while you work on it.
+Writes a station on the shop beat and registers it. Then hit **Catalog** in
+the panel to see it next to everything else, or use **Solo** to fill the whole
+grid with just that one while you work on it.
 
 ## Multi-cell machines
 
 A contraption can declare a footprint larger than one cell:
 
 ```ts
-span: [3, 1]     // pendulum-wave: three cells wide, one tall
-span: [2, 2]     // gantry, marble-run, orrery
+span: [3, 1]     // line: hopper, press and counter along one belt
+span: [2, 1]     // lineshaft: a motor, an overhead shaft, two tools
+span: [2, 2]     // gantry, carousel
 ```
 
 Placement runs in two passes. Spanning machines go first and claim contiguous
@@ -103,8 +126,8 @@ blocks of equal-sized free cells; single-cell machines then fill the leftovers.
 A layout whose rows do not line up (`bricks`) fails the block check and quietly
 gets all singles, which is the right fallback rather than a special case.
 
-Machines that depend on gravity — the crane, the chute, the drip — set
-`rotations: [0]` so they stay the right way up.
+The workshop has a down, so every machine sets `rotations: [0]`; instances are
+still mirrored, so a belt runs either way.
 
 ## Wired chains
 
@@ -135,16 +158,18 @@ walk doubles back and crosses itself, which reads as tangle rather than as a
 signal going somewhere.
 
 A sink does not have to consult anything to read as caused — because phases are
-chosen so each machine's own `fireAt` lands on the frame the cascade needs, an
-elevator simply arrives at the top on cue. Two hooks go further:
+chosen so each machine's own `fireAt` lands on the frame the cascade needs, a
+lift simply arrives at the shelf on cue. Two hooks go further:
 
 - `fireAt` — where in the loop the notable moment falls. Defaults to 0.
 - `fired` in the draw context — 1 at that instant, decaying to 0 shortly after.
   Derived from `u`, so using it costs no purity.
 
-`lamp`, `gate` and `bell` are built entirely around `fired`, and are what make a
-run legible at a glance. Only machines whose period is the full loop are
-eligible, so a chain never has to reason about a member firing twice per cycle.
+`lamp`, `bell` and `latch` are built around that moment — a stack light comes
+on, a striker hits a bell, a stop gate lifts and lets a queued part go — and
+are what make a run legible at a glance. Only machines whose period is the full
+loop are eligible, so a chain never has to reason about a member firing twice
+per cycle.
 
 ## Modes
 

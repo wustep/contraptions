@@ -1,44 +1,40 @@
 import { defineContraption } from '../core/define'
-import { floorRail, outline } from '../core/draw'
+import { outline, solid } from '../core/draw'
+import { BENCH, HIT, bench, burst, pulse } from './shop'
 
 /**
- * A bulb that lights when its machine fires. Wired into a chain, a row of these
- * reads as a signal running across the piece.
+ * The signal reaches the stack light on its post, the top lens comes on,
+ * and it fades as the moment passes.
  */
 export const lamp = defineContraption({
   name: 'lamp',
-  label: 'Lamp',
+  label: 'Stack Light',
   tags: ['signal'],
-  // Gravity gives this one an up.
-  rotations: [0],
   role: 'sink',
-  fireAt: 0,
-  mirror: false,
-  setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight, fired }) => {
-    void u
-    const d = size * 0.36
-    const y = -size * 0.08
+  rotations: [0],
+  fireAt: HIT,
+  setup: ({ color, theme }) => ({ color, bg: theme.bg }),
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    const lit = pulse(u, HIT, 48)
+    const lens = -0.34
 
+    bench(p, k, ink, weight)
+
+    // The control box, the post, the stack.
     outline(p, ink, weight)
-    floorRail(p, size)
-    p.line(0, size / 2, 0, y + d / 2)
-    p.line(-size * 0.11, y + d / 2, size * 0.11, y + d / 2)
+    p.rect(0, (BENCH - 0.07) * k, 0.24 * k, 0.14 * k)
+    p.line(0, (BENCH - 0.14) * k, 0, -0.08 * k)
+    p.line(-0.11 * k, -0.08 * k, 0.11 * k, -0.08 * k)
+    solid(p, ink, weight, s.color)
+    p.circle(0.05 * k, (BENCH - 0.07) * k, 0.05 * k)
 
-    if (fired > 0.02) {
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      const reach = d * (0.62 + fired * 0.35)
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2 + Math.PI / 8
-        p.line(Math.cos(a) * d * 0.6, y + Math.sin(a) * d * 0.6, Math.cos(a) * reach, y + Math.sin(a) * reach)
-      }
-      p.pop()
-    }
+    burst(p, k, s.color, weight, 0, lens, lit, 0.17, 0.3, 8, Math.PI / 8)
 
+    solid(p, ink, weight, s.bg)
+    p.rect(0, -0.17 * k, 0.22 * k, 0.16 * k)
+    solid(p, ink, weight, lit > 0.02 ? s.color : s.bg)
+    p.rect(0, lens * k, 0.22 * k, 0.18 * k, 0.03 * k)
     outline(p, ink, weight)
-    if (fired > 0.02) p.fill(s.color)
-    p.circle(0, y, d)
+    p.line(-0.13 * k, -0.44 * k, 0.13 * k, -0.44 * k)
   },
 })
