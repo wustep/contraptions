@@ -38,15 +38,16 @@ function drawConduits(p: p5, comp: Composition): void {
   const unit = comp.unit
   const base = strokeWeight(unit, unit, comp.theme, comp.options.stroke)
 
+  const dy = (comp.wireY ?? 0) * unit
   p.push()
   p.noFill()
   for (const w of comp.wires) {
     p.stroke(comp.theme.ink)
     p.strokeWeight(base * 3.2)
-    p.line(w.from.x, w.from.y, w.to.x, w.to.y)
+    p.line(w.from.x, w.from.y + dy, w.to.x, w.to.y + dy)
     p.stroke(comp.theme.bg)
     p.strokeWeight(base * 1.6)
-    p.line(w.from.x, w.from.y, w.to.x, w.to.y)
+    p.line(w.from.x, w.from.y + dy, w.to.x, w.to.y + dy)
   }
   p.pop()
 }
@@ -55,6 +56,7 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   if (!comp.wires.length) return
   const unit = comp.unit
   const base = strokeWeight(unit, unit, comp.theme, comp.options.stroke)
+  const dy = (comp.wireY ?? 0) * unit
 
   p.push()
   p.stroke(comp.theme.ink)
@@ -65,14 +67,14 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   // it is supposed to be feeding.
   for (const w of comp.wires) {
     p.fill(comp.theme.bg)
-    p.circle((w.from.x + w.to.x) / 2, (w.from.y + w.to.y) / 2, unit * 0.17)
+    p.circle((w.from.x + w.to.x) / 2, (w.from.y + w.to.y) / 2 + dy, unit * 0.17)
     if (w.last) {
       // A bar across the far end, so a run visibly terminates somewhere.
       const dx = Math.sign(w.to.x - w.from.x)
       const dy = Math.sign(w.to.y - w.from.y)
       const at = 0.68
       const cx = w.from.x + (w.to.x - w.from.x) * at
-      const cy = w.from.y + (w.to.y - w.from.y) * at
+      const cy = w.from.y + (w.to.y - w.from.y) * at + dy
       p.line(cx - dy * unit * 0.12, cy - dx * unit * 0.12, cx + dy * unit * 0.12, cy + dx * unit * 0.12)
     }
   }
@@ -83,7 +85,7 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
     p.fill(w.color)
     p.circle(
       w.from.x + (w.to.x - w.from.x) * travel,
-      w.from.y + (w.to.y - w.from.y) * travel,
+      w.from.y + (w.to.y - w.from.y) * travel + dy,
       unit * 0.26,
     )
   }

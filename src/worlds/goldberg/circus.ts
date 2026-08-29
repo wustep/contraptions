@@ -85,7 +85,10 @@ export function buildCircus(options: Options, canvas: number): Composition {
     return any.length ? any : floor.singles
   }
   if (options.chains > 0) {
-    for (const path of chainPaths(floor.cells, floor.claimed, floor.rng.fork('paths'), options.chains, 'any')) {
+    // Along one course only. A run that climbs draws its cable straight
+    // through the towers between the acts; a run along the course puts it on
+    // the floor they all stand on.
+    for (const path of chainPaths(floor.cells, floor.claimed, floor.rng.fork('paths'), options.chains, 'row')) {
       const members: Instance[] = path.map((cell, k) => {
         const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
         const inst = floor.place(
@@ -114,5 +117,5 @@ export function buildCircus(options: Options, canvas: number): Composition {
     inst.angle = 0
   }
 
-  return finish(options, floor, wires)
+  return finish(options, floor, wires, [], { wireY: 0.42 })
 }

@@ -40,8 +40,11 @@ export const sideOf = (from: Cell, to: Cell): Side => {
  *   any   — classic: four ways, including up
  *   down  — cascade: never up; sideways twice as often as a drop
  *   along — workshop: a shop line, mostly east, never up
+ *   row   — circus: along one course only, so the cable that joins the acts
+ *           can run on the floor they all stand on instead of climbing
+ *           through them
  */
-export type PathStyle = 'any' | 'down' | 'along'
+export type PathStyle = 'any' | 'down' | 'along' | 'row'
 
 const STEPS_ANY: [number, number][] = [
   [1, 0],
@@ -65,8 +68,13 @@ const STEPS_ALONG: [number, number][] = [
   [0, 1],
 ]
 
+const STEPS_ROW: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+]
+
 const stepsFor = (style: PathStyle): [number, number][] =>
-  style === 'down' ? STEPS_DOWN : style === 'along' ? STEPS_ALONG : STEPS_ANY
+  style === 'down' ? STEPS_DOWN : style === 'along' ? STEPS_ALONG : style === 'row' ? STEPS_ROW : STEPS_ANY
 
 /**
  * Reserve runs of free cells to build chains along.

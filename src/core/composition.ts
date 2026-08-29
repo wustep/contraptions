@@ -219,6 +219,14 @@ export interface Composition {
    * punching through paddles and running off the rim.
    */
   showWires?: boolean
+  /**
+   * Where the conduit runs inside a cell, as a fraction of the cell below its
+   * centre. 0 is centre to centre, which is right for classic's toys — they
+   * are drawn all over their cells and the wire reads as plumbing behind
+   * them. A world whose machines all stand on one ground line wants the cable
+   * on that line instead of climbing through the acts.
+   */
+  wireY?: number
 }
 
 /**

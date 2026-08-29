@@ -253,7 +253,7 @@ export function finish(
   floor: Floor,
   wires: Wire[],
   overlays: Overlay[] = [],
-  extras: { showWires?: boolean } = {},
+  extras: { showWires?: boolean; wireY?: number } = {},
 ): Composition {
   grantSeams(floor)
   return {
@@ -269,5 +269,6 @@ export function finish(
     wires,
     overlays,
     showWires: extras.showWires,
+    wireY: extras.wireY,
   }
 }
