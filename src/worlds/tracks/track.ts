@@ -1,7 +1,9 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../core/draw'
-import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
+import { clipCell, outline, solid } from '../../core/draw'
+import { easeInOutCubic, easeOutCubic, mod, seg } from '../../core/ease'
+import type { Theme } from '../../core/themes'
 import { ARC_CY, ARC_R, ARC_WALL, BY, D, FALL_V, FLOOR, LIFT_W, ROLL_V, TW } from '../lanes'
+import { reactors, type ReactorState } from './reactors'
 
 /**
  * Track cells. Each is one of seven shapes in a canonical hand — runs go west
@@ -27,10 +29,36 @@ export type Kind = 'run' | 'landing' | 'drop' | 'fall' | 'shaft' | 'liftIn' | 'l
 /** How a run is dressed. */
 export type Variant = 'rail' | 'conveyor' | 'gate'
 
+/**
+ * A reactor assembly that reaches into this track cell. The track cell draws
+ * the whole assembly clipped to its own footprint, and the reactor draws the
+ * same assembly clipped to its cell, so the seam never cuts it — the pattern
+ * of an elevator car straddling two cells.
+ */
+export interface Mount {
+  /** Which reactor's assembly, by name. */
+  name: string
+  /** The reactor's own state, with `demo` set so the assembly comes unclipped. */
+  state: ReactorState
+  /** The reactor's cell relative to this one, in cells, in world hand. */
+  dx: number
+  dy: number
+  /** Undo this instance's mirror, so the assembly lands as the reactor drew it. */
+  flip: number
+  /** Fraction of the period between this instance's u = 0 and the reactor's. */
+  at: number
+}
+
 export interface SegState {
   color: string
   kind: Kind
   variant: Variant
+  /** The instance's period in frames; reaction and gate windows count these. */
+  frames?: number
+  /** Fraction of the period at which the ball reaches the gate flap. */
+  gateAt?: number
+  /** Reactor assemblies whose ink crosses into this cell, drawn by it. */
+  mounts?: Mount[]
 }
 
 type Pt = [number, number]
@@ -142,9 +170,48 @@ export function bucket(p: p5, k: number, ink: string, weight: number, bg: string
   p.line(x + 0.18 * k, y + (D / 2 + 0.03) * k, x + 0.18 * k, y - 0.02 * k)
 }
 
+const reactorByName = new Map(reactors.map((r) => [r.name, r]))
+
 /**
- * Draw a track cell in its canonical hand. `u` is the cell's own clock — for a
- * gate it runs from the moment the ball reaches the flap.
+ * This cell's share of the reactor assemblies that reach into it, clipped to
+ * this cell so the crossing ink lands on its own other half. Drawn after the
+ * rails so a mast stands on the floor line.
+ */
+function drawMounts(
+  p: p5,
+  s: SegState,
+  k: number,
+  u: number,
+  ink: string,
+  weight: number,
+  theme: Theme,
+): void {
+  if (!s.mounts?.length) return
+  for (const m of s.mounts) {
+    const reactor = reactorByName.get(m.name)
+    if (!reactor) continue
+    clipCell(p, k, () => {
+      p.scale(m.flip, 1)
+      p.translate(m.dx * k, m.dy * k)
+      reactor.draw(p, m.state, {
+        size: k,
+        w: k,
+        h: k,
+        u: mod(u - m.at, 1),
+        t: 0,
+        unit: k,
+        theme,
+        ink,
+        weight,
+        fired: 0,
+      })
+    })
+  }
+}
+
+/**
+ * Draw a track cell in its canonical hand. `u` is the cell's own clock; the
+ * gate's window starts at `gateAt`, the moment the ball reaches the flap.
  */
 export function drawTrack(
   p: p5,
@@ -153,18 +220,27 @@ export function drawTrack(
   u: number,
   ink: string,
   weight: number,
+  theme: Theme,
 ): void {
+  drawRails(p, s, k, u, ink, weight)
+  drawMounts(p, s, k, u, ink, weight, theme)
+}
+
+function drawRails(p: p5, s: SegState, k: number, u: number, ink: string, weight: number): void {
   outline(p, ink, weight)
   switch (s.kind) {
     case 'run': {
       if (s.variant === 'conveyor') {
+        // Roller speed is set in frames so it holds whatever the period is;
+        // whole turns per period, and the cross is fourfold anyway.
+        const turns = Math.max(1, Math.round((s.frames ?? 720) / 120))
         const r = 0.08
         floorLine(p, k, -0.3, 0.3)
         floorLine(p, k, -0.3, 0.3, FLOOR + r * 2)
         for (const x of [-0.3, 0.3]) {
           p.push()
           p.translate(x * k, (FLOOR + r) * k)
-          p.rotate(u * Math.PI * 2 * 6)
+          p.rotate(u * Math.PI * 2 * turns)
           outline(p, ink, weight)
           p.circle(0, 0, r * 2 * k)
           p.line(-r * k, 0, r * k, 0)
@@ -177,8 +253,12 @@ export function drawTrack(
       }
       floorLine(p, k, -0.5, 0.5)
       if (s.variant === 'gate') {
-        // A flap hung from a bracket; the ball shoulders it open and it swings shut.
-        const open = easeOutCubic(seg(u, 0, 0.05)) - easeInOutCubic(seg(u, 0.1, 0.24))
+        // A flap hung from a bracket; the ball shoulders it open and it
+        // swings shut behind it. Windows in frames — open over 10, shut over
+        // 14 to 38 — so an open flap always has its ball beside it.
+        const K = 1 / Math.max(s.frames ?? 240, 40)
+        const ug = mod(u - (s.gateAt ?? 0), 1)
+        const open = easeOutCubic(seg(ug, 0, 10 * K)) - easeInOutCubic(seg(ug, 14 * K, 38 * K))
         const hinge = FLOOR - D - 0.12
         p.line(0.08 * k, hinge * k, 0.08 * k, (hinge - 0.12) * k)
         p.line(-0.04 * k, (hinge - 0.12) * k, 0.2 * k, (hinge - 0.12) * k)

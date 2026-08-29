@@ -1,13 +1,13 @@
 import type p5 from 'p5'
 import { ART_INSET } from '../../core/constants'
-import { solid } from '../../core/draw'
+import { clipBox, solid } from '../../core/draw'
 import { mod } from '../../core/ease'
 import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName, type Theme } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
 import type { CatalogEntry, Composition, Options, Overlay } from '../../core/composition'
-import { D } from '../lanes'
+import { D, LIFT_W } from '../lanes'
 import { reactors, type Face, type Reactor, type ReactorState } from './reactors'
 import {
   along,
@@ -97,7 +97,9 @@ function regions(res: number, rng: Rng): Region[] {
 /**
  * Carve one closed loop: a lift up one side, and an even number of runs
  * zig-zagging down the rest, joined by drops. Returns the cells in circuit
- * order starting from the lift's top.
+ * order starting from the lift's top. A region narrower than five columns
+ * gets the two-run fallback: a zig-zag there is a tower of one-cell runs
+ * where every reactor collides with the walls.
  */
 function carve(region: Region, rng: Rng): TrackCell[] | null {
   const w = region.c1 - region.c0 + 1
@@ -106,6 +108,7 @@ function carve(region: Region, rng: Rng): TrackCell[] | null {
 
   // Work with the lift on the left, then mirror if the coin says so.
   const onRight = rng.bool()
+  if (w < 5) return carveFallback(region, rng, onRight)
   const col = (c: number) => (onRight ? region.c1 - (c - region.c0) : c)
   const side = (s: Side): Side => (onRight ? (s === 'E' ? 'W' : s === 'W' ? 'E' : s) : s)
 
@@ -119,7 +122,6 @@ function carve(region: Region, rng: Rng): TrackCell[] | null {
   for (let row = region.r0 + 2; row <= region.r1 - 1; row += 2) interior.push(row)
   if (interior.length % 2 === 1) interior.pop()
   const runs = interior.length + 2
-  if (h < 3) return carveFallback(region, rng, onRight)
   const rows = [region.r0, ...interior, region.r1]
 
   const cells: TrackCell[] = []
@@ -181,7 +183,7 @@ const trackContraption: Contraption<SegState> = {
   label: 'Track',
   rotations: [0],
   setup: ({ color }) => ({ color, kind: 'run', variant: 'rail' }),
-  draw: (p, s, { size, u, ink, weight }) => drawTrack(p, s, size, u, ink, weight),
+  draw: (p, s, { size, u, ink, weight, theme }) => drawTrack(p, s, size, u, ink, weight, theme),
 }
 
 export function buildTracks(options: Options, canvas: number): Composition {
@@ -215,9 +217,10 @@ export function buildTracks(options: Options, canvas: number): Composition {
     const unit = duration(pieces('run'))
     const total = segments.reduce((sum, s) => sum + duration(s.path), 0)
     const circuitFrames = (total / unit) * FRAMES_PER_CELL
-    // Enough balls that a reactor is passed at least twice a loop however
-    // long the circuit is, and never so many they crowd.
-    const balls = Math.min(6, Math.max(regionRng.pick([2, 3, 3, 4]), Math.ceil((2 * circuitFrames) / TRACKS_LOOP)))
+    // One ball per nine or so cells of circuit: at any pause every second
+    // run holds a ball, so the rods are visibly about to be hit.
+    const circuitCells = circuitFrames / FRAMES_PER_CELL
+    const balls = Math.min(6, Math.max(2, Math.round(circuitCells / 9)))
     const wantM = (TRACKS_LOOP / circuitFrames) * balls
     const m = DIVISORS.reduce((best, d) => (Math.abs(d - wantM) < Math.abs(best - wantM) ? d : best), 1)
     const period = TRACKS_LOOP / m
@@ -230,19 +233,28 @@ export function buildTracks(options: Options, canvas: number): Composition {
     /** Frame at which ball 0 reaches circuit fraction f. */
     const passFrame = (f: number) => (f * balls * TRACKS_LOOP) / m
 
-    // Track cells.
+    // Track cells. Every one runs on the region's period with phase 0, so
+    // gate windows and mounted assemblies can share the circuit's clock.
+    const stateOf = new Map<Segment, SegState>()
+    const runCount = segments.filter((s) => s.kind === 'run').length
+    const gateCap = Math.ceil(runCount / 6)
+    let gates = 0
+    let prevRunGate = false
     for (const s of segments) {
       const cellRng = regionRng.fork(`cell:${s.cell.index}`)
       const state = trackContraption.setup({ rng: cellRng, size, w: size, h: size, theme, cell: s.cell, color: cellRng.pick(theme.colors) })
       state.kind = s.kind
-      let phase = 0
-      let instPeriod = TRACKS_LOOP
+      state.frames = period
       if (s.kind === 'run') {
         state.variant = cellRng.weighted(['rail', 'conveyor', 'gate'] as Variant[], (v) => (v === 'rail' ? 3.2 : v === 'conveyor' ? 1.2 : 1))
+        // A gate right after a gate reads as a picket fence, and a region
+        // full of them reads as one; both get demoted back to rail.
+        if (state.variant === 'gate' && (prevRunGate || gates >= gateCap)) state.variant = 'rail'
         if (state.variant === 'gate') {
-          instPeriod = period
-          phase = mod(-Math.round(passFrame(s.start + s.span * 0.4)), period)
+          gates++
+          state.gateAt = mod(Math.round(passFrame(s.start + s.span * 0.4)), period) / period
         }
+        prevRunGate = state.variant === 'gate'
       }
       instances.push({
         contraption: trackContraption as Contraption<unknown>,
@@ -250,20 +262,25 @@ export function buildTracks(options: Options, canvas: number): Composition {
         cell: s.cell,
         angle: 0,
         mirror: s.mirror ? -1 : 1,
-        phase,
-        period: instPeriod,
+        phase: 0,
+        period,
         fireFrame: 0,
       })
       taken.add(s.cell)
+      stateOf.set(s, state)
     }
 
     // Reactors in the free cells alongside, touched off as the ball passes.
-    // Each is picked to differ from any reactor already in a neighbouring
-    // cell, so a run does not end up lined with five of the same counter.
+    // A run may carry one above and one below; the tall columns beside every
+    // lift feed pinwheels and dominoes. Only the same reactor within two
+    // cells along the same free row (or column) is vetoed, for variety
+    // without starving the fill.
     const placed = new Map<string, string>()
     for (const s of regionRng.shuffle(segments)) {
-      if (s.kind !== 'run' && s.kind !== 'fall') continue
+      if (s.kind !== 'run' && s.kind !== 'fall' && s.kind !== 'shaft') continue
+      let mounted = 0
       for (const face of regionRng.shuffle(['N', 'E', 'S', 'W'] as Side[])) {
+        if (mounted >= 2) break
         const [dx, dy] = DELTA[face]
         const col = s.track.col + dx
         const row = s.track.row + dy
@@ -273,18 +290,24 @@ export function buildTracks(options: Options, canvas: number): Composition {
         const reactorFace = OPP[face] as Face
         const vertical = reactorFace === 'N' || reactorFace === 'S'
         if (vertical !== (s.kind === 'run')) continue
-        const around = [placed.get(`${col - 1}:${row}`), placed.get(`${col + 1}:${row}`), placed.get(`${col}:${row - 1}`), placed.get(`${col}:${row + 1}`)]
+        const axis: [number, number][] = vertical
+          ? [[col - 1, row], [col - 2, row], [col + 1, row], [col + 2, row]]
+          : [[col, row - 1], [col, row - 2], [col, row + 1], [col, row + 2]]
+        const around = axis.map(([c, r]) => placed.get(`${c}:${r}`))
         const pool = reactors.filter((r) => r.faces.includes(reactorFace) && !around.includes(r.name))
         if (!pool.length || !regionRng.bool(0.6)) continue
         const reactor = regionRng.pick(pool)
         const cellRng = regionRng.fork(`react:${cell.index}`)
-        const state = reactor.setup({ rng: cellRng, size, w: size, h: size, theme, cell, color: cellRng.pick(theme.colors) }) as ReactorState
+        const state = reactor.setup({ rng: cellRng, size, w: size, h: size, theme, cell, color: cellRng.pick(theme.colors) })
         state.face = reactorFace
         state.dir = s.track.out === 'E' || s.track.out === 'S' ? 1 : -1
-        // Contact: a hanging feeler or pedal meets the ball mid-cell; a side
-        // arm meets it a third of the way down the tube.
-        const contact = s.start + s.span * (s.kind === 'run' ? 0.5 : 0.3)
-        const pass = passFrame(contact)
+        state.frames = period
+        if (s.kind === 'shaft') state.wall = LIFT_W
+        // Contact: where along the cell's path the ball meets the trigger —
+        // mid-cell for a clapper or pedal, downstream for a trip lever, and
+        // mid-shaft for the rising bucket.
+        const frac = s.kind === 'shaft' ? 0.5 : reactor.contact ?? (s.kind === 'run' ? 0.5 : 0.3)
+        const pass = passFrame(s.start + s.span * frac)
         instances.push({
           contraption: reactor as Contraption<unknown>,
           state,
@@ -297,7 +320,18 @@ export function buildTracks(options: Options, canvas: number): Composition {
         })
         taken.add(cell)
         placed.set(`${col}:${row}`, reactor.name)
-        break
+        // The track cell draws the assembly's share of the ink on its own
+        // side of the seam, on the same clock.
+        const segState = stateOf.get(s)!
+        ;(segState.mounts ??= []).push({
+          name: reactor.name,
+          state: { ...state, demo: true },
+          dx,
+          dy,
+          flip: s.mirror ? -1 : 1,
+          at: mod(Math.round(pass), period) / period,
+        })
+        mounted++
       }
     }
 
@@ -361,6 +395,7 @@ export function tracksCatalog(): CatalogEntry[] {
     state: (state) => {
       state.kind = shape.kind
       state.variant = shape.variant
+      state.frames = period
     },
     overlay: (cell, { color }) => {
       const path = pieces(shape.kind)
@@ -387,14 +422,15 @@ export function tracksCatalog(): CatalogEntry[] {
 
 /**
  * A reactor shown with the piece of track it reacts to, and a ball going by:
- * a two-cell composite, the reactor on the side its face says.
+ * a two-cell composite, the reactor on the side its face says. The composite
+ * footprint holds both cells, so the assembly draws unclipped.
  */
 function reactorDemo(reactor: Reactor, period: number): CatalogEntry {
   const face = reactor.faces[0]
   const vertical = face === 'N' || face === 'S'
   const kind: Kind = vertical ? 'run' : 'fall'
   const path = pieces(kind)
-  const contact = vertical ? 0.5 : 0.3
+  const contact = reactor.contact ?? (vertical ? 0.5 : 0.3)
   const frames = (duration(path) / duration(pieces('run'))) * FRAMES_PER_CELL
   // Offsets of the reactor and the track cell from the composite's centre.
   const r: [number, number] = face === 'S' ? [0, -0.5] : face === 'N' ? [0, 0.5] : face === 'W' ? [0.5, 0] : [-0.5, 0]
@@ -405,22 +441,30 @@ function reactorDemo(reactor: Reactor, period: number): CatalogEntry {
     label: reactor.label,
     span: vertical ? [1, 2] : [2, 1],
     rotations: [0],
+    reach: reactor.reach,
     setup: (ctx) => {
       const s = reactor.setup({ ...ctx, w: ctx.size, h: ctx.size })
       s.face = face
       s.dir = 1
+      s.demo = true
+      s.frames = period
       return s
     },
     draw: (p, s, ctx) => {
       const k = ctx.size
-      p.push()
-      p.translate(t[0] * k, t[1] * k)
-      drawTrack(p, { color: s.color, kind, variant: 'rail' }, k, ctx.u, ctx.ink, ctx.weight)
-      p.pop()
-      p.push()
-      p.translate(r[0] * k, r[1] * k)
-      reactor.draw(p, s, { ...ctx, w: k, h: k })
-      p.pop()
+      // The composite is the footprint here, plus whatever reach the reactor
+      // declares (the pinwheel's blade tips), so the demo spills no further
+      // than a placed instance would.
+      clipBox(p, ctx.w + (reactor.reach ?? 0) * 2 * k, ctx.h + (reactor.reach ?? 0) * 2 * k, () => {
+        p.push()
+        p.translate(t[0] * k, t[1] * k)
+        drawTrack(p, { color: s.color, kind, variant: 'rail', frames: period }, k, ctx.u, ctx.ink, ctx.weight, ctx.theme)
+        p.pop()
+        p.push()
+        p.translate(r[0] * k, r[1] * k)
+        reactor.draw(p, s, { ...ctx, w: k, h: k })
+        p.pop()
+      })
     },
   }
 
