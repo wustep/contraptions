@@ -23,27 +23,31 @@ if (existsSync(file)) {
 }
 
 writeFileSync(file, `import { defineContraption } from '../core/define'
-import { outline, rails, solid } from '../core/draw'
-import { lerp, pingPong } from '../core/ease'
+import { outline } from '../core/draw'
+import { seg } from '../core/ease'
+import { P, flight, ground, pedestal, performer } from './circus'
 
-/** TODO: one line on what this machine does. */
+/** TODO: the act's one-sentence causal story — what sets what off, and how it comes back round. */
 export const ${camel} = defineContraption({
   name: '${name}',
   label: '${label}',
   tags: [],
+  // role: 'source',   // source | relay | sink, if this can sit in a wired chain
   // span: [2, 1],     // footprint in cells, if this needs more than one
   // fireAt: 0.5,      // where in the loop the notable moment falls
-  // rotations: [0],   // lock upright if the machine depends on gravity
+  rotations: [0],      // gravity gives this one an up
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const y = lerp(size * 0.3, -size * 0.3, pingPong(u))
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    // Cell units, y down, the origin at the centre; multiply by k at the end.
+    const left: [number, number] = [-0.3, 0.1 - P / 2]
+    const right: [number, number] = [0.3, 0.1 - P / 2]
+    const pos = u < 0.5 ? flight(left, right, 0.3, seg(u, 0.1, 0.4)) : flight(right, left, 0.3, seg(u, 0.6, 0.9))
 
     outline(p, ink, weight)
-    rails(p, size)
-    p.line(0, -size / 2, 0, size / 2)
-
-    solid(p, ink, weight, s.color)
-    p.circle(0, y, size * 0.24)
+    ground(p, k, 1)
+    pedestal(p, k, ink, weight, s.color, -0.3, 0.1, 0.5, 0.2)
+    pedestal(p, k, ink, weight, s.color, 0.3, 0.1, 0.5, 0.2)
+    performer(p, k, ink, weight, s.color, pos[0], pos[1])
   },
 })
 `)
@@ -68,4 +72,4 @@ index = index.replace(entries, list.map((l) => `  ${l},`).join('\n'))
 
 writeFileSync(indexPath, index)
 console.log(`created src/contraptions/${name}.ts and registered it`)
-console.log('remember: draw must be a pure function of `u`')
+console.log('remember: draw must be a pure function of `u`, and the act has to come back round')

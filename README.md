@@ -4,6 +4,12 @@ A generator for grids of tiny animated machines — each cell is a small,
 self-contained mechanism that loops forever, and the piece is whatever falls out
 of scattering a few hundred of them across a grid.
 
+The classic set is a circus: every cell is a looping act. An acrobat is shot
+into a net and rolls back to the cannon, a diver climbs, dives and swims to the
+ladder, two performers chase each other round a track knocking a bell and a
+counter on the way, and a gong waits all loop for its mallet. Timing is the
+joke — a lap ends, the same stunt fires again.
+
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
@@ -18,7 +24,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-36 machines, 14 palettes, 4 layouts.
+27 acts, 14 palettes, 4 layouts.
 
 ## How it fits together
 
@@ -35,7 +41,8 @@ src/
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
-  contraptions/     one file per machine, plus the registry in index.ts
+  contraptions/     one file per act, the registry in index.ts, and the
+                    shared vocabulary of the ring in circus.ts
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
@@ -60,24 +67,36 @@ A contraption fills one cell. Three rules:
    instances are offset.
 
 ```ts
-export const hammer = defineContraption({
-  name: 'hammer',
-  fireAt: 0.86,                       // the moment the weight lands
+export const hoop = defineContraption({
+  name: 'hoop',
+  fireAt: 0.24,                       // through the ring
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size, u, ink, weight }) => {
-    const y = u < 0.12
-      ? lerp(reach, -reach, easeOutSine(seg(u, 0, 0.12)))
-      : lerp(-reach, reach, easeInQuad(seg(u, 0.12, 0.86)))
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    let pos = left                                              // on a pedestal
+    if (u >= 0.12 && u < 0.36) pos = flight(left, right, lift, seg(u, 0.12, 0.36))
+    else if (u >= 0.36 && u < 0.62) pos = right
+    else if (u >= 0.62 && u < 0.86) pos = flight(right, left, lift, seg(u, 0.62, 0.86))
     outline(p, ink, weight)
-    p.line(0, -size * 0.4, 0, size * 0.4)
-    solid(p, ink, weight, s.color)
-    p.circle(0, y, size * 0.3)
+    ground(p, k, 1)
+    performer(p, k, ink, weight, s.color, pos[0], pos[1])
+    ring(p, k, ink, weight, s.color, 0, -0.14, 0.2, 0.05, knock(u, 0.24))
   },
 })
 ```
 
 `seg(u, a, b)` renormalizes `u` against a sub-window and clamps — it is the
-workhorse for anything with stages.
+workhorse for anything with stages. `src/contraptions/circus.ts` is the shared
+vocabulary the acts are written in: the performer (every act is a ball, and
+every ball is the same size), `flight` / `drop` / `rise` for anything thrown,
+`knock` and `shiver` for what a prop does when the ball hits it, `route` for a
+ball on a closed track, and the props that recur — hoop, pedestal, bell, rings
+of sound, splash. Every act draws in cell units and multiplies out by `k` at the
+last moment.
+
+Every act loops on its own: a performer that leaves a tower comes back to it by
+the end of the loop, by trampoline, cannon, teeterboard, bucket or chute, and
+the stunt on the way fires again next lap. Each file opens with the act's
+one-sentence causal story.
 
 ### Adding one
 
@@ -94,8 +113,8 @@ one while you work on it.
 A contraption can declare a footprint larger than one cell:
 
 ```ts
-span: [3, 1]     // pendulum-wave: three cells wide, one tall
-span: [2, 2]     // gantry, marble-run, orrery
+span: [3, 1]     // tightrope: three cells wide, one tall
+span: [2, 2]     // big-top, ferris
 ```
 
 Placement runs in two passes. Spanning machines go first and claim contiguous
@@ -103,8 +122,9 @@ blocks of equal-sized free cells; single-cell machines then fill the leftovers.
 A layout whose rows do not line up (`bricks`) fails the block check and quietly
 gets all singles, which is the right fallback rather than a special case.
 
-Machines that depend on gravity — the crane, the chute, the drip — set
-`rotations: [0]` so they stay the right way up.
+Machines that depend on gravity — which in a circus is nearly all of them —
+set `rotations: [0]` so they stay the right way up; the marquee is the one
+that may point any way.
 
 ## Wired chains
 
@@ -135,15 +155,17 @@ walk doubles back and crosses itself, which reads as tangle rather than as a
 signal going somewhere.
 
 A sink does not have to consult anything to read as caused — because phases are
-chosen so each machine's own `fireAt` lands on the frame the cascade needs, an
-elevator simply arrives at the top on cue. Two hooks go further:
+chosen so each machine's own `fireAt` lands on the frame the cascade needs, a
+trampoline's bounce simply lands on cue. Two hooks go further:
 
 - `fireAt` — where in the loop the notable moment falls. Defaults to 0.
 - `fired` in the draw context — 1 at that instant, decaying to 0 shortly after.
   Derived from `u`, so using it costs no purity.
 
-`lamp`, `gate` and `bell` are built entirely around `fired`, and are what make a
-run legible at a glance. Only machines whose period is the full loop are
+The sinks — `gong`, `cymbals`, `drumroll`, `confetti`, `curtain`, `dunk-tank`,
+`spotlight` — are built around `fired`, each with a build-up that runs the whole
+loop (a mallet drawn back, a drumroll speeding up, curtains slowly closing) so
+the moment reads as the end of something. Only machines whose period is the full loop are
 eligible, so a chain never has to reason about a member firing twice per cycle.
 
 ## Modes
