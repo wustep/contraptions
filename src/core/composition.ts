@@ -471,8 +471,48 @@ function buildGrid(
  * phase. This is the working view when you are building a new machine, and the
  * fastest way to see whether the set still hangs together as one language.
  */
-/** Cell columns the catalog packs into. */
-const CATALOG_COLS = 10
+/**
+ * Cell columns the catalog packs into. A fixed ten was right for the classic
+ * set of thirty-six and wrong for a world of fifteen, which came out as two
+ * short shelves of small machines adrift in white paper. Pick the width that
+ * makes the machines largest: fewer columns means a wider cell until the
+ * extra shelves cost more height than the width gains.
+ */
+const CATALOG_MAX_COLS = 10
+
+function catalogCols(entries: CatalogEntry[], canvas: number): number {
+  let best = CATALOG_MAX_COLS
+  let bestUnit = 0
+  for (let cols = 4; cols <= CATALOG_MAX_COLS; cols++) {
+    let shelves = 1
+    let used = 0
+    let unitRows = 1
+    let height = 1
+    for (const entry of entries) {
+      const [cw, ch] = entry.contraption.span ?? [1, 1]
+      if (used + cw > cols && used > 0) {
+        unitRows += height
+        shelves++
+        used = 0
+        height = 1
+      }
+      used += cw
+      height = Math.max(height, ch)
+    }
+    unitRows += height
+    const byWidth = (canvas * ART_INSET) / cols
+    const byHeight = (canvas - canvas * 0.055 - canvas * 0.03 - shelves * byWidth * 0.62) / unitRows
+    // A last shelf holding one machine reads as a mistake however big the
+    // machines are, so a ragged width does not get to win on size alone.
+    const ragged = shelves > 1 && used < cols * 0.4
+    const unit = Math.min(byWidth, byHeight) * (ragged ? 0.85 : 1)
+    if (unit > bestUnit) {
+      bestUnit = unit
+      best = cols
+    }
+  }
+  return best
+}
 
 function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[], modeLabel: string): Composition {
   const theme = themeByName(options.theme)
@@ -499,12 +539,14 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     return roleRank(a) - roleRank(b) || a.label.localeCompare(b.label)
   })
 
+  const cols = catalogCols(ordered, canvas)
+
   type Shelf = { items: CatalogEntry[]; used: number; height: number }
   const shelves: Shelf[] = []
   let shelf: Shelf = { items: [], used: 0, height: 1 }
   for (const entry of ordered) {
     const [cw, ch] = entry.contraption.span ?? [1, 1]
-    if (shelf.used + cw > CATALOG_COLS && shelf.items.length) {
+    if (shelf.used + cw > cols && shelf.items.length) {
       shelves.push(shelf)
       shelf = { items: [], used: 0, height: 1 }
     }
@@ -521,7 +563,7 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
   // the drawing rather than the canvas. It has to clear two lines of type plus
   // its offset, or a tall machine on the next shelf grows up through it — a
   // 1x2 reaches a full two units above its own shelf line.
-  const byWidth = area / CATALOG_COLS
+  const byWidth = area / cols
   const capBlock = byWidth * 0.62
   const byHeight = (canvas - headroom - canvas * 0.03 - shelves.length * capBlock) / unitRows
   const unit = Math.min(byWidth, byHeight)

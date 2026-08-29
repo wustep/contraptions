@@ -81,6 +81,7 @@ export function asContraption(machine: PortMachine<any>): Contraption<unknown> {
       name: machine.name,
       label: machine.label,
       span: machine.span,
+      reach: machine.reach,
       rotations: [0],
       setup: machine.setup,
       draw: machine.draw as Contraption<unknown>['draw'],
@@ -211,22 +212,107 @@ export function buildPorts(options: Options, canvas: number): Composition {
 
   const count = (node: Node): number => 1 + node.children.reduce((n, c) => n + count(c.node), 0)
 
-  // Grow the chains.
+  /**
+   * Grow the chains.
+   *
+   * The dial is coverage, not root count. Counting roots leaves the fraction
+   * of the sheet that ends up occupied to the seed, and the seeds that came
+   * out light did not read as air around the machines — they read as a wound,
+   * one empty blob a quarter of the sheet across. So: grow until the claimed
+   * fraction is hit, and start each chain where the sheet is emptiest.
+   */
   const roots: Node[] = []
   const sources = variants.filter((v) => v.machine.source)
-  const target = Math.max(1, Math.round((cells.length / 16) * (0.3 + options.chains * 1.4)))
+  const density = Math.max(0, Math.min(1, options.chains))
+  const want = Math.round(cells.length * (0.55 + 0.25 * density))
   const growRng = rng.fork('grow')
-  for (const start of growRng.shuffle(cells)) {
-    if (roots.length >= target) break
-    if (claimed.has(start)) continue
-    const source = growRng.weighted(sources, (v) => v.machine.source ?? 0)
-    const root = grow(start, source, null, 0, 0, growRng.fork(`chain:${start.index}`))
-    if (!root) continue
-    if (count(root) < 4) {
+
+  /** How much of a cell's neighbourhood is already taken. */
+  const crowding = (cell: Cell): number => {
+    let n = 0
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const c = neighbour(cell, dx, dy)
+        if (c && claimed.has(c)) n++
+      }
+    }
+    return n
+  }
+
+  const growAt = (start: Cell, least: number, r: Rng): boolean => {
+    const source = r.weighted(sources, (v) => v.machine.source ?? 0)
+    const root = grow(start, source, null, 0, 0, r.fork(`chain:${start.index}`))
+    if (!root) return false
+    if (count(root) < least) {
       release(root)
-      continue
+      return false
     }
     roots.push(root)
+    return true
+  }
+
+  for (let attempt = 0; claimed.size < want && attempt < cells.length * 3; attempt++) {
+    const open = cells.filter((c) => !claimed.has(c))
+    if (!open.length) break
+    // Farthest-point start: a sample of the free cells, emptiest neighbourhood
+    // wins. Taking the first free cell of a shuffle clumps the chains.
+    const sample = growRng.shuffle(open).slice(0, 12)
+    let start = sample[0]
+    let best = Infinity
+    for (const cell of sample) {
+      const n = crowding(cell)
+      if (n < best) {
+        best = n
+        start = cell
+      }
+    }
+    growAt(start, 4, growRng)
+  }
+
+  /**
+   * Patch the wounds. A connected blob of empty cells as wide as the grid is
+   * a hole in the sheet rather than air around the machines; a short chain
+   * rooted in it usually closes it, and three tries is enough to know.
+   */
+  const blobs = (): Cell[][] => {
+    const seen = new Set<Cell>()
+    const found: Cell[][] = []
+    for (const cell of cells) {
+      if (claimed.has(cell) || seen.has(cell)) continue
+      const blob: Cell[] = []
+      const stack = [cell]
+      seen.add(cell)
+      while (stack.length) {
+        const c = stack.pop()!
+        blob.push(c)
+        for (const [dx, dy] of Object.values(DELTA)) {
+          const n = neighbour(c, dx, dy)
+          if (n && !claimed.has(n) && !seen.has(n)) {
+            seen.add(n)
+            stack.push(n)
+          }
+        }
+      }
+      found.push(blob)
+    }
+    return found
+  }
+
+  const openNeighbours = (cell: Cell): number =>
+    Object.values(DELTA).filter(([dx, dy]) => {
+      const n = neighbour(cell, dx, dy)
+      return !!n && !claimed.has(n)
+    }).length
+
+  const patchRng = rng.fork('patch')
+  for (const blob of blobs()) {
+    if (blob.length < options.res) continue
+    const ranked = [...blob].sort((a, b) => openNeighbours(b) - openNeighbours(a) || a.index - b.index)
+    for (const start of ranked.slice(0, 3)) {
+      // Only here is a three-link chain enough: hopper into a landing into a
+      // cup is a whole sentence, and it is better than a hole.
+      if (growAt(start, 3, patchRng)) break
+    }
   }
 
   // Assign phases and build instances.

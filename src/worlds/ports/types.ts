@@ -58,6 +58,14 @@ export interface PortMachine<S = unknown> {
   span?: [number, number]
   /** Whether a mirrored variant may be placed. Defaults to true. */
   mirror?: boolean
+  /**
+   * How far past its own footprint this machine's ink may reach, as a
+   * fraction of a cell. A push crosses the seam on purpose — the last domino
+   * topples onto the first bar next door, the cam's follower knocks whatever
+   * is over the line — and the neighbour is drawn to be knocked. Everything
+   * else that crosses is drawn on top of the machine next door.
+   */
+  reach?: number
   ins: Port[]
   outs: Port[]
   /** Exactly one of the outs is wired — a gear passes its rotation on one way. */

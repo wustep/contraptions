@@ -93,8 +93,12 @@ function magazine(p: p5, link: Link, c: Ctx, release: number): void {
   p.line(-0.34 * k, MAG_LID * k, 0.34 * k, MAG_LID * k)
   p.line(-0.34 * k, MAG_LID * k, -TW * k, -0.14 * k)
   p.line(0.34 * k, MAG_LID * k, TW * k, -0.14 * k)
-  wall(p, k, -TW, -0.14, 0.1)
-  wall(p, k, TW, -0.14, 0.1)
+  // The throat runs all the way to the cell edge. It used to stop at the
+  // seat, so a hopper spent 96% of the loop as a funnel hanging over blank
+  // paper — the ball bridged the gap for the four frames of its fall and the
+  // hand-off was invisible the rest of the time.
+  wall(p, k, -TW, -0.14, 0.5)
+  wall(p, k, TW, -0.14, 0.5)
   p.line(-TW * k, 0.1 * k, -0.06 * k, 0.1 * k)
   p.line(TW * k, 0.1 * k, 0.06 * k, 0.1 * k)
 
@@ -143,10 +147,12 @@ export const latch = definePort({
     // The catch slides in under the push and springs back once the ball is away.
     const slide = 0.09 * (easeOutCubic(seg(c.u, 0, 0.04)) - easeInOutCubic(seg(c.u, 0.2, 0.35)))
     clipBox(p, c.w, c.h, () => magazine(p, s.link, c, 0.03))
+    // The catch's inner end overlaps the throat wall, so it reads as a finger
+    // holding the ball back rather than as a dash floating beside the tube.
     solid(p, c.ink, c.weight, s.color)
-    p.rect((-0.29 + slide) * k, PY * k, 0.2 * k, 0.07 * k)
+    p.rect((-0.22 + slide) * k, PY * k, 0.18 * k, 0.07 * k)
     outline(p, c.ink, c.weight)
-    p.line((-0.19 + slide) * k, (PY + 0.035) * k, (-0.19 + slide) * k, 0.1 * k)
+    p.line((-0.13 + slide) * k, (PY + 0.035) * k, (-0.13 + slide) * k, 0.1 * k)
   },
 })
 
@@ -249,6 +255,10 @@ export const dropoff = definePort({
       floorLine(p, k, -0.5, -TW)
       wall(p, k, -TW, FLOOR, 0.5)
       wall(p, k, TW, 0.12, 0.5)
+      // A mouth on the chute and a leg under the floor: two bare sticks and a
+      // stub of rail read as debris rather than as a ball going over an edge.
+      p.line(TW * k, 0.12 * k, 0.36 * k, 0.12 * k)
+      wall(p, k, -0.4, FLOOR, 0.5)
       rolling(p, s, c, DROP_T2, (u) => {
         if (u < DROP_T1) return [-0.5 + u * ROLL_V, BY]
         const f = lin(u, DROP_T1, DROP_T2)
@@ -271,8 +281,13 @@ export const fall = definePort({
       outline(p, c.ink, c.weight)
       wall(p, k, -TW, -0.5, 0.5)
       wall(p, k, TW, -0.5, 0.5)
-      p.line(-0.2 * k, 0, -TW * k, 0)
-      p.line(TW * k, 0, 0.2 * k, 0)
+      // Couplings, not a single pair of nubs at mid-height: two ticks a side
+      // read as a pipe joined to the pipes above and below it, where one read
+      // as a stray serif and a stack of tubes read as debris.
+      for (const y of [-0.24, 0.24]) {
+        p.line(-0.2 * k, y * k, -TW * k, y * k)
+        p.line(TW * k, y * k, 0.2 * k, y * k)
+      }
       rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V])
     })
   },
@@ -315,16 +330,19 @@ export const lift = definePort({
       wall(p, k, LIFT_W, -0.5 + FLOOR, 0.5 + FLOOR)
       floorLine(p, k, -0.5, -LIFT_W, 0.5 + FLOOR)
       floorLine(p, k, LIFT_W, 0.5, -0.5 + FLOOR)
+      // A head beam, so the pulley is mounted on something.
+      p.line(-LIFT_W * k, -0.9 * k, LIFT_W * k, -0.9 * k)
       p.circle(0, -0.9 * k, 0.16 * k)
       p.line(0, -0.82 * k, 0, (carY - D / 2 - 0.08) * k)
+      // The car: a back panel, the ball on it, the deck in front. An open
+      // frame let the paper through and the car read as a hole punched in it.
+      solid(p, c.ink, c.weight, s.color)
+      p.rect(0, (carY - 0.04) * k, 0.38 * k, (D + 0.08) * k)
       rolling(p, s, c, LIFT_OUT, (u) => {
         if (u < LIFT_IN) return [-0.5 + u * ROLL_V, lowY]
         if (u < LIFT_UP) return [0, carY]
         return [(u - LIFT_UP) * ROLL_V, highY]
       })
-      // The car: a platform under the ball with an open frame around it.
-      outline(p, c.ink, c.weight)
-      p.rect(0, (carY - 0.04) * k, 0.38 * k, (D + 0.08) * k)
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, (carY + D / 2 + 0.03) * k, 0.38 * k, 0.06 * k)
     })
@@ -433,6 +451,9 @@ const CAM_A = Math.atan2(PY, CAM_X)
 export const cam = definePort({
   name: 'cam',
   label: 'Cam',
+  // The follower reaches over the line to knock the first thing in the next
+  // cell, which is exactly what a push port promises.
+  reach: 0.16,
   ins: [{ side: 'W', kind: 'shaft', t: 0 }],
   outs: [{ side: 'E', kind: 'push', t: (s: { link: Link }) => s.link.camAt }],
   setup: ({ color }) => ({ color }),
@@ -492,6 +513,8 @@ function domRow(x0: number, span: number, count: number) {
 export const dominoes = definePort({
   name: 'dominoes',
   label: 'Dominoes',
+  // The last bar topples across the seam onto the first bar of the next run.
+  reach: 0.18,
   ins: [
     { side: 'W', kind: 'push', t: 0 },
     { side: 'N', kind: 'ball', t: 0 },
@@ -628,6 +651,12 @@ export const cup = definePort({
     const u = near(c.u)
     clipBox(p, c.w, c.h, () => {
       outline(p, c.ink, c.weight)
+      // Fed from above, the cup grows the spout it is standing under; a bare
+      // rectangle in the middle of a cell reads as debris, not as a vessel.
+      if (s.link.inSide !== 'W') {
+        wall(p, k, -TW, -0.5, 0)
+        wall(p, k, TW, -0.5, 0)
+      }
       if (s.link.inSide === 'W') {
         floorLine(p, k, -0.5, -0.22)
         if (u >= -LEAD && u < CUP_IN) ball(p, s.link, k, c.ink, c.weight, [-0.5 + u * ROLL_V, BY])
@@ -642,6 +671,8 @@ export const cup = definePort({
       solid(p, c.ink, c.weight, s.color)
       p.rect(0, 0.19 * k, 0.44 * k, 0.3 * k)
       outline(p, c.ink, c.weight)
+      // Legs down to the floor line, so the cup stands rather than hovers.
+      for (const x of [-0.2, 0.2]) wall(p, k, x, 0.34, 0.5)
       floorLine(p, k, -0.22, 0.22, 0.5)
     })
   },
