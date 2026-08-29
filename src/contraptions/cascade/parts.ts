@@ -130,8 +130,9 @@ export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, ga
   if (s.flow && s.flow.in == null && s.flow.out == null) return
   const hasW = !s.flow || s.flow.in === 'W' || s.flow.out === 'W'
   const hasE = !s.flow || s.flow.in === 'E' || s.flow.out === 'E'
-  const x0 = hasW ? -0.5 : -0.36
-  const x1 = hasE ? 0.5 : 0.4
+  const dropS = s.flow?.out === 'S'
+  const x0 = dropS && !hasW ? -0.12 : hasW ? -0.5 : -0.36
+  const x1 = dropS && !hasE ? 0.12 : hasE ? 0.5 : 0.4
   outline(p, ink, weight)
   if (gap > 0) {
     if (x0 < -gap) p.line(x0 * k, FLOOR * k, -gap * k, FLOOR * k)

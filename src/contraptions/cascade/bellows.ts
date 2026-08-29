@@ -31,6 +31,12 @@ export const bellows = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, HALF_W + 0.02)
 
+    if (fromAbove) {
+      outline(p, ink, weight)
+      p.line(-0.3 * k, -0.5 * k, -0.08 * k, FLOOR * k)
+      p.line(0.3 * k, -0.5 * k, 0.08 * k, FLOOR * k)
+    }
+
     const sideways = !s.flow || s.flow.out === 'E' || s.flow.out === 'W'
 
     p.push()

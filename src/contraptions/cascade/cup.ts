@@ -1,21 +1,19 @@
 import { defineContraption } from '../../core/define'
 import { clipCell, outline, solid } from '../../core/draw'
-import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { TOKEN, drop, fallIn, floor, heading, rollIn, since, token, tokenColor, type Beat } from './parts'
+import { easeInQuad, lerp, seg } from '../../core/ease'
+import { FLOOR, TOKEN, drop, fallIn, heading, rollIn, since, token, tokenColor, type Beat } from './parts'
 
 /**
- * A cup under the end of the line: the ball drops in and sits there, which is
- * the end of the story, until the flap in the bottom lets it go so the cup is
- * empty when the next one comes.
+ * The corner of the snake: the rail runs to a lip, the ball tips over, and
+ * a chute carries it out the bottom of the cell onto the catch below.
+ * The shaft is drawn whether the ball is falling or not — a cup that only
+ * opens at 0.62 reads as a hopper sitting on its own row.
  */
 const FIRE = 0
-const MOUTH = 0.05
-const BASE = 0.36
-const TOP_W = 0.46
-const BASE_W = 0.36
-/** Where the ball sits once it is in. */
-const REST = BASE - TOKEN / 2 - 0.02
-const DUMP = 0.62
+const LIP = 0.1
+const CHUTE_X = 0.2
+const DUMP0 = 0.3
+const DUMP1 = 0.52
 
 export const cup = defineContraption<Beat>({
   name: 'cup',
@@ -30,42 +28,34 @@ export const cup = defineContraption<Beat>({
   draw: (p, s, { size: k, u, ink, weight }) => {
     const h = heading(s.flow)
     const t = since(u, FIRE)
-    const open = easeOutCubic(seg(t, DUMP, DUMP + 0.04)) - easeInOutCubic(seg(t, DUMP + 0.14, DUMP + 0.26))
+    const dumping = s.flow?.out === 'S'
+    const fall = easeInQuad(seg(t, DUMP0, DUMP1))
+    let pos: [number, number] | null = null
+    const arriving = rollIn(s, u, FIRE) ?? fallIn(s, u, FIRE)
+    if (arriving) pos = arriving
+    else if (dumping) {
+      if (t < DUMP0) pos = [h * LIP, FLOOR - TOKEN / 2]
+      else if (t < DUMP1 + 0.12) {
+        pos = [
+          h * lerp(LIP, 0.04, fall),
+          drop(FLOOR - TOKEN / 2, 0.5 + TOKEN / 2 - (FLOOR - TOKEN / 2), Math.min(1, (t - DUMP0) / (DUMP1 - DUMP0))),
+        ]
+      }
+    } else if (t < 0.5) pos = [0, FLOOR - TOKEN / 2]
 
-    floor(p, k, ink, weight, s)
-    outline(p, ink, weight)
-    for (const x of [-0.12, 0.12]) p.line(x * k, BASE * k, x * k, 0.48 * k)
-
-    // The body, open at the bottom: the walls are drawn on their own so the
-    // flap can swing clear of a line that would otherwise stay put.
     p.push()
-    p.noStroke()
-    p.fill(s.color)
-    p.quad((-TOP_W / 2) * k, MOUTH * k, (TOP_W / 2) * k, MOUTH * k, (BASE_W / 2) * k, BASE * k, (-BASE_W / 2) * k, BASE * k)
-    p.pop()
+    p.scale(h, 1)
     outline(p, ink, weight)
-    p.line((-TOP_W / 2) * k, MOUTH * k, (-BASE_W / 2) * k, BASE * k)
-    p.line((TOP_W / 2) * k, MOUTH * k, (BASE_W / 2) * k, BASE * k)
+    const from = s.flow?.in === 'E' ? 0.5 : s.flow?.in === 'W' || !s.flow?.in ? -0.5 : -0.2
+    p.line(from * k, FLOOR * k, LIP * k, FLOOR * k)
+    p.line(LIP * k, FLOOR * k, CHUTE_X * k, 0.5 * k)
+    p.line((LIP + 0.14) * k, FLOOR * k, (CHUTE_X + 0.14) * k, 0.5 * k)
+    solid(p, ink, weight, s.color)
+    p.circle(LIP * k, FLOOR * k, 0.055 * k)
+    p.pop()
 
     clipCell(p, k, () => {
-      const ball = tokenColor(s)
-      const arriving = rollIn(s, u, FIRE) ?? fallIn(s, u, FIRE)
-      if (arriving) token(p, k, ink, weight, ball, arriving)
-      let y: number | null = null
-      if (t < 0.04) y = lerp(0, REST, easeInQuad(seg(t, 0, 0.04)))
-      else if (t < 0.09) y = REST - 0.04 * Math.sin(seg(t, 0.04, 0.09) * Math.PI)
-      else if (s.flow?.out === 'S' && t >= DUMP && t < DUMP + 0.08) {
-        y = drop(REST, 0.5 + TOKEN / 2 - REST, seg(t, DUMP, DUMP + 0.08) * 1.3)
-      } else if (!(s.flow?.out === 'S' && t >= DUMP)) y = REST
-      if (y !== null) token(p, k, ink, weight, ball, [0, y])
-
-      // The flap, hinged on the far side so it swings down and away.
-      p.push()
-      p.translate(h * (BASE_W / 2) * k, BASE * k)
-      p.rotate(-h * open * 1.3)
-      solid(p, ink, weight, s.color)
-      p.rect((-h * BASE_W) / 2 * k, 0, BASE_W * k, 0.06 * k)
-      p.pop()
+      if (pos) token(p, k, ink, weight, tokenColor(s), pos)
     })
   },
 })
