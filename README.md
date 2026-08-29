@@ -287,10 +287,22 @@ Built from what ports taught. The ball is drawn once, by the world, along a
 track that is carved first as a closed loop — runs zig-zagging down, a bucket
 lift back up — so the piece is a perpetual machine by construction. The track
 cells draw themselves from the same path the ball follows, so lines and balls
-cannot disagree. Machines along the track are reactors: each reaches a feeler
-into the track as far as the ball and is knocked by it as it passes. With N
-balls spaced evenly going round m/N times per loop, every reactor sees a ball
-every 1/m of the loop, which is exactly the period the contract wants.
+cannot disagree. Machines along the track are reactors: each stands on a mast
+planted on the run's floor, with a trip lever at its foot that the passing
+ball shoves. The mast crosses the seam between the reactor's cell and the
+track's, so both cells draw it — the reactor clipped to its own footprint,
+the track cell drawing the same assembly through its `mounts` — which is the
+same trick the elevator car uses, and it is why nothing is cut and nothing is
+left dangling. A reactor used to hang a bare rod a whole cell down into the
+track and park a dot on the lane, which read as a pendulum in empty space
+rather than as contact.
+
+Reaction windows are counted in **frames**, not fractions of the period: a
+ball is under a feeler for about twenty frames, and a window written as a
+fraction of a 360-frame period left feelers deflected and gates open four or
+five times longer than the ball was there. With N balls spaced evenly going
+round m/N times per loop, every reactor sees a ball every 1/m of the loop,
+which is exactly the period the contract wants.
 
 Both worlds have their own **Catalog** sheet: ports shows each machine wired
 as if mid-chain, tracks shows each track shape with a ball running through it
