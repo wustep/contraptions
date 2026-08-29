@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipBox, outline, solid, teeth } from '../../core/draw'
+import { outline, solid, teeth } from '../../core/draw'
 import { mod } from '../../core/ease'
 import { P, block, drop, flight, ground, performer, route, stroke, type Leg } from './circus'
 
@@ -10,7 +10,9 @@ import { P, block, drop, flight, ground, performer, route, stroke, type Leg } fr
  * to the foot of the lift and wait for the next bucket.
  */
 const CHAIN_X = 0.16
-const SPROCKET = 0.72
+/** A bucket goes over the top upside down, so the sprockets have to sit a
+ *  bucket's depth in from the ends of the footprint. */
+const SPROCKET = 0.62
 const BUCKETS = 6
 /** Loop time on the chain from the scoop at the bottom to the spill at the top. */
 const RIDE_END = (2 * SPROCKET + (Math.PI * CHAIN_X) / 2) / (4 * SPROCKET + 2 * Math.PI * CHAIN_X)
@@ -56,62 +58,60 @@ export const bucketLift = defineContraption({
   rotations: [0],
   fireAt: 0,
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size: k, w, h, u, ink, weight }) => {
-    clipBox(p, w, h, () => {
+  draw: (p, s, { size: k, u, ink, weight }) => {
+    outline(p, ink, weight)
+    ground(p, k, 1, 1)
+    stroke(p, k, -0.32, FLOOR, CHUTE_X + 0.09, FLOOR)
+    block(p, k, ink, weight, s.color, -0.34, FLOOR - 0.06, 0.05, 0.12)
+    // The chute down the right side, with a mouth to catch the spill.
+    outline(p, ink, weight)
+    stroke(p, k, CHUTE_X - 0.09, -0.62, CHUTE_X - 0.09, FLOOR - 0.2)
+    stroke(p, k, CHUTE_X + 0.09, -0.72, CHUTE_X + 0.09, FLOOR)
+    stroke(p, k, CHUTE_X - 0.09, -0.62, 0.19, -0.74)
+    // The chain and its sprockets.
+    stroke(p, k, -CHAIN_X, -SPROCKET, -CHAIN_X, SPROCKET)
+    stroke(p, k, CHAIN_X, -SPROCKET, CHAIN_X, SPROCKET)
+    p.arc(0, -SPROCKET * k, CHAIN_X * 2 * k, CHAIN_X * 2 * k, Math.PI, Math.PI * 2)
+    p.arc(0, SPROCKET * k, CHAIN_X * 2 * k, CHAIN_X * 2 * k, 0, Math.PI)
+    stroke(p, k, 0, SPROCKET, 0, 1)
+    stroke(p, k, 0, -0.96, 0, -SPROCKET)
+    for (const cy of [-SPROCKET, SPROCKET]) {
+      p.push()
+      p.translate(0, cy * k)
+      p.rotate(Math.PI * 2 * u)
+      solid(p, ink, weight, s.color)
+      p.circle(0, 0, 0.16 * k)
       outline(p, ink, weight)
-      ground(p, k, 1, 1)
-      stroke(p, k, -0.32, FLOOR, CHUTE_X + 0.09, FLOOR)
-      block(p, k, ink, weight, s.color, -0.34, FLOOR - 0.06, 0.05, 0.12)
-      // The chute down the right side, with a mouth to catch the spill.
-      outline(p, ink, weight)
-      stroke(p, k, CHUTE_X - 0.09, -0.62, CHUTE_X - 0.09, FLOOR - 0.2)
-      stroke(p, k, CHUTE_X + 0.09, -0.72, CHUTE_X + 0.09, FLOOR)
-      stroke(p, k, CHUTE_X - 0.09, -0.62, 0.19, -0.74)
-      // The chain and its sprockets.
-      stroke(p, k, -CHAIN_X, -SPROCKET, -CHAIN_X, SPROCKET)
-      stroke(p, k, CHAIN_X, -SPROCKET, CHAIN_X, SPROCKET)
-      p.arc(0, -SPROCKET * k, CHAIN_X * 2 * k, CHAIN_X * 2 * k, Math.PI, Math.PI * 2)
-      p.arc(0, SPROCKET * k, CHAIN_X * 2 * k, CHAIN_X * 2 * k, 0, Math.PI)
-      stroke(p, k, 0, SPROCKET, 0, 1)
-      stroke(p, k, 0, -1, 0, -SPROCKET)
-      for (const cy of [-SPROCKET, SPROCKET]) {
-        p.push()
-        p.translate(0, cy * k)
-        p.rotate(Math.PI * 2 * u)
-        solid(p, ink, weight, s.color)
-        p.circle(0, 0, 0.16 * k)
-        outline(p, ink, weight)
-        teeth(p, 0.08 * k, 8, 0.06 * k)
-        p.pop()
-      }
+      teeth(p, 0.08 * k, 8, 0.06 * k)
+      p.pop()
+    }
 
-      // Performers: in a bucket, over the top, down the chute, along the floor, waiting.
-      for (let j = 0; j < RIDERS; j++) {
-        const t = mod(u - j / BUCKETS, CYCLE)
-        let pos: [number, number]
-        if (t < RIDE_END) {
-          const [x, y] = chain.at(t)
-          const a = heading(t)
-          pos = [x - 0.08 * Math.sin(a), y + 0.08 * Math.cos(a)]
-        } else if (t < RIDE_END + HOP) pos = flight([-0.08, -SPROCKET - CHAIN_X], [CHUTE_X, -0.62], 0.05, (t - RIDE_END) / HOP)
-        else if (t < RIDE_END + HOP + CHUTE) pos = drop([CHUTE_X, -0.62], [CHUTE_X, FLOOR - P / 2], (t - RIDE_END - HOP) / CHUTE)
-        else if (t < RIDE_END + HOP + CHUTE + ROLL) pos = [CHUTE_X - (CHUTE_X + CHAIN_X) * ((t - RIDE_END - HOP - CHUTE) / ROLL), FLOOR - P / 2]
-        else pos = [-CHAIN_X, FLOOR - P / 2]
-        performer(p, k, ink, weight, s.color, pos[0], pos[1])
-      }
+    // Performers: in a bucket, over the top, down the chute, along the floor, waiting.
+    for (let j = 0; j < RIDERS; j++) {
+      const t = mod(u - j / BUCKETS, CYCLE)
+      let pos: [number, number]
+      if (t < RIDE_END) {
+        const [x, y] = chain.at(t)
+        const a = heading(t)
+        pos = [x - 0.08 * Math.sin(a), y + 0.08 * Math.cos(a)]
+      } else if (t < RIDE_END + HOP) pos = flight([-0.08, -SPROCKET - CHAIN_X], [CHUTE_X, -0.62], 0.05, (t - RIDE_END) / HOP)
+      else if (t < RIDE_END + HOP + CHUTE) pos = drop([CHUTE_X, -0.62], [CHUTE_X, FLOOR - P / 2], (t - RIDE_END - HOP) / CHUTE)
+      else if (t < RIDE_END + HOP + CHUTE + ROLL) pos = [CHUTE_X - (CHUTE_X + CHAIN_X) * ((t - RIDE_END - HOP - CHUTE) / ROLL), FLOOR - P / 2]
+      else pos = [-CHAIN_X, FLOOR - P / 2]
+      performer(p, k, ink, weight, s.color, pos[0], pos[1])
+    }
 
-      // Buckets, hanging off the chain and turning over with it, drawn over
-      // the riders so a rider sits in a bucket rather than on it.
-      for (let b = 0; b < BUCKETS; b++) {
-        const c = mod(u + b / BUCKETS, 1)
-        const [x, y] = chain.at(c)
-        p.push()
-        p.translate(x * k, y * k)
-        p.rotate(heading(c))
-        solid(p, ink, weight, s.color)
-        p.quad(-0.1 * k, 0.02 * k, -0.08 * k, 0.17 * k, 0.08 * k, 0.17 * k, 0.1 * k, 0.02 * k)
-        p.pop()
-      }
-    })
+    // Buckets, hanging off the chain and turning over with it, drawn over
+    // the riders so a rider sits in a bucket rather than on it.
+    for (let b = 0; b < BUCKETS; b++) {
+      const c = mod(u + b / BUCKETS, 1)
+      const [x, y] = chain.at(c)
+      p.push()
+      p.translate(x * k, y * k)
+      p.rotate(heading(c))
+      solid(p, ink, weight, s.color)
+      p.quad(-0.1 * k, 0.02 * k, -0.08 * k, 0.17 * k, 0.08 * k, 0.17 * k, 0.1 * k, 0.02 * k)
+      p.pop()
+    }
   },
 })

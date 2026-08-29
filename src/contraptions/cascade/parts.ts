@@ -2,36 +2,26 @@ import type p5 from 'p5'
 import { LOOP } from '../../core/constants'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, mod, seg } from '../../core/ease'
+import { ROLL_V, stopLane, type Lane, type LaneCtx } from '../../core/lane'
 import { LINK_DELAY, type Flow } from '../../core/wiring'
-import {
-  BOARD,
-  CLEAR as RIDE_CLEAR,
-  RIDE0,
-  RIDE1,
-  GUIDE,
-  buffers,
-  cable,
-  car,
-  carLocalY,
-  counterweight,
-  guides,
-  landing,
-  rideTravel,
-  sheave,
-} from '../../worlds/goldberg/elevator'
 
 /**
  * The shared vocabulary of the cascade set.
  *
- * Every machine here is one beat in a chain reaction. A token arrives at the
- * cell's centre, the machine does its one thing, and the token leaves.
- * Between machines each cell draws the token on its own side of the hand-off.
- * The engine's conduit is hidden in this world — a centre-to-centre rail
- * punched through paddles and ran off the rim. Unchained, a machine runs the
- * whole beat by itself, so a lone cell and the catalog sheet still tell the
- * story.
+ * Every machine here is one beat in a chain reaction: the ball arrives, the
+ * machine does its one thing, the ball leaves. **No machine draws the ball.**
+ * A machine declares where the ball goes — a `lane`, in cell units, in the
+ * canonical hand (west → east) — and the world draws every ball on the joined
+ * path of the whole snake, from one clock. That is what makes object
+ * permanence structural: a ball cannot vanish at a seam, be drawn twice, or
+ * disagree with its neighbour, because there is exactly one drawing of it.
  *
- * Units are cells, y down, with the token's centre line through the cell's
+ * A machine that is happy to be crossed in a straight line at floor height
+ * declares nothing and gets the world's default. Declare a lane when the ball
+ * should follow your geometry — wait in a throat, drop off a lip, ride a car,
+ * rest in a cup — and `hold` where the machine acts, so `fireAt` lands there.
+ *
+ * Units are cells, y down, with the ball's centre line through the cell's
  * centre, because that is where the rails meet.
  */
 
@@ -54,25 +44,27 @@ export interface Beat {
 
 export type Pt = [number, number]
 
-/** Token diameter. The same bead the engine runs along a wire. */
+/** Token diameter. */
 export const TOKEN = 0.26
-/** Loop fraction the token takes to cross one cell along a wire. */
+/** Height of a rolling ball's centre: the cell's own centre line. */
+export const LANE_Y = 0
+/** Cells per loop a ball rolls at. 24 frames to cross a cell. */
+export const SPEED = ROLL_V
+/** Loop fraction the ball takes to cross one cell. */
 export const LINK = LINK_DELAY / LOOP
-/** Cells per loop it travels at. */
-export const SPEED = 1 / LINK
 /** Loop fraction from an edge to the centre at that speed. */
 export const HALF = LINK / 2
-/** Loop fraction for the token to clear an edge once its centre is on it. */
+/** Loop fraction for the ball to clear an edge once its centre is on it. */
 export const OVER = TOKEN / 2 / SPEED
-/** Top of the floor a rolling token sits on: its centre is the cell's. */
+/** Top of the floor a rolling ball sits on: its centre is the cell's. */
 export const FLOOR = TOKEN / 2
-/** Half-width of the old painted shaft — kept so the catalog cup still compiles. */
+/** Half-width of a painted shaft. */
 export const SHAFT = 0.12
 /** Half-width of a cup mouth at the rail. */
 export const THROAT = 0.1
-
-export { BOARD, RIDE0, RIDE1, RIDE_CLEAR }
-/** A wall stands this far from the centre line, a hair clear of the token. */
+/** Height of the sheave in an elevator's top cell. The world hangs the car off it. */
+export const SHEAVE_Y = -0.34
+/** A wall stands this far from the centre line, a hair clear of the ball. */
 export const CLEAR = TOKEN / 2 + 0.05
 
 /** A fall from rest over `dist` cells, then straight on at the exit speed. */
@@ -83,11 +75,10 @@ export const drop = (from: number, dist: number, f: number) =>
 
 /** Loop fraction since the machine fired: 0 at the moment itself. */
 export const since = (u: number, at: number) => mod(u - at, 1)
-
-/** A sink on an elevator fires when the car arrives, not when the top boarded. */
-export const beat = (s: Beat, u: number, fire: number) => since(u, s.ride ? RIDE1 : fire)
 /** Loop fraction until it next fires. */
 export const until = (u: number, at: number) => mod(at - u, 1)
+/** Alias kept for the sinks: a machine's beat starts when it fires. */
+export const beat = (_s: Beat, u: number, fire: number) => since(u, fire)
 
 /** A flick: out fast, back with a settle. 1 at full stroke. */
 export const flick = (t: number, out = 0.05, back = 0.09, done = 0.3) =>
@@ -100,59 +91,34 @@ export const bez = (a: number, b: number, c: number, d: number, f: number) => {
 }
 
 /**
- * Which way the token travels, +1 for east. A run that drops out or falls in
- * takes its direction from whichever edge is sideways; a lone machine faces
- * east and leaves mirroring to the composer.
+ * The lane the world gives a machine that declares none, and the base for one
+ * that only wants a pause: roll in, stop at `at` for `time`, roll on.
  */
-export function heading(flow?: Flow): number {
-  if (!flow) return 1
-  if (flow.out === 'E' || (flow.out !== 'W' && flow.in === 'W')) return 1
-  if (flow.out === 'W' || flow.in === 'E') return -1
-  return 1
-}
+export const rollLane = (ctx: LaneCtx, opts: { at?: number; time?: number; y?: number } = {}): Lane =>
+  stopLane(ctx, SPEED, opts)
 
-/** The token's colour: the run's when chained, so it is one ball down the line. */
+/**
+ * Which way the ball travels. Always east: the composer mirrors the westbound
+ * half of the snake, so every machine draws one hand and never asks.
+ *
+ * @deprecated Kept so unconverted machines still compile. Drop the call.
+ */
+export const heading = (_flow?: Flow): number => 1
+
+/** The ball's colour: the run's when chained, so it is one ball down the line. */
 export const tokenColor = (s: Beat) => s.flow?.color ?? s.color
 
+/**
+ * A ball. The world draws every ball on a lane; this is for the multi-cell
+ * machines that carry their own, and for the catalog sheet.
+ */
 export function token(p: p5, k: number, ink: string, weight: number, color: string, [x, y]: Pt): void {
   solid(p, ink, weight, color)
   p.circle(x * k, y * k, TOKEN * k)
 }
 
 /**
- * A machine's own token rolling in from the west edge to the centre, arriving
- * at `at`. Null once the wire is carrying it instead — unless `own`, for a
- * feed the machine supplies itself — or once it is outside the cell.
- */
-export function rollIn(s: Beat, u: number, at: number, own = false): Pt | null {
-  const closed = !!s.flow && s.flow.in == null && s.flow.out == null
-  if ((closed || (s.flow && s.flow.in == null)) && !own) return null
-  if (s.flow?.in === 'N' || s.flow?.in === 'S') return null
-  const t = until(u, at)
-  if (t > HALF + OVER) return null
-  const dir = s.flow?.in === 'E' ? 1 : -1
-  return [dir * t * SPEED, 0]
-}
-
-/** The same token rolling on from the centre to the east edge after `at`. */
-export function rollOut(s: Beat, u: number, at: number): Pt | null {
-  if (s.flow && s.flow.out == null) return null
-  if (s.flow?.out === 'S' || s.flow?.out === 'N') return null
-  const t = since(u, at)
-  if (t > HALF + OVER) return null
-  const dir = s.flow?.out === 'W' ? -1 : 1
-  return [dir * t * SPEED, 0]
-}
-
-/** A lone machine's own token falling in from the top edge to the centre, arriving at `at`. */
-export function fallIn(s: Beat, u: number, at: number): Pt | null {
-  if (s.flow && s.flow.in !== 'N') return null
-  const t = until(u, at)
-  return t > (0.5 + TOKEN / 2) / FALL_V ? null : [0, -t * FALL_V]
-}
-
-/**
- * The floor the token rolls along. A closed leftover (catalog, unused cell)
+ * The floor the ball rolls along. A closed leftover (catalog, unused cell)
  * draws none. On a run the rail only extends toward ports that exist.
  *
  * A source still draws rail under the feeder (not a mid-cell stub the
@@ -177,71 +143,46 @@ export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, ga
   } else p.line(x0 * k, FLOOR * k, x1 * k, FLOOR * k)
 }
 
-export function rideOf(s: Beat): Ride | undefined {
-  if (s.ride) return s.ride
-  if (s.flow?.out === 'S' && s.flow.in !== 'N') return { index: 0, floors: 1, at: 0 }
-  if (s.flow?.in === 'N' && s.flow.out !== 'S') return { index: 1, floors: 1, at: 0 }
-  if (s.flow?.in === 'N' && s.flow.out === 'S') return { index: 0, floors: 1, at: 0 }
-  return undefined
-}
+/** This cell's place on an elevator stack, if the composer put it on one. */
+export const rideOf = (s: Beat): Ride | undefined => s.ride
 
-/** Passenger centre on this cell's car, or a roll on/off the rail. */
-export function rideToken(s: Beat, u: number, at: number): Pt | null {
-  const ride = rideOf(s)
-  if (!ride) return null
-  const t = since(u, ride.at)
-  const travel = rideTravel(t, ride.floors)
-  const y = carLocalY(travel, ride.index)
-  const top = ride.index === 0
-  const bot = ride.index === ride.floors
+/* ---------------------------------------------------------------- retired */
 
-  if (top && t < BOARD) return rollIn(s, u, at) ?? (y !== null ? [0, y] : [0, 0])
-  if (bot && t > RIDE_CLEAR) return rollOut(s, u, at) ?? (y !== null ? [0, 0] : null)
-  if (y === null) return null
-  return [0, y]
-}
-
-/** Guides, sheave, car. The token is drawn by the caller so sinks can hide it. */
-export function drawElevator(p: p5, k: number, ink: string, weight: number, s: Beat, u: number): number | null {
-  const ride = rideOf(s)
-  if (!ride) return null
-  const t = since(u, ride.at)
-  const travel = rideTravel(t, ride.floors)
-  const y = carLocalY(travel, ride.index)
-  const top = ride.index === 0
-  const bot = ride.index === ride.floors
-  const y0 = top ? -0.12 : -0.5
-  const y1 = bot ? FLOOR + 0.06 : 0.5
-  const paint = s.flow?.color ?? s.color
-
-  guides(p, k, ink, weight, y0, y1)
-  if (top) {
-    sheave(p, k, ink, weight, -0.16, travel * 6)
-    if (y !== null) cable(p, k, ink, weight, -0.16, y - 0.14)
-    const from = s.flow?.in === 'E' ? 0.5 : -0.5
-    if (s.flow?.in === 'E' || s.flow?.in === 'W' || !s.flow) {
-      landing(p, k, ink, weight, from, from > 0 ? GUIDE : -GUIDE, FLOOR)
-    }
-  } else if (y !== null) {
-    cable(p, k, ink, weight, -0.5, y - 0.14)
-  }
-  if (bot) {
-    buffers(p, k, ink, weight, FLOOR + 0.08)
-    const to = s.flow?.out === 'W' ? -0.5 : 0.5
-    if (s.flow?.out === 'E' || s.flow?.out === 'W' || !s.flow) {
-      landing(p, k, ink, weight, to > 0 ? GUIDE : -GUIDE, to, FLOOR)
-    }
-  }
-  const cwY = carLocalY(ride.floors - travel, ride.index)
-  if (cwY !== null) {
-    if (top) cable(p, k, ink, weight, -0.16, cwY, 0.28)
-    counterweight(p, k, ink, weight, paint, cwY)
-  }
-  if (y !== null) car(p, k, ink, weight, paint, y, TOKEN / 2)
-  return y
-}
-
-export function drawRideToken(p: p5, k: number, ink: string, weight: number, s: Beat, u: number, at: number): void {
-  const pos = rideToken(s, u, at)
-  if (pos) token(p, k, ink, weight, tokenColor(s), pos)
-}
+/**
+ * The hand-off helpers each machine used to draw its own ball with. The world
+ * owns the ball now, so they carry nothing: an unconverted machine keeps
+ * compiling and simply stops drawing a second ball on top of the real one.
+ *
+ * @deprecated Declare a `lane` instead and delete the call.
+ */
+export const rollIn = (_s: Beat, _u: number, _at: number, _own = false): Pt | null => null
+/** @deprecated See `rollIn`. */
+export const rollOut = (_s: Beat, _u: number, _at: number): Pt | null => null
+/** @deprecated See `rollIn`. */
+export const fallIn = (_s: Beat, _u: number, _at: number): Pt | null => null
+/** @deprecated See `rollIn`. The world draws every rider. */
+export const rideToken = (_s: Beat, _u: number, _at: number): Pt | null => null
+/** @deprecated See `rollIn`. The world draws every rider. */
+export const drawRideToken = (
+  _p: p5,
+  _k: number,
+  _ink: string,
+  _weight: number,
+  _s: Beat,
+  _u: number,
+  _at: number,
+): void => {}
+/**
+ * The car used to be drawn per cell, from a clock each cell recomputed. The
+ * world draws every moving elevator part now, for the whole stack at once.
+ *
+ * @deprecated The cells draw only the static frame — see `worlds/goldberg/elevator`.
+ */
+export const drawElevator = (
+  _p: p5,
+  _k: number,
+  _ink: string,
+  _weight: number,
+  _s: Beat,
+  _u: number,
+): number | null => null

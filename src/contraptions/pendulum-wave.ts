@@ -12,6 +12,9 @@ import { pendulum as pendulumTable, swing } from '../core/physics'
  * frequency range the true lengths differ by six-fold and read as a mess, while
  * the wave itself comes entirely from the frequency spread.
  */
+/** Swing amplitude, in radians. The row's width is derived from it. */
+const AMP = 0.42
+
 export const pendulumWave = defineContraption({
   name: 'pendulum-wave',
   label: 'Pendulum Wave',
@@ -24,12 +27,15 @@ export const pendulumWave = defineContraption({
     alt: rng.pick(theme.colors.filter((c) => c !== color)) ?? color,
     count: rng.pick([7, 9]),
     base: rng.int(4, 7),
-    table: pendulumTable(0.42),
+    table: pendulumTable(AMP),
   }),
   draw: (p, s, { w, h, size, u, ink, weight }) => {
     const top = -h / 2
     const bob = size * 0.19
-    const span = w * 0.9
+    // The row is set in by exactly what the longest arm throws its bob
+    // sideways, so the outermost swing ends at the edge of the footprint
+    // instead of a quarter of a cell into the machine beside it.
+    const span = w - 2 * (h * 0.74 * Math.sin(AMP) + bob / 2)
 
     outline(p, ink, weight)
     p.line(-w / 2, top, w / 2, top)

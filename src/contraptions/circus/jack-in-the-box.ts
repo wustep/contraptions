@@ -10,9 +10,14 @@ import { P, block, ground, knob, performer, shiver, stroke } from './circus'
  */
 const BOX_W = 0.44
 const BOX_TOP = 0.1
-const LID_OPEN = -2.2
-const IN = 0.3
-const OUT = -0.3
+const LID_OPEN = -2
+/** Down inside the box, hat and all; and up, allowing for the spring's
+ *  overshoot, which is what has to clear the ceiling. */
+const IN = 0.4
+const OUT = -0.14
+/** Where the plunger waits, out of frame, and where it stops pressing. */
+const PARK = -0.66
+const STUFFED = 0.06
 
 export const jackInTheBox = defineContraption({
   name: 'jack-in-the-box',
@@ -33,15 +38,17 @@ export const jackInTheBox = defineContraption({
     const head =
       u < 0.72 ? IN
       : u < 0.8 ? lerp(IN, OUT, easeOutBack(seg(u, 0.72, 0.8)))
-      : u < 0.86 ? OUT + 0.03 * shiver(u, 0.8, 0.08, 2)
+      : u < 0.86 ? OUT + 0.025 * shiver(u, 0.8, 0.08, 2)
       : u < 0.94 ? lerp(OUT, IN, easeInOutCubic(seg(u, 0.86, 0.94)))
       : IN
+    // The plunger drops in from off-stage rather than appearing mid-cell, and
+    // goes back the same way, so it never pops into or out of existence.
     const plunger =
-      u < 0.86 ? -0.55
-      : u < 0.94 ? head - P / 2 - 0.05
-      : lerp(IN - P / 2 - 0.05, -0.55, easeInOutCubic(seg(u, 0.94, 1)))
+      u < 0.8 ? PARK
+      : u < 0.86 ? lerp(PARK, OUT - P / 2 - 0.05, easeInOutCubic(seg(u, 0.8, 0.86)))
+      : u < 0.94 ? Math.min(head - P / 2 - 0.05, STUFFED)
+      : lerp(STUFFED, PARK, easeInOutCubic(seg(u, 0.94, 1)))
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
 
@@ -73,12 +80,12 @@ export const jackInTheBox = defineContraption({
     p.pop()
     knob(p, k, ink, weight, s.color, BOX_W / 2 + 0.06, 0.3, 0.06)
 
-    // The plunger.
-    if (plunger > -0.5) {
+    // The plunger, on its rod from above. The rod is the one part of this act
+    // that legitimately leaves the cell, so it is the one part that is clipped.
+    clipCell(p, k, () => {
       outline(p, ink, weight)
-      stroke(p, k, 0, -0.5, 0, plunger)
+      stroke(p, k, 0, -0.62, 0, plunger)
       block(p, k, ink, weight, s.color, 0, plunger, 0.18, 0.05)
-    }
     })
   },
 })

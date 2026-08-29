@@ -1,13 +1,16 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, solid } from '../../core/draw'
+import { solid } from '../../core/draw'
 import { clamp, easeInOutCubic, easeInQuad, seg } from '../../core/ease'
-import { FLOOR, HALF, floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
+import { FLOOR, SPEED, floor, rollLane, since, type Beat } from './parts'
 
 /**
  * A row of bars across the line: the ball knocks the first one going in, the
  * row goes over one by one, and the last one falls out across the edge into
  * the next cell, then they stand back up in reverse while the ball is long
  * gone.
+ *
+ * The lane is the plain one — the ball crosses in a straight roll — and all
+ * this cell owns is the row's timing off that crossing.
  */
 const FIRE = 0.4
 const COUNT = 5
@@ -18,8 +21,8 @@ const W = 0.08
 const FALL = 0.06
 /** Where a bar comes to rest against the next; the last has nothing to lean on. */
 const REST = 0.85
-/** The ball reaches the first bar as it crosses the edge, half a link before the centre. */
-const START = FIRE - HALF
+/** The ball reaches the first bar before the centre, by that much rail. */
+const START = FIRE - SPAN / 2 / SPEED
 
 export const dominoes = defineContraption<Beat>({
   name: 'dominoes',
@@ -30,6 +33,7 @@ export const dominoes = defineContraption<Beat>({
   outlets: ['E', 'W'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx) => rollLane(ctx),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     const t = since(u, START)
@@ -41,8 +45,6 @@ export const dominoes = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s)
 
-    p.push()
-    p.scale(heading(s.flow), 1)
     for (let i = 0; i < COUNT; i++) {
       const x = -SPAN / 2 + gap * i
       const last = i === COUNT - 1
@@ -57,11 +59,5 @@ export const dominoes = defineContraption<Beat>({
       p.rect(0, (-H / 2) * k, W * k, H * k)
       p.pop()
     }
-    p.pop()
-
-    clipCell(p, k, () => {
-      const at = rollIn(s, u, FIRE) ?? rollOut(s, u, FIRE)
-      if (at) token(p, k, ink, weight, tokenColor(s), at)
-    })
   },
 })

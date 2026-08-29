@@ -9,7 +9,7 @@ import { bell, block, fade, ground, knob, rings, shiver, stroke } from './circus
  * rings the bell at the top, and falls back onto the lever for the next
  * swing.
  */
-const TOWER_X = -0.22
+const TOWER_X = -0.18
 const RAIL = 0.1
 const BELL_TOP = -0.98
 const BELL_W = 0.3
@@ -60,8 +60,10 @@ export const highStriker = defineContraption({
     for (const side of [-1, 1]) stroke(p, k, TOWER_X + side * RAIL, 0.76, TOWER_X + side * RAIL, -0.76)
     for (let y = -0.55; y < 0.7; y += 0.25) stroke(p, k, TOWER_X - RAIL, y, TOWER_X + RAIL, y)
     stroke(p, k, TOWER_X - RAIL - 0.04, -0.76, TOWER_X + RAIL + 0.04, -0.76)
-    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.15, 0.2, ring, -Math.PI / 2, 2)
-    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.15, 0.2, ring, Math.PI, 1)
+    // Sound spreads from under the bell, not from its crown: the arcs are as
+    // tall again as their radius and this is the top of the footprint.
+    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.3, 0.14, ring, -Math.PI / 2, 2)
+    rings(p, k, s.color, weight, TOWER_X, BELL_TOP + 0.3, 0.14, ring, Math.PI, 1)
     bell(p, k, ink, weight, s.color, TOWER_X, BELL_TOP, BELL_W, BELL_H, 0.12 * shiver(u, 0.82, 0.16, 5))
 
     // The gallows the mallet hangs from.

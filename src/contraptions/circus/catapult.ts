@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInOutSine, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
 import { P, block, drop, ground, knob, performer, rise, stroke } from './circus'
 
@@ -16,9 +16,11 @@ const REST = 0.42
 const FLUNG = -0.55
 const WEIGHT_X = -ARM_L * Math.cos(REST)
 const PULLEY_Y = -0.44
-const CUP: [number, number] = [0.32, -0.33]
-const CUP_W = 0.28
-const CUP_H = 0.2
+/** The basket. It hangs from its outer lip and turns right over to pour, so
+ *  the hinge has to sit a basket's length in from the edge. */
+const CUP: [number, number] = [0.18, -0.3]
+const CUP_W = 0.24
+const CUP_H = 0.18
 const HINGE: [number, number] = [CUP[0] + CUP_W / 2, CUP[1] - CUP_H / 2]
 /** The arm angle at which the acrobat leaves the spoon, and when. */
 const RELEASE_A = -0.3
@@ -71,7 +73,6 @@ export const catapult = defineContraption({
       pos = drop([HINGE[0] + dx, HINGE[1] + dy], onSpoon(REST), seg(u, 0.45, 0.58))
     } else pos = onSpoon(REST)
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The stand.
@@ -110,6 +111,5 @@ export const catapult = defineContraption({
     knob(p, k, ink, weight, s.color, HINGE[0], HINGE[1], 0.06)
 
     performer(p, k, ink, weight, s.color, pos[0], pos[1])
-    })
   },
 })

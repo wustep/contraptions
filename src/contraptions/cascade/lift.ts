@@ -1,11 +1,16 @@
 import { defineContraption } from '../../core/define'
-import { drawElevator, floor, heading, rideOf, rideToken, since, token, tokenColor, type Beat } from './parts'
-import { BOARD } from '../../worlds/goldberg/elevator'
+import { hold, ride, roll, type Lane, type LaneCtx } from '../../core/lane'
+import { CASCADE_RIDE, liftFrame } from '../../worlds/goldberg/elevator'
+import { SHEAVE_Y, SPEED, floor, type Beat } from './parts'
 
 /**
- * The top of an elevator. The rail runs to the cage; the car takes the
- * ball from the lip and carries it out the bottom of the cell. The well
- * below shares this clock so the same car is one motion, not two dumps.
+ * The top of an elevator. The rail runs to the cage, the ball waits while the
+ * doors are open, and the car takes it out the bottom of the cell.
+ *
+ * This cell draws only the frame that never moves. The car, its cable, the
+ * counterweight and the sheave's spin belong to the stack, not to either of
+ * its two cells, so the world draws them once from the run's clock — which is
+ * why the car can straddle the seam and the ball can ride it as one object.
  */
 const FIRE = 0
 
@@ -18,23 +23,16 @@ export const lift = defineContraption<Beat>({
   outlets: ['E', 'W', 'S'],
   rotations: [0],
   fireAt: FIRE,
+  lane: (ctx: LaneCtx): Lane => ({
+    pieces: [
+      roll([-0.5, ctx.floorY], [0, ctx.floorY], SPEED),
+      hold([0, ctx.floorY], CASCADE_RIDE.board),
+      ride([0, ctx.floorY], [0, 0.5], CASCADE_RIDE.v),
+    ],
+  }),
   setup: ({ color }) => ({ color }),
-  draw: (p, s, { size: k, u, ink, weight }) => {
-    const h = heading(s.flow)
-    const ride = rideOf(s) ?? { index: 0, floors: 1, at: FIRE }
-    const shown = { ...s, ride }
-    const through = s.flow?.in === 'N' && s.flow.out === 'S'
-
-    if (!through) {
-      p.push()
-      p.scale(h, 1)
-      floor(p, k, ink, weight, s, 0.18)
-      p.pop()
-    }
-
-    drawElevator(p, k, ink, weight, shown, u)
-    const t = since(u, ride.at)
-    const pos = rideToken(shown, u, FIRE)
-    if (pos && (t >= BOARD || !through)) token(p, k, ink, weight, tokenColor(s), pos)
+  draw: (p, s, { size: k, ink, weight }) => {
+    floor(p, k, ink, weight, s, 0.18)
+    liftFrame(p, k, ink, weight, SHEAVE_Y)
   },
 })

@@ -32,8 +32,8 @@ export interface Engine {
  */
 function drawConduits(p: p5, comp: Composition): void {
   if (!comp.wires.length) return
-  const unit = comp.wires[0].from.size
-  const base = strokeWeight(unit, comp.theme, comp.options.stroke)
+  // One pen for the piece: see Composition.unit.
+  const base = strokeWeight(comp.unit ?? comp.wires[0].from.size, comp.theme, comp.options.stroke)
 
   p.push()
   p.noFill()
@@ -50,8 +50,7 @@ function drawConduits(p: p5, comp: Composition): void {
 
 function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   if (!comp.wires.length) return
-  const unit = comp.wires[0].from.size
-  const base = strokeWeight(unit, comp.theme, comp.options.stroke)
+  const base = strokeWeight(comp.unit ?? comp.wires[0].from.size, comp.theme, comp.options.stroke)
 
   p.push()
   p.stroke(comp.theme.ink)
@@ -59,8 +58,10 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
 
   // Junctions sit where the conduit crosses between two cells, not on the cell
   // centres — a terminal drawn on a centre punches a hole through the machine
-  // it is supposed to be feeding.
+  // it is supposed to be feeding. A link only ever joins equal-sized cells, so
+  // its own cell size is what a junction and a bead are drawn against.
   for (const w of comp.wires) {
+    const unit = w.from.size
     p.fill(comp.theme.bg)
     p.circle((w.from.x + w.to.x) / 2, (w.from.y + w.to.y) / 2, unit * 0.17)
     if (w.last) {
@@ -81,7 +82,7 @@ function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
     p.circle(
       w.from.x + (w.to.x - w.from.x) * travel,
       w.from.y + (w.to.y - w.from.y) * travel,
-      unit * 0.26,
+      w.from.size * 0.26,
     )
   }
   p.pop()
@@ -184,36 +185,48 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       if (grid) drawGrid(p, comp)
       if (comp.showWires !== false) drawConduits(p, comp)
 
-      for (const inst of comp.instances) {
-        const { cell, contraption } = inst
-        const t = frame + inst.phase
-        const u = mod(t, inst.period) / inst.period
-        p.push()
-        p.translate(cell.x, cell.y)
-        p.rotate(inst.angle)
-        p.scale(inst.mirror, 1)
-        contraption.draw(p, inst.state, {
-          size: cell.size,
-          w: cell.w,
-          h: cell.h,
-          theme,
-          t,
-          u,
-          weight: strokeWeight(cell.size, theme, comp.options.stroke),
-          ink: theme.ink,
-          fired: Math.max(0, 1 - mod(loopFrame - inst.fireFrame, comp.loop) / FIRE_DECAY),
-        })
-        p.pop()
+      // One pen for the piece: see Composition.unit.
+      const pen = comp.unit ? strokeWeight(comp.unit, theme, comp.options.stroke) : null
+
+      const each = (pass: 'draw' | 'over') => {
+        for (const inst of comp.instances) {
+          const { cell, contraption } = inst
+          const fn = pass === 'draw' ? contraption.draw : contraption.over
+          if (!fn) continue
+          const t = frame + inst.phase
+          const u = mod(t, inst.period) / inst.period
+          p.push()
+          p.translate(cell.x, cell.y)
+          p.rotate(inst.angle)
+          p.scale(inst.mirror, 1)
+          fn.call(contraption, p, inst.state, {
+            size: cell.size,
+            w: cell.w,
+            h: cell.h,
+            theme,
+            t,
+            u,
+            weight: pen ?? strokeWeight(cell.size, theme, comp.options.stroke),
+            ink: theme.ink,
+            fired: Math.max(0, 1 - mod(loopFrame - inst.fireFrame, comp.loop) / FIRE_DECAY),
+          })
+          p.pop()
+        }
       }
+
+      each('draw')
 
       if (comp.showWires !== false) drawSignals(p, comp, loopFrame)
 
       for (const overlay of comp.overlays) {
         overlay(p, loopFrame, {
           theme,
-          weight: (size) => strokeWeight(size, theme, comp.options.stroke),
+          weight: (size) => (pen ?? strokeWeight(size, theme, comp.options.stroke)),
         })
       }
+
+      // Parts that stand in front of the tokens: a tote wall, a cup lip, a hoop band.
+      each('over')
 
       if (comp.captions.length) drawCaptions(p, comp)
 

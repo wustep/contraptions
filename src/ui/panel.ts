@@ -4,6 +4,7 @@ import { themes } from '../core/themes'
 import {
   MODES,
   catalogFor,
+  clampRes,
   modeInfo,
   tagsFor,
   type Composition,
@@ -79,8 +80,9 @@ const ICON = {
 const LAYOUT_GLYPHS: Record<string, [number, number, number, number][]> = {
   grid: [[3, 3, 8, 8], [13, 3, 8, 8], [3, 13, 8, 8], [13, 13, 8, 8]],
   bricks: [[3, 3, 10, 5], [15, 3, 6, 5], [3, 10, 5, 5], [10, 10, 11, 5], [3, 17, 10, 4], [15, 17, 6, 4]],
-  quads: [[3, 3, 18, 18], [12, 3, 9, 9], [16.5, 3, 4.5, 4.5]],
-  bands: [[3, 3, 4, 18], [9, 3, 8, 18], [19, 3, 2, 18]],
+  // Both mixed layouts hold two cell sizes and no more, so the glyphs show two.
+  quads: [[3, 3, 9, 9], [13, 3, 9, 9], [3, 13, 9, 9], [13, 13, 4, 4], [18, 13, 4, 4], [13, 18, 4, 4], [18, 18, 4, 4]],
+  bands: [[3, 3, 5, 18], [9.5, 3, 2, 18], [12.5, 3, 2, 18], [15.5, 3, 5, 18]],
 }
 
 function layoutGlyph(name: string): SVGSVGElement | undefined {
@@ -195,6 +197,11 @@ export function createPanel(
         input.value = String(v)
         readout.textContent = fmt(v)
       },
+      /** Retune the stops. Call `set` after: the input clamps its own value. */
+      setRange(lo: number, hi: number) {
+        input.min = String(lo)
+        input.max = String(hi)
+      },
     }
   }
 
@@ -260,8 +267,9 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
-    'Cells across the piece')
+  const resRange = modeInfo(initial.mode).res
+  const res = slider('Resolution', resRange.min, resRange.max, 1, clampRes(initial.mode, initial.res), String,
+    (v) => handlers.onChange({ res: v }), 'Cells across the piece')
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
   const spans = slider('Multi-cell', 0, 3, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
@@ -318,9 +326,21 @@ export function createPanel(
     classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
     ports: ['Wired chains', 'How many chains the solver grows'],
     tracks: ['Wired chains', ''],
-    cascade: ['Cascade runs', 'How much of the floor the drop-chain snakes through; it ends in one sink'],
-    workshop: ['Shop floor', 'How much of the floor the bench snakes through; it ends in a bin, bell, or lamp'],
-    circus: ['Drumroll', 'How much of the ring the programme snakes through; leftover cells stay empty'],
+    cascade: ['Stations', 'How much of the snake is machinery; the rest is plain rail'],
+    workshop: ['Stations', 'How much of the line is machinery; the rest is belt'],
+    circus: ['Drumroll', 'How much of the programme fires in sequence'],
+  }
+
+  /**
+   * The resolution stops are the mode's: a cell has a legible range and the
+   * composer builds inside it whatever the dial says, so the slider shows the
+   * res the piece was actually built at.
+   */
+  const syncRes = (mode: Mode, value: number) => {
+    const { min, max } = modeInfo(mode).res
+    res.setRange(min, max)
+    res.set(clampRes(mode, value))
+    res.node.title = `Cells across the piece — ${min} to ${max} in this mode`
   }
 
   /**
@@ -411,7 +431,7 @@ export function createPanel(
       layoutBox.set(comp.options.layout)
       tagBox.setItems(tagItems(comp.options.mode), comp.options.tag ?? '')
       soloBox.setItems(soloItems(comp.options.mode), comp.options.solo ?? '')
-      res.set(comp.options.res)
+      syncRes(comp.options.mode, comp.options.res)
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
       chains.set(comp.options.chains)
@@ -424,6 +444,11 @@ export function createPanel(
       scaleSeg.set(view.exportScale)
       const edge = handlers.exportSize(view.exportScale)
       dims.textContent = `${edge} × ${edge}px`
+      // Last: a res carried in from another mode, or from a link, is pulled
+      // into range and written back so the URL agrees with the piece. clampRes
+      // is idempotent, so the rebuild this asks for settles on the next sync.
+      const inRange = clampRes(comp.options.mode, comp.options.res)
+      if (inRange !== comp.options.res) handlers.onChange({ res: inRange })
     },
     setProgress(u) {
       if (!scrubbing) {

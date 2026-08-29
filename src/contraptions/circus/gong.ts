@@ -49,7 +49,7 @@ export const gong = defineContraption({
     stroke(p, k, GONG[0] - 0.1, BEAM_Y, GONG[0] - 0.07 + shake, GONG[1] - GONG_R + 0.02)
     stroke(p, k, GONG[0] + 0.1, BEAM_Y, GONG[0] + 0.07 + shake, GONG[1] - GONG_R + 0.02)
 
-    rings(p, k, s.color, weight, GONG[0] + shake, GONG[1], GONG_R, hit, Math.PI, 2)
+    rings(p, k, s.color, weight, GONG[0] + shake, GONG[1], GONG_R * 0.72, hit, Math.PI, 2)
     rings(p, k, s.color, weight, GONG[0] + shake, GONG[1], GONG_R, hit, -Math.PI / 2, 2)
 
     solid(p, ink, weight, s.color)

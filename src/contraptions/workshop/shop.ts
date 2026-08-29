@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { LOOP } from '../../core/constants'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, mod, seg } from '../../core/ease'
+import { stopLane, type Lane, type LaneCtx } from '../../core/lane'
 import { FIRE_DECAY } from '../../core/wiring'
 import { BY, D, FLOOR } from '../../worlds/lanes'
 
@@ -12,6 +13,14 @@ import { BY, D, FLOOR } from '../../worlds/lanes'
  * machine. The bench is the same line the ports and tracks worlds roll their
  * balls on, and the part is the same size as their ball: all three worlds
  * share a floor.
+ *
+ * **No bench draws the part.** A bench declares where the part goes — a
+ * `lane`, in cell units, in the canonical hand (west → east) — and the world
+ * draws every part on the joined path of the whole line, from one clock. A
+ * bench that is happy to be crossed in a straight line along the bench top
+ * declares nothing and gets the world's default; declare a lane when the part
+ * should follow your geometry, and `hold` where the tool works, so `fireAt`
+ * lands on it.
  *
  * Units are cells, y down. Multiply by the cell size to draw.
  */
@@ -33,8 +42,22 @@ export const SHELF = -0.16
 export const HIGH_Y = SHELF - PART / 2
 /** The overhead rail a hook trolley runs on. */
 export const RAIL = -0.44
+/** Height of the sheave in an elevator's top cell. The world hangs the car off it. */
+export const SHEAVE_Y = -0.34
 /** Belt speed in cells per loop. A part crosses a cell in half a loop. */
 export const BELT_V = 2
+/**
+ * How far a belt surface moves in one bench clock, in cells. The world hands a
+ * bench exactly one part per clock, so the surface moves exactly one cell:
+ * `u * BELT_SPAN` is the travel to pass to `belt`/`rollers`, and it makes the
+ * cleats and the part agree without either knowing the other's speed.
+ */
+export const BELT_SPAN = 1
+/**
+ * Frames one bench clock takes. The world runs exactly one part through every
+ * bench in that time, so a bench's `u` is "how far through this part am I".
+ */
+export const SHOP_PERIOD = LOOP / 2
 /**
  * Roller radius. A roller with four spokes looks the same every quarter turn,
  * and at this radius a belt moving any whole number of ninths of a cell per
@@ -88,52 +111,25 @@ export function lineOf(s: unknown): Line | undefined {
   return line && typeof line.out === 'boolean' ? line : undefined
 }
 
-/** Draw a part only while its body still sits inside the cell. */
-export function showPart(
-  p: p5,
-  k: number,
-  ink: string,
-  weight: number,
-  fill: string,
-  x: number,
-  y: number,
-  opts: { mark?: Mark; angle?: number; bg?: string; w?: number; h?: number } = {},
-): void {
-  const hw = (opts.w ?? PART) / 2
-  const hh = (opts.h ?? PART) / 2
-  if (x < -0.5 - hw - 0.02 || x > 0.5 + hw + 0.02) return
-  if (y < -0.5 - hh - 0.02 || y > 0.5 + hh + 0.02) return
-  part(p, k, ink, weight, fill, x, y, opts)
-}
-
-/** Clamp a travelling x so a closed end holds at centre and nothing leaves the cell. */
-export function keepX(x: number, line?: Line): number | null {
-  if (line && !line.in && x < -0.4) return null
-  if (line && !line.out && x > 0.02) return 0
-  if (x < -0.56 || x > 0.56) return null
-  return x
-}
+/**
+ * The lane the world gives a bench that declares none, and the base for one
+ * that only wants a pause: roll in on the bench, stop at `at` for `time` while
+ * the tool works, roll on. See `core/lane.ts`.
+ */
+export const partLane = (ctx: LaneCtx, opts: { at?: number; time?: number; y?: number } = {}): Lane =>
+  stopLane(ctx, BELT_V, opts)
 
 /**
- * Where a part is on the station beat: entering from the west, held at the
- * centre between `arrive` and `depart`, leaving east. A closed outlet holds
- * the part at centre; a closed inlet starts the part inside the cell.
+ * Where a part used to be on the station beat, back when every bench drew its
+ * own. The world draws the part now, so this carries nothing: an unconverted
+ * bench keeps compiling and stops drawing a second part on top of the real one.
+ *
+ * @deprecated Declare a `lane` instead and delete the call.
  */
-export function shuttle(u: number, arrive = ARRIVE, depart = DEPART, line?: Line): number | null {
-  const edge = 0.5 + PART / 2
-  const cross = edge / BELT_V
-  if (line && !line.in) {
-    if (u < arrive - 0.12) return null
-    if (u < arrive) return -0.18 + ((u - (arrive - 0.12)) / 0.12) * 0.18
-  } else {
-    if (u < arrive - cross) return null
-    if (u < arrive) return -edge + (u - (arrive - cross)) * BELT_V
-  }
-  if (u < depart) return 0
-  if (line && !line.out) return 0
-  if (u < depart + cross) return (u - depart) * BELT_V
-  return null
-}
+export const shuttle = (_u: number, _arrive = ARRIVE, _depart = DEPART, _line?: Line): number | null => null
+
+/** @deprecated See `shuttle`. */
+export const keepX = (_x: number, _line?: Line): number | null => null
 
 /** The bench line, with a leg at each end down to the floor. */
 export function bench(p: p5, k: number, ink: string, weight: number, x0 = -0.5, x1 = 0.5, legs = true): void {

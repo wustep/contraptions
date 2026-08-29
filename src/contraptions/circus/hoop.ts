@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline } from '../../core/draw'
+import { outline } from '../../core/draw'
 import { seg } from '../../core/ease'
 import { P, flight, ground, hoop as ring, knock, pedestal, performer, stroke } from './circus'
 
@@ -9,7 +9,7 @@ import { P, flight, ground, hoop as ring, knock, pedestal, performer, stroke } f
  */
 const PED_X = 0.37
 const PED_TOP = 0.1
-const HOOP: [number, number] = [0, -0.14]
+const HOOP: [number, number] = [0, -0.1]
 const HOOP_R = 0.2
 const BAND = 0.05
 const LEAP = 0.24
@@ -36,7 +36,6 @@ export const hoop = defineContraption({
 
     const flare = Math.max(knock(u, 0.12 + LEAP / 2, 0.04, 0.3), knock(u, 0.62 + LEAP / 2, 0.04, 0.3))
 
-    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     stroke(p, k, HOOP[0], HOOP[1] + HOOP_R + BAND, HOOP[0], 0.5)
@@ -48,6 +47,5 @@ export const hoop = defineContraption({
     // reads as going through rather than past.
     performer(p, k, ink, weight, s.color, pos[0], pos[1])
     ring(p, k, ink, weight, s.color, HOOP[0], HOOP[1], HOOP_R, BAND, flare)
-    })
   },
 })

@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, outline } from '../../core/draw'
+import { outline } from '../../core/draw'
 import { easeInOutSine, easeOutCubic, lerp, seg } from '../../core/ease'
 import { block, ground, knob, second, since, stroke } from './circus'
 
@@ -13,6 +13,8 @@ const PIVOT: [number, number] = [0.17, 0.36]
 const UP = -1.35
 const DOWN = 0.35
 const BITS = 16
+/** How long the bits are in the air. */
+const BURST = 0.42
 
 const hash = (i: number, salt: number) => {
   const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453
@@ -44,23 +46,24 @@ export const confetti = defineContraption({
     knob(p, k, ink, weight, s.color, PIVOT[0] + 0.24 * Math.cos(lever), PIVOT[1] + 0.24 * Math.sin(lever), 0.08)
     knob(p, k, ink, weight, s.color, PIVOT[0], PIVOT[1], 0.05)
 
-    if (t < 0.42) {
-      clipCell(p, k, () => {
-        p.noStroke()
-        for (let i = 0; i < BITS; i++) {
-          const a = -Math.PI / 2 + (hash(i, 1) - 0.5) * 1.4
-          const v = 1 + 0.9 * hash(i, 2)
-          const x = Math.cos(a) * v * t * 1.3
-          const y = MOUTH - 0.04 + Math.sin(a) * v * t * 1.3 + 2.4 * t * t
-          if (y > 0.48) continue
-          p.push()
-          p.translate(x * k, y * k)
-          p.rotate(t * (5 + 8 * hash(i, 3)) * (hash(i, 4) > 0.5 ? 1 : -1))
-          p.fill(i % 2 === 0 ? s.color : s.alt)
-          p.rect(0, 0, 0.07 * k, 0.04 * k)
-          p.pop()
-        }
-      })
+    // The burst. Every bit stays in the cell, settles on the floor rather than
+    // falling through it, and shrinks away instead of being clipped off.
+    if (t < BURST) {
+      const f = t / BURST
+      p.noStroke()
+      for (let i = 0; i < BITS; i++) {
+        const a = -Math.PI / 2 + (hash(i, 1) - 0.5) * 1.4
+        const r = 0.42 * (0.7 + 0.45 * hash(i, 2)) * f
+        const x = Math.cos(a) * r
+        const y = Math.min(0.44, MOUTH - 0.04 + Math.sin(a) * r + 0.62 * f * f)
+        p.push()
+        p.translate(x * k, y * k)
+        p.rotate(t * (5 + 8 * hash(i, 3)) * (hash(i, 4) > 0.5 ? 1 : -1))
+        p.fill(i % 2 === 0 ? s.color : s.alt)
+        const fade = Math.min(1, 3 * (1 - f))
+        p.rect(0, 0, 0.075 * fade * k, 0.045 * fade * k)
+        p.pop()
+      }
     }
   },
 })

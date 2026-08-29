@@ -18,6 +18,7 @@ import { knocker } from './knocker'
 import { lamp } from './lamp'
 import { lift } from './lift'
 import { paddle } from './paddle'
+import { rail } from './rail'
 import { seesaw } from './seesaw'
 import { strip } from './strip'
 import { switchback } from './switchback'
@@ -48,6 +49,7 @@ export const registry: Contraption<any>[] = [
   lamp,
   lift,
   paddle,
+  rail,
   seesaw,
   strip,
   switchback,

@@ -6,7 +6,7 @@ import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName, type Theme } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
-import type { CatalogEntry, Composition, Options, Overlay } from '../../core/composition'
+import { clampRes, type CatalogEntry, type Composition, type Options, type Overlay } from '../../core/composition'
 import { D } from '../lanes'
 import { reactors, type Face, type Reactor, type ReactorState } from './reactors'
 import {
@@ -187,9 +187,11 @@ const trackContraption: Contraption<SegState> = {
 export function buildTracks(options: Options, canvas: number): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(`${options.seed}::tracks`)
-  const area = Math.floor((canvas * ART_INSET) / options.res) * options.res
+  // Never the raw dial: a cell has a legible range and the mode owns it.
+  const res = clampRes(options.mode, options.res)
+  const area = Math.floor((canvas * ART_INSET) / res) * res
   const origin = Math.round((canvas - area) / 2)
-  const cells = layoutByName('grid').build({ x: origin, y: origin, area, res: options.res, rng: rng.fork('layout') })
+  const cells = layoutByName('grid').build({ x: origin, y: origin, area, res, rng: rng.fork('layout') })
   const size = cells[0]?.size ?? 1
   const at = new Map<string, Cell>()
   for (const cell of cells) at.set(`${cell.col}:${cell.row}`, cell)
@@ -199,7 +201,7 @@ export function buildTracks(options: Options, canvas: number): Composition {
   const overlays: Overlay[] = []
   const taken = new Set<Cell>()
 
-  for (const [ri, region] of regions(options.res, rng.fork('regions')).entries()) {
+  for (const [ri, region] of regions(res, rng.fork('regions')).entries()) {
     const regionRng = rng.fork(`region:${ri}`)
     const track = carve(region, regionRng)
     if (!track) continue
@@ -315,6 +317,7 @@ export function buildTracks(options: Options, canvas: number): Composition {
     header: null,
     wires: [],
     overlays,
+    unit: size,
   }
 }
 

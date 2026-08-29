@@ -19,7 +19,7 @@ Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
 Six modes, 14 palettes, 4 layouts. Classic keeps the original 36 toys;
-Cascade, Workshop and Circus each bring their own catalog.
+Cascade, Workshop and Circus each bring their own catalog and their own grid.
 
 ## How it fits together
 
@@ -31,6 +31,7 @@ src/
     composition.ts  seed + options -> a placed, oriented, phase-offset piece
     engine.ts       owns the clock, drives p5
     wiring.ts       builds firing chains between neighbours
+    lane.ts         how a token crosses a cell, and how lanes join up
     layouts.ts      grid | bricks | quads | bands
     themes.ts       14 palettes
     rng.ts          seeded, forkable randomness
@@ -39,12 +40,12 @@ src/
   contraptions/     classic toys, plus one namespaced catalog per Goldberg mode
     cascade/        22 beats that hand a token along a chain
     workshop/       27 benches; shop.ts is the shared floor and part
-    circus/         27 looping acts; circus.ts is the shared vocabulary
+    circus/         28 looping acts; circus.ts is the shared vocabulary
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
-    goldberg/       cascade sentences and workshop shop-lines (own composers)
+    goldberg/       the cascade, workshop and circus grids; the token is theirs
   ui/               the seed explorer
 ```
 
@@ -156,62 +157,76 @@ eligible, so a chain never has to reason about a member firing twice per cycle.
 A mode picks **both a catalog and a composer**. That is what lets three
 Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
-Classic / Ports / Tracks keep the original toys and the two worlds. Circus is
-a classic-like grid composer. Cascade and Workshop are their own worlds.
-Cascade staffs inset eastbound sentences that end in a sink and leaves the
-rest empty. Workshop staffs inset shop lines that end in a bin, bell, or lamp. Multi-cell spans
-stay on the catalog sheet so they cannot punch holes in those runs.
+Classic keeps the original toys on the leftover-fill grid; Ports and Tracks are
+the two worlds. Cascade, Workshop and Circus build **their own grid** — a
+uniform block of cells that fills the frame, every one of them on the piece —
+rather than staffing runs through a classic layout. That is why the Layout
+control disappears for them, and why each carries its own resolution range:
+their machines are read close up, so a cascade is 5–9 cells across where a
+classic piece is 6–24.
 
-| Mode | Catalog | Composer |
-| --- | --- | --- |
-| Classic | the original 36 toys | independent machines, abstract wires |
-| Ports | `src/worlds/ports/` | tokens handed across typed edges |
-| Tracks | `src/worlds/tracks/` | balls circulating on a carved loop |
-| Cascade | `src/contraptions/cascade/` | inset eastbound sentences that end in a sink |
-| Workshop | `src/contraptions/workshop/` | inset shop lines that end in a bin, bell, or lamp |
-| Circus | `src/contraptions/circus/` | looping acts; wire is the drumroll between them |
+| Mode | Catalog | Composer | Cells across |
+| --- | --- | --- | --- |
+| Classic | the original 36 toys | independent machines, abstract wires | 6–24 |
+| Ports | `src/worlds/ports/` | tokens handed across typed edges | 8–20 |
+| Tracks | `src/worlds/tracks/` | balls circulating on a carved loop | 8–20 |
+| Cascade | `src/contraptions/cascade/` | one snake of stations, tokens on lanes | 5–9 |
+| Workshop | `src/contraptions/workshop/` | one shop line of benches, parts on lanes | 5–9 |
+| Circus | `src/contraptions/circus/` | a full grid of closed looping acts; the drumroll fires them in sequence | 4–7 |
 
 The Mode control lists all six with those notes. Catalog view shows the active
 mode's pieces. The URL stores the mode name (`?mode=cascade`).
 
+### Lanes
+
+Cascade and Workshop hand a token from cell to cell, and the one thing that
+must never happen is for it to blink out at a seam. So the machines do not draw
+it. A machine declares a **lane** — its token's path across the cell, in cell
+units, with rolls, rides and holds where it acts (`src/core/lane.ts`). The
+world concatenates the lanes along the snake, draws every token once from the
+joined path, and sets each machine's phase so its own clock reads `fireAt` at
+the instant the token arrives at its fire point. One drawing of the token, one
+path, one clock: it cannot be drawn twice, disagree with its neighbour, or fall
+through a gap. Tracks reached the same conclusion first, with its balls.
+
 ### Cascade
 
-A token starts in one cell and every cell after it is a beat in a chain
-reaction. The cascade world leaves the outer ring of cells empty, then
-staffs inset eastbound sentences — feeder → stations → a real ending
-(bell, cup, lamp, and the other catchers). Unused cells get no machine,
-so there is no leftover pile and nothing emits off an empty cell. The
-engine's conduit is hidden; each machine draws its own rail toward the
-ports that exist. A cup only dumps when the run actually continues south;
-a bellows only puffs when the run leaves sideways. Classic wiring is left
-alone: a pendulum on main still rotates.
+One token, one snake. The world lays its own grid across the frame and threads
+a single run through every cell of it: a feeder, then stations, then a sink,
+with two-cell elevator stacks where the run has to change floor. **Stations**
+is the fraction of that run which is machinery; the rest is plain rail, so the
+dial trades a dense chain of events against a long roll between them. The
+token itself is drawn by the world along the joined lane, and the elevator
+cars, cables and counterweights come off the same clock, so nothing that moves
+with the token is drawn by more than one thing.
 
-`src/contraptions/cascade/parts.ts` is the shared vocabulary (token size, the
-hand-off helpers, `heading(flow)`). The composer lives in
-`src/worlds/goldberg/cascade.ts`.
+`src/contraptions/cascade/parts.ts` is the shared vocabulary; the composer
+lives in `src/worlds/goldberg/cascade.ts`.
 
 ### Workshop
 
-One shop floor. The outer ring of cells stays empty. Interior equal-size
-neighbours become inset eastbound shop lines: feeder (`hopper` / `hoist` /
-`tipper`) → bench stations → a real ending (`bin`, `bell`, `lamp`) that
-sits on the bench and stops it. Unused cells get no machine. High res
-skips a row so the floor reads as lines, not wallpaper. Lift, auger,
-chute, divert, arm, press, scale and dip stay off the line — they change
-height or reach the row above. Every placed bench gets a `line`: a closed
-outlet holds the part at centre, a closed inlet starts the part inside
-the cell. Classic wires are not used; travel times do not match `fireAt`
-beads. Machines never mirror. `shop.ts` is the vocabulary every bench agrees
-on (`BENCH` is the same floor the ports and tracks worlds roll on). The
-composer lives in `src/worlds/goldberg/workshop.ts`.
+The same machinery, read as a shop floor: a hopper feeds a part onto the line,
+benches work it as it goes, and it ends in a bin, a bell, or a lamp. Cells that
+are not stations are belt. Parts are released every half loop rather than every
+loop, so the line always has work on it. `shop.ts` is the vocabulary every
+bench agrees on (`BENCH` is the same floor the ports and tracks worlds roll
+on). The composer lives in `src/worlds/goldberg/workshop.ts`.
 
 ### Circus
 
-Every cell is a looping act. A performer that leaves a tower comes back to it
-by the end of the loop, and the stunt on the way fires again next lap. Timing
-is the joke: a lap ends and the same bell rings. Composition is classic-like
-— independent acts, some wired as a drumroll — on the circus catalog.
-`circus.ts` holds the shared props (performer, flight, knock, hoop, bell).
+Every cell is a looping act, and every act stays inside its own footprint: a
+performer that leaves a tower comes back to it by the end of the loop, and the
+stunt on the way fires again next lap. Because nothing is handed across a cell
+edge, the programme does not need a snake — the world lays its own uniform grid
+across the frame and fills all of it. **Multi-cell** is the share of the floor
+the big acts take (big top, ferris wheel, tightrope, cannon, high dive, the
+two-cell elevator ride); every remaining cell gets a small act. **Drumroll** is
+how much of what is left is wired into chains that fire a beat apart, source →
+relay → sink; the rest free-runs on its own phase. The conduit itself is not
+drawn: on a floor this full a centre-to-centre line runs straight through the
+act it is cueing, and a bead travelling between cells would contradict the one
+rule the mode is built on. `circus.ts` holds the shared props (performer,
+flight, knock, hoop, bell).
 
 ### Ports (framework A)
 
@@ -249,13 +264,20 @@ and each reactor beside the piece of track it reacts to.
 | Seed | Everything random derives from this string |
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus` |
 | Theme | 14 palettes, each a different mood |
-| Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) |
-| Resolution | Cells across the art area |
+| Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
+| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7) |
 | Stroke | Multiplier on the computed line weight |
 | Multi-cell | How eagerly to place machines larger than one cell |
-| Wired chains | How much of the grid to wire into firing sequences |
+| Stations / Drumroll / Wired chains | How much of the piece is machinery, or wired into firing sequences — the dial is renamed per mode |
 | Tag / Solo | Narrow the pool while exploring |
 | Catalog | One labelled instance of every machine |
+
+The resolution range is the mode's, not the slider's: a composer builds at the
+clamped value and the panel writes it back into the URL, so a link never shows
+you a res the piece was not built at. `quads` and `bands` mix two cell sizes
+and no more, differing by exactly 2 — the piece is drawn with one pen, so a
+cell four times its neighbour's size is four times the ink, and the small
+machines stop reading as artifacts beside the large ones.
 
 Playback speed, the scrub bar, export scale, and the grid overlay are view
 settings: they change how the piece is watched, never what it is, so they do
