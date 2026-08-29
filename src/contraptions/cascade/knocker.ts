@@ -35,14 +35,16 @@ export const knocker = defineContraption<Beat>({
     else if (t < 0.9) angle = COCKED
     else angle = lerp(COCKED, HIT, easeInQuad(seg(t, 0.9, 1)))
 
-    floor(p, k, ink, weight, s, 0.1)
+    // No gap in the rail: the ball waits on it, and the gap existed only for
+    // a pedestal that reached down through the floor.
+    floor(p, k, ink, weight, s)
 
     p.push()
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
-    // The pedestal.
-    p.line(0, (FLOOR + 0.16) * k, 0, (FLOOR + 0.02) * k)
-    p.line(-0.09 * k, (FLOOR + 0.02) * k, 0.09 * k, (FLOOR + 0.02) * k)
+    // The seat the ball waits in. It used to be drawn as a post below the
+    // rail — a stalactite under the floor the ball is sitting on.
+    for (const x of [-0.11, 0.11]) p.line(x * k, FLOOR * k, x * k, (FLOOR - 0.06) * k)
     // The winch stands on the rail, not in the empty corner.
     outline(p, ink, weight)
     p.line(WINCH[0] * k, WINCH[1] * k, WINCH[0] * k, FLOOR * k)
