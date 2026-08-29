@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { LOOP } from '../../core/constants'
-import { clipCell, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, mod, seg } from '../../core/ease'
 import { LINK_DELAY, type Flow } from '../../core/wiring'
 import {
@@ -8,11 +8,14 @@ import {
   CLEAR as RIDE_CLEAR,
   RIDE0,
   RIDE1,
+  GUIDE,
   buffers,
   cable,
   car,
   carLocalY,
+  counterweight,
   guides,
+  landing,
   rideTravel,
   sheave,
 } from '../../worlds/goldberg/elevator'
@@ -164,8 +167,9 @@ export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, ga
   const hasW = !s.flow || s.flow.in === 'W' || s.flow.out === 'W'
   const hasE = !s.flow || s.flow.in === 'E' || s.flow.out === 'E'
   const dropS = s.flow?.out === 'S'
-  const x0 = dropS && !hasW ? -0.12 : hasW ? -0.5 : -0.36
-  const x1 = dropS && !hasE ? 0.12 : hasE ? 0.5 : 0.4
+  const catchN = s.flow?.in === 'N'
+  const x0 = dropS && !hasW ? -0.18 : catchN && !hasW ? 0.18 : hasW ? -0.5 : -0.36
+  const x1 = dropS && !hasE ? 0.18 : catchN && !hasE ? -0.18 : hasE ? 0.5 : 0.4
   outline(p, ink, weight)
   if (gap > 0) {
     if (x0 < -gap) p.line(x0 * k, FLOOR * k, -gap * k, FLOOR * k)
@@ -212,19 +216,32 @@ export function drawElevator(p: p5, k: number, ink: string, weight: number, s: B
 
   guides(p, k, ink, weight, y0, y1)
   if (top) {
-    sheave(p, k, ink, weight, -0.14, travel * 6)
-    if (y !== null) cable(p, k, ink, weight, -0.14, y - 0.14)
+    sheave(p, k, ink, weight, -0.16, travel * 6)
+    if (y !== null) cable(p, k, ink, weight, -0.16, y - 0.14)
+    const from = s.flow?.in === 'E' ? 0.5 : -0.5
+    if (s.flow?.in === 'E' || s.flow?.in === 'W' || !s.flow) {
+      landing(p, k, ink, weight, from, from > 0 ? GUIDE : -GUIDE, FLOOR)
+    }
   } else if (y !== null) {
     cable(p, k, ink, weight, -0.5, y - 0.14)
   }
-  if (bot) buffers(p, k, ink, weight, FLOOR + 0.08)
+  if (bot) {
+    buffers(p, k, ink, weight, FLOOR + 0.08)
+    const to = s.flow?.out === 'W' ? -0.5 : 0.5
+    if (s.flow?.out === 'E' || s.flow?.out === 'W' || !s.flow) {
+      landing(p, k, ink, weight, to > 0 ? GUIDE : -GUIDE, to, FLOOR)
+    }
+  }
+  const cwY = carLocalY(ride.floors - travel, ride.index)
+  if (cwY !== null) {
+    if (top) cable(p, k, ink, weight, -0.16, cwY, 0.28)
+    counterweight(p, k, ink, weight, paint, cwY)
+  }
   if (y !== null) car(p, k, ink, weight, paint, y, TOKEN / 2)
   return y
 }
 
 export function drawRideToken(p: p5, k: number, ink: string, weight: number, s: Beat, u: number, at: number): void {
-  clipCell(p, k, () => {
-    const pos = rideToken(s, u, at)
-    if (pos) token(p, k, ink, weight, tokenColor(s), pos)
-  })
+  const pos = rideToken(s, u, at)
+  if (pos) token(p, k, ink, weight, tokenColor(s), pos)
 }

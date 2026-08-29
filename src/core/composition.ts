@@ -93,7 +93,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'circus',
     label: 'Circus',
-    note: 'one programme that snakes the ring and ends in a bow',
+    note: 'one programme that rides elevators around the ring and ends in a bow',
     catalog: 'circus',
     composer: 'circus',
     dials: { layout: true, spans: false, chains: true, pool: true },

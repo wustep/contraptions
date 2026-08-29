@@ -1,5 +1,4 @@
 import { defineContraption } from '../../core/define'
-import { clipCell } from '../../core/draw'
 import { drawElevator, floor, heading, rideOf, rideToken, since, token, tokenColor, type Beat } from './parts'
 import { BOARD } from '../../worlds/goldberg/elevator'
 
@@ -35,9 +34,7 @@ export const lift = defineContraption<Beat>({
 
     drawElevator(p, k, ink, weight, shown, u)
     const t = since(u, ride.at)
-    clipCell(p, k, () => {
-      const pos = rideToken(shown, u, FIRE)
-      if (pos && (t >= BOARD || !through)) token(p, k, ink, weight, tokenColor(s), pos)
-    })
+    const pos = rideToken(shown, u, FIRE)
+    if (pos && (t >= BOARD || !through)) token(p, k, ink, weight, tokenColor(s), pos)
   },
 })
