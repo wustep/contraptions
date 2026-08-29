@@ -57,6 +57,17 @@ const floorLine = (p: p5, k: number, x1: number, x2: number, y = FLOOR) =>
   p.line(x1 * k, y * k, x2 * k, y * k)
 const wall = (p: p5, k: number, x: number, y1: number, y2: number) => p.line(x * k, y1 * k, x * k, y2 * k)
 
+/**
+ * A short throat at the top of the cell. The machine above draws its spout
+ * down to the seam; this is the mouth the ball comes out of on the other
+ * side, so a fall between two cells is a pipe with a gap in it rather than a
+ * ball appearing out of blank paper.
+ */
+const inletN = (p: p5, k: number, depth = 0.22) => {
+  wall(p, k, -TW, -0.5, -0.5 + depth)
+  wall(p, k, TW, -0.5, -0.5 + depth)
+}
+
 /** A gear at the cell centre, turned to `angle`. */
 function gear(p: p5, k: number, ink: string, weight: number, angle: number, spokes = 3): void {
   p.push()
@@ -377,6 +388,8 @@ export const paddle = definePort({
   setup: ({ color }) => ({ color }),
   draw: (p, s, c) => {
     const k = c.size
+    outline(p, c.ink, c.weight)
+    if (s.link.inSide === 'N') inletN(p, k)
     clipBox(p, c.w, c.h, () => rolling(p, s, c, FALL, (u) => [0, -0.5 + u * FALL_V]))
     gear(p, k, c.ink, c.weight, gearAngle(s.link, c.u), 0)
     p.push()
@@ -542,6 +555,7 @@ export const dominoes = definePort({
     outline(p, c.ink, c.weight)
     floorLine(p, k, -0.5, 0.5)
     if (byBall) {
+      inletN(p, k)
       clipBox(p, c.w, c.h, () => {
         // Straight down the centre lane onto the first bar, then tumbling
         // off its near side into the cup — sideways and down, never up.
