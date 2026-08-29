@@ -10,9 +10,9 @@ import { easeInOutCubic, seg } from '../../core/ease'
  * passenger's centre so a ball and a square part can share the cage.
  */
 
-export const GUIDE = 0.16
-export const CAR_W = 0.34
-export const CAR_H = 0.26
+export const GUIDE = 0.18
+export const CAR_W = 0.3
+export const CAR_H = 0.3
 
 /** Cascade: one token rides once a loop, boarding just after the machine fires. */
 export const BOARD = 0.1
@@ -82,12 +82,11 @@ export function car(p: p5, k: number, ink: string, weight: number, color: string
   const floor = y + seat
   const roof = floor - CAR_H
   outline(p, ink, weight)
-  p.line((-CAR_W / 2) * k, floor * k, (-CAR_W / 2) * k, roof * k)
-  p.line((CAR_W / 2) * k, floor * k, (CAR_W / 2) * k, roof * k)
+  for (const x of [-CAR_W / 2, CAR_W / 2]) p.line(x * k, floor * k, x * k, roof * k)
   p.line((-CAR_W / 2) * k, roof * k, (CAR_W / 2) * k, roof * k)
-  p.line((-CAR_W / 2) * k, (roof + CAR_H * 0.45) * k, (CAR_W / 2) * k, (roof + CAR_H * 0.45) * k)
+  p.line((-CAR_W / 2 + 0.04) * k, (roof + CAR_H * 0.5) * k, (CAR_W / 2 - 0.04) * k, (roof + CAR_H * 0.5) * k)
   solid(p, ink, weight, color)
-  p.rect(0, (floor + 0.02) * k, CAR_W * k, 0.045 * k)
+  p.rect(0, (floor + 0.018) * k, (CAR_W + 0.04) * k, 0.036 * k)
 }
 
 export function cable(p: p5, k: number, ink: string, weight: number, fromY: number, toY: number): void {
