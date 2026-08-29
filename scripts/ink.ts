@@ -407,12 +407,13 @@ export function inkOf(comp: Composition, samples = 24): InkReport[] {
       rec.reset()
       contraption.draw(rec as unknown as p5, inst.state, {
         size: cell.size,
+        unit: comp.unit,
         w: cell.w,
         h: cell.h,
         theme: comp.theme,
         t,
         u,
-        weight: strokeWeight(cell.size, comp.theme, comp.options.stroke),
+        weight: strokeWeight(cell.size, comp.unit, comp.theme, comp.options.stroke),
         ink: comp.theme.ink,
         fired: Math.max(0, 1 - mod(i - inst.fireFrame, comp.loop) / FIRE_DECAY),
       })

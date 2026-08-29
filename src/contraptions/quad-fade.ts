@@ -2,7 +2,13 @@ import { defineContraption } from '../core/define'
 import { outline, solid } from '../core/draw'
 import { easeInOutCubic, mod, seg } from '../core/ease'
 
-/** Four quarters filling and emptying in rotation. */
+/**
+ * Four quarters filling and emptying in rotation, like water rising in a
+ * tank. A quarter that scaled about its own centre spent the ends of its
+ * cycle as a speck of ink in a large empty square — a mark, not a machine.
+ * Filling from the floor keeps the shape the width of its quarter the whole
+ * way, so the same cycle reads at every cell size.
+ */
 export const quadFade = defineContraption({
   name: 'quad-fade',
   label: 'Quad Fade',
@@ -30,9 +36,11 @@ export const quadFade = defineContraption({
       const grow = easeInOutCubic(seg(local, 0, 0.25))
       const shrink = easeInOutCubic(seg(local, 0.5, 0.75))
       const scale = grow - shrink
-      if (scale <= 0.001) return
+      const side = q * 0.86
+      const level = side * scale
+      if (level <= weight) return
       solid(p, ink, weight, s.color)
-      p.rect(x, y, q * scale * 0.86, q * scale * 0.86)
+      p.rect(x, y + (side - level) / 2, side, level)
     })
   },
 })

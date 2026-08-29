@@ -40,7 +40,8 @@ export interface ModeInfo {
   catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
   /**
    * How the piece is composed. Ports, tracks, cascade, workshop and
-   * circus are their own worlds. Classic is the leftover-fill grid.
+   * circus are their own worlds — they build their own floor, so the Layout
+   * dial is not theirs to honour. Classic is the leftover-fill grid.
    */
   composer: 'ports' | 'tracks' | Composer
   /** Panel controls this mode actually uses. Hidden otherwise. */
@@ -77,26 +78,26 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'one drop-chain that rides elevators and ends in a sink',
+    note: 'chain reactions along every course, one of them the long one',
     catalog: 'cascade',
     composer: 'cascade',
-    dials: { layout: true, spans: false, chains: true, pool: true },
+    dials: { layout: false, spans: false, chains: true, pool: true },
   },
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'one shop bench that rides elevators and ends in a bin, bell, or lamp',
+    note: 'shop lines along every course, one of them the long one',
     catalog: 'workshop',
     composer: 'workshop',
-    dials: { layout: true, spans: false, chains: true, pool: true },
+    dials: { layout: false, spans: false, chains: true, pool: true },
   },
   {
     name: 'circus',
     label: 'Circus',
-    note: 'one programme that rides elevators around the ring and ends in a bow',
+    note: 'a floor of looping acts, one band of them wired into a programme',
     catalog: 'circus',
     composer: 'circus',
-    dials: { layout: true, spans: false, chains: true, pool: true },
+    dials: { layout: false, spans: true, chains: true, pool: true },
   },
 ]
 
@@ -190,6 +191,12 @@ export interface Composition {
   options: Options
   theme: Theme
   cells: Cell[]
+  /**
+   * The piece's base cell — the smallest one the layout emitted. Ink weight
+   * and the wire furniture are sized off this rather than off whatever cell
+   * they happen to sit in, so one piece reads as one hand.
+   */
+  unit: number
   instances: Instance[]
   /** Frames for the whole piece to return to its starting state. */
   loop: number
@@ -212,11 +219,28 @@ export interface Composition {
 }
 
 /**
- * Base stroke weight for a cell. Tuned so a 15x15 grid on a 900px canvas lands
- * on 2px, matching the reference sketch, and stays legible as cells shrink.
+ * One pen per piece.
+ *
+ * The base weight comes from the piece's own unit — the smallest cell the
+ * layout emitted — so every cell is inked by the same hand. A bigger cell
+ * gets at most a quarter more press, the way a hand leans on a bigger shape;
+ * it never gets a second pen. Weight used to be a function of the cell alone,
+ * which put 2px ink and 9px ink on one sheet and made a mixed layout read as
+ * two artworks pasted together.
+ *
+ * Tuned so a 15x15 grid on a 900px canvas lands on 2px, matching the
+ * reference sketch. On a uniform layout `size === unit` and this is exactly
+ * the old formula.
  */
-const strokeFor = (size: number, theme: Theme, mult: number): number =>
-  Math.max(0.75, size * 0.037) * (theme.weight ?? 1) * mult
+const strokeFor = (size: number, unit: number, theme: Theme, mult: number): number =>
+  Math.max(0.75, unit * 0.037) *
+  Math.min(1.25, Math.sqrt(Math.max(1, size / unit))) *
+  (theme.weight ?? 1) *
+  mult
+
+/** The base cell of a layout: the smallest square it emitted. */
+export const unitOf = (cells: Cell[]): number =>
+  cells.length ? Math.min(...cells.map((c) => c.size)) : CANVAS
 
 function pool(options: Options, catalog: Contraption<unknown>[]): Contraption<unknown>[] {
   if (options.solo) {
@@ -299,6 +323,7 @@ function buildGrid(
     rng: rng.fork('layout'),
   })
 
+  const unit = unitOf(cells)
   const candidates = pool(options, catalog)
   const singles = candidates.filter((c) => !c.span || (c.span[0] === 1 && c.span[1] === 1))
   const spanning = candidates.filter((c) => c.span && (c.span[0] > 1 || c.span[1] > 1))
@@ -364,6 +389,9 @@ function buildGrid(
   if (spanning.length) {
     for (const anchor of rng.fork('spans').shuffle(cells)) {
       if (claimed.has(anchor)) continue
+      // Spans anchor on the base tier only. A 2x2 on a 2x cell is a 4x
+      // footprint, which is the octave spent twice over.
+      if (anchor.size !== unit) continue
       const spanRng = rng.fork(`span:${anchor.index}`)
       if (!spanRng.bool(spanChance)) continue
       const contraption = spanRng.weighted(spanning, (c) => c.weight ?? 1)
@@ -424,6 +452,7 @@ function buildGrid(
     options,
     theme,
     cells,
+    unit,
     instances,
     loop: LOOP,
     used: [...new Set(instances.map((i) => i.contraption.name))].sort(),
@@ -576,6 +605,7 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     options,
     theme,
     cells,
+    unit,
     instances,
     loop,
     used: [...new Set(entries.map((e) => e.contraption.name))].sort(),

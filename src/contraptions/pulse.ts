@@ -1,5 +1,5 @@
 import { defineContraption } from '../core/define'
-import { clipCell, outline } from '../core/draw'
+import { clipCell, outline, tiles } from '../core/draw'
 import { mod } from '../core/ease'
 
 /** Rings expanding out of the center, clipped to the cell. */
@@ -12,12 +12,14 @@ export const pulse = defineContraption({
   fireAt: 0,
   mirror: false,
   setup: ({ color, rng }) => ({ color, rings: rng.pick([3, 4, 5]) }),
-  draw: (p, s, { size, u, ink, weight }) => {
+  draw: (p, s, { size, unit, u, ink, weight }) => {
     const max = size * 0.78
+    // A wider pond holds more rings, spaced as they always were.
+    const rings = s.rings * tiles(size, unit)
 
     clipCell(p, size, () => {
-      for (let i = 0; i < s.rings; i++) {
-        const phase = mod(u + i / s.rings, 1)
+      for (let i = 0; i < rings; i++) {
+        const phase = mod(u + i / rings, 1)
         const r = phase * max
         // The leading ring carries the color; the rest are ink.
         outline(p, ink, weight)
@@ -27,7 +29,7 @@ export const pulse = defineContraption({
       }
       outline(p, ink, weight)
       p.fill(s.color)
-      p.circle(0, 0, size * 0.12)
+      p.circle(0, 0, unit * 0.12)
     })
   },
 })

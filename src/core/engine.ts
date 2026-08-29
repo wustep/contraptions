@@ -32,8 +32,11 @@ export interface Engine {
  */
 function drawConduits(p: p5, comp: Composition): void {
   if (!comp.wires.length) return
-  const unit = comp.wires[0].from.size
-  const base = strokeWeight(unit, comp.theme, comp.options.stroke)
+  // The wire vocabulary is piece-wide furniture, so it gets one size. Sizing
+  // it off whichever chain happened to be first put the wrong-sized junction
+  // on every chain in a mixed layout.
+  const unit = comp.unit
+  const base = strokeWeight(unit, unit, comp.theme, comp.options.stroke)
 
   p.push()
   p.noFill()
@@ -50,8 +53,8 @@ function drawConduits(p: p5, comp: Composition): void {
 
 function drawSignals(p: p5, comp: Composition, loopFrame: number): void {
   if (!comp.wires.length) return
-  const unit = comp.wires[0].from.size
-  const base = strokeWeight(unit, comp.theme, comp.options.stroke)
+  const unit = comp.unit
+  const base = strokeWeight(unit, unit, comp.theme, comp.options.stroke)
 
   p.push()
   p.stroke(comp.theme.ink)
@@ -194,12 +197,13 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
         p.scale(inst.mirror, 1)
         contraption.draw(p, inst.state, {
           size: cell.size,
+          unit: comp.unit,
           w: cell.w,
           h: cell.h,
           theme,
           t,
           u,
-          weight: strokeWeight(cell.size, theme, comp.options.stroke),
+          weight: strokeWeight(cell.size, comp.unit, theme, comp.options.stroke),
           ink: theme.ink,
           fired: Math.max(0, 1 - mod(loopFrame - inst.fireFrame, comp.loop) / FIRE_DECAY),
         })
@@ -211,7 +215,7 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       for (const overlay of comp.overlays) {
         overlay(p, loopFrame, {
           theme,
-          weight: (size) => strokeWeight(size, theme, comp.options.stroke),
+          weight: (size) => strokeWeight(size, comp.unit, theme, comp.options.stroke),
         })
       }
 

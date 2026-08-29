@@ -2,10 +2,10 @@ import { registry as cascadeRegistry } from '../../contraptions/cascade'
 import type { Beat, Ride } from '../../contraptions/cascade/parts'
 import { LOOP } from '../../core/constants'
 import type { Composition, Options } from '../../core/composition'
-import type { Contraption, Instance } from '../../core/types'
+import type { Cell, Contraption, Instance, Wire } from '../../core/types'
 import { LINK_DELAY, wireCascade } from '../../core/wiring'
 import { CLEAR } from './elevator'
-import { finish, leftoverCells, openFloor, placeSpans, snakeRows, staffedBlock } from './staff'
+import { finish, openFloor, placeSpans, programmeBand, snakeRows, type Floor } from './staff'
 
 const ENDINGS = new Set(['bell', 'lamp', 'flag', 'toaster', 'balloon', 'jack'])
 const FEEDERS = new Set(['hopper', 'knocker', 'tipper', 'fuse'])
@@ -51,19 +51,13 @@ function timeStacks(chain: Instance[]): void {
 }
 
 /**
- * Cascade world. A contiguous block is snaked: east, elevator south, west,
- * elevator, east, into one sink. Unused cells stay empty. Wires set fire
- * times but are not drawn — each machine draws its own rail so ports meet.
+ * Staff one run: a feeder, stations along the rail, an elevator wherever the
+ * path steps south, and a real ending. Every run is a whole sentence, so a
+ * floor of them reads as a shop of chain reactions rather than as leftovers.
  */
-export function buildCascade(options: Options, canvas: number): Composition {
-  const floor = openFloor(options, canvas, cascadeRegistry)
-  if (floor.singles.length === 0) placeSpans(floor, 1)
-
-  const density = Math.max(0, Math.min(1, options.chains))
-  const rows = staffedBlock(leftoverCells(floor), options, density)
-  const path = snakeRows(rows)
-
-  const roleRng = floor.rng.fork('roles')
+function staffRun(floor: Floor, path: Cell[], seed: string): Wire[] {
+  if (path.length < 2) return []
+  const roleRng = floor.rng.fork(`roles:${seed}`)
   const feeders = named(floor.singles, FEEDERS)
   const endings = named(floor.singles, ENDINGS)
   const drops = named(floor.singles, DROPS)
@@ -76,10 +70,7 @@ export function buildCascade(options: Options, canvas: number): Composition {
     if (fallback.length) return fallback
     return floor.singles
   }
-
   const pick = (pool: Contraption<unknown>[]) => roleRng.weighted(from(pool, floor.singles), (c) => c.weight ?? 1)
-
-  if (!path.length) return finish(options, floor, [], [], { showWires: false })
 
   for (const cell of path) floor.claimed.add(cell)
 
@@ -102,7 +93,33 @@ export function buildCascade(options: Options, canvas: number): Composition {
     return floor.place(pick(pool), cell, `cell:${cell.index}`)
   })
 
-  const wires = wireCascade(members, floor.rng.fork(`chain:${path[0].index}`))
+  const wires = wireCascade(members, floor.rng.fork(seed))
   timeStacks(members)
+  return wires
+}
+
+/**
+ * Cascade world. The `chains` dial says how much of the floor is one machine:
+ * a centred band of courses is snaked into a single drop-chain — east,
+ * elevator south, west, elevator, east, into one sink — and every course
+ * outside the band is its own eastbound sentence. Nothing is left as paper,
+ * because a floor of empty cells is what made the piece read as a scrap
+ * adrift on the page.
+ *
+ * Wires set fire times but are not drawn: each machine draws its own rail so
+ * the ports actually meet.
+ */
+export function buildCascade(options: Options, canvas: number): Composition {
+  const floor = openFloor(options, canvas, cascadeRegistry)
+  if (floor.singles.length === 0) {
+    placeSpans(floor, 1)
+    return finish(options, floor, [], [], { showWires: false })
+  }
+
+  const { band, rest } = programmeBand(floor.rows, options.chains)
+  const wires: Wire[] = []
+  if (band.length) wires.push(...staffRun(floor, snakeRows(band), `chain:${band[0][0].index}`))
+  for (const row of rest) wires.push(...staffRun(floor, row, `row:${row[0].index}`))
+
   return finish(options, floor, wires, [], { showWires: false })
 }

@@ -78,12 +78,13 @@ function measure(mode: string, options: Options): void {
       try {
         contraption.draw(rec as unknown as p5, inst.state, {
           size: cell.size,
+          unit: comp.unit,
           w: cell.w,
           h: cell.h,
           theme: comp.theme,
           t,
           u,
-          weight: strokeWeight(cell.size, comp.theme, options.stroke),
+          weight: strokeWeight(cell.size, comp.unit, comp.theme, options.stroke),
           ink: comp.theme.ink,
           fired: Math.max(0, 1 - mod(i - inst.fireFrame, comp.loop) / FIRE_DECAY),
         })
@@ -120,7 +121,8 @@ function measure(mode: string, options: Options): void {
     worlds.push({ box: world, name: contraption.name, unit: cell.size })
     const out = Math.max(origin - world.x0, origin - world.y0, world.x1 - (origin + area), world.y1 - (origin + area))
     if (out > cell.size * 0.02) {
-      frameEscapes.push(`${label} ${contraption.name} leaves the frame by ${(out / cell.size).toFixed(2)} cells`)
+      const dir = origin - world.x0 === out ? 'W' : origin - world.y0 === out ? 'N' : world.x1 - (origin + area) === out ? 'E' : 'S'
+      frameEscapes.push(`${label} ${contraption.name} ${dir} at c${cell.col}r${cell.row} by ${(out / cell.size).toFixed(2)} cells`)
     }
     const off = Math.max(-world.x0, -world.y0, world.x1 - CANVAS, world.y1 - CANVAS)
     if (off > 0.5) {
@@ -165,7 +167,7 @@ for (const s of all.sort((a, b) => Math.max(a.spanX, a.spanY) - Math.max(b.spanX
 const tally = (label: string, list: string[]) => {
   const counts = new Map<string, number>()
   for (const line of list) {
-    const k = line.replace(/@\d+\/[^ ]+ /, ' ').replace(/ by [\d.]+ cells/, '')
+    const k = line.replace(/ by [\d.]+ cells/, '')
     counts.set(k, (counts.get(k) ?? 0) + 1)
   }
   console.log(`\n== ${label} (${list.length}) ==`)

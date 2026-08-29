@@ -308,6 +308,7 @@ export function buildTracks(options: Options, canvas: number): Composition {
     options,
     theme,
     cells,
+    unit: cells.length ? Math.min(...cells.map((c) => c.size)) : 0,
     instances,
     loop: TRACKS_LOOP,
     used: [...new Set(instances.map((i) => i.contraption.name))].sort(),

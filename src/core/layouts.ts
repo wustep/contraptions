@@ -79,8 +79,15 @@ const bricks: Layout = {
 }
 
 /**
- * Recursive quartering. Produces a mix of cell sizes, so big slow machines sit
- * next to clusters of small fast ones.
+ * Recursive quartering, in two tiers exactly one octave apart. Big slow
+ * machines next to clusters of small fast ones is the thesis; three tiers is
+ * two artworks on one sheet, and that is what the old `maxDepth - 2` produced
+ * — a 470px hall with a 60px toy beside it.
+ *
+ * The big cells cluster rather than sprinkle: each parent of the big tier
+ * draws a tempo for its quarter, so a slow pocket keeps most of its large
+ * cells and a fast field keeps almost none. A flat keep-rate reads as a grid
+ * with holes in it.
  */
 const quads: Layout = {
   name: 'quads',
@@ -88,34 +95,35 @@ const quads: Layout = {
   note: 'recursive subdivision',
   build({ x, y, area, res, rng }) {
     const maxDepth = Math.max(1, Math.min(5, Math.round(Math.log2(res))))
-    const minDepth = Math.max(1, maxDepth - 2)
+    const minDepth = Math.max(0, maxDepth - 1)
     const cells: Cell[] = []
     let index = 0
 
-    const split = (cx: number, cy: number, size: number, depth: number) => {
-      const shouldSplit =
-        depth < minDepth || (depth < maxDepth && rng.bool(0.62 - depth * 0.05))
-      if (!shouldSplit) {
+    const split = (cx: number, cy: number, size: number, depth: number, keep: number) => {
+      if (depth === maxDepth || (depth === minDepth && rng.bool(keep))) {
         const col = Math.floor((cx - x) / (area / res))
         const row = Math.floor((cy - y) / (area / res))
         cells.push(cell(cx + size / 2, cy + size / 2, size, col, row, index++, depth))
         return
       }
       const h = size / 2
-      split(cx, cy, h, depth + 1)
-      split(cx + h, cy, h, depth + 1)
-      split(cx, cy + h, h, depth + 1)
-      split(cx + h, cy + h, h, depth + 1)
+      const childKeep = depth + 1 === minDepth ? (rng.bool(0.35) ? 0.85 : 0.08) : 0
+      split(cx, cy, h, depth + 1, childKeep)
+      split(cx + h, cy, h, depth + 1, childKeep)
+      split(cx, cy + h, h, depth + 1, childKeep)
+      split(cx + h, cy + h, h, depth + 1, childKeep)
     }
 
-    split(x, y, area, 0)
+    split(x, y, area, 0, 0)
     return cells
   },
 }
 
 /**
- * Vertical bands of differing width. Each band is filled with squares at its
- * own scale, so the piece reads as columns of different tempos.
+ * Vertical bands of differing width, one unit or two. Each band is filled
+ * with squares at its own scale, so the piece reads as columns of different
+ * tempos — and the widest column is still within an octave of the narrowest,
+ * so it reads as a column and not as a poster pasted over the page.
  */
 const bands: Layout = {
   name: 'bands',
@@ -123,11 +131,10 @@ const bands: Layout = {
   note: 'columns at mixed scales',
   build({ x, y, area, res, rng }) {
     const unit = area / res
-    const allowed = [1, 2, 3, 4].filter((k) => res % k === 0)
     const widths: number[] = []
     let remaining = res
     while (remaining > 0) {
-      const options = allowed.filter((k) => k <= remaining && remaining % k === 0)
+      const options = [1, 2].filter((k) => k <= remaining)
       // Bias toward narrow bands so wide ones stay a punctuation mark.
       widths.push(rng.weighted(options, (k) => 1 / (k * k)))
       remaining -= widths[widths.length - 1]
@@ -138,10 +145,17 @@ const bands: Layout = {
     let offset = 0
     widths.forEach((k, col) => {
       const size = unit * k
-      const rows = res / k
+      const rows = Math.floor(res / k)
       for (let row = 0; row < rows; row++) {
         cells.push(
           cell(x + offset * unit + size / 2, y + row * size + size / 2, size, col, row, index++),
+        )
+      }
+      // An odd res leaves a strip under a wide band. Lay it as a course of
+      // unit cells so every band still bottoms out on the same ground line.
+      for (let i = 0; i < res % k; i++) {
+        cells.push(
+          cell(x + (offset + i) * unit + unit / 2, y + rows * size + unit / 2, unit, col, rows, index++),
         )
       }
       offset += k

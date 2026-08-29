@@ -50,6 +50,12 @@ export interface DrawCtx {
   weight: number
   /** The ink color. Shorthand for `theme.ink`. */
   ink: string
+  /**
+   * The piece's base cell. `size / unit` is how many base cells this machine
+   * was handed: a machine with repeating texture should show that many times
+   * as many events rather than one event that many times bigger.
+   */
+  unit: number
   /** Footprint width in pixels. Equals `size` for a 1x1 machine. */
   w: number
   /** Footprint height in pixels. */

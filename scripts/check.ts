@@ -333,12 +333,7 @@ for (const seed of ['first-look', 'chains', 'workshop-12', 'rim', 'candid-gasket
     check(`${label}: no leftover machines`, isolated.length === 0, `${isolated.length} leftovers`)
     check(`${label}: outlets meet an inlet`, errors.length === 0, errors.slice(0, 3).join(' | '))
     check(`${label}: no classic wires`, shop.wires.length === 0)
-    if (layout === 'grid') {
-      const onBorder = shop.instances.some(
-        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
-      )
-      check(`${label}: rim stays empty`, !onBorder)
-    }
+    check(`${label}: staffs the whole floor`, shop.instances.length === shop.cells.length, `${shop.instances.length}/${shop.cells.length}`)
   }
 }
 
@@ -419,13 +414,11 @@ check(
   'classic wiring does not write flow',
   wired.instances.every((i) => !flowOf(i)),
 )
-{
-  const res = 14
-  const onBorder = cascadeWired.instances.some(
-    (i) => i.cell.col === 0 || i.cell.col === res - 1 || i.cell.row === 0 || i.cell.row === res - 1,
-  )
-  check('regular grid leaves the rim empty', !onBorder)
-}
+check(
+  'cascade staffs the whole floor',
+  cascadeWired.instances.length === cascadeWired.cells.length,
+  `${cascadeWired.instances.length}/${cascadeWired.cells.length}`,
+)
 
 for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
   for (const layout of ['grid', 'bricks', 'bands']) {
@@ -439,35 +432,39 @@ for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
     check(`${label}: no leftover machines`, leftover.length === 0, `${leftover.length} leftovers`)
     check(`${label}: chain grammar`, chainGrammar(piece).length === 0, chainGrammar(piece).slice(0, 3).join(' | '))
     check(`${label}: hides the conduit`, piece.showWires === false)
-    if (layout === 'grid') {
-      const onBorder = piece.instances.some(
-        (i) => i.cell.col === 0 || i.cell.col === 11 || i.cell.row === 0 || i.cell.row === 11,
-      )
-      check(`${label}: rim stays empty`, !onBorder)
-    }
+    check(`${label}: staffs the whole floor`, piece.instances.length === piece.cells.length, `${piece.instances.length}/${piece.cells.length}`)
   }
 }
 
-{
-  const packed = build(
-    { ...defaultOptions, seed: 'first-look', mode: 'cascade', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
-    900,
-  )
-  const cols = packed.instances.map((i) => i.cell.col)
-  const rows = packed.instances.map((i) => i.cell.row)
-  check('cascade res=8 fills the width', cols.length > 0 && Math.min(...cols) <= 1 && Math.max(...cols) >= 6)
-  check('cascade res=8 fills the height', rows.length > 0 && Math.min(...rows) <= 1 && Math.max(...rows) >= 6)
-}
-
-{
-  const shop = build(
-    { ...defaultOptions, seed: 'velvet-lever-559', mode: 'workshop', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
-    900,
-  )
-  const onBorder = shop.instances.some(
-    (i) => i.cell.col === 0 || i.cell.col === 7 || i.cell.row === 0 || i.cell.row === 7,
-  )
-  check('workshop res=8 leaves the rim empty', !onBorder)
+/**
+ * Filling the frame. A world that leaves most of the page blank has failed
+ * whatever else it got right, and every one of these three did on some dial
+ * setting: circus cut a four-by-six block out of the middle, cascade with
+ * chains at 0 drew nothing at all. The floor is theirs to staff, so they
+ * staff all of it.
+ */
+console.log('\nfilling the frame')
+for (const mode of ['cascade', 'workshop', 'circus'] as const) {
+  for (const res of [3, 5, 8, 15, 24]) {
+    for (const chains of [0, 0.5, 1]) {
+      const piece = build({ ...defaultOptions, mode, res, chains, spans: 0.5, seed: `fill-${res}-${chains}` }, 900)
+      const label = `${mode}@${res} chains=${chains}`
+      const frame = artFrame({ ...defaultOptions, res }, 900)
+      const cols = new Set(piece.instances.map((i) => Math.round(i.cell.x)))
+      const rows = new Set(piece.instances.map((i) => Math.round(i.cell.y)))
+      check(`${label} staffs every course`, rows.size >= Math.min(res, 3) && cols.size >= Math.min(res, 3), `${cols.size}x${rows.size}`)
+      let box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
+      for (const r of inkOf(piece, 8)) {
+        box = {
+          x0: Math.min(box.x0, r.world.x0), y0: Math.min(box.y0, r.world.y0),
+          x1: Math.max(box.x1, r.world.x1), y1: Math.max(box.y1, r.world.y1),
+        }
+      }
+      const w = (box.x1 - box.x0) / (frame.x1 - frame.x0)
+      const h = (box.y1 - box.y0) / (frame.y1 - frame.y0)
+      check(`${label} fills the frame`, w > 0.92 && h > 0.92, `${w.toFixed(2)} x ${h.toFixed(2)}`)
+    }
+  }
 }
 
 /**

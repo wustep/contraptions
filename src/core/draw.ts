@@ -33,6 +33,13 @@ export function clipCircle(p: p5, d: number, fn: () => void): void {
   p.pop()
 }
 
+/**
+ * How many base cells this machine was handed. Texture repeats that many
+ * times rather than growing that many times bigger: a belt twice as long
+ * carries twice as many crates, not crates twice the size.
+ */
+export const tiles = (size: number, unit: number): number => Math.max(1, Math.round(size / unit))
+
 /** Ink outline, no fill. */
 export function outline(p: p5, ink: string, weight: number): void {
   p.stroke(ink)

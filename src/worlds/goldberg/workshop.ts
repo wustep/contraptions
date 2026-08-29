@@ -2,8 +2,8 @@ import { registry as workshopRegistry } from '../../contraptions/workshop'
 import type { Line } from '../../contraptions/workshop/shop'
 import { LOOP } from '../../core/constants'
 import type { Composition, Options } from '../../core/composition'
-import type { Contraption } from '../../core/types'
-import { finish, leftoverCells, openFloor, placeSpans, snakeRows, staffedBlock } from './staff'
+import type { Cell, Contraption } from '../../core/types'
+import { finish, openFloor, placeSpans, programmeBand, snakeRows, type Floor } from './staff'
 
 const ENDINGS = new Set(['bin', 'bell', 'lamp'])
 const FEEDERS = new Set(['hopper', 'hoist', 'tipper'])
@@ -13,24 +13,17 @@ const STATIONS = new Set(['belt', 'mill', 'punch', 'saw', 'latch', 'counter'])
 
 const named = (pool: Contraption<unknown>[], names: Set<string>) => pool.filter((c) => names.has(c.name))
 
-const south = (a: { y: number; size: number; x: number }, b: { y: number; size: number; x: number }) =>
-  b.y > a.y + a.size * 0.4 && Math.abs(b.x - a.x) < 1
+const south = (a: Cell, b: Cell) => b.y > a.y + a.size * 0.4 && Math.abs(b.x - a.x) < 1
 
 /**
- * Workshop world. A contiguous block is snaked: east, elevator south, west,
- * elevator, east, into one bin / bell / lamp. Starts, turns, and ends sit
- * inset from the art edge so a part is always in a machine, never gone
- * because the canvas ended. One colour, one pulse. Unused cells stay empty.
+ * Staff one shop line: a feeder, benches along the belt, an elevator wherever
+ * the line steps south, and an ending that stops it. Every placed bench gets
+ * a `line`, so a part is always in a machine — never gone because the run ran
+ * out of floor.
  */
-export function buildWorkshop(options: Options, canvas: number): Composition {
-  const floor = openFloor(options, canvas, workshopRegistry, { mirror: false })
-  if (floor.singles.length === 0) placeSpans(floor, 1)
-
-  const density = Math.max(0, Math.min(1, options.chains))
-  const rows = staffedBlock(leftoverCells(floor), options, density, { inset: true })
-  const path = snakeRows(rows)
-
-  const roleRng = floor.rng.fork('roles')
+function staffLine(floor: Floor, path: Cell[], seed: string): void {
+  if (path.length < 2) return
+  const roleRng = floor.rng.fork(`roles:${seed}`)
   const feeders = named(floor.singles, FEEDERS)
   const endings = named(floor.singles, ENDINGS)
   const drops = named(floor.singles, DROPS)
@@ -44,17 +37,15 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
     return floor.singles
   }
 
-  if (!path.length) return finish(options, floor, [])
-
-  const color = floor.rng.fork(`line:${path[0].index}`).pick(floor.theme.colors)
+  const color = floor.rng.fork(`line:${seed}`).pick(floor.theme.colors)
 
   for (let i = 0; i < path.length; i++) {
     const cell = path[i]
     floor.claimed.add(cell)
     const prev = path[i - 1]
     const next = path[i + 1]
-    const dropping = !!next && next.y > cell.y + cell.size * 0.4
-    const catching = !!prev && prev.y < cell.y - cell.size * 0.4
+    const dropping = !!next && south(cell, next)
+    const catching = !!prev && south(prev, cell)
     const first = i === 0
     const last = i === path.length - 1
     const along =
@@ -92,6 +83,7 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
     inst.fireFrame = Math.round(((contraption.fireAt ?? 0) * inst.period + i * 8 + LOOP * 4) % LOOP)
   }
 
+  // Tell each cell of a shaft which floor it is, so the car is one car.
   for (let i = 0; i < path.length; i++) {
     let end = i
     while (end + 1 < path.length && south(path[end], path[end + 1])) end++
@@ -105,6 +97,27 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
     }
     i = end
   }
+}
+
+/**
+ * Workshop world. One shop floor, every course of it working. The `chains`
+ * dial says how much of the floor is a single line: a centred band is snaked
+ * — east, elevator south, west, elevator, east — into one bin, bell or lamp,
+ * and every course outside the band is its own line with its own feeder and
+ * its own ending. One colour per line, one pulse. Machines never mirror
+ * except along their line, and classic wires are not used: travel times do
+ * not match `fireAt` beads.
+ */
+export function buildWorkshop(options: Options, canvas: number): Composition {
+  const floor = openFloor(options, canvas, workshopRegistry, { mirror: false })
+  if (floor.singles.length === 0) {
+    placeSpans(floor, 1)
+    return finish(options, floor, [])
+  }
+
+  const { band, rest } = programmeBand(floor.rows, options.chains)
+  if (band.length) staffLine(floor, snakeRows(band), `line:${band[0][0].index}`)
+  for (const row of rest) staffLine(floor, row, `row:${row[0].index}`)
 
   return finish(options, floor, [])
 }
