@@ -10,6 +10,7 @@ import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
 import { buildCascade } from '../worlds/goldberg/cascade'
+import { buildCircus } from '../worlds/goldberg/circus'
 import { buildWorkshop } from '../worlds/goldberg/workshop'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
@@ -24,7 +25,7 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   tracks   — balls circulating on a carved loop (own world, own catalog)
  *   cascade  — complete sentences that always end; leftovers stay closed
  *   workshop — shop lines that run east into a bin; leftovers do not emit
- *   circus   — looping acts that come back round; wire is the drumroll
+ *   circus   — one programme of acts that snakes the ring and ends in a bow
  */
 export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
 
@@ -38,8 +39,8 @@ export interface ModeInfo {
   /** Which machine list the mode draws from. */
   catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
   /**
-   * How the piece is composed. Ports, tracks, cascade and workshop are
-   * their own worlds. Circus is a classic-like grid composer.
+   * How the piece is composed. Ports, tracks, cascade, workshop and
+   * circus are their own worlds. Classic is the leftover-fill grid.
    */
   composer: 'ports' | 'tracks' | Composer
   /** Panel controls this mode actually uses. Hidden otherwise. */
@@ -76,7 +77,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'inset sentences that end in a sink',
+    note: 'one drop-chain that snakes and ends in a sink',
     catalog: 'cascade',
     composer: 'cascade',
     dials: { layout: true, spans: false, chains: true, pool: true },
@@ -84,7 +85,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'shop lines that end in a bin, bell, or lamp',
+    note: 'one shop bench that snakes and ends in a bin, bell, or lamp',
     catalog: 'workshop',
     composer: 'workshop',
     dials: { layout: true, spans: false, chains: true, pool: true },
@@ -92,10 +93,10 @@ export const MODES: ModeInfo[] = [
   {
     name: 'circus',
     label: 'Circus',
-    note: 'looping acts that come back round',
+    note: 'one programme that snakes the ring and ends in a bow',
     catalog: 'circus',
     composer: 'circus',
-    dials: GRID_DIALS,
+    dials: { layout: true, spans: false, chains: true, pool: true },
   },
 ]
 
@@ -267,12 +268,13 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   if (options.mode === 'tracks') return buildTracks(options, canvas)
   if (options.mode === 'cascade') return buildCascade(options, canvas)
   if (options.mode === 'workshop') return buildWorkshop(options, canvas)
+  if (options.mode === 'circus') return buildCircus(options, canvas)
   return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
 }
 
 /**
- * Shared grid composer for Classic and Circus. Cascade and workshop have
- * their own worlds — leftover cells there must close, not sprinkle.
+ * Shared grid composer for Classic. Cascade, workshop and circus have
+ * their own worlds — leftover cells there stay empty, not leftover toys.
  */
 function buildGrid(
   options: Options,

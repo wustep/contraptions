@@ -275,12 +275,13 @@ const unitOf = (i: Instance) => {
   return w === 1 && h === 1
 }
 const ENDINGS = new Set(['bin', 'bell', 'lamp'])
-const CASCADE_ENDINGS = new Set(['bell', 'lamp', 'flag', 'cup', 'toaster', 'balloon', 'jack'])
+const CASCADE_ENDINGS = new Set(['bell', 'lamp', 'flag', 'toaster', 'balloon', 'jack'])
 
 function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
   const errors: string[] = []
   const units = comp.instances.filter(unitOf)
   const at = new Map(units.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]))
+  const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
   for (const inst of units) {
     const line = (inst.state as { line?: Line }).line
     if (!line) {
@@ -288,11 +289,13 @@ function workshopLineErrors(comp: ReturnType<typeof build>): string[] {
       continue
     }
     if (!line.out) continue
-    const east = at.get(`${Math.round(inst.cell.x + inst.cell.size)}:${Math.round(inst.cell.y)}`)
-    const next = east && (east.state as { line?: Line }).line
-    if (!east || !next?.in) errors.push(`${inst.contraption.name} dumps east into nothing`)
+    const along = line.along ?? 1
+    const nextCell = line.drop
+      ? at.get(key(inst.cell.x, inst.cell.y + inst.cell.size))
+      : at.get(key(inst.cell.x + along * inst.cell.size, inst.cell.y))
+    const next = nextCell && (nextCell.state as { line?: Line }).line
+    if (!nextCell || !next?.in) errors.push(`${inst.contraption.name} dumps into nothing`)
     else if (next.color !== line.color) errors.push(`${inst.contraption.name} colour break`)
-    if (east && east.cell.x < inst.cell.x - 1) errors.push(`${inst.contraption.name} runs west`)
   }
   if (!comp.options.solo && !comp.options.tag) {
     for (const inst of units) {
@@ -370,7 +373,21 @@ check(
   'every run has a source with no inlet',
   cascadeHeads.every((w) => flowOf(cascadeByPos.get(`${Math.round(w.from.x)}:${Math.round(w.from.y)}`)!)!.in === null),
 )
-check('every run only steps east', cascadeWired.wires.every((w) => w.to.x > w.from.x && Math.abs(w.to.y - w.from.y) < 1))
+check(
+  'cascade is one snake',
+  cascadeHeads.length === 1,
+  `${cascadeHeads.length} heads`,
+)
+check(
+  'cascade steps to neighbours',
+  cascadeWired.wires.every(
+    (w) => Math.abs(Math.hypot(w.to.x - w.from.x, w.to.y - w.from.y) - w.from.size) < 1,
+  ),
+)
+check(
+  'cascade only drops south',
+  cascadeWired.wires.every((w) => w.to.y >= w.from.y - 1),
+)
 check(
   'every run ends in a receiver',
   cascadeHeads.every((head) => {

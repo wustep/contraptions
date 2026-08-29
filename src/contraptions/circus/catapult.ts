@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInOutSine, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
 import { P, block, drop, ground, knob, performer, rise, stroke } from './circus'
 
@@ -71,6 +71,7 @@ export const catapult = defineContraption({
       pos = drop([HINGE[0] + dx, HINGE[1] + dy], onSpoon(REST), seg(u, 0.45, 0.58))
     } else pos = onSpoon(REST)
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The stand.
@@ -109,5 +110,6 @@ export const catapult = defineContraption({
     knob(p, k, ink, weight, s.color, HINGE[0], HINGE[1], 0.06)
 
     performer(p, k, ink, weight, s.color, pos[0], pos[1])
+    })
   },
 })

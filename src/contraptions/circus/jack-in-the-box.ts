@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { coil, outline, solid } from '../../core/draw'
+import { clipCell, coil, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutBack, easeOutCubic, lerp, seg } from '../../core/ease'
 import { P, block, ground, knob, performer, shiver, stroke } from './circus'
 
@@ -41,6 +41,7 @@ export const jackInTheBox = defineContraption({
       : u < 0.94 ? head - P / 2 - 0.05
       : lerp(IN - P / 2 - 0.05, -0.55, easeInOutCubic(seg(u, 0.94, 1)))
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
 
@@ -78,5 +79,6 @@ export const jackInTheBox = defineContraption({
       stroke(p, k, 0, -0.5, 0, plunger)
       block(p, k, ink, weight, s.color, 0, plunger, 0.18, 0.05)
     }
+    })
   },
 })

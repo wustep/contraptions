@@ -233,6 +233,134 @@ export function staffedRows(
   return takeBlock(spaced, Math.max(1, Math.round(spaced.length * frac)))
 }
 
+/** Courses that sit on consecutive y — a missing band breaks the drop. */
+export function stackedBands(rows: Cell[][]): Cell[][][] {
+  const bands: Cell[][][] = []
+  let cur: Cell[][] = []
+  for (const row of rows) {
+    if (cur.length) {
+      const above = cur[cur.length - 1][0]
+      if (Math.abs(row[0].y - above.y - above.size) > 2) {
+        bands.push(cur)
+        cur = []
+      }
+    }
+    cur.push(row)
+  }
+  if (cur.length) bands.push(cur)
+  return bands
+}
+
+/**
+ * The longest run of x-centres every row shares. A south step from the
+ * east (or west) end only lands on the next sentence if that column exists
+ * on both courses — bricks are offset, so they have no such run.
+ */
+export function sharedColumns(rows: Cell[][]): Cell[][] {
+  if (!rows.length) return []
+  const size = rows[0][0].size
+  const sets = rows.map((row) => new Set(row.map((c) => Math.round(c.x))))
+  const xs = [...sets[0]].filter((x) => sets.every((s) => s.has(x))).sort((a, b) => a - b)
+  let best: number[] = []
+  let run: number[] = []
+  for (const x of xs) {
+    if (run.length && Math.abs(x - run[run.length - 1] - size) > 2) {
+      if (run.length > best.length) best = run
+      run = [x]
+    } else run.push(x)
+  }
+  if (run.length > best.length) best = run
+  if (best.length < 2) return []
+  const want = new Set(best)
+  return rows.map((row) => row.filter((c) => want.has(Math.round(c.x))))
+}
+
+/** Same-size cells stacked south, for a band that is a single column. */
+export function southCols(cells: Cell[]): Cell[][] {
+  const groups = new Map<string, Cell[]>()
+  for (const cell of cells) {
+    const key = `${Math.round(cell.x)}|${Math.round(cell.size * 1000)}`
+    const g = groups.get(key) ?? []
+    g.push(cell)
+    groups.set(key, g)
+  }
+  const cols: Cell[][] = []
+  for (const group of groups.values()) {
+    group.sort((a, b) => a.y - b.y)
+    let cur: Cell[] = [group[0]]
+    for (let i = 1; i < group.length; i++) {
+      if (Math.abs(group[i].y - cur[cur.length - 1].y - group[i].size) < 1) cur.push(group[i])
+      else {
+        cols.push(cur)
+        cur = [group[i]]
+      }
+    }
+    cols.push(cur)
+  }
+  return cols.sort((a, b) => b.length - a.length)
+}
+
+const cellsIn = (block: Cell[][]) => block.reduce((n, row) => n + row.length, 0)
+
+/**
+ * A rectangle of leftover cells the snake can actually traverse: consecutive
+ * courses, shared columns, no skip-row. Offset bricks have no south neighbour,
+ * so they collapse to the longest single row. A lone band becomes a column.
+ */
+export function staffedBlock(cells: Cell[], options: Options, density: number): Cell[][] {
+  const low = options.res < 12
+  const units = cells.filter((c) => c.w === c.size && c.h === c.size)
+  const interior = low ? units : insetRing(units)
+  if (density <= 0 || !interior.length) return []
+  const frac = low ? 1 : 0.65 + 0.35 * density
+
+  const candidates: Cell[][][] = []
+  const rows = eastRows(interior).filter((row) => row.length >= 2)
+  for (const band of stackedBands(rows)) {
+    const n = Math.min(band.length, Math.max(1, Math.round(band.length * frac)))
+    for (let h = n; h >= 1; h--) {
+      const slice = takeBlock(band, h)
+      if (h === 1) {
+        if (slice[0].length >= 2) candidates.push(slice)
+        break
+      }
+      const clipped = sharedColumns(slice)
+      if (clipped.length === h && clipped.every((r) => r.length >= 2)) {
+        candidates.push(clipped)
+        break
+      }
+    }
+  }
+
+  const col = southCols(interior).find((c) => c.length >= 2)
+  if (col) {
+    const n = Math.min(col.length, Math.max(2, Math.round(col.length * frac)))
+    candidates.push(takeBlock(col, n).map((c) => [c]))
+  }
+
+  if (!candidates.length) return []
+  candidates.sort((a, b) => {
+    const byCells = cellsIn(b) - cellsIn(a)
+    if (byCells) return byCells
+    return b.length - a.length
+  })
+  return candidates[0]
+}
+
+/**
+ * Serpentine through consecutive rows: east along the first, drop into the
+ * cell below its east end, west along the next, drop, east, … so the path
+ * is one sentence with real corners.
+ */
+export function snakeRows(rows: Cell[][]): Cell[] {
+  const path: Cell[] = []
+  for (let i = 0; i < rows.length; i++) {
+    const row = i % 2 === 0 ? rows[i] : [...rows[i]].reverse()
+    path.push(...row)
+  }
+  return path
+}
+
 /**
  * Walk every leftover cell into a run. Starts at a dead-end (fewest unused
  * neighbours) and prefers to keep going straight, so a corridor becomes one

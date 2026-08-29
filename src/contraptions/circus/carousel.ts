@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { block, ground, knob, performer, second, stroke } from './circus'
 
 /**
@@ -32,6 +32,7 @@ export const carousel = defineContraption({
       }
     }).sort((a, b) => a.depth - b.depth)
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // Legs, deck, and the canopy overhead.
@@ -53,5 +54,6 @@ export const carousel = defineContraption({
     p.strokeWeight(weight * 1.6)
     stroke(p, k, 0, TOP, 0, DECK)
     for (const h of horses) if (h.depth >= 0) horse(h)
+    })
   },
 })

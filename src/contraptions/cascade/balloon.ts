@@ -19,7 +19,7 @@ export const balloon = defineContraption<Beat>({
   label: 'Balloon',
   tags: ['pop'],
   role: 'sink',
-  inlets: ['E', 'W'],
+  inlets: ['E', 'W', 'N'],
   rotations: [0],
   fireAt: FIRE,
   setup: ({ color }) => ({ color }),

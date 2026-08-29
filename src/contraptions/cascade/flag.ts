@@ -17,7 +17,7 @@ export const flag = defineContraption<Beat>({
   label: 'Flag',
   tags: ['signal', 'swing'],
   role: 'sink',
-  inlets: ['E', 'W'],
+  inlets: ['E', 'W', 'N'],
   rotations: [0],
   fireAt: FIRE,
   setup: ({ color }) => ({ color }),

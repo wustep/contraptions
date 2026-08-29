@@ -20,7 +20,7 @@ export const bell = defineContraption<Beat>({
   label: 'Bell',
   tags: ['strike', 'signal'],
   role: 'sink',
-  inlets: ['E', 'W'],
+  inlets: ['E', 'W', 'N'],
   rotations: [0],
   fireAt: FIRE,
   setup: ({ color }) => ({ color }),

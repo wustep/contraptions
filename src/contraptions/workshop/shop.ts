@@ -68,7 +68,17 @@ export const fold = (u: number) => (u > 0.5 ? u - 1 : u)
  * A 1×1 bench's place on a shop line. The workshop composer writes this;
  * without it a machine is treated as closed (no inbound, no outbound).
  */
-export type Line = { in: boolean; out: boolean; color: string }
+export type Line = {
+  in: boolean
+  out: boolean
+  color: string
+  /** +1 east, -1 west. A westbound bench is the return of the snake. */
+  along?: number
+  /** This cell dumps the part south into the bench below. */
+  drop?: boolean
+  /** This cell receives a part from the bench above. */
+  catch?: boolean
+}
 
 export function lineOf(s: unknown): Line | undefined {
   if (!s || typeof s !== 'object' || !('line' in s)) return undefined

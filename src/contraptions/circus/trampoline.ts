@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline } from '../../core/draw'
+import { clipCell, outline } from '../../core/draw'
 import { seg } from '../../core/ease'
 import { P, drop, ground, pedestal, performer, rise, stroke } from './circus'
 
@@ -45,6 +45,7 @@ export const trampoline = defineContraption({
       pos = [0, bed[1] + dip]
     } else if (u < 0.92) pos = rise(bed, tall, seg(u, 0.7, 0.92))
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The bed: legs, a frame, and the mat between, sagging under the landing.
@@ -61,5 +62,6 @@ export const trampoline = defineContraption({
     pedestal(p, k, ink, weight, s.color, TALL[0], TALL[1], 0.5, 0.2)
     pedestal(p, k, ink, weight, s.color, SHORT[0], SHORT[1], 0.5, 0.2)
     performer(p, k, ink, weight, s.color, pos[0], pos[1])
+    })
   },
 })

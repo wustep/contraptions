@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline } from '../../core/draw'
+import { clipCell, outline } from '../../core/draw'
 import { pendulum as pendulumTable, swing } from '../../core/physics'
 import { P, block, ground, knob, performer, stroke } from './circus'
 
@@ -34,6 +34,7 @@ export const monkeyBars = defineContraption({
     const x = rung + ARM * Math.sin(angle)
     const y = BAR_Y + ARM * Math.cos(angle)
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     stroke(p, k, -0.5, -0.5, 0.5, -0.5)
@@ -43,5 +44,6 @@ export const monkeyBars = defineContraption({
     outline(p, ink, weight)
     stroke(p, k, rung, BAR_Y + 0.04, x, y - P / 2 + 0.03)
     performer(p, k, ink, weight, s.color, x, y)
+    })
   },
 })

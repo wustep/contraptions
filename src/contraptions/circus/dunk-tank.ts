@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutSine, easeInQuad, seg } from '../../core/ease'
 import { P, block, ground, knob, performer, splash, stroke } from './circus'
 
@@ -36,6 +36,7 @@ export const dunkTank = defineContraption({
     const [sx, sy] = rot(SEAT, -P / 2 - 0.02, angle)
     const kick = -0.9 * fired
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The target on its pole, and the rod that trips the seat.
@@ -67,5 +68,6 @@ export const dunkTank = defineContraption({
     outline(p, ink, weight)
     p.rect((TANK_X + (0.5 - TANK_X) / 2) * k, ((TANK_TOP + 0.5) / 2) * k, (0.5 - TANK_X) * k, (0.5 - TANK_TOP) * k)
     splash(p, k, s.color, 0.22, WATER, seg(u, 0.05, 0.26), 0.16)
+    })
   },
 })

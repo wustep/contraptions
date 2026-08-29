@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { lerp, seg, stepEase } from '../../core/ease'
 import { block, ground, knob, since, stroke } from './circus'
 
@@ -31,6 +31,7 @@ export const balloon = defineContraption({
     const handle = u < POP ? lerp(-0.02, 0.14, Math.sin(puff * Math.PI)) : -0.02
     const burst = since(u, POP)
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     // The pump: a cylinder, a rod, and the handle going up and down on it.
@@ -74,5 +75,6 @@ export const balloon = defineContraption({
       }
       p.pop()
     }
+    })
   },
 })

@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline } from '../../core/draw'
+import { clipCell, outline } from '../../core/draw'
 import { mod } from '../../core/ease'
 import { flight, ground, pedestal, performer, second, stroke } from './circus'
 
@@ -36,6 +36,7 @@ export const juggler = defineContraption({
     const restL: [number, number] = [-HAND_X, HAND_Y - BALL / 2 - 0.02]
     const restR: [number, number] = [HAND_X, HAND_Y - BALL / 2 - 0.02]
 
+    clipCell(p, k, () => {
     outline(p, ink, weight)
     ground(p, k, 1)
     pedestal(p, k, ink, weight, s.color, 0, 0.36, 0.5, 0.5)
@@ -56,5 +57,6 @@ export const juggler = defineContraption({
       else pos = [left[0], left[1] - BALL / 2 - 0.02]
       performer(p, k, ink, weight, i === 1 ? s.alt : s.color, pos[0], pos[1], BALL)
     }
+    })
   },
 })

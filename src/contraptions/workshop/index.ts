@@ -25,6 +25,7 @@ import { press } from './press'
 import { punch } from './punch'
 import { saw } from './saw'
 import { scale } from './scale'
+import { spill } from './spill'
 import { timer } from './timer'
 import { tipper } from './tipper'
 
@@ -61,6 +62,7 @@ export const registry: Contraption<any>[] = [
   punch,
   saw,
   scale,
+  spill,
   timer,
   tipper,
 ]
