@@ -20,8 +20,8 @@ export const hopper = defineContraption({
   draw: (p, s, { size: k, u, ink, weight }) => {
     const line = lineOf(s)
     const catcher = !!line?.catch
-    const W = 0.1
-    const mouth = 0.22
+    const W = 0.055
+    const mouth = 0.3
     const open = easeOutCubic(seg(u, 0, 0.05)) - easeInOutCubic(seg(u, 0.16, 0.22))
     const dropY = lerp(catcher ? -0.4 : -0.12, PART_Y, easeInQuad(seg(u, catcher ? 0 : 0.02, 0.12)))
 
@@ -34,7 +34,7 @@ export const hopper = defineContraption({
       p.line(-mouth * k, -0.46 * k, -W * k, 0.02 * k)
       p.line(mouth * k, -0.46 * k, W * k, 0.02 * k)
       p.line(-mouth * k, -0.46 * k, mouth * k, -0.46 * k)
-      p.line((-W - 0.04) * k, 0.05 * k, (W + 0.28) * k, 0.05 * k)
+      p.line((-W - 0.02) * k, 0.04 * k, (W + 0.18) * k, 0.04 * k)
 
       if (line?.drop) {
         const fall = easeInQuad(seg(u, 0.12, 0.4))

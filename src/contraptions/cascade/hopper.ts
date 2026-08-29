@@ -9,9 +9,9 @@ import { TOKEN, drop, dropTime, fallIn, floor, heading, rollOut, since, token, t
  * with a mouth at the top and a single seat.
  */
 const FIRE = 0.3
-const THROAT = 0.1
-const MOUTH = 0.22
-const GATE = -0.08
+const THROAT = 0.055
+const MOUTH = 0.3
+const GATE = -0.04
 const SEAT = GATE - 0.03 - TOKEN / 2
 const DROP = dropTime(-SEAT)
 
