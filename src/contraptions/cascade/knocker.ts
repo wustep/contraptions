@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutSine, easeInQuad, lerp, seg } from '../../core/ease'
 import { FLOOR, floor, heading, rollIn, rollOut, since, token, tokenColor, until, type Beat } from './parts'
 
@@ -39,7 +39,6 @@ export const knocker = defineContraption<Beat>({
     p.push()
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The pedestal.
     p.line(0, 0.5 * k, 0, (FLOOR + 0.02) * k)
     p.line(-0.09 * k, (FLOOR + 0.02) * k, 0.09 * k, (FLOOR + 0.02) * k)

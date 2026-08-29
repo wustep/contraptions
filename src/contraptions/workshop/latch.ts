@@ -34,9 +34,9 @@ export const latch = defineContraption({
 
       // The solenoid on its bracket, and the stop pin it lifts.
       outline(p, ink, weight)
-      p.line(STOP_X * k, -0.5 * k, STOP_X * k, -0.37 * k)
-      p.rect(STOP_X * k, -0.3 * k, 0.16 * k, 0.14 * k)
-      p.line(STOP_X * k, -0.23 * k, STOP_X * k, (BENCH - 0.26 - lift) * k)
+      p.line(STOP_X * k, -0.28 * k, STOP_X * k, -0.2 * k)
+      p.rect(STOP_X * k, -0.14 * k, 0.16 * k, 0.14 * k)
+      p.line(STOP_X * k, -0.07 * k, STOP_X * k, (BENCH - 0.26 - lift) * k)
       solid(p, ink, weight, s.color)
       p.rect(STOP_X * k, (BENCH - 0.13 - lift) * k, 0.06 * k, 0.26 * k)
     })

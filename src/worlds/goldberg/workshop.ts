@@ -3,7 +3,7 @@ import { LOOP } from '../../core/constants'
 import type { Composition, Options } from '../../core/composition'
 import type { Line } from '../../contraptions/workshop/shop'
 import type { Contraption } from '../../core/types'
-import { eastRows, finish, insetRing, leftoverCells, openFloor, placeSpans, takeBlock } from './staff'
+import { finish, leftoverCells, openFloor, placeSpans, staffedRows } from './staff'
 
 /**
  * Workshop world. Staffing every leftover cell packed the floor with floating
@@ -11,11 +11,12 @@ import { eastRows, finish, insetRing, leftoverCells, openFloor, placeSpans, take
  * on a high shelf while the belt arrived on the bench, so the handoff was a
  * gap.
  *
- * Here the outer ring stays empty. Interior equal-size neighbours become
- * inset eastbound shop lines: feeder → bench stations → a real ending.
- * Unused cells get no machine. High res skips a row so the lines stay
- * readable. Terminator drawings (bin / bell / lamp) sit on the bench and
- * stop it; they do not hang between rows.
+ * High res keeps a one-cell inset and skips a row. Low res uses the whole
+ * leftover grid but still skips a row, so mill gears and bells do not
+ * crowd the belt above. Interior equal-size neighbours become eastbound
+ * shop lines: feeder → bench stations → a real ending. Unused cells get
+ * no machine. Terminator drawings (bin / bell / lamp) sit on the bench
+ * and stop it; they do not hang between rows.
  */
 
 const ENDINGS = new Set(['bin', 'bell', 'lamp'])
@@ -34,13 +35,10 @@ export function buildWorkshop(options: Options, canvas: number): Composition {
   const floor = openFloor(options, canvas, workshopRegistry, { mirror: false })
   if (floor.singles.length === 0) placeSpans(floor, 1)
 
-  const interior = insetRing(leftoverCells(floor))
-  const rows = eastRows(interior).filter((row) => row.length >= 3)
   const density = Math.max(0, Math.min(1, options.chains))
-  const stride = options.res >= 12 ? 2 : 1
-  const spaced = rows.filter((_, i) => i % stride === 0)
-  const frac = density <= 0 ? 0 : options.res >= 12 ? 0.45 + 0.55 * density : 0.8 + 0.2 * density
-  const keep = density <= 0 ? [] : takeBlock(spaced, Math.max(1, Math.round(spaced.length * frac)))
+  // Skip a row even at low res: bells and mill gears were crowding the belt
+  // of the line above when every leftover row was staffed.
+  const keep = staffedRows(leftoverCells(floor), options, density, { skipFrom: 8 })
 
   const roleRng = floor.rng.fork('roles')
   const feeders = named(floor.singles, FEEDERS)

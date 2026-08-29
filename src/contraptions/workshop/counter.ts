@@ -7,8 +7,8 @@ import { BELT_V, BENCH, PART, PART_Y, bench, keepX, lineOf, part, rollers } from
  * The part rolling over the trip lever presses it down, the link pulls the
  * pawl round one tooth, and the count stands one higher until the next part.
  */
-const WHEEL: [number, number] = [0, -0.2]
-const R = 0.2
+const WHEEL: [number, number] = [0, -0.04]
+const R = 0.14
 const CLICK = 0.28
 
 export const counter = defineContraption({
@@ -56,7 +56,7 @@ export const counter = defineContraption({
       solid(p, ink, weight, s.color)
       p.circle(WHEEL[0] * k, WHEEL[1] * k, 0.09 * k)
       outline(p, ink, weight)
-      p.line(WHEEL[0] * k, -0.5 * k, WHEEL[0] * k, (WHEEL[1] - R - 0.06) * k)
+      p.line(WHEEL[0] * k, (WHEEL[1] - R - 0.12) * k, WHEEL[0] * k, (WHEEL[1] - R - 0.06) * k)
       solid(p, ink, weight, s.color)
       p.triangle(WHEEL[0] * k, (WHEEL[1] - R - 0.02) * k, (WHEEL[0] - 0.04) * k, (WHEEL[1] - R - 0.09) * k, (WHEEL[0] + 0.04) * k, (WHEEL[1] - R - 0.09) * k)
 

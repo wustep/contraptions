@@ -14,7 +14,7 @@ const V_IN = BELT_V
 const V_OUT = (BELT_V * T_IN) / T_OUT
 /** Loop fraction the blank spends passing through the nip. */
 const BITE = PART / V_IN
-const ROLL_R = 0.16
+const ROLL_R = 0.1
 
 export const mill = defineContraption({
   name: 'mill',
@@ -40,7 +40,8 @@ export const mill = defineContraption({
     const spin = u * Math.PI * 2 * 2
 
     clipCell(p, k, () => {
-      bench(p, k, ink, weight)
+      bench(p, k, ink, weight, -0.5, -0.3)
+      bench(p, k, ink, weight, 0.3, 0.5)
       rollers(p, k, ink, weight, s.color, -0.5, -0.3, u * V_IN)
       rollers(p, k, ink, weight, s.color, 0.3, 0.5, u * V_OUT)
 
@@ -58,11 +59,9 @@ export const mill = defineContraption({
       // The stand, and the two rolls: the top one clears the bench by the
       // thickness it leaves behind.
       outline(p, ink, weight)
-      for (const x of [-0.3, 0.3]) p.line(x * k, BENCH * k, x * k, -0.38 * k)
-      p.line(-0.34 * k, -0.38 * k, 0.34 * k, -0.38 * k)
-      p.line(0, -0.38 * k, 0, -0.5 * k)
-      p.rect(0, -0.44 * k, 0.14 * k, 0.04 * k)
-      roller(p, k, ink, weight, s.color, 0, BENCH + ROLL_R, ROLL_R, spin)
+      for (const x of [-0.3, 0.3]) p.line(x * k, BENCH * k, x * k, -0.2 * k)
+      p.line(-0.34 * k, -0.2 * k, 0.34 * k, -0.2 * k)
+      roller(p, k, ink, weight, s.color, 0, BENCH + 0.06, ROLL_R, spin)
       roller(p, k, ink, weight, s.color, 0, BENCH - T_OUT - ROLL_R, ROLL_R, -spin)
     })
   },

@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
 import { FLOOR, floor, heading, fallIn, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
 
@@ -36,7 +36,6 @@ export const bellows = defineContraption<Beat>({
     p.push()
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The nozzle only when the run actually leaves sideways. A south drop
     // or a closed leftover was drawing a spout and puff off the cell.
     if (sideways) {

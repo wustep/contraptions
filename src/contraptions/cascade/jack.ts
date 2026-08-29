@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { coil, floorRail, outline, solid } from '../../core/draw'
+import { coil, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutBack, easeOutElastic, seg } from '../../core/ease'
 import { flick, floor, heading, since, type Beat } from './parts'
 
@@ -30,7 +30,6 @@ export const jack = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, BOX / 2 + 0.02)
     outline(p, ink, weight)
-    floorRail(p, k)
 
     // The jack rides its spring up out of the box; the box front hides the rest.
     outline(p, ink, weight)

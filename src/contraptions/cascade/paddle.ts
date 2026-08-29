@@ -27,7 +27,7 @@ export const paddle = defineContraption<Beat>({
     // a whole turn closes the loop.
     const spin = -h * Math.PI * 2 * easeOutCubic(seg(t, 0, 0.5))
 
-    floor(p, k, ink, weight, s, BLADE * 0.7)
+    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
     p.line(-0.16 * k, -0.5 * k, 0, HUB * k)
     p.line(0.16 * k, -0.5 * k, 0, HUB * k)

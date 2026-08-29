@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
-import { floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
-import { bez, heading, since, type Beat, type Pt } from './parts'
+import { bez, floor, heading, since, type Beat, type Pt } from './parts'
 
 /**
  * A powder keg with a fuse: the spark creeps along the fuse for most of the
@@ -10,9 +10,9 @@ import { bez, heading, since, type Beat, type Pt } from './parts'
  */
 const FIRE = 0.66
 /** The fuse runs from the spool to the keg's lid on a cubic. */
-const SPOOL: Pt = [-0.4, -0.3]
-const C1: Pt = [-0.2, -0.64]
-const C2: Pt = [0.36, -0.42]
+const SPOOL: Pt = [-0.34, -0.16]
+const C1: Pt = [-0.18, -0.42]
+const C2: Pt = [0.28, -0.28]
 const LID: Pt = [0.02, 0.1]
 const KEG_W = 0.36
 const KEG_H = 0.4
@@ -34,10 +34,12 @@ export const fuse = defineContraption<Beat>({
     const t = since(u, FIRE)
     const jump = t < 0.08 ? 0.05 * Math.sin((t / 0.08) * Math.PI) : 0
 
+    floor(p, k, ink, weight, s)
+
     p.push()
     p.scale(heading(s.flow), 1)
+    clipCell(p, k, () => {
     outline(p, ink, weight)
-    floorRail(p, k)
 
     // The keg, with its hoops.
     const kegY = 0.5 - KEG_H / 2 - jump
@@ -100,6 +102,7 @@ export const fuse = defineContraption<Beat>({
       }
       p.pop()
     }
+    })
     p.pop()
   },
 })

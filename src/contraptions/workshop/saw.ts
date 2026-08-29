@@ -7,8 +7,8 @@ import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART, PART_Y, bench, lineOf, part, 
  * The blank rolls in under the blade, the spinning blade drops through it,
  * and two halves roll on with a kerf of daylight opening between them.
  */
-const R = 0.18
-const UP = -0.24
+const R = 0.14
+const UP = -0.08
 const DOWN = BENCH + 0.01 - R
 
 export const saw = defineContraption({
@@ -46,9 +46,9 @@ export const saw = defineContraption({
 
       // The C-frame and the slide the blade rides on.
       outline(p, ink, weight)
-      p.line(0.3 * k, BENCH * k, 0.3 * k, -0.46 * k)
-      p.line(0.34 * k, -0.46 * k, -0.04 * k, -0.46 * k)
-      p.line(0, -0.46 * k, 0, cy * k)
+      p.line(0.3 * k, BENCH * k, 0.3 * k, -0.26 * k)
+      p.line(0.34 * k, -0.26 * k, -0.04 * k, -0.26 * k)
+      p.line(0, -0.26 * k, 0, cy * k)
 
       // The blade, and the guard over its top half.
       p.push()

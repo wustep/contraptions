@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
 import { TOKEN, drop, fallIn, floor, heading, rollIn, since, token, tokenColor, type Beat } from './parts'
 
@@ -32,8 +32,7 @@ export const cup = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    floorRail(p, k)
-    for (const x of [-0.12, 0.12]) p.line(x * k, BASE * k, x * k, 0.5 * k)
+    for (const x of [-0.12, 0.12]) p.line(x * k, BASE * k, x * k, 0.48 * k)
 
     // The body, open at the bottom: the walls are drawn on their own so the
     // flap can swing clear of a line that would otherwise stay put.

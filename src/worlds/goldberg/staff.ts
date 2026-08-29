@@ -211,6 +211,29 @@ export function takeBlock<T>(list: T[], n: number): T[] {
 }
 
 /**
+ * Eastbound sentences to staff. A high-res floor keeps a one-cell inset and
+ * skips a row so the lines stay readable. A low-res floor is already a few
+ * large cells: using the inset ring and then dropping a row bunches the
+ * machine in the upper-left. There the whole leftover grid is the block.
+ */
+export function staffedRows(
+  cells: Cell[],
+  options: Options,
+  density: number,
+  opts: { skipFrom?: number } = {},
+): Cell[][] {
+  const low = options.res < 12
+  const units = cells.filter((c) => c.w === c.size && c.h === c.size)
+  const interior = low ? units : insetRing(units)
+  const rows = eastRows(interior).filter((row) => row.length >= 3)
+  const stride = options.res >= (opts.skipFrom ?? 12) ? 2 : 1
+  const spaced = rows.filter((_, i) => i % stride === 0)
+  if (density <= 0) return []
+  const frac = low ? 1 : 0.45 + 0.55 * density
+  return takeBlock(spaced, Math.max(1, Math.round(spaced.length * frac)))
+}
+
+/**
  * Walk every leftover cell into a run. Starts at a dead-end (fewest unused
  * neighbours) and prefers to keep going straight, so a corridor becomes one
  * sentence instead of a pile of pairs.

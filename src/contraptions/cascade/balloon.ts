@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { floorRail, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeOutCubic, seg } from '../../core/ease'
 import { flick, floor, heading, since, type Beat } from './parts'
 
@@ -30,7 +30,6 @@ export const balloon = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, 0.2)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The pump the balloon fills from, and its tether.
     solid(p, ink, weight, s.color)
     p.rect(0, 0.42 * k, 0.24 * k, 0.16 * k)

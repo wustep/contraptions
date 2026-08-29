@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { floorRail, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutBack, lerp, seg } from '../../core/ease'
 import { floor, heading, since, type Beat } from './parts'
 
@@ -33,7 +33,6 @@ export const toaster = defineContraption<Beat>({
 
     floor(p, k, ink, weight, s, BODY_W / 2 + 0.02)
     outline(p, ink, weight)
-    floorRail(p, k)
 
     // The toast first, so the body hides whatever is still inside.
     for (const x of [-0.12, 0.12]) {
@@ -47,7 +46,7 @@ export const toaster = defineContraption<Beat>({
     p.rect(0, (TOP + BODY_H / 2) * k, BODY_W * k, BODY_H * k, 0.05 * k)
     outline(p, ink, weight)
     for (const x of [-0.12, 0.12]) p.line((x - 0.1) * k, TOP * k, (x + 0.1) * k, TOP * k)
-    for (const x of [-0.18, 0.18]) p.line(x * k, (TOP + BODY_H) * k, x * k, 0.5 * k)
+    for (const x of [-0.18, 0.18]) p.line(x * k, (TOP + BODY_H) * k, x * k, 0.46 * k)
 
     // The lever on the side the ball comes from, in a slot.
     const lx = -h * (BODY_W / 2 + 0.03)

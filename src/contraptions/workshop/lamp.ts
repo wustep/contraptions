@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { BELT_V, BENCH, HIT, belt, bench, burst, lineOf, pulse } from './shop'
 
 /**
@@ -23,6 +23,7 @@ export const lamp = defineContraption({
     const lens = BENCH - 0.4
     const x0 = line?.in ? -0.5 : -0.36
 
+    clipCell(p, k, () => {
     bench(p, k, ink, weight, x0, STOP)
     belt(p, k, ink, weight, s.color, x0, STOP, u * BELT_V)
 
@@ -40,5 +41,6 @@ export const lamp = defineContraption({
     p.rect(POST * k, lens * k, 0.2 * k, 0.16 * k, 0.03 * k)
     outline(p, ink, weight)
     p.line((POST - 0.12) * k, (lens - 0.1) * k, (POST + 0.12) * k, (lens - 0.1) * k)
+    })
   },
 })

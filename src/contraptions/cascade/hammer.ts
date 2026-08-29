@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
-import { floorRail, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInOutSine, easeInQuad, lerp, seg } from '../../core/ease'
-import { FLOOR, since, type Beat } from './parts'
+import { FLOOR, floor, since, type Beat } from './parts'
 
 /**
  * A drop hammer: the winch hauls the head up its guides for most of the loop,
@@ -34,8 +34,8 @@ export const hammer = defineContraption<Beat>({
     else if (t < 0.93) y = HIGH
     else y = lerp(HIGH, LOW, easeInQuad(seg(t, 0.93, 1)))
 
+    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The frame: two guides the head rides between, a crossbar, and the
     // pulley the cable runs over.
     for (const x of [-GUIDE, GUIDE]) p.line(x * k, -0.5 * k, x * k, (FLOOR + 0.06) * k)

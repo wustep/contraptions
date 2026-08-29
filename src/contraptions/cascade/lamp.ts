@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { floorRail, outline, solid } from '../../core/draw'
+import { outline, solid } from '../../core/draw'
 import { easeInQuad, seg } from '../../core/ease'
 import { FLOOR, flick, floor, heading, since, type Beat } from './parts'
 
@@ -26,11 +26,11 @@ export const lamp = defineContraption<Beat>({
     const lit = 1 - easeInQuad(seg(t, 0.03, 0.6))
     const press = flick(t, 0.04, 0.08, 0.2) * 0.05
 
-    floor(p, k, ink, weight, s, 0.12)
+    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    floorRail(p, k)
-    // The post, the arm over the line, and the cord the bulb hangs on.
-    p.line(h * 0.32 * k, 0.5 * k, h * 0.32 * k, ARM_Y * k)
+    // The post stands on the rail, not the cell floor — a full-height mast
+    // was merging with the row below.
+    p.line(h * 0.32 * k, FLOOR * k, h * 0.32 * k, ARM_Y * k)
     p.line(h * 0.32 * k, ARM_Y * k, 0, ARM_Y * k)
     p.line(0, ARM_Y * k, 0, (BULB_Y - BULB_D / 2) * k)
     // The pedal, on a stem.

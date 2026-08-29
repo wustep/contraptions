@@ -18,6 +18,11 @@ import { BY, D, FLOOR } from '../../worlds/lanes'
 
 /** The bench surface. Parts sit on it, belts run along it. */
 export const BENCH = FLOOR
+/**
+ * West end of a feeder deck. Starting the belt at the cell edge left a
+ * 1–2px stub in the empty cell to the west; the feeder body is the start.
+ */
+export const FEED_WEST = -0.26
 /** Centre of a part resting on the bench. */
 export const PART_Y = BY
 /** A part's edge. Square, so it stacks, tips, and gets stamped. */

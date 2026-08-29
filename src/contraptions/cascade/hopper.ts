@@ -46,7 +46,7 @@ export const hopper = defineContraption<Beat>({
     outline(p, ink, weight)
     for (const x of [-THROAT, THROAT]) {
       p.line(x * k, -0.3 * k, x * k, (GATE - 0.06) * k)
-      p.line(x * k, -0.3 * k, x * 1.8 * k, -0.5 * k)
+      p.line(x * k, -0.3 * k, x * 1.8 * k, -0.46 * k)
     }
 
     clipCell(p, k, () => {

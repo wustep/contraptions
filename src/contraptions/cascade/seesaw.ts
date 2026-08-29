@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
 import { floor, heading, rollIn, rollOut, since, token, tokenColor, type Beat } from './parts'
 
@@ -31,9 +31,8 @@ export const seesaw = defineContraption<Beat>({
     const tip = easeOutCubic(seg(t, 0, 0.06)) - easeInOutCubic(seg(t, 0.5, 0.85))
     const angle = h * TILT * (2 * tip - 1)
 
-    floor(p, k, ink, weight, s, 0.44)
+    floor(p, k, ink, weight, s)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The stand, and the stops each end of the plank comes down onto.
     p.line(-0.14 * k, 0.5 * k, 0, PIVOT * k)
     p.line(0.14 * k, 0.5 * k, 0, PIVOT * k)

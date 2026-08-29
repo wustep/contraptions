@@ -8,7 +8,7 @@ import { ARRIVE, BELT_V, BENCH, DEPART, HIT, PART_Y, bench, burst, lineOf, part,
  * cut drops into the tray under the bench, and the part rolls on with a hole
  * in it.
  */
-const REST = -0.14
+const REST = -0.06
 const THROUGH = BENCH + 0.03
 
 export const punch = defineContraption({
@@ -47,10 +47,10 @@ export const punch = defineContraption({
 
       // The C-frame, the sleeve, and the pin.
       outline(p, ink, weight)
-      p.line(0.3 * k, BENCH * k, 0.3 * k, -0.44 * k)
-      p.line(0.34 * k, -0.44 * k, -0.06 * k, -0.44 * k)
-      p.rect(0, -0.36 * k, 0.14 * k, 0.12 * k)
-      p.line(0, -0.42 * k, 0, (tip - 0.26) * k)
+      p.line(0.3 * k, BENCH * k, 0.3 * k, -0.24 * k)
+      p.line(0.34 * k, -0.24 * k, -0.06 * k, -0.24 * k)
+      p.rect(0, -0.18 * k, 0.14 * k, 0.12 * k)
+      p.line(0, -0.24 * k, 0, (tip - 0.26) * k)
       solid(p, ink, weight, s.color)
       p.rect(0, (tip - 0.13) * k, 0.07 * k, 0.26 * k)
 

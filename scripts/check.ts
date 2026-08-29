@@ -430,6 +430,17 @@ for (const seed of ['first-look', 'cascade-8', 'rim', 'obtuse-plunger-408']) {
   }
 }
 
+{
+  const packed = build(
+    { ...defaultOptions, seed: 'first-look', mode: 'cascade', layout: 'grid', res: 8, spans: 0.2, chains: 0.3 },
+    900,
+  )
+  const cols = packed.instances.map((i) => i.cell.col)
+  const rows = packed.instances.map((i) => i.cell.row)
+  check('cascade res=8 fills the width', cols.length > 0 && Math.min(...cols) <= 1 && Math.max(...cols) >= 6)
+  check('cascade res=8 fills the height', rows.length > 0 && Math.min(...rows) <= 1 && Math.max(...rows) >= 6)
+}
+
 console.log('\ncatalog')
 const catalog = build({ ...defaultOptions, seed: 'catalog', catalog: true }, 900)
 check('shows every machine', catalog.instances.length === registry.length)

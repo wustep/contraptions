@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
-import { clipCell, floorRail, outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { floor, heading, since, type Beat } from './parts'
+import { FLOOR, floor, heading, since, type Beat } from './parts'
 
 /**
  * A tipping tray under a dripping tap: the drips fill it until it
@@ -37,14 +37,13 @@ export const tipper = defineContraption<Beat>({
     p.push()
     p.scale(heading(s.flow), 1)
     outline(p, ink, weight)
-    floorRail(p, k)
     // The tap: a pipe down from the top edge, with a valve wheel on it.
     for (const dx of [-0.035, 0.035]) p.line((PIVOT_X + dx) * k, -0.5 * k, (PIVOT_X + dx) * k, -0.36 * k)
     p.line((PIVOT_X - 0.07) * k, -0.36 * k, (PIVOT_X + 0.07) * k, -0.36 * k)
     p.line((PIVOT_X + 0.035) * k, -0.44 * k, (PIVOT_X + 0.13) * k, -0.44 * k)
     p.circle((PIVOT_X + 0.15) * k, -0.44 * k, 0.07 * k)
     // The post the tray pivots on.
-    p.line(PIVOT_X * k, PIVOT_Y * k, PIVOT_X * k, 0.5 * k)
+    p.line(PIVOT_X * k, PIVOT_Y * k, PIVOT_X * k, FLOOR * k)
 
     // Drips, one every tenth of the loop while the tray is filling.
     if (t >= REFILL) {

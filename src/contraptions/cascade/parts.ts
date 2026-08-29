@@ -117,22 +117,24 @@ export function fallIn(s: Beat, u: number, at: number): Pt | null {
 
 /**
  * The floor the token rolls along. A closed leftover (catalog, unused cell)
- * draws none. On a run the rail only extends toward ports that exist, so a
- * source does not stub west into the inset and a sink does not dump east
- * off the end. `gap` clears the middle for a machine that puts its own
- * part there.
+ * draws none. On a run the rail only extends toward ports that exist.
+ *
+ * A source still draws rail under the feeder (not a mid-cell stub the
+ * hopper/crank then floats on). A sink takes the incoming rail into the
+ * receiver and stops — it does not grow an east stub, and it must not draw
+ * a second rail on the cell floor. `gap` clears the middle only for a
+ * machine that puts its own deck there (belt, bellows); a paddle keeps the
+ * rail continuous so the wheel is mounted on it, not sat in a hole.
  */
 export function floor(p: p5, k: number, ink: string, weight: number, s: Beat, gap = 0): void {
   if (s.flow && s.flow.in == null && s.flow.out == null) return
-  let x0 = -0.5
-  let x1 = 0.5
-  if (s.flow) {
-    if (s.flow.in !== 'W' && s.flow.out !== 'W') x0 = gap > 0 ? -gap : -0.08
-    if (s.flow.in !== 'E' && s.flow.out !== 'E') x1 = gap > 0 ? gap : 0.08
-  }
+  const hasW = !s.flow || s.flow.in === 'W' || s.flow.out === 'W'
+  const hasE = !s.flow || s.flow.in === 'E' || s.flow.out === 'E'
+  const x0 = hasW ? -0.5 : -0.36
+  const x1 = hasE ? 0.5 : 0.28
   outline(p, ink, weight)
   if (gap > 0) {
     if (x0 < -gap) p.line(x0 * k, FLOOR * k, -gap * k, FLOOR * k)
-    if (x1 > gap) p.line(gap * k, FLOOR * k, x1 * k, FLOOR * k)
+    if (hasE && x1 > gap) p.line(gap * k, FLOOR * k, x1 * k, FLOOR * k)
   } else p.line(x0 * k, FLOOR * k, x1 * k, FLOOR * k)
 }

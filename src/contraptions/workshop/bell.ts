@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { outline, solid } from '../../core/draw'
+import { clipCell, outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
 import { BELT_V, BENCH, HIT, belt, bench, lineOf, pulse } from './shop'
 
@@ -30,6 +30,7 @@ export const bell = defineContraption({
     const lip = HANGER + 0.08 + BH
     const x0 = line?.in ? -0.5 : -0.36
 
+    clipCell(p, k, () => {
     bench(p, k, ink, weight, x0, STOP)
     belt(p, k, ink, weight, s.color, x0, STOP, u * BELT_V)
 
@@ -71,5 +72,6 @@ export const bell = defineContraption({
     p.line((0.34 - ext) * k, lip * k, 0.34 * k, lip * k)
     solid(p, ink, weight, s.color)
     p.circle((0.32 - ext) * k, lip * k, 0.07 * k)
+    })
   },
 })
