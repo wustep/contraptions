@@ -3,7 +3,7 @@ import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName } from '../../core/themes'
 import type { Cell, Contraption, Instance } from '../../core/types'
-import type { CatalogEntry, Composition, Options } from '../../core/composition'
+import { clampRes, type CatalogEntry, type Composition, type Options } from '../../core/composition'
 import { mod } from '../../core/ease'
 import { GN, STEADY, portMachines } from './machines'
 import type { Link, Port, PortMachine, Side } from './types'
@@ -96,14 +96,16 @@ const resolveT = (port: Port, state: unknown): number =>
 export function buildPorts(options: Options, canvas: number): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(`${options.seed}::ports`)
-  const area = Math.floor((canvas * ART_INSET) / options.res) * options.res
+  // Never the raw dial: a cell has a legible range and the mode owns it.
+  const res = clampRes(options.mode, options.res)
+  const area = Math.floor((canvas * ART_INSET) / res) * res
   const origin = Math.round((canvas - area) / 2)
   // Tokens cross edges, so the cells have to share them: always a plain grid.
   const cells = layoutByName('grid').build({
     x: origin,
     y: origin,
     area,
-    res: options.res,
+    res,
     rng: rng.fork('layout'),
   })
   const size = cells[0]?.size ?? 1
@@ -305,6 +307,7 @@ export function buildPorts(options: Options, canvas: number): Composition {
     header: null,
     wires: [],
     overlays: [],
+    unit: size,
   }
 }
 

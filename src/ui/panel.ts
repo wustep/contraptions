@@ -1,8 +1,16 @@
-import { registry, allTags } from '../contraptions'
 import { FPS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
-import { MODES, type Composition, type Mode, type Options } from '../core/composition'
+import {
+  MODES,
+  catalogFor,
+  clampRes,
+  modeInfo,
+  tagsFor,
+  type Composition,
+  type Mode,
+  type Options,
+} from '../core/composition'
 import { createListbox } from './listbox'
 import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
 
@@ -72,8 +80,9 @@ const ICON = {
 const LAYOUT_GLYPHS: Record<string, [number, number, number, number][]> = {
   grid: [[3, 3, 8, 8], [13, 3, 8, 8], [3, 13, 8, 8], [13, 13, 8, 8]],
   bricks: [[3, 3, 10, 5], [15, 3, 6, 5], [3, 10, 5, 5], [10, 10, 11, 5], [3, 17, 10, 4], [15, 17, 6, 4]],
-  quads: [[3, 3, 18, 18], [12, 3, 9, 9], [16.5, 3, 4.5, 4.5]],
-  bands: [[3, 3, 4, 18], [9, 3, 8, 18], [19, 3, 2, 18]],
+  // Both mixed layouts hold two cell sizes and no more, so the glyphs show two.
+  quads: [[3, 3, 9, 9], [13, 3, 9, 9], [3, 13, 9, 9], [13, 13, 4, 4], [18, 13, 4, 4], [13, 18, 4, 4], [18, 18, 4, 4]],
+  bands: [[3, 3, 5, 18], [9.5, 3, 2, 18], [12.5, 3, 2, 18], [15.5, 3, 5, 18]],
 }
 
 function layoutGlyph(name: string): SVGSVGElement | undefined {
@@ -188,6 +197,11 @@ export function createPanel(
         input.value = String(v)
         readout.textContent = fmt(v)
       },
+      /** Retune the stops. Call `set` after: the input clamps its own value. */
+      setRange(lo: number, hi: number) {
+        input.min = String(lo)
+        input.max = String(hi)
+      },
     }
   }
 
@@ -230,11 +244,13 @@ export function createPanel(
   // Composition
   const composition = section('Composition')
   const modeBox = createListbox({
-    items: MODES.map((m) => ({ value: m.name, label: m.label })),
+    items: MODES.map((m) => ({ value: m.name, label: m.label, note: m.note })),
     value: initial.mode,
     label: 'Mode',
-    onChange: (v) => handlers.onChange({ mode: v as Mode }),
+    onChange: (v) => handlers.onChange({ mode: v as Mode, solo: null, tag: null }),
   })
+  const modeNote = el('p', { class: 'mode-note' }, [modeInfo(initial.mode).note])
+  const modeField = field('Mode', el('div', { class: 'mode-control' }, [modeBox.node, modeNote]))
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -251,8 +267,9 @@ export function createPanel(
     label: 'Layout',
     onChange: (v) => handlers.onChange({ layout: v }),
   })
-  const res = slider('Resolution', 1, 50, 1, initial.res, String, (v) => handlers.onChange({ res: v }),
-    'Cells across the piece')
+  const resRange = modeInfo(initial.mode).res
+  const res = slider('Resolution', resRange.min, resRange.max, 1, clampRes(initial.mode, initial.res), String,
+    (v) => handlers.onChange({ res: v }), 'Cells across the piece')
   const stroke = slider('Stroke', 0.4, 2.4, 0.05, initial.stroke, (v) => v.toFixed(2), (v) => handlers.onChange({ stroke: v }),
     'Multiplier on the ink weight')
   const spans = slider('Multi-cell', 0, 3, 0.05, initial.spans, (v) => v.toFixed(2), (v) => handlers.onChange({ spans: v }),
@@ -261,7 +278,7 @@ export function createPanel(
     'How much of the grid is wired into runs that fire in sequence; past 1 they take over')
   const layoutField = field('Layout', layoutBox.node)
   composition.append(
-    field('Mode', modeBox.node),
+    modeField,
     field('Theme', themeBox.node),
     layoutField,
     res.node, stroke.node, spans.node, chains.node,
@@ -269,17 +286,22 @@ export function createPanel(
 
   // Explore
   const explore = section('Explore')
+  const tagItems = (mode: Mode) => [
+    { value: '', label: 'Every tag' },
+    ...tagsFor(mode).map((t) => ({ value: t, label: t })),
+  ]
+  const soloItems = (mode: Mode) => [
+    { value: '', label: 'All contraptions' },
+    ...catalogFor(mode).map((c) => ({ value: c.name, label: c.label ?? c.name })),
+  ]
   const tagBox = createListbox({
-    items: [{ value: '', label: 'Every tag' }, ...allTags().map((t) => ({ value: t, label: t }))],
+    items: tagItems(initial.mode),
     value: initial.tag ?? '',
     label: 'Tag filter',
     onChange: (v) => handlers.onChange({ tag: v || null, solo: null }),
   })
   const soloBox = createListbox({
-    items: [
-      { value: '', label: 'All contraptions' },
-      ...registry.map((c) => ({ value: c.name, label: c.label ?? c.name })),
-    ],
+    items: soloItems(initial.mode),
     value: initial.solo ?? '',
     label: 'Solo contraption',
     onChange: (v) => handlers.onChange({ solo: v || null }),
@@ -291,18 +313,54 @@ export function createPanel(
   const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
   explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
 
+  const labelOf = (node: HTMLElement) => node.querySelector('label span') as HTMLElement | null
+  const SPAN_COPY: Record<Mode, [string, string]> = {
+    classic: ['Multi-cell', 'How eagerly machines larger than one cell are placed; past 1 they crowd in'],
+    ports: ['Multi-cell', ''],
+    tracks: ['Multi-cell', ''],
+    cascade: ['Multi-cell', 'How eagerly strip, switchback and cradle sentences are placed'],
+    workshop: ['Multi-cell', 'How eagerly the line, gantry, carousel and lineshaft are placed'],
+    circus: ['Multi-cell', 'How eagerly the big looping acts are placed — cannon, ferris, big-top'],
+  }
+  const CHAIN_COPY: Record<Mode, [string, string]> = {
+    classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
+    ports: ['Wired chains', 'How many chains the solver grows'],
+    tracks: ['Wired chains', ''],
+    cascade: ['Stations', 'How much of the snake is machinery; the rest is plain rail'],
+    workshop: ['Stations', 'How much of the line is machinery; the rest is belt'],
+    circus: ['Drumroll', 'How much of the programme fires in sequence'],
+  }
+
   /**
-   * The worlds build on a plain grid, place no multi-cell machines from the
-   * classic set, and have their own machine lists — so the controls for those
-   * things are hidden rather than left to do nothing. Ports keeps the chains
-   * dial, which sets how many chains it grows.
+   * The resolution stops are the mode's: a cell has a legible range and the
+   * composer builds inside it whatever the dial says, so the slider shows the
+   * res the piece was actually built at.
+   */
+  const syncRes = (mode: Mode, value: number) => {
+    const { min, max } = modeInfo(mode).res
+    res.setRange(min, max)
+    res.set(clampRes(mode, value))
+    res.node.title = `Cells across the piece — ${min} to ${max} in this mode`
+  }
+
+  /**
+   * Hide what the current mode ignores, and retitle the dials that stay so
+   * they name what this composer actually does.
    */
   const showFor = (mode: Mode) => {
-    const classic = mode === 'classic'
-    layoutField.hidden = !classic
-    spans.node.hidden = !classic
-    chains.node.hidden = mode === 'tracks'
-    poolRow.hidden = !classic
+    const { dials } = modeInfo(mode)
+    layoutField.hidden = !dials.layout
+    spans.node.hidden = !dials.spans
+    chains.node.hidden = !dials.chains
+    poolRow.hidden = !dials.pool
+    const [spanLabel, spanHint] = SPAN_COPY[mode]
+    const spanName = labelOf(spans.node)
+    if (spanName) spanName.textContent = spanLabel
+    spans.node.title = spanHint
+    const [chainLabel, chainHint] = CHAIN_COPY[mode]
+    const chainName = labelOf(chains.node)
+    if (chainName) chainName.textContent = chainLabel
+    chains.node.title = chainHint
   }
 
   // Transport
@@ -367,12 +425,13 @@ export function createPanel(
       lastView = view
       seedInput.value = comp.options.seed
       modeBox.set(comp.options.mode)
+      modeNote.textContent = modeInfo(comp.options.mode).note
       showFor(comp.options.mode)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
-      soloBox.set(comp.options.solo ?? '')
-      tagBox.set(comp.options.tag ?? '')
-      res.set(comp.options.res)
+      tagBox.setItems(tagItems(comp.options.mode), comp.options.tag ?? '')
+      soloBox.setItems(soloItems(comp.options.mode), comp.options.solo ?? '')
+      syncRes(comp.options.mode, comp.options.res)
       stroke.set(comp.options.stroke)
       spans.set(comp.options.spans)
       chains.set(comp.options.chains)
@@ -385,6 +444,11 @@ export function createPanel(
       scaleSeg.set(view.exportScale)
       const edge = handlers.exportSize(view.exportScale)
       dims.textContent = `${edge} × ${edge}px`
+      // Last: a res carried in from another mode, or from a link, is pulled
+      // into range and written back so the URL agrees with the piece. clampRes
+      // is idempotent, so the rebuild this asks for settles on the next sync.
+      const inRange = clampRes(comp.options.mode, comp.options.res)
+      if (inRange !== comp.options.res) handlers.onChange({ res: inRange })
     },
     setProgress(u) {
       if (!scrubbing) {

@@ -37,8 +37,11 @@ export const orrery = defineContraption({
     const y1 = r1 * Math.sin(a1)
     const x2 = r2 * Math.cos(a2)
     const y2 = r2 * Math.sin(a2)
-    const mx = x2 + unit * 0.13 * Math.cos(a2 * 4)
-    const my = y2 + unit * 0.13 * Math.sin(a2 * 4)
+    // The moon's orbit is set so the outer body's moon closes inside the
+    // footprint: r2 + this + the moon's own radius must clear unit/2.
+    const moon = unit * 0.11
+    const mx = x2 + moon * Math.cos(a2 * 4)
+    const my = y2 + moon * Math.sin(a2 * 4)
 
     outline(p, ink, weight)
     p.line(0, 0, x1, y1)

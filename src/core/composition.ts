@@ -1,30 +1,145 @@
 import type p5 from 'p5'
 import { ART_INSET, CANVAS, LOOP } from './constants'
 import { layoutByName } from './layouts'
-import { registry } from '../contraptions'
+import { registry as classicRegistry } from '../contraptions'
+import { registry as cascadeRegistry } from '../contraptions/cascade'
+import { registry as workshopRegistry } from '../contraptions/workshop'
+import { registry as circusRegistry } from '../contraptions/circus'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
+import { buildCascade, cascadeCatalog } from '../worlds/goldberg/cascade'
+import { buildCircus } from '../worlds/goldberg/circus'
+import type { LaneRun } from '../worlds/goldberg/laneworld'
+import { buildWorkshop, workshopCatalog } from '../worlds/goldberg/workshop'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
- * Which rules the piece is built under.
+ * A mode picks a catalog and a composer. That is the whole idea: three
+ * Goldberg catalogs can share names (hopper, bell, lamp) because each lives
+ * in its own folder, and each composer is the thesis of that catalog.
  *
- *   classic — independent machines, with abstract wired chains between some
- *   ports   — machines pass real tokens (balls, rotation, pushes) across
- *             their shared edges; nothing runs into nothing
- *   tracks  — a closed track is carved first and the balls circulate on it;
- *             machines are placed along it and react as the balls pass
+ *   classic  — the original toys; independent machines, abstract wires
+ *   ports    — tokens handed across typed edges (own world, own catalog)
+ *   tracks   — balls circulating on a carved loop (own world, own catalog)
+ *   cascade  — its own grid, one snake of stations, balls on world-drawn lanes
+ *   workshop — the same lane world read as a shop line, parts every half loop
+ *   circus   — its own grid of closed looping acts, wired as a drumroll
  */
-export type Mode = 'classic' | 'ports' | 'tracks'
+export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
 
-export const MODES: { name: Mode; label: string; note: string }[] = [
-  { name: 'classic', label: 'Classic', note: 'independent machines, wired' },
-  { name: 'ports', label: 'Ports', note: 'tokens handed across edges' },
-  { name: 'tracks', label: 'Tracks', note: 'balls circulating on a track' },
+/** How the grid of a catalog-mode is staffed and wired. */
+export type Composer = 'classic' | 'cascade' | 'workshop' | 'circus'
+
+export interface ModeInfo {
+  name: Mode
+  label: string
+  note: string
+  /** Which machine list the mode draws from. */
+  catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
+  /**
+   * How the piece is composed. Ports, tracks, cascade, workshop and
+   * circus are their own worlds. Classic is the leftover-fill grid.
+   */
+  composer: 'ports' | 'tracks' | Composer
+  /** Panel controls this mode actually uses. Hidden otherwise. */
+  dials: { layout: boolean; spans: boolean; chains: boolean; pool: boolean }
+  /**
+   * Cells across the piece this mode can be built at. The composer clamps
+   * `options.res` into this range and the panel shows the same limits, so a
+   * cell is never smaller than the mode's machines can be read at, and a
+   * piece never shrinks to a speck inside an empty frame.
+   */
+  res: { min: number; max: number }
+}
+
+const GRID_DIALS = { layout: true, spans: true, chains: true, pool: true } as const
+
+export const MODES: ModeInfo[] = [
+  {
+    name: 'classic',
+    label: 'Classic',
+    note: 'independent machines, wired',
+    catalog: 'classic',
+    composer: 'classic',
+    dials: GRID_DIALS,
+    res: { min: 6, max: 24 },
+  },
+  {
+    name: 'ports',
+    label: 'Ports',
+    note: 'tokens handed across edges',
+    catalog: 'ports',
+    composer: 'ports',
+    dials: { layout: false, spans: false, chains: true, pool: false },
+    res: { min: 8, max: 20 },
+  },
+  {
+    name: 'tracks',
+    label: 'Tracks',
+    note: 'balls circulating on a track',
+    catalog: 'tracks',
+    composer: 'tracks',
+    dials: { layout: false, spans: false, chains: false, pool: false },
+    res: { min: 8, max: 20 },
+  },
+  {
+    name: 'cascade',
+    label: 'Cascade',
+    note: 'one snake of stations; balls ride rails and elevators into a sink',
+    catalog: 'cascade',
+    composer: 'cascade',
+    dials: { layout: false, spans: false, chains: true, pool: true },
+    res: { min: 4, max: 20 },
+  },
+  {
+    name: 'workshop',
+    label: 'Workshop',
+    note: 'one shop line; parts ride belts and elevators into a bin, bell, or lamp',
+    catalog: 'workshop',
+    composer: 'workshop',
+    dials: { layout: false, spans: false, chains: true, pool: true },
+    res: { min: 4, max: 20 },
+  },
+  {
+    name: 'circus',
+    label: 'Circus',
+    note: 'a ring of looping acts; the drumroll fires them in sequence',
+    catalog: 'circus',
+    composer: 'circus',
+    dials: { layout: false, spans: true, chains: true, pool: true },
+    res: { min: 3, max: 12 },
+  },
 ]
+
+export const modeInfo = (mode: Mode): ModeInfo => MODES.find((m) => m.name === mode) ?? MODES[0]
+
+/** `res` pulled into the mode's legible range. Every composer builds at this, never the raw dial. */
+export const clampRes = (mode: Mode, res: number): number => {
+  const { min, max } = modeInfo(mode).res
+  return Math.max(min, Math.min(max, Math.round(Number.isFinite(res) ? res : min)))
+}
+
+/** The contraption list a catalog-mode composes from. Ports/tracks return []. */
+export function catalogFor(mode: Mode): Contraption<unknown>[] {
+  switch (mode) {
+    case 'cascade':
+      return cascadeRegistry
+    case 'workshop':
+      return workshopRegistry
+    case 'circus':
+      return circusRegistry
+    case 'classic':
+      return classicRegistry
+    default:
+      return []
+  }
+}
+
+export const tagsFor = (mode: Mode): string[] =>
+  [...new Set(catalogFor(mode).flatMap((c) => c.tags ?? []))].sort()
 
 /** Something drawn over the whole piece, after the machines. */
 export type Overlay = (p: p5, loopFrame: number, ctx: { theme: Theme; weight: (size: number) => number }) => void
@@ -40,8 +155,12 @@ export interface CatalogEntry {
   phase?: number
   /** Finish the state after `setup` — worlds attach their links here. */
   state?: (state: Record<string, unknown>, ctx: { color: string; theme: Theme }) => void
-  /** Drawn over the sheet, for worlds whose balls are not drawn by the machine. */
-  overlay?: (cell: Cell, ctx: { color: string }) => Overlay
+  /**
+   * Drawn over the sheet, for worlds whose tokens are not drawn by the
+   * machine. `state` is the finished state of this very instance, so a lane
+   * the machine derives from its own setup is the lane the token runs.
+   */
+  overlay?: (cell: Cell, ctx: { color: string; state: Record<string, unknown> }) => Overlay
 }
 
 export interface Options {
@@ -108,6 +227,26 @@ export interface Composition {
   wires: Wire[]
   /** Layers drawn over every machine — the circulating balls in tracks mode. */
   overlays: Overlay[]
+  /**
+   * When false, wires still exist for timing but are not drawn. Cascade hides
+   * them so each machine draws its own rail; a centre-to-centre conduit was
+   * punching through paddles and running off the rim.
+   */
+  showWires?: boolean
+  /**
+   * The grid unit the piece was laid out on, in pixels. One pen for the whole
+   * piece: stroke weight is computed from this, not from each cell, so a big
+   * cell in a mixed layout is drawn with the same line as its small
+   * neighbours rather than four times as heavy. Falls back to the cell size.
+   */
+  unit?: number
+  /**
+   * The token journey, for the worlds that own it (cascade, workshop): the
+   * lane of every cell, joined, plus the elevator stacks along it. The overlay
+   * draws from this and the checks sample it, so "the token never leaves the
+   * frame" is a property of one object rather than of 27 machines.
+   */
+  lanes?: LaneRun
 }
 
 /**
@@ -117,21 +256,21 @@ export interface Composition {
 const strokeFor = (size: number, theme: Theme, mult: number): number =>
   Math.max(0.75, size * 0.037) * (theme.weight ?? 1) * mult
 
-function pool(options: Options): Contraption<unknown>[] {
+function pool(options: Options, catalog: Contraption<unknown>[]): Contraption<unknown>[] {
   if (options.solo) {
-    const one = registry.find((c) => c.name === options.solo)
+    const one = catalog.find((c) => c.name === options.solo)
     if (one) return [one]
   }
   if (options.tag) {
-    const tagged = registry.filter((c) => c.tags?.includes(options.tag!))
+    const tagged = catalog.filter((c) => c.tags?.includes(options.tag!))
     if (tagged.length) return tagged
   }
-  return registry
+  return catalog
 }
 
-/** One labelled instance of every machine in the classic set. */
-const classicCatalog = (): CatalogEntry[] =>
-  registry.map((c) => {
+/** One labelled instance of every machine in a grid catalog. */
+const gridCatalog = (catalog: Contraption<unknown>[]): CatalogEntry[] =>
+  catalog.map((c) => {
     const [w, h] = c.span ?? [1, 1]
     const footprint = w === 1 && h === 1 ? '' : `${w}×${h}`
     return {
@@ -142,33 +281,60 @@ const classicCatalog = (): CatalogEntry[] =>
   })
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
+  const info = modeInfo(options.mode)
   if (options.catalog) {
+    // The lane worlds show each machine with a token running through it, the
+    // way the tracks sheet shows each shape with a ball.
     const entries =
-      options.mode === 'ports' ? portsCatalog() : options.mode === 'tracks' ? tracksCatalog() : classicCatalog()
-    const label = MODES.find((m) => m.name === options.mode)?.label ?? 'Classic'
-    return buildCatalog(options, canvas, entries, label)
+      options.mode === 'ports'
+        ? portsCatalog()
+        : options.mode === 'tracks'
+          ? tracksCatalog()
+          : options.mode === 'cascade'
+            ? cascadeCatalog(options.theme)
+            : options.mode === 'workshop'
+              ? workshopCatalog(options.theme)
+              : gridCatalog(catalogFor(options.mode))
+    return buildCatalog(options, canvas, entries, info.label)
   }
   if (options.mode === 'ports') return buildPorts(options, canvas)
   if (options.mode === 'tracks') return buildTracks(options, canvas)
+  if (options.mode === 'cascade') return buildCascade(options, canvas)
+  if (options.mode === 'workshop') return buildWorkshop(options, canvas)
+  if (options.mode === 'circus') return buildCircus(options, canvas)
+  return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
+}
 
+/**
+ * Shared grid composer for Classic. Cascade, workshop and circus have
+ * their own worlds — leftover cells there stay empty, not leftover toys.
+ */
+function buildGrid(
+  options: Options,
+  canvas: number,
+  catalog: Contraption<unknown>[],
+  composer: Composer,
+): Composition {
   const theme = themeByName(options.theme)
   const layout = layoutByName(options.layout)
   const rng = makeRng(options.seed)
 
+  // Never the raw dial: a cell has a legible range and the mode owns it.
+  const res = clampRes(options.mode, options.res)
   // Snap the art area to a whole number of cells so every cell edge, and so
   // every rail drawn on one, lands on a whole pixel. Fractional cell sizes are
   // what make a 2px line smear across three pixels.
-  const area = Math.floor((canvas * ART_INSET) / options.res) * options.res
+  const area = Math.floor((canvas * ART_INSET) / res) * res
   const origin = Math.round((canvas - area) / 2)
   const cells = layout.build({
     x: origin,
     y: origin,
     area,
-    res: options.res,
+    res,
     rng: rng.fork('layout'),
   })
 
-  const candidates = pool(options)
+  const candidates = pool(options, catalog)
   const singles = candidates.filter((c) => !c.span || (c.span[0] === 1 && c.span[1] === 1))
   const spanning = candidates.filter((c) => c.span && (c.span[0] > 1 || c.span[1] > 1))
 
@@ -225,7 +391,9 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
 
   // Soloing a multi-cell machine leaves nothing for the second pass, so pack
   // the grid with it instead of sprinkling.
-  const spanChance = singles.length === 0 ? 1 : options.spans * 0.16
+  // Circus lives in its multi-cell acts (cannon, ferris, big-top); give them
+  // a little more room on the floor so the looping pieces actually show.
+  const spanChance = singles.length === 0 ? 1 : options.spans * (composer === 'circus' ? 0.28 : 0.16)
 
   // Pass one: multi-cell machines, which need contiguous room.
   if (spanning.length) {
@@ -267,12 +435,11 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   }
 
   if (options.chains > 0 && singles.length) {
-    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains)
+    const paths = chainPaths(cells, claimed, rng.fork('paths'), options.chains, 'any')
     for (const path of paths) {
       const members = path.map((cell, k) => {
         const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
-        const candidates = byRole(role)
-        const contraption = roleRng.weighted(candidates, (c) => c.weight ?? 1)
+        const contraption = roleRng.weighted(byRole(role), (c) => c.weight ?? 1)
         return place(contraption, cell, `cell:${cell.index}`)
       })
       wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))
@@ -299,6 +466,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
     header: null,
     wires,
     overlays: [],
+    unit: area / res,
   }
 }
 
@@ -325,10 +493,15 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     const [w, h] = e.contraption.span ?? [1, 1]
     return w * h
   }
-  const ordered =
-    options.mode === 'classic'
-      ? [...entries].sort((a, b) => areaOf(b) - areaOf(a) || a.label.localeCompare(b.label))
-      : [...entries].sort((a, b) => areaOf(b) - areaOf(a))
+  const roleRank = (e: CatalogEntry) =>
+    e.contraption.role === 'source' ? 0 : e.contraption.role === 'relay' ? 1 : e.contraption.role === 'sink' ? 2 : 3
+  const ordered = [...entries].sort((a, b) => {
+    const area = areaOf(b) - areaOf(a)
+    if (area) return area
+    if (options.mode === 'classic') return a.label.localeCompare(b.label)
+    if (options.mode === 'ports' || options.mode === 'tracks') return 0
+    return roleRank(a) - roleRank(b) || a.label.localeCompare(b.label)
+  })
 
   type Shelf = { items: CatalogEntry[]; used: number; height: number }
   const shelves: Shelf[] = []
@@ -423,7 +596,7 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
         period,
         fireFrame: 0,
       })
-      if (entry.overlay) overlays.push(entry.overlay(cell, { color }))
+      if (entry.overlay) overlays.push(entry.overlay(cell, { color, state }))
 
       x += w
       index++
@@ -446,6 +619,7 @@ function buildCatalog(options: Options, canvas: number, entries: CatalogEntry[],
     header: `${entries.length} contraptions · ${modeLabel} · ${theme.label}`,
     wires: [],
     overlays,
+    unit,
   }
 }
 

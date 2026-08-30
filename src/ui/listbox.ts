@@ -20,6 +20,8 @@ export interface ListboxSwatches {
 export interface ListboxItem {
   value: string
   label: string
+  /** Secondary line, used by Mode to say what the composer actually does. */
+  note?: string
   swatches?: ListboxSwatches
   /** Small leading glyph, e.g. a mini layout diagram. Cloned per use. */
   glyph?: SVGSVGElement
@@ -28,6 +30,8 @@ export interface ListboxItem {
 export interface Listbox {
   node: HTMLElement
   set(value: string): void
+  /** Replace the option list, e.g. when Mode swaps catalogs. */
+  setItems(next: ListboxItem[], value?: string): void
 }
 
 let uid = 0
@@ -50,13 +54,20 @@ function swatchPill(s: ListboxSwatches): HTMLElement {
   return pill
 }
 
-/** The trigger and every option share one renderer, so they cannot drift. */
-function renderContent(target: HTMLElement, item: ListboxItem): void {
+/** Trigger and options share a renderer. Notes only belong on the option. */
+function renderContent(target: HTMLElement, item: ListboxItem, withNote = false): void {
   target.replaceChildren()
   if (item.glyph) target.append(item.glyph.cloneNode(true))
+  const text = make('span', 'lb-text')
   const label = make('span', 'lb-label')
   label.textContent = item.label
-  target.append(label)
+  text.append(label)
+  if (withNote && item.note) {
+    const note = make('span', 'lb-note')
+    note.textContent = item.note
+    text.append(note)
+  }
+  target.append(text)
   if (item.swatches) target.append(swatchPill(item.swatches))
 }
 
@@ -67,7 +78,7 @@ export function createListbox(config: {
   label: string
   onChange(value: string): void
 }): Listbox {
-  const { items } = config
+  let items = config.items
   const id = `lb-${uid++}`
   let value = config.value
   let open = false
@@ -98,11 +109,13 @@ export function createListbox(config: {
   pop.setAttribute('role', 'listbox')
   pop.setAttribute('aria-label', config.label)
 
-  const optionEls = items.map((item, i) => {
+  let optionEls: HTMLElement[] = []
+
+  const bindOption = (item: ListboxItem, i: number): HTMLElement => {
     const opt = make('div', 'lb-opt')
     opt.id = `${id}-${i}`
     opt.setAttribute('role', 'option')
-    renderContent(opt, item)
+    renderContent(opt, item, true)
     opt.addEventListener('pointerenter', () => setActive(i))
     // pointerdown, not click: it wins the race against the outside-click
     // closer, and feels as immediate as a native select.
@@ -112,7 +125,14 @@ export function createListbox(config: {
     })
     pop.append(opt)
     return opt
-  })
+  }
+
+  const rebuildOptions = () => {
+    pop.replaceChildren()
+    optionEls = items.map(bindOption)
+  }
+
+  rebuildOptions()
 
   // Grabbing the popup's scrollbar must not steal focus from the trigger —
   // the blur handler would close the list mid-drag.
@@ -273,6 +293,14 @@ export function createListbox(config: {
     node,
     set(next) {
       value = next
+      paint()
+    },
+    setItems(next, nextValue) {
+      items = next
+      if (nextValue !== undefined) value = nextValue
+      if (!items.some((i) => i.value === value)) value = items[0]?.value ?? ''
+      active = Math.max(0, items.findIndex((i) => i.value === value))
+      rebuildOptions()
       paint()
     },
   }

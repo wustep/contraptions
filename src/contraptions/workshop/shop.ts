@@ -1,0 +1,246 @@
+import type p5 from 'p5'
+import { LOOP } from '../../core/constants'
+import { outline, solid } from '../../core/draw'
+import { mod } from '../../core/ease'
+import { stopLane, type Lane, type LaneCtx } from '../../core/lane'
+import { FIRE_DECAY } from '../../core/wiring'
+import { BY, D, FLOOR } from '../../worlds/lanes'
+
+/**
+ * The shop vocabulary. Every machine in the catalog is a bench on one shop
+ * floor, and a part is the thing handed from one bench to the next, so the
+ * heights and speeds a part is handled at are fixed here rather than in each
+ * machine. The bench is the same line the ports and tracks worlds roll their
+ * balls on, and the part is the same size as their ball: all three worlds
+ * share a floor.
+ *
+ * **No bench draws the part.** A bench declares where the part goes — a
+ * `lane`, in cell units, in the canonical hand (west → east) — and the world
+ * draws every part on the joined path of the whole line, from one clock. A
+ * bench that is happy to be crossed in a straight line along the bench top
+ * declares nothing and gets the world's default; declare a lane when the part
+ * should follow your geometry, and `hold` where the tool works, so `fireAt`
+ * lands on it.
+ *
+ * Units are cells, y down. Multiply by the cell size to draw.
+ */
+
+/** The bench surface. Parts sit on it, belts run along it. */
+export const BENCH = FLOOR
+/**
+ * West end of a feeder deck. Starting the belt at the cell edge left a
+ * 1–2px stub in the empty cell to the west; the feeder body is the start.
+ */
+export const FEED_WEST = -0.16
+/** Centre of a part resting on the bench. */
+export const PART_Y = BY
+/** A part's edge. Square, so it stacks, tips, and gets stamped. */
+export const PART = D
+/** A high shelf: where a lift delivers to and a chute takes from. */
+export const SHELF = -0.16
+/** Centre of a part riding the shelf. */
+export const HIGH_Y = SHELF - PART / 2
+/** The overhead rail a hook trolley runs on. */
+export const RAIL = -0.44
+/** Height of the sheave in an elevator's top cell. The world hangs the car off it. */
+export const SHEAVE_Y = -0.34
+/** Belt speed in cells per loop. A part crosses a cell in half a loop. */
+export const BELT_V = 2
+/**
+ * How far a belt surface moves in one bench clock, in cells. The world hands a
+ * bench exactly one part per clock, so the surface moves exactly one cell:
+ * `u * BELT_SPAN` is the travel to pass to `belt`/`rollers`, and it makes the
+ * cleats and the part agree without either knowing the other's speed.
+ */
+export const BELT_SPAN = 1
+/**
+ * Frames one bench clock takes. The world runs exactly one part through every
+ * bench in that time, so a bench's `u` is "how far through this part am I".
+ */
+export const SHOP_PERIOD = LOOP / 2
+/**
+ * Roller radius. A roller with four spokes looks the same every quarter turn,
+ * and at this radius a belt moving any whole number of ninths of a cell per
+ * loop turns it a whole number of quarter turns, so rollers close the loop
+ * exactly instead of jumping at the seam.
+ */
+export const ROLLER_R = 2 / (9 * Math.PI)
+/** Pitch of the cleats on a belt. Divides a cell, so a belt closes the loop. */
+export const TICK = 0.125
+
+/**
+ * The station beat: where in its own clock a bench strikes the part its lane
+ * is holding. Every station fires here, so a chain of them reads at one tempo.
+ */
+export const HIT = 0.42
+
+export type Mark = 'blank' | 'dot' | 'hole'
+
+/** 1 at `at`, decaying to 0 over `frames`. What `fired` is, derived from `u`. */
+export const pulse = (u: number, at: number, frames = FIRE_DECAY, period = LOOP) =>
+  Math.max(0, 1 - (mod(u - at, 1) * period) / frames)
+
+/**
+ * A 1×1 bench's place on a shop line. The workshop composer writes this;
+ * without it a machine is treated as closed (no inbound, no outbound).
+ */
+export type Line = {
+  in: boolean
+  out: boolean
+  color: string
+  /** +1 east, -1 west. A westbound bench is the return of the snake. */
+  along?: number
+  /** This cell dumps the part south into the bench below. */
+  drop?: boolean
+  /** This cell receives a part from the bench above. */
+  catch?: boolean
+  /** Place on an elevator stack. The composer stamps this on the pair. */
+  ride?: { index: number; floors: number }
+}
+
+export function lineOf(s: unknown): Line | undefined {
+  if (!s || typeof s !== 'object' || !('line' in s)) return undefined
+  const line = (s as { line?: Line }).line
+  return line && typeof line.out === 'boolean' ? line : undefined
+}
+
+/**
+ * The lane the world gives a bench that declares none, and the base for one
+ * that only wants a pause: roll in on the bench, stop at `at` for `time` while
+ * the tool works, roll on. See `core/lane.ts`.
+ */
+export const partLane = (ctx: LaneCtx, opts: { at?: number; time?: number; y?: number } = {}): Lane =>
+  stopLane(ctx, BELT_V, opts)
+
+/**
+ * A station's lane: `partLane` with the fire moment placed inside the pause
+ * rather than at its start. `when` is which end of the pause the bench's
+ * `fireAt` names — 'in' the part arriving, 'mid' the tool working it, 'out'
+ * the bench letting it go. A feeder keeps its release.
+ */
+export function workLane(
+  ctx: LaneCtx,
+  opts: { at?: number; time?: number; when?: 'in' | 'mid' | 'out' } = {},
+): Lane {
+  const lane = partLane(ctx, opts)
+  if (ctx.in === null) return lane
+  const share = opts.when === 'in' ? 0 : opts.when === 'out' ? 1 : 0.5
+  return { ...lane, fire: ((opts.at ?? 0) + 0.5) / BELT_V + (opts.time ?? 0) * share }
+}
+
+/** The bench line, with a leg at each end down to the floor. */
+export function bench(p: p5, k: number, ink: string, weight: number, x0 = -0.5, x1 = 0.5, legs = true): void {
+  outline(p, ink, weight)
+  p.line(x0 * k, BENCH * k, x1 * k, BENCH * k)
+  if (!legs) return
+  for (const x of [x0 + 0.07, x1 - 0.07]) p.line(x * k, BENCH * k, x * k, 0.5 * k)
+}
+
+/** A part. Square, one flat fill, optionally worked. */
+export function part(
+  p: p5,
+  k: number,
+  ink: string,
+  weight: number,
+  fill: string,
+  x: number,
+  y: number,
+  opts: { mark?: Mark; angle?: number; bg?: string; w?: number; h?: number } = {},
+): void {
+  const w = (opts.w ?? PART) * k
+  const h = (opts.h ?? PART) * k
+  p.push()
+  p.translate(x * k, y * k)
+  if (opts.angle) p.rotate(opts.angle)
+  solid(p, ink, weight, fill)
+  p.rect(0, 0, w, h, k * 0.02)
+  if (opts.mark === 'dot') {
+    p.fill(ink)
+    p.circle(0, 0, k * 0.07)
+  } else if (opts.mark === 'hole') {
+    p.fill(opts.bg ?? fill)
+    p.circle(0, 0, k * 0.1)
+  }
+  p.pop()
+}
+
+/** A roller: rim, four spokes, a coloured hub. `angle` is its rotation. */
+export function roller(p: p5, k: number, ink: string, weight: number, fill: string, x: number, y: number, r: number, angle: number): void {
+  p.push()
+  p.translate(x * k, y * k)
+  p.rotate(angle)
+  outline(p, ink, weight)
+  p.circle(0, 0, r * 2 * k)
+  p.line(-r * k, 0, r * k, 0)
+  p.line(0, -r * k, 0, r * k)
+  solid(p, ink, weight, fill)
+  p.circle(0, 0, Math.min(r, 0.045) * 2 * k)
+  p.pop()
+}
+
+/**
+ * A run of powered rollers set into the bench between x0 and x1, all turning
+ * together. `travel` is how far the surface has moved, in cells.
+ */
+export function rollers(p: p5, k: number, ink: string, weight: number, fill: string, x0: number, x1: number, travel: number, y = BENCH): void {
+  const pitch = ROLLER_R * 2 + 0.03
+  const n = Math.max(1, Math.floor((x1 - x0) / pitch))
+  const start = x0 + ((x1 - x0) - (n - 1) * pitch) / 2
+  outline(p, ink, weight)
+  p.line(x0 * k, y * k, x1 * k, y * k)
+  for (let i = 0; i < n; i++) {
+    roller(p, k, ink, weight, fill, start + i * pitch, y + ROLLER_R, ROLLER_R, travel / ROLLER_R)
+  }
+}
+
+/**
+ * A belt between two rollers, its top run on the bench line. Cleats scroll
+ * along the top run so the belt is visibly moving even when it is empty.
+ */
+export function belt(p: p5, k: number, ink: string, weight: number, fill: string, x0: number, x1: number, travel: number, y = BENCH): void {
+  const r = ROLLER_R
+  outline(p, ink, weight)
+  p.line(x0 * k, y * k, x1 * k, y * k)
+  p.line(x0 * k, (y + 2 * r) * k, x1 * k, (y + 2 * r) * k)
+  const off = mod(travel, TICK)
+  for (let x = x0 + off; x < x1; x += TICK) {
+    if (x > x0 + r * 0.5 && x < x1 - r * 0.5) p.line(x * k, y * k, x * k, (y + 0.03) * k)
+  }
+  roller(p, k, ink, weight, fill, x0, y + r, r, travel / r)
+  roller(p, k, ink, weight, fill, x1, y + r, r, travel / r)
+}
+
+/** Lines radiating from a point: an impact, a lamp coming on, a ring. */
+export function burst(p: p5, k: number, color: string, weight: number, x: number, y: number, amount: number, inner: number, outer: number, n = 8, phase = 0): void {
+  if (amount <= 0.02) return
+  p.push()
+  p.stroke(color)
+  p.strokeWeight(weight)
+  p.noFill()
+  const reach = inner + (outer - inner) * amount
+  for (let i = 0; i < n; i++) {
+    const a = phase + (i / n) * Math.PI * 2
+    p.line((x + Math.cos(a) * inner) * k, (y + Math.sin(a) * inner) * k, (x + Math.cos(a) * reach) * k, (y + Math.sin(a) * reach) * k)
+  }
+  p.pop()
+}
+
+/**
+ * Sparks or chips thrown from a point: `n` motes on short arcs, each on its
+ * own phase, `cycles` times a loop. `dir` is which way they fly, `lift` how
+ * high. Periodic because every mote makes whole cycles.
+ */
+export function sparks(p: p5, k: number, color: string, x: number, y: number, u: number, dir: number, on: number, n = 4, cycles = 3, lift = 0.16): void {
+  if (on <= 0.02) return
+  p.push()
+  p.noStroke()
+  p.fill(color)
+  for (let j = 0; j < n; j++) {
+    const t = mod(u * cycles + j / n, 1)
+    const spread = 0.5 + (j % 3) * 0.35
+    const sx = x + dir * t * 0.22 * spread
+    const sy = y - lift * spread * t + lift * 1.6 * t * t
+    p.circle(sx * k, sy * k, k * 0.035 * (1 - t * 0.5) * on)
+  }
+  p.pop()
+}

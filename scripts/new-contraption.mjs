@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Scaffold a contraption and wire it into the registry.
+ * Scaffold a contraption and wire it into the classic catalog.
  *   npm run new -- slot-machine
+ * Cascade / workshop / circus machines are added by hand in those folders.
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'

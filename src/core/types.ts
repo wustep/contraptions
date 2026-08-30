@@ -1,6 +1,10 @@
 import type p5 from 'p5'
+import type { Lane, LaneCtx } from './lane'
 import type { Rng } from './rng'
 import type { Theme } from './themes'
+
+/** An edge of a cell. Used by cascade machines that declare inlets and outlets. */
+export type Side = 'N' | 'E' | 'S' | 'W'
 
 /** A slot in a layout, in absolute canvas coordinates. */
 export interface Cell {
@@ -103,14 +107,34 @@ export interface Contraption<S = unknown> {
    * than as a line drawn through whatever happened to be adjacent.
    */
   role?: 'source' | 'relay' | 'sink'
+  /**
+   * Which edges the token may come in and go out by when this machine is
+   * wired into a cascade. Undefined means any. Cascade staffing respects
+   * these, so a hopper is never asked to send its ball out through its own
+   * roof. Chained cascade machines are drawn upright, whatever `rotations`
+   * allows. Classic / workshop / circus ignore this.
+   */
+  inlets?: Side[]
+  outlets?: Side[]
   /** Relative likelihood of being picked. Defaults to 1. */
   weight?: number
   /** Allowed quarter-turns, as multiples of TAU/4. Defaults to [0, 1, 2, 3]. */
   rotations?: number[]
   /** Whether the instance may be mirrored on X. Defaults to true. */
   mirror?: boolean
+  /**
+   * How a token crosses this machine, for the worlds that draw tokens
+   * themselves (cascade, workshop). Undefined means the world's default: a
+   * straight roll along the catalog's floor. See `core/lane.ts`.
+   */
+  lane?(ctx: LaneCtx, state: S): Lane
   setup(ctx: SetupCtx): S
   draw(p: p5, state: S, ctx: DrawCtx): void
+  /**
+   * Drawn after the world's tokens, for parts that must sit in front of them:
+   * a tote's front wall, a cup's lip, a hoop's band. Same contract as `draw`.
+   */
+  over?(p: p5, state: S, ctx: DrawCtx): void
 }
 
 /** One placed, oriented, phase-offset copy of a contraption. */
