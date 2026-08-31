@@ -346,17 +346,16 @@ button.ok { color: #8fd8a0; border-color: #3c5a44; }
 
 .transport .time { font-family: var(--mono); font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
-.deck {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
+/* Play rides with the speeds: it keeps its own width, the segment takes the
+   rest of the line. */
+.deck { align-items: center; }
+.deck > .tbtn { flex: 0 0 auto; }
+.deck > .seg { flex: 1; }
 .tbtn { width: 44px; height: 32px; padding: 0; }
 .tbtn svg { width: 13px; height: 13px; fill: currentColor; display: block; }
-.tbtn.play { width: 64px; height: 36px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.tbtn.play { width: 52px; height: 30px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .tbtn.play:hover { background: rgba(240, 180, 41, 0.24); }
-.tbtn.play svg { width: 15px; height: 15px; }
+.tbtn.play svg { width: 14px; height: 14px; }
 
 /* ---- export --------------------------------------------------------- */
 
