@@ -72,8 +72,6 @@ function icon(paths: string[]): SVGSVGElement {
 const ICON = {
   play: ['M8 5l11 7-11 7z'],
   pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
-  back: ['M7 5h2.2v14H7z', 'M18 5l-7.5 7L18 19z'],
-  fwd: ['M14.8 5H17v14h-2.2z', 'M6 5l7.5 7L6 19z'],
 }
 
 /** Mini diagrams for the layout picker, one rect list per layout name. */
@@ -381,17 +379,14 @@ export function createPanel(
     handlers.onScrub(Number(scrub.value) / 1000)
   })
   guardWheel(scrub)
-  const back = el('button', { class: 'tbtn', title: 'Back a beat — 1/8 loop (shift+←)', 'aria-label': 'Back one beat' }, [icon(ICON.back)])
-  back.addEventListener('click', () => handlers.onBeat(-1))
   const play = el('button', { class: 'tbtn play', title: 'Play / pause (P)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
-  const fwd = el('button', { class: 'tbtn', title: 'Forward a beat — 1/8 loop (shift+→)', 'aria-label': 'Forward one beat' }, [icon(ICON.fwd)])
-  fwd.addEventListener('click', () => handlers.onBeat(1))
   const speedSeg = segmented(SPEEDS, (v) => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`), (v) => handlers.onView({ speed: v }))
+  // Play sits with the speeds: one row for "is it running and how fast".
+  // Stepping a beat stays on shift+← / shift+→.
   transport.append(
     scrub,
-    el('div', { class: 'deck' }, [back, play, fwd]),
-    speedSeg.node,
+    el('div', { class: 'row deck' }, [play, speedSeg.node]),
   )
 
   // Export
