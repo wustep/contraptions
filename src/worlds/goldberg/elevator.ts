@@ -128,6 +128,15 @@ export function liftFrame(p: p5, k: number, ink: string, weight: number, sheaveY
 }
 
 /**
+ * A middle cell of a shaft deeper than two cells: guides and ties straight
+ * through, nothing else. The car passes; the frame is all this cell owns.
+ */
+export function shaftFrame(p: p5, k: number, ink: string, weight: number): void {
+  guides(p, k, ink, weight, -0.5, 0.5)
+  ties(p, k, ink, weight, -0.5, 0.5)
+}
+
+/**
  * The bottom cell's static half: guides down to the pit and the buffers the
  * car lands on. They sit clear of the car's floor slab so an empty pit still
  * reads as a pit.
@@ -192,6 +201,8 @@ export function cable(p: p5, k: number, ink: string, weight: number, fromY: numb
  * counterweight, the spinning sheave, the car. `travel` is in cells below the
  * top floor, so the car straddles the seam without any clipping — the overlay
  * is not confined to a cell, which is the whole point of drawing it here.
+ * `floors` is the shaft's depth in cells: the counterweight hangs that far
+ * down when the car is at the top, and rises as the car descends.
  */
 export function carRig(
   p: p5,
@@ -199,11 +210,12 @@ export function carRig(
   ink: string,
   weight: number,
   color: string,
-  opts: { floorY: number; sheaveY: number; travel: number; seat: number },
+  opts: { floorY: number; sheaveY: number; travel: number; seat: number; floors?: number },
 ): void {
   const { floorY, sheaveY, travel, seat } = opts
+  const floors = opts.floors ?? 1
   const y = floorY + travel
-  const cw = floorY + (1 - travel) - CW_RISE
+  const cw = floorY + (floors - travel) - CW_RISE
   cable(p, k, ink, weight, sheaveY, y + seat - CAR_H)
   cable(p, k, ink, weight, sheaveY, cw, CW_X)
   counterweight(p, k, ink, weight, color, cw)

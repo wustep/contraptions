@@ -43,7 +43,21 @@ import { filteredPool, isUnit } from './staff'
  * it is facing.
  */
 
-export type CellRole = 'feeder' | 'station' | 'filler' | 'lift' | 'well' | 'sink'
+export type CellRole =
+  | 'feeder'
+  | 'station'
+  | 'filler'
+  | 'lift'
+  | 'well'
+  | 'sink'
+  /** A middle cell of an elevator deeper than two cells: the car passes through. */
+  | 'shaft'
+  /** The top of a free fall: the token rolls off a lip and drops out the bottom. */
+  | 'chute'
+  /** A middle cell of a fall: a tube the token drops through. */
+  | 'tube'
+  /** The bottom of a fall: a quarter-pipe turns the drop back into a roll. */
+  | 'catch'
 
 /** What a lane world is: a catalog, a pace, a floor, and a pool per role. */
 export interface WorldSpec {
@@ -68,6 +82,11 @@ export interface WorldSpec {
     filler: string
     lift: string
     well: string
+    /** The descent pieces a wandering path may ask for. A snake never does. */
+    shaft?: string
+    chute?: string
+    tube?: string
+    catch?: string
   }
   /** The state this world stamps on a cell: cascade writes `flow`, workshop `line`. */
   state(role: CellRole, ctx: LaneCtx, color: string): Record<string, unknown>
@@ -96,6 +115,9 @@ export interface LaneCell {
   cell: Cell
   /** 1 eastbound, -1 westbound. The machine draws canonically either way. */
   mirror: number
+  /** Where the token came in and leaves, canonical (pre-mirror). */
+  in: 'W' | 'N' | null
+  out: 'E' | 'S' | null
   lane: Lane
   /** Journey time at the start of this lane, in loop fractions. */
   start: number
@@ -113,7 +135,40 @@ export interface LaneStack {
   mirror: number
   /** Journey time at which a token starts boarding. The car's clock zero. */
   board: number
+  /** Cells the car descends. A snake's stacks are two cells: one floor. */
+  floors: number
 }
+
+/**
+ * One cell of a planned path, before it is staffed. `in` and `out` are
+ * canonical — after `mirror` — so a westbound cell still says W → E and the
+ * world flips it. A step that rides an elevator says where on the stack it
+ * is; the stack's top is index 0 and its floors are its depth in cells.
+ */
+export interface PathStep {
+  cell: Cell
+  in: 'W' | 'N' | null
+  out: 'E' | 'S' | null
+  mirror: 1 | -1
+  role: CellRole
+  ride?: { index: number; floors: number }
+}
+
+export interface PlanCtx {
+  cells: Cell[]
+  at(col: number, row: number): Cell | undefined
+  across: number
+  rng: Rng
+  options: Options
+}
+
+/**
+ * A plan is the shape of the machine: which cells the token visits, in what
+ * order, and what each one is for. Cascade and workshop plan a snake through
+ * every cell; a Rube Goldberg piece wanders. Staffing, lanes, phases and the
+ * drawing of everything that moves are the world's, whatever the plan.
+ */
+export type Plan = (ctx: PlanCtx) => PathStep[]
 
 /** Everything the overlay draws and the checks measure. */
 export interface LaneRun {
@@ -183,7 +238,46 @@ function snakePath(at: (col: number, row: number) => Cell | undefined, across: n
   return path
 }
 
-export function buildLaneWorld(options: Options, canvas: number, world: WorldSpec): Composition {
+/**
+ * The snake, staffed by geometry: a cell is a lift when the path turns south
+ * out of it, a well when it turned south into it. Everything else between the
+ * feeder and the sink is a through-cell, and `chains` says how many of those
+ * are working stations rather than plain conveyance. Westbound rows are
+ * mirrored, so every machine draws in its canonical hand.
+ */
+export const snakePlan: Plan = ({ at, across, rng, options }) => {
+  const path = snakePath(at, across)
+  const roles: CellRole[] = path.map((cell, i) => {
+    if (i === 0) return 'feeder'
+    if (i === path.length - 1) return 'sink'
+    const next = path[i + 1]
+    const prev = path[i - 1]
+    if (next.col === cell.col && next.row === cell.row + 1) return 'lift'
+    if (prev.col === cell.col && prev.row === cell.row - 1) return 'well'
+    return 'filler'
+  })
+  const through = roles.flatMap((r, i) => (r === 'filler' ? [i] : []))
+  const density = Math.max(0, Math.min(1, options.chains))
+  const working = rng.fork('stations').shuffle(through).slice(0, Math.round(through.length * density))
+  for (const i of working) roles[i] = 'station'
+
+  return path.map((cell, i) => {
+    const role = roles[i]
+    return {
+      cell,
+      role,
+      mirror: cell.row % 2 === 0 ? 1 : -1,
+      in: role === 'feeder' ? null : role === 'well' ? 'N' : 'W',
+      out: role === 'sink' ? null : role === 'lift' ? 'S' : 'E',
+      ride: role === 'lift' ? { index: 0, floors: 1 } : role === 'well' ? { index: 1, floors: 1 } : undefined,
+    }
+  })
+}
+
+/** Which pool a role is staffed from, and what to fall back on when a filter has emptied it. */
+type Pools = Record<CellRole, [want: Contraption<unknown>[], fallback: Contraption<unknown>[]]>
+
+export function buildLaneWorld(options: Options, canvas: number, world: WorldSpec, plan: Plan = snakePlan): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(options.seed)
   const across = clampRes(options.mode, options.res)
@@ -221,73 +315,65 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
   })
   if (!candidates.length) return bare()
 
-  const path = snakePath(at, across)
   const { names } = world
-  const named = (want: string[]) => candidates.filter((c) => want.includes(c.name))
+  const named = (want: (string | undefined)[]) => candidates.filter((c) => want.includes(c.name))
   const feeders = named(names.feeders)
   const endings = named(names.endings)
   const lifts = named([names.lift])
   const wells = named([names.well])
   const fillers = named([names.filler])
-  const special = new Set([...names.feeders, ...names.endings, names.filler, names.lift, names.well])
+  const special = new Set([
+    ...names.feeders,
+    ...names.endings,
+    names.filler,
+    names.lift,
+    names.well,
+    names.shaft,
+    names.chute,
+    names.tube,
+    names.catch,
+  ])
   const stations = candidates.filter((c) => !special.has(c.name))
+  const sources = candidates.filter((c) => c.role === 'source')
+  const sinks = candidates.filter((c) => c.role === 'sink')
+  const pools: Pools = {
+    feeder: [feeders, sources],
+    sink: [endings, sinks],
+    lift: [lifts, fillers],
+    well: [wells, fillers],
+    filler: [fillers, stations],
+    station: [stations, fillers],
+    shaft: [named([names.shaft]), fillers],
+    chute: [named([names.chute]), fillers],
+    tube: [named([names.tube]), fillers],
+    catch: [named([names.catch]), fillers],
+  }
 
   const roleRng = rng.fork('roles')
-  const pick = (want: Contraption<unknown>[], fallback: Contraption<unknown>[] = stations) => {
+  const pick = (role: CellRole) => {
+    const [want, fallback] = pools[role]
     const pool = want.length ? want : fallback.length ? fallback : candidates
     return roleRng.weighted(pool, (c) => c.weight ?? 1)
   }
 
-  // A cell is a lift when the snake turns south out of it, a well when it
-  // turned south into it. Everything else between the feeder and the sink is a
-  // through-cell, and `chains` says how many of those are working stations
-  // rather than plain conveyance.
-  const roles: CellRole[] = path.map((cell, i) => {
-    if (i === 0) return 'feeder'
-    if (i === path.length - 1) return 'sink'
-    const next = path[i + 1]
-    const prev = path[i - 1]
-    if (next.col === cell.col && next.row === cell.row + 1) return 'lift'
-    if (prev.col === cell.col && prev.row === cell.row - 1) return 'well'
-    return 'filler'
-  })
-  const through = roles.flatMap((r, i) => (r === 'filler' ? [i] : []))
-  const density = Math.max(0, Math.min(1, options.chains))
-  const working = rng.fork('stations').shuffle(through).slice(0, Math.round(through.length * density))
-  for (const i of working) roles[i] = 'station'
+  const steps = plan({ cells, at, across, rng, options })
+  if (!steps.length) return bare()
 
   const color = rng.fork('chrome').pick(theme.colors)
   const laneCells: LaneCell[] = []
   const stacks: LaneStack[] = []
   let acc = 0
 
-  for (const [i, cell] of path.entries()) {
-    const role = roles[i]
-    const mirror = cell.row % 2 === 0 ? 1 : -1
-    const contraption =
-      role === 'feeder'
-        ? pick(feeders, candidates.filter((c) => c.role === 'source'))
-        : role === 'sink'
-          ? pick(endings, candidates.filter((c) => c.role === 'sink'))
-          : role === 'lift'
-            ? pick(lifts, fillers)
-            : role === 'well'
-              ? pick(wells, fillers)
-              : role === 'filler'
-                ? pick(fillers)
-                : pick(stations, fillers)
+  for (const step of steps) {
+    const { cell, role, mirror } = step
+    const contraption = pick(role)
 
     const ctx: LaneCtx = {
-      in: role === 'feeder' ? null : role === 'well' ? 'N' : 'W',
-      out: role === 'sink' ? null : role === 'lift' ? 'S' : 'E',
+      in: step.in,
+      out: step.out,
       emit: world.emit,
       floorY: world.floorY,
-      ride:
-        role === 'lift'
-          ? { index: 0, floors: 1 }
-          : role === 'well'
-            ? { index: 1, floors: 1 }
-            : undefined,
+      ride: step.ride,
     }
 
     const cellRng = rng.fork(`cell:${cell.index}`)
@@ -320,12 +406,24 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
       period,
       fireFrame: mod(Math.round(arrival), LOOP),
     })
-    laneCells.push({ name: contraption.name, role, cell, mirror, lane, start: acc, span, arrival, state })
-    // A car is drawn for a turn whose machine actually rides one. Solo a rail
-    // onto the whole grid and the token drops down the turn on its own rather
-    // than a cage appearing around a machine that never asked for one.
-    if (role === 'lift' && lane.pieces.some((piece) => piece.ride)) {
-      stacks.push({ cell, mirror, board: acc + laneFire(lane) })
+    laneCells.push({
+      name: contraption.name,
+      role,
+      cell,
+      mirror,
+      in: step.in,
+      out: step.out,
+      lane,
+      start: acc,
+      span,
+      arrival,
+      state,
+    })
+    // A car is drawn for a stack whose top machine actually rides one. Solo a
+    // rail onto the whole grid and the token drops down the turn on its own
+    // rather than a cage appearing around a machine that never asked for one.
+    if (step.ride?.index === 0 && lane.pieces.some((piece) => piece.ride)) {
+      stacks.push({ cell, mirror, board: acc + laneFire(lane), floors: step.ride.floors })
     }
     acc += span
   }
@@ -395,7 +493,11 @@ function riderColor(run: LaneRun, u: number, stack: LaneStack): string {
     if (t > journey) continue
     const here = run.at(t)
     if (!here.ride) continue
-    if (Math.abs(here.x - stack.cell.x) < run.size * 0.8 && Math.abs(here.y - stack.cell.y) < run.size * 1.4) {
+    if (
+      Math.abs(here.x - stack.cell.x) < run.size * 0.8 &&
+      here.y > stack.cell.y - run.size * 0.6 &&
+      here.y < stack.cell.y + run.size * (stack.floors + 0.4)
+    ) {
       return colors[j] ?? colors[0]
     }
   }
@@ -409,7 +511,7 @@ function drawRun(run: LaneRun, world: WorldSpec): Overlay {
     const w = weight(size)
 
     for (const stack of run.stacks) {
-      const travel = carTravel(world.ride, mod(u - stack.board, emit))
+      const travel = carTravel(world.ride, mod(u - stack.board, emit), stack.floors)
       p.push()
       p.translate(stack.cell.x, stack.cell.y)
       p.scale(stack.mirror, 1)
@@ -418,6 +520,7 @@ function drawRun(run: LaneRun, world: WorldSpec): Overlay {
         sheaveY: world.sheaveY,
         travel,
         seat: world.tokenSize / 2,
+        floors: stack.floors,
       })
       p.pop()
     }
@@ -450,31 +553,50 @@ const SLOTS = [240, 120, 80, 60, 48, 40, 30, 24, 20]
 const nearestSlot = (frames: number) =>
   SLOTS.reduce((best, d) => (Math.abs(d - frames) < Math.abs(best - frames) ? d : best), SLOTS[0])
 
-const roleOf = (world: WorldSpec, name: string): CellRole =>
-  world.names.feeders.includes(name)
-    ? 'feeder'
-    : world.names.endings.includes(name)
-      ? 'sink'
-      : name === world.names.lift
-        ? 'lift'
-        : name === world.names.well
-          ? 'well'
-          : 'station'
+const roleOf = (world: WorldSpec, name: string): CellRole => {
+  const { names } = world
+  if (names.feeders.includes(name)) return 'feeder'
+  if (names.endings.includes(name)) return 'sink'
+  for (const role of ['lift', 'well', 'shaft', 'chute', 'tube', 'catch'] as const) {
+    if (names[role] !== undefined && name === names[role]) return role
+  }
+  return 'station'
+}
 
-const ctxFor = (world: WorldSpec, role: CellRole, emit: number): LaneCtx => ({
-  in: role === 'feeder' ? null : role === 'well' ? 'N' : 'W',
-  out: role === 'sink' ? null : role === 'lift' ? 'S' : 'E',
-  emit,
-  floorY: world.floorY,
-  ride: role === 'lift' ? { index: 0, floors: 1 } : role === 'well' ? { index: 1, floors: 1 } : undefined,
+/** Which edges a role is entered and left by, canonically. */
+const sidesOf = (role: CellRole): { in: LaneCtx['in']; out: LaneCtx['out'] } => ({
+  in: role === 'feeder' ? null : role === 'well' || role === 'shaft' || role === 'tube' || role === 'catch' ? 'N' : 'W',
+  out: role === 'sink' ? null : role === 'lift' || role === 'shaft' || role === 'chute' || role === 'tube' ? 'S' : 'E',
 })
 
-/** The loop offset that turns a lane time into this stack's car cycle time. */
-function carOffset(world: WorldSpec, lane: Lane, below: boolean): number | null {
+/**
+ * A demo context for one role. A shaft's demo is a two-floor stack's middle
+ * cell, so the sheet shows the car passing through it.
+ */
+const ctxFor = (world: WorldSpec, role: CellRole, emit: number): LaneCtx => ({
+  ...sidesOf(role),
+  emit,
+  floorY: world.floorY,
+  ride:
+    role === 'lift'
+      ? { index: 0, floors: 1 }
+      : role === 'well'
+        ? { index: 1, floors: 1 }
+        : role === 'shaft'
+          ? { index: 1, floors: 2 }
+          : undefined,
+})
+
+/**
+ * The loop offset that turns a lane time into this stack's car cycle time.
+ * `index` is the demo cell's place on its stack: the car has already come
+ * that many cells down when the token enters at the top of this cell.
+ */
+function carOffset(world: WorldSpec, lane: Lane, index: number): number | null {
   let acc = 0
   for (const piece of lane.pieces) {
     if (piece.ride) {
-      const travel0 = piece.from[1] - world.floorY + (below ? 1 : 0)
+      const travel0 = piece.from[1] - world.floorY + index
       return world.ride.board + travel0 / world.ride.v - acc
     }
     acc += pieceTime(piece)
@@ -527,7 +649,9 @@ export function laneCatalog(world: WorldSpec, theme: Theme): CatalogEntry[] {
     Object.assign(scratch, world.state(role, ctx, theme.colors[0]))
     const model = demoLane(contraption, scratch, ctx, world.rollV)
     const span = laneTime(model)
-    const total = carOffset(world, model, role === 'well') !== null ? Math.max(span, carCycle(world.ride)) : span
+    const floors = ctx.ride?.floors ?? 1
+    const total =
+      carOffset(world, model, ctx.ride?.index ?? 0) !== null ? Math.max(span, carCycle(world.ride, floors)) : span
     const frames = nearestSlot(total * LOOP)
     // Stagger the demos, or every machine on the sheet whose slot divides the
     // sample frame is caught at the same instant of its own little story.
@@ -536,7 +660,7 @@ export function laneCatalog(world: WorldSpec, theme: Theme): CatalogEntry[] {
     entry.phase = Math.round(frames * ((contraption.fireAt ?? 0) - laneFire(model) / total) + lead)
     entry.overlay = (cell, { color, state }) => {
       const lane = demoLane(contraption, state, ctx, world.rollV)
-      const offset = carOffset(world, lane, role === 'well')
+      const offset = carOffset(world, lane, ctx.ride?.index ?? 0)
       const laneSpan = laneTime(lane)
       return (p, loopFrame, { theme: sheet, weight }) => {
         const t = (mod(loopFrame + lead, frames) / frames) * total
@@ -548,8 +672,9 @@ export function laneCatalog(world: WorldSpec, theme: Theme): CatalogEntry[] {
             carRig(p, cell.size, sheet.ink, pen, color, {
               floorY: world.floorY,
               sheaveY: world.sheaveY,
-              travel: carTravel(world.ride, mod(t + offset, total)),
+              travel: carTravel(world.ride, mod(t + offset, total), floors),
               seat: world.tokenSize / 2,
+              floors,
             })
           }
           if (t <= laneSpan) {

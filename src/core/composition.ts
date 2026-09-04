@@ -5,6 +5,7 @@ import { registry as classicRegistry } from '../contraptions'
 import { registry as cascadeRegistry } from '../contraptions/cascade'
 import { registry as workshopRegistry } from '../contraptions/workshop'
 import { registry as circusRegistry } from '../contraptions/circus'
+import { registry as rubeRegistry } from '../contraptions/rube'
 import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
@@ -14,6 +15,7 @@ import { buildCircus } from '../worlds/goldberg/circus'
 import type { LaneRun } from '../worlds/goldberg/laneworld'
 import { buildWorkshop, workshopCatalog } from '../worlds/goldberg/workshop'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
+import { buildRube, rubeCatalog } from '../worlds/goldberg/rube'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
@@ -27,8 +29,9 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   cascade  — its own grid, one snake of stations, balls on world-drawn lanes
  *   workshop — the same lane world read as a shop line, parts every half loop
  *   circus   — its own grid of closed looping acts, wired as a drumroll
+ *   rube     — one wandering path from a feeder to an ending; the rest is paper
  */
-export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
+export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus' | 'rube'
 
 /** How the grid of a catalog-mode is staffed and wired. */
 export type Composer = 'classic' | 'cascade' | 'workshop' | 'circus'
@@ -38,12 +41,12 @@ export interface ModeInfo {
   label: string
   note: string
   /** Which machine list the mode draws from. */
-  catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus'
+  catalog: 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus' | 'rube'
   /**
-   * How the piece is composed. Ports, tracks, cascade, workshop and
-   * circus are their own worlds. Classic is the leftover-fill grid.
+   * How the piece is composed. Ports, tracks, cascade, workshop, circus and
+   * rube are their own worlds. Classic is the leftover-fill grid.
    */
-  composer: 'ports' | 'tracks' | Composer
+  composer: 'ports' | 'tracks' | 'rube' | Composer
   /** Panel controls this mode actually uses. Hidden otherwise. */
   dials: { layout: boolean; spans: boolean; chains: boolean; pool: boolean }
   /**
@@ -112,6 +115,15 @@ export const MODES: ModeInfo[] = [
     dials: { layout: false, spans: true, chains: true, pool: true },
     res: { min: 3, max: 12 },
   },
+  {
+    name: 'rube',
+    label: 'Rube Goldberg',
+    note: 'one machine: a ball wanders from a feeder down chutes and elevators to an ending',
+    catalog: 'rube',
+    composer: 'rube',
+    dials: { layout: false, spans: true, chains: true, pool: true },
+    res: { min: 5, max: 14 },
+  },
 ]
 
 export const modeInfo = (mode: Mode): ModeInfo => MODES.find((m) => m.name === mode) ?? MODES[0]
@@ -131,6 +143,8 @@ export function catalogFor(mode: Mode): Contraption<unknown>[] {
       return workshopRegistry
     case 'circus':
       return circusRegistry
+    case 'rube':
+      return rubeRegistry
     case 'classic':
       return classicRegistry
     default:
@@ -314,7 +328,9 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
             ? cascadeCatalog(options.theme)
             : options.mode === 'workshop'
               ? workshopCatalog(options.theme)
-              : gridCatalog(catalogFor(options.mode))
+              : options.mode === 'rube'
+                ? rubeCatalog(options.theme)
+                : gridCatalog(catalogFor(options.mode))
     return buildCatalog(options, canvas, entries, info.label)
   }
   if (options.mode === 'ports') return buildPorts(options, canvas)
@@ -322,6 +338,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   if (options.mode === 'cascade') return buildCascade(options, canvas)
   if (options.mode === 'workshop') return buildWorkshop(options, canvas)
   if (options.mode === 'circus') return buildCircus(options, canvas)
+  if (options.mode === 'rube') return buildRube(options, canvas)
   return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
 }
 

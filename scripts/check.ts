@@ -25,6 +25,7 @@ import { CASCADE } from '../src/worlds/goldberg/cascade'
 import { carCycle } from '../src/worlds/goldberg/elevator'
 import type { LaneCell } from '../src/worlds/goldberg/laneworld'
 import { WORKSHOP } from '../src/worlds/goldberg/workshop'
+import { MAX_DROP, RUBE } from '../src/worlds/goldberg/rube'
 import { tracksCatalog } from '../src/worlds/tracks/build'
 import { reactors } from '../src/worlds/tracks/reactors'
 import { drawTrack, type Kind } from '../src/worlds/tracks/track'
@@ -78,7 +79,7 @@ function checkRegistry(label: string, list: Contraption<unknown>[]): void {
 }
 
 checkRegistry('classic', registry)
-for (const mode of ['cascade', 'workshop', 'circus'] as const) {
+for (const mode of ['cascade', 'workshop', 'circus', 'rube'] as const) {
   checkRegistry(mode, catalogFor(mode))
 }
 
@@ -242,7 +243,7 @@ check('ports catalog lists every port machine', portsCatalog().length === portMa
 // the way the tracks sheet runs a ball through every track shape. A machine
 // that has not been converted yet is listed without one, because it is still
 // drawing its own and two would be worse than none.
-for (const mode of ['cascade', 'workshop'] as const) {
+for (const mode of ['cascade', 'workshop', 'rube'] as const) {
   const sheet = build({ ...defaultOptions, seed: 'sheet', mode, catalog: true }, 900)
   const laned = catalogFor(mode).filter((c) => c.lane && isSingle(c))
   check(
@@ -254,7 +255,7 @@ for (const mode of ['cascade', 'workshop'] as const) {
 }
 
 console.log('\ngrid modes')
-for (const mode of ['cascade', 'workshop', 'circus'] as const) {
+for (const mode of ['cascade', 'workshop', 'circus', 'rube'] as const) {
   const { min, max } = modeInfo(mode).res
   // Past the top of the range as well: the dial is clamped, not obeyed.
   for (const res of [min, Math.round((min + max) / 2), max, max + 8]) {
@@ -650,6 +651,231 @@ for (const mode of ['cascade', 'workshop'] as const) {
   check(`${mode}: solo keeps the path joined`, !!one.lanes && one.lanes.journey > 0)
 }
 
+// ------------------------------------------------------------------ rube ---
+/**
+ * Rube Goldberg is the lane world with a wandering plan: one path from a
+ * feeder on the top row to an ending on the bottom, going east, west or down
+ * and never up, by elevator or by free fall, one to MAX_DROP floors at a
+ * time. Cells off the path stay paper. The path is the whole machine, so the
+ * things worth checking are that every machine is on it, that it is one
+ * unbroken run of neighbours, that its descents are the pieces they claim to
+ * be, and that the seed and the two dials actually change its shape.
+ */
+console.log('\nrube')
+{
+  const world = RUBE
+  const fails: Record<string, string[]> = {}
+  const fail = (prop: string, detail: string) => (fails[prop] ??= []).push(detail)
+  const RUBE_PROPS = [
+    'every machine is on the path, and the path is one run of neighbours',
+    'the path never goes up and never visits a cell twice',
+    'lanes meet exactly at every seam',
+    'the joined path never leaves the art frame',
+    'the joined path never jumps',
+    'every phase lands its machine on the token',
+    'descents are lift, shaft, well or chute, tube, catch — straight down, at most MAX_DROP',
+    'every elevator gets one car, at one speed, for its whole depth',
+    'the token count is the journey over the gap',
+    'it rebuilds identically from its seed',
+    'every cell stands upright, mirrored by its run',
+    'the path starts with a feeder on the top row and ends with an ending on the bottom',
+  ]
+  const lifts = new Set([world.names.lift, world.names.shaft, world.names.well])
+  const falls = new Set([world.names.chute, world.names.tube, world.names.catch])
+
+  check(
+    'rube: a car cycle at the deepest drop fits between two balls',
+    carCycle(world.ride, MAX_DROP) < world.emit,
+    `${carCycle(world.ride, MAX_DROP).toFixed(3)} of ${world.emit}`,
+  )
+  check('rube: the catalog carries the descent pieces', [...lifts, ...falls].every((n) => catalogFor('rube').some((c) => c.name === n)))
+
+  let cars = 0
+  let drops = 0
+  const shapes = new Set<string>()
+  for (const res of [5, 8, 14]) {
+    for (const seed of GOLDBERG_SEEDS) {
+      for (const [spans, chains] of [[0, 0.5], [0.5, 1], [1, 0]] as const) {
+        const options = { ...defaultOptions, seed, mode: 'rube' as const, res, spans, chains }
+        const comp = build(options, 900)
+        const label = `${seed}@${res}/${spans}/${chains}`
+        const run = comp.lanes
+        if (!run) {
+          fail(RUBE_PROPS[0], `${label}: no lanes`)
+          continue
+        }
+        const across = clampRes('rube', res)
+        const size = run.size
+        if (res === 8 && spans === 0.5) shapes.add(run.cells.map((lc) => `${lc.cell.col}:${lc.cell.row}`).join(' '))
+
+        // Every instance is a cell of the path and the path is one run.
+        const onPath = new Set(run.cells.map((lc) => lc.cell))
+        if (comp.instances.length !== run.cells.length || comp.instances.some((i) => !onPath.has(i.cell))) {
+          fail(RUBE_PROPS[0], `${label}: ${comp.instances.length} machines, ${run.cells.length} on the path`)
+        }
+        for (let i = 1; i < run.cells.length; i++) {
+          const a = run.cells[i - 1].cell
+          const b = run.cells[i].cell
+          if (Math.abs(Math.hypot(b.x - a.x, b.y - a.y) - a.size) > 1) fail(RUBE_PROPS[0], `${label}: ${a.col},${a.row} to ${b.col},${b.row}`)
+          if (b.row < a.row) fail(RUBE_PROPS[1], `${label}: up from ${a.col},${a.row}`)
+        }
+        const visited = new Set(run.cells.map((lc) => `${lc.cell.col}:${lc.cell.row}`))
+        if (visited.size !== run.cells.length) fail(RUBE_PROPS[1], `${label}: a cell twice`)
+
+        for (const lc of run.cells) {
+          for (let i = 1; i < lc.lane.pieces.length; i++) {
+            const prev = lc.lane.pieces[i - 1]
+            const tail = prev.hold !== undefined ? prev.from : prev.to
+            const head = lc.lane.pieces[i].from
+            if (Math.hypot(tail[0] - head[0], tail[1] - head[1]) > 1e-6) fail(RUBE_PROPS[2], `${label}: ${lc.name} piece ${i}`)
+          }
+        }
+        for (let i = 1; i < run.cells.length; i++) {
+          const a = laneEnds(run.cells[i - 1], size).to
+          const b = laneEnds(run.cells[i], size).from
+          if (Math.hypot(a[0] - b[0], a[1] - b[1]) > 1e-6) fail(RUBE_PROPS[2], `${label}: ${run.cells[i - 1].name} to ${run.cells[i].name}`)
+        }
+
+        const r = (world.tokenSize / 2) * size
+        const [x0, y0, x1, y1] = run.frame
+        let last: { x: number; y: number } | null = null
+        let jumped = 0
+        const samples = Math.max(2000, Math.ceil(run.journey / 0.035))
+        for (let s = 0; s <= samples; s++) {
+          const at = run.at((s / samples) * run.journey)
+          if (at.x - r < x0 - 0.5 || at.x + r > x1 + 0.5 || at.y - r < y0 - 0.5 || at.y + r > y1 + 0.5) {
+            fail(RUBE_PROPS[3], `${label}: ${Math.round(at.x)},${Math.round(at.y)} outside ${x0}..${x1}`)
+            break
+          }
+          if (last) jumped = Math.max(jumped, Math.hypot(at.x - last.x, at.y - last.y))
+          last = at
+        }
+        if (jumped > size * 0.5) fail(RUBE_PROPS[4], `${label}: ${jumped.toFixed(1)}px step`)
+
+        const instAt = new Map(comp.instances.map((i) => [i.cell, i]))
+        for (const lc of run.cells) {
+          const inst = instAt.get(lc.cell)
+          if (!inst) continue
+          const u = mod(lc.arrival + inst.phase, inst.period) / inst.period
+          const want = inst.contraption.fireAt ?? 0
+          const off = Math.abs(u - want)
+          if (Math.min(off, 1 - off) > 1 / inst.period) fail(RUBE_PROPS[5], `${label}: ${lc.name} at ${u.toFixed(3)} wants ${want}`)
+        }
+
+        // Descents: from the cell that turns south to the cell that turns
+        // back, one column, consecutive rows, one family of pieces.
+        let elevators = 0
+        for (let i = 0; i < run.cells.length; i++) {
+          if (run.cells[i].out !== 'S') continue
+          const top = run.cells[i]
+          const chain = [top]
+          let j = i + 1
+          while (j < run.cells.length && run.cells[j].in === 'N') {
+            chain.push(run.cells[j])
+            if (run.cells[j].out !== 'S') break
+            j++
+          }
+          const bottom = chain[chain.length - 1]
+          const depth = chain.length - 1
+          if (bottom.out === 'S' || depth < 1) fail(RUBE_PROPS[6], `${label}: descent at ${top.cell.col},${top.cell.row} never lands`)
+          if (depth > MAX_DROP) fail(RUBE_PROPS[6], `${label}: ${depth} floors`)
+          for (let k = 1; k < chain.length; k++) {
+            if (chain[k].cell.col !== top.cell.col || chain[k].cell.row !== chain[k - 1].cell.row + 1) {
+              fail(RUBE_PROPS[6], `${label}: descent at ${top.cell.col},${top.cell.row} is not straight down`)
+            }
+          }
+          const family = lifts.has(top.name) ? lifts : falls.has(top.name) ? falls : null
+          const want = family === lifts ? [world.names.lift, world.names.shaft, world.names.well] : [world.names.chute, world.names.tube, world.names.catch]
+          const names = chain.map((_lc, k) => (k === 0 ? want[0] : k === chain.length - 1 ? want[2] : want[1]))
+          if (!family || chain.some((lc, k) => lc.name !== names[k])) {
+            fail(RUBE_PROPS[6], `${label}: ${chain.map((lc) => lc.name).join(' → ')}`)
+          }
+          if (family === lifts) {
+            elevators++
+            const stack = run.stacks.find((st) => st.cell === top.cell)
+            if (!stack) fail(RUBE_PROPS[7], `${label}: no car at ${top.cell.col},${top.cell.row}`)
+            else if (stack.floors !== depth) fail(RUBE_PROPS[7], `${label}: car for ${stack.floors} floors on a ${depth} drop`)
+            const speeds = chain.flatMap((lc) => lc.lane.pieces.filter((pc) => pc.ride).map((pc) => pc.v))
+            if (speeds.length < chain.length || speeds.some((v) => Math.abs(v - speeds[0]) > 1e-9)) fail(RUBE_PROPS[7], `${label}: ${speeds.join(',')}`)
+          }
+          // Skip past the chain so a descent is counted once.
+          i = j - 1
+        }
+        if (run.stacks.length !== elevators) fail(RUBE_PROPS[7], `${label}: ${run.stacks.length} cars for ${elevators} elevators`)
+        cars += elevators
+        drops += run.cells.filter((lc) => lc.name === world.names.chute).length
+        for (const lc of run.cells) {
+          const shaft = lifts.has(lc.name) || falls.has(lc.name)
+          const vertical = lc.in === 'N' || lc.out === 'S'
+          if (shaft !== vertical) fail(RUBE_PROPS[6], `${label}: ${lc.name} as ${lc.role}`)
+        }
+
+        const wantTokens = Math.max(1, Math.ceil(run.journey / run.emit))
+        if (run.tokens !== wantTokens || run.tokens < 1) fail(RUBE_PROPS[8], `${label}: ${run.tokens} of ${wantTokens}`)
+
+        if (fingerprint(comp) !== fingerprint(build(options, 900))) fail(RUBE_PROPS[9], label)
+
+        for (let i = 0; i < run.cells.length; i++) {
+          const lc = run.cells[i]
+          const inst = instAt.get(lc.cell)
+          if (inst && inst.angle !== 0) fail(RUBE_PROPS[10], `${label}: ${lc.name} turned`)
+          const next = run.cells[i + 1]
+          if (lc.out === 'E' && next && next.cell.col - lc.cell.col !== lc.mirror) {
+            fail(RUBE_PROPS[10], `${label}: ${lc.name} faces the wrong way`)
+          }
+        }
+
+        const head = run.cells[0]
+        const tail = run.cells[run.cells.length - 1]
+        if (head.role !== 'feeder' || !world.names.feeders.includes(head.name) || head.cell.row !== 0) {
+          fail(RUBE_PROPS[11], `${label}: starts with ${head.name} on row ${head.cell.row}`)
+        }
+        if (tail.role !== 'sink' || !world.names.endings.includes(tail.name) || tail.cell.row !== across - 1) {
+          fail(RUBE_PROPS[11], `${label}: ends with ${tail.name} on row ${tail.cell.row}`)
+        }
+      }
+    }
+  }
+  for (const prop of RUBE_PROPS) check(`rube: ${prop}`, !fails[prop], (fails[prop] ?? []).slice(0, 2).join(' | '))
+  check('rube: both elevators and falls get built', cars > 0 && drops > 0, `${cars} cars, ${drops} chutes`)
+  check('rube: seeds change the shape of the machine', shapes.size === GOLDBERG_SEEDS.length, `${shapes.size} shapes`)
+
+  // Wander: at 0 the path is a snake with a start; at 1 it strays and the
+  // paper shows. Stations: none of the path, all of it.
+  const at = (spans: number, chains = 0.5, seed = 'first-look', res = 9) =>
+    build({ ...defaultOptions, seed, mode: 'rube', res, spans, chains }, 900)
+  for (const seed of GOLDBERG_SEEDS) {
+    const snake = at(0, 0.5, seed)
+    const strayed = at(1, 0.5, seed)
+    check(
+      `rube ${seed}: wander 0 covers the grid`,
+      snake.instances.length >= 81 - Math.floor(9 * 0.4),
+      `${snake.instances.length} of 81`,
+    )
+    check(
+      `rube ${seed}: wander 0 drops one floor at a time`,
+      snake.lanes!.stacks.every((st) => st.floors === 1) && !snake.used.includes('tube') && !snake.used.includes('shaft'),
+    )
+    check(
+      `rube ${seed}: wander 1 leaves paper`,
+      strayed.instances.length < snake.instances.length,
+      `${strayed.instances.length} vs ${snake.instances.length}`,
+    )
+  }
+  const filler = (c: ReturnType<typeof build>) => c.instances.filter((i) => i.contraption.name === world.names.filler).length
+  const stations = (c: ReturnType<typeof build>) =>
+    c.instances.filter((i) => i.contraption.role !== undefined && i.contraption.name !== world.names.filler && !lifts.has(i.contraption.name) && !falls.has(i.contraption.name)).length
+  check('rube: chains 0 is all rail between the turns', filler(at(0.5, 0)) > 0 && stations(at(0.5, 0)) === 2, `${filler(at(0.5, 0))} rail, ${stations(at(0.5, 0))} machines`)
+  check('rube: chains 1 leaves no rail', filler(at(0.5, 1)) === 0, `${filler(at(0.5, 1))} left`)
+  check('rube: the conduit stays hidden', at(0.5).showWires === false && at(0.5).wires.length === 0)
+  check('rube: off-path cells stay paper', at(0.5).cells.length === 81 && at(0.5).instances.length < 81)
+
+  const one = build({ ...defaultOptions, seed: 'first-look', mode: 'rube', res: 6, solo: world.names.filler }, 900)
+  check('rube: solo still builds one path', !!one.lanes && one.lanes.cells.length === one.instances.length && one.instances.length > 0)
+  check('rube: solo keeps the path joined', !!one.lanes && one.lanes.journey > 0)
+}
+// -------------------------------------------------------------- end rube --
+
 console.log('\ncatalog')
 const catalog = build({ ...defaultOptions, seed: 'catalog', catalog: true }, 900)
 check('shows every machine', catalog.instances.length === registry.length)
@@ -807,6 +1033,9 @@ check('res=0 clamps to the mode minimum', parseOptions('?res=0').res === modeInf
 check('res=99 clamps to the mode maximum', parseOptions('?res=99').res === modeInfo('classic').res.max)
 check('res is integerized', parseOptions('?res=12.7').res === 13)
 check('circus res=99 clamps to circus max', parseOptions('?mode=circus&res=99').res === modeInfo('circus').res.max)
+check('mode=rube parses', parseOptions('?mode=rube&seed=s').mode === 'rube')
+check('rube res=99 clamps to rube max', parseOptions('?mode=rube&res=99').res === modeInfo('rube').res.max)
+check('rube serializes its mode', new URLSearchParams(serializeOptions({ ...seeded, mode: 'rube' })).get('mode') === 'rube')
 check('stroke clamps to the slider floor', parseOptions('?stroke=0').stroke === 0.4)
 check('spans clamp to the slider ceiling', parseOptions('?spans=9').spans === 3)
 check('build clamps res=0', build({ ...defaultOptions, seed: 'z', res: 0 }, 900).options.res === modeInfo('classic').res.min)
