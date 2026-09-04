@@ -236,17 +236,26 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
 
   instance = new p5(sketch)
 
+  /** Paint one frame when the loop is stopped; a no-op while it is running. */
+  const paintIfIdle = () => {
+    if (paused) instance?.redraw()
+  }
+
   return {
     setComposition(next) {
       comp = next
+      paintIfIdle()
     },
     resize(next) {
       edge = next
       instance?.resizeCanvas(next, next)
       instance?.pixelDensity(density())
+      paintIfIdle()
     },
     setPaused(next) {
       paused = next
+      if (next) instance?.noLoop()
+      else instance?.loop()
     },
     paused: () => paused,
     setSpeed(next) {
@@ -254,10 +263,12 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
     },
     setGrid(next) {
       grid = next
+      paintIfIdle()
     },
     progress: () => mod(frame, comp.loop) / comp.loop,
     setProgress(u) {
       frame = u * comp.loop
+      paintIfIdle()
     },
     savePng(filename, scale = 1) {
       if (!instance) return
@@ -270,10 +281,10 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       // snapshots the bitmap synchronously at call time — only the PNG
       // encoding is async — so the canvas can be restored immediately.
       paused = true
-      if (scale !== 1) {
-        instance.pixelDensity(before * scale)
-        instance.redraw()
-      }
+      if (scale !== 1) instance.pixelDensity(before * scale)
+      // noLoop leaves the last frame on the canvas; still redraw so a
+      // paused capture (or a density change) is painted, not stale.
+      if (scale !== 1 || wasPaused) instance.redraw()
       el.toBlob((blob) => {
         if (!blob) return
         // A data: anchor is silently dropped by Chromium once the URL grows
