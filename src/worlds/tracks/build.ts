@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { ART_INSET } from '../../core/constants'
+import { ART_INSET, TRACKS_LOOP } from '../../core/constants'
 import { solid } from '../../core/draw'
 import { mod } from '../../core/ease'
 import { layoutByName } from '../../core/layouts'
@@ -46,8 +46,6 @@ import {
  *  - Causality needs contact. Reactors reach a feeler into the track and are
  *    knocked by the ball, rather than being told by a phase that it passed.
  */
-export const TRACKS_LOOP = 720
-
 interface Region {
   c0: number
   r0: number

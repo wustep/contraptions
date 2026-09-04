@@ -198,6 +198,25 @@ export const defaultOptions: Options = {
   chains: 0.5,
 }
 
+/**
+ * Slider limits are UI-only. Anything that accepts options — the URL, a
+ * programmatic build — has to enforce the same ranges, or `?res=0` and
+ * out-of-range stroke/spans/chains can walk off the map. `res` uses the
+ * mode's own range via `clampRes`.
+ */
+const clamp = (value: number, min: number, max: number, fallback: number): number =>
+  Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback
+
+export function sanitizeOptions(options: Options): Options {
+  return {
+    ...options,
+    res: clampRes(options.mode, options.res),
+    stroke: clamp(options.stroke, 0.4, 2.4, defaultOptions.stroke),
+    spans: clamp(options.spans, 0, 3, defaultOptions.spans),
+    chains: clamp(options.chains, 0, 3, defaultOptions.chains),
+  }
+}
+
 export interface Caption {
   x: number
   /** Baseline of the name. The shelf rule sits just above it. */
@@ -281,6 +300,7 @@ const gridCatalog = (catalog: Contraption<unknown>[]): CatalogEntry[] =>
   })
 
 export function build(options: Options, canvas: number = CANVAS): Composition {
+  options = sanitizeOptions(options)
   const info = modeInfo(options.mode)
   if (options.catalog) {
     // The lane worlds show each machine with a token running through it, the

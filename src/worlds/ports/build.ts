@@ -1,4 +1,4 @@
-import { ART_INSET } from '../../core/constants'
+import { ART_INSET, LOOP } from '../../core/constants'
 import { layoutByName } from '../../core/layouts'
 import { makeRng, type Rng } from '../../core/rng'
 import { themeByName } from '../../core/themes'
@@ -22,8 +22,6 @@ import type { Link, Port, PortMachine, Side } from './types'
  * neighbour expects it. A shaft train shares one phase and one drive function
  * down its whole length, with the spin alternating at each mesh.
  */
-export const PORTS_LOOP = 240
-
 const DELTA: Record<Side, [number, number]> = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] }
 const OPPOSITE: Record<Side, Side> = { N: 'S', S: 'N', E: 'W', W: 'E' }
 
@@ -273,7 +271,7 @@ export function buildPorts(options: Options, canvas: number): Composition {
     state.link = link
 
     const tIn = node.inPort ? resolveT(node.inPort.port, state) : 0
-    const phase = mod(Math.round(tIn * PORTS_LOOP - arrival), PORTS_LOOP)
+    const phase = mod(Math.round(tIn * LOOP - arrival), LOOP)
     instances.push({
       contraption: asContraption(machine),
       state,
@@ -281,19 +279,19 @@ export function buildPorts(options: Options, canvas: number): Composition {
       angle: 0,
       mirror: node.variant.mirror ? -1 : 1,
       phase,
-      period: PORTS_LOOP,
-      fireFrame: mod(Math.round(arrival), PORTS_LOOP),
+      period: LOOP,
+      fireFrame: mod(Math.round(arrival), LOOP),
     })
 
     for (const child of node.children) {
       const tOut = resolveT(child.out.port, state)
-      realize(child.node, arrival + (tOut - tIn) * PORTS_LOOP, link, chainBall, r)
+      realize(child.node, arrival + (tOut - tIn) * LOOP, link, chainBall, r)
     }
   }
 
   const timeRng = rng.fork('time')
   for (const root of roots) {
-    realize(root, timeRng.int(0, PORTS_LOOP), null, timeRng.pick(theme.colors), timeRng.fork(`chain:${root.anchor.index}`))
+    realize(root, timeRng.int(0, LOOP), null, timeRng.pick(theme.colors), timeRng.fork(`chain:${root.anchor.index}`))
   }
 
   return {
@@ -301,7 +299,7 @@ export function buildPorts(options: Options, canvas: number): Composition {
     theme,
     cells,
     instances,
-    loop: PORTS_LOOP,
+    loop: LOOP,
     used: [...new Set(instances.map((i) => i.contraption.name))].sort(),
     captions: [],
     header: null,
@@ -327,7 +325,7 @@ export function portsCatalog(): CatalogEntry[] {
       contraption: asContraption(machine),
       label: machine.label,
       sub,
-      period: PORTS_LOOP / 2,
+      period: LOOP / 2,
       state: (state, { color }) => {
         const inPort = machine.ins[0] ?? null
         const shaft = machine.driver ?? (inPort?.kind === 'shaft' ? STEADY : null)
