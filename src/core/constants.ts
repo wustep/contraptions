@@ -13,6 +13,14 @@ export const LOOP = 240
 export const FPS = 60
 
 /**
+ * Longest WebM we will encode. Tracks is 720 frames — exactly 12s at FPS —
+ * and that is the ceiling: a longer period must not become a longer file.
+ * Scale is not applied (current canvas size only), so a tracks piece stays
+ * a 12s loop of what you see, not a 4K 12s monster.
+ */
+export const LOOP_EXPORT_MAX_SECONDS = 12
+
+/**
  * Fallback canvas edge in CSS pixels. The live canvas is sized to exactly fill
  * its container instead, so it never gets resampled by CSS — see `measure()` in
  * main.ts. This is the size used for headless builds and as a floor.
