@@ -9,6 +9,13 @@
  */
 export const LOOP = 240
 
+/**
+ * Tracks mode. A carved circuit is longer than a single classic cell-loop, so
+ * the world runs three of them (12s at 60fps). Keep this as `3 * LOOP`; do
+ * not pick a new number independently of LOOP.
+ */
+export const TRACKS_LOOP = 3 * LOOP
+
 /** Nominal frame rate. Purely for reporting loop length in seconds. */
 export const FPS = 60
 

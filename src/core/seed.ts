@@ -1,4 +1,4 @@
-import { MODES, defaultOptions, modeInfo, type Options } from './composition'
+import { MODES, defaultOptions, modeInfo, sanitizeOptions, type Options } from './composition'
 import { layouts } from './layouts'
 import { themes } from './themes'
 
@@ -56,9 +56,13 @@ export function rollOptions(current: Options): Options {
 
 const NUMERIC: (keyof Options)[] = ['res', 'stroke', 'spans', 'chains']
 
-/** Read options out of the URL, falling back to defaults. */
-export function readUrl(): Options {
-  const params = new URLSearchParams(location.search)
+/**
+ * Parse a query string into options. Pure: no `location`, so the check
+ * script can import it. Unknown keys are ignored; an invalid mode falls
+ * back to classic; numbers are clamped to the same ranges as the sliders.
+ */
+export function parseOptions(search: string): Options {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
   const options: Options = { ...defaultOptions, seed: randomSeed() }
   for (const key of Object.keys(defaultOptions) as (keyof Options)[]) {
     const raw = params.get(key)
@@ -77,17 +81,30 @@ export function readUrl(): Options {
       ;(options[key] as string) = raw
     }
   }
-  return options
+  return sanitizeOptions(options)
 }
 
-/** Mirror options into the address bar so any state is a shareable link. */
-export function writeUrl(options: Options): void {
+/**
+ * Serialize options to a query string, omitting defaults (except seed) so a
+ * freshly rolled piece is `?seed=…` rather than a wall of dials.
+ */
+export function serializeOptions(options: Options): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(options)) {
     if (value === null || value === '' || value === false) continue
     if (value === defaultOptions[key as keyof Options] && key !== 'seed') continue
     params.set(key, value === true ? '1' : String(value))
   }
-  const query = params.toString()
+  return params.toString()
+}
+
+/** Read options out of the URL, falling back to defaults. */
+export function readUrl(): Options {
+  return parseOptions(location.search)
+}
+
+/** Mirror options into the address bar so any state is a shareable link. */
+export function writeUrl(options: Options): void {
+  const query = serializeOptions(options)
   history.replaceState(null, '', query ? `?${query}` : location.pathname)
 }

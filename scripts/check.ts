@@ -7,20 +7,27 @@
  *
  *   npm run check
  */
+import type p5 from 'p5'
 import { build, catalogFor, clampRes, defaultOptions, modeInfo, MODES } from '../src/core/composition'
 import { LOOP } from '../src/core/constants'
 import { mod } from '../src/core/ease'
 import { pendulum, swing } from '../src/core/physics'
-import { rollOptions } from '../src/core/seed'
+import { makeRng } from '../src/core/rng'
+import { parseOptions, rollOptions, serializeOptions } from '../src/core/seed'
+import { themeByName } from '../src/core/themes'
 import { registry } from '../src/contraptions'
-import type { Contraption, Instance } from '../src/core/types'
+import type { Contraption, DrawCtx, Instance } from '../src/core/types'
 import { LINK_DELAY } from '../src/core/wiring'
-import { portMachines } from '../src/worlds/ports/machines'
+import { portsCatalog } from '../src/worlds/ports/build'
+import { portMachines, STEADY } from '../src/worlds/ports/machines'
 import type { Link } from '../src/worlds/ports/types'
 import { CASCADE } from '../src/worlds/goldberg/cascade'
 import { carCycle } from '../src/worlds/goldberg/elevator'
 import type { LaneCell } from '../src/worlds/goldberg/laneworld'
 import { WORKSHOP } from '../src/worlds/goldberg/workshop'
+import { tracksCatalog } from '../src/worlds/tracks/build'
+import { reactors } from '../src/worlds/tracks/reactors'
+import { drawTrack, type Kind } from '../src/worlds/tracks/track'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -213,6 +220,23 @@ check('ports catalog differs from classic', build({ ...defaultOptions, seed: 'sh
 check('cascade catalog differs from classic', build({ ...defaultOptions, seed: 'sheet', mode: 'cascade', catalog: true }, 900).used.includes('hopper'))
 check('workshop catalog differs from circus', !build({ ...defaultOptions, seed: 'sheet', mode: 'workshop', catalog: true }, 900).used.includes('trampoline'))
 check('shared names stay in their catalog', catalogFor('cascade').some((c) => c.name === 'hopper') && catalogFor('workshop').some((c) => c.name === 'hopper'))
+check('ports catalog lists every port machine', portsCatalog().length === portMachines.length)
+{
+  const entries = tracksCatalog()
+  const kinds: Kind[] = ['run', 'landing', 'drop', 'fall', 'shaft', 'liftIn', 'liftOut']
+  const seen = new Set<string>()
+  const theme = themeByName('okazz')
+  for (const entry of entries) {
+    const state: Record<string, unknown> = {}
+    entry.state?.(state, { color: theme.colors[0], theme })
+    if (typeof state.kind === 'string') seen.add(state.kind)
+  }
+  check('tracks catalog covers the seven kinds', kinds.every((k) => seen.has(k)), [...seen].join(','))
+  check(
+    'tracks catalog covers every reactor',
+    reactors.every((r) => entries.some((e) => e.contraption.name === `demo-${r.name}`)),
+  )
+}
 
 // The lane sheets run a token through every machine that has declared a lane,
 // the way the tracks sheet runs a ball through every track shape. A machine
@@ -764,6 +788,170 @@ for (const { name: mode, res: range } of MODES) {
     rolled.every((r) => r >= range.min && r <= range.max),
     `${Math.min(...rolled)}..${Math.max(...rolled)}`,
   )
+}
+
+console.log('\nurl codec')
+const seeded = { ...defaultOptions, seed: 'amber-flywheel-812' }
+check('omits default dials', serializeOptions(seeded) === 'seed=amber-flywheel-812')
+{
+  const params = new URLSearchParams(serializeOptions({ ...seeded, catalog: true, mode: 'ports' }))
+  check('writes catalog', params.get('catalog') === '1')
+  check('writes non-default mode', params.get('mode') === 'ports')
+  check('still omits default res', params.get('res') === null)
+}
+check('invalid mode falls back to classic', parseOptions('?mode=nope&seed=s').mode === 'classic')
+for (const { name: mode } of MODES) {
+  check(`rollOptions keeps ${mode}`, rollOptions({ ...defaultOptions, mode }).mode === mode)
+}
+check('res=0 clamps to the mode minimum', parseOptions('?res=0').res === modeInfo('classic').res.min)
+check('res=99 clamps to the mode maximum', parseOptions('?res=99').res === modeInfo('classic').res.max)
+check('res is integerized', parseOptions('?res=12.7').res === 13)
+check('circus res=99 clamps to circus max', parseOptions('?mode=circus&res=99').res === modeInfo('circus').res.max)
+check('stroke clamps to the slider floor', parseOptions('?stroke=0').stroke === 0.4)
+check('spans clamp to the slider ceiling', parseOptions('?spans=9').spans === 3)
+check('build clamps res=0', build({ ...defaultOptions, seed: 'z', res: 0 }, 900).options.res === modeInfo('classic').res.min)
+check('unknown URL keys are ignored', parseOptions('?seed=s&goldberg=1&foo=bar').seed === 's')
+
+/**
+ * A no-op p5 so `draw` can run without a canvas. Machines only call drawing
+ * methods and read a couple of constants / `drawingContext` for clips.
+ */
+function stubP5(): p5 {
+  const ctx = {
+    beginPath() {},
+    rect() {},
+    arc() {},
+    clip() {},
+    letterSpacing: '0px',
+  }
+  const stub: Record<string, unknown> = {
+    CLOSE: 'close',
+    PIE: 'pie',
+    CENTER: 'center',
+    TOP: 'top',
+    LEFT: 'left',
+    RIGHT: 'right',
+    BOTTOM: 'bottom',
+    CORNER: 'corner',
+    RADIUS: 'radius',
+    ROUND: 'round',
+    SQUARE: 'square',
+    PROJECT: 'project',
+    MITER: 'miter',
+    BEVEL: 'bevel',
+    RADIANS: 'radians',
+    DEGREES: 'degrees',
+    PI: Math.PI,
+    TWO_PI: Math.PI * 2,
+    HALF_PI: Math.PI / 2,
+    QUARTER_PI: Math.PI / 4,
+    TAU: Math.PI * 2,
+    width: 900,
+    height: 900,
+    drawingContext: ctx,
+    color: () => ({ setAlpha() {} }),
+  }
+  const p = new Proxy(stub, {
+    get(target, prop) {
+      if (typeof prop === 'string' && prop in target) return target[prop]
+      return () => p
+    },
+  })
+  return p as unknown as p5
+}
+
+const snapshot = (value: unknown): string =>
+  JSON.stringify(value, (_k, v) => (typeof v === 'function' ? '[fn]' : v))
+
+const DRAW_U = [0, 0.25, 0.5, 0.75, 1 - 1e-9]
+const drawTheme = themeByName('okazz')
+const drawRng = makeRng('draw-check')
+
+function drawCtx(u: number, size: number, w: number, h: number): DrawCtx {
+  return { size, theme: drawTheme, t: u * LOOP, u, weight: 2, ink: drawTheme.ink, w, h, fired: 0 }
+}
+
+function setupOf<S>(contraption: Contraption<S>) {
+  const [cw, ch] = contraption.span ?? [1, 1]
+  const size = 60
+  const w = size * cw
+  const h = size * ch
+  return {
+    state: contraption.setup({
+      rng: drawRng.fork(contraption.name),
+      size,
+      w,
+      h,
+      theme: drawTheme,
+      cell: { x: 0, y: 0, size, w, h, col: 0, row: 0, index: 0, depth: 0 },
+      color: drawTheme.colors[0],
+    }),
+    size,
+    w,
+    h,
+  }
+}
+
+function runDraw(name: string, state: unknown, draw: (p: p5, u: number) => void): void {
+  const p = stubP5()
+  const before = snapshot(state)
+  try {
+    for (const u of DRAW_U) draw(p, u)
+  } catch (err) {
+    check(`draw ${name}`, false, err instanceof Error ? err.message : String(err))
+    return
+  }
+  check(`draw ${name}`, snapshot(state) === before)
+}
+
+console.log('\ndraw')
+for (const { name: mode } of MODES) {
+  const list = catalogFor(mode)
+  if (!list.length) continue
+  for (const contraption of list) {
+    const { state, size, w, h } = setupOf(contraption)
+    runDraw(`${mode}:${contraption.name}`, state, (p, u) => {
+      const ctx = drawCtx(u, size, w, h)
+      contraption.draw(p, state, ctx)
+      contraption.over?.(p, state, ctx)
+    })
+  }
+}
+for (const machine of portMachines) {
+  const [cw, ch] = machine.span ?? [1, 1]
+  const size = 60
+  const w = size * cw
+  const h = size * ch
+  const state = machine.setup({
+    rng: drawRng.fork(`port:${machine.name}`),
+    size,
+    w,
+    h,
+    theme: drawTheme,
+    cell: { x: 0, y: 0, size, w, h, col: 0, row: 0, index: 0, depth: 0 },
+    color: drawTheme.colors[0],
+  }) as Record<string, unknown>
+  const inPort = machine.ins[0] ?? null
+  const shaft = machine.driver ?? (inPort?.kind === 'shaft' ? STEADY : null)
+  state.link = {
+    inSide: inPort?.side ?? null,
+    outSides: machine.pickOne ? ['E'] : machine.outs.map((o) => o.side),
+    ball: drawTheme.colors[0],
+    drive: shaft?.drive ?? null,
+    spin: 1,
+    camAt: shaft?.camAt ?? 0,
+    mesh: 0,
+  }
+  runDraw(`port:${machine.name}`, state, (p, u) => machine.draw(p, state as never, drawCtx(u, size, w, h)))
+}
+const TRACK_KINDS: Kind[] = ['run', 'landing', 'drop', 'fall', 'shaft', 'liftIn', 'liftOut']
+for (const kind of TRACK_KINDS) {
+  const state = { color: drawTheme.colors[0], kind, variant: 'rail' as const }
+  runDraw(`track:${kind}`, state, (p, u) => drawTrack(p, state, 60, u, drawTheme.ink, 2))
+}
+for (const reactor of reactors) {
+  const { state, size, w, h } = setupOf(reactor)
+  runDraw(`reactor:${reactor.name}`, state, (p, u) => reactor.draw(p, state, drawCtx(u, size, w, h)))
 }
 
 console.log(failures === 0 ? '\nall checks passed\n' : `\n${failures} check(s) failed\n`)
