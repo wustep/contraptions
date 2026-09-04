@@ -28,7 +28,7 @@ export interface PanelHandlers {
   onStep(dir: number): void
   /** Jump a beat — an eighth of the loop, snapped to the beat grid. */
   onBeat(dir: number): void
-  onCopy(): void
+  onCopy(): void | Promise<void>
   /** Pixel edge of a PNG exported at `scale`, for the export readout. */
   exportSize(scale: number): number
 }
@@ -224,8 +224,32 @@ export function createPanel(
     }
   }
 
-  // Header
-  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions'])]))
+  // Header — Hide lives here so H is not a one-way trap. Peek stays a target
+  // after `#panel { display: none }`.
+  const hideBtn = el('button', {
+    type: 'button',
+    class: 'chip',
+    title: 'Hide the panel (H)',
+    'aria-label': 'Hide panel',
+  }, ['Hide', el('kbd', {}, ['H'])])
+  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), hideBtn]))
+
+  const peek = el('button', {
+    type: 'button',
+    class: 'panel-peek',
+    title: 'Show the panel (H)',
+    'aria-label': 'Show panel',
+  }, ['Panel', el('kbd', {}, ['H'])])
+  document.body.append(peek)
+
+  const togglePanel = () => {
+    const hide = !document.body.classList.contains('hide-panel')
+    document.body.classList.toggle('hide-panel', hide)
+    if (hide) peek.focus()
+    else hideBtn.focus()
+  }
+  hideBtn.addEventListener('click', togglePanel)
+  peek.addEventListener('click', togglePanel)
 
   // Seed — the one control users actually play, so it gets the hero card.
   const seedInput = el('input', {
@@ -237,19 +261,31 @@ export function createPanel(
     value: initial.seed,
   })
   seedInput.addEventListener('change', () => handlers.onChange({ seed: seedInput.value.trim() }))
+  const commitSeed = () => {
+    const next = seedInput.value.trim()
+    const current = lastComp?.options.seed ?? initial.seed
+    if (next && next !== current) handlers.onChange({ seed: next })
+  }
   const reroll = el('button', { class: 'primary' }, ['Reroll', el('kbd', {}, ['space'])])
-  reroll.addEventListener('click', () => handlers.onReroll())
+  reroll.addEventListener('click', () => {
+    commitSeed()
+    handlers.onReroll()
+  })
   const rollAll = el('button', { title: 'Roll theme, layout and every dial along with the seed (shift+space)' }, ['Roll all', el('kbd', {}, ['⇧'])])
   rollAll.addEventListener('click', () => handlers.onRollAll())
   const copy = el('button', { title: 'Copy a link to this exact composition' }, ['Copy'])
   copy.addEventListener('click', () => {
-    handlers.onCopy()
-    copy.textContent = 'Copied'
-    copy.classList.add('ok')
-    window.setTimeout(() => {
-      copy.textContent = 'Copy'
-      copy.classList.remove('ok')
-    }, 1200)
+    commitSeed()
+    void Promise.resolve(handlers.onCopy())
+      .then(() => {
+        copy.textContent = 'Copied'
+        copy.classList.add('ok')
+        window.setTimeout(() => {
+          copy.textContent = 'Copy'
+          copy.classList.remove('ok')
+        }, 1200)
+      })
+      .catch(() => {})
   })
   root.append(
     el('section', { class: 'seed-card' }, [
@@ -368,14 +404,18 @@ export function createPanel(
 
   /**
    * Hide what the current mode ignores, and retitle the dials that stay so
-   * they name what this composer actually does.
+   * they name what this composer actually does. Catalog rebuilds the piece
+   * as a labelled sheet: resolution, layout, spans, chains, tag and solo
+   * are ignored, so they leave with the empty slot. Stroke still paints.
    */
-  const showFor = (mode: Mode) => {
+  const showFor = (mode: Mode, catalogOn = false) => {
     const { dials } = modeInfo(mode)
-    layoutField.hidden = !dials.layout
-    spans.node.hidden = !dials.spans
-    chains.node.hidden = !dials.chains
-    poolRow.hidden = !dials.pool
+    const compose = !catalogOn
+    layoutField.hidden = !compose || !dials.layout
+    spans.node.hidden = !compose || !dials.spans
+    chains.node.hidden = !compose || !dials.chains
+    res.node.hidden = !compose
+    poolRow.hidden = !compose || !dials.pool
     const [spanLabel, spanHint] = SPAN_COPY[mode]
     const spanName = labelOf(spans.node)
     if (spanName) spanName.textContent = spanLabel
@@ -420,7 +460,16 @@ export function createPanel(
   exportSec.querySelector('.section-title')!.append(dims)
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
   const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
-  save.addEventListener('click', () => handlers.onSave())
+  save.addEventListener('click', () => {
+    commitSeed()
+    handlers.onSave()
+    save.classList.add('ok')
+    save.replaceChildren('Saved')
+    window.setTimeout(() => {
+      save.replaceChildren('Save PNG', el('kbd', {}, ['S']))
+      save.classList.remove('ok')
+    }, 1200)
+  })
   const saveLoop = el('button', {
     title: 'One seamless loop as WebM, at the current canvas size (capped at 12s). Scale is for PNG only.',
   }, ['Save loop'])
@@ -433,6 +482,7 @@ export function createPanel(
   }
   saveLoop.addEventListener('click', () => {
     if (saveLoop.disabled) return
+    commitSeed()
     void (async () => {
       saveLoop.disabled = true
       save.disabled = true
@@ -474,10 +524,10 @@ export function createPanel(
     sync(comp, view) {
       lastComp = comp
       lastView = view
-      seedInput.value = comp.options.seed
+      if (document.activeElement !== seedInput) seedInput.value = comp.options.seed
       modeBox.set(comp.options.mode)
       modeNote.textContent = modeInfo(comp.options.mode).note
-      showFor(comp.options.mode)
+      showFor(comp.options.mode, comp.options.catalog)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
       tagBox.setItems(tagItems(comp.options.mode), comp.options.tag ?? '')
@@ -516,7 +566,7 @@ export function createPanel(
       }
     },
     toggle() {
-      document.body.classList.toggle('hide-panel')
+      togglePanel()
     },
   }
 }

@@ -108,9 +108,7 @@ const panel = createPanel(panelRoot, options, view, {
   onScrub: (u) => engine.setProgress(u),
   onStep: step,
   onBeat: stepBeat,
-  onCopy: () => {
-    void navigator.clipboard.writeText(location.href)
-  },
+  onCopy: () => navigator.clipboard.writeText(location.href),
   exportSize: (scale) => Math.round(canvasSize * (window.devicePixelRatio || 1) * scale),
 })
 
