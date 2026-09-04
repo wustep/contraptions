@@ -1,6 +1,6 @@
 import './ui/styles.css'
 import { build, type Options } from './core/composition'
-import { MIN_CANVAS } from './core/constants'
+import { FPS, MIN_CANVAS } from './core/constants'
 import { createEngine } from './core/engine'
 import { randomSeed, readUrl, rollOptions, writeUrl } from './core/seed'
 import { createPanel } from './ui/panel'
@@ -35,7 +35,15 @@ engine.setSpeed(view.speed)
 /** Composition changes rebuild the piece and land in the URL. */
 function apply(patch: Partial<Options>) {
   options = { ...options, ...patch }
-  comp = build(options, canvasSize)
+  // Stroke is a draw-time multiplier on ink weight. Rebuilding would
+  // re-place every machine and recarve ports/tracks for a value the next
+  // frame already reads off options.
+  const keys = Object.keys(patch) as (keyof Options)[]
+  if (keys.length === 1 && keys[0] === 'stroke') {
+    comp = { ...comp, options }
+  } else {
+    comp = build(options, canvasSize)
+  }
   engine.setComposition(comp)
   writeUrl(options)
   panel.sync(comp, view)
@@ -159,8 +167,20 @@ if (import.meta.env.DEV) {
   }
 }
 
+// The scrubber is a 0–1000 range and the clock prints tenths of a second.
+// Writing both on every rAF is wasted work — especially while paused, when
+// neither value can change. Skip until the displayed digit would move.
+let lastScrub = -1
+let lastTenth = ''
 const tick = () => {
-  panel.setProgress(engine.progress())
+  const u = engine.progress()
+  const scrub = Math.round(u * 1000)
+  const tenth = (u * (comp.loop / FPS)).toFixed(1)
+  if (scrub !== lastScrub || tenth !== lastTenth) {
+    lastScrub = scrub
+    lastTenth = tenth
+    panel.setProgress(u)
+  }
   requestAnimationFrame(tick)
 }
 requestAnimationFrame(tick)
