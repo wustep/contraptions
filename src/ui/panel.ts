@@ -1,4 +1,4 @@
-import { FPS } from '../core/constants'
+import { FPS, LOOP_EXPORT_MAX_SECONDS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
 import {
@@ -21,6 +21,8 @@ export interface PanelHandlers {
   /** Roll the whole configuration — theme, layout, dials, and the seed. */
   onRollAll(): void
   onSave(): void
+  /** Encode one loop as WebM. Progress stays on the clock, never the URL. */
+  onSaveLoop(): void | Promise<void>
   onScrub(u: number): void
   /** Nudge the clock a single frame. */
   onStep(dir: number): void
@@ -419,7 +421,38 @@ export function createPanel(
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
   const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
   save.addEventListener('click', () => handlers.onSave())
-  exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save]))
+  const saveLoop = el('button', {
+    title: 'One seamless loop as WebM, at the current canvas size (capped at 12s). Scale is for PNG only.',
+  }, ['Save loop'])
+  const canWebm =
+    typeof MediaRecorder !== 'undefined' &&
+    ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].some((t) => MediaRecorder.isTypeSupported(t))
+  if (!canWebm) {
+    saveLoop.disabled = true
+    saveLoop.title = 'WebM export needs a browser that can record the canvas.'
+  }
+  saveLoop.addEventListener('click', () => {
+    if (saveLoop.disabled) return
+    void (async () => {
+      saveLoop.disabled = true
+      save.disabled = true
+      saveLoop.textContent = 'Saving…'
+      try {
+        await handlers.onSaveLoop()
+        saveLoop.textContent = 'Save loop'
+      } catch (err) {
+        console.error(err)
+        saveLoop.textContent = 'Failed'
+        window.setTimeout(() => {
+          saveLoop.textContent = 'Save loop'
+        }, 1600)
+      } finally {
+        save.disabled = false
+        if (canWebm) saveLoop.disabled = false
+      }
+    })()
+  })
+  exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save, saveLoop]))
 
 
   const credit = el('a', {
@@ -461,7 +494,11 @@ export function createPanel(
       speedSeg.set(view.speed)
       scaleSeg.set(view.exportScale)
       const edge = handlers.exportSize(view.exportScale)
-      dims.textContent = `${edge} × ${edge}px`
+      const loopSec = Math.min(comp.loop / FPS, LOOP_EXPORT_MAX_SECONDS)
+      dims.textContent = `${edge} × ${edge}px · ${loopSec.toFixed(1)}s`
+      if (canWebm) {
+        saveLoop.title = `WebM of one ${loopSec.toFixed(1)}s loop at the current canvas size. Scale is for PNG only.`
+      }
       // Last: a res carried in from another mode, or from a link, is pulled
       // into range and written back so the URL agrees with the piece. clampRes
       // is idempotent, so the rebuild this asks for settles on the next sync.
