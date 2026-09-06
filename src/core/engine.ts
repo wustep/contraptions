@@ -225,6 +225,13 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
       // One pen for the piece: see Composition.unit.
       const pen = comp.unit ? strokeWeight(comp.unit, theme, comp.options.stroke) : null
 
+      for (const underlay of comp.underlays ?? []) {
+        underlay(p, loopFrame, {
+          theme,
+          weight: (size) => pen ?? strokeWeight(size, theme, comp.options.stroke),
+        })
+      }
+
       const each = (pass: 'draw' | 'over') => {
         for (const inst of comp.instances) {
           const { cell, contraption } = inst

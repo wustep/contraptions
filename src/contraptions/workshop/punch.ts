@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, HIT, PART_Y, SHOP_PERIOD, bench, burst, pulse, rollers, workLane } from './shop'
+import { beltTravel, BENCH, HIT, PART_Y, SHOP_PERIOD, bench, burst, pulse, rollers, workLane } from './shop'
 
 /**
  * The pin comes down through the blank and out the other side, the slug it
@@ -35,8 +35,8 @@ export const punch = defineContraption({
 
     bench(p, k, ink, weight, -0.5, -0.06)
     bench(p, k, ink, weight, 0.06, 0.5)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.16, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.16, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.16, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.16, 0.5, beltTravel(s, u))
 
     // The slug falls into the tray, which hides it once it lands.
     if (slug !== null) {

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { ART_INSET, LOOP } from '../../core/constants'
 import { clampRes, type CatalogEntry, type Composition, type Options, type Overlay } from '../../core/composition'
-import { clipBox } from '../../core/draw'
+import { clipBox, outline, solid } from '../../core/draw'
 import { mod } from '../../core/ease'
 import {
   hold,
@@ -137,6 +137,8 @@ export interface LaneStack {
   board: number
   /** Cells the car descends. A snake's stacks are two cells: one floor. */
   floors: number
+  /** The car keeps its paint whether it is empty or carrying a dyed part. */
+  color: string
 }
 
 /**
@@ -178,7 +180,7 @@ export interface LaneRun {
   journey: number
   /** Tokens in flight: the journey divided by the gap between them. */
   tokens: number
-  /** Colour of each token, in emit order. The feeder randomises; nothing locks one colour. */
+  /** Repeating emission palette. Its length divides the master loop. */
   colors: string[]
   cells: LaneCell[]
   stacks: LaneStack[]
@@ -274,9 +276,6 @@ export const snakePlan: Plan = ({ at, across, rng, options }) => {
   })
 }
 
-/** Which pool a role is staffed from, and what to fall back on when a filter has emptied it. */
-type Pools = Record<CellRole, [want: Contraption<unknown>[], fallback: Contraption<unknown>[]]>
-
 export function buildLaneWorld(options: Options, canvas: number, world: WorldSpec, plan: Plan = snakePlan): Composition {
   const theme = themeByName(options.theme)
   const rng = makeRng(options.seed)
@@ -297,6 +296,7 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
   for (const cell of cells) byPos.set(`${cell.col}:${cell.row}`, cell)
   const at = (col: number, row: number) => byPos.get(`${col}:${row}`)
 
+  const available = world.catalog.filter(isUnit)
   const candidates = filteredPool(options, world.catalog).filter(isUnit)
   const instances: Instance[] = []
   const bare = (): Composition => ({
@@ -313,10 +313,12 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
     showWires: false,
     unit: size,
   })
-  if (!candidates.length) return bare()
+  if (!available.length) return bare()
 
   const { names } = world
-  const named = (want: (string | undefined)[]) => candidates.filter((c) => want.includes(c.name))
+  // Filters select the work on the line. Its feeder, receiver and transport
+  // remain real machines, even when the requested pool contains none of them.
+  const named = (want: (string | undefined)[]) => available.filter((c) => want.includes(c.name))
   const feeders = named(names.feeders)
   const endings = named(names.endings)
   const lifts = named([names.lift])
@@ -334,25 +336,25 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
     names.catch,
   ])
   const stations = candidates.filter((c) => !special.has(c.name))
-  const sources = candidates.filter((c) => c.role === 'source')
-  const sinks = candidates.filter((c) => c.role === 'sink')
-  const pools: Pools = {
-    feeder: [feeders, sources],
-    sink: [endings, sinks],
-    lift: [lifts, fillers],
-    well: [wells, fillers],
-    filler: [fillers, stations],
-    station: [stations, fillers],
-    shaft: [named([names.shaft]), fillers],
-    chute: [named([names.chute]), fillers],
-    tube: [named([names.tube]), fillers],
-    catch: [named([names.catch]), fillers],
+  const pools: Record<CellRole, Contraption<unknown>[]> = {
+    feeder: feeders,
+    sink: endings,
+    lift: lifts,
+    well: wells,
+    filler: fillers,
+    station: stations.length ? stations : fillers,
+    shaft: named([names.shaft]),
+    chute: named([names.chute]),
+    tube: named([names.tube]),
+    catch: named([names.catch]),
   }
 
   const roleRng = rng.fork('roles')
   const pick = (role: CellRole) => {
-    const [want, fallback] = pools[role]
-    const pool = want.length ? want : fallback.length ? fallback : candidates
+    const all = pools[role]
+    const preferred = all.filter((c) => candidates.includes(c))
+    const pool = preferred.length ? preferred : all
+    if (!pool.length) throw new Error(`Missing ${role} transport in ${options.mode}`)
     return roleRng.weighted(pool, (c) => c.weight ?? 1)
   }
 
@@ -394,7 +396,9 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
     const span = laneTime(lane)
     const arrival = (acc + laneFire(lane)) * LOOP
     const period = world.period
-    const phase = Math.round((contraption.fireAt ?? 0) * period - arrival)
+    const phase = (contraption.fireAt ?? 0) * period - arrival
+    // Belts use the shared drive clock; tool strokes keep their arrival phase.
+    state.drivePhase = mod(phase, period) / period
 
     instances.push({
       contraption,
@@ -404,7 +408,7 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
       mirror,
       phase: mod(phase, period),
       period,
-      fireFrame: mod(Math.round(arrival), LOOP),
+      fireFrame: mod(arrival, LOOP),
     })
     laneCells.push({
       name: contraption.name,
@@ -419,18 +423,20 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
       arrival,
       state,
     })
-    // A car is drawn for a stack whose top machine actually rides one. Solo a
-    // rail onto the whole grid and the token drops down the turn on its own
-    // rather than a cage appearing around a machine that never asked for one.
+    // Transport remains available under filters, so every planned elevator
+    // retains its guides and a world-owned car across the whole stack.
     if (step.ride?.index === 0 && lane.pieces.some((piece) => piece.ride)) {
-      stacks.push({ cell, mirror, board: acc + laneFire(lane), floors: step.ride.floors })
+      stacks.push({ cell, mirror, board: acc + laneFire(lane), floors: step.ride.floors, color })
     }
     acc += span
   }
 
   const journey = acc
   const tokens = Math.max(1, Math.ceil(journey / world.emit))
-  const colors = emitColors(rng, theme.colors, tokens)
+  // A four-second export must also close in colour. One emission per loop
+  // means one ball colour; Workshop can alternate its two emissions. A
+  // palette indexed by spatial slot instead recolours every moving token.
+  const colors = emitColors(rng, theme.colors, Math.round(1 / world.emit))
   const run: LaneRun = {
     size,
     emit: world.emit,
@@ -476,7 +482,7 @@ function emitColors(rng: Rng, palette: string[], n: number): string[] {
   return out
 }
 
-function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): TokenLook {
+export function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): TokenLook {
   const look: TokenLook = { color }
   for (const cell of run.cells) {
     if (t + 1e-6 < cell.start + laneFire(cell.lane)) break
@@ -486,36 +492,48 @@ function lookAt(run: LaneRun, world: WorldSpec, t: number, color: string): Token
   return look
 }
 
-function riderColor(run: LaneRun, u: number, stack: LaneStack): string {
-  const { emit, journey, colors } = run
-  for (let j = 0; j < run.tokens; j++) {
-    const t = mod(u, emit) + j * emit
-    if (t > journey) continue
-    const here = run.at(t)
-    if (!here.ride) continue
-    if (
-      Math.abs(here.x - stack.cell.x) < run.size * 0.8 &&
-      here.y > stack.cell.y - run.size * 0.6 &&
-      here.y < stack.cell.y + run.size * (stack.floors + 0.4)
-    ) {
-      return colors[j] ?? colors[0]
-    }
-  }
-  return colors[0]
+/** Stable emission identity, also valid before frame zero and across loops. */
+export function tokensAt(run: LaneRun, frame: number) {
+  const gap = run.emit * LOOP
+  const emission = Math.floor(frame / gap)
+  const age = mod(frame, gap) / LOOP
+  return Array.from({ length: run.tokens }, (_, j) => {
+    const id = emission - j
+    const t = age + j * run.emit
+    return { id, t, color: run.colors[mod(id, run.colors.length)], ...run.at(t) }
+  }).filter((token) => token.t < run.journey)
 }
 
 function drawRun(run: LaneRun, world: WorldSpec): Overlay {
-  const { size, emit, journey, colors } = run
+  const { size, emit } = run
   return (p: p5, loopFrame: number, { theme, weight }: { theme: Theme; weight: (size: number) => number }) => {
     const u = loopFrame / LOOP
     const w = weight(size)
+
+    // A joint belongs to the run, not either cell. Its deck physically joins
+    // the rails; the little trip falls as the actual token crosses the seam.
+    // Vertical shafts already have their own guides and must stay clear.
+    for (let i = 1; i < run.cells.length; i++) {
+      const cell = run.cells[i]
+      if (cell.in !== 'W') continue
+      const { x, y } = run.at(cell.start)
+      const since = mod(u - cell.start, emit)
+      const hit = Math.max(0, 1 - since / 0.09)
+      const floor = y + world.tokenSize * size / 2
+      solid(p, theme.ink, w, theme.bg)
+      p.rect(x, floor + size * 0.035, size * 0.18, size * 0.07, size * 0.015)
+      outline(p, theme.ink, w)
+      p.line(x, floor, x - cell.mirror * size * 0.075, floor - size * 0.07 * (1 - hit))
+      p.fill(theme.ink)
+      for (const dx of [-0.055, 0.055]) p.circle(x + dx * size, floor + size * 0.04, size * 0.018)
+    }
 
     for (const stack of run.stacks) {
       const travel = carTravel(world.ride, mod(u - stack.board, emit), stack.floors)
       p.push()
       p.translate(stack.cell.x, stack.cell.y)
       p.scale(stack.mirror, 1)
-      carRig(p, size, theme.ink, w, riderColor(run, u, stack), {
+      carRig(p, size, theme.ink, w, stack.color, {
         floorY: world.floorY,
         sheaveY: world.sheaveY,
         travel,
@@ -525,11 +543,8 @@ function drawRun(run: LaneRun, world: WorldSpec): Overlay {
       p.pop()
     }
 
-    for (let j = 0; j < run.tokens; j++) {
-      const t = mod(u, emit) + j * emit
-      if (t > journey) continue
-      const { x, y } = run.at(t)
-      const look = lookAt(run, world, t, colors[j] ?? colors[0])
+    for (const { t, x, y, color } of tokensAt(run, loopFrame)) {
+      const look = lookAt(run, world, t, color)
       world.token(p, size, theme.ink, w, look.color, x, y, look)
     }
   }

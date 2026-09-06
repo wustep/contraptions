@@ -164,16 +164,16 @@ the two worlds. Cascade, Workshop, Circus and Rube Goldberg build **their own
 grid** — a uniform block of cells that fills the frame — rather than staffing
 runs through a classic layout. That is why the Layout control disappears for
 them, and why each carries its own resolution range: their machines are read
-close up, so a cascade is 5–9 cells across where a classic piece is 6–24.
+close up, so each mode exposes its own range of cells across.
 
 | Mode | Catalog | Composer | Cells across |
 | --- | --- | --- | --- |
 | Classic | the original 36 toys | independent machines, abstract wires | 6–24 |
 | Ports | `src/worlds/ports/` | tokens handed across typed edges | 8–20 |
 | Tracks | `src/worlds/tracks/` | balls circulating on a carved loop | 8–20 |
-| Cascade | `src/contraptions/cascade/` | one snake of stations, tokens on lanes | 5–9 |
-| Workshop | `src/contraptions/workshop/` | one shop line of benches, parts on lanes | 5–9 |
-| Circus | `src/contraptions/circus/` | a full grid of closed looping acts; the drumroll fires them in sequence | 4–7 |
+| Cascade | `src/contraptions/cascade/` | one snake of stations, tokens on lanes | 4–20 |
+| Workshop | `src/contraptions/workshop/` | one shop line of benches, parts on lanes | 4–20 |
+| Circus | `src/contraptions/circus/` | closed acts connected by a shared drive; indexed cams cue their beats | 3–12 |
 | Rube Goldberg | `src/contraptions/rube/` | one wandering path from a feeder to an ending; the rest is paper | 5–14 |
 
 The Mode control lists all seven with those notes. Catalog view shows the active
@@ -190,6 +190,20 @@ joined path, and sets each machine's phase so its own clock reads `fireAt` at
 the instant the token arrives at its fire point. One drawing of the token, one
 path, one clock: it cannot be drawn twice, disagree with its neighbour, or fall
 through a gap. Tracks reached the same conclusion first, with its balls.
+
+Emission identity determines a token's colour throughout its journey. Cascade
+and Rube use one seeded ball colour; Workshop alternates two blank colours,
+then carries each part's dye, marks and cuts forward through the line. The
+palette repeats at the emission cadence, so colour also closes in the existing
+four-second export. Machine phases retain fractional frames at every handoff.
+Rail joints belong to the run and their trips react to the token crossing;
+Workshop belts share a drive clock independently of each tool's stroke.
+
+Solo and Tag select compatible stations, while the feeder, receiver, elevators
+and drop pieces remain available. A Solo rail therefore still has a real way
+to change floors. Filters that select a feeder or ending choose that role and
+leave plain transport between; multi-cell assemblies remain in Catalog.
+
 
 ### Cascade
 
@@ -251,13 +265,13 @@ stunt on the way fires again next lap. Because nothing is handed across a cell
 edge, the programme does not need a snake — the world lays its own uniform grid
 across the frame and fills all of it. **Multi-cell** is the share of the floor
 the big acts take (big top, ferris wheel, tightrope, cannon, high dive, the
-two-cell elevator ride); every remaining cell gets a small act. **Drumroll** is
-how much of what is left is wired into chains that fire a beat apart, source →
-relay → sink; the rest free-runs on its own phase. The conduit itself is not
-drawn: on a floor this full a centre-to-centre line runs straight through the
-act it is cueing, and a bead travelling between cells would contradict the one
-rule the mode is built on. `circus.ts` holds the shared props (performer,
-flight, knock, hoop, bell).
+two-cell elevator ride); every remaining cell gets a small act. **Drumroll** is the share of acts on one connected mechanical drive. At 1,
+all acts participate, including the big ones; at 0 every act free-runs. Belts
+and pulleys follow the footprints' edges, with a cam at each act's base. The
+cams cue neighbouring acts a beat apart. Performers stay in their own acts,
+with their own colours; the drive carries timing rather than another performer.
+The classic centre-to-centre conduit stays hidden. `programme.ts` builds the
+connected drive and its perimeter routes; `circus.ts` holds the props.
 
 ### Ports (framework A)
 
@@ -296,7 +310,7 @@ and each reactor beside the piece of track it reacts to.
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus`, `rube` |
 | Theme | 14 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
-| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7, rube 5–14) |
+| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 4–20, circus 3–12, rube 5–14) |
 | Stroke | Multiplier on the computed line weight |
 | Multi-cell / Wander | How eagerly to place machines larger than one cell; in Rube Goldberg, how far the path strays from a snake |
 | Stations / Drumroll / Wired chains | How much of the piece is machinery, or wired into firing sequences — the dial is renamed per mode |

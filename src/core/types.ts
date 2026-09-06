@@ -108,11 +108,9 @@ export interface Contraption<S = unknown> {
    */
   role?: 'source' | 'relay' | 'sink'
   /**
-   * Which edges the token may come in and go out by when this machine is
-   * wired into a cascade. Undefined means any. Cascade staffing respects
-   * these, so a hopper is never asked to send its ball out through its own
-   * roof. Chained cascade machines are drawn upright, whatever `rotations`
-   * allows. Classic / workshop / circus ignore this.
+   * Legacy edge hints used by compound catalog pieces. Lane worlds choose
+   * compatible feeder, station and transport roles from their WorldSpec;
+   * lane(ctx) supplies the actual path. These hints are not a port solver.
    */
   inlets?: Side[]
   outlets?: Side[]

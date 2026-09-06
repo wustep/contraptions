@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, FEED_WEST, belt, bench, lineOf } from './shop'
+import { beltTravel, BELT_V, FEED_WEST, belt, bench, lineOf } from './shop'
 
 /**
  * A V-funnel over the bench. One blank sits in the throat, the gate lets it
@@ -47,7 +47,7 @@ export const hopper = defineContraption({
     const x0 = line?.in ? -0.5 : FEED_WEST
 
     bench(p, k, ink, weight, x0, 0.5, false)
-    belt(p, k, ink, weight, fill, x0, 0.5, u * BELT_SPAN)
+    belt(p, k, ink, weight, fill, x0, 0.5, beltTravel(s, u))
 
     outline(p, ink, weight)
     p.line(-MOUTH * k, -0.46 * k, -W * k, GATE * k)

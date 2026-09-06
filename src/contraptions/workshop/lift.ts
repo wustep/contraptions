@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, lerp, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, rollers } from './shop'
+import { beltTravel, BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, rollers } from './shop'
 
 /**
  * The car takes a part off the rollers at bench height, hauls it up the shaft
@@ -56,8 +56,8 @@ export const lift = defineContraption({
       : lerp(SHELF, BENCH, easeInOutCubic(seg(u, DOWN0, DOWN1)))
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, CAR_X - GUIDE, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, OFF, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, CAR_X - GUIDE, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, OFF, 0.5, beltTravel(s, u))
 
     // The shelf it delivers to, and the guide the part drops down.
     outline(p, ink, weight)

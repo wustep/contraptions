@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid, teeth } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, HIT, PART_Y, bench, rollers, sparks, workLane } from './shop'
+import { beltTravel, BENCH, HIT, PART_Y, bench, rollers, sparks, workLane } from './shop'
 
 /**
  * The blank rolls in under the blade, the spinning blade drops through it,
@@ -31,8 +31,8 @@ export const saw = defineContraption({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.18, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.18, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.18, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.18, 0.5, beltTravel(s, u))
 
     // The C-frame and the slide the blade rides on.
     outline(p, ink, weight)

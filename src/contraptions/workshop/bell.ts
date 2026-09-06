@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx, type Pt } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIT, SHOP_PERIOD, belt, bench, lineOf, pulse } from './shop'
+import { beltTravel, BELT_V, BENCH, HIT, SHOP_PERIOD, belt, bench, lineOf, pulse } from './shop'
 
 /**
  * A bell hung over the end of the bench. The part rolls off the belt into the
@@ -47,7 +47,7 @@ export const bell = defineContraption({
     const x0 = line?.in === false ? -0.36 : -0.5
 
     bench(p, k, ink, weight, x0, LIP + 0.02, false)
-    belt(p, k, ink, weight, s.color, x0, LIP, u * BELT_SPAN)
+    belt(p, k, ink, weight, s.color, x0, LIP, beltTravel(s, u))
     bench(p, k, ink, weight, TRAY1, 0.5, false)
 
     // The pan under the bell.

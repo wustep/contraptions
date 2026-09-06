@@ -1,5 +1,5 @@
 import { defineContraption } from '../../core/define'
-import { BELT_SPAN, belt, partLane } from './shop'
+import { beltTravel, belt, partLane } from './shop'
 
 /**
  * A belt carries the line across the cell at shop speed, handing each part off
@@ -22,6 +22,6 @@ export const beltRun = defineContraption({
   lane: (ctx) => partLane(ctx),
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
-    belt(p, k, ink, weight, s.color, -0.5, 0.5, u * BELT_SPAN)
+    belt(p, k, ink, weight, s.color, -0.5, 0.5, beltTravel(s, u))
   },
 })

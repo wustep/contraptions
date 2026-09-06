@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInQuad, mod, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, PART, PART_Y, bench, rollers, workLane } from './shop'
+import { beltTravel, BENCH, PART, PART_Y, bench, rollers, workLane } from './shop'
 
 /**
  * A chute down from the bay above, feeding the line. Blanks slide down the
@@ -38,8 +38,8 @@ export const chute = defineContraption({
     const ny = -Math.cos(ANGLE)
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.12, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.32, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.12, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.32, 0.5, beltTravel(s, u))
 
     // The bay's shelf and its post, then the board on its strut.
     outline(p, ink, weight)

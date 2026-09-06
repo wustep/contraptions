@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, SHOP_PERIOD, belt, bench, burst, lineOf, part, pulse } from './shop'
+import { beltTravel, BELT_V, BENCH, SHOP_PERIOD, belt, bench, burst, lineOf, part, pulse } from './shop'
 
 /**
  * The part rolls in on the bench, drops off the lip into the tote, lands on
@@ -42,7 +42,7 @@ export const bin = defineContraption({
     const x0 = line?.in === false ? -0.4 : -0.5
 
     bench(p, k, ink, weight, x0, LIP + 0.06)
-    belt(p, k, ink, weight, fill, x0, LIP, u * BELT_SPAN)
+    belt(p, k, ink, weight, fill, x0, LIP, beltTravel(s, u))
 
     // Tote on the bench, mouth at the lip, bottom on the cell floor.
     outline(p, ink, weight)

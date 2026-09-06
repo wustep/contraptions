@@ -24,6 +24,7 @@ import type { Link } from '../src/worlds/ports/types'
 import { CASCADE } from '../src/worlds/goldberg/cascade'
 import { carCycle } from '../src/worlds/goldberg/elevator'
 import type { LaneCell } from '../src/worlds/goldberg/laneworld'
+import { checkConnectivity } from './check-connectivity'
 import { WORKSHOP } from '../src/worlds/goldberg/workshop'
 import { MAX_DROP, RUBE } from '../src/worlds/goldberg/rube'
 import { tracksCatalog } from '../src/worlds/tracks/build'
@@ -331,34 +332,11 @@ check(
   }),
 )
 
-function chainGrammar(comp: ReturnType<typeof build>): string[] {
-  const at = new Map<string, Instance>(
-    comp.instances.map((i) => [`${Math.round(i.cell.x)}:${Math.round(i.cell.y)}`, i]),
-  )
-  const roleAt = (x: number, y: number) => at.get(`${Math.round(x)}:${Math.round(y)}`)?.contraption.role
-  const starts = comp.wires.filter((w) => !comp.wires.some((other) => other.to === w.from))
-  const errors: string[] = []
-  for (const head of starts) {
-    const chain = [head]
-    for (;;) {
-      const next = comp.wires.find((w) => w.from === chain[chain.length - 1].to)
-      if (!next) break
-      chain.push(next)
-    }
-    const roles = [chain[0].from, ...chain.map((w) => w.to)].map((c) => roleAt(c.x, c.y))
-    if (roles[0] !== 'source') errors.push(`head is ${roles[0]}`)
-    if (roles[roles.length - 1] !== 'sink') errors.push(`tail is ${roles[roles.length - 1]}`)
-    if (roles.slice(1, -1).some((r) => r !== 'relay')) errors.push(`middle has ${roles.slice(1, -1).join(',')}`)
-  }
-  return errors
-}
-
 // ---------------------------------------------------------------- circus ---
 // The whole frame is the programme: the composer builds its own uniform grid
 // at clampRes('circus', res) and every cell of it carries exactly one act, big
-// acts included. Acts are closed loops, so nothing is handed across a cell
-// edge; the only thing the wires do is space the drumroll, and the conduit is
-// not drawn. Everything between this banner and the next one is circus.
+// acts included. Performers keep closed loops; a connected perimeter drive
+// cues the acts. Classic centre-to-centre conduits remain hidden.
 console.log('\ncircus')
 
 /** One key per grid cell an instance's footprint covers. */
@@ -405,7 +383,7 @@ for (const res of [4, 5, 7]) {
     check(`${label}: rebuilds identically from its seed`, fingerprint(comp) === fingerprint(build(options, 900)))
     check(`${label}: hides the drumroll conduit`, comp.showWires === false)
     check(`${label}: no lift or well is placed`, !comp.used.includes('lift') && !comp.used.includes('well'))
-    check(`${label}: drumroll grammar`, chainGrammar(comp).length === 0, chainGrammar(comp).slice(0, 3).join(' | '))
+    check(`${label}: drumroll reaches the requested share of acts`, new Set(comp.wires.flatMap((w) => [w.from, w.to])).size === Math.round(comp.instances.length * 0.8))
     check(
       `${label}: every act's phase lands its own beat`,
       comp.instances.every((i) => {
@@ -425,7 +403,7 @@ check('circus: the big acts get placed when spans is up', spanned > 0, `${spanne
 {
   const circus = build({ ...defaultOptions, seed: 'chains', mode: 'circus', res: 14, spans: 0.4, chains: 1 }, 900)
   check('circus: builds chains', circus.wires.length > 0, `${circus.wires.length} links`)
-  check('circus: chain grammar', chainGrammar(circus).length === 0, chainGrammar(circus).slice(0, 3).join(' | '))
+  check('circus: full drumroll reaches every act', new Set(circus.wires.flatMap((w) => [w.from, w.to])).size === circus.instances.length)
   check('circus: clamps res into its own range', circus.cells.length === 12 * 12, `${circus.cells.length} cells`)
   check(
     'circus: chains fire a beat apart',
@@ -1133,6 +1111,8 @@ function runDraw(name: string, state: unknown, draw: (p: p5, u: number) => void)
   check(`draw ${name}`, snapshot(state) === before)
 }
 
+checkConnectivity(check)
+
 console.log('\ndraw')
 for (const { name: mode } of MODES) {
   const list = catalogFor(mode)
@@ -1181,6 +1161,30 @@ for (const kind of TRACK_KINDS) {
 for (const reactor of reactors) {
   const { state, size, w, h } = setupOf(reactor)
   runDraw(`reactor:${reactor.name}`, state, (p, u) => reactor.draw(p, state, drawCtx(u, size, w, h)))
+}
+
+// Both physical layers must be periodic and pure for scrub and loop export.
+for (const mode of ['cascade', 'workshop', 'circus', 'rube'] as const) {
+  const comp = build({ ...defaultOptions, mode, seed: 'export-drive', res: 6, chains: 1 }, 900)
+  const state = snapshot(comp.instances.map((i) => i.state))
+  const trace = (frame: number) => {
+    const calls: unknown[] = []
+    const base = stubP5()
+    const p = new Proxy(base, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop)
+        if (typeof value !== 'function') return value
+        return (...args: unknown[]) => {
+          calls.push([prop, args.map((v) => typeof v === 'number' ? Math.round(v * 1e6) / 1e6 : v)])
+          return value.apply(target, args)
+        }
+      },
+    })
+    for (const layer of [...comp.underlays ?? [], ...comp.overlays]) layer(p, frame, { theme: comp.theme, weight: () => 2 })
+    return snapshot(calls)
+  }
+  check(`${mode}: world drawing repeats exactly for export`, [0, 37.25, 120, 239.999].every((frame) => trace(frame) === trace(frame + comp.loop)))
+  check(`${mode}: world drawing leaves composition state untouched`, snapshot(comp.instances.map((i) => i.state)) === state)
 }
 
 console.log(failures === 0 ? '\nall checks passed\n' : `\n${failures} check(s) failed\n`)

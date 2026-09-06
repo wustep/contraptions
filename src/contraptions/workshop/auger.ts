@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { clipBox, outline } from '../../core/draw'
 import { mod } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, rollers } from './shop'
+import { beltTravel, BELT_V, BENCH, HIGH_Y, PART, SHELF, bench, rollers } from './shop'
 
 /**
  * A part rolls in under the screw, the turning flights walk it up the tube
@@ -41,8 +41,8 @@ export const auger = defineContraption({
   setup: ({ color }) => ({ color }),
   draw: (p, s, { size: k, u, ink, weight }) => {
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -W, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, SHELF_E, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -W, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, SHELF_E, 0.5, beltTravel(s, u))
 
     // The tube: open low on the west to take a part, open high on the east
     // to let it out onto the shelf.

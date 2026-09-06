@@ -53,6 +53,12 @@ export const BELT_V = 2
  * cleats and the part agree without either knowing the other's speed.
  */
 export const BELT_SPAN = 1
+
+/** Remove the tool's phase so every bench shares one continuous belt drive. */
+export function beltTravel(state: unknown, u: number): number {
+  const phase = (state as { drivePhase?: number }).drivePhase ?? 0
+  return mod(u - phase, 1) * BELT_SPAN
+}
 /**
  * Frames one bench clock takes. The world runs exactly one part through every
  * bench in that time, so a bench's `u` is "how far through this part am I".

@@ -370,7 +370,8 @@ export function createPanel(
   const gridBtn = el('button', {}, ['Grid'])
   gridBtn.addEventListener('click', () => handlers.onView({ grid: !lastView.grid }))
   const poolRow = el('div', { class: 'row' }, [field('Tag', tagBox.node), field('Solo', soloBox.node)])
-  explore.append(poolRow, el('div', { class: 'row' }, [catalog, gridBtn]))
+  const poolNote = el('p', { class: 'mode-note' }, ['Filters choose the stations. Feeders, transport and endings stay connected. Larger assemblies are in Catalog.'])
+  explore.append(poolRow, poolNote, el('div', { class: 'row' }, [catalog, gridBtn]))
 
   const labelOf = (node: HTMLElement) => node.querySelector('label span') as HTMLElement | null
   const SPAN_COPY: Record<Mode, [string, string]> = {
@@ -388,7 +389,7 @@ export function createPanel(
     tracks: ['Wired chains', ''],
     cascade: ['Stations', 'How much of the snake is machinery; the rest is plain rail'],
     workshop: ['Stations', 'How much of the line is machinery; the rest is belt'],
-    circus: ['Drumroll', 'How much of the programme fires in sequence'],
+    circus: ['Drumroll', 'Share of acts on one connected drive; at 1 every act is cued, including the big ones'],
     rube: ['Stations', 'How much of the path is machinery; the rest is plain rail'],
   }
 
@@ -418,6 +419,7 @@ export function createPanel(
     chains.node.hidden = !compose || !dials.chains
     res.node.hidden = !compose
     poolRow.hidden = !compose || !dials.pool
+    poolNote.hidden = !compose || !['cascade', 'workshop', 'rube'].includes(mode)
     const [spanLabel, spanHint] = SPAN_COPY[mode]
     const spanName = labelOf(spans.node)
     if (spanName) spanName.textContent = spanLabel

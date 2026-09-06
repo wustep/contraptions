@@ -271,7 +271,9 @@ export function buildPorts(options: Options, canvas: number): Composition {
     state.link = link
 
     const tIn = node.inPort ? resolveT(node.inPort.port, state) : 0
-    const phase = mod(Math.round(tIn * LOOP - arrival), LOOP)
+    // A seam is shared by two clipped drawings. Keep fractional frames so
+    // their centres agree even when an arc or drop takes a non-integer time.
+    const phase = mod(tIn * LOOP - arrival, LOOP)
     instances.push({
       contraption: asContraption(machine),
       state,
@@ -280,7 +282,7 @@ export function buildPorts(options: Options, canvas: number): Composition {
       mirror: node.variant.mirror ? -1 : 1,
       phase,
       period: LOOP,
-      fireFrame: mod(Math.round(arrival), LOOP),
+      fireFrame: mod(arrival, LOOP),
     })
 
     for (const child of node.children) {

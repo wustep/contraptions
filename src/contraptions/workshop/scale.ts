@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIT, bench, rollers } from './shop'
+import { beltTravel, BELT_V, BENCH, HIT, bench, rollers } from './shop'
 
 /**
  * The part rolls onto the platform, the platform sinks under it and the
@@ -55,8 +55,8 @@ export const scale = defineContraption({
     const dy = sit * SINK
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.2, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.2, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.2, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.2, 0.5, beltTravel(s, u))
 
     // Column and dial, ticks along the sweep.
     outline(p, ink, weight)

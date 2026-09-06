@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, bench, rollers } from './shop'
+import { beltTravel, BELT_V, BENCH, bench, rollers } from './shop'
 
 /**
  * Two leaves of the bench top fold away under the part, it settles into the
@@ -48,8 +48,8 @@ export const divert = defineContraption({
 
     bench(p, k, ink, weight, -0.5, -HALF)
     bench(p, k, ink, weight, HALF, 0.5)
-    rollers(p, k, ink, weight, s.color, -0.5, -WALL, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, WALL, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -WALL, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, WALL, 0.5, beltTravel(s, u))
 
     // The bay under the doors.
     outline(p, ink, weight)

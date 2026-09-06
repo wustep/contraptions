@@ -3,21 +3,15 @@ import { clampRes, type Composition, type Options } from '../../core/composition
 import { ART_INSET, LOOP } from '../../core/constants'
 import { makeRng } from '../../core/rng'
 import { themeByName } from '../../core/themes'
-import type { Cell, Contraption, Instance, Wire } from '../../core/types'
-import { chainPaths, wireChain } from '../../core/wiring'
+import type { Cell, Contraption, Instance } from '../../core/types'
+import { programme, programmeLayers } from './programme'
 
 /**
- * The circus world. Every cell is an act, and every act is a closed loop: a
- * performer that leaves a tower comes back to it before the loop is out, so
- * nothing is ever handed across a cell edge. That is what lets the programme
- * fill the frame instead of threading a one-cell-wide snake through it.
- *
- * The floor is the composer's own uniform grid — the layout dial is hidden for
- * this mode — built at `clampRes('circus', res)` so a cell is never smaller
- * than an act can be read at. Big acts claim their blocks first, every
- * remaining cell gets a small act, and then the drumroll is wired through the
- * small ones: source -> relay* -> sink, `LINK_DELAY` apart. Acts left out of a
- * chain free-run on their own phase, which is what `chains` trades away.
+ * One programme floor. Big acts claim their blocks, small acts fill the rest,
+ * and a connected transmission runs around their footprints. Each indexed
+ * cam cues its act one beat after its parent. Drumroll controls the share of
+ * acts on this drive; at full it reaches every act, including the big ones.
+ * Performers keep their own closed stunts and their own identities.
  */
 
 const key = (x: number, y: number) => `${Math.round(x)}:${Math.round(y)}`
@@ -154,30 +148,7 @@ export function buildCircus(options: Options, canvas: number): Composition {
     }
   }
 
-  // Pass two: the drumroll. Runs of free cells are reserved and staffed by
-  // role, so a chain reads as source -> relay* -> sink rather than as a line
-  // drawn through whatever happened to be next to what.
-  const wires: Wire[] = []
-  const roleRng = rng.fork('roles')
-  const byRole = (role: Contraption<unknown>['role']) => {
-    const matching = singles.filter((c) => c.role === role && (c.period ?? LOOP) === LOOP)
-    if (matching.length) return matching
-    const anyRole = singles.filter((c) => c.role && (c.period ?? LOOP) === LOOP)
-    return anyRole.length ? anyRole : singles
-  }
-
-  if (options.chains > 0 && singles.length) {
-    for (const path of chainPaths(cells, claimed, rng.fork('paths'), options.chains, 'any')) {
-      const members = path.map((cell, k) => {
-        const role = k === 0 ? 'source' : k === path.length - 1 ? 'sink' : 'relay'
-        const contraption = roleRng.weighted(byRole(role), (c) => c.weight ?? 1)
-        return place(contraption, cell, `cell:${cell.index}`)
-      })
-      wires.push(...wireChain(members, rng.fork(`chain:${path[0].index}`)))
-    }
-  }
-
-  // Pass three: every cell that is left gets a small act of its own, running
+  // Pass two: every cell that is left gets a small act of its own, running
   // on its own phase. No leftovers and no rim — an empty cell in a programme
   // is a gap in the bill.
   if (singles.length) {
@@ -191,6 +162,9 @@ export function buildCircus(options: Options, canvas: number): Composition {
     }
   }
 
+  const wires = programme(instances, options.chains, rng.fork('programme').int(0, LOOP))
+  const drive = programmeLayers(wires, instances)
+
   return {
     options,
     theme,
@@ -201,10 +175,9 @@ export function buildCircus(options: Options, canvas: number): Composition {
     captions: [],
     header: null,
     wires,
-    overlays: [],
-    // The conduit is a centre-to-centre line; on a floor this full it runs
-    // straight through the act it is meant to be cueing. The drumroll reads
-    // from the acts themselves, firing a beat apart along the chain.
+    underlays: wires.length ? [drive.underlay] : [],
+    overlays: wires.length ? [drive.overlay] : [],
+    // The shared drive runs around the acts. Hide the classic centre wires.
     showWires: false,
     unit,
   }

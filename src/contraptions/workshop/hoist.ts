@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeOutCubic, lerp, mod, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, PART, PART_Y, RAIL, belt, bench, lineOf } from './shop'
+import { beltTravel, BELT_V, PART, PART_Y, RAIL, belt, bench, lineOf } from './shop'
 
 /**
  * Blanks come in on the shelf from the bay to the west. The hook takes the
@@ -70,7 +70,7 @@ export const hoist = defineContraption({
 
     const x0 = line?.in ? -0.5 : -0.04
     bench(p, k, ink, weight, x0, 0.5, false)
-    belt(p, k, ink, weight, fill, x0, 0.5, u * BELT_SPAN)
+    belt(p, k, ink, weight, fill, x0, 0.5, beltTravel(s, u))
 
     // The rail from the bay, and the shelf the next blank stands on.
     outline(p, ink, weight)

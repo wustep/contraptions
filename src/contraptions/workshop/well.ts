@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { hold, ride, roll, type Lane, type LaneCtx } from '../../core/lane'
 import { GUIDE, LIP, SHOP_RIDE, landing, wellFrame } from '../../worlds/goldberg/elevator'
-import { BELT_SPAN, BELT_V, BENCH, PART_Y, belt, bench, lineOf } from './shop'
+import { beltTravel, BELT_V, BENCH, PART_Y, belt, bench, lineOf } from './shop'
 
 /**
  * The pit of a shop elevator. The car comes in from the cell above, lands on
@@ -29,7 +29,7 @@ export const well = defineContraption({
     const x1 = line?.out === false ? 0.22 : 0.5
 
     bench(p, k, ink, weight, LIP, x1, false)
-    belt(p, k, ink, weight, fill, LIP, x1, u * BELT_SPAN)
+    belt(p, k, ink, weight, fill, LIP, x1, beltTravel(s, u))
     landing(p, k, ink, weight, GUIDE, LIP, BENCH)
     wellFrame(p, k, ink, weight, PART_Y)
   },

@@ -109,7 +109,7 @@ export const MODES: ModeInfo[] = [
   {
     name: 'circus',
     label: 'Circus',
-    note: 'a ring of looping acts; the drumroll fires them in sequence',
+    note: 'one connected programme; a shared drive cues the looping acts',
     catalog: 'circus',
     composer: 'circus',
     dials: { layout: false, spans: true, chains: true, pool: true },
@@ -260,6 +260,8 @@ export interface Composition {
   wires: Wire[]
   /** Layers drawn over every machine — the circulating balls in tracks mode. */
   overlays: Overlay[]
+  /** Physical drive work behind the machines, using the same export clock. */
+  underlays?: Overlay[]
   /**
    * When false, wires still exist for timing but are not drawn. Cascade hides
    * them so each machine draws its own rail; a centre-to-centre conduit was

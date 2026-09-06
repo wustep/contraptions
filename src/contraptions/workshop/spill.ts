@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline } from '../../core/draw'
 import { seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, bench, rollers, sparks, workLane } from './shop'
+import { beltTravel, BENCH, bench, rollers, sparks, workLane } from './shop'
 
 /**
  * A grate set into the bench over a swarf tray. The part stops on it, the
@@ -28,8 +28,8 @@ export const spill = defineContraption({
 
     bench(p, k, ink, weight, -0.5, -HALF)
     bench(p, k, ink, weight, HALF, 0.5)
-    rollers(p, k, ink, weight, s.color, -0.5, -HALF, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, HALF, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -HALF, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, HALF, 0.5, beltTravel(s, u))
 
     // The wash pipe over the grate, and its spray.
     outline(p, ink, weight)

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { hold, roll, type Lane, type LaneCtx, type Pt } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIT, SHOP_PERIOD, belt, bench, burst, lineOf, pulse } from './shop'
+import { beltTravel, BELT_V, BENCH, HIT, SHOP_PERIOD, belt, bench, burst, lineOf, pulse } from './shop'
 
 /**
  * A stack light on a post at the east end of the bench. The part rolls off
@@ -44,7 +44,7 @@ export const lamp = defineContraption({
     const x0 = line?.in === false ? -0.44 : -0.5
 
     bench(p, k, ink, weight, x0, LIP + 0.02, false)
-    belt(p, k, ink, weight, s.color, x0, LIP, u * BELT_SPAN)
+    belt(p, k, ink, weight, s.color, x0, LIP, beltTravel(s, u))
     bench(p, k, ink, weight, TRAY1, 0.5, false)
 
     // The tote the part drops into, open at the top.

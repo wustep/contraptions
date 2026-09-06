@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline } from '../../core/draw'
 import { seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, PART, PART_Y, bench, partLane, roller, rollers } from './shop'
+import { beltTravel, BENCH, PART, PART_Y, bench, partLane, roller, rollers } from './shop'
 
 /**
  * Two counter-turning rolls bite the part as it passes between them, the top
@@ -31,8 +31,8 @@ export const mill = defineContraption({
 
     bench(p, k, ink, weight, -0.5, -0.3)
     bench(p, k, ink, weight, 0.3, 0.5)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.3, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.3, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.3, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.3, 0.5, beltTravel(s, u))
 
     // The stand, and the two rolls: the top one rides up on what it bites.
     outline(p, ink, weight)

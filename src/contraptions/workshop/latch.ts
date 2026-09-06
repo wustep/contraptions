@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, HIT, belt, workLane } from './shop'
+import { beltTravel, BENCH, HIT, belt, workLane } from './shop'
 
 /**
  * The belt runs on under a part held back by the stop; when the stop lifts,
@@ -26,7 +26,7 @@ export const latch = defineContraption({
   draw: (p, s, { size: k, u, ink, weight }) => {
     const lift = 0.3 * (easeOutCubic(seg(u, HIT - 0.02, HIT + 0.03)) - easeInQuad(seg(u, 0.56, 0.6)))
 
-    belt(p, k, ink, weight, s.color, -0.5, 0.5, u * BELT_SPAN)
+    belt(p, k, ink, weight, s.color, -0.5, 0.5, beltTravel(s, u))
 
     // The solenoid on its bracket, and the stop pin it lifts.
     outline(p, ink, weight)

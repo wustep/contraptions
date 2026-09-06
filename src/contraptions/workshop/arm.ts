@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { clamp, easeInOutCubic, lerp, mod, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, PART, PART_Y, bench, rollers } from './shop'
+import { beltTravel, BELT_V, PART, PART_Y, bench, rollers } from './shop'
 
 /**
  * A part rolls in and stops, the arm closes on it, lifts it over the gap and
@@ -75,8 +75,8 @@ export const arm = defineContraption({
     const ey = SHOULDER[1] + Math.sin(a1) * L1
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.14, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.14, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.14, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.14, 0.5, beltTravel(s, u))
 
     // Mount, upper arm, forearm, hubs.
     outline(p, ink, weight)

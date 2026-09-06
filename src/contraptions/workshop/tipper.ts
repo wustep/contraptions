@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, mod, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, PART, PART_Y, belt, bench, lineOf } from './shop'
+import { beltTravel, BELT_V, BENCH, PART, PART_Y, belt, bench, lineOf } from './shop'
 
 /**
  * Blanks stand in the magazine over the tray. One drops into it, its weight
@@ -70,7 +70,7 @@ export const tipper = defineContraption({
     const tilt = TILT * (seg(u, U0, U1) - easeInOutCubic(seg(u, U2, U3)))
 
     bench(p, k, ink, weight, x0, 0.5, false)
-    belt(p, k, ink, weight, fill, x0 + 0.02, 0.5, u * BELT_SPAN)
+    belt(p, k, ink, weight, fill, x0 + 0.02, 0.5, beltTravel(s, u))
 
     // The magazine over the tray: a tube with the next blank standing in it.
     outline(p, ink, weight)

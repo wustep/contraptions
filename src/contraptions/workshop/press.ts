@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInQuad, easeOutCubic, lerp, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, HIT, PART_Y, SHOP_PERIOD, bench, burst, pulse, rollers, workLane } from './shop'
+import { beltTravel, BENCH, HIT, PART_Y, SHOP_PERIOD, bench, burst, pulse, rollers, workLane } from './shop'
 
 /**
  * A blank rolls in and waits under the ram, the ram slams down and leaves its
@@ -31,8 +31,8 @@ export const press = defineContraption({
       : lerp(STRIKE, REST, easeOutCubic(seg(u, HIT + 0.06, HIT + 0.18)))
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.18, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.18, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.18, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.18, 0.5, beltTravel(s, u))
 
     // The frame: two posts, a crossbar with the cylinder on top.
     outline(p, ink, weight)

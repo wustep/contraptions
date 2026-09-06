@@ -2,7 +2,7 @@ import { defineContraption } from '../../core/define'
 import { outline, solid } from '../../core/draw'
 import { easeInOutCubic, easeInQuad, lerp, mod, seg } from '../../core/ease'
 import { hold, roll, type Lane, type LaneCtx } from '../../core/lane'
-import { BELT_SPAN, BELT_V, BENCH, HIT, PART, PART_Y, RAIL, bench, rollers } from './shop'
+import { beltTravel, BELT_V, BENCH, HIT, PART, PART_Y, RAIL, bench, rollers } from './shop'
 
 /**
  * A trolley picks the part off the bench, carries it out over the vat, lowers
@@ -99,8 +99,8 @@ export const dip = defineContraption({
       : PART_Y
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, PICK + 0.09, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, PLACE - 0.09, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, PICK + 0.09, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, PLACE - 0.09, 0.5, beltTravel(s, u))
 
     // The rail and its hangers, the trolley, and the hook rod.
     outline(p, ink, weight)

@@ -1,7 +1,7 @@
 import { defineContraption } from '../../core/define'
 import { outline, solid, teeth } from '../../core/draw'
 import { easeInOutCubic, seg } from '../../core/ease'
-import { BELT_SPAN, BENCH, bench, rollers, workLane } from './shop'
+import { beltTravel, BENCH, bench, rollers, workLane } from './shop'
 
 /**
  * The part settles on the trip lever and presses it down, the link pulls the
@@ -28,8 +28,8 @@ export const counter = defineContraption({
     const tabY = BENCH - 0.06 * (1 - press)
 
     bench(p, k, ink, weight)
-    rollers(p, k, ink, weight, s.color, -0.5, -0.2, u * BELT_SPAN)
-    rollers(p, k, ink, weight, s.color, 0.2, 0.5, u * BELT_SPAN)
+    rollers(p, k, ink, weight, s.color, -0.5, -0.2, beltTravel(s, u))
+    rollers(p, k, ink, weight, s.color, 0.2, 0.5, beltTravel(s, u))
 
     // The trip lever and the link up to the pawl.
     outline(p, ink, weight)
