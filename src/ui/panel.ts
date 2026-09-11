@@ -1,3 +1,4 @@
+import { isConnected } from '../worlds/goldberg/connected'
 import { FPS, LOOP_EXPORT_MAX_SECONDS } from '../core/constants'
 import { layouts } from '../core/layouts'
 import { themes } from '../core/themes'
@@ -401,7 +402,11 @@ export function createPanel(
     const { min, max } = modeInfo(mode).res
     res.setRange(min, max)
     res.set(clampRes(mode, value))
-    res.node.title = `Cells across the piece — ${min} to ${max} in this mode`
+    const name = labelOf(res.node)
+    const title = isConnected(mode) ? 'Stops' : 'Resolution'
+    if (name) name.textContent = title
+    res.node.querySelector('input')?.setAttribute('aria-label', title)
+    res.node.title = isConnected(mode) ? 'Working stops along one continuous journey' : `Cells across the piece — ${min} to ${max} in this mode`
   }
 
   /**

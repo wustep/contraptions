@@ -47,7 +47,7 @@ src/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
-    goldberg/       the cascade, workshop, circus and rube grids; the token is theirs
+    goldberg/       connected circuits and legacy catalog demonstrations
   ui/               the seed explorer
 ```
 
@@ -94,8 +94,7 @@ npm run new -- slot-machine
 ```
 
 Writes the file and registers it. Then hit **Catalog** in the panel to see it
-next to everything else, or use **Solo** to fill the whole grid with just that
-one while you work on it.
+next to everything else. In Classic, **Solo** fills the grid with one machine.
 
 ## Multi-cell machines
 
@@ -156,108 +155,52 @@ eligible, so a chain never has to reason about a member firing twice per cycle.
 
 ## Modes
 
-A mode picks **both a catalog and a composer**. That is what lets three
-Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
-each lives in its own folder, and each composer is the thesis of that set.
-Classic keeps the original toys on the leftover-fill grid; Ports and Tracks are
-the two worlds. Cascade, Workshop, Circus and Rube Goldberg build **their own
-grid** — a uniform block of cells that fills the frame — rather than staffing
-runs through a classic layout. That is why the Layout control disappears for
-them, and why each carries its own resolution range: their machines are read
-close up, so a cascade is 5–9 cells across where a classic piece is 6–24.
+Classic, Ports and Tracks keep their original composers. Cascade, Workshop,
+Circus and Rube Goldberg now share a **single closed journey**: four to eight
+working stops, one permanent traveler, and an exposed return elevator. Each
+mode's older gadget collection remains available as a labelled Catalog sheet.
 
-| Mode | Catalog | Composer | Cells across |
-| --- | --- | --- | --- |
-| Classic | the original 36 toys | independent machines, abstract wires | 6–24 |
-| Ports | `src/worlds/ports/` | tokens handed across typed edges | 8–20 |
-| Tracks | `src/worlds/tracks/` | balls circulating on a carved loop | 8–20 |
-| Cascade | `src/contraptions/cascade/` | one snake of stations, tokens on lanes | 5–9 |
-| Workshop | `src/contraptions/workshop/` | one shop line of benches, parts on lanes | 5–9 |
-| Circus | `src/contraptions/circus/` | a full grid of closed looping acts; the drumroll fires them in sequence | 4–7 |
-| Rube Goldberg | `src/contraptions/rube/` | one wandering path from a feeder to an ending; the rest is paper | 5–14 |
+| Mode | Live composition | Density |
+| --- | --- | --- |
+| Classic | independent machines, abstract wires | 6–24 cells across |
+| Ports | tokens handed across typed edges | 8–20 cells across |
+| Tracks | balls circulating on a carved loop | 8–20 cells across |
+| Cascade | sloping rails, gates, dominoes, seesaws and bells | 4–8 stops |
+| Workshop | conveyors, press, punch, scale and release gate | 4–8 stops |
+| Circus | linked flights, trampoline, hoop, seesaw and bell | 4–8 stops |
+| Rube Goldberg | staggered rails and reversals, hammer, gate, seesaw and bell | 4–8 stops |
 
-The Mode control lists all seven with those notes. Catalog view shows the active
-mode's pieces. The URL stores the mode name (`?mode=cascade`).
+### Connected machines
 
-### Lanes
+The traveler stays on the page for its **entire 12-second circuit**, including
+the trip home. It has one seeded color, an inset ring and an off-center pin;
+Workshop uses a square part with the same permanent markings. A handoff never
+creates another object or chooses a new color. Tools wait for this traveler,
+contacting tools give it a short dwell, and the elevator carries it along the
+same trajectory used to draw the car. The empty car visibly returns for pickup.
 
-Cascade and Workshop hand a token from cell to cell, and the one thing that
-must never happen is for it to blink out at a seam. So the machines do not draw
-it. A machine declares a **lane** — its token's path across the cell, in cell
-units, with rolls, rides and holds where it acts (`src/core/lane.ts`). The
-world concatenates the lanes along the snake, draws every token once from the
-joined path, and sets each machine's phase so its own clock reads `fireAt` at
-the instant the token arrives at its fire point. One drawing of the token, one
-path, one clock: it cannot be drawn twice, disagree with its neighbour, or fall
-through a gap. Tracks reached the same conclusion first, with its balls.
+The rails, drops, numbered stops and direction marks make the route readable
+at rest. Circus uses dotted flight trajectories between platforms. Rube has
+staggered stops and changes direction instead of filling a grid. Machinery is
+mostly paper and ink, keeping the traveler's color easy to follow.
 
-### Cascade
+`src/worlds/goldberg/connected.ts` owns geometry, identity and timing;
+`connected-draw.ts` draws the structure, tools and traveler. All motion is a
+pure function of the composition clock, including the return lift. Scrubbing
+backward and PNG/WebM export use that same drawing. `scripts/check-connected.ts`
+checks endpoint continuity, bounds, identity across laps, tool contact timing,
+resize invariance, deterministic rebuilding and complete drawing periodicity.
 
-One snake. The world lays its own grid across the frame and threads a single
-run through every cell of it: a feeder, then stations, then a sink, with
-two-cell elevator stacks where the run has to change floor. The feeder lets a
-ball go once a loop, and the run is longer than a loop, so several balls are on
-it at once — each one continuous from throat to sink, and one always resting in
-the throat and one in the sink, because the next arrival replaces it at the
-same instant. **Stations** is the fraction of the run that is machinery; the
-rest is plain rail, so the dial trades a dense chain of events against a long
-roll between them. The balls are drawn by the world along the joined lane, and
-the elevator cars, cables and counterweights come off the same clock, so
-nothing that moves with a ball is drawn by more than one thing.
+**Intentional simplification:** live Solo/Tag, Stations/Drumroll, Multi-cell and
+Wander controls are retired in these four modes. The remaining **Stops** control
+changes the length of the itinerary. Old mode/seed/theme share URLs still open;
+`res` now means 4–8 stops, obsolete Solo/Tag filters are cleared, and old
+`chains`/`spans` values have no effect on these circuits. Old seeds therefore
+produce new artwork. Catalog still contains all the older mechanisms; its
+lane demos retain the original per-machine clocks. Classic's filters and the
+Ports/Tracks controls are unchanged.
 
-`src/contraptions/cascade/parts.ts` is the shared vocabulary; the composer
-lives in `src/worlds/goldberg/cascade.ts`.
-
-### Rube Goldberg
-
-The same lane world with a different plan. Where the cascade fills its grid
-with a snake, this mode **carves one path**: a ball leaves a feeder somewhere
-along the top row, rolls a way, and goes down — by elevator, or by simply
-falling down a chute — one, two or three floors at a time, then rolls on, the
-same way or back, until it reaches an ending on the bottom row. Every step is
-east, west or south and never north, so the walk cannot cross itself. Cells
-the path does not visit stay paper, and every machine on the piece is on the
-path: the frame is one connected contraption, and the seed decides its shape.
-
-The catalog is the cascade's one-cell beats — its feeders, stations, endings
-and two-cell elevator — plus the pieces a wandering path needs and a snake
-never does: a `shaft` for the middle floors of a deep elevator, and a
-`chute`, `tube` and `catch` for a ball that just falls, the catch being a
-quarter-pipe that turns the drop back into a roll. The elevator's car is
-still drawn once by the world, for the whole stack, whatever its depth; three
-floors is the most a car can descend and climb back empty before the next
-ball arrives at the top, so that is the deepest any drop goes.
-
-**Wander** is how far the path strays from a snake: at 0 every run crosses
-the frame and every drop is one floor; at 1 runs are short and drops are deep.
-**Stations** is the share of the path that is machinery rather than plain
-rail. The plan lives in `src/worlds/goldberg/rube.ts`; the lane world it
-hands its steps to is the cascade's.
-
-### Workshop
-
-The same machinery, read as a shop floor: a hopper feeds a part onto the line,
-benches work it as it goes, and it ends in a bin, a bell, or a lamp. Cells that
-are not stations are belt. Parts are released every half loop rather than every
-loop, so the line always has work on it. `shop.ts` is the vocabulary every
-bench agrees on (`BENCH` is the same floor the ports and tracks worlds roll
-on). The composer lives in `src/worlds/goldberg/workshop.ts`.
-
-### Circus
-
-Every cell is a looping act, and every act stays inside its own footprint: a
-performer that leaves a tower comes back to it by the end of the loop, and the
-stunt on the way fires again next lap. Because nothing is handed across a cell
-edge, the programme does not need a snake — the world lays its own uniform grid
-across the frame and fills all of it. **Multi-cell** is the share of the floor
-the big acts take (big top, ferris wheel, tightrope, cannon, high dive, the
-two-cell elevator ride); every remaining cell gets a small act. **Drumroll** is
-how much of what is left is wired into chains that fire a beat apart, source →
-relay → sink; the rest free-runs on its own phase. The conduit itself is not
-drawn: on a floor this full a centre-to-centre line runs straight through the
-act it is cueing, and a bead travelling between cells would contradict the one
-rule the mode is built on. `circus.ts` holds the shared props (performer,
-flight, knock, hoop, bell).
+Before/after images are in [docs/connected](docs/connected).
 
 ### Ports (framework A)
 
@@ -296,11 +239,11 @@ and each reactor beside the piece of track it reacts to.
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus`, `rube` |
 | Theme | 14 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
-| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7, rube 5–14) |
+| Resolution / Stops | Grid density in Classic, Ports and Tracks; 4–8 working stops in the connected modes |
 | Stroke | Multiplier on the computed line weight |
-| Multi-cell / Wander | How eagerly to place machines larger than one cell; in Rube Goldberg, how far the path strays from a snake |
-| Stations / Drumroll / Wired chains | How much of the piece is machinery, or wired into firing sequences — the dial is renamed per mode |
-| Tag / Solo | Narrow the pool while exploring |
+| Multi-cell | How eagerly Classic places machines larger than one cell |
+| Wired chains | How much of Classic or Ports is wired into firing sequences |
+| Tag / Solo | Narrow Classic’s pool while exploring |
 | Catalog | One labelled instance of every machine |
 
 The resolution range is the mode's, not the slider's: a composer builds at the

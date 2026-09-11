@@ -28,6 +28,7 @@ let options: Options = readUrl()
 let view: ViewState = loadView()
 let canvasSize = measure()
 let comp = build(options, canvasSize)
+options = comp.options
 
 const engine = createEngine(host, comp, canvasSize)
 engine.setSpeed(view.speed)
@@ -44,6 +45,7 @@ function apply(patch: Partial<Options>) {
   } else {
     comp = build(options, canvasSize)
   }
+  options = comp.options
   engine.setComposition(comp)
   writeUrl(options)
   panel.sync(comp, view)

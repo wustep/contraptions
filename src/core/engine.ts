@@ -251,6 +251,10 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
         }
       }
 
+      for (const underlay of comp.underlays ?? []) {
+        underlay(p, loopFrame, { theme, weight: (size) => pen ?? strokeWeight(size, theme, comp.options.stroke) })
+      }
+
       each('draw')
 
       if (comp.showWires !== false) drawSignals(p, comp, loopFrame)

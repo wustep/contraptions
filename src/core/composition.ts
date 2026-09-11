@@ -10,12 +10,12 @@ import { makeRng } from './rng'
 import { themeByName, type Theme } from './themes'
 import type { Cell, Contraption, Instance, Wire } from './types'
 import { chainPaths, wireChain } from './wiring'
-import { buildCascade, cascadeCatalog } from '../worlds/goldberg/cascade'
-import { buildCircus } from '../worlds/goldberg/circus'
+import { cascadeCatalog } from '../worlds/goldberg/cascade'
+import { buildConnected, isConnected, type Circuit } from '../worlds/goldberg/connected'
 import type { LaneRun } from '../worlds/goldberg/laneworld'
-import { buildWorkshop, workshopCatalog } from '../worlds/goldberg/workshop'
+import { workshopCatalog } from '../worlds/goldberg/workshop'
 import { buildPorts, portsCatalog } from '../worlds/ports/build'
-import { buildRube, rubeCatalog } from '../worlds/goldberg/rube'
+import { rubeCatalog } from '../worlds/goldberg/rube'
 import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
 
 /**
@@ -26,10 +26,8 @@ import { buildTracks, tracksCatalog } from '../worlds/tracks/build'
  *   classic  — the original toys; independent machines, abstract wires
  *   ports    — tokens handed across typed edges (own world, own catalog)
  *   tracks   — balls circulating on a carved loop (own world, own catalog)
- *   cascade  — its own grid, one snake of stations, balls on world-drawn lanes
- *   workshop — the same lane world read as a shop line, parts every half loop
- *   circus   — its own grid of closed looping acts, wired as a drumroll
- *   rube     — one wandering path from a feeder to an ending; the rest is paper
+ *   cascade / workshop / circus / rube — a sparse physical circuit, one
+ *     permanent traveler and a visible return; legacy gadgets live in Catalog
  */
 export type Mode = 'classic' | 'ports' | 'tracks' | 'cascade' | 'workshop' | 'circus' | 'rube'
 
@@ -91,38 +89,38 @@ export const MODES: ModeInfo[] = [
   {
     name: 'cascade',
     label: 'Cascade',
-    note: 'one snake of stations; balls ride rails and elevators into a sink',
+    note: 'one marble, a chain of little consequences',
     catalog: 'cascade',
     composer: 'cascade',
-    dials: { layout: false, spans: false, chains: true, pool: true },
-    res: { min: 4, max: 20 },
+    dials: { layout: false, spans: false, chains: false, pool: false },
+    res: { min: 4, max: 8 },
   },
   {
     name: 'workshop',
     label: 'Workshop',
-    note: 'one shop line; parts ride belts and elevators into a bin, bell, or lamp',
+    note: 'one part, a whole shift of work',
     catalog: 'workshop',
     composer: 'workshop',
-    dials: { layout: false, spans: false, chains: true, pool: true },
-    res: { min: 4, max: 20 },
+    dials: { layout: false, spans: false, chains: false, pool: false },
+    res: { min: 4, max: 8 },
   },
   {
     name: 'circus',
     label: 'Circus',
-    note: 'a ring of looping acts; the drumroll fires them in sequence',
+    note: 'one performer, from takeoff to curtain call',
     catalog: 'circus',
     composer: 'circus',
-    dials: { layout: false, spans: true, chains: true, pool: true },
-    res: { min: 3, max: 12 },
+    dials: { layout: false, spans: false, chains: false, pool: false },
+    res: { min: 4, max: 8 },
   },
   {
     name: 'rube',
     label: 'Rube Goldberg',
-    note: 'one machine: a ball wanders from a feeder down chutes and elevators to an ending',
+    note: 'one wandering marble, all the way home',
     catalog: 'rube',
     composer: 'rube',
-    dials: { layout: false, spans: true, chains: true, pool: true },
-    res: { min: 5, max: 14 },
+    dials: { layout: false, spans: false, chains: false, pool: false },
+    res: { min: 4, max: 8 },
   },
 ]
 
@@ -182,7 +180,7 @@ export interface Options {
   theme: string
   layout: string
   mode: Mode
-  /** Cells across the art area. */
+  /** Grid cells across, or working stops in the connected modes. */
   res: number
   /** Multiplier on the computed stroke weight. */
   stroke: number
@@ -224,6 +222,9 @@ const clamp = (value: number, min: number, max: number, fallback: number): numbe
 export function sanitizeOptions(options: Options): Options {
   return {
     ...options,
+    // Legacy live filters selected disconnected gadgets. Catalog retains the
+    // full collection; the live circuit always keeps its complete itinerary.
+    ...(isConnected(options.mode) ? { solo: null, tag: null } : {}),
     res: clampRes(options.mode, options.res),
     stroke: clamp(options.stroke, 0.4, 2.4, defaultOptions.stroke),
     spans: clamp(options.spans, 0, 3, defaultOptions.spans),
@@ -280,6 +281,10 @@ export interface Composition {
    * frame" is a property of one object rather than of 27 machines.
    */
   lanes?: LaneRun
+  /** Physical circuit and its one persistent traveler. */
+  circuit?: Circuit
+  /** Shared structure behind the individual mechanisms. */
+  underlays?: Overlay[]
 }
 
 /**
@@ -335,10 +340,7 @@ export function build(options: Options, canvas: number = CANVAS): Composition {
   }
   if (options.mode === 'ports') return buildPorts(options, canvas)
   if (options.mode === 'tracks') return buildTracks(options, canvas)
-  if (options.mode === 'cascade') return buildCascade(options, canvas)
-  if (options.mode === 'workshop') return buildWorkshop(options, canvas)
-  if (options.mode === 'circus') return buildCircus(options, canvas)
-  if (options.mode === 'rube') return buildRube(options, canvas)
+  if (isConnected(options.mode)) return buildConnected(options, canvas)
   return buildGrid(options, canvas, catalogFor(options.mode), info.composer as Composer)
 }
 
