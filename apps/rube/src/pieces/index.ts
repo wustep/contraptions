@@ -5,9 +5,12 @@ import { bellows } from './bellows'
 import { cannon } from './cannon'
 import { conveyor } from './conveyor'
 import { crane } from './crane'
+import { drawbridge } from './drawbridge'
 import { dominoes } from './dominoes'
 import { drop } from './drop'
+import { flipper } from './flipper'
 import { funnel } from './funnel'
+import { gears } from './gears'
 import { hammer } from './hammer'
 import { lift } from './lift'
 import { loop } from './loop'
@@ -18,10 +21,17 @@ import { portal } from './portal'
 import { plainRail } from './rail'
 import { rocket } from './rocket'
 import { scoop } from './scoop'
+import { screw } from './screw'
 import { seesaw } from './seesaw'
+import { stairs } from './stairs'
+import { switchback } from './switchback'
+import { tipper } from './tipper'
 import { toaster } from './toaster'
 import { trampoline } from './trampoline'
 import { trapdoor } from './trapdoor'
+import { trapeze } from './trapeze'
+import { trebuchet } from './trebuchet'
+import { zipline } from './zipline'
 
 /**
  * The whole catalog: twenty-three pieces, chosen over the eighty-odd toys in
@@ -76,7 +86,17 @@ export const catalog: Piece<any>[] = [
   paddle,
   balloon,
   plunger,
+  stairs,
+  switchback,
+  zipline,
+  tipper,
+  drawbridge,
+  gears,
+  trapeze,
+  trebuchet,
+  screw,
+  flipper,
   portal,
 ]
 
-export const CATALOG_LIMIT = 25
+export const CATALOG_LIMIT = 45

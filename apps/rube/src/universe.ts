@@ -41,15 +41,15 @@ const TASTES: Record<string, Taste['weights']> = {
   mixed: {},
   workshop: {
     hammer: 1.7, dominoes: 1.6, bellows: 1.6, seesaw: 1.3, bell: 1.2, pendulum: 1.6, conveyor: 1.5, paddle: 1.4,
-    cannon: 0.5, loop: 0.5, toaster: 0.7, rocket: 0.5, crane: 0.8,
+    drawbridge: 1.5, tipper: 1.4, gears: 1.7, cannon: 0.5, loop: 0.5, toaster: 0.7, rocket: 0.5, crane: 0.8,
   },
   vertical: {
     drop: 1.6, lift: 1.5, toaster: 1.4, scoop: 1.4, trapdoor: 1.6, funnel: 1.6, balloon: 1.5, trampoline: 1.3,
-    'drop-deep': 2.2, 'lift-tall': 2.2, loop: 0.6, rocket: 0.6, plunger: 0.6,
+    stairs: 1.5, switchback: 1.6, zipline: 1.4, tipper: 1.3, screw: 1.5, flipper: 1.3, 'drop-deep': 2.2, 'lift-tall': 2.2, loop: 0.6, rocket: 0.6, plunger: 0.6,
   },
   ballistic: {
     cannon: 2, loop: 1.8, toaster: 1.3, seesaw: 1.3, hammer: 1.1, plunger: 1.9, rocket: 1.8, trampoline: 1.6, crane: 1.3,
-    dominoes: 0.6, bellows: 0.6, conveyor: 0.5,
+    zipline: 1.3, trapeze: 1.6, trebuchet: 1.9, flipper: 1.5, dominoes: 0.6, bellows: 0.6, conveyor: 0.5,
   },
 }
 
