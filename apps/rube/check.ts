@@ -32,6 +32,7 @@ const WORLDS = 3
 const eq = (a: Pt, b: Pt) => Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1]) < 1e-6
 
 const beats: number[] = []
+const mechanics = new Set<string>()
 for (const seed of SEEDS) {
   console.log(`\nshow · ${seed}`)
   const show = new Show(seed)
@@ -122,7 +123,24 @@ for (const seed of SEEDS) {
     check(`${tag}: the ball starts in the world's colour`, first.ballIn.color === u.ballColor)
     check(`${tag}: every change happens inside its piece`, u.pieces.every((p) => p.changes.every((c) => c.at >= 0 && c.at <= p.span)))
 
-    for (const p of u.pieces) used.add(p.piece.name)
+    // A ghost never reaches a portal, and a relay always hands the thread to a differently coloured ball.
+    const leaving = ballAt(last.ballIn, last.changes, Infinity)
+    check(`${tag}: the ball is solid at the portal out`, !leaving.ghost)
+    let relayOk = true
+    for (const p of u.pieces) {
+      const before = p.ballIn
+      const after = ballAt(before, p.changes, Infinity)
+      if (after.id !== before.id && after.color === before.color) relayOk = false
+    }
+    check(`${tag}: every relay changes the ball`, relayOk)
+    for (const p of u.pieces) {
+      used.add(p.piece.name)
+      for (const c of p.changes) {
+        if (c.relay) mechanics.add('relay')
+        if (c.color) mechanics.add('color')
+        if (c.ghost) mechanics.add('ghost')
+      }
+    }
   }
   // A long run of worlds never repeats a theme within the memory window.
   let repeat = false
@@ -145,6 +163,7 @@ for (const seed of SEEDS) {
 const sorted = [...beats].sort((a, b) => a - b)
 console.log(`\nbeats per map: min ${sorted[0]} · median ${sorted[sorted.length >> 1]} · max ${sorted[sorted.length - 1]}`)
 check('maps average at least eight beats', beats.reduce((a, b) => a + b, 0) / beats.length >= 8)
+check('the ball is recoloured, relayed and ghosted somewhere in the run', ['color', 'relay', 'ghost'].every((m) => mechanics.has(m)), [...mechanics].join(','))
 
 console.log(failures ? `\n${failures} failure(s)` : '\nall good')
 process.exit(failures ? 1 : 0)
