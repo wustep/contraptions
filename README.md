@@ -18,7 +18,7 @@ npm run check    # headless smoke test of the pure core
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-Seven modes, 14 palettes, 4 layouts. Classic keeps the original 36 toys;
+Seven modes, 20 palettes, 4 layouts. Classic keeps the original 36 toys;
 Cascade, Workshop, Circus and Rube Goldberg each bring their own catalog and
 their own grid.
 
@@ -34,7 +34,7 @@ src/
     wiring.ts       builds firing chains between neighbours
     lane.ts         how a token crosses a cell, and how lanes join up
     layouts.ts      grid | bricks | quads | bands
-    themes.ts       14 palettes
+    themes.ts       20 palettes, shared with the show
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
@@ -294,7 +294,7 @@ and each reactor beside the piece of track it reacts to.
 | --- | --- |
 | Seed | Everything random derives from this string |
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus`, `rube` |
-| Theme | 14 palettes, each a different mood |
+| Theme | 20 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
 | Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7, rube 5–14) |
 | Stroke | Multiplier on the computed line weight |
@@ -346,8 +346,8 @@ scrub bar over the current world, speed, an overview of the whole world,
 and world-to-world jumps. `?solo=hammer` narrows the planner to one piece
 (plus rail and portals) for polishing it.
 
-**Thirteen pieces**, curated from the eighty-odd toys in the other catalogs
-and rewritten for one ball, each a beat the ball is seen to cause:
+**Twenty-three pieces**, curated from the eighty-odd toys in the other
+catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
 | --- | --- |
@@ -356,14 +356,37 @@ and rewritten for one ball, each a beat the ball is seen to cause:
 | seesaw | up, hang over the pivot, down faster |
 | bell | the clapper is in the way; punctuation |
 | bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
-| dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → gate lifts |
+| dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → portcullis lifts |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
 | lift | pawl → counterweight → cage; up one to three floors, on or back |
 | cannon | match, a long fuse, bang, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel; down one floor, facing back |
 | toaster | in the slot, coils glow, pop; up one floor |
-| portal | in and out of a section; the framed gate with antennae is a world's edge |
+| crane | magnet down, blink, up, along the beam, think, drop; over two |
+| rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
+| pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
+| trapdoor | weight → lever → bolt → the floor gives way; a ramp; down one |
+| trampoline | the rail just stops; a pit, a bounce, the biggest arc in the show |
+| funnel | round and down, behind the cone and in front of it, through the neck; down one, on or back |
+| conveyor | switch → motor → cleats carry the ball up a floor, slowly, on purpose |
+| paddle | a wheel kicked round once; a relay |
+| balloon | pin → sandbag → the balloon rises the mast; up one or two |
+| plunger | pawl → spring → across a cell with no rail in it at all |
+| portal | a ring with a hole in the world in it; the gate with antennae and lightning is a world's edge |
+
+**Portals** are the cuts. The ball is drawn out into a streak and pulled
+into the vortex; somewhere else the vortex flares and pushes it out onto a
+rail. Exits and entries are told apart three ways: the chevrons on the rail
+march toward an exit and away from an entry, the control box stands on the
+far side from the ball's path, and the vortex spins inward at an exit and
+outward at an entry. A hop between worlds closes an iris on the old gate
+and opens it on the new one.
+
+**Worlds never repeat.** A new world's theme is never any of the last three
+worlds' themes, and its taste (workshop, vertical, ballistic, mixed) is
+never the last world's. The twenty palettes are the explorer's, in
+`src/core/themes.ts`, so both apps share them.
 
 Everything is a pure function of the clock, in seconds rather than loop
 fractions, because nothing here repeats: a piece is drawn from the seconds
@@ -384,7 +407,7 @@ apps/rube/
   check.ts                     the headless checks
   src/
     parts.ts      the ball, lanes, the piece contract
-    pieces/       the thirteen
+    pieces/       the twenty-three
     plan.ts       one section: a self-avoiding walk, portals at both ends
     universe.ts   theme, taste, sections, the joined journey
     show.ts       the endless sequence of universes from one seed

@@ -7,6 +7,7 @@
 import { TRANSIT, laneAt, type Pt } from './src/parts'
 import { CATALOG_LIMIT, catalog } from './src/pieces'
 import { Show } from './src/show'
+import { THEME_MEMORY } from './src/universe'
 import { beatCount } from './src/plan'
 
 let failures = 0
@@ -40,6 +41,7 @@ for (const seed of SEEDS) {
     check(`${tag}: has pieces`, u.pieces.length > 2)
     check(`${tag}: journey is positive`, u.journey > 0)
     check(`${tag}: theme differs from the last`, i === 0 || u.theme.name !== show.universe(i - 1).theme.name)
+    check(`${tag}: taste differs from the last`, i === 0 || u.taste !== show.universe(i - 1).taste)
 
     // Footprints never overlap.
     const seen = new Set<string>()
@@ -115,6 +117,15 @@ for (const seed of SEEDS) {
 
     for (const p of u.pieces) used.add(p.piece.name)
   }
+  // A long run of worlds never repeats a theme within the memory window.
+  let repeat = false
+  for (let i = 1; i < 12; i++) {
+    const recent = new Set<string>()
+    for (let j = Math.max(0, i - THEME_MEMORY); j < i; j++) recent.add(show.universe(j).theme.name)
+    if (recent.has(show.universe(i).theme.name)) repeat = true
+  }
+  check(`no theme repeats within ${THEME_MEMORY} worlds over twelve`, !repeat)
+
   // The show's clock crosses worlds without a seam.
   const b1 = show.begin(1)
   const before = show.at(b1 - 1e-3)

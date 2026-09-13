@@ -35,8 +35,8 @@ export const ROLL = 2.6
 export const FAST = 4.4
 /** Terminal-ish speed down a tube. */
 export const FALL = 5.5
-/** Seconds the ball spends inside a portal, each side. */
-export const TRANSIT = 0.32
+/** Seconds the ball spends being pulled into a portal, or pushed out of one. */
+export const TRANSIT = 0.4
 
 /* ------------------------------------------------------------------ lanes */
 
@@ -110,11 +110,17 @@ export interface LanePoint {
   y: number
   /** 1 normally, shrinking to 0 inside a portal. */
   scale: number
+  /** 1 normally; more than 1 when the ball is drawn out into a streak along its motion. */
+  stretch: number
+  /** Direction of motion, radians, in the lane's own hand. */
+  angle: number
   hidden: boolean
   /** Index of the segment. */
   seg: number
   /** Eased progress along it. */
   s: number
+  /** Time fraction along it, before easing. */
+  raw: number
 }
 
 const easeOf = (kind: Seg['ease'], s: number): number =>
@@ -132,19 +138,25 @@ export function laneAt(lane: Lane, t: number): LanePoint {
       const s = easeOf(seg.ease, raw)
       const lift = seg.arc ? seg.arc * 4 * s * (1 - s) : 0
       const scale = seg.portal === 'out' ? 1 - raw : seg.portal === 'in' ? raw : 1
+      // Pulled into a portal, or pushed out of one, the ball draws out into
+      // a streak along its path: a teleport, not a fade.
+      const stretch = seg.portal ? 1 + 2.4 * Math.pow(1 - scale, 1.4) : 1
       return {
         x: seg.from[0] + (seg.to[0] - seg.from[0]) * s,
         y: seg.from[1] + (seg.to[1] - seg.from[1]) * s - lift,
         scale,
+        stretch,
+        angle: Math.atan2(seg.to[1] - seg.from[1], seg.to[0] - seg.from[0]),
         hidden: !!seg.hidden,
         seg: i,
         s,
+        raw,
       }
     }
     want -= seg.dur
   }
   const end = segs[segs.length - 1]
-  return { x: end.to[0], y: end.to[1], scale: 1, hidden: !!end.hidden, seg: segs.length - 1, s: 1 }
+  return { x: end.to[0], y: end.to[1], scale: 1, stretch: 1, angle: 0, hidden: !!end.hidden, seg: segs.length - 1, s: 1, raw: 1 }
 }
 
 /** Seconds into the lane at which the ball first reaches `x`, on a segment moving forward across it. */
@@ -215,7 +227,11 @@ export const definePiece = <S>(spec: Piece<S>): Piece<S> => spec
 
 /* ------------------------------------------------------------------ drawing */
 
-/** The ball: one flat fill, ink outline, a dot that shows it spinning. */
+/**
+ * The ball: one flat fill, ink outline, a dot that shows it spinning. A
+ * `stretch` above 1 draws it out along `angle` into a streak, which is how
+ * it looks going into a portal.
+ */
 export function ball(
   p: p5,
   k: number,
@@ -226,14 +242,22 @@ export function ball(
   y: number,
   spin: number,
   scale = 1,
+  stretch = 1,
+  angle = 0,
 ): void {
   if (scale <= 0.02) return
   const d = 2 * R * k * scale
-  solid(p, ink, weight, color)
-  p.circle(x, y, d)
-  p.noStroke()
-  p.fill(ink)
-  p.circle(x + Math.cos(spin) * R * k * 0.48 * scale, y + Math.sin(spin) * R * k * 0.48 * scale, d * 0.2)
+  p.push()
+  p.translate(x, y)
+  p.rotate(angle)
+  solid(p, ink, weight * Math.min(1, scale * 1.5 + 0.3), color)
+  p.ellipse(0, 0, d * stretch, d)
+  if (stretch < 1.4) {
+    p.noStroke()
+    p.fill(ink)
+    p.circle(Math.cos(spin - angle) * R * k * 0.48 * scale, Math.sin(spin - angle) * R * k * 0.48 * scale, d * 0.2)
+  }
+  p.pop()
 }
 
 /** A stretch of rail. */

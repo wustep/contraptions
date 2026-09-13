@@ -154,7 +154,7 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
           const back = show.at(t - i * 0.022)
           if (back.universe !== u || back.section !== here.section || back.hidden) continue
           const d = Math.hypot(back.x - here.x, back.y - here.y)
-          if (d < 0.05) continue
+          if (d < 0.08) continue
           p.push()
           p.noStroke()
           const c = p.color(u.ballColor)
@@ -163,7 +163,9 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
           p.circle(sx(back.x), sy(back.y), 2 * R * k * back.scale * (1 - i * 0.12))
           p.pop()
         }
-        ball(p, k, theme.ink, weight, u.ballColor, sx(here.x), sy(here.y), spin, here.scale)
+        // The streak's direction is the lane's, in the piece's hand.
+        const angle = Math.atan2(Math.sin(here.angle), here.placed.mirror * Math.cos(here.angle))
+        ball(p, k, theme.ink, weight, u.ballColor, sx(here.x), sy(here.y), spin, here.scale, here.stretch, angle)
       }
 
       pass('over')
@@ -252,13 +254,17 @@ function drawTransitions(
   const last = here.placed === u.pieces[u.pieces.length - 1]
 
   if (isPortal && seg.portal) {
-    // How far into the transit: 0 at the cut for 'in', 1 at the cut for 'out'.
+    // How far into the transit, by the clock rather than the eased path:
+    // 0 at the cut for 'in', 1 at the cut for 'out'.
     const hop = first || last
-    const f = seg.portal === 'out' ? here.s : 1 - here.s
+    const f = seg.portal === 'out' ? here.raw : 1 - here.raw
     if (hop) {
       const prevInk = seg.portal === 'in' && u.index > 0 ? show.universe(u.index - 1).theme.ink : u.theme.ink
       const shade = seg.portal === 'in' ? prevInk : u.theme.ink
-      const radius = Math.hypot(W, H) * 0.6 * (1 - easeInOutCubic(f))
+      // The iris closes over the second half of the way in and opens over
+      // the first half of the way out, so it is shut for a beat at the cut.
+      const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.55)
+      const radius = Math.hypot(W, H) * 0.6 * (1 - easeInOutCubic(shut))
       const px = sx(here.x)
       const py = sy(here.y)
       p.push()
@@ -273,10 +279,10 @@ function drawTransitions(
         outline(p, u.ballColor, 3)
         p.circle(px, py, radius * 2 + 6)
       }
-    } else if (seg.portal === 'in' && here.s < 0.5) {
-      // A flash of paper, fading fast, to cover the cut between rooms.
+    } else if (seg.portal === 'in' && here.raw < 0.4) {
+      // A flash of ink, fading fast, to cover the cut between rooms.
       const c = p.color(u.theme.ink)
-      c.setAlpha(110 * (1 - here.s / 0.5))
+      c.setAlpha(110 * (1 - here.raw / 0.4))
       p.push()
       p.noStroke()
       p.fill(c)

@@ -28,7 +28,8 @@ export class Show {
     while (this.universes.length <= i) {
       const n = this.universes.length
       const previous = n ? this.universes[n - 1] : null
-      const u = buildUniverse(this.seed, n, previous?.theme.name ?? null, this.solo)
+      const avoid = { themes: this.universes.map((u) => u.theme.name), taste: previous?.taste ?? null }
+      const u = buildUniverse(this.seed, n, avoid, this.solo)
       this.universes.push(u)
       this.starts.push(previous ? this.starts[n - 1] + previous.journey : 0)
     }

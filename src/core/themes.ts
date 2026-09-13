@@ -14,7 +14,7 @@ export interface Theme {
 }
 
 /**
- * Fourteen palettes, each a different mood rather than a reshuffle of the same
+ * Twenty palettes, each a different mood rather than a reshuffle of the same
  * hues. Every fill is checked to read against both `bg` and `ink`, since
  * contraptions always sit as ink outlines over a single flat fill.
  */
@@ -132,6 +132,54 @@ export const themes: Theme[] = [
     ink: '#E8E3F0',
     colors: ['#DBD8E3', '#9A8FBF', '#F5B841', '#E2717A', '#5C5470'],
     note: 'the hour after sunset',
+  },
+  {
+    name: 'neon',
+    label: 'Neon',
+    bg: '#0D0B1E',
+    ink: '#F4F0FF',
+    colors: ['#FF2A6D', '#05D9E8', '#FFE900', '#7CFF6B', '#B967FF'],
+    note: 'signs after rain',
+  },
+  {
+    name: 'sakura',
+    label: 'Sakura',
+    bg: '#FFF4F6',
+    ink: '#3A2431',
+    colors: ['#F27E9C', '#7FB69B', '#F2C14E', '#6E4C86', '#E8785A'],
+    note: 'blossom and stem',
+  },
+  {
+    name: 'midcentury',
+    label: 'Mid-century',
+    bg: '#F5E9CC',
+    ink: '#2A211A',
+    colors: ['#E0A030', '#C9553D', '#3E7370', '#8A7454', '#F4F1EA'],
+    note: 'mustard, teal, walnut',
+  },
+  {
+    name: 'arctic',
+    label: 'Arctic',
+    bg: '#EBF3F9',
+    ink: '#16263B',
+    colors: ['#3A86FF', '#8ECAE6', '#FFB703', '#219EBC', '#FB8500'],
+    note: 'ice and two suns',
+  },
+  {
+    name: 'plum',
+    label: 'Plum',
+    bg: '#2A0F22',
+    ink: '#F9E4EE',
+    colors: ['#F2A65A', '#EAC94F', '#5FB49C', '#F25F5C', '#C58FC1'],
+    note: 'fruit in the dark',
+  },
+  {
+    name: 'moss',
+    label: 'Moss',
+    bg: '#F0EEE2',
+    ink: '#2A3324',
+    colors: ['#6B8E23', '#A7C957', '#BC6C25', '#DDA15E', '#386641'],
+    note: 'stone wall in spring',
   },
 ]
 
