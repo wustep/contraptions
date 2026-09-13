@@ -26,10 +26,11 @@ export const paddle = definePiece<{ color: string }>({
   draw: (p, s, { k, since, ink, weight }) => {
     const spin = since < 0 ? 0 : -Math.PI * 2 * easeOutCubic(over(since, 0, 0.9))
 
+    // The stand: a post behind the rail with an arm out to the axle.
     outline(p, ink, weight)
-    p.line(-0.14 * k, (HUB - 0.14) * k, 0, HUB * k)
-    p.line(0.14 * k, (HUB - 0.14) * k, 0, HUB * k)
-    p.line(-0.18 * k, (HUB - 0.16) * k, 0.18 * k, (HUB - 0.16) * k)
+    p.line(-0.4 * k, 0.5 * k, -0.4 * k, HUB * k)
+    p.line(-0.46 * k, 0.5 * k, -0.34 * k, 0.5 * k)
+    p.line(-0.4 * k, HUB * k, 0, HUB * k)
 
     p.push()
     p.translate(0, HUB * k)

@@ -59,11 +59,11 @@ export const trampoline = definePiece<{ color: string }>({
     rail(p, k, ink, weight, 1.14, 1.5)
     p.line(1.14 * k, (FLOOR - 0.05) * k, 1.14 * k, (FLOOR + 0.05) * k)
     // The pit: two walls and a floor, and the posts the fabric is strung on.
-    p.line(0.3 * k, 0.4 * k, 0.3 * k, 1.45 * k)
-    p.line(1.12 * k, (FLOOR + 0.05) * k, 1.12 * k, 1.45 * k)
-    p.line(0.3 * k, 1.45 * k, 1.12 * k, 1.45 * k)
+    p.line(0.3 * k, 0.4 * k, 0.3 * k, 1.5 * k)
+    p.line(1.12 * k, (FLOOR + 0.05) * k, 1.12 * k, 1.5 * k)
+    p.line(0.3 * k, 1.5 * k, 1.12 * k, 1.5 * k)
     for (const x of [0.4, 1.0]) {
-      p.line(x * k, 1.45 * k, x * k, FABRIC * k)
+      p.line(x * k, 1.5 * k, x * k, FABRIC * k)
       // Springs: a short zigzag between the post and the fabric's edge.
       p.beginShape()
       for (let i = 0; i <= 6; i++) {

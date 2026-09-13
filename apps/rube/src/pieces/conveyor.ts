@@ -127,7 +127,7 @@ export const conveyor = definePiece<{ color: string }>({
     p.line(-0.04 * k, 0, 0.04 * k, 0)
     p.line(0, -0.04 * k, 0, 0.04 * k)
     p.pop()
-    outline(p, ink, weight * 0.8)
+    outline(p, ink, weight)
     p.line((mx - 0.06) * k, (my - 0.16) * k, (HEAD[0] + nx * 0.07 + 0.02) * k, (HEAD[1] + ny * 0.07 - 0.06) * k)
     p.line((mx + 0.06) * k, (my - 0.16) * k, (HEAD[0] + nx * 0.07 + 0.06) * k, (HEAD[1] + ny * 0.07 + 0.02) * k)
     // A lamp on the motor while it runs.

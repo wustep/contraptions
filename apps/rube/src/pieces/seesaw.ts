@@ -41,9 +41,9 @@ export const seesaw = definePiece<{ color: string }>({
     rail(p, k, ink, weight, END, 0.5)
 
     outline(p, ink, weight)
-    p.line(-0.13 * k, 0.44 * k, 0, PIVOT * k)
-    p.line(0.13 * k, 0.44 * k, 0, PIVOT * k)
-    p.line(-0.16 * k, 0.44 * k, 0.16 * k, 0.44 * k)
+    p.line(-0.14 * k, 0.5 * k, 0, PIVOT * k)
+    p.line(0.14 * k, 0.5 * k, 0, PIVOT * k)
+    p.line(-0.2 * k, 0.5 * k, 0.2 * k, 0.5 * k)
 
     p.push()
     p.translate(0, PIVOT * k)

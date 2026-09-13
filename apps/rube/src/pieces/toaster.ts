@@ -49,8 +49,9 @@ export const toaster = definePiece<{ color: string }>({
     rail(p, k, ink, weight, -0.5, BODY_X0)
     rail(p, k, ink, weight, 0.1, 0.5, SHELF_Y + FLOOR)
     outline(p, ink, weight)
-    p.line(0.5 * k, (SHELF_Y + FLOOR) * k, 0.5 * k, (SHELF_Y + FLOOR + 0.2) * k)
-    p.line(0.5 * k, (SHELF_Y + FLOOR + 0.2) * k, 0.18 * k, (SHELF_Y + FLOOR) * k)
+    p.line(0.42 * k, (SHELF_Y + FLOOR) * k, 0.42 * k, 0.5 * k)
+    p.line(0.36 * k, 0.5 * k, 0.48 * k, 0.5 * k)
+    p.line(0.42 * k, (SHELF_Y + FLOOR + 0.2) * k, 0.18 * k, (SHELF_Y + FLOOR) * k)
     // The lever on the side: down while toasting, up with the pop.
     const down = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE, ARRIVE + DROP) : 1 - easeOutBack(over(since, 0, 0.18))
     outline(p, ink, weight)
@@ -102,7 +103,7 @@ export const toaster = definePiece<{ color: string }>({
       p.push()
       p.noFill()
       p.stroke(ink)
-      p.strokeWeight(weight * 0.8)
+      p.strokeWeight(weight)
       for (const dx of [-0.1, 0, 0.1]) {
         const rise = ((t * 0.6 + dx) % 0.25) / 0.25
         const y = LID - 0.04 - rise * 0.16

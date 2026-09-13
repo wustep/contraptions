@@ -55,9 +55,10 @@ export const cannon = definePiece<{ color: string }>({
     rail(p, k, ink, weight, -0.5, -0.3)
     rail(p, k, ink, weight, 1.5, 2.5, -1 + FLOOR)
     outline(p, ink, weight)
-    p.line(1.62 * k, (-1 + FLOOR) * k, 1.62 * k, -0.5 * k)
-    p.line(2.3 * k, (-1 + FLOOR) * k, 2.3 * k, -0.5 * k)
-    p.line(1.5 * k, -0.5 * k, 2.5 * k, -0.5 * k)
+    p.line(1.5 * k, (-1 + FLOOR + 0.06) * k, 2.5 * k, (-1 + FLOOR + 0.06) * k)
+    p.line(1.62 * k, (-1 + FLOOR + 0.06) * k, 1.62 * k, 0.5 * k)
+    p.line(1.56 * k, 0.5 * k, 1.68 * k, 0.5 * k)
+    p.line(1.62 * k, -0.35 * k, 2.36 * k, (-1 + FLOOR + 0.06) * k)
     // The bumper at the back of the landing, squashed by the arrival.
     const landAt = ARRIVE + FUSE + FLIGHT
     const squash = t < landAt ? 0 : 1 - over(t, landAt, landAt + 0.3)

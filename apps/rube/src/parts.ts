@@ -331,6 +331,17 @@ export function post(p: p5, k: number, ink: string, weight: number, x: number, y
   p.line((x - 0.06) * k, y1 * k, (x + 0.06) * k, y1 * k)
 }
 
+/**
+ * A gallows: a beam along the cell's roof from `x0` to `x1`, held up by a
+ * post at `xPost` that stands on the ground behind the rail. Anything the
+ * show hangs over the line hangs from one of these, so nothing floats.
+ */
+export function gallows(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, xPost: number, y = -0.5): void {
+  outline(p, ink, weight)
+  p.line(x0 * k, y * k, x1 * k, y * k)
+  post(p, k, ink, weight, xPost, y, 0.5)
+}
+
 /** A flick: out fast, back with a settle. 1 at full stroke. Seconds. */
 export const flick = (t: number, out = 0.06, back = 0.12, done = 0.5) =>
   easeOutQuad(clamp(t / out)) - easeInOutSine(clamp((t - back) / (done - back)))

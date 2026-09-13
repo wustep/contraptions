@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { ROLL, definePiece, flick, over, rail, roll, wait, type Lane } from '../parts'
+import { ROLL, definePiece, flick, gallows, over, rail, roll, wait, type Lane } from '../parts'
 
 /**
  * A bell hung over the line with its clapper down in the ball's way. The ball
@@ -43,9 +43,8 @@ export const bell = definePiece<{ color: string }>({
       p.pop()
     }
 
-    // The yoke, off the cell's roof.
-    outline(p, ink, weight)
-    p.line(-0.2 * k, -0.5 * k, 0.2 * k, -0.5 * k)
+    // The yoke, on a gallows that stands behind the rail.
+    gallows(p, k, ink, weight, -0.34, 0.2, -0.34)
     p.push()
     p.translate(0, -0.5 * k)
     p.rotate(rock)

@@ -2,17 +2,18 @@ import { outline, solid } from '../../../../src/core/draw'
 import { FALL, FLOOR, ROLL, arcPts, chain, definePiece, over, rail, roll, segTime, type Lane, type Pt, type Seg } from '../parts'
 
 /**
- * A funnel. The rail ends at the rim; the ball goes round and round and
- * down, faster and tighter, behind the cone and in front of it, until it
- * drops through the neck into the cell below, where a quarter-pipe turns
- * the drop back into a roll — on, or back the way it came.
+ * A glass funnel. The rail ends at the rim; the ball goes round and round
+ * and down, faster and tighter, in full view the whole way — the funnel is
+ * drawn as a paper bowl behind the ball, so the spiral is always readable
+ * — until it drops through the neck into the cell below, where a
+ * quarter-pipe turns the drop back into a roll, on or back the way it came.
  */
 const RIM_Y = 0.06
 const RIM_HALF = 0.42
 const NECK_Y = 0.42
 const NECK_HALF = 0.16
 const ENTRY_X = -0.3
-const TURNS = 4.6
+const TURNS = 3.8
 const ORBIT = 1.5
 const ARC = 0.24
 const TUBE = 0.16
@@ -20,19 +21,15 @@ const TUBE = 0.16
 function orbit(): Seg[] {
   const n = 46
   const dt = ORBIT / n
-  const pts: { x: number; y: number; back: boolean }[] = []
+  const pts: Pt[] = []
   for (let i = 0; i <= n; i++) {
     const f = i / n
     const y = 0.02 + (NECK_Y - 0.1 - 0.02) * Math.pow(f, 1.4)
     const amp = 0.27 * (1 - 0.92 * f) + 0.02
     const phase = Math.PI + Math.PI * 2 * TURNS * Math.pow(f, 1.6)
-    pts.push({ x: Math.cos(phase) * amp, y, back: Math.sin(phase) > 0.15 })
+    pts.push([Math.cos(phase) * amp, y])
   }
-  const segs: Seg[] = []
-  for (let i = 1; i < pts.length; i++) {
-    segs.push({ from: [pts[i - 1].x, pts[i - 1].y], to: [pts[i].x, pts[i].y], dur: dt, hidden: pts[i].back && pts[i - 1].back })
-  }
-  return segs
+  return chain(pts, ORBIT).map((seg) => ({ ...seg, dur: dt }))
 }
 
 export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
@@ -65,28 +62,28 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
     const { turn } = s
     // The rail to the rim.
     rail(p, k, ink, weight, -0.5, -RIM_HALF - 0.02)
-    // The cone, paper-filled: the ball goes behind it on the far side.
+    // The bowl, in paper: the ball is always in front of it.
     solid(p, ink, weight, bg)
     p.quad(-RIM_HALF * k, RIM_Y * k, RIM_HALF * k, RIM_Y * k, NECK_HALF * k, NECK_Y * k, -NECK_HALF * k, NECK_Y * k)
-    // The rim, seen from a little above.
+    // The rim, a band of colour seen from a little above, open in the middle.
     solid(p, ink, weight, s.color)
-    p.ellipse(0, RIM_Y * k, RIM_HALF * 2 * k, 0.11 * k)
-    solid(p, ink, weight, ink)
-    p.ellipse(0, RIM_Y * k, (RIM_HALF * 2 - 0.1) * k, 0.06 * k)
-    // Bands on the cone.
-    outline(p, ink, weight * 0.8)
+    p.ellipse(0, RIM_Y * k, RIM_HALF * 2 * k, 0.12 * k)
+    solid(p, ink, weight, bg)
+    p.ellipse(0, RIM_Y * k, (RIM_HALF * 2 - 0.12) * k, 0.06 * k)
+    // Two bands round the glass.
+    outline(p, ink, weight)
     for (const f of [0.35, 0.7]) {
       const y = RIM_Y + (NECK_Y - RIM_Y) * f
       const half = RIM_HALF + (NECK_HALF - RIM_HALF) * f
       p.arc(0, y * k, half * 2 * k, 0.07 * k, 0, Math.PI)
     }
     // The neck, into the cell below, and the tube down to the catch.
-    outline(p, ink, weight)
     for (const x of [-TUBE, TUBE]) p.line(x * k, NECK_Y * k, x * k, (1 - ARC - 0.02) * k)
     for (const y of [0.62, 0.86]) for (const x of [-TUBE, TUBE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
     // The stand: legs from the rim's shoulders to the floor of the cell below.
     for (const side of [-1, 1]) {
       p.line(side * (RIM_HALF - 0.04) * k, (RIM_Y + 0.05) * k, side * 0.36 * k, 0.5 * k)
+      p.line(side * 0.3 * k, 0.5 * k, side * 0.42 * k, 0.5 * k)
     }
     // The catch: a quarter-pipe onto the floor, in the direction the ball leaves.
     p.push()

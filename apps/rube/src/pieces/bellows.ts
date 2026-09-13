@@ -1,6 +1,6 @@
 import { clipBox, outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic, lerp } from '../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane } from '../parts'
+import { FLOOR, ROLL, definePiece, gallows, over, rail, roll, wait, type Lane } from '../parts'
 
 /**
  * A bellows on a stand, aimed down the line, with a weight hung over it
@@ -79,6 +79,7 @@ export const bellows = definePiece<{ color: string }>({
     // as the tongue sinks; the weight's string slips the hook as it does.
     const rodTop = LEVER_Y + SINK * press
     const angle = Math.asin((SINK * press) / (ROD_X - PIVOT_X))
+    gallows(p, k, ink, weight, PIVOT_X - 0.1, 0.42, 0.42)
     outline(p, ink, weight)
     p.line(ROD_X * k, (FLOOR + SINK * press) * k, ROD_X * k, rodTop * k)
     p.line(PIVOT_X * k, -0.5 * k, PIVOT_X * k, LEVER_Y * k)

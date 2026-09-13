@@ -114,7 +114,7 @@ export const balloon = definePiece<BalloonState>({
     const by = up * -s.floors + sink
     solid(p, ink, weight, s.color)
     p.quad((-BASKET_W / 2) * k, (by + R * 0.1) * k, (BASKET_W / 2) * k, (by + R * 0.1) * k, (BASKET_W / 2 - 0.04) * k, (by + FLOOR + 0.05) * k, (-BASKET_W / 2 + 0.04) * k, (by + FLOOR + 0.05) * k)
-    outline(p, ink, weight * 0.8)
+    outline(p, ink, weight)
     for (const dx of [-0.06, 0, 0.06]) p.line(dx * k, (by + R * 0.1 + 0.02) * k, dx * k, (by + FLOOR + 0.03) * k)
   },
 })

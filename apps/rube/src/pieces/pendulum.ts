@@ -73,9 +73,12 @@ export const pendulum = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(TONGUE * k, (FLOOR + 0.02 + 0.03 * pressed) * k, TONGUE * k, -0.42 * k)
     p.line(TONGUE * k, -0.42 * k, 0.1 * k, -0.42 * k)
-    // The roof beam, the pivot, and the hook that held the bob.
+    // The roof beam on two posts, the pivot, and the hook that held the bob.
     p.line(-0.15 * k, -0.5 * k, 1.05 * k, -0.5 * k)
-    for (const x of [-0.1, 1.0]) p.line(x * k, -0.5 * k, x * k, -0.44 * k)
+    for (const x of [-0.1, 1.0]) {
+      p.line(x * k, -0.5 * k, x * k, 0.5 * k)
+      p.line((x - 0.06) * k, 0.5 * k, (x + 0.06) * k, 0.5 * k)
+    }
     const released = t < RELEASE - 0.06 ? 0 : t < RELEASE ? over(t, RELEASE - 0.06, RELEASE) : 1
     p.push()
     p.translate(0.06 * k, -0.42 * k)
@@ -84,7 +87,7 @@ export const pendulum = definePiece<{ color: string }>({
     p.line(-0.06 * k, 0.06 * k, -0.02 * k, 0.09 * k)
     p.pop()
     // The rod and the bob.
-    outline(p, ink, weight * 1.2)
+    outline(p, ink, weight)
     p.line(PIVOT[0] * k, PIVOT[1] * k, bx * k, by * k)
     solid(p, ink, weight, bg)
     p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.07 * k)

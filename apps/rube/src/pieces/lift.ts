@@ -74,16 +74,17 @@ export const lift = definePiece<LiftState>({
 
     // The guides, from the sheave bracket to the buffers at the bottom.
     outline(p, ink, weight)
-    for (const x of [-GUIDE, GUIDE]) p.line(x * k, (sheaveY + 0.06) * k, x * k, 0.44 * k)
+    for (const x of [-GUIDE, GUIDE]) p.line(x * k, (sheaveY + 0.06) * k, x * k, 0.5 * k)
     for (let y = 0.3; y > sheaveY + 0.2; y -= 0.24) {
       for (const x of [-GUIDE, GUIDE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
     }
-    // Buffers on the floor.
-    p.line((-GUIDE - 0.03) * k, 0.44 * k, (GUIDE + 0.03) * k, 0.44 * k)
-    for (const x of [-0.07, 0.07]) p.line(x * k, 0.44 * k, x * k, 0.485 * k)
+    // The ground under the guides, and the buffers on it.
+    p.line((-GUIDE - 0.06) * k, 0.5 * k, (CW_X + 0.14) * k, 0.5 * k)
+    for (const x of [-0.07, 0.07]) p.line(x * k, 0.44 * k, x * k, 0.5 * k)
+    p.line(-0.1 * k, 0.44 * k, 0.1 * k, 0.44 * k)
     // The sheave and its bracket.
     p.line(-GUIDE * k, (sheaveY + 0.06) * k, (CW_X + 0.08) * k, (sheaveY + 0.06) * k)
-    p.line((CW_X + 0.08) * k, (sheaveY + 0.06) * k, (CW_X + 0.08) * k, (top + 0.5) * k)
+    p.line((CW_X + 0.08) * k, (sheaveY + 0.06) * k, (CW_X + 0.08) * k, 0.5 * k)
     // The cable: over the sheave, down to the cage on one side, to the weight on the other.
     p.line(-0.08 * k, sheaveY * k, -0.08 * k, (carY - CAR_H + FLOOR) * k)
     const weightY = lerp(sheaveY + 0.28, -0.05, up)

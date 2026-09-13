@@ -101,7 +101,8 @@ export const plunger = definePiece<{ color: string }>({
     p.circle(0, 0, 0.05 * k)
     p.pop()
     outline(p, ink, weight)
-    p.line((COLLAR + 0.1) * k, -0.2 * k, (COLLAR + 0.1) * k, -0.5 * k)
+    p.line((COLLAR + 0.1) * k, -0.2 * k, COLLAR * k, -0.2 * k)
+    p.line(COLLAR * k, -0.2 * k, COLLAR * k, -0.12 * k)
     // The strike.
     if (since > 0 && since < 0.15) {
       const f = over(since, 0, 0.15)
