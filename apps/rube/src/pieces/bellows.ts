@@ -49,7 +49,8 @@ export const bellows = definePiece<{ color: string }>({
     if (!fits([[0, 0]], [1, 0])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SEAT, SINK], ROLL, 'out'),
+        roll([-0.5, 0], [TONGUE_W + 0.02, 0], ROLL),
+        roll([TONGUE_W + 0.02, 0], [SEAT, SINK], ROLL, 'out'),
         wait([SEAT, SINK], LEAVE - ARRIVE),
         roll([SEAT, SINK], [0.5, 0], ROLL * 1.3, 'out'),
       ],

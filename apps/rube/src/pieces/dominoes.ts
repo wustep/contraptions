@@ -6,11 +6,14 @@ import { FLOOR, ROLL, definePiece, flick, over, rail, roll, wait, type Lane } fr
  * A gate across the line and a table of dominoes above it. The ball hits the
  * gate; the gate's push rod knocks the first domino; the row goes over along
  * the table; the last one lands on a lever whose arm pulls a cord over two
- * pulleys; the cord lifts the gate; the ball rolls on underneath the table,
- * past the whole fallen row. Two cells, six links, one ball.
+ * pulleys; the cord hauls the gate straight up its post like a portcullis;
+ * the ball rolls on underneath the table, past the whole fallen row. Two
+ * cells, six links, one ball.
  */
 const GATE = 0.0
-const GATE_TOP = -0.3
+const GATE_TOP = -0.2
+/** How far the portcullis rises: clear of the ball, inside the cell. */
+const RISE = 0.3
 const SEAT = GATE - 0.19
 const SHELF = -0.18
 const COUNT = 7
@@ -20,8 +23,6 @@ const H = 0.26
 const W = 0.065
 const LEVER_X = FIRST + GAP * COUNT + 0.02
 const CORD_Y = -0.47
-/** The gate's pulley sits east of it, so the cord hauls the gate up and out of the way. */
-const GATE_PULLEY = GATE + 0.3
 /** Seconds after entry. */
 const ARRIVE = (0.5 + SEAT) / ROLL
 const PUSH = 0.06
@@ -60,16 +61,13 @@ export const dominoes = definePiece<{ color: string }>({
     // The cord: from the gate's foot up to a pulley, across, down to the lever.
     outline(p, ink, weight)
     const pull = since < 0 ? 0 : since < OPEN ? over(since, 0, OPEN) : 1 - over(since, RESET - 0.3, RESET)
-    p.line(GATE_PULLEY * k, CORD_Y * k, (LEVER_X + 0.08) * k, CORD_Y * k)
+    p.line(GATE * k, CORD_Y * k, (LEVER_X + 0.08) * k, CORD_Y * k)
     p.line((LEVER_X + 0.08) * k, CORD_Y * k, (LEVER_X + 0.08) * k, (SHELF - 0.1 - 0.16 * pull) * k)
-    // Down from the pulley to the gate's foot, wherever the gate has swung to.
+    // Straight down from the pulley to the top of the gate.
     const gateLift = since < 0 ? 0 : since < OPEN ? easeInOutCubic(over(since, 0, OPEN)) : 1 - easeInOutCubic(over(since, RESET - 0.3, RESET))
-    const gateLen = FLOOR - GATE_TOP - 0.03
-    const footX = GATE + Math.sin(1.35 * gateLift) * gateLen
-    const footY = GATE_TOP + Math.cos(1.35 * gateLift) * gateLen
-    p.line(GATE_PULLEY * k, CORD_Y * k, footX * k, footY * k)
+    p.line(GATE * k, CORD_Y * k, GATE * k, (GATE_TOP - RISE * gateLift) * k)
     solid(p, ink, weight, s.color)
-    p.circle(GATE_PULLEY * k, CORD_Y * k, 0.06 * k)
+    p.circle(GATE * k, CORD_Y * k, 0.06 * k)
     p.circle((LEVER_X + 0.08) * k, CORD_Y * k, 0.06 * k)
 
     // The lever on the table's end: an L, hinged at its corner. The last
@@ -106,24 +104,21 @@ export const dominoes = definePiece<{ color: string }>({
       p.pop()
     }
 
-    // The gate: a bar hinged at its top, swung up and out of the way by the
-    // cord. Its push rod runs from its foot up to the first domino.
-    const lift = gateLift
+    // The gate: a bar in a guide, hauled straight up by the cord. It gives
+    // a little when the ball hits it, and that nudge is what the push rod
+    // carries up to the first domino's foot.
     const nudge = t < ARRIVE ? 0 : flick(t - ARRIVE, 0.05, 0.1, 0.5) * 0.04
-    p.push()
-    p.translate((GATE + nudge) * k, GATE_TOP * k)
-    p.rotate(-1.35 * lift)
+    const top = GATE_TOP - RISE * gateLift
+    const gateH = FLOOR - GATE_TOP - 0.02
     outline(p, ink, weight)
-    p.line(0, 0, 0, (FLOOR - GATE_TOP) * k)
+    p.line((GATE - 0.05) * k, -0.5 * k, (GATE - 0.05) * k, (FLOOR - 0.02) * k)
     solid(p, ink, weight, s.color)
-    p.rect(0, ((FLOOR - GATE_TOP) / 2) * k, 0.06 * k, (FLOOR - GATE_TOP - 0.02) * k)
-    p.pop()
-    outline(p, ink, weight)
-    p.line(GATE * k, -0.5 * k, GATE * k, GATE_TOP * k)
-    solid(p, ink, weight, s.color)
-    p.circle(GATE * k, GATE_TOP * k, 0.05 * k)
+    p.rect((GATE + nudge) * k, (top + 0.01 + gateH / 2) * k, 0.06 * k, gateH * k)
+    p.fill(ink)
+    p.noStroke()
+    p.rect((GATE + nudge) * k, (top + 0.03) * k, 0.08 * k, 0.04 * k)
     // The push rod, from the gate up to the first domino's foot.
     outline(p, ink, weight)
-    p.line((GATE + 0.04 + nudge) * k, -0.06 * k, (FIRST - 0.04 + nudge) * k, (SHELF - 0.05) * k)
+    p.line((GATE + 0.04 + nudge) * k, (top + 0.12) * k, (FIRST - 0.04 + nudge) * k, (SHELF - 0.05) * k)
   },
 })
