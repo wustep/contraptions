@@ -195,5 +195,10 @@ if (import.meta.env.DEV) {
     reroll,
     show: () => show,
     canvas: () => stage.querySelector('canvas') as HTMLCanvasElement,
+    setOverview: (on: boolean) => {
+      overview = on
+      view.setOverview(on)
+      sync()
+    },
   }
 }
