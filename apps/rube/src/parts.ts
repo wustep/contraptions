@@ -65,6 +65,44 @@ export interface Lane {
   fire: number
 }
 
+/* ------------------------------------------------------------------ the ball */
+
+/**
+ * The ball as it is right now. The thread is one ball, but a piece may
+ * recolour it, turn it ghostly, or hand the thread to another ball
+ * altogether; the state rides along the chain from piece to piece.
+ */
+export interface BallState {
+  color: string
+  /** A phased ball: drawn as an outline, passes through solid things. */
+  ghost: boolean
+  /** Which ball this is. Counts up at every relay, so a trail never bridges two balls. */
+  id: number
+}
+
+/** A change to the ball, `at` seconds into a piece's lane. */
+export interface BallChange {
+  at: number
+  color?: string
+  ghost?: boolean
+  /** The thread passes to another ball here. */
+  relay?: boolean
+}
+
+/** The ball after every change in `changes` up to time `t`. */
+export function ballAt(ball: BallState, changes: BallChange[], t: number): BallState {
+  let out = ball
+  for (const c of changes) {
+    if (c.at > t) break
+    out = {
+      color: c.color ?? out.color,
+      ghost: c.ghost ?? out.ghost,
+      id: c.relay ? out.id + 1 : out.id,
+    }
+  }
+  return out
+}
+
 const len = (a: Pt, b: Pt) => Math.hypot(b[0] - a[0], b[1] - a[1])
 
 export const roll = (from: Pt, to: Pt, v = ROLL, ease?: Seg['ease']): Seg => ({ from, to, dur: len(from, to) / v, ease })
@@ -182,6 +220,8 @@ export interface PlaceCtx {
   color: string
   theme: Theme
   taste: Taste
+  /** The ball as it arrives: its colour, whether it is a ghost. */
+  ball: BallState
   /** True if the piece may occupy these canonical cells and hand off into `exit`. */
   fits(cells: Pt[], exit: Pt): boolean
 }
@@ -194,6 +234,8 @@ export interface Placement<S> {
   exit: { at: Pt; dir: 1 | -1 }
   lane: Lane
   state: S
+  /** What the piece does to the ball, in lane time, sorted by `at`. */
+  changes?: BallChange[]
 }
 
 /** Everything a piece gets on every frame. */
@@ -207,6 +249,7 @@ export interface PieceCtx {
   ink: string
   bg: string
   weight: number
+  /** The colour of the ball as it arrives. A piece that recolours it knows the new one from its own state. */
   color: string
   theme: Theme
 }
@@ -244,12 +287,27 @@ export function ball(
   scale = 1,
   stretch = 1,
   angle = 0,
+  ghost = false,
 ): void {
   if (scale <= 0.02) return
   const d = 2 * R * k * scale
   p.push()
   p.translate(x, y)
   p.rotate(angle)
+  if (ghost) {
+    // A phased ball: the same outline, dashed, with the world showing through.
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.setLineDash([d * 0.22, d * 0.16])
+    const tint = p.color(color)
+    tint.setAlpha(70)
+    p.stroke(ink)
+    p.strokeWeight(weight * Math.min(1, scale * 1.5 + 0.3))
+    p.fill(tint)
+    p.ellipse(0, 0, d * stretch, d)
+    ctx.setLineDash([])
+    p.pop()
+    return
+  }
   solid(p, ink, weight * Math.min(1, scale * 1.5 + 0.3), color)
   p.ellipse(0, 0, d * stretch, d)
   if (stretch < 1.4) {

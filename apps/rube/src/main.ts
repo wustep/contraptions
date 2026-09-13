@@ -140,7 +140,7 @@ function tick(): void {
     const t = now()
     const here = show.at(t)
     const u = here.universe
-    readout.textContent = `world ${u.index} · ${u.theme.label} · ${u.taste} · section ${here.section + 1}/${u.sections.length} · ${here.placed.piece.name} · ${here.local.toFixed(1)}s / ${u.journey.toFixed(0)}s`
+    readout.textContent = `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name} · ${here.local.toFixed(1)}s / ${u.journey.toFixed(0)}s`
     scrub.value = String(Math.round((here.local / u.journey) * 1000))
   }
   requestAnimationFrame(tick)

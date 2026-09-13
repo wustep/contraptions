@@ -1,13 +1,14 @@
 import { makeRng, type Rng } from '../../../src/core/rng'
 import { themes, type Theme } from '../../../src/core/themes'
-import { laneAt, type LanePoint, type Taste } from './parts'
+import { ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
 import { catalog } from './pieces'
-import { beatCount, planSection, type Box, type Placed } from './plan'
+import { beatCount, planChain, type Box, type Placed } from './plan'
 
 /**
- * A universe: one theme, one taste, one chain of sections, one ball colour.
- * Built from a seed and nothing else, so the show can build the same one
- * again at any time and get the same machine to the frame.
+ * A universe: one theme, one taste, one map, one chain from a portal to a
+ * portal, one ball colour to start with. Built from a seed and nothing
+ * else, so the show can build the same one again at any time and get the
+ * same machine to the frame.
  */
 
 export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars'
@@ -17,10 +18,12 @@ export interface Universe {
   seed: string
   theme: Theme
   taste: string
+  /** The colour the ball has when it comes out of the first portal. */
   ballColor: string
   backdrop: Backdrop
   pieces: Placed[]
-  sections: Box[]
+  /** The box the map was carved in. */
+  box: Box
   /** Seconds from the first portal to the last. */
   journey: number
   /** Cells the whole thing spans. */
@@ -29,7 +32,8 @@ export interface Universe {
 
 export interface UniversePoint extends LanePoint {
   placed: Placed
-  section: number
+  /** The ball as it is at this moment. */
+  ball: BallState
 }
 
 /** What each universe favours. The names are the pieces'; the extras steer their variants. */
@@ -49,12 +53,9 @@ const TASTES: Record<string, Taste['weights']> = {
   },
 }
 
-const DARK = new Set(['blueprint', 'noir', 'deepsea', 'ember', 'dusk'])
+const DARK = new Set(['blueprint', 'noir', 'deepsea', 'ember', 'dusk', 'neon', 'plum'])
 
-/** Each section is its own room, laid in a row with a gap the camera never crosses. */
-const GAP = 5
-
-/** What the world before this one looked like, so this one can look different. */
+/** What the worlds before this one looked like, so this one can look different. */
 export interface Avoid {
   /** Theme names of the last few worlds. None of them is picked again. */
   themes: string[]
@@ -82,25 +83,15 @@ export function buildUniverse(seed: string, index: number, avoid: Avoid, solo: s
 
   // Solo: the piece under the glass, with rail to breathe, and portals.
   const pool = solo ? catalog.filter((c) => c.name === solo || c.name === 'rail' || c.name === 'portal') : catalog
-  const sectionsWanted = rng.int(2, 5)
-  const pieces: Placed[] = []
-  const sections: Box[] = []
-  let x = 0
-  for (let s = 0; s < sectionsWanted; s++) {
-    const w = rng.int(8, 13)
-    const h = rng.int(4, 7)
-    const box: Box = { x0: x, y0: 0, x1: x + w - 1, y1: h - 1 }
-    const beats = rng.int(6, 11)
-    const section = bestOf(rng.fork(`section:${s}`), 4, (attempt) =>
-      planSection(
-        { rng: attempt, theme, taste, catalog: pool, colors, portalColor },
-        { index: s, box, beats, hopIn: s === 0, hopOut: s === sectionsWanted - 1 },
-      ),
-    )
-    pieces.push(...section)
-    sections.push(box)
-    x += w + GAP
-  }
+  // One map: a box wide enough for a long walk, tall enough to climb and fall in.
+  const w = rng.int(14, 21)
+  const h = rng.int(6, 10)
+  const box: Box = { x0: 0, y0: 0, x1: w - 1, y1: h - 1 }
+  const beats = rng.int(11, 17)
+  const ball: BallState = { color: ballColor, ghost: false, id: 0 }
+  const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball }, { box, beats }),
+  )
 
   let acc = 0
   for (const placed of pieces) {
@@ -121,15 +112,15 @@ export function buildUniverse(seed: string, index: number, avoid: Avoid, solo: s
     { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity },
   )
 
-  return { index, seed, theme, taste: tasteName, ballColor, backdrop, pieces, sections, journey: acc, bounds }
+  return { index, seed, theme, taste: tasteName, ballColor, backdrop, pieces, box, journey: acc, bounds }
 }
 
-/** Plan a section a few times and keep the one with the most beats. */
+/** Plan the map a few times and keep the walk with the most beats. */
 function bestOf(rng: Rng, tries: number, plan: (rng: Rng) => Placed[]): Placed[] {
   let best: Placed[] = []
   for (let i = 0; i < tries; i++) {
     const attempt = plan(rng.fork(`try:${i}`))
-    if (beatCount(attempt) > beatCount(best)) best = attempt
+    if (!best.length || beatCount(attempt) > beatCount(best)) best = attempt
   }
   return best
 }
@@ -146,12 +137,13 @@ export function universeAt(u: Universe, t: number): UniversePoint {
     else hi = mid - 1
   }
   const placed = pieces[lo]
-  const local = laneAt(placed.lane, clamped - placed.start)
+  const into = clamped - placed.start
+  const local = laneAt(placed.lane, into)
   return {
     ...local,
     x: placed.col + placed.mirror * local.x,
     y: placed.row + local.y,
     placed,
-    section: placed.section,
+    ball: ballAt(placed.ballIn, placed.changes, into),
   }
 }
