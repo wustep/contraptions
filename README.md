@@ -323,6 +323,75 @@ is for PNG; progress is a view of the clock and never enters the URL.
 <kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>H</kbd> hide panel ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat
 
+## The show: `apps/rube/`
+
+A second app in the same repo, and a different thing: not a grid of
+machines but **one ball on one thread**, rolling through a Rube Goldberg
+chain that never ends. Fullscreen canvas, no chrome. The camera follows the
+ball; portals cut between sections of the machine; a framed gate at the end
+of every world hands the ball into the next one — a new palette, a new
+taste in pieces, a new layout — without a seam.
+
+```bash
+npm run dev:rube      # http://localhost:8792/rube/
+npm run build:rube    # dist/rube, served at /rube/ alongside the explorer
+npm run check:rube    # headless checks on the planner and the chain
+```
+
+The seed is in the URL (`?seed=amber-flywheel-812`) and fixes the whole
+future: world `i` is built from `seed#i`, so a link is the show, and any
+moment of it can be rebuilt on demand. The only UI is for working on it:
+`?debug=1` or the backtick key opens a panel with the seed, a reroll, a
+scrub bar over the current world, speed, an overview of the whole world,
+and world-to-world jumps. `?solo=hammer` narrows the planner to one piece
+(plus rail and portals) for polishing it.
+
+**Thirteen pieces**, curated from the eighty-odd toys in the other catalogs
+and rewritten for one ball, each a beat the ball is seen to cause:
+
+| Piece | What happens |
+| --- | --- |
+| rail | a plain cell, so the beats have room to land |
+| hammer | two cells tall: wait on the anvil, the pawl lets go, the head drops a floor, out fast |
+| seesaw | up, hang over the pivot, down faster |
+| bell | the clapper is in the way; punctuation |
+| bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
+| dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → gate lifts |
+| drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
+| lift | pawl → counterweight → cage; up one to three floors, on or back |
+| cannon | match, a long fuse, bang, flight, landing bumper; over two and up one |
+| loop | round a loop-the-loop, slow at the top, no mechanism at all |
+| scoop | a bucket wheel; down one floor, facing back |
+| toaster | in the slot, coils glow, pop; up one floor |
+| portal | in and out of a section; the framed gate with antennae is a world's edge |
+
+Everything is a pure function of the clock, in seconds rather than loop
+fractions, because nothing here repeats: a piece is drawn from the seconds
+since the ball entered it and must look right armed, reacting, and long
+settled. No piece draws the ball. Each declares a **lane** — straight runs,
+pauses, and parabolic flights across its footprint — and the show draws the
+ball once on the joined path. The **planner** carves each section as a
+self-avoiding walk inside a box: every piece proposes its own footprint and
+hand-off, reversing pieces flip the heading and the next piece is mirrored
+to match, and when nothing fits the walk ends in a portal. Dead ends are
+what portals are for. The camera is pure too — a short window around now,
+filtered to the ball's own section, so it glides through a beat and cuts at
+a portal.
+
+```
+apps/rube/
+  index.html, vite.config.ts   its own page, port, base and dist
+  check.ts                     the headless checks
+  src/
+    parts.ts      the ball, lanes, the piece contract
+    pieces/       the thirteen
+    plan.ts       one section: a self-avoiding walk, portals at both ends
+    universe.ts   theme, taste, sections, the joined journey
+    show.ts       the endless sequence of universes from one seed
+    engine.ts     the p5 stage: camera, backdrops, cuts, the ball
+    main.ts       the clock, the URL, the hidden debug panel
+```
+
 ## License
 
 Reference sketch by Okazz, CC BY-NC-SA. This implementation is a rewrite, not a
