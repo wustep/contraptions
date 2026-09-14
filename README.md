@@ -7,24 +7,45 @@ of scattering a few hundred of them across a grid.
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
-**[Live →](https://contraptions-wustep.vercel.app)**
+Two things live here. The front door is **the show** — one ball on one
+thread through a Rube Goldberg chain that never ends, fullscreen, no chrome
+(`apps/rube/`, [below](#the-show-appsrube)). Behind it is **the sandbox**:
+the generator the show grew out of, seven modes of tiny machines on a grid
+with every dial exposed (`src/`). The gear at the show's top-left opens the
+sandbox; the sandbox's header links back to the show.
+
+**[The show →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
+**[The sandbox →](https://contraptions-wustep.vercel.app/sandbox/)**
 
 ```bash
 npm install
-npm run dev      # http://localhost:8791
-npm run check    # headless smoke test of the pure core
+npm run dev          # http://localhost:8791/ is the show, /sandbox/ the sandbox
+npm run check        # headless smoke test of the sandbox's pure core
+npm run check:rube   # headless checks on the show: the planner, the chain, the ball, the tempo
+npm run build        # one dist/: the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
 ```
+
+One Vite root serves and builds all of it: `index.html` is the show,
+`sandbox/index.html` the sandbox, and `rube/index.html` — where the show
+used to live — only sends old links to `/` with their seed. The two pages
+share the core (`src/core/`) and p5 as common chunks.
+
+## The sandbox: `src/`
 
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
 
-Seven modes, 14 palettes, 4 layouts. Classic keeps the original 36 toys;
+Seven modes, 20 palettes, 4 layouts. Classic keeps the original 36 toys;
 Cascade, Workshop, Circus and Rube Goldberg each bring their own catalog and
 their own grid.
 
 ## How it fits together
 
 ```
+index.html          the front door: the show
+sandbox/index.html  the sandbox
+rube/index.html     where the show used to live; redirects to / and keeps the seed
+apps/rube/          the show (see below)
 src/
   core/
     types.ts        the Contraption contract
@@ -34,7 +55,7 @@ src/
     wiring.ts       builds firing chains between neighbours
     lane.ts         how a token crosses a cell, and how lanes join up
     layouts.ts      grid | bricks | quads | bands
-    themes.ts       14 palettes
+    themes.ts       20 palettes, shared with the show
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
@@ -294,7 +315,7 @@ and each reactor beside the piece of track it reacts to.
 | --- | --- |
 | Seed | Everything random derives from this string |
 | Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus`, `rube` |
-| Theme | 14 palettes, each a different mood |
+| Theme | 20 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
 | Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7, rube 5–14) |
 | Stroke | Multiplier on the computed line weight |
@@ -322,6 +343,107 @@ is for PNG; progress is a view of the clock and never enters the URL.
 <kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>P</kbd> pause ·
 <kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>H</kbd> hide panel ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat
+
+## The show: `apps/rube/`
+
+A second app in the same repo, and a different thing: not a grid of
+machines but **one ball on one thread**, rolling through a Rube Goldberg
+chain that never ends. Fullscreen canvas, no chrome. The camera follows the
+ball; every portal is a door to a whole new map — a new palette, a new
+taste in pieces, a new layout — and the cut is an iris: the camera pushes
+in as the ball is swallowed, holds shut a beat, and opens wide on the new
+world.
+
+**[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
+— `amber-gasket` is the seed to share: a paint booth and a Newton's cradle
+in the first world, a zipline, a trampoline and two flippers, then a black
+and white world, then terracotta.
+
+```bash
+npm run dev           # http://localhost:8791/ — the show; /sandbox/ is the sandbox
+npm run check:rube    # headless checks on the planner, the chain, the ball's state, the tempo
+npm run build         # dist/ with the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
+```
+
+The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
+world `i` is built from `seed#i`, so a link is the show, and any moment of
+it can be rebuilt on demand. The only UI is one gear at top-left, dim until
+the pointer finds it. Hover it (or tap it, where there is nothing to hover
+with) for the tray: **sandbox** opens the explorer, **catalog** opens the
+sheet of every piece, the seed field rerolls or copies the link, and
+**debug** pins the working panel under it — a readout, a scrub bar over the
+current world, speed, an overview of the whole world, and world-to-world
+jumps. `?debug=1` and the backtick key pin the same panel. `?solo=hammer`
+narrows the planner to one piece (plus rail and portals) for polishing it.
+Old links to `/rube/` still work: that page sends them to `/` with the seed.
+
+`?catalog=1` opens the **catalog** instead of the show: a sheet of all
+thirty-eight pieces, each looping on its own between two portals in the
+seed's first palette, with its name under it. Click a piece to watch it
+alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
+catalog and from the catalog to the show. The tray has a **catalog** button
+for the same thing, or <kbd>c</kbd> while debug is pinned.
+
+A world is one map: a self-avoiding walk of eleven to sixteen beats in a
+box, from a portal to a portal, with a tempo — a run of two or three beats
+back to back, then a flight when one fits, then a breath of rail. The
+ball's state rides the chain: its colour, whether it is a ghost, and which
+ball holds the thread, so a piece can change it and the next piece knows.
+Five pieces do; they are capped at two a map and never absent for three
+maps running.
+
+**Thirty-eight pieces**, curated from the eighty-odd toys in the other
+catalogs and rewritten for one ball, each a beat the ball is seen to cause:
+
+| Piece | What happens |
+| --- | --- |
+| rail | a plain cell, so the beats have room to land |
+| hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, the head drops a floor, out fast |
+| seesaw | up, hang over the pivot, down faster, onto the stop |
+| bell | the clapper is in the way; punctuation |
+| bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
+| dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → portcullis lifts |
+| drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
+| lift | pawl → counterweight → cage; up one to three floors, on or back |
+| cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
+| loop | round a loop-the-loop, slow at the top, no mechanism at all |
+| scoop | a bucket wheel, four cups on a post; a pawl clicks as it turns; down one floor, facing back |
+| toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
+| crane | magnet down, blink, up, along the beam on turning wheels, think, drop; over two |
+| rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
+| pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
+| trapdoor | weight → lever → bolt → the floor gives way; a ramp; down one |
+| trampoline | the rail just stops; a pit, springs that stretch, a bounce, the biggest arc in the show |
+| funnel | round and down a glass bowl, in view the whole way, through the neck; down one, on or back |
+| conveyor | switch → motor → cleats carry the ball up a floor, slowly, on purpose |
+| paddle | a wheel kicked round once; a relay |
+| balloon | pin → sandbag → the balloon rises the mast, tugging at its ropes; up one or two |
+| plunger | pawl → spring → across a cell with no rail in it at all |
+| stairs | four steps down, off each lip, a tap on each tread |
+| switchback | ramps down to bumpers that turn the ball; one floor facing back, or two facing on |
+| zipline | a cup on a trolley runs a wire that dips under it, down a floor and over two, to a stop |
+| tipper | a bucket on its heel tips past upright and dumps the ball a floor down; clack |
+| drawbridge | plate → pawl → the winch pays out the chain → the bridge falls across the gap |
+| gears | plate → pawl → three gears run → a cord hauls the gate up its guide |
+| trapeze | a basket on ropes swings the ball across two cells of nothing, to a catch |
+| trebuchet | the counterweight drops, the arm comes over, the ball leaves along its tangent two cells |
+| screw | an Archimedes' screw in a glass tube carries the ball up a floor |
+| flipper | a pinball bat flings the ball a floor up onto a shelf |
+| painter | two nozzles spray as the ball passes; it leaves a new colour, for good |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook |
+| phasegate | an emitter makes the ball a ghost; it goes through a solid wall; another makes it solid |
+| inverter | gravity flips between two coils; the ball rolls the ceiling and drops back |
+| fuse | the ball lights a fuse that races it to a keg; the bang throws it on twice as fast |
+| portal | the door at either end of a map; the far side is always a new map |
+
+No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
+parabolic flights, hidden stretches, portal transits — and what it does to
+the ball, and the show draws the ball once on the joined path from one
+clock. Every hand-off is at rail pace, every arrival slows to its stop, and
+every launch ramps back down before the cell edge. `check:rube` builds
+worlds headless and asserts all of it: continuity at every hand-off, one
+portal at each end and none between, the ball's state carried piece to
+piece, and the tempo.
 
 ## License
 

@@ -1,0 +1,127 @@
+import { outline, solid } from '../../../../src/core/draw'
+import { easeInOutCubic, easeInQuad } from '../../../../src/core/ease'
+import { FLOOR, ROLL, definePiece, flick, over, rail, roll, wait, type Lane } from '../parts'
+
+/**
+ * A gate across the line and a table of dominoes above it. The ball hits the
+ * gate; the gate's push rod knocks the first domino; the row goes over along
+ * the table; the last one lands on a lever whose arm pulls a cord over two
+ * pulleys; the cord hauls the gate straight up its post like a portcullis;
+ * the ball rolls on underneath the table, past the whole fallen row. Two
+ * cells, six links, one ball.
+ */
+const GATE = 0.0
+const GATE_TOP = -0.2
+/** How far the portcullis rises: clear of the ball, inside the cell. */
+const RISE = 0.3
+const SEAT = GATE - 0.19
+const SHELF = -0.18
+const COUNT = 7
+const FIRST = 0.16
+const GAP = 0.178
+const H = 0.26
+const W = 0.065
+const LEVER_X = FIRST + GAP * COUNT + 0.02
+const CORD_Y = -0.47
+/** Seconds after entry. */
+const ARRIVE = (0.5 + SEAT) / ROLL
+const PUSH = 0.06
+const FALL_ONE = 0.09
+const LEAD = 0.055
+const WAVE = LEAD * (COUNT - 1) + FALL_ONE
+const TRIP = ARRIVE + PUSH + WAVE
+const OPEN = 0.22
+const RESET = 3
+
+export const dominoes = definePiece<{ color: string }>({
+  name: 'dominoes',
+  weight: 1,
+  place: ({ color, fits }) => {
+    const cells: [number, number][] = [
+      [0, 0],
+      [1, 0],
+    ]
+    if (!fits(cells, [2, 0])) return null
+    const lane: Lane = {
+      segs: [roll([-0.5, 0], [SEAT, 0], ROLL), wait([SEAT, 0], TRIP + OPEN - ARRIVE), roll([SEAT, 0], [1.5, 0], ROLL)],
+      fire: TRIP,
+    }
+    return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }
+  },
+  draw: (p, s, { k, t, since, ink, weight }) => {
+    rail(p, k, ink, weight, -0.5, 1.5)
+
+    // The table the row stands on, with its legs.
+    outline(p, ink, weight)
+    p.line((FIRST - 0.1) * k, SHELF * k, (LEVER_X + 0.16) * k, SHELF * k)
+    for (const x of [FIRST + 0.05, LEVER_X - 0.05]) {
+      p.line(x * k, SHELF * k, x * k, (FLOOR - 0.02) * k)
+    }
+
+    // The beam the pulleys hang from, between the gate's guide and a post on the table's end.
+    outline(p, ink, weight)
+    p.line((GATE - 0.05) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k)
+    p.line((LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, SHELF * k)
+    // The cord: from the gate's foot up to a pulley, across, down to the lever.
+    const pull = since < 0 ? 0 : since < OPEN ? over(since, 0, OPEN) : 1 - over(since, RESET - 0.3, RESET)
+    p.line(GATE * k, CORD_Y * k, (LEVER_X + 0.08) * k, CORD_Y * k)
+    p.line((LEVER_X + 0.08) * k, CORD_Y * k, (LEVER_X + 0.08) * k, (SHELF - 0.1 - 0.16 * pull) * k)
+    // Straight down from the pulley to the top of the gate.
+    const gateLift = since < 0 ? 0 : since < OPEN ? easeInOutCubic(over(since, 0, OPEN)) : 1 - easeInOutCubic(over(since, RESET - 0.3, RESET))
+    p.line(GATE * k, CORD_Y * k, GATE * k, (GATE_TOP - RISE * gateLift) * k)
+    solid(p, ink, weight, s.color)
+    p.circle(GATE * k, CORD_Y * k, 0.06 * k)
+    p.circle((LEVER_X + 0.08) * k, CORD_Y * k, 0.06 * k)
+
+    // The lever on the table's end: an L, hinged at its corner. The last
+    // domino lands on the flat arm; the tall arm swings and hauls the cord.
+    p.push()
+    p.translate((LEVER_X + 0.08) * k, SHELF * k)
+    p.rotate(-0.5 * pull)
+    outline(p, ink, weight)
+    p.line(0, 0, -0.14 * k, 0)
+    p.line(0, 0, 0, -0.26 * k)
+    solid(p, ink, weight, s.color)
+    p.circle(0, 0, 0.05 * k)
+    p.pop()
+
+    // The dominoes. Each falls when the one before reaches it; they stand
+    // back up from the far end once the ball is long gone.
+    const wave0 = ARRIVE + PUSH
+    for (let i = 0; i < COUNT; i++) {
+      const x = FIRST + GAP * i
+      const start = wave0 + i * LEAD
+      const fallen = easeInQuad(over(t, start, start + FALL_ONE))
+      const riseAt = RESET + 0.6 + (COUNT - 1 - i) * 0.08
+      const rise = easeInOutCubic(over(t, riseAt, riseAt + 0.25))
+      const last = i === COUNT - 1
+      p.push()
+      p.translate(x * k, SHELF * k)
+      p.rotate((last ? 1.1 : 0.9) * fallen * (1 - rise))
+      solid(p, ink, weight, s.color)
+      p.rect(0, (-H / 2) * k, W * k, H * k)
+      p.fill(ink)
+      p.noStroke()
+      p.circle(0, (-H * 0.7) * k, 0.025 * k)
+      p.circle(0, (-H * 0.3) * k, 0.025 * k)
+      p.pop()
+    }
+
+    // The gate: a bar in a guide, hauled straight up by the cord. It gives
+    // a little when the ball hits it, and that nudge is what the push rod
+    // carries up to the first domino's foot.
+    const nudge = t < ARRIVE ? 0 : flick(t - ARRIVE, 0.05, 0.1, 0.5) * 0.04
+    const top = GATE_TOP - RISE * gateLift
+    const gateH = FLOOR - GATE_TOP - 0.02
+    outline(p, ink, weight)
+    p.line((GATE - 0.05) * k, -0.5 * k, (GATE - 0.05) * k, (FLOOR - 0.02) * k)
+    solid(p, ink, weight, s.color)
+    p.rect((GATE + nudge) * k, (top + 0.01 + gateH / 2) * k, 0.06 * k, gateH * k)
+    p.fill(ink)
+    p.noStroke()
+    p.rect((GATE + nudge) * k, (top + 0.03) * k, 0.08 * k, 0.04 * k)
+    // The push rod, from the gate up to the first domino's foot.
+    outline(p, ink, weight)
+    p.line((GATE + 0.04 + nudge) * k, (top + 0.12) * k, (FIRST - 0.04 + nudge) * k, (SHELF - 0.05) * k)
+  },
+})

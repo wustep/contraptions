@@ -232,7 +232,16 @@ export function createPanel(
     title: 'Hide the panel (H)',
     'aria-label': 'Hide panel',
   }, ['Hide', el('kbd', {}, ['H'])])
-  root.append(el('header', { class: 'brand' }, [el('h1', {}, ['contraptions']), hideBtn]))
+  const showLink = el('a', {
+    class: 'show-link',
+    href: '/',
+    title: 'The show: one ball, one thread, a new map behind every portal',
+  }, ['the show \u2192'])
+  root.append(el('header', { class: 'brand' }, [
+    el('h1', {}, ['contraptions', el('span', { class: 'sub' }, ['sandbox'])]),
+    showLink,
+    hideBtn,
+  ]))
 
   const peek = el('button', {
     type: 'button',
