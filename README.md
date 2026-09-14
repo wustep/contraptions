@@ -7,13 +7,30 @@ of scattering a few hundred of them across a grid.
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
-**[Live →](https://contraptions-wustep.vercel.app)**
+Two things live here. The front door is **the show** — one ball on one
+thread through a Rube Goldberg chain that never ends, fullscreen, no chrome
+(`apps/rube/`, [below](#the-show-appsrube)). Behind it is **the sandbox**:
+the generator the show grew out of, seven modes of tiny machines on a grid
+with every dial exposed (`src/`). The gear at the show's top-left opens the
+sandbox; the sandbox's header links back to the show.
+
+**[The show →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
+**[The sandbox →](https://contraptions-wustep.vercel.app/sandbox/)**
 
 ```bash
 npm install
-npm run dev      # http://localhost:8791
-npm run check    # headless smoke test of the pure core
+npm run dev          # http://localhost:8791/ is the show, /sandbox/ the sandbox
+npm run check        # headless smoke test of the sandbox's pure core
+npm run check:rube   # headless checks on the show: the planner, the chain, the ball, the tempo
+npm run build        # one dist/: the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
 ```
+
+One Vite root serves and builds all of it: `index.html` is the show,
+`sandbox/index.html` the sandbox, and `rube/index.html` — where the show
+used to live — only sends old links to `/` with their seed. The two pages
+share the core (`src/core/`) and p5 as common chunks.
+
+## The sandbox: `src/`
 
 Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
 frame you like is a shareable link.
@@ -25,6 +42,10 @@ their own grid.
 ## How it fits together
 
 ```
+index.html          the front door: the show
+sandbox/index.html  the sandbox
+rube/index.html     where the show used to live; redirects to / and keeps the seed
+apps/rube/          the show (see below)
 src/
   core/
     types.ts        the Contraption contract
@@ -333,31 +354,35 @@ taste in pieces, a new layout — and the cut is an iris: the camera pushes
 in as the ball is swallowed, holds shut a beat, and opens wide on the new
 world.
 
-**[Watch it →](https://contraptions-wustep.vercel.app/rube/?seed=amber-gasket)**
+**[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
 — `amber-gasket` is the seed to share: a paint booth and a Newton's cradle
 in the first world, a zipline, a trampoline and two flippers, then a black
 and white world, then terracotta.
 
 ```bash
-npm run dev:rube      # http://localhost:8792/rube/
-npm run build:rube    # dist/rube, served at /rube/ alongside the explorer
+npm run dev           # http://localhost:8791/ — the show; /sandbox/ is the sandbox
 npm run check:rube    # headless checks on the planner, the chain, the ball's state, the tempo
+npm run build         # dist/ with the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
 ```
 
 The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
 world `i` is built from `seed#i`, so a link is the show, and any moment of
-it can be rebuilt on demand. The only UI is for working on it: `?debug=1`
-or the backtick key opens a panel with the seed, a reroll, a scrub bar over
-the current world, speed, an overview of the whole world, and
-world-to-world jumps. `?solo=hammer` narrows the planner to one piece (plus
-rail and portals) for polishing it.
+it can be rebuilt on demand. The only UI is one gear at top-left, dim until
+the pointer finds it. Hover it (or tap it, where there is nothing to hover
+with) for the tray: **sandbox** opens the explorer, **catalog** opens the
+sheet of every piece, the seed field rerolls or copies the link, and
+**debug** pins the working panel under it — a readout, a scrub bar over the
+current world, speed, an overview of the whole world, and world-to-world
+jumps. `?debug=1` and the backtick key pin the same panel. `?solo=hammer`
+narrows the planner to one piece (plus rail and portals) for polishing it.
+Old links to `/rube/` still work: that page sends them to `/` with the seed.
 
 `?catalog=1` opens the **catalog** instead of the show: a sheet of all
 thirty-eight pieces, each looping on its own between two portals in the
 seed's first palette, with its name under it. Click a piece to watch it
 alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
-catalog and from the catalog to the show. The debug panel has a **catalog**
-button for the same thing, or <kbd>c</kbd>.
+catalog and from the catalog to the show. The tray has a **catalog** button
+for the same thing, or <kbd>c</kbd> while debug is pinned.
 
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats
