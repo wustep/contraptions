@@ -63,11 +63,12 @@ export const cradle = definePiece<{ color: string; next: string }>({
       p.line(x * k, BEAM_Y * k, x * k, 0.5 * k)
       p.line((x - 0.06) * k, 0.5 * k, (x + 0.06) * k, 0.5 * k)
     }
-    // The balls that never move, on their strings.
+    // The balls that never move, on their strings; they take the click too, and shiver.
+    const shiver = since > 0 ? 0.04 * Math.sin(since * 30) * Math.exp(-since * 3) : 0
     for (let i = 0; i < N - 1; i++) {
-      const x = FIRST + GAP * i
+      const x = FIRST + GAP * i + Math.sin(shiver) * STRING
       outline(p, ink, weight)
-      p.line(x * k, BEAM_Y * k, x * k, -R * k)
+      p.line((FIRST + GAP * i) * k, BEAM_Y * k, x * k, -R * k)
       ball(p, k, ink, weight, s.next, x * k, 0, 0)
     }
     // The far ball, on its string, until the thread takes it at the strike; the string swings with it and slips the hook.

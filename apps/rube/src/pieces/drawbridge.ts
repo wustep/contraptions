@@ -65,6 +65,13 @@ export const drawbridge = definePiece<{ color: string }>({
     p.line((TOWER_X + 0.22) * k, (TOWER_TOP + 0.05) * k, tipX * k, tipY * k)
     solid(p, ink, weight, bg)
     p.circle((TOWER_X + 0.22) * k, (TOWER_TOP + 0.05) * k, 0.1 * k)
+    p.push()
+    p.translate((TOWER_X + 0.22) * k, (TOWER_TOP + 0.05) * k)
+    p.rotate(Math.hypot(tipX - TOWER_X - 0.22, tipY - TOWER_TOP - 0.05) / 0.05)
+    outline(p, ink, weight)
+    p.line(-0.035 * k, 0, 0.035 * k, 0)
+    p.line(0, -0.035 * k, 0, 0.035 * k)
+    p.pop()
     // The pawl at the winch, flipped by the rod.
     p.push()
     p.translate((TOWER_X + 0.22) * k, (TOWER_TOP + 0.12) * k)

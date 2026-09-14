@@ -52,14 +52,24 @@ export const hammer = definePiece<{ color: string }>({
     for (let ty = -1.15; ty < 0; ty += 0.3) {
       for (const x of [-GUIDE, GUIDE]) p.line(x * k, ty * k, (x + Math.sign(x) * 0.06) * k, ty * k)
     }
-    p.line(0, (SHEAVE_Y + 0.05) * k, 0, (y - HEAD_H / 2) * k)
+    // The cable: taut on the winch, slack while the head is falling or down.
+    const slack = since < -DROP ? 0 : since < 1.2 ? 1 : 1 - easeInOutSine(over(since, 1.2, 3.6))
+    p.noFill()
+    p.bezier(0, (SHEAVE_Y + 0.05) * k, 0, ((SHEAVE_Y + y) / 2) * k, slack * 0.08 * k, ((SHEAVE_Y + y) / 2 + 0.1) * k, 0, (y - HEAD_H / 2) * k)
     solid(p, ink, weight, s.color)
     p.circle(0, (SHEAVE_Y + 0.05) * k, 0.1 * k)
+    p.push()
+    p.translate(0, (SHEAVE_Y + 0.05) * k)
+    p.rotate(-(y - HIGH) * 12)
+    outline(p, ink, weight)
+    p.line(-0.035 * k, 0, 0.035 * k, 0)
+    p.pop()
     // The pawl that holds the head up, flipped aside at the fire.
     const pawl = since < -DROP ? 0 : since < 1.2 ? 1 : 1 - over(since, 3.4, 3.6)
+    const tremble = since > -DROP - 0.35 && since < -DROP ? 0.06 * Math.sin(since * 70) * over(since, -DROP - 0.35, -DROP) : 0
     p.push()
     p.translate(GUIDE * k, (HIGH + HEAD_H / 2 + 0.02) * k)
-    p.rotate(-0.5 * pawl)
+    p.rotate(-0.5 * pawl + tremble)
     solid(p, ink, weight, s.color)
     p.rect(-0.07 * k, 0, 0.14 * k, 0.05 * k)
     p.pop()

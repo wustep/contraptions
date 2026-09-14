@@ -82,9 +82,12 @@ export const rocket = definePiece<{ color: string }>({
     for (const dx of [-0.18, 0.18]) {
       solid(p, ink, weight, bg)
       p.circle(dx * k, (FLOOR - 0.02) * k, 0.08 * k)
-      p.fill(ink)
-      p.noStroke()
-      p.circle(dx * k, (FLOOR - 0.02) * k, 0.025 * k)
+      p.push()
+      p.translate(dx * k, (FLOOR - 0.02) * k)
+      p.rotate(sledX / 0.04)
+      outline(p, ink, weight)
+      p.line(-0.03 * k, 0, 0.03 * k, 0)
+      p.pop()
     }
     // The cup: two horns the ball sits between.
     outline(p, ink, weight)

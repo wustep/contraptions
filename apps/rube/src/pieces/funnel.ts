@@ -62,6 +62,13 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
     const { turn } = s
     // The rail to the rim.
     rail(p, k, ink, weight, -0.5, -RIM_HALF - 0.02)
+    // The bowl shivers on its stand as the ball goes through the neck.
+    const neckAt = -0.11 - 0.09
+    const shiver = since > neckAt && since < neckAt + 0.4 ? 0.02 * Math.sin((since - neckAt) * 40) * (1 - over(since, neckAt, neckAt + 0.4)) : 0
+    p.push()
+    p.translate(0, NECK_Y * k)
+    p.rotate(shiver)
+    p.translate(0, -NECK_Y * k)
     // The bowl, in paper: the ball is always in front of it.
     solid(p, ink, weight, bg)
     p.quad(-RIM_HALF * k, RIM_Y * k, RIM_HALF * k, RIM_Y * k, NECK_HALF * k, NECK_Y * k, -NECK_HALF * k, NECK_Y * k)
@@ -77,7 +84,9 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
       const half = RIM_HALF + (NECK_HALF - RIM_HALF) * f
       p.arc(0, y * k, half * 2 * k, 0.07 * k, 0, Math.PI)
     }
+    p.pop()
     // The neck, into the cell below, and the tube down to the catch.
+    outline(p, ink, weight)
     for (const x of [-TUBE, TUBE]) p.line(x * k, NECK_Y * k, x * k, (1 - ARC - 0.02) * k)
     for (const y of [0.62, 0.86]) for (const x of [-TUBE, TUBE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
     // The stand: legs from the rim's shoulders to the floor of the cell below.

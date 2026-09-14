@@ -96,8 +96,13 @@ export const balloon = definePiece<BalloonState>({
     p.line(0, 0, 0.1 * k, 0)
     p.pop()
 
-    // The ropes and the envelope above.
-    const ey = by - 0.55
+    // The ropes and the envelope above; it tugs at its ropes the whole time, and sways after the rise.
+    const ey = by - 0.55 - 0.012 * Math.sin(t * 2.1)
+    const sway = since < 0 ? 0 : 0.05 * Math.sin((since - riseTime(floors)) * 4) * Math.exp(-Math.max(0, since - riseTime(floors)) * 0.8) * (since > riseTime(floors) ? 1 : 0)
+    p.push()
+    p.translate(0, (by - R * 0.4) * k)
+    p.rotate(sway)
+    p.translate(0, -(by - R * 0.4) * k)
     outline(p, ink, weight)
     for (const dx of [-0.11, 0.11]) p.line(dx * k, (by - R * 0.4) * k, (dx * 0.6) * k, (ey + ENVELOPE * 0.8) * k)
     solid(p, ink, weight, s.color)
@@ -106,6 +111,7 @@ export const balloon = definePiece<BalloonState>({
     outline(p, ink, weight)
     p.arc(0, ey * k, ENVELOPE * 1.1 * k, ENVELOPE * 2.3 * k, -Math.PI / 2, Math.PI / 2)
     p.arc(0, ey * k, ENVELOPE * 1.1 * k, ENVELOPE * 2.3 * k, Math.PI / 2, Math.PI * 1.5)
+    p.pop()
   },
   over: (p, s, { k, t, since, ink, weight }) => {
     // The basket's front wall stands between the viewer and the ball.

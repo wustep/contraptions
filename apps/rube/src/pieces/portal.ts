@@ -66,7 +66,7 @@ export const portal = definePiece<PortalState>({
   name: 'portal',
   weight: 0,
   place: () => null,
-  draw: (p, s, { k, t, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const x = s.kind === 'in' ? -RX : RX
     const { w, h } = RING
     const a = w / 2
@@ -96,7 +96,7 @@ export const portal = definePiece<PortalState>({
     p.push()
     p.noFill()
     p.stroke(s.color)
-    p.strokeWeight(weight)
+    p.strokeWeight(weight * (1 + 0.6 * charge))
     p.beginShape()
     const n = 40
     for (let j = 0; j <= n; j++) {
@@ -126,8 +126,16 @@ export const portal = definePiece<PortalState>({
       }
     }
 
-    // The cut: one ring going out from the eye as the ball is taken, or delivered.
+    // The cut: the eye flashes paper, and one ring goes out from it as the ball is taken, or delivered.
     const cut = out ? since - TRANSIT : since
+    if (cut > -0.04 && cut < 0.1) {
+      p.push()
+      p.noStroke()
+      p.fill(bg)
+      const f = 1 - Math.abs(cut - 0.03) / 0.07
+      p.ellipse(x * k, CY * k, ia * 2 * f * k, ib * 2 * f * k)
+      p.pop()
+    }
     if (cut > 0 && cut < 0.45) {
       const f = easeOutCubic(over(cut, 0, 0.45))
       p.push()

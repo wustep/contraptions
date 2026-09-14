@@ -98,6 +98,12 @@ export const crane = definePiece<{ color: string }>({
     for (const dx of [-0.08, 0.08]) {
       solid(p, ink, weight, bg)
       p.circle((trolleyX + dx) * k, (BEAM_Y + 0.03) * k, 0.09 * k)
+      p.push()
+      p.translate((trolleyX + dx) * k, (BEAM_Y + 0.03) * k)
+      p.rotate(trolleyX / 0.045)
+      outline(p, ink, weight)
+      p.line(-0.03 * k, 0, 0.03 * k, 0)
+      p.pop()
     }
     outline(p, ink, weight)
     p.line(trolleyX * k, (BEAM_Y + 0.28) * k, trolleyX * k, (magY - MAG_H / 2) * k)

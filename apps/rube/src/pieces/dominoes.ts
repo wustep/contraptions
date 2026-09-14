@@ -58,8 +58,11 @@ export const dominoes = definePiece<{ color: string }>({
       p.line(x * k, SHELF * k, x * k, (FLOOR - 0.02) * k)
     }
 
-    // The cord: from the gate's foot up to a pulley, across, down to the lever.
+    // The beam the pulleys hang from, between the gate's guide and a post on the table's end.
     outline(p, ink, weight)
+    p.line((GATE - 0.05) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k)
+    p.line((LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, SHELF * k)
+    // The cord: from the gate's foot up to a pulley, across, down to the lever.
     const pull = since < 0 ? 0 : since < OPEN ? over(since, 0, OPEN) : 1 - over(since, RESET - 0.3, RESET)
     p.line(GATE * k, CORD_Y * k, (LEVER_X + 0.08) * k, CORD_Y * k)
     p.line((LEVER_X + 0.08) * k, CORD_Y * k, (LEVER_X + 0.08) * k, (SHELF - 0.1 - 0.16 * pull) * k)

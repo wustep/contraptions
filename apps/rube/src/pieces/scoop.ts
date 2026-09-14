@@ -14,9 +14,11 @@ const PATH = RIM - R + 0.05
 const CUPS = 4
 const TURN = 1.5
 const ARRIVE = 0.5 / ROLL
-const DROP_IN = 0.1
 
-const angleAt = (since: number) => (since < 0 ? 0 : since < TURN ? Math.PI * easeInOutSine(over(since, 0, TURN)) : Math.PI)
+const angleAt = (since: number) =>
+  since < 0 ? 0
+  : since < TURN ? Math.PI * easeInOutSine(over(since, 0, TURN))
+  : Math.PI + 0.05 * Math.exp(-(since - TURN) * 5) * Math.sin((since - TURN) * 28)
 
 export const scoop = definePiece<{ color: string }>({
   name: 'scoop',
@@ -29,28 +31,43 @@ export const scoop = definePiece<{ color: string }>({
     if (!fits(cells, [-1, 1])) return null
     // Clockwise from the top: −π/2 through 0 to π/2, in screen angles.
     const pts = arcPts(0, CY, PATH, -Math.PI / 2, Math.PI / 2, 12)
+    const drop = fall([0, 0], [0, CY - PATH], 2)
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [0, 0], ROLL),
-        fall([0, 0], [0, CY - PATH], 2),
+        drop,
         ...chain(pts, TURN).map((seg) => ({ ...seg, ease: 'inout' as const })),
         fall([0, CY + PATH], [0, 1], 2.5),
         roll([0, 1], [-0.5, 1], ROLL, 'out'),
       ],
-      fire: ARRIVE + DROP_IN,
+      fire: ARRIVE + drop.dur,
     }
     return { cells, exit: { at: [-1, 1], dir: -1 }, lane, state: { color } }
   },
   draw: (p, s, { k, since, ink, bg, weight }) => {
     const angle = angleAt(since)
 
-    // Rails in and out, stopping short of the wheel, and the post it turns on.
-    rail(p, k, ink, weight, -0.5, -0.36)
-    rail(p, k, ink, weight, -0.5, 0.16, 1 + FLOOR)
+    // The rail in runs to the top cup's lip; the rail out starts under the bottom cup; the post the wheel turns on.
+    rail(p, k, ink, weight, -0.5, -0.18)
+    rail(p, k, ink, weight, -0.5, 0.18, 1 + FLOOR)
     outline(p, ink, weight)
-    p.line(-0.36 * k, FLOOR * k, -0.36 * k, (FLOOR - 0.06) * k)
     p.line(0, CY * k, 0, 1.5 * k)
     p.line(-0.12 * k, 1.5 * k, 0.12 * k, 1.5 * k)
+    // The pawl on the post: it rides the rim and clicks as each cup goes by.
+    let click = 0
+    for (let i = 0; i < CUPS; i++) {
+      const cup = -Math.PI / 2 + (i * Math.PI * 2) / CUPS + angle
+      const d = Math.atan2(Math.sin(cup - (Math.PI / 2 + 0.3)), Math.cos(cup - (Math.PI / 2 + 0.3)))
+      click = Math.max(click, Math.exp(-(d / 0.14) * (d / 0.14)))
+    }
+    p.push()
+    p.translate(0.06 * k, (CY + RIM + 0.1) * k)
+    p.rotate(-0.9 - 0.5 * click)
+    outline(p, ink, weight)
+    p.line(0, 0, 0.13 * k, 0)
+    p.pop()
+    solid(p, ink, weight, bg)
+    p.circle(0.06 * k, (CY + RIM + 0.1) * k, 0.04 * k)
 
     p.push()
     p.translate(0, CY * k)

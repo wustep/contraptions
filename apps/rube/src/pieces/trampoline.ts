@@ -68,7 +68,8 @@ export const trampoline = definePiece<{ color: string }>({
       p.beginShape()
       for (let i = 0; i <= 6; i++) {
         const f = i / 6
-        p.vertex((x + (x < CENTRE ? 1 : -1) * 0.07 * f) * k, (FABRIC + (i % 2 ? 0.025 : -0.025) * (i === 0 || i === 6 ? 0 : 1)) * k)
+        const amp = 0.025 * (1 - Math.abs(sag) * 2.5)
+        p.vertex((x + (x < CENTRE ? 1 : -1) * 0.07 * f) * k, (FABRIC + sag * 0.5 * f + (i % 2 ? amp : -amp) * (i === 0 || i === 6 ? 0 : 1)) * k)
       }
       p.endShape()
     }
@@ -77,10 +78,10 @@ export const trampoline = definePiece<{ color: string }>({
     p.noFill()
     p.stroke(s.color)
     p.strokeWeight(weight * 2.4)
-    p.bezier(0.47 * k, FABRIC * k, 0.6 * k, (FABRIC + sag * 1.6) * k, 0.8 * k, (FABRIC + sag * 1.6) * k, 0.93 * k, FABRIC * k)
+    p.bezier(0.47 * k, (FABRIC + sag * 0.5) * k, 0.6 * k, (FABRIC + sag * 1.6) * k, 0.8 * k, (FABRIC + sag * 1.6) * k, 0.93 * k, (FABRIC + sag * 0.5) * k)
     p.stroke(ink)
     p.strokeWeight(weight)
-    p.bezier(0.47 * k, (FABRIC + 0.02) * k, 0.6 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.8 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.93 * k, (FABRIC + 0.02) * k)
+    p.bezier(0.47 * k, (FABRIC + 0.02 + sag * 0.5) * k, 0.6 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.8 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.93 * k, (FABRIC + 0.02 + sag * 0.5) * k)
     p.pop()
     // A sign on the far wall, in case anyone doubted it.
     solid(p, ink, weight, bg)

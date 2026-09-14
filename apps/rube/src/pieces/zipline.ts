@@ -60,7 +60,10 @@ export const zipline = definePiece<{ color: string }>({
     p.line(-0.12 * k, 1.5 * k, 0.04 * k, 1.5 * k)
     p.line((END[0] + 0.12) * k, (END[1] - 0.06) * k, (END[0] + 0.12) * k, 1.5 * k)
     p.line((END[0] + 0.04) * k, 1.5 * k, (END[0] + 0.2) * k, 1.5 * k)
-    p.line((TOP[0] - 0.1) * k, TOP[1] * k, (END[0] + 0.12) * k, END[1] * k)
+    // The wire, with a little give under the trolley's weight.
+    const sag = 0.035 * Math.sin(Math.PI * Math.min(1, Math.max(0, (tx - TOP[0]) / (END[0] - TOP[0]))))
+    p.line((TOP[0] - 0.1) * k, TOP[1] * k, tx * k, (ty + sag) * k)
+    p.line(tx * k, (ty + sag) * k, (END[0] + 0.12) * k, END[1] * k)
     // The brake on the top post: a bar across the wire, lifted at the fire.
     const lifted = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE + 0.1, FIRE) : 1
     p.push()
@@ -76,12 +79,16 @@ export const zipline = definePiece<{ color: string }>({
 
     // The trolley: a wheel on the wire, a hanger, and the cup.
     p.push()
-    p.translate(tx * k, ty * k)
+    p.translate(tx * k, (ty + sag) * k)
     solid(p, ink, weight, bg)
     p.circle(0, -0.03 * k, 0.11 * k)
-    p.fill(ink)
-    p.noStroke()
-    p.circle(0, -0.03 * k, 0.035 * k)
+    p.push()
+    p.translate(0, -0.03 * k)
+    p.rotate(((tx - TOP[0]) * Math.SQRT2) / 0.055)
+    outline(p, ink, weight)
+    p.line(-0.04 * k, 0, 0.04 * k, 0)
+    p.line(0, -0.04 * k, 0, 0.04 * k)
+    p.pop()
     outline(p, ink, weight)
     p.line(0, 0.02 * k, 0, (HANG - R - 0.06) * k)
     solid(p, ink, weight, s.color)

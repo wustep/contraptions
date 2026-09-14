@@ -13,19 +13,19 @@ const PIVOT: Pt = [0.5, -0.5]
 const ARM = 0.75
 const SHORT = 0.28
 const REST = Math.PI - 0.73
-const RELEASE = Math.PI * 1.7
+const RELEASE = Math.PI * 1.38
 const LAND: Pt = [2.28, 0]
 const SEAT = PIVOT[0] + Math.cos(REST) * ARM
 const ARRIVE = (0.5 + SEAT) / ROLL
 const PIN = 0.4
-const SWING = 0.36
+const SWING = 0.48
 const FIRE = ARRIVE + PIN
-const FLIGHT = 0.5
+const FLIGHT = 0.38
 
 const armAt = (since: number) =>
   since < 0 ? REST
   : since < SWING ? REST + (RELEASE - REST) * easeInQuad(over(since, 0, SWING))
-  : RELEASE + 0.5 * (1 - Math.exp(-(since - SWING) * 2)) - 0.25 * Math.exp(-(since - SWING) * 1.5) * Math.sin((since - SWING) * 7)
+  : RELEASE + 0.9 * (1 - Math.exp(-(since - SWING) * 3)) - 0.3 * Math.exp(-(since - SWING) * 1.5) * Math.sin((since - SWING) * 7)
 
 export const trebuchet = definePiece<{ color: string }>({
   name: 'trebuchet',
@@ -41,7 +41,7 @@ export const trebuchet = definePiece<{ color: string }>({
     if (!fits(cells, [3, 0])) return null
     // The ball rides the cup round the top, accelerating, then flies.
     const pts = arcPts(PIVOT[0], PIVOT[1], ARM, REST, RELEASE, 12)
-    const speed = (i: number) => 0.15 + (i / 12) * 1.2
+    const speed = (i: number) => 0.2 + (i / 12) * 1.1
     const throwSeg = chain(pts, SWING, speed)
     const off = pts[pts.length - 1]
     const lane: Lane = {
@@ -49,7 +49,7 @@ export const trebuchet = definePiece<{ color: string }>({
         roll([-0.5, 0], [SEAT, 0], ROLL, 'out'),
         wait([SEAT, 0], PIN),
         ...throwSeg,
-        fly(off, LAND, FLIGHT, 0.35),
+        fly(off, LAND, FLIGHT, 0.45),
         fly(LAND, [LAND[0] + 0.12, 0], 0.06, 0.02),
         roll([LAND[0] + 0.12, 0], [2.5, 0], ROLL * 1.3, 'out'),
       ],
@@ -93,15 +93,21 @@ export const trebuchet = definePiece<{ color: string }>({
     // The arm, the counterweight on its short end, the cup on its long end.
     outline(p, ink, weight)
     p.line(tail[0] * k, tail[1] * k, tip[0] * k, tip[1] * k)
+    // The counterweight hangs plumb from a hinge at the short end, swinging a little with the arm.
+    const hang = 0.2 * Math.sin(a - REST) * (since < SWING ? 1 : Math.exp(-(since - SWING) * 1.2))
+    outline(p, ink, weight)
+    p.line(tail[0] * k, tail[1] * k, (tail[0] + Math.sin(hang) * 0.06) * k, (tail[1] + Math.cos(hang) * 0.06) * k)
     p.push()
-    p.translate(tail[0] * k, tail[1] * k)
-    p.rotate(a)
+    p.translate((tail[0] + Math.sin(hang) * 0.06) * k, (tail[1] + Math.cos(hang) * 0.06) * k)
+    p.rotate(-hang)
     solid(p, ink, weight, s.color)
-    p.rect(0, 0, 0.16 * k, 0.2 * k, 0.02 * k)
+    p.rect(0, 0.1 * k, 0.16 * k, 0.2 * k, 0.02 * k)
     p.fill(ink)
     p.noStroke()
-    p.rect(0, -0.07 * k, 0.16 * k, 0.03 * k)
+    p.rect(0, 0.03 * k, 0.16 * k, 0.03 * k)
     p.pop()
+    solid(p, ink, weight, bg)
+    p.circle(tail[0] * k, tail[1] * k, 0.04 * k)
     p.push()
     p.translate(tip[0] * k, tip[1] * k)
     p.rotate(a + Math.PI / 2)

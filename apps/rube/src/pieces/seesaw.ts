@@ -33,12 +33,19 @@ export const seesaw = definePiece<{ color: string }>({
     }
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     const tip = easeOutCubic(over(since, 0, 0.12)) - easeInOutCubic(over(since, 1.4, 2.6))
-    const angle = TILT * (2 * tip - 1)
+    // The plank creaks up a little as the ball climbs toward the pivot, then slams over.
+    const creak = t > (0.5 - END) / ROLL && since < 0 ? 0.12 * over(t, (0.5 - END) / ROLL, (0.5 - END) / ROLL + 0.3) : 0
+    const angle = TILT * (2 * tip - 1) + creak * TILT
 
     rail(p, k, ink, weight, -0.5, -END)
     rail(p, k, ink, weight, END, 0.5)
+    // The stops the plank's ends land on, either side of the trestle.
+    outline(p, ink, weight)
+    for (const x of [-END + 0.06, END - 0.06]) p.line(x * k, (FLOOR + 0.06) * k, x * k, 0.5 * k)
+    p.line((-END - 0.04) * k, (FLOOR + 0.06) * k, (-END + 0.1) * k, (FLOOR + 0.06) * k)
+    p.line((END - 0.1) * k, (FLOOR + 0.06) * k, (END + 0.04) * k, (FLOOR + 0.06) * k)
 
     outline(p, ink, weight)
     p.line(-0.14 * k, 0.5 * k, 0, PIVOT * k)
