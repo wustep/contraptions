@@ -8,8 +8,9 @@ import { piling, water } from './sea'
  * leans down from its perch with its beak open and its pouch hanging at
  * deck height, and the ball rolls off the end straight into the pouch.
  * The bird lifts its head, opens its wings and flaps across two cells of
- * water to the far post, tips its beak, and the ball drops out onto the
- * deck and rolls on. The pelican settles on the new post and stays.
+ * water to the far post, and lets the pouch part underneath — and the ball
+ * drops straight out of it onto the deck and rolls on. The pouch closes
+ * and the pelican settles on the new post and stays.
  */
 const EDGE = 0.15
 const POUCH: Pt = [0.34, 0.06]
@@ -29,6 +30,8 @@ const T_LIFT = T_IN + DROP_IN + SCOOP
 const T_GLIDE = T_LIFT + LIFT
 const T_TIP = T_GLIDE + GLIDE
 const FIRE = T_TIP + TIP
+/** How far each half of the pouch swings out from the beak's hinge to let the ball go. */
+const PART = 0.38
 
 /** Where the pouch is: with the ball, once it has it; at the deck's end before; under the far perch after. */
 function pouchAt(t: number): Pt {
@@ -60,7 +63,8 @@ export const pelican = definePiece<{ color: string }>({
         { from: POUCH, to: [CARRY_X0, CARRY_Y], dur: LIFT, ease: 'inout' },
         { from: [CARRY_X0, CARRY_Y], to: [CARRY_X1, CARRY_Y], dur: GLIDE, ease: 'inout' },
         wait([CARRY_X1, CARRY_Y], TIP),
-        fly([CARRY_X1, CARRY_Y], LAND, 0.26, 0.04),
+        // A drop from rest: the arc is a quarter of the fall, so it leaves with no upward kick.
+        fly([CARRY_X1, CARRY_Y], LAND, 0.26, (LAND[1] - CARRY_Y) / 4),
         fly(LAND, [LAND[0] + 0.14, 0], 0.06, 0.02),
         ramp([LAND[0] + 0.14, 0], [2.5, 0], 2.4, ROLL),
       ],
@@ -137,13 +141,29 @@ export const pelican = definePiece<{ color: string }>({
     p.triangle(0, 0, 0.3 * k, 0.02 * k, 0, 0.04 * k)
     p.pop()
     p.pop()
-    // The pouch, behind the ball: a sack from the beak's hinge down round the pouch point.
-    solid(p, ink, weight, s.color)
-    p.beginShape()
-    p.vertex((hx + 0.05) * k, (hy + 0.02) * k)
-    p.bezierVertex((px - 0.2) * k, (py - 0.02) * k, (px - 0.16) * k, (py + 0.18) * k, px * k, (py + 0.17) * k)
-    p.bezierVertex((px + 0.16) * k, (py + 0.18) * k, (px + 0.2) * k, (py - 0.02) * k, (hx + 0.05 + 0.3 * Math.cos(dir + open)) * k, (hy + 0.3 * Math.sin(dir + open)) * k)
-    p.endShape(p.CLOSE)
+    // The pouch, behind the ball: a sack from the beak's hinge down round
+    // the pouch point, in two halves that part from the hinge to let the
+    // ball drop, and close again after.
+    const part = t < T_TIP ? 0 : t < FIRE + 0.6 ? PART * easeInOutSine(over(t, T_TIP, FIRE)) : PART * (1 - easeInOutSine(over(t, FIRE + 0.6, FIRE + 1.1)))
+    const gx = hx + 0.05
+    const gy = hy + 0.02
+    for (const side of [-1, 1]) {
+      p.push()
+      p.translate(gx * k, gy * k)
+      p.rotate(side * part)
+      p.translate(-gx * k, -gy * k)
+      solid(p, ink, weight, s.color)
+      p.beginShape()
+      p.vertex(gx * k, gy * k)
+      if (side < 0) {
+        p.bezierVertex((px - 0.2) * k, (py - 0.02) * k, (px - 0.16) * k, (py + 0.18) * k, px * k, (py + 0.17) * k)
+      } else {
+        p.vertex((hx + 0.05 + 0.3 * Math.cos(dir + open)) * k, (hy + 0.3 * Math.sin(dir + open)) * k)
+        p.bezierVertex((px + 0.2) * k, (py - 0.02) * k, (px + 0.16) * k, (py + 0.18) * k, px * k, (py + 0.17) * k)
+      }
+      p.endShape(p.CLOSE)
+      p.pop()
+    }
     // A drip off the pouch, and a small splash where the ball went in.
     if (since > 0 && since < 0.25) {
       p.push()
@@ -157,8 +177,8 @@ export const pelican = definePiece<{ color: string }>({
     }
   },
   over: (p, s, { k, t, ink, weight }) => {
-    // The pouch's front lip stands between the viewer and the ball while it is carried.
-    if (t < T_IN + DROP_IN || t > FIRE) return
+    // The pouch's front lip stands between the viewer and the ball while it is carried, until the pouch parts.
+    if (t < T_IN + DROP_IN || t > T_TIP) return
     const [px, py] = pouchAt(t)
     solid(p, ink, weight, s.color)
     p.arc(px * k, (py + 0.04) * k, 0.3 * k, 0.26 * k, 0.15, Math.PI - 0.15, p.CHORD)

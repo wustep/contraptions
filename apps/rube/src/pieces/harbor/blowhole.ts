@@ -6,14 +6,20 @@ import { seaColor, splash, water } from './sea'
  * A blowhole. The deck runs onto a rock with a hole in its top; the ball
  * rolls into the dip over the hole and stops; the rock rumbles, a few
  * bubbles come up, and the spout goes off — a column of water that
- * throws the ball straight up a floor and drops it onto a shelf, where
- * it rolls on. The column falls back into the hole in pieces.
+ * throws the ball straight up past a shelf a floor above, where it comes
+ * down onto the shelf and rolls on. The column falls back into the hole
+ * in pieces.
  */
-const LAND: Pt = [0.24, -1]
+/** Where the ball comes down, and where the shelf starts: clear of the ball's rise past it. */
+const LAND: Pt = [0.32, -1]
+const SHELF_X = 0.26
 const ARRIVE = arriveAt(0)
 const RUMBLE = 0.35
 const FIRE = ARRIVE + RUMBLE
 const FLIGHT = 0.4
+/** The throw's height over its chord: it peaks a ball above the shelf and comes down onto it. */
+const LOFT = 0.45
+const SPOUT_H = 1.12
 
 export const blowhole = definePiece<{ color: string }>({
   name: 'blowhole',
@@ -29,9 +35,8 @@ export const blowhole = definePiece<{ color: string }>({
       segs: [
         ...arrive([-0.5, 0], [0, 0]),
         wait([0, 0], RUMBLE),
-        fly([0, 0], LAND, FLIGHT, 0.32),
-        fly(LAND, [LAND[0] + 0.1, -1], 0.06, 0.02),
-        ramp([LAND[0] + 0.1, -1], [0.5, -1], 2.2, ROLL),
+        fly([0, 0], LAND, FLIGHT, LOFT),
+        ramp(LAND, [0.5, -1], 1.6, ROLL),
       ],
       fire: FIRE,
     }
@@ -43,11 +48,11 @@ export const blowhole = definePiece<{ color: string }>({
     const spout = since < 0 ? 0 : since < 0.5 ? Math.sin((Math.PI * since) / 0.5) : 0
 
     water(p, k, ink, weight, -0.5, 0.5)
-    // The shelf above, on a post that stands on the rock.
-    rail(p, k, ink, weight, 0.1, 0.5, -1 + FLOOR)
+    // The shelf above, on a post that stands on the rock, with a brace under it.
+    rail(p, k, ink, weight, SHELF_X, 0.5, -1 + FLOOR)
     post(p, k, ink, weight, 0.42, -1 + FLOOR, FLOOR - 0.02)
-    solid(p, ink, weight, s.color)
-    p.rect(0.47 * k, (-1 - 0.02) * k, 0.05 * k, 0.24 * k)
+    outline(p, ink, weight)
+    p.line(0.42 * k, (-1 + FLOOR + 0.16) * k, (SHELF_X + 0.03) * k, (-1 + FLOOR) * k)
 
     p.push()
     p.translate(shiver * k, 0)
@@ -80,7 +85,7 @@ export const blowhole = definePiece<{ color: string }>({
     // The spout: a column of water from the hole, its head where the ball
     // is, breaking into drops at the top.
     if (spout > 0.02) {
-      const h = 1.05 * spout
+      const h = SPOUT_H * spout
       solid(p, ink, weight, s.color)
       p.beginShape()
       p.vertex(-0.09 * k, (FLOOR + 0.02) * k)

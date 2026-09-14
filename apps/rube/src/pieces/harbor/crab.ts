@@ -7,8 +7,9 @@ import { piling, water } from './sea'
  * A crab on the pier. The ball rolls into its open claw and stops; the
  * claw closes on it; the crab lifts it high, rocks back on its legs, and
  * pitches it across a cell of open water to the deck on the far side,
- * where it lands and rolls on. The crab watches it go, waving the other
- * claw, and lowers the empty one slowly.
+ * where it lands and rolls on. The other claw waves until the wind-up,
+ * then braces low and still for the throw — out of the ball's way — and
+ * waves it goodbye after. The empty claw comes down slowly.
  */
 const SEAT = 0.1
 const BODY: Pt = [0.5, -0.12]
@@ -19,6 +20,8 @@ const GRAB = 0.35
 const LIFT = 0.3
 const AIM = 0.18
 const FLIGHT = 0.42
+/** The pitch's height over its chord: enough to clear the eyestalks and the far claw. */
+const LOFT = 0.3
 const T_LIFT = ARRIVE + GRAB
 const T_AIM = T_LIFT + LIFT
 const FIRE = T_AIM + AIM
@@ -50,7 +53,7 @@ export const crab = definePiece<{ color: string }>({
         wait([SEAT, 0], GRAB),
         { from: [SEAT, 0], to: HIGH, dur: LIFT, ease: 'inout' },
         { from: HIGH, to: [HIGH[0] - 0.08, HIGH[1] + 0.02], dur: AIM, ease: 'inout' },
-        fly([HIGH[0] - 0.08, HIGH[1] + 0.02], LAND, FLIGHT, 0.22),
+        fly([HIGH[0] - 0.08, HIGH[1] + 0.02], LAND, FLIGHT, LOFT),
         fly(LAND, [LAND[0] + 0.14, 0], 0.06, 0.02),
         ramp([LAND[0] + 0.14, 0], [2.5, 0], 2.8, ROLL),
       ],
@@ -105,12 +108,14 @@ export const crab = definePiece<{ color: string }>({
     for (const dx of [-0.09, 0.09]) p.circle((BODY[0] + dx + (holding ? -0.012 : 0)) * k, (BODY[1] - 0.21) * k, 0.025 * k)
     outline(p, ink, weight * 0.9)
     p.arc(BODY[0] * k, (BODY[1] + 0.02) * k, 0.12 * k, 0.06 * k, 0.2, Math.PI - 0.2)
-    // The far claw, waving.
-    const wave = 0.3 * Math.sin(t * 3)
-    const fx = BODY[0] + 0.22
-    const fy = BODY[1] - 0.16 + 0.04 * Math.sin(t * 3)
+    // The far claw: waving, but braced low and still through the throw so
+    // the ball flies clear over it.
+    const brace = t < T_AIM - 0.15 ? 0 : t < FIRE + 0.45 ? easeInOutSine(over(t, T_AIM - 0.15, T_AIM)) : 1 - easeInOutSine(over(t, FIRE + 0.45, FIRE + 0.8))
+    const wave = 0.3 * Math.sin(t * 3) * (1 - brace)
+    const fx = BODY[0] + 0.22 + 0.04 * brace
+    const fy = BODY[1] - 0.16 + 0.04 * Math.sin(t * 3) * (1 - brace) + 0.12 * brace
     p.line((BODY[0] + 0.17) * k, (BODY[1] - 0.04) * k, fx * k, fy * k)
-    pincer(p, k, ink, weight, s.color, fx, fy, -0.9 + wave, 0.5)
+    pincer(p, k, ink, weight, s.color, fx, fy, lerp(-0.9 + wave, 0.25, brace), 0.5 - 0.3 * brace)
     // The near arm: shoulder to elbow to claw.
     const sx = BODY[0] - 0.17
     const sy = BODY[1] - 0.02
