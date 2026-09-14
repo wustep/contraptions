@@ -94,6 +94,8 @@ export interface BallChange {
   ghost?: boolean
   /** The thread passes to another ball here. */
   relay?: boolean
+  /** Seconds over which a new colour blends in, from `at`. Instant when unset. */
+  over?: number
 }
 
 /** The ball after every change in `changes` up to time `t`. */
@@ -101,11 +103,25 @@ export function ballAt(ball: BallState, changes: BallChange[], t: number): BallS
   let out = ball
   for (const c of changes) {
     if (c.at > t) break
+    const color = c.color && c.over && t < c.at + c.over ? mixHex(out.color, c.color, (t - c.at) / c.over) : c.color ?? out.color
     out = {
-      color: c.color ?? out.color,
+      color,
       ghost: c.ghost ?? out.ghost,
       id: c.relay ? out.id + 1 : out.id,
     }
+  }
+  return out
+}
+
+/** Two `#rrggbb` colours mixed, `f` of the way from `a` to `b`. Anything else snaps at the halfway point. */
+export function mixHex(a: string, b: string, f: number): string {
+  const g = clamp(f)
+  const hex = /^#[0-9a-f]{6}$/i
+  if (!hex.test(a) || !hex.test(b)) return g < 0.5 ? a : b
+  let out = '#'
+  for (let i = 1; i < 7; i += 2) {
+    const v = Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - g) + parseInt(b.slice(i, i + 2), 16) * g)
+    out += v.toString(16).padStart(2, '0')
   }
   return out
 }
