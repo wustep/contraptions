@@ -1006,13 +1006,23 @@ for (const { name: mode, res: range } of MODES) {
   }
 }
 
-// The roll never lands outside the range the composer would clamp it into.
-for (const { name: mode, res: range } of MODES) {
-  const rolled = Array.from({ length: 200 }, () => rollOptions({ ...defaultOptions, mode }).res)
+// A full roll moves the mode, and every other dial follows the mode it landed
+// on: res inside that mode's range, a layout only where that mode has one.
+for (const { name: mode } of MODES) {
+  const rolled = Array.from({ length: 200 }, () => rollOptions({ ...defaultOptions, mode }))
+  check(`${mode}: a full roll never lands back on ${mode}`, rolled.every((o) => o.mode !== mode))
   check(
-    `${mode}: a full roll picks a res in range`,
-    rolled.every((r) => r >= range.min && r <= range.max),
-    `${Math.min(...rolled)}..${Math.max(...rolled)}`,
+    `${mode}: a full roll reaches every other mode`,
+    new Set(rolled.map((o) => o.mode)).size === MODES.length - 1,
+    [...new Set(rolled.map((o) => o.mode))].join(','),
+  )
+  check(
+    `${mode}: a full roll picks a res in the new mode's range`,
+    rolled.every((o) => o.res >= modeInfo(o.mode).res.min && o.res <= modeInfo(o.mode).res.max),
+  )
+  check(
+    `${mode}: a full roll only rolls a layout where the new mode has one`,
+    rolled.every((o) => modeInfo(o.mode).dials.layout || o.layout === defaultOptions.layout),
   )
 }
 
@@ -1026,9 +1036,10 @@ check('omits default dials', serializeOptions(seeded) === 'seed=amber-flywheel-8
   check('still omits default res', params.get('res') === null)
 }
 check('invalid mode falls back to classic', parseOptions('?mode=nope&seed=s').mode === 'classic')
-for (const { name: mode } of MODES) {
-  check(`rollOptions keeps ${mode}`, rollOptions({ ...defaultOptions, mode }).mode === mode)
-}
+check('rollOptions resets the pool and the catalog', (() => {
+  const o = rollOptions({ ...defaultOptions, mode: 'rube', solo: 'hopper', tag: 'x', catalog: true })
+  return o.solo === null && o.tag === null && o.catalog === false
+})())
 check('res=0 clamps to the mode minimum', parseOptions('?res=0').res === modeInfo('classic').res.min)
 check('res=99 clamps to the mode maximum', parseOptions('?res=99').res === modeInfo('classic').res.max)
 check('res is integerized', parseOptions('?res=12.7').res === 13)

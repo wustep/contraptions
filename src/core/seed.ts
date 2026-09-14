@@ -26,27 +26,29 @@ export function randomSeed(): string {
 }
 
 /**
- * Roll the whole configuration, not just the seed. The dials are drawn from
- * weighted tables rather than uniform ranges: an end of a range is a corner
- * someone steers into deliberately, not a place a dice roll should strand
- * them, so the middle carries most of the weight and the ends appear only as
- * occasional visitors. Pool filters and catalog mode reset — a full roll means
- * "show me a fresh piece" — but the mode stays, since it is a choice of world
- * rather than a dial on this one.
+ * Roll the whole configuration, not just the seed: the mode too. The dials
+ * are drawn from weighted tables rather than uniform ranges: an end of a
+ * range is a corner someone steers into deliberately, not a place a dice
+ * roll should strand them, so the middle carries most of the weight and the
+ * ends appear only as occasional visitors. Pool filters and catalog mode
+ * reset — a full roll means "show me a fresh piece". The mode always moves:
+ * a roll that landed back on the same world would look like nothing rolled.
  */
 export function rollOptions(current: Options): Options {
   const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]
-  // Resolution is rolled inside the mode's own range, so a roll never asks
-  // for a piece the composer would have to clamp back.
-  const { min, max } = modeInfo(current.mode).res
+  const elsewhere = MODES.filter((m) => m.name !== current.mode)
+  const mode = pick(elsewhere.length ? elsewhere : MODES).name
+  // Resolution is rolled inside the new mode's own range, so a roll never
+  // asks for a piece the composer would have to clamp back.
+  const { min, max } = modeInfo(mode).res
   return {
     ...defaultOptions,
-    mode: current.mode,
+    mode,
     seed: randomSeed(),
     theme: pick(themes).name,
     // Only the modes that lay out on a layout get one rolled; the rest build
     // their own grid, and a stray `layout=` in the URL would say otherwise.
-    layout: modeInfo(current.mode).dials.layout ? pick(layouts).name : defaultOptions.layout,
+    layout: modeInfo(mode).dials.layout ? pick(layouts).name : defaultOptions.layout,
     res: Math.round(min + (max - min) * pick([0.05, 0.2, 0.35, 0.45, 0.5, 0.5, 0.6, 0.7, 0.85, 0.95])),
     stroke: pick([0.85, 1, 1, 1, 1, 1.15, 1.3]),
     spans: pick([0.2, 0.35, 0.5, 0.5, 0.65, 0.8]),
