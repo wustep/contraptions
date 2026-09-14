@@ -1,7 +1,18 @@
 import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
+import { bumper } from './bumper'
+import { changer } from './changer'
+import { claw } from './claw'
+import { hockey } from './hockey'
+import { pachinko } from './pachinko'
 import { laneRail } from './rail'
+import { skee } from './skee'
+import { slingshot } from './slingshot'
+import { spinner } from './spinner'
+import { striker } from './striker'
+import { ticket } from './ticket'
+import { zigzag } from './zigzag'
 
 /**
  * The arcade: neon night. Everything here flashes, scores or pays out:
@@ -9,6 +20,20 @@ import { laneRail } from './rail'
  * skee-ball lane, slapped across an air-hockey table, dropped through a
  * pachinko field and down a ticket machine, lifted by a claw and by a
  * high striker, and swapped for a token by a change machine.
+ *
+ *   rail       a lit lane: lamps, strips and chevrons that come on as the ball passes
+ *   bumper     clips the skirt; the cap slams, the lamp lights, +100, out faster
+ *   spinner    shoves through a hanging plate that spins on, counting turns in lamps
+ *   changer    into the coin slot; chunk; a token drops out the far side and takes the thread
+ *   ticket     into the hopper; tickets feed out below; out of the prize chute one or two floors down
+ *   zigzag     down lit tubes to pads that turn the ball; one or two floors; +10 a pad
+ *   pachinko   off a lip through five rows of pins, each lighting; the jackpot pocket; two floors down
+ *   skee       a kicker, up the alley, off the lip, into the fifty ring a floor up
+ *   hockey     onto the air table; a mallet slaps it the length of the table into the goal
+ *   claw       into the cabinet; the claw comes down, closes, lifts, trundles, lets go
+ *   striker    onto the puck; the latch trips; up the tower to the bell; ding; one or two floors up
+ *   slingshot  into the band; the kicker fires; flung a floor up onto a shelf
+ *   portal     the door at either end of a map; the far side is always a new map
  */
 
 /** Signs after rain: the palettes the arcade is painted in. All of them dark. */
@@ -46,9 +71,9 @@ export const arcade: World = {
   themes: THEMES,
   backdrops: ['stars', 'grid', 'stars'],
   tastes: {
-    pinball: {},
-    midway: {},
-    jackpot: {},
+    pinball: { bumper: 1.8, spinner: 1.7, zigzag: 1.5, slingshot: 1.7, skee: 1.3, claw: 0.5, ticket: 0.7, hockey: 0.7, striker: 0.8 },
+    midway: { claw: 1.7, ticket: 1.6, changer: 1.4, striker: 1.6, hockey: 1.3, pachinko: 1.2, 'lift-tall': 1.8, 'drop-deep': 1.8, bumper: 0.6, spinner: 0.7 },
+    jackpot: { pachinko: 1.8, skee: 1.6, hockey: 1.5, striker: 1.3, zigzag: 1.3, changer: 1.2, slingshot: 1.2, spinner: 0.6, claw: 0.7 },
   },
-  pieces: [laneRail, portal],
+  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, portal],
 }
