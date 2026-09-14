@@ -13,7 +13,7 @@ import {
 } from '../core/composition'
 import { createListbox } from './listbox'
 import { ICON, copyButton, createShell, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented } from './shell'
-import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
+import { EXPORT_SCALES, SPEEDS, speedLabel, type ViewState } from './view'
 
 export interface PanelHandlers {
   onChange(patch: Partial<Options>): void
@@ -76,7 +76,7 @@ export function createPanel(
   let lastView = initialView
   let lastComp: Composition | null = null
 
-  const shell = createShell(root, 'sandbox')
+  const shell = createShell(root, 'explorations')
   const section = (title: string, cls = '') => sectionIn(root, title, cls)
 
   const slider = (
@@ -171,13 +171,12 @@ export function createPanel(
   // Composition
   const composition = section('Composition')
   const modeBox = createListbox({
-    items: MODES.map((m) => ({ value: m.name, label: m.label, note: m.note })),
+    items: MODES.map((m) => ({ value: m.name, label: m.label })),
     value: initial.mode,
     label: 'Mode',
     onChange: (v) => handlers.onChange({ mode: v as Mode, solo: null, tag: null }),
   })
-  const modeNote = el('p', { class: 'mode-note' }, [modeInfo(initial.mode).note])
-  const modeField = field('Mode', el('div', { class: 'mode-control' }, [modeBox.node, modeNote]))
+  const modeField = field('Mode', modeBox.node)
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -318,9 +317,9 @@ export function createPanel(
     handlers.onScrub(Number(scrub.value) / 1000)
   })
   guardWheel(root, scrub)
-  const play = el('button', { class: 'tbtn play', title: 'Play / pause (P)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+  const play = el('button', { class: 'tbtn play', title: 'Play / pause (K)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
-  const speedSeg = segmented(SPEEDS, (v) => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`), (v) => handlers.onView({ speed: v }))
+  const speedSeg = segmented(SPEEDS, speedLabel, (v) => handlers.onView({ speed: v }))
   // Play sits with the speeds: one row for "is it running and how fast".
   // Stepping a beat stays on shift+← / shift+→.
   transport.append(
@@ -394,7 +393,6 @@ export function createPanel(
       if (document.activeElement !== seedInput) seedInput.value = comp.options.seed
       shell.setSeed(comp.options.seed)
       modeBox.set(comp.options.mode)
-      modeNote.textContent = modeInfo(comp.options.mode).note
       showFor(comp.options.mode, comp.options.catalog)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)

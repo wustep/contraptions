@@ -1,26 +1,25 @@
 /**
  * The chrome the two modes share. One panel down the right edge, the full
  * height of the window, with the brand and the mode switch at its head and
- * the credit at its foot; the stage takes whatever the panel leaves. The show
- * and the sandbox fill the middle with their own sections, built from the
- * same helpers, so the two read as siblings — one frame, different dials —
- * and moving between them is a switch at the top of the panel that carries
- * the seed across. `H` hides the panel; the peek tab on the edge brings it
- * back.
+ * the credit at its foot; the stage takes whatever the panel leaves. Machine
+ * (the show, in the code) and Explorations (the sandbox) fill the middle
+ * with their own sections, built from the same helpers, so the two read as
+ * siblings — one frame, different dials — and moving between them is a
+ * switch at the top of the panel that carries the seed across. `P` hides
+ * the panel; the peek tab on the edge brings it back.
  */
 
-export type ShellMode = 'show' | 'sandbox'
+export type ShellMode = 'machine' | 'explorations'
 
 interface ModeLink {
   mode: ShellMode
   label: string
   path: string
-  note: string
 }
 
 const MODE_LINKS: ModeLink[] = [
-  { mode: 'show', label: 'The show', path: '/', note: 'one ball, one thread, a new map behind every portal' },
-  { mode: 'sandbox', label: 'Sandbox', path: '/sandbox/', note: 'seven modes of tiny machines on a grid, every dial exposed' },
+  { mode: 'machine', label: 'Machine', path: '/' },
+  { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
 ]
 
 export interface Shell {
@@ -167,14 +166,14 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     if (e.detail > 0 && e.target instanceof HTMLButtonElement) e.target.blur()
   })
 
-  // Header — Hide lives here so H is not a one-way trap. Peek stays a target
+  // Header — Hide lives here so P is not a one-way trap. Peek stays a target
   // after `#panel { display: none }`.
   const hideBtn = el('button', {
     type: 'button',
     class: 'chip',
-    title: 'Hide the panel (H)',
+    title: 'Hide the panel (P)',
     'aria-label': 'Hide panel',
-  }, ['Hide', el('kbd', {}, ['H'])])
+  }, ['Hide', el('kbd', {}, ['P'])])
 
   // The mode switch: two tabs, the one you are on lit. Real links, so a
   // switch is a navigation and the back button undoes it.
@@ -187,21 +186,19 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     }
     return { m, a }
   })
-  const current = MODE_LINKS.find((m) => m.mode === mode) ?? MODE_LINKS[0]
   root.append(
     el('header', { class: 'brand' }, [
       el('div', { class: 'brand-row' }, [el('h1', {}, ['contraptions']), hideBtn]),
       el('nav', { class: 'seg mode-switch', 'aria-label': 'Mode' }, links.map((l) => l.a)),
-      el('p', { class: 'mode-note' }, [current.note]),
     ]),
   )
 
   const peek = el('button', {
     type: 'button',
     class: 'panel-peek',
-    title: 'Show the panel (H)',
+    title: 'Show the panel (P)',
     'aria-label': 'Show panel',
-  }, ['Panel', el('kbd', {}, ['H'])])
+  }, ['Panel', el('kbd', {}, ['P'])])
   document.body.append(peek)
 
   const toggle = () => {

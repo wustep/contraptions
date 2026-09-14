@@ -210,7 +210,7 @@ function drawCaptions(p: p5, theme: Theme, sheet: Sheet, cells: Cell[], hover: n
   ctx.letterSpacing = '0.14em'
   p.text(`${cells.length} PIECES · ${seed}`.toUpperCase(), p.width / 2, sheet.header)
   ctx.letterSpacing = '0.04em'
-  p.text('click a piece to watch it alone · esc for the show', p.width / 2, sheet.footer)
+  p.text('click a piece to watch it alone · esc for the machine', p.width / 2, sheet.footer)
   ctx.letterSpacing = '0px'
   p.pop()
 }

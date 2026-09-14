@@ -7,34 +7,36 @@ of scattering a few hundred of them across a grid.
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
-Two modes of one thing live here. The front door is **the show** — one ball
+Two modes of one thing live here. The front door is **Machine** — one ball
 on one thread through a Rube Goldberg chain that never ends (`apps/rube/`,
-[below](#the-show-appsrube)). Beside it is **the sandbox**: the generator
-the show grew out of, seven modes of tiny machines on a grid with every dial
-exposed (`src/`). Both wear the same chrome: one panel down the right edge
-at the window's full height, the canvas filling everything else, and a
-two-tab switch at the top of the panel — **The show | Sandbox** — that moves
-between them and carries the seed across. <kbd>H</kbd> hides the panel in
+[below](#machine-appsrube); the code calls it the show). Beside it is
+**Explorations**: the generator the machine grew out of, seven modes of
+tiny machines on a grid with every dial exposed (`src/`; the code calls it
+the sandbox). Both wear the same chrome: one panel down the right edge at
+the window's full height, the canvas filling everything else, and a two-tab
+switch at the top of the panel — **Machine | Explorations** — that moves
+between them and carries the seed across. <kbd>P</kbd> hides the panel in
 either.
 
-**[The show →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
-**[The sandbox →](https://contraptions-wustep.vercel.app/sandbox/)**
+**[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
+**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
 
 ```bash
 npm install
-npm run dev          # http://localhost:8791/ is the show, /sandbox/ the sandbox
-npm run check        # headless smoke test of the sandbox's pure core
-npm run check:rube   # headless checks on the show: the planner, the chain, the ball, the tempo
-npm run build        # one dist/: the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
+npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations
+npm run check        # headless smoke test of Explorations' pure core
+npm run check:rube   # headless checks on Machine: the planner, the chain, the ball, the tempo
+npm run build        # one dist/: Machine at /, Explorations at /explorations/, /sandbox/ and /rube/ redirecting
 ```
 
-One Vite root serves and builds all of it: `index.html` is the show,
-`sandbox/index.html` the sandbox, and `rube/index.html` — where the show
-used to live — only sends old links to `/` with their seed. The two pages
-share the core (`src/core/`), the panel chrome (`src/ui/shell.ts`,
-`src/ui/styles.css`) and p5 as common chunks.
+One Vite root serves and builds all of it: `index.html` is Machine,
+`explorations/index.html` is Explorations, and two pages only forward:
+`sandbox/index.html` sends old links to `/explorations/` and
+`rube/index.html` — where Machine used to live — sends them to `/`, both
+keeping the seed. The two modes share the core (`src/core/`), the panel
+chrome (`src/ui/shell.ts`, `src/ui/styles.css`) and p5 as common chunks.
 
-## The sandbox: `src/`
+## Explorations: `src/`
 
 Press <kbd>space</kbd> to reroll, <kbd>⇧space</kbd> to roll everything — the
 mode included. Every control is mirrored into the URL, so any frame you like
@@ -47,10 +49,11 @@ their own grid.
 ## How it fits together
 
 ```
-index.html          the front door: the show
-sandbox/index.html  the sandbox
-rube/index.html     where the show used to live; redirects to / and keeps the seed
-apps/rube/          the show (see below)
+index.html               the front door: Machine
+explorations/index.html  Explorations
+sandbox/index.html       where Explorations used to live; redirects to /explorations/ and keeps the seed
+rube/index.html          where Machine used to live; redirects to / and keeps the seed
+apps/rube/               Machine (see below)
 src/
   core/
     types.ts        the Contraption contract
@@ -60,7 +63,7 @@ src/
     wiring.ts       builds firing chains between neighbours
     lane.ts         how a token crosses a cell, and how lanes join up
     layouts.ts      grid | bricks | quads | bands
-    themes.ts       20 palettes, shared with the show
+    themes.ts       20 palettes, shared with Machine
     rng.ts          seeded, forkable randomness
     ease.ts         easing, staging, wrapping
     draw.ts         shared vocabulary (rails, coils, teeth, clipping)
@@ -77,7 +80,7 @@ src/
   ui/
     shell.ts        the chrome both modes share: the panel, the mode switch, Hide
     styles.css      one stylesheet for both pages
-    panel.ts        the sandbox's dials
+    panel.ts        Explorations' dials
 ```
 
 ## The contract
@@ -205,7 +208,7 @@ close up, so a cascade is 5–9 cells across where a classic piece is 6–24.
 | Circus | `src/contraptions/circus/` | a full grid of closed looping acts; the drumroll fires them in sequence | 4–7 |
 | Rube Goldberg | `src/contraptions/rube/` | one wandering path from a feeder to an ending; the rest is paper | 5–14 |
 
-The Mode control lists all seven with those notes. Catalog view shows the active
+The Mode control lists all seven by name. Catalog view shows the active
 mode's pieces. The URL stores the mode name (`?mode=cascade`).
 
 ### Lanes
@@ -359,16 +362,16 @@ Export writes a PNG at the chosen scale, or a WebM of one loop at the current
 canvas size (capped at 12s). The clock is held for the encode the same way it
 is for PNG; progress is a view of the clock and never enters the URL.
 
-<kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>P</kbd> pause ·
-<kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>H</kbd> hide panel ·
+<kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>K</kbd> pause ·
+<kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>P</kbd> hide panel ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat
 
-## The show: `apps/rube/`
+## Machine: `apps/rube/`
 
 A second app in the same repo, and a different thing: not a grid of
 machines but **one ball on one thread**, rolling through a Rube Goldberg
 chain that never ends. The canvas fills everything the panel leaves;
-<kbd>H</kbd> hides the panel and the show has the whole window. The camera
+<kbd>P</kbd> hides the panel and the show has the whole window. The camera
 follows the ball; every portal is a door to a whole new map — a new
 palette, a new taste in pieces, a new layout — and the cut is an iris: the
 camera pushes in as the ball is swallowed, holds shut a beat, and opens
@@ -380,22 +383,22 @@ zipline and a gravity inverter in the first world, then a black and white
 world, then terracotta.
 
 ```bash
-npm run dev           # http://localhost:8791/ — the show; /sandbox/ is the sandbox
+npm run dev           # http://localhost:8791/ — Machine; /explorations/ is Explorations
 npm run check:rube    # headless checks on the planner, the chain, the ball's state, the tempo
-npm run build         # dist/ with the show at /, the sandbox at /sandbox/, /rube/ redirecting to /
+npm run build         # dist/ with Machine at /, Explorations at /explorations/, /sandbox/ and /rube/ redirecting
 ```
 
 The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
 world `i` is built from `seed#i`, so a link is the show, and any moment of
-it can be rebuilt on demand. The panel is the sandbox's panel with the
+it can be rebuilt on demand. The panel is Explorations' panel with the
 show's sections in it: the **seed** card rerolls (<kbd>R</kbd>) or copies
 the link; **World** reads out where the ball is — the world's index, its
 palette and taste, the piece in hand — and jumps world to world
 (<kbd>N</kbd> for the next), restarts, opens the **catalog**
 (<kbd>C</kbd>) or the **overview** of the whole map (<kbd>O</kbd>);
-**Transport** is play/pause (<kbd>space</kbd>), speed, and a scrub bar over
-the current world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a
-second. `?solo=hammer` narrows the planner to one piece (plus rail and
+**Transport** is play/pause (<kbd>space</kbd>), speed from ¼× to 4×, and a
+scrub bar over the current world; <kbd>←</kbd> <kbd>→</kbd> step a frame,
+with shift a second. `?solo=hammer` narrows the planner to one piece (plus rail and
 portals) for polishing it. Old links to `/rube/` still work: that page
 sends them to `/` with the seed.
 

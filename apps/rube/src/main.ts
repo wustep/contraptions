@@ -1,19 +1,20 @@
 import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
+import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { createCatalog } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
 
 /**
- * The entry. A seed in the URL, the canvas filling everything the panel
- * leaves, and the panel itself: the same chrome as the sandbox — brand, mode
- * switch, seed card, transport — with the show's own sections in between: a
- * readout of where the ball is, world-to-world jumps, the catalog and the
- * overview. `H` hides the panel for the show alone. `?catalog=1` opens the
- * sheet of every piece instead of the show; `?solo=<piece>` shows one
- * piece's worlds. Escape steps back out: from a solo to the catalog, from the
- * catalog to the show.
+ * The entry: Machine mode. A seed in the URL, the canvas filling everything
+ * the panel leaves, and the panel itself: the same chrome as Explorations —
+ * brand, mode switch, seed card, transport — with the show's own sections in
+ * between: a readout of where the ball is, world-to-world jumps, the catalog
+ * and the overview. `P` hides the panel for the show alone. `?catalog=1`
+ * opens the sheet of every piece instead of the show; `?solo=<piece>` shows
+ * one piece's worlds. Escape steps back out: from a solo to the catalog,
+ * from the catalog to the show.
  */
 
 const stage = document.getElementById('stage')!
@@ -36,7 +37,6 @@ let show = new Show(seed, solo)
 
 /* ------------------------------------------------------------------ clock */
 
-const SPEEDS = [0.5, 1, 2]
 let speed = 1
 let paused = false
 let base = 0
@@ -144,7 +144,7 @@ window.addEventListener('popstate', () => {
 
 /* ------------------------------------------------------------------ panel */
 
-const shell = createShell(panelRoot, 'show')
+const shell = createShell(panelRoot, 'machine')
 
 // Seed — one string fixes the whole future, so it leads.
 const seedInput = el('input', {
@@ -207,7 +207,8 @@ scrub.addEventListener('pointerdown', () => { scrubbing = true })
 window.addEventListener('pointerup', () => { scrubbing = false })
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
-const speedSeg = segmented(SPEEDS, (v) => (v === 0.5 ? '½' : `${v}×`), setSpeed)
+// The same five stops as Explorations; the clock is continuous, so any rate is fine.
+const speedSeg = segmented(SPEEDS, speedLabel, setSpeed)
 transport.append(scrub, el('div', { class: 'row deck' }, [play, speedSeg.node]))
 
 credit(panelRoot)
@@ -297,7 +298,7 @@ window.addEventListener('keydown', (e) => {
     case 'c':
       catalogBtn.click()
       break
-    case 'h':
+    case 'p':
       shell.toggle()
       break
     case 'ArrowRight':

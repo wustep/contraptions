@@ -115,7 +115,6 @@ body.hide-panel .panel-peek { display: inline-flex; }
 .mode-tab:hover { background: var(--raised); color: var(--text); }
 .mode-tab.on { background: var(--accent-soft); color: var(--accent); cursor: default; }
 .mode-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
-.brand .mode-note { margin: 0; }
 
 /* ---- sections ------------------------------------------------------- */
 
@@ -230,12 +229,6 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   line-height: 1.3;
 }
 .lb-opt.sel .lb-note { color: var(--accent); opacity: 0.75; }
-.mode-note {
-  margin: 2px 0 0;
-  font-size: 11px;
-  color: var(--faint);
-  line-height: 1.35;
-}
 .lb-value .lb-swatch { margin-left: auto; }
 
 .lb-chevron { width: 12px; height: 12px; flex: none; color: var(--dim); }

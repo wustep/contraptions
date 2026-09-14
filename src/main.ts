@@ -139,7 +139,8 @@ window.addEventListener('keydown', (e) => {
       if (e.shiftKey) apply(rollOptions(options))
       else apply({ seed: randomSeed() })
       break
-    case 'p':
+    // K for pause, as video players do: P is the panel in both modes.
+    case 'k':
       applyView({ paused: !view.paused })
       break
     case 'g':
@@ -148,7 +149,7 @@ window.addEventListener('keydown', (e) => {
     case 's':
       save()
       break
-    case 'h':
+    case 'p':
       panel.toggle()
       break
     case 'arrowright':
