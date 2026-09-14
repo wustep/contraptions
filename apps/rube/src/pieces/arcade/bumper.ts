@@ -1,15 +1,17 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FAST, ROLL, definePiece, flick, over, rail, ramp, roll, type Lane } from '../../parts'
+import { FAST, R, ROLL, definePiece, flick, over, rail, ramp, roll, type Lane } from '../../parts'
 import { flash, glow, lamp, score } from './neon'
 
 /**
  * A pop bumper: a mushroom on a post beside the lane, its skirt out over
- * the ball's line. The ball clips the skirt going by; the cap slams down,
- * the lamp inside comes on, and the kick sends the ball on faster than it
- * came, with a hundred points popping off the top. The cap rides back up
- * and the lamp dies down.
+ * the ball's line. The ball's front clips the skirt's rim going by; the cap
+ * slams down that instant, the lamp inside comes on, and the kick sends the
+ * ball on faster than it came, with a hundred points popping off the top.
+ * The cap rides back up and the lamp dies down.
  */
-const HIT = -0.1
+const SKIRT = 0.2
+/** The ball's centre when its front edge meets the skirt's rim. */
+const HIT = -SKIRT - R
 const CAP_Y = -0.3
 const T_HIT = (0.5 + HIT) / ROLL
 
@@ -38,7 +40,7 @@ export const bumper = definePiece<{ color: string }>({
     glow(p, k, s.color, 0, -0.12, 0.22, lit)
     // The skirt: a ring at the ball's height, in the colour when lit.
     solid(p, ink, weight, lit > 0.5 ? s.color : bg)
-    p.ellipse(0, -0.02 * k, 0.4 * k, 0.12 * k)
+    p.ellipse(0, -0.02 * k, SKIRT * 2 * k, 0.12 * k)
     // The lamp on the post under the cap.
     lamp(p, k, ink, weight, s.color, bg, 0, capY + 0.1, 0.05, lit)
     // The cap: a dome with a rim, slammed down on the hit.
@@ -46,7 +48,7 @@ export const bumper = definePiece<{ color: string }>({
     p.arc(0, capY * k, 0.36 * k, 0.24 * k, Math.PI, Math.PI * 2, p.CHORD)
     p.rect(0, (capY + 0.02) * k, 0.4 * k, 0.05 * k, 0.01 * k)
     // Rings off the skirt, and the score.
-    flash(p, k, s.color, weight, HIT + 0.05, -0.02, since, 0.3, 0.14, 0.34)
+    flash(p, k, s.color, weight, -SKIRT, -0.02, since, 0.3, 0.14, 0.34)
     score(p, k, s.color, 0, CAP_Y - 0.18, '+100', since)
   },
 })
