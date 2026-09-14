@@ -147,7 +147,9 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
     }
     const candidates = pool.filter((c) => {
       if (c.name === prev) return false
-      if (c.name === 'rail') return phase === 'breathe' && rails < 3
+      // Rail is for breathing between beats, unless it is all there is: a
+      // solo of rail, or of portal, is a rail between two portals.
+      if (c.name === 'rail') return (phase === 'breathe' || pool.length === 1) && rails < 3
       if (DYNAMIC.has(c.name) && dynamics >= ctx.dynamics.cap) return false
       return phase !== 'breathe'
     })
@@ -202,8 +204,8 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   }
 
   // A map should not end on plain rail; a portal after a beat reads as the
-  // beat's consequence.
-  while (out.length > 1 && out[out.length - 1].piece.name === 'rail') {
+  // beat's consequence. Unless rail is all there is.
+  while (out.length > 1 && pool.length > 1 && out[out.length - 1].piece.name === 'rail') {
     const last = out.pop()!
     for (const [c, r] of last.cells) occupied.delete(key(c, r))
     col = last.col

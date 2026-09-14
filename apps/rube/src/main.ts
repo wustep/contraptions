@@ -1,20 +1,33 @@
 import { randomSeed } from '../../../src/core/seed'
+import { createCatalog } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
 
 /**
  * The entry. No chrome: a canvas and a seed in the URL. The debug panel is
  * for working on the show — `?debug=1` or the backtick key — and is the
- * only UI there is.
+ * only UI there is. `?catalog=1` opens the sheet of every piece instead of
+ * the show; `?solo=<piece>` shows one piece's worlds. Escape steps back
+ * out: from a solo to the catalog, from the catalog to the show.
  */
-
-const params = new URLSearchParams(location.search)
-let seed = params.get('seed') || randomSeed()
-let debugOn = params.get('debug') === '1'
-const solo = params.get('solo')
 
 const stage = document.getElementById('stage')!
 const panel = document.getElementById('debug')!
+
+let seed = randomSeed()
+let debugOn = false
+let solo: string | null = null
+let catalogOn = false
+
+function readUrl(): void {
+  const params = new URLSearchParams(location.search)
+  seed = params.get('seed') || randomSeed()
+  debugOn = params.get('debug') === '1'
+  catalogOn = params.get('catalog') === '1'
+  // The catalog is a sheet of every piece; it never narrows to one.
+  solo = catalogOn ? null : params.get('solo')
+}
+readUrl()
 
 let show = new Show(seed, solo)
 
@@ -46,30 +59,79 @@ const setSpeed = (next: number) => {
 
 /* ------------------------------------------------------------------ url */
 
-function writeUrl(): void {
+function writeUrl(push = false): void {
   const q = new URLSearchParams()
   q.set('seed', seed)
   if (debugOn) q.set('debug', '1')
   if (solo) q.set('solo', solo)
-  history.replaceState(null, '', `?${q.toString()}`)
-}
-
-function reroll(next = randomSeed()): void {
-  seed = next
-  show = new Show(seed, solo)
-  view.destroy()
-  view = createStage(stage, show, { time: now })
-  view.setOverview(overview)
-  seek(0)
-  writeUrl()
-  sync()
+  if (catalogOn) q.set('catalog', '1')
+  const url = `?${q.toString()}`
+  if (push) history.pushState(null, '', url)
+  else history.replaceState(null, '', url)
 }
 
 /* ------------------------------------------------------------------ stage */
 
-let view = createStage(stage, show, { time: now })
+interface View {
+  setOverview?(on: boolean): void
+  destroy(): void
+}
+
 let overview = false
+let view: View = mount()
 writeUrl()
+
+/** The right thing on the canvas for the mode: the show, or the sheet of every piece. */
+function mount(): View {
+  if (catalogOn) return createCatalog(stage, seed, { time: now }, (name) => pick(name))
+  const s = createStage(stage, show, { time: now })
+  s.setOverview(overview)
+  return s
+}
+
+/** Rebuild everything from the seed and the mode, from the top of the clock. */
+function rebuild(push = false): void {
+  show = new Show(seed, solo)
+  view.destroy()
+  view = mount()
+  seek(0)
+  writeUrl(push)
+  sync()
+}
+
+function reroll(next = randomSeed()): void {
+  seed = next
+  rebuild()
+}
+
+function openCatalog(): void {
+  solo = null
+  catalogOn = true
+  rebuild()
+}
+
+function closeCatalog(): void {
+  catalogOn = false
+  rebuild()
+}
+
+/** From the catalog into one piece's worlds; a step in the history, so back is the sheet. */
+function pick(name: string): void {
+  solo = name
+  catalogOn = false
+  rebuild(true)
+}
+
+/** Escape: out of a solo to the catalog, out of the catalog to the show. */
+function back(): void {
+  if (catalogOn) closeCatalog()
+  else if (solo) openCatalog()
+}
+
+window.addEventListener('popstate', () => {
+  readUrl()
+  rebuild()
+})
 
 /* ------------------------------------------------------------------ debug */
 
@@ -106,9 +168,10 @@ scrub.addEventListener('input', () => {
 const pauseBtn = button('pause', () => setPaused(!paused))
 const overviewBtn = button('overview', () => {
   overview = !overview
-  view.setOverview(overview)
+  view.setOverview?.(overview)
   sync()
 })
+const catalogBtn = button('catalog', () => (catalogOn ? closeCatalog() : openCatalog()))
 const speeds = [0.5, 1, 2].map((s) => button(`${s}×`, () => setSpeed(s)))
 
 panel.append(
@@ -116,8 +179,8 @@ panel.append(
   readout,
   row([scrub]),
   row([pauseBtn, ...speeds, overviewBtn]),
-  row([button('← world', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1)))), button('world →', () => seek(show.begin(show.indexAt(now()) + 1))), button('restart', () => seek(0))]),
-  el('div', 'dim', '` toggles this panel · space pauses · r rerolls · n next world'),
+  row([button('← world', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1)))), button('world →', () => seek(show.begin(show.indexAt(now()) + 1))), button('restart', () => seek(0)), catalogBtn]),
+  el('div', 'dim', '` toggles this panel · space pauses · r rerolls · n next world · c catalog'),
 )
 
 function row(children: HTMLElement[]): HTMLElement {
@@ -131,6 +194,8 @@ function sync(): void {
   pauseBtn.textContent = paused ? 'play' : 'pause'
   pauseBtn.classList.toggle('active', paused)
   overviewBtn.classList.toggle('active', overview)
+  catalogBtn.textContent = catalogOn ? 'exit catalog' : 'catalog'
+  catalogBtn.classList.toggle('active', catalogOn)
   speeds.forEach((b, i) => b.classList.toggle('active', [0.5, 1, 2][i] === speed))
   seedInput.value = seed
 }
@@ -140,7 +205,9 @@ function tick(): void {
     const t = now()
     const here = show.at(t)
     const u = here.universe
-    readout.textContent = `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name} · ${here.local.toFixed(1)}s / ${u.journey.toFixed(0)}s`
+    readout.textContent = catalogOn
+      ? `catalog · ${u.theme.label} · ${t.toFixed(1)}s`
+      : `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name} · ${here.local.toFixed(1)}s / ${u.journey.toFixed(0)}s`
     scrub.value = String(Math.round((here.local / u.journey) * 1000))
   }
   requestAnimationFrame(tick)
@@ -160,6 +227,9 @@ window.addEventListener('keydown', (e) => {
       e.preventDefault()
       setPaused(!paused)
       break
+    case 'Escape':
+      back()
+      break
     case 'r':
       if (debugOn) reroll()
       break
@@ -168,6 +238,9 @@ window.addEventListener('keydown', (e) => {
       break
     case 'o':
       if (debugOn) overviewBtn.click()
+      break
+    case 'c':
+      if (debugOn) catalogBtn.click()
       break
     case 'ArrowRight':
       if (debugOn) {
@@ -193,11 +266,13 @@ if (import.meta.env.DEV) {
     now,
     setPaused,
     reroll,
+    pick,
+    setCatalog: (on: boolean) => (on ? openCatalog() : closeCatalog()),
     show: () => show,
     canvas: () => stage.querySelector('canvas') as HTMLCanvasElement,
     setOverview: (on: boolean) => {
       overview = on
-      view.setOverview(on)
+      view.setOverview?.(on)
       sync()
     },
   }

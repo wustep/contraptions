@@ -26,6 +26,18 @@ check('every name is unique', new Set(catalog.map((c) => c.name)).size === catal
 check('portal is placed by hand, not by weight', catalog.find((c) => c.name === 'portal')?.weight === 0)
 check('rail is in the catalog', catalog.some((c) => c.name === 'rail'))
 
+// A solo world — what `?solo=` shows and what the catalog's cells loop — is
+// the piece between two portals, for every piece, rail and portal included.
+console.log('\nsolo')
+const lonely = catalog.filter((piece) => {
+  const names = new Show('amber-gasket', piece.name).universe(0).pieces.map((p) => p.piece.name)
+  const between = names.slice(1, -1)
+  const held = piece.name === 'portal' ? between.length > 0 : between.includes(piece.name)
+  return names[0] !== 'portal' || names[names.length - 1] !== 'portal' || !held
+})
+check('every piece has a solo world with itself between two portals', lonely.length === 0, lonely.map((p) => p.name).join(','))
+check('a solo world is short', catalog.every((piece) => new Show('amber-gasket', piece.name).universe(0).journey < 8))
+
 const SEEDS = ['amber-flywheel-812', 'quiet-cam-001', 'stubborn-winch-404', 'paper-valve-077', 'cobalt-gasket-999', 'a', 'b', 'c']
 const WORLDS = 3
 

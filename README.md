@@ -352,6 +352,13 @@ the current world, speed, an overview of the whole world, and
 world-to-world jumps. `?solo=hammer` narrows the planner to one piece (plus
 rail and portals) for polishing it.
 
+`?catalog=1` opens the **catalog** instead of the show: a sheet of all
+thirty-eight pieces, each looping on its own between two portals in the
+seed's first palette, with its name under it. Click a piece to watch it
+alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
+catalog and from the catalog to the show. The debug panel has a **catalog**
+button for the same thing, or <kbd>c</kbd>.
+
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats
 back to back, then a flight when one fits, then a breath of rail. The
