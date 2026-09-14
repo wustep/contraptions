@@ -79,19 +79,29 @@ export const cannon = definePiece<{ color: string }>({
       }
     }
 
+    // The bang kicks the whole carriage back on its wheels; it rolls home again.
+    const recoil = since < 0 ? 0 : 0.07 * (1 - over(since, 0, 0.4)) * Math.sin(Math.min(1, since / 0.4) * Math.PI)
+    const kick = since < 0 ? 0 : 0.05 * Math.sin(Math.min(1, since / 0.9) * Math.PI)
+    p.push()
+    p.translate(-kick * k, 0)
     // The carriage: two wheels and a bed.
     solid(p, ink, weight, s.color)
     p.rect(-0.1 * k, 0.3 * k, 0.44 * k, 0.1 * k)
     for (const x of [-0.26, 0.06]) {
       solid(p, ink, weight, s.color)
       p.circle(x * k, 0.4 * k, 0.2 * k)
-      p.fill(ink)
-      p.noStroke()
-      p.circle(x * k, 0.4 * k, 0.05 * k)
+      p.push()
+      p.translate(x * k, 0.4 * k)
+      p.rotate(-kick / 0.1)
+      outline(p, ink, weight)
+      p.line(-0.07 * k, 0, 0.07 * k, 0)
+      p.line(0, -0.07 * k, 0, 0.07 * k)
+      p.pop()
+      solid(p, ink, weight, s.color)
+      p.circle(x * k, 0.4 * k, 0.06 * k)
     }
 
-    // The barrel: a fat rounded rect on the breech pivot, kicked back on the bang.
-    const recoil = since < 0 ? 0 : 0.07 * (1 - over(since, 0, 0.4)) * Math.sin(Math.min(1, since / 0.4) * Math.PI)
+    // The barrel: a fat rounded rect on the breech pivot, kicked back harder still on the bang.
     p.push()
     p.translate(BREECH[0] * k, BREECH[1] * k)
     p.rotate(ANGLE)
@@ -103,6 +113,7 @@ export const cannon = definePiece<{ color: string }>({
     p.line(0.12 * k, -0.11 * k, 0.12 * k, 0.11 * k)
     solid(p, ink, weight, s.color)
     p.circle(-0.07 * k, 0, 0.14 * k)
+    p.pop()
     p.pop()
 
     // The fuse: unlit before the ball, eaten by the spark during the wait,

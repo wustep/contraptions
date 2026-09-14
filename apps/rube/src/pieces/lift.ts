@@ -69,7 +69,8 @@ export const lift = definePiece<LiftState>({
       since < 0 ? 0
       : since < ride ? easeInOutSine(over(since, 0, ride))
       : 1 - easeInOutSine(over(since, ride + 2.2, ride + 5))
-    const carY = up * top
+    const settle = since > ride && since < ride + 0.6 ? 0.012 * Math.sin((since - ride) * 24) * Math.exp(-(since - ride) * 6) : 0
+    const carY = up * top + settle
     const sheaveY = top - 0.42
 
     // The guides, from the sheave bracket to the buffers at the bottom.
@@ -100,9 +101,10 @@ export const lift = definePiece<LiftState>({
     p.pop()
     // The pawl that holds the weight, flipped open at the fire.
     const pawl = since < 0 ? 0 : since < 0.12 ? easeInQuad(over(since, 0, 0.12)) : 1 - over(since, ride + 4.6, ride + 5)
+    const strain = since > -LATCH && since < 0 ? 0.08 * Math.sin(since * 60) * over(since, -LATCH, 0) : 0
     p.push()
     p.translate((CW_X + 0.08) * k, (sheaveY + 0.32) * k)
-    p.rotate(pawl * 0.8)
+    p.rotate(pawl * 0.8 + strain)
     outline(p, ink, weight)
     p.line(0, 0, -0.1 * k, 0)
     p.pop()

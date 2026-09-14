@@ -78,10 +78,13 @@ export const toaster = definePiece<{ color: string }>({
   // *out* of it, and glows through the window in between.
   over: (p, s, c: PieceCtx) => {
     const { k, t, since, ink, bg, weight } = c
+    const jolt = since > 0 && since < 0.2 ? 0.012 * Math.sin(since * 70) * (1 - over(since, 0, 0.2)) : 0
+    p.push()
+    p.translate(0, jolt * k)
     solid(p, ink, weight, s.color)
     p.rect(((BODY_X0 + BODY_X1) / 2) * k, ((LID + BODY_Y1) / 2) * k, (BODY_X1 - BODY_X0) * k, (BODY_Y1 - LID) * k, 0.05 * k)
     const toasting = t > ARRIVE + DROP && since < 0
-    const glow = toasting ? 0.5 + 0.5 * Math.sin(t * 9) : 0
+    const glow = toasting ? 0.35 + 0.35 * Math.sin(t * 9) + 0.3 * over(since, -0.4, 0) : 0
     // The slot: a dark mouth in the lid.
     p.push()
     p.noStroke()
@@ -124,5 +127,6 @@ export const toaster = definePiece<{ color: string }>({
     p.circle((BODY_X1 - 0.09) * k, 0.4 * k, 0.08 * k)
     outline(p, ink, weight)
     p.line((BODY_X1 - 0.09) * k, 0.4 * k, (BODY_X1 - 0.09 + 0.03) * k, 0.38 * k)
+    p.pop()
   },
 })
