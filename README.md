@@ -328,92 +328,90 @@ is for PNG; progress is a view of the clock and never enters the URL.
 A second app in the same repo, and a different thing: not a grid of
 machines but **one ball on one thread**, rolling through a Rube Goldberg
 chain that never ends. Fullscreen canvas, no chrome. The camera follows the
-ball; portals cut between sections of the machine; a framed gate at the end
-of every world hands the ball into the next one — a new palette, a new
-taste in pieces, a new layout — without a seam.
+ball; every portal is a door to a whole new map — a new palette, a new
+taste in pieces, a new layout — and the cut is an iris: the camera pushes
+in as the ball is swallowed, holds shut a beat, and opens wide on the new
+world.
+
+**[Watch it →](https://contraptions-wustep.vercel.app/rube/?seed=amber-gasket)**
+— `amber-gasket` is the seed to share: a paint booth and a Newton's cradle
+in the first world, a zipline, a trampoline and two flippers, then a black
+and white world, then terracotta.
 
 ```bash
 npm run dev:rube      # http://localhost:8792/rube/
 npm run build:rube    # dist/rube, served at /rube/ alongside the explorer
-npm run check:rube    # headless checks on the planner and the chain
+npm run check:rube    # headless checks on the planner, the chain, the ball's state, the tempo
 ```
 
-The seed is in the URL (`?seed=amber-flywheel-812`) and fixes the whole
-future: world `i` is built from `seed#i`, so a link is the show, and any
-moment of it can be rebuilt on demand. The only UI is for working on it:
-`?debug=1` or the backtick key opens a panel with the seed, a reroll, a
-scrub bar over the current world, speed, an overview of the whole world,
-and world-to-world jumps. `?solo=hammer` narrows the planner to one piece
-(plus rail and portals) for polishing it.
+The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
+world `i` is built from `seed#i`, so a link is the show, and any moment of
+it can be rebuilt on demand. The only UI is for working on it: `?debug=1`
+or the backtick key opens a panel with the seed, a reroll, a scrub bar over
+the current world, speed, an overview of the whole world, and
+world-to-world jumps. `?solo=hammer` narrows the planner to one piece (plus
+rail and portals) for polishing it.
 
-**Twenty-three pieces**, curated from the eighty-odd toys in the other
+A world is one map: a self-avoiding walk of eleven to sixteen beats in a
+box, from a portal to a portal, with a tempo — a run of two or three beats
+back to back, then a flight when one fits, then a breath of rail. The
+ball's state rides the chain: its colour, whether it is a ghost, and which
+ball holds the thread, so a piece can change it and the next piece knows.
+Five pieces do; they are capped at two a map and never absent for three
+maps running.
+
+**Thirty-eight pieces**, curated from the eighty-odd toys in the other
 catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
 | --- | --- |
 | rail | a plain cell, so the beats have room to land |
-| hammer | two cells tall: wait on the anvil, the pawl lets go, the head drops a floor, out fast |
-| seesaw | up, hang over the pivot, down faster |
+| hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, the head drops a floor, out fast |
+| seesaw | up, hang over the pivot, down faster, onto the stop |
 | bell | the clapper is in the way; punctuation |
 | bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
 | dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → portcullis lifts |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
 | lift | pawl → counterweight → cage; up one to three floors, on or back |
-| cannon | match, a long fuse, bang, flight, landing bumper; over two and up one |
+| cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
-| scoop | a bucket wheel; down one floor, facing back |
-| toaster | in the slot, coils glow, pop; up one floor |
-| crane | magnet down, blink, up, along the beam, think, drop; over two |
+| scoop | a bucket wheel, four cups on a post; a pawl clicks as it turns; down one floor, facing back |
+| toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
+| crane | magnet down, blink, up, along the beam on turning wheels, think, drop; over two |
 | rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
 | trapdoor | weight → lever → bolt → the floor gives way; a ramp; down one |
-| trampoline | the rail just stops; a pit, a bounce, the biggest arc in the show |
-| funnel | round and down, behind the cone and in front of it, through the neck; down one, on or back |
+| trampoline | the rail just stops; a pit, springs that stretch, a bounce, the biggest arc in the show |
+| funnel | round and down a glass bowl, in view the whole way, through the neck; down one, on or back |
 | conveyor | switch → motor → cleats carry the ball up a floor, slowly, on purpose |
 | paddle | a wheel kicked round once; a relay |
-| balloon | pin → sandbag → the balloon rises the mast; up one or two |
+| balloon | pin → sandbag → the balloon rises the mast, tugging at its ropes; up one or two |
 | plunger | pawl → spring → across a cell with no rail in it at all |
-| portal | a ring with a hole in the world in it; the gate with antennae and lightning is a world's edge |
+| stairs | four steps down, off each lip, a tap on each tread |
+| switchback | ramps down to bumpers that turn the ball; one floor facing back, or two facing on |
+| zipline | a cup on a trolley runs a wire that dips under it, down a floor and over two, to a stop |
+| tipper | a bucket on its heel tips past upright and dumps the ball a floor down; clack |
+| drawbridge | plate → pawl → the winch pays out the chain → the bridge falls across the gap |
+| gears | plate → pawl → three gears run → a cord hauls the gate up its guide |
+| trapeze | a basket on ropes swings the ball across two cells of nothing, to a catch |
+| trebuchet | the counterweight drops, the arm comes over, the ball leaves along its tangent two cells |
+| screw | an Archimedes' screw in a glass tube carries the ball up a floor |
+| flipper | a pinball bat flings the ball a floor up onto a shelf |
+| painter | two nozzles spray as the ball passes; it leaves a new colour, for good |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook |
+| phasegate | an emitter makes the ball a ghost; it goes through a solid wall; another makes it solid |
+| inverter | gravity flips between two coils; the ball rolls the ceiling and drops back |
+| fuse | the ball lights a fuse that races it to a keg; the bang throws it on twice as fast |
+| portal | the door at either end of a map; the far side is always a new map |
 
-**Portals** are the cuts. The ball is drawn out into a streak and pulled
-into the vortex; somewhere else the vortex flares and pushes it out onto a
-rail. Exits and entries are told apart three ways: the chevrons on the rail
-march toward an exit and away from an entry, the control box stands on the
-far side from the ball's path, and the vortex spins inward at an exit and
-outward at an entry. A hop between worlds closes an iris on the old gate
-and opens it on the new one.
-
-**Worlds never repeat.** A new world's theme is never any of the last three
-worlds' themes, and its taste (workshop, vertical, ballistic, mixed) is
-never the last world's. The twenty palettes are the explorer's, in
-`src/core/themes.ts`, so both apps share them.
-
-Everything is a pure function of the clock, in seconds rather than loop
-fractions, because nothing here repeats: a piece is drawn from the seconds
-since the ball entered it and must look right armed, reacting, and long
-settled. No piece draws the ball. Each declares a **lane** — straight runs,
-pauses, and parabolic flights across its footprint — and the show draws the
-ball once on the joined path. The **planner** carves each section as a
-self-avoiding walk inside a box: every piece proposes its own footprint and
-hand-off, reversing pieces flip the heading and the next piece is mirrored
-to match, and when nothing fits the walk ends in a portal. Dead ends are
-what portals are for. The camera is pure too — a short window around now,
-filtered to the ball's own section, so it glides through a beat and cuts at
-a portal.
-
-```
-apps/rube/
-  index.html, vite.config.ts   its own page, port, base and dist
-  check.ts                     the headless checks
-  src/
-    parts.ts      the ball, lanes, the piece contract
-    pieces/       the twenty-three
-    plan.ts       one section: a self-avoiding walk, portals at both ends
-    universe.ts   theme, taste, sections, the joined journey
-    show.ts       the endless sequence of universes from one seed
-    engine.ts     the p5 stage: camera, backdrops, cuts, the ball
-    main.ts       the clock, the URL, the hidden debug panel
-```
+No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
+parabolic flights, hidden stretches, portal transits — and what it does to
+the ball, and the show draws the ball once on the joined path from one
+clock. Every hand-off is at rail pace, every arrival slows to its stop, and
+every launch ramps back down before the cell edge. `check:rube` builds
+worlds headless and asserts all of it: continuity at every hand-off, one
+portal at each end and none between, the ball's state carried piece to
+piece, and the tempo.
 
 ## License
 
