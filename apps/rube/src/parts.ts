@@ -294,6 +294,10 @@ export interface Piece<S = unknown> {
   name: string
   /** Relative likelihood of being picked by the planner. 0 for the pieces it places by hand. */
   weight: number
+  /** Throws, flings or carries the ball somewhere else: one of the tempo's accents. */
+  flight?: boolean
+  /** Changes the ball itself — its colour, or which ball holds the thread. Rare enough to stay special. */
+  dynamic?: boolean
   /** Propose a placement, or null if nothing fits here. */
   place(ctx: PlaceCtx): Placement<S> | null
   draw(p: p5, s: S, c: PieceCtx): void
