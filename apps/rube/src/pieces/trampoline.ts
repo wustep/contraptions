@@ -1,4 +1,4 @@
-import { outline, solid } from '../../../../src/core/draw'
+import { coil, outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, type Lane, type Pt } from '../parts'
 
@@ -20,6 +20,15 @@ const IN = 0.32
 const DOWN = 0.1
 const UP = 0.09
 const FIRE = ARRIVE + IN + DOWN
+/** The pit's walls: each rail ends on top of one. */
+const WALL0 = LIP + 0.06
+const WALL1 = 1.14
+const GROUND = 1.5
+/** The posts the fabric is strung between, and the fabric's ends. */
+const POST0 = 0.4
+const POST1 = 1.0
+const END0 = 0.48
+const END1 = 0.92
 
 export const trampoline = definePiece<{ color: string }>({
   name: 'trampoline',
@@ -46,48 +55,37 @@ export const trampoline = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     // The fabric's sag: pressed by the ball, then a ring-down.
     const press = t < ARRIVE + IN ? 0 : since < 0 ? over(t, ARRIVE + IN, FIRE) : since < UP ? 1 - over(since, 0, UP) : 0
     const ring = since < UP ? 0 : Math.sin((since - UP) * 28) * Math.exp(-(since - UP) * 4) * 0.45
-    const sag = SAG * press + SAG * ring * -1
+    const sag = SAG * press - SAG * ring
 
-    // The lip, with an end cap; the landing rail with its post.
-    rail(p, k, ink, weight, -0.5, LIP + 0.06)
+    // The rails end on the pit's walls; the walls stand on its floor.
+    rail(p, k, ink, weight, -0.5, WALL0)
+    rail(p, k, ink, weight, WALL1, 1.5)
     outline(p, ink, weight)
-    p.line((LIP + 0.06) * k, (FLOOR - 0.05) * k, (LIP + 0.06) * k, (FLOOR + 0.05) * k)
-    rail(p, k, ink, weight, 1.14, 1.5)
-    p.line(1.14 * k, (FLOOR - 0.05) * k, 1.14 * k, (FLOOR + 0.05) * k)
-    // The pit: two walls and a floor, and the posts the fabric is strung on.
-    p.line(0.3 * k, 0.4 * k, 0.3 * k, 1.5 * k)
-    p.line(1.12 * k, (FLOOR + 0.05) * k, 1.12 * k, 1.5 * k)
-    p.line(0.3 * k, 1.5 * k, 1.12 * k, 1.5 * k)
-    for (const x of [0.4, 1.0]) {
-      p.line(x * k, 1.5 * k, x * k, FABRIC * k)
-      // Springs: a short zigzag between the post and the fabric's edge.
-      p.beginShape()
-      for (let i = 0; i <= 6; i++) {
-        const f = i / 6
-        const amp = 0.025 * (1 - Math.abs(sag) * 2.5)
-        p.vertex((x + (x < CENTRE ? 1 : -1) * 0.07 * f) * k, (FABRIC + sag * 0.5 * f + (i % 2 ? amp : -amp) * (i === 0 || i === 6 ? 0 : 1)) * k)
-      }
-      p.endShape()
+    p.line(WALL0 * k, FLOOR * k, WALL0 * k, GROUND * k)
+    p.line(WALL1 * k, FLOOR * k, WALL1 * k, GROUND * k)
+    p.line(WALL0 * k, GROUND * k, WALL1 * k, GROUND * k)
+    // The posts, and a spring from each to the fabric's edge.
+    const edge0 = FABRIC + sag * 0.5
+    for (const [px, ex] of [
+      [POST0, END0],
+      [POST1, END1],
+    ]) {
+      p.line(px * k, GROUND * k, px * k, FABRIC * k)
+      coil(p, px * k, FABRIC * k, ex * k, edge0 * k, 3, 0.022 * k)
     }
-    // The fabric, sagging under the ball.
-    p.push()
-    p.noFill()
-    p.stroke(s.color)
-    p.strokeWeight(weight * 2.4)
-    p.bezier(0.47 * k, (FABRIC + sag * 0.5) * k, 0.6 * k, (FABRIC + sag * 1.6) * k, 0.8 * k, (FABRIC + sag * 1.6) * k, 0.93 * k, (FABRIC + sag * 0.5) * k)
-    p.stroke(ink)
-    p.strokeWeight(weight)
-    p.bezier(0.47 * k, (FABRIC + 0.02 + sag * 0.5) * k, 0.6 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.8 * k, (FABRIC + 0.02 + sag * 1.6) * k, 0.93 * k, (FABRIC + 0.02 + sag * 0.5) * k)
-    p.pop()
-    // A sign on the far wall, in case anyone doubted it.
-    solid(p, ink, weight, bg)
-    p.rect(1.12 * k, 0.5 * k, 0.14 * k, 0.12 * k)
+    // The fabric: one band, sagging under the ball.
+    const th = 0.05
     solid(p, ink, weight, s.color)
-    p.triangle(1.08 * k, 0.53 * k, 1.16 * k, 0.53 * k, 1.12 * k, 0.46 * k)
+    p.beginShape()
+    p.vertex(END0 * k, edge0 * k)
+    p.bezierVertex(0.6 * k, (FABRIC + sag * 1.6) * k, 0.8 * k, (FABRIC + sag * 1.6) * k, END1 * k, edge0 * k)
+    p.vertex(END1 * k, (edge0 + th) * k)
+    p.bezierVertex(0.8 * k, (FABRIC + th + sag * 1.6) * k, 0.6 * k, (FABRIC + th + sag * 1.6) * k, END0 * k, (edge0 + th) * k)
+    p.endShape(p.CLOSE)
     // The bounce: a puff of lines off the fabric.
     if (since > 0 && since < 0.3) {
       const f = easeOutCubic(over(since, 0, 0.3))

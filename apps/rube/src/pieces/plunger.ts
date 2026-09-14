@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { easeInOutSine, easeOutCubic, lerp } from '../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
+import { easeInOutSine, easeInQuad, easeOutCubic, lerp } from '../../../../src/core/ease'
+import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A pinball plunger and a gap. The ball rolls past the cocked plunger into
@@ -11,7 +11,11 @@ import { FAST, FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp
  */
 const SEAT = 0.3
 const COCKED = -0.16
-const STRIKE = 0.14
+/** The tip's face is flush with the ball's edge at the strike, and follows through past it. */
+const STRIKE = SEAT - R - 0.025
+const THROUGH = 0.06
+/** Seconds the tip takes to cross from cocked to the strike. */
+const STROKE = 0.07
 const COLLAR = -0.44
 const LAND: Pt = [1.78, 0]
 const ARRIVE = arriveAt(SEAT)
@@ -33,7 +37,7 @@ export const plunger = definePiece<{ color: string }>({
       segs: [
         ...arrive([-0.5, 0], [SEAT, 0.02]),
         wait([SEAT, 0.02], HOLD),
-        fly([SEAT, 0.02], LAND, FLIGHT, 0.34),
+        fly([SEAT, 0.02], LAND, FLIGHT, 0.2),
         fly(LAND, [LAND[0] + 0.2, 0], 0.1, 0.04),
         ramp([LAND[0] + 0.2, 0], [2.5, 0], FAST, ROLL),
       ],
@@ -42,12 +46,16 @@ export const plunger = definePiece<{ color: string }>({
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
   },
   draw: (p, s, { k, since, ink, bg, weight }) => {
+    // The pawl lets go a hair before the fire; the tip crosses to the ball
+    // in that hair, arriving at the fire, and follows through a little as
+    // the ball leaves. Then it is drawn back, slowly, by nothing in particular.
     const tip =
-      since < 0 ? COCKED
-      : since < 0.06 ? lerp(COCKED, STRIKE, easeOutCubic(over(since, 0, 0.06)))
-      : since < 0.8 ? STRIKE
-      : lerp(STRIKE, COCKED, easeInOutSine(over(since, 0.8, 2.6)))
-    const pawl = since < 0 ? 0 : since < 0.05 ? over(since, 0, 0.05) : since < 2.6 ? 1 : 1 - over(since, 2.6, 2.8)
+      since < -STROKE ? COCKED
+      : since < 0 ? lerp(COCKED, STRIKE, easeInQuad(over(since, -STROKE, 0)))
+      : since < 0.05 ? lerp(STRIKE, STRIKE + THROUGH, easeOutCubic(over(since, 0, 0.05)))
+      : since < 0.8 ? STRIKE + THROUGH
+      : lerp(STRIKE + THROUGH, COCKED, easeInOutSine(over(since, 0.8, 2.6)))
+    const pawl = since < -STROKE ? 0 : since < -STROKE + 0.04 ? over(since, -STROKE, -STROKE + 0.04) : since < 2.6 ? 1 : 1 - over(since, 2.6, 2.8)
 
     // The rail up to the edge, the gap, and the rail beyond it.
     rail(p, k, ink, weight, -0.5, 0.5)
@@ -111,7 +119,7 @@ export const plunger = definePiece<{ color: string }>({
       p.strokeWeight(weight)
       for (const a of [-0.6, -0.2, 0.2]) {
         const r0 = 0.12 + 0.14 * f
-        p.line((STRIKE + 0.04 + Math.cos(a) * r0) * k, (Math.sin(a) * r0) * k, (STRIKE + 0.04 + Math.cos(a) * (r0 + 0.08)) * k, (Math.sin(a) * (r0 + 0.08)) * k)
+        p.line((STRIKE + 0.03 + Math.cos(a) * r0) * k, (Math.sin(a) * r0) * k, (STRIKE + 0.03 + Math.cos(a) * (r0 + 0.08)) * k, (Math.sin(a) * (r0 + 0.08)) * k)
       }
       p.pop()
     }

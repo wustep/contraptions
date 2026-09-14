@@ -5,10 +5,10 @@ import { FLOOR, ROLL, definePiece, flick, over, rail, roll, wait, type Lane } fr
 /**
  * A gate across the line and a table of dominoes above it. The ball hits the
  * gate; the gate's push rod knocks the first domino; the row goes over along
- * the table; the last one lands on a lever whose arm pulls a cord over two
- * pulleys; the cord hauls the gate straight up its post like a portcullis;
- * the ball rolls on underneath the table, past the whole fallen row. Two
- * cells, six links, one ball.
+ * the table; the last one lands on a bell-crank at the table's end whose
+ * tall arm hauls a cord over two pulleys; the cord lifts the gate straight
+ * up its post like a portcullis; the ball rolls on underneath the table,
+ * past the whole fallen row. Two cells, six links, one ball.
  */
 const GATE = 0.0
 const GATE_TOP = -0.2
@@ -16,13 +16,19 @@ const GATE_TOP = -0.2
 const RISE = 0.3
 const SEAT = GATE - 0.19
 const SHELF = -0.18
-const COUNT = 7
+const COUNT = 6
 const FIRST = 0.16
 const GAP = 0.178
 const H = 0.26
 const W = 0.065
-const LEVER_X = FIRST + GAP * COUNT + 0.02
+/** The bell-crank's pivot on the table's end, its two arms, and the pulley its tall arm pulls from. */
+const PIVOT_X = FIRST + GAP * COUNT + 0.06
+const ARM_FLAT = 0.2
+const ARM_TALL = 0.22
+const PULLEY_X = PIVOT_X + 0.14
+const POST_X = PIVOT_X + 0.18
 const CORD_Y = -0.47
+const THROW = 0.55
 /** Seconds after entry. */
 const ARRIVE = (0.5 + SEAT) / ROLL
 const PUSH = 0.06
@@ -48,40 +54,42 @@ export const dominoes = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight }) => {
     rail(p, k, ink, weight, -0.5, 1.5)
+    const pull = since < 0 ? 0 : since < OPEN ? over(since, 0, OPEN) : 1 - over(since, RESET - 0.3, RESET)
+    const throwAngle = -THROW * easeInOutCubic(pull)
 
     // The table the row stands on, with its legs.
     outline(p, ink, weight)
-    p.line((FIRST - 0.1) * k, SHELF * k, (LEVER_X + 0.16) * k, SHELF * k)
-    for (const x of [FIRST + 0.05, LEVER_X - 0.05]) {
+    p.line((FIRST - 0.1) * k, SHELF * k, POST_X * k, SHELF * k)
+    for (const x of [FIRST + 0.05, PIVOT_X + 0.08]) {
       p.line(x * k, SHELF * k, x * k, (FLOOR - 0.02) * k)
     }
 
     // The beam the pulleys hang from, between the gate's guide and a post on the table's end.
-    outline(p, ink, weight)
-    p.line((GATE - 0.05) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k)
-    p.line((LEVER_X + 0.14) * k, (CORD_Y - 0.06) * k, (LEVER_X + 0.14) * k, SHELF * k)
-    // The cord: from the gate's foot up to a pulley, across, down to the lever.
-    const pull = since < 0 ? 0 : since < OPEN ? over(since, 0, OPEN) : 1 - over(since, RESET - 0.3, RESET)
-    p.line(GATE * k, CORD_Y * k, (LEVER_X + 0.08) * k, CORD_Y * k)
-    p.line((LEVER_X + 0.08) * k, CORD_Y * k, (LEVER_X + 0.08) * k, (SHELF - 0.1 - 0.16 * pull) * k)
-    // Straight down from the pulley to the top of the gate.
+    p.line((GATE - 0.05) * k, (CORD_Y - 0.06) * k, POST_X * k, (CORD_Y - 0.06) * k)
+    p.line(POST_X * k, (CORD_Y - 0.06) * k, POST_X * k, SHELF * k)
+    // The cord: from the gate's top up to a pulley, across, over the second
+    // pulley and down to the tall arm's tip, which swings away and hauls it.
     const gateLift = since < 0 ? 0 : since < OPEN ? easeInOutCubic(over(since, 0, OPEN)) : 1 - easeInOutCubic(over(since, RESET - 0.3, RESET))
+    const tipX = PIVOT_X - ARM_TALL * Math.sin(-throwAngle)
+    const tipY = SHELF - ARM_TALL * Math.cos(throwAngle)
+    p.line(GATE * k, CORD_Y * k, PULLEY_X * k, CORD_Y * k)
+    p.line(PULLEY_X * k, CORD_Y * k, tipX * k, tipY * k)
     p.line(GATE * k, CORD_Y * k, GATE * k, (GATE_TOP - RISE * gateLift) * k)
     solid(p, ink, weight, s.color)
     p.circle(GATE * k, CORD_Y * k, 0.06 * k)
-    p.circle((LEVER_X + 0.08) * k, CORD_Y * k, 0.06 * k)
+    p.circle(PULLEY_X * k, CORD_Y * k, 0.06 * k)
 
-    // The lever on the table's end: an L, hinged at its corner. The last
+    // The bell-crank on the table's end: a solid L on a pin. The last
     // domino lands on the flat arm; the tall arm swings and hauls the cord.
     p.push()
-    p.translate((LEVER_X + 0.08) * k, SHELF * k)
-    p.rotate(-0.5 * pull)
-    outline(p, ink, weight)
-    p.line(0, 0, -0.14 * k, 0)
-    p.line(0, 0, 0, -0.26 * k)
+    p.translate(PIVOT_X * k, SHELF * k)
+    p.rotate(throwAngle)
     solid(p, ink, weight, s.color)
+    p.rect((-ARM_FLAT / 2) * k, 0, ARM_FLAT * k, 0.055 * k, 0.015 * k)
+    p.rect(0, (-ARM_TALL / 2) * k, 0.055 * k, ARM_TALL * k, 0.015 * k)
+    solid(p, ink, weight, bg)
     p.circle(0, 0, 0.05 * k)
     p.pop()
 

@@ -1,13 +1,14 @@
 import { outline } from '../../../../src/core/draw'
-import { R, ROLL, ball, chain, definePiece, fall, fly, over, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../parts'
+import { R, ROLL, ball, chain, definePiece, fly, over, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../parts'
 
 /**
  * A Newton's cradle across the line. Three balls hang from a beam on
  * strings, the last of them on a hook. The ball rolls in and strikes the
  * first; it stops dead, and the thread passes to the far ball, which
- * swings out, slips its hook at the top of the swing, and drops onto the
- * rail to carry on. The one that arrived hangs there for ever, and so do
- * the two that never moved.
+ * swings out and, still climbing, slips its hook — so it leaves the swing
+ * along its tangent, up and forward, and lands on the rail to carry on.
+ * The one that arrived hangs there for ever, and so do the two that never
+ * moved.
  */
 const BEAM_Y = -0.62
 const STRING = BEAM_Y * -1
@@ -17,13 +18,20 @@ const N = 3
 const LAST = FIRST + GAP * (N - 1)
 const SEAT = FIRST - GAP
 const ARRIVE = (0.5 + SEAT) / ROLL
+/** The swing the far ball would make, and the angle at which the hook lets it go. */
 const SWING = 0.3
 const MAX = 1.15
-const LAND: Pt = [LAST + Math.sin(MAX) * STRING + 0.06, 0]
+const RELEASE = 0.8
+const OMEGA = Math.PI / 2 / SWING
+const T_RELEASE = Math.asin(RELEASE / MAX) / OMEGA
+const FLIGHT = 0.23
+const REACH = 0.45
 
-/** The far ball's angle from the vertical over its swing, decelerating into the hook's slip. */
-const angleAt = (since: number) => (since <= 0 ? 0 : since < SWING ? MAX * Math.sin((Math.min(since, SWING) / SWING) * (Math.PI / 2)) : MAX)
+/** The far ball's angle from the vertical: a pendulum's rise, until the hook slips. */
+const angleAt = (since: number) => (since <= 0 ? 0 : MAX * Math.sin(Math.min(since, T_RELEASE) * OMEGA))
 const farAt = (a: number): Pt => [LAST + Math.sin(a) * STRING, -STRING + Math.cos(a) * STRING]
+const APEX = farAt(RELEASE)
+const LAND: Pt = [APEX[0] + REACH, 0]
 
 export const cradle = definePiece<{ color: string; next: string }>({
   name: 'cradle',
@@ -36,18 +44,16 @@ export const cradle = definePiece<{ color: string; next: string }>({
     if (!fits(cells, [2, 0])) return null
     const pool = theme.colors.filter((c) => c !== arriving.color)
     const next = rng.pick(pool.length ? pool : theme.colors)
-    const n = 10
+    const n = 8
     const arc: Pt[] = []
-    for (let i = 0; i <= n; i++) arc.push(farAt(MAX * Math.sin((i / n) * (Math.PI / 2))))
-    const swing = chain(arc, SWING, (i) => 1.6 - i / n)
-    const apex = arc[arc.length - 1]
+    for (let i = 0; i <= n; i++) arc.push(farAt(angleAt((T_RELEASE * i) / n)))
+    const swing = chain(arc, T_RELEASE).map((seg) => ({ ...seg, dur: T_RELEASE / n }))
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [SEAT, 0], ROLL),
         ...swing,
-        fall(apex, LAND, 4.5),
-        fly(LAND, [LAND[0] + 0.08, 0], 0.05, 0.015),
-        ramp([LAND[0] + 0.08, 0], [1.5, 0], 1.5, ROLL),
+        fly(APEX, LAND, FLIGHT, 0.16),
+        ramp(LAND, [1.5, 0], 2.2, ROLL),
       ],
       fire: ARRIVE,
     }
@@ -71,15 +77,14 @@ export const cradle = definePiece<{ color: string; next: string }>({
       p.line((FIRST + GAP * i) * k, BEAM_Y * k, x * k, -R * k)
       ball(p, k, ink, weight, s.next, x * k, 0, 0)
     }
-    // The far ball, on its string, until the thread takes it at the strike; the string swings with it and slips the hook.
-    const a = angleAt(since)
-    const [fx, fy] = farAt(a)
-    if (since < SWING) {
+    // The far ball's string: with it until the hook slips; then hanging
+    // free from the hook, swinging back to rest.
+    if (since < T_RELEASE) {
+      const [fx, fy] = farAt(angleAt(since))
       outline(p, ink, weight)
       p.line(LAST * k, BEAM_Y * k, fx * k, (fy - R) * k)
     } else {
-      // The slipped string hangs from the hook, swinging back to rest.
-      const back = MAX * 0.5 * Math.exp(-(since - SWING) * 2) * Math.cos((since - SWING) * 9)
+      const back = RELEASE * 0.6 * Math.exp(-(since - T_RELEASE) * 2) * Math.cos((since - T_RELEASE) * 9)
       outline(p, ink, weight)
       p.line(LAST * k, BEAM_Y * k, (LAST + Math.sin(back) * STRING * 0.9) * k, (BEAM_Y + Math.cos(back) * STRING * 0.9) * k)
     }
@@ -87,7 +92,7 @@ export const cradle = definePiece<{ color: string; next: string }>({
     // The hook on the beam that the far string slips.
     p.push()
     p.translate(LAST * k, BEAM_Y * k)
-    p.rotate(since < SWING ? 0 : 0.8)
+    p.rotate(since < T_RELEASE ? 0 : 0.8)
     outline(p, ink, weight)
     p.line(0, 0, 0.06 * k, 0.05 * k)
     p.pop()

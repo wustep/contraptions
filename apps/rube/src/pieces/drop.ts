@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FAST, FLOOR, R, ROLL, arcPts, chain, definePiece, flick, over, ramp, segTime, type Lane, type Placement, type Pt } from '../parts'
+import { FAST, FLOOR, R, ROLL, arcPts, catchBend, chain, definePiece, flick, over, ramp, segTime, type Lane, type Placement, type Pt } from '../parts'
 
 /**
  * A fall. The rail runs out to a lip over a tube; the ball drops one, two or
@@ -16,9 +16,9 @@ export interface DropState {
   flapAt: number[]
 }
 
-const TUBE = R + 0.04
+/** The tube is exactly the ball's width: its walls meet the bend and the rail without a jog. */
+const TUBE = R
 const ARC = 0.24
-const ARC_WALL = ARC + FLOOR
 /** Cartoon gravity, cells per second squared: a floor takes a third of a second. */
 const G = 24
 
@@ -65,21 +65,18 @@ export const drop = definePiece<DropState>({
   draw: (p, s, { k, t, since, ink, weight }) => {
     const { floors, turn } = s
     const bottom = floors
-    // The rail to the lip.
     outline(p, ink, weight)
+    // The rail to the lip, with the tube's near wall hung from it; the far
+    // wall stands up past the lip as a backstop. Both walls run down to
+    // where the bend begins, and the bend takes over on whichever side the
+    // ball turns.
     p.line(-0.5 * k, FLOOR * k, 0.05 * k, FLOOR * k)
-    // The tube: near wall from under the lip, far wall up past it as a backstop.
-    p.line(-TUBE * k, (FLOOR + 0.06) * k, -TUBE * k, (bottom - ARC_WALL) * k)
-    p.line(TUBE * k, -0.3 * k, TUBE * k, (bottom - 0.2) * k)
-    p.line(TUBE * k, -0.3 * k, (TUBE + 0.12) * k, -0.25 * k)
-    // Ties every so often, so the tube is fixed to something.
-    for (let y = 0.4; y < bottom - 0.3; y += 0.24) {
-      for (const x of [-TUBE, TUBE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
-    }
+    p.line(-TUBE * k, FLOOR * k, -TUBE * k, (bottom - ARC) * k)
+    p.line(TUBE * k, -0.3 * k, TUBE * k, (bottom - ARC) * k)
     // The backstop pad the ball knocks on its way over the lip.
     const knock = t < 0.5 / ROLL ? 0 : flick(t - 0.5 / ROLL, 0.04, 0.08, 0.4)
     solid(p, ink, weight, s.color)
-    p.rect((TUBE + 0.035 + knock * 0.03) * k, -0.05 * k, 0.07 * k, 0.2 * k)
+    p.rect((TUBE + 0.035 + knock * 0.03) * k, -0.05 * k, 0.07 * k, 0.2 * k, 0.015 * k)
 
     // The flaps: hinged on the near wall, hanging into the tube, kicked flat.
     for (let i = 1; i < floors; i++) {
@@ -88,28 +85,17 @@ export const drop = definePiece<DropState>({
       p.translate(-TUBE * k, (i - 0.02) * k)
       p.rotate(-0.55 + (t < s.flapAt[i - 1] ? 0 : swing) * 1.1)
       solid(p, ink, weight, s.color)
-      p.rect(0.09 * k, 0, 0.18 * k, 0.05 * k)
+      p.rect(0.08 * k, 0, 0.16 * k, 0.05 * k)
       outline(p, ink, weight)
       p.circle(0, 0, 0.05 * k)
       p.pop()
     }
 
-    // The catch: a quarter-pipe from the near wall onto the floor, in the
-    // direction the ball leaves.
+    // The catch: a quarter-pipe from the wall onto the rail out, in the direction the ball leaves.
+    const squash = since < 0 ? 0 : 1 - over(since, 0, 0.35)
     p.push()
     p.translate(0, bottom * k)
-    p.scale(turn, 1)
-    outline(p, ink, weight)
-    p.arc(ARC * k, -ARC * k, ARC_WALL * 2 * k, ARC_WALL * 2 * k, Math.PI / 2, Math.PI)
-    p.line(ARC * k, FLOOR * k, 0.5 * k, FLOOR * k)
-    p.line(-TUBE * k, -0.5 * k, -TUBE * k, -0.25 * k)
-    // The cushion under the bend, squashed by the landing.
-    const squash = since < 0 ? 0 : 1 - over(since, 0, 0.35)
-    solid(p, ink, weight, s.color)
-    p.rect(0.04 * k, (FLOOR + 0.12 + squash * 0.02) * k, 0.24 * k, (0.09 - squash * 0.03) * k)
-    outline(p, ink, weight)
-    p.line(0.04 * k, (FLOOR + 0.17) * k, 0.04 * k, 0.5 * k)
-    p.line(0.36 * k, FLOOR * k, 0.36 * k, 0.5 * k)
+    catchBend(p, k, ink, weight, s.color, turn, ARC, squash)
     p.pop()
   },
 })

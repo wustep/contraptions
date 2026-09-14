@@ -11,7 +11,6 @@ import { dominoes } from './dominoes'
 import { drop } from './drop'
 import { flipper } from './flipper'
 import { funnel } from './funnel'
-import { fuse } from './fuse'
 import { gears } from './gears'
 import { hammer } from './hammer'
 import { inverter } from './inverter'
@@ -20,7 +19,6 @@ import { loop } from './loop'
 import { paddle } from './paddle'
 import { painter } from './painter'
 import { pendulum } from './pendulum'
-import { phasegate } from './phasegate'
 import { plunger } from './plunger'
 import { portal } from './portal'
 import { plainRail } from './rail'
@@ -39,24 +37,24 @@ import { trebuchet } from './trebuchet'
 import { zipline } from './zipline'
 
 /**
- * The whole catalog: thirty-eight pieces, chosen over the eighty-odd toys in
+ * The whole catalog: thirty-six pieces, chosen over the eighty-odd toys in
  * the repo's other catalogs and rewritten for one ball on one thread. Every
  * one of these is a beat the ball is seen to cause, and polishing the set
  * beats adding to it.
  *
  *   rail      a plain cell, so the beats have room to land
- *   hammer    wait on the anvil, blow, out fast
+ *   hammer    wait on the anvil, a wedge comes down, out fast
  *   seesaw    up, over, down faster
  *   bell      punctuation
  *   bellows   trip → hook → weight → puff → go
- *   dominoes  gate → rod → row → lever → cord → gate
+ *   dominoes  gate → rod → row → bell-crank → cord → gate
  *   drop      lip, tube, flaps, quarter-pipe; down one to three floors
  *   lift      pawl → counterweight → cage; up one to three floors
  *   cannon    match, fuse, bang, flight, landing; over two and up one
  *   loop      round the loop, no mechanism at all
  *   scoop     a bucket wheel, four cups on a post; down one, facing back
  *   toaster   drop in, glow, pop; up one
- *   crane     magnet down, blink, up, along the beam, think, drop
+ *   crane     magnet down, blink, up, across a gap in the rail, think, drop
  *   rocket    button, sputter, flame, sled to the buffer, ball flies on
  *   pendulum  tongue → cord → hook → a wrecking ball on a real clock
  *   trapdoor  weight → lever → bolt → the floor gives way; down one
@@ -69,7 +67,7 @@ import { zipline } from './zipline'
  *   stairs    four steps down, off each lip, a tap on each tread
  *   switchback  ramps down to bumpers that turn the ball; one or two floors
  *   zipline   a cup on a trolley runs a wire down a floor and over two
- *   tipper    a bucket on its heel tips over and dumps the ball a floor down
+ *   tipper    a counterweighted tray tips over and dumps the ball a floor down
  *   drawbridge  plate → pawl → chain → the bridge falls across the gap
  *   gears     plate → pawl → three gears run → a cord hauls the gate up
  *   trapeze   a basket swings the ball across two cells of nothing
@@ -77,10 +75,8 @@ import { zipline } from './zipline'
  *   screw     an Archimedes' screw carries the ball up a floor in a glass tube
  *   flipper   a pinball bat flings the ball a floor up onto a shelf
  *   painter   two nozzles spray as the ball passes; it leaves a new colour
- *   cradle    a Newton's cradle: the ball stops dead, the far ball takes the thread
- *   phasegate an emitter makes the ball a ghost; it goes through a wall; another makes it solid
- *   inverter  gravity flips between two coils; the ball rolls the ceiling and drops back
- *   fuse      the ball lights a fuse that races it to a keg; the bang throws it on
+ *   cradle    a Newton's cradle: the ball stops dead, the far ball takes the thread and flies
+ *   inverter  gravity flips where the floor stops; the ball rides the ceiling and drops back
  *   portal    the door at either end of a map; the far side is always a new map
  */
 export const catalog: Piece<any>[] = [
@@ -118,9 +114,7 @@ export const catalog: Piece<any>[] = [
   flipper,
   painter,
   cradle,
-  phasegate,
   inverter,
-  fuse,
   portal,
 ]
 

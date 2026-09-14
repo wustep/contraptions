@@ -60,7 +60,7 @@ export interface PlanCtx {
 }
 
 /** The pieces that change the ball itself. Rare enough to stay special. */
-export const DYNAMIC = new Set(['painter', 'cradle', 'phasegate', 'inverter', 'fuse'])
+export const DYNAMIC = new Set(['painter', 'cradle', 'inverter'])
 /** The pieces that throw, fling or carry the ball somewhere else: the tempo's accents. */
 export const FLIGHT = new Set(['cannon', 'trebuchet', 'trampoline', 'plunger', 'flipper', 'rocket', 'zipline', 'trapeze', 'toaster', 'loop'])
 

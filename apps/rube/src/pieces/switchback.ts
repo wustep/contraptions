@@ -3,10 +3,10 @@ import { FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, roll, wait, type 
 
 /**
  * A switchback. The rail runs out onto a ramp; the ramp runs down to a
- * bumper at the wall; the bumper turns the ball onto the next ramp, down
- * the other way. Two ramps per floor, one or two floors, so the ball comes
- * out a floor down facing back, or two floors down facing on. Gravity and
- * rubber, nothing else.
+ * bumper on the wall; the bumper turns the ball onto the next ramp, down
+ * the other way; the last ramp runs straight out onto the rail below. Two
+ * ramps for one floor, so the ball comes out facing back; three for two,
+ * so it comes out facing on. Gravity and rubber, nothing else.
  */
 export interface SwitchbackState {
   color: string
@@ -16,12 +16,16 @@ export interface SwitchbackState {
 }
 
 const LIP = -0.3
-const WALL = 0.36
-const HALF = 0.5
+/** The ball's centre at a turn; the bumper's face is a radius further out, on a post inside the cell. */
+const TURN = 0.3
+const PAD = 0.05
+const FACE = TURN + R
+const POST = FACE + PAD
 const BUMP = 0.05
 
-/** The ball's line down a ramp from x0 to x1, top at y0, picking up speed from `v0`. */
-const slope = (x0: number, x1: number, y0: number, v0: number): Seg => ramp([x0, y0], [x1, y0 + HALF], v0, ROLL * 1.7)
+/** How many ramps a descent of `floors` takes, and how far each drops. */
+const rampsFor = (floors: number) => floors + 1
+const dropFor = (floors: number) => floors / rampsFor(floors)
 
 export const switchback = definePiece<SwitchbackState>({
   name: 'switchback',
@@ -32,7 +36,10 @@ export const switchback = definePiece<SwitchbackState>({
     for (const floors of order) {
       const cells: Pt[] = []
       for (let i = 0; i <= floors; i++) cells.push([0, i])
-      const turn: 1 | -1 = floors % 2 ? -1 : 1
+      const ramps = rampsFor(floors)
+      const drop = dropFor(floors)
+      // An even count of ramps ends where it began, facing back; an odd one faces on.
+      const turn: 1 | -1 = ramps % 2 ? 1 : -1
       const exit: Pt = [turn, floors]
       if (!fits(cells, exit)) continue
       const segs: Seg[] = [roll([-0.5, 0], [LIP, 0], ROLL)]
@@ -40,19 +47,20 @@ export const switchback = definePiece<SwitchbackState>({
       let t = segs[0].dur
       let x = LIP
       let y = 0
-      for (let i = 0; i < floors * 2; i++) {
-        const east = i % 2 === 0
-        const to = east ? WALL : -WALL
-        const seg = slope(x, to, y, i === 0 ? ROLL : 0.4)
+      for (let i = 0; i < ramps; i++) {
+        const to = i % 2 === 0 ? TURN : -TURN
+        const seg = ramp([x, y], [to, y + drop], i === 0 ? ROLL : 0.4, ROLL * 1.7)
         segs.push(seg)
         t += seg.dur
-        hits.push(t)
-        segs.push(wait([to, y + HALF], BUMP))
-        t += BUMP
+        if (i < ramps - 1) {
+          hits.push(t)
+          segs.push(wait([to, y + drop], BUMP))
+          t += BUMP
+        }
         x = to
-        y += HALF
+        y += drop
       }
-      segs.push(ramp([x, floors], [turn * 0.5, floors], 1.2, ROLL))
+      segs.push(ramp([x, floors], [turn * 0.5, floors], ROLL * 1.7, ROLL))
       const lane: Lane = { segs, fire: hits[hits.length - 1] }
       return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, hits } }
     }
@@ -60,54 +68,67 @@ export const switchback = definePiece<SwitchbackState>({
   },
   draw: (p, s, { k, t, ink, weight }) => {
     const { floors } = s
+    const ramps = rampsFor(floors)
+    const drop = dropFor(floors)
+    const turn = ramps % 2 ? 1 : -1
     rail(p, k, ink, weight, -0.5, LIP)
-    // The ramps: each a plank a radius under the ball's line, on a strut.
-    const slope = Math.atan2(HALF, WALL - LIP)
+    // The planks: each a radius under the ball's line, square to the slope,
+    // meeting the next in a V at the wall. The first hangs off the rail's
+    // lip; the last runs into the rail out.
+    const slope = Math.atan2(drop, TURN - LIP)
     const under = R / Math.cos(slope)
     outline(p, ink, weight)
+    p.line(LIP * k, FLOOR * k, LIP * k, under * k)
     let x = LIP
     let y = 0
-    for (let i = 0; i < floors * 2; i++) {
-      const east = i % 2 === 0
-      const to = east ? WALL : -WALL
-      p.line(x * k, (y + under) * k, to * k, (y + HALF + under) * k)
-      // A strut from the ramp's low end to the wall's post.
-      p.line(to * k, (y + HALF + under) * k, to * k, (y + HALF + under + 0.16) * k)
+    for (let i = 0; i < ramps; i++) {
+      const last = i === ramps - 1
+      const to = i % 2 === 0 ? TURN : -TURN
+      p.line(x * k, (y + under) * k, to * k, (y + drop + (last ? FLOOR : under)) * k)
+      if (!last) {
+        // A bracket from the V to the wall's post, and the post's bumper.
+        const side = to > 0 ? 1 : -1
+        p.line(to * k, (y + drop + under) * k, side * POST * k, (y + drop + under) * k)
+      }
       x = to
-      y += HALF
+      y += drop
     }
-    // The walls: a post each side, from the first bumper to the ground of the last cell.
+    // The walls: a post on each side that has a bumper, from above its
+    // first bumper to below its last; the side the ball does not leave by
+    // stands on the ground.
     for (const side of [-1, 1]) {
-      const wx = side * (WALL + 0.09)
-      p.line(wx * k, (side > 0 ? 0.2 : 0.7) * k, wx * k, (floors + 0.5) * k)
-      p.line((wx - 0.06) * k, (floors + 0.5) * k, (wx + 0.06) * k, (floors + 0.5) * k)
+      const turns = []
+      for (let i = 0; i < ramps - 1; i++) if ((i % 2 === 0 ? 1 : -1) === side) turns.push((i + 1) * drop)
+      if (!turns.length) continue
+      const top = turns[0] - 0.18
+      const bottom = side === turn ? turns[turns.length - 1] + 0.18 : floors + 0.5
+      p.line(side * POST * k, top * k, side * POST * k, bottom * k)
+      if (side !== turn) p.line((side * POST - 0.06) * k, bottom * k, (side * POST + 0.06) * k, bottom * k)
     }
     // The bumpers: a rubber pad on each post where a ramp ends, squashed by the hit.
-    for (let i = 0; i < floors * 2; i++) {
-      const east = i % 2 === 0
-      const bx = east ? WALL + 0.09 : -WALL - 0.09
-      const by = (i + 1) * HALF
+    for (let i = 0; i < ramps - 1; i++) {
+      const side = i % 2 === 0 ? 1 : -1
+      const by = (i + 1) * drop
       const hit = t < s.hits[i] ? 0 : flick(t - s.hits[i], 0.04, 0.08, 0.4)
+      const thick = PAD * (1 - 0.35 * hit)
       solid(p, ink, weight, s.color)
-      p.rect((bx - (east ? 1 : -1) * (0.05 - hit * 0.02)) * k, by * k, (0.06 + hit * 0.03) * k, 0.2 * k, 0.02 * k)
+      p.rect(side * (POST - thick / 2) * k, by * k, thick * k, 0.22 * k, 0.015 * k)
     }
-    // The rail out, level with the last ramp's end.
-    const turn = floors % 2 ? -1 : 1
-    const lastX = floors % 2 ? -WALL : WALL
+    // The rail out, from the last plank's foot.
     outline(p, ink, weight)
-    p.line(lastX * k, (floors + FLOOR) * k, turn * 0.5 * k, (floors + FLOOR) * k)
+    p.line(x * k, (floors + FLOOR) * k, turn * 0.5 * k, (floors + FLOOR) * k)
     // A tap of lines where the ball has just met a bumper.
-    for (let i = 0; i < floors * 2; i++) {
+    for (let i = 0; i < ramps - 1; i++) {
       const f = 1 - over(t, s.hits[i], s.hits[i] + 0.2)
       if (t < s.hits[i] || f <= 0) continue
-      const east = i % 2 === 0
-      const bx = east ? WALL : -WALL
-      const by = (i + 1) * HALF
+      const side = i % 2 === 0 ? 1 : -1
+      const bx = side * TURN
+      const by = (i + 1) * drop
       p.push()
       p.stroke(s.color)
       p.strokeWeight(weight)
       for (const a of [-0.5, 0, 0.5]) {
-        const dir = east ? Math.PI + a : a
+        const dir = side > 0 ? Math.PI + a : a
         const r0 = 0.16 + 0.1 * (1 - f)
         p.line((bx + Math.cos(dir) * r0) * k, (by + Math.sin(dir) * r0) * k, (bx + Math.cos(dir) * (r0 + 0.06)) * k, (by + Math.sin(dir) * (r0 + 0.06)) * k)
       }

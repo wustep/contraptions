@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { easeOutBack } from '../../../../src/core/ease'
+import { easeOutBack, easeOutCubic } from '../../../../src/core/ease'
 import { FLOOR, ROLL, burst, definePiece, fall, fly, over, rail, ramp, wait, type Lane, type PieceCtx, type Pt } from '../parts'
 
 /**
@@ -13,6 +13,8 @@ const LID = FLOOR
 const BODY_X0 = -0.36
 const BODY_X1 = 0.2
 const BODY_Y1 = 0.5
+/** The lever's slot, out from the body's side. */
+const LEVER_X = BODY_X0 - 0.07
 const INSIDE: Pt = [SLOT, 0.3]
 const SHELF_Y = -1
 const LAND: Pt = [0.32, SHELF_Y]
@@ -44,7 +46,7 @@ export const toaster = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [1, -1], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     // The rail onto the lid, and the shelf above on its bracket.
     rail(p, k, ink, weight, -0.5, BODY_X0)
     rail(p, k, ink, weight, 0.1, 0.5, SHELF_Y + FLOOR)
@@ -52,12 +54,16 @@ export const toaster = definePiece<{ color: string }>({
     p.line(0.42 * k, (SHELF_Y + FLOOR) * k, 0.42 * k, 0.5 * k)
     p.line(0.36 * k, 0.5 * k, 0.48 * k, 0.5 * k)
     p.line(0.42 * k, (SHELF_Y + FLOOR + 0.2) * k, 0.18 * k, (SHELF_Y + FLOOR) * k)
-    // The lever on the side: down while toasting, up with the pop.
-    const down = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE, ARRIVE + DROP) : 1 - easeOutBack(over(since, 0, 0.18))
+    // The lever on the side: it rides a slot the height of the body, goes
+    // all the way down as the ball drops in, and springs up with the pop.
+    const down = t < ARRIVE ? 0 : since < 0 ? easeOutCubic(over(t, ARRIVE, ARRIVE + DROP)) : 1 - easeOutBack(over(since, 0, 0.18))
+    const slotTop = LID + 0.05
+    const slotBottom = BODY_Y1 - 0.06
     outline(p, ink, weight)
-    p.line((BODY_X0 - 0.06) * k, (LID + 0.04) * k, (BODY_X0 - 0.06) * k, (LID + 0.22) * k)
-    solid(p, ink, weight, bg)
-    p.rect((BODY_X0 - 0.06) * k, (LID + 0.06 + down * 0.14) * k, 0.09 * k, 0.05 * k)
+    p.line(LEVER_X * k, slotTop * k, LEVER_X * k, slotBottom * k)
+    p.line((LEVER_X + 0.03) * k, slotTop * k, BODY_X0 * k, slotTop * k)
+    solid(p, ink, weight, s.color)
+    p.rect(LEVER_X * k, (slotTop + 0.03 + down * (slotBottom - slotTop - 0.06)) * k, 0.11 * k, 0.06 * k, 0.02 * k)
     // The ding: two arcs off the corner, and crumbs.
     if (since > 0 && since < 0.5) {
       const f = over(since, 0, 0.5)

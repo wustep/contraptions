@@ -1,5 +1,5 @@
 import { clipBox, outline, solid } from '../../../../src/core/draw'
-import { easeOutCubic } from '../../../../src/core/ease'
+import { easeInQuad, easeOutCubic } from '../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, puff, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
@@ -67,16 +67,23 @@ export const cannon = definePiece<{ color: string }>({
     p.rect((1.5 + 0.06) * k, (-1 - 0.06) * k, 0.06 * k, 0.28 * k)
     p.rect(LAND[0] * k, (-1 + FLOOR + 0.06 + squash * 0.02) * k, 0.3 * k, (0.08 - squash * 0.03) * k)
 
-    // Smoke, before the barrel so it is behind it.
-    if (since > 0 && since < 1.6) {
-      const f = over(since, 0, 1.6)
-      const e = easeOutCubic(f)
-      for (let i = 0; i < 3; i++) {
-        const along = 0.12 + e * (0.3 + i * 0.16)
-        const x = MUZZLE[0] + Math.cos(ANGLE) * along + i * 0.05 - e * 0.04 * i
-        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * 0.22 * (i + 1)
-        const r = (0.05 + 0.1 * e) * (1 - f * 0.6) * (1 - i * 0.18)
-        if (f < 0.98 && r > 0.02) puff(p, k, ink, weight, bg, x, y, r)
+    // Smoke, before the barrel so it is behind it: a string of puffs out of
+    // the muzzle, each swelling as it drifts up and away, then shrinking to
+    // nothing. The first is the biggest and the last the lightest.
+    if (since > 0 && since < 2) {
+      for (let i = 0; i < 4; i++) {
+        const born = i * 0.07
+        const life = 1.7 - i * 0.25
+        const age = since - born
+        if (age <= 0 || age >= life) continue
+        const f = age / life
+        const e = easeOutCubic(f)
+        const along = 0.08 + e * (0.22 + i * 0.16)
+        const side = e * 0.12 * Math.sin(i * 2.1)
+        const x = MUZZLE[0] + Math.cos(ANGLE) * along + side
+        const y = MUZZLE[1] + Math.sin(ANGLE) * along - e * (0.28 + i * 0.1)
+        const r = 0.16 * (1 - i * 0.16) * easeOutCubic(Math.min(1, f * 2.5)) * (1 - easeInQuad(f))
+        if (r > 0.015) puff(p, k, ink, weight, bg, x, y, r)
       }
     }
 

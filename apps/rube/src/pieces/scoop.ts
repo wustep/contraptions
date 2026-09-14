@@ -10,7 +10,10 @@ import { FLOOR, R, ROLL, arcPts, chain, definePiece, fall, over, rail, ramp, typ
  */
 const CY = 0.5
 const RIM = 0.4
-const PATH = RIM - R + 0.05
+/** The ball rides with its top on the rim; each cup is a bucket round that seat. */
+const PATH = RIM - R
+const CUP = R + 0.03
+const LIP = 0.05
 const CUPS = 4
 const TURN = 1.5
 const ARRIVE = 0.5 / ((ROLL + 1.2) / 2)
@@ -19,6 +22,14 @@ const angleAt = (since: number) =>
   since < 0 ? 0
   : since < TURN ? Math.PI * easeInOutSine(over(since, 0, TURN))
   : Math.PI + 0.05 * Math.exp(-(since - TURN) * 5) * Math.sin((since - TURN) * 28)
+
+/** One cup in its own frame: the seat at the origin, the wheel's hub down +y. A bowl round the seat with a lip either side. */
+function cup(p: import('p5'), k: number, ink: string, weight: number, color: string): void {
+  solid(p, ink, weight, color)
+  p.arc(0, 0, CUP * 2 * k, CUP * 2 * k, 0, Math.PI, p.OPEN)
+  outline(p, ink, weight)
+  for (const side of [-1, 1]) p.line(side * CUP * k, 0, side * CUP * k, -LIP * k)
+}
 
 export const scoop = definePiece<{ color: string }>({
   name: 'scoop',
@@ -48,16 +59,16 @@ export const scoop = definePiece<{ color: string }>({
     const angle = angleAt(since)
 
     // The rail in runs to the top cup's lip; the rail out starts under the bottom cup; the post the wheel turns on.
-    rail(p, k, ink, weight, -0.5, -0.18)
-    rail(p, k, ink, weight, -0.5, 0.18, 1 + FLOOR)
+    rail(p, k, ink, weight, -0.5, -CUP - 0.03)
+    rail(p, k, ink, weight, -0.5, CUP + 0.03, 1 + FLOOR)
     outline(p, ink, weight)
     p.line(0, CY * k, 0, 1.5 * k)
     p.line(-0.12 * k, 1.5 * k, 0.12 * k, 1.5 * k)
     // The pawl on the post: it rides the rim and clicks as each cup goes by.
     let click = 0
     for (let i = 0; i < CUPS; i++) {
-      const cup = -Math.PI / 2 + (i * Math.PI * 2) / CUPS + angle
-      const d = Math.atan2(Math.sin(cup - (Math.PI / 2 + 0.3)), Math.cos(cup - (Math.PI / 2 + 0.3)))
+      const at = -Math.PI / 2 + (i * Math.PI * 2) / CUPS + angle
+      const d = Math.atan2(Math.sin(at - (Math.PI / 2 + 0.3)), Math.cos(at - (Math.PI / 2 + 0.3)))
       click = Math.max(click, Math.exp(-(d / 0.14) * (d / 0.14)))
     }
     p.push()
@@ -72,19 +83,18 @@ export const scoop = definePiece<{ color: string }>({
     p.push()
     p.translate(0, CY * k)
     p.rotate(angle)
-    // The rim and its spokes.
+    // The rim and its spokes, out to each cup's floor.
     outline(p, ink, weight)
     p.circle(0, 0, RIM * 2 * k)
     for (let i = 0; i < CUPS; i++) {
-      p.line(0, 0, 0, -RIM * k)
+      p.line(0, 0, 0, -(PATH - CUP) * k)
       p.rotate((Math.PI * 2) / CUPS)
     }
-    // The cups: one at every spoke, open toward the direction of turn.
+    // The cups: a bucket at every spoke, open outward.
     for (let i = 0; i < CUPS; i++) {
       p.push()
-      p.translate(0, -RIM * k)
-      solid(p, ink, weight, s.color)
-      p.arc(0, 0.02 * k, 0.28 * k, 0.24 * k, -0.15, Math.PI + 0.15, p.CHORD)
+      p.translate(0, -PATH * k)
+      cup(p, k, ink, weight, s.color)
       p.pop()
       p.rotate((Math.PI * 2) / CUPS)
     }
@@ -96,13 +106,12 @@ export const scoop = definePiece<{ color: string }>({
     p.circle(0, CY * k, 0.04 * k)
   },
   over: (p, s, { k, since, ink, weight }) => {
-    // The near lip of the cup the ball rides in, so it sits *in* the cup.
+    // The near side of the cup the ball rides in, so the ball sits *in* it.
     p.push()
     p.translate(0, CY * k)
     p.rotate(angleAt(since))
-    p.translate(0, -RIM * k)
-    solid(p, ink, weight, s.color)
-    p.rect(0, 0.06 * k, 0.28 * k, 0.05 * k)
+    p.translate(0, -PATH * k)
+    cup(p, k, ink, weight, s.color)
     p.pop()
   },
 })

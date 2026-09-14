@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FLOOR, ROLL, arcPts, chain, definePiece, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../parts'
+import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../parts'
 
 /**
  * A glass funnel. The rail ends at the rim; the ball goes round and round
@@ -11,12 +11,13 @@ import { FLOOR, ROLL, arcPts, chain, definePiece, over, rail, ramp, roll, segTim
 const RIM_Y = 0.06
 const RIM_HALF = 0.42
 const NECK_Y = 0.42
-const NECK_HALF = 0.16
+const NECK_HALF = 0.14
 const ENTRY_X = -0.3
 const TURNS = 3.8
 const ORBIT = 1.5
 const ARC = 0.24
-const TUBE = 0.16
+/** The tube below the neck is the ball's width, so it meets the bend without a jog. */
+const TUBE = R
 
 function orbit(): Seg[] {
   const n = 46
@@ -90,26 +91,17 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
     p.pop()
     // The neck, into the cell below, and the tube down to the catch.
     outline(p, ink, weight)
-    for (const x of [-TUBE, TUBE]) p.line(x * k, NECK_Y * k, x * k, (1 - ARC - 0.02) * k)
-    for (const y of [0.62, 0.86]) for (const x of [-TUBE, TUBE]) p.line(x * k, y * k, (x + Math.sign(x) * 0.06) * k, y * k)
-    // The stand: legs from the rim's shoulders to the floor of the cell below.
+    for (const x of [-TUBE, TUBE]) p.line(x * k, NECK_Y * k, x * k, (1 - ARC) * k)
+    // The stand: a leg under each shoulder of the rim, straight down to the floor of the cell.
     for (const side of [-1, 1]) {
-      p.line(side * (RIM_HALF - 0.04) * k, (RIM_Y + 0.05) * k, side * 0.36 * k, 0.5 * k)
-      p.line(side * 0.3 * k, 0.5 * k, side * 0.42 * k, 0.5 * k)
+      p.line(side * 0.38 * k, (RIM_Y + 0.06) * k, side * 0.38 * k, 0.5 * k)
+      p.line(side * 0.32 * k, 0.5 * k, side * 0.44 * k, 0.5 * k)
     }
-    // The catch: a quarter-pipe onto the floor, in the direction the ball leaves.
+    // The catch: a quarter-pipe onto the rail out, in the direction the ball leaves.
+    const squash = since < 0 ? 0 : 1 - over(since, 0, 0.35)
     p.push()
     p.translate(0, 1 * k)
-    p.scale(turn, 1)
-    outline(p, ink, weight)
-    p.arc(ARC * k, -ARC * k, (ARC + FLOOR) * 2 * k, (ARC + FLOOR) * 2 * k, Math.PI / 2, Math.PI)
-    p.line(ARC * k, FLOOR * k, 0.5 * k, FLOOR * k)
-    const squash = since < 0 ? 0 : 1 - over(since, 0, 0.35)
-    solid(p, ink, weight, s.color)
-    p.rect(0.04 * k, (FLOOR + 0.12 + squash * 0.02) * k, 0.24 * k, (0.09 - squash * 0.03) * k)
-    outline(p, ink, weight)
-    p.line(0.04 * k, (FLOOR + 0.17) * k, 0.04 * k, 0.5 * k)
-    p.line(0.36 * k, FLOOR * k, 0.36 * k, 0.5 * k)
+    catchBend(p, k, ink, weight, s.color, turn, ARC, squash)
     p.pop()
   },
 })
