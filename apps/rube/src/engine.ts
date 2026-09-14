@@ -83,30 +83,39 @@ function cameraAt(show: Show, t: number, here: ShowPoint): Camera {
   return { x, y, zoom }
 }
 
-/** The canvas set up the way every drawing here expects it. */
-export function setupCanvas(p: p5, host: HTMLElement): p5.Renderer {
-  const c = p.createCanvas(window.innerWidth, window.innerHeight)
-  c.parent(host)
+/**
+ * The canvas set up the way every drawing here expects it, filling its host
+ * edge to edge and following it: the stage is whatever the panel leaves, and
+ * hiding the panel changes that without a window resize. `release` stops
+ * following; call it when the sketch is removed.
+ */
+export function setupCanvas(p: p5, host: HTMLElement): { canvas: p5.Renderer; release(): void } {
+  const canvas = p.createCanvas(host.clientWidth, host.clientHeight)
+  canvas.parent(host)
   p.pixelDensity(window.devicePixelRatio || 1)
   p.rectMode(p.CENTER)
   p.angleMode(p.RADIANS)
   p.strokeCap(p.ROUND)
   p.strokeJoin(p.ROUND)
-  return c
+  const follow = new ResizeObserver(() => {
+    const w = host.clientWidth
+    const h = host.clientHeight
+    if (!w || !h || (w === p.width && h === p.height)) return
+    p.resizeCanvas(w, h)
+    p.pixelDensity(window.devicePixelRatio || 1)
+  })
+  follow.observe(host)
+  return { canvas, release: () => follow.disconnect() }
 }
 
 export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage {
   let overview = false
   let instance: p5 | null = null
+  let release = () => {}
 
   const sketch = (p: p5) => {
     p.setup = () => {
-      setupCanvas(p, host)
-    }
-
-    p.windowResized = () => {
-      p.resizeCanvas(window.innerWidth, window.innerHeight)
-      p.pixelDensity(window.devicePixelRatio || 1)
+      release = setupCanvas(p, host).release
     }
 
     p.draw = () => {
@@ -135,6 +144,7 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
       overview = on
     },
     destroy() {
+      release()
       instance?.remove()
       instance = null
     },

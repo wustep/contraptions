@@ -19,33 +19,41 @@
 html, body {
   margin: 0;
   height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font: 13px/1.5 ui-sans-serif, -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+/* One frame for both modes: the panel down the right edge at the window's
+   full height, the stage everything that is left. minmax(0, 1fr) on both
+   axes so neither track can grow past the window on its content. */
 body {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
 }
 
+/* The stage is paper. The show paints its canvas edge to edge; the sandbox's
+   piece is square, so the stage takes the theme's paper (set as --paper by
+   the app) and the piece sits on it with no seam, however wide the window. */
 #stage {
+  position: relative;
   display: grid;
   place-items: center;
-  padding: 24px;
   min-width: 0;
+  min-height: 0;
   overflow: hidden;
+  background: var(--paper, var(--bg));
 }
 
 /* The canvas is built at its display size, so it must never be scaled here. */
-#canvas-host canvas {
-  display: block;
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 60px rgba(0, 0, 0, 0.55);
-}
+#stage canvas { display: block; }
 
-body.hide-panel { grid-template-columns: 1fr 0; }
+body.hide-panel { grid-template-columns: minmax(0, 1fr) 0; }
 body.hide-panel #panel { display: none; }
 
 /* Restore target when the panel is display:none. Stays out of the tab order
@@ -64,6 +72,7 @@ body.hide-panel #panel { display: none; }
 body.hide-panel .panel-peek { display: inline-flex; }
 
 #panel {
+  min-height: 0;
   background: var(--panel);
   border-left: 1px solid var(--line);
   overflow-y: auto;
@@ -73,7 +82,10 @@ body.hide-panel .panel-peek { display: inline-flex; }
   gap: 9px;
 }
 
-.brand {
+/* ---- header: brand and the mode switch ------------------------------ */
+
+.brand { display: flex; flex-direction: column; gap: 8px; }
+.brand-row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -85,21 +97,25 @@ body.hide-panel .panel-peek { display: inline-flex; }
   font-weight: 650;
   letter-spacing: 0.03em;
 }
-.brand h1 .sub {
-  margin-left: 6px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--dim);
-}
-/* The way back to the front door. It takes the slack so Hide keeps its corner. */
-.show-link {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--dim);
+/* Two tabs, the one you are on lit. Same sunken track as every other
+   segmented dial, so switching modes reads as turning a dial on the product
+   rather than leaving for another site. */
+.seg.mode-switch { display: grid; grid-template-columns: 1fr 1fr; }
+.mode-tab {
+  display: block;
+  padding: 6px 0;
+  border-radius: 4px;
+  text-align: center;
   text-decoration: none;
+  color: var(--dim);
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
 }
-.show-link:hover { color: var(--text); text-decoration: underline; }
+.mode-tab:hover { background: var(--raised); color: var(--text); }
+.mode-tab.on { background: var(--accent-soft); color: var(--accent); cursor: default; }
+.mode-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+.brand .mode-note { margin: 0; }
 
 /* ---- sections ------------------------------------------------------- */
 
@@ -417,10 +433,20 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 
 /* ---- readouts ------------------------------------------------------- */
 
-
+/* Where the ball is: the world, its palette and taste, the piece in hand. */
+.readout {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.readout b { color: var(--text); font-weight: 500; }
 
 @media (max-width: 820px) {
-  body { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  body.hide-panel { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
   #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; }
@@ -441,8 +467,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .export-row .seg { flex: 1; min-width: 0; }
 .export-row > button { flex: 0 0 auto; padding-left: 8px; padding-right: 8px; white-space: nowrap; }
 
-/* Credit sits at the foot of the tool: present, never competing. */
+/* Credit sits at the foot of the tool: present, never competing. margin-top
+   auto so it is the foot even when the sections above it stop short. */
 .credit {
+  margin-top: auto;
   padding-top: 10px;
   color: var(--faint);
   font-size: 11px;

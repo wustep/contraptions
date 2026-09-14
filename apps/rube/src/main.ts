@@ -1,32 +1,31 @@
+import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
+import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { createCatalog } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
 
 /**
- * The entry. A canvas and a seed in the URL, and one quiet control at
- * top-left: a gear that reveals a tray on hover — the sandbox the show grew
- * out of, the catalog, the seed — and pins the working panel open with
- * `debug`, the same panel `?debug=1` and the backtick key open. `?catalog=1`
- * opens the sheet of every piece instead of the show; `?solo=<piece>` shows
- * one piece's worlds. Escape steps back out: from a solo to the catalog,
- * from the catalog to the show.
+ * The entry. A seed in the URL, the canvas filling everything the panel
+ * leaves, and the panel itself: the same chrome as the sandbox — brand, mode
+ * switch, seed card, transport — with the show's own sections in between: a
+ * readout of where the ball is, world-to-world jumps, the catalog and the
+ * overview. `H` hides the panel for the show alone. `?catalog=1` opens the
+ * sheet of every piece instead of the show; `?solo=<piece>` shows one
+ * piece's worlds. Escape steps back out: from a solo to the catalog, from the
+ * catalog to the show.
  */
 
 const stage = document.getElementById('stage')!
-const hud = document.getElementById('hud')!
-const toggle = document.getElementById('hud-toggle') as HTMLButtonElement
-const panel = document.getElementById('debug')!
+const panelRoot = document.getElementById('panel')!
 
 let seed = randomSeed()
-let debugOn = false
 let solo: string | null = null
 let catalogOn = false
 
 function readUrl(): void {
   const params = new URLSearchParams(location.search)
   seed = params.get('seed') || randomSeed()
-  debugOn = params.get('debug') === '1'
   catalogOn = params.get('catalog') === '1'
   // The catalog is a sheet of every piece; it never narrows to one.
   solo = catalogOn ? null : params.get('solo')
@@ -37,6 +36,7 @@ let show = new Show(seed, solo)
 
 /* ------------------------------------------------------------------ clock */
 
+const SPEEDS = [0.5, 1, 2]
 let speed = 1
 let paused = false
 let base = 0
@@ -66,7 +66,6 @@ const setSpeed = (next: number) => {
 function writeUrl(push = false): void {
   const q = new URLSearchParams()
   q.set('seed', seed)
-  if (debugOn) q.set('debug', '1')
   if (solo) q.set('solo', solo)
   if (catalogOn) q.set('catalog', '1')
   const url = `?${q.toString()}`
@@ -132,167 +131,182 @@ function back(): void {
   else if (solo) openCatalog()
 }
 
+function setOverview(on: boolean): void {
+  overview = on
+  view.setOverview?.(on)
+  sync()
+}
+
 window.addEventListener('popstate', () => {
   readUrl()
   rebuild()
 })
 
-/* ------------------------------------------------------------------ hud */
+/* ------------------------------------------------------------------ panel */
 
-const el = (tag: string, cls = '', text = '') => {
-  const e = document.createElement(tag)
-  if (cls) e.className = cls
-  if (text) e.textContent = text
-  return e
-}
-const button = (label: string, onClick: () => void) => {
-  const b = el('button', '', label) as HTMLButtonElement
-  b.addEventListener('click', onClick)
-  return b
-}
-const link = (label: string, href: string, cls: string, title: string) => {
-  const a = el('a', cls, label) as HTMLAnchorElement
-  a.href = href
-  a.title = title
-  return a
-}
-/** A row the tray keeps for the working panel: shown only while debug is pinned. */
-const deep = (node: HTMLElement) => {
-  node.classList.add('deep')
-  return node
-}
+const shell = createShell(panelRoot, 'show')
 
-function setDebug(on: boolean): void {
-  debugOn = on
-  writeUrl()
-  sync()
-}
-
-// The tray: where else to go, and the seed.
-const sandboxLink = link('sandbox', '/sandbox/', 'sandbox', 'The explorer this grew out of: seven modes, twenty palettes, a grid of machines')
-const catalogBtn = button('catalog', () => (catalogOn ? closeCatalog() : openCatalog()))
-const debugBtn = button('debug', () => setDebug(!debugOn))
-const seedInput = el('input') as HTMLInputElement
-seedInput.type = 'text'
-seedInput.value = seed
-seedInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') reroll(seedInput.value.trim() || randomSeed())
-  e.stopPropagation()
+// Seed — one string fixes the whole future, so it leads.
+const seedInput = el('input', {
+  type: 'text',
+  class: 'seed',
+  spellcheck: 'false',
+  autocomplete: 'off',
+  'aria-label': 'Seed',
+  value: seed,
 })
+seedInput.addEventListener('change', () => {
+  const next = seedInput.value.trim()
+  if (next && next !== seed) reroll(next)
+})
+const rerollBtn = el('button', { class: 'primary', title: 'A new seed, a new show (R)' }, ['Reroll', el('kbd', {}, ['R'])])
+rerollBtn.addEventListener('click', () => reroll())
+const copyBtn = copyButton(() => navigator.clipboard.writeText(location.href), 'Copy a link to this show')
+seedCard(panelRoot, seedInput, [rerollBtn, copyBtn])
 
-// The working panel: the clock, the scrub bar, the world jumps.
-const readout = el('div', 'dim')
-const scrub = el('input') as HTMLInputElement
-scrub.type = 'range'
-scrub.min = '0'
-scrub.max = '1000'
+// World — where the ball is, and the jumps.
+const world = section(panelRoot, 'World')
+const readout = el('div', { class: 'readout' })
+const prevBtn = el('button', { title: 'Back to the start of the previous world' }, ['\u2190 world'])
+prevBtn.addEventListener('click', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1))))
+const nextBtn = el('button', { title: 'Skip to the next world (N)' }, ['world \u2192', el('kbd', {}, ['N'])])
+nextBtn.addEventListener('click', () => seek(show.begin(show.indexAt(now()) + 1)))
+const restartBtn = el('button', { title: 'Back to the top of the show' }, ['Restart'])
+restartBtn.addEventListener('click', () => seek(0))
+const catalogBtn = el('button', { title: 'The sheet of every piece (C)' }, ['Catalog', el('kbd', {}, ['C'])])
+catalogBtn.addEventListener('click', () => (catalogOn ? closeCatalog() : openCatalog()))
+const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)' }, ['Overview', el('kbd', {}, ['O'])])
+overviewBtn.addEventListener('click', () => setOverview(!overview))
+const jumps = el('div', { class: 'row' }, [prevBtn, nextBtn, restartBtn])
+const views = el('div', { class: 'row' }, [catalogBtn, overviewBtn])
+world.append(readout, jumps, views)
+
+// Transport — the clock, over the current world.
+const transport = section(panelRoot, 'Transport', 'transport')
+const time = el('span', { class: 'time' }, ['0.0 / 0s'])
+transport.querySelector('.section-title')!.append(time)
+const scrub = el('input', {
+  type: 'range',
+  class: 'scrub',
+  min: '0',
+  max: '1000',
+  step: '1',
+  value: '0',
+  'aria-label': 'Position in this world',
+})
 scrub.addEventListener('input', () => {
   const i = show.indexAt(now())
   const u = show.universe(i)
   setPaused(true)
+  scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
   seek(show.begin(i) + (Number(scrub.value) / 1000) * u.journey)
 })
-const pauseBtn = button('pause', () => setPaused(!paused))
-const overviewBtn = button('overview', () => {
-  overview = !overview
-  view.setOverview?.(overview)
-  sync()
-})
-const speeds = [0.5, 1, 2].map((s) => button(`${s}×`, () => setSpeed(s)))
+guardWheel(panelRoot, scrub)
+let scrubbing = false
+scrub.addEventListener('pointerdown', () => { scrubbing = true })
+window.addEventListener('pointerup', () => { scrubbing = false })
+const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+play.addEventListener('click', () => setPaused(!paused))
+const speedSeg = segmented(SPEEDS, (v) => (v === 0.5 ? '½' : `${v}×`), setSpeed)
+transport.append(scrub, el('div', { class: 'row deck' }, [play, speedSeg.node]))
 
-panel.append(
-  row([sandboxLink, catalogBtn, debugBtn]),
-  row([seedInput, button('reroll', () => reroll()), button('copy', () => navigator.clipboard.writeText(location.href))]),
-  deep(readout),
-  deep(row([scrub])),
-  deep(row([pauseBtn, ...speeds, overviewBtn])),
-  deep(row([button('← world', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1)))), button('world →', () => seek(show.begin(show.indexAt(now()) + 1))), button('restart', () => seek(0))])),
-  deep(el('div', 'dim', '` toggles debug · space pauses · r rerolls · n next world · c catalog · esc back')),
-)
+credit(panelRoot)
 
-// A tap pins the tray open where there is nothing to hover with; a second tap
-// lets go. The gear gives up focus afterwards: a focused button turns
-// focus-visible at the next keypress, which would reopen a tray just closed.
-toggle.addEventListener('click', () => {
-  hud.classList.toggle('pinned')
-  toggle.blur()
-  sync()
-})
-
-function row(children: HTMLElement[]): HTMLElement {
-  const r = el('div', 'row')
-  r.append(...children)
-  return r
-}
+const playIcon = icon(ICON.play)
+const pauseIcon = icon(ICON.pause)
 
 function sync(): void {
-  hud.classList.toggle('open', debugOn)
-  toggle.setAttribute('aria-expanded', String(debugOn || hud.classList.contains('pinned')))
-  debugBtn.classList.toggle('active', debugOn)
-  pauseBtn.textContent = paused ? 'play' : 'pause'
-  pauseBtn.classList.toggle('active', paused)
-  overviewBtn.classList.toggle('active', overview)
-  catalogBtn.textContent = catalogOn ? 'exit catalog' : 'catalog'
-  catalogBtn.classList.toggle('active', catalogOn)
-  speeds.forEach((b, i) => b.classList.toggle('active', [0.5, 1, 2][i] === speed))
-  seedInput.value = seed
+  if (document.activeElement !== seedInput) seedInput.value = seed
+  shell.setSeed(seed)
+  play.replaceChildren(paused ? playIcon : pauseIcon)
+  play.classList.toggle('paused', paused)
+  speedSeg.set(speed)
+  overviewBtn.classList.toggle('on', overview)
+  catalogBtn.textContent = catalogOn ? 'Exit catalog' : 'Catalog'
+  if (!catalogOn) catalogBtn.append(el('kbd', {}, ['C']))
+  catalogBtn.classList.toggle('on', catalogOn)
+  // The sheet has no worlds to jump between and no world to scrub.
+  jumps.hidden = catalogOn
+  overviewBtn.hidden = catalogOn
+  scrub.hidden = catalogOn
 }
 
+// The readout and the clock print tenths of a second; writing them on every
+// frame is wasted work, so skip until the text would change.
+let lastReadout = ''
+let lastTime = ''
+let lastPaper = ''
 function tick(): void {
-  if (debugOn) {
-    const t = now()
-    const here = show.at(t)
-    const u = here.universe
-    readout.textContent = catalogOn
-      ? `catalog · ${u.theme.label} · ${t.toFixed(1)}s`
-      : `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name} · ${here.local.toFixed(1)}s / ${u.journey.toFixed(0)}s`
-    scrub.value = String(Math.round((here.local / u.journey) * 1000))
+  const t = now()
+  const here = show.at(t)
+  const u = here.universe
+  const text = catalogOn
+    ? `catalog · ${u.theme.label}${solo ? ` · ${solo}` : ''}`
+    : `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name}${solo ? ` · solo` : ''}`
+  if (text !== lastReadout) {
+    lastReadout = text
+    readout.textContent = text
+  }
+  const clock = catalogOn ? `${t.toFixed(1)}s` : `${here.local.toFixed(1)} / ${u.journey.toFixed(0)}s`
+  if (clock !== lastTime) {
+    lastTime = clock
+    time.textContent = clock
+  }
+  if (!catalogOn && !scrubbing) {
+    const p = here.local / u.journey
+    scrub.value = String(Math.round(p * 1000))
+    scrub.style.setProperty('--p', `${p * 100}%`)
+  }
+  // The stage behind the canvas is this world's paper, so a resize never
+  // flashes the panel's dark behind the picture.
+  if (u.theme.bg !== lastPaper) {
+    lastPaper = u.theme.bg
+    stage.style.setProperty('--paper', u.theme.bg)
   }
   requestAnimationFrame(tick)
 }
 requestAnimationFrame(tick)
 
+/* ------------------------------------------------------------------ keys */
+
 window.addEventListener('keydown', (e) => {
+  // Never shadow browser chrome (cmd+S, ctrl+R, ...).
   if (e.metaKey || e.ctrlKey || e.altKey) return
-  if (e.target instanceof HTMLInputElement) return
+  const t = e.target
+  // Typing in a field or nudging a slider owns the keyboard outright; a
+  // focused button keeps only its activation keys, so the rest still work.
+  if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
+  if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
   switch (e.key) {
-    case '`':
-      setDebug(!debugOn)
-      break
     case ' ':
       e.preventDefault()
       setPaused(!paused)
       break
     case 'Escape':
-      // A pinned tray lets go first; then a solo steps back to the catalog, the catalog to the show.
-      if (hud.classList.contains('pinned')) {
-        hud.classList.remove('pinned')
-        sync()
-      } else back()
+      back()
       break
     case 'r':
-      if (debugOn) reroll()
+      reroll()
       break
     case 'n':
-      if (debugOn) seek(show.begin(show.indexAt(now()) + 1))
+      if (!catalogOn) seek(show.begin(show.indexAt(now()) + 1))
       break
     case 'o':
-      if (debugOn) overviewBtn.click()
+      if (!catalogOn) setOverview(!overview)
       break
     case 'c':
-      if (debugOn) catalogBtn.click()
+      catalogBtn.click()
+      break
+    case 'h':
+      shell.toggle()
       break
     case 'ArrowRight':
-      if (debugOn) {
-        setPaused(true)
-        seek(now() + (e.shiftKey ? 1 : 1 / 60))
-      }
+      setPaused(true)
+      seek(now() + (e.shiftKey ? 1 : 1 / 60))
       break
     case 'ArrowLeft':
-      if (debugOn) {
-        setPaused(true)
-        seek(now() - (e.shiftKey ? 1 : 1 / 60))
-      }
+      setPaused(true)
+      seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break
   }
 })
@@ -308,13 +322,9 @@ if (import.meta.env.DEV) {
     reroll,
     pick,
     setCatalog: (on: boolean) => (on ? openCatalog() : closeCatalog()),
-    setDebug,
+    togglePanel: () => shell.toggle(),
     show: () => show,
     canvas: () => stage.querySelector('canvas') as HTMLCanvasElement,
-    setOverview: (on: boolean) => {
-      overview = on
-      view.setOverview?.(on)
-      sync()
-    },
+    setOverview,
   }
 }

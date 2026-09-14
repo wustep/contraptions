@@ -118,14 +118,16 @@ export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onP
   let sheet: Sheet | null = null
   let hover = -1
   let instance: p5 | null = null
+  let release = () => {}
 
   const hit = (x: number, y: number): number =>
     sheet ? sheet.slots.findIndex((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h) : -1
 
   const sketch = (p: p5) => {
     p.setup = () => {
-      const c = setupCanvas(p, host)
-      // The canvas takes the clicks, not the window: the debug panel sits over it.
+      const { canvas: c, release: stop } = setupCanvas(p, host)
+      release = stop
+      // The canvas takes the clicks, not the window: the panel sits beside it.
       c.elt.addEventListener('mousemove', (e: MouseEvent) => {
         hover = hit(e.offsetX, e.offsetY)
         c.elt.style.cursor = hover >= 0 ? 'pointer' : 'default'
@@ -137,11 +139,6 @@ export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onP
         const i = hit(e.offsetX, e.offsetY)
         if (i >= 0) onPick(cells[i].name)
       })
-    }
-
-    p.windowResized = () => {
-      p.resizeCanvas(window.innerWidth, window.innerHeight)
-      p.pixelDensity(window.devicePixelRatio || 1)
     }
 
     p.draw = () => {
@@ -157,6 +154,7 @@ export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onP
 
   return {
     destroy() {
+      release()
       instance?.remove()
       instance = null
     },
