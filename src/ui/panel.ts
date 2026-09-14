@@ -12,13 +12,14 @@ import {
   type Options,
 } from '../core/composition'
 import { createListbox } from './listbox'
-import { EXPORT_SCALES, SPEEDS, type ViewState } from './view'
+import { ICON, copyButton, createShell, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented } from './shell'
+import { EXPORT_SCALES, SPEEDS, speedLabel, type ViewState } from './view'
 
 export interface PanelHandlers {
   onChange(patch: Partial<Options>): void
   onView(patch: Partial<ViewState>): void
   onReroll(): void
-  /** Roll the whole configuration — theme, layout, dials, and the seed. */
+  /** Roll the whole configuration — mode, theme, layout, dials, and the seed. */
   onRollAll(): void
   onSave(): void
   /** Encode one loop as WebM. Progress stays on the clock, never the URL. */
@@ -37,43 +38,6 @@ export interface Panel {
   sync(comp: Composition, view: ViewState): void
   setProgress(u: number): void
   toggle(): void
-}
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  attrs: Record<string, string> = {},
-  children: (Node | string)[] = [],
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag)
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === 'class') node.className = v
-    else node.setAttribute(k, v)
-  }
-  for (const c of children) node.append(c)
-  return node
-}
-
-function field(labelText: string, control: HTMLElement, valueNode?: HTMLElement): HTMLElement {
-  const label = el('label', {}, [el('span', {}, [labelText])])
-  if (valueNode) label.append(valueNode)
-  return el('div', { class: 'field' }, [label, control])
-}
-
-function icon(paths: string[]): SVGSVGElement {
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('viewBox', '0 0 24 24')
-  svg.setAttribute('aria-hidden', 'true')
-  for (const d of paths) {
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-    path.setAttribute('d', d)
-    svg.append(path)
-  }
-  return svg
-}
-
-const ICON = {
-  play: ['M8 5l11 7-11 7z'],
-  pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
 }
 
 /** Mini diagrams for the layout picker, one rect list per layout name. */
@@ -103,30 +67,6 @@ function layoutGlyph(name: string): SVGSVGElement | undefined {
   return svg
 }
 
-/**
- * A one-hot row of buttons. Cheaper to reason about than a select for a dial
- * with three to five known stops, and it reads at a glance.
- */
-function segmented(
-  values: number[],
-  format: (v: number) => string,
-  onPick: (v: number) => void,
-): { node: HTMLElement; set(current: number): void } {
-  const node = el('div', { class: 'seg', role: 'group' })
-  const buttons = values.map((v) => {
-    const b = el('button', { type: 'button' }, [format(v)])
-    b.addEventListener('click', () => onPick(v))
-    node.append(b)
-    return { v, b }
-  })
-  return {
-    node,
-    set(current) {
-      for (const { v, b } of buttons) b.classList.toggle('on', v === current)
-    },
-  }
-}
-
 export function createPanel(
   root: HTMLElement,
   initial: Options,
@@ -136,34 +76,8 @@ export function createPanel(
   let lastView = initialView
   let lastComp: Composition | null = null
 
-  // A wheel over a slider must scroll the panel, never nudge the value —
-  // browsers that edit ranges on wheel silently wreck a composition you were
-  // only scrolling past. The scroll is forwarded by hand because preventing
-  // the default suppresses it along with the edit.
-  const guardWheel = (input: HTMLInputElement) => {
-    input.addEventListener(
-      'wheel',
-      (e) => {
-        e.preventDefault()
-        if (root.scrollHeight > root.clientHeight) root.scrollBy({ top: e.deltaY })
-        else window.scrollBy({ top: e.deltaY })
-      },
-      { passive: false },
-    )
-  }
-
-  // Mouse clicks leave a button focused, and a focused button swallows the
-  // space shortcut. Keyboard activation reports detail 0 and keeps focus.
-  root.addEventListener('click', (e) => {
-    if (e.detail > 0 && e.target instanceof HTMLButtonElement) e.target.blur()
-  })
-
-  const section = (title: string, cls = ''): HTMLElement => {
-    const head = el('div', { class: 'section-title' }, [title])
-    const node = el('section', { class: `group${cls ? ` ${cls}` : ''}` }, [head])
-    root.append(node)
-    return node
-  }
+  const shell = createShell(root, 'explorations')
+  const section = (title: string, cls = '') => sectionIn(root, title, cls)
 
   const slider = (
     labelText: string,
@@ -206,7 +120,7 @@ export function createPanel(
       debounce = window.setTimeout(commit, debounceMs)
     })
     if (debounceMs != null) input.addEventListener('change', commit)
-    guardWheel(input)
+    guardWheel(root, input)
     const node = field(labelText, input, readout)
     if (hint) node.title = hint
     return {
@@ -223,42 +137,6 @@ export function createPanel(
       },
     }
   }
-
-  // Header — Hide lives here so H is not a one-way trap. Peek stays a target
-  // after `#panel { display: none }`.
-  const hideBtn = el('button', {
-    type: 'button',
-    class: 'chip',
-    title: 'Hide the panel (H)',
-    'aria-label': 'Hide panel',
-  }, ['Hide', el('kbd', {}, ['H'])])
-  const showLink = el('a', {
-    class: 'show-link',
-    href: '/',
-    title: 'The show: one ball, one thread, a new map behind every portal',
-  }, ['the show \u2192'])
-  root.append(el('header', { class: 'brand' }, [
-    el('h1', {}, ['contraptions', el('span', { class: 'sub' }, ['sandbox'])]),
-    showLink,
-    hideBtn,
-  ]))
-
-  const peek = el('button', {
-    type: 'button',
-    class: 'panel-peek',
-    title: 'Show the panel (H)',
-    'aria-label': 'Show panel',
-  }, ['Panel', el('kbd', {}, ['H'])])
-  document.body.append(peek)
-
-  const togglePanel = () => {
-    const hide = !document.body.classList.contains('hide-panel')
-    document.body.classList.toggle('hide-panel', hide)
-    if (hide) peek.focus()
-    else hideBtn.focus()
-  }
-  hideBtn.addEventListener('click', togglePanel)
-  peek.addEventListener('click', togglePanel)
 
   // Seed — the one control users actually play, so it gets the hero card.
   const seedInput = el('input', {
@@ -280,41 +158,25 @@ export function createPanel(
     commitSeed()
     handlers.onReroll()
   })
-  const rollAll = el('button', { title: 'Roll theme, layout and every dial along with the seed (shift+space)' }, ['Roll all', el('kbd', {}, ['⇧'])])
+  const rollAll = el('button', {
+    title: 'Roll the mode, theme, layout and every dial along with the seed (shift+space)',
+  }, ['Roll all', el('kbd', {}, ['⇧'])])
   rollAll.addEventListener('click', () => handlers.onRollAll())
-  const copy = el('button', { title: 'Copy a link to this exact composition' }, ['Copy'])
-  copy.addEventListener('click', () => {
+  const copy = copyButton(() => {
     commitSeed()
-    void Promise.resolve(handlers.onCopy())
-      .then(() => {
-        copy.textContent = 'Copied'
-        copy.classList.add('ok')
-        window.setTimeout(() => {
-          copy.textContent = 'Copy'
-          copy.classList.remove('ok')
-        }, 1200)
-      })
-      .catch(() => {})
-  })
-  root.append(
-    el('section', { class: 'seed-card' }, [
-      el('div', { class: 'section-title' }, ['Seed']),
-      seedInput,
-      // One row: the three things you do to a seed, in the order you do them.
-      el('div', { class: 'row seed-actions' }, [reroll, rollAll, copy]),
-    ]),
-  )
+    return handlers.onCopy()
+  }, 'Copy a link to this exact composition')
+  seedCard(root, seedInput, [reroll, rollAll, copy])
 
   // Composition
   const composition = section('Composition')
   const modeBox = createListbox({
-    items: MODES.map((m) => ({ value: m.name, label: m.label, note: m.note })),
+    items: MODES.map((m) => ({ value: m.name, label: m.label })),
     value: initial.mode,
     label: 'Mode',
     onChange: (v) => handlers.onChange({ mode: v as Mode, solo: null, tag: null }),
   })
-  const modeNote = el('p', { class: 'mode-note' }, [modeInfo(initial.mode).note])
-  const modeField = field('Mode', el('div', { class: 'mode-control' }, [modeBox.node, modeNote]))
+  const modeField = field('Mode', modeBox.node)
   const themeBox = createListbox({
     items: themes.map((t) => ({
       value: t.name,
@@ -454,10 +316,10 @@ export function createPanel(
     scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
     handlers.onScrub(Number(scrub.value) / 1000)
   })
-  guardWheel(scrub)
-  const play = el('button', { class: 'tbtn play', title: 'Play / pause (P)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
+  guardWheel(root, scrub)
+  const play = el('button', { class: 'tbtn play', title: 'Play / pause (K)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
-  const speedSeg = segmented(SPEEDS, (v) => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`), (v) => handlers.onView({ speed: v }))
+  const speedSeg = segmented(SPEEDS, speedLabel, (v) => handlers.onView({ speed: v }))
   // Play sits with the speeds: one row for "is it running and how fast".
   // Stepping a beat stays on shift+← / shift+→.
   transport.append(
@@ -515,14 +377,7 @@ export function createPanel(
   })
   exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, save, saveLoop]))
 
-
-  const credit = el('a', {
-    class: 'credit',
-    href: 'https://x.com/okazz_/status/2090999902805393607',
-    target: '_blank',
-    rel: 'noreferrer',
-  }, ['Heavily inspired by Okazz'])
-  root.append(credit)
+  credit(root)
 
   let scrubbing = false
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
@@ -536,8 +391,8 @@ export function createPanel(
       lastComp = comp
       lastView = view
       if (document.activeElement !== seedInput) seedInput.value = comp.options.seed
+      shell.setSeed(comp.options.seed)
       modeBox.set(comp.options.mode)
-      modeNote.textContent = modeInfo(comp.options.mode).note
       showFor(comp.options.mode, comp.options.catalog)
       themeBox.set(comp.options.theme)
       layoutBox.set(comp.options.layout)
@@ -577,7 +432,7 @@ export function createPanel(
       }
     },
     toggle() {
-      togglePanel()
+      shell.toggle()
     },
   }
 }

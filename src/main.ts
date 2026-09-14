@@ -7,21 +7,18 @@ import { createPanel } from './ui/panel'
 import { loadView, saveView, type ViewState } from './ui/view'
 
 const stage = document.getElementById('stage')!
-const host = document.getElementById('canvas-host')!
 const panelRoot = document.getElementById('panel')!
-
-/** Stage padding, kept in step with `#stage { padding }` in styles.css. */
-const STAGE_PAD = 24
 
 /**
  * The canvas is built at exactly the size it will be displayed, so the browser
- * never resamples it. Composition geometry is all proportional, so changing
- * this changes the resolution of the piece rather than its design.
+ * never resamples it. A piece is square, so it takes the stage's shorter side;
+ * the piece carries its own paper margin (ART_INSET), and the stage is painted
+ * in the same paper, so it reads as one sheet however wide the window is.
+ * Composition geometry is all proportional, so changing this changes the
+ * resolution of the piece rather than its design.
  */
 function measure(): number {
-  const w = stage.clientWidth - STAGE_PAD * 2
-  const h = stage.clientHeight - STAGE_PAD * 2
-  return Math.max(MIN_CANVAS, Math.floor(Math.min(w, h)))
+  return Math.max(MIN_CANVAS, Math.floor(Math.min(stage.clientWidth, stage.clientHeight)))
 }
 
 let options: Options = readUrl()
@@ -29,7 +26,13 @@ let view: ViewState = loadView()
 let canvasSize = measure()
 let comp = build(options, canvasSize)
 
-const engine = createEngine(host, comp, canvasSize)
+/** The stage is the piece's paper, so the square canvas sits on it without a seam. */
+function paper() {
+  stage.style.setProperty('--paper', comp.theme.bg)
+}
+paper()
+
+const engine = createEngine(stage, comp, canvasSize)
 engine.setSpeed(view.speed)
 
 /** Composition changes rebuild the piece and land in the URL. */
@@ -45,6 +48,7 @@ function apply(patch: Partial<Options>) {
     comp = build(options, canvasSize)
   }
   engine.setComposition(comp)
+  paper()
   writeUrl(options)
   panel.sync(comp, view)
 }
@@ -84,8 +88,10 @@ function saveLoop() {
   return engine.saveLoop(`contraptions-${options.mode}-${options.seed}`)
 }
 
+// The stage, not the window: hiding the panel changes the stage's size
+// without a resize event, and the piece should take the room it gets.
 let resizeTimer = 0
-window.addEventListener('resize', () => {
+new ResizeObserver(() => {
   window.clearTimeout(resizeTimer)
   resizeTimer = window.setTimeout(() => {
     const next = measure()
@@ -96,7 +102,7 @@ window.addEventListener('resize', () => {
     engine.setComposition(comp)
     panel.sync(comp, view)
   }, 120)
-})
+}).observe(stage)
 
 const panel = createPanel(panelRoot, options, view, {
   onChange: apply,
@@ -133,7 +139,8 @@ window.addEventListener('keydown', (e) => {
       if (e.shiftKey) apply(rollOptions(options))
       else apply({ seed: randomSeed() })
       break
-    case 'p':
+    // K for pause, as video players do: P is the panel in both modes.
+    case 'k':
       applyView({ paused: !view.paused })
       break
     case 'g':
@@ -142,7 +149,7 @@ window.addEventListener('keydown', (e) => {
     case 's':
       save()
       break
-    case 'h':
+    case 'p':
       panel.toggle()
       break
     case 'arrowright':
@@ -166,7 +173,7 @@ if (import.meta.env.DEV) {
     options: () => options,
     view: () => view,
     comp: () => comp,
-    canvas: () => host.querySelector('canvas') as HTMLCanvasElement,
+    canvas: () => stage.querySelector('canvas') as HTMLCanvasElement,
   }
 }
 
