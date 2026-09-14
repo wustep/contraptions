@@ -7,12 +7,15 @@ of scattering a few hundred of them across a grid.
 Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
-Two things live here. The front door is **the show** — one ball on one
-thread through a Rube Goldberg chain that never ends, fullscreen, no chrome
-(`apps/rube/`, [below](#the-show-appsrube)). Behind it is **the sandbox**:
-the generator the show grew out of, seven modes of tiny machines on a grid
-with every dial exposed (`src/`). The gear at the show's top-left opens the
-sandbox; the sandbox's header links back to the show.
+Two modes of one thing live here. The front door is **the show** — one ball
+on one thread through a Rube Goldberg chain that never ends (`apps/rube/`,
+[below](#the-show-appsrube)). Beside it is **the sandbox**: the generator
+the show grew out of, seven modes of tiny machines on a grid with every dial
+exposed (`src/`). Both wear the same chrome: one panel down the right edge
+at the window's full height, the canvas filling everything else, and a
+two-tab switch at the top of the panel — **The show | Sandbox** — that moves
+between them and carries the seed across. <kbd>H</kbd> hides the panel in
+either.
 
 **[The show →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
 **[The sandbox →](https://contraptions-wustep.vercel.app/sandbox/)**
@@ -28,12 +31,14 @@ npm run build        # one dist/: the show at /, the sandbox at /sandbox/, /rube
 One Vite root serves and builds all of it: `index.html` is the show,
 `sandbox/index.html` the sandbox, and `rube/index.html` — where the show
 used to live — only sends old links to `/` with their seed. The two pages
-share the core (`src/core/`) and p5 as common chunks.
+share the core (`src/core/`), the panel chrome (`src/ui/shell.ts`,
+`src/ui/styles.css`) and p5 as common chunks.
 
 ## The sandbox: `src/`
 
-Press <kbd>space</kbd> to reroll. Every control is mirrored into the URL, so any
-frame you like is a shareable link.
+Press <kbd>space</kbd> to reroll, <kbd>⇧space</kbd> to roll everything — the
+mode included. Every control is mirrored into the URL, so any frame you like
+is a shareable link.
 
 Seven modes, 20 palettes, 4 layouts. Classic keeps the original 36 toys;
 Cascade, Workshop, Circus and Rube Goldberg each bring their own catalog and
@@ -69,7 +74,10 @@ src/
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
     goldberg/       the cascade, workshop, circus and rube grids; the token is theirs
-  ui/               the seed explorer
+  ui/
+    shell.ts        the chrome both modes share: the panel, the mode switch, Hide
+    styles.css      one stylesheet for both pages
+    panel.ts        the sandbox's dials
 ```
 
 ## The contract
@@ -332,9 +340,20 @@ and no more, differing by exactly 2, and the whole piece is drawn with one pen
 not twice the ink, so small machines stop reading as artifacts beside large
 ones.
 
+**Reroll** draws a new seed and keeps every dial. **Roll all** rolls the
+whole configuration — a different mode every time, then a theme, a layout
+where the new mode has one, and every dial inside that mode's own range —
+and clears the tag, solo and catalog filters, so it always means "show me a
+fresh piece from another world".
+
 Playback speed, the scrub bar, export scale, and the grid overlay are view
 settings: they change how the piece is watched, never what it is, so they do
 not rebuild the composition and stay out of the URL.
+
+The piece is square and the window is not, so the canvas takes the stage's
+shorter side and the stage itself is painted in the piece's paper: one
+sheet, edge to edge, whatever the aspect ratio. Hiding the panel gives the
+piece the room the panel had.
 
 Export writes a PNG at the chosen scale, or a WebM of one loop at the current
 canvas size (capped at 12s). The clock is held for the encode the same way it
@@ -348,11 +367,12 @@ is for PNG; progress is a view of the clock and never enters the URL.
 
 A second app in the same repo, and a different thing: not a grid of
 machines but **one ball on one thread**, rolling through a Rube Goldberg
-chain that never ends. Fullscreen canvas, no chrome. The camera follows the
-ball; every portal is a door to a whole new map — a new palette, a new
-taste in pieces, a new layout — and the cut is an iris: the camera pushes
-in as the ball is swallowed, holds shut a beat, and opens wide on the new
-world.
+chain that never ends. The canvas fills everything the panel leaves;
+<kbd>H</kbd> hides the panel and the show has the whole window. The camera
+follows the ball; every portal is a door to a whole new map — a new
+palette, a new taste in pieces, a new layout — and the cut is an iris: the
+camera pushes in as the ball is swallowed, holds shut a beat, and opens
+wide on the new world.
 
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
 — `amber-gasket` is the seed to share: a switchback, two flippers, a
@@ -367,22 +387,24 @@ npm run build         # dist/ with the show at /, the sandbox at /sandbox/, /rub
 
 The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
 world `i` is built from `seed#i`, so a link is the show, and any moment of
-it can be rebuilt on demand. The only UI is one gear at top-left, dim until
-the pointer finds it. Hover it (or tap it, where there is nothing to hover
-with) for the tray: **sandbox** opens the explorer, **catalog** opens the
-sheet of every piece, the seed field rerolls or copies the link, and
-**debug** pins the working panel under it — a readout, a scrub bar over the
-current world, speed, an overview of the whole world, and world-to-world
-jumps. `?debug=1` and the backtick key pin the same panel. `?solo=hammer`
-narrows the planner to one piece (plus rail and portals) for polishing it.
-Old links to `/rube/` still work: that page sends them to `/` with the seed.
+it can be rebuilt on demand. The panel is the sandbox's panel with the
+show's sections in it: the **seed** card rerolls (<kbd>R</kbd>) or copies
+the link; **World** reads out where the ball is — the world's index, its
+palette and taste, the piece in hand — and jumps world to world
+(<kbd>N</kbd> for the next), restarts, opens the **catalog**
+(<kbd>C</kbd>) or the **overview** of the whole map (<kbd>O</kbd>);
+**Transport** is play/pause (<kbd>space</kbd>), speed, and a scrub bar over
+the current world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a
+second. `?solo=hammer` narrows the planner to one piece (plus rail and
+portals) for polishing it. Old links to `/rube/` still work: that page
+sends them to `/` with the seed.
 
 `?catalog=1` opens the **catalog** instead of the show: a sheet of all
 thirty-six pieces, each looping on its own between two portals in the
 seed's first palette, with its name under it. Click a piece to watch it
 alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
-catalog and from the catalog to the show. The tray has a **catalog** button
-for the same thing, or <kbd>c</kbd> while debug is pinned.
+catalog and from the catalog to the show. The panel's **Catalog** button is
+the same door, as is <kbd>c</kbd>.
 
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats

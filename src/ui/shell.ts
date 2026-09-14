@@ -161,8 +161,6 @@ export function credit(root: HTMLElement): void {
 }
 
 export function createShell(root: HTMLElement, mode: ShellMode): Shell {
-  document.body.dataset.mode = mode
-
   // Mouse clicks leave a button focused, and a focused button swallows the
   // space shortcut. Keyboard activation reports detail 0 and keeps focus.
   root.addEventListener('click', (e) => {
