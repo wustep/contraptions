@@ -401,12 +401,12 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | seesaw | up, hang over the pivot, down faster, onto the stop |
 | bell | the clapper is in the way; it strikes the lip and the bell knocks on its pin; punctuation |
 | bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
-| dominoes | gate → push rod → six dominoes → bell-crank → cord over two pulleys → portcullis lifts |
+| dominoes | gate → striker → six dominoes, each knocking the next → button → a pulse along the wire → the coil snaps the portcullis up |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
 | lift | pawl → counterweight → cage; up one to three floors, on or back |
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
-| scoop | a bucket wheel, four cups on a post; a pawl clicks as it turns; down one floor, facing back |
+| scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
 | toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
@@ -427,8 +427,8 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | trapeze | a basket on ropes swings the ball across two cells of nothing, to a catch |
 | trebuchet | the counterweight drops, the arm comes over, the ball leaves along its tangent two cells |
 | screw | an Archimedes' screw in a glass tube carries the ball up a floor |
-| flipper | a pinball bat flings the ball a floor up onto a shelf |
-| painter | two nozzles spray as the ball passes; it leaves a new colour, for good |
+| flipper | a drooping pinball bat; the ball settles in its lip, the bat whips up and lets go as it passes level; up a floor onto a shelf |
+| painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
 | cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook mid-swing and flies on |
 | inverter | gravity flips between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |

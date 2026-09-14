@@ -47,12 +47,12 @@ import { zipline } from './zipline'
  *   seesaw    up, over, down faster
  *   bell      punctuation
  *   bellows   trip → hook → weight → puff → go
- *   dominoes  gate → rod → row → bell-crank → cord → gate
+ *   dominoes  gate → striker → row → button → wire → coil → gate
  *   drop      lip, tube, flaps, quarter-pipe; down one to three floors
  *   lift      pawl → counterweight → cage; up one to three floors
  *   cannon    match, fuse, bang, flight, landing; over two and up one
  *   loop      round the loop, no mechanism at all
- *   scoop     a bucket wheel, four cups on a post; down one, facing back
+ *   scoop     a bucket wheel, four cups on a hub; the ball rides its seat; down one, facing back
  *   toaster   drop in, glow, pop; up one
  *   crane     magnet down, blink, up, across a gap in the rail, think, drop
  *   rocket    button, sputter, flame, sled to the buffer, ball flies on
@@ -73,8 +73,8 @@ import { zipline } from './zipline'
  *   trapeze   a basket swings the ball across two cells of nothing
  *   trebuchet the counterweight drops, the arm comes over, the ball flies
  *   screw     an Archimedes' screw carries the ball up a floor in a glass tube
- *   flipper   a pinball bat flings the ball a floor up onto a shelf
- *   painter   two nozzles spray as the ball passes; it leaves a new colour
+ *   flipper   a drooping pinball bat whips the ball a floor up onto a shelf
+ *   painter   the ball stops under two nozzles; they spray, it leaves a new colour
  *   cradle    a Newton's cradle: the ball stops dead, the far ball takes the thread and flies
  *   inverter  gravity flips where the floor stops; the ball rides the ceiling and drops back
  *   portal    the door at either end of a map; the far side is always a new map
