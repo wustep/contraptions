@@ -4,8 +4,8 @@ import { FLOOR, R, ROLL, burst, definePiece, flick, over, rail, ramp, roll, wait
 
 /**
  * A gate across the line and a table of dominoes above it. The ball hits the
- * gate square; the gate gives, and the striker on top of it taps the first
- * domino on the shoulder; the row goes over along the table, each one
+ * gate square; the gate gives, and the striker off its cap taps the first
+ * domino at the waist; the row goes over along the table, each one
  * knocking the next as it lands on it; the last one falls on a button at
  * the table's end; the pulse runs along the wire to the coil over the gate
  * and the gate snaps up its guide like a portcullis. The ball rolls on
