@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeInQuad } from '../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A drawbridge. The bridge stands up against its tower over a gap in the
@@ -14,7 +14,7 @@ const SPAN = 0.85
 const UP = -1.45
 const TOWER_X = 0.56
 const TOWER_TOP = -1.25
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const TRIP = 0.3
 const FALL = 0.45
 const FIRE = ARRIVE + TRIP
@@ -34,7 +34,7 @@ export const drawbridge = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [2, 0])) return null
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [0, 0], ROLL, 'out'), wait([0, 0], TRIP + FALL + 0.15), roll([0, 0], [1.5, 0], ROLL)],
+      segs: [...arrive([-0.5, 0], [0, 0]), wait([0, 0], TRIP + FALL + 0.15), roll([0, 0], [1.5, 0], ROLL)],
       fire: FIRE,
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }

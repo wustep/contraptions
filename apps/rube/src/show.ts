@@ -1,4 +1,4 @@
-import { buildUniverse, universeAt, type Universe, type UniversePoint } from './universe'
+import { buildUniverse, hasDynamics, universeAt, type Universe, type UniversePoint } from './universe'
 
 /**
  * The show: an endless sequence of universes from one seed. Universe `i` is
@@ -28,7 +28,7 @@ export class Show {
     while (this.universes.length <= i) {
       const n = this.universes.length
       const previous = n ? this.universes[n - 1] : null
-      const avoid = { themes: this.universes.map((u) => u.theme.name), taste: previous?.taste ?? null }
+      const avoid = { themes: this.universes.map((u) => u.theme.name), taste: previous?.taste ?? null, dynamicsLast: previous ? hasDynamics(previous) : false }
       const u = buildUniverse(this.seed, n, avoid, this.solo)
       this.universes.push(u)
       this.starts.push(previous ? this.starts[n - 1] + previous.journey : 0)

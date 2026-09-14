@@ -8,7 +8,7 @@ import { TRANSIT, ballAt, laneAt, type Pt } from './src/parts'
 import { CATALOG_LIMIT, catalog } from './src/pieces'
 import { Show } from './src/show'
 import { THEME_MEMORY } from './src/universe'
-import { beatCount } from './src/plan'
+import { DYNAMIC, FLIGHT, beatCount } from './src/plan'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -96,7 +96,7 @@ for (const seed of SEEDS) {
       run = p.piece.name === 'rail' ? run + 1 : 0
       longest = Math.max(longest, run)
     }
-    check(`${tag}: at most two rails in a row`, longest <= 2, `${longest}`)
+    check(`${tag}: at most three rails in a row`, longest <= 3, `${longest}`)
 
     // Time: starts are monotonic and sum to the journey.
     let mono = true
@@ -158,6 +158,28 @@ for (const seed of SEEDS) {
   check('the clock crosses into world 1 at the gate', before.universe.index === 0 && after.universe.index === 1)
   check('and the ball is invisible on both sides of it', before.scale < 0.02 && after.scale < 0.02)
   check(`three worlds use much of the catalog`, used.size >= 12, `${used.size}: ${[...used].sort().join(',')}`)
+}
+
+// Tempo and cadence over a longer run of worlds: flights in most maps, the pieces that change the
+// ball never more than two a map and never absent for three maps running.
+for (const seed of SEEDS.slice(0, 3)) {
+  const show = new Show(seed)
+  let flights = 0
+  let dry = 0
+  let tooMany = false
+  let longestDry = 0
+  for (let i = 0; i < 12; i++) {
+    const u = show.universe(i)
+    const names = u.pieces.map((p) => p.piece.name)
+    if (names.some((n) => FLIGHT.has(n))) flights++
+    const d = names.filter((n) => DYNAMIC.has(n)).length
+    if (d > 2) tooMany = true
+    dry = d ? 0 : dry + 1
+    longestDry = Math.max(longestDry, dry)
+  }
+  check(`${seed}: most maps have a flight`, flights >= 9, `${flights}/12`)
+  check(`${seed}: never more than two ball-changing pieces a map`, !tooMany)
+  check(`${seed}: never three maps running without one`, longestDry <= 2, `${longestDry}`)
 }
 
 const sorted = [...beats].sort((a, b) => a - b)

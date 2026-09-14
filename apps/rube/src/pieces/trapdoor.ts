@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic } from '../../../../src/core/ease'
-import { FALL, FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FALL, FAST, FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A trapdoor. The ball rolls onto it and stops in the dip it makes; its
@@ -10,7 +10,7 @@ import { FALL, FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type
  */
 const DOOR_W = 0.34
 const HINGE = -DOOR_W / 2
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const DRAW = 0.55
 const SWING = 0.1
 const FIRE = ARRIVE + DRAW
@@ -33,11 +33,11 @@ export const trapdoor = definePiece<{ color: string }>({
     if (!fits(cells, [1, 1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [0, 0.02], ROLL, 'out'),
+        ...arrive([-0.5, 0], [0, 0.02]),
         wait([0, 0.02], DRAW + SWING * 0.3),
         { from: [0, 0.02], to: LAND, dur: Math.hypot(LAND[1] - 0.02) / FALL, ease: 'in' },
-        { from: LAND, to: PATH1, dur: 0.16, ease: 'in' },
-        roll([PATH1[0], 1], [0.5, 1], ROLL * 1.3, 'out'),
+        { from: LAND, to: PATH1, dur: 0.06 },
+        ramp([PATH1[0], 1], [0.5, 1], FAST, ROLL),
       ],
       fire: FIRE,
     }

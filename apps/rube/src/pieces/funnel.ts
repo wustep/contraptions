@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FALL, FLOOR, ROLL, arcPts, chain, definePiece, over, rail, roll, segTime, type Lane, type Pt, type Seg } from '../parts'
+import { FLOOR, ROLL, arcPts, chain, definePiece, over, rail, ramp, roll, segTime, type Lane, type Pt, type Seg } from '../parts'
 
 /**
  * A glass funnel. The rail ends at the rim; the ball goes round and round
@@ -44,13 +44,16 @@ export const funnel = definePiece<{ color: string; turn: 1 | -1 }>({
       if (!fits(cells, [turn, 1])) continue
       const round = orbit()
       const last = round[round.length - 1].to
-      const bend = chain(arcPts(turn * ARC, 1 - ARC, ARC, Math.PI * (turn > 0 ? 1 : 0), Math.PI / 2, 4), 0.11)
+      const depth = 1 - ARC - last[1]
+      const fallDur = Math.sqrt((2 * depth) / 24)
+      const vEnd = (2 * depth) / fallDur
+      const bend = chain(arcPts(turn * ARC, 1 - ARC, ARC, Math.PI * (turn > 0 ? 1 : 0), Math.PI / 2, 4), ((Math.PI / 2) * ARC) / (vEnd * 0.85))
       const segs: Seg[] = [
         roll([-0.5, 0], [ENTRY_X, 0.02], ROLL),
         ...round,
-        { from: last, to: [0, 1 - ARC], dur: (1 - ARC - last[1]) / FALL, ease: 'in' },
+        { from: last, to: [0, 1 - ARC], dur: fallDur, ease: 'in' },
         ...bend,
-        roll([turn * ARC, 1], [turn * 0.5, 1], ROLL * 1.2, 'out'),
+        ramp([turn * ARC, 1], [turn * 0.5, 1], ROLL * 1.4, ROLL),
       ]
       const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur
       const lane: Lane = { segs, fire }

@@ -1,6 +1,6 @@
 import { outline, solid, teeth } from '../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
 
 /**
  * Clockwork. A gate bars the rail; the ball rolls onto a plate before it;
@@ -20,7 +20,7 @@ const DRUM = 0.05
 const GATE_X = 1.3
 const GATE_TOP = -0.22
 const RISE = 0.32
-const ARRIVE = (0.5 + PLATE) / ROLL
+const ARRIVE = arriveAt(PLATE)
 const PRESS = 0.12
 const RUN = 0.8
 const FIRE = ARRIVE + PRESS
@@ -64,7 +64,7 @@ export const gears = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [2, 0])) return null
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [PLATE, 0.02], ROLL, 'out'), wait([PLATE, 0.02], PRESS + RUN * 0.75), roll([PLATE, 0.02], [1.5, 0], ROLL)],
+      segs: [...arrive([-0.5, 0], [PLATE, 0.02]), wait([PLATE, 0.02], PRESS + RUN * 0.75), roll([PLATE, 0.02], [1.5, 0], ROLL)],
       fire: FIRE,
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }

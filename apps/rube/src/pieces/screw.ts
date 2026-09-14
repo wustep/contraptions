@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, lerp } from '../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * An Archimedes' screw. The ball rolls into the foot of a glass tube; the
@@ -11,7 +11,7 @@ import { FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } 
 const FOOT: Pt = [-0.12, 0.06]
 const HEAD: Pt = [1.1, -0.94]
 const BORE = 0.18
-const ARRIVE = (0.5 + FOOT[0]) / ROLL
+const ARRIVE = arriveAt(FOOT[0])
 const LATCH = 0.3
 const RIDE = 1.7
 const FIRE = ARRIVE + LATCH
@@ -32,10 +32,10 @@ export const screw = definePiece<{ color: string }>({
     if (!fits(cells, [2, -1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [FOOT[0], 0], ROLL, 'out'),
+        ...arrive([-0.5, 0], [FOOT[0], 0]),
         wait([FOOT[0], 0], LATCH),
         { from: [FOOT[0], 0], to: [HEAD[0], -1], dur: RIDE, ease: 'inout' },
-        roll([HEAD[0], -1], [1.5, -1], ROLL, 'out'),
+        ramp([HEAD[0], -1], [1.5, -1], 0.8, ROLL),
       ],
       fire: FIRE,
     }

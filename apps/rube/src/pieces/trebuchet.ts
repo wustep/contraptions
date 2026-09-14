@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, arcPts, burst, chain, definePiece, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A trebuchet. The long arm rests with its cup down on the rail and the
@@ -16,7 +16,7 @@ const REST = Math.PI - 0.73
 const RELEASE = Math.PI * 1.38
 const LAND: Pt = [2.28, 0]
 const SEAT = PIVOT[0] + Math.cos(REST) * ARM
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const PIN = 0.4
 const SWING = 0.48
 const FIRE = ARRIVE + PIN
@@ -46,12 +46,12 @@ export const trebuchet = definePiece<{ color: string }>({
     const off = pts[pts.length - 1]
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SEAT, 0], ROLL, 'out'),
+        ...arrive([-0.5, 0], [SEAT, 0]),
         wait([SEAT, 0], PIN),
         ...throwSeg,
         fly(off, LAND, FLIGHT, 0.45),
-        fly(LAND, [LAND[0] + 0.12, 0], 0.06, 0.02),
-        roll([LAND[0] + 0.12, 0], [2.5, 0], ROLL * 1.3, 'out'),
+        fly(LAND, [LAND[0] + 0.14, 0], 0.035, 0.015),
+        ramp([LAND[0] + 0.14, 0], [2.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }

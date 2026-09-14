@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
 import { pendulum as swingTable, swing } from '../../../../src/core/physics'
-import { FAST, FLOOR, ROLL, definePiece, over, roll, wait, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, ROLL, arrive, arriveAt, definePiece, over, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A wrecking ball. The bob hangs cocked on a hook at the roof; the ball
@@ -17,7 +17,7 @@ const COCKED = 1.25
 const CONTACT = 0.14
 const SEAT = 0.66
 const TONGUE = 0.5
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const TRIP = (0.5 + TONGUE) / ROLL
 const RELEASE = TRIP + 0.1
 const SWING = 0.36
@@ -34,7 +34,7 @@ export const pendulum = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [2, 0])) return null
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [SEAT, 0.03], ROLL, 'out'), wait([SEAT, 0.03], FIRE - ARRIVE), roll([SEAT, 0.03], [1.5, 0], FAST, 'out')],
+      segs: [...arrive([-0.5, 0], [SEAT, 0.03]), wait([SEAT, 0.03], FIRE - ARRIVE), ramp([SEAT, 0.03], [1.5, 0], FAST, ROLL)],
       fire: FIRE,
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }

@@ -55,7 +55,14 @@ export interface PlanCtx {
   portalColor: string
   /** The ball as it comes out of the first portal. */
   ball: BallState
+  /** How keen this map is on the pieces that change the ball, and how many it may have. */
+  dynamics: { boost: number; cap: number }
 }
+
+/** The pieces that change the ball itself. Rare enough to stay special. */
+export const DYNAMIC = new Set(['painter', 'cradle', 'phasegate', 'inverter', 'fuse'])
+/** The pieces that throw, fling or carry the ball somewhere else: the tempo's accents. */
+export const FLIGHT = new Set(['cannon', 'trebuchet', 'trampoline', 'plunger', 'flipper', 'rocket', 'zipline', 'trapeze', 'toaster', 'loop'])
 
 export interface ChainSpec {
   box: Box
@@ -124,6 +131,12 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   let prev = ''
   let rails = 0
   let placed = 0
+  let dynamics = 0
+  // The tempo: a run of two or three beats back to back, then a flight if
+  // one fits, then a breath of rail before the next run.
+  let phase: 'run' | 'flight' | 'breathe' = 'run'
+  let runLeft = rng.int(2, 4)
+  let breathLeft = 0
   while (placed < beats) {
     const fits = (cells: Pt[], exit: Pt) => {
       const world = worldCells(cells, col, row, mirror)
@@ -132,12 +145,23 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       const er = row + exit[1]
       return free(ec, er)
     }
-    const candidates = pool.filter((c) => c.name !== prev && !(c.name === 'rail' && rails >= 2))
+    const candidates = pool.filter((c) => {
+      if (c.name === prev) return false
+      if (c.name === 'rail') return phase === 'breathe' && rails < 3
+      if (DYNAMIC.has(c.name) && dynamics >= ctx.dynamics.cap) return false
+      return phase !== 'breathe'
+    })
+    const tempo = (name: string) => {
+      if (name === 'rail') return 1
+      let w = DYNAMIC.has(name) ? ctx.dynamics.boost : 1
+      if (phase === 'flight') w *= FLIGHT.has(name) ? 6 : 0.2
+      return w
+    }
     let chosen: { piece: Piece<any>; placement: Placement<unknown> } | null = null
     const tried = new Set<string>()
     while (tried.size < candidates.length) {
       const untried = candidates.filter((c) => !tried.has(c.name))
-      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1))
+      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c.name))
       tried.add(piece.name)
       const placement = piece.place({
         rng: rng.fork(`${placed}:${piece.name}`),
@@ -152,11 +176,29 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
         break
       }
     }
-    if (!chosen) break
+    if (!chosen) {
+      // Nothing fits in this phase; let the next phase try before giving up.
+      if (phase === 'breathe') { phase = 'run'; runLeft = rng.int(2, 4); continue }
+      if (phase === 'flight') { phase = 'breathe'; breathLeft = rng.int(1, 4); continue }
+      break
+    }
     commit(chosen.piece, chosen.placement)
-    rails = chosen.piece.name === 'rail' ? rails + 1 : 0
-    prev = chosen.piece.name
-    if (chosen.piece.name !== 'rail') placed++
+    const name = chosen.piece.name
+    rails = name === 'rail' ? rails + 1 : 0
+    prev = name
+    if (DYNAMIC.has(name)) dynamics++
+    if (name !== 'rail') placed++
+    // Advance the tempo.
+    if (phase === 'run') {
+      runLeft--
+      if (runLeft <= 0) phase = 'flight'
+    } else if (phase === 'flight') {
+      phase = 'breathe'
+      breathLeft = rng.int(1, 4)
+    } else {
+      breathLeft--
+      if (breathLeft <= 0) { phase = 'run'; runLeft = rng.int(2, 4) }
+    }
   }
 
   // A map should not end on plain rail; a portal after a beat reads as the

@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
-import { ROLL, definePiece, over, rail, roll, wait, type Lane } from '../parts'
+import { ROLL, definePiece, over, rail, ramp, roll, wait, type Lane } from '../parts'
 
 /**
  * A paddle wheel hung over the line with one blade down in the ball's way.
@@ -18,7 +18,7 @@ export const paddle = definePiece<{ color: string }>({
   place: ({ color, fits }) => {
     if (!fits([[0, 0]], [1, 0])) return null
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [MEET, 0], ROLL), wait([MEET, 0], 0.06), roll([MEET, 0], [0.5, 0], ROLL * 0.9, 'out')],
+      segs: [roll([-0.5, 0], [MEET, 0], ROLL), wait([MEET, 0], 0.06), ramp([MEET, 0], [0.5, 0], ROLL * 1.1, ROLL)],
       fire: (0.5 + MEET) / ROLL,
     }
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color } }

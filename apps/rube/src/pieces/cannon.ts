@@ -1,6 +1,6 @@
 import { clipBox, outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fly, over, puff, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, puff, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A cannon. The ball rolls into the breech and strikes the match on its way;
@@ -13,7 +13,7 @@ const ANGLE = -Math.PI * 0.32
 const BARREL = 0.5
 const MUZZLE: Pt = [BREECH[0] + Math.cos(ANGLE) * BARREL, BREECH[1] + Math.sin(ANGLE) * BARREL]
 const LAND: Pt = [1.72, -1]
-const ARRIVE = (0.5 + BREECH[0]) / ROLL
+const ARRIVE = arriveAt(BREECH[0])
 const FUSE = 1.35
 const FLIGHT = 0.58
 const ARC = 0.62
@@ -40,11 +40,12 @@ export const cannon = definePiece<{ color: string }>({
     if (!fits(cells, [3, -1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], BREECH, ROLL, 'out'),
-        wait(BREECH, FUSE, { hidden: true }),
+        ...arrive([-0.5, 0], BREECH),
+        wait(BREECH, FUSE - 0.06, { hidden: true }),
+        { from: BREECH, to: MUZZLE, dur: 0.06, ease: 'in', hidden: true },
         fly(MUZZLE, LAND, FLIGHT, ARC),
         fly(LAND, [LAND[0] + 0.28, -1], 0.13, 0.07),
-        roll([LAND[0] + 0.28, -1], [2.5, -1], ROLL * 1.3, 'out'),
+        ramp([LAND[0] + 0.28, -1], [2.5, -1], ROLL * 1.3, ROLL),
       ],
       fire: ARRIVE + FUSE,
     }

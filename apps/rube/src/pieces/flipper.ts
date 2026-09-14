@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A pinball flipper. The ball rolls onto the bat and over the switch under
@@ -13,7 +13,7 @@ const BAT = 0.5
 const SEAT = 0.06
 const SHELF_Y = -1
 const LAND: Pt = [0.3, SHELF_Y]
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const CHARGE = 0.2
 const SNAP = 0.07
 const FIRE = ARRIVE + CHARGE
@@ -33,11 +33,11 @@ export const flipper = definePiece<{ color: string }>({
     if (!fits(cells, [1, -1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SEAT, 0], ROLL, 'out'),
+        ...arrive([-0.5, 0], [SEAT, 0]),
         wait([SEAT, 0], CHARGE + SNAP * 0.6),
         fly([SEAT, -0.06], LAND, 0.42, 0.22),
         fly(LAND, [LAND[0] + 0.1, SHELF_Y], 0.06, 0.02),
-        roll([LAND[0] + 0.1, SHELF_Y], [0.5, SHELF_Y], ROLL, 'out'),
+        ramp([LAND[0] + 0.1, SHELF_Y], [0.5, SHELF_Y], 1.5, ROLL),
       ],
       fire: FIRE,
     }

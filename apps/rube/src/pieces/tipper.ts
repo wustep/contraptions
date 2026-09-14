@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, arcPts, burst, chain, definePiece, over, rail, roll, wait, type Lane, type Pt, type Seg } from '../parts'
+import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece, over, rail, ramp, wait, type Lane, type Pt, type Seg } from '../parts'
 
 /**
  * A tipping bucket. The ball rolls off the rail into a bucket hinged at
@@ -14,12 +14,14 @@ const HEEL: Pt = [-0.2, FLOOR]
 const W = 0.34
 const H = 0.3
 const SEAT = -0.03
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const LATCH = 0.3
 const FIRE = ARRIVE + LATCH
 const TIP = 0.22
 const OVER = 1.95
 const ARC = 0.18
+/** Where the catch's bend begins, under the bucket's mouth. */
+const CATCH = 0.24
 const RESET = 2.6
 
 const tipAt = (since: number) =>
@@ -34,14 +36,13 @@ export const tipper = definePiece<{ color: string }>({
       [0, 1],
     ]
     if (!fits(cells, [1, 1])) return null
-    const bend = chain(arcPts(0.3 + ARC, 1 - ARC, ARC, Math.PI, Math.PI / 2, 4), 0.09)
+    const bend = chain(arcPts(CATCH + ARC, 1 - ARC, ARC, Math.PI, Math.PI / 2, 4), 0.045)
     const segs: Seg[] = [
-      roll([-0.5, 0], [SEAT, 0], ROLL, 'out'),
+      ...arrive([-0.5, 0], [SEAT, 0]),
       wait([SEAT, 0], LATCH + 0.1),
-      { from: [SEAT, 0], to: [0.14, 0.32], dur: 0.12, ease: 'in' },
-      { from: [0.14, 0.32], to: [0.3, 1 - ARC], dur: 0.11, ease: 'in' },
+      { from: [SEAT, 0], to: [CATCH, 1 - ARC], dur: 0.22, ease: 'in' },
       ...bend,
-      roll([0.3 + ARC, 1], [0.5, 1], ROLL * 1.2, 'out'),
+      ramp([CATCH + ARC, 1], [0.5, 1], FAST, ROLL),
     ]
     const lane: Lane = { segs, fire: FIRE }
     return { cells, exit: { at: [1, 1], dir: 1 }, lane, state: { color } }
@@ -59,8 +60,8 @@ export const tipper = definePiece<{ color: string }>({
     p.line(HEEL[0] * k, 0.62 * k, 0.12 * k, 0.62 * k)
     p.line(0.12 * k, 0.62 * k, 0.12 * k, 0.56 * k)
     // The catch below: a quarter-pipe onto the rail out.
-    p.arc((0.3 + ARC) * k, (1 - ARC) * k, (ARC + FLOOR) * 2 * k, (ARC + FLOOR) * 2 * k, Math.PI / 2, Math.PI)
-    p.line((0.3 + ARC) * k, (1 + FLOOR) * k, 0.5 * k, (1 + FLOOR) * k)
+    p.arc((CATCH + ARC) * k, (1 - ARC) * k, (ARC + FLOOR) * 2 * k, (ARC + FLOOR) * 2 * k, Math.PI / 2, Math.PI)
+    p.line((CATCH + ARC) * k, (1 + FLOOR) * k, 0.5 * k, (1 + FLOOR) * k)
     p.line(0.44 * k, (1 + FLOOR) * k, 0.44 * k, 1.5 * k)
     p.line(0.38 * k, 1.5 * k, 0.5 * k, 1.5 * k)
     const squash = since < 0.55 ? 0 : 1 - over(since, 0.55, 0.9)

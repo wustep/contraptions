@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FLOOR, ROLL, definePiece, fly, over, rail, roll, type Lane, type Pt, type Seg } from '../parts'
+import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, type Lane, type Pt, type Seg } from '../parts'
 
 /**
  * A flight of stairs. The rail ends at the top step and the ball goes down
@@ -36,7 +36,7 @@ export const stairs = definePiece<{ color: string; taps: number[] }>({
       taps.push(t)
       t += TAP
     }
-    segs.push(roll([TOP + STEPS * TREAD, 1], [0.5, 1], ROLL * 1.2, 'out'))
+    segs.push(ramp([TOP + STEPS * TREAD, 1], [0.5, 1], ROLL * 1.2, ROLL))
     const lane: Lane = { segs, fire: taps[STEPS - 1] }
     return { cells, exit: { at: [1, 1], dir: 1 }, lane, state: { color, taps } }
   },

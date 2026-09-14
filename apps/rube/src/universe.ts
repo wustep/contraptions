@@ -2,7 +2,7 @@ import { makeRng, type Rng } from '../../../src/core/rng'
 import { themes, type Theme } from '../../../src/core/themes'
 import { ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
 import { catalog } from './pieces'
-import { beatCount, planChain, type Box, type Placed } from './plan'
+import { DYNAMIC, beatCount, planChain, type Box, type Placed } from './plan'
 
 /**
  * A universe: one theme, one taste, one map, one chain from a portal to a
@@ -61,6 +61,8 @@ export interface Avoid {
   themes: string[]
   /** The previous world's taste. */
   taste: string | null
+  /** Whether the previous world had a piece that changed the ball. */
+  dynamicsLast: boolean
 }
 
 /** How many worlds back a theme is barred. With twenty palettes there is always room. */
@@ -89,8 +91,11 @@ export function buildUniverse(seed: string, index: number, avoid: Avoid, solo: s
   const box: Box = { x0: 0, y0: 0, x1: w - 1, y1: h - 1 }
   const beats = rng.int(11, 17)
   const ball: BallState = { color: ballColor, ghost: false, id: 0 }
+  // The pieces that change the ball stay special: at most two a map, keen
+  // when the last world had none, shy when it had one.
+  const dynamics = { boost: avoid.dynamicsLast ? 0.5 : 3, cap: 2 }
   const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
-    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball }, { box, beats }),
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics }, { box, beats }),
   )
 
   let acc = 0
@@ -124,6 +129,9 @@ function bestOf(rng: Rng, tries: number, plan: (rng: Rng) => Placed[]): Placed[]
   }
   return best
 }
+
+/** Whether a world has a piece that changes the ball. */
+export const hasDynamics = (u: Universe): boolean => u.pieces.some((p) => DYNAMIC.has(p.piece.name))
 
 /** Where the ball is `t` seconds into a universe. Clamped to its ends. */
 export function universeAt(u: Universe, t: number): UniversePoint {

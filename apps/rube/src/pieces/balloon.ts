@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, lerp } from '../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, over, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A balloon on a mast. The ball rolls into the basket and its weight pulls
@@ -18,7 +18,7 @@ export interface BalloonState {
 const MAST_X = -0.3
 const BASKET_W = 0.3
 const ENVELOPE = 0.2
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const PIN = 0.35
 const SETTLE = 0.25
 const riseTime = (floors: number) => 0.6 + floors * 0.7
@@ -35,11 +35,11 @@ export const balloon = definePiece<BalloonState>({
       if (!fits(cells, exit)) continue
       const lane: Lane = {
         segs: [
-          roll([-0.5, 0], [0, 0], ROLL, 'out'),
+          ...arrive([-0.5, 0], [0, 0]),
           wait([0, 0], PIN),
           { from: [0, 0], to: [0, -floors], dur: riseTime(floors), ease: 'inout' },
           wait([0, -floors], SETTLE),
-          roll([0, -floors], [turn * 0.5, -floors], ROLL, 'in'),
+          ramp([0, -floors], [turn * 0.5, -floors], 0, ROLL),
         ],
         fire: ARRIVE + PIN,
       }

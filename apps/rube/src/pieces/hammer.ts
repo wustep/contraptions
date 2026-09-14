@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, lerp } from '../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A drop hammer, two cells tall. The ball rolls onto the anvil and waits;
@@ -15,7 +15,7 @@ const HIGH = -1.1
 const CONTACT = -R - HEAD_H / 2
 const GUIDE = 0.23
 const SHEAVE_Y = -1.4
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const WAIT = 0.6
 const DROP = 0.16
 
@@ -29,7 +29,7 @@ export const hammer = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [1, 0])) return null
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [0, 0], ROLL), wait([0, 0], WAIT), roll([0, 0], [0.5, 0], FAST, 'out')],
+      segs: [...arrive([-0.5, 0], [0, 0]), wait([0, 0], WAIT), ramp([0, 0], [0.5, 0], FAST, ROLL)],
       fire: ARRIVE + WAIT,
     }
     return { cells, exit: { at: [1, 0], dir: 1 }, lane, state: { color } }

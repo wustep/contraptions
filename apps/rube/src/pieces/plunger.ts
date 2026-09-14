@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, definePiece, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A pinball plunger and a gap. The ball rolls past the cocked plunger into
@@ -14,7 +14,7 @@ const COCKED = -0.16
 const STRIKE = 0.14
 const COLLAR = -0.44
 const LAND: Pt = [1.78, 0]
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const HOLD = 0.5
 const FIRE = ARRIVE + HOLD
 const FLIGHT = 0.42
@@ -31,11 +31,11 @@ export const plunger = definePiece<{ color: string }>({
     if (!fits(cells, [3, 0])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SEAT, 0.02], ROLL, 'out'),
+        ...arrive([-0.5, 0], [SEAT, 0.02]),
         wait([SEAT, 0.02], HOLD),
         fly([SEAT, 0.02], LAND, FLIGHT, 0.34),
         fly(LAND, [LAND[0] + 0.2, 0], 0.1, 0.04),
-        roll([LAND[0] + 0.2, 0], [2.5, 0], FAST, 'out'),
+        ramp([LAND[0] + 0.2, 0], [2.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }

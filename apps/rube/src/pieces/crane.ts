@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../src/core/ease'
-import { FALL, FLOOR, R, ROLL, definePiece, fall, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FALL, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fall, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * An electromagnet on a gantry. The ball rolls into a dimple under the
@@ -14,7 +14,7 @@ const DROP_X = 1.9
 const BEAM_Y = -1.05
 const HIGH = -0.55
 const MAG_H = 0.14
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = arriveAt(SEAT)
 const GRAB = 0.4
 const RISE = 0.5
 const TRAVEL = 1.1
@@ -40,14 +40,14 @@ export const crane = definePiece<{ color: string }>({
     if (!fits(cells, [3, 0])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SEAT, 0.03], ROLL, 'out'),
+        ...arrive([-0.5, 0], [SEAT, 0.03]),
         wait([SEAT, 0.03], GRAB),
         { from: [SEAT, 0.03], to: [SEAT, HIGH], dur: RISE, ease: 'inout' },
         { from: [SEAT, HIGH], to: [DROP_X, HIGH], dur: TRAVEL, ease: 'inout' },
         wait([DROP_X, HIGH], THINK),
         fall([DROP_X, HIGH], [DROP_X, 0], FALL),
         fly([DROP_X, 0], [DROP_X + 0.2, 0], 0.1, 0.05),
-        roll([DROP_X + 0.2, 0], [2.5, 0], ROLL, 'out'),
+        ramp([DROP_X + 0.2, 0], [2.5, 0], 1.5, ROLL),
       ],
       fire: T_DROP,
     }

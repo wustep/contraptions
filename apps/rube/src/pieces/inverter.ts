@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FLOOR, R, ROLL, burst, definePiece, over, rail, roll, type Lane, type Pt } from '../parts'
+import { FLOOR, R, ROLL, burst, definePiece, over, rail, ramp, roll, type Lane, type Pt } from '../parts'
 
 /**
  * A gravity inverter. Two coils on posts hold a field between them with a
@@ -13,7 +13,8 @@ const X0 = 0.5
 const X1 = 1.5
 const FLIP = 0.3
 const DROP = 1.7
-const LIFT = 0.22
+const UPSPEED = 5
+const LIFT = Math.hypot(X0 + 0.2 - FLIP, RIDE) / ((ROLL + UPSPEED) / 2)
 
 export const inverter = definePiece<{ color: string }>({
   name: 'inverter',
@@ -28,10 +29,10 @@ export const inverter = definePiece<{ color: string }>({
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [FLIP, 0], ROLL),
-        { from: [FLIP, 0], to: [X0 + 0.2, RIDE], dur: LIFT, ease: 'in' },
+        ramp([FLIP, 0], [X0 + 0.2, RIDE], ROLL, UPSPEED),
         roll([X0 + 0.2, RIDE], [X1 - 0.2, RIDE], ROLL),
-        { from: [X1 - 0.2, RIDE], to: [DROP, 0], dur: LIFT, ease: 'in' },
-        roll([DROP, 0], [2.5, 0], ROLL, 'out'),
+        ramp([X1 - 0.2, RIDE], [DROP, 0], ROLL, UPSPEED),
+        ramp([DROP, 0], [2.5, 0], 3, ROLL),
       ],
       fire: (0.5 + FLIP) / ROLL,
     }

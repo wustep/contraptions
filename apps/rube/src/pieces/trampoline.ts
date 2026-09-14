@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, fly, over, rail, roll, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, roll, type Lane, type Pt } from '../parts'
 
 /**
  * A pit with a trampoline in it. The rail just stops; the ball drops into
@@ -40,7 +40,7 @@ export const trampoline = definePiece<{ color: string }>({
         { from: LOW, to: REST, dur: UP, ease: 'in' },
         fly(REST, LAND, 0.56, 0.5),
         fly(LAND, [LAND[0] + 0.12, 0], 0.08, 0.03),
-        roll([LAND[0] + 0.12, 0], [1.5, 0], ROLL, 'out'),
+        ramp([LAND[0] + 0.12, 0], [1.5, 0], 2, ROLL),
       ],
       fire: FIRE,
     }

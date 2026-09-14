@@ -61,9 +61,13 @@ function cameraAt(show: Show, t: number, here: ShowPoint): Camera {
   }
   const x = sw ? sx / sw : here.x
   const y = sw ? sy / sw : here.y
-  // A world opens wide and settles onto the ball.
+  // A world opens wide and settles onto the ball; at its end the camera
+  // pushes in on the portal as the ball is swallowed, so the cut goes from
+  // tight on the eye to wide on the new world.
   const intro = easeInOutSine(clamp((here.local - 0.4) / 2.2))
-  const zoom = 0.62 + 0.38 * intro
+  const left = here.universe.journey - here.local
+  const push = easeInOutSine(clamp((1.1 - left) / 1.0))
+  const zoom = 0.62 + 0.38 * intro + 0.24 * push
   return { x, y, zoom }
 }
 
@@ -256,9 +260,9 @@ function drawTransitions(
     // 0 at the cut for 'in', 1 at the cut for 'out'.
     const f = seg.portal === 'out' ? here.raw : 1 - here.raw
     const shade = seg.portal === 'in' && u.index > 0 ? show.universe(u.index - 1).theme.ink : u.theme.ink
-    // The iris closes over the second half of the way in and opens over
-    // the first half of the way out, so it is shut for a beat at the cut.
-    const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.55)
+    // The iris closes over the second half of the way in and opens after
+    // the first half of the way out, so it holds shut for a beat at the cut.
+    const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.45)
     const radius = Math.hypot(W, H) * 0.6 * (1 - easeInOutCubic(shut))
     const rim = Math.hypot(W, H)
     p.push()

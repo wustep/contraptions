@@ -49,6 +49,13 @@ export interface Seg {
   /** How progress along the segment is eased. Linear when unset. */
   ease?: 'in' | 'out' | 'inout'
   /**
+   * Speed at the start and at the end, cells per second, changing linearly
+   * in time: a roll that slows from a kick to the plain rail's pace, or one
+   * that picks up from a stop. The segment's `dur` must be the length over
+   * the mean of the two. Overrides `ease`.
+   */
+  ramp?: [number, number]
+  /**
    * A flight: the ball leaves the chord on a parabola that peaks this many
    * cells above its midpoint. Zero (unset) is a straight line.
    */
@@ -106,6 +113,19 @@ export function ballAt(ball: BallState, changes: BallChange[], t: number): BallS
 const len = (a: Pt, b: Pt) => Math.hypot(b[0] - a[0], b[1] - a[1])
 
 export const roll = (from: Pt, to: Pt, v = ROLL, ease?: Seg['ease']): Seg => ({ from, to, dur: len(from, to) / v, ease })
+/** A straight run whose speed changes linearly from `v0` to `v1`, so a hand-off never jumps in pace. */
+export const ramp = (from: Pt, to: Pt, v0: number, v1: number): Seg => ({ from, to, dur: len(from, to) / ((v0 + v1) / 2), ramp: [v0, v1] })
+/** Cells over which a ball rolling at ROLL comes to a stop. */
+const STOP = 0.16
+/** Roll at ROLL and come to a stop at `to`: the last STOP cells slow to nothing. */
+export function arrive(from: Pt, to: Pt): Seg[] {
+  const L = len(from, to)
+  const f = (L - STOP) / L
+  const mid: Pt = [from[0] + (to[0] - from[0]) * f, from[1] + (to[1] - from[1]) * f]
+  return [roll(from, mid, ROLL), ramp(mid, to, ROLL, 0)]
+}
+/** Seconds after entering at x = -0.5 that `arrive` reaches a stop at `x`. */
+export const arriveAt = (x: number): number => (x + 0.5 - STOP) / ROLL + STOP / (ROLL / 2)
 export const wait = (at: Pt, dur: number, extra: Partial<Seg> = {}): Seg => ({ from: at, to: at, dur, ...extra })
 /** A drop under gravity: accelerating. */
 export const fall = (from: Pt, to: Pt, v = FALL): Seg => ({ from, to, dur: len(from, to) / v, ease: 'in' })
@@ -173,7 +193,7 @@ export function laneAt(lane: Lane, t: number): LanePoint {
     const last = i === segs.length - 1
     if (want <= seg.dur || last) {
       const raw = seg.dur <= 0 ? 1 : clamp(want / seg.dur)
-      const s = easeOf(seg.ease, raw)
+      const s = seg.ramp ? (raw * (2 * seg.ramp[0] + (seg.ramp[1] - seg.ramp[0]) * raw)) / (seg.ramp[0] + seg.ramp[1]) : easeOf(seg.ease, raw)
       const lift = seg.arc ? seg.arc * 4 * s * (1 - s) : 0
       const scale = seg.portal === 'out' ? 1 - raw : seg.portal === 'in' ? raw : 1
       // Pulled into a portal, or pushed out of one, the ball draws out into

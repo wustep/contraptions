@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, lerp } from '../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, burst, definePiece, fly, over, puff, roll, wait, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, puff, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A rocket sled. The ball drops into the cup on the sled and its weight
@@ -11,7 +11,7 @@ import { FAST, FLOOR, ROLL, burst, definePiece, fly, over, puff, roll, wait, typ
  */
 const CUP: Pt = [0.05, -0.06]
 const STOP = 2.0
-const ARRIVE = (0.5 + CUP[0]) / ROLL
+const ARRIVE = arriveAt(CUP[0])
 const IGNITE = 0.55
 const BURN = 0.55
 const FIRE = ARRIVE + IGNITE
@@ -28,11 +28,11 @@ export const rocket = definePiece<{ color: string }>({
     if (!fits(cells, [3, 0])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], CUP, ROLL, 'out'),
+        ...arrive([-0.5, 0], CUP),
         wait(CUP, IGNITE),
         { from: CUP, to: [STOP + CUP[0], CUP[1]], dur: BURN, ease: 'in' },
-        fly([STOP + CUP[0], CUP[1]], [2.42, 0], 0.13, 0.06),
-        roll([2.42, 0], [2.5, 0], FAST),
+        fly([STOP + CUP[0], CUP[1]], [2.28, 0], 0.1, 0.05),
+        ramp([2.28, 0], [2.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }

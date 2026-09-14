@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutCubic, easeOutCubic } from '../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, definePiece, over, rail, roll, wait, type Lane } from '../parts'
+import { FAST, FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, wait, type Lane } from '../parts'
 
 /**
  * A plank on a trestle with its near end down. The ball rolls up it, hangs
@@ -20,14 +20,14 @@ export const seesaw = definePiece<{ color: string }>({
   weight: 0.9,
   place: ({ color, fits }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    const up = roll([-END, 0], [0, CREST], ROLL * 0.75, 'out')
+    const up = ramp([-END, 0], [0, CREST], ROLL, 0.3)
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [-END, 0], ROLL),
         up,
         wait([0, CREST], 0.1),
-        roll([0, CREST], [END, 0], FAST, 'in'),
-        roll([END, 0], [0.5, 0], FAST),
+        ramp([0, CREST], [END, 0], 0.3, FAST),
+        ramp([END, 0], [0.5, 0], FAST, ROLL),
       ],
       fire: (0.5 - END) / ROLL + up.dur,
     }

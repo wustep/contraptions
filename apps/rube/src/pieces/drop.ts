@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FALL, FLOOR, R, ROLL, arcPts, chain, definePiece, flick, over, roll, segTime, type Lane, type Placement, type Pt } from '../parts'
+import { FAST, FLOOR, R, ROLL, arcPts, chain, definePiece, flick, over, ramp, segTime, type Lane, type Placement, type Pt } from '../parts'
 
 /**
  * A fall. The rail runs out to a lip over a tube; the ball drops one, two or
@@ -19,6 +19,8 @@ export interface DropState {
 const TUBE = R + 0.04
 const ARC = 0.24
 const ARC_WALL = ARC + FLOOR
+/** Cartoon gravity, cells per second squared: a floor takes a third of a second. */
+const G = 24
 
 export const drop = definePiece<DropState>({
   name: 'drop',
@@ -39,15 +41,18 @@ export const drop = definePiece<DropState>({
       const exit: Pt = [turn, floors]
       if (!fits(cells, exit)) continue
       const bottom = floors
-      const dropSeg = { from: [0, 0] as Pt, to: [0, bottom - ARC] as Pt, dur: (bottom - ARC) / FALL, ease: 'in' as const }
-      const bend = chain(arcPts(turn * ARC, bottom - ARC, ARC, Math.PI * (turn > 0 ? 1 : 0), Math.PI / 2, 4), 0.11)
+      const depth = bottom - ARC
+      const dropSeg = { from: [0, 0] as Pt, to: [0, depth] as Pt, dur: Math.sqrt((2 * depth) / G), ease: 'in' as const }
+      // The ball arrives at the bend at twice the fall's average speed; the bend keeps most of it.
+      const vEnd = (2 * depth) / dropSeg.dur
+      const bend = chain(arcPts(turn * ARC, bottom - ARC, ARC, Math.PI * (turn > 0 ? 1 : 0), Math.PI / 2, 4), ((Math.PI / 2) * ARC) / (vEnd * 0.85))
       const segs = [
-        roll([-0.5, 0], [0, 0], ROLL),
+        ramp([-0.5, 0], [0, 0], ROLL, 1.2),
         dropSeg,
         ...bend,
-        roll([turn * ARC, bottom], [turn * 0.5, bottom], ROLL * 1.2, 'out'),
+        ramp([turn * ARC, bottom], [turn * 0.5, bottom], Math.min(FAST, vEnd * 0.7), ROLL),
       ]
-      const arrive = 0.5 / ROLL
+      const arrive = 0.5 / ((ROLL + 1.2) / 2)
       const lane: Lane = { segs, fire: arrive + dropSeg.dur + segTime(bend) }
       // Ease-in fall: y = d * (τ/dur)^2, so τ = dur * sqrt(y / d).
       const flapAt: number[] = []

@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FAST, FLOOR, R, arcPts, chain, definePiece, over, rail, roll, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, R, ROLL, arcPts, chain, definePiece, over, rail, ramp, type Lane, type Pt } from '../parts'
 
 /**
  * A loop-the-loop. The rail dips into the loop and the ball goes round —
@@ -36,9 +36,10 @@ export const loop = definePiece<{ color: string }>({
     let total = 0
     for (let i = 1; i < pts.length; i++) total += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]) / speed(i)
     const round = chain(pts, total, speed)
+    const into = ramp([-0.5, 0], [CX, 0], ROLL, FAST)
     const lane: Lane = {
-      segs: [roll([-0.5, 0], [CX, 0], FAST, 'in'), ...round, roll([CX, 0], [1.5, 0], FAST, 'out')],
-      fire: (0.5 + CX) / FAST,
+      segs: [into, ...round, ramp([CX, 0], [1.5, 0], FAST, ROLL)],
+      fire: into.dur,
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }
   },

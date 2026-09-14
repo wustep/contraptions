@@ -1,5 +1,5 @@
 import { outline } from '../../../../src/core/draw'
-import { R, ROLL, ball, chain, definePiece, fall, fly, over, rail, roll, type BallChange, type Lane, type Pt } from '../parts'
+import { R, ROLL, ball, chain, definePiece, fall, fly, over, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../parts'
 
 /**
  * A Newton's cradle across the line. Three balls hang from a beam on
@@ -47,7 +47,7 @@ export const cradle = definePiece<{ color: string; next: string }>({
         ...swing,
         fall(apex, LAND, 4.5),
         fly(LAND, [LAND[0] + 0.08, 0], 0.05, 0.015),
-        roll([LAND[0] + 0.08, 0], [1.5, 0], ROLL, 'out'),
+        ramp([LAND[0] + 0.08, 0], [1.5, 0], 1.5, ROLL),
       ],
       fire: ARRIVE,
     }

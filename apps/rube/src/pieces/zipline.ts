@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, lerp } from '../../../../src/core/ease'
-import { FLOOR, R, ROLL, burst, definePiece, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, burst, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A zip line. A cup hangs from a trolley on a wire strung from a tall post
@@ -13,7 +13,7 @@ const TOP: Pt = [0, -0.38]
 const END: Pt = [1.9, 0.62]
 /** The cup hangs this far under the wire, so the ball rides at the rail's level. */
 const HANG = 0.38
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const BRAKE = 0.35
 const RUN = 0.8
 const FIRE = ARRIVE + BRAKE
@@ -36,11 +36,11 @@ export const zipline = definePiece<{ color: string }>({
     if (!fits(cells, [3, 1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [0, 0], ROLL, 'out'),
+        ...arrive([-0.5, 0], [0, 0]),
         wait([0, 0], BRAKE),
         { from: [0, 0], to: [END[0], 1], dur: RUN, ease: 'in' },
         fly([END[0], 1], [END[0] + 0.24, 1], 0.1, 0.04),
-        roll([END[0] + 0.24, 1], [2.5, 1], ROLL * 1.2, 'out'),
+        ramp([END[0] + 0.24, 1], [2.5, 1], 2, ROLL),
       ],
       fire: FIRE,
     }

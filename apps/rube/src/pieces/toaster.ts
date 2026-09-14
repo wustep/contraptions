@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeOutBack } from '../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fall, fly, over, rail, roll, wait, type Lane, type PieceCtx, type Pt } from '../parts'
+import { FLOOR, ROLL, burst, definePiece, fall, fly, over, rail, ramp, wait, type Lane, type PieceCtx, type Pt } from '../parts'
 
 /**
  * A toaster. The ball rolls across its lid, drops into the slot, the lever
@@ -16,7 +16,7 @@ const BODY_Y1 = 0.5
 const INSIDE: Pt = [SLOT, 0.3]
 const SHELF_Y = -1
 const LAND: Pt = [0.32, SHELF_Y]
-const ARRIVE = (0.5 + SLOT) / ROLL
+const ARRIVE = (0.5 + SLOT) / ((ROLL + 1.2) / 2)
 const DROP = 0.12
 const TOAST = 1.5
 const POP = 0.5
@@ -33,12 +33,12 @@ export const toaster = definePiece<{ color: string }>({
     if (!fits(cells, [1, -1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [SLOT, 0], ROLL),
+        ramp([-0.5, 0], [SLOT, 0], ROLL, 1.2),
         fall([SLOT, 0], INSIDE, INSIDE[1] / DROP),
         wait(INSIDE, TOAST, { hidden: true }),
         fly(INSIDE, LAND, POP, ARC),
         fly(LAND, [LAND[0] + 0.14, SHELF_Y], 0.09, 0.03),
-        roll([LAND[0] + 0.14, SHELF_Y], [0.5, SHELF_Y], ROLL, 'out'),
+        ramp([LAND[0] + 0.14, SHELF_Y], [0.5, SHELF_Y], 1.5, ROLL),
       ],
       fire: ARRIVE + DROP + TOAST,
     }

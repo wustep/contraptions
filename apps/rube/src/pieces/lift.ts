@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, lerp } from '../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, over, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A counterweight lift. The ball rolls into the cage at the bottom; a pawl
@@ -19,7 +19,7 @@ const GUIDE = 0.17
 const CAR_W = 0.38
 const CAR_H = 0.34
 const CW_X = 0.33
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = arriveAt(0)
 const LATCH = 0.4
 const RIDE_PER = 0.5
 const SETTLE = 0.3
@@ -47,11 +47,11 @@ export const lift = definePiece<LiftState>({
       const ride = rideTime(floors)
       const lane: Lane = {
         segs: [
-          roll([-0.5, 0], [0, 0], ROLL, 'out'),
+          ...arrive([-0.5, 0], [0, 0]),
           wait([0, 0], LATCH),
           { from: [0, 0], to: [0, -floors], dur: ride, ease: 'inout' },
           wait([0, -floors], SETTLE),
-          roll([0, -floors], [turn * 0.5, -floors], ROLL, 'in'),
+          ramp([0, -floors], [turn * 0.5, -floors], 0, ROLL),
         ],
         fire: ARRIVE + LATCH,
       }

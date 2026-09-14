@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, flick, over, rail, roll, wait, type Lane, type Pt, type Seg } from '../parts'
+import { FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, roll, wait, type Lane, type Pt, type Seg } from '../parts'
 
 /**
  * A switchback. The rail runs out onto a ramp; the ramp runs down to a
@@ -20,8 +20,8 @@ const WALL = 0.36
 const HALF = 0.5
 const BUMP = 0.05
 
-/** The ball's line down a ramp from x0 to x1, top at y0. */
-const ramp = (x0: number, x1: number, y0: number): Seg => roll([x0, y0], [x1, y0 + HALF], ROLL * 1.15, 'in')
+/** The ball's line down a ramp from x0 to x1, top at y0, picking up speed from `v0`. */
+const slope = (x0: number, x1: number, y0: number, v0: number): Seg => ramp([x0, y0], [x1, y0 + HALF], v0, ROLL * 1.7)
 
 export const switchback = definePiece<SwitchbackState>({
   name: 'switchback',
@@ -43,7 +43,7 @@ export const switchback = definePiece<SwitchbackState>({
       for (let i = 0; i < floors * 2; i++) {
         const east = i % 2 === 0
         const to = east ? WALL : -WALL
-        const seg = ramp(x, to, y)
+        const seg = slope(x, to, y, i === 0 ? ROLL : 0.4)
         segs.push(seg)
         t += seg.dur
         hits.push(t)
@@ -52,7 +52,7 @@ export const switchback = definePiece<SwitchbackState>({
         x = to
         y += HALF
       }
-      segs.push(roll([x, floors], [turn * 0.5, floors], ROLL, 'out'))
+      segs.push(ramp([x, floors], [turn * 0.5, floors], 1.2, ROLL))
       const lane: Lane = { segs, fire: hits[hits.length - 1] }
       return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, hits } }
     }

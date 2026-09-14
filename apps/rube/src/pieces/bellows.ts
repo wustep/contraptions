@@ -1,6 +1,6 @@
 import { clipBox, outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic, lerp } from '../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, gallows, over, rail, roll, wait, type Lane } from '../parts'
+import { FLOOR, ROLL, definePiece, gallows, over, rail, ramp, roll, wait, type Lane } from '../parts'
 
 /**
  * A bellows on a stand, aimed down the line, with a weight hung over it
@@ -30,7 +30,7 @@ const SHUT = 0.22
 const WEIGHT_X = LEVER_W + 0.02
 const WEIGHT_H = 0.14
 /** Seconds after entry. */
-const ARRIVE = (0.5 + SEAT) / ROLL
+const ARRIVE = (0.5 + TONGUE_W + 0.02) / ROLL + Math.hypot(SEAT - TONGUE_W - 0.02, SINK) / (ROLL / 2)
 const PRESS = 0.06
 const RELEASE = ARRIVE + PRESS
 const DROP = 0.2
@@ -50,9 +50,9 @@ export const bellows = definePiece<{ color: string }>({
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [TONGUE_W + 0.02, 0], ROLL),
-        roll([TONGUE_W + 0.02, 0], [SEAT, SINK], ROLL, 'out'),
+        ramp([TONGUE_W + 0.02, 0], [SEAT, SINK], ROLL, 0),
         wait([SEAT, SINK], LEAVE - ARRIVE),
-        roll([SEAT, SINK], [0.5, 0], ROLL * 1.3, 'out'),
+        ramp([SEAT, SINK], [0.5, 0], ROLL * 1.5, ROLL),
       ],
       fire: PUFF,
     }

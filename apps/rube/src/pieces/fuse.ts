@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeOutCubic } from '../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, burst, definePiece, fly, over, puff, rail, roll, type Lane, type Pt } from '../parts'
+import { FAST, FLOOR, ROLL, burst, definePiece, fly, over, puff, rail, ramp, roll, type Lane, type Pt } from '../parts'
 
 /**
  * A fuse that races the ball. The ball rolls over a striker as it comes
@@ -32,7 +32,7 @@ export const fuse = definePiece<{ color: string }>({
       segs: [
         roll([-0.5, 0], [KEG_X, 0], ROLL),
         fly([KEG_X, 0], [KEG_X + 0.3, 0], 0.09, 0.05),
-        roll([KEG_X + 0.3, 0], [2.5, 0], FAST),
+        ramp([KEG_X + 0.3, 0], [2.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }

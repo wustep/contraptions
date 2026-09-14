@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 
-import { FLOOR, ROLL, definePiece, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * An inclined conveyor. The ball rolls off the rail onto the foot of the
@@ -14,7 +14,7 @@ const HEAD: Pt = [1.2, -1 + FLOOR]
 /** The ball's centre line, one radius above the belt. */
 const P0: Pt = [-0.23, 0.03]
 const P1: Pt = [1.12, -0.97]
-const ARRIVE = (0.5 + P0[0]) / ROLL
+const ARRIVE = arriveAt(P0[0])
 const WIND = 0.35
 const RIDE = 1.7
 const OVERRUN = 0.9
@@ -34,10 +34,10 @@ export const conveyor = definePiece<{ color: string }>({
     if (!fits(cells, [2, -1])) return null
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], P0, ROLL),
+        ...arrive([-0.5, 0], P0),
         wait(P0, WIND),
         { from: P0, to: P1, dur: RIDE },
-        roll([P1[0], -1], [1.5, -1], ROLL, 'out'),
+        ramp([P1[0], -1], [1.5, -1], 1, ROLL),
       ],
       fire: FIRE,
     }

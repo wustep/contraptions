@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine } from '../../../../src/core/ease'
-import { FLOOR, R, ROLL, arcPts, chain, definePiece, fall, over, rail, roll, type Lane, type Pt } from '../parts'
+import { FLOOR, R, ROLL, arcPts, chain, definePiece, fall, over, rail, ramp, type Lane, type Pt } from '../parts'
 
 /**
  * A bucket wheel. The ball drops into the top cup, its weight turns the
@@ -13,7 +13,7 @@ const RIM = 0.4
 const PATH = RIM - R + 0.05
 const CUPS = 4
 const TURN = 1.5
-const ARRIVE = 0.5 / ROLL
+const ARRIVE = 0.5 / ((ROLL + 1.2) / 2)
 
 const angleAt = (since: number) =>
   since < 0 ? 0
@@ -34,11 +34,11 @@ export const scoop = definePiece<{ color: string }>({
     const drop = fall([0, 0], [0, CY - PATH], 2)
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], [0, 0], ROLL),
+        ramp([-0.5, 0], [0, 0], ROLL, 1.2),
         drop,
         ...chain(pts, TURN).map((seg) => ({ ...seg, ease: 'inout' as const })),
         fall([0, CY + PATH], [0, 1], 2.5),
-        roll([0, 1], [-0.5, 1], ROLL, 'out'),
+        ramp([0, 1], [-0.5, 1], 1.2, ROLL),
       ],
       fire: ARRIVE + drop.dur,
     }

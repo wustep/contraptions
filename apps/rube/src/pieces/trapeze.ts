@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../src/core/draw'
-import { FLOOR, ROLL, chain, definePiece, fly, over, rail, roll, wait, type Lane, type Pt } from '../parts'
+import { FLOOR, ROLL, arrive, arriveAt, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * A trapeze. A basket hangs from a high beam, held at the west end of its
@@ -13,7 +13,7 @@ const ROPE = 1.4
 const HALF = 0.61
 const PIN = 0.35
 const SWING = 1.1
-const ARRIVE = (0.5 + 0.2) / ROLL
+const ARRIVE = arriveAt(0.2)
 const FIRE = ARRIVE + PIN
 
 /** The basket's angle from the vertical, west negative. */
@@ -57,12 +57,12 @@ export const trapeze = definePiece<{ color: string }>({
     const end = ride[ride.length - 1]
     const lane: Lane = {
       segs: [
-        roll([-0.5, 0], start, ROLL, 'out'),
+        ...arrive([-0.5, 0], start),
         wait(start, PIN),
         ...swing,
         wait(end, 0.12),
         fly(end, [end[0] + 0.16, 0], 0.08, 0.02),
-        roll([end[0] + 0.16, 0], [2.5, 0], ROLL, 'out'),
+        ramp([end[0] + 0.16, 0], [2.5, 0], 1.5, ROLL),
       ],
       fire: FIRE,
     }
