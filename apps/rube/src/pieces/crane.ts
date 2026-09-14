@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../src/core/ease'
-import { FALL, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fall, fly, over, rail, ramp, wait, type Lane, type Pt } from '../parts'
+import { FALL, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fall, fly, over, post, rail, ramp, wait, type Lane, type Pt } from '../parts'
 
 /**
  * An electromagnet on a gantry. The ball rolls into a dimple under the
@@ -11,6 +11,9 @@ import { FALL, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fall, fly, over, r
  */
 const SEAT = 0.2
 const DROP_X = 1.9
+/** The rail stops here and starts again there; the ball is carried across the gap. */
+const GAP0 = 0.56
+const GAP1 = 1.5
 const BEAM_Y = -1.05
 const HIGH = -0.55
 const MAG_H = 0.14
@@ -82,13 +85,19 @@ export const crane = definePiece<{ color: string }>({
     p.line(-0.42 * k, (BEAM_Y + 0.07) * k, 2.42 * k, (BEAM_Y + 0.07) * k)
     for (const x of [-0.42, 2.42]) p.line(x * k, (BEAM_Y - 0.06) * k, x * k, (BEAM_Y + 0.13) * k)
 
-    // The rail, with the dimple the ball waits in and a landing mat.
+    // The rail, with the dimple the ball waits in; then nothing under the
+    // span — that is what the crane is for — and the landing with its mat.
     rail(p, k, ink, weight, -0.5, SEAT - 0.16)
     outline(p, ink, weight)
     p.line((SEAT - 0.16) * k, FLOOR * k, (SEAT - 0.08) * k, (FLOOR + 0.03) * k)
     p.line((SEAT - 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.08) * k, (FLOOR + 0.03) * k)
     p.line((SEAT + 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.16) * k, FLOOR * k)
-    rail(p, k, ink, weight, SEAT + 0.16, 2.5)
+    rail(p, k, ink, weight, SEAT + 0.16, GAP0)
+    rail(p, k, ink, weight, GAP1, 2.5)
+    for (const x of [GAP0, GAP1]) {
+      p.line(x * k, (FLOOR - 0.06) * k, x * k, (FLOOR + 0.06) * k)
+      post(p, k, ink, weight, x + (x < 1 ? -0.06 : 0.06))
+    }
     solid(p, ink, weight, s.color)
     p.rect(DROP_X * k, (FLOOR + 0.06) * k, 0.34 * k, 0.07 * k)
 

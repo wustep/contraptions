@@ -377,10 +377,43 @@ export function burst(p: p5, x: number, y: number, r0: number, r1: number, n: nu
   }
 }
 
-/** A puff of smoke: a cloud of three circles, paper-filled, drifting and fading. */
+/**
+ * A puff of smoke: a cloud of lobes, paper-filled, drawn twice — outlined,
+ * then filled again on top — so the lobes overlap into one silhouette with
+ * one outline instead of a cluster of bubbles.
+ */
 export function puff(p: p5, k: number, ink: string, weight: number, bg: string, x: number, y: number, r: number): void {
+  const lobes: [number, number, number][] = [
+    [0, 0, 1],
+    [r * 0.72, r * 0.22, 0.72],
+    [-r * 0.66, r * 0.26, 0.66],
+    [r * 0.1, -r * 0.5, 0.6],
+  ]
   solid(p, ink, weight, bg)
-  p.circle(x * k, y * k, r * 2 * k)
-  p.circle((x + r * 0.7) * k, (y + r * 0.25) * k, r * 1.4 * k)
-  p.circle((x - r * 0.6) * k, (y + r * 0.3) * k, r * 1.3 * k)
+  for (const [dx, dy, f] of lobes) p.circle((x + dx) * k, (y + dy) * k, r * 2 * f * k)
+  p.noStroke()
+  p.fill(bg)
+  for (const [dx, dy, f] of lobes) p.circle((x + dx) * k, (y + dy) * k, (r * 2 * f - weight / k) * k)
+}
+
+/**
+ * The catch at the foot of a fall: a quarter-pipe that turns a drop into a
+ * roll. Drawn in a frame whose origin is the ball's rest point at the
+ * bottom — the fall line at x = 0, the rail out at y = FLOOR — and flipped
+ * for a ball that turns back. The wall of the bend starts on the tube's
+ * near wall at x = -R and lands on the rail at x = arc, so the lines join;
+ * a cushion on a post sits under the bend and squashes at the landing.
+ */
+export function catchBend(p: p5, k: number, ink: string, weight: number, color: string, turn: 1 | -1, arc: number, squash: number, end = 0.5): void {
+  p.push()
+  p.scale(turn, 1)
+  outline(p, ink, weight)
+  p.arc(arc * k, -arc * k, (arc + FLOOR) * 2 * k, (arc + FLOOR) * 2 * k, Math.PI / 2, Math.PI)
+  p.line(arc * k, FLOOR * k, end * k, FLOOR * k)
+  solid(p, ink, weight, color)
+  p.rect(0.04 * k, (FLOOR + 0.12 + squash * 0.02) * k, 0.24 * k, (0.09 - squash * 0.03) * k, 0.015 * k)
+  outline(p, ink, weight)
+  p.line(0.04 * k, (FLOOR + 0.17) * k, 0.04 * k, 0.5 * k)
+  p.line((end - 0.1) * k, FLOOR * k, (end - 0.1) * k, 0.5 * k)
+  p.pop()
 }

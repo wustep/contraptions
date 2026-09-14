@@ -1,4 +1,4 @@
-import { clipBox, outline, solid } from '../../../../src/core/draw'
+import { outline, solid } from '../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic, lerp } from '../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, gallows, over, rail, ramp, roll, wait, type Lane } from '../parts'
 
@@ -158,20 +158,24 @@ export const bellows = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.arc(WEIGHT_X * k, (wy - WEIGHT_H / 2) * k, 0.05 * k, 0.05 * k, Math.PI, Math.PI * 2)
 
-    // The puff.
-    if (since > 0 && since < 0.5) {
-      const f = over(since, 0, 0.5)
-      clipBox(p, k, k, () => {
-        p.push()
-        p.noFill()
-        p.stroke(s.color)
-        p.strokeWeight(weight * (1.5 - f))
-        for (const dy of [-0.08, 0, 0.08]) {
-          const x0 = 0.02 + f * 0.55
-          p.arc((x0 + 0.1) * k, (dy * (1 + f * 1.5)) * k, 0.22 * k, 0.14 * k, Math.PI * 0.7, Math.PI * 1.3)
-        }
-        p.pop()
-      })
+    // The puff: three curls of air off the nozzle that race out, spread,
+    // slow, thin and fade well inside the cell, so nothing is cut off.
+    if (since > 0 && since < 0.9) {
+      const f = over(since, 0, 0.9)
+      const e = easeOutCubic(f)
+      const tint = p.color(s.color)
+      tint.setAlpha(255 * (1 - easeInQuad(f)))
+      p.push()
+      p.noFill()
+      p.stroke(tint)
+      p.strokeWeight(weight * (1.5 - 0.7 * e))
+      const x0 = 0.02 + e * 0.3
+      for (const dy of [-0.08, 0, 0.08]) {
+        const w = (0.2 + 0.12 * e) * k
+        const h = (0.12 + 0.06 * e) * k
+        p.arc((x0 + 0.1) * k, (dy * (1 + e * 1.8)) * k, w, h, Math.PI * 0.7, Math.PI * 1.3)
+      }
+      p.pop()
     }
   },
 })

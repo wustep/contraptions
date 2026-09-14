@@ -197,7 +197,7 @@ for (const seed of SEEDS.slice(0, 3)) {
 const sorted = [...beats].sort((a, b) => a - b)
 console.log(`\nbeats per map: min ${sorted[0]} · median ${sorted[sorted.length >> 1]} · max ${sorted[sorted.length - 1]}`)
 check('maps average at least eight beats', beats.reduce((a, b) => a + b, 0) / beats.length >= 8)
-check('the ball is recoloured, relayed and ghosted somewhere in the run', ['color', 'relay', 'ghost'].every((m) => mechanics.has(m)), [...mechanics].join(','))
+check('the ball is recoloured and relayed somewhere in the run', ['color', 'relay'].every((m) => mechanics.has(m)), [...mechanics].join(','))
 
 console.log(failures ? `\n${failures} failure(s)` : '\nall good')
 process.exit(failures ? 1 : 0)

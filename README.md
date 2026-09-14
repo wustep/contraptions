@@ -355,9 +355,9 @@ in as the ball is swallowed, holds shut a beat, and opens wide on the new
 world.
 
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
-— `amber-gasket` is the seed to share: a paint booth and a Newton's cradle
-in the first world, a zipline, a trampoline and two flippers, then a black
-and white world, then terracotta.
+— `amber-gasket` is the seed to share: a switchback, two flippers, a
+zipline and a gravity inverter in the first world, then a black and white
+world, then terracotta.
 
 ```bash
 npm run dev           # http://localhost:8791/ — the show; /sandbox/ is the sandbox
@@ -378,7 +378,7 @@ narrows the planner to one piece (plus rail and portals) for polishing it.
 Old links to `/rube/` still work: that page sends them to `/` with the seed.
 
 `?catalog=1` opens the **catalog** instead of the show: a sheet of all
-thirty-eight pieces, each looping on its own between two portals in the
+thirty-six pieces, each looping on its own between two portals in the
 seed's first palette, with its name under it. Click a piece to watch it
 alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
 catalog and from the catalog to the show. The tray has a **catalog** button
@@ -387,29 +387,28 @@ for the same thing, or <kbd>c</kbd> while debug is pinned.
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats
 back to back, then a flight when one fits, then a breath of rail. The
-ball's state rides the chain: its colour, whether it is a ghost, and which
-ball holds the thread, so a piece can change it and the next piece knows.
-Five pieces do; they are capped at two a map and never absent for three
-maps running.
+ball's state rides the chain: its colour and which ball holds the thread,
+so a piece can change it and the next piece knows. Three pieces do; they
+are capped at two a map and never absent for three maps running.
 
-**Thirty-eight pieces**, curated from the eighty-odd toys in the other
+**Thirty-six pieces**, curated from the eighty-odd toys in the other
 catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
 | --- | --- |
 | rail | a plain cell, so the beats have room to land |
-| hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, the head drops a floor, out fast |
+| hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, a wedge head drops a floor and squeezes the ball out fast |
 | seesaw | up, hang over the pivot, down faster, onto the stop |
-| bell | the clapper is in the way; punctuation |
+| bell | the clapper is in the way; it strikes the lip and the bell knocks on its pin; punctuation |
 | bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
-| dominoes | gate → push rod → seven dominoes → lever → cord over two pulleys → portcullis lifts |
+| dominoes | gate → push rod → six dominoes → bell-crank → cord over two pulleys → portcullis lifts |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
 | lift | pawl → counterweight → cage; up one to three floors, on or back |
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel, four cups on a post; a pawl clicks as it turns; down one floor, facing back |
 | toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
-| crane | magnet down, blink, up, along the beam on turning wheels, think, drop; over two |
+| crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
 | trapdoor | weight → lever → bolt → the floor gives way; a ramp; down one |
@@ -419,10 +418,10 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | paddle | a wheel kicked round once; a relay |
 | balloon | pin → sandbag → the balloon rises the mast, tugging at its ropes; up one or two |
 | plunger | pawl → spring → across a cell with no rail in it at all |
-| stairs | four steps down, off each lip, a tap on each tread |
-| switchback | ramps down to bumpers that turn the ball; one floor facing back, or two facing on |
+| stairs | four steps down, off each lip with a bounce, a tap on each tread |
+| switchback | ramps down to bumpers that turn the ball; two ramps for one floor facing back, three for two facing on |
 | zipline | a cup on a trolley runs a wire that dips under it, down a floor and over two, to a stop |
-| tipper | a bucket on its heel tips past upright and dumps the ball a floor down; clack |
+| tipper | a counterweighted tray on its heel tips past upright and dumps the ball a floor down; clack |
 | drawbridge | plate → pawl → the winch pays out the chain → the bridge falls across the gap |
 | gears | plate → pawl → three gears run → a cord hauls the gate up its guide |
 | trapeze | a basket on ropes swings the ball across two cells of nothing, to a catch |
@@ -430,10 +429,8 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | screw | an Archimedes' screw in a glass tube carries the ball up a floor |
 | flipper | a pinball bat flings the ball a floor up onto a shelf |
 | painter | two nozzles spray as the ball passes; it leaves a new colour, for good |
-| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook |
-| phasegate | an emitter makes the ball a ghost; it goes through a solid wall; another makes it solid |
-| inverter | gravity flips between two coils; the ball rolls the ceiling and drops back |
-| fuse | the ball lights a fuse that races it to a keg; the bang throws it on twice as fast |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook mid-swing and flies on |
+| inverter | gravity flips between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
