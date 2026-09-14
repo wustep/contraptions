@@ -5,16 +5,19 @@ import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { createCatalog } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
+import { WORLDS, nextWorld, worldByName } from './worlds'
 
 /**
  * The entry: Machine mode. A seed in the URL, the canvas filling everything
  * the panel leaves, and the panel itself: the same chrome as Explorations —
  * brand, mode switch, seed card, transport — with the show's own sections in
- * between: a readout of where the ball is, world-to-world jumps, the catalog
- * and the overview. `P` hides the panel for the show alone. `?catalog=1`
- * opens the sheet of every piece instead of the show; `?solo=<piece>` shows
- * one piece's worlds. Escape steps back out: from a solo to the catalog,
- * from the catalog to the show.
+ * between: a readout of where the ball is and which world comes next, the
+ * loop as four chips with the current one lit, world-to-world jumps, the
+ * catalog and the overview. `P` hides the panel for the show alone.
+ * `?catalog=1` opens the sheet of every piece instead of the show;
+ * `?solo=<piece>` shows one piece's worlds; `?world=<name>` keeps the show
+ * in one world instead of going round the loop. Escape steps back out: from
+ * a solo to the catalog, from the catalog to the show.
  */
 
 const stage = document.getElementById('stage')!
@@ -22,6 +25,7 @@ const panelRoot = document.getElementById('panel')!
 
 let seed = randomSeed()
 let solo: string | null = null
+let world: string | null = null
 let catalogOn = false
 
 function readUrl(): void {
@@ -30,10 +34,12 @@ function readUrl(): void {
   catalogOn = params.get('catalog') === '1'
   // The catalog is a sheet of every piece; it never narrows to one.
   solo = catalogOn ? null : params.get('solo')
+  const pin = params.get('world')
+  world = pin && worldByName(pin) ? pin : null
 }
 readUrl()
 
-let show = new Show(seed, solo)
+let show = new Show(seed, { solo, world })
 
 /* ------------------------------------------------------------------ clock */
 
@@ -67,6 +73,7 @@ function writeUrl(push = false): void {
   const q = new URLSearchParams()
   q.set('seed', seed)
   if (solo) q.set('solo', solo)
+  if (world) q.set('world', world)
   if (catalogOn) q.set('catalog', '1')
   const url = `?${q.toString()}`
   if (push) history.pushState(null, '', url)
@@ -86,7 +93,7 @@ writeUrl()
 
 /** The right thing on the canvas for the mode: the show, or the sheet of every piece. */
 function mount(): View {
-  if (catalogOn) return createCatalog(stage, seed, { time: now }, (name) => pick(name))
+  if (catalogOn) return createCatalog(stage, seed, { time: now }, (name, from) => pick(name, from))
   const s = createStage(stage, show, { time: now })
   s.setOverview(overview)
   return s
@@ -94,7 +101,7 @@ function mount(): View {
 
 /** Rebuild everything from the seed and the mode, from the top of the clock. */
 function rebuild(push = false): void {
-  show = new Show(seed, solo)
+  show = new Show(seed, { solo, world })
   view.destroy()
   view = mount()
   seek(0)
@@ -109,6 +116,7 @@ function reroll(next = randomSeed()): void {
 
 function openCatalog(): void {
   solo = null
+  world = null
   catalogOn = true
   rebuild()
 }
@@ -118,11 +126,18 @@ function closeCatalog(): void {
   rebuild()
 }
 
-/** From the catalog into one piece's worlds; a step in the history, so back is the sheet. */
-function pick(name: string): void {
+/** From the catalog into one piece's worlds, in the world it belongs to; a step in the history, so back is the sheet. */
+function pick(name: string, from: string): void {
   solo = name
+  world = from
   catalogOn = false
   rebuild(true)
+}
+
+/** Stay in one world, or go round the loop again. */
+function pinWorld(name: string | null): void {
+  world = name
+  rebuild()
 }
 
 /** Escape: out of a solo to the catalog, out of the catalog to the show. */
@@ -164,9 +179,23 @@ rerollBtn.addEventListener('click', () => reroll())
 const copyBtn = copyButton(() => navigator.clipboard.writeText(location.href), 'Copy a link to this show')
 seedCard(panelRoot, seedInput, [rerollBtn, copyBtn])
 
-// World — where the ball is, and the jumps.
-const world = section(panelRoot, 'World')
+// World — where the ball is, the loop, and the jumps.
+const worldSec = section(panelRoot, 'World')
 const readout = el('div', { class: 'readout' })
+// The loop: one chip a world, in order, the current one lit. A chip jumps
+// to the next visit to that world; Pin keeps the show there.
+const chips = WORLDS.map((w) => {
+  const b = el('button', { type: 'button', title: `Skip to the next visit to the ${w.label.toLowerCase()}` }, [w.label])
+  b.addEventListener('click', () => {
+    if (show.pinned && show.pinned !== w) return
+    seek(show.begin(show.nextVisit(show.indexAt(now()), w)))
+  })
+  return b
+})
+const loopSeg = el('div', { class: 'seg', role: 'group', 'aria-label': 'The loop' }, chips)
+const pinBtn = el('button', { class: 'chip', title: 'Stay in this world instead of going round the loop' }, ['Pin'])
+pinBtn.addEventListener('click', () => pinWorld(world ? null : show.at(now()).universe.world.name))
+const loop = el('div', { class: 'row deck' }, [loopSeg, pinBtn])
 const prevBtn = el('button', { title: 'Back to the start of the previous world' }, ['\u2190 world'])
 prevBtn.addEventListener('click', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1))))
 const nextBtn = el('button', { title: 'Skip to the next world (N)' }, ['world \u2192', el('kbd', {}, ['N'])])
@@ -179,7 +208,7 @@ const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)' }, [
 overviewBtn.addEventListener('click', () => setOverview(!overview))
 const jumps = el('div', { class: 'row' }, [prevBtn, nextBtn, restartBtn])
 const views = el('div', { class: 'row' }, [catalogBtn, overviewBtn])
-world.append(readout, jumps, views)
+worldSec.append(readout, loop, jumps, views)
 
 // Transport — the clock, over the current world.
 const transport = section(panelRoot, 'Transport', 'transport')
@@ -226,7 +255,10 @@ function sync(): void {
   catalogBtn.textContent = catalogOn ? 'Exit catalog' : 'Catalog'
   if (!catalogOn) catalogBtn.append(el('kbd', {}, ['C']))
   catalogBtn.classList.toggle('on', catalogOn)
+  pinBtn.textContent = world ? 'Unpin' : 'Pin'
+  pinBtn.classList.toggle('on', !!world)
   // The sheet has no worlds to jump between and no world to scrub.
+  loop.hidden = catalogOn
   jumps.hidden = catalogOn
   overviewBtn.hidden = catalogOn
   scrub.hidden = catalogOn
@@ -241,12 +273,16 @@ function tick(): void {
   const t = now()
   const here = show.at(t)
   const u = here.universe
+  // Which world, and which comes next (or that the show is pinned here).
+  const next = show.pinned ? null : nextWorld(u.world)
   const text = catalogOn
-    ? `catalog · ${u.theme.label}${solo ? ` · ${solo}` : ''}`
-    : `world ${u.index} · ${u.theme.label} · ${u.taste} · ${here.placed.piece.name}${solo ? ` · solo` : ''}`
+    ? `catalog · ${WORLDS.map((w) => w.label.toLowerCase()).join(' → ')}${solo ? ` · ${solo}` : ''}`
+    : `world ${u.index} · ${u.world.label.toLowerCase()}${next ? ` → ${next.label.toLowerCase()}` : ' · pinned'}\n${u.theme.label} · ${u.taste} · ${here.placed.piece.name}${solo ? ` · solo` : ''}`
   if (text !== lastReadout) {
     lastReadout = text
-    readout.textContent = text
+    const [head, tail] = text.split('\n')
+    readout.replaceChildren(el('b', {}, [head]), ...(tail ? [el('br'), tail] : []))
+    chips.forEach((chip, i) => chip.classList.toggle('on', !catalogOn && WORLDS[i] === u.world))
   }
   const clock = catalogOn ? `${t.toFixed(1)}s` : `${here.local.toFixed(1)} / ${u.journey.toFixed(0)}s`
   if (clock !== lastTime) {
@@ -322,6 +358,7 @@ if (import.meta.env.DEV) {
     setPaused,
     reroll,
     pick,
+    pinWorld,
     setCatalog: (on: boolean) => (on ? openCatalog() : closeCatalog()),
     togglePanel: () => shell.toggle(),
     show: () => show,

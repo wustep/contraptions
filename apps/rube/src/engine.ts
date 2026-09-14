@@ -287,6 +287,50 @@ function drawBackdrop(
       const y = sy(r + 0.5)
       p.line(view.x, y, view.x + W, y)
     }
+  } else if (u.backdrop === 'grid') {
+    // The arcade's floor: a grid of faint lines, every cell.
+    ink.setAlpha(22)
+    p.stroke(ink)
+    p.strokeWeight(1)
+    for (let r = r0; r <= r1; r++) p.line(view.x, sy(r + 0.5), view.x + W, sy(r + 0.5))
+    for (let c = c0; c <= c1; c++) p.line(sx(c + 0.5), view.y, sx(c + 0.5), view.y + H)
+  } else if (u.backdrop === 'waves') {
+    // The harbor's distance: a short wave-mark or two a cell, scattered, like a chart's.
+    ink.setAlpha(40)
+    p.stroke(ink)
+    p.strokeWeight(Math.max(1, k * 0.012))
+    p.noFill()
+    for (let c = c0; c <= c1; c++) {
+      for (let r = r0; r <= r1; r++) {
+        if (hash(c, r, 3) > 0.55) continue
+        const x = c - 0.5 + 0.15 + hash(c, r, 11) * 0.5
+        const y = r - 0.5 + 0.15 + hash(c, r, 21) * 0.7
+        const w = 0.16 + hash(c, r, 31) * 0.1
+        p.beginShape()
+        for (let i = 0; i <= 8; i++) {
+          const f = i / 8
+          p.vertex(sx(x + w * f), sy(y + 0.018 * Math.sin(f * Math.PI * 2)))
+        }
+        p.endShape()
+      }
+    }
+  } else if (u.backdrop === 'sprigs') {
+    // The garden's paper: a sprig — two little leaves on a stalk — here and there.
+    ink.setAlpha(46)
+    p.stroke(ink)
+    p.strokeWeight(Math.max(1, k * 0.012))
+    for (let c = c0; c <= c1; c++) {
+      for (let r = r0; r <= r1; r++) {
+        if (hash(c, r, 4) > 0.5) continue
+        const x = sx(c - 0.5 + 0.15 + hash(c, r, 12) * 0.7)
+        const y = sy(r - 0.5 + 0.15 + hash(c, r, 22) * 0.7)
+        const s = k * (0.05 + hash(c, r, 32) * 0.03)
+        const lean = (hash(c, r, 42) - 0.5) * 0.6
+        p.line(x, y, x + lean * s, y - s * 1.6)
+        p.line(x + lean * s * 0.5, y - s * 0.8, x + lean * s * 0.5 - s * 0.7, y - s * 1.1)
+        p.line(x + lean * s * 0.7, y - s * 1.15, x + lean * s * 0.7 + s * 0.7, y - s * 1.45)
+      }
+    }
   } else {
     p.noStroke()
     for (let c = c0; c <= c1; c++) {

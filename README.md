@@ -8,15 +8,15 @@ Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607) —
 heavy ink outlines, one flat fill per part, a handful of bright colors on paper.
 
 Two modes of one thing live here. The front door is **Machine** — one ball
-on one thread through a Rube Goldberg chain that never ends (`apps/rube/`,
-[below](#machine-appsrube); the code calls it the show). Beside it is
-**Explorations**: the generator the machine grew out of, seven modes of
-tiny machines on a grid with every dial exposed (`src/`; the code calls it
-the sandbox). Both wear the same chrome: one panel down the right edge at
-the window's full height, the canvas filling everything else, and a two-tab
-switch at the top of the panel — **Machine | Explorations** — that moves
-between them and carries the seed across. <kbd>P</kbd> hides the panel in
-either.
+on one thread through a Rube Goldberg chain that never ends, round four
+worlds in a fixed order (`apps/rube/`, [below](#machine-appsrube); the code
+calls it the show). Beside it is **Explorations**: the generator the machine
+grew out of, seven modes of tiny machines on a grid with every dial exposed
+(`src/`; the code calls it the sandbox). Both wear the same chrome: one
+panel down the right edge at the window's full height, the canvas filling
+everything else, and a two-tab switch at the top of the panel —
+**Machine | Explorations** — that moves between them and carries the seed
+across. <kbd>P</kbd> hides the panel in either.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
 **[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
@@ -25,7 +25,7 @@ either.
 npm install
 npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations
 npm run check        # headless smoke test of Explorations' pure core
-npm run check:rube   # headless checks on Machine: the planner, the chain, the ball, the tempo
+npm run check:rube   # headless checks on Machine: the worlds, the planner, the chain, the ball, the tempo
 npm run build        # one dist/: Machine at /, Explorations at /explorations/, /sandbox/ and /rube/ redirecting
 ```
 
@@ -54,6 +54,8 @@ explorations/index.html  Explorations
 sandbox/index.html       where Explorations used to live; redirects to /explorations/ and keeps the seed
 rube/index.html          where Machine used to live; redirects to / and keeps the seed
 apps/rube/               Machine (see below)
+  src/worlds.ts          the four worlds and the order the show visits them in
+  src/pieces/            one folder a world, each its own vocabulary; rail.ts and portal.ts are shared
 src/
   core/
     types.ts        the Contraption contract
@@ -379,49 +381,86 @@ wide on the new world.
 
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
 — `amber-gasket` is the seed to share: a switchback, two flippers, a
-zipline and a gravity inverter in the first world, then a black and white
-world, then terracotta.
+zipline and a gravity inverter in the workshop, then a harbor at sundown
+with two lighthouses and a crab, then a greenhouse, then neon.
 
 ```bash
 npm run dev           # http://localhost:8791/ — Machine; /explorations/ is Explorations
-npm run check:rube    # headless checks on the planner, the chain, the ball's state, the tempo
+npm run check:rube    # headless checks on the worlds, the planner, the chain, the ball's state, the tempo
 npm run build         # dist/ with Machine at /, Explorations at /explorations/, /sandbox/ and /rube/ redirecting
 ```
 
-The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
-world `i` is built from `seed#i`, so a link is the show, and any moment of
-it can be rebuilt on demand. The panel is Explorations' panel with the
-show's sections in it: the **seed** card rerolls (<kbd>R</kbd>) or copies
-the link; **World** reads out where the ball is — the world's index, its
-palette and taste, the piece in hand — and jumps world to world
-(<kbd>N</kbd> for the next), restarts, opens the **catalog**
-(<kbd>C</kbd>) or the **overview** of the whole map (<kbd>O</kbd>);
-**Transport** is play/pause (<kbd>space</kbd>), speed from ¼× to 4×, and a
-scrub bar over the current world; <kbd>←</kbd> <kbd>→</kbd> step a frame,
-with shift a second. `?solo=hammer` narrows the planner to one piece (plus rail and
-portals) for polishing it. Old links to `/rube/` still work: that page
-sends them to `/` with the seed.
+### Four worlds
 
-`?catalog=1` opens the **catalog** instead of the show: a sheet of all
-thirty-six pieces, each looping on its own between two portals in the
-seed's first palette, with its name under it. Click a piece to watch it
-alone (`?solo=<name>`); <kbd>esc</kbd> steps back out, from a solo to the
-catalog and from the catalog to the show. The panel's **Catalog** button is
-the same door, as is <kbd>c</kbd>.
+The show goes round **four worlds in a fixed order** — the way a climb
+goes through its biomes — and every world is a place with its own
+vocabulary of pieces, not a palette swap:
+
+| | World | The place | Its pieces |
+| --- | --- | --- | --- |
+| 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-four of them |
+| 2 | **Harbor** | a pier over water, tide and salt | buoy, wave, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool |
+| 3 | **Garden** | a greenhouse, soil and bloom | wateringcan, vine, bloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail |
+| 4 | **Arcade** | neon night: lights, scores and payouts | bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot |
+
+Workshop → harbor → garden → arcade → workshop, always. What the seed
+decides is everything *inside* a visit: which of the world's palettes it
+is painted in (each has two or three of its own, never shared), which of
+its tastes the planner leans on, how the map is laid out, and which pieces
+it draws — always and only from that world's pool. Two visits to the same
+world never look alike back to back. Each world has its own rail (a pier
+on pilings over still water, a path edge between stakes and tufts, a lit
+lane whose lamps come on as the ball passes) and its own backdrop
+(chart-marks for the harbor, sprigs for the garden, stars or a grid for
+the arcade). The portal is the same door everywhere.
+
+The seed is in the URL (`?seed=amber-gasket`) and fixes the whole future:
+world `i` is a visit to world `i mod 4` of the loop, built from `seed#i`,
+so a link is the show, and any moment of it can be rebuilt on demand. The
+panel is Explorations' panel with the show's sections in it: the **seed**
+card rerolls (<kbd>R</kbd>) or copies the link; **World** reads out where
+the ball is — the world's index, which world it is and which comes next,
+its palette and taste, the piece in hand — shows the loop as four chips
+with the current one lit (click one to jump to the next visit to that
+world; **Pin** to stay there), jumps world to world (<kbd>N</kbd> for the
+next), restarts, opens the **catalog** (<kbd>C</kbd>) or the **overview**
+of the whole map (<kbd>O</kbd>); **Transport** is play/pause
+(<kbd>space</kbd>), speed from ¼× to 4×, and a scrub bar over the current
+world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a second.
+`?solo=hammer` narrows the planner to one piece (plus rail and portals)
+for polishing it, and keeps the show in that piece's world; `?world=harbor`
+keeps it in one world on its own. Old links to `/rube/` still work: that
+page sends them to `/` with the seed.
+
+`?catalog=1` opens the **catalog** instead of the show: a sheet of every
+piece **grouped by world** — four bands in the loop's order, each on its
+own paper in its own ink — each piece looping on its own between two
+portals with its name under it. It scrolls when the four bands are taller
+than the screen. Click a piece to watch it alone (`?solo=<name>`, in its
+world); <kbd>esc</kbd> steps back out, from a solo to the catalog and from
+the catalog to the show. The panel's **Catalog** button is the same door,
+as is <kbd>c</kbd>.
 
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats
 back to back, then a flight when one fits, then a breath of rail. The
 ball's state rides the chain: its colour and which ball holds the thread,
-so a piece can change it and the next piece knows. Three pieces do; they
-are capped at two a map and never absent for three maps running.
+so a piece can change it and the next piece knows. Every world has pieces
+that do (the workshop's painter, cradle and inverter; the harbor's octopus
+and oyster; the garden's sunflower and pod; the arcade's changer); they
+are capped at two a map and never absent for three maps running. A piece
+declares for itself whether it changes the ball (`dynamic`) or throws it
+(`flight`), and the planner reads the flags off whatever pool it is
+handed.
 
-**Thirty-six pieces**, curated from the eighty-odd toys in the other
+### The workshop's pieces
+
+**Thirty-four pieces**, curated from the eighty-odd toys in the other
 catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
 | --- | --- |
-| rail | a plain cell, so the beats have room to land |
+| rail | a plain cell, so the beats have room to land: a post, a bracket, a riveted plate |
 | hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, a wedge head drops a floor and squeezes the ball out fast |
 | seesaw | up, hang over the pivot, down faster, onto the stop |
 | bell | the clapper is in the way; it strikes the lip and the bell knocks on its pin; punctuation |
@@ -458,14 +497,75 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | inverter | gravity flips between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
+### The harbor's pieces
+
+A pier over water. Under every rail there is still water on pilings — still
+on purpose, since a piece's clock is its own and a ripple animated from it
+would jump phase at every cell edge; what moves is what the ball does to it.
+
+| Piece | What happens |
+| --- | --- |
+| rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
+| buoy | the deck stops; a bell buoy rocks under the ball, clangs, and runs it off faster |
+| wave | a swell curling over; the ball rides its face two cells over and a floor down, spray behind it |
+| lighthouse | in at the door; a lit window climbs the tower; out on the gallery one or two floors up; the beam turns |
+| crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
+| kelp | into a glass tank at the bottom; rises through the kelp on its own bubbles; out at the rim |
+| octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
+| anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
+| pelican | off the deck's end into the pouch; flown across two cells; tipped out onto the deck |
+| blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up onto a shelf |
+| oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
+| whirlpool | round and down the vortex to the drain, out a floor down facing back |
+
+### The garden's pieces
+
+| Piece | What happens |
+| --- | --- |
+| rail | a path edge on stakes, between tufts of grass and a pot with one flower |
+| wateringcan | tongue → cord → the can tips → a shower washes the ball on its way faster |
+| vine | onto a leaf in a pot; the vine shoots up the trellis with it, leaves unfurling; out one or two floors up |
+| bloom | round and down the inside of a trumpet flower, down the hollow stem, out at the root a floor down |
+| wheelbarrow | into the tray; the barrow trundles two cells to a chock and tips it out |
+| sprinkler | onto the head; the tap opens; spun off across a flowerbed |
+| sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
+| pod | into a seed pod; it swells and bursts; a seed shoots out and takes the thread |
+| burrow | into a hole; a ridge of earth runs down the soil; out of a molehill a floor down; the mole looks out |
+| hose | into a coiled hose; a bulge goes round two and a half times; out of the nozzle |
+| rake | onto the tines; the handle comes up and over and cracks the ball on its way |
+| snail | up the tail onto the shell; carried a cell, slowly, leaving a trail; off over the head |
+
+### The arcade's pieces
+
+Neon night. The palettes are dark and a colour laid down with a soft halo
+reads as a lit tube; the halo is the only translucency in the show, and
+scores pop off hits in a three-by-five bitmap font.
+
+| Piece | What happens |
+| --- | --- |
+| rail | a lit lane: a lamp, a strip or chevrons that come on as the ball passes |
+| bumper | clips the skirt; the cap slams, the lamp lights, +100, out faster |
+| spinner | shoves through a hanging plate that spins on, counting its turns in lamps |
+| changer | into the coin slot; chunk; a token drops out the far side and takes the thread |
+| ticket | into the hopper; tickets feed out below while it whirs; out of the prize chute one or two floors down |
+| zigzag | down lit tubes to pads that turn the ball; one or two floors; +10 a pad |
+| pachinko | off a lip through five rows of pins, each lighting as it is struck; the jackpot pocket; two floors down |
+| skee | a kicker, up the alley, off the lip, into the fifty ring a floor up |
+| hockey | onto the air table; a mallet slaps the ball the length of it into the goal; the board goes to 1 |
+| claw | into the cabinet; the claw comes down, closes, lifts, trundles to the chute, lets go |
+| striker | onto the puck; the latch trips; up the tower to the bell, lighting every level; ding; one or two floors up |
+| slingshot | into the band; the kicker fires; flung a floor up onto a shelf |
+
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to
 the ball, and the show draws the ball once on the joined path from one
 clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
-worlds headless and asserts all of it: continuity at every hand-off, one
-portal at each end and none between, the ball's state carried piece to
-piece, and the tempo.
+worlds headless and asserts all of it: the four worlds in order, three
+times round, every piece from its own world's pool, every palette and
+taste the world's own and never the same twice running, every lane joined
+up inside its piece, continuity at every hand-off, one portal at each end
+and none between, the ball's state carried piece to piece, and the tempo.
 
 ## License
 

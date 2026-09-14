@@ -294,6 +294,10 @@ export interface Piece<S = unknown> {
   name: string
   /** Relative likelihood of being picked by the planner. 0 for the pieces it places by hand. */
   weight: number
+  /** Throws, flings or carries the ball somewhere else: one of the tempo's accents. */
+  flight?: boolean
+  /** Changes the ball itself — its colour, or which ball holds the thread. Rare enough to stay special. */
+  dynamic?: boolean
   /** Propose a placement, or null if nothing fits here. */
   place(ctx: PlaceCtx): Placement<S> | null
   draw(p: p5, s: S, c: PieceCtx): void
@@ -303,6 +307,23 @@ export interface Piece<S = unknown> {
 
 /** Identity helper that pins the state type. */
 export const definePiece = <S>(spec: Piece<S>): Piece<S> => spec
+
+/**
+ * `items` in a random order that favours heavy ones first: a weighted draw
+ * without replacement. What a piece with variants uses to decide which to
+ * try first, so a taste can lean on the tall or the deep without ruling
+ * the others out.
+ */
+export function rankBy<T>(rng: Rng, items: readonly T[], weight: (item: T) => number): T[] {
+  const pool = [...items]
+  const out: T[] = []
+  while (pool.length) {
+    const pick = rng.weighted(pool, weight)
+    out.push(pick)
+    pool.splice(pool.indexOf(pick), 1)
+  }
+  return out
+}
 
 /* ------------------------------------------------------------------ drawing */
 

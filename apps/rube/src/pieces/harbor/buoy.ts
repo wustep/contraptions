@@ -1,0 +1,102 @@
+import { outline, solid } from '../../../../../src/core/draw'
+import { FAST, FLOOR, ROLL, definePiece, over, rail, ramp, roll, wait, type Lane } from '../../parts'
+import { piling, splash, water } from './sea'
+
+/**
+ * A bell buoy in a gap in the pier. The deck stops; a buoy floats in the
+ * water between, its flat top at deck height, a bell in a cage on it and
+ * a chain down to a sinker. The ball rolls on; the near side dips under
+ * its weight and it slows, climbing; at the middle the buoy rocks over,
+ * the bell clangs against its cage, and the far side going down runs the
+ * ball off onto the deck faster than it came. The buoy rocks itself still
+ * afterwards, ringing down.
+ */
+const GAP = 0.28
+const DECK = 0.26
+/** The float's centre, which it rocks about. */
+const CY = 0.3
+const CAGE_H = -0.3
+const ROCK = 0.12
+const FIRE = (0.5 - GAP) / ROLL + GAP / ((ROLL + 1.4) / 2) + ROCK
+
+export const buoy = definePiece<{ color: string }>({
+  name: 'buoy',
+  weight: 1,
+  place: ({ color, fits }) => {
+    if (!fits([[0, 0]], [1, 0])) return null
+    const lane: Lane = {
+      segs: [
+        roll([-0.5, 0], [-GAP, 0], ROLL),
+        ramp([-GAP, 0], [0, 0], ROLL, 1.4),
+        wait([0, 0], ROCK),
+        ramp([0, 0], [GAP, 0], 1.0, FAST),
+        ramp([GAP, 0], [0.5, 0], FAST, ROLL),
+      ],
+      fire: FIRE,
+    }
+    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color } }
+  },
+  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+    // The tilt: the near side dips as the ball climbs on, then the buoy
+    // rocks over the other way at the fire and rings itself down.
+    const onto = over(t, (0.5 - GAP) / ROLL, FIRE - ROCK)
+    const tilt =
+      since < 0 ? -0.16 * onto
+      : since < 0.15 ? -0.16 + 0.4 * over(since, 0, 0.15)
+      : 0.24 * Math.cos((since - 0.15) * 7) * Math.exp(-(since - 0.15) * 1.6)
+    const clang = since < 0 ? 0 : Math.exp(-since * 3)
+
+    // The pier either side, on pilings, and the water in the gap.
+    water(p, k, ink, weight, -0.5, 0.5)
+    rail(p, k, ink, weight, -0.5, -GAP)
+    rail(p, k, ink, weight, GAP, 0.5)
+    piling(p, k, ink, weight, -GAP - 0.05)
+    piling(p, k, ink, weight, GAP + 0.05)
+    // The chain to the sinker on the seabed: not part of the rocking.
+    outline(p, ink, weight * 0.9)
+    for (let y = CY + 0.1; y < 0.48; y += 0.04) p.line(0, y * k, 0.01 * k, (y + 0.025) * k)
+    solid(p, ink, weight, ink)
+    p.rect(0, 0.485 * k, 0.1 * k, 0.03 * k)
+
+    p.push()
+    p.translate(0, CY * k)
+    p.rotate(tilt)
+    p.translate(0, -CY * k)
+    // The float: a deck on a tapering hull, with a stripe.
+    solid(p, ink, weight, s.color)
+    p.quad(-DECK * 0.92 * k, (FLOOR + 0.06) * k, DECK * 0.92 * k, (FLOOR + 0.06) * k, 0.1 * k, (CY + 0.14) * k, -0.1 * k, (CY + 0.14) * k)
+    p.rect(0, (FLOOR + 0.03) * k, DECK * 2 * k, 0.06 * k)
+    p.fill(ink)
+    p.noStroke()
+    p.quad(-0.17 * k, 0.27 * k, 0.17 * k, 0.27 * k, 0.15 * k, 0.31 * k, -0.15 * k, 0.31 * k)
+    // The cage: two posts and a crossbar, the bell hung under it.
+    outline(p, ink, weight)
+    for (const x of [-0.09, 0.09]) p.line(x * k, FLOOR * k, x * k, CAGE_H * k)
+    p.line(-0.11 * k, CAGE_H * k, 0.11 * k, CAGE_H * k)
+    p.line(0, CAGE_H * k, 0, (CAGE_H + 0.05) * k)
+    // The bell swings against the tilt and knocks the cage.
+    p.push()
+    p.translate(0, (CAGE_H + 0.05) * k)
+    p.rotate(-tilt * 1.6)
+    solid(p, ink, weight, bg)
+    p.beginShape()
+    p.vertex(-0.06 * k, 0.12 * k)
+    p.bezierVertex(-0.06 * k, 0, -0.03 * k, 0, 0, 0)
+    p.bezierVertex(0.03 * k, 0, 0.06 * k, 0, 0.06 * k, 0.12 * k)
+    p.endShape(p.CLOSE)
+    p.line(-0.06 * k, 0.12 * k, 0.06 * k, 0.12 * k)
+    p.pop()
+    p.pop()
+
+    // The clang: rings off the cage, and a ripple where the float dipped.
+    if (clang > 0.05) {
+      p.push()
+      p.noFill()
+      p.stroke(s.color)
+      p.strokeWeight(weight * clang)
+      for (let i = 1; i <= 2; i++) p.circle(0, (CAGE_H + 0.1) * k, (0.24 + i * 0.16 + (1 - clang) * 0.3) * k)
+      p.pop()
+    }
+    splash(p, k, s.color, weight, 0.2, CY + 0.06, over(since, 0.05, 0.5), 0.6)
+  },
+})

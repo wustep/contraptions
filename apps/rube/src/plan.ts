@@ -59,10 +59,14 @@ export interface PlanCtx {
   dynamics: { boost: number; cap: number }
 }
 
-/** The pieces that change the ball itself. Rare enough to stay special. */
-export const DYNAMIC = new Set(['painter', 'cradle', 'inverter'])
-/** The pieces that throw, fling or carry the ball somewhere else: the tempo's accents. */
-export const FLIGHT = new Set(['cannon', 'trebuchet', 'trampoline', 'plunger', 'flipper', 'rocket', 'zipline', 'trapeze', 'toaster', 'loop'])
+/**
+ * Which pieces change the ball, and which throw it, is each piece's to
+ * declare (`dynamic`, `flight`): the planner reads the flags off whatever
+ * pool it is handed, so a world's vocabulary is the only place its pieces
+ * are listed.
+ */
+export const isDynamic = (piece: Piece<any>): boolean => !!piece.dynamic
+export const isFlight = (piece: Piece<any>): boolean => !!piece.flight
 
 export interface ChainSpec {
   box: Box
@@ -150,20 +154,20 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       // Rail is for breathing between beats, unless it is all there is: a
       // solo of rail, or of portal, is a rail between two portals.
       if (c.name === 'rail') return (phase === 'breathe' || pool.length === 1) && rails < 3
-      if (DYNAMIC.has(c.name) && dynamics >= ctx.dynamics.cap) return false
+      if (isDynamic(c) && dynamics >= ctx.dynamics.cap) return false
       return phase !== 'breathe'
     })
-    const tempo = (name: string) => {
-      if (name === 'rail') return 1
-      let w = DYNAMIC.has(name) ? ctx.dynamics.boost : 1
-      if (phase === 'flight') w *= FLIGHT.has(name) ? 6 : 0.2
+    const tempo = (c: Piece<any>) => {
+      if (c.name === 'rail') return 1
+      let w = isDynamic(c) ? ctx.dynamics.boost : 1
+      if (phase === 'flight') w *= isFlight(c) ? 6 : 0.2
       return w
     }
     let chosen: { piece: Piece<any>; placement: Placement<unknown> } | null = null
     const tried = new Set<string>()
     while (tried.size < candidates.length) {
       const untried = candidates.filter((c) => !tried.has(c.name))
-      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c.name))
+      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c))
       tried.add(piece.name)
       const placement = piece.place({
         rng: rng.fork(`${placed}:${piece.name}`),
@@ -188,7 +192,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
     const name = chosen.piece.name
     rails = name === 'rail' ? rails + 1 : 0
     prev = name
-    if (DYNAMIC.has(name)) dynamics++
+    if (isDynamic(chosen.piece)) dynamics++
     if (name !== 'rail') placed++
     // Advance the tempo.
     if (phase === 'run') {
