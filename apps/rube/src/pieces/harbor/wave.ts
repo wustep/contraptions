@@ -1,6 +1,6 @@
 import { outline } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, over, rail, roll, type Lane, type Pt, type Seg } from '../../parts'
-import { piling, seabed } from './sea'
+import { piling, seaColor, seabed } from './sea'
 
 /**
  * A wave. The pier stops, and where the next cell should be a swell has
@@ -40,7 +40,7 @@ export const wave = definePiece<{ color: string; at: number[] }>({
   name: 'wave',
   weight: 1,
   flight: true,
-  place: ({ color, fits }) => {
+  place: ({ color, fits, theme }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
@@ -53,7 +53,7 @@ export const wave = definePiece<{ color: string; at: number[] }>({
       segs: [roll([-0.5, 0], [LIP, 0], ROLL), ...segs],
       fire: (0.5 + LIP) / ROLL + at[N >> 1],
     }
-    return { cells, exit: { at: [2, 1], dir: 1 }, lane, state: { color, at } }
+    return { cells, exit: { at: [2, 1], dir: 1 }, lane, state: { color: seaColor(theme, color), at } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The pier the ball comes off, and the seabed the wave stands on.

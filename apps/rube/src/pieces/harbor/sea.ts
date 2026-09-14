@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
+import type { Theme } from '../../../../../src/core/themes'
 import { FLOOR, post } from '../../parts'
 
 /**
@@ -16,6 +17,23 @@ import { FLOOR, post } from '../../parts'
 
 /** Where the water lies under the deck. */
 export const WATER = 0.37
+
+/** How light a colour is. */
+export function luminance(hex: string): number {
+  const n = parseInt(hex.slice(1), 16)
+  return (((n >> 16) & 255) * 0.299 + ((n >> 8) & 255) * 0.587 + (n & 255) * 0.114) / 255
+}
+
+/**
+ * A colour for a body of water: the one the planner picked, unless it is
+ * so near the paper that a wave or a pool would vanish into it, in which
+ * case the palette's colour furthest from the paper.
+ */
+export function seaColor(theme: Theme, color: string): string {
+  const paper = luminance(theme.bg)
+  if (Math.abs(luminance(color) - paper) > 0.25) return color
+  return [...theme.colors].sort((a, b) => Math.abs(luminance(b) - paper) - Math.abs(luminance(a) - paper))[0]
+}
 /** Waves per cell. A whole number, so the line joins up at every edge. */
 const WAVES = 3
 const AMP = 0.022

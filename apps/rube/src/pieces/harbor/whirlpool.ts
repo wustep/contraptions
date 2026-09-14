@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, roll, segTime, type Pt, type Seg } from '../../parts'
-import { bubbles, piling, water } from './sea'
+import { bubbles, piling, seaColor, water } from './sea'
 
 /**
  * A whirlpool in a basin let into the pier. The deck stops at the rim;
@@ -33,7 +33,7 @@ function orbit(): Seg[] {
 export const whirlpool = definePiece<{ color: string }>({
   name: 'whirlpool',
   weight: 0.9,
-  place: ({ color, fits }) => {
+  place: ({ color, fits, theme }) => {
     const cells: Pt[] = [
       [0, 0],
       [0, 1],
@@ -53,7 +53,7 @@ export const whirlpool = definePiece<{ color: string }>({
       ramp([-ARC, 1], [-0.5, 1], ROLL * 1.4, ROLL),
     ]
     const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - fallDur
-    return { cells, exit: { at: [-1, 1], dir: -1 }, lane: { segs, fire }, state: { color } }
+    return { cells, exit: { at: [-1, 1], dir: -1 }, lane: { segs, fire }, state: { color: seaColor(theme, color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The deck to the rim, and the deck out below.

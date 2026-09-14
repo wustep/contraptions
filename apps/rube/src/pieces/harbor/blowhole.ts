@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { splash, water } from './sea'
+import { seaColor, splash, water } from './sea'
 
 /**
  * A blowhole. The deck runs onto a rock with a hole in its top; the ball
@@ -19,7 +19,7 @@ export const blowhole = definePiece<{ color: string }>({
   name: 'blowhole',
   weight: 1,
   flight: true,
-  place: ({ color, fits }) => {
+  place: ({ color, fits, theme }) => {
     const cells: Pt[] = [
       [0, 0],
       [0, -1],
@@ -35,7 +35,7 @@ export const blowhole = definePiece<{ color: string }>({
       ],
       fire: FIRE,
     }
-    return { cells, exit: { at: [1, -1], dir: 1 }, lane, state: { color } }
+    return { cells, exit: { at: [1, -1], dir: 1 }, lane, state: { color: seaColor(theme, color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The rumble: the rock shivers before the spout; the spout rises fast and falls back.

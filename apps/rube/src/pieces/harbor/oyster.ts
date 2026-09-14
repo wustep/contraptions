@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, wait, type BallChange, type Lane } from '../../parts'
-import { bubbles, piling, water } from './sea'
+import { bubbles, luminance, piling, water } from './sea'
 
 /**
  * An oyster in the deck. The rail dips into the open lower shell; the
@@ -15,12 +15,6 @@ const SNAP = 0.12
 const SHUT = 0.55
 const T_STOP = 0.28 / ROLL + 0.22 / (ROLL / 2)
 const FIRE = T_STOP + SNAP
-
-/** How light a colour is, for picking the pearl. */
-function luminance(hex: string): number {
-  const n = parseInt(hex.slice(1), 16)
-  return ((n >> 16) & 255) * 0.299 + ((n >> 8) & 255) * 0.587 + (n & 255) * 0.114
-}
 
 export const oyster = definePiece<{ color: string; pearl: string }>({
   name: 'oyster',
