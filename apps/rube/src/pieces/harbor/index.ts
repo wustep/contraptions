@@ -29,7 +29,7 @@ import { whirlpool } from './whirlpool'
  *   kelp        into a tank at the bottom, bending upward; rises through the kelp on its own bubbles; out at the rim
  *   octopus     eyes follow the ball; a jet of ink from the siphon; it leaves a new colour
  *   anchor      onto the stock; the pawl trips; down one to three floors on the chain; the seabed
- *   pelican     off the deck's end into the pouch; flown across two cells; the pouch parts and it drops out
+ *   pelican     off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies to the far post, tips its head and the ball rolls out
  *   blowhole    into the dip over the hole; a rumble; the spout throws it a floor up, past a shelf and down onto it
  *   oyster      into the open shell; snap; a beat; a pearl rolls out and takes the thread
  *   whirlpool   round the near side and round and down the vortex to the drain, out a floor down facing back
