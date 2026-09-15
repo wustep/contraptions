@@ -16,7 +16,8 @@ grew out of, seven modes of tiny machines on a grid with every dial exposed
 panel down the right edge at the window's full height, the canvas filling
 everything else, and a two-tab switch at the top of the panel —
 **Machine | Explorations** — that moves between them and carries the seed
-across. <kbd>P</kbd> hides the panel in either.
+across. Both open with the panel hidden; <kbd>P</kbd> (or the tab on the
+edge) brings it out, and <kbd>P</kbd> puts it away again.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
 **[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
@@ -372,8 +373,8 @@ is for PNG; progress is a view of the clock and never enters the URL.
 
 A second app in the same repo, and a different thing: not a grid of
 machines but **one ball on one thread**, rolling through a Rube Goldberg
-chain that never ends. The canvas fills everything the panel leaves;
-<kbd>P</kbd> hides the panel and the show has the whole window. The camera
+chain that never ends. The show opens with the whole window; <kbd>P</kbd>
+brings the panel out and the canvas fills everything it leaves. The camera
 follows the ball; every portal is a door to a whole new map — a new
 palette, a new taste in pieces, a new layout — and the cut is an iris: the
 camera pushes in as the ball is swallowed, holds shut a beat, and opens
