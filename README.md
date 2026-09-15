@@ -513,8 +513,8 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | kelp | into a glass tank at the bottom; rises through the kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
-| pelican | off the deck's end into the pouch; flown across two cells; tipped out onto the deck |
-| blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up onto a shelf |
+| pelican | off the deck's end into the pouch; flown across two cells; the pouch parts and the ball drops out onto the deck |
+| blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up, past a shelf and down onto it |
 | oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
 | whirlpool | round and down the vortex to the drain, out a floor down facing back |
 
@@ -530,10 +530,10 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | sprinkler | onto the head; the tap opens; spun off across a flowerbed |
 | sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
 | pod | into a seed pod; it swells and bursts; a seed shoots out and takes the thread |
-| burrow | into a hole; a ridge of earth runs down the soil; out of a molehill a floor down; the mole looks out |
+| burrow | into a hole; a ridge of earth runs down the soil; up out of the top of a molehill a floor down, over its foot onto the rail; the mole looks out |
 | hose | into a coiled hose; a bulge goes round two and a half times; out of the nozzle |
-| rake | onto the tines; the handle comes up and over and cracks the ball on its way |
-| snail | up the tail onto the shell; carried a cell, slowly, leaving a trail; off over the head |
+| rake | over the handle and onto the tines; the handle comes up behind, over the top, and cracks the ball on its back; it shoots off and the handle lies ahead |
+| snail | up the tail onto the shell; carried most of a cell, slowly, leaving a trail; a shrug tips the shell and the ball rolls off its front, over the head |
 
 ### The arcade's pieces
 
@@ -544,16 +544,16 @@ scores pop off hits in a three-by-five bitmap font.
 | Piece | What happens |
 | --- | --- |
 | rail | a lit lane: a lamp, a strip or chevrons that come on as the ball passes |
-| bumper | clips the skirt; the cap slams, the lamp lights, +100, out faster |
-| spinner | shoves through a hanging plate that spins on, counting its turns in lamps |
-| changer | into the coin slot; chunk; a token drops out the far side and takes the thread |
+| bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +100, out faster |
+| spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, counting its turns in lamps |
+| changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
 | ticket | into the hopper; tickets feed out below while it whirs; out of the prize chute one or two floors down |
 | zigzag | down lit tubes to pads that turn the ball; one or two floors; +10 a pad |
-| pachinko | off a lip through five rows of pins, each lighting as it is struck; the jackpot pocket; two floors down |
+| pachinko | off a lip through five rows of pins, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
 | skee | a kicker, up the alley, off the lip, into the fifty ring a floor up |
-| hockey | onto the air table; a mallet slaps the ball the length of it into the goal; the board goes to 1 |
+| hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
 | claw | into the cabinet; the claw comes down, closes, lifts, trundles to the chute, lets go |
-| striker | onto the puck; the latch trips; up the tower to the bell, lighting every level; ding; one or two floors up |
+| striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level; ding; the puck cants and the ball rolls off, one or two floors up |
 | slingshot | into the band; the kicker fires; flung a floor up onto a shelf |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,

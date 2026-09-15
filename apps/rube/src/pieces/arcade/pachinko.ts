@@ -1,4 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
+import { easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, type Lane, type Pt, type Seg } from '../../parts'
 import { flash, glow, lamp, marquee, score } from './neon'
 
@@ -7,8 +8,9 @@ import { flash, glow, lamp, marquee, score } from './neon'
  * drops into a board of pins and goes down it pin to pin, left, right,
  * left — each pin lighting as it is struck — and lands in the jackpot
  * pocket at the bottom, which lights up the board, pays out five hundred,
- * and tips the ball out onto the rail below, on or back the way it came.
- * Which way it goes at each pin is the seed's.
+ * drops the pocket's side like a drawbridge and lets the ball out through
+ * a gate in the board's wall onto the rail below, on or back the way it
+ * came. Which way it goes at each pin is the seed's.
  */
 export interface PachinkoState {
   color: string
@@ -24,6 +26,11 @@ const ROW_GAP = 0.32
 const PIN_R = 0.03
 const HOP = 0.17
 const POCKET_Y = 2
+const CUP = 0.15
+const WALL = 0.36
+/** The pocket's exit side drops open this long after the jackpot; the ball rolls once it is down. */
+const OPEN_AT = 0.12
+const OPEN = 0.15
 
 export const pachinko = definePiece<PachinkoState>({
   name: 'pachinko',
@@ -60,7 +67,7 @@ export const pachinko = definePiece<PachinkoState>({
       landing.ease = 'in'
       segs.push(landing)
       t += 0.2
-      segs.push({ from: pocket, to: pocket, dur: 0.3 })
+      segs.push({ from: pocket, to: pocket, dur: OPEN_AT + OPEN })
       segs.push(ramp(pocket, [turn * 0.5, POCKET_Y], 0, ROLL))
       const lane: Lane = { segs, fire: t }
       return { cells, exit: { at: [turn, 2], dir: turn }, lane, state: { color, turn, path } }
@@ -74,10 +81,14 @@ export const pachinko = definePiece<PachinkoState>({
     rail(p, k, ink, weight, -0.5, LIP)
     outline(p, ink, weight)
     p.line(LIP * k, FLOOR * k, LIP * k, (FLOOR + 0.1) * k)
-    // The board: two side walls from under the lip to the pocket, glass between.
+    // The board: two side walls from under the lip to the floor, glass
+    // between; the exit side has a gate cut in it at the rail, the ball's
+    // height, for the payout to leave by.
     outline(p, ink, weight)
-    for (const x of [-0.36, 0.36]) p.line(x * k, 0.16 * k, x * k, (POCKET_Y + 0.5) * k)
-    p.line(-0.36 * k, (POCKET_Y + 0.5) * k, 0.36 * k, (POCKET_Y + 0.5) * k)
+    p.line(-turn * WALL * k, 0.16 * k, -turn * WALL * k, (POCKET_Y + 0.5) * k)
+    p.line(turn * WALL * k, 0.16 * k, turn * WALL * k, (POCKET_Y - 0.3) * k)
+    p.line(turn * WALL * k, (POCKET_Y + FLOOR) * k, turn * WALL * k, (POCKET_Y + 0.5) * k)
+    p.line(-WALL * k, (POCKET_Y + 0.5) * k, WALL * k, (POCKET_Y + 0.5) * k)
     // The jackpot's glow behind the board when it pays.
     glow(p, k, s.color, 0, POCKET_Y - 0.1, 0.4, jackpot)
     // The pins: staggered rows, each struck one lighting and staying lit a while.
@@ -95,16 +106,23 @@ export const pachinko = definePiece<PachinkoState>({
         if (struck) flash(p, k, s.color, weight, x, y, t - hit.at, 0.2, 0.05, 0.14)
       }
     }
-    // The pocket: a cup at the bottom with a lamp, and the flap that tips the ball out.
+    // The pocket: a cup at the bottom with a lamp. Its far wall is hinged
+    // at the foot and drops flat onto the rail out once the jackpot has
+    // paid, and the ball rolls out over it.
+    const drop = since < OPEN_AT ? 0 : (Math.PI / 2) * easeInQuad(over(since, OPEN_AT, OPEN_AT + OPEN))
     solid(p, ink, weight, s.color)
-    p.rect(0, (POCKET_Y + 0.22) * k, 0.3 * k, 0.16 * k, 0.02 * k)
+    p.rect(0, (POCKET_Y + 0.22) * k, CUP * 2 * k, 0.16 * k, 0.02 * k)
     outline(p, ink, weight)
-    p.line(-0.15 * k, (POCKET_Y - 0.06) * k, -0.15 * k, (POCKET_Y + 0.14) * k)
-    p.line(0.15 * k, (POCKET_Y - 0.06) * k, 0.15 * k, (POCKET_Y + 0.14) * k)
-    p.line(-0.15 * k, (POCKET_Y + FLOOR) * k, 0.15 * k, (POCKET_Y + FLOOR) * k)
+    p.line(-turn * CUP * k, (POCKET_Y - 0.06) * k, -turn * CUP * k, (POCKET_Y + 0.14) * k)
+    p.push()
+    p.translate(turn * CUP * k, (POCKET_Y + FLOOR) * k)
+    p.rotate(turn * drop)
+    p.line(0, 0.01 * k, 0, -(FLOOR + 0.06) * k)
+    p.pop()
+    p.line(-CUP * k, (POCKET_Y + FLOOR) * k, CUP * k, (POCKET_Y + FLOOR) * k)
     lamp(p, k, ink, weight, s.color, bg, 0, POCKET_Y + 0.22, 0.04, jackpot)
     // The rail out from the pocket's lip.
-    rail(p, k, ink, weight, turn * 0.15, turn * 0.5, POCKET_Y + FLOOR)
+    rail(p, k, ink, weight, turn * CUP, turn * 0.5, POCKET_Y + FLOOR)
     // The marquee along the foot of the board, chasing on the jackpot.
     marquee(p, k, ink, weight, s.color, bg, -0.3, 0.3, POCKET_Y + 0.42, 6, since, jackpot > 0.2)
     score(p, k, s.color, 0, POCKET_Y - 0.4, '+500', since, 1.2)

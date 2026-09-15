@@ -29,10 +29,10 @@ import { wheelbarrow } from './wheelbarrow'
  *   sprinkler    onto the head; the tap opens; spun off across a flowerbed
  *   sunflower    over a root; the head nods and dusts the ball with pollen; a new colour
  *   pod          into a seed pod; it swells and bursts; a seed shoots out and takes the thread
- *   burrow       into a hole; a ridge runs down the soil; out of a molehill a floor down
+ *   burrow       into a hole; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
  *   hose         into a coiled hose; a bulge goes round twice; out of the nozzle
- *   rake         onto the tines; the handle comes up and over and cracks it on its way
- *   snail        up the tail onto the shell; carried a cell, slowly; off over the head
+ *   rake         over the handle onto the tines; the handle comes up behind, over, and cracks it on the back; it shoots off
+ *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
  *   portal       the door at either end of a map; the far side is always a new map
  */
 

@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeOutCubic } from '../../../../../src/core/ease'
+import { easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
 import { glow, lamp, score, tube } from './neon'
 
@@ -8,8 +8,12 @@ import { glow, lamp, score, tube } from './neon'
  * the ball's weight sinks it onto the spring and trips the latch — and the
  * spring fires the puck up the tower with the ball riding it, lighting
  * every level it passes, one or two floors, to the bell at the top. Ding.
- * The puck latches there and the ball rolls off onto the rail, on or back
- * the way it came. The tower stays lit to the top, for a while.
+ * The puck latches there, cants toward the rail, and the ball rolls off
+ * onto it, on or back the way it came. The tower stays lit to the top, for
+ * a while.
+ *
+ * The ball sits on the puck the whole way: the same sink, the same
+ * easing up the slot, so neither runs ahead of the other.
  */
 export interface StrikerState {
   color: string
@@ -19,10 +23,23 @@ export interface StrikerState {
 
 const TOWER = 0.24
 const ARRIVE = arriveAt(0)
+/** How far the puck sinks under the ball's weight, and how long that takes. */
+const SINK_D = 0.04
+const SINK_T = 0.15
 const SINK = 0.3
 const FIRE_LATCH = ARRIVE + SINK
 const shootTime = (floors: number) => 0.3 + 0.18 * floors
 const DING = 0.25
+/** The puck's cant at the top, radians toward the rail, and how long after the ding it takes. */
+const CANT = 0.12
+const CANT_AT = DING - 0.1
+
+/** Where the puck's top is (the ball's centre line), `t` seconds in, for a tower of `floors`. */
+function puckAt(t: number, floors: number): number {
+  const launched = t - FIRE_LATCH
+  if (launched < 0) return t < ARRIVE ? 0 : SINK_D * easeOutQuad(Math.min(1, (t - ARRIVE) / SINK_T))
+  return SINK_D + (-floors - SINK_D) * easeOutQuad(Math.min(1, launched / shootTime(floors)))
+}
 
 export const striker = definePiece<StrikerState>({
   name: 'striker',
@@ -39,8 +56,9 @@ export const striker = definePiece<StrikerState>({
       const lane: Lane = {
         segs: [
           ...arrive([-0.5, 0], [0, 0]),
-          wait([0, 0], SINK),
-          { from: [0, 0], to: [0, -floors], dur: shoot, ease: 'out' },
+          { from: [0, 0], to: [0, SINK_D], dur: SINK_T, ease: 'out' },
+          wait([0, SINK_D], SINK - SINK_T),
+          { from: [0, SINK_D], to: [0, -floors], dur: shoot, ease: 'out' },
           wait([0, -floors], DING),
           ramp([0, -floors], [turn * 0.5, -floors], 0, ROLL),
         ],
@@ -53,12 +71,10 @@ export const striker = definePiece<StrikerState>({
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
     const top = -floors
-    const shoot = shootTime(floors)
     const launched = t - FIRE_LATCH
-    // The puck: sinks under the ball, shoots up, latches at the top.
-    const sink = t < ARRIVE ? 0 : launched < 0 ? 0.04 * Math.min(1, over(t, ARRIVE, ARRIVE + 0.15)) : 0
-    const up = launched < 0 ? 0 : easeOutCubic(Math.min(1, launched / shoot))
-    const puckY = up * top + sink
+    // The puck: sinks under the ball, shoots up, latches at the top and cants.
+    const puckY = puckAt(t, floors)
+    const cant = since < CANT_AT ? 0 : turn * CANT * easeOutCubic(over(since, CANT_AT, CANT_AT + 0.1))
     const ding = since < 0 ? 0 : Math.exp(-since * 2.5)
     const rock = since < 0 ? 0 : 0.14 * Math.sin(since * 26) * Math.exp(-since * 4)
 
@@ -89,12 +105,16 @@ export const striker = definePiece<StrikerState>({
     p.rotate(launched > 0 ? 0.8 : 0)
     p.line(0, 0, -0.1 * k, 0)
     p.pop()
-    // The puck the ball rides.
+    // The puck the ball rides, canting toward the rail once it has latched.
+    p.push()
+    p.translate(0, (puckY + FLOOR + 0.03) * k)
+    p.rotate(cant)
     solid(p, ink, weight, s.color)
-    p.rect(0, (puckY + FLOOR + 0.03) * k, 0.3 * k, 0.06 * k, 0.01 * k)
+    p.rect(0, 0, 0.3 * k, 0.06 * k, 0.01 * k)
     p.fill(ink)
     p.noStroke()
-    p.rect(0, (puckY + FLOOR + 0.02) * k, 0.06 * k, 0.03 * k)
+    p.rect(0, -0.01 * k, 0.06 * k, 0.03 * k)
+    p.pop()
     // The bell at the top, in a hood, rocking on the ding.
     glow(p, k, s.color, 0, top - 0.32, 0.22, ding)
     solid(p, ink, weight, s.color)
