@@ -5,17 +5,22 @@ import { drop, tuft } from './green'
 /**
  * A garden hose, coiled twice on a hook on the fence, its mouth at the
  * path's end and its nozzle pointing along the path a cell on. The ball
- * rolls into the mouth and is gone; a bulge travels round the coil, once,
- * twice, and the ball shoots out of the nozzle onto the path with a spit
- * of water behind it. The hose drips.
+ * rolls into the mouth and the hose swallows it: a bulge the ball's size
+ * travels round the coil, once, twice, gathering pace, and the ball shoots
+ * out of the nozzle onto the path with a spit of water behind it. The hose
+ * drips.
+ *
+ * The collars at the mouth and the nozzle stand in front of the ball, and
+ * the bulge is the ball's own colour and size, so going in and coming out
+ * are one motion with nothing popping.
  */
 const MOUTH = -0.24
 const NOZZLE = 1.12
 const CENTRE: Pt = [0.44, -0.16]
 const RADIUS = 0.3
 const T_MOUTH = (0.5 + MOUTH) / ROLL
-const INSIDE = 0.6
-const FIRE = T_MOUTH + INSIDE
+/** How fast the bulge goes at its quickest, mid-coil. */
+const PEAK = 7
 
 /** Where the hose meets the coil, and leaves it. */
 const IN: Pt = [CENTRE[0] - RADIUS, CENTRE[1] + 0.09]
@@ -37,6 +42,44 @@ function hosePt(f: number): Pt {
   return [OUT[0] + (NOZZLE - OUT[0]) * g, OUT[1] * (1 - g)]
 }
 
+/**
+ * The bulge's timetable: the hose's length walked in small steps, at a pace
+ * that starts as the ball's, peaks in the coil and ends as a kick's, so the
+ * ball goes in and comes out without a jolt. `TIMES[i]` is when the bulge
+ * reaches the i-th step.
+ */
+const STEPS = 240
+const TIMES: number[] = (() => {
+  const times = [0]
+  let prev = hosePt(0)
+  let s = 0
+  const lengths: number[] = []
+  for (let i = 1; i <= STEPS; i++) {
+    const pt = hosePt(i / STEPS)
+    lengths.push(Math.hypot(pt[0] - prev[0], pt[1] - prev[1]))
+    s += lengths[i - 1]
+    prev = pt
+  }
+  let walked = 0
+  for (let i = 0; i < STEPS; i++) {
+    const u = (walked + lengths[i] / 2) / s
+    const v = ROLL + (FAST - ROLL) * u + (PEAK - (ROLL + FAST) / 2) * Math.sin(Math.PI * u)
+    times.push(times[i] + lengths[i] / v)
+    walked += lengths[i]
+  }
+  return times
+})()
+const INSIDE = TIMES[STEPS]
+const FIRE = T_MOUTH + INSIDE
+
+/** Where along the hose the bulge is, `tau` seconds after the ball went in. */
+function bulgeAt(tau: number): Pt {
+  let i = 0
+  while (i < STEPS - 1 && TIMES[i + 1] < tau) i++
+  const f = (i + over(tau, TIMES[i], TIMES[i + 1])) / STEPS
+  return hosePt(f)
+}
+
 export const hose = definePiece<{ color: string }>({
   name: 'hose',
   weight: 0.9,
@@ -50,17 +93,15 @@ export const hose = definePiece<{ color: string }>({
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [MOUTH, 0], ROLL),
-        { from: [MOUTH, 0], to: [NOZZLE, 0], dur: INSIDE, ease: 'inout', hidden: true },
+        { from: [MOUTH, 0], to: [NOZZLE, 0], dur: INSIDE, hidden: true },
         ramp([NOZZLE, 0], [1.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    // Where the bulge is along the hose while the ball is inside.
+  draw: (p, s, { k, t, since, ink, weight, color }) => {
     const inside = t > T_MOUTH && since < 0
-    const f = inside ? -(Math.cos(Math.PI * over(t, T_MOUTH, FIRE)) - 1) / 2 : 0
 
     rail(p, k, ink, weight, -0.5, MOUTH - 0.04)
     rail(p, k, ink, weight, NOZZLE + 0.02, 1.5)
@@ -92,15 +133,11 @@ export const hose = definePiece<{ color: string }>({
       p.endShape()
       p.pop()
     }
-    // The mouth and the nozzle: a brass collar on each end.
-    solid(p, ink, weight, bg)
-    p.rect((MOUTH + 0.02) * k, 0, 0.08 * k, 0.16 * k, 0.01 * k)
-    p.quad((NOZZLE - 0.1) * k, -0.07 * k, NOZZLE * k, -0.09 * k, NOZZLE * k, 0.09 * k, (NOZZLE - 0.1) * k, 0.07 * k)
-    // The bulge, going round.
+    // The bulge, going round: the ball's size, in the ball's colour, seen through the hose's skin.
     if (inside) {
-      const [bx, by] = hosePt(f)
-      solid(p, ink, weight, s.color)
-      p.circle(bx * k, by * k, 0.2 * k)
+      const [bx, by] = bulgeAt(t - T_MOUTH)
+      solid(p, ink, weight, color)
+      p.circle(bx * k, by * k, 2 * 0.13 * k)
     }
     // The spit out of the nozzle, and drips after.
     if (since > 0 && since < 0.25) {
@@ -115,5 +152,11 @@ export const hose = definePiece<{ color: string }>({
       const g = ((since - 0.2) * 1.4) % 1
       drop(p, k, s.color, NOZZLE + 0.02, 0.06 + (FLOOR - 0.06 + 0.3) * g, 0.02)
     }
+  },
+  over: (p, _s, { k, ink, bg, weight }) => {
+    // The brass collars at either end, in front: the mouth the ball goes into, the nozzle it comes out of.
+    solid(p, ink, weight, bg)
+    p.rect((MOUTH + 0.02) * k, 0, 0.1 * k, 0.32 * k, 0.01 * k)
+    p.quad((NOZZLE - 0.12) * k, -0.11 * k, NOZZLE * k, -0.15 * k, NOZZLE * k, 0.15 * k, (NOZZLE - 0.12) * k, 0.11 * k)
   },
 })

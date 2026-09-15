@@ -1,38 +1,47 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, roll, segTime, type Pt, type Seg } from '../../parts'
+import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, segTime, type Pt, type Seg } from '../../parts'
 import { leaf, pot } from './green'
 
 /**
  * A trumpet flower as tall as the path, its bloom open to the sky and
  * its throat over a hollow stem. The rail ends at the lip of a petal;
- * the ball rolls in and goes round and down the inside of the bloom,
- * tighter and faster, in view the whole way, through the throat, down
- * the stem, and out of a bend at the root onto the path a floor down —
- * on, or back the way it came. The flower nods as the ball goes through.
+ * the ball rolls in over the near petals, still going the way it came,
+ * and the bloom takes it round and down its inside, tighter and faster,
+ * in view the whole way, through the throat, down the stem, and out of a
+ * bend at the root onto the path a floor down — on, or back the way it
+ * came. The flower nods as the ball goes through.
+ *
+ * The bloom is seen a little from above, so each turn rises at the back
+ * and dips at the front; the ball joins the swirl moving and leaves it
+ * moving, with no dead stop at the petal's edge.
  */
 const RIM_Y = 0.02
 const RIM_HALF = 0.42
 const THROAT_Y = 0.4
 const THROAT_HALF = 0.1
-const ENTRY_X = -0.3
 const TURNS = 3.2
 const ORBIT = 1.35
 const ARC = 0.24
 const TUBE = R
+/** How much of a turn's depth shows as height: the bloom seen from a little above. */
+const ASPECT = 0.1
+/** Where the ball joins the swirl: on the near side inside the rim, already moving the way it came. */
+const JOIN = 0.5
 
-function orbit(): Seg[] {
-  const n = 44
-  const dt = ORBIT / n
+/** The swirl: the angle runs on from the join and quickens as the radius closes on the throat. Equal time a step. */
+function swirl(): Seg[] {
+  const n = 96
   const pts: Pt[] = []
   for (let i = 0; i <= n; i++) {
     const f = i / n
-    const y = RIM_Y + (THROAT_Y - 0.08 - RIM_Y) * Math.pow(f, 1.35)
+    const phase = Math.PI - JOIN - Math.PI * 2 * TURNS * (0.5 * f + 0.5 * f * f * f)
     const amp = 0.28 * (1 - 0.9 * f) + 0.02
-    const phase = Math.PI + Math.PI * 2 * TURNS * Math.pow(f, 1.5)
-    pts.push([Math.cos(phase) * amp, y])
+    const y = RIM_Y + (THROAT_Y - 0.08 - RIM_Y) * Math.pow(f, 1.35)
+    pts.push([Math.cos(phase) * amp, y + Math.sin(phase) * amp * ASPECT])
   }
-  return chain(pts, ORBIT).map((seg) => ({ ...seg, dur: dt }))
+  return chain(pts, ORBIT).map((seg) => ({ ...seg, dur: ORBIT / n }))
 }
+const speedOf = (seg: Seg) => Math.hypot(seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]) / seg.dur
 
 export const flowerBloom = definePiece<{ color: string; turn: 1 | -1 }>({
   name: 'bloom',
@@ -44,20 +53,21 @@ export const flowerBloom = definePiece<{ color: string; turn: 1 | -1 }>({
         [0, 1],
       ]
       if (!fits(cells, [turn, 1])) continue
-      const round = orbit()
-      const last = round[round.length - 1].to
-      const depth = 1 - ARC - last[1]
-      const fallDur = Math.sqrt((2 * depth) / 24)
-      const vEnd = (2 * depth) / fallDur
+      const round = swirl()
+      const first = round[0]
+      const last = round[round.length - 1]
+      const depth = 1 - ARC - last.to[1]
+      const vEnd = Math.sqrt(2 * depth * 24)
+      const drop = ramp(last.to, [0, 1 - ARC], speedOf(last), vEnd)
       const bend = chain(arcPts(turn * ARC, 1 - ARC, ARC, Math.PI * (turn > 0 ? 1 : 0), Math.PI / 2, 4), ((Math.PI / 2) * ARC) / (vEnd * 0.85))
       const segs: Seg[] = [
-        roll([-0.5, 0], [ENTRY_X, RIM_Y], ROLL),
+        ramp([-0.5, 0], first.from, ROLL, speedOf(first)),
         ...round,
-        { from: last, to: [0, 1 - ARC], dur: fallDur, ease: 'in' },
+        drop,
         ...bend,
         ramp([turn * ARC, 1], [turn * 0.5, 1], ROLL * 1.4, ROLL),
       ]
-      const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - fallDur
+      const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - drop.dur
       return { cells, exit: { at: [turn, 1], dir: turn }, lane: { segs, fire }, state: { color, turn } }
     }
     return null

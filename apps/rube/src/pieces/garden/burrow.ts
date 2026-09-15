@@ -4,12 +4,13 @@ import { FLOOR, ROLL, burst, definePiece, fly, over, rail, ramp, roll, type Lane
 import { tuft } from './green'
 
 /**
- * A mole's tunnel. The path ends at a hole in the ground; the ball drops
- * in and is gone, and a ridge of turned earth travels down the soil to a
- * molehill on the path a floor below — where the ball pops up out of the
- * top with a spray of dirt, clears the hill's foot, lands on the rail, and
- * rolls on, or back the way it came. The mole puts its nose out after to
- * see what that was.
+ * A mole's tunnel. The path ends at a hole in the ground; the ball rolls
+ * over the near lip at its own pace, meets the far wall of the hole and
+ * drops in and is gone, and a ridge of turned earth travels down the soil
+ * to a molehill on the path a floor below — where the ball pops up out of
+ * the top with a spray of dirt, clears the hill's foot, lands on the rail,
+ * and rolls on, or back the way it came. The mole puts its nose out after
+ * to see what that was.
  *
  * The molehill stands in front of the ball: it comes up *through* the
  * hole in the top, not out of thin air in front of the mound.
@@ -20,11 +21,17 @@ export interface BurrowState {
 }
 
 const HOLE = -0.16
-const T_HOLE = (0.5 + HOLE) / ROLL
-const DIVE = 0.14
+/** The hole's half-width: the ball tips in over the near lip and drops at the far wall. */
+const LIP = 0.15
+/** Over the lip, falling from level, until its front meets the far wall. */
+const OVER = fly([HOLE - LIP, 0], [HOLE, 0.1], LIP / ROLL, 0.1 / 4)
+/** Down the hole from there, with the fall it already has. */
+const DIVE = ramp([HOLE, 0.1], [HOLE + 0.02, 0.4], (2 * 0.1) / OVER.dur, 5.5)
+/** When the ball is out of sight in the tunnel. */
+const T_IN = (0.5 + HOLE - LIP) / ROLL + OVER.dur + DIVE.dur
 const TUNNEL = 0.42
 const PAUSE = 0.12
-const FIRE = T_HOLE + DIVE + TUNNEL + PAUSE
+const FIRE = T_IN + TUNNEL + PAUSE
 const HILL = 1 + FLOOR
 /** The mound's half-width at its foot, and the height of its crown above the path. */
 const FOOT = 0.28
@@ -48,9 +55,10 @@ export const burrow = definePiece<BurrowState>({
       if (!fits(cells, [turn, 1])) continue
       const lane: Lane = {
         segs: [
-          roll([-0.5, 0], [HOLE, 0], ROLL),
-          { from: [HOLE, 0], to: [HOLE + 0.04, 0.4], dur: DIVE, ease: 'in' },
-          { from: [HOLE + 0.04, 0.4], to: [0, 0.95], dur: TUNNEL, hidden: true },
+          roll([-0.5, 0], [HOLE - LIP, 0], ROLL),
+          OVER,
+          DIVE,
+          { from: [HOLE + 0.02, 0.4], to: [0, 0.95], dur: TUNNEL, hidden: true },
           { from: [0, 0.95], to: [0, 0.95], dur: PAUSE, hidden: true },
           // Up out of the crown and over the foot: the peak clears the mound by a ball.
           fly([0, 0.95], [turn * LAND, 1], POP, 0.36),
@@ -65,14 +73,14 @@ export const burrow = definePiece<BurrowState>({
   draw: (p, s, { k, t, ink, weight }) => {
     const { turn } = s
     // How far along the tunnel the ridge of earth is.
-    const dig = t < T_HOLE + DIVE ? 0 : t < FIRE - PAUSE ? over(t, T_HOLE + DIVE, FIRE - PAUSE) : 1
+    const dig = t < T_IN ? 0 : t < FIRE - PAUSE ? over(t, T_IN, FIRE - PAUSE) : 1
 
     // The upper path to the hole, and the ground it sits in.
-    rail(p, k, ink, weight, -0.5, HOLE - 0.16)
+    rail(p, k, ink, weight, -0.5, HOLE - LIP)
     outline(p, ink, weight)
-    p.line((HOLE - 0.16) * k, FLOOR * k, (HOLE - 0.16) * k, 0.5 * k)
-    p.line((HOLE + 0.16) * k, FLOOR * k, (HOLE + 0.16) * k, 0.5 * k)
-    p.line((HOLE + 0.16) * k, FLOOR * k, 0.5 * k, FLOOR * k)
+    p.line((HOLE - LIP) * k, FLOOR * k, (HOLE - LIP) * k, 0.5 * k)
+    p.line((HOLE + LIP) * k, FLOOR * k, (HOLE + LIP) * k, 0.5 * k)
+    p.line((HOLE + LIP) * k, FLOOR * k, 0.5 * k, FLOOR * k)
     p.line(-0.5 * k, 0.5 * k, 0.5 * k, 0.5 * k)
     tuft(p, k, ink, weight, 0.3, FLOOR, 0.1, 0.02)
     // The hole: a dark mouth in the path, with a lip of dirt.
