@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, ROLL, chain, definePiece, over, rail, ramp, rankBy, roll, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, ROLL, chain, definePiece, over, rail, ramp, rankBy, roll, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
 import { bubbles, water } from './sea'
 
 /**
@@ -17,20 +17,50 @@ export interface KelpState {
 }
 
 const WALL = 0.24
-const ENTRY = 0.06
+/** Where the rise begins: just above the rail line, once the water has turned the ball upward. */
+const RISE0 = -0.06
 const BOB = 0.15
 const riseTime = (floors: number) => 0.6 + 0.55 * floors
 
+/**
+ * Into the tank: through the opening at the ball's pace, plunging a little
+ * under its own speed, and bending upward as the water takes hold — one
+ * curve from level to vertical, slowing all the way to the rise's crawl.
+ */
+function entry(vRise: number): Seg[] {
+  const a: Pt = [-WALL, 0]
+  const b: Pt = [-0.08, 0.0]
+  const c: Pt = [0.0, 0.12]
+  const d: Pt = [0, RISE0]
+  const n = 12
+  const pts: Pt[] = []
+  for (let i = 0; i <= n; i++) {
+    const u = i / n
+    const w = 1 - u
+    pts.push([
+      w * w * w * a[0] + 3 * w * w * u * b[0] + 3 * w * u * u * c[0] + u * u * u * d[0],
+      w * w * w * a[1] + 3 * w * w * u * b[1] + 3 * w * u * u * c[1] + u * u * u * d[1],
+    ])
+  }
+  const segs: Seg[] = []
+  for (let i = 0; i < n; i++) {
+    const v = ROLL + (vRise - ROLL) * ((i + 0.5) / n)
+    segs.push({ from: pts[i], to: pts[i + 1], dur: Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) / v })
+  }
+  return segs
+}
+
 /** The rise: a gentle weave up the column, slow at both ends. */
-function rise(floors: number) {
+function rise(floors: number): Seg[] {
   const n = 10 + 6 * floors
   const pts: Pt[] = []
   for (let i = 0; i <= n; i++) {
     const f = i / n
-    pts.push([0.07 * Math.sin(f * Math.PI * 2 * floors) * Math.sin(Math.PI * f), ENTRY + (-floors - ENTRY) * f])
+    pts.push([0.07 * Math.sin(f * Math.PI * 2 * floors) * Math.sin(Math.PI * f), RISE0 + (-floors - RISE0) * f])
   }
   return chain(pts, riseTime(floors), (i) => 0.45 + 0.55 * Math.sin((Math.PI * (i - 0.5)) / n))
 }
+const speedOf = (seg: Seg) => Math.hypot(seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]) / seg.dur
 
 export const kelp = definePiece<KelpState>({
   name: 'kelp',
@@ -43,16 +73,17 @@ export const kelp = definePiece<KelpState>({
       for (let i = 0; i <= floors; i++) cells.push([0, -i])
       const exit: Pt = [turn, -floors]
       if (!fits(cells, exit)) continue
-      const into = ramp([-WALL, 0], [0, ENTRY], ROLL, 0.8)
+      const up = rise(floors)
+      const into = entry(speedOf(up[0]))
       const lane: Lane = {
         segs: [
           roll([-0.5, 0], [-WALL, 0], ROLL),
-          into,
-          ...rise(floors),
+          ...into,
+          ...up,
           wait([0, -floors], BOB),
-          ramp([0, -floors], [turn * 0.5, -floors], 0.6, ROLL),
+          ramp([0, -floors], [turn * 0.5, -floors], 0.4, ROLL),
         ],
-        fire: (0.5 - WALL) / ROLL + into.dur,
+        fire: (0.5 - WALL) / ROLL + segTime(into),
       }
       return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, turn } }
     }
@@ -65,7 +96,7 @@ export const kelp = definePiece<KelpState>({
     const surface = top + 0.05
     const climb = riseTime(floors)
     const upF = since < 0 ? 0 : over(since, 0, climb)
-    const ballY = ENTRY + (top - ENTRY) * upF
+    const ballY = RISE0 + (top - RISE0) * upF
 
     // The pier in, to the tank's wall; the ground the tank stands on.
     water(p, k, ink, weight, -0.5, -WALL)

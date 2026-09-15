@@ -175,6 +175,20 @@ export function chain(pts: Pt[], dur: number, speed?: (i: number) => number): Se
   return parts.map((part, i) => ({ from: pts[i], to: pts[i + 1], dur: (dur * part) / total }))
 }
 
+/**
+ * The ball carried by something that moves — a deck that rocks, a tray that
+ * tips: its position sampled from a function of piece time between `t0`
+ * and `t1`, as `n` straight segments of equal duration. The lane and the
+ * drawing then come from the same motion, and the ball never floats over a
+ * deck that has tilted away from it.
+ */
+export function trace(at: (t: number) => Pt, t0: number, t1: number, n: number): Seg[] {
+  const dt = (t1 - t0) / n
+  const segs: Seg[] = []
+  for (let i = 0; i < n; i++) segs.push({ from: at(t0 + i * dt), to: at(t0 + (i + 1) * dt), dur: dt })
+  return segs
+}
+
 export const segTime = (segs: Seg[]): number => segs.reduce((sum, s) => sum + s.dur, 0)
 export const laneTime = (lane: Lane): number => segTime(lane.segs)
 

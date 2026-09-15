@@ -1,13 +1,19 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, roll, segTime, type Pt, type Seg } from '../../parts'
+import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, segTime, type Pt, type Seg } from '../../parts'
 import { bubbles, piling, seaColor, water } from './sea'
 
 /**
  * A whirlpool in a basin let into the pier. The deck stops at the rim;
- * the ball rolls onto the water and is taken round — a wide slow circle,
- * then tighter and faster, the funnel of the vortex drawing in under it
- * — down to the drain in the middle, through the pipe below, and out of
- * a quarter-pipe onto the deck a floor down, facing back the way it came.
+ * the ball rolls onto the water and the current takes it — round the near
+ * side first, the way it was already going, then round and round, a wide
+ * slow circle that tightens and quickens, the funnel of the vortex drawing
+ * in under it — down to the drain in the middle, through the pipe below,
+ * and out of a quarter-pipe onto the deck a floor down, facing back the way
+ * it came.
+ *
+ * The swirl is seen a little from above, so each turn rises at the back
+ * and dips at the front, and the ball never stops dead at the edge of a
+ * flat ellipse: it joins the swirl moving, and leaves it moving.
  */
 const RIM = 0.42
 const SURFACE = 0.02
@@ -16,19 +22,25 @@ const TURNS = 2.6
 const ORBIT = 1.25
 const ARC = 0.24
 const TUBE = R
+/** How much of a turn's depth shows as height: the vortex seen from a little above. */
+const ASPECT = 0.1
+/** Where the ball joins the swirl: on the near side short of the rim, already moving the way it came. */
+const JOIN = 0.5
 
-function orbit(): Seg[] {
-  const n = 40
+/** The swirl: the angle runs on from the join and quickens as the radius closes on the drain. Equal time a step. */
+function swirl(): Seg[] {
+  const n = 96
   const pts: Pt[] = []
   for (let i = 0; i <= n; i++) {
     const f = i / n
-    const y = SURFACE + (DRAIN_Y - 0.08 - SURFACE) * Math.pow(f, 1.5)
+    const phase = Math.PI - JOIN - Math.PI * 2 * TURNS * (0.5 * f + 0.5 * f * f * f)
     const amp = 0.3 * (1 - 0.9 * f) + 0.02
-    const phase = Math.PI + Math.PI * 2 * TURNS * Math.pow(f, 1.5)
-    pts.push([Math.cos(phase) * amp, y])
+    const y = SURFACE + (DRAIN_Y - 0.08 - SURFACE) * Math.pow(f, 1.5)
+    pts.push([Math.cos(phase) * amp, y + Math.sin(phase) * amp * ASPECT])
   }
   return chain(pts, ORBIT).map((seg) => ({ ...seg, dur: ORBIT / n }))
 }
+const speedOf = (seg: Seg) => Math.hypot(seg.to[0] - seg.from[0], seg.to[1] - seg.from[1]) / seg.dur
 
 export const whirlpool = definePiece<{ color: string }>({
   name: 'whirlpool',
@@ -39,20 +51,21 @@ export const whirlpool = definePiece<{ color: string }>({
       [0, 1],
     ]
     if (!fits(cells, [-1, 1])) return null
-    const round = orbit()
-    const last = round[round.length - 1].to
-    const depth = 1 - ARC - last[1]
-    const fallDur = Math.sqrt((2 * depth) / 24)
-    const vEnd = (2 * depth) / fallDur
+    const round = swirl()
+    const first = round[0]
+    const last = round[round.length - 1]
+    const depth = 1 - ARC - last.to[1]
+    const vEnd = Math.sqrt(2 * depth * 24)
+    const drop = ramp(last.to, [0, 1 - ARC], speedOf(last), vEnd)
     const bend = chain(arcPts(-ARC, 1 - ARC, ARC, 0, Math.PI / 2, 4), ((Math.PI / 2) * ARC) / (vEnd * 0.85))
     const segs: Seg[] = [
-      roll([-0.5, 0], [-0.32, SURFACE], ROLL),
+      ramp([-0.5, 0], first.from, ROLL, speedOf(first)),
       ...round,
-      { from: last, to: [0, 1 - ARC], dur: fallDur, ease: 'in' },
+      drop,
       ...bend,
       ramp([-ARC, 1], [-0.5, 1], ROLL * 1.4, ROLL),
     ]
-    const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - fallDur
+    const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - drop.dur
     return { cells, exit: { at: [-1, 1], dir: -1 }, lane: { segs, fire }, state: { color: seaColor(theme, color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
