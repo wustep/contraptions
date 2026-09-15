@@ -5,8 +5,9 @@
  * (the show, in the code) and Explorations (the sandbox) fill the middle
  * with their own sections, built from the same helpers, so the two read as
  * siblings — one frame, different dials — and moving between them is a
- * switch at the top of the panel that carries the seed across. `P` hides
- * the panel; the peek tab on the edge brings it back.
+ * switch at the top of the panel that carries the seed across. The panel
+ * starts hidden; `P` or the peek tab on the edge brings it out, and `P`
+ * puts it away again.
  */
 
 export type ShellMode = 'machine' | 'explorations'
@@ -209,6 +210,12 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }
   hideBtn.addEventListener('click', toggle)
   peek.addEventListener('click', toggle)
+
+  // The piece leads: both modes open with the panel away and the peek tab
+  // on the edge. Set here rather than through toggle so nothing is focused
+  // on load. The pages set the class in their markup too, so the first paint
+  // is already panel-less; this covers any host that did not.
+  document.body.classList.add('hide-panel')
 
   return {
     setSeed(seed) {
