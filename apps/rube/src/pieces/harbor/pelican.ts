@@ -38,15 +38,19 @@ const POST_TOP = -0.08
 /** The body's centre when perched, and when flying. */
 const SIT_Y = POST_TOP - 0.2
 const FLY_Y = -0.35
-/** The beak: the hinge off the head's centre, the lower bill's length, and the ball's seat in the lower bill's frame. */
-const HINGE: Pt = [0.05, 0.01]
+/**
+ * The beak: the hinge off the head's centre, the lower bill's length, and the ball's seat in the
+ * lower bill's frame. The hinge sits at the head's front edge, so the root of the upper bill swings
+ * up ahead of the eye when the mouth is wide rather than back across the head over it.
+ */
+const HINGE: Pt = [0.075, 0.01]
 const BILL = 0.32
 const SEAT: Pt = [0.18, -0.02]
 /** Where the pouch meets the throat, off the hinge, in the head's frame. */
 const THROAT: Pt = [-0.07, 0.1]
 /** The gape that wedges the ball, and the wide one it waits with and lets go with. */
 const GAPE_HELD = 0.95
-const GAPE_WIDE = 1.35
+const GAPE_WIDE = 1.2
 /** The wing's length, and the near wing's shoulder. */
 const WING = 0.32
 const SHOULDER: Pt = [0.02, -0.07]
@@ -280,9 +284,12 @@ function bird(p: p5, k: number, ink: string, weight: number, color: string, bg: 
       p.line(x0 * k, 0.09 * k, x1 * k, y1 * k)
       p.line((x1 - 0.03) * k, y1 * k, (x1 + 0.035) * k, y1 * k)
     }
-    // The neck: one band, ink under colour, from the breast to the head, bowed forward.
+    // The neck: one band, ink under colour, from the breast to the head. With the head up it bows
+    // forward, the S of a pelican's neck; as the head goes down to the deck it hangs from the breast
+    // and comes into the head from above and behind, at the nape, so the open bill stands clear of it.
     const s: Pt = [0.14, -0.02]
-    const cx = Math.max(s[0], hx) + 0.12
+    const drop = over(hy - s[1], 0.14, 0.4)
+    const cx = lerp(Math.max(s[0], hx) + 0.12, hx - 0.1, drop)
     const cy = (s[1] + hy) / 2 - 0.02
     p.noFill()
     p.strokeCap(p.ROUND)
@@ -302,12 +309,12 @@ function bird(p: p5, k: number, ink: string, weight: number, color: string, bg: 
     p.quad(-0.14 * k, -0.03 * k, -0.28 * k, -0.11 * k, -0.27 * k, 0.02 * k, -0.14 * k, 0.06 * k)
     p.ellipse(0, 0, 0.36 * k, 0.24 * k)
     wing(p, k, ink, weight, color, q.wing)
-    // The head and the eye.
+    // The head, and the eye high on it, behind the bill's root.
     solid(p, ink, weight, color)
     p.circle(hx * k, hy * k, 0.16 * k)
     p.noStroke()
     p.fill(ink)
-    p.circle((hx + 0.025) * k, (hy - 0.025) * k, 0.034 * k)
+    p.circle((hx - 0.01) * k, (hy - 0.03) * k, 0.034 * k)
     // The pouch, whole, behind the ball.
     p.push()
     p.translate(gx * k, gy * k)
@@ -332,7 +339,7 @@ function bird(p: p5, k: number, ink: string, weight: number, color: string, bg: 
     p.triangle(0, 0, BILL * k, 0.012 * k, 0, 0.04 * k)
     p.rotate(-q.open)
     p.beginShape()
-    p.vertex(0, -0.045 * k)
+    p.vertex(0, -0.055 * k)
     p.vertex((BILL + 0.05) * k, -0.012 * k)
     p.vertex((BILL + 0.04) * k, 0.022 * k)
     p.vertex(0, 0)
