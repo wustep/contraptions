@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
-import { FALL, FLOOR, R, ROLL, arrive, arriveAt, definePiece, fall, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
 import { glow, lamp, marquee } from './neon'
 
 /**
@@ -8,8 +8,9 @@ import { glow, lamp, marquee } from './neon'
  * and stops among the prizes; the claw comes down on its cable, fingers
  * open, and closes on the ball; it goes up, trundles along the gantry to
  * the prize chute, hangs there a moment — and lets go. The ball drops
- * down the chute onto the rail out. Lights chase on the marquee the whole
- * time, and the prizes it left behind stay where they were.
+ * down the chute, lands on the wedge at its foot and rolls off it onto the
+ * rail out. Lights chase on the marquee the whole time, and the prizes it
+ * left behind stay where they were.
  */
 const SEAT = 0.3
 const DROP_X = 2.0
@@ -25,6 +26,12 @@ const T_MOVE = T_RISE + RISE
 const T_THINK = T_MOVE + TRAVEL
 const T_DROP = T_THINK + THINK
 const RETURN = 1.8
+/** The wedge at the chute's foot: the ball lands on its face here and rolls down to the rail. */
+const WEDGE_TOP: Pt = [DROP_X - 0.16, FLOOR - 0.2]
+const WEDGE_FOOT = DROP_X + 0.22
+const LAND: Pt = [DROP_X, -0.08]
+const G = 10
+const T_FALL = Math.sqrt((2 * (LAND[1] - HIGH)) / G)
 
 export const claw = definePiece<{ color: string; prizes: string[] }>({
   name: 'claw',
@@ -47,9 +54,10 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
         { from: [SEAT, 0.02], to: [SEAT, HIGH], dur: RISE, ease: 'inout' },
         { from: [SEAT, HIGH], to: [DROP_X, HIGH], dur: TRAVEL, ease: 'inout' },
         wait([DROP_X, HIGH], THINK),
-        fall([DROP_X, HIGH], [DROP_X, 0], FALL),
-        fly([DROP_X, 0], [DROP_X + 0.2, 0], 0.1, 0.05),
-        ramp([DROP_X + 0.2, 0], [2.5, 0], 1.5, ROLL),
+        // Let go from rest: a fall under gravity onto the wedge, then down its face and on.
+        { from: [DROP_X, HIGH], to: LAND, dur: T_FALL, ease: 'in' },
+        ramp(LAND, [WEDGE_FOOT + 0.02, 0], 2.0, ROLL),
+        roll([WEDGE_FOOT + 0.02, 0], [2.5, 0], ROLL),
       ],
       fire: T_DROP,
     }
@@ -96,9 +104,11 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
       p.circle((px - 0.04) * k, (FLOOR + 0.06 + (i % 2) * 0.04) * k, 0.04 * k)
       p.circle((px + 0.04) * k, (FLOOR + 0.06 + (i % 2) * 0.04) * k, 0.04 * k)
     }
-    // The chute: walls either side of the drop, with a lamp.
+    // The chute: walls either side of the drop, a wedge at its foot that turns the drop into a roll, and a lamp.
     outline(p, ink, weight)
     for (const x of [DROP_X - 0.24, DROP_X + 0.24]) p.line(x * k, (FLOOR - 0.1) * k, x * k, -0.4 * k)
+    solid(p, ink, weight, s.color)
+    p.triangle((DROP_X - 0.24) * k, FLOOR * k, WEDGE_TOP[0] * k, WEDGE_TOP[1] * k, WEDGE_FOOT * k, FLOOR * k)
     glow(p, k, s.color, DROP_X, -0.5, 0.2, lit)
     lamp(p, k, ink, weight, s.color, bg, DROP_X, -0.5, 0.04, lit)
     // The gantry and the trolley on it, the cable, and the claw.

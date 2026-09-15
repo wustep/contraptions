@@ -14,7 +14,9 @@ const LIP0: Pt = [0.0, 0]
 const LIP_R = 0.28
 const LAND: Pt = [1.18, -1]
 const T_KICK = (0.5 + KICK) / ROLL
-const FLIGHT = 0.4
+/** The lip's top: how far round the quarter circle it goes. Sixty degrees sends the ball up at the ring. */
+const LIP_END = Math.PI / 3
+const V_LIP = FAST * 1.1
 
 export const skee = definePiece<{ color: string }>({
   name: 'skee',
@@ -28,16 +30,21 @@ export const skee = definePiece<{ color: string }>({
       [1, -1],
     ]
     if (!fits(cells, [2, -1])) return null
-    // The lip: a quarter circle up from the alley's end, the ball's line a radius inside it.
-    const lip = chain(arcPts(LIP0[0], LIP0[1] - LIP_R, LIP_R, Math.PI / 2, Math.PI / 4, 6), (Math.PI / 4) * LIP_R / (FAST * 1.1))
+    // The lip: an arc up from the alley's end, the ball's line a radius inside it, at the pace the kick gave.
+    const lip = chain(arcPts(LIP0[0], LIP0[1] - LIP_R, LIP_R, Math.PI / 2, Math.PI / 2 - LIP_END, 8), (LIP_END * LIP_R) / V_LIP)
     const top = lip[lip.length - 1].to
-    const run = ramp([KICK, 0], LIP0, ROLL, FAST * 1.1)
+    const run = ramp([KICK, 0], LIP0, ROLL, V_LIP)
+    // Off the lip's top the way it was going: the flight's first velocity is the lip's last, so there is no kink at the launch.
+    const vx = V_LIP * Math.cos(LIP_END)
+    const vy = -V_LIP * Math.sin(LIP_END)
+    const flight = (LAND[0] - top[0]) / vx
+    const arc = (LAND[1] - top[1] - vy * flight) / 4
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [KICK, 0], ROLL),
         run,
         ...lip,
-        fly(top, LAND, FLIGHT, 0.3),
+        fly(top, LAND, flight, arc),
         fly(LAND, [LAND[0] + 0.1, -1], 0.06, 0.02),
         ramp([LAND[0] + 0.1, -1], [1.5, -1], 2.2, ROLL),
       ],
@@ -56,9 +63,9 @@ export const skee = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.noFill()
     const surf = LIP_R + R
-    p.arc(LIP0[0] * k, -LIP_R * k, surf * 2 * k, surf * 2 * k, Math.PI / 4, Math.PI / 2)
-    const tipX = LIP0[0] + Math.cos(Math.PI / 4) * surf
-    p.line(tipX * k, (-LIP_R + Math.sin(Math.PI / 4) * surf) * k, tipX * k, 0.5 * k)
+    p.arc(LIP0[0] * k, -LIP_R * k, surf * 2 * k, surf * 2 * k, Math.PI / 2 - LIP_END, Math.PI / 2)
+    const tipX = LIP0[0] + Math.cos(Math.PI / 2 - LIP_END) * surf
+    p.line(tipX * k, (-LIP_R + Math.sin(Math.PI / 2 - LIP_END) * surf) * k, tipX * k, 0.5 * k)
     p.line((tipX - 0.06) * k, 0.5 * k, (tipX + 0.06) * k, 0.5 * k)
     // The kicker: a solenoid bat in the rail's side, out for an instant.
     p.push()
@@ -70,7 +77,7 @@ export const skee = definePiece<{ color: string }>({
     // The target board: on the back wall of the upper cell, three rings standing up, the shelf across the bottom.
     const cx = LAND[0] + 0.02
     const cy = -1 - 0.14
-    glow(p, k, s.color, cx, cy, 0.4, lit)
+    glow(p, k, s.color, cx, cy, 0.3, lit)
     for (const [r, i] of [
       [0.34, 0],
       [0.24, 1],
