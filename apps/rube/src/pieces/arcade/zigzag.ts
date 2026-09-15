@@ -1,14 +1,15 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, rankBy, roll, wait, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, rankBy, roll, type Lane, type Pt, type Seg } from '../../parts'
 import { glow, lamp, score, tube } from './neon'
 
 /**
  * A neon zigzag. The lane runs out onto a ramp made of a lit tube; the
  * tube runs down to a pad that turns the ball onto the next, and the
  * next; each tube comes on as the ball rides it and dies down behind,
- * each pad flashes and scores. Two tubes for one floor, so the ball comes
- * out facing back; three for two, facing on. Light and rubber, nothing
- * else.
+ * each pad flashes and scores; the ball bounces off each pad with most of
+ * its pace and gathers more down the next tube. Two tubes for one floor,
+ * so the ball comes out facing back; three for two, facing on. Light and
+ * rubber, nothing else.
  */
 export interface ZigzagState {
   color: string
@@ -24,7 +25,10 @@ const TURN = 0.3
 const PAD = 0.05
 const FACE = TURN + R
 const POST = FACE + PAD
-const BUMP = 0.05
+/** Down a tube the ball gathers this much pace; off a pad it keeps this much of it. The last tube eases to the rail's. */
+const V_TUBE = ROLL * 1.7
+const V_OFF = ROLL * 1.15
+const V_LAST = ROLL * 1.25
 const rampsFor = (floors: number) => floors + 1
 const dropFor = (floors: number) => floors / rampsFor(floors)
 
@@ -49,19 +53,17 @@ export const zigzag = definePiece<ZigzagState>({
       let y = 0
       for (let i = 0; i < ramps; i++) {
         const to = i % 2 === 0 ? TURN : -TURN
+        const last = i === ramps - 1
         starts.push(t)
-        const seg = ramp([x, y], [to, y + drop], i === 0 ? ROLL : 0.4, ROLL * 1.7)
+        // Off the pad with most of its pace — a bounce, not a stop — and gathering more down the tube.
+        const seg = ramp([x, y], [to, y + drop], i === 0 ? ROLL : V_OFF, last ? V_LAST : V_TUBE)
         segs.push(seg)
         t += seg.dur
-        if (i < ramps - 1) {
-          hits.push(t)
-          segs.push(wait([to, y + drop], BUMP))
-          t += BUMP
-        }
+        if (!last) hits.push(t)
         x = to
         y += drop
       }
-      segs.push(ramp([x, floors], [turn * 0.5, floors], ROLL * 1.7, ROLL))
+      segs.push(ramp([x, floors], [turn * 0.5, floors], V_LAST, ROLL))
       const lane: Lane = { segs, fire: hits[hits.length - 1] }
       return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, hits, starts } }
     }

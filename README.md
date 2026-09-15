@@ -514,7 +514,7 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises through the kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
-| pelican | off the deck's end into the pouch; flown across two cells; the pouch parts and the ball drops out onto the deck |
+| pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
 | blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up, past a shelf and down onto it |
 | oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
 | whirlpool | the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
@@ -549,13 +549,13 @@ scores pop off hits in a three-by-five bitmap font.
 | spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, counting its turns in lamps |
 | changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
 | ticket | off the rail's end into the hopper; tickets feed out below while it whirs; drops out of the prize chute beside the cabinet, one or two floors down |
-| zigzag | down lit tubes to pads that turn the ball; one or two floors; +10 a pad |
+| zigzag | down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad |
 | pachinko | off a lip and bouncing pin to pin through five rows, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
-| skee | a kicker, up the alley, off the lip, into the fifty ring a floor up |
+| skee | a kicker, up the alley, up the lip and off it the way it was going, into the fifty ring a floor up |
 | hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
-| claw | into the cabinet; the claw comes down, closes, lifts, trundles to the chute, lets go |
+| claw | into the cabinet; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot |
 | striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level; ding; the puck cants and the ball rolls off, one or two floors up |
-| slingshot | into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf |
+| slingshot | into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to

@@ -8,12 +8,16 @@ import { flash, glow, lamp, score, tube } from './neon'
  * along its face. The ball rolls into a saucer in the lane and stops with
  * its back against the band; the kicker behind the band draws it back,
  * then punches through — the band snaps into the ball and flings it up a
- * floor onto a shelf, where a bumper stops it and it rolls on. The
- * triangle flashes and the band twangs for a while after.
+ * floor onto a shelf that slopes down to the way out, so it lands soft at
+ * the top of its flight and rolls away down the slope. The triangle
+ * flashes and the band twangs for a while after.
  */
 const SEAT = -0.04
 const SHELF_Y = -1
-const LAND: Pt = [0.28, SHELF_Y]
+/** The shelf's high end, where the ball lands; it slopes down to the rail's height at the edge. */
+const SHELF_X0 = 0.1
+const SLOPE = 0.05
+const LAND: Pt = [0.26, SHELF_Y - SLOPE * ((0.5 - 0.26) / (0.5 - SHELF_X0))]
 const ARRIVE = arriveAt(SEAT)
 const STRETCH = 0.18
 const FIRE = ARRIVE + STRETCH
@@ -42,9 +46,9 @@ export const slingshot = definePiece<{ color: string }>({
       segs: [
         ...arrive([-0.5, 0], [SEAT, 0.02]),
         wait([SEAT, 0.02], STRETCH),
-        fly([SEAT, 0.02], LAND, 0.4, 0.26),
-        fly(LAND, [LAND[0] + 0.1, SHELF_Y], 0.06, 0.02),
-        ramp([LAND[0] + 0.1, SHELF_Y], [0.5, SHELF_Y], 1.6, ROLL),
+        // Up onto the shelf at the top of its flight, and down the slope to the edge.
+        fly([SEAT, 0.02], LAND, 0.4, (0.02 - LAND[1]) / 4),
+        ramp(LAND, [0.5, SHELF_Y], 0.85, ROLL),
       ],
       fire: FIRE,
     }
@@ -57,19 +61,19 @@ export const slingshot = definePiece<{ color: string }>({
     const bow = 0.1 * push + twang
     const lit = since < 0 ? 0 : 1 - over(since, 0.3, 1.2)
 
-    // The rail to the seat, with a saucer the ball settles in; the shelf above on its post with a bumper at its end.
+    // The rail to the seat, with a saucer the ball settles in; the shelf above on its post, sloping down to the edge, with a lamp over its end.
     rail(p, k, ink, weight, -0.5, SEAT - 0.1)
     outline(p, ink, weight)
     p.line((SEAT - 0.1) * k, FLOOR * k, (SEAT - 0.05) * k, (FLOOR + 0.02) * k)
     p.line((SEAT - 0.05) * k, (FLOOR + 0.02) * k, (SEAT + 0.05) * k, (FLOOR + 0.02) * k)
     p.line((SEAT + 0.05) * k, (FLOOR + 0.02) * k, (SEAT + 0.1) * k, FLOOR * k)
     rail(p, k, ink, weight, SEAT + 0.1, SEAT + 0.2)
-    rail(p, k, ink, weight, 0.1, 0.5, SHELF_Y + FLOOR)
     outline(p, ink, weight)
-    p.line(0.44 * k, (SHELF_Y + FLOOR) * k, 0.44 * k, 0.5 * k)
+    p.line(SHELF_X0 * k, (SHELF_Y + FLOOR - SLOPE) * k, 0.5 * k, (SHELF_Y + FLOOR) * k)
+    p.line(0.44 * k, (SHELF_Y + FLOOR - 0.01) * k, 0.44 * k, 0.5 * k)
     p.line(0.38 * k, 0.5 * k, 0.5 * k, 0.5 * k)
-    solid(p, ink, weight, s.color)
-    p.rect(0.47 * k, (SHELF_Y - 0.04) * k, 0.05 * k, 0.28 * k)
+    p.line(0.44 * k, (SHELF_Y - 0.32) * k, 0.44 * k, (SHELF_Y - 0.44) * k)
+    lamp(p, k, ink, weight, s.color, bg, 0.44, SHELF_Y - 0.48, 0.035, since > 0.3 ? 1 - over(since, 1.2, 2) : 0)
     // The triangle behind the band, lit on the fire, and the kicker arm inside it.
     glow(p, k, s.color, -0.28, -0.1, 0.3, lit)
     solid(p, ink, weight, lit > 0.5 ? s.color : bg)

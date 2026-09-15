@@ -6,7 +6,9 @@ import { clamp, easeOutCubic } from '../../../../../src/core/ease'
  * The arcade's shared vocabulary: glow, marquee lights, and a score that
  * pops off whatever the ball just hit. The palettes here are dark, so a
  * colour laid down with a soft halo reads as a lit tube or a lamp; the
- * halo is the only translucency in the show, and it stays here.
+ * halo is the only translucency in the show, and it stays here. The
+ * halos are kept close and faint: a lamp is lit, not a searchlight, and
+ * the ball must still be the brightest thing on the floor.
  */
 
 /** A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. */
@@ -16,16 +18,16 @@ export function glow(p: p5, k: number, color: string, x: number, y: number, r: n
   p.noStroke()
   for (let i = 3; i >= 1; i--) {
     const c = p.color(color)
-    c.setAlpha(18 * f * (4 - i))
+    c.setAlpha(11 * f * (4 - i))
     p.fill(c)
-    p.circle(x * k, y * k, r * 2 * (0.7 + i * 0.5) * k)
+    p.circle(x * k, y * k, r * 2 * (0.6 + i * 0.38) * k)
   }
   p.pop()
 }
 
 /** A lamp: a dot in the colour when lit, paper when not, with a halo when lit. */
 export function lamp(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x: number, y: number, r: number, lit: number): void {
-  if (lit > 0.05) glow(p, k, color, x, y, r * 1.6, lit)
+  if (lit > 0.05) glow(p, k, color, x, y, r * 1.4, lit)
   solid(p, ink, weight * 0.8, lit > 0.5 ? color : bg)
   p.circle(x * k, y * k, r * 2 * k)
 }
@@ -44,9 +46,9 @@ export function tube(p: p5, k: number, ink: string, weight: number, color: strin
   p.push()
   if (f > 0.02) {
     const halo = p.color(color)
-    halo.setAlpha(60 * f)
+    halo.setAlpha(40 * f)
     p.stroke(halo)
-    p.strokeWeight(weight * 4)
+    p.strokeWeight(weight * 3.2)
     p.line(x0 * k, y0 * k, x1 * k, y1 * k)
   }
   p.stroke(f > 0.5 ? color : ink)
