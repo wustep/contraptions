@@ -26,40 +26,46 @@ import { zigzag } from './zigzag'
  *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way, counting turns in lamps
  *   changer    into the slot in the cabinet's side; chunk; a token comes out under the far flap and takes the thread
  *   ticket     off the rail's end into the hopper; tickets feed out below; drops out of the prize chute beside the cabinet, one or two floors down
- *   zigzag     down lit tubes to pads that turn the ball; one or two floors; +10 a pad
+ *   zigzag     down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad
  *   pachinko   off a lip, bouncing pin to pin through five rows, each lighting; the jackpot pocket drops its side; out a gate two floors down
- *   skee       a kicker, up the alley, off the lip, into the fifty ring a floor up
+ *   skee       a kicker, up the alley, up the lip and off it the way it was going, into the fifty ring a floor up
  *   hockey     onto the air table; a mallet winds up behind and slaps it the length of the table into the goal
- *   claw       into the cabinet; the claw comes down, closes, lifts, trundles, lets go
+ *   claw       into the cabinet; the claw comes down, closes, lifts, trundles, lets go; a fall onto the wedge at the chute's foot
  *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck to the bell; ding; the puck cants; one or two floors up
- *   slingshot  into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf
+ *   slingshot  into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
-/** Signs after rain: the palettes the arcade is painted in. All of them dark. */
+/**
+ * Signs after rain: the palettes the arcade is painted in. All of them
+ * dark, but none of them pitch: the paper is a deep tint rather than
+ * black, the ink is an off-white rather than white, and the colours sit
+ * a step down from full neon, so the ball and the lit parts read without
+ * glare and the lines do not buzz against the ground.
+ */
 const THEMES: Theme[] = [
   {
     name: 'neon',
     label: 'Neon',
-    bg: '#0D0B1E',
-    ink: '#F4F0FF',
-    colors: ['#FF2A6D', '#05D9E8', '#FFE900', '#7CFF6B', '#B967FF'],
+    bg: '#15132A',
+    ink: '#DCD6EE',
+    colors: ['#EF5A86', '#3FC4D2', '#EBD457', '#8DD983', '#B48AEA'],
     note: 'signs after rain',
   },
   {
     name: 'cabinet',
     label: 'Cabinet',
-    bg: '#160E1A',
-    ink: '#F7E9F0',
-    colors: ['#FF7A1A', '#2BD1C4', '#FFD23F', '#FF4F9A', '#7B61FF'],
+    bg: '#1D1522',
+    ink: '#E2D4DC',
+    colors: ['#EA8B48', '#4FBFB5', '#E8C95E', '#E672A6', '#9080E6'],
     note: 'the side art of an old cabinet',
   },
   {
     name: 'crt',
     label: 'CRT',
-    bg: '#07110D',
-    ink: '#D8F3DC',
-    colors: ['#39FF88', '#F9F871', '#FF6E6E', '#5FD3FF', '#FFB86B'],
+    bg: '#0F1B15',
+    ink: '#C4DCC8',
+    colors: ['#63DB95', '#DEDD80', '#E88585', '#78C6E6', '#E8BC84'],
     note: 'phosphor green and a burnt-in score',
   },
 ]

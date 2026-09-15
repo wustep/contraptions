@@ -103,7 +103,7 @@ export const pachinko = definePiece<PachinkoState>({
     p.line(turn * WALL * k, (POCKET_Y + FLOOR) * k, turn * WALL * k, (POCKET_Y + 0.5) * k)
     p.line(-WALL * k, (POCKET_Y + 0.5) * k, WALL * k, (POCKET_Y + 0.5) * k)
     // The jackpot's glow behind the board when it pays.
-    glow(p, k, s.color, 0, POCKET_Y - 0.1, 0.4, jackpot)
+    glow(p, k, s.color, 0, POCKET_Y - 0.1, 0.28, jackpot)
     // The pins: staggered rows, each struck one lighting and staying lit a while.
     for (let r = 0; r < ROWS; r++) {
       const y = ROW0 + r * ROW_GAP
