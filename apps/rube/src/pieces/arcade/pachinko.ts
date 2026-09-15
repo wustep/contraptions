@@ -1,12 +1,12 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, type Lane, type Pt, type Seg } from '../../parts'
+import { FLOOR, ROLL, definePiece, over, rail, ramp, type Lane, type Pt, type Seg } from '../../parts'
 import { flash, glow, lamp, marquee, score } from './neon'
 
 /**
  * A pachinko field two floors deep. The lane stops at a lip; the ball
  * drops into a board of pins and goes down it pin to pin, left, right,
- * left — each pin lighting as it is struck — and lands in the jackpot
+ * left — bouncing off each, each lighting as it is struck — and lands in the jackpot
  * pocket at the bottom, which lights up the board, pays out five hundred,
  * drops the pocket's side like a drawbridge and lets the ball out through
  * a gate in the board's wall onto the rail below, on or back the way it
@@ -32,6 +32,20 @@ const WALL = 0.36
 const OPEN_AT = 0.12
 const OPEN = 0.15
 
+/**
+ * One hop of the way down, `dur` long. Off the lip it leaves at the pace
+ * it had, falling from level; off a pin it leaves with a little of the
+ * bounce, up and out, and gathers speed to the next. Never from a dead
+ * stop.
+ */
+function hop(from: Pt, to: Pt, dur: number, vIn: number, off: 'lip' | 'pin'): Seg {
+  const len = Math.hypot(to[0] - from[0], to[1] - from[1])
+  const mean = len / dur
+  // Off the lip the chord's pace is whatever keeps the ball's forward pace, the drop being from level.
+  const v0 = off === 'lip' ? (vIn * len) / Math.abs(to[0] - from[0]) : mean * 0.6
+  return { from, to, dur, ramp: [v0, 2 * mean - v0], arc: off === 'lip' ? (to[1] - from[1]) / 4 : 0.09 }
+}
+
 export const pachinko = definePiece<PachinkoState>({
   name: 'pachinko',
   weight: 1,
@@ -44,28 +58,27 @@ export const pachinko = definePiece<PachinkoState>({
       ]
       if (!fits(cells, [turn, 2])) continue
       // The way down: a pin a row, alternating sides more often than not.
+      // The first is always ahead: the ball comes off the lip going forward.
       const path: PachinkoState['path'] = []
       const segs: Seg[] = [ramp([-0.5, 0], [LIP, 0], ROLL, 1.6)]
       let t = segs[0].dur
       let from: Pt = [LIP, 0]
-      let side = rng.bool() ? 1 : -1
+      let side = 1
+      let vIn = 1.6
       for (let r = 0; r < ROWS; r++) {
         if (r > 0 && !rng.bool(0.25)) side = -side
         const x = side * (0.09 + 0.09 * (r % 2)) + (rng.next() - 0.5) * 0.04
         const y = ROW0 + r * ROW_GAP
         // Land a radius-and-a-pin above the pin, off centre, so the next hop goes the other way.
         const to: Pt = [x + side * 0.03, y - PIN_R - 0.12]
-        const seg = fly(from, to, HOP, 0.04)
-        seg.ease = 'in'
-        segs.push(seg)
+        segs.push(hop(from, to, HOP, vIn, r === 0 ? 'lip' : 'pin'))
         t += HOP
         path.push({ x, y, at: t })
         from = to
+        vIn = 0
       }
       const pocket: Pt = [0, POCKET_Y]
-      const landing = fly(from, pocket, 0.2, 0.02)
-      landing.ease = 'in'
-      segs.push(landing)
+      segs.push(hop(from, pocket, 0.2, 0, 'pin'))
       t += 0.2
       segs.push({ from: pocket, to: pocket, dur: OPEN_AT + OPEN })
       segs.push(ramp(pocket, [turn * 0.5, POCKET_Y], 0, ROLL))

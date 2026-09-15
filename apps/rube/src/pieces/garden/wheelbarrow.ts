@@ -1,28 +1,98 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { easeInOutSine, easeOutQuad } from '../../../../../src/core/ease'
+import { FLOOR, R, ROLL, arrive, definePiece, over, rail, ramp, segTime, trace, type Lane, type Pt } from '../../parts'
 import { soil, tuft } from './green'
 
 /**
  * A wheelbarrow parked on the path, tipped back on its legs with its tray
  * open to the rail. The ball rolls off the rail's end into the tray; the
  * weight brings the barrow forward onto its wheel and it trundles off
- * along the path, slowing, until the wheel meets a chock, the barrow
- * tips forward and the ball is dumped out onto the rail beyond. The
- * barrow stays tipped, handles in the air.
+ * along the path — gently at first, then slowing — until the wheel meets
+ * a chock: the barrow tips forward over its wheel and the ball is dumped
+ * out over the tray's lip onto the rail beyond. The barrow stays tipped,
+ * handles in the air.
+ *
+ * The ball rides the tray: through the creak, the run and the tip its lane
+ * is sampled from the one motion the barrow is drawn with, so it never
+ * runs ahead of the tray or lags behind it.
  */
 const SEAT = 0.3
 const STOP = 2.0
-const ARRIVE = arriveAt(SEAT)
 const CREAK = 0.3
 const RUN = 1.0
-const T_RUN = ARRIVE + CREAK
-const FIRE = T_RUN + RUN
 /** The wheel's axle sits this far ahead of the tray's centre, on the ground. */
 const AXLE = 0.22
 const WHEEL = 0.11
+const AY = 0.5 - WHEEL
+/** Tipped back on its legs by this much before the ball comes; tipped forward by this much at the chock. */
+const BACK = -0.16
+const DUMP = 0.5
+const TIP_T = 0.14
+/** The ball's seat in the tray, relative to the axle when the barrow is level. */
+const SEAT_REL: Pt = [-AXLE, 0.02 - AY]
+/** The ball's centre as it rolls out over the lip, and how hard it rolls down the tipped tray. */
+const LIP: Pt = [STOP + 0.44, 0]
+const SLIDE_A = 12
 
-const barrowX = (t: number) => (t < T_RUN ? SEAT : t < FIRE ? lerp(SEAT, STOP, easeOutCubic(over(t, T_RUN, FIRE))) : STOP)
+/**
+ * The run along the path, as a fraction of the way: a soft start, a peak
+ * before the middle, and a long slowing to the chock with a little pace
+ * left to bump it. The speed profile integrated once, at module load.
+ */
+const RUN_TABLE: number[] = (() => {
+  const n = 64
+  const acc = [0]
+  for (let i = 1; i <= n; i++) {
+    const r = (i - 0.5) / n
+    acc.push(acc[i - 1] + 0.12 + Math.sin(Math.PI * r) * (1.5 - r))
+  }
+  return acc.map((a) => a / acc[n])
+})()
+const runF = (r: number) => {
+  const i = Math.min(63, Math.floor(r * 64))
+  return RUN_TABLE[i] + (RUN_TABLE[i + 1] - RUN_TABLE[i]) * (r * 64 - i)
+}
+
+/** The ball comes to rest in the tipped-back tray. */
+const SEAT0: Pt = [SEAT + AXLE + SEAT_REL[0] * Math.cos(BACK) - SEAT_REL[1] * Math.sin(BACK), AY + SEAT_REL[0] * Math.sin(BACK) + SEAT_REL[1] * Math.cos(BACK)]
+const IN = arrive([-0.5, 0], SEAT0)
+const ARRIVE = segTime(IN)
+const T_RUN = ARRIVE + CREAK
+const FIRE = T_RUN + RUN
+
+const barrowX = (t: number) => (t < T_RUN ? SEAT : t < FIRE ? SEAT + (STOP - SEAT) * runF(over(t, T_RUN, FIRE)) : STOP)
+/** The barrow's tilt about its axle: back on its legs, level as it runs, forward at the chock, with a shudder once the ball is off. */
+function tiltAt(t: number): number {
+  if (t < ARRIVE) return BACK
+  if (t < T_RUN) return BACK * (1 - easeInOutSine(over(t, ARRIVE, T_RUN)))
+  if (t < FIRE) return 0
+  const since = t - FIRE
+  if (since < TIP_T) return DUMP * easeOutQuad(since / TIP_T)
+  const s = since - TIP_T
+  return DUMP - 0.04 * Math.exp(-s * 3) * Math.sin(s * 20)
+}
+/** Where the ball's seat is: in the tray, about the axle, wherever the barrow is and however it leans. */
+function seatAt(t: number): Pt {
+  const a = tiltAt(t)
+  const ax = barrowX(t) + AXLE
+  return [ax + SEAT_REL[0] * Math.cos(a) - SEAT_REL[1] * Math.sin(a), AY + SEAT_REL[0] * Math.sin(a) + SEAT_REL[1] * Math.cos(a)]
+}
+/** The tip: the tray flicks the ball up and forward, and it rolls on down the tipped tray to the lip. */
+const TIPPED = seatAt(FIRE + TIP_T)
+const SLIDE = Math.hypot(LIP[0] - TIPPED[0], LIP[1] - TIPPED[1])
+const SLIDE_DIR: Pt = [(LIP[0] - TIPPED[0]) / SLIDE, (LIP[1] - TIPPED[1]) / SLIDE]
+const T_LIP = FIRE + Math.sqrt((2 * SLIDE) / SLIDE_A)
+const V_LIP = SLIDE_A * (T_LIP - FIRE)
+function spillAt(t: number): Pt {
+  const [sx, sy] = seatAt(Math.min(t, FIRE + TIP_T))
+  const d = (SLIDE_A * Math.pow(t - FIRE, 2)) / 2
+  return [sx + SLIDE_DIR[0] * d, sy + SLIDE_DIR[1] * d]
+}
+
+const LANE: Lane = {
+  segs: [...IN, ...trace(seatAt, ARRIVE, T_RUN, 6), ...trace(seatAt, T_RUN, FIRE, 30), ...trace(spillAt, FIRE, T_LIP, 12), ramp(LIP, [2.5, 0], V_LIP, ROLL)],
+  fire: FIRE,
+}
 
 export const wheelbarrow = definePiece<{ color: string }>({
   name: 'wheelbarrow',
@@ -34,27 +104,11 @@ export const wheelbarrow = definePiece<{ color: string }>({
       [2, 0],
     ]
     if (!fits(cells, [3, 0])) return null
-    const lane: Lane = {
-      segs: [
-        ...arrive([-0.5, 0], [SEAT, 0.02]),
-        wait([SEAT, 0.02], CREAK),
-        { from: [SEAT, 0.02], to: [STOP, 0.02], dur: RUN, ease: 'out' },
-        fly([STOP, 0.02], [STOP + 0.24, 0], 0.14, 0.05),
-        ramp([STOP + 0.24, 0], [2.5, 0], 2.2, ROLL),
-      ],
-      fire: FIRE,
-    }
-    return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
+    return { cells, exit: { at: [3, 0], dir: 1 }, lane: LANE, state: { color } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const x = barrowX(t)
-    // Tipped back on its legs; level as it runs; tipped forward at the chock.
-    const tilt =
-      t < ARRIVE ? -0.16
-      : t < T_RUN ? -0.16 * (1 - easeInOutSine(over(t, ARRIVE, T_RUN)))
-      : since < 0 ? 0
-      : since < 0.12 ? 0.5 * easeOutCubic(over(since, 0, 0.12))
-      : 0.5 - 0.05 * Math.exp(-since * 3) * Math.sin(since * 20)
+    const tilt = tiltAt(t)
 
     // The rails in and out, the path between, the chock.
     rail(p, k, ink, weight, -0.5, SEAT - 0.24)
@@ -73,11 +127,10 @@ export const wheelbarrow = definePiece<{ color: string }>({
 
     // The barrow, about its axle.
     const ax = x + AXLE
-    const ay = 0.5 - WHEEL
     p.push()
-    p.translate(ax * k, ay * k)
+    p.translate(ax * k, AY * k)
     p.rotate(tilt)
-    p.translate(-ax * k, -ay * k)
+    p.translate(-ax * k, -AY * k)
     // The legs at the back, and the handles.
     outline(p, ink, weight)
     for (const dx of [-0.34, -0.3]) p.line((x + dx) * k, (FLOOR + 0.14) * k, (x + dx - 0.02) * k, 0.5 * k)
@@ -92,9 +145,9 @@ export const wheelbarrow = definePiece<{ color: string }>({
     p.rect((x - 0.01) * k, (FLOOR + 0.13) * k, 0.46 * k, 0.04 * k)
     // The wheel, turning with the ground covered.
     solid(p, ink, weight, bg)
-    p.circle(ax * k, ay * k, WHEEL * 2 * k)
+    p.circle(ax * k, AY * k, WHEEL * 2 * k)
     p.push()
-    p.translate(ax * k, ay * k)
+    p.translate(ax * k, AY * k)
     p.rotate((x - SEAT) / WHEEL)
     outline(p, ink, weight)
     for (let i = 0; i < 3; i++) {
@@ -122,24 +175,18 @@ export const wheelbarrow = definePiece<{ color: string }>({
     }
     tuft(p, k, ink, weight, 1.1, 0.5, 0.1, 0.02)
   },
-  over: (p, s, { k, t, since, ink, weight }) => {
-    // The tray's front wall stands between the viewer and the ball while it rides.
+  over: (p, s, { k, t, ink, weight }) => {
+    // The tray's front wall stands between the viewer and the ball while it rides; its lip comes down to the rail as it tips.
     if (t < ARRIVE - 0.1) return
     const x = barrowX(t)
-    const tilt =
-      t < ARRIVE ? -0.16
-      : t < T_RUN ? -0.16 * (1 - easeInOutSine(over(t, ARRIVE, T_RUN)))
-      : since < 0 ? 0
-      : since < 0.12 ? 0.5 * easeOutCubic(over(since, 0, 0.12))
-      : 0.5 - 0.05 * Math.exp(-since * 3) * Math.sin(since * 20)
+    const tilt = tiltAt(t)
     const ax = x + AXLE
-    const ay = 0.5 - WHEEL
     p.push()
-    p.translate(ax * k, ay * k)
+    p.translate(ax * k, AY * k)
     p.rotate(tilt)
-    p.translate(-ax * k, -ay * k)
+    p.translate(-ax * k, -AY * k)
     solid(p, ink, weight, s.color)
-    p.quad((x - 0.36) * k, (FLOOR - R * 0.3) * k, (x + 0.28) * k, (FLOOR - R * 0.1) * k, (x + 0.22) * k, (FLOOR + 0.16) * k, (x - 0.24) * k, (FLOOR + 0.16) * k)
+    p.quad((x - 0.36) * k, (FLOOR - R * 0.3) * k, (x + 0.28) * k, (FLOOR - 0.08) * k, (x + 0.22) * k, (FLOOR + 0.16) * k, (x - 0.24) * k, (FLOOR + 0.16) * k)
     outline(p, ink, weight * 0.7)
     for (const dx of [-0.16, 0, 0.14]) p.line((x + dx) * k, (FLOOR - 0.01) * k, (x + dx) * k, (FLOOR + 0.13) * k)
     p.pop()

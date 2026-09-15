@@ -23,14 +23,14 @@ import { wheelbarrow } from './wheelbarrow'
  *
  *   rail         a path edge on stakes, between tufts and pots
  *   wateringcan  tongue → cord → the can tips → a shower washes the ball on faster
- *   vine         onto a leaf in a pot; the vine shoots up the trellis with it; out one or two floors up
- *   bloom        round and down the inside of a trumpet flower, down the stem, out at the root
- *   wheelbarrow  into the tray; the barrow trundles two cells to a chock and tips it out
+ *   vine         onto a leaf in a pot; the vine shoots up the trellis with it; the leaf droops and spills it, one or two floors up
+ *   bloom        over the near petals, round and down the inside of a trumpet flower, down the stem, out at the root
+ *   wheelbarrow  into the tray; the barrow trundles two cells to a chock and pitches forward; the ball rides the tip out over the lip
  *   sprinkler    onto the head; the tap opens; spun off across a flowerbed
  *   sunflower    over a root; the head nods and dusts the ball with pollen; a new colour
- *   pod          into a seed pod; it swells and bursts; a seed shoots out and takes the thread
- *   burrow       into a hole; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
- *   hose         into a coiled hose; a bulge goes round twice; out of the nozzle
+ *   pod          into a seed pod's mouth; it swells and bursts; a seed shoots out between the flaps and takes the thread
+ *   burrow       over the lip of a hole and down it; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
+ *   hose         into a coiled hose's mouth; a bulge the ball's size goes round twice, gathering pace; out of the nozzle
  *   rake         over the handle onto the tines; the handle comes up behind, over, and cracks it on the back; it shoots off
  *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
  *   portal       the door at either end of a map; the far side is always a new map

@@ -25,14 +25,14 @@ import { zigzag } from './zigzag'
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
  *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way, counting turns in lamps
  *   changer    into the slot in the cabinet's side; chunk; a token comes out under the far flap and takes the thread
- *   ticket     into the hopper; tickets feed out below; out of the prize chute one or two floors down
+ *   ticket     off the rail's end into the hopper; tickets feed out below; drops out of the prize chute beside the cabinet, one or two floors down
  *   zigzag     down lit tubes to pads that turn the ball; one or two floors; +10 a pad
- *   pachinko   off a lip through five rows of pins, each lighting; the jackpot pocket drops its side; out a gate two floors down
+ *   pachinko   off a lip, bouncing pin to pin through five rows, each lighting; the jackpot pocket drops its side; out a gate two floors down
  *   skee       a kicker, up the alley, off the lip, into the fifty ring a floor up
  *   hockey     onto the air table; a mallet winds up behind and slaps it the length of the table into the goal
  *   claw       into the cabinet; the claw comes down, closes, lifts, trundles, lets go
  *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck to the bell; ding; the puck cants; one or two floors up
- *   slingshot  into the band; the kicker fires; flung a floor up onto a shelf
+ *   slingshot  into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf
  *   portal     the door at either end of a map; the far side is always a new map
  */
 

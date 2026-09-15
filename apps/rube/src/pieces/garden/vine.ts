@@ -8,8 +8,9 @@ import { bloom, leaf, pot, stem } from './green'
  * the path; the ball rolls onto the leaf and it sags, and the vine wakes:
  * the stem shoots up the trellis carrying the leaf and the ball with it,
  * side leaves unfurling as it passes, one or two floors to a rail at the
- * top, where a flower opens and the ball rolls off — on, or back the way
- * it came. The vine stays grown.
+ * top. There the flower opens, the leaf droops toward the rail under the
+ * ball's weight, and the ball rolls down it and off — on, or back the way
+ * it came. The vine stays grown, the leaf stays drooped.
  */
 export interface VineState {
   color: string
@@ -19,7 +20,14 @@ export interface VineState {
 
 const ARRIVE = arriveAt(0)
 const WAKE = 0.3
-const SETTLE = 0.2
+/** The leaf holds the ball this far above the rail at the top, and droops by this much to let it go. */
+const HOLD = 0.05
+const DROOP = 0.22
+const DROOP_AT = 0.05
+const DROOP_T = 0.3
+/** The ball starts rolling this long after the leaf starts to droop, and leaves it here. */
+const ROLL_AT = 0.12
+const OFF = 0.22
 const growTime = (floors: number) => 0.5 + 0.6 * floors
 
 export const vine = definePiece<VineState>({
@@ -37,9 +45,10 @@ export const vine = definePiece<VineState>({
         segs: [
           ...arrive([-0.5, 0], [0, 0]),
           wait([0, 0], WAKE),
-          { from: [0, 0], to: [0, -floors], dur: growTime(floors), ease: 'inout' },
-          wait([0, -floors], SETTLE),
-          ramp([0, -floors], [turn * 0.5, -floors], 0, ROLL),
+          { from: [0, 0], to: [0, -floors - HOLD], dur: growTime(floors), ease: 'inout' },
+          wait([0, -floors - HOLD], ROLL_AT),
+          ramp([0, -floors - HOLD], [turn * OFF, -floors], 0, 1.4),
+          ramp([turn * OFF, -floors], [turn * 0.5, -floors], 1.4, ROLL),
         ],
         fire: ARRIVE + WAKE,
       }
@@ -52,7 +61,9 @@ export const vine = definePiece<VineState>({
     const top = -floors
     const grow = growTime(floors)
     const up = since < 0 ? 0 : easeInOutSine(over(since, 0, grow))
-    const y = up * top
+    const y = up * (top - HOLD)
+    // At the top the leaf droops toward the rail, and the ball rolls down it.
+    const droop = since < grow + DROOP_AT ? 0 : DROOP * easeInOutSine(over(since, grow + DROOP_AT, grow + DROOP_AT + DROOP_T))
     // The leaf sags under the ball, and quivers before the vine wakes.
     const sag = t < ARRIVE ? 0 : 0.02 * Math.min(1, over(t, ARRIVE, ARRIVE + 0.1))
     const quiver = t > ARRIVE + 0.1 && since < 0 ? 0.03 * Math.sin(t * 40) * over(t, ARRIVE + 0.1, ARRIVE + WAKE) : 0
@@ -105,11 +116,12 @@ export const vine = definePiece<VineState>({
     // The flower at the top, opening once the ball is up.
     const opened = since > grow ? over(since, grow, grow + 0.5) : 0
     if (opened > 0) bloom(p, k, ink, weight, s.color, bg, -0.08 * turn, top - 0.2, 0.09, 6, opened, since)
-    // The big leaf the ball rides: under the ball, sagging, in front of the stem.
+    // The big leaf the ball rides: under the ball, sagging, in front of the
+    // stem; it lies with its tip toward the way out, and droops there.
     p.push()
     p.translate(0, (y + R + 0.02 + sag) * k)
-    p.rotate(quiver)
-    leaf(p, k, ink, weight, s.color, -0.24, 0.02, 0.48, 0, 0.3)
+    p.rotate(quiver + turn * droop)
+    leaf(p, k, ink, weight, s.color, -turn * 0.24, 0.02, 0.48, turn > 0 ? 0 : Math.PI, 0.3)
     p.pop()
   },
 })
