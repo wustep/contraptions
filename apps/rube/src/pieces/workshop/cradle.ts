@@ -3,12 +3,12 @@ import { R, ROLL, ball, chain, definePiece, fly, over, rail, ramp, roll, type Ba
 
 /**
  * A Newton's cradle across the line. Three balls hang from a beam on
- * strings, the last of them on a hook. The ball rolls in and strikes the
- * first; it stops dead, and the thread passes to the far ball, which
- * swings out and, still climbing, slips its hook — so it leaves the swing
- * along its tangent, up and forward, and lands on the rail to carry on.
- * The one that arrived hangs there for ever, and so do the two that never
- * moved.
+ * strings, all alike. The ball rolls in and strikes the first; it stops
+ * dead, and the thread passes to the far ball, which swings out and, still
+ * climbing, slips its string — so it leaves the swing along its tangent,
+ * up and forward, and lands on the rail to carry on. The string swings
+ * back empty. The one that arrived stays there for ever, and so do the two
+ * that never moved.
  */
 const BEAM_Y = -0.62
 const STRING = BEAM_Y * -1
@@ -80,25 +80,19 @@ export const cradle = definePiece<{ color: string; next: string }>({
       p.line((FIRST + GAP * i) * k, BEAM_Y * k, x * k, -R * k)
       ball(p, k, ink, weight, s.next, x * k, 0, 0)
     }
-    // The far ball's string: with it until the hook slips; then hanging
-    // free from the hook, swinging back to rest.
+    // The far ball's string, the same line as the others: to the ball's rim
+    // along the string while the ball is on it; then, from the angle it let
+    // go at, swinging back empty to hang at rest, its own length still.
+    const tail = STRING - R
+    outline(p, ink, weight)
     if (since < T_RELEASE) {
-      const [fx, fy] = farAt(angleAt(since))
-      outline(p, ink, weight)
-      p.line(LAST * k, BEAM_Y * k, fx * k, (fy - R) * k)
+      const a = angleAt(since)
+      p.line(LAST * k, BEAM_Y * k, (LAST + Math.sin(a) * tail) * k, (BEAM_Y + Math.cos(a) * tail) * k)
     } else {
-      const back = RELEASE * 0.6 * Math.exp(-(since - T_RELEASE) * 2) * Math.cos((since - T_RELEASE) * 9)
-      outline(p, ink, weight)
-      p.line(LAST * k, BEAM_Y * k, (LAST + Math.sin(back) * STRING * 0.9) * k, (BEAM_Y + Math.cos(back) * STRING * 0.9) * k)
+      const back = RELEASE * Math.exp(-(since - T_RELEASE) * 2) * Math.cos((since - T_RELEASE) * 9)
+      p.line(LAST * k, BEAM_Y * k, (LAST + Math.sin(back) * tail) * k, (BEAM_Y + Math.cos(back) * tail) * k)
     }
     if (since < 0) ball(p, k, ink, weight, s.next, LAST * k, 0, 0)
-    // The hook on the beam that the far string slips.
-    p.push()
-    p.translate(LAST * k, BEAM_Y * k)
-    p.rotate(since < T_RELEASE ? 0 : 0.8)
-    outline(p, ink, weight)
-    p.line(0, 0, 0.06 * k, 0.05 * k)
-    p.pop()
     // The ball that arrived, parked against the first, in the colour it came in.
     if (since >= 0) ball(p, k, ink, weight, color, SEAT * k, 0, SEAT / R)
     // The click.
