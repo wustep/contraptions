@@ -32,7 +32,7 @@ import { whirlpool } from './whirlpool'
  *   pelican     off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies to the far post, tips its head and the ball rolls out
  *   blowhole    onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws it a floor up, past a shelf and down onto it
  *   oyster      into the open shell; snap; a beat; a pearl rolls out and takes the thread
- *   whirlpool   round the near side and round and down the vortex to the drain, out a floor down facing back
+ *   whirlpool   onto a brim-full tank; round the near side and round and down the vortex to the drain, out a floor down facing back
  *   portal      the door at either end of a map; the far side is always a new map
  */
 

@@ -519,7 +519,7 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
 | blowhole | onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws the ball a floor up, past a shelf and down onto it |
 | oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
-| whirlpool | the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
+| whirlpool | onto the water of a tank full to the brim; the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
 
 ### The garden's pieces
 
