@@ -82,17 +82,17 @@ export const sprinkler = definePiece<{ color: string }>({
     solid(p, ink, weight, s.color)
     p.rect(0.04 * k, 0, 0.1 * k, 0.03 * k)
     p.pop()
-    // The head: a disc the ball sits on, its arms turning.
+    // The head: one disc the ball sits on, seen from a little above, with
+    // three nozzles on its face going round as it turns. No spokes: the
+    // turning is told by the nozzles and the water.
     solid(p, ink, weight, s.color)
     p.ellipse(HEAD * k, (FLOOR + 0.03) * k, 0.3 * k, 0.07 * k)
-    p.push()
-    p.translate(HEAD * k, (FLOOR + 0.03) * k)
-    outline(p, ink, weight)
+    p.noStroke()
+    p.fill(ink)
     for (let i = 0; i < 3; i++) {
       const a = angle + (i * Math.PI * 2) / 3
-      p.line(0, 0, Math.cos(a) * 0.16 * k, Math.sin(a) * 0.035 * k)
+      p.circle((HEAD + Math.cos(a) * 0.1) * k, (FLOOR + 0.03 + Math.sin(a) * 0.02) * k, 0.028 * k)
     }
-    p.pop()
     // The water: jets off the arms while it runs, arcing out and down onto the bed.
     if (r > 0.02) {
       for (let j = 0; j < 12; j++) {
