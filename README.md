@@ -474,7 +474,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
-| toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
+| toaster | into the slot, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
