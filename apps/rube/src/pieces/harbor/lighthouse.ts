@@ -69,7 +69,7 @@ export const lighthouse = definePiece<LighthouseState>({
       const lane: Lane = {
         segs: [
           ...arrive([-0.5, 0], [DOOR, 0]),
-          { from: [DOOR, 0], to: INSIDE, dur: IN },
+          { from: [DOOR, 0], to: INSIDE, dur: IN, ease: 'in' },
           { from: INSIDE, to: [0, top], dur: climbTime(floors), ease: 'inout', hidden: true },
           wait([0, top], TOP_WAIT, { hidden: true }),
           ramp([0, top], [turn * 0.5, top], 1.6, ROLL),
