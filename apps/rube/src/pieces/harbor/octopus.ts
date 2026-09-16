@@ -5,13 +5,19 @@ import { water } from './sea'
 
 /**
  * An octopus in a rock pool under the pier. Its eyes follow the ball
- * along the deck; as it passes overhead the siphon squirts a jet of ink
- * straight up at it, and the ball rolls on a different colour — for good.
- * The octopus goes on watching, and the tentacles never stop moving.
+ * along the deck; as it passes overhead the funnel on top of its head
+ * puckers, draws breath, and squirts a jet of ink straight up at it — a
+ * splat of the new colour all round the ball, and the ball rolls on that
+ * colour for good. The octopus goes on watching, and the tentacles never
+ * stop moving.
  */
 const HEAD_Y = 0.36
-const SIPHON = { x: 0.1, y: 0.28 }
+/** The funnel: on top of the head, its lip where the ink comes out. */
+const FUNNEL_Y = HEAD_Y - 0.12
+const LIP_Y = FUNNEL_Y - 0.07
 const SQUIRT = 0.12
+/** The funnel puckers over this long before the squirt, and eases back after. */
+const BREATH = 0.3
 
 export const octopus = definePiece<{ color: string; paint: string }>({
   name: 'octopus',
@@ -66,42 +72,66 @@ export const octopus = definePiece<{ color: string; paint: string }>({
       p.noStroke()
       p.circle((dx + 0.015 * bx * 1.6) * k, (HEAD_Y - 0.03 - 0.01) * k, 0.03 * squint * k)
     }
+    // The funnel on top of the head, aimed straight up at the deck: it
+    // puckers wide as the ball comes, drawing breath, and eases back after
+    // the squirt. A puckered lip on a short throat, in the body's colour.
+    const pucker = since < -BREATH ? 0 : since < 0 ? over(since, -BREATH, 0) : 1 - over(since, 0, 0.5)
+    const flare = 1 + 0.35 * pucker
     solid(p, ink, weight, s.color)
-    p.push()
-    p.translate(SIPHON.x * k, SIPHON.y * k)
-    p.rotate(-0.4)
-    p.rect(0, 0, 0.06 * k, 0.09 * k, 0.01 * k)
-    p.pop()
+    p.quad(-0.03 * k, FUNNEL_Y * k, 0.03 * k, FUNNEL_Y * k, 0.045 * flare * k, LIP_Y * k, -0.045 * flare * k, LIP_Y * k)
+    p.ellipse(0, LIP_Y * k, 0.09 * flare * k, 0.035 * k)
+    p.fill(ink)
+    p.noStroke()
+    p.ellipse(0, LIP_Y * k, 0.05 * flare * k, 0.016 * k)
 
-    // The squirt: a jet of ink from the siphon up to the ball, then a puff of the new colour.
+    // The squirt: a jet of ink from the funnel's lip straight up to the ball.
     if (since > -SQUIRT && since < SQUIRT) {
       const f = 1 - Math.abs(since) / SQUIRT
+      const reach = LIP_Y - (LIP_Y - FLOOR) * Math.min(1, f * 1.6)
       p.push()
       p.stroke(s.paint)
-      p.strokeWeight(weight * (1.5 + 2 * f))
-      p.noFill()
-      const reach = SIPHON.y - (SIPHON.y - FLOOR) * Math.min(1, f * 1.6)
-      p.bezier(SIPHON.x * k, SIPHON.y * k, (SIPHON.x - 0.04) * k, (SIPHON.y - 0.1) * k, 0.02 * k, (reach + 0.05) * k, 0, reach * k)
+      p.strokeWeight(weight * (2 + 2.5 * f))
+      p.line(0, LIP_Y * k, 0, reach * k)
+      p.noStroke()
+      p.fill(s.paint)
+      p.circle(0, reach * k, (0.05 + 0.04 * f) * k)
       p.pop()
     }
-    if (since > -0.02 && since < 0.3) {
-      const f = over(since, 0, 0.3)
+    // The splat: the ink hits the ball's underside and goes everywhere —
+    // spokes off the ball, and drops flung out and up round it that fall
+    // away — in the new colour, so the change is seen to happen.
+    if (since > -0.02 && since < 0.4) {
+      const f = over(since, 0, 0.4)
       p.push()
       p.stroke(s.paint)
-      p.strokeWeight(weight)
-      burst(p, 0, 0, (0.16 + 0.14 * f) * k, (0.2 + 0.2 * f) * k, 6, 0.5 + f)
+      p.strokeWeight(weight * 1.4 * (1 - f * 0.5))
+      burst(p, 0, 0, (0.15 + 0.18 * f) * k, (0.22 + 0.26 * f) * k, 8, 0.4 + f * 0.6)
+      p.noStroke()
+      p.fill(s.paint)
+      for (let j = 0; j < 7; j++) {
+        const a = Math.PI + (Math.PI * (j + 0.5)) / 7
+        const r = 0.16 + 0.34 * f
+        const dx = Math.cos(a) * r * (0.8 + 0.2 * ((j * 3) % 2))
+        const dy = Math.sin(a) * r * 0.7 + 0.5 * f * f
+        p.circle(dx * k, dy * k, (0.045 - 0.03 * f) * (0.8 + 0.2 * (j % 2)) * k)
+      }
       p.pop()
     }
-    // Drips of ink from the deck after, and a stain that spreads on the rail.
+    // Ink on the deck after — a stain that spreads along the rail — and drips off it into the pool.
     if (since > SQUIRT) {
       const g = over(since, SQUIRT, SQUIRT + 1.4)
       solid(p, ink, weight, s.paint)
-      p.rect(0, (FLOOR + 0.04) * k, (0.14 + 0.16 * g) * k, 0.04 * k, 0.02 * k)
+      p.rect(0, (FLOOR + 0.04) * k, (0.2 + 0.2 * g) * k, 0.045 * k, 0.02 * k)
       if (g < 1) {
         p.noStroke()
         p.fill(s.paint)
-        const y = FLOOR + 0.06 + easeOutCubic(g) * (HEAD_Y - 0.2 - FLOOR)
-        p.ellipse(-0.05 * k, y * k, 0.035 * k, 0.05 * k)
+        for (const [dx, d] of [
+          [-0.07, 0],
+          [0.06, 0.45],
+        ]) {
+          const h = ((easeOutCubic(g) + d) % 1)
+          p.ellipse(dx * k, (FLOOR + 0.06 + h * (FUNNEL_Y - 0.06 - FLOOR)) * k, 0.035 * k, 0.05 * k)
+        }
       }
     }
   },
