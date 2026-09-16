@@ -20,7 +20,7 @@ import { drop, tuft } from './green'
 const MOUTH = -0.24
 const NOZZLE = 1.12
 /** The hose's width when nothing is in it. */
-const TUBE = 0.08
+const TUBE = 0.07
 /**
  * How long the bulge is, either side of the ball's centre: the skin
  * stretches over nearly a ball's width each way. Short enough to read as

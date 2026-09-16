@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
-import { flash, lamp, score, tube } from './neon'
+import { flash, lamp, score } from './neon'
 
 /**
  * A slingshot. A fork is clamped to the post that holds the shelf above,
@@ -79,11 +79,39 @@ function pouchAt(t: number): Pt {
     const f = easeInQuad(over(t, FIRE, T_OFF))
     return [P_BACK[0] + (MOUTH[0] - P_BACK[0]) * f, P_BACK[1] + (MOUTH[1] - P_BACK[1]) * f]
   }
-  // Empty: past the mouth a little, swinging back, and dangling under the tips on slack bands.
+  // Empty: on past the mouth, checked by the bands, swinging back, and settling to dangle under the tips on slack bands.
   const s = t - T_OFF
-  const fling = 0.06 * Math.sin(s * 22) * Math.exp(-s * 7)
-  const hang = 0.16 * Math.min(1, s / 0.4)
+  const fling = 0.08 * Math.sin(s * 18) * Math.exp(-s * 6)
+  const hang = 0.16 * easeOutQuad(Math.min(1, s / 0.5))
   return [MOUTH[0] + AIM[0] * fling, MOUTH[1] + AIM[1] * fling + hang]
+}
+
+/** A band's length unstretched: taut and straight when the pouch is further than this from the tip, sagging when it is nearer. */
+const REST = 0.3
+
+/** A band from a tip to the pouch: a lit tube, straight under tension, hanging in a bight when slack. */
+function band(p: p5, k: number, ink: string, weight: number, color: string, a: Pt, b: Pt, lit: number): void {
+  const slack = Math.max(0, REST - Math.hypot(b[0] - a[0], b[1] - a[1]))
+  const mid: Pt = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + slack * 0.9]
+  const curve = () => {
+    p.beginShape()
+    p.vertex(a[0] * k, a[1] * k)
+    p.quadraticVertex(mid[0] * k, mid[1] * k, b[0] * k, b[1] * k)
+    p.endShape()
+  }
+  p.push()
+  p.noFill()
+  if (lit > 0.02) {
+    const halo = p.color(color)
+    halo.setAlpha(40 * lit)
+    p.stroke(halo)
+    p.strokeWeight(weight * 3.2)
+    curve()
+  }
+  p.stroke(lit > 0.5 ? color : ink)
+  p.strokeWeight(weight * 1.3)
+  curve()
+  p.pop()
 }
 
 const LANE: Lane = {
@@ -159,7 +187,7 @@ export const slingshot = definePiece<{ color: string }>({
     p.circle(TIP_FAR[0] * k, TIP_FAR[1] * k, 0.06 * k)
     lamp(p, k, ink, weight, s.color, bg, CROTCH[0] + 0.02, CROTCH[1] - 0.06, 0.03, lit)
     // The far band, and the pouch's back and tail: the tail's ring is what the catch holds.
-    tube(p, k, ink, weight, s.color, TIP_FAR[0], TIP_FAR[1], px - 0.12, py + 0.05, lit)
+    band(p, k, ink, weight, s.color, TIP_FAR, [px - 0.12, py + 0.05], lit)
     solid(p, ink, weight, s.color)
     p.rect(px * k, (py + 0.08) * k, 0.3 * k, 0.15 * k, 0.04 * k)
     outline(p, ink, weight)
@@ -175,7 +203,7 @@ export const slingshot = definePiece<{ color: string }>({
     const [px, py] = pouchAt(t)
     const lit = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE, T_SAGGED) : 1 - over(since, 0.4, 1.1)
     // In front of the ball: the near band, the pouch's front, and the near prong the ball passes behind.
-    tube(p, k, ink, weight, s.color, TIP_NEAR[0], TIP_NEAR[1], px + 0.12, py + 0.05, lit)
+    band(p, k, ink, weight, s.color, TIP_NEAR, [px + 0.12, py + 0.05], lit)
     solid(p, ink, weight, s.color)
     p.rect(px * k, (py + 0.1) * k, 0.3 * k, 0.11 * k, 0.04 * k)
     bar(p, k, ink, weight, s.color, CROTCH, TIP_NEAR, 0.045)
