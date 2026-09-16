@@ -80,8 +80,8 @@ export const spinner = definePiece<{ color: string }>({
     p.line(0, -0.5 * k, 0, AXLE_Y * k)
     // The lamps up the post: one for every turn so far, clear of the plate's sweep.
     for (let i = 0; i < 5; i++) lamp(p, k, ink, weight, s.color, bg, -0.3, -0.44 + i * 0.06, 0.02, since > 0 && turns > i ? 1 : 0)
-    // The score, once it stops.
-    if (since > 2 && since < 2.9) score(p, k, s.color, 0, AXLE_Y - 0.3, `+${Math.max(1, turns) * 10}`, since - 2, 0.9)
+    // The score so far, while the plate is still going and the piece is still in view.
+    if (since > 0.6 && since < 1.5) score(p, k, s.color, 0, AXLE_Y - 0.2, `+${Math.max(1, turns) * 10}`, since - 0.6, 0.9)
   },
   over: (p, s, { k, t, since, ink, weight }) => {
     // The plate, in front of the ball: hanging from the axle, turning about

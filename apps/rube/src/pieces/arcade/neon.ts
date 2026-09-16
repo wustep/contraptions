@@ -72,10 +72,17 @@ const GLYPHS: Record<string, number[]> = {
   '+': [0b000, 0b010, 0b111, 0b010, 0b000],
 }
 
-/** Bitmap text centred on (x, y), each pixel `px` cells, in the colour. */
+/**
+ * Bitmap text centred on (x, y), each pixel `px` cells, in the colour. A
+ * piece facing the other way is drawn mirrored, but its numbers still read
+ * left to right: the text undoes whatever flip the canvas is under.
+ */
 export function digits(p: p5, k: number, color: string, x: number, y: number, text: string, px: number): void {
   const w = text.length * 4 - 1
+  const flip = (p.drawingContext as CanvasRenderingContext2D).getTransform().a < 0 ? -1 : 1
   p.push()
+  p.translate(x * k, y * k)
+  p.scale(flip, 1)
   p.noStroke()
   p.fill(color)
   for (let c = 0; c < text.length; c++) {
@@ -84,8 +91,8 @@ export function digits(p: p5, k: number, color: string, x: number, y: number, te
     for (let r = 0; r < 5; r++) {
       for (let b = 0; b < 3; b++) {
         if (!(g[r] & (1 << (2 - b)))) continue
-        const gx = x + (c * 4 + b - w / 2 + 0.5) * px
-        const gy = y + (r - 2) * px
+        const gx = (c * 4 + b - w / 2 + 0.5) * px
+        const gy = (r - 2) * px
         p.rect(gx * k, gy * k, px * k * 0.98, px * k * 0.98)
       }
     }
