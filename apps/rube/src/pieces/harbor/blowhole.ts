@@ -77,12 +77,13 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
     p.bezierVertex(0.4 * k, 0.34 * k, 0.42 * k, 0.24 * k, 0.49 * k, 0.19 * k)
     p.bezierVertex(0.5 * k, 0.3 * k, 0.46 * k, 0.42 * k, 0.44 * k, 0.5 * k)
     p.endShape(p.CLOSE)
-    // The eye, and the mouth's line back from the snout.
+    // The eye — shut tight as it blows — and the mouth's line back from the snout.
+    const blink = since > -0.05 && since < 0.3 ? 0.25 : 1
     solid(p, ink, weight * 0.8, bg)
-    p.circle(-0.35 * k, 0.26 * k, 0.05 * k)
+    p.ellipse(-0.35 * k, 0.26 * k, 0.05 * k, 0.05 * blink * k)
     p.noStroke()
     p.fill(ink)
-    p.circle(-0.345 * k, 0.26 * k, 0.022 * k)
+    p.ellipse(-0.345 * k, 0.26 * k, 0.022 * k, 0.022 * blink * k)
     outline(p, ink, weight * 0.8)
     p.noFill()
     p.bezier(-0.47 * k, 0.31 * k, -0.42 * k, 0.35 * k, -0.34 * k, 0.35 * k, -0.28 * k, 0.33 * k)

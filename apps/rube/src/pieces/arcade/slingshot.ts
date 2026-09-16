@@ -117,9 +117,9 @@ function band(p: p5, k: number, ink: string, weight: number, color: string, a: P
 const LANE: Lane = {
   segs: [
     ...arrive([-0.5, 0], P_SEAT),
-    ...trace(pouchAt, ARRIVE, T_SAGGED, 4),
+    ...trace(pouchAt, ARRIVE, T_SAGGED, 6),
     wait(P_BACK, HOLD),
-    ...trace(pouchAt, FIRE, T_OFF, 10),
+    ...trace(pouchAt, FIRE, T_OFF, 18),
     fly(MOUTH, LAND, FLY_T, ARC),
     ramp(LAND, [0.5, SHELF_Y], V_LAND, ROLL),
   ],
@@ -185,7 +185,6 @@ export const slingshot = definePiece<{ color: string }>({
     bar(p, k, ink, weight, s.color, CROTCH, TIP_FAR, 0.045)
     solid(p, ink, weight, s.color)
     p.circle(TIP_FAR[0] * k, TIP_FAR[1] * k, 0.06 * k)
-    lamp(p, k, ink, weight, s.color, bg, CROTCH[0] + 0.02, CROTCH[1] - 0.06, 0.03, lit)
     // The far band, and the pouch's back and tail: the tail's ring is what the catch holds.
     band(p, k, ink, weight, s.color, TIP_FAR, [px - 0.12, py + 0.05], lit)
     solid(p, ink, weight, s.color)
