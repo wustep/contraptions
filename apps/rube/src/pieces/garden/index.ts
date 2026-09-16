@@ -24,7 +24,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   rail         a path edge on stakes, between tufts and pots
  *   wateringcan  tongue → cord → the can tips → a shower washes the ball on faster
  *   vine         onto a leaf in a pot; the vine shoots up the trellis with it; the leaf droops and spills it, one or two floors up
- *   bloom        over the near petals, round and down the inside of a trumpet flower, down the stem, out at the root
+ *   bloom        over the near petals, round and down the inside of a trumpet flower, down the stem into its pot, out at the root
  *   wheelbarrow  into the tray; the barrow trundles two cells to a chock and pitches forward; the ball rides the tip out over the lip
  *   sprinkler    onto the head; the tap opens and the nozzles go round; spun off across a flowerbed
  *   sunflower    over a root; the head nods and dusts the ball with pollen; a new colour
