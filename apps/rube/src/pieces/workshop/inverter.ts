@@ -3,24 +3,27 @@ import { FLOOR, R, ROLL, burst, chain, definePiece, over, rail, ramp, roll, segT
 
 /**
  * A gravity inverter. Two coils on posts hold a field between them with a
- * rail along its top, and no rail along the bottom: the ball rolls in, the
- * floor ends, and instead of falling it falls *up* onto the ceiling rail,
- * bobs along it upside down, slower, and at the far coil falls back down
- * onto the rail and carries on as if nothing had happened.
+ * rail along its top, and no rail along the bottom: the ball rolls in
+ * under the first coil, the floor ends, and instead of falling it falls
+ * *up* onto the ceiling rail, bobs along it upside down, slower, and
+ * before the far coil falls back down onto the rail and carries on as if
+ * nothing had happened. The coils sit up by the ceiling, clear of the ball
+ * on the floor and of the ball on the ceiling, so it rises and drops
+ * inside the field and never through a coil.
  */
 const CEIL = -0.44
 const RIDE = CEIL + R
-const X0 = 0.5
-const X1 = 1.5
+const X0 = 0.35
+const X1 = 1.65
 /** Where the floor rail ends and starts again, and where the ball leaves and lands. */
-const FLIP = 0.3
-const DROP = 1.7
-const RAIL_END = 0.4
-const RAIL_BACK = 1.6
+const FLIP = 0.5
+const DROP = 1.5
+const RAIL_END = 0.52
+const RAIL_BACK = 1.48
 const UPSPEED = 5
-/** The ceiling run: from over the first coil to over the second, with a bob and a lull in the middle. */
-const RIDE0 = X0 + 0.2
-const RIDE1 = X1 - 0.2
+/** The ceiling run: from inside the first coil to inside the second, with a bob and a lull in the middle. */
+const RIDE0 = FLIP + 0.2
+const RIDE1 = DROP - 0.2
 const RIDE_DUR = 0.42
 const BOB = 0.025
 
@@ -73,11 +76,11 @@ export const inverter = definePiece<{ color: string }>({
       p.line((x - 0.06) * k, 0.5 * k, (x + 0.06) * k, 0.5 * k)
     }
     p.line((X0 - 0.06) * k, CEIL * k, (X1 + 0.06) * k, CEIL * k)
-    // The coils on the posts, three windings each, lit while the field is on.
+    // The coils on the posts, up by the ceiling, three windings each, lit while the field is on.
     for (const x of [X0, X1]) {
       for (let i = 0; i < 3; i++) {
         solid(p, ink, weight, inside ? s.color : bg)
-        p.rect(x * k, (-0.3 + i * 0.09) * k, 0.14 * k, 0.07 * k, 0.02 * k)
+        p.rect(x * k, (CEIL + 0.08 + i * 0.08) * k, 0.14 * k, 0.065 * k, 0.02 * k)
       }
     }
     // The field: dashed lines between the coils while it is on.
