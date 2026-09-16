@@ -514,10 +514,10 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | lighthouse | in at the door; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
-| octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
+| octopus | its eyes follow the ball; the funnel on its head puckers and squirts ink straight up at it; a splat, and the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
 | pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
-| blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up, past a shelf and down onto it |
+| blowhole | onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws the ball a floor up, past a shelf and down onto it |
 | oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
 | whirlpool | the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
 
