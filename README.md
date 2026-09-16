@@ -542,8 +542,9 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 
 Neon night. The palettes are dark and a colour laid down with a soft halo
 reads as a lit tube; the halo is the only translucency in the show, and
-scores pop off hits in a three-by-five bitmap font, on the beat of the hit
-and with a rim of the paper so they read over whatever they cross. A
+scores pop off hits in a three-by-five bitmap font, on the beat of the hit,
+drawn last of all over every machine and the ball, and with a rim of the
+paper so they read over whatever they cross. A
 machine's display is a dark window its digits light in, and marquee lamps
 on a body of their own colour sit in a dark recess, so lit and unlit read.
 

@@ -194,12 +194,12 @@ export const slingshot = definePiece<{ color: string }>({
     solid(p, ink, weight * 0.9, bg)
     p.circle(px * k, (py + 0.23) * k, 0.05 * k)
 
-    // The ball leaving the fork, and the score with it: one beat, at the
-    // mouth, as the shot is made — not at the fork while the ball is still
-    // down in the pouch.
+    // The ball leaving the fork.
     flash(p, k, s.color, weight, MOUTH[0], MOUTH[1], t - T_OFF)
-    score(p, k, s.color, bg, MOUTH[0] - 0.26, MOUTH[1] - 0.06, '+100', t - T_OFF)
   },
+  // The score with the flash: one beat, at the mouth, as the shot is made —
+  // not at the fork while the ball is still down in the pouch.
+  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, MOUTH[0] - 0.26, MOUTH[1] - 0.06, '+100', t - T_OFF),
   over: (p, s, { k, t, ink, weight, since }) => {
     const [px, py] = pouchAt(t)
     const lit = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE, T_SAGGED) : 1 - over(since, 0.4, 1.1)

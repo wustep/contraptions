@@ -136,7 +136,10 @@ export function digits(p: p5, k: number, color: string, x: number, y: number, te
 /**
  * A score popping off (x, y): rises `rise` cells, holds, fades, over `dur`
  * seconds from the moment `since` = 0. It carries a rim of the paper so it
- * reads over whatever it pops across, and fades as one with it.
+ * reads over whatever it pops across, and fades as one with it. Call it
+ * from a piece's `scores` pass, never its `draw`: the show runs that pass
+ * last of all, over every piece and the ball, so a score popping up into
+ * the cell above is never behind the machine that stands there.
  */
 export function score(p: p5, k: number, color: string, bg: string, x: number, y: number, text: string, since: number, dur = 0.8, rise = 0.18): void {
   if (since < 0 || since > dur) return

@@ -157,6 +157,6 @@ export const striker = definePiece<StrikerState>({
     p.line(-0.08 * k, BELL * k, 0.08 * k, BELL * k)
     p.pop()
     flash(p, k, s.color, weight, 0, top - HOOD + BELL, since, 0.3, 0.14, 0.3)
-    score(p, k, s.color, bg, 0, top - HOOD - 0.1, '+1000', since, 1.2)
   },
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -s.floors - HOOD - 0.1, '+1000', since, 1.2),
 })

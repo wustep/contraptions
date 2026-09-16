@@ -101,10 +101,16 @@ export const zigzag = definePiece<ZigzagState>({
       solid(p, ink, weight, lit > 0.5 ? s.color : bg)
       p.rect(side * (POST - thick / 2) * k, by * k, thick * k, 0.22 * k, 0.015 * k)
       lamp(p, k, ink, weight, s.color, bg, side * POST, by - 0.19, 0.025, lit)
-      score(p, k, s.color, bg, side * TURN, by - 0.12, '+10', t - s.hits[i], 0.6)
     }
     // The rail out, from the last tube's foot.
     outline(p, ink, weight)
     p.line(x * k, (floors + FLOOR) * k, turn * 0.5 * k, (floors + FLOOR) * k)
+  },
+  scores: (p, s, { k, t, bg }) => {
+    const drop = dropFor(s.floors)
+    for (let i = 0; i < rampsFor(s.floors) - 1; i++) {
+      const side = i % 2 === 0 ? 1 : -1
+      score(p, k, s.color, bg, side * TURN, (i + 1) * drop - 0.12, '+10', t - s.hits[i], 0.6)
+    }
   },
 })

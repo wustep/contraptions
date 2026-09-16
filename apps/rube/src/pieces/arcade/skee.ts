@@ -112,6 +112,6 @@ export const skee = definePiece<{ color: string }>({
     // The lane's lights along the alley's side, on a dark band let into it, running after the score.
     marquee(p, k, ink, weight, s.color, bg, -0.42, LIP0[0] - 0.06, 0.32, 5, landed, lit > 0.2, 0.1)
     flash(p, k, s.color, weight, LAND[0], -1, landed)
-    score(p, k, s.color, bg, CX, CY - 0.3, '+50', landed, 1)
   },
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, CX, CY - 0.3, '+50', since - FLIGHT, 1),
 })

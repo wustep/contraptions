@@ -138,9 +138,9 @@ export const pachinko = definePiece<PachinkoState>({
     rail(p, k, ink, weight, turn * CUP, turn * 0.5, POCKET_Y + FLOOR)
     // The marquee along the foot of the board, chasing on the jackpot.
     marquee(p, k, ink, weight, s.color, bg, -0.3, 0.3, POCKET_Y + 0.42, 6, since, jackpot > 0.2)
-    // The jackpot pops off the ball in the pocket, in the gap between the two
-    // lowest rows of pins, and only lifts a hair: a score that rose through a
-    // row of pins was lost among them.
-    score(p, k, s.color, bg, 0, POCKET_Y - 0.25, '+500', since, 1.2, 0.04)
   },
+  // The jackpot pops off the ball in the pocket, in the gap between the two
+  // lowest rows of pins, and only lifts a hair: a score that rose through a
+  // row of pins was lost among them.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, POCKET_Y - 0.25, '+500', since, 1.2, 0.04),
 })
