@@ -109,18 +109,18 @@ export const kelp = definePiece<KelpState>({
     p.line(-WALL * k, (FLOOR + 0.04) * k, -WALL * k, 0.5 * k)
     p.line(WALL * k, (rim - 0.02) * k, WALL * k, 0.5 * k)
     water(p, k, ink, weight, -WALL, WALL, surface)
-    // The kelp: three stalks rooted in the sand, swaying, with blades.
+    // The kelp: two stalks rooted in the sand behind the ball's way up, swaying, with a blade every so often.
     const sway = (y: number, i: number) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2)
     for (const [x0, i] of [
-      [-0.13, 0],
-      [0.1, 1],
+      [-0.12, 0],
+      [0.11, 1],
     ]) {
       frond(p, k, ink, weight, s.color, x0, 0.5, surface + 0.08, i, sway)
     }
-    // Sand and a shell at the bottom.
+    // Sand at the bottom.
     p.noStroke()
     p.fill(ink)
-    for (const x of [-0.15, 0.02, 0.17]) p.ellipse(x * k, 0.48 * k, 0.06 * k, 0.03 * k)
+    for (const x of [-0.12, 0.1]) p.ellipse(x * k, 0.48 * k, 0.07 * k, 0.03 * k)
     // The bubbles the ball leaves behind as it rises.
     if (since > 0 && since < climb + 1.2) bubbles(p, k, ink, weight, bg, 0.02, Math.min(0.3, ballY + 0.3), surface + 0.04, since, 5)
     // The rim, and the rail out from it.
@@ -140,14 +140,32 @@ export const kelp = definePiece<KelpState>({
     }
   },
   over: (p, s, { k, t, ink, weight }) => {
-    // One frond in front, so the ball weaves behind it on the way up.
+    // One shorter frond in front, near the glass, so the ball is seen to be
+    // in the water without a blade lying across it the whole way up.
     const surface = -s.floors + 0.05
-    frond(p, k, ink, weight, s.color, -0.02, 0.5, surface + 0.14, 2, (y, i) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2))
+    frond(p, k, ink, weight, s.color, -0.19, 0.5, surface + 0.4, 2, (y, i) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2), 0.09, 1)
   },
 })
 
-/** A stalk from (x, y0) up to y1, swaying, with a blade every so often, alternating sides. */
-function frond(p: import('p5'), k: number, ink: string, weight: number, color: string, x: number, y0: number, y1: number, i: number, sway: (y: number, i: number) => number): void {
+/**
+ * A stalk from (x, y0) up to y1, swaying, with a blade every so often:
+ * alternating sides, or all to one side (`lean` ±1) for a stalk against
+ * the glass, so no blade pokes through it.
+ */
+function frond(
+  p: import('p5'),
+  k: number,
+  ink: string,
+  weight: number,
+  color: string,
+  x: number,
+  y0: number,
+  y1: number,
+  i: number,
+  sway: (y: number, i: number) => number,
+  blade = 0.12,
+  lean = 0,
+): void {
   outline(p, ink, weight)
   p.noFill()
   p.beginShape()
@@ -157,14 +175,15 @@ function frond(p: import('p5'), k: number, ink: string, weight: number, color: s
     p.vertex((x + sway(y, i) * (j / n)) * k, y * k)
   }
   p.endShape()
-  for (let y = y0 - 0.18; y > y1 + 0.05; y -= 0.22) {
-    const side = Math.round((y0 - y) / 0.22) % 2 ? 1 : -1
+  for (let y = y0 - 0.22; y > y1 + 0.05; y -= 0.3) {
+    const side = lean || (Math.round((y0 - y) / 0.3) % 2 ? 1 : -1)
     const sx = x + sway(y, i) * ((y0 - y) / (y0 - y1))
     p.push()
     p.translate(sx * k, y * k)
-    p.rotate(side * 1.1 + sway(y, i) * 4)
+    // Blades droop from the stalk, to its right or its left.
+    p.rotate(side > 0 ? 1.1 + sway(y, i) * 4 : Math.PI - 1.1 - sway(y, i) * 4)
     solid(p, ink, weight * 0.9, color)
-    p.ellipse(0.07 * k, 0, 0.14 * k, 0.05 * k)
+    p.ellipse((blade / 2) * k, 0, blade * k, 0.045 * k)
     p.pop()
   }
 }
