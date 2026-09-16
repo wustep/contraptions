@@ -449,10 +449,12 @@ ball's state rides the chain: its colour and which ball holds the thread,
 so a piece can change it and the next piece knows. Every world has pieces
 that do (the workshop's painter, cradle and inverter; the harbor's octopus
 and oyster; the garden's sunflower and pod; the arcade's changer); they
-are capped at two a map and never absent for three maps running. A piece
-declares for itself whether it changes the ball (`dynamic`) or throws it
-(`flight`), and the planner reads the flags off whatever pool it is
-handed.
+are capped at two a map and never absent for three maps running, and a
+piece that recolours the ball only places itself where it can hand the
+ball on in a colour other than the one it arrived in — never the same
+colour out as in. A piece declares for itself whether it changes the ball
+(`dynamic`) or throws it (`flight`), and the planner reads the flags off
+whatever pool it is handed.
 
 ### The workshop's pieces
 
@@ -528,11 +530,11 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | vine | onto a leaf in a pot; the vine shoots up the trellis with it, leaves unfurling; at the top the leaf droops and spills it onto the rail, one or two floors up |
 | bloom | over the near petals and round and down the inside of a trumpet flower, down the hollow stem, out at the root a floor down |
 | wheelbarrow | into the tray; the barrow trundles two cells to a chock and pitches forward, and the ball rides the tip out over the lip |
-| sprinkler | onto the head; the tap opens; spun off across a flowerbed |
+| sprinkler | onto the head; the tap opens and the nozzles go round; spun off across a flowerbed |
 | sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
 | pod | into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread |
 | burrow | over the lip of a hole and down it; a ridge of earth runs down the soil; up out of the top of a molehill a floor down, over its foot onto the rail; the mole looks out |
-| hose | into the mouth of a hose as wide as the ball; seen inside it as a circle in the hose's colour, round the loop two and a half times, gathering pace; out of the nozzle |
+| hose | into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its own skin goes round the loop two and a half times, gathering pace; out of the nozzle |
 | rake | over the handle and onto the tines; the handle comes up behind, over the top, and cracks the ball on its back; it shoots off and the handle lies ahead |
 | snail | up the tail onto the shell; carried most of a cell, slowly, leaving a trail; a shrug tips the shell and the ball rolls off its front, over the head |
 
@@ -555,7 +557,7 @@ scores pop off hits in a three-by-five bitmap font.
 | hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
 | claw | into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot and down its face |
 | striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
-| slingshot | into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out |
+| slingshot | into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up their own line through the fork; a lob a floor up onto a shelf, landing on the way down |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to
@@ -566,7 +568,8 @@ worlds headless and asserts all of it: the four worlds in order, three
 times round, every piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, every lane joined
 up inside its piece, continuity at every hand-off, one portal at each end
-and none between, the ball's state carried piece to piece, and the tempo.
+and none between, the ball's state carried piece to piece, every
+recolouring a change of colour, and the tempo.
 
 ## License
 
