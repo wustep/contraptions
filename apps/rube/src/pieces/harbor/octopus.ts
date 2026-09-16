@@ -19,8 +19,10 @@ export const octopus = definePiece<{ color: string; paint: string }>({
   dynamic: true,
   place: ({ rng, color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
+    // The ink is never the colour the ball arrives in; with nothing else to offer, the octopus stays out of the map.
     const pool = theme.colors.filter((c) => c !== ball.color)
-    const paint = rng.pick(pool.length ? pool : theme.colors)
+    if (!pool.length) return null
+    const paint = rng.pick(pool)
     const lane: Lane = { segs: [roll([-0.5, 0], [0.5, 0], ROLL)], fire: 0.5 / ROLL }
     const changes: BallChange[] = [{ at: laneReach(lane, 0), color: paint }]
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color, paint }, changes }

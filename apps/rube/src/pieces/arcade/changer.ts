@@ -31,8 +31,11 @@ export const changer = definePiece<{ color: string; token: string }>({
   dynamic: true,
   place: ({ rng, color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    const pool = theme.colors.filter((c) => c !== ball.color && c !== color)
-    const token = rng.pick(pool.length ? pool : theme.colors)
+    // The token is never the colour the ball arrives in — nor the cabinet's, when there is a choice; with nothing else to offer, the changer stays out of the map.
+    const others = theme.colors.filter((c) => c !== ball.color)
+    if (!others.length) return null
+    const pool = others.filter((c) => c !== color)
+    const token = rng.pick(pool.length ? pool : others)
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [GONE, 0], ROLL),

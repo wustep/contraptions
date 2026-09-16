@@ -43,8 +43,10 @@ export const cradle = definePiece<{ color: string; next: string }>({
       [1, 0],
     ]
     if (!fits(cells, [2, 0])) return null
+    // The far ball is never the colour the arriving one is; with nothing else to offer, the cradle stays out of the map.
     const pool = theme.colors.filter((c) => c !== arriving.color)
-    const next = rng.pick(pool.length ? pool : theme.colors)
+    if (!pool.length) return null
+    const next = rng.pick(pool)
     const n = 8
     const arc: Pt[] = []
     for (let i = 0; i <= n; i++) arc.push(farAt(angleAt((T_RELEASE * i) / n)))

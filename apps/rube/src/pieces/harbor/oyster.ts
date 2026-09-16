@@ -22,8 +22,10 @@ export const oyster = definePiece<{ color: string; pearl: string }>({
   dynamic: true,
   place: ({ color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
+    // The pearl is the palette's lightest colour that is not the ball's; with nothing else to offer, the oyster stays out of the map.
     const pool = theme.colors.filter((c) => c !== ball.color)
-    const pearl = [...(pool.length ? pool : theme.colors)].sort((a, b) => luminance(b) - luminance(a))[0]
+    if (!pool.length) return null
+    const pearl = [...pool].sort((a, b) => luminance(b) - luminance(a))[0]
     const lane: Lane = {
       segs: [
         roll([-0.5, 0], [-0.22, 0], ROLL),

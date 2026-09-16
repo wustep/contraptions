@@ -60,9 +60,11 @@ export const pod = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [2, 0])) return null
     // The plant's colour is the seed's. The ball may have been recoloured on
-    // its way here, so a plant the ball's colour takes another from the palette.
+    // its way here, so a plant the ball's colour takes another from the
+    // palette; with nothing else to offer, the pod stays out of the map.
     const others = theme.colors.filter((c) => c !== ball.color)
-    const plant = color !== ball.color || !others.length ? color : rng.pick(others)
+    if (!others.length) return null
+    const plant = color !== ball.color ? color : rng.pick(others)
     const changes: BallChange[] = [{ at: FIRE, relay: true, color: plant }]
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: plant }, changes }
   },
