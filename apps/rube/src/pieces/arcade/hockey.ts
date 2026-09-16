@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { digits, flash, glow, lamp, marquee } from './neon'
+import { digits, flash, glow } from './neon'
 
 /**
  * An air-hockey table. The rail runs onto the table's surface; the ball
@@ -27,6 +27,11 @@ const BACK = 0.9
 const CONTACT = Math.asin((PIVOT[0] + HEAD_W / 2 - (SEAT - R)) / ROD)
 /** How far past contact it follows through while the ball gets away. */
 const THROUGH = -0.15
+/** The goal slot's face, and when the ball's front reaches it after the slap: the half-ball of acceleration, then flat out. */
+const SLOT = GOAL + 0.02
+const T_GOAL = 0.12 / (V / 2) + (SLOT - 0.03 - R - (SEAT + 0.12)) / V
+/** The scoreboard: on a post over the goal, inside the cell. */
+const BOARD_Y = -0.41
 
 export const hockey = definePiece<{ color: string }>({
   name: 'hockey',
@@ -52,7 +57,7 @@ export const hockey = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight }) => {
     // The mallet: drawn back behind the ball while it winds, swung down onto
     // its back at the fire, a short follow-through as the ball gets away,
     // then left hanging.
@@ -63,7 +68,7 @@ export const hockey = definePiece<{ color: string }>({
       : since < 0.15 ? CONTACT + (THROUGH - CONTACT) * easeOutQuad(over(since, 0, 0.15))
       : since < 0.6 ? THROUGH
       : THROUGH * (1 - over(since, 0.6, 1.4))
-    const goal = since - (GOAL - SEAT - 0.12) / V - 0.1
+    const goal = since - T_GOAL
     const scored = goal > 0 ? 1 - over(goal, 2, 3) : 0
 
     rail(p, k, ink, weight, -0.5, -0.2)
@@ -79,19 +84,7 @@ export const hockey = definePiece<{ color: string }>({
     }
     p.line(0.85 * k, (FLOOR + 0.03) * k, 0.85 * k, (FLOOR + 0.2) * k)
     solid(p, ink, weight, ink)
-    p.rect((GOAL + 0.02) * k, -0.02 * k, 0.06 * k, 0.2 * k)
-    // The air: dots rising through the surface, more under the ball.
-    p.push()
-    p.noStroke()
-    const air = p.color(bg)
-    air.setAlpha(150)
-    p.fill(air)
-    for (let i = 0; i < 14; i++) {
-      const x = -0.1 + i * 0.145
-      const f = ((t * 1.5 + i * 0.37) % 1 + 1) % 1
-      p.circle(x * k, (FLOOR - 0.01 - 0.05 * f) * k, 0.012 * k)
-    }
-    p.pop()
+    p.rect(SLOT * k, -0.02 * k, 0.06 * k, 0.2 * k)
     // The mallet on its rod, hinged over the table from a post.
     outline(p, ink, weight)
     p.line(-0.3 * k, 0.5 * k, -0.3 * k, PIVOT[1] * k)
@@ -105,17 +98,15 @@ export const hockey = definePiece<{ color: string }>({
     p.ellipse(0, (ROD + 0.03) * k, HEAD_W * k, 0.09 * k)
     p.rect(0, (ROD - 0.03) * k, 0.06 * k, 0.06 * k)
     p.pop()
-    // The scoreboard on a post at the far end: 0, then 1.
+    // The scoreboard on a post over the goal, under the cell's roof: 0, then 1, and it glows a while.
     outline(p, ink, weight)
-    p.line((GOAL + 0.1) * k, -0.1 * k, (GOAL + 0.1) * k, -0.5 * k)
+    p.line((GOAL + 0.1) * k, -0.1 * k, (GOAL + 0.1) * k, BOARD_Y * k)
+    glow(p, k, s.color, GOAL + 0.1, BOARD_Y, 0.16, scored)
     solid(p, ink, weight, ink)
-    p.rect((GOAL + 0.1) * k, -0.58 * k, 0.26 * k, 0.16 * k, 0.01 * k)
-    glow(p, k, s.color, GOAL + 0.1, -0.58, 0.16, scored)
-    digits(p, k, s.color, GOAL + 0.1, -0.58, goal > 0 ? '1' : '0', 0.024)
-    marquee(p, k, ink, weight, s.color, bg, -0.1, GOAL, FLOOR + 0.26, 8, since, goal > 0 && goal < 2)
-    lamp(p, k, ink, weight, s.color, bg, GOAL + 0.1, -0.44, 0.03, scored)
+    p.rect((GOAL + 0.1) * k, BOARD_Y * k, 0.26 * k, 0.15 * k, 0.01 * k)
+    digits(p, k, s.color, GOAL + 0.1, BOARD_Y, goal > 0 ? '1' : '0', 0.022)
     // The slap, and the goal.
-    flash(p, k, s.color, weight, SEAT + 0.1, 0, since, 0.2, 0.1, 0.28)
-    flash(p, k, s.color, weight, GOAL, 0, goal, 0.3, 0.1, 0.3)
+    flash(p, k, s.color, weight, SEAT + 0.1, 0, since)
+    flash(p, k, s.color, weight, SLOT, 0, goal)
   },
 })

@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp, score, tube } from './neon'
+import { flash, glow, score, tube } from './neon'
 
 /**
  * A high striker. The lane runs onto the puck at the foot of the tower;
@@ -22,6 +22,11 @@ export interface StrikerState {
 }
 
 const TOWER = 0.24
+/** The frame's width round the dark face the levels light on. */
+const FRAME = 0.05
+/** The bell's hood, from the top rail: inside the cell's roof, with the bell's lip where the ball's top comes to it. */
+const HOOD = 0.3
+const BELL = 0.16
 const ARRIVE = arriveAt(0)
 /** How far the puck sinks under the ball's weight, and how long that takes. */
 const SINK_D = 0.04
@@ -80,20 +85,25 @@ export const striker = definePiece<StrikerState>({
 
     rail(p, k, ink, weight, -0.5, -TOWER)
     rail(p, k, ink, weight, turn * TOWER, turn * 0.5, top + FLOOR)
-    // The tower: a tall board on a base, the slot the puck rides up its middle.
+    // The tower: a tall frame on a base, up to the cell's roof, with a dark
+    // face inset in it that the levels light against, and the slot the
+    // puck rides up its middle.
     solid(p, ink, weight, s.color)
-    p.rect(0, ((0.5 + top - 0.55) / 2) * k, TOWER * 2 * k, (0.5 - top + 0.55) * k, 0.03 * k)
+    p.rect(0, ((0.5 + top - 0.5) / 2) * k, TOWER * 2 * k, (0.5 - top + 0.5) * k, 0.03 * k)
     p.rect(0, 0.46 * k, (TOWER * 2 + 0.2) * k, 0.08 * k)
+    p.noStroke()
+    p.fill(bg)
+    p.rect(0, ((FLOOR + 0.12 + top - 0.2) / 2) * k, (TOWER - FRAME) * 2 * k, (FLOOR + 0.12 - top + 0.2) * k, 0.02 * k)
     solid(p, ink, weight, ink)
     p.rect(0, ((FLOOR + top - 0.2) / 2) * k, 0.08 * k, (FLOOR - top + 0.2) * k)
-    // The levels: a lamp and a tube each side every so far up, lit as the puck passes and the tower fills.
+    // The levels: a tube each side every so far up the face, lit as the puck passes and the tower fills.
     const levels = 3 + 3 * floors
     for (let i = 0; i < levels; i++) {
-      const ly = FLOOR - 0.15 - ((FLOOR - 0.15 - (top - 0.25)) * i) / (levels - 1)
+      const ly = FLOOR - 0.15 - ((FLOOR - 0.15 - (top - 0.1)) * i) / (levels - 1)
       const reached = puckY <= ly + 0.02 && launched > 0
       const on = reached ? 1 - over(since, 1.5, 3) : 0
-      tube(p, k, ink, weight, s.color, -TOWER + 0.03, ly, -0.08, ly, on)
-      tube(p, k, ink, weight, s.color, 0.08, ly, TOWER - 0.03, ly, on)
+      tube(p, k, ink, weight, s.color, -TOWER + FRAME + 0.03, ly, -0.08, ly, on)
+      tube(p, k, ink, weight, s.color, 0.08, ly, TOWER - FRAME - 0.03, ly, on)
     }
     // The spring at the foot, and the latch.
     outline(p, ink, weight)
@@ -115,30 +125,23 @@ export const striker = definePiece<StrikerState>({
     p.noStroke()
     p.rect(0, -0.01 * k, 0.06 * k, 0.03 * k)
     p.pop()
-    // The bell at the top, in a hood, rocking on the ding.
-    glow(p, k, s.color, 0, top - 0.32, 0.22, ding)
+    // The bell at the top, hung in a hood under the roof with its lip where
+    // the ball's top comes to it; it rocks on the ding, and one ring goes out.
+    glow(p, k, s.color, 0, top - HOOD + BELL / 2, 0.2, ding)
     solid(p, ink, weight, s.color)
-    p.arc(0, (top - 0.42) * k, 0.4 * k, 0.3 * k, Math.PI, Math.PI * 2, p.CHORD)
+    p.arc(0, (top - HOOD) * k, 0.4 * k, 0.3 * k, Math.PI, Math.PI * 2, p.CHORD)
     p.push()
-    p.translate(0, (top - 0.42) * k)
+    p.translate(0, (top - HOOD) * k)
     p.rotate(rock)
     solid(p, ink, weight, bg)
     p.beginShape()
-    p.vertex(-0.08 * k, 0.16 * k)
+    p.vertex(-0.08 * k, BELL * k)
     p.bezierVertex(-0.08 * k, 0, -0.04 * k, 0, 0, 0)
-    p.bezierVertex(0.04 * k, 0, 0.08 * k, 0, 0.08 * k, 0.16 * k)
+    p.bezierVertex(0.04 * k, 0, 0.08 * k, 0, 0.08 * k, BELL * k)
     p.endShape(p.CLOSE)
-    p.line(-0.08 * k, 0.16 * k, 0.08 * k, 0.16 * k)
+    p.line(-0.08 * k, BELL * k, 0.08 * k, BELL * k)
     p.pop()
-    if (ding > 0.05) {
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight * ding)
-      for (let i = 1; i <= 2; i++) p.circle(0, (top - 0.34) * k, (0.3 + i * 0.16 + (1 - ding) * 0.3) * k)
-      p.pop()
-    }
-    lamp(p, k, ink, weight, s.color, bg, 0, top - 0.6, 0.04, ding)
-    score(p, k, s.color, 0, top - 0.7, '+1000', since, 1.2)
+    flash(p, k, s.color, weight, 0, top - HOOD + BELL, since, 0.3, 0.14, 0.3)
+    score(p, k, s.color, 0, top - HOOD - 0.1, '+1000', since, 1.2)
   },
 })

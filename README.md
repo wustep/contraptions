@@ -511,7 +511,7 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | wave | a swell curling over; the ball rides its face two cells over and a floor down, spray behind it |
 | lighthouse | in at the door; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
-| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises through the kelp on its own bubbles; out at the rim |
+| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises past the kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
 | pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
@@ -546,15 +546,15 @@ scores pop off hits in a three-by-five bitmap font.
 | --- | --- |
 | rail | a lit lane: a lamp, a strip or chevrons that come on as the ball passes |
 | bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +100, out faster |
-| spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, counting its turns in lamps |
+| spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, clear of its beam, counting its turns in lamps up the post |
 | changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
-| ticket | off the rail's end into the hopper; tickets feed out below while it whirs; drops out of the prize chute beside the cabinet, one or two floors down |
+| ticket | off the rail's end into the hopper; a strip of tickets feeds out below while it whirs; drops out of the prize chute beside the cabinet, one or two floors down |
 | zigzag | down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad |
 | pachinko | off a lip and bouncing pin to pin through five rows, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
-| skee | a kicker, up the alley, up the lip and off it the way it was going, into the fifty ring a floor up |
+| skee | a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top of its arc and down into the fifty ring a floor up; the rings light as it lands |
 | hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
-| claw | into the cabinet; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot |
-| striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level; ding; the puck cants and the ball rolls off, one or two floors up |
+| claw | into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot and down its face |
+| striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
 | slingshot | into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,

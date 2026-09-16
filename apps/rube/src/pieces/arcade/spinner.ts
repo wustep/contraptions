@@ -6,17 +6,18 @@ import { lamp, score } from './neon'
  * A pinball spinner: a plate hung from an axle over the lane, its foot
  * down in the ball's way. The ball shoves through it — the foot rides up
  * over the ball's front as it comes, and slips off its back — and the plate
- * goes over the top and keeps going, round and round, slowing, while a row
- * of lamps on the bracket count the turns and the score climbs. It stops
- * hanging down again, ready for the next one.
+ * goes over the top and keeps going, round and round, slowing, while a
+ * column of lamps on the bracket's post count the turns and the score
+ * climbs. It stops hanging down again, ready for the next one.
+ *
+ * The axle hangs low enough and the plate is short enough that the plate
+ * clears the beam it hangs from at the top of every turn.
  */
-const AXLE_Y = -0.34
-const PLATE = 0.27
+const AXLE_Y = -0.25
+const PLATE = 0.2
 const HALF = 0.04
 const MEET = -0.16
 const PAST = 0.1
-/** Where the ball's back lets the foot go: the plate is as high as the ball can push it. */
-const RELEASE = 0.22
 /** Spin off the shove: OMEGA radians a second, decaying with TAU. */
 const OMEGA = 34
 const TAU = 0.7
@@ -37,6 +38,19 @@ function shoved(x: number): number {
   if (c >= m) return 0
   return Math.max(0, Math.PI - Math.asin(c / m) - Math.atan2(h, x))
 }
+/** Where the ball's back lets the foot go: the plate is as high as the ball can push it. Solved by walking the ball past. */
+const RELEASE = (() => {
+  let best = 0
+  let at = 0
+  for (let x = -0.3; x <= 0.4; x += 0.001) {
+    const a = shoved(x)
+    if (a > best) {
+      best = a
+      at = x
+    }
+  }
+  return at
+})()
 const LET_GO = shoved(RELEASE)
 
 /** The one lane: slowed a little by the shove, back to pace by the far edge. */
@@ -64,10 +78,10 @@ export const spinner = definePiece<{ color: string }>({
     gallows(p, k, ink, weight, -0.3, 0.3, -0.3, -0.5)
     outline(p, ink, weight)
     p.line(0, -0.5 * k, 0, AXLE_Y * k)
-    // The lamps along the beam: one for every turn so far.
-    for (let i = 0; i < 5; i++) lamp(p, k, ink, weight, s.color, bg, -0.2 + i * 0.1, -0.44, 0.025, since > 0 && turns > i ? 1 : 0)
-    // The score, once it stops.
-    if (since > 2 && since < 2.9) score(p, k, s.color, 0, AXLE_Y - 0.3, `+${Math.max(1, turns) * 10}`, since - 2, 0.9)
+    // The lamps up the post: one for every turn so far, clear of the plate's sweep.
+    for (let i = 0; i < 5; i++) lamp(p, k, ink, weight, s.color, bg, -0.3, -0.44 + i * 0.06, 0.02, since > 0 && turns > i ? 1 : 0)
+    // The score so far, while the plate is still going and the piece is still in view.
+    if (since > 0.6 && since < 1.5) score(p, k, s.color, 0, AXLE_Y - 0.2, `+${Math.max(1, turns) * 10}`, since - 0.6, 0.9)
   },
   over: (p, s, { k, t, since, ink, weight }) => {
     // The plate, in front of the ball: hanging from the axle, turning about

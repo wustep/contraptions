@@ -68,7 +68,8 @@ export const vine = definePiece<VineState>({
     const sag = t < ARRIVE ? 0 : 0.02 * Math.min(1, over(t, ARRIVE, ARRIVE + 0.1))
     const quiver = t > ARRIVE + 0.1 && since < 0 ? 0.03 * Math.sin(t * 40) * over(t, ARRIVE + 0.1, ARRIVE + WAKE) : 0
 
-    // The trellis: a lattice behind everything, from the pot to above the top rail.
+    // The trellis: an open lattice behind everything, from the pot to above
+    // the top rail — wide diamonds, light lines, so the vine reads over it.
     const lat0 = 0.3
     const lat1 = top - 0.35
     p.push()
@@ -76,9 +77,9 @@ export const vine = definePiece<VineState>({
     ctx.beginPath()
     ctx.rect(-0.3 * k, lat1 * k, 0.6 * k, (lat0 - lat1) * k)
     ctx.clip()
-    outline(p, ink, weight * 0.7)
+    outline(p, ink, weight * 0.6)
     const span = lat0 - lat1
-    for (let d = -span; d <= 0.6; d += 0.22) {
+    for (let d = -span; d <= 0.6; d += 0.5) {
       p.line((-0.3 + d) * k, lat0 * k, (-0.3 + d + span) * k, lat1 * k)
       p.line((0.3 - d) * k, lat0 * k, (0.3 - d - span) * k, lat1 * k)
     }

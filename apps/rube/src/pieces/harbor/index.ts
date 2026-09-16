@@ -26,7 +26,7 @@ import { whirlpool } from './whirlpool'
  *   wave        a swell curling over; the ball rides its face two cells over and a floor down
  *   lighthouse  in at the door, a lit window climbs the tower, out of the lantern room's door onto the gallery one or two up
  *   crab        rolls into the claw; lifted, aimed, pitched across a cell of water over the other claw, braced low
- *   kelp        into a tank at the bottom, bending upward; rises through the kelp on its own bubbles; out at the rim
+ *   kelp        into a tank at the bottom, bending upward; rises past the kelp on its own bubbles; out at the rim
  *   octopus     eyes follow the ball; a jet of ink from the siphon; it leaves a new colour
  *   anchor      onto the stock; the pawl trips; down one to three floors on the chain; the seabed
  *   pelican     off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies to the far post, tips its head and the ball rolls out

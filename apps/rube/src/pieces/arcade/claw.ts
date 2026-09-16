@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 import { glow, lamp, marquee } from './neon'
 
 /**
@@ -26,12 +26,20 @@ const T_MOVE = T_RISE + RISE
 const T_THINK = T_MOVE + TRAVEL
 const T_DROP = T_THINK + THINK
 const RETURN = 1.8
-/** The wedge at the chute's foot: the ball lands on its face here and rolls down to the rail. */
+/** The wedge at the chute's foot: the ball lands on its face under the claw, a radius off it, and rolls down to the rail. */
 const WEDGE_TOP: Pt = [DROP_X - 0.16, FLOOR - 0.2]
 const WEDGE_FOOT = DROP_X + 0.22
-const LAND: Pt = [DROP_X, -0.08]
+const SLOPE = (FLOOR - WEDGE_TOP[1]) / (WEDGE_FOOT - WEDGE_TOP[0])
+const OFF = R * Math.sqrt(1 + SLOPE * SLOPE)
+const LAND: Pt = [DROP_X, WEDGE_TOP[1] + (DROP_X - WEDGE_TOP[0]) * SLOPE - OFF]
+/** Where the ball's line down the face meets the rail's. */
+const RUN_OUT: Pt = [DROP_X - LAND[1] / SLOPE, 0]
 const G = 10
 const T_FALL = Math.sqrt((2 * (LAND[1] - HIGH)) / G)
+/** The landing keeps the fall's component along the face; the rest is the thud. Then it gathers pace down the face. */
+const V_FALL = G * T_FALL
+const V_LAND = V_FALL * Math.sin(Math.atan(SLOPE))
+const V_FOOT = Math.sqrt(V_LAND * V_LAND + 2 * G * Math.sin(Math.atan(SLOPE)) * Math.hypot(RUN_OUT[0] - LAND[0], RUN_OUT[1] - LAND[1]))
 
 export const claw = definePiece<{ color: string; prizes: string[] }>({
   name: 'claw',
@@ -56,8 +64,8 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
         wait([DROP_X, HIGH], THINK),
         // Let go from rest: a fall under gravity onto the wedge, then down its face and on.
         { from: [DROP_X, HIGH], to: LAND, dur: T_FALL, ease: 'in' },
-        ramp(LAND, [WEDGE_FOOT + 0.02, 0], 2.0, ROLL),
-        roll([WEDGE_FOOT + 0.02, 0], [2.5, 0], ROLL),
+        ramp(LAND, RUN_OUT, V_LAND, V_FOOT),
+        ramp(RUN_OUT, [2.5, 0], V_FOOT, ROLL),
       ],
       fire: T_DROP,
     }
@@ -87,22 +95,23 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
     outline(p, ink, weight * 0.6)
     p.line(-0.3 * k, -0.9 * k, 0.1 * k, -1.3 * k)
     p.line(-0.2 * k, -0.9 * k, 0.2 * k, -1.3 * k)
-    // The rail in, through the cabinet's side, to the dimple; the chute's rail out.
+    // The rail in, through the cabinet's side, to the dimple; then the
+    // cabinet's floor, one line at the rail's height through to the way out.
     rail(p, k, ink, weight, -0.5, SEAT - 0.16)
     outline(p, ink, weight)
     p.line((SEAT - 0.16) * k, FLOOR * k, (SEAT - 0.08) * k, (FLOOR + 0.03) * k)
     p.line((SEAT - 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.08) * k, (FLOOR + 0.03) * k)
     p.line((SEAT + 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.16) * k, FLOOR * k)
-    rail(p, k, ink, weight, SEAT + 0.16, 0.7)
-    rail(p, k, ink, weight, DROP_X - 0.24, 2.5)
-    // The prizes: a heap of soft things on the cabinet floor between the dimple and the chute.
+    rail(p, k, ink, weight, SEAT + 0.16, 2.5)
+    // The prizes: a heap of soft things lying on the floor between the dimple and the chute.
     for (let i = 0; i < 4; i++) {
       const px = 0.85 + i * 0.26
+      const h = i % 2 ? 0.13 : 0.16
       solid(p, ink, weight, s.prizes[i])
-      p.ellipse(px * k, (FLOOR + 0.1 + (i % 2) * 0.04) * k, 0.2 * k, 0.16 * k)
+      p.ellipse(px * k, (FLOOR - h / 2) * k, 0.2 * k, h * k)
       solid(p, ink, weight, bg)
-      p.circle((px - 0.04) * k, (FLOOR + 0.06 + (i % 2) * 0.04) * k, 0.04 * k)
-      p.circle((px + 0.04) * k, (FLOOR + 0.06 + (i % 2) * 0.04) * k, 0.04 * k)
+      p.circle((px - 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
+      p.circle((px + 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
     }
     // The chute: walls either side of the drop, a wedge at its foot that turns the drop into a roll, and a lamp.
     outline(p, ink, weight)

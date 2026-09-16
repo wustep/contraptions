@@ -95,33 +95,22 @@ export const ticket = definePiece<TicketState>({
     solid(p, ink, weight, ink)
     p.rect(0, 0.42 * k, 0.3 * k, 0.14 * k, 0.01 * k)
     digits(p, k, whir || since > 0 ? s.color : bg, 0, 0.42, String(tickets).padStart(2, '0'), 0.022)
-    // Reels behind a window, turning while it works.
-    solid(p, ink, weight, bg)
-    p.rect(0, (floors * 0.5 + 0.5) * k, 0.3 * k, 0.2 * k, 0.01 * k)
-    outline(p, ink, weight * 0.8)
-    for (const dx of [-0.08, 0.08]) {
-      p.push()
-      p.translate(dx * k, (floors * 0.5 + 0.5) * k)
-      p.rotate(whir ? t * 12 : 0)
-      p.line(-0.05 * k, 0, 0.05 * k, 0)
-      p.line(0, -0.05 * k, 0, 0.05 * k)
-      p.pop()
-    }
     // The ticket slot beside the chute, on the other side.
     solid(p, ink, weight, ink)
     p.rect(-turn * 0.12 * k, (floors + 0.06) * k, 0.16 * k, 0.04 * k)
     p.pop()
-    // The tickets: a strip out of the slot, a perforation every ticket, curling at the end.
+    // The tickets: one strip out of the slot, a perforation every ticket.
     if (tickets > 0) {
       const x = -turn * 0.12
-      for (let i = 0; i < tickets; i++) {
-        const y = floors + 0.1 + i * 0.07
-        solid(p, ink, weight * 0.7, bg)
-        p.rect(x * k, (y + 0.035) * k, 0.14 * k, 0.07 * k)
-        p.fill(s.color)
-        p.noStroke()
-        p.circle((x - 0.04) * k, (y + 0.035) * k, 0.02 * k)
-        p.circle((x + 0.04) * k, (y + 0.035) * k, 0.02 * k)
+      const y0 = floors + 0.1
+      const h = tickets * 0.07
+      solid(p, ink, weight * 0.7, bg)
+      p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
+      outline(p, ink, weight * 0.7)
+      for (let i = 1; i < tickets; i++) {
+        const y = y0 + i * 0.07
+        p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
+        p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
       }
     }
   },
