@@ -7,13 +7,15 @@ import { flash, glow, score, tube } from './neon'
  * A high striker. The lane runs onto the puck at the foot of the tower;
  * the ball's weight sinks it onto the spring and trips the latch — and the
  * spring fires the puck up the tower with the ball riding it, lighting
- * every level it passes, one or two floors, to the bell at the top. Ding.
- * The puck latches there, cants toward the rail, and the ball rolls off
- * onto it, on or back the way it came. The tower stays lit to the top, for
- * a while.
+ * every level it passes, one or two floors, to the bell at the top. The
+ * puck slows as it climbs but still has pace on it when the ball's top
+ * meets the bell's lip; the bell is what stops it, and rings on the blow.
+ * Ding. The puck latches there, cants toward the rail, and the ball rolls
+ * off onto it, on or back the way it came. The tower stays lit to the top,
+ * for a while.
  *
- * The ball sits on the puck the whole way: the same sink, the same
- * easing up the slot, so neither runs ahead of the other.
+ * The ball sits on the puck the whole way: the same sink, the same law up
+ * the slot, so neither runs ahead of the other.
  */
 export interface StrikerState {
   color: string
@@ -34,6 +36,17 @@ const SINK_T = 0.15
 const SINK = 0.3
 const FIRE_LATCH = ARRIVE + SINK
 const shootTime = (floors: number) => 0.3 + 0.18 * floors
+/**
+ * The puck's pace up the slot, relative to its mean over the shoot: off
+ * the spring at V_OFF, slowing all the way, and still at V_BELL when it
+ * meets the bell, which is what stops it. A puck that eased to nothing at
+ * the top touched the bell with no pace left, and the ding came after the
+ * ball had already stopped.
+ */
+const V_OFF = 1.55
+const V_BELL = 0.45
+/** How far up the slot the puck is, 0 to 1, a fraction `f` of the way through the shoot: the ramp's own law, so the drawing and the lane agree. */
+const shot = (f: number) => (f * (2 * V_OFF + (V_BELL - V_OFF) * f)) / (V_OFF + V_BELL)
 const DING = 0.25
 /** The puck's cant at the top, radians toward the rail, and how long after the ding it takes. */
 const CANT = 0.12
@@ -43,7 +56,7 @@ const CANT_AT = DING - 0.1
 function puckAt(t: number, floors: number): number {
   const launched = t - FIRE_LATCH
   if (launched < 0) return t < ARRIVE ? 0 : SINK_D * easeOutQuad(Math.min(1, (t - ARRIVE) / SINK_T))
-  return SINK_D + (-floors - SINK_D) * easeOutQuad(Math.min(1, launched / shootTime(floors)))
+  return SINK_D + (-floors - SINK_D) * shot(Math.min(1, launched / shootTime(floors)))
 }
 
 export const striker = definePiece<StrikerState>({
@@ -58,12 +71,14 @@ export const striker = definePiece<StrikerState>({
       const exit: Pt = [turn, -floors]
       if (!fits(cells, exit)) continue
       const shoot = shootTime(floors)
+      const pace = (floors + SINK_D) / shoot
       const lane: Lane = {
         segs: [
           ...arrive([-0.5, 0], [0, 0]),
           { from: [0, 0], to: [0, SINK_D], dur: SINK_T, ease: 'out' },
           wait([0, SINK_D], SINK - SINK_T),
-          { from: [0, SINK_D], to: [0, -floors], dur: shoot, ease: 'out' },
+          // Up the slot on the puck, slowing, and stopped dead by the bell.
+          ramp([0, SINK_D], [0, -floors], V_OFF * pace, V_BELL * pace),
           wait([0, -floors], DING),
           ramp([0, -floors], [turn * 0.5, -floors], 0, ROLL),
         ],
@@ -142,6 +157,6 @@ export const striker = definePiece<StrikerState>({
     p.line(-0.08 * k, BELL * k, 0.08 * k, BELL * k)
     p.pop()
     flash(p, k, s.color, weight, 0, top - HOOD + BELL, since, 0.3, 0.14, 0.3)
-    score(p, k, s.color, 0, top - HOOD - 0.1, '+1000', since, 1.2)
+    score(p, k, s.color, bg, 0, top - HOOD - 0.1, '+1000', since, 1.2)
   },
 })

@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../src/core/draw'
 import { clamp, easeOutCubic } from '../../../../../src/core/ease'
+import { mixHex } from '../../parts'
 
 /**
  * The arcade's shared vocabulary: glow, marquee lights, and a score that
@@ -25,19 +26,35 @@ export function glow(p: p5, k: number, color: string, x: number, y: number, r: n
   p.pop()
 }
 
-/** A lamp: a dot in the colour when lit, paper when not, with a halo when lit. */
+/**
+ * A lamp: a dot in the colour when lit, paper when not, with a halo when
+ * lit. A small lamp's outline thins with it, so that the fill — which is
+ * what says whether it is lit — is not swallowed by its own rim: at the
+ * show's line weight a lamp under a twentieth of a cell was all ink.
+ */
 export function lamp(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x: number, y: number, r: number, lit: number): void {
   if (lit > 0.05) glow(p, k, color, x, y, r * 1.4, lit)
-  solid(p, ink, weight * 0.8, lit > 0.5 ? color : bg)
+  solid(p, ink, weight * 0.8 * Math.min(1, r / 0.04), lit > 0.5 ? color : bg)
   p.circle(x * k, y * k, r * 2 * k)
 }
 
-/** A row of marquee lamps from x0 to x1 at y, `n` of them, chasing with `t` when `on`. */
-export function marquee(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x0: number, x1: number, y: number, n: number, t: number, on = true): void {
+/**
+ * A row of marquee lamps from x0 to x1 at y, `n` of them, chasing with `t`
+ * when `on`. On a body painted the lamps' own colour a lit lamp vanishes
+ * into it, so a marquee there sits in a dark recess `band` tall — the
+ * paper, let into the body like the striker's face — and the lamps read
+ * lit or dark against it whatever the body's colour.
+ */
+export function marquee(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x0: number, x1: number, y: number, n: number, t: number, on = true, band = 0): void {
+  if (band > 0) {
+    p.noStroke()
+    p.fill(bg)
+    p.rect(((x0 + x1) / 2) * k, y * k, (x1 - x0) * k, band * k, 0.015 * k)
+  }
   for (let i = 0; i < n; i++) {
     const x = x0 + ((x1 - x0) * (i + 0.5)) / n
     const lit = on ? (Math.floor(t * 6 + i) % 3 === 0 ? 1 : 0) : 0
-    lamp(p, k, ink, weight, color, bg, x, y, 0.022, lit)
+    lamp(p, k, ink, weight, color, bg, x, y, 0.026, lit)
   }
 }
 
@@ -72,42 +89,71 @@ const GLYPHS: Record<string, number[]> = {
   '+': [0b000, 0b010, 0b111, 0b010, 0b000],
 }
 
+/** How far a digit's dark rim reaches past its pixels, in pixels. */
+const RIM = 0.24
+
 /**
  * Bitmap text centred on (x, y), each pixel `px` cells, in the colour. A
  * piece facing the other way is drawn mirrored, but its numbers still read
- * left to right: the text undoes whatever flip the canvas is under.
+ * left to right: the text undoes whatever flip the canvas is under. With a
+ * `rim` the glyphs are first laid down in that colour a shade wider, so the
+ * text stands as one silhouette on whatever is behind it — pins, a rail,
+ * another piece's lines — rather than dissolving into them.
  */
-export function digits(p: p5, k: number, color: string, x: number, y: number, text: string, px: number): void {
+export function digits(p: p5, k: number, color: string, x: number, y: number, text: string, px: number, rim?: string): void {
   const w = text.length * 4 - 1
   const flip = (p.drawingContext as CanvasRenderingContext2D).getTransform().a < 0 ? -1 : 1
-  p.push()
-  p.translate(x * k, y * k)
-  p.scale(flip, 1)
-  p.noStroke()
-  p.fill(color)
+  const cells: [number, number][] = []
   for (let c = 0; c < text.length; c++) {
     const g = GLYPHS[text[c]]
     if (!g) continue
     for (let r = 0; r < 5; r++) {
       for (let b = 0; b < 3; b++) {
-        if (!(g[r] & (1 << (2 - b)))) continue
-        const gx = (c * 4 + b - w / 2 + 0.5) * px
-        const gy = (r - 2) * px
-        p.rect(gx * k, gy * k, px * k * 0.98, px * k * 0.98)
+        if (g[r] & (1 << (2 - b))) cells.push([(c * 4 + b - w / 2 + 0.5) * px, (r - 2) * px])
       }
     }
   }
+  p.push()
+  p.translate(x * k, y * k)
+  p.scale(flip, 1)
+  p.noStroke()
+  if (rim) {
+    p.fill(rim)
+    for (const [gx, gy] of cells) p.rect(gx * k, gy * k, px * k * (1 + 2 * RIM), px * k * (1 + 2 * RIM))
+  }
+  p.fill(color)
+  for (const [gx, gy] of cells) p.rect(gx * k, gy * k, px * k * 0.98, px * k * 0.98)
   p.pop()
 }
 
-/** A score popping off (x, y): rises, holds, fades, over `dur` seconds from the moment `since` = 0. */
-export function score(p: p5, k: number, color: string, x: number, y: number, text: string, since: number, dur = 0.8): void {
+/**
+ * A score popping off (x, y): rises `rise` cells, holds, fades, over `dur`
+ * seconds from the moment `since` = 0. It carries a rim of the paper so it
+ * reads over whatever it pops across, and fades as one with it.
+ */
+export function score(p: p5, k: number, color: string, bg: string, x: number, y: number, text: string, since: number, dur = 0.8, rise = 0.18): void {
   if (since < 0 || since > dur) return
   const f = since / dur
-  const rise = easeOutCubic(clamp(f * 1.6))
+  const up = easeOutCubic(clamp(f * 1.6))
+  const alpha = 255 * (1 - clamp((f - 0.6) / 0.4))
   const c = p.color(color)
-  c.setAlpha(255 * (1 - clamp((f - 0.6) / 0.4)))
-  digits(p, k, c.toString(), x, y - 0.22 - 0.18 * rise, text, 0.03)
+  c.setAlpha(alpha)
+  const rim = p.color(bg)
+  rim.setAlpha(alpha)
+  digits(p, k, c.toString(), x, y - 0.22 - rise * up, text, 0.03, rim.toString())
+}
+
+/**
+ * A display: a dark window in an ink frame with digits in it, lit in the
+ * colour when the machine has something to say and dim when it is idle.
+ * The window is dark so the digits read whatever colour the machine is
+ * painted; a colour on the pale ink was lost whenever the colour was pale
+ * too.
+ */
+export function display(p: p5, k: number, ink: string, weight: number, bg: string, x: number, y: number, w: number, h: number, text: string, color: string, lit: boolean, px = 0.022): void {
+  solid(p, ink, weight, bg)
+  p.rect(x * k, y * k, w * k, h * k, 0.01 * k)
+  digits(p, k, lit ? color : mixHex(bg, ink, 0.42), x, y, text, px)
 }
 
 /** A cabinet: a box with a rounded top edge and a darker base band, in the colour. */

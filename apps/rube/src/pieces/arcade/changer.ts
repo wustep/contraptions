@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, wait, type BallChange, type Lane, type PieceCtx } from '../../parts'
-import { cabinet, digits, flash, lamp, marquee } from './neon'
+import { cabinet, display, flash, lamp, marquee } from './neon'
 
 /**
  * A change machine standing across the lane. The rail runs into a coin
@@ -66,10 +66,8 @@ export const changer = definePiece<{ color: string; token: string }>({
     p.translate(shake * k, 0)
     // The cabinet, the rail's height and taller, standing on the floor.
     cabinet(p, k, ink, weight, s.color, 0, -0.48, 0.5, HALF * 2)
-    // The display, with the credit count in it.
-    solid(p, ink, weight, ink)
-    p.rect(0, -0.32 * k, 0.24 * k, 0.12 * k, 0.01 * k)
-    digits(p, k, credit ? s.token : bg, 0, -0.32, credit ? '01' : '00', 0.02)
+    // The display, dark until the credit lights it in the token's colour.
+    display(p, k, ink, weight, bg, 0, -0.32, 0.26, 0.14, credit ? '01' : '00', s.token, !!credit, 0.02)
     // The slot on the near side, at the rail's height, with an arrow to it.
     solid(p, ink, weight, ink)
     p.rect((SLOT + 0.02) * k, -0.02 * k, 0.04 * k, 0.16 * k)

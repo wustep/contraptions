@@ -49,6 +49,6 @@ export const bumper = definePiece<{ color: string }>({
     p.rect(0, (capY + 0.02) * k, 0.4 * k, 0.05 * k, 0.01 * k)
     // Rings off the skirt, and the score.
     flash(p, k, s.color, weight, -SKIRT, -0.02, since)
-    score(p, k, s.color, 0, CAP_Y - 0.18, '+100', since)
+    score(p, k, s.color, bg, 0, CAP_Y - 0.18, '+100', since)
   },
 })

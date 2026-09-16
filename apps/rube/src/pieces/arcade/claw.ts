@@ -113,13 +113,17 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
       p.circle((px - 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
       p.circle((px + 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
     }
-    // The chute: walls either side of the drop, a wedge at its foot that turns the drop into a roll, and a lamp.
+    // The chute: walls either side of the drop, a wedge at its foot that
+    // turns the drop into a roll, and a lamp on the far wall's top that
+    // comes on at the drop — beside the ball's line, where it can be seen;
+    // over the drop it hung exactly where the ball hangs, hidden behind it,
+    // its halo blurring the ball's edge.
     outline(p, ink, weight)
     for (const x of [DROP_X - 0.24, DROP_X + 0.24]) p.line(x * k, (FLOOR - 0.1) * k, x * k, -0.4 * k)
     solid(p, ink, weight, s.color)
     p.triangle((DROP_X - 0.24) * k, FLOOR * k, WEDGE_TOP[0] * k, WEDGE_TOP[1] * k, WEDGE_FOOT * k, FLOOR * k)
-    glow(p, k, s.color, DROP_X, -0.5, 0.2, lit)
-    lamp(p, k, ink, weight, s.color, bg, DROP_X, -0.5, 0.04, lit)
+    glow(p, k, s.color, DROP_X + 0.24, -0.44, 0.1, lit)
+    lamp(p, k, ink, weight, s.color, bg, DROP_X + 0.24, -0.44, 0.035, lit)
     // The gantry and the trolley on it, the cable, and the claw.
     solid(p, ink, weight, s.color)
     p.rect(1 * k, (GANTRY_Y + 0.03) * k, 2.8 * k, 0.07 * k)
@@ -140,10 +144,10 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
       p.arc(0, 0.06 * k, 0.32 * k, 0.32 * k, Math.PI * 0.35, Math.PI * 0.65)
       p.pop()
     }
-    // The marquee across the top, chasing always; brighter after the drop.
+    // The marquee across the top: a dark band of lamps let into the colour header, chasing always.
     solid(p, ink, weight, s.color)
     p.rect(1 * k, (GANTRY_Y - 0.08) * k, 2.9 * k, 0.16 * k, 0.02 * k)
-    marquee(p, k, ink, weight, s.color, bg, -0.3, 2.3, GANTRY_Y - 0.08, 10, t, true)
+    marquee(p, k, ink, weight, s.color, bg, -0.3, 2.3, GANTRY_Y - 0.08, 10, t, true, 0.1)
     // The controls: a joystick and a button on the front, below the rail line.
     solid(p, ink, weight, ink)
     p.rect(1.3 * k, 0.4 * k, 0.4 * k, 0.12 * k, 0.02 * k)

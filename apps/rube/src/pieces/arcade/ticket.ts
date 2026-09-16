@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { cabinet, digits, lamp, marquee } from './neon'
+import { cabinet, display, lamp, marquee } from './neon'
 
 /**
  * A ticket machine as tall as the drop. The lane runs into a hopper in its
@@ -89,12 +89,10 @@ export const ticket = definePiece<TicketState>({
     // The hopper: a funnel in the top, on the lane's side, wide enough for the ball.
     solid(p, ink, weight, bg)
     p.quad((HOPPER - 0.2) * k, -0.04 * k, (HOPPER + 0.24) * k, -0.04 * k, 0.12 * k, 0.26 * k, -0.12 * k, 0.26 * k)
-    // The marquee along the top, chasing while it whirs; a lamp that stays on after.
-    marquee(p, k, ink, weight, s.color, bg, -0.2, 0.2, -0.36, 5, t, whir)
-    // The display: the count of tickets so far.
-    solid(p, ink, weight, ink)
-    p.rect(0, 0.42 * k, 0.3 * k, 0.14 * k, 0.01 * k)
-    digits(p, k, whir || since > 0 ? s.color : bg, 0, 0.42, String(tickets).padStart(2, '0'), 0.022)
+    // The marquee along the top, on a dark band let into the cabinet so its lamps read against it, chasing while it whirs.
+    marquee(p, k, ink, weight, s.color, bg, -0.22, 0.22, -0.35, 5, t, whir, 0.09)
+    // The display: the count of tickets so far, lit once the machine is working.
+    display(p, k, ink, weight, bg, 0, 0.42, 0.3, 0.14, String(tickets).padStart(2, '0'), s.color, whir || since > 0)
     // The ticket slot beside the chute, on the other side.
     solid(p, ink, weight, ink)
     p.rect(-turn * 0.12 * k, (floors + 0.06) * k, 0.16 * k, 0.04 * k)

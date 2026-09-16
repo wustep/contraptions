@@ -13,7 +13,7 @@ import { flash, lamp, score } from './neon'
  * through the fork, and the ball flies on from the fork's mouth the way the
  * bands sent it — a lob a floor up onto the shelf, landing on the way down
  * and rolling off to the way out. The pouch swings and hangs at the fork
- * after; the fork lights, and the score pops.
+ * after; the score pops off the fork's mouth as the ball leaves it.
  *
  * Everything lines up with the shot: the pouch's motion is one function of
  * time that both the drawing and the lane come from, the bands are straight
@@ -194,9 +194,11 @@ export const slingshot = definePiece<{ color: string }>({
     solid(p, ink, weight * 0.9, bg)
     p.circle(px * k, (py + 0.23) * k, 0.05 * k)
 
-    // The ball leaving the fork, and the score.
+    // The ball leaving the fork, and the score with it: one beat, at the
+    // mouth, as the shot is made — not at the fork while the ball is still
+    // down in the pouch.
     flash(p, k, s.color, weight, MOUTH[0], MOUTH[1], t - T_OFF)
-    score(p, k, s.color, MOUTH[0] - 0.26, MOUTH[1] - 0.06, '+100', since)
+    score(p, k, s.color, bg, MOUTH[0] - 0.26, MOUTH[1] - 0.06, '+100', t - T_OFF)
   },
   over: (p, s, { k, t, ink, weight, since }) => {
     const [px, py] = pouchAt(t)
