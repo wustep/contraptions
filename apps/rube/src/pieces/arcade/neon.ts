@@ -10,6 +10,13 @@ import { mixHex } from '../../parts'
  * halo is the only translucency in the show, and it stays here. The
  * halos are kept close and faint: a lamp is lit, not a searchlight, and
  * the ball must still be the brightest thing on the floor.
+ *
+ * What is lit has to have something dark to be lit against. The colours
+ * are pale and so is the ink, so a colour on ink, or on a body of its own
+ * colour, is lost: a display is a dark window its digits light in, a
+ * marquee on a cabinet sits in a dark recess, and a score carries a rim of
+ * the paper so it reads over whatever it pops across. Separation, not
+ * brightness, is what makes these read.
  */
 
 /** A soft halo behind something lit: a few rings of the colour, fading out. `f` is the brightness. */

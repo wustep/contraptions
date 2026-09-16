@@ -23,16 +23,16 @@ import { zigzag } from './zigzag'
  *
  *   rail       a lit lane: lamps, strips and chevrons that come on as the ball passes
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
- *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way clear of its beam, counting turns in lamps up the post
- *   changer    into the slot in the cabinet's side; chunk; a token comes out under the far flap and takes the thread
- *   ticket     off the rail's end into the hopper; a strip of tickets feeds out below; drops out of the prize chute beside the cabinet, one or two floors down
+ *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way clear of its beam, counting turns in lamps up the post; the score pops as it is flung and ticks up with the turns
+ *   changer    into the slot in the cabinet's side; chunk; the dark display lights 01 and a token comes out under the far flap and takes the thread
+ *   ticket     off the rail's end into the hopper; a strip of tickets feeds out below, the display counting them; drops out of the prize chute beside the cabinet, one or two floors down
  *   zigzag     down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad
  *   pachinko   off a lip, bouncing pin to pin through five rows, each lighting; the jackpot pocket drops its side; out a gate two floors down
  *   skee       a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top and down into the fifty ring a floor up; the rings light as it lands
- *   hockey     onto the air table; a mallet winds up behind and slaps it the length of the table into the goal; the board over the goal goes to 1
+ *   hockey     onto the air table; a mallet winds up behind and slaps it the length of the table into the goal; the board over the goal lights to 1
  *   claw       into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles, lets go; a fall onto the wedge at the chute's foot and down its face
- *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants; one or two floors up
- *   slingshot  into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up through the fork; a lob a floor up onto a shelf
+ *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck, slowing, to meet the bell with pace still on it, lighting every level on the dark face; ding; the puck cants; one or two floors up
+ *   slingshot  into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up through the fork; a lob a floor up onto a shelf; the score pops off the mouth as the ball leaves
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
