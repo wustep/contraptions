@@ -8,11 +8,13 @@ import { leaf, stem } from './green'
  * stalk from the ground. The ball rolls into the mouth and is gone; a bulge
  * creeps along the pod and the pod swells, and swells, and bursts at the
  * far end — and what shoots out along the path is a seed: a different
- * ball, in a different colour, and the thread goes with it. The husk hangs
- * open after, with the ball still inside it.
+ * ball, in the plant's own colour, and the thread goes with it. The husk
+ * hangs open after, with the ball still inside it.
  *
  * The pod stands in front of the ball, so the ball goes *into* the mouth
  * and the seed comes *out* between the flaps, instead of either popping.
+ * The plant is never the colour of the ball that arrives, so the seed that
+ * takes the thread is always a change.
  */
 const MOUTH = -0.2
 const INSIDE = 0.05
@@ -46,7 +48,7 @@ const LANE: Lane = {
   fire: FIRE,
 }
 
-export const pod = definePiece<{ color: string; seed: string }>({
+export const pod = definePiece<{ color: string }>({
   name: 'pod',
   weight: 0.9,
   dynamic: true,
@@ -57,10 +59,12 @@ export const pod = definePiece<{ color: string; seed: string }>({
       [1, 0],
     ]
     if (!fits(cells, [2, 0])) return null
-    const pool = theme.colors.filter((c) => c !== ball.color && c !== color)
-    const seed = rng.pick(pool.length ? pool : theme.colors)
-    const changes: BallChange[] = [{ at: FIRE, relay: true, color: seed }]
-    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color, seed }, changes }
+    // The plant's colour is the seed's. The ball may have been recoloured on
+    // its way here, so a plant the ball's colour takes another from the palette.
+    const others = theme.colors.filter((c) => c !== ball.color)
+    const plant = color !== ball.color || !others.length ? color : rng.pick(others)
+    const changes: BallChange[] = [{ at: FIRE, relay: true, color: plant }]
+    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: plant }, changes }
   },
   draw: (p, s, { k, ink, weight }) => {
     rail(p, k, ink, weight, -0.5, MOUTH - 0.02)
@@ -123,7 +127,7 @@ export const pod = definePiece<{ color: string; seed: string }>({
     if (since > 0 && since < 0.25) {
       const f = over(since, 0, 0.25)
       p.push()
-      p.stroke(s.seed)
+      p.stroke(s.color)
       p.strokeWeight(weight)
       burst(p, FAR * k, 0, (0.1 + 0.16 * f) * k, (0.16 + 0.22 * f) * k, 6, 0.3 + f)
       p.pop()
