@@ -23,16 +23,16 @@ import { whirlpool } from './whirlpool'
  *
  *   rail        a pier: deck on pilings over still water
  *   buoy        the deck stops; a bell buoy leans to meet the ball, which rides its deck; it rocks over, clangs, and runs it off faster
- *   wave        a swell curling over; the ball rides its face two cells over and a floor down
+ *   wave        a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down
  *   lighthouse  in at the door, a lit window climbs the tower, out of the lantern room's door onto the gallery one or two up
  *   crab        rolls into the claw; lifted, aimed, pitched across a cell of water over the other claw, braced low
- *   kelp        into a tank at the bottom, bending upward; rises past the kelp on its own bubbles; out at the rim
- *   octopus     eyes follow the ball; a jet of ink from the siphon; it leaves a new colour
+ *   kelp        into a tank at the bottom, bending upward; rises between two stalks of kelp on its own bubbles; out at the rim
+ *   octopus     eyes follow the ball; the funnel on its head puckers and squirts ink up at it; a splat, and it leaves a new colour
  *   anchor      onto the stock; the pawl trips; down one to three floors on the chain; the seabed
  *   pelican     off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies to the far post, tips its head and the ball rolls out
- *   blowhole    into the dip over the hole; a rumble; the spout throws it a floor up, past a shelf and down onto it
+ *   blowhole    onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws it a floor up, past a shelf and down onto it
  *   oyster      into the open shell; snap; a beat; a pearl rolls out and takes the thread
- *   whirlpool   round the near side and round and down the vortex to the drain, out a floor down facing back
+ *   whirlpool   onto a brim-full tank; round the near side and round and down the vortex to the drain, out a floor down facing back
  *   portal      the door at either end of a map; the far side is always a new map
  */
 

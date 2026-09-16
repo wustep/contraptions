@@ -54,7 +54,7 @@ import { zipline } from './zipline'
  *   cannon    match, fuse, bang, flight, landing; over two and up one
  *   loop      round the loop, no mechanism at all
  *   scoop     a bucket wheel, four cups on a hub; the ball rides its seat; down one, facing back
- *   toaster   drop in, glow, pop; up one
+ *   toaster   drop in; seen through the window between the elements as they glow and the timer runs down; pop; up one
  *   crane     magnet down, blink, up, across a gap in the rail, think, drop
  *   rocket    button, sputter, flame, sled to the buffer, ball flies on
  *   pendulum  tongue → cord → hook → a wrecking ball on a real clock

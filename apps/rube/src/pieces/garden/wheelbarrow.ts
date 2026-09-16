@@ -137,12 +137,9 @@ export const wheelbarrow = definePiece<{ color: string }>({
     p.line((x - 0.3) * k, (FLOOR + 0.12) * k, (x - 0.6) * k, (FLOOR + 0.02) * k)
     solid(p, ink, weight, ink)
     p.rect((x - 0.6) * k, (FLOOR + 0.02) * k, 0.06 * k, 0.03 * k)
-    // The tray: back wall, floor, front wall; the ball sits on its floor.
+    // The tray's back wall and floor; the ball sits on the floor, and the front wall is drawn over it.
     solid(p, ink, weight, s.color)
     p.quad((x - 0.38) * k, (FLOOR - 0.12) * k, (x + 0.3) * k, (FLOOR - 0.08) * k, (x + 0.22) * k, (FLOOR + 0.16) * k, (x - 0.24) * k, (FLOOR + 0.16) * k)
-    p.fill(ink)
-    p.noStroke()
-    p.rect((x - 0.01) * k, (FLOOR + 0.13) * k, 0.46 * k, 0.04 * k)
     // The wheel, turning with the ground covered.
     solid(p, ink, weight, bg)
     p.circle(ax * k, AY * k, WHEEL * 2 * k)
@@ -176,8 +173,10 @@ export const wheelbarrow = definePiece<{ color: string }>({
     tuft(p, k, ink, weight, 1.1, 0.5, 0.1, 0.02)
   },
   over: (p, s, { k, t, ink, weight }) => {
-    // The tray's front wall stands between the viewer and the ball while it rides; its lip comes down to the rail as it tips.
-    if (t < ARRIVE - 0.1) return
+    // The tray's front wall, lower than the back so the ball shows over it,
+    // stands between the viewer and the ball while it rides; its lip comes
+    // down to the rail as it tips. Always drawn, so the barrow has the same
+    // lines empty and loaded.
     const x = barrowX(t)
     const tilt = tiltAt(t)
     const ax = x + AXLE
@@ -187,8 +186,6 @@ export const wheelbarrow = definePiece<{ color: string }>({
     p.translate(-ax * k, -AY * k)
     solid(p, ink, weight, s.color)
     p.quad((x - 0.36) * k, (FLOOR - R * 0.3) * k, (x + 0.28) * k, (FLOOR - 0.08) * k, (x + 0.22) * k, (FLOOR + 0.16) * k, (x - 0.24) * k, (FLOOR + 0.16) * k)
-    outline(p, ink, weight * 0.7)
-    for (const dx of [-0.16, 0, 0.14]) p.line((x + dx) * k, (FLOOR - 0.01) * k, (x + dx) * k, (FLOOR + 0.13) * k)
     p.pop()
   },
 })

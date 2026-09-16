@@ -20,8 +20,10 @@ export const sunflower = definePiece<{ color: string; pollen: string }>({
   dynamic: true,
   place: ({ rng, color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
+    // The pollen is never the colour the ball arrives in; with nothing else to offer, the sunflower stays out of the map.
     const pool = theme.colors.filter((c) => c !== ball.color)
-    const pollen = rng.pick(pool.length ? pool : theme.colors)
+    if (!pool.length) return null
+    const pollen = rng.pick(pool)
     const lane: Lane = { segs: [roll([-0.5, 0], [0.5, 0], ROLL)], fire: 0 }
     lane.fire = laneReach(lane, HEAD.x)
     const changes: BallChange[] = [{ at: lane.fire, color: pollen }]

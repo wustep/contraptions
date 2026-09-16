@@ -32,8 +32,10 @@ export const painter = definePiece<{ color: string; paint: string }>({
   weight: 0.9,
   place: ({ rng, color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
+    // The paint is never the colour the ball arrives in; with nothing else to offer, the booth stays out of the map.
     const pool = theme.colors.filter((c) => c !== ball.color)
-    const paint = rng.pick(pool.length ? pool : theme.colors)
+    if (!pool.length) return null
+    const paint = rng.pick(pool)
     const lane: Lane = {
       segs: [...arrive([-0.5, 0], [0, 0.02]), wait([0, 0.02], OPEN + GO), ramp([0, 0.02], [0.5, 0], 0.6, ROLL)],
       fire: FIRE,

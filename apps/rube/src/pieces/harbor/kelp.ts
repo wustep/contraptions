@@ -109,7 +109,10 @@ export const kelp = definePiece<KelpState>({
     p.line(-WALL * k, (FLOOR + 0.04) * k, -WALL * k, 0.5 * k)
     p.line(WALL * k, (rim - 0.02) * k, WALL * k, 0.5 * k)
     water(p, k, ink, weight, -WALL, WALL, surface)
-    // The kelp: two stalks rooted in the sand behind the ball's way up, swaying, with a blade every so often.
+    // The kelp: two stalks rooted in the sand either side of the ball's way
+    // up, both behind it, swaying, with a blade every so often. Nothing
+    // stands in front of the ball; the water it is in is told by the walls,
+    // the surface and the bubbles.
     const sway = (y: number, i: number) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2)
     for (const [x0, i] of [
       [-0.12, 0],
@@ -139,19 +142,9 @@ export const kelp = definePiece<KelpState>({
       p.pop()
     }
   },
-  over: (p, s, { k, t, ink, weight }) => {
-    // One shorter frond in front, near the glass, so the ball is seen to be
-    // in the water without a blade lying across it the whole way up.
-    const surface = -s.floors + 0.05
-    frond(p, k, ink, weight, s.color, -0.19, 0.5, surface + 0.4, 2, (y, i) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2), 0.09, 1)
-  },
 })
 
-/**
- * A stalk from (x, y0) up to y1, swaying, with a blade every so often:
- * alternating sides, or all to one side (`lean` ±1) for a stalk against
- * the glass, so no blade pokes through it.
- */
+/** A stalk from (x, y0) up to y1, swaying, with a blade every so often, to alternating sides. */
 function frond(
   p: import('p5'),
   k: number,
@@ -163,9 +156,8 @@ function frond(
   y1: number,
   i: number,
   sway: (y: number, i: number) => number,
-  blade = 0.12,
-  lean = 0,
 ): void {
+  const blade = 0.12
   outline(p, ink, weight)
   p.noFill()
   p.beginShape()
@@ -176,7 +168,7 @@ function frond(
   }
   p.endShape()
   for (let y = y0 - 0.22; y > y1 + 0.05; y -= 0.3) {
-    const side = lean || (Math.round((y0 - y) / 0.3) % 2 ? 1 : -1)
+    const side = Math.round((y0 - y) / 0.3) % 2 ? 1 : -1
     const sx = x + sway(y, i) * ((y0 - y) / (y0 - y1))
     p.push()
     p.translate(sx * k, y * k)

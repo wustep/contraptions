@@ -449,10 +449,12 @@ ball's state rides the chain: its colour and which ball holds the thread,
 so a piece can change it and the next piece knows. Every world has pieces
 that do (the workshop's painter, cradle and inverter; the harbor's octopus
 and oyster; the garden's sunflower and pod; the arcade's changer); they
-are capped at two a map and never absent for three maps running. A piece
-declares for itself whether it changes the ball (`dynamic`) or throws it
-(`flight`), and the planner reads the flags off whatever pool it is
-handed.
+are capped at two a map and never absent for three maps running, and a
+piece that recolours the ball only places itself where it can hand the
+ball on in a colour other than the one it arrived in — never the same
+colour out as in. A piece declares for itself whether it changes the ball
+(`dynamic`) or throws it (`flight`), and the planner reads the flags off
+whatever pool it is handed.
 
 ### The workshop's pieces
 
@@ -472,7 +474,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
-| toaster | in the slot, coils glow brighter and brighter, pop; up one floor |
+| toaster | into the slot, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
@@ -494,7 +496,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | screw | an Archimedes' screw in a glass tube carries the ball up a floor |
 | flipper | a drooping pinball bat; the ball settles in its lip, the bat whips up and lets go as it passes level; up a floor onto a shelf |
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
-| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its hook mid-swing and flies on |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on |
 | inverter | gravity flips between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
@@ -508,16 +510,16 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | --- | --- |
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
-| wave | a swell curling over; the ball rides its face two cells over and a floor down, spray behind it |
+| wave | a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down, spray behind it |
 | lighthouse | in at the door; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
-| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises past the kelp on its own bubbles; out at the rim |
-| octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
+| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
+| octopus | its eyes follow the ball; the funnel on its head puckers and squirts ink straight up at it; a splat, and the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
 | pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
-| blowhole | into the dip over the hole; a rumble; the spout throws the ball a floor up, past a shelf and down onto it |
+| blowhole | onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws the ball a floor up, past a shelf and down onto it |
 | oyster | into the open shell; snap; a beat; a pearl rolls out and takes the thread |
-| whirlpool | the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
+| whirlpool | onto the water of a tank full to the brim; the current takes it round the near side and round and down the vortex to the drain, out a floor down facing back |
 
 ### The garden's pieces
 
@@ -528,11 +530,11 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | vine | onto a leaf in a pot; the vine shoots up the trellis with it, leaves unfurling; at the top the leaf droops and spills it onto the rail, one or two floors up |
 | bloom | over the near petals and round and down the inside of a trumpet flower, down the hollow stem, out at the root a floor down |
 | wheelbarrow | into the tray; the barrow trundles two cells to a chock and pitches forward, and the ball rides the tip out over the lip |
-| sprinkler | onto the head; the tap opens; spun off across a flowerbed |
+| sprinkler | onto the head; the tap opens and the nozzles go round; spun off across a flowerbed |
 | sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
-| pod | into a seed pod's mouth; it swells and bursts; a seed shoots out between the flaps and takes the thread |
+| pod | into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread |
 | burrow | over the lip of a hole and down it; a ridge of earth runs down the soil; up out of the top of a molehill a floor down, over its foot onto the rail; the mole looks out |
-| hose | into a coiled hose's mouth; a bulge the ball's size goes round two and a half times, gathering pace; out of the nozzle |
+| hose | into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its own skin goes round the loop two and a half times, gathering pace; out of the nozzle |
 | rake | over the handle and onto the tines; the handle comes up behind, over the top, and cracks the ball on its back; it shoots off and the handle lies ahead |
 | snail | up the tail onto the shell; carried most of a cell, slowly, leaving a trail; a shrug tips the shell and the ball rolls off its front, over the head |
 
@@ -555,7 +557,7 @@ scores pop off hits in a three-by-five bitmap font.
 | hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
 | claw | into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot and down its face |
 | striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
-| slingshot | into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out |
+| slingshot | into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up their own line through the fork; a lob a floor up onto a shelf, landing on the way down |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to
@@ -566,7 +568,8 @@ worlds headless and asserts all of it: the four worlds in order, three
 times round, every piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, every lane joined
 up inside its piece, continuity at every hand-off, one portal at each end
-and none between, the ball's state carried piece to piece, and the tempo.
+and none between, the ball's state carried piece to piece, every
+recolouring a change of colour, and the tempo.
 
 ## License
 

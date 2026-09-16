@@ -32,7 +32,7 @@ import { zigzag } from './zigzag'
  *   hockey     onto the air table; a mallet winds up behind and slaps it the length of the table into the goal; the board over the goal goes to 1
  *   claw       into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles, lets go; a fall onto the wedge at the chute's foot and down its face
  *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants; one or two floors up
- *   slingshot  into a saucer against the band; the kicker draws back and fires; flung a floor up onto a shelf that slopes to the way out
+ *   slingshot  into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up through the fork; a lob a floor up onto a shelf
  *   portal     the door at either end of a map; the far side is always a new map
  */
 

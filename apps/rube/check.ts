@@ -211,6 +211,9 @@ for (const seed of SEEDS) {
       if (after.id !== before.id && after.color === before.color) relayOk = false
     }
     check(`${tag}: every relay changes the ball`, relayOk)
+    // A piece that recolours the ball, by paint or by relay, never hands it on in the colour it arrived in.
+    const recolourOk = u.pieces.every((p) => !p.changes.some((c) => c.color) || ballAt(p.ballIn, p.changes, Infinity).color !== p.ballIn.color)
+    check(`${tag}: every recolouring changes the colour`, recolourOk)
     for (const p of u.pieces) {
       used.add(`${u.world.name}/${p.piece.name}`)
       for (const c of p.changes) {
