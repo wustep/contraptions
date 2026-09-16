@@ -116,7 +116,7 @@ export const pachinko = definePiece<PachinkoState>({
         if (lit > 0.05) glow(p, k, s.color, x, y, PIN_R * 3, lit)
         solid(p, ink, weight * 0.8, lit > 0.5 ? s.color : bg)
         p.circle(x * k, y * k, PIN_R * 2 * k)
-        if (struck) flash(p, k, s.color, weight, x, y, t - hit.at, 0.2, 0.05, 0.14)
+        if (struck) flash(p, k, s.color, weight, x, y, t - hit.at, 0.18, 0.05, 0.12)
       }
     }
     // The pocket: a cup at the bottom with a lamp. Its far wall is hinged

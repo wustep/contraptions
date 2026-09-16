@@ -51,7 +51,7 @@ export const changer = definePiece<{ color: string; token: string }>({
     rail(p, k, ink, weight, -0.5, SLOT - 0.02)
     rail(p, k, ink, weight, FLAP + 0.02, 0.5)
     // The clink as the token drops.
-    flash(p, k, s.token, weight, FLAP + 0.06, FLOOR - 0.06, since, 0.25, 0.06, 0.2)
+    flash(p, k, s.token, weight, FLAP + 0.06, FLOOR - 0.06, since, 0.2, 0.06, 0.18)
   },
   over: (p, s, c: PieceCtx) => {
     const { k, t, since, ink, bg, weight } = c

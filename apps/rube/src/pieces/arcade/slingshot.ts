@@ -101,7 +101,7 @@ export const slingshot = definePiece<{ color: string }>({
     p.circle(FOOT[0] * k, FOOT[1] * k, 0.06 * k)
     p.circle(TOP[0] * k, TOP[1] * k, 0.06 * k)
     // The snap, and the score.
-    flash(p, k, s.color, weight, SEAT, -0.04, since, 0.25, 0.12, 0.3)
+    flash(p, k, s.color, weight, SEAT, 0.02, since)
     score(p, k, s.color, -0.28, TOP[1] - 0.16, '+100', since)
   },
 })
