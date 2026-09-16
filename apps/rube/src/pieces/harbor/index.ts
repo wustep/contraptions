@@ -23,10 +23,10 @@ import { whirlpool } from './whirlpool'
  *
  *   rail        a pier: deck on pilings over still water
  *   buoy        the deck stops; a bell buoy leans to meet the ball, which rides its deck; it rocks over, clangs, and runs it off faster
- *   wave        a swell curling over; the ball rides its face two cells over and a floor down
+ *   wave        a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down
  *   lighthouse  in at the door, a lit window climbs the tower, out of the lantern room's door onto the gallery one or two up
  *   crab        rolls into the claw; lifted, aimed, pitched across a cell of water over the other claw, braced low
- *   kelp        into a tank at the bottom, bending upward; rises past the kelp on its own bubbles; out at the rim
+ *   kelp        into a tank at the bottom, bending upward; rises between two stalks of kelp on its own bubbles; out at the rim
  *   octopus     eyes follow the ball; a jet of ink from the siphon; it leaves a new colour
  *   anchor      onto the stock; the pawl trips; down one to three floors on the chain; the seabed
  *   pelican     off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies to the far post, tips its head and the ball rolls out

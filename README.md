@@ -508,10 +508,10 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | --- | --- |
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
-| wave | a swell curling over; the ball rides its face two cells over and a floor down, spray behind it |
+| wave | a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down, spray behind it |
 | lighthouse | in at the door; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
-| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises past the kelp on its own bubbles; out at the rim |
+| kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; a jet of ink from the siphon; the ball leaves a new colour |
 | anchor | onto the stock; the pawl trips; down one to three floors on the chain to the seabed; wound back up later |
 | pelican | off the deck's end into the open beak of a pelican bent down from its post; it hops round, flies the gap to the far post, tips its head and the ball rolls out onto the deck |
@@ -530,9 +530,9 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | wheelbarrow | into the tray; the barrow trundles two cells to a chock and pitches forward, and the ball rides the tip out over the lip |
 | sprinkler | onto the head; the tap opens; spun off across a flowerbed |
 | sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
-| pod | into a seed pod's mouth; it swells and bursts; a seed shoots out between the flaps and takes the thread |
+| pod | into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread |
 | burrow | over the lip of a hole and down it; a ridge of earth runs down the soil; up out of the top of a molehill a floor down, over its foot onto the rail; the mole looks out |
-| hose | into a coiled hose's mouth; a bulge the ball's size goes round two and a half times, gathering pace; out of the nozzle |
+| hose | into the mouth of a hose as wide as the ball; seen inside it as a circle in the hose's colour, round the loop two and a half times, gathering pace; out of the nozzle |
 | rake | over the handle and onto the tines; the handle comes up behind, over the top, and cracks the ball on its back; it shoots off and the handle lies ahead |
 | snail | up the tail onto the shell; carried most of a cell, slowly, leaving a trail; a shrug tips the shell and the ball rolls off its front, over the head |
 

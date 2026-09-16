@@ -28,9 +28,9 @@ import { wheelbarrow } from './wheelbarrow'
  *   wheelbarrow  into the tray; the barrow trundles two cells to a chock and pitches forward; the ball rides the tip out over the lip
  *   sprinkler    onto the head; the tap opens; spun off across a flowerbed
  *   sunflower    over a root; the head nods and dusts the ball with pollen; a new colour
- *   pod          into a seed pod's mouth; it swells and bursts; a seed shoots out between the flaps and takes the thread
+ *   pod          into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread
  *   burrow       over the lip of a hole and down it; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
- *   hose         into a coiled hose's mouth; a bulge the ball's size goes round twice, gathering pace; out of the nozzle
+ *   hose         into the mouth of a hose as wide as the ball; seen inside it as a circle in the hose's colour, round the loop two and a half times, gathering pace; out of the nozzle
  *   rake         over the handle onto the tines; the handle comes up behind, over, and cracks it on the back; it shoots off
  *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
  *   portal       the door at either end of a map; the far side is always a new map

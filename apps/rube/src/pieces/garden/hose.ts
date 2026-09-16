@@ -4,13 +4,13 @@ import { drop, tuft } from './green'
 
 /**
  * A garden hose hung on a hook on the fence, its mouth at the path's end
- * and its nozzle pointing along the path a cell on. The hose is a tube as
- * wide as the ball: the ball rolls into the mouth and the hose swallows it,
- * and what is seen from then on is the ball *inside* — a circle the bore's
- * width in the hose's own colour, seen through the skin — climbing to the
- * hook, going round the loop twice, gathering pace, and coming down to the
- * nozzle, where the ball shoots out onto the path with a spit of water
- * behind it. The hose drips.
+ * and its nozzle pointing along the path a cell on. The hose is a tube very
+ * nearly as wide as the ball: the ball rolls into the mouth and the hose
+ * swallows it, and what is seen from then on is the ball *inside* — a
+ * circle the bore's width in the hose's own colour, seen through the skin —
+ * going up into the loop, round it two and a half times, gathering pace,
+ * and down out of it to the nozzle, where the ball shoots out onto the path
+ * with a spit of water behind it. The hose drips.
  *
  * The tube is drawn in front of the ball, and the circle inside it is cut
  * off at the mouth's plane and the nozzle's, so going in and coming out
