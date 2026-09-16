@@ -317,6 +317,12 @@ export interface Piece<S = unknown> {
   draw(p: p5, s: S, c: PieceCtx): void
   /** Drawn after the ball, for parts that stand in front of it. */
   over?(p: p5, s: S, c: PieceCtx): void
+  /**
+   * Drawn last of all, over every piece and the ball: the scores that pop
+   * off a hit. A score is read, not seen, and a machine standing in front
+   * of one — the piece above it, or a cabinet drawn over the ball — hid it.
+   */
+  scores?(p: p5, s: S, c: PieceCtx): void
 }
 
 /** Identity helper that pins the state type. */

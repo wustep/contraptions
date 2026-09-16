@@ -7,8 +7,9 @@ import { lamp, score } from './neon'
  * down in the ball's way. The ball shoves through it — the foot rides up
  * over the ball's front as it comes, and slips off its back — and the plate
  * goes over the top and keeps going, round and round, slowing, while a
- * column of lamps on the bracket's post count the turns and the score
- * climbs. It stops hanging down again, ready for the next one.
+ * column of lamps on the bracket's post count the turns. The score pops
+ * the instant the plate is flung and ticks up with the turns while it is
+ * up. It stops hanging down again, ready for the next one.
  *
  * The axle hangs low enough and the plate is short enough that the plate
  * clears the beam it hangs from at the top of every turn.
@@ -62,6 +63,8 @@ LANE.fire = laneReach(LANE, RELEASE)
 
 /** The plate's angle, forward of hanging: shoved by the ball, then spinning on. */
 const plateAngle = (t: number, since: number) => (since >= 0 ? LET_GO + turned(since) : shoved(laneAt(LANE, t).x))
+/** Turns the plate has made since it was flung: one each time it comes over the top. */
+const turnsAt = (t: number, since: number) => Math.floor((plateAngle(t, since) - LET_GO + Math.PI) / (Math.PI * 2))
 
 export const spinner = definePiece<{ color: string }>({
   name: 'spinner',
@@ -71,8 +74,7 @@ export const spinner = definePiece<{ color: string }>({
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
-    const angle = plateAngle(t, since)
-    const turns = Math.floor((angle - LET_GO + Math.PI) / (Math.PI * 2))
+    const turns = turnsAt(t, since)
 
     rail(p, k, ink, weight, -0.5, 0.5)
     gallows(p, k, ink, weight, -0.3, 0.3, -0.3, -0.5)
@@ -80,9 +82,11 @@ export const spinner = definePiece<{ color: string }>({
     p.line(0, -0.5 * k, 0, AXLE_Y * k)
     // The lamps up the post: one for every turn so far, clear of the plate's sweep.
     for (let i = 0; i < 5; i++) lamp(p, k, ink, weight, s.color, bg, -0.3, -0.44 + i * 0.06, 0.02, since > 0 && turns > i ? 1 : 0)
-    // The score so far, while the plate is still going and the piece is still in view.
-    if (since > 0.6 && since < 1.5) score(p, k, s.color, 0, AXLE_Y - 0.2, `+${Math.max(1, turns) * 10}`, since - 0.6, 0.9)
   },
+  // The score pops the instant the foot slips off the ball and the plate is
+  // flung, and ticks up a ten at every turn that comes round while it is up;
+  // the lamps go on counting after it has faded.
+  scores: (p, s, { k, t, since, bg }) => score(p, k, s.color, bg, 0, AXLE_Y - 0.2, `+${Math.max(1, turnsAt(t, since)) * 10}`, since, 0.9),
   over: (p, s, { k, t, since, ink, weight }) => {
     // The plate, in front of the ball: hanging from the axle, turning about
     // it the way the ball is going.

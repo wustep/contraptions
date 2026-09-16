@@ -542,22 +542,26 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 
 Neon night. The palettes are dark and a colour laid down with a soft halo
 reads as a lit tube; the halo is the only translucency in the show, and
-scores pop off hits in a three-by-five bitmap font.
+scores pop off hits in a three-by-five bitmap font, on the beat of the hit,
+drawn last of all over every machine and the ball, and with a rim of the
+paper so they read over whatever they cross. A
+machine's display is a dark window its digits light in, and marquee lamps
+on a body of their own colour sit in a dark recess, so lit and unlit read.
 
 | Piece | What happens |
 | --- | --- |
 | rail | a lit lane: a lamp, a strip or chevrons that come on as the ball passes |
 | bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +100, out faster |
-| spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, clear of its beam, counting its turns in lamps up the post |
+| spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, clear of its beam, counting its turns in lamps up the post; the score pops as the plate is flung and ticks up with the turns |
 | changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
 | ticket | off the rail's end into the hopper; a strip of tickets feeds out below while it whirs; drops out of the prize chute beside the cabinet, one or two floors down |
 | zigzag | down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad |
 | pachinko | off a lip and bouncing pin to pin through five rows, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
 | skee | a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top of its arc and down into the fifty ring a floor up; the rings light as it lands |
-| hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board goes to 1 |
+| hockey | onto the air table; a mallet winds up behind and slaps the ball on the back the length of the table into the goal; the board lights to 1 |
 | claw | into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles to the chute, lets go; a fall onto the wedge at the chute's foot and down its face |
-| striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck to the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
-| slingshot | into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up their own line through the fork; a lob a floor up onto a shelf, landing on the way down |
+| striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck, slowing but with pace still on it when it meets the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
+| slingshot | into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up their own line through the fork; a lob a floor up onto a shelf, landing on the way down; the score pops off the fork's mouth as the ball leaves it |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to

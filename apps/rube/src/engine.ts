@@ -153,7 +153,8 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
 
 /**
  * One frame of one world into a viewport: paper, backdrop, the pieces in
- * view in two passes around the ball, the ball with its trail, the cut.
+ * view in two passes around the ball, the ball with its trail, the scores
+ * over all of it, the cut.
  * `cam` is the cell at the viewport's centre and `k` the cell size in
  * pixels. `cuts` draws the show's cuts too: the iris at the portals and
  * the fade up from ink at the very start. The catalog leaves them out — a
@@ -211,9 +212,9 @@ export function drawWorld(
       theme,
     }
   }
-  const pass = (which: 'draw' | 'over') => {
+  const pass = (which: 'draw' | 'over' | 'scores') => {
     for (const placed of visible) {
-      const fn = which === 'draw' ? placed.piece.draw : placed.piece.over
+      const fn = placed.piece[which]
       if (!fn) continue
       p.push()
       p.translate(sx(placed.col), sy(placed.row))
@@ -248,6 +249,8 @@ export function drawWorld(
   }
 
   pass('over')
+  // The scores last, over everything: a score behind a machine is not read.
+  pass('scores')
 
   if (cuts) drawTransitions(p, show, t, here, sx, sy, view)
   p.pop()

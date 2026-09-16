@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { digits, flash, glow } from './neon'
+import { display, flash, glow } from './neon'
 
 /**
  * An air-hockey table. The rail runs onto the table's surface; the ball
@@ -57,7 +57,7 @@ export const hockey = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The mallet: drawn back behind the ball while it winds, swung down onto
     // its back at the fire, a short follow-through as the ball gets away,
     // then left hanging.
@@ -98,13 +98,13 @@ export const hockey = definePiece<{ color: string }>({
     p.ellipse(0, (ROD + 0.03) * k, HEAD_W * k, 0.09 * k)
     p.rect(0, (ROD - 0.03) * k, 0.06 * k, 0.06 * k)
     p.pop()
-    // The scoreboard on a post over the goal, under the cell's roof: 0, then 1, and it glows a while.
+    // The scoreboard on a post over the goal, under the cell's roof: a dark
+    // window with a dim 0 in it, that lights to 1 in the colour on the goal
+    // and glows a while.
     outline(p, ink, weight)
     p.line((GOAL + 0.1) * k, -0.1 * k, (GOAL + 0.1) * k, BOARD_Y * k)
     glow(p, k, s.color, GOAL + 0.1, BOARD_Y, 0.16, scored)
-    solid(p, ink, weight, ink)
-    p.rect((GOAL + 0.1) * k, BOARD_Y * k, 0.26 * k, 0.15 * k, 0.01 * k)
-    digits(p, k, s.color, GOAL + 0.1, BOARD_Y, goal > 0 ? '1' : '0', 0.022)
+    display(p, k, ink, weight, bg, GOAL + 0.1, BOARD_Y, 0.26, 0.15, goal > 0 ? '1' : '0', s.color, goal > 0)
     // The slap, and the goal.
     flash(p, k, s.color, weight, SEAT + 0.1, 0, since)
     flash(p, k, s.color, weight, SLOT, 0, goal)
