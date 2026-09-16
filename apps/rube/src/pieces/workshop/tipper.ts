@@ -1,24 +1,34 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, catchBend, chain, definePiece, over, rail, ramp, wait, type Lane, type Pt, type Seg } from '../../parts'
+import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, burst, catchBend, chain, definePiece, over, rail, ramp, trace, type Lane, type Pt, type Seg } from '../../parts'
 
 /**
  * A tipping tray. The ball rolls off the rail onto a tray hinged at its
  * heel; a counterweight under the heel holds it level, resting against the
- * post, until the ball's weight at the far end wins; the tray tips over,
- * past upright, until it lands on its stop with its mouth facing down, and
- * the ball is dumped into the cell below, where a quarter-pipe turns the
- * fall back into a roll. The tray clacks on its stop, and later the
- * counterweight rights it.
+ * post, and gives slowly under the ball's weight — the tray creeps, the
+ * ball riding it down — until the weight at the far end wins; the tray
+ * tips over, past upright, until it lands on its stop with its mouth
+ * facing down, and the ball is dumped into the cell below, where a
+ * quarter-pipe turns the fall back into a roll. The tray clacks on its
+ * stop, and later the counterweight rights it.
+ *
+ * The ball's seat is traced from the same tilt the tray is drawn with, so
+ * it sits on the tray's floor at every angle until it slides off.
  */
 const HEEL: Pt = [-0.2, FLOOR]
 const W = 0.34
 const H = 0.3
+/** The tray's floor is this thick; the ball sits on top of it. */
+const PLATE = 0.045
 const SEAT = -0.03
 const ARRIVE = arriveAt(SEAT)
 const SETTLE = 0.3
 const FIRE = ARRIVE + SETTLE
+/** How far the tray has crept by the time it goes. */
+const CREEP = 0.12
 const TIP = 0.22
+/** The ball slides off the tray this long into the tip. */
+const SLIDE = 0.1
 const OVER = 1.95
 const ARC = 0.18
 /** Where the catch's bend begins, under the tray's mouth. */
@@ -27,7 +37,19 @@ const STOP_Y = 0.62
 const RESET = 2.6
 
 const tipAt = (since: number) =>
-  since < 0 ? 0 : since < TIP ? OVER * easeInQuad(over(since, 0, TIP)) : since < RESET ? OVER : OVER * (1 - easeInOutSine(over(since, RESET, RESET + 1)))
+  since < -SETTLE ? 0
+  : since < 0 ? CREEP * easeInQuad(over(since, -SETTLE, 0))
+  : since < TIP ? CREEP + (OVER - CREEP) * easeInQuad(over(since, 0, TIP))
+  : since < RESET ? OVER
+  : OVER * (1 - easeInOutSine(over(since, RESET, RESET + 1)))
+
+/** The ball's centre on the tray's floor, `d` along it from the heel, with the tray tilted `a`. */
+function seatAt(t: number): Pt {
+  const a = tipAt(t - FIRE)
+  const d = SEAT - HEEL[0]
+  const up = R + PLATE
+  return [HEEL[0] + d * Math.cos(a) + up * Math.sin(a), HEEL[1] + d * Math.sin(a) - up * Math.cos(a)]
+}
 
 export const tipper = definePiece<{ color: string }>({
   name: 'tipper',
@@ -39,10 +61,11 @@ export const tipper = definePiece<{ color: string }>({
     ]
     if (!fits(cells, [1, 1])) return null
     const bend = chain(arcPts(CATCH + ARC, 1 - ARC, ARC, Math.PI, Math.PI / 2, 4), 0.045)
+    const off = seatAt(FIRE + SLIDE)
     const segs: Seg[] = [
-      ...arrive([-0.5, 0], [SEAT, 0]),
-      wait([SEAT, 0], SETTLE + 0.1),
-      { from: [SEAT, 0], to: [CATCH, 1 - ARC], dur: 0.22, ease: 'in' },
+      ...arrive([-0.5, 0], seatAt(ARRIVE)),
+      ...trace(seatAt, ARRIVE, FIRE + SLIDE, 8),
+      { from: off, to: [CATCH, 1 - ARC], dur: 0.22, ease: 'in' },
       ...bend,
       ramp([CATCH + ARC, 1], [0.5, 1], FAST, ROLL),
     ]

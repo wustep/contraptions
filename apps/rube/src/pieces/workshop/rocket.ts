@@ -5,12 +5,17 @@ import { FAST, FLOOR, ROLL, arrive, arriveAt, burst, definePiece, fly, over, puf
 /**
  * A rocket sled. The ball drops into the cup on the sled and its weight
  * presses the button; the rocket sputters, catches, and the sled goes down
- * the track like it was shot; the buffer stops the sled and nothing stops
- * the ball, which flies out of the cup and rolls on. The sled stays where
- * it hit, smoking.
+ * the track like it was shot; a chock across the track stops the sled's
+ * wheels and nothing stops the ball, which flies out of the cup, over the
+ * chock, and rolls on. The sled stays where it hit, smoking.
  */
 const CUP: Pt = [0.05, -0.06]
-const STOP = 2.0
+const STOP = 1.8
+/** The chock: a low block across the rails that the stopped sled's front wheel is against, under the ball's flight. */
+const CHOCK = STOP + 0.26
+/** The ball pops out of the cup over the chock and comes down past it. */
+const LAND: Pt = [2.26, 0]
+const HOP = 0.08
 const ARRIVE = arriveAt(CUP[0])
 const IGNITE = 0.55
 const BURN = 0.55
@@ -32,8 +37,8 @@ export const rocket = definePiece<{ color: string }>({
         ...arrive([-0.5, 0], CUP),
         wait(CUP, IGNITE),
         { from: CUP, to: [STOP + CUP[0], CUP[1]], dur: BURN, ease: 'in' },
-        fly([STOP + CUP[0], CUP[1]], [2.28, 0], 0.1, 0.05),
-        ramp([2.28, 0], [2.5, 0], FAST, ROLL),
+        fly([STOP + CUP[0], CUP[1]], LAND, Math.hypot(LAND[0] - STOP - CUP[0], LAND[1] - CUP[1]) / FAST, HOP),
+        ramp(LAND, [2.5, 0], FAST, ROLL),
       ],
       fire: FIRE,
     }
@@ -42,25 +47,13 @@ export const rocket = definePiece<{ color: string }>({
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const sledX = since < 0 ? 0 : since < BURN ? lerp(0, STOP, easeInQuad(over(since, 0, BURN))) : STOP - 0.04 * Math.exp(-(since - BURN) * 6) * Math.cos((since - BURN) * 40)
 
-    // The track: a rail with sleepers, and the buffer at the far end.
+    // The track: a rail with sleepers, and the chock bolted across it on a post.
     outline(p, ink, weight)
     p.line(-0.5 * k, FLOOR * k, 2.5 * k, FLOOR * k)
     for (let x = -0.4; x < 2.5; x += 0.25) p.line(x * k, (FLOOR + 0.03) * k, x * k, (FLOOR + 0.09) * k)
+    p.line(CHOCK * k, FLOOR * k, CHOCK * k, 0.5 * k)
     solid(p, ink, weight, s.color)
-    p.rect(2.34 * k, (FLOOR - 0.12) * k, 0.1 * k, 0.24 * k)
-    outline(p, ink, weight)
-    p.line(2.34 * k, FLOOR * k, 2.34 * k, 0.5 * k)
-    // The buffer's spring, compressed by the hit.
-    const squash = since < BURN ? 0 : Math.max(0, 1 - over(since, BURN, BURN + 0.5)) * 0.6
-    const springX0 = 2.29
-    const springX1 = STOP + 0.24 + 0.05 * (1 - squash) - 0.03 * squash
-    p.beginShape()
-    const coils = 5
-    for (let i = 0; i <= coils * 2; i++) {
-      const f = i / (coils * 2)
-      p.vertex(lerp(springX0, springX1, f) * k, (FLOOR - 0.06 + (i % 2 ? 0.05 : -0.05)) * k)
-    }
-    p.endShape()
+    p.rect(CHOCK * k, (FLOOR - 0.025) * k, 0.08 * k, 0.05 * k)
 
     // Smoke, behind the sled.
     if (since > 0 && since < 1.8) {
@@ -131,13 +124,13 @@ export const rocket = definePiece<{ color: string }>({
       p.triangle((rx - 0.2) * k, (ry - 0.035) * k, (rx - 0.2) * k, (ry + 0.035) * k, (rx - 0.2 - len * 0.5) * k, ry * k)
     }
     p.pop()
-    // The sled and the ball leave a cloud of dust where they met the buffer.
+    // The sled leaves a cloud of dust where its wheel met the chock.
     if (since > BURN && since < BURN + 0.3) {
       const f = over(since, BURN, BURN + 0.3)
       p.push()
       p.stroke(ink)
       p.strokeWeight(weight)
-      burst(p, (STOP + 0.28) * k, (FLOOR - 0.05) * k, (0.04 + 0.1 * f) * k, (0.08 + 0.16 * f) * k, 6, 0.4)
+      burst(p, (CHOCK - 0.04) * k, (FLOOR - 0.03) * k, (0.04 + 0.1 * f) * k, (0.08 + 0.16 * f) * k, 6, 0.4)
       p.pop()
     }
   },

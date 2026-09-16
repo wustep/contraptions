@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { R, ROLL, arcPts, catchBend, chain, definePiece, over, rail, ramp, segTime, type Pt, type Seg } from '../../parts'
+import { FLOOR, R, ROLL, arcPts, chain, definePiece, over, rail, ramp, segTime, type Pt, type Seg } from '../../parts'
 import { leaf, pot } from './green'
 
 /**
@@ -107,12 +107,18 @@ export const flowerBloom = definePiece<{ color: string; turn: 1 | -1 }>({
     for (const x of [-TUBE, TUBE]) p.line(x * k, THROAT_Y * k, x * k, (1 - ARC) * k)
     leaf(p, k, ink, weight, s.color, TUBE, 0.62, 0.22, -0.5)
     leaf(p, k, ink, weight, s.color, -TUBE, 0.5, 0.2, Math.PI + 0.5)
-    // The pot at the root, and the bend out of it onto the path.
-    pot(p, k, ink, weight, s.color, 0, 1.5, 0.44, 0.3)
-    const squash = since < 0 ? 0 : 1 - over(since, 0.1, 0.45)
+    // The root: the pot the stem stands in, its mouth under the bend, and
+    // the stem's outer wall turning out of it onto the path, which runs to
+    // the edge on a stake. No cushion, no posts: a plant, not a pipe.
+    pot(p, k, ink, weight, s.color, 0, 1.5, 0.44, 0.36)
     p.push()
     p.translate(0, 1 * k)
-    catchBend(p, k, ink, weight, s.color, turn, ARC, squash)
+    p.scale(turn, 1)
+    outline(p, ink, weight)
+    p.arc(ARC * k, -ARC * k, (ARC + FLOOR) * 2 * k, (ARC + FLOOR) * 2 * k, Math.PI / 2, Math.PI)
+    p.line(ARC * k, FLOOR * k, 0.5 * k, FLOOR * k)
+    p.line(0.4 * k, FLOOR * k, 0.4 * k, 0.5 * k)
+    p.line(0.35 * k, 0.5 * k, 0.45 * k, 0.5 * k)
     p.pop()
   },
 })

@@ -466,7 +466,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | rail | a plain cell, so the beats have room to land: a post, a bracket, a riveted plate |
 | hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, a wedge head drops a floor and squeezes the ball out fast |
 | seesaw | up, hang over the pivot, down faster, onto the stop |
-| bell | the clapper is in the way; it strikes the lip and the bell knocks on its pin; punctuation |
+| bell | the clapper is in the way; the ball shoulders it ahead to the lip, where it strikes, and slips under it; the bell knocks on its pin; punctuation |
 | bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
 | dominoes | gate → striker → six dominoes, each knocking the next → button → a pulse along the wire → the coil snaps the portcullis up |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
@@ -476,7 +476,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
 | toaster | into the slot, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
-| rocket | button → sputter → flame → sled to the buffer; the ball flies on; over two |
+| rocket | button → sputter → flame → sled to the chock; the ball pops out of the cup over it and rolls on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
 | trapdoor | weight → lever → bolt → the floor gives way; a ramp; down one |
 | trampoline | the rail just stops; a pit, springs that stretch, a bounce, the biggest arc in the show |
@@ -484,11 +484,11 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | conveyor | switch → motor → cleats carry the ball up a floor, slowly, on purpose |
 | paddle | a wheel kicked round once; a relay |
 | balloon | pin → sandbag → the balloon rises the mast, tugging at its ropes; up one or two |
-| plunger | pawl → spring → across a cell with no rail in it at all |
+| plunger | into a dimple at the rail's end; pawl → spring → a kicker comes up through a slot under the ball's back and boots it across a cell with no rail in it at all |
 | stairs | four steps down, off each lip with a bounce, a tap on each tread |
 | switchback | ramps down to bumpers that turn the ball; two ramps for one floor facing back, three for two facing on |
 | zipline | a cup on a trolley runs a wire that dips under it, down a floor and over two, to a stop |
-| tipper | a counterweighted tray on its heel tips past upright and dumps the ball a floor down; clack |
+| tipper | a counterweighted tray on its heel creeps under the ball's weight, then tips past upright and dumps it a floor down; clack |
 | drawbridge | plate → pawl → the winch pays out the chain → the bridge falls across the gap |
 | gears | plate → pawl → three gears run → a cord hauls the gate up its guide |
 | trapeze | a basket on ropes swings the ball across two cells of nothing, to a catch |
@@ -497,7 +497,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | flipper | a drooping pinball bat; the ball settles in its lip, the bat whips up and lets go as it passes level; up a floor onto a shelf |
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
 | cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on |
-| inverter | gravity flips between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
+| inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
 ### The harbor's pieces
@@ -511,7 +511,7 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
 | wave | a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down, spray behind it |
-| lighthouse | in at the door; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
+| lighthouse | the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; the funnel on its head puckers and squirts ink straight up at it; a splat, and the ball leaves a new colour |
@@ -528,7 +528,7 @@ would jump phase at every cell edge; what moves is what the ball does to it.
 | rail | a path edge on stakes, between tufts of grass and a pot with one flower |
 | wateringcan | tongue → cord → the can tips → a shower washes the ball on its way faster |
 | vine | onto a leaf in a pot; the vine shoots up the trellis with it, leaves unfurling; at the top the leaf droops and spills it onto the rail, one or two floors up |
-| bloom | over the near petals and round and down the inside of a trumpet flower, down the hollow stem, out at the root a floor down |
+| bloom | over the near petals and round and down the inside of a trumpet flower, down the hollow stem into its pot, out at the root a floor down |
 | wheelbarrow | into the tray; the barrow trundles two cells to a chock and pitches forward, and the ball rides the tip out over the lip |
 | sprinkler | onto the head; the tap opens and the nozzles go round; spun off across a flowerbed |
 | sunflower | over a root; the head nods and dusts the ball with pollen; a new colour |
