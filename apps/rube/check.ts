@@ -39,6 +39,11 @@ check('no piece is in two worlds', straddling.length === 0, straddling.map(([n, 
 const palettes = new Map<string, string[]>()
 for (const w of WORLDS) for (const t of w.themes) palettes.set(t.name, [...(palettes.get(t.name) ?? []), w.name])
 check('no palette is shared between worlds', [...palettes.values()].every((ws) => ws.length === 1))
+// Night is the arcade's alone: every other world is painted on light paper,
+// so the cut into the arcade is the loop's one fall of dark.
+const luma = (hex: string) => (0.2126 * parseInt(hex.slice(1, 3), 16) + 0.7152 * parseInt(hex.slice(3, 5), 16) + 0.0722 * parseInt(hex.slice(5, 7), 16)) / 255
+const misplaced = WORLDS.flatMap((w) => w.themes.filter((t) => (luma(t.bg) < 0.5) !== (w.name === 'arcade')).map((t) => `${w.name}/${t.name}`))
+check('only the arcade is painted dark', misplaced.length === 0, misplaced.join(','))
 
 for (const w of WORLDS) {
   console.log(`\n${w.name}`)
@@ -295,6 +300,34 @@ for (const seed of SEEDS.slice(0, 3)) {
   check(`${seed}: most maps have a flight`, flights >= 9, `${flights}/12`)
   check(`${seed}: never more than two ball-changing pieces a map`, !tooMany)
   check(`${seed}: never three maps running without one`, longestDry <= 2, `${longestDry}`)
+}
+
+// Variety: a map says a thing once before it says it twice. Over a long
+// run of worlds most beats in a map are pieces it has not used yet, a small
+// world included, and no piece is ever in a map four times.
+{
+  const share = new Map<string, number[]>()
+  let worst = 0
+  let overlong = 0
+  for (const seed of SEEDS) {
+    const show = new Show(seed)
+    for (let i = 0; i < 12; i++) {
+      const u = show.universe(i)
+      const names = u.pieces.map((p) => p.piece.name).filter((n) => !shared.has(n))
+      const counts = new Map<string, number>()
+      for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1)
+      worst = Math.max(worst, ...counts.values())
+      share.set(u.world.name, [...(share.get(u.world.name) ?? []), counts.size / names.length])
+      if (names.length > u.world.pieces.length) overlong++
+    }
+  }
+  console.log('\nvariety')
+  for (const [name, shares] of share) {
+    const mean = shares.reduce((a, b) => a + b, 0) / shares.length
+    check(`${name}: at least three beats in four are a piece the map has not used yet`, mean >= 0.75, mean.toFixed(2))
+  }
+  check('no piece is ever in a map four times', worst < 4, `${worst}`)
+  check('no map outstays its world: never more beats than the pool has pieces, and two', overlong === 0, `${overlong}`)
 }
 
 const sorted = [...beats].sort((a, b) => a - b)

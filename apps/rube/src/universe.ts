@@ -1,6 +1,6 @@
 import { makeRng, type Rng } from '../../../src/core/rng'
 import type { Theme } from '../../../src/core/themes'
-import { ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
+import { R, ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
 import { beatCount, isDynamic, planChain, type Box, type Placed } from './plan'
 import type { Backdrop, World } from './worlds'
 
@@ -44,6 +44,8 @@ export interface Avoid {
   taste: string | null
   /** Whether the world just before this one had a piece that changed the ball. */
   dynamicsLast: boolean
+  /** The beats the last visit to this world was built from. */
+  pieces: ReadonlySet<string> | null
 }
 
 export function buildUniverse(seed: string, index: number, world: World, avoid: Avoid, solo: string | null = null): Universe {
@@ -68,13 +70,16 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   const w = rng.int(14, 21)
   const h = rng.int(6, 10)
   const box: Box = { x0: 0, y0: 0, x1: w - 1, y1: h - 1 }
-  const beats = rng.int(11, 17)
+  // A map does not outstay its world's vocabulary: a small pool asks for a
+  // shorter walk rather than the same beats three times over.
+  const own = pool.filter((c) => c.name !== 'rail' && c.name !== 'portal').length
+  const beats = Math.min(rng.int(11, 17), own + 2)
   const ball: BallState = { color: ballColor, ghost: false, id: 0 }
   // The pieces that change the ball stay special: at most two a map, keen
   // when the last world had none, shy when it had one.
   const dynamics = { boost: avoid.dynamicsLast ? 0.5 : 3, cap: 2 }
   const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
-    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics }, { box, beats }),
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats }),
   )
 
   let acc = 0
@@ -99,14 +104,32 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   return { index, seed, world, theme, taste: tasteName, ballColor, backdrop, pieces, box, journey: acc, bounds }
 }
 
-/** Plan the map a few times and keep the walk with the most beats. */
+/** Plan the map a few times and keep the walk that says the most different things; between equals, the longer. */
 function bestOf(rng: Rng, tries: number, plan: (rng: Rng) => Placed[]): Placed[] {
+  const score = (pieces: Placed[]) => new Set(pieces.map((p) => p.piece.name)).size * 100 + beatCount(pieces)
   let best: Placed[] = []
   for (let i = 0; i < tries; i++) {
     const attempt = plan(rng.fork(`try:${i}`))
-    if (!best.length || beatCount(attempt) > beatCount(best)) best = attempt
+    if (!best.length || score(attempt) > score(best)) best = attempt
   }
   return best
+}
+
+/**
+ * Everything a universe takes up, in cells: its footprints, plus wherever
+ * the ball goes — a flight can peak above every cell it crosses. What a
+ * fixed camera has to fit to show the whole of it.
+ */
+export function extentOf(u: Universe): Box {
+  const e: Box = { x0: u.bounds.x0 - 0.5, y0: u.bounds.y0 - 0.5, x1: u.bounds.x1 + 0.5, y1: u.bounds.y1 + 0.5 }
+  const n = Math.ceil(u.journey * 30)
+  for (let j = 0; j <= n; j++) {
+    const at = universeAt(u, (u.journey * j) / n)
+    e.x0 = Math.min(e.x0, at.x - R)
+    e.x1 = Math.max(e.x1, at.x + R)
+    e.y0 = Math.min(e.y0, at.y - R)
+  }
+  return e
 }
 
 /** Whether a world has a piece that changes the ball. */

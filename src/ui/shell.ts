@@ -163,8 +163,9 @@ export function credit(root: HTMLElement): void {
 export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // Mouse clicks leave a button focused, and a focused button swallows the
   // space shortcut. Keyboard activation reports detail 0 and keeps focus.
+  // The click may land on a key cap or an icon inside the button.
   root.addEventListener('click', (e) => {
-    if (e.detail > 0 && e.target instanceof HTMLButtonElement) e.target.blur()
+    if (e.detail > 0 && e.target instanceof Element) e.target.closest('button')?.blur()
   })
 
   // Header — Hide lives here so P is not a one-way trap. Peek stays a target

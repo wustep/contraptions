@@ -3,7 +3,7 @@ import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
 import { R, TRANSIT, ball, type PieceCtx } from './parts'
 import type { Placed } from './plan'
 import type { Show, ShowPoint } from './show'
-import type { Universe } from './universe'
+import { extentOf, type Universe } from './universe'
 
 /**
  * The stage. A fullscreen canvas, a camera that follows the ball, and the
@@ -12,7 +12,10 @@ import type { Universe } from './universe'
  * The camera is a pure function of time too: it averages the ball's position
  * over a short window around `t` — a little ahead, a little behind — and
  * only over samples in the same world, so it glides through a beat and cuts
- * at a portal, which is what a portal is.
+ * at a portal, which is what a portal is. A piece watched alone is the
+ * exception: its world is three seconds long, too short for a camera to
+ * open, settle and push in on, so a solo is held in one steady frame that
+ * fits the whole of it, at no more than the show's own scale.
  *
  * The drawing itself, `drawWorld`, takes a viewport: the stage draws one
  * world into the whole canvas, and the catalog draws one small world into
@@ -112,6 +115,9 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
   let overview = false
   let instance: p5 | null = null
   let release = () => {}
+  // A solo world's extent is walked once, not every frame.
+  const extents = new WeakMap<Universe, ReturnType<typeof extentOf>>()
+  const extent = (u: Universe) => extents.get(u) ?? (extents.set(u, extentOf(u)), extents.get(u)!)
 
   const sketch = (p: p5) => {
     p.setup = () => {
@@ -132,6 +138,10 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
         const bh = bounds.y1 - bounds.y0 + 2
         k = Math.min(W / bw, H / bh)
         cam = { x: (bounds.x0 + bounds.x1) / 2, y: (bounds.y0 + bounds.y1) / 2, zoom: 1 }
+      } else if (show.solo) {
+        const e = extent(here.universe)
+        k = Math.min(W / (e.x1 - e.x0 + 1), H / (e.y1 - e.y0 + 1), Math.min(W, H) / VISIBLE)
+        cam = { x: (e.x0 + e.x1) / 2, y: (e.y0 + e.y1) / 2, zoom: 1 }
       }
       drawWorld(p, show, t, here, cam, k, { x: 0, y: 0, w: W, h: H }, true)
     }

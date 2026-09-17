@@ -57,6 +57,8 @@ export interface PlanCtx {
   ball: BallState
   /** How keen this map is on the pieces that change the ball, and how many it may have. */
   dynamics: { boost: number; cap: number }
+  /** The beats the last visit to this world was built from, so this one can reach for others. */
+  lastVisit?: ReadonlySet<string>
 }
 
 /**
@@ -67,6 +69,23 @@ export interface PlanCtx {
  */
 export const isDynamic = (piece: Piece<any>): boolean => !!piece.dynamic
 export const isFlight = (piece: Piece<any>): boolean => !!piece.flight
+
+/**
+ * Freshness. A chain reaction is a run of different causes, so a map says a
+ * thing once before it says it twice: every use of a piece in this map cuts
+ * its weight, and a piece seen in the last few beats is all but out of the
+ * draw, so when a small world does have to repeat itself the repeat lands
+ * far enough on to read as a callback rather than a stutter. What the last
+ * visit to this world was built from is a little stale too, so two visits
+ * reach for different halves of a large pool. These are weights and never
+ * bans: the taste still says what a visit leans on, and a piece that is the
+ * only thing that fits is still placed.
+ */
+const USED = 0.3
+const RECENT = 0.08
+/** Beats before a piece may come round again at its used weight. */
+const COOLDOWN = 5
+const LAST_VISIT = 0.6
 
 export interface ChainSpec {
   box: Box
@@ -132,6 +151,9 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   commit(portalPiece, portalPlacement('in', ctx.portalColor))
 
   const pool = ctx.catalog.filter((c) => c.weight > 0)
+  /** How many times each piece is in this map so far, and the beat it was last placed on. */
+  const uses = new Map<string, number>()
+  const lastAt = new Map<string, number>()
   let prev = ''
   let rails = 0
   let placed = 0
@@ -163,11 +185,19 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       if (phase === 'flight') w *= isFlight(c) ? 6 : 0.2
       return w
     }
+    const fresh = (c: Piece<any>) => {
+      if (c.name === 'rail') return 1
+      let w = USED ** (uses.get(c.name) ?? 0)
+      const last = lastAt.get(c.name)
+      if (last !== undefined && placed - last < COOLDOWN) w *= RECENT
+      if (ctx.lastVisit?.has(c.name)) w *= LAST_VISIT
+      return w
+    }
     let chosen: { piece: Piece<any>; placement: Placement<unknown> } | null = null
     const tried = new Set<string>()
     while (tried.size < candidates.length) {
       const untried = candidates.filter((c) => !tried.has(c.name))
-      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c))
+      const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c) * fresh(c))
       tried.add(piece.name)
       const placement = piece.place({
         rng: rng.fork(`${placed}:${piece.name}`),
@@ -193,7 +223,11 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
     rails = name === 'rail' ? rails + 1 : 0
     prev = name
     if (isDynamic(chosen.piece)) dynamics++
-    if (name !== 'rail') placed++
+    if (name !== 'rail') {
+      uses.set(name, (uses.get(name) ?? 0) + 1)
+      lastAt.set(name, placed)
+      placed++
+    }
     // Advance the tempo.
     if (phase === 'run') {
       runLeft--
