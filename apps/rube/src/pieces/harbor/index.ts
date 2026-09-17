@@ -2,15 +2,21 @@ import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
 import { anchor } from './anchor'
+import { anemone } from './anemone'
 import { blowhole } from './blowhole'
 import { buoy } from './buoy'
 import { crab } from './crab'
+import { dolphin } from './dolphin'
+import { jellyfish } from './jellyfish'
 import { kelp } from './kelp'
 import { lighthouse } from './lighthouse'
 import { octopus } from './octopus'
 import { oyster } from './oyster'
 import { pelican } from './pelican'
+import { puffer } from './puffer'
 import { pierRail } from './rail'
+import { seal } from './seal'
+import { serpent } from './serpent'
 import { wave } from './wave'
 import { whirlpool } from './whirlpool'
 
@@ -33,6 +39,12 @@ import { whirlpool } from './whirlpool'
  *   blowhole    onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws it a floor up, past a shelf and down onto it
  *   oyster      into the open shell; snap; a beat; a pearl rolls out and takes the thread
  *   whirlpool   onto a brim-full tank; round the near side and round and down the vortex to the drain, out a floor down facing back
+ *   seal        off the deck's end onto the nose of a seal on a rock; it rears up, balances, bounces it twice, winds back and tosses it up past the end of the deck above and down onto it, on or back; then it claps
+ *   jellyfish   off the deck's end onto the crown of a jellyfish's bell, which dimples deep and springs back; a high arc onto the deck a floor up; the bell rings on, the lights round its rim running out from the middle
+ *   dolphin     off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; a fin cruises before and after
+ *   puffer      onto the back of a pufferfish asleep in a gap in the deck; it blows up with a start to a ball of spines and pops the ball over onto the far deck; then sighs itself small again
+ *   serpent     the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops
+ *   anemone     into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan
  *   portal      the door at either end of a map; the far side is always a new map
  */
 
@@ -71,5 +83,5 @@ export const harbor: World = {
     quay: { buoy: 1.7, crab: 1.6, pelican: 1.5, oyster: 1.3, octopus: 1.3, anchor: 1.2, lighthouse: 1.2, wave: 0.6, blowhole: 0.7, whirlpool: 0.7 },
     surf: { wave: 2, blowhole: 1.8, crab: 1.4, pelican: 1.4, whirlpool: 1.3, buoy: 1.2, oyster: 0.6, lighthouse: 0.6, anchor: 0.7 },
   },
-  pieces: [pierRail, buoy, wave, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool, portal],
+  pieces: [pierRail, buoy, wave, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool, seal, jellyfish, dolphin, puffer, serpent, anemone, portal],
 }
