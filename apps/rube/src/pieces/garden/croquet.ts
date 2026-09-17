@@ -75,7 +75,7 @@ function flapAt(t: number): number {
 
 export const croquet = definePiece<{ color: string }>({
   name: 'croquet',
-  weight: 1,
+  weight: 0.9,
   flight: true,
   place: ({ color, fits }) => {
     const cells: Pt[] = [

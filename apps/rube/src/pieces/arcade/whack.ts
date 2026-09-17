@@ -125,7 +125,7 @@ function mole(p: p5, k: number, ink: string, weight: number, color: string, bg: 
 
 export const whack = definePiece<{ color: string; mole: string }>({
   name: 'whack',
-  weight: 1,
+  weight: 0.9,
   flight: true,
   place: ({ rng, color, fits, theme, ball }) => {
     const cells: Pt[] = [

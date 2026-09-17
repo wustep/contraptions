@@ -51,19 +51,19 @@ import { whirlpool } from './whirlpool'
  *   blowhole    onto a whale's back, into the dip over its blowhole; a rumble; it blows, and the spout throws it a floor up, past a shelf and down onto it
  *   oyster      into the open shell; snap; a beat; a pearl rolls out and takes the thread
  *   whirlpool   onto a brim-full tank; round the near side and round and down the vortex to the drain, out a floor down facing back
+ *   dinghy      over the transom of a moored dinghy; the shove slips her painter off the cleat, the sail fills and she sails two cells to the far pier's fender; the jolt pitches the ball off over the bow
  *   seal        off the deck's end onto the nose of a seal on a rock; it rears up, balances, bounces it twice, winds back and tosses it up past the end of the deck above and down onto it, on or back; then it claps
+ *   flags       across a treadle plank; the pawl under it lets a lead weight go into the water, and three signal flags run up the mast, a pennant, a square and a swallowtail, each breaking out as it clears the ball
+ *   slipway     into the cockpit of a hull on a cradle at the head of the ways; the thump jumps the chock out; down the ways, off the cradle at its stop, a belly-flop a floor below that throws the ball onto the pier
  *   jellyfish   off the deck's end onto the crown of a jellyfish's bell, which dimples deep and springs back; a high arc onto the deck a floor up; the bell rings on, the lights round its rim running out from the middle
- *   dolphin     off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; a fin cruises before and after
+ *   floats      the deck stops; three net floats on a line; each dunks under the ball and bobs it on to the next, a ring on the water each time
+ *   lock        across the apron onto a raft in a lock chamber, the gate coming down behind; water runs in through the culvert from the upper pound and the raft rises a floor; its tail kicks up at the top and the ball rolls off
  *   puffer      onto the back of a pufferfish asleep in a gap in the deck; it blows up with a start to a ball of spines and pops the ball over onto the far deck; then sighs itself small again
+ *   hawser      into a breeches buoy under a block on a mooring line; the jerk pulls the lanyard's toggle; down the line, which the load hangs in two straight parts, to a rat guard; the ring swings on and tips the ball out a floor down
+ *   dolphin     off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; a fin cruises before and after
+ *   foghorn     out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up
  *   serpent     the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops
  *   anemone     into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan
- *   flags       across a treadle plank; the pawl under it lets a lead weight go into the water, and three signal flags run up the mast, each breaking out as it clears the ball
- *   foghorn     out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up
- *   floats      the deck stops; three net floats on a line; each dunks under the ball and bobs it on to the next, a ring on the water each time
- *   dinghy      over the transom of a moored dinghy; the shove slips her painter off the cleat, the sail fills and she sails two cells to the far pier's fender; the jolt pitches the ball off over the bow
- *   slipway     into the cockpit of a hull on a cradle at the head of the ways; the thump jumps the chock out; down the ways, off the cradle at its stop, a belly-flop a floor below that throws the ball onto the pier
- *   lock        across the apron onto a raft in a lock chamber, the gate coming down behind; water runs in through the culvert from the upper pound and the raft rises a floor; its tail kicks up at the top and the ball rolls off
- *   hawser      into a breeches buoy under a block on a mooring line; the jerk pulls the lanyard's toggle; down the line, which the load hangs in two straight parts, to a rat guard; the ring swings on and tips the ball out a floor down
  *   portal      the door at either end of a map; the far side is always a new map
  */
 

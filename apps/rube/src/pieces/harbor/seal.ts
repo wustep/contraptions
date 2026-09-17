@@ -156,7 +156,7 @@ const LANES: Record<1 | -1, Lane> = { 1: laneFor(1), [-1]: laneFor(-1) }
 
 export const seal = definePiece<SealState>({
   name: 'seal',
-  weight: 1,
+  weight: 0.9,
   flight: true,
   place: ({ rng, color, fits, theme }) => {
     const cells: Pt[] = [
