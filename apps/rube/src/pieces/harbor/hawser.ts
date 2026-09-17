@@ -122,9 +122,12 @@ export const hawser = definePiece<{ color: string }>({
   weight: 0.9,
   flight: true,
   place: ({ color, fits, theme }) => {
+    // The line comes down through the corner of the third cell of the upper
+    // floor, where a neighbour's water would be, so that cell is the hawser's too.
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
+      [2, 0],
       [0, 1],
       [1, 1],
       [2, 1],
