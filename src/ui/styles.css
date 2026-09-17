@@ -71,6 +71,45 @@ body.hide-panel #panel { display: none; }
 }
 body.hide-panel .panel-peek { display: inline-flex; }
 
+/* The way back out of a view opened over the show, in the stage's top left
+   corner: the peek tab's opposite number, in the same dress. It is on the
+   stage and not in the panel because the panel starts hidden, and a view
+   must never be easier to get into than out of. */
+.crumb {
+  position: absolute;
+  top: max(18px, env(safe-area-inset-top));
+  left: max(18px, env(safe-area-inset-left));
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.crumb button {
+  border: none;
+  background: transparent;
+  border-radius: 5px;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+.crumb button:hover { background: var(--raised); }
+.crumb button:active { transform: none; }
+.crumb-here {
+  margin-left: 2px;
+  padding: 0 8px 0 10px;
+  border-left: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.crumb .crumb-step { padding: 3px 8px 5px; font-size: 15px; line-height: 1; color: var(--dim); }
+.crumb .crumb-step:hover { color: var(--text); }
+
 #panel {
   min-height: 0;
   background: var(--panel);

@@ -1,6 +1,6 @@
 import { makeRng, type Rng } from '../../../src/core/rng'
 import type { Theme } from '../../../src/core/themes'
-import { ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
+import { R, ballAt, laneAt, type BallState, type LanePoint, type Taste } from './parts'
 import { beatCount, isDynamic, planChain, type Box, type Placed } from './plan'
 import type { Backdrop, World } from './worlds'
 
@@ -113,6 +113,23 @@ function bestOf(rng: Rng, tries: number, plan: (rng: Rng) => Placed[]): Placed[]
     if (!best.length || score(attempt) > score(best)) best = attempt
   }
   return best
+}
+
+/**
+ * Everything a universe takes up, in cells: its footprints, plus wherever
+ * the ball goes — a flight can peak above every cell it crosses. What a
+ * fixed camera has to fit to show the whole of it.
+ */
+export function extentOf(u: Universe): Box {
+  const e: Box = { x0: u.bounds.x0 - 0.5, y0: u.bounds.y0 - 0.5, x1: u.bounds.x1 + 0.5, y1: u.bounds.y1 + 0.5 }
+  const n = Math.ceil(u.journey * 30)
+  for (let j = 0; j <= n; j++) {
+    const at = universeAt(u, (u.journey * j) / n)
+    e.x0 = Math.min(e.x0, at.x - R)
+    e.x1 = Math.max(e.x1, at.x + R)
+    e.y0 = Math.min(e.y0, at.y - R)
+  }
+  return e
 }
 
 /** Whether a world has a piece that changes the ball. */

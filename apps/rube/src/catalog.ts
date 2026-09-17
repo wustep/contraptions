@@ -2,9 +2,8 @@ import p5 from 'p5'
 import { clamp } from '../../../src/core/ease'
 import type { Theme } from '../../../src/core/themes'
 import { drawWorld, setupCanvas, type Clock, type Viewport } from './engine'
-import { R } from './parts'
 import { Show } from './show'
-import { universeAt, type Universe } from './universe'
+import { extentOf, type Universe } from './universe'
 import { WORLDS, type World } from './worlds'
 
 /**
@@ -18,10 +17,29 @@ import { WORLDS, type World } from './worlds'
  * The ball is out of sight at both ends of a solo world, so the loop has
  * no seam. When the four bands are taller than the screen the sheet
  * scrolls. Click a piece to watch it alone.
+ *
+ * The sheet is a place you come back to: it opens where it was left, with
+ * the piece you were just watching in view and lit for a moment, so the
+ * eye lands where it set off from.
  */
 
 export interface Catalog {
+  /** How far down the sheet is scrolled, so it can be opened there again. */
+  scroll(): number
   destroy(): void
+}
+
+/** One piece on the sheet: its name, and the world whose band it stands in. */
+export interface Entry {
+  name: string
+  world: string
+}
+
+export interface CatalogOptions {
+  /** Where the sheet was scrolled to when it was last left. */
+  scroll?: number
+  /** The piece just come back from: brought into view, and lit for a moment. */
+  focus?: Entry | null
 }
 
 interface Cell {
@@ -88,34 +106,39 @@ const SIDE = 0.15
 const ABOVE = 0.2
 /** A cell is never narrower than this; the sheet scrolls instead. */
 const MIN_CELL = 150
+/** Pixels of the top left corner the way back takes up: across, and down. */
+const CORNER = 150
+const CORNER_H = 60
+/** The stylesheet's breakpoint: at or under this the panel stacks below the stage. */
+const NARROW = 820
 
 const ORDINAL = ['first', 'second', 'third', 'fourth']
+
+/** Seconds a piece stays lit after the sheet opens on it. */
+const LIT = 1.8
 
 function buildCell(seed: string, world: World, name: string, i: number): Cell {
   const show = new Show(seed, { solo: name, world: world.name })
   const u = show.universe(0)
-  let x0 = u.bounds.x0 - 0.5
-  let x1 = u.bounds.x1 + 0.5
-  let y0 = u.bounds.y0 - 0.5
-  const y1 = u.bounds.y1 + 0.5
-  // A flight can peak above every cell it crosses.
-  const n = Math.ceil(u.journey * 30)
-  for (let j = 0; j <= n; j++) {
-    const at = universeAt(u, (u.journey * j) / n)
-    x0 = Math.min(x0, at.x - R)
-    x1 = Math.max(x1, at.x + R)
-    y0 = Math.min(y0, at.y - R)
-  }
-  return { name, world, show, u, x0, y0, x1, y1, offset: (i * 0.618 * u.journey) % u.journey }
+  return { name, world, show, u, ...extentOf(u), offset: (i * 0.618 * u.journey) % u.journey }
 }
 
-/** Every world's pieces, in the loop's order. The portal is the same door everywhere, so it is shown once. */
+/**
+ * Every piece on the sheet, in the sheet's order: world by world round the
+ * loop. The portal is the same door everywhere, so it is shown once. This
+ * is also the order a solo steps through the pieces in.
+ */
+export function catalogOrder(): Entry[] {
+  return WORLDS.flatMap((world, w) =>
+    world.pieces.filter((piece) => w === 0 || piece.name !== 'portal').map((piece) => ({ name: piece.name, world: world.name })),
+  )
+}
+
 function buildGroups(seed: string): Group[] {
-  let i = 0
-  return WORLDS.map((world, w) => {
-    const names = world.pieces.filter((piece) => w === 0 || piece.name !== 'portal').map((piece) => piece.name)
-    const cells = names.map((name) => buildCell(seed, world, name, i++))
-    return { world, theme: cells[0].u.theme, cells }
+  const cells = catalogOrder().map((entry, i) => buildCell(seed, WORLDS.find((w) => w.name === entry.world)!, entry.name, i))
+  return WORLDS.map((world) => {
+    const own = cells.filter((cell) => cell.world === world)
+    return { world, theme: own[0].u.theme, cells: own }
   })
 }
 
@@ -125,7 +148,8 @@ function layout(W: number, H: number, groups: Group[]): Sheet {
   const pad = Math.max(12, Math.min(28, short * 0.035))
   const header = pad
   const footer = H - pad - font
-  const top = header + font * 2.4
+  // The sheet starts below the way back in the corner, however small the screen.
+  const top = Math.max(header + font * 2.4, CORNER_H)
   const bottom = footer - font * 1.6
   const area = { x: pad, w: W - 2 * pad, h: bottom - top }
   const title = font * 2.6
@@ -176,14 +200,25 @@ function layout(W: number, H: number, groups: Group[]): Sheet {
   return { bands, font, header, footer, top, bottom, height: y }
 }
 
-export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onPick: (name: string, world: string) => void): Catalog {
+export function createCatalog(
+  host: HTMLElement,
+  seed: string,
+  clock: Clock,
+  onPick: (name: string, world: string) => void,
+  options: CatalogOptions = {},
+): Catalog {
   const groups = buildGroups(seed)
   const total = groups.reduce((sum, g) => sum + g.cells.length, 0)
   let sheet: Sheet | null = null
   let hover: Cell | null = null
-  let scroll = 0
+  let scroll = options.scroll ?? 0
   let instance: p5 | null = null
   let release = () => {}
+  // The piece the sheet opens on. Lit by the wall clock, not the show's:
+  // the show may well be paused.
+  const focus = options.focus ? groups.flatMap((g) => g.cells).find((c) => c.name === options.focus!.name && c.world.name === options.focus!.world) ?? null : null
+  let landed = false
+  const opened = performance.now()
 
   const maxScroll = () => (sheet ? Math.max(0, sheet.height - (sheet.bottom - sheet.top)) : 0)
   const hit = (x: number, y: number): Cell | null => {
@@ -240,14 +275,26 @@ export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onP
     p.draw = () => {
       const t = clock.time()
       sheet = layout(p.width, p.height, groups)
+      // The first frame: if the piece come back from is off screen where the
+      // sheet was left, bring its row to the middle.
+      if (!landed && focus) {
+        const visible = sheet.bottom - sheet.top
+        for (const band of sheet.bands) {
+          const slot = band.slots[band.group.cells.indexOf(focus)]
+          if (slot && (slot.y < scroll || slot.y + slot.h > scroll + visible)) scroll = slot.y + slot.h / 2 - visible / 2
+        }
+      }
+      landed = true
       scroll = clamp(scroll, 0, maxScroll())
-      drawSheet(p, sheet, groups, scroll, t, hover, seed, total)
+      const lit = focus ? clamp(1 - (performance.now() - opened) / 1000 / LIT) : 0
+      drawSheet(p, sheet, scroll, t, hover, lit > 0 ? { cell: focus!, lit } : null, seed, total)
     }
   }
 
   instance = new p5(sketch)
 
   return {
+    scroll: () => scroll,
     destroy() {
       release()
       instance?.remove()
@@ -256,12 +303,31 @@ export function createCatalog(host: HTMLElement, seed: string, clock: Clock, onP
   }
 }
 
-function drawSheet(p: p5, sheet: Sheet, groups: Group[], scroll: number, t: number, hover: Cell | null, seed: string, total: number): void {
+/** The piece the sheet opened on, and how lit it still is, 1 to 0. */
+interface Lit {
+  cell: Cell
+  lit: number
+}
+
+function drawSheet(
+  p: p5,
+  sheet: Sheet,
+  scroll: number,
+  t: number,
+  hover: Cell | null,
+  lit: Lit | null,
+  seed: string,
+  total: number,
+): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const W = p.width
   const H = p.height
-  const first = groups[0].theme
-  const last = groups[groups.length - 1].theme
+  // The fixed header and footer stand on whichever band runs under them, so
+  // they read as the sheet's own margin wherever it is scrolled to, rather
+  // than as a bar of another world's paper laid over this one.
+  const under = (y: number) => (sheet.bands.find((b) => y - sheet.top + scroll < b.y1) ?? sheet.bands[sheet.bands.length - 1]).group.theme
+  const first = under(sheet.top)
+  const last = under(sheet.bottom)
   p.background(first.bg)
 
   // The bands, each in its world's paper, with its pieces standing on shelves in its ink.
@@ -282,8 +348,19 @@ function drawSheet(p: p5, sheet: Sheet, groups: Group[], scroll: number, t: numb
       const slot = band.slots[i]
       if (slot.y + shift > sheet.bottom || slot.y + slot.h + shift < sheet.top) return
       drawCell(p, cell, slot, shift, t)
+      // A wash of ink over the piece in hand: the one the pointer is on,
+      // and for a moment the one the sheet opened on. Over the cell and not
+      // under it, since a cell paints its own paper.
+      const held = cell === hover ? 1 : cell === lit?.cell ? lit.lit : 0
+      if (held > 0) {
+        const wash = p.color(theme.ink)
+        wash.setAlpha(16 * held)
+        p.noStroke()
+        p.fill(wash)
+        p.rect(slot.x + slot.w / 2, slot.y + slot.h / 2 + shift, slot.w - 6, slot.h - 6, 8)
+      }
     })
-    drawBandCaptions(p, band, shift, hover)
+    drawBandCaptions(p, band, shift, hover ?? lit?.cell ?? null)
   }
   p.pop()
 
@@ -310,7 +387,10 @@ function drawSheet(p: p5, sheet: Sheet, groups: Group[], scroll: number, t: numb
   p.fill(dim)
   p.textSize(sheet.font * 0.9)
   ctx.letterSpacing = '0.14em'
-  p.text(`${total} PIECES · FOUR WORLDS · ${seed}`.toUpperCase(), W / 2, sheet.header)
+  // The way back sits in the top left corner; on a narrow sheet the title
+  // would run under it, and the way back matters more.
+  const heading = `${total} PIECES · FOUR WORLDS · ${seed}`.toUpperCase()
+  if ((W - p.textWidth(heading)) / 2 > CORNER) p.text(heading, W / 2, sheet.header)
   p.noStroke()
   p.fill(last.bg)
   p.rect(W / 2, (sheet.bottom + H) / 2, W, H - sheet.bottom)
@@ -318,7 +398,11 @@ function drawSheet(p: p5, sheet: Sheet, groups: Group[], scroll: number, t: numb
   foot.setAlpha(120)
   p.fill(foot)
   ctx.letterSpacing = '0.04em'
-  p.text('click a piece to watch it alone · scroll for the other worlds · esc for the machine', W / 2, sheet.footer)
+  // As much of the hint as the sheet is wide enough for; none on a narrow
+  // screen, where the panel's tab sits at the bottom centre, over it.
+  const hints = ['click a piece to watch it alone · scroll for the other worlds · esc for the machine', 'click a piece to watch it alone']
+  const hint = W > NARROW ? hints.find((h) => p.textWidth(h) < W - 2 * CORNER) : null
+  if (hint) p.text(hint, W / 2, sheet.footer)
   ctx.letterSpacing = '0px'
   p.pop()
 }
@@ -376,7 +460,14 @@ function drawBandCaptions(p: p5, band: Band, shift: number, hover: Cell | null):
   ctx.letterSpacing = '0.14em'
   const x = band.slots.length ? Math.min(...band.slots.map((s) => s.x)) + 6 : 20
   const order = WORLDS.indexOf(world)
-  p.text(`${world.label} · ${cells.length} pieces · ${ORDINAL[order]} in the loop · ${world.note}`.toUpperCase(), x, band.title + shift)
+  // As much of the caption as the band is wide enough for: the name first.
+  const clauses = [world.label, `${cells.length} pieces`, `${ORDINAL[order]} in the loop`, world.note]
+  let caption = ''
+  for (let n = clauses.length; n > 0 && !caption; n--) {
+    const text = clauses.slice(0, n).join(' · ').toUpperCase()
+    if (n === 1 || x + p.textWidth(text) < p.width - x) caption = text
+  }
+  p.text(caption, x, band.title + shift)
   ctx.letterSpacing = '0px'
   p.pop()
 }

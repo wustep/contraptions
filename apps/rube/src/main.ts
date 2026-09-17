@@ -2,7 +2,7 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { createCatalog } from './catalog'
+import { catalogOrder, createCatalog, type Entry } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
 import { WORLDS, nextWorld, worldByName } from './worlds'
@@ -16,8 +16,16 @@ import { WORLDS, nextWorld, worldByName } from './worlds'
  * catalog and the overview. `P` hides the panel for the show alone.
  * `?catalog=1` opens the sheet of every piece instead of the show;
  * `?solo=<piece>` shows one piece's worlds; `?world=<name>` keeps the show
- * in one world instead of going round the loop. Escape steps back out: from
- * a solo to the catalog, from the catalog to the show.
+ * in one world instead of going round the loop.
+ *
+ * The three views are a stack — the machine, the catalog over it, a piece
+ * alone over that — and there is one way back down it, which every door
+ * shares: Escape, the way-back button in the stage's corner, the panel's
+ * button and the browser's own Back all do the same thing and land in the
+ * same place. Going up is a step in the history; the way back down is going
+ * back in it. And a view is left the way it will be found again: the show
+ * picks up where the ball was, the sheet opens where it was scrolled to with
+ * the piece just watched lit.
  */
 
 const stage = document.getElementById('stage')!
@@ -40,6 +48,17 @@ function readUrl(): void {
 readUrl()
 
 let show = new Show(seed, { solo, world })
+
+/** The stack, bottom to top. */
+const VIEWS = ['show', 'catalog', 'solo'] as const
+type ViewName = (typeof VIEWS)[number]
+const viewName = (): ViewName => (catalogOn ? 'catalog' : solo ? 'solo' : 'show')
+
+/** Where the show was when the catalog was opened over it, so the way back lands there and not at the top. */
+let resume: { seed: string; world: string | null; t: number } | null = null
+/** Where the sheet was scrolled to when it was last left, and the piece it was left for. */
+let sheetScroll = 0
+let lastPick: Entry | null = null
 
 /* ------------------------------------------------------------------ clock */
 
@@ -69,43 +88,70 @@ const setSpeed = (next: number) => {
 
 /* ------------------------------------------------------------------ url */
 
-function writeUrl(push = false): void {
+/**
+ * What a history entry remembers: whether it was opened from the view under
+ * it, so that the entry under it in the history is that view. When it was,
+ * the way back is the browser's own Back; when it was not — a link straight
+ * to the sheet or to a solo — the view under it takes this entry's place
+ * instead, and nothing is left behind it.
+ */
+interface Step {
+  opened: boolean
+}
+
+/**
+ * `push` is a step up the stack; `replace` is a change of view with no
+ * step under it; `keep` is the same view with something else in it — a new
+ * seed, a pin, the next piece — and leaves what the entry remembers alone.
+ */
+type Write = 'push' | 'replace' | 'keep'
+
+function writeUrl(how: Write): void {
   const q = new URLSearchParams()
   q.set('seed', seed)
   if (solo) q.set('solo', solo)
   if (world) q.set('world', world)
   if (catalogOn) q.set('catalog', '1')
   const url = `?${q.toString()}`
-  if (push) history.pushState(null, '', url)
-  else history.replaceState(null, '', url)
+  if (how === 'push') history.pushState({ opened: true } satisfies Step, '', url)
+  else history.replaceState(how === 'keep' ? history.state : ({ opened: false } satisfies Step), '', url)
 }
 
 /* ------------------------------------------------------------------ stage */
 
 interface View {
   setOverview?(on: boolean): void
+  scroll?(): number
   destroy(): void
 }
 
 let overview = false
 let view: View = mount()
-writeUrl()
+writeUrl('keep')
 
 /** The right thing on the canvas for the mode: the show, or the sheet of every piece. */
 function mount(): View {
-  if (catalogOn) return createCatalog(stage, seed, { time: now }, (name, from) => pick(name, from))
+  if (catalogOn) {
+    // The sheet opens where it was left, on the piece it was left for; the
+    // piece is lit once, not again on every reroll.
+    const focus = lastPick
+    lastPick = null
+    return createCatalog(stage, seed, { time: now }, (name, from) => pick(name, from), { scroll: sheetScroll, focus })
+  }
   const s = createStage(stage, show, { time: now })
-  s.setOverview(overview)
+  // A solo has its own steady frame; the overview is the show's.
+  s.setOverview(overview && !solo)
   return s
 }
 
-/** Rebuild everything from the seed and the mode, from the top of the clock. */
-function rebuild(push = false): void {
+/** Rebuild everything from the seed and the mode, from `at` on the clock: the top, unless a view is being come back to. */
+function rebuild(how: Write = 'keep', at = 0): void {
   show = new Show(seed, { solo, world })
+  if (view.scroll) sheetScroll = view.scroll()
   view.destroy()
   view = mount()
-  seek(0)
-  writeUrl(push)
+  seek(at)
+  writeUrl(how)
   sync()
 }
 
@@ -114,16 +160,19 @@ function reroll(next = randomSeed()): void {
   rebuild()
 }
 
+/** Where the show was left, if this is still the show that was left. */
+const resumeAt = (): number => (resume && resume.seed === seed && resume.world === world && !solo && !catalogOn ? resume.t : 0)
+
+/** The piece being watched alone, as the sheet knows it. */
+const soloEntry = (): Entry | null => (solo ? { name: solo, world: show.pinned?.name ?? '' } : null)
+
+/** From the show up to the sheet of every piece: a step in the history, so back is the show, where it was. */
 function openCatalog(): void {
+  resume = { seed, world, t: now() }
   solo = null
   world = null
   catalogOn = true
-  rebuild()
-}
-
-function closeCatalog(): void {
-  catalogOn = false
-  rebuild()
+  rebuild('push')
 }
 
 /** From the catalog into one piece's worlds, in the world it belongs to; a step in the history, so back is the sheet. */
@@ -131,7 +180,19 @@ function pick(name: string, from: string): void {
   solo = name
   world = from
   catalogOn = false
-  rebuild(true)
+  rebuild('push')
+}
+
+/** From one piece alone to the one before or after it on the sheet, without going back to the sheet between. */
+function step(dir: 1 | -1): void {
+  if (viewName() !== 'solo') return
+  const order = catalogOrder()
+  const here = soloEntry()
+  const i = order.findIndex((e) => e.name === here?.name && e.world === here?.world)
+  const next = order[(Math.max(0, i) + dir + order.length) % order.length]
+  solo = next.name
+  world = next.world
+  rebuild()
 }
 
 /** Stay in one world, or go round the loop again. */
@@ -140,21 +201,48 @@ function pinWorld(name: string | null): void {
   rebuild()
 }
 
-/** Escape: out of a solo to the catalog, out of the catalog to the show. */
+/**
+ * The way back: out of a solo to the catalog, out of the catalog to the
+ * show. When this view was opened from the one under it, that is the
+ * browser's Back, and `popstate` does the rest; when it was linked to
+ * directly, the view under it takes its place.
+ */
 function back(): void {
-  if (catalogOn) closeCatalog()
-  else if (solo) openCatalog()
+  const from = viewName()
+  if (from === 'show') return
+  if ((history.state as Step | null)?.opened) {
+    history.back()
+    return
+  }
+  if (from === 'solo') {
+    lastPick = soloEntry()
+    solo = null
+    world = null
+    catalogOn = true
+    rebuild('replace')
+  } else {
+    catalogOn = false
+    world = resume?.seed === seed ? resume.world : null
+    rebuild('replace', resumeAt())
+  }
 }
 
 function setOverview(on: boolean): void {
   overview = on
-  view.setOverview?.(on)
+  view.setOverview?.(on && !solo)
   sync()
 }
 
 window.addEventListener('popstate', () => {
+  const from = viewName()
+  const left = soloEntry()
+  const current = seed
   readUrl()
-  rebuild()
+  // Coming back down the stack keeps the seed in hand: a reroll up there
+  // was a reroll of the whole thing, not of one view of it.
+  if (VIEWS.indexOf(viewName()) < VIEWS.indexOf(from)) seed = current
+  if (from === 'solo' && catalogOn) lastPick = left
+  rebuild('keep', resumeAt())
 })
 
 /* ------------------------------------------------------------------ panel */
@@ -181,6 +269,7 @@ seedCard(panelRoot, seedInput, [rerollBtn, copyBtn])
 
 // World — where the ball is, the loop, and the jumps.
 const worldSec = section(panelRoot, 'World')
+const worldTitle = worldSec.querySelector('.section-title')!
 const readout = el('div', { class: 'readout' })
 // The loop: one chip a world, in order, the current one lit. A chip jumps
 // to the next visit to that world; Pin keeps the show there.
@@ -196,19 +285,51 @@ const loopSeg = el('div', { class: 'seg', role: 'group', 'aria-label': 'The loop
 const pinBtn = el('button', { class: 'chip', title: 'Stay in this world instead of going round the loop' }, ['Pin'])
 pinBtn.addEventListener('click', () => pinWorld(world ? null : show.at(now()).universe.world.name))
 const loop = el('div', { class: 'row deck' }, [loopSeg, pinBtn])
-const prevBtn = el('button', { title: 'Back to the start of the previous world' }, ['\u2190 world'])
-prevBtn.addEventListener('click', () => seek(show.begin(Math.max(0, show.indexAt(now()) - 1))))
+// Back is a player's back: to the top of this world first, and only from
+// there to the world before it, so one press never loses the place.
+const prevWorld = () => {
+  const here = show.at(now())
+  const i = here.universe.index
+  seek(show.begin(here.local > 2 ? i : Math.max(0, i - 1)))
+}
+const nextWorldNow = () => seek(show.begin(show.indexAt(now()) + 1))
+const prevBtn = el('button', { title: 'Back to the top of this world, then to the world before it (\u21e7N)' }, ['\u2190 world'])
+prevBtn.addEventListener('click', prevWorld)
 const nextBtn = el('button', { title: 'Skip to the next world (N)' }, ['world \u2192', el('kbd', {}, ['N'])])
-nextBtn.addEventListener('click', () => seek(show.begin(show.indexAt(now()) + 1)))
+nextBtn.addEventListener('click', nextWorldNow)
 const restartBtn = el('button', { title: 'Back to the top of the show' }, ['Restart'])
 restartBtn.addEventListener('click', () => seek(0))
-const catalogBtn = el('button', { title: 'The sheet of every piece (C)' }, ['Catalog', el('kbd', {}, ['C'])])
-catalogBtn.addEventListener('click', () => (catalogOn ? closeCatalog() : openCatalog()))
+// A piece alone steps piece to piece where the show steps world to world.
+const prevPieceBtn = el('button', { title: 'The piece before this one on the sheet ([)' }, ['\u2190 piece', el('kbd', {}, ['['])])
+prevPieceBtn.addEventListener('click', () => step(-1))
+const nextPieceBtn = el('button', { title: 'The piece after this one on the sheet (])' }, ['piece \u2192', el('kbd', {}, [']'])])
+nextPieceBtn.addEventListener('click', () => step(1))
+// One button, one door: into the catalog from the show, and the way back from anywhere above it.
+const catalogBtn = el('button')
+catalogBtn.addEventListener('click', () => (viewName() === 'show' ? openCatalog() : back()))
 const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)' }, ['Overview', el('kbd', {}, ['O'])])
 overviewBtn.addEventListener('click', () => setOverview(!overview))
 const jumps = el('div', { class: 'row' }, [prevBtn, nextBtn, restartBtn])
+const steps = el('div', { class: 'row' }, [prevPieceBtn, nextPieceBtn])
 const views = el('div', { class: 'row' }, [catalogBtn, overviewBtn])
-worldSec.append(readout, loop, jumps, views)
+worldSec.append(readout, loop, jumps, steps, views)
+
+// The way back, on the stage itself. Both modes open with the panel away,
+// so a view that can only be left from the panel, or by a key nobody was
+// told about, is a view that cannot be left.
+const crumbBack = el('button', { type: 'button' })
+crumbBack.addEventListener('click', back)
+const crumbHere = el('span', { class: 'crumb-here' })
+const crumbPrev = el('button', { type: 'button', class: 'crumb-step', title: 'The piece before ([)', 'aria-label': 'Previous piece' }, ['\u2039'])
+crumbPrev.addEventListener('click', () => step(-1))
+const crumbNext = el('button', { type: 'button', class: 'crumb-step', title: 'The piece after (])', 'aria-label': 'Next piece' }, ['\u203a'])
+crumbNext.addEventListener('click', () => step(1))
+const crumb = el('nav', { class: 'crumb', 'aria-label': 'The way back' }, [crumbBack, crumbHere, crumbPrev, crumbNext])
+// As in the panel: a clicked button must not keep the focus, or it swallows space.
+crumb.addEventListener('click', (e) => {
+  if (e.detail > 0) (e.target as Element).closest('button')?.blur()
+})
+stage.append(crumb)
 
 // Transport — the clock, over the current world.
 const transport = section(panelRoot, 'Transport', 'transport')
@@ -252,16 +373,35 @@ function sync(): void {
   play.classList.toggle('paused', paused)
   speedSeg.set(speed)
   overviewBtn.classList.toggle('on', overview)
-  catalogBtn.textContent = catalogOn ? 'Exit catalog' : 'Catalog'
-  if (!catalogOn) catalogBtn.append(el('kbd', {}, ['C']))
-  catalogBtn.classList.toggle('on', catalogOn)
   pinBtn.textContent = world ? 'Unpin' : 'Pin'
   pinBtn.classList.toggle('on', !!world)
-  // The sheet has no worlds to jump between and no world to scrub.
-  loop.hidden = catalogOn
-  jumps.hidden = catalogOn
-  overviewBtn.hidden = catalogOn
-  scrub.hidden = catalogOn
+  // The way back says where it goes, the same words in the panel and on the stage.
+  const v = viewName()
+  const under = v === 'solo' ? 'Catalog' : 'Machine'
+  if (v === 'show') {
+    catalogBtn.replaceChildren('Catalog', el('kbd', {}, ['C']))
+    catalogBtn.title = 'The sheet of every piece (C)'
+  } else {
+    catalogBtn.replaceChildren(`\u2190 ${under}`, el('kbd', {}, ['esc']))
+    catalogBtn.title = `Back to the ${under.toLowerCase()} (esc)`
+  }
+  // The section is named for what is on the stage, and so is the tab: the
+  // views are steps in the history, and a history of three entries all
+  // called the same thing is no help in getting back.
+  worldTitle.textContent = v === 'show' ? 'World' : v === 'catalog' ? 'Catalog' : 'Piece'
+  document.title = v === 'show' ? 'contraptions' : `${v === 'catalog' ? 'catalog' : solo} \u00b7 contraptions`
+  crumb.hidden = v === 'show'
+  crumbBack.replaceChildren(`\u2190 ${under}`, el('kbd', {}, ['esc']))
+  crumbBack.title = `Back to the ${under.toLowerCase()} (esc)`
+  crumbHere.textContent = solo ?? ''
+  crumbHere.hidden = crumbPrev.hidden = crumbNext.hidden = v !== 'solo'
+  // The loop, its jumps and the overview are the show's; a piece alone steps
+  // through pieces instead; the sheet has no world to jump between or scrub.
+  loop.hidden = v !== 'show'
+  jumps.hidden = v !== 'show'
+  overviewBtn.hidden = v !== 'show'
+  steps.hidden = v !== 'solo'
+  scrub.hidden = v === 'catalog'
 }
 
 // The readout and the clock print tenths of a second; writing them on every
@@ -276,13 +416,15 @@ function tick(): void {
   // Which world, and which comes next (or that the show is pinned here).
   const next = show.pinned ? null : nextWorld(u.world)
   const text = catalogOn
-    ? `catalog · ${WORLDS.map((w) => w.label.toLowerCase()).join(' → ')}${solo ? ` · ${solo}` : ''}`
-    : `world ${u.index} · ${u.world.label.toLowerCase()}${next ? ` → ${next.label.toLowerCase()}` : ' · pinned'}\n${u.theme.label} · ${u.taste} · ${here.placed.piece.name}${solo ? ` · solo` : ''}`
+    ? `catalog · ${WORLDS.map((w) => w.label.toLowerCase()).join(' → ')}`
+    : solo
+      ? `${solo} · alone · ${u.world.label.toLowerCase()}\n${u.theme.label} · take ${u.index + 1}`
+      : `world ${u.index} · ${u.world.label.toLowerCase()}${next ? ` → ${next.label.toLowerCase()}` : ' · pinned'}\n${u.theme.label} · ${u.taste} · ${here.placed.piece.name}`
   if (text !== lastReadout) {
     lastReadout = text
     const [head, tail] = text.split('\n')
     readout.replaceChildren(el('b', {}, [head]), ...(tail ? [el('br'), tail] : []))
-    chips.forEach((chip, i) => chip.classList.toggle('on', !catalogOn && WORLDS[i] === u.world))
+    chips.forEach((chip, i) => chip.classList.toggle('on', WORLDS[i] === u.world))
   }
   const clock = catalogOn ? `${t.toFixed(1)}s` : `${here.local.toFixed(1)} / ${u.journey.toFixed(0)}s`
   if (clock !== lastTime) {
@@ -326,13 +468,22 @@ window.addEventListener('keydown', (e) => {
       reroll()
       break
     case 'n':
-      if (!catalogOn) seek(show.begin(show.indexAt(now()) + 1))
+      if (!catalogOn) nextWorldNow()
+      break
+    case 'N':
+      if (!catalogOn) prevWorld()
       break
     case 'o':
-      if (!catalogOn) setOverview(!overview)
+      if (viewName() === 'show') setOverview(!overview)
       break
     case 'c':
       catalogBtn.click()
+      break
+    case '[':
+      step(-1)
+      break
+    case ']':
+      step(1)
       break
     case 'p':
       shell.toggle()
@@ -358,8 +509,10 @@ if (import.meta.env.DEV) {
     setPaused,
     reroll,
     pick,
+    step,
+    back,
     pinWorld,
-    setCatalog: (on: boolean) => (on ? openCatalog() : closeCatalog()),
+    setCatalog: (on: boolean) => (on ? viewName() === 'show' && openCatalog() : viewName() === 'catalog' && back()),
     togglePanel: () => shell.toggle(),
     show: () => show,
     canvas: () => stage.querySelector('canvas') as HTMLCanvasElement,
