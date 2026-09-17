@@ -2,23 +2,29 @@ import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
 import { appletree } from './appletree'
+import { bamboo } from './bamboo'
 import { flowerBloom } from './bloom'
 import { bumblebee } from './bumblebee'
 import { burrow } from './burrow'
 import { cocoon } from './cocoon'
+import { croquet } from './croquet'
 import { dandelion } from './dandelion'
 import { frog } from './frog'
 import { hose } from './hose'
+import { maple } from './maple'
+import { mower } from './mower'
 import { pod } from './pod'
 import { gardenRail } from './rail'
 import { rake } from './rake'
 import { scarecrow } from './scarecrow'
 import { snail } from './snail'
+import { spade } from './spade'
 import { sprinkler } from './sprinkler'
 import { sunflower } from './sunflower'
 import { toadstools } from './toadstools'
 import { vine } from './vine'
 import { wateringcan } from './wateringcan'
+import { well } from './well'
 import { wheelbarrow } from './wheelbarrow'
 
 /**
@@ -26,7 +32,13 @@ import { wheelbarrow } from './wheelbarrow'
  * wilts or burrows: the ball is watered on, carried up a vine and down a
  * flower's throat, wheeled in a barrow and on a snail's back, flung by a
  * sprinkler, through a hose, whacked by a rake, dusted by a sunflower,
- * swapped for a seed, and lost down a mole's tunnel.
+ * swapped for a seed, and lost down a mole's tunnel. A frog's tongue
+ * takes it, a bumblebee labours off with it, a dandelion seed floats it
+ * up and a falling leaf brings it down; it bounces up three toadstools,
+ * goes down a well in the bucket, is tipped by a bamboo rocker, thrown by
+ * a spade and by a mower's reel, tocked through croquet hoops, spins a
+ * scarecrow, comes out of a cocoon another colour, and knocks an apple
+ * out of a tree that rolls on in its place.
  *
  *   rail         a path edge on stakes, between tufts and pots
  *   wateringcan  tongue → cord → the can tips → a shower washes the ball on faster
@@ -47,6 +59,12 @@ import { wheelbarrow } from './wheelbarrow'
  *   frog         onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up
  *   dandelion    into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out
  *   bumblebee    onto a daisy's face; a bumblebee comes over from its flower, takes hold, heaves twice, and labours up and across the bed with it to a shelf a floor up; sets it down rolling and goes home
+ *   spade        onto the blade of a spade across a log; the grip kicks the twig out from under a flowerpot; the pot comes down on the handle; up off the blade, one or two floors, on or back
+ *   well         over the coping into the bucket; the pawl slips, the crank whirls; down the shaft two or three floors; the bucket topples on a stone and the ball rolls out through an arch
+ *   bamboo       onto the scoop of a shishi-odoshi; its weight brings the mouth down onto the terrace's coping; off the tip and down a floor, heading back; the tail cracks on its stone
+ *   mower        through the long grass up against a reel mower's reel; the reel spins up and a blade throws it over the top, between the handles and over the grass box, across the lawn
+ *   croquet      onto the mark, nose against a flap; the hook lets go and a hung mallet tocks it through two hoops; it clips the striped peg
+ *   maple        out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went
  *   portal       the door at either end of a map; the far side is always a new map
  */
 
@@ -81,9 +99,26 @@ export const garden: World = {
   themes: THEMES,
   backdrops: ['sprigs', 'plain', 'dots'],
   tastes: {
-    greenhouse: { vine: 1.7, bloom: 1.6, sunflower: 1.4, pod: 1.3, wateringcan: 1.5, sprinkler: 1.2, 'lift-tall': 1.8, hose: 0.6, rake: 0.6, wheelbarrow: 0.7 },
-    allotment: { wheelbarrow: 1.7, rake: 1.7, wateringcan: 1.4, burrow: 1.5, snail: 1.3, hose: 1.3, sprinkler: 1.2, bloom: 0.6, vine: 0.8, pod: 0.7 },
-    wild: { burrow: 1.6, pod: 1.7, sprinkler: 1.5, snail: 1.6, hose: 1.4, vine: 1.2, sunflower: 1.2, wheelbarrow: 0.5, wateringcan: 0.6, rake: 0.7 },
+    greenhouse: {
+      vine: 1.7, bloom: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, sprinkler: 1.2, maple: 1.2, 'lift-tall': 1.8,
+      well: 0.8, wheelbarrow: 0.7, croquet: 0.7, hose: 0.6, rake: 0.6, mower: 0.6, scarecrow: 0.6,
+    },
+    allotment: {
+      wheelbarrow: 1.7, rake: 1.7, spade: 1.7, well: 1.6, mower: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, 'drop-deep': 1.8,
+      vine: 0.8, pod: 0.7, frog: 0.7, dandelion: 0.7, cocoon: 0.7, bloom: 0.6, toadstools: 0.6,
+    },
+    wild: {
+      frog: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2,
+      rake: 0.7, bamboo: 0.7, wateringcan: 0.6, spade: 0.6, wheelbarrow: 0.5, mower: 0.5, croquet: 0.5,
+    },
+    lawn: {
+      croquet: 1.8, bamboo: 1.7, mower: 1.5, appletree: 1.5, sprinkler: 1.5, hose: 1.4, wateringcan: 1.3, maple: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
+      burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, pod: 0.6, frog: 0.6,
+    },
   },
-  pieces: [gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail, appletree, scarecrow, cocoon, toadstools, frog, dandelion, bumblebee, portal],
+  pieces: [
+    gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail,
+    frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, mower, croquet, scarecrow, dandelion, maple,
+    portal,
+  ],
 }
