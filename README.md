@@ -381,9 +381,10 @@ camera pushes in as the ball is swallowed, holds shut a beat, and opens
 wide on the new world.
 
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
-— `amber-gasket` is the seed to share: a switchback, two flippers, a
-zipline and a gravity inverter in the workshop, then a harbor at sundown
-with two lighthouses and a crab, then a greenhouse, then neon.
+— `amber-gasket` is the seed to share: a painter, a switchback, a gravity
+inverter, a zipline and a cannon in the workshop — sixteen beats and no
+piece twice — then a harbor at sundown with a lighthouse, a crab and a
+whirlpool, then a greenhouse, then neon.
 
 ```bash
 npm run dev           # http://localhost:8791/ — Machine; /explorations/ is Explorations
@@ -406,10 +407,29 @@ vocabulary of pieces, not a palette swap:
 
 Workshop → harbor → garden → arcade → workshop, always. What the seed
 decides is everything *inside* a visit: which of the world's palettes it
-is painted in (each has two or three of its own, never shared), which of
+is painted in (each has two of its own, never shared), which of
 its tastes the planner leans on, how the map is laid out, and which pieces
 it draws — always and only from that world's pool. Two visits to the same
-world never look alike back to back. Each world has its own rail (a pier
+world never look alike back to back.
+
+The palettes are **two a world, eight in all**. A world keeps only
+palettes that differ in their paper and their mood, not in a reshuffle of
+hues, and that keep the house style — a bright flat fill inside heavy ink
+on a ground:
+
+| World | Its palettes |
+| --- | --- |
+| Workshop | **Okazz**, the original's cool sheet and five bright inks · **Atelier**, brass and oxblood on warm paper |
+| Harbor | **Harbor**, navy, coral and sand on sea-sky paper · **Sundown**, the pier at the end of the day |
+| Garden | **Greenhouse**, leaf and terracotta on cream · **Allotment**, kraft paper, soil and radish |
+| Arcade | **Neon**, signs after rain on violet · **CRT**, phosphor green |
+
+**Night is the arcade's alone.** Every other world is painted on light
+paper, so the cut into the arcade is the loop's one fall of dark and the
+cut back to the workshop is its morning; a dark harbor or a dark garden
+spends that, and reads as an arcade with the wrong pieces in it.
+
+Each world has its own rail (a pier
 on pilings over still water, a path edge between stakes and tufts, a lit
 lane whose lamps come on as the ball passes) and its own backdrop
 (chart-marks for the harbor, sprigs for the garden, stars or a grid for
@@ -424,8 +444,9 @@ the ball is — the world's index, which world it is and which comes next,
 its palette and taste, the piece in hand — shows the loop as four chips
 with the current one lit (click one to jump to the next visit to that
 world; **Pin** to stay there), jumps world to world (<kbd>N</kbd> for the
-next), restarts, opens the **catalog** (<kbd>C</kbd>) or the **overview**
-of the whole map (<kbd>O</kbd>); **Transport** is play/pause
+next; <kbd>⇧N</kbd> is a player's back, to the top of this world and from
+there to the one before), restarts, opens the **catalog** (<kbd>C</kbd>)
+or the **overview** of the whole map (<kbd>O</kbd>); **Transport** is play/pause
 (<kbd>space</kbd>), speed from ¼× to 4×, and a scrub bar over the current
 world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a second.
 `?solo=hammer` narrows the planner to one piece (plus rail and portals)
@@ -438,14 +459,44 @@ piece **grouped by world** — four bands in the loop's order, each on its
 own paper in its own ink — each piece looping on its own between two
 portals with its name under it. It scrolls when the four bands are taller
 than the screen. Click a piece to watch it alone (`?solo=<name>`, in its
-world); <kbd>esc</kbd> steps back out, from a solo to the catalog and from
-the catalog to the show. The panel's **Catalog** button is the same door,
-as is <kbd>c</kbd>.
+world): held whole in one steady frame rather than chased by the camera,
+since its world is three seconds long. <kbd>[</kbd> and <kbd>]</kbd> step
+to the piece before and after it on the sheet without going back to the
+sheet between.
+
+The three views are a stack — the machine, the catalog over it, a piece
+alone over that — with **one way back**, which every door shares:
+<kbd>esc</kbd>, the way-back button in the stage's top left corner (it
+says where it goes: **← Catalog**, **← Machine**; it is on the stage
+because the panel starts hidden), the panel's own button, <kbd>c</kbd>,
+and the browser's Back all do the same thing and land in the same place.
+Going up the stack is a step in the history and the way back is going
+back in it, so Back and Forward and <kbd>esc</kbd> never disagree; a link
+straight to a sheet or a solo has nothing under it, and there the view
+below takes its place. A view is left the way it will be found again: the
+show picks up where the ball was rather than from the top, and the sheet
+opens where it was scrolled to with the piece just watched brought into
+view and lit for a moment. A reroll up the stack comes back down with you.
 
 A world is one map: a self-avoiding walk of eleven to sixteen beats in a
 box, from a portal to a portal, with a tempo — a run of two or three beats
-back to back, then a flight when one fits, then a breath of rail. The
-ball's state rides the chain: its colour and which ball holds the thread,
+back to back, then a flight when one fits, then a breath of rail.
+
+A chain reaction is a run of *different* causes, so **a map says a thing
+once before it says it twice**. Every use of a piece in a map cuts its
+weight there, and a piece seen in the last five beats is all but out of
+the draw, so when a small world does have to repeat itself the repeat
+lands far enough on to read as a callback rather than a stutter. What the
+last visit to this world was built from is a little stale too, so two
+visits reach for different halves of a large pool. Of the six walks the
+planner tries it keeps the one that says the most different things, and a
+map never asks for more beats than its world has pieces and two — a small
+world gets a shorter visit rather than the same beats three times over,
+and the cap dissolves by itself as a world's vocabulary grows. These are
+weights, never bans: the taste still says what a visit leans on, and a
+piece that is the only thing that fits is still placed.
+
+The ball's state rides the chain: its colour and which ball holds the thread,
 so a piece can change it and the next piece knows. Every world has pieces
 that do (the workshop's painter, cradle and inverter; the harbor's octopus
 and oyster; the garden's sunflower and pod; the arcade's changer); they
@@ -570,7 +621,9 @@ clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
 worlds headless and asserts all of it: the four worlds in order, three
 times round, every piece from its own world's pool, every palette and
-taste the world's own and never the same twice running, every lane joined
+taste the world's own and never the same twice running, only the arcade
+painted dark, at least three beats in four of every map a piece it has
+not used yet and none in a map four times, every lane joined
 up inside its piece, continuity at every hand-off, one portal at each end
 and none between, the ball's state carried piece to piece, every
 recolouring a change of colour, and the tempo.
