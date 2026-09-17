@@ -44,6 +44,8 @@ export interface Avoid {
   taste: string | null
   /** Whether the world just before this one had a piece that changed the ball. */
   dynamicsLast: boolean
+  /** The beats the last visit to this world was built from. */
+  pieces: ReadonlySet<string> | null
 }
 
 export function buildUniverse(seed: string, index: number, world: World, avoid: Avoid, solo: string | null = null): Universe {
@@ -68,13 +70,16 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   const w = rng.int(14, 21)
   const h = rng.int(6, 10)
   const box: Box = { x0: 0, y0: 0, x1: w - 1, y1: h - 1 }
-  const beats = rng.int(11, 17)
+  // A map does not outstay its world's vocabulary: a small pool asks for a
+  // shorter walk rather than the same beats three times over.
+  const own = pool.filter((c) => c.name !== 'rail' && c.name !== 'portal').length
+  const beats = Math.min(rng.int(11, 17), own + 2)
   const ball: BallState = { color: ballColor, ghost: false, id: 0 }
   // The pieces that change the ball stay special: at most two a map, keen
   // when the last world had none, shy when it had one.
   const dynamics = { boost: avoid.dynamicsLast ? 0.5 : 3, cap: 2 }
   const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
-    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics }, { box, beats }),
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats }),
   )
 
   let acc = 0
@@ -99,12 +104,13 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   return { index, seed, world, theme, taste: tasteName, ballColor, backdrop, pieces, box, journey: acc, bounds }
 }
 
-/** Plan the map a few times and keep the walk with the most beats. */
+/** Plan the map a few times and keep the walk that says the most different things; between equals, the longer. */
 function bestOf(rng: Rng, tries: number, plan: (rng: Rng) => Placed[]): Placed[] {
+  const score = (pieces: Placed[]) => new Set(pieces.map((p) => p.piece.name)).size * 100 + beatCount(pieces)
   let best: Placed[] = []
   for (let i = 0; i < tries; i++) {
     const attempt = plan(rng.fork(`try:${i}`))
-    if (!best.length || beatCount(attempt) > beatCount(best)) best = attempt
+    if (!best.length || score(attempt) > score(best)) best = attempt
   }
   return best
 }

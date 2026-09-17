@@ -62,6 +62,7 @@ export class Show {
         theme: lastHere?.theme.name ?? null,
         taste: lastHere?.taste ?? null,
         dynamicsLast: previous ? hasDynamics(previous) : false,
+        pieces: lastHere ? new Set(lastHere.pieces.map((p) => p.piece.name)) : null,
       }
       const u = buildUniverse(this.seed, n, world, avoid, this.solo)
       this.universes.push(u)
