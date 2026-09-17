@@ -5,20 +5,26 @@ import { blocks } from './blocks'
 import { bumper } from './bumper'
 import { changer } from './changer'
 import { claw } from './claw'
+import { coaster } from './coaster'
+import { ferris } from './ferris'
 import { gauss } from './gauss'
 import { hockey } from './hockey'
+import { hoops } from './hoops'
 import { pachinko } from './pachinko'
 import { phaser } from './phaser'
 import { pixel } from './pixel'
 import { pong } from './pong'
 import { laneRail } from './rail'
+import { shooter } from './shooter'
 import { skee } from './skee'
 import { slingshot } from './slingshot'
 import { slots } from './slots'
 import { spinner } from './spinner'
 import { striker } from './striker'
+import { targets } from './targets'
 import { ticket } from './ticket'
 import { ufo } from './ufo'
+import { whack } from './whack'
 import { zigzag } from './zigzag'
 
 /**
@@ -47,6 +53,12 @@ import { zigzag } from './zigzag'
  *   ufo        onto the landing mark; the hatch opens, the beam comes down, and the ball goes up it, one or two floors; the saucer slides out over the rail with it, the beam goes out, and it rolls off
  *   slots      onto the tray on the end of a one-armed bandit's lever; its weight pulls the lever down through a quarter turn, reels spinning and stopping as it comes; seven seven seven on the clunk, and the tray's wall lies along the rail below; coins in the payout tray; +777
  *   gauss      pulled into a magnet block faster and faster; clack; the far ball of the two on its other face fires off with the thread, through a speed trap that reads what it clocked; the one that came stays on the magnet
+ *   shooter    onto the cup on a plunger's tip; the knob draws down, the spring closing coil on coil; release; up a wire lane, slowing, round the arch and out through a one-way gate that clicks shut; the outer wire lights behind it; one or two floors up
+ *   targets    a bank of three drop targets on the lane; each checks the ball and drops into the trough under the rail, tick, tick, tick; lamps and a counter; +300; the reset bar thumps them back up
+ *   whack      across a whack-a-mole deck; moles pop up behind it and a mallet on a gantry comes after them, a beat late; the third pops up under the ball and tosses it over the rim; +10 a mole
+ *   hoops      into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 2
+ *   ferris     onto the seat of the low gondola of a little Ferris wheel; half a turn, slowly, every gondola swinging on its pivot; the high seat is level with the rail a floor up and the ball rolls off it
+ *   coaster    drops into a car at the station; the chain clacks it up the lift hill, the track lighting behind it; over the crest and down the drop to the floor below; the fins stop the car in sparks and the ball rolls on out of its nose
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
@@ -91,5 +103,5 @@ export const arcade: World = {
     midway: { claw: 1.7, ticket: 1.6, changer: 1.4, striker: 1.6, hockey: 1.3, pachinko: 1.2, 'lift-tall': 1.8, 'drop-deep': 1.8, bumper: 0.6, spinner: 0.7 },
     jackpot: { pachinko: 1.8, skee: 1.6, hockey: 1.5, striker: 1.3, zigzag: 1.3, changer: 1.2, slingshot: 1.2, spinner: 0.6, claw: 0.7 },
   },
-  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, gauss, phaser, pixel, pong, blocks, ufo, slots, portal],
+  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, gauss, phaser, pixel, pong, blocks, ufo, slots, shooter, targets, whack, hoops, ferris, coaster, portal],
 }
