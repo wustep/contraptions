@@ -1,17 +1,24 @@
 import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
+import { blocks } from './blocks'
 import { bumper } from './bumper'
 import { changer } from './changer'
 import { claw } from './claw'
+import { gauss } from './gauss'
 import { hockey } from './hockey'
 import { pachinko } from './pachinko'
+import { phaser } from './phaser'
+import { pixel } from './pixel'
+import { pong } from './pong'
 import { laneRail } from './rail'
 import { skee } from './skee'
 import { slingshot } from './slingshot'
+import { slots } from './slots'
 import { spinner } from './spinner'
 import { striker } from './striker'
 import { ticket } from './ticket'
+import { ufo } from './ufo'
 import { zigzag } from './zigzag'
 
 /**
@@ -33,6 +40,13 @@ import { zigzag } from './zigzag'
  *   claw       into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles, lets go; a fall onto the wedge at the chute's foot and down its face
  *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck, slowing, to meet the bell with pace still on it, lighting every level on the dark face; ding; the puck cants; one or two floors up
  *   slingshot  into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up through the fork; a lob a floor up onto a shelf; the score pops off the mouth as the ball leaves
+ *   pong       a Pong court one or two floors tall: straight lines, one pace, no gravity; the paddles rally the ball up the screen, a blip a hit; the last serves it flat along the top, the other misses, the point goes up, and it leaves by the doorway there
+ *   pixel      behind a screen on a stand, and seen on it in squares: a sprite on the screen's grid at the screen's pace; a scanline comes down it and leaves it another colour while the cursor hops along the palette; out the far side that colour for good
+ *   blocks     into a falling-blocks well onto a row with one gap, up against the far wall; the piece at the top comes down in ticks and its stem fills the gap; the line flashes and clears, and the ball falls a floor and rolls out, on or back; +100
+ *   phaser     a curtain of scanlines turns the ball to a ghost; it rolls straight through a wall of bricks, which go to wireframe where it is; a second curtain makes it solid again
+ *   ufo        onto the landing mark; the hatch opens, the beam comes down, and the ball goes up it, one or two floors; the saucer slides out over the rail with it, the beam goes out, and it rolls off
+ *   slots      onto the tray on the end of a one-armed bandit's lever; its weight pulls the lever down through a quarter turn, reels spinning and stopping as it comes; seven seven seven on the clunk, and the tray's wall lies along the rail below; coins in the payout tray; +777
+ *   gauss      pulled into a magnet block faster and faster; clack; the far ball of the two on its other face fires off with the thread, through a speed trap that reads what it clocked; the one that came stays on the magnet
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
@@ -77,5 +91,5 @@ export const arcade: World = {
     midway: { claw: 1.7, ticket: 1.6, changer: 1.4, striker: 1.6, hockey: 1.3, pachinko: 1.2, 'lift-tall': 1.8, 'drop-deep': 1.8, bumper: 0.6, spinner: 0.7 },
     jackpot: { pachinko: 1.8, skee: 1.6, hockey: 1.5, striker: 1.3, zigzag: 1.3, changer: 1.2, slingshot: 1.2, spinner: 0.6, claw: 0.7 },
   },
-  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, portal],
+  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, gauss, phaser, pixel, pong, blocks, ufo, slots, portal],
 }
