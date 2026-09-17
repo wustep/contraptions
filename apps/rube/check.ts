@@ -39,6 +39,11 @@ check('no piece is in two worlds', straddling.length === 0, straddling.map(([n, 
 const palettes = new Map<string, string[]>()
 for (const w of WORLDS) for (const t of w.themes) palettes.set(t.name, [...(palettes.get(t.name) ?? []), w.name])
 check('no palette is shared between worlds', [...palettes.values()].every((ws) => ws.length === 1))
+// Night is the arcade's alone: every other world is painted on light paper,
+// so the cut into the arcade is the loop's one fall of dark.
+const luma = (hex: string) => (0.2126 * parseInt(hex.slice(1, 3), 16) + 0.7152 * parseInt(hex.slice(3, 5), 16) + 0.0722 * parseInt(hex.slice(5, 7), 16)) / 255
+const misplaced = WORLDS.flatMap((w) => w.themes.filter((t) => (luma(t.bg) < 0.5) !== (w.name === 'arcade')).map((t) => `${w.name}/${t.name}`))
+check('only the arcade is painted dark', misplaced.length === 0, misplaced.join(','))
 
 for (const w of WORLDS) {
   console.log(`\n${w.name}`)

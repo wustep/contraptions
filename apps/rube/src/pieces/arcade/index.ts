@@ -37,11 +37,15 @@ import { zigzag } from './zigzag'
  */
 
 /**
- * Signs after rain: the palettes the arcade is painted in. All of them
- * dark, but none of them pitch: the paper is a deep tint rather than
- * black, the ink is an off-white rather than white, and the colours sit
- * a step down from full neon, so the ball and the lit parts read without
- * glare and the lines do not buzz against the ground.
+ * Signs after rain: the palettes the arcade is painted in. The arcade is
+ * the one world that is night, so the cut into it is the loop's one fall
+ * of dark and the cut out of it the morning. Two grounds that cannot be
+ * mistaken for each other — violet under neon, green under phosphor —
+ * rather than two violets a shade apart. Both dark, but neither of them
+ * pitch: the paper is a deep tint rather than black, the ink is an
+ * off-white rather than white, and the colours sit a step down from full
+ * neon, so the ball and the lit parts read without glare and the lines do
+ * not buzz against the ground.
  */
 const THEMES: Theme[] = [
   {
@@ -51,14 +55,6 @@ const THEMES: Theme[] = [
     ink: '#DCD6EE',
     colors: ['#EF5A86', '#3FC4D2', '#EBD457', '#8DD983', '#B48AEA'],
     note: 'signs after rain',
-  },
-  {
-    name: 'cabinet',
-    label: 'Cabinet',
-    bg: '#1D1522',
-    ink: '#E2D4DC',
-    colors: ['#EA8B48', '#4FBFB5', '#E8C95E', '#E672A6', '#9080E6'],
-    note: 'the side art of an old cabinet',
   },
   {
     name: 'crt',

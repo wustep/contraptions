@@ -36,7 +36,11 @@ import { whirlpool } from './whirlpool'
  *   portal      the door at either end of a map; the far side is always a new map
  */
 
-/** Sea and sky: the palettes the harbor is painted in. */
+/**
+ * Sea and sky: the palettes the harbor is painted in. The pier by day and
+ * the pier at the end of it, and no third: the harbor is a place above the
+ * water in daylight, and night is the arcade's.
+ */
 const THEMES: Theme[] = [
   {
     name: 'harbor',
@@ -53,14 +57,6 @@ const THEMES: Theme[] = [
     ink: '#3B2A3A',
     colors: ['#E0705A', '#F2B34C', '#3D6B8C', '#8C5B8A', '#FFF3E8'],
     note: 'the pier at the end of the day',
-  },
-  {
-    name: 'abyss',
-    label: 'Abyss',
-    bg: '#0B2027',
-    ink: '#CFE8E4',
-    colors: ['#2EC4B6', '#41B3A3', '#E8F1F2', '#F6AE2D', '#5C7AEA'],
-    note: 'bioluminescence',
   },
 ]
 

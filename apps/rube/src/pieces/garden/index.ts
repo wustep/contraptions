@@ -36,7 +36,11 @@ import { wheelbarrow } from './wheelbarrow'
  *   portal       the door at either end of a map; the far side is always a new map
  */
 
-/** Leaf, terracotta and marigold: the palettes the garden is painted in. */
+/**
+ * Leaf, terracotta and marigold: the palettes the garden is painted in.
+ * Cream under glass and kraft out on the plot; things grow in daylight,
+ * and night is the arcade's.
+ */
 const THEMES: Theme[] = [
   {
     name: 'greenhouse',
@@ -53,14 +57,6 @@ const THEMES: Theme[] = [
     ink: '#3A2B1E',
     colors: ['#6B8E3D', '#B6452C', '#DDA63A', '#8FBBD9', '#F4EEE2'],
     note: 'kraft paper, soil and radish',
-  },
-  {
-    name: 'nightgarden',
-    label: 'Night Garden',
-    bg: '#1E2A24',
-    ink: '#E8EFE0',
-    colors: ['#8FD17E', '#F5B7C4', '#F2D06B', '#B7A5E8', '#6CC6D6'],
-    note: 'moths and moonflowers',
   },
 ]
 

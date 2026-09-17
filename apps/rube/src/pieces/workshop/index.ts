@@ -81,7 +81,16 @@ import { zipline } from './zipline'
  *   portal    the door at either end of a map; the far side is always a new map
  */
 
-/** Paper, brass and oil: the palettes the workshop is painted in. */
+/**
+ * Paper, brass and oil: the palettes the workshop is painted in. Two, and
+ * both of them paper: the original's cool sheet with its five bright inks,
+ * and a warm one in brass and oxblood. A world keeps only palettes that
+ * differ in their paper and their mood rather than in a reshuffle of hues,
+ * and that keep the house style — a bright flat fill inside heavy ink on a
+ * ground. The inverted drafting-table sheet went for both reasons: its
+ * fills were all pale, so nothing on it read as coloured, and a dark sheet
+ * belongs to the arcade, the one world that is night.
+ */
 const THEMES: Theme[] = [
   themeByName('okazz'),
   {
@@ -92,7 +101,6 @@ const THEMES: Theme[] = [
     colors: ['#D9A441', '#A63D2F', '#3F5F7A', '#5E7A4E', '#F6F1E6'],
     note: 'brass and oxblood on warm paper',
   },
-  themeByName('blueprint'),
 ]
 
 export const workshop: World = {
