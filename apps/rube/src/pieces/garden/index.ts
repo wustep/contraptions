@@ -1,15 +1,22 @@
 import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
+import { appletree } from './appletree'
 import { flowerBloom } from './bloom'
+import { bumblebee } from './bumblebee'
 import { burrow } from './burrow'
+import { cocoon } from './cocoon'
+import { dandelion } from './dandelion'
+import { frog } from './frog'
 import { hose } from './hose'
 import { pod } from './pod'
 import { gardenRail } from './rail'
 import { rake } from './rake'
+import { scarecrow } from './scarecrow'
 import { snail } from './snail'
 import { sprinkler } from './sprinkler'
 import { sunflower } from './sunflower'
+import { toadstools } from './toadstools'
 import { vine } from './vine'
 import { wateringcan } from './wateringcan'
 import { wheelbarrow } from './wheelbarrow'
@@ -33,6 +40,13 @@ import { wheelbarrow } from './wheelbarrow'
  *   hose         into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its skin goes round the loop two and a half times, gathering pace; out of the nozzle
  *   rake         over the handle onto the tines; the handle comes up behind, over, and cracks it on the back; it shoots off
  *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
+ *   appletree    the ball bonks the trunk and stops dead; the crown shudders, a leaf or two falls; the ripe apple on the far bough drops, bounces once and rolls on with the thread; the ball stays at the tree's foot
+ *   scarecrow    loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and comes back down
+ *   cocoon       into one mouth of a silk tunnel slung between two twigs; it rocks and flushes with colour, the seam splits, three butterflies come out; the ball rolls out the far mouth their colour
+ *   toadstools   off the path's end onto three toadstools, each taller than the last; every cap squashes, springs and puffs spores; pum, pum, pum, onto the rail a floor up
+ *   frog         onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up
+ *   dandelion    into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out
+ *   bumblebee    onto a daisy's face; a bumblebee comes over from its flower, takes hold, heaves twice, and labours up and across the bed with it to a shelf a floor up; sets it down rolling and goes home
  *   portal       the door at either end of a map; the far side is always a new map
  */
 
@@ -71,5 +85,5 @@ export const garden: World = {
     allotment: { wheelbarrow: 1.7, rake: 1.7, wateringcan: 1.4, burrow: 1.5, snail: 1.3, hose: 1.3, sprinkler: 1.2, bloom: 0.6, vine: 0.8, pod: 0.7 },
     wild: { burrow: 1.6, pod: 1.7, sprinkler: 1.5, snail: 1.6, hose: 1.4, vine: 1.2, sunflower: 1.2, wheelbarrow: 0.5, wateringcan: 0.6, rake: 0.7 },
   },
-  pieces: [gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail, portal],
+  pieces: [gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail, appletree, scarecrow, cocoon, toadstools, frog, dandelion, bumblebee, portal],
 }
