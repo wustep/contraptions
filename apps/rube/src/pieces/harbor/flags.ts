@@ -2,10 +2,11 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, piling, seaColor, splash, water } from './sea'
+import { WATER, luminance, piling, seaColor, splash, water } from './sea'
 
 /**
- * A signal mast on the pier. Three flags are bent on to the halyard, rolled
+ * A signal mast on the pier. Three flags, a pennant, a square and a
+ * swallowtail, are bent on to the halyard a finger apart, rolled
  * up tight against the mast; the halyard goes over the sheave at the
  * masthead and down the far side, through the deck, to a lead weight held
  * up under the planks by a pawl. A plank of the deck is a treadle: the
@@ -24,10 +25,17 @@ const SHEAVE: Pt = [MAST, -0.44]
 const SHEAVE_R = 0.065
 const HOIST_X = MAST + SHEAVE_R
 const FALL_X = MAST - SHEAVE_R
-/** Three flags, head to tail; how far the hoist runs; the height each flag's middle breaks out at: clear of the ball's top while it is under them. */
+/**
+ * Three flags down the hoist, a finger of halyard between each; how far the
+ * hoist runs; the height each flag's middle breaks out at: clear of the
+ * ball's top while it is under them. A hoist is read by its shapes before
+ * its colours, so the three are the three shapes a signal locker has,
+ * a pennant, a square and a swallowtail, each its own length.
+ */
 const FLAGS = 3
-const FLAG_H = 0.1
-const FLAG_W = 0.27
+const PITCH = 0.1
+const FLAG_H = 0.08
+const FLAG_W = [0.31, 0.2, 0.27]
 const TOP = -0.42
 const RUN = 0.22
 const BREAK = [-0.225, -0.225, -0.15]
@@ -78,9 +86,12 @@ export const flags = definePiece<{ color: string }>({
   draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const run = runAt(since)
     const angle = plankAngle(t)
-    // The hoist's colours: the piece's own first, then round the palette.
-    const at = Math.max(0, theme.colors.indexOf(s.color))
-    const colours = Array.from({ length: FLAGS }, (_, i) => theme.colors[(at + i * 2) % theme.colors.length])
+    // The hoist's colours: the piece's own first, then round the palette,
+    // leaving out any so near the paper that a flag of it would be a hole in the hoist.
+    const paper = luminance(bg)
+    const bold = theme.colors.filter((c) => Math.abs(luminance(c) - paper) > 0.25)
+    const at = Math.max(0, bold.indexOf(s.color))
+    const colours = Array.from({ length: FLAGS }, (_, i) => bold[(at + i) % bold.length])
 
     water(p, k, ink, weight, -0.5, 0.5)
     piling(p, k, ink, weight, 0.36)
@@ -108,9 +119,9 @@ export const flags = definePiece<{ color: string }>({
 
     // The flags, head to tail down the hoist: rolled against the mast until each clears the break.
     for (let i = 0; i < FLAGS; i++) {
-      const y = TOP + RUN - run + (i + 0.5) * FLAG_H
+      const y = TOP + RUN - run + (i + 0.5) * PITCH
       const open = since < 0 ? 0 : easeOutBack(over(y, BREAK[i] + 0.005, BREAK[i] - 0.03))
-      flag(p, k, ink, weight, colours[i], bg, HOIST_X, y, open, t * 7 - i * 1.3, i)
+      flag(p, k, ink, weight, colours[i], colours[(i + 2) % FLAGS], HOIST_X, y, open, t * 7 - i * 1.3, i)
     }
 
     // The treadle.
@@ -145,34 +156,36 @@ export const flags = definePiece<{ color: string }>({
 
 /**
  * One signal flag on the hoist at (x, y): rolled to a finger's width at
- * `open` 0, flying at 1, its fly rippling on `phase`. Four patterns, so the
- * hoist reads as a signal and not as bunting: plain, halved, bordered, and
- * a swallowtail.
+ * `open` 0, flying at 1, its fly rippling on `phase`. Three shapes, so the
+ * hoist reads as a signal and not as bunting: a pennant that tapers to a
+ * blunt point, a square halved in two colours, and a swallowtail.
  */
-function flag(p: p5, k: number, ink: string, weight: number, color: string, bg: string, x: number, y: number, open: number, phase: number, pattern: number): void {
-  const w = 0.05 + (FLAG_W - 0.05) * open
-  const h = FLAG_H * 0.92
+function flag(p: p5, k: number, ink: string, weight: number, color: string, second: string, x: number, y: number, open: number, phase: number, kind: number): void {
+  const w = 0.05 + (FLAG_W[kind % 3] - 0.05) * open
+  const h = FLAG_H
   const ripple = (u: number) => 0.016 * open * u * Math.sin(phase - u * 5)
   const N = 6
+  /** Half the flag's height at `u` along it: a pennant tapers as it opens, the others are square-cut. */
+  const half = (u: number) => (kind % 3 === 0 ? (h / 2) * (1 - 0.72 * u * open) : h / 2)
   const shape = (u0: number, u1: number, inset: number, tail: boolean) => {
     p.beginShape()
     for (let j = 0; j <= N; j++) {
       const u = u0 + ((u1 - u0) * j) / N
-      p.vertex((x + w * u) * k, (y - h / 2 + inset + ripple(u)) * k)
+      p.vertex((x + w * u) * k, (y - half(u) + inset + ripple(u)) * k)
     }
-    if (tail) p.vertex((x + w * (u1 - 0.3)) * k, (y + ripple(u1 - 0.3)) * k)
+    if (tail) p.vertex((x + w * (u1 - 0.32 * open)) * k, (y + ripple(u1 - 0.32)) * k)
     for (let j = N; j >= 0; j--) {
       const u = u0 + ((u1 - u0) * j) / N
-      p.vertex((x + w * u) * k, (y + h / 2 - inset + ripple(u)) * k)
+      p.vertex((x + w * u) * k, (y + half(u) - inset + ripple(u)) * k)
     }
     p.endShape(p.CLOSE)
   }
   // Rolled, the flag is a band of its colour on the hoist: a thinner line, so the colour is not lost in it.
   solid(p, ink, weight * (open > 0.2 ? 0.9 : 0.6), color)
-  shape(0, 1, 0, pattern % 4 === 3)
-  if (open > 0.5) {
-    solid(p, ink, weight * 0.6, bg)
-    if (pattern % 4 === 1) shape(0.5, 1, 0, false)
-    if (pattern % 4 === 2) shape(0.28, 0.72, h * 0.27, false)
+  shape(0, 1, 0, kind % 3 === 2)
+  // The square is halved: its fly in a second colour.
+  if (open > 0.5 && kind % 3 === 1) {
+    solid(p, ink, weight * 0.6, second)
+    shape(0.5, 1, 0, false)
   }
 }
