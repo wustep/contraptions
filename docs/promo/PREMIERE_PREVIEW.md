@@ -10,9 +10,14 @@ The [phrase map](PREMIERE_PHRASE_MAP.md) describes all 36 phrases and the three 
 
 ## Shows integration
 
-This page is a development player. The real product home is the Shows tab being implemented separately.
+This page is a development player. The product home is the Shows tab:
+`/shows/?show=premiere-arabesque&take=take-a`. The version file at
+`apps/rube/src/shows/versions/premiere-arabesque/take-a.show.ts` loads the
+timed take — duration, approved audio URL and offset, `PremiereShow`,
+`cameraAt` — without rewriting the choreography. Credit and the recording
+link live in the panel fields only.
 
-`apps/rube/src/timed/registry.ts` exports `TIMED_SHOWS` and `timedShowById`. The take ID is `premiere-arabesque-prati-journey`, with composition title and version stored separately so other takes can coexist. `premiere-arabesque/index.ts` exposes duration, approved audio URL and offset, phrase/map data, `at(time)`, `cameraAt(time)`, and `renderFrame(p5, time)`.
+`apps/rube/src/timed/registry.ts` exports `TIMED_SHOWS` and `timedShowById`. The take ID is `premiere-arabesque-prati-journey`, with composition title and version stored separately so other takes can coexist. `premiere-arabesque/index.ts` exposes the `Show` instance, duration, approved audio URL and offset, phrase/map data, `at(time)`, `cameraAt(time)`, and `renderFrame(p5, time)`.
 
 The host owns the audio clock, playback rate, transport and export. Show time is absolute seconds after the recording offset. At 2×, the host advances show time twice as fast and sets audio playback to 2×. The choreography never depends on animation-frame deltas, a DOM page, or the review controls.
 
