@@ -301,8 +301,10 @@ const pinBtn = el('button', { class: 'chip', title: 'Stay in this world instead 
 pinBtn.addEventListener('click', () => pinWorld(world ? null : show.at(now()).universe.world.name))
 const loop = el('div', { class: 'row deck' }, [loopSeg, pinBtn])
 // The builds stand beside the loop: a chip pins the show to one, and again lets it go.
-const buildChips = builtWorlds().map((w) => {
-  const b = el('button', { type: 'button', title: `Stay in ${w.label}, a build: ${w.note}` }, [w.label])
+const buildChips = builtWorlds().map((w, _i, all) => {
+  // Two builds may be the same place; then each is told apart by its name.
+  const twin = all.some((o) => o !== w && o.label === w.label)
+  const b = el('button', { type: 'button', title: `Stay in ${w.label} (${w.name}), a build: ${w.note}` }, [twin ? `${w.label} · ${w.name}` : w.label])
   b.addEventListener('click', () => pinWorld(world === w.name ? null : w.name))
   return { w, b }
 })

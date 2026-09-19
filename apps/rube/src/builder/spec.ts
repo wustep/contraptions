@@ -192,6 +192,8 @@ export const LIMITS = {
   depth: 3,
   /** No coordinate is further than this from the entry cell. */
   reach: 8,
+  /** Rows a footprint may span, its exit's row included. A map can be as short as six, and a taller piece would often find no room. */
+  rows: 5,
   /** Seconds a lane may take. A solo world is short. */
   laneTime: 7,
   name: 32,
@@ -207,6 +209,16 @@ export interface Parsed {
 
 const SLUG = /^[a-z][a-z0-9-]*$/
 const HEX = /^#[0-9a-f]{6}$/i
+
+/** `name`, or `name-2`, `name-3`… until it is one nothing in `taken` has: cut short first if the number would push it past the limit. */
+export function uniqueName(name: string, taken: ReadonlySet<string>): string {
+  if (!taken.has(name)) return name
+  for (let i = 2; ; i++) {
+    const suffix = `-${i}`
+    const numbered = `${name.slice(0, LIMITS.name - suffix.length).replace(/-+$/, '')}${suffix}`
+    if (!taken.has(numbered)) return numbered
+  }
+}
 
 /** A name made safe to be one: lower case, hyphens, a letter first. */
 export function slug(text: string, fallback = 'piece'): string {
@@ -272,7 +284,9 @@ function checkLane(c: Checker, piece: Record<string, unknown>, path: string): vo
   let at: Pt = [-0.5, 0]
   let fires = 0
   let time = 0
-  const cells = (Array.isArray(piece.cells) ? piece.cells : []) as Pt[]
+  // Only the cells that are cells: what is wrong with the rest is said where they are checked.
+  const isCell = (v: unknown): v is Pt => Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number'
+  const cells = (Array.isArray(piece.cells) ? piece.cells : []).filter(isCell)
   // A step may end anywhere in the footprint, its edges included.
   const inside = (p: Pt) => cells.some(([cx, cy]) => Math.abs(p[0] - cx) <= 0.5 + 1e-6 && Math.abs(p[1] - cy) <= 0.5 + 1e-6)
   lane.forEach((raw, i) => {
@@ -299,8 +313,12 @@ function checkLane(c: Checker, piece: Record<string, unknown>, path: string): vo
       time += len / 2.6
     } else {
       if (c.num(raw.dur, `${at0}.dur`, 0.01, LIMITS.laneTime)) time += raw.dur
-      if (raw.op === 'fly') c.num(raw.arc, `${at0}.arc`, -3, 3)
-      else c.optOneOf(raw.ease, ['in', 'out', 'inout'] as const, `${at0}.ease`)
+      if (raw.op === 'fly') {
+        // A flight peaks `arc` above the middle of its chord, and the ball is still the piece's there.
+        if (c.num(raw.arc, `${at0}.arc`, -3, 3) && cells.length && !inside([(at[0] + raw.to[0]) / 2, (at[1] + raw.to[1]) / 2 - raw.arc])) {
+          c.fail(`${at0}.arc`, 'the flight peaks outside the cells the piece claims; claim the cells it flies through')
+        }
+      } else c.optOneOf(raw.ease, ['in', 'out', 'inout'] as const, `${at0}.ease`)
     }
     if (len < 1e-6) c.fail(at0, 'goes nowhere; use a wait')
     if (cells.length && !inside(raw.to)) c.fail(`${at0}.to`, 'is outside the cells the piece claims')
@@ -445,6 +463,9 @@ function checkPiece(c: Checker, raw: unknown, path: string): void {
       if (c.pt(exit.at, `${path}.exit.at`)) {
         if (!Number.isInteger(exit.at[0]) || !Number.isInteger(exit.at[1])) c.fail(`${path}.exit.at`, 'must be a whole cell')
         if (keys.has(`${exit.at[0]}:${exit.at[1]}`)) c.fail(`${path}.exit.at`, 'is one of the piece\'s own cells')
+        const ys = [...(cells as Pt[]).map(([, y]) => y), exit.at[1]]
+        const rows = Math.max(...ys) - Math.min(...ys) + 1
+        if (rows > LIMITS.rows) c.fail(`${path}.cells`, `span ${rows} rows with the exit; a map may be only six rows tall, so a piece keeps to ${LIMITS.rows}`)
       }
     }
   }
@@ -505,14 +526,17 @@ function checkWorld(c: Checker, raw: unknown, path: string): void {
  */
 export function parseBuild(input: unknown): Parsed {
   const c = new Checker()
-  let raw = input
-  if (typeof input === 'string') {
-    if (input.length > LIMITS.bytes) return { build: null, errors: [`file: larger than ${LIMITS.bytes / 1024} KB`] }
-    try {
-      raw = JSON.parse(input)
-    } catch (err) {
-      return { build: null, errors: [`file: not JSON (${(err as Error).message})`] }
-    }
+  // Everything is checked as the JSON it would be in a file, whatever it was handed as: an object in
+  // memory can hold things no file can (a hole in a list, NaN, a getter), and a copy through JSON is
+  // rid of them before anything is looked at. What is returned is that same copy.
+  let raw: unknown
+  try {
+    const text = typeof input === 'string' ? input : JSON.stringify(input)
+    if (typeof text !== 'string') return { build: null, errors: ['build: must be an object'] }
+    if (text.length > LIMITS.bytes) return { build: null, errors: [`file: larger than ${LIMITS.bytes / 1024} KB`] }
+    raw = JSON.parse(text)
+  } catch (err) {
+    return { build: null, errors: [`file: not JSON (${(err as Error).message})`] }
   }
   if (!c.obj(raw, 'build')) return { build: null, errors: c.errors }
   if (raw.format !== BUILD_FORMAT) return { build: null, errors: [`build.format: must be "${BUILD_FORMAT}"; this is not a contraptions build`] }
@@ -529,10 +553,18 @@ export function parseBuild(input: unknown): Parsed {
   }
   if (raw.world !== undefined) checkWorld(c, raw.world, 'world')
   if (c.errors.length) return { build: null, errors: c.errors }
-  return { build: JSON.parse(JSON.stringify(raw)) as Build, errors: [] }
+  return { build: raw as unknown as Build, errors: [] }
 }
 
-/** The text of a build's file: stable key order as written, two-space indent, a newline at the end. */
-export const serializeBuild = (build: Build): string => `${JSON.stringify(build, null, 2)}\n`
+/**
+ * JSON as a person reads and edits it: two-space indent, but a list of
+ * plain values — a point, a window, a footprint's cell — on one line.
+ */
+export const prettyJson = (value: unknown): string =>
+  // Only the breaks JSON.stringify put in are taken out; a string never holds a raw line break, so none is touched.
+  (JSON.stringify(value, null, 2) ?? '').replace(/\[\n\s+([^[\]{}]*?)\n\s*\]/g, (_, inner: string) => `[${inner.replace(/,\n\s*/g, ', ')}]`)
+
+/** The text of a build's file: stable key order as written, short lists on a line, a newline at the end. */
+export const serializeBuild = (build: Build): string => `${prettyJson(build)}\n`
 
 export const emptyBuild = (name: string): Build => ({ format: BUILD_FORMAT, version: BUILD_VERSION, name, pieces: [] })

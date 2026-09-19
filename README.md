@@ -32,7 +32,7 @@ npm install
 npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations
 npm run check        # headless smoke test of Explorations' pure core
 npm run check:rube   # headless checks on Machine: the worlds, the planner, the chain, the ball, the tempo
-npm run check:builder # headless checks on the Builder: scaffolds, the file round trip, refusals, the stock show untouched
+npm run check:builder # headless checks on the Builder: scaffolds, the file round trip, refusals, mending, the store, the stock show untouched
 npm run build        # one dist/: Machine at /, Explorations at /explorations/, the Builder at /builder/, /sandbox/ and /rube/ redirecting
 ```
 
@@ -710,7 +710,7 @@ whole build to one JSON file. **Import** reads one back.
 
 ```bash
 npm run dev            # http://localhost:8791/, then ` five times, then the Builder tab
-npm run check:builder  # scaffolds, the file round trip, refusals, the lock, the model picker, and that the stock show is untouched
+npm run check:builder  # scaffolds and their looks, the file round trip, refusals, mending, the store, the lock, the model picker, and that the stock show is untouched
 ```
 
 ### Unlocking it
@@ -720,8 +720,10 @@ In Machine or Explorations, press <kbd>`</kbd> five times in a row, each
 press within half a second of the last. The panel comes out with a
 **Builder** tab on the switch, lit for a moment. Wait longer than half a
 second between two presses and the count starts over, so the single
-<kbd>`</kbd> that clears the stage still works as before. A held key counts
-as one press.
+<kbd>`</kbd> that clears the stage still works as before. Only the first
+press of a quick run clears the stage; the rest are counted and not shown,
+so the chrome does not flicker on the way to five. A held key counts as one
+press.
 
 The unlock is kept in this browser (`contraptions:builder` in
 localStorage). The same five presses lock it again, from any mode. While it
@@ -740,15 +742,26 @@ separate chunk that a locked visit never fetches.
 3. **Change it.** The **Piece** section holds the piece as JSON. Edit,
    **Apply**, and the stage updates. What you type is validated the same way
    a file is, and a list of what is wrong appears under the pane if it does
-   not pass. **Make again** makes another version from the same prompt.
-4. **Give it a place.** "a volcano island", **Make world**. The **World**
+   not pass; the text stays in the pane to be fixed until you apply it or
+   **Revert**. **Make again** makes another version from the same prompt,
+   by the model when one is chosen. While a model writes, the button that
+   asked for it reads **Stop**.
+4. **Take it back.** **Undo** in the **Build** title, or <kbd>⌘Z</kbd>
+   outside a text field, takes back the last change to a build: a piece
+   made, removed, remade or edited, a world, a rename, a new build, an
+   import, a delete.
+5. **Give it a place.** "a volcano island", **Make world**. The **World**
    section then picks the rail (one of the four stock worlds'), the
    backdrops, and the cast. **Recast** draws another six stock pieces,
    **No cast** plays the build's pieces alone.
-5. **Export, import.** **Export** saves `<name>.contraptions.json`.
-   **Import**, or a file dropped on the stage, reads one. A build of the
-   same name in the browser is replaced.
-6. **Play it in Machine.** The link at the foot of **File** opens
+6. **Export, import.** **Export** saves `<name>.contraptions.json`.
+   **Import**, or a file dropped on the stage, reads one. A different build
+   of the same name already in the browser is never replaced: the import
+   comes in as `<name>-2` and both are kept. **Copy** puts the build on the
+   clipboard, and the piece section's **Copy** a single piece; <kbd>⌘V</kbd>
+   outside a text field pastes either back, a piece into the build on the
+   bench.
+7. **Play it in Machine.** The link at the foot of **File** opens
    `/?world=<name>`. Machine's panel lists every build under **Builds**, and
    its catalog gives each build a band after the four worlds.
 
@@ -757,21 +770,29 @@ separate chunk that a locked visit never fetches.
 Two generators write the same JSON.
 
 **Offline.** No key, no network. `scaffold.ts` reads the prompt for one of
-eight mechanisms and names the piece for the prompt's noun:
+eleven mechanisms and names the piece for the prompt's noun. Each has two
+looks (the ring has three), and a word in the prompt can pick one:
 
-| asks for | words like | what it builds |
-| --- | --- | --- |
-| strike | mallet, hammer, kick, boot | a mallet on a mast comes round onto the ball's shoulder; the ball leaves fast |
-| ring | gong, bell, lantern, chime | a body hung from a gallows with a feeler in the ball's way; it rocks and rings |
-| bounce | mushroom, drum, spring, trampoline | a pit with something springy in it; a flight |
-| lift | lift, geyser, elevator, piston | a platform on a spring between two guides; up a floor |
-| slide | slide, chute, hill, ramp | over an edge and down a slide; down a floor |
-| paint | bucket, paint, dye, honey | a bucket tips over the stopped ball; the ball changes colour for good |
-| spin | windmill, pinwheel, fan, wheel | a wheel with a vane in the ball's way; shouldered aside, it goes round once |
-| launch | catapult, fling, throw, volcano | a spoon on a fulcrum throws the ball across a cell with no rail; a flight |
+| asks for | words like | what it builds | looks |
+| --- | --- | --- | --- |
+| strike | mallet, hammer, kick, boot | a head on a mast comes round onto the ball's shoulder; the ball leaves fast | mallet, boot |
+| ring | gong, bell, lantern, chime | a body hung from a gallows with a feeler in the ball's way; it rocks and rings | disc, lantern, bell |
+| bounce | mushroom, drum, spring, trampoline | a pit with something springy in it; a flight | pad on a spring, cap |
+| lift | lift, geyser, elevator, piston | a platform between two guides; up a floor | spring, cage on a cable |
+| drop | slide, chute, stairs, hill | down a floor | a slide, three steps it hops down |
+| paint | bucket, paint, spray, honey | something over the stopped ball; the ball changes colour for good | bucket that tips, spray can |
+| spin | windmill, pinwheel, fan, wheel | a wheel with a vane in the ball's way; shouldered aside, it goes round once | four sails, three blades |
+| launch | catapult, fling, seesaw, plank | a lever on a fulcrum throws the ball across a cell with no rail; a flight | spoon, plank with a dropped weight |
+| carry | cart, ferry, boat, train | the ball rolls aboard and is carried across two cells | cart on a track, boat between piers |
+| hide | tunnel, box, cave, factory | the rail runs through it; the ball is gone for a beat and comes out fast | hill with a mouth, a house with a door |
+| turn back | bend, hairpin, pipe, reverse | round a bend and down a floor, heading back the way it came | an outer wall, a pipe |
 
-The same prompt always scaffolds the same piece. A prompt that names no
-mechanism gets one picked by its seed. Worlds work the same way: ten named
+The same prompt and the same try always scaffold the same piece. **Make
+again** is the next try: another look where the prompt does not name one,
+another set of numbers where it does. When a prompt pins everything down,
+the Builder says so rather than making the same piece twice. A prompt that
+names no mechanism gets one picked by its seed. While the prompt is empty,
+a row of example prompts shows under it. Worlds work the same way: ten named
 places (volcano, ocean, forest, desert, snow, candy, night, harvest,
 circus, kitchen) each have a hand-made palette, and any other prompt gets a
 palette generated from its seed.
@@ -802,10 +823,15 @@ provider it belongs to. The Anthropic SDK is its own chunk and loads the
 first time a Claude key is used.
 
 The model gets the format and the craft rules as its system prompt. Its
-reply is validated like any file. If it fails, the errors go back for one
-repair. If that fails too, or the key or the network does, the Builder falls
-back to the offline generator and says why. With a provider chosen but no
-key saved, it scaffolds offline and says so.
+reply is validated like any file. If it fails, the errors go back for a
+repair, twice at most. A missing or malformed name is not worth a round
+trip and is made from the prompt instead. If the repairs fail too, or the
+key or the network does, the Builder falls back to the offline generator
+and says why. With a provider chosen but no key saved, it scaffolds offline
+and says so. **Stop** cancels the request, and nothing is scaffolded in its
+place. A key that does not look like its provider's (a Claude key
+that does not start `sk-ant-`, an Anthropic key given to the gateway) is
+saved with a warning.
 
 One thing the gateway does that you will notice: it answers a browser's
 preflight, but its refusals (a bad key, no credit, a model the key may not
@@ -874,10 +900,13 @@ evaluated.
 
 `parseBuild` refuses a file with a reason per fault: a lane that does not
 end on the edge of its exit cell, a step that leaves the piece's cells, a
-footprint without `[0, 0]`, an exit inside the footprint, an unknown shape
-or drive, a number out of range, ink that does not read on its paper.
-`compileBuild` adds the faults that need the stock worlds to see: a piece
-or a build named for a stock one, and a cast member that does not exist.
+flight that peaks outside them, a footprint without `[0, 0]` or taller than
+five rows, an exit inside the footprint, an unknown shape or drive, a
+number out of range, ink that does not read on its paper. It checks what
+it is handed as the JSON a file would hold, so a list with holes in it or a
+`NaN` is refused like any other fault and never throws. `compileBuild` adds
+the faults that need the stock worlds to see: a piece or a build named for
+a stock one, and a cast member that does not exist.
 
 ### Where builds live
 
@@ -885,7 +914,10 @@ The registry in `registry.ts` has three sources. All of them load at
 startup with no rebuild step of their own.
 
 - **The browser.** Everything the Builder makes or imports is saved to
-  localStorage under `contraptions:builds` as it changes.
+  localStorage under `contraptions:builds` as it changes. A save leaves
+  every other entry as it was written, even one this version cannot read.
+  When the browser will not keep a build (storage full or turned off), the
+  **File** section says so: export it to keep it.
 - **The builds folder.** `apps/rube/builds/*.contraptions.json`. Vite globs
   it (`discover.ts`), so a file dropped there is part of the site the next
   time it is served or built, in Machine and in the Builder. It ships
@@ -898,6 +930,11 @@ startup with no rebuild step of their own.
 
 A browser build replaces a shipped build of the same name. A build that
 fails validation is skipped with a console warning and the app carries on.
+The stock pieces change between versions of the site, so a kept or
+imported build is mended to fit them as it loads (`mendBuild`): a borrowed
+piece that has gone leaves the cast, and a piece whose name a stock piece
+has since taken is numbered. The console, or the import's message, says
+what was changed.
 
 Builds stand beside the loop and never in it. The loop is the four stock
 worlds in a fixed order, so a seed is the same show for everyone whatever
@@ -913,12 +950,13 @@ visits a build when it is pinned there (`?world=<name>`, or its chip under
   second ball (a relay, as the cradle does it) is still a TypeScript piece.
   A built piece has one footprint and one lane, and the only thing it can
   do to the ball is repaint it.
-- The eight offline mechanisms are starting points. They play as they are
+- The eleven offline mechanisms are starting points. They play as they are
   and their geometry is exact (the mallet's face meets the ball where the
   lane puts it), but the prompt only picks the mechanism, the name and
-  sometimes the silhouette.
-- A build holds 24 pieces, a piece 12 cells, 40 lane steps, 80 shapes and
-  7 seconds of lane. A file is at most 512 KB.
+  sometimes the look.
+- A build holds 24 pieces, a piece 12 cells in at most five rows, 40 lane
+  steps, 80 shapes and 7 seconds of lane. A file is at most 512 KB.
+- Undo lasts as long as the page, fifty changes deep.
 - Builds are per browser. There is no account and no sync. The file is how
   a build moves.
 - A model needs the person's own key, and a key in a browser is only as

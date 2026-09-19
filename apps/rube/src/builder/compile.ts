@@ -28,7 +28,7 @@ import {
 } from '../parts'
 import { portal } from '../pieces/portal'
 import { WORLDS, type World } from '../worlds'
-import type { Build, ClockName, Fill, LaneStep, Motion, PieceSpec, Shape, Stroke, WorldSpec } from './spec'
+import { uniqueName, type Build, type ClockName, type Fill, type LaneStep, type Motion, type PieceSpec, type Shape, type Stroke, type WorldSpec } from './spec'
 
 /**
  * A build, made playable: every `PieceSpec` becomes a `Piece` — the same
@@ -298,6 +298,39 @@ export const defaultWorldSpec = (): WorldSpec => ({
   rail: 'workshop',
   borrow: [],
 })
+
+/**
+ * A build made to fit the stock worlds as they are today. The stock pieces
+ * come and go between versions of the site, so a build kept in a browser or
+ * a file can borrow one that has since gone, or own a piece whose name a
+ * stock piece has since taken; either would keep the whole build out of the
+ * show. Instead the one that has gone is dropped from the cast, and the one
+ * whose name was taken is numbered. What was changed, said in a sentence
+ * each; the build itself is not touched.
+ */
+export function mendBuild(build: Build): { build: Build; notes: string[] } {
+  const notes: string[] = []
+  const taken = stockNames()
+  let pieces = build.pieces
+  if (pieces.some((p) => taken.has(p.name))) {
+    const names = new Set([...taken, ...pieces.map((p) => p.name)])
+    pieces = pieces.map((p) => {
+      if (!taken.has(p.name)) return p
+      const name = uniqueName(p.name, names)
+      names.add(name)
+      notes.push(`${p.name} is now a stock piece's name, so this one is ${name}`)
+      return { ...p, name }
+    })
+  }
+  let world = build.world
+  const gone = world?.borrow.filter((name) => !stockPiece(name)) ?? []
+  if (world && gone.length) {
+    world = { ...world, borrow: world.borrow.filter((name) => !gone.includes(name)) }
+    notes.push(`the cast no longer has ${gone.join(', ')}: ${gone.length === 1 ? 'that piece is' : 'those pieces are'} gone from the stock worlds`)
+  }
+  if (!notes.length) return { build, notes }
+  return { build: { ...build, pieces, ...(world ? { world } : {}) }, notes }
+}
 
 export interface Compiled {
   world: World | null

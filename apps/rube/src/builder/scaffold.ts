@@ -2,12 +2,12 @@ import { makeRng, type Rng } from '../../../../src/core/rng'
 import type { Theme } from '../../../../src/core/themes'
 import { FAST, FLOOR, R, ROLL, type Pt } from '../parts'
 import { WORLDS, type Backdrop } from '../worlds'
-import { slug, type LaneStep, type Motion, type PieceSpec, type Shape, type StockWorld, type WorldSpec } from './spec'
+import { slug, uniqueName, type LaneStep, type Motion, type PieceSpec, type Shape, type StockWorld, type WorldSpec } from './spec'
 
 /**
  * The offline half of "prompt a piece": no key, no network. A prompt is read
  * for the one thing a scaffold can honestly get from it — which mechanism it
- * is asking for — and the answer is one of eight mechanisms, each written
+ * is asking for — and the answer is one of eleven mechanisms, each written
  * here the way a stock piece is: a lane the ball really follows, a cause the
  * eye can see, parts that stand on something, and one flat fill that is never
  * the ball's colour. The noun in the prompt names the piece and picks the
@@ -33,22 +33,39 @@ type Body = Pick<PieceSpec, 'cells' | 'exit' | 'lane' | 'shapes'> & Partial<Pick
 
 interface Archetype {
   key: string
+  /** What it does to the ball, in a word or two, for the Builder to list. */
+  label: string
+  /** A prompt that asks for it, for the Builder to offer. */
+  example: string
   /** Words in a prompt that ask for this mechanism. */
   words: string[]
-  build(rng: Rng, noun: string, words: Set<string>): Body
+  build(rng: Rng, noun: string, words: Set<string>, variant: number): Body
 }
 
 const has = (words: Set<string>, ...any: string[]) => any.some((w) => words.has(w))
 
-/* ------------------------------------------------------------------ the eight mechanisms */
+/**
+ * Which silhouette a mechanism wears. A word in the prompt that names one
+ * decides it; failing that the variant does, so making a piece again from
+ * the same prompt makes one that looks different and not the same one with
+ * its numbers nudged.
+ */
+function look<T extends string>(words: Set<string>, variant: number, looks: Record<T, string[]>): T {
+  const names = Object.keys(looks) as T[]
+  return names.find((name) => has(words, ...looks[name])) ?? names[variant % names.length]
+}
+
+/* ------------------------------------------------------------------ the mechanisms */
 
 /** A mallet on a mast comes round onto the ball's shoulder and drives it out along the rail. */
 const striker: Archetype = {
   key: 'striker',
+  label: 'strike',
+  example: 'a mallet',
   words: ['hammer', 'mallet', 'hit', 'hits', 'strike', 'strikes', 'smash', 'whack', 'knock', 'knocks', 'kick', 'kicks', 'boot', 'punch', 'fist', 'bat', 'club', 'thump', 'bonk', 'slap', 'stomp', 'gavel'],
-  build: (rng, noun, words) => {
+  build: (rng, noun, words, variant) => {
     const WAIT = round(rng.range(0.42, 0.6))
-    const boot = has(words, 'kick', 'kicks', 'boot', 'stomp', 'foot', 'shoe')
+    const boot = look(words, variant, { mallet: ['mallet', 'hammer', 'gavel', 'club', 'bat'], boot: ['kick', 'kicks', 'boot', 'stomp', 'foot', 'shoe'] }) === 'boot'
     // The head comes down the ball's upper back at 45° and its face stops a ball's radius from the
     // ball's centre: `face` is how far the face stands proud of the arm's end, along the swing.
     const face = boot ? 0.24 : 0.16
@@ -93,21 +110,28 @@ const striker: Archetype = {
 /** Something hung over the line that the ball brushes in passing: it swings, and rings. Punctuation. */
 const chime: Archetype = {
   key: 'chime',
+  label: 'ring',
+  example: 'a bell',
   words: ['gong', 'bell', 'chime', 'chimes', 'ring', 'rings', 'lantern', 'sign', 'hang', 'hangs', 'hanging', 'dangle', 'swing', 'swings', 'pendulum', 'cymbal', 'tambourine', 'mobile', 'charm', 'ornament', 'bauble', 'toll'],
-  build: (_rng, noun, words) => {
+  build: (_rng, noun, words, variant) => {
     const d = 0.62
     const cy = 0.95
-    const lantern = has(words, 'lantern', 'sign', 'ornament', 'bauble')
-    const body: Shape[] = lantern
-      ? [
-          { kind: 'rect', offset: pt(0, cy), w: 0.44, h: 0.58, r: 0.06 },
-          { kind: 'rect', offset: pt(0, cy), w: 0.24, h: 0.34, r: 0.03, fill: 'paper' },
-        ]
-      : [
-          { kind: 'ellipse', offset: pt(0, cy), w: d, h: d },
-          { kind: 'ellipse', offset: pt(0, cy), w: 0.2, h: 0.2, fill: 'paper' },
-        ]
-    const bottom = lantern ? cy + 0.29 : cy + d / 2
+    const form = look(words, variant, { disc: ['gong', 'cymbal', 'tambourine', 'plate'], lantern: ['lantern', 'sign', 'ornament', 'bauble', 'box'], bell: ['bell', 'toll', 'chime', 'chimes'] })
+    // Each body as its parts, and how far above and below its middle it reaches, for the cords and the feeler.
+    const bodies: Record<typeof form, { shapes: Shape[]; up: number; down: number }> = {
+      disc: { up: d / 2, down: d / 2, shapes: [{ kind: 'ellipse', offset: pt(0, cy), w: d, h: d }, { kind: 'ellipse', offset: pt(0, cy), w: 0.2, h: 0.2, fill: 'paper' }] },
+      lantern: { up: 0.29, down: 0.29, shapes: [{ kind: 'rect', offset: pt(0, cy), w: 0.44, h: 0.58, r: 0.06 }, { kind: 'rect', offset: pt(0, cy), w: 0.24, h: 0.34, r: 0.03, fill: 'paper' }] },
+      bell: {
+        up: 0.3, down: 0.28,
+        shapes: [
+          { kind: 'poly', at: pt(0, cy), pts: [[-0.32, 0.28], [-0.22, 0.14], [-0.18, -0.14], [-0.09, -0.3], [0.09, -0.3], [0.18, -0.14], [0.22, 0.14], [0.32, 0.28]] },
+          { kind: 'line', at: pt(0, cy), pts: [[-0.2, 0.18], [0.2, 0.18]] },
+        ],
+      },
+    }
+    const lantern = form === 'lantern'
+    const body = bodies[form].shapes
+    const bottom = cy + bodies[form].down
     // The feeler ends where the ball's crown passes, so the ball is seen to set it off.
     const tip = 1.5 - R - 0.03
     const shapes: Shape[] = [
@@ -121,8 +145,8 @@ const chime: Archetype = {
       {
         kind: 'group', at: pt(0, -1.5), motion: [{ drive: 'swing', from: 0, rotate: 0.13, freq: 7, decay: 1.1 }],
         shapes: [
-          { kind: 'line', pts: [[-0.1, 0], [-0.1, round(cy - (lantern ? 0.29 : d / 2) + 0.02)]] },
-          { kind: 'line', pts: [[0.1, 0], [0.1, round(cy - (lantern ? 0.29 : d / 2) + 0.02)]] },
+          { kind: 'line', pts: [[lantern ? -0.1 : -0.06, 0], [lantern ? -0.1 : -0.06, round(cy - bodies[form].up + 0.02)]] },
+          { kind: 'line', pts: [[lantern ? 0.1 : 0.06, 0], [lantern ? 0.1 : 0.06, round(cy - bodies[form].up + 0.02)]] },
           ...body,
           { kind: 'line', pts: [[0, round(bottom)], [0, round(tip - 0.025)]] },
           { kind: 'ellipse', offset: pt(0, tip), w: 0.055, h: 0.055, fill: 'ink' },
@@ -137,8 +161,10 @@ const chime: Archetype = {
 /** A pit with something springy in it: the rail stops, the ball drops in and comes back out over the far wall. */
 const bouncer: Archetype = {
   key: 'bouncer',
+  label: 'bounce',
+  example: 'a mushroom',
   words: ['bounce', 'bounces', 'bouncy', 'spring', 'springs', 'trampoline', 'jump', 'jumps', 'hop', 'hops', 'drum', 'mushroom', 'toadstool', 'pogo', 'rubber', 'jelly', 'boing', 'cushion', 'pillow', 'bed'],
-  build: (_rng, noun, words) => {
+  build: (_rng, noun, words, variant) => {
     const LIP = 0.22
     const X = 0.7
     const REST = 1.05
@@ -158,7 +184,7 @@ const bouncer: Archetype = {
     ]
     // Pressed for exactly as long as the ball is on it: down with the ball, up with it.
     const press = { clock: 't' as const, from: round(arrive + IN), to: round(arrive + IN + DOWN + UP) }
-    const cap = has(words, 'mushroom', 'toadstool', 'jelly', 'pillow', 'cushion', 'bed')
+    const cap = look(words, variant, { pad: ['drum', 'spring', 'springs', 'trampoline', 'pogo'], cap: ['mushroom', 'toadstool', 'jelly', 'pillow', 'cushion', 'bed'] }) === 'cap'
     const pad: Shape[] = cap
       ? [
           { kind: 'rect', at: pt(X, 1.37), w: 0.14, h: 0.26, fill: 'paper' },
@@ -192,8 +218,10 @@ const bouncer: Archetype = {
 /** A platform on a spring carries the ball up a floor between two guides. */
 const lifter: Archetype = {
   key: 'lifter',
+  label: 'lift',
+  example: 'an elevator',
   words: ['lift', 'lifts', 'elevator', 'rise', 'rises', 'raise', 'raises', 'up', 'climb', 'climbs', 'hoist', 'piston', 'geyser', 'fountain', 'jack', 'ladder', 'tower', 'escalator', 'upward', 'upwards'],
-  build: (rng, noun) => {
+  build: (rng, noun, words, variant) => {
     const RISE = round(rng.range(0.9, 1.15))
     const lane: LaneStep[] = [
       { op: 'arrive', to: [0, 0] },
@@ -203,27 +231,42 @@ const lifter: Archetype = {
       { op: 'ramp', to: [0.5, -1], v0: 0, v1: ROLL },
     ]
     const carried: Motion[] = [{ drive: 'follow', steps: [2, 2], axis: 'y', back: [round(RISE + 0.9), round(RISE + 2.1)] }]
+    const hoist = look(words, variant, { spring: ['spring', 'piston', 'geyser', 'fountain', 'jack'], cable: ['elevator', 'hoist', 'cable', 'crane', 'winch', 'tower'] }) === 'cable'
     const shapes: Shape[] = [
       railTo(-0.5, -0.2),
       railTo(0.2, 0.5, -1 + FLOOR),
       // Two guides the platform rides between, tied across the top.
       { kind: 'line', pts: [[-0.2, 0.5], [-0.2, -1.32], [0.2, -1.32], [0.2, 0.5]] },
       { kind: 'line', pts: [[-0.3, 0.5], [0.3, 0.5]] },
-      { kind: 'coil', at: pt(0, FLOOR + 0.06), anchor: [0, 0.5], turns: 5, amp: 0.1, motion: carried },
+      // What moves it: a spring under it, or a cable from a sheave on the tie (a coil with no amplitude is a line that stretches).
+      hoist
+        ? { kind: 'coil', at: pt(0, -0.3), anchor: [0, -1.27], turns: 1, amp: 0, motion: carried }
+        : { kind: 'coil', at: pt(0, FLOOR + 0.06), anchor: [0, 0.5], turns: 5, amp: 0.1, motion: carried },
+      ...(hoist
+        ? ([
+            { kind: 'ellipse', at: pt(0, -1.27), w: 0.1, h: 0.1, fill: 'paper', motion: [{ drive: 'ease', ease: 'inout', from: 0, to: RISE, rotate: -9, back: [round(RISE + 0.9), round(RISE + 2.1)] }] },
+            // The cage: a bail over the ball from the platform's ends, carried with it.
+            { kind: 'line', at: pt(0, FLOOR), pts: [[-0.16, 0], [-0.16, -0.43], [0.16, -0.43], [0.16, 0]], motion: carried },
+          ] satisfies Shape[])
+        : []),
       { kind: 'rect', at: pt(0, FLOOR + 0.03), w: 0.36, h: 0.06, r: 0.015, motion: carried },
-      // The catch that holds the spring down, flicked aside at the fire.
+      // The catch that holds it down, flicked aside at the fire.
       { kind: 'rect', at: pt(-0.2, FLOOR + 0.03), offset: [-0.06, 0], w: 0.12, h: 0.05, fill: 'accent', motion: [{ drive: 'ease', ease: 'out', from: -0.04, to: 0.04, rotate: -1.1, back: [round(RISE + 2.0), round(RISE + 2.2)] }] },
       sparks(0, FLOOR + 0.1, 0.1, 0.3, 5, 0.22),
     ]
+    if (hoist) return { cells: [[0, 0], [0, -1]], exit: { at: [1, -1], dir: 1 }, lane, shapes, note: `A ${noun}: a cage on a cable between two guides. The ball's weight trips the catch and the sheave winds it up a floor.` }
     return { cells: [[0, 0], [0, -1]], exit: { at: [1, -1], dir: 1 }, lane, shapes, note: `A ${noun}: a platform on a spring between two guides. The ball's weight trips the catch and the spring carries it up a floor.` }
   },
 }
 
-/** A slide down a floor: over the edge, faster all the way, and out along the rail below. */
+/** A slide down a floor: over the edge, faster all the way, and out along the rail below. Or a flight of steps it hops down. */
 const chute: Archetype = {
   key: 'chute',
-  words: ['slide', 'slides', 'chute', 'drop', 'drops', 'fall', 'falls', 'down', 'ramp', 'slope', 'hill', 'waterfall', 'slip', 'ski', 'sled', 'descend', 'tumble', 'tumbles', 'downhill', 'toboggan'],
-  build: (_rng, noun) => {
+  label: 'drop',
+  example: 'a flight of stairs',
+  words: ['slide', 'slides', 'chute', 'drop', 'drops', 'fall', 'falls', 'down', 'ramp', 'slope', 'hill', 'waterfall', 'slip', 'ski', 'sled', 'descend', 'tumble', 'tumbles', 'downhill', 'toboggan', 'stairs', 'stair', 'steps', 'staircase', 'stairway'],
+  build: (_rng, noun, words, variant) => {
+    if (look(words, variant, { slide: ['slide', 'chute', 'ramp', 'slope', 'ski', 'sled', 'toboggan', 'slip', 'hill'], stairs: ['stairs', 'stair', 'steps', 'staircase', 'stairway', 'tumble', 'tumbles'] }) === 'stairs') return stairs(noun)
     // The slide runs from the end of the upper rail to the lower one. The ball's centre keeps a radius off
     // it along its normal: round the top edge onto it, and off it where the ball first touches the flat.
     const edge = pt(-0.3, FLOOR)
@@ -257,11 +300,46 @@ const chute: Archetype = {
   },
 }
 
+/** Three steps down a floor: the ball rolls to each edge and hops down to the next tread, which gives a little under it. */
+function stairs(noun: string): Body {
+  const RISE = 1 / 3
+  // Each tread's front edge: the upper rail's end, then a quarter of a cell apart; the last is the lower rail's start.
+  const edges = [-0.3, -0.05, 0.2]
+  const HOP = 0.2
+  // The ball comes down clear of the riser it went over, and rolls on to the next edge.
+  const CLEAR = 0.14
+  const lane: LaneStep[] = [{ op: 'roll', to: [edges[0], 0] }]
+  edges.forEach((x, i) => {
+    lane.push({ op: 'fly', to: pt(x + CLEAR, RISE * (i + 1)), dur: HOP, arc: 0.08, ...(i === 0 ? { fire: true } : {}) })
+    if (i < 2) lane.push({ op: 'roll', to: pt(edges[i + 1], RISE * (i + 1)) })
+  })
+  lane.push({ op: 'ramp', to: [0.5, 1], v0: 1.6, v1: ROLL })
+  // Seconds from one landing to the next.
+  const step = round((edges[1] - edges[0] - CLEAR) / ROLL + HOP)
+  const tread = (i: number): number => round(FLOOR + RISE * i)
+  const shapes: Shape[] = [
+    railTo(-0.5, edges[0]),
+    railTo(edges[2], 0.5, 1 + FLOOR),
+    { kind: 'post', x: -0.42, y0: FLOOR, y1: 0.5 },
+    // The flight as one block: treads and risers, and down to the ground.
+    { kind: 'poly', pts: [pt(edges[0], FLOOR), pt(edges[0], tread(1)), pt(edges[1], tread(1)), pt(edges[1], tread(2)), pt(edges[2], tread(2)), pt(edges[2], 1.5), pt(edges[0], 1.5)] },
+    // A strip on each tread that dips as the ball comes down on it.
+    ...edges.map((x, i): Shape => ({
+      kind: 'rect', at: pt(x + 0.125, tread(i + 1) + 0.025), w: 0.18, h: 0.05, r: 0.015, fill: 'accent',
+      motion: [{ drive: 'pulse', from: round(i * step - 0.02), to: round(i * step + 0.14), move: [0, 0.02] }],
+    })),
+    sparks(edges[2] + CLEAR, 1 + FLOOR - 0.03, 0.06, 0.24, 5, 2 * step + 0.22, 2 * step - 0.02),
+  ]
+  return { cells: [[0, 0], [0, 1]], exit: { at: [1, 1], dir: 1 }, lane, shapes, note: `A ${noun} of three steps: the ball rolls to each edge and hops down to the next, and each tread gives under it as it lands.` }
+}
+
 /** A bucket on a gallows tips over the stopped ball, and it leaves a new colour. */
 const painter: Archetype = {
   key: 'painter',
-  words: ['paint', 'paints', 'painted', 'colour', 'color', 'colours', 'colors', 'recolour', 'recolor', 'dye', 'dyes', 'dip', 'ink', 'spray', 'splash', 'bucket', 'pour', 'pours', 'glaze', 'stain', 'tint', 'rainbow', 'honey', 'syrup', 'sauce', 'slime'],
-  build: (_rng, noun) => {
+  label: 'paint',
+  example: 'a spray can',
+  words: ['paint', 'paints', 'painted', 'colour', 'color', 'colours', 'colors', 'recolour', 'recolor', 'dye', 'dyes', 'dip', 'ink', 'spray', 'sprays', 'airbrush', 'aerosol', 'graffiti', 'splash', 'bucket', 'pour', 'pours', 'glaze', 'stain', 'tint', 'rainbow', 'honey', 'syrup', 'sauce', 'slime'],
+  build: (_rng, noun, words, variant) => {
     // Tipped, the bucket's lip comes round to the ball's centre line, so the pour lands on its crown.
     const pivot = pt(-0.1, -0.78)
     const lip = -0.47
@@ -271,12 +349,41 @@ const painter: Archetype = {
       { op: 'wait', dur: 0.62 },
       { op: 'ramp', to: [0.5, 0], v0: 0.6, v1: ROLL },
     ]
-    const shapes: Shape[] = [
+    const frame: Shape[] = [
       railTo(-0.5, -0.17),
       railTo(0.17, 0.5),
       { kind: 'rect', at: pt(0, FLOOR + 0.025), w: 0.32, h: 0.05, fill: 'ink', motion: [{ drive: 'ease', from: -0.06, to: 0, move: [0, 0.03], back: [0.7, 0.85] }] },
       { kind: 'line', pts: [pt(0, FLOOR + 0.05), [0, 0.5]] },
       { kind: 'gallows', x0: -0.38, x1: 0.24, post: -0.38, y: -1.5 },
+    ]
+    // What is left on the plate after.
+    const puddle: Shape = { kind: 'arc', at: pt(0, FLOOR), w: 0.2, h: 0.07, a0: Math.PI, a1: TAU, close: 'chord', fill: 'paint', stroke: 'none', show: { clock: 'since', from: 0.5 } }
+    const spray = look(words, variant, { bucket: ['bucket', 'pour', 'pours', 'honey', 'syrup', 'sauce', 'slime', 'dip', 'splash', 'glaze'], spray: ['spray', 'sprays', 'airbrush', 'aerosol', 'graffiti', 'mist', 'nozzle', 'can'] }) === 'spray'
+    if (spray) {
+      const hang = pt(0, -0.95)
+      const shapes: Shape[] = [
+        ...frame,
+        { kind: 'line', pts: [[0, -1.5], hang] },
+        // The cloud, behind the ball so that it settles on it, from the nozzle down to its crown.
+        { kind: 'poly', pts: [[-0.03, -0.56], [0.03, -0.56], [0.19, -0.06], [-0.19, -0.06]], fill: 'paint', stroke: 'none', show: { clock: 'since', from: 0.08, to: 0.45 } },
+        {
+          kind: 'group', at: hang, motion: [{ drive: 'pulse', from: 0, to: 0.12, move: [0, 0.04] }, { drive: 'swing', from: 0.12, rotate: 0.08, freq: 14, decay: 3 }],
+          shapes: [
+            { kind: 'rect', offset: [0, 0.17], w: 0.2, h: 0.3, r: 0.03 },
+            { kind: 'rect', offset: [0, 0.12], w: 0.2, h: 0.07, fill: 'paint' },
+            { kind: 'rect', offset: [0, 0.35], w: 0.08, h: 0.06, fill: 'ink' },
+          ],
+        },
+        { kind: 'burst', at: pt(0, -R), r0: 0.06, r1: 0.3, n: 9, phase: -Math.PI / 2 + 0.2, stroke: 'paint', show: { clock: 'since', from: 0.1, to: 0.5 } },
+        puddle,
+      ]
+      return {
+        cells: [[0, 0], [0, -1]], exit: { at: [1, 0], dir: 1 }, lane, shapes, paint: { after: 0.14, over: 0.3 }, weight: 0.9,
+        note: `A ${noun} hung over the plate. The ball stops, the can jolts and hisses a cloud of paint down over it, and it rolls on a new colour, for good.`,
+      }
+    }
+    const shapes: Shape[] = [
+      ...frame,
       { kind: 'line', pts: [[pivot[0], -1.5], pivot] },
       // The pour, behind the ball so that it lands on its crown.
       { kind: 'rect', at: pt(0.01, (lip - R) / 2), w: 0.08, h: round(-lip - R), fill: 'paint', stroke: 'none', show: { clock: 'since', from: 0.12, to: 0.5 } },
@@ -289,8 +396,7 @@ const painter: Archetype = {
         ],
       },
       { kind: 'burst', at: pt(0, -R), r0: 0.04, r1: 0.26, n: 7, phase: -Math.PI / 2 + 0.2, stroke: 'paint', show: { clock: 'since', from: 0.14, to: 0.5 } },
-      // What is left on the plate after.
-      { kind: 'arc', at: pt(0, FLOOR), w: 0.2, h: 0.07, a0: Math.PI, a1: TAU, close: 'chord', fill: 'paint', stroke: 'none', show: { clock: 'since', from: 0.5 } },
+      puddle,
     ]
     return {
       cells: [[0, 0], [0, -1]], exit: { at: [1, 0], dir: 1 }, lane, shapes, paint: { after: 0.16, over: 0.3 }, weight: 0.9,
@@ -302,10 +408,12 @@ const painter: Archetype = {
 /** A wheel over the line with a vane down in the ball's way: shouldered aside, it goes round. */
 const spinner: Archetype = {
   key: 'spinner',
+  label: 'spin',
+  example: 'a windmill',
   words: ['spin', 'spins', 'wheel', 'windmill', 'mill', 'fan', 'turn', 'turns', 'rotor', 'propeller', 'pinwheel', 'turnstile', 'carousel', 'whirl', 'whirligig', 'twirl', 'rotate', 'rotates', 'revolve', 'sail', 'sails', 'blades'],
-  build: (_rng, noun, words) => {
+  build: (_rng, noun, words, variant) => {
     const hub = pt(0, -0.52)
-    const three = has(words, 'pinwheel', 'propeller', 'fan', 'rotor', 'blades')
+    const three = look(words, variant, { four: ['windmill', 'mill', 'wheel', 'turnstile', 'sail', 'sails'], three: ['pinwheel', 'propeller', 'fan', 'rotor', 'blades'] }) === 'three'
     const n = three ? 3 : 4
     const lane: LaneStep[] = [
       { op: 'roll', to: [-0.2, 0] },
@@ -338,11 +446,13 @@ const spinner: Archetype = {
   },
 }
 
-/** A spoon on a fulcrum throws the ball over a cell with no rail at all. */
+/** A spoon on a fulcrum throws the ball over a cell with no rail at all. Or a plank, with a weight dropped on its other end. */
 const launcher: Archetype = {
   key: 'launcher',
-  words: ['launch', 'launches', 'catapult', 'fling', 'flings', 'throw', 'throws', 'toss', 'tosses', 'shoot', 'shoots', 'sling', 'slingshot', 'lob', 'hurl', 'hurls', 'fly', 'flies', 'volcano', 'erupt', 'erupts', 'spoon', 'lever', 'yeet'],
-  build: (rng, noun) => {
+  label: 'launch',
+  example: 'a plank with a weight',
+  words: ['launch', 'launches', 'catapult', 'fling', 'flings', 'throw', 'throws', 'toss', 'tosses', 'shoot', 'shoots', 'sling', 'slingshot', 'lob', 'hurl', 'hurls', 'fly', 'flies', 'volcano', 'erupt', 'erupts', 'spoon', 'lever', 'yeet', 'seesaw', 'teeter', 'totter', 'plank', 'anvil', 'trebuchet'],
+  build: (rng, noun, words, variant) => {
     const ARC = round(rng.range(0.9, 1.05))
     const pivot = pt(0.32, 0.24)
     const lane: LaneStep[] = [
@@ -353,32 +463,210 @@ const launcher: Archetype = {
       { op: 'ramp', to: [2.5, 0], v0: 2, v1: ROLL },
     ]
     const land = 0.2 / ROLL + 0.45 + 0.85
+    const THROW = 1.05
+    const seesaw = look(words, variant, { spoon: ['catapult', 'spoon', 'sling', 'slingshot', 'trebuchet', 'volcano'], seesaw: ['seesaw', 'teeter', 'totter', 'plank', 'anvil', 'lever'] }) === 'seesaw'
+    // The seesaw's weight: hung on a cable from an arm over the plank's far end, high above where the ball will fly.
+    // Let go once the ball has settled, it drops onto the end and rides it down; long after, it is wound back up.
+    const HANG = -1.25
+    const TOP = -1.45
+    const drop = round(FLOOR - 0.09 - HANG)
+    const falls: Motion[] = [
+      { drive: 'ease', ease: 'in', from: -0.36, to: 0, move: [0, drop], back: [1.5, 2.6] },
+      // Where the plank's end carries it, turned about the fulcrum.
+      { drive: 'flick', from: 0, to: 0.9, move: [0.03, 0.34] },
+    ]
+    const arm: Shape[] = seesaw
+      ? [{ kind: 'rect', offset: [-0.03, -0.08], w: 0.8, h: 0.06, r: 0.02 }]
+      : [
+          { kind: 'line', pts: [pt(-0.32, -0.06), [0.3, 0.02]] },
+          // The cup the ball sits in, and the weight on the short end.
+          { kind: 'arc', offset: pt(-pivot[0], -pivot[1]), w: 0.38, h: 0.38, a0: 0.1 * Math.PI, a1: 0.9 * Math.PI, close: 'chord' },
+          { kind: 'rect', offset: [0.3, 0.05], w: 0.22, h: 0.2, r: 0.03 },
+        ]
+    const weight: Shape[] = seesaw
+      ? [
+          { kind: 'post', x: 0.84, y0: TOP, y1: 0.5 },
+          { kind: 'line', pts: [[0.84, TOP], [0.56, TOP]] },
+          { kind: 'coil', at: pt(0.6, HANG - 0.09), anchor: [0.6, TOP], turns: 1, amp: 0, motion: falls },
+          { kind: 'rect', at: pt(0.6, HANG), w: 0.22, h: 0.18, r: 0.03, fill: 'accent', motion: falls },
+          // The catch on the arm that lets it go.
+          { kind: 'rect', at: pt(0.56, TOP), offset: [-0.04, 0], w: 0.08, h: 0.05, fill: 'ink', motion: [{ drive: 'ease', ease: 'out', from: -0.42, to: -0.36, rotate: -1.2, back: [2.6, 2.8] }] },
+        ]
+      : []
     const shapes: Shape[] = [
       railTo(-0.5, -0.22),
       railTo(1.86, 2.5),
       { kind: 'post', x: 1.9, y0: FLOOR, y1: 0.5 },
       { kind: 'poly', pts: [pt(pivot[0], pivot[1] - 0.02), pt(pivot[0] - 0.16, 0.5), pt(pivot[0] + 0.16, 0.5)], fill: 'paper' },
-      {
-        kind: 'group', at: pivot, motion: [{ drive: 'flick', from: 0, to: 0.9, rotate: 1.05 }],
-        shapes: [
-          { kind: 'line', pts: [pt(-0.32, -0.06), [0.3, 0.02]] },
-          // The cup the ball sits in, and the weight on the short end.
-          { kind: 'arc', offset: pt(-pivot[0], -pivot[1]), w: 0.38, h: 0.38, a0: 0.1 * Math.PI, a1: 0.9 * Math.PI, close: 'chord' },
-          { kind: 'rect', offset: [0.3, 0.05], w: 0.22, h: 0.2, r: 0.03 },
-        ],
-      },
+      ...weight,
+      { kind: 'group', at: pivot, motion: [{ drive: 'flick', from: 0, to: 0.9, rotate: THROW }], shapes: arm },
       // Where it comes down: a pad that gives.
       { kind: 'rect', at: pt(2.1, FLOOR + 0.035), w: 0.34, h: 0.07, r: 0.02, fill: 'accent', motion: [{ drive: 'pulse', clock: 't', from: round(land - 0.02), to: round(land + 0.14), scale: [1.1, 0.55] }] },
       sparks(0, -0.12, 0.1, 0.36, 7),
     ]
     return {
       cells: [[0, 0], [1, 0], [2, 0], [0, -1], [1, -1], [2, -1]], exit: { at: [3, 0], dir: 1 }, lane, shapes, flight: true, weight: 0.8,
-      note: `A ${noun}: a spoon on a fulcrum. The ball settles in the cup, the arm comes over, and it flies a cell with no rail under it at all.`,
+      note: seesaw
+        ? `A ${noun}: a plank on a fulcrum. The ball settles on one end, a weight is let go onto the other, and the ball flies a cell with no rail under it at all.`
+        : `A ${noun}: a spoon on a fulcrum. The ball settles in the cup, the arm comes over, and it flies a cell with no rail under it at all.`,
     }
   },
 }
 
-export const ARCHETYPES: readonly Archetype[] = [striker, chime, bouncer, lifter, chute, painter, spinner, launcher]
+/** A cart on a track of its own carries the ball across two cells. */
+const carrier: Archetype = {
+  key: 'carrier',
+  label: 'carry',
+  example: 'a ferry',
+  words: ['cart', 'wagon', 'train', 'tram', 'trolley', 'ferry', 'boat', 'raft', 'ship', 'canoe', 'gondola', 'carry', 'carries', 'ride', 'rides', 'conveyor', 'belt', 'car', 'truck', 'bus', 'taxi', 'skateboard', 'minecart'],
+  build: (rng, noun, words, variant) => {
+    const CROSS = round(rng.range(0.85, 1.05))
+    const lane: LaneStep[] = [
+      { op: 'arrive', to: [0, 0] },
+      { op: 'wait', dur: 0.25, fire: true },
+      { op: 'move', to: [1, 0], dur: CROSS, ease: 'inout' },
+      { op: 'wait', dur: 0.12 },
+      { op: 'ramp', to: [1.5, 0], v0: 0, v1: ROLL },
+    ]
+    // Whatever carries the ball moves exactly as the ball does, and goes back for the next one long after.
+    const carried: Motion[] = [{ drive: 'follow', steps: [2, 2], axis: 'x', back: [round(CROSS + 1.0), round(CROSS + 2.4)] }]
+    const boat = look(words, variant, { cart: ['cart', 'wagon', 'train', 'tram', 'trolley', 'car', 'truck', 'bus', 'taxi', 'minecart', 'skateboard'], boat: ['boat', 'ferry', 'raft', 'ship', 'canoe', 'gondola'] }) === 'boat'
+    const under: Shape[] = boat
+      ? [
+          // Water between two piers, three waves a cell as the harbor draws it, and a hull that sits down in it.
+          { kind: 'line', pts: Array.from({ length: 31 }, (_, i) => pt(-0.26 + (1.52 * i) / 30, 0.34 + 0.022 * Math.sin((-0.26 + (1.52 * i) / 30) * TAU * 3))) },
+          { kind: 'post', x: -0.26, y0: FLOOR, y1: 0.5 },
+          { kind: 'post', x: 1.26, y0: FLOOR, y1: 0.5 },
+          { kind: 'poly', at: pt(0, FLOOR), pts: [[-0.26, 0.06], [0.26, 0.06], [0.17, 0.24], [-0.17, 0.24]], motion: [...carried, { drive: 'swing', from: 0, rotate: 0.09, freq: 6, decay: 1.4 }] },
+        ]
+      : [
+          // A track of its own under the rail line, buffers at both ends, and a cart on two wheels.
+          { kind: 'line', pts: [[-0.3, 0.36], [1.3, 0.36]] },
+          { kind: 'post', x: -0.3, y0: 0.2, y1: 0.5 },
+          { kind: 'post', x: 1.3, y0: 0.2, y1: 0.5 },
+          {
+            kind: 'group', at: pt(0, FLOOR), motion: carried,
+            shapes: [
+              { kind: 'poly', pts: [[-0.19, 0.06], [0.19, 0.06], [0.14, 0.17], [-0.14, 0.17]] },
+              { kind: 'ellipse', offset: [-0.1, 0.185], w: 0.09, h: 0.09, fill: 'paper' },
+              { kind: 'ellipse', offset: [0.1, 0.185], w: 0.09, h: 0.09, fill: 'paper' },
+            ],
+          },
+        ]
+    const shapes: Shape[] = [
+      railTo(-0.5, -0.2),
+      railTo(1.2, 1.5),
+      ...under,
+      // The deck the ball stands on, level with the rail at both ends of the run.
+      { kind: 'rect', at: pt(0, FLOOR + 0.03), w: 0.38, h: 0.06, r: 0.015, fill: boat ? 'paper' : 'color', motion: carried },
+      { kind: 'puff', at: pt(-0.28, 0.02), r: 0.09, show: { clock: 'since', from: 0.02, to: 0.5 } },
+    ]
+    return {
+      cells: [[0, 0], [1, 0]], exit: { at: [2, 0], dir: 1 }, lane, shapes,
+      note: boat ? `A ${noun} between two piers. The ball rolls aboard, the ${noun} casts off, and it is put ashore on the far side.` : `A ${noun} on a track of its own. The ball rolls onto its deck, the brake lets go, and it is carried across and set down.`,
+    }
+  },
+}
+
+/** Something the rail runs into and out of: the ball goes in, is gone for a beat while the thing works, and comes out faster. */
+const tunnel: Archetype = {
+  key: 'tunnel',
+  label: 'hide',
+  example: 'a tunnel',
+  words: ['tunnel', 'cave', 'box', 'crate', 'hat', 'magic', 'vanish', 'vanishes', 'disappear', 'disappears', 'hide', 'hides', 'hidden', 'inside', 'oven', 'machine', 'factory', 'mountain', 'mound', 'igloo', 'house', 'garage', 'shed', 'barn', 'hut'],
+  build: (rng, noun, words, variant) => {
+    const INSIDE = round(rng.range(0.6, 0.85))
+    const lane: LaneStep[] = [
+      { op: 'roll', to: [0.2, 0], fire: true },
+      { op: 'move', to: [0.8, 0], dur: INSIDE, hidden: true },
+      { op: 'ramp', to: [1.5, 0], v0: FAST, v1: ROLL },
+    ]
+    const box = look(words, variant, { mound: ['tunnel', 'cave', 'mountain', 'mound', 'igloo', 'hat'], box: ['box', 'crate', 'oven', 'machine', 'factory', 'house', 'garage', 'shed', 'barn', 'hut'] }) === 'box'
+    // It shudders for as long as the ball is inside it.
+    const working: Motion[] = [{ drive: 'pulse', from: 0.02, to: INSIDE, scale: [1.03, 0.97] }]
+    const base = FLOOR + 0.06
+    // A dark way in, high enough for the ball, so the eye reads a way through and not a wall.
+    const mouth = (w: number, h: number): Shape => ({ kind: 'arc', at: pt(0.5, base), w, h, a0: Math.PI, a1: TAU, close: 'chord', fill: 'ink', layer: 'over', motion: working })
+    const shell: Shape[] = box
+      ? [
+          { kind: 'rect', at: pt(0.5, base), offset: [0, -0.36], w: 0.78, h: 0.72, r: 0.04, layer: 'over', motion: working },
+          { kind: 'rect', at: pt(0.5, base), offset: [0, -0.17], w: 0.3, h: 0.34, fill: 'ink', layer: 'over', motion: working },
+          { kind: 'rect', at: pt(0.3, -0.36), w: 0.16, h: 0.14, r: 0.02, fill: 'paper', layer: 'over' },
+          { kind: 'rect', at: pt(0.74, -0.6), w: 0.12, h: 0.22, layer: 'over' },
+          // What it gives off while it works.
+          { kind: 'puff', at: pt(0.74, -0.8), r: 0.1, layer: 'over', show: { clock: 'since', from: 0.1, to: round(INSIDE + 0.2) } },
+        ]
+      : [
+          { kind: 'arc', at: pt(0.5, base), w: 0.84, h: 1.3, a0: Math.PI, a1: TAU, close: 'chord', layer: 'over', motion: working },
+          mouth(0.36, 0.8),
+          { kind: 'line', at: pt(0.5, -0.59), pts: [[0, 0], [0, -0.2]], layer: 'over' },
+          { kind: 'poly', at: pt(0.5, -0.79), pts: [[0, 0], [0.2, 0.06], [0, 0.12]], fill: 'accent', layer: 'over', motion: [{ drive: 'swing', from: 0, rotate: 0.5, freq: 12, decay: 2 }] },
+          // Dust kicked up where it comes out.
+          { kind: 'puff', at: pt(0.98, 0.04), r: 0.08, show: { clock: 'since', from: round(INSIDE), to: round(INSIDE + 0.45) } },
+        ]
+    const shapes: Shape[] = [
+      railTo(-0.5, 1.5),
+      ...shell,
+      // The pop as the ball comes out the far side.
+      sparks(0.95, -0.04, 0.06, 0.3, 6, INSIDE + 0.26, INSIDE),
+    ]
+    return {
+      cells: [[0, 0], [1, 0]], exit: { at: [2, 0], dir: 1 }, lane, shapes,
+      note: box
+        ? `A ${noun} the rail runs straight through. The ball goes in, the ${noun} shudders and smokes with it inside, and it comes out the far side faster than it went in.`
+        : `A ${noun} the rail runs through. The ball rolls in under the hill, the flag on top shakes while it is gone, and it shoots out the far side faster than it went in.`,
+    }
+  },
+}
+
+/** A bend that takes the ball down a floor and sends it back the way it came. */
+const turnback: Archetype = {
+  key: 'turnback',
+  label: 'turn back',
+  example: 'a pipe that turns back',
+  words: ['back', 'backwards', 'reverse', 'reverses', 'return', 'returns', 'boomerang', 'bend', 'hairpin', 'curve', 'halfpipe', 'pipe', 'tube', 'rebound', 'around', 'uturn', 'turnaround', 'switchback'],
+  build: (_rng, noun, words, variant) => {
+    // Half an ellipse on its side: in at the top heading east, round the outside, out at the bottom heading west.
+    const cx = -0.05
+    const cy = 0.5
+    const rx = 0.4
+    const ry = 0.5
+    const N = 8
+    const at = (i: number): Pt => pt(cx + rx * Math.sin((Math.PI * i) / N), cy - ry * Math.cos((Math.PI * i) / N))
+    const bend: LaneStep[] = []
+    for (let i = 1; i <= N; i++) {
+      const [ax, ay] = at(i - 1)
+      const [bx, by] = at(i)
+      // Faster down the first half, easing off to the plain rail's pace by the bottom.
+      const v = ROLL + 1.4 * Math.sin((Math.PI * (i - 0.5)) / N)
+      bend.push({ op: 'move', to: at(i), dur: round(Math.hypot(bx - ax, by - ay) / v), ...(i === N / 2 ? { fire: true } : {}) })
+    }
+    const lane: LaneStep[] = [{ op: 'roll', to: at(0) }, ...bend, { op: 'roll', to: [-0.5, 1] }]
+    const wall = 0.015
+    // A pipe closes the bend on the inside too, a radius and a hair inside the ball's path: the upper rail curls down into it.
+    const pipe = look(words, variant, { wall: ['bend', 'hairpin', 'curve', 'halfpipe', 'switchback', 'boomerang'], pipe: ['pipe', 'tube', 'uturn', 'turnaround'] }) === 'pipe'
+    const shapes: Shape[] = [
+      railTo(-0.5, cx),
+      railTo(-0.5, cx, 1 + FLOOR),
+      // The wall the ball rides round: a radius and a hair outside its path, so it joins the lower rail.
+      { kind: 'arc', at: pt(cx, cy), w: round(2 * (rx + R + wall)), h: round(2 * (ry + R + wall)), a0: -Math.PI / 2, a1: Math.PI / 2 },
+      ...(pipe ? [{ kind: 'arc', at: pt(cx, cy), w: round(2 * (rx - R - wall)), h: round(2 * (ry - R - wall)), a0: -Math.PI / 2, a1: Math.PI / 2 } satisfies Shape] : []),
+      { kind: 'post', x: 0.2, y0: round(cy + (ry + R + wall) * Math.sqrt(1 - ((0.2 - cx) / (rx + R + wall)) ** 2)), y1: 1.5 },
+      { kind: 'post', x: cx, y0: round(1 + FLOOR), y1: 1.5 },
+      // A pad at the outside of the bend, where the ball leans hardest.
+      { kind: 'rect', at: pt(cx + rx + R + wall - 0.035, cy), w: 0.05, h: 0.24, r: 0.02, motion: [{ drive: 'flick', from: 0, to: 0.5, move: [0.025, 0] }] },
+      sparks(cx + rx + 0.02, cy, 0.06, 0.22, 5, 0.22),
+    ]
+    return {
+      cells: [[0, 0], [0, 1]], exit: { at: [-1, 1], dir: -1 }, lane, shapes,
+      note: pipe
+        ? `A ${noun} bent back on itself. The ball goes in at the top heading one way, round the inside and down a floor, and comes out underneath heading back the way it came.`
+        : `A ${noun} on its side. The ball goes in at the top heading one way, rides the wall round and down a floor, and comes out underneath heading back the way it came.`,
+    }
+  },
+}
+
+export const ARCHETYPES: readonly Archetype[] = [striker, chime, bouncer, lifter, chute, painter, spinner, launcher, carrier, tunnel, turnback]
 
 /* ------------------------------------------------------------------ reading a prompt */
 
@@ -411,9 +699,11 @@ function nounOf(prompt: string, archetype: Archetype): string {
   return words.find((w) => !verbs.has(w)) ?? words[0] ?? archetype.key
 }
 
-const unique = (name: string, taken: ReadonlySet<string>): string => {
-  if (!taken.has(name)) return name
-  for (let i = 2; ; i++) if (!taken.has(`${name}-${i}`)) return `${name}-${i}`
+
+/** What a piece made from this prompt would be called, whoever makes it: its noun, as a slug. */
+export const nameFor = (prompt: string): string => {
+  const archetype = archetypeFor(prompt, makeRng('name'))
+  return slug(nounOf(prompt, archetype), archetype.key)
 }
 
 /**
@@ -427,9 +717,9 @@ export function scaffoldPiece(prompt: string, variant: number, taken: ReadonlySe
   // A reroll with no mechanism named in the prompt tries another; one that names it keeps it and varies the rest.
   const archetype = archetypeFor(text, rng.fork('archetype'))
   const noun = nounOf(text, archetype)
-  const body = archetype.build(rng.fork('build'), noun, new Set(tokens(text)))
+  const body = archetype.build(rng.fork('build'), noun, new Set(tokens(text)), variant)
   const { note, weight, ...rest } = body
-  return { name: unique(slug(noun, archetype.key), taken), note, ...(text ? { prompt: text } : {}), weight: weight ?? 1, ...rest }
+  return { name: uniqueName(slug(noun, archetype.key), taken), note, ...(text ? { prompt: text } : {}), weight: weight ?? 1, ...rest }
 }
 
 /* ------------------------------------------------------------------ worlds */

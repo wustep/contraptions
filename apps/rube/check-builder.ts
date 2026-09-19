@@ -12,10 +12,10 @@ import type p5 from 'p5'
 import { R, ballAt, type PieceCtx, type Pt } from './src/parts'
 import { beatCount } from './src/plan'
 import { Show } from './src/show'
-import { compileBuild, compilePiece, stockNames } from './src/builder/compile'
-import { install, installedBuilds, uninstall } from './src/builder/registry'
+import { compileBuild, compilePiece, mendBuild, stockNames } from './src/builder/compile'
+import { deleteBuild, forgetUnreadable, install, installedBuilds, readStore, saveBuild, storeKept, uninstall, unreadable } from './src/builder/registry'
 import { ARCHETYPES, archetypeFor, scaffoldPiece, scaffoldWorld } from './src/builder/scaffold'
-import { BUILD_EXTENSION, BUILD_FORMAT, BUILD_VERSION, parseBuild, serializeBuild, type Build } from './src/builder/spec'
+import { BUILD_EXTENSION, BUILD_FORMAT, BUILD_VERSION, LIMITS, parseBuild, serializeBuild, uniqueName, type Build, type PieceSpec } from './src/builder/spec'
 import { PROVIDERS, PROVIDER_INFO, defaultSettings, modelsFor, readSettings, resolveModel, stillServed } from './src/builder/providers'
 import { makeRng } from '../../src/core/rng'
 import { themeByName } from '../../src/core/themes'
@@ -54,6 +54,9 @@ const PROMPTS: Record<string, string> = {
   painter: 'a bucket of honey that pours over the ball',
   spinner: 'a windmill the ball turns',
   launcher: 'a catapult that flings the ball',
+  carrier: 'a cart that carries the ball across',
+  tunnel: 'a tunnel the ball goes through',
+  turnback: 'a hairpin bend that sends the ball back',
 }
 
 console.log('\nscaffolds')
@@ -72,6 +75,54 @@ for (const a of ARCHETYPES) {
 check('a prompt that names no mechanism still makes a piece', parseBuild({ ...build, pieces: [scaffoldPiece('zzz qqq', 3, taken)], world: undefined }).errors.length === 0)
 check('no scaffold takes a stock piece\'s name', build.pieces.every((p) => !stockNames().has(p.name)))
 check('a name already taken is numbered', scaffoldPiece(PROMPTS.chime, 0, new Set([...stockNames(), 'gong'])).name === 'gong-2')
+{
+  const long = `a${'b'.repeat(LIMITS.name - 1)}`
+  const numbered = [2, 3, 10].map((n) => uniqueName(long, new Set([long, ...Array.from({ length: n - 2 }, (_, i) => `${long.slice(0, LIMITS.name - `-${i + 2}`.length)}-${i + 2}`)])))
+  check('a name at the length limit is cut short to take its number', numbered.every((n, i) => n.length <= LIMITS.name && n.endsWith(`-${[2, 3, 10][i]}`) && /^[a-z][a-z0-9-]*$/.test(n)), numbered.join(' '))
+}
+
+check('every example the Builder offers asks for its own mechanism', ARCHETYPES.every((a) => archetypeFor(a.example, makeRng('x')).key === a.key), ARCHETYPES.filter((a) => archetypeFor(a.example, makeRng('x')).key !== a.key).map((a) => a.key).join(','))
+
+// Every look of every mechanism, as a prompt that names none of them gets it: by the variant, one after another.
+const looks: Build = { format: BUILD_FORMAT, version: BUILD_VERSION, name: 'check-looks', pieces: [] }
+const alike: string[] = []
+for (const a of ARCHETYPES) {
+  const made = [0, 1, 2].map((v) => {
+    const { note, weight, ...body } = a.build(makeRng(`look:${a.key}`), a.key, new Set(), v)
+    return { name: `${a.key}-look-${v}`, note, weight: weight ?? 1, ...body } satisfies PieceSpec
+  })
+  const shapes = made.map((p) => JSON.stringify(p.shapes))
+  if (shapes[0] === shapes[1]) alike.push(a.key)
+  // Two looks each, and a third where there is one. The same numbers each time, so what differs is the look.
+  looks.pieces.push(...made.slice(0, new Set(shapes).size >= 3 ? 3 : 2))
+}
+check('every mechanism has a second look, so making it again offline makes another piece', alike.length === 0, alike.join(','))
+const looked = parseBuild(looks)
+check('every look validates', looked.errors.length === 0, looked.errors.slice(0, 3).join(' · '))
+check('and the looks fit in one build', looks.pieces.length <= LIMITS.pieces, `${looks.pieces.length}`)
+
+// Prompts nobody would write, made three ways each: every one is a piece that validates, installs and plays alone.
+{
+  const rng = makeRng('word-salad')
+  const vocab = [...ARCHETYPES.flatMap((a) => a.words), 'dragon', 'teapot', 'robot', 'the', 'ball', 'a', 'that', '!!!', '123', 'ünïcödé', 'x'.repeat(80), '']
+  const bad: string[] = []
+  for (let i = 0; i < 120 && bad.length < 3; i++) {
+    const prompt = Array.from({ length: rng.int(0, 7) }, () => rng.pick(vocab)).join(' ')
+    const salad: Build = { format: BUILD_FORMAT, version: BUILD_VERSION, name: 'check-salad', pieces: [] }
+    const names = new Set(stockNames())
+    for (let v = 0; v < 3; v++) {
+      const spec = scaffoldPiece(prompt, v, names)
+      names.add(spec.name)
+      salad.pieces.push(spec)
+    }
+    const read = parseBuild(serializeBuild(salad))
+    const problems = read.build ? install(read.build, 'browser') : read.errors
+    if (problems.length) bad.push(`"${prompt}": ${problems[0]}`)
+    else if (salad.pieces.some((p) => !new Show(SEED, { solo: p.name, world: 'check-salad' }).universe(0).pieces.some((q) => q.piece.name === p.name))) bad.push(`"${prompt}": a piece is not in its own solo`)
+    uninstall('check-salad')
+  }
+  check('any prompt at all makes pieces that validate and play', bad.length === 0, bad.join(' · '))
+}
 
 const parsed = parseBuild(build)
 check('the scaffolded build validates', parsed.errors.length === 0, parsed.errors.slice(0, 3).join(' · '))
@@ -171,6 +222,12 @@ function checkWorld(name: string, own: string[]): void {
   check(`${name}: the same seed builds the same map again`, mapOf(show, 0) === mapOf(again, 0))
 }
 checkWorld('check-yard', build.pieces.map((p) => p.name))
+{
+  const errors = looked.build ? install(looked.build, 'browser') : ['no build']
+  check('the looks install', errors.length === 0, errors.join(' · '))
+  if (!errors.length) checkWorld('check-looks', looks.pieces.map((p) => p.name))
+  uninstall('check-looks')
+}
 
 /* ------------------------------------------------------------------ drawing */
 
@@ -179,7 +236,7 @@ console.log('\ndrawing')
   const theme = themeByName('okazz')
   let drawn = 0
   let threw = ''
-  for (const spec of build.pieces) {
+  for (const spec of [...build.pieces, ...looks.pieces]) {
     const piece = compilePiece(spec)
     const state = { color: theme.colors[0], accent: theme.colors[1], paint: theme.colors[2] }
     for (let t = -1; t < 6; t += 0.05) {
@@ -221,6 +278,27 @@ check('a build named for a stock world', broken((b) => (b.name = 'harbor')).some
 check('a piece named for a stock piece compiles to nothing', compileBuild({ ...build, pieces: [{ ...gong, name: 'hammer' }] }).world === null)
 check('a cast member nobody has heard of', compileBuild({ ...build, world: { ...build.world!, borrow: ['no-such-piece'] } }).world === null)
 check('a stock world\'s name cannot be registered over', !registerWorld({ ...worldByName('check-yard')!, name: 'garden' }))
+check('a flight that peaks outside its cells', broken((b) => b.pieces.find((p: PieceSpec) => p.flight).lane.find((st: { op: string }) => st.op === 'fly').arc = 3).some((e) => e.includes('peaks outside')))
+check('a piece taller than a map can hold', broken((b) => (b.pieces[1].cells = [[0, 0], [0, -1], [0, -2], [0, -3], [0, -4], [0, -5]])).some((e) => e.includes('rows')))
+const junk = (cells: unknown) => {
+  try {
+    return parseBuild({ ...JSON.parse(file), pieces: [{ ...JSON.parse(file).pieces[0], cells }] }).errors.length > 0
+  } catch {
+    return false
+  }
+}
+const holey: unknown[] = [[0, 0]]
+holey[3] = [0, -1]
+check('cells that are not cells are refused, not thrown on', [['x'], [[0]], [null], [[0, 0], 'y'], holey, [[NaN, 0]], [[0, Infinity]], 'cells'].every(junk))
+check('an object that is not JSON is refused, not thrown on', (() => {
+  const loop: Record<string, unknown> = { format: BUILD_FORMAT, version: BUILD_VERSION }
+  loop.self = loop
+  try {
+    return parseBuild(loop).errors.length > 0 && parseBuild(undefined).errors.length > 0 && parseBuild(() => 1).errors.length > 0
+  } catch {
+    return false
+  }
+})())
 
 /* ------------------------------------------------------------------ the builds folder */
 
@@ -288,6 +366,60 @@ console.log('\nproviders')
   const read = readSettings({ provider: 'gateway', models: { claude: 'nope', gateway: gateway[2], other: 'x' } })
   check('stored settings are read with suspicion', read.provider === 'gateway' && read.models.gateway === gateway[2] && read.models.claude === PROVIDER_INFO.claude.defaultModel && Object.keys(read.models).length === 2)
   check('and junk is the defaults', readSettings('junk').provider === 'offline' && readSettings({ provider: 'skynet' }).provider === 'offline')
+}
+
+/* ------------------------------------------------------------------ mending */
+
+console.log('\nmending')
+{
+  const old: Build = { ...structuredClone(build), name: 'check-old', world: { ...structuredClone(build.world!), borrow: [...build.world!.borrow, 'bellows'] } }
+  old.pieces[0] = { ...old.pieces[0], name: 'hammer' }
+  check('a build that borrows a piece that has gone, or owns a stock name, is refused as it is', compileBuild(old).world === null)
+  const { build: mended, notes } = mendBuild(old)
+  check('mended, the gone piece leaves the cast', !mended.world!.borrow.includes('bellows') && notes.some((n) => n.includes('bellows')))
+  check('and the piece with the stock name is numbered', mended.pieces[0].name === 'hammer-2' && notes.some((n) => n.includes('hammer-2')))
+  check('and it compiles', compileBuild(mended).world !== null)
+  check('what was mended is a copy; a build that needs nothing comes back as it was', old.pieces[0].name === 'hammer' && mendBuild(build).build === build && mendBuild(build).notes.length === 0)
+}
+
+/* ------------------------------------------------------------------ the browser's store */
+
+console.log('\nstore')
+{
+  const mem = new Map<string, string>()
+  let full = false
+  const g = globalThis as unknown as { localStorage?: unknown }
+  g.localStorage = {
+    getItem: (k: string) => mem.get(k) ?? null,
+    setItem: (k: string, v: string) => {
+      if (full) throw new Error('QuotaExceededError')
+      mem.set(k, v)
+    },
+    removeItem: (k: string) => void mem.delete(k),
+  }
+  const later = { format: BUILD_FORMAT, version: BUILD_VERSION + 1, name: 'from-the-future', pieces: [] }
+  mem.set('contraptions:builds', JSON.stringify([later]))
+  const kept = { ...structuredClone(build), name: 'check-kept' }
+  check('a build is kept', saveBuild(kept).length === 0 && storeKept() && readStore().some((b) => b.name === 'check-kept'))
+  const raw = () => JSON.parse(mem.get('contraptions:builds') ?? '[]') as { name: string }[]
+  check('a save keeps what this version cannot read', raw().some((b) => b.name === 'from-the-future'))
+  full = true
+  saveBuild({ ...kept, label: 'Changed' })
+  check('a save that does not fit says so', !storeKept() && readStore().find((b) => b.name === 'check-kept')?.label !== 'Changed')
+  full = false
+  deleteBuild('check-kept')
+  check('and the next that does, says so too; a delete leaves the rest', storeKept() && !readStore().some((b) => b.name === 'check-kept') && raw().some((b) => b.name === 'from-the-future'))
+  check('what cannot be read is listed by name, with the reason', unreadable().length === 1 && unreadable()[0].name === 'from-the-future' && unreadable()[0].errors[0].includes('version'))
+  // One this version cannot read, under the name of one it can: saving and deleting the one it can leaves the other.
+  mem.set('contraptions:builds', JSON.stringify([...raw(), { ...later, name: 'check-kept' }, { format: BUILD_FORMAT, version: BUILD_VERSION + 1, pieces: [] }]))
+  saveBuild(kept)
+  deleteBuild('check-kept')
+  check('a save or a delete never touches an unreadable entry, even one of its name', unreadable().map((u) => u.name).join() === 'from-the-future,check-kept,unnamed')
+  forgetUnreadable()
+  check('and they can be taken out, named or not, leaving the rest', unreadable().length === 0 && raw().length === 0)
+  mem.set('contraptions:builds', '{not json')
+  check('a store that is not JSON reads as empty', readStore().length === 0)
+  delete g.localStorage
 }
 
 /* ------------------------------------------------------------------ the stock show, after */
