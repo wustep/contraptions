@@ -40,6 +40,16 @@ const GIRTH: [number, number][] = [
   [0.7, 0.04],
   [0.8, 0.022],
 ]
+/** Half the body's thickness `back` from the nose. */
+function girthAt(back: number): number {
+  const j = GIRTH.findIndex(([along]) => along >= back)
+  const [a0, w0] = GIRTH[Math.max(0, j - 1)]
+  const [a1, w1] = GIRTH[Math.max(0, j)]
+  return lerp(w0, w1, a1 > a0 ? (back - a0) / (a1 - a0) : 0)
+}
+/** The pale belly: from under the chin to the tail stock, and how far up the side it comes at its deepest. */
+const BELLY: [number, number] = [0.13, 0.66]
+const BELLY_UP = 0.6
 /** How much of the leap's curve the body takes on: 1 would follow it exactly. */
 const BEND = 0.5
 /** The deck above: where the ball lands, where the deck starts — past where the dolphin comes down — and its piling. */
@@ -169,10 +179,7 @@ export const dolphin = definePiece<{ color: string }>({
       const n = 22
       for (let i = n; i >= 0; i--) {
         const back = (LENGTH * i) / n
-        const j = GIRTH.findIndex(([along]) => along >= back)
-        const [a0, w0] = GIRTH[Math.max(0, j - 1)]
-        const [a1, w1] = GIRTH[Math.max(0, j)]
-        spine.push([...at(back), lerp(w0, w1, a1 > a0 ? (back - a0) / (a1 - a0) : 0)])
+        spine.push([...at(back), girthAt(back)])
       }
       // A point on the body `back` from the nose, `off` out from the spine toward the back (+) or the belly (-), and the heading there.
       const on = (back: number, off: number): [number, number, number] => {
@@ -200,18 +207,25 @@ export const dolphin = definePiece<{ color: string }>({
       const [fx, fy, fa] = on(0.27, -0.07)
       flipper(p, k, fx, fy, 0.18, fa + Math.PI - 0.95, 0.4)
       body(p, k, spine)
-      // The pale belly: a line along the underside.
-      p.push()
-      p.noFill()
-      p.stroke(bg)
-      p.strokeWeight(weight * 1.6)
+      // The pale belly: the underside itself, from the body's own edge up the side, and the outline drawn again
+      // over it. As a line inside the body it was a stripe down the dolphin's middle.
+      p.noStroke()
+      p.fill(bg)
       p.beginShape()
-      for (let back = 0.12; back <= 0.6; back += 0.04) {
-        const [bx, by] = on(back, -0.052 - 0.025 * Math.sin(((back - 0.12) / 0.48) * Math.PI))
+      const steps = 16
+      for (let i = 0; i <= steps; i++) {
+        const back = lerp(BELLY[0], BELLY[1], i / steps)
+        const [bx, by] = on(back, -girthAt(back))
         p.vertex(bx * k, by * k)
       }
-      p.endShape()
-      p.pop()
+      for (let i = steps; i >= 0; i--) {
+        const back = lerp(BELLY[0], BELLY[1], i / steps)
+        const [bx, by] = on(back, -girthAt(back) * (1 - BELLY_UP * Math.sin((i / steps) * Math.PI)))
+        p.vertex(bx * k, by * k)
+      }
+      p.endShape(p.CLOSE)
+      outline(p, ink, weight)
+      body(p, k, spine)
       // The smile, and an eye on the ball.
       const [m0x, m0y] = on(0.014, -0.014)
       const [m1x, m1y] = on(0.12, -0.04)

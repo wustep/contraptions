@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { clamp, easeOutCubic } from '../../../../../src/core/ease'
+import { clamp } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, burst, definePiece, laneReach, over, rail, roll, type BallChange, type Lane } from '../../parts'
 import { water } from './sea'
 
@@ -116,14 +116,6 @@ export const octopus = definePiece<{ color: string; paint: string }>({
         p.circle(dx * k, dy * k, (0.045 - 0.03 * f) * (0.8 + 0.2 * (j % 2)) * k)
       }
       p.pop()
-    }
-    // Ink on the deck after: a puddle of the new colour lying on the rail, spreading a little. Flat colour and
-    // a puddle's shape — as a bar under the rail it was one more line, floating over the octopus's head.
-    if (since > SQUIRT) {
-      const g = easeOutCubic(over(since, SQUIRT, SQUIRT + 1.4))
-      p.noStroke()
-      p.fill(s.paint)
-      p.arc(0, FLOOR * k - weight / 2, (0.2 + 0.14 * g) * k, (0.07 + 0.03 * g) * k, Math.PI, Math.PI * 2, p.CHORD)
     }
   },
 })

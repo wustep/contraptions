@@ -2,7 +2,7 @@ import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, laneAt, laneReach, rail, roll, type Lane, type Pt, type Seg } from '../../parts'
 import { aboveWater } from './creatures'
-import { WATER, bodyColor, piling, seaWater, water } from './sea'
+import { WATER, bodyColor, piling, water } from './sea'
 
 /**
  * Here be monsters. The deck stops over open water, and all there is to
@@ -104,7 +104,7 @@ export const serpent = definePiece<{ color: string }>({
     if (!fits(cells, [2, 0])) return null
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, ink, bg, weight, theme }) => {
+  draw: (p, s, { k, t, ink, bg, weight }) => {
     const bx = ballX(t)
     const by = t < 0 || t > SPAN ? 0 : laneAt(LANE, t).y
     const up = Math.max(REST, risen(CROWN, bx))
@@ -172,20 +172,7 @@ export const serpent = definePiece<{ color: string }>({
     p.pop()
     p.pop()
 
-    // The sea, over where the serpent goes into it, and the water it lifts: a ring round every coil that is coming up or going down, and round the head.
+    // The sea, over where the serpent goes into it.
     water(p, k, ink, weight, -0.5, 1.5)
-    p.push()
-    p.noFill()
-    p.stroke(seaWater(theme))
-    for (let i = 1; i <= 3; i++) {
-      const c = CROWN - i * LAMBDA
-      const r = risen(c, bx)
-      if (r < 0.04 || r > 0.96) continue
-      p.strokeWeight(weight * 0.9 * Math.sin(r * Math.PI))
-      p.ellipse(c * k, (WATER + 0.04) * k, (0.24 + 0.2 * r) * k, (0.03 + 0.03 * r) * k)
-    }
-    p.strokeWeight(weight * 0.9 * (up > REST + 0.01 ? Math.sin(Math.min(1, up) * Math.PI) : 0.55))
-    if (up < 0.96) p.ellipse((CROWN + 0.04) * k, (WATER + 0.04) * k, (0.34 + 0.1 * up) * k, 0.045 * k)
-    p.pop()
   },
 })
