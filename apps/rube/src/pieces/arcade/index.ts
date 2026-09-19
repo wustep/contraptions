@@ -43,7 +43,7 @@ import { zigzag } from './zigzag'
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
  *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way clear of its beam, counting turns in lamps up the post; the score pops as it is flung and ticks up with the turns
  *   changer    into the slot in the cabinet's side; chunk; the dark display lights 01 and a token comes out under the far flap and takes the thread
- *   ticket     the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down, a ticket a hundred feeds out below and coils on the floor; drops out of the prize chute beside the cabinet, one or two floors down
+ *   ticket     the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down, a ticket a hundred feeds out below, a strip down to the floor; drops out of the prize chute beside the cabinet, one or two floors down
  *   zigzag     down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad
  *   pachinko   off a lip, bouncing pin to pin through five rows, each lighting; the jackpot pocket drops its side; out a gate two floors down
  *   skee       a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top and down into the fifty ring a floor up; the rings light as it lands

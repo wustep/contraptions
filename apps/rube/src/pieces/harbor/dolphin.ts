@@ -5,15 +5,15 @@ import { aboveWater, body, flipper, type Rib } from './creatures'
 import { WATER, bodyColor, piling, seaWater, splash, water } from './sea'
 
 /**
- * A dolphin. The deck stops over open water where a fin has been cruising
- * up and down; as the ball comes the fin goes under. The ball runs off the
- * deck's end and falls, and the dolphin comes up out of the water under it
+ * A dolphin. The deck stops over open water, and nothing shows in it: no
+ * fin comes cruising in ahead of the ball. The ball runs off the deck's
+ * end and falls, and the dolphin comes up out of the water under it
  * that instant, takes it on the tip of its beak and leaps — a whole arc,
  * nose to tail following one line through the air, the ball riding ahead
  * of the beak. At the top it flicks the ball on, and the ball comes down
  * on the deck a floor above while the dolphin goes over and down, in under
- * that deck's end, and into the sea with a splash. After a while the fin
- * comes up again.
+ * that deck's end, and into the sea with a splash. After a while its fin
+ * comes up and cruises.
  *
  * The leap is one parabola. The dolphin's spine is that curve behind its
  * nose, so the body bends the way the jump does; the ball, while it is
@@ -108,9 +108,9 @@ const LANE: Lane = {
   fire: FIRE,
 }
 
-/** The fin that cruises while nothing is happening: where it is, which way it is going, how far out of the water. */
+/** The fin that cruises once the leap is over: where it is, which way it is going, how far out of the water. Before the ball comes there is none. */
 const finX = (t: number): number => 0.85 + 0.3 * Math.sin(t * 0.8)
-const finUp = (t: number): number => 1 - easeInOutSine(over(t, T_EDGE - 0.45, T_EDGE - 0.15)) + easeInOutSine(over(t, FIRE + T_DIVE + 1.1, FIRE + T_DIVE + 1.6))
+const finUp = (t: number): number => easeInOutSine(over(t, FIRE + T_DIVE + 1.1, FIRE + T_DIVE + 1.6))
 
 export const dolphin = definePiece<{ color: string }>({
   name: 'dolphin',
@@ -232,7 +232,7 @@ export const dolphin = definePiece<{ color: string }>({
     water(p, k, ink, weight, -0.5, 2.5)
     splash(p, k, seaWater(theme), weight, NOSE0[0], WATER, over(since, -0.02, 0.55), 1.3)
     splash(p, k, seaWater(theme), weight, noseAt(T_DIVE)[0], WATER, over(since, T_DIVE, T_DIVE + 0.6), 1.5)
-    // The ring the fin leaves where it went under, and the flick at the top.
+    // The ring round the fin as it comes up, and the flick at the top.
     if (up < 0.98 && up > 0.02) {
       p.push()
       p.noFill()

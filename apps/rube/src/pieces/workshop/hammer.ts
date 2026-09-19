@@ -92,11 +92,10 @@ export const hammer = definePiece<{ color: string }>({
     p.rect(-0.07 * k, 0, 0.14 * k, 0.05 * k)
     p.pop()
 
-    // The anvil: the one ink-filled mass, on a foot.
+    // The anvil: the rail made thick between the guides, and no more. On a foot it was a black T hung under the ball.
     p.fill(ink)
     p.noStroke()
-    p.rect(0, (FLOOR + 0.08) * k, 0.44 * k, 0.16 * k)
-    p.rect(0, (FLOOR + 0.16 + 0.105) * k, 0.2 * k, 0.21 * k)
+    p.rect(AX * k, (FLOOR + 0.04) * k, (GUIDE * 2 + 0.12) * k, 0.08 * k, 0.015 * k)
 
     // The head, with a motion streak on the way down.
     if (since > -DROP * 0.6 && since < 0) {

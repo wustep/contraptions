@@ -7,8 +7,10 @@ import { bubbles, water } from './sea'
  * full of water with kelp growing up through it. The ball rolls in at an
  * opening in the bottom and, lighter than the water, rises — slowly at
  * first, then steadily, weaving up between the fronds with a train of
- * bubbles — to break the surface at the top, where it bobs and rolls out
- * over the rim onto the rail, on or back the way it came.
+ * bubbles — to come up through the cap at the top, where it bobs and rolls
+ * out over the rim onto the rail, on or back the way it came. The tank is
+ * full to the cap: the cap is its top line, and nothing of the water shows
+ * above it.
  */
 export interface KelpState {
   color: string
@@ -93,7 +95,8 @@ export const kelp = definePiece<KelpState>({
     const { floors, turn } = s
     const top = -floors
     const rim = top + FLOOR
-    const surface = top + 0.05
+    /** The underside of the cap: the water's top, and as high as anything in the tank goes. */
+    const under = rim + 0.015
     const climb = riseTime(floors)
     const upF = since < 0 ? 0 : over(since, 0, climb)
     const ballY = RISE0 + (top - RISE0) * upF
@@ -104,43 +107,31 @@ export const kelp = definePiece<KelpState>({
     outline(p, ink, weight)
     p.line(-0.36 * k, 0.5 * k, 0.36 * k, 0.5 * k)
     // The tank: two walls from the ground to the rim, the near one with an
-    // opening at the bottom for the ball, and the surface at the top.
+    // opening at the bottom for the ball.
     p.line(-WALL * k, (rim - 0.02) * k, -WALL * k, -0.16 * k)
     p.line(-WALL * k, (FLOOR + 0.04) * k, -WALL * k, 0.5 * k)
     p.line(WALL * k, (rim - 0.02) * k, WALL * k, 0.5 * k)
-    water(p, k, ink, weight, -WALL, WALL, surface)
     // The kelp: two stalks rooted in the sand either side of the ball's way
     // up, both behind it, swaying, with a blade every so often. Nothing
-    // stands in front of the ball; the water it is in is told by the walls,
-    // the surface and the bubbles.
+    // stands in front of the ball; the water it is in is told by the walls
+    // and the bubbles.
     const sway = (y: number, i: number) => 0.03 * Math.sin(t * 1.6 + y * 3 + i * 2)
     for (const [x0, i] of [
       [-0.12, 0],
       [0.11, 1],
     ]) {
-      frond(p, k, ink, weight, s.color, x0, 0.5, surface + 0.08, i, sway)
+      frond(p, k, ink, weight, s.color, x0, 0.5, under + 0.05, i, sway)
     }
     // Sand at the bottom.
     p.noStroke()
     p.fill(ink)
     for (const x of [-0.12, 0.1]) p.ellipse(x * k, 0.48 * k, 0.07 * k, 0.03 * k)
-    // The bubbles the ball leaves behind as it rises.
-    if (since > 0 && since < climb + 1.2) bubbles(p, k, ink, weight, bg, 0.02, Math.min(0.3, ballY + 0.3), surface + 0.04, since, 5)
+    // The bubbles the ball leaves behind as it rises: they burst under the cap, the biggest of them whole below it.
+    if (since > 0 && since < climb + 1.2) bubbles(p, k, ink, weight, bg, 0.02, Math.min(0.3, ballY + 0.3), under + 0.07, since, 5)
     // The rim, and the rail out from it.
     solid(p, ink, weight, s.color)
     p.rect(0, (rim - 0.01) * k, (WALL * 2 + 0.06) * k, 0.05 * k)
     rail(p, k, ink, weight, turn * WALL, turn * 0.5, rim)
-    // A ring on the surface as the ball breaks it.
-    const broke = since - climb
-    if (broke > 0 && broke < 0.5) {
-      const f = over(broke, 0, 0.5)
-      p.push()
-      p.noFill()
-      p.stroke(s.color)
-      p.strokeWeight(weight * (1 - f))
-      p.ellipse(0, surface * k, (0.1 + 0.3 * f) * k, (0.03 + 0.06 * f) * k)
-      p.pop()
-    }
   },
 })
 

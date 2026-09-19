@@ -12,7 +12,7 @@ import { tuft } from './green'
  * then the whole figure is flung round on its pole, nearly two turns,
  * slowing, the loose hand swinging wide; it stops the way it stood. The
  * crow on its other arm goes up at the knock, flaps about over the
- * spinning hat, and comes back down when the arm is still. Punctuation.
+ * spinning hat, and flies off. Punctuation.
  *
  * The figure turns about a vertical pole, seen from the side: the arms
  * foreshorten with the cosine of the turn, the round head and hat do not,
@@ -55,8 +55,10 @@ const spinAt = (since: number) => (since < 0 ? 0 : (SPIN / TAU) * Math.exp(-sinc
 /** The crow: up at the knock, about over the hat while the arms go round, back down onto the arm when it is still. */
 const PERCH: Pt = [POLE_X + ARM * Math.cos(REST), ARM_Y - 0.012]
 const HOVER: Pt = [0.34, -0.37]
-const T_DOWN = 2.0
-const T_PERCHED = 2.6
+/** When the crow has had enough and goes, and when it is gone: off up the sky and away, smaller all the time. */
+const T_AWAY = 1.2
+const T_GONE = 2.1
+const AWAY: Pt = [0.2, -0.16]
 
 export const scarecrow = definePiece<{ color: string }>({
   name: 'scarecrow',
@@ -162,21 +164,28 @@ function hand(p: p5, color: string, { k, ink, weight }: PieceCtx, tip: Pt, spin:
   p.pop()
 }
 
-/** The crow, ink all through: perched on the far arm, startled up by the knock, flapping over the spin, and down again. */
+/**
+ * The crow, ink all through: perched on the far arm, startled up by the
+ * knock, flapping over the spin, and then off and away, dwindling to
+ * nothing. It does not come back: settling on the arm when all was still, at
+ * the show's size, it was a black dot that turned up on the sleeve.
+ */
 function crow(p: p5, { k, t, since, ink, bg, weight }: PieceCtx, turn: number): void {
   const started = t - T_TOUCH
   const perch: Pt = [POLE_X + ARM * Math.cos(turn), PERCH[1]]
-  const up = started < 0 ? 0 : since < T_DOWN ? easeOutCubic(over(started, 0, 0.3)) : 1 - easeInOutSine(over(since, T_DOWN, T_PERCHED))
+  const up = started < 0 ? 0 : easeOutCubic(over(started, 0, 0.3))
+  const away = easeInOutSine(over(since, T_AWAY, T_GONE))
+  if (away >= 1) return
   const bob = up * 0.02 * Math.sin(t * 9)
-  const x = lerp(perch[0], HOVER[0], up)
-  const y = lerp(perch[1], HOVER[1] + bob, up) - 0.045
+  const x = lerp(perch[0], HOVER[0], up) + AWAY[0] * away
+  const y = lerp(perch[1], HOVER[1] + bob, up) - 0.045 + AWAY[1] * away
   const flying = up > 0.02
   // It faces away down the path; perched, it looks back at the scarecrow now and then.
   const look = !flying && Math.sin(t * 0.9) > 0.7 ? -1 : 1
 
   p.push()
   p.translate(x * k, y * k)
-  p.scale(look, 1)
+  p.scale(look * (1 - away), 1 - away)
   // Legs, only when they are under it.
   if (!flying) {
     outline(p, ink, weight * 0.7)
