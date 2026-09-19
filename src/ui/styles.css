@@ -202,18 +202,18 @@ body.bare .stage-play { display: none; }
    is a small fixed label, shown at once on hover or keyboard focus. */
 .mode-tip {
   position: fixed;
-  z-index: 40;
-  padding: 3px 7px;
+  z-index: 80;
+  padding: 4px 8px;
   border: 1px solid var(--line);
   border-radius: 4px;
-  background: var(--raised);
+  background: #2a2c36;
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.01em;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
 }
 .mode-tip[hidden] { display: none; }
 
