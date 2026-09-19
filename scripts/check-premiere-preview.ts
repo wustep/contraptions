@@ -69,6 +69,11 @@ assert.ok(pieces.every(p=>p.end>p.begin))
 for (const [i, phrase] of score.phrases.entries()) {
   assert.equal(phrase.begin, i ? score.phrases[i - 1].end : 0)
   assert.equal(phraseAt(phrase.begin), phrase)
+  for (const strike of phrase.strikes ?? []) {
+    const piece = pieces.find(p => p.begin <= strike.time && strike.time < p.end)!
+    assert.equal(piece.name, strike.piece)
+    assert.ok(Math.abs(pieceTime(piece, strike.time) - piece.lane.fire) < 1e-9, 'Strike misses its recording cue')
+  }
   if (i && !score.maps.some(m=>m.begin===phrase.begin)) {
     assert.equal(at(phrase.begin - 1e-6).universe, at(phrase.begin + 1e-6).universe, 'Phrase changes the map')
     const left = cameraAt(phrase.begin - 1e-6), right = cameraAt(phrase.begin + 1e-6)

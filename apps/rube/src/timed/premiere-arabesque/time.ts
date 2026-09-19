@@ -14,4 +14,3 @@ export function pieceTime(piece: TimedPiece, time: number): number {
   return (2 * u3 - 3 * u2 + 1) * a.native + (u3 - 2 * u2 + u) * dt * a.slope
     + (-2 * u3 + 3 * u2) * b.native + (u3 - u2) * dt * b.slope
 }
-
