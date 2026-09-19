@@ -9,29 +9,43 @@ import { R, ROLL, ball, chain, definePiece, fly, over, rail, ramp, roll, type Ba
  * up and forward, and lands on the rail to carry on. The string swings
  * back empty. The one that arrived stays there for ever, and so do the two
  * that never moved.
+ *
+ * The far ball's whole way out is one motion: it sets off at the pace the
+ * arriving ball came in at, swings as a pendulum of this string's length
+ * does under G, leaves with the velocity it has at the angle the hook lets
+ * go, and falls under the same G to the rail. So there is no seam to see at
+ * the blow or at the slip, and where it lands is where that motion lands
+ * it — which the cradle is hung far enough back along the line to keep
+ * inside its own two cells, with rail left over to roll out on.
  */
 const BEAM_Y = -0.62
 const STRING = BEAM_Y * -1
-const FIRST = 0.24
+const FIRST = -0.08
 const GAP = 2 * R
 const N = 3
 const LAST = FIRST + GAP * (N - 1)
 const SEAT = FIRST - GAP
 const ARRIVE = (0.5 + SEAT) / ROLL
-/** The swing the far ball would make, and the angle at which the hook lets it go. */
-const SWING = 0.3
-const MAX = 1.15
-const RELEASE = 0.8
-const OMEGA = Math.PI / 2 / SWING
+const G = 10
+/** The swing the far ball would make, struck at ROLL, and the angle at which the hook lets it go. */
+const OMEGA = Math.sqrt(G / STRING)
+const MAX = ROLL / (STRING * OMEGA)
+const RELEASE = 0.7
 const T_RELEASE = Math.asin(RELEASE / MAX) / OMEGA
-const FLIGHT = 0.23
-const REACH = 0.45
 
 /** The far ball's angle from the vertical: a pendulum's rise, until the hook slips. */
 const angleAt = (since: number) => (since <= 0 ? 0 : MAX * Math.sin(Math.min(since, T_RELEASE) * OMEGA))
 const farAt = (a: number): Pt => [LAST + Math.sin(a) * STRING, -STRING + Math.cos(a) * STRING]
 const APEX = farAt(RELEASE)
-const LAND: Pt = [APEX[0] + REACH, 0]
+/** What it leaves with: the swing's speed at the slip, along the tangent. */
+const SPEED = ROLL * Math.cos(OMEGA * T_RELEASE)
+const VX = SPEED * Math.cos(RELEASE)
+const VY = -SPEED * Math.sin(RELEASE)
+/** Up, over and down to the rail, under G. */
+const FLIGHT = (-VY + Math.sqrt(VY * VY - 2 * G * APEX[1])) / G
+const LAND: Pt = [APEX[0] + VX * FLIGHT, 0]
+/** The frame's posts: behind the ball that stays, and past the far ball's reach. */
+const POSTS = [SEAT - 0.1, APEX[0] + R + 0.12]
 
 export const cradle = definePiece<{ color: string; next: string }>({
   name: 'cradle',
@@ -55,8 +69,10 @@ export const cradle = definePiece<{ color: string; next: string }>({
       segs: [
         roll([-0.5, 0], [SEAT, 0], ROLL),
         ...swing,
-        fly(APEX, LAND, FLIGHT, 0.16),
-        ramp(LAND, [1.5, 0], 2.2, ROLL),
+        // A parabola under G, as `fly` draws one: it peaks G·T²/8 over its chord.
+        fly(APEX, LAND, FLIGHT, (G * FLIGHT * FLIGHT) / 8),
+        // It lands with the forward pace it flew at, and picks the rail's up from there.
+        ramp(LAND, [1.5, 0], VX, ROLL),
       ],
       fire: ARRIVE,
     }
@@ -67,8 +83,8 @@ export const cradle = definePiece<{ color: string; next: string }>({
     rail(p, k, ink, weight, -0.5, 1.5)
     // The frame: a beam on two posts to the ground.
     outline(p, ink, weight)
-    p.line(-0.2 * k, BEAM_Y * k, 1.42 * k, BEAM_Y * k)
-    for (const x of [-0.15, 1.36]) {
+    p.line((POSTS[0] - 0.05) * k, BEAM_Y * k, (POSTS[1] + 0.05) * k, BEAM_Y * k)
+    for (const x of POSTS) {
       p.line(x * k, BEAM_Y * k, x * k, 0.5 * k)
       p.line((x - 0.06) * k, 0.5 * k, (x + 0.06) * k, 0.5 * k)
     }

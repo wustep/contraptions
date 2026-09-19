@@ -113,7 +113,7 @@ export const croquet = definePiece<{ color: string }>({
     p.pop()
 
     // The far legs of the hoops, and the peg, behind the ball.
-    for (const x of HOOPS) hoop(p, k, ink, weight, s.color, x, quiver(since - passes(x)), false)
+    for (const x of HOOPS) hoop(p, k, ink, weight, x, quiver(since - passes(x)), false)
     const knock = since - T_PEG
     p.push()
     p.translate(PEG * k, FLOOR * k)
@@ -170,9 +170,9 @@ export const croquet = definePiece<{ color: string }>({
       p.pop()
     }
   },
-  over: (p, s, { k, since, ink, weight }) => {
+  over: (p, _s, { k, since, ink, weight }) => {
     // The near legs of the hoops stand before the ball: it goes through them.
-    for (const x of HOOPS) hoop(p, k, ink, weight, s.color, x, quiver(since - passes(x)), true)
+    for (const x of HOOPS) hoop(p, k, ink, weight, x, quiver(since - passes(x)), true)
   },
 })
 
@@ -180,24 +180,25 @@ export const croquet = definePiece<{ color: string }>({
 const quiver = (s: number): number => (s < 0 ? 0 : 0.09 * Math.exp(-s * 3.5) * Math.sin(s * 34))
 
 /**
- * A hoop seen a little from the side, so it is an arch and not a line:
- * the far leg and the crown behind the ball, the near leg in front of it.
+ * A hoop seen from the side, turned enough that it is an arch and not a
+ * line: the far leg and the crown behind the ball, the near leg in front
+ * of it. Wire only — with the legs a pen's width apart and a cap on top
+ * it read as a post, and three posts in a row are a fence, not a lawn.
  */
-function hoop(p: p5, k: number, ink: string, weight: number, color: string, x: number, lean: number, near: boolean): void {
-  const W = 0.05
+function hoop(p: p5, k: number, ink: string, weight: number, x: number, lean: number, near: boolean): void {
+  const W = 0.085
   const H = 0.36
+  const CROWN = 0.15
   p.push()
   p.translate(x * k, FLOOR * k)
   p.rotate(lean)
   outline(p, ink, weight)
   if (near) {
-    p.line(-W * k, 0, -W * k, (-H + 0.05) * k)
+    p.line(-W * k, 0, -W * k, (-H + CROWN / 2) * k)
   } else {
-    p.line(W * k, 0, W * k, (-H + 0.05) * k)
+    p.line(W * k, 0, W * k, (-H + CROWN / 2) * k)
     p.noFill()
-    p.arc(0, (-H + 0.05) * k, W * 2 * k, 0.1 * k, Math.PI, Math.PI * 2)
-    solid(p, ink, weight, color)
-    p.rect(0, -H * k, 0.07 * k, 0.045 * k, 0.01 * k)
+    p.arc(0, (-H + CROWN / 2) * k, W * 2 * k, CROWN * k, Math.PI, Math.PI * 2)
   }
   p.pop()
 }

@@ -13,6 +13,12 @@ import { FLOOR, post } from '../../parts'
  * jump phase at every cell edge; three whole waves to a cell join up
  * instead, and what moves is what the ball does to it — a splash, a ring,
  * a run of bubbles.
+ *
+ * Colour here is read against the ball. Water — the sea, a splash, a wake,
+ * a lifted ring — is the palette's blue (`seaWater`), never the colour of
+ * the hull or the animal that threw it up. A body the ball rests on or in
+ * is never the ball's own colour (`bodyColor`), so the ball is always seen
+ * against what holds it.
  */
 
 /** Where the water lies under the deck. */
@@ -27,12 +33,41 @@ export function luminance(hex: string): number {
 /**
  * A colour for a body of water: the one the planner picked, unless it is
  * so near the paper that a wave or a pool would vanish into it, in which
- * case the palette's colour furthest from the paper.
+ * case the palette's colour furthest from the paper that is not `avoid`
+ * — the ball's, for water the ball rides on or in.
  */
-export function seaColor(theme: Theme, color: string): string {
+export function seaColor(theme: Theme, color: string, avoid?: string): string {
   const paper = luminance(theme.bg)
   if (Math.abs(luminance(color) - paper) > 0.25) return color
-  return [...theme.colors].sort((a, b) => Math.abs(luminance(b) - paper) - Math.abs(luminance(a) - paper))[0]
+  const pool = theme.colors.filter((c) => c !== avoid)
+  return (pool.length ? pool : theme.colors).sort((a, b) => Math.abs(luminance(b) - paper) - Math.abs(luminance(a) - paper))[0]
+}
+
+/**
+ * A colour for a body — an animal, a hull, a horn — that the ball comes
+ * to rest on or in. The planner's colour, unless it is the ball's own, so
+ * the ball would vanish into what holds it, or so near the paper that the
+ * body would be all outline; then the palette's colour furthest from the
+ * paper that is not the ball's. A body in heavy ink reads in a paler
+ * colour than water does, so the bar is lower than `seaColor`'s: a sand
+ * seal stands off the paper where a sand sea would not.
+ */
+export function bodyColor(theme: Theme, color: string, ball: string): string {
+  const paper = luminance(theme.bg)
+  const off = (c: string) => Math.abs(luminance(c) - paper)
+  if (color !== ball && off(color) > 0.12) return color
+  return theme.colors.filter((c) => c !== ball).sort((a, b) => off(b) - off(a))[0] ?? color
+}
+
+/**
+ * The sea's own colour in this palette: the bluest. What a splash, a
+ * wake and a chamber of water are painted in, so water never borrows the
+ * colour of the hull or the animal that threw it up and reads as bits of
+ * them flying.
+ */
+export function seaWater(theme: Theme): string {
+  const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
+  return [...theme.colors].sort((a, b) => blueness(b) - blueness(a))[0]
 }
 /** Waves per cell. A whole number, so the line joins up at every edge. */
 const WAVES = 3

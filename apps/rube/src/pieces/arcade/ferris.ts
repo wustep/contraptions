@@ -81,7 +81,16 @@ const LANE: Lane = {
   fire: T_GO,
 }
 
-/** One gondola hanging from (px, py), swung by `s`: a roof over the pivot, a rod, a seat with a lip at each end. */
+/** A car's side walls stand this high over its floor, and are this thick: short enough that the ball rides over them in plain sight, thick enough to be part of the silhouette. */
+const WALL = 0.075
+const SIDE = 0.035
+
+/**
+ * One gondola hanging from (px, py), swung by `s`: a roof over the pivot, a
+ * rod, a car. The car is a floor with a short wall at each end, cut as one
+ * shape, so it is still three shapes six times: anything more and the wheel
+ * is a thicket at the show's scale.
+ */
 function gondola(p: p5, k: number, ink: string, weight: number, color: string, px: number, py: number, s: number): void {
   p.push()
   p.translate(px * k, py * k)
@@ -90,9 +99,12 @@ function gondola(p: p5, k: number, ink: string, weight: number, color: string, p
   p.line(0, 0, 0, HANG * k)
   solid(p, ink, weight, color)
   p.arc(0, 0.045 * k, 0.26 * k, 0.15 * k, Math.PI, Math.PI * 2, p.CHORD)
-  p.rect(0, (HANG + 0.025) * k, SEAT * k, 0.05 * k, 0.012 * k)
-  outline(p, ink, weight)
-  for (const side of [-1, 1]) p.line(side * (SEAT / 2 - 0.01) * k, HANG * k, side * (SEAT / 2 - 0.01) * k, (HANG - 0.045) * k)
+  const out = SEAT / 2
+  const inn = out - SIDE
+  const top = HANG - WALL
+  p.beginShape()
+  for (const [x, y] of [[-out, top], [-inn, top], [-inn, HANG], [inn, HANG], [inn, top], [out, top], [out, HANG + 0.05], [-out, HANG + 0.05]]) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
   p.pop()
 }
 
@@ -132,7 +144,6 @@ export const ferris = definePiece<{ color: string }>({
       const [px, py] = pivotAt(a + (i * Math.PI * 2) / GONDOLAS)
       p.line(HUB[0] * k, HUB[1] * k, px * k, py * k)
     }
-    p.circle(HUB[0] * k, HUB[1] * k, RIM * 1.1 * k)
     for (let i = 0; i < GONDOLAS * 2; i++) {
       const [lx, ly] = pivotAt(a + ((i + 0.5) * Math.PI) / GONDOLAS)
       lamp(p, k, ink, weight, s.color, bg, lx, ly, 0.03, Math.floor(t * 5 + i) % 3 === 0 ? 1 : 0)

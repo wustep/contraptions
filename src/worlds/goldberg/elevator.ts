@@ -128,15 +128,6 @@ export function liftFrame(p: p5, k: number, ink: string, weight: number, sheaveY
 }
 
 /**
- * A middle cell of a shaft deeper than two cells: guides and ties straight
- * through, nothing else. The car passes; the frame is all this cell owns.
- */
-export function shaftFrame(p: p5, k: number, ink: string, weight: number): void {
-  guides(p, k, ink, weight, -0.5, 0.5)
-  ties(p, k, ink, weight, -0.5, 0.5)
-}
-
-/**
  * The bottom cell's static half: guides down to the pit and the buffers the
  * car lands on. They sit clear of the car's floor slab so an empty pit still
  * reads as a pit.

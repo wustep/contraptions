@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { R, ROLL, definePiece, fly, laneAt, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { piling, seaColor, splash, water } from './sea'
+import { bodyColor, piling, seaWater, splash, water } from './sea'
 
 /**
  * A pufferfish asleep in a gap in the pier. It floats at the surface with
@@ -68,11 +68,11 @@ const LANE: Lane = {
 export const puffer = definePiece<{ color: string }>({
   name: 'puffer',
   weight: 1,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const f = puffAt(since)
     const { rx, ry, cy } = shapeAt(f)
     const asleep = since < 0
@@ -180,7 +180,7 @@ export const puffer = definePiece<{ color: string }>({
       }
       p.pop()
     }
-    splash(p, k, s.color, weight, CX - 0.2, 0.37, over(since, 0.02, 0.5), 0.55)
-    splash(p, k, s.color, weight, CX + 0.22, 0.37, over(since, 0.02, 0.5), 0.55)
+    splash(p, k, seaWater(theme), weight, CX - 0.2, 0.37, over(since, 0.02, 0.5), 0.55)
+    splash(p, k, seaWater(theme), weight, CX + 0.22, 0.37, over(since, 0.02, 0.5), 0.55)
   },
 })

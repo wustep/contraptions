@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { piling, seaColor, water } from './sea'
+import { bodyColor, piling, water } from './sea'
 
 /**
  * A foghorn. A brass horn on a hollow post, aimed down the pier; under the
@@ -74,9 +74,9 @@ const PERCH: Pt = [-0.27, -0.285]
 export const foghorn = definePiece<{ color: string }>({
   name: 'foghorn',
   weight: 0.8,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const press = pressAt(t)
@@ -168,32 +168,38 @@ export const foghorn = definePiece<{ color: string }>({
 /**
  * A gull standing at (x, y): asleep with its head tucked in, or awake;
  * `lift` from 0 (standing, wings folded) to 1 (wings out and beating on `clock`).
+ *
+ * A bird this size is a fifth of a cell long, and the pen is a thirtieth
+ * of a cell wide, so it is one silhouette — tail, back, crown, breast and
+ * belly in one line — with a beak and an eye on it. A head drawn as its
+ * own circle was all rim at this scale, and asleep it read as a knot.
  */
 function gull(p: p5, k: number, ink: string, weight: number, bg: string, color: string, x: number, y: number, lift: number, asleep: boolean, clock: number): void {
   const bx = x
   const by = y - 0.055
-  // Legs, tucked up as it flies.
+  // One leg, tucked up as it flies. Gulls stand on one.
   outline(p, ink, weight * 0.8)
-  for (const dx of [-0.015, 0.02]) p.line((bx + dx) * k, (by + 0.03) * k, (bx + dx) * k, (y - 0.02 * lift) * k)
-  // The body, tail to the west; the head on its short neck, or sunk into the shoulders.
-  solid(p, ink, weight, bg)
+  p.line((bx + 0.005) * k, (by + 0.03) * k, (bx + 0.005) * k, (y - 0.02 * lift) * k)
+  // The body, tail to the west, and the head on it: up on its neck, or sunk into the shoulders.
+  const hx = bx + (asleep ? 0.04 : 0.065)
+  const hy = by - (asleep ? 0.028 : 0.06)
+  solid(p, ink, weight * 0.9, bg)
   p.beginShape()
   p.vertex((bx - 0.1) * k, (by - 0.015) * k)
-  p.bezierVertex((bx - 0.04) * k, (by - 0.05) * k, (bx + 0.05) * k, (by - 0.05) * k, (bx + 0.07) * k, (by - 0.01) * k)
-  p.bezierVertex((bx + 0.06) * k, (by + 0.04) * k, (bx - 0.03) * k, (by + 0.045) * k, (bx - 0.1) * k, (by - 0.015) * k)
+  p.bezierVertex((bx - 0.04) * k, (by - 0.05) * k, (hx - 0.05) * k, (hy - 0.005) * k, (hx - 0.022) * k, (hy - 0.03) * k)
+  p.bezierVertex((hx + 0.01) * k, (hy - 0.045) * k, (hx + 0.036) * k, (hy - 0.018) * k, (hx + 0.03) * k, (hy + 0.012) * k)
+  p.bezierVertex((hx + 0.02) * k, (hy + 0.035) * k, (bx + 0.075) * k, (by + 0.025) * k, (bx + 0.04) * k, (by + 0.042) * k)
+  p.bezierVertex(bx * k, (by + 0.05) * k, (bx - 0.06) * k, (by + 0.025) * k, (bx - 0.1) * k, (by - 0.015) * k)
   p.endShape(p.CLOSE)
-  const hx = bx + (asleep ? 0.035 : 0.06)
-  const hy = by - (asleep ? 0.035 : 0.06)
-  p.circle(hx * k, hy * k, 0.06 * k)
   solid(p, ink, weight * 0.7, color)
-  p.triangle((hx + 0.025) * k, (hy - 0.012) * k, (hx + 0.025) * k, (hy + 0.014) * k, (hx + 0.065) * k, (hy + 0.006) * k)
+  p.triangle((hx + 0.026) * k, (hy - 0.012) * k, (hx + 0.026) * k, (hy + 0.012) * k, (hx + 0.066) * k, (hy + 0.004) * k)
   if (asleep) {
     outline(p, ink, weight * 0.7)
-    p.line((hx - 0.004) * k, (hy - 0.004) * k, (hx + 0.014) * k, (hy - 0.004) * k)
+    p.line((hx - 0.002) * k, (hy - 0.006) * k, (hx + 0.016) * k, (hy - 0.006) * k)
   } else {
     p.noStroke()
     p.fill(ink)
-    p.circle((hx + 0.006) * k, (hy - 0.006) * k, 0.016 * k)
+    p.circle((hx + 0.008) * k, (hy - 0.008) * k, 0.018 * k)
   }
   // The wing: folded along the back, or out and beating.
   p.push()

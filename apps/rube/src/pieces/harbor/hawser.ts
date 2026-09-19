@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, burst, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, piling, seaColor, seabed, water } from './sea'
+import { WATER, bodyColor, piling, seabed, water } from './sea'
 
 /**
  * A breeches buoy on a hawser. A line is made fast to the head of a samson
@@ -121,7 +121,7 @@ export const hawser = definePiece<{ color: string }>({
   name: 'hawser',
   weight: 0.9,
   flight: true,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     // The line comes down through the corner of the third cell of the upper
     // floor, where a neighbour's water would be, so that cell is the hawser's too.
     const cells: Pt[] = [
@@ -133,7 +133,7 @@ export const hawser = definePiece<{ color: string }>({
       [2, 1],
     ]
     if (!fits(cells, [3, 1])) return null
-    return { cells, exit: { at: [3, 1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [3, 1], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const [bx, by] = blockAt(t)

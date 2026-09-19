@@ -1,38 +1,9 @@
 import p5 from 'p5'
 import { CANVAS, FPS, LOOP_EXPORT_MAX_SECONDS } from './constants'
+import { canvasOf, savePng, saveWebm } from './capture'
 import { mod } from './ease'
 import { strokeWeight, type Composition } from './composition'
 import { FIRE_DECAY } from './wiring'
-
-function canvasOf(instance: p5): HTMLCanvasElement {
-  // p5 exposes the element but @types/p5 does not declare it.
-  return (instance as unknown as { canvas: HTMLCanvasElement }).canvas
-}
-
-function downloadBlob(blob: Blob, filename: string): void {
-  // A data: anchor is silently dropped by Chromium once the URL grows
-  // past a couple of MB, which every scaled export does. A Blob URL has
-  // no such cap. The anchor joins the document for Firefox's sake.
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.append(link)
-  link.click()
-  link.remove()
-  // Leave the URL alive long enough for the download to begin.
-  window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
-}
-
-function webmMime(): string | null {
-  if (typeof MediaRecorder === 'undefined') return null
-  const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm']
-  return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? null
-}
-
-function waitFrame(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()))
-}
 
 export interface Engine {
   setComposition(next: Composition): void
@@ -309,85 +280,36 @@ export function createEngine(host: HTMLElement, initial: Composition, size = CAN
     },
     savePng(filename, scale = 1) {
       if (!instance) return
-      const el = canvasOf(instance)
       const wasPaused = paused
-      const before = density()
-      // Hold the clock so the capture matches what is on screen, redraw one
-      // frame at the requested density, then put everything back. toBlob
-      // snapshots the bitmap synchronously at call time — only the PNG
-      // encoding is async — so the canvas can be restored immediately.
+      // Hold the clock so the capture matches what is on screen. noLoop
+      // leaves the last frame on the canvas; a paused capture is still
+      // redrawn so it is painted, not stale.
       paused = true
-      if (scale !== 1) instance.pixelDensity(before * scale)
-      // noLoop leaves the last frame on the canvas; still redraw so a
-      // paused capture (or a density change) is painted, not stale.
-      if (scale !== 1 || wasPaused) instance.redraw()
-      el.toBlob((blob) => {
-        if (!blob) return
-        downloadBlob(blob, `${filename}.png`)
-      }, 'image/png')
-      if (scale !== 1) {
-        instance.pixelDensity(before)
-        instance.redraw()
-      }
+      savePng(instance, filename, scale, wasPaused)
       paused = wasPaused
     },
     async saveLoop(filename) {
       if (!instance) return
-      const mime = webmMime()
-      if (!mime) throw new Error('This browser cannot record a WebM from the canvas.')
-
-      const el = canvasOf(instance)
+      const sketch = instance
       const wasPaused = paused
       const saved = frame
       // Same hold as savePng: freeze the clock. noLoop so p5's own tick
       // cannot paint extra frames into the capture stream while we walk.
       paused = true
-      instance.noLoop()
-
+      sketch.noLoop()
       try {
-        const frames = Math.min(comp.loop, FPS * LOOP_EXPORT_MAX_SECONDS)
-        // captureStream(fps) timestamps from the live clock. Walking with
-        // requestFrame(0) is faster but Chrome writes a 0-duration file, which
-        // is a still by another name. Pace the walk at FPS so the WebM is a
-        // real 4s / 12s loop of what you see.
-        const stream = el.captureStream(FPS)
-
-        const chunks: Blob[] = []
-        const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 })
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) chunks.push(e.data)
-        }
-        const stopped = new Promise<void>((resolve, reject) => {
-          recorder.addEventListener('stop', () => resolve(), { once: true })
-          recorder.addEventListener('error', () => reject(new Error('WebM recording failed')), { once: true })
-        })
-
-        recorder.start()
-        await waitFrame()
-        const origin = performance.now()
-        for (let i = 0; i < frames; i++) {
-          // setProgress(i / comp.loop) — same clock, walked from the start
-          // of the loop so the file closes on the same frame it opens.
+        // Walked from the start of the loop so the file closes on the same
+        // frame it opens.
+        await saveWebm(canvasOf(sketch), filename, Math.min(comp.loop, FPS * LOOP_EXPORT_MAX_SECONDS), (i) => {
           frame = i
-          instance.redraw()
-          const target = origin + ((i + 1) * 1000) / FPS
-          const delay = target - performance.now()
-          if (delay > 0) await new Promise<void>((resolve) => window.setTimeout(resolve, delay))
-        }
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1000 / FPS))
-        if (recorder.state === 'recording') recorder.requestData()
-        recorder.stop()
-        await stopped
-        for (const t of stream.getTracks()) t.stop()
-
-        if (!chunks.length) throw new Error('WebM recording produced no data.')
-        downloadBlob(new Blob(chunks, { type: 'video/webm' }), `${filename}.webm`)
+          sketch.redraw()
+        })
       } finally {
         frame = saved
-        instance.redraw()
+        sketch.redraw()
         paused = wasPaused
-        if (wasPaused) instance.noLoop()
-        else instance.loop()
+        if (wasPaused) sketch.noLoop()
+        else sketch.loop()
       }
     },
     destroy() {

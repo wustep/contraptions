@@ -1,4 +1,6 @@
 import p5 from 'p5'
+import { canvasOf, savePng, saveWebm } from '../../../src/core/capture'
+import { FPS } from '../../../src/core/constants'
 import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
 import { R, TRANSIT, ball, type PieceCtx } from './parts'
 import type { Placed } from './plan'
@@ -33,7 +35,30 @@ export interface Clock {
 export interface Stage {
   /** Zoom out to the whole universe. Debug only. */
   setOverview(on: boolean): void
+  /** The frame on the stage as a PNG, supersampled by `scale`. */
+  savePng(filename: string, scale: number): void
+  /**
+   * The world the clock is in as a WebM, from the cut that opens it to the
+   * cut that closes it. Both are the iris shut, and for the recording both
+   * are shut in this world's own ink, so the file begins and ends on the
+   * same flat frame: one world is the show's loop.
+   */
+  saveLoop(filename: string, progress?: (done: number) => void): Promise<void>
+  /** Pixel size of a PNG saved at `scale`. */
+  exportSize(scale: number): [number, number]
   destroy(): void
+}
+
+/** The longest edge a PNG is supersampled to. Past this a browser hands back an empty canvas instead of a big one. */
+const MAX_EDGE = 8192
+
+/** `scale`, held to what a canvas of this sketch's size can actually be. */
+export const exportScale = (p: p5, scale: number): number =>
+  Math.max(1, Math.min(scale, MAX_EDGE / (Math.max(p.width, p.height) * p.pixelDensity())))
+
+export const exportSize = (p: p5, scale: number): [number, number] => {
+  const d = p.pixelDensity() * exportScale(p, scale)
+  return [Math.round(p.width * d), Math.round(p.height * d)]
 }
 
 /** A rectangle of the canvas, in pixels, that a world is drawn into. */
@@ -115,6 +140,9 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
   let overview = false
   let instance: p5 | null = null
   let release = () => {}
+  // An export takes the clock for as long as it needs it.
+  let held: number | null = null
+  let looped = false
   // A solo world's extent is walked once, not every frame.
   const extents = new WeakMap<Universe, ReturnType<typeof extentOf>>()
   const extent = (u: Universe) => extents.get(u) ?? (extents.set(u, extentOf(u)), extents.get(u)!)
@@ -125,7 +153,7 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
     }
 
     p.draw = () => {
-      const t = clock.time()
+      const t = held ?? clock.time()
       const here = show.at(t)
       const W = p.width
       const H = p.height
@@ -143,7 +171,7 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
         k = Math.min(W / (e.x1 - e.x0 + 1), H / (e.y1 - e.y0 + 1), Math.min(W, H) / VISIBLE)
         cam = { x: (e.x0 + e.x1) / 2, y: (e.y0 + e.y1) / 2, zoom: 1 }
       }
-      drawWorld(p, show, t, here, cam, k, { x: 0, y: 0, w: W, h: H }, true)
+      drawWorld(p, show, t, here, cam, k, { x: 0, y: 0, w: W, h: H }, looped ? 'loop' : true)
     }
   }
 
@@ -153,6 +181,35 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
     setOverview(on) {
       overview = on
     },
+    savePng(filename, scale) {
+      if (!instance) return
+      // Hold the clock so the frame redrawn at scale is the frame on screen.
+      held = clock.time()
+      savePng(instance, filename, exportScale(instance, scale))
+      held = null
+    },
+    async saveLoop(filename, progress) {
+      if (!instance) return
+      const sketch = instance
+      const here = show.at(clock.time())
+      const frames = Math.round(here.universe.journey * FPS)
+      // noLoop so p5's own tick cannot paint extra frames into the stream.
+      sketch.noLoop()
+      looped = true
+      try {
+        await saveWebm(canvasOf(sketch), filename, frames, (i) => {
+          // A new seed or another view takes the stage away, and the recording with it.
+          if (instance !== sketch) throw new Error('The stage changed while it was being recorded.')
+          held = here.begin + i / FPS
+          sketch.redraw()
+        }, progress)
+      } finally {
+        held = null
+        looped = false
+        if (instance === sketch) sketch.loop()
+      }
+    },
+    exportSize: (scale) => (instance ? exportSize(instance, scale) : [0, 0]),
     destroy() {
       release()
       instance?.remove()
@@ -169,6 +226,8 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
  * pixels. `cuts` draws the show's cuts too: the iris at the portals and
  * the fade up from ink at the very start. The catalog leaves them out — a
  * loop needs no door, and the ball is out of sight at both ends anyway.
+ * `'loop'` draws them for one world on its own: the iris that opens it is
+ * in its own ink, as the one that closes it is, so the two ends meet.
  */
 export function drawWorld(
   p: p5,
@@ -178,7 +237,7 @@ export function drawWorld(
   cam: { x: number; y: number },
   k: number,
   view: Viewport,
-  cuts: boolean,
+  cuts: boolean | 'loop',
 ): void {
   const u = here.universe
   const { theme } = u
@@ -262,7 +321,7 @@ export function drawWorld(
   // The scores last, over everything: a score behind a machine is not read.
   pass('scores')
 
-  if (cuts) drawTransitions(p, show, t, here, sx, sy, view)
+  if (cuts) drawTransitions(p, show, t, here, sx, sy, view, cuts === 'loop')
   p.pop()
 }
 
@@ -377,6 +436,7 @@ function drawTransitions(
   sx: (x: number) => number,
   sy: (y: number) => number,
   view: Viewport,
+  alone: boolean,
 ): void {
   const u = here.universe
   const seg = here.placed.lane.segs[here.seg]
@@ -386,7 +446,7 @@ function drawTransitions(
     // How far into the transit, by the clock rather than the eased path:
     // 0 at the cut for 'in', 1 at the cut for 'out'.
     const f = seg.portal === 'out' ? here.raw : 1 - here.raw
-    const shade = seg.portal === 'in' && u.index > 0 ? show.universe(u.index - 1).theme.ink : u.theme.ink
+    const shade = seg.portal === 'in' && u.index > 0 && !alone ? show.universe(u.index - 1).theme.ink : u.theme.ink
     // The iris closes over the second half of the way in and opens after
     // the first half of the way out, so it holds shut for a beat at the cut.
     const shut = seg.portal === 'out' ? clamp((f - 0.35) / 0.55) : clamp((f - 0.1) / 0.45)

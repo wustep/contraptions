@@ -146,9 +146,6 @@ window.addEventListener('keydown', (e) => {
     case 'g':
       applyView({ grid: !view.grid })
       break
-    case 's':
-      save()
-      break
     case 'p':
       panel.toggle()
       break

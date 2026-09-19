@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, cleat, piling, rope, seaColor, splash, water } from './sea'
+import { WATER, bodyColor, cleat, piling, rope, seaWater, splash, water } from './sea'
 
 /**
  * A sailing dinghy, moored stern-to at the deck's end with her painter
@@ -105,16 +105,16 @@ const fullAt = (t: number) => easeInOutSine(over(t, FIRE, FIRE + 0.35)) * (1 - e
 export const dinghy = definePiece<{ color: string }>({
   name: 'dinghy',
   weight: 0.9,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
       [2, 0],
     ]
     if (!fits(cells, [3, 0])) return null
-    return { cells, exit: { at: [3, 0], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [3, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const full = fullAt(t)
     const shake = (1 - full) * Math.sin(t * 11)
     const bump = t - T_BUMP
@@ -134,7 +134,7 @@ export const dinghy = definePiece<{ color: string }>({
     const slipped = since < 0 ? 0 : easeOutCubic(over(since, 0, 0.25))
     const end: Pt = [lerp(CLEAT, ring[0] - 0.2, slipped), lerp(FLOOR + 0.09, WATER + 0.02, slipped)]
     rope(p, k, ink, weight, end[0], end[1], ring[0], ring[1], since < 0 ? 0.07 * (1 - over(t, T_ABOARD, FIRE)) : 0.05)
-    if (since > 0) splash(p, k, s.color, weight, CLEAT + 0.06, WATER, over(since, 0.12, 0.6), 0.5)
+    if (since > 0) splash(p, k, seaWater(theme), weight, CLEAT + 0.06, WATER, over(since, 0.12, 0.6), 0.5)
 
     // The rig, in her frame: the mast, the boom kicked up over the stern sheets, the sail and the pennant.
     const [ox, oy] = afloat(PIVOT, t)
@@ -172,7 +172,7 @@ export const dinghy = definePiece<{ color: string }>({
     p.triangle(MAST * k, (py - 0.025) * k, MAST * k, (py + 0.025) * k, (MAST + 0.11) * k, (py + 0.012 * Math.sin(t * 9)) * k)
     p.pop()
   },
-  over: (p, s, { k, t, since, ink, bg, weight }) => {
+  over: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     // The hull stands between the viewer and the ball, which sits down inside it.
     const [ox, oy] = afloat(PIVOT, t)
     p.push()
@@ -213,6 +213,6 @@ export const dinghy = definePiece<{ color: string }>({
       p.pop()
     }
     // The bump: water thrown up between her stem and the fender.
-    splash(p, k, s.color, weight, EAST - 0.06, WATER, over(t, T_BUMP, T_BUMP + 0.45), 0.6)
+    splash(p, k, seaWater(theme), weight, EAST - 0.06, WATER, over(t, T_BUMP, T_BUMP + 0.45), 0.6)
   },
 })

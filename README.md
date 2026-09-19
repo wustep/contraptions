@@ -11,13 +11,15 @@ Two modes of one thing live here. The front door is **Machine** — one ball
 on one thread through a Rube Goldberg chain that never ends, round four
 worlds in a fixed order (`apps/rube/`, [below](#machine-appsrube); the code
 calls it the show). Beside it is **Explorations**: the generator the machine
-grew out of, seven modes of tiny machines on a grid with every dial exposed
+grew out of, six modes of tiny machines on a grid with every dial exposed
 (`src/`; the code calls it the sandbox). Both wear the same chrome: one
 panel down the right edge at the window's full height, the canvas filling
 everything else, and a two-tab switch at the top of the panel —
 **Machine | Explorations** — that moves between them and carries the seed
 across. Both open with the panel hidden; <kbd>P</kbd> (or the tab on the
-edge) brings it out, and <kbd>P</kbd> puts it away again.
+edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
+clears the stage of all of it — the panel, the tab, the way-back button —
+for the piece alone, and <kbd>`</kbd> again puts back what was there.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
 **[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
@@ -43,9 +45,9 @@ Press <kbd>space</kbd> to reroll, <kbd>⇧space</kbd> to roll everything — the
 mode included. Every control is mirrored into the URL, so any frame you like
 is a shareable link.
 
-Seven modes, 20 palettes, 4 layouts. Classic keeps the original 36 toys;
-Cascade, Workshop, Circus and Rube Goldberg each bring their own catalog and
-their own grid.
+Six modes, 20 palettes, 4 layouts. Classic keeps the original 36 toys;
+Cascade, Workshop and Circus each bring their own catalog and their own
+grid.
 
 ## How it fits together
 
@@ -74,12 +76,11 @@ src/
     cascade/        25 beats a token rolls through; parts.ts is the shared rail
     workshop/       30 benches; shop.ts is the shared floor and part
     circus/         28 looping acts; circus.ts is the shared vocabulary
-    rube/           the cascade's one-cell beats plus the drops a wandering path needs
   worlds/
     lanes.ts        where tokens travel inside a cell, shared by both worlds
     ports/          framework A: machines with typed edge ports, a chain solver
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
-    goldberg/       the cascade, workshop, circus and rube grids; the token is theirs
+    goldberg/       the cascade, workshop and circus grids; the token is theirs
   ui/
     shell.ts        the chrome both modes share: the panel, the mode switch, Hide
     styles.css      one stylesheet for both pages
@@ -195,7 +196,7 @@ A mode picks **both a catalog and a composer**. That is what lets three
 Goldberg catalogs share names (`hopper`, `bell`, `lamp`) without colliding:
 each lives in its own folder, and each composer is the thesis of that set.
 Classic keeps the original toys on the leftover-fill grid; Ports and Tracks are
-the two worlds. Cascade, Workshop, Circus and Rube Goldberg build **their own
+the two worlds. Cascade, Workshop and Circus build **their own
 grid** — a uniform block of cells that fills the frame — rather than staffing
 runs through a classic layout. That is why the Layout control disappears for
 them, and why each carries its own resolution range: their machines are read
@@ -209,9 +210,8 @@ close up, so a cascade is 5–9 cells across where a classic piece is 6–24.
 | Cascade | `src/contraptions/cascade/` | one snake of stations, tokens on lanes | 5–9 |
 | Workshop | `src/contraptions/workshop/` | one shop line of benches, parts on lanes | 5–9 |
 | Circus | `src/contraptions/circus/` | a full grid of closed looping acts; the drumroll fires them in sequence | 4–7 |
-| Rube Goldberg | `src/contraptions/rube/` | one wandering path from a feeder to an ending; the rest is paper | 5–14 |
 
-The Mode control lists all seven by name. Catalog view shows the active
+The Mode control lists all six by name. Catalog view shows the active
 mode's pieces. The URL stores the mode name (`?mode=cascade`).
 
 ### Lanes
@@ -242,32 +242,6 @@ nothing that moves with a ball is drawn by more than one thing.
 
 `src/contraptions/cascade/parts.ts` is the shared vocabulary; the composer
 lives in `src/worlds/goldberg/cascade.ts`.
-
-### Rube Goldberg
-
-The same lane world with a different plan. Where the cascade fills its grid
-with a snake, this mode **carves one path**: a ball leaves a feeder somewhere
-along the top row, rolls a way, and goes down — by elevator, or by simply
-falling down a chute — one, two or three floors at a time, then rolls on, the
-same way or back, until it reaches an ending on the bottom row. Every step is
-east, west or south and never north, so the walk cannot cross itself. Cells
-the path does not visit stay paper, and every machine on the piece is on the
-path: the frame is one connected contraption, and the seed decides its shape.
-
-The catalog is the cascade's one-cell beats — its feeders, stations, endings
-and two-cell elevator — plus the pieces a wandering path needs and a snake
-never does: a `shaft` for the middle floors of a deep elevator, and a
-`chute`, `tube` and `catch` for a ball that just falls, the catch being a
-quarter-pipe that turns the drop back into a roll. The elevator's car is
-still drawn once by the world, for the whole stack, whatever its depth; three
-floors is the most a car can descend and climb back empty before the next
-ball arrives at the top, so that is the deepest any drop goes.
-
-**Wander** is how far the path strays from a snake: at 0 every run crosses
-the frame and every drop is one floor; at 1 runs are short and drops are deep.
-**Stations** is the share of the path that is machinery rather than plain
-rail. The plan lives in `src/worlds/goldberg/rube.ts`; the lane world it
-hands its steps to is the cascade's.
 
 ### Workshop
 
@@ -328,12 +302,12 @@ and each reactor beside the piece of track it reacts to.
 | Control | Effect |
 | --- | --- |
 | Seed | Everything random derives from this string |
-| Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus`, `rube` |
+| Mode | `classic`, `ports`, `tracks`, `cascade`, `workshop`, `circus` |
 | Theme | 20 palettes, each a different mood |
 | Layout | `grid`, `bricks` (offset courses), `quads` (recursive subdivision), `bands` (columns at mixed scales) — Classic only; the other modes lay out their own grid |
-| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7, rube 5–14) |
+| Resolution | Cells across the art area, within the mode's range (classic 6–24, ports and tracks 8–20, cascade and workshop 5–9, circus 4–7) |
 | Stroke | Multiplier on the computed line weight |
-| Multi-cell / Wander | How eagerly to place machines larger than one cell; in Rube Goldberg, how far the path strays from a snake |
+| Multi-cell | How eagerly to place machines larger than one cell |
 | Stations / Drumroll / Wired chains | How much of the piece is machinery, or wired into firing sequences — the dial is renamed per mode |
 | Tag / Solo | Narrow the pool while exploring |
 | Catalog | One labelled instance of every machine |
@@ -366,7 +340,7 @@ canvas size (capped at 12s). The clock is held for the encode the same way it
 is for PNG; progress is a view of the clock and never enters the URL.
 
 <kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>K</kbd> pause ·
-<kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>P</kbd> hide panel ·
+<kbd>G</kbd> grid overlay · <kbd>P</kbd> hide panel · <kbd>`</kbd> hide everything ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat
 
 ## Machine: `apps/rube/`
@@ -462,6 +436,12 @@ there to the one before), restarts, opens the **catalog** (<kbd>C</kbd>)
 or the **overview** of the whole map (<kbd>O</kbd>); **Transport** is play/pause
 (<kbd>space</kbd>), speed from ¼× to 4×, and a scrub bar over the current
 world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a second.
+**Export** is the same pair as Explorations': the frame as a PNG at 1×, 2×
+or 4× (held to what a canvas can be), or a WebM of the show's own loop — the
+world the ball is in, from the cut that opens it to the cut that closes it.
+Both cuts are the iris shut, and for the recording both are in that world's
+own ink, so the file ends on the frame it began on. A piece alone saves its
+three seconds the same way; the sheet of every piece saves as a PNG.
 `?solo=hammer` narrows the planner to one piece (plus rail and portals)
 for polishing it, and keeps the show in that piece's world; `?world=harbor`
 keeps it in one world on its own. Old links to `/rube/` still work: that
@@ -517,7 +497,10 @@ sunflower, pod, cocoon and appletree; the arcade's changer, gauss, pixel
 and phaser); they are capped at two a map and never absent for three maps
 running, and a piece that recolours the ball only places itself where it
 can hand the ball on in a colour other than the one it arrived in — never
-the same colour out as in. A ghost is the ball as a dashed outline that
+the same colour out as in. And no piece is ever handed the colour the ball
+arrives in: the planner leaves the ball's current colour out of the pool a
+piece is painted from, so a ball never vanishes into what holds it, however
+many times it has been recoloured on the way. A ghost is the ball as a dashed outline that
 solid things do not stop, and it is a piece's own business. The phaser
 makes one to take it through a brick wall and makes it solid again before
 it hands it on. A piece declares for itself whether it changes the ball
@@ -542,7 +525,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
-| toaster | into the slot, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
+| toaster | let down into the slot on the carriage, the lever going down with it, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the chock; the ball pops out of the cup over it and rolls on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
@@ -564,7 +547,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | screw | an Archimedes' screw in a glass tube carries the ball up a floor |
 | flipper | a drooping pinball bat; the ball settles in its lip, the bat whips up and lets go as it passes level; up a floor onto a shelf |
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
-| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on — one motion from the blow to the landing, a pendulum and then a fall under the same gravity |
 | inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
@@ -573,13 +556,17 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 A pier over water. Under every rail there is still water on pilings — still
 on purpose, since a piece's clock is its own and a ripple animated from it
 would jump phase at every cell edge; what moves is what the ball does to it.
+Water is always the palette's blue — a splash never borrows the colour of
+the hull or the animal that threw it up — and an animal or a hull the ball
+rides is never painted the ball's own colour, so the ball is always seen
+against what holds it.
 
 | Piece | What happens |
 | --- | --- |
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
-| wave | a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down, spray behind it |
-| lighthouse | the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
+| wave | a swell risen out of the sea's own waterline, one shape with no wall and no floor, never still: a swell runs up the back, the crest heaves, the lip reaches and draws back, scallops of foam travel over the top to its tip, streaks climb the face; the ball rolls into the hollow under the curl and rides the face a floor down, spray behind it |
+| lighthouse | one opening shape — jambs under a round head — for the doorway, its door and every window; the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; the funnel on its head puckers and squirts ink straight up at it; a splat, and the ball leaves a new colour |

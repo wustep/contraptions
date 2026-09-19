@@ -58,8 +58,9 @@ export const appletree = definePiece<{ color: string; fruit: string }>({
     if (!others.length) return null
     // And the crown is not the apple's colour, so the apple reads on the tree.
     const fruit = color !== arriving.color ? color : rng.pick(others)
-    // A crown as pale as the paper is a cloud on a stick, so it takes a colour that stands off the paper when there is one.
-    const rest = theme.colors.filter((c) => c !== fruit)
+    // A crown as pale as the paper is a cloud on a stick, so it takes a colour that stands off the paper when there is one;
+    // and not the ball's, which rests at the tree's foot for good.
+    const rest = theme.colors.filter((c) => c !== fruit && c !== arriving.color)
     const leafy = rest.filter((c) => Math.abs(luminance(c) - luminance(theme.bg)) > 0.18)
     const crown = rng.pick(leafy.length ? leafy : rest)
     const lane: Lane = {

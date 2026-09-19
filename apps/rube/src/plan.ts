@@ -199,9 +199,14 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       const untried = candidates.filter((c) => !tried.has(c.name))
       const piece = rng.weighted(untried, (c) => c.weight * (ctx.taste.weights[c.name] ?? 1) * tempo(c) * fresh(c))
       tried.add(piece.name)
+      // A piece is never handed the colour the ball arrives in. The pool
+      // leaves out the colour the ball started with, but a piece upstream
+      // may have made it another, and a ball must not vanish into what
+      // holds it. One draw either way, so the map's shape is untouched.
+      const palette = ctx.colors.filter((c) => c !== ball.color)
       const placement = piece.place({
         rng: rng.fork(`${placed}:${piece.name}`),
-        color: rng.pick(ctx.colors),
+        color: rng.pick(palette.length ? palette : ctx.colors),
         theme: ctx.theme,
         taste: ctx.taste,
         ball,

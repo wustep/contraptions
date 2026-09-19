@@ -42,17 +42,24 @@ const ROOM = 0.15
 const ROOM_H = 0.34
 const climbTime = (floors: number) => 0.35 + 0.45 * floors
 
-/** The doorway's arch, as a path on the canvas from the threshold round and back. */
-function doorway(ctx: CanvasRenderingContext2D, k: number): void {
-  const r = DOOR_W / 2
-  const cx = DOOR_X0 + r
-  const top = FLOOR - DOOR_H + r
-  ctx.moveTo(DOOR_X0 * k, FLOOR * k)
-  ctx.lineTo(DOOR_X0 * k, top * k)
-  ctx.arc(cx * k, top * k, r * k, Math.PI, 0)
-  ctx.lineTo((DOOR_X0 + DOOR_W) * k, FLOOR * k)
+/**
+ * The tower's one opening shape: straight jambs under a round head, as a
+ * path on the canvas from the sill round and back. The doorway, the door
+ * that fills it and every window up the stair are this, at their own sizes.
+ */
+function arched(ctx: CanvasRenderingContext2D, k: number, x0: number, sill: number, w: number, h: number): void {
+  const r = w / 2
+  const spring = sill - h + r
+  ctx.moveTo(x0 * k, sill * k)
+  ctx.lineTo(x0 * k, spring * k)
+  ctx.arc((x0 + r) * k, spring * k, r * k, Math.PI, 0)
+  ctx.lineTo((x0 + w) * k, sill * k)
   ctx.closePath()
 }
+const doorway = (ctx: CanvasRenderingContext2D, k: number) => arched(ctx, k, DOOR_X0, FLOOR, DOOR_W, DOOR_H)
+/** A window: the doorway's shape, a third its size. */
+const WIN_W = 0.1
+const WIN_H = 0.13
 
 export const lighthouse = definePiece<LighthouseState>({
   name: 'lighthouse',
@@ -131,16 +138,21 @@ export const lighthouse = definePiece<LighthouseState>({
     ctx.rect(-0.5 * k, (gallery - 0.1) * k, 1 * k, (0.7 - gallery) * k)
     doorway(ctx, k)
     ctx.clip('evenodd')
-    solid(p, ink, weight, s.color)
-    p.quad(-BASE * k, 0.5 * k, BASE * k, 0.5 * k, TOP_W * k, gallery * k, -TOP_W * k, gallery * k)
+    // Paint first, edge to edge, and the ink last over all of it: a band
+    // that stops short of the wall, or laps onto the ink, puts a step in
+    // the tower's line at every stripe.
     p.noStroke()
+    p.fill(s.color)
+    p.quad(-BASE * k, 0.5 * k, BASE * k, 0.5 * k, TOP_W * k, gallery * k, -TOP_W * k, gallery * k)
     p.fill(bg)
     for (let y = 0.5 - 0.3; y > gallery + 0.1; y -= 0.6) {
-      const y1 = Math.max(gallery + 0.02, y - 0.28)
-      const w0 = widthAt(y) - 0.012
-      const w1 = widthAt(y1) - 0.012
+      const y1 = Math.max(gallery, y - 0.28)
+      const w0 = widthAt(y)
+      const w1 = widthAt(y1)
       p.quad(-w0 * k, y * k, w0 * k, y * k, w1 * k, y1 * k, -w1 * k, y1 * k)
     }
+    outline(p, ink, weight)
+    p.quad(-BASE * k, 0.5 * k, BASE * k, 0.5 * k, TOP_W * k, gallery * k, -TOP_W * k, gallery * k)
     p.pop()
     // The doorway's jambs and arch, and the door on its hinge at the near jamb, swinging in.
     p.push()
@@ -154,19 +166,25 @@ export const lighthouse = definePiece<LighthouseState>({
     p.push()
     p.translate(DOOR_X0 * k, 0)
     p.scale(Math.max(0.12, 1 - doorOpen), 1)
+    // The door is the doorway's own shape, so shut it fills it and the two read as one.
     solid(p, ink, weight, s.color)
-    p.rect((DOOR_W / 2) * k, (FLOOR - DOOR_H / 2 + 0.01) * k, (DOOR_W - 0.02) * k, (DOOR_H - 0.02) * k, 0.02 * k)
+    ctx.beginPath()
+    arched(ctx, k, 0, FLOOR, DOOR_W, DOOR_H)
+    ctx.fill()
+    ctx.stroke()
     p.fill(ink)
     p.noStroke()
-    p.circle((DOOR_W - 0.06) * k, (FLOOR - DOOR_H / 2 + 0.03) * k, 0.03 * k)
+    p.circle((DOOR_W - 0.06) * k, (FLOOR - DOOR_H / 2 + 0.05) * k, 0.03 * k)
     p.pop()
     // A window a floor, lit as the ball climbs past.
     for (let i = 0; i < floors; i++) {
       const wy = -i - 0.45
       const near = Math.max(0, 1 - Math.abs(up - (wy + 0.15)) / 0.4)
       solid(p, ink, weight, near > 0.3 ? s.color : bg)
-      p.arc(0.02 * k, wy * k, 0.1 * k, 0.16 * k, Math.PI, Math.PI * 2, p.CHORD)
-      p.rect(0.02 * k, (wy + 0.02) * k, 0.1 * k, 0.05 * k)
+      ctx.beginPath()
+      arched(ctx, k, 0.02 - WIN_W / 2, wy + 0.045, WIN_W, WIN_H)
+      ctx.fill()
+      ctx.stroke()
     }
 
     // The lantern room, in front of the ball: glass on a drum, a domed roof, and the lamp inside.

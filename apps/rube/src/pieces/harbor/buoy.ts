@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { piling, splash, water } from './sea'
+import { piling, seaWater, splash, water } from './sea'
 
 /**
  * A bell buoy in a gap in the pier. The deck stops; a buoy floats in the
@@ -81,7 +81,7 @@ export const buoy = definePiece<{ color: string }>({
     if (!fits([[0, 0]], [1, 0])) return null
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const tilt = tiltAt(t)
     // The clang's rings: gone within a third of a second, before the ball is.
     const clang = since < CLANG_AT ? 0 : 1 - over(since, CLANG_AT, CLANG_AT + 0.35)
@@ -137,6 +137,6 @@ export const buoy = definePiece<{ color: string }>({
       for (let i = 1; i <= 2; i++) p.circle(0, (CAGE_H + 0.1) * k, (0.2 + i * 0.12 + (1 - clang) * 0.2) * k)
       p.pop()
     }
-    splash(p, k, s.color, weight, 0.2, CY + 0.06, over(since, CLANG_AT, CLANG_AT + 0.45), 0.6)
+    splash(p, k, seaWater(theme), weight, 0.2, CY + 0.06, over(since, CLANG_AT, CLANG_AT + 0.45), 0.6)
   },
 })

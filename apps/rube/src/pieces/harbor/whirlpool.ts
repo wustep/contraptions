@@ -49,7 +49,7 @@ const speedOf = (seg: Seg) => Math.hypot(seg.to[0] - seg.from[0], seg.to[1] - se
 export const whirlpool = definePiece<{ color: string }>({
   name: 'whirlpool',
   weight: 0.9,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [0, 1],
@@ -70,7 +70,7 @@ export const whirlpool = definePiece<{ color: string }>({
       ramp([-ARC, 1], [-0.5, 1], ROLL * 1.4, ROLL),
     ]
     const fire = segTime(segs) - segTime(bend) - segs[segs.length - 1].dur - drop.dur
-    return { cells, exit: { at: [-1, 1], dir: -1 }, lane: { segs, fire }, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [-1, 1], dir: -1 }, lane: { segs, fire }, state: { color: seaColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The deck in, over the sea, to the rim.

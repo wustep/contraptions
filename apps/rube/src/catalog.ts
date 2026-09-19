@@ -1,7 +1,8 @@
 import p5 from 'p5'
+import { savePng } from '../../../src/core/capture'
 import { clamp } from '../../../src/core/ease'
 import type { Theme } from '../../../src/core/themes'
-import { drawWorld, setupCanvas, type Clock, type Viewport } from './engine'
+import { drawWorld, exportScale, exportSize, setupCanvas, type Clock, type Viewport } from './engine'
 import { Show } from './show'
 import { extentOf, type Universe } from './universe'
 import { WORLDS, type World } from './worlds'
@@ -26,6 +27,9 @@ import { WORLDS, type World } from './worlds'
 export interface Catalog {
   /** How far down the sheet is scrolled, so it can be opened there again. */
   scroll(): number
+  /** The sheet as it stands as a PNG, supersampled by `scale`. */
+  savePng(filename: string, scale: number): void
+  exportSize(scale: number): [number, number]
   destroy(): void
 }
 
@@ -295,6 +299,10 @@ export function createCatalog(
 
   return {
     scroll: () => scroll,
+    savePng(filename, scale) {
+      if (instance) savePng(instance, filename, exportScale(instance, scale))
+    },
+    exportSize: (scale) => (instance ? exportSize(instance, scale) : [0, 0]),
     destroy() {
       release()
       instance?.remove()

@@ -7,7 +7,9 @@
  * siblings — one frame, different dials — and moving between them is a
  * switch at the top of the panel that carries the seed across. The panel
  * starts hidden; `P` or the peek tab on the edge brings it out, and `P`
- * puts it away again.
+ * puts it away again. The backtick clears the stage of all of it — the
+ * panel, the peek tab, anything else standing on the stage — for the piece
+ * alone, and the backtick again puts back exactly what was there.
  */
 
 export type ShellMode = 'machine' | 'explorations'
@@ -29,6 +31,8 @@ export interface Shell {
   /** Hide the panel, or bring it back. */
   toggle(): void
   hidden(): boolean
+  /** Clear the stage of every piece of chrome, or put it all back as it was. */
+  toggleBare(): void
 }
 
 export function el<K extends keyof HTMLElementTagNameMap>(
@@ -204,13 +208,32 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   document.body.append(peek)
 
   const toggle = () => {
-    const hide = !document.body.classList.contains('hide-panel')
+    // Asking for the panel from a bare stage is asking for the panel.
+    const bare = document.body.classList.contains('bare')
+    document.body.classList.remove('bare')
+    const hide = !bare && !document.body.classList.contains('hide-panel')
     document.body.classList.toggle('hide-panel', hide)
     if (hide) peek.focus()
     else hideBtn.focus()
   }
   hideBtn.addEventListener('click', toggle)
   peek.addEventListener('click', toggle)
+
+  // Bare is laid over the panel's own state rather than written into it, so
+  // leaving it lands where it was entered from: panel out, or tab on the edge.
+  const toggleBare = () => {
+    const bare = document.body.classList.toggle('bare')
+    // Nothing that has just left the screen keeps the keyboard.
+    if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
+  }
+  // Here and not in each mode's key map: the key means the same thing in both.
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey) return
+    const t = e.target
+    if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
+    e.preventDefault()
+    toggleBare()
+  })
 
   // The piece leads: both modes open with the panel away and the peek tab
   // on the edge. Set here rather than through toggle so nothing is focused
@@ -226,5 +249,6 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     },
     toggle,
     hidden: () => document.body.classList.contains('hide-panel'),
+    toggleBare,
   }
 }

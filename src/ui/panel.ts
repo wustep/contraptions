@@ -251,7 +251,6 @@ export function createPanel(
     cascade: ['Multi-cell', 'How eagerly strip, switchback and cradle sentences are placed'],
     workshop: ['Multi-cell', 'How eagerly the line, gantry, carousel and lineshaft are placed'],
     circus: ['Multi-cell', 'How eagerly the big looping acts are placed — cannon, ferris, big-top'],
-    rube: ['Wander', 'How far the path strays from a snake: shorter runs, deeper drops'],
   }
   const CHAIN_COPY: Record<Mode, [string, string]> = {
     classic: ['Wired chains', 'How much of the grid is wired into runs that fire in sequence; past 1 they take over'],
@@ -260,7 +259,6 @@ export function createPanel(
     cascade: ['Stations', 'How much of the snake is machinery; the rest is plain rail'],
     workshop: ['Stations', 'How much of the line is machinery; the rest is belt'],
     circus: ['Drumroll', 'How much of the programme fires in sequence'],
-    rube: ['Stations', 'How much of the path is machinery; the rest is plain rail'],
   }
 
   /**
@@ -332,14 +330,14 @@ export function createPanel(
   const dims = el('span', { class: 'dims' }, ['—'])
   exportSec.querySelector('.section-title')!.append(dims)
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
-  const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
+  const save = el('button', {}, ['Save PNG'])
   save.addEventListener('click', () => {
     commitSeed()
     handlers.onSave()
     save.classList.add('ok')
     save.replaceChildren('Saved')
     window.setTimeout(() => {
-      save.replaceChildren('Save PNG', el('kbd', {}, ['S']))
+      save.replaceChildren('Save PNG')
       save.classList.remove('ok')
     }, 1200)
   })

@@ -71,6 +71,13 @@ body.hide-panel #panel { display: none; }
 }
 body.hide-panel .panel-peek { display: inline-flex; }
 
+/* Bare: the piece and nothing else. Laid over the panel's own state, so the
+   backtick that leaves it puts back whichever of the two was there. */
+body.bare { grid-template-columns: minmax(0, 1fr) 0; }
+body.bare #panel,
+body.bare .panel-peek,
+body.bare .crumb { display: none; }
+
 /* The way back out of a view opened over the show, in the stage's top left
    corner: the peek tab's opposite number, in the same dress. It is on the
    stage and not in the panel because the panel starts hidden, and a view
@@ -478,7 +485,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 
 @media (max-width: 820px) {
   body { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
-  body.hide-panel { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
+  body.hide-panel,
+  body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
   #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; }

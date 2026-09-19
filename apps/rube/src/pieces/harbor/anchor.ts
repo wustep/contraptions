@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { piling, seabed, splash, water } from './sea'
+import { piling, seaWater, seabed, splash, water } from './sea'
 
 /**
  * An anchor on a windlass. The deck stops at a hatch; the anchor hangs in
@@ -60,7 +60,7 @@ export const anchor = definePiece<AnchorState>({
     }
     return null
   },
-  draw: (p, s, { k, since, ink, bg, weight }) => {
+  draw: (p, s, { k, since, ink, bg, weight, theme }) => {
     const { floors, turn } = s
     const d = depth(since, floors)
     const fall = fallTime(floors)
@@ -124,7 +124,7 @@ export const anchor = definePiece<AnchorState>({
       p.triangle(side * 0.2 * k, (ay + FLOOR + 0.28) * k, side * 0.14 * k, (ay + FLOOR + 0.24) * k, side * 0.24 * k, (ay + FLOOR + 0.17) * k)
     }
     // The bite: a splash off the seabed, and a thud of lines.
-    splash(p, k, s.color, weight, 0, floors + 0.37, over(landed, 0, 0.5), 1.1)
+    splash(p, k, seaWater(theme), weight, 0, floors + 0.37, over(landed, 0, 0.5), 1.1)
     if (landed > 0 && landed < 0.2) {
       p.push()
       p.stroke(ink)
