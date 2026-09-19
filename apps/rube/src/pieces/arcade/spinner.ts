@@ -68,6 +68,8 @@ const turnsAt = (t: number, since: number) => Math.floor((plateAngle(t, since) -
 
 export const spinner = definePiece<{ color: string }>({
   name: 'spinner',
+  // Ten a turn, and the spin off the shove is good for four.
+  points: 40,
   weight: 1,
   place: ({ color, fits }) => {
     if (!fits([[0, 0]], [1, 0])) return null

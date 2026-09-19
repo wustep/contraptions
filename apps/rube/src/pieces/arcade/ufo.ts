@@ -53,6 +53,7 @@ function slideAt(since: number, floors: number, turn: 1 | -1): number {
 
 export const ufo = definePiece<UfoState>({
   name: 'ufo',
+  points: 200,
   weight: 1,
   place: ({ rng, color, fits, taste }) => {
     const tall = taste.weights['lift-tall'] ?? 1

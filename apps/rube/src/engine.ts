@@ -2,7 +2,8 @@ import p5 from 'p5'
 import { canvasOf, savePng, saveWebm } from '../../../src/core/capture'
 import { FPS } from '../../../src/core/constants'
 import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
-import { R, TRANSIT, ball, type PieceCtx } from './parts'
+import { R, TRANSIT, ball, laneAt, type PieceCtx } from './parts'
+import { score } from './pieces/arcade/neon'
 import type { Placed } from './plan'
 import type { Show, ShowPoint } from './show'
 import { extentOf, type Universe } from './universe'
@@ -284,11 +285,19 @@ export function drawWorld(
   const pass = (which: 'draw' | 'over' | 'scores') => {
     for (const placed of visible) {
       const fn = placed.piece[which]
-      if (!fn) continue
+      // A piece that scores and has no say of its own in where: its points, off the ball at the moment it fires.
+      const pop = which === 'scores' && !fn && placed.points > 0
+      if (!fn && !pop) continue
       p.push()
       p.translate(sx(placed.col), sy(placed.row))
       p.scale(placed.mirror, 1)
-      fn.call(placed.piece, p, placed.state, ctxFor(placed))
+      const c = ctxFor(placed)
+      if (fn) fn.call(placed.piece, p, placed.state, c)
+      else {
+        const at = laneAt(placed.lane, placed.lane.fire)
+        const color = (placed.state as { color?: unknown } | null)?.color
+        score(p, k, typeof color === 'string' ? color : theme.ink, theme.bg, at.x, at.y, `+${placed.points}`, c.since, 1)
+      }
       p.pop()
     }
   }

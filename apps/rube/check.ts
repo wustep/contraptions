@@ -337,5 +337,34 @@ console.log(`\nbeats per map: min ${sorted[0]} · median ${sorted[sorted.length 
 check('maps average at least eight beats', beats.reduce((a, b) => a + b, 0) / beats.length >= 8)
 check('the ball is recoloured and relayed somewhere in the run', ['color', 'relay'].every((m) => mechanics.has(m)), [...mechanics].join(','))
 
+// The arcade keeps score: every beat earns, nothing pays out along the way,
+// and the ticket machine at the end pays out exactly what the map earned.
+{
+  console.log('\nthe arcade\'s economy')
+  const arcade = WORLDS.find((w) => w.name === 'arcade')!
+  const beatsOf = arcade.pieces.filter((c) => !shared.has(c.name) && !c.finale)
+  const mute = beatsOf.filter((c) => !c.points).map((c) => c.name)
+  check('every arcade beat scores', mute.length === 0, mute.join(','))
+  check('one piece pays out, and it is never drawn from the pool', arcade.pieces.filter((c) => c.finale).length === 1)
+  let paid = 0
+  let maps = 0
+  const wrong: string[] = []
+  for (let i = 0; i < 60; i++) {
+    const u = new Show(`economy-${i}`, { world: 'arcade' }).universe(0)
+    maps++
+    const at = u.pieces.findIndex((p) => p.piece.finale)
+    if (at < 0) continue
+    paid++
+    const state = u.pieces[at].state as { points: number; tickets: number }
+    const earned = u.pieces.slice(0, at).reduce((sum, p) => sum + p.points, 0)
+    if (at !== u.pieces.length - 2) wrong.push(`economy-${i}: paid out at ${at} of ${u.pieces.length}`)
+    if (u.pieces.filter((p) => p.piece.finale).length !== 1) wrong.push(`economy-${i}: paid out twice`)
+    if (state.points !== earned) wrong.push(`economy-${i}: earned ${earned}, paid on ${state.points}`)
+    if (state.tickets !== Math.max(1, Math.round(earned / 100))) wrong.push(`economy-${i}: ${earned} points came to ${state.tickets} tickets`)
+  }
+  check('tickets come once, last thing before the door, a ticket a hundred of what the map earned', wrong.length === 0, wrong.slice(0, 3).join(' · '))
+  check('nearly every run is paid out', paid / maps >= 0.9, `${paid}/${maps}`)
+}
+
 console.log(failures ? `\n${failures} failure(s)` : '\nall good')
 process.exit(failures ? 1 : 0)

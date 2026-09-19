@@ -168,6 +168,7 @@ function inCar(p: p5, k: number, x: number, pitch: number, draw: () => void): vo
 
 export const coaster = definePiece<{ color: string }>({
   name: 'coaster',
+  points: 200,
   weight: 0.9,
   flight: true,
   place: ({ color, fits }) => {

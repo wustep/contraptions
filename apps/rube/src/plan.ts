@@ -1,6 +1,6 @@
 import type { Rng } from '../../../src/core/rng'
 import type { Theme } from '../../../src/core/themes'
-import { ballAt, type BallChange, type BallState, type Lane, type Piece, type Placement, type Pt, type Taste } from './parts'
+import { ballAt, pointsOf, type BallChange, type BallState, type Lane, type Piece, type Placement, type Pt, type Taste } from './parts'
 import { portalPlacement } from './pieces/portal'
 
 /**
@@ -15,6 +15,11 @@ import { portalPlacement } from './pieces/portal'
  * told what arrives and says what leaves. When nothing fits, or the map has
  * had its beats, the walk ends in a portal, and a portal is always a door
  * to a whole new map. Dead ends are what portals are for.
+ *
+ * A world that keeps score pays out once, at the end: a `finale` piece is
+ * never drawn from the pool, and is placed after the last beat, told what
+ * the map earned, if it fits there. Points are earned along the way and
+ * turned into tickets at the door, not sprinkled through the run.
  */
 
 export interface Box {
@@ -42,6 +47,8 @@ export interface Placed {
   /** The ball as it arrives, and what this piece does to it. */
   ballIn: BallState
   changes: BallChange[]
+  /** What the pass through it scores. */
+  points: number
 }
 
 export interface PlanCtx {
@@ -120,6 +127,7 @@ function placeOne(
     span: placement.lane.segs.reduce((sum, s) => sum + s.dur, 0),
     ballIn: ball,
     changes,
+    points: pointsOf(piece, placement.state),
   }
 }
 
@@ -150,7 +158,14 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   const portalPiece = ctx.catalog.find((c) => c.name === 'portal')!
   commit(portalPiece, portalPlacement('in', ctx.portalColor))
 
-  const pool = ctx.catalog.filter((c) => c.weight > 0)
+  const pool = ctx.catalog.filter((c) => c.weight > 0 && !c.finale)
+  const finale = ctx.catalog.find((c) => c.finale)
+  const fitsAt = (cells: Pt[], exit: Pt) => {
+    const world = worldCells(cells, col, row, mirror)
+    if (!world.every(([c, r]) => free(c, r))) return false
+    return free(col + mirror * exit[0], row + exit[1])
+  }
+  const earned = () => out.reduce((sum, p) => sum + p.points, 0)
   /** How many times each piece is in this map so far, and the beat it was last placed on. */
   const uses = new Map<string, number>()
   const lastAt = new Map<string, number>()
@@ -164,13 +179,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   let runLeft = rng.int(2, 4)
   let breathLeft = 0
   while (placed < beats) {
-    const fits = (cells: Pt[], exit: Pt) => {
-      const world = worldCells(cells, col, row, mirror)
-      if (!world.every(([c, r]) => free(c, r))) return false
-      const ec = col + mirror * exit[0]
-      const er = row + exit[1]
-      return free(ec, er)
-    }
+    const fits = fitsAt
     const candidates = pool.filter((c) => {
       if (c.name === prev) return false
       // Rail is for breathing between beats, unless it is all there is: a
@@ -210,6 +219,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
         theme: ctx.theme,
         taste: ctx.taste,
         ball,
+        earned: earned(),
         fits,
       })
       if (placement) {
@@ -255,6 +265,41 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
     row = last.row
     mirror = last.mirror
     ball = last.ballIn
+  }
+  // The finale: the run's points paid out, last thing before the door. If
+  // it does not fit where the walk ended — the bottom row, a corner — the
+  // walk steps back a beat, and another, to where it does; a run that is
+  // not paid out is worse than one a beat shorter. Failing that, the map
+  // ends as it was.
+  if (finale) {
+    const palette = ctx.colors.filter((c) => c !== ball.color)
+    const color = rng.fork('finale:color').pick(palette.length ? palette : ctx.colors)
+    const resume = { col, row, mirror, ball }
+    const undone: Placed[] = []
+    let done = false
+    for (let back = 0; back <= 3 && !done; back++) {
+      const placement = finale.place({ rng: rng.fork(`finale:${finale.name}:${back}`), color, theme: ctx.theme, taste: ctx.taste, ball, earned: earned(), fits: fitsAt })
+      if (placement) {
+        commit(finale, placement)
+        done = true
+      } else if (out.length > 2) {
+        const last = out.pop()!
+        undone.push(last)
+        for (const [c, r] of last.cells) occupied.delete(key(c, r))
+        col = last.col
+        row = last.row
+        mirror = last.mirror
+        ball = last.ballIn
+      } else break
+    }
+    if (!done) {
+      // Put back what was stepped over, in order.
+      for (const again of undone.reverse()) {
+        for (const [c, r] of again.cells) occupied.add(key(c, r))
+        out.push(again)
+      }
+      ;({ col, row, mirror, ball } = resume)
+    }
   }
   commit(portalPiece, portalPlacement('out', ctx.portalColor))
   return out

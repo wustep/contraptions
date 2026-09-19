@@ -34,6 +34,7 @@ const dropFor = (floors: number) => floors / rampsFor(floors)
 
 export const zigzag = definePiece<ZigzagState>({
   name: 'zigzag',
+  points: (s) => s.hits.length * 10,
   weight: 1,
   place: ({ rng, color, fits, taste }) => {
     const deep = taste.weights['drop-deep'] ?? 1

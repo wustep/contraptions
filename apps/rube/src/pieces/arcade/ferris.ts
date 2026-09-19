@@ -110,6 +110,7 @@ function gondola(p: p5, k: number, ink: string, weight: number, color: string, p
 
 export const ferris = definePiece<{ color: string }>({
   name: 'ferris',
+  points: 200,
   weight: 0.9,
   place: ({ color, fits }) => {
     const cells: Pt[] = [

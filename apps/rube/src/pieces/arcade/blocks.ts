@@ -56,6 +56,7 @@ const rowY = (row: number) => FLOOR + row * B
 
 export const blocks = definePiece<BlocksState>({
   name: 'blocks',
+  points: 100,
   weight: 1,
   place: ({ rng, color, fits, theme }) => {
     for (const turn of rng.shuffle([1, -1] as const)) {

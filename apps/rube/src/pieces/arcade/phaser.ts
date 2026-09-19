@@ -50,6 +50,7 @@ for (let c = 0; c < COURSES; c++) {
 
 export const phaser = definePiece<{ color: string; courses: string[] }>({
   name: 'phaser',
+  points: 100,
   weight: 0.9,
   dynamic: true,
   place: ({ rng, color, fits, theme }) => {

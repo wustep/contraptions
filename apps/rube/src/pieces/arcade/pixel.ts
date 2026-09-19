@@ -55,6 +55,7 @@ const SPRITE = [0b011110, 0b111111, 0b111111, 0b111111, 0b111111, 0b011110]
 
 export const pixel = definePiece<{ color: string; paint: string; palette: string[] }>({
   name: 'pixel',
+  points: 100,
   weight: 0.9,
   dynamic: true,
   place: ({ rng, color, fits, theme, ball }) => {

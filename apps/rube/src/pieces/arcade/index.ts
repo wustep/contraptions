@@ -43,7 +43,7 @@ import { zigzag } from './zigzag'
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
  *   spinner    shoves through a hanging plate, foot riding over the ball, that spins on the ball's way clear of its beam, counting turns in lamps up the post; the score pops as it is flung and ticks up with the turns
  *   changer    into the slot in the cabinet's side; chunk; the dark display lights 01 and a token comes out under the far flap and takes the thread
- *   ticket     off the rail's end into the hopper; a strip of tickets feeds out below, the display counting them; drops out of the prize chute beside the cabinet, one or two floors down
+ *   ticket     the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down, a ticket a hundred feeds out below and coils on the floor; drops out of the prize chute beside the cabinet, one or two floors down
  *   zigzag     down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad
  *   pachinko   off a lip, bouncing pin to pin through five rows, each lighting; the jackpot pocket drops its side; out a gate two floors down
  *   skee       a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top and down into the fifty ring a floor up; the rings light as it lands
@@ -105,14 +105,14 @@ export const arcade: World = {
   tastes: {
     pinball: {
       bumper: 1.8, spinner: 1.7, slingshot: 1.7, shooter: 1.8, zigzag: 1.5, gauss: 1.4, skee: 1.3,
-      striker: 0.8, ticket: 0.7, hockey: 0.7, whack: 0.7, hoops: 0.7, slots: 0.7, pong: 0.6, blocks: 0.6, ufo: 0.6, coaster: 0.6, claw: 0.5, ferris: 0.5,
+      striker: 0.8, hockey: 0.7, whack: 0.7, hoops: 0.7, slots: 0.7, pong: 0.6, blocks: 0.6, ufo: 0.6, coaster: 0.6, claw: 0.5, ferris: 0.5,
     },
     midway: {
-      claw: 1.7, ferris: 1.7, coaster: 1.7, ticket: 1.6, striker: 1.6, whack: 1.6, hoops: 1.6, changer: 1.4, hockey: 1.3, pachinko: 1.2, skee: 1.2,
+      claw: 1.7, ferris: 1.7, coaster: 1.7, striker: 1.6, whack: 1.6, hoops: 1.6, changer: 1.4, hockey: 1.3, pachinko: 1.2, skee: 1.2,
       'lift-tall': 1.8, 'drop-deep': 1.8, spinner: 0.7, pixel: 0.7, phaser: 0.7, bumper: 0.6, pong: 0.6, blocks: 0.6,
     },
     jackpot: {
-      slots: 1.9, pachinko: 1.8, skee: 1.6, hockey: 1.5, changer: 1.4, striker: 1.3, zigzag: 1.3, ticket: 1.3, slingshot: 1.2, gauss: 1.2,
+      slots: 1.9, pachinko: 1.8, skee: 1.6, hockey: 1.5, changer: 1.4, striker: 1.3, zigzag: 1.3, slingshot: 1.2, gauss: 1.2,
       claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6,
     },
     screens: {

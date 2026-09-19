@@ -61,6 +61,7 @@ function puckAt(t: number, floors: number): number {
 
 export const striker = definePiece<StrikerState>({
   name: 'striker',
+  points: 500,
   weight: 1,
   place: ({ rng, color, fits, taste }) => {
     const tall = taste.weights['lift-tall'] ?? 1
@@ -158,5 +159,5 @@ export const striker = definePiece<StrikerState>({
     p.pop()
     flash(p, k, s.color, weight, 0, top - HOOD + BELL, since, 0.3, 0.14, 0.3)
   },
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -s.floors - HOOD - 0.1, '+1000', since, 1.2),
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -s.floors - HOOD - 0.1, '+500', since, 1.2),
 })

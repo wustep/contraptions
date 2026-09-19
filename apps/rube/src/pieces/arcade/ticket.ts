@@ -1,16 +1,23 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, ROLL, definePiece, fly, over, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { cabinet, display, lamp, marquee } from './neon'
+import { cabinet, display, lamp, marquee, score } from './neon'
 
 /**
- * A ticket machine as tall as the drop. The lane runs into a hopper in its
- * top; the ball rolls off the rail's end and tips into the funnel, still
- * going the way it came, and is gone down the throat; the machine whirs,
- * its lights chase, and a strip of tickets feeds out of the slot at the
- * bottom, longer and longer — until the ball drops out of the prize chute
- * on the far side, a hood at the cabinet's foot, onto the rail below: one
- * or two floors down, on or back the way it came. The tickets hang there.
- * Nobody tears them off.
+ * A ticket machine as tall as the drop, and the arcade's last word: the
+ * planner never draws it from the pool, and stands it at the end of the
+ * map, where the run's points are paid out. The lane runs into a hopper in
+ * its top; the ball rolls off the rail's end and tips into the funnel,
+ * still going the way it came, and is gone down the throat; the machine
+ * whirs, its lights chase, the display — which came on showing what the
+ * map earned — counts down a hundred at a time, and for every hundred a
+ * ticket feeds out of the slot at the bottom: a strip that hangs to the
+ * floor and then coils up there into a roll that grows. Then the ball
+ * drops out of the prize chute on the far side, a hood at the cabinet's
+ * foot, onto the rail below: one or two floors down, on or back the way it
+ * came. The tickets stay. Nobody tears them off.
+ *
+ * Alone under the glass there is no run behind it, so it makes up a total
+ * a run might have earned, and pays that out.
  *
  * The hood stands in front of the ball, so it comes *out* of the chute
  * and lands beside the cabinet, instead of appearing on the cabinet's face.
@@ -19,7 +26,17 @@ export interface TicketState {
   color: string
   floors: number
   turn: 1 | -1
+  /** What the map earned, and what that comes to at a ticket a hundred. */
+  points: number
+  tickets: number
 }
+
+/** Points to a ticket. */
+export const PER_TICKET = 100
+export const ticketsFor = (points: number): number => Math.max(1, Math.round(points / PER_TICKET))
+/** Tickets that hang before the strip reaches the floor and starts to coil. */
+const HANG = 5
+const PITCH = 0.07
 
 const HOPPER = -0.12
 const W = 0.5
@@ -43,7 +60,11 @@ const HOLD = 0.15
 export const ticket = definePiece<TicketState>({
   name: 'ticket',
   weight: 1.1,
-  place: ({ rng, color, fits, taste }) => {
+  finale: true,
+  place: ({ rng, color, fits, taste, earned }) => {
+    // With no run behind it, what a run might have earned.
+    const points = earned > 0 ? earned : 300 + 50 * rng.fork('points').int(0, 26)
+    const tickets = ticketsFor(points)
     const deep = taste.weights['drop-deep'] ?? 1
     const options = rng.shuffle([1, 2].flatMap((floors) => [1, -1].map((turn) => ({ floors, turn: turn as 1 | -1 }))))
     for (const { floors, turn } of rankBy(rng, options, (o) => Math.pow(deep, o.floors - 1))) {
@@ -67,7 +88,7 @@ export const ticket = definePiece<TicketState>({
         ],
         fire: T_EDGE + TIP + ride + HOLD,
       }
-      return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, turn } }
+      return { cells, exit: { at: exit, dir: turn }, lane, state: { color, floors, turn, points, tickets } }
     }
     return null
   },
@@ -75,9 +96,10 @@ export const ticket = definePiece<TicketState>({
     const { floors, turn } = s
     const ride = rideTime(floors)
     const whir = t > T_EDGE + TIP && since < 0
-    // The ticket strip: fed out while the machine works, hanging after.
+    // The payout: a ticket for every hundred, fed out while the machine works, staying after.
     const fed = t < T_EDGE + TIP ? 0 : since < 0 ? over(t, T_EDGE + TIP, T_EDGE + TIP + ride) : 1
-    const tickets = Math.round(fed * (3 + 3 * floors))
+    const tickets = Math.round(fed * s.tickets)
+    const left = tickets >= s.tickets ? 0 : Math.max(0, s.points - tickets * PER_TICKET)
     const shake = whir ? 0.008 * Math.sin(t * 50) : 0
 
     rail(p, k, ink, weight, -0.5, EDGE)
@@ -91,27 +113,36 @@ export const ticket = definePiece<TicketState>({
     p.quad((HOPPER - 0.2) * k, -0.04 * k, (HOPPER + 0.24) * k, -0.04 * k, 0.12 * k, 0.26 * k, -0.12 * k, 0.26 * k)
     // The marquee along the top, on a dark band let into the cabinet so its lamps read against it, chasing while it whirs.
     marquee(p, k, ink, weight, s.color, bg, -0.22, 0.22, -0.35, 5, t, whir, 0.09)
-    // The display: the count of tickets so far, lit once the machine is working.
-    display(p, k, ink, weight, bg, 0, 0.42, 0.3, 0.14, String(tickets).padStart(2, '0'), s.color, whir || since > 0)
+    // The display: the points the run earned, counting down as they are paid out. Dark until the ball is in.
+    display(p, k, ink, weight, bg, 0, 0.42, 0.36, 0.14, String(left).padStart(4, '0'), s.color, whir || since > 0, 0.018)
     // The ticket slot beside the chute, on the other side.
     solid(p, ink, weight, ink)
     p.rect(-turn * 0.12 * k, (floors + 0.06) * k, 0.16 * k, 0.04 * k)
     p.pop()
-    // The tickets: one strip out of the slot, a perforation every ticket.
+    // The tickets: one strip out of the slot, a perforation every ticket, down to the floor; what comes after that coils up there, a roll that grows.
     if (tickets > 0) {
       const x = -turn * 0.12
       const y0 = floors + 0.1
-      const h = tickets * 0.07
+      const rolled = Math.max(0, tickets - HANG)
+      const r = rolled > 0 ? Math.min(0.105, 0.04 + 0.017 * Math.sqrt(rolled)) : 0
+      const h = rolled > 0 ? floors + 0.47 - 2 * r - y0 : tickets * PITCH
       solid(p, ink, weight * 0.7, bg)
       p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
       outline(p, ink, weight * 0.7)
-      for (let i = 1; i < tickets; i++) {
-        const y = y0 + i * 0.07
+      for (let y = y0 + PITCH; y < y0 + h - 0.02; y += PITCH) {
         p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
         p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
       }
+      if (rolled > 0) {
+        solid(p, ink, weight * 0.7, bg)
+        p.circle(x * k, (floors + 0.47 - r) * k, 2 * r * k)
+        outline(p, ink, weight * 0.6)
+        p.circle(x * k, (floors + 0.47 - r) * k, 0.8 * r * k)
+      }
     }
   },
+  // What the points came to, over the marquee as the last ticket lands: on the cabinet's own face it was the cabinet's colour.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -0.3, `x${s.tickets}`, since, 1.4),
   over: (p, s, { k, t, since, ink, weight, bg }) => {
     const { floors, turn } = s
     const whir = t > T_EDGE + TIP && since < 0

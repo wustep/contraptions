@@ -95,6 +95,7 @@ function paddleAt(side: 1 | -1, t: number, rally: Rally, floors: number, turn: 1
 
 export const pong = definePiece<PongState>({
   name: 'pong',
+  points: 100,
   weight: 1,
   place: ({ rng, color, fits, taste }) => {
     const tall = taste.weights['lift-tall'] ?? 1

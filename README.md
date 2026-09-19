@@ -630,13 +630,29 @@ Some of the machines are screens, and inside a screen the ball moves the
 way a video game moves it: in straight lines at one pace up a Pong court,
 in squares on a sprite's grid, by the tick in a falling-blocks well.
 
+**The arcade keeps score, and pays out once.** Every beat declares its
+`points` and pops exactly that number, at the hit if it has a `scores` pass
+of its own and off the ball at the moment it fires if it has not. A touch in
+passing is tens (a spinner's turn +10, a zigzag pad +10, a bumper +50, a
+skee ring +50, a token +50; the moles go +10, +20, +30), a game played is
++100 (a line cleared, a goal, a rally won, a skill shot), a ride or a prize
+is +200, and the big ones are a basket +300, the pachinko pocket +500, the
+striker's bell +500 and the sevens +777. Nothing pays out along the way. The
+ticket machine is the map's `finale`: the planner never draws it from the
+pool, places it after the last beat and before the door (stepping the walk
+back a beat or two if it does not fit where the walk ended), and tells it
+what the map `earned`. Its display comes on showing that total and counts
+it down a hundred at a time, a ticket out of the slot for each: a hundred
+points to a ticket, rounded, never fewer than one. Alone under the glass
+there is no run behind it, so it makes up a total a run might have earned.
+
 | Piece | What happens |
 | --- | --- |
 | rail | a lit lane: a lamp, a strip or chevrons that come on as the ball passes |
-| bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +100, out faster |
+| bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +50, out faster |
 | spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, clear of its beam, counting its turns in lamps up the post; the score pops as the plate is flung and ticks up with the turns |
 | changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
-| ticket | off the rail's end into the hopper; a strip of tickets feeds out below while it whirs; drops out of the prize chute beside the cabinet, one or two floors down |
+| ticket | the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down a hundred at a time and a ticket feeds out below for each, a strip that reaches the floor and coils into a roll; drops out of the prize chute beside the cabinet, one or two floors down |
 | zigzag | down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad |
 | pachinko | off a lip and bouncing pin to pin through five rows, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
 | skee | a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top of its arc and down into the fifty ring a floor up; the rings light as it lands |
@@ -652,8 +668,8 @@ in squares on a sprite's grid, by the tick in a falling-blocks well.
 | phaser | a curtain of scanlines turns the ball to a ghost; it rolls straight through a wall of bricks, which go to wireframe where it is; a second curtain makes it solid again |
 | ufo | onto the landing mark; the hatch opens, the beam comes down, and the ball goes up it, one or two floors; the saucer slides out over the rail with it, the beam goes out, and it rolls off |
 | slots | onto the tray on the end of a one-armed bandit's lever; its weight pulls the lever down through a quarter turn, reels spinning and stopping as it comes; seven seven seven on the clunk, and the tray's wall lies along the rail below; coins in the payout tray; +777 |
-| whack | across a whack-a-mole deck; moles pop up behind it and a mallet on a gantry comes after them, a beat late; the third pops up under the ball and tosses it over the rim; +10 a mole |
-| hoops | into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 2 |
+| whack | across a whack-a-mole deck; moles pop up behind it and a mallet on a gantry comes after them, a beat late; the third pops up under the ball and tosses it over the rim; +10, +20, +30, and the counter keeps the tally |
+| hoops | into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 300 |
 | ferris | onto the seat of the low gondola of a little Ferris wheel; half a turn, slowly, every gondola swinging on its pivot; the high seat is level with the rail a floor up and the ball rolls off it |
 | coaster | drops into a car at the station; the chain clacks it up the lift hill, the track lighting behind it; over the crest and down the drop to the floor below; the fins stop the car in sparks and the ball rolls on out of its nose |
 
@@ -671,7 +687,9 @@ not used yet and none in a map four times, every lane joined
 up inside its piece, continuity at every hand-off, one portal at each end
 and none between, the ball's state carried piece to piece, every
 recolouring a change of colour, every ghost solid again before it leaves
-its piece, and the tempo.
+its piece, the tempo, and the arcade's economy: every beat scores, and
+tickets come once, last thing before the door, a ticket a hundred of what
+the map earned.
 
 ## License
 

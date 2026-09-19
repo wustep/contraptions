@@ -64,6 +64,7 @@ function seatAt(t: number): Pt {
 
 export const slots = definePiece<{ color: string; coin: string }>({
   name: 'slots',
+  points: 777,
   weight: 1,
   place: ({ rng, color, fits, theme }) => {
     const cells: Pt[] = [

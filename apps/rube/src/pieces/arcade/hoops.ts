@@ -154,6 +154,7 @@ function net(p: p5, k: number, ink: string, weight: number, sway: number, bx: nu
 
 export const hoops = definePiece<{ color: string }>({
   name: 'hoops',
+  points: 300,
   weight: 0.9,
   flight: true,
   place: ({ color, fits }) => {
@@ -190,7 +191,7 @@ export const hoops = definePiece<{ color: string }>({
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, RIM[1] * k)
     p.line((RIM[0] + RIM_HALF) * k, RIM[1] * k, 1.23 * k, (RIM[1] + 0.1) * k)
     glow(p, k, s.color, 1.22, -1.24, 0.17, made)
-    display(p, k, ink, weight, bg, 1.22, -1.24, 0.3, 0.17, since > 0 ? '2' : '0', s.color, since > 0)
+    display(p, k, ink, weight, bg, 1.22, -1.24, 0.3, 0.17, since > 0 ? '300' : '0', s.color, since > 0, 0.02)
     // The rim's far half, behind the ball: a lit ring when the shot is made.
     glow(p, k, s.color, RIM[0], RIM[1], 0.2, made)
     p.push()
@@ -238,7 +239,7 @@ export const hoops = definePiece<{ color: string }>({
     flash(p, k, s.color, weight, OFF[0], OFF[1], t - T_OFF, 0.18, 0.12, 0.26)
     flash(p, k, s.color, weight, RIM[0], RIM[1], since, 0.25, 0.16, 0.3)
   },
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, RIM[0] - 0.05, RIM[1] - 0.12, '+2', since, 0.9),
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, RIM[0] - 0.05, RIM[1] - 0.12, '+300', since, 0.9),
   over: (p, s, { k, t, since, ink, weight }) => {
     // In front of the ball: the net it goes through, and the rim's near half.
     const ball = laneAt(LANE, t)
