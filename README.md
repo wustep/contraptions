@@ -517,7 +517,10 @@ sunflower, pod, cocoon and appletree; the arcade's changer, gauss, pixel
 and phaser); they are capped at two a map and never absent for three maps
 running, and a piece that recolours the ball only places itself where it
 can hand the ball on in a colour other than the one it arrived in — never
-the same colour out as in. A ghost is the ball as a dashed outline that
+the same colour out as in. And no piece is ever handed the colour the ball
+arrives in: the planner leaves the ball's current colour out of the pool a
+piece is painted from, so a ball never vanishes into what holds it, however
+many times it has been recoloured on the way. A ghost is the ball as a dashed outline that
 solid things do not stop, and it is a piece's own business. The phaser
 makes one to take it through a brick wall and makes it solid again before
 it hands it on. A piece declares for itself whether it changes the ball
@@ -573,6 +576,10 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 A pier over water. Under every rail there is still water on pilings — still
 on purpose, since a piece's clock is its own and a ripple animated from it
 would jump phase at every cell edge; what moves is what the ball does to it.
+Water is always the palette's blue — a splash never borrows the colour of
+the hull or the animal that threw it up — and an animal or a hull the ball
+rides is never painted the ball's own colour, so the ball is always seen
+against what holds it.
 
 | Piece | What happens |
 | --- | --- |

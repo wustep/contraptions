@@ -13,6 +13,12 @@ import { FLOOR, post } from '../../parts'
  * jump phase at every cell edge; three whole waves to a cell join up
  * instead, and what moves is what the ball does to it — a splash, a ring,
  * a run of bubbles.
+ *
+ * Colour here is read against the ball. Water — the sea, a splash, a wake,
+ * a lifted ring — is the palette's blue (`seaWater`), never the colour of
+ * the hull or the animal that threw it up. A body the ball rests on or in
+ * is never the ball's own colour (`bodyColor`), so the ball is always seen
+ * against what holds it.
  */
 
 /** Where the water lies under the deck. */
