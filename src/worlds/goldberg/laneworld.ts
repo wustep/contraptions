@@ -43,21 +43,7 @@ import { filteredPool, isUnit } from './staff'
  * it is facing.
  */
 
-export type CellRole =
-  | 'feeder'
-  | 'station'
-  | 'filler'
-  | 'lift'
-  | 'well'
-  | 'sink'
-  /** A middle cell of an elevator deeper than two cells: the car passes through. */
-  | 'shaft'
-  /** The top of a free fall: the token rolls off a lip and drops out the bottom. */
-  | 'chute'
-  /** A middle cell of a fall: a tube the token drops through. */
-  | 'tube'
-  /** The bottom of a fall: a quarter-pipe turns the drop back into a roll. */
-  | 'catch'
+export type CellRole = 'feeder' | 'station' | 'filler' | 'lift' | 'well' | 'sink'
 
 /** What a lane world is: a catalog, a pace, a floor, and a pool per role. */
 export interface WorldSpec {
@@ -82,11 +68,6 @@ export interface WorldSpec {
     filler: string
     lift: string
     well: string
-    /** The descent pieces a wandering path may ask for. A snake never does. */
-    shaft?: string
-    chute?: string
-    tube?: string
-    catch?: string
   }
   /** The state this world stamps on a cell: cascade writes `flow`, workshop `line`. */
   state(role: CellRole, ctx: LaneCtx, color: string): Record<string, unknown>
@@ -165,8 +146,8 @@ export interface PlanCtx {
 /**
  * A plan is the shape of the machine: which cells the token visits, in what
  * order, and what each one is for. Cascade and workshop plan a snake through
- * every cell; a Rube Goldberg piece wanders. Staffing, lanes, phases and the
- * drawing of everything that moves are the world's, whatever the plan.
+ * every cell. Staffing, lanes, phases and the drawing of everything that
+ * moves are the world's, whatever the plan.
  */
 export type Plan = (ctx: PlanCtx) => PathStep[]
 
@@ -316,23 +297,13 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
   if (!candidates.length) return bare()
 
   const { names } = world
-  const named = (want: (string | undefined)[]) => candidates.filter((c) => want.includes(c.name))
+  const named = (want: string[]) => candidates.filter((c) => want.includes(c.name))
   const feeders = named(names.feeders)
   const endings = named(names.endings)
   const lifts = named([names.lift])
   const wells = named([names.well])
   const fillers = named([names.filler])
-  const special = new Set([
-    ...names.feeders,
-    ...names.endings,
-    names.filler,
-    names.lift,
-    names.well,
-    names.shaft,
-    names.chute,
-    names.tube,
-    names.catch,
-  ])
+  const special = new Set([...names.feeders, ...names.endings, names.filler, names.lift, names.well])
   const stations = candidates.filter((c) => !special.has(c.name))
   const sources = candidates.filter((c) => c.role === 'source')
   const sinks = candidates.filter((c) => c.role === 'sink')
@@ -343,10 +314,6 @@ export function buildLaneWorld(options: Options, canvas: number, world: WorldSpe
     well: [wells, fillers],
     filler: [fillers, stations],
     station: [stations, fillers],
-    shaft: [named([names.shaft]), fillers],
-    chute: [named([names.chute]), fillers],
-    tube: [named([names.tube]), fillers],
-    catch: [named([names.catch]), fillers],
   }
 
   const roleRng = rng.fork('roles')
@@ -557,34 +524,23 @@ const roleOf = (world: WorldSpec, name: string): CellRole => {
   const { names } = world
   if (names.feeders.includes(name)) return 'feeder'
   if (names.endings.includes(name)) return 'sink'
-  for (const role of ['lift', 'well', 'shaft', 'chute', 'tube', 'catch'] as const) {
-    if (names[role] !== undefined && name === names[role]) return role
-  }
+  if (name === names.lift) return 'lift'
+  if (name === names.well) return 'well'
   return 'station'
 }
 
 /** Which edges a role is entered and left by, canonically. */
 const sidesOf = (role: CellRole): { in: LaneCtx['in']; out: LaneCtx['out'] } => ({
-  in: role === 'feeder' ? null : role === 'well' || role === 'shaft' || role === 'tube' || role === 'catch' ? 'N' : 'W',
-  out: role === 'sink' ? null : role === 'lift' || role === 'shaft' || role === 'chute' || role === 'tube' ? 'S' : 'E',
+  in: role === 'feeder' ? null : role === 'well' ? 'N' : 'W',
+  out: role === 'sink' ? null : role === 'lift' ? 'S' : 'E',
 })
 
-/**
- * A demo context for one role. A shaft's demo is a two-floor stack's middle
- * cell, so the sheet shows the car passing through it.
- */
+/** A demo context for one role. */
 const ctxFor = (world: WorldSpec, role: CellRole, emit: number): LaneCtx => ({
   ...sidesOf(role),
   emit,
   floorY: world.floorY,
-  ride:
-    role === 'lift'
-      ? { index: 0, floors: 1 }
-      : role === 'well'
-        ? { index: 1, floors: 1 }
-        : role === 'shaft'
-          ? { index: 1, floors: 2 }
-          : undefined,
+  ride: role === 'lift' ? { index: 0, floors: 1 } : role === 'well' ? { index: 1, floors: 1 } : undefined,
 })
 
 /**
