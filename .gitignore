@@ -4,4 +4,11 @@ dist
 *.log
 out/
 .vercel
+
+# Keep the local workbench private, with reproducible score previews checked in.
+!dev/
+dev/*
+!dev/author-clair-de-lune.ts
+!dev/clair-de-lune.html
+!dev/render-clair-de-lune.mjs
 *.mp4

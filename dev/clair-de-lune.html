@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clair de lune · 30 second preview</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f1ebdd; color: #2b2620; font: 14px system-ui, sans-serif; }
+      #stage { position: fixed; inset: 0; }
+      canvas { display: block; }
+      #controls { position: fixed; bottom: 24px; left: 24px; right: 24px; max-width: 680px; margin: auto; padding: 16px 20px; background: #f1ebddf2; border: 1px solid #2b262030; border-radius: 8px; }
+      .heading, .transport { display: flex; align-items: center; gap: 12px; }
+      .heading { justify-content: space-between; margin-bottom: 12px; }
+      .heading span, #status, .credit { font-size: 12px; color: #64594c; }
+      button { font: inherit; color: inherit; background: transparent; border: 1px solid #2b262050; border-radius: 4px; padding: 9px 14px; cursor: pointer; min-height: 40px; }
+      button:focus-visible, input:focus-visible { outline: 2px solid #3f5f7a; outline-offset: 3px; }
+      #play { background: #2b2620; color: #f1ebdd; min-width: 80px; }
+      input { min-width: 40px; flex: 1; accent-color: #3f5f7a; }
+      output { font-variant-numeric: tabular-nums; min-width: 88px; text-align: right; }
+      #status { margin: 12px 0 6px; }
+      .credit { margin: 0; }
+      a { color: inherit; }
+      body.clean #controls { display: none; }
+      @media (max-width: 560px) { #controls { left: 12px; right: 12px; bottom: 12px; padding: 12px; } .heading span { display: none; } .transport { gap: 8px; } button { padding: 9px; } }
+    </style>
+  </head>
+  <body>
+    <main id="stage" aria-label="A choreographed Rube Goldberg machine"></main>
+    <section id="controls" aria-label="Preview controls">
+      <div class="heading"><strong>Clair de lune</strong><span>Opening study · 30 seconds</span></div>
+      <div class="transport">
+        <button id="play" type="button">Play</button>
+        <button id="restart" type="button">Restart</button>
+        <input id="seek" type="range" min="0" max="30" step="0.01" value="0" aria-label="Preview time in seconds" />
+        <output id="time">0:00 / 0:30</output>
+      </div>
+      <p id="status" role="status">Ready at the first audible note. Space to play. H to hide controls.</p>
+      <p class="credit">Debussy · Piano: Laurens Goedhart, 2011 · <a href="/docs/promo/CLAIR_DE_LUNE_ATTRIBUTION.txt">CC BY 3.0 · recording credit</a></p>
+    </section>
+    <script type="module" src="/apps/rube/src/shows/clair-de-lune-preview.ts"></script>
+  </body>
+</html>
