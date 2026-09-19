@@ -51,7 +51,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   burrow       over the lip of a hole and down it; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
  *   hose         into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its skin goes round the loop two and a half times, gathering pace; out of the nozzle
  *   gate         into a picket gate; the knock hops the latch and the gate gives; the ball shoulders through, hauling a flowerpot up on a cord; the pot hauls the gate shut and its edge catches the ball on the back; it shoots off; the latch drops in
- *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
+ *   snail        up the tail's curl and over the shell; carried in three slow pulls; a look up, a bow, and the heave throws it off over the head
  *   frog         onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up
  *   toadstools   off the path's end onto three toadstools, each taller than the last; every cap squashes, springs and puffs spores; pum, pum, pum, onto the rail a floor up
  *   appletree    the ball bonks the trunk and stops dead; the crown shudders, a leaf or two falls; the ripe apple on the far bough drops, bounces once and rolls on with the thread; the ball stays at the tree's foot
