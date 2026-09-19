@@ -24,12 +24,11 @@ import { pierRail } from './rail'
 import { seal } from './seal'
 import { serpent } from './serpent'
 import { slipway } from './slipway'
-import { wave } from './wave'
 import { whirlpool } from './whirlpool'
 
 /**
  * The harbor: a pier over water, tide and salt. Everything here floats,
- * sinks, splashes or is hauled: the ball rides a buoy, a wave, a crab's
+ * sinks, splashes or is hauled: the ball rides a buoy, a crab's
  * claw and a pelican's pouch; goes up inside a lighthouse and up a column
  * of kelp; goes down on an anchor and down a whirlpool; is inked by an
  * octopus and swapped for a pearl by an oyster. It sails a dinghy across
@@ -41,7 +40,6 @@ import { whirlpool } from './whirlpool'
  *
  *   rail        a pier: deck on pilings over still water
  *   buoy        the deck stops; a bell buoy leans to meet the ball, which rides its deck; it rocks over, clangs, and runs it off faster
- *   wave        a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down
  *   lighthouse  in through the door behind the jamb, a lit window climbs the tower, out of the lantern room's door onto the gallery one or two up
  *   crab        rolls into the claw; lifted, aimed, pitched across a cell of water over the other claw, braced low
  *   kelp        into a tank at the bottom, bending upward; rises between two stalks of kelp on its own bubbles; out at the rim
@@ -99,15 +97,15 @@ export const harbor: World = {
   backdrops: ['waves', 'plain', 'waves'],
   tastes: {
     tidal: {
-      lock: 1.7, lighthouse: 1.6, kelp: 1.6, anchor: 1.6, whirlpool: 1.5, slipway: 1.4, jellyfish: 1.4, blowhole: 1.3, wave: 1.2, hawser: 1.2, seal: 1.2, 'lift-tall': 2, 'drop-deep': 2,
+      lock: 1.7, lighthouse: 1.6, kelp: 1.6, anchor: 1.6, whirlpool: 1.5, slipway: 1.4, jellyfish: 1.4, blowhole: 1.3, hawser: 1.2, seal: 1.2, 'lift-tall': 2, 'drop-deep': 2,
       crab: 0.7, pelican: 0.7, floats: 0.7, flags: 0.7, foghorn: 0.7, serpent: 0.7,
     },
     quay: {
       buoy: 1.7, flags: 1.6, crab: 1.6, foghorn: 1.5, dinghy: 1.5, hawser: 1.5, pelican: 1.5, slipway: 1.4, oyster: 1.3, octopus: 1.3, lock: 1.3, floats: 1.3, anchor: 1.2, lighthouse: 1.2,
-      seal: 0.8, blowhole: 0.7, whirlpool: 0.7, wave: 0.6, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6,
+      seal: 0.8, blowhole: 0.7, whirlpool: 0.7, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6,
     },
     surf: {
-      wave: 2, blowhole: 1.8, dolphin: 1.8, dinghy: 1.4, crab: 1.4, pelican: 1.4, whirlpool: 1.3, floats: 1.3, serpent: 1.3, buoy: 1.2, seal: 1.2,
+      blowhole: 1.8, dolphin: 1.8, dinghy: 1.4, crab: 1.4, pelican: 1.4, whirlpool: 1.3, floats: 1.3, serpent: 1.3, buoy: 1.2, seal: 1.2,
       anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, lock: 0.6, flags: 0.6, anemone: 0.7,
     },
     reef: {
@@ -116,7 +114,7 @@ export const harbor: World = {
     },
   },
   pieces: [
-    pierRail, buoy, wave, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool,
+    pierRail, buoy, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool,
     dinghy, seal, flags, slipway, jellyfish, floats, lock, puffer, hawser, dolphin, foghorn, serpent, anemone,
     portal,
   ],

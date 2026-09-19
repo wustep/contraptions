@@ -12,7 +12,6 @@ import { dandelion } from './dandelion'
 import { frog } from './frog'
 import { hose } from './hose'
 import { maple } from './maple'
-import { mower } from './mower'
 import { pod } from './pod'
 import { gardenRail } from './rail'
 import { rake } from './rake'
@@ -36,7 +35,7 @@ import { wheelbarrow } from './wheelbarrow'
  * takes it, a bumblebee labours off with it, a dandelion seed floats it
  * up and a falling leaf brings it down; it bounces up three toadstools,
  * goes down a well in the bucket, is tipped by a bamboo rocker, thrown by
- * a spade and by a mower's reel, tocked through croquet hoops, spins a
+ * a spade, tocked through croquet hoops, spins a
  * scarecrow, comes out of a cocoon another colour, and knocks an apple
  * out of a tree that rolls on in its place.
  *
@@ -60,7 +59,6 @@ import { wheelbarrow } from './wheelbarrow'
  *   bamboo       onto the scoop of a shishi-odoshi; its weight brings the mouth down onto the terrace's coping; off the tip and down a floor, heading back; the tail cracks on its stone
  *   cocoon       into one mouth of a silk tunnel slung between two twigs; it rocks and flushes with colour, the seam splits, three butterflies come out; the ball rolls out the far mouth their colour
  *   bumblebee    onto a daisy's face; a bumblebee comes over from its flower, takes hold, heaves twice, and labours up and across the bed with it to a shelf a floor up; sets it down rolling and goes home
- *   mower        through the long grass up against a reel mower's reel; the reel spins up and a blade throws it over the top, between the handles and over the grass box, across the lawn
  *   croquet      onto the mark, nose against a flap; the hook lets go and a hung mallet tocks it through two hoops; it clips the striped peg
  *   scarecrow    loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and comes back down
  *   dandelion    into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out
@@ -101,24 +99,24 @@ export const garden: World = {
   tastes: {
     greenhouse: {
       vine: 1.7, bloom: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, sprinkler: 1.2, maple: 1.2, 'lift-tall': 1.8,
-      well: 0.8, wheelbarrow: 0.7, croquet: 0.7, hose: 0.6, rake: 0.6, mower: 0.6, scarecrow: 0.6,
+      well: 0.8, wheelbarrow: 0.7, croquet: 0.7, hose: 0.6, rake: 0.6, scarecrow: 0.6,
     },
     allotment: {
-      wheelbarrow: 1.7, rake: 1.7, spade: 1.7, well: 1.6, mower: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, 'drop-deep': 1.8,
+      wheelbarrow: 1.7, rake: 1.7, spade: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, 'drop-deep': 1.8,
       vine: 0.8, pod: 0.7, frog: 0.7, dandelion: 0.7, cocoon: 0.7, bloom: 0.6, toadstools: 0.6,
     },
     wild: {
       frog: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2,
-      rake: 0.7, bamboo: 0.7, wateringcan: 0.6, spade: 0.6, wheelbarrow: 0.5, mower: 0.5, croquet: 0.5,
+      rake: 0.7, bamboo: 0.7, wateringcan: 0.6, spade: 0.6, wheelbarrow: 0.5, croquet: 0.5,
     },
     lawn: {
-      croquet: 1.8, bamboo: 1.7, mower: 1.5, appletree: 1.5, sprinkler: 1.5, hose: 1.4, wateringcan: 1.3, maple: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
+      croquet: 1.8, bamboo: 1.7, appletree: 1.5, sprinkler: 1.5, hose: 1.4, wateringcan: 1.3, maple: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
       burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, pod: 0.6, frog: 0.6,
     },
   },
   pieces: [
     gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail,
-    frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, mower, croquet, scarecrow, dandelion, maple,
+    frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, croquet, scarecrow, dandelion, maple,
     portal,
   ],
 }

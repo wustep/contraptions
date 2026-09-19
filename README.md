@@ -377,9 +377,9 @@ vocabulary of pieces, not a palette swap:
 | | World | The place | Its pieces |
 | --- | --- | --- | --- |
 | 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-four of them |
-| 2 | **Harbor** | a pier over water, tide and salt | twenty-four: sea life, boats, pier gear and the tide |
-| 3 | **Garden** | a greenhouse, soil and bloom | twenty-four: what grows, what lives in it, and the tools in the shed |
-| 4 | **Arcade** | neon night: lights, scores and payouts | twenty-four: pinball, the midway, the payout machines and the screens |
+| 2 | **Harbor** | a pier over water, tide and salt | twenty-three: sea life, boats, pier gear and the tide |
+| 3 | **Garden** | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
+| 4 | **Arcade** | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
 
 Workshop → harbor → garden → arcade → workshop, always. What the seed
 decides is everything *inside* a visit: which of the world's palettes it
@@ -388,7 +388,7 @@ its tastes the planner leans on, how the map is laid out, and which pieces
 it draws — always and only from that world's pool. Two visits to the same
 world never look alike back to back.
 
-**No world is the small one.** Every world has at least twenty-four beats
+**No world is the small one.** Every world has at least twenty-three beats
 of its own (the workshop thirty-four), and four tastes to lean on: the
 harbor's *tidal*, *quay*, *surf* and *reef*; the garden's *greenhouse*,
 *allotment*, *wild* and *lawn*; the arcade's *pinball*, *midway*,
@@ -565,7 +565,6 @@ against what holds it.
 | --- | --- |
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
-| wave | a swell risen out of the sea's own waterline, one shape with no wall and no floor, never still: a swell runs up the back, the crest heaves, the lip reaches and draws back, scallops of foam travel over the top to its tip, streaks climb the face; the ball rolls into the hollow under the curl and rides the face a floor down, spray behind it |
 | lighthouse | one opening shape — jambs under a round head — for the doorway, its door and every window; the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
@@ -613,7 +612,6 @@ against what holds it.
 | bamboo | onto the scoop of a shishi-odoshi; its weight brings the mouth down onto the terrace's coping; off the tip and down a floor, heading back; the tail cracks on its stone |
 | cocoon | into one mouth of a silk tunnel slung between two twigs; it rocks and flushes with colour, the seam splits, three butterflies come out; the ball rolls out the far mouth their colour |
 | bumblebee | onto a daisy's face; a bumblebee comes over from its flower, takes hold, heaves twice, and labours up and across the bed with it to a shelf a floor up; sets it down rolling and goes home |
-| mower | through the long grass up against a reel mower's reel; the reel spins up and a blade throws it over the top, between the handles and over the grass box, across the lawn |
 | croquet | onto the mark, nose against a flap; the hook lets go and a hung mallet tocks it through two hoops; it clips the striped peg |
 | scarecrow | loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and comes back down |
 | dandelion | into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out |
@@ -647,7 +645,6 @@ in squares on a sprite's grid, by the tick in a falling-blocks well.
 | striker | onto the puck, which sinks under the ball; the latch trips; up the tower on the puck, slowing but with pace still on it when it meets the bell, lighting every level on the dark face; ding; the puck cants and the ball rolls off, one or two floors up |
 | slingshot | into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up their own line through the fork; a lob a floor up onto a shelf, landing on the way down; the score pops off the fork's mouth as the ball leaves it |
 | shooter | onto the cup on a plunger's tip; the knob draws down, the spring closing coil on coil; release; up a wire lane, slowing, round the arch and out through a one-way gate that clicks shut; the outer wire lights behind it; one or two floors up |
-| targets | a bank of three drop targets on the lane; each checks the ball and drops into the trough under the rail, tick, tick, tick; lamps and a counter; +300; the reset bar thumps them back up |
 | gauss | pulled into a magnet block faster and faster; clack; the far ball of the two on its other face fires off with the thread, through a speed trap that reads what it clocked; the one that came stays on the magnet |
 | pong | a Pong court one or two floors tall: straight lines, one pace, no gravity; the paddles rally the ball up the screen, a blip a hit; the last serves it flat along the top, the other misses, the point goes up, and it leaves by the doorway there |
 | pixel | behind a screen on a stand, and seen on it in squares: a sprite on the screen's grid at the screen's pace; a scanline comes down it and leaves it another colour while the cursor hops along the palette; out the far side that colour for good |
@@ -666,7 +663,7 @@ the ball, and the show draws the ball once on the joined path from one
 clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
 worlds headless and asserts all of it: the four worlds in order, three
-times round, at least twenty-four beats of its own in every world, every
+times round, at least twenty-three beats of its own in every world, every
 piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, only the arcade
 painted dark, at least three beats in four of every map a piece it has
