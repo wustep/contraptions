@@ -2,11 +2,14 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
+import { UNLOCK_EVENT, builderUnlocked } from '../../../src/ui/unlock'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
+import { folderBuilds } from './builder/discover'
+import { installBuilds } from './builder/registry'
 import { catalogOrder, createCatalog, type Entry } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
-import { WORLDS, nextWorld, worldByName } from './worlds'
+import { WORLDS, builtWorlds, nextWorld, worldByName } from './worlds'
 
 /**
  * The entry: Machine mode. A seed in the URL, the canvas filling everything
@@ -19,7 +22,10 @@ import { WORLDS, nextWorld, worldByName } from './worlds'
  * show alone.
  * `?catalog=1` opens the sheet of every piece instead of the show;
  * `?solo=<piece>` shows one piece's worlds; `?world=<name>` keeps the show
- * in one world instead of going round the loop.
+ * in one world instead of going round the loop. Builds — worlds made in the
+ * Builder, from `apps/rube/builds/` and from this browser — are registered
+ * before the URL is read, so a link may name one; they stand beside the loop
+ * and are visited by pinning.
  *
  * The three views are a stack — the machine, the catalog over it, a piece
  * alone over that — and there is one way back down it, which every door
@@ -33,6 +39,8 @@ import { WORLDS, nextWorld, worldByName } from './worlds'
 
 const stage = document.getElementById('stage')!
 const panelRoot = document.getElementById('panel')!
+
+installBuilds(folderBuilds())
 
 let seed = randomSeed()
 let solo: string | null = null
@@ -292,6 +300,19 @@ const loopSeg = el('div', { class: 'seg', role: 'group', 'aria-label': 'The loop
 const pinBtn = el('button', { class: 'chip', title: 'Stay in this world instead of going round the loop' }, ['Pin'])
 pinBtn.addEventListener('click', () => pinWorld(world ? null : show.at(now()).universe.world.name))
 const loop = el('div', { class: 'row deck' }, [loopSeg, pinBtn])
+// The builds stand beside the loop: a chip pins the show to one, and again lets it go.
+const buildChips = builtWorlds().map((w) => {
+  const b = el('button', { type: 'button', title: `Stay in ${w.label}, a build: ${w.note}` }, [w.label])
+  b.addEventListener('click', () => pinWorld(world === w.name ? null : w.name))
+  return { w, b }
+})
+// The way to the workbench is shown only to someone who has unlocked it.
+const builderLink = el('a', { href: '/builder/', class: 'more' }, ['Builder \u2192'])
+const buildsRow = el('div', { class: 'field builds' }, [
+  el('label', {}, [el('span', {}, ['Builds']), builderLink]),
+  el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Builds' }, buildChips.map((c) => c.b)),
+])
+window.addEventListener(UNLOCK_EVENT, () => sync())
 // Back is a player's back: to the top of this world first, and only from
 // there to the world before it, so one press never loses the place.
 const prevWorld = () => {
@@ -319,7 +340,7 @@ overviewBtn.addEventListener('click', () => setOverview(!overview))
 const jumps = el('div', { class: 'row' }, [prevBtn, nextBtn, restartBtn])
 const steps = el('div', { class: 'row' }, [prevPieceBtn, nextPieceBtn])
 const views = el('div', { class: 'row' }, [catalogBtn, overviewBtn])
-worldSec.append(readout, loop, jumps, steps, views)
+worldSec.append(readout, loop, buildsRow, jumps, steps, views)
 
 // The way back, on the stage itself. Both modes open with the panel away,
 // so a view that can only be left from the panel, or by a key nobody was
@@ -472,6 +493,9 @@ function sync(): void {
   // The loop, its jumps and the overview are the show's; a piece alone steps
   // through pieces instead; the sheet has no world to jump between or scrub.
   loop.hidden = v !== 'show'
+  buildsRow.hidden = v !== 'show' || !buildChips.length
+  builderLink.hidden = !builderUnlocked()
+  for (const { w, b } of buildChips) b.classList.toggle('on', world === w.name)
   jumps.hidden = v !== 'show'
   overviewBtn.hidden = v !== 'show'
   steps.hidden = v !== 'solo'

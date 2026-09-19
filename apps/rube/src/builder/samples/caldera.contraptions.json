@@ -1,0 +1,899 @@
+{
+  "format": "contraptions-build",
+  "version": 1,
+  "name": "caldera",
+  "label": "Caldera",
+  "note": "The sample build: four scaffolded pieces on a volcano island, with a cast borrowed from the workshop.",
+  "pieces": [
+    {
+      "name": "gong",
+      "note": "A gong hung from a gallows with a feeler down in the ball's way: brushed in passing, it rocks on its cords and rings.",
+      "prompt": "a gong that rings when the ball brushes it",
+      "weight": 0.8,
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "exit": {
+        "at": [
+          1,
+          0
+        ],
+        "dir": 1
+      },
+      "lane": [
+        {
+          "op": "roll",
+          "to": [
+            0,
+            0
+          ],
+          "fire": true
+        },
+        {
+          "op": "roll",
+          "to": [
+            0.5,
+            0
+          ]
+        }
+      ],
+      "shapes": [
+        {
+          "kind": "rail",
+          "x0": -0.5,
+          "x1": 0.5
+        },
+        {
+          "kind": "gallows",
+          "x0": -0.36,
+          "x1": 0.24,
+          "post": -0.36,
+          "y": -1.5
+        },
+        {
+          "kind": "arc",
+          "at": [
+            0,
+            -0.55
+          ],
+          "w": 0.74,
+          "h": 0.74,
+          "a0": -0.45,
+          "a1": 0.45,
+          "stroke": "color",
+          "show": {
+            "clock": "since",
+            "from": 0.02,
+            "to": 0.5
+          },
+          "motion": [
+            {
+              "drive": "ease",
+              "ease": "out",
+              "from": 0,
+              "to": 0.5,
+              "scale": [
+                1.28,
+                1.28
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "arc",
+          "at": [
+            0,
+            -0.55
+          ],
+          "w": 0.74,
+          "h": 0.74,
+          "a0": 2.692,
+          "a1": 3.592,
+          "stroke": "color",
+          "show": {
+            "clock": "since",
+            "from": 0.02,
+            "to": 0.5
+          },
+          "motion": [
+            {
+              "drive": "ease",
+              "ease": "out",
+              "from": 0,
+              "to": 0.5,
+              "scale": [
+                1.28,
+                1.28
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "group",
+          "at": [
+            0,
+            -1.5
+          ],
+          "motion": [
+            {
+              "drive": "swing",
+              "from": 0,
+              "rotate": 0.13,
+              "freq": 7,
+              "decay": 1.1
+            }
+          ],
+          "shapes": [
+            {
+              "kind": "line",
+              "pts": [
+                [
+                  -0.1,
+                  0
+                ],
+                [
+                  -0.1,
+                  0.66
+                ]
+              ]
+            },
+            {
+              "kind": "line",
+              "pts": [
+                [
+                  0.1,
+                  0
+                ],
+                [
+                  0.1,
+                  0.66
+                ]
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "offset": [
+                0,
+                0.95
+              ],
+              "w": 0.62,
+              "h": 0.62
+            },
+            {
+              "kind": "ellipse",
+              "offset": [
+                0,
+                0.95
+              ],
+              "w": 0.2,
+              "h": 0.2,
+              "fill": "paper"
+            },
+            {
+              "kind": "line",
+              "pts": [
+                [
+                  0,
+                  1.26
+                ],
+                [
+                  0,
+                  1.315
+                ]
+              ]
+            },
+            {
+              "kind": "ellipse",
+              "offset": [
+                0,
+                1.34
+              ],
+              "w": 0.055,
+              "h": 0.055,
+              "fill": "ink"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "geyser",
+      "note": "A geyser: a platform on a spring between two guides. The ball's weight trips the catch and the spring carries it up a floor.",
+      "prompt": "a geyser that lifts the ball",
+      "weight": 1,
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "exit": {
+        "at": [
+          1,
+          -1
+        ],
+        "dir": 1
+      },
+      "lane": [
+        {
+          "op": "arrive",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "op": "wait",
+          "dur": 0.3,
+          "fire": true
+        },
+        {
+          "op": "move",
+          "to": [
+            0,
+            -1
+          ],
+          "dur": 1.086,
+          "ease": "inout"
+        },
+        {
+          "op": "wait",
+          "dur": 0.15
+        },
+        {
+          "op": "ramp",
+          "to": [
+            0.5,
+            -1
+          ],
+          "v0": 0,
+          "v1": 2.6
+        }
+      ],
+      "shapes": [
+        {
+          "kind": "rail",
+          "x0": -0.5,
+          "x1": -0.2
+        },
+        {
+          "kind": "rail",
+          "x0": 0.2,
+          "x1": 0.5,
+          "y": -0.87
+        },
+        {
+          "kind": "line",
+          "pts": [
+            [
+              -0.2,
+              0.5
+            ],
+            [
+              -0.2,
+              -1.32
+            ],
+            [
+              0.2,
+              -1.32
+            ],
+            [
+              0.2,
+              0.5
+            ]
+          ]
+        },
+        {
+          "kind": "line",
+          "pts": [
+            [
+              -0.3,
+              0.5
+            ],
+            [
+              0.3,
+              0.5
+            ]
+          ]
+        },
+        {
+          "kind": "coil",
+          "at": [
+            0,
+            0.19
+          ],
+          "anchor": [
+            0,
+            0.5
+          ],
+          "turns": 5,
+          "amp": 0.1,
+          "motion": [
+            {
+              "drive": "follow",
+              "steps": [
+                2,
+                2
+              ],
+              "axis": "y",
+              "back": [
+                1.986,
+                3.186
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rect",
+          "at": [
+            0,
+            0.16
+          ],
+          "w": 0.36,
+          "h": 0.06,
+          "r": 0.015,
+          "motion": [
+            {
+              "drive": "follow",
+              "steps": [
+                2,
+                2
+              ],
+              "axis": "y",
+              "back": [
+                1.986,
+                3.186
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rect",
+          "at": [
+            -0.2,
+            0.16
+          ],
+          "offset": [
+            -0.06,
+            0
+          ],
+          "w": 0.12,
+          "h": 0.05,
+          "fill": "accent",
+          "motion": [
+            {
+              "drive": "ease",
+              "ease": "out",
+              "from": -0.04,
+              "to": 0.04,
+              "rotate": -1.1,
+              "back": [
+                3.086,
+                3.286
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "burst",
+          "at": [
+            0,
+            0.23
+          ],
+          "r0": 0.1,
+          "r1": 0.3,
+          "n": 5,
+          "phase": -1.2707963267948965,
+          "stroke": "color",
+          "show": {
+            "clock": "since",
+            "from": 0,
+            "to": 0.22
+          }
+        }
+      ]
+    },
+    {
+      "name": "bucket",
+      "note": "A bucket on a gallows. The ball stops on the plate, the bucket tips over it, and it rolls on a new colour, for good.",
+      "prompt": "a bucket of lava that pours over the ball",
+      "weight": 0.9,
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -1
+        ]
+      ],
+      "exit": {
+        "at": [
+          1,
+          0
+        ],
+        "dir": 1
+      },
+      "lane": [
+        {
+          "op": "arrive",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "op": "wait",
+          "dur": 0.06,
+          "fire": true
+        },
+        {
+          "op": "wait",
+          "dur": 0.62
+        },
+        {
+          "op": "ramp",
+          "to": [
+            0.5,
+            0
+          ],
+          "v0": 0.6,
+          "v1": 2.6
+        }
+      ],
+      "shapes": [
+        {
+          "kind": "rail",
+          "x0": -0.5,
+          "x1": -0.17
+        },
+        {
+          "kind": "rail",
+          "x0": 0.17,
+          "x1": 0.5
+        },
+        {
+          "kind": "rect",
+          "at": [
+            0,
+            0.155
+          ],
+          "w": 0.32,
+          "h": 0.05,
+          "fill": "ink",
+          "motion": [
+            {
+              "drive": "ease",
+              "from": -0.06,
+              "to": 0,
+              "move": [
+                0,
+                0.03
+              ],
+              "back": [
+                0.7,
+                0.85
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "line",
+          "pts": [
+            [
+              0,
+              0.18
+            ],
+            [
+              0,
+              0.5
+            ]
+          ]
+        },
+        {
+          "kind": "gallows",
+          "x0": -0.38,
+          "x1": 0.24,
+          "post": -0.38,
+          "y": -1.5
+        },
+        {
+          "kind": "line",
+          "pts": [
+            [
+              -0.1,
+              -1.5
+            ],
+            [
+              -0.1,
+              -0.78
+            ]
+          ]
+        },
+        {
+          "kind": "rect",
+          "at": [
+            0.01,
+            -0.3
+          ],
+          "w": 0.08,
+          "h": 0.34,
+          "fill": "paint",
+          "stroke": "none",
+          "show": {
+            "clock": "since",
+            "from": 0.12,
+            "to": 0.5
+          }
+        },
+        {
+          "kind": "group",
+          "at": [
+            -0.1,
+            -0.78
+          ],
+          "motion": [
+            {
+              "drive": "ease",
+              "ease": "inout",
+              "from": 0,
+              "to": 0.16,
+              "rotate": 1.9,
+              "back": [
+                0.52,
+                0.85
+              ]
+            }
+          ],
+          "shapes": [
+            {
+              "kind": "poly",
+              "pts": [
+                [
+                  -0.26,
+                  -0.2
+                ],
+                [
+                  0.26,
+                  -0.2
+                ],
+                [
+                  0.19,
+                  0.24
+                ],
+                [
+                  -0.19,
+                  0.24
+                ]
+              ]
+            },
+            {
+              "kind": "rect",
+              "offset": [
+                0,
+                -0.15
+              ],
+              "w": 0.46,
+              "h": 0.07,
+              "fill": "paint"
+            },
+            {
+              "kind": "ellipse",
+              "w": 0.06,
+              "h": 0.06,
+              "fill": "ink"
+            }
+          ]
+        },
+        {
+          "kind": "burst",
+          "at": [
+            0,
+            -0.13
+          ],
+          "r0": 0.04,
+          "r1": 0.26,
+          "n": 7,
+          "phase": -1.3707963267948966,
+          "stroke": "paint",
+          "show": {
+            "clock": "since",
+            "from": 0.14,
+            "to": 0.5
+          }
+        },
+        {
+          "kind": "arc",
+          "at": [
+            0,
+            0.13
+          ],
+          "w": 0.2,
+          "h": 0.07,
+          "a0": 3.141592653589793,
+          "a1": 6.283185307179586,
+          "close": "chord",
+          "fill": "paint",
+          "stroke": "none",
+          "show": {
+            "clock": "since",
+            "from": 0.5
+          }
+        }
+      ],
+      "paint": {
+        "after": 0.16,
+        "over": 0.3
+      }
+    },
+    {
+      "name": "catapult",
+      "note": "A catapult: a spoon on a fulcrum. The ball settles in the cup, the arm comes over, and it flies a cell with no rail under it at all.",
+      "prompt": "a catapult that flings the ball over the crater",
+      "weight": 0.8,
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          1,
+          -1
+        ],
+        [
+          2,
+          -1
+        ]
+      ],
+      "exit": {
+        "at": [
+          3,
+          0
+        ],
+        "dir": 1
+      },
+      "lane": [
+        {
+          "op": "arrive",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "op": "wait",
+          "dur": 0.45,
+          "fire": true
+        },
+        {
+          "op": "fly",
+          "to": [
+            2.1,
+            0
+          ],
+          "dur": 0.85,
+          "arc": 1.023
+        },
+        {
+          "op": "fly",
+          "to": [
+            2.24,
+            0
+          ],
+          "dur": 0.08,
+          "arc": 0.03
+        },
+        {
+          "op": "ramp",
+          "to": [
+            2.5,
+            0
+          ],
+          "v0": 2,
+          "v1": 2.6
+        }
+      ],
+      "shapes": [
+        {
+          "kind": "rail",
+          "x0": -0.5,
+          "x1": -0.22
+        },
+        {
+          "kind": "rail",
+          "x0": 1.86,
+          "x1": 2.5
+        },
+        {
+          "kind": "post",
+          "x": 1.9,
+          "y0": 0.13,
+          "y1": 0.5
+        },
+        {
+          "kind": "poly",
+          "pts": [
+            [
+              0.32,
+              0.22
+            ],
+            [
+              0.16,
+              0.5
+            ],
+            [
+              0.48,
+              0.5
+            ]
+          ],
+          "fill": "paper"
+        },
+        {
+          "kind": "group",
+          "at": [
+            0.32,
+            0.24
+          ],
+          "motion": [
+            {
+              "drive": "flick",
+              "from": 0,
+              "to": 0.9,
+              "rotate": 1.05
+            }
+          ],
+          "shapes": [
+            {
+              "kind": "line",
+              "pts": [
+                [
+                  -0.32,
+                  -0.06
+                ],
+                [
+                  0.3,
+                  0.02
+                ]
+              ]
+            },
+            {
+              "kind": "arc",
+              "offset": [
+                -0.32,
+                -0.24
+              ],
+              "w": 0.38,
+              "h": 0.38,
+              "a0": 0.3141592653589793,
+              "a1": 2.827433388230814,
+              "close": "chord"
+            },
+            {
+              "kind": "rect",
+              "offset": [
+                0.3,
+                0.05
+              ],
+              "w": 0.22,
+              "h": 0.2,
+              "r": 0.03
+            }
+          ]
+        },
+        {
+          "kind": "rect",
+          "at": [
+            2.1,
+            0.165
+          ],
+          "w": 0.34,
+          "h": 0.07,
+          "r": 0.02,
+          "fill": "accent",
+          "motion": [
+            {
+              "drive": "pulse",
+              "clock": "t",
+              "from": 1.357,
+              "to": 1.517,
+              "scale": [
+                1.1,
+                0.55
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "burst",
+          "at": [
+            0,
+            -0.12
+          ],
+          "r0": 0.1,
+          "r1": 0.36,
+          "n": 7,
+          "phase": -1.2707963267948965,
+          "stroke": "color",
+          "show": {
+            "clock": "since",
+            "from": 0,
+            "to": 0.26
+          }
+        }
+      ],
+      "flight": true
+    }
+  ],
+  "world": {
+    "label": "Caldera",
+    "note": "a volcano island",
+    "themes": [
+      {
+        "name": "caldera",
+        "label": "Caldera",
+        "bg": "#F3E6D8",
+        "ink": "#2A1B17",
+        "colors": [
+          "#E4572E",
+          "#F2A541",
+          "#7A3B2E",
+          "#3D5A6C",
+          "#FBF3E4"
+        ],
+        "note": "ash paper, ember fills"
+      },
+      {
+        "name": "caldera-late",
+        "label": "Caldera, late",
+        "bg": "#EED3C8",
+        "ink": "#2A1B17",
+        "colors": [
+          "#E42E5A",
+          "#F25241",
+          "#7A2E44",
+          "#3D6C68",
+          "#FBE8E4"
+        ],
+        "note": "ash paper, ember fills, later in the day"
+      }
+    ],
+    "backdrops": [
+      "plain",
+      "dots",
+      "rules"
+    ],
+    "rail": "workshop",
+    "borrow": [
+      "trapeze",
+      "trampoline",
+      "seesaw",
+      "pendulum",
+      "hammer",
+      "gears"
+    ]
+  }
+}
