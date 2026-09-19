@@ -8,14 +8,15 @@ import { Show } from '../show'
 import { worldByName } from '../worlds'
 import { defaultWorldSpec, stockNames } from './compile'
 import { folderBuilds, sampleBuilds } from './discover'
-import { generatePiece, generateWorld, loadKey, saveKey } from './generate'
+import { gatewayModelIds, generatePiece, generateWorld, type Generator } from './generate'
+import { PROVIDERS, PROVIDER_INFO, loadKey, loadSettings, modelsFor, providerLabel, resolveModel, saveKey, saveSettings, stillServed, type Keyed } from './providers'
 import { deleteBuild, install, installBuilds, installShipped, installedBuilds, saveBuild } from './registry'
 import { ARCHETYPES, castFrom, scaffoldPiece, scaffoldWorld } from './scaffold'
 import { BACKDROPS, BUILD_EXTENSION, LIMITS, STOCK_WORLDS, emptyBuild, parseBuild, serializeBuild, slug, type Build, type PieceSpec, type WorldSpec } from './spec'
 
 /**
- * The entry: the Builder. A prompt makes a piece — by Claude when a key is
- * set, by the offline scaffolds when not — and the piece is on the stage at
+ * The entry: the Builder. A prompt makes a piece — by a model when one is
+ * chosen and its key is set, by the offline scaffolds when not — and the piece is on the stage at
  * once, alone between two portals exactly as the catalog shows a stock one,
  * because it *is* one by then: a `Piece` in a registered world. A second
  * prompt makes the place it plays in. Everything made is a build: kept in
@@ -201,9 +202,29 @@ panelRoot.append(
   el('section', { class: 'seed-card' }, [el('div', { class: 'section-title' }, ['Prompt']), promptInput, el('div', { class: 'row seed-actions' }, [makePieceBtn, makeWorldBtn]), promptStatus]),
 )
 
+// Who writes what is made: the scaffolds, Claude, or the AI Gateway (`providers.ts`).
+let settings = loadSettings()
+/** What the gateway says it serves today, once it has been asked. */
+let gatewayLive: string[] | null = null
+const offered = (name: Keyed) => (name === 'gateway' ? stillServed(modelsFor(name), gatewayLive) : modelsFor(name))
+const chosenModel = (name: Keyed) => resolveModel(name, settings.models[name], offered(name))
+/** The model to ask, if one is chosen and has its key. */
+function generator(): Generator | null {
+  const { provider } = settings
+  if (provider === 'offline') return null
+  const key = loadKey(provider)
+  return key ? { provider, key, model: chosenModel(provider) } : null
+}
+
 const MECHANISMS = 'strike, ring, bounce, lift, slide, paint, spin, launch'
-const idleStatus = () =>
-  loadKey() ? 'Claude writes the piece; the scaffolds stand in if it cannot.' : `Offline scaffolds: it reads the prompt for one of ${ARCHETYPES.length} mechanisms (${MECHANISMS}) and names the piece for its noun. Add a key below for Claude.`
+function idleStatus(): string {
+  const { provider } = settings
+  if (provider === 'offline') return `Offline: it reads the prompt for one of ${ARCHETYPES.length} mechanisms (${MECHANISMS}) and names the piece for its noun. Choose a model under Generator to have one write it instead.`
+  if (!loadKey(provider)) return `No ${providerLabel(provider)} key yet, so this scaffolds offline. Paste one under Generator.`
+  return `${chosenModel(provider)} writes it; the offline scaffolds stand in if it cannot.`
+}
+/** Why a thing was scaffolded when a model was asked for, or nothing if none was. */
+const noKeyNote = (): string => (settings.provider !== 'offline' && !loadKey(settings.provider) ? `no ${providerLabel(settings.provider)} key, so scaffolded offline` : 'scaffolded offline')
 
 let busy = false
 async function makePiece(): Promise<void> {
@@ -214,11 +235,11 @@ async function makePiece(): Promise<void> {
   sync()
   let spec: PieceSpec | null = null
   let note = ''
-  const key = loadKey()
-  if (key) {
+  const gen = generator()
+  if (gen) {
     try {
-      spec = await generatePiece(prompt, key, takenNames(), (text) => say(promptStatus, text))
-      note = 'by Claude'
+      spec = await generatePiece(prompt, gen, takenNames(), (text) => say(promptStatus, text))
+      note = `by ${gen.model}`
     } catch (err) {
       note = `${(err as Error).message} Scaffolded instead`
     }
@@ -227,7 +248,7 @@ async function makePiece(): Promise<void> {
     const variant = variants.get(prompt) ?? 0
     variants.set(prompt, variant + 1)
     spec = scaffoldPiece(prompt, variant, takenNames())
-    note = note || 'scaffolded offline'
+    note = note || noKeyNote()
   }
   build.pieces.push(spec)
   selected = spec.name
@@ -250,11 +271,11 @@ async function makeWorld(): Promise<void> {
   sync()
   let world: WorldSpec | null = null
   let note = ''
-  const key = loadKey()
-  if (key) {
+  const gen = generator()
+  if (gen) {
     try {
-      world = await generateWorld(prompt, key, (text) => say(promptStatus, text))
-      note = 'by Claude'
+      world = await generateWorld(prompt, gen, (text) => say(promptStatus, text))
+      note = `by ${gen.model}`
     } catch (err) {
       note = `${(err as Error).message} Scaffolded instead`
     }
@@ -263,7 +284,7 @@ async function makeWorld(): Promise<void> {
     const variant = variants.get(`world:${prompt}`) ?? 0
     variants.set(`world:${prompt}`, variant + 1)
     world = scaffoldWorld(prompt, variant)
-    note = note || 'scaffolded offline'
+    note = note || noKeyNote()
   }
   const was = build.world
   build.world = world
@@ -286,6 +307,63 @@ promptInput.addEventListener('keydown', (e) => {
     void makePiece()
   }
 })
+
+// Generator — who writes it. Each provider keeps its own key and its own choice of model.
+const genSec = section(panelRoot, 'Generator')
+const providerSeg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Who writes the piece' })
+const providerBtns = PROVIDERS.map((name) => {
+  const title = name === 'offline' ? 'The offline scaffolds: no key, no network' : `${PROVIDER_INFO[name].label}: your own key, sent only to ${PROVIDER_INFO[name].host}`
+  const b = el('button', { type: 'button', title }, [providerLabel(name)])
+  b.addEventListener('click', () => {
+    settings = { ...settings, provider: name }
+    saveSettings(settings)
+    say(promptStatus, idleStatus())
+    sync()
+    refreshGateway()
+  })
+  providerSeg.append(b)
+  return { name, b }
+})
+/** The gateway's own list, asked for once it is the provider: an id it has retired drops out of the picker. */
+function refreshGateway(): void {
+  if (settings.provider !== 'gateway' || gatewayLive) return
+  void gatewayModelIds().then((ids) => {
+    gatewayLive = ids
+    sync()
+  })
+}
+const modelSelect = el('select', { 'aria-label': 'Model' })
+modelSelect.addEventListener('change', () => {
+  if (settings.provider === 'offline') return
+  settings = { ...settings, models: { ...settings.models, [settings.provider]: modelSelect.value } }
+  saveSettings(settings)
+  say(promptStatus, idleStatus())
+  sync()
+})
+const modelField = field('Model', modelSelect)
+const keyInput = el('input', { type: 'password', class: 'text', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'API key' })
+const keyBtn = el('button', {}, ['Save key'])
+const forgetBtn = el('button', {}, ['Forget'])
+keyBtn.addEventListener('click', () => {
+  if (settings.provider === 'offline') return
+  saveKey(settings.provider, keyInput.value.trim())
+  say(promptStatus, idleStatus())
+  sync()
+})
+keyInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') keyBtn.click()
+})
+forgetBtn.addEventListener('click', () => {
+  if (settings.provider === 'offline') return
+  saveKey(settings.provider, '')
+  keyInput.value = ''
+  say(promptStatus, idleStatus())
+  sync()
+})
+const keyField = field('Key', keyInput)
+const keyRow = el('div', { class: 'row' }, [keyBtn, forgetBtn])
+const genNote = el('div', { class: 'status' })
+genSec.append(providerSeg, modelField, keyField, keyRow, genNote)
 
 // Build — which one is on the bench, what it is called, and what is in it.
 const buildSec = section(panelRoot, 'Build')
@@ -553,31 +631,6 @@ const machineLink = el('a', { class: 'more', href: '/' }, ['Play it in Machine �
 machineLink.addEventListener('click', () => void saveBuild(structuredClone(build)))
 fileSec.append(el('div', { class: 'row' }, [exportBtn, importBtn, copyBtn]), filePick, fileStatus, machineLink)
 
-// Claude — optional, and the key stays here.
-const keySec = el('details', { class: 'fold' }, [el('summary', {}, ['Claude API key'])])
-const keyInput = el('input', { type: 'password', class: 'text', autocomplete: 'off', spellcheck: 'false', placeholder: 'sk-ant-…', 'aria-label': 'Anthropic API key', value: loadKey() })
-const keyBtn = el('button', {}, ['Save'])
-const forgetBtn = el('button', {}, ['Forget'])
-keyBtn.addEventListener('click', () => {
-  saveKey(keyInput.value.trim())
-  say(promptStatus, idleStatus())
-  sync()
-})
-forgetBtn.addEventListener('click', () => {
-  keyInput.value = ''
-  saveKey('')
-  say(promptStatus, idleStatus())
-  sync()
-})
-keySec.append(
-  el('div', { class: 'group' }, [
-    keyInput,
-    el('div', { class: 'row' }, [keyBtn, forgetBtn]),
-    el('div', { class: 'status' }, ['Optional. With a key, Make piece and Make world ask Claude to write the JSON. The key is kept in this browser and sent only to api.anthropic.com; the site has no server to send it to.']),
-  ]),
-)
-panelRoot.append(keySec)
-
 credit(panelRoot)
 
 /* ------------------------------------------------------------------ sync */
@@ -629,6 +682,22 @@ function sync(): void {
   castNote.textContent = world.borrow.length ? world.borrow.join(' · ') : 'none: the build’s own pieces alone'
   plainBtn.disabled = !build.world
   worldPane.refresh()
+
+  const { provider } = settings
+  for (const { name, b } of providerBtns) b.classList.toggle('on', name === provider)
+  modelField.hidden = keyField.hidden = keyRow.hidden = provider === 'offline'
+  if (provider === 'offline') say(genNote, 'No key, no network. The prompt picks one of eight mechanisms.')
+  else {
+    const info = PROVIDER_INFO[provider]
+    // The list is the provider's own, and the choice is the one last made for it, or its default.
+    modelSelect.replaceChildren(...offered(provider).map((m) => el('option', { value: m.id, title: m.note }, [`${m.label} \u00b7 ${m.id}`])))
+    modelSelect.value = chosenModel(provider)
+    const saved = loadKey(provider)
+    keyInput.placeholder = info.keyHint
+    if (document.activeElement !== keyInput) keyInput.value = saved
+    forgetBtn.disabled = !saved
+    say(genNote, `${saved ? 'Key saved in this browser.' : `Paste a key from ${info.keysAt}.`} It is sent only to ${info.host}. The site has no server and no key of its own.`, saved ? 'ok' : 'plain')
+  }
 
   const shown = shownMode()
   for (const { m, b } of modeBtns) {
@@ -691,6 +760,7 @@ else {
 }
 say(promptStatus, idleStatus())
 sync()
+refreshGateway()
 requestAnimationFrame(tick)
 
 // Dev handle for scripted capture.

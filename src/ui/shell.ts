@@ -9,10 +9,15 @@
  * and Explorations start with the panel hidden, since there the piece
  * leads; the Builder is worked from its panel and starts with it out. `P`
  * or the peek tab on the edge brings it out, and `P` puts it away again.
- * The backtick clears the stage of all of it — the
- * panel, the peek tab, anything else standing on the stage — for the piece
- * alone, and the backtick again puts back exactly what was there.
+ * The backtick clears the stage of all of it — the panel, the peek tab,
+ * anything else standing on the stage — for the piece alone, and the
+ * backtick again puts back exactly what was there.
+ *
+ * The Builder's tab is not on the switch until it is unlocked: five
+ * backticks in quick succession, in any mode (`unlock.ts`). The same five
+ * lock it again.
  */
+import { UNLOCK_EVENT, UNLOCK_GAP_MS, builderUnlocked, pressCounter, setBuilderUnlocked } from './unlock'
 
 export type ShellMode = 'machine' | 'explorations' | 'builder'
 
@@ -188,6 +193,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // switch is a navigation and the back button undoes it.
   const links = MODE_LINKS.map((m) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` }, [m.label])
+    if (m.mode === 'builder') a.hidden = !builderUnlocked()
     if (m.mode === mode) {
       a.setAttribute('aria-current', 'page')
       // The tab you are on is a label, not a reload.
@@ -201,6 +207,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       el('nav', { class: 'seg mode-switch', 'aria-label': 'Mode' }, links.map((l) => l.a)),
     ]),
   )
+  const builderTab = links.find((l) => l.m.mode === 'builder')!.a
 
   const peek = el('button', {
     type: 'button',
@@ -229,13 +236,44 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Here and not in each mode's key map: the key means the same thing in both.
+  // Five backticks on each other's heels lock or unlock the Builder. Each of
+  // them is still a backtick, so the chrome comes and goes four times on the
+  // way; the fifth settles it: out for a Builder just unlocked, so that the
+  // new tab is seen, and as it was before the run for one just locked.
+  const run = pressCounter()
+  let bareBefore = false
+  let lastPress = -Infinity
+  const toggleLock = () => {
+    const on = !builderUnlocked()
+    setBuilderUnlocked(on)
+    window.dispatchEvent(new CustomEvent(UNLOCK_EVENT, { detail: on }))
+    if (!on && mode === 'builder') {
+      // The workbench is put away with its door: back to the front of the house.
+      location.replace(links.find((l) => l.m.mode === 'machine')!.a.href)
+      return
+    }
+    builderTab.hidden = !on
+    document.body.classList.toggle('bare', on ? false : bareBefore)
+    if (!on) return
+    document.body.classList.remove('hide-panel')
+    // Lit for a moment, so the eye finds what the hand just did.
+    builderTab.classList.remove('unlocked')
+    void builderTab.offsetWidth
+    builderTab.classList.add('unlocked')
+  }
+  // Here and not in each mode's key map: the key means the same thing in all of them.
   window.addEventListener('keydown', (e) => {
-    if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey) return
+    // A held key is one press: it neither strobes the chrome nor counts five.
+    if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
     const t = e.target
     if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
     e.preventDefault()
-    toggleBare()
+    const at = performance.now()
+    // The first press of a run remembers how the stage stood before it.
+    if (at - lastPress > UNLOCK_GAP_MS) bareBefore = document.body.classList.contains('bare')
+    lastPress = at
+    if (run(at)) toggleLock()
+    else toggleBare()
   })
 
   // The piece leads: Machine and Explorations open with the panel away and

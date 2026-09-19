@@ -143,10 +143,17 @@ body.bare .crumb { display: none; }
   font-weight: 650;
   letter-spacing: 0.03em;
 }
-/* Three tabs, the one you are on lit. Same sunken track as every other
+/* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
-   rather than leaving for another site. */
-.seg.mode-switch { display: grid; grid-template-columns: repeat(3, 1fr); }
+   rather than leaving for another site. The Builder's tab is hidden until
+   it is unlocked, and the track is divided among the tabs that show. */
+.seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.mode-tab.unlocked { animation: unlocked 1.6s ease-out; }
+@keyframes unlocked {
+  0%, 35% { background: var(--accent); color: #1a1409; }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .mode-tab.unlocked { animation: none; } }
 .mode-tab {
   display: block;
   padding: 6px 0;

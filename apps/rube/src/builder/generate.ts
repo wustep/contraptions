@@ -1,40 +1,33 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { FAST, FLOOR, R, ROLL } from '../parts'
 import { WORLDS } from '../worlds'
+import { PROVIDER_INFO, type Keyed } from './providers'
 import { scaffoldPiece, scaffoldWorld } from './scaffold'
 import { BACKDROPS, BUILD_FORMAT, BUILD_VERSION, LIMITS, STOCK_WORLDS, parseBuild, slug, type PieceSpec, type WorldSpec } from './spec'
 
 /**
- * The other half of "prompt a piece": Claude writes the `PieceSpec`. Optional
- * — the Builder works without it, on the scaffolds — and bring-your-own-key:
- * this is a static site with no server to hold a secret, so the key a person
- * pastes in is kept in their browser's localStorage and sent to
- * api.anthropic.com and nowhere else. The SDK is loaded only when a key is
- * used, so nobody who never sets one downloads it.
+ * The other half of "prompt a piece": a model writes the `PieceSpec`.
+ * Optional — the Builder works without it, on the scaffolds — and
+ * bring-your-own-key, client-side only. This is a static site: there is no
+ * server to hold a secret or forward a request, and no key is built into the
+ * bundle. The key a person pastes in is kept in their browser's localStorage
+ * and sent to the provider it belongs to and nowhere else (`providers.ts`):
+ *
+ *   claude   api.anthropic.com, through the official SDK, which is loaded
+ *            only when a key is used, so nobody who never sets one downloads it
+ *   gateway  ai-gateway.vercel.sh, the Vercel AI Gateway's OpenAI-compatible
+ *            chat endpoint, which answers browsers from any origin
  *
  * What comes back is text, and is treated as a file from anywhere would be:
  * parsed and validated by `parseBuild`, and if it does not pass, the reasons
  * go back for one repair before the Builder falls back to a scaffold.
  */
 
-const MODEL = 'claude-opus-5'
-const KEY_STORE = 'contraptions:anthropic-key'
-
-export const loadKey = (): string => {
-  try {
-    return localStorage.getItem(KEY_STORE) ?? ''
-  } catch {
-    return ''
-  }
-}
-
-export const saveKey = (key: string): void => {
-  try {
-    if (key) localStorage.setItem(KEY_STORE, key)
-    else localStorage.removeItem(KEY_STORE)
-  } catch {
-    /* storage unavailable: the key lasts as long as the page does */
-  }
+/** Who to ask, with what, for which model. */
+export interface Generator {
+  provider: Keyed
+  key: string
+  model: string
 }
 
 /** The contract, as the model is told it. Built once and byte-stable, so it caches. */
@@ -135,48 +128,169 @@ function jsonIn(text: string): unknown {
   return JSON.parse(text.slice(start, end + 1))
 }
 
-const textOf = (message: Anthropic.Beta.BetaMessage): string => message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
+/** One conversation with a model: say something, get its reply as text. Each provider keeps the history in its own shape. */
+interface Session {
+  send(text: string): Promise<string>
+}
 
-async function ask<T>(key: string, system: string, prompt: string, accept: (raw: unknown) => { value: T | null; errors: string[] }, status: (text: string) => void): Promise<T> {
+/* ------------------------------------------------------------------ claude */
+
+/** Models whose policy declines the API can re-run on a fallback model inside the same call. */
+const REFUSAL_FALLBACK = new Set(['claude-opus-5', 'claude-fable-5-1'])
+
+async function claudeSession(gen: Generator, system: string): Promise<Session> {
   const { default: Client } = await import('@anthropic-ai/sdk')
   // A browser call with the person's own key: see the note at the top of this file.
-  const client = new Client({ apiKey: key, dangerouslyAllowBrowser: true })
-  const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: prompt }]
-  let errors: string[] = []
-  for (let attempt = 0; attempt < 2; attempt++) {
-    status(attempt ? 'Claude is fixing what did not validate…' : 'Claude is drawing it…')
-    let message: Anthropic.Beta.BetaMessage
-    try {
-      message = await client.beta.messages
-        .stream({
-          model: MODEL,
-          max_tokens: 32000,
-          // A policy decline is re-run on a fallback model inside the same call rather than failing the button.
-          betas: ['server-side-fallback-2026-07-01'],
-          fallbacks: 'default',
-          system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-          messages,
+  const client = new Client({ apiKey: gen.key, dangerouslyAllowBrowser: true })
+  const messages: Anthropic.Beta.BetaMessageParam[] = []
+  return {
+    async send(text) {
+      messages.push({ role: 'user', content: text })
+      let message: Anthropic.Beta.BetaMessage
+      try {
+        message = await client.beta.messages
+          .stream({
+            model: gen.model,
+            max_tokens: 32000,
+            ...(REFUSAL_FALLBACK.has(gen.model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
+            system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+            messages,
+          })
+          .finalMessage()
+      } catch (err) {
+        if (err instanceof Client.AuthenticationError) throw new Error('That API key was not accepted.')
+        if (err instanceof Client.PermissionDeniedError) throw new Error('That API key may not use this model.')
+        if (err instanceof Client.NotFoundError) throw new Error(`The API does not know the model ${gen.model}.`)
+        if (err instanceof Client.RateLimitError) throw new Error('Rate limited; try again in a moment.')
+        if (err instanceof Client.APIConnectionError) throw new Error('Could not reach api.anthropic.com.')
+        if (err instanceof Client.APIError) throw new Error(`The API said ${err.status}: ${err.message}`)
+        throw err
+      }
+      if (message.stop_reason === 'refusal') throw new Error('The model declined that prompt.')
+      if (message.stop_reason === 'max_tokens') throw new Error('The reply was cut off before it finished.')
+      // The whole turn goes back as it came, thinking and all: a history with pieces missing is refused by some models.
+      messages.push({ role: 'assistant', content: message.content as Anthropic.Beta.BetaContentBlockParam[] })
+      return message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
+    },
+  }
+}
+
+/* ------------------------------------------------------------------ the gateway */
+
+const GATEWAY = `https://${PROVIDER_INFO.gateway.host}/v1`
+
+/** Every model id the gateway serves today, or null if it would not say. No key needed. */
+export async function gatewayModelIds(): Promise<string[] | null> {
+  try {
+    const res = await fetch(`${GATEWAY}/models`)
+    if (!res.ok) return null
+    const body = (await res.json()) as { data?: { id?: unknown }[] }
+    const ids = (body.data ?? []).flatMap((m) => (typeof m.id === 'string' ? [m.id] : []))
+    return ids.length ? ids : null
+  } catch {
+    return null
+  }
+}
+
+interface ChatTurn {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+/** What the gateway said went wrong, in a sentence. */
+async function gatewayError(res: Response, model: string): Promise<Error> {
+  let said = ''
+  try {
+    const body = (await res.json()) as { error?: { message?: unknown } }
+    if (typeof body.error?.message === 'string') said = body.error.message
+  } catch {
+    /* no body worth reading */
+  }
+  if (res.status === 401 || res.status === 403) return new Error('That gateway key was not accepted.')
+  if (res.status === 402) return new Error('The gateway says the account is out of credit.')
+  if (res.status === 404) return new Error(`The gateway does not serve ${model}.`)
+  if (res.status === 429) return new Error('Rate limited; try again in a moment.')
+  return new Error(`The gateway said ${res.status}${said ? `: ${said}` : ''}`)
+}
+
+function gatewaySession(gen: Generator, system: string): Session {
+  const messages: ChatTurn[] = [{ role: 'system', content: system }]
+  return {
+    async send(text) {
+      messages.push({ role: 'user', content: text })
+      let res: Response
+      try {
+        res = await fetch(`${GATEWAY}/chat/completions`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${gen.key}` },
+          // Streamed, so a model that thinks for a minute is not cut off as an idle connection.
+          body: JSON.stringify({ model: gen.model, messages, max_tokens: 32000, stream: true }),
         })
-        .finalMessage()
-    } catch (err) {
-      if (err instanceof Client.AuthenticationError) throw new Error('That API key was not accepted.')
-      if (err instanceof Client.PermissionDeniedError) throw new Error('That API key may not use this model.')
-      if (err instanceof Client.RateLimitError) throw new Error('Rate limited; try again in a moment.')
-      if (err instanceof Client.APIConnectionError) throw new Error('Could not reach api.anthropic.com.')
-      if (err instanceof Client.APIError) throw new Error(`The API said ${err.status}: ${err.message}`)
-      throw err
-    }
-    if (message.stop_reason === 'refusal') throw new Error('Claude declined that prompt.')
-    if (message.stop_reason === 'max_tokens') throw new Error('The reply was cut off before it finished.')
+      } catch {
+        // The gateway answers a browser's preflight, but its refusals (a bad key, no credit, an unknown
+        // model) come back without a CORS header, so the browser withholds them and all that is seen
+        // here is a failed fetch. Its public model list tells a refusal from a gateway that is not there.
+        const reachable = (await gatewayModelIds()) !== null
+        throw new Error(
+          reachable
+            ? 'The gateway refused the request, and does not let a browser read why. Check the key, its credit, and that it may use this model.'
+            : `Could not reach ${PROVIDER_INFO.gateway.host}.`,
+        )
+      }
+      if (!res.ok || !res.body) throw await gatewayError(res, gen.model)
+      // Server-sent events: `data: {json}` a line, `data: [DONE]` at the end.
+      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
+      let pending = ''
+      let reply = ''
+      let finish = ''
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (done) break
+        pending += value
+        const lines = pending.split('\n')
+        pending = lines.pop() ?? ''
+        for (const line of lines) {
+          const data = line.startsWith('data:') ? line.slice(5).trim() : ''
+          if (!data || data === '[DONE]') continue
+          try {
+            const chunk = JSON.parse(data) as { choices?: { delta?: { content?: unknown }; finish_reason?: unknown }[]; error?: { message?: unknown } }
+            if (typeof chunk.error?.message === 'string') throw new Error(`The gateway said: ${chunk.error.message}`)
+            const choice = chunk.choices?.[0]
+            if (typeof choice?.delta?.content === 'string') reply += choice.delta.content
+            if (typeof choice?.finish_reason === 'string') finish = choice.finish_reason
+          } catch (err) {
+            if (err instanceof SyntaxError) continue
+            throw err
+          }
+        }
+      }
+      if (finish === 'length') throw new Error('The reply was cut off before it finished.')
+      if (finish === 'content_filter') throw new Error('The model declined that prompt.')
+      if (!reply) throw new Error('The model sent back nothing.')
+      messages.push({ role: 'assistant', content: reply })
+      return reply
+    },
+  }
+}
+
+/* ------------------------------------------------------------------ asking */
+
+async function ask<T>(gen: Generator, system: string, prompt: string, accept: (raw: unknown) => { value: T | null; errors: string[] }, status: (text: string) => void): Promise<T> {
+  const who = gen.model.split('/').pop() ?? gen.model
+  const session = gen.provider === 'claude' ? await claudeSession(gen, system) : gatewaySession(gen, system)
+  let errors: string[] = []
+  let say = prompt
+  for (let attempt = 0; attempt < 2; attempt++) {
+    status(attempt ? `${who} is fixing what did not validate\u2026` : `${who} is drawing it\u2026`)
+    const reply = await session.send(say)
     try {
-      const result = accept(jsonIn(textOf(message)))
+      const result = accept(jsonIn(reply))
       if (result.value) return result.value
       errors = result.errors
     } catch (err) {
       errors = [(err as Error).message]
     }
-    messages.push({ role: 'assistant', content: message.content as Anthropic.Beta.BetaContentBlockParam[] })
-    messages.push({ role: 'user', content: `That did not validate:\n${errors.slice(0, 12).map((e) => `- ${e}`).join('\n')}\nReply with the corrected JSON object only.` })
+    say = `That did not validate:\n${errors.slice(0, 12).map((e) => `- ${e}`).join('\n')}\nReply with the corrected JSON object only.`
   }
   throw new Error(`What came back did not validate: ${errors.slice(0, 3).join('; ')}`)
 }
@@ -186,15 +300,15 @@ const unique = (name: string, taken: ReadonlySet<string>): string => {
   for (let i = 2; ; i++) if (!taken.has(`${name}-${i}`)) return `${name}-${i}`
 }
 
-/** A piece from a prompt, written by Claude and validated like any file. Throws with a sentence a person can read. */
-export async function generatePiece(prompt: string, key: string, taken: ReadonlySet<string>, status: (text: string) => void = () => {}): Promise<PieceSpec> {
+/** A piece from a prompt, written by a model and validated like any file. Throws with a sentence a person can read. */
+export async function generatePiece(prompt: string, gen: Generator, taken: ReadonlySet<string>, status: (text: string) => void = () => {}): Promise<PieceSpec> {
   // Two worked examples, from the scaffolds: deterministic, so the system prompt stays byte-stable.
   const examples = ['a gong that rings when the ball brushes it', 'a geyser that lifts the ball'].map((p) => {
     const { prompt: _made, ...spec } = scaffoldPiece(p, 0, new Set())
     return JSON.stringify(spec)
   })
   const system = `${FORMAT}\n\n## Two pieces that validate, for the shape of the thing (do better than these)\n${examples.join('\n')}`
-  const spec = await ask<PieceSpec>(key, system, `The piece: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
+  const spec = await ask<PieceSpec>(gen, system, `The piece: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
     const piece = { weight: 1, ...(raw as object) } as PieceSpec
     if (typeof piece.name === 'string') piece.name = slug(piece.name)
     const { build, errors } = parseBuild({ format: BUILD_FORMAT, version: BUILD_VERSION, name: 'draft', pieces: [piece] })
@@ -203,10 +317,10 @@ export async function generatePiece(prompt: string, key: string, taken: Readonly
   return { ...spec, name: unique(spec.name, taken), prompt: prompt.trim().slice(0, LIMITS.text) }
 }
 
-/** A world from a prompt, written by Claude and validated like any file. */
-export async function generateWorld(prompt: string, key: string, status: (text: string) => void = () => {}): Promise<WorldSpec> {
+/** A world from a prompt, written by a model and validated like any file. */
+export async function generateWorld(prompt: string, gen: Generator, status: (text: string) => void = () => {}): Promise<WorldSpec> {
   const example = JSON.stringify(scaffoldWorld('a volcano island', 0))
-  return ask<WorldSpec>(key, `${WORLD_FORMAT()}\n\n## One that validates\n${example}`, `The place: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
+  return ask<WorldSpec>(gen, `${WORLD_FORMAT()}\n\n## One that validates\n${example}`, `The place: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
     const names = new Set(WORLDS.flatMap((w) => w.pieces.map((c) => c.name)))
     const world = raw as WorldSpec
     const { build, errors } = parseBuild({ format: BUILD_FORMAT, version: BUILD_VERSION, name: 'draft', pieces: [], world })

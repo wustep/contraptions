@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Locked until unlocked in Machine or Explorations; a locked visit lands on Machine. Not one for the indexes. -->
+    <meta name="robots" content="noindex" />
     <title>contraptions · builder</title>
     <!-- A mallet in the project's hand: heavy ink, one flat fill, paper ground. -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23EBF1F4'/><path d='M22,50L38,26' stroke='%23212121' stroke-width='5' stroke-linecap='round'/><rect x='26' y='10' width='28' height='18' rx='4' transform='rotate(34 40 19)' fill='%23FCB500' stroke='%23212121' stroke-width='4'/><path d='M10,54L54,54' stroke='%23212121' stroke-width='4' stroke-linecap='round'/></svg>" />
@@ -10,6 +12,6 @@
   <body>
     <main id="stage"></main>
     <aside id="panel"></aside>
-    <script type="module" src="/apps/rube/src/builder/main.ts"></script>
+    <script type="module" src="/apps/rube/src/builder/entry.ts"></script>
   </body>
 </html>

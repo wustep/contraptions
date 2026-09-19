@@ -14,7 +14,8 @@ calls it the show). Beside it is **Explorations**: the generator the machine
 grew out of, six modes of tiny machines on a grid with every dial exposed
 (`src/`; the code calls it the sandbox). A third tab, the **Builder**, is
 where new pieces and worlds for Machine are made from a prompt and saved as
-one file ([below](#builder-appsrubesrcbuilder)). All three wear the same
+one file ([below](#builder-appsrubesrcbuilder)). It is hidden until you
+press <kbd>`</kbd> five times quickly. All three wear the same
 chrome: one panel down the right edge at the window's full height, the
 canvas filling everything else, and a switch at the top of the panel,
 **Machine | Explorations | Builder**, that moves between them and carries
@@ -24,8 +25,7 @@ clears the stage of all of it — the panel, the tab, the way-back button —
 for the piece alone, and <kbd>`</kbd> again puts back what was there.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
-**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
-**[Builder →](https://contraptions-wustep.vercel.app/builder/)**
+**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
 
 ```bash
 npm install
@@ -702,17 +702,33 @@ the map earned.
 
 ## Builder: `apps/rube/src/builder/`
 
-**[Open it →](https://contraptions-wustep.vercel.app/builder/)** The third
-tab. Type what a piece should be, press **Make piece**, and it is on the
-stage between two portals, the way the catalog shows a stock piece. Press
+The third tab, once it is unlocked. Type what a piece should be, press
+**Make piece**, and it is on the stage between two portals, the way the
+catalog shows a stock piece. Press
 **Make world** with a place in the prompt and the build gets palettes, a
 backdrop, a rail and a borrowed cast to play among. **Export** writes the
 whole build to one JSON file. **Import** reads one back.
 
 ```bash
-npm run dev            # http://localhost:8791/builder/
-npm run check:builder  # scaffolds, the file round trip, refusals, and that the stock show is untouched
+npm run dev            # http://localhost:8791/, then ` five times, then the Builder tab
+npm run check:builder  # scaffolds, the file round trip, refusals, the lock, the model picker, and that the stock show is untouched
 ```
+
+### Unlocking it
+
+The Builder is a workbench and not part of the show, so it starts hidden.
+In Machine or Explorations, press <kbd>`</kbd> five times in a row, each
+press within half a second of the last. The panel comes out with a
+**Builder** tab on the switch, lit for a moment. Wait longer than half a
+second between two presses and the count starts over, so the single
+<kbd>`</kbd> that clears the stage still works as before. A held key counts
+as one press.
+
+The unlock is kept in this browser (`contraptions:builder` in
+localStorage). The same five presses lock it again, from any mode. While it
+is locked there is no tab, Machine shows no link to it, and `/builder/`
+sends the visitor to Machine with their seed. The Builder's code is a
+separate chunk that a locked visit never fetches.
 
 ### Using it
 
@@ -761,14 +777,42 @@ places (volcano, ocean, forest, desert, snow, candy, night, harvest,
 circus, kitchen) each have a hand-made palette, and any other prompt gets a
 palette generated from its seed.
 
-**Claude.** Optional. Paste an Anthropic API key under **Claude API key**
-and both buttons ask `claude-opus-5` to write the JSON instead, with the
-format and the craft rules as its system prompt. The reply is validated
-like any file. If it fails, the errors go back for one repair. If that
-fails too, or the key or the network does, the Builder falls back to the
-offline generator and says so. The site has no server, so the key is
-stored in your browser's localStorage and sent only to api.anthropic.com.
-The SDK loads the first time a key is used.
+**A model.** Optional. The **Generator** section under the prompt picks
+who writes the JSON: **Offline**, **Claude**, or **AI Gateway**.
+
+- **Claude** takes an Anthropic API key and calls api.anthropic.com through
+  `@anthropic-ai/sdk`. The picker lists the Anthropic API's model ids:
+  `claude-opus-5` (the default), `claude-sonnet-5`, `claude-haiku-4-5` and
+  `claude-fable-5-1`.
+- **AI Gateway** takes a Vercel AI Gateway key and calls
+  ai-gateway.vercel.sh. The picker lists gateway ids, `provider/model`, from
+  an allowlist in `providers.ts`: the same four Claude models plus one or
+  two each from OpenAI, Google, Moonshot and DeepSeek. When you choose the
+  gateway, the Builder reads its public `/v1/models` and drops any id the
+  gateway no longer serves.
+
+Each provider keeps its own key and its own choice of model. Switching
+provider swaps the list and restores the model you last chose for that
+provider, or its default. A model id never carries over from one provider to
+the other.
+
+Everything is client-side. The site has no server, no `/api` route and no
+key in its bundle. A key you paste is stored in your browser's localStorage
+(`contraptions:key:claude`, `contraptions:key:gateway`) and sent only to the
+provider it belongs to. The Anthropic SDK is its own chunk and loads the
+first time a Claude key is used.
+
+The model gets the format and the craft rules as its system prompt. Its
+reply is validated like any file. If it fails, the errors go back for one
+repair. If that fails too, or the key or the network does, the Builder falls
+back to the offline generator and says why. With a provider chosen but no
+key saved, it scaffolds offline and says so.
+
+One thing the gateway does that you will notice: it answers a browser's
+preflight, but its refusals (a bad key, no credit, a model the key may not
+use) come back without a CORS header, so the browser hides them. The Builder
+then checks that the gateway is reachable and reports "refused, check the
+key, its credit and the model" instead of the real reason.
 
 ### The format
 
@@ -878,8 +922,10 @@ visits a build when it is pinned there (`?world=<name>`, or its chip under
   7 seconds of lane. A file is at most 512 KB.
 - Builds are per browser. There is no account and no sync. The file is how
   a build moves.
-- The Claude path needs the person's own key, and a key in a browser is
-  only as safe as the browser. Use a key you can revoke.
+- A model needs the person's own key, and a key in a browser is only as
+  safe as the browser. Use a key you can revoke, with a spending limit.
+- The lock keeps the Builder out of sight. It is not access control: the
+  page and its code are public, and anyone who knows the five presses has it.
 
 ## License
 

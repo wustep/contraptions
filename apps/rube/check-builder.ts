@@ -16,8 +16,10 @@ import { compileBuild, compilePiece, stockNames } from './src/builder/compile'
 import { install, installedBuilds, uninstall } from './src/builder/registry'
 import { ARCHETYPES, archetypeFor, scaffoldPiece, scaffoldWorld } from './src/builder/scaffold'
 import { BUILD_EXTENSION, BUILD_FORMAT, BUILD_VERSION, parseBuild, serializeBuild, type Build } from './src/builder/spec'
+import { PROVIDERS, PROVIDER_INFO, defaultSettings, modelsFor, readSettings, resolveModel, stillServed } from './src/builder/providers'
 import { makeRng } from '../../src/core/rng'
 import { themeByName } from '../../src/core/themes'
+import { UNLOCK_GAP_MS, UNLOCK_PRESSES, pressCounter } from '../../src/ui/unlock'
 import { WORLDS, builtWorlds, registerWorld, worldAt, worldByName, worldOf } from './src/worlds'
 
 let failures = 0
@@ -243,6 +245,49 @@ for (const { dir, source } of shipped) {
     check(`${name}: installs`, errors.length === 0, errors.join(' · '))
     if (!errors.length) checkWorld(read.build.name, read.build.pieces.map((p) => p.name))
   }
+}
+
+/* ------------------------------------------------------------------ the lock */
+
+console.log('\nthe lock')
+{
+  const quick = UNLOCK_GAP_MS * 0.6
+  const run = (times: number[]) => {
+    const press = pressCounter()
+    return times.map((t) => press(t))
+  }
+  const at = (n: number, gap: number, from = 0) => Array.from({ length: n }, (_, i) => from + i * gap)
+  check('five quick presses unlock, on the fifth and not before', UNLOCK_PRESSES === 5 && run(at(5, quick)).join() === 'false,false,false,false,true')
+  check('four are not enough', run(at(4, quick)).every((fired) => !fired))
+  check('five slow ones are five separate presses', run(at(5, UNLOCK_GAP_MS + 50)).every((fired) => !fired))
+  check('a pause in the middle starts the count over', run([...at(3, quick), ...at(4, quick, 5000)]).every((fired) => !fired))
+  check('and five after the pause still count', run([...at(3, quick), ...at(5, quick, 5000)]).pop() === true)
+  check('a sixth press does not fire again: the next run needs its own five', run(at(9, quick)).filter(Boolean).length === 1 && run(at(10, quick)).filter(Boolean).length === 2)
+}
+
+/* ------------------------------------------------------------------ who writes it */
+
+console.log('\nproviders')
+{
+  check('three ways to make a piece, offline first', PROVIDERS.join() === 'offline,claude,gateway' && defaultSettings().provider === 'offline')
+  check('offline has no models to pick', modelsFor('offline').length === 0)
+  const claude = modelsFor('claude').map((m) => m.id)
+  const gateway = modelsFor('gateway').map((m) => m.id)
+  check('the Claude list is the Anthropic API\'s own ids', claude.length > 1 && claude.every((id) => /^claude-[a-z0-9-]+$/.test(id)))
+  check('the gateway list is provider/model ids', gateway.length > 1 && gateway.every((id) => /^[a-z0-9-]+\/[a-z0-9.-]+$/.test(id)))
+  check('no id is on both lists', claude.every((id) => !gateway.includes(id)))
+  check('each provider\'s default is on its own list', claude.includes(PROVIDER_INFO.claude.defaultModel) && gateway.includes(PROVIDER_INFO.gateway.defaultModel))
+  check('a saved choice is kept while its provider offers it', resolveModel('claude', claude[1]) === claude[1] && resolveModel('gateway', gateway[3]) === gateway[3])
+  check('a model never crosses providers: the other\'s id becomes this one\'s default', resolveModel('gateway', claude[1]) === PROVIDER_INFO.gateway.defaultModel && resolveModel('claude', gateway[3]) === PROVIDER_INFO.claude.defaultModel)
+  check('nothing saved is the default', resolveModel('claude', null) === PROVIDER_INFO.claude.defaultModel)
+  const live = [gateway[1], gateway[4], 'someone/else']
+  const served = stillServed(modelsFor('gateway'), live).map((m) => m.id)
+  check('the gateway list drops what the gateway no longer serves', served.join() === [gateway[1], gateway[4]].join())
+  check('and a choice that was dropped falls to the first that is left', resolveModel('gateway', gateway[0], stillServed(modelsFor('gateway'), live)) === gateway[1])
+  check('an unreachable or empty gateway list changes nothing', stillServed(modelsFor('gateway'), null).length === gateway.length && stillServed(modelsFor('gateway'), ['x/y']).length === gateway.length)
+  const read = readSettings({ provider: 'gateway', models: { claude: 'nope', gateway: gateway[2], other: 'x' } })
+  check('stored settings are read with suspicion', read.provider === 'gateway' && read.models.gateway === gateway[2] && read.models.claude === PROVIDER_INFO.claude.defaultModel && Object.keys(read.models).length === 2)
+  check('and junk is the defaults', readSettings('junk').provider === 'offline' && readSettings({ provider: 'skynet' }).provider === 'offline')
 }
 
 /* ------------------------------------------------------------------ the stock show, after */
