@@ -48,7 +48,7 @@ export interface WorldSpec {
   borrow: string[]
 }
 
-export const STOCK_WORLDS = ['workshop', 'harbor', 'garden', 'arcade'] as const
+export const STOCK_WORLDS = ['workshop', 'garden', 'harbor', 'arcade'] as const
 export type StockWorld = (typeof STOCK_WORLDS)[number]
 export const BACKDROPS: readonly Backdrop[] = ['plain', 'dots', 'rules', 'stars', 'waves', 'sprigs', 'grid']
 

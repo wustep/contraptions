@@ -780,7 +780,8 @@ const worldNote = el('div', { class: 'readout' })
 const swatches = el('div', { class: 'swatches' })
 const railSeg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Rail' })
 const railBtns = STOCK_WORLDS.map((name) => {
-  const b = el('button', { type: 'button', title: `Run the ${name}'s rail between the beats` }, [name])
+  const label = worldByName(name)?.label ?? name
+  const b = el('button', { type: 'button', title: `Run the ${label} rail between the beats` }, [label])
   b.addEventListener('click', () => {
     change(`the ${name} rail`, () => {
       build.world = { ...(build.world ?? defaultWorldSpec()), rail: name }
