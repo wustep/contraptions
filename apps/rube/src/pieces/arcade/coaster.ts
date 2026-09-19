@@ -75,8 +75,8 @@ function railX(s: number): number {
   return X_TRACK0 + 0.02 * (i - 1 + clamp((s - RAIL_S[i - 1]) / (RAIL_S[i] - RAIL_S[i - 1] || 1)))
 }
 /** The running lights: this far apart, this long, at the chain's pace. */
-const LIGHT_GAP = 0.14
-const LIGHT = 0.045
+const LIGHT_GAP = 0.2
+const LIGHT = 0.07
 
 /** The ride's pace at `x`: the chain's to the crest, a falling thing's after it. */
 const paceAt = (x: number) => (x <= CREST[0] ? V_CHAIN : Math.sqrt(V_CHAIN * V_CHAIN + 2 * G * (lineAt(x) - CREST[1])))
