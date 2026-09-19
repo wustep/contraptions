@@ -1,7 +1,7 @@
 /**
  * The chrome the modes share. One panel down the right edge, the full
- * height of the window, with the brand and the mode switch at its head and
- * the credit at its foot; the stage takes whatever the panel leaves. Machine
+ * height of the window, with the brand and the mode switch at its head (and,
+ * in Explorations, the credit at its foot); the stage takes whatever the panel leaves. Machine
  * (the show, in the code), Explorations (the sandbox) and the Builder fill
  * the middle with their own sections, built from the same helpers, so they
  * read as siblings — one frame, different dials — and moving between them
@@ -160,7 +160,7 @@ export function seedCard(root: HTMLElement, input: HTMLInputElement, actions: HT
   )
 }
 
-/** Credit sits at the foot of the tool: present, never competing. */
+/** Credit sits at the foot of Explorations, whose grids are the ones it is owed for: present, never competing. Machine and the Builder do not carry it. */
 export function credit(root: HTMLElement): void {
   root.append(
     el('a', {

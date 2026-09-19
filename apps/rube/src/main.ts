@@ -1,6 +1,6 @@
 import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
-import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
+import { ICON, copyButton, createShell, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
 import { UNLOCK_EVENT, builderUnlocked } from '../../../src/ui/unlock'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
@@ -455,8 +455,6 @@ saveLoopBtn.addEventListener('click', () => {
   })()
 })
 exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, saveBtn, saveLoopBtn]))
-
-credit(panelRoot)
 
 const playIcon = icon(ICON.play)
 const pauseIcon = icon(ICON.pause)
