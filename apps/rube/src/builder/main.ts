@@ -1,7 +1,7 @@
 import '../../../../src/ui/styles.css'
 import { downloadBlob } from '../../../../src/core/capture'
 import { randomSeed } from '../../../../src/core/seed'
-import { ICON, copyButton, createShell, credit, el, field, icon, section } from '../../../../src/ui/shell'
+import { ICON, copyButton, createShell, el, field, icon, section } from '../../../../src/ui/shell'
 import { createCatalog } from '../catalog'
 import { createStage } from '../engine'
 import { Show } from '../show'
@@ -630,8 +630,6 @@ const machineLink = el('a', { class: 'more', href: '/' }, ['Play it in Machine â
 // Machine knows the builds folder and this browser's builds. A sample not yet touched is in neither, so it is kept on the way out.
 machineLink.addEventListener('click', () => void saveBuild(structuredClone(build)))
 fileSec.append(el('div', { class: 'row' }, [exportBtn, importBtn, copyBtn]), filePick, fileStatus, machineLink)
-
-credit(panelRoot)
 
 /* ------------------------------------------------------------------ sync */
 
