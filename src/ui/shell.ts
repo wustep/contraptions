@@ -16,12 +16,14 @@
  * anything else standing on the stage — for the piece alone, and the
  * backtick again puts back exactly what was there.
  *
- * The Builder's tab is not on the switch until it is unlocked: five
- * backticks in quick succession, in any mode (`unlock.ts`). The same five
- * lock it again. Only the first of a quick run clears the stage, so the
- * chrome does not flicker on the way.
+ * Shows and the Builder are not on the switch until they are unlocked:
+ * five backticks in quick succession, in any mode (`unlock.ts`). The same
+ * five lock them again. While they are out the switch is four icon-only
+ * buttons; locked, it is Machine and Explorations with their words. Only
+ * the first of a quick run clears the stage, so the chrome does not
+ * flicker on the way.
  */
-import { UNLOCK_EVENT, UNLOCK_GAP_MS, builderUnlocked, pressCounter, setBuilderUnlocked } from './unlock'
+import { UNLOCK_EVENT, UNLOCK_GAP_MS, pressCounter, setUnlocked, unlocked } from './unlock'
 
 export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder'
 
@@ -30,6 +32,9 @@ interface ModeLink {
   label: string
   path: string
 }
+
+/** Tabs that stay off the switch, and off their own pages, until unlocked. */
+const GATED: ReadonlySet<ShellMode> = new Set(['shows', 'builder'])
 
 const MODE_LINKS: ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
@@ -83,6 +88,13 @@ export function icon(paths: string[]): SVGSVGElement {
 export const ICON = {
   play: ['M8 5l11 7-11 7z'],
   pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
+  // The mode switch, unlocked: one geometric mark a tab, the same filled-path
+  // hand as play and pause. Machine is the ball on its rail; Explorations
+  // the four cells of a grid; Shows a note; the Builder an L-square.
+  machine: ['M12 3.6a5.2 5.2 0 1 1 0 10.4 5.2 5.2 0 0 1 0-10.4z', 'M3 16.8h18v3.2H3z'],
+  explorations: ['M3.2 3.2h7.6v7.6H3.2z', 'M13.2 3.2h7.6v7.6h-7.6z', 'M3.2 13.2h7.6v7.6H3.2z', 'M13.2 13.2h7.6v7.6h-7.6z'],
+  shows: ['M7.2 16.6a4 3 0 1 0 8 0 4 3 0 1 0-8 0z', 'M14.4 16.4V4.2h2.4v12.2z', 'M16.8 4.2l5 2v3.6l-5-2z'],
+  builder: ['M4 4h16v3.4H7.4V20H4z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */
@@ -206,10 +218,24 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }, ['Hide', el('kbd', {}, ['P'])])
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so a
-  // switch is a navigation and the back button undoes it.
+  // switch is a navigation and the back button undoes it. Locked it is two
+  // words; unlocked it is four marks, each named for a screen reader.
+  const dress = (a: HTMLAnchorElement, m: ModeLink, open: boolean) => {
+    a.hidden = GATED.has(m.mode) && !open
+    a.classList.toggle('icon', open)
+    if (open) {
+      a.replaceChildren(icon(ICON[m.mode]))
+      a.setAttribute('aria-label', m.label)
+      a.title = m.label
+    } else {
+      a.replaceChildren(m.label)
+      a.removeAttribute('aria-label')
+      a.removeAttribute('title')
+    }
+  }
   const links = MODE_LINKS.map((m) => {
-    const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` }, [m.label])
-    if (m.mode === 'builder') a.hidden = !builderUnlocked()
+    const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
+    dress(a, m, unlocked())
     if (m.mode === mode) {
       a.setAttribute('aria-current', 'page')
       // The tab you are on is a label, not a reload.
@@ -217,13 +243,14 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     }
     return { m, a }
   })
+  const switcher = el('nav', { class: 'seg mode-switch', 'aria-label': 'Mode' }, links.map((l) => l.a))
+  switcher.classList.toggle('icons', unlocked())
   root.append(
     el('header', { class: 'brand' }, [
       el('div', { class: 'brand-row' }, [el('h1', {}, ['contraptions']), hideBtn]),
-      el('nav', { class: 'seg mode-switch', 'aria-label': 'Mode' }, links.map((l) => l.a)),
+      switcher,
     ]),
   )
-  const builderTab = links.find((l) => l.m.mode === 'builder')!.a
 
   const peek = el('button', {
     type: 'button',
@@ -285,33 +312,37 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Five backticks on each other's heels lock or unlock the Builder. Only
-  // the first press of a quick run clears the stage (or puts it back): the
-  // rest of the run are counted and not shown, so five for the lock do not
-  // strobe the chrome. The fifth settles it: out for a Builder just
-  // unlocked, so that the new tab is seen, and as it was before the run for
-  // one just locked.
+  // Five backticks on each other's heels lock or unlock Shows and the
+  // Builder together. Only the first press of a quick run clears the stage
+  // (or puts it back): the rest of the run are counted and not shown, so
+  // five for the lock do not strobe the chrome. The fifth settles it: out
+  // for tabs just unlocked, so that the new marks are seen, and as it was
+  // before the run for a lock.
   const run = pressCounter()
   let bareBefore = false
   let lastPress = -Infinity
   let presses = 0
   const toggleLock = () => {
-    const on = !builderUnlocked()
-    setBuilderUnlocked(on)
+    const on = !unlocked()
+    setUnlocked(on)
     window.dispatchEvent(new CustomEvent(UNLOCK_EVENT, { detail: on }))
-    if (!on && mode === 'builder') {
-      // The workbench is put away with its door: back to the front of the house.
+    if (!on && GATED.has(mode)) {
+      // A gated mode is put away with its door: back to the front of the house.
       location.replace(links.find((l) => l.m.mode === 'machine')!.a.href)
       return
     }
-    builderTab.hidden = !on
+    switcher.classList.toggle('icons', on)
+    for (const { m, a } of links) {
+      dress(a, m, on)
+      if (!on || !GATED.has(m.mode)) continue
+      // Lit for a moment, so the eye finds what the hand just did.
+      a.classList.remove('unlocked')
+      void a.offsetWidth
+      a.classList.add('unlocked')
+    }
     document.body.classList.toggle('bare', on ? false : bareBefore)
     if (!on) return
     document.body.classList.remove('hide-panel')
-    // Lit for a moment, so the eye finds what the hand just did.
-    builderTab.classList.remove('unlocked')
-    void builderTab.offsetWidth
-    builderTab.classList.add('unlocked')
   }
   // Here and not in each mode's key map: the key means the same thing in all of them.
   window.addEventListener('keydown', (e) => {

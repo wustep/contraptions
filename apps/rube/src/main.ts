@@ -2,7 +2,7 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
-import { UNLOCK_EVENT, builderUnlocked } from '../../../src/ui/unlock'
+import { UNLOCK_EVENT, unlocked } from '../../../src/ui/unlock'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
 import { installBuilds } from './builder/registry'
@@ -494,7 +494,7 @@ function sync(): void {
   // through pieces instead; the sheet has no world to jump between or scrub.
   loop.hidden = v !== 'show'
   buildsRow.hidden = v !== 'show' || !buildChips.length
-  builderLink.hidden = !builderUnlocked()
+  builderLink.hidden = !unlocked()
   for (const { w, b } of buildChips) b.classList.toggle('on', world === w.name)
   jumps.hidden = v !== 'show'
   overviewBtn.hidden = v !== 'show'
