@@ -32,6 +32,8 @@ export interface World {
   pieces: Piece<any>[]
   /** What a visit may favour. The names are the pieces'; the extras steer their variants. */
   tastes: Record<string, Taste['weights']>
+  /** Whether a visit opens on two or three cells of rail out of the entry portal, a breath before the first beat. */
+  leadIn?: boolean
   /**
    * Set on a world made in the Builder: the names of the pieces it brought
    * with it, as against the rail and the cast it borrows from the stock

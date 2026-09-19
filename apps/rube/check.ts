@@ -70,6 +70,7 @@ for (const w of WORLDS) {
     return seq[0] !== 'portal' || seq[seq.length - 1] !== 'portal' || !held || u.world !== w
   })
   check('every piece has a solo world with itself between two portals', lonely.length === 0, lonely.map((p) => p.name).join(','))
+  check('a solo world opens on its piece, not a lead-in', w.pieces.filter((c) => !shared.has(c.name) && !c.finale).every((c) => new Show('amber-gasket', { solo: c.name, world: w.name }).universe(0).pieces[1].piece.name === c.name))
   check('a solo world is short', w.pieces.every((piece) => new Show('amber-gasket', { solo: piece.name, world: w.name }).universe(0).journey < 8))
   check('a solo resolves to this world without being told', w.pieces.filter((c) => !shared.has(c.name)).every((c) => worldOf(c.name) === w))
 
@@ -171,6 +172,10 @@ for (const seed of SEEDS) {
     check(`${tag}: no portal in the middle of the map`, portals === 2, `${portals}`)
     check(`${tag}: has at least four beats`, beatCount(u.pieces) >= 4, `${beatCount(u.pieces)}`)
     check(`${tag}: never ends on rail`, u.pieces[u.pieces.length - 2].piece.name !== 'rail')
+    // A world that opens on rail rolls two or three cells of it out of the portal; the others go straight to a beat.
+    let lead = 0
+    while (u.pieces[1 + lead].piece.name === 'rail') lead++
+    check(`${tag}: ${u.world.leadIn ? 'opens on two or three rails' : 'opens on a beat'}`, u.world.leadIn ? lead >= 2 && lead <= 3 : lead === 0, `${lead}`)
     beats.push(beatCount(u.pieces))
     // Consecutive rails are capped at three.
     let run = 0
