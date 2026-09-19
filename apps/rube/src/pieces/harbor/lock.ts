@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, bubbles, piling, seaColor, water } from './sea'
+import { WATER, bubbles, piling, seaColor, seaWater, water } from './sea'
 
 /**
  * A lock. A chamber between a sill and a quay wall, a floor deep; a raft on
@@ -85,10 +85,6 @@ const LANE: Lane = {
   fire: FIRE,
 }
 
-/** The palette's bluest colour: a chamber this size full of coral does not read as water. */
-const bluest = (colors: string[]) => [...colors].sort((a, b) => blueness(b) - blueness(a))[0]
-const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
-
 export const lock = definePiece<{ color: string; sea: string }>({
   name: 'lock',
   weight: 0.8,
@@ -100,7 +96,7 @@ export const lock = definePiece<{ color: string; sea: string }>({
       [1, -1],
     ]
     if (!fits(cells, [2, -1])) return null
-    return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color), sea: bluest(theme.colors) } }
+    return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color), sea: seaWater(theme) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const raft = raftAt(t)

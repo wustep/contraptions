@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, luminance, piling, seaColor, splash, water } from './sea'
+import { WATER, luminance, piling, seaWater, splash, water } from './sea'
 
 /**
  * A signal mast on the pier. Three flags, a pennant, a square and a
@@ -150,7 +150,7 @@ export const flags = definePiece<{ color: string }>({
     p.rect(FALL_X * k, (leadY - LEAD_H / 2 + 0.02) * k, LEAD_W * k, 0.03 * k)
     // It breaks the surface part way down.
     const wet = FALL * Math.sqrt((WATER - LEAD_Y - LEAD_H / 2) / RUN)
-    splash(p, k, seaColor(theme, s.color), weight, FALL_X - 0.04, WATER, over(since, wet, wet + 0.5), 0.7)
+    splash(p, k, seaWater(theme), weight, FALL_X - 0.04, WATER, over(since, wet, wet + 0.5), 0.7)
   },
 })
 

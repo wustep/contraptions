@@ -2,7 +2,7 @@ import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, roll, trace, wait, type Lane, type Pt } from '../../parts'
 import { body, flipper, through } from './creatures'
-import { seaColor, water } from './sea'
+import { bodyColor, water } from './sea'
 
 /**
  * A seal hauled out on a rock in a gap in the pier. It lounges with its
@@ -158,14 +158,14 @@ export const seal = definePiece<SealState>({
   name: 'seal',
   weight: 0.9,
   flight: true,
-  place: ({ rng, color, fits, theme }) => {
+  place: ({ rng, color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [0, -1],
     ]
     for (const turn of rng.shuffle([1, -1] as const)) {
       if (!fits(cells, [turn, -1])) continue
-      return { cells, exit: { at: [turn, -1], dir: turn }, lane: LANES[turn], state: { color: seaColor(theme, color), turn } }
+      return { cells, exit: { at: [turn, -1], dir: turn }, lane: LANES[turn], state: { color: bodyColor(theme, color, ball.color), turn } }
     }
     return null
   },

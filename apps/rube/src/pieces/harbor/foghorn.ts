@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, definePiece, flick, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { piling, seaColor, water } from './sea'
+import { bodyColor, piling, water } from './sea'
 
 /**
  * A foghorn. A brass horn on a hollow post, aimed down the pier; under the
@@ -74,9 +74,9 @@ const PERCH: Pt = [-0.27, -0.285]
 export const foghorn = definePiece<{ color: string }>({
   name: 'foghorn',
   weight: 0.8,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const press = pressAt(t)

@@ -2,7 +2,7 @@ import { outline, solid } from '../../../../../src/core/draw'
 import { clamp, easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, laneAt, laneReach, rail, roll, type Lane, type Pt, type Seg } from '../../parts'
 import { aboveWater } from './creatures'
-import { WATER, piling, seaColor, water } from './sea'
+import { WATER, bodyColor, piling, seaWater, water } from './sea'
 
 /**
  * Here be monsters. The deck stops over open water, and all there is to
@@ -96,15 +96,15 @@ const risen = (x: number, bx: number): number => easeInOutSine(clamp((0.66 - Mat
 export const serpent = definePiece<{ color: string }>({
   name: 'serpent',
   weight: 0.9,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
     ]
     if (!fits(cells, [2, 0])) return null
-    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, ink, bg, weight }) => {
+  draw: (p, s, { k, t, ink, bg, weight, theme }) => {
     const bx = ballX(t)
     const by = t < 0 || t > SPAN ? 0 : laneAt(LANE, t).y
     const up = Math.max(REST, risen(CROWN, bx))
@@ -119,23 +119,19 @@ export const serpent = definePiece<{ color: string }>({
     p.push()
     aboveWater(p, k, -0.5, 1.5)
 
-    // A length of body along a line: ink, the colour inside it, and a pale stripe along the belly, the inside of every arch.
+    // A length of body along a line: ink, and the colour inside it. One
+    // flat fill, like everything else here: a stripe along a body this
+    // thin split every coil into two lines, and the coils read hollow.
     const tube = (pts: Pt[]) => {
       p.noFill()
-      for (const [color, w, off] of [
-        [ink, 2 * H * k + weight, 0],
-        [s.color, 2 * H * k - weight, 0],
-        [bg, weight * 1.1, H * 0.5],
-      ] as [string, number, number][]) {
+      for (const [color, w] of [
+        [ink, 2 * H * k + weight],
+        [s.color, 2 * H * k - weight],
+      ] as [string, number][]) {
         p.stroke(color)
         p.strokeWeight(w)
         p.beginShape()
-        pts.forEach(([x, y], i) => {
-          const [ax, ay] = pts[Math.max(0, i - 1)]
-          const [cx, cy] = pts[Math.min(pts.length - 1, i + 1)]
-          const len = Math.hypot(cx - ax, cy - ay) || 1
-          p.vertex((x - ((cy - ay) / len) * off) * k, (y + ((cx - ax) / len) * off) * k)
-        })
+        for (const [x, y] of pts) p.vertex(x * k, y * k)
         p.endShape()
       }
     }
@@ -180,7 +176,7 @@ export const serpent = definePiece<{ color: string }>({
     water(p, k, ink, weight, -0.5, 1.5)
     p.push()
     p.noFill()
-    p.stroke(s.color)
+    p.stroke(seaWater(theme))
     for (let i = 1; i <= 3; i++) {
       const c = CROWN - i * LAMBDA
       const r = risen(c, bx)

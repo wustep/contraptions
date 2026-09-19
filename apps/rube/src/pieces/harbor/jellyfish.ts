@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { luminance, piling, seaColor, splash, water } from './sea'
+import { bodyColor, luminance, piling, seaWater, splash, water } from './sea'
 
 /**
  * A jellyfish. The deck stops over open water, and a big jellyfish floats
@@ -74,7 +74,7 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
   name: 'jellyfish',
   weight: 0.9,
   flight: true,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
@@ -83,11 +83,11 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
     ]
     if (!fits(cells, [2, -1])) return null
     // The bell in a colour that stands off the paper; its lights in the palette's colour furthest from that.
-    const body = seaColor(theme, color)
+    const body = bodyColor(theme, color, ball.color)
     const light = [...theme.colors].filter((c) => c !== body).sort((a, b) => Math.abs(luminance(b) - luminance(body)) - Math.abs(luminance(a) - luminance(body)))[0] ?? body
     return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: body, light } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const dip = dipAt(t)
     const dn = dip / SAG
     const breath = breathAt(t)
@@ -173,8 +173,8 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
     // The sea in front: what is under the line is under water.
     water(p, k, ink, weight, -0.5, 1.5)
     // The water the bell shoves aside as it is pressed down, and again as it rings.
-    splash(p, k, s.color, weight, JX - HALF - 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
-    splash(p, k, s.color, weight, JX + HALF + 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
+    splash(p, k, seaWater(theme), weight, JX - HALF - 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
+    splash(p, k, seaWater(theme), weight, JX + HALF + 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
     // The bounce: a puff of lines off the crown.
     if (since > UP && since < UP + 0.25) {
       const f = over(since, UP, UP + 0.25)

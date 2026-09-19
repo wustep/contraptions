@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, piling, seaColor, seabed, splash, water } from './sea'
+import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from './sea'
 
 /**
  * A slipway. A new hull stands level on a wedge of a cradle at the head of
@@ -123,7 +123,7 @@ const cradleAt = (t: number): Pt => {
 export const slipway = definePiece<{ color: string }>({
   name: 'slipway',
   weight: 0.9,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
@@ -131,9 +131,9 @@ export const slipway = definePiece<{ color: string }>({
       [1, 1],
     ]
     if (!fits(cells, [2, 1])) return null
-    return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     // The deck the ball comes off, on a piling that goes down to the bed of the sea a floor below; the pier down there.
     rail(p, k, ink, weight, -0.5, WEST)
     piling(p, k, ink, weight, WEST - 0.08, FLOOR, 1.5)
@@ -183,9 +183,9 @@ export const slipway = definePiece<{ color: string }>({
       p.triangle(-0.05 * k, 0.03 * k, 0.05 * k, 0.03 * k, 0.05 * k, -0.05 * k)
       p.pop()
     }
-    splash(p, k, s.color, weight, w0[0] + 0.55 * plop, 1 + WATER, over(since, plop, plop + 0.45), 0.6)
+    splash(p, k, seaWater(theme), weight, w0[0] + 0.55 * plop, 1 + WATER, over(since, plop, plop + 0.45), 0.6)
   },
-  over: (p, s, { k, t, ink, bg, weight }) => {
+  over: (p, s, { k, t, ink, bg, weight, theme }) => {
     // The hull stands between the viewer and the ball, which sits down in its cockpit.
     const pose = poseAt(t)
     p.push()
@@ -216,9 +216,9 @@ export const slipway = definePiece<{ color: string }>({
     // The sea in front of it all, and the belly-flop: a sheet of spray the length of the hull.
     water(p, k, ink, weight, WEST - 0.12, 1.5, 1 + WATER)
     const s1 = t - T_FLOP
-    splash(p, k, s.color, weight, X_FLOP + 0.22, 1 + WATER, over(s1, 0, 0.6), 2)
-    splash(p, k, s.color, weight, X_FLOP - 0.2, 1 + WATER, over(s1, 0.03, 0.6), 1.5)
-    splash(p, k, s.color, weight, X_FLOP, 1 + WATER, over(s1, 0.1, 0.75), 1.2)
-    splash(p, k, s.color, weight, PIER - 0.05, 1 + WATER, over(t, T_END, T_END + 0.4), 0.5)
+    splash(p, k, seaWater(theme), weight, X_FLOP + 0.22, 1 + WATER, over(s1, 0, 0.6), 2)
+    splash(p, k, seaWater(theme), weight, X_FLOP - 0.2, 1 + WATER, over(s1, 0.03, 0.6), 1.5)
+    splash(p, k, seaWater(theme), weight, X_FLOP, 1 + WATER, over(s1, 0.1, 0.75), 1.2)
+    splash(p, k, seaWater(theme), weight, PIER - 0.05, 1 + WATER, over(t, T_END, T_END + 0.4), 0.5)
   },
 })

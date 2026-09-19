@@ -2,7 +2,7 @@ import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, laneAt, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
 import { aboveWater, body, flipper, type Rib } from './creatures'
-import { WATER, piling, seaColor, splash, water } from './sea'
+import { WATER, bodyColor, piling, seaWater, splash, water } from './sea'
 
 /**
  * A dolphin. The deck stops over open water where a fin has been cruising
@@ -116,7 +116,7 @@ export const dolphin = definePiece<{ color: string }>({
   name: 'dolphin',
   weight: 0.9,
   flight: true,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
@@ -125,9 +125,9 @@ export const dolphin = definePiece<{ color: string }>({
       [2, -1],
     ]
     if (!fits(cells, [3, -1])) return null
-    return { cells, exit: { at: [3, -1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color) } }
+    return { cells, exit: { at: [3, -1], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     rail(p, k, ink, weight, -0.5, EDGE)
     piling(p, k, ink, weight, EDGE - 0.1)
     // The deck above on a piling that stands in the water, with a brace under it.
@@ -230,8 +230,8 @@ export const dolphin = definePiece<{ color: string }>({
 
     // The sea, over where the dolphin goes through it, and the water it throws coming out and going in.
     water(p, k, ink, weight, -0.5, 2.5)
-    splash(p, k, s.color, weight, NOSE0[0], WATER, over(since, -0.02, 0.55), 1.3)
-    splash(p, k, s.color, weight, noseAt(T_DIVE)[0], WATER, over(since, T_DIVE, T_DIVE + 0.6), 1.5)
+    splash(p, k, seaWater(theme), weight, NOSE0[0], WATER, over(since, -0.02, 0.55), 1.3)
+    splash(p, k, seaWater(theme), weight, noseAt(T_DIVE)[0], WATER, over(since, T_DIVE, T_DIVE + 0.6), 1.5)
     // The ring the fin leaves where it went under, and the flick at the top.
     if (up < 0.98 && up > 0.02) {
       p.push()

@@ -1,6 +1,6 @@
 import { solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt, type Seg } from '../../parts'
-import { piling, rope, seaColor, splash, water } from './sea'
+import { piling, rope, seaWater, splash, water } from './sea'
 
 /**
  * A line of net floats. The deck stops; across the gap three floats ride
@@ -99,6 +99,6 @@ export const floats = definePiece<{ color: string }>({
     })
     // The water goes in front of them, so they sit in it and not on it.
     water(p, k, ink, weight, -0.5, 1.5)
-    XS.forEach((x, i) => splash(p, k, seaColor(theme, s.color), weight, x, FY + 0.04, over(t, LANDS[i] + 0.02, LANDS[i] + 0.55), 0.75))
+    XS.forEach((x, i) => splash(p, k, seaWater(theme), weight, x, FY + 0.04, over(t, LANDS[i] + 0.02, LANDS[i] + 0.55), 0.75))
   },
 })

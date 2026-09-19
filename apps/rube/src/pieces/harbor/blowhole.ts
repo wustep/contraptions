@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, ROLL, arrive, arriveAt, definePiece, fly, over, post, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { luminance, seaColor, splash, water } from './sea'
+import { bodyColor, luminance, splash, water } from './sea'
 
 /**
  * A whale. The deck runs onto the back of a whale lying in the water,
@@ -30,7 +30,7 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
   name: 'blowhole',
   weight: 1,
   flight: true,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [0, -1],
@@ -46,7 +46,7 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
       fire: FIRE,
     }
     // The whale in a colour that stands off the paper; the water it blows in the palette's colour furthest from that.
-    const body = seaColor(theme, color)
+    const body = bodyColor(theme, color, ball.color)
     const spout = [...theme.colors].filter((c) => c !== body).sort((a, b) => Math.abs(luminance(b) - luminance(body)) - Math.abs(luminance(a) - luminance(body)))[0] ?? body
     return { cells, exit: { at: [1, -1], dir: 1 }, lane, state: { color: body, spout } }
   },
