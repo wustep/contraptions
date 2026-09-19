@@ -70,9 +70,15 @@ first second to its last.
   top to bottom. A stage of another shape sees more world round that frame,
   never less of it; a saved file is exactly it.
 
-## The placeholder
+## What is here
+
+`premiere-arabesque/take-a` is a real show: Debussy's Première Arabesque to
+Patrizia Prati's recording, the machine walking Regular, Forest, Aqua,
+Arcade. The version file only names it. The score, `PremiereShow`, camera
+and soundtrack live in `apps/rube/src/timed/premiere-arabesque/` and are
+fetched from `load()`.
 
 `metronome/` is two takes of a show with no recording: a procedural machine
-and a struck bar on every strike, made in the page. It is there so the tab
-has something to play, and so that lock can be seen and heard. Delete the
-folder when real shows are here; nothing depends on it.
+and a struck bar on every strike, made in the page. It is a worked example
+of a time map, and `check:shows` still walks it. Keep it.
+

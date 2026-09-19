@@ -1,8 +1,8 @@
 import { renderFrame } from './render'
-import { at, cameraAt, score } from './show'
+import { at, cameraAt, score, show } from './show'
 
 /**
- * A named take for the future Shows registry. The host owns playback, audio,
+ * A named take for the Shows registry. The host owns playback, audio,
  * speed, and export; every frame receives absolute show seconds. No review UI
  * or transport state is required to render this take, including at 2× speed.
  */
@@ -19,6 +19,7 @@ export const premiereArabesque = {
   },
   phrases: score.phrases,
   maps: score.maps,
+  show,
   at,
   cameraAt,
   renderFrame,

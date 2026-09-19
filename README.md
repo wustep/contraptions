@@ -71,7 +71,8 @@ apps/rube/               Machine (see below)
   src/worlds.ts          the four worlds and the order the show visits them in
   src/pieces/            one folder a world, each its own vocabulary; rail.ts and portal.ts are shared
   src/shows/             Shows: the registry, the clock, the soundtrack, the stage and its recorder, the page
-  src/shows/versions/    drop a <work>/<take>.show.ts here and it is in the picker
+  src/shows/versions/    drop a <work>/<take>.show.ts here and it is in the picker; Première Arabesque lives here
+  src/timed/             authored music takes the Shows versions load (Première Arabesque)
   src/builder/           the Builder: the build format, its compiler, the scaffolds, the registry, the page
   builds/                drop a .contraptions.json here and it ships with the site
 src/
@@ -728,7 +729,7 @@ npm run check:shows  # the registry and every version file, the clock, the time 
 The same music may have several versions side by side — takes — so that
 two runs at it can be kept, compared and later combined. The panel leads
 with the picker: the show, and under it a chip a take. A link names one:
-`/shows/?show=clair-de-lune&take=take-a`.
+`/shows/?show=premiere-arabesque&take=take-a`.
 
 A version is one file, `versions/<work>/<take>.show.ts`, and dropping it in
 is the whole of adding it: the page finds it by glob, its path says which
@@ -736,11 +737,15 @@ work it is a take of, and the file says the rest — a title, a label, a note,
 and a `load()` that reaches for the score, the machine and the recording
 only when the version is picked.
 [`versions/README.md`](apps/rube/src/shows/versions/README.md) has the
-file's shape and what the player promises it. What ships today is a
-placeholder, **Metronome**, in two takes with a soundtrack made in the page:
-*free time*, a struck bar wherever a piece fires, and *strict time*, the
-same machine under a time map that brings each strike onto a steady beat.
+file's shape and what the player promises it. What ships today is
+**Première Arabesque**, Take A: Patrizia Prati's recording, the machine
+walking Regular, Forest, Aqua, Arcade, wrapping the timed take in
+`apps/rube/src/timed/premiere-arabesque/` without rewriting it. **Metronome**
+stays beside it as a placeholder in two takes with a soundtrack made in the
+page: *free time*, a struck bar wherever a piece fires, and *strict time*,
+the same machine under a time map that brings each strike onto a steady beat.
 The note is on the strike, so lock is something you can see and hear.
+
 
 ### The music is the clock
 
