@@ -93,7 +93,7 @@ const THEMES: Theme[] = [
 
 export const garden: World = {
   name: 'garden',
-  label: 'Garden',
+  label: 'Forest',
   note: 'the greenhouse: soil, water and bloom',
   themes: THEMES,
   backdrops: ['sprigs', 'plain', 'dots'],

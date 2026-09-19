@@ -12,10 +12,15 @@ import { workshop } from './pieces/workshop'
  * pieces — a harbor has buoys and crabs and a lighthouse where a workshop
  * has hammers and gears — its own palettes to be painted in, its own
  * backdrops, and its own tastes for the planner to lean on. The show goes
- * round them in a fixed order, workshop → harbor → garden → arcade → and
+ * round them in a fixed order, workshop → garden → harbor → arcade → and
  * back to the workshop, the way a climb goes through its biomes; the seed
  * decides everything *inside* a visit — the palette, the taste, the map —
  * and never which world comes next.
+ *
+ * A world has two names. `name` is the code's and the URL's (`?world=harbor`)
+ * and does not change; `label` is what the panel and the catalog call it:
+ * the workshop is Regular, the garden Forest, the harbor Aqua, and the
+ * arcade is the Arcade. So the loop reads Regular → Forest → Aqua → Arcade.
  */
 export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars' | 'waves' | 'sprigs' | 'grid'
 
@@ -43,7 +48,7 @@ export interface World {
 }
 
 /** The loop, in order. */
-export const WORLDS: World[] = [workshop, harbor, garden, arcade]
+export const WORLDS: World[] = [workshop, garden, harbor, arcade]
 
 /** The world the show is in at universe `index`. */
 export const worldAt = (index: number): World => WORLDS[((index % WORLDS.length) + WORLDS.length) % WORLDS.length]

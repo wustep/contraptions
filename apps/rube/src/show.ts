@@ -3,7 +3,7 @@ import { worldAt, worldByName, worldOf, type World } from './worlds'
 
 /**
  * The show: an endless sequence of universes from one seed. Universe `i` is
- * a visit to world `i mod 4` of the loop — workshop, harbor, garden,
+ * a visit to world `i mod 4` of the loop — workshop, garden, harbor,
  * arcade, and round again — built from `seed#i`, so the whole future is
  * fixed by the seed and any moment of it can be rebuilt on demand:
  * scrubbing backwards, jumping ahead, reloading the link. The seed decides

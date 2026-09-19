@@ -289,7 +289,7 @@ const readout = el('div', { class: 'readout' })
 // The loop: one chip a world, in order, the current one lit. A chip jumps
 // to the next visit to that world; Pin keeps the show there.
 const chips = WORLDS.map((w) => {
-  const b = el('button', { type: 'button', title: `Skip to the next visit to the ${w.label.toLowerCase()}` }, [w.label])
+  const b = el('button', { type: 'button', title: `Skip to the next visit to ${w.label}` }, [w.label])
   b.addEventListener('click', () => {
     if (show.pinned && show.pinned !== w) return
     seek(show.begin(show.nextVisit(show.indexAt(now()), w)))
