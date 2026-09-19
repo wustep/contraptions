@@ -1,7 +1,8 @@
 import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, credit, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
-import { SPEEDS, speedLabel } from '../../../src/ui/view'
+import { webmMime } from '../../../src/core/capture'
+import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
 import { catalogOrder, createCatalog, type Entry } from './catalog'
 import { createStage } from './engine'
 import { Show } from './show'
@@ -13,7 +14,9 @@ import { WORLDS, nextWorld, worldByName } from './worlds'
  * brand, mode switch, seed card, transport — with the show's own sections in
  * between: a readout of where the ball is and which world comes next, the
  * loop as four chips with the current one lit, world-to-world jumps, the
- * catalog and the overview. `P` hides the panel for the show alone.
+ * catalog and the overview, and the same Export at the foot: the frame as a
+ * PNG, or the world the ball is in as a WebM. `P` hides the panel for the
+ * show alone.
  * `?catalog=1` opens the sheet of every piece instead of the show;
  * `?solo=<piece>` shows one piece's worlds; `?world=<name>` keeps the show
  * in one world instead of going round the loop.
@@ -122,6 +125,10 @@ function writeUrl(how: Write): void {
 interface View {
   setOverview?(on: boolean): void
   scroll?(): number
+  savePng(filename: string, scale: number): void
+  /** The show's and a solo's; the sheet of every piece has no one loop to save. */
+  saveLoop?(filename: string, progress?: (done: number) => void): Promise<void>
+  exportSize(scale: number): [number, number]
   destroy(): void
 }
 
@@ -361,6 +368,73 @@ play.addEventListener('click', () => setPaused(!paused))
 const speedSeg = segmented(SPEEDS, speedLabel, setSpeed)
 transport.append(scrub, el('div', { class: 'row deck' }, [play, speedSeg.node]))
 
+// Export — the same two as Explorations: the frame, and the loop. The
+// loop here is a world, from the cut that opens it to the cut that closes it.
+const exportSec = section(panelRoot, 'Export')
+const dims = el('span', { class: 'dims' }, ['\u2014'])
+exportSec.querySelector('.section-title')!.append(dims)
+// The scale is one preference across both modes, kept where Explorations keeps it.
+let exportScale = loadView().exportScale
+const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}\u00d7`, (v) => {
+  exportScale = v
+  saveView({ ...loadView(), exportScale })
+  sync()
+})
+/** What a file is called: the view, the seed, and for the show the world it is a visit to. */
+const exportName = (): string => {
+  if (catalogOn) return `contraptions-catalog-${seed}`
+  if (solo) return `contraptions-${solo}-${seed}`
+  const u = show.at(now()).universe
+  return `contraptions-machine-${seed}-${u.index}-${u.world.name}`
+}
+const saveBtn = el('button', {}, ['Save PNG'])
+saveBtn.addEventListener('click', () => {
+  view.savePng(exportName(), exportScale)
+  saveBtn.classList.add('ok')
+  saveBtn.textContent = 'Saved'
+  window.setTimeout(() => {
+    saveBtn.textContent = 'Save PNG'
+    saveBtn.classList.remove('ok')
+  }, 1200)
+})
+const saveLoopBtn = el('button', {}, ['Save loop'])
+const canWebm = webmMime() !== null
+let recording = false
+saveLoopBtn.addEventListener('click', () => {
+  const stage = view
+  if (recording || !stage.saveLoop) return
+  void (async () => {
+    // The clock is held for the encode and put back after it, so the show
+    // picks up where it was and the readout does not run on under the recording.
+    const wasPaused = paused
+    const from = now()
+    recording = true
+    setPaused(true)
+    saveLoopBtn.textContent = 'Saving 0%'
+    try {
+      await stage.saveLoop!(exportName(), (done) => {
+        saveLoopBtn.textContent = `Saving ${Math.round(done * 100)}%`
+      })
+      saveLoopBtn.textContent = 'Save loop'
+    } catch (err) {
+      console.error(err)
+      saveLoopBtn.textContent = 'Failed'
+      window.setTimeout(() => {
+        if (!recording) saveLoopBtn.textContent = 'Save loop'
+      }, 1600)
+    } finally {
+      recording = false
+      // Only if the stage recorded is still the stage: a reroll mid-way has its own clock.
+      if (view === stage) {
+        seek(from)
+        setPaused(wasPaused)
+      }
+      sync()
+    }
+  })()
+})
+exportSec.append(el('div', { class: 'row export-row' }, [scaleSeg.node, saveBtn, saveLoopBtn]))
+
 credit(panelRoot)
 
 const playIcon = icon(ICON.play)
@@ -402,6 +476,10 @@ function sync(): void {
   overviewBtn.hidden = v !== 'show'
   steps.hidden = v !== 'solo'
   scrub.hidden = v === 'catalog'
+  scaleSeg.set(exportScale)
+  saveBtn.disabled = recording
+  saveLoopBtn.hidden = v === 'catalog'
+  saveLoopBtn.disabled = recording || !canWebm
 }
 
 // The readout and the clock print tenths of a second; writing them on every
@@ -409,6 +487,7 @@ function sync(): void {
 let lastReadout = ''
 let lastTime = ''
 let lastPaper = ''
+let lastDims = ''
 function tick(): void {
   const t = now()
   const here = show.at(t)
@@ -430,6 +509,16 @@ function tick(): void {
   if (clock !== lastTime) {
     lastTime = clock
     time.textContent = clock
+  }
+  // What Export would write: the PNG's pixels and, where there is one, the loop's length.
+  const [ew, eh] = view.exportSize(exportScale)
+  const size = `${ew} \u00d7 ${eh}px${catalogOn ? '' : ` \u00b7 ${u.journey.toFixed(1)}s`}`
+  if (size !== lastDims) {
+    lastDims = size
+    dims.textContent = size
+    saveLoopBtn.title = canWebm
+      ? `WebM of this world, cut to cut: ${u.journey.toFixed(1)}s at the current canvas size. Scale is for PNG only.`
+      : 'WebM export needs a browser that can record the canvas.'
   }
   if (!catalogOn && !scrubbing) {
     const p = here.local / u.journey

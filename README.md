@@ -17,7 +17,9 @@ panel down the right edge at the window's full height, the canvas filling
 everything else, and a two-tab switch at the top of the panel —
 **Machine | Explorations** — that moves between them and carries the seed
 across. Both open with the panel hidden; <kbd>P</kbd> (or the tab on the
-edge) brings it out, and <kbd>P</kbd> puts it away again.
+edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
+clears the stage of all of it — the panel, the tab, the way-back button —
+for the piece alone, and <kbd>`</kbd> again puts back what was there.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
 **[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
@@ -338,7 +340,7 @@ canvas size (capped at 12s). The clock is held for the encode the same way it
 is for PNG; progress is a view of the clock and never enters the URL.
 
 <kbd>space</kbd> reroll · <kbd>⇧space</kbd> roll everything · <kbd>K</kbd> pause ·
-<kbd>S</kbd> save png · <kbd>G</kbd> grid overlay · <kbd>P</kbd> hide panel ·
+<kbd>G</kbd> grid overlay · <kbd>P</kbd> hide panel · <kbd>`</kbd> hide everything ·
 <kbd>←</kbd> <kbd>→</kbd> step a frame · <kbd>⇧←</kbd> <kbd>⇧→</kbd> jump a beat
 
 ## Machine: `apps/rube/`
@@ -434,6 +436,12 @@ there to the one before), restarts, opens the **catalog** (<kbd>C</kbd>)
 or the **overview** of the whole map (<kbd>O</kbd>); **Transport** is play/pause
 (<kbd>space</kbd>), speed from ¼× to 4×, and a scrub bar over the current
 world; <kbd>←</kbd> <kbd>→</kbd> step a frame, with shift a second.
+**Export** is the same pair as Explorations': the frame as a PNG at 1×, 2×
+or 4× (held to what a canvas can be), or a WebM of the show's own loop — the
+world the ball is in, from the cut that opens it to the cut that closes it.
+Both cuts are the iris shut, and for the recording both are in that world's
+own ink, so the file ends on the frame it began on. A piece alone saves its
+three seconds the same way; the sheet of every piece saves as a PNG.
 `?solo=hammer` narrows the planner to one piece (plus rail and portals)
 for polishing it, and keeps the show in that piece's world; `?world=harbor`
 keeps it in one world on its own. Old links to `/rube/` still work: that
