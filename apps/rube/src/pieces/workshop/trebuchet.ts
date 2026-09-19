@@ -7,7 +7,8 @@ import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece,
  * counterweight up; the ball rolls into the cup and its weight pulls the
  * pin; the counterweight drops, the arm comes over the top, and the ball
  * leaves the cup at the top of the swing to land two cells over. The arm
- * stays up, swinging a little, the way they do.
+ * swings on through upright and back, and comes to stand straight up, the
+ * weight hanging under the pivot, the way they do.
  */
 const PIVOT: Pt = [0.5, -0.5]
 const ARM = 0.75
@@ -22,10 +23,15 @@ const SWING = 0.48
 const FIRE = ARRIVE + PIN
 const FLIGHT = 0.38
 
-const armAt = (since: number) =>
-  since < 0 ? REST
-  : since < SWING ? REST + (RELEASE - REST) * easeInQuad(over(since, 0, SWING))
-  : RELEASE + 0.9 * (1 - Math.exp(-(since - SWING) * 3)) - 0.3 * Math.exp(-(since - SWING) * 1.5) * Math.sin((since - SWING) * 7)
+/** Where a counterweighted arm comes to rest: straight up, the weight straight down under the pivot. */
+const UP = Math.PI * 1.5
+/** After the release the arm swings on through upright and back, less each time, and stands there: not at whatever angle the throw left it. */
+const armAt = (since: number) => {
+  if (since < 0) return REST
+  if (since < SWING) return REST + (RELEASE - REST) * easeInQuad(over(since, 0, SWING))
+  const u = since - SWING
+  return UP + Math.exp(-u * 1.8) * (0.7 * Math.sin(u * 6) - (UP - RELEASE) * Math.cos(u * 6))
+}
 
 export const trebuchet = definePiece<{ color: string }>({
   name: 'trebuchet',

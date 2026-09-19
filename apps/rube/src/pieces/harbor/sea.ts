@@ -93,13 +93,10 @@ export function piling(p: p5, k: number, ink: string, weight: number, x: number,
   p.line((x - 0.035) * k, (y0 + 0.09) * k, (x + 0.035) * k, (y0 + 0.09) * k)
 }
 
-/** The seabed: the cell's floor with a few pebbles. */
+/** The seabed: the cell's floor, and nothing on it. A pebble every fifth of a cell was a row of studs at the show's size, a railway under the water. */
 export function seabed(p: p5, k: number, ink: string, weight: number, x0: number, x1: number, y = 0.5): void {
   outline(p, ink, weight)
   p.line(x0 * k, y * k, x1 * k, y * k)
-  p.noStroke()
-  p.fill(ink)
-  for (let x = x0 + 0.13; x < x1 - 0.05; x += 0.21) p.ellipse(x * k, (y - 0.02) * k, 0.06 * k, 0.03 * k)
 }
 
 /**

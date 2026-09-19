@@ -37,7 +37,8 @@ export const conveyor = definePiece<{ color: string }>({
         ...arrive([-0.5, 0], P0),
         wait(P0, WIND),
         { from: P0, to: P1, dur: RIDE },
-        ramp([P1[0], -1], [1.5, -1], 1, ROLL),
+        // Off the belt's head and down the hair it rode above the rail, in the same time a level run would take: no step at the join.
+        { ...ramp(P1, [1.5, -1], 1, ROLL), dur: ramp([P1[0], -1], [1.5, -1], 1, ROLL).dur },
       ],
       fire: FIRE,
     }

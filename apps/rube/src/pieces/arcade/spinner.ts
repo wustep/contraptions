@@ -19,9 +19,9 @@ const PLATE = 0.2
 const HALF = 0.04
 const MEET = -0.16
 const PAST = 0.1
-/** Spin off the shove: OMEGA radians a second, decaying with TAU. */
-const OMEGA = 34
+/** Spin off the shove decays with TAU, over this many turns in all. */
 const TAU = 0.7
+const TURNS = 4
 
 /** How far the plate has turned since the shove. */
 const turned = (since: number) => (since < 0 ? 0 : OMEGA * TAU * (1 - Math.exp(-since / TAU)))
@@ -53,6 +53,8 @@ const RELEASE = (() => {
   return at
 })()
 const LET_GO = shoved(RELEASE)
+/** The spin off the shove, radians a second: what runs down to the plate hanging plumb again, and not at whatever angle it had left. */
+const OMEGA = (TURNS * Math.PI * 2 - LET_GO) / TAU
 
 /** The one lane: slowed a little by the shove, back to pace by the far edge. */
 const LANE: Lane = {
@@ -68,8 +70,8 @@ const turnsAt = (t: number, since: number) => Math.floor((plateAngle(t, since) -
 
 export const spinner = definePiece<{ color: string }>({
   name: 'spinner',
-  // Ten a turn, and the spin off the shove is good for four.
-  points: 40,
+  // Ten a turn.
+  points: TURNS * 10,
   weight: 1,
   place: ({ color, fits }) => {
     if (!fits([[0, 0]], [1, 0])) return null

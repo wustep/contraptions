@@ -117,22 +117,12 @@ export const octopus = definePiece<{ color: string; paint: string }>({
       }
       p.pop()
     }
-    // Ink on the deck after — a stain that spreads along the rail — and drips off it into the pool.
+    // Ink on the deck after: a flat stain of the new colour that spreads a little way along the rail's underside.
     if (since > SQUIRT) {
-      const g = over(since, SQUIRT, SQUIRT + 1.4)
-      solid(p, ink, weight, s.paint)
-      p.rect(0, (FLOOR + 0.04) * k, (0.2 + 0.2 * g) * k, 0.045 * k, 0.02 * k)
-      if (g < 1) {
-        p.noStroke()
-        p.fill(s.paint)
-        for (const [dx, d] of [
-          [-0.07, 0],
-          [0.06, 0.45],
-        ]) {
-          const h = ((easeOutCubic(g) + d) % 1)
-          p.ellipse(dx * k, (FLOOR + 0.06 + h * (FUNNEL_Y - 0.06 - FLOOR)) * k, 0.035 * k, 0.05 * k)
-        }
-      }
+      const g = easeOutCubic(over(since, SQUIRT, SQUIRT + 1.4))
+      p.noStroke()
+      p.fill(s.paint)
+      p.rect(0, (FLOOR + 0.045) * k, (0.16 + 0.2 * g) * k, 0.04 * k, 0.02 * k)
     }
   },
 })
