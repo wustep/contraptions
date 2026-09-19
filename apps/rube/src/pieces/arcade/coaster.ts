@@ -19,9 +19,10 @@ import { flash } from './neon'
  * ride's pace is the chain's up the hill and a falling thing's after it.
  *
  * It is one track to the eye too: the same rail from the station to the
- * buffer, the same running lights chasing along all of it at one pace, and
- * the rail lighting behind the car wherever the car has been — up the hill,
- * down the drop and onto the brakes — then going out together.
+ * buffer, lighting behind the car wherever the car has been — up the hill,
+ * down the drop and onto the brakes — then going out together. Nothing
+ * else moves along it: dashes chasing down the rail were marks with no
+ * cause.
  */
 /** The ball's line: the station, the crest, the foot of the drop. */
 const STATION: Pt = [-0.08, 0.1]
@@ -59,24 +60,9 @@ const under = (x: number, d: number): Pt => {
   return [x - (m / n) * d, lineAt(x) + d / n]
 }
 
-/** The rail, end to end, and how far along it each point is. */
+/** The rail, end to end. */
 const RAIL: Pt[] = []
-const RAIL_S: number[] = []
-for (let tx = X_TRACK0; tx <= X_TRACK1 + 1e-9; tx += 0.02) {
-  const q = under(tx, UNDER)
-  const last = RAIL[RAIL.length - 1]
-  RAIL_S.push(last ? RAIL_S[RAIL_S.length - 1] + Math.hypot(q[0] - last[0], q[1] - last[1]) : 0)
-  RAIL.push(q)
-}
-const RAIL_LEN = RAIL_S[RAIL_S.length - 1]
-/** The line's x at `s` along the rail. */
-function railX(s: number): number {
-  const i = Math.max(1, RAIL_S.findIndex((v) => v >= s))
-  return X_TRACK0 + 0.02 * (i - 1 + clamp((s - RAIL_S[i - 1]) / (RAIL_S[i] - RAIL_S[i - 1] || 1)))
-}
-/** The running lights: this far apart, this long, at the chain's pace. */
-const LIGHT_GAP = 0.2
-const LIGHT = 0.07
+for (let tx = X_TRACK0; tx <= X_TRACK1 + 1e-9; tx += 0.02) RAIL.push(under(tx, UNDER))
 
 /** The ride's pace at `x`: the chain's to the crest, a falling thing's after it. */
 const paceAt = (x: number) => (x <= CREST[0] ? V_CHAIN : Math.sqrt(V_CHAIN * V_CHAIN + 2 * G * (lineAt(x) - CREST[1])))
@@ -217,16 +203,6 @@ export const coaster = definePiece<{ color: string }>({
     const glowing = t > T_GO ? 1 - over(since, 1.2, 2.2) : 0
     tubePath(p, k, ink, weight, s.color, pts, 0)
     if (glowing > 0) tubePath(p, k, ink, weight, s.color, pts.filter((_, i) => X_TRACK0 + i * 0.02 <= x), glowing)
-    // The running lights, chasing along the whole of it, always.
-    p.push()
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.9)
-    for (let at = (t * V_CHAIN) % LIGHT_GAP; at < RAIL_LEN; at += LIGHT_GAP) {
-      const a = under(railX(at), UNDER - 0.035)
-      const b = under(railX(Math.min(at + LIGHT, RAIL_LEN)), UNDER - 0.035)
-      p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-    }
-    p.pop()
     // The brake fins on the run-out, closed on the car once it is in them.
     const gripped = t > T_BRAKE ? 1 : 0
     solid(p, ink, weight * 0.8, s.color)

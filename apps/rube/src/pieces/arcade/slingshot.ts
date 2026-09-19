@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInQuad, easeOutQuad } from '../../../../../src/core/ease'
+import { easeOutQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, over, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
 import { flash, lamp, score } from './neon'
 
@@ -20,8 +20,6 @@ import { flash, lamp, score } from './neon'
  * lines from the tips to the pouch wherever it is, and the flight leaves
  * the mouth with the pouch's last speed along the bands' line.
  */
-/** The pouch's cup, at the rail's end. */
-const SEAT = -0.2
 /** How far the ball's weight sinks the pouch before the catch lets go. */
 const SAG = 0.06
 const SHELF_Y = -1
@@ -29,23 +27,28 @@ const POST_X = 0.4
 /** The shelf's near end: clear of the ball's flight, which comes down onto it past the top of its arc. */
 const SHELF_X0 = 0.32
 const LAND: Pt = [0.38, SHELF_Y]
-/** The fork's handle runs from its clamp on the post to the crotch, square to the shot. */
-const CLAMP: Pt = [POST_X, -0.295]
-const CROTCH: Pt = [0.12, -0.37]
-/** Along the handle, from the clamp toward the crotch and on to the fork's mouth. */
-const ALONG: Pt = (() => {
-  const dx = CROTCH[0] - CLAMP[0]
-  const dy = CROTCH[1] - CLAMP[1]
-  const l = Math.hypot(dx, dy)
-  return [dx / l, dy / l]
-})()
-/** The fork's mouth: between the tips, on the handle's line, where the ball leaves the pouch. */
-const MOUTH: Pt = [CROTCH[0] + ALONG[0] * 0.2, CROTCH[1] + ALONG[1] * 0.2]
+/**
+ * The shot's line, and the fork's mouth on it: between the tips, where the
+ * ball leaves the pouch. The mouth stands well back from the shelf and the
+ * line is steep, so the ball is still climbing as it crosses half the gap
+ * and comes *down* onto the shelf from a fifth of a cell over it. With the
+ * mouth a hand's breadth nearer, the same line topped out almost at the
+ * shelf and the ball slid onto it sideways.
+ */
+const AIM_A = (75 * Math.PI) / 180
+const AIM: Pt = [Math.cos(AIM_A), -Math.sin(AIM_A)]
+const MOUTH: Pt = [-0.2, -0.45]
+/** Along the handle, from the clamp toward the crotch and on to the mouth: square to the shot. */
+const ALONG: Pt = [AIM[1], -AIM[0]]
+/** The fork's handle runs from its clamp on the post to the crotch, a prong's length short of the mouth. */
+const CROTCH: Pt = [MOUTH[0] - ALONG[0] * 0.2, MOUTH[1] - ALONG[1] * 0.2]
+const CLAMP: Pt = [POST_X, CROTCH[1] + ((POST_X - CROTCH[0]) / ALONG[0]) * ALONG[1]]
+/** The pouch's cup, at the rail's end: back down the shot's line from the mouth, to where the ball's weight has sunk it. */
+const SEAT = MOUTH[0] + ((SAG - MOUTH[1]) / AIM[1]) * AIM[0]
 const P_SEAT: Pt = [SEAT, 0]
 const P_BACK: Pt = [SEAT, SAG]
-/** The shot's line: from the cocked pouch up through the mouth. */
+/** The shot: from the cocked pouch up through the mouth. */
 const SHOT = Math.hypot(MOUTH[0] - P_BACK[0], MOUTH[1] - P_BACK[1])
-const AIM: Pt = [(MOUTH[0] - P_BACK[0]) / SHOT, (MOUTH[1] - P_BACK[1]) / SHOT]
 /**
  * The prongs spread either side of the shot's line, seen a little turned
  * so the Y opens toward the viewer: the near tip up the line, the far tip
@@ -60,10 +63,15 @@ const SAG_T = 0.16
 const HOLD = 0.12
 const T_SAGGED = ARRIVE + SAG_T
 const FIRE = T_SAGGED + HOLD
-const LAUNCH_T = 0.18
+const LAUNCH_T = 0.14
 const T_OFF = FIRE + LAUNCH_T
-/** The pouch's speed as the ball leaves it: it comes up the line from rest, quickening all the way. */
-const V_OFF = (2 * SHOT) / LAUNCH_T
+/**
+ * The launch is a spring's: the bands pull hardest at full stretch and not
+ * at all at the mouth, so the pouch is a quarter of a swing from rest to its
+ * top speed, and that speed is what the ball leaves with.
+ */
+const spring = (u: number) => 1 - Math.cos((Math.PI / 2) * u)
+const V_OFF = ((Math.PI / 2) * SHOT) / LAUNCH_T
 /** The flight: leaves the mouth along the shot's line at the pouch's speed, and comes down onto the shelf. */
 const ARC = (LAND[1] - MOUTH[1] - ((LAND[0] - MOUTH[0]) * AIM[1]) / AIM[0]) / 4
 const FLY_T = Math.hypot(LAND[0] - MOUTH[0], LAND[1] - MOUTH[1] - 4 * ARC) / V_OFF
@@ -76,7 +84,7 @@ function pouchAt(t: number): Pt {
   if (t < T_SAGGED) return [SEAT, SAG * easeOutQuad(over(t, ARRIVE, T_SAGGED))]
   if (t < FIRE) return P_BACK
   if (t < T_OFF) {
-    const f = easeInQuad(over(t, FIRE, T_OFF))
+    const f = spring(over(t, FIRE, T_OFF))
     return [P_BACK[0] + (MOUTH[0] - P_BACK[0]) * f, P_BACK[1] + (MOUTH[1] - P_BACK[1]) * f]
   }
   // Empty: on past the mouth, checked by the bands, swinging back, and settling to dangle under the tips on slack bands.
@@ -200,7 +208,7 @@ export const slingshot = definePiece<{ color: string }>({
   },
   // The score with the flash: one beat, at the mouth, as the shot is made —
   // not at the fork while the ball is still down in the pouch.
-  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, MOUTH[0] - 0.26, MOUTH[1] - 0.06, '+100', t - T_OFF),
+  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, MOUTH[0] + 0.32, MOUTH[1] + 0.1, '+100', t - T_OFF),
   over: (p, s, { k, t, ink, weight, since }) => {
     const [px, py] = pouchAt(t)
     const lit = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE, T_SAGGED) : 1 - over(since, 0.4, 1.1)

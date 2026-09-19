@@ -3,7 +3,6 @@ import type { World } from '../../worlds'
 import { portal } from '../portal'
 import { balloon } from './balloon'
 import { bell } from './bell'
-import { bellows } from './bellows'
 import { cannon } from './cannon'
 import { conveyor } from './conveyor'
 import { cradle } from './cradle'
@@ -47,7 +46,6 @@ import { zipline } from './zipline'
  *   hammer    wait on the anvil, a wedge comes down, out fast
  *   seesaw    up, over, down faster
  *   bell      the clapper shoved ahead to the lip and slipped under; punctuation
- *   bellows   trip → hook → weight → puff → go
  *   dominoes  gate → striker → row → button → wire → coil → gate
  *   drop      lip, tube, flaps, quarter-pipe; down one to three floors
  *   lift      pawl → counterweight → cage; up one to three floors
@@ -112,7 +110,7 @@ export const workshop: World = {
   tastes: {
     mixed: { painter: 1.3, cradle: 1.3, inverter: 1.2 },
     bench: {
-      hammer: 1.7, dominoes: 1.6, bellows: 1.6, seesaw: 1.3, bell: 1.2, pendulum: 1.6, conveyor: 1.5, paddle: 1.4,
+      hammer: 1.7, dominoes: 1.6, seesaw: 1.3, bell: 1.2, pendulum: 1.6, conveyor: 1.5, paddle: 1.4,
       drawbridge: 1.5, tipper: 1.4, gears: 1.7, cradle: 1.2, cannon: 0.5, loop: 0.5, toaster: 0.7, rocket: 0.5, crane: 0.8,
     },
     vertical: {
@@ -121,7 +119,7 @@ export const workshop: World = {
     },
     ballistic: {
       cannon: 2, loop: 1.8, toaster: 1.3, seesaw: 1.3, hammer: 1.1, plunger: 1.9, rocket: 1.8, trampoline: 1.6, crane: 1.3,
-      zipline: 1.3, trapeze: 1.6, trebuchet: 1.9, flipper: 1.5, inverter: 1.4, dominoes: 0.6, bellows: 0.6, conveyor: 0.5,
+      zipline: 1.3, trapeze: 1.6, trebuchet: 1.9, flipper: 1.5, inverter: 1.4, dominoes: 0.6, conveyor: 0.5,
     },
   },
   pieces: [
@@ -129,7 +127,6 @@ export const workshop: World = {
     hammer,
     seesaw,
     bell,
-    bellows,
     dominoes,
     drop,
     lift,

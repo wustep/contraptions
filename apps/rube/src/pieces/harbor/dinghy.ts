@@ -151,19 +151,33 @@ export const dinghy = definePiece<{ color: string }>({
     const belly = -0.025 + 0.085 * full
     const lx = (head[0] + clew[0]) / 2 - belly * 0.5 + 0.02 * shake
     const ly = (head[1] + clew[1]) / 2 - belly + 0.012 * shake
-    solid(p, ink, weight, bg)
-    p.beginShape()
-    p.vertex(head[0] * k, head[1] * k)
-    p.quadraticVertex(lx * k, ly * k, clew[0] * k, clew[1] * k)
-    p.quadraticVertex(((tack[0] + clew[0]) / 2) * k, ((tack[1] + clew[1]) / 2 + 0.02 * full) * k, tack[0] * k, tack[1] * k)
-    p.endShape(p.CLOSE)
-    // A band across it in her colour.
+    const cloth = () => {
+      p.beginShape()
+      p.vertex(head[0] * k, head[1] * k)
+      p.quadraticVertex(lx * k, ly * k, clew[0] * k, clew[1] * k)
+      p.quadraticVertex(((tack[0] + clew[0]) / 2) * k, ((tack[1] + clew[1]) / 2 + 0.02 * full) * k, tack[0] * k, tack[1] * k)
+      p.endShape(p.CLOSE)
+    }
     p.noStroke()
+    p.fill(bg)
+    cloth()
+    // A band across it in her colour, from the mast out to the leech itself: its end is a point on the leech's own
+    // curve, so it bellies and shakes with the cloth. Laid out to a straight line near the leech, it stood still
+    // while the sail moved round it.
     p.fill(s.color)
-    const band = (f: number): Pt => [lerp(MAST, lerp(head[0], clew[0], f) - belly * 0.5 * 4 * f * (1 - f) * 0.5, 0.94), lerp(head[1], clew[1], f)]
-    const b0 = band(0.5)
-    const b1 = band(0.68)
-    p.quad((MAST - 0.015) * k, b0[1] * k, b0[0] * k, b0[1] * k, b1[0] * k, b1[1] * k, (MAST - 0.015) * k, b1[1] * k)
+    const leech = (u: number): Pt => [
+      (1 - u) * (1 - u) * head[0] + 2 * (1 - u) * u * lx + u * u * clew[0],
+      (1 - u) * (1 - u) * head[1] + 2 * (1 - u) * u * ly + u * u * clew[1],
+    ]
+    const b0 = leech(0.5)
+    const b1 = leech(0.68)
+    p.quad(MAST * k, b0[1] * k, b0[0] * k, b0[1] * k, b1[0] * k, b1[1] * k, MAST * k, b1[1] * k)
+    // The sail's line last, over the band's ends.
+    outline(p, ink, weight)
+    p.noFill()
+    cloth()
+    outline(p, ink, weight * 1.2)
+    p.line(MAST * k, SHEER * k, MAST * k, (head[1] - 0.03) * k)
     outline(p, ink, weight)
     p.line(tack[0] * k, tack[1] * k, clew[0] * k, clew[1] * k)
     // The pennant at the masthead: there is always a breeze.

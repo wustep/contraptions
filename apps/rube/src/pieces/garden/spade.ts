@@ -11,13 +11,13 @@ import { bloom, pot, soil, stem, tuft } from './green'
  * tread, and stops; the blade sinks a hair and the grip kicks up — and
  * kicks the twig out. The pot comes down on the handle, the blade flips,
  * and the ball goes up off its face, a floor or two, over the top and down
- * onto a ledge, on or back the way it came. Soil flies. The pot stays on
- * the handle, its flower nodding, and the twig lies where it fell.
+ * onto a ledge on the far side, the way it was going. Soil flies. The pot
+ * stays on the handle, its flower nodding, and the twig lies where it fell.
  *
  * The blade's face throws the ball along its own normal, so the angle the
  * blade has reached when the ball leaves it is the lean of the throw: a
- * little past level for a ball going on, a little short of it for one
- * going back.
+ * little past level, toward the log. It only throws that way; the planner
+ * may still mirror the whole piece.
  */
 export interface SpadeState {
   color: string
@@ -145,7 +145,9 @@ export const spade = definePiece<SpadeState>({
   flight: true,
   place: ({ rng, color, fits, taste }) => {
     const tall = taste.weights['lift-tall'] ?? 1
-    const options = rng.shuffle([1, 2].flatMap((floors) => [1, -1].map((turn) => ({ floors, turn: turn as 1 | -1 }))))
+    // Only ever on: a blade that flips up about a log beyond it throws what is on it up and over the log. Thrown
+    // back over its own tip, the ball went against the way the blade was moving.
+    const options = rng.shuffle([1, 2].map((floors) => ({ floors, turn: 1 as 1 | -1 })))
     for (const { floors, turn } of rankBy(rng, options, (o) => Math.pow(tall, o.floors - 1))) {
       const cells: Pt[] = []
       for (let i = 0; i <= floors; i++) cells.push([0, -i])

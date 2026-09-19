@@ -10,7 +10,7 @@ import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from './sea
  * out — it falls in the sea — and cradle, hull and ball go down the ways,
  * gathering pace. At the foot the cradle meets its stop and the hull does
  * not: it runs on off the cradle's top, noses over and belly-flops into
- * the sea a floor below in a sheet of spray, and the slap throws the ball
+ * the sea a floor below with one splash, and the slap throws the ball
  * out over the bow onto the pier. The hull carries its way to the pier
  * and lies there, nodding; the cradle stays at the foot of the ways.
  *
@@ -213,12 +213,36 @@ export const slipway = definePiece<{ color: string }>({
     p.circle((CUDDY + 0.07) * k, (SHEER - 0.04) * k, 0.04 * k)
     p.pop()
 
-    // The sea in front of it all, and the belly-flop: a sheet of spray the length of the hull.
+    // The sea in front of it all, and the belly-flop.
     water(p, k, ink, weight, WEST - 0.12, 1.5, 1 + WATER)
-    const s1 = t - T_FLOP
-    splash(p, k, seaWater(theme), weight, X_FLOP + 0.22, 1 + WATER, over(s1, 0, 0.6), 2)
-    splash(p, k, seaWater(theme), weight, X_FLOP - 0.2, 1 + WATER, over(s1, 0.03, 0.6), 1.5)
-    splash(p, k, seaWater(theme), weight, X_FLOP, 1 + WATER, over(s1, 0.1, 0.75), 1.2)
-    splash(p, k, seaWater(theme), weight, PIER - 0.05, 1 + WATER, over(t, T_END, T_END + 0.4), 0.5)
+    // One splash, the hull's: water thrown out from under the bow and the stern, the bow's the bigger, and one
+    // ring the hull's length that widens and is gone. Three splashes laid over one another were a cloud of dots
+    // and a knot of rings.
+    const f = over(t, T_FLOP, T_FLOP + 0.5)
+    if (f > 0 && f < 1) {
+      const sea = seaWater(theme)
+      p.push()
+      p.noStroke()
+      p.fill(sea)
+      for (const [side, size] of [
+        [-1, 0.75],
+        [1, 1.1],
+      ]) {
+        for (const [reach, h, r] of [
+          [0.07, 0.2, 0.032],
+          [0.17, 0.32, 0.028],
+          [0.29, 0.18, 0.024],
+        ]) {
+          const px = X_FLOP + side * (LEN / 2 + reach * size * (0.3 + 0.7 * f))
+          const py = 1 + WATER - h * size * 4 * f * (1 - f)
+          p.circle(px * k, py * k, r * 2 * k * (1 - f * 0.5))
+        }
+      }
+      p.noFill()
+      p.stroke(sea)
+      p.strokeWeight(weight * (1 - f))
+      p.ellipse(X_FLOP * k, (1 + WATER) * k, (LEN + 0.06 + 0.3 * f) * k, (0.04 + 0.05 * f) * k)
+      p.pop()
+    }
   },
 })

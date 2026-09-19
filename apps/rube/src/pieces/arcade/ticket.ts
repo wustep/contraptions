@@ -10,8 +10,8 @@ import { cabinet, display, lamp, marquee, score } from './neon'
  * still going the way it came, and is gone down the throat; the machine
  * whirs, its lights chase, the display — which came on showing what the
  * map earned — counts down a hundred at a time, and for every hundred a
- * ticket feeds out of the slot at the bottom: a strip that hangs to the
- * floor and then coils up there into a roll that grows. Then the ball
+ * ticket feeds out of the slot at the bottom: a strip that grows until it
+ * hangs to the floor. Then the ball
  * drops out of the prize chute on the far side, a hood at the cabinet's
  * foot, onto the rail below: one or two floors down, on or back the way it
  * came. The tickets stay. Nobody tears them off.
@@ -34,7 +34,7 @@ export interface TicketState {
 /** Points to a ticket. */
 export const PER_TICKET = 100
 export const ticketsFor = (points: number): number => Math.max(1, Math.round(points / PER_TICKET))
-/** Tickets that hang before the strip reaches the floor and starts to coil. */
+/** Tickets that hang before the strip reaches the floor; it grows no further. */
 const HANG = 5
 const PITCH = 0.07
 
@@ -119,25 +119,18 @@ export const ticket = definePiece<TicketState>({
     solid(p, ink, weight, ink)
     p.rect(-turn * 0.12 * k, (floors + 0.06) * k, 0.16 * k, 0.04 * k)
     p.pop()
-    // The tickets: one strip out of the slot, a perforation every ticket, down to the floor; what comes after that coils up there, a roll that grows.
+    // The tickets: one strip out of the slot, a perforation every ticket, down to the floor, where it stops. The
+    // roll it coiled into there was a disc with a ring in it: a second ball, lying at the foot of the machine.
     if (tickets > 0) {
       const x = -turn * 0.12
       const y0 = floors + 0.1
-      const rolled = Math.max(0, tickets - HANG)
-      const r = rolled > 0 ? Math.min(0.105, 0.04 + 0.017 * Math.sqrt(rolled)) : 0
-      const h = rolled > 0 ? floors + 0.47 - 2 * r - y0 : tickets * PITCH
+      const h = Math.min(tickets, HANG) * PITCH
       solid(p, ink, weight * 0.7, bg)
       p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
       outline(p, ink, weight * 0.7)
       for (let y = y0 + PITCH; y < y0 + h - 0.02; y += PITCH) {
         p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
         p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
-      }
-      if (rolled > 0) {
-        solid(p, ink, weight * 0.7, bg)
-        p.circle(x * k, (floors + 0.47 - r) * k, 2 * r * k)
-        outline(p, ink, weight * 0.6)
-        p.circle(x * k, (floors + 0.47 - r) * k, 0.8 * r * k)
       }
     }
   },

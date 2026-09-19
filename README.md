@@ -376,7 +376,7 @@ vocabulary of pieces, not a palette swap:
 
 | | World | The place | Its pieces |
 | --- | --- | --- | --- |
-| 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-four of them |
+| 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-three of them |
 | 2 | **Harbor** | a pier over water, tide and salt | twenty-three: sea life, boats, pier gear and the tide |
 | 3 | **Garden** | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
 | 4 | **Arcade** | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
@@ -389,7 +389,7 @@ it draws — always and only from that world's pool. Two visits to the same
 world never look alike back to back.
 
 **No world is the small one.** Every world has at least twenty-three beats
-of its own (the workshop thirty-four), and four tastes to lean on: the
+of its own (the workshop thirty-three), and four tastes to lean on: the
 harbor's *tidal*, *quay*, *surf* and *reef*; the garden's *greenhouse*,
 *allotment*, *wild* and *lawn*; the arcade's *pinball*, *midway*,
 *jackpot* and *screens*. A world's vocabulary is chosen for geometry
@@ -509,7 +509,7 @@ whatever pool it is handed.
 
 ### The workshop's pieces
 
-**Thirty-four pieces**, curated from the eighty-odd toys in the other
+**Thirty-three pieces**, curated from the eighty-odd toys in the other
 catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
@@ -518,7 +518,6 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | hammer | two cells tall: wait on the anvil, the pawl trembles and lets go, a wedge head drops a floor and squeezes the ball out fast |
 | seesaw | up, hang over the pivot, down faster, onto the stop |
 | bell | the clapper is in the way; the ball shoulders it ahead to the lip, where it strikes, and slips under it; the bell knocks on its pin; punctuation |
-| bellows | tongue → rod → roof lever → hook → weight → bellows → puff → go |
 | dominoes | gate → striker → six dominoes, each knocking the next → button → a pulse along the wire → the coil snaps the portcullis up |
 | drop | lip, tube, a flap per floor, quarter-pipe; down one to three floors, on or back |
 | lift | pawl → counterweight → cage; up one to three floors, on or back |
@@ -583,7 +582,7 @@ against what holds it.
 | lock | across the apron onto a raft in a lock chamber, the gate coming down behind; water runs in through the culvert from the upper pound and the raft rises a floor; its tail kicks up at the top and the ball rolls off |
 | puffer | onto the back of a pufferfish asleep in a gap in the deck; it blows up with a start to a ball of spines and pops the ball over onto the far deck; then sighs itself small again |
 | hawser | into a breeches buoy under a block on a mooring line; the jerk pulls the lanyard's toggle; down the line, which the load hangs in two straight parts, to a rat guard; the ring swings on and tips the ball out a floor down |
-| dolphin | off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; a fin cruises before and after |
+| dolphin | off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; its fin cruises after |
 | foghorn | out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up |
 | serpent | the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops |
 | anemone | into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan |
@@ -607,13 +606,13 @@ against what holds it.
 | frog | onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up |
 | toadstools | off the path's end onto three toadstools, each taller than the last; every cap squashes, springs and puffs spores; pum, pum, pum, onto the rail a floor up |
 | appletree | the ball bonks the trunk and stops dead; the crown shudders, a leaf or two falls; the ripe apple on the far bough drops, bounces once and rolls on with the thread; the ball stays at the tree's foot |
-| spade | onto the blade of a spade across a log; the grip kicks the twig out from under a flowerpot; the pot comes down on the handle; up off the blade, one or two floors, on or back |
+| spade | onto the blade of a spade across a log; the grip kicks the twig out from under a flowerpot; the pot comes down on the handle; up off the blade and over the log, one or two floors, always on |
 | well | over the coping into the bucket; the pawl slips, the crank whirls; down the shaft two or three floors; the bucket topples on a stone and the ball rolls out through an arch |
 | bamboo | onto the scoop of a shishi-odoshi; its weight brings the mouth down onto the terrace's coping; off the tip and down a floor, heading back; the tail cracks on its stone |
 | cocoon | into one mouth of a silk tunnel slung between two twigs; it rocks and flushes with colour, the seam splits, three butterflies come out; the ball rolls out the far mouth their colour |
 | bumblebee | onto a daisy's face; a bumblebee comes over from its flower, takes hold, heaves twice, and labours up and across the bed with it to a shelf a floor up; sets it down rolling and goes home |
 | croquet | onto the mark, nose against a flap; the hook lets go and a hung mallet tocks it through two hoops; it clips the striped peg |
-| scarecrow | loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and comes back down |
+| scarecrow | loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and flies off |
 | dandelion | into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out |
 | maple | out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went |
 
@@ -652,7 +651,7 @@ there is no run behind it, so it makes up a total a run might have earned.
 | bumper | the ball's front clips the skirt's rim; the cap slams that instant, the lamp lights, +50, out faster |
 | spinner | shoves through a hanging plate — its foot rides up over the ball and slips off its back — that spins on the way the ball went, clear of its beam, counting its turns in lamps up the post; the score pops as the plate is flung and ticks up with the turns |
 | changer | into the coin slot in the cabinet's side; chunk; a token comes out under the return flap on the far side and takes the thread |
-| ticket | the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down a hundred at a time and a ticket feeds out below for each, a strip that reaches the floor and coils into a roll; drops out of the prize chute beside the cabinet, one or two floors down |
+| ticket | the map's last beat, never drawn from the pool: off the rail's end into the hopper; the display counts the run's points down a hundred at a time and a ticket feeds out below for each, a strip that reaches the floor; drops out of the prize chute beside the cabinet, one or two floors down |
 | zigzag | down lit tubes, bouncing off a pad onto the next; one or two floors; +10 a pad |
 | pachinko | off a lip and bouncing pin to pin through five rows, each lighting as it is struck; the jackpot pocket, whose side drops to let the ball out through a gate in the board; two floors down |
 | skee | a kicker flicks it, up the alley, up the lip and off it the way it was going; a lob over the top of its arc and down into the fifty ring a floor up; the rings light as it lands |

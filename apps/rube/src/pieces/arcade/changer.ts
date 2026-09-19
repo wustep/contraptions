@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, ramp, roll, wait, type BallChange, type Lane, type PieceCtx } from '../../parts'
-import { cabinet, display, flash, lamp, marquee } from './neon'
+import { cabinet, display, flash, lamp, marquee, score } from './neon'
 
 /**
  * A change machine standing across the lane. The rail runs into a coin
@@ -24,6 +24,8 @@ const IN = 0.1
 const CHUNK = 0.45
 const OUT = 0.1
 const FIRE = T_SLOT + IN + CHUNK
+/** The cabinet's top. */
+const CAB_TOP = -0.48
 
 export const changer = definePiece<{ color: string; token: string }>({
   name: 'changer',
@@ -66,7 +68,7 @@ export const changer = definePiece<{ color: string; token: string }>({
     p.push()
     p.translate(shake * k, 0)
     // The cabinet, the rail's height and taller, standing on the floor.
-    cabinet(p, k, ink, weight, s.color, 0, -0.48, 0.5, HALF * 2)
+    cabinet(p, k, ink, weight, s.color, 0, CAB_TOP, 0.5, HALF * 2)
     // The display, dark until the credit lights it in the token's colour.
     display(p, k, ink, weight, bg, 0, -0.32, 0.26, 0.14, credit ? '01' : '00', s.token, !!credit, 0.02)
     // The slot on the near side, at the rail's height, with an arrow to it.
@@ -90,4 +92,6 @@ export const changer = definePiece<{ color: string; token: string }>({
     p.rect(0, 0.1 * k, 0.05 * k, 0.2 * k, 0.01 * k)
     p.pop()
   },
+  // The score pops over the cabinet's top, clear of it. Off the ball it popped inside the cabinet, where the ball is at the chunk, across the display's own digits.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, CAB_TOP - 0.12 + 0.22, '+50', since),
 })
