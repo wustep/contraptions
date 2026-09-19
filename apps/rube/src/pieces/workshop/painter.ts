@@ -1,5 +1,5 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeOutCubic } from '../../../../../src/core/ease'
+import { easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, gallows, over, rail, ramp, wait, type BallChange, type Lane } from '../../parts'
 
 /**
@@ -131,13 +131,18 @@ export const painter = definePiece<{ color: string; paint: string }>({
       p.push()
       p.noStroke()
       p.fill(s.paint)
+      // One off each nozzle, the second a moment after the first: each falls the way a drop does, faster all the way, and is gone when it lands.
       for (const side of [-1, 1]) {
-        const y = NOZZLE_Y + 0.1 + easeOutCubic(g) * (FLOOR - NOZZLE_Y - 0.1)
-        if (g < 1) p.ellipse(side * 0.2 * k, y * k, 0.035 * k, 0.05 * k)
+        const born = SPRAY + (side < 0 ? 0.15 : 0.7)
+        if (since < born || since > born + 0.4) continue
+        const y = NOZZLE_Y + 0.1 + easeInQuad(over(since, born, born + 0.4)) * (FLOOR - 0.03 - NOZZLE_Y - 0.1)
+        p.ellipse(side * 0.2 * k, y * k, 0.035 * k, 0.05 * k)
       }
       p.pop()
-      solid(p, ink, weight, s.paint)
-      p.rect(0, (FLOOR + 0.01 + pressed * 0.03) * k, (0.14 + 0.12 * g) * k, 0.03 * k, 0.015 * k)
+      // Flat colour, no outline: outlined, it was a dark slab with the colour showing only as a dot at each end.
+      p.noStroke()
+      p.fill(s.paint)
+      p.rect(0, (FLOOR - 0.012 + pressed * 0.03) * k, (0.1 + 0.1 * g) * k, 0.028 * k, 0.014 * k)
     }
   },
   over: (p, s, { k, since }) => {
