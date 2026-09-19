@@ -71,6 +71,31 @@ body.hide-panel #panel { display: none; }
 }
 body.hide-panel .panel-peek { display: inline-flex; }
 
+/* At a desk (`peek-tucks`, set by the shell where a pointer can hover) the
+   tab tucks into the edge and comes out for a pointer near it, for the
+   keyboard, and to greet a page just opened. Tucked it takes no clicks, but
+   stays in the tab order. `translate`, not `transform`, so the press nudge
+   still lands. It waits a beat before going, so grazing the edge of its
+   reach does not flap it. */
+body.peek-tucks .panel-peek {
+  opacity: 0;
+  translate: 100% 0;
+  pointer-events: none;
+  transition: translate 200ms ease-out 320ms, opacity 200ms ease-out 320ms;
+}
+body.peek-tucks.peek-near .panel-peek,
+body.peek-tucks.peek-greet .panel-peek,
+body.peek-tucks .panel-peek:focus-visible {
+  opacity: 1;
+  translate: none;
+  pointer-events: auto;
+  transition-duration: 160ms;
+  transition-delay: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  body.peek-tucks .panel-peek { translate: none; transition-property: opacity; }
+}
+
 /* Bare: the piece and nothing else. Laid over the panel's own state, so the
    backtick that leaves it puts back whichever of the two was there. */
 body.bare { grid-template-columns: minmax(0, 1fr) 0; }

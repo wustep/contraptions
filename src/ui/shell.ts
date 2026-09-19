@@ -9,6 +9,8 @@
  * and Explorations start with the panel hidden, since there the piece
  * leads; the Builder is worked from its panel and starts with it out. `P`
  * or the peek tab on the edge brings it out, and `P` puts it away again.
+ * At a desk the tab itself keeps off the piece: it greets a page just
+ * opened, tucks into the edge, and comes out when the pointer nears it.
  * The backtick clears the stage of all of it — the panel, the peek tab,
  * anything else standing on the stage — for the piece alone, and the
  * backtick again puts back exactly what was there.
@@ -173,6 +175,17 @@ export function credit(root: HTMLElement): void {
   )
 }
 
+/**
+ * Where the peek tab tucks away: a window wide enough for the panel to sit
+ * beside the stage (the stylesheet stacks it at 820px), worked with a pointer
+ * that can hover.
+ */
+const PEEK_TUCKS = '(min-width: 821px) and (hover: hover) and (pointer: fine)'
+/** How near the panel's edge the pointer comes, in px, before the tab comes out to meet it. */
+const PEEK_REACH = 128
+/** How long the tab stands on the edge of a page just opened before it tucks away, in ms. */
+const PEEK_GREETING_MS = 3200
+
 export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // Mouse clicks leave a button focused, and a focused button swallows the
   // space shortcut. Keyboard activation reports detail 0 and keeps focus.
@@ -218,14 +231,47 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }, ['Panel', el('kbd', {}, ['P'])])
   document.body.append(peek)
 
+  // At a desk the tab keeps off the piece: it comes out when the pointer
+  // nears the panel's edge and tucks back in when the pointer goes. Only
+  // where there is a pointer to near it with — a touch screen, or the stacked
+  // layout, keeps the tab out. The class says which; the stylesheet does the rest.
+  const desk = window.matchMedia(PEEK_TUCKS)
+  const syncDesk = () => {
+    document.body.classList.toggle('peek-tucks', desk.matches)
+    // A window widened past the stack with the tab holding the keyboard: a
+    // tab that tucks does not keep it (see toggle), whichever way it got there.
+    if (desk.matches && document.activeElement === peek) peek.blur()
+  }
+  desk.addEventListener('change', syncDesk)
+  syncDesk()
+  // Tracked with the panel out as well, so that a panel closed from under the
+  // pointer — Hide sits in the tab's corner — leaves the tab there to be met.
+  let near = false
+  const setNear = (on: boolean) => {
+    if (on === near) return
+    near = on
+    document.body.classList.toggle('peek-near', on)
+  }
+  const reach = (e: PointerEvent) => setNear(e.clientX >= window.innerWidth - PEEK_REACH)
+  window.addEventListener('pointermove', reach)
+  // A finger arrives without having moved.
+  window.addEventListener('pointerdown', reach)
+  // Only a mouse leaves the window: a finger lifting is not the pointer going away.
+  document.documentElement.addEventListener('pointerleave', (e) => {
+    if (e.pointerType === 'mouse') setNear(false)
+  })
+
   const toggle = () => {
     // Asking for the panel from a bare stage is asking for the panel.
     const bare = document.body.classList.contains('bare')
-    document.body.classList.remove('bare')
+    document.body.classList.remove('bare', 'peek-greet')
     const hide = !bare && !document.body.classList.contains('hide-panel')
     document.body.classList.toggle('hide-panel', hide)
-    if (hide) peek.focus()
-    else hideBtn.focus()
+    if (!hide) hideBtn.focus()
+    // A focused tab would stand out on the edge for as long as it held the
+    // keyboard, so a tab that tucks is not handed it. Tab still finds it.
+    else if (!desk.matches) peek.focus()
+    else if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
   hideBtn.addEventListener('click', toggle)
   peek.addEventListener('click', toggle)
@@ -292,7 +338,16 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // is focused on load. The pages set the class in their markup too, so the
   // first paint is already panel-less; this covers any host that did not.
   // The Builder is nothing without its panel, and opens with it out.
-  if (mode !== 'builder') document.body.classList.add('hide-panel')
+  if (mode !== 'builder') {
+    document.body.classList.add('hide-panel')
+    // A tab that tucks has to be seen once to be looked for: it stands on the
+    // edge as the page opens, and going in shows where it lives. The count
+    // starts when the page is looked at, not when a background tab loads it.
+    document.body.classList.add('peek-greet')
+    const tuck = () => window.setTimeout(() => document.body.classList.remove('peek-greet'), PEEK_GREETING_MS)
+    if (document.visibilityState === 'visible') tuck()
+    else document.addEventListener('visibilitychange', tuck, { once: true })
+  }
 
   return {
     setSeed(seed) {
