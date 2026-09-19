@@ -78,8 +78,11 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   // The pieces that change the ball stay special: at most two a map, keen
   // when the last world had none, shy when it had one.
   const dynamics = { boost: avoid.dynamicsLast ? 0.5 : 3, cap: 2 }
+  // A world that opens on rail does so on every visit, but not in a solo,
+  // where the piece under the glass is the whole show.
+  const leadIn = world.leadIn && !solo ? rng.fork('lead-in').int(2, 4) : 0
   const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
-    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats }),
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats, leadIn }),
   )
 
   let acc = 0

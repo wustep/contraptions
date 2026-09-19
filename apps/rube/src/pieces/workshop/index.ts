@@ -107,6 +107,8 @@ export const workshop: World = {
   note: 'the atelier: brass, oil, paper and gravity',
   themes: THEMES,
   backdrops: ['plain', 'dots', 'rules', 'plain'],
+  // The show begins here, so the ball is seen rolling before the first contraption.
+  leadIn: true,
   tastes: {
     mixed: { painter: 1.3, cradle: 1.3, inverter: 1.2 },
     bench: {

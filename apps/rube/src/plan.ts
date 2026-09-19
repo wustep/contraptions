@@ -98,6 +98,8 @@ export interface ChainSpec {
   box: Box
   /** Beats to aim for; the box may cut it short. */
   beats: number
+  /** Cells of rail out of the entry portal before the first beat. */
+  leadIn?: number
 }
 
 const key = (c: number, r: number) => `${c}:${r}`
@@ -133,7 +135,7 @@ function placeOne(
 
 /** Plan one map. Returns its pieces in order, portal to portal, or fewer beats than asked if the box ran out. */
 export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
-  const { rng, box, beats } = { ...ctx, ...spec }
+  const { rng, box, beats, leadIn = 0 } = { ...ctx, ...spec }
   const occupied = new Set<string>()
   const inBox = (c: number, r: number) => c >= box.x0 && c <= box.x1 && r >= box.y0 && r <= box.y1
   const free = (c: number, r: number) => inBox(c, r) && !occupied.has(key(c, r))
@@ -166,11 +168,24 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
     return free(col + mirror * exit[0], row + exit[1])
   }
   const earned = () => out.reduce((sum, p) => sum + p.points, 0)
+  // The lead-in: a few cells of rail straight out of the portal, so the
+  // ball is seen rolling before anything happens to it. Drawn from forks,
+  // so the walk after it makes the same draws it would have made without.
+  const railPiece = pool.find((c) => c.name === 'rail')
+  let lead = 0
+  while (railPiece && lead < leadIn) {
+    const lr = rng.fork(`lead:${lead}`)
+    const palette = ctx.colors.filter((c) => c !== ball.color)
+    const placement = railPiece.place({ rng: lr, color: lr.pick(palette.length ? palette : ctx.colors), theme: ctx.theme, taste: ctx.taste, ball, earned: 0, fits: fitsAt })
+    if (!placement) break
+    commit(railPiece, placement)
+    lead++
+  }
   /** How many times each piece is in this map so far, and the beat it was last placed on. */
   const uses = new Map<string, number>()
   const lastAt = new Map<string, number>()
-  let prev = ''
-  let rails = 0
+  let prev = lead ? 'rail' : ''
+  let rails = lead
   let placed = 0
   let dynamics = 0
   // The tempo: a run of two or three beats back to back, then a flight if
@@ -282,7 +297,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       if (placement) {
         commit(finale, placement)
         done = true
-      } else if (out.length > 2) {
+      } else if (out.length > 2 + lead) {
         const last = out.pop()!
         undone.push(last)
         for (const [c, r] of last.cells) occupied.delete(key(c, r))
