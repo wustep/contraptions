@@ -259,13 +259,17 @@ function gatewaySession(gen: Generator, system: string): Session {
         // model) come back without a CORS header, so the browser withholds them and all that is seen
         // here is a failed fetch. Its public model list tells a refusal from a gateway that is not there.
         const reachable = (await gatewayModelIds()) !== null
+        if (signal?.aborted) throw new Stopped()
         throw new Error(
           reachable
             ? 'The gateway refused the request, and does not let a browser read why. Check the key, its credit, and that it may use this model.'
             : `Could not reach ${PROVIDER_INFO.gateway.host}.`,
         )
       }
-      if (!res.ok || !res.body) throw await gatewayError(res, gen.model)
+      if (!res.ok || !res.body) {
+        const err = await gatewayError(res, gen.model)
+        throw signal?.aborted ? new Stopped() : err
+      }
       // Server-sent events: `data: {json}` a line, `data: [DONE]` at the end.
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
       let pending = ''

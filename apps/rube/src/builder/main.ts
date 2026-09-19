@@ -11,7 +11,7 @@ import { defaultWorldSpec, mendBuild, stockNames } from './compile'
 import { folderBuilds, sampleBuilds } from './discover'
 import { Stopped, gatewayModelIds, generatePiece, generateWorld, type Generator } from './generate'
 import { PROVIDERS, PROVIDER_INFO, loadKey, loadSettings, modelsFor, providerLabel, resolveModel, saveKey, saveSettings, stillServed, type Keyed } from './providers'
-import { deleteBuild, forgetKept, install, installBuilds, installShipped, installedBuilds, saveBuild, storeKept, unreadable } from './registry'
+import { deleteBuild, forgetUnreadable, install, installBuilds, installShipped, installedBuilds, saveBuild, storeKept, unreadable } from './registry'
 import { ARCHETYPES, castFrom, scaffoldPiece, scaffoldWorld } from './scaffold'
 import { BACKDROPS, BUILD_EXTENSION, BUILD_FORMAT, LIMITS, STOCK_WORLDS, emptyBuild, parseBuild, prettyJson, serializeBuild, slug, uniqueName, type Build, type PieceSpec, type WorldSpec } from './spec'
 
@@ -188,6 +188,15 @@ const freshBuildName = (stem: string): string => uniqueName(stem, new Set([...bu
 
 const selectedSpec = (): PieceSpec | undefined => build.pieces.find((p) => p.name === selected)
 
+/** The copy of a build that shipped with the site, as it is installed (the folder's over the samples'), or null. */
+function shippedCopy(name: string): Build | null {
+  for (const raw of [...folderBuilds(), ...sampleBuilds()]) {
+    const found = parseBuild(raw).build
+    if (found?.name === name) return mendBuild(found).build
+  }
+  return null
+}
+
 /* ------------------------------------------------------------------ undo */
 
 interface Snapshot {
@@ -239,9 +248,16 @@ function undo(): void {
   build = structuredClone(step.build)
   selected = step.selected
   mode = step.mode
-  // Kept again only if it differs from what is kept: undoing past a sample leaves the sample a sample.
+  // Kept again only if it differs from what is kept, and back to the shipped copy if it is that again:
+  // undoing past a sample leaves the sample a sample, and no copy of it in this browser.
   const kept = installedBuilds().find((i) => i.build.name === build.name)
-  if (kept && serializeBuild(kept.build) === serializeBuild(build)) {
+  const ship = shippedCopy(build.name)
+  if (ship && serializeBuild(ship) === serializeBuild(build)) {
+    if (kept?.source === 'browser') forget(build.name)
+    mount()
+    seek(0)
+    writeUrl()
+  } else if (kept && serializeBuild(kept.build) === serializeBuild(build)) {
     mount()
     seek(0)
     writeUrl()
@@ -389,7 +405,8 @@ async function pieceFor(prompt: string, taken: ReadonlySet<string>, variant: num
       const value = await generatePiece(prompt, gen, taken, (text) => say(promptStatus, text), signal, instead)
       return { value, note: `by ${gen.model}`, tone: 'ok', byModel: true }
     } catch (err) {
-      if (err instanceof Stopped) throw err
+      // Whatever it failed with, a request that was stopped was stopped: nothing stands in for it.
+      if (err instanceof Stopped || signal.aborted) throw new Stopped()
       failed = `${(err as Error).message} Scaffolded instead`
     }
   }
@@ -403,7 +420,7 @@ async function worldFor(prompt: string, variant: number, signal: AbortSignal): P
     try {
       return { value: await generateWorld(prompt, gen, (text) => say(promptStatus, text), signal), note: `by ${gen.model}`, tone: 'ok', byModel: true }
     } catch (err) {
-      if (err instanceof Stopped) throw err
+      if (err instanceof Stopped || signal.aborted) throw new Stopped()
       failed = `${(err as Error).message} Scaffolded instead`
     }
   }
@@ -418,13 +435,16 @@ async function makePiece(): Promise<void> {
   if (!made) return
   // The build may have changed while a model wrote it: the name is checked again as it goes in.
   const spec = { ...made.value, name: uniqueName(made.value.name, takenNames()) }
+  // Edits typed into the pane and not applied are not thrown away by moving to the new piece.
+  const stay = piecePane.edited() && !!selectedSpec()
   const problems = change(`make ${spec.name}`, () => {
     build.pieces.push(spec)
+    if (stay) return
     selected = spec.name
     mode = 'piece'
   })
   if (problems.length) say(promptStatus, `That piece would not go in: ${problems[0]}`, 'bad')
-  else say(promptStatus, `${spec.name}: ${made.note}.`, made.tone)
+  else say(promptStatus, `${spec.name}: ${made.note}.${stay ? ` It is in the list; ${selected} stays in hand, with your edits.` : ''}`, made.tone)
 }
 
 /** Everything about a piece but what it is called and what it says of itself: whether two makes came out the same. */
@@ -457,9 +477,12 @@ async function makeAgain(): Promise<void> {
   }
   const at = build.pieces.findIndex((p) => p.name === name)
   const next = { ...made.value, name: uniqueName(made.value.name, others()) }
+  // Unapplied edits to another piece keep that piece in hand.
+  const stay = piecePane.edited() && !!selectedSpec() && selected !== name
   const problems = change(`make ${name} again`, () => {
     if (at >= 0) build.pieces[at] = next
     else build.pieces.push(next)
+    if (stay) return
     selected = next.name
     mode = 'piece'
   })
@@ -482,7 +505,8 @@ async function makeWorld(): Promise<void> {
   else say(promptStatus, `${world.label ?? 'The world'}: ${made.note}.`, made.tone)
 }
 
-makePieceBtn.addEventListener('click', () => (making === 'piece' ? stopper?.abort() : void makePiece()))
+// The prompt's own button stops a Make again too: the Piece section, and its Stop, may not be in view.
+makePieceBtn.addEventListener('click', () => (making === 'piece' || making === 'again' ? stopper?.abort() : void makePiece()))
 makeWorldBtn.addEventListener('click', () => (making === 'world' ? stopper?.abort() : void makeWorld()))
 promptInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -638,11 +662,18 @@ const lostNote = el('div', { class: 'status', 'data-tone': 'bad' })
 const lostBtn = el('button', { class: 'chip', title: 'Save each as it was kept, to fix and import' }, ['Download'])
 const lostForget = el('button', { class: 'chip', title: 'Take them out of this browser; download them first', disabled: '' }, ['Forget'])
 lostBtn.addEventListener('click', () => {
-  for (const l of lost) downloadBlob(new Blob([`${prettyJson(l.raw)}\n`], { type: 'application/json' }), `${l.name}${BUILD_EXTENSION}`)
+  // Each to a file of its own, even two of one name, or none.
+  const files = new Set<string>()
+  for (const l of lost) {
+    const name = uniqueName(l.name, files)
+    files.add(name)
+    downloadBlob(new Blob([`${prettyJson(l.raw)}\n`], { type: 'application/json' }), `${name}${BUILD_EXTENSION}`)
+  }
   lostForget.disabled = false
 })
 lostForget.addEventListener('click', () => {
-  for (const l of lost.splice(0)) forgetKept(l.name)
+  forgetUnreadable()
+  lost.splice(0)
   lostRow.hidden = true
 })
 const lostRow = el('div', { class: 'row lost' }, [lostNote, lostBtn, lostForget])
@@ -663,6 +694,8 @@ const removeBtn = el('button', { title: 'Take this piece out of the build (Undo 
 removeBtn.addEventListener('click', () => {
   const name = selected
   if (!name) return
+  // A piece being made again is not taken away from under its make.
+  if (making === 'again') return say(buildStatus, WAIT, 'bad')
   change(`remove ${name}`, () => {
     build.pieces = build.pieces.filter((p) => p.name !== name)
     selected = build.pieces[0]?.name ?? null
@@ -675,14 +708,15 @@ const copyPieceBtn = copyButton(() => navigator.clipboard.writeText(prettyJson(s
  * would be before it touches the build. What is typed stays until it is
  * applied or reverted, unless the thing it shows changes under it.
  */
-function jsonPane(label: string, read: () => unknown, write: (value: unknown) => string[]): { node: HTMLElement; refresh(): void } {
+function jsonPane(label: string, key: () => string, read: () => unknown, write: (value: unknown) => string[]): { node: HTMLElement; refresh(): void; edited(): boolean } {
   const area = el('textarea', { class: 'json', rows: '12', spellcheck: 'false', 'aria-label': label })
   const problems = el('ul', { class: 'problems' })
   problems.hidden = true
   const apply = el('button', { title: 'Check it and put it in the build' }, ['Apply'])
   const revert = el('button', { title: 'Put back what is in the build' }, ['Revert'])
-  /** The text the pane last showed, and whether it has been typed over since. */
+  /** The text the pane last showed, of what, and whether it has been typed over since. */
   let shown = ''
+  let shownKey = ''
   let edited = false
   const mark = () => {
     apply.classList.toggle('primary', edited)
@@ -694,7 +728,9 @@ function jsonPane(label: string, read: () => unknown, write: (value: unknown) =>
   })
   const refresh = () => {
     const text = prettyJson(read())
-    if (edited && text === shown) return
+    // What is typed stays while the pane still shows the same thing, as it was.
+    if (edited && text === shown && key() === shownKey) return
+    shownKey = key()
     shown = area.value = text
     edited = false
     problemsList(problems, [])
@@ -718,15 +754,17 @@ function jsonPane(label: string, read: () => unknown, write: (value: unknown) =>
     edited = false
     refresh()
   })
-  return { node: el('div', { class: 'group' }, [area, el('div', { class: 'row' }, [apply, revert]), problems]), refresh }
+  return { node: el('div', { class: 'group' }, [area, el('div', { class: 'row' }, [apply, revert]), problems]), refresh, edited: () => edited }
 }
 
 const piecePane = jsonPane(
   'The piece as JSON',
+  () => `${build.name}/${selected}`,
   () => selectedSpec() ?? null,
   (value) => {
     const at = build.pieces.findIndex((p) => p.name === selected)
     if (at < 0) return ['no piece selected']
+    if (making === 'again') return [WAIT]
     const name = build.pieces[at].name
     return change(`edit ${name}`, () => {
       build.pieces[at] = value as PieceSpec
@@ -789,6 +827,7 @@ plainBtn.addEventListener('click', () => {
 })
 const worldPane = jsonPane(
   'The world as JSON',
+  () => build.name,
   () => build.world ?? defaultWorldSpec(),
   (value) =>
     change('edit the world', () => {
@@ -937,9 +976,9 @@ fileSec.append(storeWarn, el('div', { class: 'row' }, [exportBtn, importBtn, cop
 const playIcon = icon(ICON.play)
 const pauseIcon = icon(ICON.pause)
 
-/** A make button: its label, or Stop while it is the one making. */
-function labelButton(b: HTMLButtonElement, what: Making, label: string, key?: string): void {
-  const stopping = making === what
+/** A make button: its label, or Stop while it is one making. */
+function labelButton(b: HTMLButtonElement, what: Making | Making[], label: string, key?: string): void {
+  const stopping = !!making && ([] as Making[]).concat(what).includes(making)
   b.replaceChildren(stopping ? 'Stop' : label, ...(key && !stopping ? [el('kbd', {}, [key])] : []))
   b.classList.toggle('stop', stopping)
   b.disabled = !!making && !stopping
@@ -978,7 +1017,8 @@ function sync(): void {
   if (spec) {
     pieceNote.replaceChildren(el('b', {}, [spec.name]), el('br'), spec.note ?? '')
     labelButton(againBtn, 'again', 'Make again')
-    againBtn.disabled = (!!making && making !== 'again') || !spec.prompt
+    if (!making) againBtn.disabled = !spec.prompt
+    removeBtn.disabled = making === 'again'
     againBtn.title = spec.prompt ? `Make this piece again from its prompt, another way: "${spec.prompt}"` : 'This piece has no prompt to make it from'
     piecePane.refresh()
   }
@@ -1015,7 +1055,7 @@ function sync(): void {
     say(genNote, `${saved ? 'Key saved in this browser.' : `Paste a key from ${info.keysAt}.`} It is sent only to ${info.host}. The site has no server and no key of its own.`, saved ? 'ok' : 'plain')
   }
 
-  labelButton(makePieceBtn, 'piece', 'Make piece', '⌘↵')
+  labelButton(makePieceBtn, ['piece', 'again'], 'Make piece', '⌘↵')
   labelButton(makeWorldBtn, 'world', 'Make world')
   examples.hidden = !!promptInput.value.trim()
 

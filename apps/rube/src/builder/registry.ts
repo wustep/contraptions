@@ -60,22 +60,27 @@ export function unreadable(): { name: string; errors: string[]; raw: unknown }[]
 let kept = true
 export const storeKept = (): boolean => kept
 
-/**
- * Put `build` in the store in place of whatever was kept under `name`, or
- * take that out when `build` is null. Everything else stays as it was
- * written, even an entry this version cannot read: one written by a later
- * version is not lost to a save made here. Whether it was kept: not, when
- * storage is blocked or full, and the build then lasts as long as the page.
- */
-function writeEntry(name: string, build: Build | null): boolean {
-  const others = stored().filter((item) => (item as { name?: unknown } | null)?.name !== name)
+/** Write the store whole. Whether it was kept: not, when storage is blocked or full, and the builds then last as long as the page. */
+function writeAll(items: unknown[]): boolean {
   try {
-    localStorage.setItem(STORE, JSON.stringify(build ? [...others, build] : others))
+    localStorage.setItem(STORE, JSON.stringify(items))
     kept = true
   } catch {
     kept = false
   }
   return kept
+}
+
+/**
+ * Put `build` in the store in place of the build kept under `name`, or take
+ * that out when `build` is null. Only a build this version reads is ever
+ * replaced: everything else stays as it was written, an entry it cannot
+ * read included, even one of the same name, so nothing a later version
+ * wrote is lost to a save made here.
+ */
+function writeEntry(name: string, build: Build | null): boolean {
+  const others = stored().filter((item) => (item as { name?: unknown } | null)?.name !== name || !parseBuild(item).build)
+  return writeAll(build ? [...others, build] : others)
 }
 
 /** Compile a build and register its world. The reasons, when it cannot be. */
@@ -129,5 +134,5 @@ export function deleteBuild(name: string): void {
   writeEntry(name, null)
 }
 
-/** Take what is kept under `name` out of this browser's store, and nothing else: for an entry this version could not read, and so never installed. */
-export const forgetKept = (name: string): boolean => writeEntry(name, null)
+/** Take out of this browser's store every entry this version cannot read, and nothing else. */
+export const forgetUnreadable = (): boolean => writeAll(stored().filter((item) => parseBuild(item).build))

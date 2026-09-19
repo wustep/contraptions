@@ -13,7 +13,7 @@ import { R, ballAt, type PieceCtx, type Pt } from './src/parts'
 import { beatCount } from './src/plan'
 import { Show } from './src/show'
 import { compileBuild, compilePiece, mendBuild, stockNames } from './src/builder/compile'
-import { deleteBuild, forgetKept, install, installedBuilds, readStore, saveBuild, storeKept, uninstall, unreadable } from './src/builder/registry'
+import { deleteBuild, forgetUnreadable, install, installedBuilds, readStore, saveBuild, storeKept, uninstall, unreadable } from './src/builder/registry'
 import { ARCHETYPES, archetypeFor, scaffoldPiece, scaffoldWorld } from './src/builder/scaffold'
 import { BUILD_EXTENSION, BUILD_FORMAT, BUILD_VERSION, LIMITS, parseBuild, serializeBuild, uniqueName, type Build, type PieceSpec } from './src/builder/spec'
 import { PROVIDERS, PROVIDER_INFO, defaultSettings, modelsFor, readSettings, resolveModel, stillServed } from './src/builder/providers'
@@ -410,8 +410,13 @@ console.log('\nstore')
   deleteBuild('check-kept')
   check('and the next that does, says so too; a delete leaves the rest', storeKept() && !readStore().some((b) => b.name === 'check-kept') && raw().some((b) => b.name === 'from-the-future'))
   check('what cannot be read is listed by name, with the reason', unreadable().length === 1 && unreadable()[0].name === 'from-the-future' && unreadable()[0].errors[0].includes('version'))
-  forgetKept('from-the-future')
-  check('and can be taken out on its own', unreadable().length === 0 && raw().length === 0)
+  // One this version cannot read, under the name of one it can: saving and deleting the one it can leaves the other.
+  mem.set('contraptions:builds', JSON.stringify([...raw(), { ...later, name: 'check-kept' }, { format: BUILD_FORMAT, version: BUILD_VERSION + 1, pieces: [] }]))
+  saveBuild(kept)
+  deleteBuild('check-kept')
+  check('a save or a delete never touches an unreadable entry, even one of its name', unreadable().map((u) => u.name).join() === 'from-the-future,check-kept,unnamed')
+  forgetUnreadable()
+  check('and they can be taken out, named or not, leaving the rest', unreadable().length === 0 && raw().length === 0)
   mem.set('contraptions:builds', '{not json')
   check('a store that is not JSON reads as empty', readStore().length === 0)
   delete g.localStorage
