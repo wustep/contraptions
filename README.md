@@ -525,7 +525,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | cannon | match, a long fuse, bang, the carriage kicks back, flight, landing bumper; over two and up one |
 | loop | round a loop-the-loop, slow at the top, no mechanism at all |
 | scoop | a bucket wheel, four deep cups on a hub; the ball rides in its seat round the far side and drops out near the bottom; a pawl clicks on the hub's ratchet; down one floor, facing back |
-| toaster | into the slot, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
+| toaster | let down into the slot on the carriage, the lever going down with it, and seen through the window sitting between the elements as they glow and the timer runs down; pop; up one floor |
 | crane | magnet down, blink, up, along the beam on turning wheels over a gap in the rail, think, drop; over two |
 | rocket | button → sputter → flame → sled to the chock; the ball pops out of the cup over it and rolls on; over two |
 | pendulum | tongue → cord → hook → a wrecking ball on a real pendulum's clock |
@@ -547,7 +547,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | screw | an Archimedes' screw in a glass tube carries the ball up a floor |
 | flipper | a drooping pinball bat; the ball settles in its lip, the bat whips up and lets go as it passes level; up a floor onto a shelf |
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
-| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on |
+| cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on — one motion from the blow to the landing, a pendulum and then a fall under the same gravity |
 | inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
 | portal | the door at either end of a map; the far side is always a new map |
 
@@ -565,8 +565,8 @@ against what holds it.
 | --- | --- |
 | rail | a pier: a piling, a cleat with a coil of rope, a life ring hung under the deck |
 | buoy | the deck stops; a bell buoy leans to meet the ball and the ball rides its deck over the crest; it rocks over, clangs, and runs the ball off faster |
-| wave | a swell curling over, never still: the crest heaves, froth rolls over it and off the lip, streaks climb the face; the ball rides the face two cells over and a floor down, spray behind it |
-| lighthouse | the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
+| wave | a swell risen out of the sea's own waterline, one shape with no wall and no floor, never still: a swell runs up the back, the crest heaves, the lip reaches and draws back, scallops of foam travel over the top to its tip, streaks climb the face; the ball rolls into the hollow under the curl and rides the face a floor down, spray behind it |
+| lighthouse | one opening shape — jambs under a round head — for the doorway, its door and every window; the door opens and the ball goes in through it, behind the jamb; a lit window climbs the tower; out of the lantern room's door onto the gallery one or two floors up; the beam turns |
 | crab | rolls into the claw; lifted, aimed, pitched across a cell of open water |
 | kelp | into a glass tank at the bottom, bending upward as the water takes it; rises between two stalks of kelp on its own bubbles; out at the rim |
 | octopus | its eyes follow the ball; the funnel on its head puckers and squirts ink straight up at it; a splat, and the ball leaves a new colour |
