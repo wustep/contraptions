@@ -6,13 +6,14 @@
   "description": "A generator for grids of tiny animated machines.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && vite build",
+    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:shows && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "new": "node scripts/new-contraption.mjs",
     "check": "esbuild scripts/check.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/contraptions-check.cjs && node node_modules/.cache/contraptions-check.cjs",
     "check:rube": "esbuild apps/rube/check.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check.cjs && node node_modules/.cache/rube-check.cjs",
-    "check:builder": "esbuild apps/rube/check-builder.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check-builder.cjs && node node_modules/.cache/rube-check-builder.cjs"
+    "check:builder": "esbuild apps/rube/check-builder.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check-builder.cjs && node node_modules/.cache/rube-check-builder.cjs",
+    "check:shows": "esbuild apps/rube/check-shows.ts --bundle --platform=node --format=cjs --external:p5 --loader:.mp3=file --loader:.ogg=file --loader:.wav=file --log-level=error --outfile=node_modules/.cache/rube-check-shows.cjs && node node_modules/.cache/rube-check-shows.cjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

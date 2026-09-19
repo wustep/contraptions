@@ -12,14 +12,17 @@ on one thread through a Rube Goldberg chain that never ends, round four
 worlds in a fixed order (`apps/rube/`, [below](#machine-appsrube); the code
 calls it the show). Beside it is **Explorations**: the generator the machine
 grew out of, six modes of tiny machines on a grid with every dial exposed
-(`src/`; the code calls it the sandbox). A third tab, the **Builder**, is
+(`src/`; the code calls it the sandbox). **Shows** is Machine set to music:
+a machine choreographed to a piece of music with the soundtrack locked to
+it, in as many versions as you care to keep side by side
+([below](#shows-appsrubesrcshows)). A fourth tab, the **Builder**, is
 where new pieces and worlds for Machine are made from a prompt and saved as
 one file ([below](#builder-appsrubesrcbuilder)). It is hidden until you
-press <kbd>`</kbd> five times quickly. All three wear the same
+press <kbd>`</kbd> five times quickly. All four wear the same
 chrome: one panel down the right edge at the window's full height, the
 canvas filling everything else, and a switch at the top of the panel,
-**Machine | Explorations | Builder**, that moves between them and carries
-the seed across. Machine and Explorations open with the panel hidden; <kbd>P</kbd> (or the tab on the
+**Machine | Explorations | Shows | Builder**, that moves between them and carries
+the seed across. Machine, Explorations and Shows open with the panel hidden; <kbd>P</kbd> (or the tab on the
 edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
 clears the stage of all of it — the panel, the tab, the way-back button —
 for the piece alone, and <kbd>`</kbd> again puts back what was there.
@@ -29,19 +32,20 @@ for the piece alone, and <kbd>`</kbd> again puts back what was there.
 
 ```bash
 npm install
-npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations
+npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations, /shows/ is Shows
 npm run check        # headless smoke test of Explorations' pure core
 npm run check:rube   # headless checks on Machine: the worlds, the planner, the chain, the ball, the tempo
 npm run check:builder # headless checks on the Builder: scaffolds, the file round trip, refusals, mending, the store, the stock show untouched
-npm run build        # one dist/: Machine at /, Explorations at /explorations/, the Builder at /builder/, /sandbox/ and /rube/ redirecting
+npm run check:shows  # headless checks on Shows: the registry and every version file, the clock, the time maps
+npm run build        # one dist/: Machine at /, Explorations at /explorations/, Shows at /shows/, the Builder at /builder/, /sandbox/ and /rube/ redirecting
 ```
 
 One Vite root serves and builds all of it: `index.html` is Machine,
-`explorations/index.html` is Explorations, `builder/index.html` is the
-Builder, and two pages only forward:
+`explorations/index.html` is Explorations, `shows/index.html` is Shows,
+`builder/index.html` is the Builder, and two pages only forward:
 `sandbox/index.html` sends old links to `/explorations/` and
 `rube/index.html` — where Machine used to live — sends them to `/`, both
-keeping the seed. The two modes share the core (`src/core/`), the panel
+keeping the seed. The modes share the core (`src/core/`), the panel
 chrome (`src/ui/shell.ts`, `src/ui/styles.css`) and p5 as common chunks.
 
 ## Explorations: `src/`
@@ -59,12 +63,15 @@ grid.
 ```
 index.html               the front door: Machine
 explorations/index.html  Explorations
+shows/index.html         Shows
 builder/index.html       the Builder
 sandbox/index.html       where Explorations used to live; redirects to /explorations/ and keeps the seed
 rube/index.html          where Machine used to live; redirects to / and keeps the seed
 apps/rube/               Machine (see below)
   src/worlds.ts          the four worlds and the order the show visits them in
   src/pieces/            one folder a world, each its own vocabulary; rail.ts and portal.ts are shared
+  src/shows/             Shows: the registry, the clock, the soundtrack, the stage and its recorder, the page
+  src/shows/versions/    drop a <work>/<take>.show.ts here and it is in the picker
   src/builder/           the Builder: the build format, its compiler, the scaffolds, the registry, the page
   builds/                drop a .contraptions.json here and it ships with the site
 src/
@@ -90,8 +97,8 @@ src/
     tracks/         framework B: a carved loop, balls drawn by the world, reactors
     goldberg/       the cascade, workshop and circus grids; the token is theirs
   ui/
-    shell.ts        the chrome both modes share: the panel, the mode switch, Hide
-    styles.css      one stylesheet for both pages
+    shell.ts        the chrome the modes share: the panel, the mode switch, Hide
+    styles.css      one stylesheet for every page
     panel.ts        Explorations' dials
 ```
 
@@ -703,9 +710,94 @@ its piece, the tempo, and the arcade's economy: every beat scores, and
 tickets come once, last thing before the door, a ticket a hundred of what
 the map earned.
 
+## Shows: `apps/rube/src/shows/`
+
+Machine set to music. A show is one piece of music and a machine
+choreographed to it: the ball strikes on the notes, the soundtrack plays
+with it, and the whole thing runs from a first frame to a last one instead
+of round a loop. The tab is always there, between Explorations and the
+Builder.
+
+```bash
+npm run dev          # http://localhost:8791/shows/
+npm run check:shows  # the registry and every version file, the clock, the time maps, the placeholder takes
+```
+
+### Versions
+
+The same music may have several versions side by side — takes — so that
+two runs at it can be kept, compared and later combined. The panel leads
+with the picker: the show, and under it a chip a take. A link names one:
+`/shows/?show=clair-de-lune&take=take-a`.
+
+A version is one file, `versions/<work>/<take>.show.ts`, and dropping it in
+is the whole of adding it: the page finds it by glob, its path says which
+work it is a take of, and the file says the rest — a title, a label, a note,
+and a `load()` that reaches for the score, the machine and the recording
+only when the version is picked.
+[`versions/README.md`](apps/rube/src/shows/versions/README.md) has the
+file's shape and what the player promises it. What ships today is a
+placeholder, **Metronome**, in two takes with a soundtrack made in the page:
+*free time*, a struck bar wherever a piece fires, and *strict time*, the
+same machine under a time map that brings each strike onto a steady beat.
+The note is on the strike, so lock is something you can see and hear.
+
+### The music is the clock
+
+While the recording plays, show time is where the recording is
+(`clock.ts`, `soundtrack.ts`). The picture follows the music and never the
+other way about, so the two cannot drift: a recording that stalls holds the
+picture with it. **1× and 2×** are the transport's two stops; at 2× the
+recording is time-stretched, not pitched up, and the picture is wherever it
+has got to. The music is on unless it is turned off (<kbd>M</kbd>), and a
+muted show keeps exactly the same time.
+
+A show opens playing, music and all, where the browser allows it, which is
+mostly when you arrive from another tab of the site. Where the browser
+wants a press first, the show waits at the top with a play button on the
+stage and starts with its music on that press. It never runs on silently
+towards a sound that comes in late.
+
+<kbd>space</kbd> plays and pauses, <kbd>←</kbd> <kbd>→</kbd> step a frame
+(a second with <kbd>⇧</kbd>), <kbd>Home</kbd> goes to the top, <kbd>1</kbd>
+and <kbd>2</kbd> set the speed, <kbd>[</kbd> <kbd>]</kbd> change take.
+
+### Fitting a machine to music
+
+A mechanism has a clock of its own, and the music has another. The player
+asks a version for `show.at(t)` with `t` in seconds of music and for
+nothing else, so whatever retiming a version needs lives inside its
+`Show`: a pause before a strike, a bar hurried, a map for the whole show or
+one a piece. `timemap.ts` is the vocabulary: `timeMap(knots)` is a monotone
+cubic through pairs of (music, machine) seconds that never runs backwards
+and never changes pace abruptly at a knot, and `knotProblems` says when a
+map asks a mechanism to run slower than ¾ or faster than about 1⅓ of its
+own rate, past which it stops looking like itself. There is no editor.
+
+### Export: picture and music, and nothing else
+
+**Save video** records the whole show, and **Save PNG** the frame, at 720p
+or 1080p, 16:9. Neither has a word on it: no title, no credit, no clock, no
+seed, no watermark, none of the panel. That is not a mode of the exporter.
+A show's canvas is the picture and nothing else, live as well as saved;
+every word on the page is in the panel or stands on the stage as DOM, and a
+show's canvas cannot set type at all (`stage.ts`), so a version that tried
+to letter its frame would find nothing there.
+
+A video is a performance (`record.ts`): the soundtrack plays through once
+into the file, and every frame painted is the frame for where the music is
+at that instant. A frame that comes late is dropped, never pushed onto the
+ones after it, so the picture is locked to the music from the first bar to
+the last. It takes as long as the show does at the speed it is recorded at,
+and wants its tab in front. The file is WebM (VP9 and Opus), or MP4 where
+that is what the browser records. As with Machine's loops, the browser's
+recorder writes no duration into a WebM's header; `ffmpeg -i show.webm -c
+copy fixed.webm` puts one in, and `ffmpeg -i show.webm show.mp4` makes the
+MP4 a post wants.
+
 ## Builder: `apps/rube/src/builder/`
 
-The third tab, once it is unlocked. Type what a piece should be, press
+The last tab, once it is unlocked. Type what a piece should be, press
 **Make piece**, and it is on the stage between two portals, the way the
 catalog shows a stock piece. Press
 **Make world** with a place in the prompt and the build gets palettes, a

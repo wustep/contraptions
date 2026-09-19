@@ -2,9 +2,10 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig, type Connect, type Plugin } from 'vite'
 
 /**
- * One site, one build, three modes and two forwarding addresses. Machine is
+ * One site, one build, four modes and two forwarding addresses. Machine is
  * the front door (`/`, built from apps/rube); Explorations is the generator
- * it grew out of (`/explorations/`, built from src); the Builder is where new
+ * it grew out of (`/explorations/`, built from src); Shows is Machine set to
+ * music (`/shows/`, built from apps/rube/src/shows); the Builder is where new
  * pieces and worlds for Machine are made (`/builder/`, built from
  * apps/rube/src/builder). `/sandbox/` is where Explorations used to live and
  * `/rube/` where Machine did; both only redirect, keeping the seed. One dev
@@ -16,7 +17,7 @@ const here = fileURLToPath(new URL('.', import.meta.url))
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|builder|sandbox|rube)(\?.*)?$/.exec(req.url ?? '')
+    const m = /^\/(explorations|shows|builder|sandbox|rube)(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
     res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
     res.end()
@@ -42,6 +43,7 @@ export default defineConfig({
       input: {
         machine: `${here}index.html`,
         explorations: `${here}explorations/index.html`,
+        shows: `${here}shows/index.html`,
         builder: `${here}builder/index.html`,
         sandbox: `${here}sandbox/index.html`,
         rube: `${here}rube/index.html`,

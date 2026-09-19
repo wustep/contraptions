@@ -1,0 +1,235 @@
+/**
+ * Headless checks for Shows: the registry and the version files on disk,
+ * the clock, the time maps, and the placeholder takes. The stage, the
+ * soundtrack and the recorder need a browser and are not here.
+ *
+ *   npm run check:shows
+ */
+import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { SHOW_SPEEDS, Transport, clockText } from './src/shows/clock'
+import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from './src/shows/registry'
+import { renderWav } from './src/shows/ticks'
+import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
+import { GRID, freeTake, strictTake, strikes } from './src/shows/versions/metronome/metronome'
+import { Show } from './src/show'
+
+let failures = 0
+function check(name: string, ok: boolean, detail = ''): void {
+  if (ok) {
+    console.log(`  ok   ${name}`)
+    return
+  }
+  failures++
+  console.log(`  FAIL ${name}${detail ? `   ${detail}` : ''}`)
+}
+
+const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
+
+async function main(): Promise<void> {
+  /* ------------------------------------------------------------------ the registry */
+
+  console.log('\nthe registry')
+  const stub = (title: string, label: string): ShowVersion => ({ title, label, load: async () => ({}) as Performance })
+  check('a path names its work and its take', versionPath('./versions/clair-de-lune/take-a.show.ts')?.work === 'clair-de-lune' && versionPath('./versions/clair-de-lune/take-a.show.ts')?.take === 'take-a')
+  check('anything else is not a version', ['./versions/a.show.ts', './versions/A/b.show.ts', './versions/a/b.ts', './versions/a/b/c.show.ts', './other/a/b.show.ts'].every((p) => versionPath(p) === null))
+  {
+    const { works, problems } = readShows({
+      './versions/clair-de-lune/take-b.show.ts': stub('Clair de Lune', 'Take B'),
+      './versions/premiere-arabesque/take-a.show.ts': stub('Première Arabesque', 'Take A'),
+      './versions/clair-de-lune/take-a.show.ts': stub('Clair de Lune', 'Take A'),
+    })
+    check('takes of one work are grouped under it', works.length === 2 && works[0].work === 'clair-de-lune' && works[0].versions.length === 2, JSON.stringify(works.map((w) => [w.work, w.versions.length])))
+    check('in file order, so nothing keeps a list', works[0].versions.map((v) => v.take).join(',') === 'take-a,take-b' && works[1].work === 'premiere-arabesque')
+    check('a work takes its title from its takes', works[0].title === 'Clair de Lune')
+    check('a clean folder has no problems', problems.length === 0, problems.join(' · '))
+    check('a link names a version', pickVersion(works, 'clair-de-lune', 'take-b')?.label === 'Take B')
+    check('a take that is not there falls to the work\'s first', pickVersion(works, 'clair-de-lune', 'take-z')?.take === 'take-a')
+    check('a work that is not there falls to the first work', pickVersion(works, 'nocturne', null)?.work === 'clair-de-lune')
+    check('an empty folder picks nothing', pickVersion([], 'clair-de-lune', 'take-a') === null)
+  }
+  {
+    const { works, problems } = readShows({
+      './versions/a/one.show.ts': stub('A', 'One'),
+      './versions/a/two.show.ts': stub('Not A', 'One'),
+      './versions/a/three.show.ts': { title: 'A' },
+      './versions/a/four.show.ts': null,
+      './versions/B/five.show.ts': stub('B', 'Five'),
+    })
+    check('a bad file is left out and said, and the rest still stand', works.length === 1 && works[0].versions.length === 2 && problems.length === 5, `${works.length} works, ${problems.length} problems`)
+    check('takes that disagree on the title are said', problems.some((p) => p.includes('Not A')))
+    check('two takes with one label are said', problems.some((p) => p.includes('second take')))
+  }
+  {
+    const show = new Show('check')
+    check('a performance that can be played has no problems', performanceProblems({ show, duration: 10, soundtrack: { src: 'a.mp3', offset: 1.5 } }).length === 0)
+    check('no length, no source or a negative offset is said', [{ show, duration: 0 }, { show, duration: NaN }, { show, duration: 10, soundtrack: { src: '' } }, { show, duration: 10, soundtrack: { src: 'a.mp3', offset: -1 } }].every((p) => performanceProblems(p).length === 1))
+    check('what is not a performance is refused, not thrown on', performanceProblems(null as unknown as Performance).length > 0 && performanceProblems({} as Performance).length > 0)
+  }
+
+  /* ------------------------------------------------------------------ the versions folder */
+
+  console.log('\nshipped versions')
+  const root = join(process.cwd(), 'apps/rube/src/shows/versions')
+  const found: Record<string, unknown> = {}
+  for (const work of readdirSync(root).filter((d) => statSync(join(root, d)).isDirectory())) {
+    for (const file of readdirSync(join(root, work)).filter((f) => f.endsWith('.show.ts'))) {
+      const take = file.slice(0, -'.show.ts'.length)
+      // A glob import, as esbuild reads it: every version file is bundled, and the folder on disk says which to ask for.
+      found[`./versions/${work}/${file}`] = (await import(`./src/shows/versions/${work}/${take}.show.ts`)).default
+      // The page reads every version file before it shows a picker, so a version file imports nothing
+      // that weighs anything: the registry's helper, types, and the URL of a recording.
+      const source = readFileSync(join(root, work, file), 'utf8')
+      const heavy = [...source.matchAll(/^import\s+(?!type\b)[^'"]*['"]([^'"]+)['"]/gm)].map((m) => m[1]).filter((from) => from !== '../../registry' && !/\.(mp3|ogg|wav|m4a|flac|opus)$/.test(from))
+      check(`${work}/${file}: keeps what is heavy behind load()`, heavy.length === 0, heavy.join(', '))
+    }
+  }
+  const shipped = readShows(found)
+  check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
+  for (const work of shipped.works) {
+    for (const version of work.versions) {
+      const perf = await version.load()
+      const wrong = performanceProblems(perf)
+      check(`${work.work}/${version.take}: loads, and can be played`, wrong.length === 0, wrong.join(' · '))
+      if (wrong.length) continue
+      // The player asks for show.at(t) over 0..duration and nothing else.
+      let ok = true
+      for (let t = 0; t <= perf.duration && ok; t += 0.25) {
+        const here = perf.show.at(t)
+        const cam = perf.camera?.(t)
+        ok = Number.isFinite(here.x) && Number.isFinite(here.y) && (!cam || (Number.isFinite(cam.x) && Number.isFinite(cam.y) && cam.cells > 0))
+      }
+      check(`${work.work}/${version.take}: is on the stage for every second of its length`, ok)
+    }
+  }
+
+  /* ------------------------------------------------------------------ the clock */
+
+  console.log('\nthe clock')
+  check('the speeds are 1× and 2×', SHOW_SPEEDS.join(',') === '1,2')
+  {
+    let wall = 0
+    const c = new Transport({ duration: 10, wall: () => wall })
+    check('starts at the top, standing still', c.now() === 0 && !c.playing)
+    wall = 5000
+    check('does not run until it is played', c.now() === 0)
+    c.play()
+    wall = 7000
+    check('counts the wall clock', near(c.now(), 2))
+    c.setSpeed(2)
+    wall = 8000
+    check('twice as fast at 2×, from where it was', near(c.now(), 4) && c.speed === 2)
+    c.pause()
+    wall = 60000
+    check('holds where it was paused', near(c.now(), 4))
+    c.seek(9)
+    c.play()
+    wall = 62000
+    check('stops at the end and does not pass it', c.now() === 10 && c.ended)
+    c.seek(-3)
+    check('and does not go before the top', c.now() === 0)
+    c.seek(NaN)
+    check('a time that is not a number is the top', c.now() === 0)
+  }
+  {
+    let wall = 0
+    let heard: number | null = 0
+    const c = new Transport({ duration: 30, wall: () => wall, heard: () => heard })
+    c.play()
+    wall = 4000
+    heard = 3.2
+    check('with a soundtrack, the time is where the music is', near(c.now(), 3.2))
+    wall = 9000
+    check('a recording that stalls holds the picture with it', near(c.now(), 3.2))
+    // The music has not moved yet when the clock is sent somewhere: the clock says where, and the music is sent there.
+    check('a seek answers with where it went, not with where the music still is', c.seek(20) === 20 && c.seek(99) === 30 && c.seek(-1) === 0)
+    heard = 3.2
+    c.setSpeed(2)
+    heard = 6
+    check('at 2× it is still where the music is', near(c.now(), 6))
+    wall = 9500
+    heard = null
+    check('music that drops out is carried on from, at the speed it had', near(c.now(), 7))
+    heard = 99
+    check('music that runs past the end does not take the show with it', c.now() === 30)
+    c.pause()
+    heard = 12
+    check('paused, it does not listen', c.now() === 30)
+  }
+  check('the readout is m:ss', clockText(0) === '0:00' && clockText(59.9) === '0:59' && clockText(61) === '1:01' && clockText(-4) === '0:00')
+
+  /* ------------------------------------------------------------------ time maps */
+
+  console.log('\ntime maps')
+  {
+    const knots = [{ at: 0, native: 0 }, { at: 2, native: 2.4 }, { at: 3, native: 3.2 }, { at: 6, native: 6 }]
+    const map = timeMap(knots)
+    check('passes through every knot', knots.every((k) => near(map(k.at), k.native)))
+    let monotone = true
+    let steepest = 0
+    for (let t = -1; t < 8; t += 0.01) {
+      const rate = (map(t + 0.01) - map(t)) / 0.01
+      if (rate <= 0) monotone = false
+      steepest = Math.max(steepest, rate)
+    }
+    check('never runs the machine backwards or stops it dead', monotone)
+    check('never lurches: no faster than the steepest pair of knots asks, and a little', steepest < 1.2 * 1.25, steepest.toFixed(3))
+    check('runs at the machine\'s own rate outside the knots', near(map(-1), -1) && near(map(8), 8))
+    check('reads the other way round', near(map(musicTimeOf(map, 2.75, 0, 6)), 2.75, 1e-6))
+    check('one knot, or none, is the machine\'s own clock moved', near(timeMap([])(3), 3) && near(timeMap([{ at: 1, native: 4 }])(2), 5))
+    check('knots in order and in bounds have no problems', knotProblems(knots).length === 0, knotProblems(knots).join(' · '))
+    check('knots out of order are said', knotProblems([{ at: 0, native: 0 }, { at: 2, native: 2 }, { at: 1, native: 3 }]).length === 1)
+    check('a lurch is said', knotProblems([{ at: 0, native: 0 }, { at: 1, native: 2 }]).length === 1 && knotProblems([{ at: 0, native: 0 }, { at: 2, native: 1 }]).length === 1)
+  }
+  {
+    const plain = new Show('retime')
+    const held = new RetimedShow('retime', {}, (t) => t * 0.5)
+    const a = plain.at(3)
+    const b = held.at(6)
+    check('a retimed show is the same machine on another clock', near(a.x, b.x) && near(a.y, b.y) && a.placed.piece.name === b.placed.piece.name && near(a.local, b.local))
+  }
+
+  /* ------------------------------------------------------------------ the placeholders */
+
+  console.log('\nthe placeholder takes')
+  {
+    const free = freeTake()
+    const strict = strictTake()
+    const native = strikes(new Show('metronome'))
+    check('free time: a note on every strike, where the machine puts it', free.notes.length === native.length && free.notes.every((n, i) => near(n.at, native[i])))
+    check('free time ends on the cut out of its second world', near(free.duration, free.show.begin(2)))
+    const wrong = knotProblems(strict.knots, 0.75, 1.35)
+    check('strict time: the machine is never asked for more than a slight change of pace', wrong.length === 0, wrong.join(' · '))
+    check('strict time: most strikes are brought onto the beat', strict.onGrid.length >= native.length * 0.8, `${strict.onGrid.length}/${native.length}`)
+    check('strict time: and those land on the half-beat exactly', strict.onGrid.every((at) => near(at / GRID, Math.round(at / GRID), 1e-9)))
+    // The note for a strike is where the retimed machine strikes: what is heard is what is seen.
+    const map = timeMap(strict.knots)
+    const struck = strict.notes.slice(0, native.length)
+    check('strict time: every note is on its strike', struck.every((n, i) => near(map(n.at), native[i], 1e-5)))
+    check('strict time: the show is as long as its map', near(map(strict.duration), free.duration, 1e-9))
+    const last = strict.show.at(strict.duration)
+    check('both takes end on the same frame of the same machine', last.universe.index === 2 && near(last.local, 0, 1e-6))
+
+    const wav = renderWav(free.notes, free.duration + 1)
+    const view = new DataView(wav.buffer)
+    const tag = (at: number) => String.fromCharCode(...wav.slice(at, at + 4))
+    check('the soundtrack renders to a WAV', tag(0) === 'RIFF' && tag(8) === 'WAVE' && tag(36) === 'data' && view.getUint32(40, true) === wav.length - 44)
+    check('as long as it was asked to be', near((wav.length - 44) / 2 / view.getUint32(24, true), free.duration + 1, 1e-3))
+    let peak = 0
+    let silentBefore = true
+    const rate = view.getUint32(24, true)
+    const first = Math.floor(native[0] * rate)
+    for (let i = 0; i < (wav.length - 44) / 2; i++) {
+      const v = Math.abs(view.getInt16(44 + i * 2, true))
+      peak = Math.max(peak, v)
+      if (i < first - 1 && v !== 0) silentBefore = false
+    }
+    check('silent until the first strike, then heard', silentBefore && peak > 8000, `peak ${peak}`)
+    check('and never clipped', peak < 32767, `peak ${peak}`)
+  }
+
+  console.log(failures ? `\n${failures} failure(s)` : '\nall good')
+  process.exit(failures ? 1 : 0)
+}
+
+void main()

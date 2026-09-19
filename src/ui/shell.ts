@@ -2,12 +2,13 @@
  * The chrome the modes share. One panel down the right edge, the full
  * height of the window, with the brand and the mode switch at its head (and,
  * in Explorations, the credit at its foot); the stage takes whatever the panel leaves. Machine
- * (the show, in the code), Explorations (the sandbox) and the Builder fill
- * the middle with their own sections, built from the same helpers, so they
- * read as siblings — one frame, different dials — and moving between them
- * is a switch at the top of the panel that carries the seed across. Machine
- * and Explorations start with the panel hidden, since there the piece
- * leads; the Builder is worked from its panel and starts with it out. `P`
+ * (the show, in the code), Explorations (the sandbox), Shows (Machine set
+ * to music) and the Builder fill the middle with their own sections, built
+ * from the same helpers, so they read as siblings — one frame, different
+ * dials — and moving between them is a switch at the top of the panel that
+ * carries the seed across. Machine, Explorations and Shows start with the
+ * panel hidden, since there the piece leads; the Builder is worked from its
+ * panel and starts with it out. `P`
  * or the peek tab on the edge brings it out, and `P` puts it away again.
  * At a desk the tab itself keeps off the piece: it greets a page just
  * opened, tucks into the edge, and comes out when the pointer nears it.
@@ -22,7 +23,7 @@
  */
 import { UNLOCK_EVENT, UNLOCK_GAP_MS, builderUnlocked, pressCounter, setBuilderUnlocked } from './unlock'
 
-export type ShellMode = 'machine' | 'explorations' | 'builder'
+export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder'
 
 interface ModeLink {
   mode: ShellMode
@@ -33,6 +34,7 @@ interface ModeLink {
 const MODE_LINKS: ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
+  { mode: 'shows', label: 'Shows', path: '/shows/' },
   { mode: 'builder', label: 'Builder', path: '/builder/' },
 ]
 
@@ -203,7 +205,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     'aria-label': 'Hide panel',
   }, ['Hide', el('kbd', {}, ['P'])])
 
-  // The mode switch: two tabs, the one you are on lit. Real links, so a
+  // The mode switch: a tab a mode, the one you are on lit. Real links, so a
   // switch is a navigation and the back button undoes it.
   const links = MODE_LINKS.map((m) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` }, [m.label])
@@ -333,8 +335,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     } else if (presses === 1) toggleBare()
   })
 
-  // The piece leads: Machine and Explorations open with the panel away and
-  // the peek tab on the edge. Set here rather than through toggle so nothing
+  // The piece leads: Machine, Explorations and Shows open with the panel away
+  // and the peek tab on the edge. Set here rather than through toggle so nothing
   // is focused on load. The pages set the class in their markup too, so the
   // first paint is already panel-less; this covers any host that did not.
   // The Builder is nothing without its panel, and opens with it out.

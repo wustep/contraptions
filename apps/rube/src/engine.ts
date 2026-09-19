@@ -113,6 +113,24 @@ function cameraAt(show: Show, t: number, here: ShowPoint): Camera {
 }
 
 /**
+ * The follow camera as a framing: the cell at the centre, and how many cells
+ * the frame's shorter edge shows. What a show with no camera of its own is
+ * framed by (`shows/stage.ts`).
+ */
+export function followCamera(show: Show, t: number, here: ShowPoint): { x: number; y: number; cells: number } {
+  const cam = cameraAt(show, t, here)
+  return { x: cam.x, y: cam.y, cells: VISIBLE / cam.zoom }
+}
+
+/** The drawing modes every piece here is drawn in. A canvas of any size sets them once. */
+export function drawingModes(p: p5): void {
+  p.rectMode(p.CENTER)
+  p.angleMode(p.RADIANS)
+  p.strokeCap(p.ROUND)
+  p.strokeJoin(p.ROUND)
+}
+
+/**
  * The canvas set up the way every drawing here expects it, filling its host
  * edge to edge and following it: the stage is whatever the panel leaves, and
  * hiding the panel changes that without a window resize. `release` stops
@@ -122,10 +140,7 @@ export function setupCanvas(p: p5, host: HTMLElement): { canvas: p5.Renderer; re
   const canvas = p.createCanvas(host.clientWidth, host.clientHeight)
   canvas.parent(host)
   p.pixelDensity(window.devicePixelRatio || 1)
-  p.rectMode(p.CENTER)
-  p.angleMode(p.RADIANS)
-  p.strokeCap(p.ROUND)
-  p.strokeJoin(p.ROUND)
+  drawingModes(p)
   const follow = new ResizeObserver(() => {
     const w = host.clientWidth
     const h = host.clientHeight

@@ -101,7 +101,8 @@ body.peek-tucks .panel-peek:focus-visible {
 body.bare { grid-template-columns: minmax(0, 1fr) 0; }
 body.bare #panel,
 body.bare .panel-peek,
-body.bare .crumb { display: none; }
+body.bare .crumb,
+body.bare .stage-play { display: none; }
 
 /* The way back out of a view opened over the show, in the stage's top left
    corner: the peek tab's opposite number, in the same dress. It is on the
@@ -171,8 +172,10 @@ body.bare .crumb { display: none; }
 /* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
    rather than leaving for another site. The Builder's tab is hidden until
-   it is unlocked, and the track is divided among the tabs that show. */
-.seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+   it is unlocked, and the track is divided among the tabs that show: each
+   is as wide as its word and they share what is left equally, so with all
+   four out the longest word has the same room round it as the shortest. */
+.seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: auto; }
 .mode-tab.unlocked { animation: unlocked 1.6s ease-out; }
 @keyframes unlocked {
   0%, 35% { background: var(--accent); color: #1a1409; }
@@ -540,6 +543,43 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
    controls were a big part of what pushed Save PNG below the fold. */
 .export-row .seg { flex: 1; min-width: 0; }
 .export-row > button { flex: 0 0 auto; padding-left: 8px; padding-right: 8px; white-space: nowrap; }
+
+/* ---- shows ---------------------------------------------------------- */
+
+/* The one thing to do on a show that is standing still at the top or the
+   end: start it, music and all. On the stage and not only in the panel,
+   because the panel starts hidden; in the crumb's dress, the accent's colour. */
+.stage-play {
+  position: absolute;
+  left: 50%;
+  bottom: max(11%, calc(env(safe-area-inset-bottom) + 28px));
+  z-index: 20;
+  translate: -50% 0;
+  gap: 9px;
+  padding: 11px 18px 11px 16px;
+  border-radius: 999px;
+  background: var(--panel);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.stage-play:hover { background: #22201a; border-color: var(--accent); }
+.stage-play svg { width: 13px; height: 13px; fill: currentColor; display: block; }
+
+/* The frame a video is recorded from, standing over the stage while it is
+   made. It is built at the size of the file, not of the stage, so this is
+   the one canvas that is fitted to its box: the fit is for looking at, and
+   the recorder takes the canvas's own pixels. */
+.show-frame { position: absolute; inset: 0; z-index: 10; background: var(--bg); }
+.show-frame canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
+
+/* Music rides with play and the speeds, and keeps its own width. */
+.deck > .chip.music { flex: 0 0 auto; padding: 6px 9px; white-space: nowrap; }
+/* The picker while a recording runs. */
+.lb.disabled { opacity: 0.55; pointer-events: none; }
+.show-card .readout a.more { font-family: inherit; }
 
 /* ---- builder -------------------------------------------------------- */
 
