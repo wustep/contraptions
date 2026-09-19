@@ -330,14 +330,14 @@ export function createPanel(
   const dims = el('span', { class: 'dims' }, ['—'])
   exportSec.querySelector('.section-title')!.append(dims)
   const scaleSeg = segmented(EXPORT_SCALES, (v) => `${v}×`, (v) => handlers.onView({ exportScale: v }))
-  const save = el('button', {}, ['Save PNG', el('kbd', {}, ['S'])])
+  const save = el('button', {}, ['Save PNG'])
   save.addEventListener('click', () => {
     commitSeed()
     handlers.onSave()
     save.classList.add('ok')
     save.replaceChildren('Saved')
     window.setTimeout(() => {
-      save.replaceChildren('Save PNG', el('kbd', {}, ['S']))
+      save.replaceChildren('Save PNG')
       save.classList.remove('ok')
     }, 1200)
   })
