@@ -6,7 +6,8 @@
  *
  * The backtick already has a job (it clears the stage of its chrome), so
  * the presses have to come quickly, one on the heels of the last; a pause
- * between any two starts the count over.
+ * between any two starts the count over. The shell clears the stage on the
+ * first press of a run only, so the run does not flicker it.
  */
 
 const STORE = 'contraptions:builder'

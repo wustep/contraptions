@@ -2,8 +2,8 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { FAST, FLOOR, R, ROLL } from '../parts'
 import { WORLDS } from '../worlds'
 import { PROVIDER_INFO, type Keyed } from './providers'
-import { scaffoldPiece, scaffoldWorld } from './scaffold'
-import { BACKDROPS, BUILD_FORMAT, BUILD_VERSION, LIMITS, STOCK_WORLDS, parseBuild, slug, type PieceSpec, type WorldSpec } from './spec'
+import { nameFor, scaffoldPiece, scaffoldWorld } from './scaffold'
+import { BACKDROPS, BUILD_FORMAT, BUILD_VERSION, LIMITS, STOCK_WORLDS, parseBuild, slug, uniqueName, type PieceSpec, type WorldSpec } from './spec'
 
 /**
  * The other half of "prompt a piece": a model writes the `PieceSpec`.
@@ -30,6 +30,14 @@ export interface Generator {
   model: string
 }
 
+/** What a stopped request throws: the person asked for it, so nothing is scaffolded in its place. */
+export class Stopped extends Error {
+  constructor() {
+    super('Stopped.')
+    this.name = 'Stopped'
+  }
+}
+
 /** The contract, as the model is told it. Built once and byte-stable, so it caches. */
 const FORMAT = `You design pieces for "contraptions", a Rube Goldberg show drawn in heavy ink outlines with one flat fill per part on paper. One ball rolls one thread through a chain of pieces. You write a piece as JSON; the app interprets it. There is no code in a piece.
 
@@ -50,7 +58,7 @@ const FORMAT = `You design pieces for "contraptions", a Rube Goldberg show drawn
   "exit": { "at": [x,y], "dir": 1 } the next piece's entry cell (not one of "cells"); dir -1 only if the ball leaves heading west,
   "lane": [steps], "paint": optional, "shapes": [shapes]
 }
-Common footprints: one cell [[0,0]] exit [1,0]; two tall [[0,0],[0,-1]] exit [1,0]; up a floor [[0,0],[0,-1]] exit [1,-1]; down a floor [[0,0],[0,1]] exit [1,1]; a flight over a gap [[0,0],[1,0],[0,-1],[1,-1]] exit [2,0]. Keep to ${LIMITS.cells} cells or fewer, and prefer small.
+Common footprints: one cell [[0,0]] exit [1,0]; two tall [[0,0],[0,-1]] exit [1,0]; up a floor [[0,0],[0,-1]] exit [1,-1]; down a floor [[0,0],[0,1]] exit [1,1]; a flight over a gap [[0,0],[1,0],[0,-1],[1,-1]] exit [2,0]. Keep to ${LIMITS.cells} cells or fewer and ${LIMITS.rows} rows or fewer counting the exit's row, and prefer small.
 
 ## Lane steps (each starts where the last ended; the first starts at [-0.5, 0])
 { "op": "roll", "to": [x,y], "v": optional speed }        straight at constant speed
@@ -130,7 +138,19 @@ function jsonIn(text: string): unknown {
 
 /** One conversation with a model: say something, get its reply as text. Each provider keeps the history in its own shape. */
 interface Session {
-  send(text: string): Promise<string>
+  send(text: string, signal?: AbortSignal): Promise<string>
+}
+
+/**
+ * A turn as it goes back to the model. After a fallback part-way through a
+ * reply, what the refusing model began before the switch — its thinking,
+ * any tool call — is left out; its text, and everything after the switch,
+ * go back as they came.
+ */
+function echoed(content: Anthropic.Beta.BetaContentBlock[]): Anthropic.Beta.BetaContentBlockParam[] {
+  const cut = content.map((block) => block.type).lastIndexOf('fallback')
+  const kept = cut < 0 ? content : content.filter((block, i) => i > cut || block.type === 'text')
+  return kept as Anthropic.Beta.BetaContentBlockParam[]
 }
 
 /* ------------------------------------------------------------------ claude */
@@ -144,20 +164,25 @@ async function claudeSession(gen: Generator, system: string): Promise<Session> {
   const client = new Client({ apiKey: gen.key, dangerouslyAllowBrowser: true })
   const messages: Anthropic.Beta.BetaMessageParam[] = []
   return {
-    async send(text) {
+    async send(text, signal) {
       messages.push({ role: 'user', content: text })
       let message: Anthropic.Beta.BetaMessage
       try {
         message = await client.beta.messages
-          .stream({
-            model: gen.model,
-            max_tokens: 32000,
-            ...(REFUSAL_FALLBACK.has(gen.model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
-            system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-            messages,
-          })
+          .stream(
+            {
+              model: gen.model,
+              max_tokens: 32000,
+              ...(REFUSAL_FALLBACK.has(gen.model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
+              system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+              messages,
+            },
+            { signal },
+          )
           .finalMessage()
       } catch (err) {
+        // Stopped by the person, not failed: checked first, since a stop is an APIError too.
+        if (err instanceof Client.APIUserAbortError || signal?.aborted) throw new Stopped()
         if (err instanceof Client.AuthenticationError) throw new Error('That API key was not accepted.')
         if (err instanceof Client.PermissionDeniedError) throw new Error('That API key may not use this model.')
         if (err instanceof Client.NotFoundError) throw new Error(`The API does not know the model ${gen.model}.`)
@@ -168,8 +193,9 @@ async function claudeSession(gen: Generator, system: string): Promise<Session> {
       }
       if (message.stop_reason === 'refusal') throw new Error('The model declined that prompt.')
       if (message.stop_reason === 'max_tokens') throw new Error('The reply was cut off before it finished.')
-      // The whole turn goes back as it came, thinking and all: a history with pieces missing is refused by some models.
-      messages.push({ role: 'assistant', content: message.content as Anthropic.Beta.BetaContentBlockParam[] })
+      // The turn goes back as it came, thinking and all (a history with pieces missing is refused by some
+      // models), less only what a refusing model began before a fallback took over (`echoed`).
+      messages.push({ role: 'assistant', content: echoed(message.content) })
       return message.content.flatMap((block) => (block.type === 'text' ? [block.text] : [])).join('')
     },
   }
@@ -216,7 +242,7 @@ async function gatewayError(res: Response, model: string): Promise<Error> {
 function gatewaySession(gen: Generator, system: string): Session {
   const messages: ChatTurn[] = [{ role: 'system', content: system }]
   return {
-    async send(text) {
+    async send(text, signal) {
       messages.push({ role: 'user', content: text })
       let res: Response
       try {
@@ -225,8 +251,10 @@ function gatewaySession(gen: Generator, system: string): Session {
           headers: { 'content-type': 'application/json', authorization: `Bearer ${gen.key}` },
           // Streamed, so a model that thinks for a minute is not cut off as an idle connection.
           body: JSON.stringify({ model: gen.model, messages, max_tokens: 32000, stream: true }),
+          signal,
         })
       } catch {
+        if (signal?.aborted) throw new Stopped()
         // The gateway answers a browser's preflight, but its refusals (a bad key, no credit, an unknown
         // model) come back without a CORS header, so the browser withholds them and all that is seen
         // here is a failed fetch. Its public model list tells a refusal from a gateway that is not there.
@@ -244,7 +272,14 @@ function gatewaySession(gen: Generator, system: string): Session {
       let reply = ''
       let finish = ''
       for (;;) {
-        const { value, done } = await reader.read()
+        let chunk: ReadableStreamReadResult<string>
+        try {
+          chunk = await reader.read()
+        } catch (err) {
+          if (signal?.aborted) throw new Stopped()
+          throw err
+        }
+        const { value, done } = chunk
         if (done) break
         pending += value
         const lines = pending.split('\n')
@@ -275,14 +310,18 @@ function gatewaySession(gen: Generator, system: string): Session {
 
 /* ------------------------------------------------------------------ asking */
 
-async function ask<T>(gen: Generator, system: string, prompt: string, accept: (raw: unknown) => { value: T | null; errors: string[] }, status: (text: string) => void): Promise<T> {
+/** Tries a model gets at a reply that validates: the first, and two more with the reasons it did not. */
+const ATTEMPTS = 3
+
+async function ask<T>(gen: Generator, system: string, prompt: string, accept: (raw: unknown) => { value: T | null; errors: string[] }, status: (text: string) => void, signal?: AbortSignal): Promise<T> {
   const who = gen.model.split('/').pop() ?? gen.model
+  if (signal?.aborted) throw new Stopped()
   const session = gen.provider === 'claude' ? await claudeSession(gen, system) : gatewaySession(gen, system)
   let errors: string[] = []
   let say = prompt
-  for (let attempt = 0; attempt < 2; attempt++) {
-    status(attempt ? `${who} is fixing what did not validate\u2026` : `${who} is drawing it\u2026`)
-    const reply = await session.send(say)
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
+    status(attempt ? `${who} is fixing what did not validate (${attempt + 1} of ${ATTEMPTS})\u2026` : `${who} is drawing it\u2026`)
+    const reply = await session.send(say, signal)
     try {
       const result = accept(jsonIn(reply))
       if (result.value) return result.value
@@ -295,30 +334,35 @@ async function ask<T>(gen: Generator, system: string, prompt: string, accept: (r
   throw new Error(`What came back did not validate: ${errors.slice(0, 3).join('; ')}`)
 }
 
-const unique = (name: string, taken: ReadonlySet<string>): string => {
-  if (!taken.has(name)) return name
-  for (let i = 2; ; i++) if (!taken.has(`${name}-${i}`)) return `${name}-${i}`
-}
-
-/** A piece from a prompt, written by a model and validated like any file. Throws with a sentence a person can read. */
-export async function generatePiece(prompt: string, gen: Generator, taken: ReadonlySet<string>, status: (text: string) => void = () => {}): Promise<PieceSpec> {
+/** A piece from a prompt, written by a model and validated like any file. Throws with a sentence a person can read, or `Stopped`. */
+export async function generatePiece(
+  prompt: string,
+  gen: Generator,
+  taken: ReadonlySet<string>,
+  status: (text: string) => void = () => {},
+  signal?: AbortSignal,
+  /** What was made from this prompt last time, when this is to be another take on it. */
+  instead?: string,
+): Promise<PieceSpec> {
   // Two worked examples, from the scaffolds: deterministic, so the system prompt stays byte-stable.
   const examples = ['a gong that rings when the ball brushes it', 'a geyser that lifts the ball'].map((p) => {
     const { prompt: _made, ...spec } = scaffoldPiece(p, 0, new Set())
     return JSON.stringify(spec)
   })
   const system = `${FORMAT}\n\n## Two pieces that validate, for the shape of the thing (do better than these)\n${examples.join('\n')}`
-  const spec = await ask<PieceSpec>(gen, system, `The piece: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
+  const again = instead ? `\n\nOne has been made from this already: ${instead.slice(0, LIMITS.text)} Make another take on it, different in mechanism or in look.` : ''
+  const spec = await ask<PieceSpec>(gen, system, `The piece: ${prompt.trim().slice(0, LIMITS.text)}${again}`, (raw) => {
     const piece = { weight: 1, ...(raw as object) } as PieceSpec
-    if (typeof piece.name === 'string') piece.name = slug(piece.name)
+    // A name is the one thing not worth a round trip: one that is missing, or not a slug, is made from the prompt.
+    piece.name = slug(typeof piece.name === 'string' ? piece.name : '', nameFor(prompt))
     const { build, errors } = parseBuild({ format: BUILD_FORMAT, version: BUILD_VERSION, name: 'draft', pieces: [piece] })
     return { value: build?.pieces[0] ?? null, errors }
-  }, status)
-  return { ...spec, name: unique(spec.name, taken), prompt: prompt.trim().slice(0, LIMITS.text) }
+  }, status, signal)
+  return { ...spec, name: uniqueName(spec.name, taken), prompt: prompt.trim().slice(0, LIMITS.text) }
 }
 
 /** A world from a prompt, written by a model and validated like any file. */
-export async function generateWorld(prompt: string, gen: Generator, status: (text: string) => void = () => {}): Promise<WorldSpec> {
+export async function generateWorld(prompt: string, gen: Generator, status: (text: string) => void = () => {}, signal?: AbortSignal): Promise<WorldSpec> {
   const example = JSON.stringify(scaffoldWorld('a volcano island', 0))
   return ask<WorldSpec>(gen, `${WORLD_FORMAT()}\n\n## One that validates\n${example}`, `The place: ${prompt.trim().slice(0, LIMITS.text)}`, (raw) => {
     const names = new Set(WORLDS.flatMap((w) => w.pieces.map((c) => c.name)))
@@ -327,5 +371,5 @@ export async function generateWorld(prompt: string, gen: Generator, status: (tex
     const unknown = Array.isArray(world?.borrow) ? world.borrow.filter((n) => !names.has(n)) : []
     if (unknown.length) return { value: null, errors: [...errors, `world.borrow: no stock piece called ${unknown.join(', ')}`] }
     return { value: build?.world ?? null, errors }
-  }, status)
+  }, status, signal)
 }

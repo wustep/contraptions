@@ -15,7 +15,8 @@
  *
  * The Builder's tab is not on the switch until it is unlocked: five
  * backticks in quick succession, in any mode (`unlock.ts`). The same five
- * lock it again.
+ * lock it again. Only the first of a quick run clears the stage, so the
+ * chrome does not flicker on the way.
  */
 import { UNLOCK_EVENT, UNLOCK_GAP_MS, builderUnlocked, pressCounter, setBuilderUnlocked } from './unlock'
 
@@ -236,13 +237,16 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Five backticks on each other's heels lock or unlock the Builder. Each of
-  // them is still a backtick, so the chrome comes and goes four times on the
-  // way; the fifth settles it: out for a Builder just unlocked, so that the
-  // new tab is seen, and as it was before the run for one just locked.
+  // Five backticks on each other's heels lock or unlock the Builder. Only
+  // the first press of a quick run clears the stage (or puts it back): the
+  // rest of the run are counted and not shown, so five for the lock do not
+  // strobe the chrome. The fifth settles it: out for a Builder just
+  // unlocked, so that the new tab is seen, and as it was before the run for
+  // one just locked.
   const run = pressCounter()
   let bareBefore = false
   let lastPress = -Infinity
+  let presses = 0
   const toggleLock = () => {
     const on = !builderUnlocked()
     setBuilderUnlocked(on)
@@ -270,10 +274,17 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     e.preventDefault()
     const at = performance.now()
     // The first press of a run remembers how the stage stood before it.
-    if (at - lastPress > UNLOCK_GAP_MS) bareBefore = document.body.classList.contains('bare')
+    if (at - lastPress > UNLOCK_GAP_MS) {
+      bareBefore = document.body.classList.contains('bare')
+      presses = 0
+    }
     lastPress = at
-    if (run(at)) toggleLock()
-    else toggleBare()
+    presses++
+    if (run(at)) {
+      toggleLock()
+      // The counter starts over after a run; so does this.
+      lastPress = -Infinity
+    } else if (presses === 1) toggleBare()
   })
 
   // The piece leads: Machine and Explorations open with the panel away and
