@@ -1,17 +1,30 @@
 import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
+import { blocks } from './blocks'
 import { bumper } from './bumper'
 import { changer } from './changer'
 import { claw } from './claw'
+import { coaster } from './coaster'
+import { ferris } from './ferris'
+import { gauss } from './gauss'
 import { hockey } from './hockey'
+import { hoops } from './hoops'
 import { pachinko } from './pachinko'
+import { phaser } from './phaser'
+import { pixel } from './pixel'
+import { pong } from './pong'
 import { laneRail } from './rail'
+import { shooter } from './shooter'
 import { skee } from './skee'
 import { slingshot } from './slingshot'
+import { slots } from './slots'
 import { spinner } from './spinner'
 import { striker } from './striker'
+import { targets } from './targets'
 import { ticket } from './ticket'
+import { ufo } from './ufo'
+import { whack } from './whack'
 import { zigzag } from './zigzag'
 
 /**
@@ -19,7 +32,13 @@ import { zigzag } from './zigzag'
  * the ball is popped by a bumper, spun through a spinner, kicked up a
  * skee-ball lane, slapped across an air-hockey table, dropped through a
  * pachinko field and down a ticket machine, lifted by a claw and by a
- * high striker, and swapped for a token by a change machine.
+ * high striker, and swapped for a token by a change machine. It is shot
+ * up a pinball lane, knocks down a bank of targets, is tossed by a mole,
+ * thrown through a hoop, and taken round a Ferris wheel and over a
+ * coaster's hill; and it goes into the screens: rallied up a Pong court,
+ * dropped by a cleared line, drawn in squares and recoloured, lifted by a
+ * saucer's beam, pulled down with a one-armed bandit's lever, fired from
+ * a Gauss gun, and phased through a brick wall as a ghost.
  *
  *   rail       a lit lane: lamps, strips and chevrons that come on as the ball passes
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
@@ -33,6 +52,19 @@ import { zigzag } from './zigzag'
  *   claw       into the cabinet, among the prizes on its floor; the claw comes down, closes, lifts, trundles, lets go; a fall onto the wedge at the chute's foot and down its face
  *   striker    onto the puck, which sinks; the latch trips; up the tower on the puck, slowing, to meet the bell with pace still on it, lighting every level on the dark face; ding; the puck cants; one or two floors up
  *   slingshot  into the pouch of a slingshot at the rail's end; its weight slips the catch and the bands whip it up through the fork; a lob a floor up onto a shelf; the score pops off the mouth as the ball leaves
+ *   shooter    onto the cup on a plunger's tip; the knob draws down, the spring closing coil on coil; release; up a wire lane, slowing, round the arch and out through a one-way gate that clicks shut; the outer wire lights behind it; one or two floors up
+ *   targets    a bank of three drop targets on the lane; each checks the ball and drops into the trough under the rail, tick, tick, tick; lamps and a counter; +300; the reset bar thumps them back up
+ *   gauss      pulled into a magnet block faster and faster; clack; the far ball of the two on its other face fires off with the thread, through a speed trap that reads what it clocked; the one that came stays on the magnet
+ *   pong       a Pong court one or two floors tall: straight lines, one pace, no gravity; the paddles rally the ball up the screen, a blip a hit; the last serves it flat along the top, the other misses, the point goes up, and it leaves by the doorway there
+ *   pixel      behind a screen on a stand, and seen on it in squares: a sprite on the screen's grid at the screen's pace; a scanline comes down it and leaves it another colour while the cursor hops along the palette; out the far side that colour for good
+ *   blocks     into a falling-blocks well onto a row with one gap, up against the far wall; the piece at the top comes down in ticks and its stem fills the gap; the line flashes and clears, and the ball falls a floor and rolls out, on or back; +100
+ *   phaser     a curtain of scanlines turns the ball to a ghost; it rolls straight through a wall of bricks, which go to wireframe where it is; a second curtain makes it solid again
+ *   ufo        onto the landing mark; the hatch opens, the beam comes down, and the ball goes up it, one or two floors; the saucer slides out over the rail with it, the beam goes out, and it rolls off
+ *   slots      onto the tray on the end of a one-armed bandit's lever; its weight pulls the lever down through a quarter turn, reels spinning and stopping as it comes; seven seven seven on the clunk, and the tray's wall lies along the rail below; coins in the payout tray; +777
+ *   whack      across a whack-a-mole deck; moles pop up behind it and a mallet on a gantry comes after them, a beat late; the third pops up under the ball and tosses it over the rim; +10 a mole
+ *   hoops      into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 2
+ *   ferris     onto the seat of the low gondola of a little Ferris wheel; half a turn, slowly, every gondola swinging on its pivot; the high seat is level with the rail a floor up and the ball rolls off it
+ *   coaster    drops into a car at the station; the chain clacks it up the lift hill, the track lighting behind it; over the crest and down the drop to the floor below; the fins stop the car in sparks and the ball rolls on out of its nose
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
@@ -73,9 +105,26 @@ export const arcade: World = {
   themes: THEMES,
   backdrops: ['stars', 'grid', 'stars'],
   tastes: {
-    pinball: { bumper: 1.8, spinner: 1.7, zigzag: 1.5, slingshot: 1.7, skee: 1.3, claw: 0.5, ticket: 0.7, hockey: 0.7, striker: 0.8 },
-    midway: { claw: 1.7, ticket: 1.6, changer: 1.4, striker: 1.6, hockey: 1.3, pachinko: 1.2, 'lift-tall': 1.8, 'drop-deep': 1.8, bumper: 0.6, spinner: 0.7 },
-    jackpot: { pachinko: 1.8, skee: 1.6, hockey: 1.5, striker: 1.3, zigzag: 1.3, changer: 1.2, slingshot: 1.2, spinner: 0.6, claw: 0.7 },
+    pinball: {
+      bumper: 1.8, spinner: 1.7, slingshot: 1.7, shooter: 1.8, targets: 1.7, zigzag: 1.5, gauss: 1.4, skee: 1.3,
+      striker: 0.8, ticket: 0.7, hockey: 0.7, whack: 0.7, hoops: 0.7, slots: 0.7, pong: 0.6, blocks: 0.6, ufo: 0.6, coaster: 0.6, claw: 0.5, ferris: 0.5,
+    },
+    midway: {
+      claw: 1.7, ferris: 1.7, coaster: 1.7, ticket: 1.6, striker: 1.6, whack: 1.6, hoops: 1.6, changer: 1.4, hockey: 1.3, pachinko: 1.2, skee: 1.2,
+      'lift-tall': 1.8, 'drop-deep': 1.8, spinner: 0.7, targets: 0.7, pixel: 0.7, phaser: 0.7, bumper: 0.6, pong: 0.6, blocks: 0.6,
+    },
+    jackpot: {
+      slots: 1.9, pachinko: 1.8, skee: 1.6, hockey: 1.5, changer: 1.4, striker: 1.3, zigzag: 1.3, ticket: 1.3, targets: 1.3, slingshot: 1.2, gauss: 1.2,
+      claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6,
+    },
+    screens: {
+      pong: 1.9, blocks: 1.8, ufo: 1.7, pixel: 1.6, phaser: 1.6, gauss: 1.2, changer: 1.2, zigzag: 1.1,
+      'lift-tall': 1.6, hockey: 0.7, striker: 0.7, skee: 0.7, whack: 0.7, claw: 0.6, hoops: 0.6, coaster: 0.6, ferris: 0.5,
+    },
   },
-  pieces: [laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot, portal],
+  pieces: [
+    laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot,
+    shooter, targets, gauss, pong, pixel, blocks, phaser, ufo, slots, whack, hoops, ferris, coaster,
+    portal,
+  ],
 }

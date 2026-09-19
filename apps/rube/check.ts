@@ -52,7 +52,7 @@ for (const w of WORLDS) {
   check('every name is unique', new Set(names).size === names.length)
   check('has a rail and a portal', names.includes('rail') && names.includes('portal'))
   check('portal is placed by hand, not by weight', w.pieces.find((c) => c.name === 'portal')?.weight === 0)
-  check('at least ten beats of its own', w.pieces.filter((c) => !shared.has(c.name)).length >= 10, `${w.pieces.length - 2}`)
+  check('at least twenty-four beats of its own', w.pieces.filter((c) => !shared.has(c.name)).length >= 24, `${w.pieces.length - 2}`)
   check('at least two of them are flights', w.pieces.filter(isFlight).length >= 2)
   check('at least one of them changes the ball', w.pieces.some(isDynamic))
   check('more than one palette, all with five colours', w.themes.length > 1 && w.themes.every((t) => t.colors.length === 5))
@@ -206,9 +206,11 @@ for (const seed of SEEDS) {
     check(`${tag}: the ball starts in the world's colour`, first.ballIn.color === u.ballColor)
     check(`${tag}: every change happens inside its piece`, u.pieces.every((p) => p.changes.every((c) => c.at >= 0 && c.at <= p.span)))
 
-    // A ghost never reaches a portal, and a relay always hands the thread to a differently coloured ball.
+    // A ghost is a piece's own business: it is solid again before it is handed on, so it never reaches
+    // another piece, let alone a portal. And a relay always hands the thread to a differently coloured ball.
     const leaving = ballAt(last.ballIn, last.changes, Infinity)
     check(`${tag}: the ball is solid at the portal out`, !leaving.ghost)
+    check(`${tag}: a ghost is solid again before it leaves its piece`, u.pieces.every((p) => !ballAt(p.ballIn, p.changes, Infinity).ghost))
     let relayOk = true
     for (const p of u.pieces) {
       const before = p.ballIn
