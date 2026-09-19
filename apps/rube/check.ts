@@ -26,7 +26,8 @@ const eq = (a: Pt, b: Pt) => Math.abs(a[0] - b[0]) < 1e-6 && Math.abs(a[1] - b[1
 
 console.log('\nworlds')
 check('there are exactly four', WORLDS.length === 4, `${WORLDS.length}`)
-check('in the order workshop → harbor → garden → arcade', WORLDS.map((w) => w.name).join(',') === 'workshop,harbor,garden,arcade')
+check('in the order workshop → garden → harbor → arcade', WORLDS.map((w) => w.name).join(',') === 'workshop,garden,harbor,arcade')
+check('labelled Regular → Forest → Aqua → Arcade', WORLDS.map((w) => w.label).join(',') === 'Regular,Forest,Aqua,Arcade')
 check('every world has its own name', new Set(WORLDS.map((w) => w.name)).size === WORLDS.length)
 // A piece belongs to one world. Rail and the portal are the two exceptions:
 // every world has a rail of its own, and the portal is the same door everywhere.

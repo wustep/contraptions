@@ -89,7 +89,7 @@ const THEMES: Theme[] = [
 
 export const harbor: World = {
   name: 'harbor',
-  label: 'Harbor',
+  label: 'Aqua',
   note: 'the pier: water, tide and salt',
   themes: THEMES,
   backdrops: ['waves', 'plain', 'waves'],

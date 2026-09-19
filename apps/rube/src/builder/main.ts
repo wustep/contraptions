@@ -819,7 +819,7 @@ noCastBtn.addEventListener('click', () => {
     build.world = { ...(build.world ?? defaultWorldSpec()), borrow: [] }
   })
 })
-const plainBtn = el('button', { title: 'Drop the world: the pieces play on the workshop’s paper' }, ['Reset'])
+const plainBtn = el('button', { title: 'Drop the world: the pieces play on Regular’s paper' }, ['Reset'])
 plainBtn.addEventListener('click', () => {
   change('reset the world', () => {
     delete build.world
@@ -1024,7 +1024,7 @@ function sync(): void {
   }
 
   const world = build.world ?? defaultWorldSpec()
-  worldNote.replaceChildren(el('b', {}, [world.label ?? build.label ?? build.name]), el('br'), build.world ? (world.note ?? '') : 'no world of its own yet: the workshop’s paper and rail')
+  worldNote.replaceChildren(el('b', {}, [world.label ?? build.label ?? build.name]), el('br'), build.world ? (world.note ?? '') : 'no world of its own yet: Regular’s paper and rail')
   swatches.replaceChildren(
     ...world.themes.map((t) => {
       const chip = el('div', { class: 'swatch', title: `${t.label}${t.note ? `: ${t.note}` : ''}` }, t.colors.map((c) => el('i', { style: `background:${c}` })))

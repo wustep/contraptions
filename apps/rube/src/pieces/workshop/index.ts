@@ -103,7 +103,7 @@ const THEMES: Theme[] = [
 
 export const workshop: World = {
   name: 'workshop',
-  label: 'Workshop',
+  label: 'Regular',
   note: 'the atelier: brass, oil, paper and gravity',
   themes: THEMES,
   backdrops: ['plain', 'dots', 'rules', 'plain'],

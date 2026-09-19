@@ -363,12 +363,12 @@ camera pushes in as the ball is swallowed, holds shut a beat, and opens
 wide on the new world.
 
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
-— `amber-gasket` is the seed to share: a painter, a switchback, a gravity
-inverter, a zipline and a cannon in the workshop — sixteen beats and no
-piece twice — then a harbor at sundown with a lighthouse, a jellyfish, a seal
-and a dinghy, then a greenhouse with three toadstools, a bumblebee and a
-well, then neon with a coaster and a one-armed bandit; and no piece twice
-in any of the four.
+— `amber-gasket` is the seed to share: a painter, a gravity inverter, a
+cannon, a switchback and a trapeze in Regular, sixteen beats of it; then
+Forest as an allotment with toadstools, a vine, a bumblebee and a well;
+then Aqua in daylight with a dolphin, a pelican, a whirlpool and a dinghy,
+thirteen beats and no piece twice; then neon with whack-a-mole, a saucer,
+skee-ball and the ticket machine paying out at the door.
 
 ```bash
 npm run dev           # http://localhost:8791/ — Machine; /explorations/ is Explorations
@@ -382,14 +382,18 @@ The show goes round **four worlds in a fixed order** — the way a climb
 goes through its biomes — and every world is a place with its own
 vocabulary of pieces, not a palette swap:
 
-| | World | The place | Its pieces |
-| --- | --- | --- | --- |
-| 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-three of them |
-| 2 | **Harbor** | a pier over water, tide and salt | twenty-two: sea life, boats, pier gear and the tide |
-| 3 | **Garden** | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
-| 4 | **Arcade** | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
+| | World | In the code | The place | Its pieces |
+| --- | --- | --- | --- | --- |
+| 1 | **Regular** | `workshop` | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-three of them |
+| 2 | **Forest** | `garden` | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
+| 3 | **Aqua** | `harbor` | a pier over water, tide and salt | twenty-two: sea life, boats, pier gear and the tide |
+| 4 | **Arcade** | `arcade` | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
 
-Workshop → harbor → garden → arcade → workshop, always. What the seed
+Regular → Forest → Aqua → Arcade → Regular, always. The panel, the catalog
+and the readout use those names; the code, the folders under
+`src/pieces/`, `?world=` and the rest of this file keep the places' own
+(workshop, garden, harbor, arcade), so a link made before the rename still
+opens. What the seed
 decides is everything *inside* a visit: which of the world's palettes it
 is painted in (each has two of its own, never shared), which of
 its tastes the planner leans on, how the map is laid out, and which pieces
@@ -414,9 +418,9 @@ on a ground:
 
 | World | Its palettes |
 | --- | --- |
-| Workshop | **Okazz**, the original's cool sheet and five bright inks · **Atelier**, brass and oxblood on warm paper |
-| Harbor | **Harbor**, navy, coral and sand on sea-sky paper · **Sundown**, the pier at the end of the day |
-| Garden | **Greenhouse**, leaf and terracotta on cream · **Allotment**, kraft paper, soil and radish |
+| Regular (workshop) | **Okazz**, the original's cool sheet and five bright inks · **Atelier**, brass and oxblood on warm paper |
+| Forest (garden) | **Greenhouse**, leaf and terracotta on cream · **Allotment**, kraft paper, soil and radish |
+| Aqua (harbor) | **Harbor**, navy, coral and sand on sea-sky paper · **Sundown**, the pier at the end of the day |
 | Arcade | **Neon**, signs after rain on violet · **CRT**, phosphor green |
 
 **Night is the arcade's alone.** Every other world is painted on light
