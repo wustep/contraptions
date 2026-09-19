@@ -357,7 +357,7 @@ wide on the new world.
 **[Watch it →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)**
 — `amber-gasket` is the seed to share: a painter, a switchback, a gravity
 inverter, a zipline and a cannon in the workshop — sixteen beats and no
-piece twice — then a harbor at sundown with a lock, a jellyfish, a seal
+piece twice — then a harbor at sundown with a lighthouse, a jellyfish, a seal
 and a dinghy, then a greenhouse with three toadstools, a bumblebee and a
 well, then neon with a coaster and a one-armed bandit; and no piece twice
 in any of the four.
@@ -377,7 +377,7 @@ vocabulary of pieces, not a palette swap:
 | | World | The place | Its pieces |
 | --- | --- | --- | --- |
 | 1 | **Workshop** | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-three of them |
-| 2 | **Harbor** | a pier over water, tide and salt | twenty-three: sea life, boats, pier gear and the tide |
+| 2 | **Harbor** | a pier over water, tide and salt | twenty-two: sea life, boats, pier gear and the tide |
 | 3 | **Garden** | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
 | 4 | **Arcade** | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
 
@@ -388,13 +388,13 @@ its tastes the planner leans on, how the map is laid out, and which pieces
 it draws — always and only from that world's pool. Two visits to the same
 world never look alike back to back.
 
-**No world is the small one.** Every world has at least twenty-three beats
+**No world is the small one.** Every world has at least twenty-two beats
 of its own (the workshop thirty-three), and four tastes to lean on: the
 harbor's *tidal*, *quay*, *surf* and *reef*; the garden's *greenhouse*,
 *allotment*, *wild* and *lawn*; the arcade's *pinball*, *midway*,
 *jackpot* and *screens*. A world's vocabulary is chosen for geometry
 before theme. A map only stays fresh if its pieces can go up, come down,
-turn back and throw, so each world has its own ways up (a lock, a frog's
+turn back and throw, so each world has its own ways up (a lighthouse, a frog's
 tongue, a saucer's beam), its own ways down (a slipway, a falling leaf, a
 cleared line) and seven or more flights, as well as its own things to say
 on the flat.
@@ -579,7 +579,6 @@ against what holds it.
 | slipway | into the cockpit of a hull on a cradle at the head of the ways; the thump jumps the chock out; down the ways, off the cradle at its stop, a belly-flop a floor below that throws the ball onto the pier |
 | jellyfish | off the deck's end onto the crown of a jellyfish's bell, which dimples deep and springs back; a high arc onto the deck a floor up; the bell rings on, the lights round its rim running out from the middle |
 | floats | the deck stops; three net floats on a line; each dunks under the ball and bobs it on to the next, a ring on the water each time |
-| lock | across the apron onto a raft in a lock chamber, the gate coming down behind; water runs in through the culvert from the upper pound and the raft rises a floor; its tail kicks up at the top and the ball rolls off |
 | puffer | onto the back of a pufferfish asleep in a gap in the deck; it blows up with a start to a ball of spines and pops the ball over onto the far deck; then sighs itself small again |
 | hawser | into a breeches buoy under a block on a mooring line; the jerk pulls the lanyard's toggle; down the line, which the load hangs in two straight parts, to a rat guard; the ring swings on and tips the ball out a floor down |
 | dolphin | off the deck's end, and a dolphin comes up under it, takes it on its beak and leaps a whole arc; at the top it flicks the ball on to the deck above and dives in under that deck's end; its fin cruises after |
@@ -680,7 +679,7 @@ the ball, and the show draws the ball once on the joined path from one
 clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
 worlds headless and asserts all of it: the four worlds in order, three
-times round, at least twenty-three beats of its own in every world, every
+times round, at least twenty-two beats of its own in every world, every
 piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, only the arcade
 painted dark, at least three beats in four of every map a piece it has

@@ -52,7 +52,7 @@ for (const w of WORLDS) {
   check('every name is unique', new Set(names).size === names.length)
   check('has a rail and a portal', names.includes('rail') && names.includes('portal'))
   check('portal is placed by hand, not by weight', w.pieces.find((c) => c.name === 'portal')?.weight === 0)
-  check('at least twenty-three beats of its own', w.pieces.filter((c) => !shared.has(c.name)).length >= 23, `${w.pieces.length - 2}`)
+  check('at least twenty-two beats of its own', w.pieces.filter((c) => !shared.has(c.name)).length >= 22, `${w.pieces.length - 2}`)
   check('at least two of them are flights', w.pieces.filter(isFlight).length >= 2)
   check('at least one of them changes the ball', w.pieces.some(isDynamic))
   check('more than one palette, all with five colours', w.themes.length > 1 && w.themes.every((t) => t.colors.length === 5))
