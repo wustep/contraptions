@@ -1,6 +1,6 @@
 import { solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, over, rail, ramp, roll, trace, type Lane, type Pt, type Seg } from '../../parts'
-import { piling, rope, seaWater, splash, water } from './sea'
+import { bodyColor, piling, rope, seaWater, splash, water } from './sea'
 
 /**
  * A line of net floats. The deck stops; across the gap three floats ride
@@ -19,7 +19,7 @@ const EAST = 1.16
 /** The floats: where they ride, how big, and how deep the ball's weight takes them. */
 const XS = [0.12, 0.5, 0.88]
 const FY = 0.335
-const FR = 0.12
+const FR = 0.095
 const DUNK = 0.07
 /** On a float this long, rolling this far over its top; then a hop this long to the next. */
 const CONTACT = 0.13
@@ -67,17 +67,15 @@ const LANE: Lane = { segs: SEGS, fire: LANDS[1] }
 export const floats = definePiece<{ color: string }>({
   name: 'floats',
   weight: 0.9,
-  place: ({ color, fits }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
     ]
     if (!fits(cells, [2, 0])) return null
-    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color } }
+    return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, t, ink, weight, theme }) => {
-    // The floats' colours: the piece's own first, then round the palette.
-    const at = Math.max(0, theme.colors.indexOf(s.color))
     const ys = XS.map((_, i) => FY + dunkAt(i, t))
 
     rail(p, k, ink, weight, -0.5, WEST)
@@ -92,10 +90,13 @@ export const floats = definePiece<{ color: string }>({
       const b = knots[i]
       rope(p, k, ink, weight, a[0] + (i > 1 ? H : 0), a[1], b[0] - (i < knots.length - 1 ? H : 0), b[1], 0.07)
     }
-    // The floats: balls of cork, one colour each.
+    // The floats: corks on the line, all one colour and smaller than the
+    // ball, with the line seen running through each. Three ball-sized
+    // circles in three colours were three more balls to the eye.
     XS.forEach((x, i) => {
-      solid(p, ink, weight, theme.colors[(at + i * 2) % theme.colors.length])
+      solid(p, ink, weight, s.color)
       p.circle(x * k, ys[i] * k, FR * 2 * k)
+      p.line((x - FR + 0.01) * k, (ys[i] - H * 0.55) * k, (x + FR - 0.01) * k, (ys[i] - H * 0.55) * k)
     })
     // The water goes in front of them, so they sit in it and not on it.
     water(p, k, ink, weight, -0.5, 1.5)
