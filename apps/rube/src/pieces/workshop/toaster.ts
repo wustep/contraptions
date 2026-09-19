@@ -1,14 +1,16 @@
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, burst, definePiece, fall, fly, mixHex, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { easeInOutCubic, easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
+import { FLOOR, ROLL, burst, definePiece, fly, mixHex, over, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
 
 /**
- * A toaster. The ball rolls across its lid, drops into the slot, and the
- * lever goes down with it, winding the timer. Through the window the ball
- * is seen sitting in the dark of the slot between two heating elements,
- * which warm from grey to hot as the timer runs down, the chamber glowing
- * with them and heat rising off the slot — and when the hand reaches the
- * end it pops, up onto the shelf a floor above, and rolls on with a ding.
+ * A toaster. The ball rolls across its lid onto the slot and is let down
+ * into it the way bread is: on the carriage, at the lever's pace, easing
+ * off the lid and easing to rest, the lever going down beside it and
+ * winding the timer. Through the window the ball is seen sitting in the
+ * dark of the slot between two heating elements, which warm from grey to
+ * hot as the timer runs down, the chamber glowing with them and heat rising
+ * off the slot — and when the hand reaches the end it pops, up onto the
+ * shelf a floor above, and rolls on with a ding.
  * This is the show's other way up, and its silliest.
  */
 const SLOT = -0.04
@@ -29,19 +31,31 @@ const DIAL: Pt = [0.14, 0.32]
 const WIND = 1.7
 const SHELF_Y = -1
 const LAND: Pt = [0.32, SHELF_Y]
-const ARRIVE = (0.5 + SLOT) / ((ROLL + 1.2) / 2)
-const DROP = 0.12
+/** The pace the ball has slowed to at the slot's near lip, and how far short of the slot's middle that is. */
+const LIP_V = 1
+const DROP = 0.42
+const LIP = SLOT - (LIP_V * DROP) / 3
+const ARRIVE = (0.5 + LIP) / ((ROLL + LIP_V) / 2)
 /** The ball is in the slot from here until the pop. */
 const T_IN = ARRIVE + DROP
-const TOAST = 1.5
+/** What the slower way in takes, the toasting gives back: the pop comes when it always did. */
+const TOAST = 1.26
 const FIRE = T_IN + TOAST
 const POP = 0.5
 const ARC = 0.78
 
-/** How far down the lever is: down with the ball's drop, up with a spring at the pop. */
-const leverAt = (t: number, since: number) => (t < ARRIVE ? 0 : since < 0 ? easeOutCubic(over(t, ARRIVE, T_IN)) : 1 - easeOutBack(over(since, 0, 0.18)))
-/** How far the timer is wound: with the lever as the ball drops in, then running down to nothing at the pop. */
-const woundAt = (t: number) => (t < ARRIVE ? 0 : t < T_IN ? easeOutCubic(over(t, ARRIVE, T_IN)) : t < FIRE ? 1 - over(t, T_IN, FIRE) : 0)
+/** How far down the carriage is, 0 to 1: one motion for the ball, the lever and the timer's winding. */
+const sinkAt = (t: number) => easeInOutCubic(over(t, ARRIVE, T_IN))
+/**
+ * The ball on its way in. Its roll runs out over the slot — easing out from
+ * exactly the pace it reached the lip at, so nothing is seen to change
+ * there — while the carriage takes it down.
+ */
+const sinking = (t: number): Pt => [LIP + (SLOT - LIP) * easeOutCubic(over(t, ARRIVE, T_IN)), INSIDE[1] * sinkAt(t)]
+/** How far down the lever is: down with the carriage, up with a spring at the pop. */
+const leverAt = (t: number, since: number) => (since < 0 ? sinkAt(t) : 1 - easeOutBack(over(since, 0, 0.18)))
+/** How far the timer is wound: with the lever as the ball goes down, then running down to nothing at the pop. */
+const woundAt = (t: number) => (t < T_IN ? sinkAt(t) : t < FIRE ? 1 - over(t, T_IN, FIRE) : 0)
 /** How hot the elements are: building with the toast, cooling after the pop. */
 const heatAt = (t: number, since: number) => (t < T_IN ? 0 : since < 0 ? over(t, T_IN, FIRE) : 1 - over(since, 0, 1.2))
 
@@ -57,8 +71,8 @@ export const toaster = definePiece<{ color: string }>({
     if (!fits(cells, [1, -1])) return null
     const lane: Lane = {
       segs: [
-        ramp([-0.5, 0], [SLOT, 0], ROLL, 1.2),
-        fall([SLOT, 0], INSIDE, INSIDE[1] / DROP),
+        ramp([-0.5, 0], [LIP, 0], ROLL, LIP_V),
+        ...trace(sinking, ARRIVE, T_IN, 14),
         // In the slot, in view through the window.
         wait(INSIDE, TOAST),
         fly(INSIDE, LAND, POP, ARC),
@@ -78,7 +92,7 @@ export const toaster = definePiece<{ color: string }>({
     p.line(0.36 * k, 0.5 * k, 0.48 * k, 0.5 * k)
     p.line(0.42 * k, (SHELF_Y + FLOOR + 0.2) * k, 0.18 * k, (SHELF_Y + FLOOR) * k)
     // The lever on the side: it rides a slot the height of the body, goes
-    // all the way down as the ball drops in, and springs up with the pop.
+    // all the way down with the ball, and springs up with the pop.
     const down = leverAt(t, since)
     const slotTop = LID + 0.05
     const slotBottom = BODY_Y1 - 0.06
