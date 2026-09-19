@@ -79,7 +79,7 @@ export const cradle = definePiece<{ color: string; next: string }>({
     const changes: BallChange[] = [{ at: ARRIVE, relay: true, color: next }]
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color, next }, changes }
   },
-  draw: (p, s, { k, since, ink, weight, color }) => {
+  draw: (p, s, { k, since, ink, weight, color, spin }) => {
     rail(p, k, ink, weight, -0.5, 1.5)
     // The frame: a beam on two posts to the ground.
     outline(p, ink, weight)
@@ -108,9 +108,9 @@ export const cradle = definePiece<{ color: string; next: string }>({
       const back = RELEASE * Math.exp(-(since - T_RELEASE) * 2) * Math.cos((since - T_RELEASE) * 9)
       p.line(LAST * k, BEAM_Y * k, (LAST + Math.sin(back) * tail) * k, (BEAM_Y + Math.cos(back) * tail) * k)
     }
-    if (since < 0) ball(p, k, ink, weight, s.next, LAST * k, 0, 0)
+    if (since < 0) ball(p, k, ink, weight, s.next, LAST * k, 0, spin(LAST))
     // The ball that arrived, parked against the first, in the colour it came in.
-    if (since >= 0) ball(p, k, ink, weight, color, SEAT * k, 0, SEAT / R)
+    if (since >= 0) ball(p, k, ink, weight, color, SEAT * k, 0, spin(SEAT))
     // The click.
     if (since > 0 && since < 0.2) {
       const f = over(since, 0, 0.2)

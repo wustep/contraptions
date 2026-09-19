@@ -304,6 +304,14 @@ export interface PieceCtx {
   /** The colour of the ball as it arrives. A piece that recolours it knows the new one from its own state. */
   color: string
   theme: Theme
+  /**
+   * The `spin` to hand `ball` for a ball the piece draws itself at local
+   * `x`, so its dot is where the show's is for a ball there: the show turns
+   * the ball by how far along the map it is, not along the piece, and a
+   * mirrored piece draws its dot mirrored. A ball that passes between the
+   * show's hand and the piece's keeps its face.
+   */
+  spin: (x: number) => number
 }
 
 export interface Piece<S = unknown> {

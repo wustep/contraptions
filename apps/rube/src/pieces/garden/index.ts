@@ -10,11 +10,11 @@ import { cocoon } from './cocoon'
 import { croquet } from './croquet'
 import { dandelion } from './dandelion'
 import { frog } from './frog'
+import { gate } from './gate'
 import { hose } from './hose'
 import { maple } from './maple'
 import { pod } from './pod'
 import { gardenRail } from './rail'
-import { rake } from './rake'
 import { scarecrow } from './scarecrow'
 import { snail } from './snail'
 import { spade } from './spade'
@@ -30,8 +30,9 @@ import { wheelbarrow } from './wheelbarrow'
  * The garden: a greenhouse, soil and bloom. Everything here grows, pours,
  * wilts or burrows: the ball is watered on, carried up a vine and down a
  * flower's throat, wheeled in a barrow and on a snail's back, flung by a
- * sprinkler, through a hose, whacked by a rake, dusted by a sunflower,
- * swapped for a seed, and lost down a mole's tunnel. A frog's tongue
+ * sprinkler, through a hose, let through a gate that shuts on its heels,
+ * dusted by a sunflower, swapped for a seed, and lost down a mole's
+ * tunnel. A frog's tongue
  * takes it, a bumblebee labours off with it, a dandelion seed floats it
  * up and a falling leaf brings it down; it bounces up three toadstools,
  * goes down a well in the bucket, is tipped by a bamboo rocker, thrown by
@@ -49,7 +50,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   pod          into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread
  *   burrow       over the lip of a hole and down it; a ridge runs down the soil; up out of a molehill's top a floor down, over its foot
  *   hose         into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its skin goes round the loop two and a half times, gathering pace; out of the nozzle
- *   rake         over the handle onto the tines; the handle comes up behind, over, and cracks it on the back; it shoots off
+ *   gate         into a picket gate; the knock hops the latch and the gate gives; the ball shoulders through, hauling a flowerpot up on a cord; the pot hauls the gate shut and its edge catches the ball on the back; it shoots off; the latch drops in
  *   snail        up the tail onto the shell; carried most of a cell, slowly; a shrug tips it off over the head
  *   frog         onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up
  *   toadstools   off the path's end onto three toadstools, each taller than the last; every cap squashes, springs and puffs spores; pum, pum, pum, onto the rail a floor up
@@ -99,15 +100,15 @@ export const garden: World = {
   tastes: {
     greenhouse: {
       vine: 1.7, bloom: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, sprinkler: 1.2, maple: 1.2, 'lift-tall': 1.8,
-      well: 0.8, wheelbarrow: 0.7, croquet: 0.7, hose: 0.6, rake: 0.6, scarecrow: 0.6,
+      well: 0.8, wheelbarrow: 0.7, croquet: 0.7, hose: 0.6, gate: 0.6, scarecrow: 0.6,
     },
     allotment: {
-      wheelbarrow: 1.7, rake: 1.7, spade: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, 'drop-deep': 1.8,
+      wheelbarrow: 1.7, gate: 1.7, spade: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, 'drop-deep': 1.8,
       vine: 0.8, pod: 0.7, frog: 0.7, dandelion: 0.7, cocoon: 0.7, bloom: 0.6, toadstools: 0.6,
     },
     wild: {
       frog: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2,
-      rake: 0.7, bamboo: 0.7, wateringcan: 0.6, spade: 0.6, wheelbarrow: 0.5, croquet: 0.5,
+      gate: 0.7, bamboo: 0.7, wateringcan: 0.6, spade: 0.6, wheelbarrow: 0.5, croquet: 0.5,
     },
     lawn: {
       croquet: 1.8, bamboo: 1.7, appletree: 1.5, sprinkler: 1.5, hose: 1.4, wateringcan: 1.3, maple: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
@@ -115,7 +116,7 @@ export const garden: World = {
     },
   },
   pieces: [
-    gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, rake, snail,
+    gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, gate, snail,
     frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, croquet, scarecrow, dandelion, maple,
     portal,
   ],

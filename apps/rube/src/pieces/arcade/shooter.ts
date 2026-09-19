@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { coil, outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arcPts, arrive, arriveAt, definePiece, laneAt, over, post, rail, ramp, rankBy, segTime, wait, type Lane, type Pt, type Seg } from '../../parts'
-import { flash, glow } from './neon'
+import { flash, glow, score } from './neon'
 
 /**
  * A pinball shooter lane. The rail ends at a wire lane that stands a floor
@@ -225,6 +225,8 @@ export const shooter = definePiece<ShooterState>({
     }
     return null
   },
+  // The gate at the top is what scores, as a pinball table's does: over it, as the flap lets the ball go. Off the plunger it lay across the lane.
+  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, s.turn * GATE_X, -s.floors - HINGE - 0.05 + 0.1, '+100', t - build(s.floors, s.turn).letGo, 1),
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
     const b = build(floors, turn)

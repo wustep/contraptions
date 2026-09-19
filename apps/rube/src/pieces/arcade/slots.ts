@@ -171,5 +171,5 @@ export const slots = definePiece<{ color: string; coin: string }>({
     // The clunk.
     flash(p, k, s.coin, weight, sx + TRAY_WALL / 2, sy + R + TRAY_T, since, 0.2, 0.05, 0.2)
   },
-  scores: (p, s, { k, since, bg }) => score(p, k, s.coin, bg, 0.26, 0.66, '+777', since, 1.2),
+  scores: (p, s, { k, since, bg }) => score(p, k, s.coin, bg, CAB_X + CAB_W / 2 + 0.29, 0.66, '+777', since, 1.2),
 })
