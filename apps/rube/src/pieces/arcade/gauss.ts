@@ -48,6 +48,7 @@ const CLOCKED = String(Math.round(((GATE2 - GATE1) / (T_GATE2 - T_GATE1)) * 10))
 
 export const gauss = definePiece<{ color: string; next: string }>({
   name: 'gauss',
+  points: 100,
   weight: 0.9,
   dynamic: true,
   place: ({ rng, color, fits, theme, ball: arriving }) => {

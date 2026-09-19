@@ -138,6 +138,7 @@ function bar(p: p5, k: number, ink: string, weight: number, color: string, a: Pt
 
 export const slingshot = definePiece<{ color: string }>({
   name: 'slingshot',
+  points: 100,
   weight: 0.9,
   flight: true,
   place: ({ color, fits }) => {

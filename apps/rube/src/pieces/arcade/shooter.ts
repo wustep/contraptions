@@ -210,6 +210,7 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
 
 export const shooter = definePiece<ShooterState>({
   name: 'shooter',
+  points: 100,
   weight: 0.8,
   flight: true,
   place: ({ rng, color, fits, taste }) => {

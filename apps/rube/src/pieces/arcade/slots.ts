@@ -1,7 +1,7 @@
 import { solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, post, rail, ramp, trace, type Lane, type Pt } from '../../parts'
-import { cabinet, digits, flash, glow, marquee, score } from './neon'
+import { cabinet, digits, flash, glow, score } from './neon'
 
 /**
  * A one-armed bandit, two floors tall, standing behind the rails. Its arm
@@ -64,6 +64,7 @@ function seatAt(t: number): Pt {
 
 export const slots = definePiece<{ color: string; coin: string }>({
   name: 'slots',
+  points: 777,
   weight: 1,
   place: ({ rng, color, fits, theme }) => {
     const cells: Pt[] = [
@@ -85,12 +86,11 @@ export const slots = definePiece<{ color: string; coin: string }>({
     const jackpot = since < 0 ? 0 : 1 - over(since, 2.2, 3)
     const shake = pulling ? 0.004 * Math.sin(t * 70) : since > 0 && since < 0.12 ? 0.01 * Math.sin(since * 80) : 0
 
-    // The cabinet, from a marquee over the reels down to the floor of the cell below.
+    // The cabinet, from over the reels down to the floor of the cell below. No marquee: seven ringed lamps in half a cell ran into each other and into the reels, and what was left of the band between them read as a row of brackets over the sevens. The glow, the coins and the score say jackpot.
     p.push()
     p.translate(shake * k, 0)
     glow(p, k, s.coin, CAB_X, REELS_Y, 0.22, jackpot * (0.6 + 0.4 * Math.sin(since * 14)))
     cabinet(p, k, ink, weight, s.color, CAB_X, -0.47, 1.5, CAB_W)
-    marquee(p, k, ink, weight, s.coin, bg, CAB_X - 0.26, CAB_X + 0.26, -0.425, 7, jackpot > 0 ? since * 2.5 : t * 0.35, true, 0.055)
     // The reels: three dark windows, a digit in each — whatever they were left on, a blur while they spin, a seven when they stop.
     const ctx = p.drawingContext as CanvasRenderingContext2D
     for (let i = 0; i < 3; i++) {

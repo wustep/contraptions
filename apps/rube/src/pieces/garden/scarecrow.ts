@@ -23,6 +23,9 @@ const ARM = 0.3
 const ARM_Y = -0.19
 const HEAD_Y = -0.325
 const HEAD_R = 0.08
+/** How far along its arm a sleeve's cuff is, and where the shirt's hem hangs. */
+const CUFF = 0.86
+const HEM = 0.015
 /** How it stands: turned this far from square on, the hanging hand toward us and the ball. */
 const REST = 0.45
 /** How far ahead of the ball's centre the hand is pushed: the ball's half-width at the height of the straw, and half the hand's. */
@@ -81,27 +84,33 @@ export const scarecrow = definePiece<{ color: string }>({
     p.line((POLE_X - 0.06) * k, 0.5 * k, (POLE_X + 0.06) * k, 0.5 * k)
     rail(p, k, ink, weight, -0.5, 0.5)
 
-    // Whichever arm is turned away from us goes behind the coat.
-    if (sin > 0) sleeve(p, s.color, c, far, false)
-    else {
-      sleeve(p, s.color, c, near, true)
-      hand(p, s.color, c, near, spinAt(since), cos)
-    }
-    // The coat: wider than it is deep, so it narrows as it turns; a rope belt, a patch on the front.
+    // The hand hangs behind the shirt while its arm is turned away from us.
+    if (sin <= 0) hand(p, s.color, c, near, spinAt(since), cos)
+    // The sticks out of the cuffs, and the far one's straw.
+    stick(p, c, near, true)
+    stick(p, c, far, false)
+    // The shirt: one shape, cuff to cuff and down to the hem, so nothing
+    // inside it is a line. It is wider than it is deep, so it narrows as it
+    // turns, and the sleeves draw in to the shoulders with the arms.
     const w = 0.13 + 0.09 * Math.abs(cos)
+    const reach = Math.max(w * 0.45, ARM * CUFF * Math.abs(cos))
+    const top = ARM_Y - 0.05
     solid(p, ink, weight, s.color)
-    p.quad((POLE_X - w * 0.42) * k, (ARM_Y - 0.045) * k, (POLE_X + w * 0.42) * k, (ARM_Y - 0.045) * k, (POLE_X + w * 0.6) * k, -0.0 * k, (POLE_X - w * 0.6) * k, -0.0 * k)
-    outline(p, ink, weight * 0.8)
-    p.line((POLE_X - w * 0.52) * k, -0.085 * k, (POLE_X + w * 0.52) * k, -0.085 * k)
-    if (cos > 0.25) {
-      solid(p, ink, weight * 0.7, bg)
-      p.rect((POLE_X + 0.035 * cos + 0.02 * sin) * k, -0.04 * k, 0.045 * cos * k, 0.04 * k)
-    }
+    p.beginShape()
+    p.vertex((POLE_X - reach) * k, (top + 0.012) * k)
+    p.vertex((POLE_X - w * 0.3) * k, top * k)
+    p.vertex((POLE_X + w * 0.3) * k, top * k)
+    p.vertex((POLE_X + reach) * k, (top + 0.012) * k)
+    p.vertex((POLE_X + reach) * k, (ARM_Y + 0.036) * k)
+    p.vertex((POLE_X + w * 0.45) * k, (ARM_Y + 0.055) * k)
+    p.vertex((POLE_X + w * 0.62) * k, HEM * k)
+    p.vertex((POLE_X - w * 0.62) * k, HEM * k)
+    p.vertex((POLE_X - w * 0.45) * k, (ARM_Y + 0.055) * k)
+    p.vertex((POLE_X - reach) * k, (ARM_Y + 0.036) * k)
+    p.endShape(p.CLOSE)
     // Straw out of the hem.
     outline(p, ink, weight * 0.8)
-    for (const dx of [-0.4, -0.1, 0.2, 0.45]) p.line((POLE_X + w * dx) * k, 0, (POLE_X + w * dx * 1.25) * k, 0.045 * k)
-    if (sin > 0) sleeve(p, s.color, c, near, true)
-    else sleeve(p, s.color, c, far, false)
+    for (const dx of [-0.36, 0.04, 0.4]) p.line((POLE_X + w * dx) * k, HEM * k, (POLE_X + w * dx * 1.3) * k, (HEM + 0.045) * k)
 
     // The head: a round sack, which looks the same from every side but for the face, and the hat on it.
     solid(p, ink, weight, bg)
@@ -129,14 +138,12 @@ export const scarecrow = definePiece<{ color: string }>({
   },
 })
 
-/** A sleeve along one arm's stick, from the shoulder to the cuff, straw out of the far one's end. The near stick is broken short; its hand hangs. */
-function sleeve(p: p5, color: string, { k, ink, weight }: PieceCtx, tip: Pt, broken: boolean): void {
+/** What shows of an arm's stick past its cuff, and the straw out of the far one's end. The near stick is broken short; its hand hangs. */
+function stick(p: p5, { k, ink, weight }: PieceCtx, tip: Pt, broken: boolean): void {
   const dx = tip[0] - POLE_X
-  const cuff = POLE_X + dx * 0.86
+  const cuff = POLE_X + dx * CUFF
   outline(p, ink, weight * 1.2)
-  p.line(POLE_X * k, ARM_Y * k, tip[0] * k, tip[1] * k)
-  solid(p, ink, weight, color)
-  p.quad(POLE_X * k, (ARM_Y - 0.045) * k, cuff * k, (ARM_Y - 0.035) * k, cuff * k, (ARM_Y + 0.035) * k, POLE_X * k, (ARM_Y + 0.05) * k)
+  p.line(cuff * k, ARM_Y * k, tip[0] * k, tip[1] * k)
   if (broken) return
   outline(p, ink, weight * 0.8)
   for (const dy of [-0.03, 0, 0.03]) p.line(cuff * k, (ARM_Y + dy * 0.6) * k, (tip[0] + dx * 0.08) * k, (ARM_Y + dy * 1.4) * k)

@@ -272,6 +272,8 @@ export interface PlaceCtx {
   taste: Taste
   /** The ball as it arrives: its colour, whether it is a ghost. */
   ball: BallState
+  /** The points the map has earned by the time the ball gets here: what a finale pays out on. */
+  earned: number
   /** True if the piece may occupy these canonical cells and hand off into `exit`. */
   fits(cells: Pt[], exit: Pt): boolean
 }
@@ -312,6 +314,19 @@ export interface Piece<S = unknown> {
   flight?: boolean
   /** Changes the ball itself — its colour, or which ball holds the thread. Rare enough to stay special. */
   dynamic?: boolean
+  /**
+   * What a pass through the piece scores, where a world keeps score. The
+   * number it pops is this number: a piece with its own `scores` pass says
+   * it where and when it likes, and one without has it popped off the ball
+   * at the moment it fires.
+   */
+  points?: number | ((s: S) => number)
+  /**
+   * The map's last beat, placed by the planner once, after everything else
+   * and only if it fits, and never drawn from the pool: what the run's
+   * points are paid out by. It is told what the map `earned`.
+   */
+  finale?: boolean
   /** Propose a placement, or null if nothing fits here. */
   place(ctx: PlaceCtx): Placement<S> | null
   draw(p: p5, s: S, c: PieceCtx): void
@@ -324,6 +339,9 @@ export interface Piece<S = unknown> {
    */
   scores?(p: p5, s: S, c: PieceCtx): void
 }
+
+/** What a pass through a piece in this state scores. */
+export const pointsOf = <S>(piece: Piece<S>, state: S): number => (typeof piece.points === 'function' ? piece.points(state) : piece.points ?? 0)
 
 /** Identity helper that pins the state type. */
 export const definePiece = <S>(spec: Piece<S>): Piece<S> => spec

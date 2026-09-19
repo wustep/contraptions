@@ -27,6 +27,7 @@ const FIRE = T_SLOT + IN + CHUNK
 
 export const changer = definePiece<{ color: string; token: string }>({
   name: 'changer',
+  points: 50,
   weight: 0.9,
   dynamic: true,
   place: ({ rng, color, fits, theme, ball }) => {

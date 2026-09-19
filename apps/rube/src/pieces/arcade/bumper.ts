@@ -17,6 +17,7 @@ const T_HIT = (0.5 + HIT) / ROLL
 
 export const bumper = definePiece<{ color: string }>({
   name: 'bumper',
+  points: 50,
   weight: 1.1,
   place: ({ color, fits }) => {
     if (!fits([[0, 0]], [1, 0])) return null
@@ -50,5 +51,5 @@ export const bumper = definePiece<{ color: string }>({
     // The ring off the skirt.
     flash(p, k, s.color, weight, -SKIRT, -0.02, since)
   },
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, CAP_Y - 0.18, '+100', since),
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, CAP_Y - 0.18, '+50', since),
 })

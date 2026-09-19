@@ -43,6 +43,7 @@ const POSTS = [0.86, 1.44]
 
 export const skee = definePiece<{ color: string }>({
   name: 'skee',
+  points: 50,
   weight: 1,
   flight: true,
   place: ({ color, fits }) => {

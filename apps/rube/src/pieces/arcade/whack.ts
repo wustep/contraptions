@@ -12,7 +12,8 @@ import { display, flash, marquee, score } from './neon'
  * mallet comes after them — wind up, slam, on to the next — always a beat
  * late. The third mole comes up right under the ball and tosses it, over
  * the rim and onto the far lane; the mallet gets that one too, in the end.
- * Ten a mole; the counter on the cabinet's face keeps the tally. The mallet
+ * Ten for the first mole, twenty for the second, thirty for the third; the
+ * counter on the cabinet's face keeps the tally. The mallet
  * trundles back to where it started.
  *
  * The third mole's head and the toss are one motion: the ball leaves at
@@ -44,6 +45,9 @@ const HEAD = { w: 0.22, h: 0.11 }
 const HANG = -0.245
 const STRUCK = FLOOR - 0.035 - HEAD.h / 2
 const BLOWS = [POPS[0] + 0.25, POPS[0] + 0.59, POPS[0] + 0.93]
+/** Each mole is worth ten more than the last, and the counter keeps the running total. */
+const BLOW_POINTS = [10, 20, 30]
+const TALLY = [0, 10, 30, 60]
 const WIND = 0.1
 const STROKE = 0.07
 const HOLD = 0.05
@@ -125,6 +129,7 @@ function mole(p: p5, k: number, ink: string, weight: number, color: string, bg: 
 
 export const whack = definePiece<{ color: string; mole: string }>({
   name: 'whack',
+  points: BLOW_POINTS.reduce((a, b) => a + b, 0),
   weight: 0.9,
   flight: true,
   place: ({ rng, color, fits, theme, ball }) => {
@@ -168,7 +173,7 @@ export const whack = definePiece<{ color: string; mole: string }>({
     }
     // Its face: lamps chasing while there is a game on, and the tally.
     marquee(p, k, ink, weight, s.color, bg, CAB.x0 + 0.08, 0.5, 0.27, 6, t, busy, 0.075)
-    display(p, k, ink, weight, bg, 0.72, 0.34, 0.26, 0.16, `${tally}0`.replace(/^00$/, '0'), s.color, tally > 0)
+    display(p, k, ink, weight, bg, 0.72, 0.34, 0.26, 0.16, String(TALLY[tally]), s.color, tally > 0)
 
     // The beam, the trolley on it, the rod and the mallet's head.
     const tx = trolley(t)
@@ -216,6 +221,6 @@ export const whack = definePiece<{ color: string; mole: string }>({
   },
   scores: (p, s, { k, t, bg }) => {
     // Over the gantry, clear of the mallet that comes back up through where the blow was.
-    BLOWS.forEach((at, i) => score(p, k, s.color, bg, HOLES[i], BEAM.y + 0.1, '+10', t - at, 0.6, 0.12))
+    BLOWS.forEach((at, i) => score(p, k, s.color, bg, HOLES[i], BEAM.y + 0.1, `+${BLOW_POINTS[i]}`, t - at, 0.6, 0.12))
   },
 })

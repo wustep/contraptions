@@ -121,7 +121,7 @@ export const flags = definePiece<{ color: string }>({
     for (let i = 0; i < FLAGS; i++) {
       const y = TOP + RUN - run + (i + 0.5) * PITCH
       const open = since < 0 ? 0 : easeOutBack(over(y, BREAK[i] + 0.005, BREAK[i] - 0.03))
-      flag(p, k, ink, weight, colours[i], colours[(i + 2) % FLAGS], HOIST_X, y, open, t * 7 - i * 1.3, i)
+      flag(p, k, ink, weight, colours[i], HOIST_X, y, open, t * 7 - i * 1.3, i)
     }
 
     // The treadle.
@@ -158,9 +158,10 @@ export const flags = definePiece<{ color: string }>({
  * One signal flag on the hoist at (x, y): rolled to a finger's width at
  * `open` 0, flying at 1, its fly rippling on `phase`. Three shapes, so the
  * hoist reads as a signal and not as bunting: a pennant that tapers to a
- * blunt point, a square halved in two colours, and a swallowtail.
+ * blunt point, a square and a swallowtail. Each is one flag in one colour:
+ * a square halved in two read as two squares side by side.
  */
-function flag(p: p5, k: number, ink: string, weight: number, color: string, second: string, x: number, y: number, open: number, phase: number, kind: number): void {
+function flag(p: p5, k: number, ink: string, weight: number, color: string, x: number, y: number, open: number, phase: number, kind: number): void {
   const w = 0.05 + (FLAG_W[kind % 3] - 0.05) * open
   const h = FLAG_H
   const ripple = (u: number) => 0.016 * open * u * Math.sin(phase - u * 5)
@@ -183,9 +184,4 @@ function flag(p: p5, k: number, ink: string, weight: number, color: string, seco
   // Rolled, the flag is a band of its colour on the hoist: a thinner line, so the colour is not lost in it.
   solid(p, ink, weight * (open > 0.2 ? 0.9 : 0.6), color)
   shape(0, 1, 0, kind % 3 === 2)
-  // The square is halved: its fly in a second colour.
-  if (open > 0.5 && kind % 3 === 1) {
-    solid(p, ink, weight * 0.6, second)
-    shape(0.5, 1, 0, false)
-  }
 }

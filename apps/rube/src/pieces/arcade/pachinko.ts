@@ -48,6 +48,7 @@ function hop(from: Pt, to: Pt, dur: number, vIn: number, off: 'lip' | 'pin'): Se
 
 export const pachinko = definePiece<PachinkoState>({
   name: 'pachinko',
+  points: 500,
   weight: 1,
   place: ({ rng, color, fits }) => {
     for (const turn of rng.shuffle([1, -1] as const)) {

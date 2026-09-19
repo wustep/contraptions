@@ -43,6 +43,7 @@ const V_FOOT = Math.sqrt(V_LAND * V_LAND + 2 * G * Math.sin(Math.atan(SLOPE)) * 
 
 export const claw = definePiece<{ color: string; prizes: string[] }>({
   name: 'claw',
+  points: 200,
   weight: 0.9,
   place: ({ rng, color, fits, theme }) => {
     const cells: Pt[] = [

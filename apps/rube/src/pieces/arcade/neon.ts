@@ -94,6 +94,7 @@ const GLYPHS: Record<string, number[]> = {
   '8': [0b111, 0b101, 0b111, 0b101, 0b111],
   '9': [0b111, 0b101, 0b111, 0b001, 0b111],
   '+': [0b000, 0b010, 0b111, 0b010, 0b000],
+  x: [0b000, 0b101, 0b010, 0b101, 0b000],
 }
 
 /** How far a digit's dark rim reaches past its pixels, in pixels. */

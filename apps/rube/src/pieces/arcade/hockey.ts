@@ -35,6 +35,7 @@ const BOARD_Y = -0.41
 
 export const hockey = definePiece<{ color: string }>({
   name: 'hockey',
+  points: 100,
   weight: 1,
   flight: true,
   place: ({ color, fits }) => {
