@@ -32,8 +32,13 @@ const DOOR_W = 0.3
 const DOOR_H = 0.36
 /** The ball stops on the threshold, in the middle of the doorway. */
 const DOOR = DOOR_X0 + DOOR_W / 2
-/** Where the ball is wholly behind the far jamb: a radius past it, and a little up the stair. */
-const INSIDE: Pt = [DOOR_X0 + DOOR_W + R + 0.02, -0.05]
+/**
+ * Where the ball is gone: a little up the stair, and no further in than the
+ * tower is wide. The wall beside the door is narrower than the ball, so
+ * behind the far jamb would put it out through the tower's other side;
+ * here the wall covers most of it and the dark inside takes the rest.
+ */
+const INSIDE: Pt = [BASE - 0.07 - R, -0.05]
 const ARRIVE = arriveAt(DOOR)
 const IN = 0.15
 const TOP_WAIT = 0.22
@@ -154,6 +159,19 @@ export const lighthouse = definePiece<LighthouseState>({
     outline(p, ink, weight)
     p.quad(-BASE * k, 0.5 * k, BASE * k, 0.5 * k, TOP_W * k, gallery * k, -TOP_W * k, gallery * k)
     p.pop()
+    // The dark inside closes over the ball as it goes in, so it is gone into it and not cut off at the jamb.
+    const gone = t < startClimb ? over(t, ARRIVE, startClimb) : 0
+    if (gone > 0) {
+      const dark = p.color(ink)
+      dark.setAlpha(255 * gone)
+      p.push()
+      p.noStroke()
+      p.fill(dark)
+      ctx.beginPath()
+      doorway(ctx, k)
+      ctx.fill()
+      p.pop()
+    }
     // The doorway's jambs and arch, and the door on its hinge at the near jamb, swinging in.
     p.push()
     p.noFill()

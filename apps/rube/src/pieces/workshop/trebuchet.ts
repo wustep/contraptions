@@ -1,6 +1,6 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece, fly, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 
 /**
  * A trebuchet. The long arm rests with its cup down on the rail and the
@@ -9,6 +9,10 @@ import { FAST, FLOOR, ROLL, arcPts, arrive, arriveAt, burst, chain, definePiece,
  * leaves the cup at the top of the swing to land two cells over. The arm
  * swings on through upright and back, and comes to stand straight up, the
  * weight hanging under the pivot, the way they do.
+ *
+ * The cup is a bowl on the end of the arm, deep enough to hold the ball,
+ * and it stands in front of the ball: the ball sits down in it to the
+ * waist, and is not a disc laid over the arm's end.
  */
 const PIVOT: Pt = [0.5, -0.5]
 const ARM = 0.75
@@ -22,6 +26,12 @@ const PIN = 0.4
 const SWING = 0.48
 const FIRE = ARRIVE + PIN
 const FLIGHT = 0.38
+/** The cup: its floor this far down the arm from the ball's centre, under the ball; its rim short of the ball's middle; its width a little over the ball's. */
+const CUP_FLOOR = R + 0.03
+const CUP_RIM = 0.03
+const CUP_W = 0.34
+/** The pin's post: clear of the cup's corner, so the pin is seen holding it. */
+const PIN_X = SEAT + 0.22
 
 /** Where a counterweighted arm comes to rest: straight up, the weight straight down under the pivot. */
 const UP = Math.PI * 1.5
@@ -89,17 +99,17 @@ export const trebuchet = definePiece<{ color: string }>({
     // The pin: holds the arm's cup end down, pulled by the ball's weight.
     const pulled = t < ARRIVE ? 0 : since < 0 ? over(t, ARRIVE + 0.1, FIRE) : 1
     p.push()
-    p.translate((SEAT + 0.16) * k, (FLOOR - 0.04) * k)
+    p.translate((PIN_X) * k, (FLOOR - 0.04) * k)
     p.rotate(0.9 * pulled)
     solid(p, ink, weight, s.color)
     p.rect(-0.07 * k, 0, 0.14 * k, 0.035 * k)
     p.pop()
     outline(p, ink, weight)
-    p.line((SEAT + 0.16) * k, FLOOR * k, (SEAT + 0.16) * k, 0.5 * k)
+    p.line((PIN_X) * k, FLOOR * k, (PIN_X) * k, 0.5 * k)
 
     // The arm, the counterweight on its short end, the cup on its long end.
     outline(p, ink, weight)
-    p.line(tail[0] * k, tail[1] * k, tip[0] * k, tip[1] * k)
+    p.line(tail[0] * k, tail[1] * k, (tip[0] - Math.cos(a) * CUP_FLOOR) * k, (tip[1] - Math.sin(a) * CUP_FLOOR) * k)
     // The counterweight hangs plumb from a hinge at the short end, swinging a little with the arm.
     const hang = 0.2 * Math.sin(a - REST) * (since < SWING ? 1 : Math.exp(-(since - SWING) * 1.2))
     outline(p, ink, weight)
@@ -115,15 +125,6 @@ export const trebuchet = definePiece<{ color: string }>({
     p.pop()
     solid(p, ink, weight, bg)
     p.circle(tail[0] * k, tail[1] * k, 0.04 * k)
-    p.push()
-    p.translate(tip[0] * k, tip[1] * k)
-    p.rotate(a + Math.PI / 2)
-    outline(p, ink, weight)
-    p.line(-0.14 * k, 0.05 * k, -0.14 * k, -0.06 * k)
-    p.line(0.14 * k, 0.05 * k, 0.14 * k, -0.06 * k)
-    solid(p, ink, weight, s.color)
-    p.rect(0, 0.05 * k, 0.3 * k, 0.04 * k)
-    p.pop()
     solid(p, ink, weight, bg)
     p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.07 * k)
 
@@ -136,5 +137,15 @@ export const trebuchet = definePiece<{ color: string }>({
       burst(p, tip[0] * k, tip[1] * k, (0.1 + 0.16 * f) * k, (0.16 + 0.2 * f) * k, 6, 0.4)
       p.pop()
     }
+  },
+  over: (p, s, { k, since, ink, weight }) => {
+    // The cup, in front of the ball: a bowl on the arm's end, its round bottom to the arm.
+    const a = armAt(since)
+    p.push()
+    p.translate((PIVOT[0] + Math.cos(a) * ARM) * k, (PIVOT[1] + Math.sin(a) * ARM) * k)
+    p.rotate(a + Math.PI / 2)
+    solid(p, ink, weight, s.color)
+    p.rect(0, ((CUP_RIM + CUP_FLOOR) / 2 + 0.01) * k, CUP_W * k, (CUP_FLOOR - CUP_RIM + 0.02) * k, 0, 0, 0.08 * k, 0.08 * k)
+    p.pop()
   },
 })

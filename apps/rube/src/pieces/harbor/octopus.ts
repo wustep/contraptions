@@ -117,12 +117,13 @@ export const octopus = definePiece<{ color: string; paint: string }>({
       }
       p.pop()
     }
-    // Ink on the deck after: a flat stain of the new colour that spreads a little way along the rail's underside.
+    // Ink on the deck after: a puddle of the new colour lying on the rail, spreading a little. Flat colour and
+    // a puddle's shape — as a bar under the rail it was one more line, floating over the octopus's head.
     if (since > SQUIRT) {
       const g = easeOutCubic(over(since, SQUIRT, SQUIRT + 1.4))
       p.noStroke()
       p.fill(s.paint)
-      p.rect(0, (FLOOR + 0.045) * k, (0.16 + 0.2 * g) * k, 0.04 * k, 0.02 * k)
+      p.arc(0, FLOOR * k - weight / 2, (0.2 + 0.14 * g) * k, (0.07 + 0.03 * g) * k, Math.PI, Math.PI * 2, p.CHORD)
     }
   },
 })

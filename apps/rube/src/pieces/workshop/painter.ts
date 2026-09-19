@@ -139,10 +139,10 @@ export const painter = definePiece<{ color: string; paint: string }>({
         p.ellipse(side * 0.2 * k, y * k, 0.035 * k, 0.05 * k)
       }
       p.pop()
-      // Flat colour, no outline: outlined, it was a dark slab with the colour showing only as a dot at each end.
+      // Flat colour, no outline, and a puddle's shape, lying on the plate: as a thin bar it was a stripe across the plate's edge.
       p.noStroke()
       p.fill(s.paint)
-      p.rect(0, (FLOOR - 0.012 + pressed * 0.03) * k, (0.1 + 0.1 * g) * k, 0.028 * k, 0.014 * k)
+      p.arc(0, (FLOOR - 0.015 + pressed * 0.03) * k - weight / 2, (0.12 + 0.1 * g) * k, (0.06 + 0.03 * g) * k, Math.PI, Math.PI * 2, p.CHORD)
     }
   },
   over: (p, s, { k, since }) => {
