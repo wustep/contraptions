@@ -7,9 +7,8 @@ import { flash } from './neon'
 /**
  * A roller coaster. A car waits at the station, its seat a little under
  * the lane's end; the ball drops into it, the chain dog takes hold with a
- * clack, and the chain hauls car and ball up the lift hill at a walk, the
- * anti-rollback ticking under it and the track lighting behind it. Over the
- * crest the chain lets go: the car tips over and swoops down the drop to
+ * clack, and the chain hauls car and ball up the lift hill at a walk. Over
+ * the crest the chain lets go: the car tips over and swoops down the drop to
  * the floor below, faster all the way, and levels out onto the brake run —
  * where the fins grab the car and stop it dead in a shower of sparks, and
  * the ball, which nothing is holding, rolls on out of the car's open nose
@@ -18,6 +17,11 @@ import { flash } from './neon'
  * The track is one curve — the height of the ball's line at every x — and
  * the rails, the car, the trestle and the lane are all drawn from it; the
  * ride's pace is the chain's up the hill and a falling thing's after it.
+ *
+ * It is one track to the eye too: the same rail from the station to the
+ * buffer, the same running lights chasing along all of it at one pace, and
+ * the rail lighting behind the car wherever the car has been — up the hill,
+ * down the drop and onto the brakes — then going out together.
  */
 /** The ball's line: the station, the crest, the foot of the drop. */
 const STATION: Pt = [-0.08, 0.1]
@@ -54,6 +58,25 @@ const under = (x: number, d: number): Pt => {
   const n = Math.hypot(1, m)
   return [x - (m / n) * d, lineAt(x) + d / n]
 }
+
+/** The rail, end to end, and how far along it each point is. */
+const RAIL: Pt[] = []
+const RAIL_S: number[] = []
+for (let tx = X_TRACK0; tx <= X_TRACK1 + 1e-9; tx += 0.02) {
+  const q = under(tx, UNDER)
+  const last = RAIL[RAIL.length - 1]
+  RAIL_S.push(last ? RAIL_S[RAIL_S.length - 1] + Math.hypot(q[0] - last[0], q[1] - last[1]) : 0)
+  RAIL.push(q)
+}
+const RAIL_LEN = RAIL_S[RAIL_S.length - 1]
+/** The line's x at `s` along the rail. */
+function railX(s: number): number {
+  const i = Math.max(1, RAIL_S.findIndex((v) => v >= s))
+  return X_TRACK0 + 0.02 * (i - 1 + clamp((s - RAIL_S[i - 1]) / (RAIL_S[i] - RAIL_S[i - 1] || 1)))
+}
+/** The running lights: this far apart, this long, at the chain's pace. */
+const LIGHT_GAP = 0.14
+const LIGHT = 0.045
 
 /** The ride's pace at `x`: the chain's to the crest, a falling thing's after it. */
 const paceAt = (x: number) => (x <= CREST[0] ? V_CHAIN : Math.sqrt(V_CHAIN * V_CHAIN + 2 * G * (lineAt(x) - CREST[1])))
@@ -108,7 +131,7 @@ function carAt(t: number): number {
   return X_BRAKE + V_BRAKE * s - ((V_BRAKE / STOP_T) * s * s) / 2
 }
 
-/** A lit tube along a path, its halo laid once. */
+/** A tube along a path, lit by `f`, its halo laid once. */
 function tubePath(p: p5, k: number, ink: string, weight: number, color: string, pts: Pt[], f: number): void {
   if (pts.length < 2) return
   const path = () => {
@@ -125,7 +148,7 @@ function tubePath(p: p5, k: number, ink: string, weight: number, color: string, 
     p.strokeWeight(weight * 3.2)
     path()
   }
-  p.stroke(f > 0.5 ? color : ink)
+  p.stroke(p.lerpColor(p.color(ink), p.color(color), clamp(f)))
   p.strokeWeight(weight * 1.3)
   path()
   p.pop()
@@ -169,8 +192,7 @@ export const coaster = definePiece<{ color: string }>({
     post(p, k, ink, weight, X_TRACK1 + 0.03, 1 + FLOOR, 1.5)
 
     // The trestle: a bent under the track every so far, down to the ground, the tall bays braced corner to corner.
-    const pts: Pt[] = []
-    for (let tx = X_TRACK0; tx <= X_TRACK1 + 1e-9; tx += 0.02) pts.push(under(tx, UNDER))
+    const pts = RAIL
     const railAt = (bx: number) => {
       const i = Math.max(1, pts.findIndex((q) => q[0] >= bx))
       const [a, b] = [pts[i - 1], pts[i]]
@@ -190,25 +212,17 @@ export const coaster = definePiece<{ color: string }>({
     outline(p, ink, weight)
     p.line(-0.38 * k, 1.5 * k, 2.3 * k, 1.5 * k)
 
-    // The track. The lift hill is a tube that lights behind the car as it climbs, and stays lit a while.
-    const hill = pts.filter((_, i) => X_TRACK0 + i * 0.02 <= CREST[0] + 0.06)
-    const rest = pts.slice(hill.length - 1)
-    const climbed = hill.filter((_, i) => X_TRACK0 + i * 0.02 <= x)
+    // The track: one rail, lit behind the car wherever it has been, going out a while after the ride.
     const glowing = t > T_GO ? 1 - over(since, 1.2, 2.2) : 0
-    outline(p, ink, weight * 1.3)
-    p.beginShape()
-    for (const [px, py] of rest) p.vertex(px * k, py * k)
-    p.endShape()
-    tubePath(p, k, ink, weight, s.color, hill.slice(Math.max(0, climbed.length - 1)), 0)
-    tubePath(p, k, ink, weight, s.color, climbed, glowing)
-    // The chain up the middle of the hill, always running: links that climb.
+    tubePath(p, k, ink, weight, s.color, pts, 0)
+    if (glowing > 0) tubePath(p, k, ink, weight, s.color, pts.filter((_, i) => X_TRACK0 + i * 0.02 <= x), glowing)
+    // The running lights, chasing along the whole of it, always.
     p.push()
     p.stroke(ink)
     p.strokeWeight(weight * 0.9)
-    const run = (t * V_CHAIN) % 0.08
-    for (let cx = X_LIFT + run; cx < CREST[0] - 0.04; cx += 0.08) {
-      const a = under(cx, UNDER - 0.035)
-      const b = under(cx + 0.03, UNDER - 0.035)
+    for (let at = (t * V_CHAIN) % LIGHT_GAP; at < RAIL_LEN; at += LIGHT_GAP) {
+      const a = under(railX(at), UNDER - 0.035)
+      const b = under(railX(Math.min(at + LIGHT, RAIL_LEN)), UNDER - 0.035)
       p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
     }
     p.pop()
@@ -224,20 +238,7 @@ export const coaster = definePiece<{ color: string }>({
       p.rect((-CAR + 0.03) * k, (R - 0.04) * k, 0.06 * k, 0.16 * k, 0.02 * k)
     })
 
-    // The anti-rollback, ticking under the car on the way up; and the clack of the dog.
-    if (t > T_GO && x < CREST[0] - 0.05) {
-      const beat = (x - STATION[0]) / 0.1
-      const f = beat - Math.floor(beat)
-      if (f < 0.45) {
-        const at = under(x - CAR, UNDER + 0.05)
-        p.push()
-        p.stroke(ink)
-        p.strokeWeight(weight * 0.9)
-        p.line(at[0] * k, at[1] * k, (at[0] - 0.035) * k, (at[1] + 0.05 + 0.04 * f) * k)
-        p.line((at[0] + 0.05) * k, at[1] * k, (at[0] + 0.04) * k, (at[1] + 0.06 + 0.04 * f) * k)
-        p.pop()
-      }
-    }
+    // The clack of the dog taking hold.
     flash(p, k, s.color, weight, STATION[0], STATION[1] + UNDER - 0.04, t - T_GO + 0.06, 0.16, 0.05, 0.16)
   },
   over: (p, s, { k, t, ink, bg, weight }) => {
