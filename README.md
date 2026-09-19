@@ -17,12 +17,14 @@ a machine choreographed to a piece of music with the soundtrack locked to
 it, in as many versions as you care to keep side by side
 ([below](#shows-appsrubesrcshows)). A fourth tab, the **Builder**, is
 where new pieces and worlds for Machine are made from a prompt and saved as
-one file ([below](#builder-appsrubesrcbuilder)). It is hidden until you
-press <kbd>`</kbd> five times quickly. All four wear the same
-chrome: one panel down the right edge at the window's full height, the
-canvas filling everything else, and a switch at the top of the panel,
-**Machine | Explorations | Shows | Builder**, that moves between them and carries
-the seed across. Machine, Explorations and Shows open with the panel hidden; <kbd>P</kbd> (or the tab on the
+one file ([below](#builder-appsrubesrcbuilder)). Shows and the Builder
+start hidden: press <kbd>`</kbd> five times quickly and both come out
+together. All four wear the same chrome: one panel down the right edge at
+the window's full height, the canvas filling everything else, and a switch
+at the top of the panel that moves between them and carries the seed
+across. Locked it reads **Machine | Explorations**; unlocked it is four
+icon-only buttons — Machine, Explorations, Shows, Builder — each named for
+a screen reader. Machine, Explorations and Shows open with the panel hidden; <kbd>P</kbd> (or the tab on the
 edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
 clears the stage of all of it — the panel, the tab, the way-back button —
 for the piece alone, and <kbd>`</kbd> again puts back what was there.
@@ -716,8 +718,8 @@ the map earned.
 Machine set to music. A show is one piece of music and a machine
 choreographed to it: the ball strikes on the notes, the soundtrack plays
 with it, and the whole thing runs from a first frame to a last one instead
-of round a loop. The tab is always there, between Explorations and the
-Builder.
+of round a loop. The tab sits with the Builder, behind the same five
+backticks.
 
 ```bash
 npm run dev          # http://localhost:8791/shows/
@@ -802,7 +804,7 @@ MP4 a post wants.
 
 ## Builder: `apps/rube/src/builder/`
 
-The last tab, once it is unlocked. Type what a piece should be, press
+The last tab, once Shows and the Builder are unlocked. Type what a piece should be, press
 **Make piece**, and it is on the stage between two portals, the way the
 catalog shows a stock piece. Press
 **Make world** with a place in the prompt and the build gets palettes, a
@@ -810,27 +812,30 @@ backdrop, a rail and a borrowed cast to play among. **Export** writes the
 whole build to one JSON file. **Import** reads one back.
 
 ```bash
-npm run dev            # http://localhost:8791/, then ` five times, then the Builder tab
+npm run dev            # http://localhost:8791/, then ` five times, then the Shows or Builder tab
 npm run check:builder  # scaffolds and their looks, the file round trip, refusals, mending, the store, the lock, the model picker, and that the stock show is untouched
 ```
 
-### Unlocking it
+### Unlocking Shows and the Builder
 
-The Builder is a workbench and not part of the show, so it starts hidden.
-In Machine or Explorations, press <kbd>`</kbd> five times in a row, each
-press within half a second of the last. The panel comes out with a
-**Builder** tab on the switch, lit for a moment. Wait longer than half a
-second between two presses and the count starts over, so the single
-<kbd>`</kbd> that clears the stage still works as before. Only the first
-press of a quick run clears the stage; the rest are counted and not shown,
-so the chrome does not flicker on the way to five. A held key counts as one
-press.
+Shows and the Builder start hidden: they are not the front of the house.
+In any mode, press <kbd>`</kbd> five times in a row, each press within
+half a second of the last. The panel comes out with all four modes on the
+switch as icon-only buttons — Machine, Explorations, Shows, Builder —
+Shows and the Builder lit for a moment. Wait longer than half a second
+between two presses and the count starts over, so the single <kbd>`</kbd>
+that clears the stage still works as before. Only the first press of a
+quick run clears the stage; the rest are counted and not shown, so the
+chrome does not flicker on the way to five. A held key counts as one
+press. Locked, the switch is two words again: Machine and Explorations.
 
-The unlock is kept in this browser (`contraptions:builder` in
-localStorage). The same five presses lock it again, from any mode. While it
-is locked there is no tab, Machine shows no link to it, and `/builder/`
-sends the visitor to Machine with their seed. The Builder's code is a
-separate chunk that a locked visit never fetches.
+The unlock is kept in this browser (`contraptions:unlocked` in
+localStorage). A browser that already had `contraptions:builder` set still
+counts as unlocked. The same five presses lock both tabs again, from any
+mode. While they are locked there are no tabs for them, Machine shows no
+link to the Builder, and `/shows/` and `/builder/` send the visitor to
+Machine with their seed. Each page's code is a separate chunk that a
+locked visit never fetches.
 
 ### Using it
 
@@ -1062,8 +1067,8 @@ visits a build when it is pinned there (`?world=<name>`, or its chip under
   a build moves.
 - A model needs the person's own key, and a key in a browser is only as
   safe as the browser. Use a key you can revoke, with a spending limit.
-- The lock keeps the Builder out of sight. It is not access control: the
-  page and its code are public, and anyone who knows the five presses has it.
+- The lock keeps Shows and the Builder out of sight. It is not access control: the
+  pages and their code are public, and anyone who knows the five presses has them.
 
 ## License
 

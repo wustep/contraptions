@@ -171,11 +171,11 @@ body.bare .stage-play { display: none; }
 }
 /* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
-   rather than leaving for another site. The Builder's tab is hidden until
-   it is unlocked, and the track is divided among the tabs that show: each
-   is as wide as its word and they share what is left equally, so with all
-   four out the longest word has the same room round it as the shortest. */
+   rather than leaving for another site. Shows and the Builder stay hidden
+   until unlocked. Locked, two words share the track; unlocked, four
+   icon-only buttons take equal square-ish cells. */
 .seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: auto; }
+.seg.mode-switch.icons { grid-auto-columns: 1fr; }
 .mode-tab.unlocked { animation: unlocked 1.6s ease-out; }
 @keyframes unlocked {
   0%, 35% { background: var(--accent); color: #1a1409; }
@@ -193,6 +193,14 @@ body.bare .stage-play { display: none; }
   font-weight: 500;
   white-space: nowrap;
 }
+.mode-tab.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0;
+}
+.mode-tab.icon svg { width: 14px; height: 14px; fill: currentColor; display: block; }
 .mode-tab:hover { background: var(--raised); color: var(--text); }
 .mode-tab.on { background: var(--accent-soft); color: var(--accent); cursor: default; }
 .mode-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
