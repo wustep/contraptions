@@ -53,10 +53,16 @@ function place(spec: Spec): TimedPiece {
 /** Prefer a pause after a braking ramp or at a stock wait to stretching motion. */
 function restAt(piece: TimedPiece): number | undefined {
   let t = 0
-  for (const seg of piece.lane.segs) {
+  for (let i = 0; i < piece.lane.segs.length; i++) {
+    const seg = piece.lane.segs[i]
     if (t > .05 && seg.from[0] === seg.to[0] && seg.from[1] === seg.to[1]) return t + seg.dur / 2
     t += seg.dur
-    if (seg.ramp?.[1] === 0 && !piece.changes.some(c=>c.relay && Math.abs(c.at-t)<1e-8)) return t
+    if (seg.ramp?.[1] === 0 && !piece.changes.some(c=>c.relay && Math.abs(c.at-t)<1e-8)) {
+      // The cannon's arrive stop is the load: the next beat is a hidden wait.
+      // Extra time belongs in that wait, not as a visible freeze at the breech.
+      if (piece.lane.segs[i + 1]?.hidden) continue
+      return t
+    }
   }
 }
 function timing(piece: TimedPiece) {

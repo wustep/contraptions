@@ -8,8 +8,9 @@
  * dials — and moving between them is a switch at the top of the panel that
  * carries the seed across. Machine, Explorations and Shows start with the
  * panel hidden, since there the piece leads; the Builder is worked from its
- * panel and starts with it out. `P`
- * or the peek tab on the edge brings it out, and `P` puts it away again.
+ * panel and starts with it out. Once the panel has been opened or closed,
+ * that choice is kept for the session, so a switch of mode does not slam
+ * it. `P` or the peek tab on the edge brings it out, and `P` puts it away again.
  * At a desk the tab itself keeps off the piece: it greets a page just
  * opened, tucks into the edge, and comes out when the pointer nears it.
  * The backtick clears the stage of all of it — the panel, the peek tab,
@@ -19,9 +20,9 @@
  * Shows and the Builder are not on the switch until they are unlocked:
  * five backticks in quick succession, in any mode (`unlock.ts`). The same
  * five lock them again. While they are out the switch is four icon-only
- * buttons; locked, it is Machine and Explorations with their words. Only
- * the first of a quick run clears the stage, so the chrome does not
- * flicker on the way.
+ * buttons, each named on hover; locked, it is Machine and Explorations
+ * with their words. Only the first of a quick run clears the stage, so the
+ * chrome does not flicker on the way.
  */
 import { UNLOCK_EVENT, UNLOCK_GAP_MS, pressCounter, setUnlocked, unlocked } from './unlock'
 
@@ -199,6 +200,27 @@ const PEEK_TUCKS = '(min-width: 821px) and (hover: hover) and (pointer: fine)'
 const PEEK_REACH = 128
 /** How long the tab stands on the edge of a page just opened before it tucks away, in ms. */
 const PEEK_GREETING_MS = 3200
+/** Open or closed, kept for the session so a mode switch does not slam the panel. */
+const PANEL_STORE = 'contraptions:panel'
+
+function panelPref(): boolean | null {
+  try {
+    const v = sessionStorage.getItem(PANEL_STORE)
+    if (v === '1') return true
+    if (v === '0') return false
+  } catch {
+    // Private mode, or a host without sessionStorage.
+  }
+  return null
+}
+
+function rememberPanel(open: boolean): void {
+  try {
+    sessionStorage.setItem(PANEL_STORE, open ? '1' : '0')
+  } catch {
+    // Best effort: a missing store still leaves this page as the user set it.
+  }
+}
 
 export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // Mouse clicks leave a button focused, and a focused button swallows the
@@ -219,23 +241,54 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so a
   // switch is a navigation and the back button undoes it. Locked it is two
-  // words; unlocked it is four marks, each named for a screen reader.
+  // words; unlocked it is four marks, each named on hover and for a screen reader.
+  // Native title waits a beat and is easy to miss on a 32px icon; the name is
+  // a small label we place ourselves (`mode-tip`).
+  const tip = el('div', { class: 'mode-tip', hidden: '' })
+  document.body.append(tip)
+  const hideTip = () => {
+    tip.hidden = true
+  }
+  const showTip = (a: HTMLAnchorElement, label: string) => {
+    if (!a.classList.contains('icon') || a.hidden) return
+    tip.textContent = label
+    tip.hidden = false
+    const r = a.getBoundingClientRect()
+    tip.style.left = `${r.left + r.width / 2}px`
+    const below = r.bottom + 6
+    if (below + 28 < window.innerHeight) {
+      tip.style.top = `${below}px`
+      tip.style.transform = 'translateX(-50%)'
+    } else {
+      tip.style.top = `${r.top - 6}px`
+      tip.style.transform = 'translate(-50%, -100%)'
+    }
+  }
   const dress = (a: HTMLAnchorElement, m: ModeLink, open: boolean) => {
     a.hidden = GATED.has(m.mode) && !open
     a.classList.toggle('icon', open)
     if (open) {
       a.replaceChildren(icon(ICON[m.mode]))
       a.setAttribute('aria-label', m.label)
-      a.title = m.label
+      a.removeAttribute('title')
     } else {
       a.replaceChildren(m.label)
       a.removeAttribute('aria-label')
       a.removeAttribute('title')
     }
+    hideTip()
   }
   const links = MODE_LINKS.map((m) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
     dress(a, m, unlocked())
+    a.addEventListener('pointerenter', () => showTip(a, m.label))
+    a.addEventListener('pointerleave', hideTip)
+    a.addEventListener('focus', () => showTip(a, m.label))
+    a.addEventListener('blur', hideTip)
+    a.addEventListener('click', () => {
+      // A switch is a new page: remember the panel so the next mode opens as this one stood.
+      rememberPanel(!document.body.classList.contains('hide-panel'))
+    })
     if (m.mode === mode) {
       a.setAttribute('aria-current', 'page')
       // The tab you are on is a label, not a reload.
@@ -296,6 +349,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     document.body.classList.remove('bare', 'peek-greet')
     const hide = !bare && !document.body.classList.contains('hide-panel')
     document.body.classList.toggle('hide-panel', hide)
+    rememberPanel(!hide)
+    hideTip()
     if (!hide) hideBtn.focus()
     // A focused tab would stand out on the edge for as long as it held the
     // keyboard, so a tab that tucks is not handed it. Tab still finds it.
@@ -304,6 +359,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }
   hideBtn.addEventListener('click', toggle)
   peek.addEventListener('click', toggle)
+  root.addEventListener('scroll', hideTip, { passive: true })
+  window.addEventListener('scroll', hideTip, { passive: true })
 
   // Bare is laid over the panel's own state rather than written into it, so
   // leaving it lands where it was entered from: panel out, or tab on the edge.
@@ -315,9 +372,9 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // Five backticks on each other's heels lock or unlock Shows and the
   // Builder together. Only the first press of a quick run clears the stage
   // (or puts it back): the rest of the run are counted and not shown, so
-  // five for the lock do not strobe the chrome. The fifth settles it: out
-  // for tabs just unlocked, so that the new marks are seen, and as it was
-  // before the run for a lock.
+  // five for the lock do not strobe the chrome. The fifth settles it: the
+  // panel out for tabs just unlocked, so that the new marks are seen, and
+  // as it was before the run for a lock. No flash on the new tabs.
   const run = pressCounter()
   let bareBefore = false
   let lastPress = -Infinity
@@ -332,17 +389,11 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       return
     }
     switcher.classList.toggle('icons', on)
-    for (const { m, a } of links) {
-      dress(a, m, on)
-      if (!on || !GATED.has(m.mode)) continue
-      // Lit for a moment, so the eye finds what the hand just did.
-      a.classList.remove('unlocked')
-      void a.offsetWidth
-      a.classList.add('unlocked')
-    }
+    for (const { m, a } of links) dress(a, m, on)
     document.body.classList.toggle('bare', on ? false : bareBefore)
     if (!on) return
     document.body.classList.remove('hide-panel')
+    rememberPanel(true)
   }
   // Here and not in each mode's key map: the key means the same thing in all of them.
   window.addEventListener('keydown', (e) => {
@@ -367,11 +418,14 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   })
 
   // The piece leads: Machine, Explorations and Shows open with the panel away
-  // and the peek tab on the edge. Set here rather than through toggle so nothing
-  // is focused on load. The pages set the class in their markup too, so the
-  // first paint is already panel-less; this covers any host that did not.
-  // The Builder is nothing without its panel, and opens with it out.
-  if (mode !== 'builder') {
+  // and the peek tab on the edge, unless this session already chose. Set here
+  // rather than through toggle so nothing is focused on load. The pages set
+  // the class in their markup too, so the first paint is already panel-less;
+  // this covers any host that did not. The Builder is nothing without its
+  // panel, and opens with it out until the session says otherwise.
+  const pref = panelPref()
+  const hide = pref === null ? mode !== 'builder' : !pref
+  if (hide) {
     document.body.classList.add('hide-panel')
     // A tab that tucks has to be seen once to be looked for: it stands on the
     // edge as the page opens, and going in shows where it lives. The count
@@ -380,6 +434,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     const tuck = () => window.setTimeout(() => document.body.classList.remove('peek-greet'), PEEK_GREETING_MS)
     if (document.visibilityState === 'visible') tuck()
     else document.addEventListener('visibilitychange', tuck, { once: true })
+  } else {
+    document.body.classList.remove('hide-panel')
   }
 
   return {

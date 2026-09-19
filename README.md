@@ -23,8 +23,9 @@ together. All four wear the same chrome: one panel down the right edge at
 the window's full height, the canvas filling everything else, and a switch
 at the top of the panel that moves between them and carries the seed
 across. Locked it reads **Machine | Explorations**; unlocked it is four
-icon-only buttons — Machine, Explorations, Shows, Builder — each named for
-a screen reader. Machine, Explorations and Shows open with the panel hidden; <kbd>P</kbd> (or the tab on the
+icon-only buttons — Machine, Explorations, Shows, Builder — each named on
+hover. Machine, Explorations and Shows open with the panel hidden; once it
+has been opened or closed, a switch of mode keeps it that way. <kbd>P</kbd> (or the tab on the
 edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
 clears the stage of all of it — the panel, the tab, the way-back button —
 for the piece alone, and <kbd>`</kbd> again puts back what was there.
@@ -731,7 +732,8 @@ npm run check:shows  # the registry and every version file, the clock, the time 
 The same music may have several versions side by side — takes — so that
 two runs at it can be kept, compared and later combined. The panel leads
 with the picker: the show, and under it a chip a take. A link names one:
-`/shows/?show=premiere-arabesque&take=take-a`.
+`/shows/?show=premiere-arabesque&take=take-a`. `/shows/` with no work
+opens that take.
 
 A version is one file, `versions/<work>/<take>.show.ts`, and dropping it in
 is the whole of adding it: the page finds it by glob, its path says which
@@ -821,9 +823,9 @@ npm run check:builder  # scaffolds and their looks, the file round trip, refusal
 Shows and the Builder start hidden: they are not the front of the house.
 In any mode, press <kbd>`</kbd> five times in a row, each press within
 half a second of the last. The panel comes out with all four modes on the
-switch as icon-only buttons — Machine, Explorations, Shows, Builder —
-Shows and the Builder lit for a moment. Wait longer than half a second
-between two presses and the count starts over, so the single <kbd>`</kbd>
+switch as icon-only buttons — Machine, Explorations, Shows, Builder.
+Wait longer than half a second between two presses and the count starts
+over, so the single <kbd>`</kbd>
 that clears the stage still works as before. Only the first press of a
 quick run clears the stage; the rest are counted and not shown, so the
 chrome does not flicker on the way to five. A held key counts as one
