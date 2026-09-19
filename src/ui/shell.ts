@@ -1,18 +1,20 @@
 /**
- * The chrome the two modes share. One panel down the right edge, the full
+ * The chrome the modes share. One panel down the right edge, the full
  * height of the window, with the brand and the mode switch at its head and
  * the credit at its foot; the stage takes whatever the panel leaves. Machine
- * (the show, in the code) and Explorations (the sandbox) fill the middle
- * with their own sections, built from the same helpers, so the two read as
- * siblings — one frame, different dials — and moving between them is a
- * switch at the top of the panel that carries the seed across. The panel
- * starts hidden; `P` or the peek tab on the edge brings it out, and `P`
- * puts it away again. The backtick clears the stage of all of it — the
+ * (the show, in the code), Explorations (the sandbox) and the Builder fill
+ * the middle with their own sections, built from the same helpers, so they
+ * read as siblings — one frame, different dials — and moving between them
+ * is a switch at the top of the panel that carries the seed across. Machine
+ * and Explorations start with the panel hidden, since there the piece
+ * leads; the Builder is worked from its panel and starts with it out. `P`
+ * or the peek tab on the edge brings it out, and `P` puts it away again.
+ * The backtick clears the stage of all of it — the
  * panel, the peek tab, anything else standing on the stage — for the piece
  * alone, and the backtick again puts back exactly what was there.
  */
 
-export type ShellMode = 'machine' | 'explorations'
+export type ShellMode = 'machine' | 'explorations' | 'builder'
 
 interface ModeLink {
   mode: ShellMode
@@ -23,6 +25,7 @@ interface ModeLink {
 const MODE_LINKS: ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
+  { mode: 'builder', label: 'Builder', path: '/builder/' },
 ]
 
 export interface Shell {
@@ -235,11 +238,12 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     toggleBare()
   })
 
-  // The piece leads: both modes open with the panel away and the peek tab
-  // on the edge. Set here rather than through toggle so nothing is focused
-  // on load. The pages set the class in their markup too, so the first paint
-  // is already panel-less; this covers any host that did not.
-  document.body.classList.add('hide-panel')
+  // The piece leads: Machine and Explorations open with the panel away and
+  // the peek tab on the edge. Set here rather than through toggle so nothing
+  // is focused on load. The pages set the class in their markup too, so the
+  // first paint is already panel-less; this covers any host that did not.
+  // The Builder is nothing without its panel, and opens with it out.
+  if (mode !== 'builder') document.body.classList.add('hide-panel')
 
   return {
     setSeed(seed) {

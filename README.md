@@ -12,28 +12,33 @@ on one thread through a Rube Goldberg chain that never ends, round four
 worlds in a fixed order (`apps/rube/`, [below](#machine-appsrube); the code
 calls it the show). Beside it is **Explorations**: the generator the machine
 grew out of, six modes of tiny machines on a grid with every dial exposed
-(`src/`; the code calls it the sandbox). Both wear the same chrome: one
-panel down the right edge at the window's full height, the canvas filling
-everything else, and a two-tab switch at the top of the panel —
-**Machine | Explorations** — that moves between them and carries the seed
-across. Both open with the panel hidden; <kbd>P</kbd> (or the tab on the
+(`src/`; the code calls it the sandbox). A third tab, the **Builder**, is
+where new pieces and worlds for Machine are made from a prompt and saved as
+one file ([below](#builder-appsrubesrcbuilder)). All three wear the same
+chrome: one panel down the right edge at the window's full height, the
+canvas filling everything else, and a switch at the top of the panel,
+**Machine | Explorations | Builder**, that moves between them and carries
+the seed across. Machine and Explorations open with the panel hidden; <kbd>P</kbd> (or the tab on the
 edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
 clears the stage of all of it — the panel, the tab, the way-back button —
 for the piece alone, and <kbd>`</kbd> again puts back what was there.
 
 **[Machine →](https://contraptions-wustep.vercel.app/?seed=amber-gasket)** ·
-**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
+**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
+**[Builder →](https://contraptions-wustep.vercel.app/builder/)**
 
 ```bash
 npm install
 npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Explorations
 npm run check        # headless smoke test of Explorations' pure core
 npm run check:rube   # headless checks on Machine: the worlds, the planner, the chain, the ball, the tempo
-npm run build        # one dist/: Machine at /, Explorations at /explorations/, /sandbox/ and /rube/ redirecting
+npm run check:builder # headless checks on the Builder: scaffolds, the file round trip, refusals, the stock show untouched
+npm run build        # one dist/: Machine at /, Explorations at /explorations/, the Builder at /builder/, /sandbox/ and /rube/ redirecting
 ```
 
 One Vite root serves and builds all of it: `index.html` is Machine,
-`explorations/index.html` is Explorations, and two pages only forward:
+`explorations/index.html` is Explorations, `builder/index.html` is the
+Builder, and two pages only forward:
 `sandbox/index.html` sends old links to `/explorations/` and
 `rube/index.html` — where Machine used to live — sends them to `/`, both
 keeping the seed. The two modes share the core (`src/core/`), the panel
@@ -54,11 +59,14 @@ grid.
 ```
 index.html               the front door: Machine
 explorations/index.html  Explorations
+builder/index.html       the Builder
 sandbox/index.html       where Explorations used to live; redirects to /explorations/ and keeps the seed
 rube/index.html          where Machine used to live; redirects to / and keeps the seed
 apps/rube/               Machine (see below)
   src/worlds.ts          the four worlds and the order the show visits them in
   src/pieces/            one folder a world, each its own vocabulary; rail.ts and portal.ts are shared
+  src/builder/           the Builder: the build format, its compiler, the scaffolds, the registry, the page
+  builds/                drop a .contraptions.json here and it ships with the site
 src/
   core/
     types.ts        the Contraption contract
@@ -691,6 +699,187 @@ recolouring a change of colour, every ghost solid again before it leaves
 its piece, the tempo, and the arcade's economy: every beat scores, and
 tickets come once, last thing before the door, a ticket a hundred of what
 the map earned.
+
+## Builder: `apps/rube/src/builder/`
+
+**[Open it →](https://contraptions-wustep.vercel.app/builder/)** The third
+tab. Type what a piece should be, press **Make piece**, and it is on the
+stage between two portals, the way the catalog shows a stock piece. Press
+**Make world** with a place in the prompt and the build gets palettes, a
+backdrop, a rail and a borrowed cast to play among. **Export** writes the
+whole build to one JSON file. **Import** reads one back.
+
+```bash
+npm run dev            # http://localhost:8791/builder/
+npm run check:builder  # scaffolds, the file round trip, refusals, and that the stock show is untouched
+```
+
+### Using it
+
+1. **Prompt.** "a gong that rings when the ball brushes it". <kbd>⌘↵</kbd>
+   or **Make piece**. The new piece is selected and playing.
+2. **Look at it.** **Piece** is the piece alone, **Sheet** is every piece
+   in the build as the catalog draws them, **World** is a whole map as the
+   show runs it. <kbd>space</kbd> pauses, <kbd>R</kbd> rerolls the seed,
+   <kbd>[</kbd> and <kbd>]</kbd> step through the pieces.
+3. **Change it.** The **Piece** section holds the piece as JSON. Edit,
+   **Apply**, and the stage updates. What you type is validated the same way
+   a file is, and a list of what is wrong appears under the pane if it does
+   not pass. **Make again** makes another version from the same prompt.
+4. **Give it a place.** "a volcano island", **Make world**. The **World**
+   section then picks the rail (one of the four stock worlds'), the
+   backdrops, and the cast. **Recast** draws another six stock pieces,
+   **No cast** plays the build's pieces alone.
+5. **Export, import.** **Export** saves `<name>.contraptions.json`.
+   **Import**, or a file dropped on the stage, reads one. A build of the
+   same name in the browser is replaced.
+6. **Play it in Machine.** The link at the foot of **File** opens
+   `/?world=<name>`. Machine's panel lists every build under **Builds**, and
+   its catalog gives each build a band after the four worlds.
+
+### Where a piece comes from
+
+Two generators write the same JSON.
+
+**Offline.** No key, no network. `scaffold.ts` reads the prompt for one of
+eight mechanisms and names the piece for the prompt's noun:
+
+| asks for | words like | what it builds |
+| --- | --- | --- |
+| strike | mallet, hammer, kick, boot | a mallet on a mast comes round onto the ball's shoulder; the ball leaves fast |
+| ring | gong, bell, lantern, chime | a body hung from a gallows with a feeler in the ball's way; it rocks and rings |
+| bounce | mushroom, drum, spring, trampoline | a pit with something springy in it; a flight |
+| lift | lift, geyser, elevator, piston | a platform on a spring between two guides; up a floor |
+| slide | slide, chute, hill, ramp | over an edge and down a slide; down a floor |
+| paint | bucket, paint, dye, honey | a bucket tips over the stopped ball; the ball changes colour for good |
+| spin | windmill, pinwheel, fan, wheel | a wheel with a vane in the ball's way; shouldered aside, it goes round once |
+| launch | catapult, fling, throw, volcano | a spoon on a fulcrum throws the ball across a cell with no rail; a flight |
+
+The same prompt always scaffolds the same piece. A prompt that names no
+mechanism gets one picked by its seed. Worlds work the same way: ten named
+places (volcano, ocean, forest, desert, snow, candy, night, harvest,
+circus, kitchen) each have a hand-made palette, and any other prompt gets a
+palette generated from its seed.
+
+**Claude.** Optional. Paste an Anthropic API key under **Claude API key**
+and both buttons ask `claude-opus-5` to write the JSON instead, with the
+format and the craft rules as its system prompt. The reply is validated
+like any file. If it fails, the errors go back for one repair. If that
+fails too, or the key or the network does, the Builder falls back to the
+offline generator and says so. The site has no server, so the key is
+stored in your browser's localStorage and sent only to api.anthropic.com.
+The SDK loads the first time a key is used.
+
+### The format
+
+One JSON file, `contraptions-build` version 1. `spec.ts` defines it and
+`parseBuild` validates it.
+
+```jsonc
+{
+  "format": "contraptions-build",
+  "version": 1,
+  "name": "caldera",                  // a slug: the world's name, and the file's
+  "pieces": [{
+    "name": "gong",                   // unique in the build, and not a stock piece's
+    "weight": 0.8,                    // how often the planner picks it
+    "cells": [[0, 0], [0, -1]],       // footprint, relative to the entry cell
+    "exit": { "at": [1, 0], "dir": 1 },
+    "lane": [                         // the ball's path, from [-0.5, 0]
+      { "op": "roll", "to": [0, 0], "fire": true },
+      { "op": "roll", "to": [0.5, 0] }
+    ],
+    "shapes": [                       // the drawing, in order
+      { "kind": "rail", "x0": -0.5, "x1": 0.5 },
+      { "kind": "group", "at": [0, -1.5],
+        "motion": [{ "drive": "swing", "from": 0, "rotate": 0.13, "freq": 7, "decay": 1.1 }],
+        "shapes": [{ "kind": "ellipse", "offset": [0, 0.95], "w": 0.62, "h": 0.62 }] }
+    ]
+  }],
+  "world": {                          // optional
+    "themes": [{ "name": "caldera", "label": "Caldera", "bg": "#F3E6D8", "ink": "#2A1B17", "colors": ["#E4572E", "…four more"] }],
+    "backdrops": ["plain", "dots"],
+    "rail": "workshop",               // whose rail runs between the beats
+    "borrow": ["plunger", "trapeze"]  // stock pieces that play beside the build's own
+  }
+}
+```
+
+A piece in a file is data. A stock piece is a TypeScript module with a
+`place` and a `draw`. A built piece describes the same two things and
+`compile.ts` turns the description into a `Piece`, so the planner, the
+stage, the catalog and the checks treat both alike. Nothing in a file is
+evaluated.
+
+- **Lane steps** are `roll`, `ramp`, `arrive`, `wait`, `fall`, `fly` and
+  `move`. They map onto the helpers in `parts.ts`. One step may carry
+  `"fire": true`, and the piece fires when that step ends.
+- **Shapes** are `rail`, `post`, `gallows`, `line`, `poly`, `rect`,
+  `ellipse`, `arc`, `coil`, `burst`, `puff` and `group`. A shape has an
+  origin, a fill and a stroke, and may name the `over` layer to stand in
+  front of the ball.
+- **Motions** turn a clock into an amount, and the amount scales a
+  rotation, a move and a stretch about the shape's origin. The drives are
+  `ease`, `pulse`, `flick`, `swing`, `turn` and `follow`. The clock is
+  `since` (seconds since the fire) or `t` (seconds since the ball entered).
+  `follow` moves a part exactly as the ball moves over a run of lane steps,
+  which is how a platform carries the ball without the two drifting apart.
+- **Fills** are `color`, `accent`, `paint`, `paper`, `ink` and `none`.
+  The planner hands a piece `color`, and `compile.ts` picks `accent`.
+  Neither is ever the colour the ball arrives in. That is the house rule
+  for stock pieces too, and `check:builder` asserts it over built maps.
+
+`parseBuild` refuses a file with a reason per fault: a lane that does not
+end on the edge of its exit cell, a step that leaves the piece's cells, a
+footprint without `[0, 0]`, an exit inside the footprint, an unknown shape
+or drive, a number out of range, ink that does not read on its paper.
+`compileBuild` adds the faults that need the stock worlds to see: a piece
+or a build named for a stock one, and a cast member that does not exist.
+
+### Where builds live
+
+The registry in `registry.ts` has three sources. All of them load at
+startup with no rebuild step of their own.
+
+- **The browser.** Everything the Builder makes or imports is saved to
+  localStorage under `contraptions:builds` as it changes.
+- **The builds folder.** `apps/rube/builds/*.contraptions.json`. Vite globs
+  it (`discover.ts`), so a file dropped there is part of the site the next
+  time it is served or built, in Machine and in the Builder. It ships
+  empty. The front door stays the four stock worlds until someone adds a
+  file.
+- **The Builder's samples.** `samples/caldera.contraptions.json` is on the
+  bench the first time the Builder opens. Machine does not load samples.
+  Editing one, or following **Play it in Machine**, saves a copy to the
+  browser, and then Machine has it.
+
+A browser build replaces a shipped build of the same name. A build that
+fails validation is skipped with a console warning and the app carries on.
+
+Builds stand beside the loop and never in it. The loop is the four stock
+worlds in a fixed order, so a seed is the same show for everyone whatever
+is in their browser. `check:builder` asserts that the same seed lays out
+the same four stock maps before and after builds are installed. The show
+visits a build when it is pinned there (`?world=<name>`, or its chip under
+**Builds**), or for a solo of one of its pieces.
+
+### Limits
+
+- The drawing vocabulary is the twelve shape kinds and six drives above. A
+  piece that needs a loop, a particle system, a variant per placement or a
+  second ball (a relay, as the cradle does it) is still a TypeScript piece.
+  A built piece has one footprint and one lane, and the only thing it can
+  do to the ball is repaint it.
+- The eight offline mechanisms are starting points. They play as they are
+  and their geometry is exact (the mallet's face meets the ball where the
+  lane puts it), but the prompt only picks the mechanism, the name and
+  sometimes the silhouette.
+- A build holds 24 pieces, a piece 12 cells, 40 lane steps, 80 shapes and
+  7 seconds of lane. A file is at most 512 KB.
+- Builds are per browser. There is no account and no sync. The file is how
+  a build moves.
+- The Claude path needs the person's own key, and a key in a browser is
+  only as safe as the browser. Use a key you can revoke.
 
 ## License
 

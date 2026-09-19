@@ -5,7 +5,7 @@ import type { Theme } from '../../../src/core/themes'
 import { drawWorld, exportScale, exportSize, setupCanvas, type Clock, type Viewport } from './engine'
 import { Show } from './show'
 import { extentOf, type Universe } from './universe'
-import { WORLDS, type World } from './worlds'
+import { WORLDS, builtWorlds, worldByName, type World } from './worlds'
 
 /**
  * The catalog: a sheet of every piece, grouped by world, each looping on
@@ -17,7 +17,9 @@ import { WORLDS, type World } from './worlds'
  * wherever the ball goes, and stood on a shelf with its name under it.
  * The ball is out of sight at both ends of a solo world, so the loop has
  * no seam. When the four bands are taller than the screen the sheet
- * scrolls. Click a piece to watch it alone.
+ * scrolls. Click a piece to watch it alone. Builds — worlds made in the
+ * Builder — get a band each after the four, showing the pieces they
+ * brought and not the cast they borrow, which is on the sheet already.
  *
  * The sheet is a place you come back to: it opens where it was left, with
  * the piece you were just watching in view and lit for a moment, so the
@@ -44,6 +46,10 @@ export interface CatalogOptions {
   scroll?: number
   /** The piece just come back from: brought into view, and lit for a moment. */
   focus?: Entry | null
+  /** The worlds on the sheet, when not all of them: the Builder shows one build alone. */
+  worlds?: readonly World[]
+  /** What the foot of the sheet says, longest first; the first that fits is used. The machine's own, when unset. */
+  hints?: readonly string[]
 }
 
 interface Cell {
@@ -127,22 +133,29 @@ function buildCell(seed: string, world: World, name: string, i: number): Cell {
   return { name, world, show, u, ...extentOf(u), offset: (i * 0.618 * u.journey) % u.journey }
 }
 
+/** Every world with a band on the sheet: the loop, then the builds. */
+const sheetWorlds = (): World[] => [...WORLDS, ...builtWorlds()]
+
 /**
  * Every piece on the sheet, in the sheet's order: world by world round the
- * loop. The portal is the same door everywhere, so it is shown once. This
- * is also the order a solo steps through the pieces in.
+ * loop, then build by build. The portal is the same door everywhere, so it
+ * is shown once; a build is shown by the pieces it brought. This is also
+ * the order a solo steps through the pieces in.
  */
-export function catalogOrder(): Entry[] {
-  return WORLDS.flatMap((world, w) =>
-    world.pieces.filter((piece) => w === 0 || piece.name !== 'portal').map((piece) => ({ name: piece.name, world: world.name })),
+export function catalogOrder(worlds: readonly World[] = sheetWorlds()): Entry[] {
+  return worlds.flatMap((world) =>
+    world.pieces
+      .filter((piece) => (world.own ? world.own.includes(piece.name) : world === WORLDS[0] || piece.name !== 'portal'))
+      .map((piece) => ({ name: piece.name, world: world.name })),
   )
 }
 
-function buildGroups(seed: string): Group[] {
-  const cells = catalogOrder().map((entry, i) => buildCell(seed, WORLDS.find((w) => w.name === entry.world)!, entry.name, i))
-  return WORLDS.map((world) => {
+function buildGroups(seed: string, worlds: readonly World[]): Group[] {
+  const cells = catalogOrder(worlds).map((entry, i) => buildCell(seed, worldByName(entry.world)!, entry.name, i))
+  return worlds.flatMap((world) => {
     const own = cells.filter((cell) => cell.world === world)
-    return { world, theme: own[0].u.theme, cells: own }
+    // A build with nothing in it yet has no band.
+    return own.length ? [{ world, theme: own[0].u.theme, cells: own }] : []
   })
 }
 
@@ -211,8 +224,12 @@ export function createCatalog(
   onPick: (name: string, world: string) => void,
   options: CatalogOptions = {},
 ): Catalog {
-  const groups = buildGroups(seed)
+  const groups = buildGroups(seed, options.worlds ?? sheetWorlds())
   const total = groups.reduce((sum, g) => sum + g.cells.length, 0)
+  // What the sheet is a sheet of: the four worlds, and however many builds stand beside them.
+  const built = groups.filter((g) => g.world.own).length
+  const stock = groups.length - built
+  const scope = [stock === WORLDS.length ? 'FOUR WORLDS' : stock ? `${stock} WORLDS` : '', built ? `${built} ${built === 1 ? 'BUILD' : 'BUILDS'}` : ''].filter(Boolean).join(' · ')
   let sheet: Sheet | null = null
   let hover: Cell | null = null
   let scroll = options.scroll ?? 0
@@ -278,6 +295,10 @@ export function createCatalog(
 
     p.draw = () => {
       const t = clock.time()
+      if (!groups.length) {
+        p.background(getComputedStyle(host).getPropertyValue('--paper') || '#EBF1F4')
+        return
+      }
       sheet = layout(p.width, p.height, groups)
       // The first frame: if the piece come back from is off screen where the
       // sheet was left, bring its row to the middle.
@@ -291,7 +312,7 @@ export function createCatalog(
       landed = true
       scroll = clamp(scroll, 0, maxScroll())
       const lit = focus ? clamp(1 - (performance.now() - opened) / 1000 / LIT) : 0
-      drawSheet(p, sheet, scroll, t, hover, lit > 0 ? { cell: focus!, lit } : null, seed, total)
+      drawSheet(p, sheet, scroll, t, hover, lit > 0 ? { cell: focus!, lit } : null, `${total} ${total === 1 ? 'PIECE' : 'PIECES'} · ${scope} · ${seed}`, options.hints ?? HINTS)
     }
   }
 
@@ -311,6 +332,9 @@ export function createCatalog(
   }
 }
 
+/** As much of the hint as the sheet is wide enough for. */
+const HINTS = ['click a piece to watch it alone · scroll for the other worlds · esc for the machine', 'click a piece to watch it alone']
+
 /** The piece the sheet opened on, and how lit it still is, 1 to 0. */
 interface Lit {
   cell: Cell
@@ -324,8 +348,8 @@ function drawSheet(
   t: number,
   hover: Cell | null,
   lit: Lit | null,
-  seed: string,
-  total: number,
+  title: string,
+  hints: readonly string[],
 ): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const W = p.width
@@ -397,7 +421,7 @@ function drawSheet(
   ctx.letterSpacing = '0.14em'
   // The way back sits in the top left corner; on a narrow sheet the title
   // would run under it, and the way back matters more.
-  const heading = `${total} PIECES · FOUR WORLDS · ${seed}`.toUpperCase()
+  const heading = title.toUpperCase()
   if ((W - p.textWidth(heading)) / 2 > CORNER) p.text(heading, W / 2, sheet.header)
   p.noStroke()
   p.fill(last.bg)
@@ -408,7 +432,6 @@ function drawSheet(
   ctx.letterSpacing = '0.04em'
   // As much of the hint as the sheet is wide enough for; none on a narrow
   // screen, where the panel's tab sits at the bottom centre, over it.
-  const hints = ['click a piece to watch it alone · scroll for the other worlds · esc for the machine', 'click a piece to watch it alone']
   const hint = W > NARROW ? hints.find((h) => p.textWidth(h) < W - 2 * CORNER) : null
   if (hint) p.text(hint, W / 2, sheet.footer)
   ctx.letterSpacing = '0px'
@@ -469,7 +492,7 @@ function drawBandCaptions(p: p5, band: Band, shift: number, hover: Cell | null):
   const x = band.slots.length ? Math.min(...band.slots.map((s) => s.x)) + 6 : 20
   const order = WORLDS.indexOf(world)
   // As much of the caption as the band is wide enough for: the name first.
-  const clauses = [world.label, `${cells.length} pieces`, `${ORDINAL[order]} in the loop`, world.note]
+  const clauses = [world.label, `${cells.length} ${cells.length === 1 ? 'piece' : 'pieces'}`, order >= 0 ? `${ORDINAL[order]} in the loop` : 'a build, beside the loop', world.note]
   let caption = ''
   for (let n = clauses.length; n > 0 && !caption; n--) {
     const text = clauses.slice(0, n).join(' · ').toUpperCase()
