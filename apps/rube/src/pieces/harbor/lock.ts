@@ -88,7 +88,7 @@ const LANE: Lane = {
 export const lock = definePiece<{ color: string; sea: string }>({
   name: 'lock',
   weight: 0.8,
-  place: ({ color, fits, theme }) => {
+  place: ({ color, fits, theme, ball }) => {
     const cells: Pt[] = [
       [0, 0],
       [1, 0],
@@ -96,7 +96,7 @@ export const lock = definePiece<{ color: string; sea: string }>({
       [1, -1],
     ]
     if (!fits(cells, [2, -1])) return null
-    return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color), sea: seaWater(theme) } }
+    return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: seaColor(theme, color, ball.color), sea: seaWater(theme) } }
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const raft = raftAt(t)

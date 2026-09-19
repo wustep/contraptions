@@ -27,12 +27,14 @@ export function luminance(hex: string): number {
 /**
  * A colour for a body of water: the one the planner picked, unless it is
  * so near the paper that a wave or a pool would vanish into it, in which
- * case the palette's colour furthest from the paper.
+ * case the palette's colour furthest from the paper that is not `avoid`
+ * — the ball's, for water the ball rides on or in.
  */
-export function seaColor(theme: Theme, color: string): string {
+export function seaColor(theme: Theme, color: string, avoid?: string): string {
   const paper = luminance(theme.bg)
   if (Math.abs(luminance(color) - paper) > 0.25) return color
-  return [...theme.colors].sort((a, b) => Math.abs(luminance(b) - paper) - Math.abs(luminance(a) - paper))[0]
+  const pool = theme.colors.filter((c) => c !== avoid)
+  return (pool.length ? pool : theme.colors).sort((a, b) => Math.abs(luminance(b) - paper) - Math.abs(luminance(a) - paper))[0]
 }
 
 /**
