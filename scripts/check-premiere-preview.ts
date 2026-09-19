@@ -81,6 +81,16 @@ for (const [i, phrase] of score.phrases.entries()) {
   }
 }
 assert.equal(score.phrases.at(-1)!.end, score.duration)
+{
+  const cannon = pieces.find((p) => p.name === 'cannon')!
+  assert.ok(cannon.begin > 6 && cannon.begin < 6.2, `first cannon begins at ${cannon.begin}`)
+  for (let k = 1; k < cannon.timing.length; k++) {
+    const a = cannon.timing[k - 1], b = cannon.timing[k]
+    if (a.native !== b.native) continue
+    const mid = (a.time + b.time) / 2
+    assert.ok(at(mid).hidden, `first cannon holds the ball in sight at ${mid}`)
+  }
+}
 for (let frame = 0; frame <= Math.ceil(score.duration * 120); frame++) {
   const t = Math.min(score.duration, frame / 120), point = at(t), camera = cameraAt(t)
   assert.ok([point.x, point.y, camera.x, camera.y, camera.visible].every(Number.isFinite))

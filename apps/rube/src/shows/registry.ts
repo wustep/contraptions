@@ -130,9 +130,18 @@ export function readShows(found: Record<string, unknown>): Registry {
   return { works, problems }
 }
 
-/** The version a link names, or the nearest there is: the work's first take, then the first work's. */
+/** The Shows tab, with no work in the link: Première Arabesque. */
+export const DEFAULT_WORK = 'premiere-arabesque'
+
+/**
+ * The version a link names. A work that is not there falls to the first
+ * work; a take that is not there falls to that work's first. A link that
+ * names no work opens Première Arabesque, when it is there.
+ */
 export function pickVersion(works: Work[], work: string | null, take: string | null): Version | null {
-  const w = works.find((o) => o.work === work) ?? works[0]
+  const w = work
+    ? (works.find((o) => o.work === work) ?? works[0])
+    : (works.find((o) => o.work === DEFAULT_WORK) ?? works[0])
   if (!w) return null
   return w.versions.find((v) => v.take === take) ?? w.versions[0] ?? null
 }
