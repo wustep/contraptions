@@ -55,10 +55,10 @@ export const balloon = definePiece<BalloonState>({
     // The basket sinks a little under the ball; that is what pulls the pin.
     const sink = t < ARRIVE ? 0 : Math.min(1, over(t, ARRIVE, ARRIVE + 0.1)) * 0.025
 
-    // The mast, its rings, and the stop at the top.
+    // The mast, its rings, and the stop at the top; its foot runs on under the sandbag, so the bag lands on ground and not in the air.
     outline(p, ink, weight)
     p.line(MAST_X * k, 0.5 * k, MAST_X * k, (top - 0.95) * k)
-    p.line((MAST_X - 0.12) * k, 0.5 * k, (MAST_X + 0.12) * k, 0.5 * k)
+    p.line((MAST_X - 0.12) * k, 0.5 * k, (BASKET_W / 2 + 0.2) * k, 0.5 * k)
     p.line((MAST_X - 0.06) * k, (top - 0.95) * k, (MAST_X + 0.06) * k, (top - 0.95) * k)
     solid(p, ink, weight, s.color)
     p.rect((MAST_X + 0.05) * k, (top - 0.3) * k, 0.1 * k, 0.05 * k)

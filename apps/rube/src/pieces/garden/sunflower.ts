@@ -84,21 +84,13 @@ export const sunflower = definePiece<{ color: string; pollen: string }>({
       }
       p.pop()
     }
-    // The dusting: a puff of the new colour off the ball, and pollen on the path after.
+    // The dusting: a puff of the new colour off the ball.
     if (since > -0.02 && since < 0.3) {
       const f = over(since, 0, 0.3)
       p.push()
       p.stroke(s.pollen)
       p.strokeWeight(weight)
       burst(p, HEAD.x * k, 0, (0.16 + 0.14 * f) * k, (0.2 + 0.2 * f) * k, 6, 0.5 + f)
-      p.pop()
-    }
-    if (since > 0.1) {
-      const g = over(since, 0.1, 1.2)
-      p.push()
-      p.noStroke()
-      p.fill(s.pollen)
-      for (let i = 0; i < 5; i++) p.circle((HEAD.x - 0.1 + i * 0.05 * (0.5 + g)) * k, (FLOOR + 0.03) * k, 0.02 * k)
       p.pop()
     }
   },
