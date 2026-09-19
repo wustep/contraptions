@@ -1,6 +1,6 @@
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, mixHex, over, post, rail, ramp, rankBy, roll, type Lane, type Pt, type Seg } from '../../parts'
-import { digits, flash, glow } from './neon'
+import { digits, flash, glow, score } from './neon'
 import { BEZEL, doorway, screen } from './screen'
 
 /**
@@ -111,6 +111,8 @@ export const pong = definePiece<PongState>({
     }
     return null
   },
+  // Over the screen's top: off the ball it lay across the screen's own score and its bezel.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -s.floors - TOP - BEZEL + 0.1, '+100', since, 1),
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
     const rally = rallyFor(floors, turn)

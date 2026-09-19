@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp, marquee } from './neon'
+import { glow, lamp, marquee, score } from './neon'
 
 /**
  * A claw machine. The lane runs in through the side of a glass cabinet
@@ -72,6 +72,8 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
     }
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color, prizes } }
   },
+  // Over the marquee, above the chute: inside the glass it sat on the claw it was paying for.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, DROP_X, GANTRY_Y - 0.16 + 0.1, '+200', since, 1),
   draw: (p, s, { k, t, ink, bg, weight }) => {
     // The trolley's place on the gantry, and the claw's height and grip.
     const trolleyX =

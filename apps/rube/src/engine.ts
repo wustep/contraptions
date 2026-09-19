@@ -280,6 +280,10 @@ export function drawWorld(
       weight,
       color: placed.ballIn.color,
       theme,
+      spin: (x) => {
+        const turned = (placed.col + placed.mirror * x - u.pieces[0].col) / R
+        return placed.mirror > 0 ? turned : Math.PI - turned
+      },
     }
   }
   const pass = (which: 'draw' | 'over' | 'scores') => {

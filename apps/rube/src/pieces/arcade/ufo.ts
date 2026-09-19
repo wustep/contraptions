@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, rankBy, wait, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp, marquee, tube } from './neon'
+import { flash, glow, lamp, marquee, score, tube } from './neon'
 
 /**
  * A flying saucer, hovering one or two floors up, bobbing, its rim lamps
@@ -86,6 +86,8 @@ export const ufo = definePiece<UfoState>({
     }
     return null
   },
+  // Over the dome: in the beam it covered the ball going up.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -s.floors - HOVER - DISC_H / 2 - 0.125 + 0.1, '+200', since, 1),
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
     const rise = riseTime(floors)

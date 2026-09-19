@@ -77,7 +77,7 @@ export const appletree = definePiece<{ color: string; fruit: string }>({
     const changes: BallChange[] = [{ at: T_HIT, relay: true, color: fruit }]
     return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane, state: { color: crown, fruit }, changes }
   },
-  draw: (p, s, { k, since, ink, bg, weight, color }) => {
+  draw: (p, s, { k, since, ink, bg, weight, color, spin }) => {
     // The knock: the crown shudders and the trunk with it, less.
     const shake = since < 0 ? 0 : 0.02 * Math.sin(since * 46) * Math.exp(-since * 5)
     const landed = since - LOOSE - DROP
@@ -131,11 +131,12 @@ export const appletree = definePiece<{ color: string; fruit: string }>({
     }
 
     // The apple on its twig until the knock; the show draws it from then on.
-    if (since < 0) ball(p, k, ink, weight, s.fruit, HANG[0] * k, HANG[1] * k, 0.9)
+    // Both balls change hands at the knock, and neither turns its face to do it.
+    if (since < 0) ball(p, k, ink, weight, s.fruit, HANG[0] * k, HANG[1] * k, spin(HANG[0]))
     // The ball that arrived, thrown back a hair by the trunk, at rest against it for good.
     if (since >= 0) {
       const x = SEAT + (REST - SEAT) * easeOutQuad(over(since, 0, 0.16))
-      ball(p, k, ink, weight, color, x * k, 0, x / R)
+      ball(p, k, ink, weight, color, x * k, 0, spin(x))
     }
 
     // The knock on the bark, and the apple's bounce on the path.

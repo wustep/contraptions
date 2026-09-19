@@ -601,7 +601,7 @@ against what holds it.
 | pod | into a seed pod's mouth; it swells and bursts; a seed in the plant's own colour shoots out between the flaps and takes the thread |
 | burrow | over the lip of a hole and down it; a ridge of earth runs down the soil; up out of the top of a molehill a floor down, over its foot onto the rail; the mole looks out |
 | hose | into a hose's mouth, and the hose swallows it like a snake: a bulge the ball's size in its own skin goes round the loop two and a half times, gathering pace; out of the nozzle |
-| rake | over the handle and onto the tines; the handle comes up behind, over the top, and cracks the ball on its back; it shoots off and the handle lies ahead |
+| gate | into a picket gate hung shut by a flowerpot on a cord; the knock hops the latch and the gate gives; the ball shoulders through, hauling the pot up; the pot hauls the gate shut and its edge catches the ball on the back; it shoots off, and the latch drops in |
 | snail | up the tail onto the shell; carried most of a cell, slowly, leaving a trail; a shrug tips the shell and the ball rolls off its front, over the head |
 | frog | onto a flat stone under a frog on a lily pad; it leans out, its throat swells, the tongue comes down the whole drop, sticks and snaps back with the ball; cheeks full; ptui, out along the rail one or two floors up |
 | toadstools | off the path's end onto three toadstools, each taller than the last; every cap squashes, springs and puffs spores; pum, pum, pum, onto the rail a floor up |
@@ -631,7 +631,9 @@ in squares on a sprite's grid, by the tick in a falling-blocks well.
 
 **The arcade keeps score, and pays out once.** Every beat declares its
 `points` and pops exactly that number, at the hit if it has a `scores` pass
-of its own and off the ball at the moment it fires if it has not. A touch in
+of its own and off the ball at the moment it fires if it has not. A score
+pops over its machine or beside it, never across it: the machine is what
+there is to see, and a number lying on it hides the thing it is for. A touch in
 passing is tens (a spinner's turn +10, a zigzag pad +10, a bumper +50, a
 skee ring +50, a token +50; the moles go +10, +20, +30), a game played is
 +100 (a line cleared, a goal, a rally won, a skill shot), a ride or a prize

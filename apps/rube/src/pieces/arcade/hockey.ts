@@ -1,7 +1,7 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
 import { FAST, FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
-import { display, flash, glow } from './neon'
+import { display, flash, glow, score } from './neon'
 
 /**
  * An air-hockey table. The rail runs onto the table's surface; the ball
@@ -58,6 +58,8 @@ export const hockey = definePiece<{ color: string }>({
     }
     return { cells, exit: { at: [3, 0], dir: 1 }, lane, state: { color } }
   },
+  // The goal is what scores: over the scoreboard, as it goes to one. Off the slap it lay across the mallet.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, GOAL + 0.1, BOARD_Y - 0.075 - 0.025 + 0.1, '+100', since - T_GOAL, 1),
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The mallet: drawn back behind the ball while it winds, swung down onto
     // its back at the fire, a short follow-through as the ball gets away,

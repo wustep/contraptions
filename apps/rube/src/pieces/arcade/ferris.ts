@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, post, rail, ramp, trace, wait, type Lane, type Pt } from '../../parts'
-import { glow, lamp } from './neon'
+import { glow, lamp, score } from './neon'
 
 /**
  * A little Ferris wheel. Six gondolas hang upright from the rim, each a
@@ -122,6 +122,8 @@ export const ferris = definePiece<{ color: string }>({
     if (!fits(cells, [2, -1])) return null
     return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color } }
   },
+  // The ride pays at the top, as the ball gets off, over the wheel: at the boarding it popped across the spokes.
+  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, HUB[0], HUB[1] - RIM - 0.11 + 0.1, '+200', t - T_TOP, 1),
   draw: (p, s, { k, t, ink, bg, weight }) => {
     const { a } = wheelAt(t)
     const running = t > ARRIVE ? 1 - over(t, T_TOP + 0.6, T_TOP + 1.4) : 0

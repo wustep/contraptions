@@ -1,5 +1,5 @@
 import { R, ROLL, definePiece, laneAt, laneReach, mixHex, over, post, rail, ramp, roll, type BallChange, type Lane } from '../../parts'
-import { glow } from './neon'
+import { glow, score } from './neon'
 import { BEZEL, pixel as square, screen } from './screen'
 
 /**
@@ -74,7 +74,9 @@ export const pixel = definePiece<{ color: string; paint: string; palette: string
     post(p, k, ink, weight, 0, Y1 + BEZEL, 0.5)
     glow(p, k, since < 0 ? s.color : s.paint, 0, (Y0 + Y1) / 2, 0.26, on)
   },
-  over: (p, s, { k, t, since, ink, bg, weight, color }) => {
+  // Over the screen's top, clear of the palette and the picture: the screen is what there is to see.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.paint, bg, 0, Y0 - BEZEL + 0.1, '+100', since, 1),
+  over: (p, s, { k, t, since, ink, bg, weight, color, spin }) => {
     const on = t > T_ON && t < T_OFF
     const dim = mixHex(bg, ink, 0.42)
     screen(p, k, ink, weight, s.color, bg, X0, Y0, X1, Y1)
@@ -101,9 +103,9 @@ export const pixel = definePiece<{ color: string; paint: string; palette: string
       const sweep = (since + SWEEP / 2) / SWEEP
       const line = Math.floor(sweep * 8) - 1
       // The spot that shows it turning, a square of its own.
-      const spin = bx / R
-      const dotC = Math.min(4, Math.max(1, Math.round(2.5 + 1.6 * Math.cos(spin))))
-      const dotR = Math.min(4, Math.max(1, Math.round(2.5 + 1.6 * Math.sin(spin))))
+      const turned = spin(bx)
+      const dotC = Math.min(4, Math.max(1, Math.round(2.5 + 1.6 * Math.cos(turned))))
+      const dotR = Math.min(4, Math.max(1, Math.round(2.5 + 1.6 * Math.sin(turned))))
       for (let r = 0; r < 6; r++) {
         for (let c = 0; c < 6; c++) {
           if (!(SPRITE[r] & (1 << (5 - c)))) continue

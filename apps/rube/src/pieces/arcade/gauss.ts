@@ -69,7 +69,7 @@ export const gauss = definePiece<{ color: string; next: string }>({
     const changes: BallChange[] = [{ at: FIRE, relay: true, color: next }]
     return { cells, exit: { at: [2, 0], dir: 1 }, lane, state: { color, next }, changes }
   },
-  draw: (p, s, { k, t, since, ink, bg, weight, color }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, color, spin }) => {
     // The field wakes as the ball comes into it, flares on the clack and dies down.
     const pulled = t < T_PULL ? 0 : since < 0 ? over(t, T_PULL, FIRE) : 1
     const flare = since < 0 ? 0 : 1 - over(since, 0.05, 0.6)
@@ -111,8 +111,8 @@ export const gauss = definePiece<{ color: string; next: string }>({
     // shivers on the clack; the far one until it fires; the one that came, for good.
     const shiver = since > 0 ? 0.012 * Math.sin(since * 80) * Math.exp(-since * 9) : 0
     ball(p, k, ink, weight, s.next, (B1 + shiver) * k, 0, 0.6)
-    if (since < 0) ball(p, k, ink, weight, s.next, B2 * k, 0, 2.2)
-    else ball(p, k, ink, weight, color, SEAT * k, 0, (SEAT + 0.5) / R)
+    if (since < 0) ball(p, k, ink, weight, s.next, B2 * k, 0, spin(B2))
+    else ball(p, k, ink, weight, color, SEAT * k, 0, spin(SEAT))
 
     // The speed trap under the rail: a lamp at each end that comes on as
     // the ball goes over it, wired to a display that reads what it clocked.

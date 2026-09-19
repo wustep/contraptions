@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, laneAt, laneReach, over, post, rail, ramp, roll, type BallChange, type Lane, type Pt } from '../../parts'
-import { flash, glow, lamp } from './neon'
+import { flash, glow, lamp, score } from './neon'
 
 /**
  * A phase gate, and a wall to prove it on. A wall of bricks stands on the
@@ -68,6 +68,8 @@ export const phaser = definePiece<{ color: string; courses: string[] }>({
     ]
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color, courses }, changes }
   },
+  // Over the first gate's head, where the ball phases: off the ball it sat on the gate.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, GATE_IN, HEAD_Y - 0.05 + 0.1, '+100', since, 1),
   draw: (p, s, { k, t, ink, bg, weight }) => {
     rail(p, k, ink, weight, -0.5, 1.5)
     // The wall's footing: a slab under the lane on two posts.
