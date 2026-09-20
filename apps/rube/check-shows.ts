@@ -88,6 +88,8 @@ async function main(): Promise<void> {
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
   check('the Shows tab opens Première Arabesque', pickVersion(shipped.works, null, null)?.work === 'premiere-arabesque' && pickVersion(shipped.works, null, null)?.take === 'take-a')
+  check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
+  check('Clair has its own full take', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.some((v) => v.take === 'take-a') === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -95,6 +97,14 @@ async function main(): Promise<void> {
       const wrong = performanceProblems(perf)
       check(`${work.work}/${version.take}: loads, and can be played`, wrong.length === 0, wrong.join(' · '))
       if (wrong.length) continue
+      if (work.work === 'premiere-arabesque' || work.work === 'clair-de-lune') {
+        const premiere = work.work === 'premiere-arabesque'
+        check(`${work.work}/${version.take}: full approved recording and panel credit`,
+          near(perf.duration, premiere ? 290.61133333333333 : 301.648526) &&
+          near(perf.soundtrack?.offset ?? 0, premiere ? 2.38 : 2.44) &&
+          !!perf.soundtrack?.credit?.includes(premiere ? 'Patrizia Prati' : 'Laurens Goedhart') &&
+          !!perf.soundtrack?.href?.startsWith('https://commons.wikimedia.org/'))
+      }
       // The player asks for show.at(t) over 0..duration and nothing else.
       let ok = true
       for (let t = 0; t <= perf.duration && ok; t += 0.25) {

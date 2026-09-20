@@ -39,10 +39,9 @@ export interface SoundtrackSpec {
 export interface Performance {
   /**
    * The machine, as a function of the music's clock: the player asks for
-   * `show.at(t)` with `t` in seconds of music and nothing else. Whatever
-   * retiming fits the machine to the music — a pause before a strike, a
-   * beat stretched or hurried, a map a piece (`timemap.ts`) — lives in
-   * here, behind `at`, and the player never learns of it.
+   * `show.at(t)` with `t` in seconds of music and nothing else. New music
+   * takes arrange stock durations against the recording (`stock/show.ts`).
+   * Older takes and the metronome studies keep their existing clock maps.
    */
   show: Show
   /** Seconds of show. The player holds the last frame there. */
