@@ -1,20 +1,21 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, burst, catchBend, chain, definePiece, over, rail, ramp, rankBy, trace, type Lane, type Pt, type Seg } from '../../parts'
+import { easeInOutSine, easeInQuad } from '../../../../../src/core/ease'
+import { FAST, FLOOR, R, ROLL, arcPts, arrive, arriveAt, catchBend, chain, definePiece, over, rail, ramp, rankBy, trace, type Lane, type Pt, type Seg } from '../../parts'
 
 /**
  * A pair of scales. The rail ends at the left pan, which hangs level with
- * it on three cords from a beam on a knife-edge; a brass weight in the
+ * it on two cords from a beam on a knife-edge; a brass weight in the
  * right pan holds the beam down on its stop. The ball rolls into the pan
  * and outweighs the brass: the beam creeps, then swings, the loaded pan
- * sinking and the weight flying up, the pointer going over with them.
- * Part way down the pan's foot lands on a rest off the pillar; the beam
- * goes on without it, the cords slacken, and the pan, held now by its
- * outer cord alone, tips outward and rolls the ball off its rim into the
- * cell below, where a quarter-pipe turns the fall into a roll — on, or
- * back the way it came. The beam hangs a moment, then the brass wins
- * again and eases it back level onto its stop.
+ * sinking and the weight going up. A little way down the pan's foot
+ * lands on a rest off the pillar; the beam goes on without it, the inner
+ * cord slackens, and the pan, held now by its outer cord alone, tips
+ * outward and rolls the ball off its rim into the cell below, where a
+ * quarter-pipe turns the fall into a roll — on, or back the way it came.
+ * The beam hangs a moment, then the brass wins again and eases it back
+ * level onto its stop. The swing is a third of a right angle and no
+ * more, so the far pan rides up clear of the pillar and the beam.
  *
  * The pan's tilt is the geometry of its cords: the beam's end sinks and
  * comes inward, the outer cord is the one that stays taut, and the pan
@@ -40,16 +41,14 @@ const LIP = 0.035
 const FLARE = 0.02
 const FOOT = 0.03
 const FOOT_W = 0.06
-/** A cord from the beam's end to a corner of the rim, and to the rim's middle. */
+/** A cord from the beam's end to a corner of the rim. */
 const LC = Math.hypot(PW, CORD - LIP)
-const LC_MID = CORD - LIP
 const PILLAR = 0.04
 const BEAM_T = 0.05
-const POINTER = 0.2
 /** How far over the beam swings; how far it has crept when it goes; the tilt at which the pan's foot meets the rest. */
-const A_MAX = 1.01
+const A_MAX = 0.62
 const A_CREEP = 0.09
-const A_REST = 0.38
+const A_REST = 0.24
 const SEAT_X = PX - ARM
 const ARRIVE = arriveAt(SEAT_X)
 const CREEP = 0.35
@@ -61,8 +60,8 @@ const BACK = SWING + HOLD + RESET
 /** Where, along the swing, the beam stops gaining and starts braking. */
 const F1 = 0.65
 /** Cartoon gravity: along the tipped pan's floor, and for the fall. Cells per second squared. */
-const G_PAN = 12
-const G_FALL = 14
+const G_PAN = 14
+const G_FALL = 14.15
 const ARC = 0.16
 /** The rest's top, where the pan's foot lands, and the corner of the foot that turns on it. */
 const RY = FLOOR + ARM * Math.sin(A_REST) + FOOT
@@ -180,7 +179,7 @@ function seatAt(t: number): Pt {
 
 /** Where the ball leaves the rim, the line it falls on, and how long it falls to the bend. */
 const OFF = seatAt(LEAVE)
-const XF = OFF[0] - 0.02
+const XF = OFF[0] - 0.009
 const FALL = Math.sqrt((2 * (1 - ARC - OFF[1])) / G_FALL)
 /** When the ball reaches the bend, since the fire. */
 const LAND = LEAVE_SINCE + FALL
@@ -208,8 +207,8 @@ function dish(p: p5, k: number, ink: string, weight: number, color: string): voi
 
 /**
  * A cord from the beam's end `e` to a point `q` on a pan's rim, `natural`
- * cells long: straight while it carries, and bowed out to `side` by what
- * it has to spare once the pan is resting and it does not.
+ * cells long: straight while it carries, and bowed a little to `side`
+ * once the pan is resting and it does not.
  */
 function cord(p: p5, k: number, e: Pt, q: Pt, natural: number, side: number): void {
   const dx = q[0] - e[0]
@@ -220,8 +219,8 @@ function cord(p: p5, k: number, e: Pt, q: Pt, natural: number, side: number): vo
     p.line(e[0] * k, e[1] * k, q[0] * k, q[1] * k)
     return
   }
-  // A quadratic bow whose extra length is the slack.
-  const h = Math.sqrt(1.5 * slack * len)
+  // A shallow bow: a loop as deep as the cord has to spare reads as a stray curve.
+  const h = Math.min(0.07, Math.sqrt(1.5 * slack * len))
   const nx = (-dy / len) * side * h
   const ny = (dx / len) * side * h
   p.beginShape()
@@ -292,13 +291,12 @@ export const scales = definePiece<ScalesState>({
     catchBend(p, k, ink, weight, s.color, s.turn, ARC, squash, s.turn > 0 ? 0.5 - XF : XF + 0.5)
     p.pop()
 
-    // The cords: three to each pan, to the rim's two corners and its near side. The right pan's
-    // always carry; the left pan's slacken once it rests, all but the outer one. The left pan's
-    // near cord is in the over pass, in front of the ball.
+    // The cords: two to each pan, to the rim's corners. The right pan's always carry; of the
+    // left pan's, the inner one slackens once the pan rests.
     outline(p, ink, weight * 0.8)
     cord(p, k, eL, rim(L.c, L.phi, -PW), LC, 1)
     cord(p, k, eL, rim(L.c, L.phi, PW), LC, 1)
-    for (const u of [-PW, 0, PW]) {
+    for (const u of [-PW, PW]) {
       const q = rim(cR, 0, u)
       p.line(eR[0] * k, eR[1] * k, q[0] * k, q[1] * k)
     }
@@ -319,43 +317,17 @@ export const scales = definePiece<ScalesState>({
     p.circle(0, -0.088 * k, 0.028 * k)
     p.pop()
 
-    // The beam on its knife-edge, and the pointer standing up from its middle.
+    // The beam on its knife-edge.
     p.push()
     p.translate(PX * k, BY * k)
     p.rotate(-a)
     solid(p, ink, weight, s.color)
     p.rect(0, (-BEAM_T / 2) * k, (2 * ARM + 0.06) * k, BEAM_T * k)
-    p.fill(ink)
-    p.noStroke()
-    p.beginShape()
-    p.vertex(-0.02 * k, -BEAM_T * k)
-    p.vertex(0.02 * k, -BEAM_T * k)
-    p.vertex(0, -(BEAM_T + POINTER) * k)
-    p.endShape(p.CLOSE)
     p.pop()
-
-    // The pan's foot landing on the rest; later, the arm landing back on its stop.
-    if (since > T_REST && since < T_REST + 0.14) {
-      const f = easeOutCubic(over(since, T_REST, T_REST + 0.14))
-      outline(p, ink, weight * 0.8)
-      burst(p, (PIVOT[0] - 0.02) * k, (PIVOT[1] - 0.01) * k, (0.04 + 0.05 * f) * k, (0.07 + 0.06 * f) * k, 4, 3.6)
-    }
-    if (since > BACK && since < BACK + 0.2) {
-      const f = easeOutCubic(over(since, BACK, BACK + 0.2))
-      p.push()
-      p.stroke(s.color)
-      p.strokeWeight(weight)
-      burst(p, (STOP_X - 0.04) * k, BY * k, (0.05 + 0.08 * f) * k, (0.08 + 0.1 * f) * k, 5, 3.4)
-      p.pop()
-    }
   },
   over: (p, s, { k, since, ink, weight }) => {
-    // The left pan stands round the ball: its near cord comes down in front of it to the
-    // rim's near side, and the dish's near wall is in front of its foot.
-    const a = beamAt(since)
-    const L = panL(a)
-    outline(p, ink, weight * 0.8)
-    cord(p, k, endL(a), rim(L.c, L.phi, 0), LC_MID, 1)
+    // The left pan stands round the ball: the dish's near wall is in front of its foot.
+    const L = panL(beamAt(since))
     p.push()
     p.translate(L.c[0] * k, L.c[1] * k)
     p.rotate(-L.phi)

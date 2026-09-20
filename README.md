@@ -571,7 +571,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
 | cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on — one motion from the blow to the landing, a pendulum and then a fall under the same gravity |
 | inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
-| scales | into the left pan of a balance, level with the rail; the ball outweighs the brass in the other pan and the beam swings, pointer and all; the pan's foot lands on a rest off the pillar and tips, rolling the ball off its rim into a quarter-pipe a floor down, on or back; later the brass wins and the beam eases back onto its stop |
+| scales | into the left pan of a balance, level with the rail; the ball outweighs the brass in the other pan and the beam swings; the pan's foot lands on a rest off the pillar and tips, rolling the ball off its rim into a quarter-pipe a floor down, on or back; later the brass wins and the beam eases back onto its stop |
 | portal | the door at either end of a map; the far side is always a new map |
 
 ### The harbor's pieces
