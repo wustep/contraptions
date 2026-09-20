@@ -43,17 +43,20 @@ function touch(b: Boulder, deg: number): Pt {
 /** The deck's end above, and the stage below. */
 const WEST = -0.2
 const STAGE_X0 = 0.26
-/** The boulders the ball meets, the last of them awash. And the rest of the heap, behind them. */
+/** The boulders the ball meets, the last of them awash. And the rest of the heap: courses of a big stone over two small ones, so it reads as rubble and not a string of beads. */
 const B1: Boulder = { x: -0.285, y: 0.39, r: 0.18 }
 const B2: Boulder = { x: -0.265, y: 1.3, r: 0.2 }
 const B3: Boulder = { x: 0.01, y: 2 + WATER - 0.07 + 0.2 * TALL, r: 0.2 }
 const HEAP: Boulder[] = [
-  { x: -0.33, y: 0.71, r: 0.15 },
-  { x: -0.3, y: 0.99, r: 0.17 },
-  { x: -0.32, y: 1.62, r: 0.16 },
-  { x: -0.29, y: 1.9, r: 0.17 },
-  { x: -0.32, y: 2.18, r: 0.16 },
-  { x: -0.33, y: 2.45, r: 0.15 },
+  { x: -0.389, y: 0.7, r: 0.095 },
+  { x: -0.215, y: 0.715, r: 0.11 },
+  { x: -0.305, y: 0.97, r: 0.165 },
+  { x: -0.394, y: 1.62, r: 0.09 },
+  { x: -0.225, y: 1.64, r: 0.115 },
+  { x: -0.3, y: 1.9, r: 0.17 },
+  { x: -0.394, y: 2.18, r: 0.09 },
+  { x: -0.22, y: 2.2, r: 0.12 },
+  { x: -0.325, y: 2.45, r: 0.15 },
 ]
 /** Where the ball comes down on each, and where it lands on the stage. */
 const HIT1 = touch(B1, 62)

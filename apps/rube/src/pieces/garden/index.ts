@@ -80,7 +80,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   windchime    bats the sail of a wind chime up ahead of it and goes under; the sail comes down on its crown and is shoved into the first of three wooden tubes; the clack runs down the row and the chime rings; a touch slower out
  *   hammock      off the path's end into a hammock slung across a gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still
  *   birdbath     over the near rim of a dish of water on a pedestal and down its inside; a splash; across half sunk, slowing, the water heaping up ahead of it; carried up the far side on the swell and out over the pouring lip, a slop of water after it
- *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the planks give a little
+ *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the board gives a little
  *   pumpkin      off the path's end onto a pumpkin's dome in the cell below; it squashes a hair, the stem bobs; down the far flank onto the path a floor down, on or back
  *   fountain     into the cup on a fountain's standpipe, corking it; the pipe shudders and the jet comes on under the ball; up a floor on a wobbling column of water; a bob at the top, the jet leans and it slides off the crown onto a shelf; the jet falls back to a bubble
  *   pond         off a stone wall across a raised lily pool on three pads; each ducks and tips under the ball and bobs up behind it, a ripple running out along the water's line; a hop over the open water between them, and up onto the far wall
