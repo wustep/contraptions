@@ -11,7 +11,7 @@
       {"name": "trapeze", "exit": [3, 0]},
       {"name": "drop", "exit": [-1, 3]},
       {"name": "screw", "exit": [2, -1]},
-      {"name": "scales", "exit": [1, 1]},
+      {"name": "toggle", "exit": [1, 1]},
       {"name": "tipper", "exit": [1, 1]},
       {"name": "painter", "exit": [1, 0]},
       {"name": "crane", "exit": [3, 0]},
