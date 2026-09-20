@@ -3,12 +3,13 @@
  * height of the window, with the brand and the mode switch at its head (and,
  * in Explorations, the credit at its foot); the stage takes whatever the panel leaves. Machine
  * (the show, in the code), Explorations (the sandbox), Shows (Machine set
- * to music) and the Builder fill the middle with their own sections, built
+ * to music), the Builder and the Playground (where pieces and worlds wait
+ * to be let into Machine) fill the middle with their own sections, built
  * from the same helpers, so they read as siblings — one frame, different
  * dials — and moving between them is a switch at the top of the panel that
- * carries the seed across. Machine, Explorations and Shows start with the
- * panel hidden, since there the piece leads; the Builder is worked from its
- * panel and starts with it out. Once the panel has been opened or closed,
+ * carries the seed across. Machine, Explorations, Shows and the Playground
+ * start with the panel hidden, since there the piece leads; the Builder is
+ * worked from its panel and starts with it out. Once the panel has been opened or closed,
  * that choice is kept for the session, so a switch of mode does not slam
  * it. `P` or the peek tab on the edge brings it out, and `P` puts it away again.
  * At a desk the tab itself keeps off the piece: it greets a page just
@@ -17,16 +18,16 @@
  * anything else standing on the stage — for the piece alone, and the
  * backtick again puts back exactly what was there.
  *
- * Shows and the Builder are not on the switch until they are unlocked:
- * five backticks in quick succession, in any mode (`unlock.ts`). The same
- * five lock them again. While they are out the switch is four icon-only
- * buttons, each named on hover; locked, it is Machine and Explorations
- * with their words. Only the first of a quick run clears the stage, so the
+ * Shows, the Builder and the Playground are not on the switch until they
+ * are unlocked: five backticks in quick succession, in any mode
+ * (`unlock.ts`). The same five lock them again. While they are out the
+ * switch is five icon-only buttons, each named on hover; locked, it is
+ * Machine and Explorations with their words. Only the first of a quick run clears the stage, so the
  * chrome does not flicker on the way.
  */
 import { UNLOCK_EVENT, UNLOCK_GAP_MS, pressCounter, setUnlocked, unlocked } from './unlock'
 
-export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder'
+export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground'
 
 interface ModeLink {
   mode: ShellMode
@@ -35,13 +36,14 @@ interface ModeLink {
 }
 
 /** Tabs that stay off the switch, and off their own pages, until unlocked. */
-const GATED: ReadonlySet<ShellMode> = new Set(['shows', 'builder'])
+export const GATED: ReadonlySet<ShellMode> = new Set(['shows', 'builder', 'playground'])
 
-const MODE_LINKS: ModeLink[] = [
+export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
   { mode: 'shows', label: 'Shows', path: '/shows/' },
   { mode: 'builder', label: 'Builder', path: '/builder/' },
+  { mode: 'playground', label: 'Playground', path: '/playground/' },
 ]
 
 export interface Shell {
@@ -89,11 +91,12 @@ export function icon(paths: string[]): SVGSVGElement {
 export const ICON = {
   play: ['M8 5l11 7-11 7z'],
   pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
-  // Filled silhouettes at 14px: a gear, a varied grid, paired notes and a hammer.
+  // Filled silhouettes at 14px: a gear, a varied grid, paired notes, a hammer, and a ball on a seesaw.
   machine: ['M9.5 2h5l.5 3 2 .9 2.6-1.5 2.5 4.3-2.4 1.8v2.3l2.4 1.8-2.5 4.3-2.6-1.5-2 .9-.5 3h-5l-.5-3-2-.9-2.6 1.5-2.5-4.3 2.4-1.8v-2.3L1.9 8.7l2.5-4.3L7 5.9l2-.9z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'],
   explorations: ['M3 3h7v7H3z', 'M17.5 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z', 'M6.5 13 11 21H2z', 'M17.5 12.5 22 17l-4.5 4.5L13 17z'],
   shows: ['M9 4.5 21 2v14.5a3.5 2.8 0 1 1-2.5-2.7V7L11.5 8.5v10a3.5 2.8 0 1 1-2.5-2.7z'],
   builder: ['M3 3h11l6 5-3 3-4-3H3z', 'M7 10h4v11H7z'],
+  playground: ['M6.5 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z', 'M1.6 12.4 2.4 10l20 6.6-.8 2.4z', 'M12 15.5 17 22H7z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */
@@ -247,7 +250,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so a
   // switch is a navigation and the back button undoes it. Locked it is two
-  // words; unlocked it is four marks, each named on hover and for a screen reader.
+  // words; unlocked it is five marks, each named on hover and for a screen reader.
   // Native title waits a beat and is easy to miss on a 32px icon; the name is
   // a small label we place ourselves (`mode-tip`).
   const tip = el('div', { class: 'mode-tip', hidden: '' })
@@ -398,8 +401,8 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Five backticks on each other's heels lock or unlock Shows and the
-  // Builder together. Only the first press of a quick run clears the stage
+  // Five backticks on each other's heels lock or unlock Shows, the Builder
+  // and the Playground together. Only the first press of a quick run clears the stage
   // (or puts it back): the rest of the run are counted and not shown, so
   // five for the lock do not strobe the chrome. The fifth settles it: the
   // panel out for tabs just unlocked, so that the new marks are seen, and
@@ -446,7 +449,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     } else if (presses === 1) toggleBare()
   })
 
-  // The piece leads: Machine, Explorations and Shows open with the panel away
+  // The piece leads: Machine, Explorations, Shows and the Playground open with the panel away
   // and the peek tab on the edge, unless this session already chose. Set here
   // rather than through toggle so nothing is focused on load. The pages set
   // the class in their markup too, so the first paint is already panel-less;

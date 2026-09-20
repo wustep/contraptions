@@ -45,6 +45,13 @@ export interface World {
    * worlds. The catalog shows a build by these.
    */
   own?: string[]
+  /**
+   * Set on a world the Playground stages: one waiting to be let into the
+   * loop, or a stock world's name over the pieces waiting to join it. Like a
+   * build it stands beside the loop and is shown by its `own`; this is what
+   * the sheet says of where it stands.
+   */
+  staged?: string
 }
 
 /** The loop, in order. */
