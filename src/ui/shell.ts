@@ -227,6 +227,14 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   root.addEventListener('click', (e) => {
     if (e.detail > 0 && e.target instanceof Element) e.target.closest('button')?.blur()
   })
+  // A finger focusing a control scrolls the visual viewport to it — on a
+  // phone that pans the whole frame, so the panel appears to jump. Mouse
+  // already blurs on click; keep that path. Keyboard still tabs in.
+  root.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return
+    if (!(e.target instanceof Element)) return
+    if (e.target.closest('button, a.mode-tab, .lb-trigger')) e.preventDefault()
+  })
 
   // Header — Hide lives here so P is not a one-way trap. Peek stays a target
   // after `#panel { display: none }`.
@@ -316,14 +324,6 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   // where there is a pointer to near it with — a touch screen, or the stacked
   // layout, keeps the tab out. The class says which; the stylesheet does the rest.
   const desk = window.matchMedia(PEEK_TUCKS)
-  const syncDesk = () => {
-    document.body.classList.toggle('peek-tucks', desk.matches)
-    // A window widened past the stack with the tab holding the keyboard: a
-    // tab that tucks does not keep it (see toggle), whichever way it got there.
-    if (desk.matches && document.activeElement === peek) peek.blur()
-  }
-  desk.addEventListener('change', syncDesk)
-  syncDesk()
   // Tracked with the panel out as well, so that a panel closed from under the
   // pointer — Hide sits in the tab's corner — leaves the tab there to be met.
   let near = false
@@ -332,16 +332,34 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     near = on
     document.body.classList.toggle('peek-near', on)
   }
-  const reach = (e: PointerEvent) => setNear(e.clientX >= window.innerWidth - PEEK_REACH)
+  const syncDesk = () => {
+    document.body.classList.toggle('peek-tucks', desk.matches)
+    // Reach is a desk hover; a stacked or coarse pointer must not keep a
+    // leftover near-state, or a tap in the panel can look like a slide.
+    if (!desk.matches) setNear(false)
+    // A window widened past the stack with the tab holding the keyboard: a
+    // tab that tucks does not keep it (see toggle), whichever way it got there.
+    if (desk.matches && document.activeElement === peek) peek.blur()
+  }
+  desk.addEventListener('change', syncDesk)
+  syncDesk()
+  const reach = (e: PointerEvent) => {
+    if (!desk.matches) return
+    setNear(e.clientX >= window.innerWidth - PEEK_REACH)
+  }
   window.addEventListener('pointermove', reach)
-  // A finger arrives without having moved.
+  // A finger arrives without having moved — only consulted at a desk.
   window.addEventListener('pointerdown', reach)
   // Only a mouse leaves the window: a finger lifting is not the pointer going away.
   document.documentElement.addEventListener('pointerleave', (e) => {
     if (e.pointerType === 'mouse') setNear(false)
   })
 
-  const toggle = () => {
+  const focusChrome = (node: HTMLElement) => {
+    node.focus({ preventScroll: true })
+  }
+
+  const toggle = (e?: Event) => {
     // Asking for the panel from a bare stage is asking for the panel.
     const bare = document.body.classList.contains('bare')
     document.body.classList.remove('bare', 'peek-greet')
@@ -349,14 +367,27 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     document.body.classList.toggle('hide-panel', hide)
     rememberPanel(!hide)
     hideTip()
-    if (!hide) hideBtn.focus()
+    // A tap already has a place; focusing Hide or the tab would pan the
+    // visual viewport on a phone and the panel would appear to jump. P and
+    // a keyboard activation (detail 0) still land on the chrome.
+    const fromPointer = e instanceof MouseEvent && e.detail > 0
+    if (fromPointer) {
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+      return
+    }
+    if (!hide) focusChrome(hideBtn)
     // A focused tab would stand out on the edge for as long as it held the
     // keyboard, so a tab that tucks is not handed it. Tab still finds it.
-    else if (!desk.matches) peek.focus()
+    else if (!desk.matches) focusChrome(peek)
     else if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
   hideBtn.addEventListener('click', toggle)
   peek.addEventListener('click', toggle)
+  // Peek lives on the body, not in the panel, so the panel's pointerdown
+  // guard does not cover it. Same rule: a tap must not focus and pan.
+  peek.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') e.preventDefault()
+  })
   root.addEventListener('scroll', hideTip, { passive: true })
   window.addEventListener('scroll', hideTip, { passive: true })
 
