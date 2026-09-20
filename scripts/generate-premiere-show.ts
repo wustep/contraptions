@@ -65,13 +65,41 @@ function restAt(piece: TimedPiece): number | undefined {
     }
   }
 }
+/**
+ * The hidden stretch of the lane that `at` falls in — the ball in a breech, a slot, a cabinet — as
+ * [native start, native end] over every consecutive hidden segment, or null when the ball is in view there.
+ */
+function hiddenRun(piece: TimedPiece, at: number): [number, number] | null {
+  const segs = piece.lane.segs
+  let t = 0
+  for (let i = 0; i < segs.length; i++) {
+    const end = t + segs[i].dur
+    if (at >= t && at <= end) {
+      if (!segs[i].hidden) return null
+      let a = i, b = i, t0 = t, t1 = end
+      while (a > 0 && segs[a - 1].hidden) { a--; t0 -= segs[a].dur }
+      while (b < segs.length - 1 && segs[b + 1].hidden) { b++; t1 += segs[b].dur }
+      return [t0, t1]
+    }
+    t = end
+  }
+  return null
+}
 function timing(piece: TimedPiece) {
   const native = laneTime(piece.lane), span = piece.end - piece.begin, rest = restAt(piece)
   const knots: [number, number][] = [[piece.begin,0]]
   if (rest !== undefined && rest > 0 && rest < native && span > native * 1.2 && piece.name !== 'portal') {
     const moving = native * 1.1, hold = span - moving
-    const settled = piece.begin + moving * rest / native
-    knots.push([settled,rest], [settled+hold,rest])
+    const hidden = hiddenRun(piece, rest)
+    if (hidden) {
+      // The rest is out of sight: the extra time is spread over the whole hidden stretch at a slower,
+      // steady pace, so nothing in view — the fuse's spark, a timer's hand, a marquee — stops dead.
+      const [h0, h1] = hidden
+      knots.push([piece.begin + moving * h0 / native, h0], [piece.begin + moving * h1 / native + hold, h1])
+    } else {
+      const settled = piece.begin + moving * rest / native
+      knots.push([settled,rest], [settled+hold,rest])
+    }
   }
   knots.push([piece.end,native])
   piece.timing = knots.map(([time,native]) => ({time,native,slope:0}))
@@ -159,9 +187,19 @@ for(const [begin,name,time] of accents){
  const phrase=phrases.find(p=>p.begin===begin)!
  const piece=maps.flatMap(m=>m.pieces).find(p=>p.name===name && p.begin>=begin && p.begin<phrase.end)!
  assert.ok(piece,`Missing accent ${name} in ${begin}`)
- const native=piece.lane.fire, i=piece.timing.findIndex(k=>k.native>native)
- assert.ok(i>0 && time>piece.timing[i-1].time && time<piece.timing[i].time,`Accent outside motion: ${name} at ${time}`)
- piece.timing.splice(i,0,{time,native,slope:0})
+ // A knot already stands at the strike, or within a few hundredths of it — the end of a hidden stretch, whose
+ // last segment carries the ball to the muzzle — and is not one of a rest's pair: the accent takes its place,
+ // rather than doubling it into a freeze a hair before the note.
+ const native=piece.lane.fire, knots=piece.timing
+ const near=knots.findIndex((k,j)=>j>0 && j<knots.length-1 && Math.abs(k.native-native)<.02 && knots[j-1].native!==k.native && knots[j+1].native!==k.native)
+ if(near>0){
+  assert.ok(time>knots[near-1].time && time<knots[near+1].time,`Accent outside motion: ${name} at ${time}`)
+  knots[near]={time,native,slope:0}
+ } else {
+  const i=piece.timing.findIndex(k=>k.native>native)
+  assert.ok(i>0 && time>piece.timing[i-1].time && time<piece.timing[i].time,`Accent outside motion: ${name} at ${time}`)
+  piece.timing.splice(i,0,{time,native,slope:0})
+ }
  ;(phrase.strikes??=[]).push({time,piece:name})
 }
 
@@ -204,7 +242,7 @@ for(const map of maps){
   if(t===map.end)break
  }
 }
-const score:PremiereScore={id:'premiere-arabesque-prati-journey',title:'Première Arabesque',performer:'Patrizia Prati',revision:4,audioOffset:2.38,duration:DURATION,phrases,maps}
+const score:PremiereScore={id:'premiere-arabesque-prati-journey',title:'Première Arabesque',performer:'Patrizia Prati',revision:5,audioOffset:2.38,duration:DURATION,phrases,maps}
 writeFileSync('apps/rube/src/timed/premiere-arabesque/score.generated.json',JSON.stringify(score)+'\n')
 console.log(`${phrases.length} phrases, ${maps.length} long maps, ${maps.reduce((n,m)=>n+m.pieces.length,0)} stock pieces, ${DURATION.toFixed(3)} seconds.`)
 for(const m of maps)console.log(`${m.title}: ${m.begin}–${m.end}, ${m.pieces.length} pieces`)
