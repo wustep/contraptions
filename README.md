@@ -17,14 +17,18 @@ a machine choreographed to a piece of music with the soundtrack locked to
 it, in as many versions as you care to keep side by side
 ([below](#shows-appsrubesrcshows)). A fourth tab, the **Builder**, is
 where new pieces and worlds for Machine are made from a prompt and saved as
-one file ([below](#builder-appsrubesrcbuilder)). Shows and the Builder
-start hidden: press <kbd>`</kbd> five times quickly and both come out
-together. All four wear the same chrome: one panel down the right edge at
+one file ([below](#builder-appsrubesrcbuilder)). A fifth, the
+**Playground**, is where pieces and worlds wait to be let into Machine: new
+ones, ones a craft pass took out, and two whole worlds that are not in the
+loop yet ([below](#playground-appsrubesrcplayground)). Shows, the Builder
+and the Playground start hidden: press <kbd>`</kbd> five times quickly and
+all three come out together. All five wear the same chrome: one panel down the right edge at
 the window's full height, the canvas filling everything else, and a switch
 at the top of the panel that moves between them and carries the seed
-across. Locked it reads **Machine | Explorations**; unlocked it is four
-icon-only buttons — Machine, Explorations, Shows, Builder — each named on
-hover. Machine, Explorations and Shows open with the panel hidden; once it
+across. Locked it reads **Machine | Explorations**; unlocked it is five
+icon-only buttons — Machine, Explorations, Shows, Builder, Playground —
+each named on hover. Machine, Explorations, Shows and the Playground open
+with the panel hidden; once it
 has been opened or closed, a switch of mode keeps it that way. <kbd>P</kbd> (or the tab on the
 edge) brings it out, and <kbd>P</kbd> puts it away again. <kbd>`</kbd>
 clears the stage of all of it — the panel, the tab, the way-back button —
@@ -39,13 +43,15 @@ npm run dev          # http://localhost:8791/ is Machine, /explorations/ is Expl
 npm run check        # headless smoke test of Explorations' pure core
 npm run check:rube   # headless checks on Machine: the worlds, the planner, the chain, the ball, the tempo
 npm run check:builder # headless checks on the Builder: scaffolds, the file round trip, refusals, mending, the store, the stock show untouched
+npm run check:playground # headless checks on the Playground: the lock, the shelves, every staged piece in every variant, and that Machine never draws one
 npm run check:shows  # headless checks on Shows: the registry and every version file, the clock, the time maps
-npm run build        # one dist/: Machine at /, Explorations at /explorations/, Shows at /shows/, the Builder at /builder/, /sandbox/ and /rube/ redirecting
+npm run build        # one dist/: Machine at /, Explorations at /explorations/, Shows at /shows/, the Builder at /builder/, the Playground at /playground/, /sandbox/ and /rube/ redirecting
 ```
 
 One Vite root serves and builds all of it: `index.html` is Machine,
 `explorations/index.html` is Explorations, `shows/index.html` is Shows,
-`builder/index.html` is the Builder, and two pages only forward:
+`builder/index.html` is the Builder, `playground/index.html` is the
+Playground, and two pages only forward:
 `sandbox/index.html` sends old links to `/explorations/` and
 `rube/index.html` — where Machine used to live — sends them to `/`, both
 keeping the seed. The modes share the core (`src/core/`), the panel
@@ -873,7 +879,7 @@ MP4 a post wants.
 
 ## Builder: `apps/rube/src/builder/`
 
-The last tab, once Shows and the Builder are unlocked. Type what a piece should be, press
+The fourth tab, once the gated tabs are unlocked. Type what a piece should be, press
 **Make piece**, and it is on the stage between two portals, the way the
 catalog shows a stock piece. Press
 **Make world** with a place in the prompt and the build gets palettes, a
@@ -885,12 +891,13 @@ npm run dev            # http://localhost:8791/, then ` five times, then the Sho
 npm run check:builder  # scaffolds and their looks, the file round trip, refusals, mending, the store, the lock, the model picker, and that the stock show is untouched
 ```
 
-### Unlocking Shows and the Builder
+### Unlocking Shows, the Builder and the Playground
 
-Shows and the Builder start hidden: they are not the front of the house.
-In any mode, press <kbd>`</kbd> five times in a row, each press within
-half a second of the last. The panel comes out with all four modes on the
-switch as icon-only buttons — Machine, Explorations, Shows, Builder.
+Shows, the Builder and the Playground start hidden: they are not the front
+of the house. In any mode, press <kbd>`</kbd> five times in a row, each
+press within half a second of the last. The panel comes out with all five
+modes on the switch as icon-only buttons — Machine, Explorations, Shows,
+Builder, Playground.
 Wait longer than half a second between two presses and the count starts
 over, so the single <kbd>`</kbd>
 that clears the stage still works as before. Only the first press of a
@@ -900,11 +907,11 @@ press. Locked, the switch is two words again: Machine and Explorations.
 
 The unlock is kept in this browser (`contraptions:unlocked` in
 localStorage). A browser that already had `contraptions:builder` set still
-counts as unlocked. The same five presses lock both tabs again, from any
-mode. While they are locked there are no tabs for them, Machine shows no
-link to the Builder, and `/shows/` and `/builder/` send the visitor to
-Machine with their seed. Each page's code is a separate chunk that a
-locked visit never fetches.
+counts as unlocked. The same five presses lock all three tabs again, from
+any mode. While they are locked there are no tabs for them, Machine shows
+no link to the Builder, and `/shows/`, `/builder/` and `/playground/` send
+the visitor to Machine with their seed. Each page's code is a separate
+chunk that a locked visit never fetches.
 
 ### Using it
 
@@ -1136,8 +1143,94 @@ visits a build when it is pinned there (`?world=<name>`, or its chip under
   a build moves.
 - A model needs the person's own key, and a key in a browser is only as
   safe as the browser. Use a key you can revoke, with a spending limit.
-- The lock keeps Shows and the Builder out of sight. It is not access control: the
+- The lock keeps Shows, the Builder and the Playground out of sight. It is not access control: the
   pages and their code are public, and anyone who knows the five presses has them.
+
+## Playground: `apps/rube/src/playground/`
+
+The fifth tab, behind the same five backticks. Where pieces and worlds wait
+to be let into Machine. Nothing here is in Machine's pool, in a Show's plan
+or in the Builder's cast; all of it can be watched exactly as Machine would
+show it, because the Playground is Machine's own stage and sheet over a
+different set of worlds.
+
+```bash
+npm run dev               # http://localhost:8791/, then ` five times, then the Playground tab
+npm run check:playground  # the lock, the shelves, every staged piece in every variant, and that Machine never draws one
+```
+
+**[The rejected log →](docs/playground/REJECTED.md)**: every piece a craft
+pass took out of Machine and why, the ideas thrown away while the
+Playground's first pieces were designed, and the worlds that were
+considered and not built.
+
+### Shelves
+
+What is staged stands on **shelves**, a band each on the Playground's sheet:
+
+| Shelf | In the URL | What is on it |
+| --- | --- | --- |
+| Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: five new ones each, then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
+| **Snow** | `alpine` | A world not yet in the loop. A mountain in winter: snow, ice, timber and rope. A rail of its own and thirty-four beats. |
+| **Music** | `orchestra` | A world not yet in the loop. A concert hall: strings, brass, felt and wood. A rail of its own and thirty-four beats. |
+
+A shelf is a `World` like any other, registered beside the loop the way a
+build is (`staging.ts`). A stock world's shelf borrows that world's rail,
+palettes, backdrops and portal (and the arcade's ticket machine, so a run
+of staged beats is still paid out) and holds only what is waiting to join
+it. A new world's shelf is the world whole, as it would stand in the loop:
+palettes, tastes, rail and all. Every staged piece carries a status (`new`
+or `restored`) and one line said of it, which the panel reads out when the
+piece is watched alone.
+
+Three views, and the sheet is the ground floor. The **sheet** of everything
+staged; a **piece** alone between two portals
+(`/playground/?solo=cornice&world=alpine`; leave the shelf out and it is
+found); and a shelf run as a **world**, the camera on the ball, a machine
+built from nothing but what is staged there (`/playground/?world=alpine`,
+<kbd>W</kbd>, or the shelf's chip in the panel). <kbd>esc</kbd>, the
+way-back button on the stage, the panel's button and the browser's Back all
+come back down to the sheet, which opens where it was left. <kbd>[</kbd>
+and <kbd>]</kbd> step piece to piece, <kbd>N</kbd> is another map of the
+same shelf, <kbd>O</kbd> the overview, and the transport and Export are
+Machine's.
+
+### Nothing staged is loaded until it is asked for
+
+The Playground holds more pieces than Machine does, and no other mode has
+any use for them, so none of them may slow another mode's cold load:
+
+- `/playground/` is its own page with its own entry. Locked, the entry sends
+  the visitor home before it fetches anything else.
+- Each shelf is its own chunk behind a dynamic `import()`
+  (`SHELVES` in `staging.ts`). A link to one piece or one world fetches that
+  shelf and mounts it, and the rest follow behind it; the sheet waits for
+  them all, fetched side by side.
+- No file outside `apps/rube/src/playground/` imports from it, and **the
+  build fails if one does**: a plugin in `vite.config.ts` walks what every
+  other mode's entry statically loads and stops the build if a module from
+  the Playground is in it.
+- Two additions to shared code are for the Playground and cost the others
+  nothing: `World.staged` (what the sheet says of where a world stands) and
+  a `flakes` backdrop no stock world asks for.
+
+### Letting a piece into Machine
+
+A staged piece is held to everything `check:rube` holds a stock piece to, in
+every variant it has: its lane joins up, comes in on the rail at the west
+edge and leaves on a floor at an edge, every segment takes time, a ghost is
+solid again before it leaves, a relay or a recolouring hands the ball on in
+another colour, an arcade beat scores. So approval is a move, not a rewrite:
+
+1. Move the file from `playground/pieces/<world>/` to `src/pieces/<world>/`
+   and fix its two import depths.
+2. Add it to that world's `pieces`, doc block and tastes; take its line off
+   the shelf.
+3. `npm run generate:clair:b`, since Take B pins every stock lane, and the
+   README's counts.
+
+A world is the same move for the whole directory, plus a line in `WORLDS`
+and the counts and orders `check:rube` and the catalog sheet hold to four.
 
 ## License
 
