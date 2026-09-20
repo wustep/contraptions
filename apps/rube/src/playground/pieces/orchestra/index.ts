@@ -13,10 +13,10 @@ import { stageRail } from './rail'
 /**
  * Music: a concert hall. Strings, brass, felt and wood. Everything here is
  * struck, plucked, blown or wound: the ball plays a glissando across a
- * harp, is thrown by a piano's hammer and carried on a trombone's slide,
- * rides an accordion down as it sighs shut, leaves a note on every line of
- * a staff, and holds an organ's pedal down while another ball is blown
- * clear of the pipes. A world staged in the Playground, not yet in the
+ * harp, is whipped on by a metronome at the fourth beat, rides an
+ * accordion down as it sighs shut, leaves a note on every line of a
+ * staff, is wound up a floor on a piano stool, and holds an organ's pedal
+ * down while another ball is blown clear of the pipes. A world staged in the Playground, not yet in the
  * loop.
  *
  * The pieces are listed in the batches their builders made them in; the

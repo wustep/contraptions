@@ -12,11 +12,12 @@ import { snowRail } from './rail'
 
 /**
  * Snow: a mountain in winter. Snow, ice, timber and rope. Everything here
- * slides, drifts, cracks or is hauled: the ball rides a chairlift and a
- * drag lift, is flung by a fir bent under snow and butted by an ibex,
- * leaves a ski jump, gathers a snowball round itself down a slope, rides a
- * cornice down when it breaks, and comes through a glacier as ice. A world
- * staged in the Playground, not yet in the loop.
+ * slides, drifts, cracks or is hauled: the ball leaves a ski jump, gathers
+ * a snowball round itself down a slope, rides a cornice down when it
+ * breaks, crosses a lead on a floe, goes under the ice to a fish and is
+ * slapped back up, is hauled off by a husky and blown up a floor out of a
+ * snowblower's chute. A world staged in the Playground, not yet in the
+ * loop.
  *
  * The pieces are listed in the batches their builders made them in; the
  * world's own doc block is written when it is let into Machine.

@@ -1171,8 +1171,8 @@ What is staged stands on **shelves**, a band each on the Playground's sheet:
 | Shelf | In the URL | What is on it |
 | --- | --- | --- |
 | Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: five new ones each, then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
-| **Snow** | `alpine` | A world not yet in the loop. A mountain in winter: snow, ice, timber and rope. A rail of its own and thirty-four beats. |
-| **Music** | `orchestra` | A world not yet in the loop. A concert hall: strings, brass, felt and wood. A rail of its own and thirty-four beats. |
+| **Snow** | `alpine` | A world not yet in the loop. A mountain in winter: snow, ice, timber and rope. A rail of its own and eighteen beats. |
+| **Music** | `orchestra` | A world not yet in the loop. A concert hall: strings, brass, felt and wood. A rail of its own and eighteen beats. |
 
 A shelf is a `World` like any other, registered beside the loop the way a
 build is (`staging.ts`). A stock world's shelf borrows that world's rail,
