@@ -77,7 +77,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   maple        out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went
  *   fern         onto the coil of a fiddlehead; the frond unfurls and grows under it, pinnae opening as the curl leaves them; the tip hooks a floor up, bows, and lets it roll onto a shelf
  *   pinwheel     into a vane's tip; the knock spins the wheel and the next vane round scoops the ball up its far side and flips it onto a shelf a floor up; the wheel spins down
- *   windchime    shoulders through four wooden tubes on strings from a bough; each rides up over the ball and swings, clacking on its neighbour; rings off each; a touch slower out
+ *   windchime    bats the sail of a wind chime up ahead of it and goes under; the sail comes down on its crown and is shoved into the first of three wooden tubes; the clack runs down the row and the chime rings; a touch slower out
  *   hammock      off the path's end into a hammock slung across a gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still
  *   birdbath     over the near rim of a dish of water on a pedestal and down its inside; a splash; across half sunk, slowing, the water heaping up ahead of it; carried up the far side on the swell and out over the pouring lip, a slop of water after it
  *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the planks give a little

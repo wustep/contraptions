@@ -4,8 +4,9 @@ import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, fly, gallows, over, post
 import { soil, tuft } from './green'
 
 /**
- * A garden swing: a seat on two ropes from a bough that reaches out over a
- * two-cell gap from a post on the far side. The swing hangs pulled back,
+ * A garden swing: a plank seat on two ropes, each from its own ring on a
+ * bough that reaches out over a two-cell gap from a post on the far side,
+ * hung high and short so the seat clears the grass. The swing hangs pulled back,
  * its seat level at the path's end and hooked to the last stake. The ball
  * rolls onto the seat and stops; the seat dips under it and the hook slips
  * — and the swing goes: down through the bottom of its arc, low over the
@@ -18,18 +19,25 @@ import { soil, tuft } from './green'
  * the ropes once it swings — and the ball's lane is the seat's top under
  * it, from the dip to the tip.
  */
-/** The bough's pivot over the gap's middle, the ropes' length, and the seat. */
-const PIVOT: Pt = [0.5, FLOOR + 0.02 - Math.sqrt(0.9 * 0.9 - 0.7 * 0.7)]
-const L = 0.9
+/** The bough's height under the cell's roof and the ropes' length: short enough that the seat clears the grass at the bottom of its arc. */
+const BOUGH = -0.47
+const L = 0.85
+/** Half the seat's length, how far above its top a ball's centre rides, and the plank's thickness. */
 const SEAT = 0.15
 const TH = 0.04
-/** Pulled back to the path's end, and where the stop on the far post meets it. */
-const A0 = -Math.asin(0.7 / L)
-const A_STOP = (36 / 180) * Math.PI
-const G = 14
+const PLANK = 0.07
+/** The ropes' two rings on the bough stand this far either side of the pivot. */
+const RINGS = 0.06
+/** Pulled back until the seat is level with the path's end, and where the stop on the far post meets it. */
+const A0 = -Math.acos((FLOOR + 0.02 - BOUGH) / L)
+const A_STOP = (34 / 180) * Math.PI
+/** The seat's middle when it is hooked back, and the pivot over the gap that puts it there. */
+const BACK = -0.08
+const PIVOT: Pt = [BACK - L * Math.sin(A0), BOUGH]
+const G = 15.5
 const OMEGA = Math.sqrt(G / L)
 /** The dip that slips the hook, the tip over the stop, and the far post. */
-const DIP = 0.15
+const DIP = 0.12
 const TIP = 0.12
 const TIPPED = -(16 / 180) * Math.PI
 const POST_X = 1.25
@@ -126,7 +134,7 @@ export const swing = definePiece<{ color: string }>({
     soil(p, k, ink, weight, -0.5, 1.5)
     tuft(p, k, ink, weight, 0.5, 0.5, 0.11, 0.02)
     // The bough out over the gap from the far post, and the stop on the post's near face.
-    gallows(p, k, ink, weight, PIVOT[0] - 0.1, POST_X + 0.02, POST_X, PIVOT[1])
+    gallows(p, k, ink, weight, PIVOT[0] - RINGS - 0.1, POST_X + 0.02, POST_X, BOUGH)
     solid(p, ink, weight, bg)
     p.rect(((STOP[0] + POST_X) / 2) * k, (STOP[1] + 0.02) * k, (POST_X - STOP[0] + 0.02) * k, 0.05 * k, 0.01 * k)
     // The hook on the stake that held the swing back; it stays there once the seat has slipped it.
@@ -134,26 +142,24 @@ export const swing = definePiece<{ color: string }>({
     p.noFill()
     const hookX = railEnd + 0.02
     p.arc(hookX * k, (FLOOR + 0.07) * k, 0.06 * k, 0.06 * k, -Math.PI / 2, Math.PI / 2)
-    if (since < 0) p.line((hookX + 0.03) * k, (FLOOR + 0.07) * k, (c[0] - SEAT) * k, (c[1] + TH / 2) * k)
+    if (since < 0) p.line((hookX + 0.03) * k, (FLOOR + 0.07) * k, (c[0] - SEAT) * k, (c[1] + PLANK / 2) * k)
 
-    // The ropes, from the pivot to the seat's ends, and the seat between them with a lip at its front.
+    // The two ropes, each from its ring on the bough to its end of the seat, and the seat: a plank with a lip at its front.
     const fx = Math.cos(tilt)
     const fy = -Math.sin(tilt)
-    const ends: Pt[] = [
-      [c[0] - SEAT * fx, c[1] - SEAT * fy],
-      [c[0] + SEAT * fx, c[1] + SEAT * fy],
-    ]
     outline(p, ink, weight * 0.9)
-    for (const e of ends) p.line(PIVOT[0] * k, PIVOT[1] * k, e[0] * k, e[1] * k)
+    for (const side of [-1, 1]) {
+      p.line((PIVOT[0] + side * RINGS) * k, BOUGH * k, (c[0] + side * (SEAT - 0.02) * fx) * k, (c[1] + side * (SEAT - 0.02) * fy) * k)
+    }
     p.push()
     p.translate(c[0] * k, c[1] * k)
     p.rotate(-tilt)
     solid(p, ink, weight, s.color)
-    p.rect(0, (TH / 2) * k, SEAT * 2 * k, TH * k, 0.01 * k)
+    p.rect(0, (PLANK / 2) * k, SEAT * 2 * k, PLANK * k, 0.015 * k)
     p.rect((SEAT - 0.02) * k, -0.015 * k, 0.03 * k, 0.045 * k, 0.008 * k)
     p.pop()
-    // The pivot's ring on the bough.
+    // The ropes' rings on the bough.
     solid(p, ink, weight, bg)
-    p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.05 * k)
+    for (const side of [-1, 1]) p.circle((PIVOT[0] + side * RINGS) * k, BOUGH * k, 0.04 * k)
   },
 })

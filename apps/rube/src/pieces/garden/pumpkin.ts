@@ -3,13 +3,16 @@ import { FLOOR, R, ROLL, definePiece, fly, post, rail, ramp, roll, trace, type L
 import { leaf, soil, tuft } from './green'
 
 /**
- * A big ridged pumpkin on the ground of the cell below, its curled stem on
- * top, and the path ending in the air over its near shoulder. The ball
- * rolls off the end and drops onto the dome — the pumpkin squashes a hair
- * and its stem bobs — then rolls down the far side, faster as it steepens,
+ * A big ridged pumpkin on the ground of the cell below, its curled stem
+ * and one leaf on the shoulder the ball keeps clear of, and the path
+ * ending in the air over its near shoulder. The ball rolls off the end
+ * and drops onto the dome beside the stem — the pumpkin squashes a hair
+ * and the stem bobs — then rolls down the far side, faster as it steepens,
  * and straight off the pumpkin's flank onto the path a floor down, on its
  * way. Or, when the path stops shorter, it lands short of the crown and
- * comes back down the near side instead, a floor down and heading back.
+ * comes back down the near side instead, a floor down and heading back,
+ * which is why the path's end is a bare stub: a stake under it would
+ * stand in the ball's way down.
  *
  * The ball's roll over the dome is the pumpkin's own outline, a ball's
  * radius out, with the squash the landing gives the pumpkin folded into
@@ -26,6 +29,8 @@ const RY = 0.34
 const OFF = 0.1
 /** How much it gives under the landing. */
 const SQUASH = 0.07
+/** How far off the crown the stem stands, on the shoulder away from the landing, so the ball comes down beside it and not on it. */
+const STEM = 0.11
 /** Where on the dome the ball lands, and where the flank is steep enough to have let it go, as angles from the crown toward the way out. */
 const LAND_A = 0.15
 const OFF_A = 1.28
@@ -138,16 +143,15 @@ export const pumpkin = definePiece<PumpkinState>({
     const cy = 1.5 - ry
     const bob = t > v.tLand ? 0.5 * Math.exp(-(t - v.tLand) * 4) * Math.sin((t - v.tLand) * 18) : 0
 
-    // The path in, ending in the air on a tall stake; the ground below; the path out a floor down, hard against the flank.
-    post(p, k, ink, weight, v.end - 0.04, FLOOR, 1.5)
+    // The path in, a stub ending in the air: a stake to the ground would stand in the way of a ball coming back down the near side.
     rail(p, k, ink, weight, -0.5, v.end)
     soil(p, k, ink, weight, -0.5, 0.5, 1.5)
-    const railFrom = v.lane.segs[v.lane.segs.length - 1].from[0]
-    rail(p, k, ink, weight, railFrom - turn * 0.02, turn * 0.5, 1 + FLOOR)
+    // The path out a floor down, run in under the flank so the ball comes off the skin onto it.
+    rail(p, k, ink, weight, v.cx + turn * RX * 0.9, turn * 0.5, 1 + FLOOR)
     post(p, k, ink, weight, turn * 0.46, 1 + FLOOR, 1.5)
     tuft(p, k, ink, weight, -turn * 0.44, 1.5, 0.1, 0.02)
 
-    // The pumpkin: one body with three ribs, and the stem curled on its crown.
+    // The pumpkin: one body with three ribs.
     solid(p, ink, weight, s.color)
     p.ellipse(v.cx * k, cy * k, rx * 2 * k, ry * 2 * k)
     outline(p, ink, weight * 0.7)
@@ -155,16 +159,19 @@ export const pumpkin = definePiece<PumpkinState>({
       const w = rx * (0.55 + 0.45 * (1 - Math.abs(f)))
       p.arc((v.cx + f * rx * 0.9) * k, cy * k, w * 0.9 * k, ry * 1.94 * k, f < 0 ? Math.PI / 2 : -Math.PI / 2, f < 0 ? (Math.PI * 3) / 2 : Math.PI / 2)
     }
+    // The stem and its leaf, on the shoulder the ball does not land on, curled away from it.
     p.push()
-    p.translate((v.cx + 0.03) * k, (cy - ry + 0.01) * k)
+    p.translate(v.cx * k, (cy - ry) * k)
+    p.scale(-turn, 1)
+    leaf(p, k, ink, weight * 0.9, s.color, STEM + 0.03, 0.035, 0.16, 0.42 - bob * 0.3, 0.5)
+    p.translate(STEM * k, 0.02 * k)
     p.rotate(bob * 0.5)
     solid(p, ink, weight, bg)
     p.beginShape()
-    p.vertex(-0.045 * k, 0)
-    p.bezierVertex(-0.05 * k, -0.1 * k, 0.02 * k, -0.12 * k, (0.09 + bob * 0.03) * k, (-0.16 - bob * 0.03) * k)
-    p.bezierVertex(0.06 * k, -0.1 * k, 0.03 * k, -0.07 * k, 0.045 * k, 0)
+    p.vertex(-0.04 * k, 0)
+    p.bezierVertex(-0.04 * k, -0.08 * k, 0.01 * k, -0.1 * k, (0.075 + bob * 0.03) * k, (-0.135 - bob * 0.03) * k)
+    p.bezierVertex(0.055 * k, -0.08 * k, 0.04 * k, -0.06 * k, 0.045 * k, 0)
     p.endShape(p.CLOSE)
     p.pop()
-    leaf(p, k, ink, weight * 0.9, s.color, v.cx - 0.05, cy - ry + 0.02, 0.16, Math.PI + 0.35 + bob * 0.3, 0.5)
   },
 })

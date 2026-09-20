@@ -6,27 +6,30 @@ import { gardenWater, soil, tuft } from './green'
  * A little arched footbridge over a brook, two cells long. The path runs
  * up onto it and the ball climbs the hump, slowing all the way to the top,
  * and runs down the far side gathering the pace back, onto the path on the
- * far bank. The planks give a little under it as it crosses. Below, the
- * brook runs under the arch between its banks, a reed standing in it. No
- * mechanism: the shape is the beat.
+ * far bank, under the far side's handrail all the way. The deck, one bowed
+ * board, gives a little under it as it crosses. Below, the brook runs under
+ * the arch between its banks, two reeds standing in it. No mechanism: the
+ * shape is the beat.
  *
  * The ball's pace on the arch comes from its height, the way a real ball's
- * would, and the planks' give is under the ball, wherever the lane has it.
+ * would, and the deck's give is under the ball, wherever the lane has it.
  */
 /** The bridge's ends on the banks, its hump, and the deck's thickness. */
 const X0 = -0.2
 const X1 = 1.2
 const MID = (X0 + X1) / 2
 const HUMP = 0.27
-const DECK = 0.065
-/** How far the planks give under the ball, in the middle of the span. */
+const DECK = 0.09
+/** The handrail stands this high over the deck: over the ball's head, so it crosses between the posts and under the rail. */
+const HANDRAIL = 0.3
+/** How far the deck gives under the ball, in the middle of the span. */
 const FLEX = 0.022
 /** Gravity for the climb: enough that the top is slow. */
 const G = 9
 
 /** The deck's top line at `x`, unloaded. */
 const deck = (x: number) => FLOOR - HUMP * (1 - Math.pow((x - MID) / (MID - X0), 2))
-/** How much the planks can give at `x`: nothing at the abutments, most in the middle. */
+/** How much the deck can give at `x`: nothing at the abutments, most in the middle. */
 const give = (x: number) => FLEX * Math.sin((Math.PI * (x - X0)) / (X1 - X0))
 
 const LANE: Lane = (() => {
@@ -58,7 +61,7 @@ export const footbridge = definePiece<{ color: string; water: string }>({
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color, water: gardenWater(theme, ball.color) } }
   },
   draw: (p, s, { k, t, ink, bg, weight }) => {
-    // The planks' give: a dip under the ball while it is on the bridge, and a small spring back after.
+    // The deck's give: a dip under the ball while it is on the bridge, and a small spring back after.
     const on = t > T_ON && t < T_OFF
     const bx = on ? laneAt(LANE, t).x : X1
     const sag = on ? give(bx) : t >= T_OFF ? -0.4 * FLEX * Math.exp(-(t - T_OFF) * 6) * Math.sin((t - T_OFF) * 24) : 0
@@ -91,8 +94,8 @@ export const footbridge = definePiece<{ color: string; water: string }>({
     }
     p.endShape()
     for (const [x, h, lean] of [
-      [0.14, 0.42, 0.03],
-      [0.86, 0.34, -0.02],
+      [0.14, 0.3, 0.03],
+      [0.86, 0.24, -0.02],
     ]) {
       outline(p, ink, weight)
       p.line(x * k, 0.42 * k, (x + lean) * k, (0.42 - h) * k)
@@ -100,7 +103,7 @@ export const footbridge = definePiece<{ color: string; water: string }>({
       p.ellipse((x + lean) * k, (0.42 - h + 0.05) * k, 0.04 * k, 0.11 * k)
     }
 
-    // The abutments on the banks, and the deck: one band over the arch, planks ticked across it.
+    // The abutments on the banks, and the deck: one bowed board over the arch.
     solid(p, ink, weight, bg)
     p.rect((X0 + 0.02) * k, ((FLOOR + 0.5) / 2 + 0.03) * k, 0.1 * k, (0.5 - FLOOR - 0.06) * k)
     p.rect((X1 - 0.02) * k, ((FLOOR + 0.5) / 2 + 0.03) * k, 0.1 * k, (0.5 - FLOOR - 0.06) * k)
@@ -116,18 +119,16 @@ export const footbridge = definePiece<{ color: string; water: string }>({
       p.vertex(x * k, (top(x) + DECK) * k)
     }
     p.endShape(p.CLOSE)
-    outline(p, ink, weight * 0.7)
-    for (let x = X0 + 0.1; x < X1 - 0.05; x += 0.1) p.line(x * k, (top(x) + 0.012) * k, x * k, (top(x) + DECK - 0.012) * k)
 
     // The handrail on the far side: posts up from the deck and a rail along their tops, following the arch.
     outline(p, ink, weight)
     const posts = [X0 + 0.06, X0 + 0.38, MID, X1 - 0.38, X1 - 0.06]
-    for (const x of posts) p.line(x * k, top(x) * k, x * k, (top(x) - 0.22) * k)
+    for (const x of posts) p.line(x * k, top(x) * k, x * k, (top(x) - HANDRAIL) * k)
     p.noFill()
     p.beginShape()
     for (let i = 0; i <= n; i++) {
       const x = posts[0] + ((posts[4] - posts[0]) * i) / n
-      p.vertex(x * k, (top(x) - 0.22) * k)
+      p.vertex(x * k, (top(x) - HANDRAIL) * k)
     }
     p.endShape()
   },
