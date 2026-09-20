@@ -8,6 +8,43 @@ import premiere from '../apps/rube/src/shows/versions/premiere-arabesque/take-b.
 import clair from '../apps/rube/src/shows/versions/clair-de-lune/take-a.generated.json'
 import { stockPlacement } from './stock-placement'
 
+/**
+ * A saved lane must be the stock lane: same segments, flags, and clocks.
+ * Coordinates (and other floats) may move by engine ULPs of Math.pow/cos;
+ * a real retiming or variant change is orders of magnitude larger.
+ */
+function nearStock(a: number, b: number) {
+  return Math.abs(a - b) <= 1e-12 * Math.max(1, Math.abs(a), Math.abs(b))
+}
+
+function sameStockLane(saved: unknown, stock: unknown, label: string, path = 'lane'): void {
+  if (typeof saved === 'number' && typeof stock === 'number') {
+    assert.ok(nearStock(saved, stock), `${label}: altered stock lane (${path})`)
+    return
+  }
+  if (Array.isArray(saved) && Array.isArray(stock)) {
+    assert.equal(saved.length, stock.length, `${label}: altered stock lane (${path})`)
+    saved.forEach((v, i) => sameStockLane(v, stock[i], label, `${path}[${i}]`))
+    return
+  }
+  if (saved && stock && typeof saved === 'object' && typeof stock === 'object') {
+    const keys = Object.keys(saved).sort(), stockKeys = Object.keys(stock).sort()
+    assert.deepEqual(keys, stockKeys, `${label}: altered stock lane (${path})`)
+    for (const key of keys) sameStockLane((saved as Record<string, unknown>)[key], (stock as Record<string, unknown>)[key], label, `${path}.${key}`)
+    return
+  }
+  assert.deepEqual(saved, stock, `${label}: altered stock lane (${path})`)
+}
+
+{
+  const lane = { fire: 1.7687921570983507, segs: [{ from: [0, 0.14775452821772703], to: [1, 0], dur: 0.4 }] }
+  sameStockLane(lane, { ...lane, segs: [{ ...lane.segs[0], from: [0, 0.14775452821772705] }] }, 'engine-ulp')
+  assert.throws(() => sameStockLane(lane, { ...lane, fire: 1.78 }, 'x'))
+  assert.throws(() => sameStockLane(lane, { ...lane, segs: [{ ...lane.segs[0], dur: 0.5 }] }, 'x'))
+  assert.throws(() => sameStockLane(lane, { ...lane, segs: [...lane.segs, lane.segs[0]] }, 'x'))
+  assert.throws(() => sameStockLane(lane, { ...lane, segs: [{ ...lane.segs[0], ease: 'in' }] }, 'x'))
+}
+
 const work = process.argv[2]
 assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
 const score = (work === 'premiere' ? premiere : clair) as unknown as StockScore
@@ -33,7 +70,7 @@ for (const [mi, map] of score.maps.entries()) {
     const stock = stockPlacement(world, piece.spec, piece.ballIn, i)
     const duration = laneTime(stock.lane)
     // Compare to fresh stock placement, not a duplicate timing formula.
-    assert.deepEqual(piece.lane, JSON.parse(JSON.stringify(stock.lane)), `${map.world}/${piece.spec.name}: altered stock lane`)
+    sameStockLane(piece.lane, JSON.parse(JSON.stringify(stock.lane)), `${map.world}/${piece.spec.name}`)
     assert.deepEqual(piece.state, JSON.parse(JSON.stringify(stock.state)), `${map.world}/${piece.spec.name}: altered mechanism state`)
     assert.deepEqual(piece.changes, stock.changes ?? [])
     assert.deepEqual(piece.ballIn, ball, 'Ball continuity across placements and portals')
