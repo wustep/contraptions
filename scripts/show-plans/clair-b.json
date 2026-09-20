@@ -172,7 +172,7 @@
       {"name": "pusher", "exit": [1, 1]},
       {"name": "whack", "exit": [2, 0]},
       {"name": "booth", "exit": [1, 0]},
-      {"name": "flume", "exit": [2, 1]},
+      {"name": "helter", "exit": [2, 1]},
       {"name": "slingshot", "exit": [1, -1]},
       {"name": "gauss", "exit": [2, 0]},
       {"name": "skee", "exit": [2, -1]},

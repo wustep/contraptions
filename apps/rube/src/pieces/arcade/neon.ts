@@ -198,8 +198,8 @@ export function flash(p: p5, k: number, color: string, weight: number, x: number
 
 /**
  * Water's colour in this palette: the bluest. The dunk tank's water and
- * the flume's splash are painted in it, so a splash never borrows the
- * colour of the machine that threw it up and reads as bits of it flying.
+ * its splash are painted in it, so a splash never borrows the colour of
+ * the machine that threw it up and reads as bits of it flying.
  */
 export function arcadeWater(theme: Theme): string {
   const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)

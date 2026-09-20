@@ -729,7 +729,7 @@ there is no run behind it, so it makes up a total a run might have earned.
 | booth | into a photo booth behind a short curtain, seen from the middle down under its hem; a pose; the flash, the whole curtain white for an instant; it bolts out the far side, and the strip drops out of the slot: three frames with its portrait in each; +100 |
 | maze | off the rail's end into a tilting labyrinth two floors tall; along a ledge, through the gap, down onto the next as the board tilts the other way, every ledge lighting as it is ridden; level at the floor and out of the gate, on or back; +200 |
 | freefall | into the car at the top of a drop tower; hoisted a little higher with a clank, held, let go; two floors of free fall past the lamps flaring, into the brakes with a bounce; the far door drops and it rolls out; +200 |
-| flume | a hop into a log at the top of a flume; the catch slips; down the chute in its stream, faster, into the pool; a splash, the flume lamp lights, and the log stops dead while the ball rides on over its nose onto the dock; +200 |
+| helter | along a gangway to the shoulder of a helter-skelter, slowing to the brink; round the tower's front in the chute, gathering pace, out of sight round the back, round the front again lower and faster, and out along the mat at the foot, which takes the way off it; the lamp on the roof lights; +200 |
 | bumpercar | into the seat of a bumper car under a lit grid, sparks at the shoe; across the floor into the parked car, nose to nose, which is shoved back into the rubber kerb and rocks off it; the jolt pitches the ball over both of them onto the rail beyond; +100 |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,

@@ -221,6 +221,6 @@ export const maze = definePiece<MazeState>({
     })
     p.pop()
   },
-  // Beside the gate, over the rail out: on the board it would lie across the ledges.
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, s.turn * (HW + 0.3), 1.85, '+200', since, 1),
+  // Beside the gate, over the rail out and clear of the stand's post: on the board it would lie across the ledges.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, s.turn * (POST_X + 0.28), 1.85, '+200', since, 1),
 })
