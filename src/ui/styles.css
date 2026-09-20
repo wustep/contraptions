@@ -20,6 +20,7 @@ html, body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--bg);
   color: var(--text);
   font: 13px/1.5 ui-sans-serif, -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
@@ -34,7 +35,10 @@ body {
   grid-template-columns: minmax(0, 1fr) 320px;
   grid-template-rows: minmax(0, 1fr);
   height: 100vh;
-  height: 100dvh;
+  /* svh, not dvh: the dynamic viewport grows when mobile chrome hides on
+     a tap, and the stacked panel rides with it — a slide that looks like
+     the panel itself moved. The small viewport stays put. */
+  height: 100svh;
 }
 
 /* The stage is paper. The show paints its canvas edge to edge; the sandbox's
@@ -68,6 +72,7 @@ body.hide-panel #panel { display: none; }
   border-right: none;
   padding: 8px 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  touch-action: manipulation;
 }
 body.hide-panel .panel-peek { display: inline-flex; }
 
@@ -148,6 +153,8 @@ body.bare .stage-play { display: none; }
   background: var(--panel);
   border-left: 1px solid var(--line);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
   padding: 13px 14px 10px;
   display: flex;
   flex-direction: column;
@@ -546,13 +553,15 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
-  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; }
+  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; }
   .panel-peek {
     top: auto;
     right: auto;
     left: 50%;
     bottom: 0;
-    transform: translateX(-50%);
+    /* `translate`, not `transform`: the press nudge is a transform, and
+       would steal this centering — the tab jumps off-center on tap. */
+    translate: -50% 0;
     border-radius: 8px 8px 0 0;
     border-right: 1px solid var(--line);
     border-bottom: none;
