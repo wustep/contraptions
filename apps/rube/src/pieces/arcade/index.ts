@@ -2,17 +2,27 @@ import type { Theme } from '../../../../../src/core/themes'
 import type { World } from '../../worlds'
 import { portal } from '../portal'
 import { blocks } from './blocks'
+import { booth } from './booth'
 import { bumper } from './bumper'
+import { bumpercar } from './bumpercar'
 import { changer } from './changer'
 import { claw } from './claw'
 import { coaster } from './coaster'
+import { dunk } from './dunk'
 import { ferris } from './ferris'
+import { flume } from './flume'
+import { foosball } from './foosball'
+import { freefall } from './freefall'
 import { gauss } from './gauss'
 import { hockey } from './hockey'
 import { hoops } from './hoops'
+import { maze } from './maze'
 import { pachinko } from './pachinko'
 import { phaser } from './phaser'
+import { pins } from './pins'
 import { pixel } from './pixel'
+import { popcorn } from './popcorn'
+import { pusher } from './pusher'
 import { pong } from './pong'
 import { laneRail } from './rail'
 import { shooter } from './shooter'
@@ -20,6 +30,7 @@ import { skee } from './skee'
 import { slingshot } from './slingshot'
 import { slots } from './slots'
 import { spinner } from './spinner'
+import { stacker } from './stacker'
 import { striker } from './striker'
 import { ticket } from './ticket'
 import { ufo } from './ufo'
@@ -63,6 +74,17 @@ import { zigzag } from './zigzag'
  *   hoops      into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 2
  *   ferris     onto the seat of the low gondola of a little Ferris wheel; half a turn, slowly, every gondola swinging on its pivot; the high seat is level with the rail a floor up and the ball rolls off it
  *   coaster    drops into a car at the station; the chain clacks it up the lift hill, the track lighting behind it; over the crest and down the drop to the floor below; the fins stop the car in sparks and the ball rolls on out of its nose
+ *   pusher     onto the shelf of a coin pusher behind three coins; the block comes down behind it and shoves; the coins tip off the lip into the tray a floor down and the ball goes after them, out of the payout mouth
+ *   pins       down a polished alley, faster, into ten pins in four ranks; they go up and over into the pit behind the deck; the strike lamp flares; out the back slowed by the hit
+ *   popcorn    up the chute into the kettle in a popcorn cart's case, out of sight; the element lights, kernels burst; up out of the open top in a spray of popcorn onto the shelf a floor up
+ *   dunk       onto the seat over a dunk tank; its weight swings the target over and trips the latch; the seat drops away; a splash, gone under; out of the drain flap onto the rail a floor down
+ *   stacker    onto the platform at a light tower's foot; the rows light from the bottom, tick, tick, the platform rising with them; the prize lamp flares and it tilts the ball onto the rail one or two floors up, on or back
+ *   foosball   onto a foosball pitch; the first rod's men wind back, whip over and kick it in the back; the second rod swings and misses; into the goal slot and out; the goal lamp lights
+ *   booth      into a photo booth behind the curtain, gone; a pose; the flash, the curtain white for an instant; out the far side; the strip drops out of the slot, a pixel ball in every frame
+ *   maze       off the rail's end into a tilting labyrinth two floors tall; along a ledge, through the gap, down, along the next as the board tilts the other way, each ledge lighting; level at the floor and out of the gate, on or back
+ *   freefall   into the car at the top of a drop tower; a hoist, a clank, a hold; two floors of free fall past flaring lamps into the brakes; a bounce; the far door drops and it rolls out
+ *   flume      a hop into a log at the top of a flume; the catch slips; down the chute in its stream, faster, into the pool; a splash, the lamp; the log stops dead and the ball rides on over its nose onto the dock
+ *   bumpercar  into the seat of a bumper car under a lit grid; sparks at the shoe; across the floor into the parked car, shoved off the end and over; the jolt pitches the ball over the nose onto the rail beyond
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
@@ -104,25 +126,30 @@ export const arcade: World = {
   backdrops: ['stars', 'grid', 'stars'],
   tastes: {
     pinball: {
-      bumper: 1.8, spinner: 1.7, slingshot: 1.7, shooter: 1.8, zigzag: 1.5, gauss: 1.4, skee: 1.3,
+      bumper: 1.8, spinner: 1.7, slingshot: 1.7, shooter: 1.8, zigzag: 1.5, gauss: 1.4, skee: 1.3, pins: 1.2, maze: 1.2,
       striker: 0.8, hockey: 0.7, whack: 0.7, hoops: 0.7, slots: 0.7, pong: 0.6, blocks: 0.6, ufo: 0.6, coaster: 0.6, claw: 0.5, ferris: 0.5,
+      foosball: 0.7, dunk: 0.7, stacker: 0.7, pusher: 0.6, popcorn: 0.6, booth: 0.6, freefall: 0.6, flume: 0.6, bumpercar: 0.6,
     },
     midway: {
       claw: 1.7, ferris: 1.7, coaster: 1.7, striker: 1.6, whack: 1.6, hoops: 1.6, changer: 1.4, hockey: 1.3, pachinko: 1.2, skee: 1.2,
-      'lift-tall': 1.8, 'drop-deep': 1.8, spinner: 0.7, pixel: 0.7, phaser: 0.7, bumper: 0.6, pong: 0.6, blocks: 0.6,
+      dunk: 1.7, popcorn: 1.6, freefall: 1.6, flume: 1.6, bumpercar: 1.5, booth: 1.3, pins: 1.2, pusher: 1.2, stacker: 1.2,
+      'lift-tall': 1.8, 'drop-deep': 1.8, spinner: 0.7, pixel: 0.7, phaser: 0.7, bumper: 0.6, pong: 0.6, blocks: 0.6, maze: 0.8,
     },
     jackpot: {
       slots: 1.9, pachinko: 1.8, skee: 1.6, hockey: 1.5, changer: 1.4, striker: 1.3, zigzag: 1.3, slingshot: 1.2, gauss: 1.2,
-      claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6,
+      pusher: 1.8, stacker: 1.7, pins: 1.3, dunk: 1.2,
+      claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6, foosball: 0.8, popcorn: 0.7, booth: 0.7, freefall: 0.7, flume: 0.7, bumpercar: 0.6,
     },
     screens: {
-      pong: 1.9, blocks: 1.8, ufo: 1.7, pixel: 1.6, phaser: 1.6, gauss: 1.2, changer: 1.2, zigzag: 1.1,
+      pong: 1.9, blocks: 1.8, ufo: 1.7, pixel: 1.6, phaser: 1.6, gauss: 1.2, changer: 1.2, zigzag: 1.1, booth: 1.3,
       'lift-tall': 1.6, hockey: 0.7, striker: 0.7, skee: 0.7, whack: 0.7, claw: 0.6, hoops: 0.6, coaster: 0.6, ferris: 0.5,
+      foosball: 0.8, maze: 0.8, pins: 0.7, pusher: 0.7, dunk: 0.6, popcorn: 0.6, freefall: 0.6, flume: 0.6, bumpercar: 0.6,
     },
   },
   pieces: [
     laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot,
     shooter, gauss, pong, pixel, blocks, phaser, ufo, slots, whack, hoops, ferris, coaster,
+    pusher, pins, popcorn, dunk, stacker, foosball, booth, maze, freefall, flume, bumpercar,
     portal,
   ],
 }
