@@ -12,6 +12,7 @@ import { croquet } from './croquet'
 import { dandelion } from './dandelion'
 import { fern } from './fern'
 import { footbridge } from './footbridge'
+import { fountain } from './fountain'
 import { frog } from './frog'
 import { gate } from './gate'
 import { hammock } from './hammock'
@@ -23,16 +24,15 @@ import { pond } from './pond'
 import { pumpkin } from './pumpkin'
 import { gardenRail } from './rail'
 import { scarecrow } from './scarecrow'
+import { slide } from './slide'
 import { snail } from './snail'
 import { spade } from './spade'
 import { sprinkler } from './sprinkler'
-import { stump } from './stump'
 import { sunflower } from './sunflower'
 import { swing } from './swing'
 import { toadstools } from './toadstools'
 import { vine } from './vine'
 import { wateringcan } from './wateringcan'
-import { web } from './web'
 import { well } from './well'
 import { windchime } from './windchime'
 import { wheelbarrow } from './wheelbarrow'
@@ -77,14 +77,14 @@ import { wheelbarrow } from './wheelbarrow'
  *   maple        out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went
  *   fern         onto the coil of a fiddlehead; the frond unfurls and grows under it, pinnae opening as the curl leaves them; the tip hooks a floor up, bows, and lets it roll onto a shelf
  *   pinwheel     into a vane's tip; the knock spins the wheel and the next vane round scoops the ball up its far side and flips it onto a shelf a floor up; the wheel spins down
- *   windchime    shoulders through four wooden tubes on strings from a bough; each rides up over the ball and swings, clacking on its neighbour; rings off each; a touch slower out
+ *   windchime    bats the sail of a wind chime up ahead of it and goes under; the sail comes down on its crown and is shoved into the first of three wooden tubes; the clack runs down the row and the chime rings; a touch slower out
  *   hammock      off the path's end into a hammock slung across a gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still
- *   birdbath     over the rim into the bowl; a splash; round the water, seen against the far rim, and out of the spout notch onto the path; rings settle
- *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the planks give a little
+ *   birdbath     over the near rim of a dish of water on a pedestal and down its inside; a splash; across half sunk, slowing, the water heaping up ahead of it; carried up the far side on the swell and out over the pouring lip, a slop of water after it
+ *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the board gives a little
  *   pumpkin      off the path's end onto a pumpkin's dome in the cell below; it squashes a hair, the stem bobs; down the far flank onto the path a floor down, on or back
- *   stump        out along the handle of an axe left in a stump; the handle dips, the blade tears out, chips fly; the head drops and the handle flings the ball onto a shelf a floor up; the axe slides off the stump
- *   pond         across three lily pads on a raised pond; each sinks and tilts under the ball, a ring on the water; up onto the far bank
- *   web          off the path's end into a web between two twigs; it stretches deep and quivers; the threads to the bridge line snap and the ball drops through to the path a floor down; the torn web hangs
+ *   fountain     into the cup on a fountain's standpipe, corking it; the pipe shudders and the jet comes on under the ball; up a floor on a wobbling column of water; a bob at the top, the jet leans and it slides off the crown onto a shelf; the jet falls back to a bubble
+ *   pond         off a stone wall across a raised lily pool on three pads; each ducks and tips under the ball and bobs up behind it, a ripple running out along the water's line; a hop over the open water between them, and up onto the far wall
+ *   slide        onto the deck at the top of a playground slide's ladder, slowing to a crawl; a creep over the brink; down the lip and the chute gathering pace, round the foot and out along the flat a floor down
  *   swing        onto the seat of a swing hooked back at the path's end; the hook slips and it swings across a two-cell gap to a stop on the far post; the seat tips and pitches the ball onto the far path
  *   portal       the door at either end of a map; the far side is always a new map
  */
@@ -121,26 +121,26 @@ export const garden: World = {
   backdrops: ['sprigs', 'plain', 'dots'],
   tastes: {
     greenhouse: {
-      vine: 1.7, bloom: 1.6, fern: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, pond: 1.3, birdbath: 1.3, sprinkler: 1.2, maple: 1.2, web: 1.2, 'lift-tall': 1.8,
-      well: 0.8, footbridge: 0.8, wheelbarrow: 0.7, croquet: 0.7, hammock: 0.7, pumpkin: 0.7, hose: 0.6, gate: 0.6, scarecrow: 0.6, stump: 0.6,
+      vine: 1.7, bloom: 1.6, fern: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, pond: 1.3, birdbath: 1.3, fountain: 1.3, sprinkler: 1.2, maple: 1.2, 'lift-tall': 1.8,
+      well: 0.8, footbridge: 0.8, wheelbarrow: 0.7, croquet: 0.7, hammock: 0.7, pumpkin: 0.7, hose: 0.6, gate: 0.6, scarecrow: 0.6, slide: 0.6,
     },
     allotment: {
-      wheelbarrow: 1.7, gate: 1.7, spade: 1.7, pumpkin: 1.7, well: 1.6, scarecrow: 1.6, stump: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, pinwheel: 1.2, hammock: 1.2, footbridge: 1.2, 'drop-deep': 1.8,
-      vine: 0.8, web: 0.8, birdbath: 0.8, pod: 0.7, frog: 0.7, dandelion: 0.7, cocoon: 0.7, fern: 0.7, pond: 0.7, bloom: 0.6, toadstools: 0.6,
+      wheelbarrow: 1.7, gate: 1.7, spade: 1.7, pumpkin: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, pinwheel: 1.2, hammock: 1.2, footbridge: 1.2, 'drop-deep': 1.8,
+      vine: 0.8, birdbath: 0.8, pod: 0.7, frog: 0.7, dandelion: 0.7, cocoon: 0.7, fern: 0.7, pond: 0.7, bloom: 0.6, toadstools: 0.6,
     },
     wild: {
-      frog: 1.7, toadstools: 1.7, pod: 1.7, web: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, fern: 1.6, pond: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, stump: 1.3, vine: 1.2, sunflower: 1.2,
-      gate: 0.7, bamboo: 0.7, windchime: 0.7, wateringcan: 0.6, spade: 0.6, birdbath: 0.6, swing: 0.6, hammock: 0.6, pinwheel: 0.6, wheelbarrow: 0.5, croquet: 0.5,
+      frog: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, fern: 1.6, pond: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2,
+      gate: 0.7, bamboo: 0.7, windchime: 0.7, wateringcan: 0.6, spade: 0.6, birdbath: 0.6, fountain: 0.6, swing: 0.6, hammock: 0.6, pinwheel: 0.6, slide: 0.5, wheelbarrow: 0.5, croquet: 0.5,
     },
     lawn: {
-      croquet: 1.8, swing: 1.8, bamboo: 1.7, hammock: 1.7, appletree: 1.5, sprinkler: 1.5, birdbath: 1.5, hose: 1.4, windchime: 1.4, pinwheel: 1.4, wateringcan: 1.3, maple: 1.3, footbridge: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
-      burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, fern: 0.7, pumpkin: 0.7, pod: 0.6, frog: 0.6, web: 0.6,
+      croquet: 1.8, swing: 1.8, slide: 1.8, bamboo: 1.7, hammock: 1.7, appletree: 1.5, sprinkler: 1.5, birdbath: 1.5, fountain: 1.5, hose: 1.4, windchime: 1.4, pinwheel: 1.4, wateringcan: 1.3, maple: 1.3, footbridge: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
+      burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, fern: 0.7, pumpkin: 0.7, pod: 0.6, frog: 0.6,
     },
   },
   pieces: [
     gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, gate, snail,
     frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, croquet, scarecrow, dandelion, maple,
-    fern, pinwheel, windchime, hammock, birdbath, footbridge, pumpkin, stump, pond, web, swing,
+    fern, pinwheel, windchime, hammock, birdbath, footbridge, pumpkin, fountain, pond, slide, swing,
     portal,
   ],
 }

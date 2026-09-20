@@ -77,14 +77,14 @@ import { zigzag } from './zigzag'
  *   pusher     onto the shelf of a coin pusher behind three coins; the block comes down behind it and shoves; the coins tip off the lip into the tray a floor down and the ball goes after them, out of the payout mouth
  *   pins       down a polished alley, faster, into ten pins in four ranks; they go up and over into the pit behind the deck; the strike lamp flares; out the back slowed by the hit
  *   popcorn    up the chute into the kettle in a popcorn cart's case, out of sight; the element lights, kernels burst; up out of the open top in a spray of popcorn onto the shelf a floor up
- *   dunk       onto the seat over a dunk tank; its weight swings the target over and trips the latch; the seat drops away; a splash, gone under; out of the drain flap onto the rail a floor down
+ *   dunk       out along the seat over a dunk tank and into the target paddle at its far end; the paddle teeters over its pivot and falls away, and its tooth slips out from under the seat; the seat drops; a splash, gone under; out of the drain flap onto the rail a floor down
  *   stacker    onto the platform at a light tower's foot; the rows light from the bottom, tick, tick, the platform rising with them; the prize lamp flares and it tilts the ball onto the rail one or two floors up, on or back
- *   foosball   onto a foosball pitch; the first rod's men wind back, whip over and kick it in the back; the second rod swings and misses; into the goal slot and out; the goal lamp lights
- *   booth      into a photo booth behind the curtain, gone; a pose; the flash, the curtain white for an instant; out the far side; the strip drops out of the slot, a pixel ball in every frame
+ *   foosball   in through one goal mouth onto a foosball pitch; the first rod's man winds back, whips through and kicks it in the back, and spins on right round; the second swings late and kicks the air; out through the far goal mouth; the goal lamp lights
+ *   booth      into a photo booth behind a short curtain, seen from the middle down under its hem; a pose; the flash, the curtain white for an instant; it bolts out the far side; the strip drops out of the slot, its portrait in every frame
  *   maze       off the rail's end into a tilting labyrinth two floors tall; along a ledge, through the gap, down, along the next as the board tilts the other way, each ledge lighting; level at the floor and out of the gate, on or back
  *   freefall   into the car at the top of a drop tower; a hoist, a clank, a hold; two floors of free fall past flaring lamps into the brakes; a bounce; the far door drops and it rolls out
  *   flume      a hop into a log at the top of a flume; the catch slips; down the chute in its stream, faster, into the pool; a splash, the lamp; the log stops dead and the ball rides on over its nose onto the dock
- *   bumpercar  into the seat of a bumper car under a lit grid; sparks at the shoe; across the floor into the parked car, shoved off the end and over; the jolt pitches the ball over the nose onto the rail beyond
+ *   bumpercar  into the seat of a bumper car under a lit grid; sparks at the shoe; across the floor into the parked car, nose to nose, which is shoved back into the rubber kerb and rocks off it; the jolt pitches the ball over both of them onto the rail beyond
  *   portal     the door at either end of a map; the far side is always a new map
  */
 

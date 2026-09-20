@@ -571,7 +571,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
 | cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on — one motion from the blow to the landing, a pendulum and then a fall under the same gravity |
 | inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
-| scales | into the left pan of a balance, level with the rail; the ball outweighs the brass in the other pan and the beam swings, pointer and all; the pan's foot lands on a rest off the pillar and tips, rolling the ball off its rim into a quarter-pipe a floor down, on or back; later the brass wins and the beam eases back onto its stop |
+| scales | into the left pan of a balance, level with the rail; the ball outweighs the brass in the other pan and the beam swings; the pan's foot lands on a rest off the pillar and tips, rolling the ball off its rim into a quarter-pipe a floor down, on or back; later the brass wins and the beam eases back onto its stop |
 | portal | the door at either end of a map; the far side is always a new map |
 
 ### The harbor's pieces
@@ -609,17 +609,17 @@ against what holds it.
 | foghorn | out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up |
 | serpent | the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops |
 | anemone | into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan |
-| submarine | off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives; her wake and bubbles cross two cells of sea; she comes up at the far pier, the hatch opens and the ball pops out onto the deck; the periscope watches it come and go |
-| bottle | down a brow into the mouth of a bottle afloat at its foot; the shove sends her across foot first; her foot fetches up on the far piling and she vaults over the corner, hangs mouth down and pours the ball out onto the deck; empty, she falls back with a splash |
-| barrel | into a cask balanced on the deck's corner; its weight tips it onto a plank and it slides down a floor nose first, comes level on the lower deck and stops in the chock; the ball knocks the head open and rolls out |
-| springboard | out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea two cells on; bubbles; up out of the water onto the far deck with a second splash |
+| submarine | off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives to periscope depth; the periscope crosses two cells of sea, a feather at its foot, wake and bubbles behind; she comes up at the far pier, water running off her flanks, the hatch opens and the ball pops out onto the deck |
+| spyglass | in at the big end of a brass spyglass shut up short on a stand at the pier's end; its way shoves the small tube out ahead of it, clack, then the middle one, slower, clack, across open water, the nose sinking into a crutch on the far pier; out of the eyepiece onto the deck; it stays drawn |
+| barrel | into the mouth of a cask lying balanced on the deck's corner; its weight tips the cask off the end, head first, turning as it falls; it lands on the pier a floor down the other way round, slaps level and rocks; the ball trundles out of the same mouth, which now faces on |
+| springboard | out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea; a string of bubbles runs to the far pier's slip; up the slip out of the water with a second splash, slowing, and over onto the deck |
 | rod | off the deck's end into the sea by the float of a rod in its holder; the float ducks, the rod bends double and whips up, and the line hauls the ball out in an arc onto the deck a cell on or a floor up; the line swings from the tip after |
 | sandcastle | onto a sandbank into a sandcastle: the towers slump, lumps hop off the tops, the flag keels over, and the ball ploughs through the heap slowed by the sand |
-| chest | into a treasure chest across the deck; the lid slams; a glint through the keyhole; the lid lifts and the ball rolls out gilded, the palette's yellowest colour |
+| chest | onto the gold in a treasure chest let into the deck, brim-full, its lid thrown back; it beds down between two heaps; the lid slams over it; gold light out of the seam and the keyhole; the lid flies back, coins jump, and the ball rolls off gilded, the palette's yellowest colour |
 | paddlewheel | off the deck's end onto a paddle of a steamer's side wheel turning in the water; up the near side and over the top onto the deck a floor up; the funnel puffs behind |
-| creel | into the funnel mouth of a lobster pot at the rail's end; the winch hauls it up a floor on its rope, the davit swings it inboard and sets it down; the ball shoves the trap's door open and rolls out |
+| creel | into the funnel mouth of a lobster pot at the rail's end; the knock hops it off its hook and a lead weight on the rope's other end goes down into the sea and hauls it up a floor; the davit swings it inboard and sets it down; the ball shoulders the far mouth's flap aside and rolls out |
 | oar | off the deck's end onto the blade of an oar across a rowlock; the blade dips, the handle lifts a full bucket's bail off its hook, the bucket drops into the sea and the blade whips the ball up onto the deck a floor above |
-| coral | off the deck's end onto the crown of a head of brain coral standing out of the sea, off that onto a second, off that up onto the far deck; a puff and a ring on the water at each |
+| funnels | off the deck's end onto the after funnel of a steam launch moored low between the piers, like a cork; she toots, and the puff pops it on to the forward funnel, which toots it up onto the far deck; she ducks and bobs under each |
 | breakwater | off the pier's end down the face of a heap of boulders two floors high, boulder to boulder, a splash off the one awash, up onto the stage at the water's edge, short or long |
 
 ### The garden's pieces
@@ -652,14 +652,14 @@ against what holds it.
 | maple | out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went |
 | fern | onto the coil of a fiddlehead at the path's end; the frond unfurls and grows under it, pinnae opening as the curl leaves them; the hook at the tip bows a floor up and the ball rolls off it onto a shelf |
 | pinwheel | into the tip of a pinwheel's vane; the knock spins the wheel and the next vane round scoops the ball up the far side and flips it onto a shelf a floor up; the wheel spins down |
-| windchime | shoulders through four wooden tubes hung from a bough; each rides up over the ball and swings, clacking on its neighbour, rings off each; out a touch slower |
+| windchime | bats the sail of a wind chime up ahead of it and goes under; the sail comes down on its crown and is shoved into the first of three wooden tubes hung from a bough; the clack runs down the row and the chime rings; out a touch slower |
 | hammock | off the path's end into a hammock slung across the gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still |
-| birdbath | over the rim into the bowl with a splash; round the water, seen against the far rim, and out of the spout notch onto the path; rings settle |
-| footbridge | up the hump of an arched footbridge over a brook, slowing to the top, gathering pace down the far side; the planks give a little |
+| birdbath | over the near rim of a dish of water on a pedestal and down its inside; a splash; across half sunk, slowing, the water heaping up ahead of it; carried up the far side on the swell and out over the pouring lip, a slop of water and two drips after it |
+| footbridge | up the hump of an arched footbridge over a brook, slowing to the top, gathering pace down the far side; the board gives a little |
 | pumpkin | off the path's end onto a pumpkin's dome in the cell below; it squashes a hair and the stem bobs; down the flank straight onto the path a floor down, on or back |
-| stump | out along the handle of an axe left in a stump; the handle dips, the blade tears out, chips fly; the head drops and the handle flings the ball onto a shelf a floor up; the axe slides off and rests on its head against the stump |
-| pond | across three lily pads on a raised pond; each sinks and tilts under the ball, a ring on the water round it; up onto the far bank |
-| web | off the path's end into a web between two twigs; it stretches deep and quivers; the threads to the bridge line snap and the ball drops through to the path a floor down; the torn web hangs |
+| fountain | into the cup on a fountain's standpipe, corking it; the pipe shudders and the jet comes on under the ball; up a floor on a wobbling column of water; a bob at the top, the jet leans and it slides off the crown onto a shelf; the jet falls back to a bubble in its stone basin |
+| pond | off a stone wall across a raised lily pool on three pads; each ducks and tips under the ball and bobs up behind it, a ripple running out along the water's line as far as the walls; a hop over the open water between them, and up onto the far wall |
+| slide | onto the deck at the top of a playground slide's ladder, slowing to a crawl; a creep over the brink; down the lip and the chute gathering pace, round the foot and out along the flat a floor down |
 | swing | onto the seat of a swing hooked back at the path's end; the hook slips and it swings across a two-cell gap to a stop on the far post; the seat tips over the stop and pitches the ball onto the far path |
 
 ### The arcade's pieces
@@ -723,14 +723,14 @@ there is no run behind it, so it makes up a total a run might have earned.
 | pusher | onto the shelf of a coin pusher, up behind three coins at the lip; the block comes down behind it and shoves; the coins tip off into the tray a floor down and the ball goes over after them, out of the payout mouth; +100 |
 | pins | down a polished alley, faster, into ten pins in four ranks; they go up and over, each on its own spin, into the pit behind the deck; the strike lamp flares; out the back slowed by the hit; +300 |
 | popcorn | up the chute into the kettle in a popcorn cart's case, out of sight; the element lights, the kettle shakes, kernels burst; up out of the open top in a spray of popcorn onto the shelf a floor up; +100 |
-| dunk | onto the seat over a dunk tank; its weight swings the target over and trips the latch; the seat drops away and it goes into the water, a splash, gone; out of the drain flap onto the rail a floor down, a few drops with it; +200 |
+| dunk | out along the seat over a dunk tank and into the target paddle at its far end; the paddle teeters over its pivot and falls away, and its tooth slips out from under the seat; the seat drops and it goes into the water, a splash, gone; out of the drain flap onto the rail a floor down, a few drops with it; +200 |
 | stacker | onto the platform at a light tower's foot; the rows light from the bottom, tick, tick, the platform rising a row a tick with the ball on it; the prize lamp flares and the platform tilts it onto the rail one or two floors up, on or back; +500 |
-| foosball | onto a foosball pitch, its near wall in front of the ball; the first rod's men wind back, whip over and kick it in the back, the rod spinning on; the second rod swings and misses; into the goal slot and out; the goal lamp lights; +100 |
-| booth | into a photo booth behind the curtain, gone, and a pose; the flash, the whole curtain white for an instant; out the far side, and the strip drops out of the slot: three frames with a pixel ball in each; +100 |
+| foosball | in through one goal mouth onto a foosball pitch, its near wall in front of the ball; the first rod's man winds back, whips through and kicks it in the back, and spins on right round; the second swings late and kicks the air; out through the far goal mouth; the goal lamp lights; +100 |
+| booth | into a photo booth behind a short curtain, seen from the middle down under its hem; a pose; the flash, the whole curtain white for an instant; it bolts out the far side, and the strip drops out of the slot: three frames with its portrait in each; +100 |
 | maze | off the rail's end into a tilting labyrinth two floors tall; along a ledge, through the gap, down onto the next as the board tilts the other way, every ledge lighting as it is ridden; level at the floor and out of the gate, on or back; +200 |
 | freefall | into the car at the top of a drop tower; hoisted a little higher with a clank, held, let go; two floors of free fall past the lamps flaring, into the brakes with a bounce; the far door drops and it rolls out; +200 |
 | flume | a hop into a log at the top of a flume; the catch slips; down the chute in its stream, faster, into the pool; a splash, the flume lamp lights, and the log stops dead while the ball rides on over its nose onto the dock; +200 |
-| bumpercar | into the seat of a bumper car under a lit grid, sparks at the shoe; across the floor into the parked car, which is shoved off the end and over; the jolt pitches the ball over the nose onto the rail beyond; +100 |
+| bumpercar | into the seat of a bumper car under a lit grid, sparks at the shoe; across the floor into the parked car, nose to nose, which is shoved back into the rubber kerb and rocks off it; the jolt pitches the ball over both of them onto the rail beyond; +100 |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to

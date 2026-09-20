@@ -33,6 +33,11 @@ const SLAB = 0.12
 const PIT_TOP = FLOOR + SLAB
 const PIT_X0 = 0.82
 const LIE = 0.5 - PIN_W / 2
+/** A fallen pin lies wholly inside the pit's walls; and how far along the flung pins would have come down, nearest and farthest. */
+const LIE_X0 = PIT_X0 + PIN_H / 2 + 0.03
+const LIE_X1 = DECK_END - PIN_H / 2 - 0.03
+const FLUNG0 = 0.6
+const FLUNG1 = 2.4
 /** Down the alley, and after the hit. */
 const V_LANE = 4.0
 const V_HIT = 2.2
@@ -67,7 +72,12 @@ const PIN_SHAPE: Pt[] = [
   [-0.02, -0.06],
 ]
 
-/** Where pin `i` is at `t`: standing, in the air, or lying in the pit. */
+/**
+ * Where pin `i` is at `t`: standing, in the air, or lying in the pit.
+ * Wherever its flight would have taken it, it comes down in the pit, whole:
+ * the spread of the ten landings is squeezed to the pit's width, and each
+ * pin's pace along is the one that takes it there.
+ */
 function pinAt(i: number, t: number, scatter: PinsState['scatter']): { x: number; y: number; a: number } {
   const { x, y, at } = PINS[i]
   const s = t - at
@@ -75,12 +85,11 @@ function pinAt(i: number, t: number, scatter: PinsState['scatter']): { x: number
   const { vx, vy, spin } = scatter[i]
   const drop = LIE - y
   const T = (-vy + Math.sqrt(vy * vy + 2 * G * drop)) / G
-  // The back wall stops whatever reaches it.
-  const wall = DECK_END - 0.06
-  if (s < T) return { x: Math.min(x + vx * s, wall), y: y + vy * s + (G / 2) * s * s, a: spin * s }
+  const land = LIE_X0 + (LIE_X1 - LIE_X0) * over(x + vx * T, FLUNG0, FLUNG1)
+  if (s < T) return { x: x + ((land - x) * s) / T, y: y + vy * s + (G / 2) * s * s, a: spin * s }
   const al = spin * T
   const flat = Math.round((al - Math.PI / 2) / Math.PI) * Math.PI + Math.PI / 2
-  return { x: Math.min(x + vx * T, wall), y: LIE, a: al + (flat - al) * Math.min(1, (s - T) / 0.08) }
+  return { x: land, y: LIE, a: al + (flat - al) * Math.min(1, (s - T) / 0.08) }
 }
 
 function pin(p: p5, k: number, ink: string, weight: number, color: string, x: number, y: number, a: number): void {
@@ -133,8 +142,8 @@ export const pins = definePiece<PinsState>({
     p.rect(((LANE0 + DECK_END) / 2) * k, (FLOOR + SLAB / 2) * k, (DECK_END - LANE0) * k, SLAB * k, 0.01 * k)
     for (const x of [-0.2, 0.5]) post(p, k, ink, weight, x, PIT_TOP, 0.5)
     rail(p, k, ink, weight, -0.5, 1.5)
-    // The lane's light along the slab's side, on as the ball goes down it.
-    tube(p, k, ink, weight, s.color, LANE0 + 0.06, FLOOR + SLAB / 2, 0.74, FLOOR + SLAB / 2, lit)
+    // The lane's light along the slab's side, on as the ball goes down it: in the pins' colour, since the slab's own is lost on it.
+    tube(p, k, ink, weight, s.pin, LANE0 + 0.06, FLOOR + SLAB / 2, 0.74, FLOOR + SLAB / 2, lit)
     // The hood over the deck on its post, and the strike lamp in it.
     post(p, k, ink, weight, HOOD.x1 - 0.03, HOOD.y1, FLOOR)
     glow(p, k, s.color, LAMP[0], LAMP[1], 0.24, struck)

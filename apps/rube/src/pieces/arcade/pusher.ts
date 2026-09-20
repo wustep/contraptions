@@ -22,28 +22,27 @@ export interface PusherState {
   coin: string
 }
 
-/** The cabinet: the whole cell wide, from a header over the shelf to the floor of the cell below. */
+/** The cabinet: a header over a glass case the whole cell wide, down to a base whose top is the tray a floor below. */
 const CAB_X0 = -0.5
 const CAB_X1 = 0.44
 const CAB_TOP = -0.5
-const FRAME = 0.04
-/** The window: the dark play field behind the glass. */
 const WIN_TOP = -0.4
-const WIN_BOTTOM = 1 + FLOOR + 0.06
+/** The slot in the near glass the lane comes in by: open from here down to the shelf. */
+const SLOT_TOP = -0.17
 /** The shelf, level with the rail, from the back wall to the lip. */
 const LIP = 0.1
-const SHELF_T = 0.07
+const SHELF_T = 0.08
 /** The tray a floor down. */
 const TRAY_Y = 1 + FLOOR
 /** The payout mouth in the far wall: open from here down to the tray. */
 const MOUTH_TOP = 0.74
-/** The block: its face drawn back and at the end of its stroke; how thick and tall; how high it hangs; the track it rides. */
+/** The block: its face drawn back and at the end of its stroke; how thick and tall; how high it hangs; its carriage, under the header. */
 const BACK = -0.36
 const FWD = 0.05
 const BLOCK_W = 0.1
 const BLOCK_H = 0.16
 const RAISE = 0.28
-const TRACK_Y = -0.34
+const CARRIAGE_Y = WIN_TOP + 0.035
 /** Where the ball stops on the shelf, and when. */
 const SEAT = -0.2
 const ARRIVE = arriveAt(SEAT)
@@ -59,7 +58,7 @@ const T_LIFT = T_TIP + 0.1
 const T_BACK = T_LIFT + LIFT
 /** A coin, edge on. */
 const COIN_W = 0.09
-const COIN_T = 0.026
+const COIN_T = 0.04
 /** Show gravity, and the fall off the lip into the tray. */
 const G = 10
 const FALL = Math.sqrt(2 / G)
@@ -120,8 +119,8 @@ function coin(p: import('p5'), k: number, ink: string, weight: number, color: st
   p.push()
   p.translate(x * k, y * k)
   p.rotate(a)
-  solid(p, ink, weight * 0.6, color)
-  p.rect(0, 0, COIN_W * k, COIN_T * k, 0.006 * k)
+  solid(p, ink, weight * 0.5, color)
+  p.rect(0, 0, COIN_W * k, COIN_T * k, 0.012 * k)
   p.pop()
 }
 
@@ -146,38 +145,29 @@ export const pusher = definePiece<PusherState>({
     const up = raisedAt(t)
     const paid = since < 0 ? 0 : 1 - over(since, 1.2, 2)
 
-    // The cabinet: a frame in the colour round a dark window, from the header to the floor below.
+    // The cabinet: the header and the base in the colour, and the glass between them a line a side, open at the slot the lane comes in by and at the payout mouth.
     solid(p, ink, weight, s.color)
-    p.rect(((CAB_X0 + CAB_X1) / 2) * k, ((CAB_TOP + 1.5) / 2) * k, (CAB_X1 - CAB_X0) * k, (1.5 - CAB_TOP) * k, 0.03 * k)
-    solid(p, ink, weight * 0.8, bg)
-    p.rect(((CAB_X0 + CAB_X1) / 2) * k, ((WIN_TOP + WIN_BOTTOM) / 2) * k, (CAB_X1 - CAB_X0 - 2 * FRAME) * k, (WIN_BOTTOM - WIN_TOP) * k, 0.01 * k)
-    // The slot the lane comes in by, and the payout mouth the ball leaves by: the frame cut through.
-    p.noStroke()
-    p.fill(bg)
-    p.rect((CAB_X0 + FRAME / 2) * k, -0.02 * k, (FRAME + 0.03) * k, 0.3 * k)
-    p.rect((CAB_X1 - FRAME / 2) * k, ((MOUTH_TOP + WIN_BOTTOM) / 2) * k, (FRAME + 0.03) * k, (WIN_BOTTOM - MOUTH_TOP) * k)
+    p.rect(((CAB_X0 + CAB_X1) / 2) * k, ((CAB_TOP + WIN_TOP) / 2) * k, (CAB_X1 - CAB_X0) * k, (WIN_TOP - CAB_TOP) * k, 0.02 * k)
+    p.rect(((CAB_X0 + CAB_X1) / 2) * k, ((TRAY_Y + 1.5) / 2) * k, (CAB_X1 - CAB_X0) * k, (1.5 - TRAY_Y) * k, 0.02 * k)
     outline(p, ink, weight)
-    p.line((CAB_X0 - 0.01) * k, -0.17 * k, (CAB_X0 + FRAME) * k, -0.17 * k)
-    p.line((CAB_X1 - FRAME) * k, MOUTH_TOP * k, (CAB_X1 + 0.01) * k, MOUTH_TOP * k)
+    p.line(CAB_X0 * k, WIN_TOP * k, CAB_X0 * k, SLOT_TOP * k)
+    p.line(CAB_X0 * k, (FLOOR + SHELF_T) * k, CAB_X0 * k, TRAY_Y * k)
+    p.line(CAB_X1 * k, WIN_TOP * k, CAB_X1 * k, MOUTH_TOP * k)
     // The marquee on the header, chasing as the coins come down.
-    marquee(p, k, ink, weight, s.coin, bg, -0.4, 0.34, (CAB_TOP + WIN_TOP) / 2, 6, since, paid > 0.2, 0.06)
+    marquee(p, k, ink, weight, s.coin, bg, -0.38, 0.32, (CAB_TOP + WIN_TOP) / 2, 5, since, paid > 0.2, 0.06)
 
-    // The rail in, and the shelf level with it; the rail out of the mouth.
-    rail(p, k, ink, weight, -0.5, CAB_X0 + FRAME)
+    // The shelf, level with the rail and the slot's sill; the rail out of the mouth, off the base's top.
     solid(p, ink, weight, s.color)
-    p.rect(((CAB_X0 + FRAME + LIP) / 2) * k, (FLOOR + SHELF_T / 2) * k, (LIP - CAB_X0 - FRAME) * k, SHELF_T * k, 0.008 * k)
-    // The tray: a floor across the bottom of the window, out through the mouth to the rail.
-    p.rect(((CAB_X0 + FRAME + CAB_X1) / 2) * k, (TRAY_Y + 0.03) * k, (CAB_X1 - CAB_X0 - FRAME) * k, 0.06 * k, 0.008 * k)
-    rail(p, k, ink, weight, CAB_X1 - 0.02, 0.5, TRAY_Y)
+    p.rect(((CAB_X0 + LIP) / 2) * k, (FLOOR + SHELF_T / 2) * k, (LIP - CAB_X0) * k, SHELF_T * k, 0.008 * k)
+    rail(p, k, ink, weight, CAB_X1, 0.5, TRAY_Y)
 
-    // The track under the header, the carriage on it, the rod, and the block: raised at the back, down behind the ball, along the shelf.
-    outline(p, ink, weight)
-    p.line((CAB_X0 + FRAME + 0.02) * k, TRACK_Y * k, 0.22 * k, TRACK_Y * k)
+    // The carriage under the header, the rod, and the block: raised at the back, down behind the ball, along the shelf.
     const bottom = FLOOR - RAISE * up
     const bx = face - BLOCK_W / 2
-    p.line(bx * k, (TRACK_Y + 0.02) * k, bx * k, (bottom - BLOCK_H) * k)
+    outline(p, ink, weight)
+    p.line(bx * k, CARRIAGE_Y * k, bx * k, (bottom - BLOCK_H) * k)
     solid(p, ink, weight, ink)
-    p.rect(bx * k, TRACK_Y * k, 0.16 * k, 0.05 * k, 0.01 * k)
+    p.rect(bx * k, CARRIAGE_Y * k, 0.14 * k, 0.03 * k, 0.01 * k)
     solid(p, ink, weight, s.color)
     p.rect(bx * k, (bottom - BLOCK_H / 2) * k, BLOCK_W * k, BLOCK_H * k, 0.01 * k)
 

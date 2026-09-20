@@ -219,12 +219,6 @@ export const maze = definePiece<MazeState>({
       const lit = t < pl.lands[i] ? 0 : 1 - over(t - pl.lands[i], 0.6, 1.4)
       tube(p, k, ink, weight * 0.7, s.color, x0, L.y, x1, L.y, lit)
     })
-    // The axle's pin.
-    solid(p, ink, weight, bg)
-    p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.05 * k)
-    p.fill(ink)
-    p.noStroke()
-    p.circle(PIVOT[0] * k, PIVOT[1] * k, 0.02 * k)
     p.pop()
   },
   // Beside the gate, over the rail out: on the board it would lie across the ledges.

@@ -86,8 +86,8 @@ export const paddlewheel = definePiece<{ color: string }>({
     p.rect(STACK[0] * k, ((STACK[1] + 0.2) / 2) * k, 0.13 * k, (0.2 - STACK[1]) * k)
     solid(p, ink, weight, bg)
     p.rect(STACK[0] * k, (STACK[1] + 0.05) * k, 0.13 * k, 0.07 * k)
-    for (let i = 0; i < 3; i++) {
-      const f = ((t * 0.4 + i / 3) % 1 + 1) % 1
+    for (let i = 0; i < 2; i++) {
+      const f = ((t * 0.4 + i / 2) % 1 + 1) % 1
       puff(p, k, ink, weight * 0.8, bg, STACK[0] + 0.06 + 0.16 * f, STACK[1] - 0.09 - 0.2 * f, 0.03 + 0.07 * Math.sin(Math.PI * f))
     }
 
@@ -127,7 +127,7 @@ export const paddlewheel = definePiece<{ color: string }>({
     rail(p, k, ink, weight, EAST, 1.5, -1 + FLOOR)
     piling(p, k, ink, weight, 1.38, -1 + FLOOR, 0.5)
     outline(p, ink, weight)
-    p.line(1.38 * k, (-1 + FLOOR + 0.18) * k, (EAST + 0.03) * k, (-1 + FLOOR) * k)
+    p.line(1.38 * k, (-1 + FLOOR + 0.22) * k, 1.16 * k, (-1 + FLOOR) * k)
 
     // The churn: water thrown up where the paddles come up out of the sea, as long as the wheel turns.
     p.push()
