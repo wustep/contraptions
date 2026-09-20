@@ -7,6 +7,7 @@ import { score } from './pieces/arcade/neon'
 import type { Placed } from './plan'
 import type { Show, ShowPoint } from './show'
 import { extentOf, type Universe } from './universe'
+import { overviewCamera } from './overview'
 
 /**
  * The stage. A fullscreen canvas, a camera that follows the ball, and the
@@ -177,11 +178,9 @@ export function createStage(host: HTMLElement, show: Show, clock: Clock): Stage 
       let cam = cameraAt(show, t, here)
       let k = (Math.min(W, H) / VISIBLE) * cam.zoom
       if (overview) {
-        const { bounds } = here.universe
-        const bw = bounds.x1 - bounds.x0 + 2
-        const bh = bounds.y1 - bounds.y0 + 2
-        k = Math.min(W / bw, H / bh)
-        cam = { x: (bounds.x0 + bounds.x1) / 2, y: (bounds.y0 + bounds.y1) / 2, zoom: 1 }
+        const full = overviewCamera(here.universe.bounds, W, H)
+        k = full.scale
+        cam = { ...full, zoom: 1 }
       } else if (show.solo) {
         const e = extent(here.universe)
         k = Math.min(W / (e.x1 - e.x0 + 1), H / (e.y1 - e.y0 + 1), Math.min(W, H) / VISIBLE)

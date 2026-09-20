@@ -57,19 +57,19 @@ first second to its last.
 - **The music is the clock.** While the recording plays, show time is where
   the recording is. At 2× the recording is time-stretched, not pitched up,
   and the picture is wherever it has got to.
-- **It asks for `show.at(t)` and nothing else**, with `t` in seconds of
-  music. Any retiming that fits the machine to the music — a pause before a
-  strike, a bar hurried, a map a piece — lives inside your `Show`.
-  `../timemap.ts` has the vocabulary: `timeMap(knots)` for a smooth monotone
-  clock through pairs of (music, machine) seconds, `knotProblems` to say when
-  a map asks a mechanism to stop looking like itself, and `RetimedShow` for a
-  procedural machine under one map. `metronome/` is a worked example.
+- **It asks for `show.at(t)`**, with `t` in seconds of music. New music takes
+  arrange stock durations against recording cues. Choose the pieces, their
+  stock variants and their order; do not stretch mechanism clocks or add
+  pauses. `../stock/show.ts` plays saved stock placements directly.
+  `../timemap.ts` remains for the existing Take A and metronome studies.
 - **Nothing is written on the frame.** A show's canvas cannot set type, live
   or in a saved file. Titles, credits and anything else in words go in the
   fields above and are shown in the panel.
 - **`camera` frames for 16:9.** `cells` is how many cells a 16:9 frame shows
   top to bottom. A stage of another shape sees more world round that frame,
-  never less of it; a saved file is exactly it.
+  never less of it; a saved file is exactly it. Overview overrides framing
+  with Machine's fit of the current world's bounds. It affects live viewing
+  and export without changing the music clock.
 
 ## What is here
 
@@ -79,7 +79,13 @@ Arcade. The version file only names it. The score, `PremiereShow`, camera
 and soundtrack live in `apps/rube/src/timed/premiere-arabesque/` and are
 fetched from `load()`.
 
+`premiere-arabesque/take-b` and `clair-de-lune/take-a` are full stock-timing
+arrangements with four long maps. Their explicit piece orders live in
+`scripts/show-plans/`. `generate:premiere:b` and `generate:clair` compile
+those orders using fresh stock placements and write the scores and cue
+reports. `check:premiere` includes both Première takes; `check:clair` checks
+Clair. Each new take keeps its approved recording offset and panel credit.
+
 `metronome/` is two takes of a show with no recording: a procedural machine
 and a struck bar on every strike, made in the page. It is a worked example
 of a time map, and `check:shows` still walks it. Keep it.
-

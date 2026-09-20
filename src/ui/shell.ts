@@ -89,13 +89,11 @@ export function icon(paths: string[]): SVGSVGElement {
 export const ICON = {
   play: ['M8 5l11 7-11 7z'],
   pause: ['M7 5h3.4v14H7z', 'M13.6 5H17v14h-3.4z'],
-  // The mode switch, unlocked: one geometric mark a tab, the same filled-path
-  // hand as play and pause. Machine is the ball on its rail; Explorations
-  // the four cells of a grid; Shows a note; the Builder an L-square.
-  machine: ['M12 3.6a5.2 5.2 0 1 1 0 10.4 5.2 5.2 0 0 1 0-10.4z', 'M3 16.8h18v3.2H3z'],
-  explorations: ['M3.2 3.2h7.6v7.6H3.2z', 'M13.2 3.2h7.6v7.6h-7.6z', 'M3.2 13.2h7.6v7.6H3.2z', 'M13.2 13.2h7.6v7.6h-7.6z'],
-  shows: ['M7.2 16.6a4 3 0 1 0 8 0 4 3 0 1 0-8 0z', 'M14.4 16.4V4.2h2.4v12.2z', 'M16.8 4.2l5 2v3.6l-5-2z'],
-  builder: ['M4 4h16v3.4H7.4V20H4z'],
+  // Filled silhouettes at 14px: a gear, a varied grid, paired notes and a hammer.
+  machine: ['M9.5 2h5l.5 3 2 .9 2.6-1.5 2.5 4.3-2.4 1.8v2.3l2.4 1.8-2.5 4.3-2.6-1.5-2 .9-.5 3h-5l-.5-3-2-.9-2.6 1.5-2.5-4.3 2.4-1.8v-2.3L1.9 8.7l2.5-4.3L7 5.9l2-.9z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'],
+  explorations: ['M3 3h7v7H3z', 'M17.5 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z', 'M6.5 13 11 21H2z', 'M17.5 12.5 22 17l-4.5 4.5L13 17z'],
+  shows: ['M9 4.5 21 2v14.5a3.5 2.8 0 1 1-2.5-2.7V7L11.5 8.5v10a3.5 2.8 0 1 1-2.5-2.7z'],
+  builder: ['M3 3h11l6 5-3 3-4-3H3z', 'M7 10h4v11H7z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */

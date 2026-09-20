@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "description": "A generator for grids of tiny animated machines.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:shows && npm run check:premiere && vite build",
+    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:shows && npm run check:premiere && npm run check:clair && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "new": "node scripts/new-contraption.mjs",
@@ -14,8 +17,12 @@
     "check:rube": "esbuild apps/rube/check.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check.cjs && node node_modules/.cache/rube-check.cjs",
     "check:builder": "esbuild apps/rube/check-builder.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check-builder.cjs && node node_modules/.cache/rube-check-builder.cjs",
     "check:shows": "esbuild apps/rube/check-shows.ts --bundle --platform=node --format=cjs --external:p5 --loader:.mp3=file --loader:.ogg=file --loader:.wav=file --log-level=error --outfile=node_modules/.cache/rube-check-shows.cjs && node node_modules/.cache/rube-check-shows.cjs",
-    "check:premiere": "esbuild scripts/check-premiere-preview.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/premiere-check.mjs && node node_modules/.cache/premiere-check.mjs",
-    "generate:premiere": "esbuild scripts/generate-premiere-show.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-premiere-show.mjs && node node_modules/.cache/generate-premiere-show.mjs"
+    "check:premiere": "esbuild scripts/check-premiere-preview.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/premiere-check.mjs && node node_modules/.cache/premiere-check.mjs && npm run check:premiere:b",
+    "generate:premiere": "esbuild scripts/generate-premiere-show.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-premiere-show.mjs && node node_modules/.cache/generate-premiere-show.mjs",
+    "generate:premiere:b": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs premiere",
+    "generate:clair": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs clair",
+    "check:premiere:b": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs premiere",
+    "check:clair": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

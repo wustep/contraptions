@@ -750,6 +750,21 @@ page: *free time*, a struck bar wherever a piece fires, and *strict time*,
 the same machine under a time map that brings each strike onto a steady beat.
 The note is on the strike, so lock is something you can see and hear.
 
+Première also has [Take B](https://contraptions-wustep.vercel.app/shows/?show=premiere-arabesque&take=take-b),
+and [Clair de Lune, Take A](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-a) uses
+Laurens Goedhart's complete recording. Both new takes sequence unmodified
+stock durations through four long maps, Regular → Forest → Aqua → Arcade.
+They add no authored pauses or stretched mechanism clocks. Première Take A
+remains the default. The [phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and
+arrangement reports document the recording cues and repeated travel pieces.
+
+Press <kbd>O</kbd> or click **Overview** in Transport to fit the whole current
+world while the music keeps playing. Toggle it off to return to the follow
+camera. PNG and video exports use the selected view and keep credits in the
+panel. Regenerate the new scores with `npm run generate:premiere:b` and
+`npm run generate:clair`; `check:premiere` checks both Première takes, and
+`check:clair` checks Clair.
+
 
 ### The music is the clock
 

@@ -1,6 +1,7 @@
 import p5 from 'p5'
 import { canvasOf, downloadBlob } from '../../../../src/core/capture'
 import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
+import { overviewCamera } from '../overview'
 import { recordShow } from './record'
 import type { Performance } from './registry'
 
@@ -34,7 +35,7 @@ export const FRAME_SIZES: FrameSize[] = [
 ]
 
 /** One frame of a show, into the whole of whatever canvas `p` has. */
-export function paintShow(p: p5, perf: Performance, t: number): void {
+export function paintShow(p: p5, perf: Performance, t: number, overview = false): void {
   const time = Math.max(0, Math.min(perf.duration, t))
   const here = perf.show.at(time)
   const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
@@ -42,7 +43,8 @@ export function paintShow(p: p5, perf: Performance, t: number): void {
   const H = p.height
   // The composed frame is always whole: a stage wider or taller than 16:9 sees more world around it, never less of it.
   const k = Math.min(W / ASPECT, H) / cam.cells
-  drawWorld(p, perf.show, time, here, cam, k, { x: 0, y: 0, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
+  const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
+  drawWorld(p, perf.show, time, here, full ?? cam, full?.scale ?? k, { x: 0, y: 0, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
 }
 
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */
@@ -59,6 +61,7 @@ function refuseType(p: p5): void {
 }
 
 export interface ShowStage {
+  setOverview(on: boolean): void
   /** Put a version on the stage, or clear it. */
   set(perf: Performance | null): void
   /** The frame at `t` as a PNG at `size`: the picture alone. */
@@ -74,6 +77,7 @@ export interface ShowStage {
 }
 
 export function createShowStage(host: HTMLElement, clock: { time(): number }): ShowStage {
+  let overview = false
   let perf: Performance | null = null
   let release = () => {}
   let lastPaper = ''
@@ -88,7 +92,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         p.clear()
         return
       }
-      paintShow(p, perf, clock.time())
+      paintShow(p, perf, clock.time(), overview)
       // The stage behind the canvas is the world's paper, so a resize never flashes the panel's dark.
       const paper = perf.show.at(Math.min(perf.duration, Math.max(0, clock.time()))).universe.theme.bg
       if (paper !== lastPaper) {
@@ -105,6 +109,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
    * at; a still's is never seen.
    */
   function frame(size: FrameSize, showing: Performance, shown: boolean): { canvas: HTMLCanvasElement; paint(t: number): void; remove(): void } {
+    const full = overview
     const holder = document.createElement('div')
     holder.className = 'show-frame'
     holder.hidden = !shown
@@ -118,7 +123,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         refuseType(s)
         s.noLoop()
       }
-      s.draw = () => paintShow(s, showing, at)
+      s.draw = () => paintShow(s, showing, at, full)
     })
     return {
       canvas: canvasOf(p),
@@ -134,6 +139,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
   }
 
   return {
+    setOverview(on) { overview = on },
     set(next) {
       perf = next
       if (!next) {
