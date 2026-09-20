@@ -28,11 +28,16 @@ const cueSets = {
 
 interface Arrangement { world: StockMap['world']; target: number; pieces: StockSpec[] }
 
-function generate(work: 'premiere' | 'clair' | 'schubert') {
+type Work = 'premiere' | 'clair' | 'clair-b' | 'schubert'
+const IDS: Record<'premiere' | 'clair' | 'clair-b', string> = { premiere: 'premiere-arabesque/take-b', clair: 'clair-de-lune/take-a', 'clair-b': 'clair-de-lune/take-b' }
+const COMMANDS: Record<'premiere' | 'clair' | 'clair-b', string> = { premiere: 'premiere:b', clair: 'clair', 'clair-b': 'clair:b' }
+const REPORTS: Record<'premiere' | 'clair' | 'clair-b', string> = { premiere: 'PREMIERE_TAKE_B', clair: 'CLAIR_TAKE_A', 'clair-b': 'CLAIR_TAKE_B' }
+
+function generate(work: Work) {
   const arabesque = work === 'premiere'
   const impromptu = work === 'schubert'
-  const id = impromptu ? schubert.id : arabesque ? 'premiere-arabesque/take-b' : 'clair-de-lune/take-a'
-  const command = arabesque ? 'premiere:b' : work
+  const id = impromptu ? schubert.id : IDS[work]
+  const command = impromptu ? 'schubert' : COMMANDS[work]
   const plan: Arrangement[] = JSON.parse(readFileSync(`scripts/show-plans/${work}.json`, 'utf8'))
   const maps: StockMap[] = []
   let cursor = 0
@@ -65,20 +70,27 @@ function generate(work: 'premiere' | 'clair' | 'schubert') {
     }
     map.end = cursor
     assert.ok(Math.abs(map.end - scene.target) < .17, `${map.world} misses its cadence by ${map.end - scene.target}s`)
+    // Take B keeps the whale in the water: the cells under its footprint are open sea, not another machine's roof.
+    if (work === 'clair-b') for (const whale of map.pieces.filter((p) => p.spec.name === 'blowhole')) {
+      const own = new Set(whale.cells.map((c) => c.join(',')))
+      for (const [x, y] of whale.cells) assert.ok(own.has(`${x},${y + 1}`) || !occupied.has(`${x},${y + 1}`), `${map.world}: the whale at ${x},${y} is perched on another piece`)
+    }
     maps.push(map)
   }
   const phrases: Phrase[] = arabesque
     ? premiere.phrases.map(({ title, begin, end, visible }) => ({ title, begin, end, visible }))
     : (impromptu ? schubert.phrases : clairPhrases).map(([end, title, visible], i, all) => ({ begin: i ? all[i - 1][0] : 0, end, title, visible }))
   const pieces = maps.flatMap((m) => m.pieces)
+  const cueKey = work === 'clair-b' ? 'clair' : work
   const score: StockScore = { id, title: impromptu ? schubert.title : arabesque ? 'Première Arabesque' : 'Clair de Lune',
     performer: impromptu ? schubert.performer : arabesque ? 'Patrizia Prati' : 'Laurens Goedhart',
     audioOffset: impromptu ? schubert.audioOffset : arabesque ? 2.38 : 2.44,
     duration: impromptu ? schubert.duration : arabesque ? premiere.duration : 301.648526, phrases, maps,
-    cues: cueSets[work].map(([name, target]) => {
+    cues: cueSets[cueKey].map(([name, target]) => {
       const piece = pieces.find((p) => p.spec.name === name)!
       return { piece: name, target, actual: piece.begin + piece.lane.fire }
     }),
+    ...(work === 'clair-b' ? { scores: ['arcade' as const] } : {}),
   }
   const folder = `apps/rube/src/shows/versions/${id.split('/')[0]}`
   mkdirSync(folder, { recursive: true })
@@ -96,10 +108,10 @@ function generate(work: 'premiere' | 'clair' | 'schubert') {
     '| Stock strike | Recording cue | Actual strike | Error |', '| --- | ---: | ---: | ---: |')
   for (const cue of score.cues) lines.push(`| ${cue.piece} | ${cue.target.toFixed(3)} | ${cue.actual.toFixed(3)} | ${(cue.actual - cue.target).toFixed(3)}s |`)
   lines.push('', `Source offset: ${score.audioOffset}s. Full playback: ${score.duration.toFixed(3)}s. Final portal: ${maps.at(-1)!.end.toFixed(3)}s.`, '')
-  writeFileSync(`docs/promo/${impromptu ? 'SCHUBERT_TAKE_A' : arabesque ? 'PREMIERE_TAKE_B' : 'CLAIR_TAKE_A'}_ARRANGEMENT.md`, lines.join('\n'))
+  writeFileSync(`docs/promo/${impromptu ? 'SCHUBERT_TAKE_A' : REPORTS[work]}_ARRANGEMENT.md`, lines.join('\n'))
   console.log(`${id}: ${pieces.length} pieces, ${score.duration.toFixed(3)}s, four maps, zero authored rests or clock changes.`)
 }
 
 const work = process.argv[2]
-assert.ok(work === 'premiere' || work === 'clair' || work === 'schubert', 'Choose premiere, clair or schubert')
+assert.ok(work === 'premiere' || work === 'clair' || work === 'clair-b' || work === 'schubert', 'Choose premiere, clair, clair-b or schubert')
 generate(work)
