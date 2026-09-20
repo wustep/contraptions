@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
+import type { Theme } from '../../../../../src/core/themes'
 
 /**
  * The garden's shared vocabulary: leaves, blooms, soil and pots, drawn the
@@ -86,4 +87,14 @@ export function drop(p: p5, k: number, color: string, x: number, y: number, r: n
   p.circle(x * k, y * k, r * 2 * k)
   p.triangle((x - r * 0.9) * k, (y - r * 0.4) * k, (x + r * 0.9) * k, (y - r * 0.4) * k, x * k, (y - r * 2.2) * k)
   p.pop()
+}
+
+/**
+ * Water's colour in this palette: the bluest of its colours that is not the
+ * ball's, so a ball in a bowl or on a pond is always seen against it.
+ */
+export function gardenWater(theme: Theme, ball: string): string {
+  const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
+  const pool = theme.colors.filter((c) => c !== ball)
+  return [...(pool.length ? pool : theme.colors)].sort((a, b) => blueness(b) - blueness(a))[0]
 }

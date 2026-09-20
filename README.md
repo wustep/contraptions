@@ -395,10 +395,10 @@ vocabulary of pieces, not a palette swap:
 
 | | World | In the code | The place | Its pieces |
 | --- | --- | --- | --- | --- |
-| 1 | **Regular** | `workshop` | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-three of them |
-| 2 | **Forest** | `garden` | a greenhouse, soil and bloom | twenty-three: what grows, what lives in it, and the tools in the shed |
-| 3 | **Aqua** | `harbor` | a pier over water, tide and salt | twenty-two: sea life, boats, pier gear and the tide |
-| 4 | **Arcade** | `arcade` | neon night: lights, scores and payouts | twenty-three: pinball, the midway, the payout machines and the screens |
+| 1 | **Regular** | `workshop` | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-four of them |
+| 2 | **Forest** | `garden` | a greenhouse, soil and bloom | thirty-four: what grows, what lives in it, and the tools in the shed |
+| 3 | **Aqua** | `harbor` | a pier over water, tide and salt | thirty-four: sea life, boats, pier gear and the tide |
+| 4 | **Arcade** | `arcade` | neon night: lights, scores and payouts | thirty-four: pinball, the midway, the payout machines and the screens |
 
 Regular → Forest → Aqua → Arcade → Regular, always. The panel, the catalog
 and the readout use those names; the code, the folders under
@@ -411,8 +411,8 @@ its tastes the planner leans on, how the map is laid out, and which pieces
 it draws — always and only from that world's pool. Two visits to the same
 world never look alike back to back.
 
-**No world is the small one.** Every world has at least twenty-two beats
-of its own (the workshop thirty-three), and four tastes to lean on: the
+**No world is the small one.** Every world has thirty-four beats of its
+own, and four tastes to lean on: the
 harbor's *tidal*, *quay*, *surf* and *reef*; the garden's *greenhouse*,
 *allotment*, *wild* and *lawn*; the arcade's *pinball*, *midway*,
 *jackpot* and *screens*. A world's vocabulary is chosen for geometry
@@ -532,7 +532,7 @@ whatever pool it is handed.
 
 ### The workshop's pieces
 
-**Thirty-three pieces**, curated from the eighty-odd toys in the other
+**Thirty-four pieces**, curated from the eighty-odd toys in the other
 catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 
 | Piece | What happens |
@@ -571,6 +571,7 @@ catalogs and rewritten for one ball, each a beat the ball is seen to cause:
 | painter | the ball stops on a plate under two nozzles; they spray while it turns a new colour, for good; the dryer horn blows it on |
 | cradle | a Newton's cradle: the ball stops dead and the thread passes to the far ball, which slips its string mid-swing and flies on — one motion from the blow to the landing, a pendulum and then a fall under the same gravity |
 | inverter | gravity flips inside a field between two coils where the floor rail stops; the ball bobs along the ceiling and drops back |
+| scales | into the left pan of a balance, level with the rail; the ball outweighs the brass in the other pan and the beam swings, pointer and all; the pan's foot lands on a rest off the pillar and tips, rolling the ball off its rim into a quarter-pipe a floor down, on or back; later the brass wins and the beam eases back onto its stop |
 | portal | the door at either end of a map; the far side is always a new map |
 
 ### The harbor's pieces
@@ -608,6 +609,18 @@ against what holds it.
 | foghorn | out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up |
 | serpent | the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops |
 | anemone | into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan |
+| submarine | off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives; her wake and bubbles cross two cells of sea; she comes up at the far pier, the hatch opens and the ball pops out onto the deck; the periscope watches it come and go |
+| bottle | down a brow into the mouth of a bottle afloat at its foot; the shove sends her across foot first; her foot fetches up on the far piling and she vaults over the corner, hangs mouth down and pours the ball out onto the deck; empty, she falls back with a splash |
+| barrel | into a cask balanced on the deck's corner; its weight tips it onto a plank and it slides down a floor nose first, comes level on the lower deck and stops in the chock; the ball knocks the head open and rolls out |
+| springboard | out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea two cells on; bubbles; up out of the water onto the far deck with a second splash |
+| rod | off the deck's end into the sea by the float of a rod in its holder; the float ducks, the rod bends double and whips up, and the line hauls the ball out in an arc onto the deck a cell on or a floor up; the line swings from the tip after |
+| sandcastle | onto a sandbank into a sandcastle: the towers slump, lumps hop off the tops, the flag keels over, and the ball ploughs through the heap slowed by the sand |
+| chest | into a treasure chest across the deck; the lid slams; a glint through the keyhole; the lid lifts and the ball rolls out gilded, the palette's yellowest colour |
+| paddlewheel | off the deck's end onto a paddle of a steamer's side wheel turning in the water; up the near side and over the top onto the deck a floor up; the funnel puffs behind |
+| creel | into the funnel mouth of a lobster pot at the rail's end; the winch hauls it up a floor on its rope, the davit swings it inboard and sets it down; the ball shoves the trap's door open and rolls out |
+| oar | off the deck's end onto the blade of an oar across a rowlock; the blade dips, the handle lifts a full bucket's bail off its hook, the bucket drops into the sea and the blade whips the ball up onto the deck a floor above |
+| coral | off the deck's end onto the crown of a head of brain coral standing out of the sea, off that onto a second, off that up onto the far deck; a puff and a ring on the water at each |
+| breakwater | off the pier's end down the face of a heap of boulders two floors high, boulder to boulder, a splash off the one awash, up onto the stage at the water's edge, short or long |
 
 ### The garden's pieces
 
@@ -637,6 +650,17 @@ against what holds it.
 | scarecrow | loose on its pole, one straw hand hanging in the way; the ball shoulders it round till the arm points out at us, and the figure is flung round nearly two turns; the crow on its other arm goes up and flies off |
 | dandelion | into the cup of a seed the size of a parasol; the tether slips its peg; up on the air, swinging, one or two floors, small seeds drifting after; the stalk snags in a twig's fork and the cup tips the ball out |
 | maple | out onto a big leaf held level on a sapling's twig; the stalk snaps; leaf and ball swoop down side to side, one or two floors; the ball rolls off the way the last swoop went |
+| fern | onto the coil of a fiddlehead at the path's end; the frond unfurls and grows under it, pinnae opening as the curl leaves them; the hook at the tip bows a floor up and the ball rolls off it onto a shelf |
+| pinwheel | into the tip of a pinwheel's vane; the knock spins the wheel and the next vane round scoops the ball up the far side and flips it onto a shelf a floor up; the wheel spins down |
+| windchime | shoulders through four wooden tubes hung from a bough; each rides up over the ball and swings, clacking on its neighbour, rings off each; out a touch slower |
+| hammock | off the path's end into a hammock slung across the gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still |
+| birdbath | over the rim into the bowl with a splash; round the water, seen against the far rim, and out of the spout notch onto the path; rings settle |
+| footbridge | up the hump of an arched footbridge over a brook, slowing to the top, gathering pace down the far side; the planks give a little |
+| pumpkin | off the path's end onto a pumpkin's dome in the cell below; it squashes a hair and the stem bobs; down the flank straight onto the path a floor down, on or back |
+| stump | out along the handle of an axe left in a stump; the handle dips, the blade tears out, chips fly; the head drops and the handle flings the ball onto a shelf a floor up; the axe slides off and rests on its head against the stump |
+| pond | across three lily pads on a raised pond; each sinks and tilts under the ball, a ring on the water round it; up onto the far bank |
+| web | off the path's end into a web between two twigs; it stretches deep and quivers; the threads to the bridge line snap and the ball drops through to the path a floor down; the torn web hangs |
+| swing | onto the seat of a swing hooked back at the path's end; the hook slips and it swings across a two-cell gap to a stop on the far post; the seat tips over the stop and pitches the ball onto the far path |
 
 ### The arcade's pieces
 
@@ -659,8 +683,9 @@ there is to see, and a number lying on it hides the thing it is for. A touch in
 passing is tens (a spinner's turn +10, a zigzag pad +10, a bumper +50, a
 skee ring +50, a token +50; the moles go +10, +20, +30), a game played is
 +100 (a line cleared, a goal, a rally won, a skill shot), a ride or a prize
-is +200, and the big ones are a basket +300, the pachinko pocket +500, the
-striker's bell +500 and the sevens +777. Nothing pays out along the way. The
+is +200, and the big ones are a basket +300, a strike +300, the pachinko
+pocket +500, the striker's bell +500, the stacker's prize lamp +500 and the
+sevens +777. Nothing pays out along the way. The
 ticket machine is the map's `finale`: the planner never draws it from the
 pool, places it after the last beat and before the door (stepping the walk
 back a beat or two if it does not fit where the walk ended), and tells it
@@ -695,6 +720,17 @@ there is no run behind it, so it makes up a total a run might have earned.
 | hoops | into the cup of a sprung arm; the catch slips and the arm throws it, a high lob down through the rim; the net bulges round it; onto the return ramp and out under the backboard; the board lights to 300 |
 | ferris | onto the seat of the low gondola of a little Ferris wheel; half a turn, slowly, every gondola swinging on its pivot; the high seat is level with the rail a floor up and the ball rolls off it |
 | coaster | drops into a car at the station; the chain clacks it up the lift hill, the track lighting behind it; over the crest and down the drop to the floor below; the fins stop the car in sparks and the ball rolls on out of its nose |
+| pusher | onto the shelf of a coin pusher, up behind three coins at the lip; the block comes down behind it and shoves; the coins tip off into the tray a floor down and the ball goes over after them, out of the payout mouth; +100 |
+| pins | down a polished alley, faster, into ten pins in four ranks; they go up and over, each on its own spin, into the pit behind the deck; the strike lamp flares; out the back slowed by the hit; +300 |
+| popcorn | up the chute into the kettle in a popcorn cart's case, out of sight; the element lights, the kettle shakes, kernels burst; up out of the open top in a spray of popcorn onto the shelf a floor up; +100 |
+| dunk | onto the seat over a dunk tank; its weight swings the target over and trips the latch; the seat drops away and it goes into the water, a splash, gone; out of the drain flap onto the rail a floor down, a few drops with it; +200 |
+| stacker | onto the platform at a light tower's foot; the rows light from the bottom, tick, tick, the platform rising a row a tick with the ball on it; the prize lamp flares and the platform tilts it onto the rail one or two floors up, on or back; +500 |
+| foosball | onto a foosball pitch, its near wall in front of the ball; the first rod's men wind back, whip over and kick it in the back, the rod spinning on; the second rod swings and misses; into the goal slot and out; the goal lamp lights; +100 |
+| booth | into a photo booth behind the curtain, gone, and a pose; the flash, the whole curtain white for an instant; out the far side, and the strip drops out of the slot: three frames with a pixel ball in each; +100 |
+| maze | off the rail's end into a tilting labyrinth two floors tall; along a ledge, through the gap, down onto the next as the board tilts the other way, every ledge lighting as it is ridden; level at the floor and out of the gate, on or back; +200 |
+| freefall | into the car at the top of a drop tower; hoisted a little higher with a clank, held, let go; two floors of free fall past the lamps flaring, into the brakes with a bounce; the far door drops and it rolls out; +200 |
+| flume | a hop into a log at the top of a flume; the catch slips; down the chute in its stream, faster, into the pool; a splash, the flume lamp lights, and the log stops dead while the ball rides on over its nose onto the dock; +200 |
+| bumpercar | into the seat of a bumper car under a lit grid, sparks at the shoe; across the floor into the parked car, which is shoved off the end and over; the jolt pitches the ball over the nose onto the rail beyond; +100 |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to
@@ -702,7 +738,7 @@ the ball, and the show draws the ball once on the joined path from one
 clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
 worlds headless and asserts all of it: the four worlds in order, three
-times round, at least twenty-two beats of its own in every world, every
+times round, at least thirty-four beats of its own in every world, every
 piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, only the arcade
 painted dark, at least three beats in four of every map a piece it has

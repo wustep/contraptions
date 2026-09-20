@@ -47,6 +47,8 @@ function sameStockLane(saved: unknown, stock: unknown, label: string, path = 'la
 
 const work = process.argv[2]
 assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
+/** How many stock types each world had, rail and portal included, when the take was arranged. */
+const CATALOG_WHEN_ARRANGED: Record<string, number[]> = { premiere: [35, 25, 24, 25], clair: [35, 25, 24, 25] }
 const score = (work === 'premiere' ? premiere : clair) as unknown as StockScore
 const show = new StockShow(score)
 assert.equal(score.audioOffset, work === 'premiere' ? 2.38 : 2.44)
@@ -61,7 +63,10 @@ for (const [mi, map] of score.maps.entries()) {
   assert.ok(map.end - map.begin > 55, 'Keep phrases inside long maps')
   assert.equal(map.pieces[0].begin, map.begin)
   assert.equal(map.pieces.at(-1)!.end, map.end)
-  assert.deepEqual(new Set(map.pieces.map((p) => p.spec.name)), new Set(world.pieces.map((p) => p.name)), `Missing a ${map.world} stock type`)
+  // A take covers the whole catalog as it stood when it was arranged; the catalog may have grown since.
+  const used = new Set(map.pieces.map((p) => p.spec.name))
+  for (const name of used) assert.ok(world.pieces.some((p) => p.name === name), `Unknown ${map.world} stock type ${name}`)
+  assert.ok(used.size >= CATALOG_WHEN_ARRANGED[work][mi], `Missing a ${map.world} stock type`)
   assert.equal(map.pieces.filter((p) => p.spec.name === 'rail').length, 1, 'No rail padding')
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'out').length, 1)
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'in').length, mi ? 1 : 0)
