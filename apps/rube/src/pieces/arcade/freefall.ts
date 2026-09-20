@@ -29,9 +29,13 @@ const SLAB = 0.05
 const DOOR_H = 0.24
 const DOOR_T = 0.05
 const FRONT_H = 0.11
-/** The brakes at the foot, either side of the mast, and where the car is caught and stops. */
+/** Where the car is caught and stops; and the brakes at the foot: a fin on either face of the mast, from where they take hold down past where the car stops. */
 const CATCH_Y = 1.8
 const STOP_Y = 2
+const FIN_W = 0.06
+const FIN_X = MAST_W / 2 + FIN_W / 2
+const FIN_TOP = CATCH_Y - 0.1
+const FIN_FOOT = STOP_Y + R + SLAB + 0.08
 const ARRIVE = arriveAt(0)
 const SHUT = 0.2
 const HOIST = 0.4
@@ -133,11 +137,11 @@ export const freefall = definePiece<{ color: string }>({
       if (lit > 0.02) glow(p, k, s.color, MAST_W / 2 + 0.05, ly, 0.1, lit)
       lamp(p, k, ink, weight, s.color, bg, MAST_W / 2 + 0.05, ly, 0.03, lit)
     }
-    // The brakes at the foot: a fin either side of the mast, lit at the catch.
+    // The brakes at the foot: a fin on either face of the mast, behind the car, lit at the catch.
     for (const side of [-1, 1]) {
-      glow(p, k, s.color, side * (CAR_HALF + 0.05), STOP_Y + 0.02, 0.14, caught)
+      glow(p, k, s.color, side * FIN_X, (FIN_TOP + FIN_FOOT) / 2, 0.16, caught)
       solid(p, ink, weight, caught > 0.5 ? s.color : bg)
-      p.rect(side * (CAR_HALF + 0.05) * k, (STOP_Y + 0.02) * k, 0.06 * k, 0.3 * k, 0.01 * k)
+      p.rect(side * FIN_X * k, ((FIN_TOP + FIN_FOOT) / 2) * k, FIN_W * k, (FIN_FOOT - FIN_TOP) * k, 0.01 * k)
     }
     // The car's back, its floor, and its two doors: the near one a gangway at the top, the far one at the foot.
     solid(p, ink, weight, s.color)
