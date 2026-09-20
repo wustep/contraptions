@@ -1,40 +1,39 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../src/core/ease'
-import { FAST, FLOOR, R, ROLL, definePiece, laneReach, over, rail, ramp, roll, type Lane, type Pt } from '../../parts'
+import { FAST, FLOOR, R, ROLL, definePiece, laneReach, over, post, rail, ramp, roll, type Lane, type Pt } from '../../parts'
 import { flash, glow, lamp, score } from './neon'
 
 /**
- * A foosball table two cells long. The rail runs onto the pitch, whose
- * near wall stands in front of the ball; two rods cross the table over
- * it in brackets on the wall, three men on each, hanging from the rod by
- * their hips. As the ball comes the first rod's men wind back, feet up
- * out of its way, and as it passes under them they whip over and their
- * feet kick it in the back, hard, and the rod spins on right round; it
- * goes the length of the table flat out; the second rod swings at it as
- * it goes by, and misses. It runs into the goal slot in the end wall and
- * out onto the rail; the goal lamp lights, and a hundred pops. The men
- * swing to a stop.
+ * A foosball table two cells long. The rail runs in through one goal
+ * mouth and onto the pitch, behind the table's near side; two rods cross
+ * the table over it on posts, a man on each, fixed to his rod through the
+ * chest. As the ball comes the first man winds back, feet up behind him
+ * and out of its way, and as it passes under him he whips through and his
+ * toe meets it in the back, hard, and the rod spins on right round; it
+ * goes the length of the table flat out. The second man has wound back
+ * too, swings at it as it goes by, late, and kicks the air where it was.
+ * It runs out through the far goal mouth onto the rail; the goal lamp
+ * lights, and a hundred pops. The men swing to a stop.
  */
 export interface FoosballState {
   color: string
   men: string
 }
 
-/** The table: its ends, the pitch on the rail line, its body under, and the near wall in front of the ball. */
+/** The table: its ends, its body under the pitch, and the rim of its near side, which stands in front of the ball. */
 const TABLE_X0 = -0.35
 const TABLE_X1 = 1.38
 const BODY = 0.23
-const WALL_TOP = 0.02
-/** The rods: where they cross, and how high; a man hangs this far below his rod. */
-const RODS = [0.2, 1.0]
-const ROD_Y = -0.27
-const LEG = 0.37
+const WALL_TOP = 0.06
+/** A goal mouth at either end: a dark doorway the ball is seen against as it goes through. */
+const MOUTH_W = 0.09
+const MOUTH_TOP = -0.19
+const LAMP_X = TABLE_X1 - MOUTH_W / 2
 /** The goal slot in the end wall, and where the ball's front reaches it. */
 const GOAL = TABLE_X1 - 0.06
-const SLOT: Pt = [GOAL, 0]
-/** Where the ball is when the first rod's feet meet its back, and how hard it goes. */
-const KICK = RODS[0] + R + 0.04
+/** Where the ball is when the first man's toe meets its back, and how hard it goes. */
+const KICK = 0.2 + R + 0.04
 const V = FAST * 1.2
 const T_KICK = (KICK + 0.5) / ROLL
 const LANE: Lane = {
@@ -42,49 +41,70 @@ const LANE: Lane = {
   fire: T_KICK,
 }
 const T_GOAL = laneReach(LANE, GOAL - R)
-/** The men wind back this far and whip through; the rod goes right round after the kick. */
-const WIND = -1.4
+/**
+ * A man, from his rod: shoulders, hips, sole, and how far his toe sticks
+ * out in front. He is short enough to go right round his rod inside the
+ * cell, and his toe hangs at the height of the ball's middle.
+ */
+const ROD_Y = -0.24
+const SHOULDER = -0.05
+const HIP = 0.1
+const SOLE = 0.24
+const TOE = 0.065
+/** The rods: the first stands where its man's toe, hanging, is on the ball's back at the kick. */
+const RODS = [KICK - R - TOE - 0.02, 1.0]
+/** When the ball is under the second rod. */
+const T_PASS = laneReach(LANE, RODS[1])
+/** Wound back: feet up behind, a little past level, so the ball goes under with room. Then right round after the kick. */
+const WIND = 1.65
 const SPIN = Math.PI * 2
 
-/** The first rod's angle: hanging, wound back as the ball comes, whipped through the kick and right round, settling. */
+/** The first rod's angle, feet back positive: hanging, wound back as the ball comes, whipped through the kick and right round, settling. */
 function rod1(t: number): number {
   const since = t - T_KICK
   if (since < -0.36) return 0
   if (since < -0.07) return WIND * easeOutCubic(over(since, -0.36, -0.1))
   if (since < 0) return WIND * (1 - easeInQuad(over(since, -0.07, 0)))
-  if (since < 0.4) return SPIN * easeOutQuad(since / 0.4)
-  return SPIN + 0.18 * Math.sin((since - 0.4) * 14) * Math.exp(-(since - 0.4) * 4)
+  if (since < 0.5) return -SPIN * easeOutQuad(since / 0.5)
+  return -SPIN - 0.18 * Math.sin((since - 0.5) * 14) * Math.exp(-(since - 0.5) * 4)
 }
-/** The second rod: a swing at the ball as it goes by, late, and a wobble back to hanging. */
+/** The second rod: wound back as the first kicks, a swing at the ball once it has gone by, and the swing dying away. */
 function rod2(t: number): number {
-  const at = T_GOAL - 0.12
-  const s = t - at
-  if (s < -0.16) return 0
-  if (s < 0) return -1.0 * easeOutQuad(over(s, -0.16, 0))
-  if (s < 0.1) return -1.0 + 1.9 * easeInQuad(s / 0.1)
-  return 0.9 * Math.cos((s - 0.1) * 9) * Math.exp(-(s - 0.1) * 3.5)
+  const s = t - (T_PASS - 0.01)
+  const wound = WIND * easeOutCubic(over(t, T_KICK - 0.04, T_KICK + 0.07))
+  if (s < 0) return wound
+  if (s < 0.08) return WIND * (1 - easeInQuad(s / 0.08))
+  // Through the bottom at the pace the whip gave it, and on as a swing that dies.
+  const w = 12
+  return (-((WIND * 2) / 0.08 / w)) * Math.sin(w * (s - 0.08)) * Math.exp(-6 * (s - 0.08))
 }
 
-/** A man hanging from (x, ROD_Y) at angle `a`: a head over a shirt over legs, one block and a dot. */
-function man(p: p5, k: number, ink: string, weight: number, color: string, x: number, dy: number, a: number): void {
+/**
+ * A man on his rod at (x, ROD_Y), turned `a`: one block from shoulders to
+ * toe, and a head. His line is finer than the table's, or at this size it
+ * would leave none of his colour showing.
+ */
+function man(p: p5, k: number, ink: string, weight: number, color: string, x: number, a: number): void {
   p.push()
-  p.translate(x * k, (ROD_Y + dy) * k)
+  p.translate(x * k, ROD_Y * k)
   p.rotate(a)
-  solid(p, ink, weight, color)
+  solid(p, ink, weight * 0.6, color)
   p.beginShape()
   for (const [px, py] of [
-    [-0.05, -0.02],
-    [0.05, -0.02],
-    [0.05, 0.15],
-    [0.025, 0.15],
-    [0.025, LEG],
-    [-0.025, LEG],
-    [-0.025, 0.15],
-    [-0.05, 0.15],
+    [-0.06, SHOULDER],
+    [0.06, SHOULDER],
+    [0.06, HIP],
+    [0.04, HIP],
+    [0.04, SOLE - 0.04],
+    [TOE, SOLE - 0.035],
+    [TOE, SOLE],
+    [-0.04, SOLE],
+    [-0.04, HIP],
+    [-0.06, HIP],
   ] as Pt[])
     p.vertex(px * k, py * k)
   p.endShape(p.CLOSE)
-  p.circle(0, -0.065 * k, 0.07 * k)
+  p.circle(0, (SHOULDER - 0.055) * k, 0.1 * k)
   p.pop()
 }
 
@@ -109,47 +129,33 @@ export const foosball = definePiece<FoosballState>({
     const goal = t - T_GOAL
     const scored = goal < 0 ? 0 : 1 - over(goal, 1.5, 2.5)
 
-    // The rail in and out, and the table: a body under the pitch on legs, the pitch the rail's line, the end wall with the goal slot in it.
+    // The rail in and out, the table's legs, and a goal mouth at either end of the pitch: dark, so the ball is seen going through it.
     rail(p, k, ink, weight, -0.5, TABLE_X0)
     rail(p, k, ink, weight, TABLE_X1, 1.5)
-    solid(p, ink, weight, s.color)
-    p.rect(((TABLE_X0 + TABLE_X1) / 2) * k, (FLOOR + BODY / 2) * k, (TABLE_X1 - TABLE_X0) * k, BODY * k, 0.02 * k)
-    for (const x of [TABLE_X0 + 0.1, 0.6, TABLE_X1 - 0.1]) {
-      outline(p, ink, weight)
-      p.line(x * k, (FLOOR + BODY) * k, x * k, 0.5 * k)
-      p.line((x - 0.06) * k, 0.5 * k, (x + 0.06) * k, 0.5 * k)
-    }
+    for (const x of [TABLE_X0 + 0.1, TABLE_X1 - 0.1]) post(p, k, ink, weight, x, FLOOR + BODY, 0.5)
+    solid(p, ink, weight, bg)
+    for (const x of [TABLE_X0 + MOUTH_W / 2, TABLE_X1 - MOUTH_W / 2]) p.rect(x * k, ((MOUTH_TOP + FLOOR) / 2) * k, MOUTH_W * k, (FLOOR - MOUTH_TOP) * k, 0.01 * k)
+    // The rods' posts, behind the men, and the men behind the ball.
     outline(p, ink, weight)
-    p.line(TABLE_X0 * k, FLOOR * k, TABLE_X1 * k, FLOOR * k)
-    solid(p, ink, weight, s.color)
-    p.rect((TABLE_X1 - 0.04) * k, ((FLOOR - 0.14) / 2) * k, 0.08 * k, (FLOOR + 0.14) * k, 0.01 * k)
-    solid(p, ink, weight, ink)
-    p.rect(SLOT[0] * k, 0 * k, 0.05 * k, 0.24 * k)
-    // The men, behind the ball, hanging from their rods: three to a rod, the ones behind a little up and along.
-    const angles = [rod1(t), rod2(t)]
-    RODS.forEach((x, i) => {
-      for (let j = 2; j >= 0; j--) man(p, k, ink, weight, s.men, x + j * 0.03, -j * 0.028, angles[i])
-    })
-    // The goal lamp on its stalk over the end wall.
+    for (const x of RODS) p.line(x * k, ROD_Y * k, x * k, FLOOR * k)
+    man(p, k, ink, weight, s.men, RODS[0], rod1(t))
+    man(p, k, ink, weight, s.men, RODS[1], rod2(t))
+    // The goal lamp on its stalk over the far mouth.
     outline(p, ink, weight)
-    p.line((TABLE_X1 - 0.04) * k, -0.14 * k, (TABLE_X1 - 0.04) * k, -0.34 * k)
-    glow(p, k, s.color, TABLE_X1 - 0.04, -0.38, 0.14, scored)
-    lamp(p, k, ink, weight, s.color, bg, TABLE_X1 - 0.04, -0.38, 0.04, scored)
+    p.line(LAMP_X * k, MOUTH_TOP * k, LAMP_X * k, -0.36 * k)
+    glow(p, k, s.color, LAMP_X, -0.4, 0.14, scored)
+    lamp(p, k, ink, weight, s.color, bg, LAMP_X, -0.4, 0.04, scored)
     // The kick, and the goal.
     flash(p, k, s.men, weight, KICK + 0.05, 0, since, 0.18, 0.12, 0.24)
     flash(p, k, s.color, weight, GOAL, 0, goal, 0.2, 0.1, 0.22)
   },
   over: (p, s, { k, ink, weight }) => {
-    // The near wall stands in front of the ball along the pitch, and the rods' brackets stand on it, a rod's end in each.
+    // The table's near side stands in front of the ball from its rim down, and each rod's end shows on its man's chest.
     solid(p, ink, weight, s.color)
-    p.rect(((TABLE_X0 + TABLE_X1 - 0.08) / 2) * k, ((WALL_TOP + FLOOR + 0.02) / 2) * k, (TABLE_X1 - 0.08 - TABLE_X0) * k, (FLOOR + 0.02 - WALL_TOP) * k, 0.01 * k)
-    for (const x of RODS) {
-      solid(p, ink, weight, s.color)
-      p.rect(x * k, ((ROD_Y + WALL_TOP) / 2) * k, 0.06 * k, (WALL_TOP - ROD_Y) * k, 0.01 * k)
-      solid(p, ink, weight, ink)
-      p.circle(x * k, ROD_Y * k, 0.05 * k)
-    }
+    p.rect(((TABLE_X0 + TABLE_X1) / 2) * k, ((WALL_TOP + FLOOR + BODY) / 2) * k, (TABLE_X1 - TABLE_X0) * k, (FLOOR + BODY - WALL_TOP) * k, 0.02 * k)
+    solid(p, ink, weight, ink)
+    for (const x of RODS) p.circle(x * k, ROD_Y * k, 0.03 * k)
   },
-  // Over the goal lamp, as the goal goes in: at the kick it lay across the men.
-  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, TABLE_X1 - 0.04, -0.5, '+100', t - T_GOAL, 1),
+  // Over the goal lamp, as the goal goes in, and inside the table's own two cells.
+  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, 1.26, -0.5, '+100', t - T_GOAL, 1),
 })

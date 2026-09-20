@@ -1,19 +1,21 @@
 import type p5 from 'p5'
-import { solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, fly, over, post, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
+import { outline, solid } from '../../../../../src/core/draw'
+import { FLOOR, R, ROLL, definePiece, fly, mixHex, over, post, rail, ramp, roll, wait, type Lane, type Pt } from '../../parts'
 import { glow, score, tube } from './neon'
 
 /**
  * A popcorn cart. A glass case with an open top stands on a cart on two
- * wheels; inside it a kettle sits on its element with a few kernels in the
- * bottom of the case from the last batch. The rail runs in through the
- * case's side onto a chute that climbs to a tip over the kettle; the ball
- * slows up the chute, rolls off the tip and drops into the kettle, out of
- * sight. The element lights, the kettle shakes, and kernels burst up out
- * of it, white, and rain down into the case; then the ball comes up with
- * them, out of the kettle and out of the open top in a spray of popcorn,
- * high over the case and down onto the shelf a floor up, where it lands
- * and rolls on. The popcorn lies where it fell.
+ * spoked wheels; inside it a kettle sits on its element. The rail runs in
+ * through the case's side onto a chute that climbs to a tip over the
+ * kettle's lip; the ball slows up the chute, rolls off the tip and drops
+ * into the kettle, out of sight. The element lights, the kettle shakes,
+ * and kernels burst up out of it, white, and rain down into the case;
+ * then the ball comes up with them, out of the kettle and out of the open
+ * top in a spray of popcorn, high over the case and down onto the shelf a
+ * floor up, where it lands and rolls on. The popcorn lies where it fell.
+ *
+ * The popcorn is behind the ball, always: a kernel in front of it sat on
+ * it like a wart.
  */
 export interface PopcornState {
   color: string
@@ -34,7 +36,8 @@ const CASE = { x0: -0.34, x1: 0.34, top: -0.42, bottom: 0.38 }
 /** The case's uprights, in the colour, like a bezel. */
 const POST_W = 0.05
 const CART = { y0: 0.38, y1: 0.44 }
-const WHEEL = 0.05
+const WHEEL = 0.085
+const AXLES = [-0.25, 0.25]
 /** The chute: from the case's wall up to its tip over the kettle. */
 const WALL: Pt = [CASE.x0 + POST_W, 0]
 const TIP: Pt = [-0.14, -0.08]
@@ -47,10 +50,10 @@ const ELEMENT_Y = KETTLE_BOTTOM + 0.012
 /** The shelf a floor up, and where the ball comes down on it. */
 const SHELF0 = 0.2
 const LAND: Pt = [0.32, -1]
-const HEAT = 0.7
-/** Show gravity for the pop, and how high it goes. */
+const HEAT = 0.7637
+/** Show gravity for the pop, and how high it goes: the top of the cell above, less the ball. */
 const G = 12
-const POP_ARC = 1.0
+const POP_ARC = 0.85
 const POP = Math.sqrt((8 * POP_ARC) / G)
 /** Off the tip at the chute's pace, falling into the kettle: where it lands is where the kettle is. */
 const DROP = Math.sqrt((2 * (KETTLE_BOTTOM - 0.02 - R - TIP[1])) / 10)
@@ -86,12 +89,12 @@ function kernelAt(q: Kernel, t: number): Pt | null {
   return [q.x0 + (q.landX - q.x0) * f, y0 + q.vy * s + (KG / 2) * s * s]
 }
 
-function kettle(p: p5, k: number, ink: string, weight: number, color: string, bg: string, shake: number): void {
-  solid(p, ink, weight, bg)
-  p.rect((KX + shake) * k, ((RIM + KETTLE_BOTTOM) / 2) * k, KETTLE_W * k, (KETTLE_BOTTOM - RIM) * k, 0.01 * k, 0.01 * k, 0.06 * k, 0.06 * k)
-  // The rim: a lip in the colour, a shade wider.
+/** The kettle's front: a pot in the colour, round in the bottom, under a pale lip a shade wider. */
+function kettle(p: p5, k: number, ink: string, weight: number, color: string, shake: number): void {
   solid(p, ink, weight, color)
-  p.rect((KX + shake) * k, (RIM + 0.015) * k, (KETTLE_W + 0.04) * k, 0.035 * k, 0.008 * k)
+  p.rect((KX + shake) * k, ((RIM + KETTLE_BOTTOM) / 2) * k, KETTLE_W * k, (KETTLE_BOTTOM - RIM) * k, 0.01 * k, 0.01 * k, 0.1 * k, 0.1 * k)
+  solid(p, ink, weight, ink)
+  p.rect((KX + shake) * k, (RIM + 0.015) * k, (KETTLE_W + 0.04) * k, 0.03 * k, 0.015 * k)
 }
 
 export const popcorn = definePiece<PopcornState>({
@@ -140,36 +143,22 @@ export const popcorn = definePiece<PopcornState>({
     rail(p, k, ink, weight, -0.5, CASE.x0 + POST_W)
     rail(p, k, ink, weight, SHELF0, 0.5, -1 + FLOOR)
     post(p, k, ink, weight, 0.44, -1 + FLOOR, 0.5)
-    // The cart: a body on two wheels, with the case standing on it.
-    solid(p, ink, weight, s.color)
-    p.rect(0, ((CART.y0 + CART.y1) / 2) * k, 0.78 * k, (CART.y1 - CART.y0) * k, 0.01 * k)
-    for (const x of [-0.26, 0.26]) {
-      solid(p, ink, weight, bg)
-      p.circle(x * k, (0.5 - WHEEL) * k, WHEEL * 2 * k)
-      p.fill(ink)
-      p.noStroke()
-      p.circle(x * k, (0.5 - WHEEL) * k, 0.03 * k)
-    }
-    // The case: a dark window between two uprights in the colour, open at the top, the lane's doorway cut in the near one.
-    solid(p, ink, weight * 0.8, bg)
+    // The case: a pane of glass, a shade off the night, between two uprights in the colour; open at the top, the lane's doorway cut in the near upright.
+    p.noStroke()
+    p.fill(mixHex(bg, ink, 0.08))
     p.rect(0, ((CASE.top + CASE.bottom) / 2) * k, (CASE.x1 - CASE.x0 - POST_W) * k, (CASE.bottom - CASE.top) * k)
     solid(p, ink, weight, s.color)
     p.rect((CASE.x0 + POST_W / 2) * k, ((CASE.top - 0.19) / 2) * k, POST_W * k, (-0.19 - CASE.top) * k, 0.01 * k)
     p.rect((CASE.x0 + POST_W / 2) * k, ((FLOOR + 0.02 + CASE.bottom) / 2) * k, POST_W * k, (CASE.bottom - FLOOR - 0.02) * k, 0.01 * k)
     p.rect((CASE.x1 - POST_W / 2) * k, ((CASE.top + CASE.bottom) / 2) * k, POST_W * k, (CASE.bottom - CASE.top) * k, 0.01 * k)
-    // The chute: up from the wall to the tip, a radius under the ball's line.
+    // The chute: a tray up from the wall to its tip on the kettle's lip, a radius under the ball's line.
     const under = R * Math.hypot(1, (TIP[1] - WALL[1]) / (TIP[0] - WALL[0]))
-    solid(p, ink, weight, s.color)
-    p.quad(WALL[0] * k, FLOOR * k, TIP[0] * k, (TIP[1] + under) * k, TIP[0] * k, (TIP[1] + under + 0.05) * k, WALL[0] * k, (FLOOR + 0.05) * k)
+    solid(p, ink, weight, ink)
+    p.quad(WALL[0] * k, FLOOR * k, TIP[0] * k, (TIP[1] + under) * k, TIP[0] * k, (TIP[1] + under + 0.025) * k, WALL[0] * k, (FLOOR + 0.025) * k)
     // The element under the kettle, lit while it works, and the kettle's heat on the glass behind.
     glow(p, k, s.color, KX, 0.22, 0.24, heat)
     tube(p, k, ink, weight, s.color, KX - 0.15, ELEMENT_Y, KX + 0.15, ELEMENT_Y, heat)
-  },
-  over: (p, s, { k, t, ink, bg, weight }) => {
-    // The kettle stands in front of the ball: it goes in, and comes out of the top.
-    const heating = t > T_SEAT && t < T_POP
-    kettle(p, k, ink, weight, s.color, bg, heating ? 0.008 * Math.sin(t * 55) : 0)
-    // The popcorn: white, small, in the air and where it lies.
+    // The popcorn: white, small, in the air and where it lies; behind the ball, up from behind the kettle's front, and behind the wheels.
     p.noStroke()
     p.fill(ink)
     for (const q of s.kernels) {
@@ -178,7 +167,26 @@ export const popcorn = definePiece<PopcornState>({
       p.circle(at[0] * k, at[1] * k, KERNEL * 2 * k)
       p.circle((at[0] + 0.014) * k, (at[1] - 0.01) * k, KERNEL * 1.3 * k)
     }
+    // The cart: a body on two spoked wheels, with the case standing on it.
+    solid(p, ink, weight, s.color)
+    p.rect(0, ((CART.y0 + CART.y1) / 2) * k, 0.78 * k, (CART.y1 - CART.y0) * k, 0.01 * k)
+    for (const x of AXLES) {
+      solid(p, ink, weight, bg)
+      p.circle(x * k, (0.5 - WHEEL) * k, WHEEL * 2 * k)
+      outline(p, ink, weight * 0.6)
+      for (let i = 0; i < 3; i++) {
+        const a = (i * Math.PI) / 3 + Math.PI / 6
+        p.line((x - Math.cos(a) * WHEEL) * k, (0.5 - WHEEL - Math.sin(a) * WHEEL) * k, (x + Math.cos(a) * WHEEL) * k, (0.5 - WHEEL + Math.sin(a) * WHEEL) * k)
+      }
+      solid(p, ink, weight, ink)
+      p.circle(x * k, (0.5 - WHEEL) * k, 0.035 * k)
+    }
   },
-  // Beside the case, over the cart's near end: the pop goes up the far side.
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, -0.2, -0.5, '+100', since, 1),
+  over: (p, s, { k, t, ink, weight }) => {
+    // The kettle stands in front of the ball: it goes in, and comes out of the top.
+    const heating = t > T_SEAT && t < T_POP
+    kettle(p, k, ink, weight, s.color, heating ? 0.008 * Math.sin(t * 55) : 0)
+  },
+  // Beside the pop, over the cart's near end and clear of the ball going up the far side.
+  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, -0.26, -0.5, '+100', since, 1),
 })
