@@ -8,6 +8,18 @@ import premiere from '../apps/rube/src/shows/versions/premiere-arabesque/take-b.
 import clair from '../apps/rube/src/shows/versions/clair-de-lune/take-a.generated.json'
 import { stockPlacement } from './stock-placement'
 
+/** V8/libm versions differ in the last bits of trig-derived stock traces. */
+function sameStock(actual: unknown, expected: unknown, path: string): void {
+  if (typeof actual === 'number' && typeof expected === 'number') {
+    assert.ok(Number.isFinite(actual) && Number.isFinite(expected) && Math.abs(actual - expected) < 1e-12, `${path}: ${actual} != ${expected}`)
+  } else if (actual && expected && typeof actual === 'object' && typeof expected === 'object') {
+    assert.equal(Array.isArray(actual), Array.isArray(expected), path)
+    const a = actual as Record<string, unknown>, b = expected as Record<string, unknown>
+    assert.deepEqual(Object.keys(a).sort(), Object.keys(b).sort(), path)
+    for (const key of Object.keys(a)) sameStock(a[key], b[key], `${path}.${key}`)
+  } else assert.deepEqual(actual, expected, path)
+}
+
 const work = process.argv[2]
 assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
 const score = (work === 'premiere' ? premiere : clair) as unknown as StockScore
@@ -33,9 +45,9 @@ for (const [mi, map] of score.maps.entries()) {
     const stock = stockPlacement(world, piece.spec, piece.ballIn, i)
     const duration = laneTime(stock.lane)
     // Compare to fresh stock placement, not a duplicate timing formula.
-    assert.deepEqual(piece.lane, JSON.parse(JSON.stringify(stock.lane)), `${map.world}/${piece.spec.name}: altered stock lane`)
-    assert.deepEqual(piece.state, JSON.parse(JSON.stringify(stock.state)), `${map.world}/${piece.spec.name}: altered mechanism state`)
-    assert.deepEqual(piece.changes, stock.changes ?? [])
+    sameStock(piece.lane, JSON.parse(JSON.stringify(stock.lane)), `${map.world}/${piece.spec.name}: stock lane`)
+    sameStock(piece.state, JSON.parse(JSON.stringify(stock.state)), `${map.world}/${piece.spec.name}: mechanism state`)
+    sameStock(piece.changes, JSON.parse(JSON.stringify(stock.changes ?? [])), `${map.world}/${piece.spec.name}: ball changes`)
     assert.deepEqual(piece.ballIn, ball, 'Ball continuity across placements and portals')
     ball = ballAt(ball, piece.changes, duration)
     assert.ok(Math.abs(piece.end - piece.begin - duration) < 1e-10, 'Stretched mechanism')
