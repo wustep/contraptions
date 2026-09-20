@@ -1,11 +1,13 @@
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInQuad, easeOutCubic } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, over, ramp, roll, type Lane, type Pt } from '../../parts'
-import { bodyColor, water } from './sea'
+import type { Theme } from '../../../../../src/core/themes'
+import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, type Lane, type Pt } from '../../parts'
+import { WATER, bodyColor, luminance, water } from './sea'
 
 /**
- * A sandcastle. For one cell the pier gives way to a sandbank, level with
- * the deck, and a sandcastle stands on it in the ball's way: two round
+ * A sandcastle. For one cell the pier gives way to a sandbank, an island
+ * of sand standing out of the sea as high as the deck, and a sandcastle
+ * stands on it in the ball's way: two round
  * towers with a wall between, crenellated, a flag on the far tower. The
  * ball runs into the near tower and does not stop: the towers slump into
  * heaps, the wall goes down, lumps hop off the tops and land beyond, the
@@ -25,6 +27,17 @@ const V_SAND = 1.1
 const FIRE = (HIT + 0.5) / ROLL
 /** The flag on the far tower. */
 const POLE = 0.17
+/** The bank's top runs this far either side; its flanks go down into the sea from there, and a plank of deck bridges each. */
+const BANK = 0.37
+
+/** How sandy a colour is: what yellow has over its blue. */
+const sandy = (hex: string) => Math.min(parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16)) - parseInt(hex.slice(5, 7), 16)
+/** Sand is sand-coloured: the palette's sandiest colour that is not the ball's and stands off the paper; failing one, a body's colour. */
+function sandColor(theme: Theme, color: string, ball: string): string {
+  const paper = luminance(theme.bg)
+  const sand = theme.colors.filter((c) => c !== ball && sandy(c) > 60 && Math.abs(luminance(c) - paper) > 0.12).sort((a, b) => sandy(b) - sandy(a))[0]
+  return sand ?? bodyColor(theme, color, ball)
+}
 
 const LANE: Lane = {
   segs: [roll([-0.5, 0], [HIT, 0], ROLL), ramp([HIT, 0], [0.3, 0], ROLL, V_SAND), ramp([0.3, 0], [0.5, 0], V_SAND, ROLL)],
@@ -78,19 +91,22 @@ export const sandcastle = definePiece<{ color: string }>({
   weight: 0.9,
   place: ({ color, fits, theme, ball }) => {
     if (!fits([[0, 0]], [1, 0])) return null
-    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
+    return { cells: [[0, 0]], exit: { at: [1, 0], dir: 1 }, lane: LANE, state: { color: sandColor(theme, color, ball.color) } }
   },
   draw: (p, s, { k, since, ink, bg, weight }) => {
-    // The sea, and the bank standing up out of it, level with the decks either side.
-    water(p, k, ink, weight, -0.5, 0.5)
+    // The bank: an island of sand, its top level with the decks, its flanks going down into the sea to the bed;
+    // a plank of deck reaches it from either side.
+    rail(p, k, ink, weight, -0.5, -BANK + 0.02)
+    rail(p, k, ink, weight, BANK - 0.02, 0.5)
     solid(p, ink, weight, s.color)
     p.beginShape()
-    p.vertex(-0.5 * k, FLOOR * k)
-    p.vertex(0.5 * k, FLOOR * k)
-    p.vertex(0.5 * k, 0.36 * k)
-    p.bezierVertex(0.5 * k, 0.46 * k, 0.44 * k, 0.5 * k, 0.36 * k, 0.5 * k)
-    p.vertex(-0.36 * k, 0.5 * k)
-    p.bezierVertex(-0.44 * k, 0.5 * k, -0.5 * k, 0.46 * k, -0.5 * k, 0.36 * k)
+    p.vertex((-BANK + 0.04) * k, FLOOR * k)
+    p.vertex((BANK - 0.04) * k, FLOOR * k)
+    p.bezierVertex(BANK * k, FLOOR * k, (BANK + 0.03) * k, (FLOOR + 0.08) * k, 0.5 * k, (WATER + 0.05) * k)
+    p.vertex(0.5 * k, 0.5 * k)
+    p.vertex(-0.5 * k, 0.5 * k)
+    p.vertex(-0.5 * k, (WATER + 0.05) * k)
+    p.bezierVertex((-BANK - 0.03) * k, (FLOOR + 0.08) * k, -BANK * k, FLOOR * k, (-BANK + 0.04) * k, FLOOR * k)
     p.endShape(p.CLOSE)
 
     // The castle: the near tower, the wall, the far tower, each slumping in turn as the ball comes through; and
@@ -120,9 +136,10 @@ export const sandcastle = definePiece<{ color: string }>({
       parts()
       p.pop()
     }
-    // The bank's top again, over the heaps' feet, so the ground is one line.
+    // The bank's top again, over the heaps' feet, so the ground is one line; and the sea, lapping its flanks.
     outline(p, ink, weight)
-    p.line(-0.5 * k, FLOOR * k, 0.5 * k, FLOOR * k)
+    p.line((-BANK + 0.04) * k, FLOOR * k, (BANK - 0.04) * k, FLOOR * k)
+    water(p, k, ink, weight, -0.5, 0.5)
 
     // The flag on the far tower: up, until the tower goes; then over onto the ruin.
     const fx = T1 + TW / 2

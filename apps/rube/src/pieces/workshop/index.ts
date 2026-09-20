@@ -23,7 +23,6 @@ import { pendulum } from './pendulum'
 import { plunger } from './plunger'
 import { plainRail } from './rail'
 import { rocket } from './rocket'
-import { scales } from './scales'
 import { scoop } from './scoop'
 import { screw } from './screw'
 import { seesaw } from './seesaw'
@@ -31,6 +30,7 @@ import { stairs } from './stairs'
 import { switchback } from './switchback'
 import { tipper } from './tipper'
 import { toaster } from './toaster'
+import { toggle } from './toggle'
 import { trampoline } from './trampoline'
 import { trapdoor } from './trapdoor'
 import { trapeze } from './trapeze'
@@ -77,7 +77,7 @@ import { zipline } from './zipline'
  *   painter   the ball stops under two nozzles; they spray, it leaves a new colour
  *   cradle    a Newton's cradle: the ball stops dead, the far ball takes the thread and flies
  *   inverter  gravity flips inside the field where the floor stops; the ball rides the ceiling and drops back
- *   scales    a balance: the ball outweighs the brass, the beam swings, the loaded pan lands on a rest and tips it out a floor down
+ *   toggle    a flip-flop: a hopper drops the ball on the fin of a rocker; shed into the crook of the raised arm, its weight throws the rocker over, clack, and it rolls off a floor down, on or back; the rocker stays pointing the other way
  *   portal    the door at either end of a map; the far side is always a new map
  */
 
@@ -112,18 +112,18 @@ export const workshop: World = {
   // The show begins here, so the ball is seen rolling before the first contraption.
   leadIn: true,
   tastes: {
-    mixed: { painter: 1.3, cradle: 1.3, inverter: 1.2, scales: 1.2 },
+    mixed: { painter: 1.3, cradle: 1.3, inverter: 1.2, toggle: 1.2 },
     bench: {
       hammer: 1.7, dominoes: 1.6, seesaw: 1.3, bell: 1.2, pendulum: 1.6, conveyor: 1.5, paddle: 1.4,
-      drawbridge: 1.5, tipper: 1.4, gears: 1.7, cradle: 1.2, scales: 1.5, cannon: 0.5, loop: 0.5, toaster: 0.7, rocket: 0.5, crane: 0.8,
+      drawbridge: 1.5, tipper: 1.4, gears: 1.7, cradle: 1.2, toggle: 1.5, cannon: 0.5, loop: 0.5, toaster: 0.7, rocket: 0.5, crane: 0.8,
     },
     vertical: {
       drop: 1.6, lift: 1.5, toaster: 1.4, scoop: 1.4, trapdoor: 1.6, funnel: 1.6, balloon: 1.5, trampoline: 1.3,
-      stairs: 1.5, switchback: 1.6, zipline: 1.4, tipper: 1.3, scales: 1.3, screw: 1.5, flipper: 1.3, painter: 1.2, 'drop-deep': 2.2, 'lift-tall': 2.2, loop: 0.6, rocket: 0.6, plunger: 0.6,
+      stairs: 1.5, switchback: 1.6, zipline: 1.4, tipper: 1.3, toggle: 1.3, screw: 1.5, flipper: 1.3, painter: 1.2, 'drop-deep': 2.2, 'lift-tall': 2.2, loop: 0.6, rocket: 0.6, plunger: 0.6,
     },
     ballistic: {
       cannon: 2, loop: 1.8, toaster: 1.3, seesaw: 1.3, hammer: 1.1, plunger: 1.9, rocket: 1.8, trampoline: 1.6, crane: 1.3,
-      zipline: 1.3, trapeze: 1.6, trebuchet: 1.9, flipper: 1.5, inverter: 1.4, dominoes: 0.6, conveyor: 0.5, scales: 0.6,
+      zipline: 1.3, trapeze: 1.6, trebuchet: 1.9, flipper: 1.5, inverter: 1.4, dominoes: 0.6, conveyor: 0.5, toggle: 0.6,
     },
   },
   pieces: [
@@ -161,7 +161,7 @@ export const workshop: World = {
     painter,
     cradle,
     inverter,
-    scales,
+    toggle,
     portal,
   ],
 }

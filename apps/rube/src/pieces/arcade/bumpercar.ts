@@ -15,7 +15,8 @@ import { flash, score, tube } from './neon'
  * shoe sliding along the grid with it; the car that hit it stops dead and
  * the jolt pitches the ball out of the seat, over both of them and the
  * kerb, onto the rail beyond. A hundred. The sparks die and the grid goes
- * dark.
+ * dark. The throw goes over the far side of the floor: the parked car's
+ * pole and the grid's far post stand in front of it.
  *
  * The drive is one function of time, which the lane traces and the car is
  * drawn from.
@@ -154,7 +155,7 @@ export const bumpercar = definePiece<BumpercarState>({
     rail(p, k, ink, weight, DECK_X1, 2.5)
     for (const px of [2.05, 2.42]) post(p, k, ink, weight, px, FLOOR, 0.5)
     // The grid over the floor on its posts, and the tube under it, lit while a car is live.
-    for (const gx of [DECK_X0 + 0.03, DECK_X1 - 0.03]) post(p, k, ink, weight, gx, GRID_Y, DECK_Y)
+    post(p, k, ink, weight, DECK_X0 + 0.03, GRID_Y, DECK_Y)
     solid(p, ink, weight, s.color)
     p.rect(((GRID_X0 + GRID_X1) / 2) * k, GRID_Y * k, (GRID_X1 - GRID_X0) * k, 0.05 * k, 0.01 * k)
     tube(p, k, ink, weight * 0.7, s.color, GRID_X0 + 0.05, GRID_Y + 0.05, GRID_X1 - 0.05, GRID_Y + 0.05, powered)
@@ -166,7 +167,6 @@ export const bumpercar = definePiece<BumpercarState>({
     solid(p, ink, weight, ink)
     p.rect((KERB_X + 0.035) * k, (DECK_Y - 0.05) * k, 0.07 * k, 0.1 * k, 0.025 * k)
     // The parked car, nose to the one that is coming, and the driving car's pole; its body is in front of the ball.
-    pole(p, k, ink, weight, parked.x, -1)
     hull(p, k, ink, weight, s.parked, parked.x, -1, parked.a)
     pole(p, k, ink, weight, x, 1)
     // The spark at the driving car's shoe while it is live: short flicks of light off the contact.
@@ -187,6 +187,9 @@ export const bumpercar = definePiece<BumpercarState>({
   over: (p, s, { k, t, ink, weight }) => {
     // The driving car's near side, in front of the ball: it sits in the car until it is thrown out.
     hull(p, k, ink, weight, s.color, carAt(t), 1, 0)
+    // The parked car's pole and the grid's far post stand on the near side of the floor: the ball is pitched over behind them.
+    pole(p, k, ink, weight, parkedAt(t).x, -1)
+    post(p, k, ink, weight, DECK_X1 - 0.03, GRID_Y, DECK_Y)
   },
   // Over the grid, above the bump: on the floor it would lie across the cars.
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, BUMP_X + CAR_HALF + RUBBER, GRID_Y + 0.1, '+100', since, 1),

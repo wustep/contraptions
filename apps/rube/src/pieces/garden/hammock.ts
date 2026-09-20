@@ -1,4 +1,4 @@
-import { outline, solid } from '../../../../../src/core/draw'
+import { solid } from '../../../../../src/core/draw'
 import { easeInOutSine } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, fly, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
 import { soil, tuft } from './green'
@@ -24,6 +24,8 @@ const HY = FLOOR
 const SLACK = 0.11
 const DIP = 0.19
 const U_REST = 0.42
+/** How full the cloth hangs under its own line, in the middle, with nothing in it. */
+const BODY = 0.1
 /** Rolling down into it, and the spring back up. */
 const DOWN = 0.32
 const OMEGA = 12
@@ -107,8 +109,10 @@ export const hammock = definePiece<{ color: string }>({
       solid(p, ink, weight, bg)
       p.circle(x * k, (HY - 0.12) * k, 0.06 * k)
     }
-    // The hammock: one band from hook to hook, its top the cloth's line and its underside a little fuller, gathered to nothing at the ends.
+    // The hammock: one band of cloth from hook to hook, its top the cloth's line and its underside fuller, gathered to
+    // nothing at the ends. Loaded, it is pulled thinner, so it never sags into the grass.
     const n = 40
+    const full = BODY * (1 - 0.6 * Math.max(0, dipAt(t).d / DIP))
     solid(p, ink, weight, s.color)
     p.beginShape()
     for (let i = 0; i <= n; i++) {
@@ -117,14 +121,8 @@ export const hammock = definePiece<{ color: string }>({
     }
     for (let i = n; i >= 0; i--) {
       const u = i / n
-      p.vertex((XA + (XB - XA) * u) * k, (clothY(u, t) + 0.065 * Math.sin(Math.PI * u)) * k)
+      p.vertex((XA + (XB - XA) * u) * k, (clothY(u, t) + full * Math.sin(Math.PI * u)) * k)
     }
     p.endShape(p.CLOSE)
-    // A few of its cords, following the cloth.
-    outline(p, ink, weight * 0.7)
-    for (const u of [0.25, 0.5, 0.75]) {
-      const x = (XA + (XB - XA) * u) * k
-      p.line(x, (clothY(u, t) + 0.015) * k, x, (clothY(u, t) + 0.065 * Math.sin(Math.PI * u) - 0.015) * k)
-    }
   },
 })

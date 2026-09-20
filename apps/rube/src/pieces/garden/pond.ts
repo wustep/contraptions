@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { FLOOR, R, ROLL, definePiece, fly, rail, ramp, roll, trace, type Lane, type Pt, type Seg } from '../../parts'
-import { gardenWater, soil, tuft } from './green'
+import { gardenWater, soil, tuft, waterHue } from './green'
 
 /**
  * A lily pool across three cells of the path: a raised pool between two
@@ -114,8 +114,9 @@ export const pond = definePiece<{ color: string; water: string }>({
     ]
     if (!fits(cells, [3, 0])) return null
     const water = gardenWater(theme, ball.color)
-    // The pads are never the water's colour, or they would be under it.
-    const pads = color !== water ? color : rng.pick(theme.colors.filter((c) => c !== water && c !== ball.color)) ?? color
+    // The pads are never the water's hue, or they would be under it.
+    const hue = waterHue(theme)
+    const pads = color !== hue ? color : rng.pick(theme.colors.filter((c) => c !== hue && c !== ball.color)) ?? color
     return { cells, exit: { at: [3, 0], dir: 1 }, lane: LANE, state: { color: pads, water } }
   },
   draw: (p, s, { k, t, ink, bg, weight }) => {
