@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import type { Theme } from '../../../../../src/core/themes'
+import { mixHex } from '../../parts'
 
 /**
  * The garden's shared vocabulary: leaves, blooms, soil and pots, drawn the
@@ -89,12 +90,51 @@ export function drop(p: p5, k: number, color: string, x: number, y: number, r: n
   p.pop()
 }
 
+/** The palette's bluest colour: the hue its water is, whatever the ball is. */
+export function waterHue(theme: Theme): string {
+  const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
+  return [...theme.colors].sort((a, b) => blueness(b) - blueness(a))[0]
+}
+
 /**
- * Water's colour in this palette: the bluest of its colours that is not the
- * ball's, so a ball in a bowl or on a pond is always seen against it.
+ * Water's colour in this palette: its bluest, always, so a pool reads as
+ * water on any paper. When the ball is that colour too, the water is a
+ * deeper tone of the same hue, a quarter of the way to the ink, and the
+ * ball is still seen against it.
  */
 export function gardenWater(theme: Theme, ball: string): string {
-  const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
-  const pool = theme.colors.filter((c) => c !== ball)
-  return [...(pool.length ? pool : theme.colors)].sort((a, b) => blueness(b) - blueness(a))[0]
+  const hue = waterHue(theme)
+  return ball === hue ? mixHex(hue, theme.ink, 0.25) : hue
+}
+
+/** A `#rrggbb` colour's hue in degrees, and how much colour it has at all (0 to 1). */
+function hueOf(hex: string): { hue: number; chroma: number } {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+  const max = Math.max(r, g, b)
+  const c = max - Math.min(r, g, b)
+  if (c === 0) return { hue: 0, chroma: 0 }
+  const h = max === r ? ((g - b) / c + 6) % 6 : max === g ? (b - r) / c + 2 : (r - g) / c + 4
+  return { hue: h * 60, chroma: c }
+}
+
+/**
+ * The palette's colour nearest `hue` (degrees): terracotta for soil, orange
+ * for a pumpkin. Things that are a colour in the world are that colour here,
+ * whatever the map hands them. It is not `avoid` (the ball's) while another
+ * colour within `near` degrees of the hue is to be had.
+ */
+export function nearestHue(theme: Theme, hue: number, avoid?: string, near = 40): string {
+  const off = (hex: string) => {
+    const h = hueOf(hex)
+    // A colour with hardly any colour in it, a cream or a grey, is nobody's hue.
+    return h.chroma < 0.2 ? 360 : Math.abs(((h.hue - hue + 540) % 360) - 180)
+  }
+  const ranked = [...theme.colors].sort((a, b) => off(a) - off(b))
+  return ranked[0] === avoid && ranked.length > 1 && off(ranked[1]) <= near ? ranked[1] : ranked[0]
+}
+
+/** The palette's greenest colour: lawn and leaf are green whatever a piece is handed. */
+export function gardenGreen(theme: Theme): string {
+  const greenness = (hex: string) => parseInt(hex.slice(3, 5), 16) - Math.max(parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(5, 7), 16))
+  return [...theme.colors].sort((a, b) => greenness(b) - greenness(a))[0]
 }
