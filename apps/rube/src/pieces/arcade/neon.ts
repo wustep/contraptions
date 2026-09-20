@@ -1,4 +1,5 @@
 import type p5 from 'p5'
+import type { Theme } from '../../../../../src/core/themes'
 import { solid } from '../../../../../src/core/draw'
 import { clamp, easeOutCubic } from '../../../../../src/core/ease'
 import { mixHex } from '../../parts'
@@ -193,4 +194,14 @@ export function flash(p: p5, k: number, color: string, weight: number, x: number
   p.strokeWeight(weight * (1.3 - 0.7 * f))
   p.circle(x * k, y * k, (r0 + (r1 - r0) * easeOutCubic(f)) * 2 * k)
   p.pop()
+}
+
+/**
+ * Water's colour in this palette: the bluest. The dunk tank's water and
+ * the flume's splash are painted in it, so a splash never borrows the
+ * colour of the machine that threw it up and reads as bits of it flying.
+ */
+export function arcadeWater(theme: Theme): string {
+  const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
+  return [...theme.colors].sort((a, b) => blueness(b) - blueness(a))[0]
 }

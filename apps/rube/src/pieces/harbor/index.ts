@@ -3,9 +3,15 @@ import type { World } from '../../worlds'
 import { portal } from '../portal'
 import { anchor } from './anchor'
 import { anemone } from './anemone'
+import { barrel } from './barrel'
 import { blowhole } from './blowhole'
+import { breakwater } from './breakwater'
+import { bottle } from './bottle'
 import { buoy } from './buoy'
+import { chest } from './chest'
+import { coral } from './coral'
 import { crab } from './crab'
+import { creel } from './creel'
 import { dinghy } from './dinghy'
 import { dolphin } from './dolphin'
 import { flags } from './flags'
@@ -15,14 +21,20 @@ import { hawser } from './hawser'
 import { jellyfish } from './jellyfish'
 import { kelp } from './kelp'
 import { lighthouse } from './lighthouse'
+import { oar } from './oar'
 import { octopus } from './octopus'
 import { oyster } from './oyster'
+import { paddlewheel } from './paddlewheel'
 import { pelican } from './pelican'
 import { puffer } from './puffer'
 import { pierRail } from './rail'
+import { rod } from './rod'
+import { sandcastle } from './sandcastle'
 import { seal } from './seal'
 import { serpent } from './serpent'
 import { slipway } from './slipway'
+import { springboard } from './springboard'
+import { submarine } from './submarine'
 import { whirlpool } from './whirlpool'
 
 /**
@@ -60,6 +72,18 @@ import { whirlpool } from './whirlpool'
  *   foghorn     out along a treadle that squeezes a bellows under the deck; the horn sounds right behind the ball and the blast sends it off faster; the gull asleep on the horn goes straight up
  *   serpent     the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops
  *   anemone     into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan
+ *   submarine   off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives; her wake and bubbles cross two cells of sea; she comes up at the far pier and the ball pops out onto the deck
+ *   bottle      down a brow into the mouth of a bottle afloat at its foot; the shove sends her across foot first; her foot fetches up on the far piling and she vaults over the corner, hangs mouth down and pours the ball out; empty, she falls back with a splash
+ *   barrel      into a cask balanced on the deck's corner; its weight tips the cask onto a plank and it slides down a floor nose first, comes level on the lower deck and stops in the chock; the ball knocks the head open and rolls out
+ *   springboard out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea two cells on; bubbles; up out of the water onto the far deck with a second splash
+ *   rod         off the deck's end into the sea by the float of a rod in a holder; the float ducks, the rod bends double and whips up, and the line hauls the ball out in an arc onto the deck a cell on or a floor up; the line swings from the tip after
+ *   sandcastle  onto a sandbank into a sandcastle: the towers slump, lumps hop off, the flag keels over, and the ball ploughs through the heap slowed by the sand
+ *   chest       into a treasure chest across the deck; the lid slams; a glint through the keyhole; the lid lifts and the ball rolls out gilded, the palette's yellowest colour
+ *   paddlewheel off the deck's end onto a paddle of a steamer's side wheel turning in the water; up the near side and over the top onto the deck a floor up; the funnel puffs behind
+ *   creel       into the funnel mouth of a lobster pot at the rail's end; the winch hauls it up a floor on its rope, the davit swings it inboard and sets it down; the ball shoves the trap's door open and rolls out
+ *   oar         off the deck's end onto the blade of an oar across a rowlock; the blade dips, the handle lifts the bail of a full bucket off its hook, the bucket drops into the sea and the blade whips the ball up onto the deck a floor above
+ *   coral       off the deck's end onto the crown of a head of brain coral standing out of the sea, off that onto a second, off that onto the far deck; a puff and a ring at each
+ *   breakwater  off the pier's end down the face of a heap of boulders two floors high, boulder to boulder, a splash off the one awash, up onto the stage at the water's edge, short or long
  *   portal      the door at either end of a map; the far side is always a new map
  */
 
@@ -96,24 +120,29 @@ export const harbor: World = {
   tastes: {
     tidal: {
       lighthouse: 1.6, kelp: 1.6, anchor: 1.6, whirlpool: 1.5, slipway: 1.4, jellyfish: 1.4, blowhole: 1.3, hawser: 1.2, seal: 1.2, 'lift-tall': 2, 'drop-deep': 2,
-      crab: 0.7, pelican: 0.7, floats: 0.7, flags: 0.7, foghorn: 0.7, serpent: 0.7,
+      breakwater: 1.6, paddlewheel: 1.5, creel: 1.4, barrel: 1.3, submarine: 1.2, oar: 1.2,
+      crab: 0.7, pelican: 0.7, floats: 0.7, flags: 0.7, foghorn: 0.7, serpent: 0.7, sandcastle: 0.7, coral: 0.7, chest: 0.7,
     },
     quay: {
       buoy: 1.7, flags: 1.6, crab: 1.6, foghorn: 1.5, dinghy: 1.5, hawser: 1.5, pelican: 1.5, slipway: 1.4, oyster: 1.3, octopus: 1.3, floats: 1.3, anchor: 1.2, lighthouse: 1.2,
-      seal: 0.8, blowhole: 0.7, whirlpool: 0.7, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6,
+      creel: 1.6, barrel: 1.6, bottle: 1.5, rod: 1.5, chest: 1.4, oar: 1.4, submarine: 1.3, paddlewheel: 1.3,
+      seal: 0.8, blowhole: 0.7, whirlpool: 0.7, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6, coral: 0.6, sandcastle: 0.7, springboard: 0.7,
     },
     surf: {
       blowhole: 1.8, dolphin: 1.8, dinghy: 1.4, crab: 1.4, pelican: 1.4, whirlpool: 1.3, floats: 1.3, serpent: 1.3, buoy: 1.2, seal: 1.2,
-      anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, flags: 0.6, anemone: 0.7,
+      springboard: 1.8, coral: 1.5, rod: 1.4, submarine: 1.3, bottle: 1.3, breakwater: 1.2, sandcastle: 1.2,
+      anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, flags: 0.6, anemone: 0.7, creel: 0.7, chest: 0.6, barrel: 0.7,
     },
     reef: {
       anemone: 1.6, puffer: 1.7, jellyfish: 1.7, seal: 1.6, serpent: 1.6, octopus: 1.5, oyster: 1.4, kelp: 1.5, crab: 1.3, dolphin: 1.2, whirlpool: 1.1,
-      flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7,
+      coral: 1.7, sandcastle: 1.3, chest: 1.2,
+      flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7, barrel: 0.6, creel: 0.7, paddlewheel: 0.6, submarine: 0.7, bottle: 0.8,
     },
   },
   pieces: [
     pierRail, buoy, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool,
     dinghy, seal, flags, slipway, jellyfish, floats, puffer, hawser, dolphin, foghorn, serpent, anemone,
+    submarine, bottle, barrel, springboard, rod, sandcastle, chest, paddlewheel, creel, oar, coral, breakwater,
     portal,
   ],
 }
