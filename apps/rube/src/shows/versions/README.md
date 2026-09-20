@@ -11,7 +11,7 @@ versions/<work>/<take>.show.ts
 both in lower case and hyphens. Drop the file in and it is in the picker at
 `/shows/`, grouped with the other takes of the same work, in file order.
 Nothing else keeps a list. A link to it is `/shows/?show=<work>&take=<take>`.
-`/shows/` with no work opens Première Arabesque, Take A.
+`/shows/` with no work opens Clair de Lune, Take A.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a
@@ -79,12 +79,16 @@ Arcade. The version file only names it. The score, `PremiereShow`, camera
 and soundtrack live in `apps/rube/src/timed/premiere-arabesque/` and are
 fetched from `load()`.
 
-`premiere-arabesque/take-b` and `clair-de-lune/take-a` are full stock-timing
-arrangements with four long maps. Their explicit piece orders live in
-`scripts/show-plans/`. `generate:premiere:b` and `generate:clair` compile
-those orders using fresh stock placements and write the scores and cue
-reports. `check:premiere` includes both Première takes; `check:clair` checks
-Clair. Each new take keeps its approved recording offset and panel credit.
+`premiere-arabesque/take-b`, `clair-de-lune/take-a` and `clair-de-lune/take-b`
+are full stock-timing arrangements with four long maps. Their explicit piece
+orders live in `scripts/show-plans/`. `generate:premiere:b`, `generate:clair`
+and `generate:clair:b` compile those orders using fresh stock placements and
+write the scores and cue reports. `check:premiere` includes both Première
+takes; `check:clair` checks both Clair takes. Each new take keeps its approved
+recording offset and panel credit. Clair Take B was arranged across the grown
+catalogs: every piece once and a repeat only where the music needs more travel,
+the whale's cells over open water, and the arcade's score pops drawn (a stock
+score's `scores` lists the worlds whose pops show).
 
 `metronome/` is two takes of a show with no recording: a procedural machine
 and a struck bar on every strike, made in the page. It is a worked example

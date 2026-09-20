@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     check('a link names a version', pickVersion(works, 'clair-de-lune', 'take-b')?.label === 'Take B')
     check('a take that is not there falls to the work\'s first', pickVersion(works, 'clair-de-lune', 'take-z')?.take === 'take-a')
     check('a work that is not there falls to the first work', pickVersion(works, 'nocturne', null)?.work === 'clair-de-lune')
-    check('a link with no work opens Première Arabesque', pickVersion(works, null, null)?.work === 'premiere-arabesque' && pickVersion(works, null, null)?.take === 'take-a')
+    check('a link with no work opens Clair de Lune, Take A', pickVersion(works, null, null)?.work === 'clair-de-lune' && pickVersion(works, null, null)?.take === 'take-a')
     check('an empty folder picks nothing', pickVersion([], 'clair-de-lune', 'take-a') === null)
   }
   {
@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   }
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
-  check('the Shows tab opens Première Arabesque', pickVersion(shipped.works, null, null)?.work === 'premiere-arabesque' && pickVersion(shipped.works, null, null)?.take === 'take-a')
+  check('the Shows tab opens Clair de Lune, Take A', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair has its own full take', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.some((v) => v.take === 'take-a') === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
