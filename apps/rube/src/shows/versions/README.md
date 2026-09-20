@@ -86,6 +86,14 @@ those orders using fresh stock placements and write the scores and cue
 reports. `check:premiere` includes both Première takes; `check:clair` checks
 Clair. Each new take keeps its approved recording offset and panel credit.
 
+`schubert-impromptu/take-a` arranges Schubert's Impromptu No. 2 in E-flat
+major, D. 899, to Chiara Bertoglio's CC BY 3.0 recording. Its four maps
+follow the opening runs, accented middle, returning scales and closing
+drive. `scripts/show-plans/schubert.json` owns the piece order; the adjacent
+`schubert.ts` owns recording cues and phrase framing. Use
+`generate:schubert` and `check:schubert`. The phrase plan and 30-second
+checkpoint notes are in `docs/promo/SCHUBERT_TAKE_A_PLAN.md`.
+
 `metronome/` is two takes of a show with no recording: a procedural machine
 and a struck bar on every strike, made in the page. It is a worked example
 of a time map, and `check:shows` still walks it. Keep it.

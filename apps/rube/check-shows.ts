@@ -90,6 +90,7 @@ async function main(): Promise<void> {
   check('the Shows tab opens Première Arabesque', pickVersion(shipped.works, null, null)?.work === 'premiere-arabesque' && pickVersion(shipped.works, null, null)?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair has its own full take', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.some((v) => v.take === 'take-a') === true)
+  check('Schubert has its own recorded take', shipped.works.find((w) => w.work === 'schubert-impromptu')?.versions.some((v) => v.take === 'take-a') === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -103,6 +104,13 @@ async function main(): Promise<void> {
           near(perf.duration, premiere ? 290.61133333333333 : 301.648526) &&
           near(perf.soundtrack?.offset ?? 0, premiere ? 2.38 : 2.44) &&
           !!perf.soundtrack?.credit?.includes(premiere ? 'Patrizia Prati' : 'Laurens Goedhart') &&
+          !!perf.soundtrack?.href?.startsWith('https://commons.wikimedia.org/'))
+      }
+      if (work.work === 'schubert-impromptu') {
+        check('Schubert: full recording, silence offset and Commons credit',
+          near(perf.duration, 261.116) && near(perf.soundtrack?.offset ?? 0, 0.70) &&
+          !!perf.soundtrack?.credit?.includes('Chiara Bertoglio') &&
+          !!perf.soundtrack?.credit?.includes('CC BY 3.0') &&
           !!perf.soundtrack?.href?.startsWith('https://commons.wikimedia.org/'))
       }
       // The player asks for show.at(t) over 0..duration and nothing else.

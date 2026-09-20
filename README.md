@@ -765,6 +765,13 @@ panel. Regenerate the new scores with `npm run generate:premiere:b` and
 `npm run generate:clair`; `check:premiere` checks both Première takes, and
 `check:clair` checks Clair.
 
+[Schubert's Impromptu No. 2, Take A](https://contraptions-wustep.vercel.app/shows/?show=schubert-impromptu&take=take-a)
+uses Chiara Bertoglio's CC BY 3.0 recording of D. 899 No. 2. Four stock
+maps follow its running scales and accented middle, then return to the
+scales before the closing drive. The [phrase plan and checkpoint notes](docs/promo/SCHUBERT_TAKE_A_PLAN.md)
+describe the arrangement. Run `generate:schubert` to regenerate it and
+`check:schubert` to verify stock timing, continuity and camera framing.
+
 
 ### The music is the clock
 
