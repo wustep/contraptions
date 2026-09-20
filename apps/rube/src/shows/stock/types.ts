@@ -40,4 +40,6 @@ export interface StockScore {
   phrases: Phrase[]
   maps: StockMap[]
   cues: { piece: string; target: number; actual: number }[]
+  /** Worlds whose score pops are drawn over the machines: the arcade's +points. Left out, no world's are. */
+  scores?: StockMap['world'][]
 }

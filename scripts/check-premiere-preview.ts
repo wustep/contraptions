@@ -4,7 +4,7 @@ import { at, cameraAt, pieceTime, phraseAt, score } from '../apps/rube/src/timed
 
 assert.equal(score.title, 'Première Arabesque')
 assert.equal(score.performer, 'Patrizia Prati')
-assert.equal(score.revision, 4)
+assert.equal(score.revision, 5)
 assert.equal(score.duration, 290.61133333333333)
 assert.equal(score.audioOffset, 2.38)
 assert.equal(score.phrases.length, 36)
@@ -84,11 +84,20 @@ assert.equal(score.phrases.at(-1)!.end, score.duration)
 {
   const cannon = pieces.find((p) => p.name === 'cannon')!
   assert.ok(cannon.begin > 6 && cannon.begin < 6.2, `first cannon begins at ${cannon.begin}`)
-  for (let k = 1; k < cannon.timing.length; k++) {
-    const a = cannon.timing[k - 1], b = cannon.timing[k]
-    if (a.native !== b.native) continue
-    const mid = (a.time + b.time) / 2
-    assert.ok(at(mid).hidden, `first cannon holds the ball in sight at ${mid}`)
+  // Roll-in, fuse and fire are one continuous motion: the extra time is spent in the hidden breech at a
+  // slower pace, never as a dead stop that would freeze the fuse's spark in view.
+  for (let k = 1; k < cannon.timing.length; k++) assert.ok(cannon.timing[k].native > cannon.timing[k - 1].native, 'first cannon has a rest')
+  let slowest = Infinity
+  for (let time = cannon.begin; time < cannon.end - 1e-3; time += 1e-3) slowest = Math.min(slowest, (pieceTime(cannon, time + 1e-3) - pieceTime(cannon, time)) / 1e-3)
+  assert.ok(slowest > 0.45, `first cannon's clock drops to ${slowest.toFixed(3)}× its own rate`)
+  // Every hold anywhere in the show is spent out of sight or where the ball has truly stopped.
+  for (const piece of pieces) {
+    for (let k = 1; k < piece.timing.length; k++) {
+      const a = piece.timing[k - 1], b = piece.timing[k]
+      if (a.native !== b.native) continue
+      const mid = (a.time + b.time) / 2
+      assert.ok(!at(mid).hidden, `${piece.label} at ${mid}: a rest spent with the ball hidden should be spread over the hidden stretch instead`)
+    }
   }
 }
 for (let frame = 0; frame <= Math.ceil(score.duration * 120); frame++) {

@@ -769,7 +769,7 @@ The same music may have several versions side by side — takes — so that
 two runs at it can be kept, compared and later combined. The panel leads
 with the picker: the show, and under it a chip a take. A link names one:
 `/shows/?show=premiere-arabesque&take=take-a`. `/shows/` with no work
-opens that take.
+opens Clair de Lune, Take A.
 
 A version is one file, `versions/<work>/<take>.show.ts`, and dropping it in
 is the whole of adding it: the page finds it by glob, its path says which
@@ -790,9 +790,18 @@ Première also has [Take B](https://contraptions-wustep.vercel.app/shows/?show=p
 and [Clair de Lune, Take A](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-a) uses
 Laurens Goedhart's complete recording. Both new takes sequence unmodified
 stock durations through four long maps, Regular → Forest → Aqua → Arcade.
-They add no authored pauses or stretched mechanism clocks. Première Take A
-remains the default. The [phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and
+They add no authored pauses or stretched mechanism clocks. Clair de Lune,
+Take A, is the default. The [phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and
 arrangement reports document the recording cues and repeated travel pieces.
+
+[Clair de Lune, Take B](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-b)
+is the same recording arranged across the grown catalogs — every one of the
+thirty-five pieces in each world once, and a repeat only where the music runs
+longer than the catalog does — with the whale over open water and the
+arcade's points popping over its machines (a stock score may name the worlds
+whose pops are drawn; the older takes name none). Its plan is
+`scripts/show-plans/clair-b.json`; `generate:clair:b` compiles it and
+`check:clair` checks both Clair takes.
 
 Press <kbd>O</kbd> or click **Overview** in Transport to fit the whole current
 world while the music keeps playing. Toggle it off to return to the follow

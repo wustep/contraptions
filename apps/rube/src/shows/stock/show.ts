@@ -1,4 +1,4 @@
-import { ballAt, laneAt } from '../../parts'
+import { ballAt, laneAt, pointsOf } from '../../parts'
 import { Show, type ShowPoint } from '../../show'
 import type { Universe } from '../../universe'
 import { worldByName } from '../../worlds'
@@ -12,12 +12,17 @@ export class StockShow extends Show {
     super(score.id)
     this.stages = score.maps.map((map, index) => {
       const world = worldByName(map.world)!
-      const pieces = map.pieces.map((p) => ({
-        ...p,
-        // The stock drawing keeps running after the ball leaves, including its reset.
-        piece: { ...world.pieces.find((s) => s.name === p.spec.name)!, scores: undefined },
-        start: p.begin - map.begin, span: p.end - p.begin, points: 0,
-      }))
+      // Score pops are drawn only in the worlds the take asks for: the arcade's +points, where a take wants them.
+      const pops = score.scores?.includes(map.world) ?? false
+      const pieces = map.pieces.map((p) => {
+        const stock = world.pieces.find((s) => s.name === p.spec.name)!
+        return {
+          ...p,
+          // The stock drawing keeps running after the ball leaves, including its reset.
+          piece: { ...stock, scores: pops ? stock.scores : undefined },
+          start: p.begin - map.begin, span: p.end - p.begin, points: pops ? pointsOf(stock, p.state) : 0,
+        }
+      })
       const cells = pieces.flatMap((p) => p.cells)
       const bounds = { x0: Math.min(...cells.map((c) => c[0])), y0: Math.min(...cells.map((c) => c[1])), x1: Math.max(...cells.map((c) => c[0])), y1: Math.max(...cells.map((c) => c[1])) }
       return { index, seed: score.id, world, theme: world.themes[0], taste: 'arranged',
