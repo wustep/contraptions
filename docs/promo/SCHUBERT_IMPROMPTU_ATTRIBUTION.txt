@@ -1,0 +1,31 @@
+Franz Schubert: Impromptu No. 2 in E-flat major, D. 899 / Op. 90
+Piano performance: Chiara Bertoglio
+Recording date listed by Wikimedia Commons: 20 December 2012
+
+Recording license: Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+License: https://creativecommons.org/licenses/by/3.0/
+Performer: https://www.chiarabertoglio.com/
+
+Source and license statement:
+https://commons.wikimedia.org/wiki/File:Schubert%27s_Impromptu_no._2_in_E-flat_major,_D.899_-_Chiara_Bertoglio.ogg
+Source revision:
+https://commons.wikimedia.org/w/index.php?title=File:Schubert%27s_Impromptu_no._2_in_E-flat_major,_D.899_-_Chiara_Bertoglio.ogg&oldid=1227005691
+Original download:
+https://upload.wikimedia.org/wikipedia/commons/5/59/Schubert%27s_Impromptu_no._2_in_E-flat_major%2C_D.899_-_Chiara_Bertoglio.ogg
+
+Local file: schubert-impromptu-bertoglio.ogg
+Downloaded: 2026-09-19
+SHA-256: 3b9ebdb0aeb68e80bea6c0664ac84ca494120422c29e90e64c1625a59788be49
+Original duration: 261.816 seconds; stereo Ogg Vorbis, 48 kHz.
+
+Changes: The downloaded recording is unmodified. Shows starts playback at
+0.70 seconds to skip leading silence, then plays the remaining 261.116
+seconds including the final resonance. Contraptions adds synchronized
+animation. Preview exports encode this audio with the animation.
+
+Credit for the panel and exported works:
+Franz Schubert, Impromptu No. 2 in E-flat major, D. 899.
+Performed by Chiara Bertoglio. CC BY 3.0.
+https://creativecommons.org/licenses/by/3.0/
+Source: Wikimedia Commons, linked above.
+Animation: Contraptions. No endorsement by the performer is implied.

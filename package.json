@@ -9,7 +9,7 @@
   "description": "A generator for grids of tiny animated machines.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:shows && npm run check:premiere && npm run check:clair && vite build",
+    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:shows && npm run check:premiere && npm run check:clair && npm run check:schubert && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "new": "node scripts/new-contraption.mjs",
@@ -22,7 +22,9 @@
     "generate:premiere:b": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs premiere",
     "generate:clair": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs clair",
     "check:premiere:b": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs premiere",
-    "check:clair": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair"
+    "check:clair": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair",
+    "generate:schubert": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs schubert",
+    "check:schubert": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs schubert"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

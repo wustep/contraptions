@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { ballAt, laneAt, laneTime, type BallState } from '../apps/rube/src/parts'
 import { overviewCamera } from '../apps/rube/src/overview'
 import { StockShow } from '../apps/rube/src/shows/stock/show'
@@ -6,6 +7,8 @@ import type { StockScore } from '../apps/rube/src/shows/stock/types'
 import { WORLDS, worldByName } from '../apps/rube/src/worlds'
 import premiere from '../apps/rube/src/shows/versions/premiere-arabesque/take-b.generated.json'
 import clair from '../apps/rube/src/shows/versions/clair-de-lune/take-a.generated.json'
+import impromptu from '../apps/rube/src/shows/versions/schubert-impromptu/take-a.generated.json'
+import { schubert } from './show-plans/schubert'
 import { stockPlacement } from './stock-placement'
 
 /**
@@ -46,11 +49,12 @@ function sameStockLane(saved: unknown, stock: unknown, label: string, path = 'la
 }
 
 const work = process.argv[2]
-assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
-const score = (work === 'premiere' ? premiere : clair) as unknown as StockScore
+assert.ok(work === 'premiere' || work === 'clair' || work === 'schubert', 'Choose premiere, clair or schubert')
+const score = ({ premiere, clair, schubert: impromptu }[work]) as unknown as StockScore
+const plan = JSON.parse(readFileSync(`scripts/show-plans/${work}.json`, 'utf8')) as { world: string; target: number; pieces: unknown[] }[]
 const show = new StockShow(score)
-assert.equal(score.audioOffset, work === 'premiere' ? 2.38 : 2.44)
-assert.equal(score.duration, work === 'premiere' ? 290.61133333333333 : 301.648526)
+assert.equal(score.audioOffset, work === 'schubert' ? schubert.audioOffset : work === 'premiere' ? 2.38 : 2.44)
+assert.equal(score.duration, work === 'schubert' ? schubert.duration : work === 'premiere' ? 290.61133333333333 : 301.648526)
 assert.deepEqual(score.maps.map((m) => m.world), WORLDS.map((w) => w.name))
 assert.equal(score.maps.length, 4)
 let seams = 0, nativeWaits = 0, repeats = 0
@@ -58,7 +62,10 @@ let ball: BallState = { color: '#E76B31', ghost: false, id: 0 }
 for (const [mi, map] of score.maps.entries()) {
   const world = worldByName(map.world)!
   assert.equal(map.begin, mi ? score.maps[mi - 1].end : 0)
-  assert.ok(map.end - map.begin > 55, 'Keep phrases inside long maps')
+  assert.equal(map.world, plan[mi].world)
+  assert.deepEqual(map.pieces.map((p) => p.spec), plan[mi].pieces, 'Regenerate after changing the piece order')
+  assert.ok(Math.abs(map.end - plan[mi].target) < .17, 'World misses its recording cue')
+  assert.ok(map.end - map.begin > (work === 'schubert' ? 40 : 55), 'Keep phrases inside long maps')
   assert.equal(map.pieces[0].begin, map.begin)
   assert.equal(map.pieces.at(-1)!.end, map.end)
   assert.deepEqual(new Set(map.pieces.map((p) => p.spec.name)), new Set(world.pieces.map((p) => p.name)), `Missing a ${map.world} stock type`)
@@ -110,12 +117,20 @@ for (const [mi, map] of score.maps.entries()) {
     }
   }
 }
-assert.ok(repeats < (work === 'premiere' ? 55 : 60), 'Travel repeat budget grew')
+assert.ok(repeats < (work === 'schubert' ? 38 : work === 'premiere' ? 55 : 60), 'Travel repeat budget grew')
 const lastMap = score.maps.at(-1)!
 assert.equal(lastMap.pieces.at(-2)!.spec.name, 'ticket', 'The ticket belongs at the finale')
 assert.ok(score.duration > lastMap.end && score.duration - lastMap.end < 5, 'Only final resonance may outlast the chain')
 assert.equal(show.at(score.duration).scale, 0, 'Do not freeze a visible ball during the final resonance')
-for (const cue of score.cues) assert.ok(Math.abs(cue.actual - cue.target) <= .12, `Missed ${cue.piece} cue`)
+if (work === 'schubert') {
+  assert.deepEqual(score.cues.map((c) => [c.piece, c.target]), schubert.cues)
+  assert.deepEqual(score.phrases, schubert.phrases.map(([end, title, visible], i, all) => ({ begin: i ? all[i - 1][0] : 0, end, title, visible })), 'Regenerate after changing phrase framing')
+}
+for (const cue of score.cues) {
+  const piece = score.maps.flatMap((m) => m.pieces).find((p) => p.spec.name === cue.piece)!
+  assert.equal(cue.actual, piece.begin + piece.lane.fire, `Stale ${cue.piece} cue report`)
+  assert.ok(Math.abs(cue.actual - cue.target) <= .12, `Missed ${cue.piece} cue`)
+}
 for (const [i, phrase] of score.phrases.entries()) {
   assert.equal(phrase.begin, i ? score.phrases[i - 1].end : 0)
   assert.ok(phrase.end > phrase.begin)
