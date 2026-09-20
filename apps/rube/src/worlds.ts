@@ -22,7 +22,7 @@ import { workshop } from './pieces/workshop'
  * the workshop is Regular, the garden Forest, the harbor Aqua, and the
  * arcade is the Arcade. So the loop reads Regular → Forest → Aqua → Arcade.
  */
-export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars' | 'waves' | 'sprigs' | 'grid'
+export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars' | 'waves' | 'sprigs' | 'grid' | 'flakes'
 
 export interface World {
   name: string

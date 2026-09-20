@@ -413,6 +413,18 @@ function drawBackdrop(
         p.endShape()
       }
     }
+  } else if (u.backdrop === 'flakes') {
+    // Snow in the air: a flake or two a cell, scattered, small open rings of ink. No stock world asks for it yet.
+    ink.setAlpha(60)
+    p.stroke(ink)
+    p.strokeWeight(1)
+    p.noFill()
+    for (let c = c0; c <= c1; c++) {
+      for (let r = r0; r <= r1; r++) {
+        const n = 1 + Math.floor(hash(c, r, 5) * 2)
+        for (let i = 0; i < n; i++) p.circle(sx(c - 0.5 + hash(c, r, 13 + i)), sy(r - 0.5 + hash(c, r, 23 + i)), Math.max(2, k * (0.014 + hash(c, r, 33 + i) * 0.014)))
+      }
+    }
   } else if (u.backdrop === 'sprigs') {
     // The garden's paper: a sprig — two little leaves on a stalk — here and there.
     ink.setAlpha(46)

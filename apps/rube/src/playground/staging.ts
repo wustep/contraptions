@@ -50,6 +50,8 @@ export const SHELVES: readonly ShelfEntry[] = [
   { name: 'staged-garden', label: 'Forest', kind: 'additions', load: () => import('./pieces/garden').then((m) => m.shelf) },
   { name: 'staged-harbor', label: 'Aqua', kind: 'additions', load: () => import('./pieces/harbor').then((m) => m.shelf) },
   { name: 'staged-arcade', label: 'Arcade', kind: 'additions', load: () => import('./pieces/arcade').then((m) => m.shelf) },
+  { name: 'alpine', label: 'Snow', kind: 'world', load: () => import('./pieces/alpine').then((m) => m.shelf) },
+  { name: 'orchestra', label: 'Music', kind: 'world', load: () => import('./pieces/orchestra').then((m) => m.shelf) },
 ]
 
 const loaded = new Map<string, Promise<Shelf>>()
@@ -74,6 +76,9 @@ export const loadShelves = (): Promise<Shelf[]> => Promise.all(SHELVES.map((s) =
 
 /** One staged piece with what is said of it. */
 export type Entry = [piece: Piece<any>, status: Status, note: string]
+
+/** One beat of a new world, with the line said of it. Every one is new. */
+export type Beat = [piece: Piece<any>, note: string]
 
 /**
  * A stock world's shelf: its rail, its palettes, its backdrops and the
