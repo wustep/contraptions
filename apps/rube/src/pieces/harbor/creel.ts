@@ -1,3 +1,4 @@
+import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, easeOutCubic, lerp } from '../../../../../src/core/ease'
 import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
@@ -11,17 +12,19 @@ import { WATER, bodyColor, piling, rope, seaWater, splash, water } from './sea'
  * over it from the deck above, along the arm to a second sheave at the
  * post, and down through the upper deck to a lead weight that hangs by the
  * post, heavier than the pot: the hook is all that holds the pot down.
- * The ball rolls in the mouth and is gone, and its knock hops the lug off
- * the hook. The lead goes down into the sea and the pot goes up a floor on
+ * The ball rolls in the mouth and is seen through the pot's ribs from
+ * there on, and its knock hops the lug off the hook. The lead goes down into the sea and the pot goes up a floor on
  * its rope, swinging a little; at the top the davit swings inboard and
  * carries it over the upper deck, and lets it down onto the planks with a
  * thump. The ball rolls to the far end, shoulders the flap over the far
  * mouth aside and comes out onto the deck; the flap swings to behind it.
  * The rope hangs slack from the block.
  *
- * The ball is inside from the mouth to the flap: its hidden lane is
- * sampled from the pot's own hoist and swing, the one motion the pot is
- * drawn with, so it comes out where the flap is.
+ * The ball is inside from the mouth to the flap, on the pot's floor: its
+ * lane is sampled from the pot's own hoist and swing, the one motion the
+ * pot is drawn with, so it rides in the cage and comes out where the flap
+ * is. A pot is a cage, so its far side is drawn behind the ball and its
+ * ribs in front, and the ball is never out of sight.
  */
 /** The pot in its own frame: its base centre at the origin, half its width, its straight side, its arched top, the bridle over it. */
 const HW = 0.17
@@ -90,10 +93,10 @@ function alongAt(t: number): number {
 }
 const ballAt = (t: number): Pt => inPot([alongAt(t), -0.13], t)
 
-const HIDDEN = [...trace(ballAt, T_MOUTH + 0.03, FIRE, 4), ...trace(ballAt, FIRE, T_DOOR, 30)].map((s) => ({ ...s, hidden: true }))
-const OUT = HIDDEN[HIDDEN.length - 1].to
+const INSIDE = [...trace(ballAt, T_MOUTH + 0.03, FIRE, 4), ...trace(ballAt, FIRE, T_DOOR, 30)]
+const OUT = INSIDE[INSIDE.length - 1].to
 const LANE: Lane = {
-  segs: [roll([-0.5, 0], [X0 - HW - 0.04, 0], ROLL), { from: [X0 - HW - 0.04, 0], to: ballAt(T_MOUTH + 0.03), dur: 0.03 + 0.04 / ROLL }, ...HIDDEN, ramp(OUT, [0.5, -1], 1.3, ROLL)],
+  segs: [roll([-0.5, 0], [X0 - HW - 0.04, 0], ROLL), { from: [X0 - HW - 0.04, 0], to: ballAt(T_MOUTH + 0.03), dur: 0.03 + 0.04 / ROLL }, ...INSIDE, ramp(OUT, [0.5, -1], 1.3, ROLL)],
   fire: FIRE,
 }
 
@@ -110,6 +113,26 @@ function flapAt(t: number): number {
   if (s < 0.1) return 1.2 * easeOutCubic(s / 0.1)
   if (s < 0.3) return 1.2
   return 1.2 * Math.exp(-(s - 0.3) * 3) * Math.abs(Math.cos((s - 0.3) * 6))
+}
+
+/** The pot's frame: origin at its base centre, hung from its hoist point and swung `th` off the plumb. */
+function inFrame(p: p5, k: number, t: number, draw: () => void): void {
+  const { b, th } = poseAt(t)
+  p.push()
+  p.translate(b[0] * k, (b[1] - HOIST_H) * k)
+  p.rotate(th)
+  p.translate(0, HOIST_H * k)
+  draw()
+  p.pop()
+}
+/** The cage's outline: a flat bottom, straight sides, an arched top. */
+function cage(p: p5, k: number): void {
+  p.beginShape()
+  p.vertex(-HW * k, 0)
+  p.vertex(-HW * k, -SIDE * k)
+  p.bezierVertex(-HW * k, -(SIDE + HW * 1.33) * k, HW * k, -(SIDE + HW * 1.33) * k, HW * k, -SIDE * k)
+  p.vertex(HW * k, 0)
+  p.endShape(p.CLOSE)
 }
 
 export const creel = definePiece<{ color: string }>({
@@ -172,36 +195,32 @@ export const creel = definePiece<{ color: string }>({
       const sh = inPot([sx, -SIDE - HW * 0.7], t)
       p.line(hoist[0] * k, hoist[1] * k, sh[0] * k, sh[1] * k)
     }
+    // The pot's far side, behind the ball.
+    inFrame(p, k, t, () => {
+      solid(p, ink, weight, s.color)
+      cage(p, k)
+    })
   },
   over: (p, s, { k, t, ink, weight }) => {
-    const { b, th } = poseAt(t)
-    // The pot, in front of the ball: a flat-bottomed cage with an arched top, its ribs, a funnel's mouth on either end, the lug on its foot.
-    p.push()
-    p.translate(b[0] * k, (b[1] - HOIST_H) * k)
-    p.rotate(th)
-    p.translate(0, HOIST_H * k)
-    solid(p, ink, weight, s.color)
-    p.beginShape()
-    p.vertex(-HW * k, 0)
-    p.vertex(-HW * k, -SIDE * k)
-    p.bezierVertex(-HW * k, -(SIDE + HW * 1.33) * k, HW * k, -(SIDE + HW * 1.33) * k, HW * k, -SIDE * k)
-    p.vertex(HW * k, 0)
-    p.endShape(p.CLOSE)
-    outline(p, ink, weight * 0.7)
-    for (const x of [-HW * 0.4, HW * 0.4]) p.line(x * k, -0.01 * k, x * k, -(SIDE + HW * 0.9) * k)
-    p.line(-HW * k, -SIDE * 0.55 * k, HW * k, -SIDE * 0.55 * k)
-    p.fill(ink)
-    p.noStroke()
-    for (const end of [-1, 1]) p.ellipse(end * HW * k, -0.14 * k, 0.07 * k, 0.24 * k)
-    p.rect((HW + 0.012) * k, -0.02 * k, 0.04 * k, 0.03 * k)
-    // The flap over the far mouth, hinged at its top: hanging, or shouldered out by the ball and swinging to.
-    p.push()
-    p.translate((HW + 0.005) * k, -0.25 * k)
-    p.rotate(-flapAt(t))
-    solid(p, ink, weight, s.color)
-    p.rect(0.008 * k, 0.06 * k, 0.04 * k, 0.12 * k, 0.006 * k)
-    p.pop()
-    p.pop()
+    // The pot's near side, in front of the ball: the cage's frame and its ribs, a funnel's mouth on either end, the lug on its foot.
+    inFrame(p, k, t, () => {
+      outline(p, ink, weight)
+      cage(p, k)
+      outline(p, ink, weight * 0.7)
+      for (const x of [-HW * 0.4, HW * 0.4]) p.line(x * k, -0.01 * k, x * k, -(SIDE + HW * 0.9) * k)
+      p.line(-HW * k, -SIDE * 0.55 * k, HW * k, -SIDE * 0.55 * k)
+      p.fill(ink)
+      p.noStroke()
+      for (const end of [-1, 1]) p.ellipse(end * HW * k, -0.14 * k, 0.07 * k, 0.24 * k)
+      p.rect((HW + 0.012) * k, -0.02 * k, 0.04 * k, 0.03 * k)
+      // The flap over the far mouth, hinged at its top: hanging, or shouldered out by the ball and swinging to.
+      p.push()
+      p.translate((HW + 0.005) * k, -0.25 * k)
+      p.rotate(-flapAt(t))
+      solid(p, ink, weight, s.color)
+      p.rect(0.008 * k, 0.06 * k, 0.04 * k, 0.12 * k, 0.006 * k)
+      p.pop()
+    })
     // The thump as it is set down.
     const hit = t - T_LAND
     if (hit > 0 && hit < 0.18) {

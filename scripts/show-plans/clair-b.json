@@ -106,7 +106,7 @@
       {"name": "flags", "exit": [1, 0]},
       {"name": "anchor", "exit": [-1, 3]},
       {"name": "kelp", "exit": [1, -2]},
-      {"name": "breakwater", "exit": [2, 2]},
+      {"name": "sail", "exit": [2, 2]},
       {"name": "rail", "exit": [1, 0]},
       {"name": "rod", "exit": [2, -1]},
       {"name": "blowhole", "exit": [1, -1]},
