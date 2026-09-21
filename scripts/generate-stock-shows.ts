@@ -1,7 +1,7 @@
 /** Compile explicit arrangements. Musical fit comes from piece order, never retiming. */
 import assert from 'node:assert/strict'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { ballAt, laneAt, laneTime, type BallState, type Pt } from '../apps/rube/src/parts'
+import { ballAt, laneAt, laneTime, pointsOf, type BallState, type Pt } from '../apps/rube/src/parts'
 import { worldByName } from '../apps/rube/src/worlds'
 import type { StockMap, StockScore, StockSpec } from '../apps/rube/src/shows/stock/types'
 import type { Phrase } from '../apps/rube/src/timed/premiere-arabesque/types'
@@ -44,9 +44,11 @@ function generate(work: Work) {
     const map: StockMap = { world: scene.world, begin: cursor, end: 0,
       backdrop: (['dots', 'sprigs', 'waves', 'stars'] as const)[index], pieces: [] }
     let col = 0, row = 0, mirror: 1 | -1 = 1
+    // Older takes keep their saved payout. Take B pays what its own map earned.
+    let earned = 0
     const occupied = new Set<string>()
     for (const [i, spec] of scene.pieces.entries()) {
-      const placed = stockPlacement(world, spec, ball, i)
+      const placed = stockPlacement(world, spec, ball, i, work === 'clair-b' ? earned : undefined)
       const cells: Pt[] = placed.cells.map(([x, y]) => [col + mirror * x, row + y])
       for (const cell of cells) {
         assert.ok(!occupied.has(cell.join(',')), `${id}/${map.world}/${spec.name}: overlapping cell ${cell}`)
@@ -63,6 +65,7 @@ function generate(work: Work) {
       map.pieces.push(piece)
       cursor = piece.end
       ball = ballAt(ball, piece.changes, duration)
+      earned += pointsOf(world.pieces.find((p) => p.name === spec.name)!, placed.state)
       col += mirror * placed.exit.at[0]; row += placed.exit.at[1]; mirror = mirror * placed.exit.dir as 1 | -1
     }
     map.end = cursor
@@ -104,11 +107,13 @@ function generate(work: Work) {
   }
   const tail = score.duration - maps.at(-1)!.end
   const breaths = work === 'clair-b'
-    ? ' Short runs of one to three stock rails give machines room and separate gestures; even three rails take only 1.154s. Rails are not counted as repeats.'
+    ? ' Short runs of stock rails give machines room and separate gestures. Four rails separate the final photograph from the payout, and two carry the ball back below them before the portal. Rails are not counted as repeats.'
     : maps.some((m) => m.pieces.filter((p) => p.spec.name === 'rail').length > 1)
     ? ' Rails are breath: a lead-in where a world opens, and a single rail between pieces after a long run of them; they are not counted as repeats.'
     : ''
-  lines.push('', tail < 5
+  lines.push('', work === 'clair-b'
+    ? `Four nearby repeats make answering gestures. Every other catalog machine appears once.${breaths} Only the terminal audio resonance remains after the final portal.`
+    : tail < 5
     ? `Repeats carry the chain through the full recording and connect its terraces. All other catalog entries appear once per world.${breaths} The final portal completes the chain; only the terminal audio resonance remains.`
     : `Repeats connect the terraces. All other catalog entries appear once per world.${breaths} The final portal completes the chain ${tail.toFixed(1)}s before the recording ends, and its last bars play out over the finished machine.`, '',
     '| Stock strike | Recording cue | Actual strike | Error |', '| --- | ---: | ---: | ---: |')
@@ -138,6 +143,17 @@ function generate(work: Work) {
       }
     }
     lines.push('',
+      '## Space and ending', '',
+      '| World | Map width | Map height |', '| --- | ---: | ---: |')
+    for (const map of maps) {
+      const cells = map.pieces.flatMap((p) => p.cells)
+      lines.push(`| ${worldByName(map.world)!.label} | ${Math.max(...cells.map(([x]) => x)) - Math.min(...cells.map(([x]) => x)) + 1} cells | ${Math.max(...cells.map(([, y]) => y)) - Math.min(...cells.map(([, y]) => y)) + 1} cells |`)
+    }
+    const arcade = maps.at(-1)!
+    const booth = arcade.pieces.find((p) => p.spec.name === 'booth')!
+    const ticket = arcade.pieces.find((p) => p.spec.name === 'ticket')!
+    const payout = ticket.state as { points: number; tickets: number }
+    lines.push('', `The photobooth flashes at ${(booth.begin + booth.lane.fire).toFixed(3)}s. Four rails give its photograph ${(ticket.begin - booth.end).toFixed(3)}s before the ticket machine receives the ball. The ticket pays ${payout.points.toLocaleString('en-US')} earned points as ${payout.tickets} tickets at ${(ticket.begin + ticket.lane.fire).toFixed(3)}s. Two rails return below the final machines; the portal closes at ${arcade.end.toFixed(3)}s, leaving ${tail.toFixed(3)}s of resonance. Slots appears earlier in the Arcade. During the rail after the photograph, Take B’s camera settles on both final machines. The final portal does not wipe away this shot, so it remains through the resonance.`, '',
       '## Phrase arrangement', '',
       'The twelve named strikes keep the original Goedhart cue targets. Stock exit variants choose the route; their lanes, fire times and mechanism state come directly from the catalog. No duration, phrase landmark, playback rate or audio offset is adjusted. Regular and Aqua have no repeated machines. Forest and Arcade each retain two repeats. Rails replace the other 25 repeats and spread the machines across more open routes.', '',
       '| World | Cue sequence | Piece order, with rails shown as breath |', '| --- | --- | --- |')
@@ -155,6 +171,13 @@ function generate(work: Work) {
       breath()
       const order = route.join(' → ')
       lines.push(`| ${worldByName(map.world)!.label} | ${cues} | ${order} |`)
+    }
+    lines.push('', 'The balloon leads the opening into the trapeze. Two additional Forest gestures answer phrase cadences:', '',
+      '| Gesture | Phrase cadence | Actual strike | Error |', '| --- | ---: | ---: | ---: |')
+    for (const [name, occurrence, target] of [['windchime', 0, 113.1594], ['frog', 1, 126.8981]] as const) {
+      const piece = maps[1].pieces.filter((p) => p.spec.name === name)[occurrence]
+      const actual = piece.begin + piece.lane.fire
+      lines.push(`| ${occurrence ? 'Answering frog' : 'Windchime'} | ${target.toFixed(3)}s | ${actual.toFixed(3)}s | ${((actual - target) * 1000).toFixed(1)} ms |`)
     }
     lines.push('')
   }

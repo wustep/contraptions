@@ -107,8 +107,12 @@ from `scripts/show-plans/clair-b.json`. It keeps Take A's recording, offset,
 phrase landmarks and world cadence targets. Regular and Aqua have no repeated
 machines; Forest repeats windchime and frog, and Arcade repeats hoops and
 bumper. Those four answers sit in AA or ABA groups, ignoring rails, with
-different stock placement colors. Runs of one to three stock rails give the
-machines more space. The full cue comparison and ordered routes are generated
+different stock placement colors. Short stock rails give the machines more space, while lifts, drops and
+turns fold the route into vertical layers. The last machines are the
+photobooth and ticket, with four rails between them and two returning under
+them to the portal. The payout uses this take's accumulated Arcade points;
+older takes keep their saved payouts. The camera settles on the photograph
+and ticket, and the final portal leaves that shot visible through the resonance. The full cue comparison and ordered routes are generated
 in `docs/promo/CLAIR_TAKE_B_ARRANGEMENT.md`. `check:clair:b` checks stock lanes,
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
