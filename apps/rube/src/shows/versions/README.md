@@ -68,7 +68,8 @@ first second to its last.
 - **`camera` frames for 16:9.** `cells` is how many cells a 16:9 frame shows
   top to bottom. A stage of another shape sees more world round that frame,
   never less of it; a saved file is exactly it. Overview overrides framing
-  with Machine's fit of the current world's bounds. It affects live viewing
+  with Machine's fit of the current world's bounds. Zoom sits closer on the
+  follow camera. Each turns the other off. They affect live viewing
   and export without changing the music clock.
 
 ## What is here

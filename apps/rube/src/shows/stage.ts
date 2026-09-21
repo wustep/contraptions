@@ -21,6 +21,8 @@ import type { Performance } from './registry'
 
 /** The frame a show is composed for. A camera's `cells` is how many of them this frame shows top to bottom. */
 const ASPECT = 16 / 9
+/** How much closer Zoom sits than the follow camera. */
+export const FOLLOW_ZOOM = 1.5
 
 export interface FrameSize {
   label: string
@@ -35,16 +37,18 @@ export const FRAME_SIZES: FrameSize[] = [
 ]
 
 /** One frame of a show, into the whole of whatever canvas `p` has. */
-export function paintShow(p: p5, perf: Performance, t: number, overview = false): void {
+export function paintShow(p: p5, perf: Performance, t: number, overview = false, zoom = false): void {
   const time = Math.max(0, Math.min(perf.duration, t))
   const here = perf.show.at(time)
   const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
+  // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
+  const follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
   const W = p.width
   const H = p.height
   // The composed frame is always whole: a stage wider or taller than 16:9 sees more world around it, never less of it.
-  const k = Math.min(W / ASPECT, H) / cam.cells
+  const k = Math.min(W / ASPECT, H) / follow.cells
   const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
-  drawWorld(p, perf.show, time, here, full ?? cam, full?.scale ?? k, { x: 0, y: 0, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
+  drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x: 0, y: 0, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
 }
 
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */
@@ -62,6 +66,7 @@ function refuseType(p: p5): void {
 
 export interface ShowStage {
   setOverview(on: boolean): void
+  setZoom(on: boolean): void
   /** Put a version on the stage, or clear it. */
   set(perf: Performance | null): void
   /** The frame at `t` as a PNG at `size`: the picture alone. */
@@ -78,6 +83,7 @@ export interface ShowStage {
 
 export function createShowStage(host: HTMLElement, clock: { time(): number }): ShowStage {
   let overview = false
+  let zoom = false
   let perf: Performance | null = null
   let release = () => {}
   let lastPaper = ''
@@ -92,7 +98,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         p.clear()
         return
       }
-      paintShow(p, perf, clock.time(), overview)
+      paintShow(p, perf, clock.time(), overview, zoom)
       // The stage behind the canvas is the world's paper, so a resize never flashes the panel's dark.
       const paper = perf.show.at(Math.min(perf.duration, Math.max(0, clock.time()))).universe.theme.bg
       if (paper !== lastPaper) {
@@ -110,6 +116,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
    */
   function frame(size: FrameSize, showing: Performance, shown: boolean): { canvas: HTMLCanvasElement; paint(t: number): void; remove(): void } {
     const full = overview
+    const tight = zoom
     const holder = document.createElement('div')
     holder.className = 'show-frame'
     holder.hidden = !shown
@@ -123,7 +130,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         refuseType(s)
         s.noLoop()
       }
-      s.draw = () => paintShow(s, showing, at, full)
+      s.draw = () => paintShow(s, showing, at, full, tight)
     })
     return {
       canvas: canvasOf(p),
@@ -140,6 +147,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
 
   return {
     setOverview(on) { overview = on },
+    setZoom(on) { zoom = on },
     set(next) {
       perf = next
       if (!next) {

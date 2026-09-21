@@ -16,16 +16,9 @@
  * opened, tucks into the edge, and comes out when the pointer nears it.
  * The backtick clears the stage of all of it — the panel, the peek tab,
  * anything else standing on the stage — for the piece alone, and the
- * backtick again puts back exactly what was there.
- *
- * Shows, the Builder and the Playground are not on the switch until they
- * are unlocked: five backticks in quick succession, in any mode
- * (`unlock.ts`). The same five lock them again. While they are out the
- * switch is five icon-only buttons, each named on hover; locked, it is
- * Machine and Explorations with their words. Only the first of a quick run clears the stage, so the
- * chrome does not flicker on the way.
+ * backtick again puts back exactly what was there. The switch is four
+ * icon-only buttons, each named on hover. The Builder is off it for now.
  */
-import { UNLOCK_EVENT, UNLOCK_GAP_MS, pressCounter, setUnlocked, unlocked } from './unlock'
 
 export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground'
 
@@ -35,14 +28,12 @@ interface ModeLink {
   path: string
 }
 
-/** Tabs that stay off the switch, and off their own pages, until unlocked. */
-export const GATED: ReadonlySet<ShellMode> = new Set(['shows', 'builder', 'playground'])
-
 export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
   { mode: 'shows', label: 'Shows', path: '/shows/' },
-  { mode: 'builder', label: 'Builder', path: '/builder/' },
+  // TODO: Builder is rough — re-enable when ready
+  // { mode: 'builder', label: 'Builder', path: '/builder/' },
   { mode: 'playground', label: 'Playground', path: '/playground/' },
 ]
 
@@ -249,17 +240,16 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }, ['Hide', el('kbd', {}, ['P'])])
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so a
-  // switch is a navigation and the back button undoes it. Locked it is two
-  // words; unlocked it is five marks, each named on hover and for a screen reader.
-  // Native title waits a beat and is easy to miss on a 32px icon; the name is
-  // a small label we place ourselves (`mode-tip`).
+  // switch is a navigation and the back button undoes it. Four marks, each
+  // named on hover and for a screen reader. Native title waits a beat and is
+  // easy to miss on a 32px icon; the name is a small label we place ourselves
+  // (`mode-tip`).
   const tip = el('div', { class: 'mode-tip', hidden: '' })
   document.body.append(tip)
   const hideTip = () => {
     tip.hidden = true
   }
   const showTip = (a: HTMLAnchorElement, label: string) => {
-    if (!a.classList.contains('icon') || a.hidden) return
     tip.textContent = label
     tip.hidden = false
     const r = a.getBoundingClientRect()
@@ -273,23 +263,16 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       tip.style.transform = 'translate(-50%, -100%)'
     }
   }
-  const dress = (a: HTMLAnchorElement, m: ModeLink, open: boolean) => {
-    a.hidden = GATED.has(m.mode) && !open
-    a.classList.toggle('icon', open)
-    if (open) {
-      a.replaceChildren(icon(ICON[m.mode]))
-      a.setAttribute('aria-label', m.label)
-      a.removeAttribute('title')
-    } else {
-      a.replaceChildren(m.label)
-      a.removeAttribute('aria-label')
-      a.removeAttribute('title')
-    }
+  const dress = (a: HTMLAnchorElement, m: ModeLink) => {
+    a.classList.add('icon')
+    a.replaceChildren(icon(ICON[m.mode]))
+    a.setAttribute('aria-label', m.label)
+    a.removeAttribute('title')
     hideTip()
   }
   const links = MODE_LINKS.map((m) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
-    dress(a, m, unlocked())
+    dress(a, m)
     a.addEventListener('pointerenter', () => showTip(a, m.label))
     a.addEventListener('pointerleave', hideTip)
     a.addEventListener('focus', () => showTip(a, m.label))
@@ -305,8 +288,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     }
     return { m, a }
   })
-  const switcher = el('nav', { class: 'seg mode-switch', 'aria-label': 'Mode' }, links.map((l) => l.a))
-  switcher.classList.toggle('icons', unlocked())
+  const switcher = el('nav', { class: 'seg mode-switch icons', 'aria-label': 'Mode' }, links.map((l) => l.a))
   root.append(
     el('header', { class: 'brand' }, [
       el('div', { class: 'brand-row' }, [el('h1', {}, ['contraptions']), hideBtn]),
@@ -401,52 +383,14 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     // Nothing that has just left the screen keeps the keyboard.
     if (bare && document.activeElement instanceof HTMLElement) document.activeElement.blur()
   }
-  // Five backticks on each other's heels lock or unlock Shows, the Builder
-  // and the Playground together. Only the first press of a quick run clears the stage
-  // (or puts it back): the rest of the run are counted and not shown, so
-  // five for the lock do not strobe the chrome. The fifth settles it: the
-  // panel out for tabs just unlocked, so that the new marks are seen, and
-  // as it was before the run for a lock. No flash on the new tabs.
-  const run = pressCounter()
-  let bareBefore = false
-  let lastPress = -Infinity
-  let presses = 0
-  const toggleLock = () => {
-    const on = !unlocked()
-    setUnlocked(on)
-    window.dispatchEvent(new CustomEvent(UNLOCK_EVENT, { detail: on }))
-    if (!on && GATED.has(mode)) {
-      // A gated mode is put away with its door: back to the front of the house.
-      location.replace(links.find((l) => l.m.mode === 'machine')!.a.href)
-      return
-    }
-    switcher.classList.toggle('icons', on)
-    for (const { m, a } of links) dress(a, m, on)
-    document.body.classList.toggle('bare', on ? false : bareBefore)
-    if (!on) return
-    document.body.classList.remove('hide-panel')
-    rememberPanel(true)
-  }
   // Here and not in each mode's key map: the key means the same thing in all of them.
   window.addEventListener('keydown', (e) => {
-    // A held key is one press: it neither strobes the chrome nor counts five.
+    // A held key is one press: it does not strobe the chrome.
     if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
     const t = e.target
     if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
     e.preventDefault()
-    const at = performance.now()
-    // The first press of a run remembers how the stage stood before it.
-    if (at - lastPress > UNLOCK_GAP_MS) {
-      bareBefore = document.body.classList.contains('bare')
-      presses = 0
-    }
-    lastPress = at
-    presses++
-    if (run(at)) {
-      toggleLock()
-      // The counter starts over after a run; so does this.
-      lastPress = -Infinity
-    } else if (presses === 1) toggleBare()
+    toggleBare()
   })
 
   // The piece leads: Machine, Explorations, Shows and the Playground open with the panel away

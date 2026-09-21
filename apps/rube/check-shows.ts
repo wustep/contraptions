@@ -1,12 +1,13 @@
 /**
- * Headless checks for Shows: the registry and the version files on disk,
- * the clock, the time maps, and the placeholder takes. The stage, the
+ * Headless checks for Shows: the door, the registry and the version files
+ * on disk, the clock, the time maps, and the placeholder takes. The stage, the
  * soundtrack and the recorder need a browser and are not here.
  *
  *   npm run check:shows
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { MODE_LINKS } from '../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from './src/shows/clock'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from './src/shows/registry'
 import { renderWav } from './src/shows/ticks'
@@ -27,6 +28,20 @@ function check(name: string, ok: boolean, detail = ''): void {
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
 
 async function main(): Promise<void> {
+  /* ------------------------------------------------------------------ the door */
+
+  console.log('\nthe door')
+  const tab = MODE_LINKS.find((m) => m.mode === 'shows')
+  check('Shows is a mode, at /shows/', tab?.path === '/shows/' && tab.label === 'Shows')
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
+  const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
+  const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
+  check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))
+  check('a visit starts the show', /if \(current\) void open\(current, true\)/.test(player) && /if \(perf && thenPlay\) void play\(\)/.test(player))
+  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
+  check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
+
   /* ------------------------------------------------------------------ the registry */
 
   console.log('\nthe registry')

@@ -10,8 +10,8 @@ The file is 261.816 seconds long. Playback skips 0.70 seconds of leading
 silence and uses the remaining 4:21.116, including the final decay. The
 downloaded file is unmodified. Credits stay in the panel and this folder.
 
-Open `/shows/?show=schubert-impromptu&take=take-a`. If Shows is locked,
-press backtick five times quickly. The local review server uses
+Open `/shows/?show=schubert-impromptu&take=take-a`. The local review
+server uses
 `http://127.0.0.1:8793/shows/?show=schubert-impromptu&take=take-a`.
 
 ## Phrase plan
