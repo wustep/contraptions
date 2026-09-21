@@ -1172,7 +1172,7 @@ What is staged stands on **shelves**, a band each on the Playground's sheet:
 
 | Shelf | In the URL | What is on it |
 | --- | --- | --- |
-| Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: the new ones first (five were made for each; the ones let into Machine since have left their shelf), then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
+| Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: the new ones first (five were made for each, and four more for Aqua after them; the ones let into Machine since have left their shelf), then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
 | **Snow** | `alpine` | A world not yet in the loop. A mountain in winter: snow, ice, timber and rope. A rail of its own and eighteen beats. |
 | **Music** | `orchestra` | A world not yet in the loop. A concert hall: strings, brass, felt and wood. A rail of its own and eighteen beats. |
 

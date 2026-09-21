@@ -3,7 +3,8 @@
 What did not make it, and why. Three lists: pieces a craft pass took out of
 Machine (all of them restored onto the Playground's shelves, as they stood on
 the day they went, so they can still be watched); ideas thrown away while the
-Playground's first pieces and worlds were being designed; and worlds that were
+Playground's first pieces and worlds, and the pieces made for it since, were
+being designed; and worlds that were
 considered and not built.
 
 The reasons are the useful part. Most of them are one of five:
@@ -81,6 +82,36 @@ said so for itself).
 | `breakout`: the ball knocks bricks out of a wall on a screen | Arcade | Already said: `pong`'s straight lines and one pace; the arcade has seven screens. |
 | `derby`: a roll-a-ball horse race | Arcade | Hidden: the ball goes down a scoring hole and the horses are the show. |
 | `tubeman` in one cell: the sleeve heaped over its blower, rising straight up under the ball | Arcade | No silhouette at rest, since a heap of cloth is a blob, and no whip: a column that grows under the ball is the `stacker`'s platform in a sock. Built lying along the rail instead, which costs a cell and gives it somewhere to get up from. |
+
+### For Aqua's second four
+
+Four more pieces were asked for by name for Aqua's shelf after the first
+five: a tide pool, a kelp curtain, a buoy chain and a foghorn. All four
+were built (`tidepool`, `kelpcurtain`, `buoychain`, `diaphone`). These are
+the forms of them that were thrown away on the way.
+
+| Idea | Why not |
+| --- | --- |
+| `tidepool` as a pothole that drains through a crack, the ball going down with the level | Already said: the shelf's `plughole` is a pool that runs away with the ball going down on it. And a pothole a crack can empty has no door a ball can leave by. The pool bursts its rim instead and the ball goes down a floor in the waterfall. |
+| `tidepool`: a wave running from where the ball went in, at 1.8 cells a second | It stayed hidden behind the ball all the way across. It runs from the ball's bow at 1.3 now, in a wider pool. |
+| `tidepool`: the waterfall as long drops | They read as rope. Round drops, as fat as the sheet that feeds them. |
+| `buoychain` on the flat: a row of buoys across a gap, the ball hopping from one to the next | Already said: that is the `floats`, and this log already counts buoy, dolphin, serpent and floats as "a sea thing takes it across". The three stand in a rising row now and the swell hands the ball up a floor. |
+| `buoychain` on still water, rings round the buoys for the bobbing | The bed is an eighth of a floor under the still line and a buoy goes up a third of a floor, so its foot came clear of the sea at every crest. The swell is drawn. |
+| `buoychain`: the swell as solid blue humps with the still line left under them | Blue hills standing on the sea. It is a pale heave now with the sea's ink line on its back, still only by the pilings. |
+| `buoychain`: heeling about the foot; a short-link ground chain; a lamp on the spar | A toy on a stick; a railway on the seabed; in the ball's way. |
+| `foghorn` with the ball corking a horn that lies along the deck, and blown back out of its bell | A blast back the way it came on the same floor is not a placement, and a ball corked in a tube is what the `spyglass` was cut for. The name is Machine's too, so the piece is the `diaphone`: in at an upturned bell, out of the mouth. |
+| `diaphone`: a near-vertical far arm with a tight crook | It read as a vase, or a sink trap. The arm slants at 38 degrees and the shot is low and flat; at 45 it was a lob. |
+| `diaphone`: the sea a floor down under it | The flight went over a pit, and the sea's level broke with both neighbours. The water is deep here, as it is under the `breach`, and its line is where every pier has it. |
+| `diaphone`: drops thrown from the mouth at the boom | They read as spit. Rings of sound. |
+| `kelpcurtain` growing up from the seabed | Kelp stands up only under water, and the ball would have to be down there with it. It is hung over a line to dry, above the deck. |
+| `kelpcurtain`: twelve narrow blades; round floats on them | Mostly ink; eyelets. Ten wider blades, and the floats are pear-shaped. |
+| `kelpcurtain`: a blade let go the instant it is too short to reach round the ball | It swung back through the ball. It rides down the ball's back on its tip now and is let go at the ball's own pace. |
+
+One precedent in this log stands against the `diaphone` and is recorded
+here rather than argued away: `broadside` was thrown out because "a cannon
+is a cannon". The diaphone is a pop-gun. It was asked for by name, the ball
+is in sight the whole way through it, and what fires it is seen: the
+plunger and the squeezed air.
 
 ### For Snow
 
