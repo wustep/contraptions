@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, easeInQuad, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, definePiece, fly, over, post, rail, ramp, segTime, trace, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, definePiece, over, post, rail, ramp, segTime, trace, type Lane, type Pt } from '../../parts'
 import { leaf, soil, tuft } from './green'
 
 /**
@@ -11,10 +11,12 @@ import { leaf, soil, tuft } from './green'
  * unfurls — the coil unwinding from the stem up, the stalk stretching, the
  * pinnae opening pair by pair as the curl leaves them — and the ball rides
  * the top of the coil the whole way up, until the coil is only a hook at
- * the tip of a tall frond a floor above the path. The frond, top-heavy
- * now, bows under it; the hook droops and the ball rolls off it onto a
- * shelf of path a floor up. The frond springs back a little and stands
- * there, open. Two smaller fiddleheads behind it stay coiled.
+ * the tip of a tall frond, a little higher than the shelf of path a floor
+ * above it. The frond, top-heavy now, bows under it; the hook droops until
+ * the ball is level with the shelf beside it, and the ball rolls off it
+ * onto the shelf and on, the way it was going. The frond springs back a
+ * little and stands there, open. Two smaller fiddleheads behind it stay
+ * coiled.
  *
  * The frond is one curve, its heading a function of how far along it you
  * are: straight for the stem, then a curl that tightens toward the tip and
@@ -38,10 +40,10 @@ interface Shape {
 const U0 = 0.1
 /** Coiled and waiting; tall and open, with a hook at the tip that points a little down the way out. */
 const REST: Shape = { L: 1.2, q: 1.3, A: 8, B: 0, lean: 0 }
-const TALL: Shape = { L: 1.55, q: 5, A: 0.3 + Math.PI / 2 - 0.04 - 0.15, B: 0.15, lean: 0.04 }
-/** The bow that tips the ball off, and the lean with it. */
-const DROOP_B = 0.62
-const DROOP_LEAN = 0.1
+const TALL: Shape = { L: 1.6, q: 5, A: 0.3 + Math.PI / 2 - 0.04 - 0.15, B: 0.15, lean: 0.04 }
+/** The bow the ball's weight would give the frond, and the lean with it: more than it gets, since the ball is off onto the shelf before the frond is down to it. */
+const DROOP_B = 0.24
+const DROOP_LEAN = 0.05
 /** The ribbon's width at the root, and how much it tapers by the tip. */
 const W0 = 0.075
 const TAPER = 0.55
@@ -50,7 +52,6 @@ const N = 72
 const WAKE = 0.3
 const UNFURL = 1.3
 const DROOP = 0.28
-const HOP = 0.11
 
 const ROOT_X = -0.2
 const PINNAE = [0.32, 0.44, 0.56, 0.68, 0.79, 0.89]
@@ -113,9 +114,24 @@ const IN = arrive([-0.5, 0], SEAT0)
 const ARRIVE = segTime(IN)
 const FIRE = ARRIVE + WAKE
 const T_TALL = FIRE + UNFURL
-const T_OFF = T_TALL + DROOP
 
 const mix = (a: Shape, b: Shape, f: number): Shape => ({ L: lerp(a.L, b.L, f), q: lerp(a.q, b.q, f), A: lerp(a.A, b.A, f), B: lerp(a.B, b.B, f), lean: lerp(a.lean, b.lean, f) })
+/** The tall frond bowed `f` of the way to its full droop. */
+const drooped = (f: number): Shape => ({ ...TALL, B: lerp(TALL.B, DROOP_B, f), lean: lerp(TALL.lean, DROOP_LEAN, f) })
+
+/** The ball on a frond of shape `sh`, sitting on it `u` of the way along. */
+function onFrond(sh: Shape, u: number): Pt {
+  const [x, y] = pointAt(sh, u)
+  const th = theta(sh, u)
+  const off = R + width(u) / 2
+  return [ROOT[0] + x + Math.sin(th) * off, ROOT[1] + y - Math.cos(th) * off]
+}
+/** How far into its droop the frond has let the ball down level with the shelf, and when: there the ball rolls off onto it. */
+const LET_GO = (() => {
+  for (let f = 0; f < 1; f += 1 / 4000) if (onFrond(drooped(f), U_HOLD)[1] >= -1) return f
+  return 1
+})()
+const T_OFF = T_TALL + DROOP * Math.sqrt(LET_GO)
 
 /** The frond at piece time `t`. */
 function shapeAt(t: number): Shape {
@@ -125,38 +141,28 @@ function shapeAt(t: number): Shape {
     return { ...REST, A: REST.A + stir }
   }
   if (t < T_TALL) return mix(REST, TALL, easeInOutSine(over(t, FIRE, T_TALL)))
-  if (t < T_OFF) {
-    const f = easeInQuad(over(t, T_TALL, T_OFF))
-    return { ...TALL, B: lerp(TALL.B, DROOP_B, f), lean: lerp(TALL.lean, DROOP_LEAN, f) }
-  }
-  // Lightened, it springs back and sways.
+  if (t < T_OFF) return drooped(easeInQuad(over(t, T_TALL, T_TALL + DROOP)))
+  // Lightened, it springs back from as far as it had bowed, and sways.
   const s = t - T_OFF
   const ring = Math.exp(-s * 2.6) * Math.cos(s * 7)
   const sway = 0.02 * Math.sin(s * 1.3) * (1 - Math.exp(-s))
-  return { ...TALL, B: lerp(TALL.B, DROOP_B, ring), lean: lerp(TALL.lean, DROOP_LEAN, ring) + sway }
+  const sh = drooped(LET_GO * ring)
+  return { ...sh, lean: sh.lean + sway }
 }
 
 /** The ball on the frond: on the top of the coil while it unwinds, at the hook once there is only a hook. */
-function ballAt(t: number): Pt {
-  const sh = shapeAt(t)
-  const u = t < T_TALL ? seatU(sh) : U_HOLD
-  const [x, y] = pointAt(sh, u)
-  const th = theta(sh, u)
-  const off = R + width(u) / 2
-  return [ROOT[0] + x + Math.sin(th) * off, ROOT[1] + y - Math.cos(th) * off]
-}
+const ballAt = (t: number): Pt => onFrond(shapeAt(t), t < T_TALL ? seatU(shapeAt(t)) : U_HOLD)
 
 const LANE: Lane = (() => {
-  const ride = [...trace(ballAt, ARRIVE, T_TALL, 26), ...trace(ballAt, T_TALL, T_OFF, 8)]
-  const off = ride[ride.length - 1].to
-  const land: Pt = [off[0] + 0.1, -1]
-  const v = (0.5 - land[0]) / 0.12
-  return {
-    segs: [...IN, ...ride, fly(off, land, HOP, 0.02), ramp(land, [0.5, -1], Math.max(v, ROLL * 0.6), ROLL)],
-    fire: FIRE,
-  }
+  const ride = [...trace(ballAt, ARRIVE, T_TALL, 26), ...trace(ballAt, T_TALL, T_OFF, 6)]
+  const last = ride[ride.length - 1]
+  const off = last.to
+  // Off the hook at the pace the droop gave it, and up to the path's along the shelf.
+  const v = Math.hypot(last.to[0] - last.from[0], last.to[1] - last.from[1]) / last.dur
+  return { segs: [...IN, ...ride, ramp(off, [0.5, -1], v, ROLL)], fire: FIRE }
 })()
-const LEDGE = LANE.segs[LANE.segs.length - 2].to[0] - 0.08
+/** The shelf starts under where the ball comes off the hook onto it. */
+const LEDGE = LANE.segs[LANE.segs.length - 1].from[0] - 0.06
 
 export const fern = definePiece<{ color: string }>({
   name: 'fern',
@@ -180,12 +186,12 @@ export const fern = definePiece<{ color: string }>({
     post(p, k, ink, weight, railEnd)
     soil(p, k, ink, weight, -0.5, 0.5)
     rail(p, k, ink, weight, LEDGE, 0.5, -1 + FLOOR)
-    post(p, k, ink, weight, 0.45, -1 + FLOOR, 0.5)
+    post(p, k, ink, weight, 0.42, -1 + FLOOR, 0.5)
 
     // Two smaller fiddleheads behind, still coiled, swaying a little.
     for (const [x, L, lean] of [
       [-0.36, 0.7, -0.16],
-      [0.26, 0.56, 0.18],
+      [0.16, 0.56, 0.18],
     ]) {
       ribbon(p, k, ink, weight * 0.9, s.color, x, 0.5, { L, q: 1.2, A: 5.4, B: 0, lean: lean + 0.03 * Math.sin(t * 1.1 + x * 5) }, 0.6)
     }
