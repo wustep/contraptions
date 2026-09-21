@@ -1,6 +1,6 @@
 /**
  * Headless checks for Shows: the registry and the version files on disk,
- * the clock, the time maps, and the placeholder takes. The stage, the
+ * the clock, the time maps, and the placeholder take. The stage, the
  * soundtrack and the recorder need a browser and are not here.
  *
  *   npm run check:shows
@@ -11,7 +11,7 @@ import { SHOW_SPEEDS, Transport, clockText } from './src/shows/clock'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from './src/shows/registry'
 import { renderWav } from './src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
-import { GRID, freeTake, strictTake, strikes } from './src/shows/versions/metronome/metronome'
+import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metronome'
 import { Show } from './src/show'
 
 let failures = 0
@@ -89,8 +89,8 @@ async function main(): Promise<void> {
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
   check('the Shows tab opens Clair de Lune, Take A', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('Clair has its own full take', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.some((v) => v.take === 'take-a') === true)
-  check('Schubert has its own recorded take', shipped.works.find((w) => w.work === 'schubert-impromptu')?.versions.some((v) => v.take === 'take-a') === true)
+  check('Clair de Lune is one take, Take A', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a')
+  check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -104,13 +104,6 @@ async function main(): Promise<void> {
           near(perf.duration, premiere ? 290.61133333333333 : 301.648526) &&
           near(perf.soundtrack?.offset ?? 0, premiere ? 2.38 : 2.44) &&
           !!perf.soundtrack?.credit?.includes(premiere ? 'Patrizia Prati' : 'Laurens Goedhart') &&
-          !!perf.soundtrack?.href?.startsWith('https://commons.wikimedia.org/'))
-      }
-      if (work.work === 'schubert-impromptu') {
-        check('Schubert: full recording, silence offset and Commons credit',
-          near(perf.duration, 261.116) && near(perf.soundtrack?.offset ?? 0, 0.70) &&
-          !!perf.soundtrack?.credit?.includes('Chiara Bertoglio') &&
-          !!perf.soundtrack?.credit?.includes('CC BY 3.0') &&
           !!perf.soundtrack?.href?.startsWith('https://commons.wikimedia.org/'))
       }
       // The player asks for show.at(t) over 0..duration and nothing else.
@@ -212,13 +205,11 @@ async function main(): Promise<void> {
 
   /* ------------------------------------------------------------------ the placeholders */
 
-  console.log('\nthe placeholder takes')
+  console.log('\nthe placeholder take')
   {
-    const free = freeTake()
     const strict = strictTake()
-    const native = strikes(new Show('metronome'))
-    check('free time: a note on every strike, where the machine puts it', free.notes.length === native.length && free.notes.every((n, i) => near(n.at, native[i])))
-    check('free time ends on the cut out of its second world', near(free.duration, free.show.begin(2)))
+    const plain = new Show('metronome')
+    const native = strikes(plain)
     const wrong = knotProblems(strict.knots, 0.75, 1.35)
     check('strict time: the machine is never asked for more than a slight change of pace', wrong.length === 0, wrong.join(' · '))
     check('strict time: most strikes are brought onto the beat', strict.onGrid.length >= native.length * 0.8, `${strict.onGrid.length}/${native.length}`)
@@ -227,19 +218,20 @@ async function main(): Promise<void> {
     const map = timeMap(strict.knots)
     const struck = strict.notes.slice(0, native.length)
     check('strict time: every note is on its strike', struck.every((n, i) => near(map(n.at), native[i], 1e-5)))
-    check('strict time: the show is as long as its map', near(map(strict.duration), free.duration, 1e-9))
+    check('strict time: the show is as long as its map, to the cut out of its second world', near(map(strict.duration), plain.begin(2), 1e-9))
     const last = strict.show.at(strict.duration)
-    check('both takes end on the same frame of the same machine', last.universe.index === 2 && near(last.local, 0, 1e-6))
+    check('strict time: it ends on the frame the machine ends on', last.universe.index === 2 && near(last.local, 0, 1e-6))
 
-    const wav = renderWav(free.notes, free.duration + 1)
+    // The strikes alone, without the beat under them, so the silence before the first can be heard.
+    const wav = renderWav(struck, strict.duration + 1)
     const view = new DataView(wav.buffer)
     const tag = (at: number) => String.fromCharCode(...wav.slice(at, at + 4))
     check('the soundtrack renders to a WAV', tag(0) === 'RIFF' && tag(8) === 'WAVE' && tag(36) === 'data' && view.getUint32(40, true) === wav.length - 44)
-    check('as long as it was asked to be', near((wav.length - 44) / 2 / view.getUint32(24, true), free.duration + 1, 1e-3))
+    check('as long as it was asked to be', near((wav.length - 44) / 2 / view.getUint32(24, true), strict.duration + 1, 1e-3))
     let peak = 0
     let silentBefore = true
     const rate = view.getUint32(24, true)
-    const first = Math.floor(native[0] * rate)
+    const first = Math.floor(struck[0].at * rate)
     for (let i = 0; i < (wav.length - 44) / 2; i++) {
       const v = Math.abs(view.getInt16(44 + i * 2, true))
       peak = Math.max(peak, v)

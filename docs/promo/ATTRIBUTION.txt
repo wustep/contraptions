@@ -1,0 +1,10 @@
+Music: "Clair de lune" from Suite bergamasque, composed by Claude Debussy.
+Piano performance: Laurens Goedhart, 2011.
+Licensed under Creative Commons Attribution 3.0 Unported (CC BY 3.0).
+https://creativecommons.org/licenses/by/3.0/
+Source: https://commons.wikimedia.org/wiki/File:Clair_de_lune_(Claude_Debussy)_Suite_bergamasque.ogg
+
+Edit: from ~2.44s (after the opening silence) through ~79.05s of picture,
+with a 0.8-second fade-out. Original music speed and gain retained.
+Picture: seed clair-de-lune, complete four-world journey at 1x, 60 fps,
+1.5x follow-camera zoom for capture only. No voiceover.

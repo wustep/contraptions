@@ -7,9 +7,6 @@ import type { StockScore } from '../apps/rube/src/shows/stock/types'
 import { WORLDS, worldByName } from '../apps/rube/src/worlds'
 import premiere from '../apps/rube/src/shows/versions/premiere-arabesque/take-b.generated.json'
 import clair from '../apps/rube/src/shows/versions/clair-de-lune/take-a.generated.json'
-import clairB from '../apps/rube/src/shows/versions/clair-de-lune/take-b.generated.json'
-import impromptu from '../apps/rube/src/shows/versions/schubert-impromptu/take-a.generated.json'
-import { schubert } from './show-plans/schubert'
 import { stockPlacement } from './stock-placement'
 
 /**
@@ -50,29 +47,27 @@ function sameStockLane(saved: unknown, stock: unknown, label: string, path = 'la
 }
 
 const work = process.argv[2]
-assert.ok(work === 'premiere' || work === 'clair' || work === 'clair-b' || work === 'schubert', 'Choose premiere, clair, clair-b or schubert')
+assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
 /** How many stock types each world had, rail and portal included, when the take was arranged. */
 const CATALOG_WHEN_ARRANGED: Record<string, number[]> = {
   premiere: [35, 25, 24, 25],
-  clair: [35, 25, 24, 25],
-  'clair-b': WORLDS.map((w) => w.pieces.length),
-  schubert: [35, 25, 24, 25],
+  clair: WORLDS.map((w) => w.pieces.length),
 }
 /**
- * How long the recording may play on after the last portal. The older takes fill it to the final resonance;
- * Take B lets its last travel repeats go and closes on the finished machine while the last bars play out.
+ * How long the recording may play on after the last portal. Première fills it to the final resonance;
+ * Clair lets its last travel repeats go and closes on the finished machine while the last bars play out.
  */
-const TAIL: Record<string, number> = { premiere: 5, clair: 5, 'clair-b': 11, schubert: 5 }
+const TAIL: Record<string, number> = { premiere: 5, clair: 11 }
 /** How many travel repeats each take may lean on to reach the end of its recording. */
-const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 60, 'clair-b': 30, schubert: 38 }
-const score = ({ premiere, clair, 'clair-b': clairB, schubert: impromptu }[work]) as unknown as StockScore
+const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 30 }
+const score = ({ premiere, clair }[work]) as unknown as StockScore
 const plan = JSON.parse(readFileSync(`scripts/show-plans/${work}.json`, 'utf8')) as { world: string; target: number; pieces: unknown[] }[]
 const show = new StockShow(score)
-assert.equal(score.id, work === 'premiere' ? 'premiere-arabesque/take-b' : work === 'clair' ? 'clair-de-lune/take-a' : work === 'clair-b' ? 'clair-de-lune/take-b' : schubert.id)
-assert.equal(score.audioOffset, work === 'schubert' ? schubert.audioOffset : work === 'premiere' ? 2.38 : 2.44)
-assert.equal(score.duration, work === 'schubert' ? schubert.duration : work === 'premiere' ? 290.61133333333333 : 301.648526)
-// Take B pops the arcade's points and nothing else's; the older takes strip every score.
-assert.deepEqual(score.scores ?? [], work === 'clair-b' ? ['arcade'] : [])
+assert.equal(score.id, work === 'premiere' ? 'premiere-arabesque/take-b' : 'clair-de-lune/take-a')
+assert.equal(score.audioOffset, work === 'premiere' ? 2.38 : 2.44)
+assert.equal(score.duration, work === 'premiere' ? 290.61133333333333 : 301.648526)
+// Clair pops the arcade's points and nothing else's; Première strips every score.
+assert.deepEqual(score.scores ?? [], work === 'clair' ? ['arcade'] : [])
 assert.deepEqual(score.maps.map((m) => m.world), WORLDS.map((w) => w.name))
 assert.equal(score.maps.length, 4)
 let seams = 0, nativeWaits = 0, repeats = 0
@@ -83,7 +78,7 @@ for (const [mi, map] of score.maps.entries()) {
   assert.equal(map.world, plan[mi].world)
   assert.deepEqual(map.pieces.map((p) => p.spec), plan[mi].pieces, 'Regenerate after changing the piece order')
   assert.ok(Math.abs(map.end - plan[mi].target) < .17, 'World misses its recording cue')
-  assert.ok(map.end - map.begin > (work === 'schubert' ? 40 : 55), 'Keep phrases inside long maps')
+  assert.ok(map.end - map.begin > 55, 'Keep phrases inside long maps')
   assert.equal(map.pieces[0].begin, map.begin)
   assert.equal(map.pieces.at(-1)!.end, map.end)
   // A take covers the whole catalog as it stood when it was arranged; the catalog may have grown since.
@@ -146,8 +141,8 @@ for (const [mi, map] of score.maps.entries()) {
   }
 }
 assert.ok(repeats < REPEAT_BUDGET[work], 'Travel repeat budget grew')
-// Take B keeps the whale in the water: nothing stands in the cells under its footprint.
-if (work === 'clair-b') for (const map of score.maps) {
+// Clair keeps the whale in the water: nothing stands in the cells under its footprint.
+if (work === 'clair') for (const map of score.maps) {
   const taken = new Set(map.pieces.flatMap((p) => p.cells.map((c) => c.join(','))))
   for (const whale of map.pieces.filter((p) => p.spec.name === 'blowhole')) {
     const own = new Set(whale.cells.map((c) => c.join(',')))
@@ -158,10 +153,6 @@ const lastMap = score.maps.at(-1)!
 assert.equal(lastMap.pieces.at(-2)!.spec.name, 'ticket', 'The ticket belongs at the finale')
 assert.ok(score.duration > lastMap.end && score.duration - lastMap.end < TAIL[work], 'Only the close of the recording may outlast the chain')
 assert.equal(show.at(score.duration).scale, 0, 'Do not freeze a visible ball during the final resonance')
-if (work === 'schubert') {
-  assert.deepEqual(score.cues.map((c) => [c.piece, c.target]), schubert.cues)
-  assert.deepEqual(score.phrases, schubert.phrases.map(([end, title, visible], i, all) => ({ begin: i ? all[i - 1][0] : 0, end, title, visible })), 'Regenerate after changing phrase framing')
-}
 for (const cue of score.cues) assert.ok(Math.abs(cue.actual - cue.target) <= .12, `Missed ${cue.piece} cue`)
 for (const [i, phrase] of score.phrases.entries()) {
   assert.equal(phrase.begin, i ? score.phrases[i - 1].end : 0)

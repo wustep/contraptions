@@ -789,27 +789,27 @@ file's shape and what the player promises it. What ships today is
 **Première Arabesque**, Take A: Patrizia Prati's recording, the machine
 walking Regular, Forest, Aqua, Arcade, wrapping the timed take in
 `apps/rube/src/timed/premiere-arabesque/` without rewriting it. **Metronome**
-stays beside it as a placeholder in two takes with a soundtrack made in the
-page: *free time*, a struck bar wherever a piece fires, and *strict time*,
-the same machine under a time map that brings each strike onto a steady beat.
-The note is on the strike, so lock is something you can see and hear.
+stays beside it as a placeholder with a soundtrack made in the page, in
+*strict time*: a procedural machine under a time map that brings each strike
+onto a steady beat, a struck bar on every strike. The note is on the strike,
+so lock is something you can see and hear.
 
 Première also has [Take B](https://contraptions-wustep.vercel.app/shows/?show=premiere-arabesque&take=take-b),
-and [Clair de Lune, Take A](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-a) uses
-Laurens Goedhart's complete recording. Both new takes sequence unmodified
-stock durations through four long maps, Regular → Forest → Aqua → Arcade.
-They add no authored pauses or stretched mechanism clocks. Clair de Lune,
-Take A, is the default. The [phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and
-arrangement reports document the recording cues and repeated travel pieces.
+and [Clair de Lune, Take A](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-a), the
+default, uses Laurens Goedhart's complete recording. Both sequence
+unmodified stock durations through four long maps, Regular → Forest → Aqua →
+Arcade, with no authored pauses or stretched mechanism clocks. The
+[phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and arrangement reports
+document the recording cues and repeated travel pieces.
 
-[Clair de Lune, Take B](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-b)
-is the same recording arranged across the grown catalogs — every piece of
-every world once, and a repeat only where the music runs longer than the
-catalog does — with the whale over open water and the
-arcade's points popping over its machines (a stock score may name the worlds
-whose pops are drawn; the older takes name none). Its plan is
-`scripts/show-plans/clair-b.json`; `generate:clair:b` compiles it and
-`check:clair` checks both Clair takes.
+Clair de Lune is arranged across the whole catalog: every piece of every
+world at least once, and a repeat only where the music runs longer than the
+catalog does, with the whale over open water and the arcade's points
+popping over its machines (a stock score may name the worlds whose pops are
+drawn; Première names none). Its plan is `scripts/show-plans/clair.json`;
+`generate:clair` compiles it and `check:clair` checks it. It was Take B,
+beside an older Take A on the catalogs as they stood at the start; that take
+and Schubert's Impromptu are gone, and so is the metronome's free time.
 
 Press <kbd>O</kbd> or click **Overview** in Transport to fit the whole current
 world while the music keeps playing. Toggle it off to return to the follow
@@ -817,13 +817,6 @@ camera. PNG and video exports use the selected view and keep credits in the
 panel. Regenerate the new scores with `npm run generate:premiere:b` and
 `npm run generate:clair`; `check:premiere` checks both Première takes, and
 `check:clair` checks Clair.
-
-[Schubert's Impromptu No. 2, Take A](https://contraptions-wustep.vercel.app/shows/?show=schubert-impromptu&take=take-a)
-uses Chiara Bertoglio's CC BY 3.0 recording of D. 899 No. 2. Four stock
-maps follow its running scales and accented middle, then return to the
-scales before the closing drive. The [phrase plan and checkpoint notes](docs/promo/SCHUBERT_TAKE_A_PLAN.md)
-describe the arrangement. Run `generate:schubert` to regenerate it and
-`check:schubert` to verify stock timing, continuity and camera framing.
 
 
 ### The music is the clock
@@ -1228,8 +1221,8 @@ another colour, an arcade beat scores. So approval is a move, not a rewrite:
    and fix its two import depths.
 2. Add it to that world's `pieces`, doc block and tastes; take its line off
    the shelf.
-3. `npm run generate:clair:b`, since Take B pins every stock lane, and the
-   README's counts.
+3. `npm run generate:clair`, since Clair de Lune pins every stock lane, and
+   the README's counts.
 
 A world is the same move for the whole directory, plus a line in `WORLDS`
 and the counts and orders `check:rube` and the catalog sheet hold to four.
