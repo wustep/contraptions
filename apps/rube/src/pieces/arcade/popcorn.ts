@@ -15,7 +15,7 @@ import { glow, score, tube } from './neon'
  * open over the kettle; then the ball comes up through the heap, out of
  * the kettle and out of the open top in a spray of popcorn, high over the
  * case and down onto the shelf a floor up, where it lands and rolls on.
- * The heap stands over the top of the case, and some of it has gone over
+ * The heap stands half way up the case, and a few pieces have gone over
  * the sides onto the floor by the cart. Later it is served out again from
  * the top down, and the floor is swept.
  *
@@ -87,16 +87,35 @@ const KERNEL = 0.024
 const MOUTH = SEAT[1] - 0.04
 
 /**
- * A popped piece: fat, this far from its middle to the ends of its lobes,
- * and the three lobes it is made of, each along, down and how far across in
- * its own size. They are laid one on another with their outlines on, so the
- * creases between them show.
+ * A popped piece: this far from its middle to the ends of its lobes; and
+ * three ways a kernel can burst, each four fat lobes round its middle at
+ * uneven angles, along, down and how far across in the piece's own size. A piece is one
+ * scalloped outline round all of its lobes, the lines between them rubbed
+ * out, and a crease or two where one lobe folds over the next: the lumpy
+ * cloud of a real piece, not a bunch of balls.
  */
 const CORN = 0.08
-const LOBES: [number, number, number][] = [
-  [-0.42, 0.24, 1.08],
-  [0.46, 0.18, 1.0],
-  [0.02, -0.34, 1.16],
+/** How far across the middle of a piece is, that its lobes stand round, in its own size. */
+const CORE = 1.05
+const KINDS: [number, number, number][][] = [
+  [
+    [-0.423, -0.154, 0.9],
+    [0.116, -0.435, 0.8],
+    [0.435, 0.116, 0.85],
+    [-0.19, 0.408, 0.72],
+  ],
+  [
+    [-0.45, 0.0, 0.95],
+    [0.225, -0.39, 0.85],
+    [0.225, 0.39, 0.8],
+    [0.45, 0.0, 0.52],
+  ],
+  [
+    [-0.289, -0.345, 0.85],
+    [0.39, -0.225, 0.8],
+    [0.0, 0.45, 0.85],
+    [-0.423, 0.154, 0.62],
+  ],
 ]
 /** The same scatter every time: 0 to 1 from an index and a salt. */
 const hash = (i: number, salt: number): number => {
@@ -111,21 +130,23 @@ const ROW = 0.1
 const HOLLOW = 0.12
 const hollow = (x: number): number => HOLLOW * Math.exp(-(((x - KX) / 0.13) ** 2))
 
-/** A piece lying in the heap: where, how big, how it leans, which shade of pale, and how high the heap has to stand to have it. */
+/** A piece lying in the heap: where, how big, how it leans, which shade of pale, which way it burst, and how high the heap has to stand to have it. */
 interface Piled {
   x: number
   y: number
   r: number
   lean: number
   shade: number
+  kind: number
   level: number
 }
 /**
  * The heap: every piece that comes to lie in the case, in rows from its
- * floor to a crown standing proud of the open top and out over the
- * uprights. The ones the kettle's front would hide are left out. They are
- * in the order the heap takes them: from the bottom up, and over the kettle
- * last, where the popping keeps the hollow open until the end.
+ * floor up, laid as if to a crown standing proud of the open top, and then
+ * only the first half of them kept: it comes half way up the case. The ones
+ * the kettle's front would hide are left out. They are in the order the
+ * heap takes them: from the bottom up, and over the kettle last, where the
+ * popping keeps the hollow open until the end.
  */
 const HEAP: Piled[] = (() => {
   const out: Piled[] = []
@@ -141,11 +162,11 @@ const HEAP: Piled[] = (() => {
         const y = y0 + (hash(n, 2) - 0.5) * 0.03
         const r = CORN * (0.88 + 0.24 * hash(n, 3))
         const behind = x - 0.3 * r > KX - KETTLE_W / 2 && x + 0.3 * r < KX + KETTLE_W / 2 && y - 0.5 * r > RIM + 0.03
-        if (!behind) out.push({ x, y, r, lean: (hash(n, 4) - 0.5) * 1.2, shade: Math.floor(hash(n, 5) * 3), level: y - hollow(x) })
+        if (!behind) out.push({ x, y, r, lean: hash(n, 4) * 6.28, shade: Math.floor(hash(n, 5) * 3), kind: Math.floor(hash(n, 6) * 3), level: y - hollow(x) })
       }
     }
   }
-  return out.sort((a, b) => b.level - a.level)
+  return out.sort((a, b) => b.level - a.level).slice(0, Math.round(out.length / 2))
 })()
 
 /** When the heap is full, when it starts to be served out again, and when the case is empty. */
@@ -154,7 +175,7 @@ const T_SERVE = T_POP + 1.2
 const T_EMPTY = T_POP + 2.4
 /**
  * How much of the heap is there: none until the kettle is hot, more and
- * faster while it pops, over the top once the ball has gone up through it,
+ * faster while it pops, all of it once the ball has gone up through it,
  * and served out again afterwards from the top down.
  */
 function heaped(t: number): number {
@@ -177,13 +198,14 @@ interface Hop {
   vy: number
   dur: number
 }
-/** A piece thrown up out of the kettle: when, its hops one after another, whether it lies where the last one ends or is lost in the heap, and how it tumbles. */
+/** A piece thrown up out of the kettle: when, its hops one after another, whether it lies where the last one ends or is lost in the heap, which way it burst, and how it tumbles. */
 interface Flier {
   at: number
   hops: Hop[]
   air: number
   lies: boolean
   r: number
+  kind: number
   turn: number
   spin: number
 }
@@ -206,6 +228,7 @@ const flier = (i: number, at: number, hops: Hop[], lies: boolean): Flier => ({
   air: hops.reduce((sum, h) => sum + h.dur, 0),
   lies,
   r: CORN * (0.95 + 0.25 * hash(i, 6)),
+  kind: Math.floor(hash(i, 10) * 3),
   turn: hash(i, 7) * 6.28,
   spin: (hash(i, 8) - 0.5) * 16,
 })
@@ -215,7 +238,7 @@ const flier = (i: number, at: number, hops: Hop[], lies: boolean): Flier => ({
  * faster and higher and higher, each one up out of the kettle's mouth and
  * down onto the heap.
  */
-const POPPING = 18
+const POPPING = 9
 const POPS: Flier[] = Array.from({ length: POPPING }, (_, i) => {
   const u = i / (POPPING - 1)
   const at = T_SEAT + 0.1 + (HEAT - 0.13) * Math.pow(u, 0.62)
@@ -240,40 +263,55 @@ const SPRAY: Flier[] = (() => {
   const from = (i: number): Pt => [KX + (hash(i, 9) - 0.5) * 0.18, MOUTH]
   const back: [number, number][] = [
     [-0.2, -4.9],
-    [-0.1, -5.3],
     [0.02, -4.5],
-    [0.13, -3.9],
     [0.22, -3.6],
-    [-0.24, -4.2],
     [-0.04, -5.05],
-    [0.08, -3.4],
-    [-0.15, -3.7],
     [0.17, -4.1],
   ]
   back.forEach(([toX, vy], i) => out.push(flier(40 + i, T_POP, [ontoHeap(T_POP, from(i), toX, vy)], false)))
   // Off the ledge on the near side and onto the floor, with a last skip.
   out.push(flier(51, T_POP, [hop(from(11), [-0.372, LEDGE_Y], -5.25), hop([-0.372, LEDGE_Y], [-0.425, FLOOR_Y], -1.7), hop([-0.425, FLOOR_Y], [-0.44, FLOOR_Y], -0.9)], true))
-  // Onto the near upright's top, and off it down to the ledge.
-  out.push(flier(52, T_POP, [hop(from(12), [-0.315, TOP_Y], -4.7), hop([-0.315, TOP_Y], [-0.374, LEDGE_Y], -1.4)], true))
   // Onto the far upright's top, and off it to the floor.
   out.push(flier(53, T_POP, [hop(from(13), [0.315, TOP_Y], -4.2), hop([0.315, TOP_Y], [0.42, FLOOR_Y], -2), hop([0.42, FLOOR_Y], [0.438, FLOOR_Y], -0.9)], true))
-  // And one more the same way, that stays on the ledge.
-  out.push(flier(54, T_POP, [hop(from(14), [0.315, TOP_Y], -3.8), hop([0.315, TOP_Y], [0.374, LEDGE_Y], -1.2)], true))
   return out
 })()
 
-/** A popped piece at (x, y): `lobes` of its three, turned by `turn`. The fill and the line are the caller's. */
-function corn(p: p5, k: number, x: number, y: number, r: number, turn: number, lobes = 3): void {
+/** How a piece is painted: its fill, and the line round it and in its creases. */
+interface Paint {
+  fill: string
+  line: string
+  weight: number
+}
+/**
+ * A popped piece at (x, y) of the `kind` given, turned by `turn`: every
+ * lobe outlined, then every lobe and the piece's middle filled again inside
+ * the line, which rubs out the lines within and leaves the scalloped edge;
+ * then the crease where the second lobe folds over the first.
+ */
+function corn(p: p5, k: number, x: number, y: number, r: number, turn: number, kind: number, paint: Paint): void {
+  if (r <= 0.002) return
+  const lobes = KINDS[kind % KINDS.length]
   const c = Math.cos(turn) * r * k
   const s = Math.sin(turn) * r * k
-  for (let i = 0; i < lobes; i++) {
-    const [u, v, d] = LOBES[i]
-    p.circle(x * k + u * c - v * s, y * k + u * s + v * c, d * r * k)
-  }
+  const at = ([u, v]: [number, number, number]): Pt => [x * k + u * c - v * s, y * k + u * s + v * c]
+  p.stroke(paint.line)
+  p.strokeWeight(paint.weight)
+  p.fill(paint.fill)
+  for (const lobe of lobes) p.circle(...at(lobe), lobe[2] * r * k)
+  p.noStroke()
+  for (const lobe of lobes) p.circle(...at(lobe), Math.max(0, lobe[2] * r * k - paint.weight))
+  // The middle, which the lobes' own rings would otherwise leave lined between them.
+  p.circle(x * k, y * k, CORE * r * k)
+  const [ax, ay] = at(lobes[0])
+  const [bx, by] = at(lobes[1])
+  const toward = Math.atan2(ay - by, ax - bx)
+  p.stroke(paint.line)
+  p.noFill()
+  p.arc(bx, by, lobes[1][2] * r * k, lobes[1][2] * r * k, toward - 0.7, toward + 0.7)
 }
 
 /** A flier at `t`: bursting fat as it leaves, tumbling through its hops, then lying where it lit until it is swept up, or gone into the heap. */
-function fling(p: p5, k: number, f: Flier, t: number, swept: number): void {
+function fling(p: p5, k: number, f: Flier, t: number, swept: number, paint: Paint): void {
   let age = t - f.at
   if (age <= 0) return
   const grown = over(age, 0, 0.1)
@@ -281,7 +319,7 @@ function fling(p: p5, k: number, f: Flier, t: number, swept: number): void {
   const turn = f.turn + f.spin * Math.min(age, f.air)
   for (const h of f.hops) {
     if (age < h.dur) {
-      corn(p, k, h.x + h.vx * age, h.y + h.vy * age + (KG / 2) * age * age, size, turn)
+      corn(p, k, h.x + h.vx * age, h.y + h.vy * age + (KG / 2) * age * age, size, turn, f.kind, paint)
       return
     }
     age -= h.dur
@@ -290,7 +328,7 @@ function fling(p: p5, k: number, f: Flier, t: number, swept: number): void {
   const left = 1 - over(t, swept, swept + 0.2)
   if (left <= 0) return
   const last = f.hops[f.hops.length - 1]
-  corn(p, k, last.x + last.vx * last.dur, last.y + last.vy * last.dur + (KG / 2) * last.dur * last.dur + f.r * (1 - left), f.r * left, turn)
+  corn(p, k, last.x + last.vx * last.dur, last.y + last.vy * last.dur + (KG / 2) * last.dur * last.dur + f.r * (1 - left), f.r * left, turn, f.kind, paint)
 }
 
 /**
@@ -300,7 +338,7 @@ function fling(p: p5, k: number, f: Flier, t: number, swept: number): void {
  * its top and fall to the floor by the cart's end, no nearer the cell's
  * edge than their size lets them, and lie there until they are swept up.
  */
-function kernel(p: p5, k: number, q: Kernel, t: number, swept: number): void {
+function kernel(p: p5, k: number, q: Kernel, t: number, swept: number, kind: number, paint: Paint): void {
   let age = t - q.at
   if (age <= 0) return
   const grown = over(age, 0, 0.1)
@@ -309,7 +347,7 @@ function kernel(p: p5, k: number, q: Kernel, t: number, swept: number): void {
   if (q.landY < CASE.bottom) {
     const x = q.x0 + (q.landX - q.x0) * (age / airtime(MOUTH, q.landY, q.vy))
     const y = MOUTH + q.vy * age + (KG / 2) * age * age
-    if (q.vy + KG * age < 0 || y < surface(x, t)) corn(p, k, x, y, size, turn)
+    if (q.vy + KG * age < 0 || y < surface(x, t)) corn(p, k, x, y, size, turn, kind, paint)
     return
   }
   const side = q.landX < 0 ? -1 : 1
@@ -317,18 +355,18 @@ function kernel(p: p5, k: number, q: Kernel, t: number, swept: number): void {
   const vy = side > 0 ? Math.max(q.vy, -4.2) : q.vy
   const up = airtime(MOUTH, TOP_Y, vy)
   if (age < up) {
-    corn(p, k, q.x0 + (topX - q.x0) * (age / up), MOUTH + vy * age + (KG / 2) * age * age, size, turn)
+    corn(p, k, q.x0 + (topX - q.x0) * (age / up), MOUTH + vy * age + (KG / 2) * age * age, size, turn, kind, paint)
     return
   }
   age -= up
   const restX = side * Math.min(0.44, Math.abs(q.landX))
   const down = airtime(TOP_Y, FLOOR_Y, SKIP)
   if (age < down) {
-    corn(p, k, topX + (restX - topX) * (age / down), TOP_Y + SKIP * age + (KG / 2) * age * age, size, turn)
+    corn(p, k, topX + (restX - topX) * (age / down), TOP_Y + SKIP * age + (KG / 2) * age * age, size, turn, kind, paint)
     return
   }
   const left = 1 - over(t, swept, swept + 0.2)
-  if (left > 0) corn(p, k, restX, FLOOR_Y + CORN * (1 - left), CORN * left, q.x0 * 90 + q.vx * 6 * (up + down))
+  if (left > 0) corn(p, k, restX, FLOOR_Y + CORN * (1 - left), CORN * left, q.x0 * 90 + q.vx * 6 * (up + down), kind, paint)
 }
 
 /** The kettle's front: a pot in the colour, round in the bottom, under a pale lip a shade wider. */
@@ -353,16 +391,16 @@ export const popcorn = definePiece<PopcornState>({
     const kernels: Kernel[] = []
     const inside = (x: number) => Math.max(CASE.x0 + 0.05, Math.min(CASE.x1 - 0.05, x))
     // The ones that burst while it heats stay in the case.
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 5; i++) {
       const vx = (rng.next() - 0.5) * 1.6
       const vy = -(1.5 + 1.3 * rng.next())
       const x0 = KX + (rng.next() - 0.5) * 0.16
       const landY = CASE.bottom - KERNEL
       const T = (-vy + Math.sqrt(vy * vy + 2 * KG * (landY - SEAT[1] + 0.04))) / KG
-      kernels.push({ x0, vx, vy, at: T_SEAT + 0.1 + i * 0.06, landX: inside(x0 + vx * T), landY })
+      kernels.push({ x0, vx, vy, at: T_SEAT + 0.1 + i * 0.11, landX: inside(x0 + vx * T), landY })
     }
     // The spray that comes up with the ball goes out of the top and comes down round the cart.
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 3; i++) {
       const vx = (rng.next() - 0.5) * 2.6
       const vy = -(3.6 + 1.4 * rng.next())
       const x0 = KX + (rng.next() - 0.5) * 0.16
@@ -397,14 +435,12 @@ export const popcorn = definePiece<PopcornState>({
     glow(p, k, s.color, KX, 0.22, 0.24, heat)
     // The heap: pale, in three shades of it, creased in a line half way to the night; each piece drops in as the heap comes up to it and sinks out as it is served. Behind the ball, behind the kettle's front, and buried chute and all.
     const pale = [ink, mixHex(ink, bg, 0.07), mixHex(ink, bg, 0.14)]
-    p.stroke(mixHex(ink, bg, 0.5))
-    p.strokeWeight(weight * 0.4)
+    const crease = mixHex(ink, bg, 0.5)
     const have = heaped(t) * HEAP.length
     for (let i = 0; i < have && i < HEAP.length; i++) {
       const q = HEAP[i]
       const g = Math.min(1, (have - i) / 1.5)
-      p.fill(pale[q.shade])
-      corn(p, k, q.x, q.y + (t < T_SERVE ? -0.06 : 0.04) * (1 - g), q.r * g, q.lean)
+      corn(p, k, q.x, q.y + (t < T_SERVE ? -0.06 : 0.04) * (1 - g), q.r * g, q.lean, q.kind, { fill: pale[q.shade], line: crease, weight: weight * 0.32 })
     }
     // The uprights stand in front of the heap, and the element under the kettle is lit while it works.
     solid(p, ink, weight, s.color)
@@ -413,12 +449,10 @@ export const popcorn = definePiece<PopcornState>({
     p.rect((CASE.x1 - POST_W / 2) * k, ((CASE.top + CASE.bottom) / 2) * k, POST_W * k, (CASE.bottom - CASE.top) * k, 0.01 * k)
     tube(p, k, ink, weight, s.color, KX - 0.15, ELEMENT_Y, KX + 0.15, ELEMENT_Y, heat)
     // What is in the air, and what has come down outside the case: in front of the heap and the uprights, behind the ball and the wheels.
-    p.stroke(mixHex(ink, bg, 0.5))
-    p.strokeWeight(weight * 0.4)
-    p.fill(ink)
-    for (const f of POPS) fling(p, k, f, t, 0)
-    SPRAY.forEach((f, i) => fling(p, k, f, t, T_SERVE + 0.15 * (i % 4)))
-    s.kernels.forEach((q, i) => kernel(p, k, q, t, T_SERVE + 0.3 + 0.12 * (i % 6)))
+    const flying: Paint = { fill: ink, line: crease, weight: weight * 0.32 }
+    for (const f of POPS) fling(p, k, f, t, 0, flying)
+    SPRAY.forEach((f, i) => fling(p, k, f, t, T_SERVE + 0.15 * (i % 4), flying))
+    s.kernels.forEach((q, i) => kernel(p, k, q, t, T_SERVE + 0.3 + 0.12 * (i % 6), i % KINDS.length, flying))
     // The cart: a body on two spoked wheels, with the case standing on it.
     solid(p, ink, weight, s.color)
     p.rect(0, ((CART.y0 + CART.y1) / 2) * k, 0.78 * k, (CART.y1 - CART.y0) * k, 0.01 * k)
