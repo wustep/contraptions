@@ -1,8 +1,8 @@
 import type p5 from 'p5'
-import { solid } from '../../../../../../src/core/draw'
-import { clamp, easeInOutSine, lerp } from '../../../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, over, post, rail, ramp, rankBy, roll, trace, wait, type Lane, type Pt } from '../../../parts'
-import { lamp, score } from '../../../pieces/arcade/neon'
+import { solid } from '../../../../../src/core/draw'
+import { clamp, easeInOutSine, lerp } from '../../../../../src/core/ease'
+import { FLOOR, R, ROLL, definePiece, over, post, rail, ramp, rankBy, roll, trace, wait, type Lane, type Pt } from '../../parts'
+import { lamp, score } from './neon'
 
 /**
  * A tube man, the fairground's air dancer. One long sleeve of bright cloth

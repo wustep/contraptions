@@ -24,6 +24,7 @@ exits and lane time, so a saved Show only needed a rename.
 
 | Piece | World | Cut in | What it was | Why it went | What took its cells |
 | --- | --- | --- | --- | --- | --- |
+| `spyglass` | Aqua | #63 | A brass spyglass shut up short on a stand: the ball fetches up in the eyepiece like a cork and its way shoves the tubes out, clack, clack, across two cells of open water to a crutch on the far pier. | Asked out by name. Two seconds of a tube growing longer is a slow beat with nothing to watch but the wait, and a ball corked in an eyepiece never sat right. It had taken the `bottle`'s cells in #59. | none: Aqua went to thirty-three beats, and Take B was rearranged without it |
 | `scales` | Regular | #61 | A pair of scales: the ball outweighs the brass, the pan sinks, tips on a rest and rolls it off a floor down. | Fiddly: two cords a pan, a pointer, a creeping beam. An elaborate physical simulation where one bold action was wanted. | `toggle` |
 | `birdbath` | Forest | #61 | A dish on a pedestal: over the rim, a splash, across half sunk, out over the lip. | First drawn as an ellipse seen from above in a side-view world; redrawn from the side in #59, and a half-sunk ball in a dish still never sat right. | `turf` |
 | `breakwater` | Aqua | #61 | The ball tumbles two floors down a heap of boulders to a landing stage. | Fiddly: a bead-string of stones, hard to draw and to follow. Nothing moved but the ball and the water. | `sail` |
@@ -68,7 +69,7 @@ said so for itself).
 | `timber`: the ball bonks a tree a beaver has gnawed through, and it falls across a gap as the bridge | Forest | Already said, twice over: the `appletree`'s bonk and the workshop's `drawbridge`. |
 | `leafsteps`: down a tall plant leaf by leaf, each dipping under the ball and springing back | Forest | Already said: the `toadstools` run downhill, and the workshop's `switchback`. Three small actions where one bold one was wanted. |
 | `logroll`: the ball rides the top of a log that rolls down a bank | Forest | Already said: a thing that runs to a stop and pitches the ball off is the `wheelbarrow`, the `slipway` and the `sled`. |
-| `trellis`: an expanding trellis shoots out across a gap with the ball in a pot on its end | Forest | Already said: the harbor's `spyglass` is a thing that lengthens across a gap with the ball in its nose; and lazy tongs are the workshop's, not the garden's. |
+| `trellis`: an expanding trellis shoots out across a gap with the ball in a pot on its end | Forest | Already said at the time: the harbor's `spyglass` (itself cut since, in #63) was a thing that lengthens across a gap with the ball in its nose; and lazy tongs are the workshop's, not the garden's. |
 | `turtle`: a sea turtle ferries the ball across a gap | Aqua | Already said: buoy, dolphin, serpent and the floats are all "a sea thing takes it across". |
 | `broadside`: a deck gun fires its own shot with the thread | Aqua | A cannon is a cannon, relay or not. |
 | `nautilus`: round and in along a cut-through shell's spiral | Aqua | A spiral in is a dead end; the way out would be a hole through the middle that nobody could see. |

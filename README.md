@@ -402,9 +402,9 @@ vocabulary of pieces, not a palette swap:
 | | World | In the code | The place | Its pieces |
 | --- | --- | --- | --- | --- |
 | 1 | **Regular** | `workshop` | the atelier: brass, oil, paper and gravity | the classic Rube Goldberg set, thirty-four of them |
-| 2 | **Forest** | `garden` | a greenhouse, soil and bloom | thirty-four: what grows, what lives in it, and the tools in the shed |
-| 3 | **Aqua** | `harbor` | a pier over water, tide and salt | thirty-four: sea life, boats, pier gear and the tide |
-| 4 | **Arcade** | `arcade` | neon night: lights, scores and payouts | thirty-four: pinball, the midway, the payout machines and the screens |
+| 2 | **Forest** | `garden` | a greenhouse, soil and bloom | thirty-five: what grows, what lives in it, and the tools in the shed |
+| 3 | **Aqua** | `harbor` | a pier over water, tide and salt | thirty-three: sea life, boats, pier gear and the tide |
+| 4 | **Arcade** | `arcade` | neon night: lights, scores and payouts | thirty-six: pinball, the midway, the payout machines and the screens |
 
 Regular → Forest → Aqua → Arcade → Regular, always. The panel, the catalog
 and the readout use those names; the code, the folders under
@@ -417,8 +417,8 @@ its tastes the planner leans on, how the map is laid out, and which pieces
 it draws — always and only from that world's pool. Two visits to the same
 world never look alike back to back.
 
-**No world is the small one.** Every world has thirty-four beats of its
-own, and four tastes to lean on: the
+**No world is the small one.** Every world has thirty-three beats of its
+own or more, and four tastes to lean on: the
 harbor's *tidal*, *quay*, *surf* and *reef*; the garden's *greenhouse*,
 *allotment*, *wild* and *lawn*; the arcade's *pinball*, *midway*,
 *jackpot* and *screens*. A world's vocabulary is chosen for geometry
@@ -616,7 +616,6 @@ against what holds it.
 | serpent | the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops |
 | anemone | into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan |
 | submarine | off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives to periscope depth; the periscope crosses two cells of sea, a feather at its foot, wake and bubbles behind; she comes up at the far pier, water running off her flanks, the hatch opens and the ball pops out onto the deck |
-| spyglass | in at the big end of a brass spyglass shut up short on a stand at the pier's end, out of sight only down its inside; it fetches up in the eyepiece like a cork, half out of the end, and its way shoves the small tube out, clack, then the middle one, slower, clack, across open water, the nose sinking into a crutch on the far pier; it comes unstuck and rolls out onto the deck; the glass stays drawn |
 | barrel | into the mouth of a cask lying balanced on the deck's corner; its weight tips the cask off the end, head first, turning as it falls; it lands on the pier a floor down the other way round, slaps level and rocks; the ball trundles out of the same mouth, which now faces on |
 | springboard | out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea; a string of bubbles runs to the far pier's slip; up the slip out of the water with a second splash, slowing, and over onto the deck |
 | rod | off the deck's end into the sea by the float of a rod in its holder; the float ducks, the rod bends double and whips up, and the line hauls the ball out in an arc onto the deck a cell on or a floor up; the line swings from the tip after |
@@ -667,6 +666,7 @@ against what holds it.
 | pond | off a stone wall across a raised lily pool on three pads; each ducks and tips under the ball and bobs up behind it, a ripple running out along the water's line as far as the walls; a hop over the open water between them, and up onto the far wall |
 | slide | onto the deck at the top of a playground slide's ladder, slowing to a crawl; a creep over the brink; down the lip and the chute gathering pace, round the foot and out along the flat a floor down |
 | swing | onto the seat of a swing hooked back at the path's end; the hook slips and it swings across a two-cell gap to a stop on the far post; the seat tips over the stop and pitches the ball onto the far path |
+| grasshopper | a grasshopper on a leaf, its back level with the path; the ball rolls up between its knees and stops behind its head; it folds tighter, a beat, and leaps a long flat arc over a cell of nothing with the ball aboard, onto a second leaf, a floor up when the map wants; the landing pitches the ball off over its head |
 
 ### The arcade's pieces
 
@@ -737,6 +737,8 @@ there is no run behind it, so it makes up a total a run might have earned.
 | freefall | into the car at the top of a drop tower; hoisted a little higher with a clank, held, let go; two floors of free fall past the lamps flaring, into the brakes with a bounce; the far door drops and it rolls out; +200 |
 | helter | along a gangway to the shoulder of a helter-skelter, slowing to the brink; round the tower's front in the chute, gathering pace, out of sight round the back, round the front again lower and faster, and out along the mat at the foot, which takes the way off it; the lamp on the roof lights; +200 |
 | bumpercar | into the seat of a bumper car under a lit grid, sparks at the shoe; across the floor into the parked car, nose to nose, which is shoved back into the rubber kerb and rocks off it; the jolt pitches the ball over both of them onto the rail beyond; +100 |
+| mirrors | along the lane past a hall of mirrors: three funhouse glasses behind it, and in each as the ball passes a thing that is and is not the ball, squat in the barrel, a thin candle in the hourglass, rippling in the ribbon; each frame's lamp lights while it has somebody in it |
+| tubeman | onto the slack head of a tube man lying limp along the rail's end, and the pad under it gives; the blower kicks in, a swell runs along the sleeve, and it stands up from the foot in a whip, the head last with the ball on its crown, past plumb and back; arms out, it bows over the deck one or two floors up and the ball rolls off its head; let go, it dances a second, then the blower cuts and it folds down flat as it lay |
 
 No piece draws the ball. Each declares a lane — runs, pauses, speed ramps,
 parabolic flights, hidden stretches, portal transits — and what it does to
@@ -744,7 +746,7 @@ the ball, and the show draws the ball once on the joined path from one
 clock. Every hand-off is at rail pace, every arrival slows to its stop, and
 every launch ramps back down before the cell edge. `check:rube` builds
 worlds headless and asserts all of it: the four worlds in order, three
-times round, at least thirty-four beats of its own in every world, every
+times round, at least thirty-three beats of its own in every world, every
 piece from its own world's pool, every palette and
 taste the world's own and never the same twice running, only the arcade
 painted dark, at least three beats in four of every map a piece it has
@@ -801,9 +803,9 @@ Take A, is the default. The [phrase plan](docs/promo/STOCK_SHOWS_PLAN.md) and
 arrangement reports document the recording cues and repeated travel pieces.
 
 [Clair de Lune, Take B](https://contraptions-wustep.vercel.app/shows/?show=clair-de-lune&take=take-b)
-is the same recording arranged across the grown catalogs — every one of the
-thirty-five pieces in each world once, and a repeat only where the music runs
-longer than the catalog does — with the whale over open water and the
+is the same recording arranged across the grown catalogs — every piece of
+every world once, and a repeat only where the music runs longer than the
+catalog does — with the whale over open water and the
 arcade's points popping over its machines (a stock score may name the worlds
 whose pops are drawn; the older takes name none). Its plan is
 `scripts/show-plans/clair-b.json`; `generate:clair:b` compiles it and
@@ -1170,7 +1172,7 @@ What is staged stands on **shelves**, a band each on the Playground's sheet:
 
 | Shelf | In the URL | What is on it |
 | --- | --- | --- |
-| Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: five new ones each, then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
+| Regular, Forest, Aqua, Arcade | `staged-workshop`, `staged-garden`, `staged-harbor`, `staged-arcade` | Pieces waiting to join that world: the new ones first (five were made for each; the ones let into Machine since have left their shelf), then the pieces a craft pass took out of it, newest cut first, restored from git history as they stood on the day they went. |
 | **Snow** | `alpine` | A world not yet in the loop. A mountain in winter: snow, ice, timber and rope. A rail of its own and eighteen beats. |
 | **Music** | `orchestra` | A world not yet in the loop. A concert hall: strings, brass, felt and wood. A rail of its own and eighteen beats. |
 

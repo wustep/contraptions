@@ -17,6 +17,7 @@ import { helter } from './helter'
 import { hockey } from './hockey'
 import { hoops } from './hoops'
 import { maze } from './maze'
+import { mirrors } from './mirrors'
 import { pachinko } from './pachinko'
 import { phaser } from './phaser'
 import { pins } from './pins'
@@ -33,6 +34,7 @@ import { spinner } from './spinner'
 import { stacker } from './stacker'
 import { striker } from './striker'
 import { ticket } from './ticket'
+import { tubeman } from './tubeman'
 import { ufo } from './ufo'
 import { whack } from './whack'
 import { zigzag } from './zigzag'
@@ -41,14 +43,15 @@ import { zigzag } from './zigzag'
  * The arcade: neon night. Everything here flashes, scores or pays out:
  * the ball is popped by a bumper, spun through a spinner, kicked up a
  * skee-ball lane, slapped across an air-hockey table, dropped through a
- * pachinko field and down a ticket machine, lifted by a claw and by a
- * high striker, and swapped for a token by a change machine. It is shot
- * up a pinball lane, is tossed by a mole,
- * thrown through a hoop, and taken round a Ferris wheel and over a
- * coaster's hill; and it goes into the screens: rallied up a Pong court,
- * dropped by a cleared line, drawn in squares and recoloured, lifted by a
- * saucer's beam, pulled down with a one-armed bandit's lever, fired from
- * a Gauss gun, and phased through a brick wall as a ghost.
+ * pachinko field and down a ticket machine, lifted by a claw, by a high
+ * striker and on the head of a tube man, shown itself squat and thin in
+ * a hall of mirrors, and swapped for a token by a change machine. It is
+ * shot up a pinball lane, is tossed by a mole, thrown through a hoop,
+ * and taken round a Ferris wheel and over a coaster's hill; and it goes
+ * into the screens: rallied up a Pong court, dropped by a cleared line,
+ * drawn in squares and recoloured, lifted by a saucer's beam, pulled
+ * down with a one-armed bandit's lever, fired from a Gauss gun, and
+ * phased through a brick wall as a ghost.
  *
  *   rail       a lit lane: lamps, strips and chevrons that come on as the ball passes
  *   bumper     the front clips the skirt's rim; the cap slams that instant, +100, out faster
@@ -85,6 +88,8 @@ import { zigzag } from './zigzag'
  *   freefall   into the car at the top of a drop tower; a hoist, a clank, a hold; two floors of free fall past flaring lamps into the brakes; a bounce; the far door drops and it rolls out
  *   helter     along a gangway to the shoulder of a helter-skelter, slowing to the brink; round the tower's front in the chute, out of sight round the back, round the front again lower and faster, and out along the mat at the foot; the lamp on the roof lights
  *   bumpercar  into the seat of a bumper car under a lit grid; sparks at the shoe; across the floor into the parked car, nose to nose, which is shoved back into the rubber kerb and rocks off it; the jolt pitches the ball over both of them onto the rail beyond
+ *   mirrors    along the lane past a hall of mirrors: three funhouse glasses behind it, and in each as the ball passes a thing that is and is not the ball, squat in the barrel, a thin candle in the hourglass, rippling in the ribbon; each frame's lamp lights while it has somebody in it
+ *   tubeman    onto the slack head of a tube man lying limp along the rail's end, and the pad under it gives; the blower kicks in, a swell runs along the sleeve, and it stands up from the foot in a whip, the head last with the ball on its crown, past plumb and back; arms out, it bows over the deck one or two floors up and the ball rolls off its head; let go, it dances a second, then the blower cuts and it folds down flat as it lay
  *   portal     the door at either end of a map; the far side is always a new map
  */
 
@@ -128,28 +133,28 @@ export const arcade: World = {
     pinball: {
       bumper: 1.8, spinner: 1.7, slingshot: 1.7, shooter: 1.8, zigzag: 1.5, gauss: 1.4, skee: 1.3, pins: 1.2, maze: 1.2,
       striker: 0.8, hockey: 0.7, whack: 0.7, hoops: 0.7, slots: 0.7, pong: 0.6, blocks: 0.6, ufo: 0.6, coaster: 0.6, claw: 0.5, ferris: 0.5,
-      foosball: 0.7, dunk: 0.7, stacker: 0.7, pusher: 0.6, popcorn: 0.6, booth: 0.6, freefall: 0.6, helter: 0.6, bumpercar: 0.6,
+      foosball: 0.7, dunk: 0.7, stacker: 0.7, pusher: 0.6, popcorn: 0.6, booth: 0.6, freefall: 0.6, helter: 0.6, bumpercar: 0.6, mirrors: 0.7, tubeman: 0.6,
     },
     midway: {
       claw: 1.7, ferris: 1.7, coaster: 1.7, striker: 1.6, whack: 1.6, hoops: 1.6, changer: 1.4, hockey: 1.3, pachinko: 1.2, skee: 1.2,
-      dunk: 1.7, popcorn: 1.6, freefall: 1.6, helter: 1.6, bumpercar: 1.5, booth: 1.3, pins: 1.2, pusher: 1.2, stacker: 1.2,
+      dunk: 1.7, popcorn: 1.6, freefall: 1.6, helter: 1.6, tubeman: 1.6, bumpercar: 1.5, mirrors: 1.5, booth: 1.3, pins: 1.2, pusher: 1.2, stacker: 1.2,
       'lift-tall': 1.8, 'drop-deep': 1.8, spinner: 0.7, pixel: 0.7, phaser: 0.7, bumper: 0.6, pong: 0.6, blocks: 0.6, maze: 0.8,
     },
     jackpot: {
       slots: 1.9, pachinko: 1.8, skee: 1.6, hockey: 1.5, changer: 1.4, striker: 1.3, zigzag: 1.3, slingshot: 1.2, gauss: 1.2,
       pusher: 1.8, stacker: 1.7, pins: 1.3, dunk: 1.2,
-      claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6, foosball: 0.8, popcorn: 0.7, booth: 0.7, freefall: 0.7, helter: 0.7, bumpercar: 0.6,
+      claw: 0.7, pong: 0.7, coaster: 0.7, spinner: 0.6, ufo: 0.6, foosball: 0.8, popcorn: 0.7, booth: 0.7, freefall: 0.7, helter: 0.7, bumpercar: 0.6, mirrors: 0.7, tubeman: 0.6,
     },
     screens: {
       pong: 1.9, blocks: 1.8, ufo: 1.7, pixel: 1.6, phaser: 1.6, gauss: 1.2, changer: 1.2, zigzag: 1.1, booth: 1.3,
       'lift-tall': 1.6, hockey: 0.7, striker: 0.7, skee: 0.7, whack: 0.7, claw: 0.6, hoops: 0.6, coaster: 0.6, ferris: 0.5,
-      foosball: 0.8, maze: 0.8, pins: 0.7, pusher: 0.7, dunk: 0.6, popcorn: 0.6, freefall: 0.6, helter: 0.6, bumpercar: 0.6,
+      foosball: 0.8, maze: 0.8, pins: 0.7, pusher: 0.7, dunk: 0.6, popcorn: 0.6, freefall: 0.6, helter: 0.6, bumpercar: 0.6, mirrors: 1.2, tubeman: 0.6,
     },
   },
   pieces: [
     laneRail, bumper, spinner, changer, ticket, zigzag, pachinko, skee, hockey, claw, striker, slingshot,
     shooter, gauss, pong, pixel, blocks, phaser, ufo, slots, whack, hoops, ferris, coaster,
-    pusher, pins, popcorn, dunk, stacker, foosball, booth, maze, freefall, helter, bumpercar,
+    pusher, pins, popcorn, dunk, stacker, foosball, booth, maze, freefall, helter, bumpercar, mirrors, tubeman,
     portal,
   ],
 }

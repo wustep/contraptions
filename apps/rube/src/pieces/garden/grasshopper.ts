@@ -1,8 +1,8 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../../src/core/draw'
-import { clamp, easeInOutSine, easeOutQuad } from '../../../../../../src/core/ease'
-import { FLOOR, R, ROLL, definePiece, post, rail, ramp, rankBy, roll, trace, type Lane, type Pt } from '../../../parts'
-import { gardenGreen, soil, tuft } from '../../../pieces/garden/green'
+import { outline, solid } from '../../../../../src/core/draw'
+import { clamp, easeInOutSine, easeOutQuad } from '../../../../../src/core/ease'
+import { FLOOR, R, ROLL, definePiece, post, rail, ramp, rankBy, roll, trace, type Lane, type Pt } from '../../parts'
+import { gardenGreen, soil, tuft } from './green'
 
 /**
  * A grasshopper on a leaf at the path's end, its back level with the path
@@ -36,6 +36,8 @@ const HIP: Pt = [-0.07, 0.015]
 const THIGH = 0.25
 const SHIN = 0.27
 const STAND = 0.2
+/** The small legs: how far from the body a foot of theirs can be. */
+const FORELEG = 0.24
 /** How it holds itself: at rest with its head up, crouched, and nose down to shed the ball. */
 const REST = -0.12
 const CROUCH = -0.21
@@ -297,11 +299,15 @@ export const grasshopper = definePiece<GrasshopperState>({
     const foot = hindFoot(pose, l, leaves)
     hindLeg(p, k, ink, weight, s.color, onBody(pose.b, pose.pitch, HIP[0] + 0.03, HIP[1] - 0.01), [foot[0] + 0.05, foot[1]])
     outline(p, ink, weight * 0.9)
+    // The small legs reach for the leaf it is coming down on from mid-flight, and never further than they are long.
+    const coming = pose.landed || pose.b[0] > (l.from[0] + TO_X) / 2
     for (const u of [0.06, 0.15]) {
       const hip = onBody(pose.b, pose.pitch, u, 0.06)
-      const down: Pt = pose.landed ? [TO_X + u + 0.02 + leaves.second[0], leafTop(TO_Y - s.up) + leaves.second[1]] : [FROM_X + u + 0.02 + leaves.first[0], leafTop(FROM_Y) + leaves.first[1]]
+      const down: Pt = coming ? [TO_X + u + 0.02 + leaves.second[0], leafTop(TO_Y - s.up) + leaves.second[1]] : [FROM_X + u + 0.02 + leaves.first[0], leafTop(FROM_Y) + leaves.first[1]]
       const tucked = onBody(pose.b, pose.pitch, u - 0.07, 0.15)
-      const to: Pt = [down[0] + (tucked[0] - down[0]) * pose.air, down[1] + (tucked[1] - down[1]) * pose.air]
+      const want: Pt = [down[0] + (tucked[0] - down[0]) * pose.air, down[1] + (tucked[1] - down[1]) * pose.air]
+      const reach = Math.min(1, FORELEG / Math.hypot(want[0] - hip[0], want[1] - hip[1]))
+      const to: Pt = [hip[0] + (want[0] - hip[0]) * reach, hip[1] + (want[1] - hip[1]) * reach]
       const knee: Pt = [(hip[0] + to[0]) / 2 + 0.035, (hip[1] + to[1]) / 2]
       p.line(hip[0] * k, hip[1] * k, knee[0] * k, knee[1] * k)
       p.line(knee[0] * k, knee[1] * k, to[0] * k, to[1] * k)
