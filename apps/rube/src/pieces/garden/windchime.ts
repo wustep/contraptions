@@ -10,15 +10,22 @@ import { soil, tuft } from './green'
  * ball's middle. The ball bats the sail up ahead of it and goes under; the
  * sail comes down on the ball's crown, and riding it, its foot is shoved
  * into the foot of the first tube: the clack runs down the row, tube on
- * tube, and the chime rings off the row's end. The sail slides off the
- * ball's back and swings itself still behind it. The ball comes out a
- * touch slower for the shove and picks the path's pace back up.
+ * tube, and the chime rings off the row's end. Then it comes back: the last
+ * tube swings out and home into the one before it, and that one into the
+ * first, and the clack runs back up the row and rings off its other end;
+ * and so on, back and forth, each time softer, the long tube and the short
+ * ones swinging at their own paces and meeting where they meet. The sail
+ * slides off the ball's back and swings itself still behind it. The ball
+ * comes out a touch slower for the shove and picks the path's pace back up.
  *
  * The sail is a pendulum the ball cannot pass through: its angle is its own
  * swing, or whatever keeps the paddle outside the ball, whichever is more,
  * stepped through once from the ball's own lane. The tubes are pendulums
- * too, each struck from rest by the one before it at the moment that one
- * has crossed the gap between them; none is ever inside its neighbour.
+ * too, stepped once from the sail's swing: the sail's foot carries the first
+ * along wherever it has come past its face, and neighbours that meet knock
+ * each other apart, the heavier giving the lighter more; none is ever
+ * inside its neighbour. Every knock hard enough to hear rings off the end
+ * of the row it is running toward.
  */
 /** The bough, along the cell's roof; everything hangs from it. */
 const BEAM = -0.5
@@ -39,10 +46,14 @@ const STRING = 0.07
 const LENGTHS = [0.26, 0.18, 0.22]
 const SPACING = 0.125
 const GAP = 0.018
-/** A struck tube's swing, how fast it dies, and how far each swings: less down the row. */
-const TUBE_OMEGA = 7.5
-const TUBE_DAMP = 1.3
-const SWINGS = [0.14, 0.11, 0.085]
+/** Each tube's own swing, the short ones quicker; how fast it dies; how much of a knock two tubes keep between them; how far the sail's first knock would swing the first tube on its own, in radians. */
+const TUBE_OMEGA = LENGTHS.map((len) => 7.5 * Math.sqrt((STRING + LENGTHS[0] / 2) / (STRING + len / 2)))
+const TUBE_DAMP = 0.32
+const BOUNCE = 0.9
+const KNOCK = 0.26
+/** A knock is heard, and rings, when the tubes meet faster than this, in cells a second; one pair is not heard twice inside this long. */
+const HEARD = 0.07
+const ECHO = 0.14
 /** The ball is slowed to this pace by the sail and picks up again after. */
 const V_SLOW = 1.0
 const X_IN = -0.4525
@@ -129,34 +140,77 @@ const XS = LENGTHS.map((_, i) => FACE + W / 2 + i * SPACING)
 /** How far down its string and tube each pair of neighbours meets: the shorter of the two. */
 const MEET = LENGTHS.map((len, i) => STRING + Math.min(len, LENGTHS[Math.min(i + 1, LENGTHS.length - 1)]))
 
-/** A tube struck from rest at `at`: out the way it was struck, and back, dying away. */
-const struck = (i: number, t: number, at: number) => (t < at ? 0 : SWINGS[i] * Math.exp(-TUBE_DAMP * (t - at)) * Math.sin(TUBE_OMEGA * (t - at)))
-
-/** When each tube is struck: the first by the sail's foot, the rest by the tube before, once that one has crossed the gap. */
-const STRUCK: number[] = []
+/** The sail's foot first reaches the first tube's face: that is the knock the piece is about. */
 {
   let at = 0
   while (sailAt(at) < CLIP) at += DT
-  STRUCK.push(at)
-  for (let i = 1; i < LENGTHS.length; i++) {
-    let t = STRUCK[i - 1]
-    while (t < STRUCK[i - 1] + 0.2 && MEET[i - 1] * Math.sin(struck(i - 1, t, STRUCK[i - 1])) < GAP) t += DT
-    STRUCK.push(t)
+  LANE.fire = at
+}
+
+/** A knock heard: when, the tube it sends on, which way along the row, and how hard the two met. */
+interface Clack {
+  at: number
+  tube: number
+  dir: 1 | -1
+  hard: number
+}
+/** How long the chime is stepped for; by the end of it the tubes are all but still. */
+const RINGING = 9
+/** Every tube's angle at every step, and every knock heard. */
+const TUBES: number[][] = LENGTHS.map(() => [])
+const CLACKS: Clack[] = []
+{
+  const a = LENGTHS.map(() => 0)
+  const w = LENGTHS.map(() => 0)
+  const heard = LENGTHS.map(() => -Infinity)
+  let pushed = -Infinity
+  let knocked = false
+  for (let i = 0; i <= RINGING / DT; i++) {
+    const t = i * DT
+    for (let j = 0; j < a.length; j++) {
+      w[j] += (-TUBE_OMEGA[j] * TUBE_OMEGA[j] * Math.sin(a[j]) - 2 * TUBE_DAMP * w[j]) * DT
+      a[j] += w[j] * DT
+    }
+    // The sail's foot knocks the first tube away the first time it comes past its face, and after that carries it on wherever it has come past it.
+    const reach = foot(sailAt(t))[0] + HW - FACE
+    const least = reach > 0 ? Math.asin(Math.min(1, reach / (STRING + LENGTHS[0]))) : -Infinity
+    if (a[0] < least) {
+      a[0] = least
+      w[0] = Math.max(w[0], knocked ? (least - pushed) / DT : KNOCK * TUBE_OMEGA[0])
+      knocked = true
+    }
+    pushed = least
+    // Neighbours that have met are set apart, and knock each other on if they were closing.
+    for (let j = 0; j < a.length - 1; j++) {
+      const m = MEET[j]
+      const into = m * (Math.sin(a[j]) - Math.sin(a[j + 1])) - GAP
+      if (into <= 0) continue
+      a[j] = Math.asin(Math.sin(a[j]) - into / (2 * m))
+      a[j + 1] = Math.asin(Math.sin(a[j + 1]) + into / (2 * m))
+      const vi = m * Math.cos(a[j]) * w[j]
+      const vj = m * Math.cos(a[j + 1]) * w[j + 1]
+      const closing = vi - vj
+      if (closing <= 0) continue
+      const [mi, mj] = [LENGTHS[j], LENGTHS[j + 1]]
+      w[j] = (vi - ((1 + BOUNCE) * mj * closing) / (mi + mj)) / (m * Math.cos(a[j]))
+      w[j + 1] = (vj + ((1 + BOUNCE) * mi * closing) / (mi + mj)) / (m * Math.cos(a[j + 1]))
+      if (closing > HEARD && t - heard[j] > ECHO) {
+        const dir = vi + vj > 0 ? 1 : -1
+        CLACKS.push({ at: t, tube: dir > 0 ? j + 1 : j, dir, hard: closing })
+      }
+      heard[j] = t
+    }
+    a.forEach((v, j) => TUBES[j].push(v))
   }
 }
-LANE.fire = STRUCK[0]
 
-/** Every tube's angle at piece time `t`: its own swing, and never inside the paddle or the tube before it. */
+/** Every tube's angle at piece time `t`. */
 function tubesAt(t: number): number[] {
-  const out: number[] = []
-  for (let i = 0; i < LENGTHS.length; i++) {
-    let a = struck(i, t, STRUCK[i])
-    const reach = i === 0 ? foot(sailAt(t))[0] + HW - FACE : MEET[i - 1] * Math.sin(out[i - 1]) - GAP
-    const held = i === 0 ? STRING + LENGTHS[0] : MEET[i - 1]
-    if (reach > 0) a = Math.max(a, Math.asin(Math.min(1, reach / held)))
-    out.push(a)
-  }
-  return out
+  if (t <= 0) return LENGTHS.map(() => 0)
+  const f = t / DT
+  const i = Math.floor(f)
+  if (i >= TUBES[0].length - 1) return LENGTHS.map(() => 0)
+  return TUBES.map((steps) => steps[i] + (steps[i + 1] - steps[i]) * (f - i))
 }
 
 export const windchime = definePiece<{ color: string }>({
@@ -185,9 +239,12 @@ export const windchime = definePiece<{ color: string }>({
       p.rect(0, (STRING + LENGTHS[i] / 2) * k, W * k, LENGTHS[i] * k, W * 0.4 * k)
       p.pop()
     }
-    // The chime rings off the end of the row as the clack gets there.
-    const last = LENGTHS.length - 1
-    rings(p, k, ink, weight, XS[last] + 0.06, BEAM + STRING + LENGTHS[last] - 0.08, over(t, STRUCK[last], STRUCK[last] + 0.4))
+    // Every knock rings off the end of the row it is running toward: down the row, and back up it.
+    for (const c of CLACKS) {
+      const f = over(t, c.at, c.at + 0.4)
+      const end = c.dir > 0 ? LENGTHS.length - 1 : 0
+      if (f > 0 && f < 1) rings(p, k, ink, weight * Math.min(1, 0.4 + c.hard / 0.6), XS[end] + c.dir * 0.06, BEAM + STRING + LENGTHS[end] - 0.08, f, c.dir)
+    }
 
     // The sail: a cord, and a paddle that widens to a round foot.
     p.push()
@@ -206,12 +263,13 @@ export const windchime = definePiece<{ color: string }>({
   },
 })
 
-/** Two short arcs ringing off a point, spreading and fading over `f`. */
-function rings(p: p5, k: number, ink: string, weight: number, x: number, y: number, f: number): void {
+/** Two short arcs ringing off a point toward `dir`, spreading and fading over `f`. */
+function rings(p: p5, k: number, ink: string, weight: number, x: number, y: number, f: number, dir: 1 | -1): void {
   if (f <= 0 || f >= 1) return
   outline(p, ink, weight * (1 - f) * 1.1)
+  const [a0, a1] = dir > 0 ? [-0.9, 0.5] : [Math.PI - 0.5, Math.PI + 0.9]
   for (const r of [0.05, 0.09]) {
     const rr = (r + 0.08 * f) * k
-    p.arc(x * k, y * k, rr * 2, rr * 2, -0.9, 0.5)
+    p.arc(x * k, y * k, rr * 2, rr * 2, a0, a1)
   }
 }
