@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, laneAt, rail, ramp, roll, type Lane, type Seg } from '../../parts'
-import { gardenGreen, nearestHue, tuft } from './green'
+import { outline, solid } from '../../../../../../src/core/draw'
+import { FLOOR, R, ROLL, definePiece, laneAt, rail, ramp, roll, type Lane, type Seg } from '../../../parts'
+import { gardenGreen, nearestHue, tuft } from '../../../pieces/garden/green'
 
 /**
  * A roll of turf. The path crosses a bed of bare soil cut one turf's

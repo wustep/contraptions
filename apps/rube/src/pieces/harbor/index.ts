@@ -6,9 +6,9 @@ import { anemone } from './anemone'
 import { barrel } from './barrel'
 import { blowhole } from './blowhole'
 import { buoy } from './buoy'
+import { buoychain } from './buoychain'
 import { chest } from './chest'
 import { crab } from './crab'
-import { creel } from './creel'
 import { dinghy } from './dinghy'
 import { dolphin } from './dolphin'
 import { flags } from './flags'
@@ -78,7 +78,7 @@ import { whirlpool } from './whirlpool'
  *   sandcastle  onto an island of sand standing out of the sea, into a sandcastle: the towers slump, lumps hop off, the flag keels over, and the ball ploughs through the heap slowed by the sand
  *   chest       onto the gold in a treasure chest let into the deck, brim-full, its lid thrown back; it beds down between two heaps; the lid slams over it; gold light out of the seam and the keyhole; the lid flies back, coins jump, and the ball rolls off gilded, the palette's yellowest colour
  *   paddlewheel off the deck's end onto a paddle of a steamer's side wheel turning in the water; up the near side and over the top onto the deck a floor up; the funnel puffs behind
- *   creel       into the funnel mouth of a lobster pot at the rail's end, and seen through its ribs from there on; the knock hops it off its hook and a lead weight on the rope's other end goes down into the sea and hauls it up a floor; the davit swings it inboard and sets it down; the ball shoulders the far mouth's flap aside and rolls out
+ *   buoychain   off the deck's end onto a squat can buoy, the first of three on one ground chain, can, pillar and spar, each half a swell behind the one before; the swell lifts it a third of a floor and heels it over, and it hops to the next, just then in its trough; three rides and the spar tips it onto the deck a floor up
  *   oar         off the deck's end onto the blade of an oar across a rowlock; the blade dips, the handle lifts the bail of a full bucket off its hook, the bucket drops into the sea and the blade whips the ball up onto the deck a floor above
  *   funnels     off the deck's end onto the after funnel of a steam launch moored low between the piers, like a cork; she toots, and the puff pops it on to the forward funnel, which toots it up onto the far deck; she ducks and bobs under each
  *   sail        off the pier's end onto a square sail rolled up on its batten under the yard; the roll sags, the gasket slips and the sail lets fall, unrolling down the mast two floors with the ball on the roll; a snap at the end of the cloth, a ripple up the sail, and a hop off the batten's end onto the stage at the water's edge, short or long
@@ -118,29 +118,29 @@ export const harbor: World = {
   tastes: {
     tidal: {
       lighthouse: 1.6, kelp: 1.6, anchor: 1.6, whirlpool: 1.5, slipway: 1.4, jellyfish: 1.4, blowhole: 1.3, hawser: 1.2, seal: 1.2, 'lift-tall': 2, 'drop-deep': 2,
-      sail: 1.6, paddlewheel: 1.5, creel: 1.4, barrel: 1.3, submarine: 1.2, oar: 1.2, funnels: 1.2,
+      sail: 1.6, paddlewheel: 1.5, buoychain: 1.4, barrel: 1.3, submarine: 1.2, oar: 1.2, funnels: 1.2,
       crab: 0.7, pelican: 0.7, floats: 0.7, flags: 0.7, foghorn: 0.7, serpent: 0.7, sandcastle: 0.7, chest: 0.7,
     },
     quay: {
       buoy: 1.7, flags: 1.6, crab: 1.6, foghorn: 1.5, dinghy: 1.5, hawser: 1.5, pelican: 1.5, slipway: 1.4, oyster: 1.3, octopus: 1.3, floats: 1.3, anchor: 1.2, lighthouse: 1.2,
-      creel: 1.6, barrel: 1.6, rod: 1.5, chest: 1.4, oar: 1.4, funnels: 1.4, submarine: 1.3, paddlewheel: 1.3,
+      buoychain: 1.6, barrel: 1.6, rod: 1.5, chest: 1.4, oar: 1.4, funnels: 1.4, submarine: 1.3, paddlewheel: 1.3,
       seal: 0.8, blowhole: 0.7, whirlpool: 0.7, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6, sandcastle: 0.7, springboard: 0.7,
     },
     surf: {
       blowhole: 1.8, dolphin: 1.8, dinghy: 1.4, crab: 1.4, pelican: 1.4, whirlpool: 1.3, floats: 1.3, serpent: 1.3, buoy: 1.2, seal: 1.2,
-      springboard: 1.8, rod: 1.4, submarine: 1.3, sail: 1.2, sandcastle: 1.2,
-      anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, flags: 0.6, anemone: 0.7, creel: 0.7, chest: 0.6, barrel: 0.7,
+      springboard: 1.8, rod: 1.4, submarine: 1.3, sail: 1.2, sandcastle: 1.2, buoychain: 1.3,
+      anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, flags: 0.6, anemone: 0.7, chest: 0.6, barrel: 0.7,
     },
     reef: {
       anemone: 1.6, puffer: 1.7, jellyfish: 1.7, seal: 1.6, serpent: 1.6, octopus: 1.5, oyster: 1.4, kelp: 1.5, crab: 1.3, dolphin: 1.2, whirlpool: 1.1,
       sandcastle: 1.3, chest: 1.2,
-      funnels: 0.6, flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7, barrel: 0.6, creel: 0.7, paddlewheel: 0.6, submarine: 0.7,
+      funnels: 0.6, flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7, barrel: 0.6, buoychain: 0.7, paddlewheel: 0.6, submarine: 0.7,
     },
   },
   pieces: [
     pierRail, buoy, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool,
     dinghy, seal, flags, slipway, jellyfish, floats, puffer, hawser, dolphin, foghorn, serpent, anemone,
-    submarine, barrel, springboard, rod, sandcastle, chest, paddlewheel, creel, oar, funnels, sail,
+    submarine, barrel, springboard, rod, sandcastle, chest, paddlewheel, buoychain, oar, funnels, sail,
     portal,
   ],
 }

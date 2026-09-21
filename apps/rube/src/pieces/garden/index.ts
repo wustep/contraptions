@@ -31,9 +31,9 @@ import { sprinkler } from './sprinkler'
 import { sunflower } from './sunflower'
 import { swing } from './swing'
 import { toadstools } from './toadstools'
-import { turf } from './turf'
 import { vine } from './vine'
 import { wateringcan } from './wateringcan'
+import { web } from './web'
 import { well } from './well'
 import { windchime } from './windchime'
 import { wheelbarrow } from './wheelbarrow'
@@ -80,7 +80,7 @@ import { wheelbarrow } from './wheelbarrow'
  *   pinwheel     into a vane's tip; the knock spins the wheel and the next vane round scoops the ball up its far side and flips it onto a shelf a floor up; the wheel spins down
  *   windchime    bats the sail of a wind chime up ahead of it and goes under; the sail comes down on its crown and is shoved into the first of three wooden tubes; the clack runs down the row and the chime rings; a touch slower out
  *   hammock      off the path's end into a hammock slung across a gap; it sags deep, springs, and tosses the ball in an arc onto the far path; then flaps itself still
- *   turf         onto the laid end of a roll of turf on a bed of bare soil and thump into the roll; it dents, then goes, unrolling ahead of the ball and laying lawn level with the path; heavy and slow at first, quicker as the roll lightens; the last curl is pressed flat under it
+ *   web          off the path's end into a spider's web strung between two saplings; it stretches deep and quivers, the spider running up to the bridge line; the threads to the bridge line snap and the ball drops through to the path a floor down; the torn web hangs, and the spider on its thread
  *   footbridge   up the hump of an arched footbridge over a brook, slowing to the top and gathering pace down the far side; the board gives a little
  *   pumpkin      off the path's end onto the dome of a fat lobed pumpkin in the cell below, beside its stem; it does not give, it rocks over toward that shoulder and back; down the flank onto the path a floor down, on or back
  *   fountain     over the rim of the cup on a fountain's pedestal and down into it like a cork; the welling stops, the cup shudders and spits; the jet comes on under the ball; up a floor on a wobbling column, a stream falling back either side; a bob at the top, the jet leans and it slides off the crown onto a shelf
@@ -123,26 +123,26 @@ export const garden: World = {
   backdrops: ['sprigs', 'plain', 'dots'],
   tastes: {
     greenhouse: {
-      vine: 1.7, bloom: 1.6, fern: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, pond: 1.3, fountain: 1.3, sprinkler: 1.2, maple: 1.2, 'lift-tall': 1.8,
-      well: 0.8, footbridge: 0.8, wheelbarrow: 0.7, croquet: 0.7, hammock: 0.7, pumpkin: 0.7, hose: 0.6, gate: 0.6, scarecrow: 0.6, slide: 0.6, turf: 0.7,
+      vine: 1.7, bloom: 1.6, fern: 1.6, wateringcan: 1.5, sunflower: 1.4, cocoon: 1.4, dandelion: 1.4, pod: 1.3, bumblebee: 1.3, pond: 1.3, fountain: 1.3, sprinkler: 1.2, maple: 1.2, web: 1.2, 'lift-tall': 1.8,
+      well: 0.8, footbridge: 0.8, wheelbarrow: 0.7, croquet: 0.7, hammock: 0.7, pumpkin: 0.7, hose: 0.6, gate: 0.6, scarecrow: 0.6, slide: 0.6,
     },
     allotment: {
-      wheelbarrow: 1.7, gate: 1.7, spade: 1.7, pumpkin: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, pinwheel: 1.2, hammock: 1.2, footbridge: 1.2, turf: 1.4, 'drop-deep': 1.8,
-      vine: 0.8, pod: 0.7, frog: 0.7, grasshopper: 0.7, dandelion: 0.7, cocoon: 0.7, fern: 0.7, pond: 0.7, bloom: 0.6, toadstools: 0.6,
+      wheelbarrow: 1.7, gate: 1.7, spade: 1.7, pumpkin: 1.7, well: 1.6, scarecrow: 1.6, burrow: 1.5, wateringcan: 1.4, appletree: 1.4, snail: 1.3, hose: 1.3, sprinkler: 1.2, pinwheel: 1.2, hammock: 1.2, footbridge: 1.2, 'drop-deep': 1.8,
+      vine: 0.8, pod: 0.7, frog: 0.7, grasshopper: 0.7, dandelion: 0.7, cocoon: 0.7, fern: 0.7, pond: 0.7, bloom: 0.6, toadstools: 0.6, web: 0.8,
     },
     wild: {
-      frog: 1.7, grasshopper: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, fern: 1.6, pond: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2,
-      gate: 0.7, bamboo: 0.7, windchime: 0.7, wateringcan: 0.6, spade: 0.6, turf: 0.6, fountain: 0.6, swing: 0.6, hammock: 0.6, pinwheel: 0.6, slide: 0.5, wheelbarrow: 0.5, croquet: 0.5,
+      frog: 1.7, grasshopper: 1.7, toadstools: 1.7, pod: 1.7, burrow: 1.6, snail: 1.6, bumblebee: 1.6, fern: 1.6, pond: 1.6, sprinkler: 1.5, maple: 1.5, dandelion: 1.4, hose: 1.4, cocoon: 1.3, vine: 1.2, sunflower: 1.2, web: 1.7,
+      gate: 0.7, bamboo: 0.7, windchime: 0.7, wateringcan: 0.6, spade: 0.6, fountain: 0.6, swing: 0.6, hammock: 0.6, pinwheel: 0.6, slide: 0.5, wheelbarrow: 0.5, croquet: 0.5,
     },
     lawn: {
-      croquet: 1.8, swing: 1.8, slide: 1.8, bamboo: 1.7, hammock: 1.7, appletree: 1.5, sprinkler: 1.5, turf: 1.7, fountain: 1.5, hose: 1.4, windchime: 1.4, pinwheel: 1.4, wateringcan: 1.3, maple: 1.3, footbridge: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
-      burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, fern: 0.7, pumpkin: 0.7, pod: 0.6, frog: 0.6, grasshopper: 0.8,
+      croquet: 1.8, swing: 1.8, slide: 1.8, bamboo: 1.7, hammock: 1.7, appletree: 1.5, sprinkler: 1.5, fountain: 1.5, hose: 1.4, windchime: 1.4, pinwheel: 1.4, wateringcan: 1.3, maple: 1.3, footbridge: 1.3, scarecrow: 1.2, sunflower: 1.2, well: 1.2,
+      burrow: 0.7, toadstools: 0.7, snail: 0.7, wheelbarrow: 0.7, fern: 0.7, pumpkin: 0.7, pod: 0.6, frog: 0.6, grasshopper: 0.8, web: 0.6,
     },
   },
   pieces: [
     gardenRail, wateringcan, vine, flowerBloom, wheelbarrow, sprinkler, sunflower, pod, burrow, hose, gate, snail,
     frog, toadstools, appletree, spade, well, bamboo, cocoon, bumblebee, croquet, scarecrow, dandelion, maple,
-    fern, pinwheel, windchime, hammock, turf, footbridge, pumpkin, fountain, pond, slide, swing, grasshopper,
+    fern, pinwheel, windchime, hammock, web, footbridge, pumpkin, fountain, pond, slide, swing, grasshopper,
     portal,
   ],
 }

@@ -3,206 +3,1249 @@
     "world": "workshop",
     "target": 62.1054,
     "pieces": [
-      {"name": "balloon", "exit": [1, -2]},
-      {"name": "switchback", "exit": [1, 2]},
-      {"name": "lift", "exit": [1, -3]},
-      {"name": "stairs", "exit": [1, 1]},
-      {"name": "seesaw", "exit": [1, 0]},
-      {"name": "trapeze", "exit": [3, 0]},
-      {"name": "drop", "exit": [-1, 3]},
-      {"name": "screw", "exit": [2, -1]},
-      {"name": "toggle", "exit": [1, 1]},
-      {"name": "tipper", "exit": [1, 1]},
-      {"name": "painter", "exit": [1, 0]},
-      {"name": "crane", "exit": [3, 0]},
-      {"name": "funnel", "exit": [-1, 1]},
-      {"name": "rail", "exit": [1, 0]},
-      {"name": "paddle", "exit": [1, 0]},
-      {"name": "rocket", "exit": [3, 0]},
-      {"name": "conveyor", "exit": [2, -1]},
-      {"name": "trapdoor", "exit": [1, 1]},
-      {"name": "scoop", "exit": [-1, 1]},
-      {"name": "cradle", "exit": [2, 0]},
-      {"name": "bell", "exit": [1, 0]},
-      {"name": "plunger", "exit": [3, 0]},
-      {"name": "trampoline", "exit": [2, 0]},
-      {"name": "drawbridge", "exit": [2, 0]},
-      {"name": "toaster", "exit": [1, -1]},
-      {"name": "gears", "exit": [2, 0]},
-      {"name": "flipper", "exit": [1, -1]},
-      {"name": "hammer", "exit": [1, 0]},
-      {"name": "dominoes", "exit": [2, 0]},
-      {"name": "zipline", "exit": [3, 1]},
-      {"name": "loop", "exit": [2, 0]},
-      {"name": "pendulum", "exit": [2, 0]},
-      {"name": "balloon", "exit": [-1, -2]},
-      {"name": "inverter", "exit": [3, 0]},
-      {"name": "cannon", "exit": [3, -1]},
-      {"name": "trebuchet", "exit": [3, 0]},
-      {"name": "rocket", "exit": [3, 0]},
-      {"name": "lift", "exit": [1, -3]},
-      {"name": "portal", "portal": "out"}
+      {
+        "name": "balloon",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "crane",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "screw",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "trapeze",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "cannon",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "lift",
+        "exit": [
+          -1,
+          -3
+        ]
+      },
+      {
+        "name": "conveyor",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "gears",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "toaster",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "plunger",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "toggle",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "funnel",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "drawbridge",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "dominoes",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bell",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "painter",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "tipper",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "switchback",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "rocket",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "trebuchet",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "crane",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "inverter",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "balloon",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "cradle",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "paddle",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pendulum",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "zipline",
+        "exit": [
+          3,
+          1
+        ]
+      },
+      {
+        "name": "stairs",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "drop",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "trapdoor",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "screw",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "flipper",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "seesaw",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hammer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "loop",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "scoop",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "trampoline",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
     ]
   },
   {
     "world": "garden",
     "target": 140.8165,
     "pieces": [
-      {"name": "portal", "portal": "in"},
-      {"name": "vine", "exit": [-1, -2]},
-      {"name": "dandelion", "exit": [-1, -2]},
-      {"name": "gate", "exit": [2, 0]},
-      {"name": "maple", "exit": [1, 2]},
-      {"name": "turf", "exit": [1, 0]},
-      {"name": "spade", "exit": [1, -2]},
-      {"name": "well", "exit": [-1, 3]},
-      {"name": "hammock", "exit": [2, 0]},
-      {"name": "rail", "exit": [1, 0]},
-      {"name": "burrow", "exit": [-1, 1]},
-      {"name": "appletree", "exit": [1, 0]},
-      {"name": "wateringcan", "exit": [1, 0]},
-      {"name": "sunflower", "exit": [1, 0]},
-      {"name": "pumpkin", "exit": [-1, 1]},
-      {"name": "footbridge", "exit": [2, 0]},
-      {"name": "sprinkler", "exit": [3, 0]},
-      {"name": "scarecrow", "exit": [1, 0]},
-      {"name": "bloom", "exit": [-1, 1]},
-      {"name": "snail", "exit": [2, 0]},
-      {"name": "swing", "exit": [2, 0]},
-      {"name": "wheelbarrow", "exit": [3, 0]},
-      {"name": "windchime", "exit": [1, 0]},
-      {"name": "bamboo", "exit": [-1, 1]},
-      {"name": "cocoon", "exit": [1, 0]},
-      {"name": "pod", "exit": [2, 0]},
-      {"name": "pond", "exit": [3, 0]},
-      {"name": "slide", "exit": [1, 1]},
-      {"name": "hose", "exit": [2, 0]},
-      {"name": "bumblebee", "exit": [3, -1]},
-      {"name": "croquet", "exit": [2, 0]},
-      {"name": "fountain", "exit": [1, -1]},
-      {"name": "pinwheel", "exit": [1, -1]},
-      {"name": "fern", "exit": [1, -1]},
-      {"name": "vine", "exit": [-1, -2]},
-      {"name": "toadstools", "exit": [2, -1]},
-      {"name": "well", "exit": [1, 3]},
-      {"name": "maple", "exit": [1, 2]},
-      {"name": "bumblebee", "exit": [3, -1]},
-      {"name": "frog", "exit": [-1, -2]},
-      {"name": "wheelbarrow", "exit": [3, 0]},
-      {"name": "dandelion", "exit": [-1, -2]},
-      {"name": "bloom", "exit": [1, 1]},
-      {"name": "grasshopper", "exit": [3, -1]},
-      {"name": "frog", "exit": [-1, -2]},
-      {"name": "slide", "exit": [1, 1]},
-      {"name": "fern", "exit": [1, -1]},
-      {"name": "sprinkler", "exit": [3, 0]},
-      {"name": "portal", "portal": "out"}
+      {
+        "name": "portal",
+        "portal": "in"
+      },
+      {
+        "name": "dandelion",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "snail",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "fern",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "vine",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "spade",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "maple",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "well",
+        "exit": [
+          -1,
+          3
+        ]
+      },
+      {
+        "name": "footbridge",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bloom",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "snail",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bamboo",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "grasshopper",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "maple",
+        "exit": [
+          -1,
+          2
+        ]
+      },
+      {
+        "name": "wheelbarrow",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "toadstools",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "cocoon",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "sprinkler",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "dandelion",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "well",
+        "exit": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "croquet",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumblebee",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "vine",
+        "exit": [
+          -1,
+          -1
+        ]
+      },
+      {
+        "name": "hammock",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "appletree",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pinwheel",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "fern",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "fountain",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "pod",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "web",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "bumblebee",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pinwheel",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "frog",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "pond",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "gate",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pumpkin",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "swing",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bloom",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "scarecrow",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hose",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "windchime",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "grasshopper",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "burrow",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "slide",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "sunflower",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "wateringcan",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "wheelbarrow",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
     ]
   },
   {
     "world": "harbor",
     "target": 209.3707,
     "pieces": [
-      {"name": "portal", "portal": "in"},
-      {"name": "flags", "exit": [1, 0]},
-      {"name": "anchor", "exit": [-1, 3]},
-      {"name": "kelp", "exit": [1, -2]},
-      {"name": "sail", "exit": [2, 2]},
-      {"name": "rail", "exit": [1, 0]},
-      {"name": "rod", "exit": [2, -1]},
-      {"name": "blowhole", "exit": [1, -1]},
-      {"name": "lighthouse", "exit": [-1, -2]},
-      {"name": "puffer", "exit": [1, 0]},
-      {"name": "octopus", "exit": [1, 0]},
-      {"name": "anemone", "exit": [1, 0]},
-      {"name": "funnels", "exit": [2, 0]},
-      {"name": "foghorn", "exit": [1, 0]},
-      {"name": "dolphin", "exit": [3, -1]},
-      {"name": "seal", "exit": [-1, -1]},
-      {"name": "serpent", "exit": [2, 0]},
-      {"name": "buoy", "exit": [1, 0]},
-      {"name": "barrel", "exit": [2, 1]},
-      {"name": "sandcastle", "exit": [1, 0]},
-      {"name": "floats", "exit": [2, 0]},
-      {"name": "flags", "exit": [1, 0]},
-      {"name": "anemone", "exit": [1, 0]},
-      {"name": "oar", "exit": [1, -1]},
-      {"name": "chest", "exit": [1, 0]},
-      {"name": "slipway", "exit": [2, 1]},
-      {"name": "dinghy", "exit": [3, 0]},
-      {"name": "hawser", "exit": [3, 1]},
-      {"name": "whirlpool", "exit": [-1, 1]},
-      {"name": "submarine", "exit": [3, 0]},
-      {"name": "jellyfish", "exit": [2, -1]},
-      {"name": "oyster", "exit": [1, 0]},
-      {"name": "springboard", "exit": [3, 0]},
-      {"name": "anchor", "exit": [-1, 3]},
-      {"name": "crab", "exit": [3, 0]},
-      {"name": "paddlewheel", "exit": [2, -1]},
-      {"name": "pelican", "exit": [3, 0]},
-      {"name": "submarine", "exit": [3, 0]},
-      {"name": "kelp", "exit": [-1, -2]},
-      {"name": "creel", "exit": [1, -1]},
-      {"name": "seal", "exit": [1, -1]},
-      {"name": "springboard", "exit": [3, 0]},
-      {"name": "lighthouse", "exit": [1, -1]},
-      {"name": "portal", "portal": "out"}
+      {
+        "name": "portal",
+        "portal": "in"
+      },
+      {
+        "name": "seal",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "kelp",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "submarine",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "sandcastle",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "blowhole",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "pelican",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "dinghy",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "puffer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "foghorn",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "dolphin",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "buoychain",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "springboard",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "barrel",
+        "exit": [
+          2,
+          1
+        ]
+      },
+      {
+        "name": "kelp",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "crab",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "lighthouse",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "sail",
+        "exit": [
+          2,
+          2
+        ]
+      },
+      {
+        "name": "rod",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "paddlewheel",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "pelican",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "springboard",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "serpent",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "oyster",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "anchor",
+        "exit": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "anemone",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hawser",
+        "exit": [
+          3,
+          1
+        ]
+      },
+      {
+        "name": "whirlpool",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "submarine",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "oar",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "dinghy",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "flags",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "funnels",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "jellyfish",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "octopus",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "seal",
+        "exit": [
+          -1,
+          -1
+        ]
+      },
+      {
+        "name": "chest",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "floats",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "buoy",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slipway",
+        "exit": [
+          2,
+          1
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
     ]
   },
   {
     "world": "arcade",
-    "target": 291.388,
+    "target": 291.6003,
     "pieces": [
-      {"name": "portal", "portal": "in"},
-      {"name": "maze", "exit": [1, 2]},
-      {"name": "stacker", "exit": [1, -2]},
-      {"name": "zigzag", "exit": [1, 2]},
-      {"name": "spinner", "exit": [1, 0]},
-      {"name": "hoops", "exit": [2, 0]},
-      {"name": "pong", "exit": [-1, -2]},
-      {"name": "phaser", "exit": [2, 0]},
-      {"name": "ufo", "exit": [-1, -2]},
-      {"name": "dunk", "exit": [1, 1]},
-      {"name": "shooter", "exit": [-1, -2]},
-      {"name": "pixel", "exit": [1, 0]},
-      {"name": "rail", "exit": [1, 0]},
-      {"name": "pachinko", "exit": [1, 2]},
-      {"name": "bumper", "exit": [1, 0]},
-      {"name": "foosball", "exit": [2, 0]},
-      {"name": "freefall", "exit": [1, 2]},
-      {"name": "blocks", "exit": [-1, 1]},
-      {"name": "pusher", "exit": [1, 1]},
-      {"name": "whack", "exit": [2, 0]},
-      {"name": "booth", "exit": [1, 0]},
-      {"name": "helter", "exit": [2, 1]},
-      {"name": "slingshot", "exit": [1, -1]},
-      {"name": "gauss", "exit": [2, 0]},
-      {"name": "skee", "exit": [2, -1]},
-      {"name": "slots", "exit": [1, 1]},
-      {"name": "striker", "exit": [1, -2]},
-      {"name": "claw", "exit": [3, 0]},
-      {"name": "pins", "exit": [2, 0]},
-      {"name": "bumpercar", "exit": [3, 0]},
-      {"name": "popcorn", "exit": [1, -1]},
-      {"name": "stacker", "exit": [-1, -2]},
-      {"name": "ferris", "exit": [2, -1]},
-      {"name": "changer", "exit": [1, 0]},
-      {"name": "hockey", "exit": [3, 0]},
-      {"name": "coaster", "exit": [3, 1]},
-      {"name": "freefall", "exit": [1, 2]},
-      {"name": "tubeman", "exit": [2, -1]},
-      {"name": "pong", "exit": [-1, -2]},
-      {"name": "ufo", "exit": [-1, -2]},
-      {"name": "coaster", "exit": [3, 1]},
-      {"name": "mirrors", "exit": [3, 0]},
-      {"name": "maze", "exit": [1, 2]},
-      {"name": "popcorn", "exit": [1, -1]},
-      {"name": "shooter", "exit": [1, -1]},
-      {"name": "pachinko", "exit": [1, 2]},
-      {"name": "striker", "exit": [1, -1]},
-      {"name": "dunk", "exit": [1, 1]},
-      {"name": "ticket", "exit": [-1, 2]},
-      {"name": "portal", "portal": "out"}
+      {
+        "name": "portal",
+        "portal": "in"
+      },
+      {
+        "name": "stacker",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "ufo",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "pachinko",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "hoops",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "maze",
+        "exit": [
+          -1,
+          2
+        ]
+      },
+      {
+        "name": "freefall",
+        "exit": [
+          1,
+          4
+        ]
+      },
+      {
+        "name": "tubeman",
+        "exit": [
+          2,
+          -2
+        ]
+      },
+      {
+        "name": "ferris",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "dunk",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "claw",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "popcorn",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "coaster",
+        "exit": [
+          3,
+          1
+        ]
+      },
+      {
+        "name": "maze",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "striker",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "shooter",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "blocks",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "ufo",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "claw",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "pong",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "ferris",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "coaster",
+        "exit": [
+          3,
+          1
+        ]
+      },
+      {
+        "name": "stacker",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "bumpercar",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "slots",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "tubeman",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "mirrors",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "helter",
+        "exit": [
+          2,
+          1
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "phaser",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "booth",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "freefall",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "pusher",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pachinko",
+        "exit": [
+          -1,
+          2
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "hockey",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "skee",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "ticket",
+        "exit": [
+          -1,
+          2
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
     ]
   }
 ]

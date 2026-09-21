@@ -1,9 +1,9 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../src/core/draw'
-import { easeInOutSine, easeInQuad, easeOutCubic, lerp } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { aboveWater } from './creatures'
-import { WATER, bodyColor, piling, rope, seaWater, splash, water } from './sea'
+import { outline, solid } from '../../../../../../src/core/draw'
+import { easeInOutSine, easeInQuad, easeOutCubic, lerp } from '../../../../../../src/core/ease'
+import { FLOOR, ROLL, definePiece, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
+import { aboveWater } from '../../../pieces/harbor/creatures'
+import { WATER, bodyColor, piling, rope, seaWater, splash, water } from '../../../pieces/harbor/sea'
 
 /**
  * A creel. A lobster pot sits on the deck at the rail's end with its

@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
-import { easeInQuad, easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
+import { easeInOutSine, easeOutBack, easeOutCubic } from '../../../../../src/core/ease'
 import { FLOOR, R, ROLL, definePiece, over, rail, roll, trace, type Lane, type Pt } from '../../parts'
 import { WATER, luminance, piling, seaWater, splash, water } from './sea'
 
@@ -14,6 +14,10 @@ import { WATER, luminance, piling, seaWater, splash, water } from './sea'
  * lead drops into the water — and the hoist runs up the mast by as much as
  * the lead went down, each flag breaking out as it clears the ball's
  * height, to fly there for good. Punctuation: the ball barely notices.
+ *
+ * The lead gathers way and the water takes it off again, so the hoist
+ * starts and stops without a jolt; and a flag that clears its height does
+ * not snap open but shakes itself out over a fifth of a second.
  */
 /** The treadle: a plank hinged at its west end, and how far its east end sinks. */
 const HINGE = -0.44
@@ -43,7 +47,9 @@ const BREAK = [-0.225, -0.225, -0.15]
 const LEAD_W = 0.08
 const LEAD_H = 0.1
 const LEAD_Y = FLOOR + 0.04 + LEAD_H / 2
-const FALL = 0.32
+const FALL = 0.42
+/** How long a flag takes to shake itself out once it clears its height. */
+const UNFURL = 0.22
 
 /** When the ball is over the hinge, when its weight has the plank down, and when it is off the plank. */
 const T_ON = (HINGE + 0.5) / ROLL
@@ -68,13 +74,18 @@ const LANE: Lane = {
   fire: FIRE,
 }
 
-/** How far the hoist has run, in cells: with the lead's fall, and a bounce as it fetches up. */
-function runAt(since: number): number {
-  if (since < 0) return 0
-  if (since < FALL) return RUN * easeInQuad(since / FALL)
-  const s = since - FALL
-  return RUN * (1 - 0.05 * Math.exp(-s * 7) * Math.cos(s * 26))
+/** How far the hoist has run, in cells: the lead gathering way, and the water taking it off again as it goes to the bottom. */
+const runAt = (since: number): number => (since < 0 ? 0 : RUN * easeInOutSine(Math.min(1, since / FALL)))
+
+/** The first moment, after the fire, that `ok` holds of the hoist's run: stepped, since the run has no inverse worth writing. */
+function whenRun(ok: (run: number) => boolean): number {
+  let since = 0
+  while (since < FALL && !ok(runAt(since))) since += 1 / 480
+  return since
 }
+/** When each flag clears its height and starts to break out, and when the lead breaks the surface. */
+const BROKEN = BREAK.map((y, i) => whenRun((run) => TOP + RUN - run + (i + 0.5) * PITCH <= y + 0.005))
+const WET = whenRun((run) => LEAD_Y + run + LEAD_H / 2 >= WATER)
 
 export const flags = definePiece<{ color: string }>({
   name: 'flags',
@@ -120,7 +131,7 @@ export const flags = definePiece<{ color: string }>({
     // The flags, head to tail down the hoist: rolled against the mast until each clears the break.
     for (let i = 0; i < FLAGS; i++) {
       const y = TOP + RUN - run + (i + 0.5) * PITCH
-      const open = since < 0 ? 0 : easeOutBack(over(y, BREAK[i] + 0.005, BREAK[i] - 0.03))
+      const open = since < 0 ? 0 : easeOutBack(over(since, BROKEN[i], BROKEN[i] + UNFURL))
       flag(p, k, ink, weight, colours[i], HOIST_X, y, open, t * 7 - i * 1.3, i)
     }
 
@@ -149,8 +160,7 @@ export const flags = definePiece<{ color: string }>({
     p.noStroke()
     p.rect(FALL_X * k, (leadY - LEAD_H / 2 + 0.02) * k, LEAD_W * k, 0.03 * k)
     // It breaks the surface part way down.
-    const wet = FALL * Math.sqrt((WATER - LEAD_Y - LEAD_H / 2) / RUN)
-    splash(p, k, seaWater(theme), weight, FALL_X - 0.04, WATER, over(since, wet, wet + 0.5), 0.7)
+    splash(p, k, seaWater(theme), weight, FALL_X - 0.04, WATER, over(since, WET, WET + 0.5), 0.7)
   },
 })
 

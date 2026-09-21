@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../../src/core/draw'
-import { FLOOR, R, ROLL, definePiece, fly, mixHex, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
-import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from '../../../pieces/harbor/sea'
+import { outline, solid } from '../../../../../src/core/draw'
+import { FLOOR, R, ROLL, definePiece, fly, mixHex, over, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
+import { WATER, bodyColor, piling, seaWater, seabed, splash, water } from './sea'
 
 /**
  * A chain of buoys. The deck stops, and beyond it three buoys stand in a

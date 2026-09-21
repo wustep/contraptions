@@ -64,7 +64,7 @@ const CATALOG_WHEN_ARRANGED: Record<string, number[]> = {
  */
 const TAIL: Record<string, number> = { premiere: 5, clair: 5, 'clair-b': 11, schubert: 5 }
 /** How many travel repeats each take may lean on to reach the end of its recording. */
-const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 60, 'clair-b': 40, schubert: 38 }
+const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 60, 'clair-b': 30, schubert: 38 }
 const score = ({ premiere, clair, 'clair-b': clairB, schubert: impromptu }[work]) as unknown as StockScore
 const plan = JSON.parse(readFileSync(`scripts/show-plans/${work}.json`, 'utf8')) as { world: string; target: number; pieces: unknown[] }[]
 const show = new StockShow(score)
