@@ -3,8 +3,8 @@ import { additions, type Shelf } from '../../staging'
 import { bottle } from './bottle'
 import { breach } from './breach'
 import { breakwater } from './breakwater'
-import { buoychain } from './buoychain'
 import { coral } from './coral'
+import { creel } from './creel'
 import { deckchair } from './deckchair'
 import { diaphone } from './diaphone'
 import { kelpcurtain } from './kelpcurtain'
@@ -29,8 +29,8 @@ export const shelf: Shelf = additions(harbor, [
   [waterspout, 'new', 'off the deck\u2019s end the sea is open and a waterspout stands on it under its own small cloud; its foot comes across the water to meet the ball, takes it off the deck and winds it up, round the front, round the back, wider and higher every turn, and lets it go off its front onto the deck two floors up or three; then the funnel thins to a thread from the foot up and is gone, and the cloud is only a cloud'],
   [tidepool, 'new', 'off the deck\u2019s end into a rock pool in the head of a crag, brim-full, a crack in its far rim already weeping; the plop sends one wave across the pool, the wave slaps the rim, the crack runs and the wedge of rim outside it falls away into the sea; the pool pours out through the gap and the ball goes over the sill with it, down a floor in the waterfall onto the deck below; the pool is left drained to the sill'],
   [kelpcurtain, 'new', 'under a line strung between two spars and hung with ten long blades of wet kelp, down to just short of the deck; each blade the ball meets lifts, lies down its front like a bib, drags back over its crown, slips off behind and swings shut, so the curtain parts in a wave ahead of the ball and closes in a wave behind it; the weight hauls the line down and slows the ball to a third of its pace, then the last blades let go'],
-  [buoychain, 'new', 'off the deck\u2019s end onto a squat can buoy in its trough, the first of three on one ground chain, a can, a pillar and a spar, each taller than the last and each half a swell behind the one before; the swell carries the buoy up a third of a floor, it heels at the crest and the ball hops from its flat top to the next, just then in its own trough and level with it; three rides make a floor, and the spar tips it onto the deck above'],
   [diaphone, 'new', 'off the deck\u2019s end into the upturned bell of a brass foghorn, a bent tube standing in deep water, cut open so the ball shows all the way; going in it knocks the catch from under a weighted plunger hung over the bell; the ball runs down to the bottom of the bend, the plunger falls down the bore after it and squeezes the air between them, and the boom shoots the ball up the slanted arm and out of the horn\u2019s mouth, low over open water onto the far pier; rings of sound go out from the mouth'],
+  [creel, 'restored', 'into the funnel mouth of a lobster pot and seen through its ribs; a lead weight goes down into the sea and hauls it up a floor, and the davit sets it down inboard. Cut in #65, asked out by name; the buoy chain came off this shelf in its place.'],
   [spyglass, 'restored', 'a brass spyglass on a stand lengthens across two cells of open water with the ball corked in its eyepiece, and lets it go on the far pier. Cut in #63, asked out by name; nothing took its cells, and Aqua went to thirty-three.'],
   [breakwater, 'restored', 'the ball tumbles two floors down a heap of boulders to a landing stage. Cut in #61: a bead-string of stones, fiddly to draw and to follow; the sail took its cells.'],
   [bottle, 'restored', 'a floating bottle swallows the ball, drifts across and pours it out on the far pier. Cut in #59: it never read as a bottle and hid the ball in a teal blob; the spyglass took its cells.'],
