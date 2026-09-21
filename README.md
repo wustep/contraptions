@@ -7,7 +7,8 @@ machine that loops forever, and the piece is whatever falls out of
 scattering a few hundred of them across a grid.
 
 **[Machine →](https://contraptions-wustep.vercel.app/)** ·
-**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
+**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
+**[Shows →](https://contraptions-wustep.vercel.app/shows/)**
 
 ## What it is
 
@@ -21,8 +22,8 @@ whole new map: a new palette, a new taste in pieces, a new place.
 looping machines, every dial exposed. Heavily inspired by
 [Okazz](https://x.com/okazz_/status/2090999902805393607).
 
-Three more modes sit behind the same chrome: **Shows**, **Builder**, and
-**Playground**. They start hidden. Five quick backticks unlock all three.
+Two more modes wear the same chrome: **Shows** and **Playground**. The
+**Builder** is in the repo but hidden for now — it is not ready.
 
 ## Run it
 
@@ -33,8 +34,8 @@ npm run build
 ```
 
 `npm run dev` serves Machine at [http://localhost:8791/](http://localhost:8791/).
-Explorations is at `/explorations/`. Shows, Builder and Playground are at
-`/shows/`, `/builder/` and `/playground/` once unlocked.
+Explorations is at `/explorations/`. Shows and Playground are at
+`/shows/` and `/playground/`.
 
 `npm run build` writes one `dist/` with the same paths. Needs Node 22.
 One Vite root serves every mode.
@@ -58,11 +59,6 @@ is in the URL, so any frame you like is a shareable link.
 **Shows** is Machine set to music. A machine choreographed to a piece,
 the soundtrack locked to the picture, as many takes as you care to keep
 side by side.
-
-**Builder** is where new pieces and worlds for Machine are made. Type
-what a piece should be, press Make piece, and it is on the stage. Make
-world does the same for a place. Export writes the whole build to one
-file; Import reads one back.
 
 **Playground** is where pieces and worlds wait to be let into Machine:
 new ones, ones a craft pass took out, and worlds that are not in the

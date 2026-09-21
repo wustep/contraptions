@@ -54,6 +54,7 @@ let blocked = false
 let speed = 1
 let muted = false
 let overview = false
+let zoom = false
 let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
 let recording: AbortController | null = null
 
@@ -121,7 +122,17 @@ function setMuted(next: boolean): void {
 
 function setOverview(on: boolean): void {
   overview = on
+  if (on) zoom = false
   stage.setOverview(on)
+  stage.setZoom(zoom)
+  sync()
+}
+
+function setZoom(on: boolean): void {
+  zoom = on
+  if (on) overview = false
+  stage.setZoom(on)
+  stage.setOverview(overview)
   sync()
 }
 
@@ -234,8 +245,10 @@ const restartBtn = el('button', { title: 'Back to the top of the show (Home)' },
 restartBtn.addEventListener('click', () => seek(0))
 const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)', 'aria-pressed': 'false' }, ['Overview', el('kbd', {}, ['O'])])
 overviewBtn.addEventListener('click', () => setOverview(!overview))
+const zoomBtn = el('button', { title: 'Zoom in on the action (Z)', 'aria-pressed': 'false' }, ['Zoom', el('kbd', {}, ['Z'])])
+zoomBtn.addEventListener('click', () => setZoom(!zoom))
 const transportNote = el('div', { class: 'status' })
-transportSec.append(scrub, el('div', { class: 'row deck' }, [playBtn, speedSeg.node, musicBtn]), el('div', { class: 'row' }, [restartBtn, overviewBtn]), transportNote)
+transportSec.append(scrub, el('div', { class: 'row deck' }, [playBtn, speedSeg.node, musicBtn]), el('div', { class: 'row' }, [restartBtn, overviewBtn, zoomBtn]), transportNote)
 
 // Export — the frame, and the show. Picture and music; nothing written on either.
 const exportSec = section(panelRoot, 'Export')
@@ -352,9 +365,11 @@ function sync(): void {
   playBtn.replaceChildren(playing ? pauseIcon : playIcon)
   playBtn.classList.toggle('paused', !playing)
   playBtn.disabled = restartBtn.disabled = scrub.disabled = !ready || busy
-  overviewBtn.disabled = !ready || busy
+  overviewBtn.disabled = zoomBtn.disabled = !ready || busy
   overviewBtn.classList.toggle('on', overview)
   overviewBtn.setAttribute('aria-pressed', String(overview))
+  zoomBtn.classList.toggle('on', zoom)
+  zoomBtn.setAttribute('aria-pressed', String(zoom))
   speedSeg.set(speed)
   for (const b of speedSeg.node.querySelectorAll('button')) b.disabled = busy
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
@@ -446,6 +461,10 @@ window.addEventListener('keydown', (e) => {
     case 'O':
       if (perf) setOverview(!overview)
       break
+    case 'z':
+    case 'Z':
+      if (perf) setZoom(!zoom)
+      break
     case '1':
       setSpeed(1)
       break
@@ -488,12 +507,13 @@ if (import.meta.env.DEV) {
     setSpeed,
     setMuted,
     setOverview,
+    setZoom,
     open: (work: string, take: string | null = null) => {
       const v = pickVersion(works, work, take)
       return v ? open(v, false) : Promise.resolve()
     },
     now: () => transport?.now() ?? 0,
-    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, overview, blocked, loading, failed, music: music.state(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
+    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, overview, zoom, blocked, loading, failed, music: music.state(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
     togglePanel: () => shell.toggle(),
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
   }

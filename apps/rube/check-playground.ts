@@ -1,12 +1,12 @@
 /**
- * Headless checks for the Playground: the lock it shares with Shows and the
- * Builder, the shelves, and every staged piece held to what `check:rube`
+ * Headless checks for the Playground: the door, the shelves, and every
+ * staged piece held to what `check:rube`
  * holds a stock piece to, so that a piece approved here can be moved into
  * Machine as it stands. And that Machine knows nothing of any of it.
  *
  *   npm run check:playground
  */
-import { GATED, MODE_LINKS } from '../../src/ui/shell'
+import { MODE_LINKS } from '../../src/ui/shell'
 import { R, ballAt, type Pt } from './src/parts'
 import { beatCount, isDynamic, isFlight } from './src/plan'
 import { SHELVES, loadShelves } from './src/playground/staging'
@@ -34,8 +34,7 @@ async function main(): Promise<void> {
   const tab = MODE_LINKS.find((m) => m.mode === 'playground')
   check('the Playground is a mode, at /playground/', tab?.path === '/playground/' && tab.label === 'Playground')
   check('it is the last tab on the switch', MODE_LINKS[MODE_LINKS.length - 1] === tab)
-  check('one lock gates Shows, the Builder and the Playground', [...GATED].sort().join() === 'builder,playground,shows')
-  check('Machine and Explorations are never gated', !GATED.has('machine') && !GATED.has('explorations'))
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
 
   /* ---------------------------------------------------------------- before anything is fetched */
 
