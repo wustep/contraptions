@@ -65,7 +65,8 @@ function playgroundStaysLazy(): Plugin {
 export default defineConfig({
   appType: 'mpa',
   plugins: [trailingSlash(), playgroundStaysLazy()],
-  publicDir: false,
+  // Share cards and other files that must land at the site root (`/og.png`).
+  publicDir: 'public',
   server: { port: 8791, open: false },
   // The Builder loads the Anthropic SDK only when a key is used. Naming it here has the dev server
   // bundle it up front, so that first dynamic import is not met by a re-optimise and a reload.
