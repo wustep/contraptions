@@ -36,8 +36,11 @@ async function main(): Promise<void> {
   check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
+  const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))
   check('a visit starts the show', /if \(current\) void open\(current, true\)/.test(player) && /if \(perf && thenPlay\) void play\(\)/.test(player))
+  check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
+  check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
   /* ------------------------------------------------------------------ the registry */
 
