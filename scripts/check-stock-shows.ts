@@ -85,7 +85,15 @@ for (const [mi, map] of score.maps.entries()) {
   const used = new Set(map.pieces.map((p) => p.spec.name))
   for (const name of used) assert.ok(world.pieces.some((p) => p.name === name), `Unknown ${map.world} stock type ${name}`)
   assert.ok(used.size >= CATALOG_WHEN_ARRANGED[work][mi], `Missing a ${map.world} stock type`)
-  assert.equal(map.pieces.filter((p) => p.spec.name === 'rail').length, 1, 'No rail padding')
+  // Rails are breath, not machines: a lead-in of a rail or two where the world opens (straight after its portal in, or from the
+  // show's first frame), and single rails between pieces after that. Première keeps its one rail a world.
+  const opens = map.pieces[0]?.spec.portal === 'in' ? 1 : 0
+  let lead = 0
+  while (map.pieces[opens + lead]?.spec.name === 'rail') lead++
+  const railCount = map.pieces.filter((p) => p.spec.name === 'rail').length
+  if (work === 'premiere') assert.equal(railCount, 1, 'No rail padding')
+  assert.ok(lead <= 2, 'A lead-in is two rails at most')
+  assert.ok(map.pieces.every((p, j) => j <= opens + lead || p.spec.name !== 'rail' || map.pieces[j - 1].spec.name !== 'rail'), 'A breath is one rail')
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'out').length, 1)
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'in').length, mi ? 1 : 0)
   const occupied = new Set<string>(), names = new Set<string>()
@@ -114,7 +122,8 @@ for (const [mi, map] of score.maps.entries()) {
       occupied.add(cell.join(','))
     }
     nativeWaits += piece.lane.segs.filter((s) => s.from[0] === s.to[0] && s.from[1] === s.to[1]).length
-    if (piece.spec.name !== 'portal' && names.has(piece.spec.name)) repeats++
+    // A rail is breath, and is never counted as a repeat.
+    if (piece.spec.name !== 'portal' && piece.spec.name !== 'rail' && names.has(piece.spec.name)) repeats++
     names.add(piece.spec.name)
     for (const f of [.05, .25, .5, .75, .95]) {
       const t = piece.begin + duration * f, native = t - piece.begin
