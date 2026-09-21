@@ -329,9 +329,8 @@ for (const { dir, source } of shipped) {
 
 console.log('\nthe door')
 {
-  const tab = MODE_LINKS.find((m) => m.mode === 'builder')
-  check('the Builder is a mode, at /builder/', tab?.path === '/builder/' && tab.label === 'Builder')
-  check('the switch is five modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,builder,playground')
+  check('the Builder is off the switch', MODE_LINKS.every((m) => m.mode !== 'builder'))
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
 }
 
 /* ------------------------------------------------------------------ who writes it */

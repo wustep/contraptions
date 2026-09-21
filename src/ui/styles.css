@@ -178,7 +178,7 @@ body.bare .stage-play { display: none; }
 }
 /* A tab a mode, the one you are on lit. Same sunken track as every other
    segmented dial, so switching modes reads as turning a dial on the product
-   rather than leaving for another site. Five icon-only buttons take equal
+   rather than leaving for another site. Four icon-only buttons take equal
    square-ish cells. */
 .seg.mode-switch { display: grid; grid-auto-flow: column; grid-auto-columns: auto; }
 .seg.mode-switch.icons { grid-auto-columns: 1fr; }

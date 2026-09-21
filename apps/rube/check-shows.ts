@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   console.log('\nthe door')
   const tab = MODE_LINKS.find((m) => m.mode === 'shows')
   check('Shows is a mode, at /shows/', tab?.path === '/shows/' && tab.label === 'Shows')
-  check('the switch is five modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,builder,playground')
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
   check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))

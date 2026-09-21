@@ -16,8 +16,8 @@
  * opened, tucks into the edge, and comes out when the pointer nears it.
  * The backtick clears the stage of all of it — the panel, the peek tab,
  * anything else standing on the stage — for the piece alone, and the
- * backtick again puts back exactly what was there. The switch is five
- * icon-only buttons, each named on hover.
+ * backtick again puts back exactly what was there. The switch is four
+ * icon-only buttons, each named on hover. The Builder is off it for now.
  */
 
 export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground'
@@ -32,7 +32,8 @@ export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
   { mode: 'shows', label: 'Shows', path: '/shows/' },
-  { mode: 'builder', label: 'Builder', path: '/builder/' },
+  // TODO: Builder is rough — re-enable when ready
+  // { mode: 'builder', label: 'Builder', path: '/builder/' },
   { mode: 'playground', label: 'Playground', path: '/playground/' },
 ]
 
@@ -239,7 +240,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }, ['Hide', el('kbd', {}, ['P'])])
 
   // The mode switch: a tab a mode, the one you are on lit. Real links, so a
-  // switch is a navigation and the back button undoes it. Five marks, each
+  // switch is a navigation and the back button undoes it. Four marks, each
   // named on hover and for a screen reader. Native title waits a beat and is
   // easy to miss on a 32px icon; the name is a small label we place ourselves
   // (`mode-tip`).

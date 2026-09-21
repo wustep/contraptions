@@ -307,9 +307,10 @@ const buildChips = builtWorlds().map((w, _i, all) => {
   b.addEventListener('click', () => pinWorld(world === w.name ? null : w.name))
   return { w, b }
 })
-const builderLink = el('a', { href: '/builder/', class: 'more' }, ['Builder \u2192'])
+// TODO: Builder is rough — re-enable when ready
+// const builderLink = el('a', { href: '/builder/', class: 'more' }, ['Builder \u2192'])
 const buildsRow = el('div', { class: 'field builds' }, [
-  el('label', {}, [el('span', {}, ['Builds']), builderLink]),
+  el('label', {}, [el('span', {}, ['Builds'])]),
   el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Builds' }, buildChips.map((c) => c.b)),
 ])
 // Back is a player's back: to the top of this world first, and only from
