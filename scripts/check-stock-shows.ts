@@ -7,7 +7,9 @@ import type { StockScore } from '../apps/rube/src/shows/stock/types'
 import { WORLDS, worldByName } from '../apps/rube/src/worlds'
 import premiere from '../apps/rube/src/shows/versions/premiere-arabesque/take-b.generated.json'
 import clair from '../apps/rube/src/shows/versions/clair-de-lune/take-a.generated.json'
+import clairB from '../apps/rube/src/shows/versions/clair-de-lune/take-b.generated.json'
 import { stockPlacement } from './stock-placement'
+import { ticketsFor, type TicketState } from '../apps/rube/src/pieces/arcade/ticket'
 
 /**
  * A saved lane must be the stock lane: same segments, flags, and clocks.
@@ -47,27 +49,29 @@ function sameStockLane(saved: unknown, stock: unknown, label: string, path = 'la
 }
 
 const work = process.argv[2]
-assert.ok(work === 'premiere' || work === 'clair', 'Choose premiere or clair')
+assert.ok(work === 'premiere' || work === 'clair' || work === 'clair-b', 'Choose premiere, clair or clair-b')
+const isClair = work !== 'premiere'
 /** How many stock types each world had, rail and portal included, when the take was arranged. */
 const CATALOG_WHEN_ARRANGED: Record<string, number[]> = {
   premiere: [35, 25, 24, 25],
   clair: WORLDS.map((w) => w.pieces.length),
+  'clair-b': WORLDS.map((w) => w.pieces.length),
 }
 /**
  * How long the recording may play on after the last portal. Première fills it to the final resonance;
  * Clair lets its last travel repeats go and closes on the finished machine while the last bars play out.
  */
-const TAIL: Record<string, number> = { premiere: 5, clair: 11 }
+const TAIL: Record<string, number> = { premiere: 5, clair: 11, 'clair-b': 5 }
 /** How many travel repeats each take may lean on to reach the end of its recording. */
-const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 30 }
-const score = ({ premiere, clair }[work]) as unknown as StockScore
+const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 30, 'clair-b': 5 }
+const score = ({ premiere, clair, 'clair-b': clairB }[work]) as unknown as StockScore
 const plan = JSON.parse(readFileSync(`scripts/show-plans/${work}.json`, 'utf8')) as { world: string; target: number; pieces: unknown[] }[]
 const show = new StockShow(score)
-assert.equal(score.id, work === 'premiere' ? 'premiere-arabesque/take-b' : 'clair-de-lune/take-a')
+assert.equal(score.id, work === 'premiere' ? 'premiere-arabesque/take-b' : `clair-de-lune/${work === 'clair-b' ? 'take-b' : 'take-a'}`)
 assert.equal(score.audioOffset, work === 'premiere' ? 2.38 : 2.44)
 assert.equal(score.duration, work === 'premiere' ? 290.61133333333333 : 301.648526)
 // Clair pops the arcade's points and nothing else's; Première strips every score.
-assert.deepEqual(score.scores ?? [], work === 'clair' ? ['arcade'] : [])
+assert.deepEqual(score.scores ?? [], isClair ? ['arcade'] : [])
 assert.deepEqual(score.maps.map((m) => m.world), WORLDS.map((w) => w.name))
 assert.equal(score.maps.length, 4)
 let seams = 0, nativeWaits = 0, repeats = 0
@@ -85,20 +89,29 @@ for (const [mi, map] of score.maps.entries()) {
   const used = new Set(map.pieces.map((p) => p.spec.name))
   for (const name of used) assert.ok(world.pieces.some((p) => p.name === name), `Unknown ${map.world} stock type ${name}`)
   assert.ok(used.size >= CATALOG_WHEN_ARRANGED[work][mi], `Missing a ${map.world} stock type`)
-  // Rails are breath, not machines: a lead-in of a rail or two where the world opens (straight after its portal in, or from the
-  // show's first frame), and single rails between pieces after that. Première keeps its one rail a world.
+  // Take B gives machines space with short stock rails and a longer breath after the final photograph.
+  // Existing takes keep their original lead-in and single-rail limits.
   const opens = map.pieces[0]?.spec.portal === 'in' ? 1 : 0
   let lead = 0
   while (map.pieces[opens + lead]?.spec.name === 'rail') lead++
   const railCount = map.pieces.filter((p) => p.spec.name === 'rail').length
   if (work === 'premiere') assert.equal(railCount, 1, 'No rail padding')
-  assert.ok(lead <= 2, 'A lead-in is two rails at most')
-  assert.ok(map.pieces.every((p, j) => j <= opens + lead || p.spec.name !== 'rail' || map.pieces[j - 1].spec.name !== 'rail'), 'A breath is one rail')
+  assert.ok(lead <= (work === 'clair-b' ? 3 : 2), 'Rail lead-in grew')
+  if (work === 'clair-b') {
+    let run = 0
+    for (const [i, piece] of map.pieces.entries()) {
+      run = piece.spec.name === 'rail' ? run + 1 : 0
+      assert.ok(run <= 3 || run === 4 && map.world === 'arcade' && map.pieces[i + 1]?.spec.name === 'ticket', 'Only the final photograph has a four-rail breath')
+    }
+  } else {
+    assert.ok(map.pieces.every((p, j) => j <= opens + lead || p.spec.name !== 'rail' || map.pieces[j - 1].spec.name !== 'rail'), 'A breath is one rail')
+  }
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'out').length, 1)
   assert.equal(map.pieces.filter((p) => p.spec.portal === 'in').length, mi ? 1 : 0)
   const occupied = new Set<string>(), names = new Set<string>()
+  let earned = 0
   for (const [i, piece] of map.pieces.entries()) {
-    const stock = stockPlacement(world, piece.spec, piece.ballIn, i)
+    const stock = stockPlacement(world, piece.spec, piece.ballIn, i, work === 'clair-b' ? earned : undefined)
     const duration = laneTime(stock.lane)
     // Compare to fresh stock placement, not a duplicate timing formula.
     sameStockLane(piece.lane, JSON.parse(JSON.stringify(stock.lane)), `${map.world}/${piece.spec.name}`)
@@ -109,6 +122,15 @@ for (const [mi, map] of score.maps.entries()) {
     assert.ok(Math.abs(piece.end - piece.begin - duration) < 1e-10, 'Stretched mechanism')
     assert.ok(!('timing' in piece) && !('restAt' in piece), 'Authored clock/rest')
     const stockPiece = world.pieces.find((p) => p.name === piece.spec.name)!
+    if (work === 'clair-b' && piece.spec.name === 'ticket') {
+      const ticket = piece.state as TicketState
+      assert.equal(ticket.points, earned, 'Ticket must pay the accumulated stock points, not a placeholder')
+      assert.equal(ticket.tickets, ticketsFor(earned), 'Ticket payout must use the stock conversion')
+      assert.ok(earned > 600, 'The full Arcade earns more than the old placeholder payout')
+      // A corrected payout changes the display, never the native lane or mechanism clock.
+      sameStockLane(piece.lane, stockPlacement(world, piece.spec, piece.ballIn, i).lane, 'Ticket payout clock')
+    }
+    earned += pointsOf(stockPiece, piece.state)
     assert.equal(show.universe(mi).pieces[i].piece.draw, stockPiece.draw, 'Stock renderer was wrapped/retimed')
     if (score.scores?.includes(map.world)) {
       assert.equal(show.universe(mi).pieces[i].piece.scores, stockPiece.scores, 'Score pass was not the stock one')
@@ -151,7 +173,7 @@ for (const [mi, map] of score.maps.entries()) {
 }
 assert.ok(repeats < REPEAT_BUDGET[work], 'Travel repeat budget grew')
 // Clair keeps the whale in the water: nothing stands in the cells under its footprint.
-if (work === 'clair') for (const map of score.maps) {
+if (isClair) for (const map of score.maps) {
   const taken = new Set(map.pieces.flatMap((p) => p.cells.map((c) => c.join(','))))
   for (const whale of map.pieces.filter((p) => p.spec.name === 'blowhole')) {
     const own = new Set(whale.cells.map((c) => c.join(',')))
@@ -159,10 +181,48 @@ if (work === 'clair') for (const map of score.maps) {
   }
 }
 const lastMap = score.maps.at(-1)!
-assert.equal(lastMap.pieces.at(-2)!.spec.name, 'ticket', 'The ticket belongs at the finale')
+assert.equal(lastMap.pieces.filter((p) => !['rail', 'portal'].includes(p.spec.name)).at(-1)!.spec.name, 'ticket', 'The ticket belongs at the finale')
 assert.ok(score.duration > lastMap.end && score.duration - lastMap.end < TAIL[work], 'Only the close of the recording may outlast the chain')
 assert.equal(show.at(score.duration).scale, 0, 'Do not freeze a visible ball during the final resonance')
 for (const cue of score.cues) assert.ok(Math.abs(cue.actual - cue.target) <= .12, `Missed ${cue.piece} cue`)
+if (work === 'clair-b') {
+  // B improves the arrangement without moving A's musical landmarks or hiding cue drift in its report.
+  assert.deepEqual(score.phrases, clair.phrases)
+  assert.deepEqual(score.cues.map(({ piece, target }) => ({ piece, target })), clair.cues.map(({ piece, target }) => ({ piece, target })))
+  const takeAPlan = JSON.parse(readFileSync('scripts/show-plans/clair.json', 'utf8')) as typeof plan
+  assert.deepEqual(plan.map((m) => m.target), takeAPlan.map((m) => m.target))
+  assert.equal(score.maps[0].pieces.find((p) => p.spec.name !== 'rail')!.spec.name, 'balloon', 'Keep the gentle balloon opening')
+  assert.deepEqual(lastMap.pieces.slice(-9).map((p) => p.spec.name), ['booth', 'rail', 'rail', 'rail', 'rail', 'ticket', 'rail', 'rail', 'portal'], 'Give the photograph and payout their own ending')
+  assert.ok(lastMap.pieces.find((p) => p.spec.name === 'slots')!.end < 245.3789, 'Slots belongs before the final crest')
+  const forest = score.maps[1].pieces
+  const chime = forest.find((p) => p.spec.name === 'windchime')!
+  const frogAnswer = forest.filter((p) => p.spec.name === 'frog')[1]
+  assert.ok(Math.abs(chime.begin + chime.lane.fire - 113.1594) < .05, 'The chime closes Across the terrace')
+  assert.ok(Math.abs(frogAnswer.begin + frogAnswer.lane.fire - 126.8981) < .12, 'The frog answers on the softer cadence')
+  for (const cue of score.cues) {
+    const piece = score.maps.flatMap((m) => m.pieces).find((p) => p.spec.name === cue.piece)!
+    assert.equal(cue.actual, piece.begin + piece.lane.fire, 'Cue report disagrees with its stock strike')
+    assert.ok(Math.abs(cue.actual - cue.target) <= .046, `Take B regressed the worst Take A cue: ${cue.piece}`)
+  }
+  for (const [mi, map] of score.maps.entries()) {
+    const cells = map.pieces.flatMap((p) => p.cells)
+    const width = Math.max(...cells.map(([x]) => x)) - Math.min(...cells.map(([x]) => x)) + 1
+    const height = Math.max(...cells.map(([, y]) => y)) - Math.min(...cells.map(([, y]) => y)) + 1
+    assert.ok(width <= [34, 38, 36, 40][mi] && height >= [12, 12, 12, 16][mi], 'Keep the maps folded into vertical layers')
+    const travel = map.pieces.filter((p) => !['rail', 'portal'].includes(p.spec.name))
+    assert.ok(travel.length - new Set(travel.map((p) => p.spec.name)).size <= [0, 2, 0, 2][mi], 'Take B repeat reduction regressed')
+    const motifs = [[], ['windchime', 'frog'], [], ['hoops', 'bumper']][mi]
+    const repeated = [...new Set(travel.map((p) => p.spec.name))].filter((name) => travel.filter((p) => p.spec.name === name).length > 1)
+    assert.deepEqual(repeated.sort(), [...motifs].sort(), 'Only the intentional motifs repeat')
+    for (const name of motifs) {
+      const pair = travel.filter((p) => p.spec.name === name)
+      assert.equal(pair.length, 2, 'A motif is one answer')
+      assert.ok(travel.indexOf(pair[1]) - travel.indexOf(pair[0]) <= 2, 'A repeat must read as AA or ABA, ignoring rails')
+      assert.ok(pair[1].begin - pair[0].begin < 6, 'Keep the answering gesture nearby')
+      assert.notEqual((pair[0].state as { color: string }).color, (pair[1].state as { color: string }).color, 'Give the answer a different stock placement color')
+    }
+  }
+}
 for (const [i, phrase] of score.phrases.entries()) {
   assert.equal(phrase.begin, i ? score.phrases[i - 1].end : 0)
   assert.ok(phrase.end > phrase.begin)

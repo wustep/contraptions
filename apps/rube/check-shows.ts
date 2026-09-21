@@ -104,7 +104,7 @@ async function main(): Promise<void> {
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
   check('the Shows tab opens Clair de Lune, Take A', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('Clair de Lune is one take, Take A', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a')
+  check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
@@ -129,6 +129,21 @@ async function main(): Promise<void> {
         ok = Number.isFinite(here.x) && Number.isFinite(here.y) && (!cam || (Number.isFinite(cam.x) && Number.isFinite(cam.y) && cam.cells > 0))
       }
       check(`${work.work}/${version.take}: is on the stage for every second of its length`, ok)
+      if (work.work === 'clair-de-lune' && version.take === 'take-b') {
+        const final = perf.show.universe(3)
+        const souvenirs = final.pieces.filter((p) => ['booth', 'ticket'].includes(p.piece.name))
+        const cam = perf.camera!(perf.duration)
+        const zoomCells = cam.cells / 1.5
+        check('Clair B: the photograph and ticket fit the final Zoom frame', souvenirs.length === 2 && souvenirs.flatMap((p) => p.cells).every(([x, y]) =>
+          Math.abs(x - cam.x) + .5 < zoomCells * 8 / 9 && Math.abs(y - cam.y) + .5 < zoomCells / 2))
+        check('Clair B: resonance keeps the picture after the final portal', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(150) === true)
+        let visible = true
+        for (let t = 290; t <= perf.duration; t += 1 / 120) {
+          const point = perf.show.at(t), frame = perf.camera!(t), cells = frame.cells / 1.5
+          visible &&= Math.abs(point.x - frame.x) < cells * 8 / 9 - .15 && Math.abs(point.y - frame.y) < cells / 2 - .15
+        }
+        check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
+      }
     }
   }
 
