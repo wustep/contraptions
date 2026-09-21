@@ -90,14 +90,25 @@ export function drop(p: p5, k: number, color: string, x: number, y: number, r: n
   p.pop()
 }
 
-/** The palette's bluest colour: the hue its water is, whatever the ball is. */
+/** Water where the palette has no blue to give it: a pool blue, let down a little into the paper it lies on. */
+const POOL = '#4F9FD0'
+
+/**
+ * The hue a palette's water is, whatever the ball is: its bluest colour
+ * when that is a blue, from teal round to cobalt. A palette with no blue
+ * in it (the greenhouse's bluest is a violet, and a violet pool is not
+ * water) gets a blue of its own instead, the one colour in the garden
+ * that is not the palette's.
+ */
 export function waterHue(theme: Theme): string {
   const blueness = (hex: string) => parseInt(hex.slice(5, 7), 16) - parseInt(hex.slice(1, 3), 16)
-  return [...theme.colors].sort((a, b) => blueness(b) - blueness(a))[0]
+  const bluest = [...theme.colors].sort((a, b) => blueness(b) - blueness(a))[0]
+  const { hue, chroma } = hueOf(bluest)
+  return chroma >= 0.2 && hue >= 170 && hue <= 250 ? bluest : mixHex(POOL, theme.bg, 0.12)
 }
 
 /**
- * Water's colour in this palette: its bluest, always, so a pool reads as
+ * Water's colour in this palette: its blue, always, so a pool reads as
  * water on any paper. When the ball is that colour too, the water is a
  * deeper tone of the same hue, a quarter of the way to the ink, and the
  * ball is still seen against it.
