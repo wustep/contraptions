@@ -1,7 +1,9 @@
+import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { clamp } from '../../../../../src/core/ease'
-import { FLOOR, ROLL, definePiece, fly, rail, ramp, rankBy, roll, trace, type Lane, type Pt } from '../../parts'
-import { WATER, bodyColor, piling, seabed, water } from './sea'
+import type { Theme } from '../../../../../src/core/themes'
+import { FLOOR, ROLL, definePiece, fly, mixHex, rail, ramp, rankBy, roll, trace, type Lane, type Pt } from '../../parts'
+import { WATER, bodyColor, luminance, piling, seabed, water } from './sea'
 
 /**
  * A square sail, let fall. A little ship lies two floors down at the
@@ -33,6 +35,7 @@ const MAST_X = -0.06
 const HEAD = -0.47
 const YARD_Y = -0.3
 const YARD: [number, number] = [-0.43, 0.31]
+const YARD_H = 0.075
 const CLOTH: [number, number] = [-0.37, 0.25]
 /** The roll: a hair wider than the cloth, fat when furled and nearly all batten when run out. */
 const BAR: [number, number] = [-0.385, 0.265]
@@ -94,6 +97,52 @@ const LANES = { short: laneTo(0.5), long: laneTo(1.5) }
 /** Seams across the cloth, this far down it from the head. */
 const SEAMS = [0.98, 1.72]
 
+/** The hull: from her stem head under the pier to her transom, and her keel a hand off the bottom. */
+const STEM = -0.472
+const STERN = 0.47
+const KEEL = DROP + 0.445
+/** Her gunwale in the waist, where the roll fetches up, and how far the sheer sweeps up from there to the stem head. */
+const GUNWALE = DROP + FLOOR + 0.08
+const SWEEP = 0.2
+const sheerAt = (x: number) => GUNWALE - SWEEP * Math.pow(clamp((MAST_X - x) / (MAST_X - STEM)), 2.5)
+/** The break of her poop, abaft the batten's end: the poop is the near end of the stage, level with it. */
+const BREAK = STAGE_X0 - 0.015
+
+/**
+ * The cloth: canvas, the palette's palest, whatever colour she is herself;
+ * and weathered a shade toward the ink when the palest is the ball's own
+ * colour, or hers, so the ball is never lost on the sail it rides down.
+ */
+function canvas(theme: Theme, ball: string, hull: string): string {
+  const palest = [...theme.colors].sort((a, b) => luminance(b) - luminance(a))[0]
+  return palest === ball || palest === hull ? mixHex(palest, theme.ink, 0.2) : palest
+}
+
+/** The hull, side on: a raked stem, the sheer sweeping down from it to the waist, the step up to the poop, a raked transom, and one wale from stem to stern. */
+function hull(p: p5, k: number, ink: string, weight: number, color: string): void {
+  const n = 12
+  const poop = DROP + FLOOR
+  solid(p, ink, weight, color)
+  p.beginShape()
+  for (let i = 0; i <= n; i++) {
+    const x = STEM + ((BREAK - STEM) * i) / n
+    p.vertex(x * k, sheerAt(x) * k)
+  }
+  p.vertex((BREAK + 0.015) * k, poop * k)
+  p.vertex(STERN * k, poop * k)
+  p.bezierVertex((STERN - 0.005) * k, (KEEL - 0.1) * k, (STERN - 0.03) * k, KEEL * k, (STERN - 0.12) * k, KEEL * k)
+  p.vertex((STEM + 0.2) * k, KEEL * k)
+  p.bezierVertex((STEM + 0.09) * k, KEEL * k, (STEM + 0.03) * k, (KEEL - 0.16) * k, STEM * k, sheerAt(STEM) * k)
+  p.endShape(p.CLOSE)
+  outline(p, ink, weight * 0.7)
+  p.beginShape()
+  for (let i = 0; i <= n; i++) {
+    const x = STEM + 0.035 + ((STERN - 0.012 - STEM - 0.035) * i) / n
+    p.vertex(x * k, (sheerAt(x) + 0.06) * k)
+  }
+  p.endShape()
+}
+
 export const sail = definePiece<SailState>({
   name: 'sail',
   weight: 0.9,
@@ -111,41 +160,32 @@ export const sail = definePiece<SailState>({
     }
     return null
   },
-  draw: (p, s, { k, t, since, ink, bg, weight }) => {
+  draw: (p, s, { k, t, since, ink, weight, color, theme }) => {
     const x1 = s.long ? 1.5 : 0.5
     const top = topAt(t)
     const r = radiusAt(t)
     const mid = top + r
     const sea = DROP + WATER
+    const cloth = canvas(theme, color, s.color)
 
-    // The deck's last plank above; the stage at the water's edge on its pilings.
+    // The deck's last plank above; the stage at the water's edge, off her poop, and on its pilings where it runs on.
     rail(p, k, ink, weight, -0.5, X_ON - 0.01)
     rail(p, k, ink, weight, STAGE_X0, x1, DROP + FLOOR)
-    piling(p, k, ink, weight, STAGE_X0 + 0.07, DROP + FLOOR, DROP + 0.5)
-    if (s.long) piling(p, k, ink, weight, 1.2, DROP + FLOOR, DROP + 0.5)
+    if (s.long) for (const x of [0.72, 1.2]) piling(p, k, ink, weight, x, DROP + FLOOR, DROP + 0.5)
     seabed(p, k, ink, weight, -0.5, x1, DROP + 0.5)
 
-    // The mast, stepped in the hull below; the yard across its head, in its lifts.
+    // The mast, stepped in the hull below and tapering to its head, in her colour; the lifts from its head to the yardarms.
     outline(p, ink, weight * 0.9)
     for (const x of YARD) p.line(MAST_X * k, (HEAD + 0.03) * k, (x - Math.sign(x - MAST_X) * 0.03) * k, YARD_Y * k)
-    solid(p, ink, weight, bg)
-    p.rect(MAST_X * k, ((HEAD + sea) / 2) * k, 0.045 * k, (sea - HEAD) * k, 0.02 * k)
-    p.rect(((YARD[0] + YARD[1]) / 2) * k, YARD_Y * k, (YARD[1] - YARD[0]) * k, 0.045 * k, 0.02 * k)
-    // The hull: low in the water, her stem under the pier and her stern short of the stage.
     solid(p, ink, weight, s.color)
-    p.beginShape()
-    p.vertex(-0.47 * k, (sea - 0.14) * k)
-    p.quadraticVertex(-0.1 * k, (sea - 0.06) * k, 0.25 * k, (sea - 0.11) * k)
-    p.vertex(0.22 * k, (sea + 0.07) * k)
-    p.quadraticVertex(-0.2 * k, (sea + 0.11) * k, -0.37 * k, (sea + 0.05) * k)
-    p.endShape(p.CLOSE)
+    p.quad((MAST_X - 0.032) * k, HEAD * k, (MAST_X + 0.032) * k, HEAD * k, (MAST_X + 0.048) * k, sea * k, (MAST_X - 0.048) * k, sea * k)
 
     // The cloth, from the yard down to the roll; snapped taut, a ripple runs up its leeches and dies.
-    const head = YARD_Y + 0.02
+    const head = YARD_Y
     const snap = t - T_SNAP
     const wob = (y: number) => (snap <= 0 ? 0 : 0.014 * Math.exp(-snap * 5) * Math.sin((mid - y) * 9 - snap * 26) * clamp((y - head) / 0.4))
     const n = 18
-    solid(p, ink, weight, s.color)
+    solid(p, ink, weight, cloth)
     p.beginShape()
     for (let i = 0; i <= n; i++) {
       const y = head + ((mid - head) * i) / n
@@ -161,6 +201,9 @@ export const sail = definePiece<SailState>({
       const y = head + down
       if (y < top - 0.02) p.line((CLOTH[0] + wob(y)) * k, y * k, (CLOTH[1] + wob(y)) * k, y * k)
     }
+    // The yard the cloth is bent to, across the mast: a stout spar in her colour.
+    solid(p, ink, weight, s.color)
+    p.rect(((YARD[0] + YARD[1]) / 2) * k, YARD_Y * k, (YARD[1] - YARD[0]) * k, YARD_H * k, (YARD_H / 2) * k)
 
     // The gasket: round the roll and up to the yard until it slips, and swinging from the yard after.
     outline(p, ink, weight * 0.9)
@@ -177,7 +220,7 @@ export const sail = definePiece<SailState>({
     }
 
     // The roll on its batten, a knob at each end.
-    solid(p, ink, weight, s.color)
+    solid(p, ink, weight, cloth)
     p.rect(((BAR[0] + BAR[1]) / 2) * k, mid * k, (BAR[1] - BAR[0]) * k, 2 * r * k, r * k)
     if (since < 0) {
       outline(p, ink, weight * 0.9)
@@ -186,7 +229,8 @@ export const sail = definePiece<SailState>({
     solid(p, ink, weight, ink)
     for (const x of BAR) p.circle(x * k, mid * k, 0.04 * k)
 
-    // The sea, in front of the hull.
+    // The hull, in front of her mast's foot and the roll come down to her gunwale; and the sea, in front of the hull.
+    hull(p, k, ink, weight, s.color)
     water(p, k, ink, weight, -0.5, x1, sea)
   },
 })
