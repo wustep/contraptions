@@ -19,7 +19,7 @@ import { BUILD_EXTENSION, BUILD_FORMAT, BUILD_VERSION, LIMITS, parseBuild, seria
 import { PROVIDERS, PROVIDER_INFO, defaultSettings, modelsFor, readSettings, resolveModel, stillServed } from './src/builder/providers'
 import { makeRng } from '../../src/core/rng'
 import { themeByName } from '../../src/core/themes'
-import { UNLOCK_GAP_MS, UNLOCK_PRESSES, pressCounter, setUnlocked, unlocked } from '../../src/ui/unlock'
+import { MODE_LINKS } from '../../src/ui/shell'
 import { WORLDS, builtWorlds, registerWorld, worldAt, worldByName, worldOf } from './src/worlds'
 
 let failures = 0
@@ -325,48 +325,13 @@ for (const { dir, source } of shipped) {
   }
 }
 
-/* ------------------------------------------------------------------ the lock */
+/* ------------------------------------------------------------------ the door */
 
-console.log('\nthe lock')
+console.log('\nthe door')
 {
-  // Five quick backticks unlock Shows and the Builder together. Unlocked,
-  // the switch is four icon-only tabs; locked, only Machine and Explorations.
-  const quick = UNLOCK_GAP_MS * 0.6
-  const run = (times: number[]) => {
-    const press = pressCounter()
-    return times.map((t) => press(t))
-  }
-  const at = (n: number, gap: number, from = 0) => Array.from({ length: n }, (_, i) => from + i * gap)
-  check('five quick presses unlock Shows and Builder, on the fifth and not before', UNLOCK_PRESSES === 5 && run(at(5, quick)).join() === 'false,false,false,false,true')
-  check('four are not enough', run(at(4, quick)).every((fired) => !fired))
-  check('five slow ones are five separate presses', run(at(5, UNLOCK_GAP_MS + 50)).every((fired) => !fired))
-  check('a pause in the middle starts the count over', run([...at(3, quick), ...at(4, quick, 5000)]).every((fired) => !fired))
-  check('and five after the pause still count', run([...at(3, quick), ...at(5, quick, 5000)]).pop() === true)
-  check('a sixth press does not fire again: the next run needs its own five', run(at(9, quick)).filter(Boolean).length === 1 && run(at(10, quick)).filter(Boolean).length === 2)
-
-  const mem = new Map<string, string>()
-  const g = globalThis as unknown as { localStorage?: unknown }
-  const prev = g.localStorage
-  g.localStorage = {
-    getItem: (k: string) => mem.get(k) ?? null,
-    setItem: (k: string, v: string) => void mem.set(k, v),
-    removeItem: (k: string) => void mem.delete(k),
-  }
-  setUnlocked(false)
-  check('starts locked', !unlocked() && !mem.has('contraptions:unlocked'))
-  setUnlocked(true)
-  check('one flag unlocks Shows and Builder together', unlocked() && mem.get('contraptions:unlocked') === '1')
-  setUnlocked(false)
-  check('the same flag locks them both', !unlocked() && !mem.has('contraptions:unlocked'))
-  mem.set('contraptions:builder', '1')
-  check('the old builder key still counts as unlocked', unlocked())
-  setUnlocked(true)
-  check('a fresh unlock writes the shared key and drops the old one', mem.get('contraptions:unlocked') === '1' && !mem.has('contraptions:builder'))
-  mem.set('contraptions:builder', '1')
-  setUnlocked(false)
-  check('locking clears the old key too', !unlocked() && !mem.has('contraptions:builder') && !mem.has('contraptions:unlocked'))
-  if (prev === undefined) delete g.localStorage
-  else g.localStorage = prev
+  const tab = MODE_LINKS.find((m) => m.mode === 'builder')
+  check('the Builder is a mode, at /builder/', tab?.path === '/builder/' && tab.label === 'Builder')
+  check('the switch is five modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,builder,playground')
 }
 
 /* ------------------------------------------------------------------ who writes it */

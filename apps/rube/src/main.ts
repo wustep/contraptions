@@ -2,7 +2,6 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { ICON, copyButton, createShell, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
-import { UNLOCK_EVENT, unlocked } from '../../../src/ui/unlock'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
 import { installBuilds } from './builder/registry'
@@ -308,13 +307,11 @@ const buildChips = builtWorlds().map((w, _i, all) => {
   b.addEventListener('click', () => pinWorld(world === w.name ? null : w.name))
   return { w, b }
 })
-// The way to the workbench is shown only to someone who has unlocked it.
 const builderLink = el('a', { href: '/builder/', class: 'more' }, ['Builder \u2192'])
 const buildsRow = el('div', { class: 'field builds' }, [
   el('label', {}, [el('span', {}, ['Builds']), builderLink]),
   el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Builds' }, buildChips.map((c) => c.b)),
 ])
-window.addEventListener(UNLOCK_EVENT, () => sync())
 // Back is a player's back: to the top of this world first, and only from
 // there to the world before it, so one press never loses the place.
 const prevWorld = () => {
@@ -494,7 +491,6 @@ function sync(): void {
   // through pieces instead; the sheet has no world to jump between or scrub.
   loop.hidden = v !== 'show'
   buildsRow.hidden = v !== 'show' || !buildChips.length
-  builderLink.hidden = !unlocked()
   for (const { w, b } of buildChips) b.classList.toggle('on', world === w.name)
   jumps.hidden = v !== 'show'
   overviewBtn.hidden = v !== 'show'

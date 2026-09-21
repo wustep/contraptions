@@ -7,7 +7,7 @@ Both full takes load in Shows and their openings can be scrubbed forward and bac
 - [Première Take B, local](http://localhost:8791/shows/?show=premiere-arabesque&take=take-b)
 - [Clair Take A, local](http://localhost:8791/shows/?show=clair-de-lune&take=take-a)
 
-Unlock Shows with five quick backticks if necessary. Use the Transport slider to review 0:00–0:30. Press O or click Overview to see the current world; press it again to follow the ball. Music and picture remain on the same clock.
+Use the Transport slider to review 0:00–0:30. Press O or click Overview to see the current world; press it again to follow the ball. Music and picture remain on the same clock.
 
 Checkpoint captures are in `out/shows-review/premiere-arabesque-30s.png` and `out/shows-review/clair-de-lune-30s.png`. The PR will include review images and clips.
 

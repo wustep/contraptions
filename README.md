@@ -7,7 +7,8 @@ machine that loops forever, and the piece is whatever falls out of
 scattering a few hundred of them across a grid.
 
 **[Machine →](https://contraptions-wustep.vercel.app/)** ·
-**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)**
+**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
+**[Shows →](https://contraptions-wustep.vercel.app/shows/)**
 
 ## What it is
 
@@ -21,8 +22,8 @@ whole new map: a new palette, a new taste in pieces, a new place.
 looping machines, every dial exposed. Heavily inspired by
 [Okazz](https://x.com/okazz_/status/2090999902805393607).
 
-Three more modes sit behind the same chrome: **Shows**, **Builder**, and
-**Playground**. They start hidden. Five quick backticks unlock all three.
+Three more modes wear the same chrome: **Shows**, **Builder**, and
+**Playground**.
 
 ## Run it
 
@@ -34,7 +35,7 @@ npm run build
 
 `npm run dev` serves Machine at [http://localhost:8791/](http://localhost:8791/).
 Explorations is at `/explorations/`. Shows, Builder and Playground are at
-`/shows/`, `/builder/` and `/playground/` once unlocked.
+`/shows/`, `/builder/` and `/playground/`.
 
 `npm run build` writes one `dist/` with the same paths. Needs Node 22.
 One Vite root serves every mode.
