@@ -23,7 +23,7 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * the URL is not the show's — a show is the same for everyone — but it is
  * kept and handed back to the mode switch, so a visit here does not lose the
  * machine that was being watched. `/shows/` with no work opens Clair de
- * Lune, Take A.
+ * Lune, Take B.
  *
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on

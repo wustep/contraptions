@@ -11,7 +11,7 @@ versions/<work>/<take>.show.ts
 both in lower case and hyphens. Drop the file in and it is in the picker at
 `/shows/`, grouped with the other takes of the same work, in file order.
 Nothing else keeps a list. A link to it is `/shows/?show=<work>&take=<take>`.
-`/shows/` with no work opens Clair de Lune, Take A.
+`/shows/` with no work opens Clair de Lune, Take B.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a

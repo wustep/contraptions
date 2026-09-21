@@ -26,6 +26,6 @@ The ordering pass tightened the selected strikes to within 54ms of the recording
 - 34,875 motion/camera samples for Take B and 36,199 for Clair pass. All 318 handoffs join. Reverse seeks across piece boundaries and relays are stable.
 - Browser checks cover O, the Overview button, continued playback, returning to the identical follow frame, keyboard input guards, mobile resizing, and the real PNG export button. All portal cuts close fully before changing worlds.
 - Both 35-second opening previews use the export renderer at 1280×720, 30fps, with the original soundtrack offsets. Canvas text methods throw during capture to catch accidental lettering. No text calls or browser errors occurred.
-- All four icon names and tooltips remain accessible. Take A remains the default.
+- All four icon names and tooltips remain accessible. Take B is the default.
 
 The shared stock player is in `apps/rube/src/shows/stock/`. Explicit arrangement sources are in `scripts/show-plans/`; regenerate with `npm run generate:premiere:b` and `npm run generate:clair`. The arrangement reports list world boundaries, repeated travel pieces and exact strike errors.

@@ -1,6 +1,6 @@
 # Stock-timing shows
 
-Stephen's timing rule governs Première Take B and Clair Take A. Each placement comes directly from the stock piece's `place()` function. Playback uses elapsed seconds since entry. There are no time knots, authored rests, added fuse time, altered segment durations, or speed matching at handoffs. Take A remains unchanged and stays the default.
+Stephen's timing rule governs Première Take B and Clair Take A. Each placement comes directly from the stock piece's `place()` function. Playback uses elapsed seconds since entry. There are no time knots, authored rests, added fuse time, altered segment durations, or speed matching at handoffs. Take A remains unchanged.
 
 ## Plan before generation
 
