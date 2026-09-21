@@ -11,8 +11,9 @@ import { arcadeWater, lamp, score } from './neon'
  * and is not the ball: squat and very wide in the barrel, a tall thin candle
  * in the hourglass, and in the ribbon a thing bent into an S that ripples as
  * it goes. A glass brightens while there is somebody in it and the lamp on
- * its frame's head lights, and the third pays fifty. Nothing here touches
- * the ball; the ball is the cause.
+ * its frame's head lights, and it pays as the ball goes by, more at each
+ * glass than the last: ten, twenty, thirty. Nothing here touches the ball;
+ * the ball is the cause.
  *
  * A reflection is drawn from the lane: where the ball is, that is where it
  * is, well up the glass as a mirror leaning back would have it, so that the
@@ -102,12 +103,13 @@ const LANE: Lane = { segs: [roll([-0.5, 0], [2.5, 0], ROLL)], fire: 2.5 / ROLL }
 const FRONT = [0, 1, 2].map((cx) => (cx + 0.5) / ROLL)
 /** The lane's length in seconds: there is nobody in any glass after it. */
 const SPAN = 3 / ROLL
-/** Where the fifty pops from: where it always has, whatever the frames have grown to since. */
+/** What each glass pays, and where it pops from: over the glass, where the fifty always did, whatever the frames have grown to since. */
+const PAYS = [10, 20, 30]
 const SCORE_Y = -0.37
 
 export const mirrors = definePiece<{ color: string }>({
   name: 'mirrors',
-  points: 50,
+  points: PAYS.reduce((a, b) => a + b, 0),
   weight: 0.8,
   place: ({ color, fits }) => {
     const cells: Pt[] = [
@@ -163,6 +165,6 @@ export const mirrors = definePiece<{ color: string }>({
     })
     rail(p, k, ink, weight, -0.5, 2.5)
   },
-  // Fifty, over the third glass, as the ball is dead in front of it.
-  scores: (p, s, { k, t, bg }) => score(p, k, s.color, bg, 2, SCORE_Y, '+50', t - FRONT[2]),
+  // Over each glass as the ball is dead in front of it, each more than the last.
+  scores: (p, s, { k, t, bg }) => PAYS.forEach((n, i) => score(p, k, s.color, bg, i, SCORE_Y, `+${n}`, t - FRONT[i])),
 })
