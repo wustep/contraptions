@@ -3,20 +3,19 @@ import type { Note } from '../../ticks'
 import { RetimedShow, musicTimeOf, timeMap, type Knot } from '../../timemap'
 
 /**
- * The placeholder: two takes of a show with no music in the repo yet. A
- * procedural machine through its first two worlds, and a struck bar for
- * every piece that fires. The note is on the strike, so whether picture
- * and sound are locked (live, doubled, in a saved file) is something you
- * can see and hear and not only take on trust.
+ * The placeholder: a show with no recording. A procedural machine through
+ * its first two worlds, and a struck bar for every piece that fires. The
+ * note is on the strike, so whether picture and sound are locked (live,
+ * doubled, in a saved file) is something you can see and hear and not only
+ * take on trust.
  *
- * The two takes are the two ways round the problem a real version has.
- * In free time the music follows the machine: the notes fall wherever the
- * strikes do. In strict time the machine follows the music: there is a
- * steady beat, and a time map brings each strike onto it with a slight
- * hurry or a slight wait. The second is a worked example of `timemap.ts`
- * for a version that has a recording to fit.
+ * It is strict time: the machine follows the music. There is a steady
+ * beat, and a time map brings each strike onto it with a slight hurry or a
+ * slight wait: a worked example of `timemap.ts` for a version that has a
+ * recording to fit. (Free time, the music following the machine, a note
+ * wherever a strike fell, was a second take and is gone.)
  *
- * When real shows are here this folder can go; nothing depends on it.
+ * This folder can go whenever it is not wanted; nothing depends on it.
  */
 
 const SEED = 'metronome'
@@ -49,23 +48,10 @@ export function strikes(show: Show): number[] {
   return out
 }
 
-export interface Take {
+export interface StrictTake {
   show: Show
   duration: number
   notes: Note[]
-}
-
-/** The music follows the machine: a note wherever a strike falls. */
-export function freeTake(): Take {
-  const show = new Show(SEED)
-  return {
-    show,
-    duration: show.begin(WORLDS),
-    notes: strikes(show).map((at, i) => ({ at, freq: pitch(i), gain: 0.9 })),
-  }
-}
-
-export interface StrictTake extends Take {
   knots: Knot[]
   /** The strikes that were brought onto the grid, in seconds of music. */
   onGrid: number[]

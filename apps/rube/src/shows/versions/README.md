@@ -80,25 +80,19 @@ Arcade. The version file only names it. The score, `PremiereShow`, camera
 and soundtrack live in `apps/rube/src/timed/premiere-arabesque/` and are
 fetched from `load()`.
 
-`premiere-arabesque/take-b`, `clair-de-lune/take-a` and `clair-de-lune/take-b`
-are full stock-timing arrangements with four long maps. Their explicit piece
-orders live in `scripts/show-plans/`. `generate:premiere:b`, `generate:clair`
-and `generate:clair:b` compile those orders using fresh stock placements and
-write the scores and cue reports. `check:premiere` includes both Première
-takes; `check:clair` checks both Clair takes. Each new take keeps its approved
-recording offset and panel credit. Clair Take B was arranged across the grown
-catalogs: every piece once and a repeat only where the music needs more travel,
-the whale's cells over open water, and the arcade's score pops drawn (a stock
-score's `scores` lists the worlds whose pops show).
+`premiere-arabesque/take-b` and `clair-de-lune/take-a` are full stock-timing
+arrangements with four long maps. Their explicit piece orders live in
+`scripts/show-plans/`. `generate:premiere:b` and `generate:clair` compile
+those orders using fresh stock placements and write the scores and cue
+reports. `check:premiere` includes both Première takes; `check:clair` checks
+Clair. Each keeps its approved recording offset and panel credit. Clair was
+arranged across the whole catalog: every piece at least once and a repeat
+only where the music needs more travel, the whale's cells over open water,
+and the arcade's score pops drawn (a stock score's `scores` lists the worlds
+whose pops show). A change to any stock piece's lane, or a piece in or out
+of a world, means rearranging it and running `generate:clair` again.
 
-`schubert-impromptu/take-a` arranges Schubert's Impromptu No. 2 in E-flat
-major, D. 899, to Chiara Bertoglio's CC BY 3.0 recording. Its four maps
-follow the opening runs, accented middle, returning scales and closing
-drive. `scripts/show-plans/schubert.json` owns the piece order; the adjacent
-`schubert.ts` owns recording cues and phrase framing. Use
-`generate:schubert` and `check:schubert`. The phrase plan and 30-second
-checkpoint notes are in `docs/promo/SCHUBERT_TAKE_A_PLAN.md`.
-
-`metronome/` is two takes of a show with no recording: a procedural machine
-and a struck bar on every strike, made in the page. It is a worked example
-of a time map, and `check:shows` still walks it. Keep it.
+`metronome/` is a show with no recording, in strict time: a procedural
+machine under a time map, and a struck bar on every strike, made in the
+page. It is a worked example of a time map, and `check:shows` still walks
+it. Keep it.
