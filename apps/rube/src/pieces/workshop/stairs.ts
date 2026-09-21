@@ -49,8 +49,8 @@ export const stairs = definePiece<{ color: string; taps: number[] }>({
   },
   draw: (p, s, { k, t, ink, weight }) => {
     rail(p, k, ink, weight, -0.5, FIRST)
-    // The staircase: one block of colour, with the profile, the west edge
-    // and the ground drawn once in ink.
+    // The staircase: one block of colour, with the profile, the foot of
+    // the last leg, the ground and the west edge drawn once in ink.
     p.noStroke()
     p.fill(s.color)
     p.beginShape()
@@ -73,9 +73,10 @@ export const stairs = definePiece<{ color: string; taps: number[] }>({
       p.vertex(lip * k, ((i + 1) * RISE + FLOOR) * k)
     }
     p.vertex(0.5 * k, (1 + FLOOR) * k)
+    p.vertex(0.5 * k, 1.5 * k)
+    p.vertex(TOP * k, 1.5 * k)
+    p.vertex(TOP * k, FLOOR * k)
     p.endShape()
-    p.line(TOP * k, FLOOR * k, TOP * k, 1.5 * k)
-    p.line(TOP * k, 1.5 * k, 0.5 * k, 1.5 * k)
     // A tap mark where the ball has just landed.
     for (let i = 0; i < STEPS; i++) {
       const f = 1 - over(t, s.taps[i], s.taps[i] + 0.25)

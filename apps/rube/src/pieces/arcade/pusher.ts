@@ -5,14 +5,18 @@ import { marquee, score } from './neon'
 
 /**
  * A coin pusher two floors tall. The rail runs in through a slot in the
- * cabinet's side onto the shelf, level with it, where three coins lie
- * edge-on at the lip; the ball rolls up behind them and stops. The pusher
- * block, hanging raised at the back of the shelf, comes down behind the
- * ball and shoves: the ball shoves the coins, the coins tip off the lip
- * one after another and clatter into the tray a floor below, and the ball
- * goes over the edge after them, drops into the tray and rolls out of the
- * payout mouth onto the rail a floor down. The block lifts and slides back
- * to wait. The coins stay in the tray, on top of the ones already there.
+ * cabinet's side onto the shelf, level with it, where two stacks of coins
+ * stand edge-on at the lip, four and three; the ball rolls up behind them
+ * and stops. The pusher block, hanging raised at the back of the shelf,
+ * comes down behind the ball and shoves: the ball shoves the stacks, the
+ * stacks go over the lip one after the other, each from the bottom up,
+ * and the coins tumble a floor down onto the heap in the tray, where each
+ * lands, hops once and lies flat; and the ball goes over the edge after
+ * them, drops into the tray clear of the heap and rolls out of the payout
+ * mouth onto the rail a floor down. The block lifts and slides back to
+ * wait. The coins stay in the tray, on the heap that was there already:
+ * it is laid like bricks, and the seven that come down finish its near
+ * end, each on two that lay or landed before it.
  *
  * The push is one motion: the block's face is what the lane traces, a
  * radius behind the ball, until the ball's centre is past the lip.
@@ -83,25 +87,85 @@ function raisedAt(t: number): number {
 /** The ball: at its seat until the face reaches its back, then a radius ahead of the face. */
 const ballX = (t: number) => Math.max(SEAT, faceAt(t) + R)
 
-/** The coins on the shelf: a stack of two, and one at the lip; where each rests, and how high it lies. */
-const SHELF_COINS: { rest: number; lift: number; ahead: number; landX: number }[] = [
-  { rest: 0.07, lift: 0, ahead: COIN_W, landX: 0.1 },
-  { rest: -0.02, lift: 0, ahead: 0, landX: 0.18 },
-  { rest: -0.02, lift: COIN_T, ahead: 0, landX: 0.26 },
+/** The same scatter every time: 0 to 1 from an index and a salt. */
+const hash = (i: number, salt: number): number => {
+  const v = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453
+  return v - Math.floor(v)
+}
+
+/**
+ * The heap in the tray, laid like bricks: every row lies half a coin along
+ * from the row under it. Where the bottom row begins, the pitch, and what
+ * lay there already, each row's first place and how many: a bank against
+ * the near wall, under the shelf, falling away toward the lip. Its foot
+ * stops short of where the ball comes down. The coins that lay there are
+ * each a little out of true; the places the stacks come down to are exact.
+ */
+const HEAP_X0 = -0.43
+const PITCH = 0.095
+const LAY: [number, number][] = [
+  [0, 6],
+  [0, 4],
+  [-1, 4],
+  [-1, 3],
+  [-2, 3],
+  [-2, 2],
+  [-2, 1],
 ]
-/** Where a shelf coin is at `t`, pushed along by the ball, and when it tips off the lip. */
-const coinX = (i: number, t: number) => Math.max(SHELF_COINS[i].rest, ballX(t) + R + COIN_W / 2 + SHELF_COINS[i].ahead)
-const TIP_AT = SHELF_COINS.map((_, i) => {
-  for (let t = T_PUSH; t < T_TIP; t += 0.004) if (coinX(i, t) > LIP + 0.014) return t
-  return T_TIP
+const lieAt = (row: number, n: number): Pt => [HEAP_X0 + (row / 2 + n) * PITCH, TRAY_Y - COIN_T / 2 - row * COIN_T]
+
+/**
+ * The stacks on the shelf, the far one at the lip and the near one against
+ * the ball: where each stands, how far each coin in it is out of plumb from
+ * the bottom up, and the place in the heap each comes down to, its row and
+ * how far along. They are listed as they go over, and they land in that
+ * order, so every one comes down on two that are there.
+ */
+const STACKS: { rest: number; out: number[]; to: [number, number][] }[] = [
+  { rest: 0.07, out: [0, -0.007, 0.005], to: [[0, 6], [1, 4], [1, 5]] },
+  { rest: -0.02, out: [0, 0.008, -0.003, 0.009], to: [[2, 3], [2, 4], [3, 2], [3, 3]] },
+]
+/** The ball's front meets the near stack's back here, and from then on both stacks go along with it. */
+const MEET = STACKS[1].rest - COIN_W / 2
+const shiftAt = (t: number) => Math.max(0, ballX(t) + R - MEET)
+/**
+ * A stack goes when its bottom coin's middle is this far past the lip, the
+ * ones above a moment after the one under them. A coin going over is still
+ * carried along for as long as it takes its tail to clear the lip, its nose
+ * dropping; then it falls, turning over, this many half turns in all.
+ */
+const OVER = 0.014
+const FOLLOW = 0.012
+const CLEAR = 0.035
+const NOSE = 0.6
+const TURNS = [1, 2, 1, 2, 3, 2, 3]
+const SHELF_COINS = STACKS.flatMap(({ rest, out, to }) => {
+  let tip = T_TIP
+  for (let t = T_PUSH; t < T_TIP; t += 0.004) {
+    if (rest + shiftAt(t) > LIP + OVER) {
+      tip = t
+      break
+    }
+  }
+  return out.map((dx, level) => ({ x: rest + dx, y: FLOOR - COIN_T / 2 - level * COIN_T, at: tip + level * FOLLOW, to: lieAt(...to[level]) }))
 })
-/** Coins lying in the tray from before. */
-const TRAY_COINS: [number, number][] = [
-  [-0.32, 0],
-  [-0.2, 0],
-  [-0.08, 0],
-  [-0.26, 1],
-]
+
+/** Where shelf coin `i` is at `t`, and how far it has turned: standing in its stack, going over the lip, falling, or lying in the heap, where it rattles a moment and is still. */
+function coinAt(i: number, t: number): { x: number; y: number; a: number } {
+  const c = SHELF_COINS[i]
+  const s = t - c.at
+  if (s <= 0) return { x: c.x + shiftAt(t), y: c.y, a: 0 }
+  const tilt = (s / CLEAR) * (s / CLEAR)
+  if (s < CLEAR) return { x: c.x + shiftAt(t), y: c.y + 0.02 * tilt, a: NOSE * tilt }
+  const x1 = c.x + shiftAt(c.at + CLEAR)
+  const y1 = c.y + 0.02
+  const dur = Math.sqrt((2 * (c.to[1] - y1)) / G)
+  const f = (s - CLEAR) / dur
+  if (f < 1) return { x: x1 + (c.to[0] - x1) * f, y: y1 + (c.to[1] - y1) * f * f, a: NOSE + (Math.PI * TURNS[i] - NOSE) * f }
+  const w = s - CLEAR - dur
+  const ring = Math.exp(-16 * w)
+  return { x: c.to[0], y: c.to[1] - 0.012 * ring * Math.abs(Math.sin(32 * w)), a: 0.3 * ring * Math.sin(32 * w) }
+}
 
 const LANE: Lane = {
   segs: [
@@ -171,23 +235,16 @@ export const pusher = definePiece<PusherState>({
     solid(p, ink, weight, s.color)
     p.rect(bx * k, (bottom - BLOCK_H / 2) * k, BLOCK_W * k, BLOCK_H * k, 0.01 * k)
 
-    // The coins in the tray from before, and the ones that come down.
-    for (const [x, lift] of TRAY_COINS) coin(p, k, ink, weight, s.coin, x, TRAY_Y - COIN_T / 2 - lift * COIN_T, 0)
-    SHELF_COINS.forEach((c, i) => {
-      const y0 = FLOOR - COIN_T / 2 - c.lift
-      const tipped = t - TIP_AT[i]
-      if (tipped <= 0) {
-        coin(p, k, ink, weight, s.coin, coinX(i, t), y0, 0)
-        return
+    // The heap in the tray from before, from the bottom row up; and the stacks, on the shelf, going over, coming down and lying on it.
+    LAY.forEach(([n0, n], row) => {
+      for (let i = n0; i < n0 + n; i++) {
+        const [x, y] = lieAt(row, i)
+        coin(p, k, ink, weight, s.coin, x + (hash(row * 9 + i, 1) - 0.5) * 0.014, y, (hash(row * 9 + i, 2) - 0.5) * 0.07)
       }
-      // Off the lip: a tumble down into the tray, half a turn, and it lies flat where it lands.
-      const x0 = LIP + 0.014
-      const y1 = TRAY_Y - COIN_T / 2 - (i === 2 ? COIN_T : 0)
-      const dur = Math.sqrt((2 * (y1 - y0)) / G)
-      const f = Math.min(1, tipped / dur)
-      const x = x0 + (c.landX - x0) * f
-      const y = y0 + (y1 - y0) * f * f
-      coin(p, k, ink, weight, s.coin, x, y, Math.PI * f)
+    })
+    SHELF_COINS.forEach((_, i) => {
+      const q = coinAt(i, t)
+      coin(p, k, ink, weight, s.coin, q.x, q.y, q.a)
     })
   },
   // Over the header, clear of the cabinet: in the tray it would lie across the coins.

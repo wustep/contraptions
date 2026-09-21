@@ -8,6 +8,7 @@ import { deckchair } from './deckchair'
 import { lock } from './lock'
 import { plughole } from './plughole'
 import { skimmer } from './skimmer'
+import { spyglass } from './spyglass'
 import { waterspout } from './waterspout'
 import { wave } from './wave'
 
@@ -22,6 +23,7 @@ export const shelf: Shelf = additions(harbor, [
   [plughole, 'new', 'off the deck into a tub afloat on a walled pool, brim-full; the tub\u2019s chain goes over a davit to a bath plug in the pool\u2019s bed, and the plug comes out; the pool runs away down the hole and the tub goes down on it with the ball aboard; it grounds on a stone and topples, and the ball rolls out along the wet bed and up the far slip; the plug drops back and hauls the empty tub up over an empty pool'],
   [deckchair, 'new', 'off the deck onto the canvas of a deckchair stood in the shallows, and down into its sag; the strut jumps its notch and the chair snaps shut like a jaw; the closing pocket spits the ball out of the top like a pip, over the water onto the far deck, a cell on or two; the chair stands shut, keels over and lies folded'],
   [waterspout, 'new', 'off the deck\u2019s end the sea is open and a waterspout stands on it under its own small cloud; its foot comes across the water to meet the ball, takes it off the deck and winds it up, round the front, round the back, wider and higher every turn, and lets it go off its front onto the deck two floors up or three; then the funnel thins to a thread from the foot up and is gone, and the cloud is only a cloud'],
+  [spyglass, 'restored', 'a brass spyglass on a stand lengthens across two cells of open water with the ball corked in its eyepiece, and lets it go on the far pier. Cut in #63, asked out by name; nothing took its cells, and Aqua went to thirty-three.'],
   [breakwater, 'restored', 'the ball tumbles two floors down a heap of boulders to a landing stage. Cut in #61: a bead-string of stones, fiddly to draw and to follow; the sail took its cells.'],
   [bottle, 'restored', 'a floating bottle swallows the ball, drifts across and pours it out on the far pier. Cut in #59: it never read as a bottle and hid the ball in a teal blob; the spyglass took its cells.'],
   [coral, 'restored', 'the ball bounces across two heads of brain coral. Cut in #59: nothing moved but the ball; the funnels took its cells and its hop timings.'],

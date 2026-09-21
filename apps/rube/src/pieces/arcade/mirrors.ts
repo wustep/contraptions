@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../../src/core/draw'
-import { R, ROLL, definePiece, mixHex, over, rail, roll, type Lane, type PieceCtx, type Pt } from '../../../parts'
-import { arcadeWater, lamp, score } from '../../../pieces/arcade/neon'
+import { outline, solid } from '../../../../../src/core/draw'
+import { R, ROLL, definePiece, mixHex, over, rail, roll, type Lane, type PieceCtx, type Pt } from '../../parts'
+import { arcadeWater, lamp, score } from './neon'
 
 /**
  * A hall of mirrors. Three funhouse glasses stand on their feet behind the

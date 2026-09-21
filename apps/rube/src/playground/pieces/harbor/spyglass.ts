@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { outline, solid } from '../../../../../src/core/draw'
-import { R, ROLL, definePiece, laneAt, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../parts'
-import { bodyColor, piling, water } from './sea'
+import { outline, solid } from '../../../../../../src/core/draw'
+import { R, ROLL, definePiece, laneAt, over, post, rail, ramp, roll, trace, type Lane, type Pt } from '../../../parts'
+import { bodyColor, piling, water } from '../../../pieces/harbor/sea'
 
 /**
  * A spyglass. The deck ends at the big end of a brass spyglass on a

@@ -104,7 +104,10 @@ function generate(work: Work) {
     const repeats = [...counts].filter(([, n]) => n > 1).map(([name, n]) => `${name} ×${n}`).join(', ')
     lines.push(`| ${worldByName(map.world)!.label} | ${map.begin.toFixed(3)} | ${map.end.toFixed(3)} | ${(map.end - plan[i].target).toFixed(3)}s | ${map.pieces.length} | ${repeats || 'None'} |`)
   }
-  lines.push('', 'Repeats carry the chain through the full recording and connect its terraces. All other catalog entries appear once per world. The final portal completes the chain; only the terminal audio resonance remains.', '',
+  const tail = score.duration - maps.at(-1)!.end
+  lines.push('', tail < 5
+    ? 'Repeats carry the chain through the full recording and connect its terraces. All other catalog entries appear once per world. The final portal completes the chain; only the terminal audio resonance remains.'
+    : `Repeats connect the terraces. All other catalog entries appear once per world. The final portal completes the chain ${tail.toFixed(1)}s before the recording ends, and its last bars play out over the finished machine.`, '',
     '| Stock strike | Recording cue | Actual strike | Error |', '| --- | ---: | ---: | ---: |')
   for (const cue of score.cues) lines.push(`| ${cue.piece} | ${cue.target.toFixed(3)} | ${cue.actual.toFixed(3)} | ${(cue.actual - cue.target).toFixed(3)}s |`)
   lines.push('', `Source offset: ${score.audioOffset}s. Full playback: ${score.duration.toFixed(3)}s. Final portal: ${maps.at(-1)!.end.toFixed(3)}s.`, '')

@@ -32,7 +32,6 @@ import { sandcastle } from './sandcastle'
 import { seal } from './seal'
 import { serpent } from './serpent'
 import { slipway } from './slipway'
-import { spyglass } from './spyglass'
 import { springboard } from './springboard'
 import { submarine } from './submarine'
 import { whirlpool } from './whirlpool'
@@ -73,7 +72,6 @@ import { whirlpool } from './whirlpool'
  *   serpent     the deck stops; a sea serpent's coils come up out of the water ahead of the ball and go under behind it, and it rolls over them and down the head's brow onto the far deck; the ball never stops
  *   anemone     into the crown of an anemone in a rock pool; the tentacles close over it like a fist and squeeze twice; it leaves the anemone's colour, shouldered out by a wave of the fan
  *   submarine   off the deck's end into the hatch of a surfaced submarine's tower; the hatch slams and she dives to periscope depth; the periscope crosses two cells of sea, a feather at its foot, wake and bubbles behind; she comes up at the far pier and the ball pops out onto the deck
- *   spyglass    in at the big end of a brass spyglass shut up short on a stand, out of sight only down its inside; it fetches up in the eyepiece like a cork, half out of the end, and its way shoves the small tube out, clack, then the middle one, slower, clack, across open water, the nose sinking into a crutch on the far pier; it comes unstuck and rolls out
  *   barrel      into the mouth of a cask balanced on the deck's corner; its weight tips the cask off the end, head first, turning as it falls; it lands on the pier a floor down the other way round, slaps level and rocks; the ball trundles out of the same mouth, which now faces on
  *   springboard out along a diving board that bends under it; at the tip it dips and springs and the ball dives in a high arc into the sea; a string of bubbles runs to the far pier's slip; up the slip out of the water with a second splash, slowing, and over onto the deck
  *   rod         off the deck's end into the sea by the float of a rod in a holder; the float ducks, the rod bends double and whips up, and the line hauls the ball out in an arc onto the deck a cell on or a floor up; the line swings from the tip after
@@ -125,24 +123,24 @@ export const harbor: World = {
     },
     quay: {
       buoy: 1.7, flags: 1.6, crab: 1.6, foghorn: 1.5, dinghy: 1.5, hawser: 1.5, pelican: 1.5, slipway: 1.4, oyster: 1.3, octopus: 1.3, floats: 1.3, anchor: 1.2, lighthouse: 1.2,
-      creel: 1.6, barrel: 1.6, spyglass: 1.5, rod: 1.5, chest: 1.4, oar: 1.4, funnels: 1.4, submarine: 1.3, paddlewheel: 1.3,
+      creel: 1.6, barrel: 1.6, rod: 1.5, chest: 1.4, oar: 1.4, funnels: 1.4, submarine: 1.3, paddlewheel: 1.3,
       seal: 0.8, blowhole: 0.7, whirlpool: 0.7, dolphin: 0.6, jellyfish: 0.6, serpent: 0.6, sandcastle: 0.7, springboard: 0.7,
     },
     surf: {
       blowhole: 1.8, dolphin: 1.8, dinghy: 1.4, crab: 1.4, pelican: 1.4, whirlpool: 1.3, floats: 1.3, serpent: 1.3, buoy: 1.2, seal: 1.2,
-      springboard: 1.8, rod: 1.4, submarine: 1.3, spyglass: 1.3, sail: 1.2, sandcastle: 1.2,
+      springboard: 1.8, rod: 1.4, submarine: 1.3, sail: 1.2, sandcastle: 1.2,
       anchor: 0.7, slipway: 0.7, oyster: 0.6, lighthouse: 0.6, flags: 0.6, anemone: 0.7, creel: 0.7, chest: 0.6, barrel: 0.7,
     },
     reef: {
       anemone: 1.6, puffer: 1.7, jellyfish: 1.7, seal: 1.6, serpent: 1.6, octopus: 1.5, oyster: 1.4, kelp: 1.5, crab: 1.3, dolphin: 1.2, whirlpool: 1.1,
       sandcastle: 1.3, chest: 1.2,
-      funnels: 0.6, flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7, barrel: 0.6, creel: 0.7, paddlewheel: 0.6, submarine: 0.7, spyglass: 0.8,
+      funnels: 0.6, flags: 0.6, foghorn: 0.6, slipway: 0.6, hawser: 0.7, dinghy: 0.7, lighthouse: 0.7, barrel: 0.6, creel: 0.7, paddlewheel: 0.6, submarine: 0.7,
     },
   },
   pieces: [
     pierRail, buoy, lighthouse, crab, kelp, octopus, anchor, pelican, blowhole, oyster, whirlpool,
     dinghy, seal, flags, slipway, jellyfish, floats, puffer, hawser, dolphin, foghorn, serpent, anemone,
-    submarine, spyglass, barrel, springboard, rod, sandcastle, chest, paddlewheel, creel, oar, funnels, sail,
+    submarine, barrel, springboard, rod, sandcastle, chest, paddlewheel, creel, oar, funnels, sail,
     portal,
   ],
 }

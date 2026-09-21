@@ -13,15 +13,20 @@ import { gardenWater, waterHue } from './green'
  * shudders and spits from under the ball at both sides — and the jet comes
  * on under it and carries it straight up a floor on a column of water,
  * wobbling on the crown like a ping-pong ball on a garden hose, the water
- * off the crown falling back into the basin in a stream either side of it.
- * At the top it hangs, bobbing; the jet leans, and the ball slides off the
- * crown onto a shelf of path a floor up and rolls on. Relieved, the jet
- * falls back into the cup and goes on welling.
+ * off the crown thrown out either side of it and falling back into the
+ * basin. At the top it hangs, bobbing; the jet leans, and the ball slides
+ * off the crown onto a shelf of path a floor up and rolls on. Relieved, the
+ * jet falls back into the cup and goes on welling.
  *
  * The jet is one height, and the crown one place: the ball's lane while it
  * is aboard is that crown, so it sits on the water at every instant of the
- * rise, the wobble and the lean. Water is the one thing here with no ink
- * round it, so it is never taken for a thing.
+ * rise, the wobble and the lean. The water that falls is drops, each let go
+ * of the crown where the crown then was and left to gravity: slow and
+ * shoulder to shoulder at the top, where they run together into a stream,
+ * and pulled apart into beads by the time they reach the basin; when the
+ * jet drops, what is already in the air goes on falling from up there.
+ * Water is always blue, and the one thing here with no ink round it, so it
+ * is never taken for a thing.
  */
 /** The basin, cut through: its walls' outer and inner faces, their tops, its floor, and the water between them. */
 const OUTER = 0.47
@@ -52,9 +57,20 @@ const BOB = 0.015
 /** Where it comes down on the shelf, and where the shelf starts: clear of the ball on its way up, and of the water coming down. */
 const LAND: Pt = [0.39, -1]
 const SHELF_X = 0.29
-/** Where the two streams off the crown come down in the basin, and what pulls them there. */
-const FALL_X = 0.26
+/**
+ * The water off the crown: a drop lets go of each end of it every `DRIP`
+ * seconds, thrown out and a little up, and falls on its own from where the
+ * crown was at that moment. `G_WATER` pulls it down to the basin.
+ */
+const DRIP = 0.03
+const THROW = 0.34
+const TOSS = 0.5
 const G_WATER = 9
+/** The longest a drop is in the air: off the crown at full height, down to the basin. */
+const AIRBORNE = (TOSS + Math.sqrt(TOSS * TOSS + 2 * G_WATER * (H + WATER - FLOOR))) / G_WATER
+/** How fast the overflow drips off the cup's rim when nobody is on it, and how long a drip falls to the basin. */
+const DRIPS = 1.7
+const DRIP_FALL = Math.sqrt((2 * (WATER - FLOOR - 0.012)) / G_WATER)
 
 /** Over the cup's rim and down into it, to a stop. */
 const BED_IN = ramp([-CUP, 0], [0, SEAT], ROLL, 0)
@@ -135,7 +151,7 @@ export const fountain = definePiece<{ color: string; water: string }>({
     const stone = color !== hue ? color : rng.pick(theme.colors.filter((c) => c !== hue && c !== ball.color)) ?? color
     return { cells, exit: { at: [1, -1], dir: 1 }, lane: LANE, state: { color: stone, water: gardenWater(theme, ball.color) } }
   },
-  draw: (p, s, { k, t, since, ink, weight }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const jet = jetAt(t)
     const corked = t > ARRIVE && since <= 0
     const shudder = corked ? 0.009 * Math.sin(t * 80) * over(t, ARRIVE, FIRE) : 0
@@ -166,8 +182,15 @@ export const fountain = definePiece<{ color: string; water: string }>({
     p.noStroke()
     p.fill(s.water)
     p.rect(0, ((WATER + BED) / 2) * k, (INNER * 2 - weight / k) * k, (BED - WATER) * k)
+    // Its surface: still under a welling cup, and chopped up while the jet's water is coming down into it.
+    const chop = 0.007 * Math.max(jet.force, jetAt(t - AIRBORNE * 0.8).force)
     outline(p, ink, weight * 0.8)
-    p.line(-INNER * k, WATER * k, INNER * k, WATER * k)
+    p.beginShape()
+    for (let i = 0; i <= 26; i++) {
+      const x = -INNER + (2 * INNER * i) / 26
+      p.vertex(x * k, (WATER + chop * Math.sin(x * 38) * Math.sin(t * 13 + x * 9)) * k)
+    }
+    p.endShape()
 
     // The pedestal, standing in the water: a foot, and a shaft that swells under the cup.
     p.push()
@@ -187,12 +210,21 @@ export const fountain = definePiece<{ color: string; water: string }>({
     p.noStroke()
     p.fill(s.water)
     const top = FLOOR + SEAT - jet.h
-    if (since <= 0) {
-      // Welling up out of the cup and running down off its rim both sides, until the ball corks it.
-      if (jet.h > 0.004) {
-        p.arc(0, (FLOOR + 0.005) * k, (CUP * 2 - 0.07) * k, jet.h * 2 * k, Math.PI, Math.PI * 2, p.CHORD)
-        const run = jet.h / WELL
-        for (const side of [-1, 1]) p.rect(side * (CUP + 0.012) * k, ((FLOOR + WATER) / 2 + 0.01) * k, 0.028 * run * k, (WATER - FLOOR - 0.02) * k, 0.014 * k)
+    if (jet.h <= 0.1) {
+      // Welling up out of the cup, and the overflow dripping off its rim both sides into the basin, until the ball corks it.
+      if (jet.h > 0.004) p.arc(0, (FLOOR + 0.005) * k, (CUP * 2 - 0.07) * k, jet.h * 2 * k, Math.PI, Math.PI * 2, p.CHORD)
+      const run = jet.h / WELL
+      if (run > 0.4 && since <= 0) {
+        for (const side of [-1, 1]) {
+          for (let i = 0; i < 3; i++) {
+            // A bead swells under the rim, lets go, and falls.
+            const f = (t * DRIPS + i / 3 + (side > 0 ? 0.17 : 0)) % 1
+            const age = (f * (1 / DRIPS)) - (1 / DRIPS - DRIP_FALL)
+            const x = side * (CUP + 0.004)
+            if (age < 0) p.circle(x * k, (FLOOR + 0.012) * k, 0.03 * run * over(f, 0, 1 - DRIP_FALL * DRIPS) * k)
+            else p.ellipse(x * k, (FLOOR + 0.012 + 0.5 * G_WATER * age * age) * k, 0.026 * run * k, (0.03 + 0.05 * age * G_WATER * 0.1) * run * k)
+          }
+        }
       }
       // Corked: it spits from under the ball at both sides of the rim, harder as the pressure comes on.
       if (corked) {
@@ -201,30 +233,37 @@ export const fountain = definePiece<{ color: string; water: string }>({
         spit(p, k, s.water, shudder, -1, reach)
         spit(p, k, s.water, shudder, 1, reach)
       }
-    } else if (jet.h > 0.1) {
-      // The column, from the cup to the crown, leaning where the crown leans.
-      const w0 = 0.042
-      const w1 = 0.034 + 0.012 * jet.force
-      p.beginShape()
-      p.vertex(-w0 * k, (FLOOR + 0.04) * k)
-      p.bezierVertex(-w0 * k, (FLOOR - jet.h * 0.5) * k, (jet.x - w1) * k, (top + jet.h * 0.4) * k, (jet.x - w1) * k, (top + 0.03) * k)
-      p.vertex((jet.x + w1) * k, (top + 0.03) * k)
-      p.bezierVertex((jet.x + w1) * k, (top + jet.h * 0.4) * k, w0 * k, (FLOOR - jet.h * 0.5) * k, w0 * k, (FLOOR + 0.04) * k)
-      p.endShape(p.CLOSE)
-      // The crown: a cushion of water under the ball, and a stream off each end of it falling back into the basin,
-      // as long as the water has had time to fall.
-      const half = 0.085 + 0.025 * jet.force
-      p.ellipse(jet.x * k, (top + 0.012) * k, half * 2 * k, 0.07 * k)
-      const foot = Math.min(WATER, top + 0.03 + 0.5 * G_WATER * jet.up * jet.up)
-      for (const side of [-1, 1]) stream(p, k, s.water, jet.x + side * (half - 0.015), top + 0.015, side * FALL_X, foot, 0.058 * (0.55 + 0.45 * jet.force))
-      // Where they come down: a ring of spray on the water.
-      if (foot >= WATER) {
-        const f = (t * 3) % 1
-        for (const side of [-1, 1]) p.ellipse(side * FALL_X * k, (WATER - 0.004) * k, (0.06 + 0.06 * f) * k, 0.03 * (1 - f) * jet.force * k)
-      }
     } else {
-      p.arc(0, (FLOOR + 0.005) * k, (CUP * 2 - 0.07) * k, jet.h * 2 * k, Math.PI, Math.PI * 2, p.CHORD)
+      // The column, from the cup to the crown, leaning where the crown leans: its sides are never still, a swell
+      // running up it faster than the eye follows, and a glint or two of the paper riding up inside it.
+      const w0 = 0.044
+      const w1 = 0.034 + 0.012 * jet.force
+      const foot = FLOOR + 0.04
+      const n = 16
+      const edge = (u: number, side: number): Pt => {
+        const w = (w0 + (w1 - w0) * u) * (1 + 0.17 * Math.min(1, u * 5) * Math.sin(u * jet.h * 21 - t * 38 + side))
+        return [jet.x * u * u + side * w, foot + (top + 0.03 - foot) * u]
+      }
+      p.beginShape()
+      for (let i = 0; i <= n; i++) p.vertex(edge(i / n, -1)[0] * k, edge(i / n, -1)[1] * k)
+      for (let i = n; i >= 0; i--) p.vertex(edge(i / n, 1)[0] * k, edge(i / n, 1)[1] * k)
+      p.endShape(p.CLOSE)
+      p.stroke(bg)
+      p.strokeWeight(0.011 * k)
+      for (let i = 0; i < 3; i++) {
+        const u = (t * 2.6 + i / 3) % 1
+        const len = 0.07 * Math.sin(Math.PI * u)
+        if (jet.h * u < 0.08 || len < 0.01) continue
+        const x = jet.x * u * u + (i - 1) * 0.014
+        const y = foot + (top + 0.03 - foot) * u
+        p.line(x * k, y * k, x * k, (y + len) * k)
+      }
+      p.noStroke()
+      // The crown: a cushion of water under the ball, heaving a little.
+      const half = 0.085 + 0.025 * jet.force
+      p.ellipse(jet.x * k, (top + 0.012) * k, half * 2 * (1 + 0.05 * Math.sin(t * 31)) * k, 0.07 * k)
     }
+    rain(p, k, t)
   },
   over: (p, s, { k, t, since, ink, weight }) => {
     // The cup on the pedestal's top, in front of the ball bedded in it and of the water it holds.
@@ -258,38 +297,56 @@ function spit(p: p5, k: number, color: string, x: number, side: number, reach: n
   p.pop()
 }
 
+/** A number from 0 to 1 for drop `i`, the same every time: no two drops are thrown quite alike. */
+const uneven = (i: number): number => {
+  const x = Math.sin(i * 127.1 + 311.7) * 43758.5453
+  return x - Math.floor(x)
+}
+
 /**
- * A stream of falling water from (x0, y0), level as it leaves, making for
- * `x1` at the basin's water, and drawn down to `y1` at most: the whole fall
- * is one parabola, and the stream is as much of it as the water has had
- * time to cover. It thins as it falls.
+ * The water in the air at `t`: every drop let go of the crown in the last
+ * `AIRBORNE` seconds, each where its own fall has got it to, drawn along
+ * the way it is going and thinner the longer it has fallen. Where the
+ * last of them went in, a ring opens on the basin and a bead or two hops.
+ * The fill is the caller's.
  */
-function stream(p: p5, k: number, color: string, x0: number, y0: number, x1: number, y1: number, width: number): void {
-  if (y1 <= y0) return
-  const whole = WATER - y0
-  const reach = Math.sqrt((y1 - y0) / whole)
-  const n = 20
-  const left: Pt[] = []
-  const right: Pt[] = []
-  for (let i = 0; i <= n; i++) {
-    const u = (reach * i) / n
-    const tx = x1 - x0
-    const ty = 2 * whole * u
-    const len = Math.hypot(tx, ty) || 1
-    const half = (width / 2) * (1 - 0.45 * u)
-    const x = x0 + tx * u
-    const y = y0 + whole * u * u
-    left.push([x + (ty / len) * half, y - (tx / len) * half])
-    right.push([x - (ty / len) * half, y + (tx / len) * half])
+function rain(p: p5, k: number, t: number): void {
+  const newest = Math.floor(t / DRIP)
+  const count = Math.ceil(AIRBORNE / DRIP) + 1
+  for (const side of [-1, 1]) {
+    let splash: number | null = null
+    for (let i = 0; i <= count; i++) {
+      const born = (newest - i) * DRIP + (side > 0 ? 0 : DRIP / 2)
+      const age = t - born
+      if (age < 0 || born <= FIRE) continue
+      const jet = jetAt(born)
+      if (jet.h <= 0.1) continue
+      const lot = uneven((newest - i) * 2 + (side > 0 ? 0 : 1))
+      const size = uneven((newest - i) * 2 + (side > 0 ? 40 : 41))
+      // Thrown out and a little up; and off a crown that is sinking, it leaves going down as fast as the crown is.
+      const sinking = Math.max(0, (jetAt(born - 0.004).h - jet.h) / 0.004)
+      const vx = side * THROW * (0.7 + 0.6 * lot) * (0.45 + 0.55 * jet.force)
+      const v0 = sinking - TOSS * (0.6 + 0.4 * lot) * jet.force
+      const vy = v0 + G_WATER * age
+      const x = Math.max(-INNER + 0.04, Math.min(INNER - 0.04, jet.x + side * (0.07 + 0.025 * jet.force) + vx * age))
+      const y = FLOOR + SEAT - jet.h + 0.015 + v0 * age + 0.5 * G_WATER * age * age
+      if (y >= WATER) {
+        splash ??= x
+        continue
+      }
+      const d = 0.07 * (0.35 + 0.65 * jet.force) * (0.75 + 0.4 * size) * (1 - 0.4 * (age / AIRBORNE))
+      p.push()
+      p.translate(x * k, y * k)
+      p.rotate(Math.atan2(vy, vx))
+      p.ellipse(0, 0, (d + Math.hypot(vx, vy) * 0.022) * k, d * k)
+      p.pop()
+    }
+    if (splash === null) continue
+    const f = (t * 3.2) % 1
+    p.ellipse(splash * k, (WATER - 0.004) * k, (0.06 + 0.08 * f) * k, 0.032 * (1 - f) * k)
+    for (let i = 0; i < 2; i++) {
+      const g = (t * 2.7 + i * 0.5) % 1
+      p.circle((splash + side * (i ? -0.05 : 0.06) * g) * k, (WATER - 0.01 - 0.36 * g * (1 - g)) * k, 0.024 * (1 - g * 0.5) * k)
+    }
   }
-  p.push()
-  p.noStroke()
-  p.fill(color)
-  p.beginShape()
-  for (const [x, y] of left) p.vertex(x * k, y * k)
-  for (const [x, y] of right.reverse()) p.vertex(x * k, y * k)
-  p.endShape(p.CLOSE)
-  const end = reach
-  p.circle((x0 + (x1 - x0) * end) * k, (y0 + whole * end * end) * k, width * (1 - 0.45 * end) * k)
-  p.pop()
 }

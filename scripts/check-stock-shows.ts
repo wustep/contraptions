@@ -58,6 +58,11 @@ const CATALOG_WHEN_ARRANGED: Record<string, number[]> = {
   'clair-b': WORLDS.map((w) => w.pieces.length),
   schubert: [35, 25, 24, 25],
 }
+/**
+ * How long the recording may play on after the last portal. The older takes fill it to the final resonance;
+ * Take B lets its last travel repeats go and closes on the finished machine while the last bars play out.
+ */
+const TAIL: Record<string, number> = { premiere: 5, clair: 5, 'clair-b': 11, schubert: 5 }
 /** How many travel repeats each take may lean on to reach the end of its recording. */
 const REPEAT_BUDGET: Record<string, number> = { premiere: 55, clair: 60, 'clair-b': 40, schubert: 38 }
 const score = ({ premiere, clair, 'clair-b': clairB, schubert: impromptu }[work]) as unknown as StockScore
@@ -151,7 +156,7 @@ if (work === 'clair-b') for (const map of score.maps) {
 }
 const lastMap = score.maps.at(-1)!
 assert.equal(lastMap.pieces.at(-2)!.spec.name, 'ticket', 'The ticket belongs at the finale')
-assert.ok(score.duration > lastMap.end && score.duration - lastMap.end < 5, 'Only final resonance may outlast the chain')
+assert.ok(score.duration > lastMap.end && score.duration - lastMap.end < TAIL[work], 'Only the close of the recording may outlast the chain')
 assert.equal(show.at(score.duration).scale, 0, 'Do not freeze a visible ball during the final resonance')
 if (work === 'schubert') {
   assert.deepEqual(score.cues.map((c) => [c.piece, c.target]), schubert.cues)
