@@ -89,8 +89,13 @@ Clair. Each keeps its approved recording offset and panel credit. Clair was
 arranged across the whole catalog: every piece at least once and a repeat
 only where the music needs more travel, the whale's cells over open water,
 and the arcade's score pops drawn (a stock score's `scores` lists the worlds
-whose pops show). A change to any stock piece's lane, or a piece in or out
-of a world, means rearranging it and running `generate:clair` again.
+whose pops show). Its rails are breath rather than padding: two lead the
+show in before the balloon, one leads the Arcade in and one leads it out to
+the ticket, and single rails sit between pieces after a long run of them;
+none counts as a repeat. It closes at 297.3s, so only the recording's last
+resonance plays over the finished machine. A change to any stock piece's
+lane, or a piece in or out of a world, means rearranging it and running
+`generate:clair` again.
 
 `metronome/` is a show with no recording, in strict time: a procedural
 machine under a time map, and a struck bar on every strike, made in the

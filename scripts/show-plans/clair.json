@@ -4,6 +4,20 @@
     "target": 62.1054,
     "pieces": [
       {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
         "name": "balloon",
         "exit": [
           -1,
@@ -11,16 +25,16 @@
         ]
       },
       {
-        "name": "crane",
+        "name": "toaster",
         "exit": [
-          3,
-          0
+          1,
+          -1
         ]
       },
       {
-        "name": "screw",
+        "name": "lift",
         "exit": [
-          2,
+          -1,
           -1
         ]
       },
@@ -39,52 +53,17 @@
         ]
       },
       {
+        "name": "crane",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
         "name": "cannon",
         "exit": [
           3,
           -1
-        ]
-      },
-      {
-        "name": "lift",
-        "exit": [
-          -1,
-          -3
-        ]
-      },
-      {
-        "name": "conveyor",
-        "exit": [
-          2,
-          -1
-        ]
-      },
-      {
-        "name": "gears",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "toaster",
-        "exit": [
-          1,
-          -1
-        ]
-      },
-      {
-        "name": "plunger",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "toggle",
-        "exit": [
-          1,
-          1
         ]
       },
       {
@@ -95,9 +74,23 @@
         ]
       },
       {
-        "name": "drawbridge",
+        "name": "toggle",
         "exit": [
-          2,
+          1,
+          1
+        ]
+      },
+      {
+        "name": "rocket",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
           0
         ]
       },
@@ -109,38 +102,17 @@
         ]
       },
       {
-        "name": "bell",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "painter",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "tipper",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "switchback",
+        "name": "scoop",
         "exit": [
           -1,
           1
         ]
       },
       {
-        "name": "rocket",
+        "name": "zipline",
         "exit": [
           3,
-          0
+          1
         ]
       },
       {
@@ -158,70 +130,28 @@
         ]
       },
       {
-        "name": "inverter",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "balloon",
-        "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "cradle",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "paddle",
+        "name": "bell",
         "exit": [
           1,
           0
         ]
       },
       {
-        "name": "pendulum",
+        "name": "rail",
         "exit": [
-          2,
+          1,
           0
         ]
       },
       {
-        "name": "zipline",
-        "exit": [
-          3,
-          1
-        ]
-      },
-      {
-        "name": "stairs",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "drop",
+        "name": "lift",
         "exit": [
           -1,
-          1
+          -3
         ]
       },
       {
-        "name": "trapdoor",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "screw",
+        "name": "conveyor",
         "exit": [
           2,
           -1
@@ -235,10 +165,94 @@
         ]
       },
       {
-        "name": "seesaw",
+        "name": "screw",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "drawbridge",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "plunger",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "gears",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "rail",
         "exit": [
           1,
           0
+        ]
+      },
+      {
+        "name": "pendulum",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "stairs",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "trampoline",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "painter",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "switchback",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "inverter",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "drop",
+        "exit": [
+          -1,
+          3
         ]
       },
       {
@@ -249,6 +263,20 @@
         ]
       },
       {
+        "name": "seesaw",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "trapdoor",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
         "name": "loop",
         "exit": [
           2,
@@ -256,16 +284,30 @@
         ]
       },
       {
-        "name": "scoop",
+        "name": "tipper",
         "exit": [
-          -1,
+          1,
           1
         ]
       },
       {
-        "name": "trampoline",
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "cradle",
         "exit": [
           2,
+          0
+        ]
+      },
+      {
+        "name": "paddle",
+        "exit": [
+          1,
           0
         ]
       },
@@ -286,57 +328,15 @@
       {
         "name": "dandelion",
         "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "snail",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "fern",
-        "exit": [
-          1,
+          -1,
           -1
         ]
       },
       {
         "name": "vine",
         "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "spade",
-        "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "maple",
-        "exit": [
-          1,
-          2
-        ]
-      },
-      {
-        "name": "well",
-        "exit": [
           -1,
-          3
-        ]
-      },
-      {
-        "name": "footbridge",
-        "exit": [
-          2,
-          0
+          -2
         ]
       },
       {
@@ -347,7 +347,105 @@
         ]
       },
       {
+        "name": "maple",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "gate",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "spade",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
         "name": "snail",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "well",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "grasshopper",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "wheelbarrow",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "maple",
+        "exit": [
+          -1,
+          2
+        ]
+      },
+      {
+        "name": "fern",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pumpkin",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "snail",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pond",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "pod",
         "exit": [
           2,
           0
@@ -361,52 +459,24 @@
         ]
       },
       {
-        "name": "grasshopper",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "maple",
-        "exit": [
-          -1,
-          2
-        ]
-      },
-      {
-        "name": "wheelbarrow",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "toadstools",
+        "name": "hose",
         "exit": [
           2,
-          -1
+          0
         ]
       },
       {
-        "name": "cocoon",
+        "name": "rail",
         "exit": [
           1,
           0
         ]
       },
       {
-        "name": "sprinkler",
+        "name": "swing",
         "exit": [
-          3,
+          2,
           0
-        ]
-      },
-      {
-        "name": "dandelion",
-        "exit": [
-          1,
-          -2
         ]
       },
       {
@@ -417,6 +487,20 @@
         ]
       },
       {
+        "name": "cocoon",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "sunflower",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
         "name": "croquet",
         "exit": [
           2,
@@ -424,24 +508,24 @@
         ]
       },
       {
-        "name": "bumblebee",
-        "exit": [
-          3,
-          -1
-        ]
-      },
-      {
-        "name": "vine",
+        "name": "dandelion",
         "exit": [
           -1,
-          -1
+          -2
         ]
       },
       {
-        "name": "hammock",
+        "name": "rail",
         "exit": [
-          2,
+          1,
           0
+        ]
+      },
+      {
+        "name": "burrow",
+        "exit": [
+          1,
+          1
         ]
       },
       {
@@ -452,16 +536,9 @@
         ]
       },
       {
-        "name": "pinwheel",
+        "name": "vine",
         "exit": [
-          1,
-          -1
-        ]
-      },
-      {
-        "name": "fern",
-        "exit": [
-          1,
+          -1,
           -1
         ]
       },
@@ -473,14 +550,28 @@
         ]
       },
       {
-        "name": "pod",
+        "name": "sprinkler",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "footbridge",
         "exit": [
           2,
           0
         ]
       },
       {
-        "name": "web",
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slide",
         "exit": [
           1,
           1
@@ -490,6 +581,34 @@
         "name": "bumblebee",
         "exit": [
           3,
+          -1
+        ]
+      },
+      {
+        "name": "bloom",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "frog",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "grasshopper",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "toadstools",
+        "exit": [
+          2,
           -1
         ]
       },
@@ -508,44 +627,16 @@
         ]
       },
       {
-        "name": "frog",
-        "exit": [
-          -1,
-          -2
-        ]
-      },
-      {
-        "name": "pond",
+        "name": "bumblebee",
         "exit": [
           3,
-          0
+          -1
         ]
       },
       {
-        "name": "gate",
+        "name": "web",
         "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "pumpkin",
-        "exit": [
-          -1,
-          1
-        ]
-      },
-      {
-        "name": "swing",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "bloom",
-        "exit": [
-          -1,
+          1,
           1
         ]
       },
@@ -557,13 +648,6 @@
         ]
       },
       {
-        "name": "hose",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
         "name": "windchime",
         "exit": [
           1,
@@ -571,37 +655,16 @@
         ]
       },
       {
-        "name": "grasshopper",
+        "name": "toadstools",
         "exit": [
-          3,
-          0
+          2,
+          -1
         ]
       },
       {
-        "name": "burrow",
+        "name": "hammock",
         "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "slide",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "sunflower",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "wateringcan",
-        "exit": [
-          1,
+          2,
           0
         ]
       },
@@ -609,6 +672,13 @@
         "name": "wheelbarrow",
         "exit": [
           3,
+          0
+        ]
+      },
+      {
+        "name": "wateringcan",
+        "exit": [
+          1,
           0
         ]
       },
@@ -627,132 +697,6 @@
         "portal": "in"
       },
       {
-        "name": "seal",
-        "exit": [
-          1,
-          -1
-        ]
-      },
-      {
-        "name": "kelp",
-        "exit": [
-          -1,
-          -2
-        ]
-      },
-      {
-        "name": "submarine",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "sandcastle",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "blowhole",
-        "exit": [
-          1,
-          -1
-        ]
-      },
-      {
-        "name": "pelican",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "dinghy",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "puffer",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "foghorn",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "dolphin",
-        "exit": [
-          3,
-          -1
-        ]
-      },
-      {
-        "name": "buoychain",
-        "exit": [
-          3,
-          -1
-        ]
-      },
-      {
-        "name": "springboard",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "barrel",
-        "exit": [
-          2,
-          1
-        ]
-      },
-      {
-        "name": "kelp",
-        "exit": [
-          -1,
-          -2
-        ]
-      },
-      {
-        "name": "crab",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "lighthouse",
-        "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "sail",
-        "exit": [
-          2,
-          2
-        ]
-      },
-      {
-        "name": "rod",
-        "exit": [
-          2,
-          -1
-        ]
-      },
-      {
         "name": "paddlewheel",
         "exit": [
           2,
@@ -767,55 +711,6 @@
         ]
       },
       {
-        "name": "springboard",
-        "exit": [
-          3,
-          0
-        ]
-      },
-      {
-        "name": "serpent",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "oyster",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "anchor",
-        "exit": [
-          1,
-          3
-        ]
-      },
-      {
-        "name": "anemone",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "hawser",
-        "exit": [
-          3,
-          1
-        ]
-      },
-      {
-        "name": "whirlpool",
-        "exit": [
-          -1,
-          1
-        ]
-      },
-      {
         "name": "submarine",
         "exit": [
           3,
@@ -823,51 +718,72 @@
         ]
       },
       {
-        "name": "oar",
+        "name": "puffer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "blowhole",
         "exit": [
           1,
           -1
         ]
       },
       {
-        "name": "dinghy",
+        "name": "buoychain",
         "exit": [
           3,
-          0
-        ]
-      },
-      {
-        "name": "flags",
-        "exit": [
-          1,
-          0
-        ]
-      },
-      {
-        "name": "funnels",
-        "exit": [
-          2,
-          0
-        ]
-      },
-      {
-        "name": "jellyfish",
-        "exit": [
-          2,
           -1
         ]
       },
       {
-        "name": "octopus",
+        "name": "kelp",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "sandcastle",
         "exit": [
           1,
           0
+        ]
+      },
+      {
+        "name": "buoy",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "dolphin",
+        "exit": [
+          3,
+          -1
         ]
       },
       {
         "name": "rail",
         "exit": [
           1,
+          0
+        ]
+      },
+      {
+        "name": "springboard",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "dinghy",
+        "exit": [
+          3,
           0
         ]
       },
@@ -886,14 +802,21 @@
         ]
       },
       {
-        "name": "floats",
+        "name": "lighthouse",
         "exit": [
-          2,
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "crab",
+        "exit": [
+          3,
           0
         ]
       },
       {
-        "name": "buoy",
+        "name": "rail",
         "exit": [
           1,
           0
@@ -907,6 +830,181 @@
         ]
       },
       {
+        "name": "rod",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "anchor",
+        "exit": [
+          -1,
+          3
+        ]
+      },
+      {
+        "name": "jellyfish",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "hawser",
+        "exit": [
+          3,
+          1
+        ]
+      },
+      {
+        "name": "sail",
+        "exit": [
+          2,
+          2
+        ]
+      },
+      {
+        "name": "funnels",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "oyster",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "barrel",
+        "exit": [
+          2,
+          1
+        ]
+      },
+      {
+        "name": "whirlpool",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "anemone",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "buoychain",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "serpent",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "dinghy",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pelican",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "submarine",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "oar",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "flags",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "seal",
+        "exit": [
+          -1,
+          -1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "floats",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "foghorn",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "octopus",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
         "name": "portal",
         "portal": "out"
       }
@@ -914,38 +1012,38 @@
   },
   {
     "world": "arcade",
-    "target": 291.6003,
+    "target": 297.3434,
     "pieces": [
       {
         "name": "portal",
         "portal": "in"
       },
       {
-        "name": "stacker",
+        "name": "rail",
         "exit": [
           1,
-          -2
+          0
         ]
       },
       {
-        "name": "ufo",
-        "exit": [
-          1,
-          -2
-        ]
-      },
-      {
-        "name": "pachinko",
+        "name": "maze",
         "exit": [
           1,
           2
         ]
       },
       {
-        "name": "gauss",
+        "name": "coaster",
         "exit": [
-          2,
-          0
+          3,
+          1
+        ]
+      },
+      {
+        "name": "slots",
+        "exit": [
+          1,
+          1
         ]
       },
       {
@@ -956,10 +1054,38 @@
         ]
       },
       {
-        "name": "maze",
+        "name": "ferris",
         "exit": [
-          -1,
-          2
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "claw",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "tubeman",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "stacker",
+        "exit": [
+          1,
+          -2
         ]
       },
       {
@@ -970,9 +1096,9 @@
         ]
       },
       {
-        "name": "tubeman",
+        "name": "ufo",
         "exit": [
-          2,
+          1,
           -2
         ]
       },
@@ -984,17 +1110,10 @@
         ]
       },
       {
-        "name": "dunk",
+        "name": "pachinko",
         "exit": [
           1,
-          1
-        ]
-      },
-      {
-        "name": "claw",
-        "exit": [
-          3,
-          0
+          2
         ]
       },
       {
@@ -1005,21 +1124,7 @@
         ]
       },
       {
-        "name": "coaster",
-        "exit": [
-          3,
-          1
-        ]
-      },
-      {
-        "name": "maze",
-        "exit": [
-          1,
-          2
-        ]
-      },
-      {
-        "name": "pixel",
+        "name": "bumper",
         "exit": [
           1,
           0
@@ -1033,24 +1138,10 @@
         ]
       },
       {
-        "name": "shooter",
+        "name": "rail",
         "exit": [
           1,
-          -2
-        ]
-      },
-      {
-        "name": "blocks",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "ufo",
-        "exit": [
-          1,
-          -2
+          0
         ]
       },
       {
@@ -1061,23 +1152,16 @@
         ]
       },
       {
-        "name": "pong",
+        "name": "slingshot",
         "exit": [
-          -1,
-          -2
-        ]
-      },
-      {
-        "name": "ferris",
-        "exit": [
-          2,
+          1,
           -1
         ]
       },
       {
-        "name": "changer",
+        "name": "bumpercar",
         "exit": [
-          1,
+          3,
           0
         ]
       },
@@ -1089,16 +1173,30 @@
         ]
       },
       {
-        "name": "stacker",
+        "name": "pong",
         "exit": [
-          -1,
-          -2
+          1,
+          -1
         ]
       },
       {
-        "name": "foosball",
+        "name": "maze",
+        "exit": [
+          1,
+          2
+        ]
+      },
+      {
+        "name": "gauss",
         "exit": [
           2,
+          0
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
           0
         ]
       },
@@ -1110,17 +1208,38 @@
         ]
       },
       {
-        "name": "bumpercar",
+        "name": "stacker",
         "exit": [
-          3,
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "shooter",
+        "exit": [
+          1,
+          -2
+        ]
+      },
+      {
+        "name": "freefall",
+        "exit": [
+          1,
+          3
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
           0
         ]
       },
       {
-        "name": "slots",
+        "name": "ufo",
         "exit": [
           1,
-          1
+          -2
         ]
       },
       {
@@ -1128,6 +1247,13 @@
         "exit": [
           2,
           -1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
         ]
       },
       {
@@ -1145,9 +1271,72 @@
         ]
       },
       {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "skee",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "popcorn",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "blocks",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "pong",
+        "exit": [
+          -1,
+          -2
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "bumpercar",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "dunk",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
         "name": "whack",
         "exit": [
           2,
+          0
+        ]
+      },
+      {
+        "name": "hockey",
+        "exit": [
+          3,
           0
         ]
       },
@@ -1166,45 +1355,10 @@
         ]
       },
       {
-        "name": "zigzag",
+        "name": "foosball",
         "exit": [
-          1,
-          2
-        ]
-      },
-      {
-        "name": "freefall",
-        "exit": [
-          1,
-          2
-        ]
-      },
-      {
-        "name": "slingshot",
-        "exit": [
-          1,
-          -1
-        ]
-      },
-      {
-        "name": "pusher",
-        "exit": [
-          1,
-          1
-        ]
-      },
-      {
-        "name": "spinner",
-        "exit": [
-          1,
+          2,
           0
-        ]
-      },
-      {
-        "name": "pachinko",
-        "exit": [
-          -1,
-          2
         ]
       },
       {
@@ -1215,17 +1369,17 @@
         ]
       },
       {
-        "name": "hockey",
+        "name": "zigzag",
         "exit": [
-          3,
-          0
+          1,
+          2
         ]
       },
       {
-        "name": "skee",
+        "name": "pusher",
         "exit": [
-          2,
-          -1
+          1,
+          1
         ]
       },
       {
@@ -1236,10 +1390,17 @@
         ]
       },
       {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
         "name": "ticket",
         "exit": [
           -1,
-          2
+          1
         ]
       },
       {
