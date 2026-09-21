@@ -22,7 +22,7 @@ import { workshop } from './pieces/workshop'
  * the workshop is Regular, the garden Forest, the harbor Aqua, and the
  * arcade is the Arcade. So the loop reads Regular → Forest → Aqua → Arcade.
  */
-export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars' | 'waves' | 'sprigs' | 'grid'
+export type Backdrop = 'plain' | 'dots' | 'rules' | 'stars' | 'waves' | 'sprigs' | 'grid' | 'flakes'
 
 export interface World {
   name: string
@@ -45,6 +45,13 @@ export interface World {
    * worlds. The catalog shows a build by these.
    */
   own?: string[]
+  /**
+   * Set on a world the Playground stages: one waiting to be let into the
+   * loop, or a stock world's name over the pieces waiting to join it. Like a
+   * build it stands beside the loop and is shown by its `own`; this is what
+   * the sheet says of where it stands.
+   */
+  staged?: string
 }
 
 /** The loop, in order. */

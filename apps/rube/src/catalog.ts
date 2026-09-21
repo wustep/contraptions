@@ -50,6 +50,8 @@ export interface CatalogOptions {
   worlds?: readonly World[]
   /** What the foot of the sheet says, longest first; the first that fits is used. The machine's own, when unset. */
   hints?: readonly string[]
+  /** What the head of the sheet says it is a sheet of. Counted from the bands, when unset. */
+  scope?: string
 }
 
 interface Cell {
@@ -229,7 +231,7 @@ export function createCatalog(
   // What the sheet is a sheet of: the four worlds, and however many builds stand beside them.
   const built = groups.filter((g) => g.world.own).length
   const stock = groups.length - built
-  const scope = [stock === WORLDS.length ? 'FOUR WORLDS' : stock ? `${stock} WORLDS` : '', built ? `${built} ${built === 1 ? 'BUILD' : 'BUILDS'}` : ''].filter(Boolean).join(' · ')
+  const scope = options.scope ?? [stock === WORLDS.length ? 'FOUR WORLDS' : stock ? `${stock} WORLDS` : '', built ? `${built} ${built === 1 ? 'BUILD' : 'BUILDS'}` : ''].filter(Boolean).join(' · ')
   let sheet: Sheet | null = null
   let hover: Cell | null = null
   let scroll = options.scroll ?? 0
@@ -492,7 +494,7 @@ function drawBandCaptions(p: p5, band: Band, shift: number, hover: Cell | null):
   const x = band.slots.length ? Math.min(...band.slots.map((s) => s.x)) + 6 : 20
   const order = WORLDS.indexOf(world)
   // As much of the caption as the band is wide enough for: the name first.
-  const clauses = [world.label, `${cells.length} ${cells.length === 1 ? 'piece' : 'pieces'}`, order >= 0 ? `${ORDINAL[order]} in the loop` : 'a build, beside the loop', world.note]
+  const clauses = [world.label, `${cells.length} ${cells.length === 1 ? 'piece' : 'pieces'}`, order >= 0 ? `${ORDINAL[order]} in the loop` : world.staged ?? 'a build, beside the loop', world.note]
   let caption = ''
   for (let n = clauses.length; n > 0 && !caption; n--) {
     const text = clauses.slice(0, n).join(' · ').toUpperCase()

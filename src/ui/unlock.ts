@@ -1,8 +1,8 @@
 /**
- * The lock on Shows and the Builder. Neither tab is on the panel, and
- * neither page is itself until someone presses the backtick five times in
- * quick succession. That unlocks both for this browser, and the same five
- * presses lock them again.
+ * The lock on Shows, the Builder and the Playground. None of the three tabs
+ * is on the panel, and none of the pages is itself, until someone presses
+ * the backtick five times in quick succession. That unlocks all three for
+ * this browser, and the same five presses lock them again.
  *
  * The backtick already has a job (it clears the stage of its chrome), so
  * the presses have to come quickly, one on the heels of the last; a pause
@@ -13,7 +13,7 @@
 const STORE = 'contraptions:unlocked'
 /** The Builder's old key. A browser that unlocked it before Shows shared the lock still counts as unlocked. */
 const LEGACY_STORE = 'contraptions:builder'
-/** What the shell announces on `window` when the lock changes; `detail` is whether Shows and the Builder are now unlocked. */
+/** What the shell announces on `window` when the lock changes; `detail` is whether the gated tabs are now unlocked. */
 export const UNLOCK_EVENT = 'contraptions:unlocked'
 
 export const UNLOCK_PRESSES = 5
@@ -65,7 +65,7 @@ export function setUnlocked(on: boolean): void {
 }
 
 /**
- * Locked visits to Shows or the Builder land on Machine, seed and all.
+ * Locked visits to Shows, the Builder or the Playground land on Machine, seed and all.
  * Answers whether the visitor was sent away, so the page's own code is
  * never fetched when they were.
  */
