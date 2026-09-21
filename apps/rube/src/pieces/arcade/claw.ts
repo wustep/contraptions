@@ -1,6 +1,7 @@
+import type p5 from 'p5'
 import { outline, solid } from '../../../../../src/core/draw'
 import { easeInOutSine, lerp } from '../../../../../src/core/ease'
-import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
+import { FLOOR, R, ROLL, arrive, arriveAt, definePiece, mixHex, over, rail, ramp, wait, type Lane, type Pt } from '../../parts'
 import { glow, lamp, marquee, score } from './neon'
 
 /**
@@ -41,6 +42,88 @@ const V_FALL = G * T_FALL
 const V_LAND = V_FALL * Math.sin(Math.atan(SLOPE))
 const V_FOOT = Math.sqrt(V_LAND * V_LAND + 2 * G * Math.sin(Math.atan(SLOPE)) * Math.hypot(RUN_OUT[0] - LAND[0], RUN_OUT[1] - LAND[1]))
 
+/**
+ * The heap: what it is, where its middle lies, how big it is across, how
+ * far it leans, and which of the heap's colours it takes. Laid from the
+ * back of the case to the front, so the ones against the glass are whole.
+ * It starts a claw's reach past the dimple, climbs to a bear a ball's
+ * clearance under the carry, and leans on the chute's near wall, below
+ * its top: nothing in it is in the ball's way, or the claw's.
+ */
+type Kind = 'ball' | 'capsule' | 'bear' | 'duck' | 'star' | 'block'
+const HEAP: [Kind, number, number, number, number, number][] = [
+  ['ball', 1.22, -0.24, 0.24, 0, 0],
+  ['ball', 1.46, -0.245, 0.24, 0, 2],
+  ['capsule', 1.63, -0.2, 0.22, -0.4, 1],
+  ['ball', 1.0, -0.09, 0.26, 0, 3],
+  ['capsule', 1.24, -0.1, 0.26, 0.2, 1],
+  ['ball', 1.47, -0.09, 0.26, 0, 3],
+  ['block', 0.93, -0.17, 0.22, 0.35, 0],
+  ['ball', 1.15, -0.19, 0.24, 0, 2],
+  ['capsule', 1.38, -0.2, 0.26, 0.3, 1],
+  ['ball', 1.6, -0.17, 0.22, 0, 3],
+  ['capsule', 1.09, -0.235, 0.24, -0.5, 1],
+  ['star', 1.56, -0.235, 0.26, 0.3, 0],
+  ['bear', 1.33, -0.21, 0.26, -0.1, 3],
+  ['capsule', 1.05, 0.01, 0.24, -0.6, 3],
+  ['ball', 1.28, 0, 0.26, 0, 0],
+  ['block', 1.5, 0.02, 0.22, 0.2, 2],
+  ['capsule', 1.635, 0.02, 0.22, 0.7, 0],
+  ['duck', 0.8, -0.01, 0.28, 0, 2],
+]
+/** The two that stir: the duck, by the dimple, when the claw touches down beside it; the bear, on top, at the ball's thud in the chute. */
+const DUCK = 17
+const BEAR = 12
+/** A toy set rocking on its foot at `t0`: a few degrees, dying away inside a second. */
+const rock = (t: number, t0: number) => (t < t0 ? 0 : 0.16 * Math.sin((t - t0) * 14) * Math.exp((t0 - t) * 3.5))
+
+/** One prize, `d` across, leaning by `lean` and rocked about its foot by `tip`: a flat fill in ink, a `trim` for the part that is another colour. */
+function toy(p: p5, k: number, ink: string, weight: number, bg: string, kind: Kind, x: number, y: number, d: number, lean: number, tip: number, fill: string, trim: string): void {
+  const u = d * k
+  p.push()
+  p.translate(x * k, (y + d / 2) * k)
+  p.rotate(tip)
+  p.translate(0, -u / 2)
+  p.rotate(lean)
+  solid(p, ink, weight, fill)
+  if (kind === 'ball') p.circle(0, 0, u)
+  else if (kind === 'capsule') {
+    // Two halves, the lower one dimmer, and a fine seam between them.
+    p.fill(mixHex(fill, bg, 0.4))
+    p.circle(0, 0, u)
+    solid(p, ink, weight * 0.6, fill)
+    p.arc(0, 0, u, u, Math.PI, 2 * Math.PI, p.CHORD)
+  } else if (kind === 'block') p.rect(0, 0, 0.84 * u, 0.84 * u, 0.08 * u)
+  else if (kind === 'star') {
+    p.beginShape()
+    for (let i = 0; i < 10; i++) {
+      const r = (i % 2 ? 0.28 : 0.56) * u
+      p.vertex(Math.sin((i * Math.PI) / 5) * r, -Math.cos((i * Math.PI) / 5) * r)
+    }
+    p.endShape(p.CLOSE)
+  } else if (kind === 'bear') {
+    // A head, two round ears behind it, and a face.
+    for (const side of [-1, 1]) p.circle(side * 0.38 * u, -0.38 * u, 0.44 * u)
+    p.circle(0, 0, u)
+    p.noStroke()
+    p.fill(bg)
+    for (const side of [-1, 1]) p.circle(side * 0.18 * u, -0.06 * u, 0.12 * u)
+    p.ellipse(0, 0.14 * u, 0.17 * u, 0.12 * u)
+  } else {
+    // A bath duck, facing the way the ball comes in: tail, body, beak, head, eye.
+    p.triangle(0.38 * u, 0, 0.72 * u, -0.2 * u, 0.56 * u, 0.24 * u)
+    p.ellipse(0.08 * u, 0.18 * u, u, 0.64 * u)
+    p.fill(trim)
+    p.triangle(-0.46 * u, -0.3 * u, -0.78 * u, -0.15 * u, -0.46 * u, -0.02 * u)
+    p.fill(fill)
+    p.circle(-0.22 * u, -0.2 * u, 0.6 * u)
+    p.noStroke()
+    p.fill(bg)
+    p.circle(-0.3 * u, -0.26 * u, 0.11 * u)
+  }
+  p.pop()
+}
+
 export const claw = definePiece<{ color: string; prizes: string[] }>({
   name: 'claw',
   points: 200,
@@ -74,7 +157,7 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
   },
   // Over the marquee, above the chute: inside the glass it sat on the claw it was paying for.
   scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, DROP_X, GANTRY_Y - 0.16 + 0.1, '+200', since, 1),
-  draw: (p, s, { k, t, ink, bg, weight }) => {
+  draw: (p, s, { k, t, ink, bg, weight, color, theme }) => {
     // The trolley's place on the gantry, and the claw's height and grip.
     const trolleyX =
       t < T_MOVE ? SEAT
@@ -106,16 +189,15 @@ export const claw = definePiece<{ color: string; prizes: string[] }>({
     p.line((SEAT - 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.08) * k, (FLOOR + 0.03) * k)
     p.line((SEAT + 0.08) * k, (FLOOR + 0.03) * k, (SEAT + 0.16) * k, FLOOR * k)
     rail(p, k, ink, weight, SEAT + 0.16, 2.5)
-    // The prizes: a heap of soft things lying on the floor between the dimple and the chute.
-    for (let i = 0; i < 4; i++) {
-      const px = 0.85 + i * 0.26
-      const h = i % 2 ? 0.13 : 0.16
-      solid(p, ink, weight, s.prizes[i])
-      p.ellipse(px * k, (FLOOR - h / 2) * k, 0.2 * k, h * k)
-      solid(p, ink, weight, bg)
-      p.circle((px - 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
-      p.circle((px + 0.04) * k, (FLOOR - h / 2 - 0.02) * k, 0.04 * k)
-    }
+    // The prizes: a heap of them between the dimple and the chute, in the
+    // theme's colours less the ball's, so that no prize is taken for the
+    // ball; which colour goes where turns with the cabinet's own draw.
+    const hues = theme.colors.filter((c) => c !== color)
+    const turn = s.prizes.reduce((n, c) => n + theme.colors.indexOf(c), 0)
+    HEAP.forEach(([kind, x, y, d, lean, hue], i) => {
+      const tip = i === DUCK ? rock(t, ARRIVE + 0.3) : i === BEAR ? rock(t, T_DROP + T_FALL) : 0
+      toy(p, k, ink, weight * 0.8, bg, kind, x, y, d, lean, tip, hues[(hue + turn) % hues.length], hues[(hue + turn + 1) % hues.length])
+    })
     // The chute: walls either side of the drop, a wedge at its foot that
     // turns the drop into a roll, and a lamp on the far wall's top that
     // comes on at the drop — beside the ball's line, where it can be seen;
