@@ -62,6 +62,13 @@ said so for itself).
 | `clothesline`: a rotary washing line carries the ball round to the far side | Forest | A turn about a vertical pole, seen from the side, is a ball that slides left to right and slows at both ends. The birdbath's lesson: do not draw plan views in a side-view world. |
 | `pitcher`: down a pitcher plant's throat | Forest | Already said: `bloom` goes down a flower's throat, and the ball would be hidden. |
 | `boules`: the ball strikes a boule that rolls on with the thread | Forest | Already said, six times: appletree, pod, cradle, gauss, oyster, changer. |
+| `inchworm`: a looper on a twig carries the ball along on the top of its arch | Forest | Already said: it is the `snail`'s beat (up the tail, carried in slow pulls, tipped off over the head), and the arch that walks is the workshop shelf's `slinky`. |
+| `caterpillar`: a hump runs tail to head along a caterpillar's back and carries the ball on its front | Forest | Already said: the harbor's `serpent` is "a wave of serpent that travels with the ball". |
+| `roller`: the ball knocks the chock from under a heavy garden roller | Forest | Already said: `turf` is the heavy cylinder the ball thumps into and sets rolling ahead of itself, slow and then quicker; with the ball aboard it is the `wheelbarrow`. |
+| `timber`: the ball bonks a tree a beaver has gnawed through, and it falls across a gap as the bridge | Forest | Already said, twice over: the `appletree`'s bonk and the workshop's `drawbridge`. |
+| `leafsteps`: down a tall plant leaf by leaf, each dipping under the ball and springing back | Forest | Already said: the `toadstools` run downhill, and the workshop's `switchback`. Three small actions where one bold one was wanted. |
+| `logroll`: the ball rides the top of a log that rolls down a bank | Forest | Already said: a thing that runs to a stop and pitches the ball off is the `wheelbarrow`, the `slipway` and the `sled`. |
+| `trellis`: an expanding trellis shoots out across a gap with the ball in a pot on its end | Forest | Already said: the harbor's `spyglass` is a thing that lengthens across a gap with the ball in its nose; and lazy tongs are the workshop's, not the garden's. |
 | `turtle`: a sea turtle ferries the ball across a gap | Aqua | Already said: buoy, dolphin, serpent and the floats are all "a sea thing takes it across". |
 | `broadside`: a deck gun fires its own shot with the thread | Aqua | A cannon is a cannon, relay or not. |
 | `nautilus`: round and in along a cut-through shell's spiral | Aqua | A spiral in is a dead end; the way out would be a hole through the middle that nobody could see. |
@@ -72,6 +79,7 @@ said so for itself).
 | `windmill`: a mini-golf windmill's sails gate the ball | Arcade | A gate the ball only waits at is not a beat; with a sail that scoops it, it is the garden's `pinwheel`. |
 | `breakout`: the ball knocks bricks out of a wall on a screen | Arcade | Already said: `pong`'s straight lines and one pace; the arcade has seven screens. |
 | `derby`: a roll-a-ball horse race | Arcade | Hidden: the ball goes down a scoring hole and the horses are the show. |
+| `tubeman` in one cell: the sleeve heaped over its blower, rising straight up under the ball | Arcade | No silhouette at rest, since a heap of cloth is a blob, and no whip: a column that grows under the ball is the `stacker`'s platform in a sock. Built lying along the rail instead, which costs a cell and gives it somewhere to get up from. |
 
 ### For Snow
 
@@ -80,7 +88,7 @@ said so for itself).
 | `snowman` | An icon with nothing to do. Every job found for it was the sandcastle (ploughed through) or the appletree (knocked, and something falls) again. |
 | `igloo` | Over it is the footbridge; through it is hidden; cut open it is a room with nothing in it. |
 | `curling` | The house's rings are seen from above. In a side view a curling sheet is a line. |
-| `gondola`, `funicular`, `helicopter` | Already said: the `chairlift` carries through the air, the `draglift` hauls up the snow, and a hook on a winch is the workshop's `crane`. |
+| `gondola`, `funicular`, `helicopter`, `chairlift`, `draglift` | A cabin or a chair on a cable is the arcade's `ferris` gondola and the workshop's `crane`: a thing hangs, takes the ball, and carries it over. The `paraglider` is the one lift through the air Snow keeps, because the wing is the picture. |
 | `bobsled`, `roof` (a slab of snow slides off a chalet roof with the ball on it) | Already said inside the world: `sled`, `snowball` and `cornice` are the slides and the slab. `bobsled` was also the `flume` again, which was cut. |
 | `alphorn`, `chimney`, `drift` (tunnelling under the snow) | Hidden for the whole beat. |
 | `weatherhouse`: two figures on a pivot, one goes in as one comes out | Two little figures are two dots at the show's size. The `cuckoo` has the same house and one bold action. |
@@ -95,16 +103,51 @@ said so for itself).
 | Idea | Why not |
 | --- | --- |
 | `gramophone` | Tried three ways. As a blast it is the harbor's `foghorn`. As a horn to spiral down it is the `funnel`, the `whirlpool` and the `bloom`. As a record that carries the ball round, it is a plan view in a side-view world: a slab with a ball sliding along it. |
-| `tuba`, `sousaphone`, `horn` | Down the tubing is hidden; a bulge travelling round the coils is the garden's `hose`; blown out of the bell is the harbor's `funnels`, corks and all. Brass is the `trombone` (whose slide is outside) and the winds. |
-| `violin`, `cello`, `bow` | The bow as a carrier is the `trombone`'s slide again, and the instrument itself has no part the ball can work. Strings are the `harp`, the `staff` and the `upright`. |
+| `tuba`, `sousaphone`, `horn` | Down the tubing is hidden; a bulge travelling round the coils is the garden's `hose`; blown out of the bell is the harbor's `funnels`, corks and all. Brass would want a `trombone`, whose slide is outside; it was planned and not built when the world was set at eighteen. |
+| `violin`, `cello`, `bow` | The bow as a carrier is a slide like any other, and the instrument itself has no part the ball can work. Strings are the `harp`, the `staff` and the `grand`. |
 | `guitar`, `harmonica`, `panpipes`, `kalimba`, `templeblocks` | Already said inside the world: rolling or bouncing along a row of things that each sound is `keys`, `flute`, `harp` and `xylophone`. Four is enough. |
-| `cymbals` on a stand, `hihat` | Edge-on, which is how the ball meets them, a cymbal is a thin arc. The `monkey` holds a pair face-on. |
+| `cymbals` on a stand, `hihat` | Edge-on, which is how the ball meets them, a cymbal is a thin arc. A `monkey` holding a pair face-on was built and held back (below). |
 | `conductor`, `ballerina` | A figure is a lot of drawing for one flick of a stick or a foot. |
 | `spotlight`: the ball takes the colour of the gel | Light is not pigment; the `inkwell` is. |
 | `theremin`, `echo` as a ghost | Nothing in a hall makes a ball a ghost that can be seen to. Music has no ghost. |
 | `thunderrun`: cannonballs down a wooden trough, the old theatre's thunder | A real ball machine, and the workshop's `switchback` to the plank. |
 | `rainstick`, `maracas` | A tube of beads is a tube of dots. |
-| `tuningfork` on its own | A fork that only hums at the ball has no effect on it. Two of them do: `resonance`. |
+| `tuningfork` on its own | A fork that only hums at the ball has no effect on it. Two of them do: `resonance`, built and held back (below). |
+
+### Built for Snow and Music, and held back at eighteen
+
+Both worlds were first planned at thirty-four beats and set at eighteen on
+2026-09-20. More than that were built. These were reviewed on strips beside
+the ones that went in and left off the shelf; none of them is in the repo.
+The first few in each table are good pieces that lost to a better one for
+the same job, and are the place to start if a world wants more.
+
+| Piece | World | What it was | Why it was held back |
+| --- | --- | --- | --- |
+| `ibex` | Snow | An ibex on a rock lowers its head and butts the ball up a floor. | The best of the runners-up: a fine silhouette, and a strike. `snowblower` was the bolder way up. |
+| `airbag` | Snow | An avalanche pack: the ball trips the handle, the bag bursts open under it and throws it up a floor. | Good. A throw up a floor beside `bough`, and the second-best way up of three. |
+| `skis` | Snow | Four skis stood in the drift go over like dominoes and lie down as the track. | Clean, and already said: dominoes. |
+| `turnstile` | Snow | A lift turnstile: the ball shoulders an arm round, clunk, the lamp goes red to green. | Clean, and little happens to the ball. |
+| `glacier` | Snow | The ball goes through a glacier as ice and the front calves behind it. | Hidden: a dotted ring inside a block for most of the beat. |
+| `binding` | Snow | A ski is the track; the heel piece comes up and cracks the ball on. | No silhouette (a ski is a line), and a strike. |
+| `tent` | Snow | A dome tent in a hollow: the crown dimples and throws the ball back up. | Reads as a blue dome that does nothing: the `igloo` again. |
+| `ladder` | Snow | A ladder laid over a crevasse sags under the ball. | No cause: a sag. |
+| `sapling` | Snow | A fir bent double under snow springs up and flings the ball. | Already said inside the world: `bough`. |
+| `hotspring` | Snow | The ball sinks into a pool and comes up another colour. | Hidden, in a green blob. |
+| `kettle` | Snow | A kettle on a tripod nods and pours a block of ice out of the ball's way. | Fiddly: tripod, cord, tongue, kettle, block, steam. |
+| `snowfort` | Snow | A seesaw inside a fort throws a snowball on with the thread. | Already said: a seesaw relay. |
+| `yeti` | Snow | | Never finished or reviewed. |
+| `resonance` | Music | Two tuning forks: the ball rings the first, the second hums in sympathy and nudges another ball on. | The cleverest idea of the lot. It would have been a second relay beside `organ`, and a hum is thin lines at the show's size. |
+| `musicstand` | Music | The ball sits on the desk of a music stand, which telescopes up two floors. | The same beat as `stool`, which has the screw. |
+| `seats` | Music | A row of theatre seats tips up behind the ball, one after another. | Clean, and said inside the world: `keys` and `flute` are rows that move as the ball passes. |
+| `monkey` | Music | A cymbal monkey claps when the ball sits on its button. | No cause: the ball waits and rolls on, and the clap never touches it. |
+| `whistle` | Music | The ball goes into a whistle and the pea comes out with the thread. | A third relay. |
+| `moon` | Music | A prop crescent moon, hauled up a floor by a sandbag with the ball in its curve. | A hammock until the last frame, and the counterweight is `curtain`'s. |
+| `startrap` | Music | A stage star trap shoots the ball up through its doors. | Fiddly: frame, doors, counterweight; and a third counterweight. |
+| `bassdrum` | Music | The pedal's beater kicks the ball up a floor. | A strike. |
+| `upright` | Music | A piano's action, one key of it, throws the ball. | A strike with more parts, and it reads as a catapult. |
+| `tambourine`, `snare` | Music | A bounce off a drum head. | `timpani` is the one bold drum. |
+| `pianoroll` | Music | The track is punched paper running between two spools. | No silhouette: a line with holes in it. |
 
 ## Worlds considered and not built
 
