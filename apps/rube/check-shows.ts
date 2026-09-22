@@ -59,9 +59,12 @@ async function main(): Promise<void> {
     check('a work takes its title from its takes', works[0].title === 'Clair de Lune')
     check('a clean folder has no problems', problems.length === 0, problems.join(' · '))
     check('a link names a version', pickVersion(works, 'clair-de-lune', 'take-b')?.label === 'Take B')
-    check('a take that is not there falls to the work\'s first', pickVersion(works, 'clair-de-lune', 'take-z')?.take === 'take-a')
+    check('a take that is not there falls to the work\'s first', pickVersion(works, 'premiere-arabesque', 'take-z')?.take === 'take-a')
+    check('except Clair de Lune, which falls to Take B', pickVersion(works, 'clair-de-lune', 'take-z')?.take === 'take-b')
     check('a work that is not there falls to the first work', pickVersion(works, 'nocturne', null)?.work === 'clair-de-lune')
-    check('a link with no work opens Clair de Lune, Take A', pickVersion(works, null, null)?.work === 'clair-de-lune' && pickVersion(works, null, null)?.take === 'take-a')
+    check('a link with no work opens Clair de Lune, Take B', pickVersion(works, null, null)?.work === 'clair-de-lune' && pickVersion(works, null, null)?.take === 'take-b')
+    check('Clair de Lune with no take opens Take B', pickVersion(works, 'clair-de-lune', null)?.take === 'take-b')
+    check('an explicit take is still that take', pickVersion(works, 'clair-de-lune', 'take-a')?.take === 'take-a')
     check('an empty folder picks nothing', pickVersion([], 'clair-de-lune', 'take-a') === null)
   }
   {
@@ -102,7 +105,8 @@ async function main(): Promise<void> {
   }
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
-  check('the Shows tab opens Clair de Lune, Take A', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-a')
+  check('the Shows tab opens Clair de Lune, Take B', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
+  check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')

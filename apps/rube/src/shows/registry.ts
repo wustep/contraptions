@@ -131,18 +131,24 @@ export function readShows(found: Record<string, unknown>): Registry {
 
 /** The Shows tab, with no work in the link: Clair de Lune. */
 export const DEFAULT_WORK = 'clair-de-lune'
+/** Clair de Lune, with no take in the link: Take B. */
+export const DEFAULT_TAKE = 'take-b'
 
 /**
  * The version a link names. A work that is not there falls to the first
- * work; a take that is not there falls to that work's first. A link that
- * names no work opens Clair de Lune, when it is there.
+ * work; a take that is not there falls to that work's first, or to Take B
+ * on Clair de Lune. A link that names no work opens Clair de Lune, Take B,
+ * when it is there.
  */
 export function pickVersion(works: Work[], work: string | null, take: string | null): Version | null {
   const w = work
     ? (works.find((o) => o.work === work) ?? works[0])
     : (works.find((o) => o.work === DEFAULT_WORK) ?? works[0])
   if (!w) return null
-  return w.versions.find((v) => v.take === take) ?? w.versions[0] ?? null
+  const fallback = w.work === DEFAULT_WORK
+    ? (w.versions.find((v) => v.take === DEFAULT_TAKE) ?? w.versions[0])
+    : w.versions[0]
+  return w.versions.find((v) => v.take === take) ?? fallback ?? null
 }
 
 /** A loaded version that cannot be played, said plainly; empty when it can. */
