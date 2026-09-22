@@ -2,7 +2,7 @@ import '../../../../src/ui/styles.css'
 import { downloadBlob } from '../../../../src/core/capture'
 import { makeRng } from '../../../../src/core/rng'
 import { randomSeed } from '../../../../src/core/seed'
-import { ICON, copyButton, createShell, el, field, icon, section } from '../../../../src/ui/shell'
+import { ICON, copyButton, createShell, el, field, icon, section, sitePath } from '../../../../src/ui/shell'
 import { createCatalog } from '../catalog'
 import { createStage } from '../engine'
 import { Show } from '../show'
@@ -967,7 +967,7 @@ window.addEventListener('paste', (e) => {
   pasteText(text)
 })
 
-const machineLink = el('a', { class: 'more', href: '/' }, ['Play it in Machine →'])
+const machineLink = el('a', { class: 'more', href: sitePath('/') }, ['Play it in Machine →'])
 // Machine knows the builds folder and this browser's builds. A sample not yet touched is in neither, so it is kept on the way out.
 machineLink.addEventListener('click', () => void saveBuild(structuredClone(build)))
 fileSec.append(storeWarn, el('div', { class: 'row' }, [exportBtn, importBtn, copyBtn]), filePick, fileStatus, machineLink)
@@ -1070,7 +1070,7 @@ function sync(): void {
   seedNote.textContent = seed
   shell.setSeed(seed)
   storeWarn.hidden = storeKept()
-  machineLink.href = `/?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`
+  machineLink.href = `${sitePath('/')}?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`
   document.title = `${build.name} · builder · contraptions`
 }
 
