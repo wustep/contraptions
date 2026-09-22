@@ -34,6 +34,23 @@ function deliver(run) {
   for (let n = 1; n <= 3; n++) fs.writeFileSync(path.join(run.workspace, `builds/world-${n}.contraptions.json`), JSON.stringify(fixture(`world-${n}`)))
   fs.writeFileSync(path.join(run.workspace, 'HONESTY.md'), 'Synthetic gate fixtures; no rendered inspection.\n')
 }
+function fillAssessment(archive, overrides = {}) {
+  const rubric = JSON.parse(fs.readFileSync(path.join(archive, 'rubric.json'), 'utf8'))
+  const assessment = {
+    version: 1,
+    evaluatorModel: rubric.evaluator.model,
+    evaluatorKind: 'model',
+    status: 'rated',
+    score: null,
+    rationale: 'Suite-level judgment from sealed JSON only.',
+    axes: Object.fromEntries(rubric.axes.map(a => [a.id, { rating: 3, evidence: `${a.id}: world-1-test-0 handoff readable` }])),
+    issues: [],
+    ...overrides,
+  }
+  if (overrides.axes) assessment.axes = overrides.axes
+  fs.writeFileSync(path.join(archive, 'assessment.json'), JSON.stringify(assessment, null, 2) + '\n')
+  return assessment
+}
 test.after(() => {
   for (const dir of owned) fs.rmSync(dir, { recursive: true, force: true })
   fs.rmSync(home, { recursive: true, force: true })
@@ -73,14 +90,41 @@ test('candidate inputs exclude solutions; check, seal, score preserve exact byte
   const file = path.join(archive, 'builds/world-1.contraptions.json')
   assert.deepEqual(fs.readFileSync(file), before)
   fs.writeFileSync(source, 'changed after sealing')
-  assert.equal(cli(['score', run.run]).status, 'awaiting-manual-evaluation')
-  assert.equal(cli(['score', run.run]).score, null)
+  const prepared = cli(['score', run.run])
+  assert.equal(prepared.status, 'awaiting-assessment')
+  assert.equal(prepared.score, null)
+  assert.equal(prepared.evaluator, 'claude-opus-5')
+  assert.ok(fs.existsSync(path.join(archive, 'EVAL_PROMPT.md')))
+  assert.match(fs.readFileSync(path.join(archive, 'EVAL_PROMPT.md'), 'utf8'), /claude-opus-5/)
   assert.match(cli(['seal', run.run], 1), /already sealed/)
   const assessment = JSON.parse(fs.readFileSync(path.join(archive, 'assessment.json')))
-  assert.equal(assessment.worlds.length, 3)
-  assert.equal(assessment.worlds[0].axes['visual-craft'].rating, null)
+  assert.equal(assessment.axes['theme-and-variety'].rating, null)
+  assert.equal(assessment.axes['chain-readability'].rating, null)
+  assert.equal(assessment.axes['honesty-and-guidelines'].rating, null)
+  assert.equal(assessment.worlds, undefined)
   fs.appendFileSync(file, '\n')
   assert.match(cli(['score', run.run], 1), /Sealed artifacts changed/)
+})
+
+test('score registers a filled Opus 5 assessment and rejects substitute models', () => {
+  const run = start()
+  deliver(run)
+  cli(['seal', run.run])
+  const archive = path.join(root, 'bench/runs', run.run)
+  assert.equal(cli(['score', run.run]).status, 'awaiting-assessment')
+  fillAssessment(archive)
+  const scored = cli(['score', run.run, '--assess'])
+  assert.equal(scored.status, 'scored')
+  assert.equal(scored.score, 75)
+  assert.equal(scored.evaluator, 'claude-opus-5')
+  const assessment = JSON.parse(fs.readFileSync(path.join(archive, 'assessment.json')))
+  assert.equal(assessment.score, 75)
+  assert.equal(assessment.status, 'scored')
+  const seal = JSON.parse(fs.readFileSync(path.join(archive, 'seal.json')))
+  assert.equal(seal.score, 75)
+  assert.equal(seal.evaluatorModel, 'claude-opus-5')
+  fillAssessment(archive, { evaluatorModel: 'claude-sonnet-4' })
+  assert.match(cli(['score', run.run, '--assess'], 1), /evaluatorModel must be exactly "claude-opus-5"/)
 })
 
 test('real schema/compile gates reject malformed builds and invalid delivery without executing code', () => {

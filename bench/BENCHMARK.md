@@ -1,4 +1,4 @@
-# Construct benchmark — operator protocol v1
+# Construct benchmark — operator protocol v1.1
 
 Measures construction of portable pieces and worlds from written briefs. Inspired
 by StageBench's task/honesty/isolated workspace/seal pattern. It is independent
@@ -15,6 +15,7 @@ node bench/cli.mjs start starter candidate-model-id
 node bench/cli.mjs check <run-id>
 node bench/cli.mjs seal <run-id>
 node bench/cli.mjs score <run-id>
+node bench/cli.mjs score <run-id> --assess
 ```
 
 1. **New:** optional seed produces deterministic briefs from a versioned pool;
@@ -45,8 +46,10 @@ node bench/cli.mjs score <run-id>
    explicitly marked unverified. A sealed run cannot be checked/resealed; start
    another run for a new attempt. Workspace changes cannot alter sealed artifacts.
 6. **Score:** verifies the artifact digest and compiler identity, reruns gates,
-   and prints the manual evaluation path. It does **not** invoke a model or
-   register a numeric score. Follow [EVAL.md](EVAL.md).
+   and writes `EVAL_PROMPT.md` for the pinned judge **`claude-opus-5`**. Feed that
+   prompt to Opus 5 with the sealed builds (no render/video required). Register
+   the filled assessment with `score <run-id> --assess` (or a second bare `score`
+   once complete). See [EVAL.md](EVAL.md). The CLI does not call the model.
 
 Workspaces are outside the repository so walking upward does not enter runs/ or
 solutions. **This is context separation, not a security sandbox.** Same-user
