@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -147,6 +147,18 @@ async function main(): Promise<void> {
           visible &&= Math.abs(point.x - frame.x) < cells * 8 / 9 - .15 && Math.abs(point.y - frame.y) < cells / 2 - .15
         }
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'voices') {
+        check('Cornfield voices: private credit, and a clip of the chase',
+          !!perf.soundtrack?.credit?.includes('Zimmer') &&
+          !!perf.soundtrack?.href?.includes('JuSsvM8B4Jc') &&
+          (perf.soundtrack?.offset ?? 0) > 60 &&
+          perf.duration >= 40 && perf.duration <= 55)
+        const mid = perf.show.at(perf.duration / 2)
+        const cam = perf.camera!(perf.duration / 2)
+        const zoomH = cam.cells / 1.5
+        check('Cornfield voices: the hero stays inside the Zoom frame',
+          Math.abs(mid.x - cam.x) < zoomH * (16 / 9) / 2 - 0.2 && Math.abs(mid.y - cam.y) < zoomH / 2 - 0.2)
       }
     }
   }
