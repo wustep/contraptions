@@ -14,6 +14,8 @@ import { renderWav } from './src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
 import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metronome'
 import { Show } from './src/show'
+import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/shows/versions/cornfield-chase/multiball'
+import { universeAt } from './src/universe'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -109,7 +111,10 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
+  check('Cornfield Chase keeps the music-sync, multi-ball and trails takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,tech-demo,voices')
+  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
+  check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -147,6 +152,48 @@ async function main(): Promise<void> {
           visible &&= Math.abs(point.x - frame.x) < cells * 8 / 9 - .15 && Math.abs(point.y - frame.y) < cells / 2 - .15
         }
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'tech-demo') {
+        check('cornfield: the whole recording, with the demo credit',
+          near(perf.duration, 126.984) &&
+          (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
+          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        const endCam = perf.camera?.(perf.duration)
+        check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
+        check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'multiball') {
+        const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
+        const joined = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1).balls ?? []
+        const mid = perf.show.at(CORNFIELD_RIDERS[CORNFIELD_RIDERS.length - 1].spawn + 2).balls ?? []
+        const merged = perf.show.at(CORNFIELD_MEET + 0.3).balls ?? []
+        const ys = merged.map((b) => b.y)
+        const xs = merged.map((b) => b.x)
+        const spread = Math.max(...ys) - Math.min(...ys)
+        const xspread = Math.max(...xs) - Math.min(...xs)
+        check('cornfield: the whole recording, riders joining on their accents', near(perf.duration, CORNFIELD_DURATION) && before.length === 0 && joined.length === 1 && mid.length === CORNFIELD_RIDERS.length)
+        check('cornfield: each rider keeps its own id and colour', mid.every((b, i) => b.id === CORNFIELD_RIDERS[i].id && b.color === CORNFIELD_RIDERS[i].color))
+        const atJoin = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1)
+        const rider = atJoin.balls?.[0]
+        const threadY = universeAt(perf.show.universe(0), atJoin.local).y
+        check('cornfield: the first lane sits off the thread', !!rider && Math.abs(rider.y - threadY - CORNFIELD_RIDERS[0].lane) < 0.35, rider ? `dy ${rider.y - threadY}` : 'no rider')
+        check('cornfield: the lanes have merged at the portal', merged.length === CORNFIELD_RIDERS.length && spread < 0.35 && xspread < 0.35, `x ${xspread.toFixed(3)} y ${spread.toFixed(3)}`)
+        const cam = perf.camera?.(60)
+        check('cornfield: the camera holds the whole garden', !!cam && cam.cells > 6)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'voices') {
+        check('Cornfield voices: private credit, and a clip of the chase',
+          !!perf.soundtrack?.credit?.includes('Zimmer') &&
+          !!perf.soundtrack?.href?.includes('JuSsvM8B4Jc') &&
+          (perf.soundtrack?.offset ?? 0) > 60 &&
+          perf.duration >= 40 && perf.duration <= 55)
+        const mid = perf.show.at(perf.duration / 2)
+        const cam = perf.camera!(perf.duration / 2)
+        const zoomH = cam.cells / 1.5
+        check('Cornfield voices: the hero stays inside the Zoom frame',
+          Math.abs(mid.x - cam.x) < zoomH * (16 / 9) / 2 - 0.2 && Math.abs(mid.y - cam.y) < zoomH / 2 - 0.2)
       }
     }
   }
