@@ -1,31 +1,36 @@
 # contraptions
 
-Tiny animated machines. The front door is a Rube Goldberg chain that never
-ends: one ball, one thread, four worlds. Beside it, a generator that
-scatters a grid of looping mechanisms — each cell a small, self-contained
-machine that loops forever, and the piece is whatever falls out of
-scattering a few hundred of them across a grid. Built with Claude Fable 5 & 5.1.
+Small animated machines.
 
-**[Machine →](https://contraptions-wustep.vercel.app/)** ·
-**[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
-**[Shows →](https://contraptions-wustep.vercel.app/shows/)**
+[Machine](https://contraptions-wustep.vercel.app/) is the front door. One ball runs a Rube Goldberg chain that never ends, and the camera follows it. At the end of a map the ball hits a portal, and the next map is a different place: new pieces, a new palette.
 
-## What it is
+[Explorations](https://contraptions-wustep.vercel.app/explorations/) is the generator Machine grew out of. It fills a grid with tiny machines that loop on their own. Every control is in the URL, so a frame you like is a link you can share. Heavily inspired by [Okazz](https://x.com/okazz_/status/2090999902805393607).
 
-Two public modes of one thing live here.
+## Machine
 
-**Machine** is one ball on one thread through a Rube Goldberg chain that
-never ends. The camera follows the ball. Every portal is a door to a
-whole new map: a new palette, a new taste in pieces, a new place.
+The chain visits four worlds, always in the same order: Regular, Forest, Aqua, Arcade, then back to Regular. Regular is a workshop, Forest a garden, Aqua a harbor, and Arcade an arcade. Each world has its own pieces. A seed chooses the palette, which pieces show up, and how the map is laid out.
 
-**Explorations** is the generator that Machine grew out of. Grids of tiny
-looping machines, every dial exposed. Heavily inspired by
-[Okazz](https://x.com/okazz_/status/2090999902805393607).
+![The ball leaving a cannon in Regular, with a screw and a funnel along the rail](docs/readme/machine-regular.png)
 
-Two more modes wear the same chrome: **Shows** and **Playground**. The
-**Builder** is in the repo but hidden for now — it is not ready.
+![The ball falling through a maple in Forest](docs/readme/machine-forest.png)
+
+## Explorations
+
+![A grid of looping machines](docs/readme/explorations.png)
+
+There are six modes. Classic is a field of separate machines, wired together. Ports, Tracks, Cascade, Workshop, and Circus each build a different kind of grid. The panel is the same one Machine uses, and switching modes keeps the seed.
+
+## Shows and Playground
+
+[Shows](https://contraptions-wustep.vercel.app/shows/) is Machine set to music. A chain is choreographed to a piece, the soundtrack stays locked to the picture, and you can keep as many takes as you want side by side.
+
+[Playground](https://contraptions-wustep.vercel.app/playground/) is where pieces and worlds wait to be let into Machine: new ones, ones that were cut, and worlds that are not in the loop yet. You can watch them the way Machine would.
+
+The Builder is in the repo, but it is hidden for now. It is not ready.
 
 ## Run it
+
+Node 22.
 
 ```bash
 npm install
@@ -33,44 +38,16 @@ npm run dev
 npm run build
 ```
 
-`npm run dev` serves Machine at [http://localhost:8791/](http://localhost:8791/).
-Explorations is at `/explorations/`. Shows and Playground are at
-`/shows/` and `/playground/`.
+`npm run dev` serves Machine at [http://localhost:8791/](http://localhost:8791/). Explorations is at `/explorations/`, Shows at `/shows/`, and Playground at `/playground/`.
 
-`npm run build` writes one `dist/` with the same paths. Needs Node 22.
-One Vite root serves every mode.
+`npm run build` writes one `dist/` with the same paths. One Vite app serves every mode, in dev and in the build.
 
-Old links still work: `/sandbox/` forwards to Explorations, `/rube/`
-forwards to Machine, both keeping the seed.
-
-## Modes
-
-The switch at the top of the panel moves between them and carries the
-seed across.
-
-**Machine** goes around Regular, Forest, Aqua and Arcade in a fixed
-order. Each world is a place with its own pieces and palettes, not a
-colour swap. The seed decides what you see inside a visit; the order of
-worlds does not change.
-
-**Explorations** has six modes of tiny machines on a grid. Every control
-is in the URL, so any frame you like is a shareable link.
-
-**Shows** is Machine set to music. A machine choreographed to a piece,
-the soundtrack locked to the picture, as many takes as you care to keep
-side by side.
-
-**Playground** is where pieces and worlds wait to be let into Machine:
-new ones, ones a craft pass took out, and worlds that are not in the
-loop yet. You can watch them the way Machine would show them.
+Old links still work. `/sandbox/` redirects to Explorations and `/rube/` redirects to Machine, both keeping the seed.
 
 ## More
 
-The long notes live in [`docs/`](docs/) and [`docs/promo/`](docs/promo/).
-That is the place for show plans, arrangement notes, review status, and
-the Playground's rejected log — not this file.
+Longer notes live in [`docs/`](docs/) and [`docs/promo/`](docs/promo/): show plans, arrangement notes, review status, and the Playground's rejected log.
 
 ## License
 
 Released under the [MIT License](LICENSE). Copyright Stephen Wu, 2026.
-See `LICENSE` for the full text.
