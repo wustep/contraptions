@@ -9,12 +9,38 @@ import { worldAt, worldByName, worldOf, type World } from './worlds'
  * scrubbing backwards, jumping ahead, reloading the link. The seed decides
  * what each visit looks like, never which world comes next.
  */
+/**
+ * A rider besides the one thread. Stock shows leave `ShowPoint.balls` unset
+ * and the stage draws `ball` alone. A show that sets `balls` paints this
+ * list instead — one trail per `id`, no ball-ball physics.
+ */
+export interface ShowBall {
+  id: number
+  x: number
+  y: number
+  vx?: number
+  vy?: number
+  color: string
+  ghost?: boolean
+  /** 1 in the open. Shrinks into a portal. 0 hides the rider. */
+  scale?: number
+  /** Above 1 streaks the rider along `angle`. */
+  stretch?: number
+  /** Direction of travel, radians. */
+  angle?: number
+}
+
 export interface ShowPoint extends UniversePoint {
   universe: Universe
   /** Seconds since this universe began. */
   local: number
   /** Show time at which this universe began. */
   begin: number
+  /**
+   * Kinematic riders. Absent: the thread is drawn as before. Present,
+   * including an empty list: these are the only balls drawn.
+   */
+  balls?: ShowBall[]
 }
 
 export interface ShowOptions {
