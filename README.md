@@ -4,7 +4,7 @@ Tiny animated machines. The front door is a Rube Goldberg chain that never
 ends: one ball, one thread, four worlds. Beside it, a generator that
 scatters a grid of looping mechanisms — each cell a small, self-contained
 machine that loops forever, and the piece is whatever falls out of
-scattering a few hundred of them across a grid.
+scattering a few hundred of them across a grid. Built with Claude Fable 5 & 5.1.
 
 **[Machine →](https://contraptions-wustep.vercel.app/)** ·
 **[Explorations →](https://contraptions-wustep.vercel.app/explorations/)** ·
