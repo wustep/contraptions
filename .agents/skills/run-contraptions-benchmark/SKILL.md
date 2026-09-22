@@ -23,10 +23,11 @@ candidate's result. This skill operates the harness, not the Builder UI.
    within the agreed budget. Record retries. Do not fix candidate artifacts.
 6. Stop candidate work, then `node bench/cli.mjs seal <run-id>`. Failed gates are
    valid benchmark outcomes; do not relabel them passing or overwrite the seal.
-7. Run `node bench/cli.mjs score <run-id>`. This is a verification/manual scoring
-   handoff, not automatic evaluation. Prepare the blind evaluator package exactly
-   as EVAL.md describes. Use its pinned-model or labeled human path; no silent
-   substitutions. Static inspection cannot earn a completed visual-craft score.
-8. Archive evaluator evidence separately, report gates, manual scores (if any),
-   model/seed/revision/budget, honesty and isolation caveats, and record paths.
-   Do not publish, commit runs, or message other people without user instruction.
+7. Run `node bench/cli.mjs score <run-id>` to verify the seal and write
+   `EVAL_PROMPT.md`. Feed that prompt to the pinned judge **`claude-opus-5`**
+   only (no silent substitutes). No render/video is required — judge from sealed
+   Build JSON + briefs + honesty. Fill `assessment.json`, then register with
+   `node bench/cli.mjs score <run-id> --assess`.
+8. Report gates, registered suite score (if any), model/seed/revision/budget,
+   honesty and isolation caveats, and record paths. Do not publish, commit runs,
+   or message other people without user instruction.

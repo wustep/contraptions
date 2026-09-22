@@ -57,4 +57,5 @@ Released under the [MIT License](LICENSE). Copyright Stephen Wu, 2026.
 The isolated [construct benchmark](bench/BENCHMARK.md) measures agents building
 three themed worlds with ten portable pieces each. It provides seeded briefs,
 external candidate workspaces, schema/compiler gates, sealed run records, and a
-[manual evaluation protocol](bench/EVAL.md). Start with `npm run bench -- help`.
+pinned Opus 5 ([claude-opus-5](bench/EVAL.md)) scoring flow. Start with
+`npm run bench -- help`.

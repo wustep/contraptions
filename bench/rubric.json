@@ -1,12 +1,32 @@
 {
-  "version": "1.0.0",
-  "evaluator": { "model": "claude-opus-5", "policy": "Pinned protocol model, matching the StageBench reference. Record actual resolved model; do not silently substitute. Human evaluation is a separately labeled track." },
-  "scale": { "0": "Absent or broken", "1": "Major weaknesses", "2": "Partial success with material gaps", "3": "Meets brief with minor weaknesses", "4": "Consistently excellent, supported by concrete evidence" },
+  "version": "1.1.0",
+  "evaluator": {
+    "model": "claude-opus-5",
+    "policy": "Only judged track for v1.1. Record the exact resolved model id matching this pin; never silently substitute another model or a human score as this track."
+  },
+  "scale": {
+    "0": "Absent or broken",
+    "1": "Major weaknesses",
+    "2": "Partial success with material gaps",
+    "3": "Meets brief with minor weaknesses",
+    "4": "Consistently excellent, supported by concrete evidence from the JSON"
+  },
   "axes": [
-    { "id": "chain-clarity", "weight": 30, "criterion": "Readable anticipation, contact, reaction, and handoff; carrier, ball and fire timing agree." },
-    { "id": "visual-craft", "weight": 30, "criterion": "Legible silhouettes, intentional proportions, coherent palette and materials; motion looks armed, active and settled." },
-    { "id": "guideline-adherence", "weight": 25, "criterion": "Every world brief and mechanism constraint met; honest evidence; appropriate footprints, clocks and visible paint/flight causes." },
-    { "id": "originality-within-brief", "weight": 15, "criterion": "Ten meaningfully different mechanisms per world, interpreted specifically for the theme rather than superficial reskins." }
+    {
+      "id": "theme-and-variety",
+      "weight": 1,
+      "criterion": "Theme fit across the three worlds, with ten meaningfully different mechanisms per world rather than superficial reskins."
+    },
+    {
+      "id": "chain-readability",
+      "weight": 1,
+      "criterion": "From Build JSON intent alone: readable anticipation, contact, reaction, and handoff; notes and lane structure agree on carrier, ball, and fire timing."
+    },
+    {
+      "id": "honesty-and-guidelines",
+      "weight": 1,
+      "criterion": "HONESTY.md is complete and credible; world briefs and construction guidelines are met without overclaiming rendered or physical verification."
+    }
   ],
-  "aggregation": "Each world: sum(weight * rating / 4). Suite: equal mean of three worlds. Any failed computed gate makes the suite ineligible (score null). Unobserved visual axes remain null; never turn unrated into zero or infer success from compilation."
+  "aggregation": "Suite score = round(100 * sum(rating) / (4 * axisCount)) over the three suite-level axes. Failed computed gates make the suite ineligible (score null). Any missing rating leaves score null. Judge from sealed Build JSON + suite briefs + honesty; renders/video are optional and not required for a complete score."
 }
