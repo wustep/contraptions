@@ -51,3 +51,10 @@ Longer notes live in [`docs/`](docs/) and [`docs/promo/`](docs/promo/): show pla
 ## License
 
 Released under the [MIT License](LICENSE). Copyright Stephen Wu, 2026.
+
+## Construct benchmark
+
+The isolated [construct benchmark](bench/BENCHMARK.md) measures agents building
+three themed worlds with ten portable pieces each. It provides seeded briefs,
+external candidate workspaces, schema/compiler gates, sealed run records, and a
+[manual evaluation protocol](bench/EVAL.md). Start with `npm run bench -- help`.
