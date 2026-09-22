@@ -118,3 +118,10 @@ and ticket, and the final portal leaves that shot visible through the resonance.
 in `docs/promo/CLAIR_TAKE_B_ARRANGEMENT.md`. `check:clair:b` checks stock lanes,
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
+
+`cornfield-chase/voices` is a tech-demo take, not a stock arrangement. One hero
+ball plays a dense arpeggio while a ghost actor strikes a slower bass on the
+same horizontal progress. Targets wake before the hit, and ink rings fade
+where the hits landed. The recording is Hans Zimmer's Cornfield Chase, for a
+private demo only, from about 70s for 48s. The arrangement note is
+`docs/promo/CORNFIELD_CHASE_VOICES.md`.

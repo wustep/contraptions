@@ -112,6 +112,7 @@ async function main(): Promise<void> {
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
+  check('Cornfield Chase keeps the music-sync, multi-ball and trails takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,tech-demo,voices')
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -179,6 +180,18 @@ async function main(): Promise<void> {
         check('cornfield: the lanes have merged at the portal', merged.length === CORNFIELD_RIDERS.length && spread < 0.35 && xspread < 0.35, `x ${xspread.toFixed(3)} y ${spread.toFixed(3)}`)
         const cam = perf.camera?.(60)
         check('cornfield: the camera holds the whole garden', !!cam && cam.cells > 6)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'voices') {
+        check('Cornfield voices: private credit, and a clip of the chase',
+          !!perf.soundtrack?.credit?.includes('Zimmer') &&
+          !!perf.soundtrack?.href?.includes('JuSsvM8B4Jc') &&
+          (perf.soundtrack?.offset ?? 0) > 60 &&
+          perf.duration >= 40 && perf.duration <= 55)
+        const mid = perf.show.at(perf.duration / 2)
+        const cam = perf.camera!(perf.duration / 2)
+        const zoomH = cam.cells / 1.5
+        check('Cornfield voices: the hero stays inside the Zoom frame',
+          Math.abs(mid.x - cam.x) < zoomH * (16 / 9) / 2 - 0.2 && Math.abs(mid.y - cam.y) < zoomH / 2 - 0.2)
       }
     }
   }
