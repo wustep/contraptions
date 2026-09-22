@@ -97,6 +97,8 @@ resonance plays over the finished machine. A change to any stock piece's
 lane, or a piece in or out of a world, means rearranging it and running
 `generate:clair` again.
 
+`cornfield-chase/tech-demo` is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `docs/promo/CORNFIELD_CHASE_ARRANGEMENT.md`.
+
 `metronome/` is a show with no recording, in strict time: a procedural
 machine under a time map, and a struck bar on every strike, made in the
 page. It is a worked example of a time map, and `check:shows` still walks

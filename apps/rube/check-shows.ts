@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, the metronome and Première, and nothing else', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,metronome,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -147,6 +147,17 @@ async function main(): Promise<void> {
           visible &&= Math.abs(point.x - frame.x) < cells * 8 / 9 - .15 && Math.abs(point.y - frame.y) < cells / 2 - .15
         }
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'tech-demo') {
+        check('cornfield: the whole recording, with the demo credit',
+          near(perf.duration, 126.984) &&
+          (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') &&
+          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        const endCam = perf.camera?.(perf.duration)
+        check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
+        check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
     }
   }
