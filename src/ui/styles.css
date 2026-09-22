@@ -681,9 +681,11 @@ button.stop:hover, button.primary.stop:hover { background: rgba(240, 160, 138, 0
 a.more { color: var(--dim); font-size: 11px; text-decoration: none; }
 a.more:hover { color: var(--accent); }
 
-/* Credit sits at the foot of the tool: present, never competing. margin-top
-   auto so it is the foot even when the sections above it stop short. */
+/* Credit sits at the foot of Explorations: present, never competing.
+   margin-top auto so it is the foot even when the sections above it stop
+   short. order keeps it just above the byline, which the shell writes early. */
 .credit {
+  order: 1;
   margin-top: auto;
   padding-top: 10px;
   color: var(--faint);
@@ -692,6 +694,34 @@ a.more:hover { color: var(--accent); }
   border-top: 1px solid var(--line-soft);
 }
 .credit:hover { color: var(--text); text-decoration: underline; }
+
+/* The byline is on every panel. It is appended with the header, so order
+   sends it to the foot. margin-top auto holds it there when the sections
+   stop short; sticky keeps that foot in view when they run long. */
+.byline {
+  order: 2;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  margin: auto 0 0;
+  padding-top: 10px;
+  background: var(--panel);
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.4;
+  border-top: 1px solid var(--line-soft);
+}
+.byline a { color: inherit; text-decoration: none; }
+.byline a:hover { color: var(--text); text-decoration: underline; }
+/* Explorations already has a foot. The credit keeps the push, and the
+   byline sits under it as a second quiet line — one rule, no split gap. */
+#panel:has(> .credit) > .byline {
+  position: static;
+  margin-top: -4px;
+  padding-top: 4px;
+  border-top: none;
+}
 
 /* Reroll is the primary action, so it takes the width the other two do not.
    Tighter padding and no wrapping keep all three on one line at 300px. */

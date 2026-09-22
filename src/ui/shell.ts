@@ -1,7 +1,8 @@
 /**
  * The chrome the modes share. One panel down the right edge, the full
- * height of the window, with the brand and the mode switch at its head (and,
- * in Explorations, the credit at its foot); the stage takes whatever the panel leaves. Machine
+ * height of the window, with the brand and the mode switch at its head and
+ * a byline at its foot (Explorations keeps the Okazz credit just above it);
+ * the stage takes whatever the panel leaves. Machine
  * (the show, in the code), Explorations (the sandbox), Shows (Machine set
  * to music), the Builder and the Playground (where pieces and worlds wait
  * to be let into Machine) fill the middle with their own sections, built
@@ -170,7 +171,7 @@ export function seedCard(root: HTMLElement, input: HTMLInputElement, actions: HT
   )
 }
 
-/** Credit sits at the foot of Explorations, whose grids are the ones it is owed for: present, never competing. Machine and the Builder do not carry it. */
+/** Credit sits at the foot of Explorations, whose grids are the ones it is owed for: present, never competing. Machine and the Builder do not carry it. It stays above the byline. */
 export function credit(root: HTMLElement): void {
   root.append(
     el('a', {
@@ -179,6 +180,24 @@ export function credit(root: HTMLElement): void {
       target: '_blank',
       rel: 'noreferrer',
     }, ['Heavily inspired by Okazz']),
+  )
+}
+
+/**
+ * A quiet byline at the foot of every panel. Written with the header, before
+ * a mode fills the middle; the stylesheet sends it to the bottom. External,
+ * so it leaves the page the way the Okazz credit does.
+ */
+function byline(root: HTMLElement): void {
+  root.append(
+    el('footer', { class: 'byline' }, [
+      'Built by ',
+      el('a', {
+        href: 'https://wustep.me',
+        target: '_blank',
+        rel: 'noreferrer',
+      }, ['Stephen Wu']),
+    ]),
   )
 }
 
@@ -295,6 +314,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
       switcher,
     ]),
   )
+  byline(root)
 
   const peek = el('button', {
     type: 'button',
