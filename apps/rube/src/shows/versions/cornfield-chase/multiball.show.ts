@@ -2,8 +2,8 @@ import { defineShow } from '../../registry'
 
 export default defineShow({
   title: 'Cornfield Chase',
-  label: 'Multi-ball',
-  note: 'Four colored lanes on one garden, staggered on the chase pulses, merging into the portal. Tech demo.',
+  label: '[Grok 4.7] Multi-ball',
+  note: 'Pure tech demo — one-shot Grok 4.7 spike; not a finished show. Four riders on one garden, staggered onto the accents.',
   async load() {
     const { cornfieldPerformance } = await import('./multiball')
     return cornfieldPerformance()

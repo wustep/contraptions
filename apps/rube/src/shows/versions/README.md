@@ -119,9 +119,19 @@ in `docs/promo/CLAIR_TAKE_B_ARRANGEMENT.md`. `check:clair:b` checks stock lanes,
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
-`cornfield-chase/voices` is a tech-demo take, not a stock arrangement. One hero
-ball plays a dense arpeggio while a ghost actor strikes a slower bass on the
-same horizontal progress. Targets wake before the hit, and ink rings fade
-where the hits landed. The recording is Hans Zimmer's Cornfield Chase, for a
-private demo only, from about 70s for 48s. The arrangement note is
-`docs/promo/CORNFIELD_CHASE_VOICES.md`.
+`cornfield-chase/multiball`, `cornfield-chase/tech-demo` and
+`cornfield-chase/voices` are one-shot tech demos of Hans Zimmer's Cornfield
+Chase, not finished public Shows. The recording is copyrighted; the credit
+stays in `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`.
+
+`cornfield-chase/multiball` paints four riders on one garden. `ShowPoint.balls`
+is set, so the stage draws those riders instead of the single thread. They
+join on phrase accents and ease back onto the path at the exit portal. The
+clip is `docs/promo/cornfield-chase-multiball-demo.webm`.
+
+`cornfield-chase/voices` is not a stock arrangement. One hero ball plays a
+dense arpeggio while a ghost actor strikes a slower bass on the same
+horizontal progress. Targets wake before the hit, and ink rings fade where
+the hits landed. The clip starts about 70s into the recording and runs 48s.
+The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
+is `docs/promo/cornfield-chase-voices-demo.webm`.
