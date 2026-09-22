@@ -12,20 +12,39 @@ import { defineConfig, type Connect, type Plugin } from 'vite'
  * `/sandbox/` is where Explorations used to live and `/rube/` where Machine
  * did; both only redirect, keeping the seed. One dev server serves all of
  * it, and one `vite build` writes all of it into dist/ with the core the
- * modes share split into common chunks.
+ * modes share split into common chunks. `BASE=/contraptions/` mounts that
+ * build under a path — for wustep.me/contraptions — instead of at the host root.
  */
 const here = fileURLToPath(new URL('.', import.meta.url))
 
+/** Where this build is mounted. `/` on its own host. A directory base keeps its trailing slash. */
+function siteBase(): string {
+  const raw = (process.env.BASE ?? '/').trim()
+  if (raw === '' || raw === '/') return '/'
+  if (raw === './') return './'
+  const lead = raw.startsWith('/') || raw.startsWith('./') ? raw : `/${raw}`
+  return lead.endsWith('/') ? lead : `${lead}/`
+}
+
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
+  let base = '/'
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|shows|builder|playground|sandbox|rube)(\?.*)?$/.exec(req.url ?? '')
+    const url = req.url ?? ''
+    const prefix = base === '/' || base === './' ? '' : base.replace(/\/$/, '')
+    const path = prefix && (url === prefix || url.startsWith(`${prefix}/`) || url.startsWith(`${prefix}?`))
+      ? url.slice(prefix.length) || '/'
+      : url
+    const m = /^\/(explorations|shows|builder|playground|sandbox|rube)(\?.*)?$/.exec(path)
     if (!m) return next()
-    res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
+    res.writeHead(302, { Location: `${prefix}/${m[1]}/${m[2] ?? ''}` })
     res.end()
   }
   return {
     name: 'trailing-slash',
+    configResolved(config) {
+      base = config.base
+    },
     configureServer: (server) => { server.middlewares.use(redirect) },
     configurePreviewServer: (server) => { server.middlewares.use(redirect) },
   }
@@ -63,6 +82,7 @@ function playgroundStaysLazy(): Plugin {
 }
 
 export default defineConfig({
+  base: siteBase(),
   appType: 'mpa',
   plugins: [trailingSlash(), playgroundStaysLazy()],
   // Share cards and other files that must land at the site root (`/og.png`).

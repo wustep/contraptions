@@ -5,10 +5,10 @@
     <meta name="robots" content="noindex" />
     <title>contraptions</title>
     <!-- Machine used to live at /rube/. Old links land here and go to the front door with their seed. -->
-    <script>location.replace('/' + location.search + location.hash)</script>
-    <noscript><meta http-equiv="refresh" content="0; url=/" /></noscript>
+    <script>location.replace('%BASE_URL%' + location.search + location.hash)</script>
+    <noscript><meta http-equiv="refresh" content="0; url=%BASE_URL%" /></noscript>
   </head>
   <body>
-    <p>The machine moved to <a href="/">the front page</a>.</p>
+    <p>The machine moved to <a href="%BASE_URL%">the front page</a>.</p>
   </body>
 </html>

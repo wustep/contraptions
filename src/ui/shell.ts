@@ -38,6 +38,19 @@ export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'playground', label: 'Playground', path: '/playground/' },
 ]
 
+/**
+ * A path from this site's own root, mounted where the build is served.
+ * The links above stay `/shows/` and the rest; `BASE=/contraptions/` puts
+ * them under that path. `/` when the site is the whole host. The node
+ * checks have no Vite env, and the link stays at the root.
+ */
+export function sitePath(path: string): string {
+  const raw = (import.meta as { env?: { BASE_URL?: string } }).env?.BASE_URL
+  const base = typeof raw === 'string' && raw !== '' ? (raw.endsWith('/') ? raw : `${raw}/`) : '/'
+  if (path === '/' || path === '') return base
+  return base + path.replace(/^\//, '')
+}
+
 export interface Shell {
   /** Refresh the mode links so a switch carries the current seed along. */
   setSeed(seed: string): void
@@ -290,7 +303,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     hideTip()
   }
   const links = MODE_LINKS.map((m) => {
-    const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
+    const a = el('a', { href: sitePath(m.path), class: `mode-tab${m.mode === mode ? ' on' : ''}` })
     dress(a, m)
     a.addEventListener('pointerenter', () => showTip(a, m.label))
     a.addEventListener('pointerleave', hideTip)
@@ -437,7 +450,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   return {
     setSeed(seed) {
       for (const { m, a } of links) {
-        a.href = seed ? `${m.path}?seed=${encodeURIComponent(seed)}` : m.path
+        a.href = seed ? `${sitePath(m.path)}?seed=${encodeURIComponent(seed)}` : sitePath(m.path)
       }
     },
     toggle,

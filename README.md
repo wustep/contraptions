@@ -38,7 +38,9 @@ Explorations is at `/explorations/`. Shows and Playground are at
 `/shows/` and `/playground/`.
 
 `npm run build` writes one `dist/` with the same paths. Needs Node 22.
-One Vite root serves every mode.
+One Vite root serves every mode. `BASE=/contraptions/ npm run build`
+mounts that site under `/contraptions/` — assets, the mode switch, and
+the old forwards — for a host that is not the whole domain.
 
 Old links still work: `/sandbox/` forwards to Explorations, `/rube/`
 forwards to Machine, both keeping the seed.
