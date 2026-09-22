@@ -124,6 +124,20 @@ open water. Generating Take B never writes Take A's plan, score or report.
 Chase, not finished public Shows. The recording is copyrighted; the credit
 stays in `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`.
 
+`cornfield-chase/opus55-music-sync` ([Opus 5.5] Music-sync) is a separate
+one-shot eval take on the same recording, generated stock only by
+`npm run generate:cornfield:opus55`. Its targets are measured rather than
+assumed: `scripts/cornfield-opus55-onsets.py` reads the recording once and
+writes `scripts/show-plans/cornfield-opus55-onsets.json`, which holds the
+piano's notes, the organ's onsets and the chase's 96.0 bpm comb (0.625 s, every
+beat and eighth within a few ms). The generator only places a stock piece where
+its `lane.fire` lands on one of those targets, and a lattice search pays for
+every chase downbeat, beat and eighth left unstruck. The Forest carries the
+piano, a shooter flies on the drop through the portal, and the Arcade strikes
+the pulse. The booth flashes on the last phrase and the ticket pays on the last
+hit. `check:shows` measures every saved strike against the onset file again.
+The report is `docs/promo/CORNFIELD_CHASE_OPUS55.md`.
+
 `cornfield-chase/multiball` paints four riders on one garden. `ShowPoint.balls`
 is set, so the stage draws those riders instead of the single thread. They
 join on phrase accents and ease back onto the path at the exit portal. The
