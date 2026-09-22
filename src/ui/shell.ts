@@ -184,21 +184,21 @@ export function credit(root: HTMLElement): void {
 }
 
 /**
- * A quiet byline at the foot of every panel. Written with the header, before
- * a mode fills the middle; the stylesheet sends it to the bottom. External,
+ * A quiet byline at the foot of every panel. A mode fills the middle after
+ * the shell returns, in this same turn; the byline is pinned once that is
+ * done, so it is last in the document and not only on the screen. External,
  * so it leaves the page the way the Okazz credit does.
  */
 function byline(root: HTMLElement): void {
-  root.append(
-    el('footer', { class: 'byline' }, [
-      'Built by ',
-      el('a', {
-        href: 'https://wustep.me',
-        target: '_blank',
-        rel: 'noreferrer',
-      }, ['Stephen Wu']),
-    ]),
-  )
+  const foot = el('footer', { class: 'byline' }, [
+    'Built by ',
+    el('a', {
+      href: 'https://wustep.me',
+      target: '_blank',
+      rel: 'noreferrer',
+    }, ['Stephen Wu']),
+  ])
+  queueMicrotask(() => root.append(foot))
 }
 
 /**

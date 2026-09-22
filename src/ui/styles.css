@@ -683,7 +683,7 @@ a.more:hover { color: var(--accent); }
 
 /* Credit sits at the foot of Explorations: present, never competing.
    margin-top auto so it is the foot even when the sections above it stop
-   short. order keeps it just above the byline, which the shell writes early. */
+   short. order keeps it just above the byline. */
 .credit {
   order: 1;
   margin-top: auto;
@@ -695,9 +695,10 @@ a.more:hover { color: var(--accent); }
 }
 .credit:hover { color: var(--text); text-decoration: underline; }
 
-/* The byline is on every panel. It is appended with the header, so order
-   sends it to the foot. margin-top auto holds it there when the sections
-   stop short; sticky keeps that foot in view when they run long. */
+/* The byline is on every panel, pinned last once a mode has filled the
+   middle. order keeps it there if something is added after it. margin-top
+   auto holds it to the bottom when the sections stop short; sticky keeps
+   that foot in view when they run long. */
 .byline {
   order: 2;
   position: sticky;
