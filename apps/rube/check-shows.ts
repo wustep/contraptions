@@ -14,6 +14,8 @@ import { renderWav } from './src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
 import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metronome'
 import { Show } from './src/show'
+import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/shows/versions/cornfield-chase/multiball'
+import { universeAt } from './src/universe'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -158,6 +160,25 @@ async function main(): Promise<void> {
         const endCam = perf.camera?.(perf.duration)
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
         check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'multiball') {
+        const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
+        const joined = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1).balls ?? []
+        const mid = perf.show.at(CORNFIELD_RIDERS[CORNFIELD_RIDERS.length - 1].spawn + 2).balls ?? []
+        const merged = perf.show.at(CORNFIELD_MEET + 0.3).balls ?? []
+        const ys = merged.map((b) => b.y)
+        const xs = merged.map((b) => b.x)
+        const spread = Math.max(...ys) - Math.min(...ys)
+        const xspread = Math.max(...xs) - Math.min(...xs)
+        check('cornfield: the whole recording, riders joining on their accents', near(perf.duration, CORNFIELD_DURATION) && before.length === 0 && joined.length === 1 && mid.length === CORNFIELD_RIDERS.length)
+        check('cornfield: each rider keeps its own id and colour', mid.every((b, i) => b.id === CORNFIELD_RIDERS[i].id && b.color === CORNFIELD_RIDERS[i].color))
+        const atJoin = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1)
+        const rider = atJoin.balls?.[0]
+        const threadY = universeAt(perf.show.universe(0), atJoin.local).y
+        check('cornfield: the first lane sits off the thread', !!rider && Math.abs(rider.y - threadY - CORNFIELD_RIDERS[0].lane) < 0.35, rider ? `dy ${rider.y - threadY}` : 'no rider')
+        check('cornfield: the lanes have merged at the portal', merged.length === CORNFIELD_RIDERS.length && spread < 0.35 && xspread < 0.35, `x ${xspread.toFixed(3)} y ${spread.toFixed(3)}`)
+        const cam = perf.camera?.(60)
+        check('cornfield: the camera holds the whole garden', !!cam && cam.cells > 6)
       }
     }
   }

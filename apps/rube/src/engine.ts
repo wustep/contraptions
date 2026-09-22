@@ -5,7 +5,7 @@ import { clamp, easeInOutCubic, easeInOutSine } from '../../../src/core/ease'
 import { R, TRANSIT, ball, laneAt, type PieceCtx } from './parts'
 import { score } from './pieces/arcade/neon'
 import type { Placed } from './plan'
-import type { Show, ShowPoint } from './show'
+import type { Show, ShowBall, ShowPoint } from './show'
 import { extentOf, type Universe } from './universe'
 import { overviewCamera } from './overview'
 
@@ -321,8 +321,10 @@ export function drawWorld(
   }
   pass('draw')
 
-  // The ball, with a short trail when it is moving fast.
-  if (!here.hidden && here.scale > 0) {
+  // One thread, unless this show brought its own riders. An empty list is
+  // still that show: nothing has spawned, and the thread stays off stage.
+  if (here.balls) paintRiders(p, show, t, here, sx, sy, k, weight)
+  else if (!here.hidden && here.scale > 0) {
     const spin = (here.x - u.pieces[0].col) / R
     if (!here.ball.ghost) {
       for (let i = 4; i >= 1; i--) {
@@ -350,6 +352,53 @@ export function drawWorld(
 
   if (cuts) drawTransitions(p, show, t, here, sx, sy, view, cuts === 'loop')
   p.pop()
+}
+
+/**
+ * Every rider in `here.balls`, each with a trail that only joins samples of
+ * the same id. Positions are whatever `show.at` says — kinematic lanes
+ * included — and nothing here makes two riders collide.
+ */
+function paintRiders(
+  p: p5,
+  show: Show,
+  t: number,
+  here: ShowPoint,
+  sx: (x: number) => number,
+  sy: (y: number) => number,
+  k: number,
+  weight: number,
+): void {
+  const riders: ShowBall[] = here.balls ?? []
+  if (!riders.length) return
+  const u = here.universe
+  const backs: ShowPoint[] = []
+  for (let i = 4; i >= 1; i--) backs.push(show.at(t - i * 0.022))
+  for (const rider of riders) {
+    const scale = rider.scale ?? 1
+    if (scale <= 0.02) continue
+    if (!rider.ghost) {
+      for (let n = 0; n < backs.length; n++) {
+        const i = 4 - n
+        const prev = backs[n].balls?.find((b) => b.id === rider.id)
+        if (!prev || backs[n].universe !== u) continue
+        const ps = prev.scale ?? 1
+        if (ps <= 0.02) continue
+        const d = Math.hypot(prev.x - rider.x, prev.y - rider.y)
+        if (d < 0.08) continue
+        p.push()
+        p.noStroke()
+        const c = p.color(rider.color)
+        c.setAlpha(90 - i * 18)
+        p.fill(c)
+        p.circle(sx(prev.x), sy(prev.y), 2 * R * k * ps * (1 - i * 0.12))
+        p.pop()
+      }
+    }
+    const angle = rider.angle ?? Math.atan2(rider.vy ?? 0, rider.vx ?? 1)
+    const spin = (rider.x - u.pieces[0].col) / R
+    ball(p, k, u.theme.ink, weight, rider.color, sx(rider.x), sy(rider.y), spin, scale, rider.stretch ?? 1, angle, !!rider.ghost)
+  }
 }
 
 function drawBackdrop(
