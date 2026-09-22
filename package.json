@@ -25,7 +25,9 @@
     "check:premiere:b": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs premiere",
     "check:clair": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair && npm run check:clair:b",
     "generate:clair:b": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs clair-b",
-    "check:clair:b": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair-b"
+    "check:clair:b": "esbuild scripts/check-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/check-stock-shows.mjs && node node_modules/.cache/check-stock-shows.mjs clair-b",
+    "bench": "node bench/cli.mjs",
+    "test:bench": "node --test bench/cli.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.126.0",

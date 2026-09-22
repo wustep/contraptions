@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "format": "contraptions-build",
+  "buildVersion": 1,
+  "worlds": 3,
+  "piecesPerWorld": 10,
+  "worldRequired": true,
+  "borrowAllowed": false,
+  "maxCellsPerPiece": 6,
+  "maxLaneSeconds": 7,
+  "maxFileBytes": 524288,
+  "pieceNamePrefix": "<world-name>-",
+  "validator": "apps/rube/src/builder/spec.ts#parseBuild",
+  "compiler": "apps/rube/src/builder/compile.ts#compileBuild"
+}

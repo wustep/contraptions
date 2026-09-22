@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "evaluator": { "model": "claude-opus-5", "policy": "Pinned protocol model, matching the StageBench reference. Record actual resolved model; do not silently substitute. Human evaluation is a separately labeled track." },
+  "scale": { "0": "Absent or broken", "1": "Major weaknesses", "2": "Partial success with material gaps", "3": "Meets brief with minor weaknesses", "4": "Consistently excellent, supported by concrete evidence" },
+  "axes": [
+    { "id": "chain-clarity", "weight": 30, "criterion": "Readable anticipation, contact, reaction, and handoff; carrier, ball and fire timing agree." },
+    { "id": "visual-craft", "weight": 30, "criterion": "Legible silhouettes, intentional proportions, coherent palette and materials; motion looks armed, active and settled." },
+    { "id": "guideline-adherence", "weight": 25, "criterion": "Every world brief and mechanism constraint met; honest evidence; appropriate footprints, clocks and visible paint/flight causes." },
+    { "id": "originality-within-brief", "weight": 15, "criterion": "Ten meaningfully different mechanisms per world, interpreted specifically for the theme rather than superficial reskins." }
+  ],
+  "aggregation": "Each world: sum(weight * rating / 4). Suite: equal mean of three worlds. Any failed computed gate makes the suite ineligible (score null). Unobserved visual axes remain null; never turn unrated into zero or infer success from compilation."
+}
