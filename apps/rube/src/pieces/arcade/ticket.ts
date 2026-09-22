@@ -10,8 +10,8 @@ import { cabinet, display, lamp, marquee, score } from './neon'
  * still going the way it came, and is gone down the throat; the machine
  * whirs, its lights chase, the display — which came on showing what the
  * map earned — counts down a hundred at a time, and for every hundred a
- * ticket feeds out of the slot at the bottom: a strip that grows until it
- * hangs to the floor. Then the ball
+ * ticket feeds out of the slot at the bottom: a strip that keeps printing,
+ * piles up, and spills off the bottom of the frame. Then the ball
  * drops out of the prize chute on the far side, a hood at the cabinet's
  * foot, onto the rail below: one or two floors down, on or back the way it
  * came. The tickets stay. Nobody tears them off.
@@ -34,9 +34,16 @@ export interface TicketState {
 /** Points to a ticket. */
 export const PER_TICKET = 100
 export const ticketsFor = (points: number): number => Math.max(1, Math.round(points / PER_TICKET))
-/** Tickets that hang before the strip reaches the floor; it grows no further. */
-const HANG = 5
+/** Pitch of one ticket on the payout strip. */
 const PITCH = 0.07
+/**
+ * How long the strip keeps feeding after the ball tips in. Long enough that a
+ * full Arcade payout is still printing while the ball rolls the last rails
+ * into the portal; tickets pile up and spill off the bottom of the frame.
+ */
+const FEED = 3.4
+/** Seconds per ticket when the strip sets its own pace (a stream, not a burst). */
+const TICK = 0.05
 
 const HOPPER = -0.12
 const W = 0.5
@@ -56,6 +63,25 @@ const CHUTE_Y = -0.24
 const DROP = Math.sqrt((2 * -CHUTE_Y) / 24)
 const rideTime = (floors: number) => 0.4 + 0.35 * floors
 const HOLD = 0.15
+
+/** Lane time from the tip-in to the ball leaving the piece (ride + chute + exit). */
+const afterTip = (floors: number): number => {
+  const ride = rideTime(floors)
+  const flyOut = 0.03
+  const rampOut = Math.abs(0.5 - (CHUTE_X + 0.06)) / ((2.0 + ROLL) / 2)
+  return ride + HOLD + DROP + flyOut + rampOut
+}
+
+/** Elapsed payout time: continues after the ball leaves, via `since`. */
+const feedClock = (floors: number, t: number, since: number): number => {
+  const start = T_EDGE + TIP
+  if (since < 0) return Math.max(0, t - start)
+  return afterTip(floors) + since
+}
+
+/** How long this payout streams: at least FEED, and at least one TICK per ticket. */
+const feedDur = (tickets: number, floors: number): number =>
+  Math.max(FEED, rideTime(floors), tickets * TICK)
 
 export const ticket = definePiece<TicketState>({
   name: 'ticket',
@@ -94,10 +120,12 @@ export const ticket = definePiece<TicketState>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     const { floors, turn } = s
-    const ride = rideTime(floors)
-    const whir = t > T_EDGE + TIP && since < 0
-    // The payout: a ticket for every hundred, fed out while the machine works, staying after.
-    const fed = t < T_EDGE + TIP ? 0 : since < 0 ? over(t, T_EDGE + TIP, T_EDGE + TIP + ride) : 1
+    const clock = feedClock(floors, t, since)
+    const dur = feedDur(s.tickets, floors)
+    const fed = dur <= 0 ? 1 : Math.max(0, Math.min(1, clock / dur))
+    // Keep whirring for the whole stream, including after the ball has left for the portal.
+    const whir = fed > 0 && fed < 1
+    // The payout: a ticket for every hundred, streaming out through the exit, staying after.
     const tickets = Math.round(fed * s.tickets)
     const left = tickets >= s.tickets ? 0 : Math.max(0, s.points - tickets * PER_TICKET)
     const shake = whir ? 0.008 * Math.sin(t * 50) : 0
@@ -119,26 +147,33 @@ export const ticket = definePiece<TicketState>({
     solid(p, ink, weight, ink)
     p.rect(-turn * 0.12 * k, (floors + 0.06) * k, 0.16 * k, 0.04 * k)
     p.pop()
-    // The tickets: one strip out of the slot, a perforation every ticket, down to the floor, where it stops. The
-    // roll it coiled into there was a disc with a ring in it: a second ball, lying at the foot of the machine.
+    // The tickets: one strip out of the slot, a perforation every ticket, growing without a floor cap so a long
+    // payout piles up and spills off the bottom of the frame while the ball rolls into the portal.
     if (tickets > 0) {
       const x = -turn * 0.12
       const y0 = floors + 0.1
-      const h = Math.min(tickets, HANG) * PITCH
+      const h = tickets * PITCH
       solid(p, ink, weight * 0.7, bg)
       p.rect(x * k, (y0 + h / 2) * k, 0.14 * k, h * k, 0.005 * k)
       outline(p, ink, weight * 0.7)
-      for (let y = y0 + PITCH; y < y0 + h - 0.02; y += PITCH) {
+      // Perforations for the visible span (cap the loop so a long spill stays cheap to draw).
+      const yMax = y0 + Math.min(h, 8) - 0.02
+      for (let y = y0 + PITCH; y < yMax; y += PITCH) {
         p.line((x - 0.05) * k, y * k, (x - 0.02) * k, y * k)
         p.line((x + 0.02) * k, y * k, (x + 0.05) * k, y * k)
       }
     }
   },
   // What the points came to, over the marquee as the last ticket lands: on the cabinet's own face it was the cabinet's colour.
-  scores: (p, s, { k, since, bg }) => score(p, k, s.color, bg, 0, -0.3, `x${s.tickets}`, since, 1.4),
+  scores: (p, s, { k, since, bg }) => {
+    const spill = Math.max(0, feedDur(s.tickets, s.floors) - afterTip(s.floors))
+    return score(p, k, s.color, bg, 0, -0.3, `x${s.tickets}`, since - spill, 1.4)
+  },
   over: (p, s, { k, t, since, ink, weight, bg }) => {
     const { floors, turn } = s
-    const whir = t > T_EDGE + TIP && since < 0
+    const clock = feedClock(floors, t, since)
+    const fed = Math.max(0, Math.min(1, clock / feedDur(s.tickets, floors)))
+    const whir = fed > 0 && fed < 1
     const shake = whir ? 0.008 * Math.sin(t * 50) : 0
     // The prize chute: a hood on the cabinet's side at its foot, open underneath, in front of the ball.
     p.push()
