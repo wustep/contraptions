@@ -1,0 +1,1167 @@
+[
+  {
+    "world": "garden",
+    "target": 40.97652454996263,
+    "pieces": [
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "wheelbarrow",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hose",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "sunflower",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pumpkin",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "wateringcan",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slide",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "bamboo",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "burrow",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "spade",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "hammock",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "croquet",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "sprinkler",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "pod",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "gate",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "frog",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "grasshopper",
+        "exit": [
+          3,
+          -1
+        ]
+      },
+      {
+        "name": "maple",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "toadstools",
+        "exit": [
+          2,
+          -1
+        ]
+      },
+      {
+        "name": "bloom",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "footbridge",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "fountain",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "cocoon",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "scarecrow",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "swing",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "appletree",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "web",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pond",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "windchime",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
+    ]
+  },
+  {
+    "world": "arcade",
+    "target": 120.1919179463208,
+    "pieces": [
+      {
+        "name": "portal",
+        "portal": "in"
+      },
+      {
+        "name": "shooter",
+        "exit": [
+          -1,
+          -1
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hoops",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slots",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "zigzag",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pong",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "hockey",
+        "exit": [
+          3,
+          0
+        ]
+      },
+      {
+        "name": "phaser",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pixel",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "dunk",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slots",
+        "exit": [
+          1,
+          1
+        ]
+      },
+      {
+        "name": "foosball",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "slingshot",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "hoops",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "bumper",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "pins",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "pong",
+        "exit": [
+          1,
+          -1
+        ]
+      },
+      {
+        "name": "helter",
+        "exit": [
+          2,
+          1
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "gauss",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "whack",
+        "exit": [
+          2,
+          0
+        ]
+      },
+      {
+        "name": "changer",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "spinner",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "booth",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "rail",
+        "exit": [
+          1,
+          0
+        ]
+      },
+      {
+        "name": "ticket",
+        "exit": [
+          -1,
+          1
+        ]
+      },
+      {
+        "name": "portal",
+        "portal": "out"
+      }
+    ]
+  }
+]

@@ -16,6 +16,8 @@ import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metron
 import { Show } from './src/show'
 import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/shows/versions/cornfield-chase/multiball'
 import { universeAt } from './src/universe'
+import type { StockShow } from './src/shows/stock/show'
+import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -112,8 +114,8 @@ async function main(): Promise<void> {
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
-  check('Cornfield Chase keeps the music-sync, multi-ball and trails takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,tech-demo,voices')
-  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
+  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
+  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
   check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
@@ -163,6 +165,32 @@ async function main(): Promise<void> {
         const endCam = perf.camera?.(perf.duration)
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
         check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'opus55-music-sync') {
+        check('cornfield opus55: the whole recording from zero, with the demo credit',
+          near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        const score = (perf.show as StockShow).score
+        check('cornfield opus55: Forest, one portal, then the Arcade', score.maps.map((m) => m.world).join(',') === 'garden,arcade' &&
+          score.maps[0].pieces.at(-1)?.spec.portal === 'out' && score.maps[1].pieces[0]?.spec.portal === 'in')
+        // Every strike, measured again here from the saved score, lands on an onset the recording has.
+        const o = cornfieldOnsets as { drop: { t: number }; last: { t: number }; piano: { t: number }[]; gather: { t: number }[]; eighths: { beat: number; t: number }[] }
+        const marks = [...o.piano.map((n) => [n.t, 0.04]), ...o.gather.map((n) => [n.t, 0.03]), [o.drop.t, 0.02], [o.last.t, 0.03],
+          ...o.eighths.filter((e) => e.beat > 68 && e.beat < 191).map((e) => [e.t, 0.026])]
+        const struck = score.maps.flatMap((m) => m.pieces).filter((p) => p.spec.name !== 'rail' && !p.spec.portal).map((p) => p.begin + p.lane.fire)
+        const off = struck.filter((t) => !marks.some(([at, tol]) => Math.abs(t - at) <= tol + 1e-9))
+        check('cornfield opus55: every stock strike lands on a measured onset', struck.length > 120 && off.length === 0, off.map((t) => t.toFixed(3)).join(', '))
+        const beats = o.eighths.filter((e) => Number.isInteger(e.beat) && e.beat > 68 && e.beat < 191)
+        const hit = beats.filter((b) => struck.some((t) => Math.abs(t - b.t) <= 0.026))
+        const downs = beats.filter((b) => (b.beat - 68) % 4 === 0)
+        check('cornfield opus55: the chase strikes most beats and nearly every downbeat',
+          hit.length >= beats.length * 0.85 && downs.filter((b) => hit.includes(b)).length >= downs.length - 1, `${hit.length}/${beats.length} beats`)
+        check('cornfield opus55: a flight on the drop', struck.some((t) => Math.abs(t - o.drop.t) <= 0.02) &&
+          ['shooter', 'hoops', 'hockey', 'skee', 'slingshot', 'whack', 'bumpercar', 'coaster', 'popcorn', 'foosball'].includes(score.maps[1].pieces[1]?.spec.name ?? ''))
+        const endCam = perf.camera?.(perf.duration)
+        check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
+        check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'cornfield-chase' && version.take === 'multiball') {
         const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
