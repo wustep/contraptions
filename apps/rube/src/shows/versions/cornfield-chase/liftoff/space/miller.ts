@@ -125,7 +125,7 @@ const HUB_Y = NEAR - TR * Math.SQRT1_2
 const LAND_X = T0 + 3 * STEP + 0.62
 
 /** The ring overhead: a hub, four spokes, twelve modules; she runs round the inside of the rim. */
-const STATION: Pt = [10.05, -3.38]
+const STATION: Pt = [10.6, -2.8]
 const RING_IN = 0.5
 const RING_OUT = 0.63
 /** She is that far off: drawn at this size. */

@@ -29,6 +29,7 @@ import { ballpark } from './act2/ballpark'
 import { hub } from './act2/hub'
 import { undock } from './act2/undock'
 import { edmunds } from './act2/edmunds'
+import { credits } from './credits'
 
 /**
  * The whole show, in order: who has the ball from when to when. Every part
@@ -154,6 +155,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         theme: VOID,
         scenery: [standing(voidSky, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), { deck: axis[1] + 1000, leave: -100 }, DURATION)],
         chain: outside.placed,
+        // The end credits, over the camp at dawn once the music has stopped.
+        after: [standing(credits, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), null, DURATION)],
         from: UNDOCK,
       },
     ],

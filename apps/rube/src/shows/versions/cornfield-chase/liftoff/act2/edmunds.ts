@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Ctx, type PartShot, type Way } from '../kit'
-import { cue, DURATION, FINAL, PEAK } from '../music'
+import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { DARK, VOID } from '../worlds'
 
@@ -486,7 +486,9 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: LAMP + 1.3, cells: 5.5, hold: [LX + 2.8, G - 1.25] },
     // Back, slowly, to the whole of it, and held.
     { t: cue(235.8), cells: END_CELLS, hold: END_HOLD },
-    { t: DURATION, cells: END_CELLS + 0.25, hold: [END_HOLD[0] + 0.05, END_HOLD[1] - 0.08] },
+    { t: MIX_END, cells: END_CELLS + 0.25, hold: [END_HOLD[0] + 0.05, END_HOLD[1] - 0.08] },
+    // Under the credits the camera goes on drawing back, slower, and up a little into the sky they are written in.
+    { t: DURATION, cells: END_CELLS + 0.75, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.3] },
   ]
 }
 
@@ -593,7 +595,7 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   const { f, E } = v
   const X = (x: number) => x * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const dawn = smooth(T, BEGIN, DURATION)
+  const dawn = smooth(T, BEGIN, MIX_END)
   ctx.fillStyle = VOID.bg
   ctx.fillRect(X(f.x0 - 1), X(f.y0 - 1), X(f.x1 - f.x0 + 2), X(f.y1 - f.y0 + 2))
   const top = E - 7.5
@@ -625,7 +627,8 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
 
   // The sun, just under the horizon behind the camp: its light along the band, and its edge up at the very end.
   const sx = f.cx + SUN_F * (f.x1 - f.x0)
-  const rise = smooth(T, LAMP, DURATION)
+  // Up to its edge by the music's end; then, under the credits, the rest of the way over the horizon.
+  const rise = smooth(T, LAMP, MIX_END) + smooth(T, MIX_END, DURATION)
   glow(p, X(sx), X(E + 0.1), X(3.6 + 0.8 * dawn), DARK.gold, 0.36 + 0.22 * dawn)
   glow(p, X(sx), X(E), X(1.1), VOID.ink, 0.16 + 0.3 * rise)
   const sy = E + 0.3 - 0.21 * rise

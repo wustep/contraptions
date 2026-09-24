@@ -596,6 +596,47 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .stage-play:hover { background: #22201a; border-color: var(--accent); }
 .stage-play svg { width: 13px; height: 13px; fill: currentColor; display: block; }
 
+/* A show's end credits: the page's words over the frame, since the canvas
+   sets none. Placed and faded by the player (`renderWords`); sized in --u, a
+   hundredth of the composed frame's height, so they sit the same at any size.
+   Light ink on the show's own sky; a serif, for the credits of a film. */
+.stage-words { position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden; }
+.stage-words .card {
+  position: absolute;
+  translate: -50% 0;
+  width: max-content;
+  text-align: center;
+  color: #ECE5D3;
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  text-shadow: 0 0 calc(var(--u) * 1.4) rgba(244, 238, 223, 0.28);
+  will-change: opacity, filter;
+}
+.stage-words .role {
+  font-size: calc(var(--u) * 1.9);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #D9A441;
+  margin-bottom: calc(var(--u) * 1.6);
+  text-shadow: none;
+}
+.stage-words .name { font-size: calc(var(--u) * 5.6); line-height: 1.2; letter-spacing: 0.01em; }
+.stage-words .title .name { font-size: calc(var(--u) * 7.4); letter-spacing: 0.16em; font-weight: 500; }
+.stage-words .cast {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: calc(var(--u) * 1.6);
+  align-items: baseline;
+  font-size: calc(var(--u) * 4.1);
+  line-height: 1.42;
+}
+.stage-words .cast .who { text-align: right; }
+.stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
+.stage-words .note { font-size: calc(var(--u) * 1.95); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
+.stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
+.stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }
+.stage-words .title .note { font-style: normal; letter-spacing: 0.12em; font-size: calc(var(--u) * 2.1); }
+
 /* The frame a video is recorded from, standing over the stage while it is
    made. It is built at the size of the file, not of the stage, so this is
    the one canvas that is fitted to its box: the fit is for looking at, and

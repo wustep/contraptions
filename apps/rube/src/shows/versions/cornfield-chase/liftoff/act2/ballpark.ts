@@ -260,8 +260,13 @@ const DOOR_LEN = 0.64
 const DOOR_MAX = 1.08
 /** The counterweight's pulley under the rafters, and its weight. */
 const PULLEY: Pt = [-0.98, -2.55]
-/** Her rocking chair, back by the wall, facing the car: where its rockers meet the floor, its seat's height, its seat's front. */
-const CHAIR_X = -1.7
+/**
+ * Her rocking chair, a small one, set back against the wall and facing the car: where its rockers meet the floor,
+ * and its size. Its seat's height and front, and every other measure of it below, are at full size; `CHAIR_S` shrinks
+ * them.
+ */
+const CHAIR_X = -1.78
+const CHAIR_S = 0.86
 const SEAT_Y = -0.46
 const SEAT_FRONT = 0.3
 /** The trees by the house: a round one whose top the ball goes through, a tall poplar whose tip it clips. */
@@ -399,18 +404,17 @@ function onDoor(T: number): Pt {
 /**
  * The chair's lean, forward positive, at its turns; between turns it swings as a pendulum does. She has been
  * rocking it since the lights came up, gently, with the organ: forward on the even beats, back on the odd. The
- * crash upstairs stops her. As he comes down she rocks back once, and forward to get up; the empty chair rocks
- * on behind her, less each time, and is still.
+ * crash upstairs stops her; she rocks back once, and on the trunk's knock forward and up out of it. The empty
+ * chair rocks on behind her, less each time, and is still.
  */
 const ROCK_A = 0.05
-/** She rocks back to rise as he lands, and forward: off the seat's edge at the top of the swing. */
-const GATHER = SEAT
-const RISE = cue(154.28)
+const GATHER = cue(153)
+const RISE = cue(153.28)
 const TURNS: [number, number][] = (() => {
   const out: [number, number][] = []
   for (let k = 104; k <= 152; k++) out.push([cue(k), k % 2 ? -ROCK_A : ROCK_A])
-  out.push([cue(152.7), -0.4 * ROCK_A], [cue(153.4), 0], [GATHER, -0.07], [RISE, 0.2])
-  out.push([cue(154.88), -0.09], [cue(155.48), 0.1], [cue(156.08), -0.06], [cue(156.68), 0.05], [cue(157.28), -0.03], [cue(157.88), 0.015], [cue(158.5), 0])
+  out.push([cue(152.55), 0], [GATHER, -0.07], [RISE, 0.2])
+  out.push([cue(153.88), -0.09], [cue(154.48), 0.1], [cue(155.08), -0.06], [cue(155.68), 0.05], [cue(156.28), -0.03], [cue(156.88), 0.015], [cue(157.5), 0])
   return out
 })()
 function chairLean(T: number): number {
@@ -426,22 +430,27 @@ function chairLean(T: number): number {
   const shake = w > 0 && w < 0.6 ? 0.025 * Math.exp(-w / 0.14) * Math.sin(w * 38) : 0
   return a0 + (a1 - a0) * e + shake
 }
-/** A point of the chair, in its own upright cells (x from where the rockers meet the floor), in the house's. */
-/** The rockers' curve, as a circle this far over the floor: the chair rolls on it. */
+/** The rockers' curve, as a circle this far over the floor (at full size): the chair rolls on it. */
 const ROCKER_R = 1.13
+const ROCK_R = ROCKER_R * CHAIR_S
+/** A point of the chair, in its own upright cells (x from where the rockers meet the floor), in the house's. */
 function chairPoint(T: number, x: number, y: number): Pt {
   const a = chairLean(T)
-  const py = y + ROCKER_R
-  return [CHAIR_X + ROCKER_R * a + x * Math.cos(a) - py * Math.sin(a), -ROCKER_R + x * Math.sin(a) + py * Math.cos(a)]
+  const py = y + ROCK_R
+  return [CHAIR_X + ROCK_R * a + x * Math.cos(a) - py * Math.sin(a), -ROCK_R + x * Math.sin(a) + py * Math.cos(a)]
 }
 const FLOOR_Y = -R
 /** The car's threshold: a low wooden lip on the floor at its door. A ball rolling up to it stops against it. */
 const LIP = { x0: -0.52, x1: -0.46, h: 0.04 }
 /** How far short of the lip a ball's centre is when it rests against it. */
 const LIP_GAP = Math.sqrt(R * R - (R - LIP.h) ** 2)
-/** Where she stops, against the lip: she does not cross it. Where he waits, just over it, touching her across it. */
+/**
+ * Where he comes down, against the lip; where she waits for him, beside that, a breath apart, so that he comes down
+ * clear of her; on 155 she closes it.
+ */
 const REST_X = LIP.x0 - LIP_GAP
-const WAIT_X = REST_X + 2 * R
+const APART = 0.018
+const MEET_X = REST_X - 2 * R - APART
 /** A ball's centre over the floor and the lip, at `x`: up the lip's near corner, along its top, down its far one. */
 function lipY(x: number): number {
   if (x <= REST_X || x >= LIP.x1 + LIP_GAP) return FLOOR_Y
@@ -449,52 +458,67 @@ function lipY(x: number): number {
   if (x <= LIP.x1) return -LIP.h - R
   return -LIP.h - Math.sqrt(Math.max(0, R * R - (x - LIP.x1) ** 2))
 }
+/**
+ * On 155 she leans in: she closes the breath between them and presses, the two of them a little toward the car,
+ * and he rides a hair up the lip's corner. How far in, 0 to 1.
+ */
+const LEAN = 0.03
+const LEAN_OFF = cue(155.3)
+function leanAt(T: number): number {
+  if (T <= DOWN) return 0
+  if (T < DOWN + 0.22) return easeInOutSine((T - DOWN) / 0.22)
+  if (T < LEAN_OFF) return 1
+  return 1 - easeInOutSine(clamp((T - LEAN_OFF) / 0.12))
+}
 
-/* ---- him: down off the door, over the lip into the car's doorway, and waiting there */
+/* ---- him: off the trapdoor, down beside her, and on over the lip */
 
-/** He lands on the floor on the beat and rolls on, over the lip, and stops just inside the car. */
-const LAND_X = -0.72
-const ROLL = 0.5
-const dropToFloor = throwAt(onDoor(OFF), [LAND_X, FLOOR_Y], OFF, SEAT, G)
+/** The door hits its stop and throws him off its end, down into the space between her and the lip, on the beat. */
+const dropToFloor = throwAt(onDoor(OFF), [REST_X, FLOOR_Y], OFF, SEAT, G)
 function hisFloor(T: number): Pt {
   const s = T - SEAT
-  if (s < ROLL) {
-    const u = s / ROLL
-    const x = LAND_X + (WAIT_X - LAND_X) * (1 - (1 - u) ** 2)
-    const up = s < 0.14 ? 0.03 * Math.sin((Math.PI * s) / 0.14) : 0
-    return [x, lipY(x) - up]
-  }
-  // Her touch, on the beat: it presses him on a little way, and he settles back against her.
-  const t = T - DOWN
-  const give = t > 0 && t < 0.26 ? 0.018 * Math.sin((Math.PI * t) / 0.26) : 0
-  return [WAIT_X + give, FLOOR_Y]
+  // Down against the lip, a little bounce between it and her, and still.
+  const up = s < 0.16 ? 0.04 * Math.sin((Math.PI * s) / 0.16) : 0
+  const x = REST_X + LEAN * leanAt(T)
+  return [x, lipY(x) - up]
 }
-/** Her nudge on the eighth sends him on into the car, to its middle by the big step. */
+/** Her nudge on the eighth sends him on, over the lip and into the car, to its middle by the big step. */
 function hisGo(T: number): Pt {
   const u = clamp((T - INCAR) / (OUT - INCAR))
-  return [WAIT_X * (1 - u) ** 2, FLOOR_Y]
+  const x = REST_X * (1 - u) ** 1.6
+  return [x, lipY(x)]
 }
 
-/* ---- her: up out of the chair, across the floor to him, and at the lip */
+/* ---- her: up out of the chair on the knock, across the floor, there as he comes down */
 
-/** Her place on the seat, against the chair's back, and the seat's front edge, where she goes over. */
-const HER_X = -0.155
-const EDGE = SEAT_FRONT + 0.04
-/** Off the edge at the top of the forward swing, down on the floor on the eighth. */
-const ROLL_ON = cue(154.03)
-const OFF_EDGE = cue(154.24)
-const HER_DOWN = cue(154.5)
-const HER_LAND = -1.03
+/** Her place on the seat, against the chair's back, and the seat's front edge, where she goes over (full size). */
+const HER_X = -0.155 * CHAIR_S
+const EDGE = (SEAT_FRONT + 0.04) * CHAIR_S
+const SEAT_TOP = SEAT_Y * CHAIR_S - R
+/** Down the seat as it comes forward, off its edge, down on the floor on the eighth. */
+const ROLL_ON = cue(153.02)
+const OFF_EDGE = cue(153.24)
+const HER_DOWN = cue(153.5)
+const HER_LAND = -1.24
 function chairPointAt(T: number, x: number): Pt {
-  return chairPoint(T, x, SEAT_Y - R)
+  return chairPoint(T, x, SEAT_TOP)
 }
 const herDrop = throwAt(chairPointAt(OFF_EDGE, EDGE), [HER_LAND, FLOOR_Y], OFF_EDGE, HER_DOWN, G)
-/** Down, a moment to find her feet, and across to the lip, slowing, to touch him on the beat. */
-const SETTLE = cue(154.58)
-const approach = (u: number): number => 0.7 * (u * u * (3 - 2 * u)) + 0.3 * (1 - (1 - u) ** 2)
+/** Across the floor, on the way the drop gave her, slowing, to her place beside where he will land. */
+const THERE = cue(153.9)
+const V_LAND = (HER_LAND - chairPointAt(OFF_EDGE, EDGE)[0]) / (HER_DOWN - OFF_EDGE)
+function across(T: number): number {
+  const D = THERE - HER_DOWN
+  const u = (T - HER_DOWN) / D
+  const m = (V_LAND * D) / (MEET_X - HER_LAND)
+  const f = (u * u * u - 2 * u * u + u) * m + (-2 * u * u * u + 3 * u * u)
+  return HER_LAND + (MEET_X - HER_LAND) * f
+}
 /** The nudge: back a little, and into him on the eighth. */
 const DRAW = cue(155.34)
-const BACK = 0.04
+const BACK = 0.045
+/** After him to the lip; and there she stays. */
+const AT_LIP = cue(155.95)
 function herAt(T: number): Pt {
   if (T <= ROLL_ON) return chairPointAt(T, HER_X)
   if (T <= OFF_EDGE) {
@@ -503,17 +527,22 @@ function herAt(T: number): Pt {
     return chairPointAt(T, HER_X + (EDGE - HER_X) * (0.75 * u * u * (3 - 2 * u) + 0.25 * u * u))
   }
   if (T <= HER_DOWN) return herDrop(T)
-  if (T <= SETTLE) {
-    const u = (T - HER_DOWN) / (SETTLE - HER_DOWN)
-    return [HER_LAND + 0.015 * (1 - (1 - u) ** 2), FLOOR_Y - 0.018 * Math.sin(Math.PI * u)]
+  if (T <= THERE) return [across(T), FLOOR_Y - (T - HER_DOWN < 0.12 ? 0.018 * Math.sin((Math.PI * (T - HER_DOWN)) / 0.12) : 0)]
+  if (T <= SEAT) return [MEET_X, FLOOR_Y]
+  if (T <= DRAW) {
+    // He comes down against her: she gives a little under it, and comes back; on 155 she leans in.
+    const s = T - SEAT
+    const give = s < 0.3 ? 0.03 * Math.sin((Math.PI * s) / 0.3) : 0
+    const close = T <= DOWN ? 0 : easeInOutSine(clamp((T - DOWN) / 0.22))
+    return [MEET_X - give + APART * close + LEAN * leanAt(T), FLOOR_Y]
   }
-  if (T <= DOWN) {
-    const u = (T - SETTLE) / (DOWN - SETTLE)
-    return [HER_LAND + 0.015 + (REST_X - HER_LAND - 0.015) * approach(u), FLOOR_Y]
+  if (T <= INCAR - 0.06) return [MEET_X + APART + LEAN * leanAt(T) - BACK * easeInOutSine((T - DRAW) / (INCAR - 0.06 - DRAW)), FLOOR_Y]
+  // Into him, touching, on the eighth.
+  if (T <= INCAR) return [MEET_X + APART - BACK + BACK * ((T - INCAR + 0.06) / 0.06) ** 2, FLOOR_Y]
+  if (T <= AT_LIP) {
+    const u = (T - INCAR) / (AT_LIP - INCAR)
+    return [MEET_X + APART + (REST_X - MEET_X - APART) * (1 - (1 - u) ** 2), FLOOR_Y]
   }
-  if (T <= DRAW) return [REST_X, FLOOR_Y]
-  if (T <= INCAR - 0.06) return [REST_X - BACK * easeInOutSine((T - DRAW) / (INCAR - 0.06 - DRAW)), FLOOR_Y]
-  if (T <= INCAR) return [REST_X - BACK + BACK * ((T - INCAR + 0.06) / 0.06) ** 2, FLOOR_Y]
   // At the lip. The gate comes down in front of her on the step: she starts back from it, and is still.
   const g = T - OUT
   return [REST_X - (g > 0 && g < 0.35 ? 0.025 * Math.sin((Math.PI * g) / 0.35) : 0), FLOOR_Y]
@@ -627,11 +656,13 @@ export const ballpark = part<BallparkState>(
       { t: cue(150), cells: 17, hold: mid(flightAt(cue(150)), house, 0.5), w: 0.9 },
       { t: TREE, cells: 9.5, hold: mid(flightAt(TREE), house, 0.3), w: 1 },
       { t: WINDOW + 0.1, cells: 5.6, hold: U(A_HOUSE, WIN.x - 0.5, WIN.y + 0.45), w: 1 },
-      // The trapdoor over her chair; in, as he comes down and she gets up; closest for the touch and the moment
-      // after it; and out on the nudge, the car and the lip both in, to the hub's first framing on the step.
-      { t: HATCH + 0.3, cells: 5.0, hold: U(A_HOUSE, -1.1, -1.05), w: 1 },
-      { t: SEAT, cells: 3.5, hold: U(A_HOUSE, -1.1, -0.52), w: 1 },
-      { t: DOWN, cells: 3.0, hold: U(A_HOUSE, -0.78, -0.42), w: 1 },
+      // The room: the trapdoor, her chair and the floor she crosses. In as he comes down beside her; closest as
+      // she leans in, held through the moment; and out on the nudge, the car and the lip both in, to the hub's first
+      // framing on the step.
+      { t: HATCH + 0.3, cells: 4.6, hold: U(A_HOUSE, -1.22, -0.88), w: 1 },
+      { t: SEAT, cells: 3.3, hold: U(A_HOUSE, -0.98, -0.5), w: 1 },
+      { t: DOWN, cells: 2.9, hold: U(A_HOUSE, -0.98, -0.4), w: 1 },
+      { t: LEAN_OFF, cells: 2.95, hold: U(A_HOUSE, -0.93, -0.4), w: 1 },
       { t: INCAR, cells: 3.1, hold: U(A_HOUSE, -0.62, -0.45), w: 1 },
       // The hub's first framing: back a little, the house and the car in it.
       { t: slot.end, cells: 4.8, hold: U(A_HOUSE, 0.2, -1), w: 1 },
@@ -1544,13 +1575,16 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
 }
 
 function drawChair(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k, ink } = c
   const X = (v: number) => v * k
   const lean = chairLean(T)
   p.push()
-  p.translate(X(CHAIR_X + ROCKER_R * lean), X(-ROCKER_R))
+  p.translate(X(CHAIR_X + ROCK_R * lean), X(-ROCK_R))
   p.rotate(lean)
-  p.translate(0, X(ROCKER_R))
+  p.translate(0, X(ROCK_R))
+  // Drawn at full size and shrunk; its lines are not.
+  p.scale(CHAIR_S)
+  const weight = c.weight / CHAIR_S
   // The rockers: one long curved runner, touching the floor where it leans.
   outline(p, ink, weight)
   const rock = (x: number) => ROCKER_R - Math.sqrt(ROCKER_R * ROCKER_R - x * x)

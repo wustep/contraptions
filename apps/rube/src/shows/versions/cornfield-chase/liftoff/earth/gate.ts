@@ -155,6 +155,8 @@ interface GateState {
   /** Where the drone's wheels touch. */
   touch: number
   exit: number
+  /** Where he is when she taps him. */
+  meet: number
 }
 
 /* ------------------------------------------------------------------ Brand */
@@ -181,14 +183,15 @@ function goldGate(s: GateState, lane: Lane, begin: number, t: number): Companion
   if (t < HER_GO) return { x: wait, y: 0, scale }
   if (t < HER_OUT) {
     const T = HER_OUT - HER_GO
-    return { x: hermite(wait, door, 0, 2.4 * T, (t - HER_GO) / T), y: 0, scale }
+    // She comes up to the flap unhurried, and it is her nudge that opens it: a hair on the threshold, then after him.
+    return { x: hermite(wait, door, 0, 0.8 * T, (t - HER_GO) / T), y: 0, scale }
   }
   const his = (u: number) => laneAt(lane, u - begin).x
   const back = 2 * R + 0.01
   if (t < MEET) {
     // Quicker than he is all the way, so she comes up against his back on the eighth with a tap, and keeps his pace.
     const T = MEET - HER_OUT
-    return { x: hermite(door, his(MEET) - back, 2.4 * T, 3.0 * T, (t - HER_OUT) / T), y: 0 }
+    return { x: hermite(door, his(MEET) - back, 0.8 * T, 3.0 * T, (t - HER_OUT) / T), y: 0 }
   }
   return { x: his(t) - back, y: 0 }
 }
@@ -374,6 +377,7 @@ export const gate = part<GateState>(
       bunker: [faceA, faceB],
       touch: faceA + 0.45,
       exit: exitBall + 0.5,
+      meet: meetX,
     }
 
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(GRID_HITS[0]), p: [first, 0] }]
@@ -436,10 +440,9 @@ export const gate = part<GateState>(
     { t: beat(111), cells: 6.0, off: [1.5, -1.4] },
     { t: beat(113), cells: 6.0, off: [1.3, -1.3] },
     // The bunker's way out, held nearly still and closer: he comes out, the flap falls, and it opens again for her.
-    { t: beat(114.5), cells: 4.6, hold: [built.state.bunker[1] + 0.7, -0.8], w: 0.8 },
-    // She catches him up; the two of them to the tower.
-    { t: beat(115.5), cells: 5.2, hold: [built.state.exit - 1.3, -1.0], w: 0.6 },
-    { t: slot.end, cells: 6.2, hold: [built.state.exit - 0.4, -1.3], w: 0.5 },
+    { t: beat(114.2), cells: 3.8, hold: [built.state.bunker[1] + 0.35, -0.5], w: 0.9 },
+    // She catches him up and taps him; from there the frame eases out, slowly, into the gantry's climb.
+    { t: beat(115.6), cells: 3.9, hold: [built.state.meet - 0.1, -0.5], w: 0.85 },
   ],
 )
 
@@ -837,6 +840,22 @@ function bunker(d: Draw, s: GateState): void {
   p.fill(alpha(p, ink, 0.72))
   rect4(d, a, lin, b, FLOOR)
   if (t >= THROW) for (const x of [a + DOORWAY / 2, b - DOORWAY / 2]) glow(d, x, lin + 0.06, 0.28, 0.45)
+  // While the way-out flap stands open, the lamp's light spills out of the doorway onto the apron.
+  const open = t >= THROW ? clamp(flapB(t) / 1.25) : 0
+  if (open > 0.02) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const g = ctx.createLinearGradient(X(b), 0, X(b + 1.2), 0)
+    g.addColorStop(0, `rgba(255, 244, 214, ${0.55 * open})`)
+    g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(X(b), X(lin + 0.04))
+    ctx.lineTo(X(b + 1.2), X(FLOOR - 0.06))
+    ctx.lineTo(X(b + 1.2), X(FLOOR + 0.05))
+    ctx.lineTo(X(b), X(FLOOR + 0.05))
+    ctx.closePath()
+    ctx.fill()
+  }
   outline(p, ink, weight)
   p.line(X(a), X(lin), X(b), X(lin))
   // The lintels over the two mouths, which the flaps hang from.

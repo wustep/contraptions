@@ -20,7 +20,8 @@ import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
 import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
-import { ACT2, IGNITION, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
+import { ACT2, DURATION as LIFTOFF_END, IGNITION, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
+import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -198,12 +199,17 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
-        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), with the demo credit',
-          near(perf.duration, 262.741) && (perf.soundtrack?.offset ?? 0) === 0 &&
+        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), with the demo credit, and the credits after it',
+          near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
           !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
+        const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
+        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues',
+          CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 1 &&
+          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar', 'tech demo'].every((w) => said.includes(w)), said)
         const show = perf.show as LiftoffShow
         check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
           show.universe(0).world.name === 'cornfield' && show.universe(1).world.name === 'endurance' &&

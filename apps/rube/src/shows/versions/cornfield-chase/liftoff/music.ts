@@ -10,8 +10,13 @@
  * - Beat 191 (119.41 s), the last hit. Then the decay, to 126.98 s.
  */
 
-/** The whole show: the mix (`scripts/liftoff-mix.sh`), Cornfield Chase and then No Time for Caution. */
-export const DURATION = 262.741
+/** The mix (`scripts/liftoff-mix.sh`), Cornfield Chase and then No Time for Caution: where the music ends. */
+export const MIX_END = 262.741
+/**
+ * The whole show: the mix, and then the end credits over the camp, in silence (`credits.ts`). The player's clock
+ * carries on from the wall clock once the recording has run out (`shows/clock.ts`), and so does an export.
+ */
+export const DURATION = 291
 /** Where the Cornfield recording ends in the mix, and Act I with it. */
 export const ACT1_END = 126.984
 export const PERIOD = 0.625

@@ -168,7 +168,10 @@ and that it is never hidden for long. A second ball, gold, is Amelia Brand
 story: not on the farm, in shot with him from NASA's bunker to the ring,
 waiting in orbit over Miller as she goes grey, coming to greet him on Cooper
 Station, and nowhere else; never jumping, and coming and going only out of
-shot. The report is `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+shot. It ends with credits after the music, in silence: the words are set
+by the page from `Performance.titles(t)` (a show's canvas sets no type), and
+the starlight they come out of is the canvas's. The report is
+`docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
 It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
 only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue

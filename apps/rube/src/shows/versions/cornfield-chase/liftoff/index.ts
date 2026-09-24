@@ -2,6 +2,7 @@ import recording from '../../../../../../../docs/promo/interstellar-liftoff-mix-
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'
+import { creditsAt } from './credits'
 
 const { show, camera } = compose()
 
@@ -13,6 +14,8 @@ export const performance: Performance = {
   camera,
   // No portal anywhere: the only change of world is the rocket's, inside the cloud.
   cuts: () => false,
+  // The end credits' words, which the page sets over the frame (the canvas draws their starlight).
+  titles: creditsAt,
   soundtrack: {
     src: recording,
     offset: 0,

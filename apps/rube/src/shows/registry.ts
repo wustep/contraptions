@@ -52,6 +52,31 @@ export interface Performance {
   cuts?(t: number): boolean
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
+  /**
+   * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
+   * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
+   */
+  titles?(t: number): TitleCard[]
+}
+
+/** One card of words over the stage, as the page is to set it at a moment. */
+export interface TitleCard {
+  /** Stable while the card is up: the page builds it once and only fades it. */
+  key: string
+  /** What they did: a small line in capitals over the names. */
+  role?: string
+  /** The names. Two parts are a line of a cast list: a name, and who they are. */
+  names: (string | [string, string])[]
+  /** Fine print under the names. */
+  notes?: string[]
+  /** The show's own name: larger, and spaced out. */
+  title?: boolean
+  /** 0 to 1: how far up it is. */
+  light: number
+  /** How far it still has to settle, in hundredths of the frame's height (it comes up into place). */
+  rise?: number
+  /** Where its top middle sits, as shares of the 16:9 frame. */
+  at: [number, number]
 }
 
 /** What a `.show.ts` file exports as its default. */

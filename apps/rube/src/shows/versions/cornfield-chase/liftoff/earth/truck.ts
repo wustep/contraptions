@@ -263,9 +263,15 @@ const SLAPS = beats(69, 83).filter((t) => t !== TAKEOFF && t !== LANDING)
 const STALKS = SLAPS.filter((t) => t !== FENCE)
 const TOUCHDOWN = beat(86)
 
-/** He is on the bench, the door about to shut behind him; and he leaves it, thrown out ahead of the truck at the dam. */
+/** He is on the bench, the door about to shut behind him. */
 const IN_SEAT = 31.93
-const OUT = STOP + 0.12
+/**
+ * At the dam he is thrown out through the flung-open door, low across the hood, and off its nose at this moment,
+ * going this fast, from this far along the body: then over the edge and down into the combine.
+ */
+const OFF_NOSE = STOP + 0.53
+const NOSE_U = 3.0
+const V_OFF = 3.5
 
 export const TRUCK_NOTES = [LAND, BONK, DOOR]
 export const TRUCK_ORGAN = [...CRANKS, CATCH, LIGHTS, REV]
@@ -428,12 +434,15 @@ function heroAt(t: number): Pt {
   // The fence: a knock forward.
   const hit = t - FENCE
   if (hit > 0) u += 0.06 * Math.exp(-hit / 0.2) * Math.sin(Math.min(Math.PI, hit * 12))
-  // The brakes: forward against the dash, and up, as the door flies open.
+  // The brakes: the door flies open and he is thrown forward — out through it, up onto the hood just clear of it,
+  // across it with the nose going down, and off the nose. (Nowhere through the glass or above the roof.)
   const br = t - STOP
   if (br > 0) {
-    const e = easeInQuad(clamp(br / (OUT - STOP)))
-    u += (DASH - R + 0.05 - SEAT[0]) * e
-    v += 0.05 * e
+    const T = OFF_NOSE - STOP
+    const w = clamp(br / T)
+    const m1 = (V_OFF * T) / (NOSE_U - u)
+    u += (NOSE_U - u) * ((3 - 2 * w) * w * w + (w ** 3 - w ** 2) * m1)
+    v += (HOOD + R - v) * smooth(u, 1.95, 2.3) - 0.07 * smooth(u, 2.86, NOSE_U)
   }
   return [u, v]
 }
@@ -471,7 +480,7 @@ export const truck = part<TruckState>(
       return bodyPoint(s, t + slot.begin, u, v)
     }
     const land = at(LAND)
-    const leave = at(OUT)
+    const leave = at(OFF_NOSE)
     const touch: Pt = [s.edge + 2.4, 3]
     const drop = at(LAND) - fall
     // Along the flume, a hop off its end onto the rail on the note; along it and into the cab, and the ride.
@@ -481,7 +490,7 @@ export const truck = part<TruckState>(
       ...route(ways),
       ...carried(rider, land, leave, Math.ceil((leave - land) * 40)),
     ]
-    // Out of the cab ahead of the truck, over the edge, and down into the combine on the same beat as ever.
+    // Off the nose, over the edge, and down into the combine on the same beat as ever.
     const from: Way = { at: leave, p: rider(leave) }
     segs.push(...route([from, hop(from, touch, at(TOUCHDOWN))]))
     const pad = Math.ceil(s.edge + 3)

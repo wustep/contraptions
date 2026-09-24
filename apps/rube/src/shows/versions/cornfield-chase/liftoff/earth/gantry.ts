@@ -127,10 +127,11 @@ export const gantry = part<GantryState>(
     // From the gate's framing of the tower's foot straight into the climb: no push in.
     { t: RISE[0] + 0.6, cells: 7.4, off: [0.9, -0.4] },
     { t: RISE[1] - 0.3, cells: 7.4, off: [0.9, 0.6] },
-    { t: SEATED, cells: 11, hold: [RX - 0.5, -4.4] },
+    // Wide on the tower and the rocket, but centred high enough that under Zoom the window stays well inside the frame.
+    { t: SEATED, cells: 12, hold: [RX - 0.5, -5.4] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass.
-    { t: beat(133), cells: 5.4, hold: [RX - 0.4, -6.5] },
+    { t: beat(133), cells: 5.4, hold: [RX - 0.4, -6.8] },
   ],
 )
 

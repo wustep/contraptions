@@ -10,7 +10,7 @@ Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`.
 
 ## What it is
 
-A Rube Goldberg machine plays two cues back to back, 4:23 in all. Two balls tell the story.
+A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Two balls tell the story.
 - **Cooper is the rust ball:** the thread. He has the farm, he drives the truck, and he makes every machine go.
 - **Amelia Brand is the gold ball:** NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted. She waits and grows old, and he finds her again on Cooper Station, where she comes to greet him.
 
@@ -123,6 +123,7 @@ The music is the only clock.
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
   - the mix, its length and its demo credit;
+  - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the gold ball (Brand):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
@@ -145,7 +146,7 @@ The music is the only clock.
 | 26.6 | piano | the channel | The water carries him along the top of the bank, under the corn. Four flap gates hang across the channel; each board rides over his back and slaps shut behind him on a piano note. At the end the channel spills over the bank, where the truck is waiting. |
 | 29.2 | piano, organ | the truck | He hops onto the bed's rail on a note and rolls along it into the cab's corner. The knock swings the door open, he rolls in onto the bench, and the door slams behind him on a note: he is the driver. The engine turns over on the organ's first chords and catches, and the headlights come on at the strongest onset of the gather. |
 | 42.48 | the drop | the truck | He floors it into the corn, pressed back into the bench. A stalk on every beat, and the seat throws him up on every beat and he comes down on the eighth, at the wheel behind the glass. It jumps a ditch on beat 76 and goes through a fence on beat 80. The drone it chases flies ahead and glints on each downbeat. |
-| beat 84 | chase | the dam | He stands on the brakes at the edge. The door flies open and he is thrown out ahead, off the dam. The truck stays at the edge, empty, its door swinging. |
+| beat 84 | chase | the dam | He stands on the brakes at the edge. The door flies open and he is thrown out through it, up onto the hood and along it, and off the nose over the edge. The truck stays at the edge, empty, its door swinging. |
 | beat 86 | chase | the combine | An autonomous harvester with an empty cab and its aerial lamp on the 1.25 s tick. The chain runs reel, feeder, drum, elevator, tank, then the auger swinging out, then the spout. Then a plank on a straw bale. |
 | beat 100 | chase | the base's fence | A cattle grid on the eighths, a well sweep that throws, sprung dogs along the fence top, a counterweighted barrier arm, and a lever that lights the landing lamps. The drone lands on NASA's bunker on beat 112, the drone that led him here. He rolls in through one flap (113) and out of the other (114). On 114½ the flap is pushed open again and Brand rolls out after him, her first appearance. It slaps shut behind her on 115, and she catches him up and taps his back on 115½. |
 | beat 116 | chase | the gantry | They roll into the cage together, and it climbs the tower, lighting a lamp per eighth. Along the arm and into the rocket's nose window side by side on beat 124. The lamps go out one per beat while the camera pushes in on the two of them. |
@@ -168,7 +169,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 177.5 | 154 to 156 | the reunion | The trapdoor lets him down to the floor, and he rolls to the lift car's threshold. She rocks back once, rolls off the chair and comes to him across the floor, and touches him across the threshold on 155. She rests against him a moment, then nudges him in on 155½. He is in the middle of the car on the big step (156). The car's gate drops in front of her and she stays at the threshold as it goes; the empty chair rocks itself still behind her. |
+| 176.5 | 153 to 156 | the reunion | When the trunk knocks the trapdoor's latch (153), she rocks forward off her chair, rolls across the floor, and waits where he will come down. On 154 the door hits its stop and flicks him off its end, and he lands beside her: she meets him. They rest together for a whole beat; on 155 she leans in against him. On 155½ she draws back and bumps him on over the lift car's threshold, and he is in the middle of the car on the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
 | 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
@@ -177,10 +178,56 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. |
 | 252.5 | 229 to 232 | the camp | The canopy swings open, the ramp slams down, and the seat kicks him out over the nose. He rolls down into the camp and stops at the foot of its lamp. On the last hit (232) the lamp lights. |
 | 255.5 to 262.7 | the stop | the camp | The music stops dead. The camera draws back over the camp: a small dome, a flag, a helmet set down on a rock, a cairn for Edmunds. The sun's edge comes up behind the cairn and the dome's porthole lights. |
+| 261.4 to 291 | silence | the credits | Over the camp at dawn, while the camera goes on drawing back and the sun clears the horizon (see below). |
 
 Six Act II beats are still unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
 - **145 to 149:** the ball in flight across the axis, a held breath while the cue gathers. At whole-ring scale nothing mechanical reads.
+
+## End credits
+
+The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a few seconds later. At 261.4 s, as the dome's porthole lights, the credits begin. They run in silence to 291 s, while the camera keeps drawing back into the sky and the sun comes all the way over the horizon behind the cairn.
+
+**How a card plays.**
+- The stars nearest the card's place drift together into a small, faintly lit cloud, high on the right of the sky; Gargantua hangs on the left.
+- Out of the cloud the card comes into focus over about 0.7 s:
+  - a line in spaced gold capitals for what they did;
+  - the names in a book serif;
+  - where it is owed, the fine print in italics.
+- It holds 2.3 to 3.8 s, then goes out of focus while its stars drift apart into the sky, overlapping the next card's gathering by a quarter second.
+
+**The cards, in order.**
+
+| Starts (s) | Role | Names | Fine print |
+| ---: | --- | --- | --- |
+| 261.4 | Directed by | Stephen Wu | |
+| 266.0 | Machines, drawings and code | Claude Opus 5.5 | |
+| 270.7 | With | Cooper, the rust ball; Amelia Brand, the gold ball; TARS, four slabs of tin | |
+| 276.1 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
+| 282.0 | Drawn with | p5.js | |
+| 286.4 | (the title) | Liftoff | Cornfield Chase · [Opus 5.5] · a one-shot tech demo |
+
+The title card stays up to the end, 291 s.
+
+**How it is built.**
+- The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved frame or a recorded video carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
+- The words are not drawn in Overview, and not in a recording.
+- The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
+- The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
+
+## Polish in the last round
+
+- **The dam.** Thrown clear, he goes out through the flung-open door, up onto the hood and along it, and off the nose. He no longer crosses the windscreen.
+- **Brand's entrance.**
+  - The camera pushes in close on the bunker's way out (3.8 cells) just before she comes, and holds through the tap. Then it eases out to the climb in one move.
+  - She nudges the flap open herself and pauses a hair on the threshold before she hurries after him.
+  - The tunnel lamp's light spills out across the apron while the flap stands open.
+- **The greeting.**
+  - The rocking chair is smaller and set further back, so the room has floor.
+  - She leaves the chair on the latch's knock (153) and is waiting where he lands (154). They rest together for 1.3 s, where it was 0.35 s. Her path from the chair is 1.3 cells.
+- **Zoom.**
+  - The countdown's framing keeps the rocket's window, with both of them in it, inside the Zoom frame.
+  - The station in orbit over Miller moved down and in, so it is whole under Zoom.
 
 ## Interstellar nods
 
