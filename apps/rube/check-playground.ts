@@ -54,6 +54,13 @@ async function main(): Promise<void> {
   check('the loop is still the four stock worlds', WORLDS.length === 4 && WORLDS.every((w) => !w.staged))
   const additions = shelves.filter((_, i) => SHELVES[i].kind === 'additions')
   const worlds = shelves.filter((_, i) => SHELVES[i].kind === 'world')
+  const solWorlds = worlds.filter((s) => s.world.name.startsWith('sol-'))
+  const olderPieces = shelves.filter((s) => !s.world.name.startsWith('sol-')).flatMap((s) => s.world.pieces)
+  check('Sol one-shot worlds use fresh rails, entrances and exits', solWorlds.length === 2 && solWorlds.every((s) =>
+    !!s.world.portalPlacement && ['rail', 'portal'].every((name) => {
+      const own = s.world.pieces.find((p) => p.name === name)
+      return !!own && !olderPieces.includes(own)
+    })))
   check('a shelf for each stock world, in the loop’s order', additions.map((s) => s.world.name).join() === WORLDS.map((w) => `staged-${w.name}`).join())
   check('a stock world’s shelf wears that world’s label, palettes and rail', additions.every((s, i) => s.world.label === WORLDS[i].label && s.world.themes === WORLDS[i].themes && s.world.pieces[0] === WORLDS[i].pieces[0]))
 

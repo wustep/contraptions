@@ -48,6 +48,8 @@ export interface Performance {
   duration: number
   /** Authored framing. Left out, the stage follows the ball as Machine does. */
   camera?(t: number): Framing
+  /** A section name shown in the panel while the music moves. */
+  chapter?(t: number): string
   /** Whether the show's cuts are drawn at `t`: the iris at a portal, the fade up from ink. Left out, they are. */
   cuts?(t: number): boolean
   /** The music. Left out, the show is silent and runs on the wall clock. */

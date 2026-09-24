@@ -207,10 +207,11 @@ const takeRow = el('div', { class: 'seg wrap', role: 'group', 'aria-label': 'Ver
 const takeField = el('div', { class: 'field' }, [el('label', {}, [el('span', {}, ['Version'])]), takeRow])
 let takeChips: { version: Version; b: HTMLButtonElement }[] = []
 const about = el('div', { class: 'readout' })
+const chapter = el('div', { class: 'status' })
 const empty = el('div', { class: 'status' }, [
   'No shows yet. A show is a file: apps/rube/src/shows/versions/<work>/<take>.show.ts.',
 ])
-showCard.append(workList.node, takeField, about, empty)
+showCard.append(workList.node, takeField, about, chapter, empty)
 
 // The one thing to do on a stage that is standing still at either end of a show.
 const bigPlayLabel = el('span', {}, ['Play'])
@@ -358,6 +359,7 @@ function sync(): void {
     }
   }
   about.replaceChildren(...lines)
+  chapter.hidden = !perf?.chapter
   document.title = current ? `${current.title}, ${current.label} · contraptions` : 'contraptions · shows'
 
   // The transport.
@@ -411,6 +413,7 @@ function sync(): void {
 
 // The clock prints whole seconds; writing it on every frame is wasted work.
 let lastTime = ''
+let lastChapter = ''
 function tick(): void {
   if (transport) {
     const t = transport.now()
@@ -421,6 +424,11 @@ function tick(): void {
     if (text !== lastTime) {
       lastTime = text
       time.textContent = text
+    }
+    const name = perf?.chapter?.(t) ?? ''
+    if (name !== lastChapter) {
+      lastChapter = name
+      chapter.textContent = name
     }
     if (!scrubbing) {
       const p = t / transport.duration

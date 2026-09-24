@@ -1,5 +1,5 @@
 import type { Theme } from '../../../src/core/themes'
-import type { Piece, Taste } from './parts'
+import type { Piece, Placement, Taste } from './parts'
 import { arcade } from './pieces/arcade'
 import { garden } from './pieces/garden'
 import { harbor } from './pieces/harbor'
@@ -35,6 +35,8 @@ export interface World {
   backdrops: Backdrop[]
   /** Every piece the planner may draw from here — its rail and the portal included. */
   pieces: Piece<any>[]
+  /** A staged world can supply its own entrance and exit geometry. */
+  portalPlacement?: (kind: 'in' | 'out', color: string) => Placement<any>
   /** What a visit may favour. The names are the pieces'; the extras steer their variants. */
   tastes: Record<string, Taste['weights']>
   /** Whether a visit opens on two or three cells of rail out of the entry portal, a breath before the first beat. */
