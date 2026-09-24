@@ -35,10 +35,28 @@ export interface Built<S> {
    * alone. Positions here are in the part's own frame; the score moves them.
    */
   riders?: Riders
+  /**
+   * The gold ball, wherever this part shows her (`worlds.ts`, GOLD). Each span
+   * is in show seconds and may run past the part's own slot (a truck parked at
+   * the dam still has her in its cab while the hero is down in the field); at
+   * any time at most one part in the show has her. Positions are in the part's
+   * frame; null while she is out of sight (and only when she is out of shot).
+   */
+  company?: Company[]
 }
 
 /** See `Built.riders`. */
 export type Riders = (t: number, hero: ShowBall) => ShowBall[] | null
+
+/** Where the gold ball is: the ball's own fields but its id and, unless she has changed, its colour. */
+export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
+
+/** A stretch of show time in which a part has the gold ball. */
+export interface Company {
+  from: number
+  to: number
+  at: (t: number) => Companion | null
+}
 
 /**
  * A camera key a part asks for, in its own cells: `hold` is a point of the
@@ -136,6 +154,8 @@ export interface Chain {
   shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
+  /** The parts' spans of the gold ball, in world cells. */
+  company: Company[]
   /** Where the next link would enter, and when: for a chain carried on in another universe. */
   next: { col: number; row: number; begin: number; ball: BallState }
 }
@@ -151,6 +171,7 @@ export function lay(start: { col: number; row: number; begin: number; ball: Ball
   const placed: Placed[] = []
   const shots: Chain['shots'] = []
   const riders: Chain['riders'] = []
+  const company: Company[] = []
   for (const link of links) {
     const slot: Slot = { begin, end: link.end, hits: link.hits ?? [] }
     const built = link.part.build(slot)
@@ -185,13 +206,18 @@ export function lay(start: { col: number; row: number; begin: number; ball: Ball
         fn: (t, hero) => fn(t, { ...hero, x: hero.x - ox, y: hero.y - oy })?.map((b) => ({ ...b, x: b.x + ox, y: b.y + oy })) ?? null,
       })
     }
+    for (const span of built.company ?? []) {
+      const ox = col
+      const oy = row
+      company.push({ from: span.from, to: span.to, at: (t) => { const b = span.at(t); return b ? { ...b, x: b.x + ox, y: b.y + oy } : null } })
+    }
     for (const k of link.part.shots?.(slot, built) ?? []) shots.push({ ...k, hold: k.hold ? [col + k.hold[0], row + k.hold[1]] : undefined })
     ball = ballAt(ball, changes, span)
     col += built.exit[0]
     row += built.exit[1]
     begin = link.end
   }
-  return { placed, shots, riders, next: { col, row, begin, ball } }
+  return { placed, shots, riders, company, next: { col, row, begin, ball } }
 }
 
 /** A drawing that stands for the whole show at `col, row`, claiming `cells` (absolute). It is told show time. */

@@ -13,6 +13,8 @@ import { RIM_R, SEAM, angleOf, fromRim, standOnRim, stationFrame } from './stati
  * that climbs from the museum plinth round to where the ground stands on
  * end. Four machines, one bar each, on the organ's steady beat.
  *
+ *   116  Off the museum's plinth, the ball knocks down the paddle of a sluice
+ *        standing on the ground; the pipe under it fills the noria's sump.
  *   117  The noria. The water wheel stands idle over its sump until the ball
  *        rolls into the scoop at the bottom; the weight drops the clutch in,
  *        and from then on a Geneva drive turns it a quarter a beat.
@@ -397,7 +399,7 @@ function plan(begin: number, end: number): Plan {
 
 /* ------------------------------------------------------------------ the part */
 
-const HIT_BEATS = [117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131]
+const HIT_BEATS = [116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131]
 export const RIM_HITS = HIT_BEATS.map((k) => cue(k))
 
 function cellsOf(): Pt[] {
@@ -615,10 +617,60 @@ function scoopShape(P: Pose): Pt[] {
 }
 const scoopInside = (P: Pose): Pt[] => scoopShape(P).slice(14)
 
+/** The sluice's paddle stands on the ground where the ball comes off the museum's plinth: it meets it on 116. */
+const S_V = R + 0.035
+/** Which way along a machine's own x the ball is going. */
+const AHEAD = Math.sign(local(S_V, at(S_V + 0.3, 0))[0]) || 1
+
+/** Knocked flat by the ball on 116 (a little bounce as it lands), the sluice under the ground opened with it. */
+function drawSluice(p: p5, c: Ctx, kb: number): void {
+  const { k, ink, weight } = c
+  const X = (x: number) => x * k
+  // The pipe, just under the ground, from the valve to the sump.
+  const pts: Pt[] = []
+  for (let i = 0; i <= 12; i++) pts.push(at(S_V + ((S_N - 0.28 - S_V) * i) / 12, -0.34))
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(X(0.09) + weight * 1.6)
+  p.beginShape()
+  for (const q of pts) p.vertex(X(q[0]), X(q[1]))
+  p.endShape()
+  p.stroke(DUST.tin)
+  p.strokeWeight(X(0.09))
+  p.beginShape()
+  for (const q of pts) p.vertex(X(q[0]), X(q[1]))
+  p.endShape()
+  const hit = smooth(kb, 115.97, 116.13)
+  const bounce = kb > 116.13 ? 0.12 * Math.exp(-(kb - 116.13) / 0.08) * Math.sin((kb - 116.13) * 40) : 0
+  const lean = (Math.PI / 2 - 0.08) * hit - bounce
+  standing(p, k, S_V, () => {
+    // The valve box in the ground, its wheel turned by the paddle's shaft.
+    solid(p, ink, weight * 0.8, DUST.tin)
+    p.rect(0, X(0.2), X(0.2), X(0.24), X(0.02))
+    solid(p, ink, weight * 0.7, DUST.rust)
+    p.push()
+    p.translate(0, X(0.2))
+    p.rotate(lean * 1.5)
+    p.circle(0, 0, X(0.13))
+    p.line(X(-0.065), 0, X(0.065), 0)
+    p.pop()
+    // The paddle: a board on the shaft, standing in the ball's way until it is knocked down ahead of it.
+    p.push()
+    p.translate(0, X(0.06))
+    p.rotate(AHEAD * lean)
+    solid(p, ink, weight * 0.9, DUST.corn)
+    p.rect(0, X(-0.2), X(0.06), X(0.34), X(0.015))
+    solid(p, ink, weight * 0.6, DUST.bone)
+    p.circle(0, 0, X(0.06))
+    p.pop()
+  })
+}
+
 function drawNoria(p: p5, s: Plan, c: Ctx, t: number, kb: number): void {
   const { k, ink, weight } = c
   const turns = turnsAt(kb)
   const X = (x: number) => x * k
+  drawSluice(p, c, kb)
   // The flume, behind the wheel: from the top scoop's lip down to the first pool.
   const Ptop = potPose(2, 0)
   const f0 = up(S_N, ...inPot(Ptop, POT_D / 2, POT_W / 2))
@@ -655,11 +707,29 @@ function drawNoria(p: p5, s: Plan, c: Ctx, t: number, kb: number): void {
     p.noStroke()
     p.fill(DUST.shade)
     p.rect(X(0.08), X(0.2), X(0.72), X(0.4))
+    // Low until the ball knocks the sluice's paddle on 116; then the pipe fills it, just in time for the scoop.
+    const fill = 0.3 + 0.7 * smooth(kb, 116.05, 116.85)
+    const top = 0.4 - 0.28 * fill
     p.fill(WATER)
-    p.rect(X(0.08), X(0.26), X(0.7), X(0.28))
+    p.rect(X(0.08), X((top + 0.4) / 2), X(0.7), X(0.4 - top))
     p.stroke(SHEEN)
     p.strokeWeight(weight * 0.6)
-    p.line(X(-0.24), X(0.12), X(0.4), X(0.12))
+    p.line(X(-0.24), X(top), X(0.4), X(top))
+    // The pipe's mouth in the sump's near wall, and the water out of it while the sluice is open.
+    const flow = smooth(kb, 116.02, 116.12) * (1 - smooth(kb, 116.75, 117.0))
+    if (flow > 0.01) {
+      p.noFill()
+      p.stroke(alpha(p, WATER, 0.9 * flow))
+      p.strokeWeight(Math.max(1.5, X(0.07) * flow))
+      p.beginShape()
+      for (let i = 0; i <= 8; i++) {
+        const u = i / 8
+        p.vertex(X(-0.24 + 0.34 * u), X(0.34 - 0.16 * Math.sin(Math.PI * u * 0.9) + 0.1 * u * u))
+      }
+      p.endShape()
+    }
+    solid(p, ink, weight * 0.7, DUST.tin)
+    p.rect(X(-0.25), X(0.34), X(0.08), X(0.09))
     outline(p, ink, weight * 0.9)
     p.beginShape()
     p.vertex(X(-0.28), 0)

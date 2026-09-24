@@ -1,15 +1,14 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
-import { ball, FLOOR, laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import type { ShowBall } from '../../../../../show'
-import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type Way } from '../kit'
+import { FLOOR, laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
+import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_LOW, hop } from '../physics'
-import { BALL, DARK } from '../worlds'
+import { AGED, BALL, DARK, GOLD } from '../worlds'
 
 /**
- * Miller's world, and the twin who waits.
+ * Miller's world, and the one who waits.
  *
  * The ball goes into the sphere and the camera goes after it, fast, to the
  * far side: a ring of its own colour closes on a point in a pale sky, and it
@@ -22,10 +21,11 @@ import { BALL, DARK } from '../worlds'
  * cartwheels, a slab planted in the water on every tick. The buoys' lamps
  * keep the same tick.
  *
- * Up in orbit the station keeps another time. The ball that stayed behind
- * runs round the inside of the ring once an eighth, trips a catch every lap,
- * and the catch cuts a mark on the tally beside it; its orange goes grey.
- * On the twenty-third mark the catch locks and holds it.
+ * Up in orbit the ring keeps another time. The gold ball the trapdoor left
+ * behind runs round the inside of it once an eighth, trips a catch every
+ * lap, and the catch cuts a mark on the tally beside it; her gold goes to
+ * the grey of the years. On the twenty-third mark the catch locks and holds
+ * her, and the ring goes from the sky.
  *
  * From beat 175 the mountains move. They are one wave, and near it is a wall
  * of water. TARS's third plant throws the ball onto its foot (181), the face
@@ -63,13 +63,13 @@ const MOVE = beat(175)
 const ARRIVE = beat(180.75)
 /** The beacons' lamps: the planet's tick. */
 const TICKS = [166, 168, 170, 172, 174, 176, 178, 180].map(beat)
-/** The twin trips the catch every eighth from the hero's arrival; the twenty-third locks it. */
+/** She trips the catch every eighth from his arrival; the twenty-third locks it. */
 const CLICKS = Array.from({ length: 23 }, (_, i) => beat(167 + i / 2))
 const LATCH = CLICKS[CLICKS.length - 1]
 
 /** The strikes the audience sees down on the water: the tick, and the wave. */
 export const MILLER_HITS = [OUT, COLLAR, COLLAR_TOSS, BUOY_AT[0], BUOY_TOSS[0], BUOY_AT[1], BUOY_TOSS[1], CATCH, ...PLANTS, FOOT, FEATHER, FLING]
-/** The twin's catch, every eighth, the last one locking. */
+/** Her catch, every eighth, the last one locking. */
 export const MILLER_TWIN_HITS = CLICKS
 
 /* ------------------------------------------------------------------ the sea, in depth */
@@ -124,16 +124,17 @@ const HUB_Y = NEAR - TR * Math.SQRT1_2
 /** Where the ball lands on the wave's foot. */
 const LAND_X = T0 + 3 * STEP + 0.62
 
-/** The station overhead: a hub, four spokes, a ring of twelve modules; the twin runs round the inside of the rim. */
+/** The ring overhead: a hub, four spokes, twelve modules; she runs round the inside of the rim. */
 const STATION: Pt = [10.05, -3.38]
 const RING_IN = 0.5
 const RING_OUT = 0.63
+/** She is that far off: drawn at this size. */
 const TWIN_SCALE = 0.6
 const PATH = RING_IN - R * TWIN_SCALE - 0.012
-/** Where on its lap the twin meets the catch (radians, y down: just under three o'clock). */
+/** Where on her lap she meets the catch (radians, y down: just under three o'clock). */
 const MEET = (R * TWIN_SCALE) / PATH + 0.02
-const TWIN_ID = 99
-const GREY = '#9A958A'
+/** Where the sun is, seen from the ring's centre: low on the left, as it was when he left her. */
+const SUN = (150 * Math.PI) / 180
 /** The catch's pivot, in the gap between two modules at three o'clock, and where the tally starts. */
 const PIVOT: Pt = [STATION[0] + (RING_IN + RING_OUT) / 2, STATION[1]]
 const TALLY_X = STATION[0] + RING_OUT + 0.42
@@ -302,21 +303,17 @@ const tip = (s: Tars, k: number): Pt => {
   return [s.hub[0] + TR * Math.sin(a), s.hub[1] + TR * Math.cos(a)]
 }
 
-/* ------------------------------------------------------------------ the twin */
+/* ------------------------------------------------------------------ her, up there */
 
-interface Twin {
-  x: number
-  y: number
-  angle: number
-  color: string
-}
-
-/** The station in orbit, and the twin on it, go once the twin is caught: the wave and the hole have the sky to themselves. */
+/** The ring in orbit, and she on it, go once she is caught: the wave and the hole have the sky to themselves. */
 const stationOn = (t: number): number => 1 - smooth(t, beat(178.3), beat(179.6))
+/** When the ring is gone from the sky, and her with it. */
+const GONE = beat(179.6)
 
-function twinAt(t: number): Twin {
+/** Where she is on her lap, and her colour: gold going to the grey of the years by the lock. */
+function waitsAt(t: number): { x: number; y: number; angle: number; color: string } {
   const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET
-  const color = mixHex(BALL, GREY, clamp((t - OUT) / (LATCH - OUT)))
+  const color = mixHex(GOLD, AGED, clamp((t - OUT) / (LATCH - OUT)))
   return { x: STATION[0] + PATH * Math.cos(a), y: STATION[1] + PATH * Math.sin(a), angle: a - Math.PI / 2, color }
 }
 
@@ -373,16 +370,18 @@ export const miller = part<MillerState>(
     const end = ride(at(slot.end))
     const lane: Lane = { segs, fire: at(COLLAR) }
     const state: MillerState = { begin: slot.begin, end: slot.end, lane }
+    // Her: on the ring in the sky, coming up with Miller's world while the camera is still in the sphere (the
+    // ring is out of the frame then), and going with the ring, smaller and smaller, until it is gone.
+    const waits = (t: number): Companion | null => {
+      const w = waitsAt(t)
+      return { x: w.x, y: w.y, color: w.color, scale: TWIN_SCALE * presence(t, state) * stationOn(t), angle: w.angle }
+    }
     return {
       cells: box(-1, -7, 24, 3),
       exit: [end[0] + 0.5, end[1]],
       lane,
       state,
-      riders: (t: number, hero: ShowBall) => {
-        const tw = twinAt(t)
-        const on = smooth(t, slot.begin + 0.1, slot.begin + 0.5)
-        return [hero, { id: TWIN_ID, x: tw.x, y: tw.y, color: tw.color, scale: TWIN_SCALE * on * stationOn(t), angle: tw.angle }]
-      },
+      company: [{ from: slot.begin + 0.14, to: GONE + 0.02, at: waits }],
     }
   },
   (slot) => [
@@ -449,11 +448,6 @@ function drawMiller(p: p5, s: MillerState, c: Ctx): void {
   drawTars(p, c, t)
   drawSpray(p, c, f, t)
   drawOut(p, c, t)
-  // The twin, once the stage has stopped drawing it: grey, held in the catch (while the station is still there).
-  if (t >= s.end && stationOn(t) > 0) {
-    const tw = twinAt(t)
-    ball(p, k, c.ink, c.weight, tw.color, tw.x * k, tw.y * k, c.spin(tw.x), TWIN_SCALE)
-  }
   p.pop()
 }
 
@@ -506,13 +500,16 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   }
   solid(p, ink, weight * 0.5, DARK.hull)
   p.circle(X(cx), X(cy), X(0.18))
-  // The rim the twin runs on, and twelve modules round it, a gap at three o'clock for the catch.
+  // The rim she runs on, and twelve modules round it, a gap at three o'clock for the catch: the ring as he left
+  // it, sunlit on the sun's side, and on the night side its windows lit.
   outline(p, ink, weight * 0.55)
   p.circle(X(cx), X(cy), X(2 * RING_IN))
-  solid(p, ink, weight * 0.45, DARK.hull)
   for (let j = 0; j < 12; j++) {
     const a0 = (j * TAU) / 12 + 0.07
     const a1 = ((j + 1) * TAU) / 12 - 0.07
+    const mid = (a0 + a1) / 2
+    const lit = Math.cos(mid - SUN) > 0
+    solid(p, ink, weight * 0.45, lit ? DARK.hull : DARK.slate)
     p.beginShape()
     for (let i = 0; i <= 4; i++) {
       const a = a0 + ((a1 - a0) * i) / 4
@@ -523,8 +520,14 @@ function drawStation(p: p5, c: Ctx, t: number): void {
       p.vertex(X(cx + RING_IN * Math.cos(a)), X(cy + RING_IN * Math.sin(a)))
     }
     p.endShape(p.CLOSE)
+    if (!lit) {
+      p.noStroke()
+      p.fill(DARK.amber)
+      const rw = (RING_IN + RING_OUT) / 2
+      p.circle(X(cx + rw * Math.cos(mid)), X(cy + rw * Math.sin(mid)), Math.max(1.5, X(0.035)))
+    }
   }
-  // The catch: a lever through the tube at three o'clock. Its inner end is in the twin's way; its outer end cuts the tally.
+  // The catch: a lever through the tube at three o'clock. Its inner end is in her way; its outer end cuts the tally.
   const last = lastClick(t)
   const locked = t >= LATCH
   const rock = locked ? 0.22 : last.ago < 0.25 ? 0.4 * knock(last.ago, 0.05) : 0

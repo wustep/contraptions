@@ -4,7 +4,7 @@ import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
-import { BALL } from './worlds'
+import { BALL, GOLD, GOLD_ID } from './worlds'
 
 /**
  * Liftoff as a `Show`: two universes on one clock, and no portal between
@@ -36,6 +36,9 @@ export interface Stage {
 /** Riders besides the thread, for the stretches of the show that have them (`kit.ts`). */
 export type Riders = { from: number; to: number; fn: (t: number, hero: ShowBall) => ShowBall[] | null }[]
 
+/** The gold ball's spans, in world cells (`kit.ts`, `Company`). */
+export type Spans = { from: number; to: number; at: (t: number) => (Omit<ShowBall, 'id' | 'color'> & { color?: string }) | null }[]
+
 function boundsOf(pieces: Placed[]): Box {
   const b: Box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
   for (const p of pieces) {
@@ -53,7 +56,7 @@ export class LiftoffShow extends Show {
   private readonly stages: Stage[]
   private readonly worlds: Universe[]
 
-  constructor(stages: Stage[], readonly duration: number, private readonly riders: Riders = []) {
+  constructor(stages: Stage[], readonly duration: number, private readonly riders: Riders = [], private readonly company: Spans = []) {
     super('liftoff')
     this.stages = stages
     this.worlds = stages.map((s, index) => {
@@ -137,7 +140,8 @@ export class LiftoffShow extends Show {
       begin: 0,
     }
     const ride = this.riders.find((r) => time >= r.from && time < r.to)
-    if (ride) {
+    const gold = this.gold(time)
+    if (ride || gold) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -148,9 +152,17 @@ export class LiftoffShow extends Show {
         stretch: point.stretch,
         angle: point.angle,
       }
-      const balls = ride.fn(time, hero)
-      if (balls) here.balls = balls
+      const balls = ride ? ride.fn(time, hero) : null
+      here.balls = gold ? [...(balls ?? [hero]), gold] : balls ?? undefined
     }
     return here
+  }
+
+  /** The gold ball at `t`, in world cells, or null while no part has her in sight. */
+  gold(t: number): ShowBall | null {
+    const time = this.clamp(t)
+    const span = this.company.find((s) => time >= s.from && time < s.to)
+    const b = span?.at(time)
+    return b ? { ...b, id: GOLD_ID, color: b.color ?? GOLD } : null
   }
 }

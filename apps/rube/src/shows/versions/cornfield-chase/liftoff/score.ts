@@ -88,6 +88,11 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { part: undock, end: cue(212) },
     { part: edmunds, end: DURATION },
   ])
+  // The undock is a match cut: the first frame outside keeps the hub's last framing, so the Ranger holds still
+  // on the screen while the station's inside turns to the dark round it; then the camera pulls back off it.
+  const lastIn = [...station.shots].filter((s) => s.t <= UNDOCK + 1e-6).sort((a, b) => b.t - a.t)[0]
+  const firstOut = outside.shots.find((s) => Math.abs(s.t - UNDOCK) < 1e-6)
+  if (lastIn && firstOut) Object.assign(firstOut, { cells: lastIn.cells, hold: lastIn.hold, w: 1, off: undefined })
   const axis: Pt = [space.next.col - 0.5 + AXIS[0], space.next.row + AXIS[1]]
 
   const all = box(-12, -140, 260, 16, 2)
@@ -154,6 +159,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     ],
     DURATION,
     [...earth.riders, ...space.riders, ...station.riders, ...outside.riders],
+    [...earth.company, ...space.company, ...station.company, ...outside.company].sort((a, b) => a.from - b.from),
   )
 
   const shots: Shot[] = [

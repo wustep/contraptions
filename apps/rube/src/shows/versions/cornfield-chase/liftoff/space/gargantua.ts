@@ -5,7 +5,7 @@ import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../
 import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT1_END, beat, LAST } from '../music'
-import { SHELF_TOP, stayRow } from '../earth/house'
+import { drawRobot, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
 import { MILLER_HANDOFF } from './miller'
 
@@ -1223,6 +1223,8 @@ function drawRoom(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   spine(p, c, 0, fb.h / 2, fb.w, fb.h, fb.color, 0, ink)
   p.pop()
 
+  // The toy robot, back where it stood in the first frame, its arm out flat and nothing on it: she went too.
+  drawRobot(p, { k, ink, weight: w }, TOY_HOME[0], TOY_HOME[1] + 2)
   // The watch on the cap.
   drawWatch(p, c, T, 1.45, CAP - 0.11, ink, false)
   // Dusk: darkest away from the ghost, as the room was at the start, before the window caught up.

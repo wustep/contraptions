@@ -1,8 +1,9 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { R, puff, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Ctx } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
+import { goldDrift } from '../rocket'
 import { G_LOW } from '../physics'
 import { BALL, DARK } from '../worlds'
 
@@ -33,6 +34,15 @@ import { BALL, DARK } from '../worlds'
  * near a small ringed planet. Its pull bends the throw; the ball meets the
  * edge on the next beat (165) and its image wraps the rim; by 166 it is
  * inside, out of sight, at the centre.
+ *
+ * The gold ball rides all of it with him, at his back: she drifts in after
+ * him on the beacon's blinks, the cradle takes them both, they go up the
+ * rail and over on the lob one behind the other, the long jaws hold the two
+ * of them, and the airlock lets them in together. The kick sends her into
+ * him and him on, a little faster than her; she passes the lamp an eighth
+ * after him (159½). On 160 the trapdoor takes him and slaps shut a ball's
+ * width in front of her. She slows over it, and runs on round the inside of
+ * the ring without him.
  */
 
 const TAU = Math.PI * 2
@@ -89,6 +99,25 @@ const SUN = (150 * Math.PI) / 180
 /** Seconds to be drawn in through the hatch, and to fall through the trapdoor into the cup. */
 const D_IN = 0.24
 const D_DROP = 0.16
+
+/* ------------------------------------------------------------------ the gold ball */
+
+/** Two balls touching, centre to centre (a hair over two radii). */
+const GAP = 2 * R + 0.01
+/** She comes in through the hatch a moment after him, and takes a little longer about it. */
+const IN_LAG = 0.06
+const IN_DUR = 0.36
+/** On the corridor floor she rests at his back. */
+const PSI_IN = GAP / RUN_R
+/** Her eighth: she passes the bulkhead lamp on the and after him. */
+const GATE2 = beat(159.5)
+/** Too late: she hops the last of the way and comes down on the shut trapdoor on the and, stops there a beat, and runs on. */
+const HOP = beat(160.25)
+const KNOCK = beat(160.5)
+const ON = beat(161.5)
+const HOP_H = 0.08
+/** How nearly she stops on the door: 1 would be dead still. */
+const STILL = 0.93
 
 /** The catapult: an arm lying forward along a module's face from a pivot behind, a cup at its end. */
 const ARM = 0.56
@@ -235,6 +264,69 @@ function ringBall(c: Pt, T: number): Pt {
   return [fell[0] + (held[0] - fell[0]) * u, fell[1] + (held[1] - fell[1]) * u]
 }
 
+/* ------------------------------------------------------------------ her, on the ring */
+
+/** Her pace off the kick, as a share of his: what puts her past the lamp an eighth after him (and on the door on 160½). */
+const F_RUN = (PSI_IN + RHO * (GATE - KICK)) / (RHO * (GATE2 - KICK))
+/** The smoothstep's integral, 0..1 → 0..½. */
+const ramp = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * v - (v * v * v * v) / 2
+}
+/** How long she has been stopped on the door by `T` (seconds of her pace lost): she stops as she lands, and goes on from ON. */
+function stopped(T: number): number {
+  const a = KNOCK
+  const b = KNOCK + 0.12
+  const c = ON
+  const d = ON + 0.5
+  if (T <= a) return 0
+  if (T <= b) return (b - a) * ramp((T - a) / (b - a))
+  if (T <= c) return (b - a) / 2 + (T - b)
+  return (b - a) / 2 + (c - b) + (T - c) - (d - c) * ramp((T - c) / (d - c))
+}
+
+/** Her way in through the hatch, 0..1: up the hatch under him while he goes in, then rolled round his back onto the floor. */
+function herIn(v: number): { psi: number; r: number } {
+  const u = Math.max(0, Math.min(1, v))
+  const r0 = SEAT + GAP - 0.02
+  if (u < 0.5) return { psi: 0, r: r0 + (RUN_R + GAP - r0) * smooth(u, 0, 0.5) }
+  const th = (Math.PI / 2) * smooth(u, 0.5, 1)
+  return { psi: (GAP * Math.sin(th)) / RUN_R, r: RUN_R + GAP * Math.cos(th) }
+}
+
+/** Where she is on the ring at show time `T`, from the clamp on: her angle from the port, and how far out. */
+function herRing(T: number): { psi: number; r: number } {
+  if (T < HATCH + IN_LAG) return { psi: 0, r: SEAT + GAP - 0.02 * smooth(T, CLAMP, CLAMP + 0.12) }
+  if (T < KICK) return herIn((T - HATCH - IN_LAG) / IN_DUR)
+  const hop = T > HOP && T < KNOCK ? HOP_H * Math.sin((Math.PI * (T - HOP)) / (KNOCK - HOP)) : 0
+  // When she goes on, it is at his old pace, a module a beat.
+  const on = T <= ON ? 0 : 0.5 * ramp((T - ON) / 0.5) + Math.max(0, T - ON - 0.5)
+  return { psi: PSI_IN - RHO * F_RUN * (T - KICK - STILL * stopped(T)) - RHO * (1 - F_RUN) * on, r: RUN_R - hop }
+}
+
+/** The kicker: a paddle standing on the corridor floor at her back, cocked, that snaps up into her on 158. */
+const KICK_PSI = PSI_IN + 0.2 / COR_OUT
+const PADDLE = 0.3
+const COCKED = -0.95
+/** Where the paddle meets her: the lean at which its face is a ball's radius (and its own half-width) from her centre. */
+const STRIKE = (() => {
+  const u = 0.2 * (RUN_R / COR_OUT)
+  const v = COR_OUT - RUN_R
+  let b = 0
+  while (b < 1 && u * Math.cos(b) - v * Math.sin(b) > R + 0.03) b += 0.001
+  return b
+})()
+function paddleAt(T: number): number {
+  if (T < KICK - 0.09) return COCKED
+  if (T < KICK) {
+    const u = (T - (KICK - 0.09)) / 0.09
+    return COCKED + (STRIKE - COCKED) * u * u
+  }
+  // Through, a touch past where it met her, and slowly back down to cocked.
+  const through = STRIKE + 0.14 * (1 - Math.exp(-(T - KICK) / 0.05))
+  return through + (COCKED - through) * smooth(T, KICK + 0.3, KICK + 1.1)
+}
+
 /** After the throw: about the sphere, the radius closes (a cubic) while the angle swings on. */
 function flightAt(sphere: Pt, fl: Flight, tau: number): Pt {
   const u = Math.max(0, Math.min(fl.dur, tau))
@@ -327,6 +419,29 @@ export const endurance = part<EnduranceState>(
     }
     const ring = (t: number) => ringBall(c, t + slot.begin)
     const fly = (t: number) => flightAt(sphere, flight, t + slot.begin - FIRE)
+    // The gold ball, at his back: behind him up the rail, and under him in the jaws.
+    const back: Pt = [-dir[0] * GAP, -dir[1] * GAP]
+    const under: Pt = [0, GAP]
+    const gold = (T: number): Companion | null => {
+      let h: Pt
+      let o: Pt
+      if (T < CATCH) {
+        h = drift(rel(T))
+        o = goldDrift(T, back)
+      } else if (T < MUZZLE) {
+        h = rail(rel(T))
+        o = back
+      } else if (T < CLAMP) {
+        h = lob(rel(T))
+        const u = smooth(T, MUZZLE, CLAMP)
+        o = [back[0] + (under[0] - back[0]) * u, back[1] + (under[1] - back[1]) * u]
+      } else {
+        const { psi, r } = herRing(T)
+        const [x, y] = ringPt(c, T, psi, r)
+        return { x, y }
+      }
+      return { x: h[0] + o[0], y: h[1] + o[1] }
+    }
     const segs = [
       ...carried(drift, 0, rel(CATCH), 16),
       ...carried(rail, rel(CATCH), rel(MUZZLE), 48),
@@ -343,6 +458,8 @@ export const endurance = part<EnduranceState>(
       exit: [sphere[0] + 0.5, sphere[1]],
       lane: { segs, fire: rel(CATCH) },
       state,
+      // Hers ends as the camera whips off through the sphere, once she has run out of the frame round the ring.
+      company: [{ from: slot.begin, to: END + 0.1, at: gold }],
     }
   },
   (slot, built) => {
@@ -355,13 +472,18 @@ export const endurance = part<EnduranceState>(
       // The ring whole as the ball comes up at it; in a little for the clamp.
       { t: beat(155.2), cells: 8.2, hold: [c[0], c[1] + 1.1], w: 0.9 },
       { t: beat(156), cells: 6.6, hold: [c[0] + 0.05, c[1] + 1.5], w: 0.9 },
-      // Round with it: the airlock and the kick low on the right, the run and the trapdoor up the side.
-      { t: beat(158), cells: 6.2, hold: [c[0] + 1.2, c[1] + 1.1], w: 0.9 },
-      { t: beat(160), cells: 6.4, hold: [c[0] + 1.5, c[1] - 0.9], w: 0.9 },
+      // In on the two of them at the airlock and the kick, low on the right.
+      { t: beat(157), cells: 4.8, hold: [c[0] + 0.62, c[1] + 2.1], w: 0.9 },
+      { t: beat(158), cells: 4.8, hold: [c[0] + 1.15, c[1] + 1.8], w: 0.85 },
+      // Then with them up the side, closer: the trapdoor takes him and shuts, and the frame stays a beat on her.
+      { t: beat(159), cells: 4.3, off: [-0.25, 0.1], w: 0 },
+      { t: beat(160), cells: 3.6, off: [-0.3, 0.2], w: 0 },
+      { t: beat(161), cells: 3.5, off: [-0.35, 0.15], w: 0 },
+      { t: beat(161.5), cells: 3.8, off: [-0.4, 0.05], w: 0 },
       // Over the top with the catapult, the sphere waiting in the frame; out for the throw.
-      { t: beat(162.5), cells: 7.2, hold: [c[0] + 1.4, c[1] - 2.2], w: 0.9 },
+      { t: beat(163), cells: 7.2, hold: [c[0] + 1.4, c[1] - 2.2], w: 0.9 },
       { t: FIRE + 0.2, cells: 7.4, hold: [(c[0] + sphere[0]) / 2 + 0.4, sphere[1] + 0.5], w: 0.9 },
-      { t: END - 0.02, cells: 6.6, hold: sphere, w: 1 },
+      { t: END - 0.02, cells: 7, hold: sphere, w: 1 },
     ]
   },
 )
@@ -459,18 +581,19 @@ function drawDriver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   outline(p, ink, weight * 0.4)
   for (const d of [0.62, 0.9, 1.18]) p.line(...at(d, CH + 0.16), ...at(d, CH + 0.62))
   // The spine: a beam along the rail's back, from the cradle to the muzzle.
+  const foot = -GAP
   solid(p, ink, weight * 0.9, DARK.slate)
-  quad(p, at, [[-0.26, CH], [end, CH], [end, CH + 0.16], [-0.26, CH + 0.16]])
+  quad(p, at, [[foot - 0.26, CH], [end, CH], [end, CH + 0.16], [foot - 0.26, CH + 0.16]])
   // The channel between the rails, dark, and the rails: the near one starts above the cradle's mouth.
   p.noStroke()
   p.fill(alpha(p, DARK.deep, 0.85))
-  quad(p, at, [[-0.2, -CH], [end, -CH], [end, CH], [-0.2, CH]])
+  quad(p, at, [[foot - 0.2, -CH], [end, -CH], [end, CH], [foot - 0.2, CH]])
   outline(p, ink, weight)
-  p.line(...at(-0.2, CH), ...at(end, CH))
+  p.line(...at(foot - 0.2, CH), ...at(end, CH))
   p.line(...at(0.3, -CH), ...at(end, -CH))
-  // The cradle: a stop across the rail's foot; the ball comes in under the near rail and fetches up against the far one.
+  // The cradle: a stop across the rail's foot, room for two above it; they come in under the near rail.
   solid(p, ink, weight * 0.8, DARK.hull)
-  quad(p, at, [[-0.26, -CH - 0.02], [-0.16, -CH - 0.02], [-0.16, CH + 0.02], [-0.26, CH + 0.02]])
+  quad(p, at, [[foot - 0.26, -CH - 0.02], [foot - 0.16, -CH - 0.02], [foot - 0.16, CH + 0.02], [foot - 0.26, CH + 0.02]])
   // The coils: gold bands round the channel. Their backs here; the straps across the front go over the ball.
   const coils = coilSpots(s)
   const times = [...COILS, MUZZLE]
@@ -513,7 +636,8 @@ function drawDriverOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     p.noFill()
     p.stroke(alpha(p, DARK.ice, 0.85 * (1 - u)))
     p.strokeWeight(weight * (1.2 - 0.6 * u))
-    p.circle(s.cup[0] * k, s.cup[1] * k, k * (2 * R + 0.1 + 0.9 * Math.sqrt(u)))
+    const [mx, my] = at(-GAP / 2, 0)
+    p.circle(mx, my, k * (2 * R + GAP + 0.1 + 0.9 * Math.sqrt(u)))
   }
 }
 
@@ -587,42 +711,51 @@ function drawRing(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.6, DARK.deep)
   p.circle(hx, hy, X(0.3))
 
-  // The airlock hatch in module 0's floor: slides open for the ball on 157, shut again under it.
-  const open = smooth(T, HATCH - 0.08, HATCH) * (1 - smooth(T, HATCH + D_IN + 0.02, HATCH + D_IN + 0.14))
-  hatch(p, c, s.c, T, 0, open)
-  // The trapdoor over the catapult: opens as the ball comes, shuts once it has gone through.
-  const trap = smooth(T, DROP - D_DROP - 0.1, DROP - D_DROP) * (1 - smooth(T, DROP + 0.02, DROP + 0.14))
+  // The airlock hatch in module 0's floor: slides open for the two on 157, shut again once she is in after him.
+  const shut = HATCH + IN_LAG + IN_DUR
+  const open = smooth(T, HATCH - 0.08, HATCH) * (1 - smooth(T, shut, shut + 0.12))
+  hatch(p, c, s.c, T, PSI_IN * 0.3, open, 0.26)
+  // The trapdoor over the catapult: opens as he comes, and slaps shut on 160, the moment he is through.
+  const trap = smooth(T, DROP - D_DROP - 0.1, DROP - D_DROP) * (1 - smooth(T, DROP - 0.035, DROP))
   hatch(p, c, s.c, T, PSI_CUP, trap)
+  // Where she comes down on it, too late: a knock off the shut leaves.
+  const rap = T >= KNOCK ? knock(T - KNOCK, 0.12) : 0
+  if (rap > 0.02) {
+    const d = ringPt(s.c, T, PSI_CUP, COR_OUT)
+    glow(p, X(d[0]), X(d[1]), X(0.3), BONE_RGB, 0.55 * rap)
+  }
 
-  // The kicker: a paddle in the corridor behind the ball that knocks it on its way on 158.
-  const swing = T < KICK ? 0 : 1.1 * knock(T - KICK, 0.12) * smooth(T, KICK - 0.02, KICK)
-  const ka = axes(T, 0.13)
-  const kb = ringPt(s.c, T, 0.13, COR_OUT)
-  const kt: Pt = [kb[0] - ka.ox * 0.3 * Math.cos(swing) - ka.fx * 0.3 * Math.sin(swing), kb[1] - ka.oy * 0.3 * Math.cos(swing) - ka.fy * 0.3 * Math.sin(swing)]
-  if (T > HATCH - 0.3 && T < DROP + 1) bar(p, ink, weight * 0.6, DARK.hull, X(0.05), [[X(kb[0]), X(kb[1])], [X(kt[0]), X(kt[1])]])
-  // The knock itself: a spark where the paddle meets the ball.
+  // The kicker: a paddle on the corridor floor at her back, cocked; on 158 it snaps up into her, and she into him.
+  const beta = paddleAt(T)
+  const ka = axes(T, KICK_PSI)
+  const kb = ringPt(s.c, T, KICK_PSI, COR_OUT - 0.01)
+  const kt: Pt = [kb[0] + PADDLE * (-ka.ox * Math.cos(beta) + ka.fx * Math.sin(beta)), kb[1] + PADDLE * (-ka.oy * Math.cos(beta) + ka.fy * Math.sin(beta))]
+  bar(p, ink, weight * 0.6, DARK.hull, X(0.05), [[X(kb[0]), X(kb[1])], [X(kt[0]), X(kt[1])]])
+  solid(p, ink, weight * 0.5, DARK.slate)
+  p.circle(X(kb[0]), X(kb[1]), X(0.07))
+  // The knock: a spark where she meets him, the moment it goes through her.
   const kick = T >= KICK ? knock(T - KICK, 0.1) : 0
   if (kick > 0.02) {
-    const now = ringPt(s.c, T, 0.06, RUN_R)
+    const now = ringPt(s.c, T, PSI_IN / 2, RUN_R)
     glow(p, X(now[0]), X(now[1]), X(0.4), BONE_RGB, 0.85 * kick)
   }
 
-  // The bulkhead lamp the run passes on 159, a module on from the port, on the corridor's inner wall.
+  // The bulkhead lamp the run passes on 159, a module on from the port, on the corridor's inner wall: his blink, and hers on the and.
   const g = ringPt(s.c, T, -RHO * (GATE - KICK), COR_IN - 0.02)
-  lamp(p, c, g[0], g[1], 0.2 + knock(T - GATE, 0.22), DARK.amber, AMBER_RGB, 0.075)
+  lamp(p, c, g[0], g[1], 0.2 + Math.max(knock(T - GATE, 0.22), 0.75 * knock(T - GATE2, 0.22)), DARK.amber, AMBER_RGB, 0.075)
 
-  // The port's lamp, beside the jaws: amber waiting (and bright as they open), ice while it holds the ball.
-  const pl = ringPt(s.c, T, -0.12, MOD_OUT + 0.05)
+  // The port's lamp, beside the jaws: amber waiting (and bright as they open), ice while it holds the two.
+  const pl = ringPt(s.c, T, -0.17, MOD_OUT + 0.05)
   const holding = T >= CLAMP && T < HATCH + 0.3
   const on = holding ? 0.6 + 0.6 * knock(T - CLAMP, 0.25) : T < CLAMP ? 0.25 + 0.9 * knock(T - READY, 0.25) : 0.15
   lamp(p, c, pl[0], pl[1], on, holding ? DARK.ice : DARK.amber, holding ? ICE_RGB : AMBER_RGB, 0.07)
 }
 
-/** A hatch in a module's floor at `rel` from the port: two leaves that slide apart as `open` goes to 1. */
-function hatch(p: p5, c: Ctx, ctr: Pt, T: number, rel: number, open: number): void {
+/** A hatch in a module's floor at `rel` from the port: two leaves, `width` each, that slide apart as `open` goes to 1. */
+function hatch(p: p5, c: Ctx, ctr: Pt, T: number, rel: number, open: number, width = 0.19): void {
   const { k, ink, weight } = c
   const a = portAngle(T) + rel
-  const half = 0.19 / MOD_OUT
+  const half = width / MOD_OUT
   if (open > 0.02) {
     // The opening, and the corridor's light spilling out of it.
     p.noStroke()
@@ -644,7 +777,7 @@ function hatch(p: p5, c: Ctx, ctr: Pt, T: number, rel: number, open: number): vo
   }
 }
 
-/** The jaws, in front of the ball: folded flat, open wide on 155, shut to end on 156, open to let it in. */
+/** The jaws, in front of the two: long enough for both, one under the other. Folded flat, open wide on 155, shut on 156, open to let them in. */
 function drawJaws(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const ax = axes(T, 0)
@@ -655,17 +788,19 @@ function drawJaws(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     const over = T > CLAMP ? -0.12 * Math.exp(-(T - CLAMP) / 0.08) * Math.cos((T - CLAMP) * 30) : 0
     open = 0.6 * (1 - u) + over
   }
-  if (T > HATCH) open = 1.62 * smooth(T, HATCH + D_IN * 0.4, HATCH + D_IN + 0.25)
-  // Once the ball is in, they draw back into the module.
-  const stow = 1 - smooth(T, HATCH + D_IN + 0.1, HATCH + D_IN + 0.45)
+  // They let go as she, the lower, starts up through the hatch, and draw back into the module once she is in.
+  const letGo = HATCH + IN_LAG
+  if (T > letGo) open = 1.62 * smooth(T, letGo, letGo + 0.3)
+  const stow = 1 - smooth(T, letGo + 0.15, letGo + 0.5)
   if (stow <= 0.02) return
   const W = (along: number, out: number): [number, number] => [(base[0] + ax.ox * out + ax.fx * along) * k, (base[1] + ax.oy * out + ax.fy * along) * k]
+  const reach = 0.02 + (0.18 + GAP) * stow
   for (const side of [-1, 1]) {
     const piv: Pt = [side * 0.21, 0.02]
     const pts: Pt[] = [
       [side * 0.21, 0.02],
-      [side * 0.21, 0.02 + 0.18 * stow],
-      [side * (0.21 - 0.11 * stow), 0.02 + 0.3 * stow],
+      [side * 0.21, reach],
+      [side * (0.21 - 0.11 * stow), reach + 0.12 * stow],
     ]
     const ang = side * open
     const rot = pts.map(([a, o]) => {
@@ -677,12 +812,12 @@ function drawJaws(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   }
   const since = T - CLAMP
   if (since >= 0 && since < 0.5) {
-    const b = ringPt(s.c, T, 0, SEAT)
+    const b = ringPt(s.c, T, 0, SEAT + GAP / 2)
     const u = since / 0.5
     p.noFill()
     p.stroke(alpha(p, DARK.ice, 0.9 * (1 - u)))
     p.strokeWeight(weight * (1.3 - 0.6 * u))
-    p.circle(b[0] * k, b[1] * k, k * (2 * R + 0.1 + 1.1 * Math.sqrt(u)))
+    p.circle(b[0] * k, b[1] * k, k * (2 * R + GAP + 0.1 + 1.1 * Math.sqrt(u)))
   }
 }
 

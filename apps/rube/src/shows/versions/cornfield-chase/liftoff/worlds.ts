@@ -11,6 +11,17 @@ import type { World } from '../../../../worlds'
 /** The ball, the same in both worlds: a farm-rust orange that reads on dust and on the dark. */
 export const BALL = '#D6602D'
 
+/**
+ * The gold ball: the hero's companion from the first frame. The corn's own gold, so she is the farm's; she
+ * reads on the dust and on the dark. She rides, where he makes things go. Her id is the same wherever she is.
+ */
+export const GOLD = '#E2AE3C'
+export const GOLD_ID = 99
+/** What gold goes to with the years. */
+export const GREY = '#9A958A'
+/** The gold ball after the years in orbit: grey, with the gold still in it. Where Miller leaves her, and how he finds her. */
+export const AGED = '#CDBF97'
+
 export const FARM: Theme = {
   name: 'dust-bowl',
   label: 'Dust Bowl',

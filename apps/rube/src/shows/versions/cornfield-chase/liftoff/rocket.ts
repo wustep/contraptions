@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../src/core/ease'
-import { FLOOR, puff, type Pt } from '../../../../parts'
+import { FLOOR, laneAt, puff, type Lane, type Pt } from '../../../../parts'
 import { alpha, box, carried, frame, hash, part, smooth, type Ctx } from './kit'
 import { beat, IGNITION } from './music'
 import { DUST } from './worlds'
@@ -20,19 +20,34 @@ import { DUST } from './worlds'
  * It leans over into orbit, and on 147 the nose opens like a seed and the
  * ball floats out.
  *
- * The part's frame: the ball in the window is (-0.5, 0) at ignition. The
- * rocket's own frame (its "body") has its base at (0, 0) and its axis up;
- * the window is at (0, -WINDOW).
+ * Two ride it. The window is wide, a seat either side of the axis: his on
+ * the right, and on the left the gold ball, who came up the gantry with
+ * him. When the nose opens he floats straight out; she stays sitting on
+ * the spent stage for an eighth, lets go, and drifts after him.
+ *
+ * The part's frame: the ball in the window is (-0.5, 0) at ignition, and
+ * she is at (-0.77, 0). The rocket's own frame (its "body") has its base
+ * at (0, 0) and its axis up; the window's middle is at (0, -WINDOW), his
+ * seat SEAT_X to the right of it and hers SEAT_X to the left.
  */
 
 export const WINDOW = 7.3
-/** Where the base of the rocket stands on the pad, in the part's frame. */
-const BASE: Pt = [-0.5, WINDOW]
+/** The two seats, either side of the axis. */
+const SEAT_X = 0.135
+/** Where the base of the rocket stands on the pad, in the part's frame: the axis between the two seats. */
+const BASE: Pt = [-0.5 - SEAT_X, WINDOW]
 const S1_TOP = 4.4
-const S2_TOP = 6.5
-const NOSE = 8.25
+const S2_TOP = 6.3
+/** The fairing: it flares out from the second stage to a wide drum with the window in it, and closes to a point. */
+const FAIR0 = 6.6
+const FAIR1 = 7.72
+const NOSE = 8.55
 const W1 = 0.74
 const W2 = 0.6
+const WF = 0.94
+/** The window: a slot with round ends, wide enough for two. Half its straight length, and its ends' radius. */
+const WIN_L = 0.165
+const WIN_R = 0.18
 
 export const LIFTOFF = beat(136)
 /** Inside the cloud: the stage changes universe here. */
@@ -101,8 +116,8 @@ function flightAt(t: number): { base: Pt; lean: number } {
 }
 
 const cache = new Map<number, { base: Pt; lean: number }>()
-function flight(t: number): { base: Pt; lean: number } {
-  const key = Math.round(t * 240)
+/** The flight at a 240th of a second, cached. */
+function flightKey(key: number): { base: Pt; lean: number } {
   let v = cache.get(key)
   if (!v) {
     v = flightAt(key / 240)
@@ -110,6 +125,22 @@ function flight(t: number): { base: Pt; lean: number } {
     cache.set(key, v)
   }
   return v
+}
+/** The flight at show time `t`, between the two nearest cached keys, so a thing riding it moves smoothly. */
+function flight(t: number): { base: Pt; lean: number } {
+  const f = t * 240
+  const k0 = Math.floor(f)
+  const u = f - k0
+  const a = flightKey(k0)
+  if (u < 1e-9) return a
+  const b = flightKey(k0 + 1)
+  return { base: [a.base[0] + (b.base[0] - a.base[0]) * u, a.base[1] + (b.base[1] - a.base[1]) * u], lean: a.lean + (b.lean - a.lean) * u }
+}
+/** A point of the body as the rocket's first cut had it (the flight at the nearest key): what the seams are measured from. */
+function bodyAtKey(t: number, x: number, y: number): Pt {
+  const { base, lean: a } = flightKey(Math.round(t * 240))
+  const bx = x + shakeAt(t)
+  return [base[0] + bx * Math.cos(a) + y * Math.sin(a), base[1] + bx * Math.sin(a) - y * Math.cos(a)]
 }
 
 /** A point of the rocket's body (x across, y up from the base) in the part's frame, at show time `t`, with its shake. */
@@ -127,21 +158,89 @@ function shakeAt(t: number): number {
   return hard * Math.sin(t * 97) * Math.sin(t * 31 + 1)
 }
 
-/** Where the ball is while it rides in the window. */
-export const windowAt = (t: number): Pt => body(t, 0, WINDOW)
+/** Where the ball is while it rides in the window: his seat. */
+export const windowAt = (t: number): Pt => body(t, SEAT_X, WINDOW)
+/** Her seat from his: across the window, turning as the rocket leans over. */
+const seatGap = (t: number): Pt => {
+  const a = lean(t)
+  return [-2 * SEAT_X * Math.cos(a), -2 * SEAT_X * Math.sin(a)]
+}
+
+/** The ball's way out: from the window's middle, forward and a little up, going about 1.4 cells a second as it leaves. */
+const EXIT: Pt = (() => {
+  const mid = bodyAtKey(OPEN, 0, WINDOW)
+  return [mid[0] + SEAT_X + 1.3, mid[1] - 0.25]
+})()
 
 /** Where the ball is after the nose opens: it floats out ahead of the rocket, and away. */
 function floatAt(t: number, exit: Pt): Pt {
   const from = windowAt(OPEN)
   const u = clamp((t - OPEN) / (RELEASE - OPEN))
-  // Eased out of the window, then going at the pace the ring's builder was promised.
+  // Eased out of the window, then going at the pace the ring's builder was promised: straight out along the
+  // axis first, clear of her, and up to the line of the drift after, arriving level.
   const e = u * u * (3 - 2 * u) * 0.35 + u * 0.65
-  return [from[0] + (exit[0] - from[0]) * e, from[1] + (exit[1] - from[1]) * e - Math.sin(u * Math.PI) * 0.12]
+  const rise = u * u * u * (10 - 15 * u + 6 * u * u)
+  return [from[0] + (exit[0] - from[0]) * e, from[1] + (exit[1] - from[1]) * rise]
+}
+
+
+/* ------------------------------------------------------------------ her, after the nose opens */
+
+/** The beacon on the ring's driver blinks on these; she answers each with a stroke that brings her up beside him. */
+const CALLS = [149, 150, 151, 152].map(beat)
+/** Her offset from him as the nose opens (her seat from his), and how it goes on: she drifts out after him, up a little, and falls back. */
+const OUT0: Pt = [-2 * SEAT_X * Math.cos(lean(OPEN)), -2 * SEAT_X * Math.sin(lean(OPEN))]
+const OUT_V: Pt = [-0.35, -0.45]
+const LAGGING: Pt = [-0.62, -0.4]
+const LAGGING_V: Pt = [-0.45, 0.12]
+/** As far back as she drifts before the first blink, from him. */
+const FARTHEST: Pt = [-0.92, -0.24]
+
+const lerp2 = (a: Pt, b: Pt, u: number): Pt => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
+/** A cubic Hermite from (p0, m0) to (p1, m1) over h seconds, at 0..1. */
+function hermite(p0: Pt, m0: Pt, p1: Pt, m1: Pt, h: number, u: number): Pt {
+  const h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+  const h10 = u ** 3 - 2 * u ** 2 + u
+  const h01 = -2 * u ** 3 + 3 * u ** 2
+  const h11 = u ** 3 - u ** 2
+  return [h00 * p0[0] + h10 * h * m0[0] + h01 * p1[0] + h11 * h * m1[0], h00 * p0[1] + h10 * h * m0[1] + h01 * p1[1] + h11 * h * m1[1]]
+}
+
+/**
+ * Her offset from him from the nose opening until the cradle takes them
+ * both (beat 152), where she is at `cradle` from him. She drifts out a step
+ * behind him and falls back; then each blink of the beacon is a stroke: a
+ * surge on the beat, easing off, less each time, until she is at his back
+ * as the cradle closes.
+ */
+export function goldDrift(t: number, cradle: Pt = [0, 0]): Pt {
+  if (t <= RELEASE) return hermite(OUT0, OUT_V, LAGGING, LAGGING_V, RELEASE - OPEN, clamp((t - OPEN) / (RELEASE - OPEN)))
+  if (t <= CALLS[0]) return hermite(LAGGING, LAGGING_V, FARTHEST, [0, 0], CALLS[0] - RELEASE, clamp((t - RELEASE) / (CALLS[0] - RELEASE)))
+  const keys: Pt[] = [FARTHEST, lerp2(FARTHEST, cradle, 0.45), lerp2(FARTHEST, cradle, 0.8), cradle]
+  let i = 0
+  while (i < 2 && t >= CALLS[i + 1]) i++
+  const u = clamp((t - CALLS[i]) / (CALLS[i + 1] - CALLS[i]))
+  return lerp2(keys[i], keys[i + 1], 1 - (1 - u) ** 3)
+}
+
+/** Where she is in this part's frame at show time `t`, from where the hero is (his lane, so the two shake as one): in her seat, then after him. */
+function goldAt(lane: Lane, begin: number, t: number): Pt {
+  const h = laneAt(lane, t - begin)
+  const o = t < OPEN ? seatGap(t) : goldDrift(t)
+  return [h.x + o[0], h.y + o[1]]
 }
 
 interface RocketState {
   begin: number
   exit: Pt
+}
+
+/** The rocket's body frame at show time `t`, shaken: what the stack, the window and its glass are drawn in. */
+function bodyFrame(p: p5, k: number, t: number): void {
+  const { base, lean: a } = flight(t)
+  const s = shakeAt(t)
+  p.translate((base[0] + s * Math.cos(a)) * k, (base[1] + s * Math.sin(a)) * k)
+  p.rotate(a)
 }
 
 export const rocket = part<RocketState>(
@@ -150,48 +249,52 @@ export const rocket = part<RocketState>(
     flight: true,
     draw: (p, s, c) => drawRocket(p, s, c),
     over: (p, s, c) => {
-      // The window's glass and rim over the ball in it, while it rides.
+      // The window's glass and rim over the two in it, while the nose is shut.
       const t = c.t + s.begin
-      if (t >= OPEN + 0.05) return
+      if (t >= OPEN) return
       const { k, ink, weight } = c
-      const [wx, wy] = windowAt(t)
       p.push()
+      bodyFrame(p, k, t)
       p.noFill()
       p.stroke(ink)
       p.strokeWeight(weight * 1.1)
-      p.circle(wx * k, wy * k, 0.36 * k)
-      p.noStroke()
-      p.fill(alpha(p, '#FFFFFF', 0.22))
-      p.arc(wx * k, wy * k, 0.3 * k, 0.3 * k, Math.PI * 1.05, Math.PI * 1.55)
+      pill(p, k, 0, -WINDOW, WIN_L, WIN_R)
+      // A sheen across the upper half of the glass: two short strokes, the way light lies on a curved pane.
+      p.stroke(alpha(p, '#FFFFFF', 0.3))
+      p.strokeWeight(Math.max(1, k * 0.028))
+      p.strokeCap(p.ROUND)
+      p.line(-WIN_L * 1.25 * k, (-WINDOW - WIN_R * 0.58) * k, -WIN_L * 0.2 * k, (-WINDOW - WIN_R * 0.58) * k)
+      p.line(WIN_L * 0.35 * k, (-WINDOW - WIN_R * 0.58) * k, WIN_L * 0.75 * k, (-WINDOW - WIN_R * 0.58) * k)
       p.pop()
     },
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
-    // The ball's way out: from the window, forward and a little up, going about 1.4 cells a second as it leaves.
-    const open = windowAt(OPEN)
-    const exitPt: Pt = [open[0] + 1.3, open[1] - 0.25]
-    const s: RocketState = { begin: slot.begin, exit: exitPt }
+    const s: RocketState = { begin: slot.begin, exit: EXIT }
     const ride = (t: number) => windowAt(t + slot.begin)
-    const float = (t: number) => floatAt(t + slot.begin, exitPt)
+    const float = (t: number) => floatAt(t + slot.begin, EXIT)
     const segs = [
       ...carried(ride, 0, at(OPEN), Math.ceil(at(OPEN) * 30)),
       ...carried(float, at(OPEN), at(slot.end), 24),
     ]
     const top = Math.min(...[LIFTOFF, PUNCH, STAGING, OPEN, slot.end].map((t) => windowAt(t)[1])) - 4
     const right = Math.max(...[OPEN, slot.end].map((t) => windowAt(t)[0])) + 4
+    const lane: Lane = { segs, fire: at(IGNITION) }
     return {
       cells: box(-5, top, right, WINDOW + 4),
-      exit: [exitPt[0] + 0.5, exitPt[1]],
-      lane: { segs, fire: at(IGNITION) },
+      exit: [EXIT[0] + 0.5, EXIT[1]],
+      lane,
       state: s,
+      company: [{ from: slot.begin, to: slot.end, at: (t) => { const [x, y] = goldAt(lane, slot.begin, t); return { x, y } } }],
     }
   },
   () => {
-    // On the pad: the whole stack. It lets go and the frame goes with it, low, so the pad drops away under it.
+    // On the pad: the whole stack, and high enough that the two in the window stay in it under Zoom. It lets go
+    // and the frame goes with it, low, so the pad drops away under it.
+    const [hx, hy] = [-0.5, WINDOW]
     return [
-      { t: IGNITION, cells: 10.6, hold: [BASE[0] - 0.3, BASE[1] - 3.6] },
-      { t: LIFTOFF + 0.2, cells: 10.8, hold: [BASE[0] - 0.1, BASE[1] - 3.7] },
+      { t: IGNITION, cells: 10.6, hold: [hx - 0.3, hy - 4.1] },
+      { t: LIFTOFF + 0.2, cells: 10.8, hold: [hx - 0.1, hy - 4.0] },
       { t: LIFTOFF + 1.6, cells: 9.5, off: [0.2, 2.6] },
       { t: PUNCH - 0.4, cells: 8.2, off: [0.1, 1.8] },
       { t: STAGING + 0.4, cells: 8.6, off: [0.3, 1.6] },
@@ -201,12 +304,26 @@ export const rocket = part<RocketState>(
   },
 )
 
+/** A slot with round ends, centred at (x, y) in the current frame: the window. */
+function pill(p: p5, k: number, x: number, y: number, l: number, r: number): void {
+  p.beginShape()
+  for (let i = 0; i <= 10; i++) {
+    const a = -Math.PI / 2 + (Math.PI * i) / 10
+    p.vertex((x + l + Math.cos(a) * r) * k, (y + Math.sin(a) * r) * k)
+  }
+  for (let i = 0; i <= 10; i++) {
+    const a = Math.PI / 2 + (Math.PI * i) / 10
+    p.vertex((x - l + Math.cos(a) * r) * k, (y + Math.sin(a) * r) * k)
+  }
+  p.endShape(p.CLOSE)
+}
+
 /** The rocket's base and lean at show time `t`, in this part's frame: what the cloud draws its shadow from. */
 export const rocketPose = (t: number): { base: Pt; lean: number } => flight(t)
 export const ROCKET_LENGTH = NOSE
 
 /** Show time the rocket's window is in the cloud: for the score, which puts the cloud there. */
-export const punchHeight = (): number => windowAt(PUNCH)[1]
+export const punchHeight = (): number => body(PUNCH, 0, WINDOW)[1]
 
 function drawRocket(p: p5, s: RocketState, c: Ctx): void {
   const { k, ink, weight } = c
@@ -327,11 +444,9 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
     }
   }
 
-  // The stack: the first stage until it goes, the second, and the nose.
+  // The stack: the first stage until it goes, the second, and the fairing.
   p.push()
-  const { base, lean: a } = flight(t)
-  p.translate(X(base[0] + shakeAt(t) * Math.cos(a)), X(base[1] + shakeAt(t) * Math.sin(a)))
-  p.rotate(a)
+  bodyFrame(p, k, t)
   if (t < STAGING) stage1(p, k, ink, weight, hull, band, 0)
   // The second stage: plain, one band, its small bell.
   solid(p, ink, weight, hull)
@@ -347,30 +462,60 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
     p.fill(alpha(p, '#FFF6DE', 1 - pyro / 0.35))
     p.ellipse(0, X(-S1_TOP), X(W1 * (1.4 + pyro * 4)), X(0.3 + pyro))
   }
-  // The nose: two halves of a pointed shell, with the window in the near one. They open on beat 147.
+  // The fairing: two halves split down the axis, each with its half of the window. They open on beat 147.
   const open = easeOutCubic(clamp((t - OPEN) / 0.35))
   const away = Math.max(0, t - OPEN - 0.25)
   for (const side of [-1, 1] as const) {
-    if (away > 3) continue
+    if (away > 6) continue
     p.push()
-    // Hinged open on the beat, then let go: each half sails off to its own side, turning over.
-    p.translate(X(side * W2 * 0.5 + side * away * 0.75), X(-S2_TOP - away * 0.35))
+    // Hinged at the foot of the flare and opened on the beat, then let go: each half sails off to its own side,
+    // turning over, and is out of the frame before it is let go of here (no fading through the picture).
+    const off = away * 1.6
+    p.translate(X(side * W2 * 0.5 + side * off), X(-S2_TOP - away * 0.35))
     p.rotate(side * open * 1.0 + side * away * 1.6)
-    p.drawingContext.globalAlpha = 1 - clamp((away - 1.6) / 1.4)
-    solid(p, ink, weight, hull)
-    p.beginShape()
-    p.vertex(0, 0)
-    p.bezierVertex(X(0), X(-0.9), X(-side * W2 * 0.35), X(-(NOSE - S2_TOP) + 0.2), X(-side * W2 * 0.5), X(-(NOSE - S2_TOP)))
-    p.vertex(X(-side * W2 * 0.5), 0)
-    p.endShape(p.CLOSE)
+    fairingHalf(p, k, ink, weight, hull, band, side, 1 - smooth(open, 0.05, 0.5))
     p.pop()
   }
-  // The window's socket (its glass and rim are drawn over the ball, in `over`).
-  if (open < 0.02) {
-    solid(p, ink, weight, '#1C2233')
-    p.circle(0, X(-WINDOW), X(0.36))
-  }
   p.pop()
+}
+
+/** One half of the fairing in its own frame: the hinge at the origin (the foot of the flare), the axis at x = -side·W2/2. */
+function fairingHalf(p: p5, k: number, ink: string, weight: number, hull: string, band: string, side: -1 | 1, glass: number): void {
+  const X = (x: number) => x * k
+  // Body coords (x across, y up) to the half's frame.
+  const H = (x: number, y: number): [number, number] => [X(x - side * W2 * 0.5), X(-(y - S2_TOP))]
+  solid(p, ink, weight, hull)
+  p.beginShape()
+  p.vertex(...H(0, S2_TOP))
+  p.vertex(...H(side * W2 * 0.5, S2_TOP))
+  p.vertex(...H(side * WF * 0.5, FAIR0))
+  p.vertex(...H(side * WF * 0.5, FAIR1))
+  p.bezierVertex(...H(side * WF * 0.5, FAIR1 + 0.4), ...H(side * WF * 0.2, NOSE - 0.1), ...H(0, NOSE))
+  p.endShape(p.CLOSE)
+  // A band round the drum's foot.
+  solid(p, ink, weight * 0.8, band)
+  p.beginShape()
+  for (const [x, y] of [[0, FAIR0 + 0.04], [side * WF * 0.5, FAIR0 + 0.04], [side * WF * 0.5, FAIR0 + 0.14], [0, FAIR0 + 0.14]] as Pt[]) p.vertex(...H(x, y))
+  p.endShape(p.CLOSE)
+  // Its half of the window: the dark behind the glass, fading as the half swings open.
+  if (glass > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const was = ctx.globalAlpha
+    ctx.globalAlpha = was * glass
+    solid(p, ink, weight, '#1C2233')
+    p.beginShape()
+    p.vertex(...H(0, WINDOW + WIN_R))
+    for (let i = 0; i <= 10; i++) {
+      const a = Math.PI / 2 - (Math.PI * i) / 10
+      p.vertex(...H(side * (WIN_L + Math.cos(a) * WIN_R), WINDOW + Math.sin(a) * WIN_R))
+    }
+    p.vertex(...H(0, WINDOW - WIN_R))
+    p.endShape(p.CLOSE)
+    ctx.globalAlpha = was
+  }
+  // The seam down the axis, heavier: where the halves part.
+  outline(p, ink, weight * 1.1)
+  p.line(...H(0, S2_TOP), ...H(0, NOSE))
 }
 
 /** The first stage in its own frame, base at (0, y0): a white body with a band, fins, the bell. */

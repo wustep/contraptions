@@ -9,7 +9,10 @@ import { BALL, DARK } from '../worlds'
 /**
  * Undocking: the film's docking run backwards.
  *
- * The cut, on the big step (184): Cooper Station from outside, a long
+ * The cut, on the big step (184), is a match on the ship: the first frame
+ * outside keeps the hub's last framing, the Ranger still on the screen while
+ * the bay turns to the dark round it; then the camera goes back off it to
+ * Cooper Station from outside, a long
  * cylinder seen from the side, its three window strips of farm light
  * streaming round as it turns. The Ranger (the hub's ship, the ball in its
  * bubble canopy) is nosed into the port on the end cap, upright as the hub
@@ -28,7 +31,9 @@ import { BALL, DARK } from '../worlds'
  *   194  the counter-jets stop it pointing away, and the engine lights.
  *   195–205  the burn pulses with the organ, each kick as hard as the beat it is
  *            on (the onsets' own strengths), out over Saturn's cloud tops and
- *            then over its rings.
+ *            then over its rings. The way is marked: on each kick the ship goes
+ *            over a sleeping beacon left by whoever went first, and it wakes,
+ *            vanes out and lamp lit, so the lit line grows behind it.
  *   206–209  engine off; the nose jets brake, a beat at a time, down to a crawl.
  *   210  the nose touches the wormhole and it ripples.
  *   211  the cockpit goes in: the ball's light wraps the rim; the ship sinks
@@ -213,6 +218,68 @@ function pose(t: number): Pose {
   return { c, h, roll, ball: [c[0] + BALL_OFF * Math.cos(h), c[1] + BALL_OFF * Math.sin(h)] }
 }
 
+/* ------------------------------------------------------------------ the beacons */
+
+/**
+ * The way to the sphere is marked. Whoever went before left a line of small
+ * beacons along it, asleep; each wakes as the Ranger burns over it, on the
+ * beat of its burn: the lamp flashes (as hard as the kick) and settles to a
+ * glow, and the two vanes swing open. Behind the ship the line stays lit.
+ */
+const BEACONS = PULSES.map((when, i) => {
+  const { p, h } = pathAt(flown(when))
+  // Just under the ship's way (on Saturn's side), where the ship is on its beat.
+  const n: Pt = [-Math.sin(h), Math.cos(h)]
+  return { when, s: PULSE_S[i], at: [p[0] + n[0] * 1.2, p[1] + n[1] * 1.2] as Pt, h, tilt: (hash(i, 31) - 0.5) * 0.5 }
+})
+
+function drawBeacons(p: p5, c: Ctx, t: number, f: Frame): void {
+  if (t < IGNITE - 1) return
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  for (const b of BEACONS) {
+    if (b.at[0] < f.x0 - 1 || b.at[0] > f.x1 + 1 || b.at[1] < f.y0 - 1 || b.at[1] > f.y1 + 1) continue
+    const since = t - b.when
+    const open = since < 0 ? 0 : Math.min(1.1, 1.1 * clamp(since / 0.16)) - 0.1 * clamp((since - 0.16) / 0.12)
+    p.push()
+    p.translate(X(b.at[0]), X(b.at[1]))
+    p.rotate(b.h + b.tilt)
+    // The vanes, folded flat along the drum, swing out to either side.
+    for (const side of [-1, 1]) {
+      p.push()
+      p.translate(X(side * 0.13), 0)
+      p.rotate(side * (Math.PI / 2) * (1 - open))
+      solid(p, ink, weight * 0.6, DARK.slate)
+      p.rect(X(side * 0.17), 0, X(0.34), X(0.1))
+      p.stroke(alpha(p, DARK.ice, 0.5))
+      p.strokeWeight(Math.max(0.6, weight * 0.4))
+      for (const u of [0.33, 0.66]) p.line(X(side * 0.34 * u), X(-0.04), X(side * 0.34 * u), X(0.04))
+      p.pop()
+    }
+    // The drum, its band, and the mast with its lamp.
+    solid(p, ink, weight * 0.8, DARK.hull)
+    p.rect(0, 0, X(0.26), X(0.2), X(0.04))
+    solid(p, ink, weight * 0.5, DARK.slate)
+    p.rect(0, 0, X(0.26), X(0.06))
+    p.stroke(ink)
+    p.strokeWeight(Math.max(0.8, weight * 0.7))
+    p.line(0, X(-0.1), 0, X(-0.26))
+    const lit = since < 0 ? 0 : 0.45 + 0.55 * Math.exp(-since / 0.25)
+    if (lit > 0) {
+      p.pop()
+      const lamp: Pt = [b.at[0] + Math.sin(b.h + b.tilt) * 0.28, b.at[1] - Math.cos(b.h + b.tilt) * 0.28]
+      glow(p, X(lamp[0]), X(lamp[1]), X(0.22 + 0.5 * b.s * Math.exp(-since / 0.2)), '240, 147, 64', lit)
+      p.push()
+      p.translate(X(lamp[0]), X(lamp[1]))
+    } else {
+      p.translate(0, X(-0.28))
+    }
+    solid(p, ink, weight * 0.6, lit > 0 ? DARK.amber : DARK.slate)
+    p.circle(0, 0, X(0.08))
+    p.pop()
+  }
+}
+
 /* ------------------------------------------------------------------ the station's geometry */
 
 const ST_R = 4.4
@@ -341,6 +408,7 @@ export const undock = part<UndockState>(
       const q = pose(t)
       drawSaturn(p, c, f)
       drawSphere(p, c, t, f, q)
+      drawBeacons(p, c, t, f)
       if (f.x0 < CAP + 3) {
         drawStation(p, c, t, f)
         drawDock(p, c, t, false)
@@ -376,11 +444,13 @@ export const undock = part<UndockState>(
     const ballAt = (t: number) => pose(t).ball
     const near = ballAt(cue(207))
     const shots: PartShot[] = [
-      // The cut: the end of the station, big, turning, and the Ranger in its port.
+      // The cut is a match on the ship (the score gives this key the hub's last framing): the clamps spring
+      // open right there, and then the camera goes back off it to show the end of the station, big, turning.
       { t: slot.begin, cells: 12, hold: [-4.6, 0.2], w: 1 },
-      { t: cue(184.6), cells: 11.4, hold: [-4.2, 0.2], w: 1 },
-      // In on the port as the umbilical goes, for the push off.
-      { t: cue(185.7), cells: 7, hold: [-1.1, 0.1], w: 1 },
+      { t: cue(184.85), cells: 11.6, hold: [-4.4, 0.2], w: 1 },
+      { t: cue(185.35), cells: 11.4, hold: [-4.2, 0.2], w: 1 },
+      // In on the port as the umbilical goes home, for the push off.
+      { t: cue(186.1), cells: 7, hold: [-1.1, 0.1], w: 1 },
       { t: cue(187.2), cells: 7, hold: [-0.5, 0], w: 1 },
       // The spin coming off, the station still turning behind it.
       { t: cue(189), cells: 7.6, hold: [0.5, 0], w: 1 },
@@ -421,10 +491,13 @@ function glow(p: p5, x: number, y: number, r: number, rgb: string, a: number): v
   const g = ctx.createRadialGradient(x, y, 0, x, y, r)
   g.addColorStop(0, `rgba(${rgb}, ${Math.min(1, a)})`)
   g.addColorStop(1, `rgba(${rgb}, 0)`)
+  // Saved and restored, so p5's own idea of the fill stays true.
+  ctx.save()
   ctx.fillStyle = g
   ctx.beginPath()
   ctx.arc(x, y, r, 0, TAU)
   ctx.fill()
+  ctx.restore()
 }
 
 /** A thick stroke with an ink edge: a clamp's arm, a cable. */

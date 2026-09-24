@@ -432,8 +432,11 @@ function glow(p: p5, k: number, x: number, y: number, r: number, hex: string, a:
   const g = ctx.createRadialGradient(x * k, y * k, r0 * k, x * k, y * k, r * k)
   g.addColorStop(0, rgba(hex, a))
   g.addColorStop(1, rgba(hex, 0))
+  // Saved and restored, so p5's own idea of the fill stays true.
+  ctx.save()
   ctx.fillStyle = g
   ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
+  ctx.restore()
 }
 
 function shape(p: p5, k: number, pts: Pt[], close = true): void {

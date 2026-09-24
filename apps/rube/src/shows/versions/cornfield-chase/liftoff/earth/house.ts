@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
+import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Ctx, type Way } from '../kit'
 import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
+import { GOLD_IN, legs, run, ways as timed } from './yard'
 
 /**
  * The farmhouse, cut open: Murph's room upstairs, the stairs, the kitchen
@@ -477,30 +478,50 @@ function lander(p: p5, c: Ctx, x0: number, since: number): void {
 /* ------------------------------------------------------------------ the robot */
 
 /**
- * Murph's toy robot: four slabs on a hinge, knee-high to the bookcase, its
- * one arm up. It stands at the end of the case, and the ghost falls off the
- * shelf into its arm and is a ball there. Then it walks it across the room,
- * a footfall to a note, through the window's light, where the dust has
+ * Murph's toy robot: four slabs on a hinge, knee-high to the bookcase, one
+ * arm. In the dark it stands at the end of the case holding its arm out flat,
+ * and on it, like something it was given to keep, sits the gold ball: she
+ * lives here. She watches the ghost go along the shelf. As the last book goes
+ * the robot raises its arm and she rolls back into its crook, and the ghost
+ * falls off the shelf into the arm beside her and is a ball there; he rolls
+ * down against her, and that is them met. Then it walks them both across the
+ * room, a footfall to a note, through the window's light, where the dust has
  * started coming down in bands the width of a finger and of a hand — the
  * pattern that turns out to be coordinates — and at the stairwell it lowers
- * its arm like a ramp and the ball rolls off over the lip.
+ * its arm like a ramp. He rolls off over the lip. She waits a moment in the
+ * crook, then goes after him.
  *
  * The part's frame: the ball in its arm at (-0.5, 0) on the catch; the
- * floor's surface at y = 0.58 (the ball on the floor is at 0.45).
+ * floor's surface at y = 0.64 (the ball on the floor is at 0.51).
  */
-const TOY_H = 0.46
 const TOY_W = 0.3
-const ARM = 0.42
-const HELD = -0.45
-const LOWERED = 0.75
-const CRADLE = 0.24
-/** The floor under the robot, in its frame: wherever puts the ball held in its arm at (-0.5, 0). */
-const TOY_FLOOR = TOY_H - 0.04 - Math.sin(HELD) * CRADLE + Math.cos(HELD) * R
+const ARM = 0.56
+/** The arm: out flat in the dark, raised to catch, and (LOWERED, below) down like a ramp at the stairwell. */
+const REST = 0
+const HELD = -0.4
+/** Along the arm from its hinge: where he lands, where he settles against her, where she sits out on it in the dark, and in its crook. */
+const CATCH_D = 0.42
+const HER_D = 0.106
+const HIS_D = HER_D + 2 * R
+const PALM = 0.34
+/** The floor under the robot, in its frame: where it has always been, so the catch is where it always was; the robot is built to it. */
+const TOY_FLOOR = 0.42 - Math.sin(-0.45) * 0.24 + Math.cos(-0.45) * R
+const TOY_H = TOY_FLOOR + 0.04 + Math.sin(HELD) * CATCH_D - Math.cos(HELD) * R
+/** Lowered, the arm's end rests just off the boards. */
+const LOWERED = Math.asin((TOY_H - 0.075) / ARM)
 /** Where the robot's frame sits in the world (y), and so where the ghost is caught, in the shelf's frame. */
 const TOY_ROW = UP - TOY_FLOOR
 const CATCH_Y = TOY_ROW + 2
 const FOOTFALLS = [12.632, 13.497, 14.124, 14.745, 15.139]
 const LIP = 15.743
+/** The model lander hits the floorboards on this note, and she feels it. */
+const THUD = 5.764
+/** The arm goes up as the last book goes down, and is up on the next note. */
+const RAISE: [number, number] = [11.64, 11.819]
+/** She is back in the crook; she leaves it for the stairs; she is at the lip as he lands on the first tread. */
+const IN_CROOK = RAISE[1]
+const HER_GO = 15.53
+const HER_LIP = 16.01
 /** Where the lip of the stairwell is, in this frame: the world's 4.9, less the part's origin 2.83. */
 const LIP_X = WELL_L - 2.83
 export const TOY_NOTES = [...FOOTFALLS]
@@ -537,22 +558,63 @@ function walk(s: ToyState, t: number): { x: number; u: number; lead: number; bob
   return { x: s.x1, u: 0, lead: 0, bob: 0 }
 }
 
-/** The arm's angle: up while it carries, down like a ramp at the stairwell, a dip when the ball drops into it. */
+/** The arm's angle: flat, raised with a click, a dip when he drops into it, down like a ramp at the stairwell. */
 function armAt(s: ToyState, t: number): number {
+  const up = easeInOutSine(clamp((t - RAISE[0]) / (RAISE[1] - RAISE[0])))
+  const click = t > RAISE[1] ? -0.05 * Math.exp(-(t - RAISE[1]) / 0.07) * Math.sin((t - RAISE[1]) * 40) : 0
   const caught = t - s.begin
-  const dip = caught > 0 ? 0.4 * Math.exp(-caught / 0.14) * Math.sin(caught * 16) : 0
+  const dip = caught > 0 ? 0.3 * Math.exp(-caught / 0.14) * Math.sin(caught * 16) : 0
   const lower = easeInOutSine(clamp((t - FOOTFALLS[FOOTFALLS.length - 1] - 0.05) / 0.3))
-  return HELD + dip * (1 - lower) + (LOWERED - HELD) * lower
+  return REST + (HELD - REST) * up + (click + dip) * (1 - lower) + (LOWERED - HELD) * lower
 }
 
-/** Where the ball is while the arm has it: on the arm, against the body; rolling out along it once it tips past flat. */
-function cradle(s: ToyState, t: number): Pt {
+/** The arm's hinge, riding the walk. */
+function hingeAt(s: ToyState, t: number): Pt {
   const { x, bob } = walk(s, t)
+  return [x + TOY_W / 2, TOY_FLOOR - TOY_H + 0.04 - bob * 0.03]
+}
+
+/** A ball on the arm, `d` out from the hinge. */
+function onArm(s: ToyState, t: number, d: number): Pt {
   const a = armAt(s, t)
-  const pivot: Pt = [x + TOY_W / 2, TOY_FLOOR - TOY_H + 0.04 - bob * 0.03]
-  const tip = clamp((a - 0.05) / (LOWERED - 0.05))
-  const d = CRADLE + (ARM - CRADLE) * tip * tip
-  return [pivot[0] + Math.cos(a) * d + Math.sin(a) * R, pivot[1] + Math.sin(a) * d - Math.cos(a) * R]
+  const [px, py] = hingeAt(s, t)
+  return [px + Math.cos(a) * d + Math.sin(a) * R, py + Math.sin(a) * d - Math.cos(a) * R]
+}
+
+/** Where he is on the arm: rolled down against her after the catch, with a click; rolling out along it once it tips past flat. */
+function cradle(s: ToyState, t: number): Pt {
+  const since = t - s.begin
+  const settle = clamp(since / 0.2)
+  const rest = since < 0.2 ? CATCH_D - (CATCH_D - HIS_D) * easeInQuad(settle) : HIS_D + 0.012 * Math.exp(-(since - 0.2) / 0.05) * Math.abs(Math.sin((since - 0.2) * 30))
+  const tip = clamp((armAt(s, t) - 0.05) / (LOWERED - 0.05))
+  return onArm(s, t, rest + (ARM - rest) * tip * tip)
+}
+
+/** Her, in this part's frame, from the first frame to the lip of the stairwell. */
+function goldToy(s: ToyState): (t: number) => Pt {
+  // Out on the flat arm, still, watching; the lander hitting the boards rocks her a little on it. Back into the crook
+  // as it rises, a small knock against the robot; carried there.
+  const herD = (t: number): number => {
+    const thud = t - THUD
+    const startle = thud > 0 ? 0.035 * Math.exp(-thud / 0.3) * Math.sin(thud * 11) : 0
+    if (t < IN_CROOK) return PALM + startle - (PALM - HER_D) * easeInQuad(clamp((t - RAISE[0] - 0.02) / (IN_CROOK - RAISE[0] - 0.02)))
+    return HER_D + 0.02 * Math.exp(-(t - IN_CROOK) / 0.06) * Math.abs(Math.sin((t - IN_CROOK) * 25))
+  }
+  // At the stairwell she waits in the crook while he goes; then down the ramp and along the boards to the lip,
+  // arriving as he lands on the first tread, not quite stopped.
+  const top = onArm(s, HER_GO, HER_D)
+  const end = onArm(s, HER_GO, ARM)
+  const lip: Pt = [LIP_X, TOY_FLOOR - R]
+  const ramp = Math.hypot(end[0] - top[0], end[1] - top[1])
+  const floor = Math.hypot(lip[0] - end[0], lip[1] - end[1])
+  const along = run([0, 0], [ramp + floor, 0], HER_GO, HER_LIP, 0, 1.0)
+  const down = (t: number): Pt => {
+    const d = along(t)[0]
+    if (d <= ramp) return onArm(s, HER_GO, HER_D + d)
+    const u = (d - ramp) / floor
+    return [end[0] + (lip[0] - end[0]) * u, end[1] + (lip[1] - end[1]) * u]
+  }
+  return (t) => (t < HER_GO ? onArm(s, t, herD(t)) : down(t))
 }
 
 export const toy = part<ToyState>(
@@ -563,18 +625,20 @@ export const toy = part<ToyState>(
   (slot) => {
     const at = (t: number) => t - slot.begin
     const s: ToyState = { begin: slot.begin, x0: 0, x1: 0, bands: BANDS.map(([x, w, n]) => ({ x, w, at: n })) }
-    // Where it stands to catch, and where it stops: the ball in the arm at (-0.5, 0), and off the arm's end at the lip.
-    s.x0 = -0.5 - (Math.cos(HELD) * CRADLE + Math.sin(HELD) * R) - TOY_W / 2
-    s.x1 = LIP_X - 0.55
+    // Where it stands to catch, and where it stops: the ball in the arm at (-0.5, 0), and the lowered arm's end just short of the lip.
+    s.x0 = -0.5 - (Math.cos(HELD) * CATCH_D + Math.sin(HELD) * R) - TOY_W / 2
+    s.x1 = LIP_X - 0.12 - (Math.cos(LOWERED) * ARM + Math.sin(LOWERED) * R) - TOY_W / 2
     const off = FOOTFALLS[FOOTFALLS.length - 1] + 0.36
     const ride = (t: number) => cradle(s, t + slot.begin)
     const segs = [...carried(ride, 0, at(off), Math.ceil(at(off) * 40))]
     segs.push(...route([{ at: at(off), p: ride(at(off)) }, { at: at(LIP), p: [LIP_X, TOY_FLOOR - R] }]))
+    const gold = goldToy(s)
     return {
       cells: box(-1.5, -2, LIP_X + 0.5, 1),
       exit: [LIP_X + 0.5, TOY_FLOOR - R],
       lane: { segs, fire: at(FOOTFALLS[0]) },
       state: s,
+      company: [{ from: 0, to: HER_LIP, at: (t) => { const [x, y] = gold(t); return { x, y } } }],
     }
   },
 )
@@ -654,27 +718,75 @@ function drawToy(p: p5, s: ToyState, c: Ctx): void {
   p.circle(X(pivot[0]), X(pivot[1]), X(0.05))
 }
 
+/**
+ * Where the robot stood in the dark, holding her out on its arm: the middle of its body and the floor under it,
+ * in the house's own cells (the `house` scenery's, the shelf's less two rows). The rooms that remember the
+ * opening (the dusk room at the end of Act I, the museum's replica) stand it there again, its arm out and empty.
+ */
+export const TOY_HOME: Pt = [2.83 - 0.5 - (Math.cos(HELD) * CATCH_D + Math.sin(HELD) * R) - TOY_W / 2, UP]
+
+/** The robot standing still with its arm at `arm` (flat is 0), its body's middle at `x`, on a floor at `floor`, in the caller's cells. */
+export function drawRobot(p: p5, c: { k: number; ink: string; weight: number }, x: number, floor: number, arm = REST): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const half = TOY_W / 2
+  for (const pair of [0, 1]) {
+    const cx = x + (pair ? half / 2 : -half / 2)
+    solid(p, ink, weight * 0.9, pair ? DUST.tin : '#9A9486')
+    p.rect(X(cx), X(floor - TOY_H / 2), X(half), X(TOY_H), X(0.012))
+    outline(p, ink, weight * 0.45)
+    p.line(X(cx), X(floor - TOY_H + 0.03), X(cx), X(floor - 0.03))
+  }
+  outline(p, ink, weight * 0.8)
+  const hy = floor - TOY_H + 0.05
+  p.line(X(x - half), X(hy), X(x + half), X(hy))
+  solid(p, ink, weight * 0.5, '#3A3F3A')
+  p.rect(X(x + TOY_W * 0.22), X(hy + 0.07), X(TOY_W * 0.32), X(0.06))
+  p.push()
+  p.translate(X(x + half), X(floor - TOY_H + 0.04))
+  p.rotate(arm)
+  solid(p, ink, weight * 0.8, DUST.tin)
+  p.rect(X(ARM / 2), 0, X(ARM), X(0.045), X(0.01))
+  p.pop()
+  solid(p, ink, weight * 0.6, DUST.bone)
+  p.circle(X(x + half), X(floor - TOY_H + 0.04), X(0.05))
+}
+
 /* ------------------------------------------------------------------ the stairs */
 
 /**
  * Down the stairs a step to a note: off the lip, and each tread in turn,
- * quicker as it goes.
+ * quicker as it goes. She comes a tread behind him: each note, he lands on
+ * one and she on the one above, and her last is on the boards at the bottom.
  *
  * The part's frame: the ball at the stairwell's lip (-0.5, 0), the world's
  * (4.9, -2); the treads are half a cell each way.
  */
+interface Landing {
+  at: number
+  x: number
+  /** The surface's height, where the dust comes off. */
+  y: number
+  /** Hers are lighter. */
+  light?: boolean
+}
+
 interface StairState {
-  landings: number[]
-  landX: number[]
+  landings: Landing[]
 }
 
 const STEP_NOTES = [16.01, 16.353, 16.62, 17.02]
 export const STAIR_NOTES = STEP_NOTES
+/** Where she lands, a tread behind him, on the notes he lands on, and on the boards on the next. */
+const HER_TREADS: Pt[] = [[-0.2, 0.5], [0.28, 1.0], [0.76, 1.5], [1.3, 2]]
+const HER_STEPS = [16.353, 16.62, 17.02, 17.258]
+/** The stairs' exit: the porch's frame in this one's. */
+const DOWNSTAIRS: Pt = [2.6, 2]
 
 export const stairs = part<StairState>(
   {
     name: 'stairs',
-    draw: (p, s, c) => drawStairs(p, s, c),
+    draw: (p, s, c) => drawLandings(p, s.landings, c),
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
@@ -687,30 +799,46 @@ export const stairs = part<StairState>(
       last = w
     })
     ways.push({ at: slot.end - slot.begin, p: [2.1, 2] })
+    // Her: off the lip as he lands on the first tread, and down after him.
+    const hers: Way[] = [{ at: HER_LIP, p: [-0.5, 0] }]
+    HER_STEPS.forEach((n, i) => hers.push(hop(hers[i], HER_TREADS[i], n)))
+    const down = timed(hers)
+    const along = goldPorch()
+    const gold = (t: number): Pt => {
+      if (t < HER_STEPS[HER_STEPS.length - 1]) return down(t)
+      const [x, y] = along(t)
+      return [x + DOWNSTAIRS[0], y + DOWNSTAIRS[1]]
+    }
     return {
       cells: box(-0.5, -2, 2.6, 2),
-      exit: [2.6, 2],
+      exit: DOWNSTAIRS,
       lane: { segs: route(ways), fire: at(STEP_NOTES[0]) },
-      state: { landings: STEP_NOTES.map(at), landX },
+      state: {
+        landings: [
+          ...STEP_NOTES.map((n, i) => ({ at: at(n), x: landX[i], y: 0.5 * (i + 1) + R })),
+          ...HER_STEPS.map((n, i) => ({ at: at(n), x: HER_TREADS[i][0], y: HER_TREADS[i][1] + R, light: true })),
+        ],
+      },
+      company: [{ from: HER_LIP, to: slot.end, at: (t) => { const [x, y] = gold(t); return { x, y } } }],
     }
   },
 )
 
-function drawStairs(p: p5, s: StairState, c: Ctx): void {
+/** Where a ball lands on a step or a tread: a small scuff of dust off it, and the board's knock. */
+function drawLandings(p: p5, landings: Landing[], c: Ctx): void {
   const { k, t, ink } = c
   const X = (x: number) => x * k
-  // Where the ball lands on a tread: a small scuff of dust off the step.
-  for (let i = 0; i < s.landings.length; i++) {
-    const since = t - s.landings[i]
+  for (const l of landings) {
+    const since = t - l.at
     if (since < 0 || since > 0.45) continue
     const u = since / 0.45
+    const m = l.light ? 0.7 : 1
     p.noStroke()
-    p.fill(alpha(p, DUST.shade, 0.8 * (1 - u)))
-    const y = 0.5 * (i + 1) + R
-    for (const side of [-1, 1]) p.circle(X(s.landX[i] + side * (0.12 + u * 0.12)), X(y - 0.02 - u * 0.05), X(0.04 + u * 0.04))
-    p.stroke(alpha(p, ink, 0.5 * knock(since, 0.1)))
+    p.fill(alpha(p, DUST.shade, 0.8 * m * (1 - u)))
+    for (const side of [-1, 1]) p.circle(X(l.x + side * (0.12 + u * 0.12 * m)), X(l.y - 0.02 - u * 0.05), X((0.04 + u * 0.04) * m))
+    p.stroke(alpha(p, ink, 0.5 * m * knock(since, 0.1)))
     p.strokeWeight(Math.max(1, k * 0.012))
-    p.line(X(s.landX[i] - 0.2), X(y + 0.03), X(s.landX[i] + 0.2), X(y + 0.03))
+    p.line(X(l.x - 0.2 * m), X(l.y + 0.03), X(l.x + 0.2 * m), X(l.y + 0.03))
   }
 }
 
@@ -720,16 +848,53 @@ function drawStairs(p: p5, s: StairState, c: Ctx): void {
  * Out through the door onto the porch — the old man's chair, rocking a
  * little in the draught the ball lets out — and down the three steps into the
  * yard, one to a note.
+ *
+ * She has never been out of the house. She comes to the edge of the porch as
+ * he goes down, and stops there, and rocks on the brink; then she tips over
+ * and comes down the same three steps on the next three notes, and runs to
+ * catch him up.
  */
 interface PorchState {
-  landings: number[]
-  landX: number[]
+  landings: Landing[]
   out: number
 }
 
 const PORCH_NOTES = [18.669, 18.901, 19.127]
 export const PORCH_STEPS = PORCH_NOTES
 const DECK_END = 1.9
+/** She stops at the brink, tips over it, and lands on the steps on the two notes after his last; the yard's on the third. */
+const HER_BRINK = 18.75
+const HER_ROCKED = 18.877
+const HER_OVER = 19.077
+const HER_PORCH = [19.313, 19.511]
+/** The porch's exit: the yard's frame in this one's. */
+const OUTSIDE: Pt = [5, 1]
+
+/** Her from the foot of the stairs to the yard, in the porch's frame. */
+function goldPorch(): (t: number) => Pt {
+  const landed: Pt = [HER_TREADS[3][0] - DOWNSTAIRS[0], HER_TREADS[3][1] - DOWNSTAIRS[1]]
+  // She stops short of the post, where the boards end.
+  const brink: Pt = [DECK_END - 0.16, 0]
+  // Across the boards and out of the door after him, a little slower than he goes; then slowing to a stop on the brink.
+  const slows = 18.3
+  const V = 2.1
+  const at = (t: number): Pt => [landed[0] + V * (t - HER_STEPS[HER_STEPS.length - 1]), 0]
+  const stop = run(at(slows), brink, slows, HER_BRINK, V, 0)
+  // A rock back on her heels, and then over.
+  const rock = (t: number): Pt => [brink[0] - 0.035 * Math.sin(Math.PI * clamp((t - HER_BRINK) / (HER_ROCKED - HER_BRINK))), 0]
+  const go = (t: number): Pt => [brink[0] + (DECK_END - brink[0]) * easeInQuad(clamp((t - HER_ROCKED) / (HER_OVER - HER_ROCKED))), 0]
+  const edge: Way = { at: HER_OVER, p: [DECK_END, 0] }
+  const one = hop(edge, [DECK_END + 0.3, 1 / 3], HER_PORCH[0])
+  const two = hop(one, [DECK_END + 0.65, 2 / 3], HER_PORCH[1])
+  const yard = hop(two, [GOLD_IN.p[0] + OUTSIDE[0], GOLD_IN.p[1] + OUTSIDE[1]], GOLD_IN.at)
+  return legs([
+    { to: slows, at },
+    { to: HER_BRINK, at: stop },
+    { to: HER_ROCKED, at: rock },
+    { to: HER_OVER, at: go },
+    { to: Infinity, at: timed([edge, one, two, yard]) },
+  ])
+}
 
 export const porch = part<PorchState>(
   {
@@ -754,11 +919,21 @@ export const porch = part<PorchState>(
       last = w
     })
     ways.push({ at: slot.end - slot.begin, p: [4.5, 1] })
+    const gold = goldPorch()
+    const hers = [...HER_PORCH, GOLD_IN.at]
+    const herX = [DECK_END + 0.3, DECK_END + 0.65, GOLD_IN.p[0] + OUTSIDE[0]]
     return {
       cells: box(-0.5, -1, 4.5, 1),
-      exit: [5, 1],
+      exit: OUTSIDE,
       lane: { segs: route(ways), fire: at(PORCH_NOTES[0]) },
-      state: { landings: PORCH_NOTES.map(at), landX, out: at(18.065) },
+      state: {
+        landings: [
+          ...PORCH_NOTES.map((n, i) => ({ at: at(n), x: landX[i], y: (i + 1) / 3 + R })),
+          ...hers.map((n, i) => ({ at: at(n), x: herX[i], y: (i + 1) / 3 + R, light: true })),
+        ],
+        out: at(18.065),
+      },
+      company: [{ from: slot.begin, to: GOLD_IN.at, at: (t) => { const [x, y] = gold(t); return { x, y } } }],
     }
   },
 )
@@ -812,13 +987,5 @@ function drawPorch(p: p5, s: PorchState, c: Ctx): void {
   p.pop()
 
   // Scuffs on the steps.
-  for (let i = 0; i < s.landings.length; i++) {
-    const since2 = t - s.landings[i]
-    if (since2 < 0 || since2 > 0.4) continue
-    const u = since2 / 0.4
-    p.noStroke()
-    p.fill(alpha(p, DUST.shade, 0.8 * (1 - u)))
-    const y = (i + 1) / 3 + R
-    for (const side of [-1, 1]) p.circle(X(s.landX[i] + side * (0.12 + u * 0.1)), X(y - 0.02 - u * 0.04), X(0.035 + u * 0.035))
-  }
+  drawLandings(p, s.landings, c)
 }

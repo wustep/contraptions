@@ -2,11 +2,11 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeOutCubic, easeOutSine } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, hash, part, route, smooth, type Ctx, type PartShot } from '../kit'
+import { alpha, box, carried, frame, hash, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT2, CUE2_PERIOD, cue } from '../music'
 import { G_EARTH } from '../physics'
-import { DUST } from '../worlds'
-import { house, SHELF_TOP, stayRow } from '../earth/house'
+import { DARK, DUST } from '../worlds'
+import { drawRobot, house, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
 import { AXIS, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
 
 /**
@@ -18,7 +18,9 @@ import { AXIS, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
  *
  * Down through the house, on the organ's pulse:
  *
- *   104  the lights; the ghost is a ball, and the shelf's end tips under it
+ *   104  the lights: the first frame is Act I's room at dusk, and on the
+ *        accent the station's lamps strike (one catches late) and the day
+ *        comes up in it; the ghost is a ball, and the shelf's end tips under it
  *   105  out through a flap in the side of the case, into the dumbwaiter
  *   106  the dumbwaiter's catch lets go: the car drops, the counterweight flies up
  *   107  the car lands in the kitchen on its buffer, and its gate drops
@@ -417,11 +419,49 @@ function drawAll(p: p5, s: ReplicaState, c: Ctx): void {
   drawPlinth(p, c)
   drawAwning(p, c)
   drawCase(p, s, c, t)
+  // The museum keeps the toy robot where it stood, its arm out and empty.
+  drawRobot(p, c, TOY_HOME[0], TOY_HOME[1])
   drawDumbwaiter(p, c, t)
   drawClock(p, c, t)
   drawTurnstile(p, c, t)
   drawDust(p, s, c, t)
   p.pop()
+}
+
+/**
+ * The cut from Act I is one room waking up. Act I left it at dusk, darkest away from the ghost; the first frame
+ * here is that same dark. On the organ's accent the station's lamps strike, one catches late and dips it again,
+ * and then the day comes up over half a second.
+ */
+function duskAt(t: number): number {
+  if (t < 0) return 1
+  if (t < 0.04) return 1 - 0.62 * (t / 0.04)
+  if (t < 0.09) return 0.38
+  if (t < 0.13) return 0.68
+  if (t < 0.17) return 0.34
+  return 0.34 * (1 - easeOutCubic(clamp((t - 0.17) / 0.45)))
+}
+
+function drawDusk(p: p5, c: Ctx): void {
+  const a = duskAt(c.t)
+  if (a <= 0.002) return
+  const { k } = c
+  const X = (v: number) => v * k
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const deep = (o: number) => {
+    const n = parseInt(DARK.deep.slice(1), 16)
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${o * a})`
+  }
+  // Centred on the ghost's rest, as Act I's is: it is the ball's own light that keeps the dark off it.
+  const g = ctx.createRadialGradient(X(-0.5), 0, X(0.12), X(-0.5), 0, X(3.2))
+  g.addColorStop(0, deep(0.1))
+  g.addColorStop(0.25, deep(0.62))
+  g.addColorStop(1, deep(0.92))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect(X(f.x0 - 1), X(f.y0 - 1), X(f.x1 - f.x0 + 2), X(f.y1 - f.y0 + 2))
+  ctx.restore()
 }
 
 /** Beyond the plinth on the left, the farm the station keeps: a field of corn up the curve and a tree. */
@@ -976,6 +1016,7 @@ function drawOver(p: p5, _s: ReplicaState, c: Ctx): void {
   drawCasing(p, c, t)
   drawGlass(p, c)
   p.pop()
+  drawDusk(p, c)
   // The ghost is a ball: its light goes out, and a ring goes out from it.
   if (t < 1.0) {
     const at = toL(caseToHouse(onBoard(D0, 0)))

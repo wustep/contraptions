@@ -162,8 +162,12 @@ waypoints, so its strikes land on the measured onsets in
 `scripts/show-plans/cornfield-opus55-onsets.json` by construction.
 `liftoff/hits.ts` gathers every strike, and `check:shows` measures each one
 against the onset file. The check also asserts that the ball never jumps,
-that it is never hidden for long, and that the twin on the water world is
-the only second ball. The report is `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+and that it is never hidden for long. A second ball, gold, is the hero's
+companion: parts show her through `Built.company` spans (show time, part
+frame), and the check holds her to the story: in shot with him from the first
+frame to the ring, waiting in orbit over Miller as she goes grey, found again
+on Cooper Station, and nowhere else; never jumping, and coming and going only
+out of shot. The report is `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
 It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
 only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue

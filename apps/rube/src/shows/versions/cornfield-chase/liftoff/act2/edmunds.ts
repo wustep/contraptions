@@ -75,7 +75,8 @@ const LAMP = FINAL
 /** In the quiet after the music, a light in the dome. */
 const HOME = cue(235.6)
 
-export const EDMUNDS_HITS = [OUT, RING, PITCH, PITCH_STOP, ...RETRO, MORTAR, BLOOM, ...REEFS, SHIELD, CUT, ...LEGS, FLARE, TOUCH, CANOPY, RAMP, KICK, ONRAMP, LAMP]
+/** The far side opens at the sphere's centre on 212 (the whip starts from it); the ship is out on 213. */
+export const EDMUNDS_HITS = [BEGIN, OUT, RING, PITCH, PITCH_STOP, ...RETRO, MORTAR, BLOOM, ...REEFS, SHIELD, CUT, ...LEGS, FLARE, TOUCH, CANOPY, RAMP, KICK, ONRAMP, LAMP]
 
 /* ------------------------------------------------------------------ helpers */
 

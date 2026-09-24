@@ -2,9 +2,9 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, carried, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
-import { cue } from '../music'
-import { BALL, DUST } from '../worlds'
+import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
+import { ACT2, cue } from '../music'
+import { AGED, BALL, DUST } from '../worlds'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -19,18 +19,30 @@ import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
  * wheels spin up a notch at a time (136, 138) while a winch draws the bat
  * back (137, 139); the gate lets the ball into the wheels on the eighth
  * (139½) and the bat, let go, meets the pitch on the accent (140). The
- * tower's lamps come on, a bank a beat (141–144).
+ * tower's lamps come on, a bank a beat (141–144). Over it all, on a mast
+ * out in the air where the ground has turned to a wall, the scoreboard: its
+ * home row turns over a plate a beat from first base to the hit, nine beats,
+ * nine innings, and its clock's second hand goes round with the organ.
  *
- * The ball goes back over the pitcher and up toward the axis, and curves:
- * in the station's still frame it flies straight, and the ring turns under
- * it. It swings under the hub in the quiet bars, and comes down on the far
- * side through the tip of a poplar (150) and the top of a round tree (151)
- * and in at an attic window of the house at the foot of the lift's spoke,
- * on the accent and the step up (152). It runs across the attic into an old
- * trunk, which knocks the trapdoor's latch (153); the door lets it down on
- * its counterweight onto a rocking chair (154), which rocks back, comes
- * forward and pitches it onto the floor (155), and it rolls into the lift
- * car, still in the middle of it on the big step (156), where the hub has it.
+ * The ball goes back over the pitcher, across the scoreboard's face and up
+ * toward the axis, and curves: in the station's still frame it flies
+ * straight, and the ring turns under it. It swings under the hub in the quiet
+ * bars (145–149 are left to the long arc and the gathering music), and comes
+ * down on the far side through the tip of a poplar (150) and the top of a
+ * round tree (151) and in at an attic window of the house at the foot of the
+ * lift's spoke, on the accent and the step up (152). It runs across the
+ * attic into an old trunk, which knocks the trapdoor's latch (153); the door
+ * lets it down on its counterweight onto the rocking chair (154).
+ *
+ * She is in that chair: the gold ball, old, who waited in orbit. She has been
+ * there since the station's lights came up, rocking it gently with the organ;
+ * the crash upstairs stops her. He comes down onto the seat beside her, and
+ * the chair goes back with both of them, together against its back. It comes
+ * forward on the next beat and she comes after him and meets him at the edge,
+ * and the chair pitches him off (155): she sends him on. He lands in the lift
+ * car's doorway on the eighth and rolls to the middle of it by the big step
+ * (156), where the hub has him. She rolls back to her place and rocks on, and
+ * the car climbs away from her.
  */
 
 /* ------------------------------------------------------------------ the clock (show seconds) */
@@ -55,6 +67,8 @@ const PITCH = cue(139.5)
 const HIT = cue(140)
 /** The light tower's banks, one a beat. */
 const LAMPS = [141, 142, 143, 144].map(cue)
+/** The scoreboard's home row: a plate a beat, nine beats from first base to the hit, nine innings. */
+const INNINGS = [132, 133, 134, 135, 136, 137, 138, 139, 140].map(cue)
 /** Through the tip of the poplar by the far house, and the top of the round tree. */
 const POPLAR = cue(150)
 const TREE = cue(151)
@@ -65,9 +79,14 @@ const HATCH = cue(153)
 /** Down on the rocking chair's seat; pitched off it onto the floor. */
 const SEAT = cue(154)
 const DOWN = cue(155)
+/** Down on the car's floor, in its doorway. */
+const INCAR = cue(155.5)
 const OUT = cue(156)
+/** Her span ends here, the car well up the spoke and the house out of the frame behind it. */
+const GOLD_GONE = cue(162)
+const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 
-export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, SEAT, DOWN]
+export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, SEAT, DOWN, INCAR]
 
 /* ------------------------------------------------------------------ the geometry */
 
@@ -103,6 +122,9 @@ const S_MITT = V_IN * (CATCH - IN)
 const S_PITCH = 4.2
 const S_PLATE = 6.8
 const S_TOWER = 9.9
+/** The scoreboard's mast, on the free ground between the mitt and the mound; the board high over the field. */
+const S_BOARD = 3.0
+const A_BOARD = along(S_BOARD)
 const A_MITT = along(S_MITT)
 const A_PITCH = along(S_PITCH)
 const A_PLATE = along(S_PLATE)
@@ -372,12 +394,34 @@ function onDoor(T: number): Pt {
   return doorPoint(T, D0 + (DOOR_LEN - 0.06 - D0) * u * u, R)
 }
 
-/** The chair's lean: forward is positive. Knocked back by the ball landing, it rocks, and forward it pitches it off. */
-const ROCK = 1.34
+/**
+ * The chair's lean, forward positive, at its turns; between turns it swings as a pendulum does. She has been
+ * rocking it since the lights came up, gently, with the organ: forward on the even beats, back on the odd. The
+ * crash upstairs stops her. He lands and it goes back with both of them, comes forward on the next beat and
+ * pitches him off; then it rocks on lighter, and she takes up her own slow beat again.
+ */
+const ROCK_A = 0.05
+const TURNS: [number, number][] = (() => {
+  const out: [number, number][] = []
+  for (let k = 104; k <= 152; k++) out.push([cue(k), k % 2 ? -ROCK_A : ROCK_A])
+  out.push([cue(152.9), -0.5 * ROCK_A], [cue(153.6), 0.15 * ROCK_A], [SEAT, 0])
+  out.push([cue(154.42), -0.16], [DOWN, 0.24], [cue(155.55), -0.13], [cue(156.1), 0.08])
+  for (let k = 157; k <= 240; k++) out.push([cue(k), k % 2 ? -ROCK_A : ROCK_A])
+  return out
+})()
 function chairLean(T: number): number {
-  if (T < SEAT) return 0
-  const s = T - SEAT
-  return -0.3 * Math.sin((2 * Math.PI * s) / ROCK) * Math.exp(-s / 2.4)
+  if (T <= TURNS[0][0]) return TURNS[0][1]
+  let i = 1
+  while (i < TURNS.length - 1 && TURNS[i][0] < T) i++
+  const [t0, a0] = TURNS[i - 1]
+  const [t1, a1] = TURNS[i]
+  const u = clamp((T - t0) / (t1 - t0))
+  // Off the landing it goes back at once; every other swing starts from rest at a turn.
+  const e = t0 === SEAT ? Math.sin((Math.PI / 2) * u) : (1 - Math.cos(Math.PI * u)) / 2
+  // The crash shakes the house, and the chair in it.
+  const w = T - WINDOW
+  const shake = w > 0 && w < 0.6 ? 0.025 * Math.exp(-w / 0.14) * Math.sin(w * 38) : 0
+  return a0 + (a1 - a0) * e + shake
 }
 /** A point of the chair, in its own upright cells (x from where the rockers meet the floor), in the house's. */
 /** The rockers' curve, as a circle this far over the floor: the chair rolls on it. */
@@ -387,18 +431,43 @@ function chairPoint(T: number, x: number, y: number): Pt {
   const py = y + ROCKER_R
   return [CHAIR_X + ROCKER_R * a + x * Math.cos(a) - py * Math.sin(a), -ROCKER_R + x * Math.sin(a) + py * Math.cos(a)]
 }
-const SEAT_LAND = 0.02
-const dropToSeat = throwAt(onDoor(OFF), [CHAIR_X + SEAT_LAND, SEAT_Y - R], OFF, SEAT, G)
-/** It rides the seat back, then rolls off the front as the chair comes forward, and lands on the floor. */
-const LEAVE = DOWN - 0.27
-function seatX(T: number): number {
+/** On the seat: her place against the chair's back, where he lands beside her, and his place against her. */
+const HER_X = -0.155
+const HIS_LAND = 0.135
+const HIS_X = HER_X + 2 * R
+/** The seat's front edge, as far as a ball on it gets before it goes. */
+const EDGE = SEAT_FRONT + 0.04
+const dropToSeat = throwAt(onDoor(OFF), [CHAIR_X + HIS_LAND, SEAT_Y - R], OFF, SEAT, G)
+/** His place on the seat: he lands, rolls back against her as the chair goes back, and forward to the edge as it comes forward. */
+function hisSeat(T: number): { x: number; up: number } {
   const s = T - SEAT
-  if (s < 0.55) return SEAT_LAND - 0.07 * Math.sin((Math.PI * s) / 0.55)
-  return SEAT_LAND + (SEAT_FRONT + 0.04 - SEAT_LAND) * clamp((T - SEAT - 0.55) / (LEAVE - SEAT - 0.55)) ** 2
+  const up = s < 0.2 ? 0.05 * 4 * (s / 0.2) * (1 - s / 0.2) : 0
+  if (s < 0.32) return { x: HIS_LAND + (HIS_X - HIS_LAND) * easeInOutSine(clamp(s / 0.32)), up }
+  if (s < 0.5) return { x: HIS_X, up: 0 }
+  return { x: HIS_X + (EDGE - HIS_X) * ((s - 0.5) / 0.5) ** 2, up: 0 }
+}
+/**
+ * Hers: still while he comes; then, a moment after he starts forward, after him, faster, so that she meets him at
+ * the edge on the beat. That is the push that sends him. She stops there, and rolls back to her place with the chair.
+ */
+const NUDGE_X = EDGE - 2 * R
+function herSeat(T: number): number {
+  const s = T - SEAT
+  if (s < 0.7) return HER_X
+  if (s < 1) return HER_X + (NUDGE_X - HER_X) * ((s - 0.7) / 0.3) ** 2
+  if (s < 1.14) return NUDGE_X + 0.03 * Math.sin((Math.PI / 2) * ((s - 1) / 0.14))
+  if (s < 1.62) return NUDGE_X + 0.03 + (HER_X - NUDGE_X - 0.03) * easeInOutSine((s - 1.14) / 0.48)
+  // Against the chair's back: a small knock off it, and still.
+  return HER_X + 0.012 * knock(s - 1.62, 0.08) * Math.abs(Math.sin((s - 1.62) * 30))
+}
+/** Where she is, in the house's cells. */
+function herAt(T: number): Pt {
+  return chairPoint(T, herSeat(T), SEAT_Y - R)
 }
 const FLOOR_Y = -R
-const LAND_X = CHAIR_X + SEAT_FRONT + 0.26
-const dropToFloor = throwAt(chairPoint(LEAVE, SEAT_FRONT + 0.04, SEAT_Y - R), [LAND_X, FLOOR_Y], LEAVE, DOWN, G)
+/** Pitched off the edge on the beat, in a low arc through the car's doorway onto its floor on the eighth. */
+const LAND_X = -0.25
+const dropToFloor = throwAt(chairPoint(DOWN, EDGE, SEAT_Y - R), [LAND_X, FLOOR_Y], DOWN, INCAR, G)
 
 /** The ball, at show time `T`, in this part's cells. */
 function ballAt(T: number): Pt {
@@ -424,12 +493,16 @@ function ballAt(T: number): Pt {
   if (T <= HATCH) return U(A_HOUSE, ...atticAt(T))
   if (T <= OFF) return U(A_HOUSE, ...onDoor(T))
   if (T <= SEAT) return U(A_HOUSE, ...dropToSeat(T))
-  if (T <= LEAVE) return U(A_HOUSE, ...chairPoint(T, seatX(T), SEAT_Y - R))
-  if (T <= DOWN) return U(A_HOUSE, ...dropToFloor(T))
-  // Along the floor, over the sill, and still in the middle of the car.
-  const u = clamp((T - DOWN) / (OUT - DOWN))
+  if (T <= DOWN) {
+    const { x, up } = hisSeat(T)
+    return U(A_HOUSE, ...chairPoint(T, x, SEAT_Y - R - up))
+  }
+  if (T <= INCAR) return U(A_HOUSE, ...dropToFloor(T))
+  // Along the car's floor, and still in the middle of it.
+  const u = clamp((T - INCAR) / (OUT - INCAR))
   const e = 1 - (1 - u) * (1 - u)
-  return U(A_HOUSE, LAND_X * (1 - e), FLOOR_Y + 0.03 * knock(T - DOWN, 0.06))
+  const hopUp = T - INCAR < 0.16 ? 0.03 * Math.sin((Math.PI * (T - INCAR)) / 0.16) : 0
+  return U(A_HOUSE, LAND_X * (1 - e), FLOOR_Y - hopUp)
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -463,9 +536,9 @@ export const ballpark = part<BallparkState>(
       [WINDOW, HATCH, 50],
       [HATCH, OFF, 30],
       [OFF, SEAT, 14],
-      [SEAT, LEAVE, 30],
-      [LEAVE, DOWN, 10],
-      [DOWN, slot.end, 24],
+      [SEAT, DOWN, 50],
+      [DOWN, INCAR, 16],
+      [INCAR, slot.end, 20],
     ]
     const segs: Seg[] = []
     for (const [t0, t1, n] of pieces) segs.push(...carried(fn, at(t0), at(t1), n))
@@ -485,7 +558,11 @@ export const ballpark = part<BallparkState>(
       seen.add(key)
       cells.push([cx, cy])
     }
-    return { cells, exit: F.exit(SEAM.ballparkOut), lane, state: { begin, lane } }
+    // Her: in the far-side house's rocking chair from the moment the lights come up, old, waiting. Out of shot
+    // until the pull back shows the whole ring, then a speck in the house; found on 154; left rocking as the car
+    // climbs, and gone once the house is out of the frame.
+    const company: Company[] = [{ from: ACT2, to: GOLD_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: AGED }) }]
+    return { cells, exit: F.exit(SEAM.ballparkOut), lane, state: { begin, lane }, company }
   },
   (slot) => {
     const mid = (a: Pt, b: Pt, f = 0.5): Pt => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]
@@ -495,18 +572,22 @@ export const ballpark = part<BallparkState>(
     const house = U(A_HOUSE, -0.15, -1.75)
     const keys: PartShot[] = [
       { t: slot.begin, cells: 5.0, off: [Math.sin(A_IN) * 0.5 - Math.cos(A_IN) * 0.5, -Math.cos(A_IN) * 0.5 - Math.sin(A_IN) * 0.5], w: 0 },
-      { t: CATCH - 0.3, cells: 4.8, hold: wall(2.1, 1.6), w: 0.9 },
-      { t: FEED, cells: 5.0, hold: wall(3.0, 1.7), w: 1 },
-      { t: SPIN1 + 0.5, cells: 5.7, hold: wall(5.7, 1.3), w: 1 },
-      { t: HIT, cells: 5.8, hold: wall(5.8, 1.4), w: 1 },
+      // Held out in the air, so the scoreboard is in with the machines and the hull is a band, not half the frame.
+      // The windup's frame keeps the waiting ball in under Zoom and the winch's drum in without it.
+      { t: CATCH - 0.3, cells: 4.8, hold: wall(2.1, 1.9), w: 0.9 },
+      { t: FEED, cells: 5.0, hold: wall(3.0, 2.0), w: 1 },
+      { t: SPIN1 + 0.5, cells: 5.5, hold: wall(5.4, 2.1), w: 1 },
+      { t: HIT, cells: 5.5, hold: wall(5.5, 2.1), w: 1 },
       { t: cue(141.6), cells: 13, hold: mid(flightAt(cue(141.6)), tower, 0.3), w: 0.7 },
       { t: cue(144.4), cells: 44, hold: [AX[0] + 0.8, AX[1] + 1.2], w: 1 },
       { t: cue(147.4), cells: 38, hold: [AX[0] - 2.2, AX[1] - 0.6], w: 1 },
       { t: cue(150), cells: 17, hold: mid(flightAt(cue(150)), house, 0.5), w: 0.9 },
       { t: TREE, cells: 9.5, hold: mid(flightAt(TREE), house, 0.3), w: 1 },
       { t: WINDOW + 0.1, cells: 5.6, hold: U(A_HOUSE, WIN.x - 0.5, WIN.y + 0.45), w: 1 },
-      { t: HATCH + 0.3, cells: 5.2, hold: U(A_HOUSE, -0.75, -1.2), w: 1 },
-      { t: DOWN + 0.1, cells: 5.2, hold: U(A_HOUSE, -0.45, -0.85), w: 1 },
+      // She is under the trapdoor, waiting; in, as he comes down to her, and held close while they rock.
+      { t: HATCH + 0.3, cells: 5.0, hold: U(A_HOUSE, -0.85, -1.15), w: 1 },
+      { t: SEAT, cells: 3.9, hold: U(A_HOUSE, -0.95, -0.78), w: 1 },
+      { t: DOWN - 0.08, cells: 3.5, hold: U(A_HOUSE, -0.88, -0.7), w: 1 },
       // The hub's first framing: back a little, the house and the car in it.
       { t: slot.end, cells: 6.5, hold: U(A_HOUSE, 0.2, -1), w: 1 },
     ]
@@ -519,6 +600,7 @@ export const ballpark = part<BallparkState>(
 function drawPark(p: p5, s: BallparkState, c: Ctx): void {
   const T = c.t + s.begin
   drawField(p, c, T)
+  drawBoard(p, c, T)
   drawTower(p, c, T)
   drawMachine(p, c, T)
   drawBat(p, c, T)
@@ -956,6 +1038,109 @@ function drawBat(p: p5, c: Ctx, T: number): void {
   })
 }
 
+/* ------------------------------------------------------------------ the scoreboard */
+
+/**
+ * The board, in its mast's upright frame: a green face in a wood frame, two rows of nine plates on it (the
+ * visitors' over the home side's), and a clock on top whose second hand goes round with the organ, a second a beat.
+ */
+/** The board sits off-centre on its mast, out over the mound, where the pitch and the windup are. */
+const BOARD_DX = 0.4
+const BOARD = { x0: BOARD_DX - 1.42, x1: BOARD_DX + 1.42, y0: -4.15, y1: -3.1 }
+const PLATE = 0.19
+const plateX = (i: number): number => BOARD_DX - 1.14 + i * 0.285
+const ROW_HOME = -3.42
+const ROW_AWAY = -3.8
+const CLOCK: Pt = [BOARD_DX, -4.52]
+const CLOCK_R = 0.3
+
+/** How far plate `i` of the home row has turned over: 0 dark, 1 lit; it flips in the tenth of a second before its beat. */
+function plateTurn(i: number, T: number): number {
+  return clamp((T - INNINGS[i] + 0.1) / 0.1)
+}
+
+/** The second hand: a sixtieth of a turn on each beat of the cue, landing on the beat with a little shiver. */
+function secondHand(T: number): number {
+  const k = (T + 0.06 - cue(0)) / (cue(1) - cue(0))
+  const n = Math.floor(k)
+  const since = (k - n) * (cue(1) - cue(0))
+  const step = since < 0.06 ? (since / 0.06) ** 2 : 1 + 0.12 * Math.exp(-(since - 0.06) / 0.05) * Math.sin((since - 0.06) * 60)
+  return ((n - 1 + Math.min(step, 1.12)) / 60) * Math.PI * 2 - Math.PI / 2
+}
+
+function drawBoard(p: p5, c: Ctx, T: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const { x0, x1, y0, y1 } = BOARD
+  standOnRim(p, k, AX, A_BOARD, () => {
+    // The mast, tapering, and the two stays out to the board's lower corners.
+    solid(p, ink, weight * 0.9, DUST.tin)
+    p.beginShape()
+    p.vertex(X(-0.08), 0)
+    p.vertex(X(-0.045), X(y1))
+    p.vertex(X(0.045), X(y1))
+    p.vertex(X(0.08), 0)
+    p.endShape(p.CLOSE)
+    outline(p, ink, weight * 0.7)
+    for (const sx of [-1, 1]) p.line(X(sx * 0.05), X(-2.2), X(sx * 0.95 + BOARD_DX * 0.6), X(y1))
+    outline(p, alpha(p, ink, 0.45).toString(), weight * 0.5)
+    for (const y of [-0.55, -1.25, -1.95]) p.line(X(-0.065), X(y), X(0.065), X(y))
+    // The clock's housing on top: a round face on a short neck.
+    solid(p, ink, weight * 0.8, DUST.wood)
+    p.rect(X(CLOCK[0]), X((y0 + CLOCK[1]) / 2), X(0.16), X(y0 - CLOCK[1]))
+    p.circle(X(CLOCK[0]), X(CLOCK[1]), X(2 * CLOCK_R + 0.1))
+    // The board: a wood frame round a green face, and a rust cap along its top.
+    solid(p, ink, weight, DUST.wood)
+    p.rect(X((x0 + x1) / 2), X((y0 + y1) / 2), X(x1 - x0 + 0.1), X(y1 - y0 + 0.1), X(0.02))
+    solid(p, ink, weight * 0.6, DUST.sage)
+    p.rect(X((x0 + x1) / 2), X((y0 + y1) / 2), X(x1 - x0 - 0.04), X(y1 - y0 - 0.04))
+    solid(p, ink, weight * 0.9, DUST.rust)
+    p.rect(X((x0 + x1) / 2), X(y0 - 0.08), X(x1 - x0 + 0.24), X(0.07), X(0.02))
+    // The plates. The visitors' row stays dark all game; the home row turns over, a plate a beat.
+    const plate = (x: number, y: number, lit: boolean, squash: number) => {
+      solid(p, lit ? DUST.corn : alpha(p, ink, 0.75).toString(), weight * 0.5, lit ? DUST.light : alpha(p, ink, 0.45).toString())
+      p.rect(X(x), X(y), X(PLATE), X(PLATE * Math.max(0.06, squash)), X(0.015))
+    }
+    for (let i = 0; i < 9; i++) plate(plateX(i), ROW_AWAY, false, 1)
+    for (let i = 0; i < 9; i++) {
+      const u = plateTurn(i, T)
+      const since = T - INNINGS[i]
+      if (since > 0) {
+        // A lit plate glows, and flares as it lands.
+        const r = X(0.24 + 0.2 * knock(since, 0.2))
+        const g = ctx.createRadialGradient(X(plateX(i)), X(ROW_HOME), 0, X(plateX(i)), X(ROW_HOME), r)
+        g.addColorStop(0, `rgba(255, 244, 214, ${0.3 + 0.45 * knock(since, 0.2)})`)
+        g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+        // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
+        ctx.save()
+        ctx.fillStyle = g
+        ctx.fillRect(X(plateX(i)) - r, X(ROW_HOME) - r, 2 * r, 2 * r)
+        ctx.restore()
+      }
+      plate(plateX(i), ROW_HOME, u >= 0.5, Math.abs(Math.cos(Math.PI * u)))
+    }
+    // The clock: a bone face, twelve marks, and its hands. It keeps the station's time, which is the organ's.
+    solid(p, ink, weight * 0.7, DUST.bone)
+    p.circle(X(CLOCK[0]), X(CLOCK[1]), X(2 * CLOCK_R))
+    outline(p, ink, weight * 0.5)
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2
+      const r0 = i % 3 ? 0.84 : 0.72
+      p.line(X(CLOCK[0] + Math.cos(a) * CLOCK_R * r0), X(CLOCK[1] + Math.sin(a) * CLOCK_R * r0), X(CLOCK[0] + Math.cos(a) * CLOCK_R * 0.92), X(CLOCK[1] + Math.sin(a) * CLOCK_R * 0.92))
+    }
+    const hand = (a: number, len: number, w: number, col: string) => {
+      outline(p, col, w)
+      p.line(X(CLOCK[0]), X(CLOCK[1]), X(CLOCK[0] + Math.cos(a) * CLOCK_R * len), X(CLOCK[1] + Math.sin(a) * CLOCK_R * len))
+    }
+    hand(-Math.PI / 2 + 0.52, 0.5, weight * 1.1, ink)
+    hand(-Math.PI / 2 + 4.3 + T * 0.0017, 0.74, weight * 0.9, ink)
+    hand(secondHand(T), 0.86, weight * 0.55, DUST.rust)
+    solid(p, ink, weight * 0.4, DUST.rust)
+    p.circle(X(CLOCK[0]), X(CLOCK[1]), X(0.045))
+  })
+}
+
 /* ------------------------------------------------------------------ the light tower */
 
 function drawTower(p: p5, c: Ctx, T: number): void {
@@ -989,8 +1174,11 @@ function drawTower(p: p5, c: Ctx, T: number): void {
         const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), r)
         g.addColorStop(0, `rgba(255, 244, 214, ${0.55 + 0.35 * knock(since, 0.25)})`)
         g.addColorStop(1, 'rgba(255, 244, 214, 0)')
+        // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
+        ctx.save()
         ctx.fillStyle = g
         ctx.fillRect(X(lx) - r, X(ly) - r, 2 * r, 2 * r)
+        ctx.restore()
       }
       solid(p, ink, weight * 0.7, on ? DUST.light : DUST.bone)
       p.circle(X(lx), X(ly), X(0.22))
@@ -1363,8 +1551,11 @@ function drawShards(p: p5, c: Ctx, T: number): void {
       const g = ctx.createRadialGradient(X(WIN.x), X(WIN.y), 0, X(WIN.x), X(WIN.y), r)
       g.addColorStop(0, `rgba(255, 248, 226, ${0.9 * a})`)
       g.addColorStop(1, 'rgba(255, 248, 226, 0)')
+      // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
+      ctx.save()
       ctx.fillStyle = g
       ctx.fillRect(X(WIN.x) - r, X(WIN.y) - r, 2 * r, 2 * r)
+      ctx.restore()
     }
     // The crack of it.
     if (since < 0.2) {
