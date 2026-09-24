@@ -419,8 +419,6 @@ function drawAll(p: p5, s: ReplicaState, c: Ctx): void {
   drawPlinth(p, c)
   drawAwning(p, c)
   drawCase(p, s, c, t)
-  // The museum keeps Murph's toy robot where it stood, its arm out.
-  drawRobot(p, c, TOY_HOME[0], TOY_HOME[1])
   drawDumbwaiter(p, c, t)
   drawClock(p, c, t)
   drawTurnstile(p, c, t)
@@ -1014,6 +1012,8 @@ function drawOver(p: p5, _s: ReplicaState, c: Ctx): void {
   p.push()
   p.translate(O[0] * k, O[1] * k)
   drawCasing(p, c, t)
+  // The museum keeps Murph's toy robot where it stood, its arm out: in front of the dumbwaiter's shaft.
+  drawRobot(p, c, TOY_HOME[0], TOY_HOME[1])
   drawGlass(p, c)
   p.pop()
   drawDusk(p, c)

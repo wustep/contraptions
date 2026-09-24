@@ -188,6 +188,25 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   ]
   // Where a part asks for nothing, the camera follows at a middle distance.
   if (!shots.some((s) => s.t > beat(86))) shots.push({ t: DURATION, cells: 5 })
-  const camera = director((t) => show.where(t) as Pt, shots, DURATION)
+  const follow = director((t) => show.where(t) as Pt, shots, DURATION)
+  const camera = (t: number): Framing => ({ ...follow(t), angle: rollAt(t) })
   return { show, camera }
+}
+
+/**
+ * The camera's roll on Cooper Station. The station is drawn end-on and its "down" is outward, so a house on the
+ * far side of the ring stands on its head. While the ball is in the air across the axis the camera turns with the
+ * ring, a third of a turn, so that when it comes down through the far-side house's window the house stands upright
+ * and the reunion is played the right way up. As the lift climbs the spoke the car goes straight up the screen, and
+ * as gravity falls away near the hub (and "up" stops meaning anything) the camera turns back, square again for the
+ * docking bay and the cut outside.
+ */
+const FAR_SIDE = Math.PI * 1.18
+const TURNED = Math.PI / 2 - FAR_SIDE
+const rollAt = (t: number): number => {
+  const over = (a: number, b: number) => {
+    const u = Math.max(0, Math.min(1, (t - a) / (b - a)))
+    return u * u * (3 - 2 * u)
+  }
+  return TURNED * (over(cue(146), cue(151.5)) - over(cue(164), cue(170)))
 }

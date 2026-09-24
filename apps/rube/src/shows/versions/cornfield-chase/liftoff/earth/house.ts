@@ -477,11 +477,12 @@ function lander(p: p5, c: Ctx, x0: number, since: number): void {
 /* ------------------------------------------------------------------ the robot */
 
 /**
- * Murph's toy robot: four slabs on a hinge, knee-high to the bookcase, one
- * arm. In the dark it stands at the end of the case with its arm out flat.
+ * Murph's toy robot: four tall slabs on a hinge, knee-high to the bookcase,
+ * one arm. In the dark it stands just clear of the end of the case with its
+ * arm out flat.
  * As the last book goes it raises the arm with a click, and the ghost falls
- * off the shelf into it and is a ball there; the ball rolls down the arm into
- * its crook and settles as the robot takes its first step. Then it walks him
+ * off the shelf through the side of the case into its crook and is a ball
+ * there, settling as the robot takes its first step. Then it walks him
  * across the room, a footfall to a note, through the window's light, where
  * the dust has started coming down in bands the width of a finger and of a
  * hand — the pattern that turns out to be coordinates — and at the stairwell
@@ -490,19 +491,22 @@ function lander(p: p5, c: Ctx, x0: number, since: number): void {
  * The part's frame: the ball in its arm at (-0.5, 0) on the catch; the
  * floor's surface at y = 0.64 (the ball on the floor is at 0.51).
  */
-const TOY_W = 0.3
-const ARM = 0.56
-/** The arm: out flat in the dark, raised to catch, and (LOWERED, below) down like a ramp at the stairwell. */
+const TOY_W = 0.24
+const ARM = 0.44
+/** The arm: out flat in the dark, raised to catch, and down like a ramp at the stairwell, its end just off the boards. */
 const REST = 0
-const HELD = -0.4
-/** Along the arm from its hinge: where he lands, and its crook against the body, where he settles. */
-const CATCH_D = 0.42
-const CROOK = 0.106
+const HELD = -0.45
+const LOWERED = 0.95
+/** It stands just clear of the case's side (its body's near edge, in the shelf's cells); its arm's hinge is at the body's far edge. */
+const STAND = CASE_R + 0.045
+/** Where the ghost lands in the arm, in the shelf's cells: the shelf's exit, less half a cell. */
+const CATCH_X = 2.83 - 0.5
+/** Along the arm from its hinge: where he lands, as far as the arm reaches from where it stands; and its crook, where a ball touches the body's top corner. */
+const CATCH_D = (CATCH_X - (STAND + TOY_W) - Math.sin(HELD) * R) / Math.cos(HELD)
+const CROOK = (-0.08 * Math.sin(HELD) + Math.sqrt((0.08 * Math.sin(HELD)) ** 2 - 4 * (0.0016 - 0.08 * R * Math.cos(HELD)))) / 2
 /** The floor under the robot, in its frame: where it has always been, so the catch is where it always was; the robot is built to it. */
 const TOY_FLOOR = 0.42 - Math.sin(-0.45) * 0.24 + Math.cos(-0.45) * R
 const TOY_H = TOY_FLOOR + 0.04 + Math.sin(HELD) * CATCH_D - Math.cos(HELD) * R
-/** Lowered, the arm's end rests just off the boards. */
-const LOWERED = Math.asin((TOY_H - 0.075) / ARM)
 /** Where the robot's frame sits in the world (y), and so where the ghost is caught, in the shelf's frame. */
 const TOY_ROW = UP - TOY_FLOOR
 const CATCH_Y = TOY_ROW + 2
@@ -573,7 +577,7 @@ function onArm(s: ToyState, t: number, d: number): Pt {
 function cradle(s: ToyState, t: number): Pt {
   const since = t - s.begin
   const roll = FOOTFALLS[0] - s.begin
-  const rest = since < roll ? CATCH_D - (CATCH_D - CROOK) * easeInQuad(clamp(since / roll)) : CROOK + 0.015 * Math.exp(-(since - roll) / 0.06) * Math.abs(Math.sin((since - roll) * 28))
+  const rest = since < roll ? CATCH_D - (CATCH_D - CROOK) * easeInQuad(clamp(since / roll)) : CROOK
   const tip = clamp((armAt(s, t) - 0.05) / (LOWERED - 0.05))
   return onArm(s, t, rest + (ARM - rest) * tip * tip)
 }
@@ -588,7 +592,7 @@ export const toy = part<ToyState>(
     const s: ToyState = { begin: slot.begin, x0: 0, x1: 0, bands: BANDS.map(([x, w, n]) => ({ x, w, at: n })) }
     // Where it stands to catch, and where it stops: the ball in the arm at (-0.5, 0), and the lowered arm's end just short of the lip.
     s.x0 = -0.5 - (Math.cos(HELD) * CATCH_D + Math.sin(HELD) * R) - TOY_W / 2
-    s.x1 = LIP_X - 0.12 - (Math.cos(LOWERED) * ARM + Math.sin(LOWERED) * R) - TOY_W / 2
+    s.x1 = LIP_X - 0.1 - (Math.cos(LOWERED) * ARM + Math.sin(LOWERED) * R) - TOY_W / 2
     const off = FOOTFALLS[FOOTFALLS.length - 1] + 0.36
     const ride = (t: number) => cradle(s, t + slot.begin)
     const segs = [...carried(ride, 0, at(off), Math.ceil(at(off) * 40))]

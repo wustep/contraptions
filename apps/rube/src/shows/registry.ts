@@ -22,6 +22,11 @@ export interface Framing {
   x: number
   y: number
   cells: number
+  /**
+   * How far the picture is turned about its middle, radians, clockwise on the screen: a camera's roll. Left out,
+   * or in Overview, the world is square to the frame.
+   */
+  angle?: number
 }
 
 export interface SoundtrackSpec {

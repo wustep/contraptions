@@ -84,6 +84,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 | --- | --- | --- |
 | 127.5 s | the dusk room → the replica | The first frame is Act I's room under the same dusk, same framing, same toy robot. On the organ's accent the station's lamps strike, and one catches late and dips it again. Daylight comes up over half a second: one room waking up. |
 | 139.5 to 179.5 s | replica → ring → ballpark → far-side house → spoke | One universe and one camera, continuous round the ring. |
+| 169.5 to 175 s | the flight → the far side | While the ball is in the air across the axis, the camera rolls a third of a turn with the ring. The far-side house, which stands on its head in the station's end-on view, comes down upright to meet it, and the reunion plays the right way up. The lift climbs straight up the screen. As gravity falls away near the hub (187.5 to 193.5 s) the camera rolls back, square again for the docking bay and the match cut outside. |
 | 207.5 s | the hub → outside | A match cut on the Ranger. The first frame outside keeps the hub's last framing, so the ship holds still on the screen while the bay turns to the dark round it. Then the camera pulls back to show the spinning station. |
 | 235.5 s | the wormhole → Edmunds' planet | The ship sinks to the sphere's centre. On beat 212 the far side opens there as a disc, and the camera goes through it. |
 
@@ -118,13 +119,14 @@ The music is the only clock.
     - the 96 bpm comb from the drop onward, beat *b* at 0.008 + 0.625·*b* s (±26 ms).
   - Act II: No Time for Caution's 60 bpm pulse, beats and eighths (±30 ms).
 - **What `check:shows` holds it to.**
-  - 358 strikes (226 in Act I, 132 in Act II), every one on a measured onset;
+  - 359 strikes (226 in Act I, 133 in Act II), every one on a measured onset;
   - more than 90% of Act I's beats from the drop to the last hit struck, and 123 of Act II's 129 beats;
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
   - the mix, its length and its demo credit;
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
+  - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
   - the gold ball (Brand):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
     - she is in shot with him from the base to the ring (nine sample times, 72.5 to 101 s);
@@ -169,7 +171,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 176.5 | 153 to 156 | the reunion | When the trunk knocks the trapdoor's latch (153), she rocks forward off her chair, rolls across the floor, and waits where he will come down. On 154 the door hits its stop and flicks him off its end, and he lands beside her: she meets him. They rest together for a whole beat; on 155 she leans in against him. On 155½ she draws back and bumps him on over the lift car's threshold, and he is in the middle of the car on the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
+| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. When the trunk knocks the trapdoor's latch (153), she rocks forward off her chair, rolls across the floor, and waits where he will come down. The trapdoor lets him down on its counterweight and settles on its stop on 153½. He rolls off its end at the speed the slope gave him and lands beside her on 154: she meets him. They are still together for a beat. On 155 she leans in and walks him over the lift car's threshold, and on 155½ she nudges him on, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
 | 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
@@ -215,16 +217,33 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Polish in the last round
+## Polish
 
+**The latest round.**
+- **The far side is played the right way up.** The station is drawn end-on and its "down" is outward, so the far-side house stood on its head. Now the camera rolls a third of a turn with the ring while the ball is in the air across the axis (169.5 to 175 s):
+  - the house comes down upright to meet the ball, and the attic, the trapdoor and the reunion read the right way up;
+  - the lift climbs straight up the screen;
+  - as gravity falls away near the hub the camera turns back (187.5 to 193.5 s), square again for the docking bay and the match cut outside.
+- **The reunion is unhurried.**
+  - The trapdoor is shorter and shallower. It lets him down on its counterweight and settles on its stop on 153½, a new strike.
+  - He rolls off its end at the speed the slope gave him, about 1 cell/s across. It was a 1.7 cells/s flick.
+  - He lands beside her on 154, and they are still together for a beat.
+  - She walks him over the threshold on 155 and nudges him on 155½. He coasts to the car's middle from about 1 cell/s, where it was 2.
+  - Under Zoom, both balls and the chair stay in frame from 176.5 to 180 s.
+  - The broken window's glass lands on the attic floor, not across the trapdoor.
+- **A calmer first frame.**
+  - The toy robot stands on its own just clear of the bookcase's right side, taller and narrower, instead of in front of the case's corner and its books. The ghost's fall, the catch point and every strike are unchanged.
+  - The dusk room and the museum replica stand it at the same place (`TOY_HOME`), so the first and last frames still rhyme.
+  - In the replica it stands in front of the dumbwaiter's shaft.
+- **Miller's lap is kept.** At a lap an eighth, she is a quick gold dot with a short trail round the ring in orbit, a click and a tally mark each lap. That is the point: her time runs fast while his runs slow.
+
+**The round before.**
 - **The dam.** Thrown clear, he goes out through the flung-open door, up onto the hood and along it, and off the nose. He no longer crosses the windscreen.
 - **Brand's entrance.**
   - The camera pushes in close on the bunker's way out (3.8 cells) just before she comes, and holds through the tap. Then it eases out to the climb in one move.
   - She nudges the flap open herself and pauses a hair on the threshold before she hurries after him.
   - The tunnel lamp's light spills out across the apron while the flap stands open.
-- **The greeting.**
-  - The rocking chair is smaller and set further back, so the room has floor.
-  - She leaves the chair on the latch's knock (153) and is waiting where he lands (154). They rest together for 1.3 s, where it was 0.35 s. Her path from the chair is 1.3 cells.
+- **The greeting's room.** The rocking chair is smaller and set further back, so the room has floor. She leaves it on the latch's knock (153) and is waiting where he lands (154).
 - **Zoom.**
   - The countdown's framing keeps the rocket's window, with both of them in it, inside the Zoom frame.
   - The station in orbit over Miller moved down and in, so it is whole under Zoom.
@@ -260,5 +279,6 @@ These are visual and mechanical only. There are no stills, no text, and no audio
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.
   - `earth/truck.ts` exports the pickup's drawing, so the same truck appears at the dam, the gate and the tower.
+- **The camera's roll.** `Framing.angle` (optional, in `shows/registry.ts`) turns the picture about its middle. The engine (`drawWorld`) rotates after the backdrop and chooses pieces from the box round the turned view. `kit.frame()` takes the canvas's corners back through the turned transform, so skies and culling still cover the frame. Liftoff's roll curve is `rollAt` in `score.ts`; no other show sets an angle.
 - **Checks.** `apps/rube/check-shows.ts` has a Liftoff block, run by `npm run check:shows`.
 - **Rebuilding the audio.** `sh scripts/liftoff-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/liftoff-ntfc-onsets.py` measures it again. Neither needs to run unless the mix changes.

@@ -247,14 +247,22 @@ export function standing<S>(piece: Piece<S>, col: number, row: number, cells: Pt
  * part being told about the camera.
  */
 export function frame(p: p5, k: number): { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number } {
-  const m = (p.drawingContext as CanvasRenderingContext2D).getTransform()
+  // The canvas's corners taken back through the transform (which may be turned, when the camera rolls): the box
+  // round them, in cells.
+  const m = (p.drawingContext as CanvasRenderingContext2D).getTransform().inverse()
   const d = p.pixelDensity()
-  const tx = m.e / d
-  const ty = m.f / d
-  const x0 = -tx / k
-  const y0 = -ty / k
-  const x1 = (p.width - tx) / k
-  const y1 = (p.height - ty) / k
+  let x0 = Infinity
+  let y0 = Infinity
+  let x1 = -Infinity
+  let y1 = -Infinity
+  for (const [px, py] of [[0, 0], [p.width * d, 0], [0, p.height * d], [p.width * d, p.height * d]]) {
+    const x = (m.a * px + m.c * py + m.e) / k
+    const y = (m.b * px + m.d * py + m.f) / k
+    x0 = Math.min(x0, x)
+    x1 = Math.max(x1, x)
+    y0 = Math.min(y0, y)
+    y1 = Math.max(y1, y)
+  }
   return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 }
 }
 

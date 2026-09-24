@@ -249,7 +249,7 @@ export function drawWorld(
   show: Show,
   t: number,
   here: ShowPoint,
-  cam: { x: number; y: number },
+  cam: { x: number; y: number; angle?: number },
   k: number,
   view: Viewport,
   cuts: boolean | 'loop',
@@ -274,11 +274,24 @@ export function drawWorld(
   p.rect(cx, cy, W, H)
   drawBackdrop(p, u, cam, k, view, sx, sy)
 
+  // A camera's roll turns everything from here on about the frame's middle; what is in view is then the frame's
+  // turned rectangle, so the pieces are chosen from the box round it.
+  const roll = cam.angle ?? 0
+  const cos = Math.abs(Math.cos(roll))
+  const sin = Math.abs(Math.sin(roll))
+  if (roll) {
+    p.translate(cx, cy)
+    p.rotate(roll)
+    p.translate(-cx, -cy)
+  }
+
   // The pieces in view, in two passes around the ball.
-  const x0 = cam.x - W / 2 / k - 1.5
-  const x1 = cam.x + W / 2 / k + 1.5
-  const y0 = cam.y - H / 2 / k - 1.5
-  const y1 = cam.y + H / 2 / k + 1.5
+  const halfW = (W * cos + H * sin) / 2 / k
+  const halfH = (W * sin + H * cos) / 2 / k
+  const x0 = cam.x - halfW - 1.5
+  const x1 = cam.x + halfW + 1.5
+  const y0 = cam.y - halfH - 1.5
+  const y1 = cam.y + halfH + 1.5
   const visible: Placed[] = []
   for (const placed of u.pieces) {
     if (placed.cells.some(([c, r]) => c >= x0 && c <= x1 && r >= y0 && r <= y1)) visible.push(placed)

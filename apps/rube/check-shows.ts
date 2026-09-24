@@ -268,6 +268,13 @@ async function main(): Promise<void> {
         }
         check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
         check('liftoff: a ghost on the shelf at the start, a ball in the robot\'s arm', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
+        // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.
+        const rollOf = (t: number) => perf.camera!(t).angle ?? 0
+        const upright = Math.PI / 2 - Math.PI * 1.18
+        check('liftoff: the camera turns the far-side house upright for the reunion, and is square again by the hub and the cut',
+          [0, 60, ACT2 + 1, cue(140), cue(172), UNDOCK - 0.01, UNDOCK + 0.01, 250].every((t) => Math.abs(rollOf(t)) < 1e-9) &&
+          [cue(152), cue(154), cue(156), cue(160)].every((t) => Math.abs(rollOf(t) - upright) < 1e-6))
         check('liftoff: the ghost is a ball again when the station\'s lights come up', show.at(ACT2 - 0.05).ball.ghost && !show.at(ACT2 + 0.3).ball.ghost)
         // The gold ball is Amelia Brand. Cooper (the hero) has the farm and drives; she is NASA's, and joins him at
         // the base, out of the bunker the drone led him to. With him (he makes things go, she rides) to the ring, where
@@ -280,8 +287,14 @@ async function main(): Promise<void> {
         const alone = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, 190, 215, 245, 260]
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
+          // In the frame's own axes: the camera may be rolled.
           const f = perf.camera!(t)
-          return Math.abs(b.x - f.x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(b.y - f.y) < f.cells / 2 + 0.2
+          const a = f.angle ?? 0
+          const dx = b.x - f.x
+          const dy = b.y - f.y
+          const x = dx * Math.cos(a) - dy * Math.sin(a)
+          const y = dx * Math.sin(a) + dy * Math.cos(a)
+          return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
         for (const t of [...withHim, ...inOrbit, ...reunion]) if (!inShot(t, show.gold(t))) golds.push(`not in shot ${t}`)
         for (const t of alone) if (inShot(t, show.gold(t))) golds.push(`in shot ${t}`)
