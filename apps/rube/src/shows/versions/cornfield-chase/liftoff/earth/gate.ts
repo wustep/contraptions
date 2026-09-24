@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, laneAt, R, puff, type Lane, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, mixHex, R, puff, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_EARTH, hop } from '../physics'
@@ -30,12 +30,13 @@ import { drawDrone } from './drone'
  * - The ball goes through the bunker under it: a spring flap in (113) that
  *   slaps shut behind it (113.5), and a flap out (114).
  *
- * And Brand joins him. She is NASA's: inside the bunker, out of sight. He
- * goes in at one end and out at the other; the flap falls back behind him,
- * and on the eighth it is pushed open again (114.5) and a second ball rolls
- * out — her, the first time we see her. The flap slaps shut behind her (115).
- * She hurries after him, taps him on the eighth (115.5), and from there they
- * roll to the tower together, touching.
+ * And the base meets him. TARS stands by the bunker's way out: four slabs of
+ * dark steel on one hinge. As he comes out (114) it swings its front slab
+ * across his way, and he rolls up against it and stops (114.5). Behind him
+ * the flap he came through is pushed open again, and a second ball rolls
+ * out — Brand, the first time we see her; the flap slaps shut behind her
+ * (115). She comes up to him and taps him on the eighth (115.5), and TARS
+ * lifts its slab and lets them by. They roll to the tower together.
  *
  * The part's frame: the ball comes in on the ground at (-0.5, 0) and leaves
  * on it; the fence's top rail carries it at y = -2.
@@ -65,9 +66,8 @@ const FLAPS = [beat(113), beat(114)]
 /** The way-out flap falls back behind him and she pushes it open again; it slaps shut behind her. */
 const HER_OUT = beat(114.5)
 const SLAPS = [beat(113.5), beat(115)]
-/** She comes up against his back: he had slowed, as if he heard the door, and the tap sends him on. */
+/** She comes up against his back and taps him, and TARS lets them by. */
 const MEET = beat(115.5)
-const NUDGE = 0.35
 
 export const GATE_HITS = [...GRID_HITS, CUP, FLING, ...CAPS, DROP_IN, SET, TIP, SHUT, THROW, TOUCH, FLAPS[0], SLAPS[0], FLAPS[1], HER_OUT, SLAPS[1], MEET]
 
@@ -79,6 +79,11 @@ const V_HOP = 2.5
 const V_RAIL = 2.2
 const V_ROLL = 2.4
 const V_OUT = 2.0
+/** Out of the bunker to TARS's slab (cells), how fast he comes against it and how far he gives back, and how fast the tap sends him on. */
+const D_PRE = 0.58
+const V_TOUCH = 0.5
+const BOUNCE = 0.02
+const V_LAUNCH = 1.43
 
 /** The grid's bars, three to the ball's skip. */
 const SKIP = V_HOP * (beat(0.5) - beat(0))
@@ -155,9 +160,67 @@ interface GateState {
   /** Where the drone's wheels touch. */
   touch: number
   exit: number
-  /** Where he is when she taps him. */
+  /** Where he waits against TARS's slab, and where she taps him. */
   meet: number
+  /** TARS's hinge, x (it stands on the apron past the way out). */
+  tars: number
 }
+
+/* ------------------------------------------------------------------ TARS */
+
+/** Four slabs on one hinge at half their height, seen from the side: how tall, how thick, and fanned a little at rest. */
+const TARS_H = 1.0
+const TARS_W = 0.15
+/** Each slab's angle, radians: positive swings its lower end back toward the bunker. The first is the one it moves. */
+const FAN = [0.09, 0.03, -0.03, -0.09]
+/** How far the front slab swings, across his way. It starts on the in-flap's slap and is across as he comes out. */
+const BAR = 0.7
+const BAR_GO = beat(113.5)
+/** It lets them by on her tap, and is back in the fan in a moment. */
+const LIFT_T = 0.17
+
+/** The front slab's angle at show time `t`: fanned; swung across his way (114), a shiver as he comes against it (114½), up again on the tap. */
+function barAngle(t: number): number {
+  const rest = FAN[0]
+  if (t < BAR_GO) return rest
+  if (t < FLAPS[1]) return rest + (BAR - rest) * easeInQuad((t - BAR_GO) / (FLAPS[1] - BAR_GO))
+  if (t < MEET) {
+    const k = t - FLAPS[1]
+    let a = BAR - 0.07 * Math.exp(-k / 0.07) * Math.abs(Math.sin(k * 32))
+    const c = t - HER_OUT
+    if (c > 0) a += 0.03 * Math.exp(-c / 0.09) * Math.sin(c * 42)
+    return a
+  }
+  const k = t - MEET
+  const up = easeOutCubic(clamp(k / LIFT_T))
+  const settle = k > LIFT_T ? -0.05 * Math.exp(-(k - LIFT_T) / 0.1) * Math.sin((k - LIFT_T) * 26) : 0
+  return BAR + (rest - BAR) * up + settle
+}
+
+/** A slab through the hinge at `hub` at angle `a`: the distance from a point to it (it is a box, TARS_W by TARS_H). */
+function slabDistance(hub: Pt, a: number, p: Pt): number {
+  const dx = p[0] - hub[0]
+  const dy = p[1] - hub[1]
+  // Into the slab's own frame: v along it (down, toward its lower end), u across it.
+  const v = -dx * Math.sin(a) + dy * Math.cos(a)
+  const u = dx * Math.cos(a) + dy * Math.sin(a)
+  const cu = Math.max(-TARS_W / 2, Math.min(TARS_W / 2, u))
+  const cv = Math.max(-TARS_H / 2, Math.min(TARS_H / 2, v))
+  return Math.hypot(u - cu, v - cv)
+}
+
+/** How far short of TARS's hinge a ball rolling along the ground is stopped by the front slab swung across: worked out once. */
+const STOPPED = ((): number => {
+  const hub: Pt = [0, FLOOR - TARS_H / 2]
+  let lo = -2
+  let hi = 0
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2
+    if (slabDistance(hub, BAR, [mid, 0]) > R + 0.004) lo = mid
+    else hi = mid
+  }
+  return -lo
+})()
 
 /* ------------------------------------------------------------------ Brand */
 
@@ -165,7 +228,7 @@ interface GateState {
 const DOORWAY = 0.22
 /** She is in the bunker, out of sight, from here; she sets off after him once he is by her. */
 const HER_ON = beat(113)
-const HER_GO = beat(113.75)
+const HER_GO = beat(113.875)
 
 /** A cubic from p0 to p1 with end slopes m0, m1 (in the unit of w), at w in 0..1. */
 const hermite = (p0: number, p1: number, m0: number, m1: number, w: number): number =>
@@ -189,15 +252,15 @@ function goldGate(s: GateState, lane: Lane, begin: number, t: number): Companion
   const his = (u: number) => laneAt(lane, u - begin).x
   const back = 2 * R + 0.01
   if (t < MEET) {
-    // Quicker than he is all the way, so she comes up against his back on the eighth with a tap, and keeps his pace.
+    // Out of the flap, a moment's slowing on the threshold (TARS, him stopped against it), and up to his back for the tap.
     const T = MEET - HER_OUT
-    return { x: hermite(door, his(MEET) - back, 0.8 * T, 3.0 * T, (t - HER_OUT) / T), y: 0 }
+    return { x: hermite(door, his(MEET) - back, 0.8 * T, V_LAUNCH * T, (t - HER_OUT) / T), y: 0 }
   }
   return { x: his(t) - back, y: 0 }
 }
 
 /** The way-out flap: pushed by him on 114, fallen back as she pushes it on 114.5, and shut behind her on 115. */
-const flapB = (t: number): number => (t < HER_OUT ? flapAngle(t, FLAPS[1], HER_OUT) : flapAngle(t, HER_OUT, SLAPS[1]))
+const flapB = (t: number): number => (t < HER_OUT ? flapAngle(t, FLAPS[1], HER_OUT) : flapAngle(t, HER_OUT, SLAPS[1], 1.4))
 
 /** The sweep's long arm, radians (y down), at show time `t`: resting down to the left, then over the top onto its log. */
 function sweepAngle(t: number): number {
@@ -249,13 +312,13 @@ function pailSwing(t: number): number {
 }
 
 /** A spring flap, radians from hanging: pushed up by the ball on its beat, falling back to slap shut on the eighth after. */
-function flapAngle(t: number, hit: number, slap: number): number {
+function flapAngle(t: number, hit: number, slap: number, amp = 1.25): number {
   const s = t - hit
   if (s < 0) return 0
   if (t < slap) {
     const up = easeOutCubic(clamp(s / 0.12))
     const back = easeInQuad(clamp((s - 0.17) / (slap - hit - 0.17)))
-    return 1.25 * up * (1 - back)
+    return amp * up * (1 - back)
   }
   const k = t - slap
   return 0.2 * Math.exp(-k / 0.1) * Math.abs(Math.sin(k * 30))
@@ -352,15 +415,19 @@ export const gate = part<GateState>(
     const rollX = (t: number) => out + V_ROLL * (t - TIP)
     const sw = rollX(THROW)
     const faceA = rollX(FLAPS[0]) + R
-    const faceB = faceA + 1.4
-    const leaveB = faceB - R
-    const pace = (faceB - faceA) / (FLAPS[1] - FLAPS[0])
-    const exitBall = leaveB + ((pace + V_OUT) / 2) * (slot.end - FLAPS[1])
-    // Out of the bunker he eases off until her tap (MEET), which nudges him on: the same exit at the same time.
-    const T1 = MEET - FLAPS[1]
-    const T2 = slot.end - MEET
-    const slow = (2 * (exitBall - leaveB) - pace * T1 - (NUDGE + V_OUT) * T2) / (T1 + T2)
-    const meetX = leaveB + ((pace + slow) / 2) * T1
+    // The exit is where it always was (the gantry stands on it): a 1.4-cell bunker left 2.65 cells to go from 114.
+    const exitBall = faceA + 1.4 - R + ((1.4 / (FLAPS[1] - FLAPS[0]) + V_OUT) / 2) * (slot.end - FLAPS[1])
+    // Backwards from it: off TARS's slab on the tap, going on to the exit; where he waits against it; where he comes out.
+    const rest = exitBall - ((V_LAUNCH + V_OUT) / 2) * (slot.end - MEET)
+    const stopX = rest + BOUNCE
+    const tars = stopX + STOPPED
+    const leaveB = stopX - D_PRE
+    const faceB = leaveB + R
+    const vOut = (2 * D_PRE) / (HER_OUT - FLAPS[1]) - V_TOUCH
+    // Through the bunker (the long way now, behind its wall): quick in the middle, out of the flap at vOut.
+    const half = (FLAPS[1] - FLAPS[0]) / 2
+    const vMid = (leaveB - (faceA - R)) / half - (V_ROLL + vOut) / 2
+    const midX = faceA - R + ((V_ROLL + vMid) / 2) * half
     const s: GateState = {
       begin: slot.begin,
       bars,
@@ -377,7 +444,8 @@ export const gate = part<GateState>(
       bunker: [faceA, faceB],
       touch: faceA + 0.45,
       exit: exitBall + 0.5,
-      meet: meetX,
+      meet: rest,
+      tars,
     }
 
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(GRID_HITS[0]), p: [first, 0] }]
@@ -416,9 +484,13 @@ export const gate = part<GateState>(
         { at: at(TIP) + 0.1, p: [rollX(TIP + 0.1), 0] },
         { at: at(THROW), p: [sw, 0] },
         { at: at(FLAPS[0]), p: [faceA - R, 0] },
-        { at: at(FLAPS[1]), p: [leaveB, 0] },
-        { at: at(MEET), p: [meetX, 0], ramp: [pace, slow] },
-        { at: at(slot.end), p: [exitBall, 0], ramp: [slow + NUDGE, V_OUT] },
+        { at: at(FLAPS[0]) + half, p: [midX, 0], ramp: [V_ROLL, vMid] },
+        { at: at(FLAPS[1]), p: [leaveB, 0], ramp: [vMid, vOut] },
+        // Up against TARS's slab on the eighth, a small give back off it, and still until the tap.
+        { at: at(HER_OUT), p: [stopX, 0], ramp: [vOut, V_TOUCH] },
+        { at: at(HER_OUT) + (2 * BOUNCE) / 0.25, p: [rest, 0], ramp: [0.25, 0] },
+        { at: at(MEET), p: [rest, 0] },
+        { at: at(slot.end), p: [exitBall, 0], ramp: [V_LAUNCH, V_OUT] },
       ]),
     )
     const lane: Lane = { segs, fire: at(GRID_HITS[0]) }
@@ -438,11 +510,11 @@ export const gate = part<GateState>(
     { t: beat(107.4), cells: 5.9, off: [1.1, 0.1] },
     { t: beat(108.8), cells: 5.9, off: [1.3, -1.2] },
     { t: beat(111), cells: 6.0, off: [1.5, -1.4] },
-    { t: beat(113), cells: 6.0, off: [1.3, -1.3] },
-    // The bunker's way out, held nearly still and closer: he comes out, the flap falls, and it opens again for her.
-    { t: beat(114.2), cells: 3.8, hold: [built.state.bunker[1] + 0.35, -0.5], w: 0.9 },
-    // She catches him up and taps him; from there the frame eases out, slowly, into the gantry's climb.
-    { t: beat(115.6), cells: 3.9, hold: [built.state.meet - 0.1, -0.5], w: 0.85 },
+    { t: beat(113), cells: 6.0, off: [1.6, -1.3] },
+    // The bunker's way out and TARS by it, held nearly still and close: TARS bars his way, the flap opens again for her.
+    { t: beat(113.8), cells: 4.0, hold: [built.state.bunker[1] + 0.55, -0.55], w: 0.9 },
+    // She comes up to him and taps him, and TARS lets them by; from there the frame eases out into the gantry's climb.
+    { t: beat(115.6), cells: 4.0, hold: [built.state.meet + 0.15, -0.55], w: 0.85 },
   ],
 )
 
@@ -468,7 +540,40 @@ function drawGate(p: p5, s: GateState, c: Ctx): void {
   barrier(d, s)
   lever(d, s)
   bunker(d, s)
+  tarsDraw(d, s)
   drone(d, s, f)
+}
+
+/** TARS: four slabs of dark steel through one hinge, fanned a little; the front one swings. A lamp on it, lit as it moves. */
+function tarsDraw(d: Draw, s: GateState): void {
+  const { p, ink, weight, t, X } = d
+  const hub: Pt = [s.tars, FLOOR - TARS_H / 2]
+  const steel = mixHex(DUST.tin, ink, 0.55)
+  const act = Math.max(knock(t - FLAPS[1], 0.3), knock(t - MEET, 0.3))
+  for (let q = FAN.length - 1; q >= 0; q--) {
+    const a = q === 0 ? barAngle(t) : FAN[q]
+    p.push()
+    p.translate(X(hub[0]), X(hub[1]))
+    p.rotate(a)
+    solid(p, ink, weight * 0.8, steel)
+    p.rect(0, 0, X(TARS_W), X(TARS_H), X(0.02))
+    outline(p, ink, weight * 0.4)
+    p.line(X(-TARS_W * 0.28), X(-TARS_H * 0.32), X(-TARS_W * 0.28), X(TARS_H * 0.38))
+    if (q === 0) {
+      p.noStroke()
+      p.fill(act > 0.05 ? DUST.light : DUST.sky)
+      p.rect(X(TARS_W * 0.1), X(-TARS_H * 0.24), X(TARS_W * 0.34), X(0.07))
+    }
+    p.pop()
+  }
+  if (act > 0.05) {
+    const a = barAngle(t)
+    const lx = hub[0] + TARS_W * 0.1 * Math.cos(a) + TARS_H * 0.24 * Math.sin(a)
+    const ly = hub[1] + TARS_W * 0.1 * Math.sin(a) - TARS_H * 0.24 * Math.cos(a)
+    glow(d, lx, ly, 0.22, 0.6 * act)
+  }
+  solid(p, ink, weight * 0.7, DUST.bone)
+  p.circle(X(hub[0]), X(hub[1]), X(0.1))
 }
 
 /** The drone, ahead of the ball, and down onto the lamps. */
@@ -829,7 +934,7 @@ function bunker(d: Draw, s: GateState): void {
   // Aggregate in the cut face.
   p.stroke(alpha(p, ink, 0.35))
   p.strokeWeight(Math.max(1, weight * 0.7))
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < Math.round(10 * (b - a)); i++) {
     const y = ROOF + 0.2 + hash(i, 42) * (lin - 0.2 - ROOF - 0.2)
     const inset = 0.2 * (1 - (y - ROOF) / (lin - ROOF))
     const x = a + 0.12 + inset + hash(i, 41) * (b - a - 0.24 - 2 * inset)

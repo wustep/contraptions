@@ -331,7 +331,7 @@ function sync(): void {
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
-      const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
+      const b = el('button', { type: 'button', title: version.director ? `Directed by ${version.director.name}` : (version.note ?? version.label) }, [version.label])
       b.addEventListener('click', () => {
         if (version !== current && !recording) void open(version, true)
       })
@@ -349,7 +349,10 @@ function sync(): void {
     if (loading) lines.push(el('br'), 'Loading…')
     else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
     else {
-      if (current.note) lines.push(el('br'), current.note)
+      // A byline, where the take has one, in place of its note: faint, the name a quiet link.
+      if (current.director) {
+        lines.push(el('br'), el('span', { class: 'byline' }, ['Directed by ', el('a', { href: current.director.href, target: '_blank', rel: 'noreferrer' }, [current.director.name])]))
+      } else if (current.note) lines.push(el('br'), current.note)
       const credit = perf?.soundtrack?.credit
       if (credit) {
         const href = perf?.soundtrack?.href

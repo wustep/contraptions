@@ -150,8 +150,9 @@ the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
 
-`cornfield-chase/opus55-liftoff` ([Opus 5.5] Liftoff) is a second one-shot
-Opus 5.5 take on the same recording, with every piece new. It is not a
+`cornfield-chase/opus55-liftoff` (Liftoff, with a faint "Directed by wustep"
+byline in the panel from `ShowVersion.director`) is a second Opus 5.5 take
+on the same recording, with every piece new. It is not a
 stock arrangement: two worlds made for it, a farm in the dust years and the
 dark past it, and a rocket between them in place of a portal. The show lives
 in `cornfield-chase/liftoff/`. `show.ts` holds two universes on one clock

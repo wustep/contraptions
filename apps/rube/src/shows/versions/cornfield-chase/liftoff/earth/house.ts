@@ -177,12 +177,15 @@ function lightShaft(p: p5, k: number, t: number): void {
 /* ------------------------------------------------------------------ the shelf */
 
 /**
- * Murph's bookcase. A ghost sits behind the top shelf in the dark, and when
- * the piano starts it goes along the row. The model lander goes first, as it
- * does in the film; then ten books drop, one to a note, short and tall:
- * dot dot dot, dash, dot dash, dash dot dash dash. At the end of the shelf
- * the ghost goes through the side of the case, and when it lands on the
- * floorboards it is a ball.
+ * Murph's bookcase. A ghost sits at the end of the top shelf in the dark, by
+ * the side of the case. When the piano starts, the things on the shelf begin
+ * to go on their own, from the far end: the model lander first, as it does in
+ * the film; then ten books, one to a note, short and tall: dot dot dot, dash,
+ * dot dash, dash dot dash dash. Each one shivers, sheds a little dust, and
+ * leans out as if pushed from behind by nothing. The ghost doesn't move; it
+ * watches, and wonders (a small drawn question, three times). When the last
+ * book goes it rolls: along the shelf, through the side of the case, and down
+ * onto the toy truck standing there, where it is a ball.
  */
 const CASE_L = -0.45
 const CASE_R = 2.0
@@ -193,7 +196,7 @@ const BALL_Y = TOP - R
 const SHORT = 0.25
 const TALL = 0.38
 
-interface Fallen {
+export interface Fallen {
   x: number
   w: number
   h: number
@@ -206,6 +209,7 @@ interface Fallen {
 }
 
 interface ShelfState {
+  begin: number
   lane: Lane
   books: Fallen[]
   lander: { x: number; hit: number }
@@ -247,6 +251,71 @@ export function stayRow(): { x: number; w: number; h: number; color: string; das
 }
 export const SHELF_TOP = TOP
 
+/**
+ * Where the ghost rests on the top shelf, in the shelf's cells: at the end of
+ * the row, to the right of the last book. The first frame has it there, and
+ * the end of Act I (`space/gargantua.ts`, `GHOST_ON_SHELF`) brings it back
+ * to the same place. `check:shows` holds the two together.
+ */
+export const GHOST_REST: Pt = (() => {
+  const row = stayRow()
+  return [row[row.length - 1].x + 0.36, TOP - R]
+})()
+
+/** The model lander on the top shelf, left of the row, and the notes the lander and the books fall on (show seconds). */
+export const LANDER_X = -0.13
+export const FALL_NOTES = { lander: 5.126, books: SHELF_HITS }
+
+/** When the ghost wonders (show seconds), and where the question rises, from its rest: after the lander is down, in the middle of the row, and as the last book goes. */
+const WONDER = [
+  { at: 5.9, dx: 0.21, dy: -0.22, tilt: 0.14 },
+  { at: 9.62, dx: -0.22, dy: -0.23, tilt: -0.12 },
+  { at: 11.64, dx: 0.19, dy: -0.23, tilt: 0.1 },
+]
+
+/** A shiver, `since` seconds before a thing on the shelf goes: nothing touches it, and it trembles. */
+const shiver = (since: number): number => (since < -0.34 || since >= 0 ? 0 : 0.055 * smooth(since, -0.34, -0.14) * Math.sin(since * 80))
+
+/** A question, drawn: a hook and a dot in the ghost's pale light, its middle at (x, y), tilted. */
+function question(p: p5, c: Ctx, x: number, y: number, tilt: number, a: number): void {
+  if (a <= 0.01) return
+  const { k, ink, weight } = c
+  p.push()
+  p.translate(x * k, y * k)
+  p.rotate(tilt)
+  p.noFill()
+  for (const [col, w, o] of [[ink, weight * 1.9, 0.6], [DUST.light, weight * 0.95, 1]] as const) {
+    p.stroke(alpha(p, col, a * o))
+    p.strokeWeight(w)
+    p.arc(0, -0.06 * k, 0.12 * k, 0.12 * k, Math.PI * 1.05, Math.PI * 2.35)
+    p.line(0.027 * k, -0.007 * k, 0, 0.038 * k)
+    p.noStroke()
+    p.fill(alpha(p, col, a * o))
+    p.circle(0, 0.095 * k, (0.036 + (o < 1 ? 0.016 : 0)) * k)
+    p.noFill()
+  }
+  p.pop()
+}
+
+/**
+ * The row's books where they come to rest on the floor in front of the case,
+ * lying, each on whatever fell before it (shelf cells), in the order they
+ * fall. The opening leaves them so, and the end of Act I (the ghost knocking
+ * them off from behind) leaves them exactly so again.
+ */
+export function bookRests(): Fallen[] {
+  const rests: { x0: number; x1: number; top: number }[] = []
+  return stayRow().map((b, j) => {
+    const lx = b.x + (hash(j, 7) - 0.5) * 0.16 + (j % 2 ? 0.05 : -0.05)
+    const x0 = lx - b.h / 2
+    const x1 = lx + b.h / 2
+    let floor = FLOOR
+    for (const r of rests) if (r.x1 > x0 + 0.03 && r.x0 < x1 - 0.03) floor = Math.min(floor, r.top)
+    rests.push({ x0, x1, top: floor - b.w })
+    return { x: b.x, w: b.w, h: b.h, color: b.color, hit: 0, land: [lx, floor - b.w / 2] as Pt, turn: (j % 2 ? 1 : -1) as 1 | -1 }
+  })
+}
+
 export const shelf = part<ShelfState>(
   {
     name: 'bookcase',
@@ -267,49 +336,46 @@ export const shelf = part<ShelfState>(
       g.addColorStop(1, 'rgba(255, 236, 190, 0)')
       ctx.fillStyle = g
       ctx.fillRect(X - 0.42 * c.k, Y - 0.42 * c.k, 0.84 * c.k, 0.84 * c.k)
+      // It wonders: a small question rises by it and fades, three times. The last is left hanging as it rolls away.
+      const T = c.t + s.begin
+      for (const m of WONDER) {
+        const u = (T - m.at) / 1.1
+        if (u < 0 || u > 1) continue
+        const on = smooth(u, 0, 0.15) * (1 - smooth(u, 0.6, 1))
+        question(p, c, GHOST_REST[0] + m.dx, GHOST_REST[1] + m.dy - 0.06 * easeOutCubic(u), m.tilt, on)
+      }
     },
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
     // The row: short and tall books shoulder to shoulder, a thin gap between letters.
-    const books: Fallen[] = stayRow().map((b, i) => ({ x: b.x, w: b.w, h: b.h, color: b.color, hit: at(SHELF_HITS[i]), land: [0, 0], turn: i % 2 ? 1 : -1 }))
     // Where they come to rest: dropped in front of the case, lying, each on whatever fell before it.
-    const rests: { x0: number; x1: number; top: number }[] = []
-    books.forEach((b, j) => {
-      const lx = b.x + (hash(j, 7) - 0.5) * 0.16 + (j % 2 ? 0.05 : -0.05)
-      const x0 = lx - b.h / 2
-      const x1 = lx + b.h / 2
-      let floor = FLOOR
-      for (const r of rests) if (r.x1 > x0 + 0.03 && r.x0 < x1 - 0.03) floor = Math.min(floor, r.top)
-      b.land = [lx, floor - b.w / 2]
-      rests.push({ x0, x1, top: floor - b.w })
-    })
-    const lander = { x: -0.13, hit: at(5.126) }
+    const books: Fallen[] = bookRests().map((b, i) => ({ ...b, hit: at(SHELF_HITS[i]) }))
+    const lander = { x: LANDER_X, hit: at(FALL_NOTES.lander) }
     const off = at(12.016)
     const landed = at(12.283)
+    // Still at the end of the row until the last book goes; then along the shelf and through the side of the case.
     const ways: Way[] = [
-      { at: 0, p: [-0.31, BALL_Y] },
-      { at: at(4.5), p: [-0.31, BALL_Y] },
-      { at: lander.hit, p: [lander.x, BALL_Y], ease: 'inout' },
-      ...books.map((b) => ({ at: b.hit, p: [b.x, BALL_Y] as Pt })),
-      { at: off, p: [CASE_R, BALL_Y] },
+      { at: 0, p: GHOST_REST },
+      { at: at(SHELF_HITS[SHELF_HITS.length - 1]), p: GHOST_REST },
+      { at: off, p: [CASE_R, BALL_Y], ramp: [0, 1] },
     ]
     const from = ways[ways.length - 1]
-    // Off the end of the shelf, through the side of the case, and into the robot's arm.
+    // Down onto the toy truck's roof.
     ways.push(hop(from, [2.33, CATCH_Y], landed))
     const lane: Lane = { segs: route(ways), fire: lander.hit }
     return {
       cells: box(-1, -2, 2, 0),
       exit: [2.83, CATCH_Y],
       lane,
-      state: { lane, books, lander, off, landed },
+      state: { begin: slot.begin, lane, books, lander, off, landed },
       changes: [{ at: landed, ghost: false }],
     }
   },
 )
 
-/** A book falling from the shelf: where its centre is and how far it has turned, `since` seconds after the ghost reached it. */
-function bookAt(b: Fallen, since: number): { x: number; y: number; a: number } {
+/** A book falling from the shelf: where its centre is and how far it has turned, `since` seconds after it went (shelf cells). */
+export function bookAt(b: Fallen, since: number): { x: number; y: number; a: number } {
   const x0 = b.x
   const y0 = TOP - b.h / 2
   if (since < 0) return { x: x0, y: y0, a: 0 }
@@ -386,17 +452,21 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
   const sec = Math.floor(t) * (Math.PI / 30) - Math.PI / 2
   p.line(X(wx), X(wy), X(wx + Math.cos(sec) * 0.045), X(wy + Math.sin(sec) * 0.035))
 
-  // The lander model: over the edge on the first note, and down on its side.
+  // The lander model: a shiver, then over the edge on the first note, and down on its side.
   lander(p, c, s.lander.x, t - s.lander.hit)
+  const lf = t - s.lander.hit
+  if (lf > -0.36 && lf < 0.2) sift(p, c, s.lander.x, TOP - 0.2, 0.1, lf + 0.36)
 
-  // The row of ten, standing until the ghost comes; then down, one to a note.
+  // The row of ten, standing; then down on their own, one to a note: a shiver, a sift of dust off the top, a lean, and gone.
   for (const b of s.books) {
-    const at = bookAt(b, t - b.hit)
+    const since = t - b.hit
+    const at = bookAt(b, since)
     p.push()
     p.translate(X(at.x), X(at.y))
-    p.rotate(at.a)
+    p.rotate(at.a + shiver(since) * b.turn)
     book(p, c, 0, b.h / 2, b.w, b.h, b.color, 0)
     p.pop()
+    if (since > -0.36 && since < 0.2) sift(p, c, b.x, TOP - b.h, b.w, since + 0.36)
   }
   // A thud of dust where each one lands.
   p.noStroke()
@@ -408,7 +478,7 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
     for (const side of [-1, 1]) p.circle(X(b.land[0] + side * (b.h / 2 + 0.05 + u * 0.12)), X(b.land[1] + b.w / 2 - 0.02 - u * 0.04), X(0.05 + u * 0.05))
   }
 
-  // Where the ghost comes down it becomes a ball, in the robot's arm: a ring goes out from it.
+  // Where the ghost comes down it becomes a ball, on the toy truck's roof: a ring goes out from it.
   const since = t - s.landed
   if (since >= 0 && since < 0.9) {
     const u = since / 0.9
@@ -433,12 +503,27 @@ function book(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, colo
   p.pop()
 }
 
+/** A little dust sifting off the top of something about to go, `u` seconds into it: three grains, falling in front of it. */
+function sift(p: p5, c: Ctx, x: number, top: number, w: number, u: number): void {
+  const { k, ink } = c
+  p.noStroke()
+  for (let i = 0; i < 3; i++) {
+    const start = i * 0.07
+    const f = u - start
+    if (f < 0) continue
+    const gx = x + (hash(i, Math.round(x * 100), 11) - 0.5) * w
+    const gy = top + 0.02 + 0.35 * f + 0.9 * f * f
+    p.fill(alpha(p, ink, 0.5 * (1 - smooth(f, 0.25, 0.5))))
+    p.circle(gx * k, gy * k, Math.max(1.2, 0.014 * k))
+  }
+}
+
 /** The model lander: gold foil, four legs, the ascent stage on top. Knocked at since = 0, it goes over and lies on its side. */
 function lander(p: p5, c: Ctx, x0: number, since: number): void {
   const { k, ink, weight } = c
   let x = x0
   let y = TOP
-  let a = 0
+  let a = shiver(since)
   if (since >= 0) {
     const tip = 0.25
     if (since < tip) a = -0.5 * easeOutCubic(since / tip)
@@ -474,54 +559,56 @@ function lander(p: p5, c: Ctx, x0: number, since: number): void {
   p.pop()
 }
 
-/* ------------------------------------------------------------------ the robot */
+/* ------------------------------------------------------------------ the toy truck */
 
 /**
- * Murph's toy robot: four tall slabs on a hinge, knee-high to the bookcase,
- * one arm. In the dark it stands just clear of the end of the case with its
- * arm out flat.
- * As the last book goes it raises the arm with a click, and the ghost falls
- * off the shelf through the side of the case into its crook and is a ball
- * there, settling as the robot takes its first step. Then it walks him
- * across the room, a footfall to a note, through the window's light, where
- * the dust has started coming down in bands the width of a finger and of a
- * hand — the pattern that turns out to be coordinates — and at the stairwell
- * it lowers its arm like a ramp and he rolls off over the lip.
+ * Murph's wind-up tin truck: a cab-over dump truck, denim tin with a red dump
+ * box and a key in its side, parked nose to the end of the case. The ghost
+ * comes out through the side of the case and lands on its cab roof with a
+ * clank, and is a ball there; it rolls off the back of the cab into the box,
+ * and its weight lets the spring go. The truck backs away from the case a
+ * lurch a note, the key turning, through the window's light, where the dust
+ * has started coming down in bands the width of a finger and of a hand — the
+ * pattern that turns out to be coordinates — and at the stairwell it tips its
+ * box like a ramp and he rolls out over the lip. It is the truck he will
+ * drive, small.
  *
- * The part's frame: the ball in its arm at (-0.5, 0) on the catch; the
+ * The part's frame: the ball on the cab roof at (-0.5, 0) on the catch; the
  * floor's surface at y = 0.64 (the ball on the floor is at 0.51).
  */
-const TOY_W = 0.24
-const ARM = 0.44
-/** The arm: out flat in the dark, raised to catch, and down like a ramp at the stairwell, its end just off the boards. */
-const REST = 0
-const HELD = -0.45
-const LOWERED = 0.95
-/** It stands just clear of the case's side (its body's near edge, in the shelf's cells); its arm's hinge is at the body's far edge. */
-const STAND = CASE_R + 0.045
-/** Where the ghost lands in the arm, in the shelf's cells: the shelf's exit, less half a cell. */
-const CATCH_X = 2.83 - 0.5
-/** Along the arm from its hinge: where he lands, as far as the arm reaches from where it stands; and its crook, where a ball touches the body's top corner. */
-const CATCH_D = (CATCH_X - (STAND + TOY_W) - Math.sin(HELD) * R) / Math.cos(HELD)
-const CROOK = (-0.08 * Math.sin(HELD) + Math.sqrt((0.08 * Math.sin(HELD)) ** 2 - 4 * (0.0016 - 0.08 * R * Math.cos(HELD)))) / 2
-/** The floor under the robot, in its frame: where it has always been, so the catch is where it always was; the robot is built to it. */
+/** The floor under the toy, in its frame: where it has always been, so the catch is where it always was; the truck is built to it. */
 const TOY_FLOOR = 0.42 - Math.sin(-0.45) * 0.24 + Math.cos(-0.45) * R
-const TOY_H = TOY_FLOOR + 0.04 + Math.sin(HELD) * CATCH_D - Math.cos(HELD) * R
-/** Where the robot's frame sits in the world (y), and so where the ghost is caught, in the shelf's frame. */
+/** Where the toy's frame sits in the world (y), and so where the ghost is caught, in the shelf's frame. */
 const TOY_ROW = UP - TOY_FLOOR
 const CATCH_Y = TOY_ROW + 2
-const FOOTFALLS = [12.632, 13.497, 14.124, 14.745, 15.139]
+/** The truck, in its own cells: `u` back from the cab's nose, `v` up from the floor. The cab's roof takes the ghost at the catch. */
+const LEN = 0.72
+const CAB = 0.3
+const ROOF = TOY_FLOOR - R
+const BOX_U = 0.33
+const BOX_FLOOR = 0.26
+const BOX_SIDE = 0.39
+const HINGE_V = 0.22
+const WHEEL_R = 0.1
+const AXLES = [0.15, 0.58]
+/** Nose to the case, a hand clear of it (shelf cells): where it stands in the dark, and where the ghost lands on its roof. */
+const NOSE = CASE_R + 0.06
+const LURCHES = [12.632, 13.497, 14.124, 14.745, 15.139]
+export const TOY_NOTES = [...LURCHES]
 const LIP = 15.743
-/** The arm goes up as the last book goes down, and is up on the next note. */
-const RAISE: [number, number] = [11.64, 11.819]
+/** The box tips at the stairwell: when it starts, and how far. */
+const TIP: [number, number] = [15.17, 15.4]
+const DUMPED = 0.6
 /** Where the lip of the stairwell is, in this frame: the world's 4.9, less the part's origin 2.83. */
 const LIP_X = WELL_L - 2.83
-export const TOY_NOTES = [...FOOTFALLS]
+/** The truck's nose in this frame, in the dark, and the ball's place in the box (u). */
+const NOSE0 = NOSE - 2.83
+const IN_BOX = 0.49
 
 interface ToyState {
   begin: number
-  x0: number
-  x1: number
+  /** How far each lurch takes it (cells). */
+  stride: number
   bands: { x: number; w: number; at: number }[]
 }
 
@@ -535,79 +622,119 @@ const BANDS: [number, number, number][] = [
 ]
 export const DUST_NOTES = BANDS.map((b) => b[2])
 
-/** How far through its walk it is: the body's x, the step it is in (0..1) and which pair of slabs leads. */
-function walk(s: ToyState, t: number): { x: number; u: number; lead: number; bob: number } {
-  const stride = (s.x1 - s.x0) / FOOTFALLS.length
-  let from = s.begin
-  for (let i = 0; i < FOOTFALLS.length; i++) {
-    const to = FOOTFALLS[i]
-    if (t < to) {
-      const u = t <= from ? 0 : (t - from) / (to - from)
-      return { x: s.x0 + stride * (i + easeInOutSine(u)), u, lead: i % 2, bob: Math.sin(u * Math.PI) }
-    }
-    from = to
+/** A pose of the truck: its nose (x, in the caller's cells), the floor under it, its rock, its box's tip, and its key's turn. */
+interface Rig {
+  x: number
+  floor: number
+  pitch: number
+  tip: number
+  key: number
+}
+
+/** Where the truck is at show time `t`, in this frame: a lurch on each note, backing off the case, a jolt on each start. */
+function rigAt(s: ToyState, t: number): Rig {
+  let x = NOSE0
+  let key = 0
+  let pitch = 0
+  for (let i = 0; i < LURCHES.length; i++) {
+    const since = t - LURCHES[i]
+    if (since <= 0) break
+    const u = easeOutCubic(clamp(since / 0.36))
+    x += s.stride * u
+    key += (Math.PI / 2) * u
+    pitch += 0.03 * Math.exp(-since / 0.1) * Math.sin(since * 30)
   }
-  return { x: s.x1, u: 0, lead: 0, bob: 0 }
+  const tip = DUMPED * easeInOutSine(clamp((t - TIP[0]) / (TIP[1] - TIP[0])))
+  return { x, floor: TOY_FLOOR, pitch, tip, key }
 }
 
-/** The arm's angle: flat, raised with a click, a dip when he drops into it, down like a ramp at the stairwell. */
-function armAt(s: ToyState, t: number): number {
-  const up = easeInOutSine(clamp((t - RAISE[0]) / (RAISE[1] - RAISE[0])))
-  const click = t > RAISE[1] ? -0.05 * Math.exp(-(t - RAISE[1]) / 0.07) * Math.sin((t - RAISE[1]) * 40) : 0
-  const caught = t - s.begin
-  const dip = caught > 0 ? 0.3 * Math.exp(-caught / 0.14) * Math.sin(caught * 16) : 0
-  const lower = easeInOutSine(clamp((t - FOOTFALLS[FOOTFALLS.length - 1] - 0.05) / 0.3))
-  return REST + (HELD - REST) * up + (click + dip) * (1 - lower) + (LOWERED - HELD) * lower
+/** A point on the truck (u back from the nose, v up), where the rig has it; `boxed` points ride the box's tip about its hinge. */
+function onTruck(g: Rig, u: number, v: number, boxed = false): Pt {
+  let du = u - LEN
+  let dv = v - HINGE_V
+  if (boxed && g.tip) {
+    // Tipped, the box's front comes up and its back goes down about the hinge.
+    const c = Math.cos(-g.tip)
+    const s = Math.sin(-g.tip)
+    ;[du, dv] = [du * c - dv * s, du * s + dv * c]
+  }
+  // The rock is about the rear wheel's foot.
+  const pu = LEN + du - AXLES[1]
+  const pv = HINGE_V + dv
+  const c = Math.cos(g.pitch)
+  const s = Math.sin(g.pitch)
+  return [g.x + AXLES[1] + pu * c + pv * s, g.floor - (-pu * s + pv * c)]
 }
 
-/** The arm's hinge, riding the walk. */
-function hingeAt(s: ToyState, t: number): Pt {
-  const { x, bob } = walk(s, t)
-  return [x + TOY_W / 2, TOY_FLOOR - TOY_H + 0.04 - bob * 0.03]
-}
-
-/** A ball on the arm, `d` out from the hinge. */
-function onArm(s: ToyState, t: number, d: number): Pt {
-  const a = armAt(s, t)
-  const [px, py] = hingeAt(s, t)
-  return [px + Math.cos(a) * d + Math.sin(a) * R, py + Math.sin(a) * d - Math.cos(a) * R]
-}
-
-/** Where he is on the arm: rolled down into the crook after the catch, knocking home on the first step; rolling out along it once it tips past flat. */
-function cradle(s: ToyState, t: number): Pt {
-  const since = t - s.begin
-  const roll = FOOTFALLS[0] - s.begin
-  const rest = since < roll ? CATCH_D - (CATCH_D - CROOK) * easeInQuad(clamp(since / roll)) : CROOK
-  const tip = clamp((armAt(s, t) - 0.05) / (LOWERED - 0.05))
-  return onArm(s, t, rest + (ARM - rest) * tip * tip)
+/** Where he rides, from the cab roof to the lip. */
+function ballPath(s: ToyState): (t: number) => Pt {
+  const b = s.begin
+  // The clank on the roof and a small bounce; off the back of the cab; into the box as the spring goes.
+  const roof: Pt = [-0.5, 0]
+  const edge: Pt = [NOSE0 + CAB + 0.02, 0]
+  const boxed = (t: number, u = IN_BOX): Pt => onTruck(rigAt(s, t), u, BOX_FLOOR + R, true)
+  const settle = 0.14
+  const drop = 0.175
+  const hops = route([
+    { at: 0, p: roof },
+    { at: settle, p: [roof[0] + 0.005, 0], arc: 0.045 },
+    { at: LURCHES[0] - b - drop, p: edge },
+  ])
+  const fall = route([
+    { at: 0, p: edge },
+    hop({ at: 0, p: edge }, boxed(LURCHES[0]), drop),
+  ])
+  // In the box: it rolls back toward the tailgate a little as each lurch coasts out; down the box as it tips, and out.
+  const inBox = (t: number): number => {
+    let u = IN_BOX
+    for (const n of LURCHES) {
+      const since = t - n
+      if (since > 0) u += 0.03 * Math.sin(Math.PI * clamp(since / 0.5)) ** 2
+    }
+    return u + (LEN - 0.02 - IN_BOX) * easeInQuad(clamp((t - TIP[0] - 0.05) / (TIP[1] - TIP[0] - 0.02)))
+  }
+  const lane = { segs: [...hops, ...fall], fire: 0 }
+  return (t) => {
+    if (t < LURCHES[0]) {
+      const q = laneAt(lane, t - b)
+      return [q.x, q.y]
+    }
+    return boxed(t, inBox(t))
+  }
 }
 
 export const toy = part<ToyState>(
   {
-    name: 'robot',
-    draw: (p, s, c) => drawToy(p, s, c),
+    name: 'toy',
+    draw: (p, s, c) => drawToyPart(p, s, c),
+    over: (p, s, c) => {
+      // The box's near side and the key, in front of the ball.
+      const g = rigAt(s, c.t + s.begin)
+      truckFront(p, c, g)
+    },
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
-    const s: ToyState = { begin: slot.begin, x0: 0, x1: 0, bands: BANDS.map(([x, w, n]) => ({ x, w, at: n })) }
-    // Where it stands to catch, and where it stops: the ball in the arm at (-0.5, 0), and the lowered arm's end just short of the lip.
-    s.x0 = -0.5 - (Math.cos(HELD) * CATCH_D + Math.sin(HELD) * R) - TOY_W / 2
-    s.x1 = LIP_X - 0.1 - (Math.cos(LOWERED) * ARM + Math.sin(LOWERED) * R) - TOY_W / 2
-    const off = FOOTFALLS[FOOTFALLS.length - 1] + 0.36
-    const ride = (t: number) => cradle(s, t + slot.begin)
-    const segs = [...carried(ride, 0, at(off), Math.ceil(at(off) * 40))]
-    segs.push(...route([{ at: at(off), p: ride(at(off)) }, { at: at(LIP), p: [LIP_X, TOY_FLOOR - R] }]))
+    const s: ToyState = { begin: slot.begin, stride: 0, bands: BANDS.map(([x, w, n]) => ({ x, w, at: n })) }
+    // It backs to where its tipped box pours him onto the boards a short roll from the lip.
+    const pour = TIP[1] - 0.02
+    s.stride = (LIP_X - 0.46 - LEN - NOSE0) / LURCHES.length
+    const ride = ballPath(s)
+    const segs = carried((t) => ride(t + slot.begin), 0, at(pour), Math.ceil(at(pour) * 60))
+    const out: Way = { at: at(pour), p: ride(pour) }
+    const down: Way = hop(out, [ride(pour)[0] + 0.22, TOY_FLOOR - R], at(pour) + 0.19)
+    segs.push(...route([out, down, { at: at(LIP), p: [LIP_X, TOY_FLOOR - R] }]))
     return {
       cells: box(-1.5, -2, LIP_X + 0.5, 1),
       exit: [LIP_X + 0.5, TOY_FLOOR - R],
-      lane: { segs, fire: at(FOOTFALLS[0]) },
+      lane: { segs, fire: at(LURCHES[0]) },
       state: s,
     }
   },
 )
 
-function drawToy(p: p5, s: ToyState, c: Ctx): void {
-  const { k, ink, weight } = c
+function drawToyPart(p: p5, s: ToyState, c: Ctx): void {
+  const { k, ink } = c
   const t = c.t + s.begin
   const X = (x: number) => x * k
   // Dust coming down in the light: fine grains in bands, and a ridge growing on the boards under each.
@@ -636,83 +763,109 @@ function drawToy(p: p5, s: ToyState, c: Ctx): void {
       p.ellipse(X(b.x), X(TOY_FLOOR), X(b.w * (0.9 + 0.2 * grown)), X(0.04 * grown))
     }
   }
-
-  // The robot: four slabs on one hinge, in two pairs; a pair steps out ahead of the other, a footfall to a note.
-  const { x, u, lead, bob } = walk(s, t)
-  const half = TOY_W / 2
-  const reach = (s.x1 - s.x0) / FOOTFALLS.length
-  const moving = t > s.begin && t < FOOTFALLS[FOOTFALLS.length - 1]
-  for (const pair of [0, 1]) {
-    const leads = moving && pair === lead
-    const dx = moving ? (leads ? 0.17 : -0.06) * reach * Math.sin(u * Math.PI) : 0
-    const lift = leads ? 0.04 * Math.sin(u * Math.PI) : 0
-    const cx = x + (pair ? half / 2 : -half / 2) + dx
-    const cy = TOY_FLOOR - TOY_H / 2 - lift - bob * 0.03
-    solid(p, ink, weight * 0.9, pair ? DUST.tin : '#9A9486')
-    p.rect(X(cx), X(cy), X(half), X(TOY_H), X(0.012))
-    outline(p, ink, weight * 0.45)
-    p.line(X(cx), X(cy - TOY_H / 2 + 0.03), X(cx), X(cy + TOY_H / 2 - 0.03))
-  }
-  // The hinge across the top, and the little lit panel in the front slab.
-  outline(p, ink, weight * 0.8)
-  const hy = TOY_FLOOR - TOY_H + 0.05 - bob * 0.03
-  p.line(X(x - TOY_W / 2), X(hy), X(x + TOY_W / 2), X(hy))
-  const step = lastOf(FOOTFALLS, t)
-  const blink = step.ago < 0.15 ? 1 : 0.55
-  solid(p, ink, weight * 0.5, blink > 0.9 ? DUST.light : '#3A3F3A')
-  p.rect(X(x + TOY_W * 0.22), X(hy + 0.07), X(TOY_W * 0.32), X(0.06))
-  // A scuff of dust at each footfall.
-  if (step.ago < 0.35) {
-    const q = step.ago / 0.35
+  const g = rigAt(s, t)
+  // A scuff of dust off the back wheels as each lurch bites.
+  const step = lastOf(LURCHES, t)
+  if (step.ago < 0.4) {
+    const q = step.ago / 0.4
+    const [wx] = onTruck(g, LEN, 0)
     p.noStroke()
     p.fill(alpha(p, DUST.shade, 0.7 * (1 - q)))
-    for (const side of [-1, 1]) p.circle(X(x + side * (0.14 + q * 0.1)), X(TOY_FLOOR - 0.02 - q * 0.03), X(0.035 + q * 0.03))
+    for (const side of [-1, 1]) p.circle(X(wx + 0.02 + side * (0.05 + q * 0.12)), X(TOY_FLOOR - 0.02 - q * 0.03), X(0.035 + q * 0.03))
   }
-  // The arm, off the top of the front slab: held up, then down like a ramp.
-  const a = armAt(s, t)
-  const pivot: Pt = [x + TOY_W / 2, TOY_FLOOR - TOY_H + 0.04 - bob * 0.03]
+  truckBack(p, c, g)
+}
+
+/** The truck's wheels, chassis, cab and the inside of its box: everything behind whatever rides in the box. */
+function truckBack(p: p5, c: { k: number; ink: string; weight: number }, g: Rig): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const poly = (pts: Pt[], fill: string, w = weight, boxed = false) => {
+    solid(p, ink, w, fill)
+    p.beginShape()
+    for (const [u, v] of pts) {
+      const [x, y] = onTruck(g, u, v, boxed)
+      p.vertex(X(x), X(y))
+    }
+    p.endShape(p.CLOSE)
+  }
+  // Wheels: tin hubs, turning as it goes.
+  for (const u of AXLES) {
+    const [wx, wy] = onTruck(g, u, WHEEL_R)
+    solid(p, ink, weight, ink)
+    p.circle(X(wx), X(wy), X(WHEEL_R * 2))
+    solid(p, ink, weight * 0.6, DUST.tin)
+    p.circle(X(wx), X(wy), X(WHEEL_R * 1.0))
+    outline(p, ink, weight * 0.5)
+    const turn = (g.x - NOSE0) / WHEEL_R
+    for (let j = 0; j < 2; j++) {
+      const a = turn + (j * Math.PI) / 2
+      p.line(X(wx - Math.cos(a) * WHEEL_R * 0.45), X(wy - Math.sin(a) * WHEEL_R * 0.45), X(wx + Math.cos(a) * WHEEL_R * 0.45), X(wy + Math.sin(a) * WHEEL_R * 0.45))
+    }
+  }
+  // The chassis, pressed tin.
+  poly([[0.02, 0.12], [LEN, 0.12], [LEN, HINGE_V - 0.005], [0.02, HINGE_V - 0.005]], DUST.tin, weight * 0.8)
+  // The cab: flat-nosed, its roof where the ghost comes down; its door window, and a bumper.
+  poly([[0, 0.14], [CAB, 0.14], [CAB, ROOF], [0.04, ROOF], [0, ROOF - 0.04]], DUST.denim)
+  poly([[0.04, ROOF - 0.17], [0.19, ROOF - 0.17], [0.19, ROOF - 0.05], [0.06, ROOF - 0.05], [0.04, ROOF - 0.07]], DUST.sky, weight * 0.6)
+  outline(p, ink, weight * 0.45)
+  const d0 = onTruck(g, 0.215, 0.17)
+  const d1 = onTruck(g, 0.215, ROOF - 0.04)
+  p.line(X(d0[0]), X(d0[1]), X(d1[0]), X(d1[1]))
+  poly([[-0.03, 0.11], [0.04, 0.11], [0.04, 0.18], [-0.03, 0.18]], DUST.bone, weight * 0.7)
+  // The box behind the ball: its headboard, its floor, and the tailgate, which hangs from its top and swings open as it tips.
+  poly([[BOX_U, HINGE_V], [LEN, HINGE_V], [LEN, BOX_FLOOR], [BOX_U, BOX_FLOOR]], DUST.rust, weight * 0.8, true)
+  poly([[BOX_U, HINGE_V], [BOX_U + 0.035, HINGE_V], [BOX_U + 0.035, BOX_SIDE + 0.06], [BOX_U, BOX_SIDE + 0.06]], DUST.rust, weight * 0.8, true)
+  const [gx, gy] = onTruck(g, LEN, BOX_SIDE, true)
+  const swing = g.tip
+  solid(p, ink, weight * 0.8, DUST.rust)
   p.push()
-  p.translate(X(pivot[0]), X(pivot[1]))
-  p.rotate(a)
-  solid(p, ink, weight * 0.8, DUST.tin)
-  p.rect(X(ARM / 2), 0, X(ARM), X(0.045), X(0.01))
+  p.translate(X(gx), X(gy))
+  p.rotate(-g.pitch + g.tip - swing)
+  p.rect(X(-0.0175), X((BOX_SIDE - BOX_FLOOR) / 2), X(0.035), X(BOX_SIDE - BOX_FLOOR + 0.01), X(0.005))
   p.pop()
+}
+
+/** The box's near side and the wind-up key: in front of whatever rides in the box. */
+function truckFront(p: p5, c: { k: number; ink: string; weight: number }, g: Rig): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  solid(p, ink, weight * 0.9, DUST.rust)
+  p.beginShape()
+  for (const [u, v] of [[BOX_U, HINGE_V], [LEN, HINGE_V], [LEN, BOX_SIDE], [BOX_U, BOX_SIDE]] as Pt[]) {
+    const [x, y] = onTruck(g, u, v, true)
+    p.vertex(X(x), X(y))
+  }
+  p.endShape(p.CLOSE)
+  outline(p, ink, weight * 0.45)
+  const r0 = onTruck(g, BOX_U + 0.02, BOX_SIDE - 0.05, true)
+  const r1 = onTruck(g, LEN - 0.02, BOX_SIDE - 0.05, true)
+  p.line(X(r0[0]), X(r0[1]), X(r1[0]), X(r1[1]))
+  // The key, in the chassis under the box: a butterfly of tin on a short stem, turning a quarter with each lurch.
+  const [kx, ky] = onTruck(g, (AXLES[0] + AXLES[1]) / 2 + 0.03, 0.16)
+  p.push()
+  p.translate(X(kx), X(ky))
+  p.rotate(g.key)
   solid(p, ink, weight * 0.6, DUST.bone)
-  p.circle(X(pivot[0]), X(pivot[1]), X(0.05))
+  p.ellipse(X(-0.045), 0, X(0.07), X(0.045))
+  p.ellipse(X(0.045), 0, X(0.07), X(0.045))
+  p.pop()
+  solid(p, ink, weight * 0.6, DUST.tin)
+  p.circle(X(kx), X(ky), X(0.025))
 }
 
 /**
- * Where the robot stood in the dark, its arm out flat: the middle of its body and the floor under it,
- * in the house's own cells (the `house` scenery's, the shelf's less two rows). The rooms that remember the
- * opening (the dusk room at the end of Act I, the museum's replica) stand it there again, its arm out and empty.
+ * Where the truck stood in the dark, nose to the case: the middle of its length and the floor under it, in the
+ * house's own cells (the `house` scenery's, the shelf's less two rows). The rooms that remember the opening (the
+ * dusk room at the end of Act I, the museum's replica) stand it there again.
  */
-export const TOY_HOME: Pt = [2.83 - 0.5 - (Math.cos(HELD) * CATCH_D + Math.sin(HELD) * R) - TOY_W / 2, UP]
+export const TOY_HOME: Pt = [NOSE + LEN / 2, UP]
 
-/** The robot standing still with its arm at `arm` (flat is 0), its body's middle at `x`, on a floor at `floor`, in the caller's cells. */
-export function drawRobot(p: p5, c: { k: number; ink: string; weight: number }, x: number, floor: number, arm = REST): void {
-  const { k, ink, weight } = c
-  const X = (v: number) => v * k
-  const half = TOY_W / 2
-  for (const pair of [0, 1]) {
-    const cx = x + (pair ? half / 2 : -half / 2)
-    solid(p, ink, weight * 0.9, pair ? DUST.tin : '#9A9486')
-    p.rect(X(cx), X(floor - TOY_H / 2), X(half), X(TOY_H), X(0.012))
-    outline(p, ink, weight * 0.45)
-    p.line(X(cx), X(floor - TOY_H + 0.03), X(cx), X(floor - 0.03))
-  }
-  outline(p, ink, weight * 0.8)
-  const hy = floor - TOY_H + 0.05
-  p.line(X(x - half), X(hy), X(x + half), X(hy))
-  solid(p, ink, weight * 0.5, '#3A3F3A')
-  p.rect(X(x + TOY_W * 0.22), X(hy + 0.07), X(TOY_W * 0.32), X(0.06))
-  p.push()
-  p.translate(X(x + half), X(floor - TOY_H + 0.04))
-  p.rotate(arm)
-  solid(p, ink, weight * 0.8, DUST.tin)
-  p.rect(X(ARM / 2), 0, X(ARM), X(0.045), X(0.01))
-  p.pop()
-  solid(p, ink, weight * 0.6, DUST.bone)
-  p.circle(X(x + half), X(floor - TOY_H + 0.04), X(0.05))
+/** The toy on the floor by the case, standing still, its middle at `x` and its wheels on `floor`, in the caller's cells. */
+export function drawToy(p: p5, c: { k: number; ink: string; weight: number }, x: number, floor: number): void {
+  const g: Rig = { x: x - LEN / 2, floor, pitch: 0, tip: 0, key: 0.4 }
+  truckBack(p, c, g)
+  truckFront(p, c, g)
 }
 
 /* ------------------------------------------------------------------ the stairs */

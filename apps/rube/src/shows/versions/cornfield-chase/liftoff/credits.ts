@@ -58,7 +58,7 @@ const script: Omit<Card, 'at'>[] = [
     notes: ['“Cornfield Chase” and “No Time for Caution”', 'from Interstellar (2014)', 'The recordings are used here only for a private tech demo'],
   },
   { hold: 2.3, role: 'Drawn with', names: ['p5.js'] },
-  { hold: Infinity, names: ['Liftoff'], notes: ['Cornfield Chase  ·  [Opus 5.5]  ·  a one-shot tech demo'], title: true },
+  { hold: Infinity, names: ['Liftoff'], notes: ['Cornfield Chase'], title: true },
 ]
 
 export const CARDS: Card[] = (() => {

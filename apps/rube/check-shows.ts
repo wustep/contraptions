@@ -22,6 +22,8 @@ import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
 import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
 import { ACT2, DURATION as LIFTOFF_END, IGNITION, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
+import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
+import { GHOST_ON_SHELF } from './src/shows/versions/cornfield-chase/liftoff/space/gargantua'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -121,8 +123,12 @@ async function main(): Promise<void> {
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
   check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync and Liftoff', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-liftoff,opus55-music-sync,tech-demo,voices')
-  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
-  check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
+  const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
+  check('Cornfield Chase labels stay unique; the one-shot takes name their model, and Liftoff is just Liftoff', cornfield.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
+  check('Cornfield Chase one-shot notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  const liftoffTake = cornfield.find((v) => v.take === 'opus55-liftoff')
+  check('Liftoff\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
+    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot/i.test(liftoffTake.label))
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -267,7 +273,15 @@ async function main(): Promise<void> {
           longest = Math.max(longest, hidden)
         }
         check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
-        check('liftoff: a ghost on the shelf at the start, a ball in the robot\'s arm', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        check('liftoff: a ghost on the shelf at the start, a ball in the toy truck', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        // The opening's books fall on their own: the ghost sits still at its rest while the lander and all ten go, and
+        // only then rolls. At the end of Act I it comes back to the very same place, having knocked them off itself.
+        const still = [0.5, FALL_NOTES.lander, ...FALL_NOTES.books].map((t) => show.where(t))
+        const lastFall = FALL_NOTES.books[FALL_NOTES.books.length - 1]
+        check('liftoff: the opening\'s books fall on their own, the ghost still at its rest until the last has gone',
+          still.every((q) => Math.hypot(q[0] - GHOST_REST[0], q[1] - (-2 + GHOST_REST[1])) < 1e-6) && Math.hypot(show.where(lastFall + 0.3)[0] - GHOST_REST[0], 0) > 0.05)
+        check('liftoff: the ghost comes back at the end of Act I to where it sat in the first frame',
+          Math.hypot(GHOST_ON_SHELF()[0] - GHOST_REST[0], GHOST_ON_SHELF()[1] - GHOST_REST[1]) < 1e-9)
         // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
         // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.
         const rollOf = (t: number) => perf.camera!(t).angle ?? 0

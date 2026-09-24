@@ -5,7 +5,8 @@ import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../
 import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT1_END, beat, LAST } from '../music'
-import { drawRobot, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
+import { dropTime, G_EARTH } from '../physics'
+import { bookAt, bookRests, drawToy, FALL_NOTES, LANDER_X, SHELF_TOP, stayRow, TOY_HOME, type Fallen } from '../earth/house'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
 import { MILLER_HANDOFF } from './miller'
 
@@ -25,13 +26,15 @@ import { MILLER_HANDOFF } from './miller'
  * falls in, slows, and stops at the centre on 189; the dark opens round it.
  *
  * Inside is the back of Murph's bookcase, in a lattice of frames. The ball
- * comes down onto a rail on 190 and the landing trips a latch; a frame
- * drops into the gap ahead of it on 190½, just in time; it runs on to a
- * lever under the last book and on the last hit (191) its weight lifts the
- * book off the shelf and through into the room. It is the ghost of the
- * opening. The watch on top of the case twitches, the lattice goes, and the
- * room comes up round it at dusk: the book on the floor, the watch, and the
- * ghost glowing on the top shelf.
+ * comes down onto a rail by the end of the top shelf on 190 and rolls in
+ * behind the model lander, and on the last hit (191) it is the ghost, and
+ * the lander tips away from us into the room. Then the tesseract lets go
+ * and the room comes up from the front, round the ghost: Murph's room at
+ * dusk, framed as the show began. The ghost goes along behind the row and
+ * pushes the ten books off, one at a time, in the opening's own rhythm
+ * (S-T-A-Y, the same offsets from the lander), and they fall and lie where
+ * the opening left them. It comes to rest at the end of the row, where the
+ * first frame had it, glowing.
  *
  * The part's frame: the ball comes off the wave's lip at (-0.5, 0). Miller's
  * Gargantua stands at C in this frame; ours is drawn on it, concentric.
@@ -56,25 +59,25 @@ const RELEASE = beat(188)
 /** At the centre; the dark opens. */
 const HORIZON = beat(189)
 const LAND = beat(190)
-const BRIDGE = beat(190.5)
+/** The last hit: the ball is the ghost, and the lander goes. */
 const PUSH = LAST
-/** The data on the watch's second hand: the music's last notes, a dot or a dash each. */
-const DOT = 0.09
-const DASH = 0.3
-const DATA: [number, number][] = [
-  [beat(192), DOT],
-  [beat(192.5), DOT],
-  [beat(193), DASH],
-  [beat(196), DASH],
-  [beat(196.5), DOT],
-  [beat(197), DASH],
-  [beat(199.5), DOT],
-]
-/** After the data, the watch keeps time again. */
+/**
+ * The ten books go at the opening's own offsets from the lander, counted now
+ * from the last hit: the decay has nothing to strike, and the rhythm the
+ * opening had is the rhyme. Not strikes on the music, so not in the list.
+ */
+const PUSHES = FALL_NOTES.books.map((n) => PUSH + (n - FALL_NOTES.lander))
+/** The turn: the back of the case and the lattice go, and the room comes up from the front, round the ghost. */
+const TURN0 = PUSH + 0.55
+const TURN1 = PUSH + 1.45
+/** It sets off along the row once the room is up, and is at rest at the end of it a moment after the last book. */
+const SET_OFF = TURN1 + 0.1
+const AT_REST = PUSHES[PUSHES.length - 1] + 0.4
+/** The watch keeps time in the silence after the music: two ticks, not counted as strikes. */
 const TICKS = [beat(200), beat(202)]
 
-/** The strikes, on the music. The watch's last two ticks come after the music has died away: they keep time in silence, and are not counted as strikes. */
-export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, RELEASE, HORIZON, LAND, PUSH, ...DATA.map((d) => d[0])]
+/** The strikes, on the music. */
+export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, RELEASE, HORIZON, LAND, PUSH]
 
 /* ------------------------------------------------------------------ the hole */
 
@@ -268,38 +271,62 @@ function shipAt(T: number): Pt {
 
 /* ------------------------------------------------------------------ inside */
 
-/** The ball's run along the rail, from the landing to the crank: the plain rail's pace. */
+/**
+ * Where the ghost comes to rest, and so where this part hands Act II its ball:
+ * fixed by the first cut of this part (a run along a rail to the last book)
+ * and kept to the cell, since the station is placed from it.
+ */
 const RUN = 2.6
-/** It falls out of the centre onto the rail on a line that ends at that pace. */
 const LAND_PT: Pt = [F[0] + (RUN * (LAND - HORIZON)) / 2, F[1] + 1.55]
 const Y_BALL = LAND_PT[1]
 const SURF = Y_BALL + R
 const ROW = stayRow()
-const TARGET = ROW.length - 1
-/** Where the ball meets the crank's paddle, from the book. */
-const TO_BOOK = 0.45
-/** The case, seen from behind: its own frame's origin here, mirrored (x here = B.x - x there). */
-const B: Pt = [LAND_PT[0] + RUN * (PUSH - LAND) + TO_BOOK + ROW[TARGET].x, SURF - SHELF_TOP]
-const X_BOOK = B[0] - ROW[TARGET].x
-const X_CONTACT = X_BOOK - TO_BOOK
-const X_REST = X_CONTACT + 0.09
+const B: Pt = [LAND_PT[0] + RUN * (PUSH - LAND) + 0.45 + ROW[ROW.length - 1].x, SURF - SHELF_TOP]
+const X_REST = B[0] - ROW[ROW.length - 1].x - 0.45 + 0.09
 const Y_REST = Y_BALL
-/**
- * The crank: an L of wood hung from the cap on a pin. Its paddle hangs in
- * the ball's way; its other arm runs down to the book's foot. The ball
- * knocks the paddle on, the arm comes up, and the book goes up and over.
- */
-const PIN: Pt = [X_BOOK - 0.22, SURF - 0.3]
-const PADDLE: Pt = [-0.09, 0.2]
-const ARM: Pt = [0.22, 0.28]
-const SWING = -0.5
-/** Where a lattice line crosses the rail, and where the rail meets the back of the case. */
-const GAP_L = LAND_PT[0] + RUN * (BRIDGE - LAND) + 0.04
-const GAP_R = B[0] - 2.0
 /** Where the ghost rests at the end, in the bookcase's own cells (the shelf part's frame): Act II's replica room starts from it. */
 export const GHOST_ON_SHELF = (): Pt => [B[0] - X_REST, Y_REST - B[1]]
-/** The room, seen from the front at the end: the same case, the same shelf, the ghost where it rests. */
+/** The room, seen from the front: the case's frame, so the ghost's rest in it is where it rests here. */
 const BF: Pt = [X_REST - (B[0] - X_REST), B[1]]
+/** A point of the shelf's frame, seen from the front. */
+const front = (x: number): number => BF[0] + x
+/**
+ * The case seen from behind, mirrored (x here = BK.x - x there), placed so
+ * that the ghost behind the lander is in the same place seen from either
+ * side: the turn from the back to the front happens round it.
+ */
+const BK: Pt = [BF[0] + 2 * LANDER_X, B[1]]
+const back = (x: number): number => BK[0] - x
+/** The ghost behind the lander, and where the ball comes down on the rail before it rolls in there. */
+const P_L: Pt = [back(LANDER_X), Y_BALL]
+const LAND2: Pt = [P_L[0] + 0.75, Y_BALL]
+/** The books where they come to rest on the floor, as the opening left them. */
+const RESTS: Fallen[] = bookRests()
+
+/**
+ * Along the back of the row, seen from the front: to each book a moment
+ * before its note, a push on the note, and on to the next once it has gone.
+ */
+function along(at: (T: number) => number): { at: number; p: Pt; ease?: 'inout' }[] {
+  const out: { at: number; p: Pt; ease?: 'inout' }[] = []
+  for (let i = 0; i < ROW.length; i++) {
+    const prev = i === 0 ? SET_OFF : PUSHES[i - 1]
+    const next = i === ROW.length - 1 ? AT_REST : PUSHES[i + 1]
+    const early = Math.min(0.08, (PUSHES[i] - prev) / 4)
+    const late = Math.min(0.06, (next - PUSHES[i]) / 4)
+    const p: Pt = [front(ROW[i].x), Y_BALL]
+    out.push({ at: at(PUSHES[i] - early), p, ease: 'inout' }, { at: at(PUSHES[i] + late), p })
+  }
+  return out
+}
+
+/** The ghost's lean into each push, as a change in its size: smaller going away from us (the lander, from behind), larger coming at us (the books). */
+function shoveAt(T: number): number {
+  let v = -0.08 * leanPulse(T - PUSH)
+  for (const at of PUSHES) v += 0.07 * leanPulse(T - at)
+  return v
+}
+const leanPulse = (s: number): number => (s < -0.06 || s > 0.3 ? 0 : s < 0 ? smooth(s, -0.06, 0) : Math.exp(-s / 0.08))
 
 /* ------------------------------------------------------------------ the part */
 
@@ -330,9 +357,13 @@ export const gargantua = part<GargState>(
       ...carried(swing, at(RELEASE), at(HORIZON), 36),
       ...route([
         { at: at(HORIZON), p: F },
-        { at: at(LAND), p: LAND_PT, ease: 'in' },
-        { at: at(PUSH), p: [X_CONTACT, Y_BALL] },
-        { at: at(PUSH) + (2 * (X_REST - X_CONTACT)) / RUN, p: [X_REST, Y_REST], ramp: [RUN, 0] },
+        // Out of the centre onto the rail by the case's end, and in along it behind the lander, slowing.
+        { at: at(LAND), p: LAND2, ease: 'in' },
+        { at: at(PUSH), p: P_L, ramp: [1.7, 0.6] },
+        // It stays there, the lander gone, while the room turns round it.
+        { at: at(SET_OFF), p: P_L },
+        ...along(at),
+        { at: at(AT_REST), p: [X_REST, Y_REST], ease: 'inout' },
         { at: slot.end - slot.begin, p: [X_REST, Y_REST] },
       ]),
     ]
@@ -340,9 +371,14 @@ export const gargantua = part<GargState>(
     const riders = (t: number, hero: ShowBall): ShowBall[] | null => {
       // Near the centre it is drawn out toward it, and stays so, stopped, until the dark opens.
       const pull = smooth(t, RELEASE + 0.25, HORIZON) * (1 - smooth(t, HORIZON + 0.05, HORIZON + 0.4))
-      if (pull <= 0) return null
-      const angle = Math.atan2(C[1] - hero.y, C[0] - hero.x)
-      return [{ ...hero, stretch: 1 + 0.55 * pull, angle, scale: (hero.scale ?? 1) * (1 - 0.18 * pull) }]
+      if (pull > 0) {
+        const angle = Math.atan2(C[1] - hero.y, C[0] - hero.x)
+        return [{ ...hero, stretch: 1 + 0.55 * pull, angle, scale: (hero.scale ?? 1) * (1 - 0.18 * pull) }]
+      }
+      // Each push is a lean: away from us into the lander (seen from behind), toward us into each book (from the front).
+      const lean = shoveAt(t)
+      if (Math.abs(lean) < 0.002) return null
+      return [{ ...hero, scale: (hero.scale ?? 1) * (1 + lean) }]
     }
     return {
       cells: box(-9, -5, 9, 4),
@@ -361,11 +397,12 @@ export const gargantua = part<GargState>(
       { t: beat(186), cells: 5.8, hold: [C[0] + 0.1, C[1] + 0.15], w: 0.85 },
       { t: RELEASE, cells: 5.2, hold: [C[0], C[1]], w: 0.9 },
       { t: HORIZON, cells: 3.4, hold: F, w: 1 },
-      { t: LAND, cells: 3.6, hold: [LAND_PT[0] + 0.9, Y_BALL - 0.35], w: 0.9 },
-      { t: PUSH, cells: 3.3, hold: [X_CONTACT + 0.2, Y_BALL - 0.4], w: 1 },
-      { t: PUSH + 1.3, cells: 3.4, hold: [X_REST + 0.05, Y_BALL - 0.45], w: 1 },
-      { t: 122.2, cells: 3.1, hold: [X_REST - 0.2, Y_BALL - 0.35], w: 1 },
-      // The opening's framing: the room, the case, the ghost on the top shelf.
+      // Down into the lattice, the back of the case under it; in close behind the lander for the last hit.
+      { t: LAND, cells: 3.3, hold: [LAND2[0] - 0.55, Y_BALL - 0.45], w: 1 },
+      { t: PUSH, cells: 2.3, hold: [P_L[0] - 0.15, Y_BALL - 0.2], w: 1 },
+      { t: TURN0, cells: 2.3, hold: [P_L[0] - 0.15, Y_BALL - 0.2], w: 1 },
+      // The turn, round the ghost: the room from the front, framed as the show began, for the books.
+      { t: TURN1, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
       { t: ACT1_END, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
     ]
     return shots
@@ -408,10 +445,14 @@ function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: P
 const swellAt = (T: number): number => 1 + 30 * easeInQuad(clamp((T - HORIZON) / 0.62))
 /** How much of the inside is up: the lattice, the rail, the case. */
 const insideAt = (T: number): number => smooth(T, HORIZON + 0.25, HORIZON + 0.7)
-/** The back of the case and the lattice go; then the room comes up. */
-const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, 120.9, 121.9))
-const latticeAt = (T: number): number => insideAt(T) * (1 - smooth(T, 120.3, 121.5))
-const roomAt = (T: number): number => smooth(T, 122.0, 123.4)
+/**
+ * The turn: the back of the case goes first, and for a moment the ghost is
+ * alone in the lattice; then the lattice goes as the room comes up from the
+ * front, round it. Never the two sides of the case at once.
+ */
+const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, TURN0, TURN0 + 0.35))
+const latticeAt = (T: number): number => insideAt(T) * (1 - smooth(T, TURN0 + 0.45, TURN1))
+const roomAt = (T: number): number => smooth(T, TURN0 + 0.4, TURN1)
 
 function drawAll(p: p5, s: GargState, c: Ctx): void {
   const T = s.begin + c.t
@@ -791,24 +832,6 @@ function drawTars(p: p5, c: Ctx, T: number): void {
 
 /* ------------------------------------------------------------------ the tesseract */
 
-/** How far the crank has turned (radians, counterclockwise on the screen is negative): knocked round on the last hit, held there by the ball. */
-const crankAt = (T: number): number => SWING * easeOutCubic(clamp((T - PUSH) / 0.11))
-const turn = (v: Pt, a: number): Pt => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a)]
-
-/** The pushed book, in this frame: its foot's x, how far it has risen, tipped away (radians), shrunk and leaned; gone once it has dropped behind the board. */
-function bookFate(T: number): { x: number; lift: number; tip: number; lean: number; gone: boolean } {
-  const since = T - PUSH
-  if (since < 0) return { x: X_BOOK, lift: 0, tip: 0, lean: 0, gone: false }
-  const tipA = turn(ARM, crankAt(T))
-  // The arm's end carries its foot up and on; then it flies on up off it, tips away from us into the room, and falls.
-  const up = ARM[1] - tipA[1]
-  const on = tipA[0] - ARM[0]
-  const fly = Math.max(0, since - 0.11)
-  const lift = up + 1.9 * fly - 6 * fly * fly
-  const tip = (Math.PI / 2) * easeInQuad(clamp(since / 0.46))
-  return { x: X_BOOK + on + 0.25 * fly, lift, tip, lean: 0.35 * clamp(fly / 0.3), gone: fly > 0.1 && lift < 0 }
-}
-
 function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
   const { k } = c
   const X = (v: number) => v * k
@@ -822,20 +845,20 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     p.rect(X(f.cx), X(f.cy), X(f.x1 - f.x0 + 0.2), X(f.y1 - f.y0 + 0.2))
   }
   const lat = latticeAt(T)
-  const back = backAt(T)
-  if (back > 0.002) {
+  const bk = backAt(T)
+  if (bk > 0.002) {
     ctx.save()
-    ctx.globalAlpha = back
+    ctx.globalAlpha = bk
     // The light of the room through the case spills into the dark.
-    glow(p, X(B[0] - 0.78), X(B[1] - 0.65), X(2.6), DUST.light, 0.22)
+    glow(p, X(back(0.78)), X(BK[1] - 0.65), X(2.6), DUST.light, 0.22)
     ctx.restore()
   }
   if (lat > 0.002) drawLattice(p, c, T, lat, f)
-  if (back > 0.002) {
+  if (bk > 0.002) {
     ctx.save()
-    ctx.globalAlpha = back
+    ctx.globalAlpha = bk
     drawCaseBack(p, c, T)
-    drawMachine(p, c, T)
+    drawRail(p, c, T)
     ctx.restore()
   }
   const room = roomAt(T)
@@ -851,17 +874,17 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
 /**
  * The lattice: the case again, as a frame, every way — beside it, above,
  * below — and the same again deeper in, smaller, toward one point behind
- * the book. Lines only, gold, faint; the rail the ball runs on is one of its
- * beams, run on out of the case.
+ * the lander. Lines only, gold, faint; the rail the ball comes in on is one
+ * of its beams, run on out of the case.
  */
 function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof frame>): void {
   const { k } = c
   const X = (v: number) => v * k
-  const vp: Pt = [X_BOOK, SURF - 0.2]
-  const x0 = B[0] - 2.0
-  const x1 = B[0] + 0.45
-  const y0 = B[1] + SHELF_TOP - 0.665
-  const y1 = B[1] + FLOOR
+  const vp: Pt = [P_L[0], SURF - 0.2]
+  const x0 = back(2.0)
+  const x1 = back(-0.45)
+  const y0 = BK[1] + SHELF_TOP - 0.665
+  const y1 = BK[1] + FLOOR
   const PX = 3.1
   const PY = 2.25
   // The depths drift in toward the point, slowly, the whole time.
@@ -886,23 +909,23 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
         p.rect((ax + bx) / 2, (ay + by) / 2, bx - ax, by - ay)
         // Its two shelves, and the room's light a thread under each.
         for (const lv of [SHELF_TOP, SHELF_TOP + 0.46]) {
-          const [u0, v0] = Q(x0 + ox, B[1] + lv + oy)
-          const [u1] = Q(x1 + ox, B[1] + lv + oy)
+          const [u0, v0] = Q(x0 + ox, BK[1] + lv + oy)
+          const [u1] = Q(x1 + ox, BK[1] + lv + oy)
           p.stroke(alpha(p, DARK.gold, a * 0.6))
           p.line(u0, v0, u1, v0)
-          const [w0, z0] = Q(x0 + ox + 0.12, B[1] + lv - 0.28 + oy)
-          const [w1] = Q(x1 + ox - 0.12, B[1] + lv - 0.28 + oy)
+          const [w0, z0] = Q(x0 + ox + 0.12, BK[1] + lv - 0.28 + oy)
+          const [w1] = Q(x1 + ox - 0.12, BK[1] + lv - 0.28 + oy)
           p.stroke(alpha(p, DUST.light, a * 0.5))
           p.line(w0, z0, w1, z0)
         }
       }
     }
   }
-  // The beam the ball runs on, out of the case both ways, and the corners of the near frames run in toward the point.
+  // The beam the ball comes in on, out of the case's end, and the corners of the near frames run in toward the point.
   p.stroke(alpha(p, DARK.gold, on * 0.3))
   p.strokeWeight(Math.max(0.8, k * 0.014))
-  p.line(X(f.x0 - 1), X(SURF), X(GAP_L - 0.9), X(SURF))
-  p.line(X(x1 + 0.1), X(SURF), X(f.x1 + 1), X(SURF))
+  p.line(X(f.x0 - 1), X(SURF), X(x0 - 0.1), X(SURF))
+  p.line(X(LAND2[0] + 0.55), X(SURF), X(f.x1 + 1), X(SURF))
   p.stroke(alpha(p, DARK.gold, on * 0.14))
   p.strokeWeight(Math.max(0.6, k * 0.009))
   const sc = 1 / (1 + 0.75 * (depths[0] + 0.3))
@@ -912,6 +935,15 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
       p.line(X(px), X(cy), X(vp[0] + (px - vp[0]) * sc), X(vp[1] + (cy - vp[1]) * sc))
     }
   }
+}
+
+/** The lander from behind, pushed on the last hit: it tips away from us into the room and is gone over the edge. */
+function landerAway(T: number): { tip: number; drop: number; gone: boolean } {
+  const s = T - PUSH
+  if (s < 0) return { tip: 0, drop: 0, gone: false }
+  const tip = (Math.PI / 2) * easeInQuad(clamp(s / 0.42))
+  const drop = 0.5 * G_EARTH * Math.max(0, s - 0.26) ** 2
+  return { tip, drop, gone: s > 0.46 }
 }
 
 /** Murph's bookcase from behind: its frame dark against the room's light, the books' page-edges to us. */
@@ -926,43 +958,37 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   const Rr = 2.0
   // Everything here is in the shelf's own frame, mirrored.
   p.push()
-  p.translate(X(B[0]), X(B[1]))
+  p.translate(X(BK[0]), X(BK[1]))
   p.scale(-1, 1)
-  // The room beyond: warm plaster lit by the window, the paper's thin stripes.
-  const push = knock(T - PUSH, 0.6)
+  // The room beyond: warm plaster lit by the window, the paper's thin stripes; brighter for a moment as the lander goes.
+  const lit = knock(T - PUSH - 0.1, 0.5)
   p.noStroke()
-  p.fill(mixHex(DUST.wall, DUST.light, 0.35 + 0.35 * push))
+  p.fill(mixHex(DUST.wall, DUST.light, 0.35 + 0.35 * lit))
   p.rect(X((L + Rr) / 2), X((CAP + FLOOR) / 2), X(Rr - L - 0.1), X(FLOOR - CAP))
   p.stroke(alpha(p, DUST.shade, 0.6))
   p.strokeWeight(Math.max(1, k * 0.012))
   for (let x = L + 0.12; x < Rr - 0.05; x += 0.22) p.line(X(x), X(CAP + 0.03), X(x), X(FLOOR - 0.02))
 
-  // The pushed book, going: behind everything else of the case.
-  const fate = bookFate(T)
-  if (!fate.gone) {
-    const b = ROW[TARGET]
-    const hv = b.h * Math.cos(fate.tip)
-    const sc = 1 - 0.2 * Math.sin(fate.tip)
+  // The books of the top row: page edges toward us, their covers a line either side. Nothing has touched them yet.
+  for (const b of ROW) backOfBook(p, c, b.x, SHELF_TOP, b.w, b.h, b.color, ink)
+  // The lander model, a dark shape against the light; pushed, it tips away (shorter as it turns from us) and drops.
+  const la = landerAway(T)
+  if (!la.gone) {
+    const sq = Math.cos(la.tip)
     p.push()
-    p.translate(X(B[0] - fate.x), X(SHELF_TOP - fate.lift))
-    p.rotate(fate.lean)
-    backOfBook(p, c, 0, 0, b.w * sc, Math.max(0.01, hv), b.color, ink)
+    p.translate(X(LANDER_X), X(SHELF_TOP + la.drop))
+    p.scale(1 - 0.15 * Math.sin(la.tip), Math.max(0.02, sq))
+    solid(p, ink, w * 0.6, mixHex(DUST.corn, ink, 0.55))
+    p.rect(0, X(-0.08), X(0.12), X(0.06))
+    p.beginShape()
+    for (const [x, y] of [[-0.05, -0.11], [0.05, -0.11], [0.035, -0.17], [-0.035, -0.17]] as Pt[]) p.vertex(X(x), X(y))
+    p.endShape(p.CLOSE)
+    outline(p, ink, w * 0.6)
+    for (const sgn of [-1, 1]) p.line(X(sgn * 0.04), X(-0.07), X(sgn * 0.09), 0)
     p.pop()
   }
-
-  // The other books: page edges toward us, their covers a line either side.
-  for (let i = 0; i < ROW.length; i++) {
-    if (i === TARGET) continue
-    backOfBook(p, c, ROW[i].x, SHELF_TOP, ROW[i].w, ROW[i].h, ROW[i].color, ink)
-  }
-  // The lander model, a dark shape against the light.
-  solid(p, ink, w * 0.6, mixHex(DUST.corn, ink, 0.55))
-  p.rect(X(-0.13), X(SHELF_TOP - 0.08), X(0.12), X(0.06))
-  p.beginShape()
-  for (const [x, y] of [[-0.18, -0.11], [-0.08, -0.11], [-0.095, -0.17], [-0.165, -0.17]] as Pt[]) p.vertex(X(x), X(SHELF_TOP + y))
-  p.endShape(p.CLOSE)
-  outline(p, ink, w * 0.6)
-  for (const sgn of [-1, 1]) p.line(X(-0.13 + sgn * 0.04), X(SHELF_TOP - 0.07), X(-0.13 + sgn * 0.09), X(SHELF_TOP))
+  // Where it stood, the room's light comes through.
+  if (T >= PUSH) glow(p, X(LANDER_X), X(SHELF_TOP - 0.12), X(0.55), DUST.light, 0.75 * knock(T - PUSH - 0.12, 0.35) * smooth(T, PUSH, PUSH + 0.12))
   // The middle shelf, from behind, and the bottom one's stack and box.
   const mid = [
     [0.1, 0.3, DUST.denim], [0.09, 0.32, DUST.bone], [0.12, 0.28, DUST.rust], [0.08, 0.3, DUST.sage], [0.1, 0.34, DUST.corn],
@@ -1009,16 +1035,11 @@ function backOfBook(p: p5, c: Ctx, x: number, foot: number, w: number, h: number
   if (ih > 0.01) p.rect(X(x), X(foot - h / 2), X(Math.max(0.01, w - 0.03)), X(ih))
 }
 
-/** The watch, lying on the cap: a round face, its strap, the second hand, and a glint when the data moves it. */
-function drawWatch(p: p5, c: Ctx, T: number, wx: number, wy: number, ink: string, glintOnly = false): void {
+/** The watch, lying on the cap: a round face, its strap, the second hand, keeping time in the silence at the end. */
+function drawWatch(p: p5, c: Ctx, T: number, wx: number, wy: number, ink: string): void {
   const { k } = c
   const X = (v: number) => v * k
   const w = c.weight
-  const twitch = dataAt(T)
-  if (glintOnly) {
-    if (twitch > 0.02) glow(p, X(wx), X(wy), X(0.2), DUST.light, 0.75 * twitch)
-    return
-  }
   solid(p, ink, w * 0.7, DUST.wood)
   p.rect(X(wx - 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
   p.rect(X(wx + 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
@@ -1026,72 +1047,25 @@ function drawWatch(p: p5, c: Ctx, T: number, wx: number, wy: number, ink: string
   p.ellipse(X(wx), X(wy), X(0.13), X(0.1))
   let ticks = 0
   for (const t of TICKS) if (T >= t) ticks += 1 - Math.exp(-(T - t) / 0.03)
-  const a = -Math.PI / 2 + 0.95 + (ticks * Math.PI) / 30 + 0.6 * twitch
+  const a = -Math.PI / 2 + 0.95 + (ticks * Math.PI) / 30
   outline(p, ink, w * 0.6)
   p.line(X(wx), X(wy), X(wx + Math.cos(a) * 0.05), X(wy + Math.sin(a) * 0.038))
-  if (twitch > 0.02) glow(p, X(wx), X(wy), X(0.2), DUST.light, 0.75 * twitch)
 }
 
-/** The second hand's twitch, 0..1: up fast on a note, held a dot or a dash, back with a small shiver. */
-function dataAt(T: number): number {
-  let v = 0
-  for (const [at, held] of DATA) {
-    const s = T - at
-    if (s < 0 || s > held + 0.5) continue
-    if (s < 0.03) v = Math.max(v, s / 0.03)
-    else if (s < 0.03 + held) v = Math.max(v, 1)
-    else {
-      const r = s - 0.03 - held
-      v = Math.max(v, Math.exp(-r / 0.05) * Math.cos(r * 40))
-    }
-  }
-  return v
-}
-
-/** The machine: the rail and its trip, the frame that drops, the lever under the book. */
-function drawMachine(p: p5, c: Ctx, T: number): void {
+/** The rail the ball comes down on: the top board's line run on out past the case's end into the lattice. */
+function drawRail(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  // The rail: the top board's line run on out into the lattice, one piece, to the back of the case.
-  const rail0 = LAND_PT[0] - 0.7
+  const r0 = back(-0.45) - 0.02
+  const r1 = LAND2[0] + 0.55
   solid(p, ink, weight * 0.6, mixHex(DARK.hull, DARK.slate, 0.35))
-  p.rect(X((rail0 + GAP_R) / 2), X(SURF + 0.03), X(GAP_R - rail0), X(0.06))
+  p.rect(X((r0 + r1) / 2), X(SURF + 0.03), X(r1 - r0), X(0.06))
   // Where the ball comes down on it, on 190: a flash along the rail.
   const since = T - LAND
-  if (since >= 0 && since < 0.4) glow(p, X(LAND_PT[0]), X(SURF), X(0.35), DARK.amber, 0.8 * knock(since, 0.1))
-
-  // The crank, hung from the cap on a pin: the paddle in the ball's way, the arm down to the book's foot.
-  const cap = B[1] + SHELF_TOP - 0.6
-  const a = crankAt(T)
-  const pd = turn(PADDLE, a)
-  const am = turn(ARM, a)
-  outline(p, ink, weight * 0.6)
-  p.line(X(PIN[0]), X(cap), X(PIN[0]), X(PIN[1]))
-  const P = (v: Pt): [number, number] => [X(PIN[0] + v[0]), X(PIN[1] + v[1])]
-  bar(p, ink, weight * 0.55, DUST.wood, X(0.04), [P(pd), P([0, 0]), P(am)])
-  // The paddle's blade, square to its arm; the arm's lip under the book.
-  const blade = (v: Pt, len: number, w: number) => {
-    const l = Math.hypot(v[0], v[1])
-    const n: Pt = [-v[1] / l, v[0] / l]
-    bar(p, ink, weight * 0.55, DUST.wood, X(w), [P([v[0] - n[0] * len, v[1] - n[1] * len]), P([v[0] + n[0] * len, v[1] + n[1] * len])])
-  }
-  blade(pd, 0.07, 0.035)
-  blade(am, 0.05, 0.03)
-  solid(p, ink, weight * 0.5, DARK.gold)
-  p.circle(X(PIN[0]), X(PIN[1]), X(0.06))
-  // The book's going lets the room's light through: a breath of it on the last hit.
-  if (T >= PUSH && T < PUSH + 0.9) glow(p, X(X_BOOK), X(SURF - 0.25), X(0.6), DUST.light, 0.7 * knock(T - PUSH - 0.08, 0.3) * smooth(T, PUSH, PUSH + 0.08))
+  if (since >= 0 && since < 0.4) glow(p, X(LAND2[0]), X(SURF), X(0.35), DARK.amber, 0.8 * knock(since, 0.1))
 }
 
 /* ------------------------------------------------------------------ the room */
-
-/** Where the book that went came down: as the opening would have it land. */
-function fallenBook(): { x: number; y: number; w: number; h: number; color: string; turn: number } {
-  const j = TARGET
-  const b = ROW[j]
-  const lx = b.x + (hash(j, 7) - 0.5) * 0.16 + (j % 2 ? 0.05 : -0.05)
-  return { x: lx, y: FLOOR - b.w / 2, w: b.w, h: b.h, color: b.color, turn: j % 2 ? 1 : -1 }
-}
 
 function spine(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, color: string, lean: number, ink: string): void {
   const { k } = c
@@ -1107,7 +1081,7 @@ function spine(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, col
   p.pop()
 }
 
-/** Murph's room at dusk, seen from the front as the show began: the case, the book on the floor, the watch. */
+/** Murph's room at dusk, seen from the front as the show began: the case and what stays on it, the toy, the watch. The top row, the lander and the dusk itself are drawn over the ghost (`drawOver`). */
 function drawRoom(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   const { k } = c
   const X = (v: number) => v * k
@@ -1203,41 +1177,95 @@ function drawRoom(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   p.rect(X(0.85), X(FLOOR - 0.08 - 0.13), X(0.4), X(0.26), X(0.01))
   const BOOKS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUST.bone]
   for (let j = 0; j < 5; j++) spine(p, c, 1.3 + j * 0.1, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOKS[(j + 2) % 6], 0, ink)
-  // The lander, and the top row: all standing but the one that went.
-  outline(p, ink, w * 0.7)
-  for (const sgn of [-1, 1]) {
-    p.line(X(-0.13 + sgn * 0.04), X(SHELF_TOP - 0.07), X(-0.13 + sgn * 0.09), X(SHELF_TOP))
-  }
-  solid(p, ink, w * 0.8, DUST.corn)
-  p.rect(X(-0.13), X(SHELF_TOP - 0.08), X(0.12), X(0.06))
-  solid(p, ink, w * 0.8, DUST.bone)
-  p.beginShape()
-  for (const [lx, ly] of [[-0.18, -0.11], [-0.08, -0.11], [-0.095, -0.17], [-0.165, -0.17]] as Pt[]) p.vertex(X(lx), X(SHELF_TOP + ly))
-  p.endShape(p.CLOSE)
-  for (let i = 0; i < ROW.length; i++) if (i !== TARGET) spine(p, c, ROW[i].x, SHELF_TOP, ROW[i].w, ROW[i].h, ROW[i].color, 0, ink)
-  // It came down in front of the case, and lies there.
-  const fb = fallenBook()
-  p.push()
-  p.translate(X(fb.x), X(fb.y))
-  p.rotate((fb.turn * Math.PI) / 2)
-  spine(p, c, 0, fb.h / 2, fb.w, fb.h, fb.color, 0, ink)
-  p.pop()
-
-  // Murph's toy robot, where it stood in the first frame, its arm out flat.
-  drawRobot(p, { k, ink, weight: w }, TOY_HOME[0], TOY_HOME[1] + 2)
+  // Murph's toy, where it stood in the first frame.
+  drawToy(p, { k, ink, weight: w }, TOY_HOME[0], TOY_HOME[1] + 2)
   // The watch on the cap.
-  drawWatch(p, c, T, 1.45, CAP - 0.11, ink, false)
-  // Dusk: darkest away from the ghost, as the room was at the start, before the window caught up.
-  const gx = X(X_REST - BF[0])
-  const gy = X(Y_REST - BF[1])
-  const dusk = ctx.createRadialGradient(gx, gy, X(0.12), gx, gy, X(3.2))
-  dusk.addColorStop(0, rgba(DARK.deep, 0.1))
-  dusk.addColorStop(0.25, rgba(DARK.deep, 0.62))
-  dusk.addColorStop(1, rgba(DARK.deep, 0.92))
-  ctx.fillStyle = dusk
-  ctx.fillRect(X(fx0), X(fy0), X(fx1 - fx0), X(fy1 - fy0))
-  // But the watch's glint is light.
-  drawWatch(p, c, T, 1.45, CAP - 0.11, ink, true)
+  drawWatch(p, c, T, 1.45, CAP - 0.11, ink)
+  p.pop()
+}
+
+/** The lander model from the front, as the opening draws it: knocked at `since` = 0, over the edge and down on its side (shelf cells). */
+function landerFront(p: p5, c: { k: number; ink: string; weight: number }, x0: number, since: number): void {
+  const { k, ink, weight } = c
+  let x = x0
+  let y = SHELF_TOP
+  let a = 0
+  if (since >= 0) {
+    const tip = 0.25
+    if (since < tip) a = -0.5 * easeOutCubic(since / tip)
+    else {
+      const f = since - tip
+      const T = dropTime(FLOOR - SHELF_TOP)
+      const u = Math.min(1, f / T)
+      x = x0 - 0.18 * u
+      y = SHELF_TOP + Math.min(FLOOR - SHELF_TOP, 0.5 * G_EARTH * f * f)
+      a = -0.5 - (Math.PI / 2 - 0.5 + 0.35) * easeInOutSine(u)
+      if (f > T) a += Math.exp(-(f - T) / 0.1) * Math.sin((f - T) * 30) * 0.12
+    }
+  }
+  p.push()
+  p.translate(x * k, y * k)
+  p.rotate(a)
+  outline(p, ink, weight * 0.7)
+  for (const s of [-1, 1]) {
+    p.line(s * 0.04 * k, -0.07 * k, s * 0.09 * k, 0)
+    p.line(s * 0.11 * k, 0, s * 0.07 * k, 0)
+  }
+  solid(p, ink, weight * 0.8, DUST.corn)
+  p.rect(0, -0.08 * k, 0.12 * k, 0.06 * k)
+  solid(p, ink, weight * 0.8, DUST.bone)
+  p.beginShape()
+  p.vertex(-0.05 * k, -0.11 * k)
+  p.vertex(0.05 * k, -0.11 * k)
+  p.vertex(0.035 * k, -0.17 * k)
+  p.vertex(-0.035 * k, -0.17 * k)
+  p.endShape(p.CLOSE)
+  outline(p, ink, weight * 0.6)
+  p.line(0, -0.17 * k, 0, -0.2 * k)
+  p.pop()
+}
+
+/**
+ * The top row from the front, `since` seconds after each book was pushed
+ * (negative: still standing), the lander `lander` seconds after it went, and
+ * a thud of dust where each lands: in the shelf's cells. With everything long
+ * gone it is the room as the opening left it, which is how Act II's replica
+ * finds it (`act2/replica.ts`).
+ */
+export function drawFallen(p: p5, c: { k: number; ink: string; weight: number }, lander: number, since: (i: number) => number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  landerFront(p, c, LANDER_X, lander)
+  for (let i = 0; i < RESTS.length; i++) {
+    const b = RESTS[i]
+    const at = bookAt(b, since(i))
+    p.push()
+    p.translate(X(at.x), X(at.y))
+    p.rotate(at.a)
+    frontBook(p, k, ink, weight, 0, b.h / 2, b.w, b.h, b.color)
+    p.pop()
+  }
+  p.noStroke()
+  for (let i = 0; i < RESTS.length; i++) {
+    const b = RESTS[i]
+    const s = since(i) - 0.12 - dropTime(b.land[1] - (SHELF_TOP - b.h / 2))
+    if (s < 0 || s > 0.6) continue
+    const u = s / 0.6
+    p.fill(alpha(p, DUST.shade, 0.7 * (1 - u)))
+    for (const side of [-1, 1]) p.circle(X(b.land[0] + side * (b.h / 2 + 0.05 + u * 0.12)), X(b.land[1] + b.w / 2 - 0.02 - u * 0.04), X(0.05 + u * 0.05))
+  }
+}
+
+/** A book standing with its foot at `(x, foot)`, spine out, as the opening draws it. */
+function frontBook(p: p5, k: number, ink: string, weight: number, x: number, foot: number, w: number, h: number, color: string): void {
+  p.push()
+  p.translate(x * k, foot * k)
+  solid(p, ink, weight * 0.9, color)
+  p.rect(0, (-h / 2) * k, w * k, h * k, 0.008 * k)
+  outline(p, ink, weight * 0.55)
+  p.line((-w / 2) * k, (-h + 0.035) * k, (w / 2) * k, (-h + 0.035) * k)
+  p.line((-w / 2) * k, -0.035 * k, (w / 2) * k, -0.035 * k)
+  if (h > 0.26) p.rect(0, -h * 0.55 * k, w * 0.5 * k, 0.05 * k)
   p.pop()
 }
 
@@ -1271,11 +1299,33 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     }
     return
   }
-  // The ghost gives off a little light of its own, as it did at the start.
+  const room = roomAt(T)
+  const at = laneAt(s.lane, c.t)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  if (room > 0.002) {
+    ctx.save()
+    ctx.globalAlpha = room
+    // The row in front of the ghost, the lander, the books as it pushes them, and where they come down.
+    p.push()
+    p.translate(X(BF[0]), X(BF[1]))
+    drawFallen(p, { k, ink: FARM.ink, weight: c.weight }, T - PUSH, (i) => T - PUSHES[i])
+    p.pop()
+    // Dusk: darkest away from the ghost. Its own light keeps the dark off it wherever it is, as at the start.
+    const f = frame(p, k)
+    const gx = X(at.x)
+    const gy = X(at.y)
+    const dusk = ctx.createRadialGradient(gx, gy, X(0.12), gx, gy, X(3.2))
+    dusk.addColorStop(0, rgba(DARK.deep, 0.1))
+    dusk.addColorStop(0.25, rgba(DARK.deep, 0.62))
+    dusk.addColorStop(1, rgba(DARK.deep, 0.92))
+    ctx.fillStyle = dusk
+    ctx.fillRect(X(f.x0 - 0.5), X(f.y0 - 0.5), X(f.x1 - f.x0 + 1), X(f.y1 - f.y0 + 1))
+    ctx.restore()
+  }
+  // The ghost gives off a little light of its own, as it did at the start; a little more on each push.
   if (T >= PUSH) {
-    const at = laneAt(s.lane, c.t)
-    const a = smooth(T, PUSH, PUSH + 0.35) * (0.38 + 0.12 * roomAt(T))
-    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const push = Math.max(0, shoveAt(T)) / 0.07
+    const a = smooth(T, PUSH, PUSH + 0.35) * (0.38 + 0.12 * room + 0.2 * push)
     const x = X(at.x)
     const y = X(at.y)
     const g = ctx.createRadialGradient(x, y, 0, x, y, 0.45 * k)

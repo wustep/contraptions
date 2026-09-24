@@ -1,4 +1,4 @@
-# Cornfield Chase, [Opus 5.5] Liftoff
+# Cornfield Chase, Liftoff
 
 Copyrighted recordings. This is a private tech demo and one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it.
 
@@ -6,7 +6,7 @@ The music is Hans Zimmer's *Cornfield Chase* and then *No Time for Caution*, bot
 - `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`;
 - `docs/promo/INTERSTELLAR_NO_TIME_FOR_CAUTION_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`.
+Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`. In the Shows picker it is **Liftoff**, and under it, faint, "Directed by wustep", the name a link to https://x.com/wustep.
 
 ## What it is
 
@@ -46,7 +46,7 @@ The split is the film's own heartbreak, time.
 **The arc.**
 
 1. **The farm and the drive are his.**
-   - He has Murph's room, the robot, the stairs and the yard to himself.
+   - He has Murph's room, the tin truck, the stairs and the yard to himself.
    - At the truck he lands on the bed's rail, knocks the door open, rolls in onto the bench, and the door slams behind him on its note.
    - He is at the wheel through the cranks, the catch and the headlights, and through the chase: the seat throws him up on every beat.
    - At the dam he stands on the brakes. The door flies open and he is thrown clear, and the truck stays at the edge, empty.
@@ -82,7 +82,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 
 | Time | From → to | How it carries |
 | --- | --- | --- |
-| 127.5 s | the dusk room → the replica | The first frame is Act I's room under the same dusk, same framing, same toy robot. On the organ's accent the station's lamps strike, and one catches late and dips it again. Daylight comes up over half a second: one room waking up. |
+| 127.5 s | the dusk room → the replica | The first frame is Act I's room under the same dusk, same framing, same tin truck. On the organ's accent the station's lamps strike, and one catches late and dips it again. Daylight comes up over half a second: one room waking up. |
 | 139.5 to 179.5 s | replica → ring → ballpark → far-side house → spoke | One universe and one camera, continuous round the ring. |
 | 169.5 to 175 s | the flight → the far side | While the ball is in the air across the axis, the camera rolls a third of a turn with the ring. The far-side house, which stands on its head in the station's end-on view, comes down upright to meet it, and the reunion plays the right way up. The lift climbs straight up the screen. As gravity falls away near the hub (187.5 to 193.5 s) the camera rolls back, square again for the docking bay and the match cut outside. |
 | 207.5 s | the hub → outside | A match cut on the Ranger. The first frame outside keeps the hub's last framing, so the ship holds still on the screen while the bay turns to the dark round it. Then the camera pulls back to show the spinning station. |
@@ -119,7 +119,7 @@ The music is the only clock.
     - the 96 bpm comb from the drop onward, beat *b* at 0.008 + 0.625·*b* s (±26 ms).
   - Act II: No Time for Caution's 60 bpm pulse, beats and eighths (±30 ms).
 - **What `check:shows` holds it to.**
-  - 359 strikes (226 in Act I, 133 in Act II), every one on a measured onset;
+  - 352 strikes (219 in Act I, 133 in Act II), every one on a measured onset;
   - more than 90% of Act I's beats from the drop to the last hit struck, and 123 of Act II's 129 beats;
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
@@ -141,24 +141,24 @@ The music is the only clock.
 
 | Time (s) | Music | Part | What happens |
 | ---: | --- | --- | --- |
-| 0 | piano | Murph's bookcase | In the dark, a ghost ball sits behind the top shelf, and Murph's toy robot stands at the end of the case with its arm out flat. On the first clear note the model lander goes over. Then ten books drop, one per note, short and tall: S, T, A, Y in Morse. The ghost falls through the side of the case. |
-| 12.3 | piano | the toy robot | The robot raises its arm with a click as the last book falls, and the ghost lands in it and becomes a ball. He rolls into the crook, and the robot walks him across the room, a footfall per note, through the window light where the dust comes down in bands. |
-| 15.7 | piano | stairs, porch | The robot lowers its arm like a ramp. He goes down the stairs a step per note, out onto the porch, and down the porch steps. |
+| 0 | piano | Murph's bookcase | In the dark, a ghost ball sits at the right-hand end of the top shelf, glowing, by the side of the case. Murph's wind-up tin dump truck is parked on the floor by the case. On the first clear note the model lander goes over, on its own: a shiver, a little dust, and it tips. Then ten books drop the same way, one per note, left to right, short and tall: S, T, A, Y in Morse. Nothing touches them. The ghost does not move; three times a small drawn question mark rises beside it and fades. After the last book it rolls, along the empty shelf and through the side of the case. |
+| 12.3 | piano | the tin truck | The ghost lands on the toy truck's cab roof with a clank and becomes a ball, rolls off the back into the dump box, and the landing lets the wind-up spring go. The truck lurches one lurch a note, its key turning a quarter each time, through the window light where the dust comes down in bands. |
+| 15.7 | piano | stairs, porch | At the stairwell the truck's dump box tips up and he rolls out over the lip. He goes down the stairs a step per note, out onto the porch, and down the porch steps. |
 | 20.2 | piano | the yard | A plank on a sawhorse flips over. The windmill's ratchet hoist lifts a tin pail a tooth per note, and a trip bar tips him into the clothes basket on the loudest piano note. The basket runs down the line, knocking the pegs off, and throws him onto the end of the hand pump's handle. His weight works the pump: water comes out of the spout into the irrigation channel, and the handle springs back and lobs him in after it. |
 | 26.6 | piano | the channel | The water carries him along the top of the bank, under the corn. Four flap gates hang across the channel; each board rides over his back and slaps shut behind him on a piano note. At the end the channel spills over the bank, where the truck is waiting. |
 | 29.2 | piano, organ | the truck | He hops onto the bed's rail on a note and rolls along it into the cab's corner. The knock swings the door open, he rolls in onto the bench, and the door slams behind him on a note: he is the driver. The engine turns over on the organ's first chords and catches, and the headlights come on at the strongest onset of the gather. |
 | 42.48 | the drop | the truck | He floors it into the corn, pressed back into the bench. A stalk on every beat, and the seat throws him up on every beat and he comes down on the eighth, at the wheel behind the glass. It jumps a ditch on beat 76 and goes through a fence on beat 80. The drone it chases flies ahead and glints on each downbeat. |
 | beat 84 | chase | the dam | He stands on the brakes at the edge. The door flies open and he is thrown out through it, up onto the hood and along it, and off the nose over the edge. The truck stays at the edge, empty, its door swinging. |
 | beat 86 | chase | the combine | An autonomous harvester with an empty cab and its aerial lamp on the 1.25 s tick. The chain runs reel, feeder, drum, elevator, tank, then the auger swinging out, then the spout. Then a plank on a straw bale. |
-| beat 100 | chase | the base's fence | A cattle grid on the eighths, a well sweep that throws, sprung dogs along the fence top, a counterweighted barrier arm, and a lever that lights the landing lamps. The drone lands on NASA's bunker on beat 112, the drone that led him here. He rolls in through one flap (113) and out of the other (114). On 114½ the flap is pushed open again and Brand rolls out after him, her first appearance. It slaps shut behind her on 115, and she catches him up and taps his back on 115½. |
+| beat 100 | chase | the base's fence | A cattle grid on the eighths, a well sweep that throws, sprung dogs along the fence top, a counterweighted barrier arm, and a lever that lights the landing lamps. The drone lands on NASA's bunker on beat 112, the drone that led him here. He rolls in through one flap (113) and out of the other (114), and TARS, four tall slabs of dark steel standing guard by the door, swings a slab down across his way: he stops against it, the film's first meeting. On 114½ the flap is pushed open again and Brand rolls out after him, her first appearance. It slaps shut behind her on 115, and she catches him up and taps his back on 115½, and TARS lifts its slab and lets them by. |
 | beat 116 | chase | the gantry | They roll into the cage together, and it climbs the tower, lighting a lamp per eighth. Along the arm and into the rocket's nose window side by side on beat 124. The lamps go out one per beat while the camera pushes in on the two of them. |
 | beat 134 | the pedal | the rocket | Ignition, then liftoff on the downbeat of 136, and a surge through the flame on each beat of the climb. On beat 142 it goes into the cloud: a flash of white with the rocket's shadow in it, and out into the dark in the other ink. Staging on 144, the second stage on 145, the turn into orbit. On 147 the fairing splits and they float out. |
 | beat 148 | full organ | the ring | The mass driver's beacon calls them in. The cradle takes both, its coils fire on the eighths, and they lob to the ring station, a ring of twelve modules, and match its spin. The jaws close on both on beat 156, the film's spinning dock. Then the airlock, and a run inside the spinning ring. On the downbeat of 160 the trapdoor drops him into the catapult's cup and shuts before she gets there. She stays on the door a beat, then runs on round the ring. The catapult throws him into the sphere past a small ringed planet. |
 | beat 166 | full organ | Miller | Out of the far side of the sphere onto a sheet of shallow water. He moves on the 1.25 s tick, two beats: a landed Ranger's legs, two buoys, and the slab robot cartwheeling one slab per tick. Up in orbit she waits on the ring. She laps it once per eighth and cuts a tally mark each lap, and her gold fades. The "mountains" on the horizon are a wave. The landed Ranger lifts off on beat 181 and picks the slab robot up on 182½, and the wave throws him off its crest on 183. |
 | beat 184 | climax | Gargantua | The same Ranger, drawn away toward the hole as it climbs, catches him on a tether. There is one Ranger from Miller's water to the claw. The slab robot falls in first. He is swung down through the disk, behind the dark, up through the disk, and let go, and he falls to the centre. |
-| beat 190 | climax | the tesseract | He lands on a rail in a lattice of bookcases and runs into a crank behind Murph's bookcase. |
-| 119.409 | the last hit | the tesseract | The crank flips the last book of the row off the shelf, and he becomes the ghost. |
-| 119.4 to 127 | the decay | home | The watch on the case twitches its hand in Morse. The lattice goes, and Murph's room comes up at dusk, at the first frame's framing: the ghost glowing on the top shelf, and the toy robot with its arm out. |
+| beat 190 | climax | the tesseract | Out of the centre onto a rail at the end of Murph's bookcase, seen from behind in a lattice of bookcases, and in along the top board behind the model lander. |
+| 119.409 | the last hit | the tesseract | He becomes the ghost and pushes the lander off the shelf, away from us into the room: the first thing that fell in the opening. |
+| 119.4 to 127 | the decay | home | The back of the case fades, the ghost alone in the lattice, and Murph's room comes up at dusk around it, at the first frame's framing. The ghost goes along behind the top row and pushes each book off, one at a time, **in the opening's own rhythm and order** (121.5 to 125.9 s): the same books fall the same way and land where they landed at the start. It was the ghost all along. It comes to rest at the end of the row, where it sat in the first frame, the tin truck on the floor by the case. |
 
 ## Act II, in order
 
@@ -166,12 +166,12 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 
 | Time (s) | Beats | Part | What happens |
 | ---: | --- | --- | --- |
-| 127.5 | 104 | the replica | The organ's accent. The dusk room wakes: the station's lamps strike and the day comes up in it. The ghost on the top shelf turns solid, and the end of the shelf gives under it. Out through a flap in the side of the case into a museum dumbwaiter. The catch lets go, the car drops and its counterweight flies up, and the car lands on its buffer in the kitchen. Murph's toy robot stands as an exhibit, its arm out. |
+| 127.5 | 104 | the replica | The organ's accent. The dusk room wakes: the station's lamps strike and the day comes up in it. The ghost on the top shelf turns solid, and the end of the shelf gives under it. Out through a flap in the side of the case into a museum dumbwaiter. The catch lets go, the car drops and its counterweight flies up, and the car lands on its buffer in the kitchen. The books lie on the floor where the ghost left them, and Murph's tin truck stands by the case as an exhibit. |
 | 131.5 | 108 to 115 | the replica | He rides the tall clock's weight down a notch a tick while the pendulum swings a second a beat. The clock's side door drops, the museum's turnstile at the front door takes him through a third of a turn, and he runs off the end of the plinth onto the ring. Meanwhile the camera draws back from the room to the house on its plinth, then to the whole ring round it, and comes back in to the door. |
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. When the trunk knocks the trapdoor's latch (153), she rocks forward off her chair, rolls across the floor, and waits where he will come down. The trapdoor lets him down on its counterweight and settles on its stop on 153½. He rolls off its end at the speed the slope gave him and lands beside her on 154: she meets him. They are still together for a beat. On 155 she leans in and walks him over the lift car's threshold, and on 155½ she nudges him on, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
+| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. She is in her rocking chair by the far wall. The trunk knocks the trapdoor's latch (153), the door settles on its stop on 153½, and he rolls off its end and lands on 154 by the lift car's threshold, rolling on into the doorway. Then she rolls out to meet him: she rocks back, the chair pitches her off, and she rolls across the floor to him, touching him across the threshold on 155. A moment together; on 155½ she nudges him on, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
 | 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
@@ -207,7 +207,7 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 | 270.7 | With | Cooper, the rust ball; Amelia Brand, the gold ball; TARS, four slabs of tin | |
 | 276.1 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
 | 282.0 | Drawn with | p5.js | |
-| 286.4 | (the title) | Liftoff | Cornfield Chase · [Opus 5.5] · a one-shot tech demo |
+| 286.4 | (the title) | Liftoff | Cornfield Chase |
 
 The title card stays up to the end, 291 s.
 
@@ -216,6 +216,28 @@ The title card stays up to the end, 291 s.
 - The words are not drawn in Overview, and not in a recording.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
+
+## Stephen's five notes
+
+1. **TARS was too early.** The toy robot on the farm was four slabs on a hinge, which read as TARS in the cold open.
+   - The farm's toy is now Murph's wind-up tin dump truck, a small rhyme with the truck Cooper drives later. It catches the ghost on its cab roof, lurches one lurch a note, and tips its dump box at the stairwell.
+   - TARS first appears at NASA's bunker (70.4 to 72.3 s): four tall slabs of dark steel standing guard by the door. It swings a slab across Cooper's way as he comes out, the film's first meeting. When Brand taps him on, it lifts the slab and lets them by. After that it is TARS on Miller and at Gargantua, as before.
+   - The dusk room and the museum replica stand the truck where it stood.
+2. **The opening books fall on their own.**
+   - The ghost sits still at the end of the top row while the lander and the ten books go, one per note, each with a shiver and a little dust; nothing touches them.
+   - Three small question marks rise beside the ghost and fade. They are drawn as a hooked stroke and a dot, not text.
+   - Then the ghost rolls along the empty shelf and through the side of the case.
+3. **The ~2:00 callback.**
+   - On the last hit (119.409 s), from behind the bookcase, the ball becomes the ghost and pushes the lander off.
+   - The room comes up at dusk from the front. The ghost goes along behind the row and pushes each book off, in the opening's own rhythm and order (121.5 to 125.9 s). They land where they landed at the start.
+   - It rests where it sat in the first frame, and the museum replica's first frame has the books lying the same way.
+4. **The reunion is a roll-out.** She stays in her chair while he comes down. Then she rolls out across the room to meet him: the chair pitches her off, and she rolls to him and touches him on 155. She nudges him on to the lift on 155½.
+5. **The chrome.**
+   - In the Shows picker the take is **Liftoff**.
+   - The panel shows "Directed by wustep" in place of the one-shot tech-demo note, set small in the faintest grey. The name links to https://x.com/wustep and is underlined only on hover.
+   - `ShowVersion.director` is a new optional field. Other takes keep their notes.
+   - The music credit ("tech demo only, not for release") stays: it is about the recordings.
+   - The credits' title card now reads just "Liftoff" and "Cornfield Chase".
 
 ## Polish
 
@@ -232,7 +254,7 @@ The title card stays up to the end, 291 s.
   - Under Zoom, both balls and the chair stay in frame from 176.5 to 180 s.
   - The broken window's glass lands on the attic floor, not across the trapdoor.
 - **A calmer first frame.**
-  - The toy robot stands on its own just clear of the bookcase's right side, taller and narrower, instead of in front of the case's corner and its books. The ghost's fall, the catch point and every strike are unchanged.
+  - The toy (then a robot, now the tin truck) stands on its own just clear of the bookcase's right side, instead of in front of the case's corner and its books. The ghost's fall, the catch point and every strike are unchanged.
   - The dusk room and the museum replica stand it at the same place (`TOY_HOME`), so the first and last frames still rhyme.
   - In the replica it stands in front of the dumbwaiter's shaft.
 - **Miller's lap is kept.** At a lap an eighth, she is a quick gold dot with a short trail round the ring in orbit, a click and a tally mark each lap. That is the point: her time runs fast while his runs slow.
@@ -252,8 +274,8 @@ The title card stays up to the end, 291 s.
 
 These are visual and mechanical only. There are no stills, no text, and no audio beyond the two cues.
 
-- **The bookcase opening and ending.** The lander model goes first. The books fall in S-T-A-Y, the dust comes down in bands, and the watch sits on top of the case. The ghost turns out to be the ball.
-- **Machines from the film.** The toy robot and the slab robot on Miller walk and cartwheel the way TARS does. The combine drives itself, and there is a drone chase through the corn.
+- **The bookcase opening and ending.** The books fall on their own, and at the end of Act I we see the ghost knock them off: the same books, the same order, the same rhythm. The lander model goes first. The books fall in S-T-A-Y, the dust comes down in bands, and the watch sits on top of the case. The ghost turns out to be the ball.
+- **Machines from the film.** TARS first appears at NASA's base, as in the film, and stops Cooper at the bunker's door; on Miller it cartwheels. The combine drives itself, and there is a drone chase through the corn.
 - **The space set pieces.** A ring station of twelve modules and a spinning dock. The wormhole is a sphere, with Saturn beside it.
 - **The one who waits.** Miller's tick is 1.25 s, exactly two beats at 96 bpm. She laps the ring in orbit once an eighth and fades while he spends a few ticks on the water.
 - **The black hole.** Gargantua is drawn as a flat disk with the halo lensed over and under it.

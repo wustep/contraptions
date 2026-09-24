@@ -6,7 +6,8 @@ import { alpha, box, carried, frame, hash, part, route, smooth, type Ctx, type P
 import { ACT2, CUE2_PERIOD, cue } from '../music'
 import { G_EARTH } from '../physics'
 import { DARK, DUST } from '../worlds'
-import { drawRobot, house, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
+import { drawToy, house, SHELF_TOP, TOY_HOME } from '../earth/house'
+import { drawFallen } from '../space/gargantua'
 import { AXIS, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
 
 /**
@@ -77,8 +78,6 @@ const CASE_L = -0.45
 const CASE_R = 2.0
 const CAP = SHELF_TOP - 0.6
 const MIDY = SHELF_TOP + 0.46
-const ROW = stayRow()
-const GONE = ROW.length - 1
 /** The flap at the end of the top shelf: hinged here, on the board's centre line; it tips to TILT. */
 const HINGE: Pt = [1.12, SHELF_TOP + 0.025]
 const TILT = 0.3
@@ -606,7 +605,7 @@ function doorSwing(t: number, edge: number): number {
   return 1.05 * Math.exp(-(s - 0.2) / 0.22) * Math.abs(Math.cos((s - 0.2) * 7.5))
 }
 
-/** The replica bookcase, as Act I's room had it at the end: the same books, the one on the floor, the watch. */
+/** The replica bookcase, as Act I's room had it at the end: the top shelf bare but for the ghost, the lander and the ten books on the floor where they fell, the watch. */
 function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
   const { k, ink, weight: w } = c
   const X = (v: number) => v * k
@@ -678,24 +677,8 @@ function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
   const BOOKS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUST.bone]
   for (let j = 0; j < 5; j++) spine(p, c, 1.3 + j * 0.1, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOKS[(j + 2) % 6])
 
-  // The lander, and the top row, all but the one that went.
-  outline(p, ink, w * 0.7)
-  for (const sgn of [-1, 1]) p.line(X(-0.13 + sgn * 0.04), X(SHELF_TOP - 0.07), X(-0.13 + sgn * 0.09), X(SHELF_TOP))
-  solid(p, ink, w * 0.8, DUST.corn)
-  p.rect(X(-0.13), X(SHELF_TOP - 0.08), X(0.12), X(0.06))
-  solid(p, ink, w * 0.8, DUST.bone)
-  p.beginShape()
-  for (const [lx, ly] of [[-0.18, -0.11], [-0.08, -0.11], [-0.095, -0.17], [-0.165, -0.17]] as Pt[]) p.vertex(X(lx), X(SHELF_TOP + ly))
-  p.endShape(p.CLOSE)
-  for (let i = 0; i < ROW.length; i++) if (i !== GONE) spine(p, c, ROW[i].x, SHELF_TOP, ROW[i].w, ROW[i].h, ROW[i].color)
-  // The one that went lies where it fell.
-  const fb = ROW[GONE]
-  const fx = fb.x + (hash(GONE, 7) - 0.5) * 0.16 + (GONE % 2 ? 0.05 : -0.05)
-  p.push()
-  p.translate(X(fx), X(FLOOR - fb.w / 2))
-  p.rotate(((GONE % 2 ? 1 : -1) * Math.PI) / 2)
-  spine(p, c, 0, fb.h / 2, fb.w, fb.h, fb.color)
-  p.pop()
+  // The lander and the ten books on the floor in front of the case, where the ghost pushed them at the end of Act I.
+  drawFallen(p, c, 99, () => 99)
 
   // The flap in the side, swung out on its top hinge.
   if (Math.abs(swing) > 0.001) {
@@ -1013,7 +996,7 @@ function drawOver(p: p5, _s: ReplicaState, c: Ctx): void {
   p.translate(O[0] * k, O[1] * k)
   drawCasing(p, c, t)
   // The museum keeps Murph's toy robot where it stood, its arm out: in front of the dumbwaiter's shaft.
-  drawRobot(p, c, TOY_HOME[0], TOY_HOME[1])
+  drawToy(p, c, TOY_HOME[0], TOY_HOME[1])
   drawGlass(p, c)
   p.pop()
   drawDusk(p, c)

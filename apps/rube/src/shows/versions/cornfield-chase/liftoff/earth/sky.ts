@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha, frame, scenery, smooth } from '../kit'
 import { DUST } from '../worlds'
+import { GHOST_REST } from './house'
 
 /**
  * The farm's sky, drawn behind everything, filling whatever the frame is.
@@ -130,8 +131,8 @@ export const sky = scenery<SkyState>({
  * the first bars, and last of all off the window side of the room, where the
  * light comes from.
  */
-/** Where the ghost waits for the light, in world cells. */
-const GHOST = [-0.31, -2.95]
+/** The ghost's rest on the top shelf, in world cells (`GHOST_REST` from the shelf entered at 0, -2): the dark is least round it. */
+const GHOST = [GHOST_REST[0], -2 + GHOST_REST[1]]
 
 export const dawn = scenery<null>({
   name: 'dawn',
