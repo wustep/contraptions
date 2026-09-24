@@ -149,3 +149,18 @@ horizontal progress. Targets wake before the hit, and ink rings fade where
 the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
+
+`cornfield-chase/opus55-liftoff` ([Opus 5.5] Liftoff) is a second one-shot
+Opus 5.5 take on the same recording, with every piece new. It is not a
+stock arrangement: two worlds made for it, a farm in the dust years and the
+dark past it, and a rocket between them in place of a portal. The show lives
+in `cornfield-chase/liftoff/`. `show.ts` holds two universes on one clock
+that share cells, and the stage changes universe while the rocket is inside
+the cloud. Each part is handed a slot (the time the ball arrives, the time
+it leaves, the onsets it must strike) and builds its lane from timed
+waypoints, so its strikes land on the measured onsets in
+`scripts/show-plans/cornfield-opus55-onsets.json` by construction.
+`liftoff/hits.ts` gathers every strike, and `check:shows` measures each one
+against the onset file. The check also asserts that the ball never jumps,
+that it is never hidden for long, and that the twin on the water world is
+the only second ball. The report is `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.

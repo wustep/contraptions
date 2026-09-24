@@ -18,6 +18,10 @@ import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/show
 import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
+import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
+import { IGNITION, beat as chaseBeat } from './src/shows/versions/cornfield-chase/liftoff/music'
+import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -114,8 +118,8 @@ async function main(): Promise<void> {
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
-  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
-  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
+  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync and Liftoff', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-liftoff,opus55-music-sync,tech-demo,voices')
+  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
   check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
@@ -191,6 +195,64 @@ async function main(): Promise<void> {
         const endCam = perf.camera?.(perf.duration)
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      }
+      if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
+        check('liftoff: the whole recording from zero, with the demo credit',
+          near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        const show = perf.show as LiftoffShow
+        check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
+          show.universe(0).world.name === 'cornfield' && show.universe(1).world.name === 'endurance' &&
+          show.indexAt(SWITCH - 0.01) === 0 && show.indexAt(SWITCH + 0.01) === 1 && show.at(SWITCH + 0.01).placed.piece.name === 'rocket' && show.at(SWITCH - 0.01).placed.piece.name === 'rocket')
+        check('liftoff: no portal anywhere, and no cut is drawn', [0, 1].every((i) => show.universe(i).pieces.every((p) => p.piece.name !== 'portal')) &&
+          [0, 20, 42.5, 88, SWITCH, 100, 126].every((t) => perf.cuts?.(t) === false))
+        // One ball on one continuous path: never a jump, the change of world included.
+        let jump = 0
+        let at = 0
+        let prev = show.where(0)
+        for (let t = 0.001; t <= perf.duration; t += 0.001) {
+          const here = show.where(t)
+          const d = Math.hypot(here[0] - prev[0], here[1] - prev[1])
+          if (d > jump) { jump = d; at = t }
+          prev = here
+        }
+        check('liftoff: the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${at.toFixed(3)} s`)
+        // Every strike, part by part, lands on something the recording has.
+        const o = cornfieldOnsets as { drop: { t: number }; last: { t: number }; piano: { t: number }[]; gather: { t: number }[]; eighths: { beat: number; t: number }[] }
+        const within = (t: number, marks: number[], tol: number) => marks.some((m) => Math.abs(t - m) <= tol + 1e-9)
+        const piano = o.piano.map((n) => n.t)
+        const organ = o.gather.map((n) => n.t)
+        const comb = [...o.eighths.map((e) => e.t), o.drop.t, o.last.t]
+        const off: string[] = []
+        let count = 0
+        for (const [name, list] of Object.entries(STRIKES.piano)) for (const t of list) { count++; if (!within(t, piano, 0.04)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(STRIKES.organ)) for (const t of list) { count++; if (!within(t, organ, 0.03)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(STRIKES.comb)) for (const t of list) { count++; if (!within(t, comb, 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
+        check('liftoff: every strike lands on a measured onset', count > 150 && off.length === 0, `${count} strikes; off: ${off.join(', ')}`)
+        const chase = Object.values(STRIKES.comb).flat()
+        const beats: number[] = []
+        for (let b = 68; b <= 191; b++) beats.push(chaseBeat(b))
+        const struck = beats.filter((t) => chase.some((s) => Math.abs(s - t) <= 0.026))
+        check('liftoff: from the drop to the last hit, nearly every beat is struck', struck.length >= beats.length * 0.9, `${struck.length}/${beats.length}`)
+        check('liftoff: ignition on beat 134, the pedal', STRIKES.comb.rocket.some((t) => near(t, IGNITION)) && near(IGNITION, chaseBeat(134)))
+        // The ball is never out of sight for long.
+        let hidden = 0
+        let longest = 0
+        for (let t = 0; t <= perf.duration; t += 0.01) {
+          const here = show.at(t)
+          hidden = here.hidden || here.scale <= 0.02 ? hidden + 0.01 : 0
+          longest = Math.max(longest, hidden)
+        }
+        check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
+        check('liftoff: a ghost on the shelf at the start, a ball in the robot\'s arm', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        // The twin: while the hero is on the water world, two balls with two roles.
+        const twins = [106, 109, 112].map((t) => show.at(t).balls ?? [])
+        check('liftoff: on the water world, exactly two balls, the hero and the twin who waits', twins.every((b) => b.length === 2 && b[0].id !== b[1].id))
+        const early = twins[0].find((b) => b.id !== show.at(106).ball.id)
+        const late = twins[2].find((b) => b.id !== show.at(112).ball.id)
+        check('liftoff: up in orbit the twin goes grey', !!early && !!late && early.color !== late.color)
+        check('liftoff: one ball everywhere else', [30, 60, 90, 96, 118, 124].every((t) => !show.at(t).balls || show.at(t).balls!.length <= 1))
       }
       if (work.work === 'cornfield-chase' && version.take === 'multiball') {
         const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
