@@ -7,7 +7,8 @@
  *   npm run check:playground
  */
 import { MODE_LINKS } from '../../src/ui/shell'
-import { R, ballAt, type Pt } from './src/parts'
+import { R, ballAt, laneAt, laneTime, type Lane, type Pt } from './src/parts'
+import { BEAT, STRIDE, isTimed } from './src/playground/pieces/dovre/tempo'
 import { beatCount, isDynamic, isFlight } from './src/plan'
 import { SHELVES, loadShelves } from './src/playground/staging'
 import { Show } from './src/show'
@@ -182,6 +183,50 @@ async function main(): Promise<void> {
     const unseen = beats.filter((c) => !c.finale && !used.has(c.name)).map((c) => c.name)
     check('and every staged beat turns up in a map', unseen.length === 0, unseen.join(','))
     check('and a map has at least four beats', Math.min(...counts) >= Math.min(4, beats.length), `${Math.min(...counts)}`)
+
+    // A world that keeps time: every beat of it plays on the beat, at any tempo.
+    const timedBeats = beats.filter(isTimed)
+    if (timedBeats.length) {
+      const offBeat: string[] = []
+      const pace: string[] = []
+      const stretch: string[] = []
+      const theme = w.themes[0]
+      const ball = { color: theme.colors[0], ghost: false, id: 0 }
+      const whole = (x: number) => Math.abs(x - Math.round(x)) < 1e-6
+      const speedAt = (lane: Lane, t0: number, t1: number) => {
+        const a = laneAt(lane, t0)
+        const b = laneAt(lane, t1)
+        return Math.hypot(b.x - a.x, b.y - a.y) / (t1 - t0)
+      }
+      for (const piece of timedBeats) {
+        const { tempo } = piece
+        for (const v of tempo.variants) {
+          const n = tempo.beats(v)
+          const hits = tempo.hits(v)
+          for (const beat of [BEAT, 0.3, 0.6]) {
+            const plan = tempo.plan(v, beat, { color: theme.colors[1], theme, ball })
+            const total = laneTime(plan.lane)
+            if (!whole(n) || Math.abs(total - n * beat) > 1e-6) offBeat.push(`${piece.name}:${n} beats, lane ${(total / beat).toFixed(3)}`)
+            if (!hits.length || !hits.every(whole) || Math.abs(plan.lane.fire - hits[0] * beat) > 1e-6) offBeat.push(`${piece.name}:fire`)
+            if ((plan.state as { beat?: number }).beat !== beat) offBeat.push(`${piece.name}:state.beat`)
+            const dt = beat * 0.03
+            const vin = speedAt(plan.lane, 0, dt) * beat
+            const vout = speedAt(plan.lane, total - dt, total) * beat
+            if (Math.abs(vin - STRIDE) > 0.25 || Math.abs(vout - STRIDE) > 0.25) pace.push(`${piece.name}:in ${vin.toFixed(2)} out ${vout.toFixed(2)}`)
+          }
+          const a = tempo.plan(v, 0.3, { color: theme.colors[1], theme, ball })
+          const b = tempo.plan(v, 0.6, { color: theme.colors[1], theme, ball })
+          const same = a.lane.segs.length === b.lane.segs.length && a.lane.segs.every((s, i) => {
+            const o = b.lane.segs[i]
+            return eq(s.from, o.from) && eq(s.to, o.to) && Math.abs(o.dur - 2 * s.dur) < 1e-6
+          })
+          if (!same || JSON.stringify(a.cells) !== JSON.stringify(b.cells)) stretch.push(piece.name)
+        }
+      }
+      check('every beat of it keeps time: a whole number of beats, fired on a beat', offBeat.length === 0, [...new Set(offBeat)].join(', '))
+      check('and comes in and goes out at a cell a beat', pace.length === 0, [...new Set(pace)].join(', '))
+      check('and a tempo changes its clock and nothing else', stretch.length === 0, [...new Set(stretch)].join(','))
+    }
   }
 
   /* ---------------------------------------------------------------- machine is untouched */

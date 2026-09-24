@@ -52,6 +52,7 @@ export const SHELVES: readonly ShelfEntry[] = [
   { name: 'staged-arcade', label: 'Arcade', kind: 'additions', load: () => import('./pieces/arcade').then((m) => m.shelf) },
   { name: 'alpine', label: 'Snow', kind: 'world', load: () => import('./pieces/alpine').then((m) => m.shelf) },
   { name: 'orchestra', label: 'Music', kind: 'world', load: () => import('./pieces/orchestra').then((m) => m.shelf) },
+  { name: 'dovre', label: 'Troll', kind: 'world', load: () => import('./pieces/dovre').then((m) => m.shelf) },
 ]
 
 const loaded = new Map<string, Promise<Shelf>>()
