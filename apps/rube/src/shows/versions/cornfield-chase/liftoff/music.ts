@@ -10,7 +10,10 @@
  * - Beat 191 (119.41 s), the last hit. Then the decay, to 126.98 s.
  */
 
-export const DURATION = 126.984
+/** The whole show: the mix (`scripts/liftoff-mix.sh`), Cornfield Chase and then No Time for Caution. */
+export const DURATION = 262.741
+/** Where the Cornfield recording ends in the mix, and Act I with it. */
+export const ACT1_END = 126.984
 export const PERIOD = 0.625
 export const ORIGIN = 0.008
 
@@ -33,3 +36,22 @@ export const beats = (a: number, b: number, step = 1): number[] => {
   for (let x = a; x <= b + 1e-9; x += step) out.push(beat(x))
   return out
 }
+
+/**
+ * Act II: No Time for Caution, from the mix (measured by
+ * `scripts/liftoff-ntfc-onsets.py` into `scripts/show-plans/liftoff-ntfc-onsets.json`).
+ * The organ's pulse is 60 bpm: beat k of the cue at 23.5177 + 0.9999·k s of the
+ * show. It comes in on beat 104 (the accent at 127.51 s); it steps up on 132,
+ * 152, 156 and 184, peaks on 228 and stops dead after 232.
+ */
+export const CUE2_ORIGIN = 23.5177
+export const CUE2_PERIOD = 0.9999
+/** Show time of beat `k` of No Time for Caution (fractions are eighths). */
+export const cue = (k: number): number => CUE2_ORIGIN + CUE2_PERIOD * k
+/** The organ's accent: the lights come up in the station. */
+export const ACT2 = cue(104)
+/** The big step: the Ranger lets go of the station. */
+export const UNDOCK = cue(184)
+/** The peak, and the last full hit before the cue stops. */
+export const PEAK = cue(228)
+export const FINAL = cue(232)

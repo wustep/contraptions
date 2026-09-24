@@ -265,15 +265,15 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   const toe = s.b0 + 0.25
   solid(p, ink, weight, DUST.shade)
   p.beginShape()
-  p.vertex(X(-1.5), X(FLOOR))
+  p.vertex(X(-0.5), X(FLOOR))
   p.vertex(X(toe - 0.75), X(FLOOR))
   p.quadraticVertex(X(toe - 0.35), X(FLOOR + 0.15), X(toe), X(GROUND))
-  p.vertex(X(-1.5), X(GROUND))
+  p.vertex(X(-0.5), X(GROUND))
   p.endShape()
   p.stroke(alpha(p, ink, 0.3))
   p.strokeWeight(Math.max(1, weight * 0.6))
   for (let i = 0; i < 6; i++) {
-    const gx = -1.3 + i * 0.37 + hash(i, 13) * 0.2
+    const gx = -0.4 + i * 0.37 + hash(i, 13) * 0.2
     if (gx > toe - 0.9) break
     const gy = FLOOR + 0.25 + hash(i, 14) * 0.6
     p.line(X(gx), X(gy), X(gx + 0.1), X(gy))

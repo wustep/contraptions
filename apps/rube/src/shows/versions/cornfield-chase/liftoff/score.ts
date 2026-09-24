@@ -3,13 +3,13 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, smooth, standing } from './kit'
-import { beat, DROP, DURATION, IGNITION } from './music'
+import { ACT2, beat, cue, DROP, DURATION, IGNITION, UNDOCK } from './music'
 import { LiftoffShow } from './show'
-import { BALL, EARTH, FARM, SPACE, VOID } from './worlds'
+import { BALL, EARTH, FARM, SPACE, STATION, VOID } from './worlds'
 import { dawn, sky } from './earth/sky'
 import { house, porch, shelf, stairs, toy } from './earth/house'
 import { cornrow } from './earth/field'
-import { yard } from './earth/yard'
+import { yard, YARD_END } from './earth/yard'
 import { rearAt, truck } from './earth/truck'
 import { drone, type Flight } from './earth/drone'
 import { combine } from './earth/combine'
@@ -21,6 +21,14 @@ import { voidSky } from './space/sky'
 import { endurance } from './space/endurance'
 import { miller } from './space/miller'
 import { gargantua } from './space/gargantua'
+import { AXIS } from './act2/station'
+import { interior } from './act2/interior'
+import { replica } from './act2/replica'
+import { rim } from './act2/rim'
+import { ballpark } from './act2/ballpark'
+import { hub } from './act2/hub'
+import { undock } from './act2/undock'
+import { edmunds } from './act2/edmunds'
 
 /**
  * The whole show, in order: who has the ball from when to when. Every part
@@ -55,7 +63,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { part: toy, end: 15.743 },
     { part: stairs, end: 17.4 },
     { part: porch, end: 20.16 },
-    { part: yard, end: 25.966 },
+    { part: yard, end: YARD_END },
     { part: cornrow, end: 29.158 },
     { part: truck, end: beat(86) },
     { part: combine, end: beat(100) },
@@ -67,8 +75,20 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const space = lay(earth.next, [
     { part: endurance, end: beat(166) },
     { part: miller, end: beat(183) },
-    { part: gargantua, end: DURATION },
+    { part: gargantua, end: ACT2 },
   ])
+  // Act II: No Time for Caution. Inside Cooper Station, and then out of it.
+  const station = lay(space.next, [
+    { part: replica, end: cue(116) },
+    { part: rim, end: cue(132) },
+    { part: ballpark, end: cue(156) },
+    { part: hub, end: UNDOCK },
+  ])
+  const outside = lay(station.next, [
+    { part: undock, end: cue(212) },
+    { part: edmunds, end: DURATION },
+  ])
+  const axis: Pt = [space.next.col - 0.5 + AXIS[0], space.next.row + AXIS[1]]
 
   const all = box(-12, -140, 260, 16, 2)
   const pickup = earth.placed.find((p) => p.piece.name === 'pickup')!
@@ -117,9 +137,23 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
         after: [deckCloud],
         from: SWITCH,
       },
+      {
+        world: STATION,
+        theme: FARM,
+        scenery: [standing(interior, 0, 0, box(axis[0] - 30, axis[1] - 30, axis[0] + 30, axis[1] + 30, 2), { axis, lights: ACT2 }, DURATION)],
+        chain: station.placed,
+        from: ACT2,
+      },
+      {
+        world: SPACE,
+        theme: VOID,
+        scenery: [standing(voidSky, 0, 0, box(axis[0] - 60, axis[1] - 120, axis[0] + 260, axis[1] + 60, 2), { deck: axis[1] + 1000, leave: -100 }, DURATION)],
+        chain: outside.placed,
+        from: UNDOCK,
+      },
     ],
     DURATION,
-    [...earth.riders, ...space.riders],
+    [...earth.riders, ...space.riders, ...station.riders, ...outside.riders],
   )
 
   const shots: Shot[] = [
@@ -129,7 +163,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
     { t: 20.6, cells: 4.4, off: [0.7, -0.55] },
-    { t: 26.2, cells: 3.9, off: [0.7, -0.55] },
+    { t: 26.9, cells: 3.6, off: [0.6, -0.5] },
     { t: 28.4, cells: 5.2, off: [1.6, -0.2] },
     { t: 31, cells: 4.6, off: [0.8, -0.6] },
     { t: 36, cells: 6, off: [1, -1.4] },
@@ -139,6 +173,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { t: beat(86) - 0.3, cells: 5.4 },
     ...earth.shots,
     ...space.shots,
+    ...station.shots,
+    ...outside.shots,
   ]
   // Where a part asks for nothing, the camera follows at a middle distance.
   if (!shots.some((s) => s.t > beat(86))) shots.push({ t: DURATION, cells: 5 })

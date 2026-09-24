@@ -4,16 +4,20 @@ import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../.
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
-import { beat, DURATION, LAST } from '../music'
+import { ACT1_END, beat, LAST } from '../music'
 import { SHELF_TOP, stayRow } from '../earth/house'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
+import { MILLER_HANDOFF } from './miller'
 
 /**
  * Gargantua, the tesseract, and home.
  *
  * The black hole is the one that hung small in Miller's sky, and it swells
- * as the ball rises at it. A Ranger comes round with a claw on a tether and
- * takes the ball on the downbeat (184); TARS lets go of its back on 185 and
+ * as the ball rises at it. The Ranger that stood on Miller's water lifts off
+ * (181), picks TARS up on its back (182½), draws away toward the hole as it
+ * climbs, and comes round with a claw on a tether and takes the ball on the
+ * downbeat (184): one ship all the way, so there is never a second Ranger in
+ * the frame. TARS lets go of its back on 185 and
  * goes in first. The Ranger swings the ball round the hole: down through the
  * disk on 186, behind the dark on 187 (its light wraps the rim), up through
  * the disk on the loudest eighth (187½) with the engine lit, and over the
@@ -214,17 +218,39 @@ function hermite(p0: Pt, v0: Pt, p1: Pt, v1: Pt, D: number, u: number): Pt {
 /* ------------------------------------------------------------------ the Ranger */
 
 const TETHER = 0.52
-/** Where the Ranger comes in from, before the catch. */
-const IN_AT = CATCH - 0.85
+/**
+ * The Ranger is Miller's: it sits on the water in Miller's part until the ball
+ * meets the wave (beat 181), and from then this part draws it, the same hull at
+ * the same size, lifting off, skimming the wave to take TARS on its back
+ * (182½), and climbing away toward the hole, smaller as it goes, to catch the
+ * ball on 184.
+ */
+const MILLER_END = MILLER_HANDOFF.exitEnd()
+const fromMiller = (q: Pt): Pt => [q[0] - MILLER_END[0] - 0.5, q[1] - MILLER_END[1]]
+const LIFT = MILLER_HANDOFF.lift
+const PICK = MILLER_HANDOFF.picked
+const LANDED = fromMiller(MILLER_HANDOFF.ranger)
+const tarsOnWave = (T: number): Pt => fromMiller(MILLER_HANDOFF.tars(T))
+/** The Ranger's size: Miller's on the water, a third of it by the catch, out toward the hole. */
+const shipScale = (T: number): number => (T <= LIFT ? 1 : T >= CATCH ? 0.32 : 1 - 0.68 * easeInOutSine((T - LIFT) / (CATCH - LIFT)))
+/** How far TARS's back is from the Ranger's belly line, at its size. */
+const backOff = (T: number): number => 0.53 * shipScale(T)
+function approachAt(T: number): Pt {
+  const s1 = shipAt(CATCH)
+  const v1 = vel((u) => shipAt(Math.max(u, CATCH)), CATCH + 0.002)
+  // Where it has to be for TARS, on the wave, to be on its back.
+  const hub = tarsOnWave(PICK)
+  const dx = hub[0] - C[0]
+  const dy = hub[1] - C[1]
+  const d = Math.hypot(dx, dy) || 1
+  const pick: Pt = [hub[0] - (dx / d) * backOff(PICK), hub[1] - (dy / d) * backOff(PICK)]
+  const vPick: Pt = [(s1[0] - LANDED[0]) / (CATCH - LIFT) * 1.15, (s1[1] - LANDED[1]) / (CATCH - LIFT) * 0.6]
+  if (T < PICK) return hermite(LANDED, [0.8, -2.2], pick, vPick, PICK - LIFT, clamp((T - LIFT) / (PICK - LIFT)))
+  return hermite(pick, vPick, s1, v1, CATCH - PICK, clamp((T - PICK) / (CATCH - PICK)))
+}
+
 function shipAt(T: number): Pt {
-  if (T < CATCH) {
-    // It comes in late and fast from over the sea, low, and meets the ball on the beat going its way.
-    const s0 = shipAt(CATCH)
-    const v1 = vel((u) => shipAt(Math.max(u, CATCH)), CATCH + 0.002)
-    const back = CATCH - T
-    const u = back / (CATCH - IN_AT)
-    return [s0[0] - v1[0] * back - 4.2 * u * u, s0[1] - v1[1] * back + 1.5 * u * u]
-  }
+  if (T < CATCH) return T <= LIFT ? LANDED : approachAt(T)
   if (T <= RELEASE) {
     const b = swingPt(T)
     const dx = b[0] - C[0]
@@ -270,6 +296,8 @@ const SWING = -0.5
 /** Where a lattice line crosses the rail, and where the rail meets the back of the case. */
 const GAP_L = LAND_PT[0] + RUN * (BRIDGE - LAND) + 0.04
 const GAP_R = B[0] - 2.0
+/** Where the ghost rests at the end, in the bookcase's own cells (the shelf part's frame): Act II's replica room starts from it. */
+export const GHOST_ON_SHELF = (): Pt => [B[0] - X_REST, Y_REST - B[1]]
 /** The room, seen from the front at the end: the same case, the same shelf, the ghost where it rests. */
 const BF: Pt = [X_REST - (B[0] - X_REST), B[1]]
 
@@ -317,7 +345,7 @@ export const gargantua = part<GargState>(
       return [{ ...hero, stretch: 1 + 0.55 * pull, angle, scale: (hero.scale ?? 1) * (1 - 0.18 * pull) }]
     }
     return {
-      cells: box(-5, -5, 9, 4),
+      cells: box(-9, -5, 9, 4),
       exit: [X_REST + 0.5, Y_REST],
       lane,
       state: { begin: slot.begin, lane },
@@ -338,7 +366,7 @@ export const gargantua = part<GargState>(
       { t: PUSH + 1.3, cells: 3.4, hold: [X_REST + 0.05, Y_BALL - 0.45], w: 1 },
       { t: 122.2, cells: 3.1, hold: [X_REST - 0.2, Y_BALL - 0.35], w: 1 },
       // The opening's framing: the room, the case, the ghost on the top shelf.
-      { t: DURATION, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
+      { t: ACT1_END, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
     ]
     return shots
   },
@@ -466,7 +494,9 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   // Behind the hole: the Ranger and the ball's tether when they are on the far side.
   const sw = swingAt(T)
   const shipBehind = T >= CATCH && T <= RELEASE && sw.behind
-  if (shipBehind) drawRanger(p, c, T)
+  // The Ranger and TARS are not the hole: they keep their full strength.
+  const full = (fn: () => void) => { ctx0.globalAlpha = was; fn(); ctx0.globalAlpha = was * presentAt(T) }
+  if (shipBehind) full(() => drawRanger(p, c, T))
 
   // The disk rings when something goes through it.
   let bright = 0
@@ -512,8 +542,8 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
     p.circle(X(h.cx), X(h.cy), X(2 * h.r * RING))
   }
 
-  drawTars(p, c, T)
-  if (!shipBehind) drawRanger(p, c, T)
+  full(() => drawTars(p, c, T))
+  if (!shipBehind) full(() => drawRanger(p, c, T))
   ctx0.globalAlpha = was
 }
 
@@ -542,7 +572,7 @@ function einstein(p: p5, c: Ctx, h: HoleLook, at: Pt): void {
 
 /** The Ranger, the tether and the claw's mount; the claw's jaws are drawn over the ball. */
 function drawRanger(p: p5, c: Ctx, T: number): void {
-  if (T < CATCH - 2.5 || T > RELEASE + 3) return
+  if (T < LIFT || T > RELEASE + 3) return
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const sp = shipAt(T)
@@ -557,8 +587,30 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   by /= bl
   // Keep the belly square to the heading.
   const side = f[0] * by - f[1] * bx >= 0 ? 1 : -1
-  const b: Pt = [-f[1] * side, f[0] * side]
-  const S = 0.32
+  let b: Pt = [-f[1] * side, f[0] * side]
+  // Off the water it turns from Miller's pose (nose on, belly down) to its heading.
+  const turn = smooth(T, LIFT, LIFT + 0.5)
+  if (turn < 1) {
+    const fx = 1 + (f[0] - 1) * turn
+    const fy = f[1] * turn
+    const fl = Math.hypot(fx, fy) || 1
+    f[0] = fx / fl
+    f[1] = fy / fl
+    const bx2 = b[0] * turn
+    const by2 = 1 + (b[1] - 1) * turn
+    const bl2 = Math.hypot(bx2, by2) || 1
+    b = [bx2 / bl2, by2 / bl2]
+  }
+  const S = shipScale(T)
+  // The lift: a burst of spray off the water under it.
+  const lifted = T - LIFT
+  if (lifted >= 0 && lifted < 0.7) {
+    const u = lifted / 0.7
+    p.push()
+    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 0.8 * (1 - u)
+    for (const dx of [-0.6, 0, 0.6]) puff(p, k, ink, weight * 0.45, DARK.hull, LANDED[0] + dx * (1 + u), LANDED[1] + 0.35 - 0.2 * u, 0.12 + 0.25 * u)
+    p.pop()
+  }
   const W = (x: number, y: number): Pt => [sp[0] + (x * f[0] + y * b[0]) * S, sp[1] + (x * f[1] + y * b[1]) * S]
   const V = (x: number, y: number) => {
     const [a, bb] = W(x, y)
@@ -692,10 +744,12 @@ function tarsAt(T: number): { p: Pt; a: number; s: number; on: number } | null {
     const dx = sp[0] - C[0]
     const dy = sp[1] - C[1]
     const d = Math.hypot(dx, dy) || 1
-    return [sp[0] + (dx / d) * 0.17, sp[1] + (dy / d) * 0.17]
+    return [sp[0] + (dx / d) * backOff(u), sp[1] + (dy / d) * backOff(u)]
   }
-  if (T < CATCH - 2.5) return null
-  if (T < LATCH) return { p: shipBack(T), a: 0.4, s: 1, on: 1 }
+  // Before the pickup TARS is Miller's, on the wave; from it, on the Ranger's back, at the Ranger's size.
+  if (T < PICK) return null
+  const big = 1 + 2.76 * clamp((shipScale(T) - 0.32) / 0.68)
+  if (T < LATCH) return { p: shipBack(T), a: 0.4, s: big, on: 1 }
   if (T > SWALLOW) return null
   const p0 = shipBack(LATCH)
   const v0 = vel(shipBack, LATCH - 0.003)

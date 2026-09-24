@@ -1,4 +1,4 @@
-import recording from '../../../../../../../docs/promo/cornfield-chase-zimmer.mp3'
+import recording from '../../../../../../../docs/promo/interstellar-liftoff-mix-demo.mp3'
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'
@@ -16,7 +16,7 @@ export const performance: Performance = {
   soundtrack: {
     src: recording,
     offset: 0,
-    credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014) · tech demo only, not for release',
+    credit: 'Hans Zimmer · Cornfield Chase, then No Time for Caution · Interstellar (2014) · tech demo only, not for release',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',
   },
 }

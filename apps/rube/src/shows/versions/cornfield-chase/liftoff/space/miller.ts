@@ -99,8 +99,15 @@ const ROOF = 0.4
 /** The ball's centre in the collar, at rest. */
 const SEAT_Y = BELLY - ROOF - R + 0.03
 const LEGS = [-0.78, 0.62]
-/** Beat 177: while TARS has the ball, the Ranger lifts off, so it is gone before the wave. */
-const RANGER_UP = beat(177)
+/**
+ * Beat 181: as the ball meets the wave, the Ranger lifts off — from here the
+ * next part (Gargantua) draws it, the same hull at the same size, skimming the
+ * wave to pick TARS up and climbing to the hole to catch the ball. So this part
+ * stops drawing the Ranger then, and TARS once it is picked up.
+ */
+const RANGER_UP = beat(181)
+/** TARS takes hold of the Ranger's back as it skims past. */
+const TARS_PICKED = beat(182.5)
 
 /** The buoys: their x, and the ball's centre in the cup at rest. */
 const BUOYS = [10.75, 11.97]
@@ -826,29 +833,13 @@ function drawRipples(p: p5, c: Ctx, t: number, sWave: number): void {
 /* ------------------------------------------------------------------ the Ranger */
 
 function drawRanger(p: p5, c: Ctx, t: number): void {
+  if (t >= RANGER_UP) return
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const dip = rangerDip(t)
   const by = BELLY + dip
-  // On the ride up the wave it lifts off — legs up, a burn under the belly, nose up and away out of the top of the
-  // frame — so that the craft that comes round for the ball at the hole is this one.
-  const up = t - RANGER_UP
-  if (up > 0) {
-    const lift = 1.3 * up + 6 * up * up
-    const burn = Math.max(0, 1 - up / 1.2)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(X(RX), X(by + 0.05 - lift), 0, X(RX), X(by + 0.05 - lift), X(0.7))
-    g.addColorStop(0, `rgba(143, 198, 230, ${0.6 * burn})`)
-    g.addColorStop(1, 'rgba(143, 198, 230, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(X(RX - 0.7), X(by + 0.05 - lift - 0.7), X(1.4), X(1.4))
-    p.push()
-    p.translate(X(RX + 0.9 * up * up), X(by - lift))
-    p.rotate(-Math.min(0.35, up * 0.6))
-    p.translate(-X(RX), -X(by))
-  }
   // Legs: a strut from the belly to a pad on the water, the piston sliding into it as the body sinks.
-  for (const lx of up > 0 ? [] : LEGS) {
+  for (const lx of LEGS) {
     const top: Pt = [RX + lx, by - 0.02]
     const foot: Pt = [RX + lx + Math.sign(lx) * 0.2, NEAR - 0.02]
     const mid: Pt = [top[0] + (foot[0] - top[0]) * 0.55, top[1] + (foot[1] - top[1]) * 0.55]
@@ -898,7 +889,6 @@ function drawRanger(p: p5, c: Ctx, t: number): void {
   const open = 0.03 * knock(t - COLLAR, 0.15)
   p.line(X(RX - 0.17 - open), X(cy), X(RX - 0.16 - open), X(cy - 0.13))
   p.line(X(RX + 0.17 + open), X(cy), X(RX + 0.16 + open), X(cy - 0.13))
-  if (up > 0) p.pop()
 }
 
 /* ------------------------------------------------------------------ the buoys */
@@ -945,6 +935,7 @@ function drawBuoy(p: p5, c: Ctx, t: number, i: number): void {
 /* ------------------------------------------------------------------ TARS */
 
 function drawTars(p: p5, c: Ctx, t: number): void {
+  if (t >= TARS_PICKED) return
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const s = tarsAt(t)
@@ -1086,4 +1077,17 @@ function drawOut(p: p5, c: Ctx, t: number): void {
     p.strokeWeight(Math.max(1, k * 0.03 * (1 - u)))
     p.circle(X(qx), X(qy), X(0.2 + 0.8 * (1 - (1 - u) * (1 - u))))
   }
+}
+
+/**
+ * What the next part needs to carry on from this one, in this part's cells:
+ * the Ranger's hull anchor (mid-belly) where it sits on the water, TARS's hub
+ * over time, the moments they are handed on, and where the ball leaves.
+ */
+export const MILLER_HANDOFF = {
+  ranger: [RX, BELLY] as Pt,
+  lift: RANGER_UP,
+  picked: TARS_PICKED,
+  tars: (t: number): Pt => tarsAt(t).hub,
+  exitEnd: (): Pt => rideAt(beat(183)),
 }

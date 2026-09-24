@@ -82,6 +82,16 @@ export const EARTH: World = {
   tastes: { arranged: {} },
 }
 
+export const STATION: World = {
+  name: 'station',
+  label: 'Cooper Station',
+  note: 'The farm again, rebuilt in the sky: a ring of land round a spinning axis, the old house kept as a museum.',
+  themes: [FARM],
+  backdrops: ['plain'],
+  pieces: [],
+  tastes: { arranged: {} },
+}
+
 export const SPACE: World = {
   name: 'endurance',
   label: 'Endurance',

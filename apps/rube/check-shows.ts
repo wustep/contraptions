@@ -20,7 +20,8 @@ import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
 import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
-import { IGNITION, beat as chaseBeat } from './src/shows/versions/cornfield-chase/liftoff/music'
+import { ACT2, IGNITION, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
+import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
 let failures = 0
@@ -197,15 +198,20 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
-        check('liftoff: the whole recording from zero, with the demo credit',
-          near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
-          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), with the demo credit',
+          near(perf.duration, 262.741) && (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
+          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         const show = perf.show as LiftoffShow
         check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
           show.universe(0).world.name === 'cornfield' && show.universe(1).world.name === 'endurance' &&
           show.indexAt(SWITCH - 0.01) === 0 && show.indexAt(SWITCH + 0.01) === 1 && show.at(SWITCH + 0.01).placed.piece.name === 'rocket' && show.at(SWITCH - 0.01).placed.piece.name === 'rocket')
-        check('liftoff: no portal anywhere, and no cut is drawn', [0, 1].every((i) => show.universe(i).pieces.every((p) => p.piece.name !== 'portal')) &&
+        check('liftoff: Act II inside Cooper Station from the organ\'s accent, and outside from the undock',
+          show.universe(2).world.name === 'station' && show.universe(3).world.name === 'endurance' &&
+          show.indexAt(ACT2 - 0.01) === 1 && show.indexAt(ACT2 + 0.01) === 2 && show.indexAt(UNDOCK - 0.01) === 2 && show.indexAt(UNDOCK + 0.01) === 3)
+        check('liftoff: no portal anywhere, and no cut is drawn', [0, 1, 2, 3].every((i) => show.universe(i).pieces.every((p) => p.piece.name !== 'portal')) &&
           [0, 20, 42.5, 88, SWITCH, 100, 126].every((t) => perf.cuts?.(t) === false))
         // One ball on one continuous path: never a jump, the change of world included.
         let jump = 0
@@ -229,7 +235,17 @@ async function main(): Promise<void> {
         for (const [name, list] of Object.entries(STRIKES.piano)) for (const t of list) { count++; if (!within(t, piano, 0.04)) off.push(`${name} ${t.toFixed(3)}`) }
         for (const [name, list] of Object.entries(STRIKES.organ)) for (const t of list) { count++; if (!within(t, organ, 0.03)) off.push(`${name} ${t.toFixed(3)}`) }
         for (const [name, list] of Object.entries(STRIKES.comb)) for (const t of list) { count++; if (!within(t, comb, 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
-        check('liftoff: every strike lands on a measured onset', count > 150 && off.length === 0, `${count} strikes; off: ${off.join(', ')}`)
+        // The organ's pulse holds its grid to a millisecond or so (median, strong beats), so a strike is on the music
+        // when it is on a beat or an eighth of that grid, or on a strong measured onset.
+        const n2 = ntfcOnsets as { beats: { beat: number; t: number; onset: number; s: number }[] }
+        const pulse = [...n2.beats.map((b) => b.t), ...n2.beats.filter((b) => b.s > 0.3).map((b) => b.onset)]
+        for (const [name, list] of Object.entries(STRIKES.cue2)) for (const t of list) { count++; if (!within(t, pulse, 0.03)) off.push(`${name} ${t.toFixed(3)}`) }
+        check('liftoff: every strike lands on a measured onset, in both cues', count > 150 && off.length === 0, `${count} strikes; off: ${off.join(', ')}`)
+        const act2 = Object.values(STRIKES.cue2).flat()
+        const beats2: number[] = []
+        for (let k = 104; k <= 232; k++) beats2.push(cue(k))
+        const struck2 = beats2.filter((t) => act2.some((s) => Math.abs(s - t) <= 0.03))
+        check('liftoff: in Act II, nearly every beat of the organ is struck', struck2.length >= beats2.length * 0.85, `${struck2.length}/${beats2.length}`)
         const chase = Object.values(STRIKES.comb).flat()
         const beats: number[] = []
         for (let b = 68; b <= 191; b++) beats.push(chaseBeat(b))
@@ -252,7 +268,8 @@ async function main(): Promise<void> {
         const early = twins[0].find((b) => b.id !== show.at(106).ball.id)
         const late = twins[2].find((b) => b.id !== show.at(112).ball.id)
         check('liftoff: up in orbit the twin goes grey', !!early && !!late && early.color !== late.color)
-        check('liftoff: one ball everywhere else', [30, 60, 90, 96, 118, 124].every((t) => !show.at(t).balls || show.at(t).balls!.length <= 1))
+        check('liftoff: the ghost is a ball again when the station\'s lights come up', show.at(ACT2 - 0.05).ball.ghost && !show.at(ACT2 + 0.3).ball.ghost)
+        check('liftoff: one ball everywhere else', [30, 60, 90, 96, 118, 124, 135, 160, 185, 215, 245, 260].every((t) => !show.at(t).balls || show.at(t).balls!.length <= 1))
       }
       if (work.work === 'cornfield-chase' && version.take === 'multiball') {
         const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []

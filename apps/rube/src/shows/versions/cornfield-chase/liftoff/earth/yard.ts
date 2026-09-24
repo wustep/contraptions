@@ -2,13 +2,13 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, type Pt } from '../../../../../parts'
-import { alpha, box, carried, hash, knock, lastOf, part, route, type Ctx, type Way } from '../kit'
+import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { hop } from '../physics'
 import { DUST } from '../worlds'
 
 /**
  * The yard, between the porch and the corn: three machines the farm has
- * made of what it had, played on the piano's notes.
+ * made of what it had, and its hand pump, played on the piano's notes.
  *
  * A plank on a sawhorse: the ball rolls up the low end, and as it crosses the
  * middle the plank goes over (21.01) and comes down on the far side with a
@@ -18,7 +18,11 @@ import { DUST } from '../worlds'
  * a trip bar and tips, and the ball drops into the clothes basket on the line,
  * on the loudest note of the piano (24.09). The basket runs down the line on
  * its wheel, knocking the pegs off as it goes, fetches up against the pole,
- * and throws the ball out into the yard.
+ * and throws the ball out onto the end of the hand pump's handle by the corn
+ * (25.57). Its weight works the pump: the handle goes down to its stop
+ * (25.79), a rope of water comes out of the spout into the head of the
+ * irrigation channel, and the handle springs back and lobs the ball up over
+ * the pump into the channel with a splash (26.65).
  *
  * The part's frame: the ball comes in rolling on the yard (y = 0), the ground
  * at FLOOR; it leaves the same way.
@@ -35,8 +39,11 @@ const CATCH = 24.091
 const PEGS = [24.305, 24.625, 24.869]
 const POLE = 25.159
 const LAND = 25.571
-const BOUNCE = 25.786
-export const YARD_HITS = [FOOT, OVER, THUMP, IN_BUCKET, ...TEETH, TRIP, CATCH, ...PEGS, POLE, LAND, BOUNCE]
+const BOTTOM = 25.786
+const SPLASH = 26.645
+export const YARD_HITS = [FOOT, OVER, THUMP, IN_BUCKET, ...TEETH, TRIP, CATCH, ...PEGS, POLE, LAND, BOTTOM, SPLASH]
+/** Show time the yard hands the ball on: in the water at the head of the irrigation channel. */
+export const YARD_END = SPLASH
 
 // The plank on its sawhorse.
 const PIVOT: Pt = [0.87, FLOOR - 0.22]
@@ -54,7 +61,26 @@ const BUCKET_HIGH = SHEAVE[1] + 0.42
 const LINE_A: Pt = [TOWER + 0.35, TOWER_TOP + 0.55]
 const LINE_B: Pt = [5.3, FLOOR - 1.2]
 const DROP = 0.5
-const EXIT_X = 6.5
+const EXIT_X = 7.1
+// The hand pump by the corn: its body, the handle on its pivot (up when set, down when pumped), the spout to the channel.
+const PX = 6.1
+const PIVOT_H: Pt = [PX - 0.08, FLOOR - 0.78]
+const HANDLE = 0.62
+const SET = 0.45
+const PUMPED = -0.32
+/** The handle's angle: up and waiting; down under the ball; sprung back up, throwing it. */
+function handleAt(t: number): number {
+  if (t < LAND) return SET
+  if (t < BOTTOM) return SET + (PUMPED - SET) * easeInQuad((t - LAND) / (BOTTOM - LAND))
+  const up = t - BOTTOM
+  return PUMPED + (SET - PUMPED) * (1 - Math.exp(-up / 0.08)) - 0.12 * Math.exp(-up / 0.2) * Math.sin(up * 20)
+}
+/** A point along the handle, `d` out from the pivot, lifted `lift` off its top. */
+function onHandle(a: number, d: number, lift: number): Pt {
+  const dx = -Math.cos(a)
+  const dy = -Math.sin(a)
+  return [PIVOT_H[0] + dx * d + dy * lift, PIVOT_H[1] + dy * d - dx * lift]
+}
 
 /** The plank's angle at show time `t`: down at the near end, over as the ball crosses, and a bounce when it lands. */
 function plankAt(t: number): number {
@@ -167,13 +193,13 @@ export const yard = part<YardState>(
     segs.push(...route([lip, hop(lip, basket(at(CATCH)), at(CATCH))]))
     // Down the line in the basket, to the pole.
     segs.push(...carried(basket, at(CATCH), at(POLE) + 0.08, 60))
-    // Thrown out as it swings, down into the yard, one bounce, and on.
+    // Thrown out as it swings, onto the pump handle's end; down with it; and sprung up over the pump into the channel.
     const thrown: Way = { at: at(POLE) + 0.08, p: basket(at(POLE) + 0.08) }
-    const land: Pt = [thrown.p[0] + 0.55, 0]
-    const bounce: Pt = [land[0] + 0.42, 0]
-    const w1 = hop(thrown, land, at(LAND))
-    const w2 = hop({ at: at(LAND), p: land }, bounce, at(BOUNCE))
-    segs.push(...route([thrown, w1, w2, { at: slot.end - slot.begin, p: [EXIT_X, 0] }]))
+    const onEnd = (t: number): Pt => onHandle(handleAt(t + slot.begin), HANDLE - 0.06, R + 0.02)
+    segs.push(...route([thrown, hop(thrown, onEnd(at(LAND)), at(LAND))]))
+    segs.push(...carried(onEnd, at(LAND), at(BOTTOM), 12))
+    const sprung: Way = { at: at(BOTTOM), p: onEnd(at(BOTTOM)) }
+    segs.push(...route([sprung, hop(sprung, [EXIT_X, 0], slot.end - slot.begin)]))
     return {
       cells: box(-0.5, -3, EXIT_X + 0.5, 1),
       exit: [EXIT_X + 0.5, 0],
@@ -185,8 +211,9 @@ export const yard = part<YardState>(
     { t: slot.begin, cells: 4.3, off: [0.6, -0.55] },
     { t: IN_BUCKET, cells: 4.8, hold: [1.7, -0.95], w: 0.55 },
     { t: TRIP, cells: 5, hold: [2.9, -1.35], w: 0.7 },
-    { t: POLE, cells: 4.8, hold: [5.2, -0.9], w: 0.5 },
-    { t: slot.end, cells: 4.4, off: [0.7, -0.55] },
+    { t: POLE, cells: 4.8, hold: [5.4, -0.8], w: 0.55 },
+    { t: BOTTOM, cells: 4.6, hold: [6.2, -0.7], w: 0.5 },
+    { t: slot.end, cells: 4.2, off: [0.7, -0.55] },
   ],
 )
 
@@ -408,6 +435,52 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   solid(p, ink, weight * 0.8, DUST.shade)
   p.arc(0, X(-0.02), X(0.42), X(0.36), 0, Math.PI, p.CHORD)
   p.pop()
+  // The hand pump: iron body on its stand, the spout toward the corn, the handle on its pivot.
+  solid(p, ink, weight, DUST.denim)
+  p.rect(X(PX), X((FLOOR + PIVOT_H[1]) / 2 + 0.05), X(0.2), X(FLOOR - PIVOT_H[1] - 0.1), X(0.03))
+  p.rect(X(PX), X(FLOOR - 0.04), X(0.36), X(0.08))
+  outline(p, ink, weight)
+  p.line(X(PX + 0.1), X(PIVOT_H[1] + 0.28), X(PX + 0.36), X(PIVOT_H[1] + 0.3))
+  p.line(X(PX + 0.36), X(PIVOT_H[1] + 0.3), X(PX + 0.38), X(PIVOT_H[1] + 0.38))
+  solid(p, ink, weight, DUST.denim)
+  p.circle(X(PX), X(PIVOT_H[1] + 0.02), X(0.18))
+  const ha = handleAt(t)
+  const hEnd = onHandle(ha, HANDLE, 0)
+  outline(p, ink, weight * 1.3)
+  p.line(X(PIVOT_H[0]), X(PIVOT_H[1]), X(hEnd[0]), X(hEnd[1]))
+  solid(p, ink, weight * 0.8, DUST.bone)
+  p.circle(X(PIVOT_H[0]), X(PIVOT_H[1]), X(0.07))
+  // The pumped water: out of the spout in a rope on the stroke, down into the head of the channel.
+  const gush = t - BOTTOM
+  if (gush > -0.05 && gush < 1.6) {
+    const flow = smooth(gush, -0.05, 0.05) * (1 - smooth(gush, 0.9, 1.6))
+    const sx = PX + 0.37
+    const sy = PIVOT_H[1] + 0.4
+    p.noFill()
+    p.stroke(alpha(p, DUST.teal, 0.85 * flow))
+    p.strokeWeight(Math.max(1.5, k * 0.06 * flow))
+    p.beginShape()
+    for (let i = 0; i <= 10; i++) {
+      const u = i / 10
+      p.vertex(X(sx + 0.35 * u), X(sy + (FLOOR - sy) * u * u))
+    }
+    p.endShape()
+    if (flow > 0.2) {
+      p.noStroke()
+      p.fill(alpha(p, DUST.light, 0.7 * flow))
+      for (let j = 0; j < 4; j++) p.circle(X(sx + 0.35 + (hash(j, 17) - 0.5) * 0.2), X(FLOOR - 0.05 - hash(j, 18) * 0.12 * (1 + Math.sin(t * 30 + j))), X(0.04))
+    }
+  }
+  // The splash, where the ball comes down in the channel's head.
+  const sp = t - SPLASH
+  if (sp > 0 && sp < 0.6) {
+    const u = sp / 0.6
+    p.noFill()
+    p.stroke(alpha(p, DUST.teal, 1 - u))
+    p.strokeWeight(Math.max(1, weight))
+    p.ellipse(X(EXIT_X + 0.5), X(FLOOR - 0.02), X(0.3 + u * 0.7), X(0.06 + u * 0.1))
+  }
+
   // The pole takes the knock.
   const knocked = knock(t - POLE, 0.15)
   if (knocked > 0.05) {

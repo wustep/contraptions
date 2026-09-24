@@ -164,3 +164,8 @@ waypoints, so its strikes land on the measured onsets in
 against the onset file. The check also asserts that the ball never jumps,
 that it is never hidden for long, and that the twin on the water world is
 the only second ball. The report is `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
+only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
+built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
+from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
+(`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
