@@ -12,8 +12,9 @@ import type { World } from '../../../../worlds'
 export const BALL = '#D6602D'
 
 /**
- * The gold ball: the hero's companion from the first frame. The corn's own gold, so she is the farm's; she
- * reads on the dust and on the dark. She rides, where he makes things go. Her id is the same wherever she is.
+ * The gold ball: Amelia Brand. Cooper (the hero, `BALL`) has the farm and drives; she is NASA's, and joins him
+ * at the base. She rides, where he makes things go. A gold that reads on the dust and on the dark. Her id is the
+ * same wherever she is.
  */
 export const GOLD = '#E2AE3C'
 export const GOLD_ID = 99

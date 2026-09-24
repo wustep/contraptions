@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { clamp, easeInOutSine, easeInQuad, easeOutCubic, easeOutQuad } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, laneAt, type Pt } from '../../../../../parts'
+import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
+import { FLOOR, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { hop } from '../physics'
 import { DUST } from '../worlds'
@@ -24,15 +24,6 @@ import { DUST } from '../worlds'
  * irrigation channel, and the handle springs back and lobs the ball up over
  * the pump into the channel with a splash (26.65).
  *
- * She rides it all with him, a step behind. She comes onto the plank's low
- * end just as he crosses the middle, so when it goes over she is on the end
- * that flies up: the thump throws her high over him, and she drops into the
- * pail beside him as it starts up (22.04). She tips out after him, into the
- * front of the basket (24.31); at the pole she is thrown first and lands on
- * the pump handle, which only dips under her (25.39). He lands on its end and
- * it goes down. The spring throws them both: her short and low into the pool
- * at the channel's head (26.40), him long and high in front of her (26.65).
- *
  * The part's frame: the ball comes in rolling on the yard (y = 0), the ground
  * at FLOOR; it leaves the same way.
  */
@@ -54,55 +45,6 @@ export const YARD_HITS = [FOOT, OVER, THUMP, IN_BUCKET, ...TEETH, TRIP, CATCH, .
 /** Show time the yard hands the ball on: in the water at the head of the irrigation channel. */
 export const YARD_END = SPLASH
 
-/* ------------------------------------------------------------------ her path: the helpers the house and the channel share */
-
-/** A path in show time, leg after leg: each has her until its `to`; the last one has her from there on. */
-export function legs(list: { to: number; at: (t: number) => Pt }[]): (t: number) => Pt {
-  return (t) => {
-    for (const leg of list) if (t < leg.to) return leg.at(t)
-    return list[list.length - 1].at(t)
-  }
-}
-
-/** Timed ways in show seconds, read like a lane: the same runs and flights the hero's are made of. */
-export function ways(list: Way[]): (t: number) => Pt {
-  const t0 = list[0].at
-  const lane = { segs: route(list.map((w) => ({ ...w, at: w.at - t0 }))), fire: 0 }
-  return (t) => {
-    const at = laneAt(lane, t - t0)
-    return [at.x, at.y]
-  }
-}
-
-/** Along the line from `a` to `b` between two show times, leaving at `v0` and arriving at `v1` cells a second. */
-export function run(a: Pt, b: Pt, t0: number, t1: number, v0: number, v1: number): (t: number) => Pt {
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const D = Math.hypot(dx, dy) || 1
-  const T = t1 - t0
-  return (t) => {
-    const u = clamp((t - t0) / T)
-    const s = D * (3 * u * u - 2 * u * u * u) + T * (v0 * (u * u * u - 2 * u * u + u) + v1 * (u * u * u - u * u))
-    return [a[0] + (dx / D) * s, a[1] + (dy / D) * s]
-  }
-}
-
-/** Where she comes down into the yard off the porch's last step (this part's frame), and how fast she rolls on. */
-export const GOLD_IN = { at: 19.754, p: [-2.05, 0] as Pt, v: 2.1 }
-/** Where the pump handle throws her: the pool at the channel's head, a note before him. */
-export const GOLD_POOL = { at: 26.401, p: [6.76, 0] as Pt }
-// Her own notes in the yard: onto the plank's low end, into the pail as it starts up, out after him, into the basket
-// on the first peg, thrown at the pole a moment before him, onto the handle.
-const G_FOOT = 20.914
-const G_PAIL = 22.036
-const G_ROLL = 23.95
-const G_OUT = 24.05
-const G_BASKET = 24.305
-const G_THROWN = POLE + 0.02
-const G_HANDLE = 25.385
-/** Where she sits along the pump handle from its pivot: inboard of him, so the spring throws her shorter. */
-const G_ON = 0.3
-
 // The plank on its sawhorse.
 const PIVOT: Pt = [0.87, FLOOR - 0.22]
 const HALF = 0.8
@@ -121,26 +63,21 @@ const LINE_A: Pt = [TOWER - 0.2, TOWER_TOP + 0.62]
 const LINE_B: Pt = [5.3, FLOOR - 1.2]
 const DROP = 0.5
 const EXIT_X = 7.1
-/** The yard's exit: where the channel's frame is in this one's. */
-export const YARD_EXIT: Pt = [EXIT_X + 0.5, 0]
-/** How far back the channel's head reaches, in its own frame (to -HEAD_BACK): under the spout, a pool for her to wait in. */
+/** How far back the channel's head reaches, in its own frame (to -HEAD_BACK): under the pump's spout, so its water falls into it. */
 export const HEAD_BACK = 1.25
-/** The pail's rim and the basket's mouth, each wide enough for two balls side by side; where each rides in them. */
-const PAIL_W = 0.29
-const BASKET_W = 0.3
-const SIDE = 0.13
+/** Half the pail's rim, and half the basket's mouth. */
+const PAIL_W = 0.2
+const BASKET_W = 0.21
 // The hand pump by the corn: its body, the handle on its pivot (up when set, down when pumped), the spout to the channel.
 const PX = 6.1
 const PIVOT_H: Pt = [PX - 0.08, FLOOR - 0.78]
 const HANDLE = 0.62
 const SET = 0.45
 const PUMPED = -0.32
-/** The handle's angle: up and waiting; a little dip under her, too light to work it; down under him; sprung back up, throwing both. */
+/** The handle's angle: up and waiting; down under the ball; sprung back up, throwing it. */
 function handleAt(t: number): number {
-  const light = t - G_HANDLE
-  const dip = light > 0 ? -0.14 * Math.exp(-light / 0.12) * Math.sin(light * 16) : 0
-  if (t < LAND) return SET + dip
-  if (t < BOTTOM) return SET + (PUMPED - SET) * easeInQuad((t - LAND) / (BOTTOM - LAND)) + dip
+  if (t < LAND) return SET
+  if (t < BOTTOM) return SET + (PUMPED - SET) * easeInQuad((t - LAND) / (BOTTOM - LAND))
   const up = t - BOTTOM
   return PUMPED + (SET - PUMPED) * (1 - Math.exp(-up / 0.08)) - 0.12 * Math.exp(-up / 0.2) * Math.sin(up * 20)
 }
@@ -150,12 +87,6 @@ function onHandle(a: number, d: number, lift: number): Pt {
   const dy = -Math.sin(a)
   return [PIVOT_H[0] + dx * d - dy * lift, PIVOT_H[1] + dy * d + dx * lift]
 }
-/** How far out along the handle she is: she rolls in toward the pivot while it waits, and back out against him as it goes down. */
-function herOnHandle(t: number): number {
-  if (t < LAND) return G_ON - 0.05 * easeInOutSine(clamp((t - G_HANDLE) / (LAND - G_HANDLE)))
-  return G_ON - 0.05 + 0.03 * easeInQuad(clamp((t - LAND) / (BOTTOM - LAND)))
-}
-
 /** The plank's angle at show time `t`: down at the near end, over as the ball crosses, and a bounce when it lands. */
 function plankAt(t: number): number {
   if (t < OVER) return -TILT
@@ -209,56 +140,19 @@ function swingAt(t: number): number {
   return go + fling
 }
 
-/** A ball in the basket, `off` along it from the middle: under the wheel on its hanger, the swing carrying it. */
-function inBasket(t: number, off = 0): Pt {
+/** The ball in the basket: under the wheel on its hanger, the swing carrying it. */
+function inBasket(t: number): Pt {
   const [x] = trolleyAt(t)
   const y = lineY(x)
   const a = swingAt(t)
-  return [x + Math.sin(a) * DROP + Math.cos(a) * off, y + Math.cos(a) * DROP - 0.06 - Math.sin(a) * off]
+  return [x + Math.sin(a) * DROP, y + Math.cos(a) * DROP - 0.06]
 }
-/** Where he rides in the basket: he lands in the middle, and as it gets going he rolls to the back, leaving her the front. */
-const hisSide = (t: number): number => -SIDE * easeOutCubic(clamp((t - CATCH) / 0.25))
 
-/** A ball in the pail, `off` from the middle of its rim: he on the side it tips to, she on the other. */
-function inPail(t: number, off: number): Pt {
+/** The ball in the pail: on the rim's middle, and toward its lip as it tips. */
+function inPail(t: number): Pt {
   const b = bucketAt(t)
   const s = Math.sin(b.tip)
-  return [b.x + off + s * 0.12, b.y + 0.02 - s * 0.04]
-}
-
-/** Her whole way through the yard, in this part's frame. */
-function goldYard(): (t: number) => Pt {
-  // Off the porch after him, and onto the plank's low end just as he crosses the middle: she stops there.
-  const foot = onPlank(-HALF + 0.12, -TILT, R)
-  const toFoot = run(GOLD_IN.p, foot, GOLD_IN.at, G_FOOT, GOLD_IN.v, 1.2)
-  const along = (t: number): number =>
-    t < OVER ? -HALF + 0.12 + 0.06 * easeOutQuad(clamp((t - G_FOOT) / (OVER - G_FOOT))) : -HALF + 0.18 + 0.04 * easeInOutSine(clamp((t - OVER) / (THUMP - OVER)))
-  const onIt = (t: number): Pt => onPlank(along(t), plankAt(t), R)
-  // The plank comes down on his side, and her end throws her: high over him, into the pail beside him as it starts up.
-  const thrown: Way = { at: THUMP, p: onIt(THUMP) }
-  const fling = ways([thrown, hop(thrown, inPail(G_PAIL, -SIDE), G_PAIL)])
-  // Up the tower; tipped out after him when the pail goes over; into the front of the basket.
-  const side = (t: number): number => -SIDE + (2 * SIDE + 0.07) * easeInQuad(clamp((t - G_ROLL) / (G_OUT - G_ROLL)))
-  const out: Way = { at: G_OUT, p: inPail(G_OUT, side(G_OUT)) }
-  // The pail flicks her up as it goes over, so she comes down into the basket's front over him, not through him.
-  const drop = ways([out, { at: G_BASKET, p: inBasket(G_BASKET, SIDE + 0.02), arc: 0.34 }])
-  // Thrown first at the pole, onto the handle; it only dips under her. Then his weight, and the spring throws them both.
-  const off: Way = { at: G_THROWN, p: inBasket(G_THROWN, SIDE + 0.02) }
-  const toHandle = ways([off, hop(off, onHandle(handleAt(G_HANDLE), G_ON, R + 0.02), G_HANDLE)])
-  const onHandleNow = (t: number): Pt => onHandle(handleAt(t), herOnHandle(t), R + 0.02)
-  const sprung: Way = { at: BOTTOM, p: onHandleNow(BOTTOM) }
-  const lob = ways([sprung, hop(sprung, GOLD_POOL.p, GOLD_POOL.at)])
-  return legs([
-    { to: G_FOOT, at: toFoot },
-    { to: THUMP, at: onIt },
-    { to: G_PAIL, at: fling },
-    { to: G_OUT, at: (t) => inPail(t, side(t)) },
-    { to: G_BASKET, at: drop },
-    { to: G_THROWN, at: (t) => inBasket(t, SIDE + 0.02) },
-    { to: G_HANDLE, at: toHandle },
-    { to: BOTTOM, at: onHandleNow },
-    { to: Infinity, at: lob },
-  ])
+  return [b.x + s * 0.12, b.y + 0.02 - s * 0.04]
 }
 
 interface YardState {
@@ -296,13 +190,13 @@ export const yard = part<YardState>(
     segs.push(...carried(plank, at(FOOT), at(IN_BUCKET) - 0.26, 40))
     // Off the end into the bucket.
     const edge: Way = { at: at(IN_BUCKET) - 0.26, p: plank(at(IN_BUCKET) - 0.26) }
-    const bucket = (t: number): Pt => inPail(t + slot.begin, SIDE)
+    const bucket = (t: number): Pt => inPail(t + slot.begin)
     segs.push(...route([edge, hop(edge, bucket(at(IN_BUCKET)), at(IN_BUCKET))]))
     // Up the tower in the bucket.
     segs.push(...carried(bucket, at(IN_BUCKET), at(TRIP), 60))
     // Tipped out, and down into the basket.
     const out: Way = { at: at(TRIP), p: bucket(at(TRIP)) }
-    const basket = (t: number): Pt => inBasket(t + slot.begin, hisSide(t + slot.begin))
+    const basket = (t: number): Pt => inBasket(t + slot.begin)
     segs.push(...route([out, { at: at(TRIP) + 0.05, p: [out.p[0] + 0.08, out.p[1] - 0.01] }]))
     const lip: Way = { at: at(TRIP) + 0.05, p: [out.p[0] + 0.08, out.p[1] - 0.01] }
     segs.push(...route([lip, hop(lip, basket(at(CATCH)), at(CATCH))]))
@@ -315,13 +209,11 @@ export const yard = part<YardState>(
     segs.push(...carried(onEnd, at(LAND), at(BOTTOM), 12))
     const sprung: Way = { at: at(BOTTOM), p: onEnd(at(BOTTOM)) }
     segs.push(...route([sprung, hop(sprung, [EXIT_X, 0], slot.end - slot.begin)]))
-    const gold = goldYard()
     return {
       cells: box(-0.5, -3, EXIT_X + 0.5, 1),
       exit: [EXIT_X + 0.5, 0],
       lane: { segs, fire: at(OVER) },
       state: s,
-      company: [{ from: GOLD_IN.at, to: GOLD_POOL.at, at: (t) => { const [x, y] = gold(t); return { x, y } } }],
     }
   },
   (slot) => [
@@ -637,6 +529,6 @@ function basketFront(p: p5, c: Ctx, x: number, y: number, swing: number): void {
   solid(p, ink, weight * 0.8, DUST.wood)
   p.arc(0, 0.04 * k, (2 * BASKET_W + 0.02) * k, 0.3 * k, 0, Math.PI, p.CHORD)
   outline(p, ink, weight * 0.45)
-  for (const dx of [-0.19, -0.065, 0.065, 0.19]) p.line(dx * k, 0.05 * k, dx * 0.8 * k, 0.17 * k)
+  for (const dx of [-0.1, 0, 0.1]) p.line(dx * k, 0.05 * k, dx * 0.8 * k, 0.17 * k)
   p.pop()
 }

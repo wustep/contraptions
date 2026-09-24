@@ -263,14 +263,15 @@ async function main(): Promise<void> {
         check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
         check('liftoff: a ghost on the shelf at the start, a ball in the robot\'s arm', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
         check('liftoff: the ghost is a ball again when the station\'s lights come up', show.at(ACT2 - 0.05).ball.ghost && !show.at(ACT2 + 0.3).ball.ghost)
-        // The gold ball: the hero's companion from the first frame, with him (she rides, he makes things go) until
-        // the ring, where a trapdoor parts them; she is the one who waits in orbit over Miller and goes grey; he
-        // finds her again, old, in the far-side house on Cooper Station. Nowhere else is there a second ball.
+        // The gold ball is Amelia Brand. Cooper (the hero) has the farm and drives; she is NASA's, and joins him at
+        // the base, out of the bunker the drone led him to. With him (he makes things go, she rides) to the ring, where
+        // a trapdoor parts them; she is the one who waits in orbit over Miller and goes grey; he finds her again, old,
+        // in the far-side house on Cooper Station, and she comes to him. Nowhere else is there a second ball.
         const golds: string[] = []
-        const withHim = [1, 6, 12.4, 14, 16.5, 19, 22, 25, 28, 31, 40, 45, 50, 75, 80, 83, 86, 90, 94, 98, 101]
+        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
         const inOrbit = [106, 109, 111]
-        const reunion = [177, 178.5]
-        const alone = [115, 118, 124, 130, 140, 150, 190, 215, 245, 260]
+        const reunion = [177, 178.5, 179.25, 180.5]
+        const alone = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, 190, 215, 245, 260]
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
           const f = perf.camera!(t)
@@ -278,7 +279,7 @@ async function main(): Promise<void> {
         }
         for (const t of [...withHim, ...inOrbit, ...reunion]) if (!inShot(t, show.gold(t))) golds.push(`not in shot ${t}`)
         for (const t of alone) if (inShot(t, show.gold(t))) golds.push(`in shot ${t}`)
-        check('liftoff: the gold ball in shot with the hero from the first frame, waiting in orbit over Miller, found again on the station, and nowhere else', golds.length === 0, golds.join(', '))
+        check('liftoff: Brand (gold) not on the farm, in shot with Cooper from the base, waiting in orbit over Miller, found again on the station, and nowhere else', golds.length === 0, golds.join(', '))
         const two = [...withHim, ...inOrbit, ...reunion].map((t) => show.at(t).balls ?? [])
         check('liftoff: where she is, two balls with two ids, never more', two.every((b) => b.length === 2 && b[0].id !== b[1].id) &&
           [...alone, 60, 70].every((t) => (show.at(t).balls?.length ?? 1) <= (show.gold(t) ? 2 : 1)))

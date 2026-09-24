@@ -2,27 +2,26 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, puff, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
 import { DUST } from '../worlds'
 import { cornWall, stalk } from './corn'
 
 /**
- * The truck. It is waiting on the field road under the bank, tailgate up,
- * and the ball drops into the bed off the end of the corn track on a note.
- * The gold ball comes off the flume a step behind him and lands on the bed's
- * rail; he hits the cab, the jolt swings the door open, and she rolls along
- * the rail and in onto the seat: the door slams on the note. Someone got in.
- * Then the organ: the engine turns over on its first chords and catches, the
- * headlights come on, it revs — and on the drop it goes, straight into the
- * corn, her in the window.
+ * The truck, and Cooper drives it. It is waiting on the field road under the
+ * bank, tailgate up, and the ball hops off the end of the flume onto the
+ * bed's rail on a note. He rolls along the rail into the corner of the cab;
+ * the knock swings the door open, he rolls in onto the bench, and the door
+ * slams behind him on the note. Then the organ: the engine turns over on its
+ * first chords and catches, the headlights come on, it revs — and on the drop
+ * it goes, straight into the corn, him at the wheel behind the glass.
  *
- * Through the corn it hits a stalk on every beat, and every beat the bed
- * kicks the ball up, and it comes down on the eighth. At the dam it stands
- * on its brakes on the first beat of a bar, the back end comes up, and the
- * ball goes over the cab and off the edge. She is thrown against the glass,
- * and stays there, looking after him.
+ * Through the corn it hits a stalk on every beat, and every beat the seat
+ * throws him up and he comes down on the eighth. At the dam he stands on the
+ * brakes on the first beat of a bar: the nose goes down, the door flies open,
+ * and he is thrown out ahead of the truck, over the edge and down into the
+ * combine. The truck stays at the edge, empty, its door swinging.
  *
  * The part's frame: the ball comes in on the bank (y = 0); the field road
  * is a cell lower (the ground at 1 + FLOOR).
@@ -33,7 +32,7 @@ import { cornWall, stalk } from './corn'
 /** The truck, in body cells from the back of the bed (u) and up from the road (v). */
 const LEN = 3.0
 const BED_FLOOR = 0.62
-/** The bed's rail: the top of its far side, which she rolls along to the cab. */
+/** The bed's rail: the top of its far side, which he rolls along to the cab. */
 const RAIL = 0.88
 /** The near side of the bed is drawn a little low, so the ball in it shows its crown. */
 const NEAR_TOP = 0.77
@@ -52,8 +51,8 @@ const DOOR_LO = 0.45
 const DOOR_HI = 1.44
 const SILL = RAIL
 const GLASS_TOP = 1.37
-/** Where a rider sits on the bench (u, v of her centre), and how far forward she can go before the dash stops her. */
-export const SEAT: Pt = [1.72, RAIL + R]
+/** Where he sits on the bench, at the wheel (u, v of his centre), and how far forward the dash lets him go. */
+const SEAT: Pt = [1.72, RAIL + R]
 const DASH = 1.93
 
 /** Where the pickup stands and how it is holding itself: what every part that shows it passes in. */
@@ -133,6 +132,17 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   shape(wide.glass, DUST.sky, weight * 0.5)
   shape([[DOOR_B + 0.02, 0.72], [DASH + 0.02, 0.72], [DASH + 0.02, RAIL - 0.02], [DOOR_B + 0.02, RAIL - 0.02]], DUST.teal, weight * 0.7)
   shape([[DOOR_B + 0.02, RAIL - 0.02], [DOOR_B + 0.17, RAIL - 0.02], [DOOR_B + 0.17, 1.17], [DOOR_B + 0.12, 1.23], [DOOR_B + 0.02, 1.23]], DUST.teal, weight * 0.7)
+  // The wheel, raked back toward the bench and seen edge on, on its column down to the dash.
+  const hub = B(1.99, 1.05)
+  const col = B(2.1, 0.9)
+  outline(p, ink, weight * 0.8)
+  p.line(X(hub[0]), X(hub[1]), X(col[0]), X(col[1]))
+  p.push()
+  p.translate(X(hub[0]), X(hub[1]))
+  p.rotate(0.5 - pk.pitch)
+  outline(p, ink, weight * 1.1)
+  p.ellipse(0, 0, X(0.07), X(0.32))
+  p.pop()
   shape([[HOOD_U, 0.4], [LEN, 0.4], [LEN, HOOD - 0.1], [LEN - 0.12, HOOD], [HOOD_U, HOOD]], DUST.denim)
   // Bumpers, the lamp and its beam, the mirror, the tailgate.
   shape([[LEN - 0.02, 0.36], [LEN + 0.08, 0.36], [LEN + 0.08, 0.5], [LEN - 0.02, 0.5]], DUST.bone, weight * 0.8)
@@ -160,15 +170,23 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   shape([[-0.06, BED_FLOOR - 0.06], [0.02, BED_FLOOR - 0.06], [0.02, RAIL], [-0.06, RAIL]], DUST.denim)
 }
 
-/** The pickup's near side, in front of the balls: the bed's near wall, and the door with its window cut out. */
-export function nearPickup(p: p5, k: number, ink: string, weight: number, pk: Pickup): void {
+/** The bed's near wall, in front of whatever rides in the bed. */
+export function bedPickup(p: p5, k: number, ink: string, weight: number, pk: Pickup): void {
+  const X = (x: number) => x * k
+  solid(p, ink, weight, DUST.denim)
+  p.beginShape()
+  for (const [u, v] of [[-0.02, BED_FLOOR - 0.05], [CAB_U, BED_FLOOR - 0.05], [CAB_U, NEAR_TOP], [-0.02, NEAR_TOP]] as Pt[]) {
+    const [x, y] = pickupPoint(pk, u, v)
+    p.vertex(X(x), X(y))
+  }
+  p.endShape(p.CLOSE)
+}
+
+/** The near door, its window cut out, swung open by `pk.door` about its front edge: in front of whoever sits behind it. */
+export function doorPickup(p: p5, k: number, ink: string, weight: number, pk: Pickup): void {
   const X = (x: number) => x * k
   const B = (u: number, v: number) => pickupPoint(pk, u, v)
   const at = (pts: Pt[]) => pts.map(([u, v]) => B(u, v))
-  solid(p, ink, weight, DUST.denim)
-  p.beginShape()
-  for (const [x, y] of at([[-0.02, BED_FLOOR - 0.05], [CAB_U, BED_FLOOR - 0.05], [CAB_U, NEAR_TOP], [-0.02, NEAR_TOP]])) p.vertex(X(x), X(y))
-  p.endShape(p.CLOSE)
   const { door, glass } = doorShape(pk.door)
   // Swung out toward us, the door shows its edge: a strip of shadow along the back of it.
   if (pk.door > 0.02) {
@@ -216,9 +234,6 @@ export function glassPickup(p: p5, k: number, ink: string, weight: number, pk: P
   p.endShape(p.CLOSE)
 }
 
-/** The door's window, in the drawing's frame: for a part that has to put things in front of whoever sits behind it. */
-export const pickupGlass = (pk: Pickup): Pt[] => doorShape(pk.door).glass.map(([u, v]) => pickupPoint(pk, u, v))
-
 /* ------------------------------------------------------------------ the part */
 
 const GROUND = 1 + FLOOR
@@ -248,13 +263,9 @@ const SLAPS = beats(69, 83).filter((t) => t !== TAKEOFF && t !== LANDING)
 const STALKS = SLAPS.filter((t) => t !== FENCE)
 const TOUCHDOWN = beat(86)
 
-/** The gold ball: where she is handed over on the flume, the note she lands on the rail on, and when she is on the seat. */
-const HANDOFF: Pt = [-1.15, 0]
-const FLUME = 1.25
-const ON_RAIL = 30.79
-const SEATED = 31.93
-/** She is out of the story here: the truck at the dam has long left the frame. */
-const GONE = beat(94)
+/** He is on the bench, the door about to shut behind him; and he leaves it, thrown out ahead of the truck at the dam. */
+const IN_SEAT = 31.93
+const OUT = STOP + 0.12
 
 export const TRUCK_NOTES = [LAND, BONK, DOOR]
 export const TRUCK_ORGAN = [...CRANKS, CATCH, LIGHTS, REV]
@@ -270,8 +281,6 @@ const jumpAt = (t: number): number => {
 interface TruckState {
   begin: number
   b0: number
-  /** The end of the flume, where both balls go over. */
-  lip: number
   /** Where the stalks stand that the grille takes, one a beat. */
   stalks: number[]
   edge: number
@@ -295,7 +304,7 @@ export function rearAt(b0: number, t: number): number {
 function bodyAt(t: number): { pitch: number; lift: number } {
   let pitch = 0
   let lift = 0
-  // The door: the truck rocks as she gets in.
+  // The door: the truck rocks as he gets in.
   const d = t - DOOR
   if (d > 0) pitch += 0.022 * Math.exp(-d / 0.35) * Math.sin(d * 16)
   // Cranking: a shudder a turn.
@@ -343,17 +352,23 @@ function bodyAt(t: number): { pitch: number; lift: number } {
   return { pitch, lift }
 }
 
-/** The near door: swung open by the jolt when he hits the cab, and slammed on the note once she is in. */
+/** The near door: swung open by the knock when he hits the cab, slammed on the note once he is in; flung open at the dam, and left swinging. */
 function doorAt(t: number): number {
   if (t <= BONK) return 0
-  const shut = DOOR - 0.22
-  if (t < shut) {
-    const s = t - BONK
-    return easeOutCubic(clamp(s / 0.28)) + 0.06 * Math.exp(-Math.max(0, s - 0.28) / 0.12) * Math.sin(Math.max(0, s - 0.28) * 30)
+  if (t < STOP) {
+    const shut = DOOR - 0.22
+    if (t < shut) {
+      const s = t - BONK
+      return easeOutCubic(clamp(s / 0.28)) + 0.06 * Math.exp(-Math.max(0, s - 0.28) / 0.12) * Math.sin(Math.max(0, s - 0.28) * 30)
+    }
+    if (t < DOOR) return 1 - easeInQuad((t - shut) / (DOOR - shut))
+    const k = t - DOOR
+    return 0.05 * Math.exp(-k / 0.06) * Math.abs(Math.sin(k * 40))
   }
-  if (t < DOOR) return 1 - easeInQuad((t - shut) / (DOOR - shut))
-  const k = t - DOOR
-  return 0.05 * Math.exp(-k / 0.06) * Math.abs(Math.sin(k * 40))
+  const k = t - STOP
+  if (k < 0.1) return easeOutCubic(k / 0.1)
+  const j = k - 0.1
+  return 0.72 + 0.28 * Math.exp(-j / 1.6) * Math.cos(j * 4.2)
 }
 
 /** The pickup at show time `t`. */
@@ -366,115 +381,61 @@ function poseAt(s: TruckState, t: number): Pickup {
 /** A body point (u along, v up) at show time `t`, in the part's frame. */
 const bodyPoint = (s: TruckState, t: number, u: number, v: number): Pt => pickupPoint(poseAt(s, t), u, v)
 
-/** Where along the bed the ball is, at show time `t`. */
-function ballU(t: number): number {
-  if (t < LAND) return 0.35
+/** Along the rail from where he lands, into the corner of the cab on BONK; a rock back off it; and in at the door onto the bench. */
+function boardU(t: number): number {
   if (t < BONK) {
-    // It lands going 1.25 a second and hardly loses any of it before the cab stops it.
+    // He lands going 1.25 a second and hardly loses any of it before the cab stops him.
     const T = BONK - LAND
     const a = (2 * (1.25 * T - 0.82)) / (T * T)
-    const x = t - LAND
+    const x = Math.max(0, t - LAND)
     return 0.35 + 1.25 * x - 0.5 * a * x * x
   }
-  if (t < DROP) {
-    const back = 1.17 - 0.28 * easeOutCubic(clamp((t - BONK) / 0.8))
-    const door = t > DOOR ? 0.05 * Math.exp(-(t - DOOR) / 0.4) * Math.sin((t - DOOR) * 10) : 0
-    return back + door
-  }
-  // Off the line it rolls back to the tailgate, and there it stays.
-  return 0.89 - (0.89 - (R + 0.05)) * clamp(((t - DROP) / 0.45) ** 2)
-}
-
-/** How high the ball is off the bed floor: small hops on the cranks, and a kick every beat through the corn. */
-function ballHop(t: number): number {
-  let h = 0
-  for (const c of [...CRANKS, CATCH, REV]) {
-    const s = t - c
-    if (s > 0 && s < 0.2) h = Math.max(h, 0.05 * 4 * (s / 0.2) * (1 - s / 0.2))
-  }
-  const { ago } = lastOf(SLAPS, t)
-  const air = beat(0.5) - beat(0)
-  if (t < STOP && ago < air) h = Math.max(h, 0.17 * 4 * (ago / air) * (1 - ago / air))
-  // Over the ditch the ball floats clear of the bed, and comes down a moment after the truck does.
-  const f0 = TAKEOFF + 0.06
-  const f1 = LANDING + 0.14
-  if (t > f0 && t < f1) {
-    const u = (t - f0) / (f1 - f0)
-    h = Math.max(h, 0.34 * 4 * u * (1 - u))
-  }
-  return h
+  const k = t - BONK
+  if (k < 0.15) return 1.17 - 0.07 * Math.sin((Math.PI / 2) * (k / 0.15))
+  return 1.1 + (SEAT[0] - 1.1) * smooth(t, BONK + 0.15, IN_SEAT)
 }
 
 /**
- * Where she sits in the cab (u, v in body cells), at show time `t` once she is in: jolted with the truck, a little
- * of everything he gets in the bed, and at the dam thrown forward against the glass, where she stays.
+ * Where he is (u, v in body cells) at show time `t`, from the moment he lands on the rail: in at the door, then at the
+ * wheel, jolted with the truck, thrown up by the seat on every beat, and at the dam thrown against the dash.
  */
-function seatAt(t: number): Pt {
+function heroAt(t: number): Pt {
+  if (t < IN_SEAT) return [boardU(t), SEAT[1]]
   let u = SEAT[0]
   let v = SEAT[1]
-  // The slam.
+  // The slam behind him.
   const d = t - DOOR
   if (d > 0) u += 0.035 * Math.exp(-d / 0.3) * Math.sin(d * 14)
   // A lift on each turn of the engine, and on the catch and the rev.
   for (const c of [...CRANKS, CATCH, REV]) {
     const s = t - c
-    if (s > 0 && s < 0.18) v += 0.025 * 4 * (s / 0.18) * (1 - s / 0.18)
+    if (s > 0 && s < 0.2) v += 0.05 * 4 * (s / 0.2) * (1 - s / 0.2)
   }
-  // Off the line she is pressed back against the bench, and comes forward again.
+  // Off the line he is pressed back into the bench, and comes forward again.
   const go = t - DROP
   if (go > 0) u -= 0.06 * Math.sin(Math.min(Math.PI / 2, go * 7)) * Math.exp(-Math.max(0, go - 0.22) / 0.5)
-  // Every furrow: a small bob, on the beat and down on the eighth.
+  // Every furrow the seat throws him up on the beat, and he comes down on the eighth.
   const { ago } = lastOf(SLAPS, t)
   const air = beat(0.5) - beat(0)
-  if (t < STOP && ago < air) v += 0.055 * 4 * (ago / air) * (1 - ago / air)
-  // The ditch: she floats up off the bench, nearly to the roof, and settles on the eighth after the wheels.
-  const f0 = TAKEOFF + 0.1
+  if (t < STOP && ago < air) v += 0.13 * 4 * (ago / air) * (1 - ago / air)
+  // The ditch: up off the bench nearly to the roof, and down on the eighth after the wheels.
+  const f0 = TAKEOFF + 0.06
   const f1 = beat(77.5)
   if (t > f0 && t < f1) {
     const w = (t - f0) / (f1 - f0)
-    v += 0.2 * 4 * w * (1 - w)
+    v += 0.22 * 4 * w * (1 - w)
   }
   // The fence: a knock forward.
   const hit = t - FENCE
   if (hit > 0) u += 0.06 * Math.exp(-hit / 0.2) * Math.sin(Math.min(Math.PI, hit * 12))
-  // The brakes: forward to the dash as he goes over the roof, a bump off it, and she stays at the glass.
+  // The brakes: forward against the dash, and up, as the door flies open.
   const br = t - STOP
   if (br > 0) {
-    const to = DASH - R - 0.02 - SEAT[0]
-    u += to * easeInQuad(clamp(br / 0.26)) - 0.035 * Math.exp(-Math.max(0, br - 0.26) / 0.12) * Math.sin(Math.max(0, br - 0.26) * 22)
+    const e = easeInQuad(clamp(br / (OUT - STOP)))
+    u += (DASH - R + 0.05 - SEAT[0]) * e
+    v += 0.05 * e
   }
   return [u, v]
-}
-
-/** The gold ball in the truck's frame at show time `t`: down the flume behind him, onto the rail, in at the door, and along for the ride. */
-function goldAt(s: TruckState, t: number): Companion | null {
-  if (t >= GONE) return null
-  const pose = poseAt(s, t)
-  // On the flume, going its pace, a touch quicker as she nears the end.
-  const tau = t - s.begin
-  const fall = Math.sqrt((2 * (GROUND - SEAT[1] - HANDOFF[1])) / 12)
-  const leave = ON_RAIL - fall - s.begin
-  const a = (2 * (s.lip - HANDOFF[0] - FLUME * leave)) / (leave * leave)
-  const vLip = FLUME + a * leave
-  if (tau < leave) return { x: HANDOFF[0] + FLUME * tau + 0.5 * a * tau * tau, y: HANDOFF[1] }
-  // Over the lip, and down onto the rail on the note.
-  const uLand = s.lip + vLip * fall - s.b0
-  if (t < ON_RAIL) {
-    const f = t - (ON_RAIL - fall)
-    return { x: s.lip + vLip * f, y: HANDOFF[1] + 6 * f * f }
-  }
-  // Along the rail and in at the door, onto the bench.
-  if (t < SEATED) {
-    const T = SEATED - ON_RAIL
-    const w = (t - ON_RAIL) / T
-    const m0 = vLip * 0.9 * T
-    const u = (2 * w ** 3 - 3 * w ** 2 + 1) * uLand + (w ** 3 - 2 * w ** 2 + w) * m0 + (-2 * w ** 3 + 3 * w ** 2) * SEAT[0]
-    const [x, y] = pickupPoint(pose, u, SEAT[1])
-    return { x, y }
-  }
-  const [u, v] = seatAt(t)
-  const [x, y] = pickupPoint(pose, u, v)
-  return { x, y }
 }
 
 export const truck = part<TruckState>(
@@ -483,38 +444,45 @@ export const truck = part<TruckState>(
     flight: true,
     draw: (p, s, c) => drawTruck(p, s, c),
     over: (p, s, c) => {
-      // The bed's near side stands in front of the ball, and the door in front of her; its glass over her.
+      // The bed's near wall; and until he is out at the dam, the door in front of him and its glass over him.
       const t = c.t + s.begin
       const pose = poseAt(s, t)
-      nearPickup(p, c.k, c.ink, c.weight, pose)
-      glassPickup(p, c.k, c.ink, c.weight, pose)
+      bedPickup(p, c.k, c.ink, c.weight, pose)
+      if (t < STOP) {
+        doorPickup(p, c.k, c.ink, c.weight, pose)
+        glassPickup(p, c.k, c.ink, c.weight, pose)
+      }
     },
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
+    // Where the truck stands, and where the flume ends, are as they were when he dropped into the bed: the dam, and so
+    // everything after it, stays where it was.
     const fall = dropTime(GROUND - BALL_V)
     const edge = -0.5 + 1.25 * (at(LAND) - fall)
     const b0 = edge + 1.25 * fall - 0.35
-    const s: TruckState = { begin: slot.begin, b0, lip: edge, stalks: [], edge: 0, fence: 0, ditch: [0, 0] }
+    const s: TruckState = { begin: slot.begin, b0, stalks: [], edge: 0, fence: 0, ditch: [0, 0] }
     s.stalks = STALKS.map((t) => rearAt(b0, t) + LEN + 0.04)
     s.fence = rearAt(b0, FENCE) + LEN + 0.04
     s.ditch = [rearAt(b0, TAKEOFF) + WHEELS[1] + 0.2, rearAt(b0, LANDING) + WHEELS[0] - 0.15]
     s.edge = rearAt(b0, STOP + 1) + LEN + 0.12
-    const bed = (t: number): Pt => {
-      const [x, y] = bodyPoint(s, t + slot.begin, ballU(t + slot.begin), BALL_V + ballHop(t + slot.begin))
-      return [x, y]
+    const rider = (t: number): Pt => {
+      const [u, v] = heroAt(t + slot.begin)
+      return bodyPoint(s, t + slot.begin, u, v)
     }
     const land = at(LAND)
-    const leave = at(STOP)
+    const leave = at(OUT)
     const touch: Pt = [s.edge + 2.4, 3]
     const drop = at(LAND) - fall
+    // Along the flume, a hop off its end onto the rail on the note; along it and into the cab, and the ride.
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: drop, p: [edge, 0] }]
-    ways.push(hop(ways[1], bed(land), land))
+    ways.push(hop(ways[1], rider(land), land))
     const segs = [
       ...route(ways),
-      ...carried(bed, land, leave, Math.ceil((leave - land) * 40)),
+      ...carried(rider, land, leave, Math.ceil((leave - land) * 40)),
     ]
-    const from: Way = { at: leave, p: bed(leave) }
+    // Out of the cab ahead of the truck, over the edge, and down into the combine on the same beat as ever.
+    const from: Way = { at: leave, p: rider(leave) }
     segs.push(...route([from, hop(from, touch, at(TOUCHDOWN))]))
     const pad = Math.ceil(s.edge + 3)
     return {
@@ -522,7 +490,6 @@ export const truck = part<TruckState>(
       exit: [touch[0] + 0.5, touch[1]],
       lane: { segs, fire: at(DROP) },
       state: s,
-      company: [{ from: slot.begin, to: GONE, at: (t) => goldAt(s, t) }],
     }
   },
 )
@@ -664,9 +631,13 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     p.pop()
   }
 
-  // The truck itself.
+  // The truck itself. Once he is out, the door swings in front of nobody.
   const pose = poseAt(s, t)
   drawPickup(p, k, ink, weight, pose)
+  if (t >= STOP) {
+    doorPickup(p, k, ink, weight, pose)
+    glassPickup(p, k, ink, weight, pose)
+  }
 
   // Exhaust: a puff a turn of the engine, a steady thread once it runs, a cloud at each rev.
   const pipe = pickupPoint(pose, -0.05, 0.3)

@@ -380,7 +380,7 @@ export const hub = part<HubState>(
     }
     return [
       // The ballpark's last framing (the house), then in on the car for the lurch.
-      { t: slot.begin, cells: 6.5, hold: SP(0.2, -1), w: 1 },
+      { t: slot.begin, cells: 4.8, hold: SP(0.2, -1), w: 1 },
       { t: GO + 0.5, cells: 5, off: lead(0.6) },
       // The climb: the hops are the story, so near enough to read them.
       { t: cue(162), cells: 5.4, off: lead(0.9) },

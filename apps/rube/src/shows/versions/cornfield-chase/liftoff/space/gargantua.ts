@@ -1223,7 +1223,7 @@ function drawRoom(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   spine(p, c, 0, fb.h / 2, fb.w, fb.h, fb.color, 0, ink)
   p.pop()
 
-  // The toy robot, back where it stood in the first frame, its arm out flat and nothing on it: she went too.
+  // Murph's toy robot, where it stood in the first frame, its arm out flat.
   drawRobot(p, { k, ink, weight: w }, TOY_HOME[0], TOY_HOME[1] + 2)
   // The watch on the cap.
   drawWatch(p, c, T, 1.45, CAP - 0.11, ink, false)

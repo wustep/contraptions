@@ -419,7 +419,7 @@ function drawAll(p: p5, s: ReplicaState, c: Ctx): void {
   drawPlinth(p, c)
   drawAwning(p, c)
   drawCase(p, s, c, t)
-  // The museum keeps the toy robot where it stood, its arm out and empty.
+  // The museum keeps Murph's toy robot where it stood, its arm out.
   drawRobot(p, c, TOY_HOME[0], TOY_HOME[1])
   drawDumbwaiter(p, c, t)
   drawClock(p, c, t)

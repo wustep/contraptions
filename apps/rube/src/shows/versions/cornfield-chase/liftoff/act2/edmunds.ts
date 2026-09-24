@@ -26,11 +26,11 @@ import { DARK, VOID } from '../worlds'
  *
  * On the ground: the canopy swings open (229), the ramp runs out and slams
  * down (230), the seat kicks the ball out over the nose (231), it lands on the
- * ramp on the and, rolls down into Brand's camp and stops on the plate at the
- * foot of her lamp, and on the last hit (232) the lamp lights. The camp: a
- * small dome, a flag, her helmet set down on a rock, a cairn for Edmunds. The
+ * ramp on the and, rolls down into the camp and stops on the plate at the
+ * foot of its lamp, and on the last hit (232) the lamp lights. The camp: a
+ * small dome, a flag, a helmet set down on a rock, a cairn for Edmunds. The
  * camera draws back and holds while the music stops, the sun's edge comes up
- * behind the cairn, and the dome's porthole lights: she is home.
+ * behind the cairn, and the dome's porthole lights: someone is home.
  *
  * The part's frame: the ball comes in hidden at the wormhole's centre,
  * (-0.5, 0). The landing ground is at y = G (the ball rolling on it is at

@@ -1,14 +1,12 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, puff, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, R, puff, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
 import { drawDrone } from './drone'
-import { goldGantry, HALT, LAND, LEAP, OUT, PARK } from './gantry'
-import { drawPickup, glassPickup, nearPickup, pickupGlass, pickupPoint, SEAT, type Pickup } from './truck'
 
 /**
  * The fence line, and the gate of the base behind it. A chain of machines,
@@ -30,16 +28,14 @@ import { drawPickup, glassPickup, nearPickup, pickupGlass, pickupPoint, SEAT, ty
  *   corn, flying ahead of the ball since the grid, touches down between them
  *   (112). It led them here.
  * - The ball goes through the bunker under it: a spring flap in (113) that
- *   slaps shut behind it (113.5), a flap out (114, 114.5), and on to the foot
- *   of the tower.
+ *   slaps shut behind it (113.5), and a flap out (114).
  *
- * And the pickup finds him again. It comes up the track behind him from out
- * of shot, the gold ball in the cab, and runs under him as he rolls the rail.
- * It cannot get under the barrier's arm; his pail lifts it (108) and the cab
- * goes under as it goes up, and is through before it comes down (110). Then
- * it keeps pace with him across the apron, past the switch, behind the
- * bunker while he goes through it, and pulls up at the foot of the tower
- * (114.5) as he comes out. The jolt swings the door open; she jumps down.
+ * And Brand joins him. She is NASA's: inside the bunker, out of sight. He
+ * goes in at one end and out at the other; the flap falls back behind him,
+ * and on the eighth it is pushed open again (114.5) and a second ball rolls
+ * out — her, the first time we see her. The flap slaps shut behind her (115).
+ * She hurries after him, taps him on the eighth (115.5), and from there they
+ * roll to the tower together, touching.
  *
  * The part's frame: the ball comes in on the ground at (-0.5, 0) and leaves
  * on it; the fence's top rail carries it at y = -2.
@@ -66,9 +62,14 @@ const THROW = beat(111)
 /** The drone's wheels on the bunker roof. */
 const TOUCH = beat(112)
 const FLAPS = [beat(113), beat(114)]
-const SLAPS = [beat(113.5), beat(114.5)]
+/** The way-out flap falls back behind him and she pushes it open again; it slaps shut behind her. */
+const HER_OUT = beat(114.5)
+const SLAPS = [beat(113.5), beat(115)]
+/** She comes up against his back: he had slowed, as if he heard the door, and the tap sends him on. */
+const MEET = beat(115.5)
+const NUDGE = 0.35
 
-export const GATE_HITS = [...GRID_HITS, CUP, FLING, ...CAPS, DROP_IN, SET, TIP, SHUT, THROW, TOUCH, FLAPS[0], SLAPS[0], FLAPS[1], SLAPS[1]]
+export const GATE_HITS = [...GRID_HITS, CUP, FLING, ...CAPS, DROP_IN, SET, TIP, SHUT, THROW, TOUCH, FLAPS[0], SLAPS[0], FLAPS[1], HER_OUT, SLAPS[1], MEET]
 
 /* ------------------------------------------------------------------ the machines */
 
@@ -132,8 +133,6 @@ const ROLLOUT = 0.32
 
 interface GateState {
   begin: number
-  /** Show time the ball leaves for the gantry, which has the pickup from then on. */
-  end: number
   /** Every bar of the grid, and the four the ball skips on. */
   bars: number[]
   struck: number[]
@@ -156,99 +155,46 @@ interface GateState {
   /** Where the drone's wheels touch. */
   touch: number
   exit: number
-  /** Where the pickup stops at the tower's foot: the back of its bed. */
-  park: number
 }
 
-/* ------------------------------------------------------------------ the pickup */
+/* ------------------------------------------------------------------ Brand */
+
+/** How much of each end of the tunnel shows as a doorway; between them the bunker's front is a wall. */
+const DOORWAY = 0.22
+/** She is in the bunker, out of sight, from here; she sets off after him once he is by her. */
+const HER_ON = beat(113)
+const HER_GO = beat(113.75)
+
+/** A cubic from p0 to p1 with end slopes m0, m1 (in the unit of w), at w in 0..1. */
+const hermite = (p0: number, p1: number, m0: number, m1: number, w: number): number =>
+  (2 * w ** 3 - 3 * w ** 2 + 1) * p0 + (w ** 3 - 2 * w ** 2 + w) * m0 + (-2 * w ** 3 + 3 * w ** 2) * p1 + (w ** 3 - w ** 2) * m1
 
 /**
- * The pickup's pace, in show seconds and cells a second: in fast from behind,
- * easing off as it comes up to the barrier, through under the arm as it goes
- * up, then his pace across the apron, and it pulls up at the tower's foot.
+ * Brand at the gate, in its frame, given his lane: waiting in the bunker behind its wall (and only growing into being
+ * there, out of sight), after him to the way-out flap, out through it on the eighth, quick after him, and against his
+ * back from the tap on.
  */
-const PACE: [number, number][] = [[beat(105.5), 5.0], [beat(107.25), 2.8], [beat(110.25), 2.8], [beat(111), 2.43], [beat(114.5), 2.43], [HALT, 0]]
-const WHEEL = 0.25
-const WHEELS = [0.55, 2.42]
-
-/** How far short of its stop the pickup is at show time `t`: the pace, integrated from `t` to the stop. */
-function shortOf(t: number): number {
-  const k = PACE
-  if (t >= k[k.length - 1][0]) return 0
-  let d = 0
-  let from = t
-  if (from < k[0][0]) {
-    d += k[0][1] * (k[0][0] - from)
-    from = k[0][0]
+function goldGate(s: GateState, lane: Lane, begin: number, t: number): Companion {
+  const wait = s.bunker[1] - 0.55
+  const door = s.bunker[1] - R
+  const scale = smooth(t, HER_ON, HER_ON + 0.25)
+  if (t < HER_GO) return { x: wait, y: 0, scale }
+  if (t < HER_OUT) {
+    const T = HER_OUT - HER_GO
+    return { x: hermite(wait, door, 0, 2.4 * T, (t - HER_GO) / T), y: 0, scale }
   }
-  for (let i = 0; i < k.length - 1; i++) {
-    const [t0, v0] = k[i]
-    const [t1, v1] = k[i + 1]
-    if (from >= t1) continue
-    const a = Math.max(from, t0)
-    const va = v0 + ((v1 - v0) * (a - t0)) / (t1 - t0)
-    d += ((va + v1) / 2) * (t1 - a)
+  const his = (u: number) => laneAt(lane, u - begin).x
+  const back = 2 * R + 0.01
+  if (t < MEET) {
+    // Quicker than he is all the way, so she comes up against his back on the eighth with a tap, and keeps his pace.
+    const T = MEET - HER_OUT
+    return { x: hermite(door, his(MEET) - back, 2.4 * T, 3.0 * T, (t - HER_OUT) / T), y: 0 }
   }
-  return d
+  return { x: his(t) - back, y: 0 }
 }
 
-/** 1 while a wheel at `x` is over the cattle grid, eased in and out at its lips. */
-const onGrid = (s: GateState, x: number): number => smooth(x, s.pit[0] - 0.08, s.pit[0] + 0.08) * (1 - smooth(x, s.pit[1] - 0.08, s.pit[1] + 0.08))
-
-/** The pickup at the gate at show time `t`. */
-function truckAt(s: GateState, t: number): Pickup {
-  const rear = s.park - shortOf(t)
-  // It dips its nose as it slows (each change of pace eased in over a moment), and pitches and settles when it stops.
-  let pitch = 0
-  for (let i = 0; i < PACE.length - 1; i++) {
-    const [t0, v0] = PACE[i]
-    const [t1, v1] = PACE[i + 1]
-    const a = (v1 - v0) / (t1 - t0)
-    pitch -= 0.0045 * a * (smooth(t, t0, t0 + 0.12) - smooth(t, t1, t1 + 0.12))
-  }
-  const halt = t - HALT
-  if (halt > 0) pitch += 0.02 * Math.exp(-halt / 0.2) * Math.sin(halt * 16 + 0.5)
-  // It rattles over the cattle grid, and trembles while it runs.
-  let lift = t < HALT + 0.3 ? 0.004 * Math.sin(t * 90) : 0
-  for (const w of WHEELS) lift += 0.012 * onGrid(s, rear + w) * Math.abs(Math.sin(t * 47 + w))
-  const door = halt > 0 ? clamp(halt / 0.14) * (2 - clamp(halt / 0.14)) + 0.07 * Math.exp(-halt / 0.15) * Math.sin(halt * 24) : 0
-  return { rear, road: FLOOR, pitch, lift, air: 0, turn: (rear - s.park) / WHEEL, door, lamp: 1 - smooth(t, HALT + 0.2, HALT + 0.5) }
-}
-
-/**
- * Where she sits in the cab (u, v), at the gate: leaning into it as the truck
- * slows for the barrier, a rattle over the grid, and thrown against the dash
- * when it pulls up at the tower.
- */
-function seatGate(s: GateState, t: number): Pt {
-  let u = SEAT[0] + 0.035 * (smooth(t, PACE[0][0], PACE[1][0]) - smooth(t, PACE[1][0], PACE[1][0] + 0.5))
-  let v = SEAT[1]
-  const rear = s.park - shortOf(t)
-  for (const w of WHEELS) v += 0.018 * onGrid(s, rear + w) * Math.abs(Math.sin(t * 31 + w))
-  const brake = PACE[PACE.length - 2][0]
-  u += 0.13 * smooth(t, brake, HALT) - 0.08 * smooth(t, HALT, HALT + 0.25)
-  return [u, v]
-}
-
-/** The gold ball at the gate, in its frame: in the cab, then out of it and down onto the road behind him, and after him. */
-function goldGate(s: GateState, t: number): Companion | null {
-  if (t < LEAP) {
-    const [u, v] = seatGate(s, t)
-    const [x, y] = pickupPoint(truckAt(s, t), u, v)
-    return { x, y }
-  }
-  if (t < OUT) {
-    const [su, sv] = seatGate(s, LEAP)
-    const from = pickupPoint(truckAt(s, LEAP), su, sv)
-    const to: Pt = [s.exit + LAND[0], LAND[1]]
-    const T = OUT - LEAP
-    const w = (t - LEAP) / T
-    const arc = (G_EARTH * T * T) / 8
-    return { x: from[0] + (to[0] - from[0]) * w, y: from[1] + (to[1] - from[1]) * w - arc * 4 * w * (1 - w) }
-  }
-  const [x, y] = goldGantry(t)
-  return { x: x + s.exit, y }
-}
+/** The way-out flap: pushed by him on 114, fallen back as she pushes it on 114.5, and shut behind her on 115. */
+const flapB = (t: number): number => (t < HER_OUT ? flapAngle(t, FLAPS[1], HER_OUT) : flapAngle(t, HER_OUT, SLAPS[1]))
 
 /** The sweep's long arm, radians (y down), at show time `t`: resting down to the left, then over the top onto its log. */
 function sweepAngle(t: number): number {
@@ -407,9 +353,13 @@ export const gate = part<GateState>(
     const leaveB = faceB - R
     const pace = (faceB - faceA) / (FLAPS[1] - FLAPS[0])
     const exitBall = leaveB + ((pace + V_OUT) / 2) * (slot.end - FLAPS[1])
+    // Out of the bunker he eases off until her tap (MEET), which nudges him on: the same exit at the same time.
+    const T1 = MEET - FLAPS[1]
+    const T2 = slot.end - MEET
+    const slow = (2 * (exitBall - leaveB) - pace * T1 - (NUDGE + V_OUT) * T2) / (T1 + T2)
+    const meetX = leaveB + ((pace + slow) / 2) * T1
     const s: GateState = {
       begin: slot.begin,
-      end: slot.end,
       bars,
       struck,
       pit,
@@ -424,12 +374,7 @@ export const gate = part<GateState>(
       bunker: [faceA, faceB],
       touch: faceA + 0.45,
       exit: exitBall + 0.5,
-      park: exitBall + 0.5 + PARK,
     }
-    // The pickup's cab has to be short of the short arm until it goes up, and out from under the long one before it comes down.
-    const cabFront = s.park - shortOf(DROP_IN) + 2.17
-    const cabBack = s.park - shortOf(SHUT - 0.06) + 1.3
-    if (cabFront > gateX - SHORT || cabBack < gateX + LONG) console.warn(`liftoff: gate — the pickup meets the barrier's arm (${cabFront.toFixed(2)}, ${cabBack.toFixed(2)} against ${gateX.toFixed(2)})`)
 
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(GRID_HITS[0]), p: [first, 0] }]
     for (let i = 1; i < struck.length; i++) ways.push(hop(ways[ways.length - 1], [struck[i], 0], at(GRID_HITS[i])))
@@ -468,16 +413,18 @@ export const gate = part<GateState>(
         { at: at(THROW), p: [sw, 0] },
         { at: at(FLAPS[0]), p: [faceA - R, 0] },
         { at: at(FLAPS[1]), p: [leaveB, 0] },
-        { at: at(slot.end), p: [exitBall, 0], ramp: [pace, V_OUT] },
+        { at: at(MEET), p: [meetX, 0], ramp: [pace, slow] },
+        { at: at(slot.end), p: [exitBall, 0], ramp: [slow + NUDGE, V_OUT] },
       ]),
     )
+    const lane: Lane = { segs, fire: at(GRID_HITS[0]) }
     return {
       cells: box(-1, -6, s.exit + 3, 2),
       exit: [s.exit, 0],
-      lane: { segs, fire: at(GRID_HITS[0]) },
+      lane,
       state: s,
-      // She comes in with the pickup, far out of shot behind him, and is handed to the gantry on the road at its door.
-      company: [{ from: slot.begin, to: slot.end, at: (t) => goldGate(s, t) }],
+      // Brand: in the bunker from 113, out of sight until she comes out after him; handed to the gantry at his back.
+      company: [{ from: HER_ON, to: slot.end, at: (t) => goldGate(s, lane, slot.begin, t) }],
     }
   },
   (slot, built) => [
@@ -487,17 +434,18 @@ export const gate = part<GateState>(
     { t: beat(107.4), cells: 5.9, off: [1.1, 0.1] },
     { t: beat(108.8), cells: 5.9, off: [1.3, -1.2] },
     { t: beat(111), cells: 6.0, off: [1.5, -1.4] },
-    { t: beat(113), cells: 6.2, off: [1.5, -1.4] },
-    // The tower's foot, held nearly still: the pickup pulls up, she jumps down behind him, the cage.
-    { t: beat(115.2), cells: 6.4, hold: [built.state.exit - 0.7, -1.2], w: 0.7 },
-    { t: slot.end, cells: 6.6, hold: [built.state.exit - 0.5, -1.3], w: 0.6 },
+    { t: beat(113), cells: 6.0, off: [1.3, -1.3] },
+    // The bunker's way out, held nearly still and closer: he comes out, the flap falls, and it opens again for her.
+    { t: beat(114.5), cells: 4.6, hold: [built.state.bunker[1] + 0.7, -0.8], w: 0.8 },
+    // She catches him up; the two of them to the tower.
+    { t: beat(115.5), cells: 5.2, hold: [built.state.exit - 1.3, -1.0], w: 0.6 },
+    { t: slot.end, cells: 6.2, hold: [built.state.exit - 0.4, -1.3], w: 0.5 },
   ],
 )
 
 /* ------------------------------------------------------------------ drawing */
 
-/** `bare` draws a thing again over what stands behind it, without its light or its dust (which would double). */
-type Draw = { p: p5; k: number; ink: string; weight: number; t: number; X: (x: number) => number; bare?: boolean }
+type Draw = { p: p5; k: number; ink: string; weight: number; t: number; X: (x: number) => number }
 
 /** A rectangle by its corners. */
 function rect4(d: Draw, x0: number, y0: number, x1: number, y1: number): void {
@@ -513,16 +461,6 @@ function drawGate(p: p5, s: GateState, c: Ctx): void {
   ground(d, s, f)
   grid(d, s)
   fence(d, s)
-  // The pickup, on the track in front of the fence and behind everything of his. (Parked, it is the gantry's.)
-  if (t >= s.begin && t < s.end) {
-    const pk = truckAt(s, t)
-    if (pk.rear < f.x1 + 3 && pk.rear + 5.5 > f.x0) {
-      drawPickup(p, k, ink, weight, pk)
-      nearPickup(p, k, ink, weight, pk)
-      // Once she is out, the glass has nobody behind it.
-      if (t >= LEAP) glassPickup(p, k, ink, weight, pk)
-    }
-  }
   sweep(d, s)
   barrier(d, s)
   lever(d, s)
@@ -537,8 +475,8 @@ function drone(d: Draw, s: GateState, f: { x0: number; x1: number; y0: number })
   if (dr && dr.p[0] > f.x0 - 2 && dr.p[0] < f.x1 + 2 && dr.p[1] > f.y0 - 1) {
     const over = dr.p[0] > s.bunker[0] - 0.3 && dr.p[0] < s.bunker[1] + 0.1
     gear(d, dr.p, dr.pitch, dr.gear, dr.squash)
-    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, d.bare ? null : over ? ROOF : FLOOR)
-    if (!d.bare && t >= TOUCH && t < TOUCH + 0.8) {
+    drawDrone(p, k, ink, weight, dr.p, dr.pitch, 1, over ? ROOF : FLOOR)
+    if (t >= TOUCH && t < TOUCH + 0.8) {
       const age = t - TOUCH
       p.push()
       p.drawingContext.globalAlpha = 1 - age / 0.8
@@ -678,7 +616,7 @@ function sweep(d: Draw, s: GateState): void {
   solid(p, ink, weight * 0.8, ink)
   p.circle(X(px), X(py), X(0.07))
   // The stone hits the log: dust off it.
-  if (!d.bare && t >= FLING && t < FLING + 0.9) {
+  if (t >= FLING && t < FLING + 0.9) {
     const age = t - FLING
     p.push()
     p.drawingContext.globalAlpha = 1 - age / 0.9
@@ -773,7 +711,7 @@ function barrier(d: Draw, s: GateState): void {
   solid(p, ink, weight * 0.8, ink)
   p.circle(X(gx), X(GY), X(0.09))
   // The pail sets down: a little dust.
-  if (!d.bare && t >= SET && t < SET + 0.6) {
+  if (t >= SET && t < SET + 0.6) {
     const age = t - SET
     const pin = pinAt(gx, SET)
     p.push()
@@ -782,7 +720,7 @@ function barrier(d: Draw, s: GateState): void {
     p.pop()
   }
   // The pail's bail and its far rim, behind the ball; its body goes over it.
-  if (!d.bare) pail(d, s, true)
+  pail(d, s, true)
 }
 
 /** The pail on the barrier's short end. `back` draws the bail and the inside; the front draws its near wall, over the ball. */
@@ -898,13 +836,13 @@ function bunker(d: Draw, s: GateState): void {
   p.noStroke()
   p.fill(alpha(p, ink, 0.72))
   rect4(d, a, lin, b, FLOOR)
-  if (t >= THROW) glow(d, (a + b) / 2, lin + 0.04, 0.5, 0.45)
+  if (t >= THROW) for (const x of [a + DOORWAY / 2, b - DOORWAY / 2]) glow(d, x, lin + 0.06, 0.28, 0.45)
   outline(p, ink, weight)
   p.line(X(a), X(lin), X(b), X(lin))
   // The lintels over the two mouths, which the flaps hang from.
   solid(p, ink, weight * 0.9, DUST.bone)
-  rect4(d, a - 0.05, lin - 0.12, a + 0.16, lin)
-  rect4(d, b - 0.16, lin - 0.12, b + 0.05, lin)
+  rect4(d, a - 0.05, lin - 0.12, a + DOORWAY, lin)
+  rect4(d, b - DOORWAY, lin - 0.12, b + 0.05, lin)
   // The landing lamps at the roof's two corners.
   const on = t >= THROW
   const flick = on && t < THROW + 0.12 ? (Math.sin((t - THROW) * 90) > -0.2 ? 1 : 0.2) : 1
@@ -936,7 +874,6 @@ function gear(d: Draw, at: Pt, pitch: number, g: number, squash: number): void {
 
 /** A soft light: a glow around a lamp. */
 function glow(d: Draw, x: number, y: number, r: number, a: number): void {
-  if (d.bare) return
   const { p, X } = d
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const g = ctx.createRadialGradient(X(x), X(y), 0, X(x), X(y), X(r))
@@ -952,28 +889,6 @@ function overGate(p: p5, s: GateState, c: Ctx): void {
   const t = c.t + s.begin
   const X = (x: number) => x * k
   const d: Draw = { p, k, ink, weight, t, X }
-  // The pickup's glass over her; and whatever of his stands in front of the cab, over both, where it crosses the window.
-  if (t >= s.begin && t < LEAP) {
-    const pk = truckAt(s, t)
-    const f = frame(p, k)
-    if (pk.rear < f.x1 + 1 && pk.rear + 3.5 > f.x0) {
-      const win = pickupGlass(pk)
-      p.push()
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      ctx.beginPath()
-      win.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), X(y)) : ctx.moveTo(X(x), X(y))))
-      ctx.closePath()
-      ctx.clip()
-      glassPickup(p, k, ink, weight, pk, false)
-      const bare: Draw = { ...d, bare: true }
-      sweep(bare, s)
-      barrier(bare, s)
-      lever(bare, s)
-      bunker(bare, s)
-      drone(bare, s, f)
-      p.pop()
-    }
-  }
   // The cup: a bowl whose near rim sits low, so the ball in it shows.
   const a = sweepAngle(t)
   p.push()
@@ -983,14 +898,27 @@ function overGate(p: p5, s: GateState, c: Ctx): void {
   p.arc(X(SW_L), X(CUP_C), X(0.36), X(0.3), Math.PI * 1.08, Math.PI * 1.92, p.CHORD)
   p.pop()
   pail(d, s, false)
+  // The bunker's front between its two doorways: what goes in is out of sight until it comes out.
+  const [a0, b0] = s.bunker
+  const lin = FLOOR - TUNNEL
+  p.noStroke()
+  p.fill(DUST.shade)
+  rect4(d, a0 + DOORWAY, lin, b0 - DOORWAY, FLOOR)
+  p.stroke(alpha(p, ink, 0.35))
+  p.strokeWeight(Math.max(1, weight * 0.7))
+  for (let i = 0; i < 4; i++) p.point(X(a0 + DOORWAY + 0.1 + hash(i, 43) * (b0 - a0 - 2 * DOORWAY - 0.2)), X(lin + 0.08 + hash(i, 44) * (TUNNEL - 0.16)))
+  outline(p, ink, weight)
+  p.line(X(a0 + DOORWAY), X(lin), X(a0 + DOORWAY), X(FLOOR))
+  p.line(X(b0 - DOORWAY), X(lin), X(b0 - DOORWAY), X(FLOOR))
+  p.line(X(a0 + DOORWAY), X(lin), X(b0 - DOORWAY), X(lin))
   // The flaps.
   for (let i = 0; i < 2; i++) {
     const hx = s.bunker[i]
-    const ang = flapAngle(t, FLAPS[i], SLAPS[i])
+    const ang = i === 0 ? flapAngle(t, FLAPS[0], SLAPS[0]) : flapB(t)
     p.push()
     p.translate(X(hx), X(FLOOR - TUNNEL))
     p.rotate(-ang)
-    solid(p, ink, weight * 0.9, DUST.corn)
+    solid(p, ink, weight * 0.9, DUST.teal)
     p.rect(0, X(FLAP / 2), X(0.07), X(FLAP), X(0.02))
     p.pop()
   }

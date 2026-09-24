@@ -1,11 +1,10 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, R, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, knock, part, route, type Companion, type Ctx, type Way } from '../kit'
 import { beat, IGNITION } from '../music'
 import { DUST } from '../worlds'
-import { drawPickup, glassPickup, nearPickup, SEAT, type Pickup } from './truck'
 
 /**
  * The gantry. The ball rolls into the cage at the foot of the tower on beat
@@ -16,11 +15,10 @@ import { drawPickup, glassPickup, nearPickup, SEAT, type Pickup } from './truck'
  * ten, nine, eight — the arm swings back on the downbeat of 128, and on 133
  * the last one is dark. The rocket takes it from there.
  *
- * The gold ball comes with him. The pickup that brought her through the gate
- * has pulled up at the tower's foot (the gate draws it); she jumps down out
- * of the cab as he rolls past, lands behind him on the eighth, hurries, and
- * they come into the cage together. Up, and along the arm a step behind him,
- * and into the window beside him on 124.
+ * Brand comes with him. She came out of the bunker after him and caught him
+ * up; she rolls into the cage at his back, touching, and they go up
+ * together. Along the arm a step behind him, and into the window beside him
+ * on 124.
  *
  * The part's frame: the ball comes in rolling on the ground (y = 0); the
  * rocket's axis stands at RX; the pad's top is the ground.
@@ -45,38 +43,15 @@ const ARM_BACK = beat(128)
 
 export const GANTRY_HITS = [IN, ...LAMPS, SEATED, ...DARK.slice(1), ARM_BACK]
 
-/* ------------------------------------------------------------------ her way from the pickup to the window */
+/* ------------------------------------------------------------------ her way to the window */
 
-/** Where the pickup stands at the tower's foot (the back of its bed), in this part's frame. */
-export const PARK = -3.0
-/** It pulls up on this beat, the jolt swings its door open, and she jumps a moment later, as he rolls by under her. */
-export const HALT = beat(115)
-export const LEAP = HALT + 0.1
-/** The pickup as it stands at the tower's foot once she is out: the door left open, the lamp off. */
-const PARKED: Pickup = { rear: PARK, road: FLOOR, pitch: 0, lift: 0, air: 0, turn: 0, door: 1, lamp: 0 }
-/** She is down on the road behind him on this beat. */
-export const OUT = beat(116)
-/** Where she lands, and how fast she is going along the road as she does. */
-const LAND_X = -0.85
-export const LAND: Pt = [LAND_X, 0]
-export const V_LAND = (LAND_X - (PARK + SEAT[0])) / (OUT - LEAP)
 /** She leaves the cage a moment after him, and catches him up at the window. */
 const HER_GO = RISE[1] + 0.27
 const HIS_GO = RISE[1] + 0.15
 
-/** The gold ball in this part's frame from the moment she lands on the road (OUT) to ignition. */
-export function goldGantry(t: number): Pt {
-  if (t < IN) {
-    // A small bounce where she lands; then after him, quicker than he is, into the cage as he stops.
-    const T = IN - OUT
-    const w = clamp((t - OUT) / T)
-    const m0 = V_LAND * T
-    const m1 = 2.4 * T
-    const x = (2 * w ** 3 - 3 * w ** 2 + 1) * LAND_X + (w ** 3 - 2 * w ** 2 + w) * m0 + (-2 * w ** 3 + 3 * w ** 2) * HER_X + (w ** 3 - w ** 2) * m1
-    const b = (t - OUT) / 0.19
-    const y = b > 0 && b < 1 ? -0.05 * 4 * b * (1 - b) : 0
-    return [x, y]
-  }
+/** Brand in this part's frame, given his lane: at his back into the cage, up, along the arm, and in the window beside him. */
+function goldGantry(t: number, lane: Lane, begin: number): Pt {
+  if (t < IN) return [laneAt(lane, t - begin).x - 2 * R - 0.01, 0]
   if (t < HER_GO) return [HER_X, cageY(t)]
   if (t < SEATED) {
     // Along the arm: slow off the mark, faster, and against him in the window on the beat.
@@ -135,20 +110,21 @@ export const gantry = part<GantryState>(
     // Out along the arm to the window.
     const from: Way = { at: at(HIS_GO), p: [HERO_X, cageY(HIS_GO)] }
     segs.push(...route([from, { at: at(SEATED), p: WIN, ramp: [0.5, 2 * (WIN[0] - HERO_X) / (at(SEATED) - from.at) - 0.5] }, { at: slot.end - slot.begin, p: WIN }]))
+    const lane: Lane = { segs, fire: arrive }
     const gold = (t: number): Companion => {
-      const [x, y] = goldGantry(t)
+      const [x, y] = goldGantry(t, lane, slot.begin)
       return { x, y }
     }
     return {
-      cells: box(PARK - 0.5, TOP - 1, RX + 3, 2),
+      cells: box(-0.5, TOP - 1, RX + 3, 2),
       exit: [WIN[0] + 0.5, WIN[1]],
-      lane: { segs, fire: arrive },
+      lane,
       state: { begin: slot.begin },
       company: [{ from: slot.begin, to: IGNITION, at: gold }],
     }
   },
   () => [
-    // From the gate's wide framing (the pickup at the tower's foot, the cage) straight into the climb: no push in.
+    // From the gate's framing of the tower's foot straight into the climb: no push in.
     { t: RISE[0] + 0.6, cells: 7.4, off: [0.9, -0.4] },
     { t: RISE[1] - 0.3, cells: 7.4, off: [0.9, 0.6] },
     { t: SEATED, cells: 11, hold: [RX - 0.5, -4.4] },
@@ -162,12 +138,6 @@ function drawGantry(p: p5, s: GantryState, c: Ctx): void {
   const { k, ink, weight } = c
   const t = c.t + s.begin
   const X = (x: number) => x * k
-  // The pickup that brought her, where it pulled up (the gate has it until the ball is here).
-  if (t >= s.begin) {
-    drawPickup(p, k, ink, weight, PARKED)
-    nearPickup(p, k, ink, weight, PARKED)
-    glassPickup(p, k, ink, weight, PARKED)
-  }
   // The ground, up to the pad.
   outline(p, ink, weight)
   p.line(X(-0.5), X(FLOOR), X(RX - 2.75), X(FLOOR))

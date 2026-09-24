@@ -4,20 +4,16 @@ import { FLOOR, R, laneAt, type Pt } from '../../../../../parts'
 import { alpha, box, frame, hash, part, route, smooth, type Way } from '../kit'
 import { DUST } from '../worlds'
 import { cornWall, stalk } from './corn'
-import { GOLD_POOL, HEAD_BACK, YARD_EXIT } from './yard'
+import { HEAD_BACK } from './yard'
 
 /**
  * The irrigation channel along the top of the bank. The pump in the yard has
  * just filled its head and thrown the ball in, and the water carries it along
  * under the corn at an even pace. Across the channel are four flap gates,
  * boards hung from a bar; the floating ball shoulders each one open on a note
- * of the piano. At the end the channel spills over the edge of the bank, where
- * the truck is waiting below.
- *
- * She came down in the pool at the channel's head a note before him and waits
- * there; his splash sets her going, and she floats after him, a step behind.
- * A gate he opens does not close between them: its board lies on his back,
- * slides off onto hers, and slaps shut behind her.
+ * of the piano, the board rides on his back as he goes under, and it slaps
+ * shut behind him. At the end the channel spills over the edge of the bank,
+ * where the truck is waiting below.
  */
 
 /** The gates, on the piano's notes as measured. The last is the strongest. */
@@ -30,16 +26,10 @@ const WATER = 0.05
 const BED = 0.3
 const HINGE = -0.28
 const FLAP = BED - HINGE - 0.02
-/** The channel's head: back under the pump's spout, a pool. */
+/** The channel's head: back under the pump's spout, where the pumped water comes down. */
 const HEAD = -HEAD_BACK
-/** Where she comes down in the pool, in this frame. */
-const POOL: Pt = [GOLD_POOL.p[0] - YARD_EXIT[0], GOLD_POOL.p[1] - YARD_EXIT[1]]
-/** How far behind the channel's end she is when the truck takes her over, drifting at the water's pace. */
-const HANDOFF_BACK = 1.15
-/** How long she takes to get going once his splash reaches her. */
-const GETAWAY = 0.44
-/** A gate's board: how hard it falls (its hinge is stiff with dust), and the rate its swing is worked out at. */
-const FALL = 90
+/** A gate's board: how hard its spring shuts it (so each slaps shut on the next note), and the rate its swing is worked out at. */
+const FALL = 450
 const HINGE_DRAG = 3
 const RATE = 240
 
@@ -122,7 +112,7 @@ export const cornrow = part<RowState>(
       solid(p, ink, weight, DUST.wood)
       p.rect(X(mid), X(FLOOR - 0.06), X(span), X(0.12))
       p.rect(X(mid), X(BED + 0.03), X(span), X(0.06))
-      // The gates' bars and boards (the near wall and the water are drawn over the balls).
+      // The gates' bars and boards (the near wall and the water are drawn over the ball).
       for (const g of s.gates) {
         const a = swingAt(g, show)
         outline(p, ink, weight)
@@ -158,15 +148,14 @@ export const cornrow = part<RowState>(
       p.endShape()
     },
     over: (p, s, c) => {
-      // The water over the balls' lower halves, and the channel's near wall, low so the balls show above it.
+      // The water over the ball's lower half, and the channel's near wall, low so the ball shows above it.
       const { k, ink, weight } = c
       const X = (x: number) => x * k
-      const show = c.t + s.begin
       const mid = (HEAD + s.length + 0.5) / 2
       const span = s.length + 0.5 - HEAD
       p.noStroke()
-      // The pool fills when the pump's water comes down into it.
-      p.fill(alpha(p, DUST.teal, 0.55 * smooth(show, GOLD_POOL.at - 0.65, GOLD_POOL.at - 0.3)))
+      // It fills when the pump's water comes down into its head.
+      p.fill(alpha(p, DUST.teal, 0.55 * smooth(c.t, -0.85, -0.5)))
       p.rect(X(mid), X((WATER + BED) / 2), X(span), X(BED - WATER))
       p.stroke(alpha(p, DUST.light, 0.8 * smooth(c.t, -0.6, 0)))
       p.strokeWeight(Math.max(1, weight * 0.7))
@@ -175,15 +164,13 @@ export const cornrow = part<RowState>(
         const x = HEAD + 0.1 + ((((i / 3 + c.t * PACE * 0.9) % m) + m) % m)
         p.line(X(x), X(WATER + 0.01), X(Math.min(x + 0.1, s.length + 0.5)), X(WATER + 0.01))
       }
-      // Where each of them comes down in it: her in the pool, and him in front of her a note later.
-      for (const [at, x] of [[GOLD_POOL.at, POOL[0]], [s.begin, -0.5]]) {
-        const sp = show - at
-        if (sp <= 0 || sp >= 0.6) continue
-        const u = sp / 0.6
+      // Where the ball comes down in it, thrown by the pump.
+      if (c.t > 0 && c.t < 0.6) {
+        const u = c.t / 0.6
         p.noFill()
         p.stroke(alpha(p, DUST.teal, 1 - u))
         p.strokeWeight(Math.max(1, weight))
-        p.ellipse(X(x), X(WATER - 0.02), X(0.3 + u * 0.6), X(0.06 + u * 0.08))
+        p.ellipse(X(-0.5), X(WATER - 0.02), X(0.3 + u * 0.6), X(0.06 + u * 0.08))
       }
       solid(p, ink, weight, DUST.wood)
       p.rect(X(mid), X(0.21), X(span), X(0.12))
@@ -209,33 +196,15 @@ export const cornrow = part<RowState>(
     }
     const lane = { segs: route(ways), fire: gates[0].at }
 
-    // Her: still in the pool until his splash reaches her, then getting going, and at the water's pace from there on,
-    // so that she is HANDOFF_BACK short of the end at the hand-off, drifting, and no longer bobbing.
-    const away = slot.end - GETAWAY / 2 - (length - HANDOFF_BACK - POOL[0]) / PACE
-    const gold = (t: number): Pt => {
-      let x = POOL[0]
-      if (t > away + GETAWAY) x = POOL[0] + (PACE * GETAWAY) / 2 + PACE * (t - away - GETAWAY)
-      else if (t > away) {
-        const u = (t - away) / GETAWAY
-        x = POOL[0] + PACE * GETAWAY * (u * u * u - (u * u * u * u) / 2)
-      }
-      const s = t - GOLD_POOL.at
-      const land = s > 0 ? 0.05 * Math.exp(-s / 0.12) * Math.sin(s * 18) : 0
-      const bob = 0.012 * Math.sin(s * 6.3) * smooth(t, GOLD_POOL.at + 0.15, GOLD_POOL.at + 0.6) * (1 - smooth(t, slot.end - 0.9, slot.end - 0.25))
-      return [x, land + bob]
-    }
-
-    // The boards, worked out once: each lies on whichever ball is under it, and falls when there is none.
-    // Past the hand-off both drift on at the water's pace (the truck's part has them there), well past the last gate.
-    const drift = (x: number): Pt => [x, 0]
+    // The boards, worked out once: each rides on the ball while it is under it, and falls when it is past.
+    // Past the end of the slot he drifts on at the water's pace (the truck's part has him there), well past the last gate.
     const hero = (t: number): Pt => {
       if (t < slot.end) {
         const q = laneAt(lane, t - slot.begin)
         return [q.x, q.y]
       }
-      return drift(end + PACE * (t - slot.end))
+      return [end + PACE * (t - slot.end), 0]
     }
-    const her = (t: number): Pt => (t < slot.end ? gold(t) : drift(length - HANDOFF_BACK + PACE * (t - slot.end)))
     for (const g of gates) {
       g.t0 = slot.begin + g.at - 0.4
       const n = Math.ceil((slot.end + 1.6 - g.t0) * RATE)
@@ -246,12 +215,11 @@ export const cornrow = part<RowState>(
       for (let i = 0; i < n; i++) {
         const t = g.t0 + i / RATE
         const [hx, hy] = hero(t)
-        const [gx, gy] = her(t)
-        const need = Math.max(clearing(hx, hy, g.x), clearing(gx, gy, g.x))
+        const need = clearing(hx, hy, g.x)
         w += (-FALL * Math.sin(a) - HINGE_DRAG * w) / RATE
         a += w / RATE
         if (a < 0) {
-          if (w < -1.5) g.slaps.push(t)
+          if (w < -10) g.slaps.push(t)
           a = 0
           w = -w * 0.25
         }
@@ -269,7 +237,6 @@ export const cornrow = part<RowState>(
       exit: [end + 0.5, 0],
       lane,
       state: { gates, length, begin: slot.begin },
-      company: [{ from: GOLD_POOL.at, to: slot.end, at: (t) => { const [x, y] = gold(t); return { x, y } } }],
     }
   },
 )
