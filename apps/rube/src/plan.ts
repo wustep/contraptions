@@ -60,6 +60,7 @@ export interface PlanCtx {
   colors: string[]
   /** Colour of the portals. */
   portalColor: string
+  portalPlacement?: (kind: 'in' | 'out', color: string) => Placement<any>
   /** The ball as it comes out of the first portal. */
   ball: BallState
   /** How keen this map is on the pieces that change the ball, and how many it may have. */
@@ -158,7 +159,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
   }
 
   const portalPiece = ctx.catalog.find((c) => c.name === 'portal')!
-  commit(portalPiece, portalPlacement('in', ctx.portalColor))
+  commit(portalPiece, ctx.portalPlacement?.('in', ctx.portalColor) ?? portalPlacement('in', ctx.portalColor))
 
   const pool = ctx.catalog.filter((c) => c.weight > 0 && !c.finale)
   const finale = ctx.catalog.find((c) => c.finale)
@@ -316,7 +317,7 @@ export function planChain(ctx: PlanCtx, spec: ChainSpec): Placed[] {
       ;({ col, row, mirror, ball } = resume)
     }
   }
-  commit(portalPiece, portalPlacement('out', ctx.portalColor))
+  commit(portalPiece, ctx.portalPlacement?.('out', ctx.portalColor) ?? portalPlacement('out', ctx.portalColor))
   return out
 }
 

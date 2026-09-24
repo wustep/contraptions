@@ -18,6 +18,8 @@ import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/show
 import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import carmenOnsets from '../../scripts/show-plans/carmen-sol-onsets.json'
+import { CarmenShow, sections as carmenSections } from './src/shows/versions/carmen-prelude/sol-one-shot'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -113,7 +115,7 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
+  check('the shows include the Sol one-shot Carmen Prelude', shipped.works.map((w) => w.work).sort().join(',') === 'carmen-prelude,clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
   check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
   check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
   check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
@@ -124,6 +126,21 @@ async function main(): Promise<void> {
       const wrong = performanceProblems(perf)
       check(`${work.work}/${version.take}: loads, and can be played`, wrong.length === 0, wrong.join(' · '))
       if (wrong.length) continue
+      if (work.work === 'carmen-prelude') {
+        const show = perf.show as CarmenShow
+        check('Carmen Sol one-shot: full CC0 recording with credit', near(perf.duration, 125.052, .01) &&
+          !!perf.soundtrack?.credit?.includes('CC0') && perf.soundtrack?.href?.includes('wikimedia.org/wiki/File:Carmen_-_Prelude_to_Act_1.ogg') === true)
+        const sections = carmenSections.slice(0, -1).map((start, i) => show.at((start + carmenSections[i+1])/2).universe.world.name)
+        check('Carmen Sol one-shot: six staged musical sections across two new worlds', sections.join() === 'sol-kitchen,sol-backstage,sol-kitchen,sol-backstage,sol-kitchen,sol-backstage')
+        check('Carmen Sol one-shot: the panel names each musical section', perf.chapter?.(0).includes('Supper rush') === true && perf.chapter?.(70).includes('In the wings') === true && perf.chapter?.(125.052).includes('Opening night') === true)
+        const hits = carmenOnsets.attacks.map(([at]) => at)
+        check('Carmen Sol one-shot: keyed fires land on measured attacks', show.cues.length >= 18 && show.cues.every((cue) =>
+          hits.some((at) => near(at,cue.at,.001)) && near(show.nativeAt(cue.at),cue.native,1e-5) && show.at(cue.at).placed.piece.name === cue.piece), `${show.cues.length} cues`)
+        const speeds = show.knots.slice(1).map((k,i) => (k.native-show.knots[i].native)/(k.at-show.knots[i].at))
+        check('Carmen Sol one-shot: cue timing keeps the mechanisms readable', speeds.every((rate) => rate > .6 && rate < 1.6), `${Math.min(...speeds).toFixed(2)}–${Math.max(...speeds).toFixed(2)}×`)
+        check('Carmen Sol one-shot: one ball carries the plot', [0,25,60,87,123].every((at) => show.at(at).balls === undefined))
+        check('Carmen Sol one-shot: the quiet section opens the camera', perf.camera!(70).cells > perf.camera!(110).cells)
+      }
       if (work.work === 'premiere-arabesque' || work.work === 'clair-de-lune') {
         const premiere = work.work === 'premiere-arabesque'
         check(`${work.work}/${version.take}: full approved recording and panel credit`,

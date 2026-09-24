@@ -82,7 +82,7 @@ export function buildUniverse(seed: string, index: number, world: World, avoid: 
   // where the piece under the glass is the whole show.
   const leadIn = world.leadIn && !solo ? rng.fork('lead-in').int(2, 4) : 0
   const pieces = bestOf(rng.fork('map'), 6, (attempt) =>
-    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats, leadIn }),
+    planChain({ rng: attempt, theme, taste, catalog: pool, colors, portalColor, portalPlacement: world.portalPlacement, ball, dynamics, lastVisit: avoid.pieces ?? undefined }, { box, beats, leadIn }),
   )
 
   let acc = 0
