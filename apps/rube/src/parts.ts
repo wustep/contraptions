@@ -85,6 +85,8 @@ export interface BallState {
   ghost: boolean
   /** Which ball this is. Counts up at every relay, so a trail never bridges two balls. */
   id: number
+  /** Stored energy carried between pieces in a map. Zero when unset. */
+  charge?: number
 }
 
 /** A change to the ball, `at` seconds into a piece's lane. */
@@ -96,6 +98,8 @@ export interface BallChange {
   relay?: boolean
   /** Seconds over which a new colour blends in, from `at`. Instant when unset. */
   over?: number
+  /** Set or spend the energy carried into the next piece. */
+  charge?: number
 }
 
 /** The ball after every change in `changes` up to time `t`. */
@@ -108,6 +112,7 @@ export function ballAt(ball: BallState, changes: BallChange[], t: number): BallS
       color,
       ghost: c.ghost ?? out.ghost,
       id: c.relay ? out.id + 1 : out.id,
+      ...(c.charge === undefined && out.charge === undefined ? {} : { charge: c.charge ?? out.charge }),
     }
   }
   return out

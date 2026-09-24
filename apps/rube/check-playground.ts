@@ -86,7 +86,8 @@ async function main(): Promise<void> {
     check('every staged beat may be drawn by the planner', beats.every((c) => c.weight > 0 || c.finale))
     if (isWorld) {
       check(`fewer than ${CATALOG_LIMIT} pieces`, w.pieces.length < CATALOG_LIMIT, `${w.pieces.length}`)
-      check('nineteen pieces of its own: a rail and eighteen beats', beats.length === 18 && w.own!.includes('rail'), `${beats.length}`)
+      const expectedBeats = w.name.startsWith('underhill-') ? 7 : 18
+      check(`${expectedBeats} beats and a rail of its own`, beats.length === expectedBeats && w.own!.includes('rail'), `${beats.length}`)
       check('at least two of them are flights', w.pieces.filter(isFlight).length >= 2)
       check('at least one of them changes the ball', w.pieces.some(isDynamic))
       check('more than one palette, all with five colours', w.themes.length > 1 && w.themes.every((t) => t.colors.length === 5))

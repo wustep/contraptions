@@ -9,7 +9,7 @@
   "description": "A generator for grids of tiny animated machines.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:premiere && npm run check:clair && vite build",
+    "build": "tsc --noEmit && npm run check && npm run check:rube && npm run check:builder && npm run check:playground && npm run check:shows && npm run check:underhill && npm run check:premiere && npm run check:clair && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "new": "node scripts/new-contraption.mjs",
@@ -18,6 +18,7 @@
     "check:builder": "esbuild apps/rube/check-builder.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check-builder.cjs && node node_modules/.cache/rube-check-builder.cjs",
     "check:playground": "esbuild apps/rube/check-playground.ts --bundle --platform=node --format=cjs --external:p5 --log-level=error --outfile=node_modules/.cache/rube-check-playground.cjs && node node_modules/.cache/rube-check-playground.cjs",
     "check:shows": "esbuild apps/rube/check-shows.ts --bundle --platform=node --format=cjs --external:p5 --loader:.mp3=file --loader:.ogg=file --loader:.wav=file --log-level=error --outfile=node_modules/.cache/rube-check-shows.cjs && node node_modules/.cache/rube-check-shows.cjs",
+    "check:underhill": "esbuild scripts/check-underhill.ts --bundle --platform=node --format=esm --external:p5 --loader:.ogg=file --log-level=error --outfile=node_modules/.cache/check-underhill.mjs && node node_modules/.cache/check-underhill.mjs",
     "check:premiere": "esbuild scripts/check-premiere-preview.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/premiere-check.mjs && node node_modules/.cache/premiere-check.mjs && npm run check:premiere:b",
     "generate:premiere": "esbuild scripts/generate-premiere-show.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-premiere-show.mjs && node node_modules/.cache/generate-premiere-show.mjs",
     "generate:premiere:b": "esbuild scripts/generate-stock-shows.ts --bundle --platform=node --format=esm --log-level=error --outfile=node_modules/.cache/generate-stock-shows.mjs && node node_modules/.cache/generate-stock-shows.mjs premiere",
