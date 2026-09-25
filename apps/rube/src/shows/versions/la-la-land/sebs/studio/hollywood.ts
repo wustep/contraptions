@@ -612,9 +612,9 @@ export const hollywood = part<HollyState>(
     { t: beat(176.5), cells: 6.4, hold: [9.2, -1.25], w: 0.85 },
     { t: beat(181.5), cells: 6.6, hold: [10.4, -1.3], w: 0.85 },
     // The hill, whole, rising with them.
-    { t: beat(185.5), cells: 8.6, hold: [14.9, -2.8], w: 0.7 },
-    { t: beat(197), cells: 8.4, hold: [15.0, -3.6], w: 0.7 },
-    { t: beat(207), cells: 9, hold: [15.0, -4.6], w: 0.7 },
+    { t: beat(185.5), cells: 6.4, hold: [14.9, -2.6], w: 0.45 },
+    { t: beat(197), cells: 5.9, hold: [15.0, -3.5], w: 0.4 },
+    { t: beat(207), cells: 6.8, hold: [15.0, -4.5], w: 0.5 },
     // The crest and its fan of light, wide.
     { t: FLOURISH[0] - 0.3, cells: 13, hold: [14.6, -5.7], w: 1 },
     { t: OUT[0], cells: 13.4, hold: [14.6, -5.7], w: 1 },

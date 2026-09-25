@@ -140,7 +140,8 @@ function plan(begin: number) {
   hits.push(LEAN, KISS)
   // The dream drains, and he glides from her side up to the piano, onto the last chord.
   seb.push(hold(seb, LEAVE))
-  seb.push(hop(seb[seb.length - 1], keyRest(LAST_KEY), AT.last, 2.4))
+  // Not a jump but a drift: it starts from rest beside her, gathers, and arrives on the key with the chord.
+  seb.push({ at: AT.last, p: keyRest(LAST_KEY), arc: 1.3, ease: 'in' })
   hits.push(AT.last)
   const last: Press = { midi: LAST_KEY, at: AT.last, until: BAND - 0.15, how: 'ride', s: 0.4 }
   const held = heldOn(LAST_KEY)

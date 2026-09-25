@@ -361,6 +361,14 @@ function drawFloor(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, front), X(k, x1 - x0), X(k, 0.8))
   ctx.restore()
+  // Once the colour has come, the stage face below the painted street goes to the dark of the house, so the number
+  // is framed by night and not by a strip of studio paper.
+  if (reach > 0) {
+    const face = mixHex(M.skyTop, ink, 0.62)
+    const bottom = Math.max(f.y1 + 1, front + 1)
+    const tint = (col: string) => (col === white ? M.paper : face)
+    for (const [a, b, from, to] of bands) if (b > a && (from !== white || to !== white)) fill(a, b, front, bottom, tint(from), tint(to))
+  }
   outline(p, ink, weight * 0.7)
   p.line(X(k, x0), X(k, front), X(k, x1), X(k, front))
   p.stroke(rgba(ink, 0.35))
