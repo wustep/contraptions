@@ -1,11 +1,12 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, laneAt, type Lane, type Pt } from '../../../../../parts'
-import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Companion, type Ctx, type Way } from '../kit'
+import { FLOOR, R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
+import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Ctx, type Way } from '../kit'
 import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { drawWatch, WATCH_ON_SHELF } from './watch'
+import { BED } from '../act2/station'
 
 /**
  * The farmhouse, cut open: Murph's room upstairs, the stairs, the kitchen
@@ -74,6 +75,9 @@ export const house = scenery<null>({
     solid(p, ink, weight, DUST.wood)
     p.rect(X((WINDOW.x0 + WINDOW.x1) / 2), X(WINDOW.y1 + 0.03), X(WINDOW.x1 - WINDOW.x0 + 0.16), X(0.06))
     lightShaft(p, k, c.t)
+
+    // Murph's bed under the window (the one the station's museum rebuilds).
+    farmBed(p, c, c.t)
 
     // Floors, cut: the upstairs floor stops at the stairwell.
     solid(p, ink, weight, DUST.wood)
@@ -362,6 +366,8 @@ export const shelf = part<ShelfState>(
       exit: [2.83, CATCH_Y],
       lane,
       state: { begin: slot.begin, lane, books, lander, flap: flapSwing(lane, knocked, landed + 1.5) },
+      // Young Murph, in her bed from the first frame: this part's frame is the house's, two cells down.
+      company: [{ from: 0, to: M_HOUSE_END, who: 'murph', at: (t) => { const [x, y] = murphHouse(t); return { x, y: y + 2, scale: MURPH_SMALL, color: MURPH_YOUNG } } }],
     }
   },
 )
@@ -1077,15 +1083,129 @@ function drawLandings(p: p5, landings: Landing[], c: Ctx): void {
   }
 }
 
+/* ------------------------------------------------------------------ Murph's bed, and Murph */
+
+const MR = R * MURPH_SMALL
+/** She wakes on the first book to fall (the piano's first note on the shelf), with the stir he wakes with at the end of Act I. */
+const M_WAKES = 5.126
+/** Once he has gone by under the bed on the toy, she is off after him: along the bed, over its foot, and down to the floor. */
+const M_UP = 14.9
+const M_FOOT = 15.62
+const M_FLOOR = 15.9
+/** Her hops down the stairs, a step behind his, on the piano's notes. */
+const M_STEPS = [16.62, 16.8, 17.02, 17.258]
+/** Out along the kitchen floor and the porch's boards, and still at the head of the steps, watching him go. */
+const M_DOOR = 18.3
+const M_AT_STEPS = 20.346
+const M_HOUSE_END = 24
+
+/** How deep the pillow's hollow is where she lies, and how it comes back after she has gone. */
+const murphDip = (t: number): number => 0.014 * (1 - smooth(t, M_UP, M_UP + 0.5))
+
+/** The bed in Murph's room: as the station's museum has it (`act2/replica.ts`), with her in it at dawn. */
+function farmBed(p: p5, c: Ctx, t: number): void {
+  const { k, ink, weight: w } = c
+  const X = (v: number) => v * k
+  const { x0, x1, top, pillow } = BED
+  const box4 = (a: number, b: number, cc: number, d: number, r = 0) => p.rect(X((a + cc) / 2), X((b + d) / 2), X(cc - a), X(d - b), X(r))
+  solid(p, ink, w, DUST.wood)
+  for (const x of [x0 + 0.05, x1 - 0.05]) box4(x - 0.03, top + 0.12, x + 0.03, UP)
+  box4(x0, top + 0.1, x1, top + 0.2)
+  box4(x1 - 0.06, top - 0.14, x1, top + 0.2, 0.01)
+  solid(p, ink, w, DUST.bone)
+  box4(x0 + 0.01, top, x1 - 0.06, top + 0.1, 0.02)
+  outline(p, ink, w * 0.4)
+  p.line(X(x0 + 0.04), X(top + 0.05), X(x1 - 0.09), X(top + 0.05))
+  // The quilt, turned back at its top edge: it slides as she wakes.
+  const q = BED.quilt[0] + (BED.quilt[1] - BED.quilt[0]) * easeOutCubic(clamp((t - M_WAKES) / 0.5))
+  solid(p, ink, w, DUST.teal)
+  p.beginShape()
+  p.vertex(X(q), X(top - 0.035))
+  p.vertex(X(x1 - 0.06), X(top - 0.035))
+  p.vertex(X(x1 - 0.06), X(top + 0.14))
+  p.vertex(X(q + 0.03), X(top + 0.14))
+  p.endShape(p.CLOSE)
+  solid(p, ink, w * 0.8, DUST.bone)
+  box4(q, top - 0.045, q + 0.12, top + 0.02, 0.015)
+  outline(p, ink, w * 0.4)
+  for (const f of [0.35, 0.62]) p.line(X(q + 0.12 + (x1 - 0.06 - q - 0.12) * f), X(top - 0.035), X(q + 0.12 + (x1 - 0.06 - q - 0.12) * f), X(top + 0.14))
+  const dip = murphDip(t)
+  const cx = 3.22
+  solid(p, ink, w, mixHex(DUST.denim, DUST.bone, 0.62))
+  p.beginShape()
+  p.vertex(X(pillow.x0), X(top))
+  p.bezierVertex(X(pillow.x0 - 0.02), X(pillow.top + 0.02), X(pillow.x0 + 0.05), X(pillow.top), X(cx - 0.14), X(pillow.top))
+  p.bezierVertex(X(cx - 0.07), X(pillow.top + dip), X(cx + 0.07), X(pillow.top + dip), X(cx + 0.14), X(pillow.top))
+  p.bezierVertex(X(pillow.x1 - 0.05), X(pillow.top), X(pillow.x1 + 0.02), X(pillow.top + 0.02), X(pillow.x1), X(top))
+  p.endShape(p.CLOSE)
+}
+
+/** Young Murph from dawn to the porch, in the house's own cells. */
+function murphHouse(t: number): Pt {
+  const onPillow: Pt = [3.22, BED.pillow.top + 0.02 - MR]
+  const onQuilt = BED.top - 0.035 - MR
+  const foot: Pt = [BED.x1 - 0.2, onQuilt]
+  const floorY = UP - MR
+  const down: Pt = [BED.x1 + 0.22, floorY]
+  if (t < M_WAKES) return onPillow
+  if (t < M_UP) {
+    // Awake: a stir this way and that, and still, watching the shelf.
+    const k = t - M_WAKES
+    const dx = k < 0.2 ? -0.03 * smooth(k, 0, 0.2) : k < 0.45 ? -0.03 + 0.042 * smooth(k, 0.2, 0.45) : 0.012 * (1 - smooth(k, 0.45, 0.65))
+    return [onPillow[0] + dx, onPillow[1]]
+  }
+  if (t < M_FOOT) {
+    // Along the bed over the quilt, gathering.
+    const u = smooth(t, M_UP, M_FOOT)
+    const y = onPillow[1] + (onQuilt - onPillow[1]) * smooth(t, M_UP, M_UP + 0.25)
+    return [onPillow[0] + (foot[0] - onPillow[0]) * u, y]
+  }
+  if (t < M_FLOOR) {
+    // Over the foot board and down to the floor.
+    const u = (t - M_FOOT) / (M_FLOOR - M_FOOT)
+    return [foot[0] + (down[0] - foot[0]) * u, foot[1] + (down[1] - foot[1]) * u * u - 0.2 * 4 * u * (1 - u)]
+  }
+  // To the stairwell's edge, and down the treads after him, a step behind.
+  const lip: Pt = [4.86, floorY]
+  const treads: Pt[] = [[5.02, -1.5 + R - MR], [5.52, -1.0 + R - MR], [6.03, -0.5 + R - MR], [6.62, R - MR]]
+  if (t < M_STEPS[0] - 0.24) {
+    const u = smooth(t, M_FLOOR, M_STEPS[0] - 0.24)
+    return [down[0] + (lip[0] - down[0]) * u, floorY]
+  }
+  const hops: [number, Pt][] = [[M_STEPS[0] - 0.24, lip], ...M_STEPS.map((n, i) => [n, treads[i]] as [number, Pt])]
+  for (let i = 1; i < hops.length; i++) {
+    if (t < hops[i][0]) {
+      const [a, pa] = hops[i - 1]
+      const [b, pb] = hops[i]
+      const u = (t - a) / (b - a)
+      return [pa[0] + (pb[0] - pa[0]) * u, pa[1] + (pb[1] - pa[1]) * u - 0.1 * 4 * u * (1 - u)]
+    }
+  }
+  // Along the kitchen floor and out of the door onto the porch's boards, after him; slowing to the head of the steps.
+  const last = treads[treads.length - 1]
+  const door: Pt = [8.6, R - MR]
+  const head: Pt = [8 + 1.9 - 0.16, R - MR]
+  if (t < M_DOOR) {
+    const u = (t - M_STEPS[3]) / (M_DOOR - M_STEPS[3])
+    return [last[0] + (door[0] - last[0]) * u, last[1]]
+  }
+  const u = clamp((t - M_DOOR) / (M_AT_STEPS - M_DOOR))
+  const v0 = (door[0] - last[0]) / (M_DOOR - M_STEPS[3])
+  const T = M_AT_STEPS - M_DOOR
+  const D = head[0] - door[0]
+  // From the kitchen's pace to rest at the steps: a cubic with that start speed and none at the end.
+  const s0 = (v0 * T) / D
+  const e = (u ** 3 - 2 * u * u + u) * s0 + (-2 * u ** 3 + 3 * u * u)
+  return [door[0] + D * e, head[1]]
+}
+
 /* ------------------------------------------------------------------ the porch */
 
 /**
- * Out through the door onto the porch, past the rocking chair, and down the
- * three steps into the yard, one to a note. Murph, a child (the small slate
- * ball), is curled in the chair; he clips its runner going by and it rocks
- * her. She watches him go down the steps, then pushes off the seat and rolls
- * after him to the top of the steps, and stops there. (She follows him: she
- * is next seen sneaking into the truck's bed.)
+ * Out through the door onto the porch, past the rocking chair (he clips its
+ * runner going by, and it rocks), and down the three steps into the yard,
+ * one to a note. Murph comes out after him and stops at the head of the
+ * steps (`murphHouse`); she is next seen sneaking into the truck's bed.
  */
 interface PorchState {
   landings: Landing[]
@@ -1097,53 +1217,13 @@ export const PORCH_STEPS = PORCH_NOTES
 const DECK_END = 1.9
 /** The chair's runners' middle, on the deck. */
 const CHAIR_X = 1.05
-/** He clips the runner (show time); she pushes off the seat, and lands on the deck; she stops at the steps' head. */
+/** He clips the runner (show time). */
 const CLIP = 18.065
-const PUSH_OFF = 19.511
-const OFF_LANDS = 19.754
-const AT_STEPS = 20.346
-const MR = R * MURPH_SMALL
-/** Her span ends here, the camera long gone on into the yard. */
-const MURPH_PORCH_END = 24
 
-/** How far the chair is rocked (radians, positive tips it forward) at show time `t`: by his clip, and by her push off. */
+/** How far the chair is rocked (radians, positive tips it forward) at show time `t`: by his clip. */
 function chairRock(t: number): number {
   const a = t - CLIP
-  const b = t - PUSH_OFF
-  // She rocks herself, gently, until he clips it; and it keeps a little of that after she has gone.
-  let r = 0.045 * Math.sin(a * 2.6) * (b < 0 ? 1 : Math.exp(-b / 1.5))
-  r += a < 0 ? 0 : 0.14 * Math.exp(-a / 2.4) * Math.sin(a * 2.6)
-  // Pushing off, she kicks it back, and it rocks on after she has gone.
-  if (b > 0) r -= 0.11 * Math.exp(-b / 2.2) * Math.sin(b * 2.6)
-  return r
-}
-
-/** A point of the chair (its own cells, about its runners' middle on the deck) at show time `t`, in the porch's frame. */
-function onChair(t: number, lx: number, ly: number): Pt {
-  const a = chairRock(t)
-  return [CHAIR_X + lx * Math.cos(a) - ly * Math.sin(a), FLOOR + lx * Math.sin(a) + ly * Math.cos(a)]
-}
-
-/** Young Murph on the porch, in its frame: in the chair, off it, and after him to the head of the steps. */
-function murphPorch(t: number): Companion {
-  const seat = (u: number) => onChair(u, 0.03, -0.325 - MR)
-  const deck = (x: number): Pt => [x, FLOOR - MR]
-  const land = deck(CHAIR_X + 0.5)
-  const head = deck(DECK_END - 0.16)
-  let q: Pt
-  if (t < PUSH_OFF) q = seat(t)
-  else if (t < OFF_LANDS) {
-    // A small hop forward off the seat, onto the boards.
-    const u = (t - PUSH_OFF) / (OFF_LANDS - PUSH_OFF)
-    const a = seat(PUSH_OFF)
-    q = [a[0] + (land[0] - a[0]) * u, a[1] + (land[1] - a[1]) * u - 0.12 * 4 * u * (1 - u)]
-  } else {
-    // After him along the boards, slowing, and still at the head of the steps, watching him go.
-    const u = clamp((t - OFF_LANDS) / (AT_STEPS - OFF_LANDS))
-    const e = 1 - (1 - u) * (1 - u)
-    q = [land[0] + (head[0] - land[0]) * e, head[1]]
-  }
-  return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
+  return a < 0 ? 0 : 0.14 * Math.exp(-a / 2.4) * Math.sin(a * 2.6)
 }
 
 export const porch = part<PorchState>(
@@ -1176,8 +1256,7 @@ export const porch = part<PorchState>(
       exit: [5, 1],
       lane: { segs: route(ways), fire: at(PORCH_NOTES[0]) },
       state: { landings: PORCH_NOTES.map((n, i) => ({ at: at(n), x: landX[i], y: (i + 1) / 3 + R })), out: at(CLIP) },
-      // Young Murph, in the rocking chair from before the camera comes out onto the porch, until it has left her behind.
-      company: [{ from: 14, to: MURPH_PORCH_END, who: 'murph', at: murphPorch }],
+
     }
   },
 )

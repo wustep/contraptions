@@ -302,9 +302,9 @@ async function main(): Promise<void> {
         check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
         // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
         // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
-        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): she rocks
-        // on the porch as he goes, stows away in the truck's bed, follows him to the base and is kept back by TARS at
-        // the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
+        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): in her bed
+        // at dawn she watches the books fall, follows him downstairs and out onto the porch, stows away in the truck's
+        // bed, follows him to the base and is kept back by TARS at the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
         // sends him on. At the end he finds Brand at her camp on Edmunds' planet, and they meet.
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
@@ -322,8 +322,8 @@ async function main(): Promise<void> {
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
-        const murphAway = [1, 60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
-        const murphYoung = [17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
+        const murphAway = [60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
