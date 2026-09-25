@@ -8,7 +8,12 @@
  * to be let into Machine) fill the middle with their own sections, built
  * from the same helpers, so they read as siblings — one frame, different
  * dials — and moving between them is a switch at the top of the panel that
- * carries the seed across. Machine, Explorations, Shows and the Playground
+ * carries the seed across. On those four, a tab click stays in this
+ * document: the address changes and the stage is swapped, and the brand,
+ * the switch and the panel's open or closed state are not built again.
+ * The links stay real addresses, so a deep link, a modified click and the
+ * back button land where they always did. The Builder is still its own
+ * page. Machine, Explorations, Shows and the Playground
  * start with the panel hidden, since there the piece leads; the Builder is
  * worked from its panel and starts with it out. Once the panel has been opened or closed,
  * that choice is kept for the session, so a switch of mode does not slam
@@ -41,11 +46,28 @@ export const MODE_LINKS: readonly ModeLink[] = [
 export interface Shell {
   /** Refresh the mode links so a switch carries the current seed along. */
   setSeed(seed: string): void
+  /** Light the tab for `mode`. The chrome stays; only the mark moves. */
+  setMode(mode: ShellMode): void
+  /** The panel, which scrolls. */
+  root: HTMLElement
+  /** Where a mode puts its sections. A switch clears this and leaves the brand and the byline. */
+  body: HTMLElement
   /** Hide the panel, or bring it back. */
   toggle(): void
   hidden(): boolean
   /** Clear the stage of every piece of chrome, or put it all back as it was. */
   toggleBare(): void
+}
+
+/**
+ * When set, a plain click on a mode tab stays on this document. The host
+ * swaps the mode and the address; the chrome is not built again. A modified
+ * click still opens the link. Unset, on the Builder, a click is a new page.
+ */
+let clientGo: ((mode: ShellMode, href: string) => void) | null = null
+
+export function clientNavigation(go: (mode: ShellMode, href: string) => void): void {
+  clientGo = go
 }
 
 export function el<K extends keyof HTMLElementTagNameMap>(
@@ -184,21 +206,19 @@ export function credit(root: HTMLElement): void {
 }
 
 /**
- * A quiet byline at the foot of every panel. A mode fills the middle after
- * the shell returns, in this same turn; the byline is pinned once that is
- * done, so it is last in the document and not only on the screen. External,
- * so it leaves the page the way the Okazz credit does.
+ * A quiet byline at the foot of every panel. It sits after the slot a mode
+ * fills, so it stays last when that slot is cleared and filled again.
+ * External, so it leaves the page the way the Okazz credit does.
  */
 function byline(root: HTMLElement): void {
-  const foot = el('footer', { class: 'byline' }, [
+  root.append(el('footer', { class: 'byline' }, [
     'Built by ',
     el('a', {
       href: 'https://wustep.me',
       target: '_blank',
       rel: 'noreferrer',
     }, ['Stephen Wu']),
-  ])
-  queueMicrotask(() => root.append(foot))
+  ]))
 }
 
 /**
@@ -258,11 +278,12 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     'aria-label': 'Hide panel',
   }, ['Hide', el('kbd', {}, ['P'])])
 
-  // The mode switch: a tab a mode, the one you are on lit. Real links, so a
-  // switch is a navigation and the back button undoes it. Four marks, each
-  // named on hover and for a screen reader. Native title waits a beat and is
-  // easy to miss on a 32px icon; the name is a small label we place ourselves
-  // (`mode-tip`).
+  // The mode switch: a tab a mode, the one you are on lit. Real links, so
+  // the address is the mode and the back button undoes a switch. On the four
+  // tabs a plain click is handled here and the page does not reload; a
+  // modified click still navigates. Four marks, each named on hover and for
+  // a screen reader. Native title waits a beat and is easy to miss on a 32px
+  // icon; the name is a small label we place ourselves (`mode-tip`).
   const tip = el('div', { class: 'mode-tip', hidden: '' })
   document.body.append(tip)
   const hideTip = () => {
@@ -289,6 +310,7 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     a.removeAttribute('title')
     hideTip()
   }
+  let currentMode = mode
   const links = MODE_LINKS.map((m) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
     dress(a, m)
@@ -296,23 +318,40 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     a.addEventListener('pointerleave', hideTip)
     a.addEventListener('focus', () => showTip(a, m.label))
     a.addEventListener('blur', hideTip)
-    a.addEventListener('click', () => {
-      // A switch is a new page: remember the panel so the next mode opens as this one stood.
+    a.addEventListener('click', (e) => {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      // Remember before the page changes, so a real navigation opens as this one stood.
       rememberPanel(!document.body.classList.contains('hide-panel'))
-    })
-    if (m.mode === mode) {
-      a.setAttribute('aria-current', 'page')
       // The tab you are on is a label, not a reload.
-      a.addEventListener('click', (e) => e.preventDefault())
-    }
+      if (m.mode === currentMode) {
+        e.preventDefault()
+        return
+      }
+      if (!clientGo) return
+      e.preventDefault()
+      hideTip()
+      clientGo(m.mode, a.href)
+    })
+    if (m.mode === mode) a.setAttribute('aria-current', 'page')
     return { m, a }
   })
+  const setMode = (next: ShellMode) => {
+    currentMode = next
+    for (const { m, a } of links) {
+      const on = m.mode === next
+      a.classList.toggle('on', on)
+      if (on) a.setAttribute('aria-current', 'page')
+      else a.removeAttribute('aria-current')
+    }
+  }
   const switcher = el('nav', { class: 'seg mode-switch icons', 'aria-label': 'Mode' }, links.map((l) => l.a))
+  const body = el('div', { class: 'panel-body' })
   root.append(
     el('header', { class: 'brand' }, [
       el('div', { class: 'brand-row' }, [el('h1', {}, ['contraptions']), hideBtn]),
       switcher,
     ]),
+    body,
   )
   byline(root)
 
@@ -435,6 +474,9 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
   }
 
   return {
+    root,
+    body,
+    setMode,
     setSeed(seed) {
       for (const { m, a } of links) {
         a.href = seed ? `${m.path}?seed=${encodeURIComponent(seed)}` : m.path
