@@ -55,14 +55,22 @@ export const interior = scenery<InteriorState>({
     ctx.arc(X(ax), X(ay), X(RIM_R), 0, Math.PI * 2)
     ctx.fill()
 
-    // The spokes, faint, from the hub out to the land.
-    p.stroke(alpha(p, ink, 0.28))
-    p.strokeWeight(Math.max(1, weight * 0.7))
+    // The spokes, from the hub out to the land: pale tubes seen through the air, so up close they read as a structure
+    // going up out of the frame, not a stray line.
     for (const a of SPOKES) {
-      for (const side of [-0.18, 0.18]) {
-        const n: Pt = [-Math.sin(a) * side, Math.cos(a) * side]
-        p.line(X(ax + n[0] + Math.cos(a) * 1.1), X(ay + n[1] + Math.sin(a) * 1.1), X(ax + n[0] + Math.cos(a) * (RIM_R - 0.05)), X(ay + n[1] + Math.sin(a) * (RIM_R - 0.05)))
+      const pts: Pt[] = []
+      for (const [side, r] of [[-0.18, 1.1], [-0.18, RIM_R - 0.05], [0.18, RIM_R - 0.05], [0.18, 1.1]] as Pt[]) {
+        pts.push([ax - Math.sin(a) * side + Math.cos(a) * r, ay + Math.cos(a) * side + Math.sin(a) * r])
       }
+      p.noStroke()
+      p.fill(alpha(p, mixHex(DUST.bone, ink, 0.12), 0.28 * lit + 0.12))
+      p.beginShape()
+      for (const [x, y] of pts) p.vertex(X(x), X(y))
+      p.endShape(p.CLOSE)
+      p.stroke(alpha(p, ink, 0.22))
+      p.strokeWeight(Math.max(1, weight * 0.6))
+      p.line(X(pts[0][0]), X(pts[0][1]), X(pts[1][0]), X(pts[1][1]))
+      p.line(X(pts[2][0]), X(pts[2][1]), X(pts[3][0]), X(pts[3][1]))
     }
 
     // The land: soil, then hull, all the way round.
