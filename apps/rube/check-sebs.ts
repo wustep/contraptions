@@ -33,9 +33,10 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
 
   // The end credits: words the page sets (the canvas sets none), after the band, over the city, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-  check('sebs: end credits after the band, set by the page, naming Stephen Wu, Opus 5.5, the four balls, Justin Hurwitz, both cues and p5.js',
+  check('sebs: end credits after the band, set by the page: directed by Claude Opus 5.5, then the four balls, Justin Hurwitz, both cues and p5.js',
     CREDITS_OK && perf.titles === creditsAt && creditsAt(CARDS[0].at - 0.05).length === 0 && creditsAt(perf.duration).length === 0 &&
-    ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Sebastian', 'Mia', 'David', 'Their son', 'Justin Hurwitz', 'Epilogue', 'The End', 'La La Land', 'p5.js'].every((w) => said.includes(w)) &&
+    CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && !/Stephen Wu/.test(said) &&
+    ['Directed by', 'Claude Opus 5.5', 'Sebastian', 'Mia', 'David', 'Their son', 'Justin Hurwitz', 'Epilogue', 'The End', 'La La Land', 'p5.js'].every((w) => said.includes(w)) &&
     !/tech demo|seb's/i.test(said), said)
 
   // The places, in order, each changing only under a cover.

@@ -35,10 +35,9 @@ const OVERLAP = 0.25
 export const CREDITS_AT = AT.band + 2.9
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.4, role: 'Directed by', names: ['Stephen Wu'] },
-  { hold: 2.5, role: 'Machines, drawings and code', names: ['Claude Opus 5.5'] },
+  { hold: 3.4, role: 'Directed by', names: ['Claude Opus 5.5'], notes: ['Machines, drawings and code'] },
   {
-    hold: 3.8,
+    hold: 4.4,
     role: 'With',
     names: [
       ['Sebastian', 'the blue ball', SEB],
@@ -48,12 +47,12 @@ const script: Omit<Card, 'at'>[] = [
     ],
   },
   {
-    hold: 3.6,
+    hold: 4.2,
     role: 'Music',
     names: ['Justin Hurwitz'],
     notes: ['“Epilogue” and “The End”', 'from La La Land (2016)'],
   },
-  { hold: 2.6, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 3.0, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
