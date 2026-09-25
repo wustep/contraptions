@@ -101,7 +101,7 @@ const X1 = 21
 
 /** The streetlamps along the pavement, and the neon sign projecting over it before the stairwell. */
 const LAMPS = [1.4, 4.6, 7.0]
-const LAMP_H = 2.3
+const LAMP_H = 2.05
 const SIGN: Pt = [9.0, -2.55]
 
 /* ------------------------------------------------------------------ the mechanisms' clocks */
@@ -285,8 +285,28 @@ function drawStreet(p: p5, s: SebsState, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const top = -7.2
-  // The flat: a night sky, violet at the horizon with the city's glow.
-  flat(p, c, -0.5, top, X1 + 0.5, R - top, PAINT.deep, PAINT.violet, true)
+  // The flat: a night sky, violet at the horizon with the city's glow. Its left end is not a standing edge beside the
+  // last part's lighter sky: it fades in over three cells, and the ground under the pavement with it.
+  flat(p, c, -0.5, top, X1 + 0.5, R - top, PAINT.deep, PAINT.violet, false)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const fadeFrom = -3.5
+  const slices = 24
+  const sky = ctx.createLinearGradient(0, X(top), 0, X(R))
+  sky.addColorStop(0, PAINT.deep)
+  sky.addColorStop(1, PAINT.violet)
+  ctx.save()
+  for (let i = 0; i < slices; i++) {
+    const x0 = fadeFrom + ((-0.5 - fadeFrom) * i) / slices
+    const x1 = fadeFrom + ((-0.5 - fadeFrom) * (i + 1)) / slices
+    ctx.globalAlpha = smooth((i + 0.5) / slices, 0, 1)
+    ctx.fillStyle = sky
+    ctx.fillRect(X(x0), X(top), X(x1 - x0) + 0.5, X(R - top))
+    ctx.fillStyle = PAINT.deep
+    ctx.fillRect(X(x0), X(R), X(x1 - x0) + 0.5, X(CEIL - R))
+  }
+  ctx.restore()
+  outline(p, ink, weight * 0.7)
+  p.line(X(X1), X(top), X(X1), X(R))
   const horizon = -2.35
   // The skyline, painted: blocks standing on the horizon, a few windows lit.
   p.push()
@@ -352,26 +372,31 @@ function drawStreet(p: p5, s: SebsState, c: Ctx, T: number): void {
   drawSign(p, c, neonOn(T))
 }
 
-/** A streetlamp on the pavement at `x`: a post, an arm, a lantern; `lit` 0..1. */
+/**
+ * A streetlamp on the pavement at `x`, the same lamp as the one outside the house in `home.ts` (a post, a short arm
+ * to the left, a flat head, a cone of light down to the pavement), so the street is one street across the seam.
+ * `lit` 0..1: it comes up as the two come under it.
+ */
 function drawLamp(p: p5, c: Ctx, x: number, lit: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  const hx = x + 0.38
-  const hy = -LAMP_H
+  const top = -LAMP_H
+  const hx = x - 0.3
   p.push()
-  if (lit > 0.01) glow(p, c, hx, hy + 0.1, 1.25, 0.36 * lit, PAINT.gold)
-  outline(p, ink, weight * 0.9)
-  p.line(X(x), X(R), X(x), X(-LAMP_H + 0.35))
-  p.noFill()
-  p.arc(X(x + 0.38), X(-LAMP_H + 0.35), X(0.76), X(0.7), Math.PI, Math.PI * 1.5)
-  solid(p, ink, weight * 0.8, PAINT.deep)
-  p.rect(X(x), X(R - 0.06), X(0.3), X(0.12))
-  // The lantern: a small house of glass, lit gold.
-  const glass = lit > 0.01 ? alpha(p, PAINT.gold, 0.25 + 0.75 * lit) : alpha(p, PAINT.deep, 1)
-  solid(p, ink, weight * 0.8, glass.toString())
-  p.quad(X(hx - 0.15), X(hy - 0.02), X(hx + 0.15), X(hy - 0.02), X(hx + 0.11), X(hy + 0.3), X(hx - 0.11), X(hy + 0.3))
-  solid(p, ink, weight * 0.8, PAINT.deep)
-  p.triangle(X(hx - 0.19), X(hy - 0.02), X(hx + 0.19), X(hy - 0.02), X(hx), X(hy - 0.2))
+  solid(p, ink, weight * 0.9, PAINT.deep)
+  p.rect(X(x), X((top + R) / 2), X(0.08), X(R - top))
+  outline(p, ink, weight * 0.8)
+  p.line(X(x), X(top), X(hx), X(top - 0.05))
+  const head = () => p.quad(X(hx - 0.1), X(top - 0.05), X(hx + 0.1), X(top - 0.05), X(hx + 0.13), X(top + 0.12), X(hx - 0.13), X(top + 0.12))
+  solid(p, ink, weight * 0.7, PAINT.deep)
+  head()
+  if (lit > 0.01) {
+    p.noStroke()
+    p.fill(alpha(p, PAINT.beam, lit))
+    head()
+    glow(p, c, hx, top + 0.06, 1.3, 0.45 * lit, PAINT.beam)
+    beam(p, c, [hx, top + 0.12], [hx, R], 2.2, 0.1 * lit)
+  }
   p.pop()
 }
 
