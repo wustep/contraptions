@@ -1,4 +1,4 @@
-# Cornfield Chase, Liftoff
+# Interstellar
 
 Copyrighted recordings. This is a private tech demo and one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it.
 
@@ -6,7 +6,7 @@ The music is Hans Zimmer's *Cornfield Chase* and then *No Time for Caution*, bot
 - `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`;
 - `docs/promo/INTERSTELLAR_NO_TIME_FOR_CAUTION_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`. In the Shows picker it is **Liftoff**, and under it, faint, "Directed by wustep", the name a link to https://x.com/wustep.
+Open it at `/shows/?show=interstellar&take=opus55`. In the Shows picker it is its own work, **Interstellar** (it was a take of Cornfield Chase called Liftoff until it grew to two cues of the score), and under it, faint, "Directed by wustep", the name a link to https://x.com/wustep.
 
 ## What it is
 
@@ -417,8 +417,8 @@ These are visual and mechanical only. There are no stills, no text, and no audio
 
 ## How it is built
 
-- **The version file:** `apps/rube/src/shows/versions/cornfield-chase/opus55-liftoff.show.ts`. Everything with weight is behind `load()`.
-- **The show:** `.../cornfield-chase/liftoff/`.
+- **The version file:** `apps/rube/src/shows/versions/interstellar/opus55.show.ts`. Everything with weight is behind `load()`.
+- **The show:** `.../interstellar/liftoff/`.
   - `show.ts`: a `Show` with four universes on one clock: the farm, the dark, the station, and the outside.
     - They share cells. The stage switches universe by time: inside the cloud, on the second cue's accent, and on the undock.
     - It merges Brand in wherever a part has her.

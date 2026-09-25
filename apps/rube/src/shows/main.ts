@@ -345,7 +345,8 @@ function sync(): void {
   }
   const lines: (Node | string)[] = []
   if (current) {
-    lines.push(el('b', {}, [`${current.title} · ${current.label}`]))
+    // A take that is the work (its label repeats the title) is named once.
+    lines.push(el('b', {}, [current.label === current.title ? current.title : `${current.title} · ${current.label}`]))
     if (loading) lines.push(el('br'), 'Loading…')
     else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
     else {
@@ -361,7 +362,7 @@ function sync(): void {
     }
   }
   about.replaceChildren(...lines)
-  document.title = current ? `${current.title}, ${current.label} · contraptions` : 'contraptions · shows'
+  document.title = current ? `${current.label === current.title ? current.title : `${current.title}, ${current.label}`} · contraptions` : 'contraptions · shows'
 
   // The transport.
   transportSec.hidden = exportSec.hidden = works.length === 0

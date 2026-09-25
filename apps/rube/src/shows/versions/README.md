@@ -150,12 +150,14 @@ the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
 
-`cornfield-chase/opus55-liftoff` (Liftoff, with a faint "Directed by wustep"
-byline in the panel from `ShowVersion.director`) is a second Opus 5.5 take
-on the same recording, with every piece new. It is not a
+`interstellar/opus55` (Interstellar, with a faint "Directed by wustep" byline
+in the panel from `ShowVersion.director`) is its own work: two cues of the
+score, Cornfield Chase and then No Time for Caution, so it is not a take of
+Cornfield Chase, and its one take carries no subtitle (the panel shows the
+title alone when the label repeats it). Every piece is new. It is not a
 stock arrangement: two worlds made for it, a farm in the dust years and the
 dark past it, and a rocket between them in place of a portal. The show lives
-in `cornfield-chase/liftoff/`. `show.ts` holds two universes on one clock
+in `interstellar/liftoff/`. `show.ts` holds two universes on one clock
 that share cells, and the stage changes universe while the rocket is inside
 the cloud. Each part is handed a slot (the time the ball arrives, the time
 it leaves, the onsets it must strike) and builds its lane from timed
@@ -173,7 +175,7 @@ the far-side house, where she sends him on; neither ever jumping, and each
 coming and going only out of shot. It ends with credits after the music, in silence: the words are set
 by the page from `Performance.titles(t)` (a show's canvas sets no type), and
 the starlight they come out of is the canvas's. The report is
-`docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+`docs/promo/INTERSTELLAR.md`.
 It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
 only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue

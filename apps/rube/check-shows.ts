@@ -18,16 +18,16 @@ import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/show
 import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
-import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
-import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
-import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
-import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
-import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
-import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
-import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-chase/liftoff/act2/edmunds'
-import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
+import { STRIKES } from './src/shows/versions/interstellar/liftoff/hits'
+import { SWITCH } from './src/shows/versions/interstellar/liftoff/score'
+import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/interstellar/liftoff/music'
+import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/interstellar/liftoff/credits'
+import { FALL_NOTES, GHOST_REST } from './src/shows/versions/interstellar/liftoff/earth/house'
+import { IN_BED, WAKE } from './src/shows/versions/interstellar/liftoff/act2/replica'
+import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/interstellar/liftoff/act2/edmunds'
+import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/interstellar/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
-import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
+import type { LiftoffShow } from './src/shows/versions/interstellar/liftoff/show'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -123,14 +123,18 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
-  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync and Liftoff', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-liftoff,opus55-music-sync,tech-demo,voices')
+  check('the shows are Clair de Lune, Cornfield Chase, Interstellar, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,interstellar,metronome,premiere-arabesque')
+  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels stay unique; the one-shot takes name their model, and Liftoff is just Liftoff', cornfield.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
-  check('Cornfield Chase one-shot notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
-  const liftoffTake = cornfield.find((v) => v.take === 'opus55-liftoff')
-  check('Liftoff\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
-    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot/i.test(liftoffTake.label))
+  check('Cornfield Chase labels stay unique, and the one-shot takes name their model', cornfield.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
+  check('Cornfield Chase one-shot notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
+  const interstellar = shipped.works.find((w) => w.work === 'interstellar')
+  const liftoffTake = interstellar?.versions[0]
+  check('Interstellar is its own work of one take, titled Interstellar and labelled the same (no subtitle)',
+    !!interstellar && interstellar.title === 'Interstellar' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Interstellar')
+  check('Interstellar\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
+    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot|liftoff/i.test(liftoffTake.label))
   check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -206,7 +210,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
-      if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
+      if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
