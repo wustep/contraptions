@@ -1864,7 +1864,10 @@ function drawShards(p: p5, c: Ctx, T: number): void {
         const s2 = Math.min(b, tb)
         px = xb + slide * s2
         py = b < tb ? floor - vb * b + 0.5 * G * b * b : floor
-        ang = sl.spin * tHit + sl.spin * 0.3 * s2
+        // It comes to rest flat on the boards, as glass does, not stood on end.
+        const spun = sl.spin * tHit + sl.spin * 0.3 * s2
+        const flat = Math.round(spun / Math.PI) * Math.PI
+        ang = spun + (flat - spun) * smooth(b, 0, tb + 0.12)
       }
       px = clamp(px, WELL[1] + 0.12, H_R - 0.14)
       // A glint as each one turns face-on to us.
