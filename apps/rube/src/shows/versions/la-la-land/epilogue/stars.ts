@@ -71,7 +71,7 @@ const FLOOR_Y = 4
 /** The fly grid the wires run to, and its sheaves. */
 const GRID = -6.2
 /** The starcloth. */
-const CLOTH = { x0: -2, y0: -7.6, x1: 16, y1: FLOOR_Y + R }
+const CLOTH = { x0: -9, y0: -7.6, x1: 16, y1: FLOOR_Y + R }
 /** The paper moon: where it hangs, and where it flies in from. */
 const MOON_AT: Pt = [8.7, -1.2]
 const MOON_R = 0.72
@@ -262,7 +262,7 @@ export const stars = part<StarsState>(
     const segs = carried((t) => himAt(t + slot.begin), 0, end, Math.ceil(end * 40))
     const lane: Lane = { segs, fire: MOON - slot.begin }
     return {
-      cells: box(-3, -8, EXIT[0] + 8, FLOOR_Y + 1, 2),
+      cells: box(-10, -8, EXIT[0] + 8, FLOOR_Y + 1, 2),
       exit: EXIT,
       lane,
       state: { begin: slot.begin, lane },
@@ -314,7 +314,22 @@ const flare = (T: number): number => {
   return Math.min(1.2, f)
 }
 
+/**
+ * Nothing of this set before the throw: Paris plays out under it. Over the last third of a second of the throw the
+ * cloth comes up through the carousel, so the world has changed by the time the wires take them on the last hit.
+ */
+const FADE = 0.35
 function drawSet(p: p5, s: StarsState, c: Ctx): void {
+  const T = c.t + s.begin
+  if (T < CATCH - FADE) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.globalAlpha *= smooth(T, CATCH - FADE, CATCH)
+  drawSetBody(p, s, c)
+  ctx.restore()
+}
+
+function drawSetBody(p: p5, s: StarsState, c: Ctx): void {
   const { k, ink, weight } = c
   const T = c.t + s.begin
   const X = (v: number) => v * k
@@ -480,6 +495,7 @@ function drawProjector(p: p5, c: Ctx, T: number): void {
 /** The light, over everything: the projector's beams, sweeping the cloth. */
 function drawLight(p: p5, s: StarsState, c: Ctx): void {
   const T = c.t + s.begin
+  if (T < CATCH) return
   const dim = dimmed(T)
   if (dim <= 0) return
   const a = projectorAt(T)

@@ -32,13 +32,14 @@ import { DREAM, PAINT } from './worlds'
  * rollers turning on their own clock. Mia rides the same horse, on its rump
  * a step behind him, all the way round.
  *
- * The cadence (166.30 → 167.65). The carousel brakes: on each of the first
- * four hits the whole machine surges up a notch, and it comes to rest with
- * their horse at the front centre; on the fourth (167.26) the horse's pole
- * fires and throws the two straight up off it, and on the fifth (167.65) the
- * carousel drops back onto the quay with a thump as they hang at the apex,
- * 3.5 cells over the deck, at rest, she a ball's width to his left. The stars
- * take them from there.
+ * The cadence (166.30 → 167.65). The carousel brakes: on the first two hits
+ * the whole machine surges up a notch, and it comes to rest with their horse
+ * at the front centre; on the third (166.92) the horse's pole fires and
+ * throws the two straight up off it, clear over the canopy; on the fourth
+ * (167.26) the carousel drops back onto the quay with a thump under them; on
+ * the fifth (167.65) they hang at the apex, 5.9 cells over the quay, at rest,
+ * she a ball's width to his left, and the stars' wires take them. From that
+ * instant the stars' set has the picture and nothing of this one is drawn.
  *
  * Frame: the ball comes in at (-0.5, 0) rolling right on the stage floor
  * (FLOOR under it). The quay is 2.6 cells up; the apex is the exit.
@@ -62,12 +63,21 @@ const TURN_ON = waltz(154)
 const FROZEN = waltz(177)
 const DOWNBEATS = beatsOf(waltz, 154, 177)
 const BRAKE = CADENCE[0]
-const THROW = CADENCE[3]
+/** The third hit throws them; on the fourth the carousel drops back onto the quay under them; the fifth is the apex. */
+const THROW = CADENCE[2]
+const DROP = CADENCE[3]
 const APEX = CADENCE[4]
 /** Every downbeat something lands on: the flat's, the horses', the cadence's. */
 const ONES = [LANDED, ...DOWNBEATS, ...CADENCE]
 
-export const PARIS_HITS: number[] = [...NOTCHES, ...DOWNBEATS, ...CADENCE]
+/**
+ * The strikes: the eight notches (the first bar's downbeat is the flat's
+ * landing), every bar's downbeat to 177, and the cadence's first four. The
+ * fifth (167.65) is the apex: the stars' wires take them on it, and their set
+ * owns the picture from there, so the carousel's drop back onto the quay under
+ * them is motion, not a strike of this part's.
+ */
+export const PARIS_HITS: number[] = [...NOTCHES, ...DOWNBEATS, ...CADENCE.slice(0, 4)]
 
 /* ------------------------------------------------------------------ the set */
 
@@ -97,7 +107,8 @@ const SADDLE = 0.95
 const HUB_W = 1.2
 const HUB_H = 1.25
 const RCAN = RC + 0.55
-const CANOPY_Y = DECK_Y - 3.0
+/** The canopy: its front valance clears the far rider at the top of the rise. */
+const CANOPY_Y = DECK_Y - 3.12
 const CONE = 1.4
 const H_RISE = 0.4
 const SURGE = 0.35
@@ -106,7 +117,7 @@ const DTH = Math.asin(0.32 / RC)
 /** The flat, and what is painted on it. */
 const FX = 0.2
 const FW = 10.8
-const FH = 6.5
+const FH = 8.2
 const FLAT_NOTCH = 0.55
 const TOWER_X = 8.9
 const RIVER: [number, number] = [7.15, 10.65]
@@ -126,14 +137,17 @@ function flatBottom(t: number): number {
   return y - ring(t - LANDED, 0.035, 28, 0.11)
 }
 
+/** Once both are off it, the lift sinks back into its pit, slowly, and is out of the picture. */
+const LIFT_DOWN: [number, number] = [143.9, 146.6]
+const stowed = (t: number): number => 1 - smooth(t, LIFT_DOWN[0], LIFT_DOWN[1])
 /** The lift's platform, at its centre: a ball on it has its centre here. Six notches up out of the pit. */
 function liftY(t: number): number {
   let y = 0
   for (const at of LIFT_NOTCHES) y += (L_TOP / LIFT_NOTCHES.length) * step(t - at) - ring(t - at, 0.018, 36, 0.08)
-  return y
+  return y * stowed(t)
 }
-/** At its top the platform tips toward the carousel, and they roll. */
-const tilt = (t: number): number => TILT * smooth(t, LIFT_NOTCHES[5] + 0.04, LIFT_NOTCHES[5] + 0.16)
+/** At its top the platform tips toward the carousel, and they roll; it levels as it goes down. */
+const tilt = (t: number): number => TILT * smooth(t, LIFT_NOTCHES[5] + 0.04, LIFT_NOTCHES[5] + 0.16) * stowed(t)
 /** A ball on the platform, `dx` from its centre. */
 const onLift = (t: number, dx: number): Pt => [LIFT_X + dx, liftY(t) + dx * Math.tan(tilt(t))]
 
@@ -178,13 +192,13 @@ function rise(t: number): number {
   return h
 }
 
-/** The whole carousel on the cadence: four surges up, and the drop back onto the quay as they hang at the apex. */
+/** The whole carousel on the cadence: two surges up, and the drop back onto the quay with a thump on the fourth hit. */
 function surge(t: number): number {
   let up = 0
-  for (let i = 0; i < 4; i++) up += SURGE * step(t - CADENCE[i])
-  const d0 = APEX - 0.2
+  for (let i = 0; i < 2; i++) up += SURGE * step(t - CADENCE[i])
+  const d0 = DROP - 0.2
   if (t > d0) up *= 1 - easeInQuad(clamp((t - d0) / 0.2))
-  return up + ring(t - APEX, 0.06, 26, 0.14)
+  return up + ring(t - DROP, 0.06, 26, 0.14)
 }
 
 const T_FLIGHT = APEX - THROW
@@ -195,7 +209,7 @@ const STROKE = 0.5 * V_LAUNCH * T_STROKE
 function stroke(t: number): number {
   const s = t - (THROW - T_STROKE)
   let d = s <= 0 ? 0 : s < T_STROKE ? STROKE * (s / T_STROKE) ** 2 : STROKE
-  const d0 = APEX - 0.2
+  const d0 = DROP - 0.2
   if (t > d0) d *= 1 - easeInQuad(clamp((t - d0) / 0.2))
   return d
 }
@@ -242,10 +256,8 @@ function crank(t: number): number {
   return bars * Math.PI * 2
 }
 
-/** The lamps: up on the first bar, and down again as the stars take over. */
-const lit = (t: number): number => smooth(t, LANDED - 0.02, LANDED + 0.12) * (1 - dark(t))
-/** The set going dark after the throw, as the next set lights. */
-const dark = (t: number): number => smooth(t, 168.4, 170.6)
+/** The lamps: up on the first bar. (The set is gone from the apex on: the stars' cloth owns the picture from there.) */
+const lit = (t: number): number => smooth(t, LANDED - 0.02, LANDED + 0.12)
 
 /* ------------------------------------------------------------------ the part */
 
@@ -301,7 +313,7 @@ export const paris = part<ParisState>(
       ...route(rollIn),
       ...carried((t) => onLift(t + slot.begin, 0.25), at(T_REST), at(T_LEAVE), Math.ceil((T_LEAVE - T_REST) * 30)),
       ...route(off),
-      ...carried(rideSeb, at(T_SEAT), at(THROW), Math.ceil((THROW - T_SEAT) * 40)),
+      ...carried(rideSeb, at(T_SEAT), at(THROW), Math.ceil((THROW - T_SEAT) * 60)),
       ...route([launch, hop(launch, [CX, APEX_Y], at(APEX), G_EARTH)]),
     ]
     const DY0 = seat(-DTH, THROW, true)[1] - LAUNCH[1]
@@ -350,6 +362,8 @@ function drawParis(p: p5, s: ParisState, c: Ctx): void {
   const { k, ink, weight } = c
   const t = c.t + s.begin
   const X = (v: number) => v * k
+  // From the apex the stars' set has the picture: nothing of this one shows.
+  if (t >= APEX) return
   const fb = flatBottom(t)
 
   // The flat, flown in from above: a teal night, deep at the foot.
@@ -357,8 +371,9 @@ function drawParis(p: p5, s: ParisState, c: Ctx): void {
   drawPainted(p, c, fb, t)
   batten(p, c, FX, FX + FW, fb - FH)
 
-  // The rostrum: the quay, its face down to the stage floor.
-  solid(p, ink, weight * 0.8, PAINT.deep)
+  // The rostrum: the quay, its face a dark plane down to the stage floor, its edge the one line.
+  p.noStroke()
+  p.fill(PAINT.deep)
   p.rect(X((ROST[0] + ROST[1]) / 2), X((QUAY_TOP + FLOOR) / 2), X(ROST[1] - ROST[0]), X(FLOOR - QUAY_TOP))
   outline(p, ink, weight)
   p.line(X(ROST[0]), X(QUAY_TOP), X(ROST[1]), X(QUAY_TOP))
@@ -366,25 +381,18 @@ function drawParis(p: p5, s: ParisState, c: Ctx): void {
 
   // The stage floor out of the door, the pit, and the lift.
   outline(p, ink, weight)
-  p.line(X(-0.7), X(FLOOR), X(LIFT_X - LIFT_W / 2), X(FLOOR))
+  p.line(X(-0.5), X(FLOOR), X(LIFT_X - LIFT_W / 2), X(FLOOR))
   p.line(X(LIFT_X + LIFT_W / 2), X(FLOOR), X(ROST[1] + 0.3), X(FLOOR))
   drawLift(p, c, t)
 
   drawCarousel(p, c, t)
-
-  // The lights going down on the set after the throw.
-  const d = dark(t)
-  if (d > 0) {
-    p.noStroke()
-    p.fill(alpha(p, c.bg, 0.9 * d))
-    p.rect(X(5.4), X(-5.5), X(13.4), X(16))
-  }
 }
 
 /** The pole above the hub, over the ball: the far horse passes behind it. */
 function drawOver(p: p5, s: ParisState, c: Ctx): void {
   const { k } = c
   const t = c.t + s.begin
+  if (t >= APEX) return
   const up = surge(t)
   const paint = painter(t)
   p.stroke(paint(PAINT.gold))
@@ -394,7 +402,7 @@ function drawOver(p: p5, s: ParisState, c: Ctx): void {
 
 /** Colours in the dark are the stage's shadow; the lamps bring them up. */
 const painter = (t: number) => {
-  const l = 0.15 + 0.85 * lit(t)
+  const l = 0.08 + 0.92 * lit(t)
   return (hex: string): string => mixHex(PAINT.deep, hex, l)
 }
 
@@ -439,19 +447,24 @@ function drawPainted(p: p5, c: Ctx, fb: number, t: number): void {
   p.stroke(alpha(p, ink, 0.4))
   p.rect(X((RIVER[0] + RIVER[1]) / 2), X(fb - 1.08), X(RIVER[1] - RIVER[0] + 0.5), X(0.16))
   p.line(X(RIVER[0] - 0.25), X(fb - 1.22), X(RIVER[1] + 0.25), X(fb - 1.22))
+  // The spandrels either side of one open arch, the river showing through it.
   p.noStroke()
   p.fill(stone)
   const ax = (RIVER[0] + RIVER[1]) / 2
-  p.beginShape()
-  p.vertex(X(RIVER[0] - 0.1), X(fb - 1.0))
-  p.vertex(X(RIVER[0] - 0.1), X(fb - 0.55))
-  for (let i = 0; i <= 16; i++) {
-    const a = Math.PI - (Math.PI * i) / 16
-    p.vertex(X(ax + Math.cos(a) * 1.45), X(fb - 0.55 + Math.sin(a) * 0.5 * -1))
+  const half = 1.45
+  const spring = fb - 0.5
+  for (const side of [-1, 1]) {
+    const pier = ax + side * (half + 0.3)
+    p.beginShape()
+    p.vertex(X(pier), X(fb - 1.0))
+    p.vertex(X(pier), X(spring + 0.05))
+    p.vertex(X(ax + side * half), X(spring + 0.05))
+    for (let i = 0; i <= 8; i++) {
+      const a = (Math.PI / 2) * (i / 8)
+      p.vertex(X(ax + side * half * Math.cos(a)), X(spring - 0.5 * Math.sin(a)))
+    }
+    p.endShape(p.CLOSE)
   }
-  p.vertex(X(RIVER[1] + 0.1), X(fb - 0.55))
-  p.vertex(X(RIVER[1] + 0.1), X(fb - 1.0))
-  p.endShape(p.CLOSE)
   // The tower's lamps: dark until the first bar, then a sparkle on every downbeat, a different few each time.
   const l = lit(t)
   if (l > 0) {
@@ -477,13 +490,18 @@ function drawRiver(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  const paint = painter(t)
+  const l = lit(t)
+  // Two rows, the far one higher and staggered like bricks; neighbours turn opposite ways. Dark until the lamps.
   const ROLLERS: [number, number, number][] = [
-    [8.9, QUAY_TOP - 0.42, -1],
-    [7.75, QUAY_TOP - 0.2, 1],
-    [10.05, QUAY_TOP - 0.2, 1],
+    [8.27, QUAY_TOP - 0.36, -1],
+    [9.52, QUAY_TOP - 0.36, 1],
+    [7.65, QUAY_TOP - 0.19, 1],
+    [8.9, QUAY_TOP - 0.19, -1],
+    [10.15, QUAY_TOP - 0.19, 1],
   ]
   for (const [rx, ry, dir] of ROLLERS) {
-    const w = 1.25
+    const w = 1.2
     const h = 0.36
     p.push()
     ctx.save()
@@ -491,9 +509,9 @@ function drawRiver(p: p5, c: Ctx, t: number): void {
     ctx.rect(X(rx - w / 2), X(ry - h / 2), X(w), X(h))
     ctx.clip()
     p.noStroke()
-    p.fill(PAINT.sea)
+    p.fill(paint(PAINT.sea))
     p.rect(X(rx), X(ry), X(w), X(h))
-    p.fill(alpha(p, PAINT.blue, 0.85))
+    p.fill(paint(PAINT.blue))
     const pitch = 0.34
     const run = (t * 0.42 * dir) % pitch
     for (let i = -2; i < 6; i++) {
@@ -502,6 +520,7 @@ function drawRiver(p: p5, c: Ctx, t: number): void {
     }
     ctx.restore()
     outline(p, ink, weight * 0.7)
+    p.stroke(alpha(p, ink, 0.3 + 0.7 * l))
     p.rect(X(rx), X(ry), X(w), X(h), X(0.05))
     p.pop()
   }
@@ -559,7 +578,7 @@ function drawCarousel(p: p5, c: Ctx, t: number): void {
   const X = (v: number) => v * k
   const paint = painter(t)
   const l = lit(t)
-  const inkA = alpha(p, ink, 0.4 + 0.6 * l)
+  const inkA = alpha(p, ink, 0.3 + 0.7 * l)
   const up = surge(t)
   const th = theta(t)
   const dy = DECK_Y - up
