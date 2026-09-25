@@ -182,3 +182,17 @@ only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-de
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
 from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
 (`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
+
+`la-la-land/opus55-sebs` (**Seb's**, "Directed by wustep") is a one-shot take on
+Justin Hurwitz's *Epilogue* from La La Land, and then *The End*, 510 s in all.
+Every piece in it is new, and so are its places: Seb's club, Lipton's, a
+theatre, a white studio and a painted Hollywood, an audition in shadow play, a
+globe, a Paris jazz club, painted Paris and the stars, a home movie, the drive,
+and Seb's again, with the city of stars round it at both ends. The code is
+`la-la-land/sebs/` (a Liftoff-style kit: parts built to timed slots, company
+balls, an authored camera, covers that the stage changes place under). The mix
+is built by `scripts/sebs-mix.sh` and measured once by `scripts/sebs-onsets.py`
+into `scripts/show-plans/sebs-onsets.json`; `check:shows` holds every strike
+against it (`apps/rube/check-sebs.ts`). The recordings are copyrighted and
+demo only: `docs/promo/LA_LA_LAND_SEBS_ATTRIBUTION.txt`. The whole story is in
+`docs/promo/LA_LA_LAND_SEBS.md`.

@@ -27,6 +27,7 @@ import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-c
 import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
+import { checkSebs } from './check-sebs'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -126,7 +127,7 @@ async function main(): Promise<void> {
   check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
-  check('the shows are Clair de Lune, Cornfield Chase and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,la-la-land,premiere-arabesque')
   check('Cornfield Chase is Liftoff and the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-liftoff,opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are Liftoff and the two music-syncs', cornfield.map((v) => v.label).join('|') === 'Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
@@ -209,6 +210,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
+      if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
       if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
