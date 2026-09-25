@@ -82,6 +82,14 @@ const MOUNTAIN: Pt[] = [
 const RIDGE: Pt[] = [
   [-10, -5.2], [-6, -6.8], [-2, -7.6], [2, -8.8], [6, -9.3], [9, -8.6], [24, -8.2], [28, -9.6], [32, -10.3], [36, -9.1], [40, -8.2], [44, -7.4],
 ].map(([x, y]) => [H(x), y])
+/** The cloth's painted clouds: long banks low and high in the sky, each a few flat lobes (Hollywood frame, landed). */
+const CLOUDS: { x: number; y: number; fill: string; lobes: [number, number, number, number][] }[] = [
+  { x: 1.5, y: -12.6, fill: mixHex(M.skyTop, M.skyLow, 0.55), lobes: [[0, 0, 2.6, 0.32], [1.6, -0.25, 1.5, 0.3], [-1.4, 0.1, 1.2, 0.22]] },
+  { x: 25.5, y: -12.9, fill: mixHex(M.skyTop, M.flat, 0.28), lobes: [[0, 0, 3.0, 0.32], [-1.9, -0.22, 1.4, 0.26], [1.8, -0.18, 1.5, 0.25]] },
+  { x: 34, y: -11.2, fill: mixHex(M.skyLow, M.flat, 0.3), lobes: [[0, 0, 2.2, 0.26], [1.3, -0.2, 1.2, 0.22]] },
+  { x: 8, y: -11.7, fill: mixHex(M.skyLow, M.skyTop, 0.35), lobes: [[0, 0, 1.8, 0.2], [-1, -0.14, 0.9, 0.17]] },
+]
+
 /**
  * The sign: nine white blocks along the mountain's face, never letters. Widths vary the way a word's letters do;
  * each sits on the slope, a little out of true. Hollywood frame, landed: base centre, width, height, tilt.
@@ -278,6 +286,17 @@ function drawCloth(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(X(k, x0), X(k, y0), X(k, x1 - x0), X(k, bottom - y0))
   ctx.restore()
+  // The painted sun, going down behind the far ridge: a flat disc of pale gold, the hour the film is named for.
+  p.noStroke()
+  p.fill(mixHex(M.bush, M.skyLow, 0.35))
+  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 4.4))
+  p.fill(mixHex(M.bush, M.flat, 0.45))
+  p.circle(X(k, H(21.8)), X(k, -9.4 + dy), X(k, 3.3))
+  // Painted clouds: long flat banks of rose and lavender, the brush's own shapes, no ink.
+  for (const cl of CLOUDS) {
+    p.fill(cl.fill)
+    for (const [ox, oy, rx, ry] of cl.lobes) p.ellipse(X(k, H(cl.x + ox)), X(k, cl.y + oy + dy), X(k, rx * 2), X(k, ry * 2))
+  }
   // The far ridge, hazed in the rose; the mountain in front of it, a deeper violet. Painted: flat, and no ink.
   p.noStroke()
   const ridge = (pts: Pt[], fill: string) => {

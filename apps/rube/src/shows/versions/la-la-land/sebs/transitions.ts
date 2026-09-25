@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../parts'
 import { frame, rgba, scenery, smooth } from './kit'
+import { AT, snap } from './music'
 
 /**
  * The covers the stage changes place under. The dream moves the way the
@@ -14,8 +15,11 @@ import { frame, rgba, scenery, smooth } from './kit'
  */
 export type Cover =
   | { kind: 'black'; down: [number, number]; up: [number, number]; color?: string }
-  /** An iris: a ring of dark closing on a point, and opening on another. */
-  | { kind: 'iris'; down: [number, number]; up: [number, number]; from: (t: number) => Pt; to: (t: number) => Pt; r0: number; r1: number; color?: string }
+  /**
+   * An iris: a ring of dark closing on a point, and opening on another. With `snap`, it closes only to `r0` and holds
+   * that last small circle of light until `snap`, when it shuts on the hit.
+   */
+  | { kind: 'iris'; down: [number, number]; up: [number, number]; from: (t: number) => Pt; to: (t: number) => Pt; r0: number; r1: number; color?: string; snap?: number }
   /** Velvet, drawn in from both sides and parted again. */
   | { kind: 'curtain'; down: [number, number]; up: [number, number]; color: string; deep: string; gold: string }
 
@@ -23,9 +27,24 @@ export interface CoverState {
   covers: Cover[]
 }
 
-/** How much a cover covers at `t`: 0 before, 1 from `down[1]` to `up[0]`, 0 after. */
+/** How long an iris takes to shut on its snap. */
+const SNAP_TIME = 0.06
+
+/**
+ * The trumpet's iris closes to a small circle on the two of them and holds it through the silence before the second
+ * knock; on the knock (the loudest onset in the cue) the last light shuts. That shutting is a strike.
+ */
+export const IRIS_SNAP = AT.knock2
+/** The iris opens on painted Paris on the hit after it (the choir's entrance). */
+export const IRIS_OPEN = snap(269.69, 0.05)?.t ?? 269.677
+/** The red of the club's door lifts on the jazz's first kick. */
+export const RED_LIFT = AT.jazz
+export const COVER_HITS = [RED_LIFT, IRIS_SNAP, IRIS_OPEN]
+
+/** How much a cover covers at `t`: 0 before, 1 from `down[1]` to `up[0]`, 0 after. An iris still holding its last circle is not whole. */
 export function coverAt(c: Cover, t: number): number {
   if (t < c.down[0] || t > c.up[1]) return 0
+  if (c.kind === 'iris' && c.snap !== undefined && t >= c.down[1] && t < c.snap + SNAP_TIME) return 0.99
   if (t < c.down[1]) return smooth(t, c.down[0], c.down[1])
   if (t <= c.up[0]) return 1
   return 1 - smooth(t, c.up[0], c.up[1])
@@ -59,7 +78,8 @@ function drawCover(p: p5, k: number, c: Cover, f: number, t: number): void {
     // It closes to `r0` round `from` (0 is dark), and opens from `r1` round `to`: a spotlight is an iris that stops short.
     const span = Math.hypot(fr.x1 - fr.x0, fr.y1 - fr.y0)
     const least = closing ? c.r0 : c.r1
-    const r = least + (1 - f) * Math.max(0, span - least)
+    let r = least + (1 - f) * Math.max(0, span - least)
+    if (closing && c.snap !== undefined && t >= c.down[1]) r = c.r0 * (1 - smooth(t, c.snap, c.snap + SNAP_TIME))
     // A soft lip a fifth of a cell wide (a stage light's edge), or less on a small opening.
     const lip = Math.min(0.2, r * 0.3)
     const g = ctx.createRadialGradient(at[0] * k, at[1] * k, Math.max(0, r - lip) * k, at[0] * k, at[1] * k, (r + 0.02) * k)

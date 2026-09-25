@@ -66,6 +66,11 @@ const legX = (i: number) => 6.95 + 0.62 * i
 const toe = (i: number): Pt => [legX(i) + 0.15, -0.12]
 const KICK_BEATS = [175, 176.5, 177, 178, 179, 180.5, 181, 182]
 const KICKS = [...KICK_BEATS.map(beat), ...FLOURISH]
+/**
+ * The chorus: the kick-line answers the band's brass stabs on its own while he is elsewhere (the off-beats after the
+ * burst, and the climb), a lower kick in unison, the ensemble keeping the number going behind him.
+ */
+const CHORUS = [144.34, 146.69, 147.17, 152.44, 154.31, 154.9, 156.19, 162.39].map(onset)
 const LEG_COLORS = [M.costume[0], M.costume[5], M.costume[3], M.costume[4]]
 
 /** The hill: the road's stretches (ball-centre heights), the crest. */
@@ -193,7 +198,7 @@ const MIA_LANDS = [185, 186.5, 193, 194.5, 201, 202.5, 209, 211].map(beat)
 const LAMP_AT = [187, 195, 203].map(beat)
 const CREST_LAMP_AT = beat(209)
 export const HOLLYWOOD_HITS: number[] = [
-  ...new Set([...TRAP_AT, ...SIGN_AT, ...STARS.map((s) => s.at), ...KICKS, ...SEB_LANDS, ...MIA_LANDS, ...LAMP_AT, CREST_LAMP_AT, ...FLOURISH, ...OUT].map((t) => Math.round(t * 1e4) / 1e4)),
+  ...new Set([...TRAP_AT, ...SIGN_AT, ...STARS.map((s) => s.at), ...KICKS, ...CHORUS, ...SEB_LANDS, ...MIA_LANDS, ...LAMP_AT, CREST_LAMP_AT, ...FLOURISH, ...OUT].map((t) => Math.round(t * 1e4) / 1e4)),
 ].sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ drawing */
@@ -481,6 +486,15 @@ function kickPose(s: number, held: boolean): { hip: number; knee: number } {
 function legPose(t: number): { hip: number; knee: number } {
   let hip = 0
   let knee = 0
+  for (const at of CHORUS) {
+    const s = t - at
+    if (s < 0 || s > 1.2) continue
+    const q = kickPose(s, false)
+    if (q.hip * 0.62 > hip) {
+      hip = q.hip * 0.62
+      knee = q.knee * 0.62
+    }
+  }
   for (const at of KICKS) {
     const s = t - at
     if (s < 0 || s > 1.2) continue

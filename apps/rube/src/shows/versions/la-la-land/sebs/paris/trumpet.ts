@@ -16,7 +16,7 @@ import { drawDark, FLARE, HANDOFF, HOP_UP, KNOCK, miaAt, seat, SHIVER, VALVE_T }
  * on its biggest note the lamp flares. Out of the silence at 264.7 he
  * springs up off his end (hers sinks) and comes down hard: the kick sounds
  * in the dark room, the beam slams over to his side, and she rolls down it
- * to him and stops against him. The iris closes on him (267.3 → 268.45).
+ * to him and stops against him. The iris closes on them to a small circle (267.3 → 268.2) and shuts on the second knock (268.655).
  * The room and the machines are `jazz-club.ts`; this frame's entry is
  * HANDOFF, where he sits as the solo begins.
  */
@@ -34,7 +34,7 @@ const here = ([x, y]: Pt): Pt => [x - OX, y - OY]
 export const TRUMPET_HITS: number[] = [...VALVE_T.filter((t) => t >= AT.trumpet && t < 268), ...SHIVER, FLARE, KNOCK].sort((a, b) => a - b)
 
 /** She is company until the iris has closed on the two of them. */
-const MIA_TO = 268.45
+const MIA_TO = 268.72
 
 export const trumpet = part<TrumpetState>(
   {
