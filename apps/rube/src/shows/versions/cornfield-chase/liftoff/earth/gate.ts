@@ -42,9 +42,12 @@ import { drawDrone } from './drone'
  * (116½; the gantry part has them from 116).
  *
  * Then TARS walks to the tower's foot and stands guard. Murph, who followed
- * him from the farm, comes racing up the apron after the cage has gone; TARS
- * swings the same slab across her way (120) and she runs into it (120½),
- * tries once more (122), and is kept back. At the ignition TARS fans all its
+ * him from the farm, has come in behind him all along: up the track a few
+ * cells back, under the barrier's arm, and into hiding by the switch as the
+ * camera goes on. When the cage has gone up she follows his way: through the
+ * bunker, pushing its flaps as he did (117½, 119), and out of it straight
+ * into TARS's slab, swung across her way (120) as it was across his: she runs
+ * into it (120½), tries once more (122), and is kept back. At the ignition TARS fans all its
  * slabs out in front of her against the blast, and the billow rolls over
  * them both.
  *
@@ -80,6 +83,8 @@ const SLAPS = [beat(113.5), beat(115)]
 const MEET = beat(115.5)
 
 export const GATE_HITS = [...GRID_HITS, CUP, FLING, ...CAPS, DROP_IN, SET, TIP, SHUT, THROW, TOUCH, FLAPS[0], SLAPS[0], FLAPS[1], HER_OUT, SLAPS[1], MEET]
+/** Murph's pushes on the two flaps, and her running into TARS's slab (its bar across her way is on 120): after this part's slot, so the gantry's slot carries them (see GANTRY_HITS). */
+export const MURPH_BASE_HITS = [beat(117.5), beat(119), beat(120), beat(120.5), beat(122)]
 
 /* ------------------------------------------------------------------ the machines */
 
@@ -245,8 +250,12 @@ const FOLLOW = -0.5
 /** It steps to where it knocks from, then walks to the tower's foot. */
 const STEP0 = [beat(115.5) + 0.08, beat(116)] as const
 const WALK = [beat(117.5), beat(118.375), beat(119.25)] as const
-/** Murph: up the apron (from out of the frame), the slab across her way, into it, again, and waiting. */
-const M_IN = beat(116.6)
+/** Murph: in behind him up the track (from out of the frame), hiding by the switch, through the bunker, the slab across her way, into it, again, and waiting. */
+const M_IN = beat(109.2)
+const M_HIDE = beat(112.6)
+const M_GO = beat(115.8)
+const M_FLAP_A = beat(117.5)
+const M_FLAP_B = beat(119)
 const M_BAR = beat(120)
 const M_HIT = beat(120.5)
 const M_AGAIN = beat(122)
@@ -315,19 +324,25 @@ function tarsPose(s: GateState, t: number): { hub: Pt; slabs: number[] } {
 function murphBase(s: GateState, t: number): Companion {
   const y = FLOOR - MR
   const stop = s.murphStop
-  const start = stop - 5.2
+  const start = s.gate - 3.66
+  const hide = s.sw - 0.26
+  const [a, b] = s.bunker
+  // A cubic from x0 to x1 over [t0, t1], leaving at v0 and arriving at v1 (cells a second).
+  const run = (t0: number, t1: number, x0: number, x1: number, v0: number, v1: number): number => {
+    const T = t1 - t0
+    const w = clamp((t - t0) / T)
+    return hermite(x0, x1, v0 * T, v1 * T, w)
+  }
   let x: number
-  if (t < M_HIT) {
-    // Racing up the apron after the cage, slowing a little as she comes: into the slab going 1.6 a second.
-    const T = M_HIT - M_IN
-    const w = clamp((t - M_IN) / T)
-    const m0 = 3.6 * T
-    const m1 = 1.6 * T
-    x = start + (stop - start) * ((-2 * w ** 3 + 3 * w ** 2) + ((w ** 3 - 2 * w ** 2 + w) * m0 + (w ** 3 - w ** 2) * m1) / (stop - start))
-  } else if (t < M_AGAIN - 0.3) {
+  if (t < M_HIDE) x = run(M_IN, M_HIDE, start, hide, 3.4, 0)
+  else if (t < M_GO) x = hide
+  else if (t < M_FLAP_A) x = run(M_GO, M_FLAP_A, hide, a, 0, 3.0)
+  else if (t < M_FLAP_B) x = run(M_FLAP_A, M_FLAP_B, a, b, 3.0, 2.2)
+  else if (t < M_HIT) x = run(M_FLAP_B, M_HIT, b, stop, 2.2, 1.0)
+  else if (t < M_AGAIN - 0.3) {
     // Thrown back off it, and still.
     const k = t - M_HIT
-    x = stop - 0.16 * (1 - Math.exp(-k / 0.12)) * (k < 0.5 ? 1 : 1)
+    x = stop - 0.16 * (1 - Math.exp(-k / 0.12))
   } else if (t < M_AGAIN) {
     // Once more, at it.
     const w = (t - (M_AGAIN - 0.3)) / 0.3
@@ -378,7 +393,10 @@ function goldGate(s: GateState, lane: Lane, begin: number, t: number): Companion
 }
 
 /** The way-out flap: pushed by him on 114, fallen back as she pushes it on 114.5, and shut behind her on 115. */
-const flapB = (t: number): number => (t < HER_OUT ? flapAngle(t, FLAPS[1], HER_OUT) : flapAngle(t, HER_OUT, SLAPS[1], 1.4))
+const flapB = (t: number): number =>
+  Math.max(t < HER_OUT ? flapAngle(t, FLAPS[1], HER_OUT) : flapAngle(t, HER_OUT, SLAPS[1], 1.4), flapAngle(t, M_FLAP_B, M_FLAP_B + beat(0.5) - beat(0), 1.0))
+/** The way-in flap: pushed by him on 113 and shut behind him; pushed again, less far, by Murph (117½). */
+const flapA = (t: number): number => Math.max(flapAngle(t, FLAPS[0], SLAPS[0]), flapAngle(t, M_FLAP_A, M_FLAP_A + beat(0.5) - beat(0), 1.0))
 
 /** The sweep's long arm, radians (y down), at show time `t`: resting down to the left, then over the top onto its log. */
 function sweepAngle(t: number): number {
@@ -1202,7 +1220,7 @@ function overGate(p: p5, s: GateState, c: Ctx): void {
   // The flaps.
   for (let i = 0; i < 2; i++) {
     const hx = s.bunker[i]
-    const ang = i === 0 ? flapAngle(t, FLAPS[0], SLAPS[0]) : flapB(t)
+    const ang = i === 0 ? flapA(t) : flapB(t)
     p.push()
     p.translate(X(hx), X(FLOOR - TUNNEL))
     p.rotate(-ang)

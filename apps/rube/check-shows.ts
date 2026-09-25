@@ -323,7 +323,7 @@ async function main(): Promise<void> {
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
         const murphAway = [60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
-        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
+        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
