@@ -317,14 +317,16 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
   }
 
   // The room's back wall, lit by the house lights; a dado along its foot with a brass rail.
+  // In the dream the walls are warm with its rose; it drains with the dream, and the room is itself again.
   p.noStroke()
-  p.fill(M.wall)
+  p.fill(mixHex(M.wall, M.rose, 0.3 * L.rose))
   rect(R.wallL1, R.ceil, R.wallR0, R.floor)
   vband(p, k, R.wallL1, 2.0, R.stageX0, R.floor, [[0, rgba(M.deep, 0.7)], [1, rgba(M.deep, 0.9)]])
   p.stroke(rgba(M.brass, 0.5))
   p.strokeWeight(weight * 0.5)
   p.line(X(R.wallL1), X(2.0), X(R.stageX0), X(2.0))
   vband(p, k, R.wallL1, R.ceil, R.wallR0, R.ceil + 1.6, [[0, rgba(M.deep, 0.75)], [1, rgba(M.deep, 0)]])
+  if (L.rose > 0.005) glow(p, k, (R.wallL1 + R.wallR0) / 2, 0.6, 12, M.rose, 0.2 * L.rose, 1.4, 0.75)
 
   // The house lights: brass sconces, each throwing its warm fan up and down the wall.
   for (const x of SCONCES) {
@@ -644,8 +646,38 @@ function drawOver(p: p5, s: ClubRoom, k: number, ink: string, weight: number, t:
   glow(p, k, TABLE.x, TABLE.top - 0.12, 0.42, L.warm, 0.12, 1.4, 0.8)
 }
 
+/**
+ * The follow-spot, at the start: as the house lights go down the dark closes round the piano (which is drawn over the
+ * room, so it stays in its light), and while the camera is with her a pool of light finds Mia at her table, the way the
+ * film finds her face in the dark. Gone by the time the room turns into Lipton's.
+ */
+function drawSpot(p: p5, k: number, t: number): void {
+  const L = lightsAt(t, false)
+  const dark = 0.78 * (1 - L.house)
+  if (dark < 0.01) return
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cx = PIANO.x0 + 12 * PIANO.keyW
+  const cy = -0.6
+  const g = ctx.createRadialGradient(cx * k, cy * k, 1.4 * k, cx * k, cy * k, 4.4 * k)
+  g.addColorStop(0, rgba(M.lacquer, 0))
+  g.addColorStop(1, rgba(M.lacquer, dark))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  ctx.restore()
+  const her = smooth(t, 18.5, 21.5) * (1 - smooth(t, 32.5, 35.5))
+  if (her > 0.01) {
+    glow(p, k, TABLE.x, TABLE.top - 0.35, 1.35, M.candle, 0.3 * her * (dark / 0.78), 1.05, 1.2)
+    glow(p, k, TABLE.x, TABLE.top - 0.45, 0.6, M.ivory, 0.12 * her * (dark / 0.78), 1, 1.1)
+  }
+}
+
 export const clubRoom = scenery<ClubRoom>({
   name: 'club-room',
-  draw: (p, s, c) => drawRoom(p, s, c.k, c.ink, c.bg, c.weight, c.t),
+  draw: (p, s, c) => {
+    drawRoom(p, s, c.k, c.ink, c.bg, c.weight, c.t)
+    if (!s.end && c.t < 40) drawSpot(p, c.k, c.t)
+  },
   over: (p, s, c) => drawOver(p, s, c.k, c.ink, c.weight, c.t),
 })

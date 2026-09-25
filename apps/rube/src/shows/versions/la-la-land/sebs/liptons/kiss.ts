@@ -1,8 +1,8 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { beam, box, carried, frame, part, rgba, type PartShot } from '../kit'
 import { LIPTONS_MAT } from '../worlds'
-import { K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
-import { cupFront, lampLevel } from './room'
+import { bloomFront, K0, KISS_MIA, KISS_SEB, mia, seb, T } from './kiss-plan'
+import { cupFront } from './room'
 
 /**
  * The kiss, and the dream it opens: Lipton's, from the hush (61.777) to the curtain (dream(51)).
@@ -24,19 +24,22 @@ import { cupFront, lampLevel } from './room'
 
 const toK = ([x, y]: Pt): Pt => [x - K0[0], y - K0[1]]
 
-/** The kiss itself. */
-export const KISS_HITS = [T.kiss]
+/** The kiss itself; then the room's lights coming on in its wave: the tree's, and each table's lamp, nearest first. */
+export const KISS_HITS = [T.kiss, T.bloomTree, ...T.bloomTables]
 /** Her walk: the door's bell as she comes in, and her step up onto the stage. */
 export const WALK_HITS = [T.doorIn[1], T.stepUp]
 /** The dream: into the cup, the star, the tip, the swags, onto the garland, the door out, the door shut. */
 export const DREAM_HITS = [T.hopMia, T.hopSeb, T.rise[1], T.tip, ...T.swags, T.doorOut, T.doorShut]
+/** The ride's accents: the star's flash, the bulbs he passes, the string's pulse. */
+export const RIDE_HITS = [T.starFlash, ...T.flares, T.pulse].sort((a, b) => a - b)
 
-/** The hush: how dark the room goes over everything but the two of them. */
+/** The hush: how dark the room goes over everything but the two of them; it lifts behind the kiss's wave. */
 function hush(t: number): number {
   if (t < T.hush + 0.05) return 0
   const down = 0.8 * Math.min(1, Math.max(0, (t - T.hush - 0.05) / 0.8)) ** 1.5
   if (t < T.kiss) return down
-  return down * Math.exp(-(t - T.kiss) / 0.2)
+  const end = T.bloomTables[3] + 0.3
+  return down * (1 - Math.min(1, Math.max(0, (t - T.kiss) / (end - T.kiss))) ** 1.6)
 }
 
 /** Where the light stays in the hush: round the piano's end, from the top key down to her. */
@@ -77,14 +80,15 @@ export const kiss = part<null>(
       ctx.save()
       ctx.translate(px * k, py * k)
       ctx.scale(1, 1.25)
-      const g = ctx.createRadialGradient(0, 0, 0.9 * k, 0, 0, 3.1 * k)
+      // The clear middle opens out with the wave, so the dark goes back from the lamps as they come on.
+      const front = bloomFront(t)
+      const g = ctx.createRadialGradient(0, 0, (0.9 + 0.8 * front) * k, 0, 0, (3.1 + 1.05 * front) * k)
       g.addColorStop(0, rgba('#000000', 0))
       g.addColorStop(1, rgba('#000000', a))
       ctx.fillStyle = g
       const pad = 2
       ctx.fillRect((f.x0 - px - pad) * k, ((f.y0 - py) / 1.25 - pad) * k, (f.x1 - f.x0 + 2 * pad) * k, ((f.y1 - f.y0) / 1.25 + 2 * pad) * k)
       ctx.restore()
-      void lampLevel
     },
   },
   (slot) => {
@@ -125,21 +129,27 @@ export const kiss = part<null>(
       // The hush: in, slowly, on the piano's end.
       [62.3, 4.6, [5.4, 0.7]],
       [64.2, 4.2, [5.85, 1.05]],
-      [T.kiss, 3.4, [6.2, 1.8]],
-      [66.2, 3.4, [6.25, 1.8]],
-      // The bloom: back to the whole room, lit, the two of them still in each other at its middle.
-      [68.4, 14, [-0.6, -1.0]],
-      [69.0, 14, [-0.6, -1.0]],
+      // Closest, and stillest, a breath before they touch; as they touch it starts back.
+      [65.3, 3.4, [6.15, 1.75]],
+      // The bloom, one move: back off the kiss and up as the room's lights come on out both ways, across to the
+      // tables as their lamps flare, wide on the whole lit room while still drifting, and on round to the tree.
+      [66.4, 8.0, [1.9, -0.1]],
+      [67.25, 11.8, [-0.3, -0.8]],
+      [68.6, 13.0, [2.2, -1.05]],
       // To the tree, and up it with the cup.
       [70.8, 6.5, [8.4, 1.3]],
       [73.6, 7.6, [7.6, -0.8]],
-      [76.6, 8.4, [6.8, -2.9]],
-      // Across the room on the bulbs.
-      [78.0, 8.8, [5.6, -2.6]],
-      [85.5, 9.2, [-7.6, -1.2]],
+      [76.6, 7.2, [8.1, -2.8]],
+      // Across the room on the bulbs: close, a little ahead of them, so each bulb is seen lighting beside them.
+      [T.tip, 6.2, [7.7, -3.5]],
+      [(T.swags[0] + T.swags[1]) / 2, 6.0, [5.0, -3.3]],
+      [(T.swags[1] + T.swags[2]) / 2, 5.9, [0.2, -2.8]],
+      [(T.swags[2] + T.swags[3]) / 2, 5.9, [-4.65, -2.1]],
+      [(T.swags[3] + T.swags[4]) / 2, 6.0, [-9.5, -1.3]],
+      [T.swags[4], 6.2, [-11.3, -0.9]],
       // Down the garland, out of the door.
-      [87.2, 7.4, [-11.8, 0.6]],
-      [88.6, 6, [-14.2, 1.3]],
+      [87.2, 6.3, [-12.4, 0.9]],
+      [88.6, 6, [-14.1, 1.35]],
       [90.0, 6, [-14.6, 1.4]],
     ]
     return keys.map(([t, cells, hold]): PartShot => ({ t, cells, hold: toK(hold) }))

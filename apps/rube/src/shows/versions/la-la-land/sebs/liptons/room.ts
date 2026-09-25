@@ -14,10 +14,9 @@ import {
   GARLAND,
   HOOKS,
   inout,
-  KISS_MIA,
-  KISS_SEB,
   mia,
   ON_FLOOR,
+  reach,
   ROOM,
   seb,
   STAR,
@@ -58,14 +57,24 @@ const SNOW = M.cloth
 
 /* ------------------------------------------------------------------ the light */
 
-/** How bright the lamps are: lit as she comes in, down to embers in the hush, and up past where they were with the kiss. */
-export function lampLevel(t: number): number {
+/**
+ * How bright a lamp at `x` is: lit as she comes in, down to embers in the hush, and, as the kiss's wave reaches it,
+ * a flare that settles to a warmer glow than before.
+ */
+export function lampAt(x: number, t: number): number {
   if (t < T.hush) return 1
   const down = 1 - 0.8 * inout((t - T.hush) / 0.9)
-  if (t < T.kiss) return down
-  const since = t - T.kiss
-  const up = 1 - Math.exp(-since / 0.11)
-  return down + (1.3 - down) * up + 0.55 * up * Math.exp(-since / 0.5)
+  const since = t - reach(x)
+  if (since < 0) return down
+  const up = 1 - Math.exp(-since / 0.06)
+  return down + (1.2 - down) * up + 0.7 * up * Math.exp(-since / 0.26)
+}
+
+/** The string's bulbs in the bloom: dark glass until the wave passes, then a low warm glow, a flick brighter as it goes by. */
+function bulbWarm(x: number, t: number): number {
+  const since = t - reach(x)
+  if (since < 0) return 0
+  return Math.min(1, since / 0.04) * 0.5 + 0.45 * knock(since, 0.2)
 }
 
 /** How lit each swag of bulbs is (0 dark, 1 lit, a little more on the flash). */
@@ -155,6 +164,22 @@ const PASS: number[][] = HOOKS.slice(0, -1).map((_, i) =>
     return Infinity
   }),
 )
+
+/** The bulb he is passing on each of the ride's accents (swag, bulb), which flares on it. */
+const FLARES: { i: number; j: number; t: number }[] = T.flares.map((t) => {
+  const i = Math.max(0, Math.min(3, Math.floor((t - T.swags[0]) / (T.swags[1] - T.swags[0]))))
+  const x = seb(t)[0]
+  let j = 0
+  for (let q = 1; q < BULBS; q++) if (Math.abs(wire(i, (q + 0.5) / BULBS)[0] - x) < Math.abs(wire(i, (j + 0.5) / BULBS)[0] - x)) j = q
+  return { i, j, t }
+})
+
+/** A bulb's own flare on the ride, and the whole string's one pulse. */
+function flareOf(i: number, j: number, t: number): number {
+  let f = 0
+  for (const q of FLARES) if (q.i === i && q.j === j) f = Math.max(f, knock(t - q.t, 0.26))
+  return f
+}
 
 /* ------------------------------------------------------------------ drawing helpers */
 
@@ -279,15 +304,7 @@ function wall(d: Draw, t: number): void {
   p.fill(alpha(p, M.gold, 0.7))
   box(d, x0, ROOM.ceil + 0.23, x1, ROOM.ceil + 0.26)
   // The lamps' light up the wall behind each table.
-  const lv = lampLevel(t)
-  for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.4, 1.9, M.lamp, 0.16 * lv, 1, 1.25)
-  // The bloom: a warm wash that goes out from the two of them through the room.
-  const since = t - T.kiss
-  if (since > 0 && since < 3) {
-    const c: Pt = [(KISS_SEB[0] + KISS_MIA[0]) / 2, KISS_SEB[1] - 0.5]
-    const r = 1 + 13 * (1 - Math.exp(-since / 0.7))
-    glow(p, d.k, c[0], c[1], r, M.lamp, 0.3 * Math.exp(-since / 0.9), 1, 0.8)
-  }
+  for (const x of TABLES) glow(p, d.k, x, TABLE.top - 0.4, 1.9, M.lamp, 0.16 * lampAt(x, t), 1, 1.25)
 }
 
 function garland(d: Draw, t: number): void {
@@ -422,7 +439,7 @@ function table(d: Draw, x: number, t: number): void {
     [x - 0.2, 2.9],
     [x - TABLE.half - 0.04, 2.87],
   ])
-  const lv = lampLevel(t)
+  const lv = lampAt(x, t)
   // The lamp's pool on the cloth.
   glow(p, k, x, top + 0.03, 0.55, M.lamp, 0.35 * Math.min(1.4, lv), 1, 0.35)
   solid(p, ink, w * 0.35, M.gold)
@@ -552,7 +569,7 @@ function tree(d: Draw, t: number): void {
     ])
   }
   // Its lights, breathing slowly, brighter in the dream.
-  const lv = Math.min(1.3, lampLevel(t))
+  const lv = Math.min(1.3, lampAt(TREE.x, t))
   for (const L of LIGHTS) {
     const x = cx + treeHalf(L.f) * L.s * 0.9
     const y = treeY(L.f) - 0.05
@@ -584,14 +601,16 @@ function star(d: Draw, t: number): void {
   const run = CUP.low - cupY(t)
   const turn = run / STAR_R
   const lit = starLit(t)
+  // It flashes once as the cup spills them out beside it.
+  const flash = knock(t - T.starFlash, 0.24)
   if (lit > 0) {
-    glow(p, k, sx, sy, 1.6, M.lamp, 0.22 * Math.min(1.4, lit), 1, 1)
-    glow(p, k, sx, sy, 0.7, M.gold, 0.35 * Math.min(1.4, lit), 1, 1)
+    glow(p, k, sx, sy, 1.6 + 0.7 * flash, M.lamp, 0.22 * Math.min(1.4, lit) + 0.28 * flash, 1, 1)
+    glow(p, k, sx, sy, 0.7, M.gold, 0.35 * Math.min(1.4, lit) + 0.3 * flash, 1, 1)
   }
   p.push()
   p.translate(sx * k, sy * k)
   p.rotate(turn)
-  solid(p, ink, w * 0.6, mixHex(mixHex(M.gold, M.panel, 0.35), mixHex(M.gold, M.cloth, 0.35), Math.min(1, lit)))
+  solid(p, ink, w * 0.6, mixHex(mixHex(mixHex(M.gold, M.panel, 0.35), mixHex(M.gold, M.cloth, 0.35), Math.min(1, lit)), M.cloth, 0.6 * flash))
   p.beginShape()
   for (let i = 0; i < 10; i++) {
     const a = -Math.PI / 2 + (i * Math.PI) / 5
@@ -705,18 +724,25 @@ function festoon(d: Draw, t: number): void {
     p.beginShape()
     for (const [x, y] of pts) p.vertex(x * k, y * k)
     p.endShape()
-    // The bulbs, hanging under the wire; dark glass until this swag is lit.
+    // The bulbs, hanging under the wire: dark glass, warm once the kiss's wave has passed, their own colours once
+    // he has gone over this swag's hook; the one he is passing flares on an accent, and the string pulses once.
     const lit = swagLit(i, t)
+    const on = Math.min(1, lit)
+    const pulse = 0.6 * knock(t - T.pulse, 0.28)
     for (let j = 0; j < BULBS; j++) {
       const u = (j + 0.5) / BULBS
       const [x, y0] = wire(i, u)
       const y = y0 + give(x, u)
       const color = M.bulbs[(i * 2 + j) % M.bulbs.length]
       const sway = 0.35 * ring(t - PASS[i][j], 1.7, 0.45)
+      const warm = Math.min(1, bulbWarm(x, t))
+      const hot = Math.min(1, flareOf(i, j, t) + pulse * Math.max(on, warm))
       p.push()
       p.translate(x * k, y * k)
       p.rotate(sway)
+      if (warm > 0 && on < 1) glow(p, k, 0, 0.18, 0.5, M.lamp, 0.28 * warm * (1 - on), 1, 1)
       if (lit > 0) glow(p, k, 0, 0.2, 0.55, color, 0.28 * Math.min(1.3, lit), 1, 1)
+      if (hot > 0.01) glow(p, k, 0, 0.18, 0.95, color, 0.55 * hot, 1, 1.1)
       solid(p, ink, w * 0.3, M.panel)
       p.beginShape()
       p.vertex(-0.03 * k, 0)
@@ -724,8 +750,10 @@ function festoon(d: Draw, t: number): void {
       p.vertex(0.03 * k, 0.07 * k)
       p.vertex(-0.03 * k, 0.07 * k)
       p.endShape(p.CLOSE)
-      const on = Math.min(1, lit)
-      solid(p, mixHex(M.panel, ink, on), w * (0.2 + 0.1 * on), mixHex(mixHex(color, PAPER, 0.78), color, on))
+      const dark = mixHex(color, PAPER, 0.78)
+      const glass = mixHex(mixHex(mixHex(dark, mixHex(color, M.lamp, 0.6), warm * 0.8), color, on), M.cloth, 0.55 * hot)
+      const edge = Math.max(on, 0.5 * warm)
+      solid(p, mixHex(M.panel, ink, edge), w * (0.2 + 0.1 * edge), glass)
       p.beginShape()
       p.vertex(-0.045 * k, 0.07 * k)
       p.bezierVertex(-0.07 * k, 0.14 * k, -0.03 * k, 0.2 * k, 0, 0.23 * k)

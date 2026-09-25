@@ -3,7 +3,7 @@ import { box, carried, part, route, type Way } from '../kit'
 import { AT } from '../music'
 import { hop } from '../physics'
 import {
-  BALLOONS, drawClub, drawLamp, FLASHES, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
+  BALLOONS, drawClub, drawLamp, FLASHES, HANDOFF, J0, LAND_X1, LEAVE, LIGHTS, MEET, MIA_STEPS, miaAt, SEESAW_T, seat, SLAM, SNARE_T,
   SOLO_LANDINGS, stepBall, STEP_T, VALVE_T,
 } from './jazz-club'
 
@@ -13,20 +13,21 @@ import {
  * on over a red cellar. He goes down the stair on the drum fill, a step an
  * eighth, and lands on the band: a see-saw whose ends play the hi-hat and
  * the kick, which he bounces from end to end on the swing, with the trumpet
- * high over its pivot, the snare's stick and the bass's strings along with
- * it. Her premiere is up on the landing: flash guns come down from the vault
- * and fire on the beats as she crosses it, and a net of balloons lets go
- * over the stair. She comes down, lands on the other end as he lands on his,
- * and they ride it together to the band's last chord. (The room and all its
- * machines are `jazz-club.ts`, shared with the trumpet.)
+ * high over its pivot and the snare's stick on the band's accents. Her
+ * premiere is up on the landing: flash guns come down from the vault and
+ * fire on the beats as she crosses it, and at the top of the stair the knot
+ * of a bunch of balloons slips and they go up into the vault. She comes
+ * down, lands on the other end as he lands on his, and they ride it together
+ * to the band's last chord. (The room and all its machines are
+ * `jazz-club.ts`, shared with the trumpet.)
  */
 
 interface JazzState {
   begin: number
 }
 
-/** Every strike: the door, the lights, the stair, every end of the see-saw, the flashes, the balloons, the snare, the band's valves. */
-export const JAZZ_HITS: number[] = [SLAM, LIGHTS, ...STEP_T, ...SEESAW_T, ...FLASHES, BALLOONS, ...SNARE_T, ...VALVE_T.filter((t) => t < AT.trumpet)].sort((a, b) => a - b)
+/** Every strike: the door, the lights, the stair (his steps and hers), every end of the see-saw, the flashes, the balloons, the snare, the band's valves. */
+export const JAZZ_HITS: number[] = [...new Set([SLAM, LIGHTS, ...STEP_T, ...MIA_STEPS, ...SEESAW_T, ...FLASHES, BALLOONS, ...SNARE_T, ...VALVE_T.filter((t) => t < AT.trumpet)])].sort((a, b) => a - b)
 
 export const jazz = part<JazzState>(
   {
@@ -63,18 +64,20 @@ export const jazz = part<JazzState>(
     { t: slot.begin, cells: 3.6, hold: [-0.3, -0.5] },
     { t: LIGHTS - 0.05, cells: 3.9, hold: [-0.1, -0.45] },
     { t: LEAVE + 0.1, cells: 6.2, hold: [1.4, 0.55] },
-    { t: STEP_T[4], cells: 5.4, hold: [2.7, 1.1] },
-    { t: SOLO_LANDINGS[1][0], cells: 4.0, hold: [4.4, 1.45] },
-    { t: 222.6, cells: 3.9, hold: [4.5, 1.45] },
+    // Close on the band while he plays it alone: the see-saw big in frame, the trumpet over it, drifting along the kit.
+    { t: SOLO_LANDINGS[1][0], cells: 3.75, hold: [4.5, 1.5] },
+    { t: 222.6, cells: 3.55, hold: [4.75, 1.55] },
     // Up to the landing for her premiere, the band still in the corner of the frame on the way.
     { t: 224.0, cells: 5.8, hold: [1.4, 0.3] },
     { t: FLASHES[0] + 0.1, cells: 4.3, hold: [-0.85, -0.45] },
     { t: FLASHES[5], cells: 4.5, hold: [-0.2, -0.45] },
     // The balloons go, and she comes down to him.
     { t: BALLOONS + 0.5, cells: 6.0, hold: [1.7, 0.2] },
-    { t: 231.0, cells: 5.6, hold: [3.0, 1.0] },
-    { t: MEET + 0.2, cells: 3.9, hold: [4.4, 1.45] },
-    { t: 236.0, cells: 3.6, hold: [4.45, 1.4] },
-    { t: slot.end - 0.05, cells: 3.8, hold: [4.45, 1.15] },
+    { t: 230.0, cells: 5.8, hold: [2.5, 0.7] },
+    { t: 231.3, cells: 5.3, hold: [3.4, 1.1] },
+    // Close on the two of them riding it; back a little and up to the trumpet as the lights go.
+    { t: MEET + 0.2, cells: 3.75, hold: [4.6, 1.55] },
+    { t: 235.6, cells: 3.5, hold: [4.45, 1.52] },
+    { t: slot.end - 0.05, cells: 3.86, hold: [4.18, 1.22] },
   ],
 )

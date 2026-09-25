@@ -125,20 +125,25 @@ const CX = pchip([
   [NIGHT_END, 10.4],
 ])
 
-/** The float: off the floor on LIFT with just the speed that G_FLOAT spends by APEX, and held there by the dream. */
-const V0 = G_FLOAT * (APEX - LIFT)
-export const FLOAT_H = 0.5 * G_FLOAT * (APEX - LIFT) ** 2
+/**
+ * The float: off the floor on LIFT with just the speed a gentler pull than G_FLOAT spends by APEX, and held there by
+ * the dream. About two cells up: high enough to be among the stars, low enough that the projector they rise from, on
+ * the floor under them, is in the picture with them.
+ */
+const FLOAT_G = G_FLOAT * 0.36
+const V0 = FLOAT_G * (APEX - LIFT)
+export const FLOAT_H = 0.5 * FLOAT_G * (APEX - LIFT) ** 2
 function height(t: number): number {
   if (t <= LIFT) return 0
   if (t <= APEX) {
     const s = t - LIFT
-    return V0 * s - 0.5 * G_FLOAT * s * s
+    return V0 * s - 0.5 * FLOAT_G * s * s
   }
   let h = FLOAT_H
   // A slow climb while the waltz grows, a sinking breath in the quiet, and the swell that lifts them to the top of the sky.
-  h += 0.75 * smooth(t, APEX + 0.6, 316.5)
-  h -= 0.55 * smooth(t, QUIET[0], QUIET[0] + 3.2)
-  h += 2.7 * smooth(t, QUIET[1] - 0.3, DIP - 0.25)
+  h += 0.55 * smooth(t, APEX + 0.6, 316.5)
+  h -= 0.4 * smooth(t, QUIET[0], QUIET[0] + 3.2)
+  h += 1.45 * smooth(t, QUIET[1] - 0.3, DIP - 0.25)
   h -= 0.12 * smooth(t, LAST, NIGHT_END)
   // Afloat: a long slow breath, which comes in only once the float has settled.
   h += 0.1 * Math.sin(((t - APEX) * 2 * Math.PI) / 7.5) * smooth(t, APEX, APEX + 3) * (1 - smooth(t, QUIET[1], QUIET[1] + 2))

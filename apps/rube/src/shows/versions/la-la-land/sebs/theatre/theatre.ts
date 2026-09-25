@@ -74,6 +74,11 @@ const SHOW: { t0: number; t1: number; x: number; lift: number }[] = [
   { t0: on(110.121), t1: on(110.585), x: 15.75, lift: 0.42 },
   { t0: on(112.466), t1: on(112.919), x: 16.2, lift: 0.3 },
 ]
+/** The footlights answer her: where her roll lands, as she leaps, where the leap lands, where she comes home. */
+const FOOT = [on(108.716), on(110.121), SHOW[1].t1, SHOW[2].t1]
+/** The work lights in the wing, each switched on as the machine goes past it: three up the lift's shaft, three down the arbor's track. */
+const LIFT_LAMPS = [on(96.769), on(97.71), on(98.058)]
+const ARBOR_LAMPS = [on(102.4), on(103.573), on(104.037)]
 /** He is on his feet (dream(105)). */
 const SPRING = on(115.519)
 /** The rows rise behind him, one a hit; the last sends the rose up. */
@@ -157,7 +162,7 @@ const PER_ROW = 17
 /** His seat (front row), and where he sits and stands in it. */
 const HIS = 5
 const SEAT_X = seatX(0, HIS)
-const SEATED_Y = ROW_Y[0] - LOW - 0.05
+const SEATED_Y = ROW_Y[0] - LOW - R + 0.045
 const STAND_Y = ROW_Y[0] - HIGH - 0.19
 /** The rose's seat: the back row, in the middle. */
 const ROSE_SEAT: [number, number] = [3, 8]
@@ -220,6 +225,15 @@ function flown(t: number): number {
 const hemAt = (t: number): number => FLOOR - TRAVEL * flown(t)
 const plateAt = (t: number): number => GAL + TRAVEL * flown(t)
 
+/** Where the work lights' trip arms pivot: on the lift's guide beside its shaft, and on the arbor's own track. */
+const RAIL_LIFT = HOIST_X + HOIST_HW + 0.14
+const RAIL_ARBOR = ARBOR_X + ARBOR_HW + 0.07
+/** Each work light: when it is switched, and the height of its trip arm (where the lift's deck, or the arbor's foot, meets it). */
+const WORK = [
+  ...LIFT_LAMPS.map((t) => ({ t, y: deckY(t), lift: true })),
+  ...ARBOR_LAMPS.map((t) => ({ t, y: plateAt(t) + ARBOR_H, lift: false })),
+]
+
 /** 0 before a seat rises, then up with a kick past its height and a heavy settle. */
 function risen(since: number): number {
   if (since <= 0) return 0
@@ -277,6 +291,10 @@ function miaAt(t: number): Companion {
 
 /* ------------------------------------------------------------------ light */
 
+/** The footlights, along the stage's lip inside the arch; and where she is on each move they answer. */
+const FOOT_X = Array.from({ length: 13 }, (_, i) => ARCH0 + 0.4 + (i * (ARCH1 - ARCH0 - 0.8)) / 12)
+const FOOT_AT = FOOT.map((t) => ({ t, x: miaAt(t).x }))
+
 /** The house lights: up, down as the lift arrives, half up for the bows, full for the end. */
 const houseAt = (t: number): number => 1 - 0.88 * ease((t - ARRIVE) / 0.7) + 0.45 * ease((t - BOW2) / 1.2) + 0.45 * ease((t - FINAL[0]) / 0.5)
 /** The stage lights on her window: out behind the curtain, up on the thud, up again at the end. */
@@ -314,7 +332,7 @@ interface TheatreState {
 
 export const THEATRE_HITS: number[] = [
   TREADLE, ...BLADE, STAR, KNOCK, HOIST, ARRIVE, ARBOR, SPOT, THUD, OFF, SEAT,
-  SHOW[1].t1, SHOW[2].t1,
+  SHOW[1].t1, SHOW[2].t1, ...FOOT, ...LIFT_LAMPS, ...ARBOR_LAMPS,
   SPRING, ...ROWS, BOW1, BOW2, LAND, TOUCH, CURTAIN_IN[1], BOW3, ...FINAL,
   ...CLAPS,
 ].filter((t, i, all) => all.indexOf(t) === i).sort((a, b) => a - b)
@@ -409,14 +427,23 @@ export const theatre = part<TheatreState>(
     { t: ARRIVE, cells: 7.0, hold: [10.3, -4.1] },
     { t: ARBOR + 0.3, cells: 10.2, hold: [15.2, -3.2] },
     { t: THUD, cells: 7.4, hold: [15.5, -1.4] },
-    { t: SEAT + 0.3, cells: 5.6, hold: [15.8, -0.45] },
-    { t: 113.4, cells: 5.1, hold: [16.0, -0.3] },
-    { t: SPRING, cells: 5.4, hold: [16.0, 0.05] },
+    // He hops off the arbor, round the arch, and into his seat.
+    { t: SEAT + 0.2, cells: 5.3, hold: [15.5, -0.3] },
+    // Her show: in on her in the spot, the house cut to the front row's backs, and his, along the foot of the frame.
+    { t: SHOW[0].t1, cells: 4.2, hold: [16.3, -0.75] },
+    { t: SHOW[1].t1, cells: 4.0, hold: [16.05, -0.8] },
+    { t: SHOW[2].t1, cells: 3.85, hold: [16.15, -0.8] },
+    // The lead-in bar: the house holds its breath; back a little, to him.
+    { t: 114.9, cells: 4.4, hold: [15.8, -0.45] },
+    { t: SPRING, cells: 5.2, hold: [15.9, 0.0] },
     { t: ROWS[3], cells: 7.0, hold: [16.1, -0.3] },
-    { t: BOW1, cells: 6.3, hold: [16.1, -0.15] },
-    { t: LAND, cells: 4.9, hold: [15.9, -0.35] },
-    { t: CURTAIN_IN[1], cells: 5.4, hold: [15.9, -0.85] },
-    { t: WHITE, cells: 4.9, hold: [15.85, -0.55] },
+    { t: BOW1, cells: 5.8, hold: [16.1, -0.25] },
+    // The curtain calls: close on the two of them at the stage's edge.
+    { t: BOW2 + 0.3, cells: 4.7, hold: [15.95, -0.35] },
+    { t: LAND, cells: 4.5, hold: [15.8, -0.3] },
+    { t: CURTAIN_IN[1], cells: 4.5, hold: [15.8, -0.55] },
+    { t: BOW3, cells: 4.3, hold: [15.8, -0.45] },
+    { t: WHITE, cells: 4.5, hold: [15.8, -0.5] },
   ],
 )
 
@@ -479,6 +506,8 @@ function velvet(p: p5, k: number, x0: number, y0: number, x1: number, y1: number
 }
 
 function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
+  // The stage draws rectangles from their centres; everything here is laid out by its corners.
+  p.rectMode(p.CORNER)
   const { k, ink, weight } = c
   const t = c.t + s.begin
   const f = frame(p, k)
@@ -559,6 +588,7 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   outline(p, ink, weight)
   p.line(WALL_IN * k, FLOOR * k, lip0 * k, FLOOR * k)
   p.line(lip1 * k, FLOOR * k, RIGHT * k, FLOOR * k)
+  drawFoot(p, k, ink, weight, t, stage)
   // A light on the stage's boards where the spot and the stage lights fall.
   if (stage > 0.01) glow(p, k, MID, FLOOR, 3.4, M.bulb, 0.12 * Math.min(1, stage), 1, 0.12)
 
@@ -575,6 +605,64 @@ function drawHouse(p: p5, s: TheatreState, c: Ctx): void {
   outline(p, ink, weight)
   p.line(WALL * k, FLOOR * k, WALL * k, 3.0 * k)
   drawDoor(p, k, ink, weight, t)
+}
+
+/** The footlights: low hoods on the lip, up with the stage lights, and flaring under her where she lands and leaps. */
+function drawFoot(p: p5, k: number, ink: string, weight: number, t: number, stage: number): void {
+  const bg = THEATRE_INK.bg
+  const base = Math.min(1, Math.max(0, stage))
+  const dim = mixHex(bg, M.gold, 0.4)
+  for (const x of FOOT_X) {
+    let fl = 0
+    for (const f of FOOT_AT) fl = Math.max(fl, knock(t - f.t, 0.26) * Math.exp(-(((x - f.x) / 0.75) ** 2)))
+    if (base + fl > 0.01) glow(p, k, x, FLOOR - 0.05, 0.4 + 0.22 * fl, M.bulb, 0.12 * base + 0.3 * fl, 1.2, 1.3)
+    solid(p, ink, weight * 0.45, mixHex(bg, M.gold, 0.55))
+    p.beginShape()
+    p.vertex((x - 0.13) * k, FLOOR * k)
+    p.vertex((x - 0.09) * k, (FLOOR - 0.06) * k)
+    p.vertex((x + 0.09) * k, (FLOOR - 0.06) * k)
+    p.vertex((x + 0.13) * k, FLOOR * k)
+    p.endShape(p.CLOSE)
+    p.noStroke()
+    p.fill(mixHex(dim, M.bulb, Math.min(1, 0.55 * base + fl)))
+    p.ellipse(x * k, (FLOOR - 0.062) * k, 0.15 * k, 0.03 * k)
+  }
+}
+
+/** The work lights in the wing: shaded lamps on the lift's guide and on the arbor's track, each with a trip arm out into the machine's way. */
+function drawWork(p: p5, k: number, ink: string, weight: number, t: number): void {
+  const bg = THEATRE_INK.bg
+  // The lift's guide (the arbor's track is drawn with the arbor).
+  outline(p, alpha(p, ink, 0.45).toString(), weight * 0.5)
+  p.line(RAIL_LIFT * k, (GAL + 0.1) * k, RAIL_LIFT * k, FLOOR * k)
+  for (const w of WORK) {
+    const since = t - w.t
+    const rail = w.lift ? RAIL_LIFT : RAIL_ARBOR
+    // The lamp hangs just outside the machine's way, on the far side of its rail.
+    const lx = rail + 0.2
+    const ly = w.y - 0.26
+    const fl = knock(since, 0.22)
+    if (since >= 0) glow(p, k, lx, ly + 0.05, 0.8 + 0.45 * fl, M.bulb, 0.15 + 0.32 * fl, 1, 1.15)
+    outline(p, alpha(p, ink, 0.7).toString(), weight * 0.45)
+    p.line(rail * k, (ly - 0.06) * k, lx * k, (ly - 0.06) * k)
+    // The bulb under its shade.
+    p.noStroke()
+    p.fill(since >= 0 ? mixHex(M.bulb, M.spot, 0.5 * fl) : mixHex(bg, M.gold, 0.3))
+    p.circle(lx * k, (ly + 0.02) * k, 0.09 * k)
+    solid(p, ink, weight * 0.45, mixHex(bg, M.gold, 0.5))
+    p.arc(lx * k, (ly + 0.01) * k, 0.2 * k, 0.16 * k, Math.PI, Math.PI * 2, p.CHORD)
+    // The trip arm: level into the machine's way; knocked up by the lift's deck, down by the arbor's foot.
+    const thrown = since < 0 ? 0 : Math.min(1, since / 0.06) + 0.1 * Math.max(0, ring(since - 0.06, 3, 0.12))
+    const a = w.lift ? Math.PI + 0.95 * thrown : Math.PI - 0.95 * thrown
+    p.push()
+    p.translate(rail * k, w.y * k)
+    p.rotate(a)
+    outline(p, ink, weight * 0.55)
+    p.line(0, 0, 0.24 * k, 0)
+    solid(p, ink, weight * 0.35, M.gold)
+    p.circle(0.24 * k, 0, 0.05 * k)
+    p.pop()
+  }
 }
 
 /** The marquee over the pavement, the brass plate at its foot, and the blade sign above it. */
@@ -808,8 +896,9 @@ function drawCurtain(p: p5, k: number, ink: string, weight: number, t: number, l
 function drawWing(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const bg = THEATRE_INK.bg
-  // A work light on the wing's wall.
+  // A work light on the wing's wall; the lamps the machines switch on as they pass.
   glow(p, k, 10.3, -2.6, 2.6, M.bulb, 0.13)
+  drawWork(p, k, ink, weight, t)
   // The lift's block, high on its hanger.
   outline(p, alpha(p, ink, 0.5).toString(), weight * 0.5)
   p.line(HBLOCK[0] * k, (HBLOCK[1] - HBLOCK_R) * k, HBLOCK[0] * k, -8.95 * k)
@@ -902,6 +991,7 @@ function drawWing(p: p5, c: Ctx, t: number): void {
 
 /** In front of the balls: the curtain while she is behind it, the proscenium, the gallery's rail, the rows, the rose, the beam. */
 function overHouse(p: p5, s: TheatreState, c: Ctx): void {
+  p.rectMode(p.CORNER)
   const { k, ink, weight } = c
   const t = c.t + s.begin
   const bg = THEATRE_INK.bg

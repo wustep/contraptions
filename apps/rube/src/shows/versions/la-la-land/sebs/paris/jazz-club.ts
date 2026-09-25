@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
-import { alpha, beam, glow, hash, knock, ring, rgba, smooth, type Companion } from '../kit'
+import { alpha, beam, glow, hash, knock, lastOf, ring, rgba, smooth, type Companion } from '../kit'
 import { AT, level, notes, paris, snap } from '../music'
 import { CLUB_INK, CLUB_MAT } from '../worlds'
 
@@ -17,15 +17,17 @@ import { CLUB_INK, CLUB_MAT } from '../worlds'
  * on an end plays it: a ball bouncing from end to end is the swing (the
  * kick, the chick of the hi-hat). Over its pivot, high on a tall stand, the
  * band's trumpet; to the right a snare with its own stick, and a stand-up
- * bass whose strings are plucked every time the see-saw comes down.
+ * bass, idle.
  *
  * He goes down the stair on the drum fill and plays the see-saw alone. Her
  * premiere is on the landing: flash guns come down from the vault on lazy
- * tongs and fire on the beats as she crosses it; a net of balloons lets go
- * over the stair as she reaches the top of it. She comes down step by step
+ * tongs and fire on the beats as she crosses it; the knot of a bunch of
+ * balloons tied to the newel slips as she reaches the top of the stair, and
+ * they go up into the crown of the vault. She comes down step by step
  * and lands on the other end: from then on they ride it together, the two
  * of them the band's feet, to the last chord. The lights go out but for one
- * spot on the trumpet: they sit on its two ends at the edge of the light.
+ * spot on the trumpet: they sit on its two ends at the edge of the light, a
+ * balance, and through the solo she inches in toward him.
  */
 
 const M = CLUB_MAT
@@ -122,14 +124,28 @@ export const DARK: [number, number] = [BUTTON + 0.1, BUTTON + 0.9]
 /** The premiere: flash guns fire on six beats as she crosses the landing; the balloons let go on the seventh. */
 export const FLASHES = [23, 24, 25, 26, 27, 28].map(beat)
 export const BALLOONS = beat(29)
-/** The snare's stick, on the band's accents. */
-export const SNARE_T = [15, 16.5, 18.5, 20.5, 24, 29, 31.5, 41, 46.5].map(beat)
+/** The snare's stick, on the band's accents (the comb's, and three loud ones off it). */
+export const SNARE_T = [...[15, 16.5, 18.5, 20.5, 24, 29, 31.5, 41, 46.5].map(beat), on(220.09), on(230.075), on(235.741)].sort((a, b) => a - b)
 
 /** The trumpet's solo: its knock, from silence, when he comes down hard on his end; she rolls down to him. */
 export const KNOCK = AT.knock1
 export const HOP_UP = KNOCK - 0.35
 export const ROLL_FROM = on(265.056)
 export const TOUCH = on(266.008)
+
+/**
+ * The solo's breaths: in each rest between its phrases she inches along her end toward the pivot, toward him, and
+ * the beam leans his way a little more each time. [from, to, her distance from the pivot after].
+ */
+const INCH: [number, number, number][] = [
+  [244.75, 245.62, 0.41],
+  [253.25, 254.3, 0.335],
+  [258.2, 259.4, 0.265],
+]
+/** The solo's two high accents: the hi-hat's open cymbal, at the edge of the spot, shivers. */
+export const SHIVER = [on(241.325), on(262.072)]
+/** Its biggest (the F the solo comes back in on, every valve up): the spot's lamp flares. */
+export const FLARE = on(246.549)
 
 /* ------------------------------------------------------------------ the see-saw */
 
@@ -166,11 +182,12 @@ export function seesaw(t: number): { a: number; dip: number } {
     const a = e0 === e1 ? from - e0 * TILT * 0.55 * Math.sin(Math.PI * u) : from + (to - from) * u * u
     return { a: a + e0 * TILT * 0.12 * ring(t - t0, 7, 0.05), dip }
   }
-  // After the last chord it settles level on its springs, the two of them balanced on it.
-  let a = TILT * settle(t - BUTTON)
+  // After the last chord it settles level on its springs, the two of them balanced on it; then it leans his way as she
+  // inches in toward him.
+  let a = TILT * settle(t - BUTTON) + leanAt(t)
   if (t >= HOP_UP) {
     // He springs up off his end: hers sinks under her; he comes down hard on the knock, and it slams over to his side.
-    if (t < KNOCK) a -= TILT * 0.45 * smooth(t, HOP_UP, HOP_UP + 0.2)
+    if (t < KNOCK) a += (-TILT * 0.45 - a) * smooth(t, HOP_UP, HOP_UP + 0.2)
     else {
       const s = t - KNOCK
       // From where it was (down on her side) over to his, fast but whole: it slams, it does not teleport.
@@ -181,6 +198,50 @@ export function seesaw(t: number): { a: number; dip: number } {
 }
 /** From the right end down, back to level: slow and heavy, with the two of them on it. */
 const settle = (s: number): number => (s < 0 ? 1 : Math.exp(-s / 0.28) * (Math.cos(s * 6) + 0.5 * Math.sin(s * 6)))
+
+/** How far she sits from the pivot (cells, on her side) at t: her seat, then nearer him in each of the solo's breaths. */
+function miaReach(t: number): number {
+  let d = SEAT_D
+  for (const [a, b, to] of INCH) {
+    if (t >= b) d = to
+    else {
+      if (t > a) d += (to - d) * smooth(t, a, b)
+      break
+    }
+  }
+  return d
+}
+/**
+ * The lean her moves give the beam (radians, his side down): the two of them are a balance, so as she comes in
+ * toward the pivot his end goes down. The beam is heavy on its pedal springs: it follows a little late and settles
+ * with a small overshoot, never a jump. Simulated once from the first breath to his hop.
+ */
+const LEAN = (() => {
+  const t0 = INCH[0][0] - 0.1
+  const dt = 1 / 240
+  const n = Math.ceil((HOP_UP + 0.3 - t0) / dt)
+  const out = new Float32Array(n + 1)
+  // At her last reach, the beam lies over just over half its full tilt.
+  const K = (0.55 * TILT) / (SEAT_D - INCH[INCH.length - 1][2])
+  const w = 2 * Math.PI * 1.05
+  const z = 0.62
+  let a = 0
+  let v = 0
+  for (let i = 0; i <= n; i++) {
+    out[i] = a
+    const goal = K * (SEAT_D - miaReach(t0 + i * dt))
+    v += (w * w * (goal - a) - 2 * z * w * v) * dt
+    a += v * dt
+  }
+  return { t0, dt, out }
+})()
+function leanAt(t: number): number {
+  const u = (t - LEAN.t0) / LEAN.dt
+  if (u <= 0) return 0
+  const i = Math.min(LEAN.out.length - 2, Math.floor(u))
+  const f = Math.min(1, u - i)
+  return LEAN.out[i] * (1 - f) + LEAN.out[i + 1] * f
+}
 
 /** A point on the beam `d` along from the pivot and `up` above its top. */
 export function onBeam(t: number, d: number, up = R): Pt {
@@ -211,14 +272,15 @@ function pedals(t: number): { hat: number; kick: number } {
 
 /** Where she stands on the landing, the steps she comes down on, and her seat. */
 const MIA_WAIT = -1.35
-const MIA_STEPS = [30, 31, 32, 33, 34, 36, 37].map(beat)
+/** Her landings on the stair's steps, on the beats. */
+export const MIA_STEPS = [30, 31, 32, 33, 34, 36, 37].map(beat)
 
 /**
  * Mia, in the jazz frame. She comes out of the door with him and waits on the landing while he goes down; at her
  * premiere she crosses the landing a step a beat, stopping for each flash; at the top of the stair the balloons
  * go, and she comes down it the way he did, only on the beats, a hesitation on the fifth step; she lands on the
- * see-saw's other end with him, and rides it. In the dark she sits on her end; when he knocks, it throws her
- * end up and she rolls down the beam to him.
+ * see-saw's other end with him, and rides it. In the dark she sits on her end and, in the solo's breaths, inches
+ * along it toward him; when he knocks, it throws her end up and she rolls down the beam the rest of the way.
  */
 export function miaAt(t: number): Companion {
   const p = miaPos(t)
@@ -262,9 +324,10 @@ function miaPos(t: number): Pt {
     const lift = (16 * T * T) / 8
     return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u - lift * 4 * u * (1 - u)]
   }
-  if (t < ROLL_FROM) return seat(-1, t)
+  // On her end; in the solo's breaths she inches in along it toward him.
+  if (t < ROLL_FROM) return onBeam(t, -miaReach(t))
   // Down the beam to him: slowly at first, faster, and she stops against him.
-  const d0 = -SEAT_D
+  const d0 = -miaReach(ROLL_FROM)
   const d1 = SEAT_D - 2 * R
   if (t < TOUCH) {
     const u = (t - ROLL_FROM) / (TOUCH - ROLL_FROM)
@@ -375,55 +438,108 @@ function bellLift(t: number): number {
 
 /* ------------------------------------------------------------------ balloons */
 
+/** The tie: a brass cleat on the stair's newel post, where the bunch's ribbons are knotted. */
+const TIE: Pt = [LAND_X1 - 0.05, FLOOR - 0.68]
 interface Balloon {
-  x: number
-  y: number
   color: string
   r: number
-  /** When it lets go, how fast it falls, its sway, where it comes to rest. */
-  at: number
-  v: number
   sway: number
-  rest: Pt
-  land: number
+  /** Where it floats on its ribbon before the knot lets go, and its ribbon's length. */
+  x: number
+  y: number
+  len: number
+  /** After the knot lets go: its flight, sampled from BALLOONS (x, y, vx, vy per step). */
+  track: Float32Array
 }
-const surface = (x: number): number => {
-  if (x < LAND_X1) return FLOOR
-  if (x < STAIR_FOOT) return FLOOR + RISE * Math.min(NSTEP, Math.floor((x - LAND_X1) / RUN) + 1)
-  return GROUND
+const B_DT = 1 / 120
+const B_STEPS = 8 * 120
+/** Tethered: each rides its ribbon, swaying a hair round the tie. */
+function tethered(b: { x: number; y: number; sway: number }, t: number): Pt {
+  const a = 0.018 * Math.sin(t * (0.9 + 0.35 * b.sway) + b.sway * 7) + 0.008 * Math.sin(t * 2.3 + b.sway * 3)
+  const dx = b.x - TIE[0]
+  const dy = b.y - TIE[1]
+  return [TIE[0] + dx * Math.cos(a) - dy * Math.sin(a), TIE[1] + dx * Math.sin(a) + dy * Math.cos(a)]
 }
+/**
+ * The bunch: packed round a middle over the top of the stair, every ribbon to the tie. When the knot lets go they
+ * rise, each at its own pace, drifting toward the crown; they bump the vault and slide along it to the top, and stay
+ * up there, out of the way. One flight each, worked out once.
+ */
 const BALLOON_SET: Balloon[] = (() => {
   const colors = [M.red, M.brass, M.bulb, M.skin, M.red, M.spot, M.brass, M.red, M.bulb, M.skin, M.red, M.brass, M.spot]
-  const out: Balloon[] = []
-  for (let i = 0; i < colors.length; i++) {
-    const x = 1.05 + (i / (colors.length - 1)) * 2.0 + (hash(i, 3) - 0.5) * 0.18
-    const y = -1.9 + Math.sin(i * 2.1) * 0.12 - 0.1 * Math.cos(((x - 2.05) / 1.1) * 1.2)
-    const r = 0.16 + hash(i, 5) * 0.04
-    const drift = (hash(i, 7) - 0.5) * 0.9 + (x - 2.05) * 0.35
-    const restX = Math.min(STAIR_FOOT - 0.3, Math.max(LAND_X1 - 1.2, x + drift))
-    const restY = surface(restX) - r * 1.05
-    const v = 0.75 + hash(i, 11) * 0.35
-    const at = BALLOONS + hash(i, 13) * 0.35
-    const land = at + 0.35 + (restY - y) / v
-    out.push({ x, y, color: colors[i], r, at, v, sway: 0.5 + hash(i, 17), rest: [restX, restY], land })
-  }
+  const C: Pt = [1.15, -1.5]
+  const spots: Pt[] = [[0, 0]]
+  for (let i = 0; i < 6; i++) spots.push([0.3 * Math.cos(i * 1.047 + 0.3), 0.3 * Math.sin(i * 1.047 + 0.3)])
+  for (let i = 0; i < 6; i++) spots.push([0.56 * Math.cos(i * 1.047 + 0.8), 0.5 * Math.sin(i * 1.047 + 0.8)])
+  const out: Balloon[] = spots.map(([dx, dy], i) => {
+    const x = C[0] + dx + (hash(i, 3) - 0.5) * 0.08
+    const y = C[1] + dy + (hash(i, 4) - 0.5) * 0.08
+    const r = 0.155 + hash(i, 5) * 0.04
+    return { color: colors[i % colors.length], r, sway: hash(i, 17), x, y, len: Math.hypot(x - TIE[0], y + r - TIE[1]), track: new Float32Array(0) }
+  })
+  // Where each ends up under the vault, in the order they start (left to right), so none crosses another.
+  const order = out.map((_, i) => i).sort((a, b) => out[a].x - out[b].x)
+  order.forEach((bi, rank) => {
+    const b = out[bi]
+    const goal = 1.35 + (rank / (out.length - 1)) * 2.6
+    const rise = 0.62 + 0.3 * hash(bi, 11)
+    const D = 2.2
+    let [x, y] = tethered(b, BALLOONS)
+    let vx = 0
+    let vy = 0
+    const tr = new Float32Array((B_STEPS + 1) * 4)
+    for (let s = 0; s <= B_STEPS; s++) {
+      tr.set([x, y, vx, vy], s * 4)
+      const age = s * B_DT
+      // Up at its own pace (drag holds it near that speed), steered gently toward its place, wandering a little.
+      const ax = 0.9 * (goal - x) - D * vx + 0.35 * Math.sin(age * (1.4 + b.sway) + bi)
+      const ay = -D * rise - D * vy
+      vx += ax * B_DT
+      vy += ay * B_DT
+      x += vx * B_DT
+      y += vy * B_DT
+      // The vault: it may not go through; it bumps soft and slides along the curve toward the crown.
+      const ox = x - VAULT.cx
+      const oy = y - VAULT.cy
+      const d = Math.hypot(ox, oy)
+      const lim = VAULT.r - b.r * 1.05
+      if (d > lim) {
+        const nx = ox / d
+        const ny = oy / d
+        x = VAULT.cx + nx * lim
+        y = VAULT.cy + ny * lim
+        const vn = vx * nx + vy * ny
+        if (vn > 0) {
+          vx -= 1.3 * vn * nx
+          vy -= 1.3 * vn * ny
+        }
+      }
+    }
+    b.track = tr
+  })
   return out
 })()
 
-function balloonAt(b: Balloon, t: number): { x: number; y: number; a: number } {
-  if (t < b.at) return { x: b.x, y: b.y + 0.01 * Math.sin(t * 1.3 + b.sway * 5), a: 0 }
-  if (t < b.land) {
-    const s = t - b.at
-    const T = b.land - b.at
-    const u = s / T
-    // Drops free for a moment, then drifts down at its own pace, swaying.
-    const y = b.y + (b.rest[1] - b.y) * (u < 0.1 ? u * u * 5 : 0.05 + (u - 0.1) * 1.055)
-    const x = b.x + (b.rest[0] - b.x) * smooth(u, 0, 1) + 0.12 * Math.sin(s * (1.6 + b.sway)) * Math.sin(Math.PI * u)
-    return { x, y: Math.min(b.rest[1], y), a: 0.25 * Math.sin(s * (1.6 + b.sway) + 1) }
+/** Where a balloon is at t, its lean, and how fast it is going (for its ribbon). */
+function balloonAt(b: Balloon, t: number): { x: number; y: number; a: number; vx: number; vy: number } {
+  if (t < BALLOONS) {
+    const [x, y] = tethered(b, t)
+    return { x, y, a: Math.atan2(x - TIE[0], TIE[1] - y) * 0.6, vx: 0, vy: 0 }
   }
-  // A light bounce where it lands, and still.
-  const s = t - b.land
-  return { x: b.rest[0], y: b.rest[1] - 0.12 * Math.abs(Math.sin(s * 5)) * Math.exp(-s / 0.35), a: 0.2 * Math.exp(-s / 0.5) * Math.sin(s * 6) }
+  const u = Math.min(B_STEPS, (t - BALLOONS) / B_DT)
+  const i = Math.min(B_STEPS - 1, Math.floor(u))
+  const f = u - i
+  const tr = b.track
+  const at = (j: number) => tr[i * 4 + j] * (1 - f) + tr[(i + 1) * 4 + j] * f
+  const x = at(0)
+  // Up against the vault at last, it bobs a hair on the room's air.
+  const rest = smooth(t, BALLOONS + B_STEPS * B_DT - 2, BALLOONS + B_STEPS * B_DT)
+  const y = at(1) + rest * 0.01 * Math.sin(t * 1.1 + b.sway * 6)
+  const vx = at(2)
+  const vy = at(3)
+  const lean0 = Math.atan2(b.x - TIE[0], TIE[1] - b.y) * 0.6
+  const a = lean0 * (1 - smooth(t, BALLOONS, BALLOONS + 0.6)) + Math.max(-0.35, Math.min(0.35, 0.3 * vx)) + 0.05 * Math.sin(t * 1.3 + b.sway * 4)
+  return { x, y, a, vx, vy }
 }
 
 /* ------------------------------------------------------------------ light */
@@ -572,7 +688,7 @@ export function drawClub(p: p5, k: number, weight: number, t: number): void {
   drawFlashGuns(p, k, weight, t, L)
 
   // The band.
-  drawBass(p, k, weight, t, L)
+  drawBass(p, k, weight, L)
   drawTrumpet(p, k, weight, t, L)
   drawHat(p, k, weight, t, L)
   drawKick(p, k, weight, t, L)
@@ -812,7 +928,20 @@ function drawHat(p: p5, k: number, weight: number, t: number, L: number): void {
     p.endShape(p.CLOSE)
   }
   cym(HAT_Y, 1)
+  // The upper cymbal: in the solo, open at the edge of the spot, it shivers on the trumpet's high accents, rocking
+  // on its rod and catching the light on the rim that tips up.
+  const sh = lastOf(SHIVER, t)
+  const rock = sh.i >= 0 ? ring(sh.ago, 3.4, 0.28) : 0
+  p.push()
+  p.translate(S(HAT_X), S(HAT_Y - gap))
+  p.rotate(-0.13 * rock)
+  p.translate(-S(HAT_X), -S(HAT_Y - gap))
   cym(HAT_Y - gap, -1)
+  p.pop()
+  if (sh.i >= 0 && sh.ago < 0.9) {
+    const f = smooth(sh.ago, 0, 0.012) * (0.75 * Math.exp(-sh.ago / 0.16) + 0.25 * Math.exp(-sh.ago / 0.5))
+    glow(p, k, HAT_X + 0.25, HAT_Y - gap - 0.035 - 0.03 * rock, 0.26, M.spot, 0.6 * f, 1.3, 0.45)
+  }
   // The chick: a glint off the closed pair.
   const since = sinceHit(t, -1)
   if (since < 0.25) glow(p, k, HAT_X, HAT_Y - 0.02, 0.5, M.bulb, 0.45 * knock(since, 0.08) * lit, 1.4, 0.5)
@@ -878,23 +1007,25 @@ function drawSnare(p: p5, k: number, weight: number, t: number, L: number): void
   p.line(S(sx), S(sy + 0.12), S(sx), S(GROUND - 0.25))
   p.line(S(sx), S(GROUND - 0.25), S(sx - 0.18), S(GROUND))
   p.line(S(sx), S(GROUND - 0.25), S(sx + 0.18), S(GROUND))
-  // Its stick: a hinged arm on its own post, cocked, and down on the accent.
-  let i = -1
-  for (let j = 0; j < SNARE_T.length; j++) if (SNARE_T[j] <= t + 0.18) i = j
-  let lift = 1
-  if (i >= 0) {
-    const s = t - SNARE_T[i]
-    lift = s < 0 ? 1 - 0.25 * smooth(s, -0.18, -0.05) + 0.25 * smooth(s, -0.05, 0) - smooth(s, -0.05, 0) : smooth(s, 0.02, 0.3)
-    lift = Math.max(0, Math.min(1, lift))
+  // Its stick: a hinged arm on its own post. It waits cocked; before an accent it draws back a little further, then
+  // snaps down into the skin on the onset, and lifts back to cocked.
+  const { i, ago } = lastOf(SNARE_T, t)
+  let up = i >= 0 && ago < 0.45 ? smooth(ago, 0.02, 0.42) : 1
+  const next = SNARE_T[i + 1]
+  if (next !== undefined && t > next - 0.22) {
+    const s = t - next
+    const drop = s > -0.07 ? ((s + 0.07) / 0.07) ** 2 : 0
+    up = (up + 0.3 * smooth(s, -0.22, -0.07)) * (1 - drop)
   }
   const pivot: Pt = [sx + 0.42, sy - 0.2]
-  const ang = Math.PI + 0.35 - 0.75 * lift
+  // Up 0 lays the tip on the skin; up 1 is cocked.
+  const ang = Math.PI - 0.4 + 0.75 * up
   const tip: Pt = [pivot[0] + Math.cos(ang) * 0.5, pivot[1] + Math.sin(ang) * 0.5]
   p.stroke(alpha(p, M.black, 1))
   p.strokeWeight(weight * 0.9)
   p.line(S(pivot[0]), S(pivot[1]), S(pivot[0]), S(GROUND - 0.2))
   // The drum: a shallow shell, its skin face up; it shivers on the hit.
-  const hit = i >= 0 ? knock(t - SNARE_T[i], 0.08) : 0
+  const hit = i >= 0 ? knock(ago, 0.08) : 0
   p.stroke(rgba(INK, 0.4 + 0.25 * lit))
   p.strokeWeight(weight * 0.7)
   p.fill(mixHex(M.brass, M.black, 0.45 - 0.25 * lit))
@@ -909,7 +1040,7 @@ function drawSnare(p: p5, k: number, weight: number, t: number, L: number): void
   p.circle(S(pivot[0]), S(pivot[1]), S(0.06))
 }
 
-function drawBass(p: p5, k: number, weight: number, t: number, L: number): void {
+function drawBass(p: p5, k: number, weight: number, L: number): void {
   const S = X(k)
   const lit = Math.max(L, 0.2)
   p.push()
@@ -949,28 +1080,12 @@ function drawBass(p: p5, k: number, weight: number, t: number, L: number): void 
   p.rect(S(-0.06), S(-0.42), S(0.12), S(0.3))
   p.fill(mixHex(M.skin, M.brass, 0.4))
   p.rect(S(-0.09), S(-0.6), S(0.18), S(0.04))
-  // Strings, bridge to scroll: plucked each time the see-saw comes down; the plucked one hums.
-  let last = -1
-  let ago = Infinity
-  for (let j = 0; j < SEESAW_T.length; j++)
-    if (SEESAW_T[j] <= t) {
-      last = j
-      ago = t - SEESAW_T[j]
-    }
-  if (KNOCK <= t) ago = Math.min(ago, t - KNOCK)
+  // Strings, bridge to scroll. The bass stands idle: nothing in the machine reaches it, so nothing plucks it.
+  p.stroke(alpha(p, M.skin, 0.55 + 0.3 * lit))
+  p.strokeWeight(weight * 0.3)
   for (let s = 0; s < 4; s++) {
     const x = -0.045 + s * 0.03
-    const hum = last >= 0 && last % 4 === s ? 0.018 * Math.exp(-ago / 0.25) : 0
-    p.stroke(alpha(p, M.skin, 0.55 + 0.3 * lit))
-    p.strokeWeight(weight * 0.3)
-    if (hum > 0.002) {
-      p.noFill()
-      p.beginShape()
-      p.vertex(S(x), S(-0.6))
-      p.quadraticVertex(S(x + hum), S(-1.55), S(x), S(-2.5))
-      p.quadraticVertex(S(x - hum), S(-1.55), S(x), S(-0.6))
-      p.endShape()
-    } else p.line(S(x), S(-0.6), S(x), S(-2.5))
+    p.line(S(x), S(-0.6), S(x), S(-2.5))
   }
   p.pop()
 }
@@ -1056,32 +1171,45 @@ function drawTrumpet(p: p5, k: number, weight: number, t: number, L: number): vo
 function drawBalloons(p: p5, k: number, weight: number, t: number, L: number): void {
   const S = X(k)
   const lit = Math.max(L, 0.2)
-  const net0: Pt = [0.9, vaultY(0.9) + 0.2]
-  const net1: Pt = [3.2, vaultY(3.2) + 0.2]
-  // The net: slung between two hooks; on the beat its right side lets go and it hangs from the left.
-  const drop = smooth(t, BALLOONS, BALLOONS + 0.3)
-  const swing = t > BALLOONS ? 0.06 * ring(t - BALLOONS - 0.3, 1.4, 0.5) : 0
+  const since = t - BALLOONS
+  const qs = BALLOON_SET.map((b) => balloonAt(b, t))
+  // The ribbons: taut to the knot on the tie while it holds; on the beat the knot slips and they spring loose and
+  // trail under each balloon as it goes up.
+  const loose = since >= 0 ? smooth(since, 0, 0.28) : 0
   p.noFill()
-  p.stroke(alpha(p, M.skin, 0.45 * lit))
+  p.stroke(alpha(p, M.skin, 0.5 * lit))
   p.strokeWeight(weight * 0.4)
-  const mid: Pt = [(net0[0] + net1[0]) / 2, Math.max(net0[1], net1[1]) + 0.45]
-  const end1: Pt = [net1[0] + (net0[0] + 0.25 - net1[0]) * drop + swing, net1[1] + (1.6 - 0) * drop]
-  p.beginShape()
-  p.vertex(S(net0[0]), S(net0[1]))
-  p.quadraticVertex(S(mid[0] - 0.4 * drop), S(mid[1] + 0.5 * drop), S(end1[0]), S(end1[1]))
-  p.endShape()
-  p.beginShape()
-  p.vertex(S(net0[0]), S(net0[1]))
-  p.quadraticVertex(S(mid[0] - 0.3 * drop), S(mid[1] - 0.25 + 0.6 * drop), S(end1[0]), S(end1[1]))
-  p.endShape()
-  for (const b of BALLOON_SET) {
-    const q = balloonAt(b, t)
+  BALLOON_SET.forEach((b, i) => {
+    const q = qs[i]
+    const kx = q.x - Math.sin(q.a) * (b.r + 0.03)
+    const ky = q.y + Math.cos(q.a) * (b.r + 0.03)
+    const trail = 0.24 + 0.06 * b.sway
+    const tail: Pt = [kx - 0.18 * q.vx + 0.04 * Math.sin(t * 1.9 + b.sway * 5), ky + trail]
+    const end: Pt = [TIE[0] + (tail[0] - TIE[0]) * loose, TIE[1] + (tail[1] - TIE[1]) * loose]
+    // The trailing ribbon bows against the way it is going.
+    const bow = loose * (-0.12 * q.vx + 0.03 * Math.sin(t * 2.6 + b.sway * 9))
+    p.beginShape()
+    p.vertex(S(kx), S(ky))
+    p.quadraticVertex(S((kx + end[0]) / 2 + bow), S((ky + end[1]) / 2), S(end[0]), S(end[1]))
+    p.endShape()
+  })
+  // The tie: a brass ring on the newel, the knot in it; it jumps when the knot slips.
+  const jolt = since >= 0 ? 0.025 * ring(since, 5, 0.12) : 0
+  p.stroke(alpha(p, M.brass, 0.45 + 0.45 * L))
+  p.strokeWeight(weight * 0.7)
+  p.noFill()
+  p.circle(S(TIE[0]), S(TIE[1] + 0.03 - jolt), S(0.07))
+  if (since < 0) {
+    p.noStroke()
+    p.fill(mixHex(M.skin, M.black, 0.3 - 0.2 * lit))
+    p.circle(S(TIE[0]), S(TIE[1]), S(0.045))
+  }
+  for (let i = 0; i < BALLOON_SET.length; i++) {
+    const b = BALLOON_SET[i]
+    const q = qs[i]
     p.push()
     p.translate(S(q.x), S(q.y))
     p.rotate(q.a)
-    p.stroke(alpha(p, M.black, 0.5))
-    p.strokeWeight(weight * 0.35)
-    p.line(0, S(b.r), S(0.02), S(b.r + 0.2))
     p.stroke(rgba(INK, 0.25 + 0.2 * lit))
     p.strokeWeight(weight * 0.5)
     p.fill(mixHex(M.black, b.color, 0.35 + 0.65 * lit))
@@ -1104,19 +1232,24 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   const S = X(k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const pool: Pt = [PIVOT[0], GROUND - 0.9]
+  // On the solo's biggest note the lamp's filament flares: the spot surges, and for a moment the dark gives back a
+  // little of the room round it.
+  const fs = t - FLARE
+  const fl = fs < -0.02 ? 0 : smooth(fs, -0.02, 0) * (0.8 * Math.exp(-Math.max(0, fs) / 0.24) + 0.2 * Math.exp(-Math.max(0, fs) / 0.9))
   // The dark: nearly black, with a soft round hole where the spot falls.
   ctx.save()
-  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.7), S(pool[0]), S(pool[1]), S(2.1))
+  const g = ctx.createRadialGradient(S(pool[0]), S(pool[1]), S(0.7 + 0.3 * fl), S(pool[0]), S(pool[1]), S(2.1 + 0.8 * fl))
   g.addColorStop(0, rgba(M.black, 0))
-  g.addColorStop(1, rgba(M.black, 0.93 * f))
+  g.addColorStop(1, rgba(M.black, 0.93 * f * (1 - 0.12 * fl)))
   ctx.fillStyle = g
   ctx.fillRect(S(view.x0 - 2), S(view.y0 - 2), S(view.x1 - view.x0 + 4), S(view.y1 - view.y0 + 4))
   ctx.restore()
   // The beam, from the lamp in the vault to the floor, and its pool.
   const on1 = f
-  beam(p, k, LAMP[0], LAMP[1] + 0.1, PIVOT[0], GROUND, 0.2, 1.6, M.spot, 0.12 * on1)
-  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0, M.spot, 0.3 * on1, 1.3, 0.28)
-  glow(p, k, HORN[0] + 0.1, HORN[1] + 0.1, 0.9, M.spot, 0.18 * on1)
+  beam(p, k, LAMP[0], LAMP[1] + 0.1, PIVOT[0], GROUND, 0.2, 1.6, M.spot, 0.12 * on1 * (1 + 1.3 * fl))
+  glow(p, k, PIVOT[0], GROUND - 0.02, 1.0 + 0.2 * fl, M.spot, 0.3 * on1 * (1 + 0.9 * fl), 1.3, 0.28)
+  glow(p, k, HORN[0] + 0.1, HORN[1] + 0.1, 0.9, M.spot, 0.18 * on1 * (1 + 1.2 * fl))
+  drawMotes(p, k, t, on1)
   // The lamp itself: a black can in the crown, its lens lit.
   p.stroke(rgba(INK, 0.35))
   p.strokeWeight(Math.max(1, k * 0.02))
@@ -1125,9 +1258,39 @@ export function drawDark(p: p5, k: number, t: number, view: { x0: number; y0: nu
   p.translate(S(LAMP[0]), S(LAMP[1]))
   p.rect(S(-0.13), S(-0.2), S(0.26), S(0.28), S(0.04))
   p.noStroke()
-  p.fill(rgba(M.spot, 0.5 + 0.5 * on1))
+  p.fill(rgba(M.spot, Math.min(1, 0.5 + 0.5 * on1 + 0.3 * fl)))
   p.ellipse(0, S(0.09), S(0.2), S(0.05))
   p.pop()
+}
+
+/** Dust in the spot's beam: a few motes turning slowly, each catching the light now and then. */
+const MOTES = Array.from({ length: 11 }, (_, i) => ({
+  y: -0.75 + 2.2 * ((i + hash(i, 31)) / 11),
+  v: (hash(i, 32) - 0.5) * 1.3,
+  r: 0.009 + 0.007 * hash(i, 33),
+  ph: hash(i, 34) * 6.283,
+  w: 0.12 + 0.1 * hash(i, 35),
+}))
+function drawMotes(p: p5, k: number, t: number, on1: number): void {
+  if (on1 <= 0.01) return
+  const [x0, y0] = [LAMP[0], LAMP[1] + 0.1]
+  const [x1, y1] = [PIVOT[0], GROUND]
+  p.noStroke()
+  for (const m of MOTES) {
+    // Each turns on a slow loop of its own, sinking and lifting a little, drifting across the shaft.
+    const y = m.y + 0.16 * Math.sin(t * m.w + m.ph) + 0.05 * Math.sin(t * m.w * 2.3 + m.ph * 2)
+    const u = (y - y0) / (y1 - y0)
+    const half = (0.2 + 1.4 * u) / 2
+    const lateral = m.v + 0.35 * Math.sin(t * m.w * 0.7 + m.ph * 3)
+    const x = x0 + (x1 - x0) * u + half * lateral
+    // Out of the shaft, unlit; in it, it glints as it turns.
+    const inside = 1 - smooth(Math.abs(lateral), 0.6, 0.95)
+    const turn = 0.5 + 0.5 * Math.sin(t * (0.5 + m.w * 2) + m.ph * 5)
+    const a = on1 * inside * (0.2 + 0.45 * turn * turn)
+    if (a < 0.02) continue
+    p.fill(rgba(M.spot, a))
+    p.circle(x * k, y * k, 2 * m.r * k)
+  }
 }
 
 /** The lamp before it is lit: a black can in the crown of the vault, drawn with the room. */

@@ -1,4 +1,4 @@
-import { frame, glow, hash, rgba, scenery, smooth } from './kit'
+import { frame, glow, hash, knock, rgba, scenery, smooth } from './kit'
 import { AT, END_AT, level } from './music'
 import { SEBS_MAT } from './worlds'
 
@@ -99,6 +99,14 @@ const ridge = (x: number, far: boolean): number => {
 /** The observatory's ridge: the near hills, left of the club. */
 const OBSERVATORY = -38
 
+/**
+ * The End's orchestra arriving (its one clear onset), and the swell it climbs to. On the arrival two more searchlights
+ * swing up from behind the hills and every beam flares; through the swell the city's lights and the beams grow with
+ * the music, and the observatory on its ridge, where the planetarium is, lights up.
+ */
+export const SWELL = END_AT + 32.268
+export const CITY_HITS = [SWELL]
+
 export const city = scenery<CityState>({
   name: 'city',
   draw(p, s, c) {
@@ -140,17 +148,24 @@ export const city = scenery<CityState>({
     // band and cross on The End's last chord.
     const band = s.end ? smooth(t, AT.band - 0.2, AT.band + 2.5) : 0.55
     const last = END_AT + 39.4
-    for (const [i, base] of [[0, 30], [1, -12]] as const) {
+    const arrive = s.end ? smooth(t, SWELL - 0.05, SWELL + 1.4) : 0
+    const flare = s.end ? knock(t - SWELL, 0.5) : 0
+    const beams: [number, number][] = [[0, 30], [1, -12], [2, 58], [3, -44]]
+    for (const [i, base] of beams) {
+      // The two that come with the orchestra rise from lying along the hills to their place.
+      const late = i >= 2
+      if (late && arrive <= 0.001) continue
+      const side = i % 2 === 0 ? -1 : 1
       const sweep = s.end
-        ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + (i === 0 ? -0.16 : 0.16) * smooth(t, last - 5, last)
+        ? 0.32 * Math.sin((t - AT.band) * 0.23 + i * 2.2) * (1 - smooth(t, last - 5, last)) + side * 0.16 * smooth(t, last - 5, last)
         : 0.3 * Math.sin(t * 0.21 + i * 2.2)
-      const lean = (i === 0 ? -0.22 : 0.22) + sweep
+      const lean = side * (late ? 0.34 + 1.1 * (1 - arrive) : 0.22) + sweep
       const bx = base + slide(0.3)
       const by = HORIZON + 1 + lift(0.3)
       const len = 60
       const tipX = bx + Math.sin(lean) * len
       const tipY = by - Math.cos(lean) * len
-      const a = 0.09 * band * (0.7 + 0.3 * level(t))
+      const a = 0.09 * band * (0.7 + 0.3 * level(t)) * (late ? arrive : 1) * (1 + 1.2 * flare)
       const grad = ctx.createLinearGradient(bx * k, by * k, tipX * k, tipY * k)
       grad.addColorStop(0, rgba('#F4EAD0', a * 1.6))
       grad.addColorStop(1, rgba('#F4EAD0', 0))
@@ -227,7 +242,14 @@ export const city = scenery<CityState>({
       ctx.arc((ox - 1.45) * k, (oy - 0.45) * k, 0.32 * k, Math.PI, 0)
       ctx.arc((ox + 1.45) * k, (oy - 0.45) * k, 0.32 * k, Math.PI, 0)
       ctx.fill()
-      glow(p, k, ox, oy - 0.3, 1.6, LIGHT, 0.12)
+      const lit = s.end ? smooth(t, SWELL, SWELL + 3) : 0
+      glow(p, k, ox, oy - 0.3, 1.6, LIGHT, 0.12 + 0.3 * lit)
+      if (lit > 0.01) {
+        // Its windows, and the big dome catching the light.
+        ctx.fillStyle = rgba(LIGHT, 0.8 * lit)
+        for (let w = -3; w <= 3; w++) ctx.fillRect((ox + w * 0.4 - 0.06) * k, (oy - 0.35) * k, 0.12 * k, 0.16 * k)
+        glow(p, k, ox, oy - 0.8, 0.8, LIGHT_COOL, 0.35 * lit * (0.8 + 0.2 * level(t)))
+      }
     }
 
     // The basin: dark ground from the hills' foot to the street, and on it the lights of the city.
@@ -236,6 +258,8 @@ export const city = scenery<CityState>({
     basin.addColorStop(1, SEBS_MAT.deep)
     ctx.fillStyle = basin
     ctx.fillRect((fr.x0 - 1) * k, (HORIZON + lift(0.45) + 0.4) * k, (fr.x1 - fr.x0 + 2) * k, (STREET - HORIZON + 2) * k)
+    // Through The End's swell the whole city brightens with the music.
+    const swellLight = s.end ? 1 + 0.45 * smooth(t, SWELL - 2, SWELL + 3) * level(t) : 1
     // The city's own glow on the air over it.
     glow(p, k, VANISH + slide(0.25), HORIZON + 0.8 + lift(0.25), 26, '#C9795E', 0.16, 1.6, 0.28)
     for (const b of BOULEVARDS) {
@@ -262,7 +286,7 @@ export const city = scenery<CityState>({
       if (x < fr.x0 - 1 || x > fr.x1 + 1 || y < fr.y0 - 1 || y > fr.y1 + 1) continue
       const tw = 0.6 + 0.4 * Math.sin(t * (0.8 + l.d) + l.ph)
       const r = (l.big ? 0.06 : 0.032) * (0.55 + 1.4 * near)
-      ctx.fillStyle = rgba(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near))
+      ctx.fillStyle = rgba(l.warm ? LIGHT : LIGHT_COOL, (0.3 + 0.5 * tw) * (0.75 + 0.25 * near) * swellLight)
       ctx.beginPath()
       ctx.arc(x * k, y * k, Math.max(0.5, r * k), 0, Math.PI * 2)
       ctx.fill()

@@ -1,6 +1,6 @@
 import { R, type Pt } from '../../../../../parts'
 import { OPENING_END, PIANO } from '../club/geometry'
-import { dream } from '../music'
+import { dream, snap } from '../music'
 import { G } from '../physics'
 
 /**
@@ -92,6 +92,9 @@ export const GARLAND: Pt[] = [
 
 /* ------------------------------------------------------------------ the clock */
 
+/** A time moved onto the measured onset within 30 ms of it. */
+const on = (t: number): number => snap(t, 0.03)?.t ?? t
+
 export const T = {
   /** Mia is Lipton's from here (the stage light opening again), to the curtain. */
   miaFrom: 39.95,
@@ -104,6 +107,12 @@ export const T = {
   /** He lifts off the top key into the quiet. */
   lift: 62.1,
   kiss: 65.515,
+  /**
+   * The bloom: the room's own lights come on in a wave out both ways from over the kiss, on the orchestra's swell.
+   * The tree's lights first (it is nearest), then each table's lamp as the wave reaches it, nearest first.
+   */
+  bloomTree: on(65.712),
+  bloomTables: [on(66.223), on(66.386), on(66.827), on(67.117)],
   /** Into the cup: she, then he. */
   hopMia: 71.134,
   hopSeb: 71.378,
@@ -112,6 +121,10 @@ export const T = {
   /** The cup tips them out onto the wire; the first swag. */
   tip: dream(24),
   swags: [dream(25), dream(29), dream(33), dream(37), dream(41)],
+  /** The ride's big accents: the star flashes as the cup spills them; the bulb they are passing flares; the string pulses once. */
+  starFlash: on(77.764),
+  flares: [on(78.495), on(79.424), on(79.644), on(81.316), on(85.275)],
+  pulse: on(81.525),
   /** Onto the door, which swings out; and shut again behind them. */
   doorOut: dream(47),
   doorShut: dream(49),
@@ -234,6 +247,36 @@ const RUN: [number, number] = [T.stepUp, 61.62]
 /** Where they are when they touch. */
 export const KISS_SEB: Pt = [6.09, ON_STAGE]
 export const KISS_MIA: Pt = [KISS_SEB[0] + 2 * R, ON_STAGE]
+
+/* ------------------------------------------------------------------ the bloom */
+
+/** Where the bloom's wave starts: over the two of them. */
+export const BLOOM_X = (KISS_SEB[0] + KISS_MIA[0]) / 2
+
+/** The wave to the left, as (distance from BLOOM_X, show time) through each table, nearest first. */
+const WAVE: [number, number][] = [[0, T.kiss], ...[3, 2, 1, 0].map((i, j): [number, number] => [BLOOM_X - TABLES[i], T.bloomTables[j]])]
+
+/** When the bloom's wave reaches `x` (show seconds). To the right it runs at the pace that reaches the tree on its onset. */
+export function reach(x: number): number {
+  const d = x - BLOOM_X
+  if (d >= 0) return T.kiss + (d * (T.bloomTree - T.kiss)) / (TREE.x - BLOOM_X)
+  const dist = -d
+  let i = 1
+  while (i < WAVE.length - 1 && dist > WAVE[i][0]) i++
+  const [a, ta] = WAVE[i - 1]
+  const [b, tb] = WAVE[i]
+  return ta + ((tb - ta) * (dist - a)) / (b - a)
+}
+
+/** How far to the left the wave has gone at `t` (cells from BLOOM_X): the inverse of `reach` there. */
+export function bloomFront(t: number): number {
+  if (t <= T.kiss) return 0
+  let i = 1
+  while (i < WAVE.length - 1 && t > WAVE[i][1]) i++
+  const [a, ta] = WAVE[i - 1]
+  const [b, tb] = WAVE[i]
+  return a + ((b - a) * (t - ta)) / (tb - ta)
+}
 
 /** A flight from `a` to `b` over [t0, t1] under gravity `g`, at `t`. */
 function flight(a: Pt, b: Pt, t0: number, t1: number, t: number, g = G): Pt {
