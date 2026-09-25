@@ -172,8 +172,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   const sets = SETS()
   const specs = [
     { who: 'waymond' as const, from: 0 },
-    { who: 'evelyn' as const, from: JUMPS.eye },
-    { who: 'joy' as const, from: JOY_EYE },
+    { who: 'evelyn' as const, from: JUMPS.eye, arrive: true, burst: true },
+    { who: 'joy' as const, from: JOY_EYE, arrive: true },
   ]
   const eyePiece = eyes()
   const eyeStates: EyesState[] = []

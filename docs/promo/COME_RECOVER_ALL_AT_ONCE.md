@@ -129,7 +129,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 165.62 | a hit, then a swell | everywhere | She breaks through into the dark in a violet flare, seeds flung out round her, and falls slowly past them, and the laundromat comes up round her, its tubes flickering on. On `fight(72)` she lands on a seesaw and the frame tears into two panels: home and the premiere. |
 | 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike. She and the weight trade throws on every beat. |
 | 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
-| 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye is on her. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
+| 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye slaps onto her in a burst of warm light, its pupil whirling round before it settles. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
 | 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge, the camera drawing back until they are specks against the canyon. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
@@ -167,6 +167,9 @@ The notes went back to the builders who made each part, who still had their cont
   - the surf's last clear note (122.69) is struck, with a second stamp in the IRS office;
   - the ball never leaves the frame under Zoom, which is now checked;
   - the earth under the shop is a band that fades into the night.
+- **A director's pass:**
+  - the googly eyes now arrive with a slap and a whirl, and Evelyn's comes with a burst of light, so the great hit is the turning point it should be;
+  - performance was measured at 1440×810 on a 2× display in real Chrome with the GPU. Every heavy stretch holds 58–60 fps: the pull, the mosaic, the peak and the portrait. Headless software rendering is much slower there, which is not what a viewer sees.
 - **Lead changes:**
   - the first frame is the laundromat's own wide shot;
   - the zoom punches are stronger;
@@ -249,7 +252,9 @@ to 332.
   - `worlds.ts`: the eight worlds' palettes and materials, and the family's colours.
   - `fx.ts`: the googly eyes, over every world. Each is a white disc with a pupil that is a heavy bead in a round
     cage, thrown by the ball's acceleration and settling. It is worked out afresh each frame from the ball's last
-    second of path, so it scrubs true. In the laundromat the room's light shades it.
+    second of path, so it scrubs true. In the laundromat the room's light shades it. An eye given during the show
+    arrives: it slaps on oversized, squashes past its size and settles, and its pupil is flung round the rim. On the
+    great hit, Evelyn's comes with a burst of lantern-gold light behind her, the turning point of the show.
   - `credits.ts`: the cards, and the soft dark under them.
   - `hits.ts`: every strike, gathered for the check.
 - **The parts:** one folder a world.

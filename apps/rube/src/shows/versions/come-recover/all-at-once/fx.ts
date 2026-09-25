@@ -20,7 +20,19 @@ import { EYE_PUPIL, EYE_WHITE } from './worlds'
 export interface EyeSpec {
   who: 'evelyn' | 'joy' | 'waymond'
   from: number
+  /**
+   * The eye arrives at `from` rather than having always been there: it slaps on oversized and squashes down to
+   * its size with an overshoot, and its pupil is flung round the rim and settles.
+   */
+  arrive?: boolean
+  /** With the arrival, a burst of warm light behind the ball: the great hit. */
+  burst?: boolean
 }
+
+/** An arriving eye's size, `u` seconds after it lands: a slap, a squash past its size, a bounce, rest. */
+const pop = (u: number): number => (u < 0 ? 0 : 1 + 0.48 * Math.exp(-u / 0.08) * Math.cos((2 * Math.PI * u) / 0.2))
+/** How long an arriving pupil keeps its fling before the usual drag has it again. */
+const FLING = 0.9
 
 /**
  * The eye's size and place on the ball, in ball radii: the white's radius, and how far up it sits. It is big and
@@ -41,18 +53,24 @@ const MEMORY = 1.2
 
 type Where = (t: number) => { x: number; y: number; seen: boolean } | null
 
-/** The bead's offset in the white (fractions of how far it can go, -1..1) at `t`, from the ball's path `at`. */
-function bead(at: Where, t: number): { x: number; y: number; hx: number } {
+/**
+ * The bead's offset in the white (fractions of how far it can go, -1..1) at `t`, from the ball's path `at`. An
+ * eye that `arrive`s at a time starts there, its bead flung from the top of the rim round the cage, with little
+ * drag at first so it goes round a turn or so before it settles.
+ */
+function bead(at: Where, t: number, arrive?: number): { x: number; y: number; hx: number } {
   // Start at rest, hanging, a second back (or from when the ball was first seen), then step forward.
   let t0 = t - MEMORY
   const ok = (s: number) => {
     const q = at(s)
     return !!q && q.seen
   }
+  const flung = arrive !== undefined && arrive > t0
+  if (flung) t0 = arrive
   while (t0 < t && !ok(t0)) t0 += 0.05
   let px = 0
-  let py = 1
-  let vx = 0
+  let py = flung ? -1 : 1
+  let vx = flung ? 11 : 0
   let vy = 0
   let hx = 0
   const pos = (s: number) => at(s) ?? at(t)!
@@ -74,8 +92,9 @@ function bead(at: Where, t: number): { x: number; y: number; hx: number } {
     const tx = fx / f
     const ty = fy / f
     const k = Math.min(1, f / G)
-    vx += (STIFF * k * (tx - px) - DAMP * vx) * STEP
-    vy += (STIFF * k * (ty - py) - DAMP * vy) * STEP
+    const drag = flung ? DAMP * (0.18 + 0.82 * Math.min(1, Math.max(0, (s - arrive!) / FLING) ** 2)) : DAMP
+    vx += (STIFF * k * (tx - px) - drag * vx) * STEP
+    vy += (STIFF * k * (ty - py) - drag * vy) * STEP
     px += vx * STEP
     py += vy * STEP
     const r = Math.hypot(px, py)
@@ -94,6 +113,33 @@ function bead(at: Where, t: number): { x: number; y: number; hx: number } {
     hx += (Math.max(-1, Math.min(1, vxBall / 1.5)) - hx) * Math.min(1, STEP * 4)
   }
   return { x: px, y: py, hx }
+}
+
+/**
+ * The burst of light behind a ball on the great hit, `u` seconds after it: warm light that swells out from round
+ * the ball and fades, clear of the ball itself so its colour stays its own.
+ */
+function burst(p: p5, k: number, x: number, y: number, u: number, lit: (hex: string) => string): void {
+  if (u < 0 || u > 0.7) return
+  const grow = 1 - Math.exp(-u / 0.12)
+  const outer = R * (2.4 + 7 * grow)
+  const a = 0.8 * (1 - u / 0.7) ** 1.5
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Lantern gold: it has to show on the laundromat's pale tile as well as in the dark.
+  const warm = lit('#FFC95A')
+  const rgb = [1, 3, 5].map((i) => parseInt(warm.slice(i, i + 2), 16)).join(', ')
+  const g = ctx.createRadialGradient(x * k, y * k, R * 1.05 * k, x * k, y * k, outer * k)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.35, `rgba(${rgb}, ${a * 0.45})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, outer * k, 0, Math.PI * 2)
+  // Not over the ball: its own disc is cut out of the light.
+  ctx.arc(x * k, y * k, R * 1.02 * k, 0, Math.PI * 2, true)
+  ctx.fill()
+  ctx.restore()
 }
 
 /** One googly eye on a ball at (x, y) in the piece's cells, `r` its radius in cells. */
@@ -152,14 +198,21 @@ export const eyes = () =>
         if (!b || (b.scale ?? 1) <= 0.3) continue
         // The path it is swung by: in the world on the stage now, so a jump's teleport does not throw it.
         const u = show.indexAt(t)
-        const look = bead((time) => {
-          if (time < spec.from - MEMORY) return null
-          if (show.indexAt(time) !== u) return null
-          const q = find(time)
-          return q ? { x: q.x, y: q.y, seen: true } : null
-        }, t)
+        const look = bead(
+          (time) => {
+            if (time < spec.from - MEMORY) return null
+            if (show.indexAt(time) !== u) return null
+            const q = find(time)
+            return q ? { x: q.x, y: q.y, seen: true } : null
+          },
+          t,
+          spec.arrive ? spec.from : undefined,
+        )
         const shade = s.shade
-        googly(p, c.k, c.ink, c.weight, b.x, b.y, look, b.scale ?? 1, shade ? (hex) => shade(hex, b.x, b.y, t) : undefined)
+        const lit = shade ? (hex: string) => shade(hex, b!.x, b!.y, t) : (hex: string) => hex
+        if (spec.burst) burst(p, c.k, b.x, b.y, t - spec.from, lit)
+        const size = spec.arrive && t - spec.from < 1 ? pop(t - spec.from) : 1
+        googly(p, c.k, c.ink, c.weight, b.x, b.y, look, (b.scale ?? 1) * size, lit)
       }
     },
   })
