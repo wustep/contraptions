@@ -99,6 +99,8 @@ export interface Strike {
   t: number
   keys: number[]
   depth: number
+  /** How long the string rings, seconds (the decay's time constant); a note's is 0.7. */
+  sustain?: number
 }
 
 /** What the part that has the piano tells the drawing: its strikes, the time now on the same clock, and the lamp's light (0..1). */
@@ -106,6 +108,8 @@ export interface PianoPlay {
   strikes: Strike[]
   now: number
   light?: number
+  /** The strings all faintly alight, 0..1: the last of a chord dying away. */
+  shimmer?: number
 }
 
 /** How far down a key is at `since` seconds after its note: sharp on the hit, a slow damped rise after. */
@@ -128,7 +132,7 @@ const hammerUp = (since: number, depth = 1): number => {
 /** The damper: off the string while the key is down, then back on it. */
 const damperUp = (since: number): number => (since < 0 ? 0 : smooth(since, 0, 0.05) * (1 - smooth(since, 0.45, 0.85)))
 /** The string's ring: bright on the hit, dying over a second and a half. */
-const ring = (since: number, depth = 1): number => (since < 0 ? 0 : Math.min(1, depth) * knock(since, 0.7))
+const ring = (since: number, depth = 1, sustain = 0.7): number => (since < 0 ? 0 : Math.min(1, depth) * knock(since, sustain))
 
 /** The ball's dip with the keys under it at `now`: the deepest sunk key among those it sits on. */
 export function dipAt(strikes: Strike[], now: number, key: number): number {
@@ -162,12 +166,13 @@ export function drawPiano(p: p5, c: Ctx, dream: boolean, play?: PianoPlay): void
   const L = pianoLook(dream)
   const f = frame(p, k)
   const now = play?.now ?? 0
-  const live = (play?.strikes ?? []).filter((s) => now - s.t > -0.06 && now - s.t < 1.6)
-  const struck = (i: number): { since: number; depth: number } | null => {
-    let best: { since: number; depth: number } | null = null
-    for (const s of live) if (s.keys.includes(i) && (!best || now - s.t < best.since)) best = { since: now - s.t, depth: s.depth }
+  const live = (play?.strikes ?? []).filter((s) => now - s.t > -0.06 && now - s.t < 2.5 * (s.sustain ?? 0.7) + 0.5)
+  const struck = (i: number): { since: number; depth: number; sustain: number } | null => {
+    let best: { since: number; depth: number; sustain: number } | null = null
+    for (const s of live) if (s.keys.includes(i) && (!best || now - s.t < best.since)) best = { since: now - s.t, depth: s.depth, sustain: s.sustain ?? 0.7 }
     return best
   }
+  const shimmer = play?.shimmer ?? 0
 
   // The lid, up on its stick, and the case: the inside is what the strings and hammers are seen against.
   p.push()
@@ -195,7 +200,7 @@ export function drawPiano(p: p5, c: Ctx, dream: boolean, play?: PianoPlay): void
   for (let i = i0; i <= i1; i++) {
     const [tx, ty] = stringTop(i)
     const hit = struck(i)
-    const r = hit ? ring(hit.since, hit.depth) : 0
+    const r = Math.max(hit ? ring(hit.since, hit.depth, hit.sustain) : 0, shimmer * (0.35 + 0.35 * hash(i, Math.floor(now * 14))))
     p.stroke(alpha(p, L.string, 0.26 + 0.74 * r))
     p.strokeWeight(wire * (1 + 1.2 * r))
     p.line(X(keyX(i)), X(BRIDGE), X(tx), X(ty))
@@ -204,7 +209,7 @@ export function drawPiano(p: p5, c: Ctx, dream: boolean, play?: PianoPlay): void
   for (let i = i0; i <= i1; i++) {
     const hit = struck(i)
     if (!hit) continue
-    const r = ring(hit.since, hit.depth)
+    const r = ring(hit.since, hit.depth, hit.sustain)
     if (r < 0.03) continue
     const [tx, ty] = stringTop(i)
     beam(p, c, [keyX(i), BRIDGE], [tx * 0.45 + keyX(i) * 0.55, ty * 0.45 + BRIDGE * 0.55], 0.14, 0.3 * r, dream ? PAINT.gold : BAR.lamp)
@@ -312,8 +317,8 @@ export const room = scenery<RoomState>({
 /** The room's materials. */
 function roomLook(dream: boolean) {
   return dream
-    ? { wall: PAINT.deep, floor: mixHex(PAINT.timber, DREAM.bg, 0.72), curtain: PAINT.red, fold: mixHex(PAINT.red, DREAM.bg, 0.45), dark: PAINT.deep, wood: PAINT.timber, rim: PAINT.gold, lamp: PAINT.beam, glass: PAINT.sea, cloth: PAINT.pink }
-    : { wall: BAR.deep, floor: mixHex(BAR.wood, CLUB.bg, 0.8), curtain: mixHex(BAR.oxblood, CLUB.bg, 0.55), fold: mixHex(BAR.oxblood, CLUB.bg, 0.72), dark: BAR.black, wood: BAR.wood, rim: BAR.brass, lamp: BAR.lamp, glass: BAR.green, cloth: BAR.felt }
+    ? { wall: PAINT.deep, floor: mixHex(PAINT.timber, DREAM.bg, 0.86), curtain: mixHex(PAINT.red, DREAM.bg, 0.18), fold: mixHex(PAINT.red, DREAM.bg, 0.45), dark: PAINT.deep, wood: PAINT.timber, rim: PAINT.gold, lamp: PAINT.beam, glass: PAINT.sea, cloth: PAINT.pink }
+    : { wall: BAR.deep, floor: mixHex(BAR.wood, CLUB.bg, 0.86), curtain: mixHex(BAR.oxblood, CLUB.bg, 0.55), fold: mixHex(BAR.oxblood, CLUB.bg, 0.72), dark: BAR.black, wood: BAR.wood, rim: BAR.brass, lamp: BAR.lamp, glass: BAR.green, cloth: BAR.felt }
 }
 
 /** How open the curtain is, by the state or the clock (see `RoomState.open`). */
@@ -609,7 +614,7 @@ function drawLamp(p: p5, c: Ctx, L: ReturnType<typeof roomLook>, dream: boolean,
   p.noStroke()
   p.fill(alpha(p, L.lamp, light))
   p.ellipse(X(lx), X(ly + 0.12), X(0.98), X(0.1))
-  if (light > 0.01) glow(p, c, lx, ly + 0.2, 1.4, 0.7 * light, L.lamp)
+  if (light > 0.01) glow(p, c, lx, ly + 0.2, 1.1, 0.6 * light, L.lamp)
 }
 
 /** The street's light through the door, down the stairs: for the kiss, and the dream club. */

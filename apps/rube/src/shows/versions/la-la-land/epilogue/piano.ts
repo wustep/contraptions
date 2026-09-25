@@ -92,10 +92,7 @@ interface PianoState {
 export const piano = part<PianoState>(
   {
     name: 'piano',
-    draw: (p: p5, s: PianoState, c: Ctx) => {
-      void s
-      drawPiano(p, c, false, { strikes: STRIKES, now: c.t, light: 1 })
-    },
+    draw: (p: p5, _s: PianoState, c: Ctx) => drawPiano(p, c, false, { strikes: STRIKES, now: c.t, light: 1 }),
   },
   (slot) => {
     const segs = carried(onKeys, 0, PIANO_END, Math.round(PIANO_END / 0.025))

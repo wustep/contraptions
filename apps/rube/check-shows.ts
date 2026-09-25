@@ -275,7 +275,9 @@ async function main(): Promise<void> {
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
         const withHim = [KISS + 1, 80, 95, 110, 125, 150, 160, 175, 200, 225, 250, 265, 290, 320, 334]
-        const atTable = [KISS - 0.5, STRUCK + 3, LOOK + 2]
+        // After the set is struck the camera is tight on Seb at the keys for the chord's decay; her table comes into
+        // frame with the pull-back on the look.
+        const atTable = [KISS - 0.5, LOOK + 2, LOOK + 6]
         const husbandAway = [1, 30, 60, KISS + 1, 100, 200, 300, STRUCK - 1]
         const miss: string[] = []
         for (const t of [...withHim, ...atTable]) if (!inShot(t, show.mia(t))) miss.push(`Mia not in shot ${t}`)
