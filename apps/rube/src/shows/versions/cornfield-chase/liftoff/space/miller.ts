@@ -5,7 +5,7 @@ import { FLOOR, laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../..
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_LOW, hop } from '../physics'
-import { BALL, BRAND, DARK, GREY } from '../worlds'
+import { BALL, BRAND, DARK, GREY, VOID } from '../worlds'
 
 /**
  * Miller's world, and the one who waits.
@@ -16,15 +16,20 @@ import { BALL, BRAND, DARK, GREY } from '../worlds'
  * horizon a range of mountains.
  *
  * Down here the buoys' lamps keep the planet's tick, two beats, the film's
- * 1.25 s, and the machines hurry through it: the Ranger's legs take the ball
- * and throw it on, two beacon buoys bob under it and throw it on, and TARS
+ * 1.25 s, and the machines hurry through it: the Ranger (the station's own
+ * ship, standing on Edmunds' legs with its hood run back) takes the ball into
+ * its cockpit, sinks on its legs, and its seat-back kicks it out over the nose
+ * on the and; two beacon buoys bob under it and throw it on, and TARS
  * catches it in the crook of its slabs and cartwheels, a slab planted in the
  * water on each vault, the last one whipping over to throw.
  *
  * Up in orbit the ring keeps another time. Brand, whom the trapdoor left
  * behind runs round the inside of it once an eighth, trips a catch every
- * lap, and her blue dims toward the grey of the years. On the twenty-third
- * lap the catch locks and holds her, and the ring goes from the sky.
+ * lap, and her blue dims toward the grey of the years. The ring is the
+ * clock: its windows are dark when he goes down, and every other lap, on the
+ * beat, one more module lights, going round from the catch the way she runs.
+ * On the twenty-third lap the twelfth lights, the ring is lit all round, the
+ * catch locks and holds her, and the ring goes from the sky.
  *
  * From beat 172 the mountains move. They are one wave, and near it is a wall
  * of water. TARS's third plant throws the ball onto its foot (178), the face
@@ -44,7 +49,7 @@ const EIGHTH = beat(0.5) - beat(0)
 
 /** Out of the far side of the sphere. */
 const OUT = beat(167)
-/** The Ranger's collar takes it; its legs throw it on the and. */
+/** The ball drops into the Ranger's cockpit; its seat-back kicks it out on the and. */
 const COLLAR = beat(168)
 const COLLAR_TOSS = beat(168.5)
 /** The two buoys. */
@@ -65,6 +70,8 @@ const TICKS = [166, 168, 170, 172, 174, 176, 178].map(beat)
 /** She trips the catch every eighth from his arrival; the twenty-third locks it. */
 const CLICKS = Array.from({ length: 23 }, (_, i) => beat(167 + i / 2))
 const LATCH = CLICKS[CLICKS.length - 1]
+/** The years, on the ring: every other lap, on the beat, a module's windows light; the twelfth on the lock. */
+const YEARS = Array.from({ length: 12 }, (_, n) => beat(167 + n))
 
 /** The strikes the audience sees down on the water: the tick, and the wave. */
 export const MILLER_HITS = [OUT, COLLAR, COLLAR_TOSS, BUOY_AT[0], BUOY_TOSS[0], BUOY_AT[1], BUOY_TOSS[1], CATCH, ...PLANTS, FOOT, FEATHER, FLING]
@@ -90,14 +97,9 @@ const depthX = (x: number, s: number) => VPX + (x - VPX) * s
 /** Where the ball comes out of the far side. */
 const Q: Pt = [8.72, -2.2]
 
-/** The Ranger: its collar's centre, and its belly at rest. */
+/** The Ranger (drawn below, `drawRangerShip`): where the ball sits in its open cockpit, at rest on its legs. */
 const RX = 8.75
-const BELLY = -0.34
-/** The top of the hull at the collar, over the belly. */
-const ROOF = 0.4
-/** The ball's centre in the collar, at rest. */
-const SEAT_Y = BELLY - ROOF - R + 0.03
-const LEGS = [-0.78, 0.62]
+const SEAT_Y = -0.84
 /**
  * Beat 178: as the ball meets the wave, the Ranger lifts off — from here the
  * next part (Gargantua) draws it, the same hull at the same size, skimming the
@@ -105,7 +107,7 @@ const LEGS = [-0.78, 0.62]
  * stops drawing the Ranger then, and TARS once it is picked up.
  */
 const RANGER_UP = FOOT
-/** TARS takes hold of the Ranger's back as it skims past. */
+/** TARS takes hold of the Ranger as it skims past. */
 const TARS_PICKED = FOOT + 1.5 * (beat(1) - beat(0))
 
 /** The buoys: their x, and the ball's centre in the cup at rest. */
@@ -342,7 +344,7 @@ export const miller = part<MillerState>(
     const segs: Seg[] = []
     // Into the sphere and out of the far side: hidden, as fast as the camera can follow.
     segs.push({ from: [-0.5, 0], to: Q, dur: at(OUT), hidden: true, ease: 'inout' })
-    // Out of the far side, drawn out of nothing, and down to the Ranger's collar.
+    // Out of the far side, drawn out of nothing, and down into the Ranger's open cockpit.
     const seat: Pt = [RX, SEAT_Y]
     const T1 = COLLAR - OUT
     const vx = (seat[0] - Q[0]) / T1
@@ -352,7 +354,7 @@ export const miller = part<MillerState>(
     segs.push({ from: Q, to: P1, dur: E, arc: (G_LOW * E * E) / 8, portal: 'in' })
     const w1: Way = { at: at(OUT) + E, p: P1 }
     segs.push(...route([w1, hop(w1, seat, at(COLLAR), G_LOW)]))
-    // The collar sinks with the Ranger on its legs and comes back up: the and throws it.
+    // The seat sinks with the Ranger on its legs and comes back up; on the and the seat-back kicks it out.
     segs.push(...carried((u) => [RX, SEAT_Y + rangerDip(u + slot.begin)], at(COLLAR), at(COLLAR_TOSS), 10))
     const cup = (i: number) => (u: number): Pt => [BUOYS[i], CUP_Y + buoyDip(u + slot.begin, i)]
     let from: Way = { at: at(COLLAR_TOSS), p: [RX, SEAT_Y + rangerDip(COLLAR_TOSS)] }
@@ -392,6 +394,8 @@ export const miller = part<MillerState>(
   (slot) => [
     // The whip to the far side from the sphere (the ring's part holds on it), one long move, landing as he comes out.
     { t: OUT, cells: 5.4, hold: [11.35, -1.55] },
+    // Only drifting on while the ball drops into the Ranger and is kicked out of it, so the whole ship is seen.
+    { t: COLLAR_TOSS, cells: 5.45, hold: [11.55, -1.56] },
     { t: CATCH, cells: 5.8, hold: [13.1, -1.7] },
     { t: beat(176), cells: 7, hold: [13.9, -1.95] },
     { t: FEATHER, cells: 8, hold: [15.3, -2.45] },
@@ -504,16 +508,23 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   }
   solid(p, ink, weight * 0.5, DARK.hull)
   p.circle(X(cx), X(cy), X(0.18))
-  // The rim she runs on, and twelve modules round it, a gap at three o'clock for the catch: the ring as he left
-  // it, sunlit on the sun's side, and on the night side its windows lit.
+  // The rim she runs on, and twelve modules round it, a gap at three o'clock for the catch; the far sun catches
+  // their outer edges on its side. The years go by in it: its windows are dark when he goes down, and on each beat
+  // she is up there one more module lights, going round from the catch the way she runs, until on the twelfth the
+  // ring is lit all round, the hour struck, and the catch locks.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const rw = (RING_IN + RING_OUT) / 2
   outline(p, ink, weight * 0.55)
   p.circle(X(cx), X(cy), X(2 * RING_IN))
   for (let j = 0; j < 12; j++) {
     const a0 = (j * TAU) / 12 + 0.07
     const a1 = ((j + 1) * TAU) / 12 - 0.07
     const mid = (a0 + a1) / 2
-    const lit = Math.cos(mid - SUN) > 0
-    solid(p, ink, weight * 0.45, lit ? DARK.hull : DARK.slate)
+    const since = t - YEARS[11 - j]
+    const on = since >= 0
+    const fl = on ? knock(since, 0.16) : 0
+    // Dark, or lit from inside: warm, and brighter a moment as it comes on.
+    solid(p, ink, weight * 0.45, on ? mixHex(mixHex(DARK.slate, DARK.amber, 0.42), VOID.ink, 0.45 * fl) : DARK.slate)
     p.beginShape()
     for (let i = 0; i <= 4; i++) {
       const a = a0 + ((a1 - a0) * i) / 4
@@ -524,11 +535,27 @@ function drawStation(p: p5, c: Ctx, t: number): void {
       p.vertex(X(cx + RING_IN * Math.cos(a)), X(cy + RING_IN * Math.sin(a)))
     }
     p.endShape(p.CLOSE)
-    if (!lit) {
+    const sun = Math.cos(mid - SUN)
+    if (sun > 0) {
+      outline(p, alpha(p, DARK.hull, 0.85 * sun).toString(), weight * 0.9)
+      p.arc(X(cx), X(cy), X(2 * RING_OUT), X(2 * RING_OUT), a0 + 0.03, a1 - 0.03)
+    }
+    // Its two windows, and the light they give.
+    for (const off of [-0.085, 0.085]) {
+      const wx = cx + rw * Math.cos(mid + off)
+      const wy = cy + rw * Math.sin(mid + off)
+      if (on) {
+        const g = ctx.createRadialGradient(X(wx), X(wy), 0, X(wx), X(wy), X(0.09 + 0.14 * fl))
+        g.addColorStop(0, rgba(DARK.amber, 0.45 + 0.5 * fl))
+        g.addColorStop(1, rgba(DARK.amber, 0))
+        ctx.save()
+        ctx.fillStyle = g
+        ctx.fillRect(X(wx - 0.25), X(wy - 0.25), X(0.5), X(0.5))
+        ctx.restore()
+      }
       p.noStroke()
-      p.fill(DARK.amber)
-      const rw = (RING_IN + RING_OUT) / 2
-      p.circle(X(cx + rw * Math.cos(mid)), X(cy + rw * Math.sin(mid)), Math.max(1.5, X(0.035)))
+      p.fill(on ? mixHex(DARK.amber, VOID.ink, 0.25 + 0.6 * fl) : DARK.deep)
+      p.circle(X(wx), X(wy), Math.max(1.5, X(0.048)))
     }
   }
   // The catch: a lever through the tube at three o'clock, its inner end in her way; each lap she trips it, and it rocks.
@@ -543,7 +570,6 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   p.line(X(inner[0]), X(inner[1]), X(outer[0]), X(outer[1]))
   solid(p, ink, weight * 0.4, locked ? DARK.gold : DARK.hull)
   p.circle(X(px), X(py), X(0.06))
-  const ctx = p.drawingContext as CanvasRenderingContext2D
   // A lamp at the pivot: a blink each lap, steady once it holds.
   if (locked || last.ago < 0.15) {
     const a = locked ? 0.45 : knock(last.ago, 0.06)
@@ -810,7 +836,12 @@ function drawRipples(p: p5, c: Ctx, t: number, sWave: number): void {
   const { k } = c
   // Swallowed once the wave is over them.
   const under = (x: number) => sWave >= 1 && t > FOOT && surface(x, t) < NEAR - 0.02
-  for (const lx of LEGS) ring(p, k, RX + lx + Math.sign(lx) * 0.2, NEAR, t - COLLAR, 0.8, FLAT, 0.55)
+  // The Ranger's feet as it takes the ball, and as they leave the water.
+  for (const fx of FEET_X) {
+    ring(p, k, fx, NEAR, t - COLLAR, 0.8, FLAT, 0.55)
+    ring(p, k, fx, NEAR, t - RANGER_UP, 0.9, FLAT, 0.5)
+  }
+  ring(p, k, RX, NEAR, t - RANGER_UP, 1.8, FLAT, 0.55)
   for (let i = 0; i < BUOYS.length; i++) {
     ring(p, k, BUOYS[i], NEAR, t - BUOY_AT[i], 1, FLAT, 0.6)
     ring(p, k, BUOYS[i], NEAR, t - BUOY_TOSS[i], 0.7, FLAT, 0.35)
@@ -824,63 +855,393 @@ function drawRipples(p: p5, c: Ctx, t: number, sWave: number): void {
 
 /* ------------------------------------------------------------------ the Ranger */
 
-function drawRanger(p: p5, c: Ctx, t: number): void {
-  if (t >= RANGER_UP) return
+/**
+ * The Ranger: the ship the station's hangar holds (`act2/hub.ts`), that
+ * undocks (`act2/undock.ts`) and comes down on Edmunds' planet on these same
+ * legs (`act2/edmunds.ts`). It is one ship from Miller's water to the end, so
+ * it is the hub's drawing, in the hub's ship units at the hub's scale: x
+ * forward from the ball's seat, y down, the belly line at y = KEEL. A white
+ * hull with the black of its belly and nose, a swept wing hung under its
+ * after half, a bubble canopy on a sliding hood over the seat, a docking
+ * collar on its back, two bells on the tail; in the dark's colours, as
+ * Edmunds paints it. Gargantua's part flies the same drawing.
+ */
+export const RANGER_SCALE = 0.86
+/** Its belly line. */
+const KEEL = 0.41
+/**
+ * Where it is flown from: on the belly line under its back, just behind the
+ * canopy, where TARS rides and the tether hangs (`MILLER_HANDOFF.ranger` is
+ * this point on the water).
+ */
+export const RANGER_ANCHOR: Pt = [-0.9, KEEL]
+/** The hull: the nose, the sill under the canopy, the spine, the tail, the belly. */
+const HULL: Pt[] = [
+  [1.4, 0.27],
+  [1.12, 0.19],
+  [0.84, 0.13],
+  [0.56, 0.1],
+  [-0.46, 0.1],
+  [-0.55, 0.0],
+  [-0.78, -0.05],
+  [-1.86, -0.06],
+  [-2.02, -0.01],
+  [-2.06, 0.36],
+  [-1.98, 0.41],
+  [0.35, 0.41],
+  [0.86, 0.38],
+  [1.16, 0.32],
+]
+/** The black of the belly and the nose. */
+const BLACK: Pt[] = [
+  [1.4, 0.27],
+  [1.16, 0.32],
+  [0.86, 0.38],
+  [0.35, 0.41],
+  [-1.98, 0.41],
+  [-2.05, 0.33],
+  [0.35, 0.335],
+  [0.86, 0.305],
+  [1.13, 0.25],
+]
+/** The wing, swept and drooped: side-on it hangs under the after half. */
+const WING: Pt[] = [
+  [-0.3, 0.36],
+  [-1.72, 0.72],
+  [-2.14, 0.72],
+  [-1.98, 0.36],
+]
+/** The two bells, as bands of the tail, and where the main engine's flame starts. */
+const BELLS: Pt[] = [
+  [0.02, 0.17],
+  [0.21, 0.36],
+]
+const TAIL = -2.27
+/** The canopy's foot at the windscreen. Open, the hood is slid back along the spine by SLIDE. */
+const SCREEN: Pt = [0.56, 0.1]
+const SLIDE: Pt = [-0.86, -0.12]
+/** The docking collar on its back, the fuel port, the wingtip lamp. */
+const DOCK: Pt = [-1.66, -0.1]
+const PORT: Pt = [-1.5, 0.2]
+const WINGTIP: Pt = [-1.95, 0.7]
+/** The belly engines, ahead of the wing, and how far under the belly line their mouths are. */
+const ENGINES = [-0.228, 0.237]
+const JET_Y = KEEL + 0.116
+/** The hub's tin, in the dark's colours. */
+const TIN = mixHex(DARK.hull, DARK.deep, 0.34)
+/** The underside, tail to nose. */
+const UNDER: Pt[] = [
+  [-1.98, KEEL],
+  [0.35, KEEL],
+  [0.86, 0.38],
+  [1.16, 0.32],
+  [1.4, 0.27],
+]
+function underAt(x: number): number {
+  for (let i = 1; i < UNDER.length; i++) {
+    const [x0, y0] = UNDER[i - 1]
+    const [x1, y1] = UNDER[i]
+    if (x <= x1) return y0 + ((y1 - y0) * (Math.max(x, x0) - x0)) / (x1 - x0)
+  }
+  return UNDER[UNDER.length - 1][1]
+}
+/** Edmunds' landing legs: hinged under the belly fore and aft; down, each foot splays out, fore or aft, and down. */
+const LEG_X = [0.795, -1.25]
+const LEG_OUT = 0.22 / RANGER_SCALE
+const LEG_REACH = 0.55 / RANGER_SCALE
+/** The sleeve each leg's rod runs out of: as long as on Edmunds' flat ground. */
+const SLEEVE = 0.55 * Math.hypot(LEG_OUT, LEG_REACH)
+/** Down on flat ground, where a foot is. */
+const legDown = (i: number): Pt => [LEG_X[i] + (i === 0 ? LEG_OUT : -LEG_OUT), KEEL + LEG_REACH]
+/**
+ * On Miller's water the feet stand a little under the surface, ankle deep
+ * (the legs run out a little further than on Edmunds' ground): where they are
+ * in the ship's units with it at rest, and where they stand on the sea.
+ */
+const FOOT_Y = NEAR + 0.015
+export const RANGER_FEET: Pt[] = [0, 1].map((i): Pt => [legDown(i)[0], (FOOT_Y - SEAT_Y) / RANGER_SCALE])
+const FEET_X = RANGER_FEET.map(([x]) => RX + x * RANGER_SCALE)
+
+/** How the Ranger is, at a moment. */
+export interface RangerLook {
+  /** Show seconds: what the flames flicker by. */
+  at: number
+  /** The hood: 1 slid back, open; 0 shut (a little under as it knocks home). */
+  hood: number
+  /** The seat-back, swung forward: 0..1. */
+  kick: number
+  /** The legs: 0 down, 1 folded up into the belly. */
+  fold: number
+  /** While the legs are down, where the feet are (the ship's units); on flat ground if not given. */
+  feet?: Pt[]
+  /** The wingtip lamp, 0..1. */
+  blink: number
+  /** The belly engines, 0 cold to 1 at full thrust; the main engine, likewise. */
+  thrust: number
+  burn: number
+  /** 1 at full size; toward 0 (small, far off) the fine lines go. */
+  detail: number
+}
+
+/** The hood: back while the ball comes and goes, then run forward, knocking home against its stop as it lifts off (178). */
+export function rangerHood(t: number): number {
+  const since = t - RANGER_UP
+  if (since < -0.3) return 1
+  if (since < 0) {
+    const u = (since + 0.3) / 0.3
+    return 1 - u * u
+  }
+  return -0.04 * Math.exp(-since / 0.18) * Math.sin(since * 17)
+}
+
+/** The seat-back kicks the ball out over the nose on the and, and settles back. */
+const kickAt = (t: number): number => {
+  const d = t - (COLLAR_TOSS - 0.03)
+  return d < 0 ? 0 : Math.min(1, d / 0.07) * Math.exp(-Math.max(0, d - 0.07) / 0.3)
+}
+
+function poly(p: p5, k: number, pts: Pt[]): void {
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
+}
+
+/** A soft light (pixels), saved and restored so p5's idea of the fill stays true. */
+function glowAt(p: p5, x: number, y: number, r: number, hex: string, a: number): void {
+  if (a <= 0.005 || r <= 0) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r)
+  g.addColorStop(0, rgba(hex, a))
+  g.addColorStop(1, rgba(hex, 0))
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, TAU)
+  ctx.fill()
+  ctx.restore()
+}
+
+/** The bubble, from the windscreen over the seat to its back: the cockpit's well, and the glass that closes over it. */
+function bubble(p: p5, k: number): void {
+  const X = (v: number) => v * k
+  p.beginShape()
+  p.vertex(X(SCREEN[0]), X(SCREEN[1]))
+  p.bezierVertex(X(0.42), X(-0.14), X(0.14), X(-0.31), X(-0.1), X(-0.3))
+  p.bezierVertex(X(-0.36), X(-0.29), X(-0.5), X(-0.12), X(-0.46), X(0.1))
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * The Ranger in its own units. The caller has put the frame on the seat and
+ * scaled it by RANGER_SCALE (and by whatever else), and gives `c.weight` in
+ * those units. Legs and engines, the hull, the cockpit, the wing over the
+ * flank, and the hood's glass.
+ */
+export function drawRangerShip(p: p5, c: Ctx, look: RangerLook): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  const dip = rangerDip(t)
-  const by = BELLY + dip
-  // Legs: a strut from the belly to a pad on the water, the piston sliding into it as the body sinks.
-  for (const lx of LEGS) {
-    const top: Pt = [RX + lx, by - 0.02]
-    const foot: Pt = [RX + lx + Math.sign(lx) * 0.2, NEAR - 0.02]
-    const mid: Pt = [top[0] + (foot[0] - top[0]) * 0.55, top[1] + (foot[1] - top[1]) * 0.55]
-    outline(p, ink, weight * 1.6)
-    p.line(X(top[0]), X(top[1]), X(mid[0]), X(mid[1]))
-    p.stroke(DARK.hull)
-    p.strokeWeight(weight * 0.9)
-    p.line(X(top[0]), X(top[1]), X(mid[0]), X(mid[1]))
-    outline(p, ink, weight * 0.8)
-    p.line(X(mid[0]), X(mid[1]), X(foot[0]), X(foot[1]))
-    solid(p, ink, weight * 0.6, DARK.slate)
-    p.ellipse(X(foot[0]), X(foot[1]), X(0.24), X(0.06))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const faint = alpha(p, ink, 0.45 * look.detail).toString()
+  // The legs, behind the hull (the rear one behind the wing too); folded, all of them is inside it.
+  if (look.fold < 0.999) for (let i = 0; i < 2; i++) rangerLeg(p, c, i, look)
+  // The main engine: a flame from each bell, ice and a white core.
+  if (look.burn > 0.01) {
+    const flick = 0.88 + 0.12 * Math.sin(look.at * 61)
+    const len = (0.5 + 2.2 * look.burn) * flick
+    const w = 0.08 + 0.03 * look.burn
+    glowAt(p, X(TAIL - 0.1), X(0.19), X(0.35 + 0.45 * look.burn), DARK.ice, 0.55 * look.burn)
+    ctx.save()
+    for (const [y0, y1] of BELLS) {
+      const yc = (y0 + y1) / 2
+      for (const [l, ww, hex, a] of [
+        [len, w, DARK.ice, 0.9],
+        [len * 0.55, w * 0.5, VOID.ink, 1],
+      ] as [number, number, string, number][]) {
+        const g = ctx.createLinearGradient(X(TAIL), 0, X(TAIL - l), 0)
+        g.addColorStop(0, rgba(hex, a * Math.min(1, look.burn * 1.5)))
+        g.addColorStop(0.45, rgba(hex, a * 0.45 * Math.min(1, look.burn * 1.5)))
+        g.addColorStop(1, rgba(hex, 0))
+        ctx.fillStyle = g
+        ctx.beginPath()
+        ctx.moveTo(X(TAIL), X(yc - ww))
+        ctx.quadraticCurveTo(X(TAIL - l * 0.4), X(yc - ww * 1.3), X(TAIL - l), X(yc))
+        ctx.quadraticCurveTo(X(TAIL - l * 0.4), X(yc + ww * 1.3), X(TAIL), X(yc + ww))
+        ctx.closePath()
+        ctx.fill()
+      }
+    }
+    ctx.restore()
   }
-  // The hull: a low wedge, the nose to the right.
-  const hull: Pt[] = [
-    [-1.15, 0],
-    [1.12, 0],
-    [1.2, -0.05],
-    [0.9, -0.2],
-    [0.45, -0.4],
-    [-0.2, -0.42],
-    [-1.0, -0.36],
-    [-1.18, -0.3],
-  ]
+  // The bells, on the tail.
+  for (const [y0, y1] of BELLS) {
+    solid(p, ink, weight * 0.7, TIN)
+    poly(p, k, [
+      [-2.05, y0 + 0.025],
+      [-2.26, y0 - 0.015],
+      [-2.26, y1 + 0.015],
+      [-2.05, y1 - 0.025],
+    ])
+  }
+  // The belly engines: a flame down from each while they burn, and their bells, warm after.
+  for (const x of ENGINES) {
+    const th = look.thrust
+    if (th > 0.01) {
+      const len = (0.4 + 0.9 * th) * (0.88 + 0.12 * Math.sin(look.at * 67 + x * 9))
+      glowAt(p, X(x), X(JET_Y + len * 0.4), X(0.4 + 0.45 * th), DARK.amber, 0.55 * th)
+      solid(p, alpha(p, ink, 0.6).toString(), weight * 0.5, DARK.amber)
+      poly(p, k, [
+        [x - 0.08, JET_Y],
+        [x, JET_Y + len],
+        [x + 0.08, JET_Y],
+      ])
+      p.noStroke()
+      p.fill(alpha(p, VOID.ink, 0.85))
+      poly(p, k, [
+        [x - 0.04, JET_Y],
+        [x, JET_Y + len * 0.45],
+        [x + 0.04, JET_Y],
+      ])
+    }
+    solid(p, ink, weight * 0.6, mixHex(DARK.slate, DARK.amber, 0.8 * Math.min(1, th)))
+    poly(p, k, [
+      [x - 0.058, KEEL - 0.012],
+      [x - 0.093, JET_Y],
+      [x + 0.093, JET_Y],
+      [x + 0.058, KEEL - 0.012],
+    ])
+  }
+  // The hull, and the black of its belly and nose.
   solid(p, ink, weight, DARK.hull)
-  p.beginShape()
-  for (const [x, y] of hull) p.vertex(X(RX + x), X(by + y))
-  p.endShape(p.CLOSE)
-  // Its belly in shadow, the engine block, the window.
-  solid(p, ink, weight * 0.6, DARK.slate)
-  p.beginShape()
-  for (const [x, y] of [[-1.15, 0], [1.12, 0], [1.05, -0.07], [-1.12, -0.09]] as Pt[]) p.vertex(X(RX + x), X(by + y))
-  p.endShape(p.CLOSE)
-  p.rect(X(RX - 1.23), X(by - 0.18), X(0.1), X(0.2), X(0.02))
-  solid(p, ink, weight * 0.6, c.bg)
-  p.beginShape()
-  for (const [x, y] of [[0.55, -0.34], [0.86, -0.2], [0.98, -0.14], [0.6, -0.26]] as Pt[]) p.vertex(X(RX + x), X(by + y))
-  p.endShape(p.CLOSE)
-  outline(p, ink, weight * 0.5)
-  p.line(X(RX - 0.55), X(by - 0.38), X(RX - 0.55), X(by - 0.09))
-  p.line(X(RX + 0.25), X(by - 0.41), X(RX + 0.25), X(by - 0.09))
-  // The collar on its back: a short ring with two jaws the ball sits between.
-  const cy = by - ROOF
-  solid(p, ink, weight * 0.7, DARK.slate)
-  p.rect(X(RX), X(cy + 0.02), X(0.36), X(0.07), X(0.02))
+  poly(p, k, HULL)
+  p.noStroke()
+  p.fill(DARK.deep)
+  poly(p, k, BLACK)
+  // Panel lines, the hatch, the fuel port: they go when it is small.
+  if (look.detail > 0.02) {
+    outline(p, faint, weight * 0.5)
+    for (const x of [-0.78, -1.62]) p.line(X(x), X(-0.04), X(x), X(0.33))
+    p.rect(X(-1.1), X(0.16), X(0.3), X(0.18), X(0.04))
+    solid(p, faint, weight * 0.5, mixHex(DARK.slate, DARK.hull, 1 - look.detail))
+    p.circle(X(PORT[0]), X(PORT[1]), X(0.12))
+  }
+  // The docking collar on its back.
+  solid(p, ink, weight * 0.7, TIN)
+  p.rect(X(DOCK[0]), X(DOCK[1]), X(0.36), X(0.09), X(0.02))
+  // The cockpit: the well dark under the glass (with the hood back, only its floor: an open cockpit, not a dark
+  // dome), the lit panel, the red seat-back behind the ball.
+  const open = clamp(look.hood)
+  ctx.save()
+  if (open > 0) {
+    ctx.beginPath()
+    ctx.rect(X(-1), X(-0.34 + 0.3 * open), X(2), X(0.6))
+    ctx.clip()
+  }
+  solid(p, ink, weight * 0.6, DARK.deep)
+  bubble(p, k)
+  ctx.restore()
+  glowAt(p, 0, 0, X(0.42), DARK.amber, 0.28 * (1 - 0.6 * open))
+  if (look.detail > 0.02) {
+    for (const [x, y, col] of [
+      [0.4, 0.04, DARK.amber],
+      [0.33, -0.05, DARK.ice],
+      [0.26, -0.12, DARK.hull],
+    ] as const) {
+      p.noStroke()
+      p.fill(alpha(p, col, look.detail))
+      p.circle(X(x), X(y), X(0.05))
+    }
+  }
+  p.push()
+  p.translate(X(-0.235), X(0.1))
+  p.rotate(0.95 * look.kick)
+  solid(p, ink, weight * 0.6, DARK.red)
+  poly(p, k, [
+    [-0.075, 0],
+    [0.005, -0.24],
+    [0.095, -0.24],
+    [0.075, 0],
+  ])
+  p.pop()
+  // The wing, swept back and hung down under the after half, over the flank; and its lamp.
+  solid(p, ink, weight * 0.9, TIN)
+  poly(p, k, WING)
+  if (look.detail > 0.02) {
+    outline(p, faint, weight * 0.5)
+    p.line(X(-0.75), X(0.47), X(-2.02), X(0.47))
+  }
+  if (look.blink > 0.02) glowAt(p, X(WINGTIP[0]), X(WINGTIP[1]), X(0.28), DARK.red, 0.8 * look.blink)
+  solid(p, ink, weight * 0.5, look.blink > 0.3 ? DARK.amber : DARK.red)
+  p.circle(X(WINGTIP[0]), X(WINGTIP[1]), X(0.075))
+  // The hood's glass, its windscreen frame, a glint: slid back along the spine while it is open.
+  p.push()
+  p.translate(X(SLIDE[0] * look.hood), X(SLIDE[1] * clamp(look.hood)))
+  solid(p, ink, weight * 1.1, alpha(p, DARK.ice, 0.24).toString())
+  bubble(p, k)
+  outline(p, ink, weight * 0.8)
+  p.line(X(0.16), X(-0.27), X(0.32), X(0.1))
+  outline(p, alpha(p, ink, 0.6).toString(), Math.max(weight * 0.9, X(0.035)))
+  p.arc(X(-0.02), X(-0.02), X(0.46), X(0.46), -2.4, -1.5)
+  p.pop()
+}
+
+/** A landing leg: the sleeve from its hinge, the rod run out of it to the foot's pad, a brace from the belly. */
+function rangerLeg(p: p5, c: Ctx, i: number, look: RangerLook): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const hx = LEG_X[i]
+  const top: Pt = [hx, underAt(hx)]
+  const down = look.feet?.[i] ?? legDown(i)
+  const L0 = Math.hypot(down[0] - top[0], down[1] - top[1])
+  const a0 = Math.atan2(down[1] - top[1], down[0] - top[0])
+  // Folding, it swings through straight down to lie along the belly toward the other leg, a little up into it,
+  // and draws in: folded, the hull hides all of it.
+  const u = look.fold * look.fold * (3 - 2 * look.fold)
+  const a1 = i === 0 ? Math.PI + 0.14 : -0.14
+  const a = a0 + (a1 - a0) * u
+  const L = L0 * (1 - 0.35 * u)
+  const foot: Pt = [top[0] + Math.cos(a) * L, top[1] + Math.sin(a) * L]
+  const s = Math.min(L, SLEEVE)
+  const mid: Pt = [top[0] + Math.cos(a) * s, top[1] + Math.sin(a) * s]
+  const bx = hx + (i === 0 ? -0.372 : 0.372)
+  outline(p, ink, weight * 0.7)
+  p.line(X(bx), X(underAt(bx)), X(mid[0]), X(mid[1]))
   outline(p, ink, weight * 0.9)
-  const open = 0.03 * knock(t - COLLAR, 0.15)
-  p.line(X(RX - 0.17 - open), X(cy), X(RX - 0.16 - open), X(cy - 0.13))
-  p.line(X(RX + 0.17 + open), X(cy), X(RX + 0.16 + open), X(cy - 0.13))
+  p.line(X(mid[0]), X(mid[1]), X(foot[0]), X(foot[1]))
+  outline(p, ink, weight * 1.7)
+  p.line(X(top[0]), X(top[1]), X(mid[0]), X(mid[1]))
+  p.stroke(DARK.hull)
+  p.strokeWeight(weight * 0.9)
+  p.line(X(top[0]), X(top[1]), X(mid[0]), X(mid[1]))
+  solid(p, ink, weight * 0.6, DARK.slate)
+  p.ellipse(X(foot[0]), X(foot[1] - 0.017), X(0.256), X(0.058))
+  solid(p, ink, weight * 0.5, DARK.hull)
+  p.circle(X(top[0]), X(top[1]), X(0.07))
+}
+
+/** The Ranger standing on the water: the ball's seat at RX, sinking on its legs as it takes the ball, its feet where they stand. */
+function drawRanger(p: p5, c: Ctx, t: number): void {
+  if (t >= RANGER_UP) return
+  const y = SEAT_Y + rangerDip(t)
+  const S = RANGER_SCALE
+  const feet = RANGER_FEET.map(([x]): Pt => [x, (FOOT_Y - y) / S])
+  let blink = 0
+  for (const tk of TICKS) blink = Math.max(blink, knock(t - tk, 0.18))
+  p.push()
+  p.translate(RX * c.k, y * c.k)
+  p.scale(S)
+  drawRangerShip(p, { ...c, weight: c.weight / S }, {
+    at: t,
+    hood: rangerHood(t),
+    kick: kickAt(t),
+    fold: 0,
+    feet,
+    blink,
+    // The belly engines spool up as the wave comes: it is going.
+    thrust: 0.3 * smooth(t, RANGER_UP - 0.3, RANGER_UP),
+    burn: 0,
+    detail: 1,
+  })
+  p.pop()
 }
 
 /* ------------------------------------------------------------------ the buoys */
@@ -987,6 +1348,9 @@ function drawSpray(p: p5, c: Ctx, f: Frame, t: number): void {
   drops(p, k, t, FOOT, LAND_X, NEAR, 9, 1.3, up - 0.2, 1.6, 50, 5)
   // The buoys' floats as they go under.
   BUOY_AT.forEach((at, i) => drops(p, k, t, at + 0.12, BUOYS[i], NEAR, 5, 0.7, up, 2.4, 60 + i))
+  // The Ranger lifts off: its belly engines blow the water out from under it, both ways.
+  drops(p, k, t, RANGER_UP, RX - 0.25, NEAR, 12, 1.7, up - 0.8, 0.8, 90)
+  drops(p, k, t, RANGER_UP, RX + 0.25, NEAR, 12, 1.7, up + 0.8, 0.8, 91)
   // The crest feathers: spray off the whole lip, blown back.
   if (t > FEATHER && waveS(t) >= 1) {
     const age = t - FEATHER
@@ -1068,11 +1432,12 @@ function drawOut(p: p5, c: Ctx, t: number): void {
 
 /**
  * What the next part needs to carry on from this one, in this part's cells:
- * the Ranger's hull anchor (mid-belly) where it sits on the water, TARS's hub
+ * the Ranger's anchor (RANGER_ANCHOR, on the belly line under its back)
+ * where it stands on the water, TARS's hub
  * over time, the moments they are handed on, and where the ball leaves.
  */
 export const MILLER_HANDOFF = {
-  ranger: [RX, BELLY] as Pt,
+  ranger: [RX + RANGER_ANCHOR[0] * RANGER_SCALE, SEAT_Y + RANGER_ANCHOR[1] * RANGER_SCALE] as Pt,
   lift: RANGER_UP,
   picked: TARS_PICKED,
   tars: (t: number): Pt => tarsAt(t).hub,

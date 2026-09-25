@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../../parts'
+import { FLOOR, R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT1_END, ACT2, beat, LAST } from '../music'
@@ -11,17 +11,19 @@ import { drawWatch, WATCH_ON_SHELF } from '../earth/watch'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
 import { drawRoom, IN_BED, nightOver, overRoom, ROOM_CELLS, ROOM_HOLD, WAKE } from '../act2/replica'
 import { BED_REST } from '../act2/station'
-import { MILLER_HANDOFF } from './miller'
+import { drawRangerShip, MILLER_HANDOFF, RANGER_ANCHOR, RANGER_FEET, RANGER_SCALE, rangerHood } from './miller'
 
 /**
  * Gargantua, the tesseract, and home.
  *
  * The black hole is the one that hung small in Miller's sky, and it swells
  * as the ball rises at it. The Ranger that stood on Miller's water lifts off
- * (178), picks TARS up on its back (179½), draws away toward the hole as it
- * climbs, and comes round with a claw on a tether and takes the ball on 181:
- * one ship all the way, so there is never a second Ranger in the frame. TARS
- * lets go of its back on 182 and goes in first (183½). Then the slingshot,
+ * (178), catches TARS up under its tail as it skims the wave (179½), draws
+ * away toward the hole as it climbs, and comes round with a claw on a tether
+ * and takes the ball on 181, as the clamp on its back shuts on TARS: one ship
+ * all the way (the hangar's Ranger, drawn by `drawRangerShip` in miller.ts),
+ * so there is never a second Ranger in the frame. The clamp springs open on
+ * 182 and TARS goes in first (183½). Then the slingshot,
  * two turns round the hole, spiralling in and faster as it goes: down through
  * the disk on 183, behind the dark on 184 (the ball's light wraps the rim),
  * up through the disk on 185 while the camera stands back for the whole of
@@ -273,11 +275,10 @@ function hermite(p0: Pt, v0: Pt, p1: Pt, v1: Pt, D: number, u: number): Pt {
 
 const TETHER = 0.52
 /**
- * The Ranger is Miller's: it sits on the water in Miller's part until the ball
- * meets the wave (beat 181), and from then this part draws it, the same hull at
- * the same size, lifting off, skimming the wave to take TARS on its back
- * (182½), and climbing away toward the hole, smaller as it goes, to catch the
- * ball on 184.
+ * The Ranger is Miller's: it sits on the water in Miller's part until it
+ * lifts (178), and from then this part draws it, the same hull at the same
+ * size, skimming the wave to catch TARS up (179½), and climbing away toward
+ * the hole, smaller as it goes, to catch the ball on 181.
  */
 const MILLER_END = MILLER_HANDOFF.exitEnd()
 const fromMiller = (q: Pt): Pt => [q[0] - MILLER_END[0] - 0.5, q[1] - MILLER_END[1]]
@@ -769,15 +770,6 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   const v = vel(shipAt, T)
   const vs = Math.hypot(v[0], v[1]) || 1
   const f: Pt = [v[0] / vs, v[1] / vs]
-  // Its belly to the hole: the tether hangs that way.
-  let bx = C[0] - sp[0]
-  let by = C[1] - sp[1]
-  const bl = Math.hypot(bx, by) || 1
-  bx /= bl
-  by /= bl
-  // Keep the belly square to the heading.
-  const side = f[0] * by - f[1] * bx >= 0 ? 1 : -1
-  let b: Pt = [-f[1] * side, f[0] * side]
   // Off the water it turns from Miller's pose (nose on, belly down) to its heading.
   const turn = smooth(T, LIFT, LIFT + 0.5)
   if (turn < 1) {
@@ -786,71 +778,60 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
     const fl = Math.hypot(fx, fy) || 1
     f[0] = fx / fl
     f[1] = fy / fl
-    const bx2 = b[0] * turn
-    const by2 = 1 + (b[1] - 1) * turn
-    const bl2 = Math.hypot(bx2, by2) || 1
-    b = [bx2 / bl2, by2 / bl2]
   }
+  // It keeps the way up it stood on the water, square to its heading: the canopy never goes under. Once it turns
+  // up the wave at the hole (182½) that is its belly to the hole, the way the tether hangs, all the way round.
+  const b: Pt = [-f[1], f[0]]
   const S = shipScale(T)
-  // The lift: a burst of spray off the water under it.
-  const lifted = T - LIFT
-  if (lifted >= 0 && lifted < 0.7) {
-    const u = lifted / 0.7
-    p.push()
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 0.8 * (1 - u)
-    for (const dx of [-0.6, 0, 0.6]) puff(p, k, ink, weight * 0.45, DARK.hull, LANDED[0] + dx * (1 + u), LANDED[1] + 0.35 - 0.2 * u, 0.12 + 0.25 * u)
-    p.pop()
-  }
-  const W = (x: number, y: number): Pt => [sp[0] + (x * f[0] + y * b[0]) * S, sp[1] + (x * f[1] + y * b[1]) * S]
-  const V = (x: number, y: number) => {
-    const [a, bb] = W(x, y)
-    p.vertex(X(a), X(bb))
+  // Miller's drawing of it (`drawRangerShip`), in its own units: forward along f, belly along b, flown by its anchor.
+  const Z = RANGER_SCALE * S
+  const [ax, ay] = RANGER_ANCHOR
+  const W = (x: number, y: number): Pt => {
+    const u = (x - ax) * Z
+    const w = (y - ay) * Z
+    return [sp[0] + u * f[0] + w * b[0], sp[1] + u * f[1] + w * b[1]]
   }
   const claw = clawAt(T)
-  // The tether, from the winch under the belly to the claw.
-  const winch = W(0.1, 0.12)
-  outline(p, ink, weight * 0.55)
-  p.line(X(winch[0]), X(winch[1]), X(claw.base[0]), X(claw.base[1]))
-  // The claw's mount at the tether's end.
-  solid(p, ink, weight * 0.6, DARK.slate)
-  p.circle(X(claw.base[0]), X(claw.base[1]), X(0.09))
-  // The engine: lit at the periapsis and as it goes.
-  const burn = Math.max(knock(T - NODE_B2, 0.35) * smooth(T, NODE_B2 - 0.03, NODE_B2), smooth(T, RELEASE, RELEASE + 0.15))
-  if (burn > 0.02) {
-    const flick = 0.85 + 0.15 * Math.sin(T * 61)
-    const [ex, ey] = W(-1.2, -0.18)
-    glow(p, X(ex), X(ey), X(0.3 + 0.25 * burn), DARK.amber, 0.7 * burn)
-    solid(p, ink, weight * 0.5, DARK.amber)
-    p.beginShape()
-    V(-1.2, -0.3)
-    V(-1.2 - 1.6 * burn * flick, -0.18)
-    V(-1.2, -0.06)
-    p.endShape(p.CLOSE)
+  // The tether, from the winch under the belly to the claw, and the claw's mount at its end.
+  if (claw.reel > 0.02) {
+    const winch = W(ax, ay + 0.03)
+    outline(p, ink, weight * 0.55)
+    p.line(X(winch[0]), X(winch[1]), X(claw.base[0]), X(claw.base[1]))
+    solid(p, ink, weight * 0.6, DARK.slate)
+    p.circle(X(claw.base[0]), X(claw.base[1]), X(0.09 * smooth(claw.reel, 0, 0.35)))
   }
-  // The hull: Miller's Ranger, small, a low wedge nose-first, belly to the hole.
-  solid(p, ink, weight * 0.8, DARK.hull)
-  p.beginShape()
-  for (const [x, y] of [[-1.15, 0], [1.12, 0], [1.2, -0.05], [0.9, -0.2], [0.45, -0.4], [-0.2, -0.42], [-1.0, -0.36], [-1.18, -0.3]] as Pt[]) V(x, y)
-  p.endShape(p.CLOSE)
-  solid(p, ink, weight * 0.5, DARK.slate)
-  p.beginShape()
-  for (const [x, y] of [[-1.15, 0], [1.12, 0], [1.05, -0.07], [-1.12, -0.09]] as Pt[]) V(x, y)
-  p.endShape(p.CLOSE)
-  solid(p, ink, weight * 0.5, VOID.bg)
-  p.beginShape()
-  for (const [x, y] of [[0.55, -0.34], [0.86, -0.2], [0.98, -0.14], [0.6, -0.26]] as Pt[]) V(x, y)
-  p.endShape(p.CLOSE)
-  // The latch on its back that holds TARS, and lets go on 182.
-  const pop = T >= LATCH ? smooth(T, LATCH - 0.03, LATCH) : 0
-  const [l0x, l0y] = W(-0.3, -0.42)
-  const [l1x, l1y] = W(-0.3 - 0.25 * pop, -0.42 - 0.3 * pop)
-  outline(p, ink, weight * 0.8)
-  p.line(X(l0x), X(l0y), X(l1x), X(l1y))
+  // Its lamp blinks on what it does: the lift, the catch, letting TARS go, letting the ball go.
+  let blink = 0
+  for (const at of [LIFT, CATCH, LATCH, RELEASE]) if (T >= at) blink = knock(T - at, 0.18)
+  const lifted = T - LIFT
+  p.push()
+  p.translate(X(sp[0]), X(sp[1]))
+  p.applyMatrix(f[0], f[1], b[0], b[1], 0, 0)
+  p.scale(Z)
+  p.translate(X(-ax), X(-ay))
+  // Its lines keep the stage's weight, a little lighter as it gets small.
+  const cs: Ctx = { ...c, weight: (weight * (0.7 + 0.3 * S)) / Z }
+  drawRangerShip(p, cs, {
+    at: T,
+    hood: rangerHood(T),
+    kick: 0,
+    // Off the water its legs fold up into the belly, from where the feet stood.
+    fold: smooth(T, LIFT + 0.12, LIFT + 0.8),
+    feet: RANGER_FEET,
+    blink,
+    // The belly engines lift it off the water on the beat, and are out before it rolls.
+    thrust: (0.3 + 0.7 * knock(lifted, 0.2)) * (1 - smooth(lifted, 0.12, 0.34)),
+    // The main engine: lit at the periapsis, and as it goes.
+    burn: Math.max(knock(T - NODE_B2, 0.35) * smooth(T, NODE_B2 - 0.03, NODE_B2), smooth(T, RELEASE, RELEASE + 0.15)),
+    detail: smooth(S, 0.4, 0.8),
+  })
+  tarsClamp(p, cs, T)
+  p.pop()
+  // Letting TARS go: a breath of gas off the clamp. Vapour, not a cloud: in the vacuum it spreads and thins, uninked.
   const gas = T - LATCH
   if (gas >= 0 && gas < 0.8) {
     const u = gas / 0.8
-    const [gx, gy] = W(-0.3, -0.62 - 0.9 * Math.sqrt(u))
-    // Vapour, not a cloud: in the vacuum it spreads and thins, uninked.
+    const [gx, gy] = W(ax, -0.2 - 1.0 * Math.sqrt(u))
     glow(p, X(gx), X(gy), X(0.06 + 0.14 * Math.sqrt(u)), VOID.ink, 0.55 * (1 - u) ** 1.5)
   }
   const rel = T - RELEASE
@@ -860,8 +841,35 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   }
 }
 
+/**
+ * The clamp on the Ranger's back that TARS rides in (the ship's units): two
+ * jaws on the spine, behind the canopy. TARS catches hold under the tail as
+ * the ship skims past (179½) and comes round onto its back as it climbs; the
+ * clamp shuts on it on 181, with the claw on the ball, and springs on 182.
+ */
+function tarsClamp(p: p5, c: Ctx, T: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const [ax] = RANGER_ANCHOR
+  const spine = -0.05
+  // Flat along the spine, stowed; up and open as TARS comes round; shut; sprung; and down flat again.
+  const up = smooth(T, CATCH - 0.4, CATCH - 0.15) * (1 - smooth(T, LATCH + 0.35, LATCH + 0.8))
+  const shut = smooth(T, CATCH - 0.06, CATCH) * (1 - smooth(T, LATCH - 0.02, LATCH + 0.04))
+  const kick = T > LATCH ? 0.25 * Math.exp(-(T - LATCH) / 0.12) : 0
+  for (const s of [-1, 1]) {
+    const lean = s * (1.45 - 0.9 * up - 0.85 * shut + kick)
+    const foot: Pt = [ax + s * 0.12, spine]
+    const tip: Pt = [foot[0] + Math.sin(lean) * 0.2, foot[1] - Math.cos(lean) * 0.2]
+    outline(p, ink, weight * 2.1)
+    p.line(X(foot[0]), X(foot[1]), X(tip[0]), X(tip[1]))
+    p.stroke(DARK.hull)
+    p.strokeWeight(weight * 1.0)
+    p.line(X(foot[0]), X(foot[1]), X(tip[0]), X(tip[1]))
+  }
+}
+
 /** The claw at `T`: its mount, the way it points (to the ball), and how open its jaws are. */
-function clawAt(T: number): { base: Pt; dir: Pt; open: number; ball: Pt } {
+function clawAt(T: number): { base: Pt; dir: Pt; open: number; ball: Pt; reel: number } {
   const sp = shipAt(T)
   let ball: Pt
   if (T >= CATCH && T <= RELEASE) ball = swingPt(T)
@@ -876,25 +884,30 @@ function clawAt(T: number): { base: Pt; dir: Pt; open: number; ball: Pt } {
   const dy = ball[1] - sp[1]
   const d = Math.hypot(dx, dy) || 1
   const dir: Pt = [dx / d, dy / d]
-  const base: Pt = [ball[0] - dir[0] * (R + 0.07), ball[1] - dir[1] * (R + 0.07)]
-  let open = 0.95
+  // Reeled in to the winch until the ship has turned its belly to the hole, up the wave; then paid out, opening.
+  const reel = T >= CATCH ? 1 : smooth(T, LIFT + 1.2, LIFT + 1.75)
+  const base: Pt = [sp[0] + (ball[0] - dir[0] * (R + 0.07) - sp[0]) * reel, sp[1] + (ball[1] - dir[1] * (R + 0.07) - sp[1]) * reel]
+  let open = 0.95 * reel
   if (T > CATCH - 0.08) {
     const u = smooth(T, CATCH - 0.08, CATCH)
     const over = T > CATCH ? -0.1 * Math.exp(-(T - CATCH) / 0.08) * Math.cos((T - CATCH) * 30) : 0
     open = 0.95 * (1 - u) + over
   }
   if (T > RELEASE - 0.02) open = 1.1 * easeOutCubic(clamp((T - RELEASE + 0.02) / 0.12))
-  return { base, dir, open, ball }
+  return { base, dir, open, ball, reel }
 }
 
 /** The jaws, over the ball. */
 function drawJaws(p: p5, c: Ctx, T: number): void {
   if (T < CATCH - 2.5 || T > RELEASE + 3) return
   const { k, ink, weight } = c
-  const { base, dir, open } = clawAt(T)
+  const { base, dir, open, reel } = clawAt(T)
+  if (reel < 0.02) return
   const nx = -dir[1]
   const ny = dir[0]
-  const W = (along: number, out: number): Pt => [(base[0] + nx * along + dir[0] * out) * k, (base[1] + ny * along + dir[1] * out) * k]
+  // Coming out of the winch it grows to its size.
+  const q = smooth(reel, 0, 0.35)
+  const W = (along: number, out: number): Pt => [(base[0] + (nx * along + dir[0] * out) * q) * k, (base[1] + (ny * along + dir[1] * out) * q) * k]
   for (const side of [-1, 1]) {
     const piv: Pt = [side * 0.07, 0]
     const pts: Pt[] = [
