@@ -264,7 +264,12 @@ function candle(q: Pen, x: number, t: number, seed: number, strength = 1): void 
 }
 
 /** The neon arrow's tube, as points: the level tail, the bend, the drop; and its chevron's two strokes. */
-export function neonArrow(tipX: number, tipY: number): { tube: Pt[]; head: [Pt, Pt, Pt] } {
+/**
+ * Seb's sign: a blue neon arrow bent down to the door, and beside it, hung from the same bracket, the note Mia drew
+ * for his club's name (no letters, only the note). `tube` and `head` are the arrow, `note` the note's tubes, and
+ * `left` how far the bracket reaches to hold them.
+ */
+export function neonArrow(tipX: number, tipY: number): { tube: Pt[]; head: [Pt, Pt, Pt]; note: Pt[][]; left: number } {
   const r = 0.25
   const drop = 0.5
   const cx = tipX - r
@@ -277,7 +282,25 @@ export function neonArrow(tipX: number, tipY: number): { tube: Pt[]; head: [Pt, 
   tube.push([tipX, tipY])
   const s = 0.24
   const a = (40 * Math.PI) / 180
-  return { tube, head: [[tipX - s * Math.sin(a), tipY - s * Math.cos(a)], [tipX, tipY], [tipX + s * Math.sin(a), tipY - s * Math.cos(a)]] }
+  // The note: a round head tilted as a written one is, a stem up from its right side, a flag curling down.
+  const nx = cx - 1.32
+  const ny = cy + 0.08
+  const ring: Pt[] = []
+  for (let i = 0; i <= 14; i++) {
+    const u = (i / 14) * Math.PI * 2
+    const ex = 0.1 * Math.cos(u)
+    const ey = 0.07 * Math.sin(u)
+    ring.push([nx + ex * Math.cos(-0.35) - ey * Math.sin(-0.35), ny + ex * Math.sin(-0.35) + ey * Math.cos(-0.35)])
+  }
+  const sx = nx + 0.09
+  const stem: Pt[] = [[sx, ny - 0.03], [sx, ny - 0.46]]
+  const flag: Pt[] = [[sx, ny - 0.46], [sx + 0.08, ny - 0.38], [sx + 0.14, ny - 0.3], [sx + 0.13, ny - 0.2]]
+  return {
+    tube,
+    head: [[tipX - s * Math.sin(a), tipY - s * Math.cos(a)], [tipX, tipY], [tipX + s * Math.sin(a), tipY - s * Math.cos(a)]],
+    note: [ring, stem, flag],
+    left: nx - 0.02,
+  }
 }
 
 function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight: number, t: number): void {
@@ -531,10 +554,11 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
     p.line(X(a1 + 0.05), X(R.doorTop + 0.07), X(a0), X(R.doorTop + 0.35))
     const tipX = R.wallL0 - 0.55
     const tipY = R.doorTop - 0.42
-    const { tube, head } = neonArrow(tipX, tipY)
+    const { tube, head, note, left } = neonArrow(tipX, tipY)
     p.stroke(ink)
     p.strokeWeight(weight * 0.55)
-    p.line(X(a0), X(tube[0][1] - 0.18), X(tube[0][0] - 0.05), X(tube[0][1] - 0.18))
+    p.line(X(a0), X(tube[0][1] - 0.18), X(left), X(tube[0][1] - 0.18))
+    p.line(X(note[1][1][0]), X(tube[0][1] - 0.18), X(note[1][1][0]), X(note[1][1][1]))
     p.line(X(tube[0][0] + 0.1), X(tube[0][1] - 0.18), X(tube[0][0] + 0.1), X(tube[0][1] - 0.04))
     p.line(X(a0 - 0.35), X(tube[0][1] - 0.18), X(a0 - 0.35), X(tube[4][1] - 0.02))
     const lit = 0.92 + 0.08 * Math.sin(t * 13) * Math.sin(t * 5.3)
@@ -549,6 +573,11 @@ function drawRoom(p: p5, s: ClubRoom, k: number, ink: string, bg: string, weight
       p.beginShape()
       for (const [x, y] of head) p.vertex(X(x), X(y))
       p.endShape()
+      for (const line of note) {
+        p.beginShape()
+        for (const [x, y] of line) p.vertex(X(x), X(y))
+        p.endShape()
+      }
     }
   }
 }

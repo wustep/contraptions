@@ -418,8 +418,9 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
   const a0 = WALL
   const a1 = WALL - 0.95
   shape(p, k, [[a0, DOOR_TOP - 0.22], [a1, DOOR_TOP - 0.05], [a1, DOOR_TOP + 0.07], [a0, DOOR_TOP + 0.02]], D.car[0], line, w * 0.7)
-  const { tube, head } = neonArrow(WALL - 0.55, DOOR_TOP - 0.42)
-  seg(p, k, [a0, tube[0][1] - 0.18], [tube[0][0] - 0.05, tube[0][1] - 0.18], line, w * 0.55)
+  const { tube, head, note, left } = neonArrow(WALL - 0.55, DOOR_TOP - 0.42)
+  seg(p, k, [a0, tube[0][1] - 0.18], [left, tube[0][1] - 0.18], line, w * 0.55)
+  seg(p, k, [note[1][1][0], tube[0][1] - 0.18], note[1][1], line, w * 0.55)
   seg(p, k, [tube[0][0] + 0.1, tube[0][1] - 0.18], [tube[0][0] + 0.1, tube[0][1] - 0.04], line, w * 0.55)
   const s = t - NEON
   // Dark glass until its note; then it buzzes on, a stutter, and holds.
@@ -436,6 +437,11 @@ function club(p: p5, k: number, ink: string, w: number, t: number, fr: { x0: num
     p.beginShape()
     for (const [x, y] of head) p.vertex(x * k, y * k)
     p.endShape()
+    for (const tubeLine of note) {
+      p.beginShape()
+      for (const [x, y] of tubeLine) p.vertex(x * k, y * k)
+      p.endShape()
+    }
   }
 }
 /** The club's door: shut until they are nearly at it. */
