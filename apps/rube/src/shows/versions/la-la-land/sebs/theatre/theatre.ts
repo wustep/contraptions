@@ -420,8 +420,8 @@ export const theatre = part<TheatreState>(
     }
   },
   (slot): PartShot[] => [
-    { t: slot.begin, cells: 6.8, hold: [3.9, -2.35] },
-    { t: TREADLE, cells: 6.6, hold: [4.9, -2.35] },
+    { t: slot.begin, cells: 6.8, hold: [3.9, -1.9] },
+    { t: TREADLE, cells: 6.6, hold: [4.9, -1.95] },
     { t: KNOCK, cells: 6.2, hold: [6.9, -2.0] },
     { t: HOIST + 0.3, cells: 6.3, hold: [9.1, -2.3] },
     { t: ARRIVE, cells: 7.0, hold: [10.3, -4.1] },

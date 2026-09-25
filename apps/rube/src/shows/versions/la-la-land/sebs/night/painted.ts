@@ -780,8 +780,8 @@ export const painted = part<PaintedState>(
       { t: 279.4, cells: 6.3, hold: c(279.4, -1.6, 0.4) },
       { t: 286.5, cells: 6.6, hold: c(286.5, -1.8, 0.6) },
       // The clock: its bell at the top of the frame, the two of them under it.
-      { t: MIDNIGHT - 0.5, cells: 6.2, hold: [CLOCK_X - 0.1, -2.05] },
-      { t: RELEASE - 0.3, cells: 6.6, hold: [CLOCK_X + 0.4, -2.3] },
+      { t: MIDNIGHT - 0.5, cells: 6.2, hold: [CLOCK_X - 0.1, -1.62] },
+      { t: RELEASE - 0.3, cells: 6.6, hold: [CLOCK_X + 0.4, -1.85] },
       { t: slot.end, cells: 9.2, hold: [CLOCK_X + 0.2, -3.0] },
     ]
   },

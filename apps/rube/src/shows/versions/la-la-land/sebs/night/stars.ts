@@ -180,8 +180,11 @@ const HALF = 0.62
 const GLOBE_R = 0.27
 /** How far up through the trap it has come: all the way by the time they push off. */
 const risen = (T: number): number => smooth(T, FLY_SET - 0.1, LIFT - 0.35)
-/** Its lamps: on as they push off, flared on the last note. */
-const lamp = (T: number): number => smooth(T, LIFT - 0.35, LIFT + 0.25)
+/**
+ * Its lamps: on as they push off, flared on the last note, and out as the lights go, a beat before the dark is
+ * whole (the next place opens on another projector's lamp coming up in a dark room).
+ */
+const lamp = (T: number): number => smooth(T, LIFT - 0.35, LIFT + 0.25) * (1 - smooth(T, DARK[0] + 0.05, DARK[0] + 0.55))
 /** How far it has turned: a quarter of their turning, so it whirls when they do and stops when they stop. */
 const spin = (T: number): number => (theta(T) - theta(FLY_SKY)) * 0.24
 /** Where its axis crosses the yoke, as it rises. */
