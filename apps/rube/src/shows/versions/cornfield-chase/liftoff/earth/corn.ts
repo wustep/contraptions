@@ -137,20 +137,41 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
   }
   p.push()
   if (o.alpha !== undefined) p.drawingContext.globalAlpha = o.alpha
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.8)
-  p.fill(o.fill)
-  p.beginShape()
-  p.vertex(X(i0 * step), X(o.foot))
+  // The wall's leafy top, a leaf tip and then the dip between two. Filled down to its foot, but only the top is inked:
+  // the foot is the ground's to draw, and a line along it would be a second road line (or a bare line where the
+  // wall has no height yet).
+  const profile: [number, number][] = []
   for (let i = i0; i <= i1; i++) {
     const a = top(i)
     const b = top(i + 1)
-    // A leaf tip, then the dip between two.
-    p.vertex(X(a.x), X(a.y))
-    p.vertex(X((a.x + b.x) / 2 + 0.03), X(Math.min(o.foot, (a.y + b.y) / 2 + (0.16 + 0.06 * hash(i, o.seed, 2)) * Math.min(a.k, b.k))))
+    profile.push([X(a.x), X(a.y)])
+    profile.push([X((a.x + b.x) / 2 + 0.03), X(Math.min(o.foot, (a.y + b.y) / 2 + (0.16 + 0.06 * hash(i, o.seed, 2)) * Math.min(a.k, b.k)))])
   }
+  p.noStroke()
+  p.fill(o.fill)
+  p.beginShape()
+  p.vertex(X(i0 * step), X(o.foot))
+  for (const [vx, vy] of profile) p.vertex(vx, vy)
   p.vertex(X(i1 * step), X(o.foot))
   p.endShape(p.CLOSE)
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.8)
+  // Only where the wall stands: from where it first has height to where it last has.
+  let run: [number, number][] = []
+  const flush = () => {
+    if (run.length > 1) {
+      p.beginShape()
+      for (const [vx, vy] of run) p.vertex(vx, vy)
+      p.endShape()
+    }
+    run = []
+  }
+  for (const pt of profile) {
+    if (pt[1] >= X(o.foot) - 0.5) flush()
+    else run.push(pt)
+  }
+  flush()
   // A stem line now and then, and the tassels above the leaves.
   p.stroke(ink)
   for (let i = i0; i <= i1; i++) {

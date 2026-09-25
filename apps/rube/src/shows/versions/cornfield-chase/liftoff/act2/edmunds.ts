@@ -80,8 +80,8 @@ const ONRAMP = cue(231.5)
 const LAMP = FINAL
 /** When Cooper and Brand first touch at her camp: under the lamp, a beat after it lights, as the music stops. */
 export const CAMP_MEET = cue(233)
-/** She sets off from the cairn to meet him as the ramp slams down. */
-const SET_OUT = RAMP
+/** She sets off from the cairn when the ship touches down: a slow start, so the approach is long and unhurried. */
+const SET_OUT = TOUCH
 
 /** The far side opens at the sphere's centre on 212 (the whip starts from it); the ship is out on 213. */
 export const EDMUNDS_HITS = [BEGIN, OUT, RING, PITCH, PITCH_STOP, ...RETRO, MORTAR, BLOOM, ...REEFS, SHIELD, CUT, ...LEGS, FLARE, TOUCH, CANOPY, RAMP, KICK, ONRAMP, LAMP]
@@ -383,11 +383,14 @@ const HELMET_X = CAIRN_X + 0.88
 /**
  * The meeting, under the lamp: the stop on the plate drops once the lamp is
  * lit and he rolls off the plate's end to meet her; she has come all the way
- * from the cairn. Where each of them rests, touching.
+ * from the cairn. Where each of them rests: close, a hand's breadth apart,
+ * not pressed together.
  */
 const STOP_DOWN: [number, number] = [LAMP + 0.3, LAMP + 0.48]
 const MEET_H: Pt = [PLATE_X + 0.42, G - R]
-const MEET_B: Pt = [MEET_H[0] + 2 * R + 0.004, G - R]
+/** A little light between them. */
+const MEET_GAP = 0.07
+const MEET_B: Pt = [MEET_H[0] + 2 * R + MEET_GAP, G - R]
 /** Where she waits, by the cairn's side. */
 const WAIT: Pt = [CAIRN_X - 0.5, G - R]
 /** They settle against each other: a soft give, and back. */
@@ -399,8 +402,9 @@ const give = (T: number): number => {
 function brandAt(T: number): Companion {
   if (T < SET_OUT) return { x: WAIT[0], y: WAIT[1] }
   if (T < CAMP_MEET) {
+    // Slow to start, then gathering, then easing in to stop: 4u³ - 3u⁴, whose speed rises as u² and falls to rest.
     const u = (T - SET_OUT) / (CAMP_MEET - SET_OUT)
-    const e = u * u * (3 - 2 * u)
+    const e = 4 * u * u * u - 3 * u * u * u * u
     return { x: lerp(WAIT[0], MEET_B[0], e), y: WAIT[1] }
   }
   return { x: MEET_B[0] + give(T), y: MEET_B[1] }

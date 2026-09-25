@@ -346,7 +346,8 @@ async function main(): Promise<void> {
           const h = show.where(t)
           closest = Math.min(closest, Math.hypot(b.x - h[0], b.y - h[1]))
         }
-        check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp', closest <= 0.3, `closest ${closest.toFixed(3)}`)
+        // They meet close, with a little light between them: not pressed together.
+        check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp, close but not pressed together', closest >= 0.27 && closest <= 0.42, `closest ${closest.toFixed(3)}`)
         // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
         for (const [name, of] of [['Brand', (t: number) => show.brand(t)], ['Murph', (t: number) => show.murph(t)]] as const) {

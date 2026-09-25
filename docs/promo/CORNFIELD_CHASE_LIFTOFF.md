@@ -239,6 +239,8 @@ The title card stays up to the end, 291 s.
    - The scattered strokes on the channel's bank and the truck's bank are gone.
    - The corn walls no longer draw a bare line along their foot where they have no height.
    - The bank's foot sits on the road, as one outline.
+   - Every corn wall is filled to its foot but inked only along its leafy top, so none of them draws a second line along the road.
+5. **Cooper and Amelia's meeting is gentler.** She sets out from the cairn when the ship touches down (251.5 s), 2 s earlier than before. Her roll starts slow, gathers and eases in to rest (4u³ − 3u⁴). Her top speed is 1.5 cells/s, where it was 2.1. They meet a hand's breadth apart, centres 0.35 cells, with a sliver of light between them, not pressed together.
 
 ## Stephen's notes 1 to 8
 
