@@ -364,9 +364,12 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   p.line(X(hub[0]), X(hub[1]), X(hub[0] + 0.85), X(hub[1] - 0.05))
   p.quad(X(hub[0] + 0.6), X(hub[1] - 0.22), X(hub[0] + 0.95), X(hub[1] - 0.32), X(hub[0] + 0.95), X(hub[1] + 0.14), X(hub[0] + 0.6), X(hub[1] + 0.08))
 
-  // The trip bar at the head of the hoist: a stop the bucket's lip catches on, and it goes over.
+  // The trip bar at the head of the hoist: a stop the bucket's lip catches on, and it goes over. It is an arm off the
+  // tower's left leg, so it is fixed to something.
+  const tripY = BUCKET_HIGH - 0.2
+  const legAt = legL + ((TOWER - 0.12 - legL) * (tripY - FLOOR)) / (TOWER_TOP - FLOOR)
   outline(p, ink, weight)
-  p.line(X(BUCKET_X + 0.22), X(BUCKET_HIGH - 0.2), X(BUCKET_X + 0.42), X(BUCKET_HIGH - 0.2))
+  p.line(X(BUCKET_X + 0.22), X(tripY), X(legAt), X(tripY))
   // Sheave, rope, bucket.
   solid(p, ink, weight * 0.8, DUST.tin)
   p.circle(X(SHEAVE[0]), X(SHEAVE[1]), X(0.16))

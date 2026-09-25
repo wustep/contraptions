@@ -740,7 +740,8 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   p.stroke(alpha(p, ink, 0.3))
   for (let i = Math.floor(f.x0 / 0.45); i < f.x1 / 0.45; i++) {
     const x = i * 0.45 + hash(i, 9) * 0.2
-    if (x > s.edge - 0.2) continue
+    // Along the road only: from where it starts (under the flume) to the dam.
+    if (x < -1.5 || x > s.edge - 0.2) continue
     p.line(X(x), X(GROUND + 0.08), X(x + 0.14), X(GROUND + 0.08))
   }
   // The dam: the road stops at a concrete lip, and the face goes down.
