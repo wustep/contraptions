@@ -16,9 +16,10 @@ import { DUST } from '../worlds'
  * the last one is dark. The rocket takes it from there.
  *
  * Brand comes with him. She came out of the bunker after him and caught him
- * up; she rolls into the cage at his back, touching, and they go up
- * together. Along the arm a step behind him, and into the window beside him
- * on 124.
+ * up; they are coasting on toward the tower when TARS, behind them, swings
+ * its front slab through and knocks them the rest of the way (116½): into
+ * the cage hard against its far bars on 117, and they go up together.
+ * Along the arm a step behind him, and into the window beside him on 124.
  *
  * The part's frame: the ball comes in rolling on the ground (y = 0); the
  * rocket's axis stands at RX; the pad's top is the ground.
@@ -29,12 +30,30 @@ const RX = 2.68
 const WIN: Pt = [RX, FLOOR - 0.35 - 7.3]
 const LEG0 = RX - 2.2
 const LEG1 = RX - 1.35
+/** The tower's near foot (x, this part's frame): TARS stands guard just short of it. */
+export const TOWER_FOOT = LEG0
 const CAGE_X = (LEG0 + LEG1) / 2
 /** In the cage he stands to the right, and she to the left of him, touching. */
 const HERO_X = CAGE_X + 0.1
 const HER_X = HERO_X - 2 * R - 0.01
 const TOP = -8.7
 const IN = beat(117)
+/** TARS's knock (it is drawn by the gate part, and swings through Brand's back here). */
+export const KNOCK = beat(116.5)
+/** How fast they come off the gate's apron, coasting (the gate part leaves them at this pace). */
+export const V_SEAM = 0.9
+/** Coasting, how fast they are going when it knocks them; how fast it sends them; how fast he meets the far bars. */
+const V_PRE = 0.6
+const V_KNOCK = 5.0
+/** Where they are, coasting, from the seam to the knock (x, this part's frame). */
+const coastX = (u: number): number => -0.5 + V_SEAM * u - (0.5 * (V_SEAM - V_PRE) / (KNOCK - beat(116))) * u * u
+/** The far bars bounce him back a little, and her with him; they settle as the cage lifts. */
+/** Brand's back as TARS's slab meets it (x, this part's frame): she coasts at his back. */
+export const KNOCK_BACK = coastX(KNOCK - beat(116)) - 3 * R - 0.01
+const bounce = (t: number): number => {
+  const k = t - IN
+  return k <= 0 ? 0 : 0.06 * Math.sin(Math.min(Math.PI, (k * Math.PI) / 0.2)) * Math.exp(-k / 0.2)
+}
 const RISE = [beat(117), beat(122)]
 const LAMPS = Array.from({ length: 10 }, (_, i) => beat(117.5 + i * 0.5))
 const SEATED = beat(124)
@@ -52,7 +71,7 @@ const HIS_GO = RISE[1] + 0.15
 /** Brand in this part's frame, given his lane: at his back into the cage, up, along the arm, and in the window beside him. */
 function goldGantry(t: number, lane: Lane, begin: number): Pt {
   if (t < IN) return [laneAt(lane, t - begin).x - 2 * R - 0.01, 0]
-  if (t < HER_GO) return [HER_X, cageY(t)]
+  if (t < HER_GO) return [HER_X - bounce(t), cageY(t)]
   const seat: Pt = [WIN[0] - 2 * R - 0.01, WIN[1]]
   if (t < SEATED) {
     // Along the arm: slow off the mark, quicker, and easing into the window against him on the beat.
@@ -116,16 +135,21 @@ export const gantry = part<GantryState>(
   (slot) => {
     const at = (t: number) => t - slot.begin
     const arrive = at(IN)
-    // In off the apron at the gate's pace, a quickening across to the tower, and eased right down into the cage:
-    // they come to it on the beat at a touch, not a stop.
-    const v0 = 2.0
-    const v1 = 0.25
-    const surge = ((HERO_X + 0.5) / arrive - (v0 + v1) / 2) * (Math.PI / 2)
-    const toCage = (t: number): Pt => {
-      const w = Math.max(0, Math.min(1, t / arrive))
-      return [-0.5 + arrive * (v0 * w + ((v1 - v0) * w * w) / 2 + (surge * (1 - Math.cos(Math.PI * w))) / Math.PI), 0]
+    // Coasting off the apron, slowing; knocked on 116½ and sent hard across into the cage, meeting its far bars on the
+    // beat (a hit, then a small bounce back and settle as it lifts).
+    const kn = at(KNOCK)
+    const x0 = coastX(kn)
+    const T = arrive - kn
+    const vHit = (2 * (HERO_X - x0)) / T - V_KNOCK
+    const knocked = (u: number): Pt => {
+      const k = u - kn
+      return [x0 + V_KNOCK * k + (0.5 * (vHit - V_KNOCK) / T) * k * k, 0]
     }
-    const segs = [...carried(toCage, 0, arrive, 40), ...carried((t) => [HERO_X, cageY(t + slot.begin)], arrive, at(HIS_GO), 90)]
+    const segs = [
+      ...carried((u) => [coastX(u), 0], 0, kn, 12),
+      ...carried(knocked, kn, arrive, 16),
+      ...carried((t) => [HERO_X - bounce(t + slot.begin), cageY(t + slot.begin)], arrive, at(HIS_GO), 90),
+    ]
     // Out along the arm to the window.
     const from: Pt = [HERO_X, cageY(HIS_GO)]
     segs.push(...carried((t) => alongArm(from, WIN, 0, SEATED - HIS_GO, t + slot.begin - HIS_GO), at(HIS_GO), at(SEATED), 60))
@@ -148,7 +172,10 @@ export const gantry = part<GantryState>(
   () => [
     // From the gate's framing of the tower's foot straight into the climb: no push in.
     { t: RISE[0] + 0.6, cells: 7.4, off: [0.9, -0.4] },
-    { t: RISE[1] - 0.3, cells: 7.4, off: [0.9, 0.6] },
+    // The tower's foot and the cage going up out of it: Murph racing up the apron after them, TARS's slab across her
+    // way (120), into it (120½), and again (122). Held, the cage rising up through the top of the frame.
+    { t: beat(119.6), cells: 7.0, hold: [0.1, -2.5], w: 0.95 },
+    { t: beat(122.2), cells: 7.6, hold: [0.2, -2.9], w: 0.95 },
     // Wide on the tower and the rocket, but centred high enough that under Zoom the window stays well inside the frame.
     { t: SEATED, cells: 12, hold: [RX - 0.5, -5.4] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.

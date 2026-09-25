@@ -2,10 +2,10 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, mixHex, R, puff, type Pt } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
-import { DUST } from '../worlds'
+import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { cornWall, stalk } from './corn'
 
 /**
@@ -522,6 +522,86 @@ function heroAt(t: number): Pt {
   return [u, v]
 }
 
+/* ------------------------------------------------------------------ Murph, stowed away in the bed */
+
+const MR = R * MURPH_SMALL
+/**
+ * Murph followed him from the porch. She comes down the flume a few cells behind him, stops short of its end while
+ * he gets in, and once the door has slammed she drops into the bed on the next note and scoots up it, low behind the
+ * near wall (her crown shows). She rides there: tossed a little on every furrow, up over the wall at the ditch, pressed
+ * back when he floors it; and at the dam she is thrown against the cab and stays with the truck, at the edge.
+ */
+const M_WAIT = 32.0
+const M_GO = 32.29
+const M_LANDS = 32.53
+const M_SETTLED = 32.88
+const M_U = 0.55
+const M_FRONT = CAB_U - MR - 0.015
+/** Her span ends here, with the truck long out of the frame. */
+const MURPH_TRUCK_END = 58
+
+/** Where she is in the bed (u along from the tailgate, v up from the road) from when she lands. */
+function murphInBed(t: number): Pt {
+  const floor = BED_FLOOR + MR
+  if (t < M_SETTLED) {
+    const w = smooth(t, M_LANDS, M_SETTLED)
+    return [0.3 + (M_U - 0.3) * w, floor]
+  }
+  let u = M_U
+  // Down low while they are still in the yard; once they are away she comes up to peek over the wall.
+  let v = floor + 0.085 * smooth(t, 36.2, 37.2)
+  // Pulling away and flooring it: she slides back a little in the bed, and forward again.
+  if (t > CATCH && t < DROP) u -= 0.06 * pullAt(t)
+  const go = t - DROP
+  if (go > 0) u -= 0.16 * smooth(go, 0, 0.3) * Math.exp(-Math.max(0, go - 0.3) / 0.7)
+  // Each furrow tosses her a little, landing on the eighth.
+  const { ago } = lastOf(SLAPS, t)
+  const air = beat(0.5) - beat(0)
+  if (t < STOP && ago < air) v += 0.06 * 4 * (ago / air) * (1 - ago / air)
+  // The ditch: up over the wall, and down after the wheels.
+  const f0 = TAKEOFF + 0.08
+  const f1 = beat(77.6)
+  if (t > f0 && t < f1) {
+    const w = launch((t - f0) / (f1 - f0))
+    v += 0.36 * 4 * w * (1 - w)
+  }
+  // The fence: a knock forward.
+  const hit = t - FENCE
+  if (hit > 0) u += 0.05 * Math.exp(-hit / 0.2) * Math.sin(Math.min(Math.PI, hit * 12))
+  // The brakes: thrown up the bed against the cab, a bounce back off it, and she stays there.
+  const br = t - STOP
+  if (br > 0) {
+    const w = clamp(br / 0.32)
+    u += (M_FRONT - u) * w * w
+    if (br > 0.32) u = M_FRONT - 0.05 * Math.exp(-(br - 0.32) / 0.2) * Math.abs(Math.sin((br - 0.32) * 12))
+  }
+  return [u, v]
+}
+
+function murphTruck(s: TruckState, edge: number, t: number): Companion {
+  const flume = -MR + R
+  let q: Pt
+  if (t < M_WAIT) {
+    // Down the flume after him, easing to a stop short of its end.
+    const T = M_WAIT - (M_WAIT - 2.2)
+    const u = clamp((t - (M_WAIT - 2.2)) / T)
+    const x0 = edge - 3.9
+    const x1 = edge - 0.32
+    q = [x0 + (x1 - x0) * (1 - (1 - u) * (1 - u)), flume]
+  } else if (t < M_GO) q = [edge - 0.32, flume]
+  else if (t < M_LANDS) {
+    // Over the end and down into the bed by the tailgate.
+    const land = bodyPoint(s, M_LANDS, 0.3, BED_FLOOR + MR)
+    const u = (t - M_GO) / (M_LANDS - M_GO)
+    const a: Pt = [edge - 0.32, flume]
+    q = [a[0] + (land[0] - a[0]) * u, a[1] + (land[1] - a[1]) * u * u - 0.1 * 4 * u * (1 - u)]
+  } else {
+    const [u, v] = murphInBed(t)
+    q = bodyPoint(s, t, u, v)
+  }
+  return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
+}
+
 export const truck = part<TruckState>(
   {
     name: 'pickup',
@@ -585,10 +665,12 @@ export const truck = part<TruckState>(
     segs.push(...route([from, hop(from, touch, at(TOUCHDOWN))]))
     const pad = Math.ceil(s.edge + 3)
     return {
-      cells: box(-1, -3, pad, 4),
+      cells: box(-5, -3, pad, 4),
       exit: [touch[0] + 0.5, touch[1]],
       lane: { segs, fire: at(DROP) },
       state: s,
+      // Murph, from up the flume behind him to the truck left at the dam, out of the frame.
+      company: [{ from: M_WAIT - 2.2, to: MURPH_TRUCK_END, who: 'murph', at: (t) => murphTruck(s, edge, t) }],
     }
   },
 )

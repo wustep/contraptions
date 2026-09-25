@@ -2,9 +2,9 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, type Lane, type Pt } from '../../../../../parts'
-import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Ctx, type Way } from '../kit'
+import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { dropTime, G_EARTH, hop } from '../physics'
-import { DUST } from '../worlds'
+import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { drawWatch, WATCH_ON_SHELF } from './watch'
 
 /**
@@ -1080,9 +1080,12 @@ function drawLandings(p: p5, landings: Landing[], c: Ctx): void {
 /* ------------------------------------------------------------------ the porch */
 
 /**
- * Out through the door onto the porch — the old man's chair, rocking a
- * little in the draught the ball lets out — and down the three steps into the
- * yard, one to a note.
+ * Out through the door onto the porch, past the rocking chair, and down the
+ * three steps into the yard, one to a note. Murph, a child (the small slate
+ * ball), is curled in the chair; he clips its runner going by and it rocks
+ * her. She watches him go down the steps, then pushes off the seat and rolls
+ * after him to the top of the steps, and stops there. (She follows him: she
+ * is next seen sneaking into the truck's bed.)
  */
 interface PorchState {
   landings: Landing[]
@@ -1092,6 +1095,56 @@ interface PorchState {
 const PORCH_NOTES = [18.669, 18.901, 19.127]
 export const PORCH_STEPS = PORCH_NOTES
 const DECK_END = 1.9
+/** The chair's runners' middle, on the deck. */
+const CHAIR_X = 1.05
+/** He clips the runner (show time); she pushes off the seat, and lands on the deck; she stops at the steps' head. */
+const CLIP = 18.065
+const PUSH_OFF = 19.511
+const OFF_LANDS = 19.754
+const AT_STEPS = 20.346
+const MR = R * MURPH_SMALL
+/** Her span ends here, the camera long gone on into the yard. */
+const MURPH_PORCH_END = 24
+
+/** How far the chair is rocked (radians, positive tips it forward) at show time `t`: by his clip, and by her push off. */
+function chairRock(t: number): number {
+  const a = t - CLIP
+  const b = t - PUSH_OFF
+  // She rocks herself, gently, until he clips it; and it keeps a little of that after she has gone.
+  let r = 0.045 * Math.sin(a * 2.6) * (b < 0 ? 1 : Math.exp(-b / 1.5))
+  r += a < 0 ? 0 : 0.14 * Math.exp(-a / 2.4) * Math.sin(a * 2.6)
+  // Pushing off, she kicks it back, and it rocks on after she has gone.
+  if (b > 0) r -= 0.11 * Math.exp(-b / 2.2) * Math.sin(b * 2.6)
+  return r
+}
+
+/** A point of the chair (its own cells, about its runners' middle on the deck) at show time `t`, in the porch's frame. */
+function onChair(t: number, lx: number, ly: number): Pt {
+  const a = chairRock(t)
+  return [CHAIR_X + lx * Math.cos(a) - ly * Math.sin(a), FLOOR + lx * Math.sin(a) + ly * Math.cos(a)]
+}
+
+/** Young Murph on the porch, in its frame: in the chair, off it, and after him to the head of the steps. */
+function murphPorch(t: number): Companion {
+  const seat = (u: number) => onChair(u, 0.03, -0.325 - MR)
+  const deck = (x: number): Pt => [x, FLOOR - MR]
+  const land = deck(CHAIR_X + 0.5)
+  const head = deck(DECK_END - 0.16)
+  let q: Pt
+  if (t < PUSH_OFF) q = seat(t)
+  else if (t < OFF_LANDS) {
+    // A small hop forward off the seat, onto the boards.
+    const u = (t - PUSH_OFF) / (OFF_LANDS - PUSH_OFF)
+    const a = seat(PUSH_OFF)
+    q = [a[0] + (land[0] - a[0]) * u, a[1] + (land[1] - a[1]) * u - 0.12 * 4 * u * (1 - u)]
+  } else {
+    // After him along the boards, slowing, and still at the head of the steps, watching him go.
+    const u = clamp((t - OFF_LANDS) / (AT_STEPS - OFF_LANDS))
+    const e = 1 - (1 - u) * (1 - u)
+    q = [land[0] + (head[0] - land[0]) * e, head[1]]
+  }
+  return { x: q[0], y: q[1], scale: MURPH_SMALL, color: MURPH_YOUNG }
+}
 
 export const porch = part<PorchState>(
   {
@@ -1122,7 +1175,9 @@ export const porch = part<PorchState>(
       cells: box(-0.5, -1, 4.5, 1),
       exit: [5, 1],
       lane: { segs: route(ways), fire: at(PORCH_NOTES[0]) },
-      state: { landings: PORCH_NOTES.map((n, i) => ({ at: at(n), x: landX[i], y: (i + 1) / 3 + R })), out: at(18.065) },
+      state: { landings: PORCH_NOTES.map((n, i) => ({ at: at(n), x: landX[i], y: (i + 1) / 3 + R })), out: at(CLIP) },
+      // Young Murph, in the rocking chair from before the camera comes out onto the porch, until it has left her behind.
+      company: [{ from: 14, to: MURPH_PORCH_END, who: 'murph', at: murphPorch }],
     }
   },
 )
@@ -1156,9 +1211,8 @@ function drawPorch(p: p5, s: PorchState, c: Ctx): void {
   p.rect(X(wall + 0.12), X((-1.02 + FLOOR) / 2), X(0.08), X(FLOOR + 1.02))
 
   // The rocking chair: the ball clips a runner going by, and it rocks a while after.
-  const since = t - s.out
-  const rock = since < 0 ? 0 : 0.14 * Math.exp(-since / 2.4) * Math.sin(since * 2.6)
-  const cx = 1.05
+  const rock = chairRock(t - s.out + CLIP)
+  const cx = CHAIR_X
   p.push()
   p.translate(X(cx), X(FLOOR))
   p.rotate(rock)

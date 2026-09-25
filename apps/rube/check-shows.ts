@@ -25,7 +25,7 @@ import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versi
 import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
 import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
 import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-chase/liftoff/act2/edmunds'
-import { BRAND as BRAND_HEX, MURPH as MURPH_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
+import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -302,9 +302,10 @@ async function main(): Promise<void> {
         check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
         // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
         // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
-        // Miller while her years go by. On Cooper Station he finds his daughter, old Murph (slate), in the
-        // far-side house: she comes to him, and sends him on. At the end he finds Brand at her camp on Edmunds'
-        // planet, and they meet. Nowhere else is there a second ball.
+        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): she rocks
+        // on the porch as he goes, stows away in the truck's bed, follows him to the base and is kept back by TARS at
+        // the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
+        // sends him on. At the end he finds Brand at her camp on Edmunds' planet, and they meet.
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
           // In the frame's own axes: the camera may be rolled.
@@ -322,15 +323,22 @@ async function main(): Promise<void> {
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
         const murphAway = [1, 60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        const murphYoung = [17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
         for (const t of station) if (!inShot(t, show.murph(t))) miss.push(`Murph not in shot ${t}`)
         for (const t of murphAway) if (show.murph(t)) miss.push(`Murph at ${t}`)
-        check('liftoff: Brand not on the farm, with Cooper from the base, waiting in orbit, at her camp at the end; Murph only on the station',
+        for (const t of murphYoung) {
+          const m = show.murph(t)
+          if (!inShot(t, m)) miss.push(`young Murph not in shot ${t}`)
+          else if (m!.color?.toUpperCase() !== MURPH_YOUNG_HEX.toUpperCase() || (m!.scale ?? 1) >= 1) miss.push(`Murph not young at ${t}`)
+        }
+        check('liftoff: Brand not on the farm, with Cooper from the base, waiting in orbit, at her camp at the end; Murph a child on the farm and at the base, and old on the station',
           miss.length === 0, miss.join(', '))
-        const two = [...withHim, ...inOrbit, ...station, ...atCamp].map((t) => show.at(t).balls ?? [])
-        check('liftoff: where one of them is, two balls with two ids, never more', two.every((b) => b.length === 2 && b[0].id !== b[1].id) &&
+        const two = [...withHim, ...inOrbit, ...station, ...atCamp, ...murphYoung].map((t) => ({ t, b: show.at(t).balls ?? [] }))
+        check('liftoff: where they are, one ball each, each its own id, and no one else',
+          two.every(({ t, b }) => b.length === 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0) && new Set(b.map((x) => x.id)).size === b.length) &&
           [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])

@@ -3,9 +3,10 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, laneAt, mixHex, R, puff, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
-import { beat } from '../music'
+import { beat, IGNITION } from '../music'
 import { G_EARTH, hop } from '../physics'
-import { DUST } from '../worlds'
+import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
+import { KNOCK, KNOCK_BACK, TOWER_FOOT, V_SEAM } from './gantry'
 import { drawDrone } from './drone'
 
 /**
@@ -36,7 +37,16 @@ import { drawDrone } from './drone'
  * the flap he came through is pushed open again, and a second ball rolls
  * out — Brand, the first time we see her; the flap slaps shut behind her
  * (115). She comes up to him and taps him on the eighth (115.5), and TARS
- * lifts its slab and lets them by. They roll to the tower together.
+ * lifts its slab and lets them by. They coast on toward the tower, and TARS
+ * winds its slab back and knocks them the rest of the way into the cage
+ * (116½; the gantry part has them from 116).
+ *
+ * Then TARS walks to the tower's foot and stands guard. Murph, who followed
+ * him from the farm, comes racing up the apron after the cage has gone; TARS
+ * swings the same slab across her way (120) and she runs into it (120½),
+ * tries once more (122), and is kept back. At the ignition TARS fans all its
+ * slabs out in front of her against the blast, and the billow rolls over
+ * them both.
  *
  * The part's frame: the ball comes in on the ground at (-0.5, 0) and leaves
  * on it; the fence's top rail carries it at y = -2.
@@ -162,8 +172,12 @@ interface GateState {
   exit: number
   /** Where he waits against TARS's slab, and where she taps him. */
   meet: number
-  /** TARS's hinge, x (it stands on the apron past the way out). */
+  /** TARS's hinge, x (it stands on the apron past the way out); where it knocks them from, and where it stands guard. */
   tars: number
+  knockHub: number
+  guardHub: number
+  /** Where Murph comes up against its barring slab. */
+  murphStop: number
 }
 
 /* ------------------------------------------------------------------ TARS */
@@ -221,6 +235,110 @@ const STOPPED = ((): number => {
   }
   return -lo
 })()
+
+/* ------------------------------------------------------------------ TARS after the tap */
+
+/** The front slab at the knock: wound back to WIND, through the contact angle (its lower end at her back, at her middle's height), and on. */
+const KNOCK_A = Math.acos(1 - FLOOR / (TARS_H / 2))
+const WIND = 1.35
+const FOLLOW = -0.5
+/** It steps to where it knocks from, then walks to the tower's foot. */
+const STEP0 = [beat(115.5) + 0.08, beat(116)] as const
+const WALK = [beat(117.5), beat(118.375), beat(119.25)] as const
+/** Murph: up the apron (from out of the frame), the slab across her way, into it, again, and waiting. */
+const M_IN = beat(116.6)
+const M_BAR = beat(120)
+const M_HIT = beat(120.5)
+const M_AGAIN = beat(122)
+const M_OUT = beat(142)
+const MR = R * MURPH_SMALL
+/** The billow off the pad reaches the tower's foot: TARS spreads its slabs out in front of her. */
+const SHIELD = IGNITION + 0.45
+
+/** How far short of TARS's hinge the barring slab stops her (she is smaller than he is), worked out once. */
+const STOPPED_M = ((): number => {
+  const hub: Pt = [0, FLOOR - TARS_H / 2]
+  let lo = -2
+  let hi = 0
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2
+    if (slabDistance(hub, BAR, [mid, FLOOR - MR]) > MR + 0.004) lo = mid
+    else hi = mid
+  }
+  return -lo
+})()
+
+/** 0..1 through a step, and the bob of it (the body lifts as it goes over). */
+const stepOf = (t: number, a: number, b: number): number => (t <= a ? 0 : t >= b ? 1 : (t - a) / (b - a))
+const ease = (u: number): number => u * u * (3 - 2 * u)
+
+/** TARS at show time `t`: its hinge, and each slab's angle (the front one first). */
+function tarsPose(s: GateState, t: number): { hub: Pt; slabs: number[] } {
+  let x = s.tars
+  let bob = 0
+  let scissor = 0
+  const s0 = stepOf(t, STEP0[0], STEP0[1])
+  x += (s.knockHub - s.tars) * ease(s0)
+  bob += Math.sin(Math.PI * s0) * 0.03
+  for (let i = 0; i < 2; i++) {
+    const w = stepOf(t, WALK[i], WALK[i + 1])
+    x += ((s.guardHub - s.knockHub) / 2) * ease(w)
+    bob += Math.sin(Math.PI * w) * 0.04
+    scissor += (i === 0 ? 1 : -1) * 0.28 * Math.sin(Math.PI * w)
+  }
+  // The front slab.
+  let a = t < M_BAR - 0.3 ? barAngle(t) : BAR
+  const wind = t - (KNOCK - 0.3)
+  if (wind > 0 && t < KNOCK - 0.06) a = FAN[0] + (WIND - FAN[0]) * ease(clamp(wind / 0.24))
+  else if (t >= KNOCK - 0.06 && t < KNOCK) a = WIND + (KNOCK_A - WIND) * ((t - (KNOCK - 0.06)) / 0.06) ** 2
+  else if (t >= KNOCK && t < KNOCK + 0.1) a = KNOCK_A + (FOLLOW - KNOCK_A) * easeOutCubic((t - KNOCK) / 0.1)
+  else if (t >= KNOCK + 0.1 && t < M_BAR - 0.3) {
+    const k = t - KNOCK - 0.1
+    a = FAN[0] + (FOLLOW - FAN[0]) * Math.exp(-k / 0.22) * Math.cos(k * 9)
+  } else if (t >= M_BAR - 0.3 && t < M_BAR) a = FAN[0] + (BAR - FAN[0]) * easeInQuad((t - (M_BAR - 0.3)) / 0.3)
+  if (t >= M_BAR) {
+    // Across her way; it shivers as she runs into it, and again.
+    for (const at of [M_HIT, M_AGAIN]) {
+      const c = t - at
+      if (c > 0) a -= (at === M_HIT ? 0.07 : 0.035) * Math.exp(-c / 0.16) * Math.abs(Math.sin(c * 15))
+    }
+  }
+  // The blast: all four slabs out wide in front of her, and slowly back.
+  const sh = smooth(t, SHIELD, SHIELD + 0.35) * (1 - smooth(t, IGNITION + 5.5, IGNITION + 7))
+  const spread = [1.0, 0.4, -0.2, -0.75]
+  const slabs = FAN.map((f, q) => (q === 0 ? a : f) + (q === 0 ? 0 : q === 3 ? -scissor : 0) + (q === 0 ? scissor * 0.6 : 0))
+  for (let q = 0; q < 4; q++) slabs[q] += (spread[q] - slabs[q]) * sh
+  return { hub: [x, FLOOR - TARS_H / 2 - bob], slabs }
+}
+
+/** Murph at the base, in this part's frame. */
+function murphBase(s: GateState, t: number): Companion {
+  const y = FLOOR - MR
+  const stop = s.murphStop
+  const start = stop - 5.2
+  let x: number
+  if (t < M_HIT) {
+    // Racing up the apron after the cage, slowing a little as she comes: into the slab going 1.6 a second.
+    const T = M_HIT - M_IN
+    const w = clamp((t - M_IN) / T)
+    const m0 = 3.6 * T
+    const m1 = 1.6 * T
+    x = start + (stop - start) * ((-2 * w ** 3 + 3 * w ** 2) + ((w ** 3 - 2 * w ** 2 + w) * m0 + (w ** 3 - w ** 2) * m1) / (stop - start))
+  } else if (t < M_AGAIN - 0.3) {
+    // Thrown back off it, and still.
+    const k = t - M_HIT
+    x = stop - 0.16 * (1 - Math.exp(-k / 0.12)) * (k < 0.5 ? 1 : 1)
+  } else if (t < M_AGAIN) {
+    // Once more, at it.
+    const w = (t - (M_AGAIN - 0.3)) / 0.3
+    x = stop - 0.16 + 0.16 * w * w
+  } else {
+    // A small give back off it, and back a little from it, and she waits.
+    const k = t - M_AGAIN
+    x = stop - 0.08 * (1 - Math.exp(-k / 0.1)) - 0.14 * smooth(k, 0.6, 2.2)
+  }
+  return { x, y, scale: MURPH_SMALL, color: MURPH_YOUNG }
+}
 
 /* ------------------------------------------------------------------ Brand */
 
@@ -421,7 +539,7 @@ export const gate = part<GateState>(
     // The exit is where it always was (the gantry stands on it): a 1.4-cell bunker left 2.65 cells to go from 114.
     const exitBall = faceA + 1.4 - R + ((1.4 / (FLAPS[1] - FLAPS[0]) + V_OUT) / 2) * (slot.end - FLAPS[1])
     // Backwards from it: off TARS's slab on the tap, going on to the exit; where he waits against it; where he comes out.
-    const rest = exitBall - ((V_LAUNCH + V_OUT) / 2) * (slot.end - MEET)
+    const rest = exitBall - ((V_LAUNCH + V_SEAM) / 2) * (slot.end - MEET)
     const stopX = rest + BOUNCE
     const tars = stopX + STOPPED
     const leaveB = stopX - D_PRE
@@ -449,7 +567,12 @@ export const gate = part<GateState>(
       exit: exitBall + 0.5,
       meet: rest,
       tars,
+      // The gantry's frame is this one moved so its (-0.5, 0) is where he leaves this part.
+      knockHub: exitBall + 0.5 + KNOCK_BACK + (TARS_H / 2) * Math.sin(KNOCK_A),
+      guardHub: exitBall + 0.5 + TOWER_FOOT - 0.55,
+      murphStop: 0,
     }
+    s.murphStop = s.guardHub - STOPPED_M
 
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: at(GRID_HITS[0]), p: [first, 0] }]
     for (let i = 1; i < struck.length; i++) ways.push(hop(ways[ways.length - 1], [struck[i], 0], at(GRID_HITS[i])))
@@ -513,7 +636,8 @@ export const gate = part<GateState>(
         { at: at(HER_OUT), p: [stopX, 0], ramp: [vOut, V_TOUCH] },
         { at: at(HER_OUT) + (2 * BOUNCE) / 0.25, p: [rest, 0], ramp: [0.25, 0] },
         { at: at(MEET), p: [rest, 0] },
-        { at: at(slot.end), p: [exitBall, 0], ramp: [V_LAUNCH, V_OUT] },
+        // Off TARS's slab on the tap, and coasting on toward the tower, slowing: TARS will knock them the rest of the way.
+        { at: at(slot.end), p: [exitBall, 0], ramp: [V_LAUNCH, V_SEAM] },
       ]),
     )
     const lane: Lane = { segs, fire: at(GRID_HITS[0]) }
@@ -523,7 +647,11 @@ export const gate = part<GateState>(
       lane,
       state: s,
       // Brand: in the bunker from 113, out of sight until she comes out after him; handed to the gantry at his back.
-      company: [{ from: HER_ON, to: slot.end, at: (t) => goldGate(s, lane, slot.begin, t) }],
+      // Murph: up the apron after the cage has gone, kept back by TARS, and there as the rocket goes.
+      company: [
+        { from: HER_ON, to: slot.end, at: (t) => goldGate(s, lane, slot.begin, t) },
+        { from: M_IN, to: M_OUT, who: 'murph', at: (t) => murphBase(s, t) },
+      ],
     }
   },
   (_slot, built) => [
@@ -570,11 +698,12 @@ function drawGate(p: p5, s: GateState, c: Ctx): void {
 /** TARS: four slabs of dark steel through one hinge, fanned a little; the front one swings. A lamp on it, lit as it moves. */
 function tarsDraw(d: Draw, s: GateState): void {
   const { p, ink, weight, t, X } = d
-  const hub: Pt = [s.tars, FLOOR - TARS_H / 2]
+  const pose = tarsPose(s, t)
+  const hub = pose.hub
   const steel = mixHex(DUST.tin, ink, 0.55)
-  const act = Math.max(knock(t - FLAPS[1], 0.3), knock(t - MEET, 0.3))
+  const act = Math.max(knock(t - FLAPS[1], 0.3), knock(t - MEET, 0.3), knock(t - KNOCK, 0.3), knock(t - M_BAR, 0.3), knock(t - M_HIT, 0.3))
   for (let q = FAN.length - 1; q >= 0; q--) {
-    const a = q === 0 ? barAngle(t) : FAN[q]
+    const a = pose.slabs[q]
     p.push()
     p.translate(X(hub[0]), X(hub[1]))
     p.rotate(a)
@@ -590,7 +719,7 @@ function tarsDraw(d: Draw, s: GateState): void {
     p.pop()
   }
   if (act > 0.05) {
-    const a = barAngle(t)
+    const a = pose.slabs[0]
     const lx = hub[0] + TARS_W * 0.1 * Math.cos(a) + TARS_H * 0.24 * Math.sin(a)
     const ly = hub[1] + TARS_W * 0.1 * Math.sin(a) - TARS_H * 0.24 * Math.cos(a)
     glow(d, lx, ly, 0.22, 0.6 * act)
