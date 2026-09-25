@@ -24,6 +24,7 @@ import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UND
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
 import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
+import { AGED as AGED_HEX, BRAND as BRAND_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -326,7 +327,21 @@ async function main(): Promise<void> {
           [...alone, 60, 70].every((t) => (show.at(t).balls?.length ?? 1) <= (show.brand(t) ? 2 : 1)))
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])
-        check('liftoff: up in orbit the gold ball goes grey', !!young && !!old && young.color !== old.color)
+        check('liftoff: up in orbit Brand goes grey with the years', !!young && !!old && young.color !== old.color)
+        // At the end he meets Amelia: she is her own blue again (at most a light touch of the years in the chair before
+        // he comes), never the slate she waited in; and she is the only ball there besides him.
+        const hexDist = (a: string, b: string) => {
+          const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+          const [x, y] = [p(a), p(b)]
+          return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
+        }
+        const agedGap = hexDist(BRAND_HEX, AGED_HEX)
+        const meet = [cue(155), cue(155.5)].map((t) => show.brand(t))
+        const waiting = show.brand(ACT2 + 1)
+        check('liftoff: Cooper meets Amelia at the end, and she is her own blue there, not the slate of the years',
+          meet.every((b) => !!b && b.color?.toUpperCase() === BRAND_HEX.toUpperCase()) &&
+          !!waiting && hexDist(waiting.color ?? '#000000', BRAND_HEX) <= 0.3 * agedGap + 1 &&
+          [cue(155), cue(155.5)].every((t) => (show.at(t).balls?.length ?? 1) === 2))
         // She never jumps while she is drawn, and she comes and goes (or is hidden and shown) only out of shot.
         let gJump = 0
         let gAt = 0

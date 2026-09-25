@@ -4,7 +4,7 @@ import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
 import { ACT2, cue } from '../music'
-import { AGED, BALL, DUST } from '../worlds'
+import { AGED, BALL, BRAND, DUST } from '../worlds'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -37,16 +37,18 @@ import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
  * floor (154) and rolls on over the lift car's threshold, a low wooden lip,
  * into its doorway.
  *
- * Brand is in the rocking chair by the far wall: old now, who
- * waited in orbit. She has been there since the station's lights came up,
- * rocking it gently with the organ; the crash upstairs stops her, and she sits
- * still while he comes down. When he is down she rocks back once and forward,
- * the chair pitches her out onto the floor on the eighth, and she rolls out
- * across the room to him, slowing, and touches him across the lip on the beat
- * (155). A moment against him; she draws back a little and nudges him (155½),
- * and he coasts to the middle of the car by the big step (156), where the hub
- * has him. She stays at the lip; the car's gate comes down in front of her,
- * the empty chair rocks itself still behind her, and the car climbs away.
+ * Amelia Brand is in the rocking chair by the far wall, waiting, a little of
+ * the years in her blue. She has been there since the station's lights came
+ * up, rocking it gently with the organ; the crash upstairs stops her, and as
+ * he comes in and down she comes back to her own full blue. When he is down
+ * she rocks back once and forward, the chair pitches her out onto the floor on
+ * the eighth, and she rolls out across the room to him; and he, in the car's
+ * doorway, turns back out over the lip to her. They meet in the open floor on
+ * the beat (155). She walks him back to the lift, he over the lip and she up
+ * to it, and on the eighth (155½) she pushes him on; he rolls to the middle of
+ * the car by the big step (156), where the hub has him. She stays at the lip;
+ * the car's gate comes down in front of her, the empty chair rocks itself
+ * still behind her, and the car climbs away.
  *
  * The camera rolls with the ring while the ball is across the axis (the
  * score's `rollAt`), so the far-side house stands upright for all of this.
@@ -470,25 +472,55 @@ function lipY(x: number): number {
   return -LIP.h - Math.sqrt(Math.max(0, R * R - (x - LIP.x1) ** 2))
 }
 
-/* ---- him: off the trapdoor, down short of the lip, on over it into the car's doorway, and nudged on */
+/** A cubic Hermite: from `p0` with slope `m0` to `p1` with slope `m1` (slopes per unit of `u`). */
+const hermite = (p0: number, m0: number, p1: number, m1: number, u: number): number =>
+  (2 * u ** 3 - 3 * u * u + 1) * p0 + (u ** 3 - 2 * u * u + u) * m0 + (-2 * u ** 3 + 3 * u * u) * p1 + (u ** 3 - u * u) * m1
 
-/** He lands on the beat and rolls on at the speed he came down with, over the lip, slowing, into the doorway. */
+/* ---- the meeting: where they meet, in the open floor, and how they go to the lift together */
+
+/**
+ * They meet in the open floor between her chair and the lift's threshold, on the beat: he a little short of the lip,
+ * she a ball's width behind him. Then she walks him back to it, he over it into the car's doorway and she up to it;
+ * she draws back a little and nudges him on the eighth, and he rolls to the car's middle by the big step.
+ */
+const MEET_HIM = -0.66
+const MEET_HER = MEET_HIM - 2 * R
+const WALKED = cue(155.42)
+/** Where he is on the walk back to the lift, 155 to WALKED: she pushes, he rolls, over the lip. */
+function walkX(T: number): number {
+  const D = WALKED - DOWN
+  return hermite(MEET_HIM, 0.1 * D, WAIT_X, 0, clamp((T - DOWN) / D))
+}
+
+/* ---- him: off the trapdoor, on into the doorway, back out to her, walked back in, and nudged on */
+
+/** He lands on the beat and rolls on at the speed he came down with, over the lip into the car's doorway, slowing. */
 const LAND_X = -0.7
-const INTO_CAR = 0.8
+const V_DOWN = 0.86
+const INSIDE = -0.42
+const STOPPED = cue(154.45)
+/** And turns back: out over the lip again, toward her, to meet her on the beat. */
+const TURNS_BACK = cue(154.56)
 const dropToFloor = throwAt(onDoor(OFF), [LAND_X, FLOOR_Y], OFF, SEAT, G)
 function hisFloor(T: number): Pt {
   const s = T - SEAT
   const up = s < 0.14 ? 0.03 * Math.sin((Math.PI * s) / 0.14) : 0
-  const x = LAND_X + (WAIT_X - LAND_X) * (1 - (1 - clamp(s / INTO_CAR)) ** 2)
-  // Her touch, on the beat, across the lip: it presses him on a hair, and he settles back.
-  const t = T - DOWN
-  const give = t > 0 && t < 0.26 ? 0.015 * Math.sin((Math.PI * t) / 0.26) : 0
-  return [x + give, lipY(x + give) - up]
+  let x: number
+  if (T <= STOPPED) {
+    const D = STOPPED - SEAT
+    x = hermite(LAND_X, V_DOWN * D, INSIDE, 0, clamp(s / D))
+  } else if (T <= TURNS_BACK) x = INSIDE
+  else if (T <= DOWN) {
+    const D = DOWN - TURNS_BACK
+    x = hermite(INSIDE, 0, MEET_HIM, 0, (T - TURNS_BACK) / D)
+  } else x = walkX(T)
+  return [x, lipY(x) - up]
 }
-/** The nudge on the eighth: a gentle push, a little under a cell a second, and he coasts to the car's middle by the big step. */
+/** The nudge on the eighth: a gentle push that takes him up to about a cell a second and lets him roll to the car's middle. */
 function hisGo(T: number): Pt {
   const u = clamp((T - INCAR) / (OUT - INCAR))
-  return [WAIT_X * (1 - u) ** 1.4, FLOOR_Y]
+  const w = u ** 0.7
+  return [WAIT_X * (1 - w * w * (3 - 2 * w)), FLOOR_Y]
 }
 
 /* ---- her: still in her chair while he comes down; then out of it, and across the room to him */
@@ -501,7 +533,7 @@ const SEAT_TOP = SEAT_Y * CHAIR_S - R
 const ROLL_ON = cue(153.96)
 const OFF_EDGE = cue(154.27)
 const HER_DOWN = cue(154.5)
-const HER_LAND = -1.12
+const HER_LAND = -1.24
 function chairPointAt(T: number, x: number): Pt {
   return chairPoint(T, x, SEAT_TOP)
 }
@@ -516,48 +548,37 @@ const V_EDGE: Pt = (() => {
   const b = onSeat(OFF_EDGE)
   return [(b[0] - a[0]) / 0.004, (b[1] - a[1]) / 0.004]
 })()
-const V_LAND = 1.05
-const V_TOUCH = 0.25
+const V_LAND = 0.8
+const V_TOUCH = 0.1
 /**
  * Off the edge and down to the floor, eased: she leaves the seat the way it gave her, and comes down onto the floor
  * already rolling, her fall taken up in the last of it, so the touchdown is soft and she rolls straight on.
  */
-const hermite = (p0: number, m0: number, p1: number, m1: number, u: number): number =>
-  (2 * u ** 3 - 3 * u * u + 1) * p0 + (u ** 3 - 2 * u * u + u) * m0 + (-2 * u ** 3 + 3 * u * u) * p1 + (u ** 3 - u * u) * m1
 function herDrop(T: number): Pt {
   const D = HER_DOWN - OFF_EDGE
   const u = clamp((T - OFF_EDGE) / D)
   const e = onSeat(OFF_EDGE)
   return [hermite(e[0], V_EDGE[0] * D, HER_LAND, V_LAND * D, u), hermite(e[1], V_EDGE[1] * D, FLOOR_Y, 0, u)]
 }
+/** Out across the floor to him, slowing, as he comes back to her: they touch on the beat. */
 function across(T: number): number {
   const D = DOWN - HER_DOWN
-  const u = (T - HER_DOWN) / D
-  const span = REST_X - HER_LAND
-  const m0 = (V_LAND * D) / span
-  const m1 = (V_TOUCH * D) / span
-  const f = (u * u * u - 2 * u * u + u) * m0 + (-2 * u * u * u + 3 * u * u) + (u * u * u - u * u) * m1
-  return HER_LAND + span * f
+  return hermite(HER_LAND, V_LAND * D, MEET_HER, V_TOUCH * D, clamp((T - HER_DOWN) / D))
 }
 /**
- * A moment against him; she draws back a little and, on the eighth, leans into him and on after him a hair, up the
- * lip's corner, as he goes; then she settles back against the lip. One smooth sway, no stop at the push.
+ * At the lip, against him, still; on the eighth she pushes, the two of them moving together for a moment, she on
+ * after him a hair up the lip's corner as he goes on; then she settles back against it. No stop, no snap.
  */
-const DRAW = cue(155.3)
-const BACK = 0.03
-const FOLLOW = 0.022
-const V_PUSH = 0.4
-const SETTLED = cue(155.78)
+const FOLLOW = 0.03
+const SETTLED = cue(155.8)
 function nudgeX(T: number): number {
   const piece = (t0: number, t1: number, p0: number, m0: number, p1: number, m1: number) => {
     const D = t1 - t0
     return hermite(p0, m0 * D, p1, m1 * D, clamp((T - t0) / D))
   }
-  const back = cue(155.4)
-  const on = cue(155.6)
-  if (T <= back) return REST_X + piece(DRAW, back, 0, 0, -BACK, 0)
-  if (T <= INCAR) return REST_X + piece(back, INCAR, -BACK, 0, 0, V_PUSH)
-  if (T <= on) return REST_X + piece(INCAR, on, 0, V_PUSH, FOLLOW, 0)
+  const on = cue(155.64)
+  if (T <= INCAR) return REST_X
+  if (T <= on) return REST_X + piece(INCAR, on, 0, 0, FOLLOW, 0)
   return REST_X + piece(on, SETTLED, FOLLOW, 0, 0, 0)
 }
 function herAt(T: number): Pt {
@@ -565,7 +586,8 @@ function herAt(T: number): Pt {
   if (T <= OFF_EDGE) return onSeat(T)
   if (T <= HER_DOWN) return herDrop(T)
   if (T <= DOWN) return [across(T), FLOOR_Y]
-  if (T <= DRAW) return [REST_X, FLOOR_Y]
+  // She walks him back to the lift, against him all the way.
+  if (T <= WALKED) return [walkX(T) - 2 * R, FLOOR_Y]
   if (T <= SETTLED) {
     const x = nudgeX(T)
     return [x, lipY(x)]
@@ -573,6 +595,16 @@ function herAt(T: number): Pt {
   // At the lip. The gate comes down in front of her on the step: she starts back from it, and is still.
   const g = T - OUT
   return [REST_X - (g > 0 && g < 0.35 ? 0.025 * Math.sin((Math.PI * g) / 0.35) : 0), FLOOR_Y]
+}
+/**
+ * Her colour. In the chair, waiting, a little of the years in her blue (never more than a touch: she is still
+ * unmistakably herself). When he comes in at the window and down through the trapdoor she comes back to her full
+ * blue, over a beat and a half, as if she had come alive; and she is her full self from then on.
+ */
+const YEARS = 0.28
+function herColor(T: number): string {
+  const f = YEARS * (1 - smooth(T, WINDOW, cue(153.6)))
+  return f <= 0 ? BRAND : mixHex(BRAND, AGED, f)
 }
 
 /** The ball, at show time `T`, in this part's cells. */
@@ -660,7 +692,7 @@ export const ballpark = part<BallparkState>(
     // Her: in the far-side house's rocking chair from the moment the lights come up, old, waiting. Out of shot
     // until the pull back shows the whole ring, then a speck in the house; found on 154; left rocking as the car
     // climbs, and gone once the house is out of the frame.
-    const company: Company[] = [{ from: ACT2, to: BRAND_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: AGED }) }]
+    const company: Company[] = [{ from: ACT2, to: BRAND_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: herColor(T) }) }]
     return { cells, exit: F.exit(SEAM.ballparkOut), lane, state: { begin, lane }, company }
   },
   (slot) => {

@@ -59,7 +59,7 @@ The split is the film's own heartbreak, time.
 4. **The split** (beat 160). The trapdoor drops *him* into the catapult's cup and slaps shut a ball's width in front of her. She stays on the shut door for a beat, then runs on round the ring. He is thrown into the sphere.
 5. **Miller.** The station in orbit is that ring, and she is the one who waits. She laps it once an eighth, a tally mark a lap, and her blue fades to slate while he spends a few ticks on the water.
 6. **Cooper Station.**
-   - He finds her again, old, her blue faded to slate, rocking in the far-side house's chair.
+   - He finds her again in the far-side house's rocking chair, her blue only lightly touched by the years. When he comes crashing in through the window she comes back to her own full blue, Amelia again.
    - When he comes down through the trapdoor, she leaves the chair and comes to him across the floor. She touches him at the lift car's threshold on the beat, and rests against him.
    - Then she nudges him in, and stays at the threshold as the car goes.
 
@@ -171,7 +171,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. She is in her rocking chair by the far wall. The trunk knocks the trapdoor's latch (153), the door settles on its stop on 153½, and he rolls off its end and lands on 154 by the lift car's threshold, rolling on into the doorway. Then she rolls out to meet him: she rocks back, the chair pitches her off, and she rolls across the floor to him, touching him across the threshold on 155. A moment together; on 155½ she nudges him on, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
+| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. She is in her rocking chair by the far wall, her blue lightly touched by the years; as he crashes in through the window (152) she comes back to her own full blue. The trapdoor settles on its stop on 153½ and he rolls off its end, lands on 154 and rolls on into the lift car's doorway. Then **they meet**: the chair pitches her off and she rolls out across the room, and he turns back and rolls out to her, and they meet in the open floor between the chair and the threshold on 155. She walks him back to the lift and nudges him in on 155½, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
 | 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
@@ -217,12 +217,21 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## The polish round (latest)
+## Cooper meets Amelia (latest)
+
+- **Her colour at the meeting was the problem.** She waited out the years on Miller's ring going slate, and she stayed slate (`#7C8C9C`) in the far-side house, so the reunion didn't read as meeting Amelia.
+- **Now she is Amelia's own blue there.**
+  - In the chair she carries only a light touch of the years: 28% toward slate, `#396B99`, still clearly her blue.
+  - From the window crash (152) to his coming down the trapdoor she comes back to full `#1F5E98`, and she stays full blue through the meeting, the walk and the threshold.
+- **The meeting is mutual.** He lands and rolls toward the lift, then turns back and rolls out to her while she rolls out to him, and they meet in the open floor on 155. She walks him to the lift and nudges him in on 155½.
+- A check holds her colour to exactly `BRAND` at the meeting and the nudge, and within a light touch of it in the chair.
+
+## The polish round
 
 - **Colours.** The roles are unchanged; the hues are new.
   - Joseph Cooper is sand, `#F0C987`. Stephen's start was `#F6DFAE`; it was nudged a touch warmer and deeper so he stands off the farm's pale paper.
   - Dr. Amelia Brand is blue, `#1F5E98`. Stephen's start was `#154367`; it was nudged a touch lighter so she reads on the navy of space.
-  - Her years in orbit turn her to slate, `#7C8C9C`.
+  - Her years in orbit turn her to slate (`#7C8C9C`) on Miller's ring. At the reunion she is Amelia's own blue again: a light touch of the years in the chair, then full `#1F5E98` from the moment he comes in.
   - The rocket's window has a lamplit cabin so both read behind the glass, and the truck's far window is a middle blue-grey so Cooper reads at the wheel.
 - **A solid opening, and the last book knocks him down.**
   - Cooper is a plain solid ball from the first frame. The ghost is only for the tesseract.
@@ -252,7 +261,7 @@ The title card stays up to the end, 291 s.
   - Onset timing is unchanged: envelope cross-correlation shows 0.00 ms lag at every section.
 - **One Brand at the reunion.**
   - Every round lamp and glint near the far-side house is gone: the lift car's gold lamp, the spoke's landing lamps, a grey pulley, a blue counterweight, a blue trunk and a blue hat. They are now slits, sheaves, iron and wood.
-  - The only slate ball there is her.
+  - The only blue ball there is her.
 - **Credits.** The cast card reads Joseph Cooper (the sand ball), Dr. Amelia Brand (the blue ball) and TARS (four slabs of steel).
 - **The chrome and credit lines.** The Liftoff panel's music line and the end credits no longer say "tech demo only, not for release" or "used here only for a private tech demo". The attribution files for the copyrighted audio still say so.
 
