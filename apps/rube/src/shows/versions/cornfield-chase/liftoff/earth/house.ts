@@ -1149,16 +1149,21 @@ function murphHouse(t: number): Pt {
   const down: Pt = [BED.x1 + 0.22, floorY]
   if (t < M_WAKES) return onPillow
   if (t < M_UP) {
-    // Awake: a stir this way and that, and still, watching the shelf.
+    // Woken with a start: up off the pillow a little and down; a stir this way and that; then she leans toward the
+    // shelf, watching the books go; and as he goes by under the bed on the toy she follows him with a lean the other way.
     const k = t - M_WAKES
-    const dx = k < 0.2 ? -0.03 * smooth(k, 0, 0.2) : k < 0.45 ? -0.03 + 0.042 * smooth(k, 0.2, 0.45) : 0.012 * (1 - smooth(k, 0.45, 0.65))
-    return [onPillow[0] + dx, onPillow[1]]
+    const start = k < 0.32 ? 0.07 * Math.sin((Math.PI * k) / 0.32) : 0
+    const stir = k < 0.2 ? -0.03 * smooth(k, 0, 0.2) : k < 0.45 ? -0.03 + 0.042 * smooth(k, 0.2, 0.45) : 0.012 * (1 - smooth(k, 0.45, 0.65))
+    const toShelf = -0.045 * smooth(t, M_WAKES + 0.8, M_WAKES + 1.8) * (1 - smooth(t, 12.4, 13.2))
+    const toHim = 0.05 * smooth(t, 13.2, 14.4)
+    return [onPillow[0] + stir + toShelf + toHim, onPillow[1] - start]
   }
   if (t < M_FOOT) {
     // Along the bed over the quilt, gathering.
     const u = smooth(t, M_UP, M_FOOT)
     const y = onPillow[1] + (onQuilt - onPillow[1]) * smooth(t, M_UP, M_UP + 0.25)
-    return [onPillow[0] + (foot[0] - onPillow[0]) * u, y]
+    const from = onPillow[0] + 0.05
+    return [from + (foot[0] - from) * u, y]
   }
   if (t < M_FLOOR) {
     // Over the foot board and down to the floor.

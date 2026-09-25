@@ -49,7 +49,7 @@ const script: Omit<Card, 'at'>[] = [
     names: [
       ['Joseph Cooper', 'the sand ball', BALL],
       ['Dr. Amelia Brand', 'the blue ball', BRAND],
-      ['Murph', 'the slate ball', MURPH],
+      ['Murph', 'the slate ball, young and old', MURPH],
       ['TARS', 'four slabs of steel', 'slab:#5A5550'],
     ],
   },
