@@ -388,15 +388,15 @@ const HELMET_X = CAIRN_X + 0.88
  */
 const STOP_DOWN: [number, number] = [LAMP + 0.3, LAMP + 0.48]
 const MEET_H: Pt = [PLATE_X + 0.42, G - R]
-/** A little light between them. */
-const MEET_GAP = 0.07
+/** Light between them that reads at any size, past the width of both outlines: close, never touching. */
+const MEET_GAP = 0.13
 const MEET_B: Pt = [MEET_H[0] + 2 * R + MEET_GAP, G - R]
 /** Where she waits, by the cairn's side. */
 const WAIT: Pt = [CAIRN_X - 0.5, G - R]
-/** They settle against each other: a soft give, and back. */
+/** She stops just short: a soft lean toward him as she comes to rest, and back. */
 const give = (T: number): number => {
   const s = T - CAMP_MEET
-  return s <= 0 ? 0 : 0.012 * Math.sin(Math.PI * clamp(s / 0.42)) * (s < 0.42 ? 1 : 0)
+  return s <= 0 ? 0 : -0.02 * Math.sin(Math.PI * clamp(s / 0.5)) * (s < 0.5 ? 1 : 0)
 }
 /** Brand at her camp: waiting by the cairn, then out across the camp to him, and at rest with him under the lamp. */
 function brandAt(T: number): Companion {
