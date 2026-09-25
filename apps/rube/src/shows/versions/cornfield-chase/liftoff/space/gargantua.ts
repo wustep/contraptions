@@ -6,7 +6,8 @@ import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
 import { ACT1_END, ACT2, beat, LAST } from '../music'
 import { G_EARTH } from '../physics'
-import { FALL_NOTES, LANDER_X, SHELF_TOP, stayRow } from '../earth/house'
+import { drawLander, FALL_NOTES, LANDER_X, SHELF_TOP, stayRow } from '../earth/house'
+import { drawWatch, WATCH_ON_SHELF } from '../earth/watch'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
 import { drawRoom, IN_BED, nightOver, overRoom, ROOM_CELLS, ROOM_HOLD, WAKE } from '../act2/replica'
 import { BED_REST } from '../act2/station'
@@ -17,15 +18,18 @@ import { MILLER_HANDOFF } from './miller'
  *
  * The black hole is the one that hung small in Miller's sky, and it swells
  * as the ball rises at it. The Ranger that stood on Miller's water lifts off
- * (181), picks TARS up on its back (182½), draws away toward the hole as it
- * climbs, and comes round with a claw on a tether and takes the ball on the
- * downbeat (184): one ship all the way, so there is never a second Ranger in
- * the frame. TARS lets go of its back on 185 and
- * goes in first. The Ranger swings the ball round the hole: down through the
- * disk on 186, behind the dark on 187 (its light wraps the rim), up through
+ * (178), picks TARS up on its back (179½), draws away toward the hole as it
+ * climbs, and comes round with a claw on a tether and takes the ball on 181:
+ * one ship all the way, so there is never a second Ranger in the frame. TARS
+ * lets go of its back on 182 and goes in first (183½). Then the slingshot,
+ * two turns round the hole, spiralling in and faster as it goes: down through
+ * the disk on 183, behind the dark on 184 (the ball's light wraps the rim),
+ * up through the disk on 185 while the camera stands back for the whole of
+ * it, the disk and its halo; over the top close in on 186, the lensed halo
+ * filling the frame; down through the disk on 186½, behind on 187, up through
  * the disk on the loudest eighth (187½) with the engine lit, and over the
- * top it opens the claw on the downbeat (188) and burns away. The ball
- * falls in, slows, and stops at the centre on 189; the dark opens round it.
+ * top it opens the claw on the downbeat (188) and burns away. The ball falls
+ * in, slows, and stops at the centre on 189; the dark opens round it.
  *
  * The dark opens and he is a ghost, in a lattice of frames, and in front of
  * him is the back of Murph's bookcase. He comes down behind the model lander
@@ -34,11 +38,14 @@ import { MILLER_HANDOFF } from './miller'
  * order and its rhythm run three times as fast, the first of them on the
  * last hit (191): S-T-A-Y, from this side.
  *
- * Then the tesseract closes on him and he comes down out of it into a bed:
- * Murph's room, rebuilt as the museum on Cooper Station, at night. He wakes
- * a ball again, the quilt slides, and the room holds, dim, until the
- * station's lights come up on Act II (`act2/replica.ts` draws the room, both
- * sides of the cut).
+ * Then the tesseract lets him go. The back of the case falls away above him
+ * and he falls back, slowly, through the lattice, its lines streaming up past
+ * him and away into the dark; he drifts on through the black toward a small
+ * warm light, and the light opens round him into a room: Murph's room,
+ * rebuilt as the museum on Cooper Station, at night, and he settles down into
+ * the pillow of the bed under its window. He wakes a ball again, the quilt
+ * slides, and the room holds, dim, until the station's lights come up on
+ * Act II (`act2/replica.ts` draws the room, both sides of the cut).
  *
  * The part's frame: the ball comes off the wave's lip at (-0.5, 0). Miller's
  * Gargantua stands at C in this frame; ours is drawn on it, concentric.
@@ -48,18 +55,32 @@ const TAU = Math.PI * 2
 
 /* ------------------------------------------------------------------ the clock (show seconds) */
 
-const CATCH = beat(184)
+const CATCH = beat(181)
 /** TARS lets go of the Ranger's back. */
-const LATCH = beat(185)
+const LATCH = beat(182)
 /** Down through the disk on the right. */
-const NODE_A = beat(186)
+const NODE_A = beat(183)
 /** TARS is gone. */
-const SWALLOW = beat(186.5)
+const SWALLOW = beat(183.5)
 /** Behind the dark: the ball's light wraps the rim. */
-const BEHIND = beat(187)
+const BEHIND = beat(184)
+/** Up through the disk on the left. */
+const NODE_B = beat(185)
+/** Over the top again, close in: the lensed halo fills the frame. */
+const CREST = beat(186)
+/** The second turn, twice as fast: down through the disk, behind the dark. */
+const NODE_A2 = beat(186.5)
+const BEHIND2 = beat(187)
 /** Up through the disk on the left, close in, the engine lit: the loudest eighth. */
-const NODE_B = beat(187.5)
+const NODE_B2 = beat(187.5)
 const RELEASE = beat(188)
+/** Where the ball goes through the disk: when, how hard it rings, and a seed for its spray. */
+const NODES: [number, number, number][] = [
+  [NODE_A, 0.7, 1],
+  [NODE_B, 0.75, 2],
+  [NODE_A2, 0.85, 3],
+  [NODE_B2, 1, 4],
+]
 /** At the centre; the dark opens. */
 const HORIZON = beat(189)
 /** Down behind the lander, and it goes. */
@@ -74,13 +95,22 @@ const PUSH = LAST
  */
 const SQUEEZE = (FALL_NOTES.books[0] - FALL_NOTES.lander) / (PUSH - LAND)
 const PUSHES = FALL_NOTES.books.map((n) => LAND + (n - FALL_NOTES.lander) / SQUEEZE)
-/** The tesseract closes on him once the last has gone; he comes down into the bed (IN_BED) and wakes (WAKE). */
-const CLOSE = PUSHES[PUSHES.length - 1] + 0.1
-/** The watch keeps time in the silence after the music: two ticks, not counted as strikes. */
-const TICKS = [beat(200), beat(202)]
+/** The last book goes, and he goes back along the row to Cooper's watch at its end. */
+const LAST_BOOK = PUSHES[PUSHES.length - 1]
+const TO_WATCH = LAST_BOOK + 0.12
+const AT_WATCH = LAST_BOOK + 0.62
+/** Its second hand ticks the message, threads of light running into it along the lattice: on the music's eighths. */
+const WATCH_TICKS = [beat(194.5), beat(195), beat(195.5)]
+/** The grand pull-back from the watch, out to the tesseract's rooms going on every way. */
+const PULL0 = WATCH_TICKS[2] + 0.08
+/** Then it lets him go: the bridge, the fall back through it and the dark into the bed (IN_BED), and the wake (WAKE). */
+const CLOSE = 122.9
+/** The warm light he drifts toward, and the room opening out of it round him. */
+const GLOW_ON = CLOSE + 0.5
+const OPEN0 = CLOSE + 0.9
 
 /** The strikes, on the music. */
-export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, RELEASE, HORIZON, LAND, PUSH]
+export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, LAND, PUSH, ...WATCH_TICKS]
 
 /* ------------------------------------------------------------------ the hole */
 
@@ -88,7 +118,7 @@ export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, RE
 const C: Pt = [0.95, -0.85]
 /** The dark's radius: as Miller draws it far off, and as big as it gets. */
 const S0 = 0.3
-const S1 = 0.7
+const S1 = 1.25
 /** The disk's tilt, as Miller has it. */
 const TILT = -0.07
 /** In units of the dark's radius: the lensed far side of the disk over the top and under, and the disk's reach. */
@@ -98,7 +128,7 @@ const RING = 1.04
 const DISK = 4.7
 
 /** How big the dark is (cells) at `T`: Miller's size until the catch, then it swells as the ball is carried in. */
-const sizeAt = (T: number): number => S0 + (S1 - S0) * easeInOutSine(clamp((T - (CATCH - 0.2)) / (beat(186.25) - CATCH + 0.2)))
+const sizeAt = (T: number): number => S0 + (S1 - S0) * easeInOutSine(clamp((T - (CATCH - 0.2)) / (beat(184.5) - CATCH + 0.2)))
 
 const rot = (x: number, y: number, a = TILT): Pt => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]
 /** A point of the hole's own plane (units of its dark), on the stage at `T`. */
@@ -120,8 +150,10 @@ const QT = 0.46
 const QB = 0.3
 const squash = (th: number) => QB + (QT - QB) * (1 + Math.sin(th)) / 2
 const TH_CATCH = Math.PI - 0.3
-const TH_REL = -1.5 * Math.PI
-const rOrbit = (th: number) => 2.4 - 0.146 * (TH_CATCH - th)
+const TH_REL = -3.5 * Math.PI
+/** Spiralling in over the two turns, from well out to just clear of the dark. */
+const R_SLOPE = 1.3 / (TH_CATCH - TH_REL)
+const rOrbit = (th: number) => 2.6 - R_SLOPE * (TH_CATCH - th)
 const orbitPt = (r: number, th: number): Pt => [r * Math.cos(th), -r * Math.sin(th) * squash(th)]
 
 /** Monotone cubic through knots: the claw's angle against time. */
@@ -168,10 +200,13 @@ function pchip(xs: number[], ys: number[]): { at: (x: number) => number; slope: 
   }
 }
 
-const theta = pchip([CATCH, LATCH, NODE_A, BEHIND, NODE_B, RELEASE], [TH_CATCH, Math.PI / 2, 0, -Math.PI / 2, -Math.PI, TH_REL])
+const theta = pchip(
+  [CATCH, LATCH, NODE_A, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE],
+  [TH_CATCH, Math.PI / 2, 0, -Math.PI / 2, -Math.PI, -1.5 * Math.PI, -2 * Math.PI, -2.5 * Math.PI, -3 * Math.PI, TH_REL],
+)
 
 /** Let go over the top, the ball goes on round and in, slower and slower, and stops: the far end of time. */
-const TH_F = TH_REL - 0.9
+const TH_F = TH_REL - 2.0
 const R_REL = rOrbit(TH_REL)
 const R_F = 1.0
 const DRAIN = HORIZON - RELEASE
@@ -184,7 +219,7 @@ function drainTheta(T: number): number {
 }
 function drainR(th: number): number {
   const s = clamp((th - TH_REL) / (TH_F - TH_REL))
-  const a = -0.146 * (TH_REL - TH_F)
+  const a = -R_SLOPE * (TH_REL - TH_F)
   return R_REL + a * s + (R_F - R_REL - a) * s * s
 }
 
@@ -283,14 +318,27 @@ const P_L: Pt = [F[0] + 0.35, Y_BALL]
 /** The case seen from behind, mirrored (x here = BK.x - x there), with the lander's back at P_L. */
 const BK: Pt = [P_L[0] + LANDER_X, SURF - SHELF_TOP]
 const back = (x: number): number => BK[0] - x
-/** Behind the last book, where the tesseract closes on him. */
+/** Behind the last book; and beside Cooper's watch at the row's end (its left end from the front; here, mirrored, the right). */
 const LAST_AT: Pt = [back(ROW[ROW.length - 1].x), Y_BALL]
+const WATCH_X = back(WATCH_ON_SHELF[0])
+const BY_WATCH: Pt = [back(WATCH_ON_SHELF[0] + 0.21), Y_BALL]
 /**
- * The bed, in this part's frame: under where the last book went, a fall
- * below it. The next part (the replica) is placed so its entry is the ball
- * there, so our exit is half a cell on.
+ * The bed, in this part's frame: a long way below where the last book went,
+ * the fall out of the tesseract. The next part (the replica) is placed so
+ * its entry is the ball there, so our exit is half a cell on.
  */
-const IN_PILLOW: Pt = [LAST_AT[0] + 0.12, LAST_AT[1] + 1.25]
+const IN_PILLOW: Pt = [BY_WATCH[0] + 0.25, BY_WATCH[1] + 3.6]
+/**
+ * The fall, `u` 0..1 of it: gathering from rest behind the row, fastest a
+ * third of the way, then a long slow drift that settles into the pillow at
+ * no speed at all; a little way sideways, and a slow sway as it floats.
+ */
+function fallAt(u: number): Pt {
+  const v = clamp(u)
+  const s = 6 * v * v - 8 * v * v * v + 3 * v ** 4
+  const x0 = BY_WATCH[0]
+  return [x0 + (IN_PILLOW[0] - x0) * v * v * (3 - 2 * v) + 0.07 * Math.sin(Math.PI * v) * Math.sin(Math.PI * v * 1.5), BY_WATCH[1] + (IN_PILLOW[1] - BY_WATCH[1]) * s]
+}
 const EXIT: Pt = [IN_PILLOW[0] + 0.5, IN_PILLOW[1]]
 /** A point of Act I's house (the replica's) in this frame. */
 const roomPt = (h: Pt): Pt => [IN_PILLOW[0] + h[0] - BED_REST[0], IN_PILLOW[1] + h[1] - BED_REST[1]]
@@ -303,12 +351,13 @@ export const GHOST_ON_SHELF = (): Pt => [BED_REST[0], BED_REST[1] + 2]
  * Along the back of the row: one glide, faster and slower, that has him
  * behind each book on its push, so the flurry reads as one sweep.
  */
-const sweep = pchip([LAND, ...PUSHES, CLOSE], [P_L[0], ...ROW.map((b) => back(b.x)), LAST_AT[0] + 0.015])
+const sweep = pchip([LAND, ...PUSHES, TO_WATCH], [P_L[0], ...ROW.map((b) => back(b.x)), LAST_AT[0] + 0.015])
 
 /** The ghost's lean into each push, as a change in its size: smaller as it goes away from us, into the lander and each book. */
 function shoveAt(T: number): number {
   let v = 0
   for (const at of [LAND, ...PUSHES]) v -= 0.07 * leanPulse(T - at)
+  for (const at of WATCH_TICKS) v -= 0.05 * leanPulse(T - at)
   return v
 }
 const leanPulse = (s: number): number => (s < -0.04 || s > 0.2 ? 0 : s < 0 ? smooth(s, -0.04, 0) : Math.exp(-s / 0.06))
@@ -338,7 +387,7 @@ export const gargantua = part<GargState>(
     const swing = (u: number): Pt => swingPt(u + slot.begin)
     const segs = [
       ...carried(flight, 0, at(CATCH), 16),
-      ...carried(swing, at(CATCH), at(RELEASE), 90),
+      ...carried(swing, at(CATCH), at(RELEASE), 280),
       ...carried(swing, at(RELEASE), at(HORIZON), 36),
       ...route([
         { at: at(HORIZON), p: F },
@@ -346,11 +395,17 @@ export const gargantua = part<GargState>(
         { at: at(LAND), p: P_L, ease: 'in' },
       ]),
       // Along the back of the row, the books going one after another.
-      ...carried((u) => [sweep.at(u + slot.begin), Y_BALL], at(LAND), at(CLOSE), 240),
+      ...carried((u) => [sweep.at(u + slot.begin), Y_BALL], at(LAND), at(TO_WATCH), 240),
+      // Back along the empty row to the watch, and there while its hand ticks and the rooms open out round it.
       ...route([
-        { at: at(CLOSE), p: [LAST_AT[0] + 0.015, Y_BALL] },
-        // The tesseract closes, and he comes down out of it into the pillow.
-        { at: at(IN_BED), p: IN_PILLOW, ease: 'inout' },
+        { at: at(TO_WATCH), p: [LAST_AT[0] + 0.015, Y_BALL] },
+        { at: at(AT_WATCH), p: BY_WATCH, ease: 'inout' },
+        { at: at(CLOSE), p: BY_WATCH },
+      ]),
+      // The tesseract lets him go: back and down through it, through the dark, and into the pillow.
+      ...carried((u) => fallAt((u + slot.begin - CLOSE) / (IN_BED - CLOSE)), at(CLOSE), at(IN_BED), 160),
+      ...route([
+        { at: at(IN_BED), p: IN_PILLOW },
         // He wakes: a stir, this way and that, and still.
         { at: at(WAKE), p: IN_PILLOW },
         { at: at(WAKE) + 0.2, p: [IN_PILLOW[0] - 0.03, IN_PILLOW[1]], ease: 'inout' },
@@ -387,12 +442,26 @@ export const gargantua = part<GargState>(
       // Miller's last framing, then out to the hole as the Ranger comes round.
       { t: slot.begin, cells: 8, hold: [-1.44, 0.43], w: 0.85 },
       { t: CATCH, cells: 5.4, hold: [C[0] + 0.55, C[1] + 0.1], w: 0.75 },
-      { t: beat(186), cells: 5.8, hold: [C[0] + 0.1, C[1] + 0.15], w: 0.85 },
-      { t: RELEASE, cells: 5.2, hold: [C[0], C[1]], w: 0.9 },
+      { t: NODE_A, cells: 6.8, hold: [C[0] + 0.25, C[1] + 0.1], w: 0.85 },
+      // Stand back for the whole of it: the disk end to end, the dark, the halo over it.
+      { t: BEHIND + 0.3, cells: 7.6, hold: [C[0], C[1] - 0.1], w: 1 },
+      { t: NODE_B, cells: 7.2, hold: [C[0], C[1] - 0.1], w: 1 },
+      // The second pass, close in over the top: the lensed halo fills the frame.
+      { t: CREST, cells: 4.0, hold: [C[0], C[1] - 0.45], w: 0.92 },
+      { t: NODE_B2, cells: 4.3, hold: [C[0], C[1] - 0.05], w: 0.95 },
+      { t: RELEASE, cells: 4.6, hold: [C[0], C[1]], w: 0.95 },
       { t: HORIZON, cells: 3.4, hold: F, w: 1 },
       // Down into the lattice: the whole row from behind, the lander at its right-hand end, for the sweep.
       { t: LAND, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
-      { t: CLOSE, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
+      { t: LAST_BOOK, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
+      // In on the watch as he comes to it, while its hand ticks.
+      { t: AT_WATCH + 0.1, cells: 1.75, hold: [(BY_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.14], w: 1 },
+      { t: PULL0, cells: 1.75, hold: [(BY_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.14], w: 1 },
+      // The grand pull-back: Murph's bookcase is one of rooms going on every way, into the depth.
+      { t: CLOSE, cells: 9.5, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
+      // It lets him go: with him as he falls back through it, closer, looking the way he goes; the room opens under him.
+      { t: CLOSE + 0.55, cells: 4.6, off: [0.05, 0.45], w: 0 },
+      { t: OPEN0, cells: 3.0, off: [0.05, 0.45], w: 0 },
       // Down with him out of the tesseract, to the room at night, a little wide, the bed and the window. While he lies
       // awake the camera comes in on him, slowly, the whole of the decay, and arrives on the framing Act II opens on.
       { t: IN_BED + 0.15, cells: ROOM_CELLS + 0.5, hold: roomPt([ROOM_HOLD[0] - 0.08, ROOM_HOLD[1] + 0.12]), w: 1 },
@@ -440,14 +509,17 @@ const swellAt = (T: number): number => 1 + 30 * easeInQuad(clamp((T - HORIZON) /
 /** How much of the inside is up: the lattice, the rail, the case. */
 const insideAt = (T: number): number => smooth(T, HORIZON + 0.25, HORIZON + 0.7)
 /**
- * The close: the lattice folds in on him and the back of the case goes with
- * it; he comes down through the dark, and the room comes up round the bed as
- * he reaches it.
+ * The bridge: the back of the case falls away above him as he goes, and the
+ * lattice folds in behind him and fades as he falls through it; then only
+ * the dark, and the warm light ahead, and the room opening out of the light.
  */
-const closeAt = (T: number): number => smooth(T, CLOSE - 0.05, IN_BED - 0.12)
-const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE, CLOSE + 0.28))
-const latticeAt = (T: number): number => insideAt(T) * (1 - closeAt(T))
-const roomAt = (T: number): number => smooth(T, CLOSE + 0.2, IN_BED + 0.08)
+const closeAt = (T: number): number => smooth(T, CLOSE - 0.05, CLOSE + 1.05)
+const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE + 0.1, CLOSE + 0.75))
+const latticeAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE + 0.35, CLOSE + 1.15))
+/** How far the room has opened round the warm light, as a radius (cells): shut, then out past the frame by the time he is down. */
+const openAt = (T: number): number => (T <= OPEN0 ? 0 : 0.12 + 7 * easeInQuad(clamp((T - OPEN0) / (IN_BED + 0.1 - OPEN0))))
+/** The room is fully there (no window onto it) once it has opened past the frame. */
+const roomAt = (T: number): number => (T >= IN_BED + 0.1 ? 1 : T > OPEN0 ? 0.999 : 0)
 
 function drawAll(p: p5, s: GargState, c: Ctx): void {
   const T = s.begin + c.t
@@ -497,12 +569,34 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   p.translate(X(h.cx), X(h.cy))
   p.rotate(TILT)
   p.noFill()
+  // Near and big, it is light: the disk's glow along it, soft and wide under its bright lines.
+  const big = smooth(r, 0.5, 1.2)
+  if (big > 0.01) {
+    p.strokeCap(p.ROUND)
+    for (const [wd, a] of [[0.34, 0.1], [0.17, 0.16]] as Pt[]) {
+      p.stroke(alpha(p, DARK.amber, a * big * fade))
+      p.strokeWeight(X(wd * r))
+      p.line(X(-DISK * 0.85 * r), 0, X(DISK * 0.85 * r), 0)
+    }
+  }
   line(-DISK, DISK, 0.036, hot(DARK.amber), 0.55 * fade)
   line(-DISK * 0.7, DISK * 0.7, 0.025, hot(DARK.gold), 0.95 * fade)
   p.noStroke()
   p.fill(VOID.bg)
   p.circle(0, 0, X(2 * r))
   p.noFill()
+  // The halo: the far side of the disk bent up over the dark and down under it, with a glow of its own when near.
+  if (big > 0.01) {
+    p.stroke(alpha(p, DARK.gold, 0.2 * big * fade))
+    p.strokeWeight(X(0.16 * r))
+    p.arc(0, 0, X(2 * ARC_TOP * r), X(2 * ARC_TOP * r), Math.PI + 0.12, TAU - 0.12)
+    p.strokeWeight(X(0.08 * r))
+    p.arc(0, 0, X(2 * ARC_LOW * r), X(2 * ARC_LOW * r), 0.3, Math.PI - 0.3)
+    // The photon ring: a hair of light right at the edge of the dark.
+    p.stroke(alpha(p, VOID.ink, 0.35 * big * fade))
+    p.strokeWeight(Math.max(1, X(0.012 * r)))
+    p.circle(0, 0, X(2 * 1.03 * r))
+  }
   p.stroke(alpha(p, DARK.gold, 0.95 * fade))
   p.strokeWeight(W(0.05))
   p.arc(0, 0, X(2 * ARC_TOP * r), X(2 * ARC_TOP * r), Math.PI + 0.2, TAU - 0.2)
@@ -514,7 +608,7 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
 }
 
 /** In Miller's sky it is a quiet thing until the ball comes off the crest at it: then it is the only thing. */
-const presentAt = (T: number): number => 0.42 + 0.58 * smooth(T, beat(182.2), beat(183.2))
+const presentAt = (T: number): number => 0.42 + 0.58 * smooth(T, beat(179.2), beat(180.2))
 
 function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   const { k } = c
@@ -536,11 +630,11 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
 
   // The disk rings when something goes through it.
   let bright = 0
-  for (const at of [NODE_A, NODE_B]) bright = Math.max(bright, (at === NODE_B ? 1 : 0.7) * knock(T - at, 0.22))
+  for (const [at, power] of NODES) bright = Math.max(bright, power * knock(T - at, 0.22))
   holeSolid(p, c, h, bright, fade)
 
   // Where the claw went through the disk: a burst of disk-stuff, flung along its way.
-  for (const [at, power, seed] of [[NODE_A, 0.7, 1], [NODE_B, 1, 2]] as [number, number, number][]) {
+  for (const [at, power, seed] of NODES) {
     const since = T - at
     if (since < 0 || since > 0.7) continue
     const [bx, by] = swingPt(at)
@@ -558,7 +652,7 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   }
 
   // Behind the dark, the ball's own light wraps its rim: two arcs that close into a ring as it passes the middle.
-  if (sw.behind && T > NODE_A && T < NODE_B) einstein(p, c, h, sw.p)
+  if (sw.behind && T > NODE_A) einstein(p, c, h, sw.p)
 
   // TARS, gone in: the rim flickers once where it went.
   const sw2 = T - SWALLOW
@@ -661,7 +755,7 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.6, DARK.slate)
   p.circle(X(claw.base[0]), X(claw.base[1]), X(0.09))
   // The engine: lit at the periapsis and as it goes.
-  const burn = Math.max(knock(T - NODE_B, 0.35) * smooth(T, NODE_B - 0.03, NODE_B), smooth(T, RELEASE, RELEASE + 0.15))
+  const burn = Math.max(knock(T - NODE_B2, 0.35) * smooth(T, NODE_B2 - 0.03, NODE_B2), smooth(T, RELEASE, RELEASE + 0.15))
   if (burn > 0.02) {
     const flick = 0.85 + 0.15 * Math.sin(T * 61)
     const [ex, ey] = W(-1.2, -0.18)
@@ -686,7 +780,7 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   p.beginShape()
   for (const [x, y] of [[0.55, -0.34], [0.86, -0.2], [0.98, -0.14], [0.6, -0.26]] as Pt[]) V(x, y)
   p.endShape(p.CLOSE)
-  // The latch on its back that holds TARS, and lets go on 185.
+  // The latch on its back that holds TARS, and lets go on 182.
   const pop = T >= LATCH ? smooth(T, LATCH - 0.03, LATCH) : 0
   const [l0x, l0y] = W(-0.3, -0.42)
   const [l1x, l1y] = W(-0.3 - 0.25 * pop, -0.42 - 0.3 * pop)
@@ -773,7 +867,7 @@ function drawJaws(p: p5, c: Ctx, T: number): void {
   }
 }
 
-/** TARS: on the Ranger's back, then let go on 185 and in, turning, slower and slower, gone on 186½. */
+/** TARS: on the Ranger's back, then let go on 182 and in, turning, slower and slower, gone on 183½. */
 function tarsAt(T: number): { p: Pt; a: number; s: number; on: number } | null {
   const shipBack = (u: number): Pt => {
     const sp = shipAt(u)
@@ -848,17 +942,33 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     glow(p, X(back(0.78)), X(BK[1] - 0.65), X(2.6), DUST.light, 0.22)
     ctx.restore()
   }
+  if (lat > 0.002) drawRooms(p, c, T, lat)
   if (lat > 0.002) drawLattice(p, c, T, lat, f)
   if (bk > 0.002) {
+    // The back of the case, falling away above him as he goes: smaller, and gone.
+    const away = 1 - 0.5 * smooth(T, CLOSE, CLOSE + 0.75)
+    const cx = back(0.78)
+    const cy = BK[1] - 0.65
     ctx.save()
     ctx.globalAlpha = bk
+    p.push()
+    p.translate(X(cx), X(cy))
+    p.scale(away)
+    p.translate(-X(cx), -X(cy))
     drawCaseBack(p, c, T)
+    p.pop()
     ctx.restore()
   }
-  const room = roomAt(T)
-  if (room > 0.002) {
+  if (bk > 0.002) drawThreads(p, c, T, bk)
+  drawStreaks(p, c, T, f)
+  drawWarmth(p, c, T)
+  if (roomAt(T) > 0) {
     ctx.save()
-    ctx.globalAlpha = room
+    if (T < IN_BED + 0.1) {
+      ctx.beginPath()
+      ctx.arc(X(OPENING[0]), X(OPENING[1]), X(openAt(T)), 0, TAU)
+      ctx.clip()
+    }
     p.push()
     p.translate(X(EXIT[0]), X(EXIT[1]))
     drawRoom(p, farm(c), T - ACT2)
@@ -866,6 +976,170 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     ctx.restore()
   }
   void s
+}
+
+/**
+ * The tesseract's rooms: Murph's bookcase, from behind, again and again every
+ * way, beside it, above and below, and deeper in, smaller and dimmer toward
+ * the one point; each its own lit room behind, its row of ten books, its
+ * watch. The near ones are there from the first; the pull-back after the
+ * watch shows how far they go.
+ */
+function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const ink = FARM.ink
+  const vp: Pt = [P_L[0], SURF - 0.2]
+  const PX = 3.1
+  const PY = 2.25
+  const far = smooth(T, AT_WATCH, CLOSE)
+  const fold = 1 - 0.8 * closeAt(T)
+  const drift = ((T - HORIZON) * 0.09) % 1
+  p.push()
+  p.translate(X(BY_WATCH[0]), X(BY_WATCH[1]))
+  p.scale(fold)
+  p.translate(-X(BY_WATCH[0]), -X(BY_WATCH[1]))
+  for (const d of [2.2 - drift + 0.5, 1.2 - drift + 0.5, 0]) {
+    const sc = 1 / (1 + 0.75 * d)
+    const reach = d === 0 ? 1 + Math.round(4 * far) : 2 + Math.round(3 * far)
+    for (let i = -reach; i <= reach; i++) {
+      for (let j = -1 - Math.round(2 * far); j <= 1 + Math.round(3 * far); j++) {
+        if (i === 0 && j === 0 && d === 0) continue
+        const dist = Math.hypot(i, j * 1.3)
+        const a = on * (d === 0 ? 0.5 : 0.22 * (1 - d / 3.4)) * (1 / (1 + 0.45 * dist)) * (dist <= 1.5 ? 1 : far)
+        if (a <= 0.01) continue
+        const ox = BK[0] + i * PX
+        const oy = BK[1] + j * PY
+        p.push()
+        p.translate(X(vp[0] + (ox - vp[0]) * sc), X(vp[1] + (oy - vp[1]) * sc))
+        p.scale(-sc, sc)
+        miniCase(p, k, ink, c.weight, a)
+        p.pop()
+      }
+    }
+  }
+  p.pop()
+}
+
+/** One of the tesseract's rooms, Murph's bookcase from behind, in its own (shelf) cells, `a` of it. */
+function miniCase(p: p5, k: number, ink: string, weight: number, a: number): void {
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const was = ctx.globalAlpha
+  ctx.globalAlpha = was * a
+  const CAP = SHELF_TOP - 0.6
+  const MIDY = SHELF_TOP + 0.46
+  // Its room's light behind it, warm, and a bloom of it spilling round the case into the dark.
+  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.9), DUST.light, 0.35)
+  p.noStroke()
+  p.fill(mixHex(DUST.light, DUST.wall, 0.35))
+  p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
+  for (const b of ROW) {
+    p.fill(mixHex(b.color, ink, 0.62))
+    p.rect(X(b.x), X(SHELF_TOP - b.h / 2), X(b.w), X(b.h))
+  }
+  p.fill(mixHex(DUST.wood, ink, 0.5))
+  for (let x = -0.3; x < 1.9; x += 0.105) p.rect(X(x), X(MIDY - 0.15), X(0.08), X(0.3))
+  // Its watch, a spark at the row's end.
+  p.fill(DUST.light)
+  p.circle(X(WATCH_ON_SHELF[0]), X(WATCH_ON_SHELF[1] - 0.15), X(0.1))
+  solid(p, ink, weight * 0.7, mixHex(DUST.wood, ink, 0.62))
+  for (const sx of [-0.415, 1.965]) p.rect(X(sx), X((CAP + FLOOR) / 2), X(0.07), X(FLOOR - CAP))
+  p.rect(X(0.775), X(CAP - 0.03), X(2.55), X(0.07))
+  for (const y of [SHELF_TOP, MIDY]) p.rect(X(0.775), X(y + 0.025), X(2.31), X(0.05))
+  p.rect(X(0.775), X(FLOOR - 0.04), X(2.31), X(0.08))
+  ctx.globalAlpha = was
+}
+
+/**
+ * The message: threads of light running along the tesseract's lines into the
+ * watch, from both ways along the top board and up and down the case's side,
+ * and arriving on each tick of its hand.
+ */
+function drawThreads(p: p5, c: Ctx, T: number, on: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const wx = WATCH_X
+  const wy = SURF - 0.15
+  p.strokeCap(p.ROUND)
+  for (const tk of WATCH_TICKS) {
+    const lead = 0.5
+    const s = T - (tk - lead)
+    if (s < 0 || s > lead + 0.35) continue
+    const u = clamp(s / lead)
+    const fade = on * (1 - smooth(s, lead, lead + 0.35))
+    // Each thread: [start, end] of the run; it comes in along the line, its head gathering pace, a tail behind.
+    const runs: [Pt, Pt][] = [
+      [[wx + 3.4, SURF - 0.02], [wx + 0.1, SURF - 0.02]],
+      [[wx - 3.6, SURF - 0.02], [wx - 0.12, SURF - 0.02]],
+    ]
+    for (const [a, b] of runs) {
+      const e = easeInQuad(u)
+      const hx = a[0] + (b[0] - a[0]) * e
+      const hy = a[1] + (b[1] - a[1]) * e
+      const tl = Math.min(0.42, 0.12 + 0.5 * u)
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+      const tx = hx - ((b[0] - a[0]) / len) * tl
+      const ty = hy - ((b[1] - a[1]) / len) * tl
+      p.stroke(alpha(p, DUST.light, 0.22 * fade))
+      p.strokeWeight(Math.max(1, X(0.04)))
+      p.line(X(tx), X(ty), X(hx), X(hy))
+      p.stroke(alpha(p, DARK.gold, 0.8 * fade))
+      p.strokeWeight(Math.max(1, X(0.014)))
+      p.line(X(tx), X(ty), X(hx), X(hy))
+      glow(p, X(hx), X(hy), X(0.12), DUST.light, 0.6 * fade)
+    }
+    if (s >= lead) glow(p, X(wx), X(wy), X(0.5), DUST.light, 0.7 * fade)
+  }
+}
+
+/** Where the warm light is, that the room opens out of: just over the pillow, where the window's light lies. */
+const OPENING: Pt = [IN_PILLOW[0] + 0.05, IN_PILLOW[1] - 0.15]
+
+/** How fast he is falling, 0..1 of the fastest: what the lines streaming past him go by. */
+const fallPace = (T: number): number => {
+  const u = (T - CLOSE) / (IN_BED - CLOSE)
+  return u <= 0 || u >= 1 ? 0 : (12 * u * (1 - u) * (1 - u)) / (16 / 9)
+}
+
+/** The lattice's lines going past him as he falls: a few thin gold threads, streaming up the frame, longer the faster he goes. */
+function drawStreaks(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
+  const pace = fallPace(T) * (1 - smooth(T, CLOSE + 0.9, CLOSE + 1.3))
+  if (pace <= 0.02) return
+  const { k } = c
+  const X = (v: number) => v * k
+  const H = f.y1 - f.y0
+  const W = f.x1 - f.x0
+  const run = (T - CLOSE) * 5.5
+  p.strokeCap(p.ROUND)
+  for (let i = 0; i < 9; i++) {
+    const x = f.x0 + W * (0.1 + 0.8 * hash(i, 61))
+    if (Math.abs(x - f.cx) < 0.22) continue
+    const y = f.y1 + 0.5 - ((run * (0.7 + 0.6 * hash(i, 62)) + hash(i, 63) * (H + 1)) % (H + 1))
+    const len = 0.25 + 1.1 * pace * (0.6 + 0.4 * hash(i, 64))
+    p.stroke(alpha(p, DARK.gold, 0.32 * pace * (0.5 + 0.5 * hash(i, 65))))
+    p.strokeWeight(Math.max(0.7, k * 0.012))
+    p.line(X(x), X(y), X(x), X(y + len))
+  }
+}
+
+/** The warm light he drifts toward through the dark: small and far, then near; the room opens out of it. */
+function drawWarmth(p: p5, c: Ctx, T: number): void {
+  const on = smooth(T, GLOW_ON, GLOW_ON + 0.6) * (1 - smooth(T, IN_BED - 0.1, IN_BED + 0.4))
+  if (on <= 0.005) return
+  const { k } = c
+  const X = (v: number) => v * k
+  const grow = smooth(T, GLOW_ON, IN_BED)
+  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.25 + 1.6 * grow), DUST.light, 0.55 * on)
+  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.08 + 0.3 * grow), '#FFF6DE', 0.8 * on)
+  // The rim of the opening, soft and warm, going out past the frame.
+  const r = openAt(T)
+  if (r > 0.05 && T < IN_BED + 0.1) {
+    p.noFill()
+    p.stroke(alpha(p, DUST.light, 0.5 * on * (1 - smooth(r, 2, 6))))
+    p.strokeWeight(Math.max(1, X(0.03)))
+    p.circle(X(OPENING[0]), X(OPENING[1]), X(2 * r))
+  }
 }
 
 /** The room is the farm's, drawn in the farm's ink: the replica's own drawing, in the replica's frame (its origin is our exit). */
@@ -881,12 +1155,12 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
   const { k } = c
   const X = (v: number) => v * k
   const vp: Pt = [P_L[0], SURF - 0.2]
-  // As it closes it folds in on him, where the last book went.
-  const fold = 1 - 0.88 * closeAt(T)
+  // As it lets him go it folds in behind him, toward where the last book went, and away.
+  const fold = 1 - 0.8 * closeAt(T)
   p.push()
-  p.translate(X(LAST_AT[0]), X(LAST_AT[1]))
+  p.translate(X(BY_WATCH[0]), X(BY_WATCH[1]))
   p.scale(fold)
-  p.translate(-X(LAST_AT[0]), -X(LAST_AT[1]))
+  p.translate(-X(BY_WATCH[0]), -X(BY_WATCH[1]))
   const x0 = back(2.0)
   const x1 = back(-0.45)
   const y0 = BK[1] + SHELF_TOP - 0.665
@@ -904,8 +1178,10 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
     const Q = (x: number, y: number): [number, number] => [X(vp[0] + (x - vp[0]) * sc), X(vp[1] + (y - vp[1]) * sc)]
     p.strokeWeight(Math.max(0.7, k * 0.014 * (0.5 + 0.5 * sc)))
     const reach = d === 0 ? 2 : 1
+    // Rows below, too, for him to fall through as it lets him go.
+    const below = d === 0 ? 3 : 1
     for (let i = -reach; i <= reach; i++) {
-      for (let j = -1; j <= 1; j++) {
+      for (let j = -1; j <= below; j++) {
         if (i === 0 && j === 0 && d < 1.2) continue
         const ox = i * PX
         const oy = j * PY
@@ -987,20 +1263,13 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   ROW.forEach((b, i) => {
     if (T >= PUSHES[i]) glow(p, X(b.x), X(SHELF_TOP - b.h / 2), X(0.4), DUST.light, 0.6 * knock(T - PUSHES[i] - 0.1, 0.25) * smooth(T, PUSHES[i], PUSHES[i] + 0.1))
   })
-  // The lander model, a dark shape against the light; pushed, it tips away the same way.
+  // The lander model, the opening's own; pushed, it tips away the same way (shorter as it turns from us) and drops.
   const la = away(LAND, T, 0.36)
   if (!la.gone) {
-    const sq = Math.cos(la.tip)
     p.push()
     p.translate(X(LANDER_X), X(SHELF_TOP + la.drop))
-    p.scale(1 - 0.15 * Math.sin(la.tip), Math.max(0.02, sq))
-    solid(p, ink, w * 0.6, mixHex(DUST.corn, ink, 0.55))
-    p.rect(0, X(-0.08), X(0.12), X(0.06))
-    p.beginShape()
-    for (const [x, y] of [[-0.05, -0.11], [0.05, -0.11], [0.035, -0.17], [-0.035, -0.17]] as Pt[]) p.vertex(X(x), X(y))
-    p.endShape(p.CLOSE)
-    outline(p, ink, w * 0.6)
-    for (const sgn of [-1, 1]) p.line(X(sgn * 0.04), X(-0.07), X(sgn * 0.09), 0)
+    p.scale(1 - 0.15 * Math.sin(la.tip), Math.max(0.02, Math.cos(la.tip)))
+    drawLander(p, { k, ink, weight: w }, 0, 0, 0)
     p.pop()
   }
   // Where it stood, the room's light comes through.
@@ -1033,8 +1302,16 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   for (const y of [SHELF_TOP, MIDY]) p.rect(X((L + Rr) / 2), X(y + 0.025), X(Rr - L - 0.14), X(0.05))
   p.rect(X((L + Rr) / 2), X(FLOOR - 0.04), X(Rr - L - 0.14), X(0.08))
 
-  // The watch on the cap, seen from behind: the hand goes the other way round.
-  drawWatch(p, c, T, 1.45, CAP - 0.11, ink)
+  // Cooper's watch, standing at the end of the top shelf beyond the lander: he comes down beside it, and its glass
+  // catches his light; its second hand steps on with each book that goes, the message going with them.
+  const sent = PUSHES.filter((at) => T >= at).length + WATCH_TICKS.filter((at) => T >= at).length * 5
+  const tick = WATCH_TICKS.reduce((m, at) => Math.max(m, knock(T - at, 0.3)), 0)
+  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], T, {
+    mode: 'stand',
+    seconds: T < LAND ? Math.floor(T) % 60 : (Math.floor(LAND) + sent) % 60,
+    glint: Math.min(1, 0.35 + 0.65 * knock(T - LAND, 0.5) + 0.8 * tick),
+  })
+  if (tick > 0.02) glow(p, X(WATCH_ON_SHELF[0]), X(WATCH_ON_SHELF[1] - 0.15), X(0.35 + 0.25 * tick), DUST.light, 0.55 * tick)
   p.pop()
 }
 
@@ -1049,23 +1326,6 @@ function backOfBook(p: p5, c: Ctx, x: number, foot: number, w: number, h: number
   p.fill(mixHex(DUST.bone, ink, 0.5))
   const ih = Math.max(0, h - 0.035)
   if (ih > 0.01) p.rect(X(x), X(foot - h / 2), X(Math.max(0.01, w - 0.03)), X(ih))
-}
-
-/** The watch, lying on the cap: a round face, its strap, the second hand, keeping time in the silence at the end. */
-function drawWatch(p: p5, c: Ctx, T: number, wx: number, wy: number, ink: string): void {
-  const { k } = c
-  const X = (v: number) => v * k
-  const w = c.weight
-  solid(p, ink, w * 0.7, DUST.wood)
-  p.rect(X(wx - 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  p.rect(X(wx + 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  solid(p, ink, w * 0.7, DUST.bone)
-  p.ellipse(X(wx), X(wy), X(0.13), X(0.1))
-  let ticks = 0
-  for (const t of TICKS) if (T >= t) ticks += 1 - Math.exp(-(T - t) / 0.03)
-  const a = -Math.PI / 2 + 0.95 + (ticks * Math.PI) / 30
-  outline(p, ink, w * 0.6)
-  p.line(X(wx), X(wy), X(wx + Math.cos(a) * 0.05), X(wy + Math.sin(a) * 0.038))
 }
 
 /* ------------------------------------------------------------------ over the ball */
@@ -1091,7 +1351,7 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
       }
       ctx.clip()
       let bright = 0
-      for (const t of [NODE_A, NODE_B]) bright = Math.max(bright, (t === NODE_B ? 1 : 0.7) * knock(T - t, 0.22))
+      for (const [t, power] of NODES) bright = Math.max(bright, power * knock(T - t, 0.22))
       holeSolid(p, c, holeLook(T), bright)
       einstein(p, c, holeLook(T), sw.p)
       ctx.restore()
@@ -1102,9 +1362,13 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
   const at = laneAt(s.lane, c.t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   if (room > 0.002) {
-    // The room's front (the dumbwaiter's wall, the toy), and its night.
+    // The room's front (the dumbwaiter's wall, the toy), and its night: inside the opening while it opens.
     ctx.save()
-    ctx.globalAlpha = room
+    if (T < IN_BED + 0.1) {
+      ctx.beginPath()
+      ctx.arc(X(OPENING[0]), X(OPENING[1]), X(openAt(T)), 0, TAU)
+      ctx.clip()
+    }
     p.push()
     p.translate(X(EXIT[0]), X(EXIT[1]))
     overRoom(p, farm(c), T - ACT2)

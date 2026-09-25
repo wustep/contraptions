@@ -300,7 +300,7 @@ const LX = LAND_AT[0]
 const G = LAND_AT[1] + CLEAR
 
 /** How far the legs have given under it since touchdown. */
-const sinkAt = (d: number): number => (d <= 0 ? 0 : SETTLE - SETTLE * Math.exp(-d / 0.07) * Math.cos(d * 17))
+const sinkAt = (d: number): number => (d <= 0 ? 0 : SETTLE - SETTLE * Math.exp(-d / 0.17) * Math.cos(d * 9))
 
 /** Nose up is positive. */
 function pitchAt(T: number): number {
@@ -309,11 +309,11 @@ function pitchAt(T: number): number {
   th -= 0.08 * smooth(T, CUT, CUT + 0.7)
   th += 0.05 * pulse(T - FLARE, 0.25, 0.4)
   const ring = T - RING
-  if (ring > 0) th += 0.07 * Math.exp(-ring / 0.3) * Math.sin(ring * 17)
+  if (ring > 0) th += 0.07 * Math.exp(-ring / 0.4) * Math.sin(ring * 11)
   for (const r of RETRO) th += 0.03 * pulse(T - r, 0.05, 0.18)
   for (const j of [BLOOM, ...REEFS]) th -= 0.035 * pulse(T - j, 0.06, 0.2)
   const td = T - TOUCH
-  if (td > 0) th += 0.018 * Math.exp(-td / 0.18) * Math.sin(td * 20)
+  if (td > 0) th += 0.018 * Math.exp(-td / 0.3) * Math.sin(td * 11)
   return th
 }
 
@@ -327,7 +327,7 @@ function poseAt(T: number): Pose {
   const [x, y] = trackAt(T)
   // The wave from the mouth shakes it as it passes.
   const ring = T - RING
-  const shake = ring > 0 ? 0.035 * Math.exp(-ring / 0.25) * Math.sin(ring * 31) : 0
+  const shake = ring > 0 ? 0.035 * Math.exp(-ring / 0.35) * Math.sin(ring * 16) : 0
   return { x, y: y + shake, th: pitchAt(T) }
 }
 /** A point of the Ranger (u nose-ward, v up) in the part's cells. */
@@ -340,11 +340,11 @@ function jigAt(T: number): Pt {
   for (const r of RETRO) du += 0.034 * pulse(T - r, 0.05, 0.2)
   for (const j of [BLOOM, ...REEFS]) du += 0.024 * pulse(T - j, 0.05, 0.2)
   const ring = T - RING
-  if (ring > 0) du += 0.02 * Math.exp(-ring / 0.25) * Math.sin(ring * 29)
+  if (ring > 0) du += 0.02 * Math.exp(-ring / 0.35) * Math.sin(ring * 15)
   const td = T - TOUCH
   if (td > 0) {
     du += 0.03 * pulse(td, 0.04, 0.15)
-    dv -= 0.025 * Math.exp(-td / 0.12) * Math.sin(Math.min(Math.PI, td * 18))
+    dv -= 0.025 * Math.exp(-td / 0.2) * Math.sin(Math.min(Math.PI, td * 10))
   }
   return [du, dv]
 }
@@ -522,9 +522,12 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: CANOPY + 0.4, cells: 5.8, hold: [LX + 2.0, G - 1.2] },
     { t: KICK, cells: 5.4, hold: [LX + 2.3, G - 1.1] },
     { t: LAMP, cells: 5.4, hold: [LX + 2.75, G - 1.2] },
-    { t: LAMP + 1.3, cells: 5.5, hold: [LX + 2.8, G - 1.25] },
-    // Back, slowly, to the whole of it, and held.
-    { t: cue(235.8), cells: END_CELLS, hold: END_HOLD },
+    // In on the two of them as they meet under the lamp, and held close through the music's last bars: the
+    // film's last reunion, near enough to see. Then, in the silence, back to the whole of the camp at dawn.
+    { t: CAMP_MEET - 0.35, cells: 3.7, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.9], w: 0.95 },
+    { t: CAMP_MEET + 0.55, cells: 2.9, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
+    { t: 259.7, cells: 2.75, hold: [(MEET_H[0] + MEET_B[0]) / 2, G - 0.8], w: 1 },
+    { t: 262.0, cells: END_CELLS, hold: END_HOLD },
     { t: MIX_END, cells: END_CELLS + 0.25, hold: [END_HOLD[0] + 0.05, END_HOLD[1] - 0.08] },
     // Under the credits the camera goes on drawing back, slower, and up a little into the sky they are written in.
     { t: DURATION, cells: END_CELLS + 0.75, hold: [END_HOLD[0] + 0.1, END_HOLD[1] - 0.3] },
@@ -682,9 +685,12 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   const gx = f.cx + GARG_F[0] * (f.x1 - f.x0)
   const gy = f.cy + GARG_F[1] * (f.y1 - f.y0)
   const r = 0.2
-  glow(p, X(gx), X(gy), X(1.1), DARK.amber, 0.1)
+  // Far away, it keeps its size on the screen as the camera comes in and goes out (drawn to a 6.8-cell frame).
+  const far = (f.y1 - f.y0) / 6.8
+  glow(p, X(gx), X(gy), X(1.1 * far), DARK.amber, 0.1)
   p.push()
   p.translate(X(gx), X(gy))
+  p.scale(far)
   p.rotate(-0.09)
   p.noFill()
   p.stroke(alpha(p, DARK.amber, 0.5))
@@ -1282,7 +1288,7 @@ function drawWing(p: p5, c0: Ctx, T: number): void {
 function legAngle(T: number, i: number): number {
   const d = smooth(T, LEGS[i] - 0.2, LEGS[i])
   // A little past on the beat, and back into its lock.
-  const over = T > LEGS[i] ? 0.12 * Math.exp(-(T - LEGS[i]) / 0.1) * Math.sin((T - LEGS[i]) * 30) : 0
+  const over = T > LEGS[i] ? 0.1 * Math.exp(-(T - LEGS[i]) / 0.22) * Math.sin((T - LEGS[i]) * 13) : 0
   const e = easeInQuad(d)
   const down = Math.atan2(legReach(i), LEG_OUT)
   if (i === 0) return Math.PI + (Math.PI * 2 - down - Math.PI) * e + over
@@ -1326,7 +1332,7 @@ function drawLeg(p: p5, c: Ctx, T: number, q: Pose, i: number): void {
 function canopyOpen(T: number): number {
   if (T < CANOPY - 0.34) return 0
   const u = clamp((T - (CANOPY - 0.34)) / 0.34)
-  const bounce = T > CANOPY ? 0.05 * Math.exp(-(T - CANOPY) / 0.1) * Math.sin((T - CANOPY) * 30) : 0
+  const bounce = T > CANOPY ? 0.045 * Math.exp(-(T - CANOPY) / 0.22) * Math.sin((T - CANOPY) * 13) : 0
   return easeInQuad(u) - bounce
 }
 
@@ -1417,7 +1423,7 @@ function chuteAt(T: number): { mouth: Pt; dir: Pt; r: number; attached: boolean;
     return { anchor, dir, out }
   }
   let r = 0
-  const snap = (at: number, to: number, from: number) => (T < at ? from : lerp(from, to, easeOutCubic(clamp((T - at) / 0.12))) + (to - from) * 0.25 * Math.exp(-(T - at) / 0.1) * Math.sin((T - at) * 30))
+  const snap = (at: number, to: number, from: number) => (T < at ? from : lerp(from, to, easeOutCubic(clamp((T - at) / 0.12))) + (to - from) * 0.2 * Math.exp(-(T - at) / 0.22) * Math.sin((T - at) * 13))
   if (T >= BLOOM - 0.05) {
     r = snap(BLOOM - 0.05, 0.26, 0.05)
     if (T >= REEFS[0]) r = snap(REEFS[0], 0.42, 0.26)
@@ -1518,7 +1524,7 @@ function rampState(T: number): { len: number; angle: number } {
   // Runs out level from under the nose, then drops to the sand on the beat.
   const out = smooth(T, RAMP - 0.55, RAMP - 0.2)
   const drop = easeInQuad(clamp((T - (RAMP - 0.2)) / 0.2))
-  const bounce = T > RAMP ? 0.05 * Math.exp(-(T - RAMP) / 0.08) * Math.sin((T - RAMP) * 40) : 0
+  const bounce = T > RAMP ? 0.045 * Math.exp(-(T - RAMP) / 0.2) * Math.sin((T - RAMP) * 14) : 0
   return { len: RAMP_LEN * out, angle: RAMP_A * drop - bounce }
 }
 

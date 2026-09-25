@@ -301,8 +301,8 @@ const SOCKET: [number, number] = [CAP + BOSS_L + 0.1, 1.08]
 
 const collarLen = (t: number): number => {
   const u = clamp((t - STOW) / 0.24)
-  // Home with a knock: it overshoots a hair and settles.
-  const back = u >= 1 ? 1 + 0.06 * Math.exp(-(t - STOW - 0.24) / 0.08) * Math.cos((t - STOW - 0.24) * 40) : easeOut(u)
+  // Home with a knock: it overshoots a hair and settles, heavily, over most of a beat.
+  const back = u >= 1 ? 1 + 0.05 * Math.exp(-(t - STOW - 0.24) / 0.22) * Math.sin((t - STOW - 0.24) * 12) : easeOut(u)
   return COLLAR_L - (COLLAR_L - 0.1) * back
 }
 
@@ -1001,7 +1001,9 @@ function drawDock(p: p5, c: Ctx, t: number, near: boolean): void {
     if (fl >= 0 && fl < 0.5) glow(p, X(xf + 0.1), 0, X(1.1), BONE_RGB, 0.7 * (1 - fl / 0.5) ** 2)
   }
   // The clamps: a hooked arm on a pivot at the collar's face, over the Ranger's flange; they swing out on 184, and fold flat as the collar goes home.
-  const open = easeOut((t - CLAMPS) / 0.16)
+  // Out on the beat, with a heavy sway against their stops; folded flat as the collar goes home.
+  const since = t - CLAMPS
+  const open = easeOut(since / 0.16) + (since > 0 ? 0.07 * Math.exp(-since / 0.3) * Math.sin(since * 10) : 0)
   const fold = easeOut((t - STOW) / 0.24)
   const swing = 1.15 * open + 0.55 * fold
   const arm: Pt[] = [
@@ -1053,7 +1055,7 @@ const PSI_S = 2.55 - stationTurn(SEAT)
 
 function umbilical(t: number): { pts: [number, number, number][]; end: [number, number, number]; socket: number } {
   const e = easeOut((t - UMBILICAL) / (SEAT - UMBILICAL))
-  const whip = t > UMBILICAL ? Math.exp(-(t - UMBILICAL) / 0.45) * Math.sin((t - UMBILICAL) * 13) : 0
+  const whip = t > UMBILICAL ? Math.exp(-(t - UMBILICAL) / 0.6) * Math.sin((t - UMBILICAL) * 8.5) : 0
   const turn = stationTurn(t)
   const aS = PSI_S + turn
   const aP = PORT_A0 + turn

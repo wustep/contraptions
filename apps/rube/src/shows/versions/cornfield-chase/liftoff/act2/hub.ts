@@ -187,11 +187,12 @@ function carS(T: number): number {
 /** The car's jolt as its roller takes each landing's flag, the lurch off, and the thump at the top. */
 function carJolt(T: number): number {
   const { ago } = lastOf(RIBS, T)
-  let j = ago < 0.4 && T < LAND ? -0.03 * Math.exp(-ago / 0.06) * Math.cos(ago * 30) : 0
+  // Each is sharp at its moment and settles heavily: a lower ring that dies away over most of a beat.
+  let j = ago < 0.8 && T < LAND ? -0.025 * Math.exp(-ago / 0.13) * Math.cos(ago * 15) : 0
   const lurch = T - GO
-  if (lurch > 0 && lurch < 0.5) j += 0.03 * Math.exp(-lurch / 0.1) * Math.sin(lurch * 40)
+  if (lurch > 0 && lurch < 1) j += 0.03 * Math.exp(-lurch / 0.22) * Math.sin(lurch * 16)
   const stop = T - LAND
-  if (stop > 0 && stop < 0.6) j += 0.04 * Math.exp(-stop / 0.12) * Math.sin(stop * 26)
+  if (stop > 0 && stop < 1.2) j += 0.04 * Math.exp(-stop / 0.26) * Math.sin(stop * 12)
   return j
 }
 
@@ -330,7 +331,10 @@ function armAt(T: number): { j: Joints; open: number } {
   // It lets go in the seat and lifts clear for the hood; on the beat after, it whips home and latches.
   const open = smooth(T, SEAT - 0.02, SEAT + 0.06) * (1 - 0.65 * smooth(T, STOW - 0.28, STOW))
   if (T < STOW - 0.28) return { j: reach(liftAt(T)), open }
-  return { j: mixJ(reach(LIFT), home, easeOutBack(clamp((T - STOW + 0.28) / 0.28))), open }
+  // Home on the beat, latching with its speed, and a slow, heavy sway in the catch after.
+  const u = clamp((T - STOW + 0.28) / 0.28)
+  const swing = T < STOW ? u * u * (1.6 - 0.6 * u) : 1 + 0.05 * Math.exp(-(T - STOW) / 0.3) * Math.sin((T - STOW) * 11)
+  return { j: mixJ(reach(LIFT), home, swing), open }
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -761,7 +765,7 @@ function drawGate(p: p5, c: Ctx, T: number): void {
   const X = (v: number) => v * k
   const vf = -carS(T) + carJolt(T)
   const since = T - GATE
-  const down = since < 0 ? 0 : since < 0.12 ? (since / 0.12) ** 2 : 1 - 0.07 * Math.exp(-(since - 0.12) / 0.08) * Math.abs(Math.sin((since - 0.12) * 30))
+  const down = since < 0 ? 0 : since < 0.12 ? (since / 0.12) ** 2 : 1 - 0.06 * Math.exp(-(since - 0.12) / 0.18) * Math.abs(Math.sin((since - 0.12) * 13))
   const u = CAR_L + 0.035
   const len = CAR_H - 0.06
   const bottom = vf - CAR_H + 0.06 + down * (len - 0.02)
@@ -812,7 +816,7 @@ function drawDial(p: p5, c: Ctx, T: number): void {
   const ticks = [...RIBS, LAND]
   const { i, ago } = lastOf(ticks, T)
   const n = i + 1
-  const shiver = ago < 0.3 ? 0.06 * Math.exp(-ago / 0.05) * Math.cos(ago * 50) : 0
+  const shiver = ago < 0.7 ? 0.05 * Math.exp(-ago / 0.12) * Math.cos(ago * 22) : 0
   const a = at(Math.min(n, marks - 1)) + shiver
   outline(p, DUST.rust, weight * 1.1)
   p.line(X(cu), X(cv), X(cu + Math.cos(a) * (r - 0.05)), X(cv + Math.sin(a) * (r - 0.05)))
@@ -910,7 +914,8 @@ function drawClamps(p: p5, c: Ctx, T: number): void {
   for (let i = 0; i < CLAMPS.length; i++) {
     const x = shipPt(CLAMP_X[i], 0, T)[0]
     const since = T - CLAMPS[i]
-    const back = since < 0 ? 0 : easeOutBack(clamp(since / 0.16))
+    // Thrown back on the beat, and a heavy settle against its stop.
+    const back = since < 0 ? 0 : 1 - (1 - clamp(since / 0.16)) ** 3 + 0.08 * Math.exp(-since / 0.3) * Math.sin(since * 11)
     p.push()
     p.translate(X(x), X(BEAM_Y))
     p.scale(FACE, 1)
@@ -1044,7 +1049,7 @@ const canopyOpen = (T: number): number => {
     const u = (since + 0.3) / 0.3
     return 1 - u * u
   }
-  return -0.05 * Math.exp(-since / 0.07) * Math.sin(since * 45)
+  return -0.04 * Math.exp(-since / 0.18) * Math.sin(since * 17)
 }
 
 function drawRanger(p: p5, c0: Ctx, T: number): void {

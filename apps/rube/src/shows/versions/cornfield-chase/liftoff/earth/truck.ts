@@ -292,8 +292,9 @@ const jumpAt = (t: number): number => {
 interface TruckState {
   begin: number
   b0: number
-  /** Where the stalks stand that the grille takes, one a beat. */
+  /** Where the stalks stand that the grille takes, one a beat, and when the truck's tail lets each go again. */
   stalks: number[]
+  freed: number[]
   edge: number
   /** Where the fence stands, and where the ditch runs under the jump. */
   fence: number
@@ -343,19 +344,20 @@ function bodyAt(t: number): { pitch: number; lift: number } {
   }
   const down = t - LANDING
   if (down > 0) pitch += 0.07 * Math.exp(-down / 0.03)
-  if (down > 0 && down < 0.8) {
+  if (down > 0 && down < 1.2) {
     // (Squashed in a few milliseconds rather than all at once, so what rides in the cab never jumps.)
-    lift -= 0.1 * (1 - Math.exp(-down / 0.012)) * Math.exp(-down / 0.12) * Math.cos(down * 22)
-    pitch += 0.04 * Math.exp(-down / 0.2) * Math.sin(down * 18)
+    lift -= 0.1 * (1 - Math.exp(-down / 0.012)) * Math.exp(-down / 0.2) * Math.cos(down * 14)
+    pitch += 0.04 * Math.exp(-down / 0.28) * Math.sin(down * 12)
   }
   // The fence: a jolt through the frame.
   const hit = t - FENCE
-  if (hit > 0 && hit < 0.6) pitch -= 0.03 * Math.exp(-hit / 0.15) * Math.sin(hit * 30)
+  if (hit > 0 && hit < 1) pitch -= 0.03 * Math.exp(-hit / 0.2) * Math.sin(hit * 18)
   // A furrow every beat.
   const { ago } = lastOf(SLAPS, t)
-  if (ago < 0.5 && t < STOP) {
-    lift += 0.07 * Math.exp(-ago / 0.1) * Math.sin(ago * 30)
-    pitch -= 0.015 * Math.exp(-ago / 0.12)
+  if (t < STOP && ago < 1) {
+    // A heavy truck on its springs: up on the furrow, a slow rebound, settled by the next beat.
+    lift += 0.07 * Math.exp(-ago / 0.15) * Math.sin(ago * 17)
+    pitch -= 0.015 * Math.exp(-ago / 0.16)
   }
   // The brakes: the nose goes down hard and the back end comes up.
   const br = t - STOP
@@ -374,7 +376,7 @@ function doorAt(t: number): number {
     }
     if (t < DOOR) return 1 - easeInQuad((t - shut) / (DOOR - shut))
     const k = t - DOOR
-    return 0.05 * Math.exp(-k / 0.06) * Math.abs(Math.sin(k * 40))
+    return 0.05 * Math.exp(-k / 0.1) * Math.abs(Math.sin(k * 24))
   }
   const k = t - STOP
   if (k < 0.1) return easeOutCubic(k / 0.1)
@@ -475,8 +477,20 @@ export const truck = part<TruckState>(
     const fall = dropTime(GROUND - BALL_V)
     const edge = -0.5 + 1.25 * (at(LAND) - fall)
     const b0 = edge + 1.25 * fall - 0.35
-    const s: TruckState = { begin: slot.begin, b0, stalks: [], edge: 0, fence: 0, ditch: [0, 0] }
+    const s: TruckState = { begin: slot.begin, b0, stalks: [], freed: [], edge: 0, fence: 0, ditch: [0, 0] }
     s.stalks = STALKS.map((t) => rearAt(b0, t) + LEN + 0.04)
+    // When the truck's tail has cleared each stalk (or it is left lying where the truck stopped, a while later).
+    s.freed = s.stalks.map((x, i) => {
+      let lo = STALKS[i]
+      let hi = STALKS[i] + 1.6
+      if (rearAt(b0, hi) < x + 0.3) return hi
+      for (let j = 0; j < 40; j++) {
+        const mid = (lo + hi) / 2
+        if (rearAt(b0, mid) < x + 0.3) lo = mid
+        else hi = mid
+      }
+      return hi
+    })
     s.fence = rearAt(b0, FENCE) + LEN + 0.04
     s.ditch = [rearAt(b0, TAKEOFF) + WHEELS[1] + 0.2, rearAt(b0, LANDING) + WHEELS[0] - 0.15]
     s.edge = rearAt(b0, STOP + 1) + LEN + 0.12
@@ -625,14 +639,16 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     const x = s.stalks[i]
     if (x < f.x0 - 2 || x > f.x1 + 2) continue
     const since = t - STALKS[i]
-    let sway = Math.sin(t * 1.1 + i) * 0.03
+    const still = Math.sin(t * 1.1 + i) * 0.03
+    let sway = still
     if (since > -0.05) {
-      const under = rearAt(s.b0, t) < x + 0.3 && since < 1.6
-      const down = under ? 1.25 * smooth(since, -0.05, 0.08) : 0
-      const back = since > 0 ? Math.exp(-(since - 0.4) / 0.5) * Math.sin((since - 0.4) * 9) * 0.3 : 0
-      sway = under ? down : Math.max(-0.4, Math.min(0.4, back))
+      // Taken by the grille on the beat and pressed flat under the truck; when its tail has gone by, the stalk comes
+      // up again slowly, heavy with its ear: nearly a second to stand, one soft swing past upright, and still.
+      const freed = t - s.freed[i]
+      if (freed < 0) sway = 1.25 * smooth(since, -0.05, 0.08)
+      else sway = still + (1.25 - still) * Math.exp(-freed / 0.55) * (Math.cos(freed * 2.4) + 0.76 * Math.sin(freed * 2.4))
     }
-    stalk(p, k, ink, weight * 0.85, { x, foot: GROUND, h: 1.55 + hash(i, 7) * 0.25, seed: i + 500, sway, shake: since > 0 ? Math.exp(-since / 0.5) : 0, plain: true })
+    stalk(p, k, ink, weight * 0.85, { x, foot: GROUND, h: 1.55 + hash(i, 7) * 0.25, seed: i + 500, sway, shake: since > 0 ? Math.exp(-since / 1.1) : 0, plain: true })
   }
 
   // Dust: one kick off the line, then one off the back wheels on each bar's downbeat. One cloud each, never a trail.

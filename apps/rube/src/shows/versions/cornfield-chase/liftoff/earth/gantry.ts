@@ -77,7 +77,7 @@ function alongArm(a: Pt, b: Pt, v0: number, T: number, u: number): Pt {
 const ARRIVE = 0.4
 const settle = (t: number): number => {
   const k = t - SEATED
-  return k <= 0 ? 0 : (ARRIVE / 26) * Math.exp(-k / 0.1) * Math.sin(k * 26)
+  return k <= 0 ? 0 : (ARRIVE / 13) * Math.exp(-k / 0.2) * Math.sin(k * 13)
 }
 
 /** The cage's floor, where the ball rides, at show time `t`: a steady climb, eased at each end. */
@@ -89,7 +89,7 @@ function cageY(t: number): number {
   const y = 0 + (WIN[1] - 0) * e
   // A small settle when it arrives: the cable giving a little as it stops, and taking up again.
   const k = t - RISE[1]
-  const settle = k > 0 ? 0.03 * Math.exp(-k / 0.15) * (1 - Math.cos(k * 25)) * 0.5 : 0
+  const settle = k > 0 ? 0.03 * Math.exp(-k / 0.28) * (1 - Math.cos(k * 13)) * 0.5 : 0
   return y + settle
 }
 
@@ -130,8 +130,8 @@ export const gantry = part<GantryState>(
     const from: Pt = [HERO_X, cageY(HIS_GO)]
     segs.push(...carried((t) => alongArm(from, WIN, 0, SEATED - HIS_GO, t + slot.begin - HIS_GO), at(HIS_GO), at(SEATED), 60))
     // Into the window on the beat, a small give against its far side, and still.
-    segs.push(...carried((t) => [WIN[0] + settle(t + slot.begin), WIN[1]], at(SEATED), at(SEATED) + 0.6, 30))
-    segs.push(...route([{ at: at(SEATED) + 0.6, p: WIN }, { at: slot.end - slot.begin, p: WIN }]))
+    segs.push(...carried((t) => [WIN[0] + settle(t + slot.begin), WIN[1]], at(SEATED), at(SEATED) + 1.2, 48))
+    segs.push(...route([{ at: at(SEATED) + 1.2, p: WIN }, { at: slot.end - slot.begin, p: WIN }]))
     const lane: Lane = { segs, fire: arrive }
     const gold = (t: number): Companion => {
       const [x, y] = goldGantry(t, lane, slot.begin)

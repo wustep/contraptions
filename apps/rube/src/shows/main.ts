@@ -424,7 +424,19 @@ function buildCard(c: TitleCard): HTMLElement {
   const node = el('div', { class: c.title ? 'card title' : 'card' })
   if (c.role) node.append(el('div', { class: 'role' }, [c.role]))
   for (const n of c.names) {
-    node.append(typeof n === 'string' ? el('div', { class: 'name' }, [n]) : el('div', { class: 'cast' }, [el('span', { class: 'who' }, [n[0]]), el('span', { class: 'as' }, [n[1]])]))
+    if (typeof n === 'string') {
+      node.append(el('div', { class: 'name' }, [n]))
+      continue
+    }
+    const as = el('span', { class: 'as' }, [n[1]])
+    if (n[2]) {
+      // A colour, or 'slab:' and a colour for one who is not a ball.
+      const slab = n[2].startsWith('slab:')
+      const swatch = el('span', { class: slab ? 'swatch slab' : 'swatch' })
+      swatch.style.background = slab ? n[2].slice(5) : n[2]
+      as.prepend(swatch)
+    }
+    node.append(el('div', { class: 'cast' }, [el('span', { class: 'who' }, [n[0]]), as]))
   }
   c.notes?.forEach((n, i) => node.append(el('div', { class: i === c.notes!.length - 1 && !c.title && c.notes!.length > 2 ? 'note fine' : 'note' }, [n])))
   return node

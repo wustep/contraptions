@@ -3,6 +3,7 @@ import { clamp, easeInOutCubic, easeInQuad } from '../../../../../../../src/core
 import type { TitleCard } from '../../../registry'
 import { frame, hash, scenery } from './kit'
 import { DURATION, FINAL } from './music'
+import { BALL, BRAND, MURPH } from './worlds'
 
 /**
  * The end credits. The music has stopped, the lamp is lit, the camp holds at
@@ -26,7 +27,7 @@ export interface Card {
   /** How long it stays whole once it has come up; the last card stays to the end. */
   hold: number
   role?: string
-  names: (string | [string, string])[]
+  names: (string | [string, string] | [string, string, string])[]
   notes?: string[]
   title?: boolean
 }
@@ -46,10 +47,10 @@ const script: Omit<Card, 'at'>[] = [
     hold: 3.7,
     role: 'With',
     names: [
-      ['Joseph Cooper', 'the sand ball'],
-      ['Dr. Amelia Brand', 'the blue ball'],
-      ['Murph', 'the slate ball'],
-      ['TARS', 'four slabs of steel'],
+      ['Joseph Cooper', 'the sand ball', BALL],
+      ['Dr. Amelia Brand', 'the blue ball', BRAND],
+      ['Murph', 'the slate ball', MURPH],
+      ['TARS', 'four slabs of steel', 'slab:#5A5550'],
     ],
   },
   {

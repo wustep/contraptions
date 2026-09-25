@@ -6,8 +6,9 @@ import { alpha, box, carried, frame, hash, part, route, smooth, type Ctx, type P
 import { ACT2, CUE2_PERIOD, cue } from '../music'
 import { G_EARTH } from '../physics'
 import { DARK, DUST } from '../worlds'
-import { drawToy, house, LANDER_X, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
+import { drawLander, drawToy, house, LANDER_X, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
 import { AXIS, BED, BED_REST, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
+import { drawWatch, WATCH_ON_SHELF } from '../earth/watch'
 
 /**
  * The replica house. The organ comes in, the lights come up, and the room
@@ -82,13 +83,13 @@ const MIDY = SHELF_TOP + 0.46
  * of the tesseract onto the pillow, and a moment later wakes, a ball again,
  * and the quilt slides. (`space/gargantua.ts` plays it; the room is drawn here.)
  */
-export const IN_BED = 121.3
-export const WAKE = 121.45
+export const IN_BED = 124.3
+export const WAKE = 124.5
 /** How far he has sunk the pillow: as he lands, and settling. */
 const pillowDip = (T: number): number => {
   const s = T - IN_BED
   if (s < 0) return 0
-  return 0.012 + 0.03 * Math.exp(-s / 0.1) * Math.cos(s * 22)
+  return 0.012 + 0.024 * Math.exp(-s / 0.24) * Math.cos(s * 10)
 }
 
 /** Where the museum stands Murph's toy truck: on the floor in front of the bookcase (its middle, house cells). */
@@ -181,7 +182,7 @@ function carY(t: number): number {
   if (t < b105) return CAR_UP
   if (t < b106) {
     const s = t - b105
-    return CAR_UP + 0.03 * Math.exp(-s / 0.14) * Math.sin(s * 26)
+    return CAR_UP + 0.03 * Math.exp(-s / 0.26) * Math.sin(s * 13)
   }
   if (t < b107) {
     // The catch lets go with a jolt, and then it falls against the counterweight.
@@ -190,7 +191,7 @@ function carY(t: number): number {
     return CAR_UP + jolt + (CAR_DOWN - CAR_UP - JOLT) * u * u
   }
   const s = t - b107
-  return CAR_DOWN + 0.055 * Math.exp(-s / 0.08) * Math.sin(s * 40)
+  return CAR_DOWN + 0.05 * Math.exp(-s / 0.2) * Math.sin(s * 18)
 }
 
 /** The counterweight's top: it goes up as the car goes down. */
@@ -204,13 +205,13 @@ const gateDown = (t: number): number => {
   if (t < B(105) + 0.2) {
     const down = smooth(t, GANG[0], GANG[1])
     const up = t < SHUT[0] ? 0 : clamp((t - SHUT[0]) / (SHUT[1] - SHUT[0])) ** 2
-    const knock = t > SHUT[1] ? -0.07 * Math.exp(-(t - SHUT[1]) / 0.05) * Math.sin((t - SHUT[1]) * 60) : 0
+    const knock = t > SHUT[1] ? -0.05 * Math.exp(-(t - SHUT[1]) / 0.15) * Math.sin((t - SHUT[1]) * 22) : 0
     return Math.max(0, down * (1 - up)) + knock
   }
   const s = t - B(107) - 0.02
   if (s < 0) return 0
   const u = clamp(s / 0.14)
-  return u * u + (s > 0.14 ? -0.08 * Math.exp(-(s - 0.14) / 0.06) * Math.sin((s - 0.14) * 50) : 0)
+  return u * u + (s > 0.14 ? -0.06 * Math.exp(-(s - 0.14) / 0.17) * Math.sin((s - 0.14) * 20) : 0)
 }
 
 /** The weight's tray: a notch down on each tick from 108 to 111. */
@@ -220,7 +221,7 @@ function trayY(t: number): number {
     const s = t - B(k)
     if (s <= 0) continue
     const u = clamp(s / 0.08)
-    y += NOTCH * u * u + (s > 0.08 ? 0.018 * Math.exp(-(s - 0.08) / 0.05) * Math.sin((s - 0.08) * 70) : 0)
+    y += NOTCH * u * u + (s > 0.08 ? 0.012 * Math.exp(-(s - 0.08) / 0.13) * Math.sin((s - 0.08) * 28) : 0)
   }
   return y
 }
@@ -231,7 +232,7 @@ const spoutOpen = (t: number): number => {
   const s = t - B(112)
   if (s < 0) return 0
   const u = clamp(s / 0.16)
-  return u * u + (s > 0.16 ? -0.05 * Math.exp(-(s - 0.16) / 0.07) * Math.sin((s - 0.16) * 45) : 0)
+  return u * u + (s > 0.16 ? -0.04 * Math.exp(-(s - 0.16) / 0.17) * Math.sin((s - 0.16) * 20) : 0)
 }
 /** The spout's angle from pointing up (shut) to SPOUT_OPEN below the level (open). */
 const spoutAngle = (t: number): number => -Math.PI / 2 + (Math.PI / 2 + SPOUT_OPEN) * spoutOpen(t)
@@ -244,7 +245,7 @@ function turnstile(t: number): number {
   const s = t - B(114)
   if (s <= 0) return 0
   const u = clamp(s / 0.5)
-  const kick = s > 0.5 ? 0.05 * Math.exp(-(s - 0.5) / 0.06) * Math.sin((s - 0.5) * 60) : 0
+  const kick = s > 0.5 ? 0.04 * Math.exp(-(s - 0.5) / 0.16) * Math.sin((s - 0.5) * 24) : 0
   return ((2 * Math.PI) / 3) * easeOutSine(u) - kick
 }
 /** The ball against the down arm, while the arm has it. */
@@ -623,7 +624,7 @@ function spine(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, col
   p.pop()
 }
 
-/** The replica bookcase: the museum has the books back on the shelves, the lander on the top one, the watch on the cap. */
+/** The replica bookcase: the museum has the books back on the shelves, the lander on the top one, Cooper's watch at its end. */
 function drawCase(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight: w } = c
   const X = (v: number) => v * k
@@ -670,35 +671,13 @@ function drawCase(p: p5, c: Ctx, t: number): void {
   const BOOKS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUST.bone]
   for (let j = 0; j < 5; j++) spine(p, c, 1.3 + j * 0.1, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOKS[(j + 2) % 6])
 
-  // The top row, S-T-A-Y, put back; the lander at its end.
+  // The top row, S-T-A-Y, put back; the lander at its end, the opening's own model.
   for (const b of stayRow()) spine(p, c, b.x, SHELF_TOP, b.w, b.h, b.color)
-  outline(p, ink, w * 0.7)
-  for (const sgn of [-1, 1]) p.line(X(LANDER_X + sgn * 0.04), X(SHELF_TOP - 0.07), X(LANDER_X + sgn * 0.09), X(SHELF_TOP))
-  solid(p, ink, w * 0.8, DUST.corn)
-  p.rect(X(LANDER_X), X(SHELF_TOP - 0.08), X(0.12), X(0.06))
-  solid(p, ink, w * 0.8, DUST.bone)
-  p.beginShape()
-  for (const [lx, ly] of [[-0.05, -0.11], [0.05, -0.11], [0.035, -0.17], [-0.035, -0.17]] as Pt[]) p.vertex(X(LANDER_X + lx), X(SHELF_TOP + ly))
-  p.endShape(p.CLOSE)
+  drawLander(p, c, LANDER_X, SHELF_TOP, 0)
 
 
-  // The watch on the cap, keeping the organ's time: its second hand goes a second a beat.
-  const wx = 1.45
-  const wy = CAP - 0.11
-  solid(p, ink, w * 0.7, DUST.wood)
-  p.rect(X(wx - 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  p.rect(X(wx + 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  solid(p, ink, w * 0.7, DUST.bone)
-  p.ellipse(X(wx), X(wy), X(0.13), X(0.1))
-  let ticks = 0
-  for (let n = 1; n < 400; n++) {
-    const s = t - n * CUE2_PERIOD
-    if (s < 0) break
-    ticks += 1 - Math.exp(-s / 0.03)
-  }
-  const a = -Math.PI / 2 + 0.95 + (2 * Math.PI) / 30 + (ticks * Math.PI) / 30
-  outline(p, ink, w * 0.6)
-  p.line(X(wx), X(wy), X(wx + Math.cos(a) * 0.05), X(wy + Math.sin(a) * 0.038))
+  // Cooper's watch, standing at the left end of the top shelf, keeping the organ's time: its second hand goes a second a beat.
+  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], ACT2 + t, { mode: 'stand', seconds: (8 + Math.floor(Math.max(0, t) / CUE2_PERIOD)) % 60 })
   p.pop()
 }
 

@@ -287,10 +287,10 @@ async function main(): Promise<void> {
         // first book on the last hit, the last by ~120.8); then he falls into a bed and wakes there (~2:01), a ball,
         // and is still in that bed when the station's lights come up on the accent.
         const bed = show.where(WAKE + 0.8)
-        const inBed = [WAKE + 0.8, 124, ACT2 - 0.05, ACT2 + 0.3].map((t) => show.where(t))
-        check('liftoff: a ghost in the tesseract knocking the books over, then awake in a bed by 2:01, still there when the lights come up',
+        const inBed = [WAKE + 0.8, 126, ACT2 - 0.05, ACT2 + 0.3].map((t) => show.where(t))
+        check('liftoff: a ghost in the tesseract knocking the books over, then, after the fall out of it, awake in a bed by about 2:05, still there when the lights come up',
           show.at(chaseBeat(190)).ball.ghost && show.at(LAST_HIT).ball.ghost && show.at(120.8).ball.ghost &&
-          !show.at(WAKE + 0.05).ball.ghost && WAKE <= 121.5 && IN_BED < WAKE &&
+          !show.at(WAKE + 0.05).ball.ghost && WAKE <= 125 && IN_BED < WAKE &&
           inBed.every((q) => Math.hypot(q[0] - bed[0], q[1] - bed[1]) < 0.06))
         // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
         // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.

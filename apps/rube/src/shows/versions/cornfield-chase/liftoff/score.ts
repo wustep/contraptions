@@ -45,7 +45,7 @@ import { credits } from './credits'
  *   b134    ignition; the rocket through the cloud; the fairing on beat 148
  *   b148    orbit and the ring
  *   b166    Miller's world
- *   b183    Gargantua, the tesseract, and the last hit on beat 191
+ *   b180    Gargantua (a slingshot, two turns), the tesseract, the last hit on beat 191, the watch, the fall into bed
  */
 
 /** Show time at which the rocket is inside the cloud and the stage changes universe. */
@@ -75,7 +75,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const lift = earth.placed[earth.placed.length - 1]
   const space = lay(earth.next, [
     { part: endurance, end: beat(166) },
-    { part: miller, end: beat(183) },
+    { part: miller, end: beat(180) },
     { part: gargantua, end: ACT2 },
   ])
   // Act II: No Time for Caution. Inside Cooper Station, and then out of it.

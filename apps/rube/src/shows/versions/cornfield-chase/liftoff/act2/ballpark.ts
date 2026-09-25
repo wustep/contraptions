@@ -5,6 +5,7 @@ import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '..
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
 import { cue } from '../music'
 import { BALL, DUST, MURPH } from '../worlds'
+import { drawWatch } from '../earth/watch'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -174,7 +175,7 @@ function mittArm(T: number): number {
   if (u < 1) return BETA * u * u
   const since = T - TOSS - FLIP
   // Against the stop: a rebound. Then it lies back down.
-  const bounce = 0.1 * Math.exp(-since / 0.09) * Math.abs(Math.sin(since * 34))
+  const bounce = 0.08 * Math.exp(-since / 0.22) * Math.abs(Math.sin(since * 15))
   const down = smooth(T, TOSS + 0.8, TOSS + 1.7)
   return (BETA - bounce) * (1 - down)
 }
@@ -394,7 +395,7 @@ function doorAngle(T: number): number {
   const u = (T - HATCH) / DOOR_T
   if (u < 1) return DOOR_MAX * easeInOutSine(u)
   const since = T - HATCH - DOOR_T
-  return DOOR_MAX - 0.03 * Math.exp(-since / 0.1) * Math.abs(Math.sin(since * 30))
+  return DOOR_MAX - 0.022 * Math.exp(-since / 0.2) * Math.abs(Math.sin(since * 14))
 }
 /** A point on the trapdoor, `d` from its hinge and `h` above its face. */
 function doorPoint(T: number, d: number, h = 0): Pt {
@@ -445,7 +446,7 @@ function chairLean(T: number): number {
   const e = (1 - Math.cos(Math.PI * u)) / 2
   // The crash shakes the house, and the chair in it.
   const w = T - WINDOW
-  const shake = w > 0 && w < 0.6 ? 0.025 * Math.exp(-w / 0.14) * Math.sin(w * 38) : 0
+  const shake = w > 0 && w < 1.4 ? 0.02 * Math.exp(-w / 0.3) * Math.sin(w * 15) : 0
   return a0 + (a1 - a0) * e + shake
 }
 /** The rockers' curve, as a circle this far over the floor (at full size): the chair rolls on it. */
@@ -713,9 +714,9 @@ export const ballpark = part<BallparkState>(
       // close keys are centred so that the whole room reads without Zoom, and with it (1.5 closer, the same centre)
       // her chair and the two of them are still in.
       { t: HATCH + 0.3, cells: 3.6, hold: U(A_HOUSE, -0.7, -1.1), w: 1 },
-      { t: SEAT, cells: 3.25, hold: U(A_HOUSE, -0.56, -0.72), w: 1 },
-      { t: DOWN, cells: 3.15, hold: U(A_HOUSE, -0.56, -0.66), w: 1 },
-      { t: INCAR, cells: 3.2, hold: U(A_HOUSE, -0.52, -0.68), w: 1 },
+      { t: SEAT, cells: 3.15, hold: U(A_HOUSE, -0.75, -0.7), w: 1 },
+      { t: DOWN, cells: 2.9, hold: U(A_HOUSE, -0.82, -0.62), w: 1 },
+      { t: INCAR, cells: 3.0, hold: U(A_HOUSE, -0.62, -0.66), w: 1 },
       // The hub's first framing: back a little, the house and the car in it.
       { t: slot.end, cells: 4.8, hold: U(A_HOUSE, 0.2, -1), w: 1 },
     ]
@@ -819,7 +820,7 @@ function drawField(p: p5, c: Ctx, T: number): void {
     })
   }
   // First base, and home plate: bone on the clay. The bag is a treadle: it goes down under the ball.
-  const bag = knock(T - IN, 0.14)
+  const bag = knock(T - IN, 0.24)
   standOnRim(p, k, AX, along(0), () => {
     solid(p, ink, weight * 0.7, DUST.bone)
     p.rect(0, X(-0.04 + 0.03 * bag), X(0.36), X(0.08), X(0.025))
@@ -962,8 +963,8 @@ function drawMachine(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   // Each notch of the throttle: the motor coughs and the head jumps on its tripod.
-  const notch = Math.max(knock(T - SPIN1, 0.1), knock(T - SPIN2, 0.1))
-  const jolt = 0.05 * notch * Math.sin((T - (T > SPIN2 ? SPIN2 : SPIN1)) * 60)
+  const notch = Math.max(knock(T - SPIN1, 0.22), knock(T - SPIN2, 0.22))
+  const jolt = 0.045 * notch * Math.sin((T - (T > SPIN2 ? SPIN2 : SPIN1)) * 22)
   standOnRim(p, k, AX, A_PITCH, () => {
     for (const at of [SPIN1, SPIN2]) {
       const age = T - at
@@ -1129,7 +1130,7 @@ function drawBat(p: p5, c: Ctx, T: number): void {
       p.line(X(drum[0] + Math.cos(a) * 0.07), X(drum[1] + Math.sin(a) * 0.07), X(drum[0] + Math.cos(a) * 0.13), X(drum[1] + Math.sin(a) * 0.13))
     }
     // The pawl, clicking over a tooth each time.
-    const click = Math.max(knock(T - COCK1, 0.08), knock(T - COCK2, 0.08))
+    const click = Math.max(knock(T - COCK1, 0.16), knock(T - COCK2, 0.16))
     p.line(X(drum[0] + 0.02), X(drum[1] - 0.22), X(drum[0] - 0.04), X(drum[1] - 0.13 - 0.03 * click))
     // The bat, hung by its knob.
     p.push()
@@ -1394,7 +1395,7 @@ function drawTree(p: p5, c: Ctx, T: number): void {
     solid(p, ink, weight, DUST.leaf)
     for (const [lx, ly, r] of lobes) {
       const d = Math.hypot(TREE_CROWN[0] - TREE_X - lx, TREE_CROWN[1] - ly)
-      const jolt = d < 0.8 ? 0.06 * shake * Math.sin(since * 40) : 0
+      const jolt = d < 0.8 ? 0.06 * shake * Math.sin(since * 16) : 0
       p.circle(X(lx + jolt), X(ly - jolt), X(r * 2))
     }
     p.noStroke()
@@ -1587,7 +1588,7 @@ function drawAttic(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   // The trunk the ball runs into; it jolts, and the lid claps.
-  const hit = knock(T - HATCH, 0.12)
+  const hit = knock(T - HATCH, 0.22)
   const jx = -0.03 * hit
   const { x0, x1, h } = TRUNK
   solid(p, ink, weight, mixHex(DUST.wood, DUST.rust, 0.45))
@@ -1595,7 +1596,7 @@ function drawAttic(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.8, DUST.wood)
   p.push()
   p.translate(X(x0 + jx), X(H_LOFT - h))
-  p.rotate(-0.12 * hit * Math.abs(Math.sin((T - HATCH) * 30)))
+  p.rotate(-0.12 * hit * Math.abs(Math.sin((T - HATCH) * 14)))
   p.rect(X((x1 - x0) / 2), X(-0.04), X(x1 - x0 + 0.02), X(0.08), X(0.02))
   p.pop()
   outline(p, ink, weight * 0.6)
@@ -1632,43 +1633,20 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.5, DUST.rust)
   p.rect(X(0.02), X(0.115), X(0.16), X(0.025))
   p.pop()
-  drawWatch(p, c, T, shake)
+  drawHisWatch(p, c, T, shake)
 }
 
 /**
- * On the wall over Murph's chair, hung by its strap from a nail: his old wristwatch, the one he gave her. Its second
- * hand still goes, a tick a beat of the organ. The crash upstairs sets it swinging a little on its nail.
+ * On the wall over Murph's chair, hung by its strap from a nail: his old wristwatch, the one he gave her (the shared
+ * drawing, `earth/watch.ts`). Its second hand still goes, a tick a beat of the organ. The crash upstairs sets it
+ * swinging a little on its nail, and as he comes down through the trapdoor to her its glass catches the light from
+ * the window: a glint, held while he lands, fading as they meet.
  */
-const WATCH_NAIL: Pt = [-1.8, -1.2]
-function drawWatch(p: p5, c: Ctx, T: number, shake: number): void {
-  const { k, ink, weight } = c
-  const X = (v: number) => v * k
-  const [nx, ny] = WATCH_NAIL
-  p.push()
-  p.translate(X(nx), X(ny))
-  p.rotate(shake * 0.6)
-  // The strap, over the nail and down both sides of the face: worn leather.
-  solid(p, ink, weight * 0.5, DUST.wood)
-  p.rect(X(-0.03), X(0.08), X(0.035), X(0.16), X(0.01))
-  p.rect(X(0.03), X(0.08), X(0.035), X(0.16), X(0.01))
-  p.rect(0, X(0.005), X(0.095), X(0.03), X(0.012))
-  // The face: a small rounded case, a bone dial, and its hands.
-  const fy = 0.2
-  solid(p, ink, weight * 0.6, DUST.tin)
-  p.rect(0, X(fy), X(0.14), X(0.15), X(0.035))
-  solid(p, ink, weight * 0.4, DUST.bone)
-  p.rect(0, X(fy), X(0.105), X(0.115), X(0.026))
-  const beats = (T - cue(0)) / (cue(1) - cue(0))
-  const sec = ((Math.floor(beats) % 60) / 60) * Math.PI * 2 - Math.PI / 2
-  outline(p, ink, weight * 0.45)
-  p.line(0, X(fy), X(0.028 * Math.cos(-1.1)), X(fy + 0.028 * Math.sin(-1.1)))
-  p.line(0, X(fy), X(0.036 * Math.cos(0.4)), X(fy + 0.036 * Math.sin(0.4)))
-  outline(p, DUST.rust, weight * 0.3)
-  p.line(0, X(fy), X(0.04 * Math.cos(sec)), X(fy + 0.04 * Math.sin(sec)))
-  p.pop()
-  // The nail.
-  solid(p, ink, weight * 0.4, ink)
-  p.rect(X(nx), X(ny), X(0.02), X(0.02))
+const WATCH_NAIL: Pt = [-1.66, -1.39]
+function drawHisWatch(p: p5, c: Ctx, T: number, shake: number): void {
+  const glint = smooth(T, cue(153.35), cue(153.9)) * (1 - smooth(T, cue(154.7), cue(155.6)))
+  const seconds = Math.floor((T - cue(0)) / (cue(1) - cue(0))) % 60
+  drawWatch(p, c.k, c.ink, c.weight, WATCH_NAIL[0], WATCH_NAIL[1], T, { mode: 'hang', r: 0.11, swing: shake * 0.6, glint, seconds })
 }
 
 function drawChair(p: p5, c: Ctx, T: number): void {

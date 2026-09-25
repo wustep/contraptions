@@ -636,6 +636,17 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 .stage-words .cast .who { text-align: right; }
 .stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
+/* The ball they are: a small disc with the show's ink edge, sitting on the line. */
+.stage-words .cast .swatch {
+  display: inline-block;
+  width: 0.78em;
+  height: 0.78em;
+  margin-right: 0.45em;
+  border-radius: 50%;
+  vertical-align: -0.08em;
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) rgba(236, 229, 211, 0.85), 0 0 calc(var(--u) * 0.9) rgba(244, 238, 223, 0.25);
+}
+.stage-words .cast .swatch.slab { width: 0.3em; height: 0.95em; border-radius: 1px; vertical-align: -0.16em; margin-left: 0.24em; margin-right: 0.69em; }
 .stage-words .note { font-size: calc(var(--u) * 1.95); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
 .stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
 .stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }

@@ -79,7 +79,7 @@ function handleAt(t: number): number {
   if (t < LAND) return SET
   if (t < BOTTOM) return SET + (PUMPED - SET) * easeInQuad((t - LAND) / (BOTTOM - LAND))
   const up = t - BOTTOM
-  return PUMPED + (SET - PUMPED) * gather(up, 0.03) - 0.12 * Math.exp(-up / 0.2) * Math.sin(up * 20) * smooth(up, 0, 0.08)
+  return PUMPED + (SET - PUMPED) * gather(up, 0.03) - 0.08 * Math.exp(-up / 0.4) * Math.sin(up * 11) * smooth(up, 0, 0.08)
 }
 /** A point along the handle, `d` out from the pivot, lifted `lift` off its top. */
 function onHandle(a: number, d: number, lift: number): Pt {
@@ -92,7 +92,7 @@ function plankAt(t: number): number {
   if (t < OVER) return -TILT
   const u = easeInQuad(clamp((t - OVER) / (THUMP - OVER)))
   const after = t - THUMP
-  const bounce = after > 0 ? -0.07 * Math.exp(-after / 0.1) * Math.sin(after * 30) : 0
+  const bounce = after > 0 ? -0.05 * Math.exp(-after / 0.22) * Math.sin(after * 14) : 0
   return -TILT + 2 * TILT * u + bounce
 }
 
@@ -164,9 +164,12 @@ const lineY = (x: number): number => LINE_A[1] + ((x - LINE_A[0]) / (LINE_B[0] -
 /** The basket's swing on its hanger: still, a lurch as it starts down, a big swing forward when it fetches up against the pole. */
 function swingAt(t: number): number {
   const start = t - CATCH
-  const go = start > 0 ? -0.18 * Math.exp(-start / 0.35) * Math.sin(start * 9) : 0
+  const go = start > 0 ? -0.15 * Math.exp(-start / 0.5) * Math.sin(start * 6.5) : 0
   const hit = t - POLE
-  const fling = hit > 0 ? 0.9 * Math.exp(-hit / 0.5) * Math.sin(Math.min(hit * 7, Math.PI / 2 + hit * 5)) : 0
+  // Up to the top of the fling as sharp as the knock; the swing back after it slower, a heavy basket on a long hanger.
+  const top = Math.PI / 2 / 7
+  const phase = hit < top ? hit * 7 : Math.PI / 2 + (hit - top) * 4.2
+  const fling = hit > 0 ? 0.9 * Math.exp(-hit / 0.8) * Math.sin(phase) : 0
   return go + fling
 }
 
@@ -306,7 +309,7 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   p.endShape(p.CLOSE)
   p.pop()
   const click = lastOf(TEETH, t)
-  const pawl = click.ago < 0.2 ? 0.35 * Math.exp(-click.ago / 0.06) : 0
+  const pawl = click.ago < 0.45 ? 0.35 * Math.exp(-click.ago / 0.12) : 0
   outline(p, ink, weight)
   p.line(X(TOWER + 0.32), X(TOWER_TOP - 0.1), X(TOWER + 0.18 - pawl * 0.05), X(TOWER_TOP - 0.02 - pawl * 0.12))
   // The wheel, on its shaft over the head: blades as a fan, turning.

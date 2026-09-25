@@ -83,7 +83,8 @@ export function stalk(p: p5, k: number, ink: string, weight: number, s: Stalk): 
   p.stroke(ink)
   p.strokeWeight(w * 0.7)
   for (let j = -2; j <= 2; j++) {
-    const a = -Math.PI / 2 + j * 0.35 + bend + Math.sin(shake * 30 + j) * 0.25 * Math.min(1, shake * 3)
+    // A heavy head: it swings a couple of slow times as the knock dies away, rather than chattering.
+    const a = -Math.PI / 2 + j * 0.35 + bend + Math.sin(shake * 13 + j * 0.6) * 0.22 * Math.min(1, shake * 3)
     const l = s.h * (0.1 + (2 - Math.abs(j)) * 0.02)
     p.line(tx * k, ty * k, (tx + Math.cos(a) * l) * k, (ty + Math.sin(a) * l) * k)
   }

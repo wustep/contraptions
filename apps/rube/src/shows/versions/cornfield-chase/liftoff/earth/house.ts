@@ -5,6 +5,7 @@ import { FLOOR, R, laneAt, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, scenery, smooth, type Ctx, type Way } from '../kit'
 import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
+import { drawWatch, WATCH_ON_SHELF } from './watch'
 
 /**
  * The farmhouse, cut open: Murph's room upstairs, the stairs, the kitchen
@@ -262,8 +263,13 @@ export const GHOST_REST: Pt = (() => {
   return [row[row.length - 1].x + 0.36, TOP - R]
 })()
 
-/** The model lander on the top shelf, left of the row, and the notes the lander and the books fall on (show seconds). */
-export const LANDER_X = -0.13
+/**
+ * The model lander on the top shelf, left of the row (between the watch and the first book), and the notes the lander
+ * and the books fall on (show seconds).
+ */
+export const LANDER_X = -0.05
+/** Where the watch stands: `WATCH_ON_SHELF`, placed so its strap's tail stays inside the case. */
+const WATCH_X = WATCH_ON_SHELF[0]
 export const FALL_NOTES = { lander: 5.126, books: SHELF_HITS }
 
 /** When the ball wonders (show seconds), and where the question rises, from its rest: after the lander is down, in the middle of the row, and as the last book starts to go. */
@@ -405,9 +411,9 @@ export function bookAt(b: Fallen, since: number): { x: number; y: number; a: num
     const u = f / T
     return { x: x0 + (b.land[0] - x0) * u, y: y0 + 0.5 * G_EARTH * f * f, a: b.turn * (0.18 + (Math.PI / 2 - 0.18) * easeInOutSine(u)) }
   }
-  // Down: a knock and a settle.
+  // Down: a knock and a slow settle.
   const after = f - T
-  const rock = Math.exp(-after / 0.12) * Math.sin(after * 40) * 0.08
+  const rock = Math.exp(-after / 0.25) * Math.sin(after * 18) * 0.06
   return { x: b.land[0], y: b.land[1], a: b.turn * (Math.PI / 2 + rock) }
 }
 
@@ -431,7 +437,7 @@ function toppleAt(b: Fallen, since: number): { x: number; y: number; a: number }
     return { x: from.x + (b.land[0] - from.x) * u, y: from.y + 0.5 * G_EARTH * f * f, a: KNOCK_ANGLE + (Math.PI / 2 - KNOCK_ANGLE) * easeInOutSine(u) }
   }
   const after = f - T
-  const rock = Math.exp(-after / 0.12) * Math.sin(after * 40) * 0.08
+  const rock = Math.exp(-after / 0.25) * Math.sin(after * 18) * 0.06
   return { x: b.land[0], y: b.land[1], a: Math.PI / 2 + rock }
 }
 
@@ -469,11 +475,11 @@ function flapSwing(lane: Lane, from: number, to: number): { t0: number; a: Float
       else if (rho < FLAP_L + r) need = phi + Math.acos((FLAP_L * FLAP_L + rho * rho - r * r) / (2 * FLAP_L * rho))
     }
     need = Math.max(0, need)
-    w += (-240 * Math.sin(a) - 5 * w) / FLAP_RATE
+    w += (-120 * Math.sin(a) - 4 * w) / FLAP_RATE
     a += w / FLAP_RATE
     if (a < 0) {
       a = 0
-      w = -w * 0.3
+      w = -w * 0.18
     }
     if (a < need) {
       a = need
@@ -530,17 +536,8 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
     book(p, c, bx, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOK_COLORS[(j + 2) % 6], 0)
   }
 
-  // The watch, left on top of the case: a round face, its strap, the hand going round.
-  const wx = 1.45
-  const wy = CAP - 0.06 - 0.05
-  solid(p, ink, weight * 0.8, DUST.wood)
-  p.rect(X(wx - 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  p.rect(X(wx + 0.13), X(wy + 0.03), X(0.14), X(0.04), X(0.01))
-  solid(p, ink, weight * 0.8, DUST.bone)
-  p.ellipse(X(wx), X(wy), X(0.13), X(0.1))
-  outline(p, ink, weight * 0.6)
-  const sec = Math.floor(t) * (Math.PI / 30) - Math.PI / 2
-  p.line(X(wx), X(wy), X(wx + Math.cos(sec) * 0.045), X(wy + Math.sin(sec) * 0.035))
+  // Cooper's watch, stood on the left end of the top shelf, keeping time; it never falls.
+  drawWatch(p, k, ink, weight, WATCH_X, TOP, t, { mode: 'stand' })
 
   // The lander model: a shiver, then over the edge on the first note, and down on its side.
   lander(p, c, s.lander.x, t - s.lander.hit)
@@ -614,42 +611,65 @@ function sift(p: p5, c: Ctx, x: number, top: number, w: number, u: number): void
 
 /** The model lander: gold foil, four legs, the ascent stage on top. Knocked at since = 0, it goes over and lies on its side. */
 function lander(p: p5, c: Ctx, x0: number, since: number): void {
-  const { k, ink, weight } = c
   let x = x0
   let y = TOP
   let a = shiver(since)
   if (since >= 0) {
+    // It rocks back off its front legs and goes over the edge toward us, falling nearly straight down in front of the
+    // watch rather than across it.
     const tip = 0.25
-    if (since < tip) a = -0.5 * easeOutCubic(since / tip)
+    if (since < tip) a = -0.35 * easeOutCubic(since / tip)
     else {
       const f = since - tip
       const T = dropTime(FLOOR - TOP)
       const u = Math.min(1, f / T)
-      x = x0 - 0.18 * u
+      x = x0 - 0.08 * u
       y = TOP + Math.min(FLOOR - TOP, 0.5 * G_EARTH * f * f)
-      a = -0.5 - (Math.PI / 2 - 0.5 + 0.35) * easeInOutSine(u)
-      if (f > T) a += Math.exp(-(f - T) / 0.1) * Math.sin((f - T) * 30) * 0.12
+      a = -0.35 - (Math.PI / 2 - 0.35 + 0.35) * easeInOutSine(u)
+      if (f > T) a += Math.exp(-(f - T) / 0.22) * Math.sin((f - T) * 15) * 0.09
     }
   }
+  drawLander(p, c, x, y, a)
+}
+
+/**
+ * The model lunar lander, its feet at (x, y) and turned by `a`, in the caller's cells: a gold-foil descent stage
+ * on four splayed legs with round footpads, and the faceted ascent stage on top, its window and its antenna.
+ */
+export function drawLander(p: p5, c: { k: number; ink: string; weight: number }, x: number, y: number, a = 0): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
   p.push()
-  p.translate(x * k, y * k)
+  p.translate(X(x), X(y))
   p.rotate(a)
+  // The far pair of legs, fainter, then the near pair splayed wide, each on its footpad, with a strut.
+  outline(p, ink, weight * 0.45)
+  for (const s of [-1, 1]) p.line(X(s * 0.025), X(-0.075), X(s * 0.045), X(-0.008))
   outline(p, ink, weight * 0.7)
   for (const s of [-1, 1]) {
-    p.line(s * 0.04 * k, -0.07 * k, s * 0.09 * k, 0)
-    p.line(s * 0.11 * k, 0, s * 0.07 * k, 0)
+    p.line(X(s * 0.045), X(-0.08), X(s * 0.078), X(-0.01))
+    p.line(X(s * 0.018), X(-0.07), X(s * 0.062), X(-0.035))
   }
+  solid(p, ink, weight * 0.55, DUST.tin)
+  for (const s of [-1, 1]) p.ellipse(X(s * 0.08), X(-0.006), X(0.03), X(0.013))
+  // The descent stage: an octagon in gold foil, crinkled.
   solid(p, ink, weight * 0.8, DUST.corn)
-  p.rect(0, -0.08 * k, 0.12 * k, 0.06 * k)
+  p.beginShape()
+  for (const [u, v] of [[-0.055, -0.07], [0.055, -0.07], [0.062, -0.085], [0.062, -0.125], [0.055, -0.138], [-0.055, -0.138], [-0.062, -0.125], [-0.062, -0.085]] as Pt[]) p.vertex(X(u), X(v))
+  p.endShape(p.CLOSE)
+  outline(p, ink, weight * 0.35)
+  p.line(X(-0.035), X(-0.075), X(-0.02), X(-0.133))
+  p.line(X(0.02), X(-0.075), X(0.035), X(-0.133))
+  // The ascent stage: faceted, a window on its face, the antenna up top.
   solid(p, ink, weight * 0.8, DUST.bone)
   p.beginShape()
-  p.vertex(-0.05 * k, -0.11 * k)
-  p.vertex(0.05 * k, -0.11 * k)
-  p.vertex(0.035 * k, -0.17 * k)
-  p.vertex(-0.035 * k, -0.17 * k)
+  for (const [u, v] of [[-0.048, -0.138], [0.05, -0.138], [0.056, -0.17], [0.032, -0.2], [-0.03, -0.2], [-0.054, -0.172]] as Pt[]) p.vertex(X(u), X(v))
   p.endShape(p.CLOSE)
-  outline(p, ink, weight * 0.6)
-  p.line(0, -0.17 * k, 0, -0.2 * k)
+  solid(p, ink, weight * 0.4, '#3A3F3A')
+  p.triangle(X(0.012), X(-0.182), X(0.04), X(-0.17), X(0.02), X(-0.158))
+  outline(p, ink, weight * 0.55)
+  p.line(X(-0.012), X(-0.2), X(-0.018), X(-0.235))
+  p.line(X(-0.03), X(-0.232), X(-0.006), X(-0.238))
   p.pop()
 }
 
@@ -747,7 +767,7 @@ function rigAt(s: ToyState, t: number): Rig {
     const u = lurch(since)
     x += s.stride * u
     key += (Math.PI / 2) * u
-    pitch += 0.03 * Math.exp(-since / 0.1) * Math.sin(since * 30)
+    pitch += 0.025 * Math.exp(-since / 0.2) * Math.sin(since * 16)
   }
   const tip = DUMPED * easeInOutSine(clamp((t - TIP[0]) / (TIP[1] - TIP[0])))
   return { x, floor: TOY_FLOOR, pitch, tip, key }

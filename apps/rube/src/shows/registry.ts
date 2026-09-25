@@ -70,8 +70,11 @@ export interface TitleCard {
   key: string
   /** What they did: a small line in capitals over the names. */
   role?: string
-  /** The names. Two parts are a line of a cast list: a name, and who they are. */
-  names: (string | [string, string])[]
+  /**
+   * The names. Two parts are a line of a cast list: a name, and who they are. A third is a colour: a small round
+   * swatch set before who they are (in a show of balls, the ball they are), or 'slab:' and a colour for a small bar.
+   */
+  names: (string | [string, string] | [string, string, string])[]
   /** Fine print under the names. */
   notes?: string[]
   /** The show's own name: larger, and spaced out. */

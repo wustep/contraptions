@@ -358,7 +358,7 @@ function plan(begin: number, end: number): Plan {
     const trayBall = (tt: number): Pt => {
       const s = tramAt(tt)
       // Settles after the drop; rocks back as the car pulls away, and forward into the gate as it stops.
-      const settle = 0.05 * knock(tt - tTray, 0.09) * Math.abs(Math.sin((tt - tTray) * 30))
+      const settle = 0.04 * knock(tt - tTray, 0.2) * Math.abs(Math.sin((tt - tTray) * 14))
       const go = tt > tGo ? -0.05 * Math.sin(Math.min(1, (tt - tGo) / 0.35) * Math.PI) : 0
       return up(s, TRAY_BALL[0] + go, TRAY_BALL[1] - settle)
     }
@@ -646,7 +646,7 @@ function drawSluice(p: p5, c: Ctx, kb: number): void {
   for (const q of pts) p.vertex(X(q[0]), X(q[1]))
   p.endShape()
   const hit = smooth(kb, 115.97, 116.13)
-  const bounce = kb > 116.13 ? 0.12 * Math.exp(-(kb - 116.13) / 0.08) * Math.sin((kb - 116.13) * 40) : 0
+  const bounce = kb > 116.13 ? 0.09 * Math.exp(-(kb - 116.13) / 0.2) * Math.sin((kb - 116.13) * 17) : 0
   const lean = (Math.PI / 2 - 0.08) * hit - bounce
   standing(p, k, S_V, () => {
     // The valve box in the ground, its wheel turned by the paddle's shaft.
@@ -833,7 +833,7 @@ function drawNoria(p: p5, s: Plan, c: Ctx, t: number, kb: number): void {
     // The clutch: a weighted lever by the sump. Up while the wheel waits; the scoop takes the ball's weight and it drops.
     const drop = smooth(kb, CLUTCH - 0.02, CLUTCH + 0.1)
     const la = -1.05 + 0.85 * drop
-    const bounce = drop > 0.99 ? 0.06 * knock(t - s.b(CLUTCH) - 0.1, 0.1) : 0
+    const bounce = drop > 0.99 ? 0.05 * knock(t - s.b(CLUTCH) - 0.1, 0.24) : 0
     outline(p, ink, weight * 1.1)
     const lx = -0.62
     const tip: Pt = [lx - Math.cos(la - bounce) * 0.4, -0.02 + Math.sin(la - bounce) * 0.4]
@@ -911,7 +911,7 @@ function flapAngle(s: Plan, k: number, t: number): number {
   const u = (t - at0) / 0.25
   if (u < 1) return (Math.PI / 2) * u * u
   const since = t - s.b(120 + k)
-  return Math.PI / 2 - 0.1 * Math.exp(-since / 0.07) * Math.abs(Math.sin(since * 38))
+  return Math.PI / 2 - 0.08 * Math.exp(-since / 0.17) * Math.abs(Math.sin(since * 16))
 }
 
 /** The level in pool k: full until its flap goes, then drained to a running skim. */
@@ -1041,7 +1041,7 @@ function overChannel(p: p5, s: Plan, c: Ctx, t: number): void {
 
 /** How far the tray's gate has dropped, and how much corn is in the car (0..3). */
 function trayGate(s: Plan, t: number): number {
-  return smooth(t, s.b(127) - 0.02, s.b(127) + 0.1)
+  return smooth(t, s.b(127) - 0.02, s.b(127) + 0.16)
 }
 function cornIn(s: Plan, t: number): number {
   let n = 0
@@ -1053,12 +1053,12 @@ function tramPitch(s: Plan, t: number): number {
   // Squats back as it pulls away on 123, dips forward as it stops on 127, a shiver at each bin.
   let a = 0
   const go = t - s.b(123)
-  if (go > 0) a -= 0.035 * Math.exp(-go / 0.35) * Math.sin(Math.min(Math.PI, go * 9))
+  if (go > 0) a -= 0.035 * Math.exp(-go / 0.45) * Math.sin(Math.min(Math.PI, go * 6))
   const st = t - s.b(127)
-  if (st > -0.3) a += 0.045 * Math.exp(-Math.max(0, st) / 0.25) * (st < 0 ? (st + 0.3) / 0.3 : Math.cos(st * 14))
+  if (st > -0.3) a += 0.04 * Math.exp(-Math.max(0, st) / 0.4) * (st < 0 ? (st + 0.3) / 0.3 : Math.cos(st * 9))
   for (let i = 0; i < 3; i++) {
     const g = t - s.b(124 + i)
-    if (g > 0 && g < 0.6) a += 0.012 * Math.exp(-g / 0.12) * Math.sin(g * 40)
+    if (g > 0 && g < 1.2) a += 0.01 * Math.exp(-g / 0.24) * Math.sin(g * 18)
   }
   return a
 }
@@ -1181,7 +1181,7 @@ function drawBins(p: p5, s: Plan, c: Ctx, t: number): void {
   for (let i = 0; i < 3; i++) {
     const s0 = s.bins[i]
     const go = s.b(124 + i)
-    const open = smooth(t, go - 0.06, go) * (1 - smooth(t, go + 0.26, go + 0.34))
+    const open = smooth(t, go - 0.06, go) * (1 - smooth(t, go + 0.28, go + 0.62))
     const left = 1 - 0.35 * smooth(t, go, go + 0.3)
     standing(p, k, s0, () => {
       const top = -1.95
@@ -1273,7 +1273,7 @@ function slatAngle(s: Plan, i: number, t: number): number {
     return (Math.PI / 2) * (0.25 * u + 0.75 * u * u * u)
   }
   const since = t - beat
-  return Math.PI / 2 - 0.12 * Math.exp(-since / 0.08) * Math.abs(Math.sin(since * 34))
+  return Math.PI / 2 - 0.09 * Math.exp(-since / 0.18) * Math.abs(Math.sin(since * 15))
 }
 /** The paddle hanging in the ball's way: turned by the ball's own push, then swung up clear. */
 function paddleAngle(s: Plan, i: number, t: number): number {

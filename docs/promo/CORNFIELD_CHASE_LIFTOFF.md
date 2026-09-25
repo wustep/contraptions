@@ -75,7 +75,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 | 88.8 s | the farm → the dark | The world changes inside the cloud's white-out. The two worlds share cells, so neither ball moves. |
 | 103.8 s | the ring → Miller | A whip through the sphere. Her ring span ends out of shot and her orbit span starts out of shot. |
 | 113 to 115 s | Miller → Gargantua | One Ranger the whole way, from Miller's water to the claw. |
-| 118 to 127 s | the tesseract → the bed | Inside the tesseract, the lattice folds in on the ghost, he floats down through the dark, and a dim room comes up round a bed: Murph's room as the station keeps it, at night. He lands in the pillow and wakes (121.45 s). The camera comes in on him slowly through the decay and arrives on the framing Act II opens on. |
+| 118 to 127.5 s | the tesseract → the bed | The tesseract gets its time: the book knock, the watch, and a grand pull-back to its endless rooms. Then a 1.4 s bridge: the rooms fold away above him and he falls back through them, gold threads streaming past, drifts through the black toward a warm light that opens as a circle into the dim room, and settles into the pillow (124.3 s). He wakes (124.5 s), and the slow push-in holds to the scored accent. |
 
 **Act II**
 
@@ -153,11 +153,11 @@ The music is the only clock.
 | beat 116 | chase | the gantry | They roll into the cage together, and it climbs the tower, lighting a lamp per eighth. Along the arm and into the rocket's nose window side by side on beat 124. The lamps go out one per beat while the camera pushes in on the two of them. |
 | beat 134 | the pedal | the rocket | Ignition, then liftoff on the downbeat of 136, and a surge through the flame on each beat of the climb. On beat 142 it goes into the cloud: a flash of white with the rocket's shadow in it, and out into the dark in the other ink. Staging on 144, the second stage on 145, the turn into orbit. On 147 the fairing splits and they float out. |
 | beat 148 | full organ | the ring | The mass driver's beacon calls them in. The cradle takes both, its coils fire on the eighths, and they lob to the ring station, a ring of twelve modules, and match its spin. The jaws close on both on beat 156, the film's spinning dock. Then the airlock, and a run inside the spinning ring. On the downbeat of 160 the trapdoor drops him into the catapult's cup and shuts before she gets there. She stays on the door a beat, then runs on round the ring. The catapult throws him into the sphere past a small ringed planet. |
-| beat 166 | full organ | Miller | Out of the far side of the sphere onto a sheet of shallow water. He moves on the 1.25 s tick, two beats: a landed Ranger's legs, two buoys, and the slab robot cartwheeling one slab per tick. Up in orbit she waits on the ring. She laps it once per eighth and cuts a tally mark each lap, and her gold fades. The "mountains" on the horizon are a wave. The landed Ranger lifts off on beat 181 and picks the slab robot up on 182½, and the wave throws him off its crest on 183. |
-| beat 184 | climax | Gargantua | The same Ranger, drawn away toward the hole as it climbs, catches him on a tether. There is one Ranger from Miller's water to the claw. The slab robot falls in first. He is swung down through the disk, behind the dark, up through the disk, and let go, and he falls to the centre. |
-| beat 189 to 190 | climax | the tesseract | The dark opens round him and he is a ghost, behind Murph's bookcase in a lattice of bookcases. He comes down onto the top board behind the model lander. |
-| 118.8 to 120.8 | the last hit | the tesseract | **Still in the tesseract, the ghost knocks the books over**, the film's bookshelf beat: the lander on beat 190, then the ten books along the back of the row in the opening's order, the Morse rhythm three times as fast, the first on the last hit (119.409). From behind, each tips away from us into the room. It was him all along. |
-| 120.8 to 127 | the decay | the bed | The lattice folds in on him, he floats down through the dark, and he lands in a bed in a dim room (121.3 s): Murph's room as the station keeps it, at night. He wakes on 121.45, a solid ball again: he stirs, and the quilt slides. The camera comes in on him slowly through the decay. |
+| beat 166 | full organ | Miller | Out of the far side of the sphere onto a sheet of shallow water. He moves on the 1.25 s tick, two beats: a landed Ranger's legs, two buoys, and TARS cartwheeling one slab per tick. Up in orbit Brand waits on the ring, a tally mark a lap, her blue dimming with the years. The "mountains" on the horizon are a wave. The landed Ranger lifts off on beat 178 and picks TARS up on 179½, and the wave throws him off its crest on 180. |
+| beat 180 to 189 | climax | Gargantua | The slingshot: the same Ranger catches him on a tether (181), TARS lets go (182) and is swallowed (183½). Two turns round the black hole, spiralling in and speeding up: down through the disk (183), behind the dark with its light wrapping the rim (184), the wide shot with disk, dark and halo whole, up through the disk (185), over the top with the halo filling the frame (186), down and behind again, a quarter-turn an eighth, and the engine burns on the loudest eighth (187½). Release on 188, and the fall to the centre on 189. |
+| beat 189 to 190 | climax | the tesseract | The dark opens round him and he is a ghost, behind Murph's bookcase in a lattice of bookcases. He comes down onto the top board behind the model lander, and pushes it off on 190. |
+| 119.4 to 122.9 | the last hit | the tesseract | **Still in the tesseract, the ghost knocks the books over**, the film's bookshelf beat: the ten books along the back of the row in the opening's order, the Morse rhythm three times as fast, the first on the last hit (119.409). Then he glides back to Cooper's watch at the end of the row, and **the watch ticks the message** on 194½, 195 and 195½, gold threads of light running in along the board to it on each tick. Then the grand pull-back: Murph's bookcase is one of a lattice of lit bookcases, each with its row and its watch, on and on into depth. |
+| 122.9 to 127.5 | the decay | the bed | The fall out of the tesseract, and the bed: he lands in the pillow in a dim room (124.3 s), Murph's room as the station keeps it, at night, and wakes on 124.5, a solid ball again: he stirs, and the quilt slides. The camera comes in on him slowly. |
 
 ## Act II, in order
 
@@ -216,7 +216,31 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## The story, as in the film (latest)
+## Stephen's notes 1 to 8 (latest)
+
+1. **Rocket smoke covers the buildings.** The pad billow from ignition is drawn over every part now: the bunker, TARS, the tower's foot and the pad. The trail the rocket climbs out of stays behind it.
+2. **Heavier cornstalks.** The stalks the truck ploughs through stay pressed flat until it has passed. Then they rise from their lean as a slow damped spring: about 90% upright after 0.8 s, one soft swing past, settled by 1.4 s. They used to snap up at once. Their tassels swing slowly instead of chattering.
+3. **Heavier settles everywhere.** Every contraption keeps the crisp moment of its hit. Its recovery is slower and lower: decay times roughly doubled (0.05–0.1 s → 0.13–0.3 s) and ring frequencies roughly halved.
+   - On the farm: the channel gates, the plank, the basket, the pump handle, the pawl, the books and lander, the case's flap, and the tin truck.
+   - On the road: the truck's suspension, the gate's arm, dogs and sweep, the cage, the combine, and the catapult (whose ratchet now falls onto each click instead of stepping).
+   - On the station and after: the ring, the replica, the ballpark, the lift and hub, the undock, and the landing on Edmunds' planet.
+4. **A bridge from the tesseract to the bed.** The bridge was a 0.45 s snap. It is now a 1.4 s fall back out through the folding rooms, gold threads streaming past, into a warm circle of light that opens on the dim room. He lands at 124.3 s and wakes at 124.5 s.
+5. **The watch reads as a watch.** Cooper's watch is a new shared drawing, `earth/watch.ts`: a tin case with a crown, a face with twelve ticks and three hands, and a leather strap with holes and a buckle. It stands at the left end of Murph's top shelf in the opening, the tesseract and the museum replica, and hangs from a nail over Murph's chair on the station. The model lander next to it was also redrawn as a real lunar lander: gold-foil descent stage, splayed legs, ascent stage.
+6. **Inspection.** The whole show was filmed at 1× and audited frame by frame for velocity jumps and draw order. The fixes above came out of it, plus:
+   - a NaN in the truck's furrow bounce before the first chase beat, caught and guarded;
+   - Gargantua in the Edmunds sky no longer grows and shrinks with the camera;
+   - Murph's meeting is framed tighter (about 2.9 cells);
+   - Brand's meeting at the camp gets a slow push-in to 2.75 cells, held through the music's last bars, then the pull-back to the whole camp for the credits;
+   - the cast card has a small swatch of each character's colour (a slab for TARS).
+7. **The tesseract has real presence.** It runs from 118.1 to 122.9 s, with the book knock, a new watch beat (three strikes on the comb, the watch ticking the message with threads of light) and a grand pull-back to its endless rooms.
+8. **The black-hole orbit is an epic slingshot.** Miller's end moved three beats earlier (the wave throws on 180, not 183), so Gargantua runs 180 → 189, 5.6 s instead of 3.75.
+   - It is two turns round the hole, spiralling in and speeding up.
+   - The disk rings at four crossings. There is a wide shot of the whole disk and halo, a close pass over the top with the halo filling the frame, and the engine burn on the loudest eighth.
+   - A photon ring and glows were added.
+
+The book knock inside the tesseract, the wake in bed, and the scored cut into Act II at 127.5 s are where they were meant to be. No Act II strike moved. Act I now has 226 strikes on the comb, with the watch's three new ones.
+
+## The story, as in the film
 
 The last pass had it wrong. The old woman in the far-side house on Cooper Station is **Murph**, Cooper's daughter, not Brand. Cooper meets **Brand** at the very end, at her camp on Edmunds' planet.
 

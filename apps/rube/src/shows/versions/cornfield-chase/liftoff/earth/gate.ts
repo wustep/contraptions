@@ -186,14 +186,14 @@ function barAngle(t: number): number {
   if (t < FLAPS[1]) return rest + (BAR - rest) * easeInQuad((t - BAR_GO) / (FLAPS[1] - BAR_GO))
   if (t < MEET) {
     const k = t - FLAPS[1]
-    let a = BAR - 0.07 * Math.exp(-k / 0.07) * Math.abs(Math.sin(k * 32))
+    let a = BAR - 0.06 * Math.exp(-k / 0.16) * Math.abs(Math.sin(k * 15))
     const c = t - HER_OUT
-    if (c > 0) a += 0.03 * Math.exp(-c / 0.09) * Math.sin(c * 42)
+    if (c > 0) a += 0.025 * Math.exp(-c / 0.18) * Math.sin(c * 19)
     return a
   }
   const k = t - MEET
   const up = easeOutCubic(clamp(k / LIFT_T))
-  const settle = k > LIFT_T ? -0.05 * Math.exp(-(k - LIFT_T) / 0.1) * Math.sin((k - LIFT_T) * 26) : 0
+  const settle = k > LIFT_T ? -0.05 * Math.exp(-(k - LIFT_T) / 0.2) * Math.sin((k - LIFT_T) * 13) : 0
   return BAR + (rest - BAR) * up + settle
 }
 
@@ -270,7 +270,8 @@ function sweepAngle(t: number): number {
   // The stone falls from rest: slow away, fast at the end.
   if (s < T) return A0 + (A1 - A0) * (s / T) ** 2
   const k = s - T
-  return A1 - 0.07 * Math.exp(-k / 0.1) * Math.abs(Math.sin(k * 26))
+  // The pole bounces on the stone's log: heavy, so a slow bounce or two.
+  return A1 - 0.06 * Math.exp(-k / 0.2) * Math.abs(Math.sin(k * 14))
 }
 
 /** Where the ball sits in the sweep's cup for an arm at `a`: off the end, toward the cup's open side. */
@@ -288,7 +289,8 @@ function armAngle(t: number): number {
   if (t <= back) return -UP
   if (t <= SHUT) return -UP * (1 - easeInQuad((t - back) / (SHUT - back)))
   const k = t - SHUT
-  return -0.1 * Math.exp(-k / 0.12) * Math.abs(Math.sin(k * 22))
+  // Down on its rest: a slow bounce or two off it, the arm's length whipping a little.
+  return -0.09 * Math.exp(-k / 0.22) * Math.abs(Math.sin(k * 12))
 }
 
 /** The pail's pin, on the end of the short arm. */
@@ -321,7 +323,7 @@ function flapAngle(t: number, hit: number, slap: number, amp = 1.25): number {
     return amp * up * (1 - back)
   }
   const k = t - slap
-  return 0.2 * Math.exp(-k / 0.1) * Math.abs(Math.sin(k * 30))
+  return 0.18 * Math.exp(-k / 0.18) * Math.abs(Math.sin(k * 17))
 }
 
 /** A dog on the rail: folded flat by the ball on its beat, standing up again behind it with a wobble. */
@@ -331,7 +333,8 @@ function dogAngle(t: number, hit: number): number {
   const pass = 0.18
   if (s < pass) return DOG_UP * (1 - easeOutCubic(clamp(s / 0.06)))
   const u = s - pass
-  return DOG_UP * (1 - Math.exp(-u / 0.05) * Math.cos(u * 26))
+  // Up again on its spring, swinging past and back a couple of times before it stands.
+  return DOG_UP * (1 - Math.exp(-u / 0.12) * Math.cos(u * 15))
 }
 
 /** The switch's lever: the paddle end's angle, down into the road until it is knocked up and over. */
@@ -340,7 +343,7 @@ function leverAngle(t: number): number {
   const thrown = (-30 / 180) * Math.PI
   if (t <= THROW) return rest
   const s = t - THROW
-  return rest + (thrown - rest) * easeOutCubic(clamp(s / 0.1)) + 0.14 * Math.exp(-s / 0.12) * Math.sin(Math.max(0, s - 0.1) * 34)
+  return rest + (thrown - rest) * easeOutCubic(clamp(s / 0.1)) + 0.14 * Math.exp(-s / 0.2) * Math.sin(Math.max(0, s - 0.1) * 18)
 }
 
 /** The drone: where its pod is, its pitch, how far its wheels are down, and how hard they are pressed, at show time `t`. */
@@ -370,10 +373,10 @@ function droneAt(s: GateState, t: number): { p: Pt; pitch: number; gear: number;
     pitch = 0.16 * Math.sin(Math.PI * Math.min(1, u * 1.25)) - 0.07 * smooth(u, 0.7, 1)
   } else {
     const k = t - TOUCH
-    squash = 0.035 * Math.exp(-k / 0.12) * Math.abs(Math.sin(k * 22 + 0.4))
+    squash = 0.035 * Math.exp(-k / 0.2) * Math.abs(Math.sin(k * 13 + 0.4))
     y = pad + squash
     // The main wheels first; the nose comes down a moment later.
-    pitch = -0.07 * (1 - smooth(k, 0.05, 0.3)) + 0.02 * Math.exp(-Math.max(0, k - 0.3) / 0.15) * Math.sin(Math.max(0, k - 0.3) * 20)
+    pitch = -0.07 * (1 - smooth(k, 0.05, 0.4)) + 0.02 * Math.exp(-Math.max(0, k - 0.4) / 0.25) * Math.sin(Math.max(0, k - 0.4) * 12)
   }
   return { p: [x, y], pitch, gear: smooth(t, beat(110), beat(111)), squash }
 }
@@ -460,7 +463,7 @@ export const gate = part<GateState>(
           const a = sweepAngle(t)
           const [x, y] = cupBall(sweep, a)
           const k = t - CUP
-          const roll = 0.06 * Math.exp(-k / 0.1) * Math.sin(k * 30)
+          const roll = 0.06 * Math.exp(-k / 0.18) * Math.sin(k * 17)
           return [x - roll * Math.cos(a), y - roll * Math.sin(a)]
         },
         at(CUP),
@@ -674,7 +677,7 @@ function grid(d: Draw, s: GateState): void {
   // The bars, end on.
   for (const bx of s.bars) {
     let shake = 0
-    for (let i = 0; i < GRID_HITS.length; i++) if (Math.abs(bx - s.struck[i]) < 0.01) shake = knock(t - GRID_HITS[i], 0.12) * Math.sin((t - GRID_HITS[i]) * 70)
+    for (let i = 0; i < GRID_HITS.length; i++) if (Math.abs(bx - s.struck[i]) < 0.01) shake = knock(t - GRID_HITS[i], 0.2) * Math.sin((t - GRID_HITS[i]) * 42)
     solid(p, ink, weight * 0.8, DUST.shade)
     p.circle(X(bx), X(FLOOR + BAR_R + 0.005 + shake * 0.02), X(BAR_R * 2))
   }
@@ -702,7 +705,7 @@ function sweep(d: Draw, s: GateState): void {
   const cupRest = cupBall(s.sweep, A0)
   const stake: Pt = [cupRest[0] - 0.32, FLOOR]
   const freed = t > CUP ? easeOutCubic(clamp((t - CUP) / 0.1)) : 0
-  const wob = t > CUP ? 0.25 * Math.exp(-(t - CUP) / 0.25) * Math.sin((t - CUP) * 25) : 0
+  const wob = t > CUP ? 0.25 * Math.exp(-(t - CUP) / 0.3) * Math.sin((t - CUP) * 15) : 0
   outline(p, ink, weight)
   p.line(X(stake[0]), X(FLOOR), X(stake[0]), X(FLOOR - 0.24))
   p.push()
@@ -759,7 +762,7 @@ function fence(d: Draw, s: GateState): void {
   const x0 = s.posts[0]
   const x1 = s.posts[s.posts.length - 1]
   const shiver = (x: number): number => {
-    for (let i = 0; i < CAPS.length; i++) if (Math.abs(x - s.caps[i]) < 0.01) return knock(t - CAPS[i], 0.15) * Math.sin((t - CAPS[i]) * 60)
+    for (let i = 0; i < CAPS.length; i++) if (Math.abs(x - s.caps[i]) < 0.01) return knock(t - CAPS[i], 0.25) * Math.sin((t - CAPS[i]) * 34)
     return 0
   }
   // The mesh: fine diamonds, faint, between the posts.
@@ -774,7 +777,7 @@ function fence(d: Draw, s: GateState): void {
   const pitch = 0.13
   for (let x = x0 - hgt; x < x1 + hgt; x += pitch) {
     let ripple = 0
-    for (let i = 0; i < CAPS.length; i++) ripple += 0.02 * knock(t - CAPS[i], 0.2) * Math.sin((t - CAPS[i]) * 40) * Math.max(0, 1 - Math.abs(x - s.caps[i]) / 1.2)
+    for (let i = 0; i < CAPS.length; i++) ripple += 0.02 * knock(t - CAPS[i], 0.32) * Math.sin((t - CAPS[i]) * 22) * Math.max(0, 1 - Math.abs(x - s.caps[i]) / 1.2)
     p.line(X(x + ripple), X(FLOOR), X(x + hgt + ripple), X(RAIL))
     p.line(X(x + ripple), X(RAIL), X(x + hgt + ripple), X(FLOOR))
   }

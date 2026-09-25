@@ -28,9 +28,13 @@ const HINGE = -0.28
 const FLAP = BED - HINGE - 0.02
 /** The channel's head: back under the pump's spout, where the pumped water comes down. */
 const HEAD = -HEAD_BACK
-/** A gate's board: how hard its spring shuts it (so each slaps shut on the next note), and the rate its swing is worked out at. */
+/** A gate's board: how hard its spring shuts it (so each slaps shut on the next note), and the rate its swing is worked out at.
+ * Once it has slapped, it is a heavy board settling on its stop: a softer swing, more drag, and a small rebound. */
 const FALL = 450
 const HINGE_DRAG = 3
+const SETTLE = 140
+const SETTLE_DRAG = 7
+const REBOUND = 0.15
 const RATE = 240
 
 interface Gate {
@@ -214,16 +218,20 @@ export const cornrow = part<RowState>(
       let a = 0
       let w = 0
       let need0 = 0
+      let shut = false
       for (let i = 0; i < n; i++) {
         const t = g.t0 + i / RATE
         const [hx, hy] = hero(t)
         const need = clearing(hx, hy, g.x)
-        w += (-FALL * Math.sin(a) - HINGE_DRAG * w) / RATE
+        w += (-(shut ? SETTLE : FALL) * Math.sin(a) - (shut ? SETTLE_DRAG : HINGE_DRAG) * w) / RATE
         a += w / RATE
         if (a < 0) {
-          if (w < -10) g.slaps.push(t)
+          if (w < -10 && !shut) {
+            g.slaps.push(t)
+            shut = true
+          }
           a = 0
-          w = -w * 0.25
+          w = -w * (shut ? REBOUND : 0.25)
         }
         if (a < need) {
           a = need

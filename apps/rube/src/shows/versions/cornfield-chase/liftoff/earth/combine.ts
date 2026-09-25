@@ -209,7 +209,7 @@ const gateOpen = (t: number): number => {
   const s = (t - GATE) / 0.16
   if (s < 1) return s * s
   const b = t - GATE - 0.16
-  return 1 - 0.12 * Math.exp(-b / 0.08) * Math.abs(Math.sin(b * 26))
+  return 1 - 0.1 * Math.exp(-b / 0.16) * Math.abs(Math.sin(b * 15))
 }
 /** The auger's hopper at the tank's back corner, over the pivot the tube swings on. */
 const PIVOT: Pt = [3.5, -1.12]
@@ -236,7 +236,7 @@ const tubeAngle = (t: number): number => {
     return STOWED + (OUT - STOWED) * e - 0.05 * Math.sin(Math.min(1, u * 4) * Math.PI) * (1 - u)
   }
   const s = t - LOCK
-  return OUT + 0.06 * Math.exp(-s / 0.12) * Math.sin(s * 34)
+  return OUT + 0.06 * Math.exp(-s / 0.22) * Math.sin(s * 16)
 }
 const tubeEnd = (a: number): Pt => [PIVOT[0] + TUBE_L * Math.cos(a), PIVOT[1] + TUBE_L * Math.sin(a)]
 const nozzleEnd = (a: number): Pt => {
@@ -279,7 +279,7 @@ function plankAngle(t: number): number {
     return -LEAN + 2 * LEAN * (0.25 * u + 0.75 * u * u)
   }
   const s = t - THUMP
-  return LEAN - 0.05 * Math.exp(-s / 0.07) * Math.abs(Math.sin(s * 40))
+  return LEAN - 0.05 * Math.exp(-s / 0.15) * Math.abs(Math.sin(s * 20))
 }
 /** A ball on the plank, `u` from the pivot along it, the plank at angle `a`, the bale at `bx`. */
 const onPlank = (bx: number, u: number, a: number): Pt => {
@@ -371,7 +371,7 @@ export const combine = part<CombineState>(
     // Against the gate while the auger comes round; it rattles with the latch and the lock.
     const rest = heapBall(AT_GATE)
     const rattle = (t: number): Pt => {
-      const a = knock(t - UNLATCH, 0.08) * Math.sin((t - UNLATCH) * 50) + knock(t - LOCK, 0.08) * Math.sin((t - LOCK) * 50)
+      const a = knock(t - UNLATCH, 0.14) * Math.sin((t - UNLATCH) * 30) + knock(t - LOCK, 0.14) * Math.sin((t - LOCK) * 30)
       return [rest[0] - 0.012 * Math.abs(a), rest[1] - 0.02 * Math.abs(a)]
     }
     segs.push(...carried((u) => rattle(u + slot.begin), at(CLACK), at(GATE), 60))
@@ -735,7 +735,7 @@ function drawTank(p: p5, c: Ctx, t: number): void {
   p.push()
   p.translate(x(GATE_X + 0.02), x(RIM))
   // It rattles when the ball comes against it.
-  const rattle = knock(t - CLACK, 0.1) * Math.sin((t - CLACK) * 60) * 0.08
+  const rattle = knock(t - CLACK, 0.18) * Math.sin((t - CLACK) * 32) * 0.08
   p.rotate(g * Math.PI / 2 + rattle)
   solid(p, ink, weight * 0.9, DUST.bone)
   p.rect(x(0.03), x(-GATE_H / 2), x(0.06), x(GATE_H), x(0.012))
@@ -861,7 +861,7 @@ function drawAuger(p: p5, c: Ctx, t: number, lp: ReturnType<typeof laneAt>): voi
   poly(p, k, [[rest[0] - 0.03, rest[1]], [rest[0] + 0.03, rest[1]], [rest[0] + 0.03, -0.9], [rest[0] - 0.03, -0.9]])
   outline(p, ink, weight * 0.8)
   // The latch: a hook over the tube, thrown back on 94.
-  const latch = t < UNLATCH ? 0 : Math.min(1, (t - UNLATCH) / 0.07) - 0.15 * knock(t - UNLATCH - 0.07, 0.1) * Math.sin((t - UNLATCH) * 40)
+  const latch = t < UNLATCH ? 0 : Math.min(1, (t - UNLATCH) / 0.07) - 0.15 * knock(t - UNLATCH - 0.07, 0.18) * Math.sin((t - UNLATCH - 0.07) * 20)
   p.push()
   p.translate(x(rest[0] + 0.04), x(-0.9))
   p.rotate(latch * 1.3)

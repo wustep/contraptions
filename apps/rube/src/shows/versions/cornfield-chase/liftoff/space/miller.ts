@@ -15,11 +15,11 @@ import { BALL, BRAND, DARK, GREY } from '../worlds'
  * drops out. Below is a sheet of water to the horizon, ankle deep, and on the
  * horizon a range of mountains.
  *
- * Down here everything keeps the planet's tick, two beats, the film's 1.25 s:
- * the Ranger's legs take the ball and throw it on, two beacon buoys bob under
- * it and throw it on, and TARS catches it in the crook of its slabs and
- * cartwheels, a slab planted in the water on every tick. The buoys' lamps
- * keep the same tick.
+ * Down here the buoys' lamps keep the planet's tick, two beats, the film's
+ * 1.25 s, and the machines hurry through it: the Ranger's legs take the ball
+ * and throw it on, two beacon buoys bob under it and throw it on, and TARS
+ * catches it in the crook of its slabs and cartwheels, a slab planted in the
+ * water on each vault, the last one whipping over to throw.
  *
  * Up in orbit the ring keeps another time. Brand, whom the trapdoor left
  * behind runs round the inside of it once an eighth, trips a catch every
@@ -27,9 +27,9 @@ import { BALL, BRAND, DARK, GREY } from '../worlds'
  * the grey of the years. On the twenty-third mark the catch locks and holds
  * her, and the ring goes from the sky.
  *
- * From beat 175 the mountains move. They are one wave, and near it is a wall
- * of water. TARS's third plant throws the ball onto its foot (181), the face
- * lifts it, the crest feathers on 182, and on 183 the lip throws it up and to
+ * From beat 172 the mountains move. They are one wave, and near it is a wall
+ * of water. TARS's third plant throws the ball onto its foot (178), the face
+ * lifts it, the crest feathers on 179, and on 180 the lip throws it up and to
  * the right, at Gargantua (which the next part draws, over the lip), and the
  * wave breaks behind it. Miller fades as the dark takes over.
  *
@@ -49,20 +49,20 @@ const OUT = beat(167)
 const COLLAR = beat(168)
 const COLLAR_TOSS = beat(168.5)
 /** The two buoys. */
-const BUOY_AT = [beat(170), beat(172)]
-const BUOY_TOSS = [beat(170.5), beat(172.5)]
-/** TARS takes it, and plants a slab on each tick after; the third plant throws it. */
-const CATCH = beat(174)
-const PLANTS = [beat(176), beat(178), beat(180)]
+const BUOY_AT = [beat(169.5), beat(171)]
+const BUOY_TOSS = [beat(170), beat(171.5)]
+/** TARS takes it, and plants a slab on each vault after, a beat and a half apart and the last one quicker; the third plant throws it. */
+const CATCH = beat(173)
+const PLANTS = [beat(174.5), beat(176), beat(177)]
 /** The ball comes down on the wave's foot, the crest feathers, the lip throws. */
-const FOOT = beat(181)
-const FEATHER = beat(182)
-const FLING = beat(183)
+const FOOT = beat(178)
+const FEATHER = beat(179)
+const FLING = beat(180)
 /** The mountains move from here; the wave is at the ball's depth from here. */
-const MOVE = beat(175)
-const ARRIVE = beat(180.75)
+const MOVE = beat(172)
+const ARRIVE = beat(177.75)
 /** The beacons' lamps: the planet's tick. */
-const TICKS = [166, 168, 170, 172, 174, 176, 178, 180].map(beat)
+const TICKS = [166, 168, 170, 172, 174, 176, 178].map(beat)
 /** She trips the catch every eighth from his arrival; the twenty-third locks it. */
 const CLICKS = Array.from({ length: 23 }, (_, i) => beat(167 + i / 2))
 const LATCH = CLICKS[CLICKS.length - 1]
@@ -100,14 +100,14 @@ const ROOF = 0.4
 const SEAT_Y = BELLY - ROOF - R + 0.03
 const LEGS = [-0.78, 0.62]
 /**
- * Beat 181: as the ball meets the wave, the Ranger lifts off — from here the
+ * Beat 178: as the ball meets the wave, the Ranger lifts off — from here the
  * next part (Gargantua) draws it, the same hull at the same size, skimming the
  * wave to pick TARS up and climbing to the hole to catch the ball. So this part
  * stops drawing the Ranger then, and TARS once it is picked up.
  */
-const RANGER_UP = beat(181)
+const RANGER_UP = FOOT
 /** TARS takes hold of the Ranger's back as it skims past. */
-const TARS_PICKED = beat(182.5)
+const TARS_PICKED = FOOT + 1.5 * (beat(1) - beat(0))
 
 /** The buoys: their x, and the ball's centre in the cup at rest. */
 const BUOYS = [10.75, 11.97]
@@ -150,7 +150,7 @@ const H0 = 3.0
 const RIDE_DX = 1.3 * 1.25 - 0.2 * 1.25 * 1.25
 const EXIT_D = 0.39
 /** Its speed along the sea, cells a second: slowing as it stands up, so the face meets the ball where it must. */
-const C_WAVE = (L_FACE - EXIT_D - RIDE_DX) / (beat(183) - beat(181))
+const C_WAVE = (L_FACE - EXIT_D - RIDE_DX) / (FLING - FOOT)
 /** Where its crest is at the foot's moment (the ball's plane). */
 const X_FOOT = LAND_X + L_FACE
 /** The far range: extra peaks off the main one, [offset from the crest, height, half-width], all in the ball's plane. */
@@ -217,9 +217,9 @@ function rideAt(t: number): Pt {
 }
 
 /** Where the lip lets the ball go, and how fast: Gargantua's part takes it from here. */
-const LIP = rideAt(beat(183))
+const LIP = rideAt(FLING)
 export const MILLER_LIP_V: Pt = (() => {
-  const a = rideAt(beat(183) - 0.004)
+  const a = rideAt(FLING - 0.004)
   return [(LIP[0] - a[0]) / 0.004, (LIP[1] - a[1]) / 0.004]
 })()
 
@@ -317,7 +317,7 @@ const ORBIT_YEARS = mixHex(BRAND, GREY, 0.4)
 function waitsAt(t: number): { x: number; y: number; angle: number; color: string } {
   // Caught on the locking mark: she runs a hair past it and is held back to it, rather than stopping dead.
   const k = t - LATCH
-  const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET - 0.12 * Math.exp(-k / 0.07) * Math.sin(k * 60)
+  const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET - 0.2 * Math.exp(-k / 0.12) * Math.sin(k * 35)
   const color = mixHex(BRAND, ORBIT_YEARS, clamp((t - OUT) / (LATCH - OUT)))
   return { x: STATION[0] + PATH * Math.cos(a), y: STATION[1] + PATH * Math.sin(a), angle: a - Math.PI / 2, color }
 }
@@ -395,7 +395,7 @@ export const miller = part<MillerState>(
     // The whip to the far side from the sphere (the ring's part holds on it), one long move, landing as he comes out.
     { t: OUT, cells: 5.4, hold: [11.35, -1.55] },
     { t: CATCH, cells: 5.8, hold: [13.1, -1.7] },
-    { t: beat(179), cells: 7, hold: [13.9, -1.95] },
+    { t: beat(176), cells: 7, hold: [13.9, -1.95] },
     { t: FEATHER, cells: 8, hold: [15.3, -2.45] },
     // The seam: the framing Gargantua's part opens on (its hold, from its entry cell, which is our exit).
     { t: slot.end, cells: 8, hold: [LIP[0] + 0.5 - 1.44, LIP[1] + 0.43], w: 0.85 },
@@ -536,7 +536,7 @@ function drawStation(p: p5, c: Ctx, t: number): void {
   // The catch: a lever through the tube at three o'clock. Its inner end is in her way; its outer end cuts the tally.
   const last = lastClick(t)
   const locked = t >= LATCH
-  const rock = locked ? 0.22 : last.ago < 0.25 ? 0.4 * knock(last.ago, 0.05) : 0
+  const rock = locked ? 0.22 : last.ago < 0.3 ? 0.4 * knock(last.ago, 0.08) : 0
   const [px, py] = PIVOT
   const reach = px - STATION[0] - PATH + 0.03
   const inner: Pt = [px - reach * Math.cos(rock), py - reach * Math.sin(rock)]
@@ -620,7 +620,7 @@ function drawSea(p: p5, c: Ctx, f: Frame, t: number): void {
     const y = HZ + 0.06 + j * 0.14 + j * j * 0.012
     if (y > bottom) break
     const w = 0.18 + 0.05 * j + 0.08 * Math.sin(t * 1.3 + j * 2.1)
-    ctx.strokeStyle = rgba(DARK.gold, 0.22 * (1 - j / 14) * (0.42 + 0.58 * smooth(t, beat(182.2), beat(183.2))))
+    ctx.strokeStyle = rgba(DARK.gold, 0.22 * (1 - j / 14) * (0.42 + 0.58 * smooth(t, beat(179.2), beat(180.2))))
     ctx.lineWidth = Math.max(0.6, k * 0.025)
     ctx.beginPath()
     ctx.moveTo(X(GARG[0] - w / 2 + 0.05 * Math.sin(t + j)), X(y))
@@ -1098,5 +1098,5 @@ export const MILLER_HANDOFF = {
   lift: RANGER_UP,
   picked: TARS_PICKED,
   tars: (t: number): Pt => tarsAt(t).hub,
-  exitEnd: (): Pt => rideAt(beat(183)),
+  exitEnd: (): Pt => rideAt(FLING),
 }

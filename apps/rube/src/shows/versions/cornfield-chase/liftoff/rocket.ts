@@ -257,10 +257,12 @@ export const rocket = part<RocketState>(
     flight: true,
     draw: (p, s, c) => drawRocket(p, s, c),
     over: (p, s, c) => {
-      // The window's glass and rim over the two in it, while the nose is shut.
       const t = c.t + s.begin
-      if (t >= OPEN) return
       const { k, ink, weight } = c
+      // The billow off the pad, in front of the ground and everything standing on it.
+      if (c.theme.name === 'dust-bowl') padSmoke(p, k, ink, weight, t)
+      // The window's glass and rim over the two in it, while the nose is shut.
+      if (t >= OPEN) return
       p.push()
       bodyFrame(p, k, t)
       p.noFill()
@@ -311,6 +313,27 @@ export const rocket = part<RocketState>(
     ]
   },
 )
+
+/** The billow off the pad from ignition: out of the trench both ways, rolling over whatever stands near the pad. */
+function padSmoke(p: p5, k: number, ink: string, weight: number, t: number): void {
+  if (t <= IGNITION - 0.1) return
+  const f = frame(p, k)
+  const [bx, by] = BASE
+  p.push()
+  for (let i = 0; i < 26; i++) {
+    const born = IGNITION + i * 0.12
+    if (born > t) break
+    const age = t - born
+    const side = i % 2 ? 1 : -1
+    const x = bx + side * (0.6 + age * (1.1 + hash(i, 1) * 0.6))
+    const y = by + 0.7 - age * (0.25 + hash(i, 2) * 0.25)
+    const r = 0.25 + age * 0.35
+    if (x < f.x0 - 2 || x > f.x1 + 2) continue
+    p.drawingContext.globalAlpha = Math.max(0, 1 - age / 5)
+    puff(p, k, ink, weight * 0.7, DUST.bone, x, y, r)
+  }
+  p.pop()
+}
 
 /** The cabin behind the window glass, lamplit: amber, a middle tone between the two who sit in it. */
 const CABIN = '#C98A45'
@@ -384,22 +407,10 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
     }
   }
 
-  // Smoke: on the pad, a billow out of the trench both ways from ignition; in the air, a column left where it has been.
-  if (farm && t > IGNITION - 0.1) {
-    const [bx, by] = BASE
+  // Smoke in the air: a column left where it has been, behind the flame that goes up through it. (The billow on the
+  // pad is drawn in `over`, in front of everything on the ground: the bunker, the tower's foot.)
+  if (farm && t > LIFTOFF) {
     p.push()
-    for (let i = 0; i < 26; i++) {
-      const born = IGNITION + i * 0.12
-      if (born > t) break
-      const age = t - born
-      const side = i % 2 ? 1 : -1
-      const x = bx + side * (0.6 + age * (1.1 + hash(i, 1) * 0.6))
-      const y = by + 0.7 - age * (0.25 + hash(i, 2) * 0.25)
-      const r = 0.25 + age * 0.35
-      if (x < f.x0 - 2 || x > f.x1 + 2) continue
-      p.drawingContext.globalAlpha = Math.max(0, 1 - age / 5)
-      puff(p, k, ink, weight * 0.7, DUST.bone, x, y, r)
-    }
     for (let i = 0; i < 40; i++) {
       const born = LIFTOFF + i * 0.1
       if (born > t) break

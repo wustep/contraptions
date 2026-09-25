@@ -225,17 +225,22 @@ const CATCH_R = PIVOT_R + ARM * Math.sin(ARM_CATCH) + CUP_OFF * Math.cos(ARM_CAT
 const PSI_PIVOT = PSI_CUP + (ARM * Math.cos(ARM_CATCH) - CUP_OFF * Math.sin(ARM_CATCH)) / PIVOT_R
 
 /** The catapult arm's lift off the face at show time `T`. */
+/** When each notch's fall starts, so that it lands on its click. */
+const FALLS = CLICKS.map((t) => t - 0.05)
 function armAt(T: number): number {
-  if (T >= FIRE) return ARM_STOP + 0.07 * Math.exp(-(T - FIRE) / 0.08) * Math.sin((T - FIRE) * 40)
+  // Against its stop on the throw, the arm shudders and settles: slower than the throw itself.
+  if (T >= FIRE) return ARM_STOP + 0.06 * Math.exp(-(T - FIRE) / 0.18) * Math.sin((T - FIRE) * 20)
   if (T > FIRE - SWING) {
     const u = (T - (FIRE - SWING)) / SWING
     return u * u * ARM_STOP
   }
-  const { i, ago } = lastOf(CLICKS, T)
-  const n = i + 1
-  // Each click takes it down a notch, with a little bounce off the pawl.
-  const bounce = i >= 0 ? 0.035 * Math.exp(-ago / 0.06) * Math.cos(ago * 45) : 0
-  return ARM_CATCH * (1 - n / CLICKS.length) + bounce
+  // Each click lets it fall a notch (quick, onto the pawl: it lands on the click), and it bounces once off the pawl.
+  const fall = 0.05
+  const { i, ago } = lastOf(FALLS, T)
+  const f = i >= 0 ? Math.min(1, ago / fall) ** 2 : 0
+  const k = ago - fall
+  const bounce = i >= 0 && k > 0 ? 0.03 * Math.exp(-k / 0.12) * Math.sin(k * 20) : 0
+  return ARM_CATCH * (1 - (i + f) / CLICKS.length) + bounce
 }
 
 /** The catapult at show time `T`: its pivot, the arm's tip, and the ball's centre in the cup. */
@@ -262,7 +267,7 @@ function ringBall(c: Pt, T: number): Pt {
   const u = smooth(T, DROP, DROP + 0.05)
   const fell = ringPt(c, T, PSI_CUP, CATCH_R)
   const k = T - DROP
-  const give = 0.04 * Math.exp(-k / 0.07) * Math.sin(k * 45)
+  const give = 0.04 * Math.exp(-k / 0.14) * Math.sin(k * 22)
   const out = Math.hypot(held[0] - c[0], held[1] - c[1]) || 1
   return [fell[0] + (held[0] - fell[0]) * u + ((held[0] - c[0]) / out) * give, fell[1] + (held[1] - fell[1]) * u + ((held[1] - c[1]) / out) * give]
 }
@@ -803,7 +808,7 @@ function drawJaws(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   let open = 1.45 - 0.85 * smooth(T, READY - 0.12, READY)
   if (T > CLAMP - 0.07) {
     const u = smooth(T, CLAMP - 0.07, CLAMP)
-    const over = T > CLAMP ? -0.12 * Math.exp(-(T - CLAMP) / 0.08) * Math.cos((T - CLAMP) * 30) : 0
+    const over = T > CLAMP ? -0.1 * Math.exp(-(T - CLAMP) / 0.16) * Math.sin((T - CLAMP) * 16) : 0
     open = 0.6 * (1 - u) + over
   }
   // They let go as she, the lower, starts up through the hatch, and draw back into the module once she is in.
