@@ -29,7 +29,10 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on
  * the stage, and starts with its music on the first press: it never runs
- * on silently towards a sound that comes in late.
+ * on silently towards a sound that comes in late. A link that names the
+ * show is the exception. That visit should already be going when it is
+ * seen: sound if the browser allows it, and if it does not, the picture
+ * anyway, with the sound brought in on the next click or key.
  */
 
 const { works, problems } = discoverShows()
@@ -43,6 +46,8 @@ export function start(shell: Shell): () => void {
 
   const params = new URLSearchParams(location.search)
 const seed = params.get('seed') ?? ''
+/** The address named a show on arrival. A tab into Shows does not: it carries the seed, and the show is chosen here. */
+const linked = !!params.get('show')
 
 /* ------------------------------------------------------------------ state */
 
@@ -57,6 +62,9 @@ let failed = ''
 let blocked = false
 let speed = 1
 let muted = false
+/** The link is playing, and the browser is holding the sound until a gesture. Not the visitor's own mute. */
+let soundHeld = false
+let releaseSound = (): void => {}
 let overview = false
 let zoom = false
 let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
@@ -120,8 +128,63 @@ function setSpeed(next: number): void {
 
 function setMuted(next: boolean): void {
   muted = next
+  if (!next) soundHeld = false
   music.setMuted(next)
   sync()
+}
+
+/**
+ * A named link. Play it as it was meant to be heard. If the browser refuses
+ * the sound, keep the picture going with the sound held — muted, when the
+ * browser allows that — and bring the sound in on the next click or key.
+ * The picture does not wait on the play button.
+ */
+async function playLinked(): Promise<void> {
+  const mine = generation
+  await play()
+  if (!alive || mine !== generation || !blocked) return
+  soundHeld = true
+  setMuted(true)
+  await play()
+  if (!alive || mine !== generation) return
+  if (blocked) {
+    // Silence was refused too. Run the picture on the wall clock; the sound
+    // catches it at the next gesture instead of the visit sitting still.
+    blocked = false
+    transport?.play()
+    sync()
+  }
+  armSound()
+}
+
+/** The sound is held. The next gesture starts it where the picture is, and a control whose job is the sound keeps that job. */
+function armSound(): void {
+  releaseSound()
+  const join = () => {
+    if (transport && perf?.soundtrack) void music.play(transport.now())
+  }
+  const unlock = (e: Event) => {
+    const key = e instanceof KeyboardEvent ? e.key : ''
+    const musicControl = (e.target instanceof Element && !!e.target.closest('button.music')) || key === 'm' || key === 'M'
+    releaseSound()
+    if (!alive || !soundHeld) return
+    // The music control does the unmuting itself, and starts the sound with it.
+    if (musicControl) return
+    soundHeld = false
+    if (muted) setMuted(false)
+    // Space would also pause. The gesture only owed the sound; the picture stays.
+    if ((key === ' ' || key === 'Enter') && transport?.playing) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+    }
+    join()
+  }
+  releaseSound = () => {
+    window.removeEventListener('pointerdown', unlock, true)
+    window.removeEventListener('keydown', unlock, true)
+  }
+  window.addEventListener('pointerdown', unlock, true)
+  window.addEventListener('keydown', unlock, true)
 }
 
 function setOverview(on: boolean): void {
@@ -141,9 +204,16 @@ function setZoom(on: boolean): void {
 }
 
 /** Put a version on the stage from the top, and start it if asked. */
-async function open(version: Version, thenPlay: boolean): Promise<void> {
+async function open(version: Version, thenPlay: boolean | 'link'): Promise<void> {
   if (!alive) return
   const mine = ++generation
+  // The hold belonged to the arrival. A show chosen from here is heard the way the visitor left the sound.
+  if (soundHeld) {
+    soundHeld = false
+    muted = false
+    music.setMuted(false)
+  }
+  releaseSound()
   music.load(null)
   stage.set(null)
   perf = null
@@ -178,7 +248,9 @@ async function open(version: Version, thenPlay: boolean): Promise<void> {
   }
   loading = false
   sync()
-  if (perf && thenPlay) void play()
+  if (!perf || !thenPlay) return
+  if (thenPlay === 'link') void playLinked()
+  else void play()
 }
 
 /** The take before or after this one, round the takes of this work. */
@@ -245,7 +317,15 @@ const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)'
 playBtn.addEventListener('click', toggle)
 const speedSeg = segmented(SHOW_SPEEDS, (v) => `${v}×`, setSpeed)
 const musicBtn = el('button', { type: 'button', class: 'chip music' })
-musicBtn.addEventListener('click', () => setMuted(!muted))
+musicBtn.addEventListener('click', () => {
+  if (!soundHeld) {
+    setMuted(!muted)
+    return
+  }
+  soundHeld = false
+  setMuted(false)
+  if (transport && perf?.soundtrack) void music.play(transport.now())
+})
 const restartBtn = el('button', { title: 'Back to the top of the show (Home)' }, ['Restart'])
 restartBtn.addEventListener('click', () => seek(0))
 const overviewBtn = el('button', { title: 'Zoom out to the whole world (O)', 'aria-pressed': 'false' }, ['Overview', el('kbd', {}, ['O'])])
@@ -389,9 +469,11 @@ function sync(): void {
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
       ? 'The soundtrack would not load. The show runs silent, on the wall clock.'
-      : blocked
-        ? 'The browser wants a press before it plays music. Press play.'
-        : '',
+      : soundHeld
+        ? 'Playing. The browser is holding the sound until the next click or key.'
+        : blocked
+          ? 'The browser wants a press before it plays music. Press play.'
+          : '',
     perf?.soundtrack && music.state() === 'failed' ? 'bad' : '',
   )
 
@@ -526,7 +608,14 @@ const onKey = (e: KeyboardEvent) => {
       toggle()
       break
     case 'm':
-      if (perf?.soundtrack) setMuted(!muted)
+      if (!perf?.soundtrack) break
+      if (soundHeld) {
+        soundHeld = false
+        setMuted(false)
+        if (transport) void music.play(transport.now())
+        break
+      }
+      setMuted(!muted)
       break
     case 'o':
     case 'O':
@@ -567,7 +656,7 @@ window.addEventListener('keydown', onKey)
 
 writeUrl()
 sync()
-if (current) void open(current, true)
+if (current) void open(current, linked ? 'link' : true)
 
 // Dev handle for scripted capture.
 if (import.meta.env.DEV) {
@@ -585,7 +674,7 @@ if (import.meta.env.DEV) {
       return v ? open(v, false) : Promise.resolve()
     },
     now: () => transport?.now() ?? 0,
-    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, overview, zoom, blocked, loading, failed, music: music.state(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
+    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, soundHeld, overview, zoom, blocked, loading, failed, music: music.state(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
     togglePanel: () => shell.toggle(),
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
   }
@@ -593,6 +682,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    releaseSound()
     cancelAnimationFrame(raf)
     window.removeEventListener('pointerup', endScrub)
     window.removeEventListener('keydown', onKey)
