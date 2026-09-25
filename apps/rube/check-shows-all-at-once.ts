@@ -149,8 +149,9 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
 
   // The end credits: words the page sets over the dark room after the last hit, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-  check('all at once: end credits after the last hit, set by the page, naming Stephen Wu, Opus 5.5, Evelyn, Joy, Waymond, Son Lux, the film and p5.js',
+  check('all at once: end credits after the last hit, set by the page, opening on Directed by Claude Opus 5.5 and naming Evelyn, Joy, Waymond, Son Lux, the film and p5.js',
     CREDITS_OK && perf.titles === creditsAt && CREDITS_AT > HOME_HITS[2] && creditsAt(CREDITS_AT - 0.1).length === 0 && creditsAt(perf.duration).length === 0 &&
-    ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Evelyn', 'Joy', 'Waymond', 'Son Lux', 'Come Recover', 'Everything Everywhere All at Once', 'Daniels', 'p5.js'].every((w) => said.includes(w)) &&
+    CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
+    ['Directed by', 'Claude Opus 5.5', 'Evelyn', 'Joy', 'Waymond', 'Son Lux', 'Come Recover', 'Everything Everywhere All at Once', 'Daniels', 'p5.js'].every((w) => said.includes(w)) &&
     !/private tech demo/i.test(said), said)
 }

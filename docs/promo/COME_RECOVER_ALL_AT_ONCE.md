@@ -186,14 +186,13 @@ The canvas lays only a soft dark under them. The cards are:
 
 | Starts (s) | Role | Names | Fine print |
 | ---: | --- | --- | --- |
-| 297.0 | Directed by | Stephen Wu | |
-| 301.6 | Machines, drawings and code | Claude Opus 5.5 | |
-| 306.2 | With | Evelyn, the vermilion ball; Joy, the violet ball; Waymond, the jade ball | |
-| 311.8 | Music | Son Lux | "Come Recover (Empathy Fight)"; Ryan Lott, Rafiq Bhatia and Ian Chang |
-| 317.6 | After | Everything Everywhere All at Once | a film by Daniels (2022) |
-| 323.0 | Drawn with | p5.js | |
+| 297.0 | Directed by | Claude Opus 5.5 | |
+| 302.2 | With | Evelyn, the vermilion ball; Joy, the violet ball; Waymond, the jade ball | |
+| 308.4 | Music | Son Lux | "Come Recover (Empathy Fight)"; Ryan Lott, Rafiq Bhatia and Ian Chang |
+| 314.8 | After | Everything Everywhere All at Once | a film by Daniels (2022) |
+| 320.8 | Drawn with | p5.js | |
 
-There is no title card. After p5.js's card goes (about 327.7 s), the room holds alone in the dark as the music fades
+There is no title card. After p5.js's card goes (about 325.9 s), the room holds alone in the dark as the music fades
 to 332.
 
 ## What `check:shows` holds it to
@@ -230,7 +229,7 @@ to 332.
 - **The end credits:**
   - after the last hit, and gone before the end;
   - set by the page;
-  - naming Stephen Wu, Claude Opus 5.5, Evelyn, Joy, Waymond, Son Lux, the cue, the film, Daniels and p5.js;
+  - opening on "Directed by Claude Opus 5.5", and naming Evelyn, Joy, Waymond, Son Lux, the cue, the film, Daniels and p5.js;
   - with no demo disclaimer on the frame. The attribution file keeps it.
 - **The panel:** Come Recover is one take, All at Once, with the byline "Directed by wustep" and no model or
   tech-demo line.

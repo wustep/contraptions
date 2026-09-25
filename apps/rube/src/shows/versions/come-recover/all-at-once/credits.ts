@@ -31,10 +31,9 @@ const GO = 0.95
 const OVERLAP = 0.25
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.6, role: 'Directed by', names: ['Stephen Wu'] },
-  { hold: 2.6, role: 'Machines, drawings and code', names: ['Claude Opus 5.5'] },
+  { hold: 3.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 3.6,
+    hold: 4.2,
     role: 'With',
     names: [
       ['Evelyn', 'the vermilion ball', EVELYN],
@@ -43,18 +42,18 @@ const script: Omit<Card, 'at'>[] = [
     ],
   },
   {
-    hold: 3.8,
+    hold: 4.4,
     role: 'Music',
     names: ['Son Lux'],
     notes: ['“Come Recover (Empathy Fight)”', 'Ryan Lott, Rafiq Bhatia and Ian Chang'],
   },
   {
-    hold: 3.4,
+    hold: 4.0,
     role: 'After',
     names: ['Everything Everywhere All at Once'],
     notes: ['a film by Daniels (2022)'],
   },
-  { hold: 2.4, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 2.8, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
