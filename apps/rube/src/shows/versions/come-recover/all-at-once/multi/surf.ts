@@ -3,7 +3,7 @@ import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Ctx, type PartShot } from '../kit'
 import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
-import { EVELYN, HIBACHI, HOME, HOTDOG, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
+import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
 import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, round, type Pen } from './skins-pen'
 
@@ -19,7 +19,9 @@ import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, round,
  *   123.995  a canyon, and two rocks on a ledge: the one quiet world, held (it comes back at 200 s)
  *   125.852  then faster than she can see them, the worlds she has been through, backwards: the kitchen, the hot
  *            dogs, the dojo, the premiere, the laundromat
- *   126.943  black; and on 127.791 the dark, where Jobu is waiting
+ *   126.943  black, and she drifts; then every world she flew through comes back at her out of the black, in slivers,
+ *            and rings her on 127.663; on 127.791 the ring collapses into her, to a point, and it is the dark, where
+ *            Jobu is waiting
  *
  * Each world is drawn round the place she is as it begins, so it is composed on her, and slides past her as she
  * flies on: its far things with her almost, its near things staying where they are.
@@ -67,8 +69,12 @@ const WORLDS: World[] = [
   { at: 126.943, kind: 'black' },
 ]
 
-/** Every world's first instant is a strike: the change itself, on the recording's hit. */
-export const SURF_HITS: number[] = WORLDS.map((w) => w.at)
+/** The ring of worlds: they come in from the black, ring her on the hit, and collapse into her on the jump. */
+const RING_FROM = 127.4
+const RING_AT = 127.663
+
+/** Every world's first instant is a strike, on the recording's hit; then the ring closing round her, and its collapse. */
+export const SURF_HITS: number[] = [...WORLDS.map((w) => w.at), RING_AT, END]
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -432,6 +438,69 @@ function flash(s: Scene, skin: Skin): void {
   })
 }
 
+/* ------------------------------------------------------------------ 7. the ring of worlds, and the collapse */
+
+/** The worlds she flew through, each as a sliver: its paper, the colour it is known by, and its ink. */
+const SLIVERS: [string, string, string][] = [
+  [HOTDOG.bun, PINK, HOTDOG_THEME.ink],
+  [HOME.glass, HOME.gold, LAUNDROMAT.ink],
+  [ROCKS.sky, STAR.gold, LAUNDROMAT.ink],
+  [PREMIERE.bg, TEAL, PREMIERE.ink],
+  [ROCKS.sky, ROCKS.canyon, ROCKS_THEME.ink],
+  [HIBACHI_THEME.bg, HIBACHI.flame, HIBACHI_THEME.ink],
+  [HOTDOG_THEME.bg, HOTDOG.sausage, HOTDOG_THEME.ink],
+  [DOJO.screen, DOJO.lacquer, DOJO_THEME.ink],
+  [PREMIERE.bg, STAR.carpet, PREMIERE.ink],
+  [HOME.tile, HOME.enamel, LAUNDROMAT.ink],
+]
+
+/**
+ * Out of the black the worlds come back at her, every one she flew through, in long slivers from beyond the frame,
+ * and ring her on 127.663, stopping hard; then the ring turns and collapses into her, to nothing, on the jump.
+ */
+function ring(s: Scene): void {
+  const { pen, t, b } = s
+  const n = SLIVERS.length * 2
+  const collapse = t < RING_AT ? 0 : Math.min(1, (t - RING_AT) / (END - RING_AT))
+  const shrink = 1 - collapse * collapse
+  const spin = 0.35 * smooth((t - RING_FROM) / (RING_AT - RING_FROM)) + 2.6 * collapse * collapse
+  at(pen, b[0], b[1], 0, 1, () => {
+    for (let i = 0; i < n; i++) {
+      const [paper, mark, ink] = SLIVERS[i % SLIVERS.length]
+      // Each comes in on its own clock and stops, hard, on the hit.
+      const lag = 0.09 * hash(i, 1, 17)
+      const u = clamp01((t - RING_FROM - lag) / (RING_AT - RING_FROM - lag))
+      const come = 1 - Math.pow(1 - u, 3)
+      const far = 5.5 + 1.5 * hash(i, 2, 17)
+      const near = i % 2 ? 1.25 : 1.6
+      const r0 = (far + (near - far) * come) * shrink
+      const len = (i % 2 ? 0.9 : 1.2) * (0.6 + 0.4 * come) * shrink
+      if (len < 0.01) continue
+      const a = (i / n) * Math.PI * 2 + spin + (i % 2 ? Math.PI / n : 0)
+      const wi = 0.05 * shrink
+      const wo = (i % 2 ? 0.13 : 0.17) * shrink
+      at(pen, 0, 0, a, 1, () => {
+        const r1 = r0 + len
+        poly(pen, [[r0, -wi], [r1, -wo], [r1, wo], [r0, wi]], paper, 0)
+        poly(pen, [[r0 + len * 0.62, -wi - (wo - wi) * 0.62], [r1, -wo], [r1, wo], [r0 + len * 0.62, wi + (wo - wi) * 0.62]], mark, 0)
+        pen.ctx.beginPath()
+        pen.ctx.moveTo(r0, -wi)
+        pen.ctx.lineTo(r1, -wo)
+        pen.ctx.lineTo(r1, wo)
+        pen.ctx.lineTo(r0, wi)
+        pen.ctx.closePath()
+        pen.ctx.strokeStyle = ink
+        pen.ctx.lineWidth = pen.lw * 0.8
+        pen.ctx.stroke()
+      })
+    }
+    // The clamp on the hit: a hard white light off all of them at once; then, as it collapses into her, their light
+    // gathered, going out with it.
+    const x = t - RING_AT
+    if (x >= 0) glow(pen, 0, 0, 2.0 * shrink + 0.3, HOME.light, 0.65 * Math.exp(-x / 0.04) + 0.35 * collapse * shrink)
+  })
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface SurfState {
@@ -475,6 +544,7 @@ function paint(p: p5, _s: SurfState, c: Ctx): void {
       break
     case 'black':
       fill(s, MULTI_THEME.bg)
+      if (t >= RING_FROM) ring(s)
       break
   }
   ctx.restore()

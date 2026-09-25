@@ -5,7 +5,7 @@ import { G, hop } from '../physics'
 import { SEAMS } from '../seams'
 import { DOJO, DOJO_THEME, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, STAR, VOID } from '../worlds'
 import { STOP, basketFront, drawGarland, seatAt } from './set-garland'
-import { BIG_DRYER, LIGHTS, dryerBody, lantern, penOf, portDoor, type Pen } from './set'
+import { BIG_DRYER, LIGHTS, dryerBody, lantern, lanternLit, penOf, portDoor, type Pen } from './set'
 
 /**
  * The breath: the big dryer, 34.33 to the first jump at 57.95.
@@ -506,7 +506,7 @@ export const dryer = part<DryerState>(
         pen,
         t,
         (x, y, lk) => lantern(pen, x, y, lk),
-        (i, tt) => smooth(tt, LIGHTS.lanterns[i] ?? Infinity, (LIGHTS.lanterns[i] ?? Infinity) + 0.18),
+        (i, tt) => lanternLit(i, tt),
       )
       p.pop()
     },

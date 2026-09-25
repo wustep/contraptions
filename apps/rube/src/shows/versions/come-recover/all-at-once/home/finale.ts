@@ -57,6 +57,7 @@ install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
 })
 install(STREET, 'finale-fireworks', fireworks)
 LIGHTS.neonOff = LIGHTS_OUT
+LIGHTS.lanternsOff = LIGHTS_OUT
 
 /* ------------------------------------------------------------------ the part */
 

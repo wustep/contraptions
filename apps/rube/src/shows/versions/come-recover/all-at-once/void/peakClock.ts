@@ -136,6 +136,9 @@ function crawl(t: number): number {
  */
 const LURCHES: { t: number; a: number }[] = []
 for (let k = 119; k <= 150; k++) LURCHES.push({ t: fall(k), a: 0.3 + Math.min(1.8, strength('fall', k)) })
+// The one strong eighth in the opening (120½): a second kick, before the bagel settles into a lurch a beat.
+LURCHES.push({ t: fall(120.5), a: 0.6 * (0.3 + strength('fall', 120.5)) })
+LURCHES.sort((a, b) => a.t - b.t)
 const LURCH_SUM = LURCHES.reduce((a, b) => a + b.a, 0)
 function lurch(x: number): number {
   if (x <= 0) return 0
@@ -469,6 +472,17 @@ const OUT_BEATS = [123, 125, 126, 127, 128, 129, 130, 131, 132, 133, 135, 137, 1
  * down) and the receipt last (the first). Each flies out of the hole's depth toward us and away, never down across
  * the two of them at the bottom.
  */
+/** A direction out of the hole (screen radians) turned aside if it would cross the pulley and Waymond's line. */
+function clearOfMachine(dir: number, at: number): number {
+  const c = centreAt(at)
+  const toPulley = Math.atan2(PULLEY[1] - c[1], PULLEY[0] - c[0])
+  // Where it heads on average (it curls a little clockwise as it goes).
+  let d = dir + 0.2 - toPulley
+  d = Math.atan2(Math.sin(d), Math.cos(d))
+  if (Math.abs(d) >= 0.42) return dir
+  return dir + (d >= 0 ? 0.42 - d : -0.42 - d)
+}
+
 export const GIVEN: Given[] = (() => {
   const back = [...SWALLOWED].reverse()
   const n = Math.min(back.length, OUT_BEATS.length)
@@ -479,12 +493,13 @@ export const GIVEN: Given[] = (() => {
   for (let i = 0; i < n; i++) {
     const w = back[i]
     const f = (0.37 + i * 0.618034) % 1
+    const at = fall(OUT_BEATS[i])
     out.push({
       thing: w.thing,
-      at: fall(OUT_BEATS[i]),
+      at,
       size: w.size,
       variant: w.variant,
-      dir: lo + span * f,
+      dir: clearOfMachine(lo + span * f, at),
       speed: 12 + 4 * ((i * 0.381966) % 1),
       spin: (((i * 0.7548) % 1) < 0.5 ? -1 : 1) * (2.2 + 2.6 * ((i * 0.2887) % 1)),
       turn0: ((i * 2.399) % (2 * Math.PI)),
@@ -573,11 +588,11 @@ export const SPRAYS: Spray[] = (() => {
   const out: Spray[] = []
   let n = 0
   const at: { t: number; count: number }[] = []
-  for (let k = 122; k <= 150; k++) {
+  for (let k = 120; k <= 150; k++) {
     const st = strength('fall', k + 0.5)
-    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 9 + Math.round(6 * Math.min(1, st)) })
+    if (st >= 0.4) at.push({ t: fall(k + 0.5), count: 15 + Math.round(12 * Math.min(1.2, st)) })
   }
-  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 5 })
+  for (const b of OUT_BEATS) at.push({ t: fall(b), count: 8 })
   at.sort((x, y) => x.t - y.t)
   for (const { t, count } of at) {
     const seeds: Seed[] = []
@@ -603,5 +618,58 @@ export function seedAt(sp: Spray, sd: Seed, x: number): { p: Pt; size: number; a
     size: sd.size * (0.3 + 0.7 * ss(x / 0.15)) * (1 + 0.6 * x),
     angle: sd.dir + sd.spin * x,
     fade: 1 - ss((x - 0.55) / 0.5),
+  }
+}
+
+/* ------------------------------------------------------------------ the fountain's lesser pieces */
+
+export interface Chunk {
+  at: number
+  dir: number
+  speed: number
+  size: number
+  spin: number
+  turn0: number
+  /** A lump of the bagel's own crust, or a small thing it swallowed (then it wears an eye). */
+  thing: Thing | null
+  seed: number
+}
+/** On the loudest beats (1.4 and up) the big thing comes out with company: two lumps of crust and a small thing, fanned round it. */
+export const CHUNKS: Chunk[] = (() => {
+  const out: Chunk[] = []
+  const small: Thing[] = ['coin', 'pebble', 'receipt', 'onion', 'coin', 'pebble', 'sock']
+  let n = 0
+  for (const g of GIVEN) {
+    const k = Math.round((g.at - fall(0)) / (fall(1) - fall(0)))
+    if (strength('fall', k) < 1.4) continue
+    for (let i = 0; i < 3; i++) {
+      n++
+      const side = i === 0 ? -1 : i === 1 ? 1 : (n % 2 ? 1 : -1)
+      const spread = i === 2 ? 1.05 : 0.55
+      out.push({
+        at: g.at + 0.02 * i,
+        dir: clearOfMachine(g.dir + side * spread, g.at),
+        speed: 9 + 4 * ((n * 0.618) % 1),
+        size: i === 2 ? 0.5 : 0.3 + 0.14 * ((n * 0.382) % 1),
+        spin: (n % 2 ? 1 : -1) * (3 + 3 * ((n * 0.7548) % 1)),
+        turn0: (n * 2.399) % (2 * Math.PI),
+        thing: i === 2 ? small[n % small.length] : null,
+        seed: n,
+      })
+    }
+  }
+  return out
+})()
+
+/** Where a lesser piece is `x` seconds after it came out (rel), how big, how turned, and how dark. */
+export function chunkAt(ch: Chunk, x: number): { p: Pt; size: number; angle: number; dark: number } {
+  const c = centreAt(ch.at)
+  const r = ch.speed * 0.3 * (1 - Math.exp(-x / 0.3)) + 3.8 * x
+  const a = ch.dir + 0.45 * (1 - Math.exp(-x / 0.5))
+  return {
+    p: [c[0] + r * Math.cos(a), c[1] + r * Math.sin(a) - 0.1 * x * x],
+    size: ch.size * (0.1 + 0.9 * ss(x / 0.2)) * (1 + 0.35 * x),
+    angle: ch.turn0 + ch.spin * x,
+    dark: 0.6 * (1 - ss(x / 0.18)),
   }
 }

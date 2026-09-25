@@ -15,13 +15,16 @@ export const WALL = { skirt: 0.42, screen: 5.2, rail: 5.42, beam: 7.6, beamTop: 
 /** The pillars: one in the gap between the two pairs, and the rest on the same bay. */
 const BAY = 5.5
 const PILLAR0 = 3.92
-const PILLAR_W = 0.34
+const PILLAR_W = 0.24
 /** Screens: three to a bay, each a frame with its lattice. */
 const PANELS = 3
 
 const PAPER = DOJO.screen
 const PLASTER = mixHex(DOJO.screen, DOJO.wood, 0.16)
 const LATTICE = mixHex(DOJO.woodDeep, DOJO.screen, 0.55)
+/** The pillars' lacquer, aged and dulled toward the wash so they stand back behind the wooden men. */
+const PILLAR = mixHex(mixHex(DOJO.lacquer, DOJO.wash, 0.38), DOJO.screen, 0.12)
+const PILLAR_GOLD = mixHex(DOJO.gold, DOJO.wash, 0.35)
 
 export function hall(p: p5, k: number, c: Ctx, ox: number, fy: number): void {
   const { ink, weight } = c
@@ -105,13 +108,13 @@ export function hall(p: p5, k: number, c: Ctx, ox: number, fy: number): void {
   for (let b = first; b <= last; b++) {
     const px = PILLAR0 + b * BAY
     if (px + PILLAR_W < x0 || px - PILLAR_W > x1) continue
-    solid(p, ink, weight * 0.8, DOJO.lacquer)
+    solid(p, ink, weight * 0.45, PILLAR)
     p.rect(X(px), Y(WALL.beam / 2), PILLAR_W * k, WALL.beam * k)
-    // A gold collar where it meets the beam, and a dark foot.
-    solid(p, ink, weight * 0.6, DOJO.gold)
-    p.rect(X(px), Y(WALL.beam - 0.14), (PILLAR_W + 0.06) * k, 0.12 * k)
-    solid(p, ink, weight * 0.6, DOJO.woodDeep)
-    p.rect(X(px), Y(0.16), (PILLAR_W + 0.08) * k, 0.32 * k)
+    // A worn gold collar where it meets the beam, and a dark foot.
+    solid(p, ink, weight * 0.4, PILLAR_GOLD)
+    p.rect(X(px), Y(WALL.beam - 0.12), (PILLAR_W + 0.04) * k, 0.09 * k)
+    solid(p, ink, weight * 0.4, DOJO.woodDeep)
+    p.rect(X(px), Y(0.14), (PILLAR_W + 0.06) * k, 0.28 * k)
   }
 
   // The floor: its boards' edge, and the dark under the platform to the frame's foot.

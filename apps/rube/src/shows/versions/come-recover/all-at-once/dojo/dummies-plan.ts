@@ -333,7 +333,8 @@ const EVENTS: Ev[] = [
   { t: 95.422, kind: 'bounce', at: { gong: true }, w: 1.5 },
   { t: 95.747, kind: 'bounce', at: { man: 2, limb: 'up' }, w: 1.2 },
   { t: 95.968, kind: 'bounce', at: { man: 3, limb: 'mid' }, w: 0.8 },
-  { t: 96.189, kind: 'catch', man: 2, w: 0.8 },
+  { t: 96.189, kind: 'bounce', at: { man: 2, limb: 'knee' }, w: 0.9 },
+  { t: 96.618, kind: 'catch', man: 2, w: 1.3 },
   // The last kick is the jump: she leaves the leg as the seam says, up and to the right.
   { t: 97.152, kind: 'kick', man: 2, w: 1.5, v: [2.0, 2.2], pre: 0.09 },
 ]

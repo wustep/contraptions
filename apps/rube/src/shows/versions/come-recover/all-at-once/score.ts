@@ -119,7 +119,7 @@ function punch(t: number): number {
   for (const [at, s] of PUNCHES) {
     const u = t - at
     if (u < 0 || u > 1.5) continue
-    v += 0.028 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.3)
+    v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.32)
   }
   return v
 }
@@ -152,11 +152,12 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
     }
   })
 
-  // The flickers: before every jump but three. The first builds in the dryer's own glass instead, the fold home
-  // on the great hit is the mosaic's own (its panels flip there), and the drop into the rocks' silence is a clean cut.
+  // The flickers: before every jump but four. The first builds in the dryer's own glass instead, the surf's worlds
+  // collapse into her on their own before the dark, the fold home on the great hit is the mosaic's own (its panels
+  // flip there), and the drop into the rocks' silence is a clean cut.
   const flickers: Flicker[] = []
   legs.forEach((leg, i) => {
-    if (i === 0 || leg.key === 'premiere' || leg.key === 'kindness' || leg.key === 'rocks') return
+    if (i === 0 || leg.key === 'premiere' || leg.key === 'pull' || leg.key === 'kindness' || leg.key === 'rocks') return
     flickers.push(...flickersBefore(i, leg.from))
   })
 
@@ -196,7 +197,8 @@ export function compose(): { show: MultiverseShow; camera: (t: number) => Framin
   legs.forEach((leg, i) => {
     const chain = chains[i]
     const keys: Shot[] = chain.shots.filter((s) => s.t > leg.from + 1e-6 && s.t <= leg.to + 1e-6)
-    if (i === 0) keys.unshift({ t: 0, cells: 4.6 })
+    // The first frame is the first leg's own opening framing (a part's first key), held from zero.
+    if (i === 0) keys.unshift(keys.length ? { ...keys[0], t: 0 } : { t: 0, cells: 4.6 })
     else {
       const f = cams[i - 1](leg.from)
       const [sx, sy] = show.shift(i - 1, i)

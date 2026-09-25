@@ -3,12 +3,15 @@ import { R, type Pt, type Seg } from '../../../../../parts'
 import { director } from '../camera'
 import { box, carried, frame, part, type Ctx, type PartShot } from '../kit'
 import { DURATION, fight, JUMPS, strength } from '../music'
-import { EVELYN, HOME, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME } from '../worlds'
+import { EVELYN, LAUNDROMAT, MULTI_THEME, VOID, VOID_THEME } from '../worlds'
+import { room } from '../home/set'
+import { KINDNESS_AT } from '../home/kindness'
 import { backdrop, HP, LE, LW, PL, SKINS, skinAt, TH, TILT, WEDGE, type Moment, type Skin, type View } from './skins'
 import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from './skins-pen'
 
 /**
- * ALL AT ONCE. Evelyn tips into the bagel's hole and falls, slowly, through the dark, and the dark is the
+ * ALL AT ONCE. Evelyn tips into the bagel's hole (a violet flare off her, the bagel's seeds flung wide) and falls,
+ * slowly, through the dark, and the dark is the
  * laundromat with its lights off. On the fight's beat 69 the tubes flicker on round her, and on 72, as the pulse
  * comes back, she lands on the end of a seesaw: a wedge, a plank, and a laundry bag on its other end. Her landing
  * throws the bag; the bag's landing throws her. From then on the two of them trade throws, one on every beat.
@@ -22,9 +25,9 @@ import { at, circle, glow, hash, lodFor, mix, poly, rect, rgba, type Pen } from 
  *
  * On the crescendo the wall crowds to 144 (beat 121) as the seesaw throws her one last time, high, under home's
  * gravity. On 121½ every panel turns over like a card to another world; on 122 they all turn to the same one, and
- * it is one place seen through a hundred and forty-four windows: a calm floor, and one of her over it. The frames
- * close in on her and thin away, and on the great hit (123) she lands alone on the calm floor, at rest: home, where
- * the kindness begins.
+ * it is one place seen through a hundred and forty-four windows, with one of her in it: home, the laundromat's own
+ * room at the party corner. The frames close in on her, snap shut round her on 122½, and thin away, and on the
+ * great hit (123) she lands alone on the floor of home, at rest, where the kindness begins.
  *
  * The part draws everything in its `over`, in the screen's own place: a panel is a world (`skins.ts`) with its own
  * little camera on the machine. At one panel that camera is the stage's own, so the leg opens and closes on the
@@ -77,8 +80,12 @@ const ONE: Grid = { cols: 1, rows: 1, ox: 0, oy: 0 }
 const WIND = 0.035
 const WIND_T = 0.22
 
-/** Every strike: the tubes, each beat's slam from 72 to 121, the turns on 121½ and 122, and her landing on the great hit. */
-export const MOSAIC_HITS: number[] = [FLICKER, LIGHTS, ...Array.from({ length: LAST - FIRST + 1 }, (_, i) => B(FIRST + i)), B(121.5), B(122), END]
+/**
+ * Every strike: the tip into the hole (fight 59: a violet flare off her, the bagel's seeds flung), the tubes, each
+ * beat's slam from 72 to 121, the turns on 121½ and 122, the net snapping shut round her on 122½, and her landing
+ * on the great hit.
+ */
+export const MOSAIC_HITS: number[] = [JUMPS.mosaic, FLICKER, LIGHTS, ...Array.from({ length: LAST - FIRST + 1 }, (_, i) => B(FIRST + i)), B(121.5), B(122), B(122.5), END]
 
 /* ------------------------------------------------------------------ the machine's clock (scene cells: the ground under the pivot at 0,0) */
 
@@ -275,7 +282,10 @@ function flipAt(t: number): { w: number; n: number } {
 function gatherAt(t: number): number {
   const from = FOLD + FLIP_T / 2
   const u = Math.max(0, Math.min(1, (t - from) / (END - from)))
-  return Math.pow(1 - u, 1.4)
+  // On 122½ it snaps in hard round her; what is left of it settles onto her by the great hit.
+  const x = t - B(122.5)
+  const snapIn = x < 0 ? 1 : 1 - 0.55 * (1 - Math.exp(-x / 0.025))
+  return Math.pow(1 - u, 1.4) * snapIn
 }
 
 /* ------------------------------------------------------------------ state */
@@ -296,8 +306,6 @@ interface MosaicState {
 
 /** Where every panel looks: the middle of the machine and her throw. */
 const SCENE_MID: Pt = [0, -0.78]
-/** The calm floor she lands on: level with her seat, so she comes down onto it where she left the plank. */
-const CALM_FLOOR = E_UP[1] + R
 
 /* ------------------------------------------------------------------ painting */
 
@@ -418,26 +426,10 @@ function panel(ctx: CanvasRenderingContext2D, F: Frame, skin: Skin, b: Box, q: n
     ctx.fillStyle = rgba(VOID_THEME.bg, dark)
     ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
   }
-  evelyn(pen, mc.e, back, skin.ink)
+  // In the dark her ring is the dark's own ink, as it was in the bagel.
+  evelyn(pen, mc.e, back, dark > 0 ? mix(skin.ink, VOID_THEME.ink, dark) : skin.ink)
   if (skin.front && dark < 0.5) skin.front(pen, mc.m, v)
   ctx.restore()
-}
-
-/** A calm panel: home's paper and floor, and her alone over it. */
-function calmPanel(ctx: CanvasRenderingContext2D, F: Frame, b: Box, q: number, sc: Pt, sx: number, e: Pt, back: Pt[] | null): void {
-  const pen = penFor(ctx, F, b.cx, b.cy, q, sc, LAUNDROMAT.ink, sx)
-  const hw = b.w / 2 / q
-  const hh = b.h / 2 / q
-  const v: View = { x0: sc[0] - hw, y0: sc[1] - hh, x1: sc[0] + hw, y1: sc[1] + hh }
-  ctx.fillStyle = LAUNDROMAT.bg
-  ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0)
-  ctx.fillStyle = HOME.floor
-  ctx.fillRect(v.x0, CALM_FLOOR, v.x1 - v.x0, Math.max(0, v.y1 - CALM_FLOOR))
-  if (pen.lod <= 2) {
-    ctx.fillStyle = LAUNDROMAT.ink
-    ctx.fillRect(v.x0, CALM_FLOOR - pen.lw / 2, v.x1 - v.x0, pen.lw)
-  }
-  evelyn(pen, e, back, LAUNDROMAT.ink)
 }
 
 /** The tubes coming on: 0 in the dark, 1 lit. A flicker on the half-beat, then on for good on 69, with a stammer. */
@@ -564,6 +556,7 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   const mc = machine(t, s.fall)
   const back = [3, 2, 1].map((i) => machine(t - i * 0.022, s.fall).e)
 
+  const m0 = ctx.getTransform()
   ctx.save()
   ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
   ctx.globalAlpha = 1
@@ -611,10 +604,15 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
   if (split <= 0) ia = ib = ja = jb = 0
 
   if (calm) {
-    // Every panel has turned to the same calm floor, and they turn out to be windows on one place, the stage's own,
-    // with one of her in it.
+    // Every panel has turned to the same calm floor, and they turn out to be windows on one place, with one of her
+    // in it: home. The laundromat's own room (`home/set.ts`), laid so that where she comes to rest is where the
+    // kindness leg has her, so the cut on the great hit changes nothing but the party's things appearing.
     const [ox, oy] = toScreen(s.O[0], s.O[1])
-    calmPanel(ctx, F, { cx: W / 2, cy: H / 2, w: W, h: H }, F.k, [(W / 2 - ox) / F.k, (H / 2 - oy) / F.k], 1, mc.e, null)
+    ctx.setTransform(m0)
+    p.push()
+    p.translate((s.rest[0] - (KINDNESS_AT[0] - 0.5)) * c.k, (s.rest[1] - KINDNESS_AT[1]) * c.k)
+    room.draw(p, null, { k: c.k, t: time, since: 0, ink: LAUNDROMAT.ink, bg: LAUNDROMAT.bg, weight: c.weight, color: EVELYN, theme: LAUNDROMAT, spin: () => 0 })
+    p.pop()
     // The net of frames closes on her and thins away.
     const ga = Math.pow(sigma, 0.8)
     ctx.setTransform(F.d, 0, 0, F.d, 0, 0)
@@ -634,10 +632,8 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
       ctx.fillStyle = rgba(MULTI_THEME.bg, ga)
       ctx.fill('evenodd')
     }
-    // Her, and the light of her landing.
+    // Her, over it all.
     const pen = penFor(ctx, F, ox, oy, F.k, [0, 0], LAUNDROMAT.ink)
-    const x = t - END
-    if (x > -0.2) glow(pen, E_UP[0], CALM_FLOOR, 1.3, HOME.light, 0.45 * Math.exp(-Math.abs(x) / 0.1))
     evelyn(pen, mc.e, null, LAUNDROMAT.ink)
     ctx.restore()
     return
@@ -660,20 +656,50 @@ function paint(p: p5, s: MosaicState, c: Ctx, time: number): void {
     }
   }
   // In the dark she falls past seeds from the bagel, which go as the lights come.
-  if (split <= 0 && t < LIGHTS + 0.4) seedsInDark(ctx, F, s, t, q, sc, place(X0, Y0))
+  if (split <= 0 && t < LIGHTS + 0.4) seedsInDark(ctx, F, s, t, q, sc, place(X0, Y0), mc.e, mix(LAUNDROMAT.ink, VOID_THEME.ink, 0.97 * (1 - lights(t))))
   ctx.restore()
 }
 
-/** The bagel's seeds she falls past in the dark, drifting down slower than she does. */
-function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t: number, q: number, sc: Pt, c: Pt): void {
-  penFor(ctx, F, c[0], c[1], q, sc, VOID.sesame)
+/**
+ * The bagel's seeds she falls past in the dark, drifting down slower than she does. On the tip in (the first
+ * instant of the leg, fight 59) she comes through the hole with a violet flare off her, and the seeds round her are
+ * flung outward, with a spray of new ones from where she broke through; they slow in the dark and drift on.
+ */
+function seedsInDark(ctx: CanvasRenderingContext2D, F: Frame, s: MosaicState, t: number, q: number, sc: Pt, c: Pt, e: Pt, ink: string): void {
+  const pen = penFor(ctx, F, c[0], c[1], q, sc, VOID.sesame)
   const fade = 1 - smoothstep((t - FLICKER) / (LIGHTS + 0.4 - FLICKER))
   const x = t - s.begin
+  const hit = s.fall(s.begin)
+  const fling = x < 0 ? 0 : 1 - Math.exp(-x / 0.3)
   for (const sd of s.seeds) {
-    const y = sd.y + 0.28 * x * sd.s
+    const dx = sd.x - hit[0]
+    const dy = sd.y - hit[1]
+    const d = Math.hypot(dx, dy) || 1
+    const push = (0.9 * fling) / (1 + d * 0.6)
+    const y = sd.y + 0.28 * x * sd.s + (dy / d) * push
     ctx.fillStyle = rgba(sd.c, 0.55 * fade)
     ctx.beginPath()
-    ctx.ellipse(sd.x + 0.05 * Math.sin(x * 0.7 + sd.y), y, 0.032 * sd.s, 0.017 * sd.s, x * 0.4 * sd.s + sd.x, 0, Math.PI * 2)
+    ctx.ellipse(sd.x + 0.05 * Math.sin(x * 0.7 + sd.y) + (dx / d) * push, y, 0.032 * sd.s, 0.017 * sd.s, x * 0.4 * sd.s + sd.x, 0, Math.PI * 2)
     ctx.fill()
   }
+  if (x < 0 || x > 3) return
+  // The spray: seeds thrown out from where she came through, slowing in the dark.
+  for (let i = 0; i < 42; i++) {
+    const a = hash(i, 5, 43) * Math.PI * 2
+    const sp = 2.2 + 3.6 * hash(i, 6, 43)
+    const size = 1 + 0.9 * hash(i, 8, 43)
+    const drag = 3.2
+    const r = (sp / drag) * (1 - Math.exp(-drag * x))
+    const sx = hit[0] + Math.cos(a) * r
+    const sy = hit[1] + Math.sin(a) * r + 0.28 * x
+    const col = i % 5 === 0 ? VOID.poppy : i % 6 === 0 ? VOID.salt : VOID.sesame
+    ctx.fillStyle = rgba(col, 0.9 * fade * (0.55 + 0.45 * Math.exp(-x / 0.6)))
+    ctx.beginPath()
+    ctx.ellipse(sx, sy, 0.05 * size, 0.024 * size, a + x * 3 * (hash(i, 7, 43) - 0.5), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  // The flare: violet, off her, gone in a moment; a hot core for the first frames.
+  glow(pen, hit[0], hit[1] + 0.9 * x, 2.1, VOID.glow, 0.9 * Math.exp(-x / 0.16))
+  glow(pen, hit[0], hit[1] + 0.9 * x, 0.7, VOID.rimLight, 0.8 * Math.exp(-x / 0.06))
+  evelyn(pen, e, null, ink)
 }

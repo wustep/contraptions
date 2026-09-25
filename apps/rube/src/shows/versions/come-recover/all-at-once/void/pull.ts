@@ -2,11 +2,11 @@ import type p5 from 'p5'
 import { clamp, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { R, type Pt } from '../../../../../parts'
 import { box, carried, frame, hash, part, type Company, type PartShot } from '../kit'
-import { fight, JUMPS } from '../music'
-import { G_LOW } from '../physics'
+import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
 import { VOID } from '../worlds'
-import { BAGEL, BRINK, bagelPose, drawThing, edgeAt, inward, JOY_LIGHT, REVEAL, SWALLOWED, TIP_IN, type BagelPose } from './bagel'
+import { BAGEL, bagelPose, drawThing, edgeAt, HEAVY, inward, SWALLOWED, type BagelPose } from './bagel'
+import { BRINK, evelyn, JOY_LIGHT, PULL_AT, REVEAL, TIP_IN } from './pullPath'
 
 /**
  * PULL: Jobu and the everything bagel (127.79 to 165.62).
@@ -24,8 +24,8 @@ import { BAGEL, BRINK, bagelPose, drawThing, edgeAt, inward, JOY_LIGHT, REVEAL, 
  * tips in, and falls.
  */
 
-/** The entry cell of this leg in the dark's own cells (the bagel's centre is at `BAGEL.at`). */
-export const PULL_AT: Pt = [-8, -6]
+/** The entry cell of this leg in the dark's own cells (the bagel's centre is at `BAGEL.at`). Her way is in `pullPath.ts`. */
+export { PULL_AT } from './pullPath'
 /** From the bagel's own frame (its centre at 0, 0) to this part's (the entry cell's centre at 0, 0). */
 const OFF: Pt = [BAGEL.at[0] - PULL_AT[0], BAGEL.at[1] - PULL_AT[1]]
 const toPart = ([x, y]: Pt): Pt => [x + OFF[0], y + OFF[1]]
@@ -33,142 +33,17 @@ const toPart = ([x, y]: Pt): Pt => [x + OFF[0], y + OFF[1]]
 const T0 = JUMPS.void
 const T1 = JUMPS.mosaic
 
+const ss = (x: number, a: number, b: number): number => {
+  const u = clamp((x - a) / (b - a))
+  return u * u * (3 - 2 * u)
+}
+
 /* ------------------------------------------------------------------ Joy on the crown */
 
 /** Where Joy sits: on the bagel's crown, riding its lumps as it turns under her. */
 const joyAt = (t: number): Pt => {
   const pose = bagelPose(t)
   return [pose.dx, pose.dy - edgeAt(pose, -Math.PI / 2) - R]
-}
-
-/* ------------------------------------------------------------------ Evelyn's way in */
-
-/** Where she comes in, in the bagel's frame: the ball at (-0.5, 0) of the entry cell. */
-const E: Pt = [PULL_AT[0] - 0.5 - BAGEL.at[0], PULL_AT[1] - BAGEL.at[1]]
-/** The drift: the surf's velocity at the jump, dying away in the dark. */
-const V0 = SEAMS.void.v
-const TAU_DRIFT = 4.5
-const drift = (t: number): Pt => {
-  const s = Math.max(0, t - T0)
-  const f = TAU_DRIFT * (1 - Math.exp(-s / TAU_DRIFT))
-  return [E[0] + V0[0] * f, E[1] + V0[1] * f]
-}
-
-/** The pull takes her: from the drift into the orbit over these seconds. */
-const TAKE0 = 137.3
-const TAKE1 = 141.6
-/** On the brink: at the top of the hole, her foot on its lip. */
-const R_BRINK = BAGEL.hole + R
-/** A beat of the fight's pulse. */
-const BEAT = fight(1) - fight(0)
-/** Where the fast orbit ends and the lip brakes her, to the top on beat 56. */
-const BRAKE = BRINK - 3 * BEAT
-/** Her speed round at the end: a quarter turn a beat. */
-const W_END = Math.PI / 2 / BEAT
-/**
- * What she still has as she comes to the top on beat 56 (radians a second): she goes a little past it, rocks back
- * and settles there, heavy, on the brink.
- */
-const W_LIP = 0.5
-const ROCK = 2 * Math.PI / 0.62
-const ROCK_DECAY = 0.17
-/** How far past the top she is, `s` seconds after beat 56 (the angle's way: counterclockwise is negative). */
-const rock = (s: number): number => (s <= 0 ? 0 : -(W_LIP / ROCK) * Math.exp(-s / ROCK_DECAY) * Math.sin(ROCK * s))
-
-const beatOf = (t: number): number => (t - fight(0)) / BEAT
-const ss = (x: number, a: number, b: number): number => {
-  const u = clamp((x - a) / (b - a))
-  return u * u * (3 - 2 * u)
-}
-
-const TAKE_AT = drift(TAKE0)
-const R_TAKE = Math.hypot(TAKE_AT[0], TAKE_AT[1])
-const PHI_TAKE = Math.atan2(TAKE_AT[1], TAKE_AT[0])
-
-/** How close she is to the middle: pulled in a step on every bar of the pulse, on its downbeat. */
-function radius(t: number): number {
-  let g = 1 - 0.05 * ss(t, TAKE0, fight(0))
-  const b = beatOf(t)
-  for (let j = 0; j < 14; j++) g -= (0.95 / 14) * ss(b, 4 * j, 4 * j + 2.2)
-  return R_BRINK + (R_TAKE - R_BRINK) * Math.max(0, g)
-}
-
-/**
- * Her speed round (radians a second, the pull's way): nothing as she is taken, quickening to a quarter turn a beat
- * by beat 53, then braked by the lip to rest. The curve's power is solved so she comes to rest exactly at the top.
- */
-const OMEGA = (() => {
-  // Laps: from where she is taken, counterclockwise (the angle going down) to the top, and five times round.
-  const target = PHI_TAKE - (-Math.PI / 2 - 5 * 2 * Math.PI)
-  const brake = ((W_END - W_LIP) * (BRINK - BRAKE)) / 3 + W_LIP * (BRINK - BRAKE)
-  const main = target - brake
-  const q = (W_END * (BRAKE - TAKE0)) / main - 1
-  return (t: number): number => {
-    if (t <= TAKE0) return 0
-    if (t <= BRAKE) return W_END * Math.pow((t - TAKE0) / (BRAKE - TAKE0), q)
-    if (t <= BRINK) return W_LIP + (W_END - W_LIP) * (1 - (t - BRAKE) / (BRINK - BRAKE)) ** 2
-    return 0
-  }
-})()
-const ANGLE_STEP = 0.005
-const SWEPT: Float64Array = (() => {
-  const n = Math.ceil((BRINK - TAKE0) / ANGLE_STEP) + 2
-  const out = new Float64Array(n)
-  for (let i = 1; i < n; i++) {
-    const a = TAKE0 + (i - 1) * ANGLE_STEP
-    // Simpson on each step: the swept angle exact enough to land on the top.
-    out[i] = out[i - 1] + (ANGLE_STEP / 6) * (OMEGA(a) + 4 * OMEGA(a + ANGLE_STEP / 2) + OMEGA(a + ANGLE_STEP))
-  }
-  return out
-})()
-const swept = (t: number): number => {
-  const i = clamp((t - TAKE0) / ANGLE_STEP, 0, SWEPT.length - 1.001)
-  const j = Math.floor(i)
-  return SWEPT[j] + (SWEPT[j + 1] - SWEPT[j]) * (i - j)
-}
-/** Whatever the sum says, she ends at the top exactly: the small miss is spread over the whole orbit. */
-const MISS = PHI_TAKE - swept(BRINK) - (-Math.PI / 2 - 10 * Math.PI)
-const orbitAngle = (t: number): number => PHI_TAKE - swept(t) + MISS * ss(t, TAKE0, BRINK)
-
-const orbit = (t: number): Pt => {
-  const r = radius(t)
-  const a = orbitAngle(t)
-  return [r * Math.cos(a), r * Math.sin(a)]
-}
-
-/** Tipped in: from rest on the brink she falls straight down, under the dark's low pull, to the seam's speed. */
-const TIP = T1 - SEAMS.mosaic.v[1] / G_LOW
-
-/** Evelyn at show time `t`, in the bagel's frame. */
-/**
- * When the light finds Joy, Evelyn turns in the dark and drifts toward her daughter, a little way, before the pull
- * takes her round the other way.
- */
-const REACH = 0.7
-const TOWARD = (() => {
-  const from = drift(JOY_LIGHT)
-  const to = joyAt(JOY_LIGHT)
-  const d = Math.hypot(to[0] - from[0], to[1] - from[1])
-  return [(to[0] - from[0]) / d, (to[1] - from[1]) / d] as Pt
-})()
-const towardJoy = (t: number): Pt => {
-  const f = REACH * ss(t, JOY_LIGHT + 0.15, TAKE1)
-  return [TOWARD[0] * f, TOWARD[1] * f]
-}
-
-export function evelyn(t: number): Pt {
-  if (t >= BRINK) {
-    const a = -Math.PI / 2 + rock(t - BRINK)
-    const s = Math.max(0, t - TIP)
-    return [R_BRINK * Math.cos(a), R_BRINK * Math.sin(a) + 0.5 * G_LOW * s * s]
-  }
-  const [dx, dy] = drift(t)
-  const [rx, ry] = towardJoy(t)
-  const d: Pt = [dx + rx, dy + ry]
-  if (t <= TAKE0) return d
-  const w = ss(t, TAKE0, TAKE1)
-  const o = orbit(t)
-  return [d[0] + (o[0] - d[0]) * w, d[1] + (o[1] - d[1]) * w]
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -193,6 +68,7 @@ export const pull = part<PullState>(
       const ctx = p.drawingContext as CanvasRenderingContext2D
       const pose = bagelPose(t)
       drawDust(p, k, t, pose)
+      drawCatch(p, k, t, pose)
       // Joy's light: a narrow beam from far above onto the crown, struck on 133.79.
       if (pose.pool > 0.001) {
         const [jx, jy] = toPart(joyAt(t))
@@ -234,6 +110,7 @@ export const pull = part<PullState>(
         }
         drawThing(p, k, ink, weight, w.thing, x, y, size, spin, dark, w.variant)
       })
+      drawKick(p, k, t)
     },
   },
   (slot) => {
@@ -272,23 +149,125 @@ export const pull = part<PullState>(
       { t: REVEAL, cells: 6.2, hold: H(-2.9, -5.0), w: 0.85 },
       // The reveal: back and back until the whole of it is in the frame, Joy tiny on its crown.
       { t: REVEAL + 4.8, cells: 16.5, hold: H(0, -0.6), w: 0.92 },
-      { t: 142.4, cells: 16, hold: H(0, -0.6), w: 0.9 },
-      // The pull: in with her as she is drawn round, the hole always in the frame.
-      { t: 145.6, cells: 12, hold: H(0, -0.5), w: 0.5 },
-      { t: 150.4, cells: 10.4, hold: H(0, -0.4), w: 0.5 },
-      { t: 157, cells: 9.4, hold: H(0, -0.3), w: 0.62 },
-      // The last, fastest laps: the hole held in the middle of the frame, all of her circle in it.
-      { t: 161.5, cells: 8.4, hold: H(0, 0), w: 0.9 },
-      { t: BRAKE, cells: 8.0, hold: H(0, -0.2), w: 0.9 },
+      { t: 142.4, cells: 16, hold: H(0, -0.6), w: 1 },
+      // The pull, ridden: keys every tenth of a second from one smooth move (`ride`).
+      ...rideKeys(H),
       // The break: the two of them, one over the other: Evelyn on the brink with the hole under her, Joy on the
       // crown above, watching. Then down with Evelyn as she tips.
-      { t: BRINK, cells: 7.9, hold: H(0, -4.0), w: 0.95 },
+      { t: BRINK, cells: 7.9, hold: H(0, -4.0), w: 1 },
       { t: TIP_IN - 0.6, cells: 7.4, hold: H(0, -3.85), w: 0.97 },
       { t: slot.end, cells: SEAMS.mosaic.cells, hold: H(0, -1.75), w: 0.85 },
     ]
     return shots
   },
 )
+
+/* ------------------------------------------------------------------ her catch-light, and the heavy swallows' kick */
+
+/**
+ * The great light, caught on the crust where she is: a soft warm glow under her as she goes round, warmer on the lit
+ * upper side, so in all that black the eye goes to her. Only on the dough (not out in the dark, not down the well).
+ */
+function drawCatch(p: p5, k: number, t: number, pose: BagelPose): void {
+  if (pose.lit < 0.01 || t > TIP_IN) return
+  const [ex, ey] = evelyn(t)
+  const r = Math.hypot(ex, ey)
+  const on = (1 - ss(r, BAGEL.r * pose.scale - 0.15, BAGEL.r * pose.scale + 0.45)) * ss(r, BAGEL.hole * pose.scale, BAGEL.hole * pose.scale + 0.12)
+  if (on < 0.01) return
+  const up = (1 - Math.sin(Math.atan2(ey, ex))) / 2
+  const a = pose.lit * on * (0.12 + 0.16 * up)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [x, y] = toPart([ex, ey])
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, 0.62 * k)
+  g.addColorStop(0, rgba(VOID.rimLight, a))
+  g.addColorStop(0.4, rgba(VOID.rimLight, a * 0.45))
+  g.addColorStop(1, rgba(VOID.rimLight, 0))
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(x * k, y * k, 0.62 * k, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/**
+ * A heavy thing (the big beats) kicks a little of the crust up off the lip as it goes over: seeds and flakes thrown
+ * out across the face, slowing, and drawn back down the hole after it.
+ */
+const KICK = 1.1
+function drawKick(p: p5, k: number, t: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  SWALLOWED.forEach((w, i) => {
+    const s = t - w.at
+    if (s < 0 || s > KICK || !HEAVY.includes(w.at)) return
+    const [lx, ly] = inward(i, 0)
+    const d = Math.hypot(lx, ly) || 1
+    const ox = lx / d
+    const oy = ly / d
+    const fade = Math.pow(1 - s / KICK, 1.3) * 0.95
+    const paths = [new Path2D(), new Path2D(), new Path2D()]
+    for (let j = 0; j < 24; j++) {
+      const spread = (hash(i, j, 81) - 0.5) * 2.6
+      const dx = ox * Math.cos(spread) - oy * Math.sin(spread)
+      const dy = ox * Math.sin(spread) + oy * Math.cos(spread)
+      const v = 1.8 + 2.4 * hash(i, j, 83)
+      const go = v * 0.22 * (1 - Math.exp(-s / 0.22))
+      const back = 1.1 * s * s
+      const [x, y] = toPart([lx + dx * go - ox * back, ly + dy * go - oy * back])
+      const size = (0.06 + 0.09 * hash(i, j, 85)) * k
+      const a = hash(i, j, 87) * 6.28 + s * (4 + 6 * hash(i, j, 89))
+      const ca = Math.cos(a)
+      const sa = Math.sin(a)
+      const X = x * k
+      const Y = y * k
+      const path = paths[j % 5 === 0 ? 1 : j % 7 === 0 ? 2 : 0]
+      path.moveTo(X + ca * size, Y + sa * size)
+      path.quadraticCurveTo(X - sa * size * 0.5, Y + ca * size * 0.5, X - ca * size, Y - sa * size)
+      path.quadraticCurveTo(X + sa * size * 0.5, Y - ca * size * 0.5, X + ca * size, Y + sa * size)
+    }
+    ctx.fillStyle = rgba(VOID.sesame, fade)
+    ctx.fill(paths[0])
+    ctx.fillStyle = rgba(VOID.onion, fade)
+    ctx.fill(paths[1])
+    ctx.fillStyle = rgba(VOID.salt, fade)
+    ctx.fill(paths[2])
+  })
+}
+
+/* ------------------------------------------------------------------ the camera's ride */
+
+/** The wide's hold, and the brink two-shot's (Evelyn on the lip, Joy on the crown), in the bagel's frame. */
+const WIDE: Pt = [0, -0.6]
+const TWO_SHOT: Pt = [0, -4.0]
+
+/**
+ * Where the camera is in the pull, in the bagel's frame. The wide holds the scale (142 to 146), a little of her in
+ * it so she stays in the frame; then it pushes in and rides with her round the hole (from about 149.8), a medium
+ * shot a little inward of her so the lip where things go in is beside her in the frame and the crust streams past;
+ * closer as she nears the lip (157.8 on); and out again, back to the brink two-shot by beat 56. One function of
+ * time, so every move carries its speed and nothing whips.
+ */
+function ride(t: number): { cells: number; hold: Pt } {
+  const [ex, ey] = evelyn(t)
+  const d = Math.hypot(ex, ey) || 1
+  const inward = 1.1 + (0.7 - 1.1) * ss(t, 156.4, 157.8)
+  const on: Pt = [ex - (ex / d) * inward, ey - (ey / d) * inward]
+  const kw = 0.45 * ss(t, 142.4, 145.2)
+  const wide: Pt = [WIDE[0] + kw * (ex - WIDE[0]), WIDE[1] + kw * (ey - WIDE[1])]
+  const a = ss(t, 146.2, 149.8)
+  const b = ss(t, 162.9, BRINK)
+  const h: Pt = [wide[0] + (on[0] - wide[0]) * a, wide[1] + (on[1] - wide[1]) * a]
+  const hold: Pt = [h[0] + (TWO_SHOT[0] - h[0]) * b, h[1] + (TWO_SHOT[1] - h[1]) * b]
+  const lw = Math.log(16) + (Math.log(12.5) - Math.log(16)) * ss(t, 142.4, 146.2)
+  const lr = Math.log(5.6) + (Math.log(4.3) - Math.log(5.6)) * ss(t, 156.4, 157.8) + (Math.log(7.9) - Math.log(4.3)) * ss(t, 161.5, BRINK)
+  return { cells: Math.exp(lw + (lr - lw) * a), hold }
+}
+const rideKeys = (H: (x: number, y: number) => Pt): PartShot[] => {
+  const keys: PartShot[] = []
+  for (let t = 142.5; t < BRINK - 0.05; t += 0.1) {
+    const { cells, hold } = ride(t)
+    keys.push({ t, cells, hold: H(hold[0], hold[1]), w: 1 })
+  }
+  return keys
+}
 
 /** The dark's paper. */
 const DARK = '#0A090C'

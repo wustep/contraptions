@@ -200,6 +200,12 @@ export class MultiverseShow extends Show {
       local: time,
       begin: 0,
     }
+    // Through a jump the ball draws out along its way for a few frames, as if it went through something.
+    const streak = this.streak(time)
+    if (streak) {
+      here.stretch = Math.max(here.stretch, streak.stretch)
+      here.angle = streak.angle
+    }
     const ride = shown === owner ? this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to) : undefined
     const world = this.legs[shown].world
     const company = [this.family(time, 'joy', world), this.family(time, 'waymond', world)].filter((b): b is ShowBall => !!b)
@@ -211,13 +217,34 @@ export class MultiverseShow extends Show {
         color: ball.color,
         ghost: ball.ghost,
         scale: point.hidden ? 0 : point.scale,
-        stretch: point.stretch,
-        angle: point.angle,
+        stretch: here.stretch,
+        angle: here.angle,
       }
       const balls = ride ? ride.fn(time, hero) : null
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
     }
     return here
+  }
+
+  /**
+   * The streak at a jump: within 80 ms of one, a ball that is moving (faster than half a cell a second) is drawn
+   * out along its way, most at the cut itself. Null elsewhere, and for a ball at rest at the cut.
+   */
+  private streak(t: number): { stretch: number; angle: number } | null {
+    for (let i = 1; i < this.legs.length; i++) {
+      const dt = t - this.legs[i].from
+      if (Math.abs(dt) > 0.08) continue
+      // The velocity in whichever leg has the ball, sampled across a few milliseconds on its own side of the cut.
+      const a = dt < 0 ? Math.max(this.legs[i - 1].from, t - 0.012) : t
+      const b = dt < 0 ? t : Math.min(this.legs[i].to, t + 0.012)
+      if (b - a < 0.004) return null
+      const p = this.where(a)
+      const q = this.where(b)
+      const v = Math.hypot(q[0] - p[0], q[1] - p[1]) / (b - a)
+      if (v < 0.5) return null
+      return { stretch: 1 + Math.min(1.4, 0.35 * v) * Math.exp(-Math.abs(dt) / 0.028), angle: Math.atan2(q[1] - p[1], q[0] - p[0]) }
+    }
+    return null
   }
 
   /** Joy at `t`, in world cells, or null while no part in the world on the stage has her in sight. */

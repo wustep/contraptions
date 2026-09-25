@@ -5,6 +5,7 @@ import { frame, hash, knock, scenery } from '../kit'
 import { fight } from '../music'
 import { VOID } from '../worlds'
 import { drawThing, type Thing } from './bagelThings'
+import { BRINK, CENTRE, evelyn, FIRST_IN, HOLE, JOY_LIGHT, REVEAL, TIP_IN } from './pullPath'
 
 export { drawThing, THING_WORLD, type Thing } from './bagelThings'
 
@@ -50,9 +51,9 @@ export { drawThing, THING_WORLD, type Thing } from './bagelThings'
 
 /** Its centre in the dark's own cells, and its outer radius and its hole's, in cells at scale 1. */
 export const BAGEL = {
-  at: [0, 0] as Pt,
+  at: CENTRE,
   r: 6.4,
-  hole: 2.0,
+  hole: HOLE,
 }
 
 /** Everything the drawing of the bagel reads. */
@@ -81,13 +82,11 @@ export interface BagelPose {
 
 /* ------------------------------------------------------------------ the pull's timeline (show seconds) */
 
-/** A light finds Joy on the crown; the whole bagel is lit; the pull takes hold (the first thing goes in). */
-export const JOY_LIGHT = 133.793
-export const REVEAL = 135.639
-export const FIRST_IN = 138.321
-/** The pull's last beat: Evelyn at the brink (the fight's beat 56), and the tip in, on beat 59 (the jump). */
-export const BRINK = fight(56)
-export const TIP_IN = fight(59)
+/**
+ * A light finds Joy on the crown; the whole bagel is lit; the pull takes hold (the first thing goes in); Evelyn at the
+ * brink (the fight's beat 56); the tip in, on beat 59 (the jump). Kept with her way in `pullPath.ts`.
+ */
+export { BRINK, FIRST_IN, JOY_LIGHT, REVEAL, TIP_IN } from './pullPath'
 
 /** One thing that went down the hole. */
 export interface Swallowed {
@@ -151,15 +150,30 @@ const STRENGTH: Record<number, number> = {
   35: 1.23, 36: 1.35, 37: 1.05, 42: 0.96, 43: 0.94, 46: 0.96, 47: 1.05, 48: 1.16, 49: 1.24, 50: 1.38, 51: 1.39, 52: 1.33, 53: 1.42,
 }
 
+/**
+ * From here on the camera rides with Evelyn round the hole, so each thing is sent over the lip beside her: just ahead
+ * of her on her way round, its last second drifting past her as it goes in.
+ */
+const AIM_FROM = 149.4
+const AIM_LEAD = 0.2
+
 export const SWALLOWED: readonly Swallowed[] = PLAN.map(([b, thing, size, variant], i) => {
   const at = b < 0 ? -b : fight(b)
   // They come in from all round, spread by a golden angle; the later ones from further out (off the frame as the
   // camera comes in), each on a spiral of about one turn, longer for the early, lazy ones.
-  const from = -Math.PI / 2 + i * 2.39996 + (hash(i, 7) - 0.5) * 0.5
+  const turns = 0.8 + 0.35 * hash(i, 17)
+  let from = -Math.PI / 2 + i * 2.39996 + (hash(i, 7) - 0.5) * 0.5
+  if (at >= AIM_FROM) {
+    const [ex, ey] = evelyn(at)
+    from = Math.atan2(ey, ex) - AIM_LEAD + turns * 2 * Math.PI
+  }
   const far = 8.6 + 3.2 * hash(i, 11) + (at > 150 ? 2.4 : 0)
   const dur = at < 150 ? 7.5 + 2 * hash(i, 13) : 6 + 1.6 * hash(i, 13)
-  return { thing, at, size, s: b < 0 ? 0.51 : STRENGTH[b] ?? 0.6, variant, from, far, dur, turns: 0.8 + 0.35 * hash(i, 17) }
+  return { thing, at, size, s: b < 0 ? 0.51 : STRENGTH[b] ?? 0.6, variant, from, far, dur, turns }
 })
+
+/** The show times of the heavy swallows, the loudest beats of the pull (36, and 48 to 53): they go down harder. */
+export const HEAVY: readonly number[] = [36, 48, 49, 50, 51, 52, 53].map(fight)
 
 /** How many things had gone down the hole by show time `t`. */
 export const swallowedBy = (t: number): number => SWALLOWED.filter((s) => s.at <= t).length
@@ -195,7 +209,7 @@ function radiusAt(s: Swallowed, q: number): number {
 function angleAt(s: Swallowed, q: number): number {
   // The swept angle from the start to q: more of the turn near the hole, where it is quicker.
   const total = s.turns * Math.PI * 2
-  const swept = (g: number) => 1 - Math.pow(g, 0.45)
+  const swept = (g: number) => 1 - Math.pow(g, 0.7)
   return s.from - total * swept(q) + 0 * total
 }
 
@@ -244,9 +258,12 @@ function base(t: number): BagelPose {
   let throb = 0
   for (const w of SWALLOWED) {
     const x = t - w.at
-    if (x < 0 || x > 1.5) continue
-    gulp += w.s * 0.8 * knock(x, 0.32)
-    throb += 0.0065 * w.s * (x / 0.07) * Math.exp(1 - x / 0.07)
+    if (x < 0 || x > 1.8) continue
+    // The big beats (36, and 48 to 53) go down heavier: a deeper flare, a bigger, slower throb.
+    const big = HEAVY.includes(w.at)
+    gulp += w.s * (big ? 1.35 : 0.8) * knock(x, big ? 0.42 : 0.32)
+    const rise = big ? 0.09 : 0.07
+    throb += (big ? 0.016 : 0.0065) * w.s * (x / rise) * Math.exp(1 - x / rise)
   }
   const glint = clampS(t, 128.4, JOY_LIGHT - 0.2) * (1 - clampS(t, REVEAL, REVEAL + 1.2))
   return { turn: bagelTurn(t), scale: 1 + throb, lit, sweep, pool, gulp, dx: 0, dy: 0, glint }
@@ -673,13 +690,15 @@ export function drawBagel(p: p5, k: number, ink: string, weight: number, pose: B
   // The cold glow down the well, flaring as something goes in.
   if (pose.gulp > 0.005) {
     // Far down: small, and deep in the dark core, so the hole stays a well and not a lamp.
-    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, h * 0.72)
-    const a = Math.min(0.42, 0.26 * pose.gulp)
+    // A heavy one lights more of the well, up to its wall.
+    const reachOut = h * (0.72 + 0.24 * clamp((pose.gulp - 1) / 1.2))
+    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, reachOut)
+    const a = Math.min(0.62, 0.26 * pose.gulp)
     gr.addColorStop(0, rgba(VOID.glow, a))
     gr.addColorStop(0.35, rgba(VOID.glow, a * 0.45))
     gr.addColorStop(1, rgba(VOID.glow, 0))
     ctx.beginPath()
-    ctx.arc(0, 0, h * 0.72, 0, TAU)
+    ctx.arc(0, 0, reachOut, 0, TAU)
     ctx.fillStyle = gr
     ctx.fill()
   }

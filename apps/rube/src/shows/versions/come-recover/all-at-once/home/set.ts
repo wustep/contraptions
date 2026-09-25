@@ -69,6 +69,7 @@ import { EYE_PUPIL, EYE_WHITE, HOME, LAUNDROMAT } from '../worlds'
  *       lit, each is a glow of its own.
  *     - `LIGHTS.dim.push(fn)`: a share of the tubes' light (the dryer's brown-out uses it, 54.5 to 58.4).
  *     - `LIGHTS.neonOff`: when the red neon in the window goes out (default never).
+ *     - `LIGHTS.lanternsOff`: when the lanterns go down to an ember (default never; `lanternLit(i, t)` says how lit).
  * - The street. `STREET.push(fn)` paints into the storefront's glass (and the door's), over the night street and
  *   under the frames: `fn(p, k, t)` in the room's cells (fireworks on 290.99).
  * - The door. `DOOR_OPENS.push({ at, shut })` swings the front door open from `at` to `shut` (show seconds); the
@@ -157,6 +158,17 @@ export const LIGHTS = {
   lanterns: [home(20), home(22), home(23), home(24), home(25)] as number[],
   /** When the red neon in the window goes out. */
   neonOff: Infinity,
+  /** When the garland's lanterns go down to an ember (the finale sets it: with the tubes, on the last hit). */
+  lanternsOff: Infinity,
+}
+
+/** How lit the garland's lantern `i` is at `t`, 0..1: lit on its time, and down to an ember from `LIGHTS.lanternsOff`. */
+export function lanternLit(i: number, t: number): number {
+  const at = LIGHTS.lanterns[i] ?? Infinity
+  if (!Number.isFinite(at) || t < at) return 0
+  const on = smooth(t, at, at + 0.18)
+  const off = LIGHTS.lanternsOff
+  return Number.isFinite(off) ? on * (1 - 0.86 * smooth(t, off, off + 0.35)) : on
 }
 
 /** How lit tube `i` is at show time `t`, 0..1: dark, a blink, catching with a flutter, on, out. */
@@ -204,8 +216,8 @@ function roomGlows(t: number): Glow[] {
 /** The garland's lanterns, once lit, are a warm light of their own in the dark. */
 LIGHTS.glows.push((t) => {
   const out: Glow[] = []
-  LIGHTS.lanterns.forEach((at, i) => {
-    const a = smooth(t, at, at + 0.18)
+  LIGHTS.lanterns.forEach((_at, i) => {
+    const a = lanternLit(i, t)
     if (a <= 0 || i >= KNOTS.length) return
     const [x, y] = lanternAt(i, t).middle
     out.push({ x, y, r: 1.6, a: 0.75 * a, color: HOME.gold })

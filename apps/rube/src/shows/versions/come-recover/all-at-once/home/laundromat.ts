@@ -236,7 +236,7 @@ function drawCoins(pen: Pen, t: number, look: WasherLook): void {
 
 /* ------------------------------------------------------------------ the bag Waymond sets up */
 
-const SLUMPED: { x: number; foot: number } = { x: 1.4, foot: FLOOR }
+const SLUMPED: { x: number; foot: number } = { x: 3.12, foot: FLOOR }
 const NUDGE = 4.45
 /** Its tilt: slumped over towards him (to the left) until he rights it; it sways up, overshoots, and settles. */
 function bagTilt(t: number): number {
@@ -265,19 +265,18 @@ function waymondAt(t: number): Pt {
     return x
   }
   const x = X([
-    [2.6, 0.62],
-    [4.25, 0.84],
-    [4.85, 0.9],
-    [6.2, 0.7],
-    [20.3, 0.7],
-    [20.8, 0.64],
-    [23.3, 0.64],
-    [24.6, -0.12],
-    [28.2, -0.12],
-    [28.9, 0.05],
-    [29.5, -0.22],
-    [31.0, -0.22],
-    [32.2, 0.3],
+    [2.6, 2.3],
+    [4.25, 2.7],
+    [4.85, 2.78],
+    [6.2, 2.5],
+    [20.4, 2.5],
+    [21.3, 2.12],
+    [23.9, 2.12],
+    [24.5, 1.98],
+    [27.7, 1.98],
+    [28.9, 1.5],
+    [31.7, 1.5],
+    [32.3, 1.75],
   ])
   // The great hit shakes the floor under him.
   const shiver = 0.02 * knock(t - GREAT, 0.12) * Math.sin(Math.max(0, t - GREAT) * 60)
@@ -292,12 +291,18 @@ function joyAt(t: number): Pt {
     [18.2, -6.35],
     [19.95, -4.52],
     [JOY_IN, -4.52],
-    [21.1, -3.22],
-    [23.35, -3.22],
-    [23.95, -2.98],
-    [27.6, -2.98],
-    [28.3, -3.3],
-    [28.75, -3.3],
+    // In, and all the way across the shop to the counter, to stop right under her mother.
+    [22.25, 0.32],
+    // A hesitation; then a second, smaller step in, on the note.
+    [22.7, 0.26],
+    [23.394, 0.26],
+    [23.742, 0.8],
+    // Waiting under her. A lean towards her as her mother runs up the keys, and back.
+    [25.9, 0.8],
+    [26.35, 1.04],
+    [26.9, 0.92],
+    [27.35, 0.92],
+    // She goes: back across the shop and out on the bell.
     [JOY_OUT, -3.95],
     [30.0, -4.55],
     [31.6, -6.45],
@@ -368,7 +373,7 @@ export const laundromat = part<LaundromatState>(
       drawLever(pen, t)
       bag(pen, SLUMPED.x, SLUMPED.foot - 0.12 * Math.max(0, knock(t - GREAT, 0.1) * Math.sin(Math.max(0, t - GREAT) * 30)), {
         color: HOME.denim,
-        size: 0.78,
+        size: 0.62,
         tilt: bagTilt(t),
         swing: -0.9 * (bagTilt(t) + 0.2) + 0.5 * knock(t - GREAT, 0.25) * Math.sin(Math.max(0, t - GREAT) * 20),
         lift: 0.6 * knock(t - GREAT, 0.15),
@@ -442,8 +447,8 @@ export const laundromat = part<LaundromatState>(
     const thrown: Way = { at: at(GREAT), p: inLeverCup(GREAT - 1e-4) }
     segs.push(...route([thrown, hop(thrown, HEAP_IN, at(INTO_HEAP))]))
     // Down into the heap as it goes up round her; out of it; to the machine; the letter comes down behind her.
-    const beside: Pt = [1.97, COUNTER.top - R]
-    const look: Pt = [2.27, COUNTER.top - R]
+    const beside: Pt = [2.07, COUNTER.top - R]
+    const look: Pt = [2.3, COUNTER.top - R]
     segs.push(
       ...route([
         { at: at(INTO_HEAP), p: HEAP_IN },
@@ -467,13 +472,18 @@ export const laundromat = part<LaundromatState>(
       segs.push(...route([{ at: at(18.55), p: look }, { at: at(t1), p: RAMP_FOOT, ease: 'in' }, { at: at(KEYSTROKES[0][0]), p: k0, ease: 'out' }]))
     }
     // The keys: to each on its note.
-    const keyWays: Way[] = [{ at: at(KEYSTROKES[0][0]), p: onKey(0) }]
+    // Over a long gap she rolls to the next key; on the quick notes she bounces key to key, taking off as she lands.
+    const keyWays: Way[] = [{ at: at(KEYSTROKES[0][0]), p: onKey(KEYSTROKES[0][1]) }]
     for (let j = 1; j < KEYSTROKES.length; j++) {
-      const [t0] = KEYSTROKES[j - 1]
+      const [t0, k0] = KEYSTROKES[j - 1]
       const [t1k, key] = KEYSTROKES[j]
-      const move = Math.min(0.24, (t1k - t0) * 0.8)
-      keyWays.push({ at: at(t1k - move), p: onKey(KEYSTROKES[j - 1][1]) })
-      keyWays.push({ at: at(t1k), p: onKey(key), ease: 'inout' })
+      const gap = t1k - t0
+      if (gap <= 0.45) keyWays.push(hop({ at: at(t0), p: onKey(k0) }, onKey(key), at(t1k)))
+      else {
+        const move = Math.min(0.42, gap * 0.6)
+        keyWays.push({ at: at(t1k - move), p: onKey(k0) })
+        keyWays.push({ at: at(t1k), p: onKey(key), ease: 'inout' })
+      }
     }
     segs.push(...route(keyWays))
     // Up over the machine's top and out along the crank's arm into its cup.
@@ -523,13 +533,14 @@ function shotsFor(_slot: { begin: number; end: number }): PartShot[] {
     // The throw, across to the counter; the receipts and the spike, the letter.
     { t: 13.3, cells: 3.9, hold: [0.55, -1.45] },
     { t: 14.5, cells: 3.35, hold: [1.75, -1.55] },
-    { t: 18.3, cells: 3.3, hold: [1.45, -1.5] },
-    // Out as the bell goes: Joy at the door, her mother at the machine, Waymond between.
-    { t: 20.1, cells: 4.3, hold: [-0.75, -1.55] },
-    // And in, slowly, on the three of them while she waits: her mother never looks round.
-    { t: 28.2, cells: 3.75, hold: [-0.45, -1.4] },
-    // She goes: a little after her, to the door.
-    { t: 29.5, cells: 3.8, hold: [-0.85, -1.42] },
+    { t: 18.3, cells: 3.3, hold: [1.05, -1.5] },
+    // Out to the door as the bell goes; with Joy across the shop to her mother, and in close on the two of them, her
+    // mother working above her, Waymond watching; out again after her as she goes.
+    { t: 20.1, cells: 4.3, hold: [-0.42, -1.45] },
+    { t: 22.3, cells: 2.95, hold: [0.95, -1.2] },
+    { t: 27.2, cells: 2.8, hold: [1.1, -1.2] },
+    { t: 28.3, cells: 3.3, hold: [0.45, -1.3] },
+    { t: 29.45, cells: 4.3, hold: [-0.3, -1.45] },
     // The total, and the throw up into the basket.
     { t: 31.5, cells: 4.5, hold: [1.7, -2.45], off: [0.4, 0.62], w: 0.35 },
     // With her down the string, over the shop, to the big dryer.

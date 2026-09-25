@@ -79,12 +79,16 @@ the rocks in the silence, the pull back on the peak, and the credits over the ta
 Before most jumps the next world bleeds through for a frame or two, the way the film's jumps do.
 - The stage shows the next leg's world, with the ball carried into it by the jump's own offset.
 - Each flicker starts 60 ms after an onset, so the leg going out is seen striking it first.
-- Three jumps have none:
+- Four jumps have none:
   - the first, which builds in the dryer's own glass instead;
+  - the jump into the dark, where the surf's worlds collapse into her on their own;
   - the fold home on the great hit, where the mosaic flips its own panels;
   - the drop into the rocks' silence, which is a clean cut.
 
-The camera takes the show's ten biggest hits in the body: a push-in of about 2.5% that eases back (`PUNCHES` in
+Through every jump she is moving at, the ball draws out along its way for a few frames, most at the cut itself, as if
+it went through something.
+
+The camera takes the show's ten biggest hits in the body: a push-in of about 4.5% that eases back (`PUNCHES` in
 `score.ts`). There are none in the rocks.
 
 ## In order
@@ -99,7 +103,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 0 | the chord | The Wang family laundromat at night, a lit box on a dark street, with a red neon washer in the window. On the chord's eight onsets the fluorescent tubes blink and catch, the one over Evelyn first. In the silence Waymond sets a slumped, googly-eyed laundry bag back on its bottom. |
 | 7.93 | the entry | She rolls onto the foot lever of the washer by the door. Four quarters drop from the coin column on the next four onsets, and the washer fills, spins up and walks toward the lever. |
 | 12.79 | the great hit | The washer jumps and slams onto the lever, and she is thrown across the shop into a heap of receipts. The receipts storm up and come down onto the spike, the audit letter last (16.78). |
-| 19.8 to 30 | the soft run | She climbs the adding machine's keys and taps out the soft run, twenty strokes, the tape spilling to the floor. Joy comes in on the door's bell (20.19) and waits. Her mother's machine is too busy for her, and she is gone by 29.37. Waymond goes part of the way to her and stops. |
+| 19.8 to 30 | the soft run | The taxes: she works the adding machine's long keyboard, rolling to a key on the long gaps and bouncing key to key on the quick notes, twenty strokes. On each one the crank ratchets, and the tape curls down the counter's end into loops on the floor. Joy comes in on the door's bell (20.19), crosses the shop, and stops right below her mother (23.74), leaning up toward her. Her mother does not look up. Joy turns and goes on the bell (29.37), and Waymond edges after her. |
 | 30.65 | two accents | The crank slams to the total and throws her into the lantern hanger's basket (31.46). It rides the garland, and a lantern pops open on each onset. |
 | 34.33 | the breath | The hanger hits its stop and tips her into the big dryer. For twenty-three seconds of swells she tumbles in the drum, which turns with the music's loudness. The camera pushes in until its window fills the frame. From 46 s other worlds show in the drum's bays: a red carpet's flashbulb, a dojo's lacquer, hot dogs, a raccoon's mask, the bagel's black. |
 | 57.95 | the first jump | The door bursts, and she flies out through the circle into the flashbulbs. |
@@ -114,17 +118,18 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 97.15 | flurry | hot dog fingers | A pink room and a grand piano, played with the feet. Her shin is posed as the dummy's thigh was. She rides and bounces up the keys, each dipping and blushing lilac as it sounds, into a hand of floppy sausage fingers that drapes over her. On 103.56 she lands on the mustard bottle and it squirts. The index finger sags under her and snaps on 106.73. |
 | 106.73 | flurry | Raccacoonie | A teppanyaki chef who is a machine, and Raccacoonie inside the toque working the levers. The cleaver chops, and the spatula flicks her into the onion volcano, where she rattles like a lid. On 112.71 it erupts, and a shrimp tail is flung into the hat's pocket (113.69). In the breath the raccoon comes out under the brim and eats it, and in the last run an egg cracks on the spatula. |
 | 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, a canyon where two rocks sit on a ledge (held), then flashes of every world she came through, backwards, and black. |
+| 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her with a flash (127.66), spins, and collapses into her, down to a point (127.79). |
 | 127.79 | the hush | the dark | She drifts down through the dark, seeds and salt passing at three depths, a sliver of colossal rim catching light below. On 133.79 a beam finds Joy, sitting still on the crown of the everything bagel. On 135.64 the whole bagel is lit, and the camera draws back until Joy is tiny on it. |
-| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs. Evelyn is drawn in on a decaying orbit, a step closer each bar. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. |
+| 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. |
 
 ### All at Once (165.6 s to the end)
 
 | Time | Music | World | What happens |
 | ---: | --- | --- | --- |
-| 165.62 | a hit, then a swell | everywhere | She falls slowly through the dark past seeds, and the laundromat comes up round her, its tubes flickering on. On `fight(72)` she lands on a seesaw and the frame tears into two panels: home and the premiere. |
+| 165.62 | a hit, then a swell | everywhere | She breaks through into the dark in a violet flare, seeds flung out round her, and falls slowly past them, and the laundromat comes up round her, its tubes flickering on. On `fight(72)` she lands on a seesaw and the frame tears into two panels: home and the premiere. |
 | 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike. She and the weight trade throws on every beat. |
-| 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same calm floor, and the net of frames closes on her. |
-| 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye is on her. Jobu's jumpers are in the room. Each gets an eye as she touches it and turns gentle: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
+| 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
+| 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye is on her. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
 | 200.16 | the drop | the rocks | Silence. Two rocks on a ledge over a vast canyon, Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's rock rocks (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge, the camera drawing back until they are specks against the canyon. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
@@ -133,7 +138,33 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 282.2 | home's pulse | home | She rolls to the party lights' foot switch and presses it on 286.20. The lanterns light, and a camera on the counter wakes, its self-timer blinking faster and faster. She rolls back beside Joy. |
 | 290.99 | the last great hit | home | The family portrait's flash, with fireworks in the storefront glass. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
-| 297 to 328 | the tail | home | The end credits, over the dark (below). |
+| 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. On the tail's two soft accents the empty drum gives a slow half-turn (305.40) and the window's light swells once (312.59). |
+
+## The polish pass
+
+After the first cut, the whole show was audited in two ways:
+- against the recording, for strong accents with nothing striking them;
+- frame by frame, for readability.
+
+The notes went back to the builders who made each part, who still had their context.
+
+- **Music.** Every strong beat of the three combs is now struck, and only two strong free onsets are not. One is the premiere-to-dojo jump itself; the other is a 0.9-strength note in the surf. New hits:
+  - the dojo's catch on 96.62;
+  - the surf's ring of worlds on 127.66 and its collapse on 127.79;
+  - the mosaic's break into the dark on 165.62 and the net snapping shut on 191.01;
+  - the peak's second kick on 248.35;
+  - Waymond's bump on 273.18, and the tail's two accents under the credits.
+- **The pull** got a camera that rides Evelyn's orbit instead of a single slowly tightening top-down shot. Things are aimed to pass close to her, she has a catch-light, and the heavy beats hit harder.
+- **The taxes and Joy's visit** were restaged as a two-shot, with Evelyn working the keys rather than sitting still.
+- **Kindness.** The jumpers threaten before they soften, the eyes visibly come from her, and the glove is a glove.
+- **The peak's fountain** is fuller.
+- **The mosaic's last calm field** is the laundromat itself, so the fold home is seamless.
+- **Lead changes:**
+  - the first frame is the laundromat's own wide shot;
+  - the zoom punches are stronger;
+  - the ball draws out in a brief streak along its way through each jump;
+  - the flickers before the jump into the dark were taken off, since the surf's collapse owns it;
+  - the ground under the laundromat is drawn as earth, not a black band.
 
 ## End credits
 
@@ -173,7 +204,7 @@ to 332.
   - inside a world it never jumps;
   - at every jump it holds its place on the screen, within 1% of the frame a millisecond: every jump is a match cut;
   - it is never hidden for more than 2.5 s.
-- **Every strike lands on the recording.** 417 strikes, each within 40 ms of a measured onset or 30 ms of a comb's
+- **Every strike lands on the recording.** 427 strikes, each within 40 ms of a measured onset or 30 ms of a comb's
   beat or eighth.
   - Everywhere-at-once and the kindness after it strike at least 85% of the fight's beats from 170.8 to 199.6 s.
   - The peak strikes at least 85% of the fall's beats from 247.7 to 264.1 s.

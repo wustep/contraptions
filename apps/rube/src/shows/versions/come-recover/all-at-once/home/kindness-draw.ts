@@ -40,7 +40,8 @@ import {
 
 const BAMBOO = mixHex(HOME.wood, HOME.paper, 0.38)
 const BAMBOO_DEEP = mixHex(HOME.wood, HOME.steelDark, 0.25)
-const OXBLOOD = mixHex(HOME.red, HOME.night, 0.42)
+const TAN = mixHex(mixHex(HOME.wood, HOME.butter, 0.45), HOME.paper, 0.15)
+const TAN_DEEP = mixHex(HOME.wood, HOME.butter, 0.2)
 const KARAOKE_BODY = mixHex(HOME.night, HOME.denim, 0.55)
 const CARDBOARD = mixHex(HOME.wood, HOME.paper, 0.2)
 const IRON = mixHex(HOME.steelDark, HOME.night, 0.35)
@@ -313,7 +314,19 @@ function coil(pen: Pen, from: Pt, to: Pt): void {
   p.endShape()
 }
 
-/** The boxing glove on its spring, if it is out; its eye from the touch. */
+/** A point of the glove's own frame (x forward from the cuff's end, y across) in the room's cells. */
+function onGlove(g: { end: Pt; aim: number }, x: number, y: number): Pt {
+  const c = Math.cos(g.aim)
+  const sn = Math.sin(g.aim)
+  return [g.end[0] + x * c - y * sn, g.end[1] + x * sn + y * c]
+}
+
+/** Where the glove's eye sits (on the back of the mitt), and its size. */
+export function gloveEye(t: number): { at: Pt; r: number } {
+  return { at: onGlove(gloveAt(t), 0.44, -0.1), r: 0.09 }
+}
+
+/** The boxing glove on its spring, if it is out: a laced white cuff, a tan leather mitt, its thumb; its eye from the touch. */
 export function drawGlove(pen: Pen, t: number): void {
   const g = gloveAt(t)
   if (!g.out) return
@@ -322,44 +335,53 @@ export function drawGlove(pen: Pen, t: number): void {
   p.push()
   p.translate(g.end[0] * k, g.end[1] * k)
   p.rotate(g.aim)
-  const sq = g.squash
-  // The cuff, laced white.
+  const V = (x: number, y: number) => p.vertex(x * k, y * k)
+  const Bz = (a: number, b: number, c: number, d: number, e: number, f: number) => p.bezierVertex(a * k, b * k, c * k, d * k, e * k, f * k)
+  // The cuff: white, laced up its back, a red band where it meets the mitt.
   solid(p, ink, w * 0.8, HOME.paper)
-  p.rect(0.05 * k, 0, 0.12 * k, 0.2 * k, 0.03 * k)
-  outline(p, ink, w * 0.4)
-  p.line(0.02 * k, -0.06 * k, 0.08 * k, 0.06 * k)
-  p.line(0.02 * k, 0.06 * k, 0.08 * k, -0.06 * k)
-  // The fist: a big round mitt and its thumb, squashed on a touch.
+  p.rect(0.1 * k, 0, 0.21 * k, 0.23 * k, 0.03 * k)
+  outline(p, ink, w * 0.45)
+  for (let i = 0; i < 3; i++) {
+    const x = 0.035 + i * 0.055
+    p.line(x * k, -0.1 * k, (x + 0.04) * k, -0.02 * k)
+    p.line((x + 0.04) * k, -0.1 * k, x * k, -0.02 * k)
+  }
+  solid(p, ink, w * 0.6, HOME.red)
+  p.rect(0.22 * k, 0, 0.04 * k, 0.25 * k, 0.01 * k)
+  // The mitt: long, round-knuckled, squashed on a touch.
   p.push()
-  p.translate(0.26 * k, 0)
-  p.scale(1 - 0.28 * sq, 1 + 0.18 * sq)
-  solid(p, ink, w, OXBLOOD)
+  p.translate(0.24 * k, 0)
+  p.scale(1 - 0.26 * g.squash, 1 + 0.16 * g.squash)
+  solid(p, ink, w, TAN)
   p.beginShape()
-  p.vertex(-0.14 * k, -0.1 * k)
-  p.bezierVertex(-0.04 * k, -0.17 * k, 0.16 * k, -0.17 * k, 0.17 * k, -0.02 * k)
-  p.bezierVertex(0.18 * k, 0.12 * k, 0.04 * k, 0.15 * k, -0.06 * k, 0.13 * k)
-  p.bezierVertex(-0.12 * k, 0.12 * k, -0.15 * k, 0.06 * k, -0.14 * k, -0.1 * k)
+  V(0, -0.12)
+  Bz(0.04, -0.2, 0.2, -0.24, 0.3, -0.19)
+  Bz(0.4, -0.15, 0.43, -0.07, 0.42, 0.01)
+  Bz(0.41, 0.1, 0.34, 0.16, 0.22, 0.16)
+  Bz(0.12, 0.16, 0.03, 0.15, 0, 0.12)
   p.endShape(p.CLOSE)
-  // The thumb, folded over the knuckles' underside.
+  // The thumb, a lobe along its near side, pointing forward.
+  solid(p, ink, w * 0.8, TAN_DEEP)
   p.beginShape()
-  p.vertex(-0.06 * k, 0.12 * k)
-  p.bezierVertex(0.0 * k, 0.03 * k, 0.1 * k, 0.03 * k, 0.12 * k, 0.07 * k)
-  p.endShape()
-  p.stroke(alpha(p, HOME.paper, 0.35))
-  p.strokeWeight(Math.max(1, w * 0.6))
+  V(0.04, 0.06)
+  Bz(0.1, -0.01, 0.26, -0.02, 0.31, 0.04)
+  Bz(0.34, 0.08, 0.3, 0.13, 0.24, 0.12)
+  Bz(0.16, 0.11, 0.08, 0.12, 0.04, 0.06)
+  p.endShape(p.CLOSE)
+  // Its seam over the knuckles, and the shine on its back.
+  outline(p, ink, w * 0.45)
+  p.arc(0.3 * k, -0.02 * k, 0.16 * k, 0.28 * k, -Math.PI * 0.45, Math.PI * 0.05)
+  p.stroke(alpha(p, HOME.paper, 0.5))
+  p.strokeWeight(Math.max(1, w * 0.7))
   p.noFill()
-  p.arc(0.03 * k, -0.02 * k, 0.2 * k, 0.18 * k, Math.PI * 1.15, Math.PI * 1.55)
+  p.arc(0.2 * k, -0.06 * k, 0.26 * k, 0.2 * k, Math.PI * 1.1, Math.PI * 1.5)
   p.pop()
   p.pop()
-  // Its eye, on the back of the fist (the side away from the floor).
   const sc = eyeScale(t, EYE_AT.glove)
   if (sc > 0.01) {
-    const up = g.aim - Math.PI / 2
-    const side = Math.cos(g.aim) >= 0 ? 1 : -1
-    const ex = g.end[0] + Math.cos(g.aim) * 0.25 + Math.cos(up) * 0.08 * side
-    const ey = g.end[1] + Math.sin(g.aim) * 0.25 + Math.sin(up) * 0.08 * side
     const e = eyeSwing(t, EYE_AT.glove)
-    propEye(pen, ex, ey, 0.085 * sc, e.swing - (g.aim + Math.PI / 2) * 0.15, e.lift)
+    const eye = gloveEye(t)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing - (g.aim + Math.PI / 2) * 0.15, e.lift)
   }
 }
 
@@ -432,13 +454,18 @@ export function drawTrap(pen: Pen, t: number): void {
   const sc = eyeScale(t, EYE_AT.trap)
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.trap)
-    const a = j.sway - j.open
-    const lx = -0.13
-    const ly = -0.3
-    const ex = HINGE[0] + lx * Math.cos(a) - ly * Math.sin(a)
-    const ey = HINGE[1] + lx * Math.sin(a) + ly * Math.cos(a)
-    propEye(pen, ex, ey, 0.092 * sc, e.swing + j.sway * 1.5, e.lift)
+    const eye = trapEye(t)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + j.sway * 1.5, e.lift)
   }
+}
+
+/** Where the trap's eye sits (high on its near jaw), and its size. */
+export function trapEye(t: number): { at: Pt; r: number } {
+  const j = jawsAt(t)
+  const a = j.sway - j.open
+  const lx = -0.13
+  const ly = -0.3
+  return { at: [HINGE[0] + lx * Math.cos(a) - ly * Math.sin(a), HINGE[1] + lx * Math.sin(a) + ly * Math.cos(a)], r: 0.092 }
 }
 
 /* ------------------------------------------------------------------ the mallet */
@@ -477,8 +504,16 @@ export function drawHammer(pen: Pen, t: number): void {
   const sc = eyeScale(t, EYE_AT.hammer)
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.hammer)
-    propEye(pen, hx + 0.02 * Math.cos(phi), hy - 0.02, 0.118 * sc, e.swing + phi * 0.8, e.lift)
+    const eye = hammerEye(t)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing + phi * 0.8, e.lift)
   }
+}
+
+/** Where the mallet's eye sits (on its head's side), and its size. */
+export function hammerEye(t: number): { at: Pt; r: number } {
+  const phi = swingAt(t)
+  const [hx, hy] = headAt(phi)
+  return { at: [hx + 0.02 * Math.cos(phi), hy - 0.02], r: 0.118 }
 }
 
 /* ------------------------------------------------------------------ the arm */
@@ -582,11 +617,51 @@ export function drawArm(pen: Pen, t: number): void {
   const sc = eyeScale(t, EYE_AT.claw)
   if (sc > 0.01) {
     const e = eyeSwing(t, EYE_AT.claw)
-    const up = g.a - Math.PI / 2
-    const flip = Math.cos(g.a) < 0 ? -1 : 1
-    const ex = g.end[0] + Math.cos(g.a) * 0.03 + Math.cos(up) * 0.12 * flip
-    const ey = g.end[1] + Math.sin(g.a) * 0.03 + Math.sin(up) * 0.12 * flip
-    propEye(pen, ex, ey, 0.1 * sc, e.swing, e.lift)
+    const eye = clawEye(t)
+    propEye(pen, eye.at[0], eye.at[1], eye.r * sc, e.swing, e.lift)
+  }
+}
+
+/** Where the claw's eye sits (on top of its block), and its size. */
+export function clawEye(t: number): { at: Pt; r: number } {
+  const g = armGeom(armAt(t))
+  const up = g.a - Math.PI / 2
+  const flip = Math.cos(g.a) < 0 ? -1 : 1
+  return { at: [g.end[0] + Math.cos(g.a) * 0.03 + Math.cos(up) * 0.12 * flip, g.end[1] + Math.sin(g.a) * 0.03 + Math.sin(up) * 0.12 * flip], r: 0.1 }
+}
+
+/* ------------------------------------------------------------------ the eyes she gives them */
+
+/** How long an eye takes to fly from her eye to the machine, landing on the beat. */
+const FLIGHT = 0.22
+const GIVEN: { at: number; target: (t: number) => { at: Pt; r: number } }[] = [
+  { at: EYE_AT.glove, target: gloveEye },
+  { at: EYE_AT.trap, target: trapEye },
+  { at: EYE_AT.hammer, target: hammerEye },
+  { at: EYE_AT.claw, target: clawEye },
+]
+
+/**
+ * The eyes she gives: on each machine's beat a copy of her own googly eye pops off hers, flies in a quick arc,
+ * turning, its pupil flapping round, and slaps onto the machine as it touches her. Drawn over her (the part's
+ * `over`). Her eye (`fx.ts`) is centred on her ball, its white 0.6 of her radius.
+ */
+export function drawGivenEyes(pen: Pen, t: number, her: (t: number) => Pt): void {
+  for (const g of GIVEN) {
+    const u = t - (g.at - FLIGHT)
+    if (u < 0 || u >= FLIGHT) continue
+    const s = u / FLIGHT
+    const from = her(g.at - FLIGHT)
+    const to = g.target(g.at).at
+    const d = Math.hypot(to[0] - from[0], to[1] - from[1])
+    const f = 1 - (1 - s) * (1 - s) * (1 - 0.4 * s)
+    const lift = (0.1 + 0.35 * d) * 4 * s * (1 - s)
+    const x = from[0] + (to[0] - from[0]) * f
+    const y = from[1] + (to[1] - from[1]) * f - lift
+    // Peeled off hers at her eye's size, it swells to the machine's as it goes.
+    const r0 = 0.6 * R
+    const r = (r0 + (g.target(g.at).r - r0) * s) * (0.7 + 0.3 * Math.min(1, s / 0.2))
+    propEye(pen, x, y, r, s * Math.PI * 2.6 + 0.5 * Math.sin(s * 19), 0.7 * Math.sin(Math.PI * s))
   }
 }
 

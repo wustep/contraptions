@@ -14,6 +14,8 @@ import {
   JOY_EYE as EYE_ON,
   joyLook,
   SPRAYS,
+  CHUNKS,
+  chunkAt,
   SPRAY_TIMES,
   seedAt,
   joyAt,
@@ -225,6 +227,36 @@ function drawPin(p: p5, c: Ctx, x: number, y: number, a: number, open = 0): void
   p.pop()
 }
 
+/** A lump of the bagel's crust at (x, y) (frame cells), `size` across: its black, a lit edge, and a few seeds. */
+function drawCrust(p: p5, c: Ctx, x: number, y: number, size: number, a: number, dark: number, seed: number): void {
+  const { k, ink, weight } = c
+  const u = size * k
+  const h = (i: number) => ((Math.sin(seed * 91.7 + i * 17.3) * 43758.5453) % 1 + 1) % 1
+  p.push()
+  p.translate(x * k, y * k)
+  p.rotate(a)
+  p.stroke(rgba(ink, 0.9 * (1 - dark)))
+  p.strokeWeight(Math.max(0.6, weight * 0.7))
+  p.fill(mixHex(VOID.bagelRim, VOID.bagel, 0.35 + 0.5 * dark))
+  p.beginShape()
+  const n = 7
+  for (let i = 0; i < n; i++) {
+    const ang = (i / n) * Math.PI * 2
+    const r = 0.5 * (0.72 + 0.28 * h(i)) * (i % 2 ? 0.8 : 1)
+    p.vertex(Math.cos(ang) * r * u, Math.sin(ang) * r * 0.72 * u)
+  }
+  p.endShape(p.CLOSE)
+  // The glaze along its top edge, and its seeds.
+  p.noFill()
+  p.stroke(rgba(VOID.rimLight, 0.55 * (1 - dark)))
+  p.strokeWeight(Math.max(0.6, weight * 0.8))
+  p.arc(0, -0.05 * u, 0.62 * u, 0.4 * u, Math.PI * 1.15, Math.PI * 1.85)
+  p.noStroke()
+  p.fill(rgba(VOID.sesame, 0.95 * (1 - dark)))
+  for (let i = 0; i < 3; i++) p.ellipse((h(i + 9) - 0.5) * 0.5 * u, (h(i + 19) - 0.5) * 0.3 * u, 0.2 * u, 0.09 * u)
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the part */
 
 export const peak = part<PeakState>(
@@ -391,6 +423,22 @@ export const peak = part<PeakState>(
         }
       }
 
+      // On the loudest beats, lumps of its crust and a small thing come out with the big one.
+      for (const ch of CHUNKS) {
+        const x = T - ch.at
+        if (x < 0 || x > 2.2) continue
+        const w = chunkAt(ch, x)
+        const [px, py] = F(w.p)
+        if (ch.thing) {
+          drawThing(p, k, ink, weight, ch.thing, px, py, w.size, w.angle, w.dark, ch.seed % 3)
+          if (x > 0.1) {
+            const sc = Math.max(0.045, 0.13 * w.size) / (0.56 * R)
+            const wob = 0.9 * Math.exp(-(x - 0.1) / 0.5) * Math.sin((x - 0.1) * 23)
+            googly(p, k, ink, weight, px + 0.08 * w.size, py - 0.1 * w.size + 0.3 * R * sc, { x: wob, y: 1, hx: 0 }, sc)
+          }
+        } else drawCrust(p, c, px, py, w.size, w.angle, w.dark, ch.seed)
+      }
+
       // Everything it gives back, each with a googly eye.
       for (const g of GIVEN) {
         const x = T - g.at
@@ -481,10 +529,11 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // Back, as Waymond comes down, to the whole machine: pulley, line, rim, the two of them in the hole.
     { t: 246.4, cells: 5.4, hold: H([-1.4, -0.3]) },
     // Waymond caught by the line, and the tug: the line, his catch and the two of them in one frame.
-    { t: 247.3, cells: 6.2, hold: H([-2.2, -0.8]) },
-    { t: 247.62, cells: 6.2, hold: H([-2.1, -0.75]) },
+    { t: 247.3, cells: 5.3, hold: H([-1.9, -0.5]) },
+    { t: 247.62, cells: 5.0, hold: H([-1.7, -0.35]) },
+    { t: 247.85, cells: 5.1, hold: H([-1.7, -0.4]) },
     // Open to the whole machine as the bagel turns back: pulley, Waymond going down, the line, the rim, the hole.
-    { t: 248.4, cells: 8.2, hold: H([-1.4, -1.4]) },
+    { t: 248.6, cells: 8.2, hold: H([-1.4, -1.4]) },
     { t: 249.8, cells: 8.2, hold: H([-1.5, -1.5]) },
     { t: 251.0, cells: 7.9, hold: H([-1.7, -1.6]) },
     // In on mother and daughter for Joy's eye.

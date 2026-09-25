@@ -112,9 +112,51 @@ const blendLeg = (a: LegPose, b: LegPose, u: number): LegPose => ({ knee: lerpP(
 
 /** The feet's notes: the left foot stomps a low chord, the kicking foot comes down and plays. */
 export const STOMPS = [97.489]
-export const STEPS = [97.93]
 const STOMPER_REST = onKeys(-2.05, 1.33, 0.08)
-const KICKER_KEYS = onKeys(-0.5, 1.2, 0.1)
+/**
+ * The kicking foot comes down to play, and walks up the keyboard behind her: on each of her strong landings it plays
+ * a note of its own a little way back, a duet; after her last key it lifts away, out of the hand's shot.
+ */
+const WALK: [number, number][] = [
+  [97.93, -0.5],
+  [98.348, keyX(14) - 1.25],
+  [98.894, keyX(16) - 1.25],
+  [99.776, keyX(19) - 1.25],
+  [100.635, keyX(22) - 1.25],
+  [101.065, keyX(23) - 1.25],
+]
+export const STEPS = WALK.map(([t]) => t)
+/** How long each walking note is held down, and how far the key (and the foot on it) goes. */
+export const STEP_HOLD = 0.12
+const STEP_DEPTH = 0.07
+/** A note's press, 0..1: down fast on the note, held, let up. */
+export const pressOf = (u: number, hold: number): number => (u < 0 ? 0 : u < 0.035 ? u / 0.035 : u < hold ? 1 : Math.max(0, 1 - (u - hold) / 0.09))
+
+/** The kicking foot on the keys at `t`: planted on a note, lifted and carried to the next, and away at the end. */
+function walk(t: number): LegPose {
+  let x = WALK[0][1]
+  let lift = 0
+  for (let i = 0; i + 1 < WALK.length; i++) {
+    const [t0, x0] = WALK[i]
+    const [t1, x1] = WALK[i + 1]
+    if (t < t0) break
+    const v = Math.max(0, Math.min(1, (t - t0 - STEP_HOLD - 0.02) / (t1 - t0 - STEP_HOLD - 0.02)))
+    x = x0 + (x1 - x0) * ease(v)
+    // Up quickly, and down onto the next note a little faster than it rose.
+    lift = t < t1 ? 0.3 * Math.sin(Math.PI * Math.pow(v, 0.7)) : 0
+  }
+  const [tl, xl] = WALK[WALK.length - 1]
+  const away = ease((t - tl - 0.22) / 0.8)
+  if (away > 0) {
+    x = xl - 2.6 * away
+    lift = 1.4 * away
+  }
+  // Down with the key on each note.
+  let press = 0
+  for (const [n] of WALK) press = Math.max(press, pressOf(t - n, STEP_HOLD))
+  const l = lift / 0.3
+  return onKeys(x, 1.2 - 0.1 * Math.min(1, l), 0.1 - 0.22 * Math.min(1.5, l), lift - STEP_DEPTH * press)
+}
 
 /** A foot's press: lifted before it, driven down onto the keys on the note, and resting after. */
 function pressed(rest: LegPose, notes: number[], t: number): LegPose {
@@ -149,7 +191,7 @@ export function kicker(t: number): LegPose {
   const flop = ease(u / 0.12)
   const through: LegPose = { knee: KNEE_K, psi, foot: psi - FLEX * (1 - flop) + 0.45 * flop + 0.3 * ring(u - 0.08, 2.4, 0.3) }
   const down = ease((t - (KICK + 0.26)) / (STEPS[0] - KICK - 0.26))
-  const keys = pressed(KICKER_KEYS, STEPS, t)
+  const keys = walk(t)
   return down >= 1 ? keys : blendLeg(through, keys, down)
 }
 

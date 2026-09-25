@@ -6,6 +6,7 @@ import {
   drawArm,
   drawArmFront,
   drawDesk,
+  drawGivenEyes,
   drawGiftBox,
   drawGlove,
   drawHammer,
@@ -77,11 +78,13 @@ export const kindness = part<KindnessState>(
     },
     over: (p, s, c) => {
       const t = c.t + s.begin
-      if (t < B(133) || t > B(141) + 0.2) return
+      if (t < B(124) || t > B(141) + 0.2) return
       const { k } = c
+      const pen = penOf(p, c)
       p.push()
       p.translate(-O[0] * k, -O[1] * k)
-      drawArmFront(penOf(p, c), t)
+      drawArmFront(pen, t)
+      drawGivenEyes(pen, t, ballAt)
       p.pop()
     },
   },
@@ -118,11 +121,11 @@ export const kindness = part<KindnessState>(
   (slot) => {
     const H = (x: number, y: number): Pt => toPart([x, y])
     const shots: PartShot[] = [
-      // The calm she lands in, rising a little off the floor, then room for the gift box at her left as it bursts.
-      { t: slot.begin + 0.5, cells: 3.25, hold: H(27.36, -0.48), w: 1 },
-      { t: B(125), cells: 3.5, hold: H(27.5, -0.66), w: 1 },
-      // Along with her to the trap, the mallet coming into the top of the frame.
-      { t: B(127), cells: 3.9, hold: H(28.3, -0.86), w: 1 },
+      // Out of the calm she lands in to the whole of it: her, Jobu's jumpers between, and Waymond waiting at the far
+      // end of the party table (he gave her the eye).
+      { t: 191.95, cells: 5.2, hold: H(30.05, -1.22), w: 1 },
+      // Then with her to the trap, the mallet coming into the top of the frame.
+      { t: B(127), cells: 4.0, hold: H(28.5, -0.9), w: 1 },
       // Back as the mallet cocks and she goes up, to see it swing.
       { t: B(129), cells: 4.9, hold: H(29.0, -1.6), w: 1 },
       { t: B(130), cells: 5.4, hold: H(29.9, -1.95), w: 1 },

@@ -18,11 +18,11 @@ const TOP = COUNTER.top
 
 /* ------------------------------------------------------------------ the adding machine */
 
-/** Its body (a box on the counter), and the stepped ramp of keys down its right side. */
-export const MACHINE = { x0: 0.46, x1: 0.98, top: TOP - 0.3 }
-const RAMP_A: Pt = [0.98, TOP - 0.27]
-const RAMP_B: Pt = [1.52, TOP - 0.02]
-const KEY_N = 5
+/** Its body (a box on the counter), and the long stepped ramp of keys down its right side. */
+export const MACHINE = { x0: 0.46, x1: 1.0, top: TOP - 0.3 }
+const RAMP_A: Pt = [1.0, TOP - 0.29]
+const RAMP_B: Pt = [1.94, TOP - 0.02]
+export const KEY_N = 7
 const RAMP_DIR: Pt = (() => {
   const l = Math.hypot(RAMP_A[0] - RAMP_B[0], RAMP_A[1] - RAMP_B[1])
   return [(RAMP_A[0] - RAMP_B[0]) / l, (RAMP_A[1] - RAMP_B[1]) / l]
@@ -33,7 +33,7 @@ const KEY_H = 0.055
 
 /** Key i's cap (0 the lowest, at the ramp's foot; KEY_N - 1 the highest). */
 function keyBase(i: number): Pt {
-  const f = 0.12 + (0.76 * i) / (KEY_N - 1)
+  const f = 0.08 + (0.84 * i) / (KEY_N - 1)
   return [RAMP_B[0] + (RAMP_A[0] - RAMP_B[0]) * f, RAMP_B[1] + (RAMP_A[1] - RAMP_B[1]) * f]
 }
 
@@ -45,28 +45,32 @@ export function onKey(i: number): Pt {
   return [x, y - up / Math.max(0.5, -RAMP_N[1])]
 }
 
-/** The ball's strokes on the keys: when each is struck, and which. The soft run, and the tapping round it. */
+/**
+ * The ball's strokes on the keys: when each is struck, and which (0 the lowest, at the ramp's foot; 6 the top). She
+ * works the whole keyboard: rolls to a key on a long gap, bounces from key to key on the quick notes of the soft run
+ * (a run up the keys on 25.2 to 25.8, a hop-scotch on 27.1 to 28.5), and the machine works for her on every one.
+ */
 export const KEYSTROKES: [number, number][] = [
   [19.783, 0],
-  [20.538, 1],
-  [21.165, 2],
-  [23.394, 1],
+  [20.538, 2],
+  [21.165, 3],
+  [23.394, 5],
   [23.742, 2],
-  [25.217, 3],
-  [25.287, 4],
+  [25.217, 1],
+  [25.287, 2],
   [25.472, 3],
-  [25.6, 2],
-  [25.716, 1],
-  [25.844, 2],
-  [26.413, 3],
-  [27.051, 2],
+  [25.6, 4],
+  [25.716, 5],
+  [25.844, 6],
+  [26.413, 4],
+  [27.051, 6],
   [27.411, 3],
-  [27.748, 4],
-  [28.154, 3],
+  [27.748, 5],
+  [28.154, 2],
   [28.537, 4],
-  [29.373, 3],
-  [29.443, 2],
-  [30.093, 4],
+  [29.373, 6],
+  [29.443, 5],
+  [30.093, 6],
 ]
 
 /** How far key i is down at `t`, 0..1: struck, held while she is on it, sprung back as she leaves. */
@@ -96,7 +100,7 @@ export const RELEASE = THE_TOTAL + THROW.dur
 
 /** The crank's angle at `t` (radians above level): at rest, down under her, thrown, and ringing to rest. */
 export function crankAngle(t: number): number {
-  if (t < ONTO_CRANK + 0.08) return 0
+  if (t < ONTO_CRANK + 0.08) return ratchet(t)
   if (t < THE_TOTAL) {
     // Her weight takes it down, faster and faster, to its stop.
     const u = (t - ONTO_CRANK - 0.08) / (THE_TOTAL - ONTO_CRANK - 0.08)
@@ -111,6 +115,24 @@ export function crankAngle(t: number): number {
   const u = t - RELEASE
   const w = (2 * (THROW.at - THROW.from)) / THROW.dur
   return (THROW.at + (w / 14) * Math.sin(u * 14)) * Math.exp(-u / 0.22)
+}
+
+/** The machine working: on every key the crank ratchets down a notch and springs back, and the body clacks. */
+export function ratchet(t: number): number {
+  let a = 0
+  for (const [at] of KEYSTROKES) {
+    const u = t - at
+    if (u < 0 || u > 0.6) continue
+    a += u < 0.025 ? (-0.13 * u) / 0.025 : -0.13 * Math.exp(-(u - 0.025) / 0.09) * Math.cos((u - 0.025) * 26)
+  }
+  return a
+}
+
+/** The machine's body, jolted by each stroke (cells, up). */
+export function clack(t: number): number {
+  let v = 0
+  for (const [at] of KEYSTROKES) v += 0.014 * knock(t - at, 0.05)
+  return v + 0.03 * knock(t - THE_TOTAL, 0.08)
 }
 
 /** A point on the crank's arm, `s` along it from the pivot, at angle `a`. */
@@ -136,7 +158,7 @@ export const THROW_SPEED = ((2 * (THROW.at - THROW.from)) / THROW.dur) * (CRANK.
 /** How much tape is out at `t`: a curl to start, a bit more with every key, a long run on the total. */
 export function tapeOut(t: number): number {
   let n = 0.28
-  for (const [at] of KEYSTROKES) n += 0.13 * clamp((t - at) / 0.12)
+  for (const [at] of KEYSTROKES) n += 0.19 * clamp((t - at) / 0.12)
   n += 1.05 * easeOutCubic(clamp((t - THE_TOTAL) / 0.45))
   return n
 }
@@ -153,14 +175,17 @@ const TAPE_PATH: Pt[] = (() => {
     const a = -Math.PI / 2 - (i / 6) * (Math.PI / 2)
     pts.push([COUNTER.x0 + 0.06 + Math.cos(a) * 0.12, y0 + 0.12 + Math.sin(a) * 0.12])
   }
-  // Down the counter's end.
-  for (let y = y0 + 0.2; y < FLOOR - 0.12; y += 0.1) pts.push([COUNTER.x0 - 0.08 + 0.02 * Math.sin(y * 9), y])
-  // On the floor, in loose loops, spreading left.
-  let x = COUNTER.x0 - 0.1
-  for (let i = 0; i < 60; i++) {
-    const a = i * 0.9
-    x -= 0.035
-    pts.push([x + Math.cos(a) * 0.1, FLOOR - 0.1 - Math.abs(Math.sin(a)) * 0.13 + 0.04 * hash(i, 3)])
+  // Down the counter's end, swaying as it falls.
+  for (let y = y0 + 0.2; y < FLOOR - 0.16; y += 0.08) pts.push([COUNTER.x0 - 0.1 + 0.035 * Math.sin(y * 7), y])
+  // On the floor, in loops that pile up as more comes: each loop a curl, the pile spreading left and rising.
+  for (let i = 0; i < 16; i++) {
+    const cx = COUNTER.x0 - 0.16 - 0.055 * i
+    const cyc = FLOOR - 0.14 - Math.min(0.2, 0.018 * i)
+    const r = 0.12 + 0.05 * hash(i, 4)
+    for (let j = 0; j <= 10; j++) {
+      const a = Math.PI / 2 + (j / 10) * Math.PI * 2 * (i % 2 ? 1 : -1)
+      pts.push([cx + Math.cos(a) * r * 1.1, cyc + Math.sin(a) * r * 0.8])
+    }
   }
   return pts
 })()
@@ -199,7 +224,7 @@ function drawTape(pen: Pen, t: number): void {
 /* ------------------------------------------------------------------ the receipts, the spike, the letter */
 
 /** The heap she lands in, and the spike beside it. */
-export const HEAP_X = 2.2
+export const HEAP_X = 2.24
 export const SPIKE_X = 2.64
 /** The swell after the great hit: she comes down into the heap and it goes up. */
 export const INTO_HEAP = 13.665
@@ -269,6 +294,36 @@ function slipAt(s: Slip, t: number): { x: number; y: number; a: number; flat: nu
     const x = s.peak[0] + (s.land[0] - s.peak[0]) * u + sway
     const y = s.peak[1] + (s.land[1] - s.peak[1]) * fall
     return { x, y, a: s.spin + Math.sin((t - s.top) * 5.5 + s.spin) * 0.8 * (1 - u), flat: 0.35 + 0.65 * Math.abs(Math.cos((t - s.top) * 5.5 + s.spin)) }
+  }
+  return { x: s.land[0], y: s.land[1], a: 0, flat: 0 }
+}
+
+/**
+ * Two receipts that slide off the spent heap while she works, and flutter down past the counter's front to the
+ * floor: the taxes getting away from her. When each starts, where it lands, and when.
+ */
+const SLIDERS: { from: Pt; at: number; land: Pt; down: number; tint: string }[] = [
+  { from: [2.3, TOP - 0.05], at: 24.3, land: [2.62, FLOOR - 0.012], down: 25.9, tint: HOME.paper },
+  { from: [2.12, TOP - 0.06], at: 27.2, land: [1.78, FLOOR - 0.012], down: 28.75, tint: mixHex(HOME.paper, HOME.butter, 0.35) },
+]
+
+function sliderAt(s: (typeof SLIDERS)[number], t: number): { x: number; y: number; a: number; flat: number } | null {
+  if (t < s.at) return null
+  const slide = 0.3
+  if (t < s.at + slide) {
+    const u = easeInOutSine((t - s.at) / slide)
+    return { x: s.from[0] + 0.12 * u, y: s.from[1], a: 0.2 * u, flat: 0.25 }
+  }
+  if (t < s.down) {
+    const u = (t - s.at - slide) / (s.down - s.at - slide)
+    const x0 = s.from[0] + 0.12
+    const ph = (t - s.at) * 5
+    return {
+      x: x0 + (s.land[0] - x0) * easeInOutSine(u) + 0.14 * Math.sin(ph) * (1 - u),
+      y: s.from[1] + (s.land[1] - s.from[1]) * (0.3 * u * u + 0.7 * u),
+      a: 0.7 * Math.sin(ph + 0.5) * (1 - u),
+      flat: 0.35 + 0.65 * Math.abs(Math.cos(ph)) * (1 - u),
+    }
   }
   return { x: s.land[0], y: s.land[1], a: 0, flat: 0 }
 }
@@ -358,7 +413,7 @@ function drawHeap(pen: Pen, t: number): void {
   const n = 9
   for (let i = 0; i < n; i++) {
     const u = (i / (n - 1)) * 2 - 1
-    const x = HEAP_X + u * 0.32 * (1 - 0.15 * spent)
+    const x = HEAP_X + u * 0.26 * (1 - 0.15 * spent)
     const y = TOP - 0.03 - (1 - u * u) * h * (0.6 + 0.4 * hash(i, 9)) - 0.02
     p.push()
     p.translate(x * k, y * k)
@@ -372,6 +427,9 @@ function drawHeap(pen: Pen, t: number): void {
 function drawMachine(pen: Pen, t: number): void {
   const { p, k, ink, w } = pen
   const { x0, x1, top } = MACHINE
+  // Every stroke clacks the machine on the counter.
+  p.push()
+  p.translate(0, -clack(t) * k)
   // The paper roll on its arm over the machine, turning as it feeds.
   const turn = tapeOut(t) / 0.1
   outline(p, ink, w * 0.7)
@@ -403,6 +461,7 @@ function drawMachine(pen: Pen, t: number): void {
     solid(p, ink, w * 0.6, i === 0 ? HOME.red : HOME.paper)
     p.rect(bx * k, (by - hgt / 2) * k, 0.075 * k, hgt * k, 0.015 * k)
   }
+  p.pop()
   // The crank: its arm out to the left, a cup at its end, on a hub.
   const a = crankAngle(t)
   const [ex, ey] = crankPoint(CRANK.len, a)
@@ -442,10 +501,15 @@ export function counterBack(pen: Pen, t: number): void {
     if (s.spiked !== undefined || t < s.at) continue
     drawSlip(pen, s.land[0], s.land[1] - 0.012, s.w, s.h, 0, 0.12, s.tint)
   }
+  for (const sl of SLIDERS) if (t >= sl.down) drawSlip(pen, sl.land[0], sl.land[1], 0.17, 0.24, 0, 0.12, sl.tint)
 }
 
 /** What flies over everything: the receipts in the air, and the letter until it is spiked. */
 export function counterAir(pen: Pen, t: number): void {
+  for (const sl of SLIDERS) {
+    const q = sliderAt(sl, t)
+    if (q && t < sl.down) drawSlip(pen, q.x, q.y, 0.17, 0.24, q.a, q.flat, sl.tint)
+  }
   if (t < INTO_HEAP || t > 21) return
   for (const s of SLIPS) {
     if (t >= s.at) continue

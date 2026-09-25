@@ -97,7 +97,8 @@ export const EYE_AT = { glove: B(125), trap: B(128), hammer: B(130), claw: B(133
 export function eyeScale(t: number, at: number): number {
   const u = t - at
   if (u < 0) return 0
-  return (1 - Math.exp(-u / 0.025)) * (1 + 0.4 * Math.exp(-u / 0.09) * Math.sin(u * 32))
+  // Slapped on at full size (it has flown in from hers), squashing out and back.
+  return 1 + 0.32 * Math.exp(-u / 0.09) * Math.sin(u * 32)
 }
 
 /** The eye's pupil as it lands: thrown up the white, swinging, settling. */
@@ -299,43 +300,56 @@ export interface GlovePose {
   squash: number
 }
 
-/** Where the glove rears to, over the box, facing her. */
-const REAR: Pt = [GIFT.x - 0.08, -1.02]
-const REAR_AIM = 0.5
-/** Where it strikes: its fist on her upper left. */
+/** The glove, from the end of its cuff to the front of its knuckles. */
+export const GLOVE_LEN = 0.64
+/** Where it rears to, over the box, facing her; where it cocks back to, straining, before it lunges. */
+const REAR: Pt = [GIFT.x - 0.1, -1.0]
+const REAR_AIM = 0.55
+const COCK: Pt = [GIFT.x - 0.3, -1.2]
+const COCK_AIM = Math.atan2(E0[1] - 0.05 - COCK[1], E0[0] - COCK[0])
+/** Where it strikes: its knuckles on her upper left. */
 const PUNCH_AIM = Math.atan2(E0[1] - 0.06 - SPRING_FOOT[1], E0[0] - SPRING_FOOT[0])
-const FIST = 0.17
-const PUNCH_END: Pt = [E0[0] - (R + FIST * 2) * Math.cos(PUNCH_AIM), E0[1] - 0.05 - (R + FIST * 2) * Math.sin(PUNCH_AIM)]
+const PUNCH_END: Pt = [E0[0] - (R + GLOVE_LEN) * Math.cos(PUNCH_AIM), E0[1] - 0.05 - (R + GLOVE_LEN) * Math.sin(PUNCH_AIM)]
+const LUNGE = 0.14
 /** Where it waves from: stood up over the box, fist to the sky. */
-const WAVE: Pt = [GIFT.x + 0.06, -1.12]
+const WAVE: Pt = [GIFT.x + 0.04, -1.08]
 
 export function gloveAt(t: number): GlovePose {
   const t124 = B(124)
   if (t < t124 - 0.02) return { out: false, end: SPRING_FOOT, aim: -Math.PI / 2, squash: 0 }
-  // Bursting up and rearing back, with a wobble.
-  if (t < T125 - 0.13) {
+  // Bursting up out of the box and rearing, with a wobble.
+  const reared = t124 + 0.3
+  if (t < reared) {
     const u = t - (t124 - 0.02)
     const k = 1 - Math.exp(-u / 0.06) * Math.cos(u * 22)
     const end: Pt = [lerp(SPRING_FOOT[0], REAR[0], k), lerp(SPRING_FOOT[1], REAR[1], k)]
     return { out: true, end, aim: lerp(-Math.PI / 2, REAR_AIM, clamp(k * 1.1)), squash: 0 }
   }
-  // The punch: fast, and on the touch it goes soft, pressing her on her way.
+  // Cocking back: drawn up and away on its spring, aimed at her, shaking with it.
+  if (t < T125 - LUNGE) {
+    const s = (t - reared) / (T125 - LUNGE - reared)
+    const f = smooth01(s)
+    const shake = 0.018 * s * Math.sin(t * 150)
+    const aim = lerp(REAR_AIM + 0.02 * Math.exp(-(t - reared) / 0.08) * Math.sin((t - reared) * 22), COCK_AIM, f)
+    return { out: true, end: [lerp(REAR[0], COCK[0], f) - Math.sin(aim) * shake, lerp(REAR[1], COCK[1], f) + Math.cos(aim) * shake], aim, squash: 0 }
+  }
+  // The lunge: fast, and on the touch it goes soft, a nudge that sends her on her way.
   if (t < T125) {
-    const u = (t - (T125 - 0.13)) / 0.13
+    const u = (t - (T125 - LUNGE)) / LUNGE
     const f = u * u
-    return { out: true, end: [lerp(REAR[0], PUNCH_END[0], f), lerp(REAR[1], PUNCH_END[1], f)], aim: lerp(REAR_AIM, PUNCH_AIM, f), squash: 0 }
+    return { out: true, end: [lerp(COCK[0], PUNCH_END[0], f), lerp(COCK[1], PUNCH_END[1], f)], aim: lerp(COCK_AIM, PUNCH_AIM, f), squash: 0 }
   }
   const u = t - T125
   // Following her a little, softly, then drawing back and standing up to wave.
-  const follow = 0.1 * Math.sin(Math.PI * clamp(u / 0.3))
+  const follow = 0.08 * Math.sin(Math.PI * clamp(u / 0.3))
   const lift = smooth01(u / 0.55)
   const base: Pt = [lerp(PUNCH_END[0] + follow * Math.cos(PUNCH_AIM), WAVE[0], lift), lerp(PUNCH_END[1] + follow * Math.sin(PUNCH_AIM), WAVE[1], lift)]
   // The wave: a sway either way with its ends on the beats, dying away by the last hit.
   const env = clamp((t - B(125.6)) / 0.3) * (1 - smooth01((t - B(138)) / (B(144) - B(138))))
-  const sway = 0.42 * env * Math.sin((Math.PI * (t - B(125.5))) / 0.4)
+  const sway = 0.38 * env * Math.sin((Math.PI * (t - B(125.5))) / 0.4)
   const aim = lerp(PUNCH_AIM, -Math.PI / 2, lift) + sway
-  const end: Pt = [base[0] + 0.22 * Math.sin(sway), base[1] + 0.05 * Math.abs(Math.sin(sway))]
-  return { out: true, end, aim, squash: 0.35 * Math.exp(-u / 0.08) }
+  const end: Pt = [base[0] + 0.2 * Math.sin(sway), base[1] + 0.05 * Math.abs(Math.sin(sway))]
+  return { out: true, end, aim, squash: 0.4 * Math.exp(-u / 0.08) }
 }
 
 /** The lid: sat on the box, then flung off on 124, tumbling onto the stool's seat on 126, rocking there. */
@@ -364,15 +378,19 @@ export function lidAt(t: number): { at: Pt; turn: number } {
  */
 export function jawsAt(t: number): { open: number; sway: number } {
   if (t < T127) return { open: TRAP.set, sway: 0 }
+  // She drops on the pan: the jaws gape wider and shake, straining at their catch.
+  const GAPE = TRAP.set + 0.2
   if (t < T128) {
-    const u = t - T127
-    return { open: TRAP.set - 0.06 * Math.exp(-u / 0.05) * Math.sin(u * 60), sway: 0 }
+    const s = (t - T127) / (T128 - T127)
+    const gape = TRAP.set + (GAPE - TRAP.set) * smooth01(s / 0.6)
+    const quiver = 0.045 * Math.sin(Math.PI * s) * Math.sin((t - T127) * 2 * Math.PI * 22)
+    return { open: gape + quiver, sway: 0 }
   }
   const u = t - T128
   const SNAP = 0.085
   if (u < SNAP) {
     const f = u / SNAP
-    return { open: TRAP.set * (1 - f * Math.sqrt(f)), sway: 0 }
+    return { open: GAPE * (1 - f * Math.sqrt(f)), sway: 0 }
   }
   const w = u - SNAP
   const open = 0.22 * Math.exp(-w / 0.12) * Math.abs(Math.sin(w * 16))
@@ -386,18 +404,21 @@ export function jawsAt(t: number): { open: number; sway: number } {
 
 export function swingAt(t: number): number {
   const t129 = B(129)
-  const cock = -1.0
-  if (t < t129 - 0.42) return 0
-  // Hauled back, stopping hard at the top on 129.
+  const cock = -1.22
+  const HAUL = 0.55
+  if (t < t129 - HAUL) return 0
+  // Hauled back, high, stopping hard at the top on 129.
   if (t < t129) {
-    const s = (t - (t129 - 0.42)) / 0.42
+    const s = (t - (t129 - HAUL)) / HAUL
     return cock * (s * s * (3 - 2 * s) * 0.2 + 0.8 * s * s)
   }
+  // Held there a moment, shaking with it, aimed at her.
+  const HOLD = 0.14
   const u = t - t129
-  if (u < 0.12) return cock + 0.04 * Math.sin((u / 0.12) * Math.PI) * Math.exp(-u / 0.05)
+  if (u < HOLD) return cock + 0.05 * Math.exp(-u / 0.04) * Math.sin(u * 50) + 0.012 * Math.sin(u * 140) * (u / HOLD) * (1 - u / HOLD) * 4
   // The swing: accelerating down through the bottom to the touch on 130.
   if (t < T130) {
-    const s = (t - (t129 + 0.12)) / (T130 - (t129 + 0.12))
+    const s = (t - (t129 + HOLD)) / (T130 - (t129 + HOLD))
     return lerp(cock, HAMMER.contact, s * s * (1.6 - 0.6 * s))
   }
   // On the touch it goes soft: carries on up gently, and sways, its ends on the beats, dying to still by 144.
@@ -454,15 +475,23 @@ function cupUnder(t: number): Pt {
 }
 
 export function armAt(t: number): ArmPose {
-  if (t < T132 - 0.13) {
+  const POISE = B(131) - 0.15
+  if (t < POISE) {
     // Folded on its mount, twitching now and then like a thing waiting.
     const twitch = t > APPEAR ? 0.015 * Math.max(0, Math.sin(t * 5.3)) ** 8 : 0
     return { cup: [FOLDED[0] - twitch, FOLDED[1]], open: 0, holding: false }
   }
+  // Unfolding a little towards her as she flies up, its claw snapping at the air.
+  const POISED: Pt = [FOLDED[0] - 0.65, FOLDED[1] + 0.5]
+  if (t < T132 - 0.13) {
+    const s = smooth01((t - POISE) / 0.3)
+    const snap = Math.abs(Math.sin((t - POISE) * Math.PI * 5))
+    return { cup: [lerp(FOLDED[0], POISED[0], s), lerp(FOLDED[1], POISED[1], s)], open: s * (0.15 + 0.75 * snap), holding: false }
+  }
   if (t < T132) {
     const s = (t - (T132 - 0.13)) / 0.13
     const f = s * s
-    return { cup: [lerp(FOLDED[0], WAIT[0], f), lerp(FOLDED[1], WAIT[1], f)], open: 0.3 + 0.7 * f, holding: false }
+    return { cup: [lerp(POISED[0], WAIT[0], f), lerp(POISED[1], WAIT[1], f)], open: 0.5 + 0.5 * f, holding: false }
   }
   if (t < T133) {
     // Shot out: it overshoots and rings, then waits, open, tracking her down.

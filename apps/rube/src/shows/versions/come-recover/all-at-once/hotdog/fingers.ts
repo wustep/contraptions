@@ -18,6 +18,7 @@ import {
   LID,
   PALM,
   STEPS,
+  STEP_HOLD,
   STOMPS,
   ankleOf,
   ease,
@@ -149,7 +150,7 @@ function keyDown(plan: HotdogPlan, i: number, t: number): number {
   }
   for (const n of STEPS) {
     const a = ankleOf(kicker(n + 0.01))
-    if (under(a[0] - 0.12, toeOf(kicker(n + 0.01))[0])) d = Math.max(d, press(t - n, 0.26, 0.07))
+    if (under(a[0] - 0.12, toeOf(kicker(n + 0.01))[0])) d = Math.max(d, press(t - n, STEP_HOLD, 0.07))
   }
   // The hand: her landing on the fingers, the fingers' slap, her landings in the palm and on the index.
   if (under(KNUCKLE[0] - 0.74, KNUCKLE[0] - 0.2)) {

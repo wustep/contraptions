@@ -71,6 +71,7 @@ export const J_LAND = 270.269
 const W_HOP = [270.942, 271.511] as const
 export const W_TOUCH = 271.708
 export const RIPPLE = 271.906
+export const NUZZLE = 273.183
 export const DOOR_TO = 275.156
 export const SET_OFF = home(10)
 export const PRESS = HOME_HITS[0]
@@ -128,7 +129,17 @@ const sample = (arr: Float32Array, t: number): number => {
   const j = Math.floor(i)
   return arr[j] + (arr[j + 1] - arr[j]) * (i - j)
 }
-export const drumTurn = (t: number): number => (t < SIM0 ? 0 : sample(DRUM.turn, t))
+/** In the quiet under the credits, on 305.40, the empty drum gives one slow half-turn and settles. */
+export const TURN_OVER = home(68)
+/** And on 312.59 the window's light swells once. */
+export const SWELL = home(86)
+const lateTurn = (t: number): number => {
+  const u = t - TURN_OVER
+  if (u <= 0) return 0
+  const s = Math.min(1, u / 2.6)
+  return Math.PI * (1 - Math.pow(1 - s, 3)) + 0.05 * Math.exp(-Math.max(0, u - 2.6) / 0.3) * Math.sin(Math.max(0, u - 2.6) * 9)
+}
+export const drumTurn = (t: number): number => (t < SIM0 ? 0 : sample(DRUM.turn, t) + lateTurn(t))
 const rockAt = (t: number): number => (t < SIM0 ? 0 : sample(DRUM.rock, t))
 
 /** A ball on the drum's wall, rocked: where it sat at the jump, carried round the window's centre. */
@@ -249,7 +260,12 @@ export function waymondAt(t: number): Pt {
     return [hopTo[0] + (touch - hopTo[0]) * (1 - (1 - s) * (1 - s) * 0.6 - 0.4 * (1 - s)), 0]
   }
   const s = smooth01((t - W_TOUCH) / (RIPPLE - W_TOUCH))
-  return [touch + (W_ROW[0] - touch) * s, 0]
+  // A nuzzle: he eases back a little and bumps in against Joy again, on 273.18, and settles.
+  const back = NUZZLE - 0.45
+  let dx = 0
+  if (t > back && t < NUZZLE) dx = 0.06 * Math.sin((Math.PI * (t - back)) / (NUZZLE - back))
+  if (t >= NUZZLE) dx = -0.012 * Math.exp(-(t - NUZZLE) / 0.08) * Math.sin((t - NUZZLE) * 30)
+  return [touch + (W_ROW[0] - touch) * s + dx, 0]
 }
 
 /* ------------------------------------------------------------------ the washer's clocks */
@@ -274,7 +290,7 @@ export const runLamp = (t: number): number => (t >= BEGIN - 2 && t < T_LATCH ? 1
 /** A jolt of the washer's body: the drum starting, and turning back. */
 export function bodyJolt(t: number): number {
   let v = 0
-  for (const at of [T_TURN, T_BACK, T_LATCH]) {
+  for (const at of [T_TURN, T_BACK, T_LATCH, TURN_OVER]) {
     const u = t - at
     if (u >= 0 && u < 0.5) v += 0.012 * Math.exp(-u / 0.06) * Math.sin(u * 60)
   }
@@ -290,8 +306,11 @@ export function windowLight(t: number): { a: number; warm: number } {
   const warm = smooth01((t - 268) / 20)
   const end = 1 - 0.45 * smooth01((t - 326) / (END - 326))
   const breath = 1 + 0.06 * Math.sin((t - BEGIN) * 0.9)
-  return { a: 0.85 * end * breath, warm }
+  // On 312.59, once, the window's light swells, and slowly goes back.
+  const w = t - SWELL
+  const swell = w > 0 ? 0.35 * (1 - Math.exp(-w / 0.12)) * Math.exp(-w / 2.2) : 0
+  return { a: 0.85 * end * breath * (1 + swell), warm }
 }
 
 /** What was struck, for the score: every visible strike. */
-export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, DOOR_TO, SET_OFF, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, 291.724, 293.013, LIGHTS_OUT, home(42.5), home(43)]
+export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, NUZZLE, DOOR_TO, SET_OFF, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, 291.724, 293.013, LIGHTS_OUT, home(42.5), home(43), TURN_OVER, SWELL]
