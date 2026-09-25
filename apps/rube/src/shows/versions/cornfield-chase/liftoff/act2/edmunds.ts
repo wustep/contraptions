@@ -692,29 +692,57 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   // Far away, it keeps its size on the screen as the camera comes in and goes out (drawn to a 6.8-cell frame).
   const far = (f.y1 - f.y0) / 6.8
   glow(p, X(gx), X(gy), X(1.1 * far), DARK.amber, 0.1)
+  // Drawn as the one he fell into is drawn near (space/gargantua.ts), small: light, not lines. (Painted straight onto
+  // the context, so saved round it.)
+  const ctx2 = p.drawingContext as CanvasRenderingContext2D
+  const WHITE = '#FFF1D2'
   p.push()
   p.translate(X(gx), X(gy))
   p.scale(far)
   p.rotate(-0.09)
-  p.noFill()
-  p.stroke(alpha(p, DARK.amber, 0.5))
-  p.strokeWeight(Math.max(1, X(0.03)))
-  p.line(X(-r * 4.6), 0, X(r * 4.6), 0)
-  p.stroke(alpha(p, DARK.gold, 0.9))
-  p.strokeWeight(Math.max(1, X(0.02)))
-  p.line(X(-r * 3), 0, X(r * 3), 0)
-  p.noStroke()
-  p.fill(VOID.bg)
-  p.circle(0, 0, X(2 * r))
-  p.noFill()
-  p.stroke(alpha(p, DARK.gold, 0.9))
-  p.strokeWeight(Math.max(1, X(0.04)))
-  p.arc(0, 0, X(2 * r * 1.3), X(2 * r * 1.3), Math.PI + 0.25, TAU - 0.25)
-  p.strokeWeight(Math.max(0.8, X(0.018)))
-  p.arc(0, 0, X(2 * r * 1.24), X(2 * r * 1.24), 0.4, Math.PI - 0.4)
-  p.stroke(alpha(p, VOID.ink, 0.85))
-  p.strokeWeight(Math.max(0.8, X(0.014)))
-  p.line(X(-r * 1.1), 0, X(r * 1.1), 0)
+  ctx2.save()
+  // The far side of the disk, lensed over the top of the dark (broad) and under it (thin).
+  for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.7, 0.9], [0.01, Math.PI - 0.01, 1.28, 0.5]]) {
+    const g = ctx2.createRadialGradient(0, 0, X(r), 0, 0, X(rout * r))
+    g.addColorStop(0, rgba(WHITE, peak))
+    g.addColorStop(0.12, rgba(DARK.gold, 0.9 * peak))
+    g.addColorStop(0.45, rgba(DARK.amber, 0.35 * peak))
+    g.addColorStop(1, rgba(DARK.amber, 0))
+    ctx2.fillStyle = g
+    ctx2.beginPath()
+    ctx2.arc(0, 0, X(rout * r), a0, a1)
+    ctx2.arc(0, 0, X(r), a1, a0, true)
+    ctx2.closePath()
+    ctx2.fill()
+  }
+  ctx2.fillStyle = VOID.bg
+  ctx2.beginPath()
+  ctx2.arc(0, 0, X(r), 0, TAU)
+  ctx2.fill()
+  ctx2.strokeStyle = rgba(WHITE, 0.75)
+  ctx2.lineWidth = Math.max(0.8, X(0.012))
+  ctx2.beginPath()
+  ctx2.arc(0, 0, X(r * 1.015), 0, TAU)
+  ctx2.stroke()
+  // The near side of the disk across the dark: a tapered band, whitest in the middle, the side coming at us brighter.
+  const L = r * 4.6
+  const band = ctx2.createLinearGradient(X(-L), 0, X(L), 0)
+  band.addColorStop(0, rgba(DARK.amber, 0))
+  band.addColorStop(0.2, rgba(DARK.amber, 0.55))
+  band.addColorStop(0.4, rgba(DARK.gold, 0.95))
+  band.addColorStop(0.5, rgba(WHITE, 1))
+  band.addColorStop(0.6, rgba(DARK.gold, 0.7))
+  band.addColorStop(0.8, rgba(DARK.amber, 0.3))
+  band.addColorStop(1, rgba(DARK.amber, 0))
+  ctx2.fillStyle = band
+  const half = Math.max(0.012, 0.085 * r)
+  ctx2.beginPath()
+  ctx2.moveTo(X(-L), 0)
+  ctx2.quadraticCurveTo(0, X(-2 * half), X(L), 0)
+  ctx2.quadraticCurveTo(0, X(2 * half), X(-L), 0)
+  ctx2.closePath()
+  ctx2.fill()
+  ctx2.restore()
   p.pop()
 }
 
@@ -1234,9 +1262,19 @@ function drawBody(p: p5, c0: Ctx, T: number): void {
     }
     // The cockpit: its well dark under the glass, the lit panel, the red seat-back behind the ball. On 231 the
     // seat-back swings forward and kicks the ball out over the nose.
+    // As the canopy slides back the well's dark sinks to the sill with it: an open cockpit, not a dark dome.
+    const open = clamp(canopyOpen(T))
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    if (open > 0) {
+      ctx.beginPath()
+      ctx.rect(X(-1), X(-0.34 + 0.3 * open), X(2), X(0.6))
+      ctx.clip()
+    }
     solid(p, ink, weight * 0.6, DARK.deep)
     bubble(p, k)
-    glow(p, 0, 0, X(0.42), DARK.amber, 0.28)
+    ctx.restore()
+    glow(p, 0, 0, X(0.42), DARK.amber, 0.28 * (1 - 0.6 * open))
     for (const [x, y, col] of [
       [0.4, 0.04, DARK.amber],
       [0.33, -0.05, DARK.ice],
@@ -1361,26 +1399,27 @@ function drawShield(p: p5, c: Ctx, T: number): void {
   const push: Pt = [Math.sin(q.th) * 0.8 - 0.5, Math.cos(q.th) * 0.8]
   const x = x0 + (vxAt(SHIELD) + push[0]) * d
   const y = y0 + (vyAt(SHIELD) + push[1]) * d + 0.5 * 5 * d * d
-  if (y > G + 1) return
-  // A shallow dish, its hot face down: it tips as it drops, so its bowl shows.
+  // It drops away below the ship, smaller as it goes and gone within the second, so it never lies across the land.
+  const away = clamp(d / 1.3)
+  if (away >= 1) return
+  const size = 1 - 0.65 * away
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // A dish, its hot face down: it tumbles as it drops, so its round face turns toward us and away.
   p.push()
+  ctx.save()
+  ctx.globalAlpha *= 1 - smooth(away, 0.55, 1)
   p.translate(X(x), X(y))
-  p.rotate(-q.th + 0.5 * d + 0.6 * d * d)
+  p.rotate(-q.th + 0.35 * d)
+  p.scale(size)
   const heat = Math.exp(-d / 0.9)
-  solid(p, ink, weight * 0.6, DARK.slate)
-  p.beginShape()
   const hw = (SHIELD_U[1] - SHIELD_U[0]) / 2
-  p.vertex(X(-hw), X(-0.02))
-  p.quadraticVertex(0, X(0.2), X(hw), X(-0.02))
-  p.quadraticVertex(0, X(0.08), X(-hw), X(-0.02))
-  p.endShape(p.CLOSE)
-  p.noFill()
-  p.stroke(alpha(p, DARK.amber, 0.75 * heat))
-  p.strokeWeight(X(0.03))
-  p.beginShape()
-  p.vertex(X(-hw + 0.18), X(0.03))
-  p.quadraticVertex(0, X(0.2), X(hw - 0.18), X(0.03))
-  p.endShape()
+  const face = (0.1 + 0.22 * Math.abs(Math.sin(0.3 + 1.8 * d))) * hw
+  solid(p, ink, weight * 0.6, mixHex(DARK.slate, DARK.hull, 0.45))
+  p.ellipse(0, X(0.04), X(2 * hw * 0.9), X(2 * face))
+  p.noStroke()
+  p.fill(alpha(p, DARK.amber, 0.5 * heat))
+  p.ellipse(0, X(0.04 + face * 0.25), X(2 * hw * 0.55), X(2 * face * 0.45))
+  ctx.restore()
   p.pop()
   // The bolts' puffs as it goes.
   if (d < 0.6) {

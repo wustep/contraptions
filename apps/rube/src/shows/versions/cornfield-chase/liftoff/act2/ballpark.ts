@@ -163,16 +163,17 @@ const ease2 = (u: number): number => 1 - (1 - u) * (1 - u)
 /** The flipper's hinge, and how far the pocket is from it. */
 const M_PIVOT: Pt = [0.62, -R]
 const M_ARM = 0.62
-const FLIP = 0.12
-const BETA = 1.0
+/** A short flick, its arm let go at the angle the toss leaves at, so the ball goes on the way the pocket was going. */
+const FLIP = 0.09
+const BETA = 0.45
 /** The pocket's centre, the arm up by `b`. */
 const pocket = (b: number): Pt => [M_PIVOT[0] - M_ARM * Math.cos(b), M_PIVOT[1] - M_ARM * Math.sin(b)]
 
 function mittArm(T: number): number {
   if (T < TOSS) return 0
   const u = (T - TOSS) / FLIP
-  // Kicked on the beat and still gathering, but not whipping: at the top it is going the speed the toss goes on at.
-  if (u < 1) return BETA * (0.86 * u + 0.14 * u * u)
+  // Sprung on the beat and gathering: at the top it is going the speed, and the way, the toss goes on at.
+  if (u < 1) return BETA * u * u
   const since = T - TOSS - FLIP
   // Against the stop: a rebound. Then it lies back down.
   const bounce = 0.08 * Math.exp(-since / 0.22) * Math.abs(Math.sin(since * 15))

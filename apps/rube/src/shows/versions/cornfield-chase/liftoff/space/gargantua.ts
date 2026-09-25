@@ -137,9 +137,7 @@ const S0 = 0.3
 const S1 = 1.25
 /** The disk's tilt, as Miller has it. */
 const TILT = -0.07
-/** In units of the dark's radius: the lensed far side of the disk over the top and under, and the disk's reach. */
-const ARC_TOP = 1.31
-const ARC_LOW = 1.25
+/** In units of the dark's radius: the disk's reach. */
 const DISK = 4.7
 
 /** How big the dark is (cells) at `T`: Miller's size until the catch, then it swells as the ball is carried in. */
@@ -598,27 +596,15 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   const X = (v: number) => v * k
   const r = h.r
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  // Line weights in cells, as Miller's at its size, thinning a little as it grows.
-  const m = Math.pow(r / S0, 0.72)
-  const W = (w: number) => Math.max(1, k * w * m)
-  // Far off it is Miller's flat drawing, lines; near and big it is light. `flat` is how much of the lines is left.
-  const big = smooth(r, 0.45, 1.1)
-  const flat = 1 - big
-  const line = (x0: number, x1: number, w: number, col: string, a: number) => {
-    if (a <= 0.004) return
-    p.stroke(alpha(p, col, a))
-    p.strokeWeight(W(w))
-    p.line(X(x0 * r), 0, X(x1 * r), 0)
-  }
-  const hot = (col: string) => mixHex(col, VOID.ink, 0.6 * bright)
-  const A = big * fade
+  // Light, not lines, at every size: small in Miller's sky, filling the frame near. `A` is how much of it is left.
+  const A = fade
   const WHITE = '#FFF1D2'
   p.push()
   p.translate(X(h.cx), X(h.cy))
   p.rotate(TILT)
   p.noFill()
   // The haze the disk sits in, soft and wide.
-  if (big > 0.01) {
+  if (A > 0.004) {
     p.strokeCap(p.ROUND)
     for (const [wd, a] of [[0.5, 0.07], [0.26, 0.12]] as Pt[]) {
       p.stroke(alpha(p, DARK.amber, a * A))
@@ -626,8 +612,6 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
       p.line(X(-DISK * 0.8 * r), 0, X(DISK * 0.8 * r), 0)
     }
   }
-  line(-DISK, DISK, 0.036, hot(DARK.amber), 0.55 * fade * flat)
-  line(-DISK * 0.7, DISK * 0.7, 0.025, hot(DARK.gold), 0.95 * fade * flat)
   // The far side of the disk, bent over the top of the dark and under it by the lensing: near and big, broad bands of
   // light, hottest where they hug the dark and going off into the haze.
   const band = (a0: number, a1: number, rout: number, peak: number, body: number) => {
@@ -655,20 +639,14 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   p.circle(0, 0, X(2 * r))
   p.noFill()
   // The photon ring: a crisp hair of light right at the edge of the dark.
-  if (big > 0.01) {
+  if (A > 0.004) {
     p.stroke(alpha(p, WHITE, 0.8 * A))
     p.strokeWeight(Math.max(1, X(0.016 * r)))
     p.circle(0, 0, X(2 * 1.015 * r))
   }
-  // Far off: Miller's arcs, over and under.
-  p.stroke(alpha(p, DARK.gold, 0.95 * fade * flat))
-  p.strokeWeight(W(0.05))
-  p.arc(0, 0, X(2 * ARC_TOP * r), X(2 * ARC_TOP * r), Math.PI + 0.2, TAU - 0.2)
-  p.strokeWeight(W(0.022))
-  p.arc(0, 0, X(2 * ARC_LOW * r), X(2 * ARC_LOW * r), 0.35, Math.PI - 0.35)
   // The near side of the disk, across the front of the dark: near and big, a band of light, thickest and whitest at
   // the middle, tapering to nothing out along it, its left side (coming at us) the brighter.
-  if (big > 0.01) {
+  if (A > 0.004) {
     const L = DISK * r
     const half = 0.085 * r
     ctx.save()
@@ -693,8 +671,6 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     p.strokeWeight(Math.max(1, X(0.012 * r)))
     p.line(X(-L * 0.55), 0, X(L * 0.55), 0)
   }
-  line(-DISK * 0.33, DISK * 0.33, 0.025, hot(DARK.gold), 0.95 * fade * flat)
-  line(-DISK * 0.2, DISK * 0.2, 0.011, hot(DARK.hull), 0.9 * fade * flat)
   p.pop()
 }
 
