@@ -20,9 +20,34 @@ export interface Shot {
   off?: Pt
 }
 
-const ease = (u: number): number => {
-  const v = Math.max(0, Math.min(1, u))
-  return v * v * (3 - 2 * v)
+/**
+ * One channel of the framing across the keys: monotone cubic (Fritsch-Carlson), so a move that goes on the same
+ * way through a key carries its speed through it instead of stopping there and starting again, while a key held
+ * (the same value either side) or a turn (the value going back) still comes to rest on it. `left[i]` and `right[i]`
+ * are the channel's value at the start and end of the move from key i to key i + 1; where they disagree at a key
+ * (a hold that only one side has, and that side's weight is nil there), the key is a stop.
+ */
+function channel(ts: number[], left: number[], right: number[]): (i: number, u: number) => number {
+  const n = ts.length
+  const h = (i: number) => ts[i + 1] - ts[i]
+  const d = (i: number) => (h(i) > 1e-6 ? (right[i] - left[i]) / h(i) : 0)
+  const m: number[] = new Array(n).fill(0)
+  for (let i = 1; i < n - 1; i++) {
+    if (Math.abs(right[i - 1] - left[i]) > 1e-9 || h(i - 1) <= 1e-6 || h(i) <= 1e-6) continue
+    const a = d(i - 1)
+    const b = d(i)
+    if (a * b <= 0) continue
+    const w1 = 2 * h(i) + h(i - 1)
+    const w2 = h(i) + 2 * h(i - 1)
+    m[i] = (w1 + w2) / (w1 / a + w2 / b)
+  }
+  return (i, u) => {
+    if (i >= n - 1 || u <= 0) return left[i]
+    const H = h(i)
+    const u2 = u * u
+    const u3 = u2 * u
+    return (2 * u3 - 3 * u2 + 1) * left[i] + (u3 - 2 * u2 + u) * H * m[i] + (-2 * u3 + 3 * u2) * right[i] + (u3 - u2) * H * m[i + 1]
+  }
 }
 
 export function director(where: (t: number) => Pt, shots: Shot[], duration: number): (t: number) => Framing {
@@ -42,23 +67,37 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
     return [x / sum, y / sum]
   }
   const weight = (k: Shot): number => k.w ?? (k.hold ? 1 : 0)
+  // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
+  const n = keys.length
+  const ts = keys.map((k) => k.t)
+  const ends = (get: (a: Shot, b: Shot) => [number, number]) => {
+    const l: number[] = []
+    const r: number[] = []
+    for (let i = 0; i < n; i++) {
+      const [x, y] = get(keys[i], keys[Math.min(i + 1, n - 1)])
+      l.push(x)
+      r.push(y)
+    }
+    return channel(ts, l, r)
+  }
+  // The zoom goes in even steps of scale, not of cells: a pull-back from one cell to ten opens as evenly as it closes.
+  const cellsAt = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])
+  const wAt = ends((a, b) => [weight(a), weight(b)])
+  const offX = ends((a, b) => [(a.off ?? [0, 0])[0], (b.off ?? [0, 0])[0]])
+  const offY = ends((a, b) => [(a.off ?? [0, 0])[1], (b.off ?? [0, 0])[1]])
+  const holdX = ends((a, b) => [(a.hold ?? b.hold ?? [0, 0])[0], (b.hold ?? a.hold ?? [0, 0])[0]])
+  const holdY = ends((a, b) => [(a.hold ?? b.hold ?? [0, 0])[1], (b.hold ?? a.hold ?? [0, 0])[1]])
   return (t: number): Framing => {
     let i = 0
-    while (i + 1 < keys.length && keys[i + 1].t <= t) i++
-    const a = keys[i]
-    const b = keys[Math.min(i + 1, keys.length - 1)]
-    const u = a === b || t <= a.t ? 0 : ease((t - a.t) / (b.t - a.t))
-    const mix = (x: number, y: number) => x + (y - x) * u
-    const cells = mix(a.cells, b.cells)
-    const w = mix(weight(a), weight(b))
-    const offA = a.off ?? [0, 0]
-    const offB = b.off ?? [0, 0]
-    const holdA = a.hold ?? b.hold ?? [0, 0]
-    const holdB = b.hold ?? a.hold ?? [0, 0]
-    const hold: Pt = [mix(holdA[0], holdB[0]), mix(holdA[1], holdB[1])]
+    while (i + 1 < n && keys[i + 1].t <= t) i++
+    const last = i >= n - 1 || t <= keys[i].t
+    const u = last ? 0 : (t - keys[i].t) / (keys[i + 1].t - keys[i].t)
+    const cells = Math.exp(cellsAt(i, u))
+    const w = Math.max(0, Math.min(1, wAt(i, u)))
+    const hold: Pt = [holdX(i, u), holdY(i, u)]
     const [fx, fy] = w >= 1 ? hold : follow(t)
-    const x = fx + mix(offA[0], offB[0])
-    const y = fy + mix(offA[1], offB[1])
+    const x = fx + offX(i, u)
+    const y = fy + offY(i, u)
     return { x: x + (hold[0] - x) * w, y: y + (hold[1] - y) * w, cells }
   }
 }

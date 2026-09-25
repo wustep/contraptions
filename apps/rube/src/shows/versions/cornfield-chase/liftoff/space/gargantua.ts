@@ -118,9 +118,9 @@ const AT_WATCH = LAST_BOOK + 0.5
 /** He touches the watch, on an eighth: until then its second hand is still at 45; from then it ticks the message. */
 const TOUCH = beat(196.5)
 /** The grand pull-back from the watch, once its hand has ticked twice, out to the tesseract's rooms going on every way. */
-const PULL0 = TOUCH + 0.75
+const PULL0 = TOUCH + 0.6
 /** Then it lets him go: the bridge, the fall back through it and the dark into the bed (IN_BED), and the wake (WAKE). */
-const CLOSE = PULL0 + 0.6
+const CLOSE = PULL0 + 0.85
 /** The warm light he drifts toward, and the room opening out of it round him. */
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
