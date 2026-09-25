@@ -257,14 +257,14 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     // Down into the room with them, to her table.
     { t: 296.4, cells: 8.2, hold: [rx(15.4), 6.4], w: 0.7 },
     { t: TAP, cells: 7.4, hold: [rx(14.6), 6.9] },
-    { t: 303.5, cells: 7.4, hold: [rx(14.6), 6.9] },
-    // The room: a slow draw back through the swell to the whole club, the pianist in his spot at the left, the two at
-    // their table at the right.
-    { t: 313, cells: 12.0, hold: [rx(10.2), 6.4] },
-    { t: LEAVE, cells: 11.4, hold: [rx(9.9), 6.4] },
-    // With him, slowly, as he crosses to the piano and the pianist is flown out; she stays in the frame.
-    { t: 328.5, cells: 10.6, hold: [rx(8.6), 6.3] },
-    { t: 334.0, cells: 10.6, hold: [rx(8.25), 6.3] },
+    // From the tap to the end, one move that never parks: a slow draw back from the table to the whole club through
+    // the swell, drifting left across the room toward the piano the whole while (every key carries the move on), so
+    // that when he leaves her the camera is already leading him there; then in with him onto the keys.
+    { t: 306, cells: 8.6, hold: [rx(13.8), 6.75] },
+    { t: 313, cells: 10.4, hold: [rx(12.4), 6.55] },
+    { t: LEAVE, cells: 11.4, hold: [rx(10.6), 6.45] },
+    { t: 328.5, cells: 11.7, hold: [rx(9.0), 6.4] },
+    { t: 334.0, cells: 10.6, hold: [rx(8.1), 6.7] },
     // Through the peak, in on him at the keys: the finale copies this for the match cut.
     { t: slot.end, cells: 3.0, hold: [KEYS_L, KEY_Y - 0.45] },
   ]
