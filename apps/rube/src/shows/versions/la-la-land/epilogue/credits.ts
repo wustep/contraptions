@@ -37,6 +37,7 @@ const script: Omit<Card, 'at'>[] = [
     names: [
       ['Sebastian', 'the blue ball', '#5B8DD6'],
       ['Mia', 'the yellow ball', '#F2C94C'],
+      ['David', 'the grey ball', '#8C8F96'],
     ],
   },
   { hold: 4.6, role: 'Music', names: ['Justin Hurwitz'], notes: ['“Epilogue”', 'from La La Land (2016)'] },

@@ -123,7 +123,11 @@ export const piano = part<PianoState>(
     { t: slot.begin, cells: 10.2, hold: [8.4, -1.2], w: 1 },
     { t: THEME, cells: 3.0, off: [0.35, -0.55] },
     { t: 33.72, cells: 3.6, off: [0.45, -0.7] },
-    { t: 52.0, cells: 4.2, off: [0.6, -0.8] },
+    // The second half of the theme: the camera opens out and drifts across the room to her, listening at her table,
+    // with him still at the frame's left on the keys; then back in on the keys for the phrase before the chords.
+    { t: 42.0, cells: 7, hold: [12.0, -1.0], w: 1 },
+    { t: 48.0, cells: 7, hold: [13.0, -1.0], w: 1 },
+    { t: 52.0, cells: 4.6, off: [0.6, -0.8] },
     { t: 60.5, cells: 8.5, hold: [9.9, -1.3], w: 1 },
     { t: 61.6, cells: 8.5, hold: [9.9, -1.3], w: 1 },
     { t: 64.0, cells: 5, hold: [14.4, -0.2], w: 1 },
