@@ -176,11 +176,13 @@ export const gantry = part<GantryState>(
     // way (120), into it (120½), and again (122). Held, the cage rising up through the top of the frame.
     { t: beat(119.6), cells: 7.0, hold: [0.1, -2.5], w: 0.95 },
     { t: beat(122.2), cells: 7.6, hold: [0.2, -2.9], w: 0.95 },
-    // Wide on the tower and the rocket, but centred high enough that under Zoom the window stays well inside the frame.
-    { t: SEATED, cells: 12, hold: [RX - 0.5, -5.4] },
+    // The two-shot of the countdown: the two of them in the window at the top of the frame, and at the foot of the
+    // tower, at the bottom, Murph, kept back by TARS, looking up. Held while the lamps go out, to the arm swinging back.
+    { t: SEATED, cells: 9.6, hold: [RX - 1.5, -3.85] },
+    { t: beat(130.5), cells: 9.4, hold: [RX - 1.4, -3.9] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass.
-    { t: beat(133), cells: 5.4, hold: [RX - 0.4, -6.8] },
+    { t: beat(133), cells: 6.0, hold: [RX - 0.4, -6.6] },
   ],
 )
 
