@@ -454,8 +454,9 @@ export const combine = part<CombineState>(
     const s = built.state
     const keys: PartShot[] = [
       { t: slot.begin, cells: 5.4 },
-      { t: beat(87.5), cells: 6.2, hold: [1.0, -0.85], w: 0.7 },
-      { t: beat(93), cells: 6.3, hold: [2.4, -0.9], w: 0.7 },
+      // Off the dam and onto the combine: the empty truck up on the edge goes out of the frame's corner as he lands.
+      { t: beat(87.5), cells: 6.2, hold: [3.0, -0.85], w: 0.82 },
+      { t: beat(93), cells: 6.3, hold: [3.2, -0.9], w: 0.75 },
       { t: beat(97), cells: 6.3, hold: [3.4, -0.9], w: 0.65 },
       { t: beat(99), cells: 5.9, hold: [s.bale - 0.4, -0.4], w: 0.55 },
       // (No key at the hand-off: from the bale the frame eases out along with him to the gate's first framing, in one move.)

@@ -619,18 +619,35 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   const [dx0, dx1] = s.ditch
   p.line(X(-1.5), X(GROUND), X(dx0 - 0.35), X(GROUND))
   p.line(X(dx1), X(GROUND), X(s.edge), X(GROUND))
+  // The ditch is a cut in the road, sloped sides, dark inside, a strip of water at its foot; the lip a hump of dirt
+  // thrown up before it.
+  const foot = 0.42
+  const slope = 0.12
+  const cut = (d: number): Pt[] => [[dx0 - d, GROUND - 0.001], [dx1 + d, GROUND - 0.001], [dx1 - slope, GROUND + foot], [dx0 + slope, GROUND + foot]]
+  p.noStroke()
+  p.fill(mixHex(DUST.shade, ink, 0.62))
+  p.beginShape()
+  for (const [x, y] of cut(0)) p.vertex(X(x), X(y))
+  p.endShape(p.CLOSE)
+  p.fill(mixHex(DUST.teal, ink, 0.25))
+  p.beginShape()
+  p.vertex(X(dx0 + slope * 0.7), X(GROUND + foot - 0.1))
+  p.vertex(X(dx1 - slope * 0.7), X(GROUND + foot - 0.1))
+  p.vertex(X(dx1 - slope), X(GROUND + foot))
+  p.vertex(X(dx0 + slope), X(GROUND + foot))
+  p.endShape(p.CLOSE)
+  outline(p, ink, weight)
+  const [c0, c1, c2, c3] = cut(0)
+  p.line(X(c0[0]), X(c0[1]), X(c3[0]), X(c3[1]))
+  p.line(X(c3[0]), X(c3[1]), X(c2[0]), X(c2[1]))
+  p.line(X(c2[0]), X(c2[1]), X(c1[0]), X(c1[1]))
   solid(p, ink, weight, DUST.husk)
   p.beginShape()
   p.vertex(X(dx0 - 0.45), X(GROUND))
   p.quadraticVertex(X(dx0 - 0.1), X(GROUND - 0.2), X(dx0), X(GROUND - 0.1))
-  p.vertex(X(dx0), X(GROUND + 0.45))
-  p.vertex(X(dx1), X(GROUND + 0.45))
-  p.vertex(X(dx1), X(GROUND))
-  p.vertex(X(dx1 + 0.02), X(GROUND))
-  p.endShape()
+  p.vertex(X(dx0), X(GROUND))
+  p.endShape(p.CLOSE)
   p.noStroke()
-  p.fill(DUST.teal)
-  p.rect(X((dx0 + dx1) / 2), X(GROUND + 0.34), X(dx1 - dx0 - weight / k), X(0.2))
   p.stroke(alpha(p, DUST.sky, 0.8))
   p.strokeWeight(Math.max(1, weight * 0.6))
   for (let i = 0; i < 3; i++) {

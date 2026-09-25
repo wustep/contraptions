@@ -302,7 +302,7 @@ async function main(): Promise<void> {
         check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
         // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
         // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
-        // Miller while the tally counts her years. On Cooper Station he finds his daughter, old Murph (slate), in the
+        // Miller while her years go by. On Cooper Station he finds his daughter, old Murph (slate), in the
         // far-side house: she comes to him, and sends him on. At the end he finds Brand at her camp on Edmunds'
         // planet, and they meet. Nowhere else is there a second ball.
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {

@@ -23,9 +23,8 @@ import { BALL, BRAND, DARK, GREY } from '../worlds'
  *
  * Up in orbit the ring keeps another time. Brand, whom the trapdoor left
  * behind runs round the inside of it once an eighth, trips a catch every
- * lap, and the catch cuts a mark on the tally beside it; her blue dims toward
- * the grey of the years. On the twenty-third mark the catch locks and holds
- * her, and the ring goes from the sky.
+ * lap, and her blue dims toward the grey of the years. On the twenty-third
+ * lap the catch locks and holds her, and the ring goes from the sky.
  *
  * From beat 172 the mountains move. They are one wave, and near it is a wall
  * of water. TARS's third plant throws the ball onto its foot (178), the face
@@ -135,9 +134,8 @@ const PATH = RING_IN - R * TWIN_SCALE - 0.012
 const MEET = (R * TWIN_SCALE) / PATH + 0.02
 /** Where the sun is, seen from the ring's centre: low on the left, as it was when he left her. */
 const SUN = (150 * Math.PI) / 180
-/** The catch's pivot, in the gap between two modules at three o'clock, and where the tally starts. */
+/** The catch's pivot, in the gap between two modules at three o'clock. */
 const PIVOT: Pt = [STATION[0] + (RING_IN + RING_OUT) / 2, STATION[1]]
-const TALLY_X = STATION[0] + RING_OUT + 0.42
 
 
 /* ------------------------------------------------------------------ the wave */
@@ -310,7 +308,7 @@ const stationOn = (t: number): number => 1 - smooth(t, beat(178.3), beat(179.6))
 /** When the ring is gone from the sky, and her with it. */
 const GONE = beat(179.6)
 
-/** Her blue after the years she waits in orbit: dimmed toward grey, still hers (the tally counts the years). */
+/** Her blue after the years she waits in orbit: dimmed toward grey, still hers. */
 const ORBIT_YEARS = mixHex(BRAND, GREY, 0.4)
 
 /** Where she is on her lap, and her colour: her blue dimming with the years by the lock. */
@@ -533,34 +531,19 @@ function drawStation(p: p5, c: Ctx, t: number): void {
       p.circle(X(cx + rw * Math.cos(mid)), X(cy + rw * Math.sin(mid)), Math.max(1.5, X(0.035)))
     }
   }
-  // The catch: a lever through the tube at three o'clock. Its inner end is in her way; its outer end cuts the tally.
+  // The catch: a lever through the tube at three o'clock, its inner end in her way; each lap she trips it, and it rocks.
   const last = lastClick(t)
   const locked = t >= LATCH
   const rock = locked ? 0.22 : last.ago < 0.3 ? 0.4 * knock(last.ago, 0.08) : 0
   const [px, py] = PIVOT
   const reach = px - STATION[0] - PATH + 0.03
   const inner: Pt = [px - reach * Math.cos(rock), py - reach * Math.sin(rock)]
-  const outer: Pt = [px + 0.3 * Math.cos(rock), py + 0.3 * Math.sin(rock)]
+  const outer: Pt = [px + 0.09 * Math.cos(rock), py + 0.09 * Math.sin(rock)]
   outline(p, ink, weight * 0.7)
   p.line(X(inner[0]), X(inner[1]), X(outer[0]), X(outer[1]))
   solid(p, ink, weight * 0.4, locked ? DARK.gold : DARK.hull)
   p.circle(X(px), X(py), X(0.06))
-  // The tally: a mark cut for every lap, in fives.
-  const n = last.i + 1
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.lineCap = 'round'
-  for (let m = 0; m < n; m++) {
-    const g = Math.floor(m / 5)
-    const r = m % 5
-    const x = TALLY_X + g * 0.4
-    const fresh = knock(t - CLICKS[m], 0.3)
-    p.stroke(fresh > 0.03 ? mixHex(DARK.hull, DARK.gold, fresh) : DARK.hull)
-    p.strokeWeight(weight * 0.6)
-    if (r < 4) {
-      const xx = x + r * 0.065 + (hash(m, 3) - 0.5) * 0.012
-      p.line(X(xx), X(cy - 0.12 + hash(m, 5) * 0.02), X(xx + (hash(m, 4) - 0.5) * 0.025), X(cy + 0.12))
-    } else p.line(X(x - 0.05), X(cy + 0.09), X(x + 0.24), X(cy - 0.09))
-  }
   // A lamp at the pivot: a blink each lap, steady once it holds.
   if (locked || last.ago < 0.15) {
     const a = locked ? 0.45 : knock(last.ago, 0.06)

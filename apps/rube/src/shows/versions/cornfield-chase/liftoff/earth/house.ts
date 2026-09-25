@@ -75,17 +75,6 @@ export const house = scenery<null>({
     p.rect(X((WINDOW.x0 + WINDOW.x1) / 2), X(WINDOW.y1 + 0.03), X(WINDOW.x1 - WINDOW.x0 + 0.16), X(0.06))
     lightShaft(p, k, c.t)
 
-    // Downstairs: a hook by the door with a cap on it, and a calendar.
-    outline(p, ink, weight)
-    p.line(X(7.55), X(-1.25), X(7.62), X(-1.2))
-    solid(p, ink, weight, DUST.denim)
-    p.arc(X(7.62), X(-1.08), X(0.26), X(0.2), Math.PI, Math.PI * 2, p.CHORD)
-    p.line(X(7.62), X(-1.08), X(7.82), X(-1.08))
-    solid(p, ink, weight * 0.8, DUST.bone)
-    p.rect(X(6.95), X(-1.1), X(0.3), X(0.36))
-    outline(p, ink, weight * 0.6)
-    for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) p.point(X(6.84 + q * 0.07), X(-1.13 + r * 0.08))
-
     // Floors, cut: the upstairs floor stops at the stairwell.
     solid(p, ink, weight, DUST.wood)
     p.rect(X((WALL_L + WELL_L) / 2), X(UP + 0.08), X(WELL_L - WALL_L), X(0.16))

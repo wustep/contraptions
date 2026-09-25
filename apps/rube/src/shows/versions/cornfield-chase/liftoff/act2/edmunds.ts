@@ -14,7 +14,7 @@ import { BRAND, DARK, VOID } from '../worlds'
  * the sphere's centre and the camera whips after it: a desert world at dawn,
  * a dark sky with a thin gold band on the horizon, Gargantua small and high.
  * The far mouth hangs in that sky, and on 213 the Ranger comes out of it with
- * the ball in its canopy. The mouth rings behind it (214).
+ * the ball in its canopy. The mouth's wave shakes it as it passes (214).
  *
  * Then the descent, the real order of a landing, one stage a beat: a pitch-up
  * on the thrusters (215, stopped on the and); four retro burns from the nose
@@ -952,24 +952,11 @@ function drawMouth(p: p5, c: Ctx, T: number): void {
   ctx.restore()
   outline(p, alpha(p, DARK.hull, 0.95).toString(), weight * 1.1)
   p.circle(X(mx), X(my), X(2 * RM))
-  // Out: a flash where it comes through. Then the ring it rings with, running out past the Ranger on 214.
+  // Out: a flash where it comes through. (Its wave on 214 is felt, not drawn: the Ranger shakes as it passes.)
   const out = T - OUT
   if (out > -0.05 && out < 0.8) {
     const q = seatAt(Math.max(T, OUT))
     glow(p, X(q[0] - 0.3), X(q[1] + 0.1), X(1.4), VOID.ink, 0.75 * knock(out, 0.2))
-  }
-  const reach = Math.hypot(seatAt(RING)[0] - mx, seatAt(RING)[1] - my)
-  const r0 = RING - 0.45
-  const rr = RM + ((reach - RM) * (T - r0)) / (RING - r0)
-  if (T > r0 && T < RING + 0.5) {
-    const a = smooth(T, r0, r0 + 0.1) * (1 - smooth(T, RING - 0.05, RING + 0.5))
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.3 * a))
-    p.strokeWeight(X(0.22))
-    p.circle(X(mx), X(my), X(2 * rr))
-    p.stroke(alpha(p, VOID.ink, 0.85 * a))
-    p.strokeWeight(Math.max(1, X(0.03)))
-    p.circle(X(mx), X(my), X(2 * rr))
   }
   void ink
 }

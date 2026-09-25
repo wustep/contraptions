@@ -1619,7 +1619,7 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
   p.line(X(w.x - w.w / 2), X(w.y), X(w.x + w.w / 2), X(w.y))
   solid(p, ink, weight, DUST.wood)
   p.rect(X(w.x), X(w.y + w.h / 2 + 0.06), X(w.w + 0.2), X(0.05))
-  // By the door on the near wall: a hook, and a straw hat on it (as at home). The crash upstairs sets it swinging.
+  // By the door on the near wall: a hook, and a straw hat on it. The crash upstairs sets it swinging.
   const shake = T > WINDOW ? 0.14 * Math.exp(-(T - WINDOW) / 0.6) * Math.sin((T - WINDOW) * 12) : 0
   outline(p, ink, weight)
   p.line(X(2.02), X(-1.1), X(2.09), X(-1.05))
