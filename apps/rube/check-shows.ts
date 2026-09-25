@@ -7,6 +7,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { modeFromPath } from '../../src/ui/mode-path'
 import { MODE_LINKS } from '../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from './src/shows/clock'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from './src/shows/registry'
@@ -14,11 +15,19 @@ import { renderWav } from './src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
 import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metronome'
 import { Show } from './src/show'
-import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/shows/versions/cornfield-chase/multiball'
-import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 import { checkAllAtOnce } from './check-shows-all-at-once'
+import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
+import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
+import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
+import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
+import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
+import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
+import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-chase/liftoff/act2/edmunds'
+import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
+import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
+import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -39,11 +48,15 @@ async function main(): Promise<void> {
   const tab = MODE_LINKS.find((m) => m.mode === 'shows')
   check('Shows is a mode, at /shows/', tab?.path === '/shows/' && tab.label === 'Shows')
   check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  check('a tab is the path it has always been', modeFromPath('/') === 'machine' && modeFromPath('/explorations/') === 'explorations' && modeFromPath('/shows/') === 'shows' && modeFromPath('/playground/') === 'playground')
+  check('a deep link without the slash, or with index.html, is the same tab', modeFromPath('/shows') === 'shows' && modeFromPath('/shows/index.html') === 'shows' && modeFromPath('/index.html') === 'machine')
+  check('the Builder is not a tab', modeFromPath('/builder/') === null)
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
   const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))
-  check('a visit starts the show', /if \(current\) void open\(current, true\)/.test(player) && /if \(perf && thenPlay\) void play\(\)/.test(player))
+  check('a visit starts the show', /if \(current\) void open\(current, linked \? 'link' : true\)/.test(player) && /else void play\(\)/.test(player))
+  check('a named show link plays, and holds the sound only when the browser refuses it', /const linked = !!params\.get\('show'\)/.test(player) && /async function playLinked/.test(player) && /soundHeld = true/.test(player) && player.includes('The browser is holding the sound'))
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
@@ -111,18 +124,22 @@ async function main(): Promise<void> {
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
   check('the Shows tab opens Clair de Lune, Take B', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
-  check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
-  check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,metronome,premiere-arabesque')
+  check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
+  check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('the shows are Clair de Lune, Come Recover, Cornfield Chase and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,premiere-arabesque')
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('Come Recover is one take, All at Once: its model in its name, and in the panel a faint byline, Directed by wustep, and no model or tech-demo line',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].label === 'All at Once' && allAtOnce[0].note === undefined &&
     allAtOnce[0].director?.name === 'wustep' && allAtOnce[0].director.href === 'https://x.com/wustep')
-  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
-  check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
-  check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
-  check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
+  check('Cornfield Chase is Liftoff and the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-liftoff,opus55-music-sync,tech-demo')
+  const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
+  check('Cornfield Chase labels are Liftoff and the two music-syncs', cornfield.map((v) => v.label).join('|') === 'Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
+  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
+  const liftoffTake = cornfield.find((v) => v.take === 'opus55-liftoff')
+  check('Liftoff\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
+    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot/i.test(liftoffTake.label))
+  check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'opus55-music-sync')?.take === 'opus55-music-sync')
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -198,36 +215,179 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
-      if (work.work === 'cornfield-chase' && version.take === 'multiball') {
-        const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
-        const joined = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1).balls ?? []
-        const mid = perf.show.at(CORNFIELD_RIDERS[CORNFIELD_RIDERS.length - 1].spawn + 2).balls ?? []
-        const merged = perf.show.at(CORNFIELD_MEET + 0.3).balls ?? []
-        const ys = merged.map((b) => b.y)
-        const xs = merged.map((b) => b.x)
-        const spread = Math.max(...ys) - Math.min(...ys)
-        const xspread = Math.max(...xs) - Math.min(...xs)
-        check('cornfield: the whole recording, riders joining on their accents', near(perf.duration, CORNFIELD_DURATION) && before.length === 0 && joined.length === 1 && mid.length === CORNFIELD_RIDERS.length)
-        check('cornfield: each rider keeps its own id and colour', mid.every((b, i) => b.id === CORNFIELD_RIDERS[i].id && b.color === CORNFIELD_RIDERS[i].color))
-        const atJoin = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1)
-        const rider = atJoin.balls?.[0]
-        const threadY = universeAt(perf.show.universe(0), atJoin.local).y
-        check('cornfield: the first lane sits off the thread', !!rider && Math.abs(rider.y - threadY - CORNFIELD_RIDERS[0].lane) < 0.35, rider ? `dy ${rider.y - threadY}` : 'no rider')
-        check('cornfield: the lanes have merged at the portal', merged.length === CORNFIELD_RIDERS.length && spread < 0.35 && xspread < 0.35, `x ${xspread.toFixed(3)} y ${spread.toFixed(3)}`)
-        const cam = perf.camera?.(60)
-        check('cornfield: the camera holds the whole garden', !!cam && cam.cells > 6)
-      }
-      if (work.work === 'cornfield-chase' && version.take === 'voices') {
-        check('Cornfield voices: private credit, and a clip of the chase',
-          !!perf.soundtrack?.credit?.includes('Zimmer') &&
-          !!perf.soundtrack?.href?.includes('JuSsvM8B4Jc') &&
-          (perf.soundtrack?.offset ?? 0) > 60 &&
-          perf.duration >= 40 && perf.duration <= 55)
-        const mid = perf.show.at(perf.duration / 2)
-        const cam = perf.camera!(perf.duration / 2)
-        const zoomH = cam.cells / 1.5
-        check('Cornfield voices: the hero stays inside the Zoom frame',
-          Math.abs(mid.x - cam.x) < zoomH * (16 / 9) / 2 - 0.2 && Math.abs(mid.y - cam.y) < zoomH / 2 - 0.2)
+      if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
+        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
+          near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
+          !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
+          !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
+          !!perf.soundtrack?.credit?.includes('Interstellar') && !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
+          perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
+        // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
+        const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
+        check('liftoff: end credits after the music, set by the page, ending on the camp alone (no title card), naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
+          CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 0 && !/liftoff/i.test(said) &&
+          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
+          !/private tech demo/i.test(said), said)
+        const show = perf.show as LiftoffShow
+        check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
+          show.universe(0).world.name === 'cornfield' && show.universe(1).world.name === 'endurance' &&
+          show.indexAt(SWITCH - 0.01) === 0 && show.indexAt(SWITCH + 0.01) === 1 && show.at(SWITCH + 0.01).placed.piece.name === 'rocket' && show.at(SWITCH - 0.01).placed.piece.name === 'rocket')
+        check('liftoff: Act II inside Cooper Station from the organ\'s accent, and outside from the undock',
+          show.universe(2).world.name === 'station' && show.universe(3).world.name === 'endurance' &&
+          show.indexAt(ACT2 - 0.01) === 1 && show.indexAt(ACT2 + 0.01) === 2 && show.indexAt(UNDOCK - 0.01) === 2 && show.indexAt(UNDOCK + 0.01) === 3)
+        check('liftoff: no portal anywhere, and no cut is drawn', [0, 1, 2, 3].every((i) => show.universe(i).pieces.every((p) => p.piece.name !== 'portal')) &&
+          [0, 20, 42.5, 88, SWITCH, 100, 126].every((t) => perf.cuts?.(t) === false))
+        // One ball on one continuous path: never a jump, the change of world included.
+        let jump = 0
+        let at = 0
+        let prev = show.where(0)
+        for (let t = 0.001; t <= perf.duration; t += 0.001) {
+          const here = show.where(t)
+          const d = Math.hypot(here[0] - prev[0], here[1] - prev[1])
+          if (d > jump) { jump = d; at = t }
+          prev = here
+        }
+        check('liftoff: the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${at.toFixed(3)} s`)
+        // Every strike, part by part, lands on something the recording has.
+        const o = cornfieldOnsets as { drop: { t: number }; last: { t: number }; piano: { t: number }[]; gather: { t: number }[]; eighths: { beat: number; t: number }[] }
+        const within = (t: number, marks: number[], tol: number) => marks.some((m) => Math.abs(t - m) <= tol + 1e-9)
+        const piano = o.piano.map((n) => n.t)
+        const organ = o.gather.map((n) => n.t)
+        const comb = [...o.eighths.map((e) => e.t), o.drop.t, o.last.t]
+        const off: string[] = []
+        let count = 0
+        for (const [name, list] of Object.entries(STRIKES.piano)) for (const t of list) { count++; if (!within(t, piano, 0.04)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(STRIKES.organ)) for (const t of list) { count++; if (!within(t, organ, 0.03)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(STRIKES.comb)) for (const t of list) { count++; if (!within(t, comb, 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
+        // The organ's pulse holds its grid to a millisecond or so (median, strong beats), so a strike is on the music
+        // when it is on a beat or an eighth of that grid, or on a strong measured onset.
+        const n2 = ntfcOnsets as { beats: { beat: number; t: number; onset: number; s: number }[] }
+        const pulse = [...n2.beats.map((b) => b.t), ...n2.beats.filter((b) => b.s > 0.3).map((b) => b.onset)]
+        for (const [name, list] of Object.entries(STRIKES.cue2)) for (const t of list) { count++; if (!within(t, pulse, 0.03)) off.push(`${name} ${t.toFixed(3)}`) }
+        check('liftoff: every strike lands on a measured onset, in both cues', count > 150 && off.length === 0, `${count} strikes; off: ${off.join(', ')}`)
+        const act2 = Object.values(STRIKES.cue2).flat()
+        const beats2: number[] = []
+        for (let k = 104; k <= 232; k++) beats2.push(cue(k))
+        const struck2 = beats2.filter((t) => act2.some((s) => Math.abs(s - t) <= 0.03))
+        check('liftoff: in Act II, nearly every beat of the organ is struck', struck2.length >= beats2.length * 0.85, `${struck2.length}/${beats2.length}`)
+        const chase = Object.values(STRIKES.comb).flat()
+        const beats: number[] = []
+        for (let b = 68; b <= 191; b++) beats.push(chaseBeat(b))
+        const struck = beats.filter((t) => chase.some((s) => Math.abs(s - t) <= 0.026))
+        check('liftoff: from the drop to the last hit, nearly every beat is struck', struck.length >= beats.length * 0.9, `${struck.length}/${beats.length}`)
+        check('liftoff: ignition on beat 134, the pedal', STRIKES.comb.rocket.some((t) => near(t, IGNITION)) && near(IGNITION, chaseBeat(134)))
+        // The ball is never out of sight for long.
+        let hidden = 0
+        let longest = 0
+        for (let t = 0; t <= perf.duration; t += 0.01) {
+          const here = show.at(t)
+          hidden = here.hidden || here.scale <= 0.02 ? hidden + 0.01 : 0
+          longest = Math.max(longest, hidden)
+        }
+        check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
+        check('liftoff: Cooper is a solid ball from the first frame (the ghost is for the tesseract), and in the toy truck', !show.at(0).ball.ghost && !show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        // The opening's books fall on their own: the ghost sits still at its rest while the lander and all ten go, and
+        // only then rolls. At the end of Act I it comes back to the very same place, having knocked them off itself.
+        const still = [0.5, FALL_NOTES.lander, ...FALL_NOTES.books].map((t) => show.where(t))
+        const lastFall = FALL_NOTES.books[FALL_NOTES.books.length - 1]
+        check('liftoff: the opening\'s books fall on their own, the ghost still at its rest until the last has gone',
+          still.every((q) => Math.hypot(q[0] - GHOST_REST[0], q[1] - (-2 + GHOST_REST[1])) < 1e-6) && Math.hypot(show.where(lastFall + 0.3)[0] - GHOST_REST[0], 0) > 0.05)
+        // The end of Act I: a ghost in the tesseract, going through two other rooms of it (the first on beat 190) to Murph's,
+        // then knocking its lander (on the last hit) and the books over from behind, the last by ~120.85; then he falls
+        // into a bed and wakes there (~2:05), a ball, and is still in that bed when the station's lights come up on the accent.
+        const bed = show.where(WAKE + 0.8)
+        const inBed = [WAKE + 0.8, 126, ACT2 - 0.05, ACT2 + 0.3].map((t) => show.where(t))
+        check('liftoff: a ghost in the tesseract knocking the books over, then, after the fall out of it, awake in a bed by 2:06, still there when the lights come up',
+          show.at(chaseBeat(190)).ball.ghost && show.at(LAST_HIT).ball.ghost && show.at(120.8).ball.ghost &&
+          !show.at(WAKE + 0.05).ball.ghost && WAKE <= 126 && IN_BED < WAKE &&
+          inBed.every((q) => Math.hypot(q[0] - bed[0], q[1] - bed[1]) < 0.06))
+        // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
+        // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.
+        const rollOf = (t: number) => perf.camera!(t).angle ?? 0
+        const upright = Math.PI / 2 - Math.PI * 1.18
+        check('liftoff: the camera turns the far-side house upright for the reunion, and is square again by the hub and the cut',
+          [0, 60, ACT2 + 1, cue(140), cue(172), UNDOCK - 0.01, UNDOCK + 0.01, 250].every((t) => Math.abs(rollOf(t)) < 1e-9) &&
+          [cue(152), cue(154), cue(156), cue(160)].every((t) => Math.abs(rollOf(t) - upright) < 1e-6))
+        check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
+        // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
+        // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
+        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): she rocks
+        // on the porch as he goes, stows away in the truck's bed, follows him to the base and is kept back by TARS at
+        // the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
+        // sends him on. At the end he finds Brand at her camp on Edmunds' planet, and they meet.
+        const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
+          if (!b || (b.scale ?? 1) <= 0.02) return false
+          // In the frame's own axes: the camera may be rolled.
+          const f = perf.camera!(t)
+          const a = f.angle ?? 0
+          const dx = b.x - f.x
+          const dy = b.y - f.y
+          const x = dx * Math.cos(a) - dy * Math.sin(a)
+          const y = dx * Math.sin(a) + dy * Math.cos(a)
+          return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
+        }
+        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
+        const inOrbit = [106, 109, 111]
+        const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
+        const station = [177, 178.5, 179.25, 180.5]
+        const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
+        const murphAway = [1, 60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        const murphYoung = [17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
+        const miss: string[] = []
+        for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
+        for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
+        for (const t of station) if (!inShot(t, show.murph(t))) miss.push(`Murph not in shot ${t}`)
+        for (const t of murphAway) if (show.murph(t)) miss.push(`Murph at ${t}`)
+        for (const t of murphYoung) {
+          const m = show.murph(t)
+          if (!inShot(t, m)) miss.push(`young Murph not in shot ${t}`)
+          else if (m!.color?.toUpperCase() !== MURPH_YOUNG_HEX.toUpperCase() || (m!.scale ?? 1) >= 1) miss.push(`Murph not young at ${t}`)
+        }
+        check('liftoff: Brand not on the farm, with Cooper from the base, waiting in orbit, at her camp at the end; Murph a child on the farm and at the base, and old on the station',
+          miss.length === 0, miss.join(', '))
+        const two = [...withHim, ...inOrbit, ...station, ...atCamp, ...murphYoung].map((t) => ({ t, b: show.at(t).balls ?? [] }))
+        check('liftoff: where they are, one ball each, each its own id, and no one else',
+          two.every(({ t, b }) => b.length === 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0) && new Set(b.map((x) => x.id)).size === b.length) &&
+          [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
+        const young = show.brand(inOrbit[0])
+        const old = show.brand(inOrbit[2])
+        check('liftoff: up in orbit Brand\'s blue dims with the years, and she is her own blue again at the end',
+          !!young && !!old && young.color !== old.color && atCamp.every((t) => show.brand(t)?.color?.toUpperCase() === BRAND_HEX.toUpperCase()))
+        check('liftoff: on Cooper Station, Cooper meets old Murph (slate) in the far-side house, not Brand',
+          station.every((t) => show.murph(t)?.color?.toUpperCase() === MURPH_HEX.toUpperCase() && !show.brand(t)))
+        // At the end, on Edmunds' planet, they meet: they touch.
+        let closest = Infinity
+        for (let t = LIFTOFF_CAMP_MEET - 1.5; t <= LIFTOFF_CAMP_MEET + 1.5; t += 0.01) {
+          const b = show.brand(t)
+          if (!b) continue
+          const h = show.where(t)
+          closest = Math.min(closest, Math.hypot(b.x - h[0], b.y - h[1]))
+        }
+        // They meet close, with a little light between them: not pressed together.
+        check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp, close but not pressed together', closest >= 0.27 && closest <= 0.42, `closest ${closest.toFixed(3)}`)
+        // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
+        const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
+        for (const [name, of] of [['Brand', (t: number) => show.brand(t)], ['Murph', (t: number) => show.murph(t)]] as const) {
+          let gJump = 0
+          let gAt = 0
+          const pops: string[] = []
+          let gPrev = of(0)
+          for (let t = 0.001; t <= perf.duration; t += 0.001) {
+            const g = of(t)
+            if (g && gPrev) {
+              const d = Math.hypot(g.x - gPrev.x, g.y - gPrev.y)
+              if (d > gJump) { gJump = d; gAt = t }
+            }
+            // Out of nothing (or out of hidden, all at once) where the camera can see: a pop. Likewise into nothing.
+            if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
+            else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
+            else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
+            else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
+            gPrev = g
+          }
+          check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
+          check(`liftoff: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
+        }
       }
     }
   }
