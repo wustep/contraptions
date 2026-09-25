@@ -362,7 +362,15 @@ export const endurance = part<EnduranceState>(
     flight: true,
     draw: (p, s, c) => {
       const T = c.t + s.begin
-      drawPlanet(p, s, c)
+      // Saturn is on this side of the wormhole only: it goes as the camera whips through to Miller's sky.
+      const here = 1 - smooth(T, END - 0.05, END + 0.15)
+      if (here > 0.004) {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        ctx.save()
+        ctx.globalAlpha *= here
+        drawPlanet(p, s, c)
+        ctx.restore()
+      }
       drawSphere(p, s, c, T)
       drawDriver(p, s, c, T)
       drawRing(p, s, c, T)
