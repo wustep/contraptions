@@ -19,9 +19,10 @@ import { PAINT } from './worlds'
  * flies in on a batten and lands on the biggest onset of the stretch, and
  * lights. A boom of four spotlights swings in over the top of the stairs and
  * strikes. A chorus line of legs (cut-outs on a camshaft, no faces) files in
- * from both ends of a flown bridge across the sun. Then, through the swell
- * with no onsets, the lift takes the two up to the top of the staircase and
- * locks on beat 443; the chorus starts kicking on the pickups.
+ * from both ends of a flown bridge across the sun. From the sun's landing
+ * the lift takes the two up, slow and steady, so the boom and the chorus
+ * come in round a rising pair; it locks at the top of the staircase on
+ * beat 443, and the chorus starts kicking on the pickups.
  *
  * On the downbeat (444) the top landing lights and they go: down the
  * staircase, a landing on every beat, she on the off-beats half a step
@@ -126,18 +127,19 @@ function treadAt(j: number, T: number): number {
 
 /* ------------------------------------------------------------------ the lift */
 
-const LIFT_GO = 210.2
+/** The lift starts up as the sun lands (SUN_LAND), gathers slowly, and climbs steadily to its lock on beat 443. */
+const LIFT_GO = 201.317
 const LIFT_LOCK = beat(443)
 /** The downbeat: the top landing lights and they go. */
 const GO = beat(444)
 const END = beat(487)
 
-/** The lift's slab, as the ball-centre height on it. */
+/** The lift's slab, as the ball-centre height on it: one continuous eased rise, a small settle at the lock. */
 function liftAt(T: number): number {
   if (T < LIFT_GO) return 0
   const dur = LIFT_LOCK - LIFT_GO
-  if (T < LIFT_LOCK) return TOP * hoist((T - LIFT_GO) / dur, 0.25)
-  return TOP - thunk(T - LIFT_LOCK, arriving(-TOP, dur, 0.25), 0.16)
+  if (T < LIFT_LOCK) return TOP * hoist((T - LIFT_GO) / dur, 0.35)
+  return TOP - thunk(T - LIFT_LOCK, arriving(-TOP, dur, 0.35), 0.16)
 }
 
 /* ------------------------------------------------------------------ the sun, the bridge, the boom */
