@@ -17,6 +17,14 @@ import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metron
 import { Show } from './src/show'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import epilogueOnsets from '../../scripts/show-plans/lalaland-epilogue-onsets.json'
+import { STRIKES as EPILOGUE_STRIKES } from './src/shows/versions/la-la-land/epilogue/hits'
+import { INTO, OUT } from './src/shows/versions/la-la-land/epilogue/score'
+import { CHORUS, DURATION as EPILOGUE_END, HOME, KISS, KISS_PEAK, LAST_CHORDS, LOOK, PIANO2, STARS, STRUCK, SWING_FROM, SWING_MID, SWING_SOFT, WALTZ_FROM, WALTZ_END, swing as swingBeat, waltz as waltzBar, number as numberBeat, NUMBER_FROM, NUMBER_END, BUILD } from './src/shows/versions/la-la-land/epilogue/music'
+import { CARDS as EPILOGUE_CARDS, CREDITS_OK as EPILOGUE_CREDITS_OK, creditsAt as epilogueCredits } from './src/shows/versions/la-la-land/epilogue/credits'
+import { KISS_AT, ROOM } from './src/shows/versions/la-la-land/epilogue/room'
+import { MIA as MIA_HEX, HUSBAND as HUSBAND_HEX } from './src/shows/versions/la-la-land/epilogue/worlds'
+import type { EpilogueShow } from './src/shows/versions/la-la-land/epilogue/show'
 import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
 import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
 import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
@@ -128,6 +136,11 @@ async function main(): Promise<void> {
   check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('the shows are Clair de Lune, Cornfield Chase, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,la-la-land,premiere-arabesque')
+  const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
+  const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
+  check('La La Land has the Epilogue take beside Seb\'s, with a faint byline (Directed by wustep) and no model or tech-demo line',
+    lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && epilogueTake?.label === 'Epilogue' && epilogueTake?.note === undefined &&
+    epilogueTake?.director?.name === 'wustep' && epilogueTake?.director?.href === 'https://x.com/wustep')
   check('Cornfield Chase is Liftoff and the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-liftoff,opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are Liftoff and the two music-syncs', cornfield.map((v) => v.label).join('|') === 'Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
@@ -183,6 +196,144 @@ async function main(): Promise<void> {
         const endCam = perf.camera?.(perf.duration)
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
         check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
+      }
+      if (work.work === 'la-la-land' && version.take === 'fable51-epilogue') {
+        check('epilogue: the whole recording from zero, credited to Justin Hurwitz and La La Land, ending after the last chord',
+          (perf.soundtrack?.offset ?? 0) === 0 && !!perf.soundtrack?.src?.includes('lalaland-epilogue-demo') && near(perf.duration, EPILOGUE_END) &&
+          EPILOGUE_END > LAST_CHORDS[LAST_CHORDS.length - 1] + 1 && EPILOGUE_END <= epilogueOnsets.duration &&
+          !!perf.soundtrack?.credit?.includes('Justin Hurwitz') && !!perf.soundtrack?.credit?.includes('La La Land') &&
+          !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') && perf.soundtrack?.href === 'https://www.youtube.com/watch?v=jQVvT_UKZ6w')
+        const said = EPILOGUE_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
+        check('epilogue: end credits over the last chords, set by the page, naming Claude Fable 5.1 as director, Sebastian, Mia, Justin Hurwitz, Epilogue, La La Land and p5.js, gone before the last chord',
+          EPILOGUE_CREDITS_OK && perf.titles === epilogueCredits && epilogueCredits(EPILOGUE_CARDS[0].at - 0.1).length === 0 && epilogueCredits(perf.duration).length === 0 &&
+          said.includes('Directed by Claude Fable 5.1') && !said.includes('Stephen Wu') &&
+          ['Sebastian', 'Mia', 'Justin Hurwitz', 'Epilogue', 'La La Land', 'p5.js'].every((w) => said.includes(w)) &&
+          !/private tech demo/i.test(said), said)
+        const show = perf.show as EpilogueShow
+        check('epilogue: the club, then the dream from the kiss, then the club again from the moment the set is struck',
+          show.universe(0).world.name === 'sebs' && show.universe(1).world.name === 'backlot' && show.universe(2).world.name === 'sebs' &&
+          show.indexAt(INTO - 0.01) === 0 && show.indexAt(INTO + 0.01) === 1 && show.indexAt(OUT - 0.01) === 1 && show.indexAt(OUT + 0.01) === 2 &&
+          near(INTO, KISS) && near(OUT, STRUCK))
+        check('epilogue: no portal anywhere, and no cut is drawn', [0, 1, 2].every((i) => show.universe(i).pieces.every((p) => p.piece.name !== 'portal')) &&
+          [0, 30, KISS, 100, 200, STRUCK, 400].every((t) => perf.cuts?.(t) === false))
+        // One ball on one continuous path: never a jump, the changes of world included.
+        let jump = 0
+        let at = 0
+        let prev = show.where(0)
+        for (let t = 0.001; t <= perf.duration; t += 0.001) {
+          const here = show.where(t)
+          const d = Math.hypot(here[0] - prev[0], here[1] - prev[1])
+          if (d > jump) { jump = d; at = t }
+          prev = here
+        }
+        check('epilogue: the ball never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${at.toFixed(3)} s`)
+        // Every strike, part by part, lands on something the recording has.
+        const o = epilogueOnsets as {
+          piano: { t: number; s: number }[]; kiss: number; swing: { beats: { t: number }[] }; waltz: { beats: { t: number }[] }; number: { beats: { t: number }[] }
+          stars: { t: number; s: number }[]; bridge: { t: number; s: number }[]; home: { t: number; s: number }[]; piano2: { t: number; s: number }[]; look: { t: number; s: number }[]; last: { t: number; s: number }[]; strong: { t: number; s: number }[]
+        }
+        const within = (t: number, marks: number[], tol: number) => marks.some((m) => Math.abs(t - m) <= tol + 1e-9)
+        const pianoNotes = [...o.piano.map((n) => n.t), ...o.piano2.map((n) => n.t), ...o.look.filter((n) => n.s >= 0.3).map((n) => n.t), ...o.last.filter((n) => n.s >= 0.3).map((n) => n.t)]
+        const swingComb = o.swing.beats.map((b) => b.t)
+        const waltzComb = o.waltz.beats.map((b) => b.t)
+        const numberComb = o.number.beats.map((b) => b.t)
+        const free = [KISS, KISS_PEAK, ...o.strong.map((n) => n.t), ...o.stars.filter((n) => n.s >= 0.3).map((n) => n.t), ...o.bridge.filter((n) => n.s >= 0.3).map((n) => n.t), ...o.home.filter((n) => n.s >= 0.3).map((n) => n.t), ...LAST_CHORDS]
+        const off: string[] = []
+        let count = 0
+        for (const [name, list] of Object.entries(EPILOGUE_STRIKES.piano)) for (const t of list) { count++; if (!within(t, pianoNotes, 0.04)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(EPILOGUE_STRIKES.swing)) for (const t of list) { count++; if (!within(t, swingComb, 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(EPILOGUE_STRIKES.waltz)) for (const t of list) { count++; if (!within(t, [...waltzComb, ...free], 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(EPILOGUE_STRIKES.number)) for (const t of list) { count++; if (!within(t, [...numberComb, ...free], 0.026)) off.push(`${name} ${t.toFixed(3)}`) }
+        for (const [name, list] of Object.entries(EPILOGUE_STRIKES.free)) for (const t of list) { count++; if (!within(t, [...free, ...pianoNotes], 0.035)) off.push(`${name} ${t.toFixed(3)}`) }
+        check('epilogue: every strike lands on a measured onset', count > 200 && off.length === 0, `${count} strikes; off: ${off.slice(0, 12).join(', ')}`)
+        const swingHits = Object.values(EPILOGUE_STRIKES.swing).flat()
+        const swingBeats: number[] = []
+        for (let b = SWING_FROM; b <= SWING_SOFT; b++) swingBeats.push(swingBeat(b))
+        const swingStruck = swingBeats.filter((t) => swingHits.some((s) => Math.abs(s - t) <= 0.026))
+        check('epilogue: through the loud swing, nearly every beat is struck', swingStruck.length >= swingBeats.length * 0.85, `${swingStruck.length}/${swingBeats.length}`)
+        const waltzHits = Object.values(EPILOGUE_STRIKES.waltz).flat()
+        const bars: number[] = []
+        for (let b = WALTZ_FROM; b <= WALTZ_END; b++) bars.push(waltzBar(b))
+        const barsStruck = bars.filter((t) => waltzHits.some((s) => Math.abs(s - t) <= 0.026))
+        check('epilogue: every bar of the waltz is struck, or all but one', barsStruck.length >= bars.length - 1, `${barsStruck.length}/${bars.length}`)
+        const numberHits = Object.values(EPILOGUE_STRIKES.number).flat()
+        const numberBeats: number[] = []
+        for (let b = NUMBER_FROM + 4; b <= NUMBER_END; b++) numberBeats.push(numberBeat(b))
+        const numberStruck = numberBeats.filter((t) => numberHits.some((s) => Math.abs(s - t) <= 0.026))
+        check('epilogue: through the number, nearly every beat is struck', numberStruck.length >= numberBeats.length * 0.85, `${numberStruck.length}/${numberBeats.length}`)
+        const pianoHits = EPILOGUE_STRIKES.piano.piano
+        const strongNotes = o.piano.filter((n) => n.s >= 0.6).map((n) => n.t)
+        const notesStruck = strongNotes.filter((t) => pianoHits.some((s) => Math.abs(s - t) <= 0.04))
+        check('epilogue: the piano plays its theme: nearly every strong note of the opening is struck, and the four notes at the end', notesStruck.length >= strongNotes.length * 0.85 &&
+          PIANO2.every((t) => EPILOGUE_STRIKES.piano.finale.some((s) => Math.abs(s - t) <= 0.04)), `${notesStruck.length}/${strongNotes.length}`)
+        check('epilogue: the kiss is struck, on the burst', EPILOGUE_STRIKES.free.kiss.some((t) => near(t, KISS) || near(t, KISS_PEAK)))
+        // The ball is never out of sight for long.
+        let hidden = 0
+        let longest = 0
+        for (let t = 0; t <= perf.duration; t += 0.01) {
+          const here = show.at(t)
+          hidden = here.hidden || here.scale <= 0.02 ? hidden + 0.01 : 0
+          longest = Math.max(longest, hidden)
+        }
+        check('epilogue: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
+        check('epilogue: Seb is a solid ball the whole show', [0, 30, KISS + 0.5, 100, 200, 300, STRUCK + 1, 400].every((t) => !show.at(t).ball.ghost))
+        // The kiss: the ball touches Mia's on the burst, beside her table, and the room turns.
+        const kissAt = show.where(KISS)
+        const miaAtKiss = show.mia(KISS)
+        check('epilogue: on the kiss he is at her table, touching her', !!miaAtKiss && near(kissAt[0], KISS_AT[0], 0.02) && near(kissAt[1], KISS_AT[1], 0.02) &&
+          Math.hypot(miaAtKiss.x - kissAt[0], miaAtKiss.y - kissAt[1]) <= 0.3, `${kissAt.map((v) => v.toFixed(2))} · Mia ${miaAtKiss ? `${miaAtKiss.x.toFixed(2)},${miaAtKiss.y.toFixed(2)}` : 'absent'}`)
+        // Company, as in the film. Mia sits at her table while he plays, is with him everywhere in the dream, and at
+        // the end is back at her table with her husband, and leaves. Her husband is only in the club at the end.
+        const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
+          if (!b || (b.scale ?? 1) <= 0.02) return false
+          const f = perf.camera!(t)
+          const a = f.angle ?? 0
+          const dx = b.x - f.x
+          const dy = b.y - f.y
+          const x = dx * Math.cos(a) - dy * Math.sin(a)
+          const y = dx * Math.sin(a) + dy * Math.cos(a)
+          return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
+        }
+        const withHim = [KISS + 1, 80, 95, 110, 125, 150, 160, 175, 200, 225, 250, 265, 290, 320, 334]
+        // After the set is struck the camera is tight on Seb at the keys for the chord's decay; her table comes into
+        // frame with the pull-back on the look.
+        const atTable = [0.5, KISS - 0.5, LOOK + 2, LOOK + 6]
+        const husbandAway = [1, 30, 60, KISS + 1, 100, 200, 300, STRUCK - 1]
+        const miss: string[] = []
+        for (const t of [...withHim, ...atTable]) if (!inShot(t, show.mia(t))) miss.push(`Mia not in shot ${t}`)
+        for (const t of husbandAway) if (show.husband(t)) miss.push(`husband at ${t}`)
+        check('epilogue: Mia at her table for the kiss, with him through the dream, at her table again after; her husband only in the club at the end', miss.length === 0, miss.join(', '))
+        const two = [...withHim, ...atTable].map((t) => show.at(t).balls ?? [])
+        check('epilogue: where she is, two balls with two ids, or three with her husband, never more', two.every((b) => b.length >= 2 && b.length <= 3 && new Set(b.map((x) => x.id)).size === b.length))
+        check('epilogue: she is her yellow, and he his grey', withHim.every((t) => show.mia(t)?.color?.toUpperCase() === MIA_HEX.toUpperCase()) && [400, 420].every((t) => !show.husband(t) || show.husband(t)?.color?.toUpperCase() === HUSBAND_HEX.toUpperCase()))
+        // The company never jumps while drawn, and comes and goes only out of shot.
+        const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
+        for (const [name, of] of [['Mia', (t: number) => show.mia(t)], ['her husband', (t: number) => show.husband(t)]] as const) {
+          let gJump = 0
+          let gAt = 0
+          const pops: string[] = []
+          let gPrev = of(0)
+          for (let t = 0.001; t <= perf.duration; t += 0.001) {
+            const g = of(t)
+            if (g && gPrev) {
+              const d = Math.hypot(g.x - gPrev.x, g.y - gPrev.y)
+              if (d > gJump) { gJump = d; gAt = t }
+            }
+            if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
+            else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
+            else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
+            else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
+            gPrev = g
+          }
+          check(`epilogue: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
+          check(`epilogue: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
+        }
+        void ROOM
+        void STARS
+        void HOME
+        void CHORUS
+        void SWING_MID
+        void BUILD
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55-music-sync') {
         check('cornfield opus55: the whole recording from zero, with the demo credit',
