@@ -18,8 +18,8 @@ import { alpha } from '../kit'
  * - a black leather strap with cream stitching.
  *
  * The second hand does not sweep. It sits at 45 seconds and ticks back and
- * forth, a second each way, in Morse: the film's message. `twitch` adds to
- * it, for the tesseract, where the message is sent.
+ * forth, a second each way, in Morse: the film's message. `from` holds it
+ * still until the message starts, for the tesseract, where it is sent.
  *
  * It is stood up on a shelf, face out, its strap a closed loop behind it.
  * The detail is drawn to the size it is on the screen: the words and the
@@ -45,8 +45,8 @@ export interface WatchStyle {
   r?: number
   /** A glint on the glass, 0..1. */
   glint?: number
-  /** Extra seconds on the second hand (the message being sent), added to its Morse tick. */
-  twitch?: number
+  /** Show time from which the second hand ticks its Morse, from the message's start; before it, still at 45. Left out, it always ticks. */
+  from?: number
 }
 
 /* ------------------------------------------------------------------ the second hand, in Morse */
@@ -326,7 +326,7 @@ export function drawWatch(p: p5, k: number, ink: string, weight: number, x: numb
   // Syringe: a thin shaft with a slim bulb near its tip.
   hand(minA, [[0, -0.14], [0.035, 0.05], [0.025, 0.55], [0.055, 0.66], [0, 0.86], [-0.055, 0.66], [-0.025, 0.55], [-0.035, 0.05]], LUME)
   // The second hand: thin silver, with a tail, ticking at 45 in Morse.
-  const sec = 45 + keyed(t) + (style.twitch ?? 0)
+  const sec = 45 + (style.from === undefined ? keyed(t) : t < style.from ? 0 : keyed(t - style.from))
   const secA = (sec / 60) * Math.PI * 2
   p.stroke(SILVER)
   p.strokeWeight(Math.max(0.6, R * 0.025))

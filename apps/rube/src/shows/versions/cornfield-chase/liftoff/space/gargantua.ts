@@ -35,12 +35,13 @@ import { MILLER_HANDOFF } from './miller'
  * way, and he goes looking. Out of its depth rooms come at him and go round
  * him, each Murph's bookcase from behind at another time and another way up:
  * on its side in moonlight after the books have gone (190), upside down in
- * the sepia of years before (190½). Then Murph's own comes up out of the
- * depth, upright and lamplit, and he is behind its model lander on the last
- * hit (191); it tips away from us into the room, and he goes along behind
- * the row and pushes the ten books off, one after another, in the opening's
- * order and its rhythm run three and a half times as fast: S-T-A-Y, from
- * this side.
+ * the sepia of years before, on the last hit (191). Then Murph's own comes
+ * up out of the depth, slowly, upright and lamplit, and he is behind its
+ * model lander on 193; it tips away from us into the room, and he goes along
+ * behind the row and pushes the ten books off, one after another, in the
+ * opening's order and its rhythm run three and a half times as fast: S-T-A-Y,
+ * from this side. At the row's end he touches Cooper's watch, and its second
+ * hand, still until then, starts to tick its Morse.
  *
  * Then the tesseract lets him go. The back of the case falls away above him
  * and he falls back, slowly, through the lattice, its lines streaming up past
@@ -92,37 +93,40 @@ const HORIZON = beat(189)
  * tesseract's depth. Two other rooms come at him out of it and go past round
  * him, the same case at other times and other ways up: the first, on its
  * side in moonlight after the books have gone, on 190; the second, upside
- * down in the sepia of years before, half a beat on. Then Murph's
- * comes up out of the depth, upright and lamplit, and he is behind its
- * lander on the last hit (191), and it goes.
+ * down in the sepia of years before, on the last hit (191), its frame
+ * ringing. Then Murph's comes up out of the depth, slowing as it comes,
+ * upright and lamplit, and he is behind its lander on 193, and it goes.
+ * (The lander was on 191 until the dive was given twice the time: the last
+ * hit is the room he goes through now, and the lander keeps an eighth of the
+ * comb in the decay.)
  */
 const PASS_A = beat(190)
-const PASS_B = beat(190.5)
-const LAND = LAST
+const PASS_B = LAST
+const LAND = beat(193)
 /**
  * Then the ten books, in the opening's order and its Morse run about three
  * and a half times as fast: the first a quarter second after the lander, the
- * last at 120.85. Only the lander is on a strike; the books keep the Morse.
+ * last 1.44 s after it. Only the lander is on a strike; the books keep the Morse.
  */
 const FIRST_BOOK = LAND + 0.26
-const SQUEEZE = (FALL_NOTES.books[FALL_NOTES.books.length - 1] - FALL_NOTES.books[0]) / (120.85 - FIRST_BOOK)
+const SQUEEZE = (FALL_NOTES.books[FALL_NOTES.books.length - 1] - FALL_NOTES.books[0]) / (LAND + 1.441 - FIRST_BOOK)
 const PUSHES = FALL_NOTES.books.map((n) => FIRST_BOOK + (n - FALL_NOTES.books[0]) / SQUEEZE)
 /** The last book goes, and he goes back along the row to Cooper's watch at its end. */
 const LAST_BOOK = PUSHES[PUSHES.length - 1]
 const TO_WATCH = LAST_BOOK + 0.12
-const AT_WATCH = LAST_BOOK + 0.55
-/** Its second hand ticks the message, threads of light running into it along the lattice: on the music's eighths. */
-const WATCH_TICKS = [beat(194.5), beat(195), beat(195.5)]
-/** The grand pull-back from the watch, out to the tesseract's rooms going on every way. */
-const PULL0 = WATCH_TICKS[2] + 0.08
+const AT_WATCH = LAST_BOOK + 0.5
+/** He touches the watch, on an eighth: until then its second hand is still at 45; from then it ticks the message. */
+const TOUCH = beat(196.5)
+/** The grand pull-back from the watch, once its hand has ticked twice, out to the tesseract's rooms going on every way. */
+const PULL0 = TOUCH + 0.75
 /** Then it lets him go: the bridge, the fall back through it and the dark into the bed (IN_BED), and the wake (WAKE). */
-const CLOSE = 122.9
+const CLOSE = PULL0 + 0.6
 /** The warm light he drifts toward, and the room opening out of it round him. */
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
 
 /** The strikes, on the music. */
-export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, LAND, ...WATCH_TICKS]
+export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, PASS_B, LAND, TOUCH]
 
 /* ------------------------------------------------------------------ the hole */
 
@@ -337,7 +341,10 @@ const VP: Pt = [P_L[0], SURF - 0.2]
 /** A point of a room at scale `sc` of its depth, seen toward the one point. */
 const toward = (q: Pt, sc: number): Pt => [VP[0] + (q[0] - VP[0]) * sc, VP[1] + (q[1] - VP[1]) * sc]
 const WATCH_X = back(WATCH_ON_SHELF[0])
+/** Against the watch's case: where he touches it, and stays. */
 const BY_WATCH: Pt = [back(WATCH_ON_SHELF[0] + 0.21), Y_BALL]
+/** Where he stops short of it, a moment, before he reaches out. */
+const SHORT_OF_WATCH: Pt = [back(WATCH_ON_SHELF[0] + 0.33), Y_BALL]
 /**
  * The bed, in this part's frame: a long way below where the last book went,
  * the fall out of the tesseract. The next part (the replica) is placed so
@@ -371,11 +378,11 @@ const sweep = pchip([LAND, ...PUSHES, TO_WATCH], [P_L[0], ...ROW.map((b) => back
 
 /**
  * How many rooms deep Murph's still is, as he goes through the tesseract to
- * it: fast through the two between, slowing as it comes up round him, there
- * on 191. Each room is drawn at its depth past this one (`depthScale`).
+ * it: gathering out of the stop, through the two between, and slowing the
+ * whole way as Murph's comes up round him, there on 193. Each room is drawn at its depth past this one (`depthScale`).
  */
 const DIVE0 = 3.4
-const DIVE = pchip([HORIZON, PASS_A, PASS_B, LAND, LAND + 0.4], [DIVE0, 2, 1, 0, 0])
+const DIVE = pchip([HORIZON - 0.3, HORIZON, PASS_A, PASS_B, LAND, LAND + 0.4], [DIVE0, DIVE0, 2, 1, 0, 0])
 const diveAt = (T: number): number => (T <= HORIZON ? DIVE0 : T >= LAND ? 0 : DIVE.at(T))
 const depthScale = (rel: number): number => 1 / (1 + 0.75 * Math.max(-1.2, rel))
 /**
@@ -390,7 +397,7 @@ const approachY = pchip([HORIZON - 0.3, HORIZON, PASS_A, PASS_B, LAND, LAND + 0.
 function shoveAt(T: number): number {
   let v = 0
   for (const at of [LAND, ...PUSHES]) v -= 0.07 * leanPulse(T - at)
-  for (const at of WATCH_TICKS) v -= 0.05 * leanPulse(T - at)
+  v -= 0.05 * leanPulse(T - TOUCH)
   return v
 }
 const leanPulse = (s: number): number => (s < -0.04 || s > 0.2 ? 0 : s < 0 ? smooth(s, -0.04, 0) : Math.exp(-s / 0.06))
@@ -426,10 +433,13 @@ export const gargantua = part<GargState>(
       ...carried((u) => [approachX.at(u + slot.begin), approachY.at(u + slot.begin)], at(HORIZON), at(LAND), 120),
       // Along the back of the row, the books going one after another.
       ...carried((u) => [sweep.at(u + slot.begin), Y_BALL], at(LAND), at(TO_WATCH), 240),
-      // Back along the empty row to the watch, and there while its hand ticks and the rooms open out round it.
+      // Back along the empty row to the watch; a moment short of it; then in against its case on the eighth, and there
+      // while its hand ticks and the rooms open out round it.
       ...route([
         { at: at(TO_WATCH), p: [LAST_AT[0] + 0.015, Y_BALL] },
-        { at: at(AT_WATCH), p: BY_WATCH, ease: 'inout' },
+        { at: at(AT_WATCH), p: SHORT_OF_WATCH, ease: 'inout' },
+        { at: at(TOUCH - 0.13), p: SHORT_OF_WATCH },
+        { at: at(TOUCH), p: BY_WATCH, ease: 'in' },
         { at: at(CLOSE), p: BY_WATCH },
       ]),
       // The tesseract lets him go: back and down through it, through the dark, and into the pillow.
@@ -486,9 +496,10 @@ export const gargantua = part<GargState>(
       { t: PASS_A, cells: 3.0, hold: [(F[0] + P_L[0]) / 2, F[1] + 0.55], w: 1 },
       { t: LAND, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
       { t: LAST_BOOK, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
-      // In on the watch as he comes to it, while its hand ticks.
-      { t: AT_WATCH + 0.1, cells: 1.75, hold: [(BY_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.14], w: 1 },
-      { t: PULL0, cells: 1.75, hold: [(BY_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.14], w: 1 },
+      // In on the watch as he comes to it, and closer as he touches it, so its hand is seen to start.
+      { t: AT_WATCH + 0.1, cells: 1.35, hold: [(SHORT_OF_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.06], w: 1 },
+      { t: TOUCH + 0.25, cells: 0.95, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
+      { t: PULL0, cells: 0.9, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
       // The grand pull-back: Murph's bookcase is one of rooms going on every way, into the depth.
       { t: CLOSE, cells: 9.5, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
       // It lets him go: with him as he falls back through it, closer, looking the way he goes; the room opens under him.
@@ -999,7 +1010,6 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     ctx.restore()
   }
   if (dv > 0 && lat > 0.002) drawPassing(p, c, T, lat)
-  if (bk > 0.002) drawThreads(p, c, T, bk)
   drawStreaks(p, c, T, f)
   drawWarmth(p, c, T)
   if (roomAt(T) > 0) {
@@ -1090,48 +1100,6 @@ function miniCase(p: p5, k: number, ink: string, weight: number, a: number): voi
   for (const y of [SHELF_TOP, MIDY]) p.rect(X(0.775), X(y + 0.025), X(2.31), X(0.05))
   p.rect(X(0.775), X(FLOOR - 0.04), X(2.31), X(0.08))
   ctx.globalAlpha = was
-}
-
-/**
- * The message: threads of light running along the tesseract's lines into the
- * watch, from both ways along the top board and up and down the case's side,
- * and arriving on each tick of its hand.
- */
-function drawThreads(p: p5, c: Ctx, T: number, on: number): void {
-  const { k } = c
-  const X = (v: number) => v * k
-  const wx = WATCH_X
-  const wy = SURF - 0.15
-  p.strokeCap(p.ROUND)
-  for (const tk of WATCH_TICKS) {
-    const lead = 0.5
-    const s = T - (tk - lead)
-    if (s < 0 || s > lead + 0.35) continue
-    const u = clamp(s / lead)
-    const fade = on * (1 - smooth(s, lead, lead + 0.35))
-    // Each thread: [start, end] of the run; it comes in along the line, its head gathering pace, a tail behind.
-    const runs: [Pt, Pt][] = [
-      [[wx + 3.4, SURF - 0.02], [wx + 0.1, SURF - 0.02]],
-      [[wx - 3.6, SURF - 0.02], [wx - 0.12, SURF - 0.02]],
-    ]
-    for (const [a, b] of runs) {
-      const e = easeInQuad(u)
-      const hx = a[0] + (b[0] - a[0]) * e
-      const hy = a[1] + (b[1] - a[1]) * e
-      const tl = Math.min(0.42, 0.12 + 0.5 * u)
-      const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
-      const tx = hx - ((b[0] - a[0]) / len) * tl
-      const ty = hy - ((b[1] - a[1]) / len) * tl
-      p.stroke(alpha(p, DUST.light, 0.22 * fade))
-      p.strokeWeight(Math.max(1, X(0.04)))
-      p.line(X(tx), X(ty), X(hx), X(hy))
-      p.stroke(alpha(p, DARK.gold, 0.8 * fade))
-      p.strokeWeight(Math.max(1, X(0.014)))
-      p.line(X(tx), X(ty), X(hx), X(hy))
-      glow(p, X(hx), X(hy), X(0.12), DUST.light, 0.6 * fade)
-    }
-    if (s >= lead) glow(p, X(wx), X(wy), X(0.5), DUST.light, 0.7 * fade)
-  }
 }
 
 /** Where the warm light is, that the room opens out of: just over the pillow, where the window's light lies. */
@@ -1356,10 +1324,8 @@ function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
   for (const y of [SHELF_TOP, MIDY]) p.rect(X((L + Rr) / 2), X(y + 0.025), X(Rr - L - 0.14), X(0.05))
   p.rect(X((L + Rr) / 2), X(FLOOR - 0.04), X(Rr - L - 0.14), X(0.08))
 
-  // Cooper's watch, standing at the end of the top shelf beyond the lander: he comes down beside it, and its glass
-  // catches his light; its second hand, ticking its Morse at 45, is pulled on with each book that goes and each tick of the
-  // message, and springs back.
-  const tick = WATCH_TICKS.reduce((m, at) => Math.max(m, knock(T - at, 0.3)), 0)
+  // Cooper's watch, standing at the end of the top shelf beyond the lander: its second hand still at 45 until he touches
+  // it, and from then ticking its Morse.
   if (!look.watch) {
     washOver(p, k, look, L, Rr, CAP)
     p.pop()
@@ -1371,13 +1337,8 @@ function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
   p.translate(X(WATCH_ON_SHELF[0]), 0)
   p.scale(-1, 1)
   p.translate(-X(WATCH_ON_SHELF[0]), 0)
-  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], T, {
-    // At 45, ticking its Morse; each book that goes and each tick of the message pulls it on a second, and it springs back.
-    twitch: WATCH_TICKS.reduce((m, at) => m + knock(T - at, 0.35), 0) + PUSHES.reduce((m, at) => m + 0.6 * knock(T - at, 0.2), 0),
-    glint: Math.min(1, 0.35 + 0.65 * knock(T - LAND, 0.5) + 0.8 * tick),
-  })
+  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], T, look === MURPHS ? { from: TOUCH } : {})
   p.pop()
-  if (tick > 0.02) glow(p, X(WATCH_ON_SHELF[0]), X(WATCH_ON_SHELF[1] - 0.15), X(0.35 + 0.25 * tick), DUST.light, 0.55 * tick)
   washOver(p, k, look, L, Rr, CAP)
   p.pop()
 }
@@ -1417,7 +1378,9 @@ function drawPassing(p: p5, c: Ctx, T: number, on: number): void {
   const y1 = BK[1] + FLOOR
   // Deepest first.
   for (const room of [...PASSING].sort((a, b) => b.at - a.at)) {
-    const rel = room.at + dv
+    // Once he is through it, it goes on past him at its own pace, out of the frame, whatever the dive is doing.
+    const through = room.at + dv
+    const rel = through >= 0 ? through : Math.min(through, -(T - room.hit) * 2.2)
     if (rel < -0.75 || rel > 3.2) continue
     const a = on * (1 - smooth(-rel, 0, 0.45)) * (1 - smooth(rel, 1.7, 2.8))
     if (a <= 0.004) continue
@@ -1524,10 +1487,10 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     p.pop()
     ctx.restore()
   }
-  // While he is a ghost he gives off a little light of its own, a little more on each push.
+  // While he is a ghost he gives off a little light of its own, a little more on each book he pushes (not on the watch).
   const ghost = smooth(T, HORIZON, HORIZON + 0.35) * (1 - smooth(T, WAKE - 0.05, WAKE + 0.25))
   if (ghost > 0.005) {
-    const push = Math.max(0, -shoveAt(T)) / 0.07
+    const push = Math.max(0, -shoveAt(T) - 0.05 * leanPulse(T - TOUCH)) / 0.07
     const a = ghost * (0.4 + 0.25 * push)
     const x = X(at.x)
     const y = X(at.y)
@@ -1537,14 +1500,5 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     g.addColorStop(1, 'rgba(255, 236, 190, 0)')
     ctx.fillStyle = g
     ctx.fillRect(x - 0.45 * k, y - 0.45 * k, 0.9 * k, 0.9 * k)
-  }
-  // He wakes a ball: a ring goes out from him, faint, in the dark room.
-  const since = T - WAKE
-  if (since >= 0 && since < 1.0) {
-    const u = since / 1.0
-    p.noFill()
-    p.stroke(alpha(p, DUST.light, 0.7 * (1 - u) * (1 - u)))
-    p.strokeWeight(Math.max(1, c.weight * 1.6 * (1 - u)))
-    p.circle(X(at.x), X(at.y), (0.32 + easeOutCubic(u) * 0.9) * k)
   }
 }

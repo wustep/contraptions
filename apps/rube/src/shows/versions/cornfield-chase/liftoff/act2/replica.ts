@@ -83,8 +83,8 @@ const MIDY = SHELF_TOP + 0.46
  * of the tesseract onto the pillow, and a moment later wakes, a ball again,
  * and the quilt slides. (`space/gargantua.ts` plays it; the room is drawn here.)
  */
-export const IN_BED = 124.3
-export const WAKE = 124.5
+export const IN_BED = 125.52
+export const WAKE = 125.72
 /** How far he has sunk the pillow: as he lands, and settling. */
 const pillowDip = (T: number): number => {
   const s = T - IN_BED
