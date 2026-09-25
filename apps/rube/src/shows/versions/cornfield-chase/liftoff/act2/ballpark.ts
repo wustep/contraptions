@@ -99,7 +99,7 @@ const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 /** The trapdoor comes down on its stop. */
 const STOP = cue(153.5)
 
-export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, STOP, SEAT, DOWN, INCAR]
+export const BALLPARK_HITS = [IN, CATCH, TOSS, FEED, cue(135.5), SPIN1, COCK1, SPIN2, COCK2, PITCH, HIT, ...LAMPS, POPLAR, TREE, WINDOW, HATCH, STOP, SEAT, DOWN, INCAR]
 
 /* ------------------------------------------------------------------ the geometry */
 
@@ -171,7 +171,8 @@ const pocket = (b: number): Pt => [M_PIVOT[0] - M_ARM * Math.cos(b), M_PIVOT[1] 
 function mittArm(T: number): number {
   if (T < TOSS) return 0
   const u = (T - TOSS) / FLIP
-  if (u < 1) return BETA * u * u
+  // Kicked on the beat and still gathering, but not whipping: at the top it is going the speed the toss goes on at.
+  if (u < 1) return BETA * (0.86 * u + 0.14 * u * u)
   const since = T - TOSS - FLIP
   // Against the stop: a rebound. Then it lies back down.
   const bounce = 0.08 * Math.exp(-since / 0.22) * Math.abs(Math.sin(since * 15))
@@ -200,7 +201,8 @@ const WHEELS: Pt[] = [
 /** The hopper's mouth, where the toss comes down, and the gate the ball waits at. */
 const MOUTH: Pt = [-0.64, -1.8]
 const GATE: Pt = [-0.36, -1.0]
-const SLIDE = 0.34
+/** Down the hopper to its gate, which stops it on the and. */
+const SLIDE = cue(135.5) - cue(135)
 const INTO = 0.07
 
 /** How fast the wheels turn: still, a notch, another; after the pitch they run down. */

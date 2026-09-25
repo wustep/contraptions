@@ -1106,7 +1106,9 @@ export const porch = part<PorchState>(
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
-    const landX = [DECK_END + 0.2, DECK_END + 0.6, DECK_END + 1.0]
+    // Each hop lands as far on as its step allows, so off the deck's edge it keeps what it can of its roll (it cannot
+    // keep it all and land on the first step), and it gathers pace going down.
+    const landX = [DECK_END + 0.34, DECK_END + 0.72, DECK_END + 1.15]
     const leave = at(PORCH_NOTES[0]) - dropTime(1 / 3)
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: leave, p: [DECK_END, 0] }]
     let last = ways[1]

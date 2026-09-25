@@ -325,10 +325,13 @@ function plan(begin: number, end: number): Plan {
     if (t <= tFlume) return mix(inWheel(tOut), fb0, (t - tOut) / (tFlume - tOut))
     if (t <= tFlumeEnd) return mix(fb0, fb1, rampU(t - tFlume, tFlumeEnd - tFlume, 2.0, 3.3, flumeLen))
     if (t <= tLand1) {
+      // Off the flume's end at the speed the flume gave it, gathering a little as it drops into the pool.
       const e = fb1
       const l = up(S_C, land1Local[0], land1Local[1])
-      const u = (t - tFlumeEnd) / (tLand1 - tFlumeEnd)
-      return mix(e, l, u * u)
+      const T = tLand1 - tFlumeEnd
+      const lead = Math.min(1, (3.3 * T) / Math.max(1e-6, dist(e, l)))
+      const u = (t - tFlumeEnd) / T
+      return mix(e, l, lead * u + (1 - lead) * u * u)
     }
     // D: the pools and flaps.
     for (let k = 0; k < 3; k++) {
