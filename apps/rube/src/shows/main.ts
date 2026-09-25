@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { SHOW_SPEEDS, Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, type Performance, type Version } from './registry'
+import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
 import { createSoundtrack } from './soundtrack'
 import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
 
@@ -331,7 +331,7 @@ function sync(): void {
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
-      const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
+      const b = el('button', { type: 'button', title: version.director ? `Directed by ${version.director.name}` : (version.note ?? version.label) }, [version.label])
       b.addEventListener('click', () => {
         if (version !== current && !recording) void open(version, true)
       })
@@ -349,7 +349,10 @@ function sync(): void {
     if (loading) lines.push(el('br'), 'Loading…')
     else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
     else {
-      if (current.note) lines.push(el('br'), current.note)
+      // A byline, where the take has one, in place of its note: faint, the name a quiet link.
+      if (current.director) {
+        lines.push(el('br'), el('span', { class: 'byline' }, ['Directed by ', el('a', { href: current.director.href, target: '_blank', rel: 'noreferrer' }, [current.director.name])]))
+      } else if (current.note) lines.push(el('br'), current.note)
       const credit = perf?.soundtrack?.credit
       if (credit) {
         const href = perf?.soundtrack?.href
@@ -409,6 +412,65 @@ function sync(): void {
       : 'Video export needs a browser that can record the canvas.'
 }
 
+/* ------------------------------------------------------------------ words over the stage */
+
+// End credits, where a show has them. A show's canvas sets no type, so the page sets them, over the composed
+// frame (16:9, whole, centred on the stage), in its own face. Not in Overview, and never in a recording.
+const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
+stageRoot.append(wordsLayer)
+const wordCards = new Map<string, HTMLElement>()
+
+function buildCard(c: TitleCard): HTMLElement {
+  const node = el('div', { class: c.title ? 'card title' : 'card' })
+  if (c.role) node.append(el('div', { class: 'role' }, [c.role]))
+  for (const n of c.names) {
+    if (typeof n === 'string') {
+      node.append(el('div', { class: 'name' }, [n]))
+      continue
+    }
+    const as = el('span', { class: 'as' }, [n[1]])
+    if (n[2]) {
+      // A colour, or 'slab:' and a colour for one who is not a ball.
+      const slab = n[2].startsWith('slab:')
+      const swatch = el('span', { class: slab ? 'swatch slab' : 'swatch' })
+      swatch.style.background = slab ? n[2].slice(5) : n[2]
+      as.prepend(swatch)
+    }
+    node.append(el('div', { class: 'cast' }, [el('span', { class: 'who' }, [n[0]]), as]))
+  }
+  c.notes?.forEach((n, i) => node.append(el('div', { class: i === c.notes!.length - 1 && !c.title && c.notes!.length > 2 ? 'note fine' : 'note' }, [n])))
+  return node
+}
+
+function renderWords(t: number): void {
+  const cards = perf?.titles && !overview && !recording ? perf.titles(t) : []
+  const live = new Set(cards.map((c) => c.key))
+  for (const [key, node] of wordCards) {
+    if (live.has(key)) continue
+    node.remove()
+    wordCards.delete(key)
+  }
+  if (!cards.length) return
+  const W = stageRoot.clientWidth
+  const H = stageRoot.clientHeight
+  const fw = Math.min(W, (H * 16) / 9)
+  const fh = (fw * 9) / 16
+  wordsLayer.style.setProperty('--u', `${fh / 100}px`)
+  for (const c of cards) {
+    let node = wordCards.get(c.key)
+    if (!node) {
+      node = buildCard(c)
+      wordsLayer.append(node)
+      wordCards.set(c.key, node)
+    }
+    node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
+    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh}px`
+    node.style.opacity = c.light.toFixed(3)
+    // Out of focus as it comes and goes: it comes into focus as it comes up.
+    node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
+  }
+}
+
 // The clock prints whole seconds; writing it on every frame is wasted work.
 let lastTime = ''
 function tick(): void {
@@ -430,6 +492,7 @@ function tick(): void {
     // Leaving the top hides the stage's play button, and coming back to it shows it.
     const wantBig = !transport.playing && !recording && (blocked || t <= 0 || t >= transport.duration)
     if (wantBig === bigPlay.hidden) sync()
+    renderWords(t)
   }
   requestAnimationFrame(tick)
 }

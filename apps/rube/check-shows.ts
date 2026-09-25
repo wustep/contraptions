@@ -18,6 +18,7 @@ import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/show
 import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import { checkAllAtOnce } from './check-shows-all-at-once'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -113,7 +114,11 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
+  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,metronome,premiere-arabesque')
+  const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
+  check('Come Recover is one take, All at Once: its model in its name, and in the panel a faint byline, Directed by wustep, and no model or tech-demo line',
+    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].label === 'All at Once' && allAtOnce[0].note === undefined &&
+    allAtOnce[0].director?.name === 'wustep' && allAtOnce[0].director.href === 'https://x.com/wustep')
   check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
   check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
   check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
@@ -155,6 +160,7 @@ async function main(): Promise<void> {
         }
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
       }
+      if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
       if (work.work === 'cornfield-chase' && version.take === 'tech-demo') {
         check('cornfield: the whole recording, with the demo credit',
           near(perf.duration, 126.984) &&

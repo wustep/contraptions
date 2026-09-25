@@ -22,6 +22,11 @@ export interface Framing {
   x: number
   y: number
   cells: number
+  /**
+   * How far the picture is turned about its middle, radians, clockwise on the screen: a camera's roll. Left out,
+   * or in Overview, the world is square to the frame.
+   */
+  angle?: number
 }
 
 export interface SoundtrackSpec {
@@ -52,6 +57,34 @@ export interface Performance {
   cuts?(t: number): boolean
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
+  /**
+   * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
+   * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
+   */
+  titles?(t: number): TitleCard[]
+}
+
+/** One card of words over the stage, as the page is to set it at a moment. */
+export interface TitleCard {
+  /** Stable while the card is up: the page builds it once and only fades it. */
+  key: string
+  /** What they did: a small line in capitals over the names. */
+  role?: string
+  /**
+   * The names. Two parts are a line of a cast list: a name, and who they are. A third is a colour: a small round
+   * swatch set before who they are (in a show of balls, the ball they are), or 'slab:' and a colour for a small bar.
+   */
+  names: (string | [string, string] | [string, string, string])[]
+  /** Fine print under the names. */
+  notes?: string[]
+  /** The show's own name: larger, and spaced out. */
+  title?: boolean
+  /** 0 to 1: how far up it is. */
+  light: number
+  /** How far it still has to settle, in hundredths of the frame's height (it comes up into place). */
+  rise?: number
+  /** Where its top middle sits, as shares of the 16:9 frame. */
+  at: [number, number]
 }
 
 /** What a `.show.ts` file exports as its default. */
@@ -62,6 +95,11 @@ export interface ShowVersion {
   label: string
   /** One line on what this take is trying. */
   note?: string
+  /**
+   * Who directed it, set small and faint under the take in the panel, the name a link: "Directed by wustep". A
+   * take with a byline shows it in place of its note.
+   */
+  director?: { name: string; href: string }
   load(): Promise<Performance>
 }
 
@@ -112,11 +150,13 @@ export function readShows(found: Record<string, unknown>): Registry {
       continue
     }
     const v = found[path] as Partial<ShowVersion> | null | undefined
-    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string')) {
+    const director = v?.director
+    const badDirector = director !== undefined && (typeof director !== 'object' || !director || !text(director.name) || !/^https:\/\//.test(String(director.href)))
+    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string') || badDirector) {
       problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, director: v.director, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
       works.push({ work: at.work, title: v.title, versions: [version] })
