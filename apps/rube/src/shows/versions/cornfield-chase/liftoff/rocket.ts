@@ -21,7 +21,7 @@ import { DUST } from './worlds'
  * ball floats out.
  *
  * Two ride it. The window is wide, a seat either side of the axis: his on
- * the right, and on the left the gold ball, who came up the gantry with
+ * the right, and on the left Brand, who came up the gantry with
  * him. When the nose opens he floats straight out; she stays sitting on
  * the spent stage for an eighth, lets go, and drifts after him.
  *
@@ -190,7 +190,12 @@ function floatAt(t: number, exit: Pt): Pt {
 const CALLS = [149, 150, 151, 152].map(beat)
 /** Her offset from him as the nose opens (her seat from his), and how it goes on: she drifts out after him, up a little, and falls back. */
 const OUT0: Pt = [-2 * SEAT_X * Math.cos(lean(OPEN)), -2 * SEAT_X * Math.sin(lean(OPEN))]
-const OUT_V: Pt = [-0.35, -0.45]
+/** How she is moving in her seat, from him, as the nose opens (the lean still turning): she drifts out from that, no kick. */
+const SEAT_V: Pt = (() => {
+  const a = seatGap(OPEN - 0.002)
+  const b = seatGap(OPEN)
+  return [(b[0] - a[0]) / 0.002, (b[1] - a[1]) / 0.002]
+})()
 const LAGGING: Pt = [-0.62, -0.4]
 const LAGGING_V: Pt = [-0.45, 0.12]
 /** As far back as she drifts before the first blink, from him. */
@@ -206,27 +211,30 @@ function hermite(p0: Pt, m0: Pt, p1: Pt, m1: Pt, h: number, u: number): Pt {
   return [h00 * p0[0] + h10 * h * m0[0] + h01 * p1[0] + h11 * h * m1[0], h00 * p0[1] + h10 * h * m0[1] + h01 * p1[1] + h11 * h * m1[1]]
 }
 
+/** A stroke, 0..1 over a beat: it builds from nothing on the beat, is quickest a third of the way in, and fades to nothing. */
+const stroke = (u: number): number => 1 - (1 - u) ** 3 * (1 + 3 * u)
+
 /**
- * Her offset from him from the nose opening until the cradle takes them
+ * Brand's offset from him from the nose opening until the cradle takes them
  * both (beat 152), where she is at `cradle` from him. She drifts out a step
  * behind him and falls back; then each blink of the beacon is a stroke: a
- * surge on the beat, easing off, less each time, until she is at his back
- * as the cradle closes.
+ * surge that builds from the beat and fades by the next, less each time,
+ * until she is at his back as the cradle closes.
  */
-export function goldDrift(t: number, cradle: Pt = [0, 0]): Pt {
-  if (t <= RELEASE) return hermite(OUT0, OUT_V, LAGGING, LAGGING_V, RELEASE - OPEN, clamp((t - OPEN) / (RELEASE - OPEN)))
+export function brandDrift(t: number, cradle: Pt = [0, 0]): Pt {
+  if (t <= RELEASE) return hermite(OUT0, SEAT_V, LAGGING, LAGGING_V, RELEASE - OPEN, clamp((t - OPEN) / (RELEASE - OPEN)))
   if (t <= CALLS[0]) return hermite(LAGGING, LAGGING_V, FARTHEST, [0, 0], CALLS[0] - RELEASE, clamp((t - RELEASE) / (CALLS[0] - RELEASE)))
   const keys: Pt[] = [FARTHEST, lerp2(FARTHEST, cradle, 0.45), lerp2(FARTHEST, cradle, 0.8), cradle]
   let i = 0
   while (i < 2 && t >= CALLS[i + 1]) i++
   const u = clamp((t - CALLS[i]) / (CALLS[i + 1] - CALLS[i]))
-  return lerp2(keys[i], keys[i + 1], 1 - (1 - u) ** 3)
+  return lerp2(keys[i], keys[i + 1], stroke(u))
 }
 
 /** Where she is in this part's frame at show time `t`, from where the hero is (his lane, so the two shake as one): in her seat, then after him. */
-function goldAt(lane: Lane, begin: number, t: number): Pt {
+function brandAt(lane: Lane, begin: number, t: number): Pt {
   const h = laneAt(lane, t - begin)
-  const o = t < OPEN ? seatGap(t) : goldDrift(t)
+  const o = t < OPEN ? seatGap(t) : brandDrift(t)
   return [h.x + o[0], h.y + o[1]]
 }
 
@@ -285,7 +293,7 @@ export const rocket = part<RocketState>(
       exit: [EXIT[0] + 0.5, EXIT[1]],
       lane,
       state: s,
-      company: [{ from: slot.begin, to: slot.end, at: (t) => { const [x, y] = goldAt(lane, slot.begin, t); return { x, y } } }],
+      company: [{ from: slot.begin, to: slot.end, at: (t) => { const [x, y] = brandAt(lane, slot.begin, t); return { x, y } } }],
     }
   },
   () => {
@@ -303,6 +311,24 @@ export const rocket = part<RocketState>(
     ]
   },
 )
+
+/** The cabin behind the window glass, lamplit: amber, a middle tone between the two who sit in it. */
+const CABIN = '#C98A45'
+/** The cabin's lamp, over their heads: a warm pool of light at the top of the glass. */
+function cabinLamp(p: p5, k: number, t: number): void {
+  if (t >= OPEN) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createRadialGradient(0, (-WINDOW - WIN_R * 0.55) * k, 0, 0, (-WINDOW - WIN_R * 0.55) * k, (WIN_L + WIN_R) * k)
+  g.addColorStop(0, 'rgba(255, 236, 190, 0.55)')
+  g.addColorStop(1, 'rgba(255, 236, 190, 0)')
+  ctx.fillStyle = g
+  p.push()
+  p.noStroke()
+  ctx.beginPath()
+  ctx.ellipse(0, -WINDOW * k, (WIN_L + WIN_R) * k, WIN_R * k, 0, 0, Math.PI * 2)
+  ctx.fill()
+  p.pop()
+}
 
 /** A slot with round ends, centred at (x, y) in the current frame: the window. */
 function pill(p: p5, k: number, x: number, y: number, l: number, r: number): void {
@@ -476,6 +502,8 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
     fairingHalf(p, k, ink, weight, hull, band, side, 1 - smooth(open, 0.05, 0.5))
     p.pop()
   }
+  // The cabin's lamp, over the two in the window (the glass and its rim go over them, in `over`).
+  cabinLamp(p, k, t)
   p.pop()
 }
 
@@ -497,12 +525,13 @@ function fairingHalf(p: p5, k: number, ink: string, weight: number, hull: string
   p.beginShape()
   for (const [x, y] of [[0, FAIR0 + 0.04], [side * WF * 0.5, FAIR0 + 0.04], [side * WF * 0.5, FAIR0 + 0.14], [0, FAIR0 + 0.14]] as Pt[]) p.vertex(...H(x, y))
   p.endShape(p.CLOSE)
-  // Its half of the window: the dark behind the glass, fading as the half swings open.
+  // Its half of the window: the cabin behind the glass, lamplit (a warm middle tone, so the sand ball reads lighter
+  // than it and the blue one darker), fading as the half swings open.
   if (glass > 0.01) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     const was = ctx.globalAlpha
     ctx.globalAlpha = was * glass
-    solid(p, ink, weight, '#1C2233')
+    solid(p, ink, weight, CABIN)
     p.beginShape()
     p.vertex(...H(0, WINDOW + WIN_R))
     for (let i = 0; i <= 10; i++) {

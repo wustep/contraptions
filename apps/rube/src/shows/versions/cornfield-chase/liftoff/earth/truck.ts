@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, puff, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, R, puff, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
@@ -129,7 +129,8 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   // Inside, where the door opens: the cab in shadow, the far window, the bench.
   const wide = doorShape(0)
   shape(wide.door, alpha(p, ink, 0.62), weight * 0.8)
-  shape(wide.glass, DUST.sky, weight * 0.5)
+  // The far window, seen through the cab: dusty and shaded, a middle tone the sand-pale driver reads against.
+  shape(wide.glass, mixHex(DUST.sky, DUST.denim, 0.5), weight * 0.5)
   shape([[DOOR_B + 0.02, 0.72], [DASH + 0.02, 0.72], [DASH + 0.02, RAIL - 0.02], [DOOR_B + 0.02, RAIL - 0.02]], DUST.teal, weight * 0.7)
   shape([[DOOR_B + 0.02, RAIL - 0.02], [DOOR_B + 0.17, RAIL - 0.02], [DOOR_B + 0.17, 1.17], [DOOR_B + 0.12, 1.23], [DOOR_B + 0.02, 1.23]], DUST.teal, weight * 0.7)
   // The wheel, raked back toward the bench and seen edge on, on its column down to the dash.

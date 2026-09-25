@@ -556,17 +556,25 @@ function drawShaft(p: p5, c: Ctx, T: number): void {
     const fy = v + 0.17 * Math.sin(fa)
     outline(p, ink, weight * 0.8)
     p.line(X(WALL_L), X(v), X(fx), X(fy))
+    // The flag: a small pennant on the end of its arm.
+    const na = fa + Math.PI / 2
     solid(p, ink, weight * 0.5, DUST.rust)
-    p.circle(X(fx), X(fy), X(0.065))
+    shape(p, k, [
+      [fx, fy],
+      [fx - 0.08 * Math.cos(fa) + 0.06 * Math.cos(na), fy - 0.08 * Math.sin(fa) + 0.06 * Math.sin(na)],
+      [fx - 0.1 * Math.cos(fa), fy - 0.1 * Math.sin(fa)],
+    ])
     if (!inTube) continue
-    const lit = since >= -0.02
-    const flash = knock(since, 0.25)
+    // The landing's lamp: a small caged slit on a bracket, warm white once lit. It comes on, it does not flash.
+    const on = smooth(since, -0.02, 0.14)
     const lx = WALL_L - 0.2
-    if (lit) glow(p, k, lx, v, 0.26 + 0.4 * flash, DUST.light, 0.5 + 0.5 * flash)
-    solid(p, ink, weight * 0.6, lit ? mixHex(DUST.corn, DUST.light, flash) : DUST.shade)
-    p.circle(X(lx), X(v), X(0.13))
+    if (on > 0) glow(p, k, lx, v, 0.17, DUST.light, 0.35 * on)
     outline(p, ink, weight * 0.5)
-    p.line(X(WALL_L - 0.07), X(v), X(lx + 0.065), X(v))
+    p.line(X(WALL_L - 0.04), X(v), X(lx + 0.05), X(v))
+    solid(p, ink, weight * 0.5, on > 0.5 ? DUST.light : DUST.shade)
+    p.rect(X(lx), X(v), X(0.11), X(0.035), X(0.012))
+    outline(p, ink, weight * 0.35)
+    for (const dx of [-0.028, 0.028]) p.line(X(lx + dx), X(v - 0.03), X(lx + dx), X(v + 0.03))
   }
   // The walls, down into the roof.
   solid(p, ink, weight * 0.8, DUST.tin)
@@ -698,9 +706,10 @@ function drawLift(p: p5, c: Ctx, T: number): void {
   // The car. Its back wall, lit by its own lamp.
   solid(p, ink, weight * 0.7, DUST.light)
   p.rect(0, X(vf - CAR_H / 2), X(CAR_R - CAR_L - POST), X(CAR_H))
-  glow(p, k, 0, vf - CAR_H + 0.12, 0.75, DUST.corn, 0.2)
-  solid(p, ink, weight * 0.5, DUST.corn)
-  p.arc(X(-0.3), X(vf - CAR_H), X(0.14), X(0.14), 0, Math.PI)
+  // Its lamp: a slit under the roof, warm white, not a bulb.
+  glow(p, k, 0, vf - CAR_H + 0.12, 0.7, DUST.light, 0.22)
+  solid(p, ink, weight * 0.45, DUST.light)
+  p.rect(0, X(vf - CAR_H + 0.03), X(0.3), X(0.035), X(0.012))
   // The floor, a plank deck; the +u post (the -u side is the door); the roof, with the hatch over the ball.
   solid(p, ink, weight * 0.8, DUST.wood)
   p.rect(0, X(vf + 0.035), X(CAR_R - CAR_L + 0.04), X(0.07))
@@ -730,8 +739,9 @@ function drawLift(p: p5, c: Ctx, T: number): void {
     [ROPE_U + 0.07, vRoof + 0.01],
     [ROPE_U, vRoof - 0.09],
   ])
-  solid(p, ink, weight * 0.6, DUST.bone)
-  p.circle(X(CAR_L - 0.05), X(vRoof + 0.06), X(0.09))
+  // The arm that throws the flags as the car passes: a short tin cam off the roof's corner.
+  solid(p, ink, weight * 0.6, DUST.tin)
+  p.rect(X(CAR_L - 0.05), X(vRoof + 0.06), X(0.1), X(0.045), X(0.015))
   // Its underside: the safety's shoe.
   solid(p, ink, weight * 0.6, DUST.tin)
   p.rect(0, X(vf + 0.1), X(0.5), X(0.05))

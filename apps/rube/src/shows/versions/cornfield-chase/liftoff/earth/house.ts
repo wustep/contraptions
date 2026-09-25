@@ -177,15 +177,16 @@ function lightShaft(p: p5, k: number, t: number): void {
 /* ------------------------------------------------------------------ the shelf */
 
 /**
- * Murph's bookcase. A ghost sits at the end of the top shelf in the dark, by
+ * Murph's bookcase. The ball sits at the end of the top shelf in the dark, by
  * the side of the case. When the piano starts, the things on the shelf begin
  * to go on their own, from the far end: the model lander first, as it does in
  * the film; then ten books, one to a note, short and tall: dot dot dot, dash,
  * dot dash, dash dot dash dash. Each one shivers, sheds a little dust, and
- * leans out as if pushed from behind by nothing. The ghost doesn't move; it
- * watches, and wonders (a small drawn question, three times). When the last
- * book goes it rolls: along the shelf, through the side of the case, and down
- * onto the toy truck standing there, where it is a ball.
+ * leans out as if pushed from behind by nothing. The ball doesn't move; it
+ * watches, and wonders (a small drawn question, three times). The last book
+ * topples toward it instead, and its top knocks the ball off its place: along
+ * the shelf it goes, through a little flap in the side of the case, and down
+ * onto the toy truck standing there.
  */
 const CASE_L = -0.45
 const CASE_R = 2.0
@@ -201,11 +202,13 @@ export interface Fallen {
   w: number
   h: number
   color: string
-  /** Seconds into the part at which the ghost reaches it. */
+  /** Seconds into the part at which it goes. */
   hit: number
   /** Where it comes to rest, lying: its centre, and which way it turned. */
   land: Pt
   turn: 1 | -1
+  /** The last book: it topples over its foot toward the ball's rest, knocks the ball, and then falls to the floor. */
+  topple?: boolean
 }
 
 interface ShelfState {
@@ -213,9 +216,8 @@ interface ShelfState {
   lane: Lane
   books: Fallen[]
   lander: { x: number; hit: number }
-  /** Seconds into the part: the ghost leaves the shelf, and lands. */
-  off: number
-  landed: number
+  /** The flap in the case's side: its angle from `t0` (seconds into the part), RATE samples a second. */
+  flap: { t0: number; a: Float32Array }
 }
 
 const MORSE = '... - .- -.--'
@@ -225,7 +227,7 @@ const BOOK_COLORS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUS
 export const SHELF_NOTES = [5.126, ...SHELF_HITS]
 
 /**
- * The ten books of the top shelf as they stand before the ghost comes, in the
+ * The ten books of the top shelf as they stand before they go, in the
  * shelf's own cells (the top board's surface at TOP = -0.82, the ball's
  * level on it at -0.95): their centres, widths, heights and colours, in the
  * order they fall. The tesseract shows this same row from behind.
@@ -252,10 +254,8 @@ export function stayRow(): { x: number; w: number; h: number; color: string; das
 export const SHELF_TOP = TOP
 
 /**
- * Where the ghost rests on the top shelf, in the shelf's cells: at the end of
- * the row, to the right of the last book. The first frame has it there, and
- * the end of Act I (`space/gargantua.ts`, `GHOST_ON_SHELF`) brings it back
- * to the same place. `check:shows` holds the two together.
+ * Where the ball rests on the top shelf at the start, in the shelf's cells: at
+ * the end of the row, to the right of the last book, in the dawn's first light.
  */
 export const GHOST_REST: Pt = (() => {
   const row = stayRow()
@@ -266,7 +266,7 @@ export const GHOST_REST: Pt = (() => {
 export const LANDER_X = -0.13
 export const FALL_NOTES = { lander: 5.126, books: SHELF_HITS }
 
-/** When the ghost wonders (show seconds), and where the question rises, from its rest: after the lander is down, in the middle of the row, and as the last book goes. */
+/** When the ball wonders (show seconds), and where the question rises, from its rest: after the lander is down, in the middle of the row, and as the last book starts to go. */
 const WONDER = [
   { at: 5.9, dx: 0.21, dy: -0.22, tilt: 0.14 },
   { at: 9.62, dx: -0.22, dy: -0.23, tilt: -0.12 },
@@ -276,7 +276,7 @@ const WONDER = [
 /** A shiver, `since` seconds before a thing on the shelf goes: nothing touches it, and it trembles. */
 const shiver = (since: number): number => (since < -0.34 || since >= 0 ? 0 : 0.055 * smooth(since, -0.34, -0.14) * Math.sin(since * 80))
 
-/** A question, drawn: a hook and a dot in the ghost's pale light, its middle at (x, y), tilted. */
+/** A question, drawn: a hook and a dot in a pale warm ink over a thin dark line, its middle at (x, y), tilted. */
 function question(p: p5, c: Ctx, x: number, y: number, tilt: number, a: number): void {
   if (a <= 0.01) return
   const { k, ink, weight } = c
@@ -312,9 +312,36 @@ export function bookRests(): Fallen[] {
     let floor = FLOOR
     for (const r of rests) if (r.x1 > x0 + 0.03 && r.x0 < x1 - 0.03) floor = Math.min(floor, r.top)
     rests.push({ x0, x1, top: floor - b.w })
-    return { x: b.x, w: b.w, h: b.h, color: b.color, hit: 0, land: [lx, floor - b.w / 2] as Pt, turn: (j % 2 ? 1 : -1) as 1 | -1 }
+    return { x: b.x, w: b.w, h: b.h, color: b.color, hit: 0, land: [lx, floor - b.w / 2] as Pt, turn: (j % 2 ? 1 : -1) as 1 | -1, topple: j === MORSE.replace(/ /g, '').length - 1 }
   })
 }
+
+/** Along the line from `a` to `b` between two times, leaving at `v0` and arriving at `v1` cells a second. */
+function run(a: Pt, b: Pt, t0: number, t1: number, v0: number, v1: number): (t: number) => Pt {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const D = Math.hypot(dx, dy) || 1
+  const T = t1 - t0
+  return (t) => {
+    const u = clamp((t - t0) / T)
+    const d = D * (3 * u * u - 2 * u * u * u) + T * (v0 * (u * u * u - 2 * u * u + u) + v1 * (u * u * u - u * u))
+    return [a[0] + (dx / D) * d, a[1] + (dy / D) * d]
+  }
+}
+
+/** How long after the last book starts to go its top reaches the ball on its rest: 11.622 to 11.819, a note. */
+const KNOCK = 0.197
+/** How far the last book has toppled over its foot when its top meets the ball at rest, found once from where they stand. */
+const KNOCK_ANGLE = (() => {
+  const row = stayRow()
+  const b = row[row.length - 1]
+  const pivot: Pt = [b.x + b.w / 2, TOP]
+  const dx = GHOST_REST[0] - pivot[0]
+  const dy = GHOST_REST[1] - pivot[1]
+  // The book's near face runs up from its foot at the angle it has turned: find where it first touches the ball.
+  for (let a = 0; a < Math.PI / 2; a += 0.0005) if (-dx * Math.cos(a) - dy * Math.sin(a) >= -R) return a
+  return Math.PI / 2
+})()
 
 export const shelf = part<ShelfState>(
   {
@@ -322,20 +349,6 @@ export const shelf = part<ShelfState>(
     dynamic: true,
     draw: (p, s, c) => drawShelf(p, s, c),
     over: (p, s, c) => {
-      // While it is a ghost it gives off a little light of its own: the only light in the room before the dawn.
-      const fade = 1 - smooth(c.t, s.landed - 0.05, s.landed + 0.25)
-      if (fade <= 0) return
-      const at = laneAt(s.lane, c.t)
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const X = at.x * c.k
-      const Y = at.y * c.k
-      const g = ctx.createRadialGradient(X, Y, 0, X, Y, 0.42 * c.k)
-      const a = fade * (0.35 + 0.25 * (1 - smooth(c.t, 3, 7)))
-      g.addColorStop(0, `rgba(255, 246, 214, ${a})`)
-      g.addColorStop(0.35, `rgba(255, 236, 190, ${a * 0.5})`)
-      g.addColorStop(1, 'rgba(255, 236, 190, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X - 0.42 * c.k, Y - 0.42 * c.k, 0.84 * c.k, 0.84 * c.k)
       // It wonders: a small question rises by it and fades, three times. The last is left hanging as it rolls away.
       const T = c.t + s.begin
       for (const m of WONDER) {
@@ -352,24 +365,23 @@ export const shelf = part<ShelfState>(
     // Where they come to rest: dropped in front of the case, lying, each on whatever fell before it.
     const books: Fallen[] = bookRests().map((b, i) => ({ ...b, hit: at(SHELF_HITS[i]) }))
     const lander = { x: LANDER_X, hit: at(FALL_NOTES.lander) }
-    const off = at(12.016)
+    const knocked = at(SHELF_HITS[SHELF_HITS.length - 1] + KNOCK)
+    const flapped = at(12.016)
     const landed = at(12.283)
-    // Still at the end of the row until the last book goes; then along the shelf and through the side of the case.
-    const ways: Way[] = [
-      { at: 0, p: GHOST_REST },
-      { at: at(SHELF_HITS[SHELF_HITS.length - 1]), p: GHOST_REST },
-      { at: off, p: [CASE_R, BALL_Y], ramp: [0, 1] },
-    ]
-    const from = ways[ways.length - 1]
-    // Down onto the toy truck's roof.
-    ways.push(hop(from, [2.33, CATCH_Y], landed))
-    const lane: Lane = { segs: route(ways), fire: lander.hit }
+    // Still at the end of the row until the last book's top knocks it (a note); along the shelf, slowing a little,
+    // into the flap in the side of the case (a note); out through it, and down onto the toy truck's roof (a note).
+    const flapX = FLAP_X - 0.035 - R + 0.07
+    const roll = run(GHOST_REST, [flapX, BALL_Y], knocked, flapped, 2.0, 1.7)
+    const segs = route([{ at: 0, p: GHOST_REST }, { at: knocked, p: GHOST_REST }])
+    segs.push(...carried(roll, knocked, flapped, 24))
+    const out: Way = { at: flapped, p: [flapX, BALL_Y] }
+    segs.push(...route([out, hop(out, [2.33, CATCH_Y], landed)]))
+    const lane: Lane = { segs, fire: lander.hit }
     return {
       cells: box(-1, -2, 2, 0),
       exit: [2.83, CATCH_Y],
       lane,
-      state: { begin: slot.begin, lane, books, lander, off, landed },
-      changes: [{ at: landed, ghost: false }],
+      state: { begin: slot.begin, lane, books, lander, flap: flapSwing(lane, knocked, landed + 1.5) },
     }
   },
 )
@@ -379,6 +391,7 @@ export function bookAt(b: Fallen, since: number): { x: number; y: number; a: num
   const x0 = b.x
   const y0 = TOP - b.h / 2
   if (since < 0) return { x: x0, y: y0, a: 0 }
+  if (b.topple) return toppleAt(b, since)
   // It is eased out of the row first, a lean toward us, and then it goes.
   const lean = 0.12
   if (since < lean) {
@@ -398,6 +411,80 @@ export function bookAt(b: Fallen, since: number): { x: number; y: number; a: num
   return { x: b.land[0], y: b.land[1], a: b.turn * (Math.PI / 2 + rock) }
 }
 
+/**
+ * The last book: it tips over its foot toward the ball, gathering, until its top meets the ball (KNOCK seconds on);
+ * then it drops away off the shelf toward us and lies where `bookRests()` says, like the rest.
+ */
+function toppleAt(b: Fallen, since: number): { x: number; y: number; a: number } {
+  const pivot: Pt = [b.x + b.w / 2, TOP]
+  const pose = (a: number): { x: number; y: number; a: number } => ({
+    x: pivot[0] - (b.w / 2) * Math.cos(a) + (b.h / 2) * Math.sin(a),
+    y: pivot[1] - (b.w / 2) * Math.sin(a) - (b.h / 2) * Math.cos(a),
+    a,
+  })
+  if (since < KNOCK) return pose(KNOCK_ANGLE * (since / KNOCK) ** 2)
+  const from = pose(KNOCK_ANGLE)
+  const f = since - KNOCK
+  const T = dropTime(b.land[1] - from.y)
+  if (f < T) {
+    const u = f / T
+    return { x: from.x + (b.land[0] - from.x) * u, y: from.y + 0.5 * G_EARTH * f * f, a: KNOCK_ANGLE + (Math.PI / 2 - KNOCK_ANGLE) * easeInOutSine(u) }
+  }
+  const after = f - T
+  const rock = Math.exp(-after / 0.12) * Math.sin(after * 40) * 0.08
+  return { x: b.land[0], y: b.land[1], a: Math.PI / 2 + rock }
+}
+
+/** Seconds after a book goes that it lands on the floor. */
+function landsAfter(b: Fallen): number {
+  if (!b.topple) return 0.12 + dropTime(b.land[1] - (TOP - b.h / 2))
+  const a = KNOCK_ANGLE
+  const y = TOP - (b.w / 2) * Math.sin(a) - (b.h / 2) * Math.cos(a)
+  return KNOCK + dropTime(b.land[1] - y)
+}
+
+/* The flap in the case's side, at the top shelf: a board hung from its top edge in the side, that swings out as the ball goes through. */
+const FLAP_X = CASE_R - 0.035
+const FLAP_TOP = TOP - 0.3
+const FLAP_L = TOP - FLAP_TOP - 0.005
+const FLAP_RATE = 240
+
+/** The flap's swing, worked out once from the ball's lane: it rides on the ball while the ball is under it, and falls back when it is past. */
+function flapSwing(lane: Lane, from: number, to: number): { t0: number; a: Float32Array } {
+  const n = Math.ceil((to - from) * FLAP_RATE)
+  const out = new Float32Array(n)
+  const r = R + 0.035
+  let a = 0
+  let w = 0
+  let need0 = 0
+  for (let i = 0; i < n; i++) {
+    const q = laneAt(lane, from + i / FLAP_RATE)
+    const dx = q.x - FLAP_X
+    const dy = q.y - FLAP_TOP
+    const rho = Math.hypot(dx, dy)
+    let need = 0
+    if (rho > r) {
+      const phi = Math.atan2(dx, dy)
+      if (rho <= Math.hypot(FLAP_L, r)) need = phi + Math.asin(r / rho)
+      else if (rho < FLAP_L + r) need = phi + Math.acos((FLAP_L * FLAP_L + rho * rho - r * r) / (2 * FLAP_L * rho))
+    }
+    need = Math.max(0, need)
+    w += (-240 * Math.sin(a) - 5 * w) / FLAP_RATE
+    a += w / FLAP_RATE
+    if (a < 0) {
+      a = 0
+      w = -w * 0.3
+    }
+    if (a < need) {
+      a = need
+      w = Math.max(w, (need - need0) * FLAP_RATE)
+    }
+    need0 = need
+    out[i] = a
+  }
+  return { t0: from, a: out }
+}
+
 function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
   const { k, t, ink, weight } = c
   const X = (x: number) => x * k
@@ -405,7 +492,10 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
   solid(p, ink, weight, DUST.shade)
   p.rect(X((CASE_L + CASE_R) / 2), X((CAP + FLOOR) / 2), X(CASE_R - CASE_L), X(FLOOR - CAP))
   solid(p, ink, weight, DUST.wood)
-  for (const x of [CASE_L + 0.035, CASE_R - 0.035]) p.rect(X(x), X((CAP + FLOOR) / 2), X(0.07), X(FLOOR - CAP))
+  p.rect(X(CASE_L + 0.035), X((CAP + FLOOR) / 2), X(0.07), X(FLOOR - CAP))
+  // The right side, in two pieces round the flap at the top shelf.
+  p.rect(X(FLAP_X), X((CAP + FLAP_TOP) / 2), X(0.07), X(FLAP_TOP - CAP))
+  p.rect(X(FLAP_X), X((TOP + FLOOR) / 2), X(0.07), X(FLOOR - TOP))
   p.rect(X((CASE_L + CASE_R) / 2), X(CAP - 0.03), X(CASE_R - CASE_L + 0.1), X(0.07))
   for (const y of [TOP, MID]) p.rect(X((CASE_L + CASE_R) / 2), X(y + 0.025), X(CASE_R - CASE_L - 0.14), X(0.05))
   p.rect(X((CASE_L + CASE_R) / 2), X(FLOOR - 0.04), X(CASE_R - CASE_L - 0.14), X(0.08))
@@ -471,21 +561,25 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
   // A thud of dust where each one lands.
   p.noStroke()
   for (const b of s.books) {
-    const since = t - b.hit - 0.12 - dropTime(b.land[1] - (TOP - b.h / 2))
+    const since = t - b.hit - landsAfter(b)
     if (since < 0 || since > 0.6) continue
     const u = since / 0.6
     p.fill(alpha(p, DUST.shade, 0.7 * (1 - u)))
     for (const side of [-1, 1]) p.circle(X(b.land[0] + side * (b.h / 2 + 0.05 + u * 0.12)), X(b.land[1] + b.w / 2 - 0.02 - u * 0.04), X(0.05 + u * 0.05))
   }
 
-  // Where the ghost comes down it becomes a ball, on the toy truck's roof: a ring goes out from it.
-  const since = t - s.landed
-  if (since >= 0 && since < 0.9) {
-    const u = since / 0.9
-    outline(p, ink, weight * (1 - u))
-    p.stroke(alpha(p, ink, 0.6 * (1 - u)))
-    p.circle(X(2.33), X(CATCH_Y), X(0.3 + u * 0.9))
-  }
+  // The flap: hung from its top edge in the case's side, swinging out as the ball goes through, and slapping back.
+  const i = (t - s.flap.t0) * FLAP_RATE
+  const j = Math.floor(i)
+  const fa = i <= 0 || j >= s.flap.a.length - 1 ? 0 : s.flap.a[j] + (s.flap.a[j + 1] - s.flap.a[j]) * (i - j)
+  p.push()
+  p.translate(X(FLAP_X), X(FLAP_TOP))
+  p.rotate(-fa)
+  solid(p, ink, weight * 0.8, DUST.wood)
+  p.rect(0, X(FLAP_L / 2), X(0.07), X(FLAP_L), X(0.008))
+  p.pop()
+  solid(p, ink, weight * 0.5, DUST.bone)
+  p.circle(X(FLAP_X), X(FLAP_TOP + 0.02), X(0.035))
 }
 
 /** A book standing with its foot at `(x, foot)`, spine out: the spine's bands, and a label with nothing on it. */

@@ -163,7 +163,7 @@ waypoints, so its strikes land on the measured onsets in
 `scripts/show-plans/cornfield-opus55-onsets.json` by construction.
 `liftoff/hits.ts` gathers every strike, and `check:shows` measures each one
 against the onset file. The check also asserts that the ball never jumps,
-and that it is never hidden for long. A second ball, gold, is Amelia Brand
+and that it is never hidden for long. A second ball, blue, is Dr. Amelia Brand
 (the hero, Cooper, has the farm and drives the truck): parts show her through
 `Built.company` spans (show time, part frame), and the check holds her to the
 story: not on the farm, in shot with him from NASA's bunker to the ring,

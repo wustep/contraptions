@@ -20,10 +20,10 @@ import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
 import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
-import { ACT2, DURATION as LIFTOFF_END, IGNITION, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
+import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
-import { GHOST_ON_SHELF } from './src/shows/versions/cornfield-chase/liftoff/space/gargantua'
+import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -205,17 +205,18 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
-        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), with the demo credit, and the credits after it',
+        check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.includes('No Time for Caution') &&
-          !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
+          !!perf.soundtrack?.credit?.includes('Interstellar') && !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') &&
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues',
+        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, TARS, p5.js, Hans Zimmer and both cues',
           CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 1 &&
-          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar', 'tech demo'].every((w) => said.includes(w)), said)
+          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
+          !/private tech demo/i.test(said), said)
         const show = perf.show as LiftoffShow
         check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
           show.universe(0).world.name === 'cornfield' && show.universe(1).world.name === 'endurance' &&
@@ -273,15 +274,22 @@ async function main(): Promise<void> {
           longest = Math.max(longest, hidden)
         }
         check('liftoff: the ball is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s`)
-        check('liftoff: a ghost on the shelf at the start, a ball in the toy truck', show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
+        check('liftoff: Cooper is a solid ball from the first frame (the ghost is for the tesseract), and in the toy truck', !show.at(0).ball.ghost && !show.at(1).ball.ghost && !show.at(12.4).ball.ghost)
         // The opening's books fall on their own: the ghost sits still at its rest while the lander and all ten go, and
         // only then rolls. At the end of Act I it comes back to the very same place, having knocked them off itself.
         const still = [0.5, FALL_NOTES.lander, ...FALL_NOTES.books].map((t) => show.where(t))
         const lastFall = FALL_NOTES.books[FALL_NOTES.books.length - 1]
         check('liftoff: the opening\'s books fall on their own, the ghost still at its rest until the last has gone',
           still.every((q) => Math.hypot(q[0] - GHOST_REST[0], q[1] - (-2 + GHOST_REST[1])) < 1e-6) && Math.hypot(show.where(lastFall + 0.3)[0] - GHOST_REST[0], 0) > 0.05)
-        check('liftoff: the ghost comes back at the end of Act I to where it sat in the first frame',
-          Math.hypot(GHOST_ON_SHELF()[0] - GHOST_REST[0], GHOST_ON_SHELF()[1] - GHOST_REST[1]) < 1e-9)
+        // The end of Act I: a ghost in the tesseract, knocking the books over from behind (the lander on beat 190, the
+        // first book on the last hit, the last by ~120.8); then he falls into a bed and wakes there (~2:01), a ball,
+        // and is still in that bed when the station's lights come up on the accent.
+        const bed = show.where(WAKE + 0.8)
+        const inBed = [WAKE + 0.8, 124, ACT2 - 0.05, ACT2 + 0.3].map((t) => show.where(t))
+        check('liftoff: a ghost in the tesseract knocking the books over, then awake in a bed by 2:01, still there when the lights come up',
+          show.at(chaseBeat(190)).ball.ghost && show.at(LAST_HIT).ball.ghost && show.at(120.8).ball.ghost &&
+          !show.at(WAKE + 0.05).ball.ghost && WAKE <= 121.5 && IN_BED < WAKE &&
+          inBed.every((q) => Math.hypot(q[0] - bed[0], q[1] - bed[1]) < 0.06))
         // The far side of the ring is played the right way up: the camera rolls a third of a turn while the ball is in
         // the air across the axis, and back as the lift nears the hub, square again for the bay and the cut outside.
         const rollOf = (t: number) => perf.camera!(t).angle ?? 0
@@ -289,7 +297,7 @@ async function main(): Promise<void> {
         check('liftoff: the camera turns the far-side house upright for the reunion, and is square again by the hub and the cut',
           [0, 60, ACT2 + 1, cue(140), cue(172), UNDOCK - 0.01, UNDOCK + 0.01, 250].every((t) => Math.abs(rollOf(t)) < 1e-9) &&
           [cue(152), cue(154), cue(156), cue(160)].every((t) => Math.abs(rollOf(t) - upright) < 1e-6))
-        check('liftoff: the ghost is a ball again when the station\'s lights come up', show.at(ACT2 - 0.05).ball.ghost && !show.at(ACT2 + 0.3).ball.ghost)
+        check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
         // The gold ball is Amelia Brand. Cooper (the hero) has the farm and drives; she is NASA's, and joins him at
         // the base, out of the bunker the drone led him to. With him (he makes things go, she rides) to the ring, where
         // a trapdoor parts them; she is the one who waits in orbit over Miller and goes grey; he finds her again, old,
@@ -310,23 +318,23 @@ async function main(): Promise<void> {
           const y = dx * Math.sin(a) + dy * Math.cos(a)
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
-        for (const t of [...withHim, ...inOrbit, ...reunion]) if (!inShot(t, show.gold(t))) golds.push(`not in shot ${t}`)
-        for (const t of alone) if (inShot(t, show.gold(t))) golds.push(`in shot ${t}`)
+        for (const t of [...withHim, ...inOrbit, ...reunion]) if (!inShot(t, show.brand(t))) golds.push(`not in shot ${t}`)
+        for (const t of alone) if (inShot(t, show.brand(t))) golds.push(`in shot ${t}`)
         check('liftoff: Brand (gold) not on the farm, in shot with Cooper from the base, waiting in orbit over Miller, found again on the station, and nowhere else', golds.length === 0, golds.join(', '))
         const two = [...withHim, ...inOrbit, ...reunion].map((t) => show.at(t).balls ?? [])
         check('liftoff: where she is, two balls with two ids, never more', two.every((b) => b.length === 2 && b[0].id !== b[1].id) &&
-          [...alone, 60, 70].every((t) => (show.at(t).balls?.length ?? 1) <= (show.gold(t) ? 2 : 1)))
-        const young = show.gold(inOrbit[0])
-        const old = show.gold(inOrbit[2])
+          [...alone, 60, 70].every((t) => (show.at(t).balls?.length ?? 1) <= (show.brand(t) ? 2 : 1)))
+        const young = show.brand(inOrbit[0])
+        const old = show.brand(inOrbit[2])
         check('liftoff: up in orbit the gold ball goes grey', !!young && !!old && young.color !== old.color)
         // She never jumps while she is drawn, and she comes and goes (or is hidden and shown) only out of shot.
         let gJump = 0
         let gAt = 0
         const pops: string[] = []
-        let gPrev = show.gold(0)
+        let gPrev = show.brand(0)
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
         for (let t = 0.001; t <= perf.duration; t += 0.001) {
-          const g = show.gold(t)
+          const g = show.brand(t)
           if (g && gPrev) {
             const d = Math.hypot(g.x - gPrev.x, g.y - gPrev.y)
             if (d > gJump) { gJump = d; gAt = t }

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, laneAt, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
+import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
 import { ACT2, cue } from '../music'
 import { AGED, BALL, DUST } from '../worlds'
@@ -37,7 +37,7 @@ import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
  * floor (154) and rolls on over the lift car's threshold, a low wooden lip,
  * into its doorway.
  *
- * Brand is in the rocking chair by the far wall: the gold ball, old, who
+ * Brand is in the rocking chair by the far wall: old now, who
  * waited in orbit. She has been there since the station's lights came up,
  * rocking it gently with the organ; the crash upstairs stops her, and she sits
  * still while he comes down. When he is down she rocks back once and forward,
@@ -90,7 +90,7 @@ const DOWN = cue(155)
 const INCAR = cue(155.5)
 const OUT = cue(156)
 /** Her span ends here, the car well up the spoke and the house out of the frame behind it. */
-const GOLD_GONE = cue(162)
+const BRAND_GONE = cue(162)
 const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 
 /** The trapdoor comes down on its stop. */
@@ -423,8 +423,8 @@ function onDoor(T: number): Pt {
  * less each time, and is still.
  */
 const ROCK_A = 0.05
-const GATHER = SEAT
-const RISE = cue(154.28)
+const GATHER = cue(153.8)
+const RISE = cue(154.32)
 const TURNS: [number, number][] = (() => {
   const out: [number, number][] = []
   for (let k = 104; k <= 152; k++) out.push([cue(k), k % 2 ? -ROCK_A : ROCK_A])
@@ -498,17 +498,38 @@ const HER_X = -0.155 * CHAIR_S
 const EDGE = (SEAT_FRONT + 0.04) * CHAIR_S
 const SEAT_TOP = SEAT_Y * CHAIR_S - R
 /** Down the seat as the chair comes forward, pitched off its edge, down on the floor on the eighth, already rolling. */
-const ROLL_ON = cue(154.03)
-const OFF_EDGE = cue(154.24)
+const ROLL_ON = cue(153.96)
+const OFF_EDGE = cue(154.27)
 const HER_DOWN = cue(154.5)
 const HER_LAND = -1.12
 function chairPointAt(T: number, x: number): Pt {
   return chairPoint(T, x, SEAT_TOP)
 }
-const herDrop = throwAt(chairPointAt(OFF_EDGE, EDGE), [HER_LAND, FLOOR_Y], OFF_EDGE, HER_DOWN, G)
-/** Across the room on the way the chair gave her, to the lip, slowing, to touch him across it on the beat. */
-const V_LAND = (HER_LAND - chairPointAt(OFF_EDGE, EDGE)[0]) / (HER_DOWN - OFF_EDGE)
+/** Where she is on the seat as it tips forward, gathering way down it. */
+function onSeat(T: number): Pt {
+  const u = clamp((T - ROLL_ON) / (OFF_EDGE - ROLL_ON))
+  return chairPointAt(T, HER_X + (EDGE - HER_X) * (0.45 * u * u * (3 - 2 * u) + 0.55 * u * u))
+}
+/** Her way leaving the edge, and the pace she rolls away at once she is down. */
+const V_EDGE: Pt = (() => {
+  const a = onSeat(OFF_EDGE - 0.004)
+  const b = onSeat(OFF_EDGE)
+  return [(b[0] - a[0]) / 0.004, (b[1] - a[1]) / 0.004]
+})()
+const V_LAND = 1.05
 const V_TOUCH = 0.25
+/**
+ * Off the edge and down to the floor, eased: she leaves the seat the way it gave her, and comes down onto the floor
+ * already rolling, her fall taken up in the last of it, so the touchdown is soft and she rolls straight on.
+ */
+const hermite = (p0: number, m0: number, p1: number, m1: number, u: number): number =>
+  (2 * u ** 3 - 3 * u * u + 1) * p0 + (u ** 3 - 2 * u * u + u) * m0 + (-2 * u ** 3 + 3 * u * u) * p1 + (u ** 3 - u * u) * m1
+function herDrop(T: number): Pt {
+  const D = HER_DOWN - OFF_EDGE
+  const u = clamp((T - OFF_EDGE) / D)
+  const e = onSeat(OFF_EDGE)
+  return [hermite(e[0], V_EDGE[0] * D, HER_LAND, V_LAND * D, u), hermite(e[1], V_EDGE[1] * D, FLOOR_Y, 0, u)]
+}
 function across(T: number): number {
   const D = DOWN - HER_DOWN
   const u = (T - HER_DOWN) / D
@@ -518,22 +539,37 @@ function across(T: number): number {
   const f = (u * u * u - 2 * u * u + u) * m0 + (-2 * u * u * u + 3 * u * u) + (u * u * u - u * u) * m1
   return HER_LAND + span * f
 }
-/** A moment against him; she draws back a little, and on the eighth she nudges him on. */
-const DRAW = cue(155.36)
+/**
+ * A moment against him; she draws back a little and, on the eighth, leans into him and on after him a hair, up the
+ * lip's corner, as he goes; then she settles back against the lip. One smooth sway, no stop at the push.
+ */
+const DRAW = cue(155.3)
 const BACK = 0.03
+const FOLLOW = 0.022
+const V_PUSH = 0.4
+const SETTLED = cue(155.78)
+function nudgeX(T: number): number {
+  const piece = (t0: number, t1: number, p0: number, m0: number, p1: number, m1: number) => {
+    const D = t1 - t0
+    return hermite(p0, m0 * D, p1, m1 * D, clamp((T - t0) / D))
+  }
+  const back = cue(155.4)
+  const on = cue(155.6)
+  if (T <= back) return REST_X + piece(DRAW, back, 0, 0, -BACK, 0)
+  if (T <= INCAR) return REST_X + piece(back, INCAR, -BACK, 0, 0, V_PUSH)
+  if (T <= on) return REST_X + piece(INCAR, on, 0, V_PUSH, FOLLOW, 0)
+  return REST_X + piece(on, SETTLED, FOLLOW, 0, 0, 0)
+}
 function herAt(T: number): Pt {
   if (T <= ROLL_ON) return chairPointAt(T, HER_X)
-  if (T <= OFF_EDGE) {
-    // Down the seat as it tips forward, gathering way.
-    const u = (T - ROLL_ON) / (OFF_EDGE - ROLL_ON)
-    return chairPointAt(T, HER_X + (EDGE - HER_X) * (0.75 * u * u * (3 - 2 * u) + 0.25 * u * u))
-  }
+  if (T <= OFF_EDGE) return onSeat(T)
   if (T <= HER_DOWN) return herDrop(T)
-  if (T <= DOWN) return [across(T), FLOOR_Y - (T - HER_DOWN < 0.12 ? 0.018 * Math.sin((Math.PI * (T - HER_DOWN)) / 0.12) : 0)]
+  if (T <= DOWN) return [across(T), FLOOR_Y]
   if (T <= DRAW) return [REST_X, FLOOR_Y]
-  if (T <= INCAR - 0.05) return [REST_X - BACK * easeInOutSine((T - DRAW) / (INCAR - 0.05 - DRAW)), FLOOR_Y]
-  // Into him, on the eighth.
-  if (T <= INCAR) return [REST_X - BACK + BACK * ((T - INCAR + 0.05) / 0.05) ** 2, FLOOR_Y]
+  if (T <= SETTLED) {
+    const x = nudgeX(T)
+    return [x, lipY(x)]
+  }
   // At the lip. The gate comes down in front of her on the step: she starts back from it, and is still.
   const g = T - OUT
   return [REST_X - (g > 0 && g < 0.35 ? 0.025 * Math.sin((Math.PI * g) / 0.35) : 0), FLOOR_Y]
@@ -624,7 +660,7 @@ export const ballpark = part<BallparkState>(
     // Her: in the far-side house's rocking chair from the moment the lights come up, old, waiting. Out of shot
     // until the pull back shows the whole ring, then a speck in the house; found on 154; left rocking as the car
     // climbs, and gone once the house is out of the frame.
-    const company: Company[] = [{ from: ACT2, to: GOLD_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: AGED }) }]
+    const company: Company[] = [{ from: ACT2, to: BRAND_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: AGED }) }]
     return { cells, exit: F.exit(SEAM.ballparkOut), lane, state: { begin, lane }, company }
   },
   (slot) => {
@@ -1420,9 +1456,15 @@ function drawHouse(p: p5, c: Ctx, T: number): void {
     p.line(X(end[0]), X(end[1]), X(PULLEY[0] - 0.08), X(PULLEY[1]))
     p.line(X(PULLEY[0] + 0.08), X(PULLEY[1]), X(PULLEY[0] + 0.08), X(wy - 0.1))
     p.line(X(PULLEY[0]), X(PULLEY[1]), X(PULLEY[0]), X(roofAt(PULLEY[0]) + H_ROOF))
-    solid(p, ink, weight * 0.7, DUST.tin)
-    p.circle(X(PULLEY[0]), X(PULLEY[1]), X(0.16))
-    solid(p, ink, weight * 0.7, DUST.denim)
+    // The pulley: an open sheave in its strap, not a disc; the weight, cast iron.
+    solid(p, ink, weight * 0.6, DUST.tin)
+    p.rect(X(PULLEY[0]), X(PULLEY[1] - 0.06), X(0.05), X(0.14))
+    outline(p, ink, weight * 0.6)
+    p.circle(X(PULLEY[0]), X(PULLEY[1]), X(0.14))
+    p.line(X(PULLEY[0] - 0.05), X(PULLEY[1]), X(PULLEY[0] + 0.05), X(PULLEY[1]))
+    solid(p, ink, weight * 0.4, ink)
+    p.circle(X(PULLEY[0]), X(PULLEY[1]), X(0.03))
+    solid(p, ink, weight * 0.7, mixHex(DUST.tin, ink, 0.4))
     p.rect(X(PULLEY[0] + 0.08), X(wy + 0.04), X(0.12), X(0.28), X(0.02))
     // The car's well: two flaps, pushed up by the car when it goes (the hub's, just after the ball is in).
     const up = smooth(T, OUT + 1.42, OUT + 1.75)
@@ -1525,7 +1567,7 @@ function drawAttic(p: p5, c: Ctx, T: number): void {
   const hit = knock(T - HATCH, 0.12)
   const jx = -0.03 * hit
   const { x0, x1, h } = TRUNK
-  solid(p, ink, weight, DUST.denim)
+  solid(p, ink, weight, mixHex(DUST.wood, DUST.rust, 0.45))
   p.rect(X((x0 + x1) / 2 + jx), X(H_LOFT - h / 2), X(x1 - x0), X(h), X(0.02))
   solid(p, ink, weight * 0.8, DUST.wood)
   p.push()
@@ -1554,16 +1596,18 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
   p.line(X(w.x - w.w / 2), X(w.y), X(w.x + w.w / 2), X(w.y))
   solid(p, ink, weight, DUST.wood)
   p.rect(X(w.x), X(w.y + w.h / 2 + 0.06), X(w.w + 0.2), X(0.05))
-  // By the door on the near wall: a hook, and a cap on it (as at home). The crash upstairs sets it swinging.
+  // By the door on the near wall: a hook, and a straw hat on it (as at home). The crash upstairs sets it swinging.
   const shake = T > WINDOW ? 0.14 * Math.exp(-(T - WINDOW) / 0.6) * Math.sin((T - WINDOW) * 12) : 0
   outline(p, ink, weight)
   p.line(X(2.02), X(-1.1), X(2.09), X(-1.05))
   p.push()
   p.translate(X(2.09), X(-1.04))
   p.rotate(shake)
-  solid(p, ink, weight, DUST.denim)
-  p.arc(0, X(0.12), X(0.26), X(0.2), Math.PI, Math.PI * 2, p.CHORD)
-  p.line(0, X(0.12), X(0.2), X(0.12))
+  solid(p, ink, weight * 0.8, DUST.husk)
+  p.rect(X(0.02), X(0.08), X(0.16), X(0.1), X(0.03), X(0.03), 0, 0)
+  p.rect(X(0.02), X(0.14), X(0.34), X(0.035), X(0.015))
+  solid(p, ink, weight * 0.5, DUST.rust)
+  p.rect(X(0.02), X(0.115), X(0.16), X(0.025))
   p.pop()
 }
 

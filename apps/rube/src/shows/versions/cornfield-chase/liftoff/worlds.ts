@@ -8,20 +8,23 @@ import type { World } from '../../../../worlds'
  * a pool, so `pieces` stays empty.
  */
 
-/** The ball, the same in both worlds: a farm-rust orange that reads on dust and on the dark. */
-export const BALL = '#D6602D'
+/**
+ * Joseph Cooper, the hero: a warm sand, a pale ball with an ink edge. It reads
+ * on the dark of space, and on the farm's paper by its edge and its warmth.
+ */
+export const BALL = '#F0C987'
 
 /**
- * The gold ball: Amelia Brand. Cooper (the hero, `BALL`) has the farm and drives; she is NASA's, and joins him
- * at the base. She rides, where he makes things go. A gold that reads on the dust and on the dark. Her id is the
- * same wherever she is.
+ * Dr. Amelia Brand: a deep blue. Cooper has the farm and drives; she is
+ * NASA's, and joins him at the base. She rides, where he makes things go.
+ * Her id is the same wherever she is.
  */
-export const GOLD = '#E2AE3C'
-export const GOLD_ID = 99
-/** What gold goes to with the years. */
+export const BRAND = '#1F5E98'
+export const BRAND_ID = 99
+/** What years do to a blue: grey. */
 export const GREY = '#9A958A'
-/** The gold ball after the years in orbit: grey, with the gold still in it. Where Miller leaves her, and how he finds her. */
-export const AGED = '#CDBF97'
+/** Brand after the years in orbit: the blue faded to a slate grey, still hers. Where Miller leaves her, and how he finds her. */
+export const AGED = '#7C8C9C'
 
 export const FARM: Theme = {
   name: 'dust-bowl',

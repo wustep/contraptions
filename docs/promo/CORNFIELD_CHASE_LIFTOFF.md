@@ -11,8 +11,8 @@ Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`. In the Shows pick
 ## What it is
 
 A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Two balls tell the story.
-- **Cooper is the rust ball:** the thread. He has the farm, he drives the truck, and he makes every machine go.
-- **Amelia Brand is the gold ball:** NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted. She waits and grows old, and he finds her again on Cooper Station, where she comes to greet him.
+- **Joseph Cooper is the sand ball** (`#F0C987`): the thread. He has the farm, he drives the truck, and he makes every machine go.
+- **Dr. Amelia Brand is the blue ball** (`#1F5E98`): NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted. She waits and grows old, and he finds her again on Cooper Station, where she comes to greet him.
 
 Every world is new for this take, and there are no portals. A rocket carries them from Earth to the dark in Act I. A scored cut on the second cue's first accent opens Act II.
 
@@ -32,8 +32,8 @@ Every part is new: the pieces, the worlds, the palettes, the sky, and the camera
 ## Two balls
 
 The second ball used to be a surprise: a rust twin in orbit over Miller that came from nowhere. Now she is a character. The roles are locked:
-- **Cooper (rust)** is the farm and the drive.
-- **Amelia Brand (gold)** is NASA's, and joins him later.
+- **Cooper (sand)** is the farm and the drive.
+- **Brand (blue)** is NASA's, and joins him later.
 
 The split is the film's own heartbreak, time.
 
@@ -52,14 +52,14 @@ The split is the film's own heartbreak, time.
    - At the dam he stands on the brakes. The door flies open and he is thrown clear, and the truck stays at the edge, empty.
 2. **The base: she joins.**
    - The drone that led him lands on NASA's bunker. He rolls in through one flap and out of the other.
-   - A beat later the flap he came out of is pushed open again, and a gold ball rolls out after him. That is Brand's first appearance, 71.4 s into the show.
+   - A beat later the flap he came out of is pushed open again, and a blue ball rolls out after him. That is Brand's first appearance, 71.4 s into the show.
    - She catches him up and taps his back, and they roll to the tower together.
    - They ride the cage up and sit side by side in the rocket's window.
 3. **Space.** They float out of the fairing together and ride the mass driver's cradle, the dock and the airlock. They run the spinning ring's corridor.
 4. **The split** (beat 160). The trapdoor drops *him* into the catapult's cup and slaps shut a ball's width in front of her. She stays on the shut door for a beat, then runs on round the ring. He is thrown into the sphere.
-5. **Miller.** The station in orbit is that ring, and she is the one who waits. She laps it once an eighth, a tally mark a lap, and her gold fades while he spends a few ticks on the water.
+5. **Miller.** The station in orbit is that ring, and she is the one who waits. She laps it once an eighth, a tally mark a lap, and her blue fades to slate while he spends a few ticks on the water.
 6. **Cooper Station.**
-   - He finds her again, old and faded gold, rocking in the far-side house's chair.
+   - He finds her again, old, her blue faded to slate, rocking in the far-side house's chair.
    - When he comes down through the trapdoor, she leaves the chair and comes to him across the floor. She touches him at the lift car's threshold on the beat, and rests against him.
    - Then she nudges him in, and stays at the threshold as the car goes.
 
@@ -76,13 +76,13 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 | 88.8 s | the farm → the dark | The world changes inside the cloud's white-out. The two worlds share cells, so neither ball moves. |
 | 103.8 s | the ring → Miller | A whip through the sphere. Her ring span ends out of shot and her orbit span starts out of shot. |
 | 113 to 115 s | Miller → Gargantua | One Ranger the whole way, from Miller's water to the claw. |
-| 118 to 127 s | the tesseract → the dusk room | The lattice goes, a fade through the dark, and the room comes up at the first frame's framing. |
+| 118 to 127 s | the tesseract → the bed | Inside the tesseract, the lattice folds in on the ghost, he floats down through the dark, and a dim room comes up round a bed: Murph's room as the station keeps it, at night. He lands in the pillow and wakes (121.45 s). The camera comes in on him slowly through the decay and arrives on the framing Act II opens on. |
 
 **Act II**
 
 | Time | From → to | How it carries |
 | --- | --- | --- |
-| 127.5 s | the dusk room → the replica | The first frame is Act I's room under the same dusk, same framing, same tin truck. On the organ's accent the station's lamps strike, and one catches late and dips it again. Daylight comes up over half a second: one room waking up. |
+| 127.5 s | the bed at night → the replica | The same room, the same framing, the same bed. On the organ's accent the station's lamps strike, one catches late, and the day comes up over half a second: one room waking up. |
 | 139.5 to 179.5 s | replica → ring → ballpark → far-side house → spoke | One universe and one camera, continuous round the ring. |
 | 169.5 to 175 s | the flight → the far side | While the ball is in the air across the axis, the camera rolls a third of a turn with the ring. The far-side house, which stands on its head in the station's end-on view, comes down upright to meet it, and the reunion plays the right way up. The lift climbs straight up the screen. As gravity falls away near the hub (187.5 to 193.5 s) the camera rolls back, square again for the docking bay and the match cut outside. |
 | 207.5 s | the hub → outside | A match cut on the Ranger. The first frame outside keeps the hub's last framing, so the ship holds still on the screen while the bay turns to the dark round it. Then the camera pulls back to show the spinning station. |
@@ -127,7 +127,7 @@ The music is the only clock.
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
-  - the gold ball (Brand):
+  - Brand (the blue ball):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
     - she is in shot with him from the base to the ring (nine sample times, 72.5 to 101 s);
     - she is in shot in orbit over Miller at three sample times, and at four through the greeting;
@@ -141,8 +141,8 @@ The music is the only clock.
 
 | Time (s) | Music | Part | What happens |
 | ---: | --- | --- | --- |
-| 0 | piano | Murph's bookcase | In the dark, a ghost ball sits at the right-hand end of the top shelf, glowing, by the side of the case. Murph's wind-up tin dump truck is parked on the floor by the case. On the first clear note the model lander goes over, on its own: a shiver, a little dust, and it tips. Then ten books drop the same way, one per note, left to right, short and tall: S, T, A, Y in Morse. Nothing touches them. The ghost does not move; three times a small drawn question mark rises beside it and fades. After the last book it rolls, along the empty shelf and through the side of the case. |
-| 12.3 | piano | the tin truck | The ghost lands on the toy truck's cab roof with a clank and becomes a ball, rolls off the back into the dump box, and the landing lets the wind-up spring go. The truck lurches one lurch a note, its key turning a quarter each time, through the window light where the dust comes down in bands. |
+| 0 | piano | Murph's bookcase | In the dark, Cooper sits at the right-hand end of the top shelf, a plain solid ball in the dawn's first light. Murph's wind-up tin dump truck is parked on the floor by the case. On the first clear note the model lander goes over, on its own: a shiver, a little dust, and it tips. Then ten books drop the same way, one per note, left to right, short and tall: S, T, A, Y in Morse. Nothing touches them. He does not move; three times a small drawn question mark rises beside him and fades. The last book topples toward him, and its falling top knocks him off his spot (11.8 s). He rolls along the empty shelf and out through a small hinged flap in the side of the case (12.0 s). |
+| 12.3 | piano | the tin truck | He drops onto the toy truck's cab roof with a clank, rolls off the back into the dump box, and the landing lets the wind-up spring go. The truck lurches one lurch a note, its key turning a quarter each time, through the window light where the dust comes down in bands. |
 | 15.7 | piano | stairs, porch | At the stairwell the truck's dump box tips up and he rolls out over the lip. He goes down the stairs a step per note, out onto the porch, and down the porch steps. |
 | 20.2 | piano | the yard | A plank on a sawhorse flips over. The windmill's ratchet hoist lifts a tin pail a tooth per note, and a trip bar tips him into the clothes basket on the loudest piano note. The basket runs down the line, knocking the pegs off, and throws him onto the end of the hand pump's handle. His weight works the pump: water comes out of the spout into the irrigation channel, and the handle springs back and lobs him in after it. |
 | 26.6 | piano | the channel | The water carries him along the top of the bank, under the corn. Four flap gates hang across the channel; each board rides over his back and slaps shut behind him on a piano note. At the end the channel spills over the bank, where the truck is waiting. |
@@ -156,9 +156,9 @@ The music is the only clock.
 | beat 148 | full organ | the ring | The mass driver's beacon calls them in. The cradle takes both, its coils fire on the eighths, and they lob to the ring station, a ring of twelve modules, and match its spin. The jaws close on both on beat 156, the film's spinning dock. Then the airlock, and a run inside the spinning ring. On the downbeat of 160 the trapdoor drops him into the catapult's cup and shuts before she gets there. She stays on the door a beat, then runs on round the ring. The catapult throws him into the sphere past a small ringed planet. |
 | beat 166 | full organ | Miller | Out of the far side of the sphere onto a sheet of shallow water. He moves on the 1.25 s tick, two beats: a landed Ranger's legs, two buoys, and the slab robot cartwheeling one slab per tick. Up in orbit she waits on the ring. She laps it once per eighth and cuts a tally mark each lap, and her gold fades. The "mountains" on the horizon are a wave. The landed Ranger lifts off on beat 181 and picks the slab robot up on 182½, and the wave throws him off its crest on 183. |
 | beat 184 | climax | Gargantua | The same Ranger, drawn away toward the hole as it climbs, catches him on a tether. There is one Ranger from Miller's water to the claw. The slab robot falls in first. He is swung down through the disk, behind the dark, up through the disk, and let go, and he falls to the centre. |
-| beat 190 | climax | the tesseract | Out of the centre onto a rail at the end of Murph's bookcase, seen from behind in a lattice of bookcases, and in along the top board behind the model lander. |
-| 119.409 | the last hit | the tesseract | He becomes the ghost and pushes the lander off the shelf, away from us into the room: the first thing that fell in the opening. |
-| 119.4 to 127 | the decay | home | The back of the case fades, the ghost alone in the lattice, and Murph's room comes up at dusk around it, at the first frame's framing. The ghost goes along behind the top row and pushes each book off, one at a time, **in the opening's own rhythm and order** (121.5 to 125.9 s): the same books fall the same way and land where they landed at the start. It was the ghost all along. It comes to rest at the end of the row, where it sat in the first frame, the tin truck on the floor by the case. |
+| beat 189 to 190 | climax | the tesseract | The dark opens round him and he is a ghost, behind Murph's bookcase in a lattice of bookcases. He comes down onto the top board behind the model lander. |
+| 118.8 to 120.8 | the last hit | the tesseract | **Still in the tesseract, the ghost knocks the books over**, the film's bookshelf beat: the lander on beat 190, then the ten books along the back of the row in the opening's order, the Morse rhythm three times as fast, the first on the last hit (119.409). From behind, each tips away from us into the room. It was him all along. |
+| 120.8 to 127 | the decay | the bed | The lattice folds in on him, he floats down through the dark, and he lands in a bed in a dim room (121.3 s): Murph's room as the station keeps it, at night. He wakes on 121.45, a solid ball again: he stirs, and the quilt slides. The camera comes in on him slowly through the decay. |
 
 ## Act II, in order
 
@@ -166,7 +166,7 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 
 | Time (s) | Beats | Part | What happens |
 | ---: | --- | --- | --- |
-| 127.5 | 104 | the replica | The organ's accent. The dusk room wakes: the station's lamps strike and the day comes up in it. The ghost on the top shelf turns solid, and the end of the shelf gives under it. Out through a flap in the side of the case into a museum dumbwaiter. The catch lets go, the car drops and its counterweight flies up, and the car lands on its buffer in the kitchen. The books lie on the floor where the ghost left them, and Murph's tin truck stands by the case as an exhibit. |
+| 127.5 | 104 | the replica | The organ's accent. The room wakes: the station's lamps strike, and the day comes up. The papered hatch by the bed slides up, the dumbwaiter's gate comes down onto the pillow as a gangway, and he rolls off the pillow into the car; the gate swings up shut behind him on 105. The catch lets go, the car drops and its counterweight flies up, and the car lands on its buffer in the kitchen. Murph's tin truck stands by the bookcase as an exhibit. |
 | 131.5 | 108 to 115 | the replica | He rides the tall clock's weight down a notch a tick while the pendulum swings a second a beat. The clock's side door drops, the museum's turnstile at the front door takes him through a third of a turn, and he runs off the end of the plinth onto the ring. Meanwhile the camera draws back from the room to the house on its plinth, then to the whole ring round it, and comes back in to the door. |
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
@@ -204,7 +204,7 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 | ---: | --- | --- | --- |
 | 261.4 | Directed by | Stephen Wu | |
 | 266.0 | Machines, drawings and code | Claude Opus 5.5 | |
-| 270.7 | With | Cooper, the rust ball; Amelia Brand, the gold ball; TARS, four slabs of tin | |
+| 270.7 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; TARS, four slabs of steel | |
 | 276.1 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
 | 282.0 | Drawn with | p5.js | |
 | 286.4 | (the title) | Liftoff | Cornfield Chase |
@@ -217,20 +217,56 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
+## The polish round (latest)
+
+- **Colours.** The roles are unchanged; the hues are new.
+  - Joseph Cooper is sand, `#F0C987`. Stephen's start was `#F6DFAE`; it was nudged a touch warmer and deeper so he stands off the farm's pale paper.
+  - Dr. Amelia Brand is blue, `#1F5E98`. Stephen's start was `#154367`; it was nudged a touch lighter so she reads on the navy of space.
+  - Her years in orbit turn her to slate, `#7C8C9C`.
+  - The rocket's window has a lamplit cabin so both read behind the glass, and the truck's far window is a middle blue-grey so Cooper reads at the wheel.
+- **A solid opening, and the last book knocks him down.**
+  - Cooper is a plain solid ball from the first frame. The ghost is only for the tesseract.
+  - The books fall on their own while he watches with question marks. The last one topples into him and knocks him off.
+  - He rolls out through a hinged flap in the case's side.
+- **~1:58 in the tesseract, ~2:00 in bed.**
+  - The book callback now happens inside the tesseract: the ghost knocks the lander and the books off from behind, in order, from 118.8 to 120.8 s.
+  - Then he falls into a bed in a dim room and wakes there (121.45 s). The camera comes in on him slowly.
+  - The station's lights come up on the scored accent in the same room. Act II starts with him rolling out of bed into the dumbwaiter.
+  - No books fall at the transition.
+- **Smoother motion.** The lead measured the worst change of velocity in a frame, in frame-heights per second, before and after.
+
+| Where | Time | Before | After | What changed |
+| --- | --- | ---: | ---: | --- |
+| The windmill's bucket hoist | 22 to 24 s | 0.1 → 4.5 cells/s | smooth, ≤ 0.03 | A steady rise with a gentle surge per tooth. |
+| The noria | ~140 to 142 s | 10.9 cells/s peak | 2.7 cells/s | An eased quarter-turn that lands on each beat. |
+| Brand's beacon strokes | 93 to 95 s | 0.31 | < 0.06 | Each stroke builds and fades. |
+| The airlock, the hop, the ring run | 98 to 102 s | up to 0.38 | ≤ 0.12 | A bug that slowed her twice is fixed. |
+| The combine-to-fence camera snap | 62.5 s | 2.22 | gone | |
+| The cage arrival | ~73 s | abrupt stop | eased | |
+| Brand's landing at the reunion | 178 s | 0.80 | 0.16 | |
+| The roll out of bed | 128.3 s | kinked | continuous | |
+
+- **Act II louder.**
+  - No Time for Caution is lifted in the mix: +7 dB up to 200 s of the show, easing to +3.5 dB by 220 s and +1.5 dB from 245 s, with a delay-compensated limiter.
+  - Its quiet opening went from −24.1 to −17.1 LUFS and its middle from −17.0 to −11.6. Cornfield Chase's chase is −13.5, and Act I is byte-identical in the decoded audio.
+  - Onset timing is unchanged: envelope cross-correlation shows 0.00 ms lag at every section.
+- **One Brand at the reunion.**
+  - Every round lamp and glint near the far-side house is gone: the lift car's gold lamp, the spoke's landing lamps, a grey pulley, a blue counterweight, a blue trunk and a blue hat. They are now slits, sheaves, iron and wood.
+  - The only slate ball there is her.
+- **Credits.** The cast card reads Joseph Cooper (the sand ball), Dr. Amelia Brand (the blue ball) and TARS (four slabs of steel).
+- **The chrome and credit lines.** The Liftoff panel's music line and the end credits no longer say "tech demo only, not for release" or "used here only for a private tech demo". The attribution files for the copyrighted audio still say so.
+
 ## Stephen's five notes
 
 1. **TARS was too early.** The toy robot on the farm was four slabs on a hinge, which read as TARS in the cold open.
    - The farm's toy is now Murph's wind-up tin dump truck, a small rhyme with the truck Cooper drives later. It catches the ghost on its cab roof, lurches one lurch a note, and tips its dump box at the stairwell.
    - TARS first appears at NASA's bunker (70.4 to 72.3 s): four tall slabs of dark steel standing guard by the door. It swings a slab across Cooper's way as he comes out, the film's first meeting. When Brand taps him on, it lifts the slab and lets them by. After that it is TARS on Miller and at Gargantua, as before.
-   - The dusk room and the museum replica stand the truck where it stood.
+   - The museum replica stands the truck by the bookcase.
 2. **The opening books fall on their own.**
    - The ghost sits still at the end of the top row while the lander and the ten books go, one per note, each with a shiver and a little dust; nothing touches them.
    - Three small question marks rise beside the ghost and fade. They are drawn as a hooked stroke and a dot, not text.
    - Then the ghost rolls along the empty shelf and through the side of the case.
-3. **The ~2:00 callback.**
-   - On the last hit (119.409 s), from behind the bookcase, the ball becomes the ghost and pushes the lander off.
-   - The room comes up at dusk from the front. The ghost goes along behind the row and pushes each book off, in the opening's own rhythm and order (121.5 to 125.9 s). They land where they landed at the start.
-   - It rests where it sat in the first frame, and the museum replica's first frame has the books lying the same way.
+3. **The ~2:00 callback.** It was first staged in a dusk room from the front. In the latest round it moved into the tesseract, with a wake in bed after it: see the polish round below.
 4. **The reunion is a roll-out.** She stays in her chair while he comes down. Then she rolls out across the room to meet him: the chair pitches her off, and she rolls to him and touches him on 155. She nudges him on to the lift on 155½.
 5. **The chrome.**
    - In the Shows picker the take is **Liftoff**.
@@ -255,9 +291,9 @@ The title card stays up to the end, 291 s.
   - The broken window's glass lands on the attic floor, not across the trapdoor.
 - **A calmer first frame.**
   - The toy (then a robot, now the tin truck) stands on its own just clear of the bookcase's right side, instead of in front of the case's corner and its books. The ghost's fall, the catch point and every strike are unchanged.
-  - The dusk room and the museum replica stand it at the same place (`TOY_HOME`), so the first and last frames still rhyme.
+  - The museum replica stands it at the same place (`TOY_HOME`).
   - In the replica it stands in front of the dumbwaiter's shaft.
-- **Miller's lap is kept.** At a lap an eighth, she is a quick gold dot with a short trail round the ring in orbit, a click and a tally mark each lap. That is the point: her time runs fast while his runs slow.
+- **Miller's lap is kept.** At a lap an eighth, she is a quick blue dot with a short trail round the ring in orbit, a click and a tally mark each lap. That is the point: her time runs fast while his runs slow.
 
 **The round before.**
 - **The dam.** Thrown clear, he goes out through the flung-open door, up onto the hood and along it, and off the nose. He no longer crosses the windscreen.
@@ -274,7 +310,7 @@ The title card stays up to the end, 291 s.
 
 These are visual and mechanical only. There are no stills, no text, and no audio beyond the two cues.
 
-- **The bookcase opening and ending.** The books fall on their own, and at the end of Act I we see the ghost knock them off: the same books, the same order, the same rhythm. The lander model goes first. The books fall in S-T-A-Y, the dust comes down in bands, and the watch sits on top of the case. The ghost turns out to be the ball.
+- **The bookcase opening and ending.** The books fall on their own at the start; at the end of Act I, inside the tesseract, we see the ghost knock them off from behind: the same books, the same order. Then Cooper wakes in a bed, as he does on Cooper Station in the film. The lander model goes first. The books fall in S-T-A-Y, the dust comes down in bands, and the watch sits on top of the case. The ghost turns out to be the ball.
 - **Machines from the film.** TARS first appears at NASA's base, as in the film, and stops Cooper at the bunker's door; on Miller it cartwheels. The combine drives itself, and there is a drone chase through the corn.
 - **The space set pieces.** A ring station of twelve modules and a spinning dock. The wormhole is a sphere, with Saturn beside it.
 - **The one who waits.** Miller's tick is 1.25 s, exactly two beats at 96 bpm. She laps the ring in orbit once an eighth and fades while he spends a few ticks on the water.
@@ -291,12 +327,12 @@ These are visual and mechanical only. There are no stills, no text, and no audio
 - **The show:** `.../cornfield-chase/liftoff/`.
   - `show.ts`: a `Show` with four universes on one clock: the farm, the dark, the station, and the outside.
     - They share cells. The stage switches universe by time: inside the cloud, on the second cue's accent, and on the undock.
-    - It merges the gold ball in wherever a part has her.
+    - It merges Brand in wherever a part has her.
   - `kit.ts`: the part contract (`Slot` and `Built`), timed `route` and `carried` lanes, and `Built.company`. The gold ball's spans live in `company`: show time, positions in the part's frame, allowed to run past the part's slot.
   - `camera.ts`: authored camera keys.
   - `music.ts`: both combs, the mix's length, and the Act II landmarks (`ACT2`, `UNDOCK`, `PEAK`, `FINAL`).
   - `hits.ts`: every strike, gathered for the check.
-  - `worlds.ts`: the palettes, `BALL`, `GOLD` (the corn's gold) and `AGED` (her after the years).
+  - `worlds.ts`: the palettes, `BALL` (Cooper's sand), `BRAND` (Brand's blue) and `AGED` (her after the years, slate).
 - **The parts.** They live in `earth/`, `rocket.ts`, `space/` and `act2/`, one file per set piece.
   - `act2/station.ts` has the station's geometry: the ring, its axis, standing things upright on it.
   - `act2/interior.ts` draws the ring round the parts.

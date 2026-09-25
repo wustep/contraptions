@@ -103,15 +103,38 @@ function onPlank(d: number, a: number, lift: number): Pt {
   return [PIVOT[0] + d * c + s * (THICK / 2 + lift), PIVOT[1] + d * s - c * (THICK / 2 + lift)]
 }
 
-/** How far up the bucket is, 0 at the foot, 1 at the head: a step on each tooth of the ratchet. */
-function hoistAt(t: number): number {
-  let h = 0
-  for (let i = 0; i < TEETH.length; i++) {
-    const s = t - TEETH[i]
-    if (s <= 0) break
-    h = (i + easeOutCubic(clamp(s / 0.16))) / TEETH.length
+/**
+ * How far up the bucket is, 0 at the foot, 1 at the head. The wind turns the
+ * wheel steadily, so the rope comes in steadily; each tooth the pawl drops
+ * into gives it a small surge, and it never stops until the trip bar catches
+ * the lip. Worked out once as a table: a steady pull, a surge after each
+ * tooth, eased in at the start and a little slower at the top.
+ */
+const HOIST = (() => {
+  const t0 = TEETH[0]
+  const t1 = TRIP
+  const dt = 0.002
+  const n = Math.ceil((t1 - t0) / dt)
+  const speed = (t: number): number => {
+    let v = smooth(t, t0, t0 + 0.25) * (1 - 0.45 * smooth(t, t1 - 0.3, t1))
+    for (const tooth of TEETH) {
+      const s = (t - tooth) / 0.11
+      if (s > 0) v += 0.75 * s * Math.exp(1 - s)
+    }
+    return v
   }
-  return h
+  const h = new Float64Array(n + 1)
+  for (let i = 1; i <= n; i++) h[i] = h[i - 1] + speed(t0 + (i - 0.5) * dt) * dt
+  for (let i = 0; i <= n; i++) h[i] /= h[n]
+  return { t0, dt, h }
+})()
+
+function hoistAt(t: number): number {
+  const i = (t - HOIST.t0) / HOIST.dt
+  if (i <= 0) return 0
+  if (i >= HOIST.h.length - 1) return 1
+  const j = Math.floor(i)
+  return HOIST.h[j] + (HOIST.h[j + 1] - HOIST.h[j]) * (i - j)
 }
 
 /** The bucket's rim centre (x, y) and its tip (radians), at show time `t`. */
@@ -195,11 +218,10 @@ export const yard = part<YardState>(
     // Up the tower in the bucket.
     segs.push(...carried(bucket, at(IN_BUCKET), at(TRIP), 60))
     // Tipped out, and down into the basket.
+    // Poured from the lip as the pail goes over, in one flight into the basket, gathering speed as it falls.
     const out: Way = { at: at(TRIP), p: bucket(at(TRIP)) }
     const basket = (t: number): Pt => inBasket(t + slot.begin)
-    segs.push(...route([out, { at: at(TRIP) + 0.05, p: [out.p[0] + 0.08, out.p[1] - 0.01] }]))
-    const lip: Way = { at: at(TRIP) + 0.05, p: [out.p[0] + 0.08, out.p[1] - 0.01] }
-    segs.push(...route([lip, hop(lip, basket(at(CATCH)), at(CATCH))]))
+    segs.push(...route([out, { ...hop(out, basket(at(CATCH)), at(CATCH)), ramp: [0.6, 1] }]))
     // Down the line in the basket, to the pole.
     segs.push(...carried(basket, at(CATCH), at(POLE) + 0.08, 60))
     // Thrown out as it swings, onto the pump handle's end; down with it; and sprung up over the pump into the channel.

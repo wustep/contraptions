@@ -4,7 +4,7 @@ import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
-import { BALL, GOLD, GOLD_ID } from './worlds'
+import { BALL, BRAND, BRAND_ID } from './worlds'
 
 /**
  * Liftoff as a `Show`: two universes on one clock, and no portal between
@@ -36,7 +36,7 @@ export interface Stage {
 /** Riders besides the thread, for the stretches of the show that have them (`kit.ts`). */
 export type Riders = { from: number; to: number; fn: (t: number, hero: ShowBall) => ShowBall[] | null }[]
 
-/** The gold ball's spans, in world cells (`kit.ts`, `Company`). */
+/** Brand's spans, in world cells (`kit.ts`, `Company`). */
 export type Spans = { from: number; to: number; at: (t: number) => (Omit<ShowBall, 'id' | 'color'> & { color?: string }) | null }[]
 
 function boundsOf(pieces: Placed[]): Box {
@@ -140,8 +140,8 @@ export class LiftoffShow extends Show {
       begin: 0,
     }
     const ride = this.riders.find((r) => time >= r.from && time < r.to)
-    const gold = this.gold(time)
-    if (ride || gold) {
+    const brand = this.brand(time)
+    if (ride || brand) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -153,16 +153,16 @@ export class LiftoffShow extends Show {
         angle: point.angle,
       }
       const balls = ride ? ride.fn(time, hero) : null
-      here.balls = gold ? [...(balls ?? [hero]), gold] : balls ?? undefined
+      here.balls = brand ? [...(balls ?? [hero]), brand] : balls ?? undefined
     }
     return here
   }
 
-  /** The gold ball at `t`, in world cells, or null while no part has her in sight. */
-  gold(t: number): ShowBall | null {
+  /** Brand at `t`, in world cells, or null while no part has her in sight. */
+  brand(t: number): ShowBall | null {
     const time = this.clamp(t)
     const span = this.company.find((s) => time >= s.from && time < s.to)
     const b = span?.at(time)
-    return b ? { ...b, id: GOLD_ID, color: b.color ?? GOLD } : null
+    return b ? { ...b, id: BRAND_ID, color: b.color ?? BRAND } : null
   }
 }

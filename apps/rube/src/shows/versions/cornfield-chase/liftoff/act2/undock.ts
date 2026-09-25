@@ -480,7 +480,8 @@ type Frame = ReturnType<typeof frame>
 
 const ICE_RGB = '143, 198, 230'
 const AMBER_RGB = '240, 147, 64'
-const BALL_RGB = '214, 96, 45'
+/** The ball's colour as r, g, b, for gradients. */
+const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 const GOLD_RGB = '217, 164, 65'
 /** The dark's ink, as light: a flame's core, a flash. */
 const BONE_RGB = '236, 229, 211'

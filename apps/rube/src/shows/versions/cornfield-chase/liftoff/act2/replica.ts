@@ -6,23 +6,22 @@ import { alpha, box, carried, frame, hash, part, route, smooth, type Ctx, type P
 import { ACT2, CUE2_PERIOD, cue } from '../music'
 import { G_EARTH } from '../physics'
 import { DARK, DUST } from '../worlds'
-import { drawToy, house, SHELF_TOP, TOY_HOME } from '../earth/house'
-import { drawFallen } from '../space/gargantua'
-import { AXIS, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
+import { drawToy, house, LANDER_X, SHELF_TOP, stayRow, TOY_HOME } from '../earth/house'
+import { AXIS, BED, BED_REST, HOUSE, RIM_R, SEAM, stationFrame, standOnRim } from './station'
 
 /**
  * The replica house. The organ comes in, the lights come up, and the room
- * Act I left at dusk is the same room in daylight: Murph's room, rebuilt
- * board for board as a museum at the bottom of Cooper Station. The ghost on
- * the top shelf is a ball again, and the ball has weight: the end of the
- * shelf it sits on is a flap, and it gives.
+ * Act I left at night is the same room in daylight: Murph's room, rebuilt
+ * board for board as a museum at the bottom of Cooper Station, and the bed
+ * under its window that he woke in when the tesseract closed.
  *
  * Down through the house, on the organ's pulse:
  *
- *   104  the lights: the first frame is Act I's room at dusk, and on the
+ *   104  the lights: the first frame is Act I's room at night, and on the
  *        accent the station's lamps strike (one catches late) and the day
- *        comes up in it; the ghost is a ball, and the shelf's end tips under it
- *   105  out through a flap in the side of the case, into the dumbwaiter
+ *        comes up in it; the hatch by the bed slides up and the dumbwaiter's
+ *        gate comes down onto the pillow like a gangway
+ *   105  he rolls off the pillow and in, and the gate swings up shut behind him
  *   106  the dumbwaiter's catch lets go: the car drops, the counterweight flies up
  *   107  the car lands in the kitchen on its buffer, and its gate drops
  *   108–111  the tall clock: the ball rides its weight down a notch a tick,
@@ -78,23 +77,25 @@ const CASE_L = -0.45
 const CASE_R = 2.0
 const CAP = SHELF_TOP - 0.6
 const MIDY = SHELF_TOP + 0.46
-/** The flap at the end of the top shelf: hinged here, on the board's centre line; it tips to TILT. */
-const HINGE: Pt = [1.12, SHELF_TOP + 0.025]
-const TILT = 0.3
-const BOARD_END = CASE_R - 0.07
-/** Where the ghost rests, along the flap from its hinge. */
-const D0 = 1.5055 - HINGE[0]
-const D_END = BOARD_END - HINGE[0]
-/** The flap in the case's side the ball goes out through, in the side's own height. */
-const DOOR_TOP = SHELF_TOP - 0.12
-const DOOR_BOT = SHELF_TOP + 0.3
-
-/** The ball on the tipping board, `d` along it from the hinge, in the case's frame. */
-function onBoard(d: number, th: number): Pt {
-  const lift = 0.025 + R
-  return [HINGE[0] + d * Math.cos(th) + lift * Math.sin(th), HINGE[1] + d * Math.sin(th) - lift * Math.cos(th)]
+/**
+ * The end of Act I, in show seconds, as this room keeps it: he comes down out
+ * of the tesseract onto the pillow, and a moment later wakes, a ball again,
+ * and the quilt slides. (`space/gargantua.ts` plays it; the room is drawn here.)
+ */
+export const IN_BED = 121.3
+export const WAKE = 121.45
+/** How far he has sunk the pillow: as he lands, and settling. */
+const pillowDip = (T: number): number => {
+  const s = T - IN_BED
+  if (s < 0) return 0
+  return 0.012 + 0.03 * Math.exp(-s / 0.1) * Math.cos(s * 22)
 }
-const caseToHouse = (q: Pt): Pt => [q[0], q[1] - 2]
+
+/** Where the museum stands Murph's toy truck: on the floor in front of the bookcase (its middle, house cells). */
+const TOY_AT = 1.15
+/** The framing both sides of the cut share: the room at night, the bed under the window, the ball in it (house cells). */
+export const ROOM_HOLD: Pt = [3.3, -2.62]
+export const ROOM_CELLS = 2.4
 
 /* ------------------------------------------------------------------ the dumbwaiter (house cells) */
 
@@ -104,8 +105,8 @@ const CAR_L = 2.07
 const CAR_R = 2.62
 const CAR_MID = (CAR_L + CAR_R) / 2
 const CAR_H = 0.55
-/** The car's floor at its middle, up at the hatch and down in the kitchen. It slopes down toward the gate. */
-const CAR_UP = -2.54
+/** The car's floor at its middle, up at the hatch (its gate's hinge level with the mattress) and down in the kitchen. It slopes down toward the gate. */
+const CAR_UP = BED.top - 0.03
 const CAR_DOWN = -0.96
 const SLOPE = 0.128
 const JOLT = 0.05
@@ -159,8 +160,6 @@ const TS_BODY = { x0: 7.6, x1: 7.98, y0: -0.52 }
 
 /** Slot seconds of what the drawing needs to know, and where the ball comes down on the ring. */
 interface ReplicaState {
-  /** The ball at the end of the tipped flap, going through the side of the case. */
-  edge: number
   /** Down on the kitchen floor out of the clock. */
   outOfClock: number
   /** Down on the ring off the plinth, and where. */
@@ -168,18 +167,11 @@ interface ReplicaState {
   landX: number
 }
 
+/** For drawing the room before any of Act II's events: they are all a long way off. */
+const NO_EVENTS: ReplicaState = { outOfClock: 1e9, landed: 1e9, landX: 0 }
+
 /** Slot seconds of beat k of the cue: the slot begins on the accent, ACT2. */
 const B = (k: number): number => cue(k) - ACT2
-
-/** The flap's angle: level, then down under the ball's new weight; back up once the ball has gone. */
-function tailAngle(t: number): number {
-  if (t < 0.06) return 0
-  const down = TILT * easeOutCubic(clamp((t - 0.06) / 0.1))
-  const settle = t > 0.16 ? 0.035 * Math.exp(-(t - 0.16) / 0.07) * Math.sin((t - 0.16) * 42) : 0
-  const back = smooth(t, B(105) + 0.1, B(105) + 0.45)
-  const wobble = t > B(105) + 0.45 ? 0.03 * Math.exp(-(t - B(105) - 0.45) / 0.1) * Math.sin((t - B(105) - 0.45) * 36) : 0
-  return (down + settle) * (1 - back) - wobble
-}
 
 /** The car's floor (its middle): still, a dip as the ball comes in, the fall on 106, the buffer on 107. */
 function carY(t: number): number {
@@ -204,8 +196,17 @@ function carY(t: number): number {
 /** The counterweight's top: it goes up as the car goes down. */
 const cwTop = (t: number): number => CW_LOW - (carY(t) - CAR_UP)
 
-/** The car's gate, 0 up to 1 down, on 107. */
+/** Upstairs, the gate lowers onto the pillow as a gangway once the hatch is open, and swings up shut behind him on 105. */
+const GANG = [0.36, 0.52] as const
+const SHUT = [B(105) - 0.09, B(105)] as const
+/** The car's gate, 0 up to 1 down: a gangway to the bed on 104, shut on 105, and down to a bridge in the kitchen on 107. */
 const gateDown = (t: number): number => {
+  if (t < B(105) + 0.2) {
+    const down = smooth(t, GANG[0], GANG[1])
+    const up = t < SHUT[0] ? 0 : clamp((t - SHUT[0]) / (SHUT[1] - SHUT[0])) ** 2
+    const knock = t > SHUT[1] ? -0.07 * Math.exp(-(t - SHUT[1]) / 0.05) * Math.sin((t - SHUT[1]) * 60) : 0
+    return Math.max(0, down * (1 - up)) + knock
+  }
   const s = t - B(107) - 0.02
   if (s < 0) return 0
   const u = clamp(s / 0.14)
@@ -269,23 +270,34 @@ export const replica = part<ReplicaState>(
     const H = (q: Pt): Pt => toL(q)
     const segs: Seg[] = []
 
-    // The cut: the ghost is a ball, and the flap it sits on tips under it.
-    const tipped = 0.2
-    segs.push(...carried((t) => H(caseToHouse(onBoard(D0, tailAngle(t)))), 0, tipped, 8))
-    // Down the tipped board, gathering speed, to its end.
-    const g = G_EARTH * Math.sin(TILT) * (5 / 7)
-    const run = D_END - D0
-    const edge = tipped + Math.sqrt((2 * run) / g)
-    const vEdge = g * (edge - tipped)
-    const boardEnd = H(caseToHouse(onBoard(D_END, TILT)))
-    // Out through the flap in the side and down the car's floor to its gate: the knock on 105.
+    // The cut: in the bed as Act I left him, while the lights come up and the gangway comes down.
+    const rest = H(BED_REST)
+    const off = GANG[1] + 0.05
+    // Off the pillow's edge onto the gangway, and along it into the car, to lie against the gate as it shuts: the knock on 105.
     const inCar = (t: number): Pt => H([IN_CAR_X, inCarY(carY(t))])
     const into = inCar(b(105))
+    const onGang: Pt = H([BED.pillow.x0 - 0.02, BED.top - R])
+    // One continuous roll: from rest, gathering to a speed v at the pillow's edge, and on at that same speed down
+    // the gangway, easing to a touch against the gate. v is solved so the two legs fill the time exactly.
+    const d1 = Math.hypot(onGang[0] - rest[0], onGang[1] - rest[1])
+    const d2 = Math.hypot(into[0] - onGang[0], into[1] - onGang[1])
+    const V_END = 0.1
+    const total = b(105) - off
+    let vLo = 0.01
+    let vHi = 40
+    for (let i = 0; i < 60; i++) {
+      const m = (vLo + vHi) / 2
+      if ((2 * d1) / m + (2 * d2) / (m + V_END) > total) vLo = m
+      else vHi = m
+    }
+    const v = (vLo + vHi) / 2
+    const edge = off + (2 * d1) / v
     segs.push(
       ...route([
-        { at: tipped, p: H(caseToHouse(onBoard(D0, TILT))) },
-        { at: edge, p: boardEnd, ramp: [0, vEdge] },
-        { at: b(105), p: into, ramp: [vEdge, vEdge * 1.15] },
+        { at: 0, p: rest },
+        { at: off, p: rest },
+        { at: edge, p: onGang, ramp: [0, v], arc: 0.03 },
+        { at: b(105), p: into, ramp: [v, V_END] },
       ]),
     )
     // In the car: the dip, the fall, the buffer.
@@ -374,13 +386,14 @@ export const replica = part<ReplicaState>(
       cells: box(-17, -7, 9.8, 4.8),
       exit: [EXIT_AT[0] + 0.5, EXIT_AT[1]],
       lane,
-      state: { edge, outOfClock, landed, landX: land[0] },
+      state: { outOfClock, landed, landX: land[0] },
       changes: [{ at: 0, ghost: false }],
     }
   },
   (slot): PartShot[] => [
-    // Act I's last framing: the room, the case, the ball on the top shelf.
-    { t: slot.begin, cells: 2.9, hold: toL([0.75, -2.55]), w: 1 },
+    // Act I's last framing: the room at night, the bed under the window, the ball in it.
+    { t: slot.begin, cells: ROOM_CELLS, hold: toL(ROOM_HOLD), w: 1 },
+    { t: slot.begin + 1.1, cells: ROOM_CELLS, hold: toL(ROOM_HOLD), w: 1 },
     // Out to the house on its plinth, and the ground curving up either side of it.
     { t: cue(109), cells: 9.5, hold: toL([3.65, -2.25]), w: 1 },
     // The whole ring.
@@ -398,8 +411,16 @@ const rect = (p: p5, k: number, x0: number, y0: number, x1: number, y1: number, 
 }
 
 function drawAll(p: p5, s: ReplicaState, c: Ctx): void {
+  drawRoom(p, c, c.t, s)
+}
+
+/**
+ * The house and all in it at slot time `t` (negative before Act II: the room
+ * at night, as the end of Act I draws it), in this part's cells. Drawn under
+ * the ball; `overRoom` draws what stands in front of it.
+ */
+export function drawRoom(p: p5, c: Ctx, t: number, s: ReplicaState = NO_EVENTS): void {
   const { k } = c
-  const t = c.t
   p.push()
   p.translate(O[0] * k, O[1] * k)
   drawFields(p, c)
@@ -417,7 +438,8 @@ function drawAll(p: p5, s: ReplicaState, c: Ctx): void {
   ctx.restore()
   drawPlinth(p, c)
   drawAwning(p, c)
-  drawCase(p, s, c, t)
+  drawCase(p, c, t)
+  drawBed(p, c, t)
   drawDumbwaiter(p, c, t)
   drawClock(p, c, t)
   drawTurnstile(p, c, t)
@@ -440,7 +462,11 @@ function duskAt(t: number): number {
 }
 
 function drawDusk(p: p5, c: Ctx): void {
-  const a = duskAt(c.t)
+  nightOver(p, c, duskAt(c.t))
+}
+
+/** The room's night, `a` of it (1 is Act I's last frame): darkest away from the bed, where the window's last light lies (this part's cells). */
+export function nightOver(p: p5, c: Ctx, a: number): void {
   if (a <= 0.002) return
   const { k } = c
   const X = (v: number) => v * k
@@ -450,7 +476,7 @@ function drawDusk(p: p5, c: Ctx): void {
     const n = parseInt(DARK.deep.slice(1), 16)
     return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${o * a})`
   }
-  // Centred on the ghost's rest, as Act I's is: it is the ball's own light that keeps the dark off it.
+  // Centred on the ball in the bed, under the window: the night's light off the glass falls on the pillow.
   const g = ctx.createRadialGradient(X(-0.5), 0, X(0.12), X(-0.5), 0, X(3.2))
   g.addColorStop(0, deep(0.1))
   g.addColorStop(0.25, deep(0.62))
@@ -597,16 +623,8 @@ function spine(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, col
   p.pop()
 }
 
-/** The flap in the case's side, swung out on its top hinge as the ball goes through, and back shut with a knock or two. */
-function doorSwing(t: number, edge: number): number {
-  const s = t - edge + 0.1
-  if (s < 0) return 0
-  if (s < 0.2) return 1.05 * easeOutCubic(s / 0.2)
-  return 1.05 * Math.exp(-(s - 0.2) / 0.22) * Math.abs(Math.cos((s - 0.2) * 7.5))
-}
-
-/** The replica bookcase, as Act I's room had it at the end: the top shelf bare but for the ghost, the lander and the ten books on the floor where they fell, the watch. */
-function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
+/** The replica bookcase: the museum has the books back on the shelves, the lander on the top one, the watch on the cap. */
+function drawCase(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight: w } = c
   const X = (v: number) => v * k
   const L = CASE_L
@@ -617,36 +635,11 @@ function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
   rect(p, k, L, CAP, Rr, FLOOR)
   solid(p, ink, w, DUST.wood)
   rect(p, k, L, CAP, L + 0.07, FLOOR)
-  // The right-hand side, and the flap in it.
-  const swing = doorSwing(t, s.edge)
-  if (Math.abs(swing) <= 0.001) {
-    rect(p, k, Rr - 0.07, CAP, Rr, FLOOR)
-    p.stroke(alpha(p, ink, 0.35))
-    p.strokeWeight(Math.max(0.6, w * 0.4))
-    p.line(X(Rr - 0.065), X(DOOR_TOP), X(Rr - 0.005), X(DOOR_TOP))
-    p.line(X(Rr - 0.065), X(DOOR_BOT), X(Rr - 0.005), X(DOOR_BOT))
-  } else {
-    rect(p, k, Rr - 0.07, CAP, Rr, DOOR_TOP)
-    rect(p, k, Rr - 0.07, DOOR_BOT, Rr, FLOOR)
-  }
+  rect(p, k, Rr - 0.07, CAP, Rr, FLOOR)
   rect(p, k, L - 0.05, CAP - 0.065, Rr + 0.05, CAP + 0.005)
   rect(p, k, L + 0.07, MIDY, Rr - 0.07, MIDY + 0.05)
   rect(p, k, L + 0.07, FLOOR - 0.08, Rr - 0.07, FLOOR)
-  // The top board: fixed as far as the last book, then the flap on its hinge.
-  const th = tailAngle(t)
-  if (t < 0.06) rect(p, k, L + 0.07, SHELF_TOP, Rr - 0.07, SHELF_TOP + 0.05)
-  else {
-    rect(p, k, L + 0.07, SHELF_TOP, HINGE[0], SHELF_TOP + 0.05)
-    p.push()
-    p.translate(X(HINGE[0]), X(HINGE[1]))
-    p.rotate(th)
-    rect(p, k, 0, -0.025, D_END, 0.025)
-    p.pop()
-  }
-  if (t >= 0.06) {
-    solid(p, ink, w * 0.6, DUST.tin)
-    p.circle(X(HINGE[0]), X(HINGE[1]), X(0.035))
-  }
+  rect(p, k, L + 0.07, SHELF_TOP, Rr - 0.07, SHELF_TOP + 0.05)
 
   // The middle shelf, the bottom one, as they were.
   const mid = [
@@ -677,18 +670,17 @@ function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
   const BOOKS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUST.bone]
   for (let j = 0; j < 5; j++) spine(p, c, 1.3 + j * 0.1, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOKS[(j + 2) % 6])
 
-  // The lander and the ten books on the floor in front of the case, where the ghost pushed them at the end of Act I.
-  drawFallen(p, c, 99, () => 99)
+  // The top row, S-T-A-Y, put back; the lander at its end.
+  for (const b of stayRow()) spine(p, c, b.x, SHELF_TOP, b.w, b.h, b.color)
+  outline(p, ink, w * 0.7)
+  for (const sgn of [-1, 1]) p.line(X(LANDER_X + sgn * 0.04), X(SHELF_TOP - 0.07), X(LANDER_X + sgn * 0.09), X(SHELF_TOP))
+  solid(p, ink, w * 0.8, DUST.corn)
+  p.rect(X(LANDER_X), X(SHELF_TOP - 0.08), X(0.12), X(0.06))
+  solid(p, ink, w * 0.8, DUST.bone)
+  p.beginShape()
+  for (const [lx, ly] of [[-0.05, -0.11], [0.05, -0.11], [0.035, -0.17], [-0.035, -0.17]] as Pt[]) p.vertex(X(LANDER_X + lx), X(SHELF_TOP + ly))
+  p.endShape(p.CLOSE)
 
-  // The flap in the side, swung out on its top hinge.
-  if (Math.abs(swing) > 0.001) {
-    p.push()
-    p.translate(X(Rr - 0.035), X(DOOR_TOP))
-    p.rotate(-swing)
-    solid(p, ink, w, DUST.wood)
-    rect(p, k, -0.035, 0, 0.035, DOOR_BOT - DOOR_TOP)
-    p.pop()
-  }
 
   // The watch on the cap, keeping the organ's time: its second hand goes a second a beat.
   const wx = 1.45
@@ -708,6 +700,52 @@ function drawCase(p: p5, s: ReplicaState, c: Ctx, t: number): void {
   outline(p, ink, w * 0.6)
   p.line(X(wx), X(wy), X(wx + Math.cos(a) * 0.05), X(wy + Math.sin(a) * 0.038))
   p.pop()
+}
+
+/**
+ * The bed under the window: a plain wooden frame on four legs, the mattress,
+ * a pillow at the head by the dumbwaiter's hatch, and a quilt turned back.
+ * The pillow gives as he comes down into it at the end of Act I; the quilt
+ * slides a little as he wakes.
+ */
+function drawBed(p: p5, c: Ctx, t: number): void {
+  const { k, ink, weight: w } = c
+  const X = (v: number) => v * k
+  const T = ACT2 + t
+  const { x0, x1, top, pillow } = BED
+  // Legs, the side rail, and the low board at the foot.
+  solid(p, ink, w, DUST.wood)
+  for (const x of [x0 + 0.05, x1 - 0.05]) rect(p, k, x - 0.03, top + 0.12, x + 0.03, UP)
+  rect(p, k, x0, top + 0.1, x1, top + 0.2)
+  rect(p, k, x1 - 0.06, top - 0.14, x1, top + 0.2, 0.01)
+  // The mattress, and its ticking.
+  solid(p, ink, w, DUST.bone)
+  rect(p, k, x0 + 0.01, top, x1 - 0.06, top + 0.1, 0.02)
+  outline(p, ink, w * 0.4)
+  p.line(X(x0 + 0.04), X(top + 0.05), X(x1 - 0.09), X(top + 0.05))
+  // The quilt, turned back at its top edge: it slides as he wakes.
+  const q = BED.quilt[0] + (BED.quilt[1] - BED.quilt[0]) * easeOutCubic(clamp((T - WAKE) / 0.5))
+  solid(p, ink, w, DUST.teal)
+  p.beginShape()
+  p.vertex(X(q), X(top - 0.035))
+  p.vertex(X(x1 - 0.06), X(top - 0.035))
+  p.vertex(X(x1 - 0.06), X(top + 0.14))
+  p.vertex(X(q + 0.03), X(top + 0.14))
+  p.endShape(p.CLOSE)
+  solid(p, ink, w * 0.8, DUST.bone)
+  rect(p, k, q, top - 0.045, q + 0.12, top + 0.02, 0.015)
+  outline(p, ink, w * 0.4)
+  for (const f of [0.35, 0.62]) p.line(X(q + 0.12 + (x1 - 0.06 - q - 0.12) * f), X(top - 0.035), X(q + 0.12 + (x1 - 0.06 - q - 0.12) * f), X(top + 0.14))
+  // The pillow: its hollow deepens as he comes down into it.
+  const dip = pillowDip(T)
+  const cx = BED_REST[0]
+  solid(p, ink, w, mixHex(DUST.denim, DUST.bone, 0.62))
+  p.beginShape()
+  p.vertex(X(pillow.x0), X(top))
+  p.bezierVertex(X(pillow.x0 - 0.02), X(pillow.top + 0.02), X(pillow.x0 + 0.05), X(pillow.top), X(cx - 0.14), X(pillow.top))
+  p.bezierVertex(X(cx - 0.07), X(pillow.top + dip), X(cx + 0.07), X(pillow.top + dip), X(cx + 0.14), X(pillow.top))
+  p.bezierVertex(X(pillow.x1 - 0.05), X(pillow.top), X(pillow.x1 + 0.02), X(pillow.top + 0.02), X(pillow.x1), X(top))
+  p.endShape(p.CLOSE)
 }
 
 /* ------------------------------------------------------------------ the dumbwaiter */
@@ -764,7 +802,7 @@ function drawDumbwaiter(p: p5, c: Ctx, t: number): void {
   solid(p, ink, w * 0.6, DUST.corn)
   p.circle(X(CAR_R), X(y + 0.03), X(0.04))
   // The hatches' doors: papered like the wall, so each is only a hairline until it slides up into the wall.
-  jibDoor(p, c, HATCH, smooth(t, 0.1, 0.7), true)
+  jibDoor(p, c, HATCH, smooth(t, 0.08, 0.36), true)
   jibDoor(p, c, HATCH_DOWN, smooth(t, B(106), B(106) + 0.5), false)
 }
 
@@ -990,38 +1028,18 @@ function drawDust(p: p5, s: ReplicaState, c: Ctx, t: number): void {
 /* ------------------------------------------------------------------ over the ball */
 
 function drawOver(p: p5, _s: ReplicaState, c: Ctx): void {
-  const { k, ink, weight } = c
-  const t = c.t
+  overRoom(p, c, c.t)
+  drawDusk(p, c)
+}
+
+/** In front of the ball: the wall the dumbwaiter runs in, the toy, the clock's glass (this part's cells, slot time `t`). */
+export function overRoom(p: p5, c: Ctx, t: number): void {
+  const { k } = c
   p.push()
   p.translate(O[0] * k, O[1] * k)
   drawCasing(p, c, t)
-  // The museum keeps Murph's toy robot where it stood, its arm out: in front of the dumbwaiter's shaft.
-  drawToy(p, c, TOY_HOME[0], TOY_HOME[1])
+  // The museum keeps Murph's toy on the floor in front of the case, clear of the dumbwaiter and the bed.
+  drawToy(p, c, TOY_AT, TOY_HOME[1])
   drawGlass(p, c)
   p.pop()
-  drawDusk(p, c)
-  // The ghost is a ball: its light goes out, and a ring goes out from it.
-  if (t < 1.0) {
-    const at = toL(caseToHouse(onBoard(D0, 0)))
-    const X = at[0] * k
-    const Y = at[1] * k
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const a = 0.5 * (1 - smooth(t, 0, 0.3))
-    if (a > 0.005) {
-      const g = ctx.createRadialGradient(X, Y, 0, X, Y, 0.45 * k)
-      g.addColorStop(0, `rgba(255, 246, 214, ${a})`)
-      g.addColorStop(0.35, `rgba(255, 236, 190, ${a * 0.5})`)
-      g.addColorStop(1, 'rgba(255, 236, 190, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(X - 0.45 * k, Y - 0.45 * k, 0.9 * k, 0.9 * k)
-    }
-    const u = t / 1.0
-    p.noFill()
-    p.stroke(alpha(p, DUST.light, 0.9 * (1 - u) * (1 - u)))
-    p.strokeWeight(Math.max(1, weight * 2.2 * (1 - u)))
-    p.circle(X, Y, (0.32 + easeOutCubic(u) * 1.1) * k)
-    p.stroke(alpha(p, ink, 0.35 * (1 - u) * (1 - u)))
-    p.strokeWeight(Math.max(0.6, weight * 0.6))
-    p.circle(X, Y, (0.32 + easeOutCubic(u) * 1.1) * k + weight * 2.4)
-  }
 }

@@ -19,7 +19,7 @@ export const performance: Performance = {
   soundtrack: {
     src: recording,
     offset: 0,
-    credit: 'Hans Zimmer · Cornfield Chase, then No Time for Caution · Interstellar (2014) · tech demo only, not for release',
+    credit: 'Hans Zimmer · Cornfield Chase, then No Time for Caution · Interstellar (2014)',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',
   },
 }

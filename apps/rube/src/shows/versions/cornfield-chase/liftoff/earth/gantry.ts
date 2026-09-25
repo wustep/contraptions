@@ -102,11 +102,16 @@ export const gantry = part<GantryState>(
   (slot) => {
     const at = (t: number) => t - slot.begin
     const arrive = at(IN)
-    const ways: Way[] = [
-      { at: 0, p: [-0.5, 0] },
-      { at: arrive, p: [HERO_X, 0], ramp: [2.2, 2 * (HERO_X + 0.5) / arrive - 2.2] },
-    ]
-    const segs = [...route(ways), ...carried((t) => [HERO_X, cageY(t + slot.begin)], arrive, at(HIS_GO), 90)]
+    // In off the apron at the gate's pace, a quickening across to the tower, and eased right down into the cage:
+    // they come to it on the beat at a touch, not a stop.
+    const v0 = 2.0
+    const v1 = 0.25
+    const surge = ((HERO_X + 0.5) / arrive - (v0 + v1) / 2) * (Math.PI / 2)
+    const toCage = (t: number): Pt => {
+      const w = Math.max(0, Math.min(1, t / arrive))
+      return [-0.5 + arrive * (v0 * w + ((v1 - v0) * w * w) / 2 + (surge * (1 - Math.cos(Math.PI * w))) / Math.PI), 0]
+    }
+    const segs = [...carried(toCage, 0, arrive, 40), ...carried((t) => [HERO_X, cageY(t + slot.begin)], arrive, at(HIS_GO), 90)]
     // Out along the arm to the window.
     const from: Way = { at: at(HIS_GO), p: [HERO_X, cageY(HIS_GO)] }
     segs.push(...route([from, { at: at(SEATED), p: WIN, ramp: [0.5, 2 * (WIN[0] - HERO_X) / (at(SEATED) - from.at) - 0.5] }, { at: slot.end - slot.begin, p: WIN }]))

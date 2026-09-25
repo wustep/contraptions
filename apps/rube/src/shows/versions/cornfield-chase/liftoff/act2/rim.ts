@@ -17,7 +17,8 @@ import { RIM_R, SEAM, angleOf, fromRim, standOnRim, stationFrame } from './stati
  *        standing on the ground; the pipe under it fills the noria's sump.
  *   117  The noria. The water wheel stands idle over its sump until the ball
  *        rolls into the scoop at the bottom; the weight drops the clutch in,
- *        and from then on a Geneva drive turns it a quarter a beat.
+ *        and from then on its drive turns it a quarter a beat, an easy surge
+ *        that lands on the beat.
  *   118  a quarter: the scoop, ball and water, swings up the back.
  *   119  a quarter: over the top, and the lock throws the ball out into the
  *        flume with the water.
@@ -85,15 +86,19 @@ const RN = 1.24
 const POT_D = 0.44
 const POT_W = 0.4
 const TILT = 0.2
-/** The Geneva drive's index, as a fraction of a beat; it ends on the beat. */
-const WI = 0.4
+/**
+ * The drive's index, as a fraction of a beat; it ends on the beat. Most of the
+ * beat, so the wheel is nearly always turning: a quarter a beat, a slow surge
+ * that lands on the beat and a breath of rest, not a snap and a long stop.
+ */
+const WI = 0.82
 /** The beat the ball drops the clutch in. The wheel stands still until then. */
 const CLUTCH = 117
 
+/** The quarter's ease: smootherstep, so it sets off and settles with no knock (continuous speed and acceleration). */
 function geneva(q: number): number {
-  const a = -Math.PI / 4 + clamp01(q) * (Math.PI / 2)
-  const b = Math.atan2(Math.sin(a), Math.SQRT2 - Math.cos(a))
-  return (b + Math.PI / 4) / (Math.PI / 2)
+  const u = clamp01(q)
+  return u * u * u * (u * (6 * u - 15) + 10)
 }
 /** Quarter turns the wheel has made at beat number `kb`. */
 function turnsAt(kb: number): number {

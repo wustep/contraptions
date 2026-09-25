@@ -503,8 +503,8 @@ export const gate = part<GateState>(
       company: [{ from: HER_ON, to: slot.end, at: (t) => goldGate(s, lane, slot.begin, t) }],
     }
   },
-  (slot, built) => [
-    { t: slot.begin, cells: 5.4, off: [1.0, -1.0] },
+  (_slot, built) => [
+    // Taken over from the combine's bale in one long ease (a key at the hand-off would stop the move and snap it).
     { t: beat(102.5), cells: 5.6, off: [1.2, -1.2] },
     { t: beat(104.2), cells: 5.9, off: [1.3, 0.2] },
     { t: beat(107.4), cells: 5.9, off: [1.1, 0.1] },

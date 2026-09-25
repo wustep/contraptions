@@ -59,7 +59,7 @@ function glintAt(t: number): number {
 }
 
 export function compose(): { show: LiftoffShow; camera: (t: number) => Framing } {
-  const earth = lay({ col: 0, row: -2, begin: 0, ball: { color: BALL, ghost: true, id: 0 } }, [
+  const earth = lay({ col: 0, row: -2, begin: 0, ball: { color: BALL, ghost: false, id: 0 } }, [
     { part: shelf, end: 12.283 },
     { part: toy, end: 15.743 },
     { part: stairs, end: 17.4 },

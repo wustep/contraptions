@@ -1,6 +1,5 @@
 import type p5 from 'p5'
-import { FLOOR, type Pt } from '../../../../../parts'
-import { GHOST_ON_SHELF } from '../space/gargantua'
+import { FLOOR, R, type Pt } from '../../../../../parts'
 
 /**
  * Cooper Station, seen end-on: a ring of land round its axis, twenty cells
@@ -9,19 +8,36 @@ import { GHOST_ON_SHELF } from '../space/gargantua'
  * across it curves.
  *
  * Act II's station parts share this one geometry. Everything is given
- * relative to O, where Act II starts: the ball resting on the top shelf of
- * the replica bookcase, which is where Act I left it. The replica farmhouse
- * (the same house as Act I's, moved up here as a museum) stands on a levelled
- * plinth at the bottom of the ring, and its yard is the ring's ground.
+ * relative to O, where Act II starts: the ball in the bed under the window of
+ * Murph's room, where Act I left it when the tesseract closed. The replica
+ * farmhouse (the same house as Act I's, moved up here as a museum) stands on
+ * a levelled plinth at the bottom of the ring, and its yard is the ring's
+ * ground.
  */
 
 /** Cells from the axis to the ground. */
 export const RIM_R = 20
 
-/** O in the bookcase's own cells (the shelf part's frame in Act I): where the ghost came to rest. */
-const REST = GHOST_ON_SHELF()
-/** Act I's house cells, from O: Act I placed the shelf part's frame at world (0, -2) and the house at world (0, 0). */
-export const HOUSE: Pt = [-REST[0], 2 - REST[1]]
+/**
+ * The bed in Murph's room, rebuilt: under the window, its head against the
+ * dumbwaiter's wall, in Act I's house cells (the upstairs floor's surface is
+ * at -2 + FLOOR). Its frame and mattress, the pillow at the head, and the
+ * quilt from the pillow to the foot. The replica draws it; the end of Act I
+ * (`space/gargantua.ts`) draws the same room at night.
+ */
+export const BED = {
+  x0: 2.86,
+  x1: 4.6,
+  /** The mattress's top, and the pillow's top over it. */
+  top: -2.33,
+  pillow: { x0: 3.0, x1: 3.48, top: -2.42 },
+  /** Where the quilt's turned-back edge lies, before he stirs and after. */
+  quilt: [3.36, 3.46] as [number, number],
+}
+/** O in Act I's house cells: the ball lying in the pillow's hollow. */
+export const BED_REST: Pt = [3.22, BED.pillow.top + 0.025 - R]
+/** Act I's house cells, from O. */
+export const HOUSE: Pt = [-BED_REST[0], -BED_REST[1]]
 /** The house's yard, the ring's ground at the bottom, 1 + FLOOR below the house's ground floor. */
 const YARD_Y = HOUSE[1] + 1 + FLOOR
 /** The axis, from O: straight above the middle of the house, a radius up from its yard. */
@@ -41,7 +57,7 @@ export const angleOf = (q: Pt): number => Math.atan2(q[1] - AXIS[1], q[0] - AXIS
  * over the top).
  */
 export const SEAM = {
-  /** Act II starts: the ball on the replica shelf. */
+  /** Act II starts: the ball in the bed. */
   start: [0, 0] as Pt,
   /** Out of the replica house's yard onto the ring, just past the plinth. */
   replicaOut: ballOnRim(Math.PI / 2 - 0.36),

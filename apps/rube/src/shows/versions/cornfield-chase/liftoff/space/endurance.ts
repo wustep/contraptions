@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { R, puff, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
-import { goldDrift } from '../rocket'
+import { brandDrift } from '../rocket'
 import { G_LOW } from '../physics'
 import { BALL, DARK } from '../worlds'
 
@@ -35,7 +35,7 @@ import { BALL, DARK } from '../worlds'
  * edge on the next beat (165) and its image wraps the rim; by 166 it is
  * inside, out of sight, at the centre.
  *
- * The gold ball rides all of it with him, at his back: she drifts in after
+ * Brand rides all of it with him, at his back: she drifts in after
  * him on the beacon's blinks, the cradle takes them both, they go up the
  * rail and over on the lob one behind the other, the long jaws hold the two
  * of them, and the airlock lets them in together. The kick sends her into
@@ -100,19 +100,19 @@ const SUN = (150 * Math.PI) / 180
 const D_IN = 0.24
 const D_DROP = 0.16
 
-/* ------------------------------------------------------------------ the gold ball */
+/* ------------------------------------------------------------------ Brand */
 
 /** Two balls touching, centre to centre (a hair over two radii). */
 const GAP = 2 * R + 0.01
 /** She comes in through the hatch a moment after him, and takes a little longer about it. */
 const IN_LAG = 0.06
-const IN_DUR = 0.36
+const IN_DUR = 0.48
 /** On the corridor floor she rests at his back. */
 const PSI_IN = GAP / RUN_R
 /** Her eighth: she passes the bulkhead lamp on the and after him. */
 const GATE2 = beat(159.5)
 /** Too late: she hops the last of the way and comes down on the shut trapdoor on the and, stops there a beat, and runs on. */
-const HOP = beat(160.25)
+const HOP = beat(160.1)
 const KNOCK = beat(160.5)
 const ON = beat(161.5)
 const HOP_H = 0.08
@@ -282,23 +282,34 @@ function stopped(T: number): number {
   if (T <= a) return 0
   if (T <= b) return (b - a) * ramp((T - a) / (b - a))
   if (T <= c) return (b - a) / 2 + (T - b)
-  return (b - a) / 2 + (c - b) + (T - c) - (d - c) * ramp((T - c) / (d - c))
+  // Easing back into her pace, and from then on no more lost: going at his old pace again.
+  return (b - a) / 2 + (c - b) + (Math.min(T, d) - c) - (d - c) * ramp((T - c) / (d - c))
 }
 
-/** Her way in through the hatch, 0..1: up the hatch under him while he goes in, then rolled round his back onto the floor. */
+/**
+ * Her way in through the hatch, 0..1: up the hatch under him while he goes in, and rolled round his back onto the
+ * floor, in one move: she closes on him and swings round him together, so she never stops between the two.
+ */
 function herIn(v: number): { psi: number; r: number } {
   const u = Math.max(0, Math.min(1, v))
-  const r0 = SEAT + GAP - 0.02
-  if (u < 0.5) return { psi: 0, r: r0 + (RUN_R + GAP - r0) * smooth(u, 0, 0.5) }
-  const th = (Math.PI / 2) * smooth(u, 0.5, 1)
-  return { psi: (GAP * Math.sin(th)) / RUN_R, r: RUN_R + GAP * Math.cos(th) }
+  // Smoother than a smoothstep: no kick in the acceleration either, at either end.
+  const soft = (x: number, a: number, b: number): number => {
+    const w = Math.max(0, Math.min(1, (x - a) / (b - a)))
+    return w * w * w * (10 - 15 * w + 6 * w * w)
+  }
+  const far = SEAT - 0.02 - RUN_R
+  const d = GAP + far * (1 - soft(u, 0, 0.75))
+  const th = (Math.PI / 2) * soft(u, 0.2, 1)
+  return { psi: (d * Math.sin(th)) / RUN_R, r: RUN_R + d * Math.cos(th) }
 }
 
 /** Where she is on the ring at show time `T`, from the clamp on: her angle from the port, and how far out. */
 function herRing(T: number): { psi: number; r: number } {
   if (T < HATCH + IN_LAG) return { psi: 0, r: SEAT + GAP - 0.02 * smooth(T, CLAMP, CLAMP + 0.12) }
   if (T < KICK) return herIn((T - HATCH - IN_LAG) / IN_DUR)
-  const hop = T > HOP && T < KNOCK ? HOP_H * Math.sin((Math.PI * (T - HOP)) / (KNOCK - HOP)) : 0
+  // The hop: up off the floor and down onto the door on the and, eased at both ends (a low-g hop, no kick).
+  const w = (T - HOP) / (KNOCK - HOP)
+  const hop = w > 0 && w < 1 ? HOP_H * Math.sin(Math.PI * w) ** 2 : 0
   // When she goes on, it is at his old pace, a module a beat.
   const on = T <= ON ? 0 : 0.5 * ramp((T - ON) / 0.5) + Math.max(0, T - ON - 0.5)
   return { psi: PSI_IN - RHO * F_RUN * (T - KICK - STILL * stopped(T)) - RHO * (1 - F_RUN) * on, r: RUN_R - hop }
@@ -419,7 +430,7 @@ export const endurance = part<EnduranceState>(
     }
     const ring = (t: number) => ringBall(c, t + slot.begin)
     const fly = (t: number) => flightAt(sphere, flight, t + slot.begin - FIRE)
-    // The gold ball, at his back: behind him up the rail, and under him in the jaws.
+    // Brand, at his back: behind him up the rail, and under him in the jaws.
     const back: Pt = [-dir[0] * GAP, -dir[1] * GAP]
     const under: Pt = [0, GAP]
     const gold = (T: number): Companion | null => {
@@ -427,7 +438,7 @@ export const endurance = part<EnduranceState>(
       let o: Pt
       if (T < CATCH) {
         h = drift(rel(T))
-        o = goldDrift(T, back)
+        o = brandDrift(T, back)
       } else if (T < MUZZLE) {
         h = rail(rel(T))
         o = back
@@ -524,7 +535,8 @@ function glow(p: p5, x: number, y: number, r: number, rgb: string, a: number): v
 const AMBER_RGB = '240, 147, 64'
 const ICE_RGB = '143, 198, 230'
 const BONE_RGB = '236, 229, 211'
-const BALL_RGB = '214, 96, 45'
+/** The ball's colour as r, g, b, for gradients. */
+const BALL_RGB = [1, 3, 5].map((i) => parseInt(BALL.slice(i, i + 2), 16)).join(', ')
 
 /** A thick stroke with an ink edge: a finger, an arm. */
 function bar(p: p5, ink: string, weight: number, fill: string, w: number, pts: [number, number][]): void {

@@ -4,10 +4,12 @@ import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../.
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../../parts'
 import type { ShowBall } from '../../../../../show'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot } from '../kit'
-import { ACT1_END, beat, LAST } from '../music'
-import { dropTime, G_EARTH } from '../physics'
-import { bookAt, bookRests, drawToy, FALL_NOTES, LANDER_X, SHELF_TOP, stayRow, TOY_HOME, type Fallen } from '../earth/house'
+import { ACT1_END, ACT2, beat, LAST } from '../music'
+import { G_EARTH } from '../physics'
+import { FALL_NOTES, LANDER_X, SHELF_TOP, stayRow } from '../earth/house'
 import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
+import { drawRoom, IN_BED, nightOver, overRoom, ROOM_CELLS, ROOM_HOLD, WAKE } from '../act2/replica'
+import { BED_REST } from '../act2/station'
 import { MILLER_HANDOFF } from './miller'
 
 /**
@@ -25,16 +27,18 @@ import { MILLER_HANDOFF } from './miller'
  * top it opens the claw on the downbeat (188) and burns away. The ball
  * falls in, slows, and stops at the centre on 189; the dark opens round it.
  *
- * Inside is the back of Murph's bookcase, in a lattice of frames. The ball
- * comes down onto a rail by the end of the top shelf on 190 and rolls in
- * behind the model lander, and on the last hit (191) it is the ghost, and
- * the lander tips away from us into the room. Then the tesseract lets go
- * and the room comes up from the front, round the ghost: Murph's room at
- * dusk, framed as the show began. The ghost goes along behind the row and
- * pushes the ten books off, one at a time, in the opening's own rhythm
- * (S-T-A-Y, the same offsets from the lander), and they fall and lie where
- * the opening left them. It comes to rest at the end of the row, where the
- * first frame had it, glowing.
+ * The dark opens and he is a ghost, in a lattice of frames, and in front of
+ * him is the back of Murph's bookcase. He comes down behind the model lander
+ * on 190 and it tips away from us into the room; then he goes along behind
+ * the row and pushes the ten books off, one after another, in the opening's
+ * order and its rhythm run three times as fast, the first of them on the
+ * last hit (191): S-T-A-Y, from this side.
+ *
+ * Then the tesseract closes on him and he comes down out of it into a bed:
+ * Murph's room, rebuilt as the museum on Cooper Station, at night. He wakes
+ * a ball again, the quilt slides, and the room holds, dim, until the
+ * station's lights come up on Act II (`act2/replica.ts` draws the room, both
+ * sides of the cut).
  *
  * The part's frame: the ball comes off the wave's lip at (-0.5, 0). Miller's
  * Gargantua stands at C in this frame; ours is drawn on it, concentric.
@@ -58,21 +62,20 @@ const NODE_B = beat(187.5)
 const RELEASE = beat(188)
 /** At the centre; the dark opens. */
 const HORIZON = beat(189)
+/** Down behind the lander, and it goes. */
 const LAND = beat(190)
-/** The last hit: the ball is the ghost, and the lander goes. */
+/** The last hit: the first of the books. */
 const PUSH = LAST
 /**
- * The ten books go at the opening's own offsets from the lander, counted now
- * from the last hit: the decay has nothing to strike, and the rhythm the
- * opening had is the rhyme. Not strikes on the music, so not in the list.
+ * The ten books go at the opening's own offsets from the lander, squeezed so
+ * the first goes on the last hit: a little over three times as fast, the
+ * last at about 120.75. Only the lander (190) and the first book (191) are
+ * on the music's strikes; the rest keep the opening's Morse.
  */
-const PUSHES = FALL_NOTES.books.map((n) => PUSH + (n - FALL_NOTES.lander))
-/** The turn: the back of the case and the lattice go, and the room comes up from the front, round the ghost. */
-const TURN0 = PUSH + 0.55
-const TURN1 = PUSH + 1.45
-/** It sets off along the row once the room is up, and is at rest at the end of it a moment after the last book. */
-const SET_OFF = TURN1 + 0.1
-const AT_REST = PUSHES[PUSHES.length - 1] + 0.4
+const SQUEEZE = (FALL_NOTES.books[0] - FALL_NOTES.lander) / (PUSH - LAND)
+const PUSHES = FALL_NOTES.books.map((n) => LAND + (n - FALL_NOTES.lander) / SQUEEZE)
+/** The tesseract closes on him once the last has gone; he comes down into the bed (IN_BED) and wakes (WAKE). */
+const CLOSE = PUSHES[PUSHES.length - 1] + 0.1
 /** The watch keeps time in the silence after the music: two ticks, not counted as strikes. */
 const TICKS = [beat(200), beat(202)]
 
@@ -271,62 +274,44 @@ function shipAt(T: number): Pt {
 
 /* ------------------------------------------------------------------ inside */
 
-/**
- * Where the ghost comes to rest, and so where this part hands Act II its ball:
- * fixed by the first cut of this part (a run along a rail to the last book)
- * and kept to the cell, since the station is placed from it.
- */
-const RUN = 2.6
-const LAND_PT: Pt = [F[0] + (RUN * (LAND - HORIZON)) / 2, F[1] + 1.55]
-const Y_BALL = LAND_PT[1]
+/** The top board's line, and the ghost on it: straight down from where the ball stopped. */
+const Y_BALL = F[1] + 1.55
 const SURF = Y_BALL + R
 const ROW = stayRow()
-const B: Pt = [LAND_PT[0] + RUN * (PUSH - LAND) + 0.45 + ROW[ROW.length - 1].x, SURF - SHELF_TOP]
-const X_REST = B[0] - ROW[ROW.length - 1].x - 0.45 + 0.09
-const Y_REST = Y_BALL
-/** Where the ghost rests at the end, in the bookcase's own cells (the shelf part's frame): Act II's replica room starts from it. */
-export const GHOST_ON_SHELF = (): Pt => [B[0] - X_REST, Y_REST - B[1]]
-/** The room, seen from the front: the case's frame, so the ghost's rest in it is where it rests here. */
-const BF: Pt = [X_REST - (B[0] - X_REST), B[1]]
-/** A point of the shelf's frame, seen from the front. */
-const front = (x: number): number => BF[0] + x
-/**
- * The case seen from behind, mirrored (x here = BK.x - x there), placed so
- * that the ghost behind the lander is in the same place seen from either
- * side: the turn from the back to the front happens round it.
- */
-const BK: Pt = [BF[0] + 2 * LANDER_X, B[1]]
+/** The ghost behind the lander, a little right of and below where it stopped: it comes down onto the board there on 190. */
+const P_L: Pt = [F[0] + 0.35, Y_BALL]
+/** The case seen from behind, mirrored (x here = BK.x - x there), with the lander's back at P_L. */
+const BK: Pt = [P_L[0] + LANDER_X, SURF - SHELF_TOP]
 const back = (x: number): number => BK[0] - x
-/** The ghost behind the lander, and where the ball comes down on the rail before it rolls in there. */
-const P_L: Pt = [back(LANDER_X), Y_BALL]
-const LAND2: Pt = [P_L[0] + 0.75, Y_BALL]
-/** The books where they come to rest on the floor, as the opening left them. */
-const RESTS: Fallen[] = bookRests()
+/** Behind the last book, where the tesseract closes on him. */
+const LAST_AT: Pt = [back(ROW[ROW.length - 1].x), Y_BALL]
+/**
+ * The bed, in this part's frame: under where the last book went, a fall
+ * below it. The next part (the replica) is placed so its entry is the ball
+ * there, so our exit is half a cell on.
+ */
+const IN_PILLOW: Pt = [LAST_AT[0] + 0.12, LAST_AT[1] + 1.25]
+const EXIT: Pt = [IN_PILLOW[0] + 0.5, IN_PILLOW[1]]
+/** A point of Act I's house (the replica's) in this frame. */
+const roomPt = (h: Pt): Pt => [IN_PILLOW[0] + h[0] - BED_REST[0], IN_PILLOW[1] + h[1] - BED_REST[1]]
+/** Where he rests at the end of Act I, and Act II begins: in the bed, in Act I's house cells (`act2/station.ts`). */
+export const WAKE_REST: Pt = BED_REST
+/** The same, in the bookcase's own cells (the shelf part's frame, the house's plus 2 down): the name the checks know. */
+export const GHOST_ON_SHELF = (): Pt => [BED_REST[0], BED_REST[1] + 2]
 
 /**
- * Along the back of the row, seen from the front: to each book a moment
- * before its note, a push on the note, and on to the next once it has gone.
+ * Along the back of the row: one glide, faster and slower, that has him
+ * behind each book on its push, so the flurry reads as one sweep.
  */
-function along(at: (T: number) => number): { at: number; p: Pt; ease?: 'inout' }[] {
-  const out: { at: number; p: Pt; ease?: 'inout' }[] = []
-  for (let i = 0; i < ROW.length; i++) {
-    const prev = i === 0 ? SET_OFF : PUSHES[i - 1]
-    const next = i === ROW.length - 1 ? AT_REST : PUSHES[i + 1]
-    const early = Math.min(0.08, (PUSHES[i] - prev) / 4)
-    const late = Math.min(0.06, (next - PUSHES[i]) / 4)
-    const p: Pt = [front(ROW[i].x), Y_BALL]
-    out.push({ at: at(PUSHES[i] - early), p, ease: 'inout' }, { at: at(PUSHES[i] + late), p })
-  }
-  return out
-}
+const sweep = pchip([LAND, ...PUSHES, CLOSE], [P_L[0], ...ROW.map((b) => back(b.x)), LAST_AT[0] + 0.015])
 
-/** The ghost's lean into each push, as a change in its size: smaller going away from us (the lander, from behind), larger coming at us (the books). */
+/** The ghost's lean into each push, as a change in its size: smaller as it goes away from us, into the lander and each book. */
 function shoveAt(T: number): number {
-  let v = -0.08 * leanPulse(T - PUSH)
-  for (const at of PUSHES) v += 0.07 * leanPulse(T - at)
+  let v = 0
+  for (const at of [LAND, ...PUSHES]) v -= 0.07 * leanPulse(T - at)
   return v
 }
-const leanPulse = (s: number): number => (s < -0.06 || s > 0.3 ? 0 : s < 0 ? smooth(s, -0.06, 0) : Math.exp(-s / 0.08))
+const leanPulse = (s: number): number => (s < -0.04 || s > 0.2 ? 0 : s < 0 ? smooth(s, -0.04, 0) : Math.exp(-s / 0.06))
 
 /* ------------------------------------------------------------------ the part */
 
@@ -357,14 +342,21 @@ export const gargantua = part<GargState>(
       ...carried(swing, at(RELEASE), at(HORIZON), 36),
       ...route([
         { at: at(HORIZON), p: F },
-        // Out of the centre onto the rail by the case's end, and in along it behind the lander, slowing.
-        { at: at(LAND), p: LAND2, ease: 'in' },
-        { at: at(PUSH), p: P_L, ramp: [1.7, 0.6] },
-        // It stays there, the lander gone, while the room turns round it.
-        { at: at(SET_OFF), p: P_L },
-        ...along(at),
-        { at: at(AT_REST), p: [X_REST, Y_REST], ease: 'inout' },
-        { at: slot.end - slot.begin, p: [X_REST, Y_REST] },
+        // Out of the centre and down onto the top board behind the lander: it goes on 190.
+        { at: at(LAND), p: P_L, ease: 'in' },
+      ]),
+      // Along the back of the row, the books going one after another.
+      ...carried((u) => [sweep.at(u + slot.begin), Y_BALL], at(LAND), at(CLOSE), 240),
+      ...route([
+        { at: at(CLOSE), p: [LAST_AT[0] + 0.015, Y_BALL] },
+        // The tesseract closes, and he comes down out of it into the pillow.
+        { at: at(IN_BED), p: IN_PILLOW, ease: 'inout' },
+        // He wakes: a stir, this way and that, and still.
+        { at: at(WAKE), p: IN_PILLOW },
+        { at: at(WAKE) + 0.2, p: [IN_PILLOW[0] - 0.03, IN_PILLOW[1]], ease: 'inout' },
+        { at: at(WAKE) + 0.45, p: [IN_PILLOW[0] + 0.012, IN_PILLOW[1]], ease: 'inout' },
+        { at: at(WAKE) + 0.65, p: IN_PILLOW, ease: 'inout' },
+        { at: slot.end - slot.begin, p: IN_PILLOW },
       ]),
     ]
     const lane: Lane = { segs, fire: at(CATCH) }
@@ -375,17 +367,18 @@ export const gargantua = part<GargState>(
         const angle = Math.atan2(C[1] - hero.y, C[0] - hero.x)
         return [{ ...hero, stretch: 1 + 0.55 * pull, angle, scale: (hero.scale ?? 1) * (1 - 0.18 * pull) }]
       }
-      // Each push is a lean: away from us into the lander (seen from behind), toward us into each book (from the front).
+      // Each push is a lean away from us, into the lander and each book.
       const lean = shoveAt(t)
       if (Math.abs(lean) < 0.002) return null
       return [{ ...hero, scale: (hero.scale ?? 1) * (1 + lean) }]
     }
     return {
       cells: box(-9, -5, 9, 4),
-      exit: [X_REST + 0.5, Y_REST],
+      exit: EXIT,
       lane,
       state: { begin: slot.begin, lane },
-      changes: [{ at: at(PUSH), ghost: true }],
+      // A ghost as the dark opens; a ball again when he wakes in the bed.
+      changes: [{ at: at(HORIZON), ghost: true }, { at: at(WAKE), ghost: false }],
       riders,
     }
   },
@@ -397,13 +390,14 @@ export const gargantua = part<GargState>(
       { t: beat(186), cells: 5.8, hold: [C[0] + 0.1, C[1] + 0.15], w: 0.85 },
       { t: RELEASE, cells: 5.2, hold: [C[0], C[1]], w: 0.9 },
       { t: HORIZON, cells: 3.4, hold: F, w: 1 },
-      // Down into the lattice, the back of the case under it; in close behind the lander for the last hit.
-      { t: LAND, cells: 3.3, hold: [LAND2[0] - 0.55, Y_BALL - 0.45], w: 1 },
-      { t: PUSH, cells: 2.3, hold: [P_L[0] - 0.15, Y_BALL - 0.2], w: 1 },
-      { t: TURN0, cells: 2.3, hold: [P_L[0] - 0.15, Y_BALL - 0.2], w: 1 },
-      // The turn, round the ghost: the room from the front, framed as the show began, for the books.
-      { t: TURN1, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
-      { t: ACT1_END, cells: 2.9, hold: [BF[0] + 0.75, BF[1] - 0.55], w: 1 },
+      // Down into the lattice: the whole row from behind, the lander at its right-hand end, for the sweep.
+      { t: LAND, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
+      { t: CLOSE, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
+      // Down with him out of the tesseract, to the room at night, a little wide, the bed and the window. While he lies
+      // awake the camera comes in on him, slowly, the whole of the decay, and arrives on the framing Act II opens on.
+      { t: IN_BED + 0.15, cells: ROOM_CELLS + 0.5, hold: roomPt([ROOM_HOLD[0] - 0.08, ROOM_HOLD[1] + 0.12]), w: 1 },
+      { t: WAKE + 0.8, cells: ROOM_CELLS + 0.46, hold: roomPt([ROOM_HOLD[0] - 0.07, ROOM_HOLD[1] + 0.11]), w: 1 },
+      { t: ACT1_END, cells: ROOM_CELLS, hold: roomPt(ROOM_HOLD), w: 1 },
     ]
     return shots
   },
@@ -446,13 +440,14 @@ const swellAt = (T: number): number => 1 + 30 * easeInQuad(clamp((T - HORIZON) /
 /** How much of the inside is up: the lattice, the rail, the case. */
 const insideAt = (T: number): number => smooth(T, HORIZON + 0.25, HORIZON + 0.7)
 /**
- * The turn: the back of the case goes first, and for a moment the ghost is
- * alone in the lattice; then the lattice goes as the room comes up from the
- * front, round it. Never the two sides of the case at once.
+ * The close: the lattice folds in on him and the back of the case goes with
+ * it; he comes down through the dark, and the room comes up round the bed as
+ * he reaches it.
  */
-const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, TURN0, TURN0 + 0.35))
-const latticeAt = (T: number): number => insideAt(T) * (1 - smooth(T, TURN0 + 0.45, TURN1))
-const roomAt = (T: number): number => smooth(T, TURN0 + 0.4, TURN1)
+const closeAt = (T: number): number => smooth(T, CLOSE - 0.05, IN_BED - 0.12)
+const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE, CLOSE + 0.28))
+const latticeAt = (T: number): number => insideAt(T) * (1 - closeAt(T))
+const roomAt = (T: number): number => smooth(T, CLOSE + 0.2, IN_BED + 0.08)
 
 function drawAll(p: p5, s: GargState, c: Ctx): void {
   const T = s.begin + c.t
@@ -858,18 +853,23 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     ctx.save()
     ctx.globalAlpha = bk
     drawCaseBack(p, c, T)
-    drawRail(p, c, T)
     ctx.restore()
   }
   const room = roomAt(T)
   if (room > 0.002) {
     ctx.save()
     ctx.globalAlpha = room
-    drawRoom(p, c, T, f)
+    p.push()
+    p.translate(X(EXIT[0]), X(EXIT[1]))
+    drawRoom(p, farm(c), T - ACT2)
+    p.pop()
     ctx.restore()
   }
   void s
 }
+
+/** The room is the farm's, drawn in the farm's ink: the replica's own drawing, in the replica's frame (its origin is our exit). */
+const farm = (c: Ctx): Ctx => ({ ...c, ink: FARM.ink, bg: FARM.bg, theme: FARM, weight: (c.weight * (FARM.weight ?? 1)) / (VOID.weight ?? 1) })
 
 /**
  * The lattice: the case again, as a frame, every way — beside it, above,
@@ -881,6 +881,12 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
   const { k } = c
   const X = (v: number) => v * k
   const vp: Pt = [P_L[0], SURF - 0.2]
+  // As it closes it folds in on him, where the last book went.
+  const fold = 1 - 0.88 * closeAt(T)
+  p.push()
+  p.translate(X(LAST_AT[0]), X(LAST_AT[1]))
+  p.scale(fold)
+  p.translate(-X(LAST_AT[0]), -X(LAST_AT[1]))
   const x0 = back(2.0)
   const x1 = back(-0.45)
   const y0 = BK[1] + SHELF_TOP - 0.665
@@ -921,11 +927,11 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
       }
     }
   }
-  // The beam the ball comes in on, out of the case's end, and the corners of the near frames run in toward the point.
+  // The top board's line run on out of the case both ways, and the corners of the near frames run in toward the point.
   p.stroke(alpha(p, DARK.gold, on * 0.3))
   p.strokeWeight(Math.max(0.8, k * 0.014))
   p.line(X(f.x0 - 1), X(SURF), X(x0 - 0.1), X(SURF))
-  p.line(X(LAND2[0] + 0.55), X(SURF), X(f.x1 + 1), X(SURF))
+  p.line(X(x1 + 0.1), X(SURF), X(f.x1 + 1), X(SURF))
   p.stroke(alpha(p, DARK.gold, on * 0.14))
   p.strokeWeight(Math.max(0.6, k * 0.009))
   const sc = 1 / (1 + 0.75 * (depths[0] + 0.3))
@@ -935,15 +941,16 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
       p.line(X(px), X(cy), X(vp[0] + (px - vp[0]) * sc), X(vp[1] + (cy - vp[1]) * sc))
     }
   }
+  p.pop()
 }
 
-/** The lander from behind, pushed on the last hit: it tips away from us into the room and is gone over the edge. */
-function landerAway(T: number): { tip: number; drop: number; gone: boolean } {
-  const s = T - PUSH
+/** A thing on the top shelf seen from behind, pushed at `at`: it tips away from us into the room (over `dur`) and is gone over the edge. */
+function away(at: number, T: number, dur: number): { tip: number; drop: number; gone: boolean } {
+  const s = T - at
   if (s < 0) return { tip: 0, drop: 0, gone: false }
-  const tip = (Math.PI / 2) * easeInQuad(clamp(s / 0.42))
-  const drop = 0.5 * G_EARTH * Math.max(0, s - 0.26) ** 2
-  return { tip, drop, gone: s > 0.46 }
+  const tip = (Math.PI / 2) * easeInQuad(clamp(s / dur))
+  const drop = 0.5 * G_EARTH * Math.max(0, s - dur * 0.6) ** 2
+  return { tip, drop, gone: s > dur * 1.1 }
 }
 
 /** Murph's bookcase from behind: its frame dark against the room's light, the books' page-edges to us. */
@@ -960,8 +967,8 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   p.push()
   p.translate(X(BK[0]), X(BK[1]))
   p.scale(-1, 1)
-  // The room beyond: warm plaster lit by the window, the paper's thin stripes; brighter for a moment as the lander goes.
-  const lit = knock(T - PUSH - 0.1, 0.5)
+  // The room beyond: warm plaster lit by the window, the paper's thin stripes; a little brighter as each thing goes.
+  const lit = Math.min(1, [LAND, ...PUSHES].reduce((m, at) => Math.max(m, 0.6 * knock(T - at - 0.08, 0.3)), 0) + 0.4 * smooth(T, LAND, CLOSE))
   p.noStroke()
   p.fill(mixHex(DUST.wall, DUST.light, 0.35 + 0.35 * lit))
   p.rect(X((L + Rr) / 2), X((CAP + FLOOR) / 2), X(Rr - L - 0.1), X(FLOOR - CAP))
@@ -969,10 +976,19 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   p.strokeWeight(Math.max(1, k * 0.012))
   for (let x = L + 0.12; x < Rr - 0.05; x += 0.22) p.line(X(x), X(CAP + 0.03), X(x), X(FLOOR - 0.02))
 
-  // The books of the top row: page edges toward us, their covers a line either side. Nothing has touched them yet.
-  for (const b of ROW) backOfBook(p, c, b.x, SHELF_TOP, b.w, b.h, b.color, ink)
-  // The lander model, a dark shape against the light; pushed, it tips away (shorter as it turns from us) and drops.
-  const la = landerAway(T)
+  // The books of the top row: page edges toward us, their covers a line either side; pushed, each tips away (shorter
+  // as it turns from us) and drops out of sight behind the board, and the room's light comes through the gap.
+  ROW.forEach((b, i) => {
+    const a = away(PUSHES[i], T, 0.26)
+    if (a.gone) return
+    const h = b.h * Math.max(0.03, Math.cos(a.tip))
+    backOfBook(p, c, b.x, SHELF_TOP + a.drop, b.w * (1 - 0.12 * Math.sin(a.tip)), h, b.color, ink)
+  })
+  ROW.forEach((b, i) => {
+    if (T >= PUSHES[i]) glow(p, X(b.x), X(SHELF_TOP - b.h / 2), X(0.4), DUST.light, 0.6 * knock(T - PUSHES[i] - 0.1, 0.25) * smooth(T, PUSHES[i], PUSHES[i] + 0.1))
+  })
+  // The lander model, a dark shape against the light; pushed, it tips away the same way.
+  const la = away(LAND, T, 0.36)
   if (!la.gone) {
     const sq = Math.cos(la.tip)
     p.push()
@@ -988,7 +1004,7 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
     p.pop()
   }
   // Where it stood, the room's light comes through.
-  if (T >= PUSH) glow(p, X(LANDER_X), X(SHELF_TOP - 0.12), X(0.55), DUST.light, 0.75 * knock(T - PUSH - 0.12, 0.35) * smooth(T, PUSH, PUSH + 0.12))
+  if (T >= LAND) glow(p, X(LANDER_X), X(SHELF_TOP - 0.12), X(0.55), DUST.light, 0.75 * knock(T - LAND - 0.12, 0.35) * smooth(T, LAND, LAND + 0.12))
   // The middle shelf, from behind, and the bottom one's stack and box.
   const mid = [
     [0.1, 0.3, DUST.denim], [0.09, 0.32, DUST.bone], [0.12, 0.28, DUST.rust], [0.08, 0.3, DUST.sage], [0.1, 0.34, DUST.corn],
@@ -1052,223 +1068,6 @@ function drawWatch(p: p5, c: Ctx, T: number, wx: number, wy: number, ink: string
   p.line(X(wx), X(wy), X(wx + Math.cos(a) * 0.05), X(wy + Math.sin(a) * 0.038))
 }
 
-/** The rail the ball comes down on: the top board's line run on out past the case's end into the lattice. */
-function drawRail(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
-  const X = (v: number) => v * k
-  const r0 = back(-0.45) - 0.02
-  const r1 = LAND2[0] + 0.55
-  solid(p, ink, weight * 0.6, mixHex(DARK.hull, DARK.slate, 0.35))
-  p.rect(X((r0 + r1) / 2), X(SURF + 0.03), X(r1 - r0), X(0.06))
-  // Where the ball comes down on it, on 190: a flash along the rail.
-  const since = T - LAND
-  if (since >= 0 && since < 0.4) glow(p, X(LAND2[0]), X(SURF), X(0.35), DARK.amber, 0.8 * knock(since, 0.1))
-}
-
-/* ------------------------------------------------------------------ the room */
-
-function spine(p: p5, c: Ctx, x: number, foot: number, w: number, h: number, color: string, lean: number, ink: string): void {
-  const { k } = c
-  p.push()
-  p.translate(x * k, foot * k)
-  p.rotate(lean)
-  solid(p, ink, c.weight * 0.9, color)
-  p.rect(0, (-h / 2) * k, w * k, h * k, 0.008 * k)
-  outline(p, ink, c.weight * 0.55)
-  p.line((-w / 2) * k, (-h + 0.035) * k, (w / 2) * k, (-h + 0.035) * k)
-  p.line((-w / 2) * k, -0.035 * k, (w / 2) * k, -0.035 * k)
-  if (h > 0.26) p.rect(0, -h * 0.55 * k, w * 0.5 * k, 0.05 * k)
-  p.pop()
-}
-
-/** Murph's room at dusk, seen from the front as the show began: the case and what stays on it, the toy, the watch. The top row, the lander and the dusk itself are drawn over the ghost (`drawOver`). */
-function drawRoom(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
-  const { k } = c
-  const X = (v: number) => v * k
-  const ink = FARM.ink
-  const w = c.weight
-  const CAP = SHELF_TOP - 0.6
-  const MIDY = SHELF_TOP + 0.46
-  const WALL_L = -1.0
-  const CEIL = -1.78
-  const WIN = { x0: 2.95, x1: 3.8, y0: -1.38, y1: -0.5 }
-  p.push()
-  p.translate(X(BF[0]), X(BF[1]))
-  // Outside, dusk; the room, its plaster and paper; the floor and the ceiling.
-  const fx0 = f.x0 - BF[0] - 0.5
-  const fx1 = f.x1 - BF[0] + 0.5
-  const fy0 = f.y0 - BF[1] - 0.5
-  const fy1 = f.y1 - BF[1] + 0.5
-  p.noStroke()
-  p.fill(mixHex(DARK.deep, DARK.violet, 0.25))
-  p.rect(X((fx0 + fx1) / 2), X((fy0 + fy1) / 2), X(fx1 - fx0), X(fy1 - fy0))
-  // The house round the room: the attic and its roof over the ceiling, the ground floor under the boards.
-  p.fill(DUST.shade)
-  p.triangle(X(WALL_L - 0.2), X(CEIL), X(3.65), X(-3.25), X(8.5), X(CEIL))
-  p.fill(DUST.wall)
-  p.rect(X((WALL_L + fx1) / 2), X((CEIL + fy1) / 2), X(fx1 - WALL_L), X(fy1 - CEIL))
-  p.stroke(alpha(p, DUST.shade, 0.55))
-  p.strokeWeight(Math.max(1, k * 0.012))
-  for (let x = WALL_L + 0.2; x < fx1; x += 0.22) p.line(X(x), X(CEIL + 0.05), X(x), X(FLOOR - 0.02))
-  // The window: the last of the day in it.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const sky = ctx.createLinearGradient(0, X(WIN.y0), 0, X(WIN.y1))
-  sky.addColorStop(0, DARK.deep)
-  sky.addColorStop(0.7, mixHex(DARK.violet, DARK.deep, 0.45))
-  sky.addColorStop(1, mixHex(DUST.corn, DARK.violet, 0.45))
-  ctx.fillStyle = sky
-  ctx.fillRect(X(WIN.x0), X(WIN.y0), X(WIN.x1 - WIN.x0), X(WIN.y1 - WIN.y0))
-  outline(p, ink, w)
-  p.rect(X((WIN.x0 + WIN.x1) / 2), X((WIN.y0 + WIN.y1) / 2), X(WIN.x1 - WIN.x0), X(WIN.y1 - WIN.y0))
-  p.line(X((WIN.x0 + WIN.x1) / 2), X(WIN.y0), X((WIN.x0 + WIN.x1) / 2), X(WIN.y1))
-  p.line(X(WIN.x0), X((WIN.y0 + WIN.y1) / 2), X(WIN.x1), X((WIN.y0 + WIN.y1) / 2))
-  solid(p, ink, w * 0.8, DUST.teal)
-  for (const sd of [-1, 1]) {
-    const x = sd < 0 ? WIN.x0 : WIN.x1
-    p.beginShape()
-    p.vertex(X(x - sd * 0.02), X(WIN.y0 - 0.1))
-    p.vertex(X(x + sd * 0.16), X(WIN.y0 - 0.1))
-    p.vertex(X(x + sd * 0.04), X(WIN.y1 - 0.25))
-    p.vertex(X(x + sd * 0.1), X(WIN.y1 + 0.08))
-    p.vertex(X(x - sd * 0.02), X(WIN.y1 + 0.08))
-    p.endShape(p.CLOSE)
-  }
-  solid(p, ink, w, DUST.wood)
-  p.rect(X((WIN.x0 + WIN.x1) / 2), X(WIN.y1 + 0.03), X(WIN.x1 - WIN.x0 + 0.16), X(0.06))
-  p.rect(X((WALL_L + fx1) / 2), X(FLOOR + 0.08), X(fx1 - WALL_L), X(0.16))
-  p.rect(X((WALL_L + fx1) / 2), X(CEIL + 0.06), X(fx1 - WALL_L), X(0.12))
-  solid(p, ink, w, DUST.bone)
-  p.rect(X(WALL_L), X((CEIL + fy1) / 2), X(0.13), X(fy1 - CEIL))
-  // The roof's edge, cut, over the attic.
-  solid(p, ink, w, DUST.rust)
-  p.beginShape()
-  for (const [rx, ry] of [[WALL_L - 0.35, CEIL + 0.05], [3.65, -3.47], [8.65, CEIL + 0.05], [8.65, CEIL - 0.08], [3.65, -3.65], [WALL_L - 0.35, CEIL - 0.08]] as Pt[]) p.vertex(X(rx), X(ry))
-  p.endShape(p.CLOSE)
-
-  // The case, from the front.
-  const L = -0.45
-  const Rr = 2.0
-  solid(p, ink, w, DUST.shade)
-  p.rect(X((L + Rr) / 2), X((CAP + FLOOR) / 2), X(Rr - L), X(FLOOR - CAP))
-  solid(p, ink, w, DUST.wood)
-  for (const sx of [L + 0.035, Rr - 0.035]) p.rect(X(sx), X((CAP + FLOOR) / 2), X(0.07), X(FLOOR - CAP))
-  p.rect(X((L + Rr) / 2), X(CAP - 0.03), X(Rr - L + 0.1), X(0.07))
-  for (const y of [SHELF_TOP, MIDY]) p.rect(X((L + Rr) / 2), X(y + 0.025), X(Rr - L - 0.14), X(0.05))
-  p.rect(X((L + Rr) / 2), X(FLOOR - 0.04), X(Rr - L - 0.14), X(0.08))
-  const mid = [
-    [0.1, 0.3, DUST.denim], [0.09, 0.32, DUST.bone], [0.12, 0.28, DUST.rust], [0.08, 0.3, DUST.sage], [0.1, 0.34, DUST.corn],
-    [0.11, 0.3, DUST.teal], [0.09, 0.26, DUST.rust], [0.12, 0.33, DUST.bone],
-  ] as const
-  let x = L + 0.1
-  for (const [bw, bh, col] of mid) {
-    spine(p, c, x + bw / 2, MIDY, bw, bh, col, 0, ink)
-    x += bw + 0.01
-  }
-  spine(p, c, x + 0.17, MIDY, 0.1, 0.3, DUST.sage, 0.45, ink)
-  solid(p, ink, w, DUST.light)
-  p.rect(X(1.55), X(MIDY + 0.05 + 0.13), X(0.18), X(0.22), X(0.02))
-  outline(p, ink, w * 0.8)
-  for (const dx of [-0.04, 0.0, 0.05]) p.line(X(1.55 + dx), X(MIDY + 0.1), X(1.55 + dx * 1.8), X(MIDY - 0.02))
-  for (let j = 0; j < 3; j++) {
-    solid(p, ink, w, [DUST.teal, DUST.rust, DUST.corn][j])
-    p.rect(X(-0.1 + j * 0.03), X(FLOOR - 0.08 - 0.045 - j * 0.09), X(0.5 - j * 0.06), X(0.09))
-  }
-  solid(p, ink, w, DUST.sage)
-  p.rect(X(0.85), X(FLOOR - 0.08 - 0.13), X(0.4), X(0.26), X(0.01))
-  const BOOKS = [DUST.rust, DUST.teal, DUST.corn, DUST.denim, DUST.sage, DUST.bone]
-  for (let j = 0; j < 5; j++) spine(p, c, 1.3 + j * 0.1, FLOOR - 0.08, 0.09, 0.28 - (j % 2) * 0.03, BOOKS[(j + 2) % 6], 0, ink)
-  // Murph's toy, where it stood in the first frame.
-  drawToy(p, { k, ink, weight: w }, TOY_HOME[0], TOY_HOME[1] + 2)
-  // The watch on the cap.
-  drawWatch(p, c, T, 1.45, CAP - 0.11, ink)
-  p.pop()
-}
-
-/** The lander model from the front, as the opening draws it: knocked at `since` = 0, over the edge and down on its side (shelf cells). */
-function landerFront(p: p5, c: { k: number; ink: string; weight: number }, x0: number, since: number): void {
-  const { k, ink, weight } = c
-  let x = x0
-  let y = SHELF_TOP
-  let a = 0
-  if (since >= 0) {
-    const tip = 0.25
-    if (since < tip) a = -0.5 * easeOutCubic(since / tip)
-    else {
-      const f = since - tip
-      const T = dropTime(FLOOR - SHELF_TOP)
-      const u = Math.min(1, f / T)
-      x = x0 - 0.18 * u
-      y = SHELF_TOP + Math.min(FLOOR - SHELF_TOP, 0.5 * G_EARTH * f * f)
-      a = -0.5 - (Math.PI / 2 - 0.5 + 0.35) * easeInOutSine(u)
-      if (f > T) a += Math.exp(-(f - T) / 0.1) * Math.sin((f - T) * 30) * 0.12
-    }
-  }
-  p.push()
-  p.translate(x * k, y * k)
-  p.rotate(a)
-  outline(p, ink, weight * 0.7)
-  for (const s of [-1, 1]) {
-    p.line(s * 0.04 * k, -0.07 * k, s * 0.09 * k, 0)
-    p.line(s * 0.11 * k, 0, s * 0.07 * k, 0)
-  }
-  solid(p, ink, weight * 0.8, DUST.corn)
-  p.rect(0, -0.08 * k, 0.12 * k, 0.06 * k)
-  solid(p, ink, weight * 0.8, DUST.bone)
-  p.beginShape()
-  p.vertex(-0.05 * k, -0.11 * k)
-  p.vertex(0.05 * k, -0.11 * k)
-  p.vertex(0.035 * k, -0.17 * k)
-  p.vertex(-0.035 * k, -0.17 * k)
-  p.endShape(p.CLOSE)
-  outline(p, ink, weight * 0.6)
-  p.line(0, -0.17 * k, 0, -0.2 * k)
-  p.pop()
-}
-
-/**
- * The top row from the front, `since` seconds after each book was pushed
- * (negative: still standing), the lander `lander` seconds after it went, and
- * a thud of dust where each lands: in the shelf's cells. With everything long
- * gone it is the room as the opening left it, which is how Act II's replica
- * finds it (`act2/replica.ts`).
- */
-export function drawFallen(p: p5, c: { k: number; ink: string; weight: number }, lander: number, since: (i: number) => number): void {
-  const { k, ink, weight } = c
-  const X = (v: number) => v * k
-  landerFront(p, c, LANDER_X, lander)
-  for (let i = 0; i < RESTS.length; i++) {
-    const b = RESTS[i]
-    const at = bookAt(b, since(i))
-    p.push()
-    p.translate(X(at.x), X(at.y))
-    p.rotate(at.a)
-    frontBook(p, k, ink, weight, 0, b.h / 2, b.w, b.h, b.color)
-    p.pop()
-  }
-  p.noStroke()
-  for (let i = 0; i < RESTS.length; i++) {
-    const b = RESTS[i]
-    const s = since(i) - 0.12 - dropTime(b.land[1] - (SHELF_TOP - b.h / 2))
-    if (s < 0 || s > 0.6) continue
-    const u = s / 0.6
-    p.fill(alpha(p, DUST.shade, 0.7 * (1 - u)))
-    for (const side of [-1, 1]) p.circle(X(b.land[0] + side * (b.h / 2 + 0.05 + u * 0.12)), X(b.land[1] + b.w / 2 - 0.02 - u * 0.04), X(0.05 + u * 0.05))
-  }
-}
-
-/** A book standing with its foot at `(x, foot)`, spine out, as the opening draws it. */
-function frontBook(p: p5, k: number, ink: string, weight: number, x: number, foot: number, w: number, h: number, color: string): void {
-  p.push()
-  p.translate(x * k, foot * k)
-  solid(p, ink, weight * 0.9, color)
-  p.rect(0, (-h / 2) * k, w * k, h * k, 0.008 * k)
-  outline(p, ink, weight * 0.55)
-  p.line((-w / 2) * k, (-h + 0.035) * k, (w / 2) * k, (-h + 0.035) * k)
-  p.line((-w / 2) * k, -0.035 * k, (w / 2) * k, -0.035 * k)
-  if (h > 0.26) p.rect(0, -h * 0.55 * k, w * 0.5 * k, 0.05 * k)
-  p.pop()
-}
-
 /* ------------------------------------------------------------------ over the ball */
 
 function drawOver(p: p5, s: GargState, c: Ctx): void {
@@ -1303,29 +1102,21 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
   const at = laneAt(s.lane, c.t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   if (room > 0.002) {
+    // The room's front (the dumbwaiter's wall, the toy), and its night.
     ctx.save()
     ctx.globalAlpha = room
-    // The row in front of the ghost, the lander, the books as it pushes them, and where they come down.
     p.push()
-    p.translate(X(BF[0]), X(BF[1]))
-    drawFallen(p, { k, ink: FARM.ink, weight: c.weight }, T - PUSH, (i) => T - PUSHES[i])
+    p.translate(X(EXIT[0]), X(EXIT[1]))
+    overRoom(p, farm(c), T - ACT2)
+    nightOver(p, farm(c), 1)
     p.pop()
-    // Dusk: darkest away from the ghost. Its own light keeps the dark off it wherever it is, as at the start.
-    const f = frame(p, k)
-    const gx = X(at.x)
-    const gy = X(at.y)
-    const dusk = ctx.createRadialGradient(gx, gy, X(0.12), gx, gy, X(3.2))
-    dusk.addColorStop(0, rgba(DARK.deep, 0.1))
-    dusk.addColorStop(0.25, rgba(DARK.deep, 0.62))
-    dusk.addColorStop(1, rgba(DARK.deep, 0.92))
-    ctx.fillStyle = dusk
-    ctx.fillRect(X(f.x0 - 0.5), X(f.y0 - 0.5), X(f.x1 - f.x0 + 1), X(f.y1 - f.y0 + 1))
     ctx.restore()
   }
-  // The ghost gives off a little light of its own, as it did at the start; a little more on each push.
-  if (T >= PUSH) {
-    const push = Math.max(0, shoveAt(T)) / 0.07
-    const a = smooth(T, PUSH, PUSH + 0.35) * (0.38 + 0.12 * room + 0.2 * push)
+  // While he is a ghost he gives off a little light of its own, a little more on each push.
+  const ghost = smooth(T, HORIZON, HORIZON + 0.35) * (1 - smooth(T, WAKE - 0.05, WAKE + 0.25))
+  if (ghost > 0.005) {
+    const push = Math.max(0, -shoveAt(T)) / 0.07
+    const a = ghost * (0.4 + 0.25 * push)
     const x = X(at.x)
     const y = X(at.y)
     const g = ctx.createRadialGradient(x, y, 0, x, y, 0.45 * k)
@@ -1334,5 +1125,14 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     g.addColorStop(1, 'rgba(255, 236, 190, 0)')
     ctx.fillStyle = g
     ctx.fillRect(x - 0.45 * k, y - 0.45 * k, 0.9 * k, 0.9 * k)
+  }
+  // He wakes a ball: a ring goes out from him, faint, in the dark room.
+  const since = T - WAKE
+  if (since >= 0 && since < 1.0) {
+    const u = since / 1.0
+    p.noFill()
+    p.stroke(alpha(p, DUST.light, 0.7 * (1 - u) * (1 - u)))
+    p.strokeWeight(Math.max(1, c.weight * 1.6 * (1 - u)))
+    p.circle(X(at.x), X(at.y), (0.32 + easeOutCubic(u) * 0.9) * k)
   }
 }

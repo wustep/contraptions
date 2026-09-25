@@ -36,7 +36,7 @@ export interface Built<S> {
    */
   riders?: Riders
   /**
-   * The gold ball, wherever this part shows her (`worlds.ts`, GOLD). Each span
+   * Brand, wherever this part shows her (`worlds.ts`, BRAND). Each span
    * is in show seconds and may run past the part's own slot (a truck parked at
    * the dam still has her in its cab while the hero is down in the field); at
    * any time at most one part in the show has her. Positions are in the part's
@@ -48,10 +48,10 @@ export interface Built<S> {
 /** See `Built.riders`. */
 export type Riders = (t: number, hero: ShowBall) => ShowBall[] | null
 
-/** Where the gold ball is: the ball's own fields but its id and, unless she has changed, its colour. */
+/** Where Brand is: the ball's own fields but its id and, unless she has changed, its colour. */
 export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
 
-/** A stretch of show time in which a part has the gold ball. */
+/** A stretch of show time in which a part has Brand. */
 export interface Company {
   from: number
   to: number
@@ -154,7 +154,7 @@ export interface Chain {
   shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
-  /** The parts' spans of the gold ball, in world cells. */
+  /** The parts' spans of Brand, in world cells. */
   company: Company[]
   /** Where the next link would enter, and when: for a chain carried on in another universe. */
   next: { col: number; row: number; begin: number; ball: BallState }

@@ -431,7 +431,7 @@ export const combine = part<CombineState>(
       { t: beat(93), cells: 6.3, hold: [2.4, -0.9], w: 0.7 },
       { t: beat(97), cells: 6.3, hold: [3.4, -0.9], w: 0.65 },
       { t: beat(99), cells: 5.9, hold: [s.bale - 0.4, -0.4], w: 0.55 },
-      { t: slot.end, cells: 5.4, off: [1.0, -0.8] },
+      // (No key at the hand-off: from the bale the frame eases out along with him to the gate's first framing, in one move.)
     ]
     return keys
   },

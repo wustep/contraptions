@@ -5,7 +5,7 @@ import { FLOOR, laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../..
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_LOW, hop } from '../physics'
-import { AGED, BALL, DARK, GOLD } from '../worlds'
+import { AGED, BALL, BRAND, DARK } from '../worlds'
 
 /**
  * Miller's world, and the one who waits.
@@ -21,9 +21,9 @@ import { AGED, BALL, DARK, GOLD } from '../worlds'
  * cartwheels, a slab planted in the water on every tick. The buoys' lamps
  * keep the same tick.
  *
- * Up in orbit the ring keeps another time. The gold ball the trapdoor left
+ * Up in orbit the ring keeps another time. Brand, whom the trapdoor left
  * behind runs round the inside of it once an eighth, trips a catch every
- * lap, and the catch cuts a mark on the tally beside it; her gold goes to
+ * lap, and the catch cuts a mark on the tally beside it; her blue goes to
  * the grey of the years. On the twenty-third mark the catch locks and holds
  * her, and the ring goes from the sky.
  *
@@ -310,10 +310,10 @@ const stationOn = (t: number): number => 1 - smooth(t, beat(178.3), beat(179.6))
 /** When the ring is gone from the sky, and her with it. */
 const GONE = beat(179.6)
 
-/** Where she is on her lap, and her colour: gold going to the grey of the years by the lock. */
+/** Where she is on her lap, and her colour: blue going to the grey of the years by the lock. */
 function waitsAt(t: number): { x: number; y: number; angle: number; color: string } {
   const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET
-  const color = mixHex(GOLD, AGED, clamp((t - OUT) / (LATCH - OUT)))
+  const color = mixHex(BRAND, AGED, clamp((t - OUT) / (LATCH - OUT)))
   return { x: STATION[0] + PATH * Math.cos(a), y: STATION[1] + PATH * Math.sin(a), angle: a - Math.PI / 2, color }
 }
 
