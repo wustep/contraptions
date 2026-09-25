@@ -588,7 +588,9 @@ function drawClub(p: p5, c: Ctx, T: number): void {
   drawCrowd(p, c, T)
   // The spot on the piano's bass end: the pianist's, then Seb's.
   beam(p, c, [ROOM.lamp[0], ROOM.lamp[1] + 0.25], [1.6, 0.9], 5.6, 0.17 * light, PAINT.beam)
-  drawPiano(p, cr, true)
+  // The dream piano's strings alight with the room: a faint shimmer across the whole fan that grows with the swell,
+  // so the peak reads on the instrument itself, with no note to strike.
+  drawPiano(p, cr, true, { strikes: [], now: T, light, shimmer: 0.15 + 0.6 * Math.max(0, light - 0.2) })
   p.pop()
 
   drawBench(p, c, T)
