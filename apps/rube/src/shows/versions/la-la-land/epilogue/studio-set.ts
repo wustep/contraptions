@@ -450,7 +450,7 @@ function drawBayTwo(p: p5, T: number, c: Ctx): void {
     p.push()
     p.translate(X(x0 + PANEL_W / 2), X(FLOOR))
     p.rotate(panelRock(i, T))
-    flat(p, c, -PANEL_W / 2, -h, PANEL_W, h, PAINT.violet, PAINT.sea)
+    backdrop(p, c, i, PANEL_W, h)
     p.pop()
   }
   const fl = flash(T)
@@ -510,6 +510,105 @@ function drawBayTwo(p: p5, T: number, c: Ctx): void {
   p.rect(X(FAN_X + 0.02), X(FLOOR - 0.32), X(0.14), X(0.2), X(0.02))
   outline(p, ink, weight)
   p.line(X(FAN_X + 0.02), X(FLOOR - 0.32), X(FAN_X + 0.02 + 0.16 * (1 - thrown)), X(FLOOR - 0.32 - 0.16 * thrown - 0.06 * (1 - thrown)))
+}
+
+/**
+ * The backlot's stock of painted backdrops, standing in a row, one picture to a flat in flat colour and simple
+ * shapes: a sunset, a night sky, a sea with one wave, a skyline, a hill with one tree, a desert, a snowfield,
+ * clouds, a lake with a moon, a red curtain, a plain violet one. Drawn with the flat's foot at (0, 0).
+ */
+function backdrop(p: p5, c: Ctx, i: number, w: number, h: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const skies: [string, string][] = [
+    [PAINT.violet, PAINT.rose],
+    [PAINT.deep, PAINT.violet],
+    [PAINT.cream, PAINT.pink],
+    [PAINT.violet, PAINT.rose],
+    [PAINT.sea, PAINT.cream],
+    [PAINT.rose, PAINT.gold],
+    [PAINT.violet, PAINT.cream],
+    [PAINT.sea, PAINT.cream],
+    [PAINT.deep, PAINT.violet],
+    [PAINT.red, PAINT.red],
+    [PAINT.violet, PAINT.deep],
+  ]
+  const [top, bottom] = skies[i % skies.length]
+  flat(p, c, -w / 2, -h, w, h, top, bottom, false)
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(-w / 2), X(-h), X(w), X(h))
+  ctx.clip()
+  p.noStroke()
+  const fill = (col: string, a = 1) => {
+    if (a < 1) p.fill(alpha(p, col, a))
+    else p.fill(col)
+  }
+  switch (i % skies.length) {
+    case 0: // A sun low in the sunset.
+      fill(PAINT.gold)
+      p.circle(X(0.05 * w), X(-0.3 * h), X(0.44 * w))
+      break
+    case 1: // A few stars.
+      fill(PAINT.cream)
+      for (let j = 0; j < 6; j++) p.circle(X((hash(j, 21) - 0.5) * 0.85 * w), X(-(0.3 + 0.6 * hash(j, 22)) * h), X(0.035 * w))
+      break
+    case 2: // A sea, and one wave curling.
+      fill(PAINT.sea)
+      p.rect(0, X(-0.2 * h), X(w), X(0.4 * h))
+      fill(PAINT.cream)
+      p.arc(X(-0.05 * w), X(-0.4 * h), X(0.55 * w), X(0.26 * h), Math.PI, Math.PI * 2, p.CHORD)
+      fill(PAINT.sea)
+      p.circle(X(0.14 * w), X(-0.46 * h), X(0.2 * w))
+      break
+    case 3: // A skyline at dusk.
+      fill(PAINT.deep)
+      for (const [cx, tw, th] of [[-0.36, 0.2, 0.38], [-0.12, 0.16, 0.55], [0.1, 0.22, 0.3], [0.33, 0.16, 0.46]]) p.rect(X(cx * w), X((-th * h) / 2), X(tw * w), X(th * h))
+      break
+    case 4: // A green hill with one tree.
+      fill(PAINT.leaf)
+      p.ellipse(0, X(0.06 * h), X(1.7 * w), X(0.62 * h))
+      fill(PAINT.timber)
+      p.rect(X(0.18 * w), X(-0.31 * h), X(0.05 * w), X(0.14 * h))
+      fill(PAINT.sea)
+      p.circle(X(0.18 * w), X(-0.44 * h), X(0.3 * w))
+      break
+    case 5: // Dunes.
+      fill(PAINT.timber, 0.6)
+      p.ellipse(X(0.25 * w), X(0.02 * h), X(1.3 * w), X(0.5 * h))
+      fill(PAINT.gold)
+      p.ellipse(X(-0.3 * w), X(0.08 * h), X(1.4 * w), X(0.5 * h))
+      break
+    case 6: // A snowfield, a drift, one fir.
+      fill(PAINT.cream)
+      p.rect(0, X(-0.16 * h), X(w), X(0.32 * h))
+      p.ellipse(X(0.2 * w), X(-0.3 * h), X(0.9 * w), X(0.16 * h))
+      fill(PAINT.sea)
+      p.triangle(X(-0.28 * w), X(-0.33 * h), X(-0.2 * w), X(-0.56 * h), X(-0.12 * w), X(-0.33 * h))
+      break
+    case 7: // Clouds.
+      fill(PAINT.cream)
+      for (const [cx, cy, r] of [[-0.2, -0.62, 0.16], [-0.02, -0.66, 0.2], [0.18, -0.6, 0.15], [0.12, -0.3, 0.13], [0.3, -0.33, 0.16]]) p.circle(X(cx * w), X(cy * h), X(2 * r * w))
+      break
+    case 8: // A lake with a moon on it.
+      fill(PAINT.cream)
+      p.circle(X(-0.2 * w), X(-0.66 * h), X(0.28 * w))
+      fill(PAINT.sea)
+      p.rect(0, X(-0.15 * h), X(w), X(0.3 * h))
+      fill(PAINT.cream, 0.6)
+      p.ellipse(X(-0.2 * w), X(-0.15 * h), X(0.07 * w), X(0.2 * h))
+      break
+    case 9: // A red curtain: its folds.
+      fill(PAINT.deep, 0.28)
+      for (let j = 0; j < 4; j++) p.rect(X((-0.3 + j * 0.2) * w), X(-h / 2), X(0.07 * w), X(h))
+      break
+    default:
+      break
+  }
+  ctx.restore()
+  outline(p, ink, weight * 0.7)
+  p.rect(0, X(-h / 2), X(w), X(h))
 }
 
 /* ------------------------------------------------------------------ over the balls */
