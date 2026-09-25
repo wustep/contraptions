@@ -557,7 +557,9 @@ const closeAt = (T: number): number => smooth(T, CLOSE - 0.05, CLOSE + 1.05)
 const backAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE + 0.1, CLOSE + 0.75))
 const latticeAt = (T: number): number => insideAt(T) * (1 - smooth(T, CLOSE + 0.35, CLOSE + 1.15))
 /** How far the room has opened round the warm light, as a radius (cells): shut, then out past the frame by the time he is down. */
-const openAt = (T: number): number => (T <= OPEN0 ? 0 : 0.12 + 7 * easeInQuad(clamp((T - OPEN0) / (IN_BED + 0.1 - OPEN0))))
+const openAt = (T: number): number => (T <= OPEN0 ? 0 : 7.12 * easeInQuad(clamp((T - OPEN0) / (IN_BED + 0.1 - OPEN0))))
+/** How much of the room shows through the opening: none while it is small enough to read as a thing beside him. */
+const roomShows = (T: number): number => (T >= IN_BED + 0.1 ? 1 : smooth(openAt(T), 0.25, 0.9))
 /** The room is fully there (no window onto it) once it has opened past the frame. */
 const roomAt = (T: number): number => (T >= IN_BED + 0.1 ? 1 : T > OPEN0 ? 0.999 : 0)
 
@@ -1017,8 +1019,9 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
   if (dv > 0 && lat > 0.002) drawPassing(p, c, T, lat)
   drawStreaks(p, c, T, f)
   drawWarmth(p, c, T)
-  if (roomAt(T) > 0) {
+  if (roomAt(T) > 0 && roomShows(T) > 0.002) {
     ctx.save()
+    ctx.globalAlpha *= roomShows(T)
     if (T < IN_BED + 0.1) {
       ctx.beginPath()
       ctx.arc(X(OPENING[0]), X(OPENING[1]), X(openAt(T)), 0, TAU)
@@ -1145,16 +1148,27 @@ function drawWarmth(p: p5, c: Ctx, T: number): void {
   const { k } = c
   const X = (v: number) => v * k
   const grow = smooth(T, GLOW_ON, IN_BED)
-  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.25 + 1.6 * grow), DUST.light, 0.55 * on)
-  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.08 + 0.3 * grow), '#FFF6DE', 0.8 * on)
-  // The rim of the opening, soft and warm, going out past the frame.
+  // A light, not a thing: wide and soft, no bright core the size of a ball beside him.
+  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.4 + 1.6 * grow), DUST.light, 0.5 * on)
+  glow(p, X(OPENING[0]), X(OPENING[1]), X(0.3 + 0.5 * grow), '#FFF6DE', 0.35 * on)
+}
+
+/** The opening's edge, feathered into the dark: drawn inside its clip, last, so the room fades out to it and has no rim. */
+function featherOpening(p: p5, c: Ctx, T: number): void {
   const r = openAt(T)
-  if (r > 0.05 && T < IN_BED + 0.1) {
-    p.noFill()
-    p.stroke(alpha(p, DUST.light, 0.5 * on * (1 - smooth(r, 2, 6))))
-    p.strokeWeight(Math.max(1, X(0.03)))
-    p.circle(X(OPENING[0]), X(OPENING[1]), X(2 * r))
-  }
+  if (r <= 0.05 || T >= IN_BED + 0.1) return
+  const X = (v: number) => v * c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [ox, oy] = OPENING
+  const inner = Math.max(0, r - Math.min(0.9, 0.2 + 0.35 * r))
+  ctx.save()
+  const g = ctx.createRadialGradient(X(ox), X(oy), X(inner), X(ox), X(oy), X(r))
+  g.addColorStop(0, rgba(VOID.bg, 0))
+  g.addColorStop(0.9, rgba(VOID.bg, 1))
+  g.addColorStop(1, rgba(VOID.bg, 1))
+  ctx.fillStyle = g
+  ctx.fillRect(X(ox - r), X(oy - r), X(2 * r), X(2 * r))
+  ctx.restore()
 }
 
 /** The room is the farm's, drawn in the farm's ink: the replica's own drawing, in the replica's frame (its origin is our exit). */
@@ -1478,9 +1492,10 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
   const room = roomAt(T)
   const at = laneAt(s.lane, c.t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  if (room > 0.002) {
+  if (room > 0.002 && roomShows(T) > 0.002) {
     // The room's front (the dumbwaiter's wall, the toy), and its night: inside the opening while it opens.
     ctx.save()
+    ctx.globalAlpha *= roomShows(T)
     if (T < IN_BED + 0.1) {
       ctx.beginPath()
       ctx.arc(X(OPENING[0]), X(OPENING[1]), X(openAt(T)), 0, TAU)
@@ -1491,6 +1506,7 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
     overRoom(p, farm(c), T - ACT2)
     nightOver(p, farm(c), 1)
     p.pop()
+    featherOpening(p, c, T)
     ctx.restore()
   }
   // While he is a ghost he gives off a little light of its own, a little more on each book he pushes (not on the watch).
