@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../src/core/draw'
 import { easeInQuad, easeInOutSine, easeOutQuad } from '../../../../../../../src/core/ease'
-import { laneAt, R, type Lane, type Pt } from '../../../../parts'
+import { laneAt, mixHex, R, type Lane, type Pt } from '../../../../parts'
 import { alpha, box, carried, hash, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from './kit'
 import { CHORUS, STRUCK } from './music'
 import { beam, flat, glow } from './rig'
@@ -102,6 +102,16 @@ const X1 = 21
 /** The streetlamps along the pavement, and the neon sign projecting over it before the stairwell. */
 const LAMPS = [1.4, 4.6, 7.0]
 const LAMP_H = 2.05
+/**
+ * The sconces down the stairwell: on its back wall at the stairhead, over the turn, between the flights, and over
+ * the door; and the show time each comes up (null: on throughout), a little before the two reach the flight above it.
+ */
+const SCONCES: [number, number, number | null][] = [
+  [SH + 0.5, 0.95, 280.7],
+  [WELL_R - 0.5, 1.65, 282.0],
+  [SH + 2.2, 3.55, 286.3],
+  [DOOR_R + 0.6, DOOR_TOP - 0.55, null],
+]
 const SIGN: Pt = [9.0, -2.55]
 
 /* ------------------------------------------------------------------ the mechanisms' clocks */
@@ -465,9 +475,9 @@ function drawStairwell(p: p5, c: Ctx, T: number): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
   p.push()
-  // The well, cut into the ground.
+  // The well, cut into the ground: its back wall a shade of warmth over the paper, so it reads as a lit stairwell.
   p.noStroke()
-  p.fill(DREAM.bg)
+  p.fill(mixHex(PAINT.deep, PAINT.violet, 0.2))
   p.rect(X((SH + WELL_R) / 2), X((R + SILL) / 2), X(WELL_R - SH), X(SILL - R))
   // The dark under each flight, then the treads.
   const flight = (x0: number, y0: number, x1: number, y1: number) => {
@@ -515,22 +525,33 @@ function drawStairwell(p: p5, c: Ctx, T: number): void {
   outline(p, ink, weight * 0.8)
   p.line(X(WELL_R), X(R), X(WELL_R), X(HALF_Y + R))
   p.line(X(SH), X(R), X(SH), X(CEIL))
-  // A lamp over the door, on the well's wall: the one light down here until the door opens.
-  const lx = DOOR_R + 0.6
-  const ly = DOOR_TOP - 0.55
-  glow(p, c, lx, ly + 0.1, 1.3, 0.4, PAINT.gold)
-  solid(p, ink, weight * 0.7, PAINT.deep)
-  p.quad(X(lx - 0.2), X(ly - 0.1), X(lx + 0.2), X(ly - 0.1), X(lx + 0.14), X(ly + 0.12), X(lx - 0.14), X(ly + 0.12))
-  p.line(X(lx), X(ly - 0.1), X(lx), X(ly - 0.3))
-  p.noStroke()
-  p.fill(PAINT.gold)
-  p.ellipse(X(lx), X(ly + 0.12), X(0.26), X(0.06))
+  // Sconces on the well's wall, one at each turn of the switchback, each coming up ahead of the two as they reach
+  // the flight above it, so the well lights stepwise down to the door; the one over the door is on throughout.
+  for (const [sx, sy, from] of SCONCES) sconce(p, c, sx, sy, from === null ? 1 : smooth(T, from, from + 1.2))
   // The club's light through the open door, up the well: by how much of the doorway the leaf has cleared.
   const open = 1 - Math.cos((doorOpen(T) * Math.PI) / 2)
   if (open > 0.01) {
     beam(p, c, [DOOR_R + 0.1, SILL - 1.0], [WELL_R + 0.4, HALF_Y - 1.4], 3.4, 0.34 * open, PAINT.beam)
     glow(p, c, DOOR_R + 0.35, SILL - 0.9, 1.6, 0.4 * open, PAINT.beam)
   }
+  p.pop()
+}
+
+/** A wall sconce at (x, y): a small shade on its bracket, and when lit a warm glow and a cone down the wall and steps. */
+function sconce(p: p5, c: Ctx, x: number, y: number, lit: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  p.push()
+  if (lit > 0.01) {
+    glow(p, c, x, y + 0.1, 1.15, 0.4 * lit, PAINT.gold)
+    beam(p, c, [x, y + 0.12], [x, y + 1.7], 1.5, 0.13 * lit, PAINT.gold)
+  }
+  solid(p, ink, weight * 0.7, PAINT.deep)
+  p.quad(X(x - 0.2), X(y - 0.1), X(x + 0.2), X(y - 0.1), X(x + 0.14), X(y + 0.12), X(x - 0.14), X(y + 0.12))
+  p.line(X(x), X(y - 0.1), X(x), X(y - 0.3))
+  p.noStroke()
+  p.fill(alpha(p, PAINT.gold, 0.25 + 0.75 * lit))
+  p.ellipse(X(x), X(y + 0.12), X(0.26), X(0.06))
   p.pop()
 }
 

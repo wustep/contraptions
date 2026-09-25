@@ -118,7 +118,9 @@ export const piano = part<PianoState>(
     }
   },
   (slot) => [
-    { t: slot.begin, cells: 2.6, off: [0.3, -0.42] },
+    // The first frame is the room: the piano in its lamp, and Mia at her table across the floor. Through the sparse
+    // intro the camera comes in on the keys, arriving as the theme begins; the same wide comes back for the chords.
+    { t: slot.begin, cells: 10.2, hold: [8.4, -1.2], w: 1 },
     { t: THEME, cells: 3.0, off: [0.35, -0.55] },
     { t: 33.72, cells: 3.6, off: [0.45, -0.7] },
     { t: 52.0, cells: 4.2, off: [0.6, -0.8] },
