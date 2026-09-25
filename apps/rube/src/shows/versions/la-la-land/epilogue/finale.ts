@@ -204,29 +204,28 @@ export const finale = part<FinaleState>(
     }
   },
   (slot) => [
-    // Tight on him at the bass end of the keys, through the decay and the four notes.
+    // Tight on him at the bass end of the keys (the match cut's hold), a slow push in through the decay, and the four notes.
     { t: slot.begin, cells: 3, hold: [0.35, -0.5], w: 1 },
-    { t: NOTES[3], cells: 3, hold: [0.35, -0.5], w: 1 },
-    // The look: the room, the two of them at the table, in one pull-back; held until she rises.
+    { t: NOTES[0] - 0.05, cells: 2.7, hold: [0.3, -0.45], w: 1 },
+    { t: NOTES[3], cells: 2.65, hold: [0.3, -0.45], w: 1 },
+    // The look: the room, the two of them at the table, in one pull-back; then at once, slowly, in toward her table.
     { t: NOTES[3] + 1.7, cells: 11, hold: [8.4, -1.6], w: 1 },
-    { t: RISE, cells: 11, hold: [8.4, -1.6], w: 1 },
-    // In toward her table as she crosses, on her as she stops at the stairs and turns back.
     { t: RISE + 3.5, cells: 7, hold: [17.2, -0.7], w: 1 },
+    // On her as she stops at the stairs and turns back.
     { t: TURN_BACK, cells: 5.5, hold: [19.0, -0.5], w: 1 },
-    { t: TURN_BACK + 1.2, cells: 5.5, hold: [19.0, -0.5], w: 1 },
-    // Across the room to him at the keys; his nod on arriving; held through the swell.
+    { t: TURN_BACK + 1.2, cells: 5.4, hold: [19.0, -0.5], w: 1 },
+    // Across the room to him at the keys; his nod on arriving; a slow push on him through the swell.
     { t: NOD - 0.4, cells: 5, hold: [1.2, -0.4], w: 1 },
-    { t: GO - 1.5, cells: 5, hold: [1.2, -0.4], w: 1 },
+    { t: GO - 1.5, cells: 4.4, hold: [1.1, -0.35], w: 1 },
     // Back to her for her turn to the stairs, and up and out with her.
     { t: GO, cells: 6.5, hold: [19.2, -1.0], w: 1 },
     { t: HER_STEPS[0], cells: 6.5, hold: [19.6, -1.2], w: 1 },
     { t: AT_DOOR, cells: 7, hold: [21.6, -2.4], w: 1 },
-    { t: OUT + 0.7, cells: 7, hold: [21.6, -2.4], w: 1 },
-    // Back to him for the last chords, and still under the credits (the lamp above the frame, the top third dark).
+    { t: OUT + 0.7, cells: 6.6, hold: [21.9, -2.5], w: 1 },
+    // Back to him for the last chords, and one slow pull-back through them to the end: the lamp above the frame while
+    // the credits are up (the top third dark), and in the frame to go down at the end.
     { t: BACK, cells: 8.5, hold: [7.0, -0.3], w: 1 },
-    { t: LAST_CHORDS[7], cells: 8.5, hold: [7.0, -0.3], w: 1 },
-    // The end: wide and still, the lamp in the frame to go down.
-    { t: LAST_CHORDS[8], cells: 10.5, hold: [8.3, -1.6], w: 1 },
+    { t: 440, cells: 9.5, hold: [7.7, -0.7], w: 1 },
     { t: slot.end, cells: 10.5, hold: [8.3, -1.6], w: 1 },
   ],
 )
