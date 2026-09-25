@@ -12,7 +12,7 @@ import {
   type Options,
 } from '../core/composition'
 import { createListbox } from './listbox'
-import { ICON, copyButton, createShell, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented } from './shell'
+import { ICON, copyButton, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented, type Shell } from './shell'
 import { EXPORT_SCALES, SPEEDS, speedLabel, type ViewState } from './view'
 
 export interface PanelHandlers {
@@ -38,6 +38,8 @@ export interface Panel {
   sync(comp: Composition, view: ViewState): void
   setProgress(u: number): void
   toggle(): void
+  /** Drop the window listeners. The shell that was handed in stays. */
+  destroy(): void
 }
 
 /** Mini diagrams for the layout picker, one rect list per layout name. */
@@ -68,7 +70,7 @@ function layoutGlyph(name: string): SVGSVGElement | undefined {
 }
 
 export function createPanel(
-  root: HTMLElement,
+  shell: Shell,
   initial: Options,
   initialView: ViewState,
   handlers: PanelHandlers,
@@ -76,7 +78,7 @@ export function createPanel(
   let lastView = initialView
   let lastComp: Composition | null = null
 
-  const shell = createShell(root, 'explorations')
+  const root = shell.body
   const section = (title: string, cls = '') => sectionIn(root, title, cls)
 
   const slider = (
@@ -120,7 +122,7 @@ export function createPanel(
       debounce = window.setTimeout(commit, debounceMs)
     })
     if (debounceMs != null) input.addEventListener('change', commit)
-    guardWheel(root, input)
+    guardWheel(shell.root, input)
     const node = field(labelText, input, readout)
     if (hint) node.title = hint
     return {
@@ -314,7 +316,7 @@ export function createPanel(
     scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
     handlers.onScrub(Number(scrub.value) / 1000)
   })
-  guardWheel(root, scrub)
+  guardWheel(shell.root, scrub)
   const play = el('button', { class: 'tbtn play', title: 'Play / pause (K)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
   const speedSeg = segmented(SPEEDS, speedLabel, (v) => handlers.onView({ speed: v }))
@@ -379,7 +381,8 @@ export function createPanel(
 
   let scrubbing = false
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
-  window.addEventListener('pointerup', () => { scrubbing = false })
+  const endScrub = () => { scrubbing = false }
+  window.addEventListener('pointerup', endScrub)
 
   const playIcon = icon(ICON.play)
   const pauseIcon = icon(ICON.pause)
@@ -431,6 +434,9 @@ export function createPanel(
     },
     toggle() {
       shell.toggle()
+    },
+    destroy() {
+      window.removeEventListener('pointerup', endScrub)
     },
   }
 }

@@ -1,7 +1,9 @@
 import '../../../../src/ui/styles.css'
 import { webmMime } from '../../../../src/core/capture'
 import { randomSeed } from '../../../../src/core/seed'
-import { ICON, copyButton, createShell, el, guardWheel, icon, section, seedCard, segmented } from '../../../../src/ui/shell'
+import { registerMode } from '../../../../src/ui/mode-host'
+import { modeFromPath } from '../../../../src/ui/mode-path'
+import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, type Shell } from '../../../../src/ui/shell'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../../src/ui/view'
 import { catalogOrder, createCatalog, type Entry } from '../catalog'
 import { createStage } from '../engine'
@@ -28,8 +30,12 @@ import { SHELVES, loadShelf, loadShelves, type Shelf } from './staging'
  * and the rest follow behind it; the sheet waits for them all.
  */
 
-const stage = document.getElementById('stage')!
-const panelRoot = document.getElementById('panel')!
+/** One visit. The chrome is already up; this fills the stage and the panel, and the return stops it. */
+export function start(shell: Shell): () => void {
+  const stage = document.getElementById('stage')!
+  const panelRoot = shell.body
+  let alive = true
+
 
 type ViewName = 'sheet' | 'piece' | 'world'
 
@@ -154,7 +160,7 @@ function mountNow(): void {
 function mount(): void {
   const ticket = ++mounting
   const go = (): void => {
-    if (ticket !== mounting) return
+    if (!alive || ticket !== mounting) return
     // A piece named without its shelf, or on the wrong one: every shelf is in by now, so look for it.
     if (solo && !stagedAs(world, solo)) {
       const home = [...shelves.values()].find((s) => s.staged[solo!])
@@ -213,6 +219,7 @@ const soloEntry = (): Entry | null => (solo && world ? { name: solo, world } : n
 function step(dir: 1 | -1): void {
   if (viewName() !== 'piece') return
   void everything.then(() => {
+    if (!alive) return
     const order = catalogOrder(sheetWorlds())
     const here = soloEntry()
     const i = order.findIndex((e) => e.name === here?.name && e.world === here?.world)
@@ -242,7 +249,9 @@ function setOverview(on: boolean): void {
   sync()
 }
 
-window.addEventListener('popstate', () => {
+const onPop = () => {
+  // A tab change is the host's. This listener only walks the sheet, and only while this visit is up.
+  if (!alive || modeFromPath(location.pathname) !== 'playground') return
   const left = soloEntry()
   const current = seed
   const from = viewName()
@@ -253,11 +262,10 @@ window.addEventListener('popstate', () => {
     lastPick = left
   }
   rebuild('keep')
-})
+}
+window.addEventListener('popstate', onPop)
 
 /* ------------------------------------------------------------------ panel */
-
-const shell = createShell(panelRoot, 'playground')
 
 const seedInput = el('input', { type: 'text', class: 'seed', spellcheck: 'false', autocomplete: 'off', 'aria-label': 'Seed', value: seed })
 seedInput.addEventListener('change', () => {
@@ -334,10 +342,11 @@ scrub.addEventListener('input', () => {
   scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
   seek(show.begin(i) + (Number(scrub.value) / 1000) * u.journey)
 })
-guardWheel(panelRoot, scrub)
+guardWheel(shell.root, scrub)
 let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
-window.addEventListener('pointerup', () => { scrubbing = false })
+const endScrub = () => { scrubbing = false }
+window.addEventListener('pointerup', endScrub)
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
 const speedSeg = segmented(SPEEDS, speedLabel, setSpeed)
@@ -437,7 +446,9 @@ let lastReadout = ''
 let lastTime = ''
 let lastPaper = ''
 let lastDims = ''
+let raf = 0
 function tick(): void {
+  if (!alive) return
   const t = now()
   const v = viewName()
   const here = show && v !== 'sheet' ? show.at(t) : null
@@ -481,13 +492,14 @@ function tick(): void {
     lastPaper = paper
     stage.style.setProperty('--paper', paper)
   }
-  requestAnimationFrame(tick)
+  raf = requestAnimationFrame(tick)
 }
-requestAnimationFrame(tick)
+raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
-window.addEventListener('keydown', (e) => {
+const onKey = (e: KeyboardEvent) => {
+  if (!alive) return
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
@@ -535,7 +547,8 @@ window.addEventListener('keydown', (e) => {
       seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break
   }
-})
+}
+window.addEventListener('keydown', onKey)
 
 writeUrl('keep')
 mount()
@@ -559,3 +572,16 @@ if (import.meta.env.DEV) {
     setOverview,
   }
 }
+
+  return () => {
+    alive = false
+    cancelAnimationFrame(raf)
+    window.removeEventListener('popstate', onPop)
+    window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('keydown', onKey)
+    view?.destroy()
+    if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).rube
+  }
+}
+
+registerMode('playground', start)
