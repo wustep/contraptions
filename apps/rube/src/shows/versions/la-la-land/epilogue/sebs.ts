@@ -199,7 +199,12 @@ export const sebs = part<SebsState>(
     // Off the bench onto the keys' left end, at rest as the music drops out.
     const last = end - at(LIFT1)
     const v = (2 * (BENCH_X - KEYS_L)) / last
-    segs.push(...route([{ at: at(LIFT1), p: [BENCH_X, KEY_Y] }, { at: end, p: [KEYS_L, KEY_Y], ramp: [v, 0] }]))
+    // From rest, gathering over the first half and easing to rest over the second: no kink off the bench.
+    segs.push(...route([
+      { at: at(LIFT1), p: [BENCH_X, KEY_Y] },
+      { at: at(LIFT1) + last / 2, p: [(BENCH_X + KEYS_L) / 2, KEY_Y], ramp: [0, v] },
+      { at: end, p: [KEYS_L, KEY_Y], ramp: [v, 0] },
+    ]))
     const lane: Lane = { segs, fire: at(DOOR_OPEN) }
 
     // Mia: a step behind him all the way (her delay grows where she hesitates and shrinks where she catches up), and
