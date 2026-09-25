@@ -386,9 +386,12 @@ export const hub = part<HubState>(
       // The ballpark's last framing (the house), then in on the car for the lurch.
       { t: slot.begin, cells: 4.8, hold: SP(0.2, -1), w: 1 },
       { t: GO + 0.5, cells: 5, off: lead(0.6) },
-      // The climb: the hops are the story, so near enough to read them.
-      { t: cue(162), cells: 5.4, off: lead(0.9) },
-      { t: cue(165), cells: 6.2, off: lead(1.3) },
+      // The climb: near enough to read the first hops; then the camera stops following and holds wide on the spoke, and
+      // the car climbs up through the frame, its lit landings trailing below it, while the station turns round it; then
+      // up with it into the float.
+      { t: cue(160), cells: 6, off: lead(1.0) },
+      { t: cue(162.5), cells: 10, hold: mid(cue(165.5), 0), w: 0.95 },
+      { t: cue(166.5), cells: 10, hold: mid(cue(165.5), 0), w: 0.95 },
       // The step on 168: out wide, the car halfway up the spoke and the hub ahead of it.
       { t: cue(168.5), cells: 8.6, hold: mid(cue(168.5), 0.42), w: 0.8 },
       { t: BRAKE, cells: 7, hold: mid(BRAKE, 0.45), w: 0.9 },

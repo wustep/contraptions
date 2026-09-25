@@ -105,8 +105,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     at(t) {
       // In from behind the truck as it pulls away, high, overtaking it and coming down to lead it along the road;
       // ahead of it all the way through the corn.
-      if (t < 35.4) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
-      const lead = smooth(t, 35.4, 40.6)
+      if (t < 33.9) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
+      const lead = smooth(t, 33.9, 38.6)
       // Ahead, a little closer every bar, until the dam: then it is over the edge and away down the valley.
       const close = smooth(t, DROP, beat(83))
       const gone = smooth(t, beat(84), beat(86) + 1.2)
@@ -166,7 +166,10 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   )
 
   const shots: Shot[] = [
-    { t: 0, cells: 2.9, hold: [0.75, -2.55] },
+    // Dawn in the room: a slow push in from the room onto the shelf through the piano's first bars, arriving as the
+    // first book goes (5.13).
+    { t: 0, cells: 3.7, hold: [1.35, -2.4] },
+    { t: 5.2, cells: 2.9, hold: [0.75, -2.55] },
     { t: 5.5, cells: 2.9, hold: [0.75, -2.55] },
     { t: 12.3, cells: 3.1, hold: [2.1, -2.55], w: 0.7 },
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
@@ -176,10 +179,11 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     { t: 28.4, cells: 5.2, off: [1.6, -0.2] },
     // He is at the wheel from here: the cab a little left of centre, the road (and the drone) ahead of it.
     { t: 31, cells: 4.6, off: [0.8, -0.45] },
-    { t: 36, cells: 6, off: [0.5, -1.2] },
-    { t: 41, cells: 5, off: [0.6, -0.55] },
-    { t: 44, cells: 4.7, off: [0.6, -0.4] },
-    { t: 52, cells: 4.7, off: [0.6, -0.4] },
+    // Out wide as it pulls away and the drone comes over; in with it along the road, a little ahead of it.
+    { t: 35, cells: 6, off: [0.9, -1.2] },
+    { t: 40, cells: 5, off: [1.0, -0.55] },
+    { t: 44, cells: 4.8, off: [1.1, -0.4] },
+    { t: 52, cells: 4.8, off: [1.1, -0.4] },
     { t: beat(86) - 0.3, cells: 5.4 },
     ...earth.shots,
     ...space.shots,

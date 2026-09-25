@@ -242,16 +242,15 @@ export function glassPickup(p: p5, k: number, ink: string, weight: number, pk: P
 const GROUND = 1 + FLOOR
 const BALL_V = BED_FLOOR + R
 
-const V = 2.6
-const ACCEL = 5
 const BRAKE = 8
 
 /** Where the ball drops off the bank, lands in the bed, and hits the cab. */
 const LAND = 30.401
 const BONK = 31.121
 const DOOR = 32.049
-const CRANKS = [33.135, 33.785, 34.389]
-const CATCH = 35.654
+/** Two turns of the starter on the organ's first chords, and it catches on the third: no waiting about. */
+const CRANKS = [33.135, 33.46]
+const CATCH = 33.785
 const LIGHTS = 40.031
 const REV = 41.123
 const STOP = beat(84)
@@ -304,14 +303,14 @@ interface TruckState {
 }
 
 /**
- * The drive, as a speed at show time `t` (cells a second), for a chase pace `vc`: it pulls away on the catch and
- * rolls off along the field road through the gather, picks up a little on the rev, floors it on the drop, and holds
- * the chase pace to the dam, where it stands on its brakes.
+ * The drive, as a speed at show time `t` (cells a second), for a chase pace `vc`: it pulls away hard on the catch,
+ * runs along the field road through the gather gaining all the way, picks up again on the rev, floors it on the drop,
+ * and holds the chase pace to the dam, where it stands on its brakes.
  */
-const PULL = 1.3
-const ROLL = 0.55
-const RUN_UP = 0.85
-const SHIFT = 1.15
+const PULL = 1.0
+const ROLL = 1.5
+const RUN_UP = 2.1
+const SHIFT = 2.4
 const FLOOR_IT = 0.55
 const soft = (u: number): number => {
   const v = Math.max(0, Math.min(1, u))
@@ -327,13 +326,14 @@ function speedAt(t: number, vc: number): number {
 }
 
 /**
- * How far the truck goes from where it waits to where it stands at the dam: what it always went (so the dam, and all
- * that comes after it, stays where it was). The chase pace is what makes the drive come out at that, found once.
+ * How far the truck goes from where it waits to where it stands at the dam: as far as the drive takes it at the chase
+ * pace below. The dam, and everything after it, stands where the drive ends.
  */
+const CHASE = 3.1
 const TOTAL = (() => {
-  const ta = V / ACCEL
-  const x = STOP - DROP
-  return 0.5 * ACCEL * ta * ta + V * (x - ta) + (V * V) / (2 * BRAKE)
+  let d = 0
+  for (let t = CATCH; t < STOP + 1; t += 1 / 500) d += speedAt(t + 1 / 1000, CHASE) / 500
+  return d
 })()
 const DT = 1 / 500
 const T0 = CATCH
