@@ -85,15 +85,49 @@ export interface Part<S = any> {
 
 type Drawing<S> = Pick<Piece<S>, 'name' | 'draw' | 'over' | 'flight' | 'dynamic'>
 
+type Styled = { drawingContext: CanvasRenderingContext2D; _cachedFillStyle?: unknown; _cachedStrokeStyle?: unknown; _setFill?: (f: unknown) => void; _setStroke?: (s: unknown) => void; liftoffHonest?: boolean }
+/**
+ * p5 keeps a note of the fill and stroke it last set, and does not set the same again. The parts here also paint
+ * gradients straight onto the canvas, which p5 never hears of, so a later `fill` of the noted colour would be skipped
+ * and paint with the gradient instead (a dark that came out beige). So the renderer Liftoff draws with always sets
+ * the style it is given.
+ */
+function honest(p: p5): void {
+  const r = (p as unknown as { _renderer?: Styled })._renderer
+  if (!r || r.liftoffHonest || !r._setFill || !r._setStroke) return
+  r.liftoffHonest = true
+  r._setFill = function (this: Styled, f: unknown) {
+    this.drawingContext.fillStyle = f as string
+    this._cachedFillStyle = f
+  }
+  r._setStroke = function (this: Styled, v: unknown) {
+    this.drawingContext.strokeStyle = v as string
+    this._cachedStrokeStyle = v
+  }
+}
+const honestly = <S>(drawing: Drawing<S>): Drawing<S> => ({
+  ...drawing,
+  draw: (p, s, c) => {
+    honest(p)
+    drawing.draw(p, s, c)
+  },
+  over: drawing.over
+    ? (p, s, c) => {
+        honest(p)
+        drawing.over!(p, s, c)
+      }
+    : undefined,
+})
+
 /** A part: a drawing and the lane it builds for a slot. The planner never draws it (weight 0, no placement). */
 export const part = <S>(drawing: Drawing<S>, build: (slot: Slot) => Built<S>, shots?: (slot: Slot, built: Built<S>) => PartShot[]): Part<S> => ({
-  piece: { weight: 0, place: () => null, ...drawing },
+  piece: { weight: 0, place: () => null, ...honestly(drawing) },
   build,
   shots,
 })
 
 /** A drawing with no ball of its own: a sky, a house front, a drone. It is handed show time as `t`. */
-export const scenery = <S>(drawing: Drawing<S>): Piece<S> => ({ weight: 0, place: () => null, ...drawing })
+export const scenery = <S>(drawing: Drawing<S>): Piece<S> => ({ weight: 0, place: () => null, ...honestly(drawing) })
 
 /** A waypoint: where the ball is at `at` (seconds into the slot), and how it got there from the one before. */
 export interface Way {

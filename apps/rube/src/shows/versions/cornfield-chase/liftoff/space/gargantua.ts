@@ -140,7 +140,6 @@ const TILT = -0.07
 /** In units of the dark's radius: the lensed far side of the disk over the top and under, and the disk's reach. */
 const ARC_TOP = 1.31
 const ARC_LOW = 1.25
-const RING = 1.04
 const DISK = 4.7
 
 /** How big the dark is (cells) at `T`: Miller's size until the catch, then it swells as the ball is carried in. */
@@ -598,9 +597,13 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   const { k } = c
   const X = (v: number) => v * k
   const r = h.r
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   // Line weights in cells, as Miller's at its size, thinning a little as it grows.
   const m = Math.pow(r / S0, 0.72)
   const W = (w: number) => Math.max(1, k * w * m)
+  // Far off it is Miller's flat drawing, lines; near and big it is light. `flat` is how much of the lines is left.
+  const big = smooth(r, 0.45, 1.1)
+  const flat = 1 - big
   const line = (x0: number, x1: number, w: number, col: string, a: number) => {
     if (a <= 0.004) return
     p.stroke(alpha(p, col, a))
@@ -608,45 +611,90 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     p.line(X(x0 * r), 0, X(x1 * r), 0)
   }
   const hot = (col: string) => mixHex(col, VOID.ink, 0.6 * bright)
+  const A = big * fade
+  const WHITE = '#FFF1D2'
   p.push()
   p.translate(X(h.cx), X(h.cy))
   p.rotate(TILT)
   p.noFill()
-  // Near and big, it is light: the disk's glow along it, soft and wide under its bright lines.
-  const big = smooth(r, 0.5, 1.2)
+  // The haze the disk sits in, soft and wide.
   if (big > 0.01) {
     p.strokeCap(p.ROUND)
-    for (const [wd, a] of [[0.34, 0.1], [0.17, 0.16]] as Pt[]) {
-      p.stroke(alpha(p, DARK.amber, a * big * fade))
+    for (const [wd, a] of [[0.5, 0.07], [0.26, 0.12]] as Pt[]) {
+      p.stroke(alpha(p, DARK.amber, a * A))
       p.strokeWeight(X(wd * r))
-      p.line(X(-DISK * 0.85 * r), 0, X(DISK * 0.85 * r), 0)
+      p.line(X(-DISK * 0.8 * r), 0, X(DISK * 0.8 * r), 0)
     }
   }
-  line(-DISK, DISK, 0.036, hot(DARK.amber), 0.55 * fade)
-  line(-DISK * 0.7, DISK * 0.7, 0.025, hot(DARK.gold), 0.95 * fade)
+  line(-DISK, DISK, 0.036, hot(DARK.amber), 0.55 * fade * flat)
+  line(-DISK * 0.7, DISK * 0.7, 0.025, hot(DARK.gold), 0.95 * fade * flat)
+  // The far side of the disk, bent over the top of the dark and under it by the lensing: near and big, broad bands of
+  // light, hottest where they hug the dark and going off into the haze.
+  const band = (a0: number, a1: number, rout: number, peak: number, body: number) => {
+    if (peak <= 0.004) return
+    ctx.save()
+    const g = ctx.createRadialGradient(0, 0, X(1.0 * r), 0, 0, X(rout * r))
+    g.addColorStop(0, rgba(WHITE, peak))
+    g.addColorStop(0.1, rgba(DARK.gold, 0.95 * peak))
+    g.addColorStop(body, rgba(DARK.gold, 0.6 * peak))
+    g.addColorStop(Math.min(0.95, body + 0.3), rgba(DARK.amber, 0.22 * peak))
+    g.addColorStop(1, rgba(DARK.amber, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(0, 0, X(rout * r), a0, a1)
+    ctx.arc(0, 0, X(1.0 * r), a1, a0, true)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
+  band(Math.PI + 0.01, TAU - 0.01, 1.7, Math.min(1, 0.95 * A * (1 + 0.4 * bright)), 0.4)
+  band(0.01, Math.PI - 0.01, 1.25, Math.min(1, 0.5 * A * (1 + 0.4 * bright)), 0.2)
+  // The dark.
   p.noStroke()
   p.fill(VOID.bg)
   p.circle(0, 0, X(2 * r))
   p.noFill()
-  // The halo: the far side of the disk bent up over the dark and down under it, with a glow of its own when near.
+  // The photon ring: a crisp hair of light right at the edge of the dark.
   if (big > 0.01) {
-    p.stroke(alpha(p, DARK.gold, 0.2 * big * fade))
-    p.strokeWeight(X(0.16 * r))
-    p.arc(0, 0, X(2 * ARC_TOP * r), X(2 * ARC_TOP * r), Math.PI + 0.12, TAU - 0.12)
-    p.strokeWeight(X(0.08 * r))
-    p.arc(0, 0, X(2 * ARC_LOW * r), X(2 * ARC_LOW * r), 0.3, Math.PI - 0.3)
-    // The photon ring: a hair of light right at the edge of the dark.
-    p.stroke(alpha(p, VOID.ink, 0.35 * big * fade))
-    p.strokeWeight(Math.max(1, X(0.012 * r)))
-    p.circle(0, 0, X(2 * 1.03 * r))
+    p.stroke(alpha(p, WHITE, 0.8 * A))
+    p.strokeWeight(Math.max(1, X(0.016 * r)))
+    p.circle(0, 0, X(2 * 1.015 * r))
   }
-  p.stroke(alpha(p, DARK.gold, 0.95 * fade))
+  // Far off: Miller's arcs, over and under.
+  p.stroke(alpha(p, DARK.gold, 0.95 * fade * flat))
   p.strokeWeight(W(0.05))
   p.arc(0, 0, X(2 * ARC_TOP * r), X(2 * ARC_TOP * r), Math.PI + 0.2, TAU - 0.2)
   p.strokeWeight(W(0.022))
   p.arc(0, 0, X(2 * ARC_LOW * r), X(2 * ARC_LOW * r), 0.35, Math.PI - 0.35)
-  line(-DISK * 0.33, DISK * 0.33, 0.025, hot(DARK.gold), 0.95 * fade)
-  line(-DISK * 0.2, DISK * 0.2, 0.011, hot(DARK.hull), 0.9 * fade)
+  // The near side of the disk, across the front of the dark: near and big, a band of light, thickest and whitest at
+  // the middle, tapering to nothing out along it, its left side (coming at us) the brighter.
+  if (big > 0.01) {
+    const L = DISK * r
+    const half = 0.085 * r
+    ctx.save()
+    const g = ctx.createLinearGradient(X(-L), 0, X(L), 0)
+    const a = Math.min(1, A * (1 + 0.5 * bright))
+    g.addColorStop(0, rgba(DARK.amber, 0))
+    g.addColorStop(0.2, rgba(DARK.amber, 0.6 * a))
+    g.addColorStop(0.4, rgba(DARK.gold, a))
+    g.addColorStop(0.5, rgba(WHITE, a))
+    g.addColorStop(0.6, rgba(DARK.gold, 0.75 * a))
+    g.addColorStop(0.8, rgba(DARK.amber, 0.35 * a))
+    g.addColorStop(1, rgba(DARK.amber, 0))
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(X(-L), 0)
+    ctx.quadraticCurveTo(0, X(-2 * half), X(L), 0)
+    ctx.quadraticCurveTo(0, X(2 * half), X(-L), 0)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+    p.stroke(alpha(p, WHITE, 0.7 * a))
+    p.strokeWeight(Math.max(1, X(0.012 * r)))
+    p.line(X(-L * 0.55), 0, X(L * 0.55), 0)
+  }
+  line(-DISK * 0.33, DISK * 0.33, 0.025, hot(DARK.gold), 0.95 * fade * flat)
+  line(-DISK * 0.2, DISK * 0.2, 0.011, hot(DARK.hull), 0.9 * fade * flat)
   p.pop()
 }
 
@@ -705,16 +753,7 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
     p.strokeWeight(Math.max(1, k * 0.02))
     p.circle(X(h.cx), X(h.cy), X(2 * h.r * (1.02 + 0.25 * sw2)))
   }
-  // The horizon: a thin white line runs round the dark's edge, and the dark opens past the frame.
-  const hz = T - HORIZON
-  if (hz >= 0 && hz < 0.62) {
-    const a = knock(hz, 0.2)
-    p.noFill()
-    p.stroke(alpha(p, VOID.ink, 0.85 * a))
-    p.strokeWeight(Math.max(1, k * 0.022))
-    p.circle(X(h.cx), X(h.cy), X(2 * h.r * RING))
-  }
-
+  // (The dark opens past the frame on its own: `swellAt`; the photon ring goes with the light.)
   full(() => drawTars(p, c, T))
   if (!shipBehind) full(() => drawRanger(p, c, T))
   ctx0.globalAlpha = was
@@ -970,7 +1009,7 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
   const f = frame(p, k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // Inside the dark: nothing but what the lattice is made of.
-  const dark = smooth(T, HORIZON + 0.35, HORIZON + 0.62)
+  const dark = smooth(T, HORIZON + 0.1, HORIZON + 0.36)
   if (dark > 0) {
     p.noStroke()
     p.fill(alpha(p, VOID.bg, dark))
@@ -1080,10 +1119,11 @@ function miniCase(p: p5, k: number, ink: string, weight: number, a: number): voi
   ctx.globalAlpha = was * a
   const CAP = SHELF_TOP - 0.6
   const MIDY = SHELF_TOP + 0.46
-  // Its room's light behind it, warm, and a bloom of it spilling round the case into the dark.
-  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.9), DUST.light, 0.35)
+  // Its room's light behind it, lamplight, and a bloom of it spilling round the case into the dark (warm, so that
+  // seen dim over the dark it goes amber, not grey).
+  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.9), DARK.amber, 0.3)
   p.noStroke()
-  p.fill(mixHex(DUST.light, DUST.wall, 0.35))
+  p.fill(mixHex(DUST.light, DARK.amber, 0.4))
   p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
   for (const b of ROW) {
     p.fill(mixHex(b.color, ink, 0.62))
