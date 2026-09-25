@@ -5,7 +5,7 @@ import { FLOOR, laneAt, mixHex, type Lane, type Pt } from '../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from './kit'
 import { beatsOf, CADENCE, waltz, WALTZ_ORIGIN, WALTZ_PERIOD } from './music'
 import { G_EARTH, hop } from './physics'
-import { batten, flat, glow } from './rig'
+import { batten, beam, flat, glow } from './rig'
 import { DREAM, PAINT } from './worlds'
 
 /**
@@ -150,6 +150,31 @@ function liftY(t: number): number {
 const tilt = (t: number): number => TILT * smooth(t, LIFT_NOTCHES[5] + 0.04, LIFT_NOTCHES[5] + 0.16) * stowed(t)
 /** A ball on the platform, `dx` from its centre. */
 const onLift = (t: number, dx: number): Pt => [LIFT_X + dx, liftY(t) + dx * Math.tan(tilt(t))]
+
+/* --------------------------------------------- the ghost light */
+
+/**
+ * The theatre's ghost light: a bare bulb on a thin stand fixed to the
+ * platform's left end, the one light on the transition. It goes with the
+ * lift, leans as the platform tips, settles a little on each notch, and goes
+ * out in a breath as the carousel's lamps come up. It strikes nothing.
+ */
+const GHOST_DX = -0.58
+const GHOST_H = 1.7
+const ghostOn = (t: number): number => 1 - smooth(t, LANDED, LANDED + 0.3)
+function ghostSway(t: number): number {
+  let a = 0
+  for (const at of LIFT_NOTCHES) a += ring(t - at, 0.05, 20, 0.28)
+  return a + ring(t - (LIFT_NOTCHES[5] + 0.16), 0.04, 18, 0.3)
+}
+/** The stand's foot on the tipped platform, the bulb at its top, and how it leans. */
+function ghostAt(t: number): { base: Pt; bulb: Pt; lean: number } {
+  const tau = tilt(t)
+  const cy = liftY(t) + FLOOR + 0.07
+  const base: Pt = [LIFT_X + GHOST_DX * Math.cos(tau) + 0.07 * Math.sin(tau), cy + GHOST_DX * Math.sin(tau) - 0.07 * Math.cos(tau)]
+  const lean = tau + ghostSway(t)
+  return { base, bulb: [base[0] + GHOST_H * Math.sin(lean), base[1] - GHOST_H * Math.cos(lean)], lean }
+}
 
 /** A turn in eight bars. */
 const RATE = Math.PI / 4 / WALTZ_PERIOD
@@ -393,6 +418,15 @@ function drawOver(p: p5, s: ParisState, c: Ctx): void {
   const { k } = c
   const t = c.t + s.begin
   if (t >= APEX) return
+  // The ghost light's light, over the two as well: a faint cone down onto the platform, the bulb's halo, the pool.
+  const on = ghostOn(t)
+  if (on > 0.01) {
+    const g = ghostAt(t)
+    const foot: Pt = [LIFT_X + 0.2, liftY(t) + FLOOR]
+    beam(p, c, g.bulb, [foot[0], foot[1] + 0.2], 2.2, 0.13 * on, PAINT.beam)
+    glow(p, c, g.bulb[0], g.bulb[1], 0.55, 0.6 * on, PAINT.beam)
+    glow(p, c, foot[0], foot[1] - 0.08, 1.15, 0.36 * on, PAINT.beam)
+  }
   const up = surge(t)
   const paint = painter(t)
   p.stroke(paint(PAINT.gold))
@@ -566,6 +600,18 @@ function drawLift(p: p5, c: Ctx, t: number): void {
   outline(p, ink, weight * 0.5)
   p.line(X(-LIFT_W / 2 + 0.1), X(-0.07), X(LIFT_W / 2 - 0.1), X(-0.07))
   p.pop()
+  // The ghost light on its stand: a foot, the thin pole, the bulb under a small cap.
+  const g = ghostAt(t)
+  const on = ghostOn(t)
+  const px = Math.cos(g.lean)
+  const py = Math.sin(g.lean)
+  outline(p, ink, weight * 0.9)
+  p.line(X(g.base[0]), X(g.base[1]), X(g.bulb[0]), X(g.bulb[1]))
+  p.line(X(g.base[0] - 0.14 * px), X(g.base[1] - 0.14 * py), X(g.base[0] + 0.14 * px), X(g.base[1] + 0.14 * py))
+  solid(p, ink, weight * 0.6, on > 0.5 ? PAINT.beam : PAINT.deep)
+  p.circle(X(g.bulb[0]), X(g.bulb[1]), X(0.15))
+  outline(p, ink, weight * 1.4)
+  p.line(X(g.bulb[0] - 0.1 * px + 0.1 * py), X(g.bulb[1] - 0.1 * py - 0.1 * px), X(g.bulb[0] + 0.1 * px + 0.1 * py), X(g.bulb[1] + 0.1 * py - 0.1 * px))
 }
 
 /* --------------------------------------------- the carousel */
