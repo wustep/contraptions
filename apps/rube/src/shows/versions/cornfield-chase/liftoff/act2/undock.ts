@@ -443,21 +443,28 @@ export const undock = part<UndockState>(
   (slot) => {
     const ballAt = (t: number) => pose(t).ball
     const near = ballAt(cue(207))
+    /** The ship's middle. */
+    const ship = (t: number): Pt => pose(t).c
     const shots: PartShot[] = [
-      // The cut is a match on the ship (the score gives this key the hub's last framing): the clamps spring
-      // open right there, and then the camera goes back off it to show the end of the station, big, turning.
-      { t: slot.begin, cells: 12, hold: [-4.6, 0.2], w: 1 },
-      { t: cue(184.85), cells: 11.6, hold: [-4.4, 0.2], w: 1 },
-      { t: cue(185.35), cells: 11.4, hold: [-4.2, 0.2], w: 1 },
-      // In on the port as the umbilical goes home, for the push off.
-      { t: cue(186.1), cells: 7, hold: [-1.1, 0.1], w: 1 },
-      { t: cue(187.2), cells: 7, hold: [-0.5, 0], w: 1 },
-      // The spin coming off, the station still turning behind it.
-      { t: cue(189), cells: 7.6, hold: [0.5, 0], w: 1 },
-      { t: cue(191), cells: 7.6, hold: [1.5, 0], w: 1 },
-      { t: cue(193.5), cells: 8.2, hold: [2.9, -0.3], w: 1 },
+      // The cut is a match on the ship (the score gives this key the hub's last framing, close on the nose in the
+      // port): the port's clamps spring open right there. Back a little for the umbilical, the port, the ship and the
+      // cable whipping home in one frame; then close with the ship as it backs off and the spin comes off it.
+      { t: slot.begin, cells: 2.9, hold: [-1.3, 0.1], w: 1 },
+      { t: cue(185.5), cells: 3.9, hold: [-1.05, 0.15], w: 1 },
+      // The despin is the film's docking the other way about: the station goes on turning behind, and the ship's
+      // turn comes off it a third a beat. So the port stays in the frame with the ship while it does.
+      { t: cue(187.2), cells: 4.2, hold: [-0.5, 0.1], w: 1 },
+      { t: cue(190.2), cells: 4.5, hold: [0.3, 0.05], w: 1 },
+      { t: cue(191.2), cells: 4.9, hold: [0.8, 0], w: 1 },
+      // Out for the pitch and the ignition: the end of the station turning, its port's collar going home, and the
+      // ship going end for end off it and lighting.
+      { t: cue(192), cells: 5.6, hold: [ship(cue(192))[0] - 1.6, 0], w: 1 },
+      { t: cue(193.4), cells: 8.4, hold: [ship(cue(193.4))[0] - 2.4, 0.3], w: 1 },
+      // Following from the ignition on (the blend from holding to following done while the ship is all but still, so
+      // the burn does not drag the frame): where it would be held, as an offset from the ship.
+      { t: cue(194.4), cells: 9.4, off: [ship(cue(194.4))[0] - 1.9 - ballAt(cue(194.4))[0], 0.5 - ballAt(cue(194.4))[1]], w: 0 },
       // Away: out wider as it goes, and Saturn's limb comes up on the right.
-      { t: cue(195), cells: 8, off: [2, 0.7], w: 0 },
+      { t: cue(195.5), cells: 8.6, off: [2.2, 0.8], w: 0 },
       { t: cue(197.8), cells: 11.5, off: [3.6, 2.3], w: 0 },
       // Over the cloud tops, close; then out over the rings.
       { t: cue(200.6), cells: 7.8, off: [1.9, 0.8], w: 0 },
@@ -1494,7 +1501,7 @@ function drawJets(p: p5, c: Ctx, t: number): void {
       const y = 0.72 * Math.cos(r) - s * 0.96 * Math.sin(r)
       const d = 0.72 * Math.sin(r) + s * 0.96 * Math.cos(r)
       const dy = Math.abs(d) < 0.3 ? (d < 0 ? 0.3 : -0.3) : -d
-      jet(p, c, age, [-1.93, y], [0, dy], 1.3)
+      jet(p, c, age, [-1.93, y], [0, dy], 1.75)
     }
   }
   // End for end: the nose jet pushes the nose one way and the tail jet the tail the other; the same again to stop it.

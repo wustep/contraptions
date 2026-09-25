@@ -11,16 +11,17 @@ import { fromRim, RIM_R, SEAM, stationFrame } from './station'
  * Up the spoke to the Ranger.
  *
  * The far-side house is the foot of the lift: the spoke comes down through
- * its roof, and the car waits on its floor. The ball rolls in on the big step
- * (156) and the gate drops behind it; the brake comes off (157) and the car
- * climbs toward the axis, its counterweight coming down the other side of the
- * shaft (on a pulley, so half as far) to pass it. Every beat of the climb the car's roller trips a
- * flag at a landing and the landing's lamp lights and stays lit, so the lit
- * lamps climb the spoke behind it; and every beat the jolt tosses the ball.
- * Low down it taps the floor and lands on the eighth; halfway up it bounces a
- * beat at a time; from the step on 168 a hop takes two beats, and on 170 it
- * leaves the floor and does not come back. On 171 the sheave's brake bites;
- * the car slows and the ball does not.
+ * its roof, and the car waits on its floor. Murph has nudged the ball into it
+ * (the ballpark's), and the gate drops behind it (159); the brake comes off
+ * (160) and the car climbs toward the axis, its counterweight coming down the
+ * other side of the shaft (on a pulley, so half as far) to pass it. Every beat
+ * of the climb the car's roller trips a flag at a landing and the landing's
+ * lamp lights and stays lit, so the lit lamps climb the spoke behind it; and
+ * every beat the jolt tosses the ball. Low down it taps the floor and lands on
+ * the eighth (161–163); halfway up it bounces a beat at a time (164–167); from
+ * the step on 168 a hop takes two beats, and on 170 it leaves the floor and
+ * does not come back. On 171 the sheave's brake bites; the car slows and the
+ * ball does not.
  *
  * The car stops at the hub on 172, its needle on the landing's dial at the
  * stop, and the roof and the landing doors open. The ball sails on into the
@@ -52,14 +53,14 @@ const IN: Pt = [-Math.cos(A), -Math.sin(A)]
 
 /* ------------------------------------------------------------------ the clock (show seconds) */
 
-/** The ball rolls onto the car's floor and the gate drops behind it: the big step up. */
-const GATE = cue(156)
+/** The ball at rest in the car, Murph's nudge done: the gate drops behind it. */
+const GATE = cue(159)
 /** The brake off: the car goes. */
-const GO = cue(157)
-const CRUISE = cue(158)
+const GO = cue(160)
+const CRUISE = cue(161)
 /** The beats of the climb: a landing a beat, its flag tripped and its lamp lit. */
 const RIBS: number[] = []
-for (let b = 158; b <= 171; b++) RIBS.push(cue(b))
+for (let b = 161; b <= 171; b++) RIBS.push(cue(b))
 /** The ball leaves the floor for good. */
 const FLOAT = cue(170)
 /** The sheave's brake bites. */
@@ -84,15 +85,12 @@ const CLAMPS = [180, 181, 182, 183].map(cue)
  * weight is nearly all there, a quick tap that lands on the eighth; halfway, a beat a hop; from the step on 168, two.
  */
 const HOPS: [number, number, number][] = [
-  [158, 0.5, 0.17],
-  [159, 0.5, 0.18],
-  [160, 0.5, 0.2],
-  [161, 0.5, 0.22],
-  [162, 1, 0.4],
-  [163, 1, 0.43],
-  [164, 1, 0.47],
-  [165, 1, 0.5],
-  [166, 1, 0.54],
+  [161, 0.5, 0.17],
+  [162, 0.5, 0.19],
+  [163, 0.5, 0.22],
+  [164, 1, 0.42],
+  [165, 1, 0.47],
+  [166, 1, 0.52],
   [167, 1, 0.58],
   [168, 2, 0.78],
 ]
@@ -240,11 +238,15 @@ function ballQ(T: number): number {
 
 /** The Ranger's cockpit, where the ball sits: the dock. */
 const DOCK: Pt = [0.8, 0]
-/** How low the ship sits in its cradle while it is clamped. It lifts a notch at each release, to the dock. */
-const SINK = 0.06
+/**
+ * How low the ship sits in its cradle while it is clamped. It springs up a notch at each release, sharp on the beat,
+ * over a hair and settling, heavily; after the last it is at the dock exactly.
+ */
+const SINK = 0.12
+const notch = (s: number): number => (s <= 0 ? 0 : 1 - Math.exp(-s / 0.12) * Math.cos(s * 8) * (1 - smooth(s, 0.6, 0.9)))
 const rangerY = (T: number): number => {
   let up = 0
-  for (const c of CLAMPS) up += smooth(T, c, c + 0.35)
+  for (const c of CLAMPS) up += notch(T - c)
   return SINK * (1 - up / CLAMPS.length)
 }
 
@@ -280,7 +282,7 @@ const ARM_BASE: Pt = [0.25, -2.86]
 const L1 = 1.65
 const L2 = 1.6
 /** Folded: up against the collar, over the ship's back, out of the way; its elbow in a catch on the collar. */
-const HOME: Pt = [0.55, -1.3]
+const HOME: Pt = [0.35, -2.05]
 /** After it lets go: straight up out of the cockpit, and forward over the nose, clear of the hood's run. */
 const LIFT_UP: Pt = [DOCK[0], -0.6]
 const LIFT: Pt = [-0.55, -0.78]
@@ -365,7 +367,7 @@ export const hub = part<HubState>(
         { at: at(SEAT), p: ball(at(SEAT)) },
         { at: at(CLAMPS[0]), p: ball(at(SEAT)) },
       ]),
-      ...carried(ball, at(CLAMPS[0]), slot.end - slot.begin, 80),
+      ...carried(ball, at(CLAMPS[0]), slot.end - slot.begin, 240),
     ]
     return {
       cells: CELLS,
@@ -383,26 +385,34 @@ export const hub = part<HubState>(
       return [q[0] + (h[0] - q[0]) * f, q[1] + (h[1] - q[1]) * f]
     }
     return [
-      // The ballpark's last framing (the house), then in on the car for the lurch.
-      { t: slot.begin, cells: 4.8, hold: SP(0.2, -1), w: 1 },
-      { t: GO + 0.5, cells: 5, off: lead(0.6) },
+      // The gate, framed as the ballpark pulls out from the meeting (it leaves this key to the hub): the car, him in it,
+      // and her on the floor outside. Then out with the car as it lurches off.
+      { t: slot.begin, cells: 2.6, hold: SP(-0.42, -0.62), w: 1 },
+      { t: GO + 0.5, cells: 5, hold: SP(0, -(carS(GO + 0.5) + FLOOR + 0.6)), w: 1 },
       // The climb: near enough to read the first hops; then the camera stops following and holds wide on the spoke, and
       // the car climbs up through the frame, its lit landings trailing below it, while the station turns round it; then
       // up with it into the float.
-      { t: cue(160), cells: 6, off: lead(1.0) },
-      { t: cue(162.5), cells: 10, hold: mid(cue(165.5), 0), w: 0.95 },
-      { t: cue(166.5), cells: 10, hold: mid(cue(165.5), 0), w: 0.95 },
+      { t: cue(162), cells: 6, off: lead(1.0) },
+      { t: cue(163.5), cells: 10, hold: mid(cue(166), 0), w: 0.95 },
+      { t: cue(166.5), cells: 10, hold: mid(cue(166), 0), w: 0.95 },
       // The step on 168: out wide, the car halfway up the spoke and the hub ahead of it.
       { t: cue(168.5), cells: 8.6, hold: mid(cue(168.5), 0.42), w: 0.8 },
       { t: BRAKE, cells: 7, hold: mid(BRAKE, 0.45), w: 0.9 },
       // Home: the landing and the bay.
       { t: LAND + 0.3, cells: 5.8, hold: HB(-1.35, -0.95), w: 1 },
       { t: CATCH, cells: 5.6, hold: HB(-0.7, -0.75), w: 1 },
-      // The ship. The last key is at the cut itself, so nothing eases toward the next part's framing before it.
+      // The ship. Seated; in on the hood as it runs forward and knocks home, drifting aft over it as the arm whips home
+      // and the ship wakes (its wingtip lamp is at the tail); then a slow push along the ship from its tail to its nose
+      // as the cradle lets it go a clamp a beat, the release running ahead of the frame, to the nose in the port for
+      // the cut, where the port's own clamps (outside) are the next to go. The last key is at the cut itself: the
+      // undock's first frame keeps it.
       { t: SEAT, cells: 5, hold: HB(0.55, -0.3), w: 1 },
-      { t: CANOPY, cells: 4.8, hold: HB(0.85, -0.4), w: 1 },
-      { t: WAKE, cells: 4.5, hold: HB(0.95, -0.1), w: 1 },
-      { t: slot.end, cells: 4.1, hold: HB(1.0, 0.1), w: 1 },
+      { t: CANOPY, cells: 3.7, hold: HB(1.25, -0.22), w: 1 },
+      { t: STOW, cells: 3.4, hold: HB(1.5, -0.2), w: 1 },
+      { t: WAKE, cells: 3.2, hold: HB(1.45, 0.08), w: 1 },
+      { t: CLAMPS[0], cells: 3.1, hold: HB(1.25, 0.15), w: 1 },
+      { t: CLAMPS[3], cells: 2.95, hold: HB(0.3, 0.12), w: 1 },
+      { t: slot.end, cells: 2.9, hold: HB(0.02, 0.1), w: 1 },
     ]
   },
 )

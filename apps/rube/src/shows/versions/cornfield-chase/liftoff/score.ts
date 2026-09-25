@@ -82,7 +82,7 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const station = lay(space.next, [
     { part: replica, end: cue(116) },
     { part: rim, end: cue(132) },
-    { part: ballpark, end: cue(156) },
+    { part: ballpark, end: cue(159) },
     { part: hub, end: UNDOCK },
   ])
   const outside = lay(station.next, [
