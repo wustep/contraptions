@@ -328,6 +328,22 @@ export function curtainOpen(s: RoomState, t: number): number {
   return t >= KISS - 1 && t < DURATION ? smooth(t, KISS_PEAK, KISS_PEAK + 2.6) : 1
 }
 
+/* ------------------------------------------------------------------ the fly: the furniture leaves on the burst */
+
+/** A stage fly: how far (cells) a thing on a wire has risen `d` seconds after the wire takes it: a gather, then a steady pull, and gone. */
+const FLY_V = 2.4
+const flown = (d: number): number => (d <= 0 ? 0 : Math.min(14, FLY_V * (d <= 0.3 ? (d * d) / 0.6 : d - 0.15)))
+/**
+ * When the stagehands fly each piece of the club's furniture out for the dream, show seconds: from the burst's
+ * peak, one after another, the last (her table) clearing the frame on the cymbal's hit at 68.336.
+ */
+export const FLY_AT = { nearChair: 65.85, nearTable: 66.35, herChairs: 66.9, herTable: 67.38 }
+/** How far a piece has flown, and how much of its wire shows (it appears a moment before the pull). Only the dream's own scenery, on show time. */
+function flyOf(s: RoomState, t: number, t0: number): { lift: number; wire: number } {
+  if (!s.dream || s.open !== undefined || t < KISS - 1 || t >= DURATION) return { lift: 0, wire: 0 }
+  return { lift: flown(t - t0), wire: smooth(t, t0 - 0.3, t0 - 0.08) }
+}
+
 /** The lamp's light, by the state or the clock. In the club it goes down after the last chord. */
 export function lampLight(s: RoomState, t: number): number {
   if (s.light !== undefined) return s.light
@@ -384,9 +400,9 @@ export function drawRoom(p: p5, s: RoomState, c: Ctx): void {
   // The bar, at the left: the counter, the shelves behind it, bottles catching the lamp.
   if (f.x0 < -1.5) drawBar(p, c, L, light)
 
-  // The tables and the chairs: Mia's, and one nearer the piano.
-  drawTable(p, c, L, ROOM.table, true)
-  drawTable(p, c, L, 14.1, false)
+  // The tables and the chairs: Mia's, and one nearer the piano. In the dream they fly out on the burst.
+  drawTable(p, c, L, ROOM.table, true, flyOf(s, c.t, FLY_AT.herChairs), flyOf(s, c.t, FLY_AT.herTable))
+  drawTable(p, c, L, 14.1, false, flyOf(s, c.t, FLY_AT.nearChair), flyOf(s, c.t, FLY_AT.nearTable))
 
   // The stairs up to the street and the door at their top.
   drawStairs(p, c, L)
@@ -509,26 +525,44 @@ function drawBar(p: p5, c: Ctx, L: ReturnType<typeof roomLook>, light: number): 
   }
 }
 
-function drawTable(p: p5, c: Ctx, L: ReturnType<typeof roomLook>, x: number, near: boolean): void {
+type Fly = { lift: number; wire: number }
+const STILL: Fly = { lift: 0, wire: 0 }
+
+/** A wire from (x, y) up out of the frame, as much of it as shows. */
+function wire(p: p5, c: Ctx, x: number, y: number, a: number): void {
+  if (a <= 0.01) return
+  const { k, ink, weight } = c
+  p.stroke(alpha(p, ink, 0.9 * a))
+  p.strokeWeight(weight * 0.45)
+  p.noFill()
+  p.line(x * k, y * k, x * k, (y - 60) * k)
+}
+
+function drawTable(p: p5, c: Ctx, L: ReturnType<typeof roomLook>, x: number, near: boolean, chairs: Fly = STILL, table: Fly = STILL): void {
   const { k, ink, weight } = c
   const X = (v: number) => v * k
-  const top = ROOM.floor - 0.62
+  const floor = ROOM.floor
   const w = near ? 1.15 : 1.0
-  // Chairs, in silhouette, either side.
+  // Chairs, in silhouette, either side; flown out on their wires when the dream takes the room.
   for (const side of near ? [-1, 1] : [1]) {
     const cx = x + side * (w / 2 + 0.36)
+    const f = floor - chairs.lift
+    wire(p, c, cx - side * 0.15, f - 1.12, chairs.wire)
     p.noStroke()
     p.fill(L.dark)
-    p.rect(X(cx), X(ROOM.floor - 0.42), X(0.34), X(0.09))
-    p.rect(X(cx - side * 0.15), X(ROOM.floor - 0.75), X(0.07), X(0.75))
+    p.rect(X(cx), X(f - 0.42), X(0.34), X(0.09))
+    p.rect(X(cx - side * 0.15), X(f - 0.75), X(0.07), X(0.75))
     outline(p, ink, weight * 0.55)
-    for (const dx of [-0.13, 0.13]) p.line(X(cx + dx), X(ROOM.floor - 0.4), X(cx + dx), X(ROOM.floor))
+    for (const dx of [-0.13, 0.13]) p.line(X(cx + dx), X(f - 0.4), X(cx + dx), X(f))
   }
   // The table: a round top with a cloth, on a pedestal.
+  const top = floor - table.lift - 0.62
+  const foot = floor - table.lift
+  wire(p, c, x, top - (near ? 0.22 : 0.08), table.wire)
   p.noStroke()
   p.fill(L.dark)
-  p.rect(X(x), X((top + ROOM.floor) / 2 + 0.05), X(0.1), X(ROOM.floor - top - 0.1))
-  p.rect(X(x), X(ROOM.floor - 0.04), X(0.5), X(0.08))
+  p.rect(X(x), X((top + foot) / 2 + 0.05), X(0.1), X(foot - top - 0.1))
+  p.rect(X(x), X(foot - 0.04), X(0.5), X(0.08))
   solid(p, ink, weight * 0.6, L.cloth)
   p.ellipse(X(x), X(top), X(w), X(0.16))
   // A candle in a glass on Mia's table: the one small light at her end of the room.

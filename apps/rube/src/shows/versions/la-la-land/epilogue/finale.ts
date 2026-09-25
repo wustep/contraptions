@@ -35,7 +35,7 @@ const NOTES = PIANO2
 const RISE = 352.044
 const AT_STAIRS = 358.348
 const TURN_BACK = 359.352
-const NOD = 361.332
+const NOD = 362.91
 /** The swell's peak: she turns to the stairs. */
 const GO = 370.416
 /** Her steps up the stairs, a landing each, and his a step behind. */
@@ -207,14 +207,21 @@ export const finale = part<FinaleState>(
     // Tight on him at the bass end of the keys, through the decay and the four notes.
     { t: slot.begin, cells: 3, hold: [0.35, -0.5], w: 1 },
     { t: NOTES[3], cells: 3, hold: [0.35, -0.5], w: 1 },
-    // The look: the room, the two of them at the table, in one pull-back.
+    // The look: the room, the two of them at the table, in one pull-back; held until she rises.
     { t: NOTES[3] + 1.7, cells: 11, hold: [8.4, -1.6], w: 1 },
-    { t: TURN_BACK, cells: 12, hold: [10.1, -2.0], w: 1 },
-    { t: GO + 0.6, cells: 12, hold: [10.1, -2.0], w: 1 },
-    // With them up the stairs, to the door.
-    { t: HER_STEPS[0], cells: 10, hold: [14.5, -2.2], w: 1 },
-    { t: AT_DOOR, cells: 9.5, hold: [15.2, -2.3], w: 1 },
-    { t: OUT + 0.7, cells: 9.5, hold: [15.2, -2.3], w: 1 },
+    { t: RISE, cells: 11, hold: [8.4, -1.6], w: 1 },
+    // In toward her table as she crosses, on her as she stops at the stairs and turns back.
+    { t: RISE + 3.5, cells: 7, hold: [17.2, -0.7], w: 1 },
+    { t: TURN_BACK, cells: 5.5, hold: [19.0, -0.5], w: 1 },
+    { t: TURN_BACK + 1.2, cells: 5.5, hold: [19.0, -0.5], w: 1 },
+    // Across the room to him at the keys; his nod on arriving; held through the swell.
+    { t: NOD - 0.4, cells: 5, hold: [1.2, -0.4], w: 1 },
+    { t: GO - 1.5, cells: 5, hold: [1.2, -0.4], w: 1 },
+    // Back to her for her turn to the stairs, and up and out with her.
+    { t: GO, cells: 6.5, hold: [19.2, -1.0], w: 1 },
+    { t: HER_STEPS[0], cells: 6.5, hold: [19.6, -1.2], w: 1 },
+    { t: AT_DOOR, cells: 7, hold: [21.6, -2.4], w: 1 },
+    { t: OUT + 0.7, cells: 7, hold: [21.6, -2.4], w: 1 },
     // Back to him for the last chords, and still under the credits (the lamp above the frame, the top third dark).
     { t: BACK, cells: 8.5, hold: [7.0, -0.3], w: 1 },
     { t: LAST_CHORDS[7], cells: 8.5, hold: [7.0, -0.3], w: 1 },
