@@ -1,5 +1,6 @@
 import '../../../../src/ui/styles.css'
-import { ICON, createShell, el, guardWheel, icon, section, segmented } from '../../../../src/ui/shell'
+import { registerMode } from '../../../../src/ui/mode-host'
+import { ICON, el, guardWheel, icon, section, segmented, type Shell } from '../../../../src/ui/shell'
 import { createListbox } from '../../../../src/ui/listbox'
 import { SHOW_SPEEDS, Transport, clockText } from './clock'
 import { discoverShows } from './discover'
@@ -31,13 +32,16 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * on silently towards a sound that comes in late.
  */
 
-const stageRoot = document.getElementById('stage')!
-const panelRoot = document.getElementById('panel')!
-
 const { works, problems } = discoverShows()
 for (const problem of problems) console.warn(`shows: ${problem}`)
 
-const params = new URLSearchParams(location.search)
+/** One visit. The chrome is already up; this fills the stage and the panel, and the return stops the music. */
+export function start(shell: Shell): () => void {
+  const stageRoot = document.getElementById('stage')!
+  const panelRoot = shell.body
+  let alive = true
+
+  const params = new URLSearchParams(location.search)
 const seed = params.get('seed') ?? ''
 
 /* ------------------------------------------------------------------ state */
@@ -85,7 +89,7 @@ async function play(): Promise<void> {
   sync()
   const mine = generation
   const result = await music.play(from)
-  if (mine !== generation || result !== 'blocked') return
+  if (!alive || mine !== generation || result !== 'blocked') return
   // The music is the clock. With no music allowed yet there is no show yet: wait where it stood.
   transport.pause()
   transport.seek(from)
@@ -138,6 +142,7 @@ function setZoom(on: boolean): void {
 
 /** Put a version on the stage from the top, and start it if asked. */
 async function open(version: Version, thenPlay: boolean): Promise<void> {
+  if (!alive) return
   const mine = ++generation
   music.load(null)
   stage.set(null)
@@ -156,7 +161,7 @@ async function open(version: Version, thenPlay: boolean): Promise<void> {
       loads.set(version, load)
     }
     const loaded = await load
-    if (mine !== generation) return
+    if (!alive || mine !== generation) return
     const wrong = performanceProblems(loaded)
     if (wrong.length) throw new Error(wrong.join(', '))
     perf = loaded
@@ -165,7 +170,7 @@ async function open(version: Version, thenPlay: boolean): Promise<void> {
     music.load(loaded.soundtrack ?? null)
     stage.set(loaded)
   } catch (err) {
-    if (mine !== generation) return
+    if (!alive || mine !== generation) return
     // A version that would not load may load next time; one that loaded wrong will not.
     loads.delete(version)
     console.error(err)
@@ -186,7 +191,6 @@ function step(dir: 1 | -1): void {
 
 /* ------------------------------------------------------------------ panel */
 
-const shell = createShell(panelRoot, 'shows')
 shell.setSeed(seed)
 
 // Show — which music, and which take of it. It leads, as the seed does elsewhere.
@@ -232,10 +236,11 @@ scrub.addEventListener('input', () => {
   scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
   seek((Number(scrub.value) / 1000) * transport.duration)
 })
-guardWheel(panelRoot, scrub)
+guardWheel(shell.root, scrub)
 let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
-window.addEventListener('pointerup', () => { scrubbing = false })
+const endScrub = () => { scrubbing = false }
+window.addEventListener('pointerup', endScrub)
 const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 playBtn.addEventListener('click', toggle)
 const speedSeg = segmented(SHOW_SPEEDS, (v) => `${v}×`, setSpeed)
@@ -473,7 +478,9 @@ function renderWords(t: number): void {
 
 // The clock prints whole seconds; writing it on every frame is wasted work.
 let lastTime = ''
+let raf = 0
 function tick(): void {
+  if (!alive) return
   if (transport) {
     const t = transport.now()
     if (transport.playing && t >= transport.duration) {
@@ -494,13 +501,14 @@ function tick(): void {
     if (wantBig === bigPlay.hidden) sync()
     renderWords(t)
   }
-  requestAnimationFrame(tick)
+  raf = requestAnimationFrame(tick)
 }
-requestAnimationFrame(tick)
+raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
-window.addEventListener('keydown', (e) => {
+const onKey = (e: KeyboardEvent) => {
+  if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
@@ -554,7 +562,8 @@ window.addEventListener('keydown', (e) => {
       seek(transport.now() - (e.shiftKey ? 1 : 1 / 60))
       break
   }
-})
+}
+window.addEventListener('keydown', onKey)
 
 writeUrl()
 sync()
@@ -581,3 +590,17 @@ if (import.meta.env.DEV) {
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
   }
 }
+
+  return () => {
+    alive = false
+    cancelAnimationFrame(raf)
+    window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('keydown', onKey)
+    recording?.abort()
+    music.load(null)
+    stage.destroy()
+    if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).shows
+  }
+}
+
+registerMode('shows', start)

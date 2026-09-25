@@ -7,6 +7,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { modeFromPath } from '../../src/ui/mode-path'
 import { MODE_LINKS } from '../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from './src/shows/clock'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from './src/shows/registry'
@@ -14,8 +15,6 @@ import { renderWav } from './src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from './src/shows/timemap'
 import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metronome'
 import { Show } from './src/show'
-import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/shows/versions/cornfield-chase/multiball'
-import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
 import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
@@ -48,6 +47,9 @@ async function main(): Promise<void> {
   const tab = MODE_LINKS.find((m) => m.mode === 'shows')
   check('Shows is a mode, at /shows/', tab?.path === '/shows/' && tab.label === 'Shows')
   check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  check('a tab is the path it has always been', modeFromPath('/') === 'machine' && modeFromPath('/explorations/') === 'explorations' && modeFromPath('/shows/') === 'shows' && modeFromPath('/playground/') === 'playground')
+  check('a deep link without the slash, or with index.html, is the same tab', modeFromPath('/shows') === 'shows' && modeFromPath('/shows/index.html') === 'shows' && modeFromPath('/index.html') === 'machine')
+  check('the Builder is not a tab', modeFromPath('/builder/') === null)
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
   const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
@@ -120,18 +122,18 @@ async function main(): Promise<void> {
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
   check('the Shows tab opens Clair de Lune, Take B', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
-  check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
-  check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
-  check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync and Liftoff', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-liftoff,opus55-music-sync,tech-demo,voices')
+  check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
+  check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('the shows are Clair de Lune, Cornfield Chase and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,premiere-arabesque')
+  check('Cornfield Chase is Liftoff and the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-liftoff,opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels stay unique; the one-shot takes name their model, and Liftoff is just Liftoff', cornfield.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
-  check('Cornfield Chase one-shot notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  check('Cornfield Chase labels are Liftoff and the two music-syncs', cornfield.map((v) => v.label).join('|') === 'Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
+  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
   const liftoffTake = cornfield.find((v) => v.take === 'opus55-liftoff')
   check('Liftoff\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
     !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot/i.test(liftoffTake.label))
-  check('a named take is still that take', pickVersion(shipped.works, 'metronome', 'strict')?.take === 'strict')
+  check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'opus55-music-sync')?.take === 'opus55-music-sync')
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -379,37 +381,6 @@ async function main(): Promise<void> {
           check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
           check(`liftoff: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
         }
-      }
-      if (work.work === 'cornfield-chase' && version.take === 'multiball') {
-        const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
-        const joined = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1).balls ?? []
-        const mid = perf.show.at(CORNFIELD_RIDERS[CORNFIELD_RIDERS.length - 1].spawn + 2).balls ?? []
-        const merged = perf.show.at(CORNFIELD_MEET + 0.3).balls ?? []
-        const ys = merged.map((b) => b.y)
-        const xs = merged.map((b) => b.x)
-        const spread = Math.max(...ys) - Math.min(...ys)
-        const xspread = Math.max(...xs) - Math.min(...xs)
-        check('cornfield: the whole recording, riders joining on their accents', near(perf.duration, CORNFIELD_DURATION) && before.length === 0 && joined.length === 1 && mid.length === CORNFIELD_RIDERS.length)
-        check('cornfield: each rider keeps its own id and colour', mid.every((b, i) => b.id === CORNFIELD_RIDERS[i].id && b.color === CORNFIELD_RIDERS[i].color))
-        const atJoin = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1)
-        const rider = atJoin.balls?.[0]
-        const threadY = universeAt(perf.show.universe(0), atJoin.local).y
-        check('cornfield: the first lane sits off the thread', !!rider && Math.abs(rider.y - threadY - CORNFIELD_RIDERS[0].lane) < 0.35, rider ? `dy ${rider.y - threadY}` : 'no rider')
-        check('cornfield: the lanes have merged at the portal', merged.length === CORNFIELD_RIDERS.length && spread < 0.35 && xspread < 0.35, `x ${xspread.toFixed(3)} y ${spread.toFixed(3)}`)
-        const cam = perf.camera?.(60)
-        check('cornfield: the camera holds the whole garden', !!cam && cam.cells > 6)
-      }
-      if (work.work === 'cornfield-chase' && version.take === 'voices') {
-        check('Cornfield voices: private credit, and a clip of the chase',
-          !!perf.soundtrack?.credit?.includes('Zimmer') &&
-          !!perf.soundtrack?.href?.includes('JuSsvM8B4Jc') &&
-          (perf.soundtrack?.offset ?? 0) > 60 &&
-          perf.duration >= 40 && perf.duration <= 55)
-        const mid = perf.show.at(perf.duration / 2)
-        const cam = perf.camera!(perf.duration / 2)
-        const zoomH = cam.cells / 1.5
-        check('Cornfield voices: the hero stays inside the Zoom frame',
-          Math.abs(mid.x - cam.x) < zoomH * (16 / 9) / 2 - 0.2 && Math.abs(mid.y - cam.y) < zoomH / 2 - 0.2)
       }
     }
   }
