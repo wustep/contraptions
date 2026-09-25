@@ -1,6 +1,8 @@
 import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
-import { ICON, copyButton, createShell, el, guardWheel, icon, section, seedCard, segmented } from '../../../src/ui/shell'
+import { registerMode } from '../../../src/ui/mode-host'
+import { modeFromPath } from '../../../src/ui/mode-path'
+import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, type Shell } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
 import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
@@ -36,10 +38,14 @@ import { WORLDS, builtWorlds, nextWorld, worldByName } from './worlds'
  * the piece just watched lit.
  */
 
-const stage = document.getElementById('stage')!
-const panelRoot = document.getElementById('panel')!
-
 installBuilds(folderBuilds())
+
+/** One visit. The chrome is already up; this fills the stage and the panel, and the return stops it. */
+export function start(shell: Shell): () => void {
+  const stage = document.getElementById('stage')!
+  const panelRoot = shell.body
+  let alive = true
+
 
 let seed = randomSeed()
 let solo: string | null = null
@@ -247,7 +253,9 @@ function setOverview(on: boolean): void {
   sync()
 }
 
-window.addEventListener('popstate', () => {
+const onPop = () => {
+  // A tab change is the host's. This listener only walks the catalog stack, and only while this visit is up.
+  if (!alive || modeFromPath(location.pathname) !== 'machine') return
   const from = viewName()
   const left = soloEntry()
   const current = seed
@@ -257,11 +265,10 @@ window.addEventListener('popstate', () => {
   if (VIEWS.indexOf(viewName()) < VIEWS.indexOf(from)) seed = current
   if (from === 'solo' && catalogOn) lastPick = left
   rebuild('keep', resumeAt())
-})
+}
+window.addEventListener('popstate', onPop)
 
 /* ------------------------------------------------------------------ panel */
-
-const shell = createShell(panelRoot, 'machine')
 
 // Seed — one string fixes the whole future, so it leads.
 const seedInput = el('input', {
@@ -379,10 +386,11 @@ scrub.addEventListener('input', () => {
   scrub.style.setProperty('--p', `${Number(scrub.value) / 10}%`)
   seek(show.begin(i) + (Number(scrub.value) / 1000) * u.journey)
 })
-guardWheel(panelRoot, scrub)
+guardWheel(shell.root, scrub)
 let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
-window.addEventListener('pointerup', () => { scrubbing = false })
+const endScrub = () => { scrubbing = false }
+window.addEventListener('pointerup', endScrub)
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
@@ -509,7 +517,9 @@ let lastReadout = ''
 let lastTime = ''
 let lastPaper = ''
 let lastDims = ''
+let raf = 0
 function tick(): void {
+  if (!alive) return
   const t = now()
   const here = show.at(t)
   const u = here.universe
@@ -552,13 +562,14 @@ function tick(): void {
     lastPaper = u.theme.bg
     stage.style.setProperty('--paper', u.theme.bg)
   }
-  requestAnimationFrame(tick)
+  raf = requestAnimationFrame(tick)
 }
-requestAnimationFrame(tick)
+raf = requestAnimationFrame(tick)
 
 /* ------------------------------------------------------------------ keys */
 
-window.addEventListener('keydown', (e) => {
+const onKey = (e: KeyboardEvent) => {
+  if (!alive) return
   // Never shadow browser chrome (cmd+S, ctrl+R, ...).
   if (e.metaKey || e.ctrlKey || e.altKey) return
   const t = e.target
@@ -607,7 +618,8 @@ window.addEventListener('keydown', (e) => {
       seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break
   }
-})
+}
+window.addEventListener('keydown', onKey)
 
 sync()
 
@@ -629,3 +641,16 @@ if (import.meta.env.DEV) {
     setOverview,
   }
 }
+
+  return () => {
+    alive = false
+    cancelAnimationFrame(raf)
+    window.removeEventListener('popstate', onPop)
+    window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('keydown', onKey)
+    view.destroy()
+    if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).rube
+  }
+}
+
+registerMode('machine', start)

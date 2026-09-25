@@ -161,6 +161,11 @@ body.bare .stage-play { display: none; }
   gap: 9px;
 }
 
+/* A mode fills this. It is not a box: its sections are flex items of the
+   panel, between the brand and the byline, so a switch can clear them
+   without touching the chrome or the panel's layout. */
+.panel-body { display: contents; }
+
 /* ---- header: brand and the mode switch ------------------------------ */
 
 .brand { display: flex; flex-direction: column; gap: 8px; }
@@ -776,7 +781,7 @@ a.more:hover { color: var(--accent); }
 .byline a:hover { color: var(--text); text-decoration: underline; }
 /* Explorations already has a foot. The credit keeps the push, and the
    byline sits under it as a second quiet line — one rule, no split gap. */
-#panel:has(> .credit) > .byline {
+#panel:has(.credit) > .byline {
   position: static;
   margin-top: -4px;
   padding-top: 4px;
