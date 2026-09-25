@@ -85,7 +85,7 @@ export function compose(): { show: EpilogueShow; camera: (t: number) => Framing 
     [...club.company, ...dream.company, ...back.company].sort((a, b) => a.from - b.from),
   )
 
-  const shots: Shot[] = [...club.shots, ...dream.shots, ...back.shots]
+  let shots: Shot[] = [...club.shots, ...dream.shots, ...back.shots]
   if (!shots.some((s) => s.t <= 0)) shots.unshift({ t: 0, cells: 5 })
   if (!shots.some((s) => s.t >= DURATION)) shots.push({ t: DURATION, cells: 5 })
   // Match cuts: the first key of the dream keeps the room's last framing, so the kiss is one picture with the light
@@ -95,6 +95,10 @@ export function compose(): { show: EpilogueShow; camera: (t: number) => Framing 
     const first = shots.find((s) => Math.abs(s.t - at) < 1e-6)
     if (before && first && before.hold && !first.hold) Object.assign(first, { cells: before.cells, hold: before.hold, w: before.w ?? 1, off: undefined })
   }
+  // At every other seam the two parts each put a key on the same instant. Where they agree there is nothing to do;
+  // where they differ, the part being entered wins, and the part being left ends on a move toward it, so no seam is
+  // a cut: the camera is one continuous take from the first frame to the last.
+  shots = shots.filter((s, i) => !shots.some((o, j) => j > i && Math.abs(o.t - s.t) < 1e-6))
   const follow = director((t) => show.where(t) as Pt, shots, DURATION)
   return { show, camera: follow }
 }
