@@ -169,8 +169,9 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
     // Dawn in Murph's room: a slow push in through the piano's first bars on the shelf and her bed under the window,
     // arriving as the first book goes (5.13) and she wakes.
     { t: 0, cells: 3.8, hold: [1.7, -2.4] },
-    { t: 5.2, cells: 2.95, hold: [1.38, -2.55] },
-    { t: 5.5, cells: 2.95, hold: [1.38, -2.55] },
+    // (Centred so that under Zoom, 1.5 times closer, her pillow is still in with the shelf's books.)
+    { t: 5.2, cells: 2.95, hold: [1.52, -2.55] },
+    { t: 5.5, cells: 2.95, hold: [1.52, -2.55] },
     { t: 12.3, cells: 3.1, hold: [2.1, -2.55], w: 0.7 },
     { t: 15.5, cells: 3.3, w: 0.35, hold: [4.4, -2.3] },
     { t: 17.2, cells: 3.8, w: 0 },
