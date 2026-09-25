@@ -309,7 +309,7 @@ export function joyAt(t: number): Pt {
   // Waymond's touch pushes her against her mother.
   const nudge = smooth01((t - W_TOUCH) / (RIPPLE - W_TOUCH))
   const x = J_FLOOR[0] + (J_ROW[0] - J_FLOOR[0]) * nudge
-  return [x, -lineUp(t, LINE_UP[0])]
+  return [x, -lineUp(t, LINE_UP[0]) - lineUp(t, NESTLE, 0.24)]
 }
 
 export function waymondAt(t: number): Pt {
@@ -337,8 +337,9 @@ export function waymondAt(t: number): Pt {
 
 /** As Evelyn goes for the lights, Joy and then Waymond straighten up for the picture: a small hop each, landing on the beat. */
 export const LINE_UP = [home(11), home(12)]
-function lineUp(t: number, land: number): number {
-  const air = 0.2
+/** In the hold, Joy nestles in against her mother: a little lift and settle, on a soft note. */
+export const NESTLE = 279.835
+function lineUp(t: number, land: number, air = 0.2): number {
   const u = t - (land - air)
   if (u <= 0 || u >= air) return 0
   return 0.5 * G * u * (air - u)
@@ -389,4 +390,4 @@ export function windowLight(t: number): { a: number; warm: number } {
 }
 
 /** What was struck, for the score: every visible strike. */
-export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, NUZZLE, DOOR_TO, SET_OFF, ...LINE_UP, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, EJECT, LOOSE, 291.724, PHOTO_DOWN, 293.013, LIGHTS_OUT, home(42.5), home(43), TURN_OVER, SWELL]
+export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, NUZZLE, DOOR_TO, NESTLE, SET_OFF, ...LINE_UP, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, EJECT, LOOSE, 291.724, PHOTO_DOWN, 293.013, LIGHTS_OUT, home(42.5), home(43), TURN_OVER, SWELL]

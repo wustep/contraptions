@@ -149,16 +149,18 @@ export const finale = part<FinaleState>(
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
       { t: 275.2, cells: 4.3, hold: H(-2.1, -1.0), w: 1 },
-      // With her, under the camera's tripod, to the switch under the window.
-      { t: 282.2, cells: 4.0, hold: H(-3.3, -1.2), w: 1 },
+      // In, slowly, to the three of them together at the washer's foot, its window glowing behind them; and hold.
+      { t: 279.0, cells: 2.6, hold: H(-2.03, -0.6), w: 1 },
+      { t: 282.2, cells: 2.6, hold: H(-2.05, -0.6), w: 1 },
+      // Out again with her, under the camera's tripod, to the switch under the window.
       { t: 284.8, cells: 3.75, hold: H(-4.35, -1.02), w: 1 },
       { t: 286.2, cells: 3.75, hold: H(-4.4, -1.02), w: 1 },
       // She presses it: back and right, the string of lanterns lighting over the family one a beat.
-      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.4), w: 1 },
+      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.25), w: 1 },
       // And settle on the portrait: the door's glass, the camera, the family under the lanterns.
-      { t: 290.2, cells: 3.85, hold: H(-3.5, -1.18), w: 1 },
-      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.18), w: 1 },
-      { t: 293.2, cells: 3.9, hold: H(-3.45, -1.18), w: 1 },
+      { t: 290.2, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
+      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.1), w: 1 },
+      { t: 293.2, cells: 3.9, hold: H(-3.45, -1.12), w: 1 },
       // Then back, towards the washer's glow, for the lights going out.
       { t: 294.6, cells: 5.15, hold: H(-4.62, -1.52), w: 1 },
       // The rest: drawing back, very slowly, over the dark.

@@ -74,7 +74,7 @@ const RING_FROM = 127.4
 const RING_AT = 127.663
 
 /** Every world's first instant is a strike, on the recording's hit; then the ring closing round her, and its collapse. */
-export const SURF_HITS: number[] = [...WORLDS.map((w) => w.at), RING_AT, END]
+export const SURF_HITS: number[] = [...WORLDS.map((w) => w.at), 122.694, RING_AT, END].sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -286,8 +286,10 @@ function irs(s: Scene): void {
     }
     rect(pen, 2.5, top + 0.16, 0.14, 1.6, HOME.wood)
     // Trophies.
-    for (const [tx, sc] of [[1.7, 1.2], [2.35, 0.9]] as const) {
-      at(pen, tx, top, 0, sc, () => {
+    // The second stamp jolts the desk, and the trophies hop and rock back.
+    const jolt = x > STAMPS[1] ? Math.exp(-(x - STAMPS[1]) / 0.12) * Math.abs(Math.sin((x - STAMPS[1]) * 22)) : 0
+    for (const [tx, sc, side] of [[1.7, 1.2, 1], [2.35, 0.9, -1]] as const) {
+      at(pen, tx, top - 0.09 * jolt, side * 0.1 * jolt, sc, () => {
         rect(pen, -0.2, -0.12, 0.4, 0.12, HOME.steelDark, 1)
         rect(pen, -0.05, -0.5, 0.1, 0.38, STAR.gold, 1)
         poly(pen, [[-0.28, -1.05], [0.28, -1.05], [0.2, -0.66], [0.06, -0.5], [-0.06, -0.5], [-0.2, -0.66]], STAR.gold, 1)
@@ -313,16 +315,36 @@ function irs(s: Scene): void {
     }
     // The form, and the stamp slamming down on it: the red mark it leaves.
     rect(pen, 0.1, top - 0.03, 1.0, 0.04, HOME.paper, 0.7)
-    const down = x < 0 ? 0 : x < 0.06 ? 1 : Math.max(0, 1 - easeOut((x - 0.06) / 0.35))
-    const lift = x < -0.15 ? 0.9 : x < 0 ? 0.9 + 0.3 * smooth((x + 0.15) / 0.15) : 1.2 * (1 - down)
+    const lift = stampLift(x)
     const sy = top - 0.05 - lift
     if (x > 0) rect(pen, 0.35, top - 0.05, 0.5, 0.02, HOME.red, 0)
     rect(pen, 0.33, sy - 0.14, 0.54, 0.14, HOME.red, 1)
     rect(pen, 0.38, sy - 0.26, 0.44, 0.12, HOME.steelDark, 1)
     rect(pen, 0.54, sy - 0.66, 0.12, 0.4, HOME.wood, 1)
     ellipse(pen, 0.6, sy - 0.74, 0.18, 0.12, HOME.wood, 1)
-    if (x >= 0 && x < 0.25) glow(pen, 0.6, top, 0.9, HOME.light, 0.6 * (1 - x / 0.25))
+    for (const at0 of STAMPS) {
+      const dx = x - at0
+      if (dx >= 0 && dx < 0.25) glow(pen, 0.6, top, 0.9, HOME.light, 0.6 * (1 - dx / 0.25))
+    }
   })
+}
+
+/** The auditor's stamp comes down twice: on the IRS's own hit (122.381), and again on 122.694, seconds into it. */
+const STAMPS = [0, 122.694 - 122.381]
+
+/** How high the stamp is over the form `x` seconds into the IRS: raised, down on each hit, up again between. */
+function stampLift(x: number): number {
+  if (x < -0.15) return 0.9
+  if (x < 0) return 0.9 + 0.3 * smooth((x + 0.15) / 0.15)
+  const rise = (dx: number) => (dx < 0.05 ? 0 : 1.2 * easeOut((dx - 0.05) / 0.3))
+  const second = STAMPS[1]
+  if (x < second - 0.07) return rise(x)
+  if (x < second) {
+    // Brought down again, hard.
+    const u = (x - (second - 0.07)) / 0.07
+    return rise(second - 0.07) * (1 - u * u)
+  }
+  return rise(x - second)
 }
 
 /* ------------------------------------------------------------------ 4. karaoke */
