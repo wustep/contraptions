@@ -665,7 +665,7 @@ export const shadow = part<ShadowState>(
       { at: at(TOUCH), p: BESIDE, ease: 'out' },
       // The bow: up a little together, and down on the onset.
       { at: at(BOW - 0.24), p: BESIDE },
-      { at: at(BOW - 0.12), p: [BESIDE[0], BESIDE[1] - 0.09], ease: 'out' },
+      { at: at(BOW - 0.12), p: [BESIDE[0], BESIDE[1] - 0.09], ease: 'inout' },
       { at: at(BOW), p: BESIDE, ease: 'in' },
       { at: T, p: BESIDE },
     )
