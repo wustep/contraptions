@@ -260,11 +260,23 @@ const LEAN = Math.asin((GROUND - PLANK_Y - PLANK_T) / PLANK_HALF)
 const U0 = 0.36
 
 /** The plank's angle (positive: right end down). */
+/** The ball's height off the plank after it lands on it: a bounce, and a smaller one, and it sits (both on the plank's going-down). */
+function plankBounce(t: number): number {
+  const s = t - PLANK
+  const b1 = 0.16
+  const b2 = 0.08
+  if (s <= 0) return 0
+  if (s < b1) return 0.045 * 4 * (s / b1) * (1 - s / b1)
+  if (s < b1 + b2) return 0.012 * 4 * ((s - b1) / b2) * (1 - (s - b1) / b2)
+  return 0
+}
+
 function plankAngle(t: number): number {
   if (t < PLANK) return -LEAN
   if (t < THUMP) {
+    // The ball's landing starts it going (it gives under the blow), and its weight takes it down faster and faster.
     const u = (t - PLANK) / (THUMP - PLANK)
-    return -LEAN + 2 * LEAN * u * u
+    return -LEAN + 2 * LEAN * (0.25 * u + 0.75 * u * u)
   }
   const s = t - THUMP
   return LEAN - 0.05 * Math.exp(-s / 0.07) * Math.abs(Math.sin(s * 40))
@@ -370,6 +382,8 @@ export const combine = part<CombineState>(
         { at: at(GATE), p: rest },
         { at: at(GATE) + 0.2, p: onGate, ease: 'in' },
         { at: at(GATE) + 0.34, p: IN_HOPPER, ease: 'in' },
+        // Down into the hopper, a small bounce off its floor, and still.
+        { at: at(GATE) + 0.48, p: IN_HOPPER, arc: 0.035 },
         { at: at(DRAW), p: IN_HOPPER },
       ]),
     )
@@ -397,8 +411,21 @@ export const combine = part<CombineState>(
     const bale = MUZZLE[0] + vx * T - land0[0]
     const fire: Way = { at: at(FIRE), p: MUZZLE }
     segs.push(...route([fire, hop(fire, [bale + land0[0], land0[1]], at(PLANK))]))
-    // The plank comes down with it.
-    segs.push(...carried((u) => onPlank(bale, U0, plankAngle(u + slot.begin)), at(PLANK), at(THUMP), 24))
+    // It bounces once on the plank (the plank giving under it), and the plank comes down with it.
+    segs.push(
+      ...carried(
+        (u) => {
+          const t = u + slot.begin
+          const a = plankAngle(t)
+          const [x, y] = onPlank(bale, U0, a)
+          const b = plankBounce(t)
+          return [x + b * Math.sin(a), y - b * Math.cos(a)]
+        },
+        at(PLANK),
+        at(THUMP),
+        48,
+      ),
+    )
     // And it rolls off the low end onto the stubble, up to the pace of the field.
     const tipEnd = onPlank(bale, PLANK_HALF, LEAN)
     const off: Pt[] = [onPlank(bale, U0, LEAN), tipEnd, [tipEnd[0] + 0.1, ON_GROUND]]
@@ -1050,5 +1077,20 @@ function drawChaff(p: p5, c: Ctx, t: number): void {
     const r = (big ? 0.1 : 0.05) + age * (big ? 0.16 : 0.08)
     puff(p, k, ink, weight * 0.5, DUST.husk, BODY_BACK + 0.3 + age * 0.6, 0.12 + age * 0.12 - age * age * 0.1, r)
     p.pop()
+    // Straw out of the spreader with it: a few short slivers thrown back, turning over, falling to the stubble.
+    for (let q = 0; q < 3; q++) {
+      const vx = 0.7 + 0.5 * hash(b, q, 71)
+      const vy = -0.9 - 0.6 * hash(b, q, 72)
+      const sx = BODY_BACK + 0.25 + vx * age
+      const sy = Math.min(GROUND - 0.02, 0.1 + vy * age + 0.5 * 4.5 * age * age)
+      const turn = (hash(b, q, 73) - 0.5) * 12 * age + hash(b, q, 74) * 3
+      p.push()
+      p.stroke(alpha(p, ink, 0.55 * (1 - u)))
+      p.strokeWeight(Math.max(1, weight * 0.55))
+      p.translate(sx * k, sy * k)
+      p.rotate(turn)
+      p.line(-0.05 * k, 0, 0.05 * k, 0)
+      p.pop()
+    }
   }
 }

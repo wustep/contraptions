@@ -5,7 +5,7 @@ import { FLOOR, laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../..
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat } from '../music'
 import { G_LOW, hop } from '../physics'
-import { AGED, BALL, BRAND, DARK } from '../worlds'
+import { BALL, BRAND, DARK, GREY } from '../worlds'
 
 /**
  * Miller's world, and the one who waits.
@@ -23,7 +23,7 @@ import { AGED, BALL, BRAND, DARK } from '../worlds'
  *
  * Up in orbit the ring keeps another time. Brand, whom the trapdoor left
  * behind runs round the inside of it once an eighth, trips a catch every
- * lap, and the catch cuts a mark on the tally beside it; her blue goes to
+ * lap, and the catch cuts a mark on the tally beside it; her blue dims toward
  * the grey of the years. On the twenty-third mark the catch locks and holds
  * her, and the ring goes from the sky.
  *
@@ -310,10 +310,15 @@ const stationOn = (t: number): number => 1 - smooth(t, beat(178.3), beat(179.6))
 /** When the ring is gone from the sky, and her with it. */
 const GONE = beat(179.6)
 
-/** Where she is on her lap, and her colour: blue going to the grey of the years by the lock. */
+/** Her blue after the years she waits in orbit: dimmed toward grey, still hers (the tally counts the years). */
+const ORBIT_YEARS = mixHex(BRAND, GREY, 0.4)
+
+/** Where she is on her lap, and her colour: her blue dimming with the years by the lock. */
 function waitsAt(t: number): { x: number; y: number; angle: number; color: string } {
-  const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET
-  const color = mixHex(BRAND, AGED, clamp((t - OUT) / (LATCH - OUT)))
+  // Caught on the locking mark: she runs a hair past it and is held back to it, rather than stopping dead.
+  const k = t - LATCH
+  const a = t < LATCH ? MEET - (TAU * (t - CLICKS[0])) / EIGHTH : MEET - 0.12 * Math.exp(-k / 0.07) * Math.sin(k * 60)
+  const color = mixHex(BRAND, ORBIT_YEARS, clamp((t - OUT) / (LATCH - OUT)))
   return { x: STATION[0] + PATH * Math.cos(a), y: STATION[1] + PATH * Math.sin(a), angle: a - Math.PI / 2, color }
 }
 
@@ -374,19 +379,20 @@ export const miller = part<MillerState>(
     // ring is out of the frame then), and going with the ring, smaller and smaller, until it is gone.
     const waits = (t: number): Companion | null => {
       const w = waitsAt(t)
-      return { x: w.x, y: w.y, color: w.color, scale: TWIN_SCALE * presence(t, state) * stationOn(t), angle: w.angle }
+      const born = smooth(t, slot.begin + 0.14, slot.begin + 0.5)
+      return { x: w.x, y: w.y, color: w.color, scale: TWIN_SCALE * presence(t, state) * stationOn(t) * born, angle: w.angle }
     }
     return {
       cells: box(-1, -7, 24, 3),
       exit: [end[0] + 0.5, end[1]],
       lane,
       state,
+      // A moment after the ring's part lets her go (a gap: she is somewhere else now), growing out of nothing.
       company: [{ from: slot.begin + 0.14, to: GONE + 0.02, at: waits }],
     }
   },
   (slot) => [
-    // The sphere, as the ball goes in; then the whip to the far side, stopping as it comes out.
-    { t: slot.begin, cells: 7, hold: [-0.5, 0] },
+    // The whip to the far side from the sphere (the ring's part holds on it), one long move, landing as he comes out.
     { t: OUT, cells: 5.4, hold: [11.35, -1.55] },
     { t: CATCH, cells: 5.8, hold: [13.1, -1.7] },
     { t: beat(179), cells: 7, hold: [13.9, -1.95] },

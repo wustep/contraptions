@@ -272,16 +272,20 @@ const IN_SEAT = 31.93
  */
 const OFF_NOSE = STOP + 0.53
 const NOSE_U = 3.0
-const V_OFF = 3.5
+/** How fast he goes off the nose, along the body: set by the build to the speed his flight over the edge starts at, so there is no kink. */
+let vOff = 3.5
 
 export const TRUCK_NOTES = [LAND, BONK, DOOR]
 export const TRUCK_ORGAN = [...CRANKS, CATCH, LIGHTS, REV]
 export const TRUCK_BEATS = [DROP, ...SLAPS, TAKEOFF, LANDING, STOP, TOUCHDOWN].sort((a, b) => a - b)
 
 /** How far the whole truck is off the road, over the ditch. */
+/** 0..1 → 0..1, starting at rest and running on at an even pace: a launch that builds over a moment (the lip). */
+const launch = (u: number, a = 0.15): number => (u + a * (Math.exp(-u / a) - 1)) / (1 + a * (Math.exp(-1 / a) - 1))
 const jumpAt = (t: number): number => {
   if (t <= TAKEOFF || t >= LANDING) return 0
-  const u = (t - TAKEOFF) / (LANDING - TAKEOFF)
+  // Up the lip: the front wheels climb it first, so the lift builds over a moment rather than all at once. Down hard.
+  const u = launch((t - TAKEOFF) / (LANDING - TAKEOFF))
   return HANG * 4 * u * (1 - u)
 }
 
@@ -429,7 +433,7 @@ function heroAt(t: number): Pt {
   const f0 = TAKEOFF + 0.06
   const f1 = beat(77.5)
   if (t > f0 && t < f1) {
-    const w = (t - f0) / (f1 - f0)
+    const w = launch((t - f0) / (f1 - f0))
     v += 0.22 * 4 * w * (1 - w)
   }
   // The fence: a knock forward.
@@ -441,9 +445,9 @@ function heroAt(t: number): Pt {
   if (br > 0) {
     const T = OFF_NOSE - STOP
     const w = clamp(br / T)
-    const m1 = (V_OFF * T) / (NOSE_U - u)
+    const m1 = (vOff * T) / (NOSE_U - u)
     u += (NOSE_U - u) * ((3 - 2 * w) * w * w + (w ** 3 - w ** 2) * m1)
-    v += (HOOD + R - v) * smooth(u, 1.95, 2.3) - 0.07 * smooth(u, 2.86, NOSE_U)
+    v += (HOOD + R - v) * smooth(u, 1.95, 2.3)
   }
   return [u, v]
 }
@@ -484,6 +488,9 @@ export const truck = part<TruckState>(
     const leave = at(OFF_NOSE)
     const touch: Pt = [s.edge + 2.4, 3]
     const drop = at(LAND) - fall
+    // Off the nose at the pace his flight over the edge begins with (along the nose-down body): where he leaves the
+    // nose does not depend on it, so it is worked out first, and the ride below is sampled with it.
+    vOff = (touch[0] - rider(leave)[0]) / (at(TOUCHDOWN) - leave) / Math.cos(bodyAt(OFF_NOSE).pitch)
     // Along the flume, a hop off its end onto the rail on the note; along it and into the cab, and the ride.
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }, { at: drop, p: [edge, 0] }]
     ways.push(hop(ways[1], rider(land), land))

@@ -3,8 +3,8 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
-import { ACT2, cue } from '../music'
-import { AGED, BALL, BRAND, DUST } from '../worlds'
+import { cue } from '../music'
+import { BALL, DUST, MURPH } from '../worlds'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -37,15 +37,16 @@ import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
  * floor (154) and rolls on over the lift car's threshold, a low wooden lip,
  * into its doorway.
  *
- * Amelia Brand is in the rocking chair by the far wall, waiting, a little of
- * the years in her blue. She has been there since the station's lights came
- * up, rocking it gently with the organ; the crash upstairs stops her, and as
- * he comes in and down she comes back to her own full blue. When he is down
- * she rocks back once and forward, the chair pitches her out onto the floor on
- * the eighth, and she rolls out across the room to him; and he, in the car's
- * doorway, turns back out over the lip to her. They meet in the open floor on
- * the beat (155). She walks him back to the lift, he over the lip and she up
- * to it, and on the eighth (155½) she pushes him on; he rolls to the middle of
+ * Murph is in the rocking chair by the far wall: his daughter, a lifetime
+ * older than he is now, in a room that is hers, his old watch hung on the
+ * wall by her chair and a quilt over its back. She has been there all along,
+ * rocking gently with the organ; the crash upstairs
+ * stops her. When he is down she rocks back once and forward, the chair
+ * pitches her out onto the floor on the eighth, and she rolls out across the
+ * room to him; and he, in the car's doorway, turns back out over the lip to
+ * her. They meet in the open floor on the beat (155). Then she sends him on:
+ * she walks him back to the lift, he over the lip and she up to it, and on
+ * the eighth (155½) she pushes him on (go to her); he rolls to the middle of
  * the car by the big step (156), where the hub has him. She stays at the lip;
  * the car's gate comes down in front of her, the empty chair rocks itself
  * still behind her, and the car climbs away.
@@ -91,8 +92,8 @@ const DOWN = cue(155)
 /** Her nudge: on into the car. */
 const INCAR = cue(155.5)
 const OUT = cue(156)
-/** Her span ends here, the car well up the spoke and the house out of the frame behind it. */
-const BRAND_GONE = cue(162)
+/** Murph's span ends here, the car well up the spoke and the house out of the frame behind it. */
+const MURPH_GONE = cue(162)
 const xy = (q: Pt): { x: number; y: number } => ({ x: q[0], y: q[1] })
 
 /** The trapdoor comes down on its stop. */
@@ -273,7 +274,7 @@ const DOOR_T = 0.5
 /** The counterweight's pulley under the rafters, and its weight. */
 const PULLEY: Pt = [-0.98, -2.55]
 /**
- * Her rocking chair, a small one, set back against the wall and facing the car: where its rockers meet the floor,
+ * Murph's rocking chair, a small one, set back against the wall and facing the car: where its rockers meet the floor,
  * and its size. Its seat's height and front, and every other measure of it below, are at full size; `CHAIR_S` shrinks
  * them.
  */
@@ -523,7 +524,7 @@ function hisGo(T: number): Pt {
   return [WAIT_X * (1 - w * w * (3 - 2 * w)), FLOOR_Y]
 }
 
-/* ---- her: still in her chair while he comes down; then out of it, and across the room to him */
+/* ---- Murph: still in her chair while he comes down; then out of it, and across the room to him */
 
 /** Her place on the seat, against the chair's back, and the seat's front edge, where she goes over (full size). */
 const HER_X = -0.155 * CHAIR_S
@@ -566,7 +567,7 @@ function across(T: number): number {
   return hermite(HER_LAND, V_LAND * D, MEET_HER, V_TOUCH * D, clamp((T - HER_DOWN) / D))
 }
 /**
- * At the lip, against him, still; on the eighth she pushes, the two of them moving together for a moment, she on
+ * At the lip, against him, still; on the eighth she sends him on: she pushes, the two of them moving together for a moment, she on
  * after him a hair up the lip's corner as he goes on; then she settles back against it. No stop, no snap.
  */
 const FOLLOW = 0.03
@@ -596,17 +597,6 @@ function herAt(T: number): Pt {
   const g = T - OUT
   return [REST_X - (g > 0 && g < 0.35 ? 0.025 * Math.sin((Math.PI * g) / 0.35) : 0), FLOOR_Y]
 }
-/**
- * Her colour. In the chair, waiting, a little of the years in her blue (never more than a touch: she is still
- * unmistakably herself). When he comes in at the window and down through the trapdoor she comes back to her full
- * blue, over a beat and a half, as if she had come alive; and she is her full self from then on.
- */
-const YEARS = 0.28
-function herColor(T: number): string {
-  const f = YEARS * (1 - smooth(T, WINDOW, cue(153.6)))
-  return f <= 0 ? BRAND : mixHex(BRAND, AGED, f)
-}
-
 /** The ball, at show time `T`, in this part's cells. */
 function ballAt(T: number): Pt {
   if (T <= CATCH) return U(along(V_IN * (T - IN)), 0, -FLOOR)
@@ -689,10 +679,11 @@ export const ballpark = part<BallparkState>(
       seen.add(key)
       cells.push([cx, cy])
     }
-    // Her: in the far-side house's rocking chair from the moment the lights come up, old, waiting. Out of shot
-    // until the pull back shows the whole ring, then a speck in the house; found on 154; left rocking as the car
-    // climbs, and gone once the house is out of the frame.
-    const company: Company[] = [{ from: ACT2, to: BRAND_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: herColor(T) }) }]
+    // Murph: in the far-side house's rocking chair, old, waiting. Her span starts with this part, out of shot (the
+    // house is across the ring); the pull back as the ball crosses the axis shows her as a speck in the house; she
+    // meets her father on 155 and sends him on; left at the lift's threshold as the car climbs, and gone once the
+    // house is out of the frame.
+    const company: Company[] = [{ who: 'murph', from: begin, to: MURPH_GONE, at: (T) => ({ ...xy(U(A_HOUSE, ...herAt(T))), color: MURPH }) }]
     return { cells, exit: F.exit(SEAM.ballparkOut), lane, state: { begin, lane }, company }
   },
   (slot) => {
@@ -1641,6 +1632,43 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.5, DUST.rust)
   p.rect(X(0.02), X(0.115), X(0.16), X(0.025))
   p.pop()
+  drawWatch(p, c, T, shake)
+}
+
+/**
+ * On the wall over Murph's chair, hung by its strap from a nail: his old wristwatch, the one he gave her. Its second
+ * hand still goes, a tick a beat of the organ. The crash upstairs sets it swinging a little on its nail.
+ */
+const WATCH_NAIL: Pt = [-1.8, -1.2]
+function drawWatch(p: p5, c: Ctx, T: number, shake: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const [nx, ny] = WATCH_NAIL
+  p.push()
+  p.translate(X(nx), X(ny))
+  p.rotate(shake * 0.6)
+  // The strap, over the nail and down both sides of the face: worn leather.
+  solid(p, ink, weight * 0.5, DUST.wood)
+  p.rect(X(-0.03), X(0.08), X(0.035), X(0.16), X(0.01))
+  p.rect(X(0.03), X(0.08), X(0.035), X(0.16), X(0.01))
+  p.rect(0, X(0.005), X(0.095), X(0.03), X(0.012))
+  // The face: a small rounded case, a bone dial, and its hands.
+  const fy = 0.2
+  solid(p, ink, weight * 0.6, DUST.tin)
+  p.rect(0, X(fy), X(0.14), X(0.15), X(0.035))
+  solid(p, ink, weight * 0.4, DUST.bone)
+  p.rect(0, X(fy), X(0.105), X(0.115), X(0.026))
+  const beats = (T - cue(0)) / (cue(1) - cue(0))
+  const sec = ((Math.floor(beats) % 60) / 60) * Math.PI * 2 - Math.PI / 2
+  outline(p, ink, weight * 0.45)
+  p.line(0, X(fy), X(0.028 * Math.cos(-1.1)), X(fy + 0.028 * Math.sin(-1.1)))
+  p.line(0, X(fy), X(0.036 * Math.cos(0.4)), X(fy + 0.036 * Math.sin(0.4)))
+  outline(p, DUST.rust, weight * 0.3)
+  p.line(0, X(fy), X(0.04 * Math.cos(sec)), X(fy + 0.04 * Math.sin(sec)))
+  p.pop()
+  // The nail.
+  solid(p, ink, weight * 0.4, ink)
+  p.rect(X(nx), X(ny), X(0.02), X(0.02))
 }
 
 function drawChair(p: p5, c: Ctx, T: number): void {
@@ -1685,6 +1713,26 @@ function drawChair(p: p5, c: Ctx, T: number): void {
   p.rect(X(-0.41), X(-1.0), X(0.1), X(0.06), X(0.02))
   outline(p, ink, weight * 0.6)
   for (const f of [0.3, 0.6]) p.line(X(-0.3 - 0.08 * f), X(SEAT_Y - 0.08), X(-0.3 - 0.08 * f - 0.04), X(-0.96))
+  // A patchwork quilt folded over the top of the back and hanging down its front: a small checker of faded squares,
+  // the fold along the top.
+  const quilt = [DUST.bone, DUST.rust, DUST.husk, DUST.sage]
+  const qx0 = -0.43
+  const qw = 0.3
+  const qTop = -1.04
+  const rows = 3
+  const cols = 3
+  const rowH = 0.075
+  for (let r = 0; r < rows; r++) {
+    for (let q = 0; q < cols; q++) {
+      const x0 = qx0 + (q * qw) / cols + 0.012 * r
+      const y0 = qTop + 0.03 + r * rowH
+      solid(p, ink, weight * 0.35, quilt[(r + q * 2) % quilt.length])
+      p.rect(X(x0 + qw / cols / 2), X(y0 + rowH / 2), X(qw / cols), X(rowH))
+    }
+  }
+  // The fold, and the hem hanging a little uneven.
+  solid(p, ink, weight * 0.5, DUST.rust)
+  p.rect(X(qx0 + qw / 2), X(qTop + 0.015), X(qw + 0.02), X(0.035), X(0.015))
   p.pop()
 }
 

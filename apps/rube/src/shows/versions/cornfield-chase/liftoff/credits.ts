@@ -43,11 +43,12 @@ const script: Omit<Card, 'at'>[] = [
   { hold: 2.5, role: 'Directed by', names: ['Stephen Wu'] },
   { hold: 2.6, role: 'Machines, drawings and code', names: ['Claude Opus 5.5'] },
   {
-    hold: 3.3,
+    hold: 3.7,
     role: 'With',
     names: [
       ['Joseph Cooper', 'the sand ball'],
       ['Dr. Amelia Brand', 'the blue ball'],
+      ['Murph', 'the slate ball'],
       ['TARS', 'four slabs of steel'],
     ],
   },

@@ -36,11 +36,12 @@ export interface Built<S> {
    */
   riders?: Riders
   /**
-   * Brand, wherever this part shows her (`worlds.ts`, BRAND). Each span
-   * is in show seconds and may run past the part's own slot (a truck parked at
-   * the dam still has her in its cab while the hero is down in the field); at
-   * any time at most one part in the show has her. Positions are in the part's
-   * frame; null while she is out of sight (and only when she is out of shot).
+   * The hero's company: Brand (`worlds.ts`, BRAND) or, on Cooper Station, old
+   * Murph (MURPH), wherever this part shows her. Each span is in show seconds
+   * and may run past the part's own slot (a truck parked at the dam still has
+   * her in its cab while the hero is down in the field); at any time at most
+   * one part in the show has each of them. Positions are in the part's frame;
+   * null while she is out of sight (and only when she is out of shot).
    */
   company?: Company[]
 }
@@ -48,14 +49,18 @@ export interface Built<S> {
 /** See `Built.riders`. */
 export type Riders = (t: number, hero: ShowBall) => ShowBall[] | null
 
-/** Where Brand is: the ball's own fields but its id and, unless she has changed, its colour. */
+/** Where she is: the ball's own fields but its id and, unless she has changed, its colour. */
 export type Companion = Omit<ShowBall, 'id' | 'color'> & { color?: string }
 
-/** A stretch of show time in which a part has Brand. */
+/** Who keeps the hero company: Brand (the default), or Murph. */
+export type Who = 'brand' | 'murph'
+
+/** A stretch of show time in which a part has one of them. */
 export interface Company {
   from: number
   to: number
   at: (t: number) => Companion | null
+  who?: Who
 }
 
 /**
@@ -209,7 +214,7 @@ export function lay(start: { col: number; row: number; begin: number; ball: Ball
     for (const span of built.company ?? []) {
       const ox = col
       const oy = row
-      company.push({ from: span.from, to: span.to, at: (t) => { const b = span.at(t); return b ? { ...b, x: b.x + ox, y: b.y + oy } : null } })
+      company.push({ from: span.from, to: span.to, who: span.who, at: (t) => { const b = span.at(t); return b ? { ...b, x: b.x + ox, y: b.y + oy } : null } })
     }
     for (const k of link.part.shots?.(slot, built) ?? []) shots.push({ ...k, hold: k.hold ? [col + k.hold[0], row + k.hold[1]] : undefined })
     ball = ballAt(ball, changes, span)

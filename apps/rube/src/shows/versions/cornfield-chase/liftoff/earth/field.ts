@@ -181,17 +181,19 @@ export const cornrow = part<RowState>(
     const length = PACE * (slot.end - slot.begin)
     const end = length - 0.5
     const gates: Gate[] = NOTES.map(([n, strong]) => ({ x: -0.5 + PACE * at(n) + 0.02, at: at(n), strong, t0: 0, swing: new Float32Array(0), slaps: [] }))
-    // Carried on the water at the stream's pace, bobbing a little, held back a moment at each gate.
+    // Carried on the water at the stream's pace, bobbing a little, held back a moment at each gate. It comes in
+    // from the pump's throw faster than the water and plunging: it goes under a little, comes up, and eases to the pace.
     const ways: Way[] = [{ at: 0, p: [-0.5, 0] }]
-    const steps = Math.ceil((slot.end - slot.begin) * 30)
+    const steps = Math.ceil((slot.end - slot.begin) * 60)
     for (let i = 1; i <= steps; i++) {
       const tt = (i / steps) * (slot.end - slot.begin)
-      let x = -0.5 + PACE * tt
+      const plunge = 3.6 * tt * Math.exp(-tt / 0.07)
+      let x = -0.5 + PACE * tt + 0.115 * (Math.exp(-tt / 0.45) - Math.exp(-tt / 0.12))
       for (const g of gates) {
         const since = tt - g.at
         if (since > -0.15 && since < 0.2) x -= 0.03 * Math.sin(Math.PI * clamp((since + 0.15) / 0.35))
       }
-      const bob = i === steps ? 0 : 0.015 * Math.sin(tt * 7)
+      const bob = i === steps ? 0 : 0.015 * Math.sin(tt * 7) + plunge
       ways.push({ at: tt, p: [i === steps ? end : x, bob] as Pt })
     }
     const lane = { segs: route(ways), fire: gates[0].at }

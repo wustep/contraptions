@@ -725,6 +725,17 @@ interface Rig {
   key: number
 }
 
+/**
+ * One lurch, 0 to 1, `since` seconds after the spring lets go: it takes hold over about 90 ms, runs, and coasts out
+ * (a gamma step, so it starts and ends at rest, and gathers smoothly).
+ */
+function lurch(since: number): number {
+  if (since <= 0) return 0
+  const tau = 0.045
+  const at = (s: number) => 1 - (1 + s / tau + (s * s) / (2 * tau * tau)) * Math.exp(-s / tau)
+  return Math.min(1, at(since) / at(0.5))
+}
+
 /** Where the truck is at show time `t`, in this frame: a lurch on each note, backing off the case, a jolt on each start. */
 function rigAt(s: ToyState, t: number): Rig {
   let x = NOSE0
@@ -733,7 +744,7 @@ function rigAt(s: ToyState, t: number): Rig {
   for (let i = 0; i < LURCHES.length; i++) {
     const since = t - LURCHES[i]
     if (since <= 0) break
-    const u = easeOutCubic(clamp(since / 0.36))
+    const u = lurch(since)
     x += s.stride * u
     key += (Math.PI / 2) * u
     pitch += 0.03 * Math.exp(-since / 0.1) * Math.sin(since * 30)

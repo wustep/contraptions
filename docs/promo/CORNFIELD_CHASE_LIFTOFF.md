@@ -10,9 +10,10 @@ Open it at `/shows/?show=cornfield-chase&take=opus55-liftoff`. In the Shows pick
 
 ## What it is
 
-A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Two balls tell the story.
+A Rube Goldberg machine plays two cues back to back, 4:23 of music, and then 28 s of end credits in silence over the last scene: 4:51 in all. Three balls tell the story, as the film does.
 - **Joseph Cooper is the sand ball** (`#F0C987`): the thread. He has the farm, he drives the truck, and he makes every machine go.
-- **Dr. Amelia Brand is the blue ball** (`#1F5E98`): NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted. She waits and grows old, and he finds her again on Cooper Station, where she comes to greet him.
+- **Dr. Amelia Brand is the blue ball** (`#1F5E98`): NASA's. She joins him at the base and rides with him to the ring in orbit, where they are parted, and she waits while he is on Miller. At the very end he finds her at her camp on Edmunds' planet, and they meet.
+- **Murph, old, is the slate ball** (`#7C8C9C`): Cooper's daughter. On Cooper Station he finds her in the far-side house, a lifetime older than he is. She comes to him, and she sends him on, to Brand.
 
 Every world is new for this take, and there are no portals. A rocket carries them from Earth to the dark in Act I. A scored cut on the second cue's first accent opens Act II.
 
@@ -24,23 +25,22 @@ Every world is new for this take, and there are no portals. A rocket carries the
 
 **Act II, No Time for Caution** (127.5 to 262.7 s)
 
-4. **Cooper Station** (127.5 to 207.5 s): the O'Neill cylinder from the film's last reel, seen end-on from inside. The replica farmhouse on its museum plinth, a working farm on the ring, a baseball game on the ground where it stands on end, the far-side house where she waits, and a lift up a spoke to the Ranger in the hub.
-5. **Outside** (207.5 to 262.7 s): the Ranger undocks from the spinning station, crosses Saturn, goes into the wormhole, and lands at the camp on Edmunds' planet.
+4. **Cooper Station** (127.5 to 207.5 s): the O'Neill cylinder from the film's last reel, seen end-on from inside. The replica farmhouse on its museum plinth, a working farm on the ring, a baseball game on the ground where it stands on end, the far-side house where old Murph waits, and a lift up a spoke to the Ranger in the hub.
+5. **Outside** (207.5 to 262.7 s): the Ranger undocks from the spinning station, crosses Saturn, goes into the wormhole, and lands at Brand's camp on Edmunds' planet, where they meet.
 
 Every part is new: the pieces, the worlds, the palettes, the sky, and the camera. Nothing comes from Machine's worlds or from the other takes. The one thing shared with the earlier [Opus 5.5] Music-sync take is the onset file for Cornfield Chase, `scripts/show-plans/cornfield-opus55-onsets.json`. That file is a measurement of the recording.
 
-## Two balls
+## The company
 
-The second ball used to be a surprise: a rust twin in orbit over Miller that came from nowhere. Now she is a character. The roles are locked:
-- **Cooper (sand)** is the farm and the drive.
-- **Brand (blue)** is NASA's, and joins him later.
+The film's ending has two reunions, and so does the show. On Cooper Station, Cooper meets his daughter, old Murph. Then, on Edmunds' planet, he finds Brand. The roles are locked:
+- **Cooper (sand)** has the farm and drives, and every mechanism's beat is his.
+- **Brand (blue)** is NASA's and joins him later. She is blue the whole show.
+- **Murph (slate)** is his daughter, old, and appears only on the station.
 
-The split is the film's own heartbreak, time.
-
-**The roles.**
-- He makes things go. Every mechanism's beat is his, and he drives.
-- She rides. The cage, the rocket's window, the mass driver's cradle and the dock carry her.
-- She follows a step behind, and gets her life from timing alone: a hesitation, a catch-up, a tap on his back.
+**How the company moves.**
+- He makes things go.
+- She rides: the cage, the rocket's window, the mass driver's cradle and the dock carry her.
+- She follows a step behind and gets her life from timing alone: a hesitation, a catch-up, a tap on his back.
 - There are never two lanes through the same machine. This is not the Multi-ball take's garden chase.
 
 **The arc.**
@@ -48,20 +48,19 @@ The split is the film's own heartbreak, time.
 1. **The farm and the drive are his.**
    - He has Murph's room, the tin truck, the stairs and the yard to himself.
    - At the truck he lands on the bed's rail, knocks the door open, rolls in onto the bench, and the door slams behind him on its note.
-   - He is at the wheel through the cranks, the catch and the headlights, and through the chase: the seat throws him up on every beat.
-   - At the dam he stands on the brakes. The door flies open and he is thrown clear, and the truck stays at the edge, empty.
-2. **The base: she joins.**
-   - The drone that led him lands on NASA's bunker. He rolls in through one flap and out of the other.
-   - A beat later the flap he came out of is pushed open again, and a blue ball rolls out after him. That is Brand's first appearance, 71.4 s into the show.
-   - She catches him up and taps his back, and they roll to the tower together.
-   - They ride the cage up and sit side by side in the rocket's window.
-3. **Space.** They float out of the fairing together and ride the mass driver's cradle, the dock and the airlock. They run the spinning ring's corridor.
-4. **The split** (beat 160). The trapdoor drops *him* into the catapult's cup and slaps shut a ball's width in front of her. She stays on the shut door for a beat, then runs on round the ring. He is thrown into the sphere.
-5. **Miller.** The station in orbit is that ring, and she is the one who waits. She laps it once an eighth, a tally mark a lap, and her blue fades to slate while he spends a few ticks on the water.
-6. **Cooper Station.**
-   - He finds her again in the far-side house's rocking chair, her blue only lightly touched by the years. When he comes crashing in through the window she comes back to her own full blue, Amelia again.
-   - When he comes down through the trapdoor, she leaves the chair and comes to him across the floor. She touches him at the lift car's threshold on the beat, and rests against him.
-   - Then she nudges him in, and stays at the threshold as the car goes.
+   - He is at the wheel through the chase, and at the dam he is thrown clear.
+2. **The base: Brand joins.**
+   - The drone that led him lands on NASA's bunker. He rolls in through one flap and out of the other, and TARS stops him.
+   - A beat later a blue ball rolls out after him: Brand's first appearance, 71.4 s into the show.
+   - She taps his back, and they roll to the tower together and sit side by side in the rocket's window.
+3. **Space.** They float out of the fairing together and ride the mass driver, the dock and the airlock. They run the spinning ring's corridor.
+4. **The split** (beat 160). The trapdoor drops *him* into the catapult's cup and slaps shut a ball's width in front of her. She stays on the shut door for a beat, then runs on round the ring.
+5. **Miller.** She waits on that ring in orbit while he spends a few ticks on the water. She laps it once an eighth, a tally mark a lap, and her blue dims a little with the years (it stays her blue).
+6. **Cooper Station: Murph** (about 2:56).
+   - In the far-side house, old Murph rocks in her chair.
+   - He crashes in through the window, comes down the trapdoor, and they meet on the open floor: she rolls out to him, and he turns back to her.
+   - Then she walks him to the lift and nudges him in. She is sending him on, as she does in the film: go to her.
+7. **Edmunds' planet: Brand** (the end). He lands at her camp, rolls down the ramp, and she rolls out from the cairn to meet him. They meet by the lamp as the music stops, and the credits roll over the two of them.
 
 ## The cuts
 
@@ -171,16 +170,16 @@ Beats are No Time for Caution's (`cue(k)`). The station is drawn end-on, as a ri
 | 139.5 | 116 to 131 | the working ring | A farm in the sky, one machine a bar. On 116 he knocks down a sluice's paddle, and the pipe under the ground fills the noria's sump. The noria: his weight drops the clutch in, and a Geneva drive turns the water wheel a quarter a beat. Down a stepped channel, a flap gate falling flat on each beat. Off the spout into the tray on the front of the harvest tram, which trips a row of corn bins' gates, a bin a beat. At the end of the line the tray's gate drops. He pushes the paddle under each sunlight louvre over the seed beds, so a shade flips up a beat at a time. |
 | 155.5 | 132 to 144 | the ballpark | The diamond stands sideways on the ring where the ground has turned to a wall. A scoreboard stands high over the field on a mast. Its home row turns over one plate a beat for nine innings, the ninth on the hit, and its clock ticks the cue's second. The first-base bag is a treadle that springs a mitt open; the mitt shuts on him and flips him to the pitching machine. Its wheels spin up a notch at a time while a winch draws a mechanical bat back. On the eighth the gate lets him into the wheels, and the bat meets the pitch on the accent (140). The light tower's lamps come on, a bank a beat. |
 | 168.5 | 145 to 153 | the flight | The film's gag. He goes up toward the axis and curves under the hub, because the ring turns under him, while the camera pulls out to the whole ring and the cue gathers. He comes down on the far side through a poplar (150) and a round tree (151), and in at an attic window on the accent and step up (152). The crash stops her rocking. An old trunk knocks the trapdoor's latch (153). |
-| 176.5 | 153 to 156 | the reunion | The camera has turned with the ring, so the far-side house stands upright. She is in her rocking chair by the far wall, her blue lightly touched by the years; as he crashes in through the window (152) she comes back to her own full blue. The trapdoor settles on its stop on 153½ and he rolls off its end, lands on 154 and rolls on into the lift car's doorway. Then **they meet**: the chair pitches her off and she rolls out across the room, and he turns back and rolls out to her, and they meet in the open floor between the chair and the threshold on 155. She walks him back to the lift and nudges him in on 155½, and he coasts to the middle of the car by the big step (156). The gate drops in front of her, and she stays at the threshold as the car goes; the empty chair rocks itself still behind her. |
+| 176.5 | 153 to 156 | Murph | The camera has turned with the ring, so the far-side house stands upright. **Old Murph**, the slate ball, rocks in her chair by the far wall, a patchwork quilt over its back and his watch hanging on a nail above her. The trapdoor settles on its stop on 153½, he rolls off its end, lands on 154 and rolls toward the lift. Then **they meet**: the chair pitches her off and she rolls out across the room, he turns back and rolls out to her, and they meet on the open floor on 155. She walks him to the lift and nudges him in on 155½: go to her. He coasts to the middle of the car by the big step (156), and she stays at the threshold as the car goes. |
 | 179.5 | 156 to 172 | the spoke | Loud from here. The gate drops, the brake comes off, and the lift car climbs the spoke toward the axis while its counterweight comes down the other side. Each beat the car trips a landing's flag and its lamp lights, so the lit lamps climb the spoke behind it. Gravity falls away as it rises. He bounces a beat at a time, then a hop takes two beats, and on 170 he leaves the floor and does not come back. The sheave's brake bites on 171, and the car stops at the hub on 172. |
 | 196.5 | 173 to 183 | the hub | He floats on into the docking bay, where the Ranger sits in its cradle. A grabber arm springs out, closes on him, swings him over the ship and sets him in the seat. The canopy runs forward and knocks home, and the arm whips back into its catch. The cockpit lights, and the cradle's four clamps let go one a beat, tail to nose. |
 | 207.5 | 184 to 194 | the undock | The cue's biggest step, and a match cut to outside on the ship. The port's clamps spring open, and the camera pulls back to Cooper Station seen from the side, turning. The umbilical fires out and whips back to its socket, and the nose jets back the ship off the port. Roll jets take the spin off in three equal steps, and it stops dead, level, on the loudest beat. The probe snaps back, it pitches end for end, the port's collar slides home, and the engine lights. |
 | 218.5 | 195 to 211 | Saturn | The burn pulses with the organ, each kick as hard as the beat it is on, out over Saturn's cloud tops and then over its rings. The way is marked by beacons left by whoever went first. On each kick the ship goes over one, and it wakes: vanes out, lamp lit. The lit line grows behind it. Engine off, the nose jets brake a beat at a time, and the nose touches the wormhole on 210. On 211 the cockpit goes in, the ball's light wrapping the sphere's rim. |
 | 235.5 | 212 to 227 | Edmunds' planet | On 212 the far side opens at the sphere's centre, and the camera whips through to a desert world at dawn: a dark sky, a thin gold band, Gargantua small and high. The Ranger comes out of the far mouth on 213 and lands in the real order, one stage a beat. A pitch-up, four retro burns, the drogue mortar, and the chute opening reefed and then in two steps. The heat shield drops, the chute is cut and the belly engines light, a landing leg comes down on each of 225 and 226, and the flare. |
 | 251.5 | 228 | Edmunds' planet | Touchdown on the cue's loudest bar. |
-| 252.5 | 229 to 232 | the camp | The canopy swings open, the ramp slams down, and the seat kicks him out over the nose. He rolls down into the camp and stops at the foot of its lamp. On the last hit (232) the lamp lights. |
-| 255.5 to 262.7 | the stop | the camp | The music stops dead. The camera draws back over the camp: a small dome, a flag, a helmet set down on a rock, a cairn for Edmunds. The sun's edge comes up behind the cairn and the dome's porthole lights. |
-| 261.4 to 291 | silence | the credits | Over the camp at dawn, while the camera goes on drawing back and the sun clears the horizon (see below). |
+| 252.5 | 229 to 232 | Brand's camp | The canopy swings open, the ramp slams down (230), and **Brand**, the blue ball, sets off from the cairn she built for Edmunds, across her camp toward him. The seat kicks him out over the nose (231), he rolls down the ramp and stops at the foot of the lamp, and on the last hit (232) the lamp lights. |
+| 255.5 to 262.7 | the stop | Cooper meets Amelia | The music stops dead. He rolls off the lamp's plate toward her, and **they meet under the lamp** on the next beat (256.49 s), easing into each other; the lamp swells once. They rest together while the camera draws back over the camp: the dome with its porthole lit, the flag, the cairn, her helmet set down on a rock. The sun's edge comes up behind the cairn. |
+| 261.4 to 291 | silence | the credits | Over the two of them at the camp at dawn, while the camera goes on drawing back and the sun clears the horizon (see below). |
 
 Six Act II beats are still unstruck, on purpose:
 - **113:** the camera swoops back in from the whole ring to the house, and the move is the event. A mechanism small enough to fit the kitchen would not read at that distance.
@@ -204,10 +203,10 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 | ---: | --- | --- | --- |
 | 261.4 | Directed by | Stephen Wu | |
 | 266.0 | Machines, drawings and code | Claude Opus 5.5 | |
-| 270.7 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; TARS, four slabs of steel | |
-| 276.1 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
-| 282.0 | Drawn with | p5.js | |
-| 286.4 | (the title) | Liftoff | Cornfield Chase |
+| 270.7 | With | Joseph Cooper, the sand ball; Dr. Amelia Brand, the blue ball; Murph, the slate ball; TARS, four slabs of steel | |
+| 276.5 | Music | Hans Zimmer | "Cornfield Chase" and "No Time for Caution", from Interstellar (2014). The recordings are used here only for a private tech demo. |
+| 282.4 | Drawn with | p5.js | |
+| 286.8 | (the title) | Liftoff | Cornfield Chase |
 
 The title card stays up to the end, 291 s.
 
@@ -217,21 +216,40 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Cooper meets Amelia (latest)
+## The story, as in the film (latest)
 
-- **Her colour at the meeting was the problem.** She waited out the years on Miller's ring going slate, and she stayed slate (`#7C8C9C`) in the far-side house, so the reunion didn't read as meeting Amelia.
-- **Now she is Amelia's own blue there.**
-  - In the chair she carries only a light touch of the years: 28% toward slate, `#396B99`, still clearly her blue.
-  - From the window crash (152) to his coming down the trapdoor she comes back to full `#1F5E98`, and she stays full blue through the meeting, the walk and the threshold.
-- **The meeting is mutual.** He lands and rolls toward the lift, then turns back and rolls out to her while she rolls out to him, and they meet in the open floor on 155. She walks him to the lift and nudges him in on 155½.
-- A check holds her colour to exactly `BRAND` at the meeting and the nudge, and within a light touch of it in the chair.
+The last pass had it wrong. The old woman in the far-side house on Cooper Station is **Murph**, Cooper's daughter, not Brand. Cooper meets **Brand** at the very end, at her camp on Edmunds' planet.
+
+- **Murph** is a new character: the slate ball (`MURPH`, `#7C8C9C`), who appears only in the far-side house.
+  - He crashes in through her window, and they meet on the open floor.
+  - She walks him to the lift and nudges him in: she sends him on, to Brand.
+- **Brand is blue the whole show.** She is never restored from grey. On Miller's orbit ring her blue only dims a little with the years.
+- **At the end** she is at her camp on Edmunds' planet. When he lands and rolls down the ramp, she rolls out to meet him by the lamp, and the credits roll over the two of them.
+- **Credits:** the cast card adds Murph (the slate ball).
+- **Code:** `Company` has an optional `who` (`brand` or `murph`), and `show.murph(t)` sits beside `show.brand(t)`. The checks hold Murph to the station, in slate, and hold Brand to blue at her camp, where the two of them touch.
+
+**The liberty pass after it.**
+- **Motion.**
+  - The tin truck's lurches take hold over about 90 ms instead of jerking (0.75 to 0.15 frame-heights/s).
+  - The pail tips from rest, the pump handle lifts him before it throws him, and he plunges into the channel and bobs up.
+  - The ditch take-off builds, and his speed off the truck's nose matches his flight.
+  - He bounces on the plank and in the well sweep's cup instead of stopping dead. He bounces once off the fence rail, and the catapult's cup gives as it catches him.
+  - Brand runs a hair past the lock on Miller's ring and is held back to it. The cage and the arm into the window start and stop at a touch.
+- **Transitions.** The whip into the sphere at 103.8 s is now one deliberate move of about a second, where it used to stop dead and then snap. Camera audit: 0.54 down to 0.22.
+- **Details.**
+  - Two hens in the yard. One steps back from him, and the other flutters up as he rolls under her.
+  - Straw thrown from the combine's spreader on each beat.
+  - A worn hazard band on the bunker's lintels.
+  - The Endurance's windows brighten on the beats.
+  - Murph's room has his watch on a nail and a patchwork quilt.
+  - At Brand's camp, the dome's porthole stays lit and brightens after they meet, and her helmet rests by the cairn.
 
 ## The polish round
 
 - **Colours.** The roles are unchanged; the hues are new.
   - Joseph Cooper is sand, `#F0C987`. Stephen's start was `#F6DFAE`; it was nudged a touch warmer and deeper so he stands off the farm's pale paper.
   - Dr. Amelia Brand is blue, `#1F5E98`. Stephen's start was `#154367`; it was nudged a touch lighter so she reads on the navy of space.
-  - Her years in orbit turn her to slate (`#7C8C9C`) on Miller's ring. At the reunion she is Amelia's own blue again: a light touch of the years in the chair, then full `#1F5E98` from the moment he comes in.
+  - On Miller's ring her blue dims a little with the years. The slate (`#7C8C9C`) is Murph's, on the station.
   - The rocket's window has a lamplit cabin so both read behind the glass, and the truck's far window is a middle blue-grey so Cooper reads at the wheel.
 - **A solid opening, and the last book knocks him down.**
   - Cooper is a plain solid ball from the first frame. The ghost is only for the tesseract.
@@ -261,7 +279,7 @@ The title card stays up to the end, 291 s.
   - Onset timing is unchanged: envelope cross-correlation shows 0.00 ms lag at every section.
 - **One Brand at the reunion.**
   - Every round lamp and glint near the far-side house is gone: the lift car's gold lamp, the spoke's landing lamps, a grey pulley, a blue counterweight, a blue trunk and a blue hat. They are now slits, sheaves, iron and wood.
-  - The only blue ball there is her.
+  - The only other ball there is Murph.
 - **Credits.** The cast card reads Joseph Cooper (the sand ball), Dr. Amelia Brand (the blue ball) and TARS (four slabs of steel).
 - **The chrome and credit lines.** The Liftoff panel's music line and the end credits no longer say "tech demo only, not for release" or "used here only for a private tech demo". The attribution files for the copyrighted audio still say so.
 
@@ -328,7 +346,7 @@ These are visual and mechanical only. There are no stills, no text, and no audio
 - **The ending.**
   - The film's docking scene played backwards, the Ranger matching the station's spin and then letting it go.
   - Beacons from whoever went first, marking the way to the wormhole.
-  - The camp on Edmunds' planet, with a cairn for Edmunds and a helmet set down on a rock.
+  - Brand's camp on Edmunds' planet, with a cairn for Edmunds and her helmet set down on a rock, where Cooper finds her.
 
 ## How it is built
 

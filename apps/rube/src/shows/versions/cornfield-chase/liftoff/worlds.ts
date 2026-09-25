@@ -21,10 +21,15 @@ export const BALL = '#F0C987'
  */
 export const BRAND = '#1F5E98'
 export const BRAND_ID = 99
-/** What years do to a blue: grey. */
+/** What years do to a colour: grey. */
 export const GREY = '#9A958A'
-/** Brand after the years in orbit: the blue faded to a slate grey, still hers. Where Miller leaves her, and how he finds her. */
-export const AGED = '#7C8C9C'
+/**
+ * Murph, old: Cooper's daughter, whom he finds again on Cooper Station at the
+ * end, in the far-side house, a lifetime older than he is. A slate grey. She
+ * is the one who sends him on, to Brand.
+ */
+export const MURPH = '#7C8C9C'
+export const MURPH_ID = 98
 
 export const FARM: Theme = {
   name: 'dust-bowl',

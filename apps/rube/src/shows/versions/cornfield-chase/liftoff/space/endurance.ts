@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { R, puff, type Pt } from '../../../../../parts'
+import { mixHex, R, puff, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
 import { brandDrift } from '../rocket'
@@ -257,11 +257,14 @@ function ringBall(c: Pt, T: number): Pt {
     const { psi, r } = onRing(T)
     return ringPt(c, T, psi, r)
   }
-  // In the cup: it came down onto it at the catch, and rides it from there.
+  // In the cup: it came down onto it at the catch, sinks into it a little (the cup gives), and rides it from there.
   const held = catapult(c, T).ball
   const u = smooth(T, DROP, DROP + 0.05)
   const fell = ringPt(c, T, PSI_CUP, CATCH_R)
-  return [fell[0] + (held[0] - fell[0]) * u, fell[1] + (held[1] - fell[1]) * u]
+  const k = T - DROP
+  const give = 0.04 * Math.exp(-k / 0.07) * Math.sin(k * 45)
+  const out = Math.hypot(held[0] - c[0], held[1] - c[1]) || 1
+  return [fell[0] + (held[0] - fell[0]) * u + ((held[0] - c[0]) / out) * give, fell[1] + (held[1] - fell[1]) * u + ((held[1] - c[1]) / out) * give]
 }
 
 /* ------------------------------------------------------------------ her, on the ring */
@@ -494,7 +497,8 @@ export const endurance = part<EnduranceState>(
       // Over the top with the catapult, the sphere waiting in the frame; out for the throw.
       { t: beat(163), cells: 7.2, hold: [c[0] + 1.4, c[1] - 2.2], w: 0.9 },
       { t: FIRE + 0.2, cells: 7.4, hold: [(c[0] + sphere[0]) / 2 + 0.4, sphere[1] + 0.5], w: 0.9 },
-      { t: END - 0.02, cells: 7, hold: sphere, w: 1 },
+      // On the sphere as he goes in; from here the whip to the far side is one long move (Miller's first key is its end).
+      { t: END - 0.36, cells: 7, hold: sphere, w: 1 },
     ]
   },
 )
@@ -691,7 +695,9 @@ function drawRing(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     solid(p, ink, weight, fill(a))
     sector(p, k, cx, cy, MOD_IN, MOD_OUT, a - MOD_HALF, a + MOD_HALF, 5)
     p.noStroke()
-    p.fill(l > 0.5 ? alpha(p, DARK.slate, 0.8) : alpha(p, DARK.amber, 0.9 * (1 - l)))
+    // By night the windows are lit, and brighten a little on every beat: the station keeping time.
+    const pulse = knock(T - beat(Math.floor((T - beat(0)) / (beat(1) - beat(0)))), 0.22)
+    p.fill(l > 0.5 ? alpha(p, DARK.slate, 0.8) : alpha(p, mixHex(DARK.amber, '#FFE3B0', 0.5 * pulse), (0.75 + 0.25 * pulse) * (1 - l)))
     for (const off of [-0.09, 0.09]) sector(p, k, cx, cy, MOD_IN + 0.13, MOD_IN + 0.22, a + off - 0.035, a + off + 0.035, 2)
   }
   // The corridor, cut away all round: a dark channel with the floor on the outside.

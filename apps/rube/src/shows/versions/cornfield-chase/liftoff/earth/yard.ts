@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
+import { clamp, easeInOutSine, easeInQuad } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
 import { hop } from '../physics'
@@ -54,7 +54,7 @@ const THICK = 0.06
 const TOWER = 2.9
 const TOWER_TOP = FLOOR - 2.45
 const SHEAVE: Pt = [1.95, TOWER_TOP + 0.2]
-const BUCKET_X = 1.95
+const BUCKET_X = 2.15
 const BUCKET_LOW = 0.12
 const BUCKET_HIGH = SHEAVE[1] + 0.42
 // The line, the basket's wheel on it, and the pole.
@@ -79,7 +79,7 @@ function handleAt(t: number): number {
   if (t < LAND) return SET
   if (t < BOTTOM) return SET + (PUMPED - SET) * easeInQuad((t - LAND) / (BOTTOM - LAND))
   const up = t - BOTTOM
-  return PUMPED + (SET - PUMPED) * (1 - Math.exp(-up / 0.08)) - 0.12 * Math.exp(-up / 0.2) * Math.sin(up * 20)
+  return PUMPED + (SET - PUMPED) * gather(up, 0.03) - 0.12 * Math.exp(-up / 0.2) * Math.sin(up * 20) * smooth(up, 0, 0.08)
 }
 /** A point along the handle, `d` out from the pivot, lifted `lift` off its top. */
 function onHandle(a: number, d: number, lift: number): Pt {
@@ -137,11 +137,18 @@ function hoistAt(t: number): number {
   return HOIST.h[j] + (HOIST.h[j + 1] - HOIST.h[j]) * (i - j)
 }
 
+/** A step from 0 to 1 that starts at rest and gathers over a few `tau`s: what a spring or a lurch looks like as it lets go. */
+function gather(since: number, tau: number): number {
+  if (since <= 0) return 0
+  const at = (s: number) => 1 - (1 + s / tau + (s * s) / (2 * tau * tau)) * Math.exp(-s / tau)
+  return Math.min(1, at(since) / at(14 * tau))
+}
+
 /** The bucket's rim centre (x, y) and its tip (radians), at show time `t`. */
 function bucketAt(t: number): { x: number; y: number; tip: number } {
   const h = hoistAt(t)
   const y = BUCKET_LOW + (BUCKET_HIGH - BUCKET_LOW) * h
-  const tip = t < TRIP ? 0 : 1.1 * easeOutCubic(clamp((t - TRIP) / 0.18)) - 0.25 * easeInOutSine(clamp((t - CATCH - 0.4) / 0.8))
+  const tip = 1.1 * gather(t - TRIP, 0.035) - 0.25 * easeInOutSine(clamp((t - CATCH - 0.4) / 0.8))
   const sway = t > IN_BUCKET ? 0.02 * Math.sin((t - IN_BUCKET) * 7) * (1 - smooth(t, TEETH[TEETH.length - 1], TRIP)) : 0
   return { x: BUCKET_X + sway, y, tip }
 }
@@ -217,11 +224,10 @@ export const yard = part<YardState>(
     segs.push(...route([edge, hop(edge, bucket(at(IN_BUCKET)), at(IN_BUCKET))]))
     // Up the tower in the bucket.
     segs.push(...carried(bucket, at(IN_BUCKET), at(TRIP), 60))
-    // Tipped out, and down into the basket.
-    // Poured from the lip as the pail goes over, in one flight into the basket, gathering speed as it falls.
+    // Tipped out as the pail goes over: poured in one flight into the basket, gathering speed as it falls.
     const out: Way = { at: at(TRIP), p: bucket(at(TRIP)) }
     const basket = (t: number): Pt => inBasket(t + slot.begin)
-    segs.push(...route([out, { ...hop(out, basket(at(CATCH)), at(CATCH)), ramp: [0.6, 1] }]))
+    segs.push(...route([out, { ...hop(out, basket(at(CATCH)), at(CATCH)), ramp: [0.5, 1] }]))
     // Down the line in the basket, to the pole.
     segs.push(...carried(basket, at(CATCH), at(POLE) + 0.08, 60))
     // Thrown out as it swings, onto the pump handle's end; down with it; and sprung up over the pump into the channel.
@@ -229,10 +235,13 @@ export const yard = part<YardState>(
     const onEnd = (t: number): Pt => onHandle(handleAt(t + slot.begin), HANDLE - 0.06, R + 0.02)
     segs.push(...route([thrown, hop(thrown, onEnd(at(LAND)), at(LAND))]))
     segs.push(...carried(onEnd, at(LAND), at(BOTTOM), 12))
-    const sprung: Way = { at: at(BOTTOM), p: onEnd(at(BOTTOM)) }
+    // The handle hits its stop; the spring takes hold and lifts him a moment before it throws him.
+    const lift = at(BOTTOM) + 0.06
+    segs.push(...carried(onEnd, at(BOTTOM), lift, 6))
+    const sprung: Way = { at: lift, p: onEnd(lift) }
     segs.push(...route([sprung, hop(sprung, [EXIT_X, 0], slot.end - slot.begin)]))
     return {
-      cells: box(-0.5, -3, EXIT_X + 0.5, 1),
+      cells: box(-2, -3, EXIT_X + 0.5, 1),
       exit: [EXIT_X + 0.5, 0],
       lane: { segs, fire: at(OVER) },
       state: s,
@@ -263,6 +272,7 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
     p.line(X(gx), X(FLOOR), X(gx - 0.03), X(FLOOR - 0.07))
     p.line(X(gx + 0.03), X(FLOOR), X(gx + 0.06), X(FLOOR - 0.06))
   }
+  drawHens(p, c, t)
 
   // The windmill: a wooden lattice tower, the wheel of blades turning in the dawn wind, the tail behind it.
   const legL = TOWER - 0.42
@@ -512,6 +522,84 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
     p.strokeWeight(weight)
     for (const dy of [-0.12, 0, 0.12]) p.line(X(LINE_B[0] - 0.08), X(LINE_B[1] + 0.3 + dy), X(LINE_B[0] - 0.2), X(LINE_B[1] + 0.3 + dy * 1.3))
   }
+}
+
+/*
+ * Two hens scratching in the yard between the porch and the plank. The ball comes rolling through them: the rust
+ * one jerks her head up and steps back as it passes (19.51); the buff one goes up in a flurry as it reaches her,
+ * the ball rolls under, and she comes down behind it (19.75 to 20.16), and goes back to pecking.
+ */
+const HENS: { x: number; color: string; startle: number; flight?: [number, number, number] }[] = [
+  { x: -1.72, color: DUST.rust, startle: 19.511 },
+  { x: -0.9, color: DUST.wood, startle: 19.754, flight: [19.754, 20.161, -0.42] },
+]
+
+function drawHens(p: p5, c: Ctx, t: number): void {
+  for (let i = 0; i < HENS.length; i++) {
+    const h = HENS[i]
+    const since = t - h.startle
+    let x = h.x
+    let lift = 0
+    let flap = 0
+    let alert = 0
+    if (h.flight && since > 0) {
+      const [t0, t1, dx] = h.flight
+      const u = clamp((t - t0) / (t1 - t0))
+      x += dx * easeInOutSine(u)
+      lift = 0.3 * Math.sin(Math.PI * u) + 0.03 * Math.sin(Math.PI * u) ** 2
+      flap = u < 1 ? 0.5 + 0.5 * Math.sin((t - t0) * 38) : 0
+      alert = u < 1 ? 1 : 1 - smooth(t, t1 + 0.2, t1 + 0.6)
+    } else if (!h.flight && since > 0) {
+      // Head up, a step back, and settled again.
+      x -= 0.07 * easeInOutSine(clamp(since / 0.18))
+      lift = 0.05 * Math.sin(Math.PI * clamp(since / 0.18))
+      alert = 1 - smooth(since, 0.5, 0.9)
+    }
+    // Pecking, each at her own unhurried rhythm, unless she is watching.
+    const cycle = (t * (0.55 + 0.2 * i) + i * 0.37) % 1
+    const peck = (1 - alert) * (cycle < 0.3 ? Math.sin((Math.PI * cycle) / 0.3) : 0)
+    hen(p, c, x, FLOOR - lift, h.color, peck, flap)
+  }
+}
+
+/** A hen facing left, her feet at (x, foot): buff or rust, a red comb, a corn beak; `peck` puts her head down, `flap` her wings up. */
+function hen(p: p5, c: Ctx, x: number, foot: number, color: string, peck: number, flap: number): void {
+  const { k, ink, weight } = c
+  const X = (v: number) => v * k
+  const w = weight * 0.7
+  // Legs.
+  outline(p, ink, w)
+  for (const dx of [-0.015, 0.03]) p.line(X(x + dx), X(foot - 0.09), X(x + dx - 0.01), X(foot))
+  // Tail, then body.
+  solid(p, ink, w, color)
+  p.beginShape()
+  p.vertex(X(x + 0.08), X(foot - 0.12))
+  p.vertex(X(x + 0.17), X(foot - 0.27))
+  p.vertex(X(x + 0.19), X(foot - 0.2))
+  p.vertex(X(x + 0.12), X(foot - 0.1))
+  p.endShape(p.CLOSE)
+  p.ellipse(X(x + 0.02), X(foot - 0.155), X(0.24), X(0.15))
+  // The neck and head: up and looking, or down to the dirt.
+  const hx = x - 0.1 - 0.04 * peck
+  const hy = foot - 0.26 + 0.19 * peck
+  p.beginShape()
+  p.vertex(X(x - 0.07), X(foot - 0.2))
+  p.vertex(X(hx + 0.02), X(hy - 0.02))
+  p.vertex(X(hx + 0.045), X(hy + 0.02))
+  p.vertex(X(x - 0.02), X(foot - 0.13))
+  p.endShape(p.CLOSE)
+  p.circle(X(hx), X(hy), X(0.075))
+  solid(p, ink, w * 0.8, DUST.rust)
+  p.arc(X(hx + 0.005), X(hy - 0.035), X(0.05), X(0.04), Math.PI, Math.PI * 2, p.CHORD)
+  solid(p, ink, w * 0.8, DUST.corn)
+  p.triangle(X(hx - 0.035), X(hy - 0.01), X(hx - 0.075), X(hy + 0.005), X(hx - 0.035), X(hy + 0.015))
+  // The near wing: folded, or beating.
+  solid(p, ink, w * 0.9, color === DUST.rust ? DUST.wood : DUST.bone)
+  p.push()
+  p.translate(X(x + 0.05), X(foot - 0.17))
+  p.rotate(-1.1 * flap)
+  p.ellipse(X(0.02), 0, X(0.13), X(0.065))
+  p.pop()
 }
 
 /** The bucket's back and bottom, behind the ball: a tin pail, rim at (x, y), tipped by `tip`. */

@@ -163,13 +163,14 @@ waypoints, so its strikes land on the measured onsets in
 `scripts/show-plans/cornfield-opus55-onsets.json` by construction.
 `liftoff/hits.ts` gathers every strike, and `check:shows` measures each one
 against the onset file. The check also asserts that the ball never jumps,
-and that it is never hidden for long. A second ball, blue, is Dr. Amelia Brand
-(the hero, Cooper, has the farm and drives the truck): parts show her through
-`Built.company` spans (show time, part frame), and the check holds her to the
-story: not on the farm, in shot with him from NASA's bunker to the ring,
-waiting in orbit over Miller as she goes grey, coming to greet him on Cooper
-Station, and nowhere else; never jumping, and coming and going only out of
-shot. It ends with credits after the music, in silence: the words are set
+and that it is never hidden for long. Two more balls keep him company, as in the film: blue Dr. Amelia Brand
+(the hero, Cooper, has the farm and drives the truck) and, on Cooper
+Station, slate old Murph. Parts show them through `Built.company` spans
+(show time, part frame, `who`), and the check holds them to the story: Brand
+not on the farm, with him from NASA's bunker to the ring, waiting in orbit,
+and at her camp on Edmunds' planet, where they meet at the end; Murph only in
+the far-side house, where she sends him on; neither ever jumping, and each
+coming and going only out of shot. It ends with credits after the music, in silence: the words are set
 by the page from `Performance.titles(t)` (a show's canvas sets no type), and
 the starlight they come out of is the canvas's. The report is
 `docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.

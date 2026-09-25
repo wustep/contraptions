@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { FLOOR, laneAt, R, type Lane, type Pt } from '../../../../../parts'
-import { alpha, box, carried, knock, part, route, type Companion, type Ctx, type Way } from '../kit'
+import { alpha, box, carried, knock, part, route, type Companion, type Ctx } from '../kit'
 import { beat, IGNITION } from '../music'
 import { DUST } from '../worlds'
 
@@ -53,18 +53,31 @@ const HIS_GO = RISE[1] + 0.15
 function goldGantry(t: number, lane: Lane, begin: number): Pt {
   if (t < IN) return [laneAt(lane, t - begin).x - 2 * R - 0.01, 0]
   if (t < HER_GO) return [HER_X, cageY(t)]
+  const seat: Pt = [WIN[0] - 2 * R - 0.01, WIN[1]]
   if (t < SEATED) {
-    // Along the arm: slow off the mark, faster, and against him in the window on the beat.
-    const T = SEATED - HER_GO
-    const d = WIN[0] - 2 * R - 0.01 - HER_X
-    const v0 = 0.3
-    const v1 = (2 * d) / T - v0
-    const u = t - HER_GO
-    const s = (v0 * u + 0.5 * ((v1 - v0) / T) * u * u) / d
+    // Along the arm: slow off the mark, quicker, and easing into the window against him on the beat.
     const y0 = cageY(HER_GO)
-    return [HER_X + d * s, y0 + (WIN[1] - y0) * s]
+    return alongArm([HER_X, y0], seat, 0, SEATED - HER_GO, t - HER_GO)
   }
-  return [WIN[0] - 2 * R - 0.01, WIN[1]]
+  const k = settle(t)
+  return [seat[0] + k, seat[1]]
+}
+
+/** Along the arm from `a` to `b` in `T` seconds, `u` in: off at `v0` cells a second, in at a touch (ARRIVE). */
+function alongArm(a: Pt, b: Pt, v0: number, T: number, u: number): Pt {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1])
+  const w = Math.max(0, Math.min(1, u / T))
+  const m0 = (v0 * T) / L
+  const m1 = (ARRIVE * T) / L
+  const s = (w ** 3 - 2 * w ** 2 + w) * m0 + (-2 * w ** 3 + 3 * w ** 2) + (w ** 3 - w ** 2) * m1
+  return [a[0] + (b[0] - a[0]) * s, a[1] + (b[1] - a[1]) * s]
+}
+
+/** How fast the two come into the window, and the little give as they settle against its far side: both the same, so they touch. */
+const ARRIVE = 0.4
+const settle = (t: number): number => {
+  const k = t - SEATED
+  return k <= 0 ? 0 : (ARRIVE / 26) * Math.exp(-k / 0.1) * Math.sin(k * 26)
 }
 
 /** The cage's floor, where the ball rides, at show time `t`: a steady climb, eased at each end. */
@@ -74,8 +87,9 @@ function cageY(t: number): number {
   const a = 0.06
   const e = (u < a ? (u * u) / (2 * a) : u > 1 - a ? 1 - a - ((1 - u) * (1 - u)) / (2 * a) : u - a / 2) / (1 - a)
   const y = 0 + (WIN[1] - 0) * e
-  // A small settle when it arrives.
-  const settle = t > RISE[1] ? 0.04 * Math.exp(-(t - RISE[1]) / 0.12) * Math.sin((t - RISE[1]) * 40) : 0
+  // A small settle when it arrives: the cable giving a little as it stops, and taking up again.
+  const k = t - RISE[1]
+  const settle = k > 0 ? 0.03 * Math.exp(-k / 0.15) * (1 - Math.cos(k * 25)) * 0.5 : 0
   return y + settle
 }
 
@@ -113,8 +127,11 @@ export const gantry = part<GantryState>(
     }
     const segs = [...carried(toCage, 0, arrive, 40), ...carried((t) => [HERO_X, cageY(t + slot.begin)], arrive, at(HIS_GO), 90)]
     // Out along the arm to the window.
-    const from: Way = { at: at(HIS_GO), p: [HERO_X, cageY(HIS_GO)] }
-    segs.push(...route([from, { at: at(SEATED), p: WIN, ramp: [0.5, 2 * (WIN[0] - HERO_X) / (at(SEATED) - from.at) - 0.5] }, { at: slot.end - slot.begin, p: WIN }]))
+    const from: Pt = [HERO_X, cageY(HIS_GO)]
+    segs.push(...carried((t) => alongArm(from, WIN, 0, SEATED - HIS_GO, t + slot.begin - HIS_GO), at(HIS_GO), at(SEATED), 60))
+    // Into the window on the beat, a small give against its far side, and still.
+    segs.push(...carried((t) => [WIN[0] + settle(t + slot.begin), WIN[1]], at(SEATED), at(SEATED) + 0.6, 30))
+    segs.push(...route([{ at: at(SEATED) + 0.6, p: WIN }, { at: slot.end - slot.begin, p: WIN }]))
     const lane: Lane = { segs, fire: arrive }
     const gold = (t: number): Companion => {
       const [x, y] = goldGantry(t, lane, slot.begin)

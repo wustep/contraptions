@@ -2,10 +2,10 @@ import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
 import { laneAt, mixHex, puff, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Ctx, type PartShot, type Way } from '../kit'
+import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { cue, DURATION, FINAL, MIX_END, PEAK } from '../music'
 import { G_EARTH, hop } from '../physics'
-import { DARK, VOID } from '../worlds'
+import { BRAND, DARK, VOID } from '../worlds'
 
 /**
  * Edmunds' planet: the end of the show.
@@ -24,13 +24,19 @@ import { DARK, VOID } from '../worlds'
  * down on each of 225 and 226, the engines pulsing with them; the flare, the
  * dust coming up (227); and touchdown on the peak (228).
  *
+ * The camp is Brand's: a small dome with a light on in its porthole, a flag,
+ * her helmet set down on a rock, and the cairn she built for Edmunds, and she
+ * is there by the cairn, blue, small at the edge of the frame as the Ranger
+ * touches down.
+ *
  * On the ground: the canopy swings open (229), the ramp runs out and slams
- * down (230), the seat kicks the ball out over the nose (231), it lands on the
- * ramp on the and, rolls down into the camp and stops on the plate at the
- * foot of its lamp, and on the last hit (232) the lamp lights. The camp: a
- * small dome, a flag, a helmet set down on a rock, a cairn for Edmunds. The
- * camera draws back and holds while the music stops, the sun's edge comes up
- * behind the cairn, and the dome's porthole lights: someone is home.
+ * down (230) and she sets off from the cairn; the seat kicks Cooper out over
+ * the nose (231), he lands on the ramp on the and, rolls down into the camp
+ * and stops on the plate at the foot of its lamp, and on the last hit (232)
+ * the lamp lights. The stop on the plate drops, he rolls on, and under the
+ * lamp, as the music stops, they meet (CAMP_MEET) and rest together. The
+ * camera draws back and holds, the sun's edge comes up behind the cairn, and
+ * the credits roll over the two of them.
  *
  * The part's frame: the ball comes in hidden at the wormhole's centre,
  * (-0.5, 0). The landing ground is at y = G (the ball rolling on it is at
@@ -72,8 +78,10 @@ const RAMP = cue(230)
 const KICK = cue(231)
 const ONRAMP = cue(231.5)
 const LAMP = FINAL
-/** In the quiet after the music, a light in the dome. */
-const HOME = cue(235.6)
+/** When Cooper and Brand first touch at her camp: under the lamp, a beat after it lights, as the music stops. */
+export const CAMP_MEET = cue(233)
+/** She sets off from the cairn to meet him as the ramp slams down. */
+const SET_OUT = RAMP
 
 /** The far side opens at the sphere's centre on 212 (the whip starts from it); the ship is out on 213. */
 export const EDMUNDS_HITS = [BEGIN, OUT, RING, PITCH, PITCH_STOP, ...RETRO, MORTAR, BLOOM, ...REEFS, SHIELD, CUT, ...LEGS, FLARE, TOUCH, CANOPY, RAMP, KICK, ONRAMP, LAMP]
@@ -365,12 +373,38 @@ const REST: Pt = [PLATE_X + 0.06, G - R - PLATE_H + 0.012]
 const STOP_X = REST[0] + R + 0.035
 const MAST_X = PLATE_X + 0.34
 const LAMP_Y = G - 1.72
-/** The camp: her helmet on a rock, the dome, the flag, the cairn. */
-const HELMET_X = PLATE_X + 1.02
+/** The camp: the dome, the flag, the cairn, and her helmet set down on a rock beyond it, where she took it off. */
 const DOME_X = PLATE_X + 3.1
 const DOME_R = 0.92
 const FLAG_X = PLATE_X + 4.5
 const CAIRN_X = PLATE_X + 5.45
+const HELMET_X = CAIRN_X + 0.88
+
+/**
+ * The meeting, under the lamp: the stop on the plate drops once the lamp is
+ * lit and he rolls off the plate's end to meet her; she has come all the way
+ * from the cairn. Where each of them rests, touching.
+ */
+const STOP_DOWN: [number, number] = [LAMP + 0.3, LAMP + 0.48]
+const MEET_H: Pt = [PLATE_X + 0.42, G - R]
+const MEET_B: Pt = [MEET_H[0] + 2 * R + 0.004, G - R]
+/** Where she waits, by the cairn's side. */
+const WAIT: Pt = [CAIRN_X - 0.5, G - R]
+/** They settle against each other: a soft give, and back. */
+const give = (T: number): number => {
+  const s = T - CAMP_MEET
+  return s <= 0 ? 0 : 0.012 * Math.sin(Math.PI * clamp(s / 0.42)) * (s < 0.42 ? 1 : 0)
+}
+/** Brand at her camp: waiting by the cairn, then out across the camp to him, and at rest with him under the lamp. */
+function brandAt(T: number): Companion {
+  if (T < SET_OUT) return { x: WAIT[0], y: WAIT[1] }
+  if (T < CAMP_MEET) {
+    const u = (T - SET_OUT) / (CAMP_MEET - SET_OUT)
+    const e = u * u * (3 - 2 * u)
+    return { x: lerp(WAIT[0], MEET_B[0], e), y: WAIT[1] }
+  }
+  return { x: MEET_B[0] + give(T), y: MEET_B[1] }
+}
 
 /** The kick's lob: high enough to clear the long nose ahead of the cockpit. */
 const G_HOP = G_EARTH
@@ -441,22 +475,27 @@ export const edmunds = part<EdmundsState>(
     segs.push(...route([kicked, hop(kicked, onRamp(LAND_D), at(ONRAMP), G_HOP)]))
     // Down the ramp and across the sand to the plate.
     segs.push(...carried((a) => runAt(a + slot.begin), at(ONRAMP), at(LAMP), 24))
-    // Against the stop, a little back, and at rest.
+    // Against the stop, a little back; the stop drops, and he rolls off the plate's end to meet her, and settles against her.
     const stop = runAt(LAMP)
     segs.push(
       ...route([
         { at: at(LAMP), p: stop },
         { at: at(LAMP) + 0.13, p: [stop[0] - 0.045, stop[1]], ease: 'out' },
-        { at: at(LAMP) + 0.45, p: REST, ease: 'inout' },
-        { at: end, p: REST },
+        { at: at(STOP_DOWN[0]), p: REST, ease: 'inout' },
+        { at: at(CAMP_MEET), p: MEET_H, ease: 'inout' },
+        { at: at(CAMP_MEET) + 0.21, p: [MEET_H[0] - 0.012, MEET_H[1]], ease: 'out' },
+        { at: at(CAMP_MEET) + 0.42, p: MEET_H, ease: 'inout' },
+        { at: end, p: MEET_H },
       ]),
     )
     const lane: Lane = { segs, fire: at(OUT) }
     return {
       cells: box(-4, -5, CAIRN_X + 6, G + 3, 2),
-      exit: [REST[0] + 0.5, REST[1]],
+      exit: [MEET_H[0] + 0.5, MEET_H[1]],
       lane,
       state: { begin: slot.begin, lane },
+      // Brand, at her camp, from while the camera is still at the wormhole (the camp far out of the frame) to the end.
+      company: [{ from: BEGIN, to: DURATION + 1, who: 'brand', at: (T) => ({ ...brandAt(T), color: BRAND }) }],
       // What comes through the wormhole is the ball itself, whatever the station made of it.
       changes: [{ at: 0, ghost: false }],
     }
@@ -479,7 +518,7 @@ function shotsFor(slot: { begin: number; end: number }): PartShot[] {
     { t: SHIELD, cells: 7.0, off: [-0.2, -0.45] },
     // The camp comes into the frame as it comes down.
     { t: LEGS[0], cells: 7.2, hold: [LX + 2.0, G - 2.7], w: 0.55 },
-    { t: TOUCH, cells: 6.8, hold: [LX + 2.1, G - 1.9] },
+    { t: TOUCH, cells: 6.8, hold: [LX + 2.55, G - 1.9] },
     { t: CANOPY + 0.4, cells: 5.8, hold: [LX + 2.0, G - 1.2] },
     { t: KICK, cells: 5.4, hold: [LX + 2.3, G - 1.1] },
     { t: LAMP, cells: 5.4, hold: [LX + 2.75, G - 1.2] },
@@ -1666,8 +1705,8 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
     p.stroke(alpha(p, DARK.amber, 0.55 * warm))
     p.arc(X(dx0), X(G - 0.08), X(2 * DOME_R - 0.04), X(2 * DOME_R * 0.92 - 0.04), Math.PI * 1.05, Math.PI * 1.35)
   }
-  // A window in its side: dark, and lit once she has seen the lamp.
-  const home = smooth(T, HOME, HOME + 1.6)
+  // A window in its side, a light left on inside: hers.
+  const home = 0.7 + 0.3 * smooth(T, CAMP_MEET, CAMP_MEET + 2)
   const ph: Pt = [dx0 - 0.36, G - 0.5]
   if (home > 0) glow(p, X(ph[0]), X(ph[1]), X(0.6), DARK.amber, 0.4 * home)
   p.push()
@@ -1743,12 +1782,19 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   solid(p, ink, weight * 0.7, lampOn ? mixHex(DARK.gold, VOID.ink, 0.55) : mixHex(DARK.slate, VOID.bg, 0.4))
   p.circle(X(MAST_X - 0.13), X(LAMP_Y + 0.02), X(0.14))
 
-  // The plate at the mast's foot, and the stop the ball comes up against.
+  // The plate at the mast's foot, and the stop the ball comes up against (it drops into the plate once the lamp is lit).
   const sink = T >= LAMP ? 0.02 * (1 - Math.exp(-(T - LAMP) / 0.05)) : 0
   solid(p, ink, weight * 0.7, DARK.slate)
   p.rect(X(PLATE_X), X(G - PLATE_H / 2 + sink), X(PLATE_W), X(PLATE_H), X(0.01))
-  solid(p, ink, weight * 0.7, DARK.hull)
-  p.rect(X(STOP_X + 0.02), X(G - 0.1), X(0.04), X(0.2), X(0.01))
+  drawStop(p, c, T)
+}
+
+/** The stop at the plate's end: up until the lamp is lit, then down into the plate to let him by. */
+function drawStop(p: p5, c: Ctx, T: number): void {
+  const h = 0.2 * (1 - smooth(T, STOP_DOWN[0], STOP_DOWN[1]))
+  if (h <= 0.004) return
+  solid(p, c.ink, c.weight * 0.7, DARK.hull)
+  p.rect(c.k * (STOP_X + 0.02), c.k * (G - h / 2), c.k * 0.04, c.k * h, c.k * 0.01)
 }
 
 function drawFlag(p: p5, c: Ctx, T: number): void {
@@ -1800,11 +1846,10 @@ function drawFlag(p: p5, c: Ctx, T: number): void {
 
 function drawPlateLip(p: p5, c: Ctx, T: number): void {
   if (T < ONRAMP) return
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const X = (x: number) => x * k
   // The stop, in front of the ball, and its tap.
-  solid(p, ink, weight * 0.7, DARK.hull)
-  p.rect(X(STOP_X + 0.02), X(G - 0.1), X(0.04), X(0.2), X(0.01))
+  drawStop(p, c, T)
   const hit = T - LAMP
   if (hit >= 0 && hit < 0.35) {
     p.stroke(alpha(p, VOID.ink, 0.8 * (1 - hit / 0.35)))
@@ -1818,10 +1863,10 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   const { k } = c
   const X = (x: number) => x * k
   const d = T - LAMP
-  // It catches with a flicker, blooms, and settles to a steady light.
+  // It catches with a flicker, blooms, and settles to a steady light; it swells a little again as the two of them meet under it.
   const flick = d < 0.2 ? (Math.sin(d * 95) > -0.3 ? 1 : 0.4) : 1
   const on = smooth(d, 0, 0.04) * flick
-  const bloom = knock(d, 0.4)
+  const bloom = Math.max(knock(d, 0.4), 0.45 * pulse(T - CAMP_MEET, 0.25, 1.1))
   const lx = MAST_X - 0.13
   const ly = LAMP_Y + 0.02
   glow(p, X(lx), X(ly), X(2.8 + 2.2 * bloom), DARK.gold, (0.3 + 0.3 * bloom) * on)
@@ -1842,11 +1887,15 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   ctx.restore()
 }
 
-/** A dark spot under the ball when it is on the ground: it sits on the sand, not over it. */
+/** A dark spot under each ball on the ground: they sit on the sand, not over it. */
 function drawBallShadow(p: p5, s: EdmundsState, c: Ctx, T: number): void {
-  if (T < ONRAMP) return
   const { k } = c
   const X = (x: number) => x * k
+  const her = brandAt(T)
+  p.noStroke()
+  p.fill(alpha(p, VOID.bg, 0.5))
+  p.ellipse(X(her.x - 0.04), X(G - 0.005), X(0.3), X(0.05))
+  if (T < ONRAMP) return
   const b = laneAt(s.lane, c.t)
   const h = G - (b.y + R)
   if (b.x < FOOT[0] - 0.2) return

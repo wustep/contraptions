@@ -4,7 +4,7 @@ import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
-import { BALL, BRAND, BRAND_ID } from './worlds'
+import { BALL, BRAND, BRAND_ID, MURPH, MURPH_ID } from './worlds'
 
 /**
  * Liftoff as a `Show`: two universes on one clock, and no portal between
@@ -36,8 +36,8 @@ export interface Stage {
 /** Riders besides the thread, for the stretches of the show that have them (`kit.ts`). */
 export type Riders = { from: number; to: number; fn: (t: number, hero: ShowBall) => ShowBall[] | null }[]
 
-/** Brand's spans, in world cells (`kit.ts`, `Company`). */
-export type Spans = { from: number; to: number; at: (t: number) => (Omit<ShowBall, 'id' | 'color'> & { color?: string }) | null }[]
+/** The company's spans, Brand's and Murph's, in world cells (`kit.ts`, `Company`). */
+export type Spans = { from: number; to: number; who?: 'brand' | 'murph'; at: (t: number) => (Omit<ShowBall, 'id' | 'color'> & { color?: string }) | null }[]
 
 function boundsOf(pieces: Placed[]): Box {
   const b: Box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }
@@ -140,8 +140,8 @@ export class LiftoffShow extends Show {
       begin: 0,
     }
     const ride = this.riders.find((r) => time >= r.from && time < r.to)
-    const brand = this.brand(time)
-    if (ride || brand) {
+    const company = [this.brand(time), this.murph(time)].filter((b): b is ShowBall => !!b)
+    if (ride || company.length) {
       const hero: ShowBall = {
         id: ball.id,
         x: here.x,
@@ -153,16 +153,25 @@ export class LiftoffShow extends Show {
         angle: point.angle,
       }
       const balls = ride ? ride.fn(time, hero) : null
-      here.balls = brand ? [...(balls ?? [hero]), brand] : balls ?? undefined
+      here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined
     }
     return here
   }
 
   /** Brand at `t`, in world cells, or null while no part has her in sight. */
   brand(t: number): ShowBall | null {
+    return this.companion(t, 'brand', BRAND_ID, BRAND)
+  }
+
+  /** Old Murph at `t` (Cooper Station, the far-side house), in world cells, or null. */
+  murph(t: number): ShowBall | null {
+    return this.companion(t, 'murph', MURPH_ID, MURPH)
+  }
+
+  private companion(t: number, who: 'brand' | 'murph', id: number, color: string): ShowBall | null {
     const time = this.clamp(t)
-    const span = this.company.find((s) => time >= s.from && time < s.to)
+    const span = this.company.find((s) => (s.who ?? 'brand') === who && time >= s.from && time < s.to)
     const b = span?.at(time)
-    return b ? { ...b, id: BRAND_ID, color: b.color ?? BRAND } : null
+    return b ? { ...b, id, color: b.color ?? color } : null
   }
 }

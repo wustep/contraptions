@@ -452,9 +452,29 @@ export const gate = part<GateState>(
     for (let i = 1; i < struck.length; i++) ways.push(hop(ways[ways.length - 1], [struck[i], 0], at(GRID_HITS[i])))
     ways.push(hop(ways[ways.length - 1], cup0, at(CUP)))
     const segs = [...route(ways)]
-    segs.push(...carried((u) => cupBall(sweep, sweepAngle(u + slot.begin)), at(CUP), at(FLING), 24))
+    // In the cup it rolls on into the far side of the bowl and back, settling, while the stone begins to fall.
+    segs.push(
+      ...carried(
+        (u) => {
+          const t = u + slot.begin
+          const a = sweepAngle(t)
+          const [x, y] = cupBall(sweep, a)
+          const k = t - CUP
+          const roll = 0.06 * Math.exp(-k / 0.1) * Math.sin(k * 30)
+          return [x - roll * Math.cos(a), y - roll * Math.sin(a)]
+        },
+        at(CUP),
+        at(FLING),
+        40,
+      ),
+    )
     // Onto the rail, along it over the dogs, and off the end.
-    const rail: Way[] = [{ at: at(FLING), p: thrown }, { at: at(FLING) + SETTLE, p: [rail0, Y_RAIL] }]
+    // Thrown down onto the rail: it bounces once off it and runs on.
+    const rail: Way[] = [
+      { at: at(FLING), p: thrown },
+      { at: at(FLING) + SETTLE, p: [rail0, Y_RAIL] },
+      { at: at(FLING) + SETTLE + 0.2, p: [railX(FLING + SETTLE + 0.2), Y_RAIL], arc: 0.06 },
+    ]
     const bump = (2 * CAP_MEET) / V_RAIL
     for (const t of CAPS) {
       rail.push({ at: at(t), p: [railX(t), Y_RAIL] })
@@ -967,6 +987,18 @@ function bunker(d: Draw, s: GateState): void {
   solid(p, ink, weight * 0.9, DUST.bone)
   rect4(d, a - 0.05, lin - 0.12, a + DOORWAY, lin)
   rect4(d, b - DOORWAY, lin - 0.12, b + 0.05, lin)
+  // Painted on them, the base's hazard band: short diagonal bars, worn.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  for (const [x0, x1] of [[a - 0.05, a + DOORWAY], [b - DOORWAY, b + 0.05]]) {
+    p.push()
+    ctx.beginPath()
+    ctx.rect(X(x0), X(lin - 0.11), X(x1 - x0), X(0.1))
+    ctx.clip()
+    p.noStroke()
+    p.fill(alpha(p, DUST.corn, 0.85))
+    for (let x = x0 - 0.1; x < x1 + 0.1; x += 0.1) p.quad(X(x), X(lin - 0.01), X(x + 0.05), X(lin - 0.01), X(x + 0.1), X(lin - 0.11), X(x + 0.05), X(lin - 0.11))
+    p.pop()
+  }
   // The landing lamps at the roof's two corners.
   const on = t >= THROW
   const flick = on && t < THROW + 0.12 ? (Math.sin((t - THROW) * 90) > -0.2 ? 1 : 0.2) : 1

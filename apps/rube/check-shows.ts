@@ -24,7 +24,8 @@ import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UND
 import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
 import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
 import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
-import { AGED as AGED_HEX, BRAND as BRAND_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
+import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-chase/liftoff/act2/edmunds'
+import { BRAND as BRAND_HEX, MURPH as MURPH_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
 
@@ -214,9 +215,9 @@ async function main(): Promise<void> {
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, TARS, p5.js, Hans Zimmer and both cues',
+        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
           CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 1 &&
-          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
+          ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
           !/private tech demo/i.test(said), said)
         const show = perf.show as LiftoffShow
         check('liftoff: the farm, then the dark, and the stage changes world inside the cloud',
@@ -299,15 +300,11 @@ async function main(): Promise<void> {
           [0, 60, ACT2 + 1, cue(140), cue(172), UNDOCK - 0.01, UNDOCK + 0.01, 250].every((t) => Math.abs(rollOf(t)) < 1e-9) &&
           [cue(152), cue(154), cue(156), cue(160)].every((t) => Math.abs(rollOf(t) - upright) < 1e-6))
         check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
-        // The gold ball is Amelia Brand. Cooper (the hero) has the farm and drives; she is NASA's, and joins him at
-        // the base, out of the bunker the drone led him to. With him (he makes things go, she rides) to the ring, where
-        // a trapdoor parts them; she is the one who waits in orbit over Miller and goes grey; he finds her again, old,
-        // in the far-side house on Cooper Station, and she comes to him. Nowhere else is there a second ball.
-        const golds: string[] = []
-        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
-        const inOrbit = [106, 109, 111]
-        const reunion = [177, 178.5, 179.25, 180.5]
-        const alone = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, 190, 215, 245, 260]
+        // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
+        // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
+        // Miller while the tally counts her years. On Cooper Station he finds his daughter, old Murph (slate), in the
+        // far-side house: she comes to him, and sends him on. At the end he finds Brand at her camp on Edmunds'
+        // planet, and they meet. Nowhere else is there a second ball.
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
           // In the frame's own axes: the camera may be rolled.
@@ -319,50 +316,60 @@ async function main(): Promise<void> {
           const y = dx * Math.sin(a) + dy * Math.cos(a)
           return Math.abs(x) < (f.cells * 16) / 9 / 2 + 0.2 && Math.abs(y) < f.cells / 2 + 0.2
         }
-        for (const t of [...withHim, ...inOrbit, ...reunion]) if (!inShot(t, show.brand(t))) golds.push(`not in shot ${t}`)
-        for (const t of alone) if (inShot(t, show.brand(t))) golds.push(`in shot ${t}`)
-        check('liftoff: Brand (gold) not on the farm, in shot with Cooper from the base, waiting in orbit over Miller, found again on the station, and nowhere else', golds.length === 0, golds.join(', '))
-        const two = [...withHim, ...inOrbit, ...reunion].map((t) => show.at(t).balls ?? [])
-        check('liftoff: where she is, two balls with two ids, never more', two.every((b) => b.length === 2 && b[0].id !== b[1].id) &&
-          [...alone, 60, 70].every((t) => (show.at(t).balls?.length ?? 1) <= (show.brand(t) ? 2 : 1)))
+        const withHim = [72.5, 75, 80, 83, 86, 90, 94, 98, 101]
+        const inOrbit = [106, 109, 111]
+        const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
+        const station = [177, 178.5, 179.25, 180.5]
+        const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
+        const murphAway = [1, 60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        const miss: string[] = []
+        for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
+        for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)
+        for (const t of station) if (!inShot(t, show.murph(t))) miss.push(`Murph not in shot ${t}`)
+        for (const t of murphAway) if (show.murph(t)) miss.push(`Murph at ${t}`)
+        check('liftoff: Brand not on the farm, with Cooper from the base, waiting in orbit, at her camp at the end; Murph only on the station',
+          miss.length === 0, miss.join(', '))
+        const two = [...withHim, ...inOrbit, ...station, ...atCamp].map((t) => show.at(t).balls ?? [])
+        check('liftoff: where one of them is, two balls with two ids, never more', two.every((b) => b.length === 2 && b[0].id !== b[1].id) &&
+          [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])
-        check('liftoff: up in orbit Brand goes grey with the years', !!young && !!old && young.color !== old.color)
-        // At the end he meets Amelia: she is her own blue again (at most a light touch of the years in the chair before
-        // he comes), never the slate she waited in; and she is the only ball there besides him.
-        const hexDist = (a: string, b: string) => {
-          const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
-          const [x, y] = [p(a), p(b)]
-          return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
+        check('liftoff: up in orbit Brand\'s blue dims with the years, and she is her own blue again at the end',
+          !!young && !!old && young.color !== old.color && atCamp.every((t) => show.brand(t)?.color?.toUpperCase() === BRAND_HEX.toUpperCase()))
+        check('liftoff: on Cooper Station, Cooper meets old Murph (slate) in the far-side house, not Brand',
+          station.every((t) => show.murph(t)?.color?.toUpperCase() === MURPH_HEX.toUpperCase() && !show.brand(t)))
+        // At the end, on Edmunds' planet, they meet: they touch.
+        let closest = Infinity
+        for (let t = LIFTOFF_CAMP_MEET - 1.5; t <= LIFTOFF_CAMP_MEET + 1.5; t += 0.01) {
+          const b = show.brand(t)
+          if (!b) continue
+          const h = show.where(t)
+          closest = Math.min(closest, Math.hypot(b.x - h[0], b.y - h[1]))
         }
-        const agedGap = hexDist(BRAND_HEX, AGED_HEX)
-        const meet = [cue(155), cue(155.5)].map((t) => show.brand(t))
-        const waiting = show.brand(ACT2 + 1)
-        check('liftoff: Cooper meets Amelia at the end, and she is her own blue there, not the slate of the years',
-          meet.every((b) => !!b && b.color?.toUpperCase() === BRAND_HEX.toUpperCase()) &&
-          !!waiting && hexDist(waiting.color ?? '#000000', BRAND_HEX) <= 0.3 * agedGap + 1 &&
-          [cue(155), cue(155.5)].every((t) => (show.at(t).balls?.length ?? 1) === 2))
-        // She never jumps while she is drawn, and she comes and goes (or is hidden and shown) only out of shot.
-        let gJump = 0
-        let gAt = 0
-        const pops: string[] = []
-        let gPrev = show.brand(0)
+        check('liftoff: on Edmunds\' planet, at the end, Cooper meets Amelia at her camp', closest <= 0.3, `closest ${closest.toFixed(3)}`)
+        // They never jump while they are drawn, and come and go (or are hidden and shown) only out of shot.
         const drawn = (g: { scale?: number } | null) => !!g && (g.scale ?? 1) > 0.02
-        for (let t = 0.001; t <= perf.duration; t += 0.001) {
-          const g = show.brand(t)
-          if (g && gPrev) {
-            const d = Math.hypot(g.x - gPrev.x, g.y - gPrev.y)
-            if (d > gJump) { gJump = d; gAt = t }
+        for (const [name, of] of [['Brand', (t: number) => show.brand(t)], ['Murph', (t: number) => show.murph(t)]] as const) {
+          let gJump = 0
+          let gAt = 0
+          const pops: string[] = []
+          let gPrev = of(0)
+          for (let t = 0.001; t <= perf.duration; t += 0.001) {
+            const g = of(t)
+            if (g && gPrev) {
+              const d = Math.hypot(g.x - gPrev.x, g.y - gPrev.y)
+              if (d > gJump) { gJump = d; gAt = t }
+            }
+            // Out of nothing (or out of hidden, all at once) where the camera can see: a pop. Likewise into nothing.
+            if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
+            else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
+            else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
+            else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
+            gPrev = g
           }
-          // Out of nothing (or out of hidden, all at once) where the camera can see: a pop. Likewise into nothing.
-          if (!gPrev && inShot(t, g)) pops.push(`in at ${t.toFixed(3)}`)
-          else if (gPrev && !g && inShot(t - 0.001, gPrev)) pops.push(`out at ${t.toFixed(3)}`)
-          else if (gPrev && g && !drawn(gPrev) && (g.scale ?? 1) > 0.3 && inShot(t, g)) pops.push(`shown at ${t.toFixed(3)}`)
-          else if (gPrev && g && drawn(gPrev) && (gPrev.scale ?? 1) > 0.3 && !drawn(g) && inShot(t - 0.001, gPrev)) pops.push(`hidden at ${t.toFixed(3)}`)
-          gPrev = g
+          check(`liftoff: ${name} never jumps (no more than 0.04 cells a millisecond)`, gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
+          check(`liftoff: ${name} comes and goes only out of shot`, pops.length === 0, pops.slice(0, 8).join(', '))
         }
-        check('liftoff: the gold ball never jumps (no more than 0.04 cells a millisecond)', gJump <= 0.04, `${gJump.toFixed(3)} at ${gAt.toFixed(3)} s`)
-        check('liftoff: the gold ball comes and goes only out of shot', pops.length === 0, pops.slice(0, 8).join(', '))
       }
       if (work.work === 'cornfield-chase' && version.take === 'multiball') {
         const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
