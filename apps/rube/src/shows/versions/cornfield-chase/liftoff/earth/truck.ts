@@ -14,8 +14,10 @@ import { cornWall, stalk } from './corn'
  * bed's rail on a note. He rolls along the rail into the corner of the cab;
  * the knock swings the door open, he rolls in onto the bench, and the door
  * slams behind him on the note. Then the organ: the engine turns over on its
- * first chords and catches, the headlights come on, it revs — and on the drop
- * it goes, straight into the corn, him at the wheel behind the glass.
+ * first chords, and on the catch it pulls away, rolling off along the field
+ * road under the corn with the drone coming over to lead it. The headlights
+ * come on, it picks up on the rev, and on the drop he floors it, straight into
+ * the corn, him at the wheel behind the glass.
  *
  * Through the corn it hits a stalk on every beat, and every beat the seat
  * throws him up and he comes down on the eighth. At the dam he stands on the
@@ -301,19 +303,80 @@ interface TruckState {
   ditch: [number, number]
 }
 
+/**
+ * The drive, as a speed at show time `t` (cells a second), for a chase pace `vc`: it pulls away on the catch and
+ * rolls off along the field road through the gather, picks up a little on the rev, floors it on the drop, and holds
+ * the chase pace to the dam, where it stands on its brakes.
+ */
+const PULL = 1.3
+const ROLL = 0.55
+const RUN_UP = 0.85
+const SHIFT = 1.15
+const FLOOR_IT = 0.55
+const soft = (u: number): number => {
+  const v = Math.max(0, Math.min(1, u))
+  return v * v * v * (10 - 15 * v + 6 * v * v)
+}
+function speedAt(t: number, vc: number): number {
+  if (t <= CATCH) return 0
+  if (t < CATCH + PULL) return ROLL * soft((t - CATCH) / PULL)
+  if (t < REV) return ROLL + (RUN_UP - ROLL) * soft((t - CATCH - PULL) / (REV - CATCH - PULL))
+  if (t < DROP) return RUN_UP + (SHIFT - RUN_UP) * soft((t - REV) / 0.5)
+  if (t < STOP) return SHIFT + (vc - SHIFT) * (1 - (1 - Math.min(1, (t - DROP) / FLOOR_IT)) ** 3)
+  return Math.max(0, vc - BRAKE * (t - STOP))
+}
+
+/**
+ * How far the truck goes from where it waits to where it stands at the dam: what it always went (so the dam, and all
+ * that comes after it, stays where it was). The chase pace is what makes the drive come out at that, found once.
+ */
+const TOTAL = (() => {
+  const ta = V / ACCEL
+  const x = STOP - DROP
+  return 0.5 * ACCEL * ta * ta + V * (x - ta) + (V * V) / (2 * BRAKE)
+})()
+const DT = 1 / 500
+const T0 = CATCH
+const T1 = STOP + 1
+function driveTable(vc: number): Float64Array {
+  const n = Math.ceil((T1 - T0) / DT)
+  const out = new Float64Array(n + 1)
+  for (let i = 1; i <= n; i++) {
+    const a = T0 + (i - 1) * DT
+    out[i] = out[i - 1] + (DT / 6) * (speedAt(a, vc) + 4 * speedAt(a + DT / 2, vc) + speedAt(a + DT, vc))
+  }
+  return out
+}
+const DRIVE = (() => {
+  let lo = 1
+  let hi = 4
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2
+    const d = driveTable(mid)
+    if (d[d.length - 1] < TOTAL) lo = mid
+    else hi = mid
+  }
+  return { vc: (lo + hi) / 2, table: driveTable((lo + hi) / 2) }
+})()
+/** The chase pace (cells a second) the drive works out at. */
+export const CHASE_PACE = DRIVE.vc
+
 /** The back of the bed, in the part's frame, at show time `t`. */
 export function rearAt(b0: number, t: number): number {
-  if (t <= DROP) return b0
-  const ta = V / ACCEL
-  const run = (x: number) => (x < ta ? 0.5 * ACCEL * x * x : 0.5 * ACCEL * ta * ta + V * (x - ta))
-  if (t <= STOP) return b0 + run(t - DROP)
-  const tb = V / BRAKE
-  const f = Math.min(t - STOP, tb)
-  return b0 + run(STOP - DROP) + V * f - 0.5 * BRAKE * f * f
+  if (t <= T0) return b0
+  const f = Math.min(DRIVE.table.length - 1, (t - T0) / DT)
+  const i = Math.min(DRIVE.table.length - 2, Math.floor(f))
+  return b0 + DRIVE.table[i] + (DRIVE.table[i + 1] - DRIVE.table[i]) * (f - i)
+}
+
+/** How hard it is speeding up (cells a second a second) at show time `t`, before the chase: what the body sits back on. */
+const pullAt = (t: number): number => {
+  const pre = (x: number) => speedAt(Math.min(x, DROP - 1e-6), DRIVE.vc)
+  return (pre(t + 0.02) - pre(t - 0.02)) / 0.04
 }
 
 /** The body's pitch (positive is nose down) and how far it has lifted on its springs, at show time `t`. */
-function bodyAt(t: number): { pitch: number; lift: number } {
+function bodyAt(t: number, calm = false): { pitch: number; lift: number } {
   let pitch = 0
   let lift = 0
   // The door: the truck rocks as he gets in.
@@ -325,16 +388,19 @@ function bodyAt(t: number): { pitch: number; lift: number } {
     if (s > 0 && s < 0.6) pitch += 0.012 * Math.exp(-s / 0.15) * Math.sin(s * 70)
   }
   // Running: a fine tremble while it idles, more with the revs.
-  if (t > CATCH && t < STOP + 0.6) {
+  // (Not for what he feels on the bench: a fine tremble he rides through, drawn on the body, not in his path.)
+  if (!calm && t > CATCH && t < STOP + 0.6) {
     const rev = knock(t - REV, 0.4) + knock(t - DROP, 0.5)
     lift += (0.006 + 0.01 * rev) * Math.sin(t * 90)
     pitch += 0.004 * Math.sin(t * 53)
   }
   const catchUp = t - CATCH
   if (catchUp > 0) pitch += 0.02 * Math.exp(-catchUp / 0.25) * Math.sin(catchUp * 25)
+  // Pulling away and picking up through the gather: it sits back on its springs as it gathers speed.
+  if (t > CATCH && t < DROP) pitch -= 0.03 * pullAt(t)
   // Off the line: it squats.
   const go = t - DROP
-  if (go > 0) pitch -= 0.06 * Math.exp(-go / 0.45) * Math.sin(Math.min(Math.PI / 2, go * 9))
+  if (go > 0) pitch -= 0.06 * Math.exp(-go / 0.45) * smooth(go, 0, 0.18)
   // The ditch: off the lip nose-up, over, down nose-first, and a hard squash on the springs.
   const air = jumpAt(t)
   if (air > 0) {
@@ -385,14 +451,14 @@ function doorAt(t: number): number {
 }
 
 /** The pickup at show time `t`. */
-function poseAt(s: TruckState, t: number): Pickup {
-  const { pitch, lift } = bodyAt(t)
+function poseAt(s: TruckState, t: number, calm = false): Pickup {
+  const { pitch, lift } = bodyAt(t, calm)
   const rear = rearAt(s.b0, t)
   return { rear, road: GROUND, pitch, lift, air: jumpAt(t) * 0.92, turn: (rear - s.b0) / WHEEL_R, door: doorAt(t), lamp: t > LIGHTS ? (t < LIGHTS + 0.25 ? (Math.sin((t - LIGHTS) * 80) > 0 ? 1 : 0.3) : 1) : 0 }
 }
 
 /** A body point (u along, v up) at show time `t`, in the part's frame. */
-const bodyPoint = (s: TruckState, t: number, u: number, v: number): Pt => pickupPoint(poseAt(s, t), u, v)
+const bodyPoint = (s: TruckState, t: number, u: number, v: number): Pt => pickupPoint(poseAt(s, t, true), u, v)
 
 /** Along the rail from where he lands, into the corner of the cab on BONK; a rock back off it; and in at the door onto the bench. */
 function boardU(t: number): number {
@@ -424,9 +490,11 @@ function heroAt(t: number): Pt {
     const s = t - c
     if (s > 0 && s < 0.2) v += 0.05 * 4 * (s / 0.2) * (1 - s / 0.2)
   }
+  // As it pulls away and picks up, he sits back into the bench a little.
+  if (t > CATCH && t < DROP) u -= 0.05 * pullAt(t)
   // Off the line he is pressed back into the bench, and comes forward again.
   const go = t - DROP
-  if (go > 0) u -= 0.06 * Math.sin(Math.min(Math.PI / 2, go * 7)) * Math.exp(-Math.max(0, go - 0.22) / 0.5)
+  if (go > 0) u -= 0.06 * smooth(go, 0, 0.24) * Math.exp(-Math.max(0, go - 0.24) / 0.5)
   // Every furrow the seat throws him up on the beat, and he comes down on the eighth.
   const { ago } = lastOf(SLAPS, t)
   const air = beat(0.5) - beat(0)
@@ -533,8 +601,9 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   // The corn on the far side of the road: the field, as one wall, to the dam.
   const wx1 = Math.min(s.edge - 0.1, f.x1 + 1)
   if (wx1 > f.x0 - 1) {
-    cornWall(p, k, ink, weight, { x0: f.x0 - 1, x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1] })
-    cornWall(p, k, ink, weight, { x0: f.x0 - 1, x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
+    // Each wall starts where it has height: a wall of no height would be a bare line along its foot, across the bank.
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 0.6), x1: wx1, foot: GROUND - 0.35, h: 2.6, t, fill: DUST.husk, seed: 31, taper: [s.b0 + 0.6, s.edge - 0.1] })
+    cornWall(p, k, ink, weight, { x0: Math.max(f.x0 - 1, s.b0 + 1.4), x1: wx1, foot: GROUND - 0.1, h: 1.25, t: t + 1, fill: DUST.sage, seed: 32, tassels: false, taper: [s.b0 + 1.4, s.edge - 0.1] })
   }
   // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
   const toe = s.b0 + 0.25
@@ -545,14 +614,6 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   p.quadraticVertex(X(toe - 0.35), X(FLOOR + 0.15), X(toe), X(GROUND))
   p.vertex(X(-0.5), X(GROUND))
   p.endShape()
-  p.stroke(alpha(p, ink, 0.3))
-  p.strokeWeight(Math.max(1, weight * 0.6))
-  for (let i = 0; i < 6; i++) {
-    const gx = -0.4 + i * 0.37 + hash(i, 13) * 0.2
-    if (gx > toe - 0.9) break
-    const gy = FLOOR + 0.25 + hash(i, 14) * 0.6
-    p.line(X(gx), X(gy), X(gx + 0.1), X(gy))
-  }
   // The road, with the irrigation ditch across it and the dirt lip before it.
   outline(p, ink, weight)
   const [dx0, dx1] = s.ditch
@@ -652,14 +713,14 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   }
 
   // Dust: one kick off the line, then one off the back wheels on each bar's downbeat. One cloud each, never a trail.
-  const kicks = [DROP, beat(72), beat(76), beat(80), STOP]
+  const kicks = [CATCH + 0.3, DROP, beat(72), beat(76), beat(80), STOP]
   for (const at of kicks) {
     const age = t - at
     if (age < 0 || age > 1.4) continue
     const u = age / 1.4
     const cx = rearAt(s.b0, at) + (at === STOP ? LEN + 0.1 : 0.3) - age * (at === STOP ? -0.3 : 0.35)
     p.push()
-    p.drawingContext.globalAlpha = (1 - u) * (1 - u) * 0.85
+    p.drawingContext.globalAlpha = (1 - u) * (1 - u) * (at < DROP ? 0.45 : 0.85)
     puff(p, k, alpha(p, ink, 0.5).toString(), weight * 0.6, DUST.husk, cx, GROUND - 0.18 - age * 0.3, 0.16 + age * 0.3)
     p.pop()
   }
@@ -672,13 +733,13 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     glassPickup(p, k, ink, weight, pose)
   }
 
-  // Exhaust: a puff a turn of the engine, a steady thread once it runs, a cloud at each rev.
-  const pipe = pickupPoint(pose, -0.05, 0.3)
+  // Exhaust: a puff a turn of the engine, a cloud at each rev, left hanging where it came out of the pipe.
   const puffs = [...CRANKS, CATCH, REV, DROP]
   for (const at of puffs) {
     const age = t - at
     if (age < 0 || age > 1.4) continue
     const u = age / 1.4
+    const pipe = pickupPoint(poseAt(s, at), -0.05, 0.3)
     p.push()
     const big = at === CATCH || at === REV || at === DROP ? 1.5 : 1
     p.drawingContext.globalAlpha = 1 - u

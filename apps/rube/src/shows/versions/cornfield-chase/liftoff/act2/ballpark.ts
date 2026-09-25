@@ -1645,8 +1645,7 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
 const WATCH_NAIL: Pt = [-1.66, -1.39]
 function drawHisWatch(p: p5, c: Ctx, T: number, shake: number): void {
   const glint = smooth(T, cue(153.35), cue(153.9)) * (1 - smooth(T, cue(154.7), cue(155.6)))
-  const seconds = Math.floor((T - cue(0)) / (cue(1) - cue(0))) % 60
-  drawWatch(p, c.k, c.ink, c.weight, WATCH_NAIL[0], WATCH_NAIL[1], T, { mode: 'hang', r: 0.11, swing: shake * 0.6, glint, seconds })
+  drawWatch(p, c.k, c.ink, c.weight, WATCH_NAIL[0], WATCH_NAIL[1], T, { mode: 'hang', r: 0.1, swing: shake * 0.6, glint })
 }
 
 function drawChair(p: p5, c: Ctx, T: number): void {

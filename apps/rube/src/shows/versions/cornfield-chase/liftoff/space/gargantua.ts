@@ -1303,14 +1303,22 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   p.rect(X((L + Rr) / 2), X(FLOOR - 0.04), X(Rr - L - 0.14), X(0.08))
 
   // Cooper's watch, standing at the end of the top shelf beyond the lander: he comes down beside it, and its glass
-  // catches his light; its second hand steps on with each book that goes, the message going with them.
-  const sent = PUSHES.filter((at) => T >= at).length + WATCH_TICKS.filter((at) => T >= at).length * 5
+  // catches his light; its second hand, ticking its Morse at 45, is pulled on with each book that goes and each tick of the
+  // message, and springs back.
   const tick = WATCH_TICKS.reduce((m, at) => Math.max(m, knock(T - at, 0.3)), 0)
+  // The case is drawn mirrored (we are behind it), but the watch faces us through the gap in the row: turn it back so its
+  // dial reads true.
+  p.push()
+  p.translate(X(WATCH_ON_SHELF[0]), 0)
+  p.scale(-1, 1)
+  p.translate(-X(WATCH_ON_SHELF[0]), 0)
   drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], T, {
     mode: 'stand',
-    seconds: T < LAND ? Math.floor(T) % 60 : (Math.floor(LAND) + sent) % 60,
+    // At 45, ticking its Morse; each book that goes and each tick of the message pulls it on a second, and it springs back.
+    twitch: WATCH_TICKS.reduce((m, at) => m + knock(T - at, 0.35), 0) + PUSHES.reduce((m, at) => m + 0.6 * knock(T - at, 0.2), 0),
     glint: Math.min(1, 0.35 + 0.65 * knock(T - LAND, 0.5) + 0.8 * tick),
   })
+  p.pop()
   if (tick > 0.02) glow(p, X(WATCH_ON_SHELF[0]), X(WATCH_ON_SHELF[1] - 0.15), X(0.35 + 0.25 * tick), DUST.light, 0.55 * tick)
   p.pop()
 }

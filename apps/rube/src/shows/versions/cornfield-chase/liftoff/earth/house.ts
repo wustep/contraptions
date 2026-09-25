@@ -710,6 +710,8 @@ const NOSE = CASE_R + 0.06
 const LURCHES = [12.632, 13.497, 14.124, 14.745, 15.139]
 export const TOY_NOTES = [...LURCHES]
 const LIP = 15.743
+/** He comes down off the tipped box onto the boards on this note. */
+const BOARDS = 15.557
 /** The box tips at the stairwell: when it starts, and how far. */
 const TIP: [number, number] = [15.17, 15.4]
 const DUMPED = 0.6
@@ -746,28 +748,46 @@ interface Rig {
 }
 
 /**
- * One lurch, 0 to 1, `since` seconds after the spring lets go: it takes hold over about 90 ms, runs, and coasts out
- * (a gamma step, so it starts and ends at rest, and gathers smoothly).
+ * How far along its run the truck is, 0 to 1. Wound up, it runs continuously from the first note: it gathers, runs
+ * at a steady clip, and each note the key gives it a pulse, a surge and back; it slows to a stop as the box goes
+ * up at the stairwell. Worked out once as a table from its speed, so its motion is smooth.
  */
-function lurch(since: number): number {
-  if (since <= 0) return 0
-  const tau = 0.045
-  const at = (s: number) => 1 - (1 + s / tau + (s * s) / (2 * tau * tau)) * Math.exp(-s / tau)
-  return Math.min(1, at(since) / at(0.5))
+const RUN = (() => {
+  const t0 = LURCHES[0]
+  const t1 = TIP[0] + 0.2
+  const dt = 0.002
+  const n = Math.ceil((t1 - t0) / dt)
+  const speed = (t: number): number => {
+    let v = smooth(t, t0, t0 + 0.3) * (1 - smooth(t, TIP[0] - 0.25, t1))
+    for (const note of LURCHES) {
+      const u = (t - note) / 0.09
+      if (u > 0) v += 0.55 * u * u * Math.exp(2 * (1 - u)) * (1 - smooth(t, TIP[0] - 0.25, t1))
+    }
+    return v
+  }
+  const h = new Float64Array(n + 1)
+  for (let i = 1; i <= n; i++) h[i] = h[i - 1] + speed(t0 + (i - 0.5) * dt) * dt
+  for (let i = 0; i <= n; i++) h[i] /= h[n]
+  return { t0, dt, h }
+})()
+
+function runAt(t: number): number {
+  const i = (t - RUN.t0) / RUN.dt
+  if (i <= 0) return 0
+  if (i >= RUN.h.length - 1) return 1
+  const j = Math.floor(i)
+  return RUN.h[j] + (RUN.h[j + 1] - RUN.h[j]) * (i - j)
 }
 
-/** Where the truck is at show time `t`, in this frame: a lurch on each note, backing off the case, a jolt on each start. */
+/** Where the truck is at show time `t`, in this frame: running continuously off the case, rearing a little on each pulse. */
 function rigAt(s: ToyState, t: number): Rig {
-  let x = NOSE0
-  let key = 0
+  const u = runAt(t)
+  const x = NOSE0 + s.stride * LURCHES.length * u
+  const key = (Math.PI / 2) * LURCHES.length * u
   let pitch = 0
-  for (let i = 0; i < LURCHES.length; i++) {
-    const since = t - LURCHES[i]
-    if (since <= 0) break
-    const u = lurch(since)
-    x += s.stride * u
-    key += (Math.PI / 2) * u
-    pitch += 0.025 * Math.exp(-since / 0.2) * Math.sin(since * 16)
+  for (const note of LURCHES) {
+    const q = (t - note) / 0.12
+    if (q > 0) pitch += 0.02 * q * q * Math.exp(2 * (1 - q))
   }
   const tip = DUMPED * easeInOutSine(clamp((t - TIP[0]) / (TIP[1] - TIP[0])))
   return { x, floor: TOY_FLOOR, pitch, tip, key }
@@ -842,13 +862,38 @@ export const toy = part<ToyState>(
     const at = (t: number) => t - slot.begin
     const s: ToyState = { begin: slot.begin, stride: 0, bands: BANDS.map(([x, w, n]) => ({ x, w, at: n })) }
     // It backs to where its tipped box pours him onto the boards a short roll from the lip.
-    const pour = TIP[1] - 0.02
     s.stride = (LIP_X - 0.46 - LEN - NOSE0) / LURCHES.length
     const ride = ballPath(s)
+    // He leaves the box's end when it is tipped far enough, and falls to the boards: when he leaves is chosen so
+    // that he lands on the piano's next note.
+    const ground = TOY_FLOOR - R
+    const flight = (pour: number) => {
+      const P = ride(pour)
+      const Q = ride(pour - 0.004)
+      const V: Pt = [(P[0] - Q[0]) / 0.004, (P[1] - Q[1]) / 0.004]
+      const T = (-V[1] + Math.sqrt(V[1] * V[1] + 2 * G_EARTH * (ground - P[1]))) / G_EARTH
+      return { P, V, T }
+    }
+    let lo = TIP[0] + 0.12
+    let hi = TIP[1] + 0.1
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2
+      if (mid + flight(mid).T < BOARDS) lo = mid
+      else hi = mid
+    }
+    const pour = lo
     const segs = carried((t) => ride(t + slot.begin), 0, at(pour), Math.ceil(at(pour) * 60))
-    const out: Way = { at: at(pour), p: ride(pour) }
-    const down: Way = hop(out, [ride(pour)[0] + 0.22, TOY_FLOOR - R], at(pour) + 0.19)
-    segs.push(...route([out, down, { at: at(LIP), p: [LIP_X, TOY_FLOOR - R] }]))
+    // Off the end of the tipped box with the speed it had, a short fall to the boards, and a roll on to the lip.
+    const { P, V, T: fallT } = flight(pour)
+    const land = pour + fallT
+    const fall = (t: number): Pt => {
+      const q = t + slot.begin - pour
+      return [P[0] + V[0] * q, Math.min(ground, P[1] + V[1] * q + 0.5 * G_EARTH * q * q)]
+    }
+    segs.push(...carried(fall, at(pour), at(land), 12))
+    const landed: Pt = [P[0] + V[0] * fallT, ground]
+    const roll = run(landed, [LIP_X, ground], land, LIP, Math.max(0.3, V[0]), 0.6)
+    segs.push(...carried((t) => roll(t + slot.begin), at(land), at(LIP), 24))
     return {
       cells: box(-1.5, -2, LIP_X + 0.5, 1),
       exit: [LIP_X + 0.5, TOY_FLOOR - R],

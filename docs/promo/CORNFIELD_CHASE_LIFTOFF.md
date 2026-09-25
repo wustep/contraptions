@@ -216,7 +216,31 @@ The title card stays up to the end, 291 s.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Stephen's notes 1 to 8 (latest)
+## Phase A polish (latest)
+
+1. **Continuous early motion.**
+   - Murph's tin truck runs continuously on its wind-up. It gathers from the first note, surges on each one and never stops, then slows as it tips its box at the stairwell.
+   - He leaves the box, the tipping pail and the basket with the speed each gave him, and curves into his fall.
+   - Every non-impact velocity jump from 11 to 26 s is now under 0.2 frame-heights per second.
+2. **The truck drives sooner.**
+   - It pulls away when the engine catches (35.65 s) and drives the field road through the organ's gather.
+   - The drone overtakes it and leads, the headlights come on as it rolls (40.0 s), and it picks up speed (41.1 s).
+   - On the drop it swings into the corn, about six cells after it first moved.
+   - Every strike and the dam's place are kept, so the chase through the corn now runs at about 2.1 cells/s, where it was 2.6.
+3. **The watch is Murph's Hamilton Khaki Field.**
+   - A round steel case with a polished bezel and a knurled crown at three.
+   - A black dial with large tan numerals, an outer minute track numbered 05 to 60, HAMILTON under the 12 and KHAKI AUTOMATIC over the 6. The words are drawn as strokes, since the canvas sets no type.
+   - A tan cathedral hour hand and syringe minute hand at 7:37, and a thin silver second hand.
+   - A black leather strap with cream stitching.
+   - The second hand sits at 45 and ticks back and forth in Morse (STAY), and the tesseract's message pulls it further. It no longer sweeps.
+   - It is a little smaller (radius 0.075 cells). The detail follows its size on screen: the words and the track's numbers appear only when there are pixels for them.
+   - In the tesseract it is turned to face us, so its dial reads true.
+4. **The ground at about 0:28 is clean.**
+   - The scattered strokes on the channel's bank and the truck's bank are gone.
+   - The corn walls no longer draw a bare line along their foot where they have no height.
+   - The bank's foot sits on the road, as one outline.
+
+## Stephen's notes 1 to 8
 
 1. **Rocket smoke covers the buildings.** The pad billow from ignition is drawn over every part now: the bunker, TARS, the tower's foot and the pad. The trail the rocket climbs out of stays behind it.
 2. **Heavier cornstalks.** The stalks the truck ploughs through stay pressed flat until it has passed. Then they rise from their lean as a slow damped spring: about 90% upright after 0.8 s, one soft swing past, settled by 1.4 s. They used to snap up at once. Their tassels swing slowly instead of chattering.

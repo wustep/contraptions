@@ -94,22 +94,14 @@ export const cornrow = part<RowState>(
         if (x > s.length) break
         stalk(p, k, ink, weight, { x, foot: FLOOR - 0.12, h: 1.9 + hash(i, 4) * 0.5, seed: 40 + i, sway: 0.12 + Math.sin(t * 0.9 + i) * 0.03, plain: i % 2 === 1 })
       }
-      // The bank's face down to the field road.
+      // The bank's face down to the field road: one clean face, its foot exactly on the road's line.
       solid(p, ink, weight, DUST.shade)
       p.beginShape()
-      p.vertex((HEAD - 0.4) * k, (1 + FLOOR + 0.02) * k)
+      p.vertex((HEAD - 0.4) * k, (1 + FLOOR) * k)
       p.vertex(HEAD * k, FLOOR * k)
       p.vertex((s.length + 0.5) * k, FLOOR * k)
-      p.vertex((s.length + 0.5) * k, (1 + FLOOR + 0.02) * k)
+      p.vertex((s.length + 0.5) * k, (1 + FLOOR) * k)
       p.endShape(p.CLOSE)
-      p.stroke(alpha(p, ink, 0.3))
-      p.strokeWeight(Math.max(1, weight * 0.6))
-      for (let i = Math.floor(x0 / 0.37); i < x1 / 0.37; i++) {
-        const gx = i * 0.37 + hash(i, 13) * 0.2
-        if (gx < -0.4 || gx > s.length + 0.4) continue
-        const gy = FLOOR + 0.4 + hash(i, 14) * 0.5
-        p.line(gx * k, gy * k, (gx + 0.1) * k, gy * k)
-      }
       // The channel cut into the bank's top: its far wall and its bed, from the pool at its head.
       const mid = (HEAD + s.length + 0.5) / 2
       const span = s.length + 0.5 - HEAD
@@ -176,8 +168,9 @@ export const cornrow = part<RowState>(
         p.strokeWeight(Math.max(1, weight))
         p.ellipse(X(-0.5), X(WATER - 0.02), X(0.3 + u * 0.6), X(0.06 + u * 0.08))
       }
+      // Down over the bed's edge, so the channel reads as one wall on the bank.
       solid(p, ink, weight, DUST.wood)
-      p.rect(X(mid), X(0.21), X(span), X(0.12))
+      p.rect(X(mid), X((0.15 + BED + 0.06) / 2), X(span), X(BED + 0.06 - 0.15))
     },
   },
   (slot) => {

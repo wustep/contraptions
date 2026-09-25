@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeInQuad } from '../../../../../../../../src/core/ease'
 import { FLOOR, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, hash, knock, lastOf, part, route, smooth, type Ctx, type Way } from '../kit'
-import { hop } from '../physics'
+import { G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
 
 /**
@@ -137,6 +137,15 @@ function hoistAt(t: number): number {
   return HOIST.h[j] + (HOIST.h[j + 1] - HOIST.h[j]) * (i - j)
 }
 
+/** A cubic from `a` leaving at velocity `va` to `b` arriving at `vb`, `T` seconds apart, at `u` (0..1) of the way. */
+function hermite(a: Pt, va: Pt, b: Pt, vb: Pt, T: number, u: number): Pt {
+  const h00 = 2 * u ** 3 - 3 * u ** 2 + 1
+  const h10 = u ** 3 - 2 * u ** 2 + u
+  const h01 = -2 * u ** 3 + 3 * u ** 2
+  const h11 = u ** 3 - u ** 2
+  return [h00 * a[0] + h10 * T * va[0] + h01 * b[0] + h11 * T * vb[0], h00 * a[1] + h10 * T * va[1] + h01 * b[1] + h11 * T * vb[1]]
+}
+
 /** A step from 0 to 1 that starts at rest and gathers over a few `tau`s: what a spring or a lurch looks like as it lets go. */
 function gather(since: number, tau: number): number {
   if (since <= 0) return 0
@@ -227,16 +236,34 @@ export const yard = part<YardState>(
     segs.push(...route([edge, hop(edge, bucket(at(IN_BUCKET)), at(IN_BUCKET))]))
     // Up the tower in the bucket.
     segs.push(...carried(bucket, at(IN_BUCKET), at(TRIP), 60))
-    // Tipped out as the pail goes over: poured in one flight into the basket, gathering speed as it falls.
-    const out: Way = { at: at(TRIP), p: bucket(at(TRIP)) }
+    // Tipped out as the pail goes over: poured into the basket, leaving the pail with the pail's own motion and
+    // bending into a drop, so it never jumps from riding to flying.
     const basket = (t: number): Pt => inBasket(t + slot.begin)
-    segs.push(...route([out, { ...hop(out, basket(at(CATCH)), at(CATCH)), ramp: [0.5, 1] }]))
-    // Down the line in the basket, to the pole.
-    segs.push(...carried(basket, at(CATCH), at(POLE) + 0.08, 60))
+    const p0 = bucket(at(TRIP))
+    const pb = bucket(at(TRIP) - 0.004)
+    const v0: Pt = [(p0[0] - pb[0]) / 0.004, (p0[1] - pb[1]) / 0.004]
+    const p1 = basket(at(CATCH))
+    const T = CATCH - TRIP
+    // Landing a little faster than a plain drop between the two would, so the pour gathers evenly from the lip.
+    const v1: Pt = [((p1[0] - p0[0]) / T) * 1.6, ((p1[1] - p0[1]) / T + (G_EARTH * T) / 2) * 1.6]
+    const poured = (t: number): Pt => hermite(p0, v0, p1, v1, T, (t - at(TRIP)) / T)
+    segs.push(...carried(poured, at(TRIP), at(CATCH), 16))
+    // Into the basket, and down the line in it to the pole.
     // Thrown out as it swings, onto the pump handle's end; down with it; and sprung up over the pump into the channel.
-    const thrown: Way = { at: at(POLE) + 0.08, p: basket(at(POLE) + 0.08) }
+    // He leaves the basket with the basket's own swing, and the flight bends from that into a thrown arc that comes
+    // down onto the handle's end as a ball under gravity would: one smooth curve, no jump from riding to flying.
     const onEnd = (t: number): Pt => onHandle(handleAt(t + slot.begin), HANDLE - 0.06, R + 0.02)
-    segs.push(...route([thrown, hop(thrown, onEnd(at(LAND)), at(LAND))]))
+    const t0 = at(POLE) + 0.08
+    const q0 = basket(t0)
+    const qb = basket(t0 - 0.004)
+    const w0: Pt = [(q0[0] - qb[0]) / 0.004, (q0[1] - qb[1]) / 0.004]
+    const q1 = onEnd(at(LAND))
+    const TT = at(LAND) - t0
+    // The landing velocity of the plain throw between the two points in that time.
+    const w1: Pt = [(q1[0] - q0[0]) / TT, (q1[1] - q0[1]) / TT + (G_EARTH * TT) / 2]
+    segs.push(...carried(basket, at(CATCH), t0, 60))
+    const toss = (t: number): Pt => hermite(q0, w0, q1, w1, TT, (t - t0) / TT)
+    segs.push(...carried(toss, t0, at(LAND), 24))
     segs.push(...carried(onEnd, at(LAND), at(BOTTOM), 12))
     // The handle hits its stop; the spring takes hold and lifts him a moment before it throws him.
     const lift = at(BOTTOM) + 0.06

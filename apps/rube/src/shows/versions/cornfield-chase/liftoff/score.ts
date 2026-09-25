@@ -103,18 +103,18 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
   const road = pickup.row + 1 + FLOOR
   const flight: Flight = {
     at(t) {
-      // Over the truck while it idles, high, left to right; gone; then ahead of it all the way through the corn.
+      // In from behind the truck as it pulls away, high, overtaking it and coming down to lead it along the road;
+      // ahead of it all the way through the corn.
       if (t < 35.4) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
-      if (t < 41) {
-        const u = (t - 35.4) / 5.6
-        return { p: [rear(35.4) - 5 + 14 * u, road - 3.6 - 0.5 * u], bank: -0.04, seen: 1, ground: road - 2, glint: 0 }
-      }
-      if (t < DROP - 0.2) return { p: [0, 0], bank: 0, seen: 0, ground: null, glint: 0 }
+      const lead = smooth(t, 35.4, 40.6)
       // Ahead, a little closer every bar, until the dam: then it is over the edge and away down the valley.
       const close = smooth(t, DROP, beat(83))
       const gone = smooth(t, beat(84), beat(86) + 1.2)
-      const x = rear(Math.min(t, beat(84))) + 5.6 - 1.8 * close + 0.3 * Math.sin(t * 0.9) + gone * 9
-      return { p: [x, road - 2.55 + 0.1 * Math.sin(t * 1.7) - gone * 1.5], bank: 0.05 * Math.sin(t * 0.9) - gone * 0.12, seen: smooth(t, DROP - 0.2, DROP + 0.3) * (1 - smooth(t, beat(86), beat(86) + 1.4)), ground: gone > 0.2 ? null : road - 2, glint: glintAt(t) }
+      const ahead = 5.6 - 1.8 * close + 0.3 * Math.sin(t * 0.9)
+      const x = rear(Math.min(t, beat(84))) - 5 * (1 - lead) + ahead * lead + gone * 9
+      const y = road - 3.6 * (1 - lead) + (-2.55 + 0.1 * Math.sin(t * 1.7)) * lead - gone * 1.5
+      const bank = -0.04 * (1 - lead) + 0.05 * Math.sin(t * 0.9) * lead - gone * 0.12
+      return { p: [x, y], bank, seen: 1 - smooth(t, beat(86), beat(86) + 1.4), ground: gone > 0.2 ? null : road - 2, glint: glintAt(t) }
     },
   }
 
