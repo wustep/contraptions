@@ -22,7 +22,7 @@ export interface Pebble {
 export const PEBBLES: Pebble[] = [
   { x: LIP - 0.012, r: 0.026, at: PEBBLE_AT[0], seed: 1, big: false },
   { x: LIP - 0.13, r: 0.034, at: PEBBLE_AT[1], seed: 2, big: false },
-  { x: LIP - 0.3, r: 0.062, at: PEBBLE_AT[2], seed: 3, big: true },
+  { x: LIP - 0.25, r: 0.062, at: PEBBLE_AT[2], seed: 3, big: true },
 ]
 /** The big one's two landings, on the beat after it drops and on the soft note after that. */
 export const PEBBLE_LANDS = [fall(10.5), fall(13)]

@@ -1,17 +1,21 @@
 import type p5 from 'p5'
-import { mixHex, R, type Pt } from '../../../../../parts'
+import { ballAt, laneAt, mixHex, R, type BallChange, type Lane, type Pt } from '../../../../../parts'
 import { box, frame, hash, part, type PartShot } from '../kit'
 import { fall } from '../music'
 import { G } from '../physics'
 import { EVELYN, JOY, ROCKS } from '../worlds'
 import { buildLand, INK, paintCloud, paintRing, paintSky, paintSlices, paintWall, type Land } from './ledgeLand'
 import { PEBBLE_LANDS, pebbleAt, pebbleWays, type Pebble, type PebbleWay } from './ledgePebbles'
+import { EVELYN_ROCK, JOY_ROCK, paintStone } from './ledgeStones'
 import {
   BEGIN,
   E_BALK,
   E_GO,
   E_LEAN,
   END,
+  EVELYN_SEAT,
+  JOY_SEAT,
+  joyTilt,
   LEAN,
   LIP,
   MEET,
@@ -137,6 +141,9 @@ interface State {
   plan: Plan
   land: Land
   pebbles: PebbleWay[]
+  /** Evelyn's lane and what it does to her colour, once built: her stone is drawn on the ball's own path. */
+  lane?: Lane
+  changes?: BallChange[]
 }
 
 let cached: State | null = null
@@ -186,7 +193,20 @@ export const ledge = part<State>(
       }
     },
     over: (p, s, c) => {
-      paintRing(p, c.k, frame(p, c.k), s.land, c.weight * 0.9, true, c.t + BEGIN, c.weight)
+      const { k, weight } = c
+      const show = c.t + BEGIN
+      const f = frame(p, k)
+      const seen = (x: number, y: number) => x > f.x0 - 0.5 && x < f.x1 + 0.5 && y > f.y0 - 0.5 && y < f.y1 + 0.5
+      // The two of them as stones, over their balls: Joy, then Evelyn (whose eye goes on after all of this).
+      const [jx, jy] = wayAt(s.plan.joy, show)
+      if (show < END + 1e-6 && seen(jx, jy)) paintStone(p, k, weight, JOY_ROCK, jx, jy, joyTilt(show) || (jx - JOY_SEAT) / R, mixHex(JOY_STONE, JOY, recovered(show)), s.plan.ledges)
+      if (s.lane && s.changes && c.t >= 0) {
+        const at = laneAt(s.lane, c.t)
+        const color = ballAt({ color: c.color, ghost: false, id: 0 }, s.changes, c.t).color
+        if (!at.hidden && seen(at.x, at.y)) paintStone(p, k, weight, EVELYN_ROCK, at.x, at.y, (at.x - EVELYN_SEAT) / R, color, s.plan.ledges)
+      }
+      // The ring's near half over them, so what falls in goes down behind its lip.
+      paintRing(p, k, f, s.land, weight * 0.9, true, show, weight)
     },
   },
   (slot) => {
@@ -195,16 +215,17 @@ export const ledge = part<State>(
     const lane = { segs, fire: OVER - slot.begin }
     const end = wayAt(pl.evelyn, END)
     const joy = pl.joy
+    const changes: BallChange[] = [
+      { at: 0, color: EVELYN_STONE, over: 1.4 },
+      { at: RECOVER[0] - slot.begin, color: EVELYN, over: RECOVER[1] - RECOVER[0] },
+    ]
     return {
       cells: box(-9, -7, 72, 40, 2),
       exit: [end[0] + 0.5, end[1]] as Pt,
       lane,
-      state: { plan: pl, land, pebbles },
+      state: { plan: pl, land, pebbles, lane, changes },
       // She goes to stone as the world comes up, and her colour comes back on the way down, from when she reaches Joy.
-      changes: [
-        { at: 0, color: EVELYN_STONE, over: 1.4 },
-        { at: RECOVER[0] - slot.begin, color: EVELYN, over: RECOVER[1] - RECOVER[0] },
-      ],
+      changes,
       company: [
         {
           who: 'joy',
@@ -226,8 +247,8 @@ export const ledge = part<State>(
     { t: fall(12.5), cells: 11, hold: [3.3, 3.05] },
     { t: fall(14.5), cells: 10.6, hold: [3.15, 2.95] },
     // Then in, slowly, all through Joy's rocking and her lean out over the edge, and closer while she waits there.
-    { t: ROCK_AT[0], cells: 5.6, hold: [1.0, 0.75] },
-    { t: LEAN, cells: 3.9, hold: [0.38, 0.05] },
+    { t: ROCK_AT[0], cells: 4.6, hold: [0.75, 0.5] },
+    { t: LEAN, cells: 3.6, hold: [0.34, 0.0] },
     { t: OVER - 0.15, cells: 2.8, hold: [0.2, -0.16] },
     // She is gone; Evelyn on the rim, alone.
     { t: E_LEAN, cells: 2.8, hold: [0.14, -0.14] },

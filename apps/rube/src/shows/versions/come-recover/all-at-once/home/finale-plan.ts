@@ -83,9 +83,9 @@ export const LIGHTS_OUT = HOME_HITS[2]
 export const BLINKS = [26, 27, 28, 29, 29.5, 30, 30.5, 31, 31.5].map(home)
 /** Fireworks over the street: the flash, and the two loud notes after it. */
 export const BURSTS: { at: number; x: number; y: number; r: number; color: 'gold' | 'rose' | 'light' }[] = [
-  { at: FLASH, x: -7.0, y: -2.85, r: 0.95, color: 'gold' },
-  { at: 291.724, x: -5.7, y: -2.45, r: 0.72, color: 'rose' },
-  { at: 293.013, x: -6.35, y: -3.1, r: 0.88, color: 'light' },
+  { at: FLASH, x: -4.45, y: -2.25, r: 1.15, color: 'gold' },
+  { at: 291.724, x: -5.75, y: -1.75, r: 0.95, color: 'rose' },
+  { at: 293.013, x: -4.7, y: -2.55, r: 1.05, color: 'light' },
 ]
 
 /* ------------------------------------------------------------------ small tools */
@@ -161,10 +161,10 @@ const J_DROP = (() => {
   return { from, v: launch(from, J_FLOOR, J_LAND - J_OUT).out }
 })()
 
-/* ------------------------------------------------------------------ the foot switch, the camera */
+/* ------------------------------------------------------------------ the foot switch, the camera, the lanterns */
 
-/** The party lights' foot switch on the floor by the front door: its middle, its dome and its button. */
-export const SWITCH = { x: -3.18, w: 0.3, h: 0.09, button: 0.035 }
+/** The party lights' foot switch on the floor under the storefront window: its middle, its dome and its button. */
+export const SWITCH = { x: -5.3, w: 0.32, h: 0.09, button: 0.035 }
 /** Where she sits on it with the button down. */
 const ON_SWITCH: Pt = [SWITCH.x, FLOOR - SWITCH.h - R]
 /** Her height rolling up the dome's flank. */
@@ -178,24 +178,90 @@ function switchY(x: number): number {
 /** The button: up, pressed on 286.2, up again as she rolls off. */
 export function buttonDown(t: number): number {
   if (t < PRESS - 0.02) return 0
-  if (t < BACK_GO + 0.3) return smooth01((t - (PRESS - 0.02)) / 0.04)
-  return 1 - smooth01((t - (BACK_GO + 0.3)) / 0.08)
+  if (t < BACK_GO + 0.25) return smooth01((t - (PRESS - 0.02)) / 0.04)
+  return 1 - smooth01((t - (BACK_GO + 0.25)) / 0.08)
 }
 
-/** The camera for the portrait, on its little tripod on the counter, looking left at the washer. */
-export const CAMERA = { x: 1.72, foot: -1.2, lens: [1.46, -1.62] as Pt, lamp: [1.6, -1.72] as Pt, flash: [1.74, -1.95] as Pt }
+/**
+ * The camera for the family portrait: a boxy wooden camera with a bellows and a flash reflector, on a tripod on the
+ * floor in front of the door, looking right at the family by the washer. Its tripod's head, and how far it is tipped
+ * down at them (radians); everything else is drawn from these.
+ */
+export const CAMERA = { x: -3.8, head: -0.36, tilt: 0.3 }
+/** A point in the camera's own frame (origin on the tripod's head, x out through its lens) in the room's cells. */
+export function onCamera(x: number, y: number): Pt {
+  const c = Math.cos(CAMERA.tilt)
+  const sn = Math.sin(CAMERA.tilt)
+  return [CAMERA.x + x * c - y * sn, CAMERA.head + x * sn + y * c]
+}
+/** Its self-timer lamp, its flash bulb, and the slot the photo comes out of, in its own frame. */
+export const CAM_LAMP: Pt = [0.12, -0.3]
+export const CAM_BULB: Pt = [-0.08, -0.52]
+export const CAM_SLOT: Pt = [0.3, -0.07]
 
-/** The self-timer lamp: dark till the lights are on, then a blink on each of its beats, and lit through the flash. */
+/** The self-timer lamp: dark till the lights are on, then a blink on each of its beats, lit through the flash. */
 export function timerLamp(t: number): number {
   if (t < PRESS) return 0
-  if (t >= FLASH + 0.5) return 0
-  let v = 0.25
+  if (t >= FLASH + 0.35) return 0
+  let v = 0.18
   for (const b of BLINKS) {
     const u = t - b
-    if (u >= 0 && u < 0.3) v = Math.max(v, Math.exp(-u / 0.09))
+    if (u >= 0 && u < 0.3) v = Math.max(v, Math.exp(-u / 0.1))
   }
   if (t >= BLINKS[BLINKS.length - 1]) v = Math.max(v, 0.9)
   return v
+}
+
+/**
+ * A short string of paper lanterns over the family, from the wall by the door to past the washer, on the switch's
+ * cord: they light one a beat along it (with the garland over the counter, on `LIGHTS.lanterns`).
+ */
+export const STRING = { a: [-3.5, -2.86] as Pt, b: [-0.62, -2.72] as Pt, sag: 0.13, at: [0.1, 0.3, 0.5, 0.7, 0.9], size: 0.7 }
+/** The string's wire at x. */
+export function stringY(x: number): number {
+  const u = clamp((x - STRING.a[0]) / (STRING.b[0] - STRING.a[0]))
+  return STRING.a[1] + (STRING.b[1] - STRING.a[1]) * u + STRING.sag * 4 * u * (1 - u)
+}
+export const STRING_X = STRING.at.map((u) => STRING.a[0] + (STRING.b[0] - STRING.a[0]) * u)
+
+/* ------------------------------------------------------------------ the photograph */
+
+export const EJECT = 291.201
+const LOOSE = 291.445
+export const PHOTO_DOWN = 292.769
+export const DEVELOPED = 293.013
+/** The instant photograph's size, and where it ends: propped against the washer's front, by the family. */
+export const PHOTO = { w: 0.3, h: 0.36 }
+const PHOTO_REST: Pt = [WX - 0.62, FLOOR - PHOTO.h / 2 - 0.005]
+
+/**
+ * The photograph: pushed out of the camera's slot on 291.2, let go on 291.45, fluttering down on the air to land
+ * propped against the washer on 292.77, developing from white as it goes, sharp on 293.01.
+ * Its middle, its turn, how much of its face shows (it flips as it falls), and how developed it is (0..1).
+ */
+export function photoAt(t: number): { at: Pt; turn: number; face: number; dev: number } | null {
+  if (t < EJECT) return null
+  const slot = onCamera(CAM_SLOT[0], CAM_SLOT[1])
+  const dir: Pt = [Math.cos(CAMERA.tilt), Math.sin(CAMERA.tilt)]
+  const dev = smooth01((t - 291.9) / (DEVELOPED - 291.9)) * 0.92 + 0.08 * smooth01((t - DEVELOPED + 0.06) / 0.1)
+  if (t < LOOSE) {
+    // Pushed out of the slot, a card's length.
+    const s = (t - EJECT) / (LOOSE - EJECT)
+    const out = PHOTO.h * 0.55 * (1 - (1 - s) * (1 - s))
+    return { at: [slot[0] + dir[0] * out, slot[1] + dir[1] * out + 0.05], turn: CAMERA.tilt + Math.PI / 2, face: 0.35, dev }
+  }
+  const from: Pt = [slot[0] + dir[0] * PHOTO.h * 0.55, slot[1] + dir[1] * PHOTO.h * 0.55 + 0.05]
+  if (t < PHOTO_DOWN) {
+    // Down on the air like a leaf: swinging side to side, flipping, drifting over to the washer.
+    const s = (t - LOOSE) / (PHOTO_DOWN - LOOSE)
+    const x = from[0] + (PHOTO_REST[0] - from[0]) * smooth01(s) + 0.1 * Math.sin(s * Math.PI * 3) * (1 - s)
+    const y = from[1] + (PHOTO_REST[1] - from[1]) * (s * s * 0.4 + 0.6 * s)
+    const turn = (CAMERA.tilt + Math.PI / 2) * (1 - smooth01(s * 1.6)) + 0.45 * Math.sin(s * Math.PI * 3) * (1 - s) - 0.12 * smooth01(s)
+    return { at: [x, y], turn, face: 0.35 + 0.65 * Math.abs(Math.cos(s * Math.PI * 1.5)) * smooth01(s * 3), dev }
+  }
+  // Propped: it lands, rocks, and leans.
+  const u = t - PHOTO_DOWN
+  return { at: PHOTO_REST, turn: -0.12 + 0.08 * Math.exp(-u / 0.12) * Math.sin(u * 30), face: 1, dev }
 }
 
 /* ------------------------------------------------------------------ Evelyn */
@@ -207,7 +273,8 @@ export function evelynAt(t: number): Pt {
   if (t < E_LAND) return ballistic(E_DROP.from, E_DROP.v, t - E_OUT)
   if (t < SET_OFF) return E_FLOOR
   if (t < PRESS) {
-    // A slow, even roll to the switch, easing up onto it, its button going down under her on the beat.
+    // Off along the floor, under the camera's tripod, to the switch under the window, up onto it, the button going
+    // down under her on the beat.
     const s = (t - SET_OFF) / (PRESS - SET_OFF)
     const f = 1 - Math.pow(1 - s, 1.7)
     const x = E_FLOOR[0] + (ON_SWITCH[0] - E_FLOOR[0]) * f
@@ -215,7 +282,7 @@ export function evelynAt(t: number): Pt {
   }
   if (t < BACK_GO) return ON_SWITCH
   if (t < BACK) {
-    // Back to her place for the photograph, down off the switch and along, to touch Joy.
+    // Back to her place for the photograph, the timer blinking: down off the switch, under the tripod, to touch Joy.
     const s = (t - BACK_GO) / (BACK - BACK_GO)
     const f = s * s * (3 - 2 * s) * 0.82 + 0.18 * s
     const x = ON_SWITCH[0] + (E_FLOOR[0] - ON_SWITCH[0]) * f
@@ -242,7 +309,7 @@ export function joyAt(t: number): Pt {
   // Waymond's touch pushes her against her mother.
   const nudge = smooth01((t - W_TOUCH) / (RIPPLE - W_TOUCH))
   const x = J_FLOOR[0] + (J_ROW[0] - J_FLOOR[0]) * nudge
-  return [x, 0]
+  return [x, -lineUp(t, LINE_UP[0])]
 }
 
 export function waymondAt(t: number): Pt {
@@ -265,7 +332,16 @@ export function waymondAt(t: number): Pt {
   let dx = 0
   if (t > back && t < NUZZLE) dx = 0.06 * Math.sin((Math.PI * (t - back)) / (NUZZLE - back))
   if (t >= NUZZLE) dx = -0.012 * Math.exp(-(t - NUZZLE) / 0.08) * Math.sin((t - NUZZLE) * 30)
-  return [touch + (W_ROW[0] - touch) * s + dx, 0]
+  return [touch + (W_ROW[0] - touch) * s + dx, -lineUp(t, LINE_UP[1])]
+}
+
+/** As Evelyn goes for the lights, Joy and then Waymond straighten up for the picture: a small hop each, landing on the beat. */
+export const LINE_UP = [home(11), home(12)]
+function lineUp(t: number, land: number): number {
+  const air = 0.2
+  const u = t - (land - air)
+  if (u <= 0 || u >= air) return 0
+  return 0.5 * G * u * (air - u)
 }
 
 /* ------------------------------------------------------------------ the washer's clocks */
@@ -313,4 +389,4 @@ export function windowLight(t: number): { a: number; warm: number } {
 }
 
 /** What was struck, for the score: every visible strike. */
-export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, NUZZLE, DOOR_TO, SET_OFF, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, 291.724, 293.013, LIGHTS_OUT, home(42.5), home(43), TURN_OVER, SWELL]
+export const STRIKES: number[] = [T_TURN, T_BACK, T_LATCH, T_DOOR, E_OUT, E_LAND, J_OUT, J_LAND, W_HOP[0], W_HOP[1], W_TOUCH, RIPPLE, NUZZLE, DOOR_TO, SET_OFF, ...LINE_UP, PRESS, home(22), home(23), home(24), home(25), ...BLINKS, BACK, FLASH, EJECT, LOOSE, 291.724, PHOTO_DOWN, 293.013, LIGHTS_OUT, home(42.5), home(43), TURN_OVER, SWELL]

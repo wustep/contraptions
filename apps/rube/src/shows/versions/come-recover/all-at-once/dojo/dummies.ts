@@ -323,6 +323,8 @@ export const dummies = part<DojoState>(
       { t: 92.45, cells: 5.8, hold: H(4.2, 3.4), w: 0.6 },
       { t: 93.25, cells: 5.3, hold: H(5.95, 2.3), w: 0.9 },
       { t: 94.45, cells: 5.0, hold: H(6.15, 2.55), w: 0.9 },
+      // Held on him through the catch and the wind, until the kick; then up with her to the gong.
+      { t: 94.88, cells: 5.2, hold: H(6.15, 2.45), w: 0.9 },
       // The high kick and the gong, wide: from his leg to the beam.
       { t: 95.25, cells: 6.1, hold: H(6.5, 5.0), w: 0.97 },
       { t: 95.9, cells: 6.3, hold: H(6.3, 4.45), w: 0.95 },

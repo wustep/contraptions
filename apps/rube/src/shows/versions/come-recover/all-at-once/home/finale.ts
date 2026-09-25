@@ -1,8 +1,9 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, frame, part, type Company, type PartShot } from '../kit'
-import { LIGHTS, lightAt, penOf, STREET, type Glow } from './set'
+import { LIGHTS, lightAt, penOf, shade, STREET, type Glow } from './set'
 import { APPEAR, E_IN, END, evelynAt, FLASH, joyAt, LIGHTS_OUT, PIECES, PORT, STRIKES, waymondAt, windowLight } from './finale-plan'
-import { drawCamera, drawFlash, drawSwitch, drawWasher, drawWasherDoor, drawWindowGlow, fireworkLight, fireworks, lightColor } from './finale-draw'
+import { HOME } from '../worlds'
+import { drawCamera, drawFlash, drawFlashShadows, drawLanternString, drawPhoto, drawSwitch, drawTripodFront, drawWasher, drawWasherDoor, drawWindowGlow, fireworkFloor, fireworkLight, fireworks, lightColor, stringGlows } from './finale-draw'
 
 /**
  * HOME: through the washer's window, the family, the last hits, the lights out, and the credits over the dark
@@ -51,6 +52,7 @@ install(LIGHTS.glows, 'finale-window', (t: number): Glow[] => {
   const out: Glow[] = [
     { x: PORT[0], y: PORT[1] + 0.25, r: 2.1, a: 0.85 * light.a, color: col },
   ]
+  for (const g of stringGlows(t)) if (g.a > 0.01) out.push({ x: g.x, y: g.y, r: 1.3, a: 0.55 * g.a, color: HOME.gold })
   const fw = fireworkLight(t)
   if (fw.a > 0.01) out.push({ x: -6.3, y: -2.2, r: 3.6, a: 0.45 * fw.a, color: fw.color })
   return out
@@ -76,7 +78,10 @@ export const finale = part<FinaleState>(
       p.translate(-O[0] * c.k, -O[1] * c.k)
       drawSwitch(pen, t)
       drawWasher(pen, t)
+      drawFlashShadows(pen, t, [evelynAt(t), joyAt(t), waymondAt(t)])
+      drawLanternString(pen, t)
       drawCamera(pen, t)
+      drawPhoto(pen, t)
       p.pop()
     },
     over: (p, s, c) => {
@@ -87,7 +92,9 @@ export const finale = part<FinaleState>(
       p.push()
       p.translate(-O[0] * k, -O[1] * k)
       drawWasherDoor(pen, t)
+      drawTripodFront(pen, t, (hex, x, y) => shade(hex, x, y, t))
       drawWindowGlow(pen, t, 1 - lightAt(PORT[0], PORT[1], t))
+      fireworkFloor(pen, t)
       const f = frame(p, k)
       drawFlash(pen, t, f)
       p.pop()
@@ -142,14 +149,17 @@ export const finale = part<FinaleState>(
       { t: 269.7, cells: 3.1, hold: H(-2.05, -0.5), w: 1 },
       { t: 271.7, cells: 3.8, hold: H(-1.95, -0.72), w: 1 },
       { t: 275.2, cells: 4.3, hold: H(-2.1, -1.0), w: 1 },
-      // With her to the switch; back to see the lanterns come on over the counter.
-      { t: 282.2, cells: 4.7, hold: H(-2.4, -1.2), w: 1 },
-      { t: 285.9, cells: 5.6, hold: H(-1.0, -1.72), w: 1 },
-      { t: 288.3, cells: 5.8, hold: H(-0.85, -1.78), w: 1 },
-      // The portrait: the family, the camera, the window onto the street.
-      { t: 290.45, cells: 6.0, hold: H(-2.9, -1.7), w: 1 },
-      { t: FLASH + 0.6, cells: 6.0, hold: H(-3.0, -1.7), w: 1 },
-      // After it the camera leaves the camera behind, and holds on the family by the window.
+      // With her, under the camera's tripod, to the switch under the window.
+      { t: 282.2, cells: 4.0, hold: H(-3.3, -1.2), w: 1 },
+      { t: 284.8, cells: 3.75, hold: H(-4.35, -1.02), w: 1 },
+      { t: 286.2, cells: 3.75, hold: H(-4.4, -1.02), w: 1 },
+      // She presses it: back and right, the string of lanterns lighting over the family one a beat.
+      { t: 287.8, cells: 4.25, hold: H(-3.55, -1.4), w: 1 },
+      // And settle on the portrait: the door's glass, the camera, the family under the lanterns.
+      { t: 290.2, cells: 3.85, hold: H(-3.5, -1.18), w: 1 },
+      { t: FLASH + 0.6, cells: 3.85, hold: H(-3.5, -1.18), w: 1 },
+      { t: 293.2, cells: 3.9, hold: H(-3.45, -1.18), w: 1 },
+      // Then back, towards the washer's glow, for the lights going out.
       { t: 294.6, cells: 5.15, hold: H(-4.62, -1.52), w: 1 },
       // The rest: drawing back, very slowly, over the dark.
       { t: END - 0.05, cells: 5.45, hold: H(-4.9, -1.66), w: 1 },

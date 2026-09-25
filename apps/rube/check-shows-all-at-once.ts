@@ -88,6 +88,18 @@ export function checkAllAtOnce(perf: Performance, check: Check): void {
   check('all at once: the peak strikes nearly every beat (247.7 to 264.1 s)', peak.n >= peak.of * 0.85, `${peak.n}/${peak.of}`)
   check('all at once: home\'s last three hits are struck', HOME_HITS.every((h) => all.some((s) => Math.abs(s - h) <= 0.03)))
 
+  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
+  const outOfZoom: string[] = []
+  for (let t = 0; t <= perf.duration; t += 0.05) {
+    const h = show.at(t)
+    if (h.hidden || h.scale < 0.3) continue
+    const f = cam(t)
+    const cells = f.cells / 1.5
+    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
+    if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
+  }
+  check('all at once: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
   // The ball is never out of sight for long.
   let hidden = 0
   let longest = 0

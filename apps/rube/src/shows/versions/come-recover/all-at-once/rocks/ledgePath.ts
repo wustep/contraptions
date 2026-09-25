@@ -52,7 +52,28 @@ export const SLAB = 0.9
 /** How far Evelyn rolls back from the edge when she balks. */
 export const BALK = 0.2
 export const SLAB_BACK = 1.25
-export const JOY_SEAT = -0.2
+export const JOY_SEAT = -0.16
+/**
+ * Joy's teeter: on each of her two notes she tips forward on the front edge of her flat underside, falls back onto
+ * it, tips back a little on its back edge, and settles, a heavy stone rocking. How far she is tipped at `t`
+ * (radians, forward positive), and where that puts her centre. Her stone is drawn at this tilt.
+ */
+const TEETER_EDGE = 0.5 * R
+const TEETER_END = ROCK_AT[1] + 1.5
+export function joyTilt(t: number): number {
+  if (t <= ROCK_AT[0] || t >= TEETER_END) return 0
+  const one = (s: number, amp: number) => (s <= 0 ? 0 : amp * Math.exp(-s / 0.36) * Math.sin((2 * Math.PI * s) / 0.6))
+  const fade = t > TEETER_END - 0.3 ? (TEETER_END - t) / 0.3 : 1
+  const phi = (one(t - ROCK_AT[0], 0.5) + one(t - ROCK_AT[1], 0.76)) * fade
+  // Back onto her face and a little past it: she rebounds less than she tipped.
+  return phi < 0 ? phi * 0.5 : phi
+}
+/** The centre of a stone at rest at (x0, 0) tipped by `phi` about the edge of its underside it is tipping onto. */
+export function tipped(x0: number, phi: number): Pt {
+  const side = phi >= 0 ? 1 : -1
+  const a = Math.abs(phi)
+  return [x0 + side * (TEETER_EDGE * (1 - Math.cos(a)) + R * Math.sin(a)), TOP - TEETER_EDGE * Math.sin(a) - R * Math.cos(a)]
+}
 export const EVELYN_SEAT = -0.5
 
 /** The dark ring in the sand: its hole's radius and its outer radius (on the ground), and how high its rim stands. */
@@ -277,12 +298,11 @@ export function plan(): Plan {
 
   /* ---- Joy, on the rim */
   const J = new Walker(BEGIN, [JOY_SEAT, 0])
-  // She rocks, twice: a push out toward the edge that swings back and dies, and a harder one while it still swings.
+  // She teeters, twice: tipped forward on the front edge of her underside, back onto it, a little back, settling.
   {
     const x0 = J.p[0]
-    const swing = (s: number, amp: number) => (s <= 0 ? 0 : amp * Math.exp(-s / 0.32) * Math.sin((2 * Math.PI * s) / 0.62))
     J.rest(ROCK_AT[0])
-    J.fn((t) => [x0 + swing(t - ROCK_AT[0], 0.062) + swing(t - ROCK_AT[1], 0.098), 0], ROCK_AT[1] + 1.45, 90)
+    J.fn((t) => tipped(x0, joyTilt(t)), TEETER_END, 110)
     J.p = [x0, 0]
   }
   // She leans: out to the brink, over-running it a hair, and back onto it.
@@ -349,7 +369,8 @@ export function plan(): Plan {
 
   /* ---- the bench: Joy rolls to rest, and waits */
   const JOY_REST = bench[0] + 0.8
-  const EVE_REST = JOY_REST - 2 * R - 0.006
+  // Their stones are bigger than the balls under them: she stops with the stones just touching.
+  const EVE_REST = JOY_REST - 2.36 * R
   {
     const u = 1.3
     const T = (2 * (JOY_REST - bench[0])) / u

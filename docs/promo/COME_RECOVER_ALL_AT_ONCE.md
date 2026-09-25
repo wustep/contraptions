@@ -117,7 +117,7 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 86.30 | the flurry | the dojo | The kung fu picture she could have lived. Four wing chun wooden men trade her down their arms, tak-tak-tak, each arm swinging into her and ringing. A bo staff on a rope bats her over their heads, and a high kick sends her up to the bronze gong (95.42). A last kick is the jump. |
 | 97.15 | flurry | hot dog fingers | A pink room and a grand piano, played with the feet. Her shin is posed as the dummy's thigh was. She rides and bounces up the keys, each dipping and blushing lilac as it sounds, into a hand of floppy sausage fingers that drapes over her. On 103.56 she lands on the mustard bottle and it squirts. The index finger sags under her and snaps on 106.73. |
 | 106.73 | flurry | Raccacoonie | A teppanyaki chef who is a machine, and Raccacoonie inside the toque working the levers. The cleaver chops, and the spatula flicks her into the onion volcano, where she rattles like a lid. On 112.71 it erupts, and a shrimp tail is flung into the hat's pocket (113.69). In the breath the raccoon comes out under the brim and eats it, and in the last run an egg cracks on the spatula. |
-| 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, a canyon where two rocks sit on a ledge (held), then flashes of every world she came through, backwards, and black. |
+| 120.95 | six big hits | the surf | One long flight, and a new world on every hit: a piñata party, a sign spinner on a street corner, the IRS office with its trophies, karaoke under a mirror ball, then a canyon, held, where two stones sit on a ledge in the foreground, faintly vermilion and faintly violet: the rocks, before we know them. Then flashes of every world she came through, backwards, and black. |
 | 127.66 | two hits | the surf's end | Out of the black, every world she flew through comes back at her as slivers, clamps into a ring round her with a flash (127.66), spins, and collapses into her, down to a point (127.79). |
 | 127.79 | the hush | the dark | She drifts down through the dark, seeds and salt passing at three depths, a sliver of colossal rim catching light below. On 133.79 a beam finds Joy, sitting still on the crown of the everything bagel. On 135.64 the whole bagel is lit, and the camera draws back until Joy is tiny on it. |
 | 142 | the pulse | the pull | Everything drifts in on slow spirals and goes over the lip on the beats, one thing a beat: a coat hanger, a sock, a trophy, a dog. Each time the well's violet glow flares and the bagel throbs, hardest on the loudest beats, with dust kicked off the lip. Evelyn is drawn in on a decaying orbit, a step closer each bar. The camera rides the orbit with her, close, the crust streaming past and things going over the lip beside her, with a warm catch-light under her. On beat 56 the lip brakes her to the brink, and in the held break Joy watches from the crown. On 165.62 she tips in. |
@@ -130,13 +130,13 @@ Times are show seconds. The fight's pulse is `fight(k)` (142 to 200 s), the fall
 | 170.8 to 190 | the pumping pulse | everywhere | The frame splits into 4 panels on beat 76, 9 on 88, 16 on 96, 36 on 104 and 64 on 112. Each panel is another world with her in it, the same seesaw in its own materials: 13 worlds, no two neighbours alike. She and the weight trade throws on every beat. |
 | 190 to 191.2 | the crescendo | everywhere | The wall crowds to 144 panels, and the seesaw throws her high. On 121½ every panel flips like a card to another world. On 122 they all flip to the same place, the laundromat, and on 122½ the net of frames snaps shut round her. |
 | 191.22 | the great hit | home | She lands alone, home, at the party, and the googly eye is on her. Jobu's jumpers are in the room, each rearing at her in turn: a boxing glove on a spring out of a gift box (125), a steel trap (128), a mallet from the ceiling (130), a scissor arm (133). On each one's beat a copy of her own eye flies off her and lands on it, and its blow turns gentle: a nudge, a squeeze, a scoop, a cradle. The arm sets her on the dumpling steamers, and she steps down one a beat to the table, touching Waymond on the fight's last hit (199.61). |
-| 200.16 | the drop | the rocks | Silence. Two rocks on a ledge over a vast canyon, Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's rock rocks (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
+| 200.16 | the drop | the rocks | Silence. Two stones on a ledge over a vast canyon, lumpy and flat-bottomed, the colour drained out of them: Evelyn's with her eye, Joy's beside it, where Waymond was. Pebbles fall from the lip and take forever to land. Joy's stone teeters forward on its flat underside (207.56, 208.36) and rolls out to the brink (209.96). On 213.96, the strongest note in the quiet, it goes over. Evelyn rolls to where she was (214.76), flinches back (216.36), and goes after her (219.56). |
 | 220 to 241.8 | a soft swell | the rocks | The long way down, on the beats, ledge by ledge, the camera drawing back until they are specks against the canyon. At the bottom a dark ring lies in the sand: the bagel. Joy drops into it, and on 241.76 Evelyn follows. |
 | 241.76 | a breath | the dark | They fall into the bagel's hole. Joy is drawn up into its dark, shrinking and dimming, and Evelyn holds her at the lip. |
 | 247.35 | the peak | the dark | A line comes down from a pulley high above: Waymond's. He drops as the counterweight, and on every beat the line turns the bagel backwards, a ratchet kick of the whole crust. On 118½ Evelyn heaves back, and on 122 Joy pops out of the dark. From 123 everything the bagel swallowed bursts back out of the hole, one thing a beat, last in first out, each with a googly eye, and a spray of seeds goes out on every eighth. On 136 an eye rises out of the hole and lands on Joy. The bagel shrinks as it gives, until its hole is exactly a washer's window, and the hole fills with glass light. |
 | 264.14 | the peak's end | home | Through the window: they are inside the drum of the washer by the door, where the morning started. The cycle ends, the door swings open (268.39), and they drop out. Waymond leaps the foot lever and touches Joy, and the touch runs through to Evelyn. |
-| 282.2 | home's pulse | home | She rolls to the party lights' foot switch and presses it on 286.20. The lanterns light, and a camera on the counter wakes, its self-timer blinking faster and faster. She rolls back beside Joy. |
-| 290.99 | the last great hit | home | The family portrait's flash, with fireworks in the storefront glass. |
+| 282.2 | home's pulse | home | The family portrait. A wooden box camera with a bellows stands on a tripod by the door, facing them. Joy and Waymond straighten up on two small hops. Evelyn rolls to a foot switch under the window and presses it on 286.20: a string of lanterns over the family lights one a beat, and the camera draws back to take in the whole portrait. The self-timer's red lamp blinks faster and faster while she hurries back beside Joy (290.38). |
+| 290.99 | the last great hit | home | The flash: the bulb bursts, the room washes white from the camera's side with their shadows thrown on the washer, and a firework fills the door's glass with gold. The photograph ejects (291.20), flutters down like a leaf and props itself against the washer beside them (292.77). It develops by 293.01: the glowing washer window with the three of them in it, eyes and all. |
 | 295.01 | the last hit | home | The tubes go out in the reverse order of the opening, and the neon with them. The three of them rest in the washer window's warm glow. |
 | 297 to 328 | the tail | home | The end credits, over the dark (below). The lanterns have gone down to an ember with the tubes. On the tail's two soft accents the empty drum gives a slow half-turn (305.40) and the window's light swells once (312.59). |
 
@@ -159,6 +159,12 @@ The notes went back to the builders who made each part, who still had their cont
 - **Kindness.** The jumpers threaten before they soften, the eyes visibly come from her, and the glove is a glove.
 - **The peak's fountain** is fuller.
 - **The mosaic's last calm field** is the laundromat itself, so the fold home is seamless.
+- **A third round:**
+  - the rocks are drawn as stones, lumpy and flat-bottomed, turning as they roll, with Evelyn's eye in her stone's face;
+  - the surf's canyon glimpse shows the same two stones up close;
+  - the finale was re-staged around the family portrait;
+  - the ball never leaves the frame under Zoom, which is now checked;
+  - the earth under the shop is a band that fades into the night.
 - **Lead changes:**
   - the first frame is the laundromat's own wide shot;
   - the zoom punches are stronger;
@@ -203,8 +209,9 @@ to 332.
 - **The ball:**
   - inside a world it never jumps;
   - at every jump it holds its place on the screen, within 1% of the frame a millisecond: every jump is a match cut;
-  - it is never hidden for more than 2.5 s.
-- **Every strike lands on the recording.** 427 strikes, each within 40 ms of a measured onset or 30 ms of a comb's
+  - it is never hidden for more than 2.5 s;
+  - under Zoom (1.5× closer) it never leaves the frame.
+- **Every strike lands on the recording.** 432 strikes, each within 40 ms of a measured onset or 30 ms of a comb's
   beat or eighth.
   - Everywhere-at-once and the kindness after it strike at least 85% of the fight's beats from 170.8 to 199.6 s.
   - The peak strikes at least 85% of the fall's beats from 247.7 to 264.1 s.
@@ -278,5 +285,5 @@ to 332.
 - In the widest shots of the pull (16 cells) and the canyon (about 23 cells) the balls are small. It is scale on
   purpose, but it is small.
 - At 64 and 144 panels, Evelyn in the mosaic is a red dot on each plank.
-- The finale's lanterns glow in the dark once lit, so the last shots keep them off the right edge.
+- The photograph's picture is only legible large or under Zoom.
 - Only Chrome on macOS has been watched. The recording export has not been re-measured for this take.

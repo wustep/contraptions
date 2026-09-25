@@ -5,7 +5,7 @@ import { JUMPS } from '../music'
 import { SEAMS } from '../seams'
 import { DOJO, DOJO_THEME, EVELYN, HIBACHI, HIBACHI_THEME, HOME, HOTDOG, HOTDOG_THEME, JOY, LAUNDROMAT, MULTI_THEME, PREMIERE, ROCKS, ROCKS_THEME, STAR } from '../worlds'
 import { backdrop, SKINS, type Moment, type Skin } from './skins'
-import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, round, type Pen } from './skins-pen'
+import { at, beam, circle, ellipse, glow, hash, line, lodFor, poly, rect, rgba, round, type Pen } from './skins-pen'
 
 /**
  * The surf: she has learned to jump, and now it comes faster than she can land. The spatula's flip carries on as
@@ -406,20 +406,97 @@ function canyon(s: Scene): void {
     poly(pen, [[-0.6, 1.6], [2.3, 1.05], [2.1, 7], [-0.6, 7]], ROCKS.canyonShade, 0)
     poly(pen, [[0.4, 3.0], [2.2, 2.2], [2.1, 7], [0.2, 7]], mixHex(ROCKS.canyonShade, ROCKS_THEME.ink, 0.25), 0)
   })
-  // The ledge, near, and the two rocks sitting on its lip, side by side.
+  // The ledge, near, in the foreground low on the left, and the two rocks sitting on its lip, side by side: hers,
+  // and Joy's nearer the edge. They are the rocks of the rocks leg (200 s), before anything has happened to them.
   layer(s, 1, () => {
-    const y = 1.35
-    poly(pen, [[-9, y], [0.55, y], [0.75, y + 0.35], [0.5, y + 0.9], [0.8, y + 1.8], [0.4, 7], [-9, 7]], ROCKS.stone, 1)
-    poly(pen, [[0.55, y], [0.75, y + 0.35], [0.5, y + 0.9], [0.8, y + 1.8], [0.4, 7], [0.15, 7], [0.3, y + 1.6], [0.2, y + 0.6]], ROCKS.stoneDeep, 0)
-    if (pen.lod <= 1) line(pen, -7, y + 0.55, -0.4, y + 0.62, ROCKS.stoneDeep, pen.lw * 1.2)
-    rockShape(pen, -0.5, y, 0.21, mixHex(ROCKS.stone, EVELYN, 0.14))
-    rockShape(pen, -0.06, y, 0.18, mixHex(ROCKS.stone, JOY, 0.16))
+    at(pen, -0.8, 1.3, 0, 2.6, () => {
+      const lw = pen.lw
+      pen.lw = lw / 2.6
+      poly(pen, [[-9, 0], [0.35, 0], [0.43, 0.12], [0.34, 0.34], [0.46, 0.7], [0.3, 3], [-9, 3]], ROCKS.stone, 1)
+      poly(pen, [[0.35, 0], [0.43, 0.12], [0.34, 0.34], [0.46, 0.7], [0.3, 3], [0.2, 3], [0.26, 0.6], [0.2, 0.2]], ROCKS.stoneDeep, 0)
+      if (pen.lod <= 1) line(pen, -3, 0.2, -0.3, 0.23, ROCKS.stoneDeep, pen.lw * 1.2)
+      stone(pen, -0.46, 0, 0.46, 0.34, EVELYN_STONE, 3, false)
+      stone(pen, 0.03, 0, 0.34, 0.27, JOY_STONE, 8, true)
+      pen.lw = lw
+    })
   })
 }
 
-function rockShape(pen: Pen, x: number, y: number, r: number, c: string): void {
-  poly(pen, [[x - r, y], [x + r * 0.95, y], [x + r * 1.05, y - r * 0.6], [x + r * 0.4, y - r * 1.25], [x - r * 0.45, y - r * 1.15], [x - r * 1.05, y - r * 0.55]], c, 1)
+/** Gone to stone, as the rocks leg has them: their own colours, but only a hint left. */
+const EVELYN_STONE = mixHex(EVELYN, ROCKS.stoneDeep, 0.68)
+const JOY_STONE = mixHex(JOY, ROCKS.stoneDeep, 0.66)
+const GRIT = mixHex(ROCKS.stoneDeep, ROCKS.canyonShade, 0.4)
+
+/**
+ * A stone sitting on the ground at `base`, `w` wide and `h` tall: a lumpy pebble with a flatter underside (or, for
+ * Joy's, fewer and sharper facets), a light face on top where the sky falls on it, and grit speckled over it.
+ */
+function stone(pen: Pen, cx: number, base: number, w: number, h: number, col: string, seed: number, angular: boolean): void {
+  const n = angular ? 7 : 11
+  const pts: Pt[] = []
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + 0.3 * hash(seed, 1, 5)
+    const lump = 1 + (hash(i, seed, 5) - 0.5) * (angular ? 0.34 : 0.16)
+    const x = cx + Math.cos(a) * (w / 2) * lump
+    const y = Math.min(base - h / 2 + Math.sin(a) * (h / 2) * lump, base)
+    pts.push([x, y])
+  }
+  const path = () => {
+    const { ctx } = pen
+    ctx.beginPath()
+    if (angular) {
+      ctx.moveTo(pts[0][0], pts[0][1])
+      for (let i = 1; i < n; i++) ctx.lineTo(pts[i][0], pts[i][1])
+    } else {
+      const mid = (i: number): Pt => [(pts[i % n][0] + pts[(i + 1) % n][0]) / 2, (pts[i % n][1] + pts[(i + 1) % n][1]) / 2]
+      const m0 = mid(n - 1)
+      ctx.moveTo(m0[0], m0[1])
+      for (let i = 0; i < n; i++) {
+        const m = mid(i)
+        ctx.quadraticCurveTo(pts[i][0], pts[i][1], m[0], m[1])
+      }
+    }
+    ctx.closePath()
+  }
+  const { ctx } = pen
+  // Its shadow on the ledge.
+  ctx.fillStyle = rgba(ROCKS.canyonShade, 0.45)
+  ctx.beginPath()
+  ctx.ellipse(cx + w * 0.08, base + 0.004, w * 0.55, h * 0.1, 0, 0, Math.PI * 2)
+  ctx.fill()
+  path()
+  ctx.fillStyle = col
+  ctx.fill()
+  ctx.save()
+  path()
+  ctx.clip()
+  // The light top face, and a darker underside.
+  ctx.fillStyle = mixHex(col, ROCKS.sky, 0.38)
+  ctx.beginPath()
+  ctx.ellipse(cx - w * 0.1, base - h * 0.86, w * 0.36, h * 0.28, -0.12, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = mixHex(col, ROCKS.canyonShade, 0.35)
+  ctx.fillRect(cx - w, base - h * 0.2, 2 * w, h * 0.2)
+  if (pen.lod <= 1) {
+    ctx.fillStyle = GRIT
+    // Scattered evenly over its face (a sunflower's spiral, jittered), never in a line.
+    for (let i = 0; i < 10; i++) {
+      const a = i * 2.39996 + seed
+      const r = Math.sqrt((i + 0.5) / 10) * 0.78
+      const x = cx + Math.cos(a) * r * (w / 2) + (hash(i, seed, 9) - 0.5) * w * 0.06
+      const y = base - h / 2 + Math.sin(a) * r * (h / 2)
+      ctx.beginPath()
+      ctx.arc(x, y, w * 0.016 * (0.7 + hash(i, seed, 11)), 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+  path()
+  ctx.strokeStyle = pen.ink
+  ctx.lineWidth = pen.lw
+  ctx.stroke()
 }
+
 
 /* ------------------------------------------------------------------ 6. the worlds she came through, backwards */
 

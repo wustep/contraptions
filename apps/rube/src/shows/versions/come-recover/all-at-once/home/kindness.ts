@@ -130,9 +130,9 @@ export const kindness = part<KindnessState>(
       { t: B(129), cells: 4.9, hold: H(29.0, -1.6), w: 1 },
       { t: B(130), cells: 5.4, hold: H(29.9, -1.95), w: 1 },
       // Up with her to the top of the lob, the ceiling in the frame.
-      { t: B(131.5), cells: 6.0, hold: H(30.8, -2.4), w: 1 },
+      { t: B(131), cells: 5.95, hold: H(31.35, -2.38), w: 1 },
       // The lob, the arm, the catch: the whole corner.
-      { t: B(133), cells: 6.3, hold: H(31.05, -2.2), w: 1 },
+      { t: B(133), cells: 6.3, hold: H(31.4, -2.2), w: 1 },
       // Then in, slowly, on the cradle and on Waymond waiting, the gentled machines swaying behind.
       { t: B(137), cells: 5.0, hold: H(31.75, -1.9), w: 1 },
       // In to the steps and to Waymond, and to rest.

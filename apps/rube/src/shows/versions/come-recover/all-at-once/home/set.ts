@@ -1191,9 +1191,22 @@ function drawRoom(pen: Pen, t: number, f: { x0: number; x1: number; y0: number; 
     const gx0 = Math.max(R0 - 0.3, f.x0 - 1)
     const gx1 = Math.min(R1 + 0.3, f.x1 + 1)
     if (gx1 > gx0) {
+      // A band of earth under the slab, going down into the night: deep enough for any shot of the room, and in a
+      // wide view no more than the ground's cut, not a slab to the bottom of the frame.
+      const top = FLOOR + 0.44
+      const deep = 2.6
+      const fade = 0.9
       p.noStroke()
       p.fill(mixHex(HOME.floor, HOME.night, 0.62))
-      p.rect(((gx0 + gx1) / 2) * k, ((FLOOR + 0.44 + f.y1 + 1) / 2) * k, (gx1 - gx0) * k, (f.y1 + 1 - FLOOR - 0.44) * k)
+      p.rect(((gx0 + gx1) / 2) * k, (top + deep / 2) * k, (gx1 - gx0) * k, deep * k)
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const earth = mixHex(HOME.floor, HOME.night, 0.62)
+      const e = (a: number) => `rgba(${parseInt(earth.slice(1, 3), 16)}, ${parseInt(earth.slice(3, 5), 16)}, ${parseInt(earth.slice(5, 7), 16)}, ${a})`
+      const g = ctx.createLinearGradient(0, (top + deep) * k, 0, (top + deep + fade) * k)
+      g.addColorStop(0, e(1))
+      g.addColorStop(1, e(0))
+      ctx.fillStyle = g
+      ctx.fillRect(gx0 * k, (top + deep - 0.01) * k, (gx1 - gx0) * k, (fade + 0.01) * k)
       p.stroke(alpha(p, mixHex(HOME.floor, HOME.night, 0.45), 0.5))
       p.strokeWeight(Math.max(1, k * 0.01))
       for (let i = 0; i < 4; i++) {
