@@ -8,7 +8,7 @@ import { ACT1_END, ACT2, beat, LAST } from '../music'
 import { G_EARTH } from '../physics'
 import { drawLander, FALL_NOTES, LANDER_X, SHELF_TOP, stayRow } from '../earth/house'
 import { drawWatch, WATCH_ON_SHELF } from '../earth/watch'
-import { BALL, DARK, DUST, FARM, VOID } from '../worlds'
+import { BALL, DARK, DUST, FARM, MURPH_SMALL, MURPH_YOUNG, VOID } from '../worlds'
 import { drawRoom, IN_BED, nightOver, overRoom, ROOM_CELLS, ROOM_HOLD, WAKE } from '../act2/replica'
 import { BED_REST } from '../act2/station'
 import { drawRangerShip, MILLER_HANDOFF, RANGER_ANCHOR, RANGER_FEET, RANGER_SCALE, rangerHood } from './miller'
@@ -42,8 +42,11 @@ import { drawRangerShip, MILLER_HANDOFF, RANGER_ANCHOR, RANGER_FEET, RANGER_SCAL
  * model lander on 193; it tips away from us into the room, and he goes along
  * behind the row and pushes the ten books off, one after another, in the
  * opening's order and its rhythm run three and a half times as fast: S-T-A-Y,
- * from this side. At the row's end he touches Cooper's watch, and its second
- * hand, still until then, starts to tick its Morse.
+ * from this side. As they go, through the gaps: Murph, in her bed across the
+ * room at dawn, as the opening has her. The first book wakes her with a
+ * start, and she watches the rest go. At the row's end he touches Cooper's
+ * watch, with her beyond it, and its second hand, still until then, starts
+ * to tick its Morse.
  *
  * Then the tesseract lets him go. The back of the case falls away above him
  * and he falls back, slowly, through the lattice, its lines streaming up past
@@ -1303,6 +1306,9 @@ function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
   p.strokeWeight(Math.max(1, k * 0.012))
   for (let x = L + 0.12; x < Rr - 0.05; x += 0.22) p.line(X(x), X(CAP + 0.03), X(x), X(FLOOR - 0.02))
 
+  // Through the top row, low behind the books, her room: Murph in her bed at dawn, as the opening has her.
+  if (look === MURPHS) murphBeyond(p, c, T)
+
   // The books of the top row: page edges toward us, their covers a line either side; pushed, each tips away (shorter
   // as it turns from us) and drops out of sight behind the board, and the room's light comes through the gap.
   ROW.forEach((b, i) => {
@@ -1453,6 +1459,46 @@ function drawPassing(p: p5, c: Ctx, T: number, on: number): void {
     }
     p.pop()
   }
+}
+
+/**
+ * Murph, seen from the tesseract: through the top row of her case, low behind the books, her bed across the room and
+ * her in it, as the opening has her at dawn. The books hide her until he pushes them; she is asleep until the first
+ * one goes, and it wakes her with the same start (up off the pillow and down) that it does in the opening; then she
+ * lies watching the rest go, and the watch. Drawn in the shelf's frame, mirrored, a little smaller for the distance,
+ * and seen over the top board (the bed's frame below its edge).
+ */
+function murphBeyond(p: p5, c: Ctx, T: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const ink = FARM.ink
+  const w = c.weight * 0.7
+  const far = 0.8
+  // The top of her quilt, just over the top board: the bed stands across the room, its frame and legs out of sight
+  // below the board's edge (clipped to the row's opening), so it reads as seen through the shelf, not stood on it.
+  const top = SHELF_TOP - 0.075
+  const x0 = 0.12
+  const x1 = 1.3
+  const px = 0.36
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(-0.45), X(SHELF_TOP - 0.6), X(2.45), X(0.6))
+  ctx.clip()
+  solid(p, ink, w, DUST.bone)
+  p.rect(X((x0 + x1) / 2), X(top + 0.06), X(x1 - x0 - 0.02), X(0.1), X(0.01))
+  solid(p, ink, w, mixHex(DUST.teal, DUST.light, 0.15))
+  p.rect(X((px + 0.12 + x1) / 2), X(top + 0.03), X(x1 - px - 0.14), X(0.07), X(0.01))
+  solid(p, ink, w, mixHex(DUST.denim, DUST.bone, 0.62))
+  p.rect(X(px), X(top - 0.01), X(0.24), X(0.05), X(0.02))
+  // Her: asleep; the start on the first book; then still, watching.
+  const r = R * MURPH_SMALL * far
+  const k0 = T - PUSHES[0]
+  const start = k0 > 0 && k0 < 0.32 ? 0.06 * Math.sin((Math.PI * k0) / 0.32) : 0
+  const turn = 0.03 * smooth(T, PUSHES[0] + 0.3, PUSHES[0] + 0.8)
+  solid(p, ink, w, MURPH_YOUNG)
+  p.circle(X(px + turn), X(top - 0.035 - r - start), X(2 * r))
+  ctx.restore()
 }
 
 /** A book seen from behind: the page block, pale, between two edges of its cover. */
