@@ -1060,7 +1060,8 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
       for (let j = -1 - Math.round(2 * far); j <= 1 + Math.round(3 * far); j++) {
         if (i === 0 && j === 0 && d === 0) continue
         const dist = Math.hypot(i, j * 1.3)
-        const a = on * (d === 0 ? 0.5 : 0.22 * (1 - d / 3.4)) * (1 / (1 + 0.45 * dist)) * (dist <= 1.5 ? 1 : far)
+        // Brightest round Murph's, going out into the dark with distance and depth: a lit room among rooms without end.
+        const a = on * (d === 0 ? 0.55 : 0.2 * (1 - d / 3.4)) / (1 + (d === 0 ? 1.0 : 0.7) * dist * dist * 0.35) * (dist <= 1.5 ? 1 : far)
         if (a <= 0.01) continue
         const ox = BK[0] + i * PX
         const oy = BK[1] + j * PY
@@ -1083,9 +1084,9 @@ function miniCase(p: p5, k: number, ink: string, weight: number, a: number): voi
   ctx.globalAlpha = was * a
   const CAP = SHELF_TOP - 0.6
   const MIDY = SHELF_TOP + 0.46
-  // Its room's light behind it, lamplight, and a bloom of it spilling round the case into the dark (warm, so that
-  // seen dim over the dark it goes amber, not grey).
-  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.9), DARK.amber, 0.3)
+  // Its room's light behind it, lamplight, and a little of it spilling round the case into the dark (warm, so that
+  // seen dim over the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between).
+  glow(p, X(0.775), X((CAP + FLOOR) / 2), X(1.5), DARK.amber, 0.18)
   p.noStroke()
   p.fill(mixHex(DUST.light, DARK.amber, 0.4))
   p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.35), X(FLOOR - CAP))
