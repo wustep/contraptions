@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { mixHex, R, puff, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Companion, type Ctx } from '../kit'
 import { beat } from '../music'
 import { brandDrift } from '../rocket'
@@ -862,10 +862,10 @@ function drawCatapult(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const rel = T - FIRE
   if (rel >= 0 && rel < 1.0) {
     const u = rel / 1.0
-    p.push()
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 0.7 * (1 - u)
-    puff(p, k, ink, weight * 0.5, DARK.hull, foot[0] + ax.ox * (0.2 + 0.3 * Math.sqrt(u)) + ax.fx * 0.25 * u, foot[1] + ax.oy * (0.2 + 0.3 * Math.sqrt(u)) + ax.fy * 0.25 * u, 0.05 + 0.09 * Math.sqrt(u))
-    p.pop()
+    // Vapour, not a cloud: in the vacuum it spreads and thins, uninked.
+    const gx = foot[0] + ax.ox * (0.2 + 0.3 * Math.sqrt(u)) + ax.fx * 0.25 * u
+    const gy = foot[1] + ax.oy * (0.2 + 0.3 * Math.sqrt(u)) + ax.fy * 0.25 * u
+    glow(p, X(gx), X(gy), X(0.08 + 0.2 * Math.sqrt(u)), BONE_RGB, 0.55 * (1 - u) ** 1.5)
   }
 }
 

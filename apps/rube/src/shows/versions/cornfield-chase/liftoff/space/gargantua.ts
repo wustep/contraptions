@@ -850,18 +850,13 @@ function drawRanger(p: p5, c: Ctx, T: number): void {
   if (gas >= 0 && gas < 0.8) {
     const u = gas / 0.8
     const [gx, gy] = W(-0.3, -0.62 - 0.9 * Math.sqrt(u))
-    p.push()
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 0.7 * (1 - u)
-    puff(p, k, ink, weight * 0.45, DARK.hull, gx, gy, 0.035 + 0.06 * Math.sqrt(u))
-    p.pop()
+    // Vapour, not a cloud: in the vacuum it spreads and thins, uninked.
+    glow(p, X(gx), X(gy), X(0.06 + 0.14 * Math.sqrt(u)), VOID.ink, 0.55 * (1 - u) ** 1.5)
   }
   const rel = T - RELEASE
   if (rel >= 0 && rel < 0.8) {
     const u = rel / 0.8
-    p.push()
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 0.6 * (1 - u)
-    puff(p, k, ink, weight * 0.45, DARK.hull, claw.base[0] + (claw.dir[0] * 0.1 + 0.05) * (1 + u), claw.base[1] + claw.dir[1] * 0.1 * (1 + u), 0.03 + 0.05 * Math.sqrt(u))
-    p.pop()
+    glow(p, X(claw.base[0] + (claw.dir[0] * 0.1 + 0.05) * (1 + u)), X(claw.base[1] + claw.dir[1] * 0.1 * (1 + u)), X(0.05 + 0.1 * Math.sqrt(u)), VOID.ink, 0.5 * (1 - u) ** 1.5)
   }
 }
 

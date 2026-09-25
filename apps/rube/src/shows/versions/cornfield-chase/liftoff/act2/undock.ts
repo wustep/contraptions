@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
-import { R, puff, type Pt, type Seg } from '../../../../../parts'
+import { R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Ctx, type PartShot } from '../kit'
 import { cue, UNDOCK } from '../music'
 import { BALL, DARK } from '../worlds'
@@ -537,27 +537,42 @@ function nearBand(a0: number, a1: number, r: number): [number, number][] {
   return out
 }
 
-/** A jet's breath: a puff from `at`, blown along `dir`, gone in a little over half a second. */
+/**
+ * A jet's breath: a short tapered plume out of the nozzle for the first instant, and the vapour it leaves, blown on
+ * along `dir`, spreading and thinning, gone in a little over half a second. Vapour, not a cloud: no ink.
+ */
 function jet(p: p5, c: Ctx, age: number, at: Pt, dir: Pt, size = 1): void {
   if (age < 0 || age > 0.7) return
   const u = age / 0.7
   const go = 1 - (1 - u) ** 2
-  const x = at[0] + dir[0] * 0.8 * size * go
-  const y = at[1] + dir[1] * 0.8 * size * go
+  const len = Math.hypot(dir[0], dir[1]) || 1
+  const ux = dir[0] / len
+  const uy = dir[1] / len
+  const k = c.k
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  p.push()
-  // The jet itself, a bright stroke out of the nozzle for the first instant.
-  if (age < 0.22) {
-    const v = age / 0.22
-    const len = Math.hypot(dir[0], dir[1]) || 1
-    p.stroke(`rgba(${BONE_RGB}, ${0.95 * (1 - v)})`)
-    p.strokeWeight(Math.max(1, c.k * 0.045 * size * (1 - 0.5 * v)))
-    p.line(at[0] * c.k, at[1] * c.k, (at[0] + (dir[0] / len) * 0.55 * size) * c.k, (at[1] + (dir[1] / len) * 0.55 * size) * c.k)
+  ctx.save()
+  // The plume: out to full length in a few hundredths, then back into the nozzle.
+  if (age < 0.2) {
+    const v = age / 0.2
+    const L = 0.5 * size * Math.sin(Math.PI * Math.min(1, v * 1.6 + 0.08)) * (1 - 0.3 * v)
+    const W = 0.07 * size
+    const g = ctx.createLinearGradient(at[0] * k, at[1] * k, (at[0] + ux * L) * k, (at[1] + uy * L) * k)
+    g.addColorStop(0, `rgba(${BONE_RGB}, ${0.95 * (1 - 0.5 * v)})`)
+    g.addColorStop(1, `rgba(${BONE_RGB}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((at[0] - uy * W) * k, (at[1] + ux * W) * k)
+    ctx.lineTo((at[0] + ux * L) * k, (at[1] + uy * L) * k)
+    ctx.lineTo((at[0] + uy * W) * k, (at[1] - ux * W) * k)
+    ctx.closePath()
+    ctx.fill()
   }
-  ctx.globalAlpha = (1 - u) ** 1.5 * 0.95
-  if (age < 0.1) glow(p, at[0] * c.k, at[1] * c.k, c.k * 0.3 * size, BONE_RGB, 0.95 * (1 - age / 0.1))
-  puff(p, c.k, alpha(p, c.ink, 0.7).toString(), c.weight * 0.6, DARK.hull, x, y, (0.07 + 0.22 * Math.sqrt(u)) * size)
-  p.pop()
+  ctx.restore()
+  if (age < 0.1) glow(p, at[0] * k, at[1] * k, k * 0.22 * size, BONE_RGB, 0.8 * (1 - age / 0.1))
+  // The vapour: carried on the way the jet blew, spreading and thinning out.
+  const x = at[0] + ux * 0.8 * size * go
+  const y = at[1] + uy * 0.8 * size * go
+  glow(p, x * k, y * k, k * (0.1 + 0.3 * Math.sqrt(u)) * size, BONE_RGB, 0.6 * (1 - u) ** 1.5)
 }
 
 /* ------------------------------------------------------------------ drawing: Saturn */
