@@ -215,8 +215,8 @@ async function main(): Promise<void> {
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-        check('liftoff: end credits after the music, set by the page, naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
-          CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 1 &&
+        check('liftoff: end credits after the music, set by the page, ending on the camp alone (no title card), naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
+          CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 0 && !/liftoff/i.test(said) &&
           ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&
           !/private tech demo/i.test(said), said)
         const show = perf.show as LiftoffShow
@@ -283,9 +283,9 @@ async function main(): Promise<void> {
         const lastFall = FALL_NOTES.books[FALL_NOTES.books.length - 1]
         check('liftoff: the opening\'s books fall on their own, the ghost still at its rest until the last has gone',
           still.every((q) => Math.hypot(q[0] - GHOST_REST[0], q[1] - (-2 + GHOST_REST[1])) < 1e-6) && Math.hypot(show.where(lastFall + 0.3)[0] - GHOST_REST[0], 0) > 0.05)
-        // The end of Act I: a ghost in the tesseract, knocking the books over from behind (the lander on beat 190, the
-        // first book on the last hit, the last by ~120.8); then he falls into a bed and wakes there (~2:01), a ball,
-        // and is still in that bed when the station's lights come up on the accent.
+        // The end of Act I: a ghost in the tesseract, going through two other rooms of it (the first on beat 190) to Murph's,
+        // then knocking its lander (on the last hit) and the books over from behind, the last by ~120.85; then he falls
+        // into a bed and wakes there (~2:05), a ball, and is still in that bed when the station's lights come up on the accent.
         const bed = show.where(WAKE + 0.8)
         const inBed = [WAKE + 0.8, 126, ACT2 - 0.05, ACT2 + 0.3].map((t) => show.where(t))
         check('liftoff: a ghost in the tesseract knocking the books over, then, after the fall out of it, awake in a bed by about 2:05, still there when the lights come up',

@@ -12,8 +12,8 @@ import { BALL, BRAND, MURPH } from './worlds'
  * drift together into a small bright cloud, and out of the cloud the card
  * comes into focus: a line in capitals for what they did, the names, and
  * where it is owed the fine print. When it has been read it goes out of
- * focus, and the stars drift apart again. The last card is the show's own
- * name, and it stays.
+ * focus, and the stars drift apart again. After the last, the camp holds
+ * alone at dawn to the end.
  *
  * Two halves. The words are the page's: a show's canvas sets no type, and a
  * saved frame or a recorded video has none (`shows/stage.ts`), so the player
@@ -24,7 +24,7 @@ import { BALL, BRAND, MURPH } from './worlds'
 export interface Card {
   /** Show time the stars start to gather. */
   at: number
-  /** How long it stays whole once it has come up; the last card stays to the end. */
+  /** How long it stays whole once it has come up. */
   hold: number
   role?: string
   names: (string | [string, string] | [string, string, string])[]
@@ -60,7 +60,6 @@ const script: Omit<Card, 'at'>[] = [
     notes: ['“Cornfield Chase” and “No Time for Caution”', 'from Interstellar (2014)'],
   },
   { hold: 2.3, role: 'Drawn with', names: ['p5.js'] },
-  { hold: Infinity, names: ['Liftoff'], notes: ['Cornfield Chase'], title: true },
 ]
 
 export const CARDS: Card[] = (() => {
@@ -73,8 +72,11 @@ export const CARDS: Card[] = (() => {
   return out
 })()
 
-/** When the last card (the title) is up. */
-export const TITLE_UP = CARDS[CARDS.length - 1].at + FORM
+/** When the last card has gone: after it the camp holds alone at dawn, the stars back where they were, to the end. */
+export const LAST_GONE = (() => {
+  const last = CARDS[CARDS.length - 1]
+  return last.at + FORM + last.hold + GO
+})()
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: right of the middle (Gargantua hangs high on the left), high in the sky. */
 const AT: [number, number] = [0.585, 0.105]
@@ -201,5 +203,5 @@ export const credits = scenery<null>({
   },
 })
 
-/** For the check: the credits come after the music has stopped, and the title is up well before the end. */
-export const CREDITS_OK = CREDITS_AT >= FINAL + 4 && TITLE_UP <= DURATION - 2.5
+/** For the check: the credits come after the music has stopped, and the last has gone well before the end. */
+export const CREDITS_OK = CREDITS_AT >= FINAL + 4 && LAST_GONE <= DURATION - 2

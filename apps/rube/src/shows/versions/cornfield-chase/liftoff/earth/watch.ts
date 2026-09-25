@@ -21,10 +21,9 @@ import { alpha } from '../kit'
  * forth, a second each way, in Morse: the film's message. `twitch` adds to
  * it, for the tesseract, where the message is sent.
  *
- * Two ways to show it: `stand` (stood up on a shelf, face out, the strap
- * curled under it) and `hang` (hung by its strap from a nail). The detail is
- * drawn to the size it is on the screen: the words and the minute track's
- * numbers only when there are pixels enough for them.
+ * It is stood up on a shelf, face out, its strap a closed loop behind it.
+ * The detail is drawn to the size it is on the screen: the words and the
+ * minute track's numbers only when there are pixels enough for them.
  */
 
 /** Where it stands on Murph's bookcase: the left end of the top shelf, in the shelf's own cells (the top board's surface at -0.82). */
@@ -42,14 +41,10 @@ const STRAP = '#17171A'
 const STITCH = '#E6DCC4'
 
 export interface WatchStyle {
-  /** How it is shown. */
-  mode: 'stand' | 'hang'
   /** The case's radius, in cells. */
   r?: number
   /** A glint on the glass, 0..1. */
   glint?: number
-  /** How it swings on its nail (radians), for `hang`. */
-  swing?: number
   /** Extra seconds on the second hand (the message being sent), added to its Morse tick. */
   twitch?: number
 }
@@ -145,88 +140,75 @@ function strokes(p: p5, text: string, x: number, y: number, h: number, tracking 
 /* ------------------------------------------------------------------ the watch */
 
 /**
- * Draw the watch with its foot (stand) or its nail (hang) at (x, y), in the caller's cells. `t` is show time,
+ * Draw the watch standing with its foot at (x, y), in the caller's cells. `t` is show time,
  * for the second hand's Morse.
  */
-export function drawWatch(p: p5, k: number, ink: string, weight: number, x: number, y: number, t: number, style: WatchStyle): void {
+export function drawWatch(p: p5, k: number, ink: string, weight: number, x: number, y: number, t: number, style: WatchStyle = {}): void {
   const r = style.r ?? WATCH_R
   const X = (v: number) => v * k
   /** The case's radius on the screen, in pixels: how much detail there is room for. */
   const R = X(r)
   p.push()
   p.translate(X(x), X(y))
-  if (style.mode === 'hang') p.rotate(style.swing ?? 0)
-  const cy = style.mode === 'stand' ? -(r + r * 0.72) : r * 2.35
+  const cy = -(r + r * 0.72)
   const lug = r * 0.92
 
-  // The strap: black leather, cream stitching.
-  const stitchWeight = Math.max(0.5, Math.min(weight * 0.35, R * 0.03))
-  const stitched = (draw: () => void) => {
-    solid(p, ink, Math.min(weight * 0.6, Math.max(0.6, R * 0.06)), STRAP)
-    draw()
-    if (R > 9) {
-      p.noFill()
-      p.stroke(alpha(p, STITCH, 0.9))
-      p.strokeWeight(stitchWeight)
+  // The strap: black alligator leather, a cream stitch running a hair in from each edge. On a shelf it stands the way
+  // a buckled watch stands, the band a closed loop behind the case: from the front we see it rise from the twelve
+  // o'clock lug and bend away behind, and come down from the six o'clock lug to the shelf and turn back along it.
+  const edgeW = Math.min(weight * 0.55, Math.max(0.6, R * 0.05))
+  const band = (top: number, bottom: number, wTop: number, wBottom: number, cap: 'up' | 'down') => {
+    // A band between two widths, its far end rounded where it turns away from us.
+    solid(p, ink, edgeW, STRAP)
+    p.beginShape()
+    p.vertex(X(-wBottom / 2), X(bottom))
+    p.vertex(X(-wTop / 2), X(top))
+    if (cap === 'up') p.bezierVertex(X(-wTop / 2), X(top - r * 0.2), X(wTop / 2), X(top - r * 0.2), X(wTop / 2), X(top))
+    else p.vertex(X(wTop / 2), X(top))
+    p.vertex(X(wBottom / 2), X(bottom))
+    if (cap === 'down') p.bezierVertex(X(wBottom / 2), X(bottom + r * 0.12), X(-wBottom / 2), X(bottom + r * 0.12), X(-wBottom / 2), X(bottom))
+    p.endShape(p.CLOSE)
+    // Where it turns away, it darkens: a shade across its far end.
+    p.noStroke()
+    p.fill(alpha(p, '#000000', 0.35))
+    if (cap === 'up') p.rect(0, X(top + r * 0.08), X(wTop * 0.9), X(r * 0.16), X(r * 0.08))
+    if (cap === 'down') p.rect(0, X(bottom - r * 0.06), X(wBottom * 0.9), X(r * 0.12), X(r * 0.06))
+    // The alligator's scales: a few soft bars across, when there is room to see them.
+    if (R > 26) {
+      p.stroke(alpha(p, '#3A3A40', 0.9))
+      p.strokeWeight(Math.max(0.4, R * 0.012))
+      const n = Math.max(2, Math.round(Math.abs(bottom - top) / (r * 0.2)))
+      for (let i = 1; i < n; i++) {
+        const y = top + ((bottom - top) * i) / n
+        const w = wTop + ((wBottom - wTop) * i) / n
+        p.line(X(-w * 0.32), X(y), X(w * 0.32), X(y))
+      }
+    }
+    // The stitch, cream, just in from each edge: fine dashes when there is room, a fine line when not.
+    if (R > 8) {
+      p.stroke(alpha(p, STITCH, 0.95))
+      p.strokeWeight(Math.max(0.5, R * (R > 26 ? 0.022 : 0.03)))
+      const inset = 0.13
+      for (const side of [-1, 1]) {
+        const x0 = side * (wBottom / 2) * (1 - inset * 2)
+        const x1 = side * (wTop / 2) * (1 - inset * 2)
+        if (R > 26) {
+          const n = Math.max(3, Math.round(Math.abs(bottom - top) / (r * 0.09)))
+          for (let i = 0; i < n; i += 2) {
+            const u0 = i / n
+            const u1 = Math.min(1, (i + 1) / n)
+            p.line(X(x0 + (x1 - x0) * u0), X(bottom + (top - bottom) * u0), X(x0 + (x1 - x0) * u1), X(bottom + (top - bottom) * u1))
+          }
+        } else p.line(X(x0), X(bottom), X(x1), X(top))
+      }
     }
   }
-  if (style.mode === 'stand') {
-    // Curled under the case into a loop it stands on, the tail lying on the shelf.
-    stitched(() => {
-      p.beginShape()
-      p.vertex(X(-lug / 2), X(cy + r * 0.62))
-      p.bezierVertex(X(-lug / 2 - r * 0.15), X(0), X(-r * 1.25), X(0), X(-r * 1.6), X(0))
-      p.vertex(X(-r * 1.6), X(-r * 0.24))
-      p.bezierVertex(X(-r * 1.05), X(-r * 0.24), X(-lug / 2 + r * 0.25), X(-r * 0.32), X(lug / 2), X(cy + r * 0.62))
-      p.endShape(p.CLOSE)
-    })
-    if (R > 9) {
-      p.beginShape()
-      p.vertex(X(-lug / 2 + r * 0.18), X(cy + r * 0.7))
-      p.bezierVertex(X(-lug / 2 + r * 0.05), X(-r * 0.12), X(-r * 1.05), X(-r * 0.12), X(-r * 1.5), X(-r * 0.12))
-      p.endShape()
-    }
-    // The other end, standing up behind the case and bent back over it.
-    stitched(() => {
-      p.beginShape()
-      p.vertex(X(-lug / 2), X(cy - r * 0.62))
-      p.bezierVertex(X(-lug / 2), X(cy - r * 1.95), X(r * 0.9), X(cy - r * 2.1), X(r * 1.3), X(cy - r * 1.5))
-      p.vertex(X(r * 1.06), X(cy - r * 1.33))
-      p.bezierVertex(X(r * 0.7), X(cy - r * 1.72), X(lug / 2), X(cy - r * 1.57), X(lug / 2), X(cy - r * 0.62))
-      p.endShape(p.CLOSE)
-    })
-    if (R > 9) {
-      p.beginShape()
-      p.vertex(X(-lug / 2 + r * 0.16), X(cy - r * 0.7))
-      p.bezierVertex(X(-lug / 2 + r * 0.16), X(cy - r * 1.75), X(r * 0.7), X(cy - r * 1.88), X(r * 1.04), X(cy - r * 1.45))
-      p.endShape()
-    }
-  } else {
-    // Looped over the nail, the ends coming down to the case; below it, the buckle end.
-    for (const side of [-1, 1]) {
-      stitched(() => {
-        p.beginShape()
-        p.vertex(X(side * lug * 0.12), X(0))
-        p.vertex(X(side * lug * 0.62), X(r * 0.18))
-        p.vertex(X(side * lug / 2), X(cy - r * 0.62))
-        p.vertex(X(-side * lug / 2 + side * lug * 0.12), X(cy - r * 0.62))
-        p.endShape(p.CLOSE)
-      })
-      if (R > 9) p.line(X(side * lug * 0.42), X(r * 0.2), X(side * lug * 0.34), X(cy - r * 0.7))
-    }
-    stitched(() => p.rect(X(0), X(cy + r * 1.45), X(lug), X(r * 1.2), X(r * 0.18)))
-    if (R > 9) p.rect(X(0), X(cy + r * 1.5), X(lug * 0.72), X(r * 0.95), X(r * 0.12))
-    // The buckle, and the nail.
-    p.noFill()
-    p.stroke(ink)
-    p.strokeWeight(Math.max(1, X(r * 0.16)) + weight * 0.4)
-    p.rect(X(0), X(cy + r * 2.02), X(lug * 1.08), X(r * 0.32), X(r * 0.06))
-    p.stroke(STEEL)
-    p.strokeWeight(Math.max(1, X(r * 0.12)))
-    p.rect(X(0), X(cy + r * 2.02), X(lug * 1.08), X(r * 0.32), X(r * 0.06))
-    solid(p, ink, weight * 0.6, STEEL_DARK)
-    p.circle(0, 0, X(r * 0.32))
-  }
+  // Below: from the six o'clock lug down to the shelf, a touch wider as it comes to rest on it.
+  band(cy + r * 1.05, 0, lug * 0.96, lug * 1.02, 'down')
+  // Above: up from the twelve o'clock lug and away behind, narrowing, with its keeper.
+  band(cy - r * 1.9, cy - r * 1.05, lug * 0.8, lug * 0.96, 'up')
+  solid(p, ink, edgeW, STRAP)
+  p.rect(0, X(cy - r * 1.42), X(lug * 0.98), X(r * 0.16), X(r * 0.04))
 
   // A small, precise thing: its lines are finer than the room's.
   const fine = Math.min(weight * 0.55, Math.max(0.6, R * 0.05))

@@ -677,7 +677,7 @@ function drawCase(p: p5, c: Ctx, t: number): void {
 
 
   // Cooper's watch, standing at the left end of the top shelf, keeping the organ's time: its second hand goes a second a beat.
-  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], ACT2 + t, { mode: 'stand' })
+  drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], ACT2 + t)
   p.pop()
 }
 

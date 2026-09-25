@@ -31,12 +31,16 @@ import { MILLER_HANDOFF } from './miller'
  * top it opens the claw on the downbeat (188) and burns away. The ball falls
  * in, slows, and stops at the centre on 189; the dark opens round it.
  *
- * The dark opens and he is a ghost, in a lattice of frames, and in front of
- * him is the back of Murph's bookcase. He comes down behind the model lander
- * on 190 and it tips away from us into the room; then he goes along behind
+ * The dark opens and he is a ghost, in a lattice of frames going on every
+ * way, and he goes looking. Out of its depth rooms come at him and go round
+ * him, each Murph's bookcase from behind at another time and another way up:
+ * on its side in moonlight after the books have gone (190), upside down in
+ * the sepia of years before (190½). Then Murph's own comes up out of the
+ * depth, upright and lamplit, and he is behind its model lander on the last
+ * hit (191); it tips away from us into the room, and he goes along behind
  * the row and pushes the ten books off, one after another, in the opening's
- * order and its rhythm run three times as fast, the first of them on the
- * last hit (191): S-T-A-Y, from this side.
+ * order and its rhythm run three and a half times as fast: S-T-A-Y, from
+ * this side.
  *
  * Then the tesseract lets him go. The back of the case falls away above him
  * and he falls back, slowly, through the lattice, its lines streaming up past
@@ -83,22 +87,30 @@ const NODES: [number, number, number][] = [
 ]
 /** At the centre; the dark opens. */
 const HORIZON = beat(189)
-/** Down behind the lander, and it goes. */
-const LAND = beat(190)
-/** The last hit: the first of the books. */
-const PUSH = LAST
 /**
- * The ten books go at the opening's own offsets from the lander, squeezed so
- * the first goes on the last hit: a little over three times as fast, the
- * last at about 120.75. Only the lander (190) and the first book (191) are
- * on the music's strikes; the rest keep the opening's Morse.
+ * He does not land on Murph's case: he goes looking for it, into the
+ * tesseract's depth. Two other rooms come at him out of it and go past round
+ * him, the same case at other times and other ways up: the first, on its
+ * side in moonlight after the books have gone, on 190; the second, upside
+ * down in the sepia of years before, half a beat on. Then Murph's
+ * comes up out of the depth, upright and lamplit, and he is behind its
+ * lander on the last hit (191), and it goes.
  */
-const SQUEEZE = (FALL_NOTES.books[0] - FALL_NOTES.lander) / (PUSH - LAND)
-const PUSHES = FALL_NOTES.books.map((n) => LAND + (n - FALL_NOTES.lander) / SQUEEZE)
+const PASS_A = beat(190)
+const PASS_B = beat(190.5)
+const LAND = LAST
+/**
+ * Then the ten books, in the opening's order and its Morse run about three
+ * and a half times as fast: the first a quarter second after the lander, the
+ * last at 120.85. Only the lander is on a strike; the books keep the Morse.
+ */
+const FIRST_BOOK = LAND + 0.26
+const SQUEEZE = (FALL_NOTES.books[FALL_NOTES.books.length - 1] - FALL_NOTES.books[0]) / (120.85 - FIRST_BOOK)
+const PUSHES = FALL_NOTES.books.map((n) => FIRST_BOOK + (n - FALL_NOTES.books[0]) / SQUEEZE)
 /** The last book goes, and he goes back along the row to Cooper's watch at its end. */
 const LAST_BOOK = PUSHES[PUSHES.length - 1]
 const TO_WATCH = LAST_BOOK + 0.12
-const AT_WATCH = LAST_BOOK + 0.62
+const AT_WATCH = LAST_BOOK + 0.55
 /** Its second hand ticks the message, threads of light running into it along the lattice: on the music's eighths. */
 const WATCH_TICKS = [beat(194.5), beat(195), beat(195.5)]
 /** The grand pull-back from the watch, out to the tesseract's rooms going on every way. */
@@ -110,7 +122,7 @@ const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
 
 /** The strikes, on the music. */
-export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, LAND, PUSH, ...WATCH_TICKS]
+export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, LAND, ...WATCH_TICKS]
 
 /* ------------------------------------------------------------------ the hole */
 
@@ -313,13 +325,17 @@ function shipAt(T: number): Pt {
 const Y_BALL = F[1] + 1.55
 const SURF = Y_BALL + R
 const ROW = stayRow()
-/** The ghost behind the lander, a little right of and below where it stopped: it comes down onto the board there on 190. */
+/** The ghost behind the lander, a little right of and below where it stopped: he comes down onto the board there on 191. */
 const P_L: Pt = [F[0] + 0.35, Y_BALL]
 /** The case seen from behind, mirrored (x here = BK.x - x there), with the lander's back at P_L. */
 const BK: Pt = [P_L[0] + LANDER_X, SURF - SHELF_TOP]
 const back = (x: number): number => BK[0] - x
 /** Behind the last book; and beside Cooper's watch at the row's end (its left end from the front; here, mirrored, the right). */
 const LAST_AT: Pt = [back(ROW[ROW.length - 1].x), Y_BALL]
+/** The one point the tesseract's depths all go toward: just over the top board behind the lander. */
+const VP: Pt = [P_L[0], SURF - 0.2]
+/** A point of a room at scale `sc` of its depth, seen toward the one point. */
+const toward = (q: Pt, sc: number): Pt => [VP[0] + (q[0] - VP[0]) * sc, VP[1] + (q[1] - VP[1]) * sc]
 const WATCH_X = back(WATCH_ON_SHELF[0])
 const BY_WATCH: Pt = [back(WATCH_ON_SHELF[0] + 0.21), Y_BALL]
 /**
@@ -352,6 +368,23 @@ export const GHOST_ON_SHELF = (): Pt => [BED_REST[0], BED_REST[1] + 2]
  * behind each book on its push, so the flurry reads as one sweep.
  */
 const sweep = pchip([LAND, ...PUSHES, TO_WATCH], [P_L[0], ...ROW.map((b) => back(b.x)), LAST_AT[0] + 0.015])
+
+/**
+ * How many rooms deep Murph's still is, as he goes through the tesseract to
+ * it: fast through the two between, slowing as it comes up round him, there
+ * on 191. Each room is drawn at its depth past this one (`depthScale`).
+ */
+const DIVE0 = 3.4
+const DIVE = pchip([HORIZON, PASS_A, PASS_B, LAND, LAND + 0.4], [DIVE0, 2, 1, 0, 0])
+const diveAt = (T: number): number => (T <= HORIZON ? DIVE0 : T >= LAND ? 0 : DIVE.at(T))
+const depthScale = (rel: number): number => 1 / (1 + 0.75 * Math.max(-1.2, rel))
+/**
+ * His way there: out of the stop, down a little and left as the first room
+ * goes round him, right as the second does, and down onto the board behind
+ * the lander, arriving as it goes.
+ */
+const approachX = pchip([HORIZON - 0.3, HORIZON, PASS_A, PASS_B, LAND, LAND + 0.3], [F[0], F[0], F[0] - 0.14, F[0] + 0.16, P_L[0], sweep.at(LAND + 0.3)])
+const approachY = pchip([HORIZON - 0.3, HORIZON, PASS_A, PASS_B, LAND, LAND + 0.3], [F[1], F[1], F[1] + 0.42, F[1] + 1.0, P_L[1], P_L[1]])
 
 /** The ghost's lean into each push, as a change in its size: smaller as it goes away from us, into the lander and each book. */
 function shoveAt(T: number): number {
@@ -389,11 +422,8 @@ export const gargantua = part<GargState>(
       ...carried(flight, 0, at(CATCH), 16),
       ...carried(swing, at(CATCH), at(RELEASE), 280),
       ...carried(swing, at(RELEASE), at(HORIZON), 36),
-      ...route([
-        { at: at(HORIZON), p: F },
-        // Out of the centre and down onto the top board behind the lander: it goes on 190.
-        { at: at(LAND), p: P_L, ease: 'in' },
-      ]),
+      // Out of the centre and through the tesseract's rooms to Murph's, onto the top board behind the lander: it goes on 191.
+      ...carried((u) => [approachX.at(u + slot.begin), approachY.at(u + slot.begin)], at(HORIZON), at(LAND), 120),
       // Along the back of the row, the books going one after another.
       ...carried((u) => [sweep.at(u + slot.begin), Y_BALL], at(LAND), at(TO_WATCH), 240),
       // Back along the empty row to the watch, and there while its hand ticks and the rooms open out round it.
@@ -451,7 +481,9 @@ export const gargantua = part<GargState>(
       { t: NODE_B2, cells: 4.3, hold: [C[0], C[1] - 0.05], w: 0.95 },
       { t: RELEASE, cells: 4.6, hold: [C[0], C[1]], w: 0.95 },
       { t: HORIZON, cells: 3.4, hold: F, w: 1 },
-      // Down into the lattice: the whole row from behind, the lander at its right-hand end, for the sweep.
+      // Into the lattice with him, the rooms coming at us round him; Murph's comes up, the whole row from behind, the lander
+      // at its right-hand end, for the sweep.
+      { t: PASS_A, cells: 3.0, hold: [(F[0] + P_L[0]) / 2, F[1] + 0.55], w: 1 },
       { t: LAND, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
       { t: LAST_BOOK, cells: 2.35, hold: [back(0.5), Y_BALL - 0.12], w: 1 },
       // In on the watch as he comes to it, while its hand ticks.
@@ -935,11 +967,15 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
   }
   const lat = latticeAt(T)
   const bk = backAt(T)
+  // Murph's case, as deep in as it still is (all of it, the lattice round it included, scaled toward the one point).
+  const dv = diveAt(T)
+  const deep = depthScale(dv)
   if (bk > 0.002) {
     ctx.save()
     ctx.globalAlpha = bk
-    // The light of the room through the case spills into the dark.
-    glow(p, X(back(0.78)), X(BK[1] - 0.65), X(2.6), DUST.light, 0.22)
+    // The light of the room through the case spills into the dark: warmer as he nears it.
+    const [gx, gy] = toward([back(0.78), BK[1] - 0.65], deep)
+    glow(p, X(gx), X(gy), X(2.6 * deep), DUST.light, 0.22 + 0.12 * (1 - smooth(dv, 0, 1.5)) * (1 - smooth(T, LAND, LAND + 0.8)))
     ctx.restore()
   }
   if (lat > 0.002) drawRooms(p, c, T, lat)
@@ -952,6 +988,9 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     ctx.save()
     ctx.globalAlpha = bk
     p.push()
+    p.translate(X(VP[0]), X(VP[1]))
+    p.scale(deep)
+    p.translate(-X(VP[0]), -X(VP[1]))
     p.translate(X(cx), X(cy))
     p.scale(away)
     p.translate(-X(cx), -X(cy))
@@ -959,6 +998,7 @@ function drawInside(p: p5, s: GargState, c: Ctx, T: number): void {
     p.pop()
     ctx.restore()
   }
+  if (dv > 0 && lat > 0.002) drawPassing(p, c, T, lat)
   if (bk > 0.002) drawThreads(p, c, T, bk)
   drawStreaks(p, c, T, f)
   drawWarmth(p, c, T)
@@ -989,7 +1029,8 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
   const { k } = c
   const X = (v: number) => v * k
   const ink = FARM.ink
-  const vp: Pt = [P_L[0], SURF - 0.2]
+  const vp = VP
+  const dv = diveAt(T)
   const PX = 3.1
   const PY = 2.25
   const far = smooth(T, AT_WATCH, CLOSE)
@@ -1000,7 +1041,7 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
   p.scale(fold)
   p.translate(-X(BY_WATCH[0]), -X(BY_WATCH[1]))
   for (const d of [2.2 - drift + 0.5, 1.2 - drift + 0.5, 0]) {
-    const sc = 1 / (1 + 0.75 * d)
+    const sc = depthScale(d + dv)
     const reach = d === 0 ? 1 + Math.round(4 * far) : 2 + Math.round(3 * far)
     for (let i = -reach; i <= reach; i++) {
       for (let j = -1 - Math.round(2 * far); j <= 1 + Math.round(3 * far); j++) {
@@ -1154,7 +1195,9 @@ const farm = (c: Ctx): Ctx => ({ ...c, ink: FARM.ink, bg: FARM.bg, theme: FARM, 
 function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof frame>): void {
   const { k } = c
   const X = (v: number) => v * k
-  const vp: Pt = [P_L[0], SURF - 0.2]
+  const vp = VP
+  const dv = diveAt(T)
+  const sc0 = depthScale(dv)
   // As it lets him go it folds in behind him, toward where the last book went, and away.
   const fold = 1 - 0.8 * closeAt(T)
   p.push()
@@ -1172,7 +1215,7 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
   const depths = [2.2, 1.2].map((d) => d - drift + 0.5)
   p.noFill()
   for (const d of [...depths, 0]) {
-    const sc = 1 / (1 + 0.75 * d)
+    const sc = depthScale(d + dv)
     const a = on * (d === 0 ? 0.24 : 0.2 * (1 - d / 3.2)) * (d === 0 ? 1 : smooth(T, HORIZON + 0.25 + 0.1 * d, HORIZON + 0.6 + 0.1 * d))
     if (a <= 0.004) continue
     const Q = (x: number, y: number): [number, number] => [X(vp[0] + (x - vp[0]) * sc), X(vp[1] + (y - vp[1]) * sc)]
@@ -1206,15 +1249,17 @@ function drawLattice(p: p5, c: Ctx, T: number, on: number, f: ReturnType<typeof 
   // The top board's line run on out of the case both ways, and the corners of the near frames run in toward the point.
   p.stroke(alpha(p, DARK.gold, on * 0.3))
   p.strokeWeight(Math.max(0.8, k * 0.014))
-  p.line(X(f.x0 - 1), X(SURF), X(x0 - 0.1), X(SURF))
-  p.line(X(x1 + 0.1), X(SURF), X(f.x1 + 1), X(SURF))
+  const Q0 = (x: number, y: number): Pt => toward([x, y], sc0)
+  const run = (a: Pt, b: Pt) => p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
+  run(Q0(vp[0] - (vp[0] - f.x0 + 1) / sc0, SURF), Q0(x0 - 0.1, SURF))
+  run(Q0(x1 + 0.1, SURF), Q0(vp[0] + (f.x1 + 1 - vp[0]) / sc0, SURF))
   p.stroke(alpha(p, DARK.gold, on * 0.14))
   p.strokeWeight(Math.max(0.6, k * 0.009))
-  const sc = 1 / (1 + 0.75 * (depths[0] + 0.3))
+  const sc = depthScale(depths[0] + 0.3 + dv)
   for (const i of [-1, 1]) {
     for (const [cx, cy] of [[x0, y0], [x1, y0], [x0, y1], [x1, y1]] as Pt[]) {
       const px = cx + i * PX
-      p.line(X(px), X(cy), X(vp[0] + (px - vp[0]) * sc), X(vp[1] + (cy - vp[1]) * sc))
+      run(Q0(px, cy), toward([px, cy], sc))
     }
   }
   p.pop()
@@ -1229,8 +1274,17 @@ function away(at: number, T: number, dur: number): { tip: number; drop: number; 
   return { tip, drop, gone: s > dur * 1.1 }
 }
 
+/** How one of the tesseract's rooms is: the light of its hour over it all (none for Murph's, now), and what is on its top shelf. */
+interface Look {
+  wash?: [string, number]
+  row: boolean
+  lander: boolean
+  watch: boolean
+}
+const MURPHS: Look = { row: true, lander: true, watch: true }
+
 /** Murph's bookcase from behind: its frame dark against the room's light, the books' page-edges to us. */
-function drawCaseBack(p: p5, c: Ctx, T: number): void {
+function drawCaseBack(p: p5, c: Ctx, T: number, look: Look = MURPHS): void {
   const { k } = c
   const X = (v: number) => v * k
   const ink = FARM.ink
@@ -1256,7 +1310,7 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   // as it turns from us) and drops out of sight behind the board, and the room's light comes through the gap.
   ROW.forEach((b, i) => {
     const a = away(PUSHES[i], T, 0.26)
-    if (a.gone) return
+    if (a.gone || !look.row) return
     const h = b.h * Math.max(0.03, Math.cos(a.tip))
     backOfBook(p, c, b.x, SHELF_TOP + a.drop, b.w * (1 - 0.12 * Math.sin(a.tip)), h, b.color, ink)
   })
@@ -1265,7 +1319,7 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   })
   // The lander model, the opening's own; pushed, it tips away the same way (shorter as it turns from us) and drops.
   const la = away(LAND, T, 0.36)
-  if (!la.gone) {
+  if (!la.gone && look.lander) {
     p.push()
     p.translate(X(LANDER_X), X(SHELF_TOP + la.drop))
     p.scale(1 - 0.15 * Math.sin(la.tip), Math.max(0.02, Math.cos(la.tip)))
@@ -1306,6 +1360,11 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   // catches his light; its second hand, ticking its Morse at 45, is pulled on with each book that goes and each tick of the
   // message, and springs back.
   const tick = WATCH_TICKS.reduce((m, at) => Math.max(m, knock(T - at, 0.3)), 0)
+  if (!look.watch) {
+    washOver(p, k, look, L, Rr, CAP)
+    p.pop()
+    return
+  }
   // The case is drawn mirrored (we are behind it), but the watch faces us through the gap in the row: turn it back so its
   // dial reads true.
   p.push()
@@ -1313,14 +1372,95 @@ function drawCaseBack(p: p5, c: Ctx, T: number): void {
   p.scale(-1, 1)
   p.translate(-X(WATCH_ON_SHELF[0]), 0)
   drawWatch(p, k, ink, w, WATCH_ON_SHELF[0], WATCH_ON_SHELF[1], T, {
-    mode: 'stand',
     // At 45, ticking its Morse; each book that goes and each tick of the message pulls it on a second, and it springs back.
     twitch: WATCH_TICKS.reduce((m, at) => m + knock(T - at, 0.35), 0) + PUSHES.reduce((m, at) => m + 0.6 * knock(T - at, 0.2), 0),
     glint: Math.min(1, 0.35 + 0.65 * knock(T - LAND, 0.5) + 0.8 * tick),
   })
   p.pop()
   if (tick > 0.02) glow(p, X(WATCH_ON_SHELF[0]), X(WATCH_ON_SHELF[1] - 0.15), X(0.35 + 0.25 * tick), DUST.light, 0.55 * tick)
+  washOver(p, k, look, L, Rr, CAP)
   p.pop()
+}
+
+/** The light of another hour over a whole room of the tesseract, case and all. */
+function washOver(p: p5, k: number, look: Look, L: number, Rr: number, CAP: number): void {
+  if (!look.wash) return
+  p.noStroke()
+  p.fill(alpha(p, look.wash[0], look.wash[1]))
+  p.rect(k * ((L + Rr) / 2), k * ((CAP + FLOOR) / 2), k * (Rr - L + 0.12), k * (FLOOR - CAP + 0.12))
+}
+
+/**
+ * The two rooms he goes through on the way to Murph's: the same case at
+ * other times and other ways up, each in its own lattice turned with it.
+ * The first is on its side, in moonlight, after the books have gone (the
+ * lander too; the watch is there). The second is upside down in the sepia
+ * of years before: the books, the lander, no watch yet. Each comes
+ * at him out of the depth, goes round him, and is gone past the frame.
+ */
+const PASSING: { at: number; turn: number; look: Look; hit: number; ring: number }[] = [
+  { at: -2, turn: Math.PI / 2, look: { wash: ['#3E5A86', 0.42], row: false, lander: false, watch: true }, hit: PASS_A, ring: 1 },
+  { at: -1, turn: Math.PI, look: { wash: ['#7A5C3E', 0.46], row: true, lander: true, watch: false }, hit: PASS_B, ring: 0.6 },
+]
+
+function drawPassing(p: p5, c: Ctx, T: number, on: number): void {
+  const { k } = c
+  const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const dv = diveAt(T)
+  const CAP = SHELF_TOP - 0.6
+  // The case's middle, and its outline, in this frame.
+  const mid: Pt = [back(0.775), BK[1] + (CAP + FLOOR) / 2]
+  const x0 = back(2.0)
+  const x1 = back(-0.45)
+  const y0 = BK[1] + CAP - 0.065
+  const y1 = BK[1] + FLOOR
+  // Deepest first.
+  for (const room of [...PASSING].sort((a, b) => b.at - a.at)) {
+    const rel = room.at + dv
+    if (rel < -0.75 || rel > 3.2) continue
+    const a = on * (1 - smooth(-rel, 0, 0.45)) * (1 - smooth(rel, 1.7, 2.8))
+    if (a <= 0.004) continue
+    const sc = depthScale(rel)
+    // Going through it: its frame rings.
+    const ring = room.ring * knock(T - room.hit, 0.35)
+    // Centred on him as it goes round him, at its own depth toward the one point.
+    const g: Pt = [approachX.at(room.hit), approachY.at(room.hit)]
+    p.push()
+    p.translate(X(VP[0]), X(VP[1]))
+    p.scale(sc)
+    p.translate(-X(VP[0]), -X(VP[1]))
+    p.translate(X(g[0]), X(g[1]))
+    p.rotate(room.turn)
+    p.translate(-X(mid[0]), -X(mid[1]))
+    // Its lattice: the case again every way round it, lines only.
+    p.noFill()
+    p.strokeWeight(Math.max(0.7, (k * 0.014) / Math.max(0.6, sc)))
+    for (let i = -2; i <= 2; i++) {
+      for (let j = -2; j <= 2; j++) {
+        if (i === 0 && j === 0) continue
+        const ox = i * 3.1
+        const oy = j * 2.25
+        const fall = 1 / (1 + 0.5 * Math.hypot(i, j * 1.3))
+        p.stroke(alpha(p, DARK.gold, a * (0.26 + 0.5 * ring) * fall))
+        p.rect(X((x0 + x1) / 2 + ox), X((y0 + y1) / 2 + oy), X(x1 - x0), X(y1 - y0))
+        p.stroke(alpha(p, DARK.gold, a * 0.16 * fall))
+        for (const lv of [SHELF_TOP, SHELF_TOP + 0.46]) p.line(X(x0 + ox), X(BK[1] + lv + oy), X(x1 + ox), X(BK[1] + lv + oy))
+      }
+    }
+    // The room itself.
+    ctx.save()
+    ctx.globalAlpha = a
+    drawCaseBack(p, c, T, room.look)
+    ctx.restore()
+    if (ring > 0.01) {
+      p.noFill()
+      p.stroke(alpha(p, DARK.gold, 0.8 * ring * a))
+      p.strokeWeight(Math.max(1, (k * 0.03) / Math.max(0.6, sc)))
+      p.rect(X((x0 + x1) / 2), X((y0 + y1) / 2), X(x1 - x0 + 0.1), X(y1 - y0 + 0.1))
+    }
+    p.pop()
+  }
 }
 
 /** A book seen from behind: the page block, pale, between two edges of its cover. */

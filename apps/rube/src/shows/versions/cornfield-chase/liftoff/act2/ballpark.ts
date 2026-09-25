@@ -5,7 +5,6 @@ import { FLOOR, R, laneAt, mixHex, puff, type Lane, type Pt, type Seg } from '..
 import { alpha, carried, hash, knock, part, smooth, type Company, type Ctx, type PartShot } from '../kit'
 import { cue } from '../music'
 import { BALL, DUST, MURPH } from '../worlds'
-import { drawWatch } from '../earth/watch'
 import { fromRim, RIM_R, SEAM, standOnRim, stationFrame } from './station'
 
 /**
@@ -279,7 +278,7 @@ const PULLEY: Pt = [-0.98, -2.55]
  * and its size. Its seat's height and front, and every other measure of it below, are at full size; `CHAIR_S` shrinks
  * them.
  */
-const CHAIR_X = -1.78
+const CHAIR_X = -1.72
 const CHAIR_S = 0.86
 const SEAT_Y = -0.46
 const SEAT_FRONT = 0.3
@@ -1633,21 +1632,15 @@ function drawRoom(p: p5, c: Ctx, T: number): void {
   solid(p, ink, weight * 0.5, DUST.rust)
   p.rect(X(0.02), X(0.115), X(0.16), X(0.025))
   p.pop()
-  drawHisWatch(p, c, T, shake)
 }
 
 /**
- * On the wall over Murph's chair, hung by its strap from a nail: his old wristwatch, the one he gave her (the shared
- * drawing, `earth/watch.ts`). Its second hand still goes, a tick a beat of the organ. The crash upstairs sets it
- * swinging a little on its nail, and as he comes down through the trapdoor to her its glass catches the light from
- * the window: a glint, held while he lands, fading as they meet.
+ * Murph's rocking chair, side on: two rockers on the one arc (the far one a shade darker, just behind), turned legs
+ * joined by a stretcher, the seat, an arm on a turned post with a scrolled end, and a tall raked back of spindles
+ * under a curved crest rail, a small quilt folded over it. Drawn at full size in its own frame (x toward the lift,
+ * y down, the rockers' arc touching the floor at 0, 0) and shrunk by `CHAIR_S`; it rolls on the rockers' arc as the
+ * lean in `chairPoint` says, so the drawing and the ball on its seat move together.
  */
-const WATCH_NAIL: Pt = [-1.66, -1.39]
-function drawHisWatch(p: p5, c: Ctx, T: number, shake: number): void {
-  const glint = smooth(T, cue(153.35), cue(153.9)) * (1 - smooth(T, cue(154.7), cue(155.6)))
-  drawWatch(p, c.k, c.ink, c.weight, WATCH_NAIL[0], WATCH_NAIL[1], T, { mode: 'hang', r: 0.1, swing: shake * 0.6, glint })
-}
-
 function drawChair(p: p5, c: Ctx, T: number): void {
   const { k, ink } = c
   const X = (v: number) => v * k
@@ -1659,57 +1652,132 @@ function drawChair(p: p5, c: Ctx, T: number): void {
   // Drawn at full size and shrunk; its lines are not.
   p.scale(CHAIR_S)
   const weight = c.weight / CHAIR_S
-  // The rockers: one long curved runner, touching the floor where it leans.
-  outline(p, ink, weight)
+  p.strokeJoin(p.ROUND)
+  const wood = DUST.wood
+  const far = mixHex(DUST.wood, ink, 0.22)
+  /** The rockers' arc: the height of its underside over the floor at `x`. */
   const rock = (x: number) => ROCKER_R - Math.sqrt(ROCKER_R * ROCKER_R - x * x)
-  const runner = (off: number) => {
+  const RK = 0.055
+  const RX0 = -0.5
+  const RX1 = 0.5
+  const rocker = (dx: number, dy: number, fill: string) => {
+    solid(p, ink, weight * 0.9, fill)
     p.beginShape()
-    for (let i = 0; i <= 12; i++) {
-      const x = -0.5 + (i / 12) * 0.95
-      p.vertex(X(x), X(-rock(x) - off))
+    const n = 20
+    for (let i = 0; i <= n; i++) {
+      const x = RX0 + ((RX1 - RX0) * i) / n
+      p.vertex(X(x + dx), X(-rock(x) + dy))
     }
-    for (let i = 12; i >= 0; i--) {
-      const x = -0.5 + (i / 12) * 0.95
-      p.vertex(X(x), X(-rock(x) - off - 0.06))
+    // The front tip, rounded.
+    p.bezierVertex(X(RX1 + 0.035 + dx), X(-rock(RX1) + dy), X(RX1 + 0.035 + dx), X(-rock(RX1) - RK + dy), X(RX1 + dx), X(-rock(RX1) - RK + dy))
+    for (let i = n; i >= 0; i--) {
+      const x = RX0 + ((RX1 - RX0) * i) / n
+      p.vertex(X(x + dx), X(-rock(x) - RK + dy))
     }
+    // The back tip, rounded.
+    p.bezierVertex(X(RX0 - 0.035 + dx), X(-rock(RX0) - RK + dy), X(RX0 - 0.035 + dx), X(-rock(RX0) + dy), X(RX0 + dx), X(-rock(RX0) + dy))
     p.endShape(p.CLOSE)
   }
-  solid(p, ink, weight, DUST.wood)
-  runner(0.0)
-  // Legs, the seat, the arm, the tall back with its spindles.
-  for (const x of [-0.24, 0.22]) p.rect(X(x), X((SEAT_Y - rock(x) - 0.06) / 2), X(0.06), X(-SEAT_Y - rock(x) - 0.06))
-  p.rect(X((SEAT_FRONT - 0.32) / 2), X(SEAT_Y + 0.035), X(SEAT_FRONT + 0.32), X(0.07), X(0.02))
-  p.rect(X(0.04), X(-0.76), X(0.5), X(0.05), X(0.02))
-  p.rect(X(0.24), X((-0.76 + SEAT_Y) / 2), X(0.05), X(0.3))
-  p.beginShape()
-  p.vertex(X(-0.34), X(SEAT_Y))
-  p.vertex(X(-0.42), X(-1.02))
-  p.vertex(X(-0.34), X(-1.02))
-  p.vertex(X(-0.27), X(SEAT_Y))
-  p.endShape(p.CLOSE)
-  p.rect(X(-0.41), X(-1.0), X(0.1), X(0.06), X(0.02))
-  outline(p, ink, weight * 0.6)
-  for (const f of [0.3, 0.6]) p.line(X(-0.3 - 0.08 * f), X(SEAT_Y - 0.08), X(-0.3 - 0.08 * f - 0.04), X(-0.96))
-  // A patchwork quilt folded over the top of the back and hanging down its front: a small checker of faded squares,
-  // the fold along the top.
-  const quilt = [DUST.bone, DUST.rust, DUST.husk, DUST.sage]
-  const qx0 = -0.43
-  const qw = 0.3
-  const qTop = -1.04
-  const rows = 3
-  const cols = 3
-  const rowH = 0.075
-  for (let r = 0; r < rows; r++) {
-    for (let q = 0; q < cols; q++) {
-      const x0 = qx0 + (q * qw) / cols + 0.012 * r
-      const y0 = qTop + 0.03 + r * rowH
-      solid(p, ink, weight * 0.35, quilt[(r + q * 2) % quilt.length])
-      p.rect(X(x0 + qw / cols / 2), X(y0 + rowH / 2), X(qw / cols), X(rowH))
+  /** A turned member from (x0, y0) to (x1, y1), `w` wide, with a bead a third of the way along. */
+  const member = (x0: number, y0: number, x1: number, y1: number, w: number, fill: string, bead = true, line = 0.8) => {
+    const L = Math.hypot(x1 - x0, y1 - y0)
+    const ux = (x1 - x0) / L
+    const uy = (y1 - y0) / L
+    const nx = -uy * (w / 2)
+    const ny = ux * (w / 2)
+    solid(p, ink, weight * line, fill)
+    p.beginShape()
+    p.vertex(X(x0 + nx), X(y0 + ny))
+    p.vertex(X(x1 + nx * 0.85), X(y1 + ny * 0.85))
+    p.vertex(X(x1 - nx * 0.85), X(y1 - ny * 0.85))
+    p.vertex(X(x0 - nx), X(y0 - ny))
+    p.endShape(p.CLOSE)
+    if (bead) {
+      const bx = x0 + (x1 - x0) * 0.62
+      const by = y0 + (y1 - y0) * 0.62
+      p.ellipse(X(bx), X(by), X(w * 1.5), X(w * 1.5))
     }
   }
-  // The fold, and the hem hanging a little uneven.
-  solid(p, ink, weight * 0.5, DUST.rust)
-  p.rect(X(qx0 + qw / 2), X(qTop + 0.015), X(qw + 0.02), X(0.035), X(0.015))
+  const SEAT_B = -0.36
+  const legTop = SEAT_Y + 0.07
+  const FRONT_LEG = 0.2
+  const BACK_LEG = -0.26
+  // The far side first, a shade darker and a hair behind: its rocker and its legs.
+  const fd: [number, number] = [0.05, -0.03]
+  for (const x of [FRONT_LEG, BACK_LEG]) member(x + fd[0], -rock(x) - RK + fd[1], x + fd[0] - 0.01, legTop + fd[1], 0.04, far, false, 0.6)
+  rocker(fd[0], fd[1], far)
+  // The back: two raked posts, a crest rail, three spindles and a low rail, the whole raked back from the seat.
+  const post = (u: number, y: number): [number, number] => {
+    const f = (SEAT_Y - y) / (SEAT_Y + 1.12)
+    return [u - 0.09 * f, y]
+  }
+  const B0 = SEAT_B
+  const B1 = -0.13
+  // Behind the spindles, the wall shows through: they are thin, and there are only two.
+  for (let i = 1; i <= 2; i++) {
+    const u = B0 + ((B1 - B0) * i) / 3
+    const [ax, ay] = post(u, SEAT_Y - 0.1)
+    const [bx, by] = post(u, -1.07)
+    member(ax, ay, bx, by, 0.03, wood, false, 0.5)
+  }
+  for (const u of [B0, B1]) {
+    const [ax, ay] = post(u, SEAT_Y + 0.02)
+    const [bx, by] = post(u, -1.1)
+    member(ax, ay, bx, by, 0.055, wood, false)
+  }
+  {
+    const [ax, ay] = post(B0, SEAT_Y - 0.1)
+    const [bx, by] = post(B1, SEAT_Y - 0.1)
+    member(ax, ay, bx, by, 0.035, wood, false, 0.6)
+  }
+  // The crest rail: a gentle arch, a little proud of the posts each side.
+  {
+    const [lx, ly] = post(B0 - 0.03, -1.1)
+    const [rx, ry] = post(B1 + 0.03, -1.1)
+    solid(p, ink, weight * 0.9, wood)
+    p.beginShape()
+    p.vertex(X(lx), X(ly + 0.03))
+    p.bezierVertex(X(lx + 0.05), X(ly - 0.05), X(rx - 0.05), X(ry - 0.05), X(rx), X(ry + 0.03))
+    p.vertex(X(rx), X(ry + 0.075))
+    p.bezierVertex(X(rx - 0.05), X(ry + 0.01), X(lx + 0.05), X(ly + 0.01), X(lx), X(ly + 0.075))
+    p.endShape(p.CLOSE)
+  }
+  // The near legs, meeting the rocker, and the stretcher between them.
+  for (const x of [FRONT_LEG, BACK_LEG]) member(x, -rock(x) - RK + 0.01, x - 0.01, legTop, 0.055, wood)
+  member(BACK_LEG, (legTop - rock(BACK_LEG) - RK) / 2, FRONT_LEG, (legTop - rock(FRONT_LEG) - RK) / 2, 0.03, wood, false, 0.6)
+  rocker(0, 0, wood)
+  // The seat: a thick board, its front edge rounded over.
+  solid(p, ink, weight * 0.9, wood)
+  p.rect(X((SEAT_B + SEAT_FRONT + 0.04) / 2), X(SEAT_Y + 0.035), X(SEAT_FRONT + 0.04 - SEAT_B), X(0.07), X(0.02), X(0.035), X(0.035), X(0.02))
+  // The arm: from the back post forward over the seat, on a turned post, its end scrolled over.
+  const ARM_Y = -0.8
+  const [ax0] = post(B1, ARM_Y)
+  member(0.24, SEAT_Y - 0.01, 0.23, ARM_Y + 0.02, 0.045, wood)
+  solid(p, ink, weight * 0.9, wood)
+  p.rect(X((ax0 + 0.3) / 2), X(ARM_Y), X(0.3 - ax0), X(0.045), X(0.02))
+  p.ellipse(X(0.3), X(ARM_Y + 0.012), X(0.07), X(0.065))
+  // A quilt folded over the crest rail and hanging a little way down the back: bone, with a rust band at its hem.
+  {
+    const [l0x, l0y] = post(B0 - 0.03, -1.12)
+    const [r0x, r0y] = post(B1 + 0.03, -1.12)
+    const [l1x, l1y] = post(B0 - 0.02, -0.86)
+    const [r1x, r1y] = post(B1 + 0.02, -0.9)
+    const edge = (band: number, fill: string) => {
+      solid(p, ink, weight * 0.55, fill)
+      p.beginShape()
+      p.vertex(X(l0x), X(l0y))
+      p.bezierVertex(X(l0x + 0.06), X(l0y - 0.04), X(r0x - 0.06), X(r0y - 0.04), X(r0x), X(r0y))
+      const ry = r0y + (r1y - r0y) * band
+      const rx = r0x + (r1x - r0x) * band
+      const ly = l0y + (l1y - l0y) * band
+      const lx = l0x + (l1x - l0x) * band
+      p.vertex(X(rx), X(ry))
+      p.bezierVertex(X(rx - 0.05), X(ry + 0.03), X(lx + 0.06), X(ly - 0.02), X(lx), X(ly))
+      p.endShape(p.CLOSE)
+    }
+    edge(1, DUST.rust)
+    edge(0.72, DUST.bone)
+  }
   p.pop()
 }
 

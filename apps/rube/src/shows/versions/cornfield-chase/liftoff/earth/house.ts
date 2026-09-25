@@ -183,8 +183,9 @@ function lightShaft(p: p5, k: number, t: number): void {
  * to go on their own, from the far end: the model lander first, as it does in
  * the film; then ten books, one to a note, short and tall: dot dot dot, dash,
  * dot dash, dash dot dash dash. Each one shivers, sheds a little dust, and
- * leans out as if pushed from behind by nothing. The ball doesn't move; it
- * watches, and wonders (a small drawn question, three times). The last book
+ * leans out as if pushed from behind by nothing. The ball stays on its place
+ * and only watches: as each one goes it turns a little toward it, the way a
+ * head turns, and back, and is still again. The last book
  * topples toward it instead, and its top knocks the ball off its place: along
  * the shelf it goes, through a little flap in the side of the case, and down
  * onto the toy truck standing there.
@@ -272,36 +273,28 @@ export const LANDER_X = -0.05
 const WATCH_X = WATCH_ON_SHELF[0]
 export const FALL_NOTES = { lander: 5.126, books: SHELF_HITS }
 
-/** When the ball wonders (show seconds), and where the question rises, from its rest: after the lander is down, in the middle of the row, and as the last book starts to go. */
-const WONDER = [
-  { at: 5.9, dx: 0.21, dy: -0.22, tilt: 0.14 },
-  { at: 9.62, dx: -0.22, dy: -0.23, tilt: -0.12 },
-  { at: 11.64, dx: 0.19, dy: -0.23, tilt: 0.1 },
-]
+/**
+ * How far the ball has turned toward the row (cells rolled left, so the dot on it turns too), at show time `t`.
+ * A beat after each thing goes it turns a little toward it, holds, and turns back: more for the lander, the first
+ * and the strangest, and for the books nearer it; a quick small glance when the notes come close. It is exactly on
+ * its place at every note, and after the last it is still, until the knock.
+ */
+function glance(t: number): number {
+  const notes = [FALL_NOTES.lander, ...FALL_NOTES.books]
+  let x = 0
+  for (let i = 0; i < notes.length - 1; i++) {
+    const start = notes[i] + 0.08
+    const w = Math.min(0.9, notes[i + 1] - 0.04 - start)
+    const u = (t - start) / w
+    if (u <= 0 || u >= 1) continue
+    const size = i === 0 ? 0.05 : 0.016 + 0.014 * (i / (notes.length - 2))
+    x += size * Math.min(1, w / 0.6) * Math.sin(Math.PI * u) ** 2
+  }
+  return x
+}
 
 /** A shiver, `since` seconds before a thing on the shelf goes: nothing touches it, and it trembles. */
 const shiver = (since: number): number => (since < -0.34 || since >= 0 ? 0 : 0.055 * smooth(since, -0.34, -0.14) * Math.sin(since * 80))
-
-/** A question, drawn: a hook and a dot in a pale warm ink over a thin dark line, its middle at (x, y), tilted. */
-function question(p: p5, c: Ctx, x: number, y: number, tilt: number, a: number): void {
-  if (a <= 0.01) return
-  const { k, ink, weight } = c
-  p.push()
-  p.translate(x * k, y * k)
-  p.rotate(tilt)
-  p.noFill()
-  for (const [col, w, o] of [[ink, weight * 1.9, 0.6], [DUST.light, weight * 0.95, 1]] as const) {
-    p.stroke(alpha(p, col, a * o))
-    p.strokeWeight(w)
-    p.arc(0, -0.06 * k, 0.12 * k, 0.12 * k, Math.PI * 1.05, Math.PI * 2.35)
-    p.line(0.027 * k, -0.007 * k, 0, 0.038 * k)
-    p.noStroke()
-    p.fill(alpha(p, col, a * o))
-    p.circle(0, 0.095 * k, (0.036 + (o < 1 ? 0.016 : 0)) * k)
-    p.noFill()
-  }
-  p.pop()
-}
 
 /**
  * The row's books where they come to rest on the floor in front of the case,
@@ -354,16 +347,6 @@ export const shelf = part<ShelfState>(
     name: 'bookcase',
     dynamic: true,
     draw: (p, s, c) => drawShelf(p, s, c),
-    over: (p, s, c) => {
-      // It wonders: a small question rises by it and fades, three times. The last is left hanging as it rolls away.
-      const T = c.t + s.begin
-      for (const m of WONDER) {
-        const u = (T - m.at) / 1.1
-        if (u < 0 || u > 1) continue
-        const on = smooth(u, 0, 0.15) * (1 - smooth(u, 0.6, 1))
-        question(p, c, GHOST_REST[0] + m.dx, GHOST_REST[1] + m.dy - 0.06 * easeOutCubic(u), m.tilt, on)
-      }
-    },
   },
   (slot) => {
     const at = (t: number) => t - slot.begin
@@ -378,7 +361,9 @@ export const shelf = part<ShelfState>(
     // into the flap in the side of the case (a note); out through it, and down onto the toy truck's roof (a note).
     const flapX = FLAP_X - 0.035 - R + 0.07
     const roll = run(GHOST_REST, [flapX, BALL_Y], knocked, flapped, 2.0, 1.7)
-    const segs = route([{ at: 0, p: GHOST_REST }, { at: knocked, p: GHOST_REST }])
+    // On its place it only watches: a glance toward each thing as it goes (see `glance`), and still at every note.
+    const watch = (t: number): Pt => [GHOST_REST[0] - glance(t + slot.begin), GHOST_REST[1]]
+    const segs = carried(watch, 0, knocked, Math.ceil(knocked * 120))
     segs.push(...carried(roll, knocked, flapped, 24))
     const out: Way = { at: flapped, p: [flapX, BALL_Y] }
     segs.push(...route([out, hop(out, [2.33, CATCH_Y], landed)]))
@@ -537,7 +522,7 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
   }
 
   // Cooper's watch, stood on the left end of the top shelf, keeping time; it never falls.
-  drawWatch(p, k, ink, weight, WATCH_X, TOP, t, { mode: 'stand' })
+  drawWatch(p, k, ink, weight, WATCH_X, TOP, t)
 
   // The lander model: a shiver, then over the edge on the first note, and down on its side.
   lander(p, c, s.lander.x, t - s.lander.hit)
