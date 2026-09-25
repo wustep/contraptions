@@ -29,7 +29,7 @@ const OVERLAP = 0.2
 export const CREDITS_AT = LAST_CHORDS[1]
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 3.2, role: 'Directed by', names: ['Stephen Wu'] },
+  { hold: 3.2, role: 'Directed by', names: ['Claude Fable 5.1'] },
   { hold: 3.4, role: 'Machines, drawings and code', names: ['Claude Fable 5.1'] },
   {
     hold: 4.2,

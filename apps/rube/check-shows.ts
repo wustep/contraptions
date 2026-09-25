@@ -185,9 +185,10 @@ async function main(): Promise<void> {
           !!perf.soundtrack?.credit?.includes('Justin Hurwitz') && !!perf.soundtrack?.credit?.includes('La La Land') &&
           !/private tech demo|not for release/i.test(perf.soundtrack?.credit ?? '') && perf.soundtrack?.href === 'https://www.youtube.com/watch?v=jQVvT_UKZ6w')
         const said = EPILOGUE_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-        check('epilogue: end credits over the last chords, set by the page, naming Stephen Wu, Fable 5.1, Sebastian, Mia, Justin Hurwitz, Epilogue, La La Land and p5.js, gone before the last chord',
+        check('epilogue: end credits over the last chords, set by the page, naming Claude Fable 5.1 as director, Sebastian, Mia, Justin Hurwitz, Epilogue, La La Land and p5.js, gone before the last chord',
           EPILOGUE_CREDITS_OK && perf.titles === epilogueCredits && epilogueCredits(EPILOGUE_CARDS[0].at - 0.1).length === 0 && epilogueCredits(perf.duration).length === 0 &&
-          ['Directed by', 'Stephen Wu', 'Fable 5.1', 'Sebastian', 'Mia', 'Justin Hurwitz', 'Epilogue', 'La La Land', 'p5.js'].every((w) => said.includes(w)) &&
+          said.includes('Directed by Claude Fable 5.1') && !said.includes('Stephen Wu') &&
+          ['Sebastian', 'Mia', 'Justin Hurwitz', 'Epilogue', 'La La Land', 'p5.js'].every((w) => said.includes(w)) &&
           !/private tech demo/i.test(said), said)
         const show = perf.show as EpilogueShow
         check('epilogue: the club, then the dream from the kiss, then the club again from the moment the set is struck',
