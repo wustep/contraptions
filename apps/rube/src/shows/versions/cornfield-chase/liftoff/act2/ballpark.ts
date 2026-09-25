@@ -1546,30 +1546,27 @@ function drawWindow(p: p5, c: Ctx, T: number): void {
     p.line(X(x + w * 0.14), X(y + h * 0.3), X(x + w * 0.3), X(y + h * 0.12))
   } else {
     // What is left in the frame: jagged teeth of glass at the corners, the muntins snapped off short.
-    p.fill(alpha(p, DUST.light, 0.9))
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.5)
+    p.fill(alpha(p, mixHex(DUST.sky, '#FFFFFF', 0.35), 0.8))
+    p.stroke(alpha(p, ink, 0.6))
+    p.strokeWeight(weight * 0.4)
     const corners: Pt[] = [
       [x - w / 2, y - h / 2],
       [x + w / 2, y - h / 2],
       [x + w / 2, y + h / 2],
       [x - w / 2, y + h / 2],
     ]
+    // Two slim teeth, top left and bottom right: enough to say glass was here, not so many they make a pattern.
     corners.forEach(([cx, cy], i) => {
+      if (i % 2 === 1) return
       const sx = cx < x ? 1 : -1
       const sy = cy < y ? 1 : -1
       p.beginShape()
       p.vertex(X(cx), X(cy))
-      p.vertex(X(cx + sx * w * (0.3 + 0.12 * hash(i, 1))), X(cy))
-      p.vertex(X(cx + sx * w * 0.14), X(cy + sy * h * 0.18))
-      p.vertex(X(cx + sx * w * 0.08), X(cy + sy * h * 0.22))
-      p.vertex(X(cx), X(cy + sy * h * (0.34 + 0.1 * hash(i, 2))))
+      p.vertex(X(cx + sx * w * (0.34 + 0.1 * hash(i, 1))), X(cy))
+      p.vertex(X(cx + sx * w * 0.1), X(cy + sy * h * 0.14))
+      p.vertex(X(cx), X(cy + sy * h * (0.26 + 0.08 * hash(i, 2))))
       p.endShape(p.CLOSE)
     })
-    outline(p, ink, weight * 0.8)
-    p.line(X(x), X(y - h / 2), X(x + 0.02), X(y - h * 0.3))
-    p.line(X(x + w / 2), X(y), X(x + w * 0.32), X(y + 0.03))
-    p.line(X(x), X(y + h / 2), X(x - 0.03), X(y + h * 0.34))
   }
   // A curtain rod and a short curtain tied back each side.
   solid(p, ink, weight * 0.7, DUST.teal)
@@ -1784,58 +1781,95 @@ function drawChair(p: p5, c: Ctx, T: number): void {
   p.pop()
 }
 
+/** The glass: a dozen slivers, [spread angle, speed, start across, start down, length, spin, lands on]. */
+const SLIVERS = Array.from({ length: 12 }, (_, i) => ({
+  // The way the ball went, spread: in, and down onto the boards.
+  dir: (hash(i, 3) - 0.5) * 1.6,
+  v: 0.5 + hash(i, 4) * 0.9,
+  sx: (hash(i, 5) - 0.5) * WIN.w * 0.7,
+  sy: (hash(i, 6) - 0.5) * WIN.h * 0.7,
+  len: 0.035 + hash(i, 8) * 0.045,
+  spin: (hash(i, 7) - 0.5) * 22,
+}))
+
 function drawShards(p: p5, c: Ctx, T: number): void {
   const since = T - WINDOW
-  if (since < 0 || since > 1.8) return
+  if (since < 0) return
   const { k, ink, weight } = c
   const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   standOnRim(p, k, AX, A_HOUSE, () => {
-    // The pane goes in a burst of light.
-    if (since < 0.22) {
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      const a = 1 - since / 0.22
-      const r = X(0.5 + since * 3)
-      const g = ctx.createRadialGradient(X(WIN.x), X(WIN.y), 0, X(WIN.x), X(WIN.y), r)
-      g.addColorStop(0, `rgba(255, 248, 226, ${0.9 * a})`)
-      g.addColorStop(1, 'rgba(255, 248, 226, 0)')
-      // Saved and restored, so p5's own idea of the fill stays true for what it draws next.
+    // The pane goes in a short flash of light.
+    if (since < 0.16) {
+      const a = 1 - since / 0.16
+      const r = X(0.32 + since * 1.6)
       ctx.save()
+      const g = ctx.createRadialGradient(X(WIN.x), X(WIN.y), 0, X(WIN.x), X(WIN.y), r)
+      g.addColorStop(0, `rgba(255, 248, 226, ${0.85 * a})`)
+      g.addColorStop(1, 'rgba(255, 248, 226, 0)')
       ctx.fillStyle = g
       ctx.fillRect(X(WIN.x) - r, X(WIN.y) - r, 2 * r, 2 * r)
       ctx.restore()
     }
-    // The crack of it.
-    if (since < 0.2) {
-      const f = 1 - since / 0.2
-      p.stroke(alpha(p, ink, f))
-      p.strokeWeight(weight)
-      for (let i = 0; i < 9; i++) {
-        const a = (i / 9) * Math.PI * 2 + 0.3
-        const r0 = 0.3 + since * 1.4
-        p.line(X(WIN.x + Math.cos(a) * r0), X(WIN.y + Math.sin(a) * r0), X(WIN.x + Math.cos(a) * (r0 + 0.14)), X(WIN.y + Math.sin(a) * (r0 + 0.14)))
+    // The slivers: thin, glassy, turning so they catch the light as they go; each drops to the boards (or the sill
+    // outside), bounces once, and lies there, a glint.
+    const [dx, dy] = V_WINDOW
+    const base = Math.atan2(dy, dx)
+    for (const sl of SLIVERS) {
+      const a = base + sl.dir
+      const vx = Math.cos(a) * sl.v
+      const vy = Math.sin(a) * sl.v * 0.6 - 0.4
+      const x0 = WIN.x + sl.sx
+      const y0 = WIN.y + sl.sy
+      const floor = H_LOFT - 0.012
+      // First fall, to the floor.
+      const tHit = (() => {
+        // y0 + vy t + G t²/2 = floor
+        const A = 0.5 * G
+        const disc = vy * vy + 4 * A * (floor - y0)
+        return (-vy + Math.sqrt(Math.max(0, disc))) / (2 * A)
+      })()
+      let px: number
+      let py: number
+      let ang: number
+      if (since < tHit) {
+        px = x0 + vx * since
+        py = y0 + vy * since + 0.5 * G * since * since
+        ang = sl.spin * since
+      } else {
+        // One small bounce, then still.
+        const b = since - tHit
+        const vb = 0.25 * (vy + G * tHit)
+        const tb = (2 * vb) / G
+        const xb = x0 + vx * tHit
+        const slide = vx * 0.3
+        const s2 = Math.min(b, tb)
+        px = xb + slide * s2
+        py = b < tb ? floor - vb * b + 0.5 * G * b * b : floor
+        ang = sl.spin * tHit + sl.spin * 0.3 * s2
       }
-    }
-    // Glass, out at us and falling, and lying on the boards under the window (the ball's way in scatters a few
-    // further along), never out over the trapdoor or the lift's well.
-    for (let i = 0; i < 22; i++) {
-      const a = (hash(i, 3) - 0.5) * Math.PI * 2
-      const v = 0.3 + hash(i, 4) * 0.9
-      const vx = Math.cos(a) * v * 0.6 + V_WINDOW[0] * 0.08
-      const vy = Math.sin(a) * v - 0.6
-      const sx = WIN.x + (hash(i, 5) - 0.5) * WIN.w * 0.8
-      const sy = WIN.y + (hash(i, 6) - 0.5) * WIN.h * 0.8
-      const px = clamp(sx + vx * since, WELL[1] + 0.12, H_R - 0.14)
-      const py = Math.min(H_LOFT - 0.03, sy + vy * since + 0.5 * G * since * since)
-      const spin = (hash(i, 7) - 0.5) * 18 * Math.min(since, 0.45)
-      const size = 0.05 + hash(i, 8) * 0.08
-      const fade = 1 - smooth(since, 1.2, 1.8)
+      px = clamp(px, WELL[1] + 0.12, H_R - 0.14)
+      // A glint as each one turns face-on to us.
+      const glint = Math.max(0, Math.cos(ang * 1.7)) ** 6
+      const lying = since > tHit + 0.4
+      const a2 = lying ? 0.8 : 1
       p.push()
       p.translate(X(px), X(py))
-      p.rotate(spin)
-      p.fill(alpha(p, DUST.light, 0.95 * fade))
-      p.stroke(alpha(p, ink, fade))
-      p.strokeWeight(weight * 0.5)
-      p.triangle(X(-size), X(size * 0.5), X(size * 0.8), X(size * 0.7), 0, X(-size))
+      p.rotate(ang)
+      const L = sl.len * (lying ? 1 : 0.55 + 0.45 * Math.abs(Math.cos(ang)))
+      p.noStroke()
+      p.fill(alpha(p, mixHex(DUST.sky, '#FFFFFF', 0.35), 0.75 * a2))
+      p.quad(X(-L), 0, X(-L * 0.1), X(-0.012), X(L), X(0.004), X(-L * 0.05), X(0.014))
+      if (!lying) {
+        p.stroke(alpha(p, ink, 0.55))
+        p.strokeWeight(Math.max(0.6, weight * 0.35))
+        p.line(X(-L), 0, X(L), X(0.004))
+      }
+      if (glint > 0.05 && !lying) {
+        p.noStroke()
+        p.fill(alpha(p, '#FFFFFF', 0.9 * glint))
+        p.circle(0, 0, Math.max(1.5, X(0.03)))
+      }
       p.pop()
     }
   })
