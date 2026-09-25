@@ -149,3 +149,33 @@ horizontal progress. Targets wake before the hit, and ink rings fade where
 the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
+
+`cornfield-chase/opus55-liftoff` (Liftoff, with a faint "Directed by wustep"
+byline in the panel from `ShowVersion.director`) is a second Opus 5.5 take
+on the same recording, with every piece new. It is not a
+stock arrangement: two worlds made for it, a farm in the dust years and the
+dark past it, and a rocket between them in place of a portal. The show lives
+in `cornfield-chase/liftoff/`. `show.ts` holds two universes on one clock
+that share cells, and the stage changes universe while the rocket is inside
+the cloud. Each part is handed a slot (the time the ball arrives, the time
+it leaves, the onsets it must strike) and builds its lane from timed
+waypoints, so its strikes land on the measured onsets in
+`scripts/show-plans/cornfield-opus55-onsets.json` by construction.
+`liftoff/hits.ts` gathers every strike, and `check:shows` measures each one
+against the onset file. The check also asserts that the ball never jumps,
+and that it is never hidden for long. Two more balls keep him company, as in the film: blue Dr. Amelia Brand
+(the hero, Cooper, has the farm and drives the truck) and, on Cooper
+Station, slate old Murph. Parts show them through `Built.company` spans
+(show time, part frame, `who`), and the check holds them to the story: Brand
+not on the farm, with him from NASA's bunker to the ring, waiting in orbit,
+and at her camp on Edmunds' planet, where they meet at the end; Murph only in
+the far-side house, where she sends him on; neither ever jumping, and each
+coming and going only out of shot. It ends with credits after the music, in silence: the words are set
+by the page from `Performance.titles(t)` (a show's canvas sets no type), and
+the starlight they come out of is the canvas's. The report is
+`docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
+only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
+built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
+from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
+(`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
