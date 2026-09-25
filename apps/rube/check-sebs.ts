@@ -97,8 +97,8 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   }
   // The dream is an orchestra, not a drum: the parts strike its bars (a hit on the downbeat or somewhere in the bar on
   // a beat or an eighth of the comb), not every strong beat. Nearly every bar from the band's entrance to the end of
-  // the Hollywood number carries one; the few that do not are breaths (the curtain going out, the lift climbing, the
-  // house holding its breath before the ovation, the last bar into the white).
+  // the Hollywood number carries one; the few that do not are breaths (the cup rising to the star, the curtain going
+  // out, the house holding its breath before the ovation, the last bar into the white).
   const hitAt = (t: number) => all.some((s) => Math.abs(s - t) <= 0.03)
   const bars: number[] = []
   for (let k = 1; dream(k) < AT.hollywood_out - 1.5; k += 4) if (dream(k) >= 74 && !(dream(k) > SWITCH.studio - 0.5 && dream(k) < AT.hollywood - 0.5)) bars.push(k)

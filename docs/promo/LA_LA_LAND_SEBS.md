@@ -79,8 +79,8 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - the end credits: after the band, set by the page, naming Stephen Wu, Claude Opus 5.5, the four balls, Justin Hurwitz, both cues and p5.js;
 - ten places in the film's order, the club again at the end, and every change of place under a full cover; no portal, no cut drawn;
 - Seb never jumps (0.04 cells a millisecond) and is never hidden for more than 2.5 s;
-- 553 strikes, every one within 30 ms of a measured onset or a comb beat, and every part strikes;
-- 38 of the dream's 45 bars struck from the band's entrance to the end of the Hollywood number (the check asks for 80%; the ones left are breaths: the curtain going out, the lift climbing, the house holding its breath before the ovation, the last bar into the white), and 28 of the Paris club's 33 strong beats;
+- 559 strikes, every one within 30 ms of a measured onset or a comb beat, and every part strikes;
+- 41 of the dream's 45 bars struck from the band's entrance to the end of the Hollywood number (the check asks for 80%; the four left are breaths: the cup rising to the star at Lipton's, the curtain going out, the house holding its breath before the ovation, the last bar into the white), and 28 of the Paris club's 33 strong beats;
 - the kiss and the last chord are struck;
 - Mia in shot through the dream, David only in the room as it is, their son only in the home movie, each in their colour, the son small;
 - they kiss at Lipton's and again in the club (close, not pressed);
