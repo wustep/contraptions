@@ -1063,11 +1063,6 @@ function drawOut(p: p5, c: Ctx, t: number): void {
     g.addColorStop(1, rgba(DARK.hull, 0))
     ctx.fillStyle = g
     ctx.fillRect(X(qx - 0.7), X(qy - 0.7), X(1.4), X(1.4))
-    const u = clamp(e / 0.45)
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.8 * (1 - u) * (1 - u)))
-    p.strokeWeight(Math.max(1, k * 0.03 * (1 - u)))
-    p.circle(X(qx), X(qy), X(0.2 + 0.8 * (1 - (1 - u) * (1 - u))))
   }
 }
 

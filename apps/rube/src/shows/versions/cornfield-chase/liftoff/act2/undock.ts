@@ -699,17 +699,8 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const X = (v: number) => v * k
   glow(p, X(sx), X(sy), X(RS * 1.8), ICE_RGB, 0.16)
-  // Stars behind it, drawn out into arcs round its edge.
+  // (Its edge is its own: no arcs of stars round it, which read as a dashed ring.)
   p.noFill()
-  for (let j = 0; j < 26; j++) {
-    const r = RS * (1.04 + 0.6 * hash(j, 71) ** 1.6)
-    const near = (RS / r) ** 3
-    const a = hash(j, 72) * TAU + (f.cx - sx) * 0.02
-    const len = 0.04 + 0.35 * near
-    p.stroke(alpha(p, ink, 0.2 + 0.45 * near))
-    p.strokeWeight(Math.max(1, weight * (0.5 + 0.6 * near)))
-    p.arc(X(sx), X(sy), X(r * 2), X(r * 2), a, a + len)
-  }
   // Saturn, behind and to the left, bent into a thin gold arc on the rim that faces it.
   const toSat = Math.atan2(SAT[1] - sy, SAT[0] - sx)
   p.stroke(`rgba(${GOLD_RGB}, 0.55)`)
@@ -761,19 +752,6 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   const cp: Pt = [sx + Math.cos(face) * RS, sy + Math.sin(face) * RS]
   const touch = t - CONTACT
   if (touch >= 0 && touch < 0.6) glow(p, X(cp[0]), X(cp[1]), X(1.1), ICE_RGB, 0.8 * (1 - touch / 0.6) ** 2)
-  for (let i = 0; i < 3; i++) {
-    const age = t - CONTACT - i * 0.16
-    if (age < 0 || age > 1.6) continue
-    const u = age / 1.6
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.75 * (1 - u) ** 1.4))
-    p.strokeWeight(Math.max(1, X(0.045 * (1 - 0.5 * u))))
-    p.circle(X(cp[0]), X(cp[1]), X(2 * RS * 1.9 * Math.sqrt(u)))
-  }
-  p.noFill()
-  p.stroke(alpha(p, DARK.ice, 0.45))
-  p.strokeWeight(Math.max(1, X(0.025)))
-  p.circle(X(sx), X(sy), X(RS * 1.9))
   p.pop()
   // The rim.
   p.noFill()
@@ -1452,15 +1430,11 @@ function drawPlume(p: p5, c: Ctx, t: number, cs: number): void {
     p.strokeWeight(Math.max(1, X(0.04)))
     p.ellipse(X(x0 - 0.15 - (1.6 * u * s) / SHIP), X(mid), X(0.14 + 0.24 * u), X(0.5 + 0.55 * u * s))
   }
-  // Lighting up: a white flash at the bells and a ring thrown wide.
+  // Lighting up: a white flash at the bells.
   const lit = t - IGNITE
   if (lit >= 0 && lit < 0.7) {
     const u = lit / 0.7
     glow(p, X(x0), X(mid), X(1.05), BONE_RGB, 0.95 * (1 - u) ** 2)
-    p.noFill()
-    p.stroke(`rgba(${BONE_RGB}, ${0.9 * (1 - u) ** 1.2})`)
-    p.strokeWeight(Math.max(1, X(0.045 * (1 - u) + 0.012)))
-    p.circle(X(x0 - 0.1), X(mid), X(0.45 + 2.8 * Math.sqrt(u)))
   }
 }
 

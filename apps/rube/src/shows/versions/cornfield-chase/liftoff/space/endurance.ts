@@ -634,7 +634,7 @@ function drawDriver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
 
 /** The fronts of the coils, and the beacon, over the ball. */
 function drawDriverOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
-  const { k, weight } = c
+  const { k } = c
   const at = driverFrame(s, k)
   const coils = coilSpots(s)
   const times = [...COILS, MUZZLE]
@@ -651,15 +651,6 @@ function drawDriverOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const on = T < CATCH ? 0.25 + 0.9 * Math.exp(-ago / 0.18) : 0.15 + hit
   const [bx, by] = at(0.3, -CH - 0.07)
   lamp(p, c, bx / k, by / k, on, DARK.ice, ICE_RGB)
-  // The catch itself: a ring of light off the cradle.
-  if (T >= CATCH && T < CATCH + 0.45) {
-    const u = (T - CATCH) / 0.45
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.85 * (1 - u)))
-    p.strokeWeight(weight * (1.2 - 0.6 * u))
-    const [mx, my] = at(-GAP / 2, 0)
-    p.circle(mx, my, k * (2 * R + GAP + 0.1 + 0.9 * Math.sqrt(u)))
-  }
 }
 
 /* ------------------------------------------------------------------ drawing: the ring */
@@ -833,15 +824,6 @@ function drawJaws(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     })
     bar(p, ink, weight * 0.6, DARK.hull, k * 0.06, rot)
   }
-  const since = T - CLAMP
-  if (since >= 0 && since < 0.5) {
-    const b = ringPt(s.c, T, 0, SEAT + GAP / 2)
-    const u = since / 0.5
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.9 * (1 - u)))
-    p.strokeWeight(weight * (1.3 - 0.6 * u))
-    p.circle(b[0] * k, b[1] * k, k * (2 * R + GAP + 0.1 + 1.1 * Math.sqrt(u)))
-  }
 }
 
 /** The catapult: its mount, the ratchet at the pivot, the arm and the cup, over the ball; a breath of gas at the throw. */
@@ -945,17 +927,6 @@ function drawSphere(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   const [sx, sy] = s.sphere
   const X = (v: number) => v * k
   glow(p, X(sx), X(sy), X(RS * 1.75), ICE_RGB, 0.2)
-  // Background stars caught at its edge, drawn into short arcs.
-  p.noFill()
-  for (let j = 0; j < 16; j++) {
-    const r = RS * (1.06 + 0.55 * hash(j, 41) ** 1.5)
-    const near = (RS / r) ** 3
-    const a = hash(j, 42) * TAU + (f.cx - sx) * 0.03
-    const len = 0.05 + 0.4 * near
-    p.stroke(alpha(p, ink, 0.25 + 0.45 * near))
-    p.strokeWeight(Math.max(1, weight * (0.6 + 0.6 * near)))
-    p.arc(X(sx), X(sy), X(r * 2), X(r * 2), a, a + len)
-  }
   ctx.save()
   ctx.beginPath()
   ctx.arc(X(sx), X(sy), X(RS), 0, TAU)
@@ -993,9 +964,6 @@ function drawSphere(p: p5, s: EnduranceState, c: Ctx, T: number): void {
     }
   }
   p.noFill()
-  p.stroke(alpha(p, DARK.ice, 0.5))
-  p.strokeWeight(Math.max(1, X(0.025)))
-  p.circle(X(sx), X(sy), X(RS * 1.9))
   p.stroke(alpha(p, DARK.hull, 0.22))
   p.strokeWeight(X(0.07))
   p.arc(X(sx), X(sy), X(RS * 1.62), X(RS * 1.62), Math.PI * 1.08, Math.PI * 1.36)

@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../src/core/draw'
 import { clamp, easeInOutSine, easeOutCubic } from '../../../../../../../src/core/ease'
-import { FLOOR, laneAt, puff, type Lane, type Pt } from '../../../../parts'
+import { FLOOR, laneAt, mixHex, puff, type Lane, type Pt } from '../../../../parts'
 import { alpha, box, carried, frame, hash, part, smooth, type Ctx } from './kit'
 import { beat, IGNITION } from './music'
 import { DUST } from './worlds'
@@ -392,9 +392,14 @@ function drawRocket(p: p5, s: RocketState, c: Ctx): void {
     solid(p, ink, weight, DUST.shade)
     p.rect(X(bx - 1.9), X(by + 0.35 + (FLOOR + 0.2) / 2), X(1.6), X(FLOOR + 0.2))
     p.rect(X(bx + 1.9), X(by + 0.35 + (FLOOR + 0.2) / 2), X(1.6), X(FLOOR + 0.2))
-    outline(p, ink, weight)
-    p.line(X(bx - 1.1), X(by + 0.35 + FLOOR + 0.2), X(bx - 0.4), X(by + 0.35 + FLOOR + 1.0))
-    p.line(X(bx + 1.1), X(by + 0.35 + FLOOR + 0.2), X(bx + 0.4), X(by + 0.35 + FLOOR + 1.0))
+    // The trench between them: a dark cut, its walls going in under the slabs to a floor.
+    const top = by + 0.35
+    const lip = by + 0.35 + FLOOR + 0.2
+    const floor = lip + 0.8
+    solid(p, ink, weight, mixHex(DUST.shade, ink, 0.62))
+    p.beginShape()
+    for (const [x, y] of [[bx - 1.1, top], [bx + 1.1, top], [bx + 1.1, lip], [bx + 0.4, floor], [bx - 0.4, floor], [bx - 1.1, lip]] as Pt[]) p.vertex(X(x), X(y))
+    p.endShape(p.CLOSE)
     // The mount's arms hold the base until the rocket lets go, and fall back.
     const let_go = easeOutCubic(clamp((t - LIFTOFF) / 0.5))
     solid(p, ink, weight, DUST.wood)

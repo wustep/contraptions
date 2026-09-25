@@ -937,16 +937,6 @@ function drawJaws(p: p5, c: Ctx, T: number): void {
     })
     bar(p, ink, weight * 0.5, DARK.hull, k * 0.04, rotd)
   }
-  // The catch: a ring of ice light off the jaws.
-  const since = T - CATCH
-  if (since >= 0 && since < 0.5) {
-    const b = swingPt(T)
-    const u = since / 0.5
-    p.noFill()
-    p.stroke(alpha(p, DARK.ice, 0.9 * (1 - u)))
-    p.strokeWeight(weight * (1.2 - 0.6 * u))
-    p.circle(b[0] * k, b[1] * k, k * (2 * R + 0.08 + 0.7 * Math.sqrt(u)))
-  }
 }
 
 /** TARS: on the Ranger's back, then let go on 182 and in, turning, slower and slower, gone on 183½. */
