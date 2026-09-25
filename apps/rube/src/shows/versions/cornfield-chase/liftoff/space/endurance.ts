@@ -1005,10 +1005,11 @@ function drawSphereOver(p: p5, s: EnduranceState, c: Ctx, T: number): void {
   }
   const since = T - TOUCH
   if (since >= 0 && since < 1.2) {
+    // On the rim itself, fading: the rim lit, not a ring thrown off it.
     const u = since / 1.2
-    p.stroke(alpha(p, BALL, 0.95 * (1 - u) ** 1.5))
-    p.strokeWeight(X(0.08 * (1 - 0.6 * u)))
-    p.circle(X(sx), X(sy), X(RS * (1.9 + 0.35 * Math.sqrt(u))))
+    p.stroke(alpha(p, BALL, 0.9 * (1 - u) ** 1.5))
+    p.strokeWeight(X(0.07 * (1 - 0.6 * u)))
+    p.circle(X(sx), X(sy), X(RS * 2))
     glow(p, X(sx), X(sy), X(RS * 1.6), BALL_RGB, 0.35 * (1 - u))
     if (T < END) {
       const q = Math.max(0.15, dist / RS)

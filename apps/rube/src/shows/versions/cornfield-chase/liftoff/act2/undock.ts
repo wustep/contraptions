@@ -782,12 +782,13 @@ function drawSphere(p: p5, c: Ctx, t: number, f: Frame, q: Pose): void {
   }
   // The cockpit goes in: the ball's light runs all round the rim.
   const since = t - CROSS
-  if (since >= 0 && since < 1.3) {
-    const u = since / 1.3
+  if (since >= 0 && since < 0.8) {
+    // On the rim itself, fading: the rim lit, not a ring thrown off it.
+    const u = since / 0.8
     p.noFill()
-    p.stroke(alpha(p, BALL, 0.95 * (1 - u) ** 1.5))
-    p.strokeWeight(X(0.08 * (1 - 0.6 * u)))
-    p.circle(X(sx), X(sy), X(RS * (2 + 0.3 * Math.sqrt(u))))
+    p.stroke(alpha(p, BALL, 0.9 * (1 - u) ** 1.5))
+    p.strokeWeight(X(0.07 * (1 - 0.6 * u)))
+    p.circle(X(sx), X(sy), X(RS * 2))
     glow(p, X(sx), X(sy), X(RS * 1.2), BALL_RGB, 0.16 * (1 - u))
   }
 }
