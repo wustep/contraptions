@@ -60,7 +60,7 @@ const SEATED = beat(124)
 const DARK = Array.from({ length: 10 }, (_, i) => beat(124 + i))
 const ARM_BACK = beat(128)
 
-export const GANTRY_HITS = [IN, ...LAMPS, SEATED, ...DARK.slice(1), ARM_BACK]
+export const GANTRY_HITS = [KNOCK, IN, ...LAMPS, SEATED, ...DARK.slice(1), ARM_BACK]
 
 /* ------------------------------------------------------------------ her way to the window */
 

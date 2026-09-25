@@ -190,7 +190,9 @@ export const cornrow = part<RowState>(
         const since = tt - g.at
         if (since > -0.15 && since < 0.2) x -= 0.03 * Math.sin(Math.PI * clamp((since + 0.15) / 0.35))
       }
-      const bob = i === steps ? 0 : 0.015 * Math.sin(tt * 7) + plunge
+      // (The bob dies away into the flume at the end, where the truck's part carries him on level.)
+      const span = slot.end - slot.begin
+      const bob = i === steps ? 0 : (0.015 * Math.sin(tt * 7) + plunge) * (1 - smooth(tt, span - 0.35, span))
       ways.push({ at: tt, p: [i === steps ? end : x, bob] as Pt })
     }
     const lane = { segs: route(ways), fire: gates[0].at }

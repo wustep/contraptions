@@ -49,13 +49,15 @@ const CLACK = beat(93)
 const UNLATCH = beat(94)
 const LOCK = beat(95)
 const GATE = beat(96)
+/** Down into the hopper, on the and. */
+const PLUNK = beat(96.5)
 const DRAW = beat(97)
 const FIRE = beat(98)
 const PLANK = beat(99)
 const THUMP = beat(99.5)
 const EXIT = beat(100)
 
-export const COMBINE_HITS = [LAND, SWEEP, CATCH, LIFT, TIP, FLING, POP, PLOP, CLACK, UNLATCH, LOCK, GATE, DRAW, FIRE, PLANK, THUMP]
+export const COMBINE_HITS = [LAND, SWEEP, CATCH, LIFT, TIP, FLING, POP, PLOP, CLACK, UNLATCH, LOCK, GATE, PLUNK, DRAW, FIRE, PLANK, THUMP]
 
 /**
  * The combine's own clock: it surges on every beat and all but stops
@@ -377,13 +379,21 @@ export const combine = part<CombineState>(
     segs.push(...carried((u) => rattle(u + slot.begin), at(CLACK), at(GATE), 60))
     // The gate goes down: over it and into the hopper, where it sits with its crown showing.
     const onGate: Pt = [GATE_X + 0.12, RIM - 0.02 - R]
+    // Over the gate gathering, and on down into the hopper still gathering (no stall on the gate's edge), landing on
+    // the and.
+    const T1 = 0.2
+    const T2 = PLUNK - GATE - T1
+    const d1 = Math.hypot(onGate[0] - rest[0], onGate[1] - rest[1])
+    const d2 = Math.hypot(IN_HOPPER[0] - onGate[0], IN_HOPPER[1] - onGate[1])
+    const v1 = (2 * d1) / T1
+    const v2 = Math.max(0, (2 * d2) / T2 - v1)
     segs.push(
       ...route([
         { at: at(GATE), p: rest },
-        { at: at(GATE) + 0.2, p: onGate, ease: 'in' },
-        { at: at(GATE) + 0.34, p: IN_HOPPER, ease: 'in' },
+        { at: at(GATE) + T1, p: onGate, ease: 'in' },
+        { at: at(PLUNK), p: IN_HOPPER, ramp: [v1, v2] },
         // Down into the hopper, a small bounce off its floor, and still.
-        { at: at(GATE) + 0.48, p: IN_HOPPER, arc: 0.035 },
+        { at: at(PLUNK) + 0.14, p: IN_HOPPER, arc: 0.035 },
         { at: at(DRAW), p: IN_HOPPER },
       ]),
     )
