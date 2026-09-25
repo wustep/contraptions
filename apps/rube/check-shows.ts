@@ -18,6 +18,7 @@ import { CORNFIELD_DURATION, CORNFIELD_MEET, CORNFIELD_RIDERS } from './src/show
 import { universeAt } from './src/universe'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import { checkSebs } from './check-sebs'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -113,7 +114,7 @@ async function main(): Promise<void> {
   check('Clair de Lune with no take is Take B, and take-a is still there', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-a')
   check('Première keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
   check('Clair de Lune keeps Take A alongside Take B', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-a,take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,metronome,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, La La Land, the metronome and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,la-la-land,metronome,premiere-arabesque')
   check('Cornfield Chase keeps the Grok music-sync, multi-ball and trails takes beside the Opus 5.5 music-sync', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'multiball,opus55-music-sync,tech-demo,voices')
   check('Cornfield Chase labels name the model and stay unique', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.label).join('|') === '[Grok 4.7] Multi-ball|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync|[Grok 4.7] Trails')
   check('Cornfield Chase notes say these are one-shot tech demos', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
@@ -192,6 +193,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
+      if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
       if (work.work === 'cornfield-chase' && version.take === 'multiball') {
         const before = perf.show.at(CORNFIELD_RIDERS[0].spawn - 0.5).balls ?? []
         const joined = perf.show.at(CORNFIELD_RIDERS[0].spawn + 1).balls ?? []
