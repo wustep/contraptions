@@ -6,7 +6,6 @@ import { BUILD, CHORUS, DURATION, HOME, KISS, STARS, STRUCK, SWING_FROM, SWING_M
 import { EpilogueShow } from './show'
 import { BACKLOT, CLUB, DREAM, SEB, SEBS } from './worlds'
 import { room } from './room'
-import { backlot } from './backlot'
 import { piano } from './piano'
 import { kiss } from './kiss'
 import { freeway } from './freeway'
@@ -57,7 +56,6 @@ export function compose(): { show: EpilogueShow; camera: (t: number) => Framing 
   // the ball comes in at the left end of the keys, where it begins and where it is when the set is struck.
   const roomCells = (x: number, y: number) => box(x - 6, y - 8, x + 28, y + 4, 2)
   const end = back.placed[0]
-  const all = box(-12, -60, dream.next.col + 40, 30, 3)
   const show = new EpilogueShow(
     [
       {
@@ -70,7 +68,7 @@ export function compose(): { show: EpilogueShow; camera: (t: number) => Framing 
       {
         world: BACKLOT,
         theme: DREAM,
-        scenery: [standing(backlot, 0, 0, all, { floorAt: () => 0.5 }, DURATION), standing(room, 0, 0, roomCells(0, 0), { dream: true }, DURATION)],
+        scenery: [standing(room, 0, 0, roomCells(0, 0), { dream: true }, DURATION)],
         chain: dream.placed,
         from: INTO,
       },
