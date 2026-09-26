@@ -1,14 +1,12 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
-import { solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { KICK, KIT_FLOOR, SNARE, drawStick, type KitPiece } from '../drums'
 import type { Ctx } from '../kit'
 import { CYMBALS, KICKS, SNARES, level } from '../music'
-import { KIT } from '../worlds'
 import { NOD_BACK } from './conductor'
 import { CHORD_HIT, CUT, F_FLY, F_LEAP, F_SEATED, ROLL, STICKS_UP } from './finale-clock'
-import { FORE, LIMP, NECK, SHOULDER_AT, UPPER, ampOf, clampBlock, drawYoke, elbowOf, liftShape, smoother, tube, upSign } from './solo-rig'
+import { ARM_W, FORE, LIMP, NECK, SHOULDER_AT, SLUMP, UPPER, ampOf, drawShin, drawTorso, drawYoke, elbowOf, fist, joint, liftShape, limb, smoother, upSign } from './solo-rig'
 import { HOLD, STICK, TARGETS, type Arm, type Grip } from './solo-score'
 
 /**
@@ -175,10 +173,18 @@ export function headAt(T: number): Pt {
   return [NECK[0] + ANSWER.head[0] * a, NECK[1] + bob(T) * w + ANSWER.head[1] * a + rigDrop(T)]
 }
 
+/** Slumped while it flies in empty; straightening as he lands in the cup (as the solo's frame does). */
+const slumpOf = (T: number): number => 1 - smoother((T - F_LEAP) / (F_SEATED - F_LEAP))
+
 function shoulder(arm: Arm, T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
   const a = answer(T)
-  return [NECK[0] + SHOULDER_AT[arm][0] + ANSWER.across * a, NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + ANSWER[arm] * a + rigDrop(T)]
+  const sl = slumpOf(T)
+  const inward = (arm === 'left' ? 1 : -1) * SLUMP.inward * sl
+  return [
+    NECK[0] + SHOULDER_AT[arm][0] + ANSWER.across * a + inward,
+    NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + ANSWER[arm] * a + SLUMP.down * sl + rigDrop(T),
+  ]
 }
 
 /* ------------------------------------------------------------------ the arms */
@@ -337,9 +343,9 @@ function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const s = shoulder(arm, T)
   const w = pose.grip
   const e = arm === 'left' ? elbowOf(s, w, 1) : elbowSwing(s, w, -1 + 2 * smoother((T - ELBOW_UNDER[0]) / (ELBOW_UNDER[1] - ELBOW_UNDER[0])))
-  tube(p, c, s, e, 4.4)
-  tube(p, c, e, w, 3.8)
-  clampBlock(p, c, e, Math.atan2(w[1] - e[1], w[0] - e[0]), 0.15, 0.12)
+  limb(p, c, s, e, ARM_W.upper[0], ARM_W.upper[1])
+  limb(p, c, e, w, ARM_W.fore[0], ARM_W.fore[1])
+  joint(p, c, e, ARM_W.elbow)
   const butt = (g: Pt, ang: number): Pt => [g[0] - Math.cos(ang) * HOLD, g[1] - Math.sin(ang) * HOLD]
   // A roll's blur: the stick's ghost at the top and bottom of its tremble, faint, behind the stick itself.
   if (pose.blur > 0.004) {
@@ -354,7 +360,7 @@ function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
     ctx.restore()
   }
   drawStick(p, c, butt(w, pose.ang), pose.ang, STICK)
-  clampBlock(p, c, w, pose.ang, 0.15, 0.11)
+  fist(p, c, w, pose.ang)
 }
 
 function drawFrame(p: p5, c: Ctx, T: number): void {
@@ -366,8 +372,10 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
   for (const q of [L, R]) {
     const g = ctx.createLinearGradient(0, (q[1] - 5) * k, 0, q[1] * k)
     g.addColorStop(0, 'rgba(183, 178, 167, 0)')
-    // Bright while it flies in; dim once it hangs still at its height.
-    g.addColorStop(1, `rgba(183, 178, 167, ${(0.16 + 0.34 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)).toFixed(3)})`)
+    // Only while it flies in: hanging still, the two lines made it read as a coat hanger.
+    const a = 0.5 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)
+    if (a < 0.005) continue
+    g.addColorStop(1, `rgba(183, 178, 167, ${a.toFixed(3)})`)
     ctx.save()
     ctx.strokeStyle = g
     ctx.lineWidth = weight * 0.8
@@ -383,7 +391,7 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
 function drawFoot(p: p5, c: Ctx, T: number): void {
   const down = footDown(T)
   if (down <= 0.001) return
-  const { k, ink, weight } = c
+  const { k } = c
   const heel: Pt = [KICK.x + 0.55, KIT_FLOOR - 0.02]
   const tilt = -0.22 + 0.16 * pedalPress(T)
   const along = (d: number, up: number): Pt => [heel[0] + Math.cos(tilt) * d + Math.sin(tilt) * up, heel[1] + Math.sin(tilt) * d - Math.cos(tilt) * up]
@@ -401,10 +409,16 @@ function drawFoot(p: p5, c: Ctx, T: number): void {
   ctx.beginPath()
   ctx.rect((top[0] - 1) * k, hidden * k, 2 * k, 3 * k)
   ctx.clip()
-  tube(p, c, [top[0], hidden - 0.2], ankle, 3.8)
-  solid(p, ink, weight * 0.8, KIT.lacquer)
-  p.quad(sole0[0] * k, sole0[1] * k, sole1[0] * k, sole1[1] * k, top1[0] * k, top1[1] * k, top0[0] * k, top0[1] * k)
-  clampBlock(p, c, ankle, Math.atan2(top[1] - ankle[1], top[0] - ankle[0]), 0.12, 0.11)
+  drawShin(p, c, [top[0], hidden], ankle, [sole0, sole1, top1, top0])
+  p.pop()
+}
+
+/** The finale's drummer's body, drawn by the hall behind the kit (as `solo-rig.ts` `drawDrummerBody`). */
+export function drawFinaleBody(p: p5, c: Ctx, T: number): void {
+  if (rigOut(T)) return
+  p.push()
+  p.rectMode(p.CORNER)
+  drawTorso(p, c, shoulder('left', T), shoulder('right', T), rigDrop(T), slumpOf(T))
   p.pop()
 }
 
@@ -417,9 +431,7 @@ export function drawFinaleRig(p: p5, c: Ctx, T: number): void {
   drawFrame(p, c, T)
   drawArm(p, c, 'left', T)
   drawArm(p, c, 'right', T)
-  const L = shoulder('left', T)
-  const R = shoulder('right', T)
-  for (const q of [L, R]) clampBlock(p, c, q, Math.atan2(R[1] - L[1], R[0] - L[0]), 0.2, 0.15)
+  for (const q of [shoulder('left', T), shoulder('right', T)]) joint(p, c, q, ARM_W.shoulder)
   p.pop()
 }
 
