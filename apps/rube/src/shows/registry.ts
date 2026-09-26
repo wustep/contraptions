@@ -133,7 +133,7 @@ export interface ShowVersion {
    * page. The share card's words (`share.ts`). Left out, the card says the title and the site's own line.
    */
   about?: string
-  /** Seconds of show at which the share card's picture is taken (`scripts/show-cards.mjs`). */
+  /** Seconds of show at which the share card's picture is taken (`scripts/shows/show-cards.mjs`). */
   still?: number
   load(): Promise<Performance>
 }

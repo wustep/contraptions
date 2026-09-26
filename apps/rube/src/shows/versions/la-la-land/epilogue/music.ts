@@ -1,6 +1,6 @@
 /**
- * The recording's clock, as measured once by `scripts/lalaland-epilogue-onsets.py`
- * into `scripts/show-plans/lalaland-epilogue-onsets.json`; `check:shows` holds
+ * The recording's clock, as measured once by `scripts/shows/lalaland-epilogue-onsets.py`
+ * into `scripts/shows/plans/lalaland-epilogue-onsets.json`; `check:shows` holds
  * every strike of this take against that file. Show time is recording time
  * (the soundtrack's offset is 0).
  *

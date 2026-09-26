@@ -1,4 +1,4 @@
-import recording from '../../../../../../docs/promo/cornfield-chase-zimmer.mp3'
+import recording from './cornfield-chase-zimmer.mp3'
 import type { Performance } from '../../registry'
 import { StockShow } from '../../stock/show'
 import type { StockScore } from '../../stock/types'

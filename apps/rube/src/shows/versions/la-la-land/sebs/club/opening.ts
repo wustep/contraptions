@@ -37,7 +37,7 @@ const TURN: [number, number] = [24.55, 25.75]
 
 /**
  * Flux spikes in the solo intro that are not notes of the piano. Measured against the mix's amplitude
- * (`docs/promo/la-la-land-sebs-mix-demo.mp3`): 1.254 is a pre-echo 120 ms before F#4 (the tone arrives at
+ * (`apps/rube/src/shows/versions/la-la-land/la-la-land-sebs-mix-demo.mp3`): 1.254 is a pre-echo 120 ms before F#4 (the tone arrives at
  * 1.358), and the other four sit in the two long rests, where nothing new sounds. 14.338 is the loud one,
  * a forte hit while the camera is on the keys and the C# is only decaying.
  */

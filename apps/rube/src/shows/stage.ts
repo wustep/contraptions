@@ -71,7 +71,7 @@ export interface ShowStage {
   set(perf: Performance | null): void
   /** The frame at `t` as a PNG at `size`: the picture alone. */
   savePng(filename: string, size: FrameSize, t: number): Promise<void>
-  /** The same PNG, handed back rather than saved: for share cards (`scripts/show-cards.mjs`). */
+  /** The same PNG, handed back rather than saved: for share cards (`scripts/shows/show-cards.mjs`). */
   png(size: FrameSize, t: number): Promise<Blob | null>
   /**
    * The whole show as a video at `size`, picture and music, played through

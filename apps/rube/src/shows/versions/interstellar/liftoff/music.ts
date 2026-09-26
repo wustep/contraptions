@@ -1,6 +1,6 @@
 /**
- * The recording's clock, as measured once by `scripts/cornfield-opus55-onsets.py`
- * (the numbers below are read from `scripts/show-plans/cornfield-opus55-onsets.json`;
+ * The recording's clock, as measured once by `scripts/shows/cornfield-opus55-onsets.py`
+ * (the numbers below are read from `scripts/shows/plans/cornfield-opus55-onsets.json`;
  * `check:shows` holds every strike of this take against that file).
  *
  * - 0 to 33.1 s, the piano, rubato: no grid, so the house strikes the piano's own notes.
@@ -10,7 +10,7 @@
  * - Beat 191 (119.41 s), the last hit. Then the decay, to 126.98 s.
  */
 
-/** The mix (`scripts/liftoff-mix.sh`), Cornfield Chase and then No Time for Caution: where the music ends. */
+/** The mix (`scripts/shows/liftoff-mix.sh`), Cornfield Chase and then No Time for Caution: where the music ends. */
 export const MIX_END = 262.741
 /**
  * The whole show: the mix, and then the end credits over the camp, in silence (`credits.ts`). The player's clock
@@ -44,7 +44,7 @@ export const beats = (a: number, b: number, step = 1): number[] => {
 
 /**
  * Act II: No Time for Caution, from the mix (measured by
- * `scripts/liftoff-ntfc-onsets.py` into `scripts/show-plans/liftoff-ntfc-onsets.json`).
+ * `scripts/shows/liftoff-ntfc-onsets.py` into `scripts/shows/plans/liftoff-ntfc-onsets.json`).
  * The organ's pulse is 60 bpm: beat k of the cue at 23.5177 + 0.9999·k s of the
  * show. It comes in on beat 104 (the accent at 127.51 s); it steps up on 132,
  * 152, 156 and 184, peaks on 228 and stops dead after 232.

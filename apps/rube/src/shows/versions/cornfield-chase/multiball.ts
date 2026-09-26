@@ -4,7 +4,7 @@ import type { ShowBall, ShowPoint } from '../../../show'
 import { Show } from '../../../show'
 import { extentOf, universeAt, type Universe } from '../../../universe'
 import type { Framing, Performance } from '../../registry'
-import recording from '../../../../../../docs/promo/cornfield-chase-zimmer.mp3'
+import recording from './cornfield-chase-zimmer.mp3'
 
 /**
  * Cornfield Chase, as four kinematic riders on one garden.

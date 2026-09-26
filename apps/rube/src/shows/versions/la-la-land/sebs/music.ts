@@ -1,8 +1,8 @@
-import measured from '../../../../../../../scripts/show-plans/sebs-onsets.json'
+import measured from '../../../../../../../scripts/shows/plans/sebs-onsets.json'
 
 /**
- * The recording's clock, as measured once by `scripts/sebs-onsets.py`
- * from the mix the show plays (`scripts/sebs-mix.sh`): Justin Hurwitz's
+ * The recording's clock, as measured once by `scripts/shows/sebs-onsets.py`
+ * from the mix the show plays (`scripts/shows/sebs-mix.sh`): Justin Hurwitz's
  * Epilogue whole from zero, then The End from 464 s. `check:shows` holds
  * every strike of this take against the same file.
  *

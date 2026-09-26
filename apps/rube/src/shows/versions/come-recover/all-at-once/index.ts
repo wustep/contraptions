@@ -1,4 +1,4 @@
-import recording from '../../../../../../../docs/promo/eeaao-come-recover-demo.mp3'
+import recording from '../eeaao-come-recover-demo.mp3'
 import type { Performance } from '../../../registry'
 import { creditsAt } from './credits'
 import { DURATION } from './music'
@@ -21,7 +21,7 @@ export const performance: Performance = {
     offset: 0,
     credit: 'Son Lux · Come Recover (Empathy Fight) · Everything Everywhere All at Once (2022)',
     href: 'https://www.youtube.com/watch?v=IOh1H06Cx0w',
-    // The upload the file was cut from (scripts/eeaao-cue.sh): from its first second to 5:32, fading over the last nine.
+    // The upload the file was cut from (scripts/shows/eeaao-cue.sh): from its first second to 5:32, fading over the last nine.
     youtube: [{ id: 'IOh1H06Cx0w', until: 332, fadeOut: 9 }],
   },
 }
