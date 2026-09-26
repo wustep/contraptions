@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine, easeOutQuad, lerp } from '../../../../../../../../src/core/ease'
-import { RIG, POSES, beatPose, blendPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { RIG, POSES, beatPose, blendPose, mixArm, wrapAngle, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { smooth } from '../kit'
 import { BAND, QUIET, TEMPO, TUNE_ORIGIN, TUNE_PERIOD, level, tune } from '../music'
 import type { KitPiece } from '../drums'
@@ -191,10 +191,13 @@ export const shoulders = (head: Pt): { right: Pt; left: Pt } => ({
 })
 
 /**
- * An arm reaching its wrist to `target` from `shoulder` (two links, the elbow on the side that keeps it up), the
- * hand pointing along `dir` (radians) in `shape`.
+ * An arm reaching its wrist to `target` from `shoulder` (two links), the hand pointing along `dir` (radians) in
+ * `shape`. `side` says which side of the line from the shoulder to the target the elbow is on, always the same one
+ * (-1 turns the upper arm back from the line, +1 on past it), so the elbow never jumps across as the target goes
+ * round the shoulder. Picking the lower elbow instead flipped the whole arm in one frame wherever the target crossed
+ * the shoulder's level. The bend and the wrist come back wrapped into (-pi, pi], so blends between poses stay short.
  */
-export function reach(shoulder: Pt, target: Pt, dir: number, shape: HandShape, elbow: 'up' | 'down' = 'up'): ArmPose {
+export function reach(shoulder: Pt, target: Pt, dir: number, shape: HandShape, side: -1 | 1): ArmPose {
   const U = RIG.upper
   const F = RIG.fore
   const dx = target[0] - shoulder[0]
@@ -202,15 +205,24 @@ export function reach(shoulder: Pt, target: Pt, dir: number, shape: HandShape, e
   const d = clamp(Math.hypot(dx, dy), Math.abs(U - F) + 0.02, U + F - 0.002)
   const base = Math.atan2(dy, dx)
   const a = Math.acos(clamp((U * U + d * d - F * F) / (2 * U * d), -1, 1))
-  const pick = (up: number) => {
-    const e: Pt = [shoulder[0] + Math.cos(up) * U, shoulder[1] + Math.sin(up) * U]
-    const fa = Math.atan2(target[1] - e[1], target[0] - e[0])
-    return { up, e, fa }
-  }
-  const s1 = pick(base - a)
-  const s2 = pick(base + a)
-  const s = (s1.e[1] <= s2.e[1]) === (elbow === 'up') ? s1 : s2
-  return arm(s.up, s.fa - s.up, dir - s.fa, shape)
+  const up = base + side * a
+  const e: Pt = [shoulder[0] + Math.cos(up) * U, shoulder[1] + Math.sin(up) * U]
+  const fa = Math.atan2(target[1] - e[1], target[0] - e[0])
+  return arm(wrapAngle(up), wrapAngle(fa - up), wrapAngle(dir - fa), shape)
+}
+
+/** His near arm at the kit: the elbow in across his chest over the snare, out at his shoulder with the palm raised. */
+const NEAR_SIDE = -1
+/** Both arms on the chair: the elbows out, the hands in on its rail. */
+const CHAIR_SIDE = 1
+
+/**
+ * A recovery from 0 to 1 over `u` 0..1: from rest, quickest a third of the way, then a long settle, still at both
+ * ends (1 - (1-u)^3 (1+3u)). A hit can be sharp; what follows it is this.
+ */
+const settle = (u: number): number => {
+  const v = clamp(u)
+  return 1 - (1 - v) ** 3 * (1 + 3 * v)
 }
 
 /** Where a wrist is for an arm pose from a shoulder (the drawing's own sum). */
@@ -227,8 +239,33 @@ const HOOP: Pt = [KX + 0.62, KY - 0.0]
 const TOP: Pt = [KX + 0.7, KY - 0.5]
 /** The counts: his open palm up over Andrew's head, fingers up. */
 const RAISED: Pt = [KX + 0.14, KY - 1.18]
+/** When the point at Tanner comes down, and how long both arms take to settle at his sides. */
+const POINT_DOWN = 120.3
+const POINT_SETTLE = 0.9
 /** His far hand on his hip (his left, on the house's right): the upper arm out, the forearm back in to the waist. */
 const AKIMBO: ArmPose = { up: 1.0, bend: 1.414, wrist: -0.84, hand: 'beat' }
+
+/** Where the open hand hovers over the snare, close at his ear: rushing or dragging? */
+const HOVER: Pt = [KX + 0.56, KY - 0.28]
+const HOVER_DIR = Math.PI + 0.2
+
+/**
+ * A slap's path, `u` 0..1, from `a` over his head round the outside (his right, the house's left, past his
+ * shoulder) and down to `b` on the hoop: the angle round the shoulder turns the long way through the side, and the
+ * reach swells a little at the middle, so the arm stays long through it instead of folding through the shoulder.
+ */
+function swing(shoulder: Pt, a: Pt, b: Pt, u: number): Pt {
+  const [ax, ay] = [a[0] - shoulder[0], a[1] - shoulder[1]]
+  const [bx, by] = [b[0] - shoulder[0], b[1] - shoulder[1]]
+  const a0 = Math.atan2(ay, ax)
+  // Decreasing angle is round through the house's left; b's angle taken below a0 by less than a full turn.
+  let a1 = Math.atan2(by, bx)
+  while (a1 > a0) a1 -= 2 * Math.PI
+  while (a1 <= a0 - 2 * Math.PI) a1 += 2 * Math.PI
+  const r = lerp(Math.hypot(ax, ay), Math.hypot(bx, by), u) + 0.12 * Math.sin(Math.PI * u)
+  const t = lerp(a0, a1, u)
+  return [shoulder[0] + Math.cos(t) * r, shoulder[1] + Math.sin(t) * r]
+}
 
 /** His beating hand over the snare: down to the head's height on each `ictus`, a quick lift, a float back up. */
 function patHand(T: number, ictus: (T: number) => number, size = 1): Pt {
@@ -284,11 +321,37 @@ export function fletcherPose(T: number): Pose {
     const s = Math.sin(-lean)
     return [head[0] + dx * c - dy * s, head[1] + dx * s + dy * c]
   }
-  /** His near hand (his right, toward Andrew) at `target`; the far one on his hip, out of the way. */
-  const near = (target: Pt, dir: number, shape: HandShape, u = 1): Pose => ({
-    right: blend(rest.right, reach(sh.right, into(target), dir - lean, shape), u),
-    left: blend(rest.left, AKIMBO, u),
-  })
+  /**
+   * His near hand (his right, toward Andrew) at `target`; the far one on his hip, out of the way. Coming up from his
+   * side (`u` below 1) the wrist swings round the shoulder from where it hangs to the target, the arm long at first
+   * and bending only as it gets there, and the arm reaches for it all the way: blending the two poses' angles
+   * instead turned the arm the long way round, or flipped it, whenever the reach passed opposite the hang. It swings
+   * up the outside (the house's left) to anything above his shoulder, even a target still on his far side as he
+   * walks in under it, and straight in to one below.
+   */
+  const near = (target: Pt, dir: number, shape: HandShape, u = 1): Pose => {
+    let to = into(target)
+    let hand = dir - lean
+    if (u < 1) {
+      const e = easeInOutSine(clamp(u))
+      const [s0, s1] = sh.right
+      const from = wristOf(sh.right, rest.right)
+      const f0 = Math.atan2(from[1] - s1, from[0] - s0)
+      const f1 = Math.atan2(to[1] - s1, to[0] - s0)
+      let turn = f1 - f0
+      while (turn > 2 * Math.PI - 1.5) turn -= 2 * Math.PI
+      while (turn <= -1.5) turn += 2 * Math.PI
+      const ang = f0 + turn * e
+      const r = lerp(Math.hypot(from[0] - s0, from[1] - s1), Math.hypot(to[0] - s0, to[1] - s1), e * e)
+      to = [s0 + Math.cos(ang) * r, s1 + Math.sin(ang) * r]
+      const fromDir = rest.right.up + rest.right.bend + rest.right.wrist
+      hand = fromDir + wrapAngle(hand - fromDir) * e
+    }
+    return {
+      right: blend(rest.right, reach(sh.right, to, hand, shape, NEAR_SIDE), u),
+      left: blend(rest.left, AKIMBO, u),
+    }
+  }
 
   // Trials one and two: his near hand counts in and keeps time over the snare; the palm comes down flat on each stop.
   if (T < STEADY[0] - 0.2) {
@@ -304,37 +367,48 @@ export function fletcherPose(T: number): Pose {
         target = [lerp(target[0], TOP[0], up), lerp(target[1], TOP[1], up)]
         shape = down > 0.5 ? 'open' : shape
         dir = lerp(dir, Math.PI + 0.02, down)
+      } else if (T >= again && T < again + 0.3) {
+        // Up off the stop, and eased back into his time from there.
+        const back = smooth(T, again, again + 0.3)
+        target = [lerp(TOP[0], target[0], back), lerp(TOP[1], target[1], back)]
+        shape = back < 0.5 ? 'open' : shape
+        dir = lerp(Math.PI + 0.02, dir, back)
       }
     }
     // Leaning in close, his hand open and hovering over the drum: rushing or dragging?
     const hover = smooth(T, LEAN + 0.3, LEAN + 1.0)
     if (hover > 0) {
-      target = [lerp(target[0], KX + 0.56, hover), lerp(target[1], KY - 0.28, hover)]
+      target = [lerp(target[0], HOVER[0], hover), lerp(target[1], HOVER[1], hover)]
       shape = 'open'
-      dir = lerp(dir, Math.PI + 0.2, hover)
+      dir = lerp(dir, HOVER_DIR, hover)
     }
     return near(target, dir, shape, inn)
   }
 
-  // Trial three: he leaves the hand and goes for the chair.
-  if (T < 94.2) return blendPose(near(TOP, Math.PI - 0.2, 'open'), rest, smooth(T, STEADY[0] - 0.2, STEADY[0] + 0.5))
+  // Trial three: he takes the hovering hand away and goes for the chair.
+  // (Handed over to the chair while both arms hang at rest, before the reach for it starts.)
+  if (T < 93.6) return blendPose(near(HOVER, HOVER_DIR, 'open'), rest, smooth(T, STEADY[0] - 0.2, STEADY[0] + 0.5))
   if (T < CRASH + 0.4) {
     const grip = chairGrip(T)
     const rightDir = Math.atan2(grip[1] - sh.right[1], grip[0] - sh.right[0])
-    const r = reach(sh.right, grip, rightDir + 0.4, 'open')
+    const r = reach(sh.right, grip, rightDir + 0.4, 'open', CHAIR_SIDE)
     const reachIn = smooth(T, 93.6, 94.3)
     // Both hands on it once it is up; open, and flung on through after it goes.
     const both = smooth(T, 95.0, 95.6) * (T < THROW ? 1 : 0)
-    const l = reach(sh.left, [grip[0] + 0.14, grip[1] + 0.05], rightDir + 0.2, 'open')
+    const l = reach(sh.left, [grip[0] + 0.14, grip[1] + 0.05], rightDir + 0.2, 'open', CHAIR_SIDE)
     if (T < THROW) return { right: blend(rest.right, r, reachIn), left: blend(rest.left, l, both) }
     const after = smooth(T, THROW, THROW + 0.18)
     const through: Pose = { right: arm(-0.35, 0.3, 0.1, 'open'), left: arm(-0.15, 0.2, 0.05, 'open') }
-    const settle = smooth(T, THROW + 0.5, CRASH + 0.4)
-    return blendPose(blendPose({ right: r, left: l }, through, after), rest, settle * 0.6)
+    // Then both arms come all the way down to his sides, slowly, by the time the counts begin.
+    const down = settle((T - (THROW + 0.35)) / (CRASH + 0.4 - THROW - 0.35))
+    return blendPose(blendPose({ right: r, left: l }, through, after), rest, down)
   }
 
   // The counts: his open palm raised by Andrew's ear, chopping down with him on one, two, three; on four a wind-up,
-  // high and back, and the palm slapped down flat on the hoop by his ear.
+  // high over his head, and the palm swung down round the outside, out past his shoulder, and slapped flat on the
+  // hoop by his ear. (Straight down, the wrist's line ran through his shoulder and the arm flipped over it.) It rests
+  // there a moment and lifts off slowly back the way it came, settling over Andrew for the next count. After the
+  // last slap it stays on the hoop: the time of trial four takes it from there.
   const counting = (): Pose => {
     const raise = smooth(T, 100.3, 101.1)
     let target: Pt = [...RAISED]
@@ -345,17 +419,21 @@ export function fletcherPose(T: number): Pose {
     }
     for (const s of [SLAP1, SLAP2, SLAP3]) {
       const wind = smooth(T, s - 0.6, s - 0.14) * (1 - smooth(T, s - 0.12, s))
-      const hit = smooth(T, s - 0.1, s) * (1 - smooth(T, s + 0.45, s + 1.1))
+      const release = s === SLAP3 ? 0 : settle((T - (s + 0.3)) / 1.0)
+      const hit = smooth(T, s - 0.1, s) * (1 - release)
       target = [target[0] + 0.14 * wind, target[1] - 0.34 * wind]
-      target = [lerp(target[0], HOOP[0], hit), lerp(target[1], HOOP[1], hit)]
-      dir = lerp(dir - 0.3 * wind, Math.PI + 0.05, hit)
+      if (hit > 0) target = swing(sh.right, target, HOOP, hit)
+      // The hand turns with the swing, the short way, from fingers up to flat on the hoop.
+      const from = dir - 0.3 * wind
+      dir = from + wrapAngle(Math.PI + 0.05 - from) * hit
     }
     return near(target, dir, 'open', raise)
   }
   if (T < WITH[0] - 0.3) return counting()
 
-  // Trial four: in time with him, stroke for stroke, to the last stop; then his far hand points him off, at Tanner.
-  if (T < POINT + 1.3) {
+  // Trial four: in time with him, stroke for stroke, to the last stop; then his far hand points him off, at Tanner,
+  // and both arms come down to his sides, slowly, as he turns to walk back.
+  if (T < POINT_DOWN + POINT_SETTLE) {
     const inn = smooth(T, WITH[0] - 0.3, WITH[0])
     let target = patHand(T, onBeat)
     let shape: HandShape = 'beat'
@@ -370,7 +448,7 @@ export function fletcherPose(T: number): Pose {
     let pose = blendPose(counting(), near(target, dir, shape), inn)
     const point = smooth(T, POINT - 0.2, POINT + 0.05)
     if (point > 0) pose = { ...pose, left: blend(pose.left, pointFrom(sh.left, into(TANNER_ASIDE)), point) }
-    return pose
+    return blendPose(pose, rest, settle((T - POINT_DOWN) / POINT_SETTLE))
   }
 
   // Walking back to his podium.
@@ -394,7 +472,7 @@ function pointFrom(shoulder: Pt, target: Pt): ArmPose {
 }
 
 function blend(a: ArmPose, b: ArmPose, u: number): ArmPose {
-  return blendPose({ left: a, right: a }, { left: b, right: b }, easeInOutSine(clamp(u))).left
+  return mixArm(a, b, easeInOutSine(clamp(u)))
 }
 
 /* ------------------------------------------------------------------ the chair */

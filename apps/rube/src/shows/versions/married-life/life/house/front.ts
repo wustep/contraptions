@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha, frame, hash, scenery, smooth } from '../kit'
+import { CARD_ZONE, CREDITS_AT, LAST_GONE, LIFT } from '../credits'
 import { AGE } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawHouse, dusk, type Look } from './front-house'
@@ -62,6 +63,23 @@ function sky(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   ctx.restore()
 }
 
+/**
+ * How far a star at (x, y) is put out by the credits: 1 under a card while the cards are up, 0 clear of them. The page
+ * sets the cards in the 16:9 box round the camera (lifted into the sky a taller stage shows over it), so their place
+ * in cells follows from the frame; the edges are soft, and the stars drift through them slowly as the camera draws
+ * back, so none pops.
+ */
+function underCards(p: p5, k: number, f: ReturnType<typeof frame>, T: number): (x: number, y: number) => number {
+  const up = smooth(T, CREDITS_AT - 0.5, CREDITS_AT + 0.3) * (1 - smooth(T, LAST_GONE - 0.2, LAST_GONE + 1.2))
+  if (up <= 0) return () => 0
+  const boxH = Math.min(p.width / (16 / 9), p.height) / k
+  const boxW = (boxH * 16) / 9
+  const extra = Math.max(0, (f.y1 - f.y0 - boxH) / 2)
+  const foot = f.cy - boxH / 2 + CARD_ZONE.foot * boxH - LIFT * extra
+  const half = CARD_ZONE.half * boxW
+  return (x, y) => up * (1 - smooth(Math.abs(x - f.cx), half, half + 0.05 * boxW)) * (1 - smooth(y, foot, foot + 0.05 * boxH))
+}
+
 /** The evening star first, on its note; then the others, one by one as the dark comes: small and still, high over the house. */
 function stars(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   if (T < STAR.on) return
@@ -75,12 +93,13 @@ function stars(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void {
   p.circle(sx * k, sy * k, 0.36 * k)
   p.fill(alpha(p, '#FFF6E0', 0.95 * on))
   p.circle(sx * k, sy * k, (0.14 + 0.03 * Math.exp(-s / 0.5)) * k)
+  const cards = underCards(p, k, f, T)
   for (let i = 0; i < 90; i++) {
     const x = -26 + hash(i, 71) * 64
     const y = -17.5 + hash(i, 72) * 13
     if (x < f.x0 - 1 || x > f.x1 + 1 || y < f.y0 - 1 || y > f.y1 + 1) continue
-    const a = smooth(T, STAR.on + 1.5 + hash(i, 73) * 12, STAR.on + 3 + hash(i, 73) * 12) * smooth(d, 0.5, 0.7)
-    if (a <= 0) continue
+    const a = smooth(T, STAR.on + 1.5 + hash(i, 73) * 12, STAR.on + 3 + hash(i, 73) * 12) * smooth(d, 0.5, 0.7) * (1 - cards(x, y))
+    if (a <= 0.002) continue
     const r = 0.025 + hash(i, 74) * 0.03
     p.fill(alpha(p, '#FFF3D6', 0.7 * a))
     p.circle(x * k, y * k, 2 * r * k)
@@ -102,6 +121,20 @@ function ground(p: p5, k: number, f: ReturnType<typeof frame>, T: number): void 
   band(G + 0.24, G + 0.55, mixHex(HOME.stone, '#B8AD9A', L.age))
   band(G + 0.55, G + 0.66, mixHex('#9C9282', '#8E8578', L.age))
   band(G + 0.66, Math.max(G + 0.66, f.y1 + 1), mixHex('#77716B', '#6C6862', L.age))
+  // At dusk the road deepens toward us, out of the lamps' reach: on a phone held upright the picture's lower half is
+  // road, and it read as one flat grey slab.
+  if (L.dark > 0 && f.y1 > G + 0.66) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const n = parseInt(HOME.night.slice(1), 16)
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+    ctx.save()
+    const g = ctx.createLinearGradient(0, (G + 0.66) * k, 0, f.y1 * k)
+    g.addColorStop(0, `rgba(${rgb}, 0)`)
+    g.addColorStop(1, `rgba(${rgb}, ${0.6 * L.dark})`)
+    ctx.fillStyle = g
+    ctx.fillRect(x0 * k, (G + 0.66) * k, (x1 - x0) * k, (f.y1 + 1 - G - 0.66) * k)
+    ctx.restore()
+  }
 }
 
 /** A street lamp: an iron post and a lantern; lit on its note, the glass warm and a soft pool of light round it. */

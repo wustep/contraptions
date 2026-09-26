@@ -32,11 +32,15 @@ export const FUNERAL_AT: Pt = [SEATED[0] + 0.5, SEATED[1]]
 /* ------------------------------------------------------------------ the clock */
 
 /**
- * He leans forward to get up as the grey morning comes up, and lets himself down off the seat to the floor (on the
- * phrase's strong onset, 192.052). An old man: he has the whole of the walk to take slowly (under 0.6 cells a second
- * in the aisle, about 0.65 at most out of the doors, slower than he climbed the hill), so he goes early.
+ * He leans forward to get up as the grey morning comes up, and lets himself down off the seat to the floor (landing on
+ * the phrase's strong onset, 192.052). An old man: the seat is twice his height above the floor, so he takes it at
+ * under half a cell a second, all the way from the seat's edge to the floor; then the whole of the walk slowly (under
+ * 0.6 cells a second in the aisle, about 0.65 at most out of the doors, slower than he climbed the hill), so he goes
+ * early.
  */
-const LEAN = 191.0
+const LEAN = 190.1
+/** He starts to slide forward off the seat (after the lean has begun), and is on the floor on DOWN. */
+const MOVE = 190.3
 const DOWN = 192.052
 /** He walks from the pew to the porch under the tower, and stands there. */
 const WALK = 192.2
@@ -65,16 +69,52 @@ function stepY(x: number): number {
   return y - 0.13
 }
 
+/**
+ * Off the pew: forward to the seat's edge first, then down its front to the floor, one unbroken move. The path's shape
+ * is `offPew(u)`; he goes along it at an even pace (`DESCENT` cells a second) that he eases into as he tips forward and
+ * out of onto the floor, so the drop of twice his height is let down, never fallen.
+ */
+const offPew = (u: number): Pt => [
+  SEATED[0] + (STOOD[0] - SEATED[0]) * smooth(u, 0, 0.6),
+  SEATED[1] + (STOOD[1] - SEATED[1]) * smooth(u, 0.14, 1),
+]
+/** The path's arc length at each of its samples (u = i / N). */
+const OFF_N = 240
+const offLen: number[] = [0]
+for (let i = 1; i <= OFF_N; i++) {
+  const [ax, ay] = offPew((i - 1) / OFF_N)
+  const [bx, by] = offPew(i / OFF_N)
+  offLen.push(offLen[i - 1] + Math.hypot(bx - ax, by - ay))
+}
+/** The easing into and out of the even pace (s), and the pace that fits the path into MOVE → DOWN. */
+const RAMP_IN = 0.5
+const RAMP_OUT = 0.42
+const DESCENT = offLen[OFF_N] / (DOWN - MOVE - (RAMP_IN + RAMP_OUT) / 2)
+/** How far along the path (cells) he is at show time T: raised-cosine ramps either side of the even pace. */
+function offDist(T: number): number {
+  const t = Math.max(0, Math.min(DOWN - MOVE, T - MOVE))
+  const D = DOWN - MOVE
+  const rampIn = (x: number) => DESCENT * (x / 2 - (RAMP_IN / (2 * Math.PI)) * Math.sin((Math.PI * x) / RAMP_IN))
+  if (t <= RAMP_IN) return rampIn(t)
+  const flat = D - RAMP_IN - RAMP_OUT
+  if (t <= RAMP_IN + flat) return rampIn(RAMP_IN) + DESCENT * (t - RAMP_IN)
+  // The ramp out mirrors a ramp in, counted back from the landing.
+  const back = D - t
+  const rampOut = (x: number) => DESCENT * (x / 2 - (RAMP_OUT / (2 * Math.PI)) * Math.sin((Math.PI * x) / RAMP_OUT))
+  return offLen[OFF_N] - rampOut(back)
+}
+function offPewAt(T: number): Pt {
+  const d = offDist(T)
+  let i = 1
+  while (i < OFF_N && offLen[i] < d) i++
+  const f = (d - offLen[i - 1]) / Math.max(1e-9, offLen[i] - offLen[i - 1])
+  return offPew((i - 1 + Math.max(0, Math.min(1, f))) / OFF_N)
+}
+
 /** Carl, in the church's cells, at show time T. */
 function carl(T: number): Pt {
-  if (T < LEAN) return SEATED
-  if (T < DOWN) {
-    // Forward to the seat's edge first, then down: an old man letting himself off a pew.
-    const u = (T - LEAN) / (DOWN - LEAN)
-    const x = SEATED[0] + (STOOD[0] - SEATED[0]) * ease(u, 0, 0.75)
-    const y = SEATED[1] + (STOOD[1] - SEATED[1]) * ease(u, 0.28, 1)
-    return [x, y]
-  }
+  if (T < MOVE) return SEATED
+  if (T < DOWN) return offPewAt(T)
   if (T < WALK) return STOOD
   if (T < OUT) return [aisle(Math.min(T, HALT)), 0]
   const x = out(Math.min(T, CUT.home))
@@ -192,7 +232,7 @@ function drawRope(p: p5, k: number, weight: number, T: number): void {
 }
 
 function lane(begin: number, end: number, at: Pt): Seg[] {
-  const marks = [begin, LEAN, DOWN, WALK, HALT, OUT, end].filter((s) => s >= begin && s <= end)
+  const marks = [begin, MOVE, DOWN, WALK, HALT, OUT, end].filter((s) => s >= begin && s <= end)
   const cuts = [...new Set(marks)].sort((a, b) => a - b)
   const segs: Seg[] = []
   const local = (T: number): Pt => {
@@ -204,7 +244,7 @@ function lane(begin: number, end: number, at: Pt): Seg[] {
     const b = cuts[i + 1]
     if (b - a < 1e-6) continue
     // Where he sits or stands still, one piece; where he moves, short ones.
-    const still = (a >= begin && b <= LEAN) || (a >= DOWN && b <= WALK) || (a >= HALT && b <= OUT)
+    const still = (a >= begin && b <= MOVE) || (a >= DOWN && b <= WALK) || (a >= HALT && b <= OUT)
     segs.push(...carried((t) => local(t + begin), a - begin, b - begin, still ? 1 : Math.max(1, Math.ceil((b - a) / 0.02))))
   }
   return segs
@@ -261,8 +301,9 @@ export const funeral = part<FuneralState>(
     const at = FUNERAL_AT
     const key = (t: number, cells: number, x: number, y: number) => ({ t, cells, hold: [x - at[0], y - at[1]] as Pt, w: 1 })
     return [
-      // Off him to the altar: the kiss's framing, with nobody in it, and him at its edge, still in the pew.
-      key(191.2, 3.6, 0.3, -0.66),
+      // Off him to the altar across the dawn, slowly: the kiss's framing, with nobody in it, and him in its right
+      // side. It arrives as he comes down off the pew, and turns with him.
+      key(192.0, 3.55, 0.85, -0.68),
       // With him, slowly, as he gets up and goes down the aisle.
       key(193.6, 4.0, 1.5, -0.88),
       // Into the porch with him, the rope hanging beside the doors.

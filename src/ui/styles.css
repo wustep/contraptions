@@ -108,7 +108,8 @@ body.bare { grid-template-columns: minmax(0, 1fr) 0; }
 body.bare #panel,
 body.bare .panel-peek,
 body.bare .crumb,
-body.bare .stage-play { display: none; }
+body.bare .stage-play,
+body.bare .stage-note { display: none; }
 
 /* The way back out of a view opened over the show, in the stage's top left
    corner: the peek tab's opposite number, in the same dress. It is on the
@@ -403,6 +404,9 @@ input[type='range'] {
   margin: 0;
   background: transparent;
   cursor: pointer;
+  /* A finger on a dial or the scrub must not become a pan of the panel:
+     that ends in pointercancel and the drag dies mid-way. */
+  touch-action: none;
 }
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
@@ -491,6 +495,11 @@ button kbd {
 }
 button.primary { background: var(--accent); border-color: var(--accent); color: #1a1409; font-weight: 600; }
 button.primary:hover { background: #ffc63d; border-color: #ffc63d; }
+/* A key cap is a promise of a key. On a touch screen with no keyboard there
+   is none to press, and the caps only crowd the buttons. */
+@media (hover: none) and (pointer: coarse) {
+  button kbd { display: none; }
+}
 button.primary kbd { background: rgba(0, 0, 0, 0.14); border-color: rgba(0, 0, 0, 0.25); color: #4d3c0e; }
 button.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 button.ok { color: #8fd8a0; border-color: #3c5a44; }
@@ -563,13 +572,18 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
     top: auto;
     right: auto;
     left: 50%;
-    bottom: 0;
+    /* Sit above the home indicator; stage-play already does. */
+    bottom: env(safe-area-inset-bottom, 0px);
     /* `translate`, not `transform`: the press nudge is a transform, and
        would steal this centering — the tab jumps off-center on tap. */
     translate: -50% 0;
     border-radius: 8px 8px 0 0;
     border-right: 1px solid var(--line);
     border-bottom: none;
+  }
+  /* The stacked panel's foot clears the home indicator too. */
+  #panel {
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -601,6 +615,36 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 .stage-play:hover { background: #22201a; border-color: var(--accent); }
 .stage-play svg { width: 13px; height: 13px; fill: currentColor; display: block; }
+
+/* A show (or a Playground shelf) on its way, or one that would not come:
+   said on the stage, in the play button's place and dress, since the panel
+   starts hidden. A load that lands quickly never shows it: it fades in after
+   a beat. */
+.stage-note {
+  position: absolute;
+  left: 50%;
+  bottom: max(11%, calc(env(safe-area-inset-bottom) + 28px));
+  z-index: 20;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--dim);
+  font-size: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: stage-note-in 200ms ease-out 450ms both;
+}
+.stage-note.bad { color: #f0a08a; border-color: #5a3c34; padding: 5px 5px 5px 16px; animation-delay: 0s; }
+.stage-note button { flex: none; padding: 4px 11px; border-radius: 999px; }
+@keyframes stage-note-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .stage-note { animation-duration: 1ms; }
+}
 
 /* A show's end credits: the page's words over the frame, since the canvas
    sets none. Placed and faded by the player (`renderWords`); sized in --u, a
@@ -638,11 +682,15 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 .stage-words .cast .who { text-align: right; }
 .stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
-/* The ball they are: a small disc with the show's ink edge, sitting on the line. */
+/* The ball they are: a small disc with the show's ink edge, sitting on the line. The panel's `.swatch` (padding and a
+   2px border) would make it 18px on any stage; here it is 0.78em whole, its gold ring a share of the card's unit, as
+   a saved video paints it (words.ts). */
 .stage-words .cast .swatch {
   display: inline-block;
   width: 0.78em;
   height: 0.78em;
+  padding: 0;
+  border: calc(var(--u) * 0.28) solid currentColor;
   margin-right: 0.45em;
   border-radius: 50%;
   vertical-align: -0.08em;
@@ -759,7 +807,8 @@ a.more:hover { color: var(--accent); }
 /* The byline is on every panel, pinned last once a mode has filled the
    middle. order keeps it there if something is added after it. margin-top
    auto holds it to the bottom when the sections stop short; sticky keeps
-   that foot in view when they run long. */
+   that foot in view when they run long on the desktop sidebar. On mobile
+   (max-width 820px) sticky is cleared so it scrolls with the panel. */
 .byline {
   order: 2;
   position: sticky;
@@ -773,6 +822,12 @@ a.more:hover { color: var(--accent); }
   font-size: 11px;
   line-height: 1.4;
   border-top: 1px solid var(--line-soft);
+}
+/* On mobile the panel is a short scrolling strip under the stage. Sticky
+   pinned the byline over the Shows controls; let it scroll with the rest.
+   After the rule above, which it has to beat at the same specificity. */
+@media (max-width: 820px) {
+  .byline { position: static; }
 }
 .byline a { color: inherit; text-decoration: none; }
 .byline a:hover { color: var(--text); text-decoration: underline; }

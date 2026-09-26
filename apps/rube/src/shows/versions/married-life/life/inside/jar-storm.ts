@@ -164,20 +164,25 @@ const DROOP = 0.45
 
 /**
  * The crown's own masses, drawn as the yard's big tree is (shade first, the lit masses over it, no outline): [x, y, rx,
- * ry, lit]. Round (11.85, -12.5); the roof hides the lowest.
+ * ry, lit]. An old tree's broad dome round (12.1, -12.4), about 8.8 cells across, overhanging both slopes of the roof
+ * (the roof hides the lowest lobes on the left, where it stands higher); its top at about y -14.35, inside the storm's
+ * wide (17.2 cells round y -5.95), and its lowest lobes low enough to show at the top of the close frames.
  */
 const CROWN: [number, number, number, number, number][] = [
-  [11.35, -11.55, 1.0, 0.7, 0], [12.6, -11.45, 0.95, 0.65, 0], [11.95, -12.65, 1.35, 0.95, 0], [12.95, -12.75, 0.72, 0.6, 0],
-  [11.45, -13.45, 0.8, 0.6, 0], [12.35, -13.8, 0.95, 0.65, 0],
-  [11.75, -13.3, 0.78, 0.5, 1], [12.65, -13.55, 0.58, 0.4, 1], [12.4, -12.35, 0.68, 0.45, 1], [11.3, -12.05, 0.52, 0.36, 1],
-  [12.95, -11.65, 0.45, 0.3, 1],
+  [12.1, -12.55, 2.1, 1.35, 0], [10.2, -12.35, 1.35, 0.95, 0], [14.0, -12.3, 1.4, 0.95, 0], [8.9, -11.2, 1.1, 0.72, 0],
+  [15.35, -10.75, 1.1, 0.7, 0], [9.9, -11.1, 0.9, 0.6, 0], [14.3, -11.0, 0.95, 0.6, 0], [11.0, -13.55, 1.2, 0.78, 0],
+  [13.1, -13.6, 1.15, 0.72, 0], [9.4, -12.9, 0.85, 0.6, 0], [14.9, -12.7, 0.9, 0.62, 0], [12.1, -13.75, 0.8, 0.55, 0],
+  [16.1, -11.2, 0.6, 0.45, 0], [8.1, -11.75, 0.55, 0.4, 0],
+  [11.0, -13.45, 0.85, 0.5, 1], [12.9, -13.5, 0.8, 0.45, 1], [9.9, -12.6, 0.8, 0.5, 1], [12.2, -12.4, 0.95, 0.55, 1],
+  [14.2, -12.45, 0.8, 0.5, 1], [9.0, -11.45, 0.6, 0.38, 1], [15.2, -11.1, 0.62, 0.38, 1], [11.3, -11.75, 0.6, 0.36, 1],
+  [13.5, -11.5, 0.55, 0.34, 1],
 ]
 /**
  * The limb's own masses, riding with it: [along it from its butt, across it (up-left), rx, ry, lit]. They are the
  * crown's left side, and it stands thinner there once they have gone.
  */
 const LIMB_LEAVES: [number, number, number, number, number][] = [
-  [0.98, 0.94, 0.8, 0.58, 0], [1.82, 0.82, 0.62, 0.42, 0], [0.31, 0.35, 0.55, 0.36, 1], [0.69, 0.93, 0.5, 0.32, 1],
+  [0.98, 0.94, 0.95, 0.66, 0], [1.9, 0.86, 0.75, 0.5, 0], [0.31, 0.35, 0.62, 0.4, 1], [0.69, 0.98, 0.6, 0.38, 1],
 ]
 const SHADE = mixHex(HOME.leaf, INK, 0.18)
 const LIT = mixHex(HOME.leaf, HOME.grass, 0.45)
@@ -231,9 +236,19 @@ function boughs(p: p5, c: Ctx, T: number): void {
   p.stroke(alpha(p, INK, 0.75))
   p.strokeWeight(weight * 0.7)
   p.fill(mixHex(mixHex(HOME.bark, INK, 0.2 * storm), '#D8DEDC', 0.5 * Math.min(1, flash) ** 2))
-  p.quad(x(11.72, -9.8), -9.8 * k, x(12.3, -9.8), -9.8 * k, x(12.28, -12.3), -12.3 * k, x(11.98, -12.3), -12.3 * k)
-  p.quad(x(12.0, -12.0), -12.0 * k, x(12.2, -12.1), -12.1 * k, x(12.95, -13.35), -13.35 * k, x(12.85, -13.4), -13.4 * k)
-  p.quad(x(12.05, -12.1), -12.1 * k, x(12.25, -12.2), -12.2 * k, x(12.2, -13.9), -13.9 * k, x(12.1, -13.9), -13.9 * k)
+  // A thick old trunk up from behind the roof (showing between the ridge and the crown), and the boughs it spreads
+  // into, out under both sides of the crown.
+  const limbTo = (x0: number, y0: number, w0: number, x1: number, y1: number, w1: number): void => {
+    const a = Math.atan2(y1 - y0, x1 - x0)
+    const nx = -Math.sin(a)
+    const ny = Math.cos(a)
+    p.quad(x(x0 + nx * w0, y0 + ny * w0), (y0 + ny * w0) * k, x(x1 + nx * w1, y1 + ny * w1), (y1 + ny * w1) * k,
+      x(x1 - nx * w1, y1 - ny * w1), (y1 - ny * w1) * k, x(x0 - nx * w0, y0 - ny * w0), (y0 - ny * w0) * k)
+  }
+  limbTo(9.4, -11.75, 0.1, 12.0, -11.5, 0.2)
+  limbTo(14.8, -11.65, 0.1, 12.2, -11.45, 0.2)
+  limbTo(13.4, -13.3, 0.08, 12.2, -12.0, 0.17)
+  limbTo(12.1, -9.8, 0.46, 12.15, -12.5, 0.26)
 }
 
 /* ------------------------------------------------------------------ the great limb */
@@ -279,12 +294,16 @@ function limbPose(T: number): LimbPose | null {
   return { butt: [ROOT[0], ROOT[1] + SINK * q], ang: REST + HAUL - DROOP * q, inside: 'none' }
 }
 
-/** A point along the limb, `s` of its length out from its butt, `side` across it (up-left positive). */
+/** A point along the limb, `s` of its length out from its butt, `side` across it (up-left positive). It bows a little. */
 function along(pose: LimbPose, s: number, side = 0): [number, number] {
   const c = Math.cos(pose.ang)
   const n = Math.sin(pose.ang)
-  return [pose.butt[0] + c * LEN * s - n * side, pose.butt[1] + n * LEN * s + c * side]
+  const q = side + 0.12 * Math.sin(Math.PI * Math.min(1, Math.max(0, s)))
+  return [pose.butt[0] + c * LEN * s - n * q, pose.butt[1] + n * LEN * s + c * q]
 }
+
+/** The limb's half-width `s` of its length out: a heavy butt (0.3) tapering fast at first, then slowly to its tip. */
+const girth = (s: number): number => 0.045 + 0.255 * Math.pow(1 - s, 1.5)
 
 function limb(p: p5, c: Ctx, T: number, pose: LimbPose): void {
   const { k, weight } = c
@@ -294,19 +313,27 @@ function limb(p: p5, c: Ctx, T: number, pose: LimbPose): void {
   p.stroke(alpha(p, INK, 0.9))
   p.strokeWeight(weight * 0.8)
   p.fill(mixHex(mixHex(HOME.bark, INK, 0.15 * wet), '#D8DEDC', 0.5 * Math.min(1, flash) ** 2))
-  // The limb: a tapering bough with one side branch.
+  // The limb: a heavy bough, bowed a little, tapering to its end, with two side branches carrying leaves.
   p.beginShape()
-  const n = 10
-  for (let i = 0; i <= n; i++) { const s = i / n; const [px, py] = along(pose, s, 0.2 * (1 - s) + 0.04); p.vertex(x(px), x(py)) }
-  for (let i = n; i >= 0; i--) { const s = i / n; const [px, py] = along(pose, s, -(0.2 * (1 - s) + 0.04)); p.vertex(x(px), x(py)) }
+  const n = 14
+  for (let i = 0; i <= n; i++) { const s = i / n; const [px, py] = along(pose, s, girth(s)); p.vertex(x(px), x(py)) }
+  for (let i = n; i >= 0; i--) { const s = i / n; const [px, py] = along(pose, s, -girth(s)); p.vertex(x(px), x(py)) }
   p.endShape(p.CLOSE)
-  const [bx, by] = along(pose, 0.72)
-  const [ex, ey] = along(pose, 0.84, 0.75)
   p.strokeWeight(weight * 0.6)
-  p.quad(x(bx - 0.05), x(by - 0.03), x(bx + 0.05), x(by + 0.03), x(ex + 0.02), x(ey + 0.01), x(ex - 0.02), x(ey - 0.01))
-  // The leaves at its end, in soft lobed masses of different sizes, no outline, heavier and darker in the rain.
+  for (const [s0, s1, side, w] of [[0.6, 0.8, 0.8, 0.07], [0.72, 0.9, -0.62, 0.055]] as [number, number, number, number][]) {
+    const [bx, by] = along(pose, s0)
+    const [ex, ey] = along(pose, s1, side)
+    const a = Math.atan2(ey - by, ex - bx)
+    const nx = -Math.sin(a)
+    const ny = Math.cos(a)
+    p.quad(x(bx + nx * w), x(by + ny * w), x(ex + nx * 0.02), x(ey + ny * 0.02), x(ex - nx * 0.02), x(ey - ny * 0.02), x(bx - nx * w), x(by - ny * w))
+  }
+  // The leaves at its end and on its branches, in soft lobed masses of different sizes, no outline, darker in the rain.
   p.noStroke()
-  const clumps: [number, number, number][] = [[0.8, -0.2, 0.52], [0.9, 0.2, 0.44], [0.99, -0.04, 0.36], [0.86, 0.74, 0.4], [0.94, 0.95, 0.28], [0.74, 0.34, 0.3]]
+  const clumps: [number, number, number][] = [
+    [0.8, -0.3, 0.86], [0.9, 0.3, 0.8], [0.99, -0.05, 0.66], [0.83, 0.78, 0.7], [0.93, 0.98, 0.52], [0.72, 0.2, 0.56],
+    [0.88, -0.62, 0.5],
+  ]
   clumps.forEach(([s, side, r], ci) => {
     const [lx, ly] = along(pose, s, side)
     p.fill(leafTone(mixHex(HOME.leaf, '#5E8A4C', hash(ci, 2, 1)), T))
@@ -314,8 +341,8 @@ function limb(p: p5, c: Ctx, T: number, pose: LimbPose): void {
     const lobes = 7 + (ci % 3)
     for (let i = 0; i < lobes * 4; i++) {
       const a = (i / (lobes * 4)) * Math.PI * 2
-      const bump = 0.78 + 0.22 * Math.abs(Math.sin((a * lobes) / 2)) + 0.08 * (hash(ci, i, 5) - 0.5)
-      p.vertex(x(lx + Math.cos(a) * r * 0.62 * bump), x(ly + Math.sin(a) * r * 0.46 * bump))
+      const bump = 0.86 + 0.14 * Math.abs(Math.sin((a * lobes) / 2)) + 0.06 * (hash(ci, i, 5) - 0.5)
+      p.vertex(x(lx + Math.cos(a) * r * 0.66 * bump), x(ly + Math.sin(a) * r * 0.5 * bump))
     }
     p.endShape(p.CLOSE)
   })
@@ -385,14 +412,17 @@ function holes(p: p5, c: Ctx, T: number): void {
   for (let i = 0; i <= n; i++) p.vertex(x(HOLE.x0 + (i / n) * (HOLE.x1 - HOLE.x0)), x(HOLE.y - 0.13 - 0.05 * hash(i, 1, 1)))
   for (let i = n; i >= 0; i--) p.vertex(x(HOLE.x0 + (i / n) * (HOLE.x1 - HOLE.x0)), x(HOLE.y + 0.02 + 0.07 * hash(i, 2, 1)))
   p.endShape(p.CLOSE)
-  // Plaster teeth and lath hanging down round the break.
-  p.fill(mixHex(HOME.nursery, HOME.stone, 0.4))
-  p.stroke(alpha(p, INK, 0.6))
-  p.strokeWeight(weight * 0.45)
-  for (let i = 0; i < 5; i++) {
-    const tx = HOLE.x0 - 0.08 + i * 0.3 + hash(i, 3, 1) * 0.08
-    const d = 0.08 + 0.12 * hash(i, 4, 1)
-    p.triangle(x(tx), x(HOLE.y), x(tx + 0.12), x(HOLE.y), x(tx + 0.05), x(HOLE.y + d))
+  // Broken plaster hanging from the break's edge, inside its span, until the first board swings up over it.
+  const teeth = 1 - clamp01(boardAt(T, 0))
+  if (teeth > 0.01) {
+    p.fill(alpha(p, mixHex(HOME.nursery, HOME.stone, 0.4), teeth))
+    p.stroke(alpha(p, INK, 0.6 * teeth))
+    p.strokeWeight(weight * 0.45)
+    const TEETH = [[0.1, 0.2, 0.09], [0.46, 0.13, 0.14], [0.74, 0.17, 0.07]]
+    TEETH.forEach(([u, w, d], i) => {
+      const tx = HOLE.x0 + u * (HOLE.x1 - HOLE.x0)
+      p.triangle(x(tx), x(HOLE.y), x(tx + w), x(HOLE.y), x(tx + w * (0.3 + 0.4 * hash(i, 3, 1))), x(HOLE.y + d))
+    })
   }
   // The roof: the gap the limb tore, or (from the last board) its patch of new shingles.
   p.push()
@@ -407,34 +437,78 @@ function holes(p: p5, c: Ctx, T: number): void {
   p.pop()
 }
 
-/** Plaster brought down by the limb: it falls into the nursery, lies there, and is gone by the time it is mended. */
+/**
+ * The plaster the limb brings down: [where it comes to rest from under the hole's middle, its half-length, its
+ * thickness (of its length), its rest angle, how late it falls, where it falls from (from the middle), its speed out of
+ * the hole, its spin]. Chunks of clearly different sizes that land in a heap, overlapping, lying nearly flat.
+ */
+const CHUNKS: [number, number, number, number, number, number, number, number][] = [
+  [0.0, 0.19, 0.4, 0.07, 0, -0.12, 5.3, 6],
+  [-0.15, 0.11, 0.52, -0.2, 0.05, -0.36, 4.7, -8],
+  [0.15, 0.075, 0.6, 0.18, 0.09, 0.3, 4.2, 9],
+  [0.06, 0.045, 0.7, -0.12, 0.14, 0.12, 3.8, -11],
+]
+/** Each chunk's outline, irregular, as [x, y] of unit size (x along its length, y across it). */
+const CHUNK_SHAPES: Pt[][] = CHUNKS.map((_, ci) => {
+  const m = 6 + (ci % 2)
+  return Array.from({ length: m }, (_, i) => {
+    const a = ((i + 0.3 * (hash(ci, i, 11) - 0.5)) / m) * Math.PI * 2
+    const r = 0.8 + 0.28 * hash(ci, i, 12)
+    return [Math.cos(a) * r, Math.sin(a) * r] as Pt
+  })
+})
+/** Plaster dust, pale on the nursery's floor. */
+const DUST = mixHex(HOME.paper, '#F7F2E8', 0.55)
+/** How long a chunk takes to stop sliding once it has landed. */
+const SETTLE = 0.08
+
+/** Plaster brought down by the limb: it falls into the nursery in a heap, on its own dust, and is gone by the time it is mended. */
 function plaster(p: p5, c: Ctx, T: number): void {
   const s0 = T - TREE
   if (s0 < 0 || T > BOARDS[2] + 1.6) return
   const { k, weight } = c
   const x = (u: number) => u * k
   const fade = 1 - smoothstep((T - BOARDS[1]) / (BOARDS[2] + 1.6 - BOARDS[1]))
-  const floor = -3.72
-  const v0 = 5.3
-  const drop = floor - HOLE.y - 0.05
-  const tf = (-v0 + Math.sqrt(v0 * v0 + 2 * G * drop)) / G
-  p.push()
-  p.stroke(alpha(p, INK, 0.5 * fade))
-  p.strokeWeight(weight * 0.4)
-  p.fill(alpha(p, mixHex(HOME.nursery, HOME.stone, 0.4), fade))
-  for (let i = 0; i < 5; i++) {
-    const lag = i * 0.03
+  const floor = INSIDE.groundUp
+  const mid = (HOLE.x0 + HOLE.x1) / 2
+  const y0 = HOLE.y + 0.05
+  const poses = CHUNKS.map(([rest, size, thick, ang, lag, from, v0, spin], ci) => {
+    // Where it rests: its lowest corner (at its rest angle) on the floor.
+    const cs = Math.cos(ang)
+    const sn = Math.sin(ang)
+    const low = Math.max(...CHUNK_SHAPES[ci].map(([u, v]) => sn * u * size + cs * v * size * thick))
+    const yRest = floor - low
+    const tf = (-v0 + Math.sqrt(v0 * v0 + 2 * G * (yRest - y0))) / G
+    // Across, at one speed through the fall, and on after it lands, slowing to rest (so it never jerks sideways).
+    const vx = (rest - from) / (tf + SETTLE)
     const s = Math.max(0, s0 - lag)
-    const px = HOLE.x0 + 0.1 + i * 0.2 + hash(i, 7, 1) * 0.1
-    const size = 0.07 + 0.06 * hash(i, 8, 1)
     const t = Math.min(s, tf)
-    const py = HOLE.y + 0.05 + v0 * t + 0.5 * G * t * t
-    const slide = s > tf ? 0.12 * (1 - Math.exp(-(s - tf) / 0.12)) * (hash(i, 9, 1) - 0.5) * 2 : 0
-    const turn = s < tf ? s * (4 + i) : tf * (4 + i)
+    const px = mid + from + vx * t + (s > tf ? vx * SETTLE * (1 - Math.exp(-(s - tf) / SETTLE)) : 0)
+    const py = s < tf ? y0 + v0 * t + 0.5 * G * t * t : yRest
+    return { ci, px, py, a: ang + spin * (tf - t), size, thick, landed: s >= tf, tf: tf + lag }
+  })
+  p.push()
+  // The dust it lands in: a soft pale smear on the floor under the heap, spreading as it settles.
+  const smear = smoothstep((s0 - poses[0].tf) / 0.5) * fade
+  if (smear > 0.01) {
+    p.noStroke()
+    const spread = 0.75 + 0.25 * smear
+    for (const [w, h, a] of [[1.15, 0.1, 0.12], [0.85, 0.075, 0.16], [0.55, 0.05, 0.2]]) {
+      p.fill(alpha(p, DUST, a * smear))
+      p.ellipse(x(mid + 0.01), x(floor - h * 0.3), x(w * spread), x(h))
+    }
+  }
+  p.stroke(alpha(p, INK, 0.55 * fade))
+  p.strokeWeight(weight * 0.4)
+  for (const { ci, px, py, a, size, thick } of poses) {
+    if (s0 < CHUNKS[ci][4]) continue
+    p.fill(alpha(p, mixHex(HOME.nursery, HOME.stone, 0.3 + 0.12 * ci), fade))
     p.push()
-    p.translate(x(px + slide), x(Math.min(py, floor - size * 0.4)))
-    p.rotate(turn)
-    p.quad(x(-size), x(-size * 0.4), x(size * 0.7), x(-size * 0.5), x(size), x(size * 0.4), x(-size * 0.6), x(size * 0.5))
+    p.translate(x(px), x(py))
+    p.rotate(a)
+    p.beginShape()
+    for (const [u, v] of CHUNK_SHAPES[ci]) p.vertex(x(u * size), x(v * size * thick))
+    p.endShape(p.CLOSE)
     p.pop()
   }
   p.pop()

@@ -189,7 +189,7 @@ function shoulder(arm: Arm, T: number): Pt {
 
 /* ------------------------------------------------------------------ the arms */
 
-interface ArmPose {
+export interface ArmPose {
   grip: Pt
   ang: number
   /** Ghost strokes either side of the stick while it is a blur (the roll). */
@@ -200,9 +200,11 @@ interface ArmPose {
  * The house's right arm through the band's chord and the cut-off: low, the stick up from under the crash's rim (not
  * down onto it from above, where the grip and the stick's butt would sit in the gap between Andrew and Fletcher, by
  * his raised hands). It strikes the rim on the chord, rolls against it under the held chord, and on the cut-off it
- * pins the rim and stops: the cymbal choked, the stick pointing up and away from him, below the two heads.
+ * pins the rim and stops: the cymbal choked, below the two heads. The grip is under the cymbal, left of the rim, the
+ * stick leaning out to it (the lean it held up in the silence): with the grip right of the rim, the steel fist sat on
+ * Fletcher's hanging hand through the whole last image.
  */
-const EDGE: Grip = { grip: [1.505, -1.226], ang: -Math.PI / 2 - 0.3 }
+const EDGE: Grip = { grip: [0.905, -1.233], ang: -Math.PI / 2 + 0.3 }
 const targetOf = (arm: Arm, s: Stroke): Grip => (arm === 'right' && (s.t === CUT || s.t === CHORD_HIT) ? EDGE : TARGETS[arm][s.piece]!)
 
 /** An arm playing its strokes: the rebound and the carry to the next, as the solo's frame plays them. */
@@ -243,7 +245,7 @@ function trembling(arm: Arm, piece: KitPiece, T: number, size: number, phase: nu
 }
 
 /** An arm's pose at `T`, in the kit's frame. */
-function armPose(arm: Arm, T: number): ArmPose {
+export function armPose(arm: Arm, T: number): ArmPose {
   const s = shoulder(arm, T)
   const limp: Grip = { grip: [s[0] + LIMP[arm].off[0], s[1] + LIMP[arm].off[1]], ang: LIMP[arm].ang }
   const w = awake(T)

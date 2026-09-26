@@ -8,12 +8,12 @@ import { KIT_FLOOR, KIT_LAND, type KitPiece } from '../drums'
  * stands still in the middle of it all; the parts are what happens round it, one after the other.
  *
  * The hall itself (`hall.ts`, scenery, the director's) is drawn from show time at the same origin: the back wall and
- * the proscenium, the stage floor, the band on its risers, the piano and the bass, the kit (struck by every part's
+ * the proscenium, the stage floor, the band on its risers, the piano, the kit (struck by every part's
  * `*_KIT` list, gathered in `strokes.ts`), the house in the dark below the stage's lip, and the light.
  *
  * Seen from the house, in elevation, a cell about a foot:
  *
- *   the wings and the stage door (x ≈ -9)  |  piano (-6.5)  |  the kit (snare at -0.5)  |  bass (2.6)  |
+ *   the wings and the stage door (x ≈ -9)  |  piano (-6.5)  |  the kit (snare at -0.5)  |  clear floor  |
  *   Fletcher's podium (4.8)  |  the band on three risers (6.6 to 19)
  *   the stage floor at y = FLOOR; the lip at y = FLOOR + 0.35; the house below.
  */
@@ -38,9 +38,12 @@ export const JIM_DOOR: Pt = [DOOR.x + 0.2, FLOOR - 0.13]
 /** Just out of the doorway, clear of the piano's tail: where he stands to watch his son. */
 export const JIM_WINGS: Pt = [DOOR.x + 1.05, FLOOR - 0.13]
 
-/** The piano (a black grand, side on) and the upright bass: the rest of the rhythm section, beside the kit. */
+/**
+ * The piano (a black grand, side on), the rest of the rhythm section, beside the kit. (There was an upright bass in
+ * its stand between the kit and the podium, with no player: Fletcher crossed it on every trip to the kit, its neck
+ * rising out of his head and its dark body merging with his, so it went in the third polish round.)
+ */
 export const PIANO = { x: -6.05, w: 3.3 }
-export const BASS = { x: 2.7 }
 
 /** The band's three risers, saxophones in front, then trombones, then trumpets, and how high each stands. */
 export const RISERS = [

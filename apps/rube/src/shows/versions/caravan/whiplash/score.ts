@@ -5,7 +5,7 @@ import { box, lay, standing, type Company } from './kit'
 import { BAND, BUILD, BURST, CARNEGIE, DURATION, HUSH, LOUD, QUIET, RUBATO, SOLO, TEMPO } from './music'
 import { CaravanShow } from './show'
 import { ANDREW, CARNEGIE_HALL, CARNEGIE_THEME, ROADS, ROAD_THEME, SHAFFER, SHAFFER_THEME } from './worlds'
-import { practice } from './shaffer/practice'
+import { FLETCHER_OUT_CELLS, fletcherOut, practice } from './shaffer/practice'
 import { band } from './shaffer/band'
 import { tempo } from './shaffer/tempo'
 import { night } from './shaffer/night'
@@ -63,6 +63,10 @@ export function compose(): { show: CaravanShow; camera: (t: number) => Framing }
     { part: finale, end: DURATION },
   ])
 
+  // The practice part's frame (the Shaffer chain's first cell).
+  const px = shaffer.placed[0].col
+  const py = shaffer.placed[0].row
+
   // The Carnegie frame: every Carnegie part enters at this cell (the ball on the snare), and the hall stands on it.
   const origin = carnegie.placed[0]
   const ox = origin.col
@@ -76,7 +80,15 @@ export function compose(): { show: CaravanShow; camera: (t: number) => Framing }
 
   const show = new CaravanShow(
     [
-      { world: SHAFFER, theme: SHAFFER_THEME, scenery: [], chain: shaffer.placed, from: 0 },
+      {
+        world: SHAFFER,
+        theme: SHAFFER_THEME,
+        scenery: [],
+        chain: shaffer.placed,
+        // The practice part's Fletcher on his way out, over the band room's corridor too (its `draw`, after every part).
+        after: [standing(fletcherOut, px, py, FLETCHER_OUT_CELLS.map(([x, y]) => [px + x, py + y] as Pt), null, DURATION)],
+        from: 0,
+      },
       { world: ROADS, theme: ROAD_THEME, scenery: [], chain: road.placed, from: SWITCH.road },
       { world: CARNEGIE_HALL, theme: CARNEGIE_THEME, scenery: [standing(hall, ox, oy, hallCells, { on: true as const }, DURATION)], chain: carnegie.placed, from: SWITCH.carnegie },
     ],

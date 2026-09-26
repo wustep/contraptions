@@ -78,7 +78,7 @@ let releaseSound = (): void => {}
 let joinedAt = 0
 let overview = false
 let zoom = false
-let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
+let size: FrameSize = FRAME_SIZES.find((s) => s.label === '1080p') ?? FRAME_SIZES[FRAME_SIZES.length - 1]
 let recording: AbortController | null = null
 
 // YouTube's player for the music, where a version names its upload. Shown, in the Show card: its terms want it seen.
@@ -311,14 +311,26 @@ bigPlay.addEventListener('click', () => {
 })
 stageRoot.append(bigPlay)
 
+// While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
+// and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
+// not fetch as failed for the life of the page, so asking again here gets the same answer. The address is the show.
+const stageNoteText = el('span')
+const retryBtn = el('button', { type: 'button' }, ['Reload'])
+retryBtn.addEventListener('click', () => location.reload())
+const stageNote = el('div', { class: 'stage-note', role: 'status' }, [stageNoteText, retryBtn])
+stageNote.hidden = true
+stageRoot.append(stageNote)
+
 // The stage is the play button. Not a press on something standing on it, and not the press that only brought the
 // held sound in: that one owed the sound, and the picture keeps going.
-stageRoot.addEventListener('click', (e) => {
-  if (!transport || recording || e.button !== 0) return
+// The stage outlives this visit, so the listener is taken off it on the way out.
+const onStageClick = (e: MouseEvent) => {
+  if (!alive || !transport || recording || e.button !== 0) return
   if (e.target instanceof Element && e.target.closest('button, a, iframe, input')) return
   if (performance.now() - joinedAt < 700) return
   toggle()
-})
+}
+stageRoot.addEventListener('click', onStageClick)
 
 // On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
 // tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
@@ -347,6 +359,8 @@ let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
 const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
+// A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
+window.addEventListener('pointercancel', endScrub)
 const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 playBtn.addEventListener('click', toggle)
 const speedSeg = segmented(SHOW_SPEEDS, (v) => `${v}×`, setSpeed)
@@ -527,6 +541,12 @@ function sync(): void {
     perf?.soundtrack && music.state() === 'failed' ? 'bad' : '',
   )
 
+  // The stage's own word while there is no show on it.
+  stageNote.hidden = !current || !(loading || failed)
+  stageNote.classList.toggle('bad', !!failed)
+  stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
+  retryBtn.hidden = !failed
+
   // The stage's own play button: at the top, at the end, or where the browser is waiting for a press.
   const t = transport?.now() ?? 0
   const atEnd = !!transport && !transport.loop && t >= transport.duration
@@ -657,13 +677,15 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  if (e.key === 'p') {
+  // Letter keys are case-blind: Caps Lock must not silence P, M, O or Z.
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
+  if (key === 'p') {
     shell.toggle()
     return
   }
   // A recording owns the show until it is done or stopped.
   if (recording) return
-  switch (e.key) {
+  switch (key) {
     case ' ':
       e.preventDefault()
       toggle()
@@ -679,11 +701,9 @@ const onKey = (e: KeyboardEvent) => {
       setMuted(!muted)
       break
     case 'o':
-    case 'O':
       if (perf) setOverview(!overview)
       break
     case 'z':
-    case 'Z':
       if (perf) setZoom(!zoom)
       break
     case '1':
@@ -757,7 +777,9 @@ if (import.meta.env.DEV) {
     releaseSound()
     shell.holdPeek(false)
     cancelAnimationFrame(raf)
+    stageRoot.removeEventListener('click', onStageClick)
     window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     recording?.abort()
     music.load(null)

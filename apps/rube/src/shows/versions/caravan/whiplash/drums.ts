@@ -185,16 +185,25 @@ function lacquer(ctx: CanvasRenderingContext2D, x0: number, x1: number, shell: s
 }
 
 
+/**
+ * A rod of the hardware from (x0, y0) to (x1, y1), cells: chrome in shadow edged in its own dark, so a stand's post
+ * reads as a rod and not as a pale line ruled down the frame (in the closes, on a dark wall, it did).
+ */
+function rod(p: p5, c: Ctx, x0: number, y0: number, x1: number, y1: number, w: number): void {
+  const { k, weight } = c
+  p.strokeCap(p.ROUND)
+  p.stroke(edgeOf(HARDWARE))
+  p.strokeWeight(weight * (w + 0.6))
+  p.line(x0 * k, y0 * k, x1 * k, y1 * k)
+  p.stroke(HARDWARE)
+  p.strokeWeight(weight * w)
+  p.line(x0 * k, y0 * k, x1 * k, y1 * k)
+}
+
 /** A stand's post and its three feet, from `top` down to the floor. */
 function stand(p: p5, c: Ctx, x: number, top: number, spread = 0.42): void {
-  const { k, weight } = c
-  p.stroke(HARDWARE)
-  p.strokeWeight(weight * 0.9)
-  p.line(x * k, top * k, x * k, (KIT_FLOOR - 0.38) * k)
-  p.strokeWeight(weight * 0.75)
-  p.line(x * k, (KIT_FLOOR - 0.38) * k, (x - spread) * k, KIT_FLOOR * k)
-  p.line(x * k, (KIT_FLOOR - 0.38) * k, (x + spread) * k, KIT_FLOOR * k)
-  p.line(x * k, (KIT_FLOOR - 0.38) * k, x * k, KIT_FLOOR * k)
+  rod(p, c, x, top, x, KIT_FLOOR - 0.38, 0.9)
+  for (const fx of [x - spread, x + spread, x]) rod(p, c, x, KIT_FLOOR - 0.38, fx, KIT_FLOOR, 0.75)
 }
 
 /** A drum: its shell (with hoops and lugs), its head as a thin ellipse on top, dipping by `dip`. */
@@ -207,15 +216,9 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
   const bottom = d.top + d.depth
   if (mount === 'stand') stand(p, c, d.x, bottom, 0.38)
   if (mount === 'legs') {
-    p.stroke(HARDWARE)
-    p.strokeWeight(weight * 0.8)
-    for (const s of [-1, 1]) p.line((d.x + s * d.w * 0.44) * k, (bottom - 0.2) * k, (d.x + s * d.w * 0.6) * k, KIT_FLOOR * k)
+    for (const s of [-1, 1]) rod(p, c, d.x + s * d.w * 0.44, bottom - 0.2, d.x + s * d.w * 0.6, KIT_FLOOR, 0.8)
   }
-  if (mount === 'mount') {
-    p.stroke(HARDWARE)
-    p.strokeWeight(weight * 0.9)
-    p.line(d.x * k, bottom * k, (KICK.x + 0.1) * k, (KICK.cy - KICK.r + 0.08) * k)
-  }
+  if (mount === 'mount') rod(p, c, d.x, bottom, KICK.x + 0.1, KICK.cy - KICK.r + 0.08, 0.9)
   // The shell: a rectangle with a rounded bottom edge, lit lacquer (a cylinder: dark edges, a warm band, a stripe of
   // light), edged in its own dark.
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -272,9 +275,7 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
   const shake = since >= 0 && since < 0.8 ? 0.012 * Math.exp(-since / 0.1) * Math.sin(since * 70) : 0
   const r = KICK.r * (1 + (since >= 0 && since < 0.5 ? 0.012 * Math.exp(-since / 0.07) : 0))
   // The spurs, out to the floor either side.
-  p.stroke(HARDWARE)
-  p.strokeWeight(weight * 0.8)
-  for (const s of [-1, 1]) p.line((KICK.x + s * r * 0.8) * k, (KICK.cy + r * 0.45) * k, (KICK.x + s * r * 1.12) * k, KIT_FLOOR * k)
+  for (const s of [-1, 1]) rod(p, c, KICK.x + s * r * 0.8, KICK.cy + r * 0.45, KICK.x + s * r * 1.12, KIT_FLOOR, 0.8)
   // The hoop (the shell's lacquer, as a ring, edged in its own dark) and the head inside it.
   const hoop = shade(shell, light)
   solid(p, edgeOf(hoop), weight, mixHex(hoop, KIT.chrome, 0.12))
@@ -312,11 +313,7 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
 function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: boolean): void {
   const { k, weight } = c
   stand(p, c, s.x + (boom ? 0.35 : 0), s.y + 0.25, 0.46)
-  if (boom) {
-    p.stroke(HARDWARE)
-    p.strokeWeight(weight * 0.9)
-    p.line((s.x + 0.35) * k, (s.y + 0.25) * k, s.x * k, (s.y + 0.04) * k)
-  }
+  if (boom) rod(p, c, s.x + 0.35, s.y + 0.25, s.x, s.y + 0.04, 0.9)
   p.push()
   p.translate(s.x * k, s.y * k)
   p.rotate(s.tilt + swing)
@@ -360,9 +357,7 @@ function hat(p: p5, c: Ctx, open: number, since: number, light: number): void {
   const tick = since >= 0 && since < 0.5 ? 0.02 * Math.exp(-since / 0.06) : 0
   stand(p, c, HAT.x, HAT.y, 0.4)
   // The pull rod above the top cymbal.
-  p.stroke(HARDWARE)
-  p.strokeWeight(weight * 0.8)
-  p.line(HAT.x * k, (HAT.y - lift - 0.3) * k, HAT.x * k, HAT.y * k)
+  rod(p, c, HAT.x, HAT.y - lift - 0.3, HAT.x, HAT.y, 0.8)
   const w = HAT.w * k
   const h = 0.07 * k
   const bronze = shade(KIT.bronze, light)
