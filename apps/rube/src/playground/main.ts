@@ -156,11 +156,36 @@ function mountNow(): void {
   view = s
 }
 
+// While the first shelf is on its way, or when one would not come, the stage says so, as Shows' does: the panel
+// starts hidden, and a blank stage reads as broken. A failed shelf is tried again by a reload, since the browser keeps
+// a module that would not fetch as failed for the life of the page. The address is the view.
+const noteText = el('span')
+const reloadBtn = el('button', { type: 'button' }, ['Reload'])
+reloadBtn.addEventListener('click', () => location.reload())
+const note = el('div', { class: 'stage-note', role: 'status' }, [noteText, reloadBtn])
+note.hidden = true
+stage.append(note)
+
+function say(state: 'loading' | 'failed' | null): void {
+  note.hidden = state === null
+  note.classList.toggle('bad', state === 'failed')
+  noteText.textContent = state === 'failed' ? 'The Playground would not load.' : 'Loading the Playground…'
+  reloadBtn.hidden = state !== 'failed'
+}
+
 /** Put the right thing on the stage, once the code it needs is in. */
 function mount(): void {
   const ticket = ++mounting
+  // A view already up stays up while the next one's shelf comes in; only a bare stage needs the word.
+  if (!view) say('loading')
+  const failed = (err: unknown): void => {
+    if (!alive || ticket !== mounting) return
+    console.error(err)
+    say('failed')
+  }
   const go = (): void => {
     if (!alive || ticket !== mounting) return
+    say(null)
     // A piece named without its shelf, or on the wrong one: every shelf is in by now, so look for it.
     if (solo && !stagedAs(world, solo)) {
       const home = [...shelves.values()].find((s) => s.staged[solo!])
@@ -174,14 +199,14 @@ function mount(): void {
   // A piece or a world on a named shelf needs that shelf and no other; the sheet needs them all.
   const named = viewName() !== 'sheet' && world ? loadShelf(world) : null
   if (!named) {
-    void everything.then(go)
+    everything.then(go, failed)
     return
   }
-  void named.then((s) => {
+  named.then((s) => {
     shelves.set(s.world.name, s)
     if (!solo || s.staged[solo]) go()
-    else void everything.then(go)
-  })
+    else everything.then(go, failed)
+  }, failed)
 }
 
 function rebuild(how: Write = 'keep', at = 0): void {
@@ -227,6 +252,11 @@ function step(dir: 1 | -1): void {
     solo = next.name
     world = next.world
     rebuild()
+  }, (err) => {
+    // A shelf that would not come has no piece after this one: the stage says so, and the piece stays.
+    if (!alive) return
+    console.error(err)
+    say('failed')
   })
 }
 
@@ -271,6 +301,8 @@ const seedInput = el('input', { type: 'text', class: 'seed', spellcheck: 'false'
 seedInput.addEventListener('change', () => {
   const next = seedInput.value.trim()
   if (next && next !== seed) reroll(next)
+  // An emptied field is not a seed: the show keeps its own, and the field says it again.
+  else if (!next) seedInput.value = seed
 })
 const rerollBtn = el('button', { class: 'primary', title: 'A new seed: new variants, new maps (R)' }, ['Reroll', el('kbd', {}, ['R'])])
 rerollBtn.addEventListener('click', () => reroll())

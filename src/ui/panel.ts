@@ -149,12 +149,16 @@ export function createPanel(
     'aria-label': 'Seed',
     value: initial.seed,
   })
-  seedInput.addEventListener('change', () => handlers.onChange({ seed: seedInput.value.trim() }))
   const commitSeed = () => {
     const next = seedInput.value.trim()
     const current = lastComp?.options.seed ?? initial.seed
     if (next && next !== current) handlers.onChange({ seed: next })
   }
+  // An emptied field is not a seed: the piece keeps its own, and the field says it again.
+  seedInput.addEventListener('change', () => {
+    commitSeed()
+    if (!seedInput.value.trim()) seedInput.value = lastComp?.options.seed ?? initial.seed
+  })
   const reroll = el('button', { class: 'primary' }, ['Reroll', el('kbd', {}, ['space'])])
   reroll.addEventListener('click', () => {
     commitSeed()
