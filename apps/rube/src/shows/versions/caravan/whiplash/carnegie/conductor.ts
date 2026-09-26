@@ -291,9 +291,8 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
  */
 export function jimAt(t: number): Pt {
   const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
-  // Drawn toward the stage too when the solo's camera and the build's come to him.
+  // Drawn toward the stage too when the solo's camera comes to him.
   const solo = 0.06 * ease(t, 304.2, 305.6) * (1 - ease(t, 307.2, 308.6))
-  const build = 0.06 * ease(t, 396.0, 397.4) * (1 - ease(t, 398.6, 400.0))
-  const lean = hush + solo + build + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
+  const lean = hush + solo + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
   return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
 }

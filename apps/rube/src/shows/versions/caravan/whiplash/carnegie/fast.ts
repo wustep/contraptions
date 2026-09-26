@@ -8,7 +8,7 @@ import type { KitStroke } from '../stub'
 import { HALL, KIT } from '../worlds'
 import { ACCENTS, BIG, BOUNCE, FIRST, FOLD, GO, HOP, HOP_MAX, LAND, LAST, LATCH, SHIFT, SLAM, STOMPS, UNWIND, hopHeight, sunk } from './fast-clock'
 import { BALL_X, LEVER, POST_X, drawEngine, leverTop } from './fast-engine'
-import { ARCH, CLOSE, FLOOR, JIM_WINGS, KIT_AT, RISERS } from './stage'
+import { ARCH, CLOSE, FLOOR, KIT_AT, RISERS } from './stage'
 
 /**
  * Carnegie Hall, the build (369.98 → 423.34): from the hush to the loudest and fastest playing of the solo, and
@@ -28,9 +28,9 @@ import { ARCH, CLOSE, FLOOR, JIM_WINGS, KIT_AT, RISERS } from './stage'
  * belt, the flywheel spinning up) into the roll (383), then up the post to the sticks as the roll runs away. Fletcher
  * gives in (388.2): a two-shot, the engine and his hand coming up to beat with the stomps. On the build's biggest
  * kick (394.62) a second stage: the post telescopes up, a second head swings round off it over the rack tom and
- * seats, and from then its two sticks double the roll's accents on the tom. Across the stage to his father in the
- * wings for the loudest phrase's arrival (396.7), the stage's light lifted on him (`hall.ts` `jimLit`); back to the whole
- * grown machine and Fletcher conducting it with his whole arm. Then in on the peak (404-405), and out to the whole
+ * seats, and from then its two sticks double the roll's accents on the tom. Out from the seat so the loudest phrase's
+ * arrival (396.7) lands on the whole grown machine: both heads doubling the roll, him stomping the treadle, and
+ * Fletcher conducting it with his whole arm, held and drifting. Then in on the peak (404-405), and out to the whole
  * hall in its pool of light, the light up with the music and the band watching from the dark, held; then a hard push
  * in onto the sticks' blur (414.5), and up to him on the treadle with Fletcher's beating hand at the edge of the
  * frame, until the unwind (421.72), when both heads fold away.
@@ -214,9 +214,8 @@ const PUSHED = 414.534
 const KICK_LOW = 381.0
 const ROLL_UP = 386.8
 const TWO_SHOT = 389.1
-/** His father in the wings, on the arrival of the build's loudest phrase (396.70), for one phrase. */
-const JIM_IN = 396.7
-const JIM_OUT = 398.9
+/** The arrival of the build's loudest phrase: the whole grown machine and Fletcher, framed by then. */
+const ARRIVAL = 396.7
 
 function shots(slot: Slot): PartShot[] {
   const close = { cells: CLOSE.cells, hold: CLOSE.hold, w: 1 }
@@ -242,11 +241,11 @@ function shots(slot: Slot): PartShot[] {
     // The second stage: in to the post as it grows and the rack head swings round and seats on the biggest kick.
     { t: TUBE_UP[0] + 0.1, cells: 4.1, hold: [-0.45, -0.6], w: 1 },
     { t: SEAT, cells: 4.4, hold: [-0.6, -0.8], w: 1 },
-    // Across the dark stage to his father in the wings, watching, for the loudest phrase's arrival: by the stage
-    // door his son walked out to, in the stage's spill; a slow push in on him; and back.
-    { t: JIM_IN, cells: 3.6, hold: [JIM_WINGS[0] - 0.6, JIM_WINGS[1] - 0.87], w: 1 },
-    { t: JIM_OUT, cells: 3.15, hold: [JIM_WINGS[0] - 0.35, JIM_WINGS[1] - 0.72], w: 1 },
-    // The whole grown machine, both heads going, and Fletcher conducting it with his whole arm now.
+    // Out from the seat, easing, so the loudest phrase's arrival lands on the whole grown machine: both heads
+    // doubling the roll, him stomping the treadle, and Fletcher conducting it with his whole arm now; held,
+    // drifting a little further out through the phrase.
+    { t: ARRIVAL, cells: 6.6, hold: [1.5, -0.98], w: 1 },
+    { t: 399.0, cells: 6.85, hold: [1.58, -1.08], w: 1 },
     { t: 401.3, cells: 7.2, hold: [1.7, -1.25], w: 1 },
     { t: 402.7, cells: 6.9, hold: [1.55, -1.15], w: 1 },
     // In on the peak: both heads.
