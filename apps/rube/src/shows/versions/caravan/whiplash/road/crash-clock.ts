@@ -20,8 +20,8 @@ import { kick, ring } from './crash-paint'
  *   227.79 to 230.57 in the air, slowly, turning over (the silence between the breaks)
  *   230.57  onto its roof; then end over end, a slam on every break, 230.99 to 233.67
  *   233.99  into a lamp post, on its roof, stopped (the last and loudest break)
- *   234.33  the post's lamp dies; the lamps round the wreck go out one by one
- *   236.36  he drops out of his seat; out under the hood; he crawls, and goes on, alone
+ *   234.33  the post's lamp dies; the lamps round the wreck go out one by one, from the outside in
+ *   236.36  he drops out of his seat, hurt; out under the hood; he crawls, stumbles, and goes on, alone
  *   241.06  the wreck's last headlamp dies; 242.34 he is at rest in the dark: Carnegie Hall
  */
 
@@ -346,17 +346,48 @@ export function him(t: number): Pt {
     const u = smoothstep(t, DROP + 0.35, OUT)
     return [lined[0] + (OUT_X - lined[0]) * u, lined[1] + (OUT_Y - lined[1]) * u]
   }
-  // The crawl: out from under the hood, a stop to gather himself, and on; slowing to rest at the end.
-  const x = crawl(t)
-  return [x, OUT_Y]
+  // The crawl: out from under the hood, in uneven pulls; he tries to rise, stumbles and stops to gather himself;
+  // and on, slowing to rest at the end.
+  return [crawl(uneven(t)), OUT_Y - stumble(t)]
 }
 
-/** His distance along the road from where he comes out: slow, a stop, then on, and at rest on the last beat. */
+/** Where he stumbles: pitched forward and down onto the road, and the stop. */
+const STUMBLE = OUT + 0.95
+
+/**
+ * He pushes up off the road a little, slowly, and his arms give: back down onto it, quicker than he rose, by
+ * `STUMBLE` (cells above the road). Down with no bounce and no jolt: a body settling, not a ball landing.
+ */
+function stumble(t: number): number {
+  const a = STUMBLE - 0.4
+  const top = STUMBLE - 0.13
+  if (t <= a || t >= STUMBLE) return 0
+  if (t < top) return 0.06 * smoothstep(t, a, top)
+  return 0.06 * (1 - smoothstep(t, top, STUMBLE))
+}
+
+/**
+ * The crawl's own time: hand over hand, a pull and a slack, never quite even (two rates at once), laid over the
+ * crawl's plan in its two moving stretches so it starts and ends where the plan does. Never runs backwards.
+ */
+function uneven(t: number): number {
+  const pulls = (t0: number, t1: number, w: number): number => {
+    if (t <= t0 || t >= t1) return 0
+    const tau = t - t0
+    const env = Math.sin((Math.PI * tau) / (t1 - t0)) ** 2
+    const w2 = w * 1.63
+    return env * ((0.4 * Math.sin(w * tau)) / w + (0.18 * Math.sin(w2 * tau + 1.1)) / w2)
+  }
+  return t + pulls(OUT, STUMBLE - 0.4, 2 * Math.PI * 1.6) + pulls(ON, END - 0.5, 2 * Math.PI * 1.85)
+}
+
+/** His distance along the road from where he comes out: slow, the stumble and a stop, then on, and at rest on the last beat. */
 const crawl = (() => {
   const pts: [number, number][] = [
     [OUT, 0],
-    [OUT + 0.95, 0.42],
-    [OUT + 1.5, 0.5],
+    [STUMBLE - 0.13, 0.31],
+    [STUMBLE, 0.42],
+    [OUT + 1.5, 0.47],
     [ON, 0.78],
     [ON + 1.3, 1.9],
     [END - 0.45, 2.85],
@@ -386,13 +417,17 @@ const crawl = (() => {
 
 /* ------------------------------------------------------------------ what dies */
 
-/** The lamps round the wreck, going out one by one after it stops: lamp index → the beat it dies on. */
+/**
+ * The lamps round the wreck, going out one by one after it stops: lamp index → the beat it dies on. The post's
+ * lamp first (the wreck hit it); then from the outside in, so the light closes on him and the wreck: the far ones
+ * first, the one over his crawl, and last the one over the wreck's tail.
+ */
 export const DIES: Map<number, number> = new Map([
   [POST_LAMP, 234.333],
-  [POST_LAMP + 1, 235.947],
-  [POST_LAMP - 1, 237.776],
-  [POST_LAMP + 2, 239.137],
-  [POST_LAMP - 2, 240.192],
+  [POST_LAMP + 2, 235.947],
+  [POST_LAMP - 2, 237.776],
+  [POST_LAMP - 1, 239.137],
+  [POST_LAMP + 1, 240.192],
 ])
 /** The wreck's last headlamp, still burning along the road, dies. */
 export const LAST_LIGHT = 241.059

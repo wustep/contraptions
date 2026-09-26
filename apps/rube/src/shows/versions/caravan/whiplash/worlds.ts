@@ -31,7 +31,10 @@ export const JIM_ID = 98
 /** Carl Tanner, the core drummer Andrew replaces: a dull olive. Only in the band room and at the competition. */
 export const TANNER = '#8C8F66'
 export const TANNER_ID = 97
-/** Blood: one dab on one snare head, in the practice room at night. Nowhere else, ever. */
+/**
+ * Blood: one dab on one snare head, in the practice room at night; and after the crash, one thin streak darkened
+ * toward the road's night across the top of Andrew's head (`road/crash.ts`), to the cut to Carnegie. Nowhere else.
+ */
 export const BLOOD = '#A3231F'
 
 /* ------------------------------------------------------------------ the kit */
