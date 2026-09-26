@@ -303,7 +303,8 @@ export const rocket = part<RocketState>(
     // and the frame goes with it, low, so the pad drops away under it.
     const [hx, hy] = [-0.5, WINDOW]
     return [
-      { t: IGNITION, cells: 10.6, hold: [hx - 0.3, hy - 4.1] },
+      // Thrown wide by the ignition (the push in on the window runs to it, earth/gantry.ts).
+      { t: IGNITION + 0.55, cells: 10.6, hold: [hx - 0.3, hy - 4.1] },
       { t: LIFTOFF + 0.2, cells: 10.8, hold: [hx - 0.1, hy - 4.0] },
       { t: LIFTOFF + 1.6, cells: 9.5, off: [0.2, 2.6] },
       { t: PUNCH - 0.4, cells: 8.2, off: [0.1, 1.8] },

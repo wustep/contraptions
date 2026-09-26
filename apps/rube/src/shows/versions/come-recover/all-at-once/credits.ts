@@ -10,8 +10,8 @@ import { EVELYN, JOY, WAYMOND } from './worlds'
  * line in capitals for what they did, the names, and where it is owed the fine print. Each comes into focus, holds,
  * and goes out of focus as the next comes.
  *
- * The words are the page's: a show's canvas sets no type, and a saved frame or a recorded video has none
- * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt` in its own face. The canvas's half is
+ * The words are the page's: a show's canvas sets no type (`shows/stage.ts`), so the player sets them over the frame
+ * from `creditsAt` in its own face, and a saved video has them painted in (`shows/words.ts`). The canvas's half is
  * only a soft dark under them, so they read whatever the room is doing.
  */
 

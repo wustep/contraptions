@@ -11,9 +11,9 @@ import { DAVID, MIA, SEB, SON } from './worlds'
  * it, and go the same way. There is no title card: after the last one the
  * city holds alone to the end.
  *
- * The words are the page's: a show's canvas sets no type, and a saved frame
- * or a recorded video has none (`shows/stage.ts`), so the player sets them
- * over the frame from `creditsAt` in its own face.
+ * The words are the page's: a show's canvas sets no type (`shows/stage.ts`),
+ * so the player sets them over the frame from `creditsAt` in its own face,
+ * and a saved video has them painted in (`shows/words.ts`).
  */
 
 export interface Card {
