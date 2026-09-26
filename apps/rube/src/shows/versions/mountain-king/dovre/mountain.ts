@@ -332,9 +332,9 @@ function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: num
  * the middle of its base, cells.
  */
 function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number): void {
-  // A stave church after Borgund: steep dark shingled roofs stacked tight over a low skirt roof, each tier a short
-  // wall and a steeper, narrower roof, dragon heads rearing from the upper gables, one tall spire; tarred black, the
-  // east slopes catching the dawn. Tall and narrow: never the flared, spreading tiers of a pagoda.
+  // A stave church after Borgund, read first as a building: a nave wall with a dark door and one small warm window,
+  // a steep roof over it, two short steep tiers stacked narrow over its ridge, and a tall thin spire with a cross.
+  // Tarred black, the east slopes catching the dawn. (Four or five flaring tiers read as a pagoda or a fir.)
   const s = 1.8
   const u = (v: number) => v * s * k
   p.push()
@@ -343,55 +343,69 @@ function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number
   p.noStroke()
   const tar = mixHex(SKY.tar, mixHex(SKY.tar, SKY.far, 0.5), 0.35 * d)
   const lit = mixHex(SKY.tar, SKY.dawn, 0.35 * d)
+  const wall = mixHex(tar, SKY.far, 0.18)
+  const wallLit = mixHex(wall, SKY.dawn, 0.22 * d)
   const quad = (pts: [number, number][], col: string) => {
     p.fill(col)
     p.beginShape()
     for (const [a, b] of pts) p.vertex(u(a), u(b))
     p.endShape(p.CLOSE)
   }
-  // The skirt roof round the foot (the svalgang) on its posts, and the nave's wall over it.
-  quad([[-0.44, 0], [0.44, 0], [0.44, -0.05], [-0.44, -0.05]], mixHex(tar, SKY.far, 0.25))
-  quad([[-0.52, -0.04], [0.52, -0.04], [0.4, -0.19], [-0.4, -0.19]], tar)
-  quad([[0.12, -0.04], [0.52, -0.04], [0.4, -0.19], [0.1, -0.19]], lit)
-  // The tiers: a short wall, then a steep roof overhanging it: [wall half-width, wall foot y, eaves half-width,
-  // eaves y, ridge half-width, ridge y]. Each narrower and steeper: stepped, a building, not a tree.
+  // The nave: a plank wall, its east end in the dawn, a dark round-headed door and one small warm window.
+  quad([[-0.36, 0], [0.36, 0], [0.36, -0.27], [-0.36, -0.27]], wall)
+  quad([[0.12, 0], [0.36, 0], [0.36, -0.27], [0.12, -0.27]], wallLit)
+  p.fill(mixHex(SKY.tar, '#000000', 0.55))
+  p.beginShape()
+  p.vertex(u(-0.06), 0)
+  p.vertex(u(-0.06), u(-0.11))
+  p.bezierVertex(u(-0.06), u(-0.16), u(0.06), u(-0.16), u(0.06), u(-0.11))
+  p.vertex(u(0.06), 0)
+  p.endShape(p.CLOSE)
+  const win = p.color(mixHex(LAMP.flame, SKY.tar, 0.25 + 0.35 * d))
+  p.fill(win)
+  p.rect(u(0.19), u(-0.2), u(0.045), u(0.07))
+  // The nave's roof, steep, overhanging the wall; then two short tiers over its ridge, each a wall and a steeper,
+  // narrower roof: [wall half-width, wall foot y, eaves half-width, eaves y, ridge half-width, ridge y].
   const tiers: [number, number, number, number, number, number][] = [
-    [0.3, -0.18, 0.42, -0.31, 0.21, -0.57],
-    [0.19, -0.56, 0.29, -0.67, 0.13, -0.88],
-    [0.11, -0.87, 0.18, -0.97, 0.07, -1.1],
+    [0.36, -0.26, 0.45, -0.28, 0.1, -0.56],
+    [0.12, -0.55, 0.19, -0.64, 0.07, -0.8],
+    [0.075, -0.79, 0.12, -0.87, 0.05, -0.97],
   ]
   tiers.forEach(([ww, wy, w0, y0, w1, y1], i) => {
-    quad([[-ww, wy], [ww, wy], [ww, y0], [-ww, y0]], mixHex(tar, SKY.far, 0.18))
+    if (i > 0) quad([[-ww, wy], [ww, wy], [ww, y0], [-ww, y0]], wall)
     quad([[-w0, y0], [w0, y0], [w1, y1], [-w1, y1]], tar)
     // The east slope in the dawn light.
     quad([[w0 * 0.3, y0], [w0, y0], [w1, y1], [w1 * 0.3, y1]], lit)
-    // Dragon heads: a neck rearing up and out from each end of the two upper ridges, a small jaw at its tip.
-    if (i > 0) {
+    // Dragon heads rearing from the middle tier's gable ends: a neck up and out, a small jaw at its tip.
+    if (i === 1) {
       for (const sd of [-1, 1]) {
         p.fill(tar)
         p.beginShape()
         p.vertex(u(sd * w1 * 0.6), u(y1 + 0.005))
-        p.bezierVertex(u(sd * (w1 + 0.06)), u(y1 - 0.02), u(sd * (w1 + 0.1)), u(y1 - 0.07), u(sd * (w1 + 0.17)), u(y1 - 0.17))
-        p.vertex(u(sd * (w1 + 0.12)), u(y1 - 0.14))
-        p.bezierVertex(u(sd * (w1 + 0.07)), u(y1 - 0.07), u(sd * (w1 + 0.02)), u(y1 - 0.045), u(sd * w1 * 0.5), u(y1 - 0.03))
+        p.bezierVertex(u(sd * (w1 + 0.05)), u(y1 - 0.02), u(sd * (w1 + 0.08)), u(y1 - 0.06), u(sd * (w1 + 0.13)), u(y1 - 0.14))
+        p.vertex(u(sd * (w1 + 0.09)), u(y1 - 0.115))
+        p.bezierVertex(u(sd * (w1 + 0.05)), u(y1 - 0.06), u(sd * (w1 + 0.02)), u(y1 - 0.04), u(sd * w1 * 0.5), u(y1 - 0.03))
         p.endShape(p.CLOSE)
       }
     }
   })
-  // The spire: a short turret and a tall, needle-steep roof.
-  quad([[-0.065, -1.09], [0.065, -1.09], [0.065, -1.2], [-0.065, -1.2]], tar)
-  quad([[-0.1, -1.19], [0.1, -1.19], [0, -1.78]], tar)
-  quad([[0.025, -1.19], [0.1, -1.19], [0, -1.78]], lit)
-  // A lit window at night.
+  // The spire: a slim turret and a tall, needle-steep roof, a small iron cross on its tip.
+  quad([[-0.045, -0.96], [0.045, -0.96], [0.045, -1.05], [-0.045, -1.05]], wall)
+  quad([[-0.075, -1.04], [0.075, -1.04], [0, -1.72]], tar)
+  quad([[0.02, -1.04], [0.075, -1.04], [0, -1.72]], lit)
+  p.fill(tar)
+  p.rect(u(-0.009), u(-1.84), u(0.018), u(0.14))
+  p.rect(u(-0.042), u(-1.8), u(0.084), u(0.018))
+  // At night the window glows brighter.
   if (d < 0.8) {
-    const win = p.color(LAMP.flame)
-    win.setAlpha(210 * (1 - d / 0.8))
-    p.fill(win)
-    p.rect(u(-0.025), u(-0.14), u(0.05), u(0.08))
+    const glow = p.color(LAMP.flame)
+    glow.setAlpha(200 * (1 - d / 0.8))
+    p.fill(glow)
+    p.rect(u(0.19), u(-0.2), u(0.045), u(0.07))
   }
 
-  // The bell house: two posts, an open belfry, a pyramid roof; the bell hangs from the beam and swings.
-  const bx = 0.95
+  // The bell house, close by the nave: two posts, an open belfry, a pyramid roof; the bell hangs from the beam and swings.
+  const bx = 0.74
   p.fill(tar)
   p.quad(u(bx - 0.2), 0, u(bx + 0.2), 0, u(bx + 0.17), u(-0.28), u(bx - 0.17), u(-0.28))
   p.quad(u(bx - 0.17), u(-0.28), u(bx - 0.13), u(-0.28), u(bx - 0.13), u(-0.62), u(bx - 0.17), u(-0.62))

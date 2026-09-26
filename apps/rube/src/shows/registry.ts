@@ -189,7 +189,10 @@ export interface Registry {
 export function readShows(found: Record<string, unknown>): Registry {
   const works: Work[] = []
   const problems: string[] = []
-  for (const path of Object.keys(found).sort()) {
+  // By the take's name, not the file's: `opus55.show.ts` sorts after `opus55-spark.show.ts` ('.' comes after '-'),
+  // but a take is filed after the take its name extends.
+  const name = (path: string): string => path.replace(/\.show\.ts$/, '')
+  for (const path of Object.keys(found).sort((a, b) => (name(a) < name(b) ? -1 : name(a) > name(b) ? 1 : 0))) {
     const at = versionPath(path)
     if (!at) {
       problems.push(`${path}: not versions/<work>/<take>.show.ts, in lower case and hyphens`)

@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot } from '../kit'
-import { PLAN, SEAM_SHOT } from '../seams'
+import { HEART_SHOT, PLAN } from '../seams'
 import { BELLOWS, FLY, OOM, PAH, PISTONS, T0, T1, kt } from './heart-clock'
 import { FLICK, HOPS, OFF_FLY, laneOf } from './heart-path'
 import { drawHeart, drawHeartOver } from './heart-set'
@@ -45,26 +45,27 @@ export const gears = part<{ begin: number }>(
     state: { begin: slot.begin },
   }),
   (slot): PartShot[] => {
-    const at = (t: number, cells: number, hold?: Pt, w?: number, off?: Pt): PartShot => ({ t, cells, hold, w, off })
+    const at = (t: number, cells: number, hold?: Pt, w?: number, wy?: number): PartShot => ({ t, cells, hold, w, wy })
     // A point in WORLD cells, in this part's frame (laid mirrored: its entry, frame (-0.5, 0), is world (61.5, 33)).
     const wp = (x: number, y: number): Pt => [61 - x, y - 33]
     // The frame opens a step with each new mechanism and never goes back in, so the machine is visibly bigger each
-    // phrase: 7 cells on the hammer, 8.5 on the flywheel, 9.2 on the pumps, 9.5 (the whole heart) on the great
-    // bellows, held so into the runaway (`runaway.ts`). The frame's top stays under the drum's floor (world y 26.3):
-    // the drum room above is never in the heart's frames.
+    // phrase: 8 cells on the hammer (the drop's wide seam, `HEART_SHOT`), 8.5 on the flywheel, 9.2 on the pumps, 9.5
+    // (the whole heart) on the great bellows, held so into the runaway (`runaway.ts`). Across the room the frame
+    // travels with him (a light hold, `w`), so his flings across the machine carry the frame and it resettles on the
+    // next phrase; up and down it holds (`wy`), so its top stays under the drum's floor (world y 26.3): the drum room
+    // above is never in the heart's frames.
     return [
-      { t: slot.begin, ...SEAM_SHOT },
-      // His landing trips the hammer; its first blows wake the furnace: easing back to the anvil, the cam and the
-      // furnace's mouth with him.
-      at(kt(196), 7.0, wp(58.3, 31.35), 0.7),
+      { t: slot.begin, cells: HEART_SHOT.cells, hold: wp(HEART_SHOT.world[0], HEART_SHOT.world[1]), w: HEART_SHOT.w },
+      // His landing trips the hammer; its first blows wake the furnace: the anvil, the cam and the furnace's mouth.
+      at(kt(196), 8.0, wp(57.0, 31.35), 0.6),
       // The flywheel engages: the great wheel whole, him riding up its side.
-      at(FLY, 8.5, wp(56.2, 31.05), 0.78),
-      at(FLICK, 8.8, wp(55.0, 30.85), 0.8),
+      at(FLY, 8.5, wp(56.2, 31.05), 0.5, 0.85),
+      at(FLICK, 8.8, wp(55.0, 30.85), 0.45, 0.8),
       // The pistons.
-      at(PISTONS, 9.2, wp(53.4, 31.15), 0.82),
+      at(PISTONS, 9.2, wp(53.4, 31.15), 0.5, 0.85),
       // The great bellows: everything, the whole heart.
-      at(BELLOWS, 9.5, wp(53.8, 31.25), 0.85),
-      at(slot.end, 9.5, wp(52.6, 31.25), 0.82),
+      at(BELLOWS, 9.5, wp(53.8, 31.25), 0.55, 0.88),
+      at(slot.end, 9.5, wp(52.6, 31.25), 0.5, 0.85),
     ]
   },
 )

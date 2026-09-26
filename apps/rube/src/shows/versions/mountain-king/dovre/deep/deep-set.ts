@@ -35,8 +35,13 @@ export function lightAt(x: number, y: number, t: number): number {
 
 /** A stone colour at a light level: from the rock's dark to its lit face. */
 export const stoneAt = (lit: number, hi = STONE.light): string => mixHex(STONE.dark, hi, 0.12 + 0.72 * lit)
-/** The ink at a light level: lines sink into the dark with the things they draw. */
-export const inkAt = (ink: string, lit: number): string => mixHex(STONE.dark, ink, 0.22 + 0.6 * lit)
+/**
+ * The edge at a light level: the shadow of what it edges, darker than any lit stone or timber, sinking into the dark
+ * with the things it draws. (It was the page's cream, up to four-fifths of it: the slabs, the beam and the wheel read
+ * as pale line art. `ink` is kept for the callers' signature.)
+ */
+const EDGE = mixHex(STONE.deep, '#000000', 0.2)
+export const inkAt = (_ink: string, lit: number): string => mixHex(STONE.dark, EDGE, 0.35 + 0.65 * Math.max(0, Math.min(1, lit)))
 
 /* ------------------------------------------------------------------ the hollow */
 

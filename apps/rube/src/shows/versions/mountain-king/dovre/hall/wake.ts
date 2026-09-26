@@ -129,13 +129,16 @@ export const wake = part<{ begin: number }>(
     // turns to him and goes, the King rising between them; she walks out of its east side before the roar.
     { t: 61.65, cells: 6.4, hold: [X(16.6), -1.85], w: 1 },
     { t: 63.45, cells: 6.3, hold: [X(17.7), -1.85], w: 1 },
-    { t: 64.6, cells: 6.3, hold: [X(16.3), -1.85], w: 1 },
-    { t: 66.6, cells: 6.4, hold: [X(15.6), -1.9], w: 0.95 },
-    // The chase: up the dais, through the King's feet, to its end.
-    { t: 68.5, cells: 6.4, hold: [X(17.4), -1.7], w: 0.6 },
-    { t: 70.4, cells: 6.2, hold: [X(21.0), -1.8], w: 0.7 },
-    // The blow, the crack, the hatch, and down the shaft after him.
-    { t: 71.4, cells: 6.5, hold: [X(23.4), -1.6], w: 0.8 },
+    // Out and up as he roars, and held there through the chase and the blow: the whole King, the sceptre's head on
+    // every pump and on the wind-up, and the lit crown-lamp over him whole (its ring is at the head's height, so a top
+    // edge between them would slice it), with Peer still inside the zoomed frame on the floor: ~8.2 cells at least.
+    { t: 64.6, cells: 8.3, hold: [X(16.3), -2.5], w: 1 },
+    { t: 66.6, cells: 8.3, hold: [X(15.6), -2.5], w: 0.95, wy: 1 },
+    // The chase: up the dais, through the King's feet, to its end; the frame travels with him, its height held.
+    { t: 68.5, cells: 8.2, hold: [X(17.4), -2.5], w: 0.6, wy: 1 },
+    // The wind-up and the blow: the whole King, the sceptre's arc and the dais step it strikes, Peer east of them.
+    { t: 70.4, cells: 8.1, hold: [X(20.0), -2.6], w: 0.7, wy: 1 },
+    { t: 71.3, cells: 8.2, hold: [X(21.4), -2.5], w: 0.8, wy: 1 },
     // Close on the fissure racing from the sceptre's head to the hatch, so the lurch and the fall read big.
     { t: 72.6, cells: 5.4, hold: [X(24.2), -0.7], w: 0.7 },
     { t: 73.45, cells: 5.5, hold: [X(26.9), 1.2], w: 0.6 },

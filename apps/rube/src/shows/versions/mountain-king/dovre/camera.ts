@@ -16,6 +16,11 @@ export interface Shot {
   hold?: Pt
   /** How much of the hold: 0 follows the ball, 1 holds the point. Defaults to 1 with a hold, 0 without. */
   w?: number
+  /**
+   * How much of the hold up and down, where that differs from `w`: a frame that travels with him across a room
+   * (a low `w`) while its top stays under the floor above (a high `wy`). Defaults to `w`.
+   */
+  wy?: number
   /** Added to the follow: frame ahead of the ball, or above it. */
   off?: Pt
 }
@@ -91,6 +96,8 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   // The zoom goes in even steps of scale, not of cells: a pull-back from one cell to ten opens as evenly as it closes.
   const cellsAt = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])
   const wAt = ends((a, b) => [weight(a), weight(b)])
+  const weightY = (k: Shot): number => k.wy ?? weight(k)
+  const wyAt = ends((a, b) => [weightY(a), weightY(b)])
   const offX = ends((a, b) => [(a.off ?? [0, 0])[0], (b.off ?? [0, 0])[0]])
   const offY = ends((a, b) => [(a.off ?? [0, 0])[1], (b.off ?? [0, 0])[1]])
   const holdX = ends((a, b) => [(a.hold ?? b.hold ?? [0, 0])[0], (b.hold ?? a.hold ?? [0, 0])[0]])
@@ -102,10 +109,11 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
     const u = last ? 0 : (t - keys[i].t) / (keys[i + 1].t - keys[i].t)
     const cells = Math.exp(cellsAt(i, u))
     const w = Math.max(0, Math.min(1, wAt(i, u)))
+    const wy = Math.max(0, Math.min(1, wyAt(i, u)))
     const hold: Pt = [holdX(i, u), holdY(i, u)]
-    const [fx, fy] = w >= 1 ? hold : follow(t)
+    const [fx, fy] = w >= 1 && wy >= 1 ? hold : follow(t)
     const x = fx + offX(i, u)
     const y = fy + offY(i, u)
-    return { x: x + (hold[0] - x) * w, y: y + (hold[1] - y) * w, cells }
+    return { x: x + (hold[0] - x) * w, y: y + (hold[1] - y) * wy, cells }
   }
 }

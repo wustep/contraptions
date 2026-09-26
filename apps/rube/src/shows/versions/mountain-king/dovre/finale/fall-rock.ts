@@ -130,14 +130,17 @@ function ventAt(y: number, x: number): [number, number] {
  * sees). Once the geyser's spray is in it its back wall shows wet and its sides round off, so it reads as a shaft;
  * then day comes down it from the top once the cap is gone.
  */
-export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number; shut?: number }): void {
+export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number; shut?: number }, top = VENT.top): void {
   const k = c.k
   const X = (v: number) => (v - o[0] + q[0]) * k
   const Y = (v: number) => (v - o[1] + q[1]) * k
   const n = 120
   const rows: [number, number, number][] = []
+  // `top` (world y): where the shaft opens, if lower than the cap's underside (the crater's floor once the cap and the
+  // crown are gone: the shaft must never stand up above the ground into the sky).
+  const y0 = Math.max(VENT.top, top)
   for (let j = 0; j <= n; j++) {
-    const y = VENT.top + ((VENT.bottom - VENT.top) * j) / n
+    const y = y0 + ((VENT.bottom - y0) * j) / n
     const [m, hw] = ventAt(y, x)
     rows.push([m - hw, m + hw, y])
   }
@@ -411,12 +414,13 @@ export function puff(p: p5, c: Pen, x: number, y: number, since: number, size: n
 const STUB = { half: 0.17, rise: 0.075, lip: 0.2 }
 
 export function collar(p: p5, c: Pen, o: Pt, x: number, top: number, q: Pt): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const X = x - o[0] + q[0]
   const Y = top - o[1] + q[1]
   p.push()
   p.rectMode(p.CORNER)
-  p.stroke(mixHex(ink, WORKS.iron, 0.45))
+  // Iron edged in darker iron, like the heart's machine (a half-cream edge made the pipe a drawing of one).
+  p.stroke(mixHex(WORKS.iron, STONE.deep, 0.5))
   p.strokeWeight(weight * 0.8)
   // The pipe going down through the floor, and a flange where it meets the floor.
   p.fill(mixHex(WORKS.iron, STONE.deep, 0.3))
@@ -437,7 +441,8 @@ export function collarFront(p: p5, c: Pen, o: Pt, x: number, top: number, q: Pt)
   const Y = top - o[1] + q[1]
   p.push()
   p.rectMode(p.CORNER)
-  p.stroke(mixHex(ink, WORKS.iron, 0.45))
+  // Iron edged in darker iron, like the heart's machine (a half-cream edge made the pipe a drawing of one).
+  p.stroke(mixHex(WORKS.iron, STONE.deep, 0.5))
   p.strokeWeight(weight * 0.8)
   // The stub, standing a little above the floor, and its flanged lip.
   p.fill(WORKS.iron)
