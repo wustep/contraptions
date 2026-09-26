@@ -469,8 +469,11 @@ export const shop = part<ShopState>(
     { t: DOOR, cells: 5.0, hold: [7.3, -1.4], off: [0.9, -1.25], w: 0.35 },
     // The street, the town waking: following her a third of the way up the frame, close enough that the fronts pass,
     // the lamps put out as she comes by them.
-    { t: 30.2, cells: 6.2, off: [1.3, -1.2], w: 0 },
-    { t: 34.6, cells: 6.0, off: [1.2, -1.1], w: 0 },
+    { t: 30.2, cells: 6.2, off: [1.3, -1.35], w: 0 },
+    // Down the street: the camera lets her go on ahead and drifts after her, slower than she walks, so she crosses
+    // the frame past the lamps, each put out as she comes by it; then on with her to the alley.
+    { t: 31.6, cells: 6.4, hold: [17.7, -1.55], w: 1 },
+    { t: 34.3, cells: 6.3, hold: [19.9, -1.5], w: 1 },
     // Down to the alley's framing on the seam.
     { t: slot.end, cells: 5, hold: [EXIT_X + 0.9, -0.8], w: 1 },
   ],
@@ -509,8 +512,8 @@ function drawStreetLamps(p: p5, c: Ctx, t: number): void {
     const { x } = lamp
     const e = t - lamp.t
     // The arm: up at rest (the counterweight holds it), dropping on the note, a small bounce on the cap, then still.
-    const drop = e < -0.14 ? 0 : e < 0 ? ((e + 0.14) / 0.14) ** 2 : 1 - 0.08 * Math.exp(-e / 0.12) * Math.abs(Math.sin(e * 26))
-    const lit = e < 0 ? 1 : Math.exp(-e / 0.12)
+    const drop = e < -0.3 ? 0 : e < 0 ? ((e + 0.3) / 0.3) ** 2 : 1 - 0.08 * Math.exp(-e / 0.15) * Math.abs(Math.sin(e * 22))
+    const lit = e < 0 ? 1 : Math.exp(-e / 0.18)
     p.push()
     // The post, its foot, and the crook the lantern hangs from.
     p.stroke(ink)
@@ -526,25 +529,35 @@ function drawStreetLamps(p: p5, c: Ctx, t: number): void {
     p.stroke(ink)
     p.strokeWeight(W * 0.7)
     p.fill(lit > 0.02 ? mixHex(tone(TOWN.slateDark), TOWN.glow, 0.9 * lit + 0.1) : tone(TOWN.slateDark))
-    p.rect(X(x - 0.12), X(HEAD + 0.02), X(0.24), X(0.3))
+    p.rect(X(x - 0.17), X(HEAD + 0.02), X(0.34), X(0.42), X(0.03))
+    p.stroke(alpha(p, ink, 0.6))
+    p.line(X(x), X(HEAD + 0.04), X(x), X(HEAD + 0.42))
+    p.stroke(ink)
     p.fill(iron)
-    p.triangle(X(x - 0.16), X(HEAD + 0.02), X(x + 0.16), X(HEAD + 0.02), X(x), X(HEAD - 0.12))
-    if (lit > 0.02) glow(p, k, x, HEAD + 0.17, 0.7, TOWN.glow, 0.3 * lit)
-    // The snuffer: an arm pivoted on the post under the lantern, a counterweight on its short end, the cap on its long
-    // one; up and back at rest, down over the lantern's chimney on the note.
-    const a = -1.15 + 1.15 * drop
-    const pv: Pt = [x + 0.05, HEAD + 0.4]
-    const tip: Pt = [pv[0] + 0.34 * Math.cos(a - 1.05), pv[1] + 0.34 * Math.sin(a - 1.05)]
-    const cw: Pt = [pv[0] - 0.14 * Math.cos(a - 1.05), pv[1] - 0.14 * Math.sin(a - 1.05)]
+    p.triangle(X(x - 0.22), X(HEAD + 0.02), X(x + 0.22), X(HEAD + 0.02), X(x), X(HEAD - 0.17))
+    if (lit > 0.02) glow(p, k, x, HEAD + 0.22, 1.0, TOWN.glow, 0.42 * lit)
+    // The snuffer: a long iron arm pivoted on the post under the lantern, a heavy counterweight on its short end, a
+    // cone of a cap on its long one; up and back at rest, swinging down over the lantern on the note.
+    const a = -1.2 + 1.2 * drop
+    const pv: Pt = [x + 0.06, HEAD + 0.62]
+    const L = 0.62
+    const tip: Pt = [pv[0] + L * Math.cos(a - 1.1), pv[1] + L * Math.sin(a - 1.1)]
+    const cw: Pt = [pv[0] - 0.24 * Math.cos(a - 1.1), pv[1] - 0.24 * Math.sin(a - 1.1)]
+    p.stroke(ink)
+    p.strokeWeight(W * 2.0)
+    p.line(X(cw[0]), X(cw[1]), X(tip[0]), X(tip[1]))
     p.stroke(iron)
-    p.strokeWeight(W * 0.9)
+    p.strokeWeight(W * 1.1)
     p.line(X(cw[0]), X(cw[1]), X(tip[0]), X(tip[1]))
     p.stroke(ink)
-    p.strokeWeight(W * 0.6)
+    p.strokeWeight(W * 0.7)
     p.fill(iron)
-    p.rect(X(cw[0] - 0.04), X(cw[1] - 0.04), X(0.08), X(0.08))
-    // The cap hangs plumb from the arm's end.
-    p.triangle(X(tip[0] - 0.08), X(tip[1] + 0.1), X(tip[0] + 0.08), X(tip[1] + 0.1), X(tip[0]), X(tip[1] - 0.04))
+    p.rect(X(cw[0] - 0.09), X(cw[1] - 0.07), X(0.18), X(0.16), X(0.02))
+    p.fill(tone(TOWN.gold))
+    p.rect(X(pv[0] - 0.035), X(pv[1] - 0.035), X(0.07), X(0.07))
+    // The cap hangs plumb from the arm's end: a cone that comes down over the lantern's top.
+    p.fill(iron)
+    p.triangle(X(tip[0] - 0.19), X(tip[1] + 0.22), X(tip[0] + 0.19), X(tip[1] + 0.22), X(tip[0]), X(tip[1] - 0.06))
     p.pop()
     // A thread of smoke from the snuffed wick, drifting up and away.
     if (e > 0 && e < 3) {
