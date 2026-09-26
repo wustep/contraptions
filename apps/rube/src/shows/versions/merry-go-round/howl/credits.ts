@@ -45,7 +45,11 @@ const script: Omit<Card, 'at'>[] = [
     hold: 4.2,
     role: 'Music',
     names: ['Joe Hisaishi'],
-    notes: ['“Merry-Go-Round of Life”', 'from Howl’s Moving Castle (2004)'],
+    notes: [
+      '“Merry-Go-Round of Life”',
+      'from Howl’s Moving Castle (2004)',
+      'in his concert arrangement, from Dream Songs: The Essential Joe Hisaishi (Decca Gold, 2020)',
+    ],
   },
   {
     hold: 4.0,

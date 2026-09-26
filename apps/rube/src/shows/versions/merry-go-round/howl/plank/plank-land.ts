@@ -91,7 +91,8 @@ export function drawBack(p: p5, k: number, W: number, ink: string, v: View): voi
     h.addColorStop(0, 'rgba(238, 241, 236, 0)')
     h.addColorStop(1, 'rgba(238, 241, 236, 0.9)')
     ctx.fillStyle = h
-    ctx.fillRect(LAND.edge * k, (LAND.ledge + 0.5) * k, (v.x1 + 2 - LAND.edge) * k, (v.y1 + 2 - LAND.ledge) * k)
+    // (From behind the cliff's face, which covers its left edge: no seam at the face's foot.)
+    ctx.fillRect((LAND.edge - 1.5) * k, (LAND.ledge + 0.5) * k, (v.x1 + 3.5 - LAND.edge) * k, (v.y1 + 2 - LAND.ledge) * k)
   }
   // The mist lying on the moor, over the hills' feet.
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -180,12 +181,18 @@ export function drawGround(p: p5, k: number, W: number, ink: string, v: View): v
       p.line((face(y) - 0.7 - hash(i, 4) * 0.6) * k, (y - 0.08) * k, face(y) * k, y * k)
     }
     p.pop()
+  }
+  // Deep down (only a tall frame, a phone held upright, sees it): the land, the cliff and the gorge all go into one
+  // mist together, across the whole frame, thickening softly with depth. No edge anywhere.
+  if (v.y1 > LAND.ledge + 2) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const h = ctx.createLinearGradient(0, (g + 2) * k, 0, (g + 8) * k)
+    const g = LAND.ledge
+    const h = ctx.createLinearGradient(0, (g + 2) * k, 0, (g + 10) * k)
     h.addColorStop(0, 'rgba(238, 241, 236, 0)')
-    h.addColorStop(1, 'rgba(238, 241, 236, 0.8)')
+    h.addColorStop(0.45, 'rgba(238, 241, 236, 0.5)')
+    h.addColorStop(1, 'rgba(238, 241, 236, 0.86)')
     ctx.fillStyle = h
-    ctx.fillRect((LAND.edge - 1.5) * k, (g + 2) * k, 4 * k, (v.y1 - g) * k)
+    ctx.fillRect((v.x0 - 1) * k, (g + 2) * k, (v.x1 - v.x0 + 2) * k, (v.y1 - g) * k)
   }
 }
 

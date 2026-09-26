@@ -608,10 +608,14 @@ function drawGround(p: p5, k: number, W: number, ink: string, f: ReturnType<type
     const off = (r % 2) * 0.45
     for (let x = Math.floor((f.x0 - 1) / 0.9) * 0.9 + off; x < f.x1 + 1; x += 0.9) p.rect(X(x), X(y + 0.3), X(0.86), X(0.035))
   }
+  // Sinking into shadow: as before over the first three cells, and on a tall frame (a phone held upright) on down
+  // into the night, deepening all the way, so the town stands on dark and never on a flat slab.
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createLinearGradient(0, X(G + 0.5), 0, X(G + 0.5 + Math.min(deep, 3)))
+  const reach = Math.max(3, deep)
+  const g = ctx.createLinearGradient(0, X(G + 0.5), 0, X(G + 0.5 + reach))
   g.addColorStop(0, hexA(TOWN.night, 0))
-  g.addColorStop(1, hexA(TOWN.night, 0.45))
+  g.addColorStop(Math.min(1, 3 / reach), hexA(TOWN.night, 0.45))
+  if (reach > 3) g.addColorStop(1, hexA(TOWN.night, Math.min(0.85, 0.45 + 0.06 * (reach - 3))))
   ctx.fillStyle = g
   ctx.fillRect(X(f.x0 - 1), X(G + 0.5), X(f.x1 - f.x0 + 2), X(deep))
   // The street's cobbles: a band seen a little from above, stones in soft rows, no ink but the kerb's edge.

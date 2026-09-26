@@ -1013,9 +1013,14 @@ function drawShade(p: p5, c: Ctx, L: Light, f: { y0: number; y1: number }): void
   // The soft edge (the mask stretched over it) and the rest of the lane (the mask's last column, stretched).
   ctx.drawImage(m, 0, 0, 32, 64, x0 * k, top * k, edge * k, (G - top) * k)
   ctx.drawImage(m, 31, 0, 1, 64, (x0 + edge) * k, top * k, (x1 - x0 - edge) * k, (G - top) * k)
-  // On the stones below, the shade at its deepest: soft at the mouth.
+  // On the stones below, the shade at its deepest: soft at the mouth, and soft where the square opens (the tower's
+  // corner ends the shade up the walls, but on the stones a hard end would cut the ground in two greys).
+  const out = 2.5
   ctx.drawImage(m, 0, 63, 32, 1, x0 * k, G * k, edge * k, (bottom - G) * k)
-  ctx.drawImage(m, 31, 63, 1, 1, (x0 + edge) * k, G * k, (x1 - x0 - edge) * k, (bottom - G) * k)
+  ctx.drawImage(m, 31, 63, 1, 1, (x0 + edge) * k, G * k, (x1 - x0 - edge - out / 2) * k, (bottom - G) * k)
+  ctx.translate((x1 + out / 2) * k, 0)
+  ctx.scale(-1, 1)
+  ctx.drawImage(m, 0, 63, 32, 1, 0, G * k, out * k, (bottom - G) * k)
   ctx.restore()
 }
 

@@ -50,21 +50,32 @@ export function wastesNight(t: number): number {
   return 1
 }
 
+/**
+ * The sky's gradient at `t` over the frame `f` (in cells): laid over the 16:9 box the show is composed for (the one
+ * the page sets the credits in), extended flat beyond it, so on a tall phone the sky over the words is the same as on
+ * a wide screen. The finale's veil paints the same gradient over the land, so the two never differ.
+ */
+export function skyGradient(ctx: CanvasRenderingContext2D, k: number, t: number, f: { x0: number; x1: number; y0: number; y1: number }): CanvasGradient {
+  const { top, low } = wastesSky(t)
+  const h = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+  const my = (f.y0 + f.y1) / 2
+  const g = ctx.createLinearGradient(0, (my - h / 2) * k, 0, (my + h / 2) * k)
+  g.addColorStop(0, top)
+  // Under the credits the evening's deep blue comes half-way down the frame, so every row of the cards (set in the
+  // upper half) is over it, and the gold is only the low sky the castle walks away into.
+  const deep = Math.max(0, Math.min(1, (t - 300) / 6))
+  if (deep > 0) g.addColorStop(0.5, mixHex(top, low, 0.5 - 0.32 * deep))
+  g.addColorStop(1, low)
+  return g
+}
+
 export const sky = scenery<null>({
   name: 'wastes-sky',
   draw: (p, _s, c) => {
     const { k, t } = c
     const f = frame(p, k)
-    const { top, low } = wastesSky(t)
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    // Over the 16:9 box the show is composed for (the one the page sets the credits in), extended flat beyond it: on a
-    // tall phone the sky over the words is the same as on a wide screen.
-    const h = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
-    const my = (f.y0 + f.y1) / 2
-    const g = ctx.createLinearGradient(0, (my - h / 2) * k, 0, (my + h / 2) * k)
-    g.addColorStop(0, top)
-    g.addColorStop(1, low)
-    ctx.fillStyle = g
+    ctx.fillStyle = skyGradient(ctx, k, t, f)
     ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
   },
 })
