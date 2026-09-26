@@ -162,13 +162,14 @@ export function drawBoulders(p: p5, c: Pen, t: number): void {
 
 /** One dressed stone of the stair: its top flat (the tread), its body sunk into the slope. */
 function stone(p: p5, c: Pen, t: number, x0: number, x1: number, top: number, rung: number, seed: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const bottom = Math.max(skyline(x0), skyline(x1)) + 0.28
   const face = nightMix(mixHex(STONE.mid, STONE.dark, 0.25 + 0.2 * hash(seed, 3)), t, 0.28)
   const lipCol = mixHex(nightMix(STONE.light, t, 0.3), STONE.wet, 0.75 * rung)
   const r = 0.05
   p.push()
-  p.stroke(alpha(p, ink, 0.55))
+  // Edged in its own shadow, not the page's cream (a cream edge made every stone an outlined box).
+  p.stroke(mixHex(face, STONE.deep, 0.55))
   p.strokeWeight(weight * 0.65)
   p.fill(face)
   p.beginShape()
@@ -185,7 +186,7 @@ function stone(p: p5, c: Pen, t: number, x0: number, x1: number, top: number, ru
   p.rectMode(p.CORNER)
   p.rect((x0 + r * 0.6) * k, top * k, (x1 - x0 - r * 1.2) * k, Math.max(1, 0.055 * k))
   // A crack or two in the face, so no two stones are the same.
-  p.stroke(alpha(p, ink, 0.22))
+  p.stroke(mixHex(face, STONE.deep, 0.4))
   p.strokeWeight(weight * 0.5)
   const cx = x0 + (x1 - x0) * (0.25 + 0.5 * hash(seed, 5))
   p.line(cx * k, (top + 0.08) * k, (cx + 0.06 * (hash(seed, 6) - 0.5)) * k, (top + 0.2) * k)
@@ -576,7 +577,7 @@ export function drawDoor(p: p5, c: Pen, t: number, drop: number, knock: number):
 
 /** The pawl on the slot's lip, riding the rack: lifted as a tooth passes, dropping in on the click. */
 export function drawPawl(p: p5, c: Pen, t: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const lift = pawlLift(t)
   const a = -0.25 - 0.55 * lift
   p.push()
@@ -586,9 +587,10 @@ export function drawPawl(p: p5, c: Pen, t: number): void {
   p.fill(mixHex(STONE.deep, STONE.dark, 0.3))
   p.ellipse(0, 0, 0.16 * k, 0.16 * k)
   p.rotate(a)
-  p.stroke(ink)
+  // Iron edged in iron (a cream stroke made it a pale tick, a glyph, at the landing's end).
+  p.stroke(mixHex(WORKS.iron, STONE.deep, 0.45))
   p.strokeWeight(weight * 0.7)
-  p.fill(WORKS.iron)
+  p.fill(mixHex(WORKS.iron, STONE.dark, 0.3))
   p.beginShape()
   p.vertex(-0.04 * k, -0.035 * k)
   p.vertex(0.17 * k, -0.02 * k)
@@ -609,11 +611,17 @@ export function drawPawl(p: p5, c: Pen, t: number): void {
  */
 const worksFill = (c: Pen, lit: number): string => mixHex(c.bg, STONE.dark, Math.max(0, Math.min(1, lit)))
 
+/**
+ * How much of the gutter's oil is still burning: all of it until the door is down, then it burns down to embers over
+ * about two and a half seconds with the slot's lamp, so the works under the path are dark as the tunnels begin.
+ */
+const oilLeft = (t: number): number => 1 - 0.8 * smooth(t, TIMES.open + 0.5, TIMES.open + 3.0)
+
 /** How lit the works are at x: the lamp's pool in the chamber, and the gutter's fire wherever it has run. */
 export function worksLight(t: number, x: number): number {
   const lamp = worksLamp(t) * Math.max(0, 1 - Math.max(0, x - CHAMBER.x1) / 1.6)
   const front = flameFront(t)
-  const fire = front === null ? 0 : x <= front + 0.3 ? 0.75 * Math.min(1, (front + 0.3 - x) / 0.6) : 0
+  const fire = front === null ? 0 : x <= front + 0.3 ? 0.75 * oilLeft(t) * Math.min(1, (front + 0.3 - x) / 0.6) : 0
   const end = slotLamp(t) * Math.max(0, 1 - Math.abs(x - SLOT_LAMP[0]) / 1.4)
   return Math.min(1, Math.max(lamp, fire, end))
 }
@@ -634,7 +642,7 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   // Lit where the fire has run: the channel's back wall warms behind it.
   if (front !== null) {
     const x1 = Math.min(CHANNEL.x1, front + 0.2)
-    p.fill(worksFill(c, 0.55))
+    p.fill(worksFill(c, 0.55 * oilLeft(t)))
     p.rect(CHANNEL.x0 * k, CHANNEL.y0 * k, Math.max(0, x1 - CHANNEL.x0) * k, (CHANNEL.y1 - CHANNEL.y0) * k)
   }
   const sl = slotLamp(t)
@@ -860,10 +868,11 @@ function drawFire(p: p5, c: Pen, t: number): void {
   const x0 = FLAME.x0
   const x1 = Math.min(front, FLAME.x1)
   if (x1 <= x0 + 0.02) return
+  const left = oilLeft(t)
   const height = (x: number) => {
     const age = Math.max(0, front - x)
     const lick = 0.5 + 0.5 * Math.sin(t * 9 + x * 11) * Math.sin(t * 5.3 + x * 4.1)
-    return (0.035 + 0.075 * Math.exp(-age / 0.7)) * (0.75 + 0.5 * lick) * Math.min(1, (x1 - x) / 0.08 + 0.3)
+    return (0.035 + 0.075 * Math.exp(-age / 0.7)) * (0.75 + 0.5 * lick) * Math.min(1, (x1 - x) / 0.08 + 0.3) * (0.25 + 0.75 * left)
   }
   p.push()
   p.noStroke()
@@ -873,7 +882,7 @@ function drawFire(p: p5, c: Pen, t: number): void {
   p.rect(x0 * k, (y - 0.02) * k, (x1 - x0) * k, 0.04 * k)
   for (const [col, f, a] of [[LAMP.flame, 1, 0.85], [LAMP.core, 0.45, 0.9]] as const) {
     const cc = p.color(col)
-    cc.setAlpha(255 * a)
+    cc.setAlpha(255 * a * (0.3 + 0.7 * left))
     p.fill(cc)
     p.beginShape()
     p.vertex(x0 * k, y * k)
