@@ -22,7 +22,8 @@ import { Walk, laneAtShow } from './band-walk'
  *   250  "rushing".  252  the last slap
  *   254  again, in time, the hand beating with him, stroke for stroke...    276  STOP. Not quite
  *   278  Fletcher points: Tanner. 280  Andrew drops off the kit; Tanner hops up past him, onto it (286)
- *   295  Andrew goes. 298.71  he pushes the door; 300 it slams behind him on the band's last hit
+ *   288  a look back at the kit, and he turns away on it: a slow roll from rest along the floor, under the band's last
+ *        loud bars, gathering to the door. 298.71  he pushes it; 300 it slams behind him on the band's last hit
  *   304  in the dark corridor, rolling, as the band drops out
  */
 
@@ -60,9 +61,12 @@ export const POINT = tune(278)
 export const DROP_OFF = tune(280)
 export const TANNER_GO = tune(283.5)
 export const TANNER_ON = tune(286)
-/** Andrew goes: to the door, pushes it, and it slams behind him on the band's last hit. */
+/**
+ * Andrew goes: a look back at the kit (rolled back toward it by the look), then away on it, a slow roll from rest to
+ * the door that plays under the band; he pushes it, and it slams behind him on the band's last hit.
+ */
 export const LOOK = 123.9
-export const GO = 126.631
+export const GO = 124.2
 export const PUSH = 128.231
 export const SLAM = 128.781
 
@@ -117,17 +121,18 @@ function build(): Walk {
   const floor: Pt = [SNARE[0] + 1.5, PIT_Y]
   w.hop(floor, DROP_OFF, G_EARTH).landed()
   w.vx = 0
-  // A slow way toward the door; Tanner goes up over him; a look back at the kit; then out.
-  w.travel([TANNER_ASIDE[0] - 1.25, PIT_Y], TANNER_GO + 0.3, 0)
-  w.rest(LOOK)
-  w.ease([TANNER_ASIDE[0] - 1.42, PIT_Y], LOOK + 0.9, 'inout')
-  w.rest(LOOK + 1.4)
-  w.ease([TANNER_ASIDE[0] - 1.2, PIT_Y], GO - 0.2, 'inout')
+  // A slow way toward the door, where Tanner waits; Tanner goes up over him.
+  w.travel([TANNER_ASIDE[0] - 1.05, PIT_Y], TANNER_GO + 0.3, 0)
+  // Tanner lands on the kit and plays; a look back at it as he lands, drawn back toward it (to where he came down
+  // off it), held a moment.
+  w.rest(TANNER_ON + 0.05)
+  w.ease([TANNER_ASIDE[0] - 1.6, PIT_Y], LOOK, 'inout')
   w.rest(GO)
+  // And away on the look: from rest, gathering evenly (about a cell a second at the end) to the door's plate on PUSH.
   const plate = WALL_R.x0 - 0.13
-  w.travel([plate, PIT_Y], PUSH, 1.45)
-  // Through, as the door swings out, and on down the corridor at the pace he leaves with.
-  const past = plate + 0.5 * (1.45 + EXIT_V) * (QUIET - PUSH)
+  w.roll([plate, PIT_Y], PUSH)
+  // Through, as the door swings out, and on down the corridor, gathering to the pace he leaves with.
+  const past = plate + 0.5 * (w.vx + EXIT_V) * (QUIET - PUSH)
   w.roll([past, PIT_Y], QUIET)
   return w
 }
