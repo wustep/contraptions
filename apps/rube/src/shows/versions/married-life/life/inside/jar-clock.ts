@@ -55,7 +55,7 @@ export const FLASH1 = J(24, 3)
 export const TREE = onset(128.871)
 export const TOPPLE = onset(129.271)
 export const THUNDER = J(27)
-export const RIGHTED3 = J(28)
+export const RIGHTED3 = J(28, 2)
 export const FLASH2 = J(29)
 /** Down the plank, off it, and out: Ellie onto the plank, off it; Carl off it. */
 export const ONTO_PLANK = J(28)
@@ -76,8 +76,8 @@ export interface Pour {
   left: number
 }
 export const POURS: Pour[] = [
-  { tip: PUSH1, stop: J(15, 2), back: J(16), left: 0 },
-  { tip: PUSH2, stop: J(23, 2), back: J(24), left: 0 },
+  { tip: PUSH1, stop: J(15, 2), back: J(16, 3), left: 0 },
+  { tip: PUSH2, stop: J(23, 2), back: J(24, 3), left: 0 },
   { tip: TOPPLE, stop: THUNDER, back: RIGHTED3, left: 0.06 },
 ]
 
@@ -110,6 +110,14 @@ export const CUP = 0.84
 export const BOX = { x0: 6.02, x1: 6.58, rim: -0.2 }
 /** Where Carl stands to hop onto his end. */
 export const FOOT: Pt = [4.3, 0]
+/**
+ * The chute the savings go out by: a tin hopper under the jar's mouth where it lies tipped in its cradle, a trough
+ * down the wall from it, and a brass-lipped slot in the wall at its foot (below the right-hand window, left of the
+ * chairs) that the coins go through and are gone: paid out of the house.
+ */
+export const CHUTE = { top: [8.1, -1.13] as Pt, foot: [8.84, -0.46] as Pt, hopper: 0.34 }
+/** How long a coin takes down the trough (it gathers speed), and the trough's length. */
+export const CHUTE_LEN = Math.hypot(CHUTE.foot[0] - CHUTE.top[0], CHUTE.foot[1] - CHUTE.top[1])
 /** The slot in the jar's lid, where each handful goes in. */
 export const SLOT: Pt = [JAR_X, MANTLE.top - JAR_H - 0.1]
 /** Where he falls. */
@@ -160,9 +168,12 @@ export const cupAt = (t: number): Pt => onPlank(CUP, 0.1, plankAt(t))
 
 /* ------------------------------------------------------------------ the jar */
 
-const TIP_MAX = 1.9
-/** How long the cradle's spring takes to set it back on its feet. */
-const RIGHTING = 0.45
+export const TIP_MAX = 1.9
+/** How long the cradle's spring takes to set it back on its feet: slow, and damped. */
+const RIGHTING = 0.9
+
+/** Eases from rest to rest with no jolt at either end (a spring against a damper, set back by it). */
+const smoother = (u: number): number => { const v = clamp01(u); return v * v * v * (v * (v * 6 - 15) + 10) }
 
 /** The jar's turn about its right-hand foot (radians, clockwise), its lid (0 on, 1 flung open), and whether it is pouring. */
 export function jarAt(t: number): { tilt: number; lid: number; jolt: number } {
@@ -182,11 +193,11 @@ export function jarAt(t: number): { tilt: number; lid: number; jolt: number } {
       // On its stop: a knock, and a small rebound that dies.
       tilt = TIP_MAX - 0.09 * Math.abs(ring(t - p.stop, 0.13, 22))
     } else if (t < p.back) {
-      // Righted by the cradle's spring, landing on its feet on the beat.
+      // Set back on its feet by the cradle's spring, slowly against its damper, landing on the beat.
       const u = (t - (p.back - RIGHTING)) / RIGHTING
-      tilt = TIP_MAX * (1 - smoothstep(u) * 0.35 - 0.65 * u * u)
-    } else tilt = -0.05 * ring(t - p.back, 0.14, 24)
-    lid = s < fall ? smoothstep((s - fall * 0.55) / (fall * 0.45)) : t < p.back - 0.4 ? 1 : t < p.back ? 1 - smoothstep((t - (p.back - 0.4)) / 0.4) : 0
+      tilt = TIP_MAX * (1 - smoother(u))
+    } else tilt = -0.03 * ring(t - p.back, 0.16, 22)
+    lid = s < fall ? smoothstep((s - fall * 0.55) / (fall * 0.45)) : t < p.back - 0.5 ? 1 : t < p.back ? 1 - smoothstep((t - (p.back - 0.5)) / 0.5) : 0
   }
   return { tilt, lid, jolt }
 }

@@ -7,8 +7,9 @@ import { drawChairs } from '../props/chairs'
 import { drawJar } from '../props/jar'
 import { INSIDE } from './inside'
 import {
-  AXLE, BOX, CHAIRS_X, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS, SLOT, TREE, TYRE,
-  carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt, sunAt,
+  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
+  SLOT, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt,
+  sunAt,
 } from './jar-clock'
 
 /**
@@ -399,54 +400,202 @@ function handfuls(p: p5, c: Ctx, T: number): void {
   })
 }
 
-/** The jar on the mantle, with the brass hinge its cradle turns on. */
-function jar(p: p5, c: Ctx, T: number): void {
+/* ------------------------------------------------------------------ the jar in its cradle, and the chute */
+
+const BRASS = '#B8912F'
+const BRASS_DARK = '#8E6B1F'
+const TIN = '#B9B3A6'
+const TIN_DARK = '#8F897D'
+
+/** The trough's direction (unit) and its normal (pointing up off it), and a point `d` down it, `up` off its floor. */
+const DIR: Pt = [(CHUTE.foot[0] - CHUTE.top[0]) / CHUTE_LEN, (CHUTE.foot[1] - CHUTE.top[1]) / CHUTE_LEN]
+const NRM: Pt = [DIR[1], -DIR[0]]
+const along = (d: number, up = 0): Pt => [CHUTE.top[0] + DIR[0] * d + NRM[0] * up, CHUTE.top[1] + DIR[1] * d + NRM[1] * up]
+const ANGLE = Math.atan2(DIR[1], DIR[0])
+
+/** The chute's back: the hopper's inside and the trough's dark bed (the coins slide in front of these). */
+function chuteBack(p: p5, c: Ctx): void {
   const { k, weight } = c
   const x = X(k)
-  const { tilt, lid, jolt } = jarAt(T)
-  const [bx, by] = jarBase(tilt)
+  const [hx, hy] = CHUTE.top
+  const hw = CHUTE.hopper / 2
   p.push()
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  // The wall slot at its foot: dark, with a brass lip, a little taller than the trough.
+  const [fx, fy] = CHUTE.foot
+  p.push()
+  p.translate(x(fx), x(fy))
+  p.rotate(ANGLE)
+  p.fill(BRASS)
+  p.rectMode(p.CENTER)
+  p.rect(x(0.02), x(-0.02), x(0.09), x(0.2), x(0.03))
   p.noStroke()
-  p.fill('#9C7424')
-  p.rectMode(p.CORNER)
-  p.rect(x(HINGE[0] - 0.09), x(MANTLE.top - 0.03), x(0.12), x(0.03))
+  p.fill(mixHex(INK, '#000000', 0.2))
+  p.rect(x(0.02), x(-0.02), x(0.045), x(0.14), x(0.02))
   p.pop()
-  const dust = clamp01((AGE(T) - 0.3) * 1.6)
-  drawJar(p, k, weight, bx, by - jolt, { fill: fillAt(T), lid, tilt, dust })
+  // The trough's bed, seen from the side: a dark channel, the coins run in it.
+  const a0 = along(0.02, -0.03)
+  const a1 = along(CHUTE_LEN - 0.02, -0.03)
+  const b1 = along(CHUTE_LEN - 0.02, 0.1)
+  const b0 = along(0.02, 0.1)
+  p.fill(mixHex(TIN_DARK, INK, 0.25))
+  p.quad(x(a0[0]), x(a0[1]), x(a1[0]), x(a1[1]), x(b1[0]), x(b1[1]), x(b0[0]), x(b0[1]))
+  // The hopper's inside.
+  p.fill(mixHex(TIN_DARK, INK, 0.3))
+  p.quad(x(hx - hw), x(hy - 0.17), x(hx + hw), x(hy - 0.17), x(hx + 0.08), x(hy + 0.02), x(hx - 0.08), x(hy + 0.02))
+  p.pop()
 }
 
-/** What each pour lets go: coins streaming off the jar's mouth, bouncing on the boards, skittering away and gone. */
+/** The chute's front: the hopper's near face and the trough's near lip, over the coins in them; two brackets to the wall. */
+function chuteFront(p: p5, c: Ctx): void {
+  const { k, weight } = c
+  const x = X(k)
+  const [hx, hy] = CHUTE.top
+  const hw = CHUTE.hopper / 2
+  p.push()
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  // The near lip: a tin strip along the trough's lower half.
+  const a0 = along(0.0, -0.06)
+  const a1 = along(CHUTE_LEN, -0.06)
+  const b1 = along(CHUTE_LEN, 0.02)
+  const b0 = along(0.0, 0.02)
+  p.fill(TIN)
+  p.quad(x(a0[0]), x(a0[1]), x(a1[0]), x(a1[1]), x(b1[0]), x(b1[1]), x(b0[0]), x(b0[1]))
+  // The hopper's near face: a tin funnel, wide at its mouth, rolled at its rim.
+  p.quad(x(hx - hw), x(hy - 0.12), x(hx + hw), x(hy - 0.12), x(hx + 0.09), x(hy + 0.03), x(hx - 0.09), x(hy + 0.03))
+  p.fill(mixHex(TIN, '#FFFFFF', 0.25))
+  p.rect(x(hx - hw - 0.02), x(hy - 0.15), x(2 * hw + 0.04), x(0.035), x(0.015))
+  // Two brackets holding it to the wall.
+  p.fill(BRASS_DARK)
+  for (const d of [0.32, 0.72]) {
+    const q = along(d * CHUTE_LEN, -0.075)
+    p.push()
+    p.translate(x(q[0]), x(q[1]))
+    p.rotate(ANGLE)
+    p.rect(x(-0.025), x(-0.02), x(0.05), x(0.05), x(0.01))
+    p.pop()
+  }
+  p.pop()
+}
+
+/** Where the cradle is fixed: a brass plate on the mantle's front at its right end, the knuckle the cradle turns on. */
+function bracket(p: p5, c: Ctx): void {
+  const { k, weight } = c
+  const x = X(k)
+  const [hx, hy] = HINGE
+  p.push()
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  p.fill(BRASS_DARK)
+  p.quad(x(hx - 0.1), x(hy + 0.005), x(hx + 0.1), x(hy + 0.005), x(hx + 0.06), x(hy + 0.13), x(hx - 0.06), x(hy + 0.13))
+  p.pop()
+}
+
+/** The torsion spring round the knuckle, wound as the jar goes over, and the knuckle's barrel and pin over it. */
+function knuckle(p: p5, c: Ctx, tilt: number): void {
+  const { k, weight } = c
+  const x = X(k)
+  const [hx, hy] = HINGE
+  p.push()
+  p.translate(x(hx), x(hy))
+  p.noFill()
+  p.stroke(alpha(p, INK, 0.85))
+  p.strokeWeight(weight * 0.5)
+  p.beginShape()
+  const turns = 1.6 + 0.3 * (tilt / 1.9)
+  for (let i = 0; i <= 40; i++) {
+    const u = i / 40
+    const a = -Math.PI / 2 + tilt * 0.5 + u * turns * 2 * Math.PI
+    const r = 0.05 + 0.04 * u
+    p.vertex(x(r * Math.cos(a)), x(r * Math.sin(a)))
+  }
+  p.endShape()
+  p.fill(BRASS)
+  p.strokeWeight(weight * 0.6)
+  p.circle(0, 0, x(0.075))
+  p.noStroke()
+  p.fill(INK)
+  p.circle(0, 0, x(0.022))
+  p.pop()
+}
+
+/** The cradle, in the jar's own frame (its bottom middle, turned with it): a base plate and two side straps (behind the glass's edges), and the band across its front (over it). */
+function cradle(p: p5, c: Ctx, bx: number, by: number, tilt: number, front: boolean): void {
+  const { k, weight } = c
+  const x = X(k)
+  const w = JAR_W
+  p.push()
+  p.translate(x(bx), x(by))
+  p.rotate(tilt)
+  p.rectMode(p.CORNER)
+  p.stroke(alpha(p, INK, 0.9))
+  p.strokeWeight(weight * 0.6)
+  p.fill(BRASS)
+  if (!front) {
+    // The straps up each side, and the plate it stands on.
+    p.rect(x(-w / 2 - 0.035), x(-0.36 * JAR_H), x(0.035), x(0.36 * JAR_H + 0.02), x(0.01))
+    p.rect(x(w / 2), x(-0.36 * JAR_H), x(0.035), x(0.36 * JAR_H + 0.02), x(0.01))
+    p.rect(x(-w / 2 - 0.045), x(-0.005), x(w + 0.09), x(0.04), x(0.01))
+  } else {
+    // The band round its belly, below the painting, with a rivet at each end.
+    p.rect(x(-w / 2 - 0.035), x(-0.33 * JAR_H), x(w + 0.07), x(0.045), x(0.012))
+    p.noStroke()
+    p.fill(BRASS_DARK)
+    for (const s of [-1, 1]) p.circle(x(s * (w / 2 + 0.0)), x(-0.33 * JAR_H + 0.022), x(0.022))
+  }
+  p.pop()
+}
+
+/** The jar on the mantle, in its cradle: tipped over its right-hand foot on the knuckle, it pours into the chute. */
+function jar(p: p5, c: Ctx, T: number): void {
+  const { k, weight } = c
+  const { tilt, lid, jolt } = jarAt(T)
+  const [bx, by] = jarBase(tilt)
+  bracket(p, c)
+  cradle(p, c, bx, by - jolt, tilt, false)
+  const dust = clamp01((AGE(T) - 0.3) * 1.6)
+  drawJar(p, k, weight, bx, by - jolt, { fill: fillAt(T), lid, tilt, dust })
+  cradle(p, c, bx, by - jolt, tilt, true)
+  knuckle(p, c, tilt)
+  void MANTLE
+}
+
+/**
+ * What each pour lets go: coins streaming off the jar's mouth into the hopper, sliding down the trough, and gone
+ * through the slot in the wall. Drawn between the chute's back and its front, so they run in it.
+ */
 function spill(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   POURS.forEach((pour, n) => {
-    if (T < pour.stop - 0.1 || T > pour.stop + 3.5) return
-    const count = [24, 12, 9][n]
+    if (T < pour.stop - 0.1 || T > pour.stop + 2.5) return
+    const count = [22, 14, 10][n]
     for (let j = 0; j < count; j++) {
-      const r = pour.stop - 0.06 + (j / count) * 0.5 + hash(j, n, 2) * 0.03
+      const r = pour.stop - 0.06 + (j / count) * 0.8 + hash(j, n, 2) * 0.03
       if (T < r) continue
-      const tilt = jarAt(r).tilt
-      const [mx, my] = jarMouth(tilt)
-      const vx = 0.5 + 0.6 * hash(j, n, 5)
-      const vy = 0.3 + 0.4 * hash(j, n, 6)
-      const floor = INSIDE.ground - 0.02
-      // Time to reach the floor from the mouth.
-      const tf = (-vy + Math.sqrt(vy * vy + 2 * G * (floor - my))) / G
+      const [mx, my] = jarMouth(jarAt(r).tilt)
+      const vx = 0.1 + 0.25 * hash(j, n, 5)
+      const vy = 0.15 + 0.2 * hash(j, n, 6)
+      // Down from the mouth into the hopper.
+      const into = CHUTE.top[1] - 0.05
+      const tf = (-vy + Math.sqrt(vy * vy + 2 * G * Math.max(0.01, into - my))) / G
       const s = T - r
       if (s < tf) {
         coin(p, k, weight, mx + vx * s, my + vy * s + 0.5 * G * s * s, s * (9 + 6 * hash(j, n, 8)), 0.4)
         continue
       }
+      // Then down the trough, gathering speed, flat on it; into the slot at its foot, and gone.
       const q = s - tf
-      const v0 = 2.6 + 1.2 * hash(j, n, 9)
-      const dec = 1.6
-      const stop = v0 / dec
-      const tq = Math.min(q, stop)
-      const sx = mx + vx * tf + v0 * tq - 0.5 * dec * tq * tq
-      const bounce = 0.07 * Math.abs(Math.sin(q * 16)) * Math.exp(-q / 0.07)
-      // Skittering off out of the room, thinning as they go: gone within the second.
-      const a = 1 - smoothstep((q - 0.45) / 0.55)
-      if (a <= 0.01) continue
-      coin(p, k, weight, sx, floor - bounce, q < 0.2 ? q * 20 : Math.PI / 2 - 0.2, 0, a)
+      const d = 0.55 * q + 2.6 * q * q
+      if (d > CHUTE_LEN + 0.02) continue
+      const hx = mx + vx * tf
+      const settle = clamp01(q / 0.12)
+      const [ax, ay] = along(Math.max(0, d), 0.048)
+      const cx = hx + (ax - hx) * settle
+      const cy = into + (ay - into) * settle
+      const a = 1 - smoothstep((d - (CHUTE_LEN - 0.08)) / 0.1)
+      coin(p, k, weight, cx, cy, 0.55 + 0.15 * hash(j, n, 3), ANGLE * settle + 0.4 * (1 - settle), a)
     }
   })
 }
@@ -499,8 +648,10 @@ export function drawRoom(p: p5, c: Ctx, T: number): void {
   lamp(p, c, T)
   seesaw(p, c, T)
   handfuls(p, c, T)
-  jar(p, c, T)
+  chuteBack(p, c)
   spill(p, c, T)
+  chuteFront(p, c)
+  jar(p, c, T)
   dim(p, k, T)
   sunlight(p, k, T)
   void onPlank

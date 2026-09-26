@@ -282,26 +282,41 @@ export const jar = part<JarState>(
   () => shots(),
 )
 
-/** The camera: on the machine, to the window for the tyre, the jar for the pours, close for the fall and the bandage, out wide for the storm and the whole house, and in again to follow them into the hall. */
+/**
+ * The camera: on the machine; in on the window as the tyre blows; on the jar in its cradle for each pour down the
+ * chute; in on the ladder for the fall and closer for the bandage; out wide as the storm comes, so the limb breaks
+ * through the roof inside the frame and the roof is patched in it; and in again to follow them into the hall. Carl
+ * stays whole inside the Zoom frame throughout (a third of the height, 16:9, from the middle).
+ */
 function shots(): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold: L(hold), w })
   return [
     k(104.6, 5.0, [3.3, -1.3], 0.55),
     k(107.0, 4.5, [5.1, -1.3], 0.9),
-    k(111.9, 4.15, [5.3, -1.2]),
-    k(113.3, 4.4, [4.3, -1.3]),
-    k(115.3, 4.6, [5.0, -1.35]),
-    k(116.9, 4.5, [5.9, -1.3]),
-    k(118.6, 4.7, [4.9, -1.45]),
-    k(120.8, 4.5, [3.9, -1.25]),
-    k(122.6, 4.0, [3.55, -1.0]),
-    k(124.2, 4.4, [4.6, -1.25]),
-    k(125.7, 4.9, [5.7, -1.4]),
-    k(127.5, 6.3, [6.1, -2.0]),
-    k(129.4, 8.8, [7.2, -2.8]),
-    k(131.8, 8.9, [7.5, -2.8]),
-    k(135.3, 8.9, [8.4, -2.8]),
-    k(137.6, 6.1, [10.5, -1.75], 0.75),
+    k(111.5, 4.15, [5.0, -1.2]),
+    // The tyre: in on the car through the window, him going over to look.
+    k(113.5, 3.5, [3.72, -0.97]),
+    k(114.3, 3.52, [3.68, -0.97]),
+    // Along the mantle with her to the jar, and on it as it goes over in its cradle and the coins go down the chute.
+    k(116.8, 3.72, [5.7, -1.05]),
+    k(117.9, 3.75, [5.9, -1.06]),
+    // The ladder and the lamp; in as he falls, and closer for her touch and the bandage.
+    k(119.4, 3.6, [4.0, -1.2]),
+    k(FALL, 3.2, [3.35, -0.9]),
+    k(TOUCH, 3.0, [3.15, -0.82]),
+    k(123.3, 3.6, [3.95, -0.98]),
+    // Her second pour.
+    k(125.6, 3.9, [5.8, -1.12]),
+    // The storm gathers; out wide for the tree through the roof and the jar thrown over by the blow, the roof
+    // above the nursery's ceiling in the frame; the limb winched out and the hole boarded.
+    k(127.0, 5.4, [6.4, -1.7]),
+    k(128.4, 8.3, [7.25, -2.78]),
+    k(129.9, 9.45, [7.7, -3.2]),
+    k(131.4, 9.5, [7.95, -3.15]),
+    k(133.3, 8.8, [8.35, -2.72]),
+    k(135.3, 8.1, [9.3, -2.55]),
+    // The sun: in again to the two of them, on their way to the hall.
+    k(137.3, 5.8, [10.9, -1.6], 0.75),
     { t: END, cells: 5.6, off: [0.9, -1.1], w: 0 },
   ]
 }
