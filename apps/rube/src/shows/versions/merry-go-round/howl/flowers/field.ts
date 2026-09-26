@@ -579,11 +579,11 @@ export const field = part<FieldState>(
   },
   () => {
     const keys: PartShot[] = [
-      // The door bangs wide on the slow waltz's hit and the camera goes back from it and down, out under the porch
-      // into the valley: by the time they have waltzed down to the meadow the picture is the valley, the lake and
-      // the mountains, the castle getting up behind them at the left.
-      { t: BANG + 1.1, cells: 8.2, off: [2.5, 1.3] },
-      { t: LAND, cells: 10, off: [3.4, -2.2] },
+      // The door bangs wide on the slow waltz's hit and the picture opens wide on it (the score's scale match cut,
+      // `SEAMS.field.open`): the two of them on the porch high at the left, the meadow at the foot, the lake and the
+      // mountains across the rest. Held and breathing out a little through the first slow bar as they waltz down
+      // into the flowers, the castle getting up behind them, then settling on them as they land.
+      { t: LAND, cells: 11, off: [3.4, -2.2] },
       { t: BOARD, cells: 6.8, off: [1.4, -1.4] },
       { t: TIP, cells: 7.8, off: [2.2, 0.6] },
       { t: GATES[1], cells: 7.8, off: [1.8, 0.8] },

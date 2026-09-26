@@ -28,6 +28,11 @@ export interface Seam {
   howl: Pt | null
   markl: Pt | null
   calcifer?: boolean
+  /**
+   * A scale match cut: the incoming leg opens this many cells tall, the carried framing scaled about her, so her
+   * place on the screen holds exactly while the picture changes size on the hit. Left out, it opens at `cells`.
+   */
+  open?: number
   /** What she is doing, in words, for whoever builds either side. */
   what: string
 }
@@ -101,7 +106,8 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     frame: [0.9, -0.7],
     howl: [0.36, 0],
     markl: null,
-    what: 'walking right, level, through the door a step behind Howl (the dial turned); on the far side, out of the castle\'s door onto the flower field',
+    open: 15,
+    what: 'walking right, level, through the door a step behind Howl (the dial turned); on the far side, out of the castle\'s door onto the flower field, the picture opening wide on the hit (the valley, the lake, the mountains) with her held where she was on the screen',
   },
   raid: {
     t: SEAM.raid,

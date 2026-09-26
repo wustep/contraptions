@@ -4,6 +4,7 @@ import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { box, lay, standing, type Chain, type Link } from './kit'
 import { CLIMAX, CURSE, DURATION, HEART, SEAM } from './music'
+import { SEAMS } from './seams'
 import { CastleShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { SOPHIE_YOUNG, type WorldKey } from './worlds'
 import { town, TOWN_BOX, CURSE_AT, RAID_AT } from './town/town'
@@ -185,11 +186,16 @@ export function compose(): { show: CastleShow; camera: (t: number) => Framing } 
     else {
       const f = cams[i - 1](leg.from)
       const [sx, sy] = show.shift(i - 1, i)
-      const carried: Pt = [f.x + sx, f.y + sy]
+      // A scale match cut (a seam with `open`): the carried framing scaled about her, so she holds her place on the
+      // screen exactly and the picture changes size on the hit.
+      const seam = Object.values(SEAMS).find((m) => m.cut && Math.abs(m.t - leg.from) < 1e-3)
+      const scale = seam?.open ? seam.open / f.cells : 1
+      const carried: Pt = [a0[0] + (f.x + sx - a0[0]) * scale, a0[1] + (f.y + sy - a0[1]) * scale]
+      const cells = f.cells * scale
       if (Math.hypot(vIn[0], vIn[1]) > 0.05) {
         const [fx, fy] = follower(where, DURATION)(leg.from)
-        keys.unshift({ t: leg.from, cells: f.cells, off: [carried[0] - fx, carried[1] - fy], w: 0 })
-      } else keys.unshift({ t: leg.from, cells: f.cells, hold: carried, w: 1 })
+        keys.unshift({ t: leg.from, cells, off: [carried[0] - fx, carried[1] - fy], w: 0 })
+      } else keys.unshift({ t: leg.from, cells, hold: carried, w: 1 })
     }
     if (keys.length === 1) keys.push({ t: Math.min(leg.to, leg.from + 1.2), cells: 5 })
     cams.push(director(where, keys, DURATION))
