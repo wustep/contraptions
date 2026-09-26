@@ -69,10 +69,20 @@ export const FALLS: Fall[] = [
   { group: 'house', ids: ['house'], at: c(3), land: c(5), pivot: MODULE_PIVOT.house, box: [-5.55, -19.25, 3.2, -12.25], to: -10.5, rot: -0.36 },
   { group: 'front', ids: ['turretFront'], at: c(4), land: c(6), pivot: MODULE_PIVOT.turretFront, box: [3.05, -19.05, 8.5, -12.25], to: 8.6, rot: 1.58 },
   { group: 'pipes', ids: ['pipes'], at: c(5), land: c(7), pivot: MODULE_PIVOT.pipes, box: [4.5, -18.1, 6.35, -12.3], to: 6.6, rot: 1.25 },
-  { group: 'face', ids: ['eye', 'nose', 'jaw'], at: c(6), land: c(7, 2), pivot: MODULE_PIVOT.eye, box: [6.3, -12.6, 10.85, -6.4], to: 9.4, rot: 0.55 },
+  { group: 'face', ids: ['eye', 'nose', 'jaw'], at: c(6), land: c(7, 2), pivot: MODULE_PIVOT.eye, box: [6.3, -12.6, 10.85, -6.4], to: 9.8, rot: 1.45 },
   { group: 'hullL', ids: ['hull'], at: c(7), land: c(8), pivot: [-4.6, -9.2], box: [-8.6, -12.6, -0.4, -6.0], to: -12.8, rot: -0.2 },
   { group: 'hullR', ids: ['hull'], at: c(7), land: c(8), pivot: [4.2, -9.2], box: [-1.2, -12.6, 9.2, -6.0], to: 9.0, rot: 0.24 },
 ]
+
+/**
+ * The pieces that fall ahead of the plank, in its way: each crumbles into its own dust where it lies (hazed opaquely
+ * into the dust's colour inside a dust bank that rises round it, never faded see-through), so the plank runs on over
+ * clear ground and leaves the rest of the wreck behind it.
+ */
+const CRUMBLES = new Set<Group>(['front', 'pipes', 'face', 'hullR'])
+function crumbleAt(f: Fall, t: number): number {
+  return CRUMBLES.has(f.group) ? smooth(t, f.land + 0.45, f.land + 2.3) : 0
+}
 
 /** The draw order the castle draws its modules in (the hull's second call, the stair, goes with it). */
 const ORDER: ModuleId[] = ['turretBack', 'cannonTop', 'flag', 'house', 'chimney', 'pipes', 'turretFront', 'hull', 'eye', 'nose', 'jaw']
@@ -343,9 +353,11 @@ export function drawCollapse(p: p5, k: number, W: number, ink: string, t: number
   p.pop()
 
   // The pieces that have let go: each where it was when it went, falling in the world, then lying there.
+  const dustCol = mixHex(WASTES.rock, WASTES.mist, 0.5)
   for (const f of FALLS) {
     if (t < f.at) continue
-    if ((f.group === 'flag' && t > f.land) || (f.group === 'hullR' && t > f.land + 1.5)) continue
+    const crumble = crumbleAt(f, t)
+    if ((f.group === 'flag' && t > f.land) || crumble >= 0.985) continue
     const { at, rot } = fallAt(f, t)
     if (at[0] < vis.x0 - 16 || at[0] > vis.x1 + 16) continue
     const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -367,17 +379,36 @@ export function drawCollapse(p: p5, k: number, W: number, ink: string, t: number
       rim(p, k, W, ink)
       p.pop()
     }
-    // The flag goes on the wind; the hull's front half, too big to lie in the plank's way, crumbles in its dust.
-    const fadeOut = f.group === 'flag' ? smooth(t, f.land - 1.2, f.land) : f.group === 'hullR' ? smooth(t, f.land + 0.15, f.land + 1.5) : 0
-    const pose = only(t, f.ids, { night: light.night })
+    // The flag goes on the wind; what lies in the plank's way crumbles into its dust.
+    const fadeOut = f.group === 'flag' ? smooth(t, f.land - 1.2, f.land) : 0
+    const pose = only(t, f.ids, { night: light.night, haze: crumble, hazeTo: dustCol })
     if (fadeOut > 0) pose.modules = { ...pose.modules, [f.ids[0]]: { gone: fadeOut } }
     drawCastle(p, k, W, ink, pose)
     p.pop()
     ctx.restore()
   }
 
+  // The dust bank each crumbling piece goes into: as thick as the piece is hazed, over the whole of it, thinning
+  // away once it has gone.
+  for (const f of FALLS) {
+    if (!CRUMBLES.has(f.group) || t < f.land || t > f.land + 5) continue
+    const bank = smooth(t, f.land + 0.1, f.land + 1.9) * (1 - smooth(t, f.land + 2.4, f.land + 4.8))
+    if (bank < 0.01) continue
+    const [x0, x1] = spanOnGround(f)
+    const H = heightOnGround(f)
+    const nx = Math.max(2, Math.round((x1 - x0) / 1.3))
+    const ny = Math.max(1, Math.round(H / 1.4))
+    for (let i = 0; i < nx; i++) {
+      for (let j = 0; j < ny; j++) {
+        const x = x0 + ((i + 0.5) / nx) * (x1 - x0) + (hash(i, j, 41) - 0.5) * 0.6
+        const y = YG - ((j + 0.5) / ny) * H - (t - f.land) * 0.15
+        const r = 1.1 + 0.6 * hash(i, j, 43) + 0.25 * (t - f.land)
+        puff(p, k, x, y, r, dustCol, 0.62 * bank * (0.75 + 0.25 * hash(i, j, 47)), 0.85)
+      }
+    }
+  }
+
   // Dust where each piece comes down: soft, rolling out along the ground and up.
-  const dustCol = mixHex(WASTES.rock, WASTES.mist, 0.5)
   for (const f of FALLS) {
     if (f.group === 'flag' || t < f.land || t > f.land + 4) continue
     const a = t - f.land
@@ -401,6 +432,15 @@ function spanOnGround(f: Fall): [number, number] {
   const xs = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => (x - f.pivot[0]) * cs - (y - f.pivot[1]) * sn)
   const cx = BX0 + f.to
   return [cx + Math.min(...xs), cx + Math.max(...xs)]
+}
+
+/** How tall a fallen piece stands off the ground as it lies. */
+function heightOnGround(f: Fall): number {
+  const [x0, y0, x1, y1] = f.box
+  const cs = Math.cos(f.rot)
+  const sn = Math.sin(f.rot)
+  const vs = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => (x - f.pivot[0]) * sn + (y - f.pivot[1]) * cs)
+  return Math.max(...vs) - Math.min(...vs)
 }
 
 /** The strikes of the collapse: each piece's letting go and each landing. */
