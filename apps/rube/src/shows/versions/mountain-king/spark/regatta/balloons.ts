@@ -192,8 +192,8 @@ interface Mate {
 const mate = (a: string, b: string, band?: string): Balloon => ({ key: 'mate', H: 10.5, Rs: 4.3, silk: { a, b, band, cap: band ?? a } })
 /** Far to near, the order they are drawn in. */
 const MATES: Mate[] = [
-  { u: -0.78, v: -0.02, d: 0.44, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
-  { u: 0.76, v: 0.06, d: 0.48, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
+  { u: -0.73, v: -0.02, d: 0.44, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
+  { u: 0.72, v: 0.06, d: 0.48, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
   { u: -0.5, v: 0.2, d: 0.56, b: mate(REG.coral, REG.ivory), side: 'L', seed: 32 },
   { u: 0.46, v: 0.26, d: 0.6, b: mate(REG.saffron, REG.saffron, REG.coral), side: 'R', seed: 34 },
 ]
@@ -431,57 +431,85 @@ function smoothed(t: number, long: number, short: number, mix: number, lean: num
 }
 
 /**
- * The balloon stair (up out of B1 to the reveal of B4) on one rising line: the spark's path smoothed, so the camera
- * climbs the stair steadily and the spark's hops (the ride up inside each envelope, the sit on each pilot while that
- * balloon surges) move within the frame, instead of the frame surging after each hop and parking in each basket. Half
- * the smoothing is long (it carries the climb through the sits, at about a third of the surge), half short (so the
- * frame still leans into each ride). Keys every 0.3 s on it, so the camera's own easing follows it.
+ * The balloon stair (up out of B1 to the reveal of B4), three climbs, each framed its own way so the stair reads as a
+ * climb and not one climb looped.
+ *
+ * - Climb 1 (whoosh1 to land2) on one rising line: the spark's path smoothed, so the camera climbs steadily and the
+ *   ride up inside B1 and the float to B2 move within the frame. Half the smoothing is long, half short (so the frame
+ *   still leans into the ride).
+ * - Climb 2 (land2 to land3) low and close: in on B2's basket as the spark floats down onto its pilot, held there
+ *   through the ballast and the whoosh, the spark going up the jet into the mouth with the envelope's skirt over the
+ *   top of the frame; then up the silk with the glow, close behind it, to the pop and the float to B3.
+ * - Climb 3 (land3 to pop3) side on and wider: B3 in the left third, the sky it is climbing into on the right, so the
+ *   step up to B4 (high and to the right) reads as a diagonal; then in on the vent as it pops.
+ *
+ * Keys every 0.2 s, so the camera's own easing follows these lines.
  */
 const STAIR_FROM = AT.whoosh1 + 0.45
 const STAIR_TO = AT.pop3 + 0.45
 const stairLine = (t: number): Pt => smoothed(t, 1.0, 0.3, 0.55, 0)
-/** The stair's framing: [t, cells]. The third stair comes in closer on the crown as its vent pops. */
+/** The stair's framing: [t, cells]. */
 const STAIR_CELLS: [number, number][] = [
   [STAIR_FROM, 12],
   [AT.whoosh1 + 1.15, 13.6],
   [AT.pop1, 13],
-  [AT.land2, 12],
-  [AT.whoosh2, 12.2],
-  [AT.flare2, 13],
-  [AT.land3, 12],
-  [AT.whoosh3, 11.8],
-  [AT.flare3, 10.6],
+  // Climb 2: in on B2's basket as the spark comes down onto it, close through the whoosh, then up the silk.
+  [AT.pop1 + 0.45, 12.4],
+  [AT.bags2, 7.5],
+  [AT.whoosh2 + 0.25, 7.6],
+  [AT.pop2 - 0.3, 10.4],
+  [AT.pop2 + 0.25, 9.6],
+  [AT.land3 - 0.25, 10.2],
+  // Climb 3: side on, then in on the vent as it pops.
+  [AT.land3 + 0.35, 11],
+  [AT.flare3, 11],
   [AT.pop3, 9.6],
   [STAIR_TO, 10.8],
 ]
-/**
- * Where the frame sits off the line: a little right of the stair (it steps east), and low enough that the spark's sits
- * and rides are centred on it.
- */
+/** Climb 1's frame off its line: a little right of the stair (it steps east), and low enough to centre the ride. */
 const STAIR_OFF: Pt = [0.4, 0.4]
+/** Climb 2, low: the frame's middle off B2's nozzle, so the basket's floor is at the bottom and the mouth high. */
+const LOW2 = (t: number): Pt => add(n2(t), [-0.2, -1.1])
+/** Climb 2, up the silk: the spark followed closely (a short smoothing that leans a little ahead). */
+const RISE2 = (t: number): Pt => add(smoothed(t, 0.45, 0.22, 0.6, 0.1), [0.35, -1.2])
+/**
+ * Climb 3, side on: a steady line up the stair, with the spark's balloon in the left third. The frame is low on the
+ * sit (the envelope going up out of it) and rises ahead of the glow, so at the pop the crown is low left and B4's
+ * basket is in over it, up and to the right.
+ */
+const SIDE3 = (t: number): Pt => add(smoothed(t, 0.9, 0.3, 0.6, 0), [3.9, 0.9 - 2.6 * ss(t, AT.whoosh3, AT.pop3 - 0.1)])
+const mix = (a: Pt, b: Pt, u: number): Pt => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
+function stairHold(t: number): Pt {
+  let h = add(stairLine(t), STAIR_OFF)
+  h = mix(h, LOW2(t), ss(t, AT.pop1 + 0.45, AT.bags2))
+  h = mix(h, RISE2(t), ss(t, AT.whoosh2 + 0.15, AT.pop2 + 0.25))
+  h = mix(h, SIDE3(t), ss(t, AT.land3 - 0.45, AT.land3 + 0.35))
+  return h
+}
 const STAIR: PartShot[] = (() => {
   const out: PartShot[] = []
-  const n = Math.round((STAIR_TO - STAIR_FROM) / 0.3)
+  const n = Math.round((STAIR_TO - STAIR_FROM) / 0.2)
   for (let i = 0; i <= n; i++) {
     const t = STAIR_FROM + ((STAIR_TO - STAIR_FROM) * i) / n
-    out.push({ t, cells: schedule(STAIR_CELLS, t), hold: add(stairLine(t), STAIR_OFF), w: 1 })
+    out.push({ t, cells: schedule(STAIR_CELLS, t), hold: stairHold(t), w: 1 })
   }
   return out
 })()
 
 /**
- * The crescendo's wide (land4 to the fortissimo), opening slowly from 21 to 24.5 cells tall as the regatta spreads out
- * below. The spark on the top balloon's pilot sits low in the frame with the whole balloon over it. The balloon never
- * stops climbing (its cruise), and the camera climbs with it on a line smoothed over about a second, so each roar's
- * shove carries the balloon up the frame and the camera eases after it: steps on a climb that never parks, while
- * everything under it falls away below.
+ * The crescendo (land4 to the fortissimo), on the top balloon: its envelope fills the top of the frame, the spark on
+ * its pilot a little below the middle, opening only a little (12 to 14 cells) so the spark stays findable, and the
+ * regatta dropping past below and round it. The show's widest frames belong to the crash and the Titan. The balloon
+ * never stops climbing (its cruise), and the camera climbs with it on a line smoothed over about a second, so each
+ * roar's shove carries the balloon up the frame and the camera eases after it: steps on a climb that never parks.
  */
 const WIDE_CELLS: [number, number][] = [
-  [AT.land4, 21],
-  [AT.blast4, 24.5],
+  [AT.land4, 12],
+  [AT.glow, 13.5],
+  [AT.blast4, 14],
 ]
 const WIDE_DOWN = 0.6
-const wideLine = (t: number): Pt => smoothed(t, 0.9, 0.3, 0.8, 0.1)
+const wideLine = (t: number): Pt => smoothed(t, 0.9, 0.3, 0.8, 0)
 const wideHold = (t: number, cells: number): Pt => add(wideLine(t), [0.65, -(WIDE_DOWN - 0.5) * cells])
 const WIDE: PartShot[] = (() => {
   const out: PartShot[] = []
