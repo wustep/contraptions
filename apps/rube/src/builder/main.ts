@@ -967,7 +967,7 @@ window.addEventListener('paste', (e) => {
   pasteText(text)
 })
 
-const machineLink = el('a', { class: 'more', href: '/' }, ['Play it in Machine →'])
+const machineLink = el('a', { class: 'more', href: '/machine/' }, ['Play it in Machine →'])
 // Machine knows the builds folder and this browser's builds. A sample not yet touched is in neither, so it is kept on the way out.
 machineLink.addEventListener('click', () => void saveBuild(structuredClone(build)))
 fileSec.append(storeWarn, el('div', { class: 'row' }, [exportBtn, importBtn, copyBtn]), filePick, fileStatus, machineLink)
@@ -1069,7 +1069,7 @@ function sync(): void {
   play.classList.toggle('paused', paused)
   seedNote.textContent = seed
   storeWarn.hidden = storeKept()
-  machineLink.href = `/?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`
+  machineLink.href = `/machine/?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`
   document.title = `${build.name} · builder · contraptions`
 }
 
