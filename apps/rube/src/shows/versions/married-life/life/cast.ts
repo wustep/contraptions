@@ -31,9 +31,10 @@ export interface CastState {
 
 /** Carl's half-width: the same footprint as a ball, so every lane built for a ball holds him. */
 export const HALF = R
-/** How round his corners are, in cells. */
+/** How round his corners are, in cells: young, and old (softer). */
 const CORNER = 0.075
-/** The balloon is his from the cut into the hospital to the end. */
+const CORNER_OLD = 0.09
+/** The balloon comes in with him at the cut into the hospital, and is in the picture from there to the end. */
 export const BALLOON_FROM = AT.hospital
 /**
  * The bow tie is his from the last morning at the tie machine to the end, as the old Carl's is in the film: she ties
@@ -43,8 +44,34 @@ export const BOW_FROM = bar('jar', 48) + 0.6
 /** Where it floats, from his centre, at rest. */
 export const BALLOON_REST: Pt = [0.24, -1.42]
 
+/**
+ * How the years sit on them, under whatever a part asks of them: Carl settles (a touch shorter and wider), his
+ * corners soften, and when he walks he stoops a little toward where he is going, more as he goes faster; Ellie
+ * settles a little onto the floor. All of it follows `AGE`, so it comes on with the years and never pops.
+ */
+export function bearingOfAge(show: LifeShow, t: number): { stoop: number; settle: number; corner: number; ellie: number } {
+  const age = AGE(t)
+  const leg = show.legs[show.owner(t)]
+  const a = Math.max(leg.from, t - 0.07)
+  const b = Math.min(leg.to - 1e-4, t + 0.07)
+  const vx = b - a > 0.02 ? (show.where(b)[0] - show.where(a)[0]) / (b - a) : 0
+  const u = Math.max(0, Math.min(1, (Math.abs(vx) - 0.05) / 0.35))
+  return {
+    stoop: 0.06 * age * Math.sign(vx) * u * u * (3 - 2 * u),
+    settle: 0.07 * age,
+    corner: CORNER + (CORNER_OLD - CORNER) * age,
+    ellie: 0.05 * age,
+  }
+}
+
+/** How Carl holds himself at `t`: a part's pose (or the slope's lean), with the years' settle and stoop on top. */
+export function carlBearing(show: LifeShow, t: number, years = bearingOfAge(show, t)): { tilt: number; squash: number } {
+  const pose = show.pose(t)
+  return { tilt: (pose?.tilt ?? slopeAt(show, t)) + years.stoop, squash: (pose?.squash ?? 0) + years.settle }
+}
+
 /** Carl, a rounded square, at (x, y) in pixels, turned `tilt`, flattened `squash` onto his bottom. */
-export function drawCarl(p: p5, k: number, weight: number, color: string, x: number, y: number, tilt = 0, squash = 0, scale = 1, light = 1): void {
+export function drawCarl(p: p5, k: number, weight: number, color: string, x: number, y: number, tilt = 0, squash = 0, scale = 1, light = 1, corner = CORNER): void {
   if (scale <= 0.02) return
   const s = 2 * HALF * k * scale
   const h = s * (1 - squash)
@@ -58,7 +85,7 @@ export function drawCarl(p: p5, k: number, weight: number, color: string, x: num
   p.strokeWeight(weight * Math.min(1, scale * 1.5 + 0.3))
   p.fill(alpha(p, color, light))
   p.rectMode(p.CENTER)
-  p.rect(0, 0, w, h, CORNER * k * scale)
+  p.rect(0, 0, w, h, corner * k * scale)
   p.pop()
 }
 
@@ -181,6 +208,9 @@ export const cast = scenery<CastState>({
     const { k, weight } = c
     const here = show.at(t)
     const leg = show.owner(t)
+    const years = bearingOfAge(show, t)
+    // Their short trails fade with the years: the old don't streak.
+    const streak = 1 - 0.75 * AGE(t)
     const trail = (get: (u: number) => { x: number; y: number; scale: number } | null, shape: (x: number, y: number, size: number, a: number) => void) => {
       const now = get(t)
       if (!now) return
@@ -190,7 +220,7 @@ export const cast = scenery<CastState>({
         const back = get(u)
         if (!back || back.scale <= 0.02) continue
         if (Math.hypot(back.x - now.x, back.y - now.y) < 0.08) continue
-        shape(back.x * k, back.y * k, back.scale * (1 - i * 0.12), (90 - i * 18) / 255)
+        shape(back.x * k, back.y * k, back.scale * (1 - i * 0.12), (streak * (90 - i * 18)) / 255)
       }
     }
 
@@ -211,8 +241,16 @@ export const cast = scenery<CastState>({
         },
       )
       const spin = ellie.x / R
-      const angle = ellie.angle ?? 0
-      ball(p, k, INK, weight, ellie.color, ellie.x * k, ellie.y * k, spin, ellie.scale ?? 1, ellie.stretch ?? 1, angle, false)
+      const size = ellie.scale ?? 1
+      // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
+      // squash or stretch a part gives her.
+      const foot = (ellie.y + R * size) * k
+      p.push()
+      p.translate(0, foot)
+      p.scale(1, 1 - years.ellie)
+      p.translate(0, -foot)
+      ball(p, k, INK, weight, ellie.color, ellie.x * k, ellie.y * k, spin, size, ellie.stretch ?? 1, ellie.angle ?? 0, false)
+      p.pop()
     }
 
     // The balloon, behind him.
@@ -232,13 +270,12 @@ export const cast = scenery<CastState>({
         p.noStroke()
         p.fill(alpha(p, color, a))
         p.rectMode(p.CENTER)
-        p.rect(x, y, 2 * HALF * k * size, 2 * HALF * k * size, CORNER * k * size)
+        p.rect(x, y, 2 * HALF * k * size, 2 * HALF * k * size, years.corner * k * size)
         p.pop()
       },
     )
-    const pose = show.pose(t)
-    const tilt = pose?.tilt ?? slopeAt(show, t)
-    drawCarl(p, k, weight, color, here.x * k, here.y * k, tilt, pose?.squash ?? 0, here.scale)
-    if (t >= BOW_FROM) drawBowTie(p, k, weight, here.x * k, here.y * k, tilt, pose?.squash ?? 0, here.scale)
+    const { tilt, squash } = carlBearing(show, t, years)
+    drawCarl(p, k, weight, color, here.x * k, here.y * k, tilt, squash, here.scale, 1, years.corner)
+    if (t >= BOW_FROM) drawBowTie(p, k, weight, here.x * k, here.y * k, tilt, squash, here.scale)
   },
 })

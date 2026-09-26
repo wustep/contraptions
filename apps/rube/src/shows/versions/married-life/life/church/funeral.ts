@@ -82,9 +82,10 @@ function carl(T: number): Pt {
  */
 function carlPose(T: number): { tilt: number; squash: number } {
   // He settles into the pew over the first second after the cut (on the far side he was upright in her bedside chair).
-  const slump = 0.05 * smooth(T, FUN.from, FUN.from + 1.2) * (1 - smooth(T, LEAN, DOWN))
+  // The years' own settle and walking stoop are the cast's (`bearingOfAge`); this is only the grief on top of them.
+  const slump = 0.025 * smooth(T, FUN.from, FUN.from + 1.2) * (1 - smooth(T, LEAN, DOWN))
   const forward = -0.13 * smooth(T, LEAN, LEAN + 0.5) * (1 - smooth(T, DOWN - 0.3, DOWN + 0.3))
-  const stoop = 0.05 * smooth(T, WALK, WALK + 0.6) * (1 - smooth(T, HALT - 0.5, HALT))
+  const stoop = 0.015 * smooth(T, WALK, WALK + 0.6) * (1 - smooth(T, HALT - 0.5, HALT))
   const up = -0.17 * ease(T, TOLL + 0.02, TOLL + 0.6) * (1 - ease(T, ANSWER + 0.05, OUT + 0.45))
   const bow = 0.07 * smooth(T, OUT - 0.2, OUT + 0.4) * (1 - smooth(T, 201.3, CUT.home - 0.05))
   const squash = slump + 0.05 * knock(T - DOWN, 0.2) * (T >= DOWN ? 1 : 0) + 0.045 * knock(T - TOLL, 0.22) * (T >= TOLL ? 1 : 0)

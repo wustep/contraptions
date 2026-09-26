@@ -143,24 +143,23 @@ export const SEAM = {
 
 /**
  * How old they are, 0 (the wedding) to 1 (the hill): what their colours and their pace follow. The years go by
- * slowly through the first waltz, and fastest in the ties, as in the film.
+ * slowly through the first waltz; in the jar, life's three breaks each cost a few (the tyre, his leg, the tree); and
+ * in the ties they go a decade a morning: each step taken as she snugs his tie (`TIE_YEARS`, the CINCH downbeats,
+ * jar bars 40 to 48), eased over 0.6 s, so no single frame pops and yet each morning is plainly older than the last.
  */
+const eased = (t: number, a: number, b: number): number => {
+  const u = Math.max(0, Math.min(1, (t - a) / (b - a)))
+  return u * u * (3 - 2 * u)
+}
+/** Life's breaks in the jar (the tyre, his fall, the tree): a few years each. */
+export const BREAK_YEARS = [beat('jar', 11, 3), beat('jar', 19, 1), 128.871]
+/** Her knots in the ties: a decade each. */
+export const TIE_YEARS = [40, 42, 44, 46, 48].map((n) => bar('jar', n))
 export function AGE(t: number): number {
-  const keys: [number, number][] = [
-    [0, 0],
-    [CUT.yard, 0.12],
-    [SEAM.ties, 0.35],
-    [161.68, 0.95],
-    [CUT.climb, 1],
-  ]
-  if (t <= keys[0][0]) return keys[0][1]
-  for (let i = 1; i < keys.length; i++) {
-    const [t1, a1] = keys[i]
-    const [t0, a0] = keys[i - 1]
-    if (t <= t1) {
-      const u = (t - t0) / (t1 - t0)
-      return a0 + (a1 - a0) * u * u * (3 - 2 * u)
-    }
-  }
-  return 1
+  let a = 0.12 * eased(t, 0, CUT.yard)
+  for (const b of BREAK_YEARS) a += 0.06 * eased(t, b + 0.05, b + 0.65)
+  a += 0.05 * eased(t, 131.5, SEAM.ties)
+  for (const c of TIE_YEARS) a += 0.12 * eased(t, c + 0.05, c + 0.65)
+  a += 0.05 * eased(t, 161.68, CUT.climb)
+  return a
 }
