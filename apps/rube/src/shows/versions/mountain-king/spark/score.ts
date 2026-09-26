@@ -5,7 +5,7 @@ import { director, type Shot } from './camera'
 import { credits } from './credits'
 import { bound as sparkBound, ember, flame, veil, type FlameState, type VeilState } from './fx'
 import { box, lay, standing, type Chain, type Link } from './kit'
-import { CODA, DOORS, DURATION, FESTIVAL, LAST, LOFT_SEAM } from './music'
+import { CODA, DOORS, DURATION, FESTIVAL, HAMMERS, LAST, LOFT_SEAM } from './music'
 import { SparkShow, type Leg, type Riders, type WorldSet } from './show'
 import { SPARK, type WorldKey } from './worlds'
 import { room, ROOM_CELLS } from './loft/set'
@@ -75,13 +75,15 @@ const PLAN = (): LegPlan[] => [
 /**
  * The camera takes the show's biggest hits in the body: on each it pushes in a little, at once, and eases back. Only
  * the great ones: the doors into statements 2 and 3, the crash (the coda's first chord, the show's structural climax,
- * though it measures under the heaviest), the coda's heaviest chords, and the two last.
+ * though it measures under the heaviest), the coda's heaviest chords, the six hammer blows (each a salute's flash-bang
+ * in the field, the last the heaviest as the spark comes down in the ash), and the two last.
  */
 const PUNCHES: [number, number][] = [
   [DOORS.glass, 0.5],
   [DOORS.railway, 0.9],
   [CODA[0].t, 0.9],
   ...CODA.filter((c) => c.s >= 6).map((c) => [c.t, 0.7] as [number, number]),
+  ...HAMMERS.map((t, i) => [t, i === HAMMERS.length - 1 ? 0.6 : 0.4] as [number, number]),
   [LAST[0], 0.6],
   [LAST[1], 1],
 ]
