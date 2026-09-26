@@ -71,15 +71,16 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(H_WALK[1] + 0.4, 5.8, [0.5, -1.95]),
     k(FIX[0] + 0.5, 4.5, [0.25, -2.2]),
     k(LET_GO + 0.9, 4.1, [0.2, -2.15]),
-    // He goes back; the bursts round the kit, both arms, his head over them at the top of the frame: the rack and
-    // the snare, down to the floor tom, up to the crash (it holds now), the snare's little roll.
+    // He goes back; the bursts round the kit, both arms, his head over them at the top of the frame. In close on the
+    // rack tom and the snare, along to the floor tom; out on the crash (it holds now), with Fletcher back on his
+    // podium watching; in again on the snare, a breath wider, and close for its little roll.
     k(H_BACK[0] + 1.2, 6.2, [0.7, -1.4]),
-    k(345.0, 4.5, [-1.2, -1.2], 0.55),
-    k(347.0, 4.4, [-1.5, -1.15], 0.55),
-    k(348.9, 4.6, [-0.5, -1.55], 0.6),
-    k(351.6, 4.2, [-0.9, -1.25], 0.6),
-    k(354.0, 4.4, [-1.3, -1.2], 0.55),
-    k(356.1, 4.2, [-1.0, -1.3]),
+    k(344.7, 3.5, [-1.2, -1.25], 0.6),
+    k(346.8, 3.6, [-2.0, -1.1], 0.6),
+    k(348.95, 6.4, [0.9, -1.5], 0.7),
+    k(351.6, 3.5, [-0.8, -1.25], 0.6),
+    k(354.0, 4.6, [-1.3, -1.2], 0.55),
+    k(356.1, 3.3, [-0.9, -1.25]),
     // To the ride; then a slow move across the stage to his father at the stage door: Jim low at the left in the
     // wings' light, the frame and his son small in their pool at the right, the whole width of the stage between
     // them; and back to the kit.
