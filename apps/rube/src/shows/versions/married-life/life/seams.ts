@@ -90,8 +90,11 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   funeral: {
     t: CUT.funeral,
     v: [0, 0],
-    cells: 3.1,
-    frame: [0.3, -0.65],
+    // As wide as the hand-over's framing and a touch wider, the middle about a cell over him: the balloon whole over
+    // her under Zoom up to the cut, and the camera drawing back slowly through it into the empty church (it drifted in
+    // to 3.1 and out again, and cut the balloon's crown under Zoom for the last second).
+    cells: 3.47,
+    frame: [0.3, -0.96],
     ellie: null,
     balloon: true,
     what: 'Carl at rest in a chair: at her bedside, the balloon tied to her and over her; on the far side, alone in the front pew of the church, the balloon his again and drifting back over him. She is gone',
