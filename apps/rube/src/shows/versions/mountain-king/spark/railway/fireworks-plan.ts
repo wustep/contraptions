@@ -520,18 +520,40 @@ const FAR_BANK = GY - 1.3
 const VOLLEY_N = [1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7]
 const VOLLEY_KINDS: Kind[] = ['peony', 'chrys', 'palm', 'peony', 'willow', 'chrys', 'peony']
 /**
- * Where the moon is, near enough, from the spark: it holds its place in the frame (`night.ts`), and the camera rides
- * the wire a little ahead of the spark, then draws back over the last bar (measured off the sheets). No shell breaks
- * on it: a burst round the moon makes the moon its bright round core.
+ * Where the moon is, from the spark: it holds its place in the frame (`night.ts`), so it rides with the camera, which
+ * runs the wire a little ahead of the spark, draws back over the last bar and opens out on the crash. Offsets from the
+ * spark, measured from the show's own camera every 0.3 s (the director's `dev` moon probe; re-measure if the camera
+ * keys in `fireworks.ts` change). No shell breaks on it: a burst round the moon makes the moon its bright round core.
  */
 const MOON_KEYS: [number, number, number][] = [
-  [128.5, 5.3, -0.4],
-  [132.9, 5.2, -0.6],
-  [133.3, 3.8, -2.2],
-  [133.7, 3.2, -2.2],
+  [127.30, 4.65, -4.21],
+  [127.60, 4.52, -3.73],
+  [127.90, 4.64, -3.04],
+  [128.20, 4.75, -2.81],
+  [128.50, 5.23, -1.18],
+  [128.80, 5.28, -0.81],
+  [129.10, 5.29, -0.72],
+  [129.40, 5.34, -0.69],
+  [129.70, 5.37, -0.68],
+  [130.00, 5.40, -0.67],
+  [130.30, 5.43, -0.67],
+  [130.60, 5.46, -0.67],
+  [130.90, 5.49, -0.68],
+  [131.20, 5.51, -0.68],
+  [131.50, 5.54, -0.69],
+  [131.80, 5.56, -0.71],
+  [132.10, 5.55, -0.84],
+  [132.40, 5.35, -1.28],
+  [132.70, 4.99, -1.83],
+  [133.00, 4.51, -2.32],
+  [133.30, 3.94, -2.58],
+  [133.60, 3.32, -2.51],
+  [133.90, 4.10, -3.31],
+  [134.20, 6.00, -5.96],
+  [134.50, 6.57, -4.37],
+  [134.80, 6.40, -2.92],
 ]
 const moonFrom = (t: number): Pt => {
-  if (t >= CRASH - 0.05) return [34.1, 0.9]
   let i = 0
   while (i < MOON_KEYS.length - 2 && t > MOON_KEYS[i + 1][0]) i++
   const [ta, xa, ya] = MOON_KEYS[i]
