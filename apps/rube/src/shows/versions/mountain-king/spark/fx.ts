@@ -226,6 +226,13 @@ const TONGUES: Tongue[] = (() => {
   return out
 })()
 
+type RGB = [number, number, number]
+const lerp3 = (a: RGB, b: RGB, f: number): RGB => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
+const css = (c: RGB, al: number): string => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${Math.max(0, Math.min(1, al))})`
+const palette = (x: { rim: string; body: string; heart: string }): { rim: RGB; body: RGB; heart: RGB } => ({ rim: rgb(x.rim), body: rgb(x.body), heart: rgb(x.heart) })
+/** Where one world's fire meets the next at a door: white heat, which any fire's colours go to without turning grey. */
+const HOT: RGB = rgb('#FFF6E0')
+
 /** The fire over the frame at a door, from the world left's fire to the world come to's. */
 export const veil = () =>
   scenery<VeilState>({
@@ -248,21 +255,12 @@ export const veil = () =>
         }
       }
       if (best < 0) return
-      const span = best >= 4 ? FLASH : VEIL
+      const flash = best >= 4
+      const span = flash ? FLASH : VEIL
       const door = show.legs[best].from
-      const from = FIRES[show.legs[best - 1].world]
-      const to = FIRES[show.legs[best].world]
-      const turn = best >= 4 ? smooth(d, -0.012, 0.012) : smooth(d, -0.07, 0.07)
-      const mix = (a: string, b: string) => {
-        const pa = rgb(a)
-        const pb = rgb(b)
-        return pa.map((v, i) => Math.round(v + (pb[i] - v) * turn)) as [number, number, number]
-      }
-      const rim = mix(from.rim, to.rim)
-      const body = mix(from.body, to.body)
-      const heart = mix(from.heart, to.heart)
-      const col = (a: [number, number, number], b: [number, number, number], f: number, al: number) =>
-        `rgba(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')}, ${Math.max(0, Math.min(1, al))})`
+      // The two fires, each in its own world's colours. They never mix: blue and orange mixed are a flat grey.
+      const OLD = palette(FIRES[show.legs[best - 1].world])
+      const NEW = palette(FIRES[show.legs[best].world])
 
       const { k } = c
       const f = frame(p, k)
@@ -287,36 +285,47 @@ export const veil = () =>
       // 0 at the frame's trailing edge, 1 at its leading edge.
       const sOf = (x: number, y: number) => 0.5 + ((x - cx) * ux + (y - cy) * uy) / (2 * reach)
       const q = (d + span.before) / (span.before + span.after)
-      const band = best >= 4 ? 0.5 : 2.0 - 3.0 * q
-      const cover = (sv: number) => (best >= 4 ? smooth(d, -span.before, -span.before * 0.3) * (1 - smooth(d, span.after * 0.3, span.after)) : 1 - smooth(Math.abs(sv - band), 0.62, 1.0))
+      const band = flash ? 0.5 : 2.0 - 3.0 * q
+      const cover = (sv: number) => (flash ? smooth(d, -span.before, -span.before * 0.3) * (1 - smooth(d, span.after * 0.3, span.after)) : 1 - smooth(Math.abs(sv - band), 0.62, 1.0))
+      // Which fire a point is in. The band comes in as the old world's fire and goes out as the new one's: behind its
+      // middle it is the new fire, ahead of it the old, and where they meet it is white-hot. A flash (the dash home) is
+      // the old fire up to the cut and the new one after it.
+      const sideOf = (sv: number): number => (flash ? (d < 0 ? -1 : 1) : sv - band)
+      const seam = (side: number): number => (flash ? 0 : Math.exp(-((side / 0.11) ** 2)))
 
       const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()
-      // The wash: dark rim at the fire's edges, the body where it is thickest.
+      // The wash: dark rim at the fire's edges, the body where it is thickest; white-hot where the two fires meet.
       const g = ctx.createLinearGradient((cx - ux * reach) * k, (cy - uy * reach) * k, (cx + ux * reach) * k, (cy + uy * reach) * k)
-      for (let i = 0; i <= 10; i++) {
-        const sv = i / 10
+      for (let i = 0; i <= 24; i++) {
+        const sv = i / 24
         const cv = cover(sv)
-        g.addColorStop(sv, col(rim, body, 0.55 * cv * cv, 0.94 * cv))
+        const side = sideOf(sv)
+        const P = side < 0 ? OLD : NEW
+        g.addColorStop(sv, css(lerp3(lerp3(P.rim, P.body, 0.55 * cv * cv), HOT, 0.75 * seam(side)), 0.94 * cv))
       }
       ctx.fillStyle = g
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, hgt * k)
       ctx.restore()
-      // The tongues, rising through it and flickering, hotter toward the middle of the fire.
+      // The tongues, rising through it and flickering, hotter toward the middle of the fire. Each is one fire's or the
+      // other's, whole; the line between them is ragged.
       p.push()
       p.noStroke()
       for (const tg of TONGUES) {
         const life = (t * tg.rate * 0.9 + tg.phase) % 1
         const bx = f.x0 + w * tg.u + 0.03 * w * Math.sin(t * 7 + tg.phase * 20)
         const by = f.y0 + hgt * (tg.v - 0.22 * life)
-        const cv = cover(sOf(bx, by - hgt * tg.h * 0.4))
+        const sv = sOf(bx, by - hgt * tg.h * 0.4)
+        const cv = cover(sv)
         if (cv < 0.03) continue
+        const side = sideOf(sv + 0.22 * (tg.phase - 0.5))
+        const P = side < 0 ? OLD : NEW
         const fade = Math.sin(Math.PI * life)
         const hh = hgt * tg.h * (0.55 + 0.45 * cv) * (0.8 + 0.2 * Math.sin(t * 13 * tg.rate + tg.phase * 9))
         const ww = w * tg.w * 0.5 * (0.6 + 0.4 * cv)
         const hot = Math.min(1, tg.hot * (0.4 + 0.6 * cv))
-        const fill = hot < 0.5 ? col(rim, body, hot * 2, 0.8 * cv * fade) : col(body, heart, (hot - 0.5) * 2, 0.8 * cv * fade)
-        tongue(p, k, bx, by, ww, hh, Math.sin(t * 3 + tg.phase * 12) * w * 0.02, fill)
+        const base = hot < 0.5 ? lerp3(P.rim, P.body, hot * 2) : lerp3(P.body, P.heart, (hot - 0.5) * 2)
+        tongue(p, k, bx, by, ww, hh, Math.sin(t * 3 + tg.phase * 12) * w * 0.02, css(lerp3(base, HOT, 0.6 * seam(side)), 0.8 * cv * fade))
       }
       p.pop()
       // The spark itself stays in front of its fire: a door never hides it.
