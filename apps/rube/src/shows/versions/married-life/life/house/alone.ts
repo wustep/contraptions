@@ -68,26 +68,39 @@ const carl: Path = pieces([
 /** A bell curve of width w round t0: how a lean comes and goes. */
 const lean = (T: number, t0: number, w: number) => Math.exp(-(((T - t0) / w) ** 2))
 
-/** An old man: a stoop as he goes, a rest on the steps, a push on the door, a bow at her chair, the chair's settle, a reach for the lamp. */
+/** 0 before `a`, 1 after `b`, smoothly between. */
+const ramp = (T: number, a: number, b: number) => {
+  const u = Math.max(0, Math.min(1, (T - a) / (b - a)))
+  return u * u * (3 - 2 * u)
+}
+
+/**
+ * An old man: a stoop as he stands and goes, a rest on the steps, a push on the door, a bow at her chair, the chair's
+ * settle, a reach for the lamp. His lean is one continuous sum (it never flips between frames); the years' own settle,
+ * and their stoop while he walks, are the cast's (`bearingOfAge`), under this.
+ */
 function carlPose(T: number): { tilt?: number; squash?: number } {
   // Each step placed with a small settle; a gathering before he lifts himself into his chair.
   let settle = 0
   for (const t of ALONE.steps) if (T > t) settle += 0.06 * Math.exp(-(T - t) / 0.18)
   settle += 0.07 * crouch(T, A.toMine[1], 0.3)
-  if (T < A.up[0]) return { tilt: -0.03 * Math.min(1, (T - T0) / 0.8), squash: 0 }
-  if (T < A.up[1] - 0.5) return { tilt: -0.04, squash: settle }
-  if (T >= A.up[1] - 0.5 && T < A.up[2]) {
-    // Catching his breath on the second step.
-    const s = Math.max(0, T - ALONE.steps[1])
-    return { tilt: -0.06 * Math.min(1, s / 0.5), squash: settle + 0.05 * Math.min(1, s / 0.6) * (1 - Math.max(0, Math.min(1, (T - (A.up[2] - 0.4)) / 0.4))) }
-  }
-  if (T >= A.toDoor[0] && T < A.walkIn[1]) return { tilt: -0.07 - 0.1 * lean(T, ALONE.latch, 0.35), squash: 0 }
-  if (T >= A.walkIn[1] && T < A.toMine[1] + 0.3) return { tilt: -0.07 * (1 - crouch(T, A.toMine[1], 0.3)) - 0.09 * lean(T, ALONE.tie, 0.4), squash: settle }
+  // Catching his breath on the second step.
+  const breath = ramp(T, ALONE.steps[1], ALONE.steps[1] + 0.5) * (1 - ramp(T, A.up[2] - 0.4, A.up[2]))
+  const tilt =
+    -0.03 * ramp(T, T0, T0 + 0.8) * (1 - ramp(T, A.toMine[1] - 0.2, A.toMine[1] + 0.3)) -
+    0.03 * breath -
+    0.1 * lean(T, ALONE.latch, 0.35) -
+    0.09 * lean(T, ALONE.tie, 0.4) -
+    0.2 * lean(T, ALONE.lamp - 0.1, 0.32)
+  if (T < A.up[0]) return { tilt, squash: 0 }
+  if (T < A.up[2]) return { tilt, squash: settle + 0.05 * breath }
+  if (T >= A.toDoor[0] && T < A.walkIn[1]) return { tilt, squash: 0 }
+  if (T >= A.walkIn[1] && T < A.toMine[1] + 0.3) return { tilt, squash: settle }
   if (T >= ALONE.sit) {
     const s = T - ALONE.sit
-    return { tilt: -0.2 * lean(T, ALONE.lamp - 0.1, 0.32), squash: 0.11 * Math.exp(-s / 0.4) * Math.cos(Math.min(Math.PI / 2, s * 1.6)) }
+    return { tilt, squash: 0.11 * Math.exp(-s / 0.4) * Math.cos(Math.min(Math.PI / 2, s * 1.6)) }
   }
-  return {}
+  return { tilt, squash: settle }
 }
 
 /**

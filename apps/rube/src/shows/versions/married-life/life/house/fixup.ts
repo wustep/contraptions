@@ -137,7 +137,10 @@ function carlPose(T: number): { tilt?: number; squash?: number } {
     const s = T - SHOVE
     const squash = s > 0 ? 0.14 * Math.exp(-s / 0.1) : 0
     const back = Math.exp(-(((T - HALT) / 0.35) ** 2))
-    return { tilt: s < 0 ? 0 : Math.min(1, s / 0.15) * (0.06 + 0.1 * Math.min(1, v / 1.1)) - 0.1 * back, squash }
+    // (All of it eased out by the time he lets go of the cart, so he stands up straight without a flick.)
+    const u = Math.max(0, Math.min(1, (T - HALT - 0.2) / 0.4))
+    const off = 1 - u * u * (3 - 2 * u)
+    return { tilt: (s < 0 ? 0 : Math.min(1, s / 0.15) * (0.06 + 0.1 * Math.min(1, v / 1.1)) - 0.1 * back) * off, squash }
   }
   if (T > C.up - 0.16 && T < C.up) return { tilt: 0, squash: 0.13 * crouch(T, C.up, 0.16) }
   if (T > C.press - 0.1 && T < C.down + 0.3) {

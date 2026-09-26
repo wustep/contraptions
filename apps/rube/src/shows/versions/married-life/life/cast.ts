@@ -104,14 +104,27 @@ function slopeAt(show: LifeShow, t: number): number {
     const q = show.where(b)
     const vx = (q[0] - p[0]) / (b - a)
     const vy = (q[1] - p[1]) / (b - a)
+    // In the air (a hop's arc bends hard; a slope does not) he is upright: the slope's lean fades out. Measured over
+    // a wider span than the lanes' own samples, so their corners never read as a bend.
+    // (Three spans, as a landing's corner between two arcs can cancel in one of them.)
+    const c = (a + b) / 2
+    let air = 0
+    for (const span of [0.08, 0.05, 0.03]) {
+      const h = Math.min(span, c - from, to - 1e-4 - c)
+      if (h <= 0.015) continue
+      const ay = Math.abs(show.where(c + h)[1] - 2 * show.where(c)[1] + show.where(c - h)[1]) / (h * h)
+      air = Math.max(air, Math.min(1, (ay - 0.5) / 1.5))
+    }
     const speed = Math.abs(vx)
     if (speed < 0.05) {
       n++
       continue
     }
-    // Along a slope he leans with it, either way he is going; a steep drop or a climb is not a slope.
+    // Along a slope he leans with it, either way he is going; a steep drop or a climb is not a slope (and the one
+    // fades into the other, so going up a step never flips his lean from one frame to the next).
     const slope = Math.atan2(vy, Math.abs(vx)) * Math.sign(vx)
-    const along = Math.max(0, Math.min(1, (speed - 0.1) / 0.5)) * (Math.abs(slope) < 0.9 ? 1 : 0)
+    const steep = Math.max(0, Math.min(1, (Math.abs(slope) - 0.55) / 0.4))
+    const along = Math.max(0, Math.min(1, (speed - 0.1) / 0.5)) * (1 - steep * steep * (3 - 2 * steep)) * (1 - air * air * (3 - 2 * air))
     sum += Math.max(-0.7, Math.min(0.7, slope)) * along
     n++
   }
