@@ -4,7 +4,7 @@ import { KIT_FLOOR, drawStick } from '../drums'
 import { alpha, hash, type Ctx } from '../kit'
 import { TUNE_ORIGIN, TUNE_PERIOD } from '../music'
 import { KIT, SHOP } from '../worlds'
-import { box4, inked } from './room'
+import { LAMP, box4 } from './room'
 
 /**
  * The night's props, in the practice room's kit frame (the ball on the snare's head at the origin): the drill rig
@@ -12,6 +12,75 @@ import { box4, inked } from './room'
  * down onto the head), the tape on the grip of the stick that bled, the metronome ticking on a shelf, and the stool
  * with the glass of ice water on it.
  */
+
+/* ------------------------------------------------------------------ the finishes */
+
+/*
+ * Every prop here is a filled form edged in its own dark, never the cream ink (a room of ink outlines next to the lit
+ * lacquer kit read as a diagram), with a tungsten edge only on the side the lamp is on. As drums.ts's hardware.
+ */
+/** The room's deepest dark, that a finish's edge sinks toward. */
+const DARK = '#050404'
+/** Steel in the room's shadow (the rig's posts, clamps and hinges, the metronome's rod and weight): drums.ts's HARDWARE. */
+const STEEL = mixHex(KIT.chrome, KIT.shade, 0.42)
+/** The hinges' barrels: steel a step darker than the posts. */
+const BLOCK = mixHex(STEEL, KIT.shade, 0.55)
+/** White tape (the roll, the wound grip). */
+const TAPE = KIT.head
+/** The lamp's light caught on an edge: on wood, on steel, on tape. */
+const WOOD_LIT = mixHex(SHOP.wood, SHOP.tungsten, 0.62)
+const STEEL_LIT = mixHex(KIT.chrome, SHOP.tungsten, 0.35)
+const TAPE_LIT = mixHex(KIT.head, SHOP.tungsten, 0.25)
+
+/** A finish as the light on it goes: toward the room's paper, as the night's props always did. */
+const dim = (bg: string, hex: string, lit: number, floor = 0.3): string => mixHex(bg, hex, floor + (1 - floor) * lit)
+/** A finish's own edge: its dark. */
+const edgeOf = (hex: string): string => mixHex(hex, DARK, 0.6)
+/** Which side of `x` the lamp hangs: 1 right, -1 left. */
+const lampSide = (x: number): 1 | -1 => (LAMP.x >= x ? 1 : -1)
+
+/** A filled shape through `pts` (kit frame), edged in `edge`. */
+function slab(p: p5, k: number, pts: readonly Pt[], fill: string, edge: string, w: number): void {
+  p.fill(fill)
+  p.stroke(edge)
+  p.strokeWeight(w)
+  p.strokeJoin(p.ROUND)
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
+}
+
+/** The lamp's light along an edge from `a` to `b` (kit frame), fading with the light. */
+function litEdge(p: p5, k: number, a: Pt, b: Pt, hex: string, lit: number, w: number): void {
+  if (lit < 0.1) return
+  p.stroke(alpha(p, hex, Math.min(0.85, 0.12 + 0.7 * lit)))
+  p.strokeWeight(w)
+  p.strokeCap(p.ROUND)
+  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+}
+
+/**
+ * A box by its corners (its corners rounded by `r`), filled and edged in its own dark, lit along its top and its
+ * lamp-side end.
+ */
+function block(p: p5, c: Ctx, x0: number, y0: number, x1: number, y1: number, fill: string, lit: number, hi: string, r = 0): void {
+  const { k, weight } = c
+  if (r > 0) {
+    p.push()
+    p.rectMode(p.CORNER)
+    p.fill(fill)
+    p.stroke(edgeOf(fill))
+    p.strokeWeight(weight * 0.55)
+    p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k, r * k)
+    p.pop()
+  } else {
+    slab(p, k, [[x0, y0], [x1, y0], [x1, y1], [x0, y1]], fill, edgeOf(fill), weight * 0.55)
+  }
+  const inset = (weight * 0.35) / k
+  litEdge(p, k, [x0 + inset + r, y0 + inset], [x1 - inset - r, y0 + inset], hi, lit, weight * 0.5)
+  const sx = lampSide((x0 + x1) / 2) > 0 ? x1 - inset : x0 + inset
+  litEdge(p, k, [sx, y0 + inset + r], [sx, y1 - inset - r], hi, lit * 0.6, weight * 0.4)
+}
 
 /* ------------------------------------------------------------------ the sticks */
 
@@ -86,64 +155,99 @@ export function stickAngle(side: Side, T: number, strokes: readonly number[], ba
 
 /** The drill rig: the posts clamped to the snare's hoop, the hinges, the sticks at their angles, the tape. */
 export function drawRig(p: p5, c: Ctx, look: { L: number; R: number; tape: [number, number]; light: number; laying: number }): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const lit = Math.max(0.08, Math.min(1, look.light))
-  const chrome = mixHex(mixHex(bg, KIT.shade, 0.6), KIT.chrome, 0.25 + 0.75 * lit)
+  const steel = dim(bg, STEEL, lit, 0.4)
   p.push()
+  p.strokeCap(p.ROUND)
   for (const side of ['L', 'R'] as const) {
     const st = STICKS[side]
     const m = side === 'L' ? -1 : 1
     const [hx, hy] = st.hinge
-    // The post, from its clamp on the hoop to the hinge.
-    p.stroke(chrome)
+    // The post, from its clamp on the hoop to the hinge: a steel rod edged in its own dark.
+    p.stroke(edgeOf(steel))
+    p.strokeWeight(weight * 1.9)
+    p.line((m * 0.6) * k, 0.17 * k, hx * k, hy * k)
+    p.stroke(steel)
     p.strokeWeight(weight * 1.1)
     p.line((m * 0.6) * k, 0.17 * k, hx * k, hy * k)
-    inked(p, alpha(p, ink, 0.4 + 0.4 * lit), weight * 0.5, chrome)
-    box4(p, k, m * 0.6 - 0.05, 0.12, m * 0.6 + 0.05, 0.22)
+    // The clamp on the hoop: a steel jaw, its lower lip under the hoop's rim.
+    block(p, c, m * 0.6 - 0.035, 0.125, m * 0.6 + 0.035, 0.215, steel, lit, STEEL_LIT, 0.015)
+    p.noStroke()
+    p.fill(edgeOf(steel))
+    p.ellipse(m * 0.6 * k, 0.15 * k, 0.018 * k, 0.018 * k)
   }
   // The sticks: a hickory stick on each hinge, and the tape on the right one's grip.
   for (const side of ['L', 'R'] as const) {
     const st = STICKS[side]
     const a = side === 'L' ? look.L : look.R
     const ang = side === 'L' ? a : Math.PI - a
-    const shade: Ctx = lit >= 0.99 ? c : { ...c, ink: mixHex(bg, ink, 0.35 + 0.65 * lit) }
-    drawStick(p, shade, st.hinge, ang, st.len)
+    drawStick(p, c, st.hinge, ang, st.len)
     if (side === 'R' && look.tape[1] > look.tape[0] + 0.005) tape(p, c, a, look.tape, lit)
   }
-  // The hinges over the sticks' butts: a dark block on each post.
+  // The hinges over the sticks' butts: a steel barrel on each post's head, its pin through it.
+  const knuckle = dim(bg, BLOCK, lit, 0.5)
   for (const side of ['L', 'R'] as const) {
     const [hx, hy] = STICKS[side].hinge
-    inked(p, alpha(p, ink, 0.5 + 0.4 * lit), weight * 0.6, mixHex(bg, SHOP.black, 0.5))
-    p.rect(hx * k, hy * k, 0.09 * k, 0.08 * k, 0.02 * k)
+    block(p, c, hx - 0.045, hy - 0.032, hx + 0.045, hy + 0.032, knuckle, lit * 0.8, STEEL_LIT, 0.03)
+    p.noStroke()
+    p.fill(edgeOf(knuckle))
+    p.ellipse(hx * k, hy * k, 0.026 * k, 0.026 * k)
   }
   // The tape's roll, hung on the right post below the hinge: a flat ring, edge on; while he lays it, the strip
   // runs from the roll to where he is on the stick.
   const [rx, ry] = [STICKS.R.hinge[0] + 0.02, STICKS.R.hinge[1] + 0.2]
+  const white = dim(bg, TAPE, lit, 0.35)
   if (look.laying > 0.005) {
     const [tx, ty] = along('R', look.R, look.tape[1])
-    p.stroke(alpha(p, mixHex(bg, ink, 0.4 + 0.6 * lit), look.laying))
+    p.stroke(alpha(p, white, look.laying))
     p.strokeWeight(weight * 1.3)
     p.line(rx * k, ry * k, tx * k, ty * k)
   }
-  inked(p, alpha(p, ink, 0.4 + 0.4 * lit), weight * 0.55, mixHex(bg, KIT.head, 0.3 + 0.65 * lit))
-  p.rect(rx * k, ry * k, 0.13 * k, 0.07 * k, 0.015 * k)
+  // The roll: a short drum of tape on its side, hung on a peg on the post, its face (the card core in it) turned to
+  // the lamp; the wraps' shadow on its far end.
+  const [h, d, fw] = [0.06, 0.035, 0.028]
+  const edge = edgeOf(white)
+  p.fill(mixHex(white, SHOP.panel, 0.35))
+  p.stroke(edge)
+  p.strokeWeight(weight * 0.5)
+  p.ellipse((rx - d) * k, ry * k, fw * 2 * k, h * 2 * k)
+  p.noStroke()
+  p.fill(white)
+  box4(p, k, rx - d, ry - h, rx + d, ry + h)
+  p.stroke(edge)
+  p.line((rx - d) * k, (ry - h) * k, (rx + d) * k, (ry - h) * k)
+  p.line((rx - d) * k, (ry + h) * k, (rx + d) * k, (ry + h) * k)
+  litEdge(p, k, [rx - d, ry - h + weight * 0.5 / k], [rx + d, ry - h + weight * 0.5 / k], TAPE_LIT, lit, weight * 0.5)
+  p.fill(mixHex(white, TAPE_LIT, 0.4 * lit))
+  p.stroke(edge)
+  p.strokeWeight(weight * 0.5)
+  p.ellipse((rx + d) * k, ry * k, fw * 2 * k, h * 2 * k)
+  p.noStroke()
+  p.fill(dim(bg, mixHex(SHOP.wood, KIT.hickory, 0.5), lit, 0.4))
+  p.ellipse((rx + d) * k, ry * k, fw * 1.15 * k, h * 1.15 * k)
+  p.fill(mixHex(bg, DARK, 0.5))
+  p.ellipse((rx + d) * k, ry * k, fw * 0.8 * k, h * 0.8 * k)
   p.pop()
 }
 
 /** White tape wound on the right stick from `span[0]` to `span[1]` of its length: a pale band, the wraps across it. */
 function tape(p: p5, c: Ctx, a: number, span: [number, number], lit: number): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const [x0, y0] = along('R', a, span[0])
   const [x1, y1] = along('R', a, span[1])
-  p.stroke(mixHex(bg, SHOP.black, 0.5))
+  const white = dim(bg, TAPE, lit, 0.4)
+  // The band: white tape edged in its own shadow, wider than the stick it is wound on.
+  p.strokeCap(p.ROUND)
+  p.stroke(edgeOf(white))
   p.strokeWeight(weight * 4.1)
   p.line(x0 * k, y0 * k, x1 * k, y1 * k)
-  p.stroke(mixHex(bg, ink, 0.4 + 0.6 * lit))
+  p.stroke(white)
   p.strokeWeight(weight * 3.3)
   p.line(x0 * k, y0 * k, x1 * k, y1 * k)
-  // The wraps: short strokes across the band, a little slanted, at the tape's width apart.
+  // The wraps: short creases across the band in the tape's shadow, a little slanted, at the tape's width apart.
   const n = Math.floor((span[1] - span[0]) * STICKS.R.len / 0.055)
-  p.stroke(alpha(p, SHOP.black, 0.3 + 0.25 * lit))
+  p.stroke(alpha(p, edgeOf(white), 0.35 + 0.25 * lit))
   p.strokeWeight(weight * 0.5)
   const dx = x1 - x0
   const dy = y1 - y0
@@ -169,27 +273,39 @@ export const METRONOME = { x: 2.9, base: SHELF.y, h: 0.58, wBase: 0.38, wTop: 0.
 export const metronomeAngle = (T: number): number => METRONOME.amp * Math.cos((Math.PI * (T - TUNE_ORIGIN)) / TUNE_PERIOD)
 
 export function drawMetronome(p: p5, c: Ctx, T: number, light: number): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const lit = Math.max(0.06, Math.min(1, light))
   const M = METRONOME
+  const side = lampSide(M.x)
+  const wood = dim(bg, SHOP.wood, lit, 0.25)
   p.push()
-  // The shelf: a board on a bracket.
-  inked(p, alpha(p, ink, 0.25 + 0.5 * lit), weight * 0.6, mixHex(bg, SHOP.wood, 0.25 + 0.65 * lit))
-  box4(p, k, SHELF.x0, SHELF.y, SHELF.x1, SHELF.y + 0.06)
-  p.noFill()
-  p.stroke(alpha(p, ink, 0.2 + 0.4 * lit))
-  p.strokeWeight(weight * 0.6)
-  p.line((SHELF.x1 - 0.2) * k, (SHELF.y + 0.06) * k, (SHELF.x1 - 0.2) * k, (SHELF.y + 0.34) * k)
-  p.line((SHELF.x1 - 0.2) * k, (SHELF.y + 0.34) * k, (SHELF.x1 - 0.5) * k, (SHELF.y + 0.06) * k)
-  // The case: a wooden pyramid, its front a shade lighter.
+  p.strokeCap(p.ROUND)
+  // The shelf: a board on two wooden brackets, the brackets in the board's shadow.
+  const under = SHELF.y + 0.06
+  const shadowed = mixHex(wood, DARK, 0.3)
+  for (const [x, dir] of [[SHELF.x0 + 0.12, 1], [SHELF.x1 - 0.12, -1]] as const) {
+    slab(p, k, [[x, under], [x + dir * 0.2, under], [x, under + 0.24]], shadowed, edgeOf(wood), weight * 0.55)
+  }
+  block(p, c, SHELF.x0, SHELF.y, SHELF.x1, under, wood, lit, WOOD_LIT)
+  // The case: a wooden pyramid, edged in its own dark, the lamp along its near side and its top.
   const top = M.base - M.h
-  inked(p, alpha(p, ink, 0.35 + 0.5 * lit), weight * 0.7, mixHex(bg, SHOP.wood, 0.3 + 0.65 * lit))
+  const bl: Pt = [M.x - M.wBase / 2, M.base]
+  const br: Pt = [M.x + M.wBase / 2, M.base]
+  const tr: Pt = [M.x + M.wTop / 2, top]
+  const tl: Pt = [M.x - M.wTop / 2, top]
+  const caseWood = dim(bg, mixHex(SHOP.wood, KIT.oxblood, 0.25), lit, 0.3)
+  slab(p, k, [bl, br, tr, tl], caseWood, edgeOf(caseWood), weight * 0.7)
+  // Its far side a shade darker: a narrow face turned from the lamp.
+  const far: Pt[] = side > 0 ? [bl, [bl[0] + 0.05, M.base], [tl[0] + 0.015, top], tl] : [[br[0] - 0.05, M.base], br, tr, [tr[0] - 0.015, top]]
+  p.noStroke()
+  p.fill(alpha(p, DARK, 0.35))
   p.beginShape()
-  p.vertex((M.x - M.wBase / 2) * k, M.base * k)
-  p.vertex((M.x + M.wBase / 2) * k, M.base * k)
-  p.vertex((M.x + M.wTop / 2) * k, top * k)
-  p.vertex((M.x - M.wTop / 2) * k, top * k)
+  for (const [x, y] of far) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
+  const inset = (weight * 0.4) / k
+  const near = side > 0 ? [br, tr] : [bl, tl]
+  litEdge(p, k, [near[0][0] - side * inset * 2, near[0][1] - inset], [near[1][0] - side * inset, near[1][1] + inset], WOOD_LIT, lit, weight * 0.55)
+  litEdge(p, k, [tl[0] + inset, top + inset], [tr[0] - inset, top + inset], WOOD_LIT, lit, weight * 0.5)
   // The slot the arm swings in front of: dark.
   p.noStroke()
   p.fill(mixHex(bg, SHOP.black, 0.7))
@@ -199,25 +315,25 @@ export function drawMetronome(p: p5, c: Ctx, T: number, light: number): void {
   p.vertex((M.x + 0.02) * k, (top + 0.08) * k)
   p.vertex((M.x - 0.02) * k, (top + 0.08) * k)
   p.endShape(p.CLOSE)
-  // The arm, from its pivot low in the case, and its sliding weight.
+  // The arm, from its pivot low in the case, and its sliding weight: steel, edged in its own dark.
   const a = metronomeAngle(T)
   const px = M.x
   const py = M.base - 0.08
   const ax = px + Math.sin(a) * M.arm
   const ay = py - Math.cos(a) * M.arm
-  p.stroke(mixHex(bg, KIT.chrome, 0.3 + 0.7 * lit))
-  p.strokeWeight(weight * 0.8)
+  const rod = dim(bg, mixHex(STEEL, KIT.chrome, 0.5), lit, 0.35)
+  p.stroke(edgeOf(rod))
+  p.strokeWeight(weight * 1.4)
+  p.line(px * k, py * k, ax * k, ay * k)
+  p.stroke(rod)
+  p.strokeWeight(weight * 0.75)
   p.line(px * k, py * k, ax * k, ay * k)
   p.push()
   p.translate((px + Math.sin(a) * M.arm * 0.62) * k, (py - Math.cos(a) * M.arm * 0.62) * k)
   p.rotate(a)
-  inked(p, alpha(p, ink, 0.4 + 0.4 * lit), weight * 0.5, mixHex(bg, KIT.chrome, 0.25 + 0.6 * lit))
-  p.beginShape()
-  p.vertex(-0.045 * k, -0.035 * k)
-  p.vertex(0.045 * k, -0.035 * k)
-  p.vertex(0.035 * k, 0.035 * k)
-  p.vertex(-0.035 * k, 0.035 * k)
-  p.endShape(p.CLOSE)
+  const weightSteel = dim(bg, STEEL, lit, 0.35)
+  slab(p, k, [[-0.045, -0.035], [0.045, -0.035], [0.035, 0.035], [-0.035, 0.035]], weightSteel, edgeOf(weightSteel), weight * 0.5)
+  litEdge(p, k, [-0.04, -0.035 + inset], [0.04, -0.035 + inset], STEEL_LIT, lit, weight * 0.45)
   p.pop()
   p.pop()
 }
@@ -237,40 +353,54 @@ const halfAt = (y: number): number => {
 }
 
 export function drawStool(p: p5, c: Ctx, light: number): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const lit = Math.max(0.06, Math.min(1, light))
   const S = STOOL
-  const wood = mixHex(bg, SHOP.wood, 0.3 + 0.65 * lit)
-  p.push()
-  // Three legs, splayed, and the rung between them; the back leg thinner and darker.
-  p.stroke(mixHex(bg, SHOP.wood, 0.2 + 0.45 * lit))
-  p.strokeWeight(weight * 1.5)
-  p.line(S.x * k, (S.top + 0.08) * k, S.x * k, KIT_FLOOR * k)
-  for (const m of [-1, 1]) {
-    p.stroke(alpha(p, ink, 0.35 + 0.45 * lit))
-    p.strokeWeight(weight * 2.6)
-    p.line((S.x + m * S.w * 0.36) * k, (S.top + 0.08) * k, (S.x + m * S.w * 0.52) * k, KIT_FLOOR * k)
-    p.stroke(wood)
-    p.strokeWeight(weight * 1.5)
-    p.line((S.x + m * S.w * 0.36) * k, (S.top + 0.08) * k, (S.x + m * S.w * 0.52) * k, KIT_FLOOR * k)
+  const side = lampSide(S.x)
+  const wood = dim(bg, SHOP.wood, lit, 0.3)
+  const back = mixHex(wood, DARK, 0.35)
+  const edge = edgeOf(wood)
+  const y0 = S.top + 0.07
+  /** A leg: a tapered filled quad from under the seat at `xt` to the floor at `xb`. */
+  const leg = (xt: number, xb: number, fill: string, wt: number, wb: number, lamp: boolean): void => {
+    slab(p, k, [[xt - wt, y0], [xt + wt, y0], [xb + wb, KIT_FLOOR], [xb - wb, KIT_FLOOR]], fill, edge, weight * 0.55)
+    if (lamp) {
+      const i = (weight * 0.45) / k
+      litEdge(p, k, [xt + side * (wt - i), y0 + 0.02], [xb + side * (wb - i), KIT_FLOOR - 0.03], WOOD_LIT, lit * 0.55, weight * 0.4)
+    }
   }
+  p.push()
+  // The back leg, thinner and in the seat's shadow; the rung between the front two; the front legs, splayed.
+  leg(S.x, S.x, back, 0.022, 0.018, false)
   const rung = S.top + (KIT_FLOOR - S.top) * 0.62
-  p.stroke(wood)
-  p.strokeWeight(weight * 1.1)
-  p.line((S.x - S.w * 0.46) * k, rung * k, (S.x + S.w * 0.46) * k, rung * k)
-  // The seat: a round wooden top seen from the side, a thick slab with rounded ends.
-  inked(p, alpha(p, ink, 0.4 + 0.45 * lit), weight * 0.8, wood)
+  const rx = S.w * (0.36 + 0.16 * 0.62) - 0.01
+  slab(p, k, [[S.x - rx, rung - 0.02], [S.x + rx, rung - 0.02], [S.x + rx, rung + 0.02], [S.x - rx, rung + 0.02]], mixHex(wood, DARK, 0.15), edge, weight * 0.5)
+  for (const m of [-1, 1]) leg(S.x + m * S.w * 0.36, S.x + m * S.w * 0.52, wood, 0.03, 0.024, true)
+  // The seat: a round wooden top seen from the side, a thick slab with rounded ends, the lamp along its top.
+  p.rectMode(p.CENTER)
+  p.fill(wood)
+  p.stroke(edge)
+  p.strokeWeight(weight * 0.7)
   p.rect(S.x * k, (S.top + 0.045) * k, S.w * k, 0.09 * k, 0.045 * k)
+  const i = (weight * 0.5) / k
+  litEdge(p, k, [S.x - S.w / 2 + 0.05, S.top + i], [S.x + S.w / 2 - 0.05, S.top + i], WOOD_LIT, lit, weight * 0.55)
+  // Its underside in shadow.
+  p.noStroke()
+  p.fill(alpha(p, DARK, 0.3))
+  box4(p, k, S.x - S.w / 2 + 0.04, S.top + 0.06, S.x + S.w / 2 - 0.04, S.top + 0.085)
   p.pop()
 }
 
+/** The glass's edges: pale ice catching the lamp, never the cream ink. */
+const GLASS_EDGE = mixHex(SHOP.ice, SHOP.tungsten, 0.15)
+
 /** The glass's back: its far rim, behind everything that goes into it. */
 export function drawGlassBack(p: p5, c: Ctx, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const lit = Math.max(0.06, Math.min(1, light))
   p.push()
   p.noFill()
-  p.stroke(alpha(p, ink, 0.2 + 0.3 * lit))
+  p.stroke(alpha(p, GLASS_EDGE, 0.15 + 0.25 * lit))
   p.strokeWeight(weight * 0.5)
   p.arc(GLASS.x * k, GLASS.top * k, GLASS.wTop * k, 0.08 * k, Math.PI, Math.PI * 2)
   p.pop()
@@ -287,7 +417,7 @@ export interface GlassLook {
 
 /** The glass's front: the water (over him, when he is in it), the ice, the glass itself, and any splash. */
 export function drawGlassFront(p: p5, c: Ctx, g: GlassLook): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const lit = Math.max(0.06, Math.min(1, g.light))
   const inGlass = Math.abs(g.ball[0] - GLASS.x) < 0.3 && g.ball[1] > GLASS.top - 0.1 && g.ball[1] < GLASS.bottom
   // The surface: rocked by the last splash, settling.
@@ -329,13 +459,17 @@ export function drawGlassFront(p: p5, c: Ctx, g: GlassLook): void {
     p.push()
     p.translate(x * k, (level + 0.012 + bob) * k)
     p.rotate(cube.r + 0.08 * Math.sin(g.T * 1.3 + i))
-    inked(p, alpha(p, ink, 0.2 + 0.3 * lit), weight * 0.5, mixHex(bg, SHOP.ice, 0.35 + 0.55 * lit))
+    const ice = mixHex(bg, SHOP.ice, 0.35 + 0.55 * lit)
+    p.rectMode(p.CENTER)
+    p.fill(ice)
+    p.stroke(mixHex(ice, SHOP.panel, 0.45))
+    p.strokeWeight(weight * 0.5)
     p.rect(0, 0, cube.s * k, cube.s * k, 0.018 * k)
     p.pop()
   })
   // The glass: its walls, its thick base, its rim, a streak of light down one side.
   p.noFill()
-  p.stroke(alpha(p, ink, 0.3 + 0.45 * lit))
+  p.stroke(alpha(p, GLASS_EDGE, 0.3 + 0.45 * lit))
   p.strokeWeight(weight * 0.7)
   const ht = halfAt(GLASS.top)
   const hB = halfAt(GLASS.bottom)
