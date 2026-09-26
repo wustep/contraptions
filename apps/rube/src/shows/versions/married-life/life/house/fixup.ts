@@ -200,12 +200,18 @@ function shotsFor(): PartShot[] {
   const key = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - at[0], y - at[1]], w: 1 })
   const cut = SEATED(CHAIRS.carl)
   return [
-    // Running in on the church's framing; easing out to take in the old house and the cart.
-    key(SHOVE, 5.6, -0.1, -1.6),
-    // Up with the mast, along the bay as the chairs go in.
-    key(24.2, 6.2, 0.9, -1.9),
-    key(26.1, 6.1, 1.7, -1.85),
-    key(27.9, 6.1, 2.8, -1.85),
+    // Running in on the church's framing, and out, once, to the whole of the old grey house: its sagging roof, its
+    // dark bay, the cart and the two of them at its foot, as the mast goes up and the first blows fall (the same
+    // framing the house made new comes back to at 35.6: before, then after). Held a breath as the first stroke of
+    // paint goes on at its left end; then in again over two bars, never turning back, along the bay as the chairs go
+    // in. (10 cells is the least that holds the ridge, -7.9, and keeps him inside Zoom; the frame rises no faster than it
+    // widens, for the same reason.)
+    key(SHOVE, 5.75, -0.1, -1.75),
+    key(23.75, 7.8, 0.7, -2.25),
+    key(24.6, 9.6, 1.1, -2.98),
+    key(25.3, 10.0, 1.25, -3.1),
+    key(27.1, 6.3, 2.2, -1.9),
+    key(28.1, 6.15, 2.9, -1.87),
     key(29.5, 6.6, 4.0, -2.0),
     // Wide: the house half old, half new, the rollers as tall as it.
     key(31.6, 8.4, 5.1, -2.6),
