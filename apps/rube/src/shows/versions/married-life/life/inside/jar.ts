@@ -309,6 +309,37 @@ export const jar = part<JarState>(
  * while Ellie is on the mantle (y -1.48) or in the air over it, the frame can come no closer than about 2.8 cells
  * (3.4 at the top of her hops up onto it).
  */
+/**
+ * The storm's pull-out as keys along one curve: the zoom a Hermite in log cells from the pour (carrying on the draw
+ * back's pace) to rest at STORM_WIDE on STORM_IN; across, even in the zoom's progress; the frame's middle rising with
+ * the cells it opens (nearly linear in cells), which keeps Carl on his plank (y -0.48) inside the Zoom frame all the
+ * way out, and at the widest puts the crown's top (y -14.45) inside the frame. Sampled closer at
+ * the ends, where it turns, so the director's monotone cubic through the samples is the curve.
+ */
+const STORM_IN = 128.4
+const STORM_WIDE = { cells: 17.2, at: [10.4, -5.95] as Pt }
+function stormOut(k: (t: number, cells: number, hold: Pt) => PartShot): PartShot[] {
+  const [c0, x0, y0] = [3.85, 5.2, -1.05]
+  const { cells: c1, at: [x1, y1] } = STORM_WIDE
+  const D = STORM_IN - PUSH2
+  const L0 = Math.log(c0)
+  const L1 = Math.log(c1)
+  const m0 = 0.196 * D
+  const m1 = (Math.log(17.4 / c1) / (130.4 - STORM_IN)) * D
+  const out: PartShot[] = []
+  const n = 14
+  for (let i = 1; i <= n; i++) {
+    const u = (1 - Math.cos((Math.PI * i) / n)) / 2
+    const L = (2 * u ** 3 - 3 * u ** 2 + 1) * L0 + (u ** 3 - 2 * u ** 2 + u) * m0 + (-2 * u ** 3 + 3 * u ** 2) * L1 + (u ** 3 - u ** 2) * m1
+    const c = Math.exp(L)
+    const s = (L - L0) / (L1 - L0)
+    // (A little behind the cells: his last stroke, 127.431, drops his end of the plank as the frame opens.)
+    const up = ((c - c0) / (c1 - c0)) ** 1.15
+    out.push(k(PUSH2 + D * u, c, [x0 + (x1 - x0) * s, y0 + (y1 - y0) * up]))
+  }
+  return out
+}
+
 function shots(): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold: L(hold), w })
   /** A step in that lands on `at` and rests there a moment (the frame settles with the coins, then moves on). */
@@ -348,15 +379,12 @@ function shots(): PartShot[] {
     k(UP2[0], 2.5, [3.25, -0.66]),
     k(123.9, 2.97, [3.9, -0.82]),
     k(PUSH2, 3.85, [5.2, -1.05]),
-    k(126.3, 4.8, [6.1, -1.5]),
-    // The storm gathers: out and up past the nursery to the whole house, its roof and the garden tree over the
-    // ridge, so the limb is seen to come down through the roof (TREE) and the jar thrown over by the blow; in again
-    // as the cradle rights and the limb is winched out, the nursery's ceiling well inside the frame while the hole is
-    // boarded.
-    k(127.3, 7.0, [7.1, -2.15]),
-    k(128.3, 12.6, [9.1, -4.2]),
-    k(129.2, 16.0, [10.2, -5.3]),
-    k(130.4, 16.4, [10.3, -5.4]),
+    // The storm gathers: from the pour, one move out and up past the nursery to the whole house, its roof and the
+    // garden tree's whole crown over the ridge, landed before the limb comes down (TREE), so the limb, the jar thrown
+    // over by the blow and the thunder all fall in a still frame; a slight drift; then in again as the cradle rights and
+    // the limb is winched out, the nursery's ceiling well inside the frame while the hole is boarded.
+    ...stormOut(k),
+    k(130.4, 17.4, [10.45, -6.0]),
     k(131.7, 11.5, [9.0, -3.8]),
     k(133.3, 10.0, [8.6, -3.1]),
     k(135.3, 9.2, [9.3, -2.85]),
