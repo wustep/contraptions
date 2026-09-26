@@ -117,9 +117,10 @@ export const walk = part<null>(
     const seat = castleAt(SETTLE + 1).at
     const NIGHT = WHOLE + 2
     const night = w([seat[0] + 0.4, seat[1] + 3.5 - NIGHT / 2])
-    // Under the porch at night: her high in the frame, the legs striding under her down to the dark ground.
-    const UNDER = 11.5
-    const under: Pt = [0.12 * UNDER * (16 / 9), 0.21 * UNDER]
+    // Under the porch at night: her high in the frame, the great legs striding under her into the dark (at 7.6 cells
+    // she holds the lead's floor, 12 px at 640x360).
+    const UNDER = 7.6
+    const under: Pt = [0.12 * UNDER * (16 / 9), 0.23 * UNDER]
     return [
       // On the first footfall out of the fog, a cut in to her on the hilltop, low in the frame: the legs stamping
       // round her and the belly over her, cropped by the top; the stair drops into the frame over her, and in on her
@@ -149,7 +150,7 @@ export const walk = part<null>(
       // On a footfall, a cut down under the porch: her high in the frame, the great legs walking on under her into the
       // dark as it slows.
       { t: W(86), cells: UNDER, off: under, cut: true },
-      { t: W(87) + 0.6, cells: UNDER + 0.6, off: [under[0], under[1] + 0.3] },
+      { t: W(87) + 0.6, cells: UNDER + 0.15, off: [under[0], under[1] + 0.1] },
       // On the last footfall, out to the whole castle small against the night, its windows lit, folding down onto its
       // seat; on the last note (the sit), back in to her on the porch beside the door, and on to the door as the latch
       // lifts and it opens on the room's light.
