@@ -311,7 +311,8 @@ function drawWindow(p: p5, c: C, tone: Tone, ink: string, t: number, day: number
     p.fill(tone(shade))
     p.rect(X(Math.min(hinge, free)), X(y0 - 0.02), X(Math.abs(hinge - free)), X(y1 - y0 + 0.04))
     if (lw > 0.08) {
-      // Boards, and a heart cut in each leaf (the one ornament), with the dawn showing through it.
+      // Boards, and a slot cut across each leaf near its top, with the dawn showing through it (a plain slot: no
+      // ornament that reads as a glyph).
       p.stroke(alpha(p, ink, 0.4))
       p.strokeWeight(W * 0.45)
       for (let i = 1; i < 3; i++) {
@@ -320,14 +321,10 @@ function drawWindow(p: p5, c: C, tone: Tone, ink: string, t: number, day: number
       }
       p.noStroke()
       const hx = hinge - side * lw * 0.5
-      const hy = y0 + 0.42
-      const s = lw / half
+      const hy = y0 + 0.36
+      const sw = 0.5 * lw
       p.fill(alpha(p, mixHex(WASTES.gold, ROOM.sun, 0.5), 0.25 + 0.65 * (1 - open)))
-      p.beginShape()
-      p.vertex(X(hx), X(hy + 0.1))
-      p.bezierVertex(X(hx - 0.12 * s), X(hy), X(hx - 0.08 * s), X(hy - 0.1), X(hx), X(hy - 0.04))
-      p.bezierVertex(X(hx + 0.08 * s), X(hy - 0.1), X(hx + 0.12 * s), X(hy), X(hx), X(hy + 0.1))
-      p.endShape(p.CLOSE)
+      p.rect(X(hx - sw / 2), X(hy - 0.025), X(sw), X(0.05), X(0.02))
     }
   }
   // The latch bar across the shutters, lifted by its cord as the shaft winds it, until it lets go.
@@ -614,9 +611,11 @@ function drawShaft(p: p5, c: C, tone: Tone, ink: string, t: number): void {
   p.stroke(ink)
   p.strokeWeight(W)
   p.fill(tone(IRON))
+  // (Drawn at the room's line weight: never thinner than a stroke and a half, so they hold at a wide framing.)
   for (const x of SHAFT.hangers) {
-    p.rect(X(x - 0.04), X(R.ceil), X(0.08), X(SHAFT.y - R.ceil))
-    p.rect(X(x - 0.09), X(SHAFT.y - 0.07), X(0.18), X(0.14), X(0.03))
+    const hw = Math.max(0.12, (2.5 * W) / k)
+    p.rect(X(x - hw / 2), X(R.ceil), X(hw), X(SHAFT.y - R.ceil))
+    p.rect(X(x - 0.1), X(SHAFT.y - 0.08), X(0.2), X(0.16), X(0.03))
   }
   // The shaft.
   p.stroke(ink)
@@ -882,20 +881,36 @@ function drawPull(p: p5, c: C, tone: Tone, ink: string, t: number): void {
   const pull = pullAt(t)
   const [dx] = R.door
   const lintel = R.door[1] - 2.05 - 0.12
-  // The chain: from the dial's hub along the lintel to a pulley on the wall, and down to its handle.
-  p.stroke(alpha(p, ink, 0.85))
-  p.strokeWeight(W * 0.6)
-  p.line(X(dx - 0.16), X(lintel - 0.2), X(PULL.x), X(PULL.pulley))
-  const hx = PULL.x + pull.swing
-  const hy = PULL.handle + pull.down
-  p.line(X(PULL.x), X(PULL.pulley), X(hx), X(hy - 0.08))
-  p.stroke(ink)
-  p.strokeWeight(W)
-  p.fill(tone(BRASS))
-  p.circle(X(PULL.x), X(PULL.pulley), X(0.1))
-  // The handle: a brass tee, never a ring.
-  p.rect(X(hx - 0.1), X(hy - 0.09), X(0.2), X(0.05), X(0.02))
-  p.line(X(hx), X(hy - 0.09), X(hx), X(hy - 0.04))
+  // The bell-pull turns the dial, and it has that job only in the morning: a hemp rope from the dial's foot along
+  // the lintel to a pulley on the wall and down, with a tassel to pull by. Thick enough to read at any framing.
+  if (inMorning(t)) {
+    const hx = PULL.x + pull.swing
+    const hy = PULL.handle + pull.down
+    const rope = tone(mixHex(ROOM.wood, ROOM.plaster, 0.45))
+    const thick = Math.max(0.045, (1.8 * W) / k)
+    p.noFill()
+    p.stroke(ink)
+    p.strokeWeight(X(thick) + W * 0.9)
+    p.line(X(dx - 0.17), X(lintel - 0.03), X(PULL.x), X(PULL.pulley))
+    p.line(X(PULL.x), X(PULL.pulley), X(hx), X(hy - 0.12))
+    p.stroke(rope)
+    p.strokeWeight(X(thick))
+    p.line(X(dx - 0.17), X(lintel - 0.03), X(PULL.x), X(PULL.pulley))
+    p.line(X(PULL.x), X(PULL.pulley), X(hx), X(hy - 0.12))
+    p.stroke(ink)
+    p.strokeWeight(W)
+    p.fill(tone(BRASS))
+    p.circle(X(PULL.x), X(PULL.pulley), X(0.1))
+    // The tassel: a knot, and a flared skirt of cord below it.
+    p.fill(tone(ROOM.brick))
+    p.rect(X(hx - 0.045), X(hy - 0.14), X(0.09), X(0.07), X(0.02))
+    p.beginShape()
+    p.vertex(X(hx - 0.04), X(hy - 0.07))
+    p.vertex(X(hx + 0.04), X(hy - 0.07))
+    p.vertex(X(hx + 0.08), X(hy + 0.12))
+    p.vertex(X(hx - 0.08), X(hy + 0.12))
+    p.endShape(p.CLOSE)
+  }
   // The trolley's lever on the door's right post: a short arm on a pivot, knocked over as Howl passes.
   const [lx, ly] = LEVER
   const lv = leverAt(t)
