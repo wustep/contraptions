@@ -12,7 +12,8 @@ import { fireLight, shade, type Light } from './stove-light'
  *
  * It breathes, slow (about four seconds a breath), and it reacts only on its cues:
  *
- * - `CAT_CUES.ear` (LOFT-A's): an ear flicks while the rack's candles knock.
+ * - `CAT_CUES.ear` (LOFT-A's): the rack's candles knock and it half wakes, eye shut: the head comes up off the paws
+ *   and turns toward the sound, both ears prick and swivel, the tail's tip thumps once, and it sinks back by 1.8 s.
  * - `CAT_CUES.stir[0]` (42.455): the tail's tip lifts and flops, right in front of the spark.
  * - `CAT_CUES.stir[1]` (51.384): it shifts in its sleep, a heave of the shoulders, and the spark riding them is tossed
  *   up the stove's hot face.
@@ -75,6 +76,21 @@ export function heave(t: number): number {
   return 0.32 * (1 - Math.exp(-s / 0.075)) * Math.exp(-s / 0.5) - 0.06 * smooth(s, 0.35, 0.9) * Math.exp(-Math.max(0, s - 0.9) / 1.4)
 }
 
+/**
+ * The startle on the rack's knocks (`CAT_CUES.ear`), 0..1: a third of the wake. The head comes up off the paws at once
+ * (the note is the hit), holds while it listens, and sinks back on a long ease, down by about 1.8 s. The eye stays shut.
+ */
+export function startle(t: number): number {
+  let a = 0
+  for (const c of CAT_CUES.ear) {
+    const s = t - c
+    if (s < 0 || s > 2) continue
+    const up = 1 - (1 - Math.min(1, s / 0.24)) ** 3
+    a = Math.max(a, up * (1 - smooth(s, 0.34, 1.85)))
+  }
+  return a
+}
+
 /** How far the tail's tip is lifted by its twitch (42.455) or its lash on waking (149.815), and swung (cells). */
 function twitch(t: number): { lift: number; swing: number } {
   let lift = 0
@@ -92,15 +108,45 @@ function twitch(t: number): { lift: number; swing: number } {
     lift += 0.42 * Math.sin(Math.PI * Math.min(1, w / 0.5)) * Math.exp(-w / 0.9)
     swing += 0.35 * Math.sin(w * 7.5) * Math.exp(-w / 0.45)
   }
+  // Startled by a knock: after the head, the tip comes up off the boards and thumps down once, and lies still.
+  for (const c of CAT_CUES.ear) {
+    const u = (t - c - 0.12) / 0.46
+    if (u <= 0 || u >= 1.6) continue
+    if (u < 1) {
+      lift += 0.5 * Math.sin(Math.PI * Math.pow(u, 0.75))
+      swing += 0.16 * Math.sin(Math.PI * u)
+    } else {
+      // The thump's give: the tip settles a hair into the fur and back.
+      lift -= 0.04 * Math.sin((Math.PI * (u - 1)) / 0.6) * Math.exp(-(u - 1) / 0.25)
+    }
+  }
   return { lift, swing }
+}
+
+/**
+ * The ears on a knock: both prick up and forward toward the sound and swivel, the near one a beat ahead of the far
+ * one, then ease back with the head. Radians (forward, toward the head's west, is positive).
+ */
+function prick(t: number, far: boolean): number {
+  let a = 0
+  for (const c of CAT_CUES.ear) {
+    const s = t - c - (far ? 0.08 : 0)
+    if (s < 0 || s > 2.2) continue
+    const on = 1 - (1 - Math.min(1, s / 0.16)) ** 3
+    const hold = on * (1 - smooth(s, 0.5, 1.9))
+    // Forward, then a swivel back and round again as it listens (two turns, damped).
+    a += (far ? 0.26 : 0.34) * hold - (far ? 0.3 : 0.24) * smooth(s, 0.1, 0.3) * Math.sin(((s - 0.1) / 0.62) * Math.PI) * Math.exp(-Math.max(0, s - 0.1) / 0.55)
+  }
+  return a
 }
 
 /** The ear flick: the near ear's turn, radians (back is negative). */
 function earTurn(t: number): number {
-  let a = 0
+  let a = prick(t, false)
   // A cat's flick: the ear snapped back hard and let go, twice, the second smaller; still again within a second.
   const flick = (s: number, amp: number) => (s < 0 || s > 1.2 ? 0 : -amp * smooth(s, 0, 0.04) * Math.exp(-s / 0.13) * Math.cos(s * 13))
-  for (const c of [...CAT_CUES.ear, EAR_NEAR]) a += flick(t - c, 0.95) + flick(t - c - 0.24, 0.6)
+  for (const c of CAT_CUES.ear) a += flick(t - c, 0.5)
+  a += flick(t - EAR_NEAR, 0.95) + flick(t - EAR_NEAR - 0.24, 0.6)
   const w = t - CAT_CUES.wake
   if (w >= 0) a += -0.45 * Math.exp(-w / 0.5) * (w < 0.06 ? w / 0.06 : 1)
   return a
@@ -142,7 +188,7 @@ const shoulders = (x: number): number => Math.exp(-(((x - 5.7) / 1.0) ** 2))
 
 function bodyAt(t: number): Pt[] {
   const b = breath(t)
-  const hv = heave(t)
+  const hv = heave(t) + 0.07 * startle(t)
   return BODY.map(([x, h]) => [x, h * (1 + 0.032 * b * ribs(x)) + hv * shoulders(x) * Math.min(1, h / 1.2)] as Pt)
 }
 
@@ -466,7 +512,9 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   /* The head: tucked, facing west, its chin on its paws; lifted and looking when it wakes. */
   const aw = awake(t)
   const hb = 0.018 * breath(t) + 0.16 * Math.max(0, heave(t) / 0.32)
-  const lift = aw.lift
+  // Startled, the head comes up and turns up toward the rack at about a third of the wake (0.35 cells, 15 degrees).
+  const st = startle(t)
+  const lift = aw.lift + 0.44 * st
   const turnUp = 0.6 * lift
   const rise = hb + 0.8 * lift
   // Where a point of the head (x, h) is drawn, lifted and turned about the nape: for the neck, which joins the two.
@@ -510,9 +558,10 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   // Local head coordinates: centred on HEAD_AT.
   const headPts = spline(HEAD.map(([dx, dh]) => H(dx, dh)), true, 6)
   // Ears: the far one behind, the near one in front of the crown; the near one flicks.
-  const ear = (base0: Pt, base1: Pt, tip: Pt, turn: number, fill: string) => {
+  const ear = (base0: Pt, base1: Pt, tip0: Pt, turn: number, fill: string, tall = 1) => {
     const bx = (base0[0] + base1[0]) / 2
     const bh = (base0[1] + base1[1]) / 2
+    const tip: Pt = [bx + (tip0[0] - bx) * tall, bh + (tip0[1] - bh) * tall]
     const rot = (q: Pt): Pt => {
       const dx = q[0] - bx
       const dh = q[1] - bh
@@ -528,7 +577,8 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     vtx(p, k, pts)
   }
   const back = -0.35 * smooth(t - CAT_CUES.wake, 0, 0.04) * Math.exp(-Math.max(0, t - CAT_CUES.wake) / 0.6)
-  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8, deepAt(7.0, 2.0))
+  const tall = 1 + 0.16 * st
+  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8 + prick(t, true), deepAt(7.0, 2.0), tall)
   p.noStroke()
   p.fill(furAt(6.5, 1.3))
   vtx(p, k, headPts)
@@ -543,7 +593,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   p.stroke(ink)
   p.strokeWeight(w * 0.75)
   vtx(p, k, headPts)
-  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back, furAt(6.4, 2.0))
+  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back, furAt(6.4, 2.0), tall)
   // The eye: shut, a soft downward curve; open, an almond of amber with a slit pupil looking up and west, at the candle.
   const E = H(-0.3, 0.12)
   const ew = 0.3 * HS
