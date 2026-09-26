@@ -396,10 +396,11 @@ export const express = part<State>(
       }
       // The train, then what it breathes over it.
       if (e.x + 3 > f.x0 && e.x - 25 < f.x1) train(p, k, e, w, { glow, inside: heatAt(t), ring: knock(t - T_DOME, 0.28), valves: t < T_VALVES ? 0 : knock(t - T_VALVES - 0.25, 0.3) + (t < T_VALVES + 0.25 ? 1 : 0) })
+      // The whistle's steam under the stack's smoke, which rolls back over it.
+      whistle(p, k, t)
       exhaust(p, k, t, f.x0 - 2, f.x1 + 2)
       stackSparks(p, k, t, f.x0, f.x1)
       cocks(p, k, t)
-      whistle(p, k, t)
       blowOff(p, k, t, T_VALVES)
       draught(p, k, t)
       firebox(p, k, t)

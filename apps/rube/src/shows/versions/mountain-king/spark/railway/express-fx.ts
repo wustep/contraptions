@@ -163,21 +163,33 @@ export function cocks(p: p5, k: number, t: number): void {
   }
 }
 
-/** The whistle's shriek: a white jet straight up off the whistle, bent back as the train runs out from under it. */
+/**
+ * The whistle's shriek: steam off the whistle's mouth, a short hard plume while it sounds, bent back at once by the
+ * train's run and breaking into soft grey-white puffs that widen as they stream back over the cab and are gone in
+ * about 0.6 s. Always rooted on the whistle, so it never floats off as a stroke of its own.
+ */
 export function whistle(p: p5, k: number, t: number): void {
+  const LIFE = 0.62
+  const grey = mixHex(STEAM, SMOKE, 0.28)
+  const lit = mixHex(STEAM, RAILWAY.moon, 0.5)
   for (const b of BLASTS) {
-    if (t < b || t > b + BLAST + 1.1) continue
+    if (t < b || t > b + BLAST + LIFE) continue
     for (let i = 0; ; i++) {
-      const born = b + i * 0.025
+      const born = b + i * 0.04
       if (born > Math.min(t, b + BLAST)) break
       const a = t - born
-      if (a > 1.0) continue
+      if (a > LIFE) continue
       const at = bodyPoint(born, WHISTLE.u, WHISTLE.top)
-      const x = at[0] + speed(born) * 0.12 * (1 - Math.exp(-a / 0.12))
-      const y = at[1] - 6 * 0.2 * (1 - Math.exp(-a / 0.2)) - 0.3 * a
-      const r = 0.05 + 0.4 * (1 - Math.exp(-a / 0.35))
-      const onset = Math.min(1, (born - b) / 0.04 + 0.4)
-      cloud(p, k, x, y, r, 0.8 * onset * Math.pow(1 - a, 1.3), STEAM, STEAM, 300 + i)
+      const now = bodyPoint(t, WHISTLE.u, WHISTLE.top)
+      // Up off the mouth a little, then left in the air behind the whistle as the train runs on: young, it rides with
+      // the whistle (the jet's push); old, it hangs where it was let go.
+      const carry = Math.exp(-a / 0.08)
+      const x = now[0] * carry + at[0] * (1 - carry) - 0.25 * a + (hash(i, 31) - 0.5) * 0.12 * a
+      const y = at[1] - 0.42 * (1 - Math.exp(-a / 0.1)) - 0.35 * a + (hash(i, 32) - 0.5) * 0.15 * a
+      const r = 0.05 + 0.5 * (1 - Math.exp(-a / 0.22)) * (0.75 + 0.5 * hash(i, 33))
+      const onset = Math.min(1, (born - b) / 0.05 + 0.4)
+      const fade = Math.pow(1 - a / LIFE, 1.6)
+      cloud(p, k, x, y, r, 0.5 * onset * fade, grey, lit, 300 + i)
     }
   }
 }
