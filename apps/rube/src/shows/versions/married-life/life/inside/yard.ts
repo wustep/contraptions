@@ -550,11 +550,10 @@ export const yard = part<YardState>(
     // The two of them, closer, and in close on the book as it opens and the falls rise, and on her turning to it.
     { t: 98.9, cells: 3.5, hold: [at(-3.1), -0.95], w: 1 },
     { t: OPEN, cells: 2.72, hold: [at(-3.18), -0.7], w: 1 },
-    { t: 100.95, cells: 2.56, hold: [at(-3.15), -0.66], w: 1 },
-    // After them, home.
-    { t: 101.75, cells: 3.3, hold: [at(-2.5), -0.86], w: 1 },
-    { t: 102.5, cells: 3.9, hold: [at(-1.1), -0.92], w: 1 },
-    { t: E, cells: 4.3, hold: [at(0.6), -0.9], w: 1 },
+    { t: 101.2, cells: 2.58, hold: [at(-3.08), -0.67], w: 1 },
+    // After them, home: eased out of the close, not snapped back from it.
+    { t: 102.4, cells: 3.25, hold: [at(-2.0), -0.86], w: 1 },
+    { t: E, cells: 4.1, hold: [at(0.45), -0.9], w: 1 },
   ],
 )
 
