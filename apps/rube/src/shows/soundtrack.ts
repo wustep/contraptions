@@ -1,4 +1,5 @@
 import type { SoundtrackSpec } from './registry'
+import { createYouTubeSoundtrack } from './youtube'
 
 /**
  * The music. One audio element for the page's life, handed a new recording
@@ -54,6 +55,8 @@ export interface Soundtrack {
   state(): SoundtrackState
   /** Where the recording is, in seconds of show; null when it has no say, and the clock runs on the wall. */
   position(): number | null
+  /** Told where the show is, once a frame, whoever keeps its time: a soundtrack of several cues brings each in on it. */
+  follow(t: number): void
   play(at: number): Promise<PlayResult>
   pause(): void
   seek(at: number): void
@@ -63,7 +66,103 @@ export interface Soundtrack {
   onChange(fn: () => void): void
 }
 
-export function createSoundtrack(): Soundtrack {
+/** Where a show's music is coming from: the site's own file, or YouTube's player. */
+export type MusicSource = 'file' | 'youtube'
+
+export interface ShowSoundtrack extends Soundtrack {
+  /** Which is playing the version that is up; null with no music. */
+  source(): MusicSource | null
+  /** YouTube would not play it here, and the file is playing it instead. */
+  fellBack(): boolean
+  /** Heard when the viewer plays or pauses YouTube's own player. */
+  onPlayer(fn: (playing: boolean) => void): void
+  /** YouTube's unsmoothed report of where it is, in seconds of show; null from a file. For the dev probes. */
+  report(): number | null
+}
+
+/**
+ * The music as the page has it: YouTube's player for a version that names
+ * its upload (`SoundtrackSpec.youtube`), the file otherwise. `prefer: 'file'`
+ * turns YouTube off (`?music=file`, to hear the two side by side). YouTube
+ * that will not play here — blocked, refused, not embeddable — hands over to
+ * the file, and says so.
+ */
+export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtube'): ShowSoundtrack {
+  const file = createFileSoundtrack()
+  const tube = createYouTubeSoundtrack(host)
+  let spec: SoundtrackSpec | null = null
+  let active: Soundtrack = file
+  let fell = false
+  let wanted = false
+  /** A play is waiting on YouTube's answer, and takes the file's answer if YouTube fails it. */
+  let asking = false
+  let shown = 0
+  let changed = () => {}
+  file.onChange(() => changed())
+  tube.onChange(() => {
+    if (active === tube && tube.state() === 'failed' && spec?.src) {
+      // YouTube will not have it. The file plays it instead.
+      fell = true
+      active = file
+      tube.load(null)
+      file.load(spec)
+      // The show was already going: the file picks it up where it is. A play still waiting is answered by the file.
+      if (wanted && !asking) void file.play(shown)
+    }
+    changed()
+  })
+  const other = (): Soundtrack => (active === file ? tube : file)
+  return {
+    load(next) {
+      spec = next
+      fell = false
+      wanted = false
+      const wantsTube = !!next?.youtube?.length && prefer === 'youtube'
+      active = wantsTube ? tube : file
+      other().load(null)
+      active.load(next)
+    },
+    state: () => active.state(),
+    position: () => active.position(),
+    follow(t) {
+      shown = t
+      active.follow(t)
+    },
+    async play(at) {
+      wanted = true
+      shown = at
+      if (active !== tube) return active.play(at)
+      asking = true
+      const result = await tube.play(at).finally(() => (asking = false))
+      // YouTube failed it and handed over: the file's answer is the answer, blocked or not.
+      if (result === 'silent' && active === file && wanted) return file.play(shown)
+      return result
+    },
+    pause() {
+      wanted = false
+      active.pause()
+    },
+    seek: (at) => active.seek(at),
+    setSpeed(speed) {
+      file.setSpeed(speed)
+      tube.setSpeed(speed)
+    },
+    setMuted(muted) {
+      file.setMuted(muted)
+      tube.setMuted(muted)
+    },
+    onChange(fn) {
+      changed = fn
+    },
+    source: () => (!spec ? null : active === tube ? 'youtube' : 'file'),
+    fellBack: () => fell,
+    onPlayer: (fn) => tube.onPlayer(fn),
+    report: () => (active === tube ? tube.report() : null),
+  }
+}
+
+/** The music as a file the site serves, in one audio element. */
+function createFileSoundtrack(): Soundtrack {
   const audio = new Audio()
   audio.preload = 'auto'
   audio.preservesPitch = true
@@ -123,6 +222,7 @@ export function createSoundtrack(): Soundtrack {
         return 'silent'
       }
     },
+    follow() {},
     pause() {
       audio.pause()
     },

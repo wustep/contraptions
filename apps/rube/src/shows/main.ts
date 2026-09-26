@@ -7,6 +7,7 @@ import { discoverShows } from './discover'
 import { recordingFormat } from './record'
 import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
 import { createSoundtrack } from './soundtrack'
+import './youtube.css'
 import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
 
 /**
@@ -70,7 +71,11 @@ let zoom = false
 let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
 let recording: AbortController | null = null
 
-const music = createSoundtrack()
+// YouTube's player for the music, where a version names its upload. Shown, in the Show card: its terms want it seen.
+const playerHost = el('div', { class: 'yt-host' })
+playerHost.hidden = true
+/** `?music=file` plays the site's own file even where YouTube could, to hear the two side by side. */
+const music = createSoundtrack(playerHost, params.get('music') === 'file' ? 'file' : 'youtube')
 const stage = createShowStage(stageRoot, { time: () => transport?.now() ?? 0 })
 /** A version is loaded once: its machine and its music are the same every time it is come back to. */
 const loads = new Map<Version, Promise<Performance>>()
@@ -286,7 +291,7 @@ const about = el('div', { class: 'readout' })
 const empty = el('div', { class: 'status' }, [
   'No shows yet. A show is a file: apps/rube/src/shows/versions/<work>/<take>.show.ts.',
 ])
-showCard.append(workList.node, takeField, about, empty)
+showCard.append(workList.node, takeField, about, playerHost, empty)
 
 // The one thing to do on a stage that is standing still at either end of a show.
 const bigPlayLabel = el('span', {}, ['Play'])
@@ -402,6 +407,12 @@ exportSec.append(el('div', { class: 'row export-row' }, [sizeSeg.node, pngBtn, v
 const playIcon = icon(ICON.play)
 const pauseIcon = icon(ICON.pause)
 music.onChange(() => sync())
+// A press on YouTube's own player moves the show with it.
+music.onPlayer((playing) => {
+  if (recording || !transport) return
+  if (playing && !transport.playing) void play()
+  else if (!playing && transport.playing) pause()
+})
 
 function sync(): void {
   const work = works.find((w) => w.work === current?.work) ?? null
@@ -469,11 +480,15 @@ function sync(): void {
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
       ? 'The soundtrack would not load. The show runs silent, on the wall clock.'
-      : soundHeld
-        ? 'Playing. The browser is holding the sound until the next click or key.'
-        : blocked
-          ? 'The browser wants a press before it plays music. Press play.'
-          : '',
+      : music.fellBack()
+        ? "YouTube would not play the music here, so the site's own copy is playing it."
+        : perf?.soundtrack && music.source() === 'youtube' && music.state() === 'loading'
+          ? 'Loading the music from YouTube…'
+          : soundHeld
+            ? 'Playing. The browser is holding the sound until the next click or key.'
+            : blocked
+              ? 'The browser wants a press before it plays music. Press play.'
+              : '',
     perf?.soundtrack && music.state() === 'failed' ? 'bad' : '',
   )
 
@@ -565,6 +580,7 @@ function tick(): void {
   if (!alive) return
   if (transport) {
     const t = transport.now()
+    music.follow(t)
     if (transport.playing && t >= transport.duration) {
       pause()
     }
@@ -674,7 +690,8 @@ if (import.meta.env.DEV) {
       return v ? open(v, false) : Promise.resolve()
     },
     now: () => transport?.now() ?? 0,
-    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, soundHeld, overview, zoom, blocked, loading, failed, music: music.state(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
+    report: () => music.report(),
+    state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, soundHeld, overview, zoom, blocked, loading, failed, music: music.state(), source: music.source(), fellBack: music.fellBack(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
     togglePanel: () => shell.toggle(),
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
   }

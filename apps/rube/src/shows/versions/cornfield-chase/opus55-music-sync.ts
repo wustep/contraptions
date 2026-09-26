@@ -40,5 +40,6 @@ export const performance: Performance = {
     offset: score.audioOffset,
     credit: 'Hans Zimmer · Cornfield Chase · Interstellar (2014) · tech demo only, not for release',
     href: 'https://www.youtube.com/watch?v=JuSsvM8B4Jc',
+    youtube: [{ id: 'JuSsvM8B4Jc', from: score.audioOffset }],
   },
 }
