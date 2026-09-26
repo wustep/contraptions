@@ -221,7 +221,7 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   push({ to: hopFrom, dur: HOP_UP - FLOOR_AT, ramp: [vFloor, vHop] }, HOP_UP)
   // Up onto the reel, and riding it as it rolls, a step a note, to rest against the tail.
   hop(upOn, ON_SPOOL)
-  ride(onSpool, TWITCH)
+  ride(onSpool, TWITCH, 0.01)
   // The twitch: it flinches up off the reel and back down onto it; then gathers itself and hops onto the tail.
   const flinch = (t: number): Pt => {
     const [x, y] = onSpool(t)

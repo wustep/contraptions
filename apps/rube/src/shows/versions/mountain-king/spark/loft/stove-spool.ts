@@ -21,8 +21,26 @@ export const SPOOL_STEPS = [39.018, 39.648, 40.193, 40.776, 41.335]
 export const TOUCH = CAT_CUES.stir[0]
 /** How fast the reel starts off under the spark (cells/s). */
 const V0 = 2.3
+/** Each step's shove: the reel's speed jumps by `KICK` (cells/s) as the spark comes down on it, dying over `KICK_TAU`. */
+const KICK = 0.55
+const KICK_TAU = 0.25
+const KICK_RISE = 0.025
+/** How far one step's shove has carried the reel `s` seconds after the note (its speed's integral). */
+function shoved(s: number): number {
+  if (s <= 0) return 0
+  // speed: KICK (1 - e^(-s/KICK_RISE)) e^(-s/KICK_TAU)
+  const a = 1 / KICK_TAU
+  const b = 1 / KICK_RISE + 1 / KICK_TAU
+  return KICK * ((1 - Math.exp(-a * s)) / a - (1 - Math.exp(-b * s)) / b)
+}
+/** All the steps' shoves by `t`; by the touch they are spent. */
+const shoves = (t: number): number => SPOOL_STEPS.reduce((d, at) => d + shoved(t - at), 0)
 
-/** The reel's middle (x) at `t`: lying still, then rolling east from the landing, slowing to rest on the tail's tip. */
+/**
+ * The reel's middle (x) at `t`: lying still, then rolling east from the landing, slowing to rest on the tail's tip.
+ * Under the slow-down each step shoves it on (a bump of speed on the note), and the slow-down is laid so that with
+ * the shoves it still comes to rest against the tail on the twitch.
+ */
 export function spoolX(t: number): number {
   const { x0, x1 } = SPOOL
   if (t <= ON_SPOOL) return x0
@@ -31,8 +49,9 @@ export function spoolX(t: number): number {
     const u = (t - ON_SPOOL) / T
     const u2 = u * u
     const u3 = u2 * u
-    // Leaves at the spark's own speed, carried on by its steps, and eases to a stop against the tail.
-    return x0 + (u3 - 2 * u2 + u) * T * V0 + (-2 * u3 + 3 * u2) * (x1 - x0)
+    // Leaves at the spark's own speed and eases to a stop against the tail, the steps' shoves on top.
+    const rest = x1 - x0 - shoves(TOUCH)
+    return x0 + (u3 - 2 * u2 + u) * T * V0 + (-2 * u3 + 3 * u2) * rest + shoves(t)
   }
   // The tail's twitch nudges it back a little; it rocks and settles against it.
   const s = t - TOUCH
@@ -44,15 +63,15 @@ export const SPOOL_Y = FLOOR_Y - SPOOL.r
 export const spoolTurn = (t: number): number => (spoolX(t) - SPOOL.x0) / SPOOL.r
 
 /**
- * The spark on top of the reel: riding it, with a little lift before each of its steps (a step a note), and a flinch
- * as the tail twitches.
+ * The spark on top of the reel: riding it, with a hop up before each of its steps that comes down on the note (a step
+ * a note), shoving the reel on as it lands.
  */
 export function onSpool(t: number): Pt {
   const x = spoolX(t)
   let up = 0
   for (const at of SPOOL_STEPS) {
-    const u = (t - (at - 0.22)) / 0.22
-    if (u > 0 && u < 1) up = Math.max(up, 0.07 * Math.sin(Math.PI * u))
+    const u = (t - (at - 0.24)) / 0.24
+    if (u > 0 && u < 1) up = Math.max(up, 0.17 * 4 * u * (1 - u))
   }
   return [x, SPOOL_Y - SPOOL.r - R - up]
 }
