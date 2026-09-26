@@ -9,7 +9,8 @@ import { AT, BEATS, CUT, DURATION, ONSETS, RECORDING, SEAM } from '../src/shows/
 import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/married-life/life/credits'
 import { CUTS } from '../src/shows/versions/married-life/life/seams'
 import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/married-life/life/worlds'
-import { BALLOON_FROM, balloonAt } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_FROM, balloonAt, HALF } from '../src/shows/versions/married-life/life/cast'
+import { R } from '../src/parts'
 import type { LifeShow } from '../src/shows/versions/married-life/life/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -126,17 +127,55 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   const empty = Object.entries(STRIKES).filter(([name, list]) => list.length === 0 && name !== 'doctor').map(([name]) => name)
   check('married life: every part strikes (the doctor\'s office may keep its silence)', empty.length === 0, empty.join(', '))
 
-  // Under Zoom (half as close again as the show's camera) Carl stays in the frame wherever he is to be seen.
-  const outOfZoom: string[] = []
-  for (let t = 0; t <= perf.duration; t += 0.05) {
-    const h = show.at(t)
-    if (h.hidden || h.scale < 0.3) continue
+  // Under Zoom (half as close again as the show's camera) the two of them stay whole in the frame wherever they are
+  // to be seen: his whole square and her whole ball, not only their middles.
+  const zoomed = (t: number, x: number, y: number, r: number) => {
     const f = cam(t)
     const cells = f.cells / 1.5
-    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
-    if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
+    return Math.max((Math.abs(x - f.x) + r) / ((cells * 16) / 9 / 2), (Math.abs(y - f.y) + r) / (cells / 2))
   }
-  check('married life: under Zoom Carl never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+  const outOfZoom: string[] = []
+  const herOutOfZoom: string[] = []
+  for (let t = 0; t <= perf.duration; t += 0.05) {
+    const h = show.at(t)
+    if (!h.hidden && h.scale >= 0.3) {
+      const u = zoomed(t, h.x, h.y, HALF * h.scale)
+      if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
+    }
+    const e = show.ellie(t)
+    if (e && (e.scale ?? 1) >= 0.3) {
+      const u = zoomed(t, e.x, e.y, R * (e.scale ?? 1))
+      if (u > 1) herOutOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
+    }
+  }
+  check('married life: under Zoom Carl never leaves the frame, not even a corner of him', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+  check('married life: under Zoom Ellie never leaves the frame either', herOutOfZoom.length === 0, herOutOfZoom.slice(0, 6).join(', '))
+
+  // No wide shot lingers: a frame over 6 cells tall (where the two of them are a few pixels on a phone) lasts at most
+  // 2.5 s, except the named reveals, each held to its window and to how wide it may go.
+  const REVEALS: { what: string; from: number; to: number; cells: number }[] = [
+    { what: 'the house made new, the machine as tall as it', from: 23.5, to: 37.6, cells: 10.2 },
+    { what: 'the storm: the tree through the roof over the nursery, and the hole boarded', from: 127, to: 137.2, cells: 9.8 },
+    { what: 'the hill, years later, too far for her now', from: 168, to: 173, cells: 9.6 },
+    { what: 'the one toll, the whole empty church and its bell', from: 196.5, to: 200, cells: 7.6 },
+    { what: 'the credits: the house small under the stars', from: CREDITS_AT - 2, to: perf.duration, cells: 22 },
+  ]
+  const wide: string[] = []
+  let wideFrom = -1
+  let widest = 0
+  for (let t = 0; t <= perf.duration + 0.05; t += 0.05) {
+    const c = t <= perf.duration ? cam(t).cells : 0
+    const reveal = REVEALS.find((r) => t >= r.from && t <= r.to)
+    if (reveal && c > reveal.cells) wide.push(`${t.toFixed(2)}: ${c.toFixed(1)} cells, wider than ${reveal.what} may go`)
+    if (c > 6 && !reveal) {
+      if (wideFrom < 0) { wideFrom = t; widest = 0 }
+      widest = Math.max(widest, c)
+    } else if (wideFrom >= 0) {
+      if (t - wideFrom > 2.5) wide.push(`${wideFrom.toFixed(1)}–${t.toFixed(1)} (${widest.toFixed(1)} cells)`)
+      wideFrom = -1
+    }
+  }
+  check('married life: no wide shot lingers (over 6 cells for at most 2.5 s, but for the named reveals)', wide.length === 0, wide.slice(0, 6).join('; '))
 
   // Ellie: with him from the wedding to the hospital, never after; she never jumps in a place, and comes and goes
   // only out of shot or at a cut. At the kiss she touches him.
@@ -194,9 +233,9 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
 
   // The end credits: words the page sets over the house, after he has sat down, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
-  check('married life: end credits over the house, set by the page, opening on Directed by Claude Opus 5.5 and naming Carl, Ellie, Michael Giacchino, Married Life, Up, Pete Docter and p5.js',
+  check('married life: end credits over the house, set by the page, opening on Directed by Claude Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js',
     CREDITS_OK && perf.titles === creditsAt && creditsAt(CREDITS_AT - 0.1).length === 0 && creditsAt(perf.duration).length === 0 &&
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && CARDS.filter((c) => c.role === 'Directed by').length === 1 &&
-    ['Claude Opus 5.5', 'Carl', 'Ellie', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
+    ['Claude Opus 5.5', 'Carl Fredricksen', 'Ellie Fredricksen', 'Michael Giacchino', 'Married Life', 'Up', 'Pete Docter', 'p5.js'].every((w) => said.includes(w)) &&
     !/Stephen Wu|tech demo/i.test(said), said)
 }

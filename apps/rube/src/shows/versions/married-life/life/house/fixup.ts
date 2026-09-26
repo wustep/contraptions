@@ -204,7 +204,7 @@ function shotsFor(): PartShot[] {
     key(29.5, 6.6, 4.0, -2.0),
     // Wide: the house half old, half new, the rollers as tall as it.
     key(31.6, 8.4, 5.1, -2.6),
-    key(33.6, 9.3, 5.9, -2.95),
+    key(33.6, 9.6, 5.9, -2.95),
     // Past the house: the whole of it new, the cart rolling away from it, the rollers folding; then in to the mailbox.
     key(35.6, 10.0, 6.5, -2.95),
     key(38.7, 4.5, 8.85, -1.0),

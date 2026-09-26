@@ -380,7 +380,7 @@ export const wedding = part<WeddingState>(
       key(0.001, 3.1, 1.46, -0.5),
       key(1.6, 2.9, 1.34, -0.54),
       // Out, once, as the march gets going, to the whole church: organ, families, tower, bell, doors.
-      key(5.0, 6.0, 0.75, -1.95),
+      key(5.0, 6.3, 0.75, -1.86),
       // Held as the establishing wide, only drifting in toward the altar.
       key(8.0, 5.45, 0.55, -1.6),
       // One continuous push from the wide into the kiss (her hops, his, her bump, the march slowing on the way).
