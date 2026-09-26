@@ -285,6 +285,9 @@ const FLETCHER_PATH = new Path(CUT, FLETCH)
   .go(FLETCH, 189.5, 'inout')
   .rest(FOLDER_END + 1)
 
+/** His hands through the part, where his path has him (for `check:shows`). */
+export const folderPose = (t: number): Pose => fletcherPose(t, FLETCHER_PATH.at(t))
+
 /** His hands through the part. */
 const arm = (up: number, bend: number, wrist: number, hand: ArmPose['hand']): ArmPose => ({ up, bend, wrist, hand })
 function fletcherPose(t: number, at: Pt): Pose {

@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
 import { HAT, KIT_FLOOR, KIT_LAND, SNARE, drawKit, drawStick, type KitPiece } from '../drums'
-import { POSES, beatPose, drawConductor, type ArmPose, type Pose } from '../fletcher'
+import { POSES, beatPose, blendPose, drawConductor, type Pose } from '../fletcher'
 import { alpha, box, part, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
 import { BAND, BASS, FIRST, TUNE_ORIGIN, TUNE_PERIOD, tune } from '../music'
 import { G_EARTH, G_SNAP } from '../physics'
@@ -317,37 +317,23 @@ function fletcherAt(T: number): Pt {
   return [DOOR_X + d, HEAD_Y]
 }
 
-/**
- * Between two poses, `u` 0..1, each arm turning the short way round (the house's `blendPose` turns an arm from
- * hanging to raised through the horizontal on the wrong side).
- */
-export function turnPose(a: Pose, b: Pose, u: number): Pose {
-  const arm = (x: ArmPose, y: ArmPose): ArmPose => {
-    let d = y.up - x.up
-    while (d > Math.PI) d -= Math.PI * 2
-    while (d < -Math.PI) d += Math.PI * 2
-    return { up: x.up + d * u, bend: x.bend + (y.bend - x.bend) * u, wrist: x.wrist + (y.wrist - x.wrist) * u, hand: u < 0.5 ? x.hand : y.hand }
-  }
-  return { left: arm(a.left, b.left), right: arm(a.right, b.right) }
-}
-
 const BEAT_IN = BASS + 0.3
 const POINT_AT = tune(62.5)
 const POINT_HELD = GO - 0.2
 /** What his hands do: at rest; keeping time a beat a stroke; pointing at the kit; at rest again as he goes. */
-function fletcherPose(T: number): Pose {
+export function fletcherPose(T: number): Pose {
   const time = (T - TUNE_ORIGIN) / TUNE_PERIOD
   // One hand up keeping time, big enough to read from the kit; the other hangs.
   const beating: Pose = { right: beatPose(time, 1).right, left: POSES.rest.left }
   if (T < BEAT_IN) return POSES.rest
-  if (T < BEAT_IN + 0.45) return turnPose(POSES.rest, beating, easeInOutSine(clamp((T - BEAT_IN) / 0.45)))
+  if (T < BEAT_IN + 0.45) return blendPose(POSES.rest, beating, easeInOutSine(clamp((T - BEAT_IN) / 0.45)))
   if (T < POINT_AT) return beating
   if (T < POINT_AT + 0.35) {
     const from: Pose = { right: beatPose((POINT_AT - TUNE_ORIGIN) / TUNE_PERIOD, 1).right, left: POSES.rest.left }
-    return turnPose(from, POSES.point, easeInOutSine(clamp((T - POINT_AT) / 0.35)))
+    return blendPose(from, POSES.point, easeInOutSine(clamp((T - POINT_AT) / 0.35)))
   }
   if (T < POINT_HELD) return POSES.point
-  return turnPose(POSES.point, POSES.rest, easeInOutSine(clamp((T - POINT_HELD) / 0.5)))
+  return blendPose(POSES.point, POSES.rest, easeInOutSine(clamp((T - POINT_HELD) / 0.5)))
 }
 
 /* ------------------------------------------------------------------ the part */

@@ -15,6 +15,11 @@ import { STRIKES } from '../src/shows/versions/caravan/whiplash/hits'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/caravan/whiplash/credits'
 import { BASS, BREAKS, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
 import { poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
+import { poseAt as sabotagePose } from '../src/shows/versions/caravan/whiplash/carnegie/sabotage-motion'
+import { fletcherPose as bandPose } from '../src/shows/versions/caravan/whiplash/shaffer/band-people'
+import { fletcherPose as practicePose } from '../src/shows/versions/caravan/whiplash/shaffer/practice'
+import { folderPose } from '../src/shows/versions/caravan/whiplash/road/folder'
+import type { Pose } from '../src/shows/versions/caravan/whiplash/fletcher'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -147,6 +152,30 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   check('caravan: Fletcher\'s fist closes once, on the final cut-off, and nowhere before it',
     [poseAt(FINAL + 0.05).right.hand, poseAt(FINAL + 0.05).left.hand].includes('fist') && poseAt(FINAL - 0.1).right.hand !== 'fist' && poseAt(FINAL - 0.1).left.hand !== 'fist' && fists > 0 &&
     Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
+
+  // His arms never flip: stepped at 120 Hz through every part that draws him, no upper arm, forearm or hand turns
+  // more than half a radian in a step (an unwrapped angle blended straight turned a forearm round in one frame).
+  // The sharpest scored moves (the slaps on the hoop, the fist's strike) stay near 0.4.
+  const turn = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))
+  let flip = 0
+  let flipAt = ''
+  for (const [name, f, a, b] of [
+    ['practice', practicePose, 0, 30.65], ['band room', bandPose, 30.65, 130.5], ['folder', folderPose, SWITCH.road, 205.92],
+    ['sabotage', sabotagePose, SWITCH.carnegie, SOLO], ['Carnegie', poseAt, SOLO, DURATION],
+  ] as [string, (t: number) => Pose, number, number][]) {
+    let prev = f(a)
+    for (let t = a + 1 / 120; t <= b; t += 1 / 120) {
+      const cur = f(t)
+      for (const side of ['left', 'right'] as const) {
+        const c = cur[side]
+        const p = prev[side]
+        const d = Math.max(turn(c.up - p.up), turn(c.up + c.bend - p.up - p.bend), turn(c.up + c.bend + c.wrist - p.up - p.bend - p.wrist))
+        if (d > flip) { flip = d; flipAt = `${d.toFixed(2)} rad, ${name} ${side} at ${t.toFixed(3)} s` }
+      }
+      prev = cur
+    }
+  }
+  check('caravan: Fletcher\'s arms never flip (every joint under half a radian in 1/120 s)', flip < 0.5, flipAt)
 
   const crowd = [5, 60, 150, 190, 250, 300, 460, 545].map((t) => show.at(t).balls ?? [])
   check('caravan: every ball on the stage is someone, once', crowd.every((b) => new Set(b.map((x) => x.id)).size === b.length && b.length <= 4))
