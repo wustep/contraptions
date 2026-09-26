@@ -4,7 +4,7 @@ import { solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { alpha, frame, type Ctx } from '../kit'
 import { HALL } from '../worlds'
-import { CHART_H, CHART_W, doorAngle, veil } from './sabotage-motion'
+import { CHART_H, CHART_W, GO_BACK, MEET, doorAngle, veil } from './sabotage-motion'
 import { DOOR, FLOOR, LIP } from './stage'
 
 /**
@@ -78,8 +78,9 @@ export function drawDoorway(p: p5, c: Ctx, T: number): void {
   if (angle <= 0.001) return
   const { k, weight } = c
   const ink = '#050404'
-  // Open, and a little brighter as the band's held chord swells behind the two of them.
-  const open = clamp(angle / 0.9) * (0.85 + 0.25 * easeInOutSine(clamp((T - 262.1) / 5)))
+  // Open, and brighter as the band's held chord swells behind the two of them.
+  const sw = swell(T)
+  const open = clamp(angle / 0.9) * (0.85 + 0.25 * sw)
   const x0 = DOOR_X0
   const x1 = DOOR_X0 + DOOR.w
   p.push()
@@ -106,19 +107,46 @@ export function drawDoorway(p: p5, c: Ctx, T: number): void {
   down.addColorStop(1, `rgba(227, 176, 91, ${(0.22 * open).toFixed(3)})`)
   ctx.fillStyle = down
   ctx.fillRect(x0 * k, DOOR_TOP * k, DOOR.w * k, DOOR.h * k)
+  // The light in the air before the door, rising and widening behind the two of them as the chord swells: a tall
+  // soft oval, its middle on the threshold, no core (it is the room's light, not a thing).
+  if (sw > 0.001) {
+    const cx = (x0 + x1) / 2
+    // Narrow enough to die out before the piano (its left end at -7.7), which stands in front of this light.
+    const rx = DOOR.w / 2 + 0.45 + 0.35 * sw
+    const ry = 1.2 + 0.9 * sw
+    ctx.save()
+    ctx.translate(cx * k, FLOOR * k)
+    ctx.scale(rx / ry, 1)
+    const air = ctx.createRadialGradient(0, 0, 0, 0, 0, ry * k)
+    air.addColorStop(0, `rgba(227, 176, 91, ${(0.13 * sw).toFixed(3)})`)
+    air.addColorStop(0.55, `rgba(227, 176, 91, ${(0.06 * sw).toFixed(3)})`)
+    air.addColorStop(1, 'rgba(227, 176, 91, 0)')
+    ctx.fillStyle = air
+    ctx.fillRect(-ry * k, -ry * k, 2 * ry * k, ry * k)
+    ctx.restore()
+  }
+  // Out through the door onto the stage floor, wider and warmer as the chord swells.
   const spill = ctx.createLinearGradient(0, FLOOR * k, 0, LIP * k)
-  spill.addColorStop(0, `rgba(227, 176, 91, ${(0.3 * open).toFixed(3)})`)
+  spill.addColorStop(0, `rgba(227, 176, 91, ${(0.3 * open + 0.14 * sw).toFixed(3)})`)
   spill.addColorStop(1, 'rgba(227, 176, 91, 0)')
   ctx.fillStyle = spill
   ctx.beginPath()
   ctx.moveTo(x0 * k, FLOOR * k)
   ctx.lineTo(x1 * k, FLOOR * k)
-  ctx.lineTo((x1 + 1.1) * k, LIP * k)
-  ctx.lineTo((x0 - 0.5) * k, LIP * k)
+  ctx.lineTo((x1 + 1.1 + 1.3 * sw) * k, LIP * k)
+  ctx.lineTo((x0 - 0.5 - 0.8 * sw) * k, LIP * k)
   ctx.closePath()
   ctx.fill()
   ctx.restore()
   p.pop()
+}
+
+/**
+ * How far the band's held chord has swelled the door's light, 0..1: up with the chord from the moment they meet,
+ * held at its height, and down as he turns back for the stage (`GO_BACK`), so the light leaves with him.
+ */
+function swell(T: number): number {
+  return easeInOutSine(clamp((T - MEET) / 3.6)) * (1 - easeInOutSine(clamp((T - GO_BACK) / 0.8)))
 }
 
 /**
