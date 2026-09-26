@@ -64,7 +64,7 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   yard: {
     t: CUT.yard,
     v: [0, 0],
-    cells: 4.5,
+    cells: 3.9,
     frame: [-1.4, -0.7],
     ellie: null,
     what: 'Carl at rest: in the office chair; on the far side, alone inside the back door, looking out at her. Ellie is out in the yard, left of him',

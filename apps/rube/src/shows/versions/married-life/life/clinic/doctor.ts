@@ -174,9 +174,14 @@ export const doctor = part<DoctorState>(
     }
   },
   (slot) => [
-    // From the two-shot the nursery hands over (4 cells), a slow breath out to the room: the coat, the bars, the two.
-    { t: 77.6, cells: 4.55, hold: [O + 0.08, -0.66], w: 1 },
-    // Then the long drift left, off her and past him, to where the yard will be: the cut (`CUTS.yard`).
-    { t: slot.end, cells: 4.5, hold: [O - 1.4, -0.7], w: 1 },
+    // From the two-shot the nursery hands over (4 cells), one slow push in through the held note, so her sinking
+    // (81.136) and his lean to her (81.508) are the picture, not a few pixels in a grey room.
+    { t: 77.6, cells: 3.35, hold: [O + 0.3, -0.5], w: 1 },
+    { t: SLUMP, cells: 2.8, hold: [O + 0.31, -0.44], w: 1 },
+    // It comes to rest on the two of them as he leans, and holds while he stays leaning.
+    { t: 82.1, cells: 2.72, hold: [O + 0.3, -0.43], w: 1 },
+    // Then, in the near silence, the long drift out and left, off her and past him, to where the yard will be: the
+    // cut (`CUTS.yard`).
+    { t: slot.end, cells: 3.9, hold: [O - 1.4, -0.7], w: 1 },
   ],
 )

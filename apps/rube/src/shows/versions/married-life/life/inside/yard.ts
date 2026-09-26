@@ -532,7 +532,7 @@ export const yard = part<YardState>(
   },
   () => [
     // From the doctor's framing, a slow drift to him at the door; in on him for the book.
-    { t: 87.4, cells: 4.3, hold: [at(-1.7), -0.95], w: 1 },
+    { t: 87.4, cells: 3.95, hold: [at(-1.7), -0.95], w: 1 },
     { t: 89.6, cells: 3.85, hold: [at(-1.1), -0.95], w: 1 },
     // Out with him, and along as he walks out to her.
     { t: 92.4, cells: 4.05, hold: [at(-1.75), -1.0], w: 1 },
