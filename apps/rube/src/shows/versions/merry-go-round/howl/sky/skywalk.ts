@@ -1,10 +1,10 @@
 import type p5 from 'p5'
-import { mixHex, type Pt, type Seg } from '../../../../../parts'
+import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, hash, part, type Company, type Ctx, type PartShot } from '../kit'
 import { beatsIn } from '../music'
 import { DIAL, TOWN } from '../worlds'
 import { drawPerched, drawPigeon, drawSoldier } from './figures'
-import { ALLEY_EXIT, BALCONY, END, HOP_OFF, howlWalk, LAND_AT, LIFT, NOON_BAR, RAIL_TOP, sophieWalk, STROKES, TOWER_X, W } from './path'
+import { ALLEY_EXIT, BALCONY, barAt, ease, END, foot, HOP_OFF, howlWalk, LAND, LAND_AT, LIFT, NOON_BAR, pchip, RAIL_TOP, sophieWalk, STROKES, TOWER_X, W, walkBase } from './path'
 import { CAFE, G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
 
 /**
@@ -42,6 +42,146 @@ const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
 const sm = (t: number, a: number, b: number) => {
   const u = clamp01((t - a) / (b - a))
   return u * u * (3 - 2 * u)
+}
+
+/* ------------------------------------------------------------------ the two of them, arm in arm */
+
+/*
+ * `path.ts` keeps the way over the town (the footholds the chimneys, the tower and the café are built under); here the
+ * two of them walk it as the film has them, his arm round her:
+ * - The rise keeps to the plain middle of the tall house's front (between its window columns) until they are over its
+ *   top floor's windows, then sweeps right over its eaves: they climb against bare plaster and then the sky, never
+ *   across a window.
+ * - Howl rides a hair from her shoulder, a touch above (HOWL_AT, from 0.37 level on her right), and his step leads
+ *   hers by 60 ms, so he carries her into each step.
+ * - Her first four steps out over the roofs (bars 8 to 11) come late and too high, less so each bar; from bar 12 she
+ *   lifts exactly as he does, and they move as one.
+ */
+
+/** Sophie's lift a bar as `path.ts` has it (bars 7 to 28, the only ones re-shaped here). */
+function pathLift(i: number): number {
+  if (i >= 7 && i <= 18) return 0.1 + 0.16 * Math.min(1, (i - 7) / 5)
+  if (i >= 19 && i <= 23) return 0.12
+  if (i >= 24 && i <= 27) return 0.16
+  if (i === 28) return 0.1
+  return 0
+}
+/** Howl's, as `path.ts` has it: an easy lilt over the roofs, her own steps on the stairs and the way down. */
+const pathHowlLift = (i: number): number => (i >= 7 && i <= 18 ? 0.24 : pathLift(i))
+/** His here: as the path's, but on the last stair (bar 7) no higher than hers, so he never stands on her head. */
+const howlLift = (i: number): number => (i === 7 ? 0.12 : pathHowlLift(i))
+const bump = (u: number) => 4 * u * (1 - u) * (1 - 0.18 * (u - 0.5))
+const lilt = (u: number, dx: number) => (dx * 0.16 * Math.sin(2 * Math.PI * u)) / (2 * Math.PI)
+const barDx = (i: number) => walkBase(W[Math.min(i + 1, W.length - 1)])[0] - walkBase(W[i])[0]
+
+/** Her first steps onto the open air: how late (a warp of the bar) and how much too high, bars 8 to 11. */
+const LATE = [0.2, 0.14, 0.08, 0.03]
+const OVER = [0.5, 0.32, 0.16, 0.05]
+function herLift(i: number, u: number): number {
+  if (i >= 8 && i <= 11) {
+    const late = LATE[i - 8]
+    return 0.24 * (1 + OVER[i - 8]) * bump(u - late * Math.sin(Math.PI * u))
+  }
+  if (i >= 12 && i <= 18) return 0.24 * bump(u)
+  return pathLift(i) * bump(u)
+}
+
+/** The rise kept between the tall house's window columns until it is over its top floor's windows. */
+const riseDx = pchip([
+  [W[2], 0],
+  [W[3], -0.28],
+  [W[4], -0.66],
+  [54.3, -0.95],
+  [W[5] + 0.35, -0.42],
+  [W[6] + 0.1, 0],
+])
+const riseShift = (t: number) => (t <= W[2] || t >= W[6] + 0.1 ? 0 : riseDx(t))
+
+/** Sophie on the walk on the air (the alley's frame). */
+export function sophieSky(t: number): Pt {
+  const [x, y] = sophieWalk(t)
+  if (t <= W[0] || t >= LAND) return [x, y]
+  const { i, u } = barAt(t)
+  const dy = i >= 7 ? pathLift(i) * bump(u) - herLift(i, u) : 0
+  return [x + riseShift(t), y + dy]
+}
+
+/** Where Howl rides from her, once he has come round onto her right: a hair from her shoulder, a touch above. */
+const HOWL_AT: Pt = [0.23, -0.15]
+const HOWL_PATH: Pt = [0.37, 0]
+/** Never closer than this, centre to centre: two balls a hair apart. */
+const HAIR = 2 * R + 0.02
+/** How far his step leads hers. */
+const LEAD = 0.06
+
+export function howlSky(t: number): Pt {
+  const h = howlWalk(t)
+  if (t <= W[0] || t >= LAND) return h
+  let [x, y] = h
+  // The step: path.ts's taken out, the same step 60 ms early put in.
+  const lead = LEAD * ease(t, W[7], W[8]) * (1 - ease(t, W[27], W[28]))
+  const a = barAt(t)
+  const b = barAt(t + lead)
+  x += lilt(b.u, barDx(b.i)) - lilt(a.u, barDx(a.i))
+  y += pathHowlLift(a.i) * bump(a.u) - howlLift(b.i) * bump(b.u)
+  // He keeps to her side up the plain front of the tall house, as she does.
+  x += riseShift(t)
+  // Round from the path's 0.37 to his arm's place, on the way up; back to it for the landing.
+  const k = ease(t, W[2], W[4]) * (1 - ease(t, W[27], W[28] + 0.5))
+  x += (HOWL_AT[0] - HOWL_PATH[0]) * k
+  y += (HOWL_AT[1] - HOWL_PATH[1]) * k
+  // A hair's gap, never touching: when her late high steps bring her up to him, he gives way along the line between.
+  const [sx, sy] = sophieSky(t)
+  const dx = x - sx
+  const dy = y - sy
+  const r = Math.hypot(dx, dy)
+  if (k > 0 && r > 1e-6) {
+    const soft = (r + HAIR + Math.sqrt((r - HAIR) ** 2 + 0.0004)) / 2
+    const rr = r + (soft - r) * k
+    x = sx + (dx / r) * rr
+    y = sy + (dy / r) * rr
+  }
+  return [x, y]
+}
+
+/* ------------------------------------------------------------------ her steps finding the air */
+
+/**
+ * On each of her downbeats the air her foot finds is pressed out under it: a few soft lobes of pale air (volume, like
+ * the chimneys' smoke, each its own size, fanned out flat and never a ring), gone in about 0.6 s. On the swell's step
+ * over the tower the breath goes on down onto the weathercock and sets it spinning.
+ */
+function drawSteps(p: p5, c: Ctx, t: number): void {
+  const { k } = c
+  const L = lightAt(t)
+  if (L.dark > 0.5) return
+  const air = L.tone(mixHex(TOWN.plaster, '#FFFFFF', 0.8))
+  for (let i = 1; i <= 28; i++) {
+    const a = t - W[i]
+    if (a < 0 || a > 0.75) continue
+    const [fx, fy0] = sophieSky(W[i])
+    const fy = fy0 + R * 0.85
+    const cock = i === NOON_BAR
+    const big = cock ? 1.7 : 1
+    const grow = 1 - Math.exp(-a / 0.16)
+    const fade = Math.min(1, a / 0.04) * Math.max(0, 1 - a / 0.62) ** 1.4
+    if (fade <= 0) continue
+    const n = cock ? 7 : 5
+    for (let j = 0; j < n; j++) {
+      const h1 = hash(i, j, 91)
+      const h2 = hash(i, j, 92)
+      const h3 = hash(i, j, 93)
+      const h4 = hash(i, j, 94)
+      // Fanned out flat either side of her foot, each lobe its own way and size.
+      const side = j % 2 ? 1 : -1
+      const reach = (0.12 + 0.26 * h1) * big * (j === 0 ? 0.3 : 1)
+      const x = fx + side * reach * grow + 0.04 * (h2 - 0.5)
+      const down = (0.02 + 0.08 * h3) * big + (cock ? (0.25 + 0.3 * h1) : 0)
+      const y = fy + down * grow
+      const r = (0.06 + 0.07 * h4) * (0.5 + 0.9 * grow) * big
+      lobe(p, k, x, y, r, r * 0.62, air, 0.72 * fade * (0.65 + 0.35 * h2))
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ chimney smoke */
@@ -357,7 +497,7 @@ function drawParade(p: p5, c: Ctx, t: number): void {
   const lead = LEAD_X - PACE * (t - LEAD_AT)
   // Where the two of them are over the square: each man tips his head back a little as they pass over him (a glance
   // up, never a stop in the step), and back to the front as they go on.
-  const [px, py] = sophieWalk(t)
+  const [px, py] = sophieSky(t)
   const low = sm(py, -14.5, -9.5)
   for (let n = 0; n < 8; n++) {
     const x = lead + n * FILE
@@ -410,6 +550,7 @@ export const skywalk = part<WalkState>(
         drawRidgeBirds(p, c, t)
       }
       drawSmoke(p, c, t)
+      if (t > W[1] - 0.05 && t < W[28] + 1) drawSteps(p, c, t)
       drawPetals(p, c, t)
       if (t > 60 && t < END + 1) drawParade(p, c, t)
       drawPigeons(p, c, t)
@@ -418,7 +559,7 @@ export const skywalk = part<WalkState>(
   },
   (slot) => {
     const fn = (s: number): Pt => {
-      const [x, y] = sophieWalk(slot.begin + s)
+      const [x, y] = sophieSky(slot.begin + s)
       return [x - E[0], y - E[1]]
     }
     // Sampled a bar at a time, so every downbeat (where a step changes speed) falls on a joint.
@@ -432,7 +573,7 @@ export const skywalk = part<WalkState>(
         from: slot.begin,
         to: slot.end,
         at: (t) => {
-          const [x, y] = howlWalk(t)
+          const [x, y] = howlSky(t)
           return { x: x - E[0], y: y - E[1] }
         },
       },
@@ -447,7 +588,7 @@ export const skywalk = part<WalkState>(
   },
   (slot): PartShot[] => {
     const at = (t: number): Pt => {
-      const [x, y] = sophieWalk(t)
+      const [x, y] = sophieSky(t)
       return [x - E[0], y - E[1]]
     }
     const end = at(slot.end)
@@ -458,27 +599,31 @@ export const skywalk = part<WalkState>(
       { t: LIFT + 0.6, cells: 5.6, off: [0.35, -0.8] },
       { t: W[2], cells: 6.9, off: [0.4, 0.4] },
       { t: W[4], cells: 7.1, off: [0.5, 0.95] },
-      { t: W[6], cells: 7.0, off: [0.8, 1.45] },
-      // Over the roofs the camera goes a little slower than they walk: they cross the frame, the roofs pass under.
-      // (Framed with a fifth of the frame over them, so they keep a margin under Zoom.)
-      // Close on them over the roofs (the lift and glide of each step reads), the roofs passing under, and under each
-      // downbeat's step something answering: a chimney's puff, a vane spun round, pigeons off a ridge, the washing.
-      { t: W[8], cells: 5.0, off: [0.75, 1.0] },
-      { t: W[11], cells: 4.7, off: [0.7, 1.05] },
-      { t: W[14], cells: 4.8, off: [0.75, 1.1] },
-      { t: W[16], cells: 5.6, off: [0.9, 1.25] },
-      { t: W[18], cells: 7.8, hold: [28.0 - E[0], -13.3], w: 1 },
-      { t: W[NOON_BAR], cells: 9.5, hold: [30.1 - E[0], -13.8], w: 1 },
-      // The swell: out to the tower whole (the weathercock spinning, the bell swinging, the clock on noon) with the
-      // two of them a fifth down against clear sky, crossing the frame past it while the camera drifts after them.
-      { t: W[20] + 0.05, cells: 13, hold: [TOWER_X + 2.4 - E[0], -11.9], w: 1, off: [0.3, 3.8] },
-      { t: W[22] + 0.5, cells: 13, hold: [TOWER_X + 4.9 - E[0], -11.9], w: 1, off: [0.3, 3.8] },
-      // Then down with them as they come down (a fifth from the top all the way, within Zoom's margin), the square
-      // coming up into the bottom of the frame with the parade crossing it under them, and in to the balcony.
-      { t: W[24], cells: 13, off: [0.3, 3.8], w: 0 },
-      { t: W[25] + 0.3, cells: 13, off: [0.8, 3.7], w: 0 },
-      { t: W[26] + 0.1, cells: 12, off: [0.8, 3.6], w: 0 },
-      { t: W[27], cells: 9, off: [0.7, 1.75], w: 0 },
+      // Coming in on them as they clear the eaves, so the walk over the roofs opens on the two of them.
+      { t: W[6], cells: 5.0, off: [0.6, 1.0] },
+      // The walk over the roofs is a close two-shot (3.2 to 3.6 cells): the pair a third down with open sky round
+      // them, his arm at her shoulder, the lift and glide of every step whole, and only chimney tops, ridges and what
+      // answers her step (a puff, a vane, the ridge's pigeons) coming in at the foot as the roofs pass under.
+      { t: W[8], cells: 3.4, off: [0.42, 0.57] },
+      { t: W[10], cells: 3.3, off: [0.4, 0.55] },
+      { t: W[12], cells: 3.4, off: [0.42, 0.57] },
+      { t: W[14], cells: 3.5, off: [0.42, 0.58] },
+      { t: W[16], cells: 3.5, off: [0.45, 0.58] },
+      { t: W[18], cells: 3.6, off: [0.45, 0.6] },
+      // The swell (a cut on its downbeat): out to the whole town far below them, the street, the square and the
+      // parade at the foot of the frame, the weathercock spinning under her step, the two of them small and high in
+      // open sky. The frame draws in on them at once, softly, while the bell's first strokes ring.
+      { t: W[NOON_BAR], cells: 23, hold: [TOWER_X + 5 - E[0], -15.55 + 6.9 - E[1]], w: 1, cut: true },
+      { t: W[21] - 0.02, cells: 14, hold: [foot(21)[0] + 3.1 - E[0], -15.73 + 4.2 - E[1]], w: 1 },
+      // In to a medium on the next stroke (a cut), walking with them past the tower for the strokes of noon and down
+      // the long S, a quarter down the frame so that the square comes up into its foot with the parade marching under
+      // them, and in to the balcony.
+      { t: W[21], cells: 7.5, off: [0.6, 1.6], cut: true },
+      { t: W[22] + 0.5, cells: 7.5, off: [0.6, 1.7] },
+      { t: W[24], cells: 7.5, off: [0.55, 1.5] },
+      { t: W[25] + 0.3, cells: 7.5, off: [0.6, 1.5] },
+      { t: W[26] + 0.1, cells: 7.4, off: [0.65, 1.6] },
+      { t: W[27], cells: 7.2, off: [0.65, 1.8] },
       { t: W[28], cells: 5.8, off: [0.6, -0.6], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },
       { t: W[31] - 0.2, cells: 4.4, hold: [land[0] + 0.7, land[1] - 0.62], w: 1 },
