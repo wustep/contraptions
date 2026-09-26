@@ -183,8 +183,10 @@ export const gantry = part<GantryState>(
     { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
     { t: beat(130.5), cells: 9.8, hold: [RX - 1.4, -4.6] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
-    // Close enough, by the last lamp, that the two of them read as two, side by side at the glass.
+    // Close enough, by the last lamp, that the two of them read as two, side by side at the glass. The push goes on to
+    // the pedal itself and turns there: the camera is thrown by the engines, it does not see them coming.
     { t: beat(133), cells: 6.0, hold: [RX - 0.4, -6.6] },
+    { t: IGNITION, cells: 5.8, hold: [RX - 0.4, -6.65] },
   ],
 )
 
