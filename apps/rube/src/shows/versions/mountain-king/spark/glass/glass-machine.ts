@@ -61,6 +61,7 @@ import {
   bottleOutline,
   bubbleAt,
   doorAngle,
+  droopAt,
   glassOutline,
   hollowAt,
   pipeTurn,
@@ -254,13 +255,34 @@ function inset(pts: Pt[], cx: number, cy: number, d: number): Pt[] {
   })
 }
 
+/** The gather's skin: molten glass taken well down toward the brick, a deep cherry-red amber, never gold. */
+const GOB_SKIN = mixHex(GLASS.molten, GLASS.brickDeep, 0.55)
+/** Its rim, darker still where the glass is seen edge on. */
+const GOB_RIM = mixHex(GLASS.brickDeep, '#3A1410', 0.35)
+/** Its dull heart, seen through the glass low on the underside. */
+const GOB_HEART = mixHex(GLASS.molten, GLASS.moltenHot, 0.35)
+
+/** A stroke whose alpha swells from nothing at its ends to `alpha` in its middle: a streak of light, tapered. */
+function taper(pen: Pen, pts: Pt[], hex: string, alpha: number, width: number): void {
+  const n = pts.length - 1
+  for (let i = 0; i < n; i++) {
+    const f = Math.sin((Math.PI * (i + 0.5)) / n)
+    if (f * alpha > 0.01) strokeLine(pen, [pts[i], pts[i + 1]], rgba(hex, alpha * f), Math.max(0.6, width * (0.4 + 0.6 * f)))
+  }
+}
+
 /**
  * Molten glass: seen through, it glows from its heart, white-gold, low down where the glass is thickest; at its skin
  * it is a darker, burnt amber, so it reads as a lump of hot glass and not as a lamp (nor as the spark grown big).
  * The day's window shines on its shoulder, crisp. `hollow` 0..1 shows a blown bubble's thin wall (its inside paler).
  * `a` fades it all.
+ *
+ * `gob` 0..1 draws it as the gather on the pipe instead: a gob of glass, not a flame. Its skin is a deep cherry-red
+ * amber with a darker rim, its heart only a dull warmth low on the underside, and the window's light on it one long
+ * thin streak along its shoulder, with no round highlight. So the spark sitting on it is the only bright gold round
+ * thing in the frame.
  */
-function molten(pen: Pen, pts: Pt[], heat: number, hollow: number, a = 1): void {
+function molten(pen: Pen, pts: Pt[], heat: number, hollow: number, a = 1, gob = 0): void {
   let cx = 0
   let cy = 0
   let x0 = Infinity
@@ -278,74 +300,138 @@ function molten(pen: Pen, pts: Pt[], heat: number, hollow: number, a = 1): void 
   cx /= pts.length
   cy /= pts.length
   const size = Math.max(x1 - x0, y1 - y0) / 2
-  // A little of the furnace's warmth round it: never a glowing ball of light.
-  glow(pen, cx, cy, size * 1.8 + 0.4, GLASS.furnace, 0.16 * heat * a, size * 0.5)
-  // The skin: a burnt amber while it is hot, going to the glass's own colour as it cools.
-  const skin = mixHex(glassColor(heat), GLASS.brickDeep, 0.38 * heat)
+  const plain = 1 - gob
+  // A little of the furnace's warmth round it: never a glowing ball of light. A gob keeps only a trace of it.
+  glow(pen, cx, cy, size * 1.8 + 0.4, GLASS.furnace, 0.16 * heat * a * (1 - 0.7 * gob), size * 0.5)
+  // The skin: a burnt amber while it is hot, going to the glass's own colour as it cools; a gob's is cherry-red.
+  const skin = mixHex(mixHex(glassColor(heat), GLASS.brickDeep, 0.38 * heat), GOB_SKIN, gob)
   shape(pen, pts, rgba(skin, a), 0)
-  // The heart, seen through the glass: white-gold, low in it and well inside the skin.
   const { ctx, k } = pen
-  const hy = cy + (y1 - y0) * 0.12
-  const hr = size * 0.84
-  const g = ctx.createRadialGradient(cx * k, hy * k, 0, cx * k, hy * k, hr * k)
-  g.addColorStop(0, rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.5), 0.95 * heat * a))
-  g.addColorStop(0.35, rgba(GLASS.moltenHot, 0.88 * heat * a))
-  g.addColorStop(0.72, rgba(GLASS.molten, 0.5 * heat * a))
-  g.addColorStop(1, rgba(GLASS.molten, 0))
-  fillWith(pen, pts, g)
-  // A blown bubble: its inside, paler, inside a wall.
+  // The heart, seen through the glass: white-gold, low in it and well inside the skin.
+  if (plain > 0.01) {
+    const hy = cy + (y1 - y0) * 0.12
+    const hr = size * 0.84
+    const g = ctx.createRadialGradient(cx * k, hy * k, 0, cx * k, hy * k, hr * k)
+    const o = heat * a * plain
+    g.addColorStop(0, rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.5), 0.95 * o))
+    g.addColorStop(0.35, rgba(GLASS.moltenHot, 0.88 * o))
+    g.addColorStop(0.72, rgba(GLASS.molten, 0.5 * o))
+    g.addColorStop(1, rgba(GLASS.molten, 0))
+    fillWith(pen, pts, g)
+  }
+  // A gob's: only a dull warmth, low on its underside where the glass hangs thickest, wider than it is tall.
+  if (gob > 0.01) {
+    const hy = cy + (y1 - y0) * 0.26
+    const hr = size * 0.72
+    const o = heat * a * gob
+    clipTo(pen, pts, () => {
+      ctx.save()
+      ctx.translate(cx * k, hy * k)
+      ctx.scale(1, 0.62)
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, hr * k)
+      g.addColorStop(0, rgba(GOB_HEART, 0.34 * o))
+      g.addColorStop(0.5, rgba(GLASS.molten, 0.2 * o))
+      g.addColorStop(1, rgba(GLASS.molten, 0))
+      ctx.fillStyle = g
+      ctx.fillRect(-hr * k, -hr * k, 2 * hr * k, 2 * hr * k)
+      ctx.restore()
+    })
+    // The rim: the glass seen edge on, darker, soft inward.
+    clipTo(pen, pts, () => {
+      strokeLine(pen, [...pts, pts[0], pts[1]], rgba(GOB_RIM, 0.28 * o), Math.max(2, 0.2 * k))
+      strokeLine(pen, [...pts, pts[0], pts[1]], rgba(GOB_RIM, 0.5 * o), Math.max(1.4, 0.09 * k))
+    })
+  }
+  // A blown bubble: its inside, paler, inside a wall (a gob's only a little: dull amber, not light).
   if (hollow > 0.01) {
     const wall = Math.max(0.06, size * 0.16)
-    fillWith(pen, inset(pts, cx, cy, wall), rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.45), 0.4 * hollow * a))
+    const inside = mixHex(mixHex(GLASS.moltenHot, GLASS.light, 0.45), mixHex(GLASS.molten, GLASS.amber, 0.5), gob)
+    fillWith(pen, inset(pts, cx, cy, wall), rgba(inside, (0.4 - 0.18 * gob) * hollow * a))
   }
   // The day on it: a crisp streak of window light round its upper west shoulder, and a faint one low on the east.
-  const reflect = (lo: number, hi: number, at: number, alpha: number, width: number) => {
+  const streakOf = (lo: number, hi: number, at: number): Pt[] => {
     const streak: Pt[] = []
     for (const [x, y] of pts) {
       const ang = Math.atan2(y - cy, x - cx)
       if (ang > lo && ang < hi) streak.push([cx + (x - cx) * at, cy + (y - cy) * at])
     }
-    if (streak.length < 2) return
     streak.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx))
-    strokeLine(pen, streak, rgba(GLASS.light, alpha * a), width)
+    return streak
   }
-  reflect(-2.6, -1.7, 0.78, 0.92, Math.max(1.6, 0.065 * k))
-  reflect(0.35, 0.95, 0.84, 0.35, Math.max(1, 0.035 * k))
+  const reflect = (lo: number, hi: number, at: number, alpha: number, width: number) => {
+    const streak = streakOf(lo, hi, at)
+    if (streak.length >= 2 && alpha * a > 0.01) strokeLine(pen, streak, rgba(GLASS.light, alpha * a), width)
+  }
+  reflect(-2.6, -1.7, 0.78, 0.92 * plain, Math.max(1.6, 0.065 * k))
+  reflect(0.35, 0.95, 0.84, 0.35 * plain, Math.max(1, 0.035 * k))
+  // A gob's: one long thin streak of the window along its west shoulder, stopping short of the crown, tapered.
+  if (gob > 0.01) {
+    const streak = streakOf(-3.02, -1.86, 0.84)
+    if (streak.length >= 3) taper(pen, streak, GLASS.light, 0.62 * gob * a, 0.028 * k)
+  }
   shape(pen, pts, null, 0.7, rgba(WARM_INK(pen.ink), a))
+}
+
+/**
+ * The gather as it is drawn: a gob hanging on the pipe's tip, not a sphere. Held about its crown (where the spark
+ * sits, so the spark stays on it), it is drawn a little narrower and a good deal shallower than the plan's outline, so
+ * it hangs about half again as long as it is deep (the pipe running into its upper middle). `w` 1 is the full gob,
+ * 0 the plan's outline as it is (the droop into the mould runs from it, and must end on the mould's own bottle).
+ */
+const GOB_SX = 0.94
+const GOB_SY = 0.76
+function asGob(pts: Pt[], w: number): Pt[] {
+  if (w <= 0.001) return pts
+  const [ox, oy] = pts[0]
+  const sx = 1 + (GOB_SX - 1) * w
+  const sy = 1 + (GOB_SY - 1) * w
+  return pts.map(([x, y]) => [ox + (x - ox) * sx, oy + (y - oy) * sy] as Pt)
 }
 
 export function drawGlassOnPipe(pen: Pen, t: number): void {
   if (t >= CLAP) return
-  const pts = glassOutline(t)
+  const d = droopAt(t)
+  // The gob's shape gives way as the droop begins; its colour as the glass runs thin and long into the mould.
+  const shapeW = 1 - smooth(d, 0, 0.5)
+  const gob = 1 - smooth(d, 0.25, 0.95)
+  const pts = asGob(glassOutline(t), shapeW)
   // A drip hangs from the gather while it is left still, and is turned back up as the pipe turns.
   const sag = sagAt(t)
   if (sag > 0.01) {
     let lo = pts[0]
     for (const q of pts) if (q[1] > lo[1]) lo = q
-    const len = 0.1 + 1.3 * sag
+    const len = 0.16 + 2.1 * sag
     const sway = 0.02 * Math.sin(t * 3.1)
-    const drip = tongue(lo[0] - 0.02, lo[1] - 0.05, 0.16, -len, sway)
-    shape(pen, drip, mixHex(GLASS.molten, GLASS.brick, 0.28), 0.6, WARM_INK(pen.ink))
-    glow(pen, lo[0], lo[1] + len * 0.5, 0.18, GLASS.moltenHot, 0.4)
+    const drip = tongue(lo[0] - 0.02, lo[1] - 0.06, 0.13, -len, sway)
+    shape(pen, drip, mixHex(GOB_SKIN, GLASS.brickDeep, 0.15), 0.6, WARM_INK(pen.ink))
+    // Its end, where the glass is thickest, a little warmer: dull, not a light.
+    glow(pen, lo[0] - 0.02 + sway, lo[1] + len * 0.8, 0.12, GLASS.molten, 0.22)
   }
-  molten(pen, pts, 1, hollowAt(t) * (1 - smooth(t, STOP - 0.4, CLAP - 0.2)))
+  molten(pen, pts, 1, hollowAt(t) * (1 - smooth(t, STOP - 0.4, CLAP - 0.2)), 1, gob)
   // While the pipe turns, bands of hotter glass go round it: it is being rolled.
   const rolling = smooth(t, PLOP, PLOP + 0.4) * (1 - smooth(t, STOP - 0.3, STOP + 0.3))
   if (rolling > 0.01) {
     const b = bubbleAt(t)
+    const crown = glassOutline(t)[0]
+    const sx = 1 + (GOB_SX - 1) * shapeW
+    const sy = 1 + (GOB_SY - 1) * shapeW
+    // The bands are a gob's hotter skin coming round: amber, not gold.
+    const band = mixHex(GLASS.molten, GOB_SKIN, 0.35 * gob)
     clipTo(pen, pts, () => {
       for (let i = 0; i < 3; i++) {
         const a = pipeTurn(t) + (i / 3) * Math.PI * 2
         const face = Math.cos(a)
         if (face <= 0) continue
         const y = b.cy + b.ry * Math.sin(a) * 0.9
-        const band: Pt[] = []
+        const line: Pt[] = []
         for (let j = 0; j <= 10; j++) {
           const u = -1 + (2 * j) / 10
           const half = b.rx * Math.sqrt(Math.max(0, 1 - ((y - b.cy) / b.ry) ** 2))
-          band.push([b.cx + u * half, y + 0.04 * (1 - u * u) * face])
+          const x = b.cx + u * half
+          const yy = y + 0.04 * (1 - u * u) * face
+          line.push([crown[0] + (x - crown[0]) * sx, crown[1] + (yy - crown[1]) * sy])
         }
-        strokeLine(pen, band, rgba(GLASS.moltenHot, 0.6 * face * rolling), Math.max(1, 0.035 * pen.k))
+        strokeLine(pen, line, rgba(band, (0.6 - 0.2 * gob) * face * rolling), Math.max(1, 0.035 * pen.k))
       }
     })
   }
@@ -726,6 +812,75 @@ function onCarriage(cx: number, dip: number, u: number, v: number): Pt {
   return [bx + u * c + v * sn, by - u * sn - v * c]
 }
 
+/** How far the slack cable hangs at its middle while the catch holds the carriage (cells). */
+const SLACK = 0.19
+/** The cable's midpoint sag at `t`: slack while the carriage waits, snapped taut on the catch, a damped twang after. */
+function cableSag(t: number): number {
+  const u = t - CATCH
+  if (u <= 0) return SLACK
+  const twang = 0.035 * Math.sin(u * 2 * Math.PI * 6.5) * Math.exp(-u / 0.16) * (1 - Math.exp(-u / 0.012))
+  return SLACK * Math.exp(-u / 0.022) + twang
+}
+
+/**
+ * The carriage's cable: dark wire rope with a twisted lay, from its hook up over the top of the wheel and wound on
+ * round its rim. Slack while the catch holds, it hangs in a shallow curve; on the lurch it snaps taut, and the lay's
+ * strands, fixed to the rope, run up it and round the wheel as it winds on.
+ */
+function drawCable(pen: Pen, t: number, hook: Pt, tanA: number): void {
+  const S = SHEAVE
+  const { k } = pen
+  const R = S.r - 0.035
+  const top: Pt = [S.x + R * Math.cos(tanA), S.y + R * Math.sin(tanA)]
+  const sag = cableSag(t)
+  // The free run: a hanging curve (gravity pulls straight down) from the hook to where it meets the wheel.
+  const run: Pt[] = []
+  const N = 36
+  for (let i = 0; i <= N; i++) {
+    const f = i / N
+    run.push([hook[0] + (top[0] - hook[0]) * f, hook[1] + (top[1] - hook[1]) * f + 4 * sag * f * (1 - f)])
+  }
+  // Wound on: once round the rim, on from where the free run meets it (clockwise on screen, over the top).
+  const wound: Pt[] = arcPts(S.x, S.y, R, R, tanA, tanA + Math.PI * 2, 48)
+  const W = Math.max(1.5, 0.072 * k)
+  const core = mixHex(GLASS.iron, pen.ink, 0.35)
+  strokeLine(pen, wound, pen.ink, W)
+  strokeLine(pen, wound, core, Math.max(1, W - Math.max(1, 0.022 * k)))
+  strokeLine(pen, run, pen.ink, W)
+  strokeLine(pen, run, core, Math.max(1, W - Math.max(1, 0.022 * k)))
+  // The lay: a short lit strand across the rope every LAY cells, at a slant, counted from the hook so they travel
+  // with the rope. Too small to read in a wide shot, they fade rather than buzz.
+  const LAY = 0.15
+  const clear = smooth(LAY * k, 5, 10)
+  if (clear < 0.02) return
+  const color = rgba(GLASS.steel, 0.6 * clear)
+  const width = Math.max(0.7, 0.018 * k)
+  const half = 0.026
+  const slant = 0.028
+  const path = [...run, ...wound.slice(1)]
+  let s = 0
+  let next = 0.06
+  for (let i = 1; i < path.length; i++) {
+    const [ax, ay] = path[i - 1]
+    const [bx, by] = path[i]
+    const len = Math.hypot(bx - ax, by - ay)
+    if (len < 1e-6) continue
+    const tx = (bx - ax) / len
+    const ty = (by - ay) / len
+    while (next <= s + len) {
+      const f = (next - s) / len
+      const px = ax + (bx - ax) * f
+      const py = ay + (by - ay) * f
+      // The normal, pointing up off the rope (the side the light is on).
+      const nx = ty
+      const ny = -tx
+      strokeLine(pen, [[px - tx * slant + nx * half, py - ty * slant + ny * half], [px + tx * slant - nx * half, py + ty * slant - ny * half]], color, width)
+      next += LAY
+    }
+    s += len
+  }
+}
+
 /**
  * The ringing carriage and all it works: the rail, the catch, the carriage and its cup, its hammer, the buffer at the
  * rail's head, the wheel the cable runs over, the counterweight's rope, the crucible of cullet and its box of sand.
@@ -808,10 +963,9 @@ export function drawCarriage(pen: Pen, t: number): void {
   const d = Math.hypot(dx, dy)
   const base = Math.atan2(dy, dx)
   const off = Math.acos(Math.min(1, S.r / d))
-  const tan: Pt = [S.x + S.r * Math.cos(base + Math.PI + off), S.y + S.r * Math.sin(base + Math.PI + off)]
-  const top: Pt = tan[1] < S.y ? tan : [S.x + S.r * Math.cos(base + Math.PI - off), S.y + S.r * Math.sin(base + Math.PI - off)]
-  strokeLine(pen, [hook, top], GLASS.iron, Math.max(1, 0.04 * pen.k))
-  strokeLine(pen, [hook, top], lit(0.45), Math.max(0.6, 0.012 * pen.k))
+  const a0 = base + Math.PI + off
+  const tanA = Math.sin(a0) < 0 ? a0 : base + Math.PI - off
+  drawCable(pen, t, hook, tanA)
   // The carriage: two flanged wheels on the rail, an iron body, the cup the spark rides in, its nose.
   const wheelR = 0.11
   for (const u of [-0.3, 0.3]) {
