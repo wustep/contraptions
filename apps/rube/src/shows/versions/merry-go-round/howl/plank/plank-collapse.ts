@@ -2,8 +2,10 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
 import { CASTLE, HULL_OUTLINE, MODULE_PIVOT, doorAt, drawCastle, onBody, puff, spline, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
+import { DOOR as DOOR_SIZE, drawDoor } from '../cast'
+import { ROOM_AT, roomTone } from '../castle/room'
 import { ROOM, WASTES } from '../worlds'
-import { BX0, c, CROUCH, deck, ring, T0, YG, type Deck } from './plank-rig'
+import { BX0, c, CROUCH, DECK, deck, ring, T0, YG, type Deck } from './plank-rig'
 
 /**
  * The castle falling apart round her (243.635 → 251.797), drawn through the castle builder's API and nothing else.
@@ -285,13 +287,21 @@ function fallAt(f: Piece, t: number): { at: Pt; rot: number } {
 const XS = [-4.8, -2.6, -0.6, 0.15, 1.2, 3.1]
 const YS = [-11.4, -9.3, -6.8]
 interface Slab {
+  /** Its torn outline, and the line inside it where the plaster's face ends and the broken lath and core begin. */
   pts: Pt[]
+  inner: Pt[]
   mid: Pt
   at: number
   vx: number
   spin: number
   g: number
+  /** How fast it turns over out of the wall's plane (rad/s), and the axis it turns about (0 upright). */
+  tumble: number
+  tilt: number
 }
+/** How deep the torn band of plaster and lath is at a slab's edge, and how thick the wall is (cells). */
+const BAND = 0.12
+const THICK = 0.16
 const SLABS: Slab[] = (() => {
   const out: Slab[] = []
   const j = (i: number, n: number, s: number) => (hash(i, n, s) - 0.5) * 0.35
@@ -304,46 +314,237 @@ const SLABS: Slab[] = (() => {
       // A ragged slab: a notch in its top edge and one down a side, so no two read as boxes.
       const nx = x0 + (x1 - x0) * (0.3 + 0.4 * hash(ci, ri, 8))
       const ny = y0 + (y1 - y0) * (0.3 + 0.4 * hash(ci, ri, 9))
-      const pts: Pt[] = [[x0, y0], [nx, y0 + 0.25 + j(ci, ri, 3)], [x1, y0 + j(ci, ri, 3) * 0.5], [x1 - 0.2 * hash(ci, ri, 10), ny], [x1, y1], [x0 + 0.25, y1 + j(ci, ri, 4) * 0.5], [x0 + 0.15 * hash(ci, ri, 12), ny + 0.3]]
+      const base: Pt[] = [[x0, y0], [nx, y0 + 0.25 + j(ci, ri, 3)], [x1, y0 + j(ci, ri, 3) * 0.5], [x1 - 0.2 * hash(ci, ri, 10), ny], [x1, y1], [x0 + 0.25, y1 + j(ci, ri, 4) * 0.5], [x0 + 0.15 * hash(ci, ri, 12), ny + 0.3]]
+      // Plaster breaks, it is not cut: every edge wanders a little, more on a long edge than a short one.
+      const pts: Pt[] = []
+      base.forEach((a, i) => {
+        const b = base[(i + 1) % base.length]
+        const dx = b[0] - a[0]
+        const dy = b[1] - a[1]
+        const len = Math.hypot(dx, dy)
+        pts.push(a)
+        // A few sharp breaks along it, in and out by turns, each its own depth: jagged, never a ripple.
+        const n = len > 1.2 ? 3 : len > 0.5 ? 2 : 1
+        for (let q = 1; q <= n; q++) {
+          const m = (q - 0.5 + 0.6 * (hash(ci * 11 + i, ri, 20 + q) - 0.5)) / n
+          const w = (q % 2 ? 1 : -1) * (hash(ci * 11 + i, ri, 30 + q) < 0.5 ? 1 : -1) * (0.03 + 0.09 * hash(ci * 11 + i, ri, 40 + q)) * Math.min(1, len / 0.8)
+          pts.push([a[0] + dx * m - (dy / len) * w, a[1] + dy * m + (dx / len) * w])
+        }
+      })
       const mid: Pt = [(x0 + x1) / 2, (y0 + y1) / 2]
+      // The band inside the edge: the outline drawn in toward the middle by about BAND, unevenly (torn, not trimmed).
+      const sx = Math.max(0.4, 1 - (2 * BAND) / (x1 - x0))
+      const sy = Math.max(0.4, 1 - (2 * BAND) / (y1 - y0))
+      // The face broke back further in some places than others: the band from a sliver to twice its depth.
+      const inner: Pt[] = pts.map(([x, y], i) => {
+        const e = 0.35 + 1.65 * hash(ci, ri * 7 + Math.floor(i / 2), 30)
+        const ix = mid[0] + (x - mid[0]) * sx
+        const iy = mid[1] + (y - mid[1]) * sy
+        return [x + (ix - x) * e, y + (iy - y) * e]
+      })
       const at = T0 + 0.02 + 0.16 * hash(ci, ri, 5) + (ri === 0 ? 0.06 : 0)
+      // They turn over as they go: the top row pitching about a level axis (its top falling away), the rest about
+      // one near upright, each its own way.
+      const tumble = (hash(ci, ri, 13) < 0.5 ? -1 : 1) * (0.9 + 1.3 * hash(ci, ri, 14))
+      const tilt = (ri === 0 ? Math.PI / 2 : 0) + (hash(ci, ri, 15) - 0.5) * 0.7
       // They break away from the top first and drop behind the floor, turning, gone into the hull's hold.
-      out.push({ pts, mid, at, vx: (mid[0] + 0.8) * 0.25 + (hash(ci, ri, 6) - 0.5) * 0.6, spin: (hash(ci, ri, 7) - 0.5) * 2.2, g: 13 + 4 * hash(ci, ri, 11) })
+      out.push({ pts, inner, mid, at, vx: (mid[0] + 0.8) * 0.25 + (hash(ci, ri, 6) - 0.5) * 0.6, spin: (hash(ci, ri, 7) - 0.5) * 2.2, g: 13 + 4 * hash(ci, ri, 11), tumble, tilt })
     }
   }
   return out
 })()
 
-/** The back wall as it was: plaster, the brick breast behind the hearth, a shelf; lit red by the war. */
-function wall(p: p5, k: number, W: number) {
+/**
+ * The room on the wall. The back wall is the room the hearth part draws (`castle/room.ts`, `hearth.ts`), placed on the
+ * plank so it holds still in the frame across the cut: her place in the room at the cut (0.85 short of the log) onto
+ * hers on the deck, the room's floor onto the sill. Room cells from here on.
+ */
+const ROOM_OFF: Pt = [DECK.sophie - (ROOM_AT.log[0] - 0.85), DOOR[1] - ROOM_AT.ground]
+/** The crockery on the mantel (as `hearth.ts` has it): [x from the hearth's left, width, height, colour]. */
+const MANTEL_ITEMS: [number, number, number, string][] = [
+  [-0.35, 0.2, 0.3, WASTES.stone],
+  [0.15, 0.16, 0.22, ROOM.copper],
+  [1.55, 0.26, 0.2, ROOM.cloth],
+  [2.3, 0.14, 0.34, WASTES.stoneDark],
+]
+/** The lantern on its chain from the beam left of the door (as `hearth.ts` hangs it). */
+const LANTERN = { x: -1.6, len: 2.3 }
+
+/** The room's lamp-lit warmth on the wall: whole on the cut, gone into the daylight over 0.4 s. */
+const warmAt = (t: number): number => 1 - smooth(t, T0, T0 + 0.4)
+/** The wall's light at `t`: the room's own tone at the cut, easing into the day (the plaster lit red by the war). */
+function wallTone(t: number, ink: string): (hex: string) => string {
+  const w = warmAt(t)
+  const lamp = roomTone(T0 - 0.001, ink).tone
+  const day = (h: string) => mixHex(mixHex(h, ROOM.night, 0.28), ROOM.warLight, 0.22)
+  return (h: string) => (w <= 0 ? day(h) : mixHex(day(h), lamp(h), w))
+}
+
+/** The back wall as it was: plaster over a boarded wainscot, the door, the brick breast and its arch, the mantel. */
+function wall(p: p5, k: number, W: number, ink: string, t: number) {
+  const R = ROOM_AT
+  const X = (v: number) => v * k
+  const w = warmAt(t)
+  const tone = wallTone(t, ink)
+  const day = (h: string) => mixHex(mixHex(h, ROOM.night, 0.28), ROOM.warLight, 0.22)
+  // What the hearth drew untoned (its door, its crockery), easing into the day with the rest.
+  const lit = (warm: string, h: string) => mixHex(day(h), warm, w)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  p.push()
+  p.translate(X(ROOM_OFF[0]), X(ROOM_OFF[1]))
+  p.rectMode(p.CORNER)
+  const [x0, x1] = [-3.3, 5.3]
+  // The plaster, and the wainscot of boards below its dado rail.
+  p.noStroke()
+  p.fill(tone(ROOM.plaster))
+  p.rect(X(x0), X(R.ceil - 0.5), X(x1 - x0), X(R.ground - R.ceil + 0.5))
+  p.fill(tone(ROOM.plasterShade))
+  p.rect(X(x0), X(-0.95), X(x1 - x0), X(R.ground + 0.95))
+  p.stroke(alpha(p, ink, 0.14))
+  p.strokeWeight(W * 0.45)
+  for (let x = R.wallL + 0.45, i = 0; x < x1; x += 0.45 + 0.08 * Math.sin(i * 2.7), i++) if (x > x0) p.line(X(x), X(-0.9), X(x), X(R.ground))
+  p.stroke(alpha(p, ink, 0.6))
+  p.strokeWeight(W * 0.8)
+  p.line(X(x0), X(-0.95), X(x1), X(-0.95))
+  p.noStroke()
+  for (let i = 0; i < 6; i++) {
+    p.fill(alpha(p, tone(ROOM.soot), 0.05))
+    p.ellipse(X(2.8 + (i - 2.5) * 0.25), X(-3.4 + i * 0.1), X(4.2 - i * 0.35), X(2.2 - i * 0.2))
+  }
+  // The ceiling's beam over it.
+  p.stroke(ink)
+  p.strokeWeight(W)
+  p.fill(tone(ROOM.woodDark))
+  p.rect(X(x0), X(R.ceil - 0.5), X(x1 - x0), X(0.5))
+
+  // The door, shut (its dial is off the top of the frame, as the hearth left it).
+  p.push()
+  p.translate(X(R.door[0]), X(R.door[1]))
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(-3), -(DOOR_SIZE.h + DOOR_SIZE.frame) * k - W / 2, X(6), X(4))
+  ctx.clip()
+  const wood = lit(mixHex(ROOM.wood, ROOM.night, 0.35), ROOM.wood)
+  const woodDark = lit(mixHex(ROOM.woodDark, ROOM.night, 0.35), ROOM.woodDark)
+  drawDoor(p, k, W, ink, { open: 0, dial: 2, wood, woodDark })
+  ctx.restore()
+  p.pop()
+
+  // The chimney breast, brick to the ceiling, a few bricks showing where the plaster has come off; the arched
+  // fireplace, the hearthstone, the mantel shelf and its crockery.
+  const [hx0, hx1, htop] = R.hearth
+  p.stroke(ink)
+  p.strokeWeight(W)
+  p.fill(tone(ROOM.brick))
+  p.rect(X(hx0 - 0.5), X(R.ceil), X(hx1 - hx0 + 1), X(R.ground - R.ceil))
+  p.stroke(alpha(p, ink, 0.28))
+  p.strokeWeight(W * 0.45)
+  p.noFill()
+  for (const [bx, by] of [[1.6, -3.0], [4.0, -3.6], [1.75, -1.1], [3.95, -0.7], [4.05, -2.2], [1.55, -3.8]] as Pt[]) {
+    p.rect(X(bx - 0.18), X(by - 0.07), X(0.36), X(0.14))
+    p.rect(X(bx), X(by + 0.07), X(0.36), X(0.14))
+  }
+  p.stroke(ink)
+  p.strokeWeight(W)
+  p.fill(tone(ROOM.hearth))
+  p.beginShape()
+  p.vertex(X(hx0), X(R.ground))
+  p.vertex(X(hx0), X(htop + 0.3))
+  p.quadraticVertex(X((hx0 + hx1) / 2), X(htop - 0.2), X(hx1), X(htop + 0.3))
+  p.vertex(X(hx1), X(R.ground))
+  p.endShape(p.CLOSE)
+  p.fill(tone(WASTES.stoneDark))
+  p.rect(X(hx0 - 0.25), X(R.ground - 0.02), X(hx1 - hx0 + 0.5), X(0.1))
+  p.fill(tone(ROOM.woodDark))
+  p.rect(X(hx0 - 0.7), X(htop - 0.22), X(hx1 - hx0 + 1.4), X(0.22))
+  const shelf = htop - 0.22
+  p.strokeWeight(W * 0.7)
+  for (const [dx, iw, ih, col] of MANTEL_ITEMS) {
+    const cx = hx0 + dx
+    p.fill(lit(col, col))
+    p.beginShape()
+    p.vertex(X(cx - iw / 2), X(shelf))
+    p.vertex(X(cx + iw / 2), X(shelf))
+    p.bezierVertex(X(cx + iw * 0.62), X(shelf - ih / 2), X(cx + iw * 0.45), X(shelf - ih * 0.8), X(cx + iw * 0.22), X(shelf - ih))
+    p.vertex(X(cx - iw * 0.22), X(shelf - ih))
+    p.bezierVertex(X(cx - iw * 0.45), X(shelf - ih * 0.8), X(cx - iw * 0.62), X(shelf - ih / 2), X(cx - iw / 2), X(shelf))
+    p.endShape(p.CLOSE)
+  }
+
+  // The lantern, hanging still now, and its light; the fire's glow over the breast. Both go with the lamp tone.
+  const lx = LANTERN.x
+  const ly = R.ceil + LANTERN.len
+  p.stroke(alpha(p, ink, 0.8))
+  p.strokeWeight(W * 0.6)
+  p.line(X(lx), X(R.ceil), X(lx), X(ly))
+  p.stroke(ink)
+  p.strokeWeight(W * 0.7)
+  p.fill(tone(WASTES.ironDark))
+  p.quad(X(lx - 0.12), X(ly + 0.12), X(lx + 0.12), X(ly + 0.12), X(lx + 0.035), X(ly + 0.05), X(lx - 0.035), X(ly + 0.05))
+  p.fill(mixHex(tone(ROOM.copper), '#FFD9A0', 0.55 * w))
+  p.quad(X(lx - 0.1), X(ly + 0.12), X(lx + 0.1), X(ly + 0.12), X(lx + 0.08), X(ly + 0.38), X(lx - 0.08), X(ly + 0.38))
+  p.strokeWeight(W * 0.6)
+  p.line(X(lx), X(ly + 0.12), X(lx), X(ly + 0.38))
+  p.fill(tone(WASTES.ironDark))
+  p.strokeWeight(W * 0.7)
+  p.rect(X(lx - 0.1), X(ly + 0.38), X(0.2), X(0.045))
+  if (w > 0.01) {
+    ctx.save()
+    const glow = (cx: number, cy: number, r: number, rgb: string, a: number) => {
+      const g = ctx.createRadialGradient(X(cx), X(cy), 0, X(cx), X(cy), X(r))
+      g.addColorStop(0, `rgba(${rgb}, ${a})`)
+      g.addColorStop(1, `rgba(${rgb}, 0)`)
+      ctx.fillStyle = g
+      ctx.fillRect(X(cx - r), X(cy - r), X(2 * r), X(2 * r))
+    }
+    glow(lx, ly + 0.3, 1.3, '255, 196, 120', 0.13 * w)
+    glow((hx0 + hx1) / 2, -0.6, 3.4, '255, 150, 70', 0.3 * w)
+    ctx.restore()
+  }
+  p.pop()
+}
+
+/**
+ * The back of a slab, as it turns over: the plaster's rough underside keyed through the lath, the strips running
+ * level across it with the dark between. Standing cells, clipped to the slab by the caller.
+ */
+function slabBack(p: p5, k: number, W: number, tone: (h: string) => string, s: Slab) {
+  const X = (v: number) => v * k
+  const [mx, my] = s.mid
   p.push()
   p.rectMode(p.CORNER)
-  const war = (h: string) => mixHex(mixHex(h, ROOM.night, 0.28), ROOM.warLight, 0.22)
   p.noStroke()
-  p.fill(war(ROOM.plaster))
-  p.rect(-5 * k, -11.6 * k, 8.4 * k, 4.9 * k)
-  // The chimney breast behind the grate, as the room has it: brick to the ceiling, an arched fireplace, a mantel.
-  const b0 = -0.35
-  const b1 = 1.75
-  p.fill(war(ROOM.brick))
-  p.rect(b0 * k, -11.6 * k, (b1 - b0) * k, 4.9 * k)
-  p.stroke(alpha(p, war(ROOM.brickDark), 1))
-  p.strokeWeight(W * 0.5)
-  for (let i = 0; i < 12; i++) {
-    const y = -6.8 - (i + 1) * 0.38
-    p.line(b0 * k, y * k, b1 * k, y * k)
-    for (let x = b0 + (i % 2 ? 0.3 : 0.6); x < b1; x += 0.6) p.line(x * k, y * k, x * k, (y + 0.38) * k)
+  p.fill(tone(mixHex(ROOM.plasterShade, ROOM.soot, 0.45)))
+  p.rect(X(mx - 2), X(my - 2), X(4), X(4))
+  p.fill(tone(mixHex(ROOM.wood, ROOM.plasterShade, 0.25)))
+  for (let y = my - 2, i = 0; y < my + 2; y += 0.2, i++) p.rect(X(mx - 2 + 0.3 * hash(i, 2, 3)), X(y), X(4), X(0.1))
+  p.stroke(alpha(p, tone(ROOM.woodDark), 0.7))
+  p.strokeWeight(W * 0.4)
+  for (let y = my - 2; y < my + 2; y += 0.2) p.line(X(mx - 2), X(y + 0.1), X(mx + 2), X(y + 0.1))
+  p.pop()
+}
+
+/** The torn band at a slab's edge (drawn over the whole slab, the face then drawn inside `inner`): the plaster's
+ * grey core and the ends of the lath through it. */
+function slabBand(p: p5, k: number, _W: number, tone: (h: string) => string, s: Slab) {
+  const X = (v: number) => v * k
+  const [mx, my] = s.mid
+  p.push()
+  p.rectMode(p.CORNER)
+  p.noStroke()
+  p.fill(tone(mixHex(ROOM.plasterShade, ROOM.soot, 0.55)))
+  p.rect(X(mx - 2), X(my - 2), X(4), X(4))
+  // The lath: level strips behind the plaster, their broken ends showing here and there along the edge.
+  p.stroke(tone(mixHex(ROOM.woodDark, ROOM.soot, 0.25)))
+  p.strokeWeight(X(0.06))
+  p.strokeCap(p.SQUARE)
+  for (let y = my - 2 + 0.09, i = 0; y < my + 2; y += 0.21, i++) {
+    for (let x = mx - 2, q = 0; x < mx + 2; q++) {
+      const run = 0.25 + 0.6 * hash(i, q, 9)
+      if (hash(i, q, 10) < 0.6) p.line(X(x), X(y), X(x + run), X(y))
+      x += run + 0.1
+    }
   }
-  p.noStroke()
-  p.fill(war(ROOM.hearth))
-  p.beginShape()
-  p.vertex((b0 + 0.25) * k, -6.8 * k)
-  p.vertex((b0 + 0.25) * k, -7.9 * k)
-  p.bezierVertex((b0 + 0.25) * k, -8.45 * k, (b1 - 0.25) * k, -8.45 * k, (b1 - 0.25) * k, -7.9 * k)
-  p.vertex((b1 - 0.25) * k, -6.8 * k)
-  p.endShape(p.CLOSE)
-  p.fill(war(ROOM.woodDark))
-  p.rect((b0 - 0.2) * k, -8.72 * k, (b1 - b0 + 0.4) * k, 0.2 * k)
   p.pop()
 }
 
@@ -487,31 +688,94 @@ export function drawCollapse(p: p5, k: number, W: number, ink: string, t: number
     holdCtx.clip()
     holdCtx.setTransform(m)
   }
+  const tone = wallTone(t, ink)
+  // While a slab still stands the cracks round it are dark (the wall's broken core), not sky.
+  if (t >= T0 + 0.04) {
+    p.noStroke()
+    p.fill(tone(mixHex(ROOM.soot, ROOM.night, 0.4)))
+    const d0 = deck(T0)
+    for (const s of SLABS) {
+      if (t >= s.at) continue
+      const [mu, mv] = deckOf(s.mid)
+      p.push()
+      p.translate((d0.x + mu * Math.cos(d0.rot) - mv * Math.sin(d0.rot)) * k, (d0.y + mu * Math.sin(d0.rot) + mv * Math.cos(d0.rot)) * k)
+      p.rotate(d0.rot)
+      p.beginShape()
+      for (const [x, y] of s.pts) {
+        const dx = x - s.mid[0]
+        const dy = y - s.mid[1]
+        const r = Math.hypot(dx, dy) || 1
+        p.vertex((dx + (dx / r) * 0.09) * k, (dy + (dy / r) * 0.09) * k)
+      }
+      p.endShape(p.CLOSE)
+      p.pop()
+    }
+  }
   for (const s of SLABS) {
-    if (t < s.at || t > s.at + 1.2) continue
-    const u = t - s.at
+    // Cracked through on the hit, each lets go on its own beat after it and turns over as it falls.
+    if (t < T0 + 0.04 || t > s.at + 1.2) continue
+    const u = Math.max(0, t - s.at)
     const dd = deck(s.at)
     const [mu, mv] = deckOf(s.mid)
     const mx = dd.x + mu * Math.cos(dd.rot) - mv * Math.sin(dd.rot) + s.vx * u
     const my = dd.y + mu * Math.sin(dd.rot) + mv * Math.cos(dd.rot) + 0.5 * s.g * u * u
     if (my > vis.y1 + 3) continue
-    p.push()
-    p.translate(mx * k, my * k)
-    p.rotate(dd.rot + s.spin * u)
-    p.translate(-s.mid[0] * k, -s.mid[1] * k)
+    // Turned out of the wall's plane by `phi` about its axis: foreshortened across it, its thickness showing on the
+    // side it turns from, and its back (the lath) once it is past edge-on.
+    const phi = s.tumble * (0.5 * u + 1.1 * u * u)
+    const cp = Math.cos(phi)
+    const face = cp >= 0 ? 1 : -1
+    const sx = face * Math.max(0.035, Math.abs(cp))
+    const shift = (face * THICK * Math.sin(phi)) / 2
+    const place = (dx: number) => {
+      p.translate(mx * k, my * k)
+      p.rotate(dd.rot + s.spin * u + s.tilt)
+      p.translate(dx * k, 0)
+      p.scale(sx, 1)
+      p.rotate(-s.tilt)
+      p.translate(-s.mid[0] * k, -s.mid[1] * k)
+    }
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    // The far face: the slab's broken thickness, dark.
+    if (Math.abs(shift) > 0.004) {
+      p.push()
+      place(-shift)
+      p.stroke(ink)
+      p.strokeWeight(W * 0.8)
+      p.fill(tone(mixHex(ROOM.plasterShade, ROOM.soot, 0.6)))
+      outline(p, k, s.pts, true)
+      p.pop()
+    }
+    p.push()
+    place(shift)
     ctx.save()
     ctx.beginPath()
     tracePath(ctx, s.pts, k)
     ctx.clip()
-    wall(p, k, W)
+    slabBand(p, k, W, tone, s)
+    ctx.save()
+    ctx.beginPath()
+    tracePath(ctx, s.inner, k)
+    ctx.clip()
+    if (face > 0) wall(p, k, W, ink, t)
+    else slabBack(p, k, W, tone, s)
+    ctx.restore()
+    // The plaster's broken lip, and the face darkening as it turns away from the light.
+    p.noFill()
+    p.stroke(alpha(p, ink, 0.35))
+    p.strokeWeight(W * 0.5)
+    outline(p, k, s.inner, true)
+    const shade = 0.5 * (1 - Math.abs(cp)) + (face < 0 ? 0.12 : 0)
+    if (shade > 0.01) {
+      p.noStroke()
+      p.fill(alpha(p, ROOM.night, shade))
+      outline(p, k, s.pts, true)
+    }
     ctx.restore()
     p.stroke(ink)
     p.strokeWeight(W * 0.8)
     p.noFill()
-    p.beginShape()
-    for (const [x, y] of s.pts) p.vertex(x * k, y * k)
-    p.endShape(p.CLOSE)
+    outline(p, k, s.pts, true)
     p.pop()
   }
   holdCtx.restore()
@@ -527,7 +791,7 @@ export function drawCollapse(p: p5, k: number, W: number, ink: string, t: number
     ctx.beginPath()
     tracePath(ctx, HOLE, k)
     ctx.clip()
-    wall(p, k, W)
+    wall(p, k, W, ink, t)
     ctx.restore()
   }
   const before: ModuleId[] = []
