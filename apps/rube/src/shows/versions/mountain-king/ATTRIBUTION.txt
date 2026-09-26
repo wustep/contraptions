@@ -1,0 +1,26 @@
+Mountain King (versions/mountain-king/opus55.show.ts)
+
+Music
+  Edvard Grieg (1843–1907), "In the Hall of the Mountain King"
+  Peer Gynt Suite No. 1, Op. 46, IV (from the incidental music to Ibsen's Peer Gynt, Op. 23, 1875)
+  Composition: public domain.
+
+Recording
+  Czech National Symphony Orchestra, recorded for Musopen (the Musopen Kickstarter project, 2012).
+  Released by Musopen into the public domain: "This work has been released into the public domain by its author,
+  Musopen. This applies worldwide." Musopen grants anyone the right to use this work for any purpose, without any
+  conditions.
+  Source file: https://commons.wikimedia.org/wiki/File:Grieg_-_Peer_Gynt_Suite_No._1,_Op._46_-_IV._In_the_Hall_of_the_Mountain_King_(Musopen_Symphony).flac
+  (FLAC, 48 kHz, 154.091 s), re-encoded whole and untouched to grieg-mountain-king-musopen.mp3
+  (160 kbit/s) by scripts/shows/mountain-king-cue.sh.
+
+  The show can also play the same recording from YouTube: the orchestra's label upload,
+  "Czech National Symphony Orchestra, Prague - Topic" (provided to YouTube by CDBaby, from the compilation
+  "50 Masterpieces of Classical Music", which credits Libor Pešek as conductor),
+  https://www.youtube.com/watch?v=k8HCJS4FflY. Measured against the Musopen file it is the same recording,
+  sample for sample (lag 0, the same 154.091 s).
+
+Story
+  After Henrik Ibsen, Peer Gynt (1867), Act Two: the hall of the Dovre King (public domain).
+
+The file is shipped with the show: it is public domain, not a demo-only recording.
