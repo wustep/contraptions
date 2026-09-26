@@ -10,6 +10,7 @@ import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/merry-go-rou
 import { age, sophieAt } from '../src/shows/versions/merry-go-round/howl/age'
 import { SOPHIE_SILVER } from '../src/shows/versions/merry-go-round/howl/worlds'
 import type { CastleShow } from '../src/shows/versions/merry-go-round/howl/show'
+import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
@@ -104,6 +105,23 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('merry-go-round: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
+  // She can be found: outside the castle's whole-castle wides (the roar and the great strides, the collapse, the
+  // rebuild) and the credits, she is never under 5.5 px across at 640x360 for more than 1.5 s.
+  const WIDES: [number, number][] = [[126.5, 138], [245.5, 252.5], [294, 300.2], [301.2, DURATION]]
+  let small = 0
+  let smallest = 0
+  let smallAt = 0
+  for (let t = 0; t <= perf.duration; t += 0.05) {
+    const h = show.at(t)
+    const px = (2 * R * (h.scale ?? 1) * 360) / cam(t).cells
+    small = !h.hidden && px < 5.5 && !WIDES.some(([a, b]) => t >= a && t <= b) ? small + 0.05 : 0
+    if (small > smallest) {
+      smallest = small
+      smallAt = t
+    }
+  }
+  check('merry-go-round: she can be found: never under 5.5 px across for more than 1.5 s outside the castle\'s great wides and the credits', smallest <= 1.5, `${smallest.toFixed(2)} s to ${smallAt.toFixed(2)}`)
 
   // The ball is never out of sight for long.
   let hidden = 0
