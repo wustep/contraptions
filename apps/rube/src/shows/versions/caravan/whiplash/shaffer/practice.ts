@@ -9,7 +9,7 @@ import { G_EARTH, G_SNAP } from '../physics'
 import { KIT } from '../worlds'
 import { Path, beat, loudAt, since, swing, type Hit } from './room-path'
 import { BLOCK, STEEL, STEEL_LIT, block, dim, edgeOf } from './night-rig'
-import { ROOM, drawPracticeRoom, litAt, type RoomLook } from './room'
+import { ROOM, drawPracticeRoom, lampMouth, litAt, rgba, type RoomLook } from './room'
 
 /**
  * The practice room, the film's first shot (0 → 30.65: the drum intro alone, the bass from 21.11, the band on 30.65).
@@ -359,14 +359,98 @@ interface PracticeState {
   lane: Lane
 }
 
+/**
+ * The opening is dark: for the first bars only the lamp's cone and its pool, the room's open door and the spill
+ * through its doorway are lit, so the eye goes straight down the black corridor to the one lit room and the ball on
+ * the kit in it. The room's dark comes up as the push arrives in it (beat 7 → 15); the corridor's fixtures come up as
+ * the push passes them and the corridor slides out of the frame, and are at their level long before Fletcher comes
+ * down the other one. (The night, `night.ts`, is darker than this opening's lit room.)
+ */
+const DARK = { ambient: 0.04, hall: 0.035 }
+const LIT = { ambient: 0.13, hall: 0.2 }
+function ambientAt(T: number): number {
+  return DARK.ambient + (LIT.ambient - DARK.ambient) * smooth(T, 4.4, 7.6)
+}
+function hallAt(T: number): number {
+  return DARK.hall + (LIT.hall - DARK.hall) * smooth(T, 4.0, 7.0)
+}
+
+/** How much of the opening's dark is still over the building, 1 → 0 as the push arrives in the room. */
+function openingDark(T: number): number {
+  return 1 - smooth(T, 4.4, 7.6)
+}
+
+/** The opening's dark is drawn off screen, then laid over the canvas: its holes are cut out of it, not lit on it. */
+let darkLayer: HTMLCanvasElement | null = null
+
+/** Cut a soft elliptical hole in the dark at (x, y): radius `r` across, `r * tall` up and down, `a` at its middle. */
+function hole(g: CanvasRenderingContext2D, k: number, x: number, y: number, r: number, tall: number, a: number, core = 0.3): void {
+  g.save()
+  g.translate(x * k, y * k)
+  g.scale(1, tall)
+  const q = g.createRadialGradient(0, 0, 0, 0, 0, r * k)
+  q.addColorStop(0, `rgba(0,0,0,${a})`)
+  q.addColorStop(core, `rgba(0,0,0,${a})`)
+  q.addColorStop(core + (1 - core) * 0.5, `rgba(0,0,0,${0.3 * a})`)
+  q.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = q
+  g.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
+  g.restore()
+}
+
+/**
+ * The opening's dark. The room's own ambient is only a step on the paper, and the lamp's wide falloff lights every
+ * panel, so on its own the building still read fully lit. Over the room, its corridors and the kit (the ball is drawn
+ * after, his own colour) the paper's dark, with two openings in it: the lamp's cone and its pool on the kit (following
+ * the lamp's swing), and the room's left doorway with its light spilling out onto the corridor's floor, the door open
+ * against the wall catching it. It lifts as the push arrives in the room.
+ */
+function drawOpeningDark(p: p5, c: Ctx, look: RoomLook, amount: number): void {
+  if (amount < 0.005) return
+  const { k, bg } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cv = ctx.canvas
+  if (typeof document === 'undefined') return
+  darkLayer ??= document.createElement('canvas')
+  if (darkLayer.width !== cv.width || darkLayer.height !== cv.height) {
+    darkLayer.width = cv.width
+    darkLayer.height = cv.height
+  }
+  const g = darkLayer.getContext('2d')
+  if (!g) return
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  g.globalCompositeOperation = 'source-over'
+  g.clearRect(0, 0, cv.width, cv.height)
+  g.setTransform(ctx.getTransform())
+  // The dark over the building (the room, its corridors), not the paper round it (already the dark).
+  const x0 = HALL_L - 0.5
+  const x1 = X_END + 0.5
+  const y0 = ROOM.ceil - 0.7
+  const y1 = ROOM.floor + 0.06
+  g.fillStyle = rgba(bg, 0.9 * amount)
+  g.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+  g.globalCompositeOperation = 'destination-out'
+  // The lamp: its cone from the shade down onto the kit and the pool on the boards.
+  const [mx] = lampMouth(look.sway)
+  hole(g, k, 0.55 * mx + 0.45 * 0.35, ROOM.floor - 2.4, 3.7, 1.3, 1, 0.34)
+  // The doorway, lit from the room, and its light out across the corridor's floor.
+  const door = ROOM.x0 - ROOM.wall / 2
+  hole(g, k, door + 0.1, ROOM.floor - 2.0, 1.25, 1.9, 0.9, 0.25)
+  hole(g, k, door - 0.9, ROOM.floor - 0.35, 2.6, 0.32, 0.75, 0.2)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(darkLayer, 0, 0)
+  ctx.restore()
+}
+
 /** The room's light and air at `T`. */
 function roomLook(T: number): RoomLook {
   return {
     T,
     light: 1,
     sway: swing(BLOWS, T),
-    ambient: 0.13,
-    hall: 0.2,
+    ambient: ambientAt(T),
+    hall: hallAt(T),
     left: HALL_L,
     right: X_END,
     dust: stir(T),
@@ -398,6 +482,7 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
     light: 0.9,
   })
   drawPair(p, c, { S: pairAngle('S', T, PAIR_HITS.S, ball), H: pairAngle('H', T, PAIR_HITS.H, ball) })
+  drawOpeningDark(p, c, look, openingDark(T))
   p.pop()
 }
 
