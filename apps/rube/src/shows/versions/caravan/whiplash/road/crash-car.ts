@@ -321,7 +321,10 @@ export interface TruckLook {
 export function drawTruck(p: p5, c: Ctx, x: number, road: number, s: TruckLook): void {
   const { k, weight } = c
   const L = Math.max(0, s.light)
-  const ink = lit(c, c.ink, Math.min(1, 0.3 + 0.7 * L))
+  // Edged in its own dirty dark, never the cream ink (outlined in ink, it was the one vehicle still drawn as a line
+  // drawing); the trailer's ribs and the grille's bars a low line in the same dark.
+  const ink = lit(c, mixHex(ROAD.truck, ROAD.deep, 0.72), Math.min(1, 0.45 + 0.55 * L))
+  const rib = hexA(mixHex(ROAD.truck, ROAD.deep, 0.6), 0.35 + 0.2 * Math.min(1, L))
   const cream = lit(c, ROAD.truck, Math.min(1.1, 0.22 + 0.78 * L))
   const shade = lit(c, mixHex(ROAD.truck, ROAD.deep, 0.45), Math.min(1.1, 0.25 + 0.75 * L))
   // The body rides its springs: the nose dips by `dive` at the bumper, nothing at the back.
@@ -338,7 +341,7 @@ export function drawTruck(p: p5, c: Ctx, x: number, road: number, s: TruckLook):
   // The trailer: a long box on its bogie at the back, its landing legs up.
   solid(p, ink, weight, shade)
   shape([[3.55, 1.25], [TRUCK_LEN, 1.25], [TRUCK_LEN, 4.15], [3.55, 4.15]])
-  outline(p, lit(c, ROAD.truck, 0.25 + 0.3 * L), weight * 0.5)
+  outline(p, rib, weight * 0.5)
   for (let i = 1; i < 8; i++) {
     const a = at(3.55 + i * 1.2, 1.3)
     const b = at(3.55 + i * 1.2, 4.1)
@@ -358,7 +361,7 @@ export function drawTruck(p: p5, c: Ctx, x: number, road: number, s: TruckLook):
   // The windshield and the door's glass: dark, with the lamps' glint.
   solid(p, ink, weight * 0.6, hexA(ROAD.deep, 0.9))
   shape([[1.95, 2.25], [2.12, 3.0], [2.55, 3.0], [2.55, 2.25]])
-  outline(p, ink, weight * 0.55)
+  outline(p, rib, weight * 0.55)
   const d0 = at(2.65, 1.1)
   const d1 = at(2.65, 3.05)
   p.line(d0[0] * k, d0[1] * k, d1[0] * k, d1[1] * k)
@@ -373,11 +376,12 @@ export function drawTruck(p: p5, c: Ctx, x: number, road: number, s: TruckLook):
   // The wheels.
   for (const w of TRUCK_WHEELS) {
     const [wx, wy] = [x + w, road - TRUCK_R]
-    solid(p, ink, weight, lit(c, ROAD.asphalt, 0.75 + 0.25 * L))
+    solid(p, ROAD.deep, weight * 0.8, lit(c, ROAD.asphalt, 0.75 + 0.25 * L))
     p.circle(wx * k, wy * k, 2 * TRUCK_R * k)
-    solid(p, ink, weight * 0.6, lit(c, ROAD.paint, 0.3 + 0.5 * L))
+    p.noStroke()
+    p.fill(lit(c, mixHex(ROAD.truck, ROAD.asphalt, 0.45), 0.3 + 0.55 * L))
     p.circle(wx * k, wy * k, 0.9 * TRUCK_R * k)
-    outline(p, ink, weight * 0.5)
+    outline(p, hexA(ROAD.deep, 0.85), weight * 0.5)
     for (let i = 0; i < 6; i++) {
       const a = s.turn + (i / 6) * Math.PI * 2
       p.line(wx * k, wy * k, (wx + Math.cos(a) * TRUCK_R * 0.4) * k, (wy + Math.sin(a) * TRUCK_R * 0.4) * k)
