@@ -1178,33 +1178,45 @@ export const plank = part<PlankState>(
       return sum / 60
     })()
     const run = (t: number, cells: number, ox: number, foot = 0.85): PartShot => follow(t, cells, [ox, YG + foot - cells / 2 - runY])
+    // The deck close: her on the deck `top` of the way down the frame, the hips, the knees and what the feet throw up
+    // under her; the feet just out of it. At 7.8 cells or less she holds the lead's floor (12 px at 640x360).
+    const onDeckShot = (t: number, cells: number, ox: number, top = 0.3): PartShot => follow(t, cells, [ox, (0.5 - top) * cells])
     // The stop: on the contact, the brink and the drop under it; the cadenza: the two of them, the star over them.
     const JOLT_AT: Pt = [end[0] + 1.0, end[1] + 0.22]
     const CADENZA: Pt = [end[0] + 0.88, end[1] - 1.12]
     return [
-      // The collapse: close on her with Calcifer as the hearth breaks round them and the flag and the chimney go
-      // (c1, c1.2); then, on the bar (c2, the back turret snapping), a cut out to the castle tearing apart, going on
-      // back slowly to the whole of it coming down; then in again as the plank stands.
+      // The collapse, cut on the bars: close on her with Calcifer as the hearth breaks round them and the flag and
+      // the chimney go (c1, c1.2); on c2 (the back turret snapping) a cut out to the whole castle tearing apart, two
+      // bars; on c4 back in to her, the hull torn in plates over her head, pushing in; on c6 out again to the whole
+      // of it, the cottage and the face going down; on c8 in to her on the plank standing up in the dust, the wreck
+      // at the left, and on with her as it runs (c9).
       hold(244.5, 4.5, [her0[0] + 0.25, her0[1] - 0.88]),
       hold(245.0, 5.1, [her0[0] + 0.2, her0[1] - 0.98]),
       { ...hold(c(2), 23, [BX0 - 1.3, -3.7]), cut: true },
-      hold(247.4, 25, [BX0 - 1.5, -2.8]),
-      hold(250.7, 22, [BX0 + 0.5, -1.5]),
-      hold(252.3, 14, [BX0 + 2, 2.8]),
-      // The run. On its first stroke (c9) a cut in to the machine tearing clear of the dust, the whole of it, her on
-      // its deck right of the middle looking back at the wreck left behind on the moor, Turnip Head springing out of
-      // the dust onto the stern. Then running with it, the frame leading, the brink coming in under it; out wider for
-      // the size of it as the bird comes down out of the sky; in to the two of them as he lands on the prow on the
-      // loudest note. Every running frame has the feet in it.
-      { ...run(c(9), 9.4, -3.4), cut: true },
-      run(c(10) + 0.4, 9.4, -2.8),
-      run(c(12) + 0.3, 9.4, 0.7, 1.25),
-      run(c(16) + 0.3, 9.4, 0.9, 1.25),
-      run(c(18), 10.6, 2.4, 1.5),
+      hold(247.3, 24.2, [BX0 - 1.45, -3.1]),
+      { ...onDeckShot(c(4), 7.4, -0.3, 0.44), cut: true },
+      onDeckShot(c(6) - 0.05, 6.6, -0.4, 0.42),
+      { ...hold(c(6), 24, [BX0 - 0.6, -2.4]), cut: true },
+      hold(c(8) - 0.05, 21, [BX0 + 0.6, -1.2]),
+      // The run: from c8 close on her on the deck, right of the middle, the wreck left behind at the left and Turnip
+      // Head springing out of the dust onto the stern behind her; on with it close on the deck as it runs (Calcifer
+      // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
+      // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
+      // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
+      // it and lands on the loudest note.
+      { ...onDeckShot(c(8), 7.7, -3.1, 0.3), cut: true },
+      onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.28),
+      onDeckShot(c(10) + 0.4, 7.7, -2.6, 0.27),
+      onDeckShot(c(12) + 0.3, 7.7, 0.3, 0.27),
+      onDeckShot(c(16) + 0.3, 7.7, 0.7, 0.27),
+      onDeckShot(c(18) - 0.05, 7.7, 0.8, 0.27),
+      { ...run(c(18), 10.6, 2.4, 1.5), cut: true },
       run(c(19) + 0.5, 10.6, 2.2, 1.5),
-      run(c(21), 9.0, 2.0),
-      run(c(23), 9.0, 2.1),
-      run(c(25) + 0.2, 9.0, 1.3),
+      run(c(20) - 0.05, 10.4, 2.2, 1.5),
+      { ...onDeckShot(c(20), 6.9, 2.7, 0.36), cut: true },
+      onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.36),
+      onDeckShot(c(23), 6.6, 2.4, 0.35),
+      onDeckShot(c(25) + 0.2, 6.4, 2.0, 0.35),
       // As she raises him to Howl: a cut in to the two of them for the heart.
       { ...follow(RAISE, 4.1, [0.55, -0.4]), cut: true },
       follow(272.8, 3.7, [0.45, -0.5]),
@@ -1214,7 +1226,7 @@ export const plank = part<PlankState>(
       // frame tightening on the contact.
       follow(276.2, 6.8, [2.4, -0.4]),
       follow(277.6, 7.6, [3.2, -0.5]),
-      follow(279.0, 8.1, [4.1, -0.6]),
+      follow(279.0, 7.6, [3.8, -0.6]),
       hold(281.2, 7.6, [end[0] - 1.9, end[1] - 0.4]),
       hold(282.9, 6.6, [end[0] - 0.5, end[1] - 0.15]),
       // The stop: a cut in on the contact, jolted by it; the settling; then in to the cadenza's one still frame.
@@ -1222,8 +1234,9 @@ export const plank = part<PlankState>(
       hold(IMPACT + 0.07, 5.2, [JOLT_AT[0] + 0.04, JOLT_AT[1] + 0.1]),
       hold(IMPACT + 0.6, 5.15, [JOLT_AT[0] - 0.01, JOLT_AT[1] - 0.02]),
       hold(284.4, 5.0, [JOLT_AT[0] - 0.05, JOLT_AT[1] - 0.2]),
-      hold(285.9, 4.5, CADENZA),
-      hold(GLANCE, 4.5, CADENZA),
+      // The cadenza: the two of them and the star, a push in so slow it reads as a held frame (never parked).
+      hold(285.9, 4.8, [CADENZA[0] - 0.1, CADENZA[1] + 0.06]),
+      hold(GLANCE, 4.3, [CADENZA[0] + 0.05, CADENZA[1] - 0.04]),
       hold(slot.end, 5.9, [end[0] + 0.85, end[1] - 1.3]),
     ]
   },
