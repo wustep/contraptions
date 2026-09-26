@@ -41,26 +41,17 @@ export const COURT: Courtier[] = [
   { row: 0, x: 2.3, size: 1.55, seed: 101, doze: 0.55, station: { tail: TAIL_A, flick: FLICK_A, snort: SNORT_A, toward: 1 }, chase: { to: 11.4 } },
   { row: 0, x: 6.3, size: 1.65, seed: 102, doze: -0.55, station: { tail: TAIL_B, flick: FLICK_B, snort: SNORT_B, toward: -1 }, chase: { to: 12.9 } },
   { row: 0, x: 8.4, size: 1.5, seed: 103, doze: 0.18, chase: { to: 14.1 } },
-  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 15.05, grab: GRAB } },
-  // The tiers.
-  { row: 1, x: 1.25, size: 1.45, seed: 111, doze: 0.3 },
-  { row: 1, x: 2.85, size: 1.4, seed: 112, doze: -0.25 },
-  { row: 1, x: 5.85, size: 1.5, seed: 113, doze: 0.4 },
-  { row: 1, x: 7.45, size: 1.4, seed: 114, doze: -0.35 },
-  { row: 1, x: 11.0, size: 1.5, seed: 115, doze: 0.2 },
-  { row: 2, x: 0.95, size: 1.35, seed: 121, doze: -0.2 },
-  { row: 2, x: 2.55, size: 1.3, seed: 122, doze: 0.35 },
-  { row: 2, x: 6.4, size: 1.35, seed: 123, doze: -0.3 },
-  { row: 2, x: 7.95, size: 1.3, seed: 124, doze: 0.25 },
-  { row: 2, x: 11.45, size: 1.35, seed: 125, doze: -0.15 },
+  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB } },
+  // The ledges: fewer, and no two alike (a big one slumped, small ones leaning in), clear of the pillars (4.3, 9.5).
+  { row: 1, x: 1.55, size: 1.3, seed: 111, doze: 0.45 },
+  { row: 1, x: 6.95, size: 1.9, seed: 113, hide: TROLL.old, doze: -0.5 },
+  { row: 1, x: 11.25, size: 1.25, seed: 115, doze: 0.2 },
+  { row: 2, x: 2.7, size: 1.5, seed: 122, doze: -0.35 },
+  { row: 2, x: 7.85, size: 1.2, seed: 124, doze: 0.4 },
   // The gallery in the dark: silhouettes, their eyes the only thing that shows.
-  { row: 3, x: 1.0, size: 1.2, seed: 131, doze: 0.2 },
-  { row: 3, x: 2.4, size: 1.15, seed: 132, doze: -0.3 },
-  { row: 3, x: 5.7, size: 1.2, seed: 133, doze: 0.25 },
-  { row: 3, x: 6.95, size: 1.15, seed: 134, doze: -0.2 },
-  { row: 3, x: 8.2, size: 1.2, seed: 135, doze: 0.3 },
-  { row: 3, x: 10.75, size: 1.15, seed: 136, doze: -0.25 },
-  { row: 3, x: 11.95, size: 1.2, seed: 137, doze: 0.1 },
+  { row: 3, x: 1.6, size: 1.2, seed: 131, doze: 0.2 },
+  { row: 3, x: 6.3, size: 1.1, seed: 133, doze: 0.25 },
+  { row: 3, x: 10.6, size: 1.15, seed: 136, doze: -0.25 },
 ]
 
 export const SEAT_Y = (row: number): number => (row === 3 ? GALLERY_Y : ROW_Y[row])
@@ -154,7 +145,9 @@ export function courtierAt(c: Courtier, t: number): Pose {
     eyes = 1.35 * ease(t, woke - 0.12, woke) - 0.3 * ease(t, woke + 0.3, woke + 1.0)
     const sh = shout(t)
     mouth = Math.max(mouth, 0.9 * sh * awake)
-    arms = (c.row === 3 ? 0 : 0.85) * sh * awake
+    // Arms flung up over their heads (never held out level beside the nose: that reads as a trunk).
+    const up = Math.max(0, Math.min(1, (sh - 0.3) / 0.45))
+    arms = (c.row === 3 ? 0 : 1) * up * up * (3 - 2 * up) * awake
     // The first eyes: the elder's, a beat before the rest.
     if (c.seed === 104) eyes = Math.max(eyes, 1.35 * ease(t, FIRST_EYES - 0.1, FIRST_EYES) - 0.3 * ease(t, FIRST_EYES + 0.3, FIRST_EYES + 1))
   }
@@ -177,7 +170,8 @@ export function courtierAt(c: Courtier, t: number): Pose {
       if (c.chase.grab) {
         // The grab: a lunge, arms out at where he was, closing on nothing on the note, and a slow step back.
         const lunge = ease(t, c.chase.grab - 0.28, c.chase.grab) * (1 - ease(t, c.chase.grab + 0.15, c.chase.grab + 1.3))
-        x += 0.55 * lunge
+        // Its mitt closes on the air he has just left, never on him (a mitt on the ball reads as a second ball).
+        x += 0.18 * lunge
         arms = Math.max(arms, 0.5 * lunge)
         mouth = Math.max(mouth, 0.7 * lunge)
       }
@@ -290,10 +284,9 @@ export function kingAt(t: number, hand?: Pt): KingPose {
   // The sceptre: resting upright while he dozes; up in the air with the roar; down at Peer's feet as he passes; up
   // again behind him, and down on the dais where he stood.
   let arms = 0.3 * up + 0.7 * ease(t, SLAY[1] - 0.35, SLAY[1])
-  // The grab: he stoops, hands down at Peer running through his feet, and straightens.
+  // Peer runs under him between his feet: he keeps his arms up, roaring, and only his head comes down after him.
   const grab = ease(t, KING_GRAB - 0.32, KING_GRAB) * (1 - ease(t, KING_GRAB + 0.12, KING_GRAB + 0.75))
-  arms = arms * (1 - grab) + 0.06 * grab
-  slump += 0.55 * grab
+  slump += 0.25 * grab
   const raise = ease(t, 69.95, 70.95)
   const strike = ease(t, SMASH - 0.13, SMASH)
   const after = ease(t, SMASH + 1.4, SMASH + 2.6)
@@ -313,7 +306,6 @@ export function kingAt(t: number, hand?: Pt): KingPose {
   const upright = -Math.PI / 2 + 0.12
   const high = -Math.PI / 2 + 0.3
   let sceptre = upright + (high - upright) * ease(t, SLAY[1] - 0.35, SLAY[1])
-  sceptre -= 0.25 * grab
   if (t >= SMASH - 0.13) {
     // Down on the dais (the angle that brings its head to the dais from where his hand is), lifted again, held upright.
     const reach = SCEPTRE.len * (1 - SCEPTRE.grip)

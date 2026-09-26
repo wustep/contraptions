@@ -98,8 +98,8 @@ const torchFlame = (i: number): Pt => [TORCHES[i].foot[0] + TORCHES[i].side * TO
 
 /** The oiled rope: from the first lantern's hook, over the elder's brazier, up to the crown-lamp's hook over the throne. */
 const ROPE0: Pt = [BRAZIERS[2].x, -2.3]
-const CROWN: Pt = [THRONE.x, -6.45]
-const ROPE1: Pt = [THRONE.x, -7.4]
+const CROWN: Pt = [THRONE.x, -6.05]
+const ROPE1: Pt = [THRONE.x, -6.95]
 const SAG = 1.0
 const rope = (u: number): Pt => [ROPE0[0] + (ROPE1[0] - ROPE0[0]) * u, ROPE0[1] + (ROPE1[1] - ROPE0[1]) * u + SAG * 4 * u * (1 - u)]
 const LANTERN_U = [0, 0.36, 0.7]
@@ -194,8 +194,17 @@ function drawRoom(p: p5, c: Pen, lit: number): void {
   poly(p, k, pts)
 }
 
-/** The court's benches cut in the rock: terraces stepping down from the dark gallery to the front bench, lit where the light falls. */
-const TIER_X1 = [12.9, 12.6, 12.4, 12.2]
+/**
+ * The court's benches: ledges of the living rock stepping up from the floor to the dark gallery, each a little
+ * shorter than the one under it as the vault closes over them, with an uneven lip and a ragged end stepping down
+ * into the approach. No boards, no back panel: the riser under each lip is the rock's own dark face.
+ */
+const LEDGES = [
+  { x0: 0.3, x1: 12.9 },
+  { x0: 0.3, x1: 12.35 },
+  { x0: 0.3, x1: 11.75 },
+  { x0: 0.3, x1: 11.1 },
+]
 function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number): void {
   const k = c.k
   const seats = [ROW_Y[0], ROW_Y[1], ROW_Y[2], GALLERY_Y]
@@ -203,17 +212,31 @@ function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number): voi
   for (let r = 3; r >= 0; r--) {
     const top = seats[r]
     const bottom = r === 0 ? FL : seats[r - 1]
-    const x0 = 0.3
-    const x1 = TIER_X1[r]
-    // The riser, and the lip of the seat over it (the pools of light drawn over them do the lighting).
-    const l = 0.35 * lit(6, (top + bottom) / 2)
-    p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.6), STONE.mid, 0.12 + l))
-    p.rect(x0 * k, top * k, (x1 - x0) * k, (bottom - top) * k)
-    p.fill(mixHex(STONE.dark, STONE.light, 0.22 + l))
-    p.rect(x0 * k, top * k, (x1 - x0) * k, Math.max(1, 0.1 * k))
-    // The terrace's end, a step lighter, where it meets the approach to the throne.
-    p.fill(mixHex(STONE.dark, STONE.mid, 0.2 + 0.4 * lit(x1, top)))
-    p.rect((x1 - 0.12) * k, top * k, 0.12 * k, (bottom - top) * k)
+    const { x0, x1 } = LEDGES[r]
+    const h = bottom - top
+    // The lip: the seat's edge, uneven, a knot every half cell or so.
+    const n = Math.round((x1 - x0) * 2.2)
+    const lip: Pt[] = []
+    for (let i = 0; i <= n; i++) {
+      const x = x0 + ((x1 - x0) * i) / n
+      lip.push([x, top + (i === 0 ? 0 : 0.07 * (hash(r, i, 71) - 0.5) + 0.03 * Math.sin(x * 1.7 + r * 2))])
+    }
+    // Its end: broken back and down in two or three steps, never a straight cut.
+    const end: Pt[] = [
+      [x1 + 0.1 + 0.08 * hash(r, 72), top + 0.12 * h],
+      [x1 - 0.05 + 0.1 * hash(r, 73), top + 0.4 * h],
+      [x1 + 0.2 + 0.12 * hash(r, 74), top + 0.62 * h],
+      [x1 + 0.32 + 0.1 * hash(r, 75), bottom + 0.02],
+    ]
+    const l = 0.3 * lit(6, (top + bottom) / 2)
+    // The rock face under the lip, dark, taking a little of the light.
+    p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * l))
+    poly(p, k, [...lip, ...end, [x0, bottom + 0.02]])
+    // The lip's worn edge, catching the light, following it (a band, not a board).
+    const lipLit = lit(x1 - 3, top)
+    p.fill(mixHex(STONE.dark, STONE.light, 0.12 + 0.55 * Math.min(1, lipLit)))
+    const band = 0.07
+    poly(p, k, [...lip, ...[...lip].reverse().map(([x, y], j): Pt => [x, y + band * (0.7 + 0.6 * hash(r, j, 76))])])
   }
   // The court's ways out at the west end of each bench: low dark archways into the trolls' warren.
   p.fill(mixHex(STONE.deep, TROLL.shade, 0.35))
@@ -454,21 +477,39 @@ function drawLamps(p: p5, c: Pen, t: number, lit: number, sway: number): void {
   const k = c.k
   const b = burnt(t)
   const iron = mixHex(WORKS.iron, c.ink, 0.25 + 0.3 * lit)
-  // The chains from the vault: the first lantern's, and the crown-lamp's.
+  // The rope's west end is tied to an iron post standing on the end of the court's first ledge (no chain from the
+  // vault: a full-height line through every wide shot of the hall); the crown-lamp's short chain from the vault.
   p.stroke(iron)
   p.strokeWeight(Math.max(1, c.weight * 0.7))
-  p.line(ROPE0[0] * k, vaultY(ROPE0[0]) * k, ROPE0[0] * k, ROPE0[1] * k)
   p.line(ROPE1[0] * k, vaultY(ROPE1[0]) * k, ROPE1[0] * k, ROPE1[1] * k)
-  // The rope: charred behind the fire, rope-coloured ahead of it, the fire itself running along it.
+  const post: Pt = [ROPE0[0] - 0.12, ROW_Y[1]]
+  p.stroke(mixHex(c.bg, c.ink, 0.25 + 0.35 * lit))
+  p.strokeWeight(c.weight * 0.8)
+  p.fill(mixHex(WORKS.iron, STONE.deep, 0.3))
+  p.beginShape()
+  p.vertex((post[0] - 0.05) * k, post[1] * k)
+  p.vertex((post[0] - 0.035) * k, (ROPE0[1] - 0.18) * k)
+  p.vertex((ROPE0[0] + 0.04) * k, (ROPE0[1] - 0.2) * k)
+  p.vertex((ROPE0[0] + 0.04) * k, (ROPE0[1] - 0.13) * k)
+  p.vertex((post[0] + 0.035) * k, (ROPE0[1] - 0.11) * k)
+  p.vertex((post[0] + 0.05) * k, post[1] * k)
+  p.endShape(p.CLOSE)
+  // The rope: a real rope, a finger thick, charred behind the fire, rope-coloured ahead of it, the fire itself
+  // running along it.
   const n = 30
-  p.strokeWeight(Math.max(1, c.weight * 0.9))
-  for (let j = 0; j < n; j++) {
-    const u0 = j / n
-    const u1 = (j + 1) / n
-    const [x0, y0] = rope(u0)
-    const [x1, y1] = rope(u1)
-    p.stroke(u1 <= b ? mixHex(TROLL.shade, WORKS.rust, 0.25) : mixHex(c.bg, WORKS.rope, 0.35 + 0.6 * lit))
-    p.line(x0 * k, y0 * k, x1 * k, y1 * k)
+  p.noFill()
+  for (const pass of [0, 1]) {
+    p.strokeWeight(Math.max(1.5, c.weight * (pass === 0 ? 2.3 : 1.3)))
+    for (let j = 0; j < n; j++) {
+      const u0 = j / n
+      const u1 = (j + 1) / n
+      const [x0, y0] = rope(u0)
+      const [x1, y1] = rope(u1)
+      const charred = u1 <= b
+      const col = charred ? mixHex(TROLL.shade, WORKS.rust, 0.18 + 0.12 * hash(j, 91)) : mixHex(c.bg, WORKS.rope, 0.35 + 0.6 * lit)
+      p.stroke(pass === 0 ? mixHex(col, STONE.deep, 0.55) : col)
+      p.line(x0 * k, y0 * k, x1 * k, y1 * k)
+    }
   }
   if (b > 0 && b < 1) {
     const [fx, fy] = rope(b)
@@ -742,15 +783,24 @@ function drawCrack(p: p5, c: Pen, t: number, from: Pt): void {
       ? edge + (25.3 - edge) * ease(t, CRACK[0] - 0.04, CRACK[0] + 0.06)
       : 25.3 + (HATCH.x0 - 25.3) * ease(t, CRACK[1] - 0.04, CRACK[1] + 0.06)
   const surf = (x: number): number => (x < DAIS.x1 - DAIS.inset ? DAIS.top : x < DAIS.x1 ? DAIS.step : FL)
-  const pts: Pt[] = []
-  for (let x = from[0]; x < run; x += 0.12) pts.push([x, surf(x) + 0.06 + 0.04 * Math.sin(x * 11.3) + 0.03 * Math.sin(x * 23.1)])
-  pts.push([run, surf(run) + 0.06])
-  p.noFill()
-  p.stroke(mixHex(STONE.deep, TROLL.shade, 0.3))
-  p.strokeWeight(Math.max(1, 0.05 * k))
-  p.beginShape()
-  for (const [x, y] of pts) p.vertex(x * k, y * k)
-  p.endShape()
+  // A fissure, not a line: a dark wedge down into the floor from its surface, widest where the head came down and at
+  // each jump, tapering to the running tip, and opening wider as it settles.
+  const open = 0.55 + 0.45 * ease(t, SMASH, SMASH + 1.2)
+  const top: Pt[] = []
+  const bot: Pt[] = []
+  const jumps = [from[0], DAIS.x1, 25.3]
+  for (let x = from[0]; x < run; x += 0.1) {
+    const y = surf(x) + 0.015
+    const toTip = Math.min(1, (run - x) / 1.2)
+    const near = Math.max(...jumps.map((j) => Math.exp(-Math.abs(x - j) / 0.6)))
+    const d = (0.07 + 0.12 * near) * open * toTip * (0.75 + 0.5 * hash(Math.round(x * 10), 88))
+    top.push([x, y])
+    bot.push([x + 0.03 * Math.sin(x * 17), y + d])
+  }
+  top.push([run, surf(run) + 0.015])
+  p.noStroke()
+  p.fill(mixHex(STONE.deep, TROLL.shade, 0.15))
+  poly(p, k, [...top, ...bot.reverse()])
   // The notch where the head came down.
   p.noStroke()
   p.fill(mixHex(STONE.deep, TROLL.shade, 0.3))
@@ -759,12 +809,12 @@ function drawCrack(p: p5, c: Pen, t: number, from: Pt): void {
   for (const [at, x0, y0] of [[SMASH, from[0], DAIS.top], [CRACK[0], 25.3, FL], [CRACK[1], HATCH.x0, FL]] as const) {
     const s = t - at
     if (s < 0 || s > 0.6) continue
-    for (let j = 0; j < 5; j++) {
-      const px = x0 + (hash(j, at * 10) - 0.5) * 2.2 * s
-      const py = y0 - (1.6 + 1.4 * hash(j, 3)) * s + 0.5 * 14 * s * s
+    for (let j = 0; j < 8; j++) {
+      const px = x0 + (hash(j, at * 10) - 0.5) * 2.6 * s
+      const py = y0 - (1.9 + 1.6 * hash(j, 3)) * s + 0.5 * 14 * s * s
       if (py > y0 + 0.02) continue
-      p.fill(alpha(p, STONE.light, 1 - s / 0.6))
-      const r = 0.035 + 0.03 * hash(j, 7)
+      p.fill(alpha(p, mixHex(STONE.mid, STONE.light, 0.5), 1 - s / 0.6))
+      const r = 0.045 + 0.045 * hash(j, 7)
       poly(p, k, [[px - r, py], [px, py - r * 0.8], [px + r, py + r * 0.2], [px + r * 0.1, py + r]])
     }
   }

@@ -41,8 +41,8 @@ export const PILLARS = [4.3, 9.5, 24.9]
 export const DAIS = { x0: 16.4, x1: 23.2, step: -0.2, top: -0.55, inset: 0.4 }
 /** The throne's seat (its middle and its top) and the King's place. */
 export const THRONE = { x: 19.7, seat: -1.15, back: -4.9, w: 2.1 }
-/** Where he stands once he is up. */
-export const KING_UP: Pt = [19.5, DAIS.top]
+/** Where he stands once he is up: stepped off his throne, west of its seat, his whole silhouette clear of it. */
+export const KING_UP: Pt = [18.15, DAIS.top]
 /** The hatch in the floor (the trolls' way down to the mine), hinged at its east edge; the wake part's shaft under it. */
 export const HATCH = { x0: 26.9, x1: 28.1, hinge: 28.1 }
 /** The chimney's column (the director's finale lifts Peer up it, ~141.7 → 145): kept clear of what falls. */
@@ -270,11 +270,11 @@ export const PEER_PATH: Path = (() => {
   // A start back from the King's roar, and still through the held notes; the court stands.
   a.hop([15.25, 0], q6(26), 0.28)
   a.rest(STEPS[2])
-  // They come on: he bolts up the dais (the grab closes where he was), past the King's feet (the King's grab), and
+  // They come on: he bolts up the dais (the grab closes where he was), under the roaring King between his feet, and
   // along it, and down its east steps.
   a.hop([17.35, on(DAIS.top)], GRAB, 0.55)
   a.rest(q7(10))
-  a.hop([20.15, on(DAIS.top)], KING_GRAB, 0.22)
+  a.hop([19.95, on(DAIS.top)], KING_GRAB, 0.16)
   a.hop([21.35, on(DAIS.top)], q7(14), 0.16)
   a.hop([22.4, on(DAIS.top)], q7(16), 0.14)
   // At the dais's end the sceptre goes up behind him; he jumps as it comes down where he stood; its jolt throws him

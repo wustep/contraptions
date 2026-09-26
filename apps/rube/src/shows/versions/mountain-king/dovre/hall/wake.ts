@@ -70,8 +70,9 @@ export const wake = part<{ begin: number }>(
     { t: 70.4, cells: 7.0, hold: [X(21.0), -1.9], w: 0.7 },
     // The blow, the crack, the hatch, and down the shaft after him.
     { t: 71.4, cells: 7.2, hold: [X(23.4), -1.6], w: 0.8 },
-    { t: 72.6, cells: 6.8, hold: [X(26.3), -0.8], w: 0.65 },
-    { t: 73.45, cells: 6.8, hold: [X(27.5), 1.6], w: 0.6 },
+    // Close on the fissure racing from the sceptre's head to the hatch, so the lurch and the fall read big.
+    { t: 72.6, cells: 5.4, hold: [X(24.2), -0.7], w: 0.7 },
+    { t: 73.45, cells: 5.5, hold: [X(26.9), 1.2], w: 0.6 },
     { t: slot.end, ...SEAM_SHOT },
   ],
 )
