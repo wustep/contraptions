@@ -127,22 +127,13 @@ const JIM_WATCH = { cells: 3.2, hold: [JIM_WINGS[0] - 0.05, JIM_WINGS[1] - 0.72]
 const HALL_WIDE = { cells: 12, hold: [1.0, -0.35] as Pt }
 
 /**
- * A whip pan from framing `a` to framing `b` over [t0, t1], as keys the camera's monotone cubic runs through. One cubic
- * between two rests leaves and lands with a jolt (its acceleration jumps at both ends, and a whip's distance makes
- * that jump large); these keys follow a smootherstep instead, so it gathers speed and settles with none. The zoom
- * opens a little at the middle of the move, so the stage streams past at a speed the eye can hold.
+ * A whip pan from framing `a` to framing `b` over [t0, t1]: the camera's own whip (`camera.ts` `Shot.ease`), a
+ * smootherstep from rest to rest that leaves and lands with no jolt, the zoom opening a little at the middle of the
+ * move, so the stage streams past at a speed the eye can hold. (Eight keys through the monotone cubic, before, each
+ * put a kink in its acceleration, and the landings caught.)
  */
-function whip(t0: number, t1: number, a: PartShot, b: PartShot, open = 0.08, n = 8): PartShot[] {
-  const A = a.hold!
-  const B = b.hold!
-  const out: PartShot[] = []
-  for (let i = 0; i <= n; i++) {
-    const u = i / n
-    const s = u * u * u * (u * (6 * u - 15) + 10)
-    const cells = Math.exp(Math.log(a.cells) + (Math.log(b.cells) - Math.log(a.cells)) * s + open * Math.sin(Math.PI * s))
-    out.push({ t: t0 + (t1 - t0) * u, cells, hold: [A[0] + (B[0] - A[0]) * s, A[1] + (B[1] - A[1]) * s], w: 1 })
-  }
-  return out
+function whip(t0: number, t1: number, a: PartShot, b: PartShot, open = 0.08): PartShot[] {
+  return [{ ...a, t: t0, ease: 'whip', open }, { ...b, t: t1 }]
 }
 
 /**
@@ -176,8 +167,7 @@ function shots(): PartShot[] {
     // now, hands at his sides. Held on him, drifting in a little, and whipped back to the kit landing on the loudest
     // stroke of the phrase (281.39), him over the snare and the rack tom.
     ...whip(276.4, 277.96, cu(0, CU.crash, -0.02, 0.01), fletcher(0)),
-    fletcher(279.92, 1),
-    ...whip(279.92, 281.391, fletcher(0, 1), k(0, 4.4, [-0.75, -1.45])).slice(1),
+    ...whip(279.92, 281.391, fletcher(0, 1), k(0, 4.4, [-0.75, -1.45])),
     // Round the toms.
     k(283.4, 4.9, [-1.35, -1.25]),
     k(284.8, 4.8, [-1.3, -1.3]),
@@ -199,9 +189,8 @@ function shots(): PartShot[] {
     // A whip across the dark stage to his father by the stage door, watching; the trading starts under him. Held, and
     // whipped back to the kit landing on a loud snare stroke of the trade (308.99).
     ...whip(303.45, 305.12, k(0, 4.55, [-0.22, -1.5]), jim(0)),
-    jim(307.45, 1),
     // The snare and the floor tom trading: both hands, close, and him over them at the top of the frame.
-    ...whip(307.45, 308.988, jim(0, 1), k(0, 4.0, [-1.2, -1.32])).slice(1),
+    ...whip(307.45, 308.988, jim(0, 1), k(0, 4.0, [-1.2, -1.32])),
     k(310.3, 3.9, [-1.25, -1.28]),
     // His head and the hi-hat again.
     k(312.6, 4.4, [0.05, -1.8]),
