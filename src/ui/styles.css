@@ -571,6 +571,11 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
     border-right: 1px solid var(--line);
     border-bottom: none;
   }
+  /* On mobile the panel is a short scrolling strip under the stage. Sticky
+     pinned the byline over the Shows controls; let it scroll with the rest. */
+  .byline {
+    position: static;
+  }
 }
 
 /* Export puts the scale and both actions on one line — stacked full-width
@@ -757,7 +762,8 @@ a.more:hover { color: var(--accent); }
 /* The byline is on every panel, pinned last once a mode has filled the
    middle. order keeps it there if something is added after it. margin-top
    auto holds it to the bottom when the sections stop short; sticky keeps
-   that foot in view when they run long. */
+   that foot in view when they run long on the desktop sidebar. On mobile
+   (max-width 820px) sticky is cleared so it scrolls with the panel. */
 .byline {
   order: 2;
   position: sticky;
