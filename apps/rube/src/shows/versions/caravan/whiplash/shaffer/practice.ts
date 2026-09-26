@@ -1,14 +1,15 @@
 import type p5 from 'p5'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
+import { R, laneAt, type Lane, type Pt } from '../../../../../parts'
 import { HAT, KIT_FLOOR, KIT_LAND, SNARE, drawKit, drawStick, type KitPiece } from '../drums'
-import { POSES, beatPose, drawConductor, type ArmPose, type Pose } from '../fletcher'
-import { alpha, box, part, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
+import { POSES, beatPose, blendPose, drawConductor, type Pose } from '../fletcher'
+import { box, part, scenery, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
 import { BAND, BASS, FIRST, TUNE_ORIGIN, TUNE_PERIOD, tune } from '../music'
 import { G_EARTH, G_SNAP } from '../physics'
-import { KIT, SHOP } from '../worlds'
+import { KIT } from '../worlds'
 import { Path, beat, loudAt, since, swing, type Hit } from './room-path'
-import { ROOM, box4, drawPracticeRoom, inked, litAt, type RoomLook } from './room'
+import { BLOCK, STEEL, STEEL_LIT, block, dim, edgeOf } from './night-rig'
+import { ROOM, drawPracticeRoom, litAt, type RoomLook } from './room'
 
 /**
  * The practice room, the film's first shot (0 → 30.65: the drum intro alone, the bass from 21.11, the band on 30.65).
@@ -262,28 +263,43 @@ function stir(T: number): number {
   return Math.min(1, d)
 }
 
-/** The pair: the post and its clamp, the two sticks at their angles, a hinge block over each butt. */
+/**
+ * The pair: the post and its clamp, the two sticks at their angles, a hinge over each butt. Steel in the room's light,
+ * edged in its own dark, lit along its top (the night rig's finishes: this pair is its ancestor); the dark blocks
+ * edged in cream ink it had read as selection handles on a diagram in the backbeat's closes.
+ */
 function drawPair(p: p5, c: Ctx, angle: Record<Side, number>): void {
-  const { k, ink, weight, bg } = c
-  const chrome = KIT.chrome
+  const { k, weight, bg } = c
+  const lit = 0.9
+  const steel = dim(bg, STEEL, lit, 0.4)
   p.push()
-  // The clamp on the snare's hoop and the post up from it to the high hinge.
-  p.stroke(chrome)
+  p.strokeCap(p.ROUND)
+  // The post up from the clamp on the snare's hoop to the high hinge: a steel rod edged in its own dark.
+  p.stroke(edgeOf(steel))
+  p.strokeWeight(weight * 1.9)
+  p.line(POST.x * k, POST.foot * k, POST.x * k, PAIR.H.hinge[1] * k)
+  p.stroke(steel)
   p.strokeWeight(weight * 1.1)
   p.line(POST.x * k, POST.foot * k, POST.x * k, PAIR.H.hinge[1] * k)
-  inked(p, alpha(p, ink, 0.75), weight * 0.5, chrome)
-  box4(p, k, POST.clamp - 0.03, POST.foot - 0.05, POST.x + 0.04, POST.foot + 0.05)
+  // The clamp on the hoop: a steel jaw, a bolt through it.
+  block(p, c, POST.clamp - 0.03, POST.foot - 0.05, POST.x + 0.04, POST.foot + 0.05, steel, lit, STEEL_LIT, 0.015)
+  p.noStroke()
+  p.fill(edgeOf(steel))
+  p.ellipse((POST.x + 0.005) * k, POST.foot * k, 0.02 * k, 0.02 * k)
   // The sticks: hickory, the house's stick, from each hinge.
   for (const side of ['S', 'H'] as const) {
     const st = PAIR[side]
     const a = angle[side]
     drawStick(p, c, st.hinge, st.m === 1 ? a : Math.PI - a, st.len)
   }
-  // The hinge blocks over the butts.
+  // The hinges over the butts: a steel barrel on the post, a step darker, its pin through it.
+  const knuckle = dim(bg, BLOCK, lit, 0.5)
   for (const side of ['S', 'H'] as const) {
     const [hx, hy] = PAIR[side].hinge
-    inked(p, alpha(p, ink, 0.85), weight * 0.6, mixHex(bg, SHOP.black, 0.5))
-    box4(p, k, hx - 0.05, hy - 0.045, hx + 0.05, hy + 0.045)
+    block(p, c, hx - 0.05, hy - 0.036, hx + 0.05, hy + 0.036, knuckle, lit * 0.8, STEEL_LIT, 0.03)
+    p.noStroke()
+    p.fill(edgeOf(knuckle))
+    p.ellipse(hx * k, hy * k, 0.028 * k, 0.028 * k)
   }
   p.pop()
 }
@@ -317,37 +333,23 @@ function fletcherAt(T: number): Pt {
   return [DOOR_X + d, HEAD_Y]
 }
 
-/**
- * Between two poses, `u` 0..1, each arm turning the short way round (the house's `blendPose` turns an arm from
- * hanging to raised through the horizontal on the wrong side).
- */
-export function turnPose(a: Pose, b: Pose, u: number): Pose {
-  const arm = (x: ArmPose, y: ArmPose): ArmPose => {
-    let d = y.up - x.up
-    while (d > Math.PI) d -= Math.PI * 2
-    while (d < -Math.PI) d += Math.PI * 2
-    return { up: x.up + d * u, bend: x.bend + (y.bend - x.bend) * u, wrist: x.wrist + (y.wrist - x.wrist) * u, hand: u < 0.5 ? x.hand : y.hand }
-  }
-  return { left: arm(a.left, b.left), right: arm(a.right, b.right) }
-}
-
 const BEAT_IN = BASS + 0.3
 const POINT_AT = tune(62.5)
 const POINT_HELD = GO - 0.2
 /** What his hands do: at rest; keeping time a beat a stroke; pointing at the kit; at rest again as he goes. */
-function fletcherPose(T: number): Pose {
+export function fletcherPose(T: number): Pose {
   const time = (T - TUNE_ORIGIN) / TUNE_PERIOD
   // One hand up keeping time, big enough to read from the kit; the other hangs.
   const beating: Pose = { right: beatPose(time, 1).right, left: POSES.rest.left }
   if (T < BEAT_IN) return POSES.rest
-  if (T < BEAT_IN + 0.45) return turnPose(POSES.rest, beating, easeInOutSine(clamp((T - BEAT_IN) / 0.45)))
+  if (T < BEAT_IN + 0.45) return blendPose(POSES.rest, beating, easeInOutSine(clamp((T - BEAT_IN) / 0.45)))
   if (T < POINT_AT) return beating
   if (T < POINT_AT + 0.35) {
     const from: Pose = { right: beatPose((POINT_AT - TUNE_ORIGIN) / TUNE_PERIOD, 1).right, left: POSES.rest.left }
-    return turnPose(from, POSES.point, easeInOutSine(clamp((T - POINT_AT) / 0.35)))
+    return blendPose(from, POSES.point, easeInOutSine(clamp((T - POINT_AT) / 0.35)))
   }
   if (T < POINT_HELD) return POSES.point
-  return turnPose(POSES.point, POSES.rest, easeInOutSine(clamp((T - POINT_HELD) / 0.5)))
+  return blendPose(POSES.point, POSES.rest, easeInOutSine(clamp((T - POINT_HELD) / 0.5)))
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -357,12 +359,9 @@ interface PracticeState {
   lane: Lane
 }
 
-function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
-  const T = c.t + s.begin
-  const { k } = c
-  const b = laneAt(s.lane, c.t)
-  const ball: Pt = [b.x - K[0], b.y - K[1]]
-  const look: RoomLook = {
+/** The room's light and air at `T`. */
+function roomLook(T: number): RoomLook {
+  return {
     T,
     light: 1,
     sway: swing(BLOWS, T),
@@ -373,13 +372,25 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
     dust: stir(T),
     backlit: smooth(T, F_FROM, BASS - 0.4) * (1 - smooth(T, F_GONE - 0.8, F_GONE + 0.6)),
   }
+}
+
+/** Fletcher's rig at `T`, in the kit's frame (his head is the company ball the stage draws over it). */
+function drawFletcher(p: p5, c: Ctx, T: number, look: RoomLook): void {
+  const head = fletcherAt(T)
+  drawConductor(p, c, head, fletcherPose(T), { floor: KIT_FLOOR, light: Math.min(1, litAt(look, head[0], 0) + 0.25) })
+}
+
+function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
+  const T = c.t + s.begin
+  const { k } = c
+  const b = laneAt(s.lane, c.t)
+  const ball: Pt = [b.x - K[0], b.y - K[1]]
+  const look = roomLook(T)
   p.push()
   p.translate(K[0] * k, K[1] * k)
   drawPracticeRoom(p, c, look)
-  if (T >= F_FROM && T < F_GONE) {
-    const head = fletcherAt(T)
-    drawConductor(p, c, head, fletcherPose(T), { floor: KIT_FLOOR, light: Math.min(1, litAt(look, head[0], 0) + 0.25) })
-  }
+  // In the doorway he is drawn here, behind the kit; once he goes, the stage draws him (`fletcherOut`).
+  if (T >= F_FROM && T < F_LEAVE) drawFletcher(p, c, T, look)
   drawKit(p, c, {
     shell: KIT.oxblood,
     since: (piece) => since(KIT_HITS, piece, T),
@@ -389,6 +400,27 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
   drawPair(p, c, { S: pairAngle('S', T, PAIR_HITS.S, ball), H: pairAngle('H', T, PAIR_HITS.H, ball) })
   p.pop()
 }
+
+/**
+ * Fletcher on his way out (`F_LEAVE` → `F_GONE`), drawn by the Shaffer stage after every part (`score.ts`, the
+ * stage's `after`), so over the band room's corridor as well as this one. Drawn by this part, he was cut off at the
+ * band set's left edge (which comes after this part in the chain and covers it) while his head, a company ball drawn
+ * over every set, carried on alone across the corridor wall: a hollow ring at head height. Placed at this part's
+ * origin; it is told show time.
+ */
+export const fletcherOut = scenery<null>({
+  name: 'practice-fletcher',
+  draw: (p, _s, c) => {
+    const T = c.t
+    if (T < F_LEAVE || T >= F_GONE) return
+    p.push()
+    p.translate(K[0] * c.k, K[1] * c.k)
+    drawFletcher(p, c, T, roomLook(T))
+    p.pop()
+  },
+})
+/** The cells he walks out through, in this part's frame (the stage draws `fletcherOut` whenever any are in view). */
+export const FLETCHER_OUT_CELLS: Pt[] = box(DOOR_X + K[0] - 2, K[1] + HEAD_Y - 2, DOOR_X + K[0] + 12, K[1] + KIT_FLOOR + 0.6)
 
 export const practice = part<PracticeState>(
   {
@@ -427,7 +459,9 @@ export const practice = part<PracticeState>(
     // Back, for Fletcher in the doorway, and hold on the two of them.
     { t: beat(53), cells: 6.3, hold: at([1.4, -0.25]) },
     { t: GO, cells: 6.1, hold: at([1.55, -0.2]) },
-    // After him, following as the band comes in.
-    { t: slot.end, cells: 5, off: [0.9, -0.8] },
+    // After him down the corridor; then, just ahead of the band's first chord, the frame leans on past him toward
+    // the room, so the chord lands on the lit tiers playing (band.ts takes the seam's key over from here).
+    { t: slot.end - 0.8, cells: 5, off: [0.9, -0.8] },
+    { t: slot.end, cells: 5.3, off: [2.45, -0.95] },
   ],
 )

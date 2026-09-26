@@ -145,7 +145,7 @@ export function drawPracticeRoom(p: p5, c: Ctx, look: RoomLook): void {
 }
 
 function backWall(p: p5, c: Ctx, look: RoomLook): void {
-  const { k, bg, ink, weight } = c
+  const { k, bg, weight } = c
   const { x0, x1, ceil, floor } = ROOM
   // The wall itself, dark, then the panels on it, each as lit as the lamp makes its middle.
   p.noStroke()
@@ -177,7 +177,9 @@ function backWall(p: p5, c: Ctx, look: RoomLook): void {
       const ax = px0 + i * (pw + gap)
       const ay = py0 + j * (ph + gap)
       const lit = Math.min(1, litAt(look, ax + pw / 2, ay + ph / 2))
-      inked(p, alpha(p, ink, 0.05 + 0.12 * lit), weight * 0.5, mixHex(bg, SHOP.panel, 0.18 + 0.82 * lit))
+      // Each panel edged in the wall's dark, its bevel the only light line (a pale ring round every panel made the
+      // wall a grid of outlines in the closes).
+      inked(p, alpha(p, SHOP.black, 0.3 + 0.15 * lit), weight * 0.5, mixHex(bg, SHOP.panel, 0.18 + 0.82 * lit))
       p.rect((ax + pw / 2) * k, (ay + ph / 2) * k, pw * k, ph * k, 0.05 * k)
       // The bevel: a lighter line along the top, a darker along the bottom.
       p.stroke(alpha(p, SHOP.window, 0.04 + 0.12 * lit))
@@ -192,7 +194,7 @@ function backWall(p: p5, c: Ctx, look: RoomLook): void {
   p.noStroke()
   p.fill(mixHex(bg, SHOP.wood, 0.15 + 0.5 * skLit))
   box4(p, k, x0, sk - 0.16, x1, sk)
-  p.stroke(alpha(p, ink, 0.08 + 0.15 * skLit))
+  p.stroke(alpha(p, mixHex(SHOP.wood, SHOP.tungsten, 0.5), 0.1 + 0.3 * skLit))
   p.strokeWeight(weight * 0.5)
   p.line(x0 * k, (sk - 0.16) * k, x1 * k, (sk - 0.16) * k)
 }
@@ -269,7 +271,7 @@ function cone(p: p5, c: Ctx, look: RoomLook): void {
 
 /** The cut: the room's and the corridors' faces in ink, the doorways open, a sill across each. */
 function section(p: p5, c: Ctx, look: RoomLook): void {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const { x0, x1, wall, floor, ceil, lintel, hall } = ROOM
   const lx = look.left !== undefined ? look.left : x0 - wall
   const rx = look.right !== undefined ? look.right : x1 + wall
@@ -325,21 +327,29 @@ function section(p: p5, c: Ctx, look: RoomLook): void {
   box4(p, k, x0 - wall, ceil - 0.6, x1 + wall, ceil)
   if (look.left !== undefined) box4(p, k, look.left, ceil - 0.6, x0 - wall, hall)
   if (look.right !== undefined) box4(p, k, x1 + wall, ceil - 0.6, look.right, hall)
-  // The floor, one line through both doorways.
-  p.stroke(alpha(p, ink, 0.4 + 0.45 * lit))
-  p.strokeWeight(weight * 1.1)
+  // The floor, one edge through both doorways, catching the lamp's light (warm lit wood, not the cream ink: a full
+  // line along the ground read as a drawing of the floor).
+  p.stroke(alpha(p, mixHex(SHOP.wood, SHOP.tungsten, 0.5), 0.22 + 0.45 * lit))
+  p.strokeWeight(weight * 1.0)
   p.noFill()
   p.line(Math.min(lx, x0 - wall) * k, floor * k, Math.max(rx, x1 + wall) * k, floor * k)
   // A sill across each doorway: a worn oak strip, a hair proud of the floor.
   for (const [a, b] of [[x0 - wall, x0], [x1, x1 + wall]]) {
-    inked(p, alpha(p, ink, 0.5), weight * 0.6, mixHex(bg, SHOP.wood, 0.3 + 0.5 * lit))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(bg, SHOP.wood, 0.3 + 0.5 * lit))
     box4(p, k, a - 0.04, floor - 0.035, b + 0.04, floor)
   }
 }
 
+/** The corridor doors' and their windows' edges: their own dark, not the cream ink (light, not line). */
+const DOOR_EDGE = mixHex(SHOP.black, SHOP.deep, 0.3)
+/** A door's lever handle: dull brass in the corridor's light. */
+const LEVER = mixHex(SHOP.wood, SHOP.tungsten, 0.55)
+/** A cord (the lamp's flex, the pull-cord): dark, a thread of the lamp's light along it. */
+const CORD = mixHex(SHOP.black, SHOP.wood, 0.35)
+
 /** A corridor from `a` to `b` (kit frame): its dark back wall, the doors of other rooms, the ceiling's fixtures. */
 function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 | 1): void {
-  const { k, bg, ink, weight } = c
+  const { k, bg, weight } = c
   const { floor, hall } = ROOM
   const h = look.hall ?? 0.25
   const x0 = Math.min(a, b)
@@ -384,12 +394,12 @@ function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 
     const b = Math.max(hinge, far)
     if (a > x0 - 0.01 && b < x1 + 0.01) {
       const lit = Math.min(1, 0.3 * h + 0.55 * light)
-      inked(p, alpha(p, ink, 0.2 + 0.3 * lit), weight * 0.7, mixHex(bg, SHOP.wood, 0.25 + 0.45 * lit))
+      inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.7, mixHex(bg, SHOP.wood, 0.25 + 0.45 * lit))
       box4(p, k, a, floor - DOOR_H, b, floor - 0.62)
       const wx = (a + b) / 2
-      inked(p, alpha(p, ink, 0.2 + 0.3 * lit), weight * 0.6, mixHex(mixHex(bg, SHOP.black, 0.6), SHOP.window, 0.35 * light))
+      inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(mixHex(bg, SHOP.black, 0.6), SHOP.window, 0.35 * light))
       box4(p, k, wx - 0.16, floor - DOOR_H + 0.55, wx + 0.16, floor - DOOR_H + 1.25)
-      p.stroke(alpha(p, ink, 0.25 + 0.35 * lit))
+      p.stroke(alpha(p, LEVER, 0.3 + 0.45 * lit))
       p.strokeWeight(weight * 1.1)
       const hx = far - side * 0.16
       p.line(hx * k, (floor - 1.6) * k, (hx - side * 0.18) * k, (floor - 1.6) * k)
@@ -402,21 +412,21 @@ function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 
     if (cx - DOOR_W / 2 < x0 + 0.1 || cx + DOOR_W / 2 > x1 - 0.1) continue
     const near = Math.exp(-Math.abs(cx - doorX) / 3) * light
     const lit = Math.min(1, 0.25 * h + 0.35 * near)
-    inked(p, alpha(p, ink, 0.16 + 0.3 * lit), weight * 0.7, mixHex(bg, SHOP.wood, 0.2 + 0.45 * lit))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.7, mixHex(bg, SHOP.wood, 0.2 + 0.45 * lit))
     box4(p, k, cx - DOOR_W / 2, floor - DOOR_H, cx + DOOR_W / 2, floor - 0.62)
-    inked(p, alpha(p, ink, 0.1 + 0.25 * lit), weight * 0.6, mixHex(bg, SHOP.black, 0.6))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(bg, SHOP.black, 0.6))
     box4(p, k, cx - 0.16, floor - DOOR_H + 0.55, cx + 0.16, floor - DOOR_H + 1.25)
     p.stroke(alpha(p, SHOP.window, 0.05 + 0.12 * lit))
     p.strokeWeight(weight * 0.5)
     p.line((cx - 0.1) * k, (floor - DOOR_H + 1.12) * k, (cx + 0.08) * k, (floor - DOOR_H + 0.7) * k)
-    p.stroke(alpha(p, ink, 0.22 + 0.35 * lit))
+    p.stroke(alpha(p, LEVER, 0.3 + 0.45 * lit))
     p.strokeWeight(weight * 1.1)
     const hx = cx - side * (DOOR_W / 2 - 0.16)
     p.line(hx * k, (floor - 1.6) * k, (hx + side * 0.18) * k, (floor - 1.6) * k)
   }
   // The fixtures: flush drums on the ceiling, pale when lit.
   for (let x = doorX + side * DOOR_EVERY * 0.5; side < 0 ? x > x0 + 0.3 : x < x1 - 0.3; x += side * DOOR_EVERY) {
-    inked(p, alpha(p, ink, 0.3), weight * 0.6, mixHex(bg, SHOP.window, 0.12 + 0.4 * h))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(bg, SHOP.window, 0.12 + 0.4 * h))
     p.beginShape()
     p.vertex((x - 0.24) * k, hall * k)
     p.vertex((x + 0.24) * k, hall * k)
@@ -428,26 +438,27 @@ function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 
 
 /** The lamp: its cord from the ceiling, the socket, the enamel shade, its lit mouth and the bulb's sliver under it. */
 function lamp(p: p5, c: Ctx, look: RoomLook): void {
-  const { k, bg, ink, weight } = c
+  const { k, bg, weight } = c
   const on = Math.min(1, Math.max(0, look.light))
   p.push()
   p.translate(LAMP.x * k, ROOM.ceil * k)
   p.rotate(-look.sway)
-  // A ceiling rose, then the cord.
-  inked(p, alpha(p, ink, 0.6), weight * 0.6, mixHex(bg, SHOP.panel, 0.5))
+  // A ceiling rose, then the cord: dark things edged in their own dark (in cream ink the lamp was a line drawing of
+  // one against the dark ceiling).
+  inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(bg, SHOP.panel, 0.5))
   p.beginShape()
   p.vertex(-0.1 * k, 0)
   p.vertex(0.1 * k, 0)
   p.vertex(0.06 * k, 0.05 * k)
   p.vertex(-0.06 * k, 0.05 * k)
   p.endShape(p.CLOSE)
-  p.stroke(alpha(p, ink, 0.7))
-  p.strokeWeight(weight * 0.7)
+  p.stroke(CORD)
+  p.strokeWeight(weight * 0.8)
   p.line(0, 0.05 * k, 0, LAMP.cord * k)
   const top = LAMP.cord
   const bot = LAMP.cord + LAMP.shade
   // The socket.
-  solid(p, ink, weight * 0.6, mixHex(bg, SHOP.black, 0.7))
+  solid(p, DOOR_EDGE, weight * 0.6, mixHex(bg, SHOP.black, 0.7))
   p.beginShape()
   p.vertex(-0.045 * k, (top - 0.05) * k)
   p.vertex(0.045 * k, (top - 0.05) * k)
@@ -458,8 +469,8 @@ function lamp(p: p5, c: Ctx, look: RoomLook): void {
   p.noStroke()
   p.fill(mixHex(mixHex(bg, SHOP.window, 0.25), SHOP.window, on))
   p.arc(0, bot * k, 0.2 * k, 0.1 * k, 0, Math.PI, p.CHORD)
-  // The shade: a shallow enamel cone, dark outside, its lip rolled.
-  solid(p, ink, weight * 0.8, mixHex(bg, SHOP.black, 0.5))
+  // The shade: a shallow enamel cone, dark outside, its lip rolled; the bulb's light catching its rolled rim.
+  solid(p, DOOR_EDGE, weight * 0.8, mixHex(bg, SHOP.black, 0.5))
   p.beginShape()
   p.vertex(-0.06 * k, (top + 0.02) * k)
   p.vertex(0.06 * k, (top + 0.02) * k)
@@ -480,21 +491,29 @@ function pullCord(p: p5, c: Ctx, look: RoomLook): void {
   // Only where a part uses it (the night's switch); the practice room's lamp is on already, and a bare cord there
   // was a hairline with no job.
   if (look.pull === undefined) return
-  const { k, bg, ink, weight } = c
+  const { k, bg, weight } = c
   const lit = Math.min(1, litAt(look, PULL.x, 0))
   const a = look.pull ?? 0
   const L = PULL.bottom - PULL.len - PULL.top
-  // The cord hangs from a screw-eye; a swing turns it about there.
+  // The cord hangs from a screw-eye; a swing turns it about there. The cord is dark with a faint thread of the lamp's
+  // light along it, and the toggle lit wood with no edge (a cream cord ending in an inked capsule read as a '0' on a
+  // string in the dark).
   const bx = PULL.x + Math.sin(a) * L
   const by = PULL.top + Math.cos(a) * L
   p.push()
-  p.stroke(alpha(p, ink, 0.25 + 0.35 * lit))
-  p.strokeWeight(weight * 0.5)
+  p.stroke(CORD)
+  p.strokeWeight(weight * 0.7)
   p.line(PULL.x * k, PULL.top * k, bx * k, by * k)
+  p.stroke(alpha(p, LEVER, 0.12 + 0.3 * lit))
+  p.strokeWeight(weight * 0.35)
+  p.line((PULL.x + 0.008) * k, PULL.top * k, (bx + 0.008) * k, by * k)
   p.translate(bx * k, by * k)
   p.rotate(-a)
-  inked(p, alpha(p, ink, 0.5 + 0.3 * lit), weight * 0.6, mixHex(bg, SHOP.wood, 0.35 + 0.55 * lit))
-  p.rect(0, (PULL.len / 2) * k, 0.055 * k, PULL.len * k, 0.02 * k)
+  p.noStroke()
+  p.fill(mixHex(bg, SHOP.wood, 0.45 + 0.55 * lit))
+  p.rect(0, (PULL.len / 2) * k, 0.06 * k, PULL.len * k, 0.03 * k)
+  p.fill(alpha(p, LEVER, 0.25 + 0.5 * lit))
+  p.rect(0.012 * k, (PULL.len / 2) * k, 0.018 * k, (PULL.len - 0.03) * k, 0.01 * k)
   p.pop()
 }
 

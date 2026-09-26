@@ -73,6 +73,9 @@ export interface PartShot {
   hold?: Pt
   w?: number
   off?: Pt
+  /** The move from this key to the next runs on its own curve (`camera.ts` `Shot.ease`), opening by `open`. */
+  ease?: 'whip' | 'hit'
+  open?: number
 }
 
 export interface Part<S = any> {
@@ -189,7 +192,7 @@ export interface Link {
 export interface Chain {
   placed: Placed[]
   /** The camera keys the parts asked for, moved into the world. */
-  shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
+  shots: PartShot[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
   /** The parts' spans of company, in world cells. */

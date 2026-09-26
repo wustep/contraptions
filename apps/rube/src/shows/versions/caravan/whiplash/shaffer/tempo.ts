@@ -5,7 +5,7 @@ import { PIT, ROOM_TOP, TEMPO_AT, WALL_R, toTempo } from './band-plan'
 import { ROOM_KIT } from './band-people'
 import { drawFarCorridor, drawSnareOver } from './bandroom'
 import {
-  CRASH, DROP_OFF, DUCK, GO, LEAN, PEEK, PUSH, RUSH, SLAM, SLAP1, SLAP2, SLAP3, STOP1, STOP2, STOP3, TANNER_ON, TEMPO_END, TEMPO_WALK, THROW, WALL, WITH,
+  CRASH, DROP_OFF, DUCK, LEAN, LOOK, PEEK, PUSH, RUSH, SLAM, SLAP1, SLAP2, SLAP3, STOP1, STOP2, STOP3, TANNER_ON, TEMPO_END, TEMPO_WALK, THROW, WALL, WITH,
 } from './tempo-motion'
 
 /**
@@ -102,10 +102,12 @@ export const tempo = part<TempoState>(
       at(WITH[0] + 1.1, 7.6, [21.0, -0.9]),
       at(WITH[0] + 5.0, 7.3, [21.3, -0.8]),
       at(STOP3, 3.3, [22.45, -0.1]),
-      // Off the kit; Tanner over him; the look back; out.
+      // Off the kit; Tanner over him; the look back at the kit, the frame settling with him onto it (Tanner playing,
+      // him on the floor below); then away with him from rest, the frame easing from the look into his roll to the
+      // door. (A hold key between the two would stop the camera on it: a hold handing over to a follow comes to rest.)
       at(DROP_OFF + 0.2, 5.4, [22.9, 0.9]),
       at(TANNER_ON + 0.5, 5.1, [23.3, 1.2]),
-      at(GO, 5.0, [24.0, 1.3]),
+      at(LOOK + 0.15, 5.05, [23.15, 1.25]),
       { t: PUSH, cells: 5, off: [0.9, -0.8] },
       { t: slot.end, cells: 5, off: [0.9, -0.8] },
     ]

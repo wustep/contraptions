@@ -65,9 +65,10 @@ export const band = part<BandState>(
     }
   },
   (slot: Slot): PartShot[] => [
-    // In the corridor as the band comes in: on its first chord the frame opens past the wall to the room lit and the
-    // tiers playing, him rolling toward its door; through the door with him.
-    { t: slot.begin, cells: 5, off: [0.9, -0.8] },
+    // In the corridor as the band comes in: the frame already leaning past him (practice.ts leads it there) so its
+    // first chord lands on the room lit and the tiers playing; opening on, him rolling toward its door; through the
+    // door with him.
+    { t: slot.begin, cells: 5.3, off: [2.45, -0.95] },
     { t: 31.9, cells: 6.6, hold: [4.0, -1.2], w: 0.8 },
     { t: DOOR_IN, cells: 7.1, hold: [4.4, -1.15], w: 0.7 },
     // The room opens: the tiers and the band, as he comes down them a step a bar.
@@ -79,11 +80,13 @@ export const band = part<BandState>(
     // His place: the chair, the chart; Fletcher at the edge of it.
     { t: SEATED, cells: 5.8, hold: [16.9, 0.4], w: 1 },
     // The first page, as an insert: in on Tanner's chart at the kit as he hops up onto its ledge, the desk big in
-    // frame, the page carried over by him; out again with his hop down to the seat.
-    { t: FIRST.up - 2.4 * BEAT, cells: 3.5, hold: [STAND.x + 0.33, 0.1], w: 1 },
+    // frame, the page carried over by him; out again with his hop down to the seat, one pull-out that opens past
+    // Fletcher's reach (his whole figure on the podium by 49.3, never his hand parked alone at the edge) and carries
+    // on, leaning left, out to the room.
+    { t: FIRST.up - 2.4 * BEAT, cells: 3.5, hold: [STAND.x + 0.37, 0.1], w: 1 },
     { t: FIRST.up, cells: 2.45, hold: [STAND.x + 0.03, -0.72], w: 1 },
     { t: FIRST.page + 0.04, cells: 2.4, hold: [STAND.x, -0.74], w: 1 },
-    { t: FIRST.down + 0.6, cells: 4.7, hold: [STAND.x - 0.25, 0.25], w: 1 },
+    { t: FIRST.down + 0.6, cells: 5.5, hold: [STAND.x - 0.75, 0.4], w: 1 },
     // Back to take in the saxophones and trombones at work, the conductor, the page turner.
     { t: 51.6, cells: 7.4, hold: [13.3, -0.4], w: 1 },
     { t: 53.95, cells: 7.2, hold: [13.0, -0.7], w: 1 },
@@ -96,9 +99,11 @@ export const band = part<BandState>(
     { t: ANSWER + 0.34, cells: 3.4, hold: [15.7, -1.1], w: 1 },
     { t: TUTTI_DOWN, cells: 4.4, hold: [17.2, 0.3], w: 1 },
     // The alternate and the drummer, keeping the same time: Andrew tapping on his seat, Tanner playing his kit.
-    // (Loose enough that both balls stay inside under Zoom.)
-    { t: 61.8, cells: 5.2, hold: [19.37, 0.62], w: 1 },
-    { t: 64.4, cells: 5.1, hold: [19.35, 0.6], w: 1 },
+    // Fletcher's beating hand reaches to 15.07 on his podium, so the frame's left edge stays past it (15.15), while
+    // under Zoom (the same centre, 1.5x closer) both balls stay inside by about their radius and a little more: a
+    // window only about 0.05 cells wide in size and centre, so move these together.
+    { t: 61.3, cells: 4.77, hold: [19.39, 0.62], w: 1 },
+    { t: 64.4, cells: 4.74, hold: [19.38, 0.6], w: 1 },
     // A page, and Fletcher's eye on him.
     { t: 66.9, cells: 5.8, hold: [16.4, 0.25], w: 1 },
     // Across and up to the band at work, then along the tiers at the bells' height: from the trumpets down past the

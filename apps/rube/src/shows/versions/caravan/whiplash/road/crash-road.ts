@@ -4,7 +4,20 @@ import { outline, solid } from '../../../../../../../../src/core/draw'
 import { hash, type Ctx } from '../kit'
 import { ROAD } from '../worlds'
 import { BRIDGE, CURB_X, LAMP_X, LOT_LAMP_X, LOT_ON, LOT_Y, POST_LAMP, ROAD_Y, lampAt, postLean } from './crash-clock'
-import { cone, glow, hexA, kick, lit, pool, poly, rect, wash } from './crash-paint'
+import { cone, glow, hexA, kick, pool, poly, rect, wash } from './crash-paint'
+
+/**
+ * The road's own dark, that its solid things are edged in (never the cream ink: the dock, the step and the bridge's
+ * rail read as hairline boxes in a line drawing), and the lamps' light caught on their top edges.
+ */
+const DARK_EDGE = '#101317'
+const TOP_LIT = mixHex(ROAD.sodium, ROAD.paint, 0.3)
+/** A top edge from `a` to `b` at `y`, catching the lamps' light. */
+function topEdge(p: p5, c: Ctx, a: number, b: number, y: number, alpha: number): void {
+  p.stroke(hexA(TOP_LIT, alpha))
+  p.strokeWeight(c.weight * 0.7)
+  p.line(a * c.k, (y + 0.02) * c.k, b * c.k, (y + 0.02) * c.k)
+}
 
 /**
  * The road's set, in the crash part's frame: the night over it, the far hills and a town's few lights, the lot
@@ -45,10 +58,11 @@ export function drawSky(p: p5, c: Ctx, f: Frame): void {
   if (x1 <= x0) return
   p.push()
   wash(p, c, x0, HORIZON - 5, x1, HORIZON + 0.4, hexA(ROAD.sodium, 0), hexA(ROAD.sodium, 0.07))
-  // The far hills (depth 0.14): a slow soft ridge a shade up from the paper, and the town's lit windows on it.
+  // The far hills (depth 0.14): a slow soft ridge a step up from the paper (at the sky's own value its lit windows
+  // read as dashes floating in the sky), and the town's lit windows on it.
   const shiftFar = f.cx * 0.86
   p.noStroke()
-  p.fill(mixHex(c.bg, ROAD.deep, 0.9))
+  p.fill(mixHex(ROAD.deep, ROAD.asphalt, 0.75))
   p.beginShape()
   p.vertex(x0 * k, (HORIZON + 0.5) * k)
   for (let x = x0; x <= x1 + 0.4; x += 0.4) p.vertex(x * k, (HORIZON - hill(x - shiftFar)) * k)
@@ -62,7 +76,7 @@ export function drawSky(p: p5, c: Ctx, f: Frame): void {
     if (x < x0 || x > x1) continue
     const y = HORIZON - hill(u) * (0.2 + 0.6 * hash(i, 3))
     const w = 0.05 + 0.08 * hash(i, 5)
-    p.fill(hexA(hash(i, 9) > 0.5 ? ROAD.sodium : ROAD.paint, 0.22 + 0.4 * hash(i, 11)))
+    p.fill(hexA(hash(i, 9) > 0.5 ? ROAD.sodium : ROAD.paint, 0.16 + 0.3 * hash(i, 11)))
     rect(p, k, x, y, x + w, y + 0.045)
   }
   // The near trees (depth 0.42): darker, their tops uneven: a band, not a row of puffs.
@@ -78,7 +92,7 @@ export function drawSky(p: p5, c: Ctx, f: Frame): void {
 
 /** The lot behind the hall, the curb, the road and its near edge; the crossing's gap; buildings at the corner. */
 export function drawGround(p: p5, c: Ctx, f: Frame): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = Math.max(f.x0 - 1, WALL_X)
   const x1 = f.x1 + 1
   if (x1 <= x0) return
@@ -87,7 +101,7 @@ export function drawGround(p: p5, c: Ctx, f: Frame): void {
   // in rows; the crossing between them.
   for (const [a, b, h, seed] of [[CROSS_X - 12.5, CROSS_X - 2.1, 3.6, 1], [CROSS_X + 2.1, CROSS_X + 13, 4.4, 2]] as const) {
     if (b < x0 || a > x1) continue
-    solid(p, lit(c, ink, 0.18), weight * 0.6, mixHex(c.bg, ROAD.deep, 1))
+    solid(p, DARK_EDGE, weight * 0.6, mixHex(c.bg, ROAD.deep, 1))
     rect(p, k, a, ROAD_Y - h, b, ROAD_Y)
     p.fill(mixHex(ROAD.deep, ROAD.paint, 0.08))
     rect(p, k, a - 0.08, ROAD_Y - h - 0.12, b + 0.08, ROAD_Y - h)
@@ -103,17 +117,20 @@ export function drawGround(p: p5, c: Ctx, f: Frame): void {
     }
   }
   // The lot: a step above the road, from the hall's wall to the curb.
-  solid(p, lit(c, ink, 0.35), weight * 0.7, mixHex(c.bg, ROAD.asphalt, 0.95))
   if (CURB_X > x0) {
     const e = Math.min(CURB_X, x1)
+    p.noStroke()
+    p.fill(mixHex(c.bg, ROAD.asphalt, 0.95))
     poly(p, k, [[x0, LOT_Y], [e, LOT_Y], [e, NEAR + 3], [x0, NEAR + 3]])
+    topEdge(p, c, x0, e, LOT_Y, 0.22)
   }
   // The road: its surface, its near curb a band lighter with the crossing a gap in it, and the dark verge; over the
   // river, the bridge instead.
   const r0 = Math.max(x0, CURB_X)
   const land = (a: number, b: number) => {
     if (b <= a) return
-    solid(p, lit(c, ink, 0.35), weight * 0.7, ROAD.asphalt)
+    p.noStroke()
+    p.fill(ROAD.asphalt)
     poly(p, k, [[a, ROAD_Y], [b, ROAD_Y], [b, NEAR], [a, NEAR]])
     p.noStroke()
     p.fill(mixHex(ROAD.asphalt, ROAD.paint, 0.08))
@@ -142,7 +159,7 @@ const DECK = 0.55
 
 /** The bridge: a steel deck under the road, a rail along it, piers down into the black river, the banks at its ends. */
 function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   p.push()
   // The river, a shade of the night, and the far bank's dark line on it.
   p.noStroke()
@@ -151,13 +168,13 @@ function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
   p.fill(mixHex(c.bg, ROAD.asphalt, 0.45))
   rect(p, k, Math.max(a, BRIDGE.x0), WATER - 0.12, Math.min(b, BRIDGE.x1), WATER)
   // The banks: the land falling to the water at each end, under the abutments.
-  solid(p, lit(c, ink, 0.25), weight * 0.6, mixHex(c.bg, ROAD.deep, 0.9))
+  solid(p, DARK_EDGE, weight * 0.6, mixHex(c.bg, ROAD.deep, 0.9))
   for (const [x, dir] of [[BRIDGE.x0, 1], [BRIDGE.x1, -1]] as const) {
     if (x < a - 3 || x > b + 3) continue
     poly(p, k, [[x - dir * 1.2, ROAD_Y], [x + dir * 0.4, ROAD_Y], [x + dir * 0.4, ROAD_Y + DECK + 0.3], [x + dir * 1.6, WATER + 0.05], [x - dir * 1.2, WATER + 0.05]])
   }
   // The piers, every eleven cells or so, from the deck to the water.
-  solid(p, lit(c, ink, 0.25), weight * 0.6, mixHex(c.bg, ROAD.asphalt, 0.75))
+  solid(p, DARK_EDGE, weight * 0.6, mixHex(c.bg, ROAD.asphalt, 0.75))
   const span = BRIDGE.x1 - BRIDGE.x0
   const n = Math.max(2, Math.round(span / 11))
   for (let i = 1; i < n; i++) {
@@ -168,17 +185,20 @@ function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
   // The deck: the road's asphalt over a steel girder with its stiffeners.
   const d0 = Math.max(a, BRIDGE.x0 - 0.4)
   const d1 = Math.min(b, BRIDGE.x1 + 0.4)
-  solid(p, lit(c, ink, 0.35), weight * 0.7, ROAD.asphalt)
+  solid(p, DARK_EDGE, weight * 0.6, ROAD.asphalt)
   rect(p, k, d0, ROAD_Y, d1, ROAD_Y + 0.18)
-  solid(p, lit(c, ink, 0.3), weight * 0.6, mixHex(ROAD.asphalt, ROAD.car, 0.25))
+  solid(p, DARK_EDGE, weight * 0.6, mixHex(ROAD.asphalt, ROAD.car, 0.25))
   rect(p, k, d0, ROAD_Y + 0.18, d1, ROAD_Y + DECK)
-  outline(p, lit(c, mixHex(ROAD.asphalt, ROAD.paint, 0.2), 0.8), weight * 0.5)
+  // The girder's stiffeners: its own shadow, not pale lines (with the rail's posts they made a grid of boxes).
+  outline(p, hexA(DARK_EDGE, 0.55), weight * 0.5)
   for (let x = Math.ceil(d0 / 0.8) * 0.8; x < d1; x += 0.8) p.line(x * k, (ROAD_Y + 0.22) * k, x * k, (ROAD_Y + DECK - 0.04) * k)
-  // The rail along the far edge: a top bar on short posts.
-  outline(p, lit(c, mixHex(ROAD.asphalt, ROAD.paint, 0.35), 0.8), weight * 0.8)
-  p.line(d0 * k, (ROAD_Y - 0.4) * k, d1 * k, (ROAD_Y - 0.4) * k)
-  p.strokeWeight(weight * 0.6)
-  for (let x = Math.ceil(d0 / 0.9) * 0.9; x < d1; x += 0.9) p.line(x * k, (ROAD_Y - 0.4) * k, x * k, ROAD_Y * k)
+  // The rail along the far edge: dark posts under a steel top bar, the lamps' light along its top.
+  outline(p, DARK_EDGE, weight * 0.8)
+  for (let x = Math.ceil(d0 / 0.9) * 0.9; x < d1; x += 0.9) p.line(x * k, (ROAD_Y - 0.38) * k, x * k, ROAD_Y * k)
+  p.noStroke()
+  p.fill(mixHex(ROAD.asphalt, ROAD.car, 0.3))
+  rect(p, k, d0, ROAD_Y - 0.44, d1, ROAD_Y - 0.37)
+  topEdge(p, c, d0, d1, ROAD_Y - 0.44, 0.3)
   p.pop()
 }
 
@@ -221,11 +241,12 @@ function headOf(x: number, base: number, lean: number): Pt {
 
 /** A lamp post: its pole from the ground, the arm over the road, the head; lit, a warm lens. */
 function drawLamp(p: p5, c: Ctx, x: number, base: number, on: number, lean = 0): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const glowing = Math.min(1, on)
   const top: Pt = [x - Math.sin(lean) * LAMP_H, base - Math.cos(lean) * LAMP_H]
   const head = headOf(x, base, lean)
-  const edge = lit(c, ink, 0.28 + 0.45 * glowing)
+  // Steel edged in the road's dark (in cream ink the pole was two hairlines on a hairline box).
+  const edge = DARK_EDGE
   p.push()
   solid(p, edge, weight * 0.6, mixHex(c.bg, ROAD.asphalt, 0.55 + 0.35 * glowing))
   // The pole, tapering, and its foot.
@@ -233,14 +254,16 @@ function drawLamp(p: p5, c: Ctx, x: number, base: number, on: number, lean = 0):
   const ny = -Math.sin(lean)
   poly(p, k, [[x - 0.075 * nx, base - 0.075 * ny], [x + 0.075 * nx, base + 0.075 * ny], [top[0] + 0.045 * nx, top[1] + 0.045 * ny], [top[0] - 0.045 * nx, top[1] - 0.045 * ny]])
   rect(p, k, x - 0.16, base - 0.12, x + 0.16, base)
-  // The arm: out over the road in a gentle bow.
-  outline(p, edge, weight * 1.5)
-  p.beginShape()
-  for (let i = 0; i <= 8; i++) {
-    const u = i / 8
-    p.vertex((top[0] + (head[0] - top[0]) * u) * k, (top[1] + (head[1] - 0.06 - top[1]) * u - 0.18 * Math.sin(Math.PI * u)) * k)
+  // The arm: out over the road in a gentle bow, steel, its own lens's light along it.
+  for (const [col, w] of [[edge, 1.9], [mixHex(c.bg, mixHex(ROAD.asphalt, ROAD.sodium, 0.25), 0.6 + 0.4 * glowing), 1.0]] as const) {
+    outline(p, col, weight * w)
+    p.beginShape()
+    for (let i = 0; i <= 8; i++) {
+      const u = i / 8
+      p.vertex((top[0] + (head[0] - top[0]) * u) * k, (top[1] + (head[1] - 0.06 - top[1]) * u - 0.18 * Math.sin(Math.PI * u)) * k)
+    }
+    p.endShape()
   }
-  p.endShape()
   // The head: a long low hood, its lens underneath.
   solid(p, edge, weight * 0.6, mixHex(c.bg, ROAD.asphalt, 0.75))
   poly(p, k, [[head[0] - 0.14, head[1] - 0.07], [head[0] + 0.4, head[1] - 0.05], [head[0] + 0.5, head[1] + 0.03], [head[0] - 0.12, head[1] + 0.05]])

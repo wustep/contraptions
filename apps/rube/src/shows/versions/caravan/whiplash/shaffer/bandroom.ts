@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { outline, solid } from '../../../../../../../../src/core/draw'
+import { solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { drawKit, type KitPiece } from '../drums'
 import { drawConductor } from '../fletcher'
@@ -28,6 +28,22 @@ function penFill(p: p5, colour: p5.Color, w: number, fill: string): void {
   p.strokeWeight(w)
   p.fill(fill)
 }
+
+/**
+ * Light, not line: a floor's or a tread's front edge catching the room's light (`lit` 0..1), in the warm of lit wood,
+ * never the cream ink (a full-ink line along the ground ran the width of every frame here).
+ */
+function litEdge(p: p5, lit: number, w: number): void {
+  pen(p, alpha(p, mixHex(SHOP.wood, SHOP.tungsten, 0.5), 0.22 + 0.4 * lit), w)
+}
+/** The building's own dark: risers, the ceiling, the troughs and their hangers. */
+const BUILDING_DARK = mixHex(SHOP.black, SHOP.deep, 0.35)
+/** An edge in the building's own dark: a riser, a ceiling's line, a hanger. */
+function darkEdge(p: p5, w: number): void {
+  pen(p, alpha(p, BUILDING_DARK, 0.9), w)
+}
+/** A door leaf's edge: the practice rooms' doors' own dark (`room.ts` `DOOR_EDGE`), not the cream ink. */
+const DOOR_EDGE = mixHex(SHOP.black, SHOP.deep, 0.3)
 
 /**
  * The studio band's room at Shaffer: the canonical set for the band and tempo parts, drawn from show time. The band
@@ -140,7 +156,7 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
 
 /** The corridor off the room's left: carpet, dark walls, the doors of other rooms, one lamp. */
 function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = Math.max(-0.5, f.x0 - 0.5)
   const x1 = WALL_L.x0
   if (x1 <= x0) return
@@ -156,20 +172,20 @@ function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   // A door on the corridor's far wall: another practice room, dark.
   for (const dx of [0.35]) {
     if (dx < x0 - 1 || dx > x1) continue
-    penFill(p, alpha(p, ink, 0.5), weight * 0.7, mixHex(SHOP.deep, SHOP.wood, 0.28))
+    penFill(p, alpha(p, mixHex(SHOP.black, SHOP.deep, 0.3), 0.9), weight * 0.7, mixHex(SHOP.deep, SHOP.wood, 0.28))
     p.rect((dx - 0.55) * k, (G - 2.45) * k, 1.1 * k, 2.45 * k)
     p.noStroke()
     p.fill(mixHex(SHOP.deep, SHOP.black, 0.5))
     p.rect((dx - 0.14) * k, (G - 2.0) * k, 0.28 * k, 0.5 * k)
   }
-  // Floor and ceiling lines.
-  outline(p, ink, weight)
-  p.line(x0 * k, G * k, x1 * k, G * k)
-  pen(p, alpha(p, ink, 0.5), weight * 0.8)
-  p.line(x0 * k, CORRIDOR_TOP * k, x1 * k, CORRIDOR_TOP * k)
   // Light from the band room under and through its door: warmer while the door stands open.
   const open = doorL(T)
   const band = roomLight(T)
+  // The floor's edge catching that light; the ceiling's in the dark.
+  litEdge(p, 0.25 * band + 0.35 * open * band, weight * 0.9)
+  p.line(x0 * k, G * k, x1 * k, G * k)
+  darkEdge(p, weight * 0.8)
+  p.line(x0 * k, CORRIDOR_TOP * k, x1 * k, CORRIDOR_TOP * k)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
@@ -185,7 +201,7 @@ function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
 
 /** The room's shell: the back wall and its panels, the ceiling and its lamps, the tiered floor, the pit, the walls. */
 function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = WALL_L.x1
   const x1 = WALL_R.x0
   const bottom = Math.max(PIT + 1, f.y1 + 1)
@@ -250,16 +266,18 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
   p.vertex(x1 * k, bottom * k)
   p.vertex(x0 * k, bottom * k)
   p.endShape(p.CLOSE)
-  // Its treads and risers in ink, not the mass's cut ends (those ran down the frame as lines at the walls).
-  outline(p, ink, weight)
-  p.beginShape()
-  p.vertex(x0 * k, TIERS[0].top * k)
+  // Its treads' front edges catching the light, its risers' in their own dark: light, not line (the mass's cut ends
+  // ran down the frame as lines at the walls, and a cream line round the steps read as a drawing of them).
+  let from = x0
   for (const t of TIERS) {
-    p.vertex(t.x1 * k, t.top * k)
-    p.vertex(t.x1 * k, (t.top + 0.8) * k)
+    litEdge(p, L, weight * 0.9)
+    p.line(from * k, t.top * k, t.x1 * k, t.top * k)
+    darkEdge(p, weight * 0.8)
+    p.line(t.x1 * k, t.top * k, t.x1 * k, (t.top + 0.8) * k)
+    from = t.x1
   }
-  p.vertex(x1 * k, PIT * k)
-  p.endShape()
+  litEdge(p, L, weight * 0.9)
+  p.line(from * k, PIT * k, x1 * k, PIT * k)
   p.noStroke()
   for (const t of TIERS) {
     p.fill(alpha(p, SHOP.black, 0.3))
@@ -267,14 +285,16 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
     p.fill(alpha(p, SHOP.tungsten, 0.1 + 0.12 * L))
     p.rect(t.x0 * k, t.top * k, (t.x1 - t.x0) * k, 0.035 * k)
   }
-  // The ceiling, and the trough lights hung from it.
-  pen(p, alpha(p, ink, 0.55), weight * 0.8)
+  // The ceiling, and the trough lights hung from it: in the building's dark, read by their lit lips alone (on a
+  // phone's tall stage the ceiling is in every band-room frame, and a cream line across the top with cream-outlined
+  // fixtures under it read as a drawing of the room).
+  darkEdge(p, weight * 0.8)
   p.line(x0 * k, ROOM_TOP * k, x1 * k, ROOM_TOP * k)
   for (const lx of LAMPS) {
     if (lx < f.x0 - 2 || lx > f.x1 + 2) continue
-    pen(p, alpha(p, ink, 0.6), weight * 0.6)
+    darkEdge(p, weight * 0.6)
     p.line(lx * k, ROOM_TOP * k, lx * k, (ROOM_TOP + 0.5) * k)
-    solid(p, ink, weight * 0.8, mixHex(SHOP.black, SHOP.deep, 0.4))
+    solid(p, BUILDING_DARK, weight * 0.6, mixHex(SHOP.black, SHOP.deep, 0.4))
     p.quad((lx - 0.7) * k, (ROOM_TOP + 0.5) * k, (lx + 0.7) * k, (ROOM_TOP + 0.5) * k, (lx + 0.85) * k, (ROOM_TOP + 0.72) * k, (lx - 0.85) * k, (ROOM_TOP + 0.72) * k)
     p.noStroke()
     p.fill(lit(SHOP.tungsten, L))
@@ -322,11 +342,16 @@ function podium(p: p5, c: Ctx, L: number): void {
 
 /** The two doors' leaves: shut, they are the wall's thickness; swung, a face-on door with its small window. */
 function doors(p: p5, c: Ctx, T: number, L: number): void {
-  leaf(p, c, WALL_L.x1, G, DOOR_TOP, doorL(T), 1, L, WALL_L.x1 - WALL_L.x0)
+  // The entry door swings into the room: its free edge faces the room's light.
+  leaf(p, c, WALL_L.x1, G, DOOR_TOP, doorL(T), 1, L, WALL_L.x1 - WALL_L.x0, 'free')
 }
 
-function leaf(p: p5, c: Ctx, hinge: number, floor: number, top: number, open: number, dir: 1 | -1, light: number, thick: number): void {
-  const { k, ink, weight } = c
+/**
+ * A door's leaf. Edged in its own dark all round (a cream frame round a brown door read as a drawing of one), with one
+ * lit edge: the one facing the light, `free` (the leaf's swinging edge) or `hinge` (the doorway's side).
+ */
+function leaf(p: p5, c: Ctx, hinge: number, floor: number, top: number, open: number, dir: 1 | -1, light: number, thick: number, litSide: 'free' | 'hinge'): void {
+  const { k, weight } = c
   const a = open * (Math.PI / 2)
   const w = DOOR_W * Math.sin(a)
   const t = thick * 0.6 * Math.cos(a)
@@ -336,9 +361,9 @@ function leaf(p: p5, c: Ctx, hinge: number, floor: number, top: number, open: nu
   const x1 = hinge + dir * w
   const wood = lit(SHOP.wood, 0.35 + 0.65 * light)
   p.push()
-  // Shut, the leaf is the wall's thickness: its edge soft, so it is not a bright line the height of the frame.
-  p.stroke(alpha(p, ink, 0.3 + 0.7 * Math.sin(a)))
-  p.strokeWeight(weight)
+  const s = Math.sin(a)
+  p.stroke(alpha(p, DOOR_EDGE, 0.9))
+  p.strokeWeight(weight * 0.7)
   p.fill(wood)
   p.beginShape()
   p.vertex(x0 * k, top * k)
@@ -346,6 +371,12 @@ function leaf(p: p5, c: Ctx, hinge: number, floor: number, top: number, open: nu
   p.vertex(x1 * k, floor * k)
   p.vertex(x0 * k, floor * k)
   p.endShape(p.CLOSE)
+  // The lit edge, in lit wood. Shut, the leaf is the wall's thickness: its lit edge soft, so it is not a bright line
+  // the height of the frame; it comes up as the leaf swings round to face the light.
+  const ex = litSide === 'free' ? x1 : x0
+  const eTop = litSide === 'free' ? floor - h * grow : top
+  pen(p, alpha(p, mixHex(SHOP.wood, SHOP.tungsten, 0.5), (0.16 + 0.42 * light) * (0.35 + 0.65 * s)), weight * 0.8)
+  p.line(ex * k, (eTop + 0.03) * k, ex * k, (floor - 0.02) * k)
   if (w > 0.25) {
     // The small window, high in the door, and the push plate.
     const cx = hinge + dir * w * 0.55
@@ -404,7 +435,7 @@ function glow(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>, L: number):
 
 /** The corridor beyond the far door, from the wall to `x1`: dark, lit only through the open door. */
 export function drawFarCorridor(p: p5, c: Ctx, T: number, x1: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = WALL_R.x1
   p.push()
   p.rectMode(p.CORNER)
@@ -416,12 +447,13 @@ export function drawFarCorridor(p: p5, c: Ctx, T: number, x1: number): void {
   p.fill(mixHex(c.bg, SHOP.black, 0.3))
   p.rect(x0 * k, (ROOM_TOP - 0.4) * k, (x1 - x0) * k, (CORRIDOR_R_TOP - ROOM_TOP + 0.4) * k)
   p.rect(x0 * k, PIT * k, (x1 - x0) * k, 3 * k)
-  outline(p, ink, weight)
+  litEdge(p, 0.2 + 0.4 * spill(T) * roomLight(T), weight * 0.9)
   p.line(x0 * k, PIT * k, x1 * k, PIT * k)
-  pen(p, alpha(p, ink, 0.5), weight * 0.8)
+  darkEdge(p, weight * 0.8)
   p.line(x0 * k, CORRIDOR_R_TOP * k, x1 * k, CORRIDOR_R_TOP * k)
   // The far door's leaf, swung out into this corridor (drawn here, over the corridor's dark).
-  leaf(p, c, WALL_R.x1, PIT, DOOR_R_TOP, doorR(T), 1, 0.6 * roomLight(T), WALL_R.x1 - WALL_R.x0)
+  // It swings out into the dark corridor, so its lit edge is the doorway's, toward the band room's light.
+  leaf(p, c, WALL_R.x1, PIT, DOOR_R_TOP, doorR(T), 1, 0.6 * roomLight(T), WALL_R.x1 - WALL_R.x0, 'hinge')
   const s = spill(T) * roomLight(T)
   if (s > 0.001) {
     const ctx = p.drawingContext as CanvasRenderingContext2D

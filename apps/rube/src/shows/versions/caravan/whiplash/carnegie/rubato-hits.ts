@@ -26,6 +26,30 @@ export const RACK_TAP = snare(430.318)
 export const CRASH_AT = onset(431.121)
 /** The leap's landing on the metronome's weight: his weight pushes the rod off into its first swing. */
 export const BOARD = onset(432.343)
+/** He springs off the crash for the weight here (the leap's lift-off, on the onset at 431.70). */
+export const PUSH_OFF = BOARD - 0.6
+/** How long he crouches into the crash before he springs, and how far it gives under him (radians, his side down). */
+const CROUCH = 0.14
+const GIVE = 0.2
+
+/**
+ * The crash under him as he springs off it for the weight, added to its angle (+ dips the right, his side): it gives
+ * under his crouch over the `CROUCH` before `PUSH_OFF`, comes to rest at the bottom as he leaves, and springs back
+ * up after him, ringing long and damped (from rest: the swing's slope is nil where the crouch leaves it). The hall
+ * draws the crash with it (`conductor.ts` `crashAskew`), and his seat on the crash rides it.
+ */
+export function pushOff(T: number): number {
+  const s = T - PUSH_OFF
+  if (s < -CROUCH || s > 5) return 0
+  if (s <= 0) {
+    const u = (s + CROUCH) / CROUCH
+    return GIVE * 0.5 * (1 - Math.cos(Math.PI * u))
+  }
+  const w = 2 * Math.PI * 1.6
+  const tau = 0.7
+  return GIVE * Math.exp(-s / tau) * (Math.cos(w * s) + Math.sin(w * s) / (w * tau))
+}
+
 /** The landing on the snare: the burst (the kick's and the snare's measured stroke). */
 export const LAND = snare(503.995)
 

@@ -13,8 +13,15 @@ import { show as caravanShow } from '../src/shows/versions/caravan/whiplash'
 import { SWITCH } from '../src/shows/versions/caravan/whiplash/score'
 import { STRIKES } from '../src/shows/versions/caravan/whiplash/hits'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/caravan/whiplash/credits'
-import { BASS, BREAKS, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
-import { poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
+import { BASS, BREAKS, CARNEGIE, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
+import { fletcherAt, poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
+import { armPose as frameArm } from '../src/shows/versions/caravan/whiplash/carnegie/finale-rig'
+import { KIT_AT } from '../src/shows/versions/caravan/whiplash/carnegie/stage'
+import { poseAt as sabotagePose } from '../src/shows/versions/caravan/whiplash/carnegie/sabotage-motion'
+import { fletcherPose as bandPose } from '../src/shows/versions/caravan/whiplash/shaffer/band-people'
+import { fletcherPose as practicePose } from '../src/shows/versions/caravan/whiplash/shaffer/practice'
+import { folderPose } from '../src/shows/versions/caravan/whiplash/road/folder'
+import { CHEST, RIG, type Pose } from '../src/shows/versions/caravan/whiplash/fletcher'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -147,6 +154,86 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   check('caravan: Fletcher\'s fist closes once, on the final cut-off, and nowhere before it',
     [poseAt(FINAL + 0.05).right.hand, poseAt(FINAL + 0.05).left.hand].includes('fist') && poseAt(FINAL - 0.1).right.hand !== 'fist' && poseAt(FINAL - 0.1).left.hand !== 'fist' && fists > 0 &&
     Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
+
+  // The last image: clear wall between the drummer's frame's steel fist (pinning the crash) and either of Fletcher's
+  // hands, from the cut-off to the end (the fist sat on his hanging hand: the machine handing him the stick).
+  const handAt = (side: 'left' | 'right', t: number): [number, number] => {
+    const h = fletcherAt(t)
+    const a = poseAt(t)[side]
+    const sx = h[0] + (side === 'right' ? -1 : 1) * RIG.shoulder
+    const sy = h[1] + RIG.drop
+    const d = a.up + a.bend + a.wrist
+    return [sx + Math.cos(a.up) * RIG.upper + Math.cos(a.up + a.bend) * RIG.fore + Math.cos(d) * 0.13, sy + Math.sin(a.up) * RIG.upper + Math.sin(a.up + a.bend) * RIG.fore + Math.sin(d) * 0.13]
+  }
+  let apart = Infinity
+  for (let t = FINAL; t < DURATION; t += 0.1) {
+    const g = frameArm('right', t).grip
+    for (const side of ['left', 'right'] as const) {
+      const hand = handAt(side, t)
+      apart = Math.min(apart, Math.hypot(hand[0] - (g[0] + KIT_AT[0]), hand[1] - (g[1] + KIT_AT[1])))
+    }
+  }
+  check('caravan: in the last image the frame\'s steel fist keeps clear of Fletcher\'s hands', apart >= 0.6, `${apart.toFixed(2)} cells`)
+
+  // Never a lone hand at the frame's edge: from the chart's arrival at Carnegie to the end, whenever Fletcher's head
+  // is past a side edge of the 16:9 frame but a hand or an arm of his reaches inside it, that lasts no more than
+  // 1.25 s (a camera move passing him), never a hand parked at the edge through a shot.
+  const reachOf = (t: number): [number, number, number] => {
+    const g = show.fletcher(t)!
+    const p = t >= SOLO ? poseAt(t) : sabotagePose(t)
+    let lo = g.x - CHEST.half
+    let hi = g.x + CHEST.half
+    for (const side of ['right', 'left'] as const) {
+      const a = p[side]
+      const ex = g.x + (side === 'right' ? -1 : 1) * RIG.shoulder + Math.cos(a.up) * RIG.upper
+      const wx = ex + Math.cos(a.up + a.bend) * RIG.fore
+      const tx = wx + Math.cos(a.up + a.bend + a.wrist) * 0.3
+      lo = Math.min(lo, ex, wx, tx)
+      hi = Math.max(hi, ex, wx, tx)
+    }
+    return [g.x, lo, hi]
+  }
+  let poke = 0
+  let pokeFrom = 0
+  let pokeWorst = ''
+  for (let t = CARNEGIE + 0.5; t < DURATION; t += 0.02) {
+    const c = cam(t)
+    const g = show.fletcher(t)
+    let on = false
+    if (g && Math.abs(g.y - c.y) < c.cells / 2 + 0.8) {
+      const half = (c.cells * 16) / 9 / 2
+      const [x, lo, hi] = reachOf(t)
+      on = (x > c.x + half && lo < c.x + half) || (x < c.x - half && hi > c.x - half)
+    }
+    if (on && !poke) pokeFrom = t
+    poke = on ? t - pokeFrom + 0.02 : 0
+    if (poke > 1.25 && !pokeWorst) pokeWorst = `a hand at the edge from ${pokeFrom.toFixed(2)} s`
+  }
+  check('caravan: Fletcher is never a lone hand parked at the frame\'s edge', !pokeWorst, pokeWorst)
+
+  // His arms never flip: stepped at 120 Hz through every part that draws him, no upper arm, forearm or hand turns
+  // more than half a radian in a step (an unwrapped angle blended straight turned a forearm round in one frame).
+  // The sharpest scored moves (the slaps on the hoop, the fist's strike) stay near 0.4.
+  const turn = (a: number) => Math.abs(a - 2 * Math.PI * Math.round(a / (2 * Math.PI)))
+  let flip = 0
+  let flipAt = ''
+  for (const [name, f, a, b] of [
+    ['practice', practicePose, 0, 30.65], ['band room', bandPose, 30.65, 130.5], ['folder', folderPose, SWITCH.road, 205.92],
+    ['sabotage', sabotagePose, SWITCH.carnegie, SOLO], ['Carnegie', poseAt, SOLO, DURATION],
+  ] as [string, (t: number) => Pose, number, number][]) {
+    let prev = f(a)
+    for (let t = a + 1 / 120; t <= b; t += 1 / 120) {
+      const cur = f(t)
+      for (const side of ['left', 'right'] as const) {
+        const c = cur[side]
+        const p = prev[side]
+        const d = Math.max(turn(c.up - p.up), turn(c.up + c.bend - p.up - p.bend), turn(c.up + c.bend + c.wrist - p.up - p.bend - p.wrist))
+        if (d > flip) { flip = d; flipAt = `${d.toFixed(2)} rad, ${name} ${side} at ${t.toFixed(3)} s` }
+      }
+      prev = cur
+    }
+  }
+  check('caravan: Fletcher\'s arms never flip (every joint under half a radian in 1/120 s)', flip < 0.5, flipAt)
 
   const crowd = [5, 60, 150, 190, 250, 300, 460, 545].map((t) => show.at(t).balls ?? [])
   check('caravan: every ball on the stage is someone, once', crowd.every((b) => new Set(b.map((x) => x.id)).size === b.length && b.length <= 4))

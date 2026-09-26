@@ -9,7 +9,7 @@ import { CRASH, RACK, SNARE, cymbalSwing } from '../drums'
 import { box, part, smooth, type Ctx } from '../kit'
 import { RIDE, SNARES, level } from '../music'
 import { G_EARTH } from '../physics'
-import { BOARD, CRASH_AT, LAND, RACK_AT, RACK_TAP, TAPS } from './rubato-hits'
+import { BOARD, CRASH_AT, LAND, PUSH_OFF, RACK_AT, RACK_TAP, TAPS, pushOff } from './rubato-hits'
 import {
   COCK,
   LANDING,
@@ -196,9 +196,10 @@ export const rubato = part<{ begin: number }>(
     // The leap onto the crash, riding it as it swings under him; a lean toward the metronome (his glance at it),
     // and the leap onto the weight.
     const lean = (T: number) => CRASH_LX - LEAN * easeInSine(clamp((T - (BOARD - 1.0)) / 0.4))
-    const onCrash = (T: number) => seatOnCymbal(CRASH, lean(T), cymbalSwing(T - CRASH_AT, 0.16, 1.2))
+    // He crouches into the crash before he springs (it gives under him: `pushOff`), and it swings up after him.
+    const onCrash = (T: number) => seatOnCymbal(CRASH, lean(T), cymbalSwing(T - CRASH_AT, 0.16, 1.2) + pushOff(T))
     path.hop(onCrash(CRASH_AT), CRASH_AT)
-    path.ride(onCrash, BOARD - 0.6, 120)
+    path.ride(onCrash, PUSH_OFF, 120)
     path.hop(riding(BOARD), BOARD)
     // On the weight: every stroke a sample, and the swing between them; the roll (still, at the centre of the
     // shimmer); the lean back; the toss.
@@ -228,9 +229,11 @@ export const rubato = part<{ begin: number }>(
       { t: 440, cells: 7.8, hold: at(M + 2.2, -2.2), w: 1 },
       // Slowing: in on the whole pendulum, tall, as he climbs the rod: him at the top and the bob's tip meeting the
       // ride's rim both in the frame (centred between his top, -4.4, and the rim, -1.1), the camera drifting across
-      // as it pushes. Tight enough to feel, loose enough that every stroke is seen to land.
-      { t: 446.6, cells: 5.7, hold: at(M + 0.55, -2.74), w: 1 },
-      { t: 452.4, cells: 5.4, hold: at(M + 0.22, -2.76), w: 1 },
+      // as it pushes. Tight enough to feel, loose enough that every stroke is seen to land. The push leaves Fletcher
+      // behind the right edge as it goes, clear of it by the time it settles (his hanging hand sat in the edge for
+      // six seconds).
+      { t: 446.6, cells: 5.7, hold: at(M + 0.2, -2.74), w: 1 },
+      { t: 452.4, cells: 5.4, hold: at(M + 0.14, -2.76), w: 1 },
       { t: 455.0, cells: 5.3, hold: at(M + 0.07, -2.76), w: 1 },
       // Then a truck right, landing on the slowest stroke, to a two-shot: the metronome in the left of the frame and
       // Fletcher on his podium in the right, keeping its time with a small beat of his hand, slowing with it and

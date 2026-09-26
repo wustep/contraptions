@@ -113,18 +113,24 @@ const SHARDS: Shard[] = (() => {
   return out
 })()
 
-function shardAt(s: Shard, t: number): { p: Pt; a: number; resting: boolean } | null {
+function shardAt(s: Shard, t: number): { p: Pt; a: number; resting: boolean; fade: number } | null {
   const tau = t - s.t0
   if (tau < 0) return null
-  // The flight to the road, and where it comes to lie, a little further on.
+  // The flight to the road, and where it comes to lie, a little further on: each at its own depth across the road,
+  // after its own slide, and most of them lost to the eye in the dark soon after (all at one height after one slide,
+  // they lay in an even row, a dotted line under the truck).
   const g = G_EARTH
   const y0 = s.from[1]
-  const floor = ROAD_Y - 0.02
+  const floor = ROAD_Y - 0.02 + 0.2 * hash(s.seed, 30)
   const land = (s.v[1] + Math.sqrt(s.v[1] * s.v[1] + 2 * g * Math.max(0, floor - y0))) / g
-  if (tau < land) return { p: [s.from[0] + s.v[0] * tau, y0 + s.v[1] * tau + 0.5 * g * tau * tau], a: s.spin * tau, resting: false }
-  const slide = Math.min(tau - land, 0.35)
-  const x = s.from[0] + s.v[0] * land + s.v[0] * 0.3 * (slide - (slide * slide) / 0.7)
-  return { p: [x, floor], a: s.spin * land, resting: true }
+  if (tau < land) return { p: [s.from[0] + s.v[0] * tau, y0 + s.v[1] * tau + 0.5 * g * tau * tau], a: s.spin * tau, resting: false, fade: 1 }
+  const T = 0.15 + 0.5 * hash(s.seed, 31)
+  const slide = Math.min(tau - land, T)
+  const x = s.from[0] + s.v[0] * land + s.v[0] * (0.15 + 0.35 * hash(s.seed, 32)) * (slide - (slide * slide) / (2 * T))
+  const stay = hash(s.seed, 33) < 0.3
+  const gone = 0.5 + 1.2 * hash(s.seed, 34)
+  const fade = stay ? 0.7 : 0.7 * (1 - Math.min(1, Math.max(0, (tau - land - gone) / 0.5)))
+  return { p: [x, floor], a: s.spin * land, resting: true, fade }
 }
 
 function drawShards(p: p5, c: Ctx, t: number): void {
@@ -133,9 +139,9 @@ function drawShards(p: p5, c: Ctx, t: number): void {
   p.noStroke()
   for (const s of SHARDS) {
     const at = shardAt(s, t)
-    if (!at) continue
+    if (!at || at.fade <= 0.01) continue
     const light = 0.35 + lightAt(at.p[0], t)
-    p.fill(hexA(mixHex(ROAD.paint, ROAD.car, 0.4), Math.min(0.95, 0.3 + 0.5 * light)))
+    p.fill(hexA(mixHex(ROAD.paint, ROAD.car, 0.4), at.fade * Math.min(0.95, 0.3 + 0.5 * light)))
     const r = s.size
     const a = at.resting ? 0.2 * (hash(s.seed, 13) - 0.5) : at.a
     const sq = at.resting ? 0.35 : 1
@@ -243,21 +249,23 @@ export const crash = part<CrashState>(
       // In the seat as the door slams; away over the curb, the frame opening round him as he gathers speed.
       { t: slot.begin, cells: 4.4, off: [0.9, -0.6] },
       { t: CURB_F, cells: 5.0, off: [1.2, -0.9] },
-      { t: LAMP_T[3], cells: 5.8, off: [1.0, -1.3] },
-      // Low and close on him at the wheel at speed, the lamps whipping over him and lighting as they pass; then
-      // back, wide, the road lit behind him and dark ahead.
-      { t: LAMP_T[6], cells: 2.9, off: [0.25, -0.3] },
-      { t: LAMP_T[11], cells: 3.1, off: [0.3, -0.35] },
+      { t: LAMP_T[2], cells: 5.8, off: [1.0, -1.3] },
+      // Settling low and close on him at the wheel over five lamps as the lamps come every beat, whipping over him
+      // and lighting as they pass; held there; then back over six, wide, the road lit behind him and dark ahead.
+      // (Pushed in and out over two or three lamps each, the drive read as a lunge in and out.)
+      { t: LAMP_T[7], cells: 2.9, off: [0.25, -0.3] },
+      { t: LAMP_T[12], cells: 3.1, off: [0.3, -0.35] },
       // Out over the river: wide, low, the lamps doubled in the water.
-      { t: LAMP_T[16], cells: 8.8, off: [0.3, 0.15] },
-      { t: LAMP_T[19], cells: 8.8, off: [0.5, 0.05] },
+      { t: LAMP_T[18], cells: 8.8, off: [0.3, 0.15] },
+      { t: LAMP_T[20], cells: 8.8, off: [0.5, 0.05] },
       { t: LAMP_T[23], cells: 7.2, off: [-0.4, -1.8] },
       { t: LAMP_T[28], cells: 7.6, off: [0.8, -1.9] },
       // Leaning ahead into the dark road; then up and back, long and high, to hold both of them as the truck's high
-      // beams flash far ahead: the car small on the left under its lamps, the truck coming on the right; and in as
-      // they close, still on the crossing for the hit; then with the car through its slow turn in the air.
+      // beams flash far ahead: the car small on the left under its lamps, the truck coming on the right (both inside
+      // the middle two thirds, so a Zoom crop keeps the car too); and in as they close, still on the crossing for the
+      // hit; then with the car through its slow turn in the air.
       { t: LAMP_T[33], cells: 9.6, off: [4.2, -2.6] },
-      { t: FLASH, cells: 18, off: [lead, -4.6] },
+      { t: FLASH, cells: 21, off: [lead - 0.8, -3.6] },
       { t: IMPACT, cells: 9.6, hold: [hit[0] - 1.0, ROAD_Y - 2.5], w: 1 },
       { t: TAIL + 0.5, cells: 9.8, hold: [tail[0] - 2.8, ROAD_Y - 2.9], w: 1 },
       { t: LAND, cells: 10.2, hold: [land[0] - 3.0, ROAD_Y - 2.6], w: 1 },
