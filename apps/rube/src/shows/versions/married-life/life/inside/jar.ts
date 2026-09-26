@@ -285,36 +285,54 @@ export const jar = part<JarState>(
 )
 
 /**
- * The camera: on the machine; in on the window as the tyre blows; on the jar in its cradle for each pour down the
- * chute; in on the ladder for the fall and closer for the bandage; out wide as the storm comes, so the limb breaks
- * through the roof inside the frame and the roof is patched in it; and in again to follow them into the hall. Carl
- * stays whole inside the Zoom frame throughout (a third of the height, 16:9, from the middle).
+ * The camera: every event its own move. A step in on each handful; left to the car as the tyre goes; in on the
+ * cradle as she pushes, then out and right after the coins, down the chute to the wall; back to the ladder and the
+ * lamp; in as he falls, and closer on the two of them for the bandage; the second pour the same in and out; out wide
+ * as the storm comes, so the limb breaks through the roof inside the frame and the roof is patched in it; and in
+ * again to follow them into the hall. Both stay whole inside the Zoom frame throughout (two thirds of the height,
+ * 16:9, from the middle): with Carl on the floor at y 0 that keeps the middle within cells / 3 - 0.13 of it, and
+ * while Ellie is on the mantle (y -1.48) or in the air over it, the frame can come no closer than about 2.8 cells
+ * (3.4 at the top of her hops up onto it).
  */
 function shots(): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold: L(hold), w })
+  /** A step in that lands on `at` and rests there a moment (the frame settles with the coins, then moves on). */
+  const step = (at: number, cells: number, hold: Pt): PartShot[] => [k(at, cells, hold), k(at + 0.27, cells, hold)]
   return [
-    // In with him to the machine, and close on it for the four handfuls: his plank, the coins' whole flight, the jar
-    // filling a notch at a time, and her on the ladder counting them in.
+    // In with him to the machine. Then a step in on each handful as it drops into the slot, pushing off as the next
+    // flies: his plank, the jar filling a notch at a time, and her on the ladder counting them in. The slot stays in
+    // the top of the frame; the coins' apex may leave it.
     k(104.6, 4.6, [3.6, -1.2], 0.6),
     k(106.9, 3.65, [5.2, -1.03], 0.95),
-    k(109.2, 3.6, [5.3, -1.02]),
-    k(111.5, 3.6, [5.2, -1.0]),
-    // The tyre: in on the car through the window, him going over to look.
-    k(113.5, 3.5, [3.72, -0.97]),
-    k(114.3, 3.52, [3.68, -0.97]),
-    // Along the mantle with her to the jar, and on it as it goes over in its cradle and the coins go down the chute.
-    k(116.8, 3.72, [5.7, -1.05]),
-    k(117.9, 3.75, [5.9, -1.06]),
-    // The ladder and the lamp; in as he falls, and closer for her touch and the bandage.
-    k(119.4, 3.6, [4.0, -1.2]),
-    k(FALL, 3.2, [3.35, -0.9]),
-    k(TOUCH, 3.0, [3.15, -0.82]),
-    k(123.3, 3.6, [3.95, -0.98]),
-    // Her second pour.
-    k(125.6, 3.9, [5.8, -1.12]),
+    k(SLAMS[0] + 0.13, 3.65, [5.2, -1.03]),
+    ...step(LANDS[0], 3.45, [5.3, -0.99]),
+    ...step(LANDS[1], 3.25, [5.4, -0.93]),
+    ...step(LANDS[2], 3.1, [5.45, -0.88]),
+    k(LANDS[3], 3.0, [4.95, -0.85]),
+    // The tyre: left to the car in the window as it goes (the whole car in frame by the blow), settling as the hubcap
+    // lands; held as he goes over to look. Then up with her as she climbs to the jar (the top of her hop onto the
+    // mantle sets 3.45).
+    k(113.05, 3.3, [3.5, -0.96]),
+    k(114.2, 3.3, [3.4, -0.96]),
+    k(115.05, 3.45, [4.2, -1.0]),
+    // Along the mantle with her, in on the cradle as she pushes; then out and right after the coins, down the chute
+    // to the slot in the wall; then back in to the machine for the refill's handful.
+    k(PUSH1, 3.1, [5.3, -0.9]),
+    k(117.6, 4.0, [6.3, -0.9]),
+    k(LANDS[4], 3.4, [5.2, -1.0]),
+    // The ladder and the lamp going out; in as he falls; closer on the two of them for her touch and the bandage. (At
+    // 121.0 she is at the top of her hop down off the mantle, and the frame can be no closer than 2.8 there.)
+    k(119.6, 3.45, [3.85, -1.38]),
+    k(FALL, 2.95, [3.78, -0.84]),
+    k(121.0, 2.82, [3.72, -0.795]),
+    k(122.3, 2.2, [3.04, -0.575]),
+    // Back out as she climbs again, along the mantle with her, in on the cradle for the second pour, out after it.
+    k(123.85, 3.5, [3.95, -1.0]),
+    k(PUSH2 + 0.05, 3.1, [5.3, -0.9]),
+    k(126.4, 4.2, [6.35, -1.1]),
     // The storm gathers; out wide for the tree through the roof and the jar thrown over by the blow, the roof
     // above the nursery's ceiling in the frame; the limb winched out and the hole boarded.
-    k(127.0, 5.4, [6.4, -1.7]),
+    k(127.0, 5.4, [6.4, -1.62]),
     k(128.4, 8.3, [7.25, -2.78]),
     k(129.9, 9.45, [7.7, -3.2]),
     k(131.4, 9.5, [7.95, -3.15]),
