@@ -334,10 +334,12 @@ export function clampBlock(p: p5, c: Ctx, at: Pt, _ang: number, len: number, w: 
 }
 
 /** The frame's body: darker plate than its tubes, so the torso reads as a mass behind the arms. */
-const PLATE = mixHex(STEEL, KIT.lacquer, 0.28)
+const PLATE = mixHex(STEEL, KIT.lacquer, 0.34)
 const PLATE_DARK = mixHex(PLATE, KIT.lacquer, 0.7)
 /** Where his waist sits on the seat, in the kit's frame (the frame's drop added). */
-export const WAIST = { y: 0.3, half: 0.525 }
+export const WAIST = { y: 0.3, half: 0.44 }
+/** How far in from each shoulder joint the torso's top corner sits: the yoke's ends and the round shoulders stand out past it. */
+const INSET = 0.16
 
 const css = (hex: string, a: number): string => {
   const n = parseInt(hex.slice(1), 16)
@@ -345,7 +347,7 @@ const css = (hex: string, a: number): string => {
 }
 
 /**
- * The drummer's torso, behind the drums: a filled shape from the shoulders (L, R, 1.7 apart) tapering to his waist on
+ * The drummer's torso, behind the drums: a filled shape from just in from the shoulders (L, R) tapering to his waist on
  * the seat, lit like the kit's lacquer (dark edges, a lifted band toward the house's left) and darkening toward the
  * waist, a gold rim along the tops of the shoulders; the seat's black cushion under him. `drop` is the frame's
  * height (it flies with the frame); `slump` rounds the shoulders forward (the torso shorter, its top curved).
@@ -357,27 +359,30 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, drop: number, slump: numb
   const wy = WAIST.y + drop
   const hw = WAIST.half
   const midY = Math.min(L[1], R[1]) - 0.07 + 0.05 * slump
+  // The torso's top corners, in from the shoulder joints (the yoke's ends and the round shoulders stand out past them).
+  const tl: Pt = [L[0] + INSET, L[1] + 0.04]
+  const tr: Pt = [R[0] - INSET, R[1] + 0.04]
   const outline = (): void => {
     ctx.beginPath()
-    ctx.moveTo(L[0] * k, (L[1] + 0.02) * k)
-    ctx.bezierCurveTo((L[0] + 0.45) * k, midY * k, (R[0] - 0.45) * k, midY * k, R[0] * k, (R[1] + 0.02) * k)
+    ctx.moveTo(tl[0] * k, tl[1] * k)
+    ctx.bezierCurveTo((tl[0] + 0.35) * k, midY * k, (tr[0] - 0.35) * k, midY * k, tr[0] * k, tr[1] * k)
     // Full through the ribs, then in to the waist.
-    ctx.bezierCurveTo((R[0] + 0.12) * k, (R[1] + 0.75) * k, (wx + hw + 0.02) * k, (wy - 0.75) * k, (wx + hw) * k, wy * k)
+    ctx.bezierCurveTo((tr[0] + 0.1) * k, (tr[1] + 0.75) * k, (wx + hw + 0.02) * k, (wy - 0.75) * k, (wx + hw) * k, wy * k)
     ctx.lineTo((wx - hw) * k, wy * k)
-    ctx.bezierCurveTo((wx - hw - 0.02) * k, (wy - 0.75) * k, (L[0] - 0.12) * k, (L[1] + 0.75) * k, L[0] * k, (L[1] + 0.02) * k)
+    ctx.bezierCurveTo((wx - hw - 0.02) * k, (wy - 0.75) * k, (tl[0] - 0.1) * k, (tl[1] + 0.75) * k, tl[0] * k, tl[1] * k)
     ctx.closePath()
   }
   // The seat: a black cushion under him, on the throne's post.
   p.noStroke()
   p.fill(HALL_BLACK)
-  p.rect((wx - 0.75) * k, (wy - 0.03) * k, 1.5 * k, 0.2 * k, 0.09 * k)
+  p.rect((wx - 0.62) * k, (wy - 0.03) * k, 1.24 * k, 0.2 * k, 0.09 * k)
   p.fill(PLATE_DARK)
   p.rect((wx - 0.05) * k, (wy + 0.15) * k, 0.1 * k, 0.9 * k)
   ctx.save()
   outline()
   // Across: lit plate, a cylinder like the drums' shells.
-  const x0 = Math.min(L[0], wx - hw) - 0.05
-  const x1 = Math.max(R[0], wx + hw) + 0.05
+  const x0 = Math.min(tl[0], wx - hw) - 0.1
+  const x1 = Math.max(tr[0], wx + hw) + 0.1
   const g = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
   g.addColorStop(0, PLATE_DARK)
   g.addColorStop(0.12, PLATE)
@@ -399,15 +404,15 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, drop: number, slump: numb
   ctx.stroke()
   // A seam down the middle of the plate: a chest, not a panel.
   ctx.beginPath()
-  ctx.moveTo((wx + (L[0] + R[0] - 2 * wx) * 0.25) * k, (midY + 0.3) * k)
-  ctx.quadraticCurveTo((wx + (L[0] + R[0] - 2 * wx) * 0.12) * k, ((midY + wy) / 2) * k, wx * k, (wy - 0.1) * k)
+  ctx.moveTo((wx + (tl[0] + tr[0] - 2 * wx) * 0.25) * k, (midY + 0.3) * k)
+  ctx.quadraticCurveTo((wx + (tl[0] + tr[0] - 2 * wx) * 0.12) * k, ((midY + wy) / 2) * k, wx * k, (wy - 0.1) * k)
   ctx.lineWidth = weight * 0.7
   ctx.strokeStyle = css(KIT.lacquer, 0.45)
   ctx.stroke()
   // The gold rim along the tops of the shoulders.
   ctx.beginPath()
-  ctx.moveTo((L[0] + 0.02) * k, (L[1] + 0.03) * k)
-  ctx.bezierCurveTo((L[0] + 0.45) * k, (midY + 0.015) * k, (R[0] - 0.45) * k, (midY + 0.015) * k, (R[0] - 0.02) * k, (R[1] + 0.03) * k)
+  ctx.moveTo((tl[0] + 0.02) * k, (tl[1] + 0.01) * k)
+  ctx.bezierCurveTo((tl[0] + 0.35) * k, (midY + 0.015) * k, (tr[0] - 0.35) * k, (midY + 0.015) * k, (tr[0] - 0.02) * k, (tr[1] + 0.01) * k)
   ctx.lineWidth = weight * 1.2
   ctx.strokeStyle = css(HALL_GOLD, 0.6 - 0.25 * slump)
   ctx.stroke()
