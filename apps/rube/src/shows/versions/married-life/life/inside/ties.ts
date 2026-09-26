@@ -24,11 +24,13 @@ import { BOW, drawTie } from './ties-tie'
  * each a little greyer than the one before. The light the front door's glass throws on the wall behind them jumps a
  * step on every downbeat, morning to evening and season to season; his steps shorten, her rolls slow.
  *
- * The dance. She bumps the gramophone's lever (bar 49); the needle drops (bar 50); they meet (bar 51) at the loudest
- * of the waltz and waltz the length of the hall in a pool of warm light, in hold, she at his right: a rise on every
- * downbeat, a sway on the two and three; on bar 53 she turns out under his arm and back; they come to rest in each
- * other's arms on the accent of bar 55. The camera has the gramophone whole at the start and the desk and her
- * painting whole at the end, and all of it at the top of its crane.
+ * The dance. She bumps the gramophone's lever (bar 49); the needle drops (bar 50); they meet (bar 51) as the waltz
+ * swells and waltz the length of the hall in a pool of warm light, in hold, she at his right: a rise on every
+ * downbeat, a sway on the two and three. The swell crests from 51's third beat into 52's downbeat (156.75–157.5, the
+ * loudest of the second half; by 53 it is 8–10 dB down): through it she turns out under his arm, at arm's length and
+ * her highest on 52's downbeat, as the pool of light brightens and the camera's crane lands at its widest, and she
+ * rolls back in by 53. They come to rest in each other's arms on the accent of bar 55. The camera has the gramophone
+ * whole at the start and the desk and her painting whole at the end, and all of it at the top of its crane.
  *
  * The tickets. The evening comes in, and the lamp over her painting of Paradise Falls lights (bar 56): he sees it, a
  * long look. He steps onto the pedal in the floor by the desk (bar 57); the desk's leaf lets go and the picnic basket
@@ -396,19 +398,31 @@ const P0 = 3.25
 const M1 = 6.05
 const pairAt = lilted([P0, 3.95, 4.65, 5.35, M1], 0.8)
 /**
- * Where she is: always at his right, in hold, a little apart, so the two never run together into one shape. Bars 51
- * and 52 they waltz in hold; on 53, the loudest bar, she turns out under his arm to arm's length and rolls back in by
- * its end; on 54 they close into the embrace, still a little apart. Her roll out and back turns her through most of
- * a turn and back.
+ * Where she is: always at his right, in hold, a little apart, so the two never run together into one shape. Bar 51
+ * they waltz in hold; on the crest of the swell (51's third beat into 52's downbeat, the loudest of the second half)
+ * she turns out under his arm to arm's length, is out and at her highest on 52's downbeat, holds there to its two and
+ * rolls back in by 53, as the music falls away; on 54 they close into the embrace, still a little apart. Her roll out
+ * and back turns her through most of a turn and back.
  */
 const HOLD_GAP = 0.32
 const EMBRACE_GAP = 0.28
-const TURN_OUT = 0.26
-/** Her turn out under his arm, 0..1..0 over bar 53: out through its first two beats, back in on its third. */
+const TURN_OUT = 0.45
+/**
+ * Her turn out under his arm, 0..1..0: out from the middle of bar 51, arriving at arm's length on 52's downbeat (the
+ * crest), held to its two, and back in through its two and three, home by 53.
+ */
 const turnOutAt = (T: number): number => {
-  const L = DANCE[3] - DANCE[2]
-  return smooth(T, DANCE[2] + 0.04 * L, DANCE[2] + 0.46 * L) * (1 - smooth(T, DANCE[2] + 0.5 * L, DANCE[3] - 0.02 * L))
+  const L0 = DANCE[1] - DANCE[0]
+  const L1 = DANCE[2] - DANCE[1]
+  return smooth(T, DANCE[0] + 0.5 * L0, DANCE[1]) * (1 - smooth(T, DANCE[1] + 0.3 * L1, DANCE[2] - 0.04 * L1))
 }
+/** Her lift through the turn out, 0..1..0: up through the crest to her highest on 52's downbeat, down by its three. */
+const liftAt = (T: number): number => {
+  const L1 = DANCE[2] - DANCE[1]
+  return smooth(T, DANCE[0] + 0.6 * (DANCE[1] - DANCE[0]), DANCE[1]) * (1 - smooth(T, DANCE[1], DANCE[1] + 0.62 * L1))
+}
+/** How high her lift takes her (cells): about twice a waltz step's rise. */
+const LIFT_ELLIE = 0.13
 const gapAt = (T: number): number => HOLD_GAP + TURN_OUT * turnOutAt(T) - (HOLD_GAP - EMBRACE_GAP) * smooth(T, DANCE[3] + 0.2, EMBRACE)
 /** The bar the dance is in, and how far through it. */
 function danceBar(T: number): { i: number; u: number } | null {
@@ -429,8 +443,14 @@ function swayAt(T: number): number {
 }
 /** How much they are in the dance: in from the approach, out through the embrace. */
 const inDanceAt = (T: number): number => smooth(T, DANCE[0] - 0.3, DANCE[0] + 0.15) * (1 - smooth(T, EMBRACE - 0.4, EMBRACE + 0.3))
-/** The warm pool of light they dance in: it gathers as the needle drops and gives way to the picture lamp. */
-const poolAt = (T: number): number => smooth(T, NEEDLE + 0.2, DANCE[0] + 0.5) * (1 - smooth(T, EMBRACE + 0.4, LAMP + 0.6))
+/**
+ * The warm pool of light they dance in: it gathers as the needle drops, swells with the music to its brightest on 52's
+ * downbeat (the crest), settles as the swell falls away, and gives way to the picture lamp.
+ */
+const poolAt = (T: number): number => {
+  const swell = smooth(T, DANCE[0] + 0.25, DANCE[1]) * (1 - smooth(T, DANCE[1], DANCE[2] + 0.2))
+  return smooth(T, NEEDLE + 0.2, DANCE[0] + 0.5) * (1 - smooth(T, EMBRACE + 0.4, LAMP + 0.6)) * (1 + 0.4 * swell)
+}
 
 /* ------------------------------------------------------------------ Carl */
 
@@ -644,14 +664,20 @@ const ellieAtDoor = spline([
 
 /**
  * Her place in the dance: at his right, rising with him on each downbeat, leaning into the sway opposite his (towards
- * him when he leans to her), a little taller on the rise.
+ * him when he leans to her), a little taller on the rise. Through the turn out her lift takes the place of the
+ * waltz's rise (none of bar 52's own), so her highest is on 52's downbeat.
  */
+function ellieRise(T: number): number {
+  const k = T < DANCE[2] ? 1 - smooth(T, DANCE[0] + 0.5 * (DANCE[1] - DANCE[0]), DANCE[1]) : 1
+  return riseAt(T) * k + (LIFT_ELLIE / RISE_ELLIE) * liftAt(T)
+}
 function ellieDancing(T: number): Companion {
   const inDance = inDanceAt(T)
+  const rise = ellieRise(T)
   return {
     x: pairAt(T) + gapAt(T),
-    y: -RISE_ELLIE * riseAt(T),
-    stretch: 1 - 0.05 * riseAt(T) * inDance - 0.03 * inDance,
+    y: -RISE_ELLIE * rise,
+    stretch: 1 - 0.05 * rise * inDance - 0.03 * inDance,
     angle: -0.09 * swayAt(T) * inDance,
   }
 }
@@ -901,7 +927,7 @@ export const ties = part<TiesState>(
       const age = AGE(T)
       drawDoorLight(p, k, T)
       drawSunWedge(p, k, sunAt(T), 5.6 - 1.4 * smooth(T, 158.6, 161.4))
-      drawPool(p, k, pairAt(T) + 0.2, poolAt(T))
+      drawPool(p, k, pairAt(T) + 0.2 + 0.5 * TURN_OUT * turnOutAt(T), poolAt(T))
       drawPainting(p, k, weight, age)
       const [cx] = carlAt(T)
       drawWheelFrame(p, k, weight, wheelTurn(T), pawlAt(T), plateY(T, cx), age)
@@ -1013,16 +1039,18 @@ export const ties = part<TiesState>(
       key(TURNS[2], 2.7, 1.36),
       key(TURNS[3], 2.55, 1.42),
       key(152.6, 2.45, 1.48),
-      // Off to the gramophone after her, the wheel left behind.
-      key(153.9, 2.72, 2.0),
-      key(155.1, 2.92, 3.25),
-      // The dance, on the loudest bars of the cue. On its first downbeat the gramophone is whole in the left third,
-      // its record turning, the two of them coming into the middle of the frame; a slow crane up and out as they waltz
-      // down the hall, until on the turn out (bar 53) the whole of it is in: the gramophone, the floor, the desk and
-      // her painting; then in again onto the embrace, the desk and the painting whole at the right.
-      key(DANCE[0], 3.1, 4.3),
-      key(DANCE[2] + 0.2, 3.5, 4.93),
-      key(EMBRACE, 3.3, 5.9),
+      // Off to the gramophone after her, the wheel left behind: the pan sets off as soon as the bow tie is tied and
+      // gathers way, so it is still going strong as the music swells.
+      key(153.9, 2.7, 2.3),
+      key(155.1, 2.95, 3.2),
+      // The dance, on the swell. On its first downbeat the gramophone is in the left third, its record turning, the
+      // two of them coming into the frame; the crane goes on up and out through the swell as they waltz down the
+      // hall, and lands at its widest on its crest, 52's downbeat, as she turns out under his arm: the whole of it in,
+      // the gramophone, the floor, the desk and her painting. Then, as the music falls away, a slow drift in onto the
+      // embrace, the desk and the painting whole at the right.
+      key(DANCE[0], 3.2, 4.05),
+      key(DANCE[1], 3.5, 4.93),
+      key(EMBRACE, 3.3, 6.05),
       // The painting, lit: a long look, him small under it.
       key(LAMP + 0.45, 3.45, 7.15),
       // On the machine, the basket and him, her at the door, the painting whole over them all the way to the cut, so
