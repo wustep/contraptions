@@ -205,8 +205,8 @@ export const fireworks = part<FireworksState>(
       { t: TITAN_BURST, cells: 12.5, hold: [TITAN_X + 0.6, APEX[1] + 2.6], w: 0.9 },
       { t: TITAN_BURST + 0.46, cells: 18, hold: [TITAN_X + 1.8, GY - 7.1], w: 1 },
       // Down with it through the salutes, into the ash, and in close by the crate's fire.
-      { t: 145.8, cells: 15, hold: [TITAN_X + 3.8, GY - 5.6], w: 0.95 },
-      { t: 146.2, cells: 11, hold: [REST[0] - 0.6, GY - 3.6], w: 0.85 },
+      { t: 145.8, cells: 17.5, hold: [TITAN_X + 2.8, GY - 7.0], w: 0.97 },
+      { t: 146.25, cells: 11.5, hold: [REST[0] - 0.6, GY - 3.7], w: 0.85 },
       { t: DOWN, cells: 7, hold: [REST[0] - 0.4, GY - 1.8], w: 0.7 },
       { t: 147.3, cells: 3.9, hold: [REST[0] - 0.35, GY - 0.8], w: 0.85 },
       { t: ROLL, cells: 2.9, hold: [REST[0] - 0.3, GY - 0.6], w: 0.9 },
