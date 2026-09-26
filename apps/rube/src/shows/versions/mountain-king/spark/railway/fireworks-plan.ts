@@ -983,6 +983,11 @@ for (let i = 0; i < 9; i++) {
 }
 const MOON_THEN: Pt = [TITAN_X + 10.8, GY - 11.9]
 puff(TITAN_BURST + 0.4, MOON_THEN[0] - 0.3, MOON_THEN[1] + 0.1, 1.3, 3.0, 9, 0.38)
+// Down through the salutes the camera descends and the moon, holding its place in the frame, sinks through the world
+// past that bank (to about TITAN_X + 10.1, GY - 8.8 at 145.85 and TITAN_X + 9.2, GY - 4.8 at 146.3): two more banks
+// of the finale's smoke lie where it passes, so it stays a smudge behind the flash-bangs and never comes out crisp.
+puff(TITAN_BURST + 0.7, TITAN_X + 10.0, GY - 8.6, 1.0, 2.4, 9, 0.32)
+puff(TITAN_BURST + 1.05, TITAN_X + 9.0, GY - 4.9, 0.8, 2.0, 9, 0.3)
 puff(TITAN_FIRE + 0.05, TITAN_X, LIP - 0.6, 0.6, 2.4, 10, 0.45)
 puff(TITAN_FIRE + 0.15, TITAN_X + 0.5, GY - 0.3, 0.5, 1.8, 9, 0.3)
 PUFFS.sort((a, b) => a.at - b.at)
