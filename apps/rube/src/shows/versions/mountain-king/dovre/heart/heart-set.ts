@@ -1234,6 +1234,7 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   p.translate(qx * k, qy * k)
   const lift = mechanisms(T)
   drawRoom(p, c, L, lift)
+  drawPitLight(p, c, T)
   const fire = fireAt(T)
   const s = surge(T)
   // The fire's light over the whole room, stepping up with each mechanism it has lit.
@@ -1276,19 +1277,78 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   drawSparks(p, c, T)
   void VALVE_AT
   p.pop()
-  // Dark until he drops into it (the drum's frames look down the pit and must see only rock): the room is woken
-  // under the drum's light, on the downbeat he lands on.
-  const hide = 1 - smoothstep(T, T0 - 0.08, T0 + 0.12)
-  if (hide > 0.001) {
-    alphaFill(p, STONE.deep, hide)
+  // Dark until he drops into it (the drum's frames look down the pit and must see only rock). As he falls through
+  // its ceiling the cover lifts from the top down, a little ahead of him, so he is seen falling into a place: the
+  // room under the drum's firelight down the shaft and the banked coals, the machine near-black against it. The
+  // furnace wakes it on the downbeat he lands on.
+  const edge = coverEdge(T)
+  if (edge < COVER_BOTTOM) {
     p.noStroke()
     p.rectMode(p.CORNER)
-    p.rect((WALL_L - 0.6) * k, ROOM_TOP * k, (WALL_R - WALL_L + 1.2) * k, (PIT + 0.7 - ROOM_TOP) * k)
+    const x0 = (WALL_L - 0.6) * k
+    const w = (WALL_R - WALL_L + 1.2) * k
+    const top = Math.max(ROOM_TOP, edge)
+    alphaFill(p, STONE.deep, 1)
+    p.rect(x0, top * k, w, (COVER_BOTTOM - top) * k)
+    // The cover's upper edge is soft: a feather of bands over the cell above it.
+    if (edge > ROOM_TOP) {
+      const n = 10
+      for (let i = 0; i < n; i++) {
+        const y0 = edge - COVER_FEATHER * (1 - i / n)
+        if (y0 + COVER_FEATHER / n <= ROOM_TOP) continue
+        const yy = Math.max(ROOM_TOP, y0)
+        alphaFill(p, STONE.deep, (i + 0.5) / n)
+        p.rect(x0, yy * k, w, (y0 + COVER_FEATHER / n - yy) * k)
+      }
+    }
   }
 }
 
 /** The top of the heart's room (frame y), for the cover before its slot. */
 const ROOM_TOP = -6.3
+const COVER_BOTTOM = PIT + 0.7
+const COVER_FEATHER = 1.0
+/**
+ * When the cover lifts: he passes the room's ceiling about half a second before he lands (T0), and the cover's edge
+ * sweeps from the ceiling to the pit's floor in 0.42 s, starting slower than him (so it stays over his head until he
+ * is through) and running ahead of him (so the room is all there before he lands on the hammer).
+ */
+const OPEN_FROM = T0 - 0.5
+const OPEN_FOR = 0.42
+const coverEdge = (T: number): number => ROOM_TOP + (COVER_BOTTOM + COVER_FEATHER - ROOM_TOP) * smoothstep(T, OPEN_FROM, OPEN_FROM + OPEN_FOR)
+
+/**
+ * The drum's firelight falling down its pit into the heart as the skin bursts (he falls through the hole in the
+ * room's ceiling): a warm shaft widening to the floor by the hammer, and a pool where it lands. It is the room's only
+ * light till the furnace wakes, then it fades to a glimmer under the furnace's.
+ */
+function drawPitLight(p: p5, c: Pen, T: number): void {
+  const a = 0.16 * smoothstep(T, OPEN_FROM - 0.2, OPEN_FROM + 0.3) * (1 - 0.85 * smoothstep(T, T0, T0 + 1.6))
+  if (a <= 0.003) return
+  const { k } = c
+  const hx = (SHAFT[0] + SHAFT[1]) / 2
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const col = p.color(LAMP.glow)
+  const rgb = `${p.red(col)},${p.green(col)},${p.blue(col)}`
+  ctx.save()
+  // Three widths laid over each other, so the light is brightest down its middle and has no hard edge.
+  for (const [top, left, right, f] of [[0.3, 0.3, 1.5, 0.45], [0.55, 0.6, 2.4, 0.33], [0.85, 1.0, 3.3, 0.22]]) {
+    const g = ctx.createLinearGradient(0, ROOM_TOP * k, 0, PIT * k)
+    g.addColorStop(0, `rgba(${rgb},${a * f})`)
+    g.addColorStop(0.6, `rgba(${rgb},${a * f * 0.55})`)
+    g.addColorStop(1, `rgba(${rgb},${a * f * 0.25})`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((hx - top) * k, ROOM_TOP * k)
+    ctx.lineTo((hx + top) * k, ROOM_TOP * k)
+    ctx.lineTo((hx + right) * k, PIT * k)
+    ctx.lineTo((hx - left) * k, PIT * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.restore()
+  glow(p, c, hx + 0.9, 0.2, 2.2, a * 1.3)
+}
 
 /** The furnace blowing out as the halves crash into its mouth: a spray of embers up and out of it, once. */
 function drawBlast(p: p5, c: Pen, T: number): void {
