@@ -76,49 +76,59 @@ function carl(T: number): Pt {
 
 /* ------------------------------------------------------------------ the light over them */
 
-/** The sun's bars, over everything in the room and over the two of them. */
-function light(p: p5, c: Ctx, T: number): void {
+/**
+ * The sun's bars: light, not lines. A few broad bars, each a soft parallelogram whose ends lean with the sun's slant
+ * (no upright edge anywhere), laid on the wall, the floor and the chairs under the two of them (`strength` 1, in the
+ * part's draw, so they keep their colour), and once more very faintly over them (in its over), so they sit in it.
+ */
+function light(p: p5, c: Ctx, T: number, strength = 1): void {
   const { k } = c
   const b = officeBars(T)
+  if (b.a * strength <= 0.005) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const f = frame(p, k)
-  const ox = O
   ctx.save()
   ctx.beginPath()
   ctx.rect((f.x0 - 0.1) * k, CEIL * k, (f.x1 - f.x0 + 0.2) * k, (FLOOR + 0.06 - CEIL) * k)
   ctx.clip()
-  if (b.a > 0.005) {
-    ctx.globalCompositeOperation = 'screen'
-    const x0 = ox + b.x0
-    const x1 = ox + b.x1
-    // The jambs' edges soft, the far one softest; the whole stack's light falling off to the right.
-    const g = ctx.createLinearGradient((x0 - 0.06) * k, 0, (x1 + 0.08) * k, 0)
-    const col = mixHex(CLINIC.light, HOME.lamp, 0.25)
-    g.addColorStop(0, hexA(col, 0))
-    g.addColorStop(0.1, hexA(col, 0.5 * b.a))
-    g.addColorStop(0.55, hexA(col, 0.44 * b.a))
-    g.addColorStop(0.92, hexA(col, 0.2 * b.a))
-    g.addColorStop(1, hexA(col, 0))
-    ctx.fillStyle = g
-    const w = x1 - x0
-    const drop = w * b.slope
-    // Each bar three times, a little wider and fainter each time: a sun's soft edge, not a ruled line.
-    for (const [grow, a] of [[0.05, 0.35], [0.018, 0.55], [-0.02, 0.5]] as [number, number][]) {
-      ctx.globalAlpha = a
-      ctx.beginPath()
-      for (let i = 0; i < b.n; i++) {
-        const y = b.top + i * b.pitch - grow / 2
-        const h = b.lit + grow
-        ctx.moveTo(x0 * k, y * k)
-        ctx.lineTo(x1 * k, (y + drop) * k)
-        ctx.lineTo(x1 * k, (y + drop + h) * k)
-        ctx.lineTo(x0 * k, (y + h) * k)
-        ctx.closePath()
-      }
-      ctx.fill()
+  ctx.globalCompositeOperation = 'screen'
+  const x0 = O + b.x0
+  const x1 = O + b.x1
+  // The stack's light falling off to both ends, the far one longest.
+  const g = ctx.createLinearGradient((x0 - 0.5) * k, 0, (x1 + 0.3) * k, 0)
+  const col = mixHex(CLINIC.light, HOME.lamp, 0.3)
+  g.addColorStop(0, hexA(col, 0))
+  g.addColorStop(0.22, hexA(col, 0.42 * b.a * strength))
+  g.addColorStop(0.55, hexA(col, 0.36 * b.a * strength))
+  g.addColorStop(0.85, hexA(col, 0.14 * b.a * strength))
+  g.addColorStop(1, hexA(col, 0))
+  ctx.fillStyle = g
+  const w = x1 - x0
+  const drop = w * b.slope
+  // The ends lean with the sun: each bar's ends are further left the lower the bar.
+  const LEAN = 0.55
+  const n = 6
+  const pitch = 0.36
+  const lit = 0.19
+  // Each bar six times, from wide and faint to its own width: a soft edge all round, not a ruled one.
+  for (let pass = 0; pass < 6; pass++) {
+    const grow = 0.15 - pass * 0.034
+    ctx.globalAlpha = 0.24
+    ctx.beginPath()
+    for (let i = 0; i < n; i++) {
+      const y = b.top + 0.05 + i * pitch - grow / 2
+      const h = lit + grow
+      const lx = x0 - LEAN * (y - b.top) - grow * 0.6
+      const rx = x1 - LEAN * (y - b.top) + grow * 0.6
+      ctx.moveTo(lx * k, y * k)
+      ctx.lineTo(rx * k, (y + drop) * k)
+      ctx.lineTo((rx - LEAN * h) * k, (y + drop + h) * k)
+      ctx.lineTo((lx - LEAN * h) * k, (y + h) * k)
+      ctx.closePath()
     }
-    ctx.globalAlpha = 1
+    ctx.fill()
   }
+  ctx.globalAlpha = 1
   ctx.restore()
 }
 
@@ -152,9 +162,10 @@ export const doctor = part<DoctorState>(
       // His chair and hers, her seat pressed where she has sunk into it.
       drawVisitorChair(p, k, weight, O)
       drawVisitorChair(p, k, weight, O + OFFICE_APART, Math.max(0, ey) * 0.9, ex)
+      light(p, c, T)
       cold(p, c, T)
     },
-    over: (p, s, c) => light(p, c, c.t + s.begin),
+    over: (p, s, c) => light(p, c, c.t + s.begin, 0.16),
   },
   (slot) => {
     const dur = slot.end - slot.begin
