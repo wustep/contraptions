@@ -174,12 +174,9 @@ async function main(): Promise<void> {
   const merryGoRound = shipped.works.find((w) => w.work === 'merry-go-round')?.versions ?? []
   check('merry-go-round is Merry-Go-Round, one take, Opus 5.5, with no note',
     merryGoRound.map((v) => v.take).join(',') === 'opus55' && merryGoRound[0].title === 'Merry-Go-Round' && merryGoRound[0].label === 'Opus 5.5' && merryGoRound[0].note === undefined)
-  // Takes come in their files' path order, and `opus55-spark.show.ts` sorts before `opus55.show.ts`
-  // ('-' before '.'), so the pairs are read in take order here rather than in the picker's.
-  const mountainKing = (shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []).slice().sort((a, b) => (a.take < b.take ? -1 : a.take > b.take ? 1 : 0))
+  const mountainKing = shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []
   check('mountain-king is Mountain King, takes Opus 5.5 and Spark, with no notes',
-    mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5|Spark',
-    mountainKing.map((v) => `${v.take}=${v.label}`).join(', '))
+    mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5|Spark')
 
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
