@@ -156,7 +156,9 @@ function elliePath(carlX: (t: number) => number): Path {
   const vt = (T1[0] - 0.66 - Tr * (SEAM_V / 2)) / (leap + Tr / 2)
   e.run(SEAM_V, vt, Tr).hop(T1, PERCH)
   e.bob(SETTLE, 0.3, 0.05)
-  for (let i = 0; i < 4; i++) e.bob(LANDS[i], 0.3, 0.06)
+  // Her job while he works the plank: she counts each handful in, a hop on her tread as it drops into the slot, each
+  // a little higher than the last as the brass climbs.
+  for (let i = 0; i < 4; i++) e.bob(LANDS[i], 0.36, 0.1 + 0.025 * i)
   // The tyre: a start; then up to the jar and over with it.
   e.hold(TYRE).hop(T1, HUBCAP, 0.08)
   e.hold(113.85).hop(T2, UP1[0]).hold(114.7).hop(SEAT, UP1[1])
@@ -291,9 +293,12 @@ export const jar = part<JarState>(
 function shots(): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold: L(hold), w })
   return [
-    k(104.6, 5.0, [3.3, -1.3], 0.55),
-    k(107.0, 4.5, [5.1, -1.3], 0.9),
-    k(111.5, 4.15, [5.0, -1.2]),
+    // In with him to the machine, and close on it for the four handfuls: his plank, the coins' whole flight, the jar
+    // filling a notch at a time, and her on the ladder counting them in.
+    k(104.6, 4.6, [3.6, -1.2], 0.6),
+    k(106.9, 3.65, [5.2, -1.03], 0.95),
+    k(109.2, 3.6, [5.3, -1.02]),
+    k(111.5, 3.6, [5.2, -1.0]),
     // The tyre: in on the car through the window, him going over to look.
     k(113.5, 3.5, [3.72, -0.97]),
     k(114.3, 3.52, [3.68, -0.97]),

@@ -180,7 +180,9 @@ export function jarAt(t: number): { tilt: number; lid: number; jolt: number } {
   let tilt = 0
   let lid = 0
   // The tree's blow jolts it off its feet a little before it goes over.
-  const jolt = 0.05 * Math.max(0, ring(t - TREE, 0.12, 28)) + 0.03 * Math.max(0, ring(t - FALL, 0.1, 30))
+  let jolt = 0.05 * Math.max(0, ring(t - TREE, 0.12, 28)) + 0.03 * Math.max(0, ring(t - FALL, 0.1, 30))
+  // Each handful's clink: the jar gives the smallest hop in its cradle as the coins go in.
+  for (const land of LANDS) jolt += 0.012 * Math.max(0, ring(t - land, 0.09, 26))
   for (const p of POURS) {
     if (t < p.tip || t > p.back + 1.2) continue
     const s = t - p.tip
@@ -215,14 +217,19 @@ export function jarMouth(tilt: number): Pt {
   return [bx + JAR_H * Math.sin(tilt), by - JAR_H * Math.cos(tilt)]
 }
 
-/** A handful: three coins flung from the cup on a stroke, dropping into the lid's slot on the next downbeat. */
-export const PER_COIN = 0.04
-export const HANDFUL = 3
+/**
+ * A handful: five coins flung from the cup on a stroke, dropping into the lid's slot on the next downbeat, each
+ * handful a notch of brass you can see go up in the glass.
+ */
+export const PER_COIN = 0.028
+export const HANDFUL = 5
+/** The coins drop into the slot one after another, this far apart. */
+export const COIN_GAP = 0.028
 
 /** How full the jar is at `t` (0..1): a coin at a time, drained by each pour down to what it leaves. */
 export function fillAt(t: number): number {
   const events: { t: number; pour?: Pour }[] = []
-  for (const land of LANDS) for (let i = 0; i < HANDFUL; i++) events.push({ t: land + i * 0.03 })
+  for (const land of LANDS) for (let i = 0; i < HANDFUL; i++) events.push({ t: land + i * COIN_GAP })
   for (const p of POURS) events.push({ t: p.stop - 0.08, pour: p })
   events.sort((a, b) => a.t - b.t)
   let fill = 0

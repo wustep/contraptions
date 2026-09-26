@@ -7,7 +7,7 @@ import { drawChairs } from '../props/chairs'
 import { drawJar } from '../props/jar'
 import { INSIDE } from './inside'
 import {
-  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
+  AXLE, BOX, CHAIRS_X, CHUTE, CHUTE_LEN, COIN_GAP, CUP, FIXED, HALF, HANDFUL, HINGE, HUBCAP, JAR_H, JAR_W, LAMP, LADDER, LANDS, MANTLE, POURS, SLAMS,
   SLOT, TREE, TYRE, carAt, clamp01, cupAt, fillAt, jarAt, jarBase, jarMouth, ladderAt, lampAt, onPlank, plankAt, smoothstep, stormAt,
   sunAt,
 } from './jar-clock'
@@ -23,7 +23,7 @@ const X = (k: number) => (v: number) => v * k
 const G = 12
 
 /** A coin seen nearly edge on: a flat brass disc, turning, inked so it reads against brick; its face flashes pale as it turns to us. */
-function coin(p: p5, k: number, weight: number, x: number, y: number, spin: number, turn = 0, a = 1): void {
+function coin(p: p5, k: number, weight: number, x: number, y: number, spin: number, turn = 0, a = 1, glint = false): void {
   const w = 0.15
   const face = Math.abs(Math.sin(spin))
   const h = 0.022 + 0.07 * face
@@ -34,6 +34,12 @@ function coin(p: p5, k: number, weight: number, x: number, y: number, spin: numb
   p.strokeWeight(weight * 0.45)
   p.fill(alpha(p, mixHex(HOME.brass, HOME.shine, face * face * 0.7), a))
   p.ellipse(0, 0, w * k, h * k)
+  if (glint && face > 0.8) {
+    // As it turns its face to the light: a soft white catch on its upper rim, gone as it turns away.
+    p.noStroke()
+    p.fill(alpha(p, '#FFFFFF', ((face - 0.8) / 0.2) * 0.85 * a))
+    p.ellipse(-w * 0.18 * k, -h * 0.18 * k, w * 0.34 * k, h * 0.3 * k)
+  }
   p.pop()
 }
 
@@ -379,23 +385,31 @@ function seesaw(p: p5, c: Ctx, T: number): void {
   p.pop()
 }
 
-/** Each handful in the air: three coins off the cup on a stroke, over the room and down into the lid's slot. */
+/**
+ * Each handful in the air: five coins off the cup on a stroke, a loose spray that closes up over the room and drops
+ * into the lid's slot one after another on the next downbeat, turning and catching the light. Their flight is flatter
+ * than a thrown ball's (the cup flings them hard), so the whole of it stays in the frame over the machine.
+ */
+const COIN_G = 6.2
 function handfuls(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   SLAMS.forEach((slam, i) => {
     for (let j = 0; j < HANDFUL; j++) {
-      const r = slam + 0.03 + j * 0.03
-      const land = LANDS[i] + j * 0.03
+      const r = slam + 0.03 + j * 0.02
+      const land = LANDS[i] + j * COIN_GAP
       if (T < r || T >= land) continue
       const [sx, sy] = cupAt(r)
-      const from: Pt = [sx + (j - 1) * 0.04, sy - 0.02 * j]
-      const to: Pt = [SLOT[0] + (j - 1) * 0.035, SLOT[1]]
+      const off = j - (HANDFUL - 1) / 2
+      const from: Pt = [sx + off * 0.035, sy - 0.015 * Math.abs(off)]
+      const to: Pt = [SLOT[0] + off * 0.02, SLOT[1]]
       const D = land - r
       const u = (T - r) / D
-      const arc = (G * D * D) / 8
-      const cx = from[0] + (to[0] - from[0]) * u
+      // Spread apart in the air (each its own height), together again at the slot.
+      const arc = ((COIN_G * D * D) / 8) * (1 + 0.07 * off)
+      const spread = 0.09 * off * Math.sin(Math.PI * u)
+      const cx = from[0] + (to[0] - from[0]) * u + spread
       const cy = from[1] + (to[1] - from[1]) * u - arc * 4 * u * (1 - u)
-      coin(p, k, weight, cx, cy, (T - r) * (11 + j * 3), 0.3 * (j - 1))
+      coin(p, k, weight, cx, cy, (T - r) * (9 + j * 2.3) + j, 0.25 * off, 1, true)
     }
   })
 }
