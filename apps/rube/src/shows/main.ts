@@ -600,7 +600,9 @@ function renderWords(t: number): void {
       wordCards.set(c.key, node)
     }
     node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
-    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh}px`
+    // On a stage much taller than the frame, a card may ask to sit by the stage's own height (in the sky over it).
+    const tall = c.tall !== undefined && H > fh * 1.2
+    node.style.top = tall ? `${c.tall! * H + ((c.rise ?? 0) / 100) * fh}px` : `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh}px`
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`

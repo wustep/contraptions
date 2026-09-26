@@ -118,6 +118,11 @@ export interface TitleCard {
   rise?: number
   /** Where its top middle sits, as shares of the 16:9 frame. */
   at: [number, number]
+  /**
+   * Where its top sits on a stage taller than 16:9 (a phone held upright), as a share of the whole stage's height
+   * instead of the frame's: for a card that belongs in the sky over a scene rather than on it. Optional.
+   */
+  tall?: number
 }
 
 /** What a `.show.ts` file exports as its default. */
