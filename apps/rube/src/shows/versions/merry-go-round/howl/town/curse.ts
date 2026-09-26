@@ -2,16 +2,17 @@ import type p5 from 'p5'
 import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, part, smooth, type PartShot } from '../kit'
 import { TOWN, WITCH } from '../worlds'
-import { CURSE_AT, DISPLAY, DISPLAY_BRAKE, DISPLAY_FOLD, DISPLAY_ON, LAUGH, LOOM, TOWN_AT, displayPedal, glow, soft } from './town'
+import { CURSE_AT, DISPLAY, DISPLAY_BRAKE, DISPLAY_FOLD, DISPLAY_ON, DISPLAY_TICKS, LAUGH, LOOM, TOWN_AT, displayPedal, glow, soft } from './town'
 import { curve, ring, step } from './shop-kit'
 import { drawWitch } from './witch'
 
 /**
  * Night in the hat shop, and the curse (85.8 → 107.9): the town builder's.
  *
- * Closing (85.8 → 94.6, the waltz soft). Sophie is home, at the counter, the shop lamp-lit. She steps onto the
- * pedal of the display carousel by the counter (88.33): a step on each of three downbeats brakes it (89.10, 90.18,
- * 91.31) and it folds its arms down for the night (92.42). Out in the street, unseen by her, a huge dark shape comes
+ * Closing (85.8 → 94.6, the waltz soft). Sophie is home, at the counter, the shop lamp-lit, the display carousel by
+ * the counter ticking round on the downbeats (85.80, 86.89, 87.98). She turns to it and steps onto its pedal (88.33):
+ * each tick is smaller under her weight (89.10, 90.18), it stops on 91.31, and it folds its arms down for the night
+ * (92.42). Out in the street, unseen by her, a huge dark shape comes
  * slowly along to the door, a heavy step on each of those beats. She goes to lock the door.
  *
  * The Witch (94.6 → 101.3). On w41 (94.645) the bell over the door swings and the door opens by itself. The Witch of
@@ -43,7 +44,7 @@ const GLANCE = 106.429
 const LAST = 106.812
 
 /** Every strike of this part, in show seconds. */
-export const CURSE_HITS: number[] = [DISPLAY_ON, ...DISPLAY_BRAKE, DISPLAY_FOLD, BELL, ...SHOVES, ...LOOM, ...LAUGH].sort((a, b) => a - b)
+export const CURSE_HITS: number[] = [...DISPLAY_TICKS, DISPLAY_ON, ...DISPLAY_BRAKE, DISPLAY_FOLD, BELL, ...SHOVES, ...LOOM, ...LAUGH].sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ where things are (town cells) */
 
@@ -67,7 +68,11 @@ const STAND = 5.8
 /** Her x before the curse: to the pedal, on it, off toward the door, stopped by the bell, backing away. */
 const before = curve([
   [85.8, O[0] - 0.5, 0],
-  [86.7, O[0] - 0.5, 0],
+  // At the counter as the carousel ticks round beside her; on its second tick she turns to it, a step, and on the
+  // third goes to its pedal.
+  [DISPLAY_TICKS[1], O[0] - 0.5, 0],
+  [DISPLAY_TICKS[1] + 0.5, O[0] - 0.3, 0.12],
+  [DISPLAY_TICKS[2], O[0] - 0.24, 0],
   [DISPLAY_ON, PEDAL_X - 0.24, 0.18],
   [DISPLAY_ON + 0.45, PEDAL_X - 0.21, 0],
   [DISPLAY_FOLD + 0.05, PEDAL_X - 0.21, 0],
@@ -150,7 +155,9 @@ function witchLean(t: number): number {
   LOOM.forEach((at, i) => {
     lean -= 0.035 * step(t - at, 0.08) * (i < 5 ? 1 : 0)
   })
-  return lean * (1 - smooth(t, CURSE + 0.3, 102.4))
+  // On the curse her whole bulk goes forward after the flung glove, and settles back.
+  const after = -0.07 * smooth(t, CURSE + 0.03, CURSE + 0.32) * (1 - smooth(t, CURSE + 0.45, 102.3))
+  return lean * (1 - smooth(t, CURSE + 0.3, 102.4)) + after
 }
 /** Her mouth: open in the laugh. */
 function witchMouth(t: number): number {
@@ -161,8 +168,19 @@ function witchMouth(t: number): number {
   }
   return Math.min(1, m * 1.3) * (1 - smooth(t, 105.8, 106.6))
 }
-/** Her hand, out for the curse. */
-const witchHand = (t: number): number => smooth(t, LOOM[4], CURSE) * (1 - smooth(t, CURSE + 0.4, CURSE + 1.2))
+/**
+ * Her hand, out for the curse: out of the fur on the last loom, drawn back a moment before the note (the wind-up),
+ * flung a hand's width further on it, with a small recoil, held open while the gust goes, then back into the fur.
+ */
+function witchHand(t: number): number {
+  const out = 0.62 * smooth(t, LOOM[4], LOOM[4] + 0.26)
+  const back = 0.14 * smooth(t, LOOM[4] + 0.2, CURSE - 0.005)
+  const s = t - CURSE
+  const fling = s <= 0 ? 0 : 0.7 * (1 - Math.exp(-s / 0.035)) + 0.07 * Math.exp(-s / 0.18) * Math.sin(s * 13)
+  return (out - back + fling) * (1 - smooth(t, CURSE + 0.7, CURSE + 1.5))
+}
+/** Her glove's fingers, spread wide on the curse and closing as the hand goes back. */
+const witchSpread = (t: number): number => (t <= CURSE ? 0 : (1 - Math.exp(-(t - CURSE) / 0.04)) * (1 - smooth(t, CURSE + 0.7, CURSE + 1.3)))
 /** She faces into the shop, and turns to go once she is out of the door. */
 const witchFace = (t: number): number => -1 + 2 * smooth(t, 104.9, 105.35)
 
@@ -196,8 +214,11 @@ function curseHold(t: number): number {
 /** The gust's front: out of the glove, down across the gap and past her, then rolling left along the floor. */
 const GUST_RUN = 5.1
 const gustFront = (u: number): number => (u <= 0 ? 0 : GUST_RUN * (1 - Math.exp(-u / 0.5)))
+/** Where the gust leaves the glove: where the fling has it a moment after the note. */
+let gustFrom: Pt | null = null
 function gustPath(d: number): Pt {
-  const [gx, gy] = glove(CURSE)
+  gustFrom ??= glove(CURSE + 0.06)
+  const [gx, gy] = gustFrom
   // Low over the boards once it is down: a roll a hand's height deep.
   return [gx - d, -0.24 + (gy + 0.24) * Math.exp(-d / 0.24)]
 }
@@ -233,7 +254,9 @@ function gust(t: number): Puff[] {
     const rise = (climbs ? 1.6 + 0.6 * hash(i, 6, 51) : 0.2 + 0.4 * hash(i, 6, 51)) * (1 - Math.exp(-age / (climbs ? 0.7 : 1.0)))
     const r0 = 0.36 + 0.3 * hash(i, 7, 51)
     const r = r0 * (0.6 + 0.9 * (1 - Math.exp(-age / 0.6))) * (climbs ? 1.2 : 1)
-    const a = (0.32 + 0.16 * hash(i, 8, 51)) * smooth(age, 0, 0.06) * Math.exp(-age / life) * (1 - 0.3 * (i / PUFFS))
+    // The first dozen are there on the note's own frame, dense and dark at the glove; the rest fade in as shed.
+    const first = i < 12
+    const a = (first ? 0.44 + 0.12 * hash(i, 8, 51) : 0.32 + 0.16 * hash(i, 8, 51)) * smooth(age, 0, first ? 0.012 : 0.06) * Math.exp(-age / life) * (1 - 0.3 * (i / PUFFS))
     out.push({ x: px + Math.cos(roll) * rr, y: py - depth + Math.sin(roll) * rr * 0.6 - rise, r, a })
   }
   return out
@@ -283,9 +306,9 @@ export const curse = part<CurseState>(
   (slot): PartShot[] => {
     const H = (x: number, y: number): Pt => [x - O[0], y - O[1]]
     return [
-      // Home at the counter, the lamp lit; then the carousel by it, turned down for the night.
-      { t: 86.4, cells: 3.7, hold: H(6.55, -0.62), w: 1 },
-      { t: DISPLAY_ON, cells: 3.9, hold: H(6.75, -0.95), w: 1 },
+      // Home at the counter, the lamp lit, the carousel beside her ticking round: the frame opens on the balcony's
+      // (wider, watching Howl go) and settles in on the two of them by the pedal.
+      { t: DISPLAY_ON, cells: 4.1, hold: H(6.75, -0.95), w: 1 },
       // While she brakes the carousel the frame opens out to the right, onto the street past the door: the vast dark
       // shape comes into it on the first heavy step (91.31) and on along the street to the door, the camera easing a
       // little toward the door on each step. Dread before the bell.
@@ -439,6 +462,7 @@ function drawTheWitch(p: p5, k: number, W: number, ink: string, t: number): void
     squash: witchSquash(t, x),
     mouth: witchMouth(t),
     hand: witchHand(t),
+    spread: witchSpread(t),
     look: [-1, 0.8],
     dark: x > W1 + 0.3 ? 0.55 : 0.3,
   })
