@@ -1420,21 +1420,40 @@ function drawJet(p: p5, k: number, t: number): void {
     const y = JET_AT[1] + 0.1 - 1.5 * age * (1 - 0.3 * u)
     puff(p, k, x, y, 0.35 + 0.7 * Math.sqrt(u), steam, 0.17 * q * Math.pow(1 - u, 1.4) * Math.min(1, age / 0.15), 0.55)
   }
+  // The jet: a body of water, not a line: a translucent sheath round a brighter core, thick while she drives the
+  // brake down, and toward its end it breaks up into drops of every size that spread as they fall.
   p.push()
   p.noFill()
   p.strokeCap(p.ROUND)
-  p.stroke(water)
-  let prev: Pt | null = null
-  let prevQ = 0
-  for (let a = 0; a <= JET_T + 1e-9; a += 1 / 90) {
-    const q = flow(t - a)
-    const pt: Pt = [nx + JET_V[0] * a, ny + JET_V[1] * a + 0.5 * G * a * a]
-    if (prev && q > 0.03 && prevQ > 0.03) {
-      p.strokeWeight((0.018 + 0.06 * Math.min(q, prevQ)) * k)
-      p.line(prev[0] * k, prev[1] * k, pt[0] * k, pt[1] * k)
+  const core = mixHex(water, TOWN.plaster, 0.35)
+  for (const [col, wMul, aMul] of [[water, 1.9, 0.35], [core, 1, 0.9]] as [string, number, number][]) {
+    let prev: Pt | null = null
+    let prevQ = 0
+    for (let a = 0; a <= JET_T * 0.78 + 1e-9; a += 1 / 90) {
+      const q = flow(t - a)
+      const pt: Pt = [nx + JET_V[0] * a, ny + JET_V[1] * a + 0.5 * G * a * a]
+      if (prev && q > 0.03 && prevQ > 0.03) {
+        const qq = Math.min(q, prevQ)
+        p.stroke(alpha(p, col, aMul * Math.min(1, qq * 2.5)))
+        p.strokeWeight((0.03 + 0.085 * qq) * wMul * k)
+        p.line(prev[0] * k, prev[1] * k, pt[0] * k, pt[1] * k)
+      }
+      prev = pt
+      prevQ = q
     }
-    prev = pt
-    prevQ = q
+  }
+  p.noStroke()
+  for (let a = JET_T * 0.62; a <= JET_T + 1e-9; a += 1 / 150) {
+    const q = flow(t - a)
+    if (q < 0.05) continue
+    const n = Math.round((t - a) * 150)
+    for (let j = 0; j < 2; j++) {
+      const sx = (hash(n, j, 83) - 0.5) * 0.9 * (a - JET_T * 0.62)
+      const sy = (hash(n, j, 89) - 0.5) * 0.6 * (a - JET_T * 0.62)
+      const r = (0.018 + 0.04 * hash(n, j, 97)) * (0.6 + q)
+      p.fill(alpha(p, core, 0.85 * Math.min(1, q * 2)))
+      p.circle((nx + JET_V[0] * a + sx) * k, (ny + JET_V[1] * a + 0.5 * G * a * a + sy) * k, 2 * r * k)
+    }
   }
   p.pop()
 }

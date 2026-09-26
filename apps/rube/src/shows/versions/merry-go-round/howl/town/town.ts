@@ -96,8 +96,14 @@ export function skyAt(t: number): { top: string; low: string; dark: number; war:
 /** How lit the shop's inside is: dark before the dawn, lit by the morning, lamp-dim at night. 0..1. */
 export function shopLight(t: number): number {
   if (t < SEAM.curse) return 0.1 + 0.9 * smooth(t, 0.4, 13)
+  // The war: the shop's lamp goes out with the town's blackout (the last house's light, 210.814), and the shop stands
+  // dark, its workroom shut away in the night, until she comes back in.
+  if (t > 200) return 0.2 * (1 - smooth(t, 210.6, 211.3))
   return 0.2
 }
+
+/** The war's blackout for the shop's own house: its windows go dark on the build's bar 8 with the street's. */
+const blackedOut = (t: number): boolean => t >= 210.814 && t < 240
 
 /** The door's openings: [opens from, open at, shuts from, shut at]. The morning, the curse (the Witch, then Sophie), the war. */
 const OPENINGS: [number, number, number, number][] = [
@@ -683,7 +689,7 @@ function drawShop(p: p5, k: number, W: number, ink: string, t: number, tone: Ton
     p.strokeWeight(W * 0.75)
     p.fill(tone(wall))
     p.rect(X(cx - 0.5), X(dy), X(1.0), X(1.1))
-    p.fill(night ? TOWN.glow : tone(mixHex(TOWN.slateDark, TOWN.canal, 0.3)))
+    p.fill(night && !blackedOut(t) ? TOWN.glow : tone(mixHex(TOWN.slateDark, TOWN.canal, 0.3)))
     p.rect(X(cx - 0.28), X(dy + 0.2), X(0.56), X(0.72))
     p.fill(tone(TOWN.slateDark))
     p.triangle(X(cx - 0.65), X(dy + 0.02), X(cx + 0.65), X(dy + 0.02), X(cx), X(dy - 0.7))
@@ -714,7 +720,7 @@ function drawShop(p: p5, k: number, W: number, ink: string, t: number, tone: Ton
     const bays = 4
     for (let b = 0; b < bays; b++) {
       const cx = x0 + (hw * (b + 0.5)) / bays
-      window(p, k, W, ink, { x: cx - 0.34, y: yb - 2.0, w: 0.68, h: 1.35 }, 1, night && (b + s) % 2 === 0, tone, true)
+      window(p, k, W, ink, { x: cx - 0.34, y: yb - 2.0, w: 0.68, h: 1.35 }, 1, night && !blackedOut(t) && (b + s) % 2 === 0, tone, true)
     }
   }
 
