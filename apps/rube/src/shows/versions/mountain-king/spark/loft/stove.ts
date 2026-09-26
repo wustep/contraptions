@@ -203,8 +203,9 @@ function lane(slot: { begin: number; end: number }): Seg[] {
 
   // Off the rack, at the seam's velocity, down onto the frame.
   hop(LANDED, LAND)
-  // Riding the frame round and down; a crouch, and off it on the eighth.
-  ride(seatAt, TAKEOFF - 0.17)
+  // Riding the frame round and down (sampled finely enough that each 60 ms drop of the ratchet is a drop, stopping
+  // dead on its note); a crouch, and off it on the eighth.
+  ride(seatAt, TAKEOFF - 0.17, 0.008)
   crouch(TAKEOFF, seatAt)
   // A hop onto the ladle, the slide down it, the skid along the boards: one pace that runs down, from the handle
   // through the floor to the reel.
@@ -221,7 +222,7 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   push({ to: hopFrom, dur: HOP_UP - FLOOR_AT, ramp: [vFloor, vHop] }, HOP_UP)
   // Up onto the reel, and riding it as it rolls, a step a note, to rest against the tail.
   hop(upOn, ON_SPOOL)
-  ride(onSpool, TWITCH)
+  ride(onSpool, TWITCH, 0.01)
   // The twitch: it flinches up off the reel and back down onto it; then gathers itself and hops onto the tail.
   const flinch = (t: number): Pt => {
     const [x, y] = onSpool(t)

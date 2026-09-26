@@ -54,8 +54,15 @@ function heights(to: number, n: number): number[] {
   return out
 }
 
-/** The vent's cap: the top of the dome, this far down from the crown. */
-const CAP = 0.85
+/**
+ * The parachute valve: a small disc of fabric over the crown, this far down from it. It is a piece of the dome (it
+ * follows the dome's curve), so the dome reads whole when it is shut.
+ */
+const CAP = 0.33
+/** How far the valve's seam (a ring round the dome) bows down across the front: the regatta is seen a little from above. */
+const BOW = 0.11
+/** How much of the plan's vent lift the valve shows: a short lift, so the opening is a narrow crescent. */
+const LIFT = 0.45
 
 export interface Pose {
   /** The nozzle, world cells. */
@@ -261,43 +268,82 @@ export function drawEnvelope(p: p5, look: Look, b: Balloon, pose: Pose, warm: nu
     ctx.restore()
   }
 
-  // The vent's cap on the crown, lifted by `vent`, and the dark of the hole under it.
-  const up = rot([0, -pose.vent], pose.a)
-  const capPose: Pose = { ...pose, n: [pose.n[0] + up[0], pose.n[1] + up[1]] }
-  if (pose.vent > 0.01) {
-    const r = radius(b, top)
+  drawValve(p, look, b, pose, warm)
+}
+
+/**
+ * The parachute valve on the crown: a small disc of the dome's own curve, sewn in on a seam that bows down across the
+ * front. When the plan opens it (`pose.vent`), the hot air pushes it up off the seam: it billows up most over the
+ * middle and stays sewn on at the seam's two ends, so the opening under its front edge is a narrow dark crescent that
+ * tapers to nothing at the sides, with the shroud lines running down from its hem inside the envelope. The hot air
+ * goes up out of it as a soft plume.
+ */
+function drawValve(p: p5, look: Look, b: Balloon, pose: Pose, warm: number): void {
+  const { k, weight } = look
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const ink = hz(INK, look)
+  const haze = look.haze ?? 0
+  const top = b.H - CAP
+  const rc = radius(b, top)
+  const e = BOW * rc
+  // Never more than the seam's own bow, so the crescent's upper edge stays under the ring's back half.
+  const lift = Math.min(1.6 * e, LIFT * pose.vent)
+  const open = lift > 0.004
+  const N = 16
+  const q = (x: number): number => Math.sqrt(Math.max(0, 1 - (x / rc) * (x / rc)))
+  /** A point of the valve (envelope cells), pushed up by the air: most in the middle, none at the seam's ends. */
+  const V = (x: number, h: number): Pt => toWorld(pose, x, h + lift * q(x))
+  /** The seam's ring at `s` (-1..1 across): its front half (`side` -1, bowing down) or its back half (+1). */
+  const ring = (s: number, side: -1 | 1): Pt => toWorld(pose, rc * s, top + side * e * Math.sqrt(Math.max(0, 1 - s * s)))
+  const hemAt = (s: number): Pt => V(rc * s, top - e * Math.sqrt(Math.max(0, 1 - s * s)))
+
+  if (open) {
+    // The opening: the seam's whole ring, dark inside (the burner's light warms it a little), clipped to the dome so
+    // its ends never stand proud of the silk. The valve, drawn after, covers all of it but the crescent in front.
+    const whole = silhouette(b, pose, b.H, 22)
     const hole: Pt[] = []
-    for (let i = 0; i <= 14; i++) {
-      const s = -1 + (2 * i) / 14
-      hole.push(toWorld(pose, r * s, top + 0.14 * r * Math.sqrt(1 - s * s) * 0.6))
-    }
-    for (let i = 14; i >= 0; i--) {
-      const s = -1 + (2 * i) / 14
-      hole.push(toWorld(pose, r * s, top - 0.12 * r * Math.sqrt(1 - s * s) * 0.6))
-    }
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.7)
-    p.fill(hz(mixHex(INK, b.silk.cap, 0.18), look))
+    for (let i = 0; i <= N; i++) hole.push(ring(-1 + (2 * i) / N, -1))
+    for (let i = N; i >= 0; i--) hole.push(ring(-1 + (2 * i) / N, 1))
+    const dark = mixHex(mixHex(INK, b.silk.cap, 0.14), '#B8583A', 0.22 * Math.min(1, warm))
+    ctx.save()
+    pathOf(ctx, k, whole)
+    ctx.clip()
+    p.noStroke()
+    p.fill(hz(dark, look))
     poly(p, k, hole)
-    // Its cords, from the cap's rim down to the dome's.
-    p.stroke(rgba(ink, 0.7))
-    p.strokeWeight(weight * 0.5)
-    for (const s of [-0.8, -0.3, 0.3, 0.8]) {
-      const [x0, y0] = toWorld(pose, r * s, top)
-      const [x1, y1] = toWorld(capPose, r * s * 0.98, top)
+    // The shroud lines: from the valve's hem down and in, into the dark of the envelope.
+    pathOf(ctx, k, hole)
+    ctx.clip()
+    p.noFill()
+    p.stroke(rgba(hz(mixHex(b.silk.cap, REGATTA.ivory, 0.3), look), 0.5 * (1 - haze)))
+    p.strokeWeight(weight * 0.45)
+    for (const s of [-0.7, -0.35, 0, 0.35, 0.7]) {
+      const [x0, y0] = hemAt(s)
+      const [x1, y1] = toWorld(pose, rc * s * 0.3, top - 2.4)
       p.line(x0 * k, y0 * k, x1 * k, y1 * k)
     }
+    ctx.restore()
+    // The lip of the opening: a fine line where the dome's silk turns in.
+    p.noFill()
+    p.stroke(rgba(ink, 0.55))
+    p.strokeWeight(weight * 0.5)
+    p.beginShape()
+    for (let i = 0; i <= N; i++) {
+      const [x, y] = ring(-1 + (2 * i) / N, -1)
+      p.vertex(x * k, y * k)
+    }
+    p.endShape()
   }
+
   // Out of the open vent, the hot air going up: a soft plume of warm light with no edge, what the spark rides out on.
   if (pose.vent > 0.02) {
-    const r = radius(b, top)
-    const [vx, vy] = toWorld(pose, 0, b.H)
+    const [vx, vy] = V(0, b.H)
     const on = Math.min(1, pose.vent / 0.3)
     const tall = 2.6 * on
-    const a = on * (1 - (look.haze ?? 0))
+    const a = on * (1 - haze)
     ctx.save()
     ctx.translate(vx * k, (vy - tall * 0.35) * k)
-    ctx.scale(Math.max(0.2, (r * 0.55) / Math.max(0.1, tall)), 1)
+    ctx.scale(Math.max(0.2, (rc * 0.8) / Math.max(0.1, tall)), 1)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, tall * k)
     g.addColorStop(0, `rgba(255, 214, 150, ${0.26 * a})`)
     g.addColorStop(0.55, `rgba(255, 214, 150, ${0.1 * a})`)
@@ -306,20 +352,63 @@ export function drawEnvelope(p: p5, look: Look, b: Balloon, pose: Pose, warm: nu
     ctx.fillRect(-tall * k, -tall * k, 2 * tall * k, 2 * tall * k)
     ctx.restore()
   }
-  const cap: Pt[] = []
-  const hc = heights(CAP, 8).map((h) => b.H - CAP + h)
-  for (const h of hc) cap.push(toWorld(capPose, radius(b, h), h))
-  for (let i = hc.length - 1; i >= 0; i--) cap.push(toWorld(capPose, -radius(b, hc[i]), hc[i]))
+
+  // The valve: the dome's curve over the crown, its hem the seam's front edge.
+  const hc = heights(CAP, 8).map((h) => top + h)
+  const arc: Pt[] = []
+  for (const h of hc) arc.push(V(radius(b, h), h))
+  for (let i = hc.length - 2; i >= 0; i--) arc.push(V(-radius(b, hc[i]), hc[i]))
+  const hem: Pt[] = []
+  for (let i = 1; i < N; i++) hem.push(hemAt(-1 + (2 * i) / N))
+  const valve = [...arc, ...hem]
+  p.noStroke()
+  p.fill(hz(b.silk.cap, look))
+  poly(p, k, valve)
+  ctx.save()
+  pathOf(ctx, k, valve)
+  ctx.clip()
+  // Its own gores' seams, carrying the load tapes' meridians on up to the crown.
+  if (!look.simple) {
+    p.noFill()
+    p.stroke(rgba(ink, 0.3))
+    p.strokeWeight(weight * 0.4)
+    for (let j = 2; j < 8; j += 2) {
+      const s = Math.sin(-Math.PI / 2 + (j * Math.PI) / 8)
+      p.beginShape()
+      for (const h of hc) {
+        const [x, y] = V(radius(b, h) * s, h - e * Math.sqrt(Math.max(0, 1 - s * s)) * (1 - (h - top) / CAP))
+        p.vertex(x * k, y * k)
+      }
+      p.endShape()
+    }
+  }
+  // The shade on the side away from the sun, the sun on the other, as on the dome under it.
+  p.noStroke()
+  const shade: Pt[] = []
+  for (const h of hc) shade.push(V(-radius(b, h), h - e))
+  for (let i = hc.length - 1; i >= 0; i--) shade.push(V(-radius(b, hc[i]) * 0.38, hc[i] - e))
+  p.fill(rgba(INK, 0.17 * (1 - haze)))
+  poly(p, k, shade)
+  const sun: Pt[] = []
+  for (const h of hc) sun.push(V(radius(b, h) * 0.72, h - e))
+  for (let i = hc.length - 1; i >= 0; i--) sun.push(V(radius(b, hc[i]) * 1.02, hc[i] - e))
+  p.fill(rgba(REGATTA.sun, 0.25 * (1 - haze) * (1 - 0.7 * (look.dusk ?? 0))))
+  poly(p, k, sun)
+  ctx.restore()
+  // Outlined over the top (it is the dome's own edge there); the hem is a sewn seam, fine, not a cut.
+  p.noFill()
   p.stroke(ink)
   p.strokeWeight(weight)
-  p.fill(hz(b.silk.cap, look))
-  poly(p, k, cap)
-  p.noStroke()
-  p.fill(rgba(REGATTA.sun, 0.25 * (1 - (look.haze ?? 0))))
-  const capRim: Pt[] = []
-  for (const h of hc) capRim.push(toWorld(capPose, radius(b, h) * 0.75, h))
-  for (let i = hc.length - 1; i >= 0; i--) capRim.push(toWorld(capPose, radius(b, hc[i]), hc[i]))
-  poly(p, k, capRim)
+  p.beginShape()
+  for (const [x, y] of arc) p.vertex(x * k, y * k)
+  p.endShape()
+  p.stroke(rgba(ink, open ? 0.7 : 0.4))
+  p.strokeWeight(weight * (open ? 0.55 : 0.45))
+  p.beginShape()
+  p.vertex(arc[arc.length - 1][0] * k, arc[arc.length - 1][1] * k)
+  for (const [x, y] of hem) p.vertex(x * k, y * k)
+  p.vertex(arc[0][0] * k, arc[0][1] * k)
+  p.endShape()
 }
 
 /* ------------------------------------------------------------------ the burner and its jet */

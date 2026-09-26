@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { sparkIn } from '../fx'
+import { sparkIn, wickCatch } from '../fx'
 import { LOFT } from '../worlds'
 import { DOOR } from './layout'
 import { doorOpen, fireRoar } from './stove-door'
@@ -33,7 +33,7 @@ export function lightAt(t: number): Light {
     t,
     sx: s?.x ?? 0,
     sy: s?.y ?? 0,
-    power: s ? Math.min(1.3, s.heat) * (s.hidden ? 0.35 : 1) : 0,
+    power: s ? (Math.min(1.3, s.heat) + 0.4 * wickCatch(t)) * (s.hidden ? 0.35 : 1) : 0,
     open: doorOpen(t),
     roar: fireRoar(t),
     flick,
