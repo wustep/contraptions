@@ -7,12 +7,14 @@ import { drawConductor } from '../fletcher'
 import { alpha, frame, hash, scenery, type Ctx } from '../kit'
 import { CARNEGIE, CHORD, CUTOFF, FINAL, LAST_CHORD, SOLO, level, SHOUT_ORIGIN, SHOUT_PERIOD } from '../music'
 import { HALL, KIT } from '../worlds'
-import { baseAt, bowAt, crashAskew, fletcherAt, floorAt, poseAt } from './conductor'
+import { baseAt, bowAt, crashAskew, fletcherAt, floorAt, hushDoor, poseAt, riseAt, rubatoOn } from './conductor'
 import { ROLL, rolling } from './finale-clock'
 import { drawFinaleBody } from './finale-rig'
+import { CUE_FROM, cueAt, type Cue } from './light'
 import { drawDrummerBody } from './solo-rig'
 import { ARCH, DOOR, FLOOR, JIM_WINGS, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
 import { sinceStroke } from './strokes'
+import { drawLeafAt, drawOpenDoorway } from './sabotage-set'
 
 /**
  * Carnegie Hall: the stage and everything on it that is not a part's own machine. Scenery, drawn from show time,
@@ -29,8 +31,8 @@ import { sinceStroke } from './strokes'
  *   Fletcher sets it straight (`conductor.ts`), its snare trembling under the finale's roll, its cymbals choked on
  *   the cut-off;
  * - Fletcher's rig from the solo's first stroke (the sabotage draws him before);
- * - and the light: the whole stage for the last chorus, the band down into the dark on the cut-off and a pool on
- *   the kit for the solo, the band lit again for the last chord, and everything down to the dark under the credits.
+ * - and the light (`light.ts`): one scored cue from the cut-off before the solo to the dark under the credits, read
+ *   by every light here and by the dark laid over the stage after the parts' machines (`hallDark`).
  *
  * The stage draws in `rectMode(CENTER)` (`engine.ts`); everything here is laid out by corners, so the hall sets
  * `CORNER` inside its own push.
@@ -51,40 +53,19 @@ const MOULD = 0.6
 /** The edge of anything dark on the stage: its own black, never the cream ink (light tells it from the wall). */
 const EDGE = '#050404'
 
-/**
- * The hall's lights coming up after the match cut from the road: the cut opens on the road's darkness, and the
- * stage wakes on the chorus's first big hit (243.297).
- */
-export const LIGHTS_UP = 243.297
-const wake = (t: number): number => 0.12 + 0.88 * easeInOutSine(clamp((t - (LIGHTS_UP - 0.08)) / 0.35))
-const ease = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))
+export { LIGHTS_UP } from './light'
 
-/** How lit the band is at `t`, 0..1: up for the chorus, down after the cut-off, up for the last chord, down at the end. */
+/** How lit the band is at `t`, 0..1 (the cue's band channel). */
 export function bandLight(t: number): number {
-  if (t < LIGHTS_UP + 0.5) return wake(t)
-  if (t < CUTOFF) return 1
-  if (t < LAST_CHORD - 0.05) return 1 - 0.72 * ease(t, CUTOFF, CUTOFF + 2.2)
-  if (t < FINAL) return 0.28 + 0.72 * ease(t, LAST_CHORD - 0.05, LAST_CHORD + 0.13)
-  return 1 - 0.92 * ease(t, FINAL + 0.6, FINAL + 7)
+  return cueAt(t).band
 }
 
-/** The end of the show's light: the spot on the drummer closes over the last three seconds of the credits. */
-const SPOT_OUT: [number, number] = [572.2, 575.3]
-
-/** How lit the kit is at `t`: the stage's light, then the solo's pool; at the end it stays in its spot to the last. */
+/** How lit the kit's lacquer is at `t` (the cue's; the rubato's metronome draws its kit with it too). */
 export function kitLight(t: number): number {
-  if (t < LIGHTS_UP + 0.5) return wake(t)
-  if (t < FINAL) return 1
-  return (1 - 0.18 * ease(t, FINAL + 1.2, FINAL + 9)) * (1 - 0.8 * ease(t, SPOT_OUT[0], SPOT_OUT[1]))
+  return cueAt(t).kit
 }
 
-/**
- * The solo's pool of light on the kit: it gathers as the band's chord is cut off; after the last cut-off it stays on
- * him (the band, the piano and the house go dark round it) and closes over the credits' last seconds.
- */
-export function poolLight(t: number): number {
-  return ease(t, CUTOFF - 0.3, SOLO + 0.35) * (1 - 0.12 * ease(t, FINAL + 1, FINAL + 8)) * (1 - 0.9 * ease(t, SPOT_OUT[0], SPOT_OUT[1]))
-}
+const ease = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))
 
 /** How much the band's horns are up at `t` (0 in their laps, 1 at their mouths). */
 function hornsUp(t: number): number {
@@ -140,7 +121,7 @@ export const hall = scenery<HallState>({
     drawFinaleBody(p, c, T)
     drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), askew: { crash: crashAskew(T) } })
     p.pop()
-    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), base: baseAt(T), bow: bowAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * bandLight(T)) })
+    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), base: baseAt(T), bow: bowAt(T), rise: riseAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * Math.min(1, bandLight(T))) })
     p.pop()
   },
 })
@@ -159,7 +140,8 @@ function opening(ctx: CanvasRenderingContext2D, k: number, inset = 0): void {
 
 function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, T: number): void {
   const { k, weight } = c
-  const lit = 0.35 + 0.65 * bandLight(T)
+  const q = cueAt(T)
+  const lit = 0.35 + 0.65 * Math.min(1, q.band)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   // The hall round the arch: its dark front wall.
   p.noStroke()
@@ -191,12 +173,13 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, T: number): void {
     if (x > ARCH.x1) break
     p.rect((x + 0.06) * k, top * k, (W - 0.12) * k, (FLOOR - top) * k)
   }
-  // The light on the back wall, as the practice room's lamp lights its wall, made grand: a warm field behind the kit
-  // and the podium (the solo's spot), and one behind the band (the band's light), falling to the dark at the arch and
-  // up in the flies. Every dark thing on the stage stands against it.
-  const kitGlow = Math.max(poolLight(T), 0.75 * bandLight(T) * (T < SOLO ? kitLight(T) : 1))
-  field(ctx, k, 1.0, FLOOR - 2.9, 7.8, 5.6, WALL_LIT, 0.95 * kitGlow)
-  field(ctx, k, 12.8, FLOOR - 3.3, 9.0, 5.2, WALL_LIT, 0.8 * bandLight(T))
+  // The light on the back wall, as the practice room's lamp lights its wall, made grand: a field where the cue's pool
+  // is (behind the kit and the podium for the whole stage, the kit alone for the solo, the metronome in the rubato, the
+  // two of them at the end), in the cue's colour, and one behind the band (the band's light), falling to the dark at
+  // the arch and up in the flies. Every dark thing on the stage stands against it.
+  const kitGlow = Math.min(1, q.wall)
+  field(ctx, k, q.cx, q.cy, q.rx, q.ry, wallTone(q), 0.95 * kitGlow)
+  field(ctx, k, 12.8, FLOOR - 3.3, 9.0, 5.2, wallTone({ ...q, cool: 0 }), 0.8 * Math.min(1, q.band))
   // Over the light: the joints between the panels, the rail along the shell at hand height with its top catching
   // the light, and the lower panels in the shadow of the risers and the drums.
   ctx.fillStyle = css(HALL.black, 0.42)
@@ -214,20 +197,20 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, T: number): void {
   const at = (x: number): number => (x - (ARCH.x0 + 2)) / (ARCH.x1 - ARCH.x0 - 4)
   railLit.addColorStop(0, css(HALL.gilt, 0.08 * lit))
   railLit.addColorStop(clamp(at(-1.5)), css(HALL.gilt, 0.2 + 0.4 * kitGlow))
-  railLit.addColorStop(clamp(at(4.5)), css(HALL.gilt, 0.15 + 0.3 * Math.max(kitGlow, bandLight(T))))
-  railLit.addColorStop(clamp(at(12.5)), css(HALL.gilt, 0.15 + 0.35 * bandLight(T)))
+  railLit.addColorStop(clamp(at(4.5)), css(HALL.gilt, 0.15 + 0.3 * Math.max(kitGlow, Math.min(1, q.band))))
+  railLit.addColorStop(clamp(at(12.5)), css(HALL.gilt, 0.15 + 0.35 * Math.min(1, q.band)))
   railLit.addColorStop(1, css(HALL.gilt, 0.08 * lit))
   ctx.fillStyle = railLit
   ctx.fillRect(ARCH.x0 * k, rail * k, (ARCH.x1 - ARCH.x0) * k, 0.035 * k)
   ctx.restore()
-  // The moulding's two edges, catching the light.
+  // The moulding's two edges, catching the light (and the last chord's blaze).
   ctx.save()
-  ctx.lineWidth = weight * 0.9
-  ctx.strokeStyle = mixHex(HALL.gilt, HALL.beam, 0.2 * lit)
-  ctx.globalAlpha = 0.4 + 0.4 * lit
+  ctx.lineWidth = weight * (0.9 + 0.5 * q.blaze)
+  ctx.strokeStyle = mixHex(HALL.gilt, HALL.beam, 0.2 * lit + 0.35 * q.blaze)
+  ctx.globalAlpha = Math.min(1, 0.4 + 0.4 * lit + 0.2 * q.blaze)
   opening(ctx, k, -MOULD)
   ctx.stroke()
-  ctx.globalAlpha = 0.25 + 0.3 * lit
+  ctx.globalAlpha = Math.min(1, 0.25 + 0.3 * lit + 0.2 * q.blaze)
   opening(ctx, k)
   ctx.stroke()
   ctx.restore()
@@ -237,7 +220,10 @@ function floorAndHouse(p: p5, c: Ctx, f: ReturnType<typeof frame>, T: number): v
   const { k, weight } = c
   const x0 = Math.min(f.x0, ARCH.x0 - 6)
   const x1 = Math.max(f.x1, ARCH.x1 + 6)
-  const lit = 0.5 + 0.5 * Math.max(kitLight(T) * 0.8, bandLight(T))
+  // The floor and the house's front rows in the cue's light (up to 1.4 for the burst's slam and the last chord).
+  const house = cueAt(T).house
+  const lit = 0.5 + 0.5 * Math.min(1, house)
+  const rows = 0.6 + 0.4 * house
   // The stage floor: its boards seen a little from above, dark wood, and the apron's face below them.
   p.noStroke()
   p.fill(mixHex(c.bg, HALL.floor, 0.45 + 0.4 * lit))
@@ -258,7 +244,7 @@ function floorAndHouse(p: p5, c: Ctx, f: ReturnType<typeof frame>, T: number): v
   const fx1 = Math.min(x1, f.x1 + 1)
   for (let row = 0; row < 3; row++) {
     const y = LIP + 0.8 + row * 0.7
-    p.fill(mixHex(c.bg, HALL.velvet, (0.3 - row * 0.08) * (0.6 + 0.4 * lit)))
+    p.fill(mixHex(c.bg, HALL.velvet, (0.3 - row * 0.08) * rows))
     p.beginShape()
     p.vertex(fx0 * k, (y + 0.9) * k)
     for (let x = Math.floor(fx0 * 4) / 4; x <= fx1 + 0.25; x += 0.25) {
@@ -282,6 +268,20 @@ function door(p: p5, c: Ctx, T: number): void {
   p.noStroke()
   p.fill(frameCol)
   p.rect((x - DOOR.w / 2 - 0.12) * k, (FLOOR - DOOR.h - 0.12) * k, (DOOR.w + 0.24) * k, (DOOR.h + 0.12) * k)
+  // Open for the hush's look at Jim (`conductor.ts` `hushDoor`): the lit corridor behind him, as at the meeting.
+  const open = T >= SOLO ? hushDoor(T) : 0
+  if (open > 0.001) {
+    drawOpenDoorway(p, c, open, 0.35 * clamp(open / 1.3))
+    drawLeafAt(p, c, open)
+    p.push()
+    p.rectMode(p.CORNER)
+    p.noStroke()
+    const lit = 0.25 + 0.5 * jimLit(T)
+    p.fill(alpha(p, HALL.gilt, 0.35 * lit))
+    p.rect((x + DOOR.w / 2) * k, (FLOOR - DOOR.h - 0.12) * k, 0.12 * k, (DOOR.h + 0.12) * k)
+    p.pop()
+    return
+  }
   p.fill(leaf)
   p.rect((x - DOOR.w / 2) * k, (FLOOR - DOOR.h) * k, DOOR.w * k, DOOR.h * k)
   // The lit edge: the frame's stage side and its head, in the spill.
@@ -302,7 +302,8 @@ function door(p: p5, c: Ctx, T: number): void {
 function piano(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   const ink = EDGE
-  const lit = 0.4 + 0.6 * Math.max(kitLight(T) * 0.7, bandLight(T))
+  const q = cueAt(T)
+  const lit = 0.4 + 0.6 * Math.min(1, Math.max(0.7 * q.wall, q.band))
   const x0 = PIANO.x - PIANO.w / 2
   const x1 = PIANO.x + PIANO.w / 2
   const rim = FLOOR - 1.95
@@ -350,7 +351,8 @@ function podium(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   solid(p, EDGE, weight * 0.8, HALL.black)
   p.rect((PODIUM.x - PODIUM.w / 2) * k, (FLOOR - PODIUM.h) * k, PODIUM.w * k, PODIUM.h * k, 0.04 * k)
-  p.stroke(alpha(p, HALL.gilt, 0.3 + 0.3 * Math.max(bandLight(T), 0.6 * poolLight(T))))
+  const q = cueAt(T)
+  p.stroke(alpha(p, HALL.gilt, 0.3 + 0.3 * Math.min(1, Math.max(q.band, 0.6 * q.wall))))
   p.strokeWeight(weight * 0.8)
   p.line((PODIUM.x - PODIUM.w / 2 + 0.05) * k, (FLOOR - PODIUM.h + 0.03) * k, (PODIUM.x + PODIUM.w / 2 - 0.05) * k, (FLOOR - PODIUM.h + 0.03) * k)
 }
@@ -360,7 +362,7 @@ function podium(p: p5, c: Ctx, T: number): void {
 /** The band on its risers: each player a dark figure at a big-band stand, the stand's lamp on the page, the horn gilt. */
 function band(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
-  const lit = bandLight(T)
+  const lit = Math.min(1, bandLight(T))
   const up = hornsUp(T)
   // Back to front: the trumpets on the top riser first, the saxophones on the floor last.
   for (let row = RISERS.length - 1; row >= 0; row--) {
@@ -438,53 +440,59 @@ function player(p: p5, c: Ctx, x: number, top: number, row: number, seat: number
 
 /**
  * The stage's light on the wall and the floor, drawn under everything that stands on the stage (the band, the piano,
- * the kit, Fletcher; every part's machine is drawn over it too): the warm wash from above, beams down from the
- * flies (a strong one on the kit, softer ones over the band), the solo's pool on the kit, and the spill into the
- * wings where Jim stands.
+ * the kit, Fletcher; every part's machine is drawn over it too), all from the cue (`light.ts`): the wash from above,
+ * beams down from the flies (the spot on the kit, softer ones over the band, the narrow top light on the rubato's
+ * metronome), the cream pool on the kit and the floor, and the spill into the wings where Jim stands.
  */
 export function hallLight(p: p5, c: Ctx, T: number): void {
   const { k } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const pool = poolLight(T)
-  const band = bandLight(T)
-  const wash = 0.06 + 0.1 * band + 0.05 * level(T)
+  const q = cueAt(T)
+  const band = Math.min(1, q.band)
+  const wash = q.wash + 0.05 * level(T) + 0.1 * q.blaze
+  const tone = lightRGB(q)
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
-  // The stage's warm wash, from above.
+  // The stage's wash, from above.
   const g = ctx.createLinearGradient(0, (ARCH.top + 2) * k, 0, FLOOR * k)
-  g.addColorStop(0, 'rgba(227, 176, 91, 0)')
-  g.addColorStop(1, `rgba(227, 176, 91, ${wash.toFixed(3)})`)
+  g.addColorStop(0, `rgba(${tone}, 0)`)
+  g.addColorStop(1, `rgba(${tone}, ${Math.min(1, wash).toFixed(3)})`)
   ctx.fillStyle = g
   ctx.fillRect(ARCH.x0 * k, (ARCH.top + 2) * k, (ARCH.x1 - ARCH.x0) * k, (FLOOR - ARCH.top - 2) * k)
-  // The beams from the flies: the spot on the kit (with the solo's pool, and whenever the kit is lit for the band),
-  // and three softer ones over the band's risers.
-  const spot = Math.max(pool, 0.45 * band * kitLight(T))
-  beam(ctx, k, KIT_AT[0] - 0.7, ARCH.top + 0.6, 3.6, 0.075 * spot)
-  for (const x of [9.6, 13.4, 17.2]) beam(ctx, k, x, ARCH.top + 0.6, 2.5, 0.045 * band)
-  // The pool on the kit for the solo, and where the spot lands on the floor.
-  if (pool > 0.001) {
-    const cx = (KIT_AT[0] - 1.2) * k
-    const cy = (KIT_AT[1] + 0.2) * k
-    const r = 4.4 * k
-    const q = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-    q.addColorStop(0, `rgba(255, 241, 207, ${(0.16 * pool).toFixed(3)})`)
-    q.addColorStop(0.6, `rgba(255, 241, 207, ${(0.06 * pool).toFixed(3)})`)
-    q.addColorStop(1, 'rgba(255, 241, 207, 0)')
-    ctx.fillStyle = q
+  // The beams from the flies: the spot on the kit, three softer ones over the band's risers (and every one of them up
+  // on the last chord's blaze), and the rubato's narrow top light on the metronome.
+  const beamHex = beamTone(q)
+  const blaze = 1 + 0.6 * q.blaze
+  beam(ctx, k, KIT_AT[0] - 0.7, ARCH.top + 0.6, 3.6, 0.075 * q.beam * blaze, beamHex)
+  for (const x of [9.6, 13.4, 17.2]) beam(ctx, k, x, ARCH.top + 0.6, 2.5, 0.045 * band * blaze, beamHex)
+  if (q.metro > 0.003) beam(ctx, k, METRO_X, ARCH.top + 0.6, 0.62, 0.11 * q.metro, beamHex, 0.18)
+  // The cream pool the spot lays on the kit, and where it lands on the floor.
+  if (q.pool > 0.001) {
+    const cream = poolRGB(q)
+    const cx = (q.cx - 0.6) * k
+    const cy = (q.cy + 0.9) * k
+    const r = 0.8 * q.rx * k
+    const pq = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+    pq.addColorStop(0, `rgba(${cream}, ${(0.16 * q.pool).toFixed(3)})`)
+    pq.addColorStop(0.6, `rgba(${cream}, ${(0.06 * q.pool).toFixed(3)})`)
+    pq.addColorStop(1, `rgba(${cream}, 0)`)
+    ctx.fillStyle = pq
     ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
     ctx.save()
-    ctx.translate((KIT_AT[0] - 0.7) * k, (FLOOR + 0.05) * k)
+    ctx.translate((q.cx - 0.2) * k, (FLOOR + 0.05) * k)
     ctx.scale(1, 0.14)
-    const fl = ctx.createRadialGradient(0, 0, 0, 0, 0, 3.8 * k)
-    fl.addColorStop(0, `rgba(255, 241, 207, ${(0.2 * pool).toFixed(3)})`)
-    fl.addColorStop(1, 'rgba(255, 241, 207, 0)')
+    const fr = 0.7 * q.rx
+    const fl = ctx.createRadialGradient(0, 0, 0, 0, 0, fr * k)
+    fl.addColorStop(0, `rgba(${cream}, ${(0.2 * q.pool).toFixed(3)})`)
+    fl.addColorStop(1, `rgba(${cream}, 0)`)
     ctx.fillStyle = fl
-    ctx.fillRect(-3.8 * k, -3.8 * k, 7.6 * k, 7.6 * k)
+    ctx.fillRect(-fr * k, -fr * k, 2 * fr * k, 2 * fr * k)
     ctx.restore()
   }
   // The stage's light spilling into the wings where his father stands to watch: faint all through the solo, up
-  // while the camera is with him (the solo's look across at him, the hush's, the build's), and out with the hall at
-  // the end. Low and wide, on the floor, and a little up the wall behind him.
+  // while the camera is with him (the solo's look across at him, the hush's), and out with the hall at the end. Low
+  // and wide, on the floor, and a little up the wall behind him. Always warm: in the hush's cool it is the one other
+  // warm island on the stage.
   const wings = T < SOLO ? 0 : (0.35 + 0.65 * jimLit(T)) * smoothIn(T, SOLO, SOLO + 3) * (1 - smoothIn(T, FINAL + 2, FINAL + 9))
   if (wings > 0.001) {
     const cx = (JIM_WINGS[0] + 0.25) * k
@@ -493,15 +501,17 @@ export function hallLight(p: p5, c: Ctx, T: number): void {
     ctx.save()
     ctx.translate(cx, cy)
     ctx.scale(1, 0.62)
-    const q = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-    q.addColorStop(0, `rgba(227, 176, 91, ${(0.13 * wings).toFixed(3)})`)
-    q.addColorStop(0.55, `rgba(227, 176, 91, ${(0.05 * wings).toFixed(3)})`)
-    q.addColorStop(1, 'rgba(227, 176, 91, 0)')
-    ctx.fillStyle = q
+    const wq = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    wq.addColorStop(0, `rgba(227, 176, 91, ${(0.13 * wings).toFixed(3)})`)
+    wq.addColorStop(0.55, `rgba(227, 176, 91, ${(0.05 * wings).toFixed(3)})`)
+    wq.addColorStop(1, 'rgba(227, 176, 91, 0)')
+    ctx.fillStyle = wq
     ctx.fillRect(-r, -r, 2 * r, 2 * r)
     ctx.restore()
-    // The spill up the wall behind him, from the stage's side.
+    // The spill up the wall behind him, from the stage's side: the wall round the door warm (the one other warm island
+    // when the stage is cool and dark), and a little brighter low behind him.
     const up = 0.65 * jimLit(T) * wings
+    if (up > 0.003) field(ctx, k, JIM_WINGS[0] + 0.5, FLOOR - 1.9, 2.3, 2.6, WALL_LIT, 0.75 * up)
     if (up > 0.003) {
       ctx.save()
       ctx.translate((JIM_WINGS[0] + 0.6) * k, (FLOOR - 1.2) * k)
@@ -514,15 +524,152 @@ export function hallLight(p: p5, c: Ctx, T: number): void {
       ctx.restore()
     }
   }
+  // Behind Fletcher when the stage round him is dark (the rubato): a little of his light on the wall, so his black
+  // figure stands against it, rim-lit, and does not go out with the wall.
+  const back = T >= SOLO ? q.fl * q.dark : 0
+  if (back > 0.02) {
+    const [fx, fy] = fletcherAt(T)
+    field(ctx, k, fx + 0.1, fy + 1.1, 1.3, 2.3, wallTone({ ...q, cool: 0 }), 0.22 * back)
+  }
   ctx.restore()
 }
 
+/* ------------------------------------------------------------------ the dark */
+
+/** The metronome's pivot across the stage (`rubato-metronome.ts` `PIVOT_X`, which imports this file). */
+const METRO_X = -1.47
+/** The dark is soft everywhere, so it is drawn at a quarter of the canvas's size and laid over it smoothed. */
+const MASK = 0.25
+let mask: HTMLCanvasElement | null = null
+
+/**
+ * The dark laid over the stage after every part (the frame's arms, the engine, the metronome: machines drawn over the
+ * hall, which its light cannot reach) and before the balls: the cue's dark outside its pool (and its `inside` over
+ * the pool), with holes where the light falls: the pool, the metronome's top light, Fletcher's own light, and the
+ * wings' warm spill for Jim. Then the burst's flash, a white slam over everything, gone in half a second.
+ * On the Carnegie stage's `after` (`score.ts`).
+ */
+export const hallDark = scenery<HallState>({
+  name: 'hall-dark',
+  draw: (p, _s, c) => {
+    const T = c.t
+    if (T < CUE_FROM) return
+    const q = cueAt(T)
+    darkOver(p, c, T, q)
+    if (q.flash > 0.004) {
+      const { k } = c
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const f = frame(p, k)
+      const r = 13 * k
+      const cx = (KIT_AT[0] + 1.5) * k
+      const cy = (KIT_AT[1] - 1) * k
+      ctx.save()
+      ctx.globalCompositeOperation = 'lighter'
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+      g.addColorStop(0, `rgba(255, 243, 224, ${(0.34 * q.flash).toFixed(3)})`)
+      g.addColorStop(1, `rgba(255, 243, 224, ${(0.14 * q.flash).toFixed(3)})`)
+      ctx.fillStyle = g
+      ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+      ctx.restore()
+    }
+  },
+})
+
+function darkOver(p: p5, c: Ctx, T: number, q: Cue): void {
+  if (q.dark < 0.004 || typeof document === 'undefined') return
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cw = ctx.canvas.width
+  const ch = ctx.canvas.height
+  const w = Math.max(1, Math.ceil(cw * MASK))
+  const h = Math.max(1, Math.ceil(ch * MASK))
+  mask ??= document.createElement('canvas')
+  if (mask.width !== w || mask.height !== h) {
+    mask.width = w
+    mask.height = h
+  }
+  const g = mask.getContext('2d')
+  if (!g) return
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  g.globalCompositeOperation = 'source-over'
+  g.clearRect(0, 0, w, h)
+  g.fillStyle = css(c.bg, q.dark)
+  g.fillRect(0, 0, w, h)
+  const m = ctx.getTransform()
+  const sx = w / cw
+  const sy = h / ch
+  g.setTransform(m.a * sx, m.b * sy, m.c * sx, m.d * sy, m.e * sx, m.f * sy)
+  g.globalCompositeOperation = 'destination-out'
+  // The pool: over it only the cue's `inside`.
+  hole(g, k, q.cx, q.cy, q.rx, q.ry, 1 - Math.min(1, q.inside / q.dark), 0.5)
+  // The metronome's top light: a tall narrow reach of it, from the cradle down the rod to the bob.
+  if (q.metro > 0.01) hole(g, k, METRO_X, -2.9, 0.95, 2.6, 0.85 * q.metro, 0.4)
+  // Fletcher's own light, on his whole figure.
+  if (q.fl > 0.01 && T >= SOLO) {
+    const [fx, fy] = fletcherAt(T)
+    hole(g, k, fx + 0.1, fy + 1.3, 1.2, 2.8, q.fl, 0.45)
+    // In the rubato his beating hand rises above his head, out toward the metronome: the light reaches its whole travel.
+    const beating = rubatoOn(T)
+    if (beating > 0.01) hole(g, k, fx - 0.75, fy - 0.35, 0.8, 1.05, q.fl * beating, 0.5)
+  }
+  // The wings' warm spill, for Jim.
+  const jim = T >= SOLO ? 0.85 * jimLit(T) : 0
+  // (Over to the door while it is open for him, so its lit opening is inside the light.)
+  if (jim > 0.01) hole(g, k, JIM_WINGS[0] + 0.45 - 0.95 * clamp(hushDoor(T) / 1.3), FLOOR - 1.8, 2.4, 2.8, jim, 0.45)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.imageSmoothingEnabled = true
+  ctx.drawImage(mask, 0, 0, w, h, 0, 0, cw, ch)
+  ctx.restore()
+}
+
+/** Cut a soft elliptical hole in the dark: `a` of it taken out inside `core` of the radius, easing to none at the edge. */
+function hole(g: CanvasRenderingContext2D, k: number, x: number, y: number, rx: number, ry: number, a: number, core: number): void {
+  if (a < 0.005 || rx <= 0 || ry <= 0) return
+  g.save()
+  g.translate(x * k, y * k)
+  g.scale(1, ry / rx)
+  const q = g.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+  const at = (u: number) => core + (1 - core) * u
+  q.addColorStop(0, `rgba(0,0,0,${a})`)
+  q.addColorStop(core, `rgba(0,0,0,${a})`)
+  q.addColorStop(at(0.25), `rgba(0,0,0,${(0.82 * a).toFixed(4)})`)
+  q.addColorStop(at(0.5), `rgba(0,0,0,${(0.5 * a).toFixed(4)})`)
+  q.addColorStop(at(0.75), `rgba(0,0,0,${(0.18 * a).toFixed(4)})`)
+  q.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = q
+  g.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+  g.restore()
+}
+
+/* ------------------------------------------------------------------ the cue's colours */
+
+/** The hush's slate (the wall's, not Jim's blue-grey), and the burst's white on the wall. */
+const SLATE = '#4B5561'
+const WALL_WHITE = '#D8CCB9'
+const mix3 = (a: number[], b: number[], u: number): number[] => a.map((v, i) => v + (b[i] - v) * u)
+const GOLD_RGB = [227, 176, 91]
+const COOL_RGB = [150, 168, 186]
+const WHITE_RGB = [255, 243, 224]
+const CREAM_RGB = [255, 241, 207]
+const rgbOf = (v: number[]): string => v.map((x) => Math.round(x)).join(', ')
+
+/** The back wall where the light falls on it, in the cue's colour. */
+const wallTone = (q: Cue): string => mixHex(mixHex(WALL_LIT, SLATE, q.cool), WALL_WHITE, 0.5 * q.white)
+/** The wash's colour, and the pool's, as `r, g, b`. */
+const lightRGB = (q: Cue): string => rgbOf(mix3(mix3(GOLD_RGB, COOL_RGB, q.cool), WHITE_RGB, q.white))
+const poolRGB = (q: Cue): string => rgbOf(mix3(mix3(CREAM_RGB, [200, 212, 224], 0.8 * q.cool), [255, 249, 242], q.white))
+/** A beam's colour. */
+const beamTone = (q: Cue): string => mixHex(mixHex(HALL.beam, '#C9D5E1', 0.8 * q.cool), '#FFF8EE', q.white)
+
 /**
  * How much the wings' light is up for Jim, 0..1: while the camera is with him. The solo's look across at him
- * (`solo.ts`, 304.8-307.9) and the hush's visit (358.6-367.8). The build stays on the machine.
+ * (`solo.ts`, 304.8-307.9) and the hush's visit (358.8-367.6: full as the camera lands on him, 360.1, down as the
+ * two-shot leaves, 366.1). The build stays on the machine.
  */
 export function jimLit(T: number): number {
-  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.6, 367.8))
+  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.8, 367.6))
 }
 
 const smoothIn = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))
@@ -555,21 +702,21 @@ function field(ctx: CanvasRenderingContext2D, k: number, cx: number, cy: number,
 }
 
 /**
- * A beam from the flies: a cone of `hex` light from a narrow mouth high above (x, `from`) to `spread` either side of
- * x at the floor, two nested so its edges are soft.
+ * A beam from the flies: a cone of `hex` light from a narrow mouth high above (x, `from`), `mouth` either side of x,
+ * to `spread` either side of x at the floor, two nested so its edges are soft.
  */
-function beam(ctx: CanvasRenderingContext2D, k: number, x: number, from: number, spread: number, a: number): void {
+function beam(ctx: CanvasRenderingContext2D, k: number, x: number, from: number, spread: number, a: number, hex: string = HALL.beam, mouth = 0.35): void {
   if (a < 0.003) return
   const L = FLOOR - from
   for (const [w, f] of [[1, 0.55], [0.66, 0.8]] as const) {
     const g = ctx.createLinearGradient(0, from * k, 0, FLOOR * k)
-    g.addColorStop(0, css(HALL.beam, 0))
-    g.addColorStop(0.25, css(HALL.beam, a * f * 0.9))
-    g.addColorStop(1, css(HALL.beam, a * f * 0.5))
+    g.addColorStop(0, css(hex, 0))
+    g.addColorStop(0.25, css(hex, a * f * 0.9))
+    g.addColorStop(1, css(hex, a * f * 0.5))
     ctx.fillStyle = g
     ctx.beginPath()
-    ctx.moveTo((x - 0.35 * w) * k, from * k)
-    ctx.lineTo((x + 0.35 * w) * k, from * k)
+    ctx.moveTo((x - mouth * w) * k, from * k)
+    ctx.lineTo((x + mouth * w) * k, from * k)
     ctx.lineTo((x + spread * w) * k, (from + L) * k)
     ctx.lineTo((x - spread * w) * k, (from + L) * k)
     ctx.closePath()

@@ -135,7 +135,19 @@ export interface ConductorLook {
    * waist, so his head goes forward and down off it. Needs `floor`. The head passed in is already where the bow puts it.
    */
   bow?: number
+  /**
+   * How far his column has risen above his height (cells): the extra is telescoped steel, a slim inner tube sliding up
+   * out of the trousers at the knee with a lit collar on the joint, the trousers keeping their length (stretched, the
+   * trouser-column read as stilts). Needs `floor`.
+   */
+  rise?: number
 }
+
+/** Where along his column (cells up from the floor) the telescope's joint is: about his knee. */
+const KNEE = 0.62
+/** The inner tube: steel in the shadow, a lit edge; the collar on the joint. */
+const TUBE = '#46433E'
+const COLLAR = '#3B3833'
 
 /** His edge: the black's own dark, never cream. He is told from the wall by light, not by a line. */
 const EDGE = '#0B0A09'
@@ -185,16 +197,66 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
   if (look.floor !== undefined) {
     solid(p, EDGE, weight * 0.8, FLETCHER)
     const bx = look.base ?? hx
+    const fy = look.floor
     // The waist, where the chest ends (in a bow the chest is turned further, so the column meets it lower).
     const wx = bow ? tx : hx - CHEST.waist * Math.sin(lean)
     const wy = bow ? ty : hy + CHEST.waist * Math.cos(lean)
-    p.quad((bx - 0.1) * k, look.floor * k, (bx + 0.1) * k, look.floor * k, (wx + 0.125) * k, wy * k, (wx - 0.125) * k, wy * k)
-    p.rect((bx - 0.2) * k, (look.floor - 0.06) * k, 0.4 * k, 0.07 * k, 0.03 * k, 0.03 * k, 0.01 * k, 0.01 * k)
-    // A dark crease down the middle (two legs, standing together), and the light along the key side.
+    const L = Math.hypot(wx - bx, wy - fy)
+    const rise = Math.min(Math.max(0, look.rise ?? 0), Math.max(0, L - KNEE - 0.6))
+    // A point `s` cells up the column from the floor, and its half-width there (0.1 at the floor, 0.125 at the waist).
+    const up = (s: number): Pt => [bx + ((wx - bx) * s) / L, fy + ((wy - fy) * s) / L]
+    const half = (s: number): number => 0.1 + (0.025 * s) / L
+    const piece = (s0: number, s1: number, w0: number, w1: number): void => {
+      const a = up(s0)
+      const b = up(s1)
+      p.quad((a[0] - w0) * k, a[1] * k, (a[0] + w0) * k, a[1] * k, (b[0] + w1) * k, b[1] * k, (b[0] - w1) * k, b[1] * k)
+    }
+    if (rise < 0.005) {
+      piece(0, L, 0.1, 0.125)
+    } else {
+      // Telescoped: the trousers below the knee, the steel inner tube, the trousers from the knee up (their length).
+      const j0 = KNEE
+      const j1 = KNEE + rise
+      solid(p, EDGE, weight * 0.7, TUBE)
+      piece(j0 - 0.02, j1 + 0.02, 0.05, 0.05)
+      const t0 = up(j0)
+      const t1 = up(j1)
+      rimLine(p, [(t0[0] - 0.035) * k, t0[1] * k], [(t1[0] - 0.035) * k, t1[1] * k], weight * 0.8, rim * 0.9)
+      solid(p, EDGE, weight * 0.8, FLETCHER)
+      piece(0, j0, 0.1, half(j0))
+      piece(j1, L, half(j0), 0.125)
+      // The collar on the joint, lit along its top, fading in as the tube comes out.
+      const on = Math.min(1, rise / 0.15)
+      const cw = half(j0) + 0.025
+      solid(p, EDGE, weight * 0.7, mixHex(FLETCHER, COLLAR, on))
+      p.rect((t0[0] - cw) * k, (t0[1] - 0.055) * k, 2 * cw * k, 0.075 * k, 0.02 * k)
+      rimLine(p, [(t0[0] - cw + 0.02) * k, (t0[1] - 0.05) * k], [(t0[0] + cw - 0.02) * k, (t0[1] - 0.05) * k], weight * 0.9, rim * on)
+      solid(p, EDGE, weight * 0.8, FLETCHER)
+    }
+    p.rect((bx - 0.2) * k, (fy - 0.06) * k, 0.4 * k, 0.07 * k, 0.03 * k, 0.03 * k, 0.01 * k, 0.01 * k)
+    // A dark crease down the middle (two legs, standing together), and the light along the key side: on the trousers
+    // only, below the joint and above it.
     p.stroke(EDGE)
     p.strokeWeight(weight * 0.7)
-    p.line(bx * k, (look.floor - 0.07) * k, (bx + (wx - bx) * 0.72) * k, (look.floor + (wy - look.floor) * 0.72) * k)
-    rimLine(p, [(bx - 0.095) * k, (look.floor - 0.08) * k], [(wx - 0.12) * k, (wy + 0.06) * k], weight * 0.9, rim * 0.6)
+    const crease = (s0: number, s1: number): void => {
+      const a = up(s0)
+      const b = up(s1)
+      p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+    }
+    const rimUp = (s0: number, s1: number): void => {
+      const a = up(s0)
+      const b = up(s1)
+      rimLine(p, [(a[0] - half(s0) + 0.005) * k, a[1] * k], [(b[0] - half(s1) + 0.005) * k, b[1] * k], weight * 0.9, rim * 0.6)
+    }
+    if (rise < 0.005) {
+      crease(0.07, 0.72 * L)
+      rimUp(0.08, L - 0.06)
+    } else {
+      crease(0.07, KNEE - 0.06)
+      crease(KNEE + rise + 0.03, 0.72 * L)
+      rimUp(0.08, KNEE - 0.06)
+      rimUp(KNEE + rise + 0.03, L - 0.06)
+    }
   }
   p.translate(hx * k, hy * k)
   if (lean + bow) p.rotate(lean + bow)

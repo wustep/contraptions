@@ -85,9 +85,11 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // In the frame: the march, leaving Fletcher behind the right edge.
     k(F_SEATED + 0.4, 6.0, [-1.45, -1.7]),
     k(514.6, 5.2, [-1.0, -1.5]),
-    // The long roll, not the solo's framings: low and close on the snare, the two sticks a blur on its head; up
-    // with Fletcher as he comes across.
-    k(ROLL[0] + 0.5, 3.1, [-0.62, -0.5]),
+    // The long roll is his, and the nod comes out of it: close, but with his head in. His ball in the top fifth, the
+    // frame's shoulders under it, the two sticks' blur on the snare along the bottom; a breath in while the roll
+    // settles, then over and up with Fletcher as he comes across.
+    k(ROLL[0] + 0.5, 4.2, [-0.8, -1.3]),
+    k(F_WALK[0] + 0.7, 4.1, [-0.7, -1.3]),
     k(F_WALK[1], 4.6, [0.4, -1.9]),
     // The nod is Fletcher approving the roll, so the roll stays in the shot: the two heads, level, in the top third,
     // the sticks' blur on the snare along the bottom; a little tighter through Andrew's answer. Both heads inside
@@ -109,15 +111,16 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     { ...k(CHORD_HIT, 5.6, [-0.1, -2.1]), ease: 'hit' },
     k(CHORD_HIT + 2.0, 14.2, [6.45, -2.55]),
     k(CUT - 0.3, 4.0, [0.58, -2.55]),
-    // Held on the fist; then out, not far, to the last image and held there: the frame with Andrew in its cup and
-    // Fletcher beside him in the spot that stays on them while the band and the house go dark, low in the frame so
-    // the cards come up over the wall above; then slowly in on the two of them to the end (a key past the end, so
-    // the camera is still moving on the last frame).
+    // Held on the fist; then out only a little (6 cells) as it comes down to his side, and up, to the two heads in
+    // the spot: Andrew in the frame's cup and Fletcher beside him, level, a little below the middle, so the cards
+    // come up over the dark wall above and the bottom edge cuts the frame's body off at the chest, where the dark
+    // takes the rest. Then slowly in on the two of them to the end, the pool shrinking round them (a key past the
+    // end, so the camera is still moving on the last frame: no parked hold under the credits).
     k(CUT + 2.4, 3.92, [0.56, -2.57]),
-    k(556.2, 8.6, [0.35, -2.2]),
-    k(559.6, 7.6, [0.32, -2.32]),
-    k(567.0, 6.0, [0.27, -2.5]),
-    k(slot.end + 3, 4.8, [0.22, -2.64]),
+    k(555.4, 6.0, [0.2, -3.16]),
+    k(562.0, 5.2, [0.18, -3.13]),
+    k(569.0, 4.5, [0.17, -3.08]),
+    k(slot.end + 3, 3.7, [0.16, -3.0]),
   ]
 }
 

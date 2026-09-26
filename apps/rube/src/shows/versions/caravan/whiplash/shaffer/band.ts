@@ -16,9 +16,11 @@ import { drawBandRoom } from './bandroom'
  * He pushes the door open on the band's hit (75) and comes down the room's tiers a step a bar (83, 87, 91), past
  * the trumpets, the trombones and the saxophones, their bells lifting on their hits, to roll up against the
  * conductor's podium (93¾): Fletcher's head comes down to him, and his hand points him to his place, the
- * alternate's chair beside Tanner's chart. Tanner plays; Andrew turns his pages, up on the stand's ledge and back,
- * each page going over with him on a bar line; in the tutti the trumpets stand, Fletcher flings both hands up on
- * the biggest hit, and in its one breath of silence the page goes over. On 175 Fletcher points at him: you; then at
+ * alternate's chair beside Tanner's chart. Tanner plays; Andrew turns his pages with the stand's page-turner: off
+ * his seat onto the treadle at its foot on a phrase's downbeat, and the sprung arm at the top of the desk sweeps the
+ * page over by the next beat and swings back; in the tutti the trumpets stand, Fletcher flings both hands up on the
+ * biggest hit, Andrew drops onto the treadle with it, and in its one breath of silence the page goes over. On 175
+ * Fletcher points at him: you; then at
  * the kit: off. Tanner hops down and stands aside; Andrew comes onto the kit by a fill across the toms, and lands on
  * the snare on 188, the tempo part's first beat.
  *
@@ -26,12 +28,12 @@ import { drawBandRoom } from './bandroom'
  * `band-people.ts`.
  */
 
-/** The first page after he is seated, and the tutti's page (his hop down from it). */
-const FIRST = TURNS[0] as Required<(typeof TURNS)[number]>
+/** The first page after he is seated (the page-turner's first turn), and the tutti's page (his hop up from it). */
+const FIRST = TURNS[0] as { press: number; page: number; down: number }
 const TUTTI_DOWN = TURNS[2].down as number
 
 const upBeats = [LANDINGS[0], LANDINGS[1]].map((t) => t + BEAT / 2)
-const turnBeats = TURNS.flatMap((t) => [t.up, t.page, t.down]).filter((t): t is number => t !== undefined)
+const turnBeats = TURNS.flatMap((t) => [t.press, t.up, t.page, t.down]).filter((t): t is number => t !== undefined)
 /** The band's hits in the slot, where its bells lift: the loudest onsets. */
 const bandAccents = ONSETS.filter((o) => o.t >= 30.6 && o.t < TEMPO - 0.02 && o.s >= 0.9).map((o) => o.t)
 const kit = ROOM_KIT.filter((s) => s.t >= 30.6 && s.t < TEMPO - 0.02).map((s) => s.t)
@@ -79,24 +81,25 @@ export const band = part<BandState>(
     { t: THERE + 0.4, cells: 6.2, hold: [13.8, 0.55], w: 1 },
     // His place: the chair, the chart; Fletcher at the edge of it.
     { t: SEATED, cells: 5.8, hold: [16.9, 0.4], w: 1 },
-    // The first page, as an insert: in on Tanner's chart at the kit as he hops up onto its ledge, the desk big in
-    // frame, the page carried over by him; out again with his hop down to the seat, one pull-out that opens past
-    // Fletcher's reach (his whole figure on the podium by 49.3, never his hand parked alone at the edge) and carries
-    // on, leaning left, out to the room.
-    { t: FIRST.up - 2.4 * BEAT, cells: 3.5, hold: [STAND.x + 0.37, 0.1], w: 1 },
-    { t: FIRST.up, cells: 2.45, hold: [STAND.x + 0.03, -0.72], w: 1 },
-    { t: FIRST.page + 0.04, cells: 2.4, hold: [STAND.x, -0.74], w: 1 },
+    // The first page, as an insert on the page-turner: the whole stand, from the arm over its desk to the treadle at
+    // its foot, the chair's back at the left; he drops onto the treadle on the downbeat and the arm takes the page
+    // over; a slow push in on the desk as the arm swings back; out again with his hop up to the seat, one pull-out
+    // that opens past Fletcher's reach (his whole figure on the podium by 49.3, never his hand parked alone at the
+    // edge) and carries on, leaning left, out to the room.
+    { t: FIRST.press - 2 * BEAT - 0.5, cells: 4.3, hold: [STAND.x - 0.35, 0.55], w: 1 },
+    { t: FIRST.press, cells: 4.05, hold: [STAND.x - 0.2, 0.5], w: 1 },
+    { t: FIRST.page + 0.5, cells: 3.7, hold: [STAND.x - 0.1, 0.25], w: 1 },
     { t: FIRST.down + 0.6, cells: 5.5, hold: [STAND.x - 0.75, 0.4], w: 1 },
     // Back to take in the saxophones and trombones at work, the conductor, the page turner.
     { t: 51.6, cells: 7.4, hold: [13.3, -0.4], w: 1 },
     { t: 53.95, cells: 7.2, hold: [13.0, -0.7], w: 1 },
-    // The tutti, up among the heads and the bells: the trumpets standing behind him as his beat grows; in on his two
-    // hands flung up on the biggest hit, Andrew waiting at the chart's corner beside them; they drop to his chest as
-    // the page goes over in the breath; out with Andrew's hop down to his seat.
+    // The tutti, up among the heads and the bells: the trumpets standing behind him as his beat grows; across to his
+    // two hands flung up on the biggest hit and the whole stand beside them, Andrew dropping onto its treadle with
+    // the hit; the page goes over in the breath as the hands drop to his chest; in on the stand as he hops back up.
     { t: TUTTI - 0.05, cells: 5.0, hold: [10.9, -1.85], w: 1 },
     { t: TUTTI + 0.85, cells: 4.8, hold: [11.4, -1.85], w: 1 },
-    { t: PEAK - 0.08, cells: 3.85, hold: [15.8, -1.3], w: 1 },
-    { t: ANSWER + 0.34, cells: 3.4, hold: [15.7, -1.1], w: 1 },
+    { t: PEAK - 0.08, cells: 5.05, hold: [16.05, -0.1], w: 1 },
+    { t: ANSWER + 0.34, cells: 4.75, hold: [16.3, 0.05], w: 1 },
     { t: TUTTI_DOWN, cells: 4.4, hold: [17.2, 0.3], w: 1 },
     // The alternate and the drummer, keeping the same time: Andrew tapping on his seat, Tanner playing his kit.
     // Fletcher's beating hand reaches to 15.07 on his podium, so the frame's left edge stays past it (15.15), while

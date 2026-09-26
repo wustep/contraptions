@@ -3,7 +3,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { solid } from '../../../../../../../../src/core/draw'
 import { alpha, hash, type Ctx } from '../kit'
 import { KIT, SHOP } from '../worlds'
-import { BACK_H, SEAT_H, type Section } from './band-plan'
+import { BACK_H, SEAT_H, TURNER, padAt, type Section } from './band-plan'
 
 
 /** A stroke in a colour with alpha over a fill. */
@@ -319,7 +319,10 @@ export function drawPlayerStand(p: p5, c: Ctx, foot: Pt, light: number, glow: nu
  * chart open on it (two pale pages ruled with a few bars, nothing that reads as writing), and a small lamp over it.
  * `turned` pages have gone over; `u` is how far the one going over has got (its free corner carried by the ball).
  */
-export function drawChartStand(p: p5, c: Ctx, x: number, ledge: number, w: number, h: number, floor: number, turned: number, u: number, light: number): void {
+export function drawChartStand(
+  p: p5, c: Ctx, x: number, ledge: number, w: number, h: number, floor: number, turned: number, u: number, light: number,
+  turner?: { lever: number; arm: number },
+): void {
   const { k, weight } = c
   // Black, edged in its own dark; the lamp catches the top of the desk and the post's lit side.
   const ink = SHOP.black
@@ -409,5 +412,71 @@ export function drawChartStand(p: p5, c: Ctx, x: number, ledge: number, w: numbe
   p.stroke(alpha(p, SHOP.deep, 0.6))
   p.strokeWeight(weight * 0.7)
   p.line(x * K, py0 * K, x * K, py1 * K)
+  if (turner) drawTurner(p, c, x, top, ledge, floor, turner, light)
   p.pop()
+}
+
+/**
+ * The page-turner on the stand (`band-plan.ts` `TURNER`): the treadle at its foot (a steel bar hinged on the post,
+ * a rubber pad out toward the chair, a short tail), the rod beside the post from the tail up under the desk, and the
+ * sprung wire arm hinged at the top of the desk over the spine, a clip at its tip. Steel in the room's dark, lit
+ * along its upper edges; nothing round near the ball but the small hinge bolts.
+ */
+function drawTurner(p: p5, c: Ctx, x: number, top: number, ledge: number, floor: number, t: { lever: number; arm: number }, light: number): void {
+  const { k, weight } = c
+  const K = k
+  const ink = SHOP.black
+  const steel = mixHex(SHOP.black, KIT.chrome, 0.28 + 0.3 * light)
+  const shine = alpha(p, SHOP.tungsten, 0.25 + 0.45 * light)
+  const bar = (a: Pt, b: Pt, w: number, col = steel) => {
+    p.stroke(ink)
+    p.strokeWeight(weight * (w + 1.1))
+    p.line(a[0] * K, a[1] * K, b[0] * K, b[1] * K)
+    p.stroke(col)
+    p.strokeWeight(weight * w)
+    p.line(a[0] * K, a[1] * K, b[0] * K, b[1] * K)
+  }
+  const bolt = (q: Pt) => {
+    solid(p, ink, weight * 0.5, mixHex(steel, SHOP.tungsten, 0.2 * light))
+    p.circle(q[0] * K, q[1] * K, 0.07 * K)
+  }
+  // The treadle.
+  const a = TURNER.rest + (TURNER.pressed - TURNER.rest) * t.lever
+  const pivot: Pt = [x + TURNER.pivot[0], floor - TURNER.pivot[1]]
+  const pad = padAt(a, x)
+  const tail: Pt = [pivot[0] + 0.17 * Math.cos(a), pivot[1] - 0.17 * Math.sin(a)]
+  // The rod: from the tail up beside the post to under the desk (it runs on up behind it to the arm's crank).
+  const rodX = tail[0] + 0.02
+  bar([rodX, tail[1]], [rodX, ledge + 0.03], 0.8)
+  p.stroke(shine)
+  p.strokeWeight(weight * 0.4)
+  p.line((rodX - 0.012) * K, (tail[1] - 0.02) * K, (rodX - 0.012) * K, (ledge + 0.06) * K)
+  bar(pad, tail, 1.5)
+  // The pad: a rubber block along the bar's end, its top catching the lamp.
+  p.push()
+  p.translate(pad[0] * K, pad[1] * K)
+  p.rotate(-a)
+  p.rectMode(p.CORNER)
+  solid(p, ink, weight * 0.6, mixHex(SHOP.black, SHOP.deep, 0.5))
+  p.rect(-0.13 * K, -0.045 * K, 0.26 * K, 0.055 * K, 0.015 * K)
+  p.noStroke()
+  p.fill(alpha(p, SHOP.tungsten, 0.2 + 0.4 * light))
+  p.rect(-0.11 * K, -0.045 * K, 0.22 * K, 0.013 * K)
+  p.pop()
+  bolt(pivot)
+  // The arm: hinged at the top of the desk over the spine, a spring wire to a clip at its tip.
+  const hinge: Pt = [x, top - 0.02]
+  const tip: Pt = [hinge[0] + TURNER.arm * Math.sin(t.arm), hinge[1] + TURNER.arm * Math.cos(t.arm)]
+  bar(hinge, tip, 0.75)
+  p.stroke(shine)
+  p.strokeWeight(weight * 0.35)
+  p.line(hinge[0] * K, (hinge[1] - 0.008) * K, tip[0] * K, (tip[1] - 0.008) * K)
+  p.push()
+  p.translate(tip[0] * K, tip[1] * K)
+  p.rotate(-t.arm)
+  p.rectMode(p.CORNER)
+  solid(p, ink, weight * 0.5, mixHex(steel, SHOP.tungsten, 0.25 * light))
+  p.rect(-0.03 * K, -0.07 * K, 0.06 * K, 0.1 * K, 0.012 * K)
+  p.pop()
+  bolt(hinge)
 }

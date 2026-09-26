@@ -10,7 +10,7 @@ import { SEAT } from './crash-car'
 import { ease, kick, ring } from './crash-paint'
 import {
   BAY_Y, BUTTON, CAN_X, FL, FLETCH, KX, MACHINE, SHELF_Y, TRAP, WALL, WING_L, WING_R, drawBackstage, drawBackstageLight, drawBand, drawCases, drawDoorLight, drawFolder,
-  drawMachine, drawMachineLight, drawStage, drawStageLight, drawWall, drawWing, type MachineLook,
+  drawDrumStand, drawMachine, drawMachineLight, drawStage, drawStageLight, drawWall, drawWing, type MachineLook,
 } from './folder-set'
 
 /**
@@ -27,7 +27,8 @@ import {
  * finds the lid bare. Tanner comes back, and cannot find it; Fletcher comes off the stage at them, hands up, and
  * on the band's hit points at Andrew (186.00). Tanner slinks off. Andrew rolls along the cases and leaps from their
  * end, past the wing, onto the kit's floor tom; the stage lights come up on Fletcher's downbeat (190.07) and he
- * plays: the band's hits, from memory, on the kit, Fletcher conducting him. On the last hit of the phrase
+ * plays: the band's hits, from memory, on the kit, its stand bare beside him (every player in the band has a lit
+ * page), Fletcher conducting him. On the last hit of the phrase
  * (200.78) Fletcher points at him again: core. The stage goes dark; he drops off the kit and rolls out past the band
  * to the loading door, which rolls up on the lot's sodium light (202.42), and into the rental car waiting there,
  * whose door slams as he lands in the seat on 205.92: the drive (`crash.ts`).
@@ -439,6 +440,8 @@ function drawFolderPart(p: p5, s: FolderState, c: Ctx): void {
     up,
     accent: (seat) => (T < DOWNBEAT ? 0 : Math.min(1, ACCENTS.reduce((acc, b) => acc + kick(T - b, 0.2), 0)) * (0.75 + 0.25 * hash(seat, 3))),
   })
+  // The drummer's stand beside the hi-hat, bare (Tanner's chart is gone), behind the kit.
+  drawDrumStand(p, c, Math.max(0.25, stage))
   p.push()
   p.translate(KX * k, 0)
   drawKit(p, c, { shell: KIT.lacquer, since: sinceOf(T), light: Math.max(0.25, stage) })
@@ -502,8 +505,8 @@ export const folder = part<FolderState>(
     { t: tune(444), cells: 6.2, hold: [10.0, -1.0], w: 1 },
     { t: tune(453.75), cells: 6.8, hold: [10.4, -1.1], w: 1 },
     { t: tune(459), cells: 6.2, hold: [10.0, -1.1], w: 1 },
-    { t: tune(462), cells: 4.8, hold: [9.8, -0.95], w: 1 },
-    { t: tune(465), cells: 5.0, hold: [9.8, -0.95], w: 1 },
+    { t: tune(462), cells: 4.8, hold: [9.95, -0.95], w: 1 },
+    { t: tune(465), cells: 5.0, hold: [9.95, -0.95], w: 1 },
     { t: CORE, cells: 6.4, hold: [10.4, -1.0], w: 1 },
     // Out through the dark to the door and the car.
     { t: OFF_FLOOR + 0.2, cells: 5.4, hold: [12.3, 0.4], w: 0.55 },

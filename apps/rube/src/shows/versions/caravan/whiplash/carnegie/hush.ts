@@ -61,15 +61,16 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold, w })
   return [
     { t: slot.begin, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
-    // Up from the snare to take in the frame hanging over it, and the cup he leaps for; the knock.
+    // Up from the snare to take in the frame hanging over it, and the cup he leaps for; the knock, a step closer and
+    // over to the crash, so the cymbal it tips is a subject of the frame.
     k(325.4, 5.2, [-0.9, -1.35]),
-    k(KNOCK, 5.4, [-0.8, -1.7]),
+    k(KNOCK, 4.7, [-0.4, -1.85]),
     k(330.2, 5.0, [-0.3, -1.75]),
     // Back to see Fletcher come down off his podium and across; in on the hand on the crash, and the two heads
     // either side of it.
     k(H_WALK[0] + 1.6, 8.4, [1.9, -1.55]),
     k(H_WALK[1] + 0.4, 5.8, [0.5, -1.95]),
-    k(FIX[0] + 0.5, 4.5, [0.25, -2.2]),
+    k(FIX[0] + 0.5, 3.95, [0.5, -2.15]),
     k(LET_GO + 0.9, 4.1, [0.2, -2.15]),
     // He goes back; the bursts round the kit, both arms, his head over them at the top of the frame. In close on the
     // rack tom and the snare, along to the floor tom; out on the crash (it holds now), with Fletcher back on his
@@ -81,19 +82,21 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(351.6, 3.5, [-0.8, -1.25], 0.6),
     k(354.0, 4.6, [-1.3, -1.2], 0.55),
     k(356.1, 3.8, [-0.9, -1.4]),
-    // To the ride; then across the stage to his father at the stage door, alone in the wings' light under its lit
-    // window (the solo's look at him is closer and keeps the window out; this one is wide enough for the window over
-    // him, with him at about three quarters of the height, the wings' floor and the lip under him, and the house's
-    // seats just out of the bottom edge), leaning toward the stage (`conductor.ts` `jimAt`, `hall.ts` `jimLit`); and
-    // out from him across the whole width of the stage to his son, small in the frame in their pool at the right: the
-    // look from father to son. Back to the kit for the ride's last stroke.
+    // To the ride; then across the stage to his father at the stage door, in one smooth move from rest to rest (the
+    // solo already crossed this floor; this look is about him, not the way there). Alone in the wings' light under
+    // its lit window (the solo's look at him is closer and keeps the window out; this one has the window over him,
+    // him at about three quarters of the height, a little left so he looks into the frame toward the stage), leaning
+    // toward it (`conductor.ts` `jimAt`, `hall.ts` `jimLit`), for a breath (360.1-361.9). Then straight out from him
+    // across the whole width of the stage to his son, small beyond in their pool at the right: the look from father
+    // to son, the story's image, so it is the one held (363.1-366.25, landing and leaving on the ride's accents).
+    // Back to the kit for the ride's last stroke.
     k(357.9, 5.4, [-2.1, -1.4]),
-    k(358.9, 5.3, [-2.45, -1.3]),
-    k(361.0, 5.0, [JIM[0] - 0.1, JIM[1] - 1.3]),
-    k(362.6, 4.85, [JIM[0] + 0.0, JIM[1] - 1.25]),
-    k(364.8, 6.5, [(JIM[0] + KIT_AT[0] - 0.8) / 2 - 0.15, -0.3]),
-    k(366.0, 6.4, [(JIM[0] + KIT_AT[0] - 0.8) / 2 + 0.05, -0.35]),
-    k(367.4, 5.6, [-2.0, -1.2]),
+    { ...k(358.8, 5.3, [-2.45, -1.3]), ease: 'whip', open: 0.05 },
+    k(360.1, 4.95, [JIM[0] + 0.35, JIM[1] - 1.3]),
+    { ...k(361.9, 4.85, [JIM[0] + 0.4, JIM[1] - 1.25]), ease: 'whip', open: 0 },
+    k(363.1, 6.5, [(JIM[0] + KIT_AT[0] - 0.8) / 2 - 0.15, -0.3]),
+    k(366.25, 6.35, [(JIM[0] + KIT_AT[0] - 0.8) / 2 + 0.1, -0.35]),
+    k(367.5, 5.6, [-2.0, -1.2]),
     k(368.6, 5.2, [-1.1, -1.35]),
     { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
   ]
