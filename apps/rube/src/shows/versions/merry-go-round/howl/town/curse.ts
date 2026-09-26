@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, hash, part, smooth, type PartShot } from '../kit'
+import { alpha, box, carried, frame, hash, part, smooth, type PartShot } from '../kit'
 import { TOWN, WITCH } from '../worlds'
 import { CURSE_AT, DISPLAY, DISPLAY_BRAKE, DISPLAY_FOLD, DISPLAY_ON, LAUGH, LOOM, TOWN_AT, displayPedal, glow, soft } from './town'
 import { curve, ring, step } from './shop-kit'
@@ -19,8 +19,11 @@ import { drawWitch } from './witch'
  * doorway and spreading out inside until she fills the shop; Sophie backs away before her to the counter. On the
  * accents (99.45 → 100.96) she leans in over her, the lamp gutters, the hats jump on their shelves.
  *
- * The curse (101.309, the strongest note of the waltz): her gloved hand goes out and a soft dark gust goes through
- * Sophie and knocks her back. On each accent after it (102.01 → 106.81) Sophie greys a step (`age.ts`): the Witch
+ * The curse (101.309, the strongest note of the waltz): her gloved hand goes out over the gap of floor between them,
+ * darkness gathers in it, and on the note a dark gust (soft volume, never inked) rolls out of the glove, through
+ * Sophie and on across the shop floor, some of it climbing the wall to the hats; the lamp all but goes out and the
+ * shop sinks into the dark, coming back slowly. The gust carries her back about 0.6 cells, slowing all the way. On
+ * each accent after it (102.01 → 106.81) Sophie greys a step (`age.ts`): the Witch
  * laughs, heaving, and backs out through the door the way she came, and goes; the lamp gutters on every one.
  * Sophie follows slowly to the door, and stops at the mirror beside it (106.43): a glance, a pause, the last step of
  * grey (106.81). Then she walks out of the open door, slowly, 0.45 c/s at 107.9.
@@ -56,6 +59,11 @@ const PEDAL_TILT = 0.12
 
 /* ------------------------------------------------------------------ Sophie */
 
+/**
+ * Where she stands for the curse: backed off from the Witch's hem with a clear gap of floor between them (about 0.4
+ * cells from her edge to the fur), so the hand that goes out over it and the gust that crosses it both read.
+ */
+const STAND = 5.8
 /** Her x before the curse: to the pedal, on it, off toward the door, stopped by the bell, backing away. */
 const before = curve([
   [85.8, O[0] - 0.5, 0],
@@ -66,21 +74,32 @@ const before = curve([
   [93.3, 7.25, 0.5],
   [94.4, 7.7, 0],
   [95.3, 7.7, 0],
-  [98.3, 6.2, 0],
-  [CURSE, 6.2, 0],
+  [98.3, STAND, 0],
+  [CURSE, STAND, 0],
 ])
-/** And after: knocked back by the gust, still, then after the Witch to the door, a glance at the mirror, out. */
+/**
+ * The blow: the gust takes her at once on 101.309 and carries her back across the floor, slowing all the way (a
+ * long exponential, nothing snaps), and she finds her feet again a little forward of where it left her. Net about
+ * 0.6 cells.
+ */
+const BLOW = 0.7
+const BLOW_TAU = 0.42
+const FIND = 0.09
+const FIND_TAU = 0.9
+const blown = (u: number): number => STAND - BLOW * (1 - Math.exp(-u / BLOW_TAU)) + FIND * (1 - Math.exp(-u / FIND_TAU))
+const blownV = (u: number): number => (-BLOW / BLOW_TAU) * Math.exp(-u / BLOW_TAU) + (FIND / FIND_TAU) * Math.exp(-u / FIND_TAU)
+/** She stands where it left her while the first greys take her, then goes after the Witch to the door. */
+const MOVE = 103.2
+/** And after: after the Witch to the door, a glance at the mirror, out. */
 const after = curve([
-  [CURSE, 6.2, -1.4],
-  [CURSE + 0.55, 5.97, 0],
-  [103.7, 5.97, 0],
-  [105.3, 7.05, 0.62],
+  [MOVE, blown(MOVE - CURSE), blownV(MOVE - CURSE)],
+  [105.0, 6.75, 0.8],
   [GLANCE, 7.88, 0.08],
   [GLANCE + 0.2, 7.85, 0],
   [LAST, 7.9, 0.2],
   [107.9, W0 + 0.08, 0.45],
 ])
-const sophieX = (t: number): number => (t < CURSE ? before(t) : after(t))
+const sophieX = (t: number): number => (t < CURSE ? before(t) : t < MOVE ? blown(t - CURSE) : after(t))
 /** Up on the display's pedal while she is on it. */
 function sophieY(t: number, x: number): number {
   const from = PEDAL_X - PEDAL_L
@@ -122,7 +141,10 @@ function witchHeave(t: number): number {
   }
   return Math.min(1.2, h)
 }
-/** Her lean toward Sophie as she looms, a step nearer on each accent. */
+/**
+ * Her lean toward Sophie as she looms, a step nearer on each accent (negative: toward the left). Drawn as a shear
+ * about the floor (`drawTheWitch`), so her top comes over Sophie while her hem stays flat on the boards.
+ */
 function witchLean(t: number): number {
   let lean = 0
   LOOM.forEach((at, i) => {
@@ -144,6 +166,79 @@ const witchHand = (t: number): number => smooth(t, LOOM[4], CURSE) * (1 - smooth
 /** She faces into the shop, and turns to go once she is out of the door. */
 const witchFace = (t: number): number => -1 + 2 * smooth(t, 104.9, 105.35)
 
+/** Where her glove is (the palm's middle), in town cells: the same transforms `drawTheWitch` and `drawWitch` make. */
+function glove(t: number): Pt {
+  const x = witchX(t)
+  const h = witchHand(t)
+  const heave = witchHeave(t)
+  const sq = witchSquash(t, x)
+  const sx = 1 + 0.12 * sq + 0.05 * heave
+  const sy = 1 - 0.14 * sq - 0.05 * heave
+  const lx = (-0.55 - 0.55 * h - 0.08) * sx * -witchFace(t)
+  const ly = (-0.95 + 0.25 * h) * sy
+  return [x + lx + -witchLean(t) * (ly - 0.12), FLOOR - 0.12 + ly]
+}
+
+/* ------------------------------------------------------------------ the curse's gust */
+
+/**
+ * How hard the curse has the shop at `t`, 0..1: a breath of it gathering in her glove as it comes up (0.25 at the
+ * note), all of it at once on 101.309, and a long ebb (the lamp nearly out, the room dark, coming back slowly).
+ */
+function curseHold(t: number): number {
+  const s = t - CURSE
+  if (s < -0.4) return 0
+  if (s < 0) return 0.25 * smooth(t, CURSE - 0.4, CURSE)
+  if (s > 5) return 0
+  return 0.25 * Math.exp(-s / 0.08) + (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 0.95)
+}
+
+/** The gust's front: out of the glove, down across the gap and past her, then rolling left along the floor. */
+const GUST_RUN = 5.1
+const gustFront = (u: number): number => (u <= 0 ? 0 : GUST_RUN * (1 - Math.exp(-u / 0.5)))
+function gustPath(d: number): Pt {
+  const [gx, gy] = glove(CURSE)
+  // Low over the boards once it is down: a roll a hand's height deep.
+  return [gx - d, -0.24 + (gy + 0.24) * Math.exp(-d / 0.24)]
+}
+
+interface Puff {
+  x: number
+  y: number
+  r: number
+  a: number
+}
+const PUFFS = 64
+/** The gust as soft volume at `t`: puffs shed at its front as it goes, each drifting on, swelling, rising, thinning. */
+function gust(t: number): Puff[] {
+  const u = t - CURSE
+  const out: Puff[] = []
+  if (u < -0.02 || u > 3.6) return out
+  for (let i = 0; i < PUFFS; i++) {
+    // Shed densely at first, when the front is fastest, then more sparsely as it slows along the floor.
+    const born = 0.95 * Math.pow(i / PUFFS, 1.35) + 0.02 * hash(i, 1, 51)
+    const age = u - born
+    if (age <= 0) continue
+    const life = 0.8 + 0.8 * hash(i, 2, 51)
+    const d0 = gustFront(born)
+    // The part shed under the shelves climbs the back wall to the hats; the rest rolls on along the floor.
+    const climbs = d0 > 0.15 && d0 < 1.5 && hash(i, 5, 51) < 0.45
+    // It carries on after it is shed, slower than the front (what climbs, hardly at all).
+    const d = d0 + (climbs ? 0.2 : 0.8) * (1 - Math.exp(-age / 0.7)) * (1 - 0.4 * (i / PUFFS))
+    const [px, py] = gustPath(d)
+    // The billow is deep: puffs at every height from the boards to a little over her head, rolling as it goes.
+    const depth = 0.55 * hash(i, 9, 51) * (1 - Math.exp(-d / 0.5))
+    const roll = hash(i, 3, 51) * 6.28 - age * 4.5
+    const rr = 0.1 + 0.1 * hash(i, 4, 51)
+    const rise = (climbs ? 1.6 + 0.6 * hash(i, 6, 51) : 0.2 + 0.4 * hash(i, 6, 51)) * (1 - Math.exp(-age / (climbs ? 0.7 : 1.0)))
+    const r0 = 0.36 + 0.3 * hash(i, 7, 51)
+    const r = r0 * (0.6 + 0.9 * (1 - Math.exp(-age / 0.6))) * (climbs ? 1.2 : 1)
+    const a = (0.32 + 0.16 * hash(i, 8, 51)) * smooth(age, 0, 0.06) * Math.exp(-age / life) * (1 - 0.3 * (i / PUFFS))
+    out.push({ x: px + Math.cos(roll) * rr, y: py - depth + Math.sin(roll) * rr * 0.6 - rise, r, a })
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------ the lamp */
 
 /** The lamp's flame: steady, leaning and fluttering in the draught when the door opens, guttering on every accent. */
@@ -156,7 +251,11 @@ function flame(t: number): { h: number; lean: number; glow: number } {
   }
   const draught = smooth(t, BELL, BELL + 0.3) * (1 - smooth(t, 106, 108)) * (0.5 + 0.5 * Math.sin(t * 7.3))
   const flicker = 0.04 * Math.sin(t * 13.1) + 0.03 * Math.sin(t * 21.7 + 1)
-  return { h: 1 - 0.55 * gut + flicker, lean: 0.25 * draught + 0.15 * gut * Math.sin(t * 17), glow: 1 - 0.5 * gut + flicker * 0.6 }
+  // The curse all but puts it out: flat and blown over, coming back slowly.
+  const cur = curseHold(t)
+  const h = Math.max(0.12, 1 - 0.55 * gut * (1 - cur) - 0.85 * cur + flicker)
+  const lean = 0.25 * draught + 0.15 * gut * Math.sin(t * 17) - 0.75 * cur * (1 + 0.25 * Math.sin(t * 19))
+  return { h, lean, glow: Math.max(0.15, 1 - 0.5 * gut * (1 - cur) - 0.8 * cur + flicker * 0.6) }
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -192,10 +291,11 @@ export const curse = part<CurseState>(
       { t: BELL, cells: 5.1, hold: H(8.1, -1.4), w: 1 },
       // The Witch fills the shop.
       { t: 97.6, cells: 5.4, hold: H(7.3, -1.45), w: 1 },
-      { t: LOOM[0], cells: 4.9, hold: H(6.95, -1.25), w: 1 },
-      // In for the curse.
-      { t: CURSE, cells: 4.3, hold: H(6.55, -1.0), w: 1 },
-      { t: 103.4, cells: 4.5, hold: H(7.05, -1.05), w: 1 },
+      { t: LOOM[0], cells: 4.9, hold: H(6.8, -1.25), w: 1 },
+      // In for the curse: the two of them and the floor between; then a breath wider, holding still so the blow shows.
+      { t: CURSE, cells: 4.4, hold: H(6.3, -1.0), w: 1 },
+      { t: 102.4, cells: 4.65, hold: H(6.25, -1.05), w: 1 },
+      { t: 103.8, cells: 4.5, hold: H(6.85, -1.05), w: 1 },
       // The mirror, and out of the door.
       { t: GLANCE, cells: 4.2, hold: H(8.05, -0.9), w: 1 },
       { t: slot.end, cells: 4.5, hold: H(W0 + 0.08 + 0.9, -0.8), w: 1 },
@@ -214,43 +314,62 @@ function drawCurse(p: p5, c: Ctx, t: number): void {
   p.translate(-O[0] * k, -O[1] * k)
   // Only while the night leg has the shop (and a moment either side); the rest of the show the shop is others'.
   if (t > 84.5 && t < 109.5) {
+    drawDark(p, k, t)
     drawLamp(p, c, t)
     drawTheWitch(p, k, W, ink, t)
+    drawGust(p, k, t, false)
   }
   p.pop()
 }
 
 function drawOver(p: p5, c: Ctx, t: number): void {
-  if (t < CURSE - 0.2 || t > CURSE + 1.6) return
+  if (t < CURSE - 0.4 || t > CURSE + 3.6) return
   const { k } = c
   p.push()
   p.translate(-O[0] * k, -O[1] * k)
-  // The curse: a soft dark gust out of her glove, round Sophie once, and up and away.
-  const u = t - CURSE
-  const hand: Pt = [witchX(t) - 1.4, -0.95]
-  const her: Pt = [sophieX(t), 0]
-  const col = mixHex(WITCH.fur, TOWN.blob, 0.4)
-  for (let i = 0; i < 14; i++) {
-    const s = u - i * 0.03
-    if (s < -0.12) continue
-    const go = Math.max(0, (s + 0.12) / 0.3)
-    let x: number
-    let y: number
-    if (go <= 1) {
-      // Out of the hand to her, arcing down.
-      x = hand[0] + (her[0] + 0.25 - hand[0]) * go
-      y = hand[1] + (her[1] - 0.2 - hand[1]) * Math.sin((go * Math.PI) / 2)
-    } else {
-      // Round her, and rising off her as it thins.
-      const a = -Math.PI / 2 + (go - 1) * 3.6 + i * 0.05
-      const r = 0.3 + (go - 1) * 0.12
-      x = her[0] + Math.cos(a + Math.PI / 2) * r
-      y = her[1] - 0.05 + Math.sin(a + Math.PI / 2) * r * 0.6 - (go - 1) * 0.35
-    }
-    const a = 0.42 * Math.exp(-Math.max(0, s) / 0.55) * smooth(s, -0.12, 0.02) * (1 - 0.35 * hash(i, 7))
-    soft(p, k, x, y, 0.14 + 0.05 * Math.min(go, 2.5) + 0.05 * hash(i, 3), col, a)
-  }
+  drawGust(p, k, t, true)
   p.pop()
+}
+
+const GUST_INK = mixHex(WITCH.fur, TOWN.blob, 0.45)
+
+/** The shop sinks toward the night while the curse has the lamp down (behind the Witch, the gust and Sophie). */
+function drawDark(p: p5, k: number, t: number): void {
+  const cur = curseHold(t)
+  if (cur <= 0.01) return
+  const f = frame(p, k)
+  p.push()
+  p.noStroke()
+  p.rectMode(p.CORNER)
+  p.fill(alpha(p, TOWN.night, 0.5 * cur))
+  p.rect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+  p.pop()
+}
+
+/**
+ * The curse as soft volume, never inked. Before the note it gathers in her glove; on it, a dark gust rolls out of
+ * the glove, down over the gap, through Sophie and on across the shop floor, a part of it climbing the wall to the
+ * hats. Behind the balls it is at full strength; `front` is the thin veil of it that passes in front of her.
+ */
+function drawGust(p: p5, k: number, t: number, front: boolean): void {
+  const u = t - CURSE
+  if (u < -0.4 || u > 3.6) return
+  const her: Pt = [sophieX(t), 0]
+  if (!front && u < 0.25) {
+    // Gathering in the palm as the hand comes out, and spent into the gust at once.
+    const [gx, gy] = glove(t)
+    const g = u < 0 ? smooth(u, -0.4, 0) : Math.exp(-u / 0.07)
+    soft(p, k, gx - 0.05, gy, 0.16 + 0.2 * g, GUST_INK, 0.5 * g)
+  }
+  for (const f of gust(t)) {
+    if (!front) {
+      soft(p, k, f.x, f.y, f.r, GUST_INK, f.a)
+      continue
+    }
+    // In front of her only where it is passing through her, and only thinly: she must still read through it.
+    const near = Math.exp(-(Math.pow(f.x - her[0], 2) + Math.pow(f.y - her[1], 2)) / 0.18)
+    soft(p, k, f.x, f.y, f.r, GUST_INK, f.a * 0.38 * near)
+  }
 }
 
 /** The lamp over the counter: its flame under the shade and the warm pool it throws, guttering when the Witch is near. */
@@ -302,10 +421,14 @@ function drawTheWitch(p: p5, k: number, W: number, ink: string, t: number): void
   ctx.rect(X(W1), X(-40), X(60), X(80))
   ctx.clip()
   p.translate(X(x), X(FLOOR - 0.12))
+  // Her lean as a shear about the floor: her top comes over toward Sophie, her hem stays flat on the boards.
+  p.translate(0, X(0.12))
+  p.applyMatrix(1, 0, -witchLean(t), 1, 0, 0)
+  p.translate(0, X(-0.12))
   drawWitch(p, k, W, ink, {
     t,
     face: witchFace(t),
-    lean: witchLean(t),
+    lean: 0,
     heave: witchHeave(t),
     squash: witchSquash(t, x),
     mouth: witchMouth(t),
