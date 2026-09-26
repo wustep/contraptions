@@ -5,7 +5,7 @@ import { PIT, ROOM_TOP, TEMPO_AT, WALL_R, toTempo } from './band-plan'
 import { ROOM_KIT } from './band-people'
 import { drawFarCorridor, drawSnareOver } from './bandroom'
 import {
-  CRASH, DROP_OFF, DUCK, GO, PEEK, PUSH, RUSH, SLAM, SLAP3, STOP2, TANNER_ON, TEMPO_END, TEMPO_WALK, THROW, WALL, WITH,
+  ANSWER, CRASH, DROP_OFF, DUCK, GO, PEEK, PUSH, RUSH, SLAM, SLAP1, SLAP2, SLAP3, STOP2, TANNER_ON, TEMPO_END, TEMPO_WALK, THROW, WALL, WITH,
 } from './tempo-motion'
 
 /**
@@ -79,13 +79,21 @@ export const tempo = part<TempoState>(
       at(92.6, 4.6, [21.6, -0.1]),
       // Wide enough for the chair: Fletcher going for it behind him, and back with it.
       at(94.3, 6.8, [19.7, 0.1]),
-      at(97.2, 6.3, [20.7, -0.3]),
-      at(WALL + 0.3, 6.3, [21.4, -0.3]),
-      // Close for the counts, and for the last trial: pushing in, slowly.
-      at(100.9, 3.8, [22.15, -0.1]),
-      at(SLAP3 + 0.3, 3.8, [22.15, -0.1]),
-      at(WITH[0] + 2.2, 5.2, [22.7, 0.35]),
-      at(WITH[WITH.length - 1], 3.3, [22.15, -0.12]),
+      at(97.2, 6.6, [19.0, -0.7]),
+      at(THROW, 6.5, [19.55, -0.7]),
+      at(WALL + 0.3, 6.3, [21.3, -0.4]),
+      // The counts, each its own beat: the two of them for the count-in (his hand up over the drum), close on the
+      // palm slapped down on the hoop by his ear; again; his answer; the last slap.
+      at(100.9, 4.3, [22.2, -0.5]),
+      at(SLAP1, 2.7, [22.45, 0.02]),
+      at(104.3, 4.1, [22.2, -0.45]),
+      at(SLAP2, 2.6, [22.45, 0.02]),
+      at(ANSWER, 3.4, [22.3, -0.2]),
+      at(SLAP3, 2.7, [22.45, 0.02]),
+      // The last trial runs clean: wider, the whole kit and Fletcher's hand keeping it; one push onto the last stop.
+      at(WITH[0] + 1.6, 5.6, [22.3, -0.55]),
+      at(WITH[0] + 5.2, 5.4, [22.3, -0.5]),
+      at(WITH[WITH.length - 1], 3.0, [22.15, -0.12]),
       // Off the kit; Tanner over him; the look back; out.
       at(DROP_OFF + 0.2, 5.4, [22.9, 0.9]),
       at(TANNER_ON + 0.5, 5.1, [23.3, 1.2]),
