@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
-import { drawCalcifer, drawTurnip, drawWings } from '../cast'
+import { calciferBody, drawCalcifer, drawTurnip, drawWings } from '../cast'
 import { alpha, box, carried, frame, hash, part, smooth, type Company, type PartShot } from '../kit'
 import { CASTLE, puff, drawLeg } from '../wastes/castle'
 import { CALCIFER, HOWL, HOWL_BIRD, WASTES } from '../worlds'
@@ -342,7 +342,7 @@ export function drawGrate(p: p5, k: number, W: number, ink: string, t: number, l
   p.push()
   p.strokeJoin(p.ROUND)
   if (lit > 0.01) {
-    const col = mixHex(CALCIFER.body, CALCIFER.weak, weak)
+    const col = calciferBody(weak)
     p.noStroke()
     for (let i = 0; i < 3; i++) {
       p.fill(alpha(p, i % 2 ? CALCIFER.edge : col, 0.9 * lit))
