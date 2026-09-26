@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot } from '../kit'
 import { PLAN, SEAM_SHOT } from '../seams'
 import { BELLOWS, FLY, OOM, PAH, PISTONS, T0, T1, kt } from './heart-clock'
-import { HOPS, OFF_FLY, laneOf } from './heart-path'
+import { FLICK, HOPS, OFF_FLY, laneOf } from './heart-path'
 import { drawHeart, drawHeartOver } from './heart-set'
 
 /**
@@ -46,24 +46,25 @@ export const gears = part<{ begin: number }>(
   }),
   (slot): PartShot[] => {
     const at = (t: number, cells: number, hold?: Pt, w?: number, off?: Pt): PartShot => ({ t, cells, hold, w, off })
+    // A point in WORLD cells, in this part's frame (laid mirrored: its entry, frame (-0.5, 0), is world (61.5, 33)).
+    const wp = (x: number, y: number): Pt => [61 - x, y - 33]
+    // The frame opens a step with each new mechanism and never goes back in, so the machine is visibly bigger each
+    // phrase: 7 cells on the hammer, 8.5 on the flywheel, 9.2 on the pumps, 9.5 (the whole heart) on the great
+    // bellows, held so into the runaway (`runaway.ts`). The frame's top stays under the drum's floor (world y 26.3):
+    // the drum room above is never in the heart's frames.
     return [
       { t: slot.begin, ...SEAM_SHOT },
-      // His landing trips the hammer; its first blow wakes the furnace: easing back as the heart wakes, the anvil, the
-      // furnace and the flywheel in the frame with him.
-      at(OOM[0], 6.45, [3.0, -1.2], 0.4),
-      at(kt(196), 9.0, [3.8, -1.9], 0.62),
-      at(OOM[5], 8.3, [4.0, -2.4], 0.55),
-      // The flywheel engages: wide on the great wheel.
-      at(FLY, 9.6, [5.9, -1.7], 0.65),
-      at(FLY + 2.6, 8.9, [5.8, -1.6], 0.6),
-      at(OFF_FLY, 8.3, [7.0, -1.5], 0.5),
+      // His landing trips the hammer; its first blows wake the furnace: easing back to the anvil, the cam and the
+      // furnace's mouth with him.
+      at(kt(196), 7.0, wp(58.3, 31.35), 0.7),
+      // The flywheel engages: the great wheel whole, him riding up its side.
+      at(FLY, 8.5, wp(56.2, 31.05), 0.78),
+      at(FLICK, 8.8, wp(55.0, 30.85), 0.8),
       // The pistons.
-      at(PISTONS + 0.4, 8.4, [9.4, -1.6], 0.55),
-      at(PISTONS + 3.0, 6.0, [10.6, -0.9], 0.45, [0, -0.5]),
-      // The great bellows: everything.
-      at(BELLOWS + 0.35, 10.2, [7.0, -2.1], 0.65),
-      at(BELLOWS + 3.2, 6.6, [10.4, -1.3], 0.5, [0, -0.6]),
-      { t: slot.end, ...SEAM_SHOT },
+      at(PISTONS, 9.2, wp(53.4, 31.15), 0.82),
+      // The great bellows: everything, the whole heart.
+      at(BELLOWS, 9.5, wp(53.8, 31.25), 0.85),
+      at(slot.end, 9.5, wp(52.6, 31.25), 0.82),
     ]
   },
 )

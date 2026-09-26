@@ -114,9 +114,10 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   // The seams' contract (`seams.ts`): the camera on SEAM_SHOT's framing at every builder's seam, and at a drop the
   // ball falling straight down onto the next part's entry.
   // The coda's first chord (runaway → fall) is the one wide seam: the machine coming apart over him (CODA_SHOT).
+  // A seam inside one builder's room ('own': court → wake, gears → runaway) is not a hand-off: its framing is free.
   const shotAt = (pl: (typeof PLAN)[keyof typeof PLAN]) => (pl.name === 'runaway' ? CODA_SHOT.cells : SEAM_SHOT.cells)
-  const badCam = Object.values(PLAN).filter((pl) => Math.abs(cam(pl.end).cells - shotAt(pl)) > 0.01).map((pl) => pl.end.toFixed(2))
-  check('mountain king: the camera is on the seam framing (6 cells, following) at every builder\'s seam, wide on the coda\'s', badCam.length === 0, badCam.join(', '))
+  const badCam = Object.values(PLAN).filter((pl) => pl.out !== 'own' && Math.abs(cam(pl.end).cells - shotAt(pl)) > 0.01).map((pl) => pl.end.toFixed(2))
+  check('mountain king: the camera is on the seam framing (6 cells, following) at every hand-off, wide on the coda\'s', badCam.length === 0, badCam.join(', '))
   const badDrop: string[] = []
   for (const pl of Object.values(PLAN)) {
     if (pl.out !== 'drop') continue

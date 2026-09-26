@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot } from '../kit'
-import { CODA_SHOT, PLAN, SEAM_SHOT } from '../seams'
+import { CODA_SHOT, PLAN } from '../seams'
 import { GOVERNOR, GOV_SNAP, GOV_STOPS, GOV_WEIGHTS, OOM, PAH, RUN_DX, T1, T2, VALVE_AT, VALVE_THROW, YOKE_GOES, kt } from './heart-clock'
 import { ON_YOKE, YOKE_BUCKS, laneOf } from './heart-path'
 
@@ -36,9 +36,6 @@ export const RUNAWAY_HITS: number[] = uniq([
   GOV_SNAP,
 ]).filter((t) => t >= T1 - 1e-6 && t < T2 - 1e-6)
 
-/** A point of gears' frame in the runaway's. */
-const g = (x: number, y: number): Pt => [x - RUN_DX, y]
-
 export const runaway = part<{ begin: number }>(
   { name: 'runaway', draw: () => {} },
   (slot) => ({
@@ -52,16 +49,14 @@ export const runaway = part<{ begin: number }>(
     // CODA_SHOT's world point in this frame (laid mirrored from world x 51: the chimney's foot is this frame's exit),
     // nudged by dx, dy world cells.
     const coda = (dx: number, dy: number): Pt => [PLAN.runaway.exit[0] - 0.5 - (CODA_SHOT.world[0] + dx - 47.5), CODA_SHOT.world[1] + dy - 33]
+    // A point in WORLD cells, in this frame.
+    const wp = (x: number, y: number): Pt => coda(x - CODA_SHOT.world[0], y - CODA_SHOT.world[1])
+    // One wide frame of the whole heart from the gears' last phrase to the crash (9.5 opening to 10): the machine
+    // past control is the picture; no pushing in and out. The frame's top stays under the drum's floor.
     return [
-      { t: slot.begin, ...SEAM_SHOT },
-      // Flung onto the yoke: the governor, the whole of it, spinning up with him on it.
-      at(ON_YOKE + 0.2, 9.2, g(11.6, -2.6), 0.55),
-      at(ON_YOKE + 2.4, 6.0, undefined, 0, [-0.6, -0.9]),
-      // The valve blows and the keeper sits on it: wide on the whole machine past control.
-      at(VALVE_AT + 0.2, 11.0, g(7.4, -2.4), 0.7),
-      at(VALVE_THROW, 7.0, g(12.4, -2.4), 0.45),
-      // The governor opens past its stops: back, to hold the whole machine as it comes apart over him (the weights
-      // flung, the flywheel split), and he drops into the collar low in the frame on the coda's first chord.
+      { t: slot.begin, cells: 9.5, hold: wp(52.6, 31.25), w: 0.82 },
+      at(ON_YOKE, 9.6, wp(51.8, 31.25), 0.84),
+      at(VALVE_AT, 9.75, wp(51.8, 31.1), 0.96),
       at(GOV_STOPS, 10.0, coda(0, 0), 0.82),
       at(GOV_SNAP, CODA_SHOT.cells, coda(0, 0), CODA_SHOT.w),
       { t: slot.end, cells: CODA_SHOT.cells, hold: coda(0, 0), w: CODA_SHOT.w },
