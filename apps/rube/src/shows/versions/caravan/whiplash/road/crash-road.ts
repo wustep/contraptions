@@ -182,7 +182,10 @@ function drawBridge(p: p5, c: Ctx, a: number, b: number): void {
   p.pop()
 }
 
-/** The lit lamps doubled in the river: broken streaks of sodium under each, stirring. Additive. */
+/**
+ * The lit lamps doubled in the river: under each, one soft column of sodium on the black water, brightest at the
+ * surface and fading down, breathing a little as the water moves. A filled glow, no strokes. Additive.
+ */
 export function drawReflections(p: p5, c: Ctx, f: Frame, t: number): void {
   if (f.x1 < BRIDGE.x0 || f.x0 > BRIDGE.x1 || f.y1 < WATER) return
   const { k } = c
@@ -194,13 +197,18 @@ export function drawReflections(p: p5, c: Ctx, f: Frame, t: number): void {
     if (lx < BRIDGE.x0 || lx > BRIDGE.x1 || lx < f.x0 - 2 || lx > f.x1 + 2) continue
     const on = lampAt(i, t)
     if (on <= 0.02) continue
-    for (let j = 0; j < 9; j++) {
-      const y = WATER + 0.08 + j * 0.16
-      const w = (0.5 - j * 0.035) * (0.7 + 0.5 * Math.sin(t * 2.3 + j * 1.7 + i))
-      const dx = 0.12 * Math.sin(t * 1.7 + j * 2.1 + i * 0.7)
-      ctx.fillStyle = hexA(ROAD.sodium, 0.34 * on * (1 - j / 10))
-      ctx.fillRect((lx + dx - w / 2) * k, y * k, w * k, 0.05 * k)
-    }
+    const breathe = 0.85 + 0.15 * Math.sin(t * 1.3 + i * 1.9)
+    const sway = 0.05 * Math.sin(t * 0.9 + i * 0.7)
+    ctx.save()
+    ctx.translate((lx + sway) * k, (WATER + 0.05) * k)
+    ctx.scale(1, 3.2)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.42 * k)
+    g.addColorStop(0, hexA(ROAD.sodium, 0.2 * on * breathe))
+    g.addColorStop(0.55, hexA(ROAD.sodium, 0.07 * on * breathe))
+    g.addColorStop(1, hexA(ROAD.sodium, 0))
+    ctx.fillStyle = g
+    ctx.fillRect(-0.42 * k, 0, 0.84 * k, 0.42 * k)
+    ctx.restore()
   }
   ctx.restore()
 }
