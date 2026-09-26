@@ -69,8 +69,10 @@ export const hills = part<null>(
     { t: 109.9, cells: 4.1, hold: [AT_POLE + 0.3, -0.72] },
     { t: POP + 0.1, cells: 4.5, hold: [0.1, -1.05] },
     { t: LANDS + 0.3, cells: 4.6, hold: [-0.35, -0.95] },
-    { t: 114.6, cells: 4.9, off: [0.55, -1.0] },
-    { t: 116.9, cells: 5.8, off: [-0.4, -1.3] },
+    // Locked off on the hill: she climbs up across the frame, and he hops past her to the top, and back down into
+    // the fog.
+    { t: 114.3, cells: 5.8, hold: [1.0, -1.55] },
+    { t: 117.3, cells: 6.4, hold: [1.1, -1.8] },
     // The fog, and what is in it: wider on each thud.
     { t: THUD[0], cells: 9.5, hold: [HILLTOP[0] - 2.6, -3.3] },
     { t: THUD[1], cells: 17, hold: [HILLTOP[0] - 3.8, -4.7] },

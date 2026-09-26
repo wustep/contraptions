@@ -31,8 +31,8 @@ export function ground(x: number): number {
   let y = FLOOR
   // Behind her, the lane dips back toward the town.
   y += 0.5 * sm((-3 - x) / 16)
-  // The knoll.
-  y -= 0.55 * sm((x - 0.9) / 1.3)
+  // The knoll: a real climb up past the hedge to the hilltop, the way out of town going up into the hills.
+  y -= 1.1 * sm((x - 0.6) / 2.6)
   // Down off the knoll to the moor.
   y += 1.9 * sm((x - 7) / 12)
   // The moor's swell, and the far side's; level where the castle sits down for the night.
@@ -437,11 +437,12 @@ export const ABOARD_KEYS: number[] = [...CLIMB, CLIMB[CLIMB.length - 1] + 1.0, .
 
 /** His hops: take off on the one, land by the three, a hop a bar; [take-off, landing, from x, to x]. */
 const HOPS: [number, number, number, number][] = [
-  [W(58), W(58, 3), -1.2, -0.72],
-  [W(59), W(59, 3), -0.72, -0.12],
-  [W(60), W(60, 3), -0.12, 0.45],
-  // He stops, looks back into the fog, and goes back for it.
-  [W(62), W(62, 3), 0.45, -0.35],
+  // Past her and up the hill ahead of her, a hop a bar, to the hilltop.
+  [W(58), W(58, 3), -1.2, -0.2],
+  [W(59), W(59, 3), -0.2, 0.85],
+  [W(60), W(60, 3), 0.85, 2.75],
+  // He stops up there, looks back into the fog rolling up the lane, and bounds back down past her into it, for the castle.
+  [W(62), W(62, 3), 2.75, -0.35],
   // Out of the fog ahead of the castle, leading it to her; the castle's foot stamps down where he took off, and he
   // bounds over her to stand at her side.
   [W(64), W(64, 3), -0.35, 0.95],

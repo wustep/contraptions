@@ -133,7 +133,7 @@ function band(p: p5, k: number, pts: Pt[], d0: (x: number) => number, d1: (x: nu
  * hedge and cresting a little over the hilltop, so the lane's own short climb reads as a path going up its flank.
  * It sinks back under the near ground on both sides (it is only ever seen above the lane).
  */
-const KNOLL = { x: 2.9, w: 2.7, h: 0.66 }
+const KNOLL = { x: 3.4, w: 3.0, h: 1.3 }
 const knollTop = (x: number): number => FLOOR - KNOLL.h * Math.exp(-(((x - KNOLL.x) / KNOLL.w) ** 2))
 
 /** A lumpy round volume (foliage, a cushion of heather): its edge wanders by `seed`, never a clean ellipse. */
