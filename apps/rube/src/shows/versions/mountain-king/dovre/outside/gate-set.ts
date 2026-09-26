@@ -280,47 +280,46 @@ export function drawMouth(p: p5, c: Pen, open: number): void {
  */
 export function drawLintel(p: p5, c: Pen, t: number): void {
   const { k, ink, weight } = c
-  const { x0, x1, y0, y1 } = LINTEL
+  const { x0, x1, y1 } = LINTEL
   p.push()
-  // The rock above the lintel, out to its face: the cliff made good up to where it meets its own slope.
+  // The rock above the mouth, out to the cliff's face: made good up to where it meets its own slope, its face broken
+  // into ledges and bulges (a cliff, not a straight cut against the sky).
+  const cliff: Pt[] = [
+    [x0, y1],
+    [x0 - 0.05, y1 - 0.35],
+    [x0 + 0.04, y1 - 0.62],
+    [x0 - 0.06, y1 - 1.0],
+    [x0 + 0.05, y1 - 1.3],
+    [x0 + 0.01, y1 - 1.75],
+    [x0 + 0.13, y1 - 2.05],
+    [20.07, -9.0],
+    [20.3, -9.0],
+    [20.3, y1],
+  ]
   p.noStroke()
   p.fill(c.bg)
   p.beginShape()
-  p.vertex(x0 * k, y1 * k)
-  p.vertex(x0 * k, (y0 - 0.3) * k)
-  p.vertex(20.07 * k, -9.0 * k)
-  p.vertex(20.3 * k, -9.0 * k)
-  p.vertex(20.3 * k, y1 * k)
+  for (const [x, y] of cliff) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
-  // The dressed face of the lintel: a band of lighter stone fading up into the rock.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const face = p.color(nightMix(mixHex(STONE.mid, STONE.dark, 0.3), t, 0.28))
-  const rgb = `${p.red(face)},${p.green(face)},${p.blue(face)}`
-  const g = ctx.createLinearGradient(0, y1 * k, 0, (y0 - 0.25) * k)
-  g.addColorStop(0, `rgba(${rgb},1)`)
-  g.addColorStop(0.7, `rgba(${rgb},0.85)`)
-  g.addColorStop(1, `rgba(${rgb},0)`)
-  ctx.save()
-  ctx.fillStyle = g
-  ctx.fillRect(x0 * k, (y0 - 0.25) * k, (x1 - x0) * k, (y1 - y0 + 0.25) * k)
-  ctx.restore()
-  // Its face and underside, cut.
+  // The lintel: the cliff's own rock over the door, only its underside cut, a shade lighter where the door grinds.
   p.noFill()
-  p.stroke(alpha(p, ink, 0.75))
-  p.strokeWeight(weight * 0.9)
+  p.stroke(alpha(p, mixHex(ink, STONE.deep, 0.55), 0.8))
+  p.strokeWeight(weight * 0.8)
   p.beginShape()
-  p.vertex(x0 * k, (y0 - 0.1) * k)
-  p.vertex(x0 * k, (y1 - 0.06) * k)
+  p.vertex(x0 * k, (y1 - 0.08) * k)
   p.quadraticVertex(x0 * k, y1 * k, (x0 + 0.06) * k, y1 * k)
-  p.vertex(x1 * k, y1 * k)
+  p.vertex((x0 + (x1 - x0) * 0.5) * k, (y1 + 0.02) * k)
+  p.vertex(x1 * k, (y1 - 0.02) * k)
   p.endShape()
-  // The underside worn pale where the door has ground past it.
   p.noStroke()
-  p.fill(nightMix(STONE.light, t, 0.3))
+  p.fill(nightMix(mixHex(STONE.dark, STONE.mid, 0.5), t, 0.25))
   p.rectMode(p.CORNER)
-  p.rect((x0 + 0.06) * k, (y1 - 0.055) * k, (DOOR.x1 - x0) * k, Math.max(1, 0.05 * k))
+  p.rect((x0 + 0.06) * k, (y1 - 0.05) * k, (DOOR_FACE - x0) * k, Math.max(1, 0.045 * k))
   p.pop()
 }
+
+/** The door's east face (drawn): the slab is thick, its bulk east of the slot's line into the mouth. */
+const DOOR_FACE = 20.98
 
 /** The rack's teeth on the door's west face: a notch a click. */
 export const TOOTH = DOOR.travel / TIMES.clicks.length
@@ -334,63 +333,75 @@ const BITE_Y = -3.8
  */
 export function drawDoor(p: p5, c: Pen, t: number, drop: number, knock: number): void {
   const { k, ink, weight } = c
+  // A great slab of rough stone, thick as a troll is broad (seen edge-on in the cliff it is still a wall, not a post):
+  // its west face on the slot's line, its bulk east into the mouth.
   const x0 = DOOR.x0 + knock
-  const x1 = DOOR.x1 + knock
+  const x1 = DOOR_FACE + knock
   const top = MOUTH.ceil + drop
   const bottom = MOUTH.floor + drop
-  const face = nightMix(mixHex(STONE.mid, STONE.dark, 0.1), t, 0.25)
+  const face = nightMix(mixHex(STONE.mid, STONE.dark, 0.35), t, 0.22)
+  const edge = mixHex(ink, STONE.deep, 0.7)
   p.push()
   p.rectMode(p.CORNER)
-  // The slot it sinks into: cut into the rock under the threshold, dark.
-  p.noStroke()
-  p.fill(mixHex(STONE.deep, '#000000', 0.3))
-  p.rect(SLOT.x0 * k, SLOT.y0 * k, (SLOT.x1 - SLOT.x0) * k, (SLOT.y1 - SLOT.y0) * k)
-  // The slab.
-  p.stroke(ink)
-  p.strokeWeight(weight * 1.05)
+  // The slab, its edges a little broken.
+  p.stroke(edge)
+  p.strokeWeight(weight * 0.8)
   p.fill(face)
   p.beginShape()
   p.vertex(x0 * k, bottom * k)
-  p.vertex(x0 * k, (top + 0.06) * k)
-  p.vertex((x0 + 0.07) * k, top * k)
-  p.vertex((x1 - 0.05) * k, top * k)
-  p.vertex(x1 * k, (top + 0.05) * k)
+  p.vertex(x0 * k, (top + 0.1) * k)
+  p.vertex((x0 + 0.1) * k, top * k)
+  p.vertex((x0 + (x1 - x0) * 0.45) * k, (top + 0.025) * k)
+  p.vertex((x1 - 0.12) * k, top * k)
+  p.vertex(x1 * k, (top + 0.09) * k)
+  p.vertex((x1 - 0.02) * k, ((top + bottom) / 2) * k)
   p.vertex(x1 * k, bottom * k)
   p.endShape(p.CLOSE)
-  // Its top edge, the part that will be the doorstep: worn and pale.
-  p.noStroke()
-  p.fill(nightMix(STONE.light, t, 0.25))
-  p.rect((x0 + 0.06) * k, top * k, (x1 - x0 - 0.1) * k, Math.max(1, 0.05 * k))
-  // Two iron bands.
-  for (const v of [0.26, 0.74]) {
+  // The stone's courses: two faint seams across it.
+  p.stroke(mixHex(face, STONE.deep, 0.45))
+  p.strokeWeight(weight * 0.6)
+  for (const v of [0.4, 0.62]) {
     const y = top + (bottom - top) * v
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.7)
-    p.fill(WORKS.iron)
-    p.rect((x0 - 0.02) * k, (y - 0.06) * k, (x1 - x0 + 0.04) * k, 0.12 * k)
-    p.noStroke()
-    p.fill(WORKS.steel)
-    for (const bx of [x0 + 0.1, x1 - 0.1]) p.rect((bx - 0.02) * k, (y - 0.02) * k, 0.04 * k, 0.04 * k)
+    p.line((x0 + 0.05) * k, y * k, (x0 + (x1 - x0) * 0.55) * k, (y + 0.03) * k)
   }
-  // The rack: iron teeth down its west face, the pawl biting one at a time.
-  p.stroke(ink)
+  // Its top edge, the part that will be the doorstep: worn a little paler.
+  p.noStroke()
+  p.fill(nightMix(mixHex(STONE.mid, STONE.light, 0.5), t, 0.25))
+  p.rect((x0 + 0.08) * k, top * k, (x1 - x0 - 0.18) * k, Math.max(1, 0.045 * k))
+  // Two iron straps across it, riveted.
+  for (const v of [0.24, 0.78]) {
+    const y = top + (bottom - top) * v
+    p.stroke(edge)
+    p.strokeWeight(weight * 0.6)
+    p.fill(nightMix(WORKS.iron, t, 0.2))
+    p.rect((x0 - 0.02) * k, (y - 0.07) * k, (x1 - x0 + 0.04) * k, 0.14 * k)
+    p.noStroke()
+    p.fill(nightMix(WORKS.steel, t, 0.25))
+    for (let bx = x0 + 0.1; bx < x1 - 0.05; bx += 0.26) p.rect((bx - 0.02) * k, (y - 0.02) * k, 0.04 * k, 0.04 * k)
+  }
+  // The rack: iron teeth down its west face, seen only where they go into the slot at the doorstep, the pawl biting.
+  p.stroke(edge)
   p.strokeWeight(weight * 0.6)
   p.fill(WORKS.iron)
   const phase = ((BITE_Y - MOUTH.ceil) % TOOTH + TOOTH) % TOOTH
-  p.beginShape()
-  p.vertex(x0 * k, (top + 0.08) * k)
-  for (let y = top + phase; y < bottom - 0.04; y += TOOTH) {
-    if (y < top + 0.08) continue
-    p.vertex((x0 - 0.075) * k, (y - TOOTH * 0.1) * k)
-    p.vertex(x0 * k, (y + TOOTH * 0.55) * k)
+  const from = Math.max(top + 0.08, MOUTH.floor - 0.16)
+  if (from < bottom - 0.04) {
+    p.beginShape()
+    p.vertex(x0 * k, from * k)
+    for (let y = top + phase; y < bottom - 0.04; y += TOOTH) {
+      if (y < from) continue
+      p.vertex((x0 - 0.075) * k, (y - TOOTH * 0.1) * k)
+      p.vertex(x0 * k, (y + TOOTH * 0.55) * k)
+    }
+    p.vertex(x0 * k, (bottom - 0.04) * k)
+    p.endShape(p.CLOSE)
   }
-  p.vertex(x0 * k, (bottom - 0.04) * k)
-  p.endShape(p.CLOSE)
-  // The chain's eye at its foot.
-  p.noFill()
-  p.stroke(WORKS.steel)
-  p.strokeWeight(weight * 0.8)
-  p.ellipse(((x0 + x1) / 2) * k, (bottom - 0.06) * k, 0.1 * k, 0.1 * k)
+  // Below the doorstep it goes down into the rock: the slot is inside the mountain, so what has sunk is not seen.
+  p.noStroke()
+  p.fill(c.bg)
+  p.rect((x0 - 0.12) * k, (MOUTH.floor + 0.015) * k, (x1 - x0 + 0.16) * k, (SLOT.y1 - MOUTH.floor + 0.12) * k)
+  // The threshold's rim, over the slab's foot, as the mouth drew it.
+  slab(p, c, DOOR.x1, MOUTH.x1, MOUTH.floor, 0.3, 0.25 + 0.45 * Math.min(1, drop / DOOR.travel), 4)
   p.pop()
 }
 
