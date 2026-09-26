@@ -85,7 +85,8 @@ function drawSmoke(p: p5, c: Ctx, t: number): void {
     for (let j = 5; j >= 0; j--) {
       const a = since - j * 0.1
       if (a <= 0) continue
-      const rise = 1.7 * (1 - Math.exp(-a / 0.75)) * (1 - j * 0.06)
+      // Up fast to her foot on the one (it is under her step), then rolling on up past her, slowing.
+      const rise = 1.9 * (1 - Math.exp(-a / 0.42)) * (1 - j * 0.06) + 0.12 * a
       const y = top - 0.12 - rise
       const px = x + 0.22 * a + 0.06 * Math.sin(a * 3 + j) + (j % 2 ? 0.06 : -0.06)
       const r = 0.18 + 0.42 * (1 - Math.exp(-a / 0.9)) * (1 - j * 0.05)
@@ -207,7 +208,81 @@ function drawPigeons(p: p5, c: Ctx, t: number): void {
     p.push()
     p.translate(at[0] * k, at[1] * k)
     p.rotate(Math.atan2(ahead[1] - at[1], Math.abs(ahead[0] - at[0]) + 1e-6) * 0.5 * face)
-    drawPigeon(p, k, weight, ink, face, flap, 1 - sm(s, 0.85, 1))
+    // Seen from the swell's wide: drawn larger than life, so they read as birds and never as marks.
+    const big = 1 + 0.8 * sm(s, 0, 0.25)
+    p.scale(big)
+    drawPigeon(p, k, weight / big, ink, face, flap, 1 - sm(s, 0.85, 1))
+    p.pop()
+  })
+}
+
+/* ------------------------------------------------------------------ the vanes, and the pigeons on the ridge */
+
+/**
+ * The weathervanes on the roofs under her steps where no chimney is: a banner vane on the dormer (bar 9) and on the
+ * last gable before the tower (bar 17), each spun round by the air of her step on its downbeat and settling back to
+ * the wind. An iron rod and a swallow-tailed plate turning on it (drawn foreshortened as it turns).
+ */
+const VANES: { at: Pt; bar: number }[] = [
+  { at: [13.6, -11.75], bar: 9 },
+  { at: [25.385, -12.2], bar: 17 },
+]
+function drawVanes(p: p5, c: Ctx, t: number): void {
+  const { k, ink, weight } = c
+  const L = lightAt(t)
+  VANES.forEach(({ at, bar }, n) => {
+    const [x, y] = at
+    const since = t - W[bar]
+    const spin = since < 0 ? 0 : 2 * Math.PI * 2.25 * (1 - Math.exp(-since / 0.75))
+    const th = 0.35 + 0.18 * Math.sin(t * 0.9 + n * 2) + spin
+    const c0 = Math.cos(th)
+    const top = y - 0.52
+    p.push()
+    p.stroke(ink)
+    p.strokeWeight(weight * 0.9)
+    p.line(x * k, y * k, x * k, (top - 0.08) * k)
+    p.strokeWeight(weight * 0.6)
+    p.fill(L.tone(mixHex(TOWN.slateDark, TOWN.straw, 0.35)))
+    p.beginShape()
+    const plate: Pt[] = [[0, -0.02], [0.38, -0.02], [0.3, 0.07], [0.38, 0.16], [0, 0.16]]
+    for (const [px, py] of plate) p.vertex((x + px * c0) * k, (top + py) * k)
+    p.endShape(p.CLOSE)
+    p.pop()
+  })
+}
+
+/** Three pigeons on the ridge of the dormer's house; on bar 11 her step goes over them and they burst off it. */
+const RIDGE_BIRDS = [
+  { x: 15.12, face: 1, dx: -2.6, dy: -2.1 },
+  { x: 15.32, face: -1, dx: 1.6, dy: -2.8 },
+  { x: 15.52, face: 1, dx: 3.4, dy: -1.7 },
+]
+function drawRidgeBirds(p: p5, c: Ctx, t: number): void {
+  const { k, ink, weight } = c
+  if (lightAt(t).dark > 0.5) return
+  const off = W[11]
+  RIDGE_BIRDS.forEach((b, i) => {
+    const y0 = -11.5
+    const t0 = off + 0.04 * i
+    if (t < t0) {
+      const bob = Math.max(0, Math.sin(t * 2.1 + i * 2.4)) ** 6
+      p.push()
+      p.translate(b.x * k, y0 * k)
+      drawPerched(p, k, weight, ink, b.face, bob)
+      p.pop()
+      return
+    }
+    const u = (t - t0) / 3.2
+    if (u >= 1) return
+    // Off the ridge in a burst, then away in a long glide, fading into the distance.
+    const e = 1 - Math.pow(1 - u, 2.2)
+    const x = b.x + b.dx * e
+    const y = y0 - 0.15 - b.dy * (e + 0.4 * Math.sin(Math.PI * e) * 0.3)
+    const face = b.dx >= 0 ? 1 : -1
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(-0.25 * face * (1 - u))
+    drawPigeon(p, k, weight, ink, face, (t - t0) * 15 * (1 - 0.4 * u), 1 - sm(u, 0.75, 1))
     p.pop()
   })
 }
@@ -273,6 +348,10 @@ export const skywalk = part<WalkState>(
       p.translate(-E[0] * c.k, -E[1] * c.k)
       p.rectMode(p.CORNER)
       drawWashing(p, c, t)
+      if (t > W[6] && t < W[20]) {
+        drawVanes(p, c, t)
+        drawRidgeBirds(p, c, t)
+      }
       drawSmoke(p, c, t)
       if (t > 60 && t < END + 1) drawParade(p, c, t)
       drawPigeons(p, c, t)
@@ -317,21 +396,26 @@ export const skywalk = part<WalkState>(
     const land = [LAND_AT[0] - E[0], LAND_AT[1] - E[1]]
     const wide: Pt = [37 - E[0], -9.55]
     return [
-      { t: LIFT + 0.6, cells: 5.6, off: [0.35, 0.8] },
-      { t: W[2], cells: 5.8, off: [0.4, 1.05] },
+      // The lift: the frame goes on from the alley's (a head of sky over her) and rises with them from the downbeat,
+      // letting them climb up the frame only as fast as it keeps rising itself: never a dip under the lift.
+      { t: LIFT + 0.6, cells: 5.6, off: [0.35, -0.8] },
+      { t: W[2], cells: 5.8, off: [0.4, 0.75] },
       { t: W[4], cells: 6.2, off: [0.5, 1.2] },
       { t: W[6], cells: 6.8, off: [0.8, 1.5] },
       // Over the roofs the camera goes a little slower than they walk: they cross the frame, the roofs pass under.
       // (Framed with a fifth of the frame over them, so they keep a margin under Zoom.)
-      { t: W[8], cells: 6.0, hold: [12.9 - E[0], -12.0], w: 1 },
-      { t: W[13], cells: 5.7, hold: [18.1 - E[0], -12.15], w: 1 },
-      { t: W[16], cells: 6.2, hold: [23.0 - E[0], -12.35], w: 1 },
+      // Close on them over the roofs (the lift and glide of each step reads), the roofs passing under, and under each
+      // downbeat's step something answering: a chimney's puff, a vane spun round, pigeons off a ridge, the washing.
+      { t: W[8], cells: 5.0, off: [0.75, 1.0] },
+      { t: W[11], cells: 4.7, off: [0.7, 1.05] },
+      { t: W[14], cells: 4.8, off: [0.75, 1.1] },
+      { t: W[16], cells: 5.6, off: [0.9, 1.25] },
       { t: W[18], cells: 7.8, hold: [28.0 - E[0], -13.3], w: 1 },
       { t: W[NOON_BAR], cells: 9.5, hold: [30.1 - E[0], -13.8], w: 1 },
       // The swell: the whole town under them, the two of them against clear sky a fifth down; held while the town
       // lands, then down to the balcony.
-      { t: W[21], cells: 20, hold: [wide[0], wide[1] - 1.0], w: 1 },
-      { t: W[23] + 0.6, cells: 20, hold: [wide[0] + 0.3, wide[1] - 0.95], w: 1 },
+      { t: W[21], cells: 17, hold: [wide[0] - 0.4, -11.9], w: 1 },
+      { t: W[23] + 0.6, cells: 16.5, hold: [wide[0] + 0.2, -11.7], w: 1 },
       { t: W[26] + 0.1, cells: 10.5, off: [0.8, 1.2], w: 0 },
       { t: W[28], cells: 5.8, off: [0.6, -0.2], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },
