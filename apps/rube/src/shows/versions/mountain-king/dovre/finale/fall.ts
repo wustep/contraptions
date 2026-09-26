@@ -697,6 +697,12 @@ function dawnBurst(p: p5, c: Pen, T: number, f: { x0: number; x1: number; y0: nu
   ctx.restore()
 }
 
+/**
+ * 0..1: the heart's standpipe seen. The heart is covered in rock until he falls into it (heart-set.ts lifts its cover
+ * from the roof down from 101.45 over 0.42 s); the pipe comes up with the cover's edge passing the floor.
+ */
+const collarSeen = (T: number): number => smooth(T, 101.62, 101.86)
+
 /* ------------------------------------------------------------------ the bells' light */
 
 /** 0..1: the bells' shaft of light down the chimney's line into the heart, from the first chord, pulsing on the next two. */
@@ -708,9 +714,11 @@ function bellLight(T: number): number {
 }
 
 /**
- * The bells (134.25), seen: a thin, cold-gold shaft of light falling from the heart's roof down the chimney's line onto
- * the collar at its foot, soft-edged (a shaft, not a spotlight), where every troll in the room turns to look. It is
- * the way out, shown before he takes it; the geyser fills it on the crash.
+ * The bells (134.25), seen: a thread of warm daylight down the chimney's line from the heart's roof onto the collar at
+ * its foot, where every troll in the room turns to look. It is the way out, shown before he takes it. Not a stage
+ * light: narrow (a tenth of a cell at the roof, under half a cell at the foot), dawn-warm, faint, and drawn as thin
+ * horizontal slices each with its own soft side-to-side falloff, so its edges never step. On the crash the geyser
+ * fills the chimney and the thread is cut off from the top down.
  */
 function bellShaft(p: p5, c: Pen, T: number): void {
   const a = bellLight(T)
@@ -718,35 +726,42 @@ function bellShaft(p: p5, c: Pen, T: number): void {
   const k = c.k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const cx = lx(COL)
-  const top = ly(26.4)
-  const foot = ly(33.13)
-  const gold = rgb(mixHex(SKY.sun, SKY.morning, 0.35))
+  const roof = ly(26.4)
+  const floor = ly(33.13)
+  // From the crash the top of the thread slides down the chimney after the geyser's head (cut off from above).
+  const cut = roof + (floor - 0.4 - roof) * smooth(T, 135.42, 136.25)
+  const gold = rgb(mixHex(SKY.sun, SKY.dawn, 0.4))
   ctx.save()
   ctx.globalCompositeOperation = 'screen'
-  for (let i = 0; i < 5; i++) {
-    const v = (i + 1) / 5
-    const w0 = 0.12 + 0.3 * v
-    const w1 = 0.3 + 0.75 * v
-    const g = ctx.createLinearGradient(0, top * k, 0, foot * k)
+  const N = 36
+  for (let i = 0; i < N; i++) {
+    const y0 = roof + ((floor - roof) * i) / N
+    const y1 = roof + ((floor - roof) * (i + 1)) / N
+    if (y1 <= cut) continue
+    const v = (y0 + y1) / 2 - roof
+    const f = v / (floor - roof)
+    // Brightest a little under the roof, dimming toward the floor; fading in over the first cell under the cut.
+    const along = Math.min(1, v / 1.1) * (1 - 0.55 * f) * Math.min(1, Math.max(0, (y0 - cut) / 1.0))
+    const al = 0.24 * a * along
+    if (al <= 0.002) continue
+    const half = 0.1 + 0.35 * f
+    const g = ctx.createLinearGradient((cx - half) * k, 0, (cx + half) * k, 0)
     g.addColorStop(0, `rgba(${gold},0)`)
-    g.addColorStop(0.18, `rgba(${gold},${(0.1 * a).toFixed(3)})`)
-    g.addColorStop(0.85, `rgba(${gold},${(0.075 * a).toFixed(3)})`)
-    g.addColorStop(1, `rgba(${gold},${(0.03 * a).toFixed(3)})`)
+    g.addColorStop(0.3, `rgba(${gold},${(al * 0.7).toFixed(4)})`)
+    g.addColorStop(0.5, `rgba(${gold},${al.toFixed(4)})`)
+    g.addColorStop(0.7, `rgba(${gold},${(al * 0.7).toFixed(4)})`)
+    g.addColorStop(1, `rgba(${gold},0)`)
     ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo((cx - w0) * k, top * k)
-    ctx.lineTo((cx + w0) * k, top * k)
-    ctx.lineTo((cx + w1) * k, foot * k)
-    ctx.lineTo((cx - w1) * k, foot * k)
-    ctx.closePath()
-    ctx.fill()
+    const ya = Math.max(y0, cut)
+    ctx.fillRect((cx - half) * k, ya * k, 2 * half * k, (y1 - ya) * k + 0.5)
   }
-  // Where it lands: a soft pool on the heart's floor round the collar.
-  const pool = ctx.createRadialGradient(cx * k, foot * k, 0, cx * k, foot * k, 1.4 * k)
-  pool.addColorStop(0, `rgba(${gold},${(0.22 * a).toFixed(3)})`)
+  // Where it lands: a small soft pool on the heart's floor round the collar.
+  const r = 0.9
+  const pool = ctx.createRadialGradient(cx * k, floor * k, 0, cx * k, floor * k, r * k)
+  pool.addColorStop(0, `rgba(${gold},${(0.11 * a).toFixed(3)})`)
   pool.addColorStop(1, `rgba(${gold},0)`)
   ctx.fillStyle = pool
-  ctx.fillRect((cx - 1.4) * k, (foot - 1.4) * k, 2.8 * k, 2.8 * k)
+  ctx.fillRect((cx - r) * k, (floor - r) * k, 2 * r * k, 2 * r * k)
   ctx.restore()
 }
 
@@ -852,7 +867,16 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   if (T >= LAST2) plug(p, c, T, q)
   for (const fl of FLOORS) breach(p, c, ORIGIN, COL, fl, T, q)
   bellShaft(p, c, T)
-  collar(p, c, ORIGIN, COL, 33.13, q)
+  // The standpipe is the heart's: nothing of it until the heart's cover has lifted past the floor (it stood alone in
+  // the black rock at the foot of a phone's frame from the opening through the drum).
+  const pipe = collarSeen(T)
+  if (pipe > 0) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha = pipe
+    collar(p, c, ORIGIN, COL, 33.13, q)
+    ctx.restore()
+  }
   capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, LAST1, (x) => skyline(x))
 
   // The last chords: the dawn bursting up through the crater, the flanks cracking along the skyline.
@@ -897,7 +921,15 @@ export const fall = part<State>(
     name: 'fall',
     draw: (p, s, c) => drawFall(p, s, c),
     // Over the ball: the front of the standpipe's mouth, so he sits down inside it when he drops on it.
-    over: (p, s, c) => collarFront(p, c, ORIGIN, COL, 33.13, quake(s.begin + c.t)),
+    over: (p, s, c) => {
+      const pipe = collarSeen(s.begin + c.t)
+      if (pipe <= 0) return
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.globalAlpha = pipe
+      collarFront(p, c, ORIGIN, COL, 33.13, quake(s.begin + c.t))
+      ctx.restore()
+    },
   },
   (slot) => {
     const l = lane(slot.begin, slot.end)
@@ -961,11 +993,13 @@ export const fall = part<State>(
       // broken hall dark, the chimney he came up: the lighting rule's payoff. (He stays in the frame under Zoom.)
       { t: 156, cells: 12.6, hold: w(61, -19.9), w: 0.9 },
       { t: 160.5, cells: 15.5, hold: w(60.6, -19.6), w: 0.95 },
-      // (The summit kept a fifth of the way down the frame, under the cards, which sit on the sky over it.)
+      // (The summit kept under the cards, which sit on the sky over it: at least a third of the way down the frame
+      // while the Music card is up (to 171.7), a quarter under p5.js, and the heart's floor off the bottom edge.)
       { t: 164.5, cells: 24, hold: w(57, -16.5), w: 0.97 },
-      { t: 168.5, cells: 40, hold: w(51, -13.2), w: 0.98 },
-      { t: 172.5, cells: 60, hold: w(47, -3), w: 0.99 },
-      { t: slot.end, cells: 72, hold: w(46, 1.0), w: 1 },
+      { t: 168.5, cells: 40, hold: w(51, -15.0), w: 0.98 },
+      { t: 170.9, cells: 49, hold: w(49.5, -12.7), w: 0.985 },
+      { t: 172.5, cells: 60, hold: w(47, -7.2), w: 0.99 },
+      { t: slot.end, cells: 80, hold: w(46, -1.0), w: 1 },
     ]
   },
 )
