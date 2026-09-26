@@ -1,7 +1,8 @@
 import type p5 from 'p5'
 import { R, mixHex } from '../../../../parts'
 import { frame, hash, scenery, smooth } from './kit'
-import { KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
+import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
+import { FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
 import type { SparkShow } from './show'
 import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from './worlds'
 
@@ -22,8 +23,8 @@ import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from '.
 export function heat(t: number): number {
   if (t < THEME) return 1
   const grown = 0.7 + 1.9 * Math.pow(level(t), 1.4)
-  // The silence: it sinks to an ember, and the roll brings it roaring back.
-  const out = smooth(t, SILENCE, SILENCE + 0.6) * (1 - smooth(t, ROLL, ROLL + 0.12))
+  // The silence: it sinks to an ember at once (the silence is the stillest frame), and the roll brings it roaring back.
+  const out = smooth(t, SILENCE - 0.05, SILENCE + 0.3) * (1 - smooth(t, ROLL, ROLL + 0.12))
   const flare = t >= ROLL ? 1.6 * Math.exp(-(t - ROLL) / 0.8) : 0
   const home = smooth(t, LAST[0] - 0.05, LAST[0] + 0.9)
   const live = grown * (1 - out) + 0.06 * out + flare
@@ -87,6 +88,18 @@ function tongue(p: p5, k: number, x: number, y: number, w: number, h: number, le
   p.endShape(p.CLOSE)
 }
 
+/**
+ * How much bigger than its true size the flame draws, so heart and flame stay about 6% of the frame's 16:9 band (`hb`,
+ * cells) however wide the camera is: 1 when close, up to 2.6 in the widest frames. Taken from the flame's steady
+ * length, so its flicker still shows. None while it is a candle on its wick (it eases in off the wick and out onto it).
+ */
+export function flameBoost(t: number, hb: number, h: number): number {
+  const steady = 2 * R + R * 2.1 * h
+  const want = Math.max(1, Math.min(2.6, (0.06 * hb) / steady))
+  const free = smooth(t, WICK_LEFT, WICK_LEFT + 0.8) * (1 - smooth(t, WICK_BACK - 0.35, WICK_BACK))
+  return 1 + (want - 1) * free
+}
+
 /** The spark's flame, drawn over it in the world on the stage. One of these stands last in each world's `after`. */
 export const flame = () =>
   scenery<FlameState>({
@@ -101,11 +114,10 @@ export const flame = () =>
       if (here.hidden || here.scale <= 0.05) return
       const h = heat(t)
       if (h <= 0.01) return
-      const { k } = c
       // All but out (the silence): no flame to speak of, but a tiny guttering tongue off the coal that flickers up on
       // each breath and nearly dies between, so it is still a fire.
       const ash = 1 - smooth(h, 0.1, 0.45)
-      if (ash > 0.02) guttering(p, k, here.x, here.y, t, ash)
+      if (ash > 0.02) guttering(p, c.k, here.x, here.y, t, ash)
       if (ash > 0.98) return
       // The spark's velocity over the last few hundredths, in its own leg: the flame streams back from it.
       const a = show.where(t - 0.04)
@@ -114,8 +126,15 @@ export const flame = () =>
       const vx = same ? (b[0] - a[0]) / 0.04 : 0
       const vy = same ? (b[1] - a[1]) / 0.04 : 0
       const flick = 0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)
-      const len = R * (2.1 + 0.25 * flick) * h
-      const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick)
+      const { k } = c
+      // Findable at a glance in a wide frame (on a phone held upright the 16:9 band is about 220 px tall): the flame
+      // never draws smaller than about 6% of the band, heart and all. The heart keeps its true size, so every socket
+      // and contact still holds; only the flame grows. A candle burning on its wick is a candle, at any distance.
+      const f = frame(p, k)
+      const hb = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+      const boost = flameBoost(t, hb, h)
+      const len = R * (2.1 + 0.25 * flick) * h * boost
+      const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick) * Math.sqrt(boost)
       // Speed lays the flame back along the way it came, up to nearly flat.
       const lean = Math.max(-1.6, Math.min(1.6, -vx * 0.09)) * len + flick * R * 0.6
       const up = Math.max(0.35, 1 - Math.max(0, vy) * 0.05)
@@ -123,15 +142,35 @@ export const flame = () =>
       const y = here.y - R * 0.35
       p.push()
       p.noStroke()
-      // A soft warm light round it, wide and faint: never a bright core of its own.
       const ctx = p.drawingContext as CanvasRenderingContext2D
-      const glow = R * (5 + 6 * Math.min(2.5, h)) * k
+      // Among the festival's bursts (gold stars on gold stars) a soft dusk round it, clear of the heart, so it stands
+      // in front of the fire instead of being one more spark of it. No edge: it fades in off the heart and out again.
+      if (s.world === 'railway' && t > FESTIVAL - 0.2 && t < SILENCE + 0.3) {
+        const on = smooth(t, FESTIVAL - 0.2, FESTIVAL + 0.6) * (1 - smooth(t, SILENCE - 0.3, SILENCE + 0.3))
+        shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 4, 0.036 * hb), 0.5 * on)
+      }
+      // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
+      const glow = Math.max(R * (5 + 6 * Math.min(2.5, h)), 0.11 * hb * Math.min(1, boost)) * k
       const g = ctx.createRadialGradient(x * k, y * k, R * k, x * k, y * k, glow)
       const dark = s.world === 'loft' || s.world === 'railway'
       g.addColorStop(0, `rgba(255, 196, 120, ${(dark ? 0.2 : 0.1) * (1 - 0.45 * ash)})`)
       g.addColorStop(1, 'rgba(255, 196, 120, 0)')
       ctx.fillStyle = g
       ctx.fillRect(x * k - glow, y * k - glow, glow * 2, glow * 2)
+      if (!dark) {
+        // By day the sky is as bright as the spark: a warm light added over it lifts the spark off the sunset and the
+        // whitewash, the way a flame outshines daylight close to.
+        const halo = Math.max(R * 3.2, 0.05 * hb) * k
+        const lg = ctx.createRadialGradient(x * k, (y - len * 0.25) * k, 0, x * k, (y - len * 0.25) * k, halo)
+        lg.addColorStop(0, `rgba(255, 190, 110, ${0.18 * (1 - ash)})`)
+        lg.addColorStop(0.45, `rgba(255, 170, 90, ${0.08 * (1 - ash)})`)
+        lg.addColorStop(1, 'rgba(255, 160, 80, 0)')
+        ctx.save()
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.fillStyle = lg
+        ctx.fillRect(x * k - halo, (y - len * 0.25) * k - halo, halo * 2, halo * 2)
+        ctx.restore()
+      }
       if (ash > 0.02) ctx.globalAlpha = 1 - ash
       tongue(p, k, x, y, wide * 1.15, len * up * 1.1, lean, FLAME_RIM)
       tongue(p, k, x, y, wide * 0.8, len * up * 0.82, lean * 0.85, SPARK)
@@ -139,6 +178,24 @@ export const flame = () =>
       p.pop()
     },
   })
+
+/**
+ * A soft shadow round the spark (cells: the heart's radius `r`, the shadow's reach `out`), clear of the heart itself
+ * so it never dulls it: what lifts it off a bright fire behind it. Drawn before the flame.
+ */
+export function shadow(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, r: number, out: number, a: number): void {
+  if (a <= 0.01 || out <= r) return
+  const g = ctx.createRadialGradient(x * k, y * k, r * 0.95 * k, x * k, y * k, out * k)
+  const col = '12, 10, 22'
+  g.addColorStop(0, `rgba(${col}, 0)`)
+  g.addColorStop(Math.min(0.5, (r * 0.6) / out + 0.08), `rgba(${col}, ${(a * 0.9).toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(${col}, ${(a * 0.45).toFixed(3)})`)
+  g.addColorStop(1, `rgba(${col}, 0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect((x - out) * k, (y - out) * k, out * 2 * k, out * 2 * k)
+  ctx.restore()
+}
 
 /** The ember's last tongue: a small flame off the top of the coal, rising on its breath and all but gone between. */
 function guttering(p: p5, k: number, x: number, y: number, t: number, ash: number): void {
