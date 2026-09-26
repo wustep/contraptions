@@ -2,13 +2,12 @@ import type p5 from 'p5'
 import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { drawStick } from '../drums'
 import { alpha, box, carried, part, route, type Ctx, type PartShot, type Slot, type Way } from '../kit'
-import { level } from '../music'
 import { G_EARTH } from '../physics'
 import type { KitStroke } from '../stub'
 import { HALL, KIT } from '../worlds'
 import { ACCENTS, BIG, BOUNCE, FIRST, FOLD, GO, HOP, HOP_MAX, LAND, LAST, LATCH, SHIFT, SLAM, STOMPS, UNWIND, hopHeight, sunk } from './fast-clock'
 import { BALL_X, LEVER, POST_X, drawEngine, leverTop } from './fast-engine'
-import { ARCH, CLOSE, FLOOR, KIT_AT, RISERS } from './stage'
+import { CLOSE, KIT_AT } from './stage'
 
 /**
  * Carnegie Hall, the build (369.98 → 423.34): from the hush to the loudest and fastest playing of the solo, and
@@ -411,63 +410,6 @@ function drawRack(p: p5, c: Ctx, T: number): void {
   p.pop()
 }
 
-/* ------------------------------------------------------------------ the light: up with the music for the wide */
-
-/** How much the stage's light is up for the third stage: in as the camera goes out, down through the unwind. */
-const swellOn = (T: number): number => ease((T - 405.6) / 3.4) * (1 - ease((T - 419.6) / 3.6))
-/** The music's loudness, averaged over a second, so the light breathes with it and never flickers. */
-const breath = (T: number): number => {
-  let s = 0
-  for (let i = -4; i <= 4; i++) s += level(T + i * 0.12)
-  return s / 9
-}
-
-/**
- * The stage's light up with the music, laid over the hall (additive, as the hall's own is): the pool on the kit
- * wider and brighter, a warm wash down the whole stage, and a little on the risers, so the band is seen watching.
- */
-function drawSwell(p: p5, c: Ctx, T: number): void {
-  const on = swellOn(T)
-  if (on < 0.002) return
-  const { k } = c
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const a = on * (0.35 + 0.65 * clamp01((breath(T) - 0.6) / 0.35))
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  // The wash, from the flies down to the floor.
-  const top = ARCH.top + 2
-  const g = ctx.createLinearGradient(0, top * k, 0, FLOOR * k)
-  g.addColorStop(0, 'rgba(227, 176, 91, 0)')
-  g.addColorStop(1, `rgba(227, 176, 91, ${(0.07 * a).toFixed(3)})`)
-  ctx.fillStyle = g
-  ctx.fillRect(ARCH.x0 * k, top * k, (ARCH.x1 - ARCH.x0) * k, (FLOOR - top) * k)
-  // The pool on the kit and the machine, wider.
-  const cx = (KIT_AT[0] + 0.2) * k
-  const cy = (KIT_AT[1] + 0.3) * k
-  const r = 6.2 * k
-  const q = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-  q.addColorStop(0, `rgba(255, 241, 207, ${(0.13 * a).toFixed(3)})`)
-  q.addColorStop(0.5, `rgba(255, 241, 207, ${(0.05 * a).toFixed(3)})`)
-  q.addColorStop(1, 'rgba(255, 241, 207, 0)')
-  ctx.fillStyle = q
-  ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
-  // The risers: a low soft spill over the band's front rows, wide and flat, fading to nothing all round.
-  const bx = RISERS[0].x0 + 3.2
-  const by = FLOOR - 1.6
-  const br = 6.5 * k
-  ctx.save()
-  ctx.translate(bx * k, by * k)
-  ctx.scale(1, 0.42)
-  const b = ctx.createRadialGradient(0, 0, 0, 0, 0, br)
-  b.addColorStop(0, `rgba(227, 176, 91, ${(0.07 * a).toFixed(3)})`)
-  b.addColorStop(0.6, `rgba(227, 176, 91, ${(0.025 * a).toFixed(3)})`)
-  b.addColorStop(1, 'rgba(227, 176, 91, 0)')
-  ctx.fillStyle = b
-  ctx.fillRect(-br, -br, 2 * br, 2 * br)
-  ctx.restore()
-  ctx.restore()
-}
-
 export const fast = part<FastState>(
   {
     name: 'fast',
@@ -475,7 +417,6 @@ export const fast = part<FastState>(
       const T = s.begin + c.t
       drawEngine(p, c, T)
       drawRack(p, c, T)
-      drawSwell(p, c, T)
     },
   },
   build,
