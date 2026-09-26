@@ -7,6 +7,7 @@ import {
   BOARD,
   BOILER,
   BOSS,
+  BUFFER_STOP,
   CYL,
   DOME,
   LEAD,
@@ -442,17 +443,25 @@ export const express = part<State>(
       { t: slot.begin + 0.45, cells: 3.4, w: 0, off: [0, 0.25] },
       // The halt, the engine, the spark coming down on the dome: the train pulling out.
       { t: bb(195), cells: 5.6, w: 0, off: [-0.4, 1.0] },
-      { t: bb(199), cells: 5.2, w: 0, off: [0.3, 0.8] },
-      { t: bb(205), cells: 4.8, w: 0, off: [0.3, 0.45] },
+      // Along the running board: out a little, the boiler's top in, dome and valves over the spark, so the drop to
+      // the wheels below is a change of scale.
+      { t: bb(199), cells: 5.9, w: 0, off: [0.3, 0.1] },
+      { t: bb(205), cells: 6.4, w: 0, off: [0.2, -0.5] },
+      { t: bb(206.2), cells: 6.5, w: 0, off: [0.2, -0.45] },
       // Down to the wheels: the spark caught on the crank pin. (The hold, unweighted here, is where the ride below
       // starts on the engine, so the camera takes up the engine's speed as it hands over instead of stopping for it.)
       { t: bb(208), cells: 4.3, hold: [engineX(bb(208)) - 2.9, RAIL_Y - 2.2], w: 0, off: [0.1, -0.35] },
       // Phrase 13: out to the whole engine side on, running away with the telegraph poles whipping past a backbeat
       // apart, the spark a light going along the rods. The camera rides with the engine, not the spark, so the crank
       // circles inside a steady picture.
-      ...riding(bb(210), bb(215), 9.0, 9.4, -2.9, 2.2),
-      // Back in on the motion for the way back along the rods, still riding with the engine.
-      ...riding(bb(217), bb(224), 4.6, 4.2, -2.5, 1.15),
+      ...riding(bb(210), bb(214.5), 9.0, 9.4, -2.9, 2.2),
+      // Then three pictures of the motion, still riding with the engine: close on the crosshead shuttling in its
+      // guides, the frame leading on to the cylinder; a low ride, the rail on the lower third and the poles whipping
+      // past above, as the spark climbs the main rod and runs back along the coupling rod; close on the trailing
+      // crank, its pin going round with the spark on it. Then out for the whistle and the trestle.
+      ...riding(bb(217.25), bb(218.5), 3.4, 3.3, -0.15, 1.45),
+      ...riding(bb(220), bb(221.25), 6.0, 6.2, -1.9, 1.05, -2.6, 1.05),
+      ...riding(bb(223), bb(224), 3.0, 3.2, -4.5, 1.12),
       // The whistle, and the line opens out ahead: back to following the spark before the trestle's wide.
       { t: bb(225.3), cells: 5.0, hold: [engineX(bb(225.3)) - 2.5, RAIL_Y - 1.15], w: 0, off: [0.4, -0.4] },
       // The trestle: out to the whole train, and the camera lags it, so the train crosses the frame and the moon's
@@ -465,10 +474,13 @@ export const express = part<State>(
       // as the brakes grind, and up with it as it is thrown.
       { t: bb(242), cells: 8.0, hold: [engineX(bb(242)) - 3.0, RAIL_Y - 2.0], w: 0, off: [1.9, -1.2] },
       ...riding(bb(243.5), T_IN, 7.0, 6.4, -3.0, 2.0),
-      ...riding(T_IN, T_OUT, 6.4, 6.4, -3.0, 2.0, 1.0, 3.1).slice(1),
-      // The buffer stops: out a little, the engine's front and the stops in the lower third as they meet, the spark
-      // flung high over them.
-      { t: slot.end, cells: 8, hold: [engineX(T_STOP) + 1.4, RAIL_Y - 3.8], w: 0.85 },
+      ...riding(T_IN, bb(254), 6.4, 6.8, -3.0, 2.0, 0.2, 2.6).slice(1),
+      // A quarter before the stops, as the spark bursts out of the chimney: out on the engine's nose, and still going
+      // out and on as the buffers meet the stops, so the camera travels into the hit instead of arriving before it.
+      { t: T_OUT, cells: 7.5, hold: [engineX(T_OUT) + 1.5, RAIL_Y - 2.6], w: 1 },
+      // The buffer stops: the rail low in the frame with its ballast, the buffer beam on the stops below the middle,
+      // the spark flung up over them from the chimney, all in one picture.
+      { t: slot.end, cells: 10, hold: [BUFFER_STOP - 0.9, RAIL_Y - 2.8], w: 0.85 },
     ]
     return shots.filter((s) => s.t > slot.begin && s.t <= slot.end + 1e-6)
   },
