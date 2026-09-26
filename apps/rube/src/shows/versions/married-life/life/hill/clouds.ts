@@ -18,9 +18,9 @@ import { TREE_X } from './hill'
  *
  * -  bars 32 to 35: three puffs make an airship (body, tail fins, the gondola slung under it), whole on bar 35; it
  *    sails off left, climbing, behind the tree;
- * -  bars 35 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, a flat-topped cliff of cloud in
- *    shadow; the fifth puff reaches its lip on bar 39 and the falls pour; then a gust takes it off right, out of the
- *    frame by bar 41, while the camera comes down to the two of them;
+ * -  bars 35 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, her tepui in cloud, as tall as it
+ *    is wide, the sun on its left; the fifth puff reaches its lip on bar 39 and three falls pour; then a gust takes it
+ *    off right, out of the frame by bar 41, while the camera comes down to the two of them;
  * -  bars 39 to 45: low over the two of them, big and whole in the frame, a baby sitting up on a cushion of cloud: its
  *    body (bar 40), its leg out in front (41), its head (42: now it is a baby), its arm reaching up and out (43), the
  *    cloud it sits on (44, 45). He starts; she rolls close to him.
@@ -105,7 +105,7 @@ interface Shape {
   /** For each puff, in order, which billows it carries. */
   puffs: number[][]
   /** The billows by mass, back to front: each drawn whole over the one behind, so a head reads in front of a body. */
-  groups: { of: number[]; tone?: number }[]
+  groups: { of: number[]; tone?: number; face?: boolean }[]
   /** Drawn as one smooth mass (the airship, the baby), or billowed (the falls' cliff). */
   smooth: boolean
 }
@@ -146,42 +146,66 @@ const AIRSHIP: Shape = {
 }
 
 /**
- * Paradise Falls, in cloud (the shape of Ellie's painting, `props/falls.ts`): a flat-topped cliff standing out of a
- * bank of mist, its face in shadow, and the falls pouring bright off the middle of its lip. Off right on a gust after
- * they pour.
+ * Paradise Falls, in cloud: Ellie's tepui (`props/falls.ts`), as tall as it is wide, about 1.35 cells by 1.4 drawn. A
+ * core, then its sheer sides stacked out of small billows, a little ragged, narrowing to the top as her cliff does; a
+ * flat top of five small puffs along the lip in full sun; a narrow bank of mist at its foot that curls up where the
+ * water lands. Its face is a cloud in light, not a block: lit on the left, falling into shadow on the right (`cliff`).
+ * On bar 39 three ribbons pour off the lip; then a gust takes it off right.
  */
 const FALLS_CLOUD: Shape = {
   at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 57.6, 58.6, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
   size: 1.1,
   smooth: false,
   billows: [
-    // 0-2: the cliff's mass.
-    { x: 0, y: 0.02, r: 0.46, w: 1.95 },
-    { x: -0.48, y: 0.32, r: 0.3, w: 1.3 },
-    { x: 0.48, y: 0.33, r: 0.3, w: 1.3 },
-    // 3-6: its steep sides.
-    { x: -0.86, y: -0.14, r: 0.2, w: 0.9 },
-    { x: -0.92, y: 0.22, r: 0.24, w: 0.9 },
-    { x: 0.87, y: -0.14, r: 0.2, w: 0.9 },
-    { x: 0.94, y: 0.24, r: 0.24, w: 0.9 },
-    // 7-11: its flat top, lit.
-    { x: -0.68, y: -0.36, r: 0.19, w: 1.5 },
-    { x: -0.34, y: -0.39, r: 0.2, w: 1.5 },
-    { x: 0.02, y: -0.4, r: 0.21, w: 1.5 },
-    { x: 0.38, y: -0.39, r: 0.2, w: 1.5 },
-    { x: 0.7, y: -0.36, r: 0.18, w: 1.5 },
-    // 12-15: the mist at its foot, one low bank.
-    { x: -1.05, y: 0.64, r: 0.2, w: 2.4 },
-    { x: -0.35, y: 0.7, r: 0.25, w: 2.3 },
-    { x: 0.4, y: 0.69, r: 0.26, w: 2.2 },
-    { x: 1.1, y: 0.63, r: 0.19, w: 2.4 },
+    // 0-2: the cliff's core, already a mesa when it comes: a body, broad shoulders under the lip, a broader foot.
+    { x: 0, y: 0.02, r: 0.42 },
+    { x: 0, y: -0.27, r: 0.25, w: 1.5 },
+    { x: 0, y: 0.31, r: 0.3, w: 1.6 },
+    // 3-7: its left side, stacked from the lip down, stepping out a little as it falls.
+    { x: -0.36, y: -0.32, r: 0.11 },
+    { x: -0.4, y: -0.14, r: 0.16, w: 0.85 },
+    { x: -0.5, y: 0.05, r: 0.1 },
+    { x: -0.47, y: 0.24, r: 0.17, w: 0.85 },
+    { x: -0.53, y: 0.47, r: 0.13, w: 1.1 },
+    // 8-12: its right side, the same fall of billows but not a mirror (a cliff is ragged).
+    { x: 0.37, y: -0.26, r: 0.14, w: 0.85 },
+    { x: 0.46, y: -0.06, r: 0.1 },
+    { x: 0.46, y: 0.13, r: 0.16, w: 0.85 },
+    { x: 0.53, y: 0.35, r: 0.11 },
+    { x: 0.49, y: 0.52, r: 0.15, w: 1.05 },
+    // 13-17: its flat top, five small puffs along the lip, lit.
+    { x: -0.34, y: -0.45, r: 0.105, w: 1.3 },
+    { x: -0.17, y: -0.47, r: 0.115, w: 1.3 },
+    { x: 0.0, y: -0.48, r: 0.12, w: 1.3 },
+    { x: 0.17, y: -0.47, r: 0.115, w: 1.3 },
+    { x: 0.34, y: -0.45, r: 0.1, w: 1.3 },
+    // 18-20: the mist at its foot, a low bank little wider than the cliff.
+    { x: -0.38, y: 0.66, r: 0.15, w: 1.5 },
+    { x: -0.02, y: 0.7, r: 0.17, w: 1.6 },
+    { x: 0.34, y: 0.67, r: 0.15, w: 1.5 },
+    // 21-23: where each ribbon lands, the mist curling up (`CURLS`: small until the water reaches it).
+    { x: -0.19, y: 0.55, r: 0.075, w: 1.35 },
+    { x: 0.02, y: 0.54, r: 0.1, w: 1.3 },
+    { x: 0.21, y: 0.56, r: 0.07, w: 1.35 },
   ],
-  puffs: [[0, 1, 2], [3, 4, 5, 6], range(7, 5), range(12, 4)],
-  groups: [{ of: range(0, 7), tone: 1 }, { of: range(7, 5) }, { of: range(12, 4), tone: 0.3 }],
+  puffs: [[0, 1, 2], range(3, 10), range(13, 5), range(18, 6)],
+  groups: [{ of: range(0, 13), tone: 0.45, face: true }, { of: range(13, 5) }, { of: range(18, 6), tone: 0.25 }],
 }
 
-/** Where the falls pour from, on the cliff's lip, in its own cells (before its size). */
-const LIP: Pt = [0.1, -0.42]
+/** Where the falls pour from, on the cliff's lip, in its own cells (before its size): the last puff goes here. */
+const LIP: Pt = [0.02, -0.5]
+
+/** The falls, three ribbons off the lip on bar 39: where each leaves the lip (its own cells), how wide, how late after the first. */
+const RIBBONS = [
+  { x: 0.02, w: 0.12, late: 0 },
+  { x: -0.19, w: 0.065, late: 0.09 },
+  { x: 0.21, w: 0.055, late: 0.17 },
+]
+/** The mist's curls, one under each ribbon (the billows' indices, in the ribbons' order). */
+const CURLS = [22, 21, 23]
+/** Where the ribbons start (under the lip's puffs, drawn over them) and where they end (inside the mist). */
+const FALL_TOP = -0.45
+const FALL_FOOT = 0.58
 
 /**
  * The baby: a little one sitting up on a cushion of cloud, facing right, as a baby sits. A big round head (a round
@@ -410,6 +434,68 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
 }
 
 /**
+ * The falls' cliff face: a cloud with the sun on its left. A halo; the whole of it in its shadow colour; then (inside
+ * it only) the body shifted left and up, so the shadow shows down its right side and under each billow that stands out
+ * of the side; the light shifted further left, so each billow of its left side is lit; and last a soft wash across the
+ * whole mass, light on the left, shadow on the right, so it turns from the sun as one form. `tone` is how deep in shade
+ * the body is (0 a white cloud).
+ */
+function cliff(p: p5, k: number, billows: Billow[], tone: number): void {
+  if (!billows.length) return
+  const deep = mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.5)
+  const bodyC = mixHex(mixHex(HILL.cloud, HILL.cloudShade, 0.6), deep, tone)
+  const shadeC = mixHex(bodyC, deep, 0.55)
+  const litC = mixHex(HILL.cloud, HILL.cloudShade, 0.08)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  p.noStroke()
+  p.fill(alpha(p, HILL.cloud, 0.22))
+  for (const b of billows) oval(p, k, b, 1.09)
+  p.fill(shadeC)
+  for (const b of billows) oval(p, k, b, 1)
+  clipTo(p, k, billows)
+  p.fill(bodyC)
+  for (const b of billows) oval(p, k, b, 1.0, -0.12, -0.1)
+  // The small billows stand out of it, top to bottom, each over a soft shade of its own below and right of it: the
+  // sides read as heaped cloud, not a wall.
+  const small = billows.filter((b) => b.r < 0.2).sort((a, b) => a.y - b.y)
+  for (const b of small) {
+    p.fill(alpha(p, shadeC, 0.85))
+    oval(p, k, b, 0.98, 0.18, 0.22)
+    p.fill(bodyC)
+    oval(p, k, b, 0.96, -0.04, -0.05)
+  }
+  // The sun on the left side's small billows: each a little lit on its upper left.
+  let mid = 0
+  for (const b of billows) mid += b.x / billows.length
+  p.fill(alpha(p, litC, 0.38))
+  for (const b of small) if (b.x < mid) oval(p, k, b, 0.8, -0.3, -0.26)
+  // The mass turning from the sun: across its whole width, light on the left, clear, then shadow on the right.
+  let x0 = Infinity
+  let x1 = -Infinity
+  let y0 = Infinity
+  let y1 = -Infinity
+  for (const b of billows) {
+    const rx = b.r * (b.w ?? 1)
+    x0 = Math.min(x0, b.x - rx)
+    x1 = Math.max(x1, b.x + rx)
+    y0 = Math.min(y0, b.y - b.r)
+    y1 = Math.max(y1, b.y + b.r)
+  }
+  const g = ctx.createLinearGradient(X(x0, k), 0, X(x1, k), 0)
+  const rgb = (hex: string, a: number) => {
+    const n = parseInt(hex.slice(1), 16)
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+  }
+  g.addColorStop(0, rgb(litC, 0.6))
+  g.addColorStop(0.38, rgb(litC, 0))
+  g.addColorStop(0.58, rgb(deep, 0))
+  g.addColorStop(1, rgb(deep, 0.7))
+  ctx.fillStyle = g
+  ctx.fillRect(X(x0, k), X(y0, k), X(x1 - x0, k), X(y1 - y0, k))
+  ctx.restore()
+}
+
+/**
  * A cloud drawn as ONE smooth mass (the airship, the baby): a halo, the whole of it in shade, then (inside it only)
  * the whole of it again lifted a fixed small way, and the light lifted further, so the shade and the body show only
  * as a band along its underside and under whatever stands out of it, never round each billow: no inner seams, one
@@ -437,48 +523,74 @@ function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   const shape = SHAPES[key]
   const { got, loose } = billowsOf(key, t)
   if (!got.size && !loose.length) return
+  if (key === 'falls') {
+    // Each curl of the mist is small until its ribbon reaches it, then rises and swells where the water lands.
+    CURLS.forEach((i, j) => {
+      const b = got.get(i)
+      if (!b) return
+      const land = smooth(t, POUR + RIBBONS[j].late + 0.35, POUR + RIBBONS[j].late + 1.05)
+      got.set(i, { ...b, r: b.r * (0.55 + 0.6 * land), y: b.y - 0.05 * FALLS_CLOUD.size * land })
+    })
+  }
   for (const g of shape.groups) {
     const list = g.of.map((i) => got.get(i)).filter((b): b is Billow => !!b)
     if (shape.smooth) mass(p, k, list)
+    else if (g.face) cliff(p, k, list, g.tone ?? 0)
     else cloud(p, k, list, g.tone ?? 0)
-    // The falls pour between the cliff and the mist at its foot: a bright ribbon off the middle of the lip.
-    if (key === 'falls' && g === shape.groups[1]) drawPour(p, k, t)
+    // The falls pour from under the lit lip (its puffs drawn over their heads) down the face, into the mist at its foot.
+    if (key === 'falls' && g === shape.groups[0]) drawPour(p, k, t)
   }
   for (const b of loose) mass(p, k, [b])
 }
 
-/** The falls: they begin at the lip when their puff gets there, and pour down to the mist. */
+/**
+ * The falls: when the last puff reaches the lip, three ribbons pour off it (the widest first, the two thin ones a
+ * moment after), each out from under the lit lip, running down the face, its front a soft knot of spray, until it
+ * reaches the mist, a little wider as it falls, lit down its left edge and in shade down its right, as the cliff is.
+ */
 function drawPour(p: p5, k: number, t: number): void {
-  const pour = smooth(t, POUR - 0.05, POUR + 0.75)
-  if (pour <= 0) return
   const [fx, fy] = FALLS_CLOUD.at(t)
   const S = FALLS_CLOUD.size
-  const P = (dx: number, dy: number) => p.vertex(X(fx + dx * S, k), X(fy + dy * S, k))
-  const y0 = LIP[1]
-  const y1 = y0 + 1.12 * pour
+  const Q = (dx: number, dy: number): Pt => [X(fx + dx * S, k), X(fy + dy * S, k)]
+  const V = (dx: number, dy: number) => p.vertex(...Q(dx, dy))
+  const shade = alpha(p, mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.22), 0.85)
   p.noStroke()
-  p.fill(alpha(p, HILL.cloud, 0.45))
-  p.beginShape()
-  P(0.0, y0)
-  P(0.2, y0)
-  P(0.26, y1)
-  P(-0.04, y1)
-  p.endShape(p.CLOSE)
-  p.fill(HILL.cloud)
-  p.beginShape()
-  P(0.03, y0 - 0.02)
-  P(0.17, y0 - 0.02)
-  P(0.21, y1)
-  P(0.0, y1)
-  p.endShape(p.CLOSE)
-  // The water's fall, a little shade down one side of the ribbon.
-  p.fill(alpha(p, mixHex(HILL.cloudShade, HILL.sky, 0.35), 0.8))
-  p.beginShape()
-  P(0.12, y0 + 0.08)
-  P(0.17, y0 + 0.08)
-  P(0.21, y1)
-  P(0.15, y1)
-  p.endShape(p.CLOSE)
+  for (const r of RIBBONS) {
+    const pour = smooth(t, POUR + r.late - 0.05, POUR + r.late + 0.75)
+    if (pour <= 0) continue
+    const y0 = FALL_TOP
+    const y1 = y0 + (FALL_FOOT - y0) * pour
+    // Its half-width at depth `y`: a little wider as it falls.
+    const half = (y: number) => (r.w / 2) * (1 + 0.35 * ((y - y0) / (FALL_FOOT - y0)))
+    // A band of it from `left` to `right` (fractions of its half-width) between two depths.
+    const band = (left: number, right: number, ya: number, yb: number, grow = 0) => {
+      p.beginShape()
+      V(r.x + left * half(ya) - grow, ya)
+      V(r.x + right * half(ya) + grow, ya)
+      V(r.x + right * half(yb) + grow, yb)
+      V(r.x + left * half(yb) - grow, yb)
+      p.endShape(p.CLOSE)
+    }
+    // The spray about it, the water, and its shaded right side. While it runs, its front is a soft knot of spray, not
+    // a hard end: the water thins into it.
+    const running = pour < 1
+    const front = running ? y1 - 0.9 * half(y1) : y1
+    p.fill(alpha(p, HILL.cloud, 0.4))
+    band(-1, 1, y0, y1, 0.025)
+    p.fill(HILL.cloud)
+    band(-1, 1, y0, front)
+    if (front - y0 > 0.1) {
+      p.fill(shade)
+      band(0.25, 1, y0, front)
+    }
+    if (running) {
+      const [cx, cy] = Q(r.x, front)
+      p.fill(alpha(p, HILL.cloud, 0.55))
+      p.ellipse(cx, cy, X(2.5 * half(y1) * S, k), X(2.6 * half(y1) * S, k))
+      p.fill(alpha(p, HILL.cloud, 0.8))
+      p.ellipse(cx, cy - X(0.2 * half(y1) * S, k), X(1.7 * half(y1) * S, k), X(1.6 * half(y1) * S, k))
+    }
+  }
 }
 
 /**
