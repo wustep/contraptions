@@ -74,11 +74,12 @@ export const deep = part<DeepState>(
   },
   (slot): PartShot[] => [
     { t: slot.begin, ...SEAM_SHOT },
-    // In close under the xylophone: the drips over them as they go.
-    { t: E(4), cells: 5.2, off: [0.9, -1.3] },
-    { t: E(10), cells: 4.8, off: [0.6, -0.8] },
+    // Under the xylophone with them: the slabs and the drips playing the phrase over them, held in the frame
+    // through its first bars, down to the beam and the cup.
+    { t: E(4), cells: 6.4, hold: [2.4, -1.3], w: 0.55 },
+    { t: E(10), cells: 6.6, hold: [3.3, -0.4], w: 0.5 },
     // The beam and the cup, and the tip.
-    { t: T_CUP, cells: 4.6, hold: [4.9, 1.2], w: 0.55 },
+    { t: T_CUP, cells: 5.6, hold: [4.6, 0.6], w: 0.55 },
     { t: T_SLAM + 0.3, cells: 5.0, hold: [5.4, 1.7], w: 0.5 },
     // The water to the wheel; she goes first.
     { t: T_WHEEL, cells: 5.4, hold: [7.6, 2.6], w: 0.55 },

@@ -1,6 +1,6 @@
 import { laneAt, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { carried } from '../kit'
-import { beat, beatAt, eighth, note, THEME } from '../music'
+import { beat, beatAt, eighth, note, onset, THEME } from '../music'
 import { G_EARTH } from '../physics'
 
 /**
@@ -32,9 +32,9 @@ export const F = (i: number): number => eighth(96 + i)
 export const BEGIN = E(0)
 export const END = F(32)
 
-/** He drops into the cup (the phrase's loudest note); the lever slams onto the flint. */
+/** He drops into the cup; the lever slams onto the flint on the loudest accent of the stretch (26.57, s 3.8). */
 export const T_CUP = E(12)
-export const T_SLAM = E(16)
+export const T_SLAM = onset(26.57, 3)
 /** The water reaches the wheel, which starts; she drops into a bucket; he does, on phrase 3's first note. */
 export const T_WHEEL = E(24)
 export const T_HER_BUCKET = E(28)
@@ -262,7 +262,8 @@ export const LAMPS: Lamp[] = [
   { at: [12.75, 1.6], catch: BLOWS[0], hang: 0.45, seed: 5 },
   // Down the stair: the blow on 34.55 sets the gutter alight; the flame chases him down, a torch at each tread he leaves.
   { at: [12.25, 5.84], catch: F(14), hang: 0, seed: 6 },
-  { at: [14.2, 8.03], catch: F(18), hang: 0, seed: 7 },
+  // (On the accent the orchestra leans on, 36.10, a little before his step.)
+  { at: [14.2, 8.03], catch: onset(36.1, 2), hang: 0, seed: 7 },
   { at: [15.75, 9.96], catch: F(22), hang: 0, seed: 8 },
   { at: [17.45, 10.4], catch: F(26), hang: 0, seed: 9 },
 ]
