@@ -17,7 +17,7 @@ import { hush } from './carnegie/hush'
 import { fast } from './carnegie/fast'
 import { rubato } from './carnegie/rubato'
 import { finale } from './carnegie/finale'
-import { hall } from './carnegie/hall'
+import { hall, hallDark } from './carnegie/hall'
 import { fletcherAt, jimAt } from './carnegie/conductor'
 import { ARCH, LIP } from './carnegie/stage'
 
@@ -90,7 +90,15 @@ export function compose(): { show: CaravanShow; camera: (t: number) => Framing }
         from: 0,
       },
       { world: ROADS, theme: ROAD_THEME, scenery: [], chain: road.placed, from: SWITCH.road },
-      { world: CARNEGIE_HALL, theme: CARNEGIE_THEME, scenery: [standing(hall, ox, oy, hallCells, { on: true as const }, DURATION)], chain: carnegie.placed, from: SWITCH.carnegie },
+      {
+        world: CARNEGIE_HALL,
+        theme: CARNEGIE_THEME,
+        scenery: [standing(hall, ox, oy, hallCells, { on: true as const }, DURATION)],
+        chain: carnegie.placed,
+        // The hall's dark, after every part's machine and before the balls (`hall.ts` `hallDark`, on the light cue).
+        after: [standing(hallDark, ox, oy, hallCells, { on: true as const }, DURATION)],
+        from: SWITCH.carnegie,
+      },
     ],
     DURATION,
     [...shaffer.riders, ...road.riders, ...carnegie.riders],

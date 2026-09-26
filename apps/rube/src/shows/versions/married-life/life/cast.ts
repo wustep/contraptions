@@ -168,8 +168,77 @@ export function anchorIn(show: LifeShow, s: number, leg: number): Pt {
   return [own[0] + (tx - own[0]) * e, own[1] + (ty - own[1]) * e]
 }
 
-/** The balloon at `t`: where it is and where it is tied, in the cells of the leg on the stage. Null before it is his. */
+/**
+ * How far Ellie's mark (her dot, which way she looks) is turned at `t`: the ball's own roll, her place over `R`, in the
+ * place she is in. At a match cut her place on the screen carries across but her place in the new world's cells does
+ * not, so the roll alone would flick her dot round on the cut: across it she goes on looking the way she was, and
+ * turns to the new place's own look over `LOOK_ROUND` seconds (the short way round, eased at both ends).
+ */
+const LOOK_ROUND = 1.6
+export function ellieSpin(show: LifeShow, t: number): number {
+  const e = show.ellie(t)
+  if (!e) return 0
+  const own = e.x / R
+  const leg = show.owner(t)
+  const t0 = leg > 0 ? show.legs[leg].from : -Infinity
+  if (t - t0 >= LOOK_ROUND) return own
+  const before = show.ellie(t0 - 1e-4)
+  const after = show.ellie(t0 + 1e-4)
+  if (!before || !after) return own
+  // Only where she is in the same place in the picture on both sides (not where the cut finds her somewhere else).
+  const [bx, by] = carry(show, [before.x, before.y], leg - 1, leg)
+  if (Math.hypot(bx - after.x, by - after.y) > 0.05) return own
+  const d = ellieSpin(show, t0 - 1e-4) - after.x / R
+  const turn = d - 2 * Math.PI * Math.round(d / (2 * Math.PI))
+  const u = Math.max(0, Math.min(1, (t - t0) / LOOK_ROUND))
+  return own + turn * (1 - u * u * u * (u * (u * 6 - 15) + 10))
+}
+
+/**
+ * The balloon's string at `t`, from the knot to where it is tied: its own length, or a tie's (`Tie.string`), taken in
+ * over the second after the knot arrives (the balloon settling down to her) and let out again over 2.2 s after the
+ * tie's span ends, so across the cut it rises back to its length. Quintic eases: no kick at either end.
+ */
+function stringAt(show: LifeShow, t: number): number {
+  const ease = (u: number) => {
+    const v = Math.max(0, Math.min(1, u))
+    return v * v * v * (v * (v * 6 - 15) + 10)
+  }
+  let L = BALLOON_SIZE.string
+  for (const tie of show.ties) {
+    if (tie.string === undefined || t < tie.arrive - 0.1) continue
+    const into = ease((t - (tie.arrive - 0.1)) / 1.2)
+    const out = t < tie.to ? 0 : ease((t - tie.to) / 2.2)
+    L += (tie.string - BALLOON_SIZE.string) * into * (1 - out)
+  }
+  return L
+}
+
+/**
+ * The balloon at `t`: where it is and where it is tied, in the cells of the leg on the stage. Null before it is his.
+ * Across the cut where a short tie ends (her bedside into the church), the knot is his again but the balloon goes on
+ * from exactly where it was in the picture, and drifts over to where it rides on him while its string is let out.
+ */
 export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
+  const b = riding(show, t)
+  if (!b) return null
+  const leg = show.owner(t)
+  for (const tie of show.ties) {
+    if (tie.string === undefined || t < tie.to || t >= tie.to + 2.2) continue
+    const was = riding(show, tie.to - 1e-4)
+    const now = riding(show, tie.to + 1e-4)
+    if (!was || !now || show.owner(tie.to + 1e-4) !== leg) continue
+    const [wx, wy] = carry(show, was.at, show.owner(tie.to - 1e-4), leg)
+    const u = Math.min(1, (t - tie.to) / 2.2)
+    const left = 1 - u * u * u * (u * (u * 6 - 15) + 10)
+    b.at = [b.at[0] + (wx - now.at[0]) * left, b.at[1] + (wy - now.at[1]) * left]
+    b.sway += (was.sway - now.sway) * left
+  }
+  return b
+}
+
+/** Where the balloon rides at `t` on its string from where it is tied, lagging where it is tied in the still air. */
+function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
   if (t < BALLOON_FROM) return null
   const leg = show.owner(t)
   // It follows where it is tied with a lag: an average of where it would rest over the last second and a half,
@@ -204,7 +273,7 @@ export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway
   let dx = x + drift - anchor[0]
   let dy = y - anchor[1]
   const d = Math.hypot(dx, dy) || 1
-  const L = BALLOON_SIZE.string + BALLOON_SIZE.ry
+  const L = stringAt(show, t) + BALLOON_SIZE.ry
   dx = (dx / d) * L
   dy = (dy / d) * L
   const at: Pt = [anchor[0] + dx, anchor[1] + dy]
@@ -253,7 +322,7 @@ export const cast = scenery<CastState>({
           p.pop()
         },
       )
-      const spin = ellie.x / R
+      const spin = ellieSpin(show, t)
       const size = ellie.scale ?? 1
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.

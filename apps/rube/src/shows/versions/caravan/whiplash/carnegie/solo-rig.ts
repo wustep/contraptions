@@ -3,21 +3,21 @@ import type { Pt } from '../../../../../parts'
 import { solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
 import { drawStick, KICK, KIT_FLOOR, SNARE, type KitPiece } from '../drums'
-import type { Ctx } from '../kit'
+import { alpha, type Ctx } from '../kit'
 import { SOLO } from '../music'
-import { HALL, KIT } from '../worlds'
+import { ANDREW, HALL, HANDS, KIT } from '../worlds'
 import { mixHex } from '../../../../../parts'
 
 const HALL_BLACK = HALL.black
-const HALL_GOLD = HALL.gold
 import { H_ACCENTS, H_FLY, H_LEAP, H_REST, H_SEATED, H_STROKES, H_UNSEAT } from './hush-score'
 import { ACCENTS, CATCH, FOOT_DOWN, HOLD, LEAP, RIG_DOWN, SEATED, SLAM, STICK, STROKES, TARGETS, TOSS, UNSEAT, strokesOf, type Arm, type Grip, type Stroke } from './solo-score'
 
 /**
- * The solo's machine, moved and drawn: a drummer's frame of chrome drum hardware, flown in on two lines from the flies
- * over the kit. A yoke for shoulders with a cup on top where his head goes, two long jointed arms with a stick in each
- * grip, and a steel shin that comes down from behind the snare onto the kick's pedal. Andrew (the ball) is its head:
- * he leaps up into the cup and it plays as his body, his head bouncing on the accents and leaning into the playing.
+ * The solo's machine, moved and drawn: a drummer's body, flown in empty on two lines from the flies over the kit, like
+ * a marionette. A dark shirt with a collar where his head goes, shoulders sloping to rounded deltoids, two long arms
+ * (sleeves to the elbow, skin below) with a stick in each hand, and a trouser leg that comes down from behind the
+ * snare onto the kick's pedal. Andrew (the ball) is its head: he leaps up onto the collar and it plays as his body,
+ * leaning about the waist into the side it plays, hunching on the accents, his head bouncing on them.
  *
  * After the solo it does not fly out: it hangs limp over the kit while he plays soft on the snare, and he leaps back
  * up into it for the hush (`hush-score.ts`), where it plays soft (the hi-hat, the bursts, the ride) with him in the
@@ -72,7 +72,7 @@ export const liftShape = (u: number): number => Math.sin(Math.PI * Math.pow(clam
 const SIDE: Partial<Record<KitPiece, number>> = { ride: -1, floor: -1, rack: -0.6, snare: 0, hat: 0.7, crash: 1 }
 const ARMS: readonly { t: number; piece: KitPiece }[] = [...STROKES.filter((s) => s.limb === 'left' || s.limb === 'right'), ...H_STROKES]
 /** The accents his head bounces on: the solo's, and the hush's (soft). */
-const ALL_ACCENTS: readonly { t: number; a: number }[] = [...ACCENTS, ...H_ACCENTS.map((x) => ({ t: x.t, a: x.a * 0.6 }))]
+const ALL_ACCENTS: readonly { t: number; a: number }[] = [...ACCENTS, ...H_ACCENTS.map((x) => ({ t: x.t, a: x.a * 0.6 }))].sort((a, b) => a.t - b.t)
 /** His lean at `T`, cells: into the side the arms are playing, smoothed over the strokes round it. */
 function lean(T: number): number {
   let sum = 0
@@ -114,25 +114,68 @@ export function slumpOf(T: number): number {
 /** The slump's shoulders: down, and in toward the middle (rounded forward). */
 export const SLUMP = { down: 0.2, inward: 0.09 }
 
-/** How the body follows his head: the shoulders take part of the lean and the bounce. */
-function body(T: number): Pt {
-  const w = seatedW(T)
-  if (w <= 0) return [0, 0]
-  return [lean(T) * 0.7 * w, bob(T) * 0.35 * w]
+/**
+ * The lean: the whole upper body tilts about the waist (on the seat) toward the side being played, 1.2 radians a cell
+ * of lean, never past 0.14; the head, the collar and the shoulders turn together, so the body leans into the playing
+ * instead of the head sliding over a still chest.
+ */
+export const TILT = { perCell: 1.2, max: 0.14 }
+export const tiltOf = (lean: number): number => Math.max(-TILT.max, Math.min(TILT.max, TILT.perCell * lean))
+/** The waist he tilts about, in the kit's frame (the frame's drop added by the caller). */
+export const PIVOT: Pt = [NECK[0], 0.3]
+/** `q` turned `th` about the waist (positive: the top toward the house's right), with the frame `drop`ped. */
+export function turnAbout(q: Pt, th: number, drop: number): Pt {
+  const dx = q[0] - PIVOT[0]
+  const dy = q[1] - PIVOT[1]
+  const c = Math.cos(th)
+  const s = Math.sin(th)
+  return [PIVOT[0] + dx * c - dy * s, PIVOT[1] + dx * s + dy * c + drop]
 }
+
+/**
+ * The hunch: on an accent the shoulders rise toward the head and come in, sharp, and let go over about 0.4 s, damped
+ * (0 to 1; accents close together hold it up). `a` of each accent 0..1.
+ */
+export const HUNCH = { rise: 0.1, inward: 0.05 }
+export function hunchOf(accents: readonly { t: number; a: number }[], T: number): number {
+  let lo = 0
+  let hi = accents.length
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (accents[mid].t < T - 1.5) lo = mid + 1
+    else hi = mid
+  }
+  let sum = 0
+  for (let i = lo; i < accents.length && accents[i].t <= T; i++) {
+    const u = T - accents[i].t
+    sum += ((0.4 + 0.6 * accents[i].a) * (1 - Math.exp(-u / 0.035)) * Math.exp(-u / 0.2)) / 0.61
+  }
+  return 1 - Math.exp(-1.2 * sum)
+}
+
+/** His tilt at `T`, radians, as far as he is in the cup. */
+const tilt = (T: number): number => tiltOf(lean(T)) * seatedW(T)
+/** His hunch at `T`: the solo's accents full, the hush's soft. */
+const hunch = (T: number): number => hunchOf(ALL_ACCENTS, T) * (T > H_LEAP ? 0.5 : 1) * seatedW(T)
+
 /** His head (the ball's centre) while he rides the frame, in the kit's frame. */
 export function headAt(T: number): Pt {
   const w = seatedW(T)
-  return [NECK[0] + lean(T) * w, NECK[1] + bob(T) * w + rigDrop(T)]
+  return turnAbout([NECK[0], NECK[1] + bob(T) * w], tilt(T), rigDrop(T))
 }
 
-/** A shoulder at `T`, with the frame's drop, the body's sway, and its slump when empty. */
+/** A shoulder at `T`: with the bounce, the hunch, the lean about the waist, the frame's drop, and its slump when empty. */
 function shoulder(arm: Arm, T: number): Pt {
-  const b = body(T)
+  const w = seatedW(T)
   const sl = slumpOf(T)
-  const inward = (arm === 'left' ? 1 : -1) * SLUMP.inward * sl
-  return [NECK[0] + SHOULDER_AT[arm][0] + b[0] + inward, NECK[1] + SHOULDER_AT[arm][1] + b[1] + SLUMP.down * sl + rigDrop(T)]
+  const h = hunch(T)
+  const inward = (arm === 'left' ? 1 : -1) * (SLUMP.inward * sl + HUNCH.inward * h)
+  const up: Pt = [NECK[0] + SHOULDER_AT[arm][0] + inward, NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + SLUMP.down * sl - HUNCH.rise * h]
+  return turnAbout(up, tilt(T), rigDrop(T))
 }
+
+/** Which way each piece leans him (exported for the finale's frame). */
+export { SIDE }
 
 /* ------------------------------------------------------------------ an arm's stroke */
 
@@ -279,241 +322,253 @@ function footLift(T: number): number {
 
 /* ------------------------------------------------------------------ drawing */
 
-/** The frame's metal: a dark chrome that holds its silhouette against the warm wall, and the light along its top. */
-export const STEEL = mixHex(KIT.chrome, KIT.lacquer, 0.58)
-const STEEL_EDGE = mixHex(STEEL, KIT.lacquer, 0.45)
-
 /**
- * A length of tube: dark chrome, a darker edge under it, and one lit edge along its upper side (the stage's light is
- * above), so it reads as a solid rod, not a pale outline.
+ * His clothes and skin: a dark shirt warmed a little toward his yellow (his, not Fletcher's black), flat, lit only by
+ * a soft rim of top light in a dim of his yellow; trousers darker; forearms and hands in skin (Fletcher's hands' tone),
+ * each edged in its own shadow.
  */
-export function tube(p: p5, c: Ctx, a: Pt, b: Pt, w0: number): void {
-  const { k, weight } = c
-  const w = weight * w0 * 0.82
-  p.strokeCap(p.ROUND)
-  p.stroke(STEEL_EDGE)
-  p.strokeWeight(w)
-  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  p.stroke(STEEL)
-  p.strokeWeight(w * 0.72)
-  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  // The lit edge: on the side of the tube that faces up.
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const L = Math.hypot(dx, dy) || 1
-  let nx = dy / L
-  let ny = -dx / L
-  if (ny > 0) {
-    nx = -nx
-    ny = -ny
-  }
-  const off = w * 0.2
-  p.stroke(KIT.chrome)
-  p.strokeWeight(w * 0.16)
-  p.line(a[0] * k + nx * off, a[1] * k + ny * off, b[0] * k + nx * off, b[1] * k + ny * off)
-}
+export const SHIRT = mixHex('#1E1C1B', ANDREW, 0.08)
+const SHIRT_EDGE = mixHex(SHIRT, '#050404', 0.55)
+const SHIRT_LOW = mixHex(SHIRT, '#050404', 0.45)
+/** The rim of top light on his shoulders and sleeves: a dim of his yellow. */
+export const RIM = mixHex(SHIRT, ANDREW, 0.5)
+const TROUSERS = mixHex('#121110', ANDREW, 0.03)
+const TROUSERS_EDGE = mixHex(TROUSERS, '#000000', 0.5)
+const SHOE = '#0A0908'
+const SKIN = HANDS
+const SKIN_ARM = mixHex(HANDS, SHIRT, 0.16)
+const SKIN_SHADE = mixHex(HANDS, '#3B2B20', 0.58)
+const SKIN_LIT = mixHex(HANDS, HALL.beam, 0.4)
 
-/**
- * A joint: a round hub in the tube's dark chrome (sized from `len` and `w`, the old clamp's), a darker rim, one
- * small highlight on its upper side. Never bright, never ball-sized.
- */
-export function clampBlock(p: p5, c: Ctx, at: Pt, _ang: number, len: number, w: number): void {
-  const { k, weight } = c
-  const d = Math.min(0.13, 0.72 * Math.max(len, w))
-  p.push()
-  p.translate(at[0] * k, at[1] * k)
-  p.stroke(STEEL_EDGE)
-  p.strokeWeight(weight * 0.9)
-  p.fill(STEEL)
-  p.circle(0, 0, d * k)
-  p.noFill()
-  p.stroke(KIT.chrome)
-  p.strokeWeight(weight * 0.8)
-  p.arc(0, 0, d * 0.62 * k, d * 0.62 * k, Math.PI * 1.1, Math.PI * 1.55)
-  p.pop()
-}
-
-/** The frame's body: darker plate than its tubes, so the torso reads as a mass behind the arms. */
-const PLATE = mixHex(STEEL, KIT.lacquer, 0.34)
-const PLATE_DARK = mixHex(PLATE, KIT.lacquer, 0.7)
-/** Where his waist sits on the seat, in the kit's frame (the frame's drop added). */
-export const WAIST = { y: 0.3, half: 0.44 }
-/** How far in from each shoulder joint the torso's top corner sits: the yoke's ends and the round shoulders stand out past it. */
-const INSET = 0.16
+/** His waist on the seat (behind the snare), in the kit's frame, and half its width. */
+export const WAIST = { y: PIVOT[1], half: 0.28 }
 
 const css = (hex: string, a: number): string => {
   const n = parseInt(hex.slice(1), 16)
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
 }
 
+type Bez = [Pt, Pt, Pt]
 /**
- * The drummer's torso, behind the drums: a filled shape from just in from the shoulders (L, R) tapering to his waist on
- * the seat, lit like the kit's lacquer (dark edges, a lifted band toward the house's left) and darkening toward the
- * waist, a gold rim along the tops of the shoulders; the seat's black cushion under him. `drop` is the frame's
- * height (it flies with the frame); `slump` rounds the shoulders forward (the torso shorter, its top curved).
+ * One side of his torso from the collar (s = 1 the house's right), in the torso's own upright frame: the collar under
+ * his head, the shoulder sloping down and out to the round deltoid over the arm's joint, round it to the armpit, and
+ * down the side, narrowing, to the waist. `S` the shoulder joint, `H` his head.
  */
-export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, drop: number, slump: number): void {
+function side(S: Pt, H: Pt, s: 1 | -1): { from: Pt; segs: Bez[]; rim: number } {
+  const C: Pt = [H[0] + s * 0.11, H[1] + 0.03]
+  const Dt: Pt = [S[0] - s * 0.08, S[1] - 0.06]
+  const Do: Pt = [S[0] + s * 0.15, S[1] + 0.08]
+  const A: Pt = [S[0] - s * 0.1, S[1] + 0.4]
+  const W: Pt = [s * WAIST.half, 0.02]
+  return {
+    from: C,
+    segs: [
+      [[C[0] + s * 0.14, C[1] + 0.02], [Dt[0] - s * 0.26, Dt[1] - 0.01], Dt],
+      [[S[0] + s * 0.07, S[1] - 0.08], [S[0] + s * 0.15, S[1] - 0.02], Do],
+      [[S[0] + s * 0.16, S[1] + 0.2], [S[0] + s * 0.03, S[1] + 0.36], A],
+      [[A[0] - s * 0.03, A[1] + 0.75], [s * (WAIST.half + 0.06), -0.8], W],
+    ],
+    // The rim runs over the first two: the slope of the shoulder and the top of the deltoid.
+    rim: 2,
+  }
+}
+
+/**
+ * His torso, behind the drums (`hall.ts` draws it before the kit): a dark shirt from the collar under his head, the
+ * shoulders sloping to round deltoids over the arms' joints, the chest narrowing to his waist on the seat, the seat's
+ * black cushion under him; flat cloth sinking into shadow toward the waist, and a soft rim of top light along the
+ * shoulders. All turned `tilt` about the waist. `L`, `R` the shoulder joints and `H` his head, in the kit's frame (as
+ * drawn, tilted); `drop` the frame's height; `slump` how empty it hangs (the rim dims).
+ */
+export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, H: Pt, drop: number, slump: number, tilt: number): void {
   const { k, weight } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const wx = NECK[0]
-  const wy = WAIST.y + drop
-  const hw = WAIST.half
-  const midY = Math.min(L[1], R[1]) - 0.07 + 0.05 * slump
-  // The torso's top corners, in from the shoulder joints (the yoke's ends and the round shoulders stand out past them).
-  const tl: Pt = [L[0] + INSET, L[1] + 0.04]
-  const tr: Pt = [R[0] - INSET, R[1] + 0.04]
-  const outline = (): void => {
-    ctx.beginPath()
-    ctx.moveTo(tl[0] * k, tl[1] * k)
-    ctx.bezierCurveTo((tl[0] + 0.35) * k, midY * k, (tr[0] - 0.35) * k, midY * k, tr[0] * k, tr[1] * k)
-    // Full through the ribs, then in to the waist.
-    ctx.bezierCurveTo((tr[0] + 0.1) * k, (tr[1] + 0.75) * k, (wx + hw + 0.02) * k, (wy - 0.75) * k, (wx + hw) * k, wy * k)
-    ctx.lineTo((wx - hw) * k, wy * k)
-    ctx.bezierCurveTo((wx - hw - 0.02) * k, (wy - 0.75) * k, (tl[0] - 0.1) * k, (tl[1] + 0.75) * k, tl[0] * k, tl[1] * k)
-    ctx.closePath()
-  }
-  // The seat: a black cushion under him, on the throne's post.
+  const P: Pt = [PIVOT[0], PIVOT[1] + drop]
+  // Into the torso's own upright frame (about the waist).
+  const cs = Math.cos(-tilt)
+  const sn = Math.sin(-tilt)
+  const local = (q: Pt): Pt => [(q[0] - P[0]) * cs - (q[1] - P[1]) * sn, (q[0] - P[0]) * sn + (q[1] - P[1]) * cs]
+  const l = local(L)
+  const r = local(R)
+  const h = local(H)
+  // The seat: a black cushion under him, on the throne's post (upright, not tilted).
   p.noStroke()
   p.fill(HALL_BLACK)
-  p.rect((wx - 0.62) * k, (wy - 0.03) * k, 1.24 * k, 0.2 * k, 0.09 * k)
-  p.fill(PLATE_DARK)
-  p.rect((wx - 0.05) * k, (wy + 0.15) * k, 0.1 * k, 0.9 * k)
+  p.rect((P[0] - 0.62) * k, (P[1] - 0.03) * k, 1.24 * k, 0.2 * k, 0.09 * k)
+  p.fill(mixHex(HALL_BLACK, KIT.chrome, 0.2))
+  p.rect((P[0] - 0.05) * k, (P[1] + 0.15) * k, 0.1 * k, 0.9 * k)
+  const right = side(r, h, 1)
+  const left = side(l, h, -1)
   ctx.save()
+  ctx.translate(P[0] * k, P[1] * k)
+  ctx.rotate(tilt)
+  const K = (q: Pt): [number, number] => [q[0] * k, q[1] * k]
+  const outline = (): void => {
+    ctx.beginPath()
+    ctx.moveTo(...K(left.from))
+    // Under his head: the collar.
+    ctx.quadraticCurveTo(...K([h[0], h[1] + 0.17]), ...K(right.from))
+    for (const [a, b, q] of right.segs) ctx.bezierCurveTo(...K(a), ...K(b), ...K(q))
+    // Up the other side, the same curves backward.
+    const back: Pt[] = [left.from, ...left.segs.map((g) => g[2])]
+    for (let i = left.segs.length - 1; i >= 0; i--) {
+      const [a, b] = left.segs[i]
+      if (i === left.segs.length - 1) ctx.lineTo(...K(back[i + 1]))
+      ctx.bezierCurveTo(...K(b), ...K(a), ...K(back[i]))
+    }
+    ctx.closePath()
+  }
   outline()
-  // Across: lit plate, a cylinder like the drums' shells.
-  const x0 = Math.min(tl[0], wx - hw) - 0.1
-  const x1 = Math.max(tr[0], wx + hw) + 0.1
-  const g = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
-  g.addColorStop(0, PLATE_DARK)
-  g.addColorStop(0.12, PLATE)
-  g.addColorStop(0.27, mixHex(PLATE, KIT.chrome, 0.28))
-  g.addColorStop(0.32, mixHex(PLATE, KIT.chrome, 0.4))
-  g.addColorStop(0.38, mixHex(PLATE, KIT.chrome, 0.24))
-  g.addColorStop(0.62, PLATE)
-  g.addColorStop(1, PLATE_DARK)
+  // Flat cloth, sinking into shadow toward the waist (behind the drums).
+  const g = ctx.createLinearGradient(0, (Math.min(l[1], r[1]) + 0.5) * k, 0, 0)
+  g.addColorStop(0, SHIRT)
+  g.addColorStop(1, SHIRT_LOW)
   ctx.fillStyle = g
   ctx.fill()
-  // Down: into shadow toward the waist.
-  const v = ctx.createLinearGradient(0, (midY + 0.5) * k, 0, wy * k)
-  v.addColorStop(0, css(KIT.lacquer, 0))
-  v.addColorStop(1, css(KIT.lacquer, 0.6))
-  ctx.fillStyle = v
-  ctx.fill()
   ctx.lineWidth = weight * 0.8
-  ctx.strokeStyle = STEEL_EDGE
+  ctx.strokeStyle = SHIRT_EDGE
   ctx.stroke()
-  // A seam down the middle of the plate: a chest, not a panel.
+  // The rim of top light along both shoulders: a soft wide glow of it and a finer line.
+  const rim = (w: number, a: number): void => {
+    for (const sd of [left, right]) {
+      ctx.beginPath()
+      ctx.moveTo(...K([sd.from[0] + (sd === left ? 0.02 : -0.02), sd.from[1] + 0.012]))
+      for (let i = 0; i < sd.rim; i++) {
+        const [a1, b1, q] = sd.segs[i]
+        ctx.bezierCurveTo(...K([a1[0], a1[1] + 0.012]), ...K([b1[0], b1[1] + 0.012]), ...K([q[0], q[1] + 0.012]))
+      }
+      ctx.lineCap = 'round'
+      ctx.lineWidth = weight * w
+      ctx.strokeStyle = css(RIM, a)
+      ctx.stroke()
+    }
+  }
+  const lit = 1 - 0.5 * slump
+  rim(3.0, 0.18 * lit)
+  rim(1.1, 0.62 * lit)
+  ctx.restore()
+}
+
+/**
+ * A tapered length with round ends, from `a` (`w0` across) to `b` (`w1`): a sleeve, a forearm, a trouser leg. Filled
+ * `fill`, edged `edge`; `lit` along its upper side and `shade` along its lower, each a line a little in from the edge.
+ */
+function taper(p: p5, c: Ctx, a: Pt, b: Pt, w0: number, w1: number, fill: string, edge: string, lit: [string, number] | null, shade: [string, number] | null): void {
+  const { k, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const ang = Math.atan2(b[1] - a[1], b[0] - a[0])
+  const pa = ang - Math.PI / 2
+  const n: Pt = [Math.cos(pa), Math.sin(pa)]
+  ctx.save()
   ctx.beginPath()
-  ctx.moveTo((wx + (tl[0] + tr[0] - 2 * wx) * 0.25) * k, (midY + 0.3) * k)
-  ctx.quadraticCurveTo((wx + (tl[0] + tr[0] - 2 * wx) * 0.12) * k, ((midY + wy) / 2) * k, wx * k, (wy - 0.1) * k)
+  ctx.moveTo((a[0] + (n[0] * w0) / 2) * k, (a[1] + (n[1] * w0) / 2) * k)
+  ctx.lineTo((b[0] + (n[0] * w1) / 2) * k, (b[1] + (n[1] * w1) / 2) * k)
+  ctx.arc(b[0] * k, b[1] * k, (w1 / 2) * k, pa, pa + Math.PI, false)
+  ctx.lineTo((a[0] - (n[0] * w0) / 2) * k, (a[1] - (n[1] * w0) / 2) * k)
+  ctx.arc(a[0] * k, a[1] * k, (w0 / 2) * k, pa + Math.PI, pa + 2 * Math.PI, false)
+  ctx.closePath()
+  ctx.fillStyle = fill
+  ctx.fill()
+  ctx.lineWidth = weight * 0.75
+  ctx.strokeStyle = edge
+  ctx.stroke()
+  // Which side faces up (the stage's light is above).
+  const up = n[1] <= 0 ? 1 : -1
+  const line = (col: [string, number], sgn: number, w: number): void => {
+    const o0 = (w0 / 2 - 0.035) * sgn
+    const o1 = (w1 / 2 - 0.03) * sgn
+    ctx.beginPath()
+    ctx.moveTo((a[0] + n[0] * o0) * k, (a[1] + n[1] * o0) * k)
+    ctx.lineTo((b[0] + n[0] * o1) * k, (b[1] + n[1] * o1) * k)
+    ctx.lineCap = 'round'
+    ctx.lineWidth = weight * w
+    ctx.strokeStyle = css(col[0], col[1])
+    ctx.stroke()
+  }
+  if (lit) line(lit, up, 1.1)
+  if (shade) line(shade, -up, 1.4)
+  ctx.restore()
+}
+
+/** The upper arm: a sleeve of his shirt from the shoulder to the elbow, tapered, the elbow a round bend in the cloth. */
+export function sleeve(p: p5, c: Ctx, s: Pt, e: Pt): void {
+  taper(p, c, s, e, 0.24, 0.2, SHIRT, SHIRT_EDGE, [RIM, 0.55], null)
+}
+
+/** The forearm, in skin, from inside the sleeve's cuff to the wrist: tapered, lit along its top, its underside in shadow. */
+export function forearm(p: p5, c: Ctx, e: Pt, w: Pt): void {
+  taper(p, c, e, w, 0.155, 0.115, SKIN_ARM, SKIN_SHADE, [SKIN_LIT, 0.45], [SKIN_SHADE, 0.75])
+}
+
+/**
+ * A hand round the stick at `at` (the stick at `ang`): skin, the fingers wrapped under it and the knuckles over it,
+ * lit along the knuckles, the lower edge in shadow, the thumb laid along the stick toward its tip. Drawn over the
+ * stick. Smaller and open while the stick is in the air.
+ */
+export function hand(p: p5, c: Ctx, at: Pt, ang: number, holding = true): void {
+  const { k, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.translate(at[0] * k, at[1] * k)
+  ctx.rotate(ang)
+  // The stick's upper side on the screen, in the hand's frame.
+  const up = Math.cos(ang) >= 0 ? -1 : 1
+  const L = holding ? 0.2 : 0.15
+  const W = holding ? 0.15 : 0.12
+  ctx.beginPath()
+  ctx.roundRect((-L / 2) * k, (-W / 2 + up * 0.012) * k, L * k, W * k, 0.06 * k)
+  ctx.fillStyle = SKIN
+  ctx.fill()
   ctx.lineWidth = weight * 0.7
-  ctx.strokeStyle = css(KIT.lacquer, 0.45)
+  ctx.strokeStyle = SKIN_SHADE
   ctx.stroke()
-  // The gold rim along the tops of the shoulders.
-  ctx.beginPath()
-  ctx.moveTo((tl[0] + 0.02) * k, (tl[1] + 0.01) * k)
-  ctx.bezierCurveTo((tl[0] + 0.35) * k, (midY + 0.015) * k, (tr[0] - 0.35) * k, (midY + 0.015) * k, (tr[0] - 0.02) * k, (tr[1] + 0.01) * k)
+  if (holding) {
+    // The fingers' creases across the back of the hand, and the knuckles' ridge over the stick, lit.
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = css(SKIN_SHADE, 0.55)
+    ctx.lineWidth = weight * 0.6
+    for (const x of [-0.04, 0.0, 0.04]) {
+      ctx.beginPath()
+      ctx.moveTo(x * k, up * 0.012 * k)
+      ctx.lineTo(x * k, up * 0.06 * k)
+      ctx.stroke()
+    }
+    ctx.strokeStyle = css(SKIN_LIT, 0.8)
+    ctx.lineWidth = weight * 1.0
+    ctx.beginPath()
+    ctx.moveTo(-0.07 * k, up * 0.058 * k)
+    ctx.lineTo(0.06 * k, up * 0.058 * k)
+    ctx.stroke()
+    // The thumb, along the stick toward its tip.
+    ctx.beginPath()
+    ctx.ellipse(0.1 * k, -up * 0.012 * k, 0.05 * k, 0.03 * k, 0, 0, Math.PI * 2)
+    ctx.fillStyle = SKIN
+    ctx.fill()
+    ctx.lineWidth = weight * 0.6
+    ctx.strokeStyle = SKIN_SHADE
+    ctx.stroke()
+  }
+  // The heel of the hand, underneath, in shadow.
+  ctx.strokeStyle = css(SKIN_SHADE, 0.8)
   ctx.lineWidth = weight * 1.2
-  ctx.strokeStyle = css(HALL_GOLD, 0.6 - 0.25 * slump)
+  ctx.beginPath()
+  ctx.moveTo((-L / 2 + 0.04) * k, (-up * (W / 2 - 0.03) + up * 0.012) * k)
+  ctx.lineTo((L / 2 - 0.05) * k, (-up * (W / 2 - 0.03) + up * 0.012) * k)
   ctx.stroke()
   ctx.restore()
 }
 
 /**
- * A limb of the frame: a filled, tapered length of dark steel from a (w0 across) to b (w1), its edge a darker steel
- * and its upper side lit, so it reads as a solid arm, not a pipe.
+ * An arm: the forearm, the sleeve over its top (the elbow a round bend of cloth), the stick, and the hand round it.
+ * `stick` draws the stick (and any blur of it) between the arm and the hand.
  */
-export function limb(p: p5, c: Ctx, a: Pt, b: Pt, w0: number, w1: number): void {
-  const { k, weight } = c
-  const dx = b[0] - a[0]
-  const dy = b[1] - a[1]
-  const L = Math.hypot(dx, dy) || 1e-6
-  let nx = -dy / L
-  let ny = dx / L
-  if (ny > 0) {
-    nx = -nx
-    ny = -ny
-  }
-  solid(p, STEEL_EDGE, weight * 0.8, STEEL)
-  p.quad(
-    (a[0] + (nx * w0) / 2) * k, (a[1] + (ny * w0) / 2) * k,
-    (b[0] + (nx * w1) / 2) * k, (b[1] + (ny * w1) / 2) * k,
-    (b[0] - (nx * w1) / 2) * k, (b[1] - (ny * w1) / 2) * k,
-    (a[0] - (nx * w0) / 2) * k, (a[1] - (ny * w0) / 2) * k,
-  )
-  // The lit side: a band a little in from the upper edge.
-  p.stroke(mixHex(STEEL, KIT.chrome, 0.7))
-  p.strokeWeight(weight * 1.1)
-  p.line((a[0] + nx * w0 * 0.3) * k, (a[1] + ny * w0 * 0.3) * k, (b[0] + nx * w1 * 0.3) * k, (b[1] + ny * w1 * 0.3) * k)
-}
-
-/** A round joint of the frame (a shoulder, an elbow, a knee): filled steel, a darker rim, a small light up and left. */
-export function joint(p: p5, c: Ctx, at: Pt, d: number): void {
-  const { k, weight } = c
-  solid(p, STEEL_EDGE, weight * 0.8, STEEL)
-  p.circle(at[0] * k, at[1] * k, d * k)
-  p.noFill()
-  p.stroke(mixHex(STEEL, KIT.chrome, 0.75))
-  p.strokeWeight(weight * 0.9)
-  p.arc(at[0] * k, at[1] * k, d * 0.62 * k, d * 0.62 * k, Math.PI * 1.05, Math.PI * 1.55)
-}
-
-/** A grip: a filled fist of steel round the stick at `at`, turned with the stick. Smaller while the stick is away. */
-export function fist(p: p5, c: Ctx, at: Pt, ang: number, holding = true): void {
-  const { k, weight } = c
-  const w = holding ? 0.17 : 0.12
-  const h = holding ? 0.14 : 0.1
-  p.push()
-  p.translate(at[0] * k, at[1] * k)
-  p.rotate(ang)
-  solid(p, STEEL_EDGE, weight * 0.8, STEEL)
-  p.rect((-w / 2) * k, (-h / 2) * k, w * k, h * k, 0.045 * k)
-  // The knuckles' edge, lit.
-  p.stroke(mixHex(STEEL, KIT.chrome, 0.7))
-  p.strokeWeight(weight * 0.9)
-  p.line((-w / 2 + 0.03) * k, (-h / 2 + 0.018) * k, (w / 2 - 0.03) * k, (-h / 2 + 0.018) * k)
-  p.pop()
-}
-
-/**
- * The yoke across the shoulders, bowed up under his head, and the cradle his head sits in: a shallow shaped dish of
- * the same dark chrome, its lit rim along the top (not a black half-disc under him).
- */
-export function drawYoke(p: p5, c: Ctx, L: Pt, R: Pt): void {
-  const { k, weight } = c
-  const mid: Pt = [(L[0] + R[0]) / 2, (L[1] + R[1]) / 2 - 0.05]
-  p.noFill()
-  p.strokeCap(p.ROUND)
-  for (const [w, col] of [[4.4, STEEL_EDGE], [3.2, STEEL]] as const) {
-    p.stroke(col)
-    p.strokeWeight(weight * w)
-    p.bezier(L[0] * k, L[1] * k, (L[0] + 0.3) * k, (mid[1] - 0.12) * k, (R[0] - 0.3) * k, (mid[1] - 0.12) * k, R[0] * k, R[1] * k)
-  }
-  p.stroke(KIT.chrome)
-  p.strokeWeight(weight * 0.7)
-  p.bezier(L[0] * k, (L[1] - 0.02) * k, (L[0] + 0.3) * k, (mid[1] - 0.14) * k, (R[0] - 0.3) * k, (mid[1] - 0.14) * k, R[0] * k, (R[1] - 0.02) * k)
-  // The cradle: a shallow dish, its top the rim he sits in, its underside curved.
-  const top = mid[1] - 0.1
-  const half = 0.2
-  p.stroke(STEEL_EDGE)
-  p.strokeWeight(weight * 0.8)
-  p.fill(STEEL)
-  p.beginShape()
-  for (let i = 0; i <= 16; i++) {
-    const u = i / 16
-    const x = mid[0] - half + 2 * half * u
-    p.vertex(x * k, (top + 0.1 * Math.sin(Math.PI * u) ** 0.8 + 0.012) * k)
-  }
-  for (let i = 16; i >= 0; i--) {
-    const u = i / 16
-    const x = mid[0] - half * 0.82 + 2 * half * 0.82 * u
-    p.vertex(x * k, (top + 0.035 * Math.sin(Math.PI * u)) * k)
-  }
-  p.endShape(p.CLOSE)
-  p.noFill()
-  p.stroke(KIT.chrome)
-  p.strokeWeight(weight * 0.7)
-  p.line((mid[0] - half * 0.95) * k, (top + 0.004) * k, (mid[0] - half * 0.55) * k, (top + 0.022) * k)
+export function drawBodyArm(p: p5, c: Ctx, s: Pt, e: Pt, w: Pt, ang: number, holding: boolean, stick: () => void): void {
+  forearm(p, c, e, w)
+  // The sleeve's round top sits a little under the joint, so the shoulder's slope runs over it into the arm.
+  const d = Math.hypot(e[0] - s[0], e[1] - s[1]) || 1
+  sleeve(p, c, [s[0] + ((e[0] - s[0]) / d) * 0.03, s[1] + 0.035 + ((e[1] - s[1]) / d) * 0.03], e)
+  stick()
+  hand(p, c, w, ang, holding)
 }
 
 /**
@@ -554,37 +609,40 @@ export function elbowSwing(s: Pt, w: Pt, bend: number): Pt {
 const RIGHT_UNDER: [number, number] = [UNSEAT + 0.8, UNSEAT + 2.4]
 /** The arms' widths, in cells: tapered limbs, round joints. */
 export const ARM_W = { upper: [0.26, 0.21], fore: [0.2, 0.15], elbow: 0.22, shoulder: 0.3 } as const
-const rightBend = (T: number): number => -1 + 2 * smoother((T - RIGHT_UNDER[0]) / (RIGHT_UNDER[1] - RIGHT_UNDER[0]))
+/**
+ * The knock in the hush: as he leaps for the cup the right elbow swings out again, up over the crash, so the upper
+ * arm clears the disc when the stick comes down on its rim; it swings back under as the arm drops to hang out of
+ * Fletcher's way (`H_REST`). Tucked under for the stroke, the elbow sat on the crash's right rim and the sleeve lay
+ * across the cymbal the whole time it tipped.
+ */
+const KNOCK_OUT: [number, number] = [H_LEAP, H_SEATED + 0.35]
+export const rightBend = (T: number): number => {
+  const under = -1 + 2 * smoother((T - RIGHT_UNDER[0]) / (RIGHT_UNDER[1] - RIGHT_UNDER[0]))
+  const out = smoother((T - KNOCK_OUT[0]) / 0.4) * (1 - smoother((T - KNOCK_OUT[1]) / 0.6))
+  return under - 2 * out
+}
 
 function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const pose = armPose(arm, T)
   const s = shoulder(arm, T)
   const w = pose.grip
   const e = arm === 'left' ? elbowOf(s, w, 1) : elbowSwing(s, w, rightBend(T))
-  limb(p, c, s, e, ARM_W.upper[0], ARM_W.upper[1])
-  limb(p, c, e, w, ARM_W.fore[0], ARM_W.fore[1])
-  joint(p, c, e, ARM_W.elbow)
-  if (pose.holding) {
+  drawBodyArm(p, c, s, e, w, pose.ang, pose.holding, () => {
+    if (!pose.holding) return
     const butt: Pt = [w[0] - Math.cos(pose.ang) * HOLD, w[1] - Math.sin(pose.ang) * HOLD]
     drawStick(p, c, butt, pose.ang, STICK)
-  }
-  // The grip: a fist round the stick (a smaller one, empty, while the stick is in the air).
-  fist(p, c, w, pose.ang, pose.holding)
+  })
 }
 
-/** The yoke, the cup, and the two lines up into the flies. */
-function drawFrame(p: p5, c: Ctx, T: number): void {
+/** The two lines up into the flies, only while it flies in and out (hanging still, they read as a coat hanger). */
+export function drawLines(p: p5, c: Ctx, L: Pt, R: Pt, drop: number): void {
   const { k, weight } = c
-  const L = shoulder('left', T)
-  const R = shoulder('right', T)
-  // The lines, up out of sight, fading into the dark above the light.
+  const a = 0.5 * Math.min(1, Math.abs(drop) / 0.6)
+  if (a < 0.005) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const q of [L, R]) {
     const g = ctx.createLinearGradient(0, (q[1] - 5) * k, 0, q[1] * k)
     g.addColorStop(0, 'rgba(183, 178, 167, 0)')
-    // Only while it flies in and out: hanging still, two lines up into the flies made it read as a coat hanger.
-    const a = 0.5 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)
-    if (a < 0.005) continue
     g.addColorStop(1, `rgba(183, 178, 167, ${a.toFixed(3)})`)
     ctx.save()
     ctx.strokeStyle = g
@@ -595,7 +653,6 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
     ctx.stroke()
     ctx.restore()
   }
-  drawYoke(p, c, L, R)
 }
 
 function drawFoot(p: p5, c: Ctx, T: number): void {
@@ -607,13 +664,13 @@ function drawFoot(p: p5, c: Ctx, T: number): void {
   const tilt = -0.22 + 0.16 * pedalPress(T)
   const along = (d: number, up: number): Pt => [heel[0] + Math.cos(tilt) * d + Math.sin(tilt) * up, heel[1] + Math.sin(tilt) * d - Math.cos(tilt) * up]
   const lift = footLift(T) + (1 - down) * 1.6
-  // The boot on the board's toe: a black wedge, its sole along the board, lifted between kicks.
+  // The shoe on the board's toe: its sole along the board, lifted between kicks.
   const sole0 = along(0.25, 0.045 + lift)
   const sole1 = along(0.52, 0.045 + lift)
   const top1 = along(0.47, 0.15 + lift)
   const top0 = along(0.31, 0.25 + lift)
   const ankle = along(0.41, 0.21 + lift)
-  // The shin, up from the ankle to behind the snare's shell, where it goes out of sight.
+  // The leg, up from the ankle to behind the snare's shell, where it goes out of sight.
   const hidden = SNARE.top + SNARE.depth + SNARE.w * 0.11 * 0.8
   const top: Pt = [ankle[0] + 0.07, hidden]
   if (ankle[1] <= top[1] + 0.02) return
@@ -628,29 +685,30 @@ function drawFoot(p: p5, c: Ctx, T: number): void {
 }
 
 /**
- * The shin and the boot, below the snare: the knee just under the snare's shell (the thigh goes up behind it to the
- * seat), a filled shin down to the ankle, and the boot on the footboard.
+ * The shin and the shoe, below the snare: a trouser leg from the knee just under the snare's shell (the thigh goes up
+ * behind it to the seat) down to the ankle, and the shoe on the footboard, its toe catching the light.
  */
 export function drawShin(p: p5, c: Ctx, top: Pt, ankle: Pt, boot: [Pt, Pt, Pt, Pt]): void {
   const { k, weight } = c
-  const knee: Pt = [top[0], top[1] + 0.07]
-  limb(p, c, [top[0], top[1] - 0.2], ankle, 0.2, 0.15)
-  solid(p, mixHex(KIT.lacquer, KIT.chrome, 0.25), weight * 0.8, KIT.lacquer)
+  taper(p, c, [top[0], top[1] - 0.2], [ankle[0], ankle[1] - 0.03], 0.22, 0.16, TROUSERS, TROUSERS_EDGE, [RIM, 0.3], null)
+  solid(p, mixHex(SHOE, '#000000', 0.5), weight * 0.8, SHOE)
   p.quad(boot[0][0] * k, boot[0][1] * k, boot[1][0] * k, boot[1][1] * k, boot[2][0] * k, boot[2][1] * k, boot[3][0] * k, boot[3][1] * k)
-  joint(p, c, ankle, 0.14)
-  if (ankle[1] > knee[1] + 0.3) joint(p, c, knee, 0.23)
+  // The toe, lit.
+  p.stroke(alpha(p, HALL.beam, 0.28))
+  p.strokeWeight(weight * 0.9)
+  p.line(boot[3][0] * k, boot[3][1] * k, boot[2][0] * k, boot[2][1] * k)
 }
 
 /**
- * The drummer's body (torso, seat, thigh): drawn by the hall BEHIND the kit (`hall.ts`, just before `drawKit`), in
- * the kit's frame, so the rack tom, the snare and the kick sit in front of it. The arms, the shin and the frame's
- * lines stay in `drawRig`, in front.
+ * The drummer's body (torso, collar, seat): drawn by the hall BEHIND the kit (`hall.ts`, just before `drawKit`), in
+ * the kit's frame, so the rack tom, the snare and the kick sit in front of it. The arms, the leg and the fly lines stay
+ * in `drawRig`, in front.
  */
 export function drawDrummerBody(p: p5, c: Ctx, T: number): void {
   if (rigOut(T)) return
   p.push()
   p.rectMode(p.CORNER)
-  drawTorso(p, c, shoulder('left', T), shoulder('right', T), rigDrop(T), slumpOf(T))
+  drawTorso(p, c, shoulder('left', T), shoulder('right', T), headAt(T), rigDrop(T), slumpOf(T), tilt(T))
   p.pop()
 }
 
@@ -658,14 +716,11 @@ export function drawDrummerBody(p: p5, c: Ctx, T: number): void {
 export function drawRig(p: p5, c: Ctx, T: number): void {
   if (rigOut(T)) return
   p.push()
-  // The clamps are laid out round their joints by corners (the stage draws in rectMode(CENTER)).
   p.rectMode(p.CORNER)
   drawFoot(p, c, T)
-  drawFrame(p, c, T)
+  drawLines(p, c, shoulder('left', T), shoulder('right', T), rigDrop(T))
   drawArm(p, c, 'left', T)
   drawArm(p, c, 'right', T)
-  // The shoulders: round joints over where the arms join the yoke.
-  for (const q of [shoulder('left', T), shoulder('right', T)]) joint(p, c, q, ARM_W.shoulder)
   const flying = tossedStick(T)
   if (flying) {
     const butt: Pt = [flying.mid[0] - (Math.cos(flying.ang) * STICK) / 2, flying.mid[1] - (Math.sin(flying.ang) * STICK) / 2]

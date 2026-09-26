@@ -2,14 +2,13 @@
 // gathers every Carnegie part's `*_KIT` from here, and which the metronome's drawing below reads for the kit's
 // clock) finds them set whichever of the two is loaded first.
 export { RUBATO_KIT, RUBATO_HITS } from './rubato-hits'
-import type p5 from 'p5'
 import type { Pt, Seg } from '../../../../../parts'
 import { clamp, easeInSine } from '../../../../../../../../src/core/ease'
 import { CRASH, RACK, SNARE, cymbalSwing } from '../drums'
-import { box, part, smooth, type Ctx } from '../kit'
-import { RIDE, SNARES, level } from '../music'
+import { box, part, smooth } from '../kit'
+import { RIDE, SNARES } from '../music'
 import { G_EARTH } from '../physics'
-import { BOARD, CRASH_AT, LAND, PUSH_OFF, RACK_AT, RACK_TAP, TAPS, pushOff } from './rubato-hits'
+import { BOARD, CRASH_AT, PUSH_OFF, RACK_AT, RACK_TAP, TAPS, pushOff } from './rubato-hits'
 import {
   COCK,
   LANDING,
@@ -25,7 +24,7 @@ import {
   seatOnDrum,
   weightAt,
 } from './rubato-metronome'
-import { CLOSE, KIT_AT } from './stage'
+import { CLOSE } from './stage'
 
 /**
  * Carnegie Hall, 423.34 → 504.0: the rubato. The heart of the show, and its answer to the house Metronome ("not
@@ -76,56 +75,6 @@ const seated = (T: number): Pt => {
   return [PIVOT_X + r * Math.sin(th), PIVOT_Y + lift(T) - r * Math.cos(th)]
 }
 
-/** How far through the swell `T` is, 0..1: by the clock and by the music's level together. */
-function swell(T: number): number {
-  const clock = smooth(T, RIDE_END + 0.6, COCK - 0.3)
-  const loud = clamp((level(T) - 0.3) / 0.26)
-  return 0.6 * clock + 0.4 * loud * smooth(T, RIDE_END, RIDE_END + 1.5)
-}
-
-const rgb = (hex: string): string => `${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)}`
-/** The stage's gold, and the burst's white-gold. */
-const GOLD = rgb('#E3B05B')
-const FLASH = rgb('#FFF1CF')
-/** The swell's light on the stage at `T` (added to the hall's), held after the burst and let down slowly. */
-function swellLight(T: number): number {
-  const at = (u: number) => 0.1 * swell(u) * smooth(u, RIDE_END + 0.3, RIDE_END + 2)
-  if (T <= RIDE_END) return 0
-  if (T < LAND) return at(T)
-  return at(LAND) * (1 - smooth(T, LAND + 0.4, LAND + 4.5))
-}
-/** The burst: the hall's light slams up on the landing, and comes down long and damped. */
-function slam(T: number): number {
-  const s = T - LAND
-  if (s < 0 || s > 9) return 0
-  return 0.2 * Math.exp(-s / 0.3) + 0.09 * Math.exp(-s / 1.7)
-}
-
-/** The hall's light rising with the swell, and slamming up on the burst: over the whole stage, and a pool on the snare. */
-function drawLight(p: p5, c: Ctx, T: number): void {
-  const wash = swellLight(T) + 0.55 * slam(T)
-  const pool = slam(T)
-  if (wash < 0.003 && pool < 0.003) return
-  const { k } = c
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const glow = (x: number, y: number, r: number, color: string, a: number) => {
-    if (a < 0.003) return
-    const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
-    g.addColorStop(0, `rgba(${color}, ${a.toFixed(3)})`)
-    g.addColorStop(0.55, `rgba(${color}, ${(a * 0.45).toFixed(3)})`)
-    g.addColorStop(1, `rgba(${color}, 0)`)
-    ctx.fillStyle = g
-    ctx.fillRect((x - r) * k, (y - r) * k, 2 * r * k, 2 * r * k)
-  }
-  // Over the stage: the metronome, the kit and the podium.
-  glow(-0.8, -1.9, 9, GOLD, wash)
-  // On the snare where he lands.
-  glow(KIT_AT[0], KIT_AT[1] - 0.3, 2.6, FLASH, pool)
-  ctx.restore()
-}
-
 /** A lane written forward in show time: rests, flights under gravity, and rides on things that move. */
 class Path {
   readonly segs: Seg[] = []
@@ -169,7 +118,6 @@ export const rubato = part<{ begin: number }>(
     draw: (p, s, c) => {
       const T = s.begin + c.t
       drawMetronome(p, c, T)
-      drawLight(p, c, T)
     },
   },
   (slot) => {

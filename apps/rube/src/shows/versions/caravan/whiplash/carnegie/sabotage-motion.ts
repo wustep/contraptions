@@ -14,6 +14,8 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT } from './stage'
  *
  *   242.34  the match cut: he sits on the snare in the dark.
  *   243.30  the lights come up on the band's hit. Fletcher conducts with a chart in his hand.
+ *   245.5   the whole hall: his father in the front row under the kit, watching. He leaves his seat, unseen,
+ *           while the camera is close on Andrew (249.4 → 257.2), and waits behind the stage door.
  *   247.51  he flings it; it lands on Andrew's empty stand on 248.16 (the desk knocks and rocks).
  *   248.2   Andrew looks at it, close; gives up; the band's three hits (254.6, 255.2, 255.8) knock him back
  *           toward the edge of the drum, and Fletcher's finger (258.11) does the rest.
@@ -22,7 +24,8 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT } from './stage'
  *   262.03  the chord: they meet, close, not pressed, and hold while it swells.
  *   266.1   he turns back; Jim steps out into the wings behind him; the door closes.
  *   268.75  a running leap: he lands on the snare on 269.62 as Fletcher's open hands cut the band off,
- *           and counts himself in on the drum: 269.92, 270.23, and the solo's first stroke on 270.52.
+ *           and counts himself in on the drum: 269.92, 270.23, and the solo's first stroke on 270.52. Fletcher's
+ *           hands stay out where the band stopped, his head turned hard to the kit.
  */
 
 /* ------------------------------------------------------------------ the clock */
@@ -180,16 +183,33 @@ export const BOUNCES: { at: number; arc: number }[] = [
 
 /* ------------------------------------------------------------------ Jim */
 
+/**
+ * His seat in the house: the front row, under the kit, the one pale head above the dark velvet backs (`hall.ts`
+ * draws the first row's top edge at `LIP + 0.8`, 3.4), where the reveal's wide (245.5) finds him watching his son's
+ * silent kit. The match cut's close and the two-shot both leave the house out of frame.
+ */
+const JIM_SEAT: Pt = [-1.7, 3.36]
 /** Behind the stage door, out of sight, until it opens; then he steps out from behind its leaf. */
 const JIM_HIDE = -9.62
 const JIM_MEET = ANDREW_MEET - 0.34
+/**
+ * From his seat to the stage door, while the camera is close on Andrew's tries and the band's hits (every frame's
+ * bottom edge is above the house from 248.4 to 258.5): along the front of the house under the stage's lip, in its
+ * dark, then up the wings' steps behind the door's leaf. Settled there before the camera turns for the wings (258.8),
+ * so the door opens on the man we saw in the house.
+ */
+const LEAVES_SEAT = 249.4
+const AT_DOOR = 257.2
+const CLIMB = 255.6
 
-/** Jim at show time `T`: behind the door, then in the doorway, then out in the wings to watch. */
+/** Jim at show time `T`: in the house, then (unseen) behind the door, then in the doorway, then out in the wings to watch. */
 export function jimAt(T: number): Pt {
-  let x = JIM_HIDE + move(T, 261.3, 1.0, JIM_MEET - JIM_HIDE)
+  let x = JIM_SEAT[0] + move(T, LEAVES_SEAT, AT_DOOR - LEAVES_SEAT, JIM_HIDE - JIM_SEAT[0])
+  const y = JIM_SEAT[1] + move(T, CLIMB, AT_DOOR - CLIMB, JIM_WINGS[1] - JIM_SEAT[1])
+  x += move(T, 261.3, 1.0, JIM_MEET - JIM_HIDE)
   x += 0.012 * sway(T) + 0.014 * embrace(T)
   x += move(T, 266.75, 1.85, JIM_WINGS[0] - JIM_MEET)
-  return [x, JIM_WINGS[1]]
+  return [x, y]
 }
 
 /* ------------------------------------------------------------------ the stage door */
@@ -215,8 +235,14 @@ export function fletcherAt(T: number): Pt {
   // Into the throw; a long look at the silent kit while he keeps the band going; into the point.
   const lean = -0.09 * (S((T - 247.1) / 0.4) - S((T - 248.6) / 0.8)) - 0.17 * (S((T - 250.45) / 0.55) - S((T - 251.7) / 0.9)) - 0.06 * (S((T - 257.72) / 0.4) - S((T - 259.4) / 0.8))
   const dip = 0.05 * (S((T - 269.3) / 0.32) - S((T - 269.8) / 0.55))
-  return [hx + lean, hy + bob + dip]
+  // The band stopped, and the drummer goes on: his head turns hard to the kit and stays there (`conductor.ts` holds
+  // it through the solo's first phrase).
+  const stunned = -STUN_LEAN * S((T - 269.78) / 0.6)
+  return [hx + lean + stunned, hy + bob + dip]
 }
+
+/** How far his head turns off his column toward the kit when Andrew plays on past his cut-off. */
+export const STUN_LEAN = 0.2
 
 const phase = (T: number): number => (T - SHOUT_ORIGIN) / SHOUT_PERIOD
 /** beatPose's bounce, 1 at the top of the beat, 0 at its ictus. */
@@ -237,8 +263,11 @@ const COCK = arm(-Math.PI * 0.62, 1.32, -0.3, 'beat')
 const RELEASE = arm(-Math.PI * 0.95, 0.08, 0.1, 'beat')
 /** The chord held: both hands up, open, a little higher as it swells. */
 const HELD = POSES.ready
-/** The cut-off: both open hands swept out and down. */
-const CUT = { right: arm(Math.PI * 0.8, -0.3, -0.25, 'open'), left: arm(Math.PI * 0.2, 0.3, 0.25, 'open') }
+/**
+ * The cut-off: both open hands swept out and down, and stopped there. He holds it, frozen, while the drummer counts
+ * himself in and goes on alone (`conductor.ts` lowers it only once the solo's camera has found him).
+ */
+export const CUT: Pose = { right: arm(Math.PI * 0.8, -0.3, -0.25, 'open'), left: arm(Math.PI * 0.2, 0.3, 0.25, 'open') }
 
 /** The right arm straight out at `target` from where his right shoulder is: "you". */
 function aim(T: number, target: Pt): ArmPose {
@@ -266,11 +295,11 @@ export function poseAt(T: number): Pose {
       const u = easeInQuad(clamp((T - 269.25) / (LANDED - 269.25)))
       return { right: mixArm(held.right, CUT.right, u), left: mixArm(held.left, CUT.left, u) }
     }
-    // A small rebound off the stop, then down to his sides (exactly `POSES.rest` at the solo's first stroke).
+    // A small rebound off the stop, dying away, and then held: the band is stopped, and the drummer is not (exactly
+    // `CUT` at the solo's first stroke, where the conductor's clock takes him).
     const s = T - LANDED
-    const settle = { right: { ...CUT.right, up: CUT.right.up - 0.06 * Math.exp(-s / 0.12) * Math.sin(s * 14) }, left: { ...CUT.left, up: CUT.left.up + 0.06 * Math.exp(-s / 0.12) * Math.sin(s * 14) } }
-    const u = easeInOutSine(clamp(s / (SOLO - LANDED)))
-    return { right: mixArm(settle.right, POSES.rest.right, u), left: mixArm(settle.left, POSES.rest.left, u) }
+    const r = 0.06 * Math.exp(-s / 0.12) * Math.sin(s * 14) * (1 - S(s / (SOLO - LANDED)))
+    return { right: { ...CUT.right, up: CUT.right.up - r }, left: { ...CUT.left, up: CUT.left.up + r } }
   }
   // The right hand's own business through the chorus.
   if (T >= WIND && T < 247.36) right = mixArm(b.right, COCK, easeInOutSine((T - WIND) / (247.36 - WIND)))

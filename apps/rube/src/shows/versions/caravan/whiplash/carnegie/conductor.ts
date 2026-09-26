@@ -5,7 +5,8 @@ import { CHEST, POSES, RIG, beatPose, blendPose, mixArm, reachFromHead, wrapAngl
 import { BREAK, FINAL, LAST_CHORD, RIDE, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
 import { pushOff } from './rubato-hits'
-import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
+import { CUT, STUN_LEAN } from './sabotage-motion'
+import { DOOR, FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
 /**
  * Fletcher, Jim and the crash cymbal from the solo's first stroke (270.52) to the end, in the Carnegie frame
@@ -16,7 +17,9 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
  *
  * What the film has, and where it is here:
  *
- * - **The solo.** Fletcher on his podium, watching. Jim in the wings by the stage door, watching.
+ * - **The solo.** Fletcher cut the band off, and the drummer did not stop. His open hands stay out where the band
+ *   stopped, his head turned hard to the kit, until the solo's camera whips across to him (`STUNNED`); only then do
+ *   they come down, and he sinks into listening. Jim in the wings by the stage door, watching.
  * - **The hush: the cymbal.** Andrew lands on the crash on a loud stroke (`KNOCK`) and knocks it askew on its stand;
  *   it hangs there, tipped. Fletcher comes down off the podium, crosses to the kit, rises on his column to reach
  *   it, and sets it straight with one hand (`FIX`); a look at Andrew, close; back to the podium.
@@ -30,6 +33,12 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
  */
 
 /* ------------------------------------------------------------------ the clock */
+
+/**
+ * The solo's first phrase: frozen in his cut-off from the solo's first stroke until the camera's whip lands on him on
+ * the phrase's big hit (`solo.ts`, 277.96); then his hands come down and his head eases back to a listening lean.
+ */
+export const STUNNED: [number, number] = [277.96, 280.5]
 
 /** The hush: Andrew lands on the crash and knocks it askew. */
 export const KNOCK = 327.84
@@ -47,13 +56,38 @@ export const CONDUCT: [number, number] = [388.2, UNWIND]
 const BEATS: number[] = STOMPS.filter((t) => t > CONDUCT[0] - 1 && t < CONDUCT[1] + 1.5).filter((_, i) => i % 4 === 0)
 
 /**
- * The rubato: from his podium he keeps the metronome's time with it, a small beat of his right hand on every stroke
- * of the rod, slowing with it to the slowest (458.58) and quickening after, leaning in: the conductor keeping the
- * drummer's own tempo, which is the show's answer to "not my tempo".
+ * The rubato: from his podium he keeps the metronome's time with it, his right hand alone beating every stroke of the
+ * rod, the hand falling into each stroke as the bob strikes and rebounding high, slowing with it to the slowest
+ * (458.58, one long slow fall a stroke) and quickening after, leaning in; the left hangs at his side, so the one
+ * thing moving is the hand that keeps the time: the conductor keeping the drummer's own tempo, which is the show's
+ * answer to "not my tempo".
  */
 export const RUBATO: [number, number] = [455.0, 468.8]
 const RUBATO_BEATS: number[] = RIDE.filter((t) => t > RUBATO[0] - 2 && t < RUBATO[1] + 2)
-const rubatoOn = (t: number): number => ease(t, RUBATO[0], RUBATO[0] + 1.5) * (1 - ease(t, RUBATO[1] - 1.8, RUBATO[1]))
+export const rubatoOn = (t: number): number => ease(t, RUBATO[0], RUBATO[0] + 1.5) * (1 - ease(t, RUBATO[1] - 1.8, RUBATO[1]))
+/** The rubato beat's ictus (relative to his head: his shoulder's height, out toward the metronome) and its rebound's share of a beat. */
+const RUBATO_ICTUS: Pt = [-0.9, 0.12]
+const REBOUND = 0.33
+
+/**
+ * His right hand in the rubato at `t`: on each stroke of the rod it is at the ictus, with a flick of the wrist; it
+ * rebounds up (quick, slowing to the top), hangs, and falls, gathering speed, into the next stroke. The slower the
+ * rod, the higher the rebound (0.45 to 0.8 cells) and the longer the fall. Continuous across every stroke: whatever
+ * the beat's size, the hand is at the ictus on it.
+ */
+function rubatoBeat(t: number): ArmPose {
+  let j = 0
+  while (j + 1 < RUBATO_BEATS.length && RUBATO_BEATS[j + 1] <= t) j++
+  const a = RUBATO_BEATS[j]
+  const b = RUBATO_BEATS[Math.min(j + 1, RUBATO_BEATS.length - 1)]
+  const span = b - a
+  const u = span > 0 ? clamp((t - a) / span) : 0
+  const h = u < REBOUND ? 1 - (1 - u / REBOUND) ** 2 : 1 - ((u - REBOUND) / (1 - REBOUND)) ** 2
+  const size = 0.45 + 0.35 * clamp((span - 0.3) / 0.6)
+  const w: Pt = [RUBATO_ICTUS[0] + 0.18 * h, RUBATO_ICTUS[1] - size * h]
+  const flick = (1 - h) ** 3
+  return reachFromHead(-1, w, Math.PI + 0.5 * h - 0.35 * flick, 'beat')
+}
 
 /** The finale: to the kit in the long roll, up to Andrew's height, the nod, and back. */
 export const F_WALK: [number, number] = [519.4, 522.8]
@@ -96,7 +130,7 @@ function xAt(T: number): number {
 }
 
 /** How far his column has risen above his height: to reach the crash, and to meet Andrew's eyes. */
-function riseAt(T: number): number {
+export function riseAt(T: number): number {
   if (T < 400) return FIX_RISE * ease(T, H_WALK[1] - 0.9, GRIP[0] + 0.2) * (1 - ease(T, H_BACK[0] - 0.9, H_BACK[0] + 0.4))
   return NOD_RISE * ease(T, F_WALK[1] - 1.2, F_WALK[1] + 0.6) - BACK_SINK * away(T, F_BACK, UP_AGAIN)
 }
@@ -115,8 +149,9 @@ export function floorAt(T: number): number {
  * foot planted: a look close after he sets the crash straight, and the nod.
  */
 function leanAt(t: number): number {
-  // The solo: when the camera swings across to him (277.3-280.6) he is leaning a little toward the kit, watching.
-  const watch = -0.1 * ease(t, 277.2, 278.3) * (1 - ease(t, 280.0, 281.0))
+  // The solo: turned hard to the kit from the cut-off (the sabotage turned him), easing to a listening lean as his
+  // hands come down under the camera's look (`STUNNED`), and upright again once it has gone back to the kit.
+  const watch = t < 290 ? -STUN_LEAN * (1 - ease(t, STUNNED[0], STUNNED[1])) - 0.1 * ease(t, STUNNED[0], STUNNED[1]) * (1 - ease(t, 281.6, 283.4)) : 0
   if (t < 400) return watch - 0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
   if (t < 480) return -0.1 * rubatoOn(t)
   // Turned in to him before the nod, and back once it is done (the nod itself is a bow: `bowAt`).
@@ -216,14 +251,16 @@ function beatAt(t: number, beats: readonly number[] = BEATS): number {
 
 /** What his hands do at `t`. */
 export function poseAt(t: number): Pose {
+  // The solo's first phrase: the cut-off held, then lowered to his sides once the camera has found him.
+  if (t < STUNNED[1]) return blendPose(CUT, POSES.rest, ease(t, STUNNED[0], STUNNED[1]))
   // The build: drawn in, he conducts him, bigger as it goes.
   if (t > CONDUCT[0] && t < CONDUCT[1] + 1.4) {
     const on = ease(t, CONDUCT[0], CONDUCT[0] + 1.6) * (1 - ease(t, CONDUCT[1], CONDUCT[1] + 1.3))
     const size = 0.3 + 0.6 * ease(t, CONDUCT[0], CONDUCT[0] + 16)
     return blendPose(POSES.rest, beatPose(beatAt(t), size), on)
   }
-  // The rubato: a small beat with the rod's strokes, the left hand still at his chest.
-  if (t > RUBATO[0] && t < RUBATO[1]) return blendPose(POSES.rest, beatPose(beatAt(t, RUBATO_BEATS), 0.32, true), rubatoOn(t))
+  // The rubato: his right hand beats the rod's strokes, the left hangs at his side.
+  if (t > RUBATO[0] && t < RUBATO[1]) return { left: POSES.rest.left, right: mixArm(POSES.rest.right, rubatoBeat(t), rubatoOn(t)) }
   // The hush: his right hand up to the crash's rim, straightening it, and back down.
   if (t > GRIP[0] && t < LET_GO + 0.9) {
     const on = ease(t, GRIP[0], GRIP[1]) * (1 - ease(t, LET_GO, LET_GO + 0.9))
@@ -305,13 +342,31 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
 /* ------------------------------------------------------------------ Jim */
 
 /**
- * Where Jim is at `t`: in the wings by the stage door, watching; drawn a little toward the stage when the camera
- * comes to him in the hush (his son alone on the ride, far across the stage), and at the nod.
+ * The hush's look at Jim: the stage door opens again (358.5) and he stands in it, in the corridor's light, where he
+ * held his son under the chord; a small ball in a lit doorway reads across the stage where a ball on a dark floor
+ * did not. He steps back out into the wings once the camera has gone back to the kit (367.2), and the door closes.
+ */
+const HUSH_DOOR = { open: [358.5, 359.5] as [number, number], shut: [368.0, 369.3] as [number, number] }
+const IN_DOOR: [number, number] = [358.7, 359.95]
+const OUT_DOOR: [number, number] = [367.2, 368.4]
+/** Where he stands in the doorway: just inside its stage edge, the corridor's light behind him. */
+const DOORWAY_X = DOOR.x + 0.18
+
+/** How far the stage door is open in the hush (radians, as the sabotage's `doorAngle`: 1.36 wide open). */
+export function hushDoor(t: number): number {
+  return 1.3 * ease(t, HUSH_DOOR.open[0], HUSH_DOOR.open[1]) * (1 - ease(t, HUSH_DOOR.shut[0], HUSH_DOOR.shut[1]))
+}
+
+/**
+ * Where Jim is at `t`: in the wings by the stage door, watching; in the doorway's light for the hush's look at him,
+ * drawn toward the stage (his son alone on the ride, far across it); drawn toward it too for the solo's look, and at
+ * the nod.
  */
 export function jimAt(t: number): Pt {
-  const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
+  const inDoor = ease(t, IN_DOOR[0], IN_DOOR[1]) * (1 - ease(t, OUT_DOOR[0], OUT_DOOR[1]))
+  const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.6, 367.2))
   // Drawn toward the stage too when the solo's camera comes to him.
   const solo = 0.06 * ease(t, 304.2, 305.6) * (1 - ease(t, 307.2, 308.6))
   const lean = hush + solo + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
-  return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
+  return [JIM_WINGS[0] + (DOORWAY_X - JIM_WINGS[0]) * inDoor + lean, JIM_WINGS[1]]
 }

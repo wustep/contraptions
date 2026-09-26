@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { smooth } from '../kit'
 import { BAND, ONSETS, TEMPO, TUNE_ORIGIN, TUNE_PERIOD, tune } from '../music'
 import { G_EARTH } from '../physics'
-import { LEDGE_L, LEDGE_R, PIT_Y, PODIUM, SEAT, STEP, TIERS, WALL_L, kitLand } from './band-plan'
+import { LEDGE_R, PAD_DOWN, PAD_UP, PIT_Y, PODIUM, SEAT, STEP, TIERS, TURNER, WALL_L, kitLand } from './band-plan'
 import { Walk, laneAtShow } from './band-walk'
 
 /**
@@ -13,9 +13,11 @@ import { Walk, laneAtShow } from './band-walk'
  *   79   it swings shut behind him                                   83, 87, 91   he comes down the tiers, a step a bar
  *   92, 92¾  two bounces in the pit       93¾  he rolls up against Fletcher's podium: the glare
  *   96   Fletcher points him to his place: the alternate's chair, beside Tanner's chart
- *   102  seated.  Then the job: turning Tanner's pages, up on the stand's ledge and back, a page at a time:
- *        110–112, 121–123, the tutti (the page turned in its one breath of silence, 134¼ → 135¾), 153–156
- *   171  up at the stand again, waiting for the next page        175  Fletcher points at him: you
+ *   102  seated.  Then the job: turning Tanner's pages with the stand's page-turner (`TURNER`): down off the seat
+ *        onto its treadle on a phrase's downbeat, the arm sweeping the page over by the next beat, back up to the
+ *        seat: 112, 123, the tutti (on its biggest hit, the page going over in its one breath of silence, 134¼ →
+ *        135¾), 156
+ *   171  up at the stand's ledge, waiting for the next page        175  Fletcher points at him: you
  *   177  and at the kit: Tanner, off        179  Tanner hops down and stands aside
  *   184–188  Andrew comes onto the kit by a fill: floor tom, floor tom, rack, rack, the snare on 188
  */
@@ -37,17 +39,22 @@ export const BUMP = 40.378
 export const THERE = tune(96)
 export const SEATED = 44.345
 
-/** A page turn: the hop up to the stand's ledge (landing), the page landing on the left, the hop down to the seat. */
+/**
+ * A page turn: his drop off the seat onto the page-turner's treadle (`press`, a phrase's downbeat), the page landing
+ * on the left as the arm reaches its stop (`page`), the hop back up to the seat (`down`). The last is only the hop
+ * up to the stand's ledge (`up`), where he waits for a page that never comes: Fletcher takes him to the kit.
+ */
 export interface Turn {
+  press?: number
   up?: number
   page?: number
   down?: number
 }
 export const TURNS: Turn[] = [
-  { up: tune(110), page: tune(112), down: tune(114) },
-  { up: 52.045, page: 52.954, down: tune(125) },
-  { up: 55.491, page: 58.364, down: 59.798 },
-  { up: 65.794, page: 67.064, down: 68.598 },
+  { press: tune(112), page: tune(113), down: tune(115) },
+  { press: 52.954, page: tune(124), down: tune(126) },
+  { press: 57.73, page: 58.364, down: 59.798 },
+  { press: 67.064, page: tune(157), down: tune(159) },
   { up: 73.508 },
 ]
 /** Between pages, on his seat, he keeps time with Tanner: a small hop on every beat (the alternate playing along). */
@@ -66,6 +73,9 @@ export const TANNER_DOWN = tune(181)
 export const FILL = [79.071, tune(185), tune(186), 80.354, TEMPO]
 
 /* ------------------------------------------------------------------ his path */
+
+/** How long the page-turner's treadle takes to give under him (the ball rides it down). */
+const PRESS = 0.14
 
 function build(): Walk {
   const w = new Walk(BAND, [-0.5, 0], 1.6)
@@ -105,32 +115,21 @@ function build(): Walk {
     w.rest(until)
   }
   for (const turn of TURNS) {
-    if (turn.up !== undefined) {
-      if (Math.abs(w.x - SEAT[0]) < 0.01 && Math.abs(w.y - SEAT[1]) < 0.01) tap(turn.up - 2 * BEAT)
-      w.rest(turn.up - 2 * BEAT)
-      w.hop(LEDGE_R, turn.up).landed()
+    const from = turn.press ?? turn.up
+    if (from === undefined) continue
+    if (Math.abs(w.x - SEAT[0]) < 0.01 && Math.abs(w.y - SEAT[1]) < 0.01) tap(from - 2 * BEAT)
+    w.rest(from - 2 * BEAT)
+    if (turn.press === undefined) {
+      // The last: up onto the ledge's corner, to wait for the next page.
+      w.hop(LEDGE_R, from).landed()
+      continue
     }
-    if (turn.page !== undefined) {
-      // Waiting at the page's corner; then across with it, easing, the page landing as he does.
-      const go = turn.page - (turn.page === 58.364 ? ANSWER - PEAK - 0.02 : 0.56)
-      if (w.x < LEDGE_R[0] - 0.01) w.ease(LEDGE_R, Math.min(go - 0.1, w.T + 1.0))
-      w.rest(go)
-      w.ease(LEDGE_L, turn.page, 'inout')
-      if (turn.down === undefined) {
-        // Stays up: back along the ledge to the corner, ready for the next.
-        w.rest(turn.page + 0.35)
-        w.ease(LEDGE_R, turn.page + 1.3)
-      }
-    }
-    if (turn.down !== undefined) {
-      // Back along the ledge to the corner over his seat, and down.
-      if (w.x < LEDGE_R[0] - 0.01) {
-        w.rest(w.T + 0.12)
-        w.ease(LEDGE_R, Math.min(turn.down - BEAT - 0.04, w.T + 0.7))
-      }
-      w.rest(turn.down - BEAT)
-      w.hop(SEAT, turn.down).landed()
-    }
+    // Off the seat, up past the chair's back and down onto the treadle's pad on the downbeat; it gives under him,
+    // and the arm takes the page over. He waits on it until the hop back up to the seat.
+    w.hop(PAD_UP, turn.press).landed()
+    w.ease(PAD_DOWN, turn.press + PRESS, 'out')
+    w.rest((turn.down as number) - 2 * BEAT)
+    w.hop(SEAT, turn.down as number).landed()
   }
   // Onto the kit: off the ledge's corner to the floor tom, a fill across the toms, the snare on the downbeat.
   w.rest(FILL[0] - 1.5 * BEAT)
@@ -147,20 +146,61 @@ export const BAND_LANE = BAND_WALK.lane(BAND, DOOR_IN)
 /** Where Andrew is at show time `T` in the band's frame (clamped to the part). */
 export const heroBand = (T: number): Pt => laneAtShow(BAND_LANE, BAND, T)
 
-/* ------------------------------------------------------------------ the page turns */
+/* ------------------------------------------------------------------ the page-turner */
 
-/** Which page is showing on the right (0 at first), and how far the one being turned has gone (0..1), at `T`. */
-export function pageAt(T: number): { turned: number; u: number } {
+/**
+ * The page-turner at `T`: how far the treadle is pressed (0 up, 1 down) and the arm's angle off straight down
+ * (radians, positive to the right: `TURNER.swing` at rest, past the desk's right edge; `-swing` at its stop past the
+ * left). Pressed as he lands, it gives under him and holds; it springs back up, damped, as he leaves it. The arm is
+ * tripped as the treadle goes down: it sweeps over, gathering speed, to its stop on the page's beat (with a small
+ * rebound), holds a moment, and its spring swings it back, damped, to rest.
+ */
+export function turnerAt(T: number): { lever: number; arm: number } {
+  const A = TURNER.swing
+  let lever = 0
+  let arm = A
+  for (const turn of TURNS) {
+    if (turn.press === undefined || turn.page === undefined || turn.down === undefined) continue
+    const off = turn.down - 2 * BEAT
+    if (T >= turn.press && T < off + 1.2) {
+      const down = 1 - Math.pow(1 - Math.min(1, (T - turn.press) / PRESS), 2)
+      const s = T - off
+      // Back up as his weight leaves it: quick, a small overshoot above its rest, settled (a spring's step, from rest).
+      const w = 18
+      const tau = 0.08
+      const up = s <= 0 ? 0 : 1 - Math.exp(-s / tau) * (Math.cos(w * s) + Math.sin(w * s) / (w * tau))
+      lever = down * (1 - up)
+    }
+    const t0 = turn.press + 0.04
+    if (T <= t0 || T > turn.page + 2.2) continue
+    if (T < turn.page) {
+      const u = (T - t0) / (turn.page - t0)
+      arm = A - 2 * A * u * u
+    } else {
+      const s = T - turn.page
+      // At the stop: a small rebound off it, held, then the spring takes it back (critically damped).
+      const bounce = 0.07 * Math.exp(-s / 0.05) * Math.sin(s * 40)
+      const r = Math.max(0, s - 0.22)
+      const back = 1 - (1 + r / 0.2) * Math.exp(-r / 0.2)
+      arm = -A + bounce + 2 * A * back
+    }
+  }
+  return { lever, arm }
+}
+
+/**
+ * Which page is showing on the right (0 at first), and how far the one being turned has gone (0..1), at `T`: the page's
+ * free corner is under the arm's tip while the arm sweeps it over (`pw` the page's width from the spine).
+ */
+export function pageAt(T: number, pw = 0.64): { turned: number; u: number } {
   let turned = 0
   let u = 0
   for (const turn of TURNS) {
-    if (turn.page === undefined) continue
-    const go = turn.page - (turn.page === 58.364 ? ANSWER - PEAK - 0.02 : 0.56)
+    if (turn.page === undefined || turn.press === undefined) continue
     if (T >= turn.page) turned++
-    else if (T > go) {
-      // The page's free corner is where he is along the ledge.
-      const [x] = heroBand(T)
-      u = Math.max(0, Math.min(1, (LEDGE_R[0] - x) / (LEDGE_R[0] - LEDGE_L[0])))
+    else if (T > turn.press) {
+      const tip = TURNER.arm * Math.sin(turnerAt(T).arm)
+      u = Math.acos(Math.max(-1, Math.min(1, tip / pw))) / Math.PI
     }
   }
   return { turned, u }

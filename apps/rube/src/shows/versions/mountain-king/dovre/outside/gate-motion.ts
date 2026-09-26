@@ -484,8 +484,13 @@ export function flameFront(t: number): number | null {
   const s = u < 0.15 ? (u * u) / 0.3 : 0.075 + (u - 0.15) * (1 - 0.075) / 0.85
   return FLAME.x0 + (FLAME.x1 - FLAME.x0) * Math.min(1, s)
 }
-/** The lamp under the door: catches as the fire reaches it, on the last click. */
-export const slotLamp = (t: number): number => smooth(t, TIMES.open - 0.05, TIMES.open + 0.35)
+/**
+ * The lamp under the door: catches as the fire reaches it, on the last click, and with the door down (its job done)
+ * burns down to embers over two seconds, so the slot and the works under it go dark before the tunnels (the lit
+ * pulley and a black notch cut into its glow sat at the frame's foot through the seam).
+ */
+export const slotLamp = (t: number): number =>
+  smooth(t, TIMES.open - 0.05, TIMES.open + 0.35) * (1 - 0.96 * smooth(t, TIMES.open + 0.5, TIMES.open + 2.5))
 
 /** How bright a stair stone rings after something lands on it (0..1). */
 export function ring(times: readonly number[], t: number): number {

@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { box, carried, frame, part, type Companion, type Ctx, type Pose } from '../kit'
+import { CUTS } from '../seams'
 import { CLINIC, HOME } from '../worlds'
 import { CEIL, D_IN, D_OUT, drawVisitorChair, FLOOR, hexA, lean, OFFICE, OFFICE_APART, officeBars, officeCold } from './clinic'
 
@@ -12,8 +13,8 @@ import { CEIL, D_IN, D_OUT, drawVisitorChair, FLOOR, hexA, lean, OFFICE, OFFICE_
  * see. Through the held note the sun moves: its bars slide off him, then off her. On the first of four soft notes
  * (80.469) she draws herself up a little; on the third (81.136) she sinks, rolling a little away from him, her gaze
  * falling; on the fourth (81.508) he leans to her. A cloud takes the last of the sun, the room goes cold, and in the
- * near silence he sits back, alone with it, as the camera drifts from her to the left of him, where on the far side
- * of the cut the back door opens on the yard, and she is out there by herself.
+ * near silence he sits back, alone with it, and the camera, close on them since her sinking, drifts off her to the
+ * left of him, where on the far side of the cut the back door opens on the yard, and she is out there by herself.
  *
  * Frame: Carl's seat is (-0.5, 0) (he enters there at rest, and leaves there at rest: `exit` is [0, 0]); the set
  * draws the room from the same point (`OFFICE`).
@@ -185,14 +186,18 @@ export const doctor = part<DoctorState>(
     }
   },
   (slot) => [
-    // From the two-shot the nursery hands over (4 cells), one slow push in through the held note, so her sinking
-    // (81.136) and his lean to her (81.508) are the picture, not a few pixels in a grey room.
-    { t: 77.6, cells: 3.35, hold: [O + 0.3, -0.5], w: 1 },
-    { t: SLUMP, cells: 2.8, hold: [O + 0.31, -0.44], w: 1 },
-    // It comes to rest on the two of them as he leans, and holds while he stays leaning.
-    { t: 82.1, cells: 2.72, hold: [O + 0.3, -0.43], w: 1 },
-    // Then, in the near silence, the long drift out and left, off her and past him, to where the yard will be: the
-    // cut (`CUTS.yard`).
-    { t: slot.end, cells: 3.9, hold: [O - 1.4, -0.7], w: 1 },
+    // From the two-shot the nursery hands over (4 cells), one slow push in through the held note, easing as it
+    // arrives, so her sinking (81.136) and his lean to her (81.508) are the whole picture: the two of them a third of
+    // its height, the coat stand and the door gone. Framed on him a little more than on her, the empty side of the
+    // room at the left.
+    { t: 77.6, cells: 3.05, hold: [O + 0.2, -0.5], w: 1 },
+    { t: SLUMP, cells: 2.3, hold: [O + 0.1, -0.47], w: 1 },
+    // It stays with them, creeping in, through his lean and the first soft note of the near silence (83.064): the
+    // camera does not leave while the moment plays.
+    { t: 82.3, cells: 2.24, hold: [O + 0.02, -0.47], w: 1 },
+    { t: 83.1, cells: 2.2, hold: [O - 0.08, -0.47], w: 1 },
+    // Then, as he sits back, a short slow drift left, off her, to the cut (`CUTS.yard`): close, so the yard opens on
+    // him alone at the back door and her small on her stump at the far left.
+    { t: slot.end, cells: CUTS.yard.cells, hold: [O + CUTS.yard.frame[0], CUTS.yard.frame[1]], w: 1 },
   ],
 )

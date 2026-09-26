@@ -6,13 +6,14 @@ import type { Ctx } from '../kit'
 import { CYMBALS, KICKS, SNARES, level } from '../music'
 import { NOD_BACK } from './conductor'
 import { CHORD_HIT, CUT, F_FLY, F_LEAP, F_SEATED, ROLL, STICKS_UP } from './finale-clock'
-import { ARM_W, FORE, LIMP, NECK, SHOULDER_AT, SLUMP, UPPER, ampOf, drawShin, drawTorso, drawYoke, elbowOf, fist, joint, liftShape, limb, smoother, upSign } from './solo-rig'
+import { FORE, HUNCH, LIMP, NECK, SHOULDER_AT, SIDE, SLUMP, UPPER, ampOf, drawBodyArm, drawLines, drawShin, drawTorso, elbowOf, hunchOf, liftShape, smoother, tiltOf, turnAbout, upSign } from './solo-rig'
 import { HOLD, STICK, TARGETS, type Arm, type Grip } from './solo-score'
 
 /**
- * The finale's machine: the drummer's frame from the solo (`solo-rig.ts`, drawn the same way, from the same parts),
- * flown in again for the end. A yoke on two lines from the flies, a cup where his head goes, two long jointed arms
- * with a stick in each grip, a steel shin down behind the snare onto the kick's pedal.
+ * The finale's machine: the drummer's body from the solo (`solo-rig.ts`, drawn the same way, from the same parts),
+ * flown in again for the end, empty, on two lines from the flies: the shirt with its collar where his head goes, two
+ * long arms with a stick in each hand, a trouser leg down behind the snare onto the kick's pedal. It leans into what
+ * it plays and hunches on the accents, hardest in the march and through the long roll; upright from the silence on.
  *
  * It comes down as the metronome goes into the stage; he leaps up into its cup on a big kick and it plays the kick
  * drum's march (the shin every kick, the house's left arm the toms on the loud ones, the right the hi-hat between);
@@ -165,12 +166,37 @@ const ANSWER = { head: [0.1, 0.17] as Pt, right: 0.15, left: 0.06, across: 0.05 
 /** Awake (1) or limp (0): the arms come up as he leaps for the cup. */
 const awake = (T: number): number => smoother((T - (F_LEAP + 0.04)) / (F_SEATED - F_LEAP - 0.08))
 
+/** His lean at `T`, cells: into the side the arms are playing, smoothed over the strokes round it (as the solo's). */
+const ARMS = FRAME_STROKES.filter((s) => s.limb !== 'foot')
+function lean(T: number): number {
+  let sum = 0
+  let w = 0
+  for (const s of ARMS) {
+    const d = s.t - T
+    if (d < -0.9) continue
+    if (d > 0.9) break
+    const k = Math.exp(-(d * d) / (2 * 0.28 * 0.28))
+    sum += k * (SIDE[s.piece] ?? 0)
+    w += k
+  }
+  return (0.11 * sum) / (w + 0.6)
+}
+/** How much of the playing body there is: in the cup, and until the silence (upright from there to the end). */
+const playing = (T: number): number => smoother((T - F_SEATED) / 0.3) * (1 - smoother((T - (STICKS_UP - 0.6)) / 0.6))
+/** His tilt about the waist at `T`, radians. */
+const tilt = (T: number): number => tiltOf(lean(T)) * playing(T)
+/** His hunch: harder than the solo's on the march's accents, and held up, tense, through the long roll. */
+function hunch(T: number): number {
+  const roll = smoother((T - ROLL[0]) / 0.4) * (1 - smoother((T - (ROLL[1] - 0.3)) / 0.5)) * (0.55 + 0.35 * level(T))
+  return Math.min(1.2, Math.max(1.2 * hunchOf(ACCENTS, T), roll)) * playing(T)
+}
+
 /** His head (the ball's centre) in the cup, in the kit's frame. */
 export function headAt(T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
-  // His answer to Fletcher's nod: the head dips and tips toward him (the house's right), the yoke with it.
+  // His answer to Fletcher's nod: the head dips and tips toward him (the house's right), the shoulders with it.
   const a = answer(T)
-  return [NECK[0] + ANSWER.head[0] * a, NECK[1] + bob(T) * w + ANSWER.head[1] * a + rigDrop(T)]
+  return turnAbout([NECK[0] + ANSWER.head[0] * a, NECK[1] + bob(T) * w + ANSWER.head[1] * a], tilt(T), rigDrop(T))
 }
 
 /** Slumped while it flies in empty; straightening as he lands in the cup (as the solo's frame does). */
@@ -180,11 +206,13 @@ function shoulder(arm: Arm, T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
   const a = answer(T)
   const sl = slumpOf(T)
-  const inward = (arm === 'left' ? 1 : -1) * SLUMP.inward * sl
-  return [
+  const h = hunch(T)
+  const inward = (arm === 'left' ? 1 : -1) * (SLUMP.inward * sl + HUNCH.inward * h)
+  const up: Pt = [
     NECK[0] + SHOULDER_AT[arm][0] + ANSWER.across * a + inward,
-    NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + ANSWER[arm] * a + SLUMP.down * sl + rigDrop(T),
+    NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + ANSWER[arm] * a + SLUMP.down * sl - HUNCH.rise * h,
   ]
+  return turnAbout(up, tilt(T), rigDrop(T))
 }
 
 /* ------------------------------------------------------------------ the arms */
@@ -345,49 +373,22 @@ function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const s = shoulder(arm, T)
   const w = pose.grip
   const e = arm === 'left' ? elbowOf(s, w, 1) : elbowSwing(s, w, -1 + 2 * smoother((T - ELBOW_UNDER[0]) / (ELBOW_UNDER[1] - ELBOW_UNDER[0])))
-  limb(p, c, s, e, ARM_W.upper[0], ARM_W.upper[1])
-  limb(p, c, e, w, ARM_W.fore[0], ARM_W.fore[1])
-  joint(p, c, e, ARM_W.elbow)
   const butt = (g: Pt, ang: number): Pt => [g[0] - Math.cos(ang) * HOLD, g[1] - Math.sin(ang) * HOLD]
-  // A roll's blur: the stick's ghost at the top and bottom of its tremble, faint, behind the stick itself.
-  if (pose.blur > 0.004) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    ctx.save()
-    ctx.globalAlpha = 0.3
-    for (const d of [-1, 1]) {
-      const dy = d * pose.blur * 0.5
-      const da = -upSign(pose.ang) * d * pose.blur * 0.8
-      drawStick(p, c, butt([w[0], w[1] + dy], pose.ang + da), pose.ang + da, STICK)
+  drawBodyArm(p, c, s, e, w, pose.ang, true, () => {
+    // A roll's blur: the stick's ghost at the top and bottom of its tremble, faint, behind the stick itself.
+    if (pose.blur > 0.004) {
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      ctx.save()
+      ctx.globalAlpha = 0.3
+      for (const d of [-1, 1]) {
+        const dy = d * pose.blur * 0.5
+        const da = -upSign(pose.ang) * d * pose.blur * 0.8
+        drawStick(p, c, butt([w[0], w[1] + dy], pose.ang + da), pose.ang + da, STICK)
+      }
+      ctx.restore()
     }
-    ctx.restore()
-  }
-  drawStick(p, c, butt(w, pose.ang), pose.ang, STICK)
-  fist(p, c, w, pose.ang)
-}
-
-function drawFrame(p: p5, c: Ctx, T: number): void {
-  const { k, weight } = c
-  const L = shoulder('left', T)
-  const R = shoulder('right', T)
-  // The lines, up out of sight, fading into the dark above the light.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  for (const q of [L, R]) {
-    const g = ctx.createLinearGradient(0, (q[1] - 5) * k, 0, q[1] * k)
-    g.addColorStop(0, 'rgba(183, 178, 167, 0)')
-    // Only while it flies in: hanging still, the two lines made it read as a coat hanger.
-    const a = 0.5 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)
-    if (a < 0.005) continue
-    g.addColorStop(1, `rgba(183, 178, 167, ${a.toFixed(3)})`)
-    ctx.save()
-    ctx.strokeStyle = g
-    ctx.lineWidth = weight * 0.8
-    ctx.beginPath()
-    ctx.moveTo(q[0] * k, (q[1] - 5) * k)
-    ctx.lineTo(q[0] * k, q[1] * k)
-    ctx.stroke()
-    ctx.restore()
-  }
-  drawYoke(p, c, L, R)
+    drawStick(p, c, butt(w, pose.ang), pose.ang, STICK)
+  })
 }
 
 function drawFoot(p: p5, c: Ctx, T: number): void {
@@ -420,7 +421,7 @@ export function drawFinaleBody(p: p5, c: Ctx, T: number): void {
   if (rigOut(T)) return
   p.push()
   p.rectMode(p.CORNER)
-  drawTorso(p, c, shoulder('left', T), shoulder('right', T), rigDrop(T), slumpOf(T))
+  drawTorso(p, c, shoulder('left', T), shoulder('right', T), headAt(T), rigDrop(T), slumpOf(T), tilt(T))
   p.pop()
 }
 
@@ -430,10 +431,9 @@ export function drawFinaleRig(p: p5, c: Ctx, T: number): void {
   p.push()
   p.rectMode(p.CORNER)
   drawFoot(p, c, T)
-  drawFrame(p, c, T)
+  drawLines(p, c, shoulder('left', T), shoulder('right', T), rigDrop(T))
   drawArm(p, c, 'left', T)
   drawArm(p, c, 'right', T)
-  for (const q of [shoulder('left', T), shoulder('right', T)]) joint(p, c, q, ARM_W.shoulder)
   p.pop()
 }
 

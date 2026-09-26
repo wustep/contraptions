@@ -316,3 +316,15 @@ the beat is followed quarter note by quarter note (`scripts/shows/mountain-king-
 `scripts/shows/plans/mountain-king-onsets.json`), and `check:shows` holds every strike against it
 (`apps/rube/checks/mountain-king.ts`). Licences: `apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`; the
 report is `apps/rube/src/shows/versions/mountain-king/MOUNTAIN_KING.md`.
+`mountain-king/opus55-spark` (in the picker, **Mountain King**, take **Spark**) is Grieg's *In the Hall of the
+Mountain King* in the Czech National Symphony Orchestra's public-domain Musopen recording, whole, with the credits
+after it in silence: 179 s (`apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`). A candle's flame slips off
+its wick while the cat sleeps, and every fire is a door: out through the stove into a glassworks, a balloon regatta
+at sunset and a runaway night express that ends at a fireworks festival, and home through every fire on the roll
+before the last two chords. The code is `mountain-king/spark/`, on the Liftoff kit with Everything's legs and match
+cuts (the doors are on phrases 6, 9 and 12, and on the roll's strokes); the stage draws no ball, `spark/fx.ts` draws
+the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb, so
+`scripts/shows/mountain-king-onsets.py` tracked every quarter into `scripts/shows/plans/mountain-king-onsets.json`;
+`check:shows` holds every strike to it (`apps/rube/checks/spark.ts`). The report is
+`apps/rube/src/shows/versions/mountain-king/SPARK.md`.
+

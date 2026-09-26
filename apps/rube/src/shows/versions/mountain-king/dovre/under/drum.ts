@@ -4,7 +4,7 @@ import { alpha, box, hash, part, route, smooth, type Ctx, type PartShot, type Wa
 import { beat, FF } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { quake } from '../rock'
-import { PLAN, SEAM_SHOT } from '../seams'
+import { HEART_SHOT, PLAN, SEAM_SHOT } from '../seams'
 import { STONE, WORKS } from '../worlds'
 import { BEGIN, BLOWS, BURST, BURST_B, BURST_X, DRUM2, DRUM3, DRUMMERS, END, FLOOR, LANDINGS, SHAFT, THROUGH, farEdge, landY, onSkin, type Drummer } from './drum-clock'
 import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light } from './drum-set'
@@ -287,16 +287,85 @@ function drawThrown(p: p5, c: Ctx, dr: Drummer, T: number, L: number, peerX: num
  * vault (the throw across, the hang) reach a little over it, where the mine's floor, its rails and its wreck would
  * show along the top of the frame (the Zoom crop keeps him in frame only if the frame goes that high); while the drum
  * has the ball that band is plain rock.
+ *
+ * A stage taller than 16:9 (a phone) sees far over it: the mine is a whole room there, and the band would be a black
+ * box laid over its floor. So it fades out as the view's top rises past the band's own top.
  */
+const CEIL_TOP = -9.5
 function drawCeiling(p: p5, c: Ctx, T: number): void {
   if (T < BEGIN || T > END) return
   const k = c.k
+  const m = (p.drawingContext as CanvasRenderingContext2D).getTransform()
+  const viewTop = -m.f / m.d / k
+  const a = 1 - smooth(CEIL_TOP - viewTop, -0.1, 0.7)
+  if (a <= 0.004) return
   p.push()
   p.noStroke()
-  p.fill(c.bg)
+  p.fill(alpha(p, c.bg, a))
   p.rectMode(p.CORNER)
-  p.rect(0.55 * k, -9.5 * k, 24 * k, (9.5 - 6.52) * k)
+  p.rect(0.55 * k, CEIL_TOP * k, 24 * k, (-CEIL_TOP - 6.52) * k)
   p.pop()
+}
+
+/*
+ * Dark until he drops into it. The part draws whenever its cells are in view, and the opening wide and the mine's
+ * chase both see down here (a tall phone frame most of all), so until he falls through the vault the room is solid
+ * rock: a cover over its box and the pit. As he comes through the vault the cover lifts from the top down with a
+ * soft edge, just ahead of him, so he is seen falling into a place, and the room is all there well before the kettle.
+ */
+const COVER_TOP = -6.5 - 0.2
+const COVER_BOTTOM = FLOOR + 0.4
+const COVER_FEATHER = 1.0
+/** He passes the vault (-6.5) about 0.68 s before he lands on the kettle (`BEGIN`), just after the cart hits the stop. */
+const OPEN_FROM = BEGIN - 0.68
+const OPEN_FOR = 0.42
+/** The cover's top edge, part frame: over the vault until he reaches it, then under the floor. */
+const coverEdge = (T: number): number => COVER_TOP + (COVER_BOTTOM + COVER_FEATHER - COVER_TOP) * smooth(T, OPEN_FROM, OPEN_FROM + OPEN_FOR)
+const covered = (T: number): boolean => T <= OPEN_FROM
+const lifted = (T: number): boolean => T >= OPEN_FROM + OPEN_FOR
+
+function drawCover(p: p5, c: Ctx, T: number): void {
+  if (lifted(T)) return
+  const k = c.k
+  const edge = coverEdge(T)
+  const x0 = -1.0 - 0.2
+  const x1 = 17.0 + 0.2
+  p.push()
+  p.noStroke()
+  p.rectMode(p.CORNER)
+  p.fill(STONE.deep)
+  // The pit under the great drum, down to the heart's ceiling (the heart covers its own room).
+  p.rect((SHAFT.x0 - 0.15) * k, (FLOOR - 0.1) * k, (SHAFT.x1 - SHAFT.x0 + 0.3) * k, (SHAFT.bottom - FLOOR + 0.1) * k)
+  if (edge < COVER_BOTTOM) {
+    const top = Math.max(COVER_TOP, edge)
+    p.rect(x0 * k, top * k, (x1 - x0) * k, (COVER_BOTTOM - top) * k)
+  }
+  // The upper edge is soft: a feather of bands over the cell above it, never above the vault's own rock.
+  if (edge > COVER_TOP) {
+    const n = 10
+    for (let i = 0; i < n; i++) {
+      const y0 = edge - COVER_FEATHER * (1 - i / n)
+      const y1 = Math.min(COVER_BOTTOM, y0 + COVER_FEATHER / n)
+      const yy = Math.max(COVER_TOP, y0)
+      if (y1 <= yy) continue
+      p.fill(alpha(p, STONE.deep, (i + 0.5) / n))
+      p.rect(x0 * k, yy * k, (x1 - x0) * k, (y1 - yy) * k)
+    }
+  }
+  p.pop()
+}
+
+/**
+ * While the cover lifts, what is drawn over the ball (the kettle's and the drums' fronts) is clipped to the room
+ * already uncovered (to the feather's middle): the cover itself is under the ball, so he is never hidden by it.
+ */
+function clipUncovered(p: p5, c: Ctx, T: number): void {
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const edge = coverEdge(T) - 0.5 * COVER_FEATHER
+  ctx.beginPath()
+  ctx.rect(-4 * k, (COVER_TOP - 4) * k, 26 * k, (edge - COVER_TOP + 4) * k)
+  ctx.clip()
 }
 
 export const drum = part<DrumState>(
@@ -304,6 +373,10 @@ export const drum = part<DrumState>(
     name: 'drum',
     draw: (p, s, c) => {
       const T = s.begin + c.t
+      if (covered(T)) {
+        drawCover(p, c, T)
+        return
+      }
       const L = light(T)
       const peerX = laneAt(s.lane, c.t).x
       const [qx, qy] = quake(T)
@@ -324,13 +397,21 @@ export const drum = part<DrumState>(
         else drawDrummer(p, c, d, T, L, peerX, j)
       }
       p.pop()
+      drawCover(p, c, T)
     },
     over: (p, s, c) => {
       const T = s.begin + c.t
+      if (covered(T)) return
       const L = light(T)
       const peerX = laneAt(s.lane, c.t).x
       const [qx, qy] = quake(T)
       const j = jolt(T)
+      const ctx = p.drawingContext as CanvasRenderingContext2D
+      const lifting = !lifted(T)
+      if (lifting) {
+        ctx.save()
+        clipUncovered(p, c, T)
+      }
       p.push()
       p.translate(qx * c.k, qy * c.k)
       drawKettle(p, c, T, L, 'front')
@@ -343,6 +424,7 @@ export const drum = part<DrumState>(
       }
       drawCeiling(p, c, T)
       p.pop()
+      if (lifting) ctx.restore()
     },
   },
   (slot) => {
@@ -372,14 +454,18 @@ export const drum = part<DrumState>(
   },
   (slot): PartShot[] => [
     { t: slot.begin, ...SEAM_SHOT },
-    // The kettle's three strokes (the camera settling on them, drifting the way he will be thrown), then its throw.
-    { t: beat(161.2), cells: 6.1, off: [0.5, -0.7] },
-    { t: beat(162.4), cells: 6.3, off: [0.9, -0.9] },
-    // On the war-drum: close, the drummers over him.
-    { t: beat(164.6), cells: 6.0, hold: [4.6, -2.0], w: 0.4 },
+    // The kettle's three strokes: the landing settles first (the camera eases out of the dive onto him on the kettle,
+    // a held point, over a beat), and only then leans the way he will be thrown.
+    { t: beat(161.2), cells: 6.1, hold: [-0.2, -0.55], w: 0.75, off: [0.2, -0.3] },
+    { t: beat(162.4), cells: 6.3, hold: [1.2, -1.1], w: 0.35, off: [0.9, -0.9] },
+    // On the war-drum: close, the drummers over him. Held a little west of him, so the frame runs from the room's west
+    // wall to the far war-fire: the kettle whole at its west edge (never half out of it), both fires whole over the
+    // floor, and the great drum's gallery out past its east edge. Low enough for the fires, high enough that the
+    // clubs at the top of their swing stay in the Zoom crop.
+    { t: beat(164.6), cells: 6.6, hold: [4.46, -2.21], w: 0.8 },
     // A slow push in as the second drummer comes up, then back out for the throw.
-    { t: beat(168.5), cells: 5.5, hold: [5.1, -2.1], w: 0.45 },
-    { t: beat(171.5), cells: 6.1, hold: [5.7, -2.2], w: 0.45 },
+    { t: beat(168.5), cells: 6.5, hold: [4.5, -2.17], w: 0.8 },
+    { t: beat(171.5), cells: 6.7, hold: [4.42, -2.27], w: 0.8 },
     // The throw across: the whole chamber. (Every key's frame top stays near the vault: the rock over it is plain,
     // `drawCeiling`, but a frame kept low wastes none of itself on it. His two flights up under the vault set how low:
     // the Zoom crop must still hold him at their tops.)
@@ -394,9 +480,10 @@ export const drum = part<DrumState>(
     { t: beat(187), cells: 7.6, hold: [11.3, -3.6], w: 0.9 },
     // The fortissimo: opening out as he comes down onto the skin, wide on the blow: the great drum whole, the skin
     // bursting, its drummers thrown off their galleries, the war-drum's pair still pounding, the pit's mouth under it.
-    // Then down the pit after him (the seam's key).
+    // Then down the pit after him, only tilting and a little closer, onto the heart's wide seam (`HEART_SHOT`: the
+    // machine he falls into already in the frame).
     // (A little of the follow in it, so the frame is already going down with him on the blow, not stopped there.)
     { t: FF, cells: 9.0, hold: [10.6, -2.0], w: 0.8 },
-    { t: slot.end, ...SEAM_SHOT },
+    { t: slot.end, cells: HEART_SHOT.cells, hold: [HEART_SHOT.world[0] - 46, HEART_SHOT.world[1] - 25], w: HEART_SHOT.w },
   ],
 )

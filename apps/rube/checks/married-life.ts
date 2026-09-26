@@ -155,6 +155,7 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   // No wide shot lingers: a frame over 6 cells tall (where the two of them are a few pixels on a phone) lasts at most
   // 2.5 s, except the named reveals, each held to its window and to how wide it may go.
   const REVEALS: { what: string; from: number; to: number; cells: number }[] = [
+    { what: "bar 4's peal, the bell whole, and the run out of the church to the old house", from: 20.3, to: 23.0, cells: 6.6 },
     { what: 'the house made new, the machine as tall as it', from: 23.5, to: 37.6, cells: 10.2 },
     { what: 'the storm: the whole house, its roof and the garden tree, the limb through the roof into the nursery, and the hole boarded', from: 126.5, to: 137.2, cells: 17.6 },
     { what: 'the one toll, the whole empty church and its bell', from: 196.5, to: 200, cells: 7.6 },

@@ -2,7 +2,7 @@ import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, route, type PartShot, type Way } from '../kit'
 import { HUSH, SOLO } from '../music'
 import type { KitStroke } from '../stub'
-import { KIT_AT, CLOSE, FLETCHER_HOME, JIM_WINGS } from './stage'
+import { KIT_AT, CLOSE, FLETCHER_HOME, JIM_WINGS, TURN } from './stage'
 import { drawRig, headAt, liftShape } from './solo-rig'
 import { ACCENTS, BALL, DOWN, LEAP, PULSE, SEATED, SLAM, STROKES, TOSS, UNSEAT } from './solo-score'
 
@@ -154,17 +154,18 @@ function shots(): PartShot[] {
     hall(t, FLETCHER_WATCH.cells - 0.2 * drift, [FLETCHER_WATCH.hold[0] - 0.05 * drift, FLETCHER_WATCH.hold[1] + 0.02 * drift])
   const jim = (t: number, drift = 0): PartShot => hall(t, JIM_WATCH.cells - 0.15 * drift, [JIM_WATCH.hold[0] + 0.05 * drift, JIM_WATCH.hold[1] - 0.02 * drift])
   return [
-    { t: SOLO, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
-    // In on him alone on the snare; the frame's sticks come down into the top of the shot.
-    k(271.39, 3.0, [-0.15, -0.55]),
-    k(271.95, 3.2, [-0.25, -0.8]),
-    // Out to the whole frame as he leaps up into its cup.
-    k(SEATED + 0.15, 5.6, [-0.5, -1.5]),
-    k(274.5, 5.2, [-0.35, -1.6]),
+    // The count-in's two-shot (the sabotage's last frame): the drummer going on alone, Fletcher frozen in his cut-off.
+    // Then, after the first stroke, in on him alone on the snare; the frame's sticks come down into the top of the shot.
+    { t: SOLO, cells: TURN.cells, hold: TURN.hold, w: 1 },
+    k(271.95, 3.6, [-0.25, -0.8]),
+    // Out to the whole frame as he leaps up into its cup (its right edge short of Fletcher's held-out hand).
+    k(SEATED + 0.15, 5.15, [-0.72, -1.55]),
+    k(274.5, 4.9, [-0.55, -1.65]),
     // The first big hit: the crash and his head.
     cu(276.288, CU.crash),
-    // A whip across the stage to Fletcher on his podium, landing on the phrase's big hit (277.96): he is listening
-    // now, hands at his sides. Held on him, drifting in a little, and whipped back to the kit landing on the loudest
+    // A whip across the stage to Fletcher on his podium, landing on the phrase's big hit (277.96): his cut-off's hands
+    // still out, his head still turned to the kit; they come down as the camera settles, and he sinks into listening
+    // (`conductor.ts` `STUNNED`). Held on him, drifting in a little, and whipped back to the kit landing on the loudest
     // stroke of the phrase (281.39), him over the snare and the rack tom.
     ...whip(276.4, 277.96, cu(0, CU.crash, -0.02, 0.01), fletcher(0)),
     ...whip(279.92, 281.391, fletcher(0, 1), k(0, 4.4, [-0.75, -1.45])),
@@ -195,9 +196,12 @@ function shots(): PartShot[] {
     // His head and the hi-hat again.
     k(312.6, 4.4, [0.05, -1.8]),
     k(314.8, 4.6, [-0.2, -1.6]),
-    // The kick drum's pulse: a tilt down the shin to his boot on the pedal, briefly; then all of him, head to foot.
-    cu(PULSE + 0.35, CU.pedal, 0.08, -0.5),
-    cu(317.8, CU.pedal, -0.05, 0.05),
+    // The kick drum's pulse: all of him, head to foot, his head at the top edge and the pedal at the bottom; a short
+    // dip down the shin to the knee and his boot on the pedal (his head out for about a second), and straight back up.
+    { ...k(PULSE - 0.2, 5.2, [-0.5, -0.42]), ease: 'whip', open: 0 },
+    { ...k(317.28, 3.9, [-0.36, 0.78]), ease: 'whip', open: 0 },
+    { ...k(317.48, 3.88, [-0.36, 0.8]), ease: 'whip', open: 0 },
+    k(318.6, 5.2, [-0.5, -0.4]),
     k(319.7, 5.5, [-0.45, -0.25]),
     // Out to all of him, head to foot, and down to the snare as the frame goes limp over him.
     k(UNSEAT - 0.5, 6.0, [-0.85, -0.7]),

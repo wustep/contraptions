@@ -142,9 +142,9 @@ export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
 
   const show = new LifeShow(legs, sets, DURATION, company.sort((a, b) => a.from - b.from), poses)
   castState.show = show
-  // The balloon's ties. At her bedside he gives it to her: the knot goes across from his corner to her, and it floats
-  // over her while she is there (to the cut: across it, in the church, it is his again). At the end he ties it to her
-  // chair.
+  // The balloon's ties. At her bedside he gives it to her: the knot goes across from his corner to her, tied short, and
+  // it floats low over her, just over the bed's head, while she is there (to the cut: across it, in the church, it is
+  // his again, and it rises back over him as its string is let out). At the end he ties it to her chair.
   show.ties.push({
     from: HAND.from,
     arrive: HAND.to,
@@ -153,6 +153,7 @@ export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
       const e = show.ellie(s)
       return e ? [e.x + 0.03, e.y - R * 0.92] : show.where(s)
     },
+    string: 0.6,
   })
   if (ALONE_TIE) {
     const at: Pt = [ALONE_AT[0] + ALONE_TIE.at[0], ALONE_AT[1] + ALONE_TIE.at[1]]

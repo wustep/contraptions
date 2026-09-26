@@ -41,6 +41,7 @@ import { checkGymnopedie } from './gymnopedie'
 import { checkMountainKing } from './mountain-king'
 import { checkCaravan } from './caravan'
 import { checkMarriedLife } from './married-life'
+import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
 
 let failures = 0
@@ -174,8 +175,8 @@ async function main(): Promise<void> {
   check('merry-go-round is Merry-Go-Round, one take, Opus 5.5, with no note',
     merryGoRound.map((v) => v.take).join(',') === 'opus55' && merryGoRound[0].title === 'Merry-Go-Round' && merryGoRound[0].label === 'Opus 5.5' && merryGoRound[0].note === undefined)
   const mountainKing = shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []
-  check('mountain-king is Mountain King, one take, Opus 5.5, with no note',
-    mountainKing.map((v) => v.take).join(',') === 'opus55' && mountainKing[0].title === 'Mountain King' && mountainKing[0].label === 'Opus 5.5' && mountainKing[0].note === undefined)
+  check('mountain-king is Mountain King, takes Opus 5.5 and Spark, with no notes',
+    mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5|Spark')
 
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
@@ -413,6 +414,7 @@ async function main(): Promise<void> {
       if (work.work === 'mountain-king' && version.take === 'opus55') checkMountainKing(perf, version, check)
       if (work.work === 'caravan' && version.take === 'opus55') checkCaravan(perf, version, check)
       if (work.work === 'married-life' && version.take === 'opus55') checkMarriedLife(perf, version, check)
+      if (work.work === 'mountain-king' && version.take === 'opus55-spark') checkSpark(perf, version, check)
       if (work.work === 'merry-go-round' && version.take === 'opus55') checkMerryGoRound(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {

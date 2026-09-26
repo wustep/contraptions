@@ -155,8 +155,8 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
     [poseAt(FINAL + 0.05).right.hand, poseAt(FINAL + 0.05).left.hand].includes('fist') && poseAt(FINAL - 0.1).right.hand !== 'fist' && poseAt(FINAL - 0.1).left.hand !== 'fist' && fists > 0 &&
     Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
 
-  // The last image: clear wall between the drummer's frame's steel fist (pinning the crash) and either of Fletcher's
-  // hands, from the cut-off to the end (the fist sat on his hanging hand: the machine handing him the stick).
+  // The last image: clear wall between the drummer's right hand (pinning the crash) and either of Fletcher's hands,
+  // from the cut-off to the end (it sat on his hanging hand once: the drummer handing him the stick).
   const handAt = (side: 'left' | 'right', t: number): [number, number] => {
     const h = fletcherAt(t)
     const a = poseAt(t)[side]
@@ -173,7 +173,7 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
       apart = Math.min(apart, Math.hypot(hand[0] - (g[0] + KIT_AT[0]), hand[1] - (g[1] + KIT_AT[1])))
     }
   }
-  check('caravan: in the last image the frame\'s steel fist keeps clear of Fletcher\'s hands', apart >= 0.6, `${apart.toFixed(2)} cells`)
+  check('caravan: in the last image the drummer\'s hand keeps clear of Fletcher\'s hands', apart >= 0.6, `${apart.toFixed(2)} cells`)
 
   // Never a lone hand at the frame's edge: from the chart's arrival at Carnegie to the end, whenever Fletcher's head
   // is past a side edge of the 16:9 frame but a hand or an arm of his reaches inside it, that lasts no more than
