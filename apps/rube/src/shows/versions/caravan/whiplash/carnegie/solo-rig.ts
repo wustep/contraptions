@@ -7,13 +7,18 @@ import type { Ctx } from '../kit'
 import { SOLO } from '../music'
 import { KIT } from '../worlds'
 import { mixHex } from '../../../../../parts'
-import { ACCENTS, CATCH, FOOT_DOWN, HOLD, LEAP, RIG_DOWN, RIG_UP, SEATED, SLAM, STICK, STROKES, TARGETS, TOSS, UNSEAT, strokesOf, type Arm, type Grip, type Stroke } from './solo-score'
+import { H_ACCENTS, H_FLY, H_LEAP, H_REST, H_SEATED, H_STROKES, H_UNSEAT } from './hush-score'
+import { ACCENTS, CATCH, FOOT_DOWN, HOLD, LEAP, RIG_DOWN, SEATED, SLAM, STICK, STROKES, TARGETS, TOSS, UNSEAT, strokesOf, type Arm, type Grip, type Stroke } from './solo-score'
 
 /**
  * The solo's machine, moved and drawn: a drummer's frame of chrome drum hardware, flown in on two lines from the flies
  * over the kit. A yoke for shoulders with a cup on top where his head goes, two long jointed arms with a stick in each
  * grip, and a steel shin that comes down from behind the snare onto the kick's pedal. Andrew (the ball) is its head:
  * he leaps up into the cup and it plays as his body, his head bouncing on the accents and leaning into the playing.
+ *
+ * After the solo it does not fly out: it hangs limp over the kit while he plays soft on the snare, and he leaps back
+ * up into it for the hush (`hush-score.ts`), where it plays soft (the hi-hat, the bursts, the ride) with him in the
+ * cup; he leaves it for the build, and it flies out as the build's engine rises.
  *
  * Every pose is a function of show time, in the kit's frame (`drums.ts`), so the lane and the drawing agree.
  */
@@ -28,7 +33,7 @@ export const SHOULDER_AT: Record<Arm, Pt> = { left: [-0.86, 0.24], right: [0.84,
 export const UPPER = 1.2
 export const FORE = 1.13
 
-/** How far above its playing height the frame is at `T`: high in the flies, down on the solo's first stroke, up at the end. */
+/** How far above its playing height the frame is at `T`: high in the flies, down on the solo's first stroke, up as the build begins. */
 export function rigDrop(T: number): number {
   if (T <= SOLO) return -9
   if (T < RIG_DOWN) {
@@ -36,14 +41,20 @@ export function rigDrop(T: number): number {
     const u = (T - SOLO) / (RIG_DOWN - SOLO)
     return -9 * Math.pow(1 - u, 3)
   }
-  const up = UNSEAT + 0.35
-  if (T < up) return 0
-  const u = clamp((T - up) / (RIG_UP - up))
+  if (T < H_FLY[0]) return 0
+  const u = clamp((T - H_FLY[0]) / (H_FLY[1] - H_FLY[0]))
   return -9.5 * Math.pow(u, 2.2)
 }
 
 /** Whether the machine is anywhere to be seen at `T`. */
-export const rigOut = (T: number): boolean => T <= SOLO || T >= RIG_UP
+export const rigOut = (T: number): boolean => T <= SOLO || T >= H_FLY[1]
+
+/** How much he is seated in the cup: through the solo, and again through the hush. */
+function seatedW(T: number): number {
+  const solo = smoother((T - SEATED) / 0.3) * (1 - smoother((T - UNSEAT + 0.3) / 0.3))
+  const hush = smoother((T - H_SEATED) / 0.3) * (1 - smoother((T - H_UNSEAT + 0.3) / 0.3))
+  return solo + hush
+}
 
 export const smoother = (x: number): number => {
   const u = clamp(x)
@@ -56,7 +67,9 @@ export const liftShape = (u: number): number => Math.sin(Math.PI * Math.pow(clam
 
 /** Which way each piece leans him: the house's left for the ride and the toms, its right for the hi-hat and the crash. */
 const SIDE: Partial<Record<KitPiece, number>> = { ride: -1, floor: -1, rack: -0.6, snare: 0, hat: 0.7, crash: 1 }
-const ARMS = STROKES.filter((s) => s.limb === 'left' || s.limb === 'right')
+const ARMS: readonly { t: number; piece: KitPiece }[] = [...STROKES.filter((s) => s.limb === 'left' || s.limb === 'right'), ...H_STROKES]
+/** The accents his head bounces on: the solo's, and the hush's (soft). */
+const ALL_ACCENTS: readonly { t: number; a: number }[] = [...ACCENTS, ...H_ACCENTS.map((x) => ({ t: x.t, a: x.a * 0.6 }))]
 /** His lean at `T`, cells: into the side the arms are playing, smoothed over the strokes round it. */
 function lean(T: number): number {
   let sum = 0
@@ -74,24 +87,26 @@ function lean(T: number): number {
 /** His head's bounce at `T`: down on each accent, up between, higher for a longer gap and a louder hit to come. */
 function bob(T: number): number {
   let j = 0
-  while (j < ACCENTS.length && ACCENTS[j].t <= T) j++
-  if (j === 0 || j === ACCENTS.length) return 0
-  const a = ACCENTS[j - 1]
-  const b = ACCENTS[j]
+  while (j < ALL_ACCENTS.length && ALL_ACCENTS[j].t <= T) j++
+  if (j === 0 || j === ALL_ACCENTS.length) return 0
+  const a = ALL_ACCENTS[j - 1]
+  const b = ALL_ACCENTS[j]
   const gap = b.t - a.t
   const big = Math.abs(b.t - SLAM) < 0.01 ? 2.6 : 1
-  const amp = clamp(0.035 + 0.11 * gap, 0.04, 0.12) * (0.55 + 0.45 * b.a) * big
+  // The hush plays soft: the head's bounce half the solo's.
+  const soft = T > H_LEAP ? 0.5 : 1
+  const amp = clamp(0.035 + 0.11 * gap, 0.04, 0.12) * (0.55 + 0.45 * b.a) * big * soft
   return -amp * liftShape((T - a.t) / gap)
 }
 /** How the body follows his head: the shoulders take part of the lean and the bounce. */
 function body(T: number): Pt {
-  if (T < SEATED || T > UNSEAT) return [0, 0]
-  const w = smoother((T - SEATED) / 0.3) * (1 - smoother((T - UNSEAT + 0.3) / 0.3))
+  const w = seatedW(T)
+  if (w <= 0) return [0, 0]
   return [lean(T) * 0.7 * w, bob(T) * 0.35 * w]
 }
 /** His head (the ball's centre) while he rides the frame, in the kit's frame. */
 export function headAt(T: number): Pt {
-  const w = smoother((T - SEATED) / 0.3) * (1 - smoother((T - UNSEAT + 0.3) / 0.3))
+  const w = seatedW(T)
   return [NECK[0] + lean(T) * w, NECK[1] + bob(T) * w + rigDrop(T)]
 }
 
@@ -120,7 +135,10 @@ export const LIMP: Record<Arm, { off: Pt; ang: number }> = {
   right: { off: [0.48, 1.2], ang: Math.PI / 2 - 0.26 },
 }
 
-const ARM_STROKES: Record<Arm, Stroke[]> = { left: strokesOf('left'), right: strokesOf('right') }
+const ARM_STROKES: Record<Arm, Stroke[]> = {
+  left: [...strokesOf('left'), ...H_STROKES.filter((s) => s.limb === 'left')] as Stroke[],
+  right: [...strokesOf('right'), ...H_STROKES.filter((s) => s.limb === 'right')] as Stroke[],
+}
 
 function playPose(arm: Arm, T: number): Grip {
   const list = ARM_STROKES[arm]
@@ -132,6 +150,7 @@ function playPose(arm: Arm, T: number): Grip {
   const a = TARGETS[arm][prev.piece]!
   const b = TARGETS[arm][next.piece]!
   const gap = next.t - prev.t
+  if (T > H_LEAP && gap > 1.6) return restPose(a, b, prev, next, T)
   const u = clamp((T - prev.t) / gap)
   // Carried across between the rebound and the next downstroke; a little up and over when it goes far.
   const e = smoother((u - 0.12) / 0.76)
@@ -146,18 +165,45 @@ function playPose(arm: Arm, T: number): Grip {
   }
 }
 
+/**
+ * A long wait in the hush (an arm with nothing to play for seconds): carried over to the next drum early, the stick
+ * resting just over its head, lifted only for the stroke to come. (One backswing stretched over the whole wait held
+ * the stick up high for ten seconds.)
+ */
+function restPose(a: Grip, b: Grip, prev: Stroke, next: Stroke, T: number): Grip {
+  const since = T - prev.t
+  const until = next.t - T
+  const PREP = 0.8
+  const e = smoother((since - 0.15) / 0.8)
+  const rebound = since < 0.45 ? ampOf(0.45, prev.s) * liftShape(since / 0.45) : 0
+  const prep = until < PREP ? ampOf(PREP, next.s) * liftShape(1 - until / PREP) : 0
+  const hover = 0.08 * smoother((since - 0.2) / 0.4) * smoother((until - 0.1) / 0.4)
+  const lift = Math.max(rebound, prep, hover)
+  const dist = Math.hypot(b.grip[0] - a.grip[0], b.grip[1] - a.grip[1])
+  const sign = upSign(a.ang) + (upSign(b.ang) - upSign(a.ang)) * e
+  return {
+    grip: [a.grip[0] + (b.grip[0] - a.grip[0]) * e, a.grip[1] + (b.grip[1] - a.grip[1]) * e - 0.2 * dist * Math.sin(Math.PI * e) - 0.3 * lift],
+    ang: a.ang + (b.ang - a.ang) * e + sign * 0.72 * lift,
+  }
+}
+
+/** How far the right arm hangs out of Fletcher's way while he is at the kit (`H_REST`), 0 to 1. */
+const resting = (T: number): number => smoother((T - H_REST[0]) / 0.6) * (1 - smoother((T - (H_REST[1] - 0.6)) / 0.6))
+
 /** Awake (1) or limp (0): the arms come up as he leaps for the cup, and go limp as he leaves it. */
-const awake = (T: number): number => smoother((T - (LEAP + 0.04)) / (SEATED - LEAP - 0.08)) * (1 - smoother((T - (UNSEAT + 0.04)) / 0.45))
+const awake = (T: number): number =>
+  smoother((T - (LEAP + 0.04)) / (SEATED - LEAP - 0.08)) * (1 - smoother((T - (UNSEAT + 0.04)) / 0.45)) +
+  smoother((T - (H_LEAP + 0.04)) / (H_SEATED - H_LEAP - 0.08)) * (1 - smoother((T - (H_UNSEAT + 0.04)) / 0.45))
 
 /** An arm's pose at `T`, in the kit's frame. */
 export function armPose(arm: Arm, T: number): ArmPose {
-  const w = awake(T)
+  const w = awake(T) * (arm === 'right' ? 1 - resting(T) : 1)
   const s = shoulder(arm, T)
   const drop = rigDrop(T)
   const play = w > 0 ? playPose(arm, T) : null
   // A limp arm still swings a little as the frame comes to rest, and as it starts up again.
   const settle = T > RIG_DOWN - 0.3 && T < RIG_DOWN + 2.5 ? 0.07 * Math.exp(-(T - RIG_DOWN + 0.3) / 0.5) * Math.sin((T - RIG_DOWN + 0.3) * 6.5) : 0
-  const lift = T > UNSEAT + 0.35 ? 0.06 * Math.sin(clamp((T - UNSEAT - 0.35) / 0.5) * Math.PI) : 0
+  const lift = T > H_FLY[0] ? 0.06 * Math.sin(clamp((T - H_FLY[0]) / 0.5) * Math.PI) : 0
   const limp: Grip = { grip: [s[0] + LIMP[arm].off[0] + settle * 0.5, s[1] + LIMP[arm].off[1]], ang: LIMP[arm].ang + settle + lift * (arm === 'left' ? 1 : -1) }
   if (!play) return { ...limp, holding: true }
   return {
@@ -323,11 +369,36 @@ export function elbowOf(s: Pt, w: Pt, bend: -1 | 1): Pt {
   return [s[0] + Math.cos(a) * UPPER, s[1] + Math.sin(a) * UPPER]
 }
 
+/**
+ * Where an elbow is for a shoulder and a wrist, `bend` from -1 to 1: at ±1 the two ways an elbow bends (as
+ * `elbowOf`); between, the elbow swinging through the depth of the stage toward the house, so the arm never stretches.
+ */
+export function elbowSwing(s: Pt, w: Pt, bend: number): Pt {
+  const dx = w[0] - s[0]
+  const dy = w[1] - s[1]
+  const L = Math.hypot(dx, dy) || 1e-6
+  const d = Math.max(Math.abs(UPPER - FORE) + 1e-3, Math.min(UPPER + FORE - 1e-3, L))
+  const A = Math.acos(clamp((UPPER * UPPER + d * d - FORE * FORE) / (2 * UPPER * d), -1, 1))
+  const ux = dx / L
+  const uy = dy / L
+  const along = UPPER * Math.cos(A)
+  const across = UPPER * Math.sin(A) * bend
+  return [s[0] + ux * along - uy * across, s[1] + uy * along + ux * across]
+}
+
+/**
+ * The house's right elbow: out (as through the solo) until the frame hangs limp after it; then it swings under and
+ * stays under through the hush, where the arm plays the hi-hat below the crash Fletcher straightens: out, its elbow
+ * would sit up by the crash's rim, in his hand's way.
+ */
+const RIGHT_UNDER: [number, number] = [UNSEAT + 0.8, UNSEAT + 2.4]
+const rightBend = (T: number): number => -1 + 2 * smoother((T - RIGHT_UNDER[0]) / (RIGHT_UNDER[1] - RIGHT_UNDER[0]))
+
 function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const pose = armPose(arm, T)
   const s = shoulder(arm, T)
   const w = pose.grip
-  const e = elbowOf(s, w, arm === 'left' ? 1 : -1)
+  const e = arm === 'left' ? elbowOf(s, w, 1) : elbowSwing(s, w, rightBend(T))
   tube(p, c, s, e, 4.4)
   tube(p, c, e, w, 3.8)
   clampBlock(p, c, e, Math.atan2(w[1] - e[1], w[0] - e[0]), 0.15, 0.12)

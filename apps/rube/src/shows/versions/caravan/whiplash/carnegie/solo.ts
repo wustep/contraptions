@@ -18,7 +18,8 @@ import { ACCENTS, BALL, DOWN, LEAP, PULSE, SEATED, SLAM, STROKES, TOSS, TRADE, U
  * playing. Round the toms (283 to 286); the cymbals' climax (286 to 291), where the right arm throws its stick up
  * end over end and catches it for the biggest hit of the solo (290.50), his head thrown back; the whole machine
  * with Fletcher watching from his podium; the kick drum's pulse (316.5 to 321.8). On its last kick he jumps down to
- * the snare, the frame goes limp and flies out, and he plays the soft strokes into the hush (323.27) alone.
+ * the snare, the frame goes limp and hangs there, and he plays the soft strokes into the hush (323.27) alone; the
+ * hush (`hush.ts`) takes him back up into it.
  *
  * The machine's motion and drawing are in `solo-rig.ts`; who plays which stroke is in `solo-score.ts`. The frame is
  * Carnegie's (`stage.ts`): the ball enters on the snare (-0.5, 0) and leaves there (exit [0, 0]).
@@ -165,7 +166,7 @@ function shots(): PartShot[] {
     cu(PULSE + 0.35, CU.pedal, 0.08, -0.5),
     cu(317.8, CU.pedal, -0.05, 0.05),
     k(319.7, 5.5, [-0.45, -0.25]),
-    // Out to all of him, head to foot, and down to the snare as the frame flies out.
+    // Out to all of him, head to foot, and down to the snare as the frame goes limp over him.
     k(UNSEAT - 0.5, 6.0, [-0.6, -0.7]),
     k(DOWN + 0.15, 5.2, [-0.55, -0.9]),
     { t: HUSH, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
