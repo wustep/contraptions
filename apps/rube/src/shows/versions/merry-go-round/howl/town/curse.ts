@@ -407,9 +407,20 @@ function drawLamp(p: p5, c: Ctx, t: number): void {
   const X = (v: number) => v * k
   const f = flame(t)
   const on = smooth(t, 84.6, 85.2) * (1 - smooth(t, 108.2, 109.2))
-  // The pool of light: on the counter, the wall, the floor.
+  // The pool of light: on the counter, the wall, the floor. It stays in the room: never through the boards onto the
+  // stone under them (a pale band along a wide frame's foot, an oval in the dark on a tall one), nor out through the
+  // shop's front wall. The floor's share lies flat along the boards, a pool seen edge-on, not a disc.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const s0 = TOWN_AT.shop[0] - 0.4
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(s0), X(-40), X(W0 - s0), X(40 + FLOOR))
+  ctx.clip()
   glow(p, k, LAMP_X, LAMP_Y + 0.8, 3.4, TOWN.glow, 0.34 * f.glow * on)
-  glow(p, k, LAMP_X + 0.3, FLOOR - 0.3, 2.2, TOWN.gold, 0.14 * f.glow * on)
+  ctx.translate(0, X(FLOOR))
+  ctx.scale(1, 0.32)
+  glow(p, k, LAMP_X + 0.3, 0, 2.4, TOWN.gold, 0.2 * f.glow * on)
+  ctx.restore()
   // The glass chimney under the shade, and the flame in it: a small tongue, never a round core.
   const gx = LAMP_X
   const gy = LAMP_Y
