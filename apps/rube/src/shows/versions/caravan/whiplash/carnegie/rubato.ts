@@ -229,9 +229,11 @@ export const rubato = part<{ begin: number }>(
       { t: 440, cells: 7.8, hold: at(M + 2.2, -2.2), w: 1 },
       // Slowing: in on the whole pendulum, tall, as he climbs the rod: him at the top and the bob's tip meeting the
       // ride's rim both in the frame (centred between his top, -4.4, and the rim, -1.1), the camera drifting across
-      // as it pushes. Tight enough to feel, loose enough that every stroke is seen to land.
-      { t: 446.6, cells: 5.7, hold: at(M + 0.55, -2.74), w: 1 },
-      { t: 452.4, cells: 5.4, hold: at(M + 0.22, -2.76), w: 1 },
+      // as it pushes. Tight enough to feel, loose enough that every stroke is seen to land. The push leaves Fletcher
+      // behind the right edge as it goes, clear of it by the time it settles (his hanging hand sat in the edge for
+      // six seconds).
+      { t: 446.6, cells: 5.7, hold: at(M + 0.2, -2.74), w: 1 },
+      { t: 452.4, cells: 5.4, hold: at(M + 0.14, -2.76), w: 1 },
       { t: 455.0, cells: 5.3, hold: at(M + 0.07, -2.76), w: 1 },
       // Then a truck right, landing on the slowest stroke, to a two-shot: the metronome in the left of the frame and
       // Fletcher on his podium in the right, keeping its time with a small beat of his hand, slowing with it and

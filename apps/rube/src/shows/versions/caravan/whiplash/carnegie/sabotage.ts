@@ -391,10 +391,12 @@ export const sabotage = part<SabotageState>(
     { t: REVEAL.leave, cells: REVEAL.cells + 0.25, hold: [REVEAL.hold[0] + 0.03, REVEAL.hold[1] - 0.03], w: 1, ease: 'whip' },
     { t: TWO_SHOT.at, cells: TWO_SHOT.cells, hold: TWO_SHOT.hold, w: 1 },
     { t: TWO_SHOT.until, cells: TWO_SHOT.cells - 0.12, hold: [TWO_SHOT.hold[0] - 0.02, TWO_SHOT.hold[1] + 0.01], w: 1 },
-    { t: 250.3, cells: 3.15, hold: [0.9, -0.7], w: 1 },
+    { t: 250.3, cells: 3.15, hold: [0.62, -0.7], w: 1 },
     // His first try close, the chart beside him; then a slow widening through the other two until Fletcher is in the
-    // frame too, keeping the band going on the other side of the chart; on out into the band's three hits.
-    { t: 251.2, cells: 3.55, hold: [0.35, -0.62], w: 1 },
+    // frame too, keeping the band going on the other side of the chart; on out into the band's three hits. (The
+    // closes keep their right edge short of his pointing hand: held on the edge, it was an arm with no one on it.)
+    { t: 251.2, cells: 3.55, hold: [0.2, -0.62], w: 1 },
+    { t: 252.45, cells: 3.62, hold: [0.26, -0.64], w: 1 },
     { t: 253.9, cells: 4.9, hold: [1.75, -0.95], w: 1 },
     // Drawing back over two seconds into the band's three hits: the band playing past the small still ball.
     { t: 255.9, cells: 8.4, hold: [3.1, -1.5], w: 1 },

@@ -252,12 +252,13 @@ function shots(slot: Slot): PartShot[] {
     { t: 404.265, cells: 3.5, hold: [-0.8, -0.45], w: 1 },
     { t: 405.461, cells: 3.4, hold: [-0.7, -0.4], w: 1 },
     // The third stage: out to the whole hall, held; then a hard push in onto the sticks' blur, held there; then up
-    // to him on the treadle, Fletcher's beating hand coming into the right edge of the frame.
+    // to him on the treadle, the frame's right edge short of Fletcher's beating hand (his forearm came in from the
+    // edge through the whole push, a hand with no one on it).
     { t: WIDE_IN, cells: 13.6, hold: [3.2, -2.2], w: 1 },
     { t: WIDE_OUT, cells: 14.4, hold: [3.5, -2.45], w: 1 },
     { t: PUSHED, cells: 2.8, hold: [-0.45, -0.25], w: 1 },
     { t: 416.665, cells: 2.65, hold: [-0.35, -0.3], w: 1 },
-    { t: 419.9, cells: 3.4, hold: [1.45, -0.7], w: 1 },
+    { t: 419.9, cells: 3.0, hold: [0.7, -0.68], w: 1 },
     { t: LAST, cells: 4.2, hold: [-0.3, -0.25], w: 1 },
     { t: slot.end, ...close },
   ]

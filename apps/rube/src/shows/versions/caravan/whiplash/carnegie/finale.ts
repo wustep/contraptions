@@ -76,13 +76,14 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     { t: slot.begin, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
     // The kick march: close and low on the toms, the ball bouncing round them and the metronome going down into the
     // stage at the top of the frame. Only as the frame comes down out of the flies does the camera open, just ahead
-    // of it breaking the top edge, and up to where it hangs.
+    // of it breaking the top edge, and up to where it hangs, Fletcher on his podium at the right watching it come
+    // (all of him, well inside: the open stopped with his head on the edge, cut in half).
     k(505.2, 4.5, [-1.75, -0.7]),
     k(F_FLY[0] - 0.35, 4.8, [-1.7, -0.95]),
-    k(F_FLY[0] + 0.85, 7.1, [-1.5, -2.0]),
-    k(F_FLY[1], 7.0, [-1.4, -2.1]),
-    // In the frame: the march.
-    k(F_SEATED + 0.4, 6.0, [-1.2, -1.7]),
+    k(F_FLY[0] + 0.85, 7.1, [-0.75, -2.0]),
+    k(F_FLY[1], 7.0, [-0.65, -2.1]),
+    // In the frame: the march, leaving Fletcher behind the right edge.
+    k(F_SEATED + 0.4, 6.0, [-1.45, -1.7]),
     k(514.6, 5.2, [-1.0, -1.5]),
     // The long roll, not the solo's framings: low and close on the snare, the two sticks a blur on its head; up
     // with Fletcher as he comes across.

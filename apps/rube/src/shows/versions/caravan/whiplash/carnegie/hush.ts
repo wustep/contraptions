@@ -63,7 +63,7 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     { t: slot.begin, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
     // Up from the snare to take in the frame hanging over it, and the cup he leaps for; the knock.
     k(325.4, 5.2, [-0.9, -1.35]),
-    k(KNOCK, 5.4, [-0.6, -1.7]),
+    k(KNOCK, 5.4, [-0.8, -1.7]),
     k(330.2, 5.0, [-0.3, -1.75]),
     // Back to see Fletcher come down off his podium and across; in on the hand on the crash, and the two heads
     // either side of it.
@@ -80,7 +80,7 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(348.95, 6.4, [0.9, -1.5], 0.7),
     k(351.6, 3.5, [-0.8, -1.25], 0.6),
     k(354.0, 4.6, [-1.3, -1.2], 0.55),
-    k(356.1, 3.3, [-0.9, -1.25]),
+    k(356.1, 3.8, [-0.9, -1.4]),
     // To the ride; then across the stage to his father at the stage door, alone in the wings' light under its lit
     // window (the solo's look at him is closer and keeps the window out; this one is wide enough for the window over
     // him, with him at about three quarters of the height, the wings' floor and the lip under him, and the house's

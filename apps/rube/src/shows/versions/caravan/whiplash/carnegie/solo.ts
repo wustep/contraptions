@@ -113,7 +113,7 @@ const CU = {
   pedal: { cells: 2.75, hold: [-0.35, 1.5] as Pt },
 }
 /** A framing that holds the thrown stick's whole flight, its top, his head, the crash and the snare it slams. */
-const THROW = { cells: 5.6, hold: [-0.3, -2.3] as Pt }
+const THROW = { cells: 5.6, hold: [-0.5, -2.3] as Pt }
 
 /**
  * The two watchers, in the part's frame (the hall's, not the kit's). Fletcher on his podium, his head on the right
@@ -200,7 +200,7 @@ function shots(): PartShot[] {
     cu(317.8, CU.pedal, -0.05, 0.05),
     k(319.7, 5.5, [-0.45, -0.25]),
     // Out to all of him, head to foot, and down to the snare as the frame goes limp over him.
-    k(UNSEAT - 0.5, 6.0, [-0.6, -0.7]),
+    k(UNSEAT - 0.5, 6.0, [-0.85, -0.7]),
     k(DOWN + 0.15, 5.2, [-0.55, -0.9]),
     { t: HUSH, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
   ]
