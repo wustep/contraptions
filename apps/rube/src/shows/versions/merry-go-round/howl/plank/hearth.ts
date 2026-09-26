@@ -92,39 +92,50 @@ function shaking(t: number): number {
 }
 
 /**
- * Dust pouring from between the beams on every hit: soft columns that fall and thin out (each a light gradient,
- * never a string of beads), and a low haze where they land. Room cells.
+ * Dust shaken out from between the beams on every hit: each gap lets go a clump that falls, spreads and thins as it
+ * goes, sifting in soft puffs of every size (never a column of light, never a string of beads), and a low haze where
+ * it lands. Room cells.
  */
 function dust(p: p5, k: number, t: number, top: number) {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const floor = ROOM_AT.ground
+  const puffAt = (x: number, y: number, r: number, a: number) => {
+    if (a <= 0.004 || r <= 0.01) return
+    const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
+    g.addColorStop(0, `rgba(205, 185, 153, ${a})`)
+    g.addColorStop(0.5, `rgba(205, 185, 153, ${a * 0.6})`)
+    g.addColorStop(1, 'rgba(205, 185, 153, 0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+    ctx.fill()
+  }
   HIT.forEach((h, i) => {
     const u = t - h
-    if (u < 0 || u > 2.8) return
+    if (u < 0 || u > 3.2) return
     const n = i === 3 ? 6 : 3
     for (let j = 0; j < n; j++) {
       const x = -0.4 + hash(i, j, 3) * 8.2
-      const s = u - hash(i, j, 5) * 0.2
-      if (s < 0) continue
-      const head = Math.min(floor, top + (2.2 + hash(i, j, 7)) * s + 1.6 * s * s)
-      const tail = top + Math.max(0, s - 0.9) * 2.5
-      const a = (1 - smooth(s, 1.0, 2.4)) * (0.16 + 0.1 * hash(i, j, 9))
-      const w = 0.08 + 0.1 * hash(i, j, 11) + 0.1 * s
-      if (head - tail > 0.05 && a > 0.005) {
-        const g = ctx.createLinearGradient(0, tail * k, 0, head * k)
-        g.addColorStop(0, 'rgba(205, 185, 153, 0)')
-        g.addColorStop(0.6, `rgba(205, 185, 153, ${a})`)
-        g.addColorStop(1, `rgba(205, 185, 153, ${a * 0.4})`)
-        ctx.fillStyle = g
-        ctx.beginPath()
-        ctx.ellipse((x + Math.sin(s * 2 + j) * 0.03) * k, ((head + tail) / 2) * k, (w / 2) * k, ((head - tail) / 2) * k, 0, 0, Math.PI * 2)
-        ctx.fill()
+      const s0 = u - hash(i, j, 5) * 0.2
+      if (s0 < 0) continue
+      const fade = (1 - smooth(s0, 1.0, 2.8)) * (0.22 + 0.12 * hash(i, j, 9))
+      // The clump and what sifts off it behind: puffs let go one after another, each falling on its own.
+      for (let q = 0; q < 5; q++) {
+        const s = s0 - q * 0.14
+        if (s <= 0) continue
+        const fall = (1.6 + 0.8 * hash(i, j, 7)) * s + 1.4 * s * s
+        const y = Math.min(floor - 0.1, top + fall)
+        const r = (0.1 + 0.08 * hash(i, j, q)) * (1 + 1.6 * s) * (q === 0 ? 1.25 : 1)
+        const drift = Math.sin(s * 2.2 + j + q) * 0.06 * s
+        puffAt(x + drift + (hash(i, j, q + 20) - 0.5) * 0.12, y, r, fade * (q === 0 ? 1 : 0.6))
       }
       // Where it lands, a low haze on the boards.
-      if (head >= floor - 0.01) {
+      const land = (Math.sqrt((1.6 + 0.8 * hash(i, j, 7)) ** 2 + 5.6 * (floor - top)) - (1.6 + 0.8 * hash(i, j, 7))) / 2.8
+      if (s0 > land) {
+        const e = s0 - land
         p.noStroke()
-        p.fill(alpha(p, ROOM.plasterShade, a * 0.9))
-        p.ellipse(x * k, (floor - 0.06) * k, (0.35 + 0.5 * s) * k, (0.14 + 0.05 * s) * k)
+        p.fill(alpha(p, ROOM.plasterShade, fade * 0.9 * Math.min(1, e * 4)))
+        p.ellipse(x * k, (floor - 0.06) * k, (0.35 + 0.5 * e) * k, (0.14 + 0.05 * e) * k)
       }
     }
   })
