@@ -18,6 +18,12 @@ const wave: Wave = (u) => Math.sin(u) * 0.6 + Math.sin(u * 2.3 + 1.1) * 0.3 + Ma
 
 /* ------------------------------------------------------------------ Calcifer */
 
+/** 0 until `a`, 1 from `b`, smooth between. */
+const smoothUnit = (u: number, a: number, b: number): number => {
+  const v = Math.max(0, Math.min(1, (u - a) / (b - a)))
+  return v * v * (3 - 2 * v)
+}
+
 export interface CalciferOpts {
   /** Show time, for his flicker. */
   t: number
@@ -44,20 +50,30 @@ export interface CalciferOpts {
  * tongues and the face keep him from reading as a ball.
  */
 export function drawCalcifer(p: p5, k: number, weight: number, ink: string, o: CalciferOpts): void {
-  const h = (o.size ?? 0.6) * k
   const weak = Math.max(0, Math.min(1, o.weak ?? 0))
+  // Weakness shows first as size and brightness: the flame sinks low and small toward an ember.
+  const sink = smoothUnit(weak, 0.08, 0.6)
+  const h = (o.size ?? 0.6) * k * (1 - 0.36 * sink)
   const light = o.light ?? 1
   const t = o.t
   const lean = o.lean ?? 0
   if (h < 1 || light <= 0.01) return
-  const body = mixHex(CALCIFER.body, CALCIFER.weak, weak)
-  const core = mixHex(CALCIFER.core, CALCIFER.weakCore, weak)
-  const edge = mixHex(CALCIFER.edge, '#3E5FA8', weak)
-  // The silhouette, as a closed curve through points: the belly's half circle, then the three tongues.
+  // Then the hue: his orange dims to an ember, the ember cools to a dark ash-blue, and only far gone is he the
+  // water's blue. Never through pink.
+  const w1 = smoothUnit(weak, 0, 0.35)
+  const w2 = smoothUnit(weak, 0.3, 0.6)
+  const w3 = smoothUnit(weak, 0.6, 1)
+  const tint = (fire: string, ember: string, ash: string, blue: string) => mixHex(mixHex(mixHex(fire, ember, w1), ash, w2), blue, w3)
+  const body = tint(CALCIFER.body, '#A4522F', '#56668C', CALCIFER.weak)
+  const core = tint(CALCIFER.core, '#D68A4C', '#8B9DC2', CALCIFER.weakCore)
+  const edge = tint(CALCIFER.edge, '#6E3326', '#3A4466', '#3E5FA8')
+  // The silhouette, as a closed curve through points: the belly's half circle, then the three tongues (lower as he
+  // weakens).
   const W = 0.34
+  const reach = 1 - 0.35 * sink
   const tip = (i: number, base: number, height: number, x: number): Pt => {
     const s = wave(t * (5.3 + i) + i * 1.7)
-    return [(x + 0.05 * s + lean * 0.12 * (1 + i * 0.2)) * h, -(base + height * (0.88 + 0.12 * s)) * h]
+    return [(x + 0.05 * s + lean * 0.12 * (1 + i * 0.2)) * h, -(base + height * reach * (0.88 + 0.12 * s)) * h]
   }
   const shape = (scale: number, cx: number, cy: number): Pt[] => {
     const pts: Pt[] = []
@@ -92,8 +108,9 @@ export function drawCalcifer(p: p5, k: number, weight: number, ink: string, o: C
   // A soft glow round him, low and wide, so he lights what is near without a bright core of his own.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const g = ctx.createRadialGradient(0, -0.3 * h, 0, 0, -0.3 * h, 1.6 * h)
-  const glow = weak > 0.5 ? '120, 160, 255' : '255, 170, 80'
-  g.addColorStop(0, `rgba(${glow}, ${0.28 * light * (1 - 0.5 * weak)})`)
+  const warm = 1 - w2
+  const glow = `${Math.round(120 + 135 * warm)}, ${Math.round(160 + 10 * warm)}, ${Math.round(255 - 175 * warm)}`
+  g.addColorStop(0, `rgba(${glow}, ${0.28 * light * (1 - 0.7 * sink)})`)
   g.addColorStop(1, `rgba(${glow}, 0)`)
   ctx.fillStyle = g
   ctx.fillRect(-1.6 * h, -1.9 * h, 3.2 * h, 3.2 * h)

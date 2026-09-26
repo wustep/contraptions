@@ -424,11 +424,18 @@ export const plank = part<PlankState>(
         })
         p.pop()
       }
-      // The heart: a warm light through Howl as Calcifer goes into him, and a flare as he comes out free.
+      // The heart: a warm light through Howl as Calcifer goes into him, spreading over her as well (the gift passes
+      // between them), and a flare as he comes out free.
       const hu = t - HEART
-      if (hu > -0.05 && hu < 2) {
+      if (hu > -0.05 && hu < 2.4) {
         const [hx, hy] = howlAt(t)
-        puff(p, k, hx, hy, 0.75 + 0.5 * Math.min(1, hu + 0.05), CALCIFER.core, 0.32 * Math.exp(-Math.max(0, hu) / 0.55) * smooth(hu, -0.05, 0.02))
+        const [sx, sy] = herAt(t)
+        const a = 0.32 * Math.exp(-Math.max(0, hu) / 0.55) * smooth(hu, -0.05, 0.02)
+        puff(p, k, hx, hy, 0.75 + 0.5 * Math.min(1, hu + 0.05), CALCIFER.core, a)
+        // Between them and over her, a moment later and slower to go: it reaches her as it lights him.
+        const b = 0.24 * smooth(hu, 0.02, 0.3) * Math.exp(-Math.max(0, hu - 0.3) / 0.8)
+        puff(p, k, (hx + sx) / 2, (hy + sy) / 2, 0.55 + 0.3 * Math.min(1, hu), CALCIFER.core, b * 0.7)
+        puff(p, k, sx, sy, 0.6 + 0.35 * Math.min(1, hu), CALCIFER.core, b)
       }
       const fu = t - FREE
       if (fu > 0 && fu < 1) {
