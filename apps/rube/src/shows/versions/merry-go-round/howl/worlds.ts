@@ -111,8 +111,8 @@ export const TOWN = {
   fireHot: '#FFD27A',
   ember: '#B8432A',
   smoke: '#4A4550',
-  /** The soldiers' blue, the Witch's blob men's black. */
-  soldier: '#44557A',
+  /** The soldiers' grey-green (never blue: blue is Howl's alone), the Witch's blob men's black. */
+  soldier: '#56604A',
   blob: '#2A2528',
 }
 

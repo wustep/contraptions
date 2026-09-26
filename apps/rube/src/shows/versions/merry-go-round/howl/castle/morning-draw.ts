@@ -16,6 +16,8 @@ type Box = { x0: number; y0: number; x1: number; y1: number }
 const EGG = mixHex(FLOWERS.white, ROOM.plasterShade, 0.28)
 const WHITE = FLOWERS.white
 const YOLK = FLOWERS.yellow
+/** The Porthaven fisherman's oilskin. */
+const OILSKIN = '#A4803F'
 
 /* ------------------------------------------------------------------ through the door */
 
@@ -116,8 +118,9 @@ export function viewPorthaven(p: p5, k: number, W: number, ink: string, b: Box, 
   const sh = quay - 1.02 + 0.06 * bow
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  // Coat: shoulders to the sill, a little wider at the hem.
-  p.fill(TOWN.slate)
+  // Coat: shoulders to the sill, a little wider at the hem; an ochre oilskin (never blue: a stranger in the door must
+  // not read as Howl, who comes home through the black a beat later).
+  p.fill(OILSKIN)
   p.beginShape()
   p.vertex(X(cx - 0.33), X(b.y1 + 0.02))
   p.vertex(X(cx - 0.29), X(sh + 0.3))
