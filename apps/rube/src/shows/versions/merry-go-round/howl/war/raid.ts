@@ -1567,10 +1567,10 @@ export const raid = part<{ begin: number }>(
       on(209.6, 7.0, 1.8, 0.24),
       on(211.0, 8.4, 2.4),
       // The flight comes in over the roofs, Howl tears through it, and its leader goes down beyond them.
-      on(212.3, 10.8, 3.6, 0.27),
-      on(213.3, 12.8, 4.2, 0.28),
-      on(214.7, 12.0, 3.6, 0.28),
-      on(215.6, 10.6, 2.6, 0.27),
+      on(212.3, 11.8, 3.6, 0.29),
+      on(213.3, 14.0, 4.2, 0.3),
+      on(214.7, 13.2, 3.6, 0.3),
+      on(215.6, 11.4, 2.6, 0.29),
       // The dive on the street, the bomb turned aside over her head, the burst.
       on(216.8, 9.4, 2.0),
       on(218.4, 8.6, 2.2),
