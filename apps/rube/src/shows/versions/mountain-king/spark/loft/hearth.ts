@@ -270,59 +270,130 @@ function drawDoor(p: p5, k: number, ink: string, weight: number, L: Light, t: nu
   poly(p, k, panel)
   lightOn(p, k, L, panel, IRON_SHEEN, 0.5, out ? 0.2 : 1)
   if (out) {
-    // A raised panel with an arched head, cast in the door.
+    // A panel with an arched head, cast in the door: embossed in the door's own iron, no ink round it, only lit
+    // along its upper edges and shadowed along its lower ones.
     const arch: Pt[] = []
-    const ax0 = 0.3
-    const ax1 = DOOR_W - 0.3
-    const top = DOOR.y0 + 0.34
-    const spring = DOOR.y0 + 0.95
-    arch.push(q(ax0, DOOR.y1 - 1.02))
-    for (let i = 0; i <= 14; i++) {
-      const u = i / 14
-      const lx = ax0 + (ax1 - ax0) * u
-      arch.push(q(lx, spring - (spring - top) * Math.sin(Math.PI * u)))
+    const ax0 = 0.36
+    const ax1 = DOOR_W - 0.36
+    const top = DOOR.y0 + 0.36
+    const spring = DOOR.y0 + 0.92
+    const foot = DOOR.y1 - 1.12
+    arch.push(q(ax0, foot))
+    for (let i = 0; i <= 18; i++) {
+      const u = i / 18
+      arch.push(q(ax0 + (ax1 - ax0) * u, spring - (spring - top) * Math.sin(Math.PI * u)))
     }
-    arch.push(q(ax1, DOOR.y1 - 1.02))
-    p.fill(mixHex(face, COOL_SHEEN, 0.1))
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.5)
+    arch.push(q(ax1, foot))
+    p.noStroke()
+    p.fill(mixHex(face, LOFT.soot, 0.05))
     poly(p, k, arch)
-    // The vent: five narrow slots low on the door, glowing with the fire behind it until the door swings clear.
+    p.noFill()
+    p.strokeWeight(Math.max(1, weight * 0.55))
+    p.stroke(rgba(mixHex(face, COOL_SHEEN, 0.5), 0.4))
+    p.beginShape()
+    for (let i = 0; i < arch.length - 1; i++) p.vertex(arch[i][0] * k, arch[i][1] * k)
+    p.endShape()
+    p.stroke(rgba(LOFT.soot, 0.4))
+    p.line(arch[arch.length - 1][0] * k, arch[arch.length - 1][1] * k, arch[0][0] * k, arch[0][1] * k)
+    // The draught grille low on the door: a low arched opening with a few iron bars across it, the fire glowing
+    // unevenly behind them (brightest low in the middle, breathing), until the door swings clear.
     const shut = 1 - smooth(a, 0.35, 1.1)
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    const gw = 0.66
+    const gy0 = VENT.y - 0.24
+    const gy1 = VENT.y + 0.2
+    const grille: Pt[] = []
+    grille.push(q(DOOR_W / 2 - gw, gy1))
+    for (let i = 0; i <= 12; i++) {
+      const u = i / 12
+      grille.push(q(DOOR_W / 2 - gw + 2 * gw * u, gy0 + 0.16 - 0.16 * Math.sin(Math.PI * u)))
+    }
+    grille.push(q(DOOR_W / 2 + gw, gy1))
+    p.fill(LOFT.soot)
+    p.stroke(ink)
+    p.strokeWeight(weight * 0.5)
+    poly(p, k, grille)
     if (shut > 0) {
-      // The glow over the door round the slots: low and wide, never a round core.
-      const [gx, gy] = q(DOOR_W / 2, VENT.y)
       const breathe = 0.8 + 0.12 * Math.sin(t * 1.7) + 0.08 * Math.sin(t * 4.1 + 1)
+      const [gx, gy] = q(DOOR_W / 2, gy1)
       ctx.save()
-      ctx.translate(gx * k, gy * k)
-      ctx.scale(1, 0.42)
-      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1.25 * k)
-      g.addColorStop(0, rgba(LOFT.ember, 0.34 * shut * breathe))
-      g.addColorStop(1, rgba(LOFT.ember, 0))
+      p.noStroke()
+      p.fill(0)
+      ctx.beginPath()
+      grille.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+      ctx.closePath()
+      ctx.clip()
+      // The fire behind: a low bank of ember, hotter in two or three places that come and go.
+      const g = ctx.createRadialGradient(gx * k, gy * k, 0, gx * k, gy * k, 0.75 * k)
+      g.addColorStop(0, rgba(mixHex(LOFT.ember, LOFT.emberHot, 0.35 * breathe), 0.95 * shut))
+      g.addColorStop(0.55, rgba(LOFT.ember, 0.6 * shut * breathe))
+      g.addColorStop(1, rgba(LOFT.ember, 0.08 * shut))
       ctx.fillStyle = g
+      ctx.fillRect((gx - 0.8) * k, (gy - 0.8) * k, 1.6 * k, 0.9 * k)
+      for (let i = 0; i < 3; i++) {
+        const hx = DOOR_W / 2 + (i - 1) * 0.36 + 0.08 * Math.sin(t * 0.7 + i * 2)
+        const flick = Math.max(0, Math.sin(t * (1.3 + 0.4 * i) + i * 2.1))
+        const [hxw, hyw] = q(hx, gy1 - 0.08)
+        const h = ctx.createRadialGradient(hxw * k, hyw * k, 0, hxw * k, hyw * k, 0.26 * k)
+        h.addColorStop(0, rgba(LOFT.emberHot, 0.5 * shut * flick))
+        h.addColorStop(1, rgba(LOFT.emberHot, 0))
+        ctx.fillStyle = h
+        ctx.fillRect((hxw - 0.3) * k, (hyw - 0.3) * k, 0.6 * k, 0.6 * k)
+      }
+      ctx.restore()
+      // Its glow on the door round the grille: low and wide, never a round core.
+      ctx.save()
+      ctx.translate(gx * k, (gy - 0.1) * k)
+      ctx.scale(1, 0.42)
+      const w2 = ctx.createRadialGradient(0, 0, 0, 0, 0, 1.25 * k)
+      w2.addColorStop(0, rgba(LOFT.ember, 0.26 * shut * breathe))
+      w2.addColorStop(1, rgba(LOFT.ember, 0))
+      ctx.fillStyle = w2
       ctx.fillRect(-1.25 * k, -1.25 * k, 2.5 * k, 2.5 * k)
       ctx.restore()
     }
-    for (let i = 0; i < 5; i++) {
-      const lx = DOOR_W / 2 + (i - 2) * 0.34
-      const glow = 0.55 + 0.25 * Math.sin(t * 1.7 + i * 1.3) + 0.2 * Math.sin(t * 4.1 + i)
-      const hot = mixHex(LOFT.ember, LOFT.emberHot, 0.3 * glow)
-      p.fill(shut > 0 ? mixHex(LOFT.soot, hot, shut * (0.55 + 0.45 * glow)) : LOFT.soot)
+    // The grille's bars: iron, uneven in the glow.
+    p.stroke(mixHex(face, LOFT.soot, 0.2))
+    p.strokeWeight(Math.max(1, 0.07 * k))
+    p.strokeCap(p.SQUARE)
+    for (let i = 0; i < 4; i++) {
+      const lx = DOOR_W / 2 - gw + (2 * gw * (i + 1)) / 5
+      const u = (lx - (DOOR_W / 2 - gw)) / (2 * gw)
+      const [x0, y0] = q(lx, gy0 + 0.16 - 0.16 * Math.sin(Math.PI * u))
+      const [x1, y1] = q(lx, gy1)
+      p.line(x0 * k, y0 * k, x1 * k, y1 * k)
+    }
+    p.strokeCap(p.ROUND)
+    // Its hinges on the west edge: dark iron straps tapering to a rounded end, each on a round knuckle, lit only
+    // along their top edges.
+    for (const y of [DOOR.y0 + 0.5, DOOR.y1 - 0.5]) {
+      const strap: Pt[] = [q(0.02, y - 0.13)]
+      for (let i = 0; i <= 6; i++) {
+        const an = -Math.PI / 2 + (Math.PI * i) / 6
+        strap.push(q(0.72 + 0.075 * Math.cos(an), y + 0.075 * Math.sin(an)))
+      }
+      strap.push(q(0.02, y + 0.13))
+      p.fill(mixHex(face, LOFT.soot, 0.35))
       p.stroke(ink)
       p.strokeWeight(weight * 0.45)
-      const slot: Pt[] = []
-      const hw = 0.065
-      for (let j = 0; j <= 6; j++) slot.push(q(lx + hw * Math.cos(Math.PI + (j / 6) * Math.PI), VENT.y - 0.2 + hw * Math.sin(Math.PI + (j / 6) * Math.PI)))
-      for (let j = 0; j <= 6; j++) slot.push(q(lx + hw * Math.cos((j / 6) * Math.PI), VENT.y + 0.2 + hw * Math.sin((j / 6) * Math.PI)))
-      poly(p, k, slot)
-    }
-    // Its hinges on the west edge: straps with a knuckle.
-    p.fill(nickelAt(L, DOOR.x0, DOOR_MID))
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.6)
-    for (const y of [DOOR.y0 + 0.5, DOOR.y1 - 0.5]) {
-      poly(p, k, [q(-0.12, y - 0.17), q(0.5, y - 0.1), q(0.5, y + 0.1), q(-0.12, y + 0.17)])
+      poly(p, k, strap)
+      p.noFill()
+      p.stroke(rgba(mixHex(face, COOL_SHEEN, 0.6), 0.6))
+      p.strokeWeight(Math.max(1, weight * 0.4))
+      const [lx0, ly0] = q(0.06, y - 0.115)
+      const [lx1, ly1] = q(0.68, y - 0.065)
+      p.line(lx0 * k, ly0 * k, lx1 * k, ly1 * k)
+      // The knuckle: a short upright barrel on the door's edge, its lit side toward the room.
+      const kn: Pt[] = [q(-0.1, y - 0.22), q(0.06, y - 0.22), q(0.06, y + 0.22), q(-0.1, y + 0.22)]
+      p.fill(mixHex(face, LOFT.soot, 0.25))
+      p.stroke(ink)
+      p.strokeWeight(weight * 0.45)
+      poly(p, k, kn)
+      p.stroke(rgba(mixHex(face, COOL_SHEEN, 0.6), 0.5))
+      p.strokeWeight(Math.max(1, weight * 0.35))
+      const [kx0, ky0] = q(0.03, y - 0.19)
+      const [kx1, ky1] = q(0.03, y + 0.19)
+      p.line(kx0 * k, ky0 * k, kx1 * k, ky1 * k)
     }
     // The latch: a flat grip west of its pivot, a tongue east into the keeper; the grip dips when pressed.
     const d = gripDip(t)
@@ -374,9 +445,14 @@ function drawStove(p: p5, k: number, ink: string, weight: number, L: Light, t: n
   sheen(p, k, pipe, PIPE.x0, PIPE.x1, 0.3)
   p.strokeWeight(w * 0.5)
   for (let y = -2.4; y > pipeTop; y -= 3.1) p.line(PIPE.x0 * k, y * k, PIPE.x1 * k, y * k)
-  p.fill(nickel(STOVE.pipeX, -1.3))
-  p.strokeWeight(w * 0.6)
-  poly(p, k, [[PIPE.x1, -1.4], [PIPE.x1 + 0.42, -1.37], [PIPE.x1 + 0.42, -1.27], [PIPE.x1, -1.3]])
+  // The damper's key: a small dark iron handle out of the pipe, lit only along its top.
+  p.fill(mixHex(iron(STOVE.pipeX, -1.3), LOFT.soot, 0.3))
+  p.strokeWeight(w * 0.5)
+  poly(p, k, [[PIPE.x1, -1.4], [PIPE.x1 + 0.3, -1.38], [PIPE.x1 + 0.38, -1.42], [PIPE.x1 + 0.42, -1.34], [PIPE.x1 + 0.38, -1.25], [PIPE.x1 + 0.3, -1.29], [PIPE.x1, -1.3]])
+  p.stroke(rgba(COOL_SHEEN, 0.45))
+  p.strokeWeight(Math.max(1, w * 0.35))
+  p.line(PIPE.x1 * k, -1.39 * k, (PIPE.x1 + 0.3) * k, -1.37 * k)
+  p.stroke(ink)
   // The collar where it meets the top.
   p.fill(iron(STOVE.pipeX, TOP.y0))
   p.strokeWeight(w * 0.8)
@@ -469,8 +545,13 @@ function drawStove(p: p5, k: number, ink: string, weight: number, L: Light, t: n
     const x = CX - 0.62 + i * 0.36
     poly(p, k, rectPts(x, 6.66, x + 0.16, 7.14))
   }
-  p.fill(nickel(CX + 0.75, 6.9))
-  poly(p, k, rectPts(CX + 0.62, 6.8, CX + 0.86, 7.0))
+  // The slide's knob: dark iron, lit along its top.
+  p.fill(mixHex(iron(CX + 0.75, 6.9, 0.3), LOFT.soot, 0.2))
+  poly(p, k, [[CX + 0.62, 6.84], [CX + 0.86, 6.84], [CX + 0.9, 6.9], [CX + 0.86, 6.96], [CX + 0.62, 6.96]])
+  p.stroke(rgba(COOL_SHEEN, 0.4))
+  p.strokeWeight(Math.max(1, w * 0.3))
+  p.line((CX + 0.64) * k, 6.85 * k, (CX + 0.84) * k, 6.85 * k)
+  p.stroke(ink)
 
   // The base's moulding and the nickel trims: rim, collar, waist, foot rail.
   p.fill(iron(CX, BASE.y0, 0.15))
