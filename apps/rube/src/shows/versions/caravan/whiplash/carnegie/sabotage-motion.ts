@@ -14,6 +14,8 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT } from './stage'
  *
  *   242.34  the match cut: he sits on the snare in the dark.
  *   243.30  the lights come up on the band's hit. Fletcher conducts with a chart in his hand.
+ *   245.5   the whole hall: his father in the front row under the kit, watching. He leaves his seat, unseen,
+ *           while the camera is close on Andrew (249.4 → 257.2), and waits behind the stage door.
  *   247.51  he flings it; it lands on Andrew's empty stand on 248.16 (the desk knocks and rocks).
  *   248.2   Andrew looks at it, close; gives up; the band's three hits (254.6, 255.2, 255.8) knock him back
  *           toward the edge of the drum, and Fletcher's finger (258.11) does the rest.
@@ -180,16 +182,33 @@ export const BOUNCES: { at: number; arc: number }[] = [
 
 /* ------------------------------------------------------------------ Jim */
 
+/**
+ * His seat in the house: the front row, under the kit, the one pale head above the dark velvet backs (`hall.ts`
+ * draws the first row's top edge at `LIP + 0.8`, 3.4), where the reveal's wide (245.5) finds him watching his son's
+ * silent kit. The match cut's close and the two-shot both leave the house out of frame.
+ */
+const JIM_SEAT: Pt = [-1.7, 3.36]
 /** Behind the stage door, out of sight, until it opens; then he steps out from behind its leaf. */
 const JIM_HIDE = -9.62
 const JIM_MEET = ANDREW_MEET - 0.34
+/**
+ * From his seat to the stage door, while the camera is close on Andrew's tries and the band's hits (every frame's
+ * bottom edge is above the house from 248.4 to 258.5): along the front of the house under the stage's lip, in its
+ * dark, then up the wings' steps behind the door's leaf. Settled there before the camera turns for the wings (258.8),
+ * so the door opens on the man we saw in the house.
+ */
+const LEAVES_SEAT = 249.4
+const AT_DOOR = 257.2
+const CLIMB = 255.6
 
-/** Jim at show time `T`: behind the door, then in the doorway, then out in the wings to watch. */
+/** Jim at show time `T`: in the house, then (unseen) behind the door, then in the doorway, then out in the wings to watch. */
 export function jimAt(T: number): Pt {
-  let x = JIM_HIDE + move(T, 261.3, 1.0, JIM_MEET - JIM_HIDE)
+  let x = JIM_SEAT[0] + move(T, LEAVES_SEAT, AT_DOOR - LEAVES_SEAT, JIM_HIDE - JIM_SEAT[0])
+  const y = JIM_SEAT[1] + move(T, CLIMB, AT_DOOR - CLIMB, JIM_WINGS[1] - JIM_SEAT[1])
+  x += move(T, 261.3, 1.0, JIM_MEET - JIM_HIDE)
   x += 0.012 * sway(T) + 0.014 * embrace(T)
   x += move(T, 266.75, 1.85, JIM_WINGS[0] - JIM_MEET)
-  return [x, JIM_WINGS[1]]
+  return [x, y]
 }
 
 /* ------------------------------------------------------------------ the stage door */
