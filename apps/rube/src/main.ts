@@ -578,12 +578,18 @@ const onKey = (e: KeyboardEvent) => {
   // focused button keeps only its activation keys, so the rest still work.
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  switch (e.key) {
+  // N / n are deliberate opposites (previous / next world). Caps Lock must
+  // not silence every other key on the panel.
+  if (e.key === 'N') {
+    if (!catalogOn) prevWorld()
+    return
+  }
+  switch (e.key.toLowerCase()) {
     case ' ':
       e.preventDefault()
       setPaused(!paused)
       break
-    case 'Escape':
+    case 'escape':
       back()
       break
     case 'r':
@@ -591,9 +597,6 @@ const onKey = (e: KeyboardEvent) => {
       break
     case 'n':
       if (!catalogOn) nextWorldNow()
-      break
-    case 'N':
-      if (!catalogOn) prevWorld()
       break
     case 'o':
       if (viewName() === 'show') setOverview(!overview)
@@ -610,11 +613,11 @@ const onKey = (e: KeyboardEvent) => {
     case 'p':
       shell.toggle()
       break
-    case 'ArrowRight':
+    case 'arrowright':
       setPaused(true)
       seek(now() + (e.shiftKey ? 1 : 1 / 60))
       break
-    case 'ArrowLeft':
+    case 'arrowleft':
       setPaused(true)
       seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break
