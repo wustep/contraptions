@@ -12,12 +12,14 @@ import {
   CRATE,
   DIVE,
   DRIVERS_AT,
+  FLARE,
   FLANK,
   GERB,
   GERB_AT,
   GUNS,
   GY,
   HANG,
+  HUSH,
   IN,
   jetTop,
   LEADER_AT,
@@ -155,6 +157,8 @@ export function lightsAt(t: number): Light[] {
   if (blast >= 0 && blast < 0.8) out.push({ x: TITAN_X, y: LIP - 0.8, r: 5, a: 1.1 * Math.exp(-blast / 0.14), col: FW.fwWhite })
   const fire = crateFire(t)
   if (fire > 0.02) out.push({ x: CRATE.x1 - 0.35, y: GY - 0.8, r: 2.2 + 1.4 * fire, a: 0.65 * fire * (0.9 + 0.1 * Math.sin(t * 17)), col: FW.coal })
+  const sm = crateSmoulder(t)
+  if (sm > 0.02) out.push({ x: CRATE.x1 - 0.25, y: GY - 0.3, r: 1.3, a: 0.2 * sm * breath(t), col: FW.coal })
   return out
 }
 
@@ -259,26 +263,6 @@ function mouth(pen: Pen, at: Pt, lean: number, rx: number, rim: string, bore: st
   ctx.ellipse(0, -rx * 0.04 * k, rx * 0.74 * k, rx * 0.24 * k, 0, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
-}
-
-/** A flame's teardrop (as the spark's own, `fx.ts`): base at (x, y), `h` tall, `w` wide, its tip swung `lean`. */
-function tongue(pen: Pen, x: number, y: number, w: number, h: number, lean: number, fill: string): void {
-  const { ctx, k } = pen
-  ctx.fillStyle = fill
-  ctx.beginPath()
-  const n = 16
-  for (let i = 0; i <= n; i++) {
-    const a = (i / n) * Math.PI * 2
-    const u = (1 - Math.cos(a)) / 2
-    const side = Math.sin(a)
-    const belly = Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
-    const px = x + side * w * 0.5 * belly + lean * u * u
-    const py = y - h * u
-    if (i) ctx.lineTo(px * k, py * k)
-    else ctx.moveTo(px * k, py * k)
-  }
-  ctx.closePath()
-  ctx.fill()
 }
 
 /* ------------------------------------------------------------------ the ground */
@@ -927,54 +911,188 @@ export function drawSaluteRack(pen: Pen, L: Light[]): void {
 
 /* ------------------------------------------------------------------ the crate, the ash */
 
-/** How big the crate's fire is, 0..1: caught by the Titan's blast, blazing by the silence. */
+/**
+ * How big the crate's fire is, 0..1: caught by the Titan's blast, up through the salutes, then burning down as the
+ * spark falls, out by the hush (a smoulder, `crateSmoulder`). On the roll the spark's flare catches it again, and it
+ * goes up with it, roaring by the door the spark dives into.
+ */
 export function crateFire(t: number): number {
   if (t < TITAN_FIRE + 0.15) return 0
-  return 0.25 + 0.75 * smooth(t, TITAN_FIRE + 0.15, 146.4)
+  const first = (0.25 + 0.75 * smooth(t, TITAN_FIRE + 0.15, 145.4)) * (1 - smooth(t, 145.85, HUSH - 0.05))
+  const again = 1.1 * smooth(t, FLARE + 0.012, FLARE + 0.075)
+  return Math.max(first, again)
+}
+/** How much the crate glows red in its slats as it smoulders, 0..1: from the fire's dying to the flare. */
+export function crateSmoulder(t: number): number {
+  return smooth(t, 146.1, HUSH) * (1 - smooth(t, FLARE, FLARE + 0.06))
+}
+/** How charred its boards are: only ever more so. */
+const charred = (t: number): number => smooth(t, TITAN_FIRE + 0.15, HUSH)
+/** The smoulder's slow breath. */
+const breath = (t: number): number => 0.72 + 0.18 * Math.sin(t * 2.3) + 0.1 * Math.sin(t * 5.1 + 1.3)
+
+/** The crate's broken end: a ragged mouth. */
+const crateMouth = (): Pt[] => {
+  const { x1, h } = CRATE
+  return [[x1 - 0.42, GY - h + 0.12], [x1 + 0.01, GY - h + 0.02], [x1 + 0.01, GY], [x1 - 0.3, GY], [x1 - 0.36, GY - 0.35], [x1 - 0.5, GY - 0.6]]
 }
 
 export function drawCrate(pen: Pen, L: Light[]): void {
-  const { t, f } = pen
+  const { t, f, ctx } = pen
   const { x0, x1, h } = CRATE
   if (x1 + 2 < f.x0 || x0 - 2 > f.x1) return
   const fire = crateFire(t)
+  const sm = crateSmoulder(t)
   const board = shade(L, WOOD, WOOD_LIT, (x0 + x1) / 2, GY - h / 2)
-  const burnt = mixHex(board, CHAR, 0.4 * fire)
-  // The inside, dark, where its end is broken open (the right quarter).
+  const burnt = mixHex(board, CHAR, 0.55 * charred(t))
   rectC(pen, x0, GY - h, x1, GY, burnt)
   // Its boards: three long ones, with dark seams; the right end's broken short.
   const seams = [GY - h * 0.66, GY - h * 0.33]
   for (const y of seams) rectC(pen, x0, y - 0.02, x1 - 0.28, y + 0.02, rgba(FW.iron, 0.6))
   rectC(pen, x0, GY - h, x0 + 0.1, GY, mixHex(burnt, FW.iron, 0.3))
-  // The broken end: a ragged mouth, black inside.
-  quad(pen, [[x1 - 0.42, GY - h + 0.12], [x1 + 0.01, GY - h + 0.02], [x1 + 0.01, GY], [x1 - 0.3, GY], [x1 - 0.36, GY - 0.35], [x1 - 0.5, GY - 0.6]], mixHex(FW.iron, FW.coal, 0.18 * fire))
+  // The broken end: a ragged mouth, black inside, a bed of embers in it once it has burnt.
+  const mouthPts = crateMouth()
+  quad(pen, mouthPts, mixHex(FW.iron, FW.coal, 0.18 * fire + 0.05 * sm))
+  if (sm <= 0.01) return
+  const b = breath(t) * sm
+  additive(pen, () => {
+    // The slats smoulder: the seams and the burnt edges glow red where the fire got into them, unevenly, breathing.
+    ctx.lineCap = 'round'
+    seams.forEach((y, si) => {
+      // One unbroken crack along each seam, its glow rising and falling along it and hottest by the broken end.
+      const xa = x0 + 0.12
+      const xb = x1 - 0.28
+      const gr = ctx.createLinearGradient(xa * pen.k, 0, xb * pen.k, 0)
+      const n = 8
+      for (let i = 0; i <= n; i++) {
+        const u = i / n
+        const a = b * (0.1 + 0.75 * u * u) * (0.55 + 0.45 * Math.sin(t * (1.3 + 0.8 * hash(i, si, 124)) + i * 2.1 + si)) * (0.5 + 0.5 * hash(i, si, 121))
+        gr.addColorStop(u, rgba(u > 0.7 ? mixHex(FW.coal, FW.coalHot, 0.4) : FW.coal, 0.75 * a))
+      }
+      ctx.strokeStyle = gr
+      ctx.lineWidth = Math.max(0.6, 0.03 * pen.k)
+      ctx.beginPath()
+      ctx.moveTo(xa * pen.k, y * pen.k)
+      ctx.lineTo(xb * pen.k, y * pen.k)
+      ctx.stroke()
+    })
+    // Inside the broken end, the embers light it from below: red at the floor, gone to black by the top.
+    ctx.save()
+    ctx.beginPath()
+    mouthPts.forEach(([x, y], i) => (i ? ctx.lineTo(x * pen.k, y * pen.k) : ctx.moveTo(x * pen.k, y * pen.k)))
+    ctx.closePath()
+    ctx.clip()
+    const up = ctx.createLinearGradient(0, GY * pen.k, 0, (GY - h) * pen.k)
+    up.addColorStop(0, rgba(FW.coal, 0.5 * b))
+    up.addColorStop(0.22, rgba(FIRES.railway.rim, 0.22 * b))
+    up.addColorStop(0.55, rgba(FIRES.railway.rim, 0))
+    ctx.fillStyle = up
+    ctx.fillRect((x1 - 0.6) * pen.k, (GY - h) * pen.k, 0.7 * pen.k, h * pen.k)
+    ctx.restore()
+    // The ember bed inside the mouth: a low red light, and a few coals breathing in it.
+    glow(pen, x1 - 0.2, GY - 0.12, 0.55, FIRES.railway.rim, 0.9 * b, 0.45)
+    for (let i = 0; i < 9; i++) {
+      const x = x1 - 0.32 + 0.3 * hash(i, 125)
+      const y = GY - 0.04 - 0.12 * hash(i, 126)
+      const on = 0.5 + 0.5 * Math.sin(t * (1.1 + 0.9 * hash(i, 127)) + i * 1.9)
+      ctx.fillStyle = rgba(i % 3 ? FW.coal : FW.coalHot, 0.7 * sm * on)
+      ctx.fillRect((x - 0.025) * pen.k, (y - 0.014) * pen.k, 0.05 * pen.k, 0.028 * pen.k)
+    }
+  })
 }
 
-/** The crate's fire: tongues out of its broken end and over its top, bigger through the fall, blazing in the hush. */
-export function drawCrateFire(pen: Pen): void {
-  const { t } = pen
-  const fire = crateFire(t)
-  if (fire <= 0) return
-  const { x0, x1, h } = CRATE
+/**
+ * A sheet of fire along a burning edge, from (xa..xb, y) up: a body with licks along its top that rise, sway and
+ * drop back, each layer (rim, body, heart) nested in the last. Ragged, wide and low: a fire, not a flame, so the
+ * spark's own teardrop never reads as one more of its tongues.
+ */
+function blaze(pen: Pen, xa: number, xb: number, y: number, H: number, seed: number): void {
+  if (H <= 0.02 || xb <= xa) return
+  const { ctx, k, t } = pen
   const F = FIRES.railway
-  // The glow of it, soft and wide: light, never a disc.
-  glow(pen, x1 - 0.4, GY - 0.6, 1.8 + fire, F.body, 0.28 * fire)
-  const tongues = [
-    { x: x1 - 0.2, y: GY - 0.05, w: 0.5, h: 1.1 },
-    { x: x1 - 0.38, y: GY - 0.2, w: 0.42, h: 1.25 },
-    { x: x1 - 0.05, y: GY - 0.02, w: 0.36, h: 0.8 },
-    { x: x1 - 0.7, y: GY - h + 0.05, w: 0.38, h: 0.7 },
-    { x: x0 + 0.5, y: GY - h + 0.02, w: 0.3, h: 0.45 },
+  const m = Math.max(3, Math.round((xb - xa) / 0.2))
+  const lick = (u: number): number => {
+    let best = 0.22
+    for (let j = 0; j < m; j++) {
+      const c = (j + 0.5 + 0.3 * Math.sin(t * 1.7 + j * 2.3 + seed)) / m
+      const a = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(t * (6.5 + j * 1.9) + j * 3.1 + seed)) * (0.7 + 0.3 * hash(j, seed, 131))
+      const w = 1.25 / m
+      const d = Math.abs(u - c) / w
+      if (d < 1) best = Math.max(best, a * Math.pow(1 - d, 1.5))
+    }
+    return best
+  }
+  const layers: [number, number, string][] = [
+    [1, 0, rgba(F.rim, 0.9)],
+    [0.72, 0.12, rgba(F.body, 0.95)],
+    [0.42, 0.26, rgba(F.heart, 0.92)],
   ]
-  tongues.forEach((tg, i) => {
-    const flick = 0.12 * Math.sin(t * (9 + i * 2.3) + i) + 0.08 * Math.sin(t * (21 + i * 3.1) + 2 * i)
-    const size = fire * (1 + flick) * (i === 4 ? smooth(t, 145.5, 147) : 1)
-    if (size <= 0.02) return
-    const lean = 0.12 * Math.sin(t * 3.1 + i) + 0.05
-    tongue(pen, tg.x, tg.y, tg.w * size, tg.h * size, lean, rgba(F.rim, 0.9))
-    tongue(pen, tg.x, tg.y + 0.02, tg.w * 0.72 * size, tg.h * 0.78 * size, lean * 0.8, rgba(F.body, 0.95))
-    tongue(pen, tg.x, tg.y + 0.04, tg.w * 0.4 * size, tg.h * 0.45 * size, lean * 0.5, rgba(F.heart, 0.95))
-  })
+  const N = 30
+  for (const [sh, inset, fill] of layers) {
+    const a = xa + (xb - xa) * inset
+    const b = xb - (xb - xa) * inset
+    ctx.fillStyle = fill
+    ctx.beginPath()
+    ctx.moveTo(a * k, y * k)
+    for (let i = 0; i <= N; i++) {
+      const u = i / N
+      const uu = inset + (1 - 2 * inset) * u
+      const env = Math.pow(Math.sin(Math.PI * u), 0.55)
+      const hh = H * sh * env * lick(uu)
+      // The tips lean downwind and waver; the foot stays put.
+      const q = hh / Math.max(1e-6, H)
+      const x = a + (b - a) * u + (0.1 + 0.08 * Math.sin(t * 2.3 + seed)) * H * q * q + 0.03 * Math.sin(t * 5 + uu * 9 + seed) * q
+      ctx.lineTo(x * k, (y - hh) * k)
+    }
+    ctx.lineTo(b * k, y * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+}
+
+/**
+ * The crate's fire: a sheet of flame out of its broken end and along its top, caught by the Titan's blast and burning
+ * down as the spark falls; in the hush only a red smoulder and a thread of smoke (`drawCrate` draws the smoulder);
+ * on the roll it goes up again with the spark's flare, and the spark dives into it.
+ */
+export function drawCrateFire(pen: Pen): void {
+  const { t, ctx, k } = pen
+  const { x0, x1, h } = CRATE
+  const fire = crateFire(t)
+  // The thread of smoke off the embers: thin at the mouth, widening and drifting downwind as it climbs.
+  const thread = smooth(t, 145.9, HUSH) * (1 - smooth(t, FLARE, FLARE + 0.05))
+  if (thread > 0.01) {
+    const rate = 9
+    const life = 3.2
+    for (let i = Math.floor((t - life) * rate); i <= t * rate; i++) {
+      const born = i / rate
+      const a = t - born
+      if (a < 0 || a > life) continue
+      const u = a / life
+      const x = x1 - 0.22 + 0.05 * (hash(i, 141) - 0.5) + (WIND[0] * 0.9 + 0.05) * a + 0.08 * Math.sin(a * 2.1 + i * 0.7) * u
+      const y = GY - 0.25 - 0.55 * a
+      const r = 0.05 + 0.2 * u
+      const al = 0.3 * thread * smooth(a, 0, 0.3) * (1 - u) * (1 - u)
+      if (al < 0.004) continue
+      ctx.save()
+      ctx.translate(x * k, y * k)
+      ctx.scale(1, 1.4)
+      const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
+      gr.addColorStop(0, rgba(mixHex(FW.smoke, FW.coal, 0.12 * (1 - u)), al))
+      gr.addColorStop(1, rgba(FW.smoke, 0))
+      ctx.fillStyle = gr
+      ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
+      ctx.restore()
+    }
+  }
+  if (fire <= 0.02) return
+  const F = FIRES.railway
+  // The glow of it, soft, wide and low: light, never a disc.
+  glow(pen, x1 - 0.4, GY - 0.5, 1.8 + fire, F.body, 0.26 * fire, 0.7)
+  // Out of the broken end, and along the top from the end back (the far end catches last and burns least).
+  blaze(pen, x1 - 0.62, x1 + 0.06, GY - 0.03, 1.25 * fire, 1)
+  const along = fire * (0.55 + 0.45 * smooth(t, TITAN_FIRE + 0.6, 145.4))
+  blaze(pen, x0 + 0.35 + 0.5 * (1 - along), x1 - 0.18, GY - h + 0.03, 0.62 * along, 5)
 }
 
 /** The ash round the Titan's foot and the crate: a low grey drift with embers breathing in it. */
@@ -1061,6 +1179,8 @@ export function drawRise(pen: Pen, r: Rise): void {
 export function drawBurst(pen: Pen, b: Burst): void {
   const { t, ctx, k, f } = pen
   const s = t - b.at
+  if (b.kind === 'salute') return drawSalute(pen, b, s)
+  if (b.kind === 'small') return drawSmall(pen, b, s)
   // Not in its first hundredth: a burst that small is a dot, and a dot near the spark is a second ball.
   if (s < 0.01 || s > b.life) return
   const reach = b.v / b.k + 2
@@ -1078,8 +1198,7 @@ export function drawBurst(pen: Pen, b: Burst): void {
       // Glitter: willows and the Titan's stars twinkle as they burn down.
       const tw = b.kind === 'willow' || b.kind === 'titan' || b.kind === 'chrys' ? 0.75 + 0.25 * Math.sin(t * 40 + i * 2.1) : 1
       const m = 6
-      // A salute's stars are short dashes flung out of its flash, not spokes from its centre.
-      const from = b.kind === 'salute' ? Math.max(0, s - 0.035) : Math.max(s - trail, s * 0.22)
+      const from = Math.max(s - trail, s * 0.22)
       let prev = starAt(b, vx, vy, from)
       for (let q = 1; q <= m; q++) {
         const ss = from + ((s - from) * q) / m
@@ -1135,29 +1254,136 @@ export function drawBurst(pen: Pen, b: Burst): void {
     case 'palm':
       stars(b.n, b.v, b.trail, b.col, b.tail ?? b.col, 0.13, 1)
       break
-    case 'salute': {
-      // A flash-bang: a ragged spray of short white streaks thrown out of the flash at every angle and speed,
-      // flickering and gone. Uneven, so it reads as a bang and never as clean spokes or a ring.
-      const out = (u: number) => 2.0 * (1 - Math.exp(-u / 0.05))
-      const fade = 1 - smooth(s, b.life * 0.3, b.life)
-      for (let i = 0; i < 34; i++) {
-        const on = hash(i, b.seed, Math.floor(t * 40)) > 0.25 ? 1 : 0.3
-        const ang = 2 * Math.PI * hash(i, b.seed, 1)
-        const spd = 0.35 + 0.7 * hash(i, b.seed, 2)
-        const r1 = out(s) * spd
-        const r0 = out(Math.max(0, s - 0.03)) * spd * 0.9
-        const drop = 0.8 * s * s
-        ctx.strokeStyle = rgba(i % 4 ? FW.fwWhite : FW.fwGold, 0.95 * fade * on)
-        ctx.lineWidth = Math.max(0.7, 0.045 * k)
-        ctx.beginPath()
-        ctx.moveTo((b.x + Math.cos(ang) * r0) * k, (b.y + Math.sin(ang) * r0 + drop) * k)
-        ctx.lineTo((b.x + Math.cos(ang) * r1) * k, (b.y + Math.sin(ang) * r1 + drop) * k)
-        ctx.stroke()
-      }
+    default:
+      stars(b.n, b.v, b.trail, b.col, b.tail ?? b.col, b.kind === 'mine' ? 0.075 : 0.065, 1)
+  }
+}
+
+/**
+ * A star's trail: its path back in time from `s`, never longer than `maxLen` cells nor older than `maxT` seconds, so
+ * a fast star shows a short streak and a slow, falling one a short curve hanging from it. Head first.
+ */
+function trailOf(b: Burst, vx: number, vy: number, s: number, maxLen: number, maxT: number, steps = 8): Pt[] {
+  const out: Pt[] = [starAt(b, vx, vy, s)]
+  let len = 0
+  for (let q = 1; q <= steps; q++) {
+    const ss = s - (maxT * q) / steps
+    if (ss < 0) break
+    const p = starAt(b, vx, vy, ss)
+    const last = out[out.length - 1]
+    const d = Math.hypot(p[0] - last[0], p[1] - last[1])
+    if (len + d > maxLen) {
+      const u = (maxLen - len) / Math.max(1e-9, d)
+      out.push([last[0] + (p[0] - last[0]) * u, last[1] + (p[1] - last[1]) * u])
       break
     }
-    default:
-      stars(b.n, b.v, b.trail, b.col, b.tail ?? b.col, b.kind === 'small' ? 0.05 : b.kind === 'mine' ? 0.075 : 0.065, 1)
+    out.push(p)
+    len += d
+  }
+  return out
+}
+
+/**
+ * A rack comet's little shell: a handful of stars thrown out unevenly (no two alike in speed, none on a shared
+ * circle), that slow at once and droop, each with a short falling trail. Never a star of spokes.
+ */
+function drawSmall(pen: Pen, b: Burst, s: number): void {
+  const { ctx, k, t } = pen
+  if (s < 0.025 || s > b.life + 0.35) return
+  // Heavier drag and a little more droop than the plan's stars: out, over and falling.
+  const bb: Burst = { ...b, k: b.k * 1.5, gs: b.gs * 1.25 }
+  const fade = 1 - smooth(s, b.life * 0.45, b.life + 0.35)
+  ctx.lineCap = 'round'
+  for (let i = 0; i < b.n; i++) {
+    const ang = (2 * Math.PI * (i + 0.85 * hash(i, 11, b.seed))) / b.n + b.seed
+    const v = b.v * (0.42 + 0.72 * hash(i, 12, b.seed))
+    const vx = Math.cos(ang) * v
+    const vy = Math.sin(ang) * v
+    // Each burns out at its own time.
+    // ... and catches at its own time too, fading up as it flies, so the break is never a star of equal spokes.
+    const lit0 = 0.02 + 0.09 * hash(i, 15, b.seed)
+    const own = fade * smooth(s, lit0, lit0 + 0.1) * (1 - smooth(s, b.life * (0.55 + 0.35 * hash(i, 13, b.seed)), b.life + 0.35 * hash(i, 14, b.seed)))
+    if (own <= 0.01) continue
+    const tw = 0.8 + 0.2 * Math.sin(t * 38 + i * 2.7)
+    const pts = trailOf(bb, vx, vy, s, 0.16 + 0.22 * smooth(s, 0.1, 0.5), 0.3)
+    for (let q = 1; q < pts.length; q++) {
+      const u = 1 - q / pts.length
+      ctx.strokeStyle = rgba(b.col, 0.85 * u * own * tw)
+      ctx.lineWidth = Math.max(0.6, 0.045 * (0.4 + 0.6 * u) * k)
+      ctx.beginPath()
+      ctx.moveTo(pts[q - 1][0] * k, pts[q - 1][1] * k)
+      ctx.lineTo(pts[q][0] * k, pts[q][1] * k)
+      ctx.stroke()
+    }
+  }
+}
+
+/**
+ * A salute: a bang, not a flower. The frame's flash (`drawWash`), and where it broke a ragged puff of smoke lit from
+ * inside, white at the bang and cooling through gold to grey; through the puff, a few glitter crackles pop at random
+ * places and times, and go. No spokes, no ring, nothing at a shared radius.
+ */
+function drawSalute(pen: Pen, b: Burst, s: number): void {
+  const { ctx, k, f } = pen
+  const LIFE = 1.3
+  if (s < 0 || s > LIFE) return
+  if (b.x + 3 < f.x0 || b.x - 3 > f.x1 || b.y + 3 < f.y0 || b.y - 3 > f.y1) return
+  // The puff: thrown out at once, then spreading slowly and drifting downwind; the plan's own puff (from 0.18 s)
+  // takes it over as this one thins.
+  const size = 0.45 + 0.85 * (1 - Math.exp(-s / 0.05)) + 0.3 * s
+  const flash = Math.exp(-s / 0.045)
+  const warm = Math.exp(-s / 0.13)
+  const body = (1 - smooth(s, 0.35, LIFE)) * smooth(s, 0, 0.015)
+  const cx = b.x + WIND[0] * s
+  const cy = b.y + WIND[1] * s
+  ctx.save()
+  ctx.globalCompositeOperation = 'source-over'
+  const lobes = 7
+  for (let j = 0; j < lobes; j++) {
+    // Uneven lobes, scattered off the middle: a ragged cloud, not a disc.
+    const ang = 2 * Math.PI * hash(j, b.seed, 151)
+    const off = size * (j === 0 ? 0.1 : 0.3 + 0.35 * hash(j, b.seed, 152))
+    const x = cx + Math.cos(ang) * off * 1.25
+    const y = cy + Math.sin(ang) * off * 0.8
+    const rr = size * (0.42 + 0.38 * hash(j, b.seed, 153))
+    // Lit from inside: lobes nearer the heart of the bang catch more of it.
+    const inner = 1 - off / (size * 0.75)
+    const lit = Math.max(0, Math.min(1, flash * (0.75 + 0.25 * inner) + 0.5 * warm * Math.max(0, inner)))
+    const col = mixHex(mixHex(FW.smoke, FW.fwGold, Math.min(1, lit * 1.1)), FW.fwWhite, flash * 0.9)
+    const a = body * (0.3 + 0.5 * flash + 0.2 * lit) * (0.75 + 0.25 * hash(j, b.seed, 154))
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.scale(1, 0.75)
+    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rr * k)
+    gr.addColorStop(0, rgba(col, a))
+    gr.addColorStop(0.55, rgba(col, a * 0.6))
+    gr.addColorStop(1, rgba(col, 0))
+    ctx.fillStyle = gr
+    ctx.fillRect(-rr * k, -rr * k, 2 * rr * k, 2 * rr * k)
+    ctx.restore()
+  }
+  ctx.restore()
+  // The glitter: a few crackles, each at its own place in the puff (any distance from its middle) and its own
+  // moment, for a few frames.
+  const n = 18
+  for (let i = 0; i < n; i++) {
+    const at = 0.03 + 0.55 * hash(i, b.seed, 161) ** 1.3
+    const dur = 0.05 + 0.05 * hash(i, b.seed, 162)
+    const u = (s - at) / dur
+    if (u < 0 || u > 1) continue
+    const ang = 2 * Math.PI * hash(i, b.seed, 163)
+    const d = size * (0.1 + 0.95 * hash(i, b.seed, 164))
+    const x = cx + Math.cos(ang) * d * 1.2
+    const y = cy + Math.sin(ang) * d * 0.8 + 0.4 * (s - at)
+    const a = Math.sin(Math.PI * u)
+    // A crackle is a few grains of glitter going off together, scattered a little: no stroke, so no shape.
+    for (let g = 0; g < 4; g++) {
+      const gx = x + (hash(i, g, b.seed + 167) - 0.5) * 0.18
+      const gy = y + (hash(i, g, b.seed + 168) - 0.5) * 0.14
+      const sz = 0.025 + 0.025 * hash(i, g, b.seed + 169)
+      ctx.fillStyle = rgba(g % 3 ? FW.fwWhite : FW.fwGold, 0.95 * a)
+      ctx.fillRect((gx - sz / 2) * k, (gy - sz / 2) * k, sz * k, sz * k)
+    }
   }
 }
 
