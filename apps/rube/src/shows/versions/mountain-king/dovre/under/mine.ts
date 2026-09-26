@@ -133,8 +133,10 @@ export const mine = part<MineState>(
     // so the frame arrives with the lunge instead of whipping onto it.
     { t: FIRST_CLACK + 0.5, cells: 8.0, off: [-2.3, -1.3] },
     { t: LUNGES[0], cells: 5.15, off: [-0.9, -0.65] },
-    { t: LUNGES[2] - 0.35, cells: 5.0, off: [-0.7, -0.62] },
-    // Phrase 9: back over the whole stope, the lit gallery behind, the switch ahead; held through the switch and the buffer.
+    { t: LUNGES[1] + 0.1, cells: 5.0, off: [-0.7, -0.62] },
+    // Phrase 9: back over the whole stope, the lit gallery behind, the switch ahead; held through the switch and the
+    // buffer. The pull back starts under the third lunge, so it opens evenly over a bar and a half onto the downbeat
+    // instead of lurching out in one.
     { t: WIDE, cells: 8.2, hold: [11.0, -1.0], w: 0.7 },
     { t: ONTO, cells: 7.2, hold: [11.2, -0.8], w: 0.7 },
     { t: CRASH + 0.3, cells: 6.2, hold: [12.1, -0.45], w: 0.7 },
