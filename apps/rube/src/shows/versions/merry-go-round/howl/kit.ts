@@ -74,6 +74,8 @@ export interface PartShot {
   hold?: Pt
   w?: number
   off?: Pt
+  /** A cut on this key, on one of the part's strikes (`Shot.cut`). */
+  cut?: boolean
 }
 
 export interface Part<S = any> {
@@ -190,7 +192,7 @@ export interface Link {
 export interface Chain {
   placed: Placed[]
   /** The camera keys the parts asked for, moved into the world. */
-  shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
+  shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt; cut?: boolean }[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
   /** The parts' spans of Howl and Markl, in world cells. */

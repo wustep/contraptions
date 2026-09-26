@@ -7,6 +7,7 @@ import measured from '../../../scripts/shows/plans/merry-go-round-onsets.json'
 import { STRIKES } from '../src/shows/versions/merry-go-round/howl/hits'
 import { BEATS, CHORD, CREDITS_AT, CURSE, DURATION, HEART, ONSETS, RECORDING, SEAM, downbeats } from '../src/shows/versions/merry-go-round/howl/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/merry-go-round/howl/credits'
+import { JOLT } from '../src/shows/versions/merry-go-round/howl/plank/hearth'
 import { age, sophieAt } from '../src/shows/versions/merry-go-round/howl/age'
 import { SOPHIE_SILVER } from '../src/shows/versions/merry-go-round/howl/worlds'
 import type { CastleShow } from '../src/shows/versions/merry-go-round/howl/show'
@@ -63,7 +64,9 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
       if (d > jump) { jump = d; jumpAt = t }
     }
     const s = onScreen(t)
-    const ds = Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
+    // The camera's own cuts inside a place (on strikes, held below) may move her on the screen; nothing else may.
+    const cutHere = show.cameraCuts.some((c) => c > t - 0.001 - 1e-9 && c <= t + 1e-9)
+    const ds = cutHere ? 0 : Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
     if (ds > screen) { screen = ds; screenAt = t }
     prev = here
     prevLeg = leg
@@ -93,6 +96,27 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
   check('merry-go-round: the last tutti\'s downbeats are struck', finale.n === finale.of, `${finale.n}/${finale.of}`)
   check('merry-go-round: the curse, the slow waltz\'s hit, the climax, the heart and the last chord are struck',
     [CURSE, SEAM.field, SEAM.plank, HEART, CHORD[0]].every((t) => hit(t)), [CURSE, SEAM.field, SEAM.plank, HEART, CHORD[0]].filter((t) => !hit(t)).map((t) => t.toFixed(3)).join(', '))
+
+  // The camera cuts inside a place only on a strike, and otherwise never whips: its zoom stays under 0.6 of a scale a
+  // second, but for the punches' attacks (score.ts), the cuts between places and its own cuts, and two designed
+  // knocks (the floor bucking under the bombs, and the last chord flinging the frame open).
+  const cameraCuts = show.cameraCuts
+  const offStrike = cameraCuts.filter((c) => !all.some((s) => Math.abs(s - c) <= 0.005))
+  check('merry-go-round: the camera cuts inside a place only on a strike', offStrike.length === 0 && cameraCuts.length >= 3,
+    `${cameraCuts.length} cuts${offStrike.length ? `; off: ${offStrike.map((c) => c.toFixed(3)).join(', ')}` : ''}`)
+  const KNOCKS: [number, number][] = [[CURSE, 0.15], [SEAM.plank, 0.15], [HEART, 0.15], [JOLT, 0.06], [CHORD[0], 0.8]]
+  let whip = 0
+  let whipAt = 0
+  const ZDT = 1 / 120
+  for (let t = ZDT; t <= perf.duration; t += ZDT) {
+    if (show.owner(t) !== show.owner(t - ZDT)) continue
+    if (cameraCuts.some((c) => c > t - ZDT && c <= t + 1e-9)) continue
+    if (KNOCKS.some(([a, d]) => t >= a - 0.01 && t <= a + d)) continue
+    const z = Math.abs(Math.log(cam(t).cells / cam(t - ZDT).cells)) / ZDT
+    if (z > whip) { whip = z; whipAt = t }
+  }
+  check('merry-go-round: the camera never whips: its zoom under 0.6 of a scale a second but for the punches, its cuts and two knocks',
+    whip <= 0.6, `${whip.toFixed(2)} log/s at ${whipAt.toFixed(2)} s`)
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
   const outOfZoom: string[] = []

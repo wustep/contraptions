@@ -31,7 +31,8 @@ const T0 = 237.0
 /** The bombs: the cut, then the return's hits. */
 const HIT = [T0, 238.579, 238.997, 239.81, 241.203] as const
 const SLAM = HIT[1]
-const JOLT = HIT[3]
+/** The floor bucks: the loudest bomb, the camera knocked (the check lets its knock be quick). */
+export const JOLT = HIT[3]
 /** Where the floor's buck puts her down again: the next onset. */
 const BUCK_DOWN = 240.268
 /** The breath's one note: she lifts him. */
