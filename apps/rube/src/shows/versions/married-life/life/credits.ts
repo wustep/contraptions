@@ -1,6 +1,5 @@
 import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
-import { frame, scenery } from './kit'
 import { DURATION } from './music'
 import { CARL, ELLIE } from './worlds'
 
@@ -9,7 +8,8 @@ import { CARL, ELLIE } from './worlds'
  * (`Performance.titles`), since a show's canvas sets no type. Each comes up high in the frame, holds, and goes as
  * the next comes; the last is gone before the end, so the film ends on the house alone.
  *
- * The canvas's half is only a soft dark under the words (`credits`, below), so they read over the dusk.
+ * The canvas draws nothing for them: the camera has drawn back by then, so the first card comes over the house's upper
+ * storey, the second over its roof, and the rest over the night sky, and the words read there by themselves.
  */
 
 export interface Card {
@@ -36,8 +36,8 @@ const script: Omit<Card, 'at'>[] = [
     role: 'With',
     names: [
       // Carl is square: the page's small bar in the disc's footprint.
-      ['Carl', 'the blue square', `slab:${CARL}`],
-      ['Ellie', 'the coral ball', ELLIE],
+      ['Carl Fredricksen', 'the blue square', `slab:${CARL}`],
+      ['Ellie Fredricksen', 'the coral ball', ELLIE],
     ],
   },
   { hold: 4.4, role: 'Music', names: ['Michael Giacchino'], notes: ['“Married Life”', 'from Up (2009)'] },
@@ -83,43 +83,6 @@ export function creditsAt(t: number): TitleCard[] {
   })
   return out
 }
-
-/**
- * How dark the bed under the words is at `t`: up with the first card, down after the last. The first cards come over
- * the lit house front and want it; by the third the camera has pulled back and night has fallen, and the words stand
- * on the dark sky by themselves, so it thins to a breath there instead of lying on the sky as a smudge.
- */
-const NIGHT = 237
-const bedAt = (t: number): number =>
-  clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8)) * (1 - 0.75 * easeInOutCubic(clamp((t - (NIGHT - 5)) / 5)))
-
-/** The canvas's half: a soft dark where the words come, over everything. */
-export const credits = scenery<null>({
-  name: 'credits',
-  draw: () => {},
-  over: (p, _s, c) => {
-    const bed = bedAt(c.t)
-    if (bed <= 0.001) return
-    const { k } = c
-    const f = frame(p, k)
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const w = f.x1 - f.x0
-    const h = f.y1 - f.y0
-    const cx = (f.x0 + w * AT[0]) * k
-    const cy = (f.y0 + h * (AT[1] + 0.13)) * k
-    const rx = w * 0.36 * k
-    ctx.save()
-    ctx.translate(cx, cy)
-    ctx.scale(1, 0.42)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(20, 18, 24, ${0.42 * bed})`)
-    g.addColorStop(0.6, `rgba(20, 18, 24, ${0.22 * bed})`)
-    g.addColorStop(1, 'rgba(20, 18, 24, 0)')
-    ctx.fillStyle = g
-    ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
-    ctx.restore()
-  },
-})
 
 /** For the check: the credits start after he has sat down, and the last card is gone before the end. */
 export const CREDITS_OK = CREDITS_AT >= 220 && LAST_GONE <= DURATION - 1

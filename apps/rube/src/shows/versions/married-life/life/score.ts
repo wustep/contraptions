@@ -7,7 +7,6 @@ import { CUT, DURATION, SEAM } from './music'
 import { LifeShow, type Leg, type Spans, type WorldSet } from './show'
 import { CARL, type WorldKey } from './worlds'
 import { cast, type CastState } from './cast'
-import { credits } from './credits'
 import { churchSet, CHURCH_BOX } from './church/church'
 import { wedding, WEDDING_AT } from './church/wedding'
 import { funeral, FUNERAL_AT } from './church/funeral'
@@ -89,8 +88,7 @@ const SETS = (): Record<WorldKey, WorldSet> => ({
       standing(front, 0, 0, boxed(FRONT_BOX), null, DURATION),
       standing(inside, INSIDE_AT[0], INSIDE_AT[1], boxed(INSIDE_BOX, INSIDE_AT), null, DURATION),
     ],
-    // The soft dark under the end credits' words.
-    after: [standing(credits, 0, 0, boxed(FRONT_BOX), null, DURATION)],
+    after: [],
   },
   hill: { scenery: [standing(hillSet, 0, 0, boxed(HILL_BOX), null, DURATION)], after: [] },
   clinic: { scenery: [standing(clinicSet, 0, 0, boxed(CLINIC_BOX), null, DURATION)], after: [] },

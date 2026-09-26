@@ -112,16 +112,20 @@ function shotsFor(): PartShot[] {
     key(212.6, 4.1, 3.4, -1.55),
     key(215.6, 3.8, 2.75, -1.65),
     key(ALONE.sit, 3.6, 2.2, -1.7),
-    // Slowly in on the two chairs, his and hers with the balloon over it, in the lamp's light.
-    key(224.4, 3.15, 2.4, -1.85),
-    // The credits: drawing back without a stop to the whole house at night, the roof below the words by the third
-    // card, and on, slower, to the end: the house small under the stars.
-    key(229.5, 4.8, 2.6, -2.25),
-    key(234.0, 8.2, 3.4, -3.55),
-    key(239.0, 13.6, 4.1, -5.6),
-    key(247.0, 16.8, 4.2, -6.05),
-    key(255.0, 20.0, 4.25, -6.55),
-    key(DURATION, 21.4, 4.25, -6.8),
+    // Slowly in on the two chairs, his and hers with the balloon over it, until he reaches over and the lamp comes on.
+    key(ALONE.lamp, 3.2, 2.3, -1.8),
+    // From the lamp, one long draw back without a stop: the lit window, the house at dusk, the roof and the sky, and
+    // on, slower and slower, to the end: the house small under the stars. The first card comes over the upper storey,
+    // the second over the roof, the rest over the sky. He stays inside the Zoom frame (a third of its height from
+    // its middle) the whole way.
+    key(225.2, 4.1, 2.5, -2.05),
+    key(228.3, 6.4, 3.0, -2.6),
+    key(232.3, 9.4, 3.6, -3.55),
+    key(236.5, 12.8, 4.1, -4.6),
+    key(241.0, 15.4, 4.2, -5.35),
+    key(247.0, 17.0, 4.2, -5.8),
+    key(255.0, 20.4, 4.25, -6.5),
+    key(DURATION, 21.6, 4.25, -6.85),
   ]
 }
 
