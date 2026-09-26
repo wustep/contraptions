@@ -52,6 +52,12 @@ const DRIFT1 = 301.25
 const DRIFT = 3.2
 /** How steep the stair of air is it walks up (cells up a cell along). */
 const SLOPE = 0.27
+/** The breath's two-shot on the porch: how many cells tall, where the camera sits from her, when it goes back (the
+ * pull-back to the chord's frame runs from there to 302.2, easing into the hit). */
+const TWO = 7.4
+const TWO_OFF: Pt = [0.85, -0.6]
+const TWO_IN = 300.4
+const TWO_OUT = 301.0
 
 /* ------------------------------------------------------------------ placing the castle on the plank */
 
@@ -203,7 +209,8 @@ function poseAt(t: number): CastlePose {
     noLegs: t < UNFOLD1,
     modules: mods,
     lights: smooth(t, 299.3, 301.6),
-    door: smooth(t, 299.4, 300.6),
+    // It swings open behind the two of them once the camera is in on the porch.
+    door: smooth(t, 299.95, 300.95),
     dial: 0,
     eye: 0.35 * smooth(t, FACE, FACE + 0.1) + 0.65 * knock(t - FACE, 0.5),
     jaw: 0.7 * Math.max(0, ring(t - FACE, 1.1, 0.5)),
@@ -622,6 +629,39 @@ function drawFire(p: p5, k: number, t: number, L: Look) {
   drawChimneyFire(p, k, t, ex, ey, f, ROARS)
 }
 
+/**
+ * The room's light out of the open door onto the porch, where the two of them stand: a long low wash on the iron
+ * round the doorway and a pool along the porch's boards under their feet, warm (the hearth's). Soft all the way out
+ * from its middle (no rim, no core), so it lights them and never reads as a round thing by them. It opens with the
+ * door and stays lit under the credits, so as the castle goes small the porch is the warm point where they are.
+ */
+function porchLight(t: number, ctx: CanvasRenderingContext2D, k: number, L: Look) {
+  const a = smooth(t, 299.95, 300.95) * (L.pose.lights ?? 0) * (1 + 0.6 * smooth(t, 304, 312))
+  if (a < 0.01) return
+  const warm = rgbHex(mixHex(WASTES.window, CALCIFER.body, 0.35))
+  const wash = (at: Pt, rx: number, ry: number, alpha: number) => {
+    const [x, y] = onCastle(L, at)
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.scale(1, ry / rx)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+    g.addColorStop(0, `rgba(${warm}, ${alpha})`)
+    g.addColorStop(0.35, `rgba(${warm}, ${0.6 * alpha})`)
+    g.addColorStop(0.7, `rgba(${warm}, ${0.18 * alpha})`)
+    g.addColorStop(1, `rgba(${warm}, 0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(0, 0, rx * k, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
+  const [dx, dy] = CASTLE.door
+  // On the iron round the doorway, leaning out toward them.
+  wash([dx - 0.45, dy - 1.0], 2.3, 1.45, 0.2 * a)
+  // The pool along the boards, from the sill out past where they stand.
+  wash([dx - 0.9, dy + 0.05], 1.8, 0.38, 0.34 * a)
+}
+
 /* ------------------------------------------------------------------ the stair of air: a cloud under every foot */
 
 /**
@@ -819,6 +859,7 @@ export const flight = part<null>(
         p.pop()
       }
       flareWindows(p, k, t, L)
+      porchLight(t, p.drawingContext as CanvasRenderingContext2D, k, L)
       footClouds(p, k, t, false)
       flying(true)
       lockBreath(p, k, t, L)
@@ -864,6 +905,9 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
+    // The two-shot on the porch: the camera this far from her (cells), so the pair sit low and left of middle with
+    // the door and its hood over Howl's shoulder.
+    const two = (t: number, cells: number): PartShot => ({ t, cells, off: TWO_OFF, w: 0 })
     // The chord's frame: the whole castle, big, from the cloud under its first foot to the fire over its chimney,
     // set a little right of middle so the smoke rolls back into the open left. Placed where it is on the chord.
     const O = look(CHORD[0]).O
@@ -878,11 +922,17 @@ export const flight = part<null>(
       hold(295.9, 22, mid(FACE + 0.2, 0.5, 0.2)),
       hold(297.1, 28.5, mid(HOUSE + 0.3, 0.6, -2.0)),
       hold(298.6, 31, mid(298.6, 0.8, -3.2)),
-      hold(299.2, 30, mid(299.2, 0.5, -2.8)),
-      // The breath, one slow settle onto the chord's frame as the windows light, the door swings open behind the two
-      // of them and its legs let down onto the air; then held, still, for the chord (the first foot down on a cloud,
-      // the three roars of fire, every window flaring, the smoke rolling up and back).
-      hold(302.0, 31, chordAt),
+      hold(299.15, 30, mid(299.15, 0.5, -2.8)),
+      // The breath is theirs: in to the porch, a two-shot of the two of them side by side (her silver, his
+      // cornflower) as the windows light and the door swings open on the warm room behind them, drifting with the
+      // castle as it goes out over the gorge.
+      two(TWO_IN, TWO),
+      // Easing out a little as the door opens, so the pull-back grows out of it with no stop.
+      two(TWO_OUT, TWO + 0.4),
+      // Then back, easing all the way into the hit, to the whole castle as its legs let down onto the air; held,
+      // still, for the chord (the first foot down on a cloud, the three roars of fire, every window flaring, the
+      // smoke rolling up and back).
+      hold(302.2, 31, chordAt),
       hold(302.95, 31, chordAt),
       hold(304.0, 37, mid(304.0, -8.5, -5.5)),
       // Then with it, up the sky, going small, under the credits.
