@@ -9,13 +9,15 @@ of the label's YouTube upload). In the picker it is **Caravan**, one take, **Opu
 ## What it is
 
 A Rube Goldberg machine plays "Caravan" from the *Whiplash* soundtrack, the film's finale with Andrew Neiman's drum
-solo. It plays the whole recording, 9:15, untouched, and the credits run on for 21 s in silence over the dark hall:
-576 s in all, the longest show in the catalogue. It tells the film in order over the music.
+solo. It plays the whole recording, 9:15, untouched, and the credits run on for 20 s in silence over the dark hall:
+575.5 s in all, the longest show in the catalogue. It tells the film in order over the music.
 
 - **Andrew Neiman is the yellow ball** (`#F2B233`), the thread. Every strike is his.
 - **Terence Fletcher is the black ball** (`#1E1C1B`) on a conductor's rig: a black column, a chest, two long arms
   and pale hands. The hands are his instrument, in four shapes: open (hold), beat (time), point ("you") and the
-  fist. The fist closes once, on the last stroke of the recording.
+  fist. He conducts small and tight at the chest, the way the film's Fletcher does; his arms go overhead only to
+  hold a chord. The fist closes once, on the last stroke of the recording. His ball carries no rolling mark: it is
+  a head, and the house's spin dot read as an eye.
 - **Jim Neiman, his father, is the blue-grey ball** (`#8FA7BD`), at Carnegie Hall only.
 - **Carl Tanner is the olive ball** (`#8C8F66`), in the band room and at the competition only.
 - **Blood** is one dab on the practice kit's snare head, at night, from the stroke that makes it. Nowhere else.
@@ -69,18 +71,18 @@ strike is on the music by construction (`whiplash/kit.ts`, after Liftoff's and E
 
 | Show s | Part | File | What happens |
 | ---: | --- | --- | --- |
-| 0 | practice | `shaffer/practice.ts` | The film's first shot: down a long dark corridor to one lit practice room. He drops onto the kick pedal and plays the intro's groove across the old oxblood kit, a strike on every stroke; the lamp sways on its cord. On the bass (21.11) Fletcher is in the doorway. He keeps time faster, points ("you"), and goes. Andrew follows him out down the corridor. |
-| 30.65 | band | `shaffer/band.ts` | The studio band in its tiered room. He comes down the tiers a step a bar, Fletcher points him to the alternate's chair, and he turns Tanner's pages. On the tutti the trumpets stand. Fletcher puts him on the kit. |
-| 80.79 | tempo | `shaffer/tempo.ts` | "Not quite my tempo." Fletcher's hand keeps time on the snare's far side: rushing, dragging, the palm slammed flat. The chair thrown on a big hit (he ducks behind the snare; it hits the back wall and lies behind the kit). The counted slaps by his ear. Tanner gets the kit back and Andrew goes out the far door on the band's last hit. |
-| 130.5 | night | `shaffer/night.ts` | The practice room at night. He knocks the pull-cord and the lamp comes on. The drill rig (two sticks on hinged posts) against the metronome, faster and faster; the red dab on the head; a plunge into the ice water; the tape wound on the bleeding stick's grip. On the last stroke the bulb pops and the room goes dark round him. |
+| 0 | practice | `shaffer/practice.ts` | The film's first shot: down a long dark corridor to one lit practice room. He drops onto the kick pedal and plays the intro's groove across the old oxblood kit, a strike on every stroke; the camera goes in close on the snare and the hi-hat for the backbeat and out with him down the toms for the fill; the lamp sways on its cord. On the bass (21.11) Fletcher is black in the doorway against the corridor's light. He keeps time, points ("you"), and goes. Andrew follows him out down the corridor. |
+| 30.65 | band | `shaffer/band.ts` | The studio band in its tiered room. He comes down the tiers a step a bar, Fletcher points him to the alternate's chair, and he turns Tanner's pages. Tanner plays every beat on his snare while Andrew taps the same time on his chair; on the tutti the trumpets stand; a look across at the band at work. Fletcher puts him on the kit. |
+| 80.79 | tempo | `shaffer/tempo.ts` | "Not quite my tempo." Fletcher's hand keeps time on the snare's far side: rushing, dragging, the palm slammed flat. The chair thrown on a big hit (he ducks behind the snare; it hits the back wall and lies behind the kit). The counts, each its own beat: a two-shot for the count-in, close on the palm slapped down by his ear. The last trial wide and clean, one push onto the last stop. Tanner gets the kit back and Andrew goes out the far door on the band's last hit. |
+| 130.5 | night | `shaffer/night.ts` | The practice room at night. He knocks the pull-cord and the lamp comes on. The drill rig (two sticks on hinged posts) against the metronome, faster and faster, framed to the tune's phrases: close on the sticks, back to the clock and the bulb, in on the red dab when it comes; a plunge into the ice water; close on the tape wound on the bleeding stick's grip. On the last stroke the bulb pops and the room goes dark round him. |
 | 172.07 | folder | `road/folder.ts` | Match cut to Overbrook, backstage. Tanner leaves his folder with Andrew; Andrew goes to the vending machine; the folder is gone. Fletcher sends him to the kit and he plays the performance from memory: the core seat. Out through the loading door into the rental car. |
-| 205.92 | crash | `road/crash.ts` | The drive: every sodium lamp lights on the beat as he passes under it. The truck's high beams, the brakes, and the twelve stop-time breaks as the crash, one impact a hit. He drops out of his belt, crawls out from under the hood, and goes on into the dark. |
-| 242.34 | sabotage | `carnegie/sabotage.ts` | Match cut to Carnegie Hall, waking on the chorus's first big hit. Fletcher flings the wrong chart onto Andrew's stand; his kit stays silent while the band plays past him. He goes to the stage door and his father holds him there under the held chord. He turns back, lands on the snare as Fletcher's open hands cut the band off, and counts himself in. |
-| 270.52 | solo | `carnegie/solo.ts` | The solo. A drummer's frame of chrome hardware flies in from the flies; he leaps into the cup at its top and it plays as his body: two jointed arms with sticks, a shin on the kick pedal, his head bouncing on the accents. A stick thrown end over end and caught for the biggest hit. |
-| 323.27 | hush | `carnegie/hush.ts` | The hush. He lands on the crash and knocks it askew. Fletcher comes down off his podium, rises on his column, and sets it straight with one hand, and looks at him. The bursts round the toms; the crash again, and it holds. The camera finds his father at the stage door. |
-| 369.98 | fast | `carnegie/fast.ts` | The build. A treadle engine rises from the stage: he stomps its lever (every stomp a kick), a flywheel spins up, a camshaft throws two sticks at the snare, one stroke a stomp and then a 70 ms roll. Fletcher, on his podium, starts to conduct him. |
-| 423.34 | rubato | `carnegie/rubato.ts` | The show's heart. A walnut metronome rises behind the kit and he rides its weight. The rod strikes the ride at one end of its swing and the crash at the other, on every one of the 162 strokes; he climbs the rod as it slows and slides down as it quickens, the way a real metronome's weight sets its period. The roll is a shimmer. The rod tosses him onto the snare on the burst. |
-| 504.0 | finale | `carnegie/finale.ts` | The kick march round the toms as the metronome sinks; the drummer's frame comes down again and he leaps into its cup. The long roll, both sticks a blur on the snare. Fletcher crosses to the kit, rises to Andrew's height and nods, once; Andrew nods back. The last fill; both sticks up through the silence; the band's last chord; and the fist. The hall goes dark under the credits. |
+| 205.92 | crash | `road/crash.ts` | The drive: low and close on him at the wheel, every sodium lamp lighting on the beat as he passes under it; then long and high as the truck's high beams flash far ahead, the two of them in one frame, closing. The brakes, and the twelve stop-time breaks as the crash, one impact a hit. He drops out of his belt, crawls out from under the hood, and goes on into the dark. |
+| 242.34 | sabotage | `carnegie/sabotage.ts` | Match cut to Carnegie Hall, waking on the chorus's first big hit. Fletcher flings the wrong chart, tumbling, onto Andrew's desk; his kit stays silent while the band plays past him: three tries on the chorus's beats, each smaller, and nothing. A look from the chart to Fletcher and back. He goes to the stage door and his father holds him there under the held chord. He turns back, lands on the snare as Fletcher's open hands cut the band off, and counts himself in. |
+| 270.52 | solo | `carnegie/solo.ts` | The solo. A drummer's frame of chrome hardware flies in from the flies; he leaps into the cup at its top and it plays as his body: two jointed arms with sticks, a shin on the kick pedal, his head nodding down onto the accents. The camera picks a subject per key (the snare, the crash with his head, the pedal, the wide with Fletcher watching). A stick thrown end over end and caught for the biggest hit. |
+| 323.27 | hush | `carnegie/hush.ts` | The hush. He lands on the crash and knocks it askew. Fletcher comes down off his podium, stops short of the bass, rises on his column, sets it straight with one hand, and leans in to look at him. The bursts round the toms, the camera close and going with him drum to drum; the crash again, and it holds. Across the dark stage to his father in the wings' light, leaning to see his son, and back. |
+| 369.98 | fast | `carnegie/fast.ts` | The build. An engine rises from the stage: he rides and stomps its sprung treadle (every stomp a kick), a small flywheel spins up, and two trip-hammer sticks under a short arm, cammed, beat the snare, one stroke a stomp and then a 70 ms roll. Fletcher, on his podium, starts to conduct him. |
+| 423.34 | rubato | `carnegie/rubato.ts` | The show's heart. A walnut metronome with its works exposed rises behind the kit and he rides the weight on its short arm; the long arm's bob strikes the ride's rim at one end of its swing and the crash's at the other, on every one of the 162 strokes; he climbs as it slows and sits down as it quickens, the way a real metronome's weight sets its period. The roll is a trembling rod and a blur, him held still on it, the hall's light rising; the machine crouches, flings him onto the snare on the burst, and the light slams up. |
+| 504.0 | finale | `carnegie/finale.ts` | The kick march round the toms as the metronome sinks; the drummer's frame comes down again and he leaps into its cup. The long roll, low and close on the blur of both sticks. Fletcher crosses to the kit, rises to Andrew's height, leans in and nods, once, deep and held; Andrew tips toward him and nods back. Fletcher stays by the kit. The last fill; both sticks up through the silence, his hands up for the band; the band's last chord; and the cut-off: his open left hand circles up and comes down hard, closing on the last stroke, the fist between the two of them. The hall goes dark under the credits. |
 
 ## Craft notes
 
@@ -101,7 +103,21 @@ strike is on the music by construction (`whiplash/kit.ts`, after Liftoff's and E
 - **The roll is drawn, not struck.** Where the music runs together (the build's roll, the rubato's swell, the
   finale's long roll), nothing hits. A blur, a shimmer, a trembling head (`hall.ts` `kitSince`).
 - **Fletcher's arms blend the short way round.** A linear blend from hanging to raised swings the arm across the
-  chest; `conductor.ts` turns each upper arm the short way.
+  chest; `fletcher.ts` `blendPose` turns each upper arm the short way, everywhere.
+- **Fletcher conducts from one pattern.** `beatPose` reaches the hand to chest-height targets (two-link IK, the
+  elbow low and out): the hand falls into the ictus with a flick of the wrist, rebounds, floats at chin height. The
+  first version parked both arms overhead and read as "hooray". The band room's own pattern now calls it too.
+- **Leaning.** `drawConductor` takes `base` (the column's foot): the head can lean off it, the chest and arms tipped
+  with the column, the foot planted. The hush's look and the nod use it.
+- **The fist.** Side on, 1.3 times an open hand, one rounded block with the thumb across it and a single ridge. Four
+  knuckle bumps on the end read as fingertips (a wave). It is struck with his left hand, on the house's right, over
+  clear wall: his right side is all the frame's arm and sticks.
+- **Company without a mark.** `ShowBall.spin` (engine, opt-in): `null` draws no spin dot. Only Fletcher sets it.
+- **The credits find clear wall.** From the cut-off the camera pulls back and up until the machine sits in the lower
+  half of the frame; on a tall screen (a phone held upright) `credits.ts` sets the cards high in the empty band
+  over the stage instead of the 16:9 box's top.
+- **No outlines on the building.** The rooms' walls and ceilings are filled planes; ink contours round them ran as
+  stepped hairlines at the frame's edges and as long verticals at the corridor seams.
 - **The fist is checked.** `check:shows` walks `poseAt` from the solo to the end and fails if a fist shows before
   the final cut-off.
 - **Traps.** A Vite reload during a shot freezes every later frame. `dev/shot.mjs` below about 900 px wide puts the
@@ -114,7 +130,7 @@ strike is on the music by construction (`whiplash/kit.ts`, after Liftoff's and E
 npx vite --port 8931 --strictPort                 # then /shows/?show=caravan&take=opus55
 npm run check:shows                               # the Caravan block is apps/rube/checks/caravan.ts
 node dev/shot.mjs --from 323 --to 370 --n 24 --out hush.png   # contact sheets (untracked dev/ tools)
-node dev/film.mjs --from 500 --to 575.8 --out end.webm        # 1x film, reports fps
+node dev/film.mjs --from 500 --to 575.4 --out end.webm        # 1x film, reports fps
 node dev/caravan-card.mjs                         # this take's share card at its still (338.5 s)
 ```
 
