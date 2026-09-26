@@ -4,7 +4,7 @@ import { alpha, box, hash, part, route, smooth, type Ctx, type PartShot, type Wa
 import { beat, FF } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { quake } from '../rock'
-import { PLAN, SEAM_SHOT } from '../seams'
+import { HEART_SHOT, PLAN, SEAM_SHOT } from '../seams'
 import { STONE, WORKS } from '../worlds'
 import { BEGIN, BLOWS, BURST, BURST_B, BURST_X, DRUM2, DRUM3, DRUMMERS, END, FLOOR, LANDINGS, SHAFT, THROUGH, farEdge, landY, onSkin, type Drummer } from './drum-clock'
 import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light } from './drum-set'
@@ -372,9 +372,10 @@ export const drum = part<DrumState>(
   },
   (slot): PartShot[] => [
     { t: slot.begin, ...SEAM_SHOT },
-    // The kettle's three strokes (the camera settling on them, drifting the way he will be thrown), then its throw.
-    { t: beat(161.2), cells: 6.1, off: [0.5, -0.7] },
-    { t: beat(162.4), cells: 6.3, off: [0.9, -0.9] },
+    // The kettle's three strokes: the landing settles first (the camera eases out of the dive onto him on the kettle,
+    // a held point, over a beat), and only then leans the way he will be thrown.
+    { t: beat(161.2), cells: 6.1, hold: [-0.2, -0.55], w: 0.75, off: [0.2, -0.3] },
+    { t: beat(162.4), cells: 6.3, hold: [1.2, -1.1], w: 0.35, off: [0.9, -0.9] },
     // On the war-drum: close, the drummers over him.
     { t: beat(164.6), cells: 6.0, hold: [4.6, -2.0], w: 0.4 },
     // A slow push in as the second drummer comes up, then back out for the throw.
@@ -394,9 +395,10 @@ export const drum = part<DrumState>(
     { t: beat(187), cells: 7.6, hold: [11.3, -3.6], w: 0.9 },
     // The fortissimo: opening out as he comes down onto the skin, wide on the blow: the great drum whole, the skin
     // bursting, its drummers thrown off their galleries, the war-drum's pair still pounding, the pit's mouth under it.
-    // Then down the pit after him (the seam's key).
+    // Then down the pit after him, only tilting and a little closer, onto the heart's wide seam (`HEART_SHOT`: the
+    // machine he falls into already in the frame).
     // (A little of the follow in it, so the frame is already going down with him on the blow, not stopped there.)
     { t: FF, cells: 9.0, hold: [10.6, -2.0], w: 0.8 },
-    { t: slot.end, ...SEAM_SHOT },
+    { t: slot.end, cells: HEART_SHOT.cells, hold: [HEART_SHOT.world[0] - 46, HEART_SHOT.world[1] - 25], w: HEART_SHOT.w },
   ],
 )
