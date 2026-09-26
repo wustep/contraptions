@@ -524,10 +524,10 @@ export const hearth = part<HearthState>(
       [237.6, -0.72, 4.0],
       [JOLT, -0.7, 3.86],
       [241.2, -0.64, 3.7],
-      [242.5, -0.5, 3.5],
+      [242.5, -0.36, 3.5],
       // Low enough that the door's dial is wholly out of the top of the frame, never half on its edge.
-      [243.45, -0.4, 3.4],
-      [slot.end, -0.4, 3.4],
+      [243.45, -0.3, 3.4],
+      [slot.end, -0.3, 3.4],
     ]
     const base = director(() => [0, 0], coarse.map(([t, hy, cells]): Shot => ({ t, cells, hold: [0, hy], w: 1 })), slot.end + 1)
     // The knock: the frame thrown down and aside at once (the room jumping up in it) and rung down, each swing a
