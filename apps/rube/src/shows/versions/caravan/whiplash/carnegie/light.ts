@@ -10,7 +10,9 @@ import { BIG, SHIFT, UNWIND } from './fast-clock'
  *
  * The cues are on the music, sharp on their attacks and long in their releases:
  *
- *   269.5   the cut-off: the band down, a pool on the kit, the stage round it a quarter dark (the solo)
+ *   243.3   the last chorus (the sabotage): the stage wakes on its first big hit; the light settles on the band and
+ *           Fletcher, his silent kit at the edge of it, the wings a little dark round the stage door
+ *   269.5   the cut-off: the band down, a pool on the kit, the stage round it dark (the solo): the light finds him
  *   323.27  the hush: cooler and darker, a small pool, half dark round it; Jim's door the one other warm island
  *   369.98  the build: warm back up in three steps on its phrases (the landing, the big kick, the shift), full by 383
  *   405.6   the lit wide: the whole stage and the band watching; down through the unwind
@@ -25,8 +27,7 @@ import { BIG, SHIFT, UNWIND } from './fast-clock'
  *   548.56  the cut-off: in 0.15 s everything drops to a spot on the two of them and the fist
  *   550.3   the credits: one slow, even fade to near black, the balls last
  *
- * Before the cut-off (the sabotage) the hall keeps the light it had: the whole stage, waking on the chorus's first
- * big hit.
+ * Before the board takes over (the match cut from the road) the stage is dark, and wakes on the chorus's first big hit.
  */
 
 export interface Cue {
@@ -83,10 +84,10 @@ const curve = (e: Ease, u: number): number => {
 export const LIGHTS_UP = 243.297
 const wake = (t: number): number => (t < LIGHTS_UP + 0.5 ? 0.12 + 0.88 * easeInOutSine(clamp((t - (LIGHTS_UP - 0.08)) / 0.35)) : 1)
 
-/** Where the board takes over from the sabotage's light. */
-export const CUE_FROM = CUTOFF - 0.3
+/** Where the board takes over: the stage awake. */
+export const CUE_FROM = LIGHTS_UP + 0.5
 
-/** The sabotage's light (the whole stage, waking at `LIGHTS_UP`), and the level every cue starts from. */
+/** The stage waking at `LIGHTS_UP` (the whole stage), and the level every cue starts from. */
 function stage(t: number): Cue {
   const w = wake(t)
   return {
@@ -119,8 +120,11 @@ const HEADS_Y = -2.6
 
 /** The cue sheet. */
 const GOS: Go[] = [
-  // The cut-off before the solo: the band down into the dark, a pool gathering on the kit and the frame's height.
-  { at: CUE_FROM, fade: SOLO + 0.35 - CUE_FROM, set: { wall: 0.7, cx: -0.8, cy: -0.9, rx: 5.0, ry: 4.0, pool: 1, beam: 1, fl: 0.65, kit: 1 } },
+  // The last chorus: the band's. The light settles on the band and Fletcher conducting it past the silent kit, which is
+  // left at the edge of it; the wings and the stage door a little dark (the door's own light swells there).
+  { at: CUE_FROM, fade: 3.5, set: { wall: 0.5, cx: 7.0, cy: -1.2, rx: 9, ry: 6.2, dark: 0.24, beam: 0.28 } },
+  // The cut-off before the solo: the band down into the dark, and the light finds him: a pool gathering on the kit.
+  { at: CUTOFF - 0.3, fade: SOLO + 0.35 - (CUTOFF - 0.3), set: { wall: 0.7, cx: -0.8, cy: -0.9, rx: 5.0, ry: 4.0, pool: 1, beam: 1, fl: 0.65, kit: 1 } },
   { at: CUTOFF, fade: 2.4, set: { band: 0.12, dark: 0.3, wash: 0.07, house: 0.45 } },
   // The hush: cooler and darker, a small pool, half dark round it.
   { at: HUSH, fade: 1.5, set: { wall: 0.4, cx: -0.9, cy: -1.15, rx: 3.2, ry: 2.9, cool: 0.35, dark: 0.5, band: 0.05, beam: 0.55, pool: 0.7, wash: 0.04, house: 0.3 } },
