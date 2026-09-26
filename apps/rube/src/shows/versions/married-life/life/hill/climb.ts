@@ -1,34 +1,38 @@
 import type p5 from 'p5'
-import { R, type Pt, type Seg } from '../../../../../parts'
+import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { HALF } from '../cast'
-import { box, carried, part, smooth, type Company, type Pose } from '../kit'
+import { alpha, box, carried, part, smooth, type Company, type Pose } from '../kit'
 import { CUT } from '../music'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
-import { LANE_Y, ridge, ridgeSlope, STEP } from './hill'
+import { HILL, HOME, INK } from '../worlds'
+import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
 
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
  *
  * They come along the lane at the hill's foot, walking right, Ellie a step ahead as she always is, the picnic basket
- * (the tickets in it) on Carl's top. At the stone step where the path leaves the lane he stops, and for once he leads:
- * he steps up (169.482) and starts up the skyline toward the tree on the crest, the picnic place, eager with his
- * surprise. She has gone on a little; she comes back, and follows him up the step, slowly (171.543).
+ * (the tickets in it) on Carl's top. At the fieldstone where the path leaves the lane he stops, and for once he
+ * leads: he steps up onto it (169.482) and starts up the flank toward the tree on the crest, the picnic place, eager
+ * with his surprise. She has gone on a little; she comes back, and follows him up onto the stone, slowly (171.543).
  *
- * The held note: he climbs, slower and slower; she has only just made the step. She rests there. She tries the slope,
- * a little. He stops and turns to look back at her. She lets go: she rolls back across the step and over its edge,
- * the smallest drop, and down onto the lane (174.672), and rolls a little way along it and comes to rest. No hit on
- * her: the strike is the basket, thrown off his top as he starts, landing on the path behind him (174.672), and
- * tipping over onto its side (175.409). He stands a moment; then he goes back down to her, old and careful, off the
- * step (178.556), and along the lane, and comes to rest beside her with a little space between them (`CUTS.hospital`:
+ * The held note: he climbs, slower and slower, and stops to wait for her, turned to look back. She climbs the flank
+ * behind him, a good length of it, tiring: she stops to rest, goes on, and can go no further. She slips a little,
+ * and on 174.672 she gives way: she rolls back down the whole length she climbed, across the stone and off it onto
+ * the lane (176.060), one small bounce (176.274), and a long, slow roll along the lane to rest. No hit on her: the
+ * struck thing is the basket, thrown off his top as he starts toward her, landing on the path behind him (174.672)
+ * and tipping over onto its side (175.409). Then he goes back down to her, old and careful, off the stone
+ * (178.556), and along the lane, and comes to rest beside her with a little space between them (`CUTS.hospital`:
  * Ellie at +0.45, level). The basket lies where it fell, up the path.
  *
- * The camera: from the cut's framing out to a long shot of the whole hill, the two of them small on its flank below
- * the tree; in on the two of them as she falters; and slowly down with him to her.
+ * The camera: from the cut's framing it keeps pulling out to the establishing shot of the whole hill (the tree on
+ * its crest, the two of them small at its foot), holds it while he climbs, pushes in on the two of them as she
+ * climbs and tires, and has settled on them before she gives way (3.4 cells by 173.8); then it goes slowly with her
+ * down to the lane, and on to him beside her.
  */
 
-/** Where Carl comes in, in the hill's cells: on the lane, a little short of the step. */
-const START_X = STEP.x1 + 0.14 - 0.36
+/** Where Carl comes in, in the hill's cells: on the lane, a little short of the stone (he stops clear of it). */
+const START_X = STEP.x1 + 0.24 - 0.36
 
 /** Where this part's entry cell is, in its world's cells (the score starts its leg here). */
 export const CLIMB_AT: Pt = [START_X + 0.5, LANE_Y]
@@ -41,13 +45,13 @@ const L = (x: number, y: number): Pt => [x - CLIMB_AT[0], y - CLIMB_AT[1]]
 /* ------------------------------------------------------------------ the times */
 
 const T = {
-  /** He stops at the step, and steps up onto it. */
+  /** He stops at the stone, and steps up onto it. */
   stop: BEGIN + 1.2,
   up: 169.1,
   onStep: 169.482,
   go: 169.7,
-  /** He stands on the slope and looks back. */
-  top: 173.9,
+  /** He stops on the slope to wait for her, and looks back. */
+  top: 173.3,
   /** He starts, and the basket is thrown; it lands, and it tips over. */
   jolt: 174.42,
   fall: 174.672,
@@ -57,25 +61,64 @@ const T = {
   edge: 178.15,
   offStep: 178.556,
   lane: 178.8,
-  beside: 180.0,
+  beside: 180.05,
 }
 
-/** Her times: past the step, back, up the step, the rest, the try, the letting go, the drop, the roll. */
+/** How long a fall off the stone takes, from its top to the lane (0.13 cells, at the house's gravity, 12). */
+const DROP_T = Math.sqrt((2 * (LANE_Y - STEP.y)) / 12)
+
+/** Her times: past the stone, back, up onto it, the climb, the rest, the last push, the slip, the fall, the settle. */
 const E = {
   stop: 169.639,
   back: 170.05,
   foot: 171.2,
   hop: 171.25,
   onStep: 171.543,
-  on: 171.9,
-  rest: 172.9,
-  push: 173.35,
-  still: 173.75,
-  go: 173.95,
-  edge: 174.525,
-  land: 174.672,
-  rest2: 175.95,
+  /** Up the flank after him, eager at first, tiring; she stops to rest. */
+  on: 171.66,
+  rest: 172.62,
+  /** On again, slower; and she can go no further. */
+  push: 173.02,
+  still: 173.9,
+  /** She starts to slip, the smallest way; and she gives way. */
+  sag: 174.3,
+  give: 174.672,
+  /** Off the stone's edge, onto the lane, one small bounce, and the long slow roll to rest. */
+  edge: 176.06 - DROP_T,
+  land: 176.06,
+  bounce: 176.274,
+  rest2: 176.274 + 2.4,
 }
+
+/* ------------------------------------------------------------------ her fall, worked out once */
+
+/** Her places: where she lands on the stone, where she stops to rest, how far up the flank she gets. */
+const TREAD = STEP.x1 - 0.15
+const MID = STEP.x0 - 0.5
+const HIGH = STEP.x0 - 1.0
+/** How fast she is slipping back when she gives way (cells/s, downhill), and where she is then. */
+const SLIP_V = 0.15
+const GIVE_X = HIGH + (SLIP_V * (E.give - E.sag)) / 2
+/**
+ * The roll back down: her speed eases up from the slip toward a steady roll (grass and straw hold her back), and she
+ * leaves the stone's edge at `E.edge`. `v(τ) = VMAX - (VMAX - SLIP_V) e^(-τ/TC)`, VMAX chosen so she gets there.
+ */
+const TC = 0.4
+const ROLL_T = E.edge - E.give
+const Q = TC * (1 - Math.exp(-ROLL_T / TC))
+const VMAX = (STEP.x1 - GIVE_X - SLIP_V * Q) / (ROLL_T - Q)
+const rollX = (tau: number) => GIVE_X + VMAX * tau - (VMAX - SLIP_V) * TC * (1 - Math.exp(-tau / TC))
+const EDGE_V = VMAX - (VMAX - SLIP_V) * Math.exp(-ROLL_T / TC)
+/** Where she lands on the lane; the bounce (it keeps three quarters of her speed); the settle, and where she rests. */
+const LAND_X = STEP.x1 + EDGE_V * DROP_T
+const BOUNCE_V = 0.75 * EDGE_V
+const BOUNCE_H = 0.045
+const BOUNCE_X = LAND_X + BOUNCE_V * (E.bounce - E.land)
+const SETTLE_N = 2.5
+const SETTLE_D = (BOUNCE_V * (E.rest2 - E.bounce)) / SETTLE_N
+/** Where they come to rest: her, then him, at the cut's distance. */
+const HER_REST = BOUNCE_X + SETTLE_D
+const HIS_REST = HER_REST - CUTS.hospital.ellie![0]
 
 /* ------------------------------------------------------------------ Carl */
 
@@ -111,13 +154,11 @@ const CLIMB = (() => {
 /** How far up the skyline he gets, and where he stands to look back. */
 const B = STEP.x1
 const CLIMB_FROM = B - 0.18
-const CLIMB_TO = B - 1.73
+const CLIMB_TO = B - 2.3
 const JOLT_TO = CLIMB_TO + 0.07
-const DOWN_TO = B - 0.21
-const LANDS = B + 0.15
-/** Where they come to rest: her, then him, at the cut's distance. */
-const HER_REST = B + 0.897
-const HIS_REST = HER_REST - CUTS.hospital.ellie![0]
+/** Where he steps off the stone (its outer edge), and where he lands on the lane, clear of it. */
+const DOWN_TO = B
+const LANDS = B + 0.31
 
 /** Carl in the hill's cells at show time `t`. */
 function carl(t: number): Pt {
@@ -153,7 +194,7 @@ function carl(t: number): Pt {
   }
   if (t < T.offStep) {
     const u = lift((t - T.edge) / (T.offStep - T.edge))
-    return [lerp(DOWN_TO, LANDS, u), lerp(STEP.y, LANE_Y, u) - 4 * 0.12 * u * (1 - u)]
+    return [lerp(DOWN_TO, LANDS, u), lerp(STEP.y, LANE_Y, u) - 4 * 0.1 * u * (1 - u)]
   }
   if (t < T.lane) return [LANDS, LANE_Y]
   if (t < T.beside) return [lerp(LANDS, HIS_REST, ease((t - T.lane) / (T.beside - T.lane))), LANE_Y]
@@ -194,10 +235,11 @@ function bearing(t: number): { tilt: number; squash: number } {
 
 /* ------------------------------------------------------------------ Ellie */
 
-/** Her places on the step: where she lands on it, how far she creeps along it, how far onto the slope she tries. */
-const TREAD = STEP.x1 - 0.15
-const CREEP = STEP.x1 - 0.29
-const PUSH = STEP.x0 - 0.03
+/** Up the flank: eager at first and tiring, from rest to rest (its speed peaks a third of the way). */
+const tire = (u: number) => {
+  const v = clamp01(u)
+  return v * v * (6 - 8 * v + 3 * v * v)
+}
 
 /** Ellie in the hill's cells at show time `t`. */
 function ellie(t: number): Pt {
@@ -208,7 +250,7 @@ function ellie(t: number): Pt {
     return [x0 + 0.6 * tau - 0.5 * a * tau * tau, LANE_Y]
   }
   const far = x0 + 0.3 * (E.stop - BEGIN)
-  const foot = STEP.x1 + 0.14
+  const foot = STEP.x1 + 0.16
   if (t < E.back) return [far, LANE_Y]
   if (t < E.foot) return [lerp(far, foot, ease((t - E.back) / (E.foot - E.back))), LANE_Y]
   if (t < E.hop) return [foot, LANE_Y]
@@ -216,37 +258,97 @@ function ellie(t: number): Pt {
     const u = lift((t - E.hop) / (E.onStep - E.hop))
     return [lerp(foot, TREAD, u), lerp(LANE_Y, STEP.y, u) - 4 * 0.13 * u * (1 - u)]
   }
-  if (t < E.on) return [TREAD, STEP.y]
-  if (t < E.rest) return [lerp(TREAD, CREEP, ease((t - E.on) / (E.rest - E.on))), STEP.y]
-  if (t < E.push) return [CREEP, STEP.y]
-  if (t < E.still) {
-    const x = lerp(CREEP, PUSH, ease((t - E.push) / (E.still - E.push)))
-    return [x, ridge(x)]
+  const on = (x: number): Pt => [x, ridge(x)]
+  if (t < E.on) return on(TREAD)
+  if (t < E.rest) return on(lerp(TREAD, MID, tire((t - E.on) / (E.rest - E.on))))
+  if (t < E.push) return on(MID)
+  if (t < E.still) return on(lerp(MID, HIGH, tire((t - E.push) / (E.still - E.push))))
+  if (t < E.sag) return on(HIGH)
+  if (t < E.give) {
+    // She slips back, the smallest way, gathering: the slope is taking her.
+    const tau = t - E.sag
+    return on(HIGH + (0.5 * SLIP_V * tau * tau) / (E.give - E.sag))
   }
-  if (t < E.go) return [PUSH, ridge(PUSH)]
-  const v = (2 * (STEP.x1 - PUSH)) / (E.edge - E.go)
-  if (t < E.edge) {
-    // She lets go: back across the step, gathering a little speed.
-    const u = (t - E.go) / (E.edge - E.go)
-    const x = PUSH + (STEP.x1 - PUSH) * u * u
-    return [x, ridge(x)]
-  }
+  if (t < E.edge) return on(rollX(t - E.give))
   if (t < E.land) {
-    // Over its edge: the smallest drop.
+    // Off the stone's edge: the smallest drop.
     const tau = t - E.edge
-    const d = E.land - E.edge
-    const g = (2 * (LANE_Y - STEP.y)) / (d * d)
-    return [STEP.x1 + v * tau, STEP.y + 0.5 * g * tau * tau]
+    return [STEP.x1 + EDGE_V * tau, STEP.y + 6 * tau * tau]
   }
-  const landX = STEP.x1 + v * (E.land - E.edge)
+  if (t < E.bounce) {
+    // One small bounce.
+    const u = (t - E.land) / (E.bounce - E.land)
+    return [LAND_X + BOUNCE_V * (t - E.land), LANE_Y - 4 * BOUNCE_H * u * (1 - u)]
+  }
   if (t < E.rest2) {
-    // Along the lane a little way, slowing, and still.
-    const tau = t - E.land
-    const d = E.rest2 - E.land
-    const v0 = (2 * (HER_REST - landX)) / d
-    return [landX + v0 * tau - (0.5 * v0 * tau * tau) / d, LANE_Y]
+    // Along the lane, slower and slower, a long way to stillness.
+    const u = (t - E.bounce) / (E.rest2 - E.bounce)
+    return [HER_REST - SETTLE_D * Math.pow(1 - u, SETTLE_N), LANE_Y]
   }
   return [HER_REST, LANE_Y]
+}
+
+/* ------------------------------------------------------------------ the stone */
+
+/**
+ * The fieldstone where the path leaves the lane: a big, low, rounded stone, set into the hill's foot, its top worn
+ * flat where the path steps onto it. It is drawn over the hill set's step (the same place and height, so everything
+ * that stands on the step stands on it), in the hill's earth tones; the hill set draws a plain slab there.
+ */
+function drawStone(p: p5, k: number, weight: number, t: number): void {
+  const au = autumn(t)
+  const top = STEP.y + R
+  const ground = LANE_Y + R
+  const x0 = STEP.x0 - 0.18
+  const x1 = STEP.x1 + 0.06
+  const [ox, oy] = L(0, 0)
+  const X = (x: number) => (x + ox) * k
+  const Y = (y: number) => (y + oy) * k
+  const body = mixHex(mixHex(HOME.stone, HILL.bark, 0.32), HILL.grassAutumn, 0.18 * au)
+  const lit = mixHex(body, HILL.cloud, 0.32)
+  const shade = mixHex(body, HILL.bark, 0.4)
+  // Its outline, round from the lane on the left, over the worn top, and down to the lane on the right.
+  const outlinePath = () => {
+    p.vertex(X(x0 + 0.005), Y(ground + 0.004))
+    p.bezierVertex(X(x0 - 0.01), Y(ground - 0.045), X(x0 + 0.01), Y(top + 0.004), X(x0 + 0.09), Y(top))
+    p.bezierVertex(X(x0 + 0.25), Y(top - 0.012), X(x1 - 0.22), Y(top - 0.007), X(x1 - 0.045), Y(top))
+    p.bezierVertex(X(x1 + 0.004), Y(top + 0.006), X(x1 + 0.014), Y(ground - 0.045), X(x1 + 0.006), Y(ground + 0.004))
+  }
+  p.push()
+  // A soft contact shadow on the lane.
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.16))
+  p.ellipse(X((x0 + x1) / 2 + 0.02), Y(ground + 0.02), (x1 - x0 + 0.1) * k, 0.06 * k)
+  // The body, and its shade and light (clipped to it).
+  p.fill(body)
+  p.beginShape()
+  outlinePath()
+  p.bezierVertex(X(x1 - 0.12), Y(ground + 0.03), X(x0 + 0.12), Y(ground + 0.03), X(x0 + 0.005), Y(ground + 0.004))
+  p.endShape(p.CLOSE)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.clip()
+  p.fill(alpha(p, shade, 0.55))
+  p.ellipse(X((x0 + x1) / 2 + 0.05), Y(ground + 0.02), (x1 - x0 + 0.1) * k, 0.12 * k)
+  p.fill(alpha(p, lit, 0.7))
+  p.ellipse(X((x0 + x1) / 2 - 0.05), Y(top + 0.005), (x1 - x0 - 0.12) * k, 0.045 * k)
+  ctx.restore()
+  // Inked once, over the top and down both sides; not along the ground.
+  p.noFill()
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.9)
+  p.beginShape()
+  outlinePath()
+  p.endShape()
+  // A tuft of straw at each end, where the stone goes into the ground.
+  p.stroke(alpha(p, mixHex(HILL.grassAutumn, HILL.bark, 0.3), 0.9))
+  p.strokeWeight(Math.max(1, weight * 0.55))
+  const lean = 0.02 * Math.sin(t * 1.2)
+  for (const [x, h] of [[x0 + 0.01, 0.08], [x1 + 0.01, 0.06]] as const) {
+    p.line(X(x), Y(ground + 0.01), X(x - 0.03 + lean), Y(ground - h))
+    p.line(X(x + 0.03), Y(ground + 0.01), X(x + 0.045 + lean), Y(ground - h * 0.8))
+  }
+  p.pop()
 }
 
 /* ------------------------------------------------------------------ the basket */
@@ -299,7 +401,7 @@ export interface ClimbState {
 export const climb = part<ClimbState>(
   {
     name: 'climb',
-    draw: () => {},
+    draw: (p: p5, s, c) => drawStone(p, c.k, c.weight, s.begin + c.t),
     over: (p: p5, s, c) => {
       const t = s.begin + c.t
       if (c.t < -0.001 || c.t > END - BEGIN + 2) return
@@ -333,7 +435,7 @@ export const climb = part<ClimbState>(
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (t) => bearing(t) }]
     const [ex, ey] = L(HIS_REST, LANE_Y)
     return {
-      cells: box(ex - 5, -2.2, ex + 1.5, 0.5),
+      cells: box(ex - 5.5, -2.4, ex + 1.5, 0.5),
       exit: [ex + 0.5, ey],
       lane: { segs, fire: T.fall - slot.begin },
       state: { begin: slot.begin },
@@ -345,17 +447,19 @@ export const climb = part<ClimbState>(
     const h = (x: number, y: number): Pt => L(x, y)
     const [cx, cy] = L(HIS_REST, LANE_Y)
     return [
-      // Out as he steps up; the long shot of the whole hill, the tree on its crest, the two of them small below it.
-      { t: 169.6, cells: 5.7, hold: h(B - 0.25, LANE_Y - 1.25) },
-      { t: 171.8, cells: 9.8, hold: h(B - 5.45, LANE_Y - 2.6) },
-      { t: 172.6, cells: 9.6, hold: h(B - 5.6, LANE_Y - 2.55) },
-      // In on the two of them as she rests, tries, and stops; the fall; slowly down with him to her.
-      { t: 174.5, cells: 4.4, hold: h(B - 0.95, LANE_Y - 1.05) },
-      { t: 177.2, cells: 4.0, hold: h(B - 0.1, LANE_Y - 0.85) },
+      // The cut's pull-out carries on out to the establishing shot: the whole hill, the tree on its crest, the two of
+      // them small at its foot. It holds while he climbs, easing in a little.
+      { t: 169.6, cells: 9.4, hold: h(3.9, -0.2) },
+      { t: 171.6, cells: 8.3, hold: h(4.5, 0.0) },
+      // In on the two of them as she climbs after him and tires; settled before she gives way.
+      { t: 173.8, cells: 3.4, hold: h(7.6, LANE_Y - 0.75) },
+      { t: 174.95, cells: 3.36, hold: h(7.72, LANE_Y - 0.72) },
+      // Slowly with her down to the lane, and on to him beside her.
+      { t: 177.4, cells: 3.45, hold: h(9.0, LANE_Y - 0.66) },
       { t: slot.end, cells: CUTS.hospital.cells, hold: [cx + CUTS.hospital.frame[0], cy + CUTS.hospital.frame[1]] },
     ]
   },
 )
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip, T.offStep]
+export const CLIMB_HITS: number[] = [T.onStep, E.onStep, T.fall, T.tip, E.land, E.bounce, T.offStep]
