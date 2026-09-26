@@ -274,18 +274,23 @@ export function doorLeak(p: p5, k: number, W: number, dx: number, floor: number,
 /** Embers going up from the grate at `at`: a handful, rising and dying. */
 export function sparks(p: p5, k: number, t: number, at: number, n: number, force: number): void {
   const u0 = t - at
-  if (u0 < 0 || u0 > 1.3) return
+  if (u0 < 0 || u0 > 1.6) return
   const X = (v: number) => v * k
   p.noStroke()
+  // A scatter, never a row: each spark born on its own a moment after the note, from its own height in the fire, and
+  // each its own size (0.02 to 0.05 across).
   for (let i = 0; i < n; i++) {
-    const life = 0.6 + 0.6 * hash(i, at * 100)
-    const u = u0 / life
-    if (u >= 1) continue
-    const sx = LOG[0] + (hash(i, 7, at * 10) - 0.5) * 0.5
+    const born = i === 0 ? 0 : 0.25 * hash(i, 11, at * 10)
+    const life = 0.55 + 0.6 * hash(i, at * 100)
+    const u = (u0 - born) / life
+    if (u < 0 || u >= 1) continue
+    const sx = LOG[0] + (hash(i, 7, at * 10) - 0.5) * 0.6
     const x = sx + (hash(i, 8, at) - 0.5) * 0.5 * u + 0.05 * Math.sin(u * 9 + i)
-    const y = LOG[1] - 0.3 - force * (0.9 + 0.8 * hash(i, 9)) * u + 0.3 * u * u
+    const y0 = LOG[1] - 0.18 - 0.32 * hash(i, 12, at * 10)
+    const y = y0 - force * (0.9 + 0.8 * hash(i, 9)) * u + 0.3 * u * u
+    const size = 0.02 + 0.03 * hash(i, 13, at * 10)
     p.fill(alpha(p, i % 2 ? CALCIFER.core : CALCIFER.body, 0.95 * (1 - u)))
-    p.circle(X(x), X(y), Math.max(1, X(0.03 * (1 - 0.5 * u))))
+    p.circle(X(x), X(y), Math.max(1, X(size * (1 - 0.5 * u))))
   }
 }
 
