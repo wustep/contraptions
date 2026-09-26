@@ -674,13 +674,15 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  if (e.key === 'p') {
+  // Letter keys are case-blind: Caps Lock must not silence P, M, O or Z.
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
+  if (key === 'p') {
     shell.toggle()
     return
   }
   // A recording owns the show until it is done or stopped.
   if (recording) return
-  switch (e.key) {
+  switch (key) {
     case ' ':
       e.preventDefault()
       toggle()
@@ -696,11 +698,9 @@ const onKey = (e: KeyboardEvent) => {
       setMuted(!muted)
       break
     case 'o':
-    case 'O':
       if (perf) setOverview(!overview)
       break
     case 'z':
-    case 'Z':
       if (perf) setZoom(!zoom)
       break
     case '1':

@@ -505,12 +505,18 @@ const onKey = (e: KeyboardEvent) => {
   const t = e.target
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  switch (e.key) {
+  // N / n are deliberate opposites (previous / next map). Caps Lock must
+  // not silence every other key on the panel.
+  if (e.key === 'N') {
+    if (viewName() === 'world') prevWorld()
+    return
+  }
+  switch (e.key.toLowerCase()) {
     case ' ':
       e.preventDefault()
       setPaused(!paused)
       break
-    case 'Escape':
+    case 'escape':
     case 'c':
       back()
       break
@@ -524,9 +530,6 @@ const onKey = (e: KeyboardEvent) => {
     case 'n':
       if (viewName() === 'world') nextWorldNow()
       break
-    case 'N':
-      if (viewName() === 'world') prevWorld()
-      break
     case 'o':
       if (viewName() === 'world') setOverview(!overview)
       break
@@ -539,11 +542,11 @@ const onKey = (e: KeyboardEvent) => {
     case 'p':
       shell.toggle()
       break
-    case 'ArrowRight':
+    case 'arrowright':
       setPaused(true)
       seek(now() + (e.shiftKey ? 1 : 1 / 60))
       break
-    case 'ArrowLeft':
+    case 'arrowleft':
       setPaused(true)
       seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break

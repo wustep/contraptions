@@ -404,6 +404,9 @@ input[type='range'] {
   margin: 0;
   background: transparent;
   cursor: pointer;
+  /* A finger on a dial or the scrub must not become a pan of the panel:
+     that ends in pointercancel and the drag dies mid-way. */
+  touch-action: none;
 }
 input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
@@ -569,13 +572,18 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
     top: auto;
     right: auto;
     left: 50%;
-    bottom: 0;
+    /* Sit above the home indicator; stage-play already does. */
+    bottom: env(safe-area-inset-bottom, 0px);
     /* `translate`, not `transform`: the press nudge is a transform, and
        would steal this centering — the tab jumps off-center on tap. */
     translate: -50% 0;
     border-radius: 8px 8px 0 0;
     border-right: 1px solid var(--line);
     border-bottom: none;
+  }
+  /* The stacked panel's foot clears the home indicator too. */
+  #panel {
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   }
 }
 
