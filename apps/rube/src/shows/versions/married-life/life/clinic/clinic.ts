@@ -57,8 +57,12 @@ const WARD_WALLS: Pt = [-5.4, 5.4]
  * the back door, open, beside him, with her out beyond it. [x0, x1] and its head.
  */
 export const DOOR = { x0: -1.34, x1: -0.44, top: -1.68 }
-/** The coat stand, to her right: the doctor's white coat on it, the one thing in the room that says whose room it is. */
-export const STAND = 1.95
+/**
+ * The coat stand, to her right: the doctor's white coat on it, the one thing in the room that says whose room it is.
+ * Far enough out that it is whole in the room's wide and slides out of the frame as the camera closes on the two of
+ * them (by 80.1), so no strip of white coat hangs at the edge of the close or the drift to the cut.
+ */
+export const STAND = 2.6
 /** The hospital room's window, on the far wall behind the lamp: [x0, x1, y0, y1]. */
 export const WINDOW = { x0: -2.55, x1: -0.98, y0: -2.25, y1: -0.9 }
 

@@ -590,10 +590,10 @@ export const yard = part<YardState>(
     }
   },
   () => [
-    // From the doctor's cut (`CUTS.yard`), a slow settle onto the two of them, a quarter larger than the old wide:
-    // her on the stump, him at the door, the frame between them (house x -1.6), the trunk and the sheet at its left,
-    // the living-room window (its sill from x 1.25) and the car in it out past its right. Then a breath in on him for
-    // the book. Under Zoom both stay whole.
+    // From the doctor's close cut (`CUTS.yard`, 2.8 cells), a slow settle out and up onto the two of them and the
+    // distance between them: her on the stump, him at the door, the frame between them (house x -1.6), the trunk and
+    // the sheet at its left, the living-room window (its sill from x 1.25) and the car in it out past its right. Then
+    // a breath in on him for the book. Under Zoom both stay whole.
     { t: 87.4, cells: 3.22, hold: [at(-1.64), -0.84], w: 1 },
     { t: 89.6, cells: 3.14, hold: [at(-1.58), -0.84], w: 1 },
     // Out with him, and along as he walks out to her, a little wider (the window still out of the frame).

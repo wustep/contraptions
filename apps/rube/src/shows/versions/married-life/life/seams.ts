@@ -64,8 +64,11 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   yard: {
     t: CUT.yard,
     v: [0, 0],
-    cells: 3.9,
-    frame: [-1.4, -0.7],
+    // Close, from the close on the two of them in the office: under Zoom this is about as close as a cut can be that
+    // holds her at his right in the office and her on her stump 2.07 to his left in the yard; and no further right of
+    // him than the yard's window, whose sill would show as a sliver at the edge.
+    cells: 2.8,
+    frame: [-0.72, -0.5],
     ellie: null,
     what: 'Carl at rest: in the office chair; on the far side, alone inside the back door, looking out at her. Ellie is out in the yard, left of him',
   },
