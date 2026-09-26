@@ -84,8 +84,14 @@ export function creditsAt(t: number): TitleCard[] {
   return out
 }
 
-/** How dark the bed under the words is at `t`: up with the first card, down after the last. */
-const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
+/**
+ * How dark the bed under the words is at `t`: up with the first card, down after the last. The first cards come over
+ * the lit house front and want it; by the third the camera has pulled back and night has fallen, and the words stand
+ * on the dark sky by themselves, so it thins to a breath there instead of lying on the sky as a smudge.
+ */
+const NIGHT = 237
+const bedAt = (t: number): number =>
+  clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8)) * (1 - 0.75 * easeInOutCubic(clamp((t - (NIGHT - 5)) / 5)))
 
 /** The canvas's half: a soft dark where the words come, over everything. */
 export const credits = scenery<null>({
@@ -106,8 +112,8 @@ export const credits = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(20, 18, 24, ${0.5 * bed})`)
-    g.addColorStop(0.6, `rgba(20, 18, 24, ${0.28 * bed})`)
+    g.addColorStop(0, `rgba(20, 18, 24, ${0.42 * bed})`)
+    g.addColorStop(0.6, `rgba(20, 18, 24, ${0.22 * bed})`)
     g.addColorStop(1, 'rgba(20, 18, 24, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)

@@ -3,7 +3,7 @@ import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, smooth, type Companion, type Ctx, type PartShot, type Pose, type Slot } from '../kit'
 import { AGE, AT, bar, beat, SEAM } from '../music'
 import { G_EARTH } from '../physics'
-import { HALF } from '../cast'
+import { BOW_FROM, HALF } from '../cast'
 import { BASKET, drawBasket } from '../props/basket'
 import { DESK, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, MACHINE, PEDAL, WHEEL } from './ties-set'
 import { BOW, drawTie, TIES } from './ties-tie'
@@ -45,7 +45,7 @@ export const TIES_AT: Pt = [0, 0]
  * and set `BOW_IN_CAST` true, so it is drawn once.
  */
 export const BOW_STAYS = true
-export const BOW_IN_CAST = false
+export const BOW_IN_CAST = true
 
 /* ------------------------------------------------------------------ the clock (show seconds) */
 
@@ -565,7 +565,7 @@ export const ties = part<TiesState>(
         drawTie(p, k, weight, TIES[j], clip[0], clip[1], angle, snug)
       }
       // The bow tie on him, from her knot to the cut (drawn here unless the cast has taken it over).
-      if (BOW_STAYS && !BOW_IN_CAST && T >= BOW_ON && T <= SHUT) {
+      if (BOW_STAYS && T >= BOW_ON && T <= SHUT && (!BOW_IN_CAST || T < BOW_FROM)) {
         const set = seated(4, T)
         drawTie(p, k, weight, BOW, top.x, top.y, top.tilt + set.angle, set.snug)
       }
@@ -627,9 +627,10 @@ export const ties = part<TiesState>(
       { t: 152.5, cells: 2.35, hold: [1.35, -0.62], w: 1 },
       // The gramophone, and after her to the floor.
       { t: 154.7, cells: 2.55, hold: [2.05, -0.62], w: 0.8 },
-      // The dance, close, with them down the hall.
-      { t: DANCE[0] + 0.25, cells: 2.15, off: [0.25, -0.55] },
-      { t: EMBRACE - 0.2, cells: 2.2, off: [0.3, -0.56] },
+      // The dance, on the loudest bars of the cue: the whole of it in one wide, the gramophone playing at the left, her
+      // painting over the desk at the right, and the two of them turning down the hall between, drifting with them.
+      { t: DANCE[0] + 0.25, cells: 3.5, hold: [4.85, -1.12], w: 1 },
+      { t: EMBRACE - 0.2, cells: 3.3, hold: [5.35, -1.08], w: 1 },
       // The painting, lit: a long look, him small under it.
       { t: LAMP + 0.45, cells: 3.35, hold: [7.15, -1.1], w: 1 },
       // In on the machine, the basket and him; her at the door.

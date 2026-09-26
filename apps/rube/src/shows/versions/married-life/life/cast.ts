@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { ball, R, type Pt } from '../../../../parts'
 import { alpha, scenery } from './kit'
-import { AT } from './music'
+import { AT, bar } from './music'
 import type { LifeShow } from './show'
 import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
+import { drawBowTie } from './inside/ties-tie'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -32,6 +33,11 @@ export const HALF = R
 const CORNER = 0.075
 /** The balloon is his from the cut into the hospital to the end. */
 export const BALLOON_FROM = AT.hospital
+/**
+ * The bow tie is his from the last morning at the tie machine to the end, as the old Carl's is in the film: she ties
+ * it on jar bar 48 (`ties.ts` draws it while it settles), and the cast carries it from here, across every cut after.
+ */
+export const BOW_FROM = bar('jar', 48) + 0.6
 /** Where it floats, from his centre, at rest. */
 export const BALLOON_REST: Pt = [0.24, -1.42]
 
@@ -207,5 +213,6 @@ export const cast = scenery<CastState>({
     const pose = show.pose(t)
     const tilt = pose?.tilt ?? slopeAt(show, t)
     drawCarl(p, k, weight, color, here.x * k, here.y * k, tilt, pose?.squash ?? 0, here.scale)
+    if (t >= BOW_FROM) drawBowTie(p, k, weight, here.x * k, here.y * k, tilt, pose?.squash ?? 0, here.scale)
   },
 })

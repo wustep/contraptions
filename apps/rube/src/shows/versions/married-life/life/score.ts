@@ -96,6 +96,9 @@ const SETS = (): Record<WorldKey, WorldSet> => ({
   clinic: { scenery: [standing(clinicSet, 0, 0, boxed(CLINIC_BOX), null, DURATION)], after: [] },
 })
 
+/** Every leg's camera keys, as the camera has them (for the probes). */
+export const KEYS: Shot[][] = []
+
 export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
   const plans = PLAN()
   const chains: Chain[] = []
@@ -143,24 +146,38 @@ export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
   castState.show = show
   if (ALONE_TIE) show.tie = { from: ALONE_TIE.from, at: [ALONE_AT[0] + ALONE_TIE.at[0], ALONE_AT[1] + ALONE_TIE.at[1]] }
 
-  // The camera: one director per leg, each following Carl only inside its own leg, and each leg opening on exactly
-  // the framing the last one closed on, carried by the cut: a match cut on him.
-  const cams: ((t: number) => Framing)[] = []
+  // The camera: one take. Every leg's keys go to one director, in cells unrolled across the cuts: each leg's cells
+  // are moved back by the sum of the cuts' shifts before it, so Carl's path is continuous in them, and so is the
+  // camera. At a cut the frame moves with him by exactly the cut's shift (a match cut on him: on the screen he holds
+  // still), and whatever move the camera was making carries on through the cut at the speed it had, instead of
+  // coming to rest on each side of it.
+  const unroll: Pt[] = [[0, 0]]
+  for (let i = 1; i < legs.length; i++) {
+    const [sx, sy] = show.shift(i - 1, i)
+    unroll.push([unroll[i - 1][0] + sx, unroll[i - 1][1] + sy])
+  }
+  const all: (Shot & { leg: number; n: number })[] = []
   legs.forEach((leg, i) => {
-    const chain = chains[i]
-    const keys: Shot[] = chain.shots.filter((s) => s.t > leg.from + 1e-6 && s.t <= leg.to + 1e-6)
-    if (i === 0) keys.unshift(keys.length ? { ...keys[0], t: 0 } : { t: 0, cells: 5 })
-    else {
-      const f = cams[i - 1](leg.from)
-      const [sx, sy] = show.shift(i - 1, i)
-      keys.unshift({ t: leg.from, cells: f.cells, hold: [f.x + sx, f.y + sy], w: 1 })
-    }
-    // Where two parts of one leg each put a key on the same instant, the part being entered wins.
-    const clean = keys.filter((s, j) => !keys.some((o, m) => m > j && Math.abs(o.t - s.t) < 1e-6))
-    if (clean.length === 1) clean.push({ t: Math.min(leg.to, leg.from + 1.2), cells: 5 })
-    const where = (s: number): Pt => show.where(Math.max(leg.from, Math.min(leg.to - 1e-6, s)))
-    cams.push(director(where, clean, DURATION))
+    const [ux, uy] = unroll[i]
+    const own = chains[i].shots.filter((s) => s.t > leg.from - 1e-6 && s.t <= leg.to + 1e-6)
+    KEYS[i] = own
+    own.forEach((s, n) => all.push({ ...s, hold: s.hold ? [s.hold[0] - ux, s.hold[1] - uy] : undefined, leg: i, n }))
   })
-  const camera = (t: number): Framing => cams[show.owner(t)](t)
+  all.sort((a, b) => a.t - b.t || a.leg - b.leg || a.n - b.n)
+  // Where two keys fall on one instant (a part's key at its cut out and the next part's at its cut in, or two parts
+  // of one leg at a seam), the one being entered wins.
+  const keys: Shot[] = all.filter((s, j) => !all.some((o, m) => m > j && Math.abs(o.t - s.t) < 1e-6)).map(({ leg: _l, n: _n, ...s }) => s)
+  if (!keys.length || keys[0].t > 1e-6) keys.unshift(keys.length ? { ...keys[0], t: 0 } : { t: 0, cells: 5 })
+  const where = (s: number): Pt => {
+    const [x, y] = show.where(s)
+    const [ux, uy] = unroll[show.owner(s)]
+    return [x - ux, y - uy]
+  }
+  const take = director(where, keys, DURATION)
+  const camera = (t: number): Framing => {
+    const f = take(t)
+    const [ux, uy] = unroll[show.owner(t)]
+    return { ...f, x: f.x + ux, y: f.y + uy }
+  }
   return { show, camera }
 }

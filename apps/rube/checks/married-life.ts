@@ -72,6 +72,25 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   }
   check('married life: in a place Carl never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${jumpAt.toFixed(3)} s`)
   check('married life: every cut is a match cut: on the screen he never jumps (no more than 1% of the frame a millisecond)', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
+  // One take: at a cut the camera's move carries on at the speed it had (pan and zoom), carried by the cut's shift, so
+  // no cut is a stop and a start again.
+  const seams: string[] = []
+  for (let i = 1; i < show.legs.length; i++) {
+    const t = show.legs[i].from
+    const [sx, sy] = show.shift(i - 1, i)
+    const d = 0.002
+    const a0 = cam(t - 2 * d), a1 = cam(t - d), b0 = cam(t + d), b1 = cam(t + 2 * d)
+    const pan = Math.hypot((b1.x - b0.x) - (a1.x - a0.x), (b1.y - b0.y) - (a1.y - a0.y)) / d / a1.cells
+    const zoom = Math.abs(Math.log(b1.cells / b0.cells) - Math.log(a1.cells / a0.cells)) / d
+    const gap = Math.hypot(b0.x - sx - a1.x, b0.y - sy - a1.y) / a1.cells
+    if (pan > 0.02 || zoom > 0.02 || gap > 0.01) seams.push(`${t.toFixed(3)}: pan ${pan.toFixed(3)} fh/s, zoom ${zoom.toFixed(3)}/s, gap ${gap.toFixed(4)}`)
+    // Where he is on the move across the cut, so is the camera: it does not come to rest there.
+    const w0 = show.where(t - 2 * d), w1 = show.where(t - d)
+    const carl = Math.hypot(w1[0] - w0[0], w1[1] - w0[1]) / d
+    const moving = Math.hypot(a1.x - a0.x, a1.y - a0.y) / d / a1.cells > 0.02 || Math.abs(Math.log(a1.cells / a0.cells)) / d > 0.02
+    if (carl > 0.2 && !moving) seams.push(`${t.toFixed(3)}: the camera stops while he goes on at ${carl.toFixed(2)} cells/s`)
+  }
+  check('married life: the camera is one take: at every cut its move carries on through, carried by the cut', seams.length === 0, seams.join('; '))
   let hidden = 0
   let longest = 0
   for (let t = 0; t <= perf.duration; t += 0.01) {

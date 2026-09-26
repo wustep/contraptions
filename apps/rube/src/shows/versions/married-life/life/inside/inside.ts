@@ -70,8 +70,10 @@ export const INSIDE_BOX: [number, number, number, number] = [-18, -13, 27, 3]
 /** The sky over the yard and the roof: grey through the loss, clear with the book, warm with the late years. */
 function skyAt(t: number): string {
   const grey = '#C6CDD0'
-  if (t < CUT.yard) return HOME.sky
-  if (t < 95) return mixHex(HOME.sky, grey, Math.min(1, (t - CUT.yard) / 2))
+  // The yard opens grey (the doctor's office ends cold, and the cut carries its light across), and warms as the
+  // book comes out to her.
+  if (t < CUT.doctor) return HOME.sky
+  if (t < 95) return grey
   if (t < 101) return mixHex(grey, HOME.sky, (t - 95) / 6)
   return mixHex(HOME.sky, '#D9D3C4', Math.max(0, Math.min(1, (t - 140) / 25)))
 }
