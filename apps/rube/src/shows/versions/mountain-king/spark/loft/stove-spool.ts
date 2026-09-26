@@ -63,15 +63,15 @@ export const SPOOL_Y = FLOOR_Y - SPOOL.r
 export const spoolTurn = (t: number): number => (spoolX(t) - SPOOL.x0) / SPOOL.r
 
 /**
- * The spark on top of the reel: riding it, with a hop up before each of its steps that comes down on the note (a step
- * a note), shoving the reel on as it lands.
+ * The spark on top of the reel: riding it, lifting before each of its steps and stamping down on the note (a step a
+ * note), shoving the reel on as it lands. The lift eases up from standing (no kick off the reel); the stamp is quick.
  */
 export function onSpool(t: number): Pt {
   const x = spoolX(t)
   let up = 0
   for (const at of SPOOL_STEPS) {
-    const u = (t - (at - 0.24)) / 0.24
-    if (u > 0 && u < 1) up = Math.max(up, 0.17 * 4 * u * (1 - u))
+    const u = (t - (at - 0.26)) / 0.26
+    if (u > 0 && u < 1) up = Math.max(up, 0.17 * 6.75 * u * u * (1 - u))
   }
   return [x, SPOOL_Y - SPOOL.r - R - up]
 }
