@@ -116,6 +116,12 @@ function shaking(t: number): number {
 function dust(p: p5, k: number, t: number, top: number) {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const floor = ROOM_AT.ground
+  // Only inside the room: between its walls, from the beams down to the boards. (p5's push and pop, so its cached
+  // fill is the canvas's again after the clip is let go.)
+  p.push()
+  ctx.beginPath()
+  ctx.rect(ROOM_AT.wallL * k, ROOM_AT.ceil * k, (ROOM_AT.wallR - ROOM_AT.wallL) * k, (floor + 0.1 - ROOM_AT.ceil) * k)
+  ctx.clip()
   const puffAt = (x: number, y: number, r: number, a: number) => {
     if (a <= 0.004 || r <= 0.01) return
     const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r * k)
@@ -156,6 +162,7 @@ function dust(p: p5, k: number, t: number, top: number) {
       }
     }
   })
+  p.pop()
 }
 
 /** The bombs' light: a warm flash through the room on each hit, from the door's side, gone in a breath. */
@@ -496,7 +503,8 @@ export const hearth = part<HearthState>(
       p.pop()
 
       // Dust from the beams, and the bombs' light, over everything in the room.
-      dust(p, k, t, Math.min(f.y0, ROOM_AT.ceil) - 0.2)
+      // (From the beams: on a phone held upright the frame's top is far over them, in the dark over the set.)
+      dust(p, k, t, ROOM_AT.ceil - 0.2)
       flash(p, k, t, f)
       p.pop()
     },
