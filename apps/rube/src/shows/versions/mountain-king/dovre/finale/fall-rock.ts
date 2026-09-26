@@ -130,14 +130,17 @@ function ventAt(y: number, x: number): [number, number] {
  * sees). Once the geyser's spray is in it its back wall shows wet and its sides round off, so it reads as a shaft;
  * then day comes down it from the top once the cap is gone.
  */
-export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number; shut?: number }): void {
+export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number; shut?: number }, top = VENT.top): void {
   const k = c.k
   const X = (v: number) => (v - o[0] + q[0]) * k
   const Y = (v: number) => (v - o[1] + q[1]) * k
   const n = 120
   const rows: [number, number, number][] = []
+  // `top` (world y): where the shaft opens, if lower than the cap's underside (the crater's floor once the cap and the
+  // crown are gone: the shaft must never stand up above the ground into the sky).
+  const y0 = Math.max(VENT.top, top)
   for (let j = 0; j <= n; j++) {
-    const y = VENT.top + ((VENT.bottom - VENT.top) * j) / n
+    const y = y0 + ((VENT.bottom - y0) * j) / n
     const [m, hw] = ventAt(y, x)
     rows.push([m - hw, m + hw, y])
   }

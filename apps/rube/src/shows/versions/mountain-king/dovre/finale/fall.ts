@@ -848,7 +848,7 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   // Before the coda there is no vent: the summit is solid rock over the hall's smoke hole (the opening wide sees it).
   // After the blow-out the day comes down it only while the geyser is up; then the crater's rubble plugs its top.
   const inVent = smooth(T, 142.6, 145.0) * (1 - 0.8 * smooth(T, LAST2 + 8, LAST2 + 16))
-  if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - smooth(T, LAST2 + 0.9, LAST2 + 2.6)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1), shut: smooth(T, LAST2 + 1.2, LAST2 + 4) })
+  if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - smooth(T, LAST2 + 0.9, LAST2 + 2.6)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1), shut: smooth(T, LAST2 + 1.2, LAST2 + 4) }, surface(COL, T) + 0.15)
   if (T >= LAST2) plug(p, c, T, q)
   for (const fl of FLOORS) breach(p, c, ORIGIN, COL, fl, T, q)
   bellShaft(p, c, T)
