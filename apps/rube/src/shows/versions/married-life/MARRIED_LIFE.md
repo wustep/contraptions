@@ -73,10 +73,14 @@ measured beat or onset.
   scale, head and shoulders over the pews: his parents grey and square and still, hers warm and round in hats,
   bobbing on the beat. Ellie hops on the march's accents; Carl makes small stiff hops, and on one she bumps him; while
   she waits he shuffles two nervous steps along the altar step and back. The camera reveals the whole church and its
-  bell once, comes in on the organ, carries past the couple to the pews, and closes on the two of them for the kiss.
-- **The kiss is on waltz bar 1 (17.76)**, with the organ's great chord, a warm shaft from the east window on them and
-  a second flash from off frame. The bell peals on the next three downbeats. They run down the aisle, the doors fly open as Ellie reaches them, and they run
-  out at 1.6 cells a second.
+  bell once (landing on his startled hop, 3.45), comes in on the organ, carries past the couple to the pews, and
+  closes on the two of them for the kiss. As the march slows they turn to each other a step on each of its slowing
+  notes (15.41, 15.95, 16.81, 17.21): she rolls closer and rises onto her toes, his lean grows.
+- **The kiss is on waltz bar 1 (17.76)**, the last of the gap closed, with the organ's great chord, a warm shaft from
+  the east window on them and a second flash from off frame. The bell peals on the next three downbeats. From the kiss
+  the camera pulls out on the swell and comes to rest on its crest (bar 3, 20.2), the whole nave in, the bell swinging
+  whole in its tower; then it goes in after them. They run down the aisle, the doors fly open as Ellie reaches them,
+  and they run out at 1.6 cells a second.
 
 ### The fix-up (21.58 to 49.64 s): the house, from the street
 
@@ -85,7 +89,9 @@ measured beat or onset.
   to each drum, a belt-driven trip hammer, and a jib. The drums are wet (a deeper teal than the dry siding, the top one
   roof-red) and a seam wound round each climbs as it turns. Left of the rollers the house is new, a glossy wet band
   just behind them drying as they roll on; right of them it is still the old grey one.
-- Hammer blows fall on bars 7 to 17, each kicking the cart on in a waltz lilt. The jib lowers his chair, then hers,
+- Hammer blows fall on bars 7 to 17, each kicking the cart on in a waltz lilt. After each blow the hammer lies on the
+  wall a moment; the gear trips it up, quick, into the bar's third beat, where a pawl catches it with a small recoil,
+  and it hangs cocked for the next downbeat. The jib lowers his chair, then hers,
   in through the empty bay. The door is knocked straight, a pane drops in, and the last blow sets the mailbox post.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
   fingers up, thumbs reaching toward each other, in the box's own paint pressed darker, so they never read as two
@@ -133,23 +139,29 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   book tips onto him (a thick old book, a rounded spine, a strap), and he pushes out through the screen door. **On
   100.36, the waltz's return, the book opens** on his top: its top board swings over on the spine and comes down
   flat, the pages curling at the gutter, and Paradise Falls rises out of the gutter in cut paper, the camera in close
-  on it and on her turning to it. She hops down and leads him back in; the book folds shut, slowly, on bar 2's third
-  beat, and slides back off his top onto its shelf by the door on bar 3.
-- **The jar.** A seesaw stands in front of the fireplace. Carl hops on his end on each downbeat, and the cup end
+  on it and on her turning to it. She hops down and is away home ahead of him. He turns for home on bar 1, the book
+  open on his top, and walks after her at an even pace (about 1.3 cells a second: an old-fashioned brisk walk, never a
+  run), the camera leading him at his pace; the book folds shut, slowly, on bar 2's third beat; he comes in through
+  the back door on bar 3, and as he goes past the bookcase the book slides back off his top onto its shelf, on bar 4.
+  It is one walk from the stump to his seesaw.
+- **The jar.** A seesaw stands in front of the fireplace. Carl hops on his end on each downbeat (taking off on the
+  third beat before it, the waltz's pickup), and the cup end
   throws a handful of five coins over the room, spreading and closing up again, turning and catching the light, into
   the jar's slot on the mantle on the next downbeat; each handful puts a visible notch of brass in the glass, the jar
   clinks in its cradle, and Ellie on the ladder counts each one in with a hop. The camera is close (3.6 cells) on the
   plank, the flight and the jar for the four handfuls. The jar stands in **a brass cradle** that turns
   on a sprung knuckle at the mantle's end; under it a tin hopper feeds **a chute** down the wall to a slot, and what
   goes down the chute is gone, paid out of the house. Life breaks it open three times:
-  - the tyre of their car (a round family car), seen close through the window (the hubcap flies); she pushes the jar
+  - the tyre of their car (a round family car), seen through the window in a still frame with the jar on the mantle
+    in it (the hubcap flies); she pushes the jar
     over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
     slowly. Paid for, the car drives off out of the window;
   - Carl's leg: he climbs the ladder for the pendant lamp, the ladder kicks, he falls (the camera in close), and her
     touch wraps a bandage round his foot; she pours the jar out again;
-  - the storm: the camera draws back to the whole house as it gathers (about 16 cells: the house, its roof, and the
-    garden tree's crown over the ridge, bending in the gusts and whitened by each flash), and the tree's limb comes
-    down through the roof into the nursery on the thunder (128.87); the blow throws the jar over by itself. The camera
+  - the storm: from the second pour the camera draws back to the whole house as it gathers (17.2 cells by 128.4: the
+    house, its roof, and the garden tree's whole crown over the ridge, bending in the gusts and whitened by each
+    flash), and holds, nearly still, as the tree's limb comes down through the roof into the nursery (128.87), the
+    blow throws the jar over by itself (129.27) and the thunder rolls (129.64). The camera
     comes in as the limb is winched out, the nursery's ceiling well inside the frame while boards are nailed over the
     hole, and the sun breaks through.
 - **The ties.** A wheel of ties stands in the hall and turns on the downbeats. Each morning a collar and tie comes
@@ -159,21 +171,25 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   clock: each morning a season (a pale spring, a deep gold summer, an amber autumn, a blue-white winter, a paler
   spring), stepping to that day's evening, lower and warmer, when she knots the tie. From then on the bow tie
   sits small and dark in his collar, where the long ties' knots sat, below his top edge.
-- **The dance**, on the loudest bars of the cue: side by side, she at his right, rising on every downbeat and
-  swaying on the two and three, across the open floor from the gramophone toward her painting. On bar 53, the
-  loudest, she turns out under his arm and rolls back in while he draws himself up, and a slow crane takes in the
-  gramophone, the floor, the desk and the painting together; they close into each other's arms on bar 55.
+- **The dance**, on the swell of the second waltz: side by side, she at his right, rising on every downbeat and
+  swaying on the two and three, across the open floor from the gramophone toward her painting. The swell crests from
+  bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
+  10 dB down). Through it she turns out under his arm and rises, at arm's length and her highest on 52's downbeat,
+  as the warm pool brightens and a slow crane lands at its widest on the gramophone, the floor, the desk and the
+  painting together. She rolls back in by bar 53, and they close into each other's arms on bar 55.
 - **The tickets.** The picture lamp lights on her painting, and Carl looks up at it. He pumps **a red ticket press**
   (a roll of blank tickets on its top, a hand lever that throws down on each stamp, a window whose reel rolls through
-  a city, the sea, mountains, to the falls) on bars 57 to 60. The camera is in close as the two tickets fly from its
-  slot into the picnic basket on the cadence, and draws back as its lid shuts on 167.71. Past the open front door the
+  a city, the sea, mountains, to the falls) on bars 57 to 60, as the music presses on, and the camera pushes in slowly
+  on the press, the basket and him until it is close (2.55 cells) on the slot and the basket as the two tickets fly
+  into it on the cadence (166.93, 167.28); it draws back as the lid shuts on 167.71, on through the cut. Past the open front door the
   porch has its rail and the evening sky. He goes out with the basket on his top, Ellie a step ahead.
 
 ### The climb (167.71 to 180.41 s): the hill, years later
 
-- Autumn: grey sky, straw grass, the tree turning, the town a pale roofline far off. The camera draws back from the
-  two of them setting out to the whole hill, the tree whole on its crest, for about two seconds, and comes in again
-  as she follows. For once Carl leads, up the steep flank.
+- Autumn: grey sky, straw grass, the town a pale roofline far off. Over the held note the camera takes one slow breath:
+  the draw back from the tickets carries on through the cut, out over the two of them at the step and the flank he
+  leads her up (5 cells, the crest's edge at the top of it), and in again as she follows, never quicker than it went
+  out. For once Carl leads, up the steep flank.
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
   she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still. No bounce. The
   strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
@@ -195,8 +211,10 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
   comes up over it in three seconds, the one pale beam and its dust last. Carl sits alone in the front pew, the
   wedding photograph on an easel where they stood. Across the cut the balloon is his again: it drifts back from
-  where she was to over him. She is gone. The camera drifts to the wedding kiss's framing, now empty.
-- As the morning comes up he lets himself down off the pew (192.05) and walks the aisle at an old man's pace (about
+  where she was to over him. She is gone. The camera drifts slowly across the dawn to the wedding kiss's framing, now
+  empty, arriving as he reaches the floor.
+- As the morning comes up he lets himself down off the pew, forward to its edge and down its front in one even move
+  (under half a cell a second, the seat twice his height), onto the floor on 192.05, and walks the aisle at an old man's pace (about
   half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
   the frame. Dust sifts down. He goes out in the silence and comes to rest at the foot of the steps.
@@ -243,8 +261,8 @@ window.
   millisecond). He is never hidden for more than 2.5 s. The stage draws no ball: the cast draws the two of them.
 - **Zoom and distance:** under Zoom (1.5× closer) his whole square and her whole ball stay in the frame. No shot wider
   than 6 cells lasts more than 2.5 s, except four named reveals, each held to its window and its widest: the house
-  made new (the machine as tall as it), the storm (the whole house and its tree, up to 16.5 cells), the one toll,
-  and the credits (up to 27.5 cells). The hill's wide is no longer a reveal: it is under 2.5 s.
+  made new (the machine as tall as it), the storm (the whole house and its tree, up to 17.6 cells), the one toll,
+  and the credits (up to 27.5 cells). The hill has no wide now: one breath out to 5 cells.
 - **The camera is one take:** at every cut its pan and zoom carry on through, carried by the cut, and where Carl is
   moving across a cut the camera does not come to rest there.
 - **The music:** every strike lands within 30 ms of a waltz beat or 35 ms of a measured onset. At least 80% of each
@@ -328,12 +346,19 @@ window.
   ward's chair low, so he stands clear of it; the years stepping on her knots, and a bearing for them (settled,
   stooping as he walks); the widower's pace slowed in the church; their car a family car, driving off once paid for;
   no lean that flips between frames (on the hill's stone, up the porch steps, at the cart, at home).
+- **Polish round 2 (music and motion): five fixers and the director's fourth pass.** The kiss arrived at a step on each
+  of the march's slowing notes, and the pull-out resting on the swell's crest; the trip hammer tripped into each bar's
+  third beat and caught; the seesaw hops taking off on the pickup, and the jar's camera in a few long moves; the
+  dance's turn-out on the swell's crest; the widower let down off the pew in one even move. Then Carl walking home
+  from the book instead of sprinting; the storm landed before the limb, the crown whole; the push in on the ticket
+  press for the cadence, and the hill's out-and-back wide made one breath.
 
 ## Known limits
 
-- In the named reveals (the house made new, about 10 cells; the storm, about 16) and the hill's two-second wide (9)
-  the two of them are small. It is scale on purpose, and each is held to its window by the check. In the hill's wide
-  the tree's crown comes into the frame before its trunk, for about half a second each way.
+- In the named reveals (the house made new, about 10 cells; the storm, about 17) the two of them are small. It is
+  scale on purpose, and each is held to its window by the check.
+- The hill years later has no wide: the tree on its crest is not seen again. A wide that holds the tree and them needs
+  about 9.5 cells, and from there the camera cannot come in to the close on her stall by 174.0 at a slow breath's pace.
 - Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
   shows a sixth of its height below their floor, and the dance keeps them low in the frame.
 - Card 1 fades in with the chimney's top just under its name; it is clear by the time it is sharp.
