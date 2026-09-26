@@ -8,6 +8,7 @@ import { STRIKES } from '../src/shows/versions/merry-go-round/howl/hits'
 import { BEATS, CHORD, CREDITS_AT, CURSE, DURATION, HEART, ONSETS, RECORDING, SEAM, downbeats } from '../src/shows/versions/merry-go-round/howl/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/merry-go-round/howl/credits'
 import { JOLT } from '../src/shows/versions/merry-go-round/howl/plank/hearth'
+import { flightCastleBox } from '../src/shows/versions/merry-go-round/howl/finale/flight'
 import { age, sophieAt } from '../src/shows/versions/merry-go-round/howl/age'
 import { SOPHIE_SILVER } from '../src/shows/versions/merry-go-round/howl/worlds'
 import type { CastleShow } from '../src/shows/versions/merry-go-round/howl/show'
@@ -98,13 +99,13 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
     [CURSE, SEAM.field, SEAM.plank, HEART, CHORD[0]].every((t) => hit(t)), [CURSE, SEAM.field, SEAM.plank, HEART, CHORD[0]].filter((t) => !hit(t)).map((t) => t.toFixed(3)).join(', '))
 
   // The camera cuts inside a place only on a strike, and otherwise never whips: its zoom stays under 0.6 of a scale a
-  // second, but for the punches' attacks (score.ts), the cuts between places and its own cuts, and two designed
-  // knocks (the floor bucking under the bombs, and the last chord flinging the frame open).
+  // second, but for the punches' attacks (score.ts), the cuts between places and its own cuts, and one designed
+  // knock (the floor bucking under the bombs). The last chord is a cut now, not a knock.
   const cameraCuts = show.cameraCuts
   const offStrike = cameraCuts.filter((c) => !all.some((s) => Math.abs(s - c) <= 0.005))
   check('merry-go-round: the camera cuts inside a place only on a strike', offStrike.length === 0 && cameraCuts.length >= 3,
     `${cameraCuts.length} cuts${offStrike.length ? `; off: ${offStrike.map((c) => c.toFixed(3)).join(', ')}` : ''}`)
-  const KNOCKS: [number, number][] = [[CURSE, 0.15], [SEAM.plank, 0.15], [HEART, 0.15], [JOLT, 0.06], [CHORD[0], 0.8]]
+  const KNOCKS: [number, number][] = [[CURSE, 0.15], [SEAM.plank, 0.15], [HEART, 0.15], [JOLT, 0.06]]
   let whip = 0
   let whipAt = 0
   const ZDT = 1 / 120
@@ -115,7 +116,7 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
     const z = Math.abs(Math.log(cam(t).cells / cam(t - ZDT).cells)) / ZDT
     if (z > whip) { whip = z; whipAt = t }
   }
-  check('merry-go-round: the camera never whips: its zoom under 0.6 of a scale a second but for the punches, its cuts and two knocks',
+  check('merry-go-round: the camera never whips: its zoom under 0.6 of a scale a second but for the punches, its cuts and the floor\'s knock',
     whip <= 0.6, `${whip.toFixed(2)} log/s at ${whipAt.toFixed(2)} s`)
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
@@ -129,6 +130,22 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
   check('merry-go-round: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+
+  // Under the credits the whole castle (flag to toes, gun to gun) stays inside the Zoom frame, so nothing of it is cut
+  // by the frame's edge while the words are up. From 0.3 s into the first card's 1.3 s fade (5% light): until then the
+  // chord's pull-back is still easing out and the toes graze the Zoom frame's foot (1.02).
+  let castleOut = 0
+  let castleAt = 0
+  for (let t = CREDITS_AT + 0.3; t <= perf.duration; t += 0.05) {
+    const f = cam(t)
+    const h = show.at(t)
+    const b = flightCastleBox(t)
+    const hw = (f.cells * 16) / 9 / 2 / 1.5
+    const hh = f.cells / 2 / 1.5
+    const u = Math.max((h.x + b.x1 - f.x) / hw, (f.x - h.x - b.x0) / hw, (h.y + b.y1 - f.y) / hh, (f.y - h.y - b.y0) / hh)
+    if (u > castleOut) { castleOut = u; castleAt = t }
+  }
+  check('merry-go-round: under the credits the whole castle stays inside the Zoom frame', castleOut <= 1, `${castleOut.toFixed(3)} at ${castleAt.toFixed(2)} s`)
 
   // She can be found: outside the castle's whole-castle wides (the roar and the great strides, its sitting down in the
   // night, the collapse, the rebuild) and the credits, she is never under 5.5 px across at 640x360 for more than 1.5 s.
