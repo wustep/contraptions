@@ -701,12 +701,13 @@ function ellieAt(T: number): Companion {
 /* ------------------------------------------------------------------ the light through the door */
 
 /**
- * The patch of sun the front door's glass (four panes) throws on the hall's far wall, in the clear paper between the
- * wheel's rim and the stairs, beside the two of them: the house's clock. Each morning is a season, and the patch
- * takes its light: a pale green-white spring, a deep gold summer, an amber autumn, a blue-white winter, and the
- * spring again, paler, for the bow tie. Within each morning it steps on both downbeats: the morning's patch when the
- * tie comes down, that day's evening (the same season, lower sun: a flatter, longer patch reaching back behind the
- * wheel, warmer) when she knots it.
+ * The patch of sun the front door's glass throws on the hall's far wall, in the clear paper between the wheel's rim
+ * and the stairs, beside the two of them: the house's clock. Each morning is a season, and the patch takes its light:
+ * a pale green-white spring, a gold summer, an amber autumn, a blue-white winter, and the spring again, paler, for
+ * the bow tie. Within each morning it steps on both downbeats: the morning's patch when the tie comes down, that day's
+ * evening (the same season, lower sun: a flatter, longer patch reaching back behind the wheel, warmer) when she knots
+ * it. One soft slanted patch at half the seasons' saturation, no glazing bars: with a pane cross and full colour it
+ * read as a painted tile or a sign on the wall, not as light.
  */
 interface Light {
   rgb: [number, number, number]
@@ -747,36 +748,34 @@ function drawLightPatch(p: p5, k: number, l: Light, a: number): void {
   if (a <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const H = l.h
-  const gap = 0.045
-  const pw = (l.w - gap) / 2
-  const ph = (H - gap) / 2
-  const [r, g, b] = l.rgb
+  // Half the season's saturation: its colour pulled halfway to its own grey.
+  const [r, g, b] = ((): RGB => {
+    const [r0, g0, b0] = l.rgb
+    const lum = 0.3 * r0 + 0.59 * g0 + 0.11 * b0
+    return [r0, g0, b0].map((c) => Math.round(c + (lum - c) * 0.5)) as RGB
+  })()
   ctx.save()
-  // Three layers, each a little larger: a soft edge, a penumbra, not a cut. The outer two each lay a quarter of `a`;
-  // the inner one makes up the rest, so the panes' middles, under all three, take `a` exactly.
+  // Three layers, each a little larger: a soft edge, a wide penumbra, not a cut. The outer two each lay a quarter of
+  // `a`; the inner one makes up the rest, so the middle, under all three, takes `a` exactly.
   const edge = 0.25 * a
   const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
   for (const [grow, f] of [
+    [0.1, edge],
     [0.05, edge],
-    [0.024, edge],
     [0, inner],
   ] as [number, number][]) {
     ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
     ctx.beginPath()
-    for (let cx = 0; cx < 2; cx++) {
-      for (let cy = 0; cy < 2; cy++) {
-        const y0 = l.top + cy * (ph + gap) - grow
-        const y1 = y0 + ph + 2 * grow
-        const sx = (y: number) => -l.skew * ((y - l.top) / H)
-        const x0 = l.x0 + cx * (pw + gap) - grow
-        const x1 = x0 + pw + 2 * grow
-        ctx.moveTo((x0 + sx(y0)) * k, y0 * k)
-        ctx.lineTo((x1 + sx(y0)) * k, y0 * k)
-        ctx.lineTo((x1 + sx(y1)) * k, y1 * k)
-        ctx.lineTo((x0 + sx(y1)) * k, y1 * k)
-        ctx.closePath()
-      }
-    }
+    const y0 = l.top - grow
+    const y1 = l.top + H + grow
+    const sx = (y: number) => -l.skew * ((y - l.top) / H)
+    const x0 = l.x0 - grow
+    const x1 = l.x0 + l.w + grow
+    ctx.moveTo((x0 + sx(y0)) * k, y0 * k)
+    ctx.lineTo((x1 + sx(y0)) * k, y0 * k)
+    ctx.lineTo((x1 + sx(y1)) * k, y1 * k)
+    ctx.lineTo((x0 + sx(y1)) * k, y1 * k)
+    ctx.closePath()
     ctx.fill()
   }
   ctx.restore()
