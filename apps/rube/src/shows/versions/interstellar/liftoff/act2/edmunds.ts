@@ -30,8 +30,8 @@ import { BRAND, DARK, VOID } from '../worlds'
  * touches down.
  *
  * On the ground: the canopy swings open (229), the ramp runs out and slams
- * down (230) and she sets off from the cairn; the seat kicks Cooper out over
- * the nose (231), he lands on the ramp on the and, rolls down into the camp
+ * down (230) and she sets off from the cairn; the seat leans Cooper out over
+ * the nose (230½), he floats a beat and lands on the ramp (231½), rolls down into the camp
  * and stops on the plate at the foot of its lamp, and on the last hit (232)
  * the lamp lights. The stop on the plate drops, he rolls on, and under the
  * lamp, as the music stops, they meet (CAMP_MEET) and rest together. The
@@ -75,7 +75,11 @@ const TOUCH = PEAK
 /** On the ground: the canopy, the ramp, the kick, the ball on the ramp, the lamp. */
 const CANOPY = cue(229)
 const RAMP = cue(230)
-const KICK = cue(231)
+/**
+ * The seat-back leans him out on the and after the ramp is down (it was on 231, half a beat later, and threw him:
+ * too eager), and he floats a full beat over the nose onto the ramp.
+ */
+const KICK = cue(230.5)
 const ONRAMP = cue(231.5)
 const LAMP = FINAL
 /** When Cooper and Brand first touch at her camp: under the lamp, a beat after it lights, as the music stops. */
@@ -410,8 +414,8 @@ function brandAt(T: number): Companion {
   return { x: MEET_B[0] + give(T), y: MEET_B[1] }
 }
 
-/** The kick's lob: high enough to clear the long nose ahead of the cockpit. */
-const G_HOP = G_EARTH
+/** The lob out of the cockpit: unhurried, a full beat in the air and no higher than it needs to clear the nose. */
+const G_HOP = G_EARTH * 0.38
 
 /** The ball's run from the ramp to the plate: a path, and how far along it is at `T`. */
 const RUN: Pt[] = [onRamp(LAND_D), onRamp(RAMP_LEN - 0.05), [FOOT[0] + 0.12, G - R], [PLATE_X - PLATE_W / 2 - 0.02, G - R], [PLATE_X - PLATE_W / 2 + 0.08, G - R - PLATE_H], [REST[0], G - R - PLATE_H]]
@@ -1220,8 +1224,16 @@ function bubble(p: p5, k: number): void {
   p.endShape(p.CLOSE)
 }
 
-/** How far the seat-back has swung forward: it kicks on 231 and settles back. */
-const kickAt = (T: number): number => (T >= KICK ? Math.min(1, (T - KICK) / 0.07) * Math.exp(-Math.max(0, T - KICK - 0.07) / 0.35) : 0)
+/** How far the seat-back has swung forward: it leans in over a quarter second, lets him go on the and, and settles back slowly. */
+const kickAt = (T: number): number => {
+  const lean = 0.28
+  if (T < KICK - lean) return 0
+  if (T < KICK) {
+    const u = (T - (KICK - lean)) / lean
+    return 0.85 * u * u * (3 - 2 * u)
+  }
+  return 0.85 * Math.exp(-(T - KICK) / 0.6)
+}
 
 /** The hull, its belly and nose, the bells, the collar, and the cockpit's well under the ball (hub units). */
 function drawBody(p: p5, c0: Ctx, T: number): void {
@@ -1589,17 +1601,6 @@ function drawRamp(p: p5, c: Ctx, T: number): void {
       ctx.globalAlpha = 0.8 * (1 - hit / 1.2)
       puff(p, k, alpha(p, ink, 0.5).toString(), weight * 0.5, DUST, ex + side * (0.12 + 0.35 * Math.sqrt(hit)), G - 0.06 - 0.12 * hit, 0.05 + 0.1 * Math.sqrt(hit))
       p.pop()
-    }
-  }
-  // The ball comes down on it on the and: a knock along it.
-  const on = T - ONRAMP
-  if (on >= 0 && on < 0.3) {
-    const [bx, by] = onRamp(LAND_D)
-    p.stroke(alpha(p, VOID.ink, 0.8 * (1 - on / 0.3)))
-    p.strokeWeight(Math.max(1, weight * 0.6))
-    for (const sgn of [-1, 1]) {
-      const a = RAMP_A + Math.PI / 2 + sgn * 0.7
-      p.line(X(bx + Math.cos(a) * 0.2), X(by + R + Math.sin(a) * 0.2), X(bx + Math.cos(a) * (0.28 + on * 0.4)), X(by + R + Math.sin(a) * (0.28 + on * 0.4)))
     }
   }
 }

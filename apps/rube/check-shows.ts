@@ -381,6 +381,8 @@ async function main(): Promise<void> {
           perf.soundtrack?.href === 'https://www.youtube.com/watch?v=JuSsvM8B4Jc')
         // The end credits: words the page sets (the canvas sets none), after the music has stopped, owing what is owed.
         const said = LIFTOFF_CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')
+        check('Interstellar: Directed by Stephen Wu, and under him Claude Opus 5.5',
+          LIFTOFF_CARDS[0].role === 'Directed by' && LIFTOFF_CARDS[0].names.join('|') === 'Stephen Wu|Claude Opus 5.5')
         check('liftoff: end credits after the music, set by the page, ending on the camp alone (no title card), naming Stephen Wu, Opus 5.5, Joseph Cooper, Dr. Amelia Brand, Murph, TARS, p5.js, Hans Zimmer and both cues',
           CREDITS_OK && perf.titles === creditsAt && creditsAt(LIFTOFF_CARDS[0].at - 0.1).length === 0 && creditsAt(perf.duration).length === 0 && !/liftoff/i.test(said) &&
           ['Directed by', 'Stephen Wu', 'Opus 5.5', 'Joseph Cooper', 'Dr. Amelia Brand', 'Murph', 'TARS', 'p5.js', 'Hans Zimmer', 'Cornfield Chase', 'No Time for Caution', 'Interstellar'].every((w) => said.includes(w)) &&

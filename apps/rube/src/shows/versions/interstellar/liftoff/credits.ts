@@ -41,7 +41,7 @@ const OVERLAP = 0.25
 export const CREDITS_AT = 261.4
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.5, role: 'Directed by', names: ['Stephen Wu'] },
+  { hold: 3.0, role: 'Directed by', names: ['Stephen Wu', 'Claude Opus 5.5'] },
   { hold: 2.6, role: 'Machines, drawings and code', names: ['Claude Opus 5.5'] },
   {
     hold: 3.7,
