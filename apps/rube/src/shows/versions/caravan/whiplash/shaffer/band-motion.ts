@@ -54,7 +54,7 @@ export const TURNS: Turn[] = [
   { press: tune(112), page: tune(113), down: tune(115) },
   { press: 52.954, page: tune(124), down: tune(126) },
   { press: 57.73, page: 58.364, down: 59.798 },
-  { press: 67.064, page: tune(157), down: 68.598 },
+  { press: 67.064, page: tune(157), down: tune(159) },
   { up: 73.508 },
 ]
 /** Between pages, on his seat, he keeps time with Tanner: a small hop on every beat (the alternate playing along). */
