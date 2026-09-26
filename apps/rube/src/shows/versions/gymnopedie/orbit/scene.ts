@@ -52,7 +52,9 @@ function viewOf(p: p5, c: PieceCtx): View {
   const cells = p.height / (c.k * scale)
   const wide = wideAt(cells)
   const u = along(c.t)
-  const half = (Math.hypot(p.width, p.height) / (c.k * scale)) * 0.62 + 1.5
+  // Once the frame has begun to slide from the ball to the planet's middle, the ball's neighbourhood is no longer
+  // what is in it: the whole way round is.
+  const half = wide > 0.001 ? LENGTH / 2 : (Math.hypot(p.width, p.height) / (c.k * scale)) * 0.62 + 1.5
   return { cells, wide, u0: u - half, u1: u + half }
 }
 
