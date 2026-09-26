@@ -631,18 +631,19 @@ export function drawCurtain(pen: Pen): void {
       glow(pen, cx, y0 + 0.9, 1.25, FW.fwGold, 0.26 * hz, 1.35)
       glow(pen, cx + 0.3 * Math.sin(t * 0.9 + j), y0 + 1.8, 1.1, FW.coal, 0.1 * hz, 1.2)
     }
-    // It catches: a flare along its length, and a gush of white sparks spat down and out from every lance at once.
-    if (s0 < 0.3) glow(pen, cx, y0, 1.3, FW.fwWhite, 0.4 * (1 - s0 / 0.3), 0.3)
-    if (s0 < 0.62) {
+    // It catches ON the backbeat: the flare along its length is brightest in the frame the cymbal is heard in and dies
+    // over about 0.15 s, and a gush of white sparks is spat down and out from every lance within 20 ms of it.
+    if (s0 < 0.45) glow(pen, cx, y0, 1.3, FW.fwWhite, 0.7 * Math.exp(-s0 / 0.15), 0.3)
+    if (s0 < 0.6) {
       const gn = 6.5
       for (let i = 0; i < 36; i++) {
-        // Spat over the first few hundredths, not all in one frame (which would be a row of beads).
-        const sa = s0 - 0.06 * hash(i, j, 34)
-        if (sa < 0.012 || sa > 0.55) continue
+        // Spat over the first 20 ms, not all in one instant (which would be a row of beads), and fast out of the mouth.
+        const sa = s0 - 0.02 * hash(i, j, 34)
+        if (sa < 0.003 || sa > 0.55) continue
         const x = cx + (hash(i, j, 31) - 0.5) * 1.5
         const ly = wireY(x) + 0.33
         const vx = (hash(i, j, 32) - 0.5) * 2.6
-        const vy = 1.5 + 3 * hash(i, j, 33)
+        const vy = 2.2 + 3.3 * hash(i, j, 33)
         const at = (s: number): Pt => [x + vx * s, ly + vy * s + 0.5 * gn * s * s]
         const [px, py] = at(sa)
         const [qx, qy] = at(Math.max(0, sa - 0.07))
