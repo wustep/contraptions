@@ -27,7 +27,7 @@ export const CREST = { x0: -1.3, x1: 2.6 }
 /** The lane at the hill's foot, a ball's centre height (it runs the whole width, in front of the hill). */
 export const LANE_Y = 2.1
 /** The stone step where the path leaves the lane: its tread from x0 to x1, a ball on it at y. */
-export const STEP = { x0: 8.7, x1: 9.05, y: LANE_Y - 0.13 }
+export const STEP = { x0: 8.15, x1: 9.05, y: LANE_Y - 0.13 }
 /** The foot of the path: the step's face, on the lane. */
 export const FOOT_X = STEP.x1
 /** The tree on the crest: its trunk's foot. */
