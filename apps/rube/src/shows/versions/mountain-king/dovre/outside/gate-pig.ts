@@ -1,6 +1,5 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha } from '../kit'
 import { skyline } from '../mountain'
 import type { Pen } from '../troll'
 import { SKY, STONE, TROLL, WORKS } from '../worlds'
@@ -11,7 +10,9 @@ import { pigPoint, SEAT, type PigPose } from './gate-motion'
  * for a saddle"). A troll-pig, seen side on and facing east: a wedge, not a barrel. Heavy bristled shoulders with a
  * crest along the spine, the back sloping down to a narrow rump and a curly tail; a long wedge of a head ending in a
  * flat snout, a tusk curving up out of the jaw, a small eye, a big ear that flops forward and pricks up when it is
- * startled; short legs on cloven trotters. Flat fills and one ink, like the trolls.
+ * startled; short heavy legs, thick in the ham and the shoulder, tapering through a rounded knee or hock to cloven
+ * trotters. Flat fills edged, like the trolls, with the hide's own shadow, not the page's cream ink: a cream-outlined
+ * pig read as a plush toy on stilts beside the massy trolls. The far legs are a shade darker and have no edge.
  *
  * Drawn in world cells from its pose (`gate-motion.ts`), so the riders `riderAt` puts on its back sit exactly on
  * the sack.
@@ -59,16 +60,19 @@ export interface PigLook {
 }
 
 export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const night = 0.22 * (1 - look.day)
   const hide = mixHex(TROLL.old, SKY.night, night)
-  const far = mixHex(hide, STONE.deep, 0.45)
+  // The edge: the hide's own shadow (a mass, not line art), cooled by the night.
+  const edge = mixHex(mixHex(TROLL.shade, hide, 0.3), SKY.night, night)
+  const far = mixHex(mixHex(hide, STONE.deep, 0.4), TROLL.shade, 0.2)
+  const hoof = mixHex(TROLL.shade, SKY.night, night)
   const belly = mixHex(hide, TROLL.pale, 0.22)
   const snout = mixHex(mixHex(TROLL.pale, TROLL.old, 0.35), SKY.night, night * 0.6)
   const bone = mixHex(TROLL.bone, SKY.night, night * 0.5)
   const sack = mixHex(WORKS.rope, SKY.night, night + 0.1)
   const rope = mixHex(WORKS.rope, SKY.night, night * 0.5)
-  const w = weight * 0.95
+  const w = weight * 0.8
 
   // The head's turn about the neck, in the pig's cells.
   const ch = Math.cos(pose.head)
@@ -103,32 +107,76 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
     const bend = (front ? 1 : -1) * (0.05 + 0.5 * lift)
     const kx = hx + (fx - hx) * 0.55 + bend
     const ky = hy + (fy - hy) * 0.55
-    p.stroke(ink)
-    p.strokeWeight(w * 0.85)
-    p.fill(near ? hide : far)
-    const limb = (x0: number, y0: number, x1: number, y1: number, r0: number, r1: number) => {
-      const L = Math.hypot(x1 - x0, y1 - y0) || 1
-      const nx = (-(y1 - y0) / L) * k
-      const ny = ((x1 - x0) / L) * k
-      p.beginShape()
-      p.vertex(x0 * k + nx * r0, y0 * k + ny * r0)
-      p.vertex(x1 * k + nx * r1, y1 * k + ny * r1)
-      p.vertex(x1 * k - nx * r1, y1 * k - ny * r1)
-      p.vertex(x0 * k - nx * r0, y0 * k - ny * r0)
-      p.endShape(p.CLOSE)
+    // The fetlock, just over the trotter.
+    const ax = fx
+    const ay = fy - 0.065
+    // One tapered limb: thick in the ham (or the shoulder), narrowing to a rounded knee or hock, then a short cannon
+    // tapering to the fetlock. Each side is a smooth curve through the joint, not two straight quads.
+    const normal = (dx: number, dy: number): Pt => {
+      const n = Math.hypot(dx, dy) || 1
+      return [-dy / n, dx / n]
     }
-    limb(hx, hy, kx, ky, 0.105, 0.07)
-    limb(kx, ky, fx, fy - 0.05, 0.065, 0.05)
-    // The cloven trotter: a dark wedge with its cleft.
-    p.fill(mixHex(TROLL.shade, SKY.night, night))
+    const n1 = normal(kx - hx, ky - hy)
+    const n2 = normal(ax - kx, ay - ky)
+    const nl = normal(ax - hx, ay - hy)
+    const nj0: Pt = [n1[0] + n2[0], n1[1] + n2[1]]
+    const njl = Math.hypot(nj0[0], nj0[1]) || 1
+    const nj: Pt = [nj0[0] / njl, nj0[1] / njl]
+    // The side the joint juts to rounds out; the other creases in a little.
+    const out = (kx - hx) * nl[0] + (ky - hy) * nl[1] >= 0 ? 1 : -1
+    const r = front ? [0.12, 0.085, 0.06, 0.047, 0.042] : [0.145, 0.1, 0.062, 0.047, 0.042]
+    const side = (sg: number): Pt[] => {
+      const jr = r[2] * (sg === out ? 1.22 : 0.88)
+      return [
+        [hx + n1[0] * r[0] * sg, hy + n1[1] * r[0] * sg],
+        [hx + (kx - hx) * 0.5 + n1[0] * r[1] * sg, hy + (ky - hy) * 0.5 + n1[1] * r[1] * sg],
+        [kx + nj[0] * jr * sg, ky + nj[1] * jr * sg],
+        [kx + (ax - kx) * 0.5 + n2[0] * r[3] * sg, ky + (ay - ky) * 0.5 + n2[1] * r[3] * sg],
+        [ax + n2[0] * r[4] * sg, ay + n2[1] * r[4] * sg],
+      ]
+    }
+    const pa = side(1)
+    const pb = side(-1)
+    // Round the fill under the fetlock (inside the trotter) and over the hip (inside the body).
+    const ring: Pt[] = [...pa, [ax, ay + 0.03], ...pb.slice().reverse(), [hx, hy - r[0] * 0.8]]
+    const kv = (q: Pt) => p.curveVertex(q[0] * k, q[1] * k)
+    p.noStroke()
+    p.fill(near ? hide : far)
     p.beginShape()
-    p.vertex((fx - 0.06) * k, (fy - 0.075) * k)
-    p.vertex((fx + 0.06) * k, (fy - 0.075) * k)
+    kv(ring[ring.length - 1])
+    for (const q of ring) kv(q)
+    kv(ring[0])
+    kv(ring[1])
+    p.endShape()
+    if (near) {
+      // The edge down each side only, from mid-thigh (about the belly's line) to the fetlock: no line across the body
+      // where the leg joins it. The hip's point steers the curve and is not drawn.
+      p.noFill()
+      p.stroke(edge)
+      p.strokeWeight(w * 0.85)
+      for (const sd of [pa, pb]) {
+        p.beginShape()
+        for (const q of [...sd, sd[4]]) kv(q)
+        p.endShape()
+      }
+    }
+    // The cloven trotter: a dark wedge, narrow at the fetlock and splayed on the ground, with its cleft.
+    if (near) {
+      p.stroke(edge)
+      p.strokeWeight(w * 0.7)
+    } else p.noStroke()
+    p.fill(near ? hoof : mixHex(hoof, STONE.deep, 0.3))
+    p.beginShape()
+    p.vertex((ax - 0.046) * k, (ay - 0.01) * k)
+    p.vertex((ax + 0.046) * k, (ay - 0.01) * k)
     p.vertex((fx + 0.085) * k, fy * k)
     p.vertex((fx - 0.07) * k, fy * k)
     p.endShape(p.CLOSE)
-    p.strokeWeight(w * 0.6)
-    p.line((fx + 0.01) * k, (fy - 0.035) * k, (fx + 0.015) * k, fy * k)
+    if (near) {
+      p.stroke(mixHex(hoof, hide, 0.45))
+      p.strokeWeight(w * 0.5)
+      p.line((fx + 0.012) * k, (fy - 0.03) * k, (fx + 0.016) * k, fy * k)
+    }
   }
 
   p.push()
@@ -144,7 +192,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   const [t2x, t2y] = P(-1.03, -0.78)
   const [t3x, t3y] = P(-0.95, -0.76)
   p.noFill()
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 2.1)
   p.bezier(t0x, t0y, t1x, t1y, t2x, t2y, t3x, t3y)
   p.stroke(hide)
@@ -152,7 +200,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   p.bezier(t0x, t0y, t1x, t1y, t2x, t2y, t3x, t3y)
 
   // The body and head: one outline, the head's points turned about the neck.
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w)
   p.fill(hide)
   const pts = OUTLINE.map(([x, y, f]) => {
@@ -178,7 +226,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   leg(SHOULDER, pose.phase, true, true)
 
   // The crest: stiff bristles along the spine from the crown back, longest over the shoulders, stirring.
-  p.stroke(alpha(p, ink, 0.6))
+  p.stroke(mixHex(edge, hide, 0.25))
   p.strokeWeight(w * 0.7)
   for (let i = 0; i < 15; i++) {
     const u = i / 14
@@ -193,7 +241,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   }
 
   // The sack for a saddle, lumped over his seat, a cord round it.
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.8)
   p.fill(sack)
   p.beginShape()
@@ -211,7 +259,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   // The ear: floppy, over the eye; pricked up when startled.
   const e = Math.max(0, Math.min(1, pose.ears))
   const tip: Pt = [0.8 - 0.17 * e, -0.84 - 0.22 * e]
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.85)
   p.fill(mixHex(hide, TROLL.pale, 0.12))
   p.beginShape()
@@ -229,21 +277,21 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
     p.fill(TROLL.shade)
     p.ellipse(ex + 0.008 * k, ey, 0.022 * k, 0.024 * k * Math.min(1, open))
   } else {
-    p.stroke(ink)
+    p.stroke(edge)
     p.strokeWeight(w * 0.6)
     p.noFill()
     const [ax, ay] = H(0.71, -0.77)
     const [bx, by] = H(0.76, -0.76)
     p.line(ax, ay, bx, by)
   }
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.9)
   p.noFill()
   const [b0x, b0y] = H(0.68, -0.8)
   const [b1x, b1y] = H(0.79, -0.785)
   p.line(b0x, b0y, b1x, b1y)
   // The snout's flat end, and its nostrils.
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.8)
   p.fill(snout)
   p.beginShape()
@@ -256,7 +304,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
     p.ellipse(nx, ny, 0.018 * k, 0.034 * k)
   }
   // The tusk, curving up out of the jaw.
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.7)
   p.fill(bone)
   p.beginShape()
@@ -265,7 +313,7 @@ export function drawPig(p: p5, c: Pen, pose: PigPose, look: PigLook): void {
   p.bezierVertex(...H(0.925, -0.58), ...H(0.9, -0.54), ...H(0.84, -0.52))
   p.endShape(p.CLOSE)
   // The mouth's line under the tusk.
-  p.stroke(ink)
+  p.stroke(edge)
   p.strokeWeight(w * 0.6)
   p.noFill()
   p.line(...H(0.72, -0.5), ...H(0.88, -0.5))

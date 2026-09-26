@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../parts'
-import { CODA, CODA_CHORDS, FF, LAST1, LAST2, level, SILENCE } from './music'
+import { beat, CODA, CODA_CHORDS, FF, LAST1, LAST2, level, SILENCE } from './music'
 import type { Pen } from './troll'
 import { STONE } from './worlds'
 
@@ -17,14 +17,31 @@ import { STONE } from './worlds'
 /* ------------------------------------------------------------------ the shake */
 
 /**
- * How far the mountain is shaken at show time `t`, in cells: [dx, dy]. Nothing through the soft statements; a
- * rumble growing with the loudness through the fortissimo (from `FF`); a jolt on each of the coda's chords, decaying
- * over half a second; stillness in the silence; the roll's shudder; the two last chords. Continuous: a pure
- * function of time. Multiply by how much your set should feel it (a hanging lantern more, a floor less).
+ * The heart's hammer blows through the third statement (the 1 and 3 of every bar, from the first blow on the beat
+ * after he lands; `heart-clock.ts` OOM): the whole mountain thumps down on each and settles, a little harder each
+ * phrase. Beat numbers, so the rock needs nothing from the heart.
+ */
+let BLOWS: { t: number; size: number }[] | null = null
+const blows = () =>
+  (BLOWS ??= [193, ...Array.from({ length: 47 }, (_, i) => 196 + 2 * i)].map((k) => ({ t: beat(k), size: 0.018 + 0.002 * Math.floor((k - 192) / 16) })))
+/** A thump's shape: down within about 30 ms, back over about a tenth of a second (peak 1). */
+const thump = (d: number): number => (d <= 0 ? 0 : ((1 - Math.exp(-d / 0.018)) * Math.exp(-d / 0.12)) / 0.64)
+
+/**
+ * How far the mountain is shaken at show time `t`, in cells: [dx, dy]. Nothing through the soft statements; a jolt
+ * on the fortissimo's downbeat (`FF`) and a rumble growing with the loudness through it; through the third
+ * statement a thump down on each hammer blow (never more than 0.03 cells: Peer's rides are drawn unshaken and must
+ * not slip on the machine); a jolt on each of the coda's chords, decaying over half a second; stillness in the
+ * silence; the roll's shudder; the two last chords. Continuous: a pure function of time. Multiply by how much your
+ * set should feel it (a hanging lantern more, a floor less).
  */
 export function quake(t: number): Pt {
   let a = 0
-  if (t > FF - 1) a += 0.012 * Math.max(0, Math.min(1, (t - FF + 1) / 3)) * level(t)
+  let down = 0
+  // (The rumble eases off once the hammer's thumps take over the pulse, so the two together stay small.)
+  if (t > FF - 1) a += 0.012 * Math.max(0, Math.min(1, (t - FF + 1) / 3)) * level(t) * (1 - 0.45 * Math.max(0, Math.min(1, (t - FF - 1) / 1.5)))
+  if (t >= FF) a += 0.08 * Math.exp(-(t - FF) / 0.35) * Math.min(1, (t - FF) / 0.015)
+  if (t > FF && t < CODA) for (const b of blows()) if (t > b.t && t - b.t < 0.8) down += b.size * thump(t - b.t)
   if (t >= CODA - 0.02) {
     for (const c of CODA_CHORDS) {
       const d = t - c.t
@@ -36,8 +53,8 @@ export function quake(t: number): Pt {
       if (d >= 0 && d < 2.5) a += 0.1 * Math.exp(-d / 0.5)
     }
   }
-  if (a <= 0) return [0, 0]
-  return [a * (Math.sin(t * 61.3) + 0.5 * Math.sin(t * 97.1)), a * (Math.sin(t * 53.7 + 1) + 0.5 * Math.sin(t * 89.9 + 2))]
+  if (a <= 0 && down <= 0) return [0, 0]
+  return [a * (Math.sin(t * 61.3) + 0.5 * Math.sin(t * 97.1)), a * (Math.sin(t * 53.7 + 1) + 0.5 * Math.sin(t * 89.9 + 2)) + down]
 }
 
 /* ------------------------------------------------------------------ the hollow */

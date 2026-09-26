@@ -14,7 +14,7 @@ import { SKY, STONE } from '../worlds'
  * - through the silence it lets go of him (`below`): the last hammer blow throws him on up the vent, the water falls
  *   back away under him, and on the roll a fresh jet comes up the dark vent and slams into him;
  * - after the second of the last two chords it bursts out of the summit past the top of the frame (`burst`), falls
- *   back, and is gone before the credits (151.8).
+ *   back from the top down over the ring-out, raining spray on the crater, and is gone before the credits (153.7).
  */
 
 /** The column's body: the wet stone's blue, deeper, so the froth on it reads. */
@@ -37,11 +37,17 @@ function below(T: number): number {
   return Math.min(0.5 * SAG * (T - LET_GO) * (T - LET_GO), JET * (ROLL - T))
 }
 
-/** After the last chord (u = T - LAST2): how far the burst's jet climbs over the caller's top (then falls back), how open its head is, and how much of it is left. */
+/**
+ * After the last chord (u = T - LAST2): how far the burst's jet climbs over the caller's top (then falls back), how
+ * open its head is, and how much of it is left. The jet climbs for about 0.7 s, then its top falls back under about
+ * half of gravity (the water under it still rising into it) and runs down the column from the top for about a second
+ * and a half, down into the crater and the vent, while the last chord rings out; what is left thins after that and is
+ * gone well before the credits (153.7).
+ */
 function burst(u: number): { up: number; open: number; left: number } {
   const s = Math.min(1, Math.max(0, u / 0.65))
-  const up = 3 * (1 - (1 - s) * (1 - s) * (1 - s)) - 14 * Math.max(0, u - 0.7) ** 2
-  return { up, open: smooth(u, 0, 0.45), left: 1 - smooth(u, 1.15, 1.9) }
+  const up = 3 * (1 - (1 - s) * (1 - s) * (1 - s)) - 4.2 * Math.max(0, u - 0.72) ** 2
+  return { up, open: smooth(u, 0, 0.45), left: 1 - smooth(u, 2.1, 3.0) }
 }
 
 /* ------------------------------------------------------------------ the column */
@@ -56,8 +62,8 @@ function profile(d: number, f: number, force: number, open: number): number {
 }
 
 /** A ragged edge: the swellings run up the column (y falls as T grows), each side on its own phase. */
-function rag(y: number, T: number, s: number): number {
-  return 0.13 * Math.sin(y * 2.1 + T * 19 + s) + 0.08 * Math.sin(y * 4.9 + T * 34 + 2.3 * s) + 0.05 * Math.sin(y * 9.7 + T * 47 + 3.1 * s)
+function rag(y: number, T: number, s: number, fine = 1): number {
+  return 0.13 * Math.sin(y * 2.1 + T * 19 + s) + 0.08 * fine * Math.sin(y * 4.9 + T * 34 + 2.3 * s) + 0.05 * fine * Math.sin(y * 9.7 + T * 47 + 3.1 * s)
 }
 
 interface Row {
@@ -93,7 +99,7 @@ export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T
   // Loose: the top is not pushing anything (he is away above it, or it is out in the open on its own).
   const loose = Math.max(smooth(below(T), 0.03, 0.4), T >= LAST2 ? 1 : 0)
   // 0..1 how much a loose head is falling back (1) rather than driving up (0).
-  const falling = T >= LAST2 ? smooth(T - LAST2, 0.6, 1.0) : T > LET_GO && T < ROLL && 0.5 * SAG * (T - LET_GO) ** 2 < JET * (ROLL - T) ? 1 : 0
+  const falling = T >= LAST2 ? smooth(T - LAST2, 0.6, 1.1) : T > LET_GO && T < ROLL && 0.5 * SAG * (T - LET_GO) ** 2 < JET * (ROLL - T) ? 1 : 0
   const n = Math.max(10, Math.min(420, Math.ceil(len * 12)))
   const rows: Row[] = []
   for (let i = 0; i <= n; i++) {
@@ -110,7 +116,9 @@ export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T
     const hw = profile(d, f, force, open) * wide * neck * tip
     const amp = 0.7 + 0.9 * smooth(d, 0.4, 4) + 0.9 * loose * Math.exp(-d / (0.3 + open))
     const wob = 0.02 * Math.sin(y * 1.3 + T * 6)
-    rows.push({ y, l: x + wob - hw * (1 + amp * rag(y, T, 0)), r: x + wob + hw * (1 + amp * rag(y, T, 1.7)), d, hw })
+    // Out in the open (the burst) the edge swells in broad tongues, not a fringe of hairline spikes.
+    const fine = 1 - 0.85 * open
+    rows.push({ y, l: x + wob - hw * (1 + amp * rag(y, T, 0, fine)), r: x + wob + hw * (1 + amp * rag(y, T, 1.7, fine)), d, hw })
   }
   const band = (from: (w: Row) => number, to: (w: Row) => number) => {
     p.beginShape()
@@ -176,7 +184,10 @@ export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T
     const dx = edge + s * (0.02 + 0.3 * age * (0.5 + hash(j, 74)))
     const dy = y + 0.25 * age * age
     const sz = 0.5 + 0.7 * hash(j, 75)
-    p.fill(alpha(p, s > 0 && sun > 0.02 ? mixHex(FOAM, SKY.sun, 0.5 * sun) : FOAM, 0.7 * a * (1 - age)))
+    // (Out in the open these would be hairline dashes along a wide frame's column: they give way to the head's tongues.)
+    const keep = 1 - smooth(open, 0.05, 0.4)
+    if (keep <= 0.01) continue
+    p.fill(alpha(p, s > 0 && sun > 0.02 ? mixHex(FOAM, SKY.sun, 0.5 * sun) : FOAM, 0.7 * a * (1 - age) * keep))
     p.ellipse(dx * k, dy * k, 0.028 * sz * k, 0.06 * sz * k)
   }
   // A loose head: tongues of froth round its dome, reaching up while it drives and hanging out and down as it falls
@@ -306,8 +317,6 @@ export function crown(p: p5, c: Pen, bx: number, by: number, T: number, force: n
 
 /* ------------------------------------------------------------------ the burst */
 
-type Pt2 = [number, number]
-
 /**
  * Out of the summit on the second of the last two chords: the jet (drawn by `column`) climbs past the top of the
  * frame and bursts, throwing spray up and out in streaks that arc over and fall back to the flanks (to `ground(x)` of
@@ -321,42 +330,53 @@ export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: 
   const { left } = burst(u)
   if (left <= 0.005) return
   const k = c.k
-  // Where the jet's top was when each streak left it (the caller's top moves little over the burst).
+  // Where the jet's top was when each drop left it (the caller's top moves little over the burst).
   const topAt = (v: number) => yTop - burst(v).up
   p.push()
   p.noStroke()
-  // Streaks peel off the jet's upper part (most near its top), thrown up and out to both sides, and arc over.
-  const N = 90
+  // Drops peel off the jet's upper part (most near its top), thrown up and out to both sides, and fall back; they go
+  // on peeling off its falling head as it runs back down, thrown less high, raining back into the crater. Few and fat:
+  // each a teardrop (a round head, a short tapered tail along its flight) a tenth of a cell across, never more than
+  // three of itself long, kept within about four cells of the jet and gone in about 0.6 s. (A hundred and fifty thin
+  // streaks over the whole upper frame read as scratches on the film.)
+  const N = 60
   for (let i = 0; i < N; i++) {
-    const t0 = 0.95 * Math.pow((i + hash(i, 60)) / N, 1.3)
+    const t0 = 1.9 * Math.pow((i + hash(i, 60)) / N, 1.5)
     const tau = u - t0
-    if (tau <= 0) continue
+    if (tau <= 0 || tau > 0.62) continue
     const s = hash(i, 61) < 0.5 ? -1 : 1
     const along = Math.pow(hash(i, 67), 1.6)
     const top0 = topAt(t0)
-    const y0 = top0 + along * 0.45 * Math.max(0, yBase - top0)
+    const y0 = top0 + along * 0.4 * Math.max(0, yBase - top0)
     const x0 = x + s * profile(y0 - top0, 9, 0.6, smooth(t0, 0, 0.45)) * (0.7 + 0.3 * hash(i, 68))
-    const vx = s * (1.2 + 2.8 * hash(i, 62))
-    const vy = -(1.5 + 5 * hash(i, 63)) * (1 - 0.35 * along)
+    const vx = s * (0.9 + 2.2 * hash(i, 62))
+    const vy = -(1.2 + 3.8 * hash(i, 63)) * (1 - 0.35 * along) * (1 - 0.6 * smooth(t0, 0.7, 1.6))
     const g = 8
-    const at = (q: number): Pt2 => [x0 + vx * q, y0 + vy * q + 0.5 * g * q * q]
-    const head = at(tau)
-    if (head[1] > ground(head[0])) continue
-    const tail = at(Math.max(0, tau - 0.08 - 0.05 * hash(i, 64)))
-    const fade = left * (1 - smooth(tau, 0.9, 1.5))
+    const hx = x0 + vx * tau
+    const hy = y0 + vy * tau + 0.5 * g * tau * tau
+    if (hy > ground(hx)) continue
+    const off = Math.abs(hx - x)
+    const fade = left * (1 - smooth(tau, 0.3, 0.6)) * (1 - smooth(off, 3.2, 4.0)) * smooth(tau, 0, 0.05)
     if (fade <= 0.01) continue
-    // Each a streak drawn out along its flight, a few of them heavier gouts.
-    const soft = i % 5 === 0
-    const wd = (soft ? 0.07 + 0.03 * Math.min(1, tau / 0.7) : 0.03 + 0.035 * hash(i, 65)) * (0.7 + 0.6 * hash(i, 69))
-    const dx = head[0] - tail[0]
-    const dy = head[1] - tail[1]
-    const m = Math.hypot(dx, dy)
-    const col = mixHex(soft ? FOAM : WHITE, SKY.sun, (s > 0 ? 0.55 : 0.15) * sun)
-    p.fill(alpha(p, col, (soft ? 0.4 : 0.55 + 0.3 * hash(i, 66)) * fade))
+    const wd = 0.06 + 0.04 * hash(i, 65)
+    // The tail trails back along the flight: as long as the drop is fast, at most three widths.
+    const dvx = vx
+    const dvy = vy + g * tau
+    const speed = Math.hypot(dvx, dvy)
+    const L = Math.min(3 * wd, wd * (0.6 + 0.35 * speed))
+    const col = mixHex(i % 3 ? FOAM : WHITE, SKY.sun, (s > 0 ? 0.55 : 0.15) * sun)
+    p.fill(alpha(p, col, (0.55 + 0.25 * hash(i, 66)) * fade))
     p.push()
-    p.translate(((head[0] + tail[0]) / 2) * k, ((head[1] + tail[1]) / 2) * k)
-    p.rotate(Math.atan2(dy, dx))
-    p.ellipse(0, 0, (m + wd) * k, wd * k)
+    p.translate(hx * k, hy * k)
+    p.rotate(Math.atan2(dvy, dvx))
+    const r = (wd / 2) * k
+    p.beginShape()
+    p.vertex(-L * k, 0)
+    p.bezierVertex(-L * 0.5 * k, -r * 0.35, -r * 0.8, -r, 0, -r)
+    p.bezierVertex(r * 0.56, -r, r, -r * 0.56, r, 0)
+    p.bezierVertex(r, r * 0.56, r * 0.56, r, 0, r)
+    p.bezierVertex(-r * 0.8, r, -L * 0.5 * k, r * 0.35, -L * k, 0)
+    p.endShape(p.CLOSE)
     p.pop()
   }
   p.pop()

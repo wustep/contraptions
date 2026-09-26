@@ -95,15 +95,18 @@ export function drawLantern(p: p5, c: Pen, x: number, y: number, look: LightLook
   p.translate(x * k, y * k)
   p.rotate(look.swing ?? 0)
   const iron = WORKS.iron
+  // The cage is iron, edged in iron that catches its own flame's light, never the page's cream (a cream cage read as
+  // a little white jar, a glyph, at hanging size). A caller's dimmed ink still darkens it a little in the dark.
+  const cage = mixHex(mixHex(iron, WORKS.steel, 0.2 + 0.5 * lit), ink, 0.15)
   // The chain: a line is enough at this size.
   if (hang > 0) {
-    p.stroke(mixHex(iron, ink, 0.25))
+    p.stroke(mixHex(iron, cage, 0.4))
     p.strokeWeight(weight * 0.8)
     p.line(0, 0, 0, hang * k)
   }
   p.translate(0, hang * k)
   // The bail: a hoop from the cap's sides up to the hook.
-  p.stroke(ink)
+  p.stroke(cage)
   p.strokeWeight(weight * 0.8)
   p.noFill()
   p.arc(0, S * 0.24, S * 0.56, S * 0.48, Math.PI, Math.PI * 2)
@@ -153,7 +156,8 @@ export function drawTorch(p: p5, c: Pen, x: number, y: number, look: LightLook &
   p.push()
   p.rectMode(p.CORNER)
   p.translate(x * k, y * k)
-  p.stroke(ink)
+  // An iron bracket, edged in iron (not the page's cream).
+  p.stroke(mixHex(mixHex(WORKS.iron, WORKS.steel, 0.2 + 0.4 * lit), ink, 0.15))
   p.strokeWeight(weight * 0.9)
   p.noFill()
   // The bracket: an arm out from the wall and a cup.

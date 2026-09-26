@@ -18,7 +18,12 @@ import {
  */
 
 const shade = (hex: string, light: number, bg: string, floor = 0.2): string => mixHex(bg, hex, floor + (1 - floor) * clamp01(light))
-const inkIn = (c: Pen, light: number): string => mixHex(c.bg, c.ink, 0.3 + 0.7 * clamp01(light))
+/**
+ * The edge of the mine's timber and iron: old wood's shadow, darker than what it edges at every light (a cream edge
+ * made the timbering and the carts pale line art).
+ */
+const EDGE = mixHex(WORKS.wood, STONE.deep, 0.62)
+const inkIn = (c: Pen, light: number): string => mixHex(c.bg, EDGE, 0.45 + 0.55 * clamp01(light))
 
 function poly(p: p5, k: number, pts: Pt[]): void {
   p.beginShape()
