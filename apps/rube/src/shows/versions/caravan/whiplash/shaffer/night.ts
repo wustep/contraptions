@@ -310,22 +310,25 @@ export const night = part<NightState>(
     { t: slot.begin, cells: 5, off: [0.9, -0.8] },
     { t: LAMP_ON + 0.6, cells: 5.8, hold: at([-2.4, -0.45]), w: 0.75 },
     { t: KICK, cells: 5.5, hold: at([-0.5, -0.2]) },
-    // The drill, close, the metronome on its shelf; in closer as it goes faster, and on the blood.
+    // The drill, scored to the tune's phrases: close on the sticks; back for the whole of it, the metronome ticking on
+    // its shelf and the bulb over him; in again as it goes faster; in to the red dab on the head when it comes.
     { t: DRILL + 0.4, cells: 3.9, hold: at([0.45, -0.5]) },
-    { t: beat(333), cells: 3.5, hold: at([0.3, -0.42]) },
-    { t: BLOOD, cells: 2.9, hold: at([0.2, -0.25]) },
+    { t: beat(326), cells: 6.0, hold: at([1.15, -1.45]) },
+    { t: beat(334), cells: 3.3, hold: at([0.3, -0.4]) },
+    { t: BLOOD, cells: 2.25, hold: at([0.15, -0.08]) },
     // To the glass, and back.
     { t: SPLASH, cells: 3.1, hold: at([2.3, -0.05]) },
     { t: POP, cells: 3.0, hold: at([2.5, 0.0]) },
     // The tape, close.
-    { t: GRIP, cells: 2.8, hold: at([0.55, -0.35]) },
-    { t: TAPED, cells: 2.9, hold: at([0.35, -0.3]) },
-    // The drill again: close on the sticks; up to the lamp beginning to swing; across to the clock in the quiet; out
-    // wide as the swing grows widest; and in, through the last strokes, to him.
-    { t: beat(356), cells: 3.3, hold: at([0.25, -0.35]) },
-    { t: beat(368), cells: 4.4, hold: at([0.7, -1.15]) },
-    { t: beat(376), cells: 3.6, hold: at([1.3, -0.75]) },
-    { t: beat(384), cells: 3.75, hold: at([1.1, -0.8]) },
+    { t: GRIP, cells: 2.4, hold: at([0.55, -0.35]) },
+    { t: TAPED, cells: 2.5, hold: at([0.4, -0.3]) },
+    // The drill again, grimmer: close on the sticks; back to the clock and the bulb as it speeds up and the lamp
+    // begins to swing; close; the clock and him; out wide as the swing grows widest; and in, through the last
+    // strokes, to him.
+    { t: beat(356), cells: 3.4, hold: at([0.3, -0.4]) },
+    { t: beat(366), cells: 6.3, hold: at([1.0, -1.6]) },
+    { t: beat(376), cells: 3.2, hold: at([0.35, -0.4]) },
+    { t: beat(384), cells: 4.6, hold: at([1.4, -0.9]) },
     { t: beat(391), cells: 5.6, hold: at([0.0, -0.75]) },
     // Dark, and in on him at rest: the match cut to the road.
     { t: REST_AT + 0.12, cells: 3.5, hold: at(REST), w: 1 },
