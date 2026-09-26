@@ -374,6 +374,11 @@ const OUT_V = 0.95
 const OUT_T = RAISED + Math.hypot(OUT_AT[0] - 4.721, OUT_AT[1] + 0.047) / ((0.1 + OUT_V) / 2)
 const EXIT_X = 25.5
 const EXIT_V = 0.9
+/** Her check as the soldiers' heads come round (the last lamp's note), how slow, and when she is walking on again. */
+const HESITATE = 35.84
+const SLOW_T = 36.55
+const SLOW_V = 0.7
+const ON_T = 37.5
 const DOOR_X = DOOR_AT.x0 - R - 0.01
 function solveRun(end: number): { tp: number; vp: number } {
   let best = { tp: OUT_T + 1, vp: 2, err: Infinity }
@@ -407,6 +412,17 @@ export const shop = part<ShopState>(
     const n = (a: number, b: number, per = 40) => Math.max(2, Math.ceil((b - a) * per))
     const { tp, vp } = solveRun(slot.end)
     const peakX = OUT_AT[0] + ((OUT_V + vp) / 2) * (tp - OUT_T)
+    // The hesitation: on the last lamp's note the soldiers at the lane's mouth ahead turn their heads to her, and she
+    // checks, then walks on (a little quicker, head down), easing into the lane's pace by the seam. The run up to
+    // that note is the solved one, unchanged.
+    const aR = (EXIT_V - vp) / (slot.end - tp)
+    const vH = vp + aR * (HESITATE - tp)
+    const xH = peakX + vp * (HESITATE - tp) + 0.5 * aR * (HESITATE - tp) ** 2
+    const xS = xH + ((vH + SLOW_V) / 2) * (SLOW_T - HESITATE)
+    const on1 = ON_T - SLOW_T
+    const on2 = slot.end - ON_T
+    const vm = (EXIT_X - xS - (SLOW_V * on1) / 2 - (EXIT_V * on2) / 2) / (on1 / 2 + on2 / 2)
+    const xO = xS + ((SLOW_V + vm) / 2) * on1
     const off = shelfBall(LEDGE_OFF)
     const land = floorBall(LAND)
     const flickFrom = floorBall(FLICK)
@@ -433,7 +449,10 @@ export const shop = part<ShopState>(
         { at: at(RAISED), p: cup1 },
         { at: at(OUT_T), p: OUT_AT, ramp: [0.1, OUT_V], arc: 0.04 },
         { at: at(tp), p: [peakX, 0], ramp: [OUT_V, vp] },
-        { at: at(slot.end), p: [EXIT_X, 0], ramp: [vp, EXIT_V] },
+        { at: at(HESITATE), p: [xH, 0], ramp: [vp, vH] },
+        { at: at(SLOW_T), p: [xS, 0], ramp: [vH, SLOW_V] },
+        { at: at(ON_T), p: [xO, 0], ramp: [SLOW_V, vm] },
+        { at: at(slot.end), p: [EXIT_X, 0], ramp: [vm, EXIT_V] },
       ]),
     ]
     return {
@@ -470,10 +489,12 @@ export const shop = part<ShopState>(
     // The street, the town waking: following her a third of the way up the frame, close enough that the fronts pass,
     // the lamps put out as she comes by them.
     { t: 30.2, cells: 6.2, off: [1.3, -1.35], w: 0 },
-    // Down the street: the camera lets her go on ahead and drifts after her, slower than she walks, so she crosses
-    // the frame past the lamps, each put out as she comes by it; then on with her to the alley.
-    { t: 31.6, cells: 6.4, hold: [17.7, -1.55], w: 1 },
-    { t: 34.3, cells: 6.3, hold: [19.9, -1.5], w: 1 },
+    // Down the street at eye level (the shop fronts, the awnings going out, the lamps' feet; the upper storeys
+    // cropped), her a third up; the camera gliding on ahead of her toward the lane's mouth, where the two soldiers
+    // lounge in the right of the frame by the last lamp's note; it settles there and she walks up into it.
+    { t: 31.6, cells: 5.4, hold: [17.85, -0.92], w: 1 },
+    { t: 33.9, cells: 5.3, hold: [21.9, -0.92], w: 1 },
+    { t: HESITATE, cells: 5.3, hold: [25.45, -0.9], w: 1 },
     // Down to the alley's framing on the seam.
     { t: slot.end, cells: 5, hold: [EXIT_X + 0.9, -0.8], w: 1 },
   ],

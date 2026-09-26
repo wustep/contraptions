@@ -366,6 +366,7 @@ export const town = scenery<null>({
       // The houses across the street, and the ones to the west of the shop.
       for (let i = 0; i < HOUSES.length; i++) drawHouse(p, k, W, ink, HOUSES[i], i, t, tone, night)
       for (const h of WEST) drawHouse(p, k, W, ink, h, -1, t, tone, night)
+      if (t < 150) drawBunting(p, k, W, ink, t, tone)
     }
 
     // The ground: cobbles in the street, the shop's boards, the stone under both.
@@ -497,9 +498,276 @@ function drawHouse(p: p5, k: number, W: number, ink: string, h: House, index: nu
   const gx = d > h.x0 + h.w / 2 ? h.x0 + 0.35 : h.x0 + h.w - 1.05
   // The houses west of the shop go dark in the war's blackout with it (the war builder puts out the ones across the way).
   const lamps = night && !(index < 0 && blackedOut(t))
-  if (gx + 0.7 < x1 && gx > h.x0) window(p, k, W, ink, { x: gx, y: G - 2.1, w: 0.7, h: 1.2 }, 1, lamps && hash(index + 30, 1) > 0.4, tone, false)
+  if (gx + 0.7 < x1 && gx > h.x0) window(p, k, W, ink, { x: gx, y: G - 2.1, w: 0.7, h: 1.2 }, groundShutter(index, t), lamps && hash(index + 30, 1) > 0.4, tone, index === 3)
   // The upper windows: shutters, and a box of flowers under each.
   h.wins.forEach((win, j) => window(p, k, W, ink, win, index >= 0 ? shutterAt(index, j, t) : 1, lamps && hash(index + 20, j) > 0.3, tone, true))
+  if (index >= 0) dressFront(p, k, W, ink, index, t, tone)
+}
+
+/* --------------------------------------------- the street dressed for the parade day */
+
+/**
+ * The street at eye level, so no two frames of her walk look alike: a baker's pretzel and a cobbler's boot on iron
+ * brackets, the café's striped awning and the florist's green one (each cranked out on a strong note as she comes
+ * by, the shops opening), the florist's stand of buckets, ground-floor shutters opening, and bunting for the parade
+ * under the jetties. The awnings, the stand and the bunting are the day's (gone by the night and the war); the
+ * signs are the street's.
+ */
+const GROUND_WAKE: Record<number, number> = { 1: 29.681, 3: 32.821, 5: 36.966 }
+const AWNINGS: { house: number; x0: number; x1: number; t: number; stripes: boolean }[] = [
+  { house: 2, x0: 15.35, x1: 17.75, t: 31.242, stripes: true },
+  { house: 4, x0: 22.3, x1: 23.5, t: 34.975, stripes: false },
+]
+
+/** A ground-floor window's shutters: shut until its note on the morning walk, open after (and all night). */
+function groundShutter(index: number, t: number): number {
+  const at = GROUND_WAKE[index]
+  if (at === undefined || t >= SEAM.curse) return 1
+  const s = t - (at - 0.3)
+  if (s <= 0) return 0
+  const out = s < 0.3 ? Math.pow(s / 0.3, 2) : 1
+  const settle = s >= 0.3 ? 0.08 * Math.exp(-(s - 0.3) / 0.35) * Math.abs(Math.sin((s - 0.3) * 11)) : 0
+  return Math.max(0, Math.min(1, out - settle))
+}
+
+/** How far an awning is cranked out (0 rolled up, 1 out), landing on its note with a small damped give. */
+function awningOut(at: number, t: number): number {
+  if (t >= SEAM.curse) return 0
+  const s = t - (at - 0.45)
+  if (s <= 0) return 0
+  if (s < 0.45) {
+    const u = s / 0.45
+    return u * u * (3 - 2 * u)
+  }
+  return 1 + 0.05 * Math.exp(-(s - 0.45) / 0.28) * Math.sin((s - 0.45) * 13)
+}
+
+function dressFront(p: p5, k: number, W: number, ink: string, index: number, t: number, tone: Tone): void {
+  const day = t < SEAM.curse
+  for (const a of AWNINGS) if (a.house === index) drawAwning(p, k, W, ink, a, awningOut(a.t, t), tone)
+  if (index === 1) bracketSign(p, k, W, ink, 12.18, t, tone, 'pretzel')
+  if (index === 5) bracketSign(p, k, W, ink, 23.68, t, tone, 'boot')
+  if (index === 4 && day) flowerStand(p, k, W, ink, 22.28, 23.52, tone)
+}
+
+/** An awning: a roller under the jetty, and cranked out, a sloping face (stripes or plain) with a scalloped valance. */
+function drawAwning(p: p5, k: number, W: number, ink: string, a: { x0: number; x1: number; stripes: boolean }, u: number, tone: Tone): void {
+  const X = (v: number) => v * k
+  const top = G - 2.86
+  // The roller and its box, always there.
+  p.stroke(ink)
+  p.strokeWeight(W * 0.6)
+  p.fill(tone(TOWN.timberDark))
+  p.rect(X(a.x0 - 0.05), X(top - 0.1), X(a.x1 - a.x0 + 0.1), X(0.12))
+  if (u <= 0.01) return
+  const drop = 0.62 * u
+  const flare = 0.1 * u
+  const L = a.x0 - flare
+  const R = a.x1 + flare
+  const bot = top + drop
+  const main = a.stripes ? TOWN.rose : TOWN.shutter
+  const second = TOWN.plaster
+  // The face: a trapezoid from the roller out to its front edge, striped.
+  p.noStroke()
+  p.fill(tone(main))
+  p.beginShape()
+  p.vertex(X(a.x0), X(top))
+  p.vertex(X(a.x1), X(top))
+  p.vertex(X(R), X(bot))
+  p.vertex(X(L), X(bot))
+  p.endShape(p.CLOSE)
+  if (a.stripes) {
+    const n = Math.max(4, Math.round((a.x1 - a.x0) / 0.24))
+    p.fill(tone(second))
+    for (let i = 1; i < n; i += 2) {
+      const f0 = i / n
+      const f1 = (i + 1) / n
+      p.beginShape()
+      p.vertex(X(a.x0 + (a.x1 - a.x0) * f0), X(top))
+      p.vertex(X(a.x0 + (a.x1 - a.x0) * f1), X(top))
+      p.vertex(X(L + (R - L) * f1), X(bot))
+      p.vertex(X(L + (R - L) * f0), X(bot))
+      p.endShape(p.CLOSE)
+    }
+  }
+  // The valance: a band with scallops along its hem, hanging off the front edge.
+  const vh = 0.16 * Math.min(1, u * 1.4)
+  const m = Math.max(4, Math.round((R - L) / 0.26))
+  const sw = (R - L) / m
+  for (let i = 0; i < m; i++) {
+    const x = L + i * sw
+    p.fill(tone(a.stripes ? (i % 2 ? second : main) : mixHex(main, TOWN.timberDark, 0.12)))
+    p.beginShape()
+    p.vertex(X(x), X(bot))
+    p.vertex(X(x + sw), X(bot))
+    p.vertex(X(x + sw), X(bot + vh * 0.55))
+    p.quadraticVertex(X(x + sw / 2), X(bot + vh * 1.25), X(x), X(bot + vh * 0.55))
+    p.endShape(p.CLOSE)
+  }
+  // Its outline, and the shadow it throws on the wall under it.
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(W * 0.55)
+  p.beginShape()
+  p.vertex(X(a.x0), X(top))
+  p.vertex(X(L), X(bot))
+  p.vertex(X(R), X(bot))
+  p.vertex(X(a.x1), X(top))
+  p.endShape()
+  p.noStroke()
+  p.fill(alpha(p, tone(TOWN.timberDark), 0.16 * u))
+  p.rect(X(a.x0), X(bot + vh * 0.9), X(a.x1 - a.x0), X(0.28))
+}
+
+/** A sign on a wrought-iron bracket off the wall: the baker's pretzel or the cobbler's boot, swaying a little. */
+function bracketSign(p: p5, k: number, W: number, ink: string, x: number, t: number, tone: Tone, kind: 'pretzel' | 'boot'): void {
+  const X = (v: number) => v * k
+  const y = G - 2.55
+  const arm = 0.62
+  // The bracket: an arm off a wall plate, a scrolled brace under it.
+  p.stroke(ink)
+  p.strokeWeight(W * 0.9)
+  p.noFill()
+  p.line(X(x), X(y), X(x + arm), X(y))
+  p.strokeWeight(W * 0.7)
+  p.beginShape()
+  p.vertex(X(x), X(y + 0.34))
+  p.quadraticVertex(X(x + 0.08), X(y + 0.02), X(x + arm * 0.62), X(y))
+  p.endShape()
+  p.fill(tone(TOWN.timberDark))
+  p.rect(X(x - 0.04), X(y - 0.06), X(0.08), X(0.46))
+  // The sign hangs from the arm's end on two short links, swinging slowly in the morning air.
+  const cx = x + arm * 0.62
+  const sway = 0.06 * Math.sin(t * 1.3 + (kind === 'boot' ? 1.7 : 0))
+  p.push()
+  p.translate(X(cx), X(y))
+  p.rotate(sway)
+  p.stroke(ink)
+  p.strokeWeight(W * 0.5)
+  p.line(X(-0.08), 0, X(-0.08), X(0.1))
+  p.line(X(0.08), 0, X(0.08), X(0.1))
+  p.translate(0, X(0.1))
+  if (kind === 'pretzel') {
+    // A baked knot: two lobes over a crossing, its two ends out below. Ink under, crust over, a glaze on top.
+    const knot = (w: number, col: string) => {
+      p.stroke(col)
+      p.strokeWeight(w * k)
+      p.noFill()
+      p.beginShape()
+      p.vertex(X(-0.2), X(0.36))
+      p.bezierVertex(X(-0.02), X(0.26), X(0.1), X(0.2), X(0.17), X(0.12))
+      p.bezierVertex(X(0.27), X(0.02), X(0.2), X(-0.05), X(0.08), X(0.0))
+      p.bezierVertex(X(0.02), X(0.03), X(-0.01), X(0.12), X(0.0), X(0.2))
+      p.bezierVertex(X(0.01), X(0.12), X(-0.02), X(0.03), X(-0.08), X(0.0))
+      p.bezierVertex(X(-0.2), X(-0.05), X(-0.27), X(0.02), X(-0.17), X(0.12))
+      p.bezierVertex(X(-0.1), X(0.2), X(0.02), X(0.26), X(0.2), X(0.36))
+      p.endShape()
+    }
+    knot(0.11, ink)
+    knot(0.075, tone(mixHex(TOWN.gold, TOWN.timber, 0.35)))
+    knot(0.022, tone(mixHex(TOWN.gold, TOWN.plaster, 0.4)))
+  } else {
+    // A tall boot: its shaft, the foot to the right, a heel, a strap at the top.
+    p.stroke(ink)
+    p.strokeWeight(W * 0.65)
+    p.fill(tone(mixHex(TOWN.timberDark, TOWN.timber, 0.3)))
+    p.beginShape()
+    p.vertex(X(-0.14), X(0))
+    p.vertex(X(0.06), X(0))
+    p.vertex(X(0.07), X(0.3))
+    p.quadraticVertex(X(0.1), X(0.37), X(0.24), X(0.39))
+    p.quadraticVertex(X(0.29), X(0.41), X(0.28), X(0.46))
+    p.vertex(X(-0.04), X(0.46))
+    p.vertex(X(-0.05), X(0.49))
+    p.vertex(X(-0.15), X(0.49))
+    p.vertex(X(-0.15), X(0.3))
+    p.endShape(p.CLOSE)
+    p.noStroke()
+    p.fill(tone(TOWN.gold))
+    p.rect(X(-0.13), X(0.05), X(0.18), X(0.035))
+  }
+  p.pop()
+}
+
+/** The florist's stand at the wall's foot: two tiers of zinc buckets, flowers heaped in each (never a row of beads). */
+function flowerStand(p: p5, k: number, W: number, ink: string, x0: number, x1: number, tone: Tone): void {
+  const X = (v: number) => v * k
+  const zinc = mixHex(TOWN.slate, TOWN.plaster, 0.5)
+  const cols = [TOWN.ribbon, TOWN.gold, TOWN.plaster, TOWN.rose, TOWN.gold]
+  // The stand: a back tier and a low front shelf on legs.
+  p.stroke(ink)
+  p.strokeWeight(W * 0.6)
+  p.fill(tone(TOWN.timber))
+  p.rect(X(x0 + 0.12), X(G - 0.62), X(x1 - x0 - 0.24), X(0.07))
+  p.rect(X(x0), X(G - 0.3), X(x1 - x0), X(0.07))
+  for (const lx of [x0 + 0.05, x1 - 0.1]) p.rect(X(lx), X(G - 0.3), X(0.05), X(0.3))
+  const bucket = (bx: number, base: number, w: number, h: number, i: number) => {
+    // Flowers first (behind the bucket's rim), a heap of clusters of uneven size, leaves under them.
+    p.noStroke()
+    for (let j = 0; j < 6; j++) {
+      const fx = bx + (hash(i, j, 1) - 0.5) * w * 1.25
+      const fy = base - h - 0.06 - hash(i, j, 2) * 0.22
+      const r = 0.05 + 0.07 * hash(i, j, 3)
+      p.fill(tone(TOWN.moss))
+      p.ellipse(X(fx - 0.02), X(fy + 0.05), X(r * 1.6), X(r * 1.1))
+    }
+    for (let j = 0; j < 7; j++) {
+      const fx = bx + (hash(i, j, 4) - 0.5) * w * 1.15
+      const fy = base - h - 0.1 - hash(i, j, 5) * 0.24
+      const r = 0.035 + 0.06 * hash(i, j, 6)
+      p.fill(tone(cols[(i + j) % cols.length]))
+      p.ellipse(X(fx), X(fy), X(r * 1.3), X(r))
+    }
+    p.stroke(ink)
+    p.strokeWeight(W * 0.55)
+    p.fill(tone(zinc))
+    p.quad(X(bx - w / 2), X(base - h), X(bx + w / 2), X(base - h), X(bx + w * 0.4), X(base), X(bx - w * 0.4), X(base))
+  }
+  const back = [x0 + 0.35, x0 + 0.75, x1 - 0.35]
+  back.forEach((bx, i) => bucket(bx, G - 0.62, 0.26, 0.24, i))
+  const front = [x0 + 0.22, x0 + 0.62, x1 - 0.55, x1 - 0.2]
+  front.forEach((bx, i) => bucket(bx, G - 0.3, 0.22 + 0.04 * hash(i, 9), 0.2, i + 5))
+}
+
+/** The parade's bunting: a cord in swags under the jetties from the shop's door to the lane, small pennants on it. */
+function drawBunting(p: p5, k: number, W: number, ink: string, t: number, tone: Tone): void {
+  const X = (v: number) => v * k
+  const nails = [TOWN_AT.street[0] + 0.1, ...HOUSES.slice(1).map((h) => h.x0), TOWN_AT.street[1] - 0.1]
+  const y0 = G - 2.78
+  const cols = [TOWN.rose, TOWN.gold, TOWN.plaster, TOWN.shutter]
+  let n = 0
+  for (let i = 0; i < nails.length - 1; i++) {
+    const a = nails[i]
+    const b = nails[i + 1]
+    const sag = 0.3 + 0.06 * hash(i, 41)
+    const at = (u: number): [number, number] => [a + (b - a) * u, y0 + 4 * sag * u * (1 - u)]
+    // The cord.
+    p.noFill()
+    p.stroke(tone(mixHex(TOWN.timberDark, TOWN.plaster, 0.2)))
+    p.strokeWeight(W * 0.45)
+    p.beginShape()
+    for (let s = 0; s <= 16; s++) {
+      const [x, y] = at(s / 16)
+      p.vertex(X(x), X(y))
+    }
+    p.endShape()
+    // The pennants, hanging off it, each fluttering on its own.
+    const count = Math.max(4, Math.round((b - a) / 0.24))
+    for (let j = 1; j < count; j++) {
+      const u = j / count
+      const [x, y] = at(u)
+      const flap = 0.16 * Math.sin(t * 2.3 + n * 1.7) + 0.05 * Math.sin(t * 5.1 + n)
+      p.push()
+      p.translate(X(x), X(y))
+      p.rotate(flap)
+      p.stroke(alpha(p, ink, 0.7))
+      p.strokeWeight(W * 0.35)
+      p.fill(tone(cols[n % cols.length]))
+      p.triangle(X(-0.075), 0, X(0.075), 0, X(0.01 * Math.sin(n)), X(0.2))
+      p.pop()
+      n++
+    }
+  }
 }
 
 /** The timber framing of an upper floor: posts at the corners, a rail, and braces in the end panels. */

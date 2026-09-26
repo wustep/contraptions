@@ -5,7 +5,7 @@ import { TOWN } from '../worlds'
 
 /**
  * The sky builder's people (canonical for this show: the soldiers and the Witch's blob men are drawn only here; the
- * town builder's Witch keeps their look): a soldier of the king's army, tall and stiff in a blue coat and a shako;
+ * town builder's Witch keeps their look): a soldier of the king's army, tall and stiff in a grey-green coat and a shako;
  * a blob man, a tall black rubbery figure in a straw boater; and a pigeon. Each draws about its feet (the pigeon
  * about its middle) at the origin the caller has translated to, in cells times `k`, and leaves p5 as it found it.
  * None of them is round and ball-sized: faces are small and under hats, bodies are tall.
@@ -35,10 +35,12 @@ export interface SoldierPose {
   scale?: number
   /** Toward night (the set's tone). */
   dark?: number
+  /** His head turned: 0 the way he faces, 1 right round over his shoulder (the other way). */
+  look?: number
 }
 
 /**
- * A soldier: black boots, dark trousers, the blue coat to the knee with a white belt and cross-belt, a small face
+ * A soldier: black boots, dark trousers, the grey-green coat to the knee with a white belt and cross-belt, a small face
  * with a moustache, and the tall shako with its peak and a red plume. About 1.36 cells tall.
  */
 export function drawSoldier(p: p5, k: number, weight: number, ink: string, o: SoldierPose): void {
@@ -114,7 +116,13 @@ export function drawSoldier(p: p5, k: number, weight: number, ink: string, o: So
   p.fill(tone(SKIN))
   p.ellipse(0, 0.46 * s, 0.075 * s, 0.085 * s)
   p.pop()
-  // The head: a small face, a moustache, the ear; the shako over it with its peak and plume.
+  // The head: a small face, a moustache, the ear; the shako over it with its peak and plume. Turned, it narrows to
+  // its profile's edge and opens out the other way.
+  p.push()
+  p.translate(0.015 * s, 0)
+  const turn = Math.cos(Math.PI * Math.max(0, Math.min(1, o.look ?? 0)))
+  p.scale(Math.abs(turn) < 0.06 ? Math.sign(turn || 1) * 0.06 : turn, 1)
+  p.translate(-0.015 * s, 0)
   p.stroke(inkA)
   p.strokeWeight(weight * 0.6)
   p.fill(tone(SKIN))
@@ -157,6 +165,7 @@ export function drawSoldier(p: p5, k: number, weight: number, ink: string, o: So
     p.line(0.08 * s, -1.085 * s, 0.17 * s, -1.06 * s)
     p.rect(0.17 * s, -1.08 * s, 0.045 * s, 0.06 * s)
   }
+  p.pop()
   p.pop()
 }
 
