@@ -1053,11 +1053,14 @@ export const ties = part<TiesState>(
       key(EMBRACE, 3.3, 6.05),
       // The painting, lit: a long look, him small under it.
       key(LAMP + 0.45, 3.45, 7.15),
-      // On the machine, the basket and him, her at the door, the painting whole over them all the way to the cut, so
-      // the two tickets are seen leaving the slot and dropping into the basket under it; then out after her on the
-      // follow-through, into the cut.
-      key(163.6, 3.4, 7.5),
-      key(166.95, 3.3, 7.9),
+      // Then, as the music presses on, one slow push in on the machine, the basket and him, her at the door, to the
+      // slot and the basket close on the cadence, so the two tickets are seen leaving the slot and dropping into the
+      // basket; closest between the two, then opening so gently through the second that it is still close as it
+      // drops in; out after her on the follow-through, and on out through the cut into the hill (the climb carries
+      // the move on).
+      key(162.7, 3.45, 7.3),
+      key(STAMP1, 2.56, 7.85),
+      key(167.15, 2.55, 7.93),
       // The cut: framed as `CUTS.climb` says.
       { t: SHUT, cells: CUTS.climb.cells, hold: [cut[0] + CUTS.climb.frame[0], cut[1] + CUTS.climb.frame[1]], w: 1 },
     ]

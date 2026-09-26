@@ -72,7 +72,7 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   climb: {
     t: CUT.climb,
     v: [0.6, 0],
-    cells: 3.6,
+    cells: 2.7,
     frame: [0.55, -0.72],
     ellie: [0.36, 0],
     basket: true,
