@@ -330,11 +330,16 @@ export const plank = part<PlankState>(
       follow(271.4, 4.0, [0.6, -0.35]),
       follow(272.8, 3.7, [0.45, -0.5]),
       follow(274.4, 5.2, [0.8, -0.4]),
-      // The slide: with it, then a locked-off wide it crosses into, and a slow push in through the cadenza.
+      // The slide: with it, then a locked-off wide it crosses into, held while it comes to rest at the brink; then a
+      // slow push in to the two of them for the cadenza (Howl's stir and the glance on 286.38, 286.92, 287.36, the
+      // star crossing over them), and out a little toward the finale's framing.
       follow(276.9, 7.5, [2.2, -0.4]),
       follow(279.6, 8.2, [2.8, -0.3]),
       hold(281.3, 8.8, lock),
-      hold(285.9, 8.6, [lock[0] + 0.1, lock[1] + 0.05]),
+      hold(283.9, 8.6, [lock[0] + 0.1, lock[1] + 0.05]),
+      hold(286.1, 4.6, [end[0] + 0.25, end[1] - 0.6]),
+      hold(289.0, 4.3, [end[0] + 0.2, end[1] - 0.62]),
+      hold(291.3, 4.6, [end[0] + 0.3, end[1] - 0.7]),
       hold(slot.end, 5, [end[0] + 0.4, end[1] - 0.8]),
     ]
   },
