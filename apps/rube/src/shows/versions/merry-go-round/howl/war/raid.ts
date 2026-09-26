@@ -559,16 +559,18 @@ const FLAK: [number, number, number, number][] = [
 /* ------------------------------------------------------------------ Sophie and the fire engine */
 
 /**
- * The street's fire engine: a hand pump on two wheels (a wooden tub, two brass barrels, a see-saw brake on a post, a
- * brass branch pipe). She pushes it from behind by its push bar (her middle this far behind its middle), and then works
- * it from the brake's left end, which she rides: her height on it with the brake up and down, the post's pivot height,
- * and her x from the engine's middle.
+ * The street's fire engine: a hand pump (a squat wooden tank of water banded in copper, on four small wheels; the pump
+ * beam over it, a see-saw with a handle bar across each end; a hose to a brass branch pipe). She pushes it from behind
+ * by its push handle (her middle this far behind its middle), and then works it from the beam's left end, which she
+ * rides: her height on it with the beam up and down, the pivot's height, and her x from the engine's middle.
  */
 /** The engine is drawn in its own units, this many cells each. */
 const ES = 1.3
 const PUSH_OFF = 1.28
-const WHEEL = 0.34 * ES
-const BRAKE = { up: -1.944, down: -1.112, pivot: TOWN_AT.ground - 1.21 * ES, reach: 0.9 * ES }
+/** The wheels' radius (cells): they turn by the way the engine has come. */
+const WHEEL = 0.21 * ES
+/** The beam's pivot is level with her end at rest, so it rests level and rocks down under her, up again. */
+const BRAKE = { up: -1.944, down: -1.112, pivot: -1.944 + 0.176, reach: 0.9 * ES }
 /** How far above her middle the brake's end is when she is on it (her radius and half the pole). */
 const SEAT = 0.176
 /** Where she sits on the brake, and its pole's resting height at her end. */
@@ -726,10 +728,12 @@ function flow(t: number): number {
   return Math.max(0, Math.min(1, WAY(t).v[1] / 2.1))
 }
 
-/** The jet: from the branch pipe's nozzle to the fire in the crater, `JET_T` seconds on the way. */
+/** The water: from the branch pipe's nozzle (engine units) into the fire in the crater, `JET_T` seconds on the way. */
 const JET_T = 0.55
-const NOZZLE: Pt = [0.93, -1.4]
-const JET_AT: Pt = [CRATER[0] - 0.3, GROUND - 0.7]
+const NOZZLE: Pt = [1.18, -1.05]
+/** The branch pipe's other end, where the hose comes up to it and the clamp holds it at the tank's front corner. */
+const BRANCH: Pt = [0.86, -0.9]
+const JET_AT: Pt = [CRATER[0] - 0.05, GROUND - 0.4]
 const nozzle = (): Pt => [JOURNEY.x1 + NOZZLE[0] * ES, GROUND + NOZZLE[1] * ES]
 const JET_V: Pt = (() => {
   const [nx, ny] = nozzle()
@@ -853,11 +857,39 @@ function flashAt(t: number): number {
 
 type Frame = ReturnType<typeof frame>
 
+/** The war's night: a deep indigo, over the town's own night. */
+const INDIGO = '#14163A'
+/**
+ * The night of the raid, laid over the whole set (the town's sky, its walls and roofs, the street) before anything of
+ * the war is drawn: deepest over the roofs, where the war is, and lighter down at the street, where the fires light
+ * it. It deepens as the town's lights go out. The fires, the lit windows, the war and her engine are drawn over it;
+ * she is drawn over everything, so she reads, pale, against the dark. It covers the whole frame: no edge anywhere.
+ */
+function drawNight(p: p5, k: number, t: number, f: Frame): void {
+  const a = 0.78 + 0.22 * smooth(t, BLACKOUT[0] - 0.4, BLACKOUT[5] + 0.6)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  const g = ctx.createLinearGradient(0, -17 * k, 0, (GROUND + 1) * k)
+  for (const [y, v] of [
+    [-17, 0.84],
+    [-11.5, 0.76],
+    [-8, 0.66],
+    [-4, 0.52],
+    [-1, 0.42],
+    [GROUND + 1, 0.36],
+  ] as const)
+    g.addColorStop((y + 17) / (GROUND + 18), rgba(INDIGO, v * a))
+  ctx.fillStyle = g
+  ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+  ctx.restore()
+}
+
 function drawSky(p: p5, k: number, t: number, f: Frame): void {
-  // The town burning under the roofs lights the smoke over them, more as the night goes on.
+  // The town burning under the roofs lights the smoke just over them, more as the night goes on; above that the
+  // night is indigo.
   const burning = 0.1 + 0.12 * smooth(t, 206, 232)
-  skyGlow(p, k, f.x0, f.x1, -8.0, 13, TOWN.ember, burning)
-  skyGlow(p, k, f.x0, f.x1, -9.0, 5, TOWN.fire, burning * 0.5)
+  skyGlow(p, k, f.x0, f.x1, -7.6, 6.5, TOWN.ember, burning)
+  skyGlow(p, k, f.x0, f.x1, -8.6, 3.5, TOWN.fire, burning * 0.5)
   // The smoke over the town: long low banks drifting left, lit from under.
   p.push()
   p.noStroke()
@@ -952,7 +984,9 @@ function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void 
       // The ground floor over the crater is the one her water reaches: its fire dies back to smouldering.
       const wet = low ? doused(t) : 0
       const dark = !w.lit || t >= out + 0.012 * n
-      if (burn < 0 && !(w.lit && dark)) return
+      // Still lit (the night's veil went over the set's own lit glass): lit again here until its house goes dark.
+      const litNow = w.lit && !dark
+      if (burn < 0 && !(w.lit && dark) && !litNow) return
       p.push()
       p.rectMode(p.CORNER)
       if (burn >= 0) {
@@ -974,8 +1008,9 @@ function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void 
           fire(p, k, w.x + w.w / 2, w.y + 0.12, w.w * 0.95, 0.6 * heat * smooth(burn, 0.8, 2.4) * (0.8 + 0.2 * fl), { t, seed: j * 11 + n, lean: 0.25 })
       } else {
         p.noStroke()
-        p.fill(w.dormer ? DARK_DORMER : DARK_GLASS)
+        p.fill(litNow ? TOWN.glow : w.dormer ? DARK_DORMER : DARK_GLASS)
         p.rect(w.x * k, w.y * k, w.w * k, w.h * k)
+        if (litNow) glow(p, k, w.x + w.w / 2, w.y + w.h / 2, 0.8, TOWN.glow, 0.1)
       }
       if (!w.dormer) {
         p.stroke(alpha(p, ink, 0.55))
@@ -1093,8 +1128,8 @@ function drawStreetBurst(p: p5, k: number, W: number, ink: string, t: number): v
   }
   p.pop()
   // The fireball: up at once, rolling up and out, settling to a fire in the crater that burns on, until her water
-  // beats it down.
-  const wet = 1 - 0.72 * doused(t)
+  // beats it down: it ducks under each stroke's water as it lands, and comes back a little less each time.
+  const wet = (1 - 0.72 * doused(t)) * (1 - 0.42 * landing(t))
   const tall = step(u, 0.04) * (0.6 + 2.6 * Math.exp(-u / 0.45)) * wet
   const width = (0.9 + 1.4 * Math.exp(-u / 0.6) + 0.5 * smooth(u, 0, 0.3)) * (0.7 + 0.3 * wet)
   glow(p, k, cx, GROUND - 1.2, 3.2 + 3 * Math.exp(-u / 0.4), TOWN.fire, (0.16 + 0.5 * Math.exp(-u / 0.25)) * wet)
@@ -1279,180 +1314,286 @@ function drawTheBomb(p: p5, k: number, W: number, ink: string, t: number): void 
   if (t >= TURNED) sparks(p, k, STRUCK[0], STRUCK[1], t - TURNED, 10, 3.5, 99)
 }
 
+/** The engine's copper: its bands, and the air vessel between the pump barrels. */
+const COPPER = '#B8703E'
+/** The engine's far side, in its own units: seen side on and a little from above, the far side is up and to the right. */
+const DEPTH: Pt = [0.13, -0.15]
+/** The tank: its near face's ends, its floor and its top (engine units, up is minus). */
+const TANK = { x0: -0.72, x1: 0.72, y0: -0.26, y1: -0.8 }
+
 /**
- * The fire engine, side on: a wooden tub on a pair of spoked wheels, two brass pump barrels standing in it with their
- * rods up to the see-saw brake on its post, the brass branch pipe at its front, and the push bar at its back. It rolls
- * as she pushes it (the wheel turns by the way it has come), rocks on the burst, and its brake goes as she rides it.
+ * The fire engine, side on and a little from above: a squat wooden tank of water, planked, banded in copper, on four
+ * small spoked wheels; standing up out of its water the copper air vessel with the pivot's iron fork on it, and the
+ * two brass pump barrels either side, their rods up to the pump beam; the beam a see-saw over the tank, a pole along
+ * each side joined by a handle bar across each end (she rides the left one); the leather hose out of the tank's front,
+ * sagging to the cobbles and back up to the brass branch pipe clamped at its front corner, aimed at the fire; the push
+ * handle at its back. It rolls as she pushes it, rocks on the burst, and its beam goes as she rides it.
  */
 function drawEngine(p: p5, k: number, W: number, ink: string, t: number): void {
-  const tone = outside(t)
+  const base = outside(t)
+  // In the night with the set: a step toward the indigo, so it stands in the street, not on it.
+  const tone = (hex: string) => mixHex(base(hex), INDIGO, 0.18)
   const ex = engineX(t)
   const roll = ring(t - STREET, 0.045, 13, 0.4) + ring(t - JOURNEY.push[0], 0.012, 15, 0.2)
   const wood = tone(TOWN.timber)
   const dark = tone(TOWN.timberDark)
+  const copper = tone(COPPER)
+  const copperDark = mixHex(copper, dark, 0.45)
   const brass = mixHex(tone(TOWN.gold), TOWN.fire, 0.15)
   const iron = tone(WASTES.ironDark)
+  const leather = mixHex(dark, '#2A1A14', 0.5)
+  const water = tone(mixHex(TOWN.canal, TOWN.slateDark, 0.55))
   const X = (v: number) => v * k * ES
+  const [dx, dy] = DEPTH
+  const poly = (pts: Pt[]) => {
+    p.beginShape()
+    for (const [x, y] of pts) p.vertex(X(x), X(y))
+    p.endShape(p.CLOSE)
+  }
+  /** A bar from a to b, `w` thick (engine units), filled, inked. */
+  const bar = (a: Pt, c: Pt, w: number) => {
+    const L = Math.hypot(c[0] - a[0], c[1] - a[1])
+    const nx = (-(c[1] - a[1]) / L) * (w / 2)
+    const ny = ((c[0] - a[0]) / L) * (w / 2)
+    poly([
+      [a[0] + nx, a[1] + ny],
+      [c[0] + nx, c[1] + ny],
+      [c[0] - nx, c[1] - ny],
+      [a[0] - nx, a[1] - ny],
+    ])
+  }
+  // The beam: its pivot, and its two ends on the near side (her end's height where she has it).
+  const py = (BRAKE.pivot - GROUND) / ES
+  const lx = -BRAKE.reach / ES
+  const ly = (brakeEnd(t) - GROUND) / ES
+  const rx = -lx
+  const ry = 2 * py - ly
+  const beamAt = (x: number) => py + ((ly - py) * x) / lx
+  const turn = (ex - JOURNEY.x0) / WHEEL
+  const wr = WHEEL / ES
+  const wheel = (cx: number, cy: number, far: boolean) => {
+    p.push()
+    p.translate(X(cx), X(cy))
+    p.rotate(turn)
+    p.stroke(ink)
+    p.strokeWeight(W * 0.8 + 0.05 * k * ES)
+    p.noFill()
+    p.circle(0, 0, X(2 * wr - 0.05))
+    p.stroke(far ? mixHex(iron, INDIGO, 0.4) : iron)
+    p.strokeWeight(0.05 * k * ES)
+    p.circle(0, 0, X(2 * wr - 0.05))
+    if (far) p.stroke(alpha(p, ink, 0.6))
+    else p.stroke(ink)
+    p.strokeWeight(W * 0.7)
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3
+      p.line(0, 0, X((wr - 0.05) * Math.cos(a)), X((wr - 0.05) * Math.sin(a)))
+    }
+    p.fill(far ? dark : copperDark)
+    p.rect(X(-0.045), X(-0.045), X(0.09), X(0.09))
+    p.pop()
+  }
+
   p.push()
   p.translate(ex * k, GROUND * k)
   p.rotate(roll)
   p.rectMode(p.CORNER)
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  // The brake: a long pole on the post's pivot, her end where she has it (in the engine's own heights).
-  const py = (BRAKE.pivot - GROUND) / ES
-  const ly = (brakeEnd(t) - GROUND) / ES
-  const lx = -BRAKE.reach / ES
-  const at = (x: number) => py + ((ly - py) * x) / lx
-  // The two barrels, standing up out of the tub, and their rods up to the brake.
-  for (const bx of [-0.42, 0.42]) {
+  // The far wheels, behind the tank.
+  for (const cx of [-0.44, 0.44]) wheel(cx + dx, -wr + dy * 0.6, true)
+  // The tank: its right side, and its top (the water in it, a copper rim round it).
+  p.fill(mixHex(wood, dark, 0.55))
+  poly([
+    [TANK.x1, TANK.y1],
+    [TANK.x1 + dx, TANK.y1 + dy],
+    [TANK.x1 + dx, TANK.y0 + dy],
+    [TANK.x1, TANK.y0],
+  ])
+  p.fill(water)
+  poly([
+    [TANK.x0, TANK.y1],
+    [TANK.x1, TANK.y1],
+    [TANK.x1 + dx, TANK.y1 + dy],
+    [TANK.x0 + dx, TANK.y1 + dy],
+  ])
+  // Standing up out of its water: the two pump barrels, and between them the copper air vessel, domed, with the
+  // pivot's iron fork on its crown.
+  const mid = (x: number, y: number): Pt => [x + dx / 2, y + dy / 2]
+  for (const bx of [-0.45, 0.45]) {
+    const [cx, cy] = mid(bx, TANK.y1)
     p.fill(brass)
-    p.rect(X(bx - 0.08), X(-0.99), X(0.16), X(0.4))
-    p.strokeWeight(W * 0.7)
-    p.line(X(bx), X(-0.99), X(bx), X(at(bx)))
-    p.strokeWeight(W * 0.8)
+    p.rect(X(cx - 0.075), X(cy - 0.12), X(0.15), X(0.14))
+    p.fill(copperDark)
+    p.rect(X(cx - 0.09), X(cy - 0.14), X(0.18), X(0.03))
   }
-  // The tub: planked, bound with two iron hoops, a lip round its top.
-  p.fill(wood)
+  const [vx, vy] = mid(0, TANK.y1)
+  p.fill(copper)
   p.beginShape()
-  p.vertex(X(-0.7), X(-0.86))
-  p.vertex(X(0.7), X(-0.86))
-  p.vertex(X(0.64), X(-0.3))
-  p.vertex(X(-0.64), X(-0.3))
+  p.vertex(X(vx - 0.13), X(vy + 0.02))
+  p.vertex(X(vx - 0.13), X(vy - 0.2))
+  p.bezierVertex(X(vx - 0.13), X(vy - 0.33), X(vx + 0.13), X(vy - 0.33), X(vx + 0.13), X(vy - 0.2))
+  p.vertex(X(vx + 0.13), X(vy + 0.02))
   p.endShape(p.CLOSE)
-  p.strokeWeight(W * 0.5)
-  for (const v of [-0.35, 0, 0.35]) p.line(X(v), X(-0.84), X(v * 0.93), X(-0.32))
-  p.stroke(iron)
-  p.strokeWeight(W * 1.1)
-  for (const hy of [-0.74, -0.42]) p.line(X(-0.69 + (0.86 + hy) * 0.1), X(hy), X(0.69 - (0.86 + hy) * 0.1), X(hy))
+  p.stroke(alpha(p, ink, 0.5))
+  p.strokeWeight(W * 0.45)
+  p.line(X(vx - 0.13), X(vy - 0.12), X(vx + 0.13), X(vy - 0.12))
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  p.fill(dark)
-  p.rect(X(-0.76), X(-0.92), X(1.52), X(0.08))
-  // The post, a narrow A of two legs on the tub, and the brake over it.
-  p.fill(dark)
-  p.beginShape()
-  p.vertex(X(-0.15), X(-0.92))
-  p.vertex(X(-0.035), X(py))
-  p.vertex(X(0.035), X(py))
-  p.vertex(X(0.15), X(-0.92))
-  p.endShape(p.CLOSE)
-  const rx = -lx
-  const ry = 2 * py - ly
-  const ang = Math.atan2(ry - ly, rx - lx)
-  const len = Math.hypot(rx - lx, ry - ly)
-  p.push()
-  p.translate(X(lx), X(ly))
-  p.rotate(ang)
+  // The standard: an iron A over the vessel, up to the pivot, where the beam balances.
+  p.fill(iron)
+  for (const side of [-1, 1]) bar([side * 0.26, TANK.y1 - 0.02], [side * 0.03, py], 0.05)
+  bar([-0.17, (TANK.y1 + py) / 2 + 0.06], [0.17, (TANK.y1 + py) / 2 + 0.06], 0.04)
+  // The tank's near face: planked, a copper band round its top and a copper strap down each corner.
   p.fill(wood)
-  p.rect(X(-0.06), X(-0.035), X(len + 0.12), X(0.07))
-  // A grip across each end: flat blocks, square to the pole.
+  p.rect(X(TANK.x0), X(TANK.y1), X(TANK.x1 - TANK.x0), X(TANK.y0 - TANK.y1))
+  p.stroke(alpha(p, ink, 0.55))
+  p.strokeWeight(W * 0.45)
+  for (const y of [-0.44, -0.62]) p.line(X(TANK.x0 + 0.06), X(y), X(TANK.x1 - 0.06), X(y))
+  p.stroke(ink)
+  p.strokeWeight(W * 0.8)
+  p.fill(copper)
+  p.rect(X(TANK.x0), X(TANK.y1), X(TANK.x1 - TANK.x0), X(0.07))
+  p.rect(X(TANK.x0), X(TANK.y1), X(0.07), X(TANK.y0 - TANK.y1))
+  p.rect(X(TANK.x1 - 0.07), X(TANK.y1), X(0.07), X(TANK.y0 - TANK.y1))
+  // The barrels' rods, up to the beam between its two poles.
+  p.strokeWeight(W * 0.7)
+  for (const bx of [-0.45, 0.45]) {
+    const [cx, cy] = mid(bx, TANK.y1)
+    p.line(X(cx), X(cy - 0.12), X(cx), X(beamAt(cx)))
+  }
+  p.strokeWeight(W * 0.8)
+  // The beam, a see-saw on the pivot; a handle bar across each end, going back into the picture (she rides the left).
   p.fill(dark)
-  p.rect(X(-0.1), X(-0.05), X(0.13), X(0.1))
-  p.rect(X(len - 0.03), X(-0.05), X(0.13), X(0.1))
-  p.pop()
+  for (const [ex0, ey0] of [
+    [lx, ly],
+    [rx, ry],
+  ] as Pt[])
+    bar([ex0 - dx * 0.35, ey0 - dy * 0.35], [ex0 + dx * 1.35, ey0 + dy * 1.35], 0.07)
+  p.fill(wood)
+  bar([lx - 0.05, ly - (0.05 * (ry - ly)) / (rx - lx)], [rx + 0.05, ry + (0.05 * (ry - ly)) / (rx - lx)], 0.06)
   p.fill(brass)
-  p.rect(X(-0.035), X(py - 0.035), X(0.07), X(0.07))
-  // The branch pipe: up out of the tub's front and bent over toward the fire, its nozzle along the jet.
-  const tip = NOZZLE
-  const elbow: Pt = [0.6, -1.26]
+  p.rect(X(-0.045), X(py - 0.045), X(0.09), X(0.09))
+  // The push handle at its back, where her hands go.
+  p.fill(dark)
+  p.rect(X(-0.86), X(-0.58), X(0.15), X(0.05))
+  p.rect(X(-0.91), X(-0.62), X(0.06), X(0.5))
+  // The hose: out of the tank's front low down (a brass coupling), sagging to the cobbles, and up again to the branch
+  // pipe; leather, thick and soft.
+  const hose = () => {
+    p.beginShape()
+    p.vertex(X(0.74), X(-0.4))
+    p.bezierVertex(X(0.95), X(-0.38), X(0.98), X(-0.05), X(1.12), X(-0.05))
+    p.bezierVertex(X(1.3), X(-0.05), X(1.12), X(-0.62), X(BRANCH[0] + 0.02), X(BRANCH[1] + 0.03))
+    p.endShape()
+  }
   p.noFill()
   p.strokeWeight(W * 0.8 + 0.075 * k * ES)
-  p.line(X(0.5), X(-0.9), X(elbow[0]), X(elbow[1]))
-  p.line(X(elbow[0]), X(elbow[1]), X(tip[0]), X(tip[1]))
-  p.stroke(brass)
+  hose()
+  p.stroke(leather)
   p.strokeWeight(0.075 * k * ES)
-  p.line(X(0.5), X(-0.9), X(elbow[0]), X(elbow[1]))
-  p.line(X(elbow[0]), X(elbow[1]), X(tip[0]), X(tip[1]))
+  hose()
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  // The push bar at its back, and its grip, where her hands go.
-  p.fill(dark)
-  p.rect(X(-0.84), X(-0.49), X(0.2), X(0.06))
-  p.rect(X(-0.9), X(-0.52), X(0.06), X(0.46))
-  // The near wheel: iron tyre, eight spokes, the hub.
-  const turn = (ex - JOURNEY.x0) / WHEEL
-  p.push()
-  const wr = WHEEL / ES
-  p.translate(0, X(-wr))
-  p.rotate(turn)
-  p.stroke(ink)
-  p.strokeWeight(W * 0.8 + 0.045 * k * ES)
-  p.noFill()
-  p.circle(0, 0, X(2 * wr - 0.045))
-  p.stroke(iron)
-  p.strokeWeight(0.045 * k * ES)
-  p.circle(0, 0, X(2 * wr - 0.045))
-  p.stroke(ink)
-  p.strokeWeight(W * 0.8)
-  p.fill(dark)
-  for (let i = 0; i < 8; i++) {
-    const a = (i * Math.PI) / 4
-    p.line(0, 0, X((wr - 0.05) * Math.cos(a)), X((wr - 0.05) * Math.sin(a)))
-  }
-  p.rect(X(-0.055), X(-0.055), X(0.11), X(0.11))
+  p.fill(brass)
+  p.rect(X(0.72), X(-0.45), X(0.06), X(0.1))
+  // The clamp: an iron bracket off the tank's front corner holding the branch pipe.
+  p.fill(iron)
+  bar([TANK.x1 - 0.02, TANK.y1 + 0.02], [BRANCH[0] + 0.03, BRANCH[1] - 0.01], 0.035)
+  // The branch pipe: brass, tapering to the nozzle, along the water's way out.
+  const bl = Math.hypot(NOZZLE[0] - BRANCH[0], NOZZLE[1] - BRANCH[1])
+  const ux = (NOZZLE[0] - BRANCH[0]) / bl
+  const uy = (NOZZLE[1] - BRANCH[1]) / bl
+  p.fill(brass)
+  poly([
+    [BRANCH[0] - uy * 0.05, BRANCH[1] + ux * 0.05],
+    [NOZZLE[0] - uy * 0.022, NOZZLE[1] + ux * 0.022],
+    [NOZZLE[0] + uy * 0.022, NOZZLE[1] - ux * 0.022],
+    [BRANCH[0] + uy * 0.05, BRANCH[1] - ux * 0.05],
+  ])
+  p.fill(copperDark)
+  bar([BRANCH[0] - ux * 0.02, BRANCH[1] - uy * 0.02], [BRANCH[0] + ux * 0.05, BRANCH[1] + uy * 0.05], 0.13)
+  // The near wheels.
+  for (const cx of [-0.44, 0.44]) wheel(cx, -wr, false)
   p.pop()
-  p.pop()
+  // The crater's fire lights its front.
+  if (t > STREET) glow(p, k, ex + 1.2, GROUND - 0.7, 1.5, TOWN.fire, 0.12 * (1 - 0.6 * doused(t)), 0.8)
 }
 
+/** The water reaching the fire now (0..1): each stroke's pulse as it lands, and a breath after. */
+const landing = (t: number): number => Math.max(flow(t - JET_T), 0.75 * flow(t - JET_T - 0.14), 0.45 * flow(t - JET_T - 0.3))
+
 /**
- * The water: out of the nozzle on each stroke and over onto the fire in the crater, thick while she drives the brake
- * down and gone while it comes back up, so each stroke is a pulse along the arc; and where it strikes, steam.
+ * The water: out of the nozzle on each stroke (as fast as she drives the beam down) and over onto the fire in the
+ * crater. Never a line: a stream of drops, each let go with its own small error of speed and aim, so it holds together
+ * as it leaves the nozzle and breaks up along its way into drops of every size and a mist, lit by the fire as it
+ * comes to it; where it strikes, steam, a plume on each stroke.
  */
 function drawJet(p: p5, k: number, t: number): void {
   const [r0, r1] = JOURNEY.ride
   if (t < r0 || t > r1 + JET_T + 2.6) return
   const [nx, ny] = nozzle()
-  const water = mixHex(mixHex(TOWN.canal, TOWN.plaster, 0.45), TOWN.fireHot, 0.2)
+  const water = mixHex(mixHex(TOWN.canal, TOWN.plaster, 0.5), INDIGO, 0.1)
   const steam = mixHex(mixHex(TOWN.plasterShade, TOWN.smoke, 0.3), TOWN.fire, 0.12)
-  // The steam first, so the water strikes into it.
+  const warm = (x: number) => Math.max(0, Math.min(1, (x - nx) / (JET_AT[0] - nx)))
+  // The steam first, so the water strikes into it: puffs off either side of where it lands, wide and flat, rising
+  // fast and leaning with the wind, thin; the most on the stroke's pulse.
   for (let s = Math.max(r0, t - JET_T - 2.4); s <= Math.min(r1, t - JET_T); s += 0.04) {
     const q = flow(s)
     if (q < 0.05) continue
     const age = t - (s + JET_T)
     if (age < 0 || age >= 2.4) continue
     const u = age / 2.4
-    // A plume, never a ball: each puff born off to one side or the other of where the water strikes, wide and flat,
-    // rising fast and leaning with the wind, thin.
     const n = Math.round(s * 25)
     const side = hash(n, 1, 71) - 0.5
-    const x = JET_AT[0] + 1.1 * side + (0.35 + 0.4 * side) * age
-    const y = JET_AT[1] + 0.1 - 1.5 * age * (1 - 0.3 * u)
-    puff(p, k, x, y, 0.35 + 0.7 * Math.sqrt(u), steam, 0.17 * q * Math.pow(1 - u, 1.4) * Math.min(1, age / 0.15), 0.55)
+    const x = JET_AT[0] + 1.0 * side + (0.35 + 0.4 * side) * age
+    const y = JET_AT[1] - 0.1 - 1.6 * age * (1 - 0.3 * u)
+    puff(p, k, x, y, 0.35 + 0.8 * Math.sqrt(u), steam, 0.2 * q * Math.pow(1 - u, 1.4) * Math.min(1, age / 0.12), 0.55)
   }
-  // The jet: a body of water, not a line: a translucent sheath round a brighter core, thick while she drives the
-  // brake down, and toward its end it breaks up into drops of every size that spread as they fall.
+  const EMIT = 1 / 80
+  const LIFE = JET_T * 1.2
+  // The mist: soft and faint, along the back half of the way and over the fire where it lands.
+  for (let s = Math.ceil((t - LIFE) / EMIT) * EMIT; s <= t; s += EMIT * 3) {
+    const q = flow(s)
+    const a = t - s
+    if (q < 0.05 || a < JET_T * 0.35) continue
+    const n = Math.round(s / EMIT)
+    const vx = JET_V[0] * (1 + 0.1 * (hash(n, 7, 81) - 0.5))
+    const vy = JET_V[1] + 1.2 * (hash(n, 8, 81) - 0.5)
+    const x = nx + vx * a
+    const y = Math.min(GROUND - 0.2, ny + vy * a + 0.5 * G * a * a) - 0.3 * Math.max(0, a - JET_T)
+    const r = 0.12 + 0.35 * (a / LIFE) + 0.1 * hash(n, 9, 81)
+    puff(p, k, x, y, r, mixHex(water, TOWN.fireHot, 0.3 * warm(x)), 0.1 * q * (1 - smooth(a, JET_T, LIFE)), 0.7)
+  }
+  // The drops: streaks along their way (never beads), of every size, translucent.
   p.push()
-  p.noFill()
   p.strokeCap(p.ROUND)
-  const core = mixHex(water, TOWN.plaster, 0.35)
-  for (const [col, wMul, aMul] of [[water, 1.9, 0.35], [core, 1, 0.9]] as [string, number, number][]) {
-    let prev: Pt | null = null
-    let prevQ = 0
-    for (let a = 0; a <= JET_T * 0.78 + 1e-9; a += 1 / 90) {
-      const q = flow(t - a)
-      const pt: Pt = [nx + JET_V[0] * a, ny + JET_V[1] * a + 0.5 * G * a * a]
-      if (prev && q > 0.03 && prevQ > 0.03) {
-        const qq = Math.min(q, prevQ)
-        p.stroke(alpha(p, col, aMul * Math.min(1, qq * 2.5)))
-        p.strokeWeight((0.03 + 0.085 * qq) * wMul * k)
-        p.line(prev[0] * k, prev[1] * k, pt[0] * k, pt[1] * k)
-      }
-      prev = pt
-      prevQ = q
-    }
-  }
-  p.noStroke()
-  for (let a = JET_T * 0.62; a <= JET_T + 1e-9; a += 1 / 150) {
-    const q = flow(t - a)
-    if (q < 0.05) continue
-    const n = Math.round((t - a) * 150)
-    for (let j = 0; j < 2; j++) {
-      const sx = (hash(n, j, 83) - 0.5) * 0.9 * (a - JET_T * 0.62)
-      const sy = (hash(n, j, 89) - 0.5) * 0.6 * (a - JET_T * 0.62)
-      const r = (0.018 + 0.04 * hash(n, j, 97)) * (0.6 + q)
-      p.fill(alpha(p, core, 0.85 * Math.min(1, q * 2)))
-      p.circle((nx + JET_V[0] * a + sx) * k, (ny + JET_V[1] * a + 0.5 * G * a * a + sy) * k, 2 * r * k)
+  for (let s = Math.ceil((t - LIFE) / EMIT) * EMIT; s <= t; s += EMIT) {
+    const q = flow(s)
+    if (q < 0.04) continue
+    const a = t - s
+    const n = Math.round(s / EMIT)
+    for (let j = 0; j < 3; j++) {
+      const h1 = hash(n, j, 83)
+      const h2 = hash(n, j, 89)
+      const h3 = hash(n, j, 97)
+      const vx = JET_V[0] * (1 + 0.22 * (h1 - 0.5))
+      const vy = JET_V[1] + 2.0 * (h2 - 0.5)
+      const x = nx + vx * a
+      const y = ny + vy * a + 0.5 * G * a * a
+      // Into the fire, or onto the cobbles, and gone.
+      if (y > GROUND - 0.04 || a > LIFE) continue
+      const vyn = vy + G * a
+      const sp = Math.hypot(vx, vyn)
+      const len = sp * (0.018 + 0.03 * h3) * (a < 0.06 ? 1.8 : 1)
+      // Whole as it leaves the nozzle, breaking up along the way: the thin ones go to mist first.
+      const size = (0.014 + 0.055 * h3 * h3 * h1) * (0.55 + 0.7 * q) * (1 + 0.8 * (1 - smooth(a, 0, 0.12)))
+      const thin = 1 - smooth(a, JET_T * (0.55 + 0.5 * h3), LIFE)
+      const op = (0.18 + 0.4 * h3) * Math.min(1, q * 2.2) * thin
+      if (op < 0.02) continue
+      p.stroke(alpha(p, mixHex(water, TOWN.fireHot, 0.4 * warm(x)), op))
+      p.strokeWeight(size * k)
+      p.line((x - (vx / sp) * len) * k, (y - (vyn / sp) * len) * k, x * k, y * k)
     }
   }
   p.pop()
@@ -1467,6 +1608,7 @@ export const raid = part<{ begin: number }>(
       const { k, ink, weight: W } = c
       const f = frame(p, k)
       p.push()
+      drawNight(p, k, t, f)
       drawSky(p, k, t, f)
       drawFarShip(p, k, W, ink, t)
       // Beyond the roofs: fires and their smoke, and the burning quarter past the street's end.
@@ -1507,9 +1649,10 @@ export const raid = part<{ begin: number }>(
       const { k } = c
       const f = frame(p, k)
       // The flashes: the whole picture lit for a moment.
-      // The fires' light on everything, flickering, stronger as the street burns.
-      const flicker = 0.045 + 0.03 * smooth(t, 220, 232) + 0.018 * wobble(t * 6.3, 3)
-      skyGlow(p, k, f.x0, f.x1, f.y1, f.y1 - f.y0, TOWN.ember, flicker)
+      // The fires' light, flickering, stronger as the street burns: up from the street over the ground floors, never
+      // over the sky (a wash over the whole picture made the night beige).
+      const flicker = 0.04 + 0.03 * smooth(t, 220, 232) + 0.016 * wobble(t * 6.3, 3)
+      skyGlow(p, k, f.x0, f.x1, GROUND + 0.8, 7.5, TOWN.ember, flicker)
       const a = flashAt(t)
       if (a > 0.004) {
         const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -1556,43 +1699,39 @@ export const raid = part<{ begin: number }>(
     }
   },
   () => {
-    // Close on her, never a locked wide of the fronts: each key holds the street a little ahead of where she is (her
-    // own way, so the camera goes with her), with her low in the frame and the war over her; out wider only for what
-    // happens over the roofs, and the whole wide for the ship's end alone.
+    // Close on her out of the door and up to the engine; then three long moves, never a pump. Out, as the lights go
+    // out and the flight comes in, to the street under its sky: her and the engine low (a fifth up the frame), the
+    // roofs a third of the way down, the war over them. In a little for the dive, the bomb turned aside over her and
+    // the first pump strokes, the great ship's belly low over the roofs at the top of the frame. Out once, slowly, as
+    // its stick walks down the roofs toward the shop, to the whole ship for its end (231.81); then in on her as she
+    // runs home, to the door.
     const on = (t: number, cells: number, lead: number, low = 0.26): PartShot => ({ t, cells, hold: [WAY(t).p[0] + lead, -low * cells] })
+    const at = (t: number, cells: number, x: number, low = 0.295): PartShot => ({ t, cells, hold: [x, -low * cells] })
+    /** A hold at a height of its own: while she rides the beam (1.1 to 2.2 cells up) the frame rises with her. */
+    const up = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x, y] })
     return [
       { t: 206.3, cells: 4.7, off: [0.9, -0.82] },
       on(207.3, 5.4, 1.2, 0.2),
       on(208.4, 6.2, 1.5, 0.22),
-      on(209.6, 7.0, 1.8, 0.24),
-      on(211.0, 8.4, 2.4),
-      // The flight comes in over the roofs, Howl tears through it, and its leader goes down beyond them.
-      on(212.3, 11.8, 3.6, 0.29),
-      on(213.3, 14.0, 4.2, 0.3),
-      on(214.7, 13.2, 3.6, 0.3),
-      on(215.6, 11.4, 2.6, 0.29),
-      // The dive on the street, the bomb turned aside over her head, the burst.
-      on(216.8, 9.4, 2.0),
-      on(218.4, 8.6, 2.2),
-      on(219.6, 9.0, 2.4),
-      on(220.5, 9.6, 2.2),
-      // A breath out for the warship's bay opening over the roofs; then in on her at the pump.
-      on(221.6, 13.5, 1.8, 0.29),
-      on(222.9, 10.0, 1.6, 0.27),
-      on(224.3, 9.2, 1.5),
-      on(226.0, 9.0, 1.4),
-      on(227.7, 9.2, 1.3),
-      on(228.9, 10.4, 1.2),
-      // Howl at the ship's bay, thrown; she steps down and looks up at him as it blows; out to the whole wide on its
-      // second blast alone.
-      on(229.9, 12.0, 1.0, 0.28),
-      on(230.9, 13.2, 0.3, 0.29),
-      on(231.8, 15.0, -0.6, 0.29),
-      on(232.35, 20.0, -1.2, 0.29),
-      on(233.0, 14.0, -1.4, 0.28),
-      on(233.7, 9.8, -1.3, 0.26),
-      on(234.6, 7.4, -1.0, 0.23),
-      on(235.6, 5.5, -0.3, 0.18),
+      // Out.
+      at(209.9, 8.6, 4.6, 0.25),
+      at(211.4, 12.5, 6.4, 0.285),
+      at(212.9, 16.4, 8.0),
+      at(215.6, 17.6, 9.7),
+      // In, a little: the dive, the bomb turned aside, the burst, her climb onto the beam, the bay opening, the first
+      // strokes (the frame rising with her onto the beam, the ship's belly at its top).
+      at(218.4, 16.0, 7.5),
+      at(220.6, 15.8, 7.3, 0.285),
+      up(222.0, 15.4, 7.2, -5.7),
+      up(224.3, 15.4, 7.0, -5.7),
+      // Out, once, over the stick's walk, to the whole ship as it blows (wide enough by the time she steps down).
+      up(228.4, 17.6, 5.6, -5.75),
+      up(230.6, 19.6, 4.5, -5.8),
+      at(231.8, 20.6, 3.9),
+      at(232.6, 20.6, 3.5),
+      // In on her, running home.
+      on(234.2, 12.0, -0.9, 0.28),
+      on(235.6, 6.2, -0.3, 0.2),
       { t: E, cells: SEAMS.hearth.cells, hold: [INSIDE[0] + SEAMS.hearth.frame[0], SEAMS.hearth.frame[1]] },
     ]
   },
