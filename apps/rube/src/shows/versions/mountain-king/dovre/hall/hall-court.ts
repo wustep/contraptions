@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import type { TrollLook } from '../troll'
-import { beatAt } from '../music'
+import { beat, beatAt } from '../music'
 import { TROLL } from '../worlds'
 import {
   BELLS, COURT_UP, CRIES, DAIS, FIRST_EYES, FL, FLEE, FLICK_A, FLICK_B, FLICK_C, GALLERY_Y, GRAB, KING_EYES, KING_GRAB, KING_RISE, KING_UP,
@@ -265,6 +265,29 @@ export interface KingPose {
 /** The sceptre's angle to bring its head down on the dais at `hand`. */
 export const SCEPTRE = { len: 2.55, grip: 0.22 }
 
+/**
+ * The King on his feet, before the wind-up: he pumps arms and sceptre on the court's accents (standing 66.43, Peer
+ * bolting 67.95, the grab on air 68.46), each a lift with a long settle, and his weight comes down on the beats.
+ */
+const PUMPS: { at: number; arms: number; sceptre: number; mouth: number }[] = [
+  { at: COURT_UP, arms: 0.13, sceptre: 0.26, mouth: 0.5 },
+  { at: STEPS[2], arms: 0.11, sceptre: 0.24, mouth: 0.45 },
+  { at: GRAB, arms: 0.14, sceptre: 0.3, mouth: 0.6 },
+]
+/** Held arms between pumps: still up, lower than the roar's, so every pump and the wind-up have somewhere to go. */
+const ARMS_HELD = 0.82
+/** The wind-up (anticipation of the smash): the largest move of all. */
+const WIND = [69.95, 70.95] as const
+
+/** A heavy footfall on each beat, 0..1: the weight comes down on the beat and is taken up again slowly. */
+function footfall(t: number): number {
+  const b = Math.floor(beatAt(t))
+  let v = 0
+  // The last few beats and the next one: a beat's tail has decayed to nothing before it drops out of the window.
+  for (let k = b - 3; k <= b + 1; k++) v += accent(t, beat(k), 0.12, 0.26)
+  return Math.min(1, v)
+}
+
 export function kingAt(t: number, hand?: Pt): KingPose {
   const b = breath(t, 0.4, 4)
   const size = 3.0
@@ -284,29 +307,51 @@ export function kingAt(t: number, hand?: Pt): KingPose {
   let mouth = Math.max(sh, accent(t, SMASH, 0.12, 0.8), 0.4 * accent(t, KING_GRAB, 0.2, 0.5))
   // The sceptre: resting upright while he dozes; up in the air with the roar; down at Peer's feet as he passes; up
   // again behind him, and down on the dais where he stood.
-  let arms = 0.3 * up + 0.7 * ease(t, SLAY[1] - 0.35, SLAY[1])
+  // After the roar the arms settle to a held height, still up; they pump on the court's accents.
+  let arms = 0.3 * up + 0.7 * ease(t, SLAY[1] - 0.35, SLAY[1]) - (1 - ARMS_HELD) * ease(t, SLAY[1] + 0.3, SLAY[1] + 1.6)
+  let pumpSceptre = 0
+  for (const pm of PUMPS) {
+    const v = accent(t, pm.at, 0.16, 0.55)
+    arms += pm.arms * v
+    pumpSceptre += pm.sceptre * v
+    mouth = Math.max(mouth, pm.mouth * v)
+  }
   // Peer runs under him between his feet: he keeps his arms up, roaring, and only his head comes down after him.
   const grab = ease(t, KING_GRAB - 0.32, KING_GRAB) * (1 - ease(t, KING_GRAB + 0.12, KING_GRAB + 0.75))
   slump += 0.25 * grab
-  const raise = ease(t, 69.95, 70.95)
+  // His weight on the beats, from the roar's settle until he gathers for the blow: the knees give and the head drops
+  // as each foot comes down, and the weight rocks from foot to foot.
+  const heavy = (0.55 + 0.45 * ease(t, SLAY[1] + 1.2, COURT_UP)) * ease(t, SLAY[1] + 0.5, SLAY[1] + 1.4) * (1 - ease(t, KING_GRAB - 0.2, WIND[0]))
+  const fall = heavy * footfall(t)
+  slump += 0.08 * fall
+  x += 0.06 * heavy * Math.cos(Math.PI * beatAt(t))
+  // The gather: as his head follows Peer under him, the arms sink a little and the sceptre tips after him.
+  const gather = ease(t, KING_GRAB - 0.25, WIND[0] - 0.05)
+  arms -= 0.06 * gather
+  const raise = ease(t, WIND[0], WIND[1])
   const strike = ease(t, SMASH - 0.13, SMASH)
   const after = ease(t, SMASH + 1.4, SMASH + 2.6)
-  if (t >= 69.95) arms = Math.max(arms, 0.55 + 0.45 * raise)
+  // The wind-up: arms all the way up from wherever the gather left them, and he rears back to his full height.
+  if (t >= WIND[0]) arms = arms + (1 - arms) * raise
+  slump -= 0.12 * raise * (1 - strike)
   if (t >= SMASH - 0.13) arms = 1 - 0.72 * strike + 0.72 * after * 0.35 - 0.04 * ring(t - SMASH, 0.3, 18)
   if (t >= 69.4 && t < WAKE_END + 1) face = Math.max(face, 0.25 + 0.6 * ease(t, 69.4, 70.3))
   // The blow's weight: he drops into it, head and all, and comes back up slowly.
   const blow = t >= SMASH - 0.13 ? ease(t, SMASH - 0.13, SMASH) * (1 - ease(t, SMASH + 0.1, SMASH + 1.1)) : 0
   slump += 0.3 * blow
-  if (t >= OPEN) {
-    eyes = 1.5 - 0.4 * ease(t, OPEN + 0.6, OPEN + 2.5)
-    face = 0.95
-    slump = 0.25 + 0.2 * ease(t, OPEN, OPEN + 1.2)
+  if (t >= OPEN - 0.1) {
+    // Eyes wide and head down at the open hatch: eased in (it used to drop his head in one frame).
+    const o = ease(t, OPEN - 0.1, OPEN + 0.2)
+    eyes += (1.5 - 0.4 * ease(t, OPEN + 0.6, OPEN + 2.5) - eyes) * o
+    face += (0.95 - face) * o
+    slump += (0.25 + 0.2 * ease(t, OPEN, OPEN + 1.2) - slump) * o
   }
 
   // The sceptre's angle: upright seated, raised high with the roar, reaching down with the grab, then the blow.
   const upright = -Math.PI / 2 + 0.12
   const high = -Math.PI / 2 + 0.3
-  let sceptre = upright + (high - upright) * ease(t, SLAY[1] - 0.35, SLAY[1])
+  // Shaken on the pumps (tipped up past the vertical, over the court), and tipped after Peer in the gather.
+  let sceptre = upright + (high - upright) * ease(t, SLAY[1] - 0.35, SLAY[1]) - pumpSceptre + 0.15 * gather
   if (t >= SMASH - 0.13) {
     // Down on the dais (the angle that brings its head to the dais from where his hand is), lifted again, held upright.
     const reach = SCEPTRE.len * (1 - SCEPTRE.grip)
@@ -314,7 +359,7 @@ export function kingAt(t: number, hand?: Pt): KingPose {
     const raised = -Math.PI / 2 - 0.2
     sceptre = raised + (onDais - raised) * strike
     sceptre = after >= 1 ? upright : sceptre + (upright - sceptre) * after
-  } else if (t >= 69.95) {
+  } else if (t >= WIND[0]) {
     sceptre = sceptre + (-Math.PI / 2 - 0.2 - sceptre) * raise
   }
 
@@ -351,8 +396,8 @@ export function kingAt(t: number, hand?: Pt): KingPose {
     look: {
       size,
       pose,
-      // Knees giving a little into the blow.
-      rise: up * (1 - 0.18 * blow),
+      // Knees giving a little into each footfall, and into the blow.
+      rise: up * (1 - 0.07 * fall - 0.18 * blow),
       face: Math.max(-1, Math.min(1, face)),
       slump,
       eyes: Math.max(0, eyes),
