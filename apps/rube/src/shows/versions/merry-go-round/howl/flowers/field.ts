@@ -621,11 +621,14 @@ export const field = part<FieldState>(
       { t: GATES[1], cells: 6.6, off: [1.4, 1.1] },
       { t: TROUGH, cells: 6.8, off: [1.2, 0.55] },
       { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.1], w: 0.75 },
-      // The build: out wide and up, briefly, the fleet coming out over the mountains (and into the lake, in its
-      // reflection), the two of them small at the water's edge looking up at it; then in on her, still looking up,
-      // as Howl rises off the edge over her into the bird; and on in with her running for the castle.
-      { t: FLEET - 0.1, cells: 10.5, hold: [X_REST + 2.6, GR - 3.25], w: 1 },
-      { t: WINGS - 0.35, cells: 10.8, hold: [X_REST + 2.6, GR - 3.4], w: 1 },
+      { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.3], w: 0.75 },
+      // The build: on its first note a cut out wide and up, the fleet coming out over the mountains (and into the
+      // lake, in its reflection), the two of them small at the water's edge looking up at it, Howl rising off the
+      // edge into the bird; on the bar's last strike a cut in to her, still looking up, as he climbs away over her;
+      // and on with her running for the castle.
+      { t: FLEET, cells: 10.5, hold: [X_REST + 2.6, GR - 3.25], w: 1, cut: true },
+      { t: 201.189 - 0.03, cells: 10.8, hold: [X_REST + 2.6, GR - 3.4], w: 1 },
+      { t: 201.189, cells: 6.9, off: [0.9, -1.4], cut: true },
       { t: STONES[0] + 0.2, cells: 6.6, off: [1.0, -1.3] },
       { t: STONES[1], cells: 6.4, off: [0.9, -0.6] },
       // The kneel: framed low, the lake and its reflection the bottom half and the hull's keel at the middle, the
