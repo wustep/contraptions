@@ -628,9 +628,10 @@ export const ties = part<TiesState>(
       // The gramophone, and after her to the floor.
       { t: 154.7, cells: 2.55, hold: [2.05, -0.62], w: 0.8 },
       // The dance, on the loudest bars of the cue: the whole of it in one wide, the gramophone playing at the left, her
-      // painting over the desk at the right, and the two of them turning down the hall between, drifting with them.
-      { t: DANCE[0] + 0.25, cells: 3.5, hold: [4.85, -1.12], w: 1 },
-      { t: EMBRACE - 0.2, cells: 3.3, hold: [5.35, -1.08], w: 1 },
+      // painting over the desk at the right, both whole in the frame, and the two of them turning down the hall
+      // between, crossing it, as the frame closes in a little.
+      { t: DANCE[0] + 0.25, cells: 3.62, hold: [4.9, -1.12], w: 1 },
+      { t: EMBRACE - 0.2, cells: 3.52, hold: [4.96, -1.1], w: 1 },
       // The painting, lit: a long look, him small under it.
       { t: LAMP + 0.45, cells: 3.35, hold: [7.15, -1.1], w: 1 },
       // In on the machine, the basket and him; her at the door.
