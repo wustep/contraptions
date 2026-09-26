@@ -376,7 +376,9 @@ export const crash = part<CrashState>(
       // hit, held still from the brakes; then with the car through its tumble.
       { t: LAMP_T[33], cells: 9.6, off: [4.2, -2.6] },
       { t: FLASH, cells: 21, off: [lead - 0.8, -3.6], ease: 'whip' },
-      { t: BRAKE, cells: twoCells, hold: two, w: 1 },
+      // In to the two-shot through the brakes, still just before the hit (landing on the brakes, the push in from the
+      // flash's wide was 1.3 s and snapped: zoom acceleration 3.4).
+      { t: IMPACT - 0.12, cells: twoCells, hold: two, w: 1 },
       { t: TAIL, cells: twoCells, hold: two, w: 1 },
       ...tumble,
       // Stopped: the frame settles on the wreck and the road beside it and holds while the lamps go out round him;
