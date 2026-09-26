@@ -92,12 +92,13 @@ export interface Performance {
   loop?: boolean
   /**
    * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
-   * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
+   * canvas sets none (`stage.ts`). A saved video has the same cards painted into its frame (`words.ts`); a saved PNG has
+   * none. Left out, there are none.
    */
   titles?(t: number): TitleCard[]
 }
 
-/** One card of words over the stage, as the page is to set it at a moment. */
+/** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */
 export interface TitleCard {
   /** Stable while the card is up: the page builds it once and only fades it. */
   key: string
