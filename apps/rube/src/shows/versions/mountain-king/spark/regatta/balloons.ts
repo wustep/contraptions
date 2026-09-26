@@ -1,11 +1,15 @@
+import type p5 from 'p5'
 import type { Pt, Seg } from '../../../../../parts'
 import { heat } from '../fx'
 import { box, part, type PartShot } from '../kit'
-import { drawBalloon, type Look, type Moment } from './balloons-draw'
+import { drawBalloon, drawBasket, drawBurner, drawEnvelope, drawJet, drawPilot, drawSandbag, drawWires, type Look, type Moment } from './balloons-draw'
 import { drawFan, drawTether } from './balloons-ground'
 import {
+  add,
+  ANAT,
   AT,
   B,
+  BACK,
   BAGS,
   BLASTS,
   BURNER_POINT,
@@ -53,11 +57,116 @@ import { drawFar, drawLand, drawSky, drawTiny } from './balloons-sky'
 /** The strikes (show seconds): every landing, roar, heave, pop and ballast drop, on the tracked beat. */
 export const BALLOON_HITS: number[] = Object.values(AT).sort((a, b) => a - b)
 
+/* ------------------------------------------------------------------ the top balloon's climb */
+
+/**
+ * The crescendo's two strikes on the top balloon (B4), 97.063 and 99.322: each is a roar of its burner that shoves
+ * the whole balloon up a step. A critically damped step: no way on it at the strike, the shove at once, most of the
+ * climb in the first half second, then a long ease into the new height. Added on top of the regatta's own climb.
+ */
+const STEPS = [
+  { at: AT.land4, d: 3.6 },
+  { at: AT.glow, d: 3.8 },
+] as const
+const STEP_TAU = 0.28
+function lift4(t: number): number {
+  let y = 0
+  for (const s of STEPS) {
+    const u = (t - s.at) / STEP_TAU
+    if (u > 0) y += s.d * (1 - (1 + u) * Math.exp(-u))
+  }
+  return y
+}
+const up4 = (t: number): Pt => [0, -lift4(t)]
+/** B4's nozzle with its stepped climb. */
+const n4s = (t: number): Pt => add(n4(t), up4(t))
+
+/** The spark, with the top balloon's steps once it is on it (the step is still at the landing, so it joins smoothly). */
+function sparkHere(t: number): { p: Pt; hidden: boolean } {
+  const s = sparkAt(t)
+  return t > AT.land4 ? { p: add(s.p, up4(t)), hidden: s.hidden } : s
+}
+
+/**
+ * B4's burner: louder, longer roars on the two strikes (a tall blue jet), the fortissimo's great blast into the door,
+ * and alight again for the return.
+ */
+const B4_BLASTS = [
+  { on: AT.land4, off: AT.land4 + 0.7, i: 1.5 },
+  { on: AT.glow, off: AT.glow + 0.75, i: 1.55 },
+  ...BLASTS.b4.filter((b) => b.on >= AT.blast4 - 1e-6),
+]
+/** The blue flash of a strike's roar: sharp on, long off. */
+function flash4(t: number): number {
+  let v = 0
+  for (const s of STEPS) {
+    const u = t - s.at
+    if (u < 0 || u > 3) continue
+    v = Math.max(v, Math.min(1, u / 0.035) * Math.exp(-u / 0.42))
+  }
+  return v
+}
+
+/** The light of a strike's roar round the burner: a tall soft blue, the shape of the jet, never a disc. */
+function drawBlue(p: p5, k: number, n: Pt, f: number): void {
+  if (f < 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const L = 3.2
+  ctx.save()
+  ctx.translate(n[0] * k, (n[1] - 1.3) * k)
+  ctx.scale(0.42, 1)
+  ctx.globalCompositeOperation = 'screen'
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, L * k)
+  g.addColorStop(0, `rgba(120, 185, 255, ${0.55 * f})`)
+  g.addColorStop(0.45, `rgba(95, 169, 238, ${0.22 * f})`)
+  g.addColorStop(1, 'rgba(95, 169, 238, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect(-L * k, -L * k, 2 * L * k, 2 * L * k)
+  ctx.restore()
+}
+
+/** B4's ballast: a big sack each side, hung off the rim; the pair let go on 97.822, a few hundredths apart. */
+const SACK = 1.9
+function drawSacks(p: p5, look: Look, n: Pt, t: number, drop: number): void {
+  for (const side of [-1, 1] as const) {
+    const hook: Pt = [n[0] + side * (ANAT.rimW + 0.02), n[1] + ANAT.rimY + 0.02]
+    p.push()
+    p.translate(hook[0] * look.k, hook[1] * look.k)
+    p.scale(SACK)
+    p.translate(-hook[0] * look.k, -hook[1] * look.k)
+    drawSandbag(p, { ...look, weight: look.weight / SACK }, n, side, t, side < 0 ? drop : drop + 0.06)
+    p.pop()
+  }
+}
+
+/** The top balloon, drawn here (not by `drawBalloon`) for its blue roars and its big sacks. */
+function drawTop(p: p5, look: Look, t: number): void {
+  const { k } = look
+  const n = n4s(t)
+  const warm = warmth(B4_BLASTS, t, LIT.b4)
+  const roar = roarOf(B4_BLASTS, t)
+  // The spark sits on the pilot arm from its landing to the door; after that the pilot's own small flame shows.
+  const pilot = t > T1 + 0.15
+  drawBasket(p, look, n)
+  p.push()
+  p.translate(n[0] * k, n[1] * k)
+  drawWires(p, look, 1)
+  drawJet(p, k, t, roar, 8.2)
+  drawBurner(p, look, roar)
+  if (pilot) drawPilot(p, k, t, 8.2)
+  p.pop()
+  drawEnvelope(p, look, B.b4, { n, a: 0, fill: 0.97 + 0.025 * Math.min(1, warm) + swellOf(B4_BLASTS, t), vent: 0 }, warm, null, heat(t))
+  drawBlue(p, k, n, flash4(t))
+  drawSacks(p, look, n, t, BAGS.b4)
+}
+
 /**
  * Where a lit burner is on the way home (148.330 to 148.404): the highest balloon's, which the spark went into, its
  * flame alight again then. World cells: the middle of its jet.
  */
-export const BURNER_AT: Pt = BURNER_POINT
+export const BURNER_AT: Pt = add(BURNER_POINT, up4(BACK[0]))
+/** Where the spark leaves, with the top balloon's steps. */
+const EXIT4: Pt = add(EXIT, up4(T1))
 
 interface BalloonsState {
   begin: number
@@ -84,9 +193,9 @@ function lane(): { segs: Seg[]; end: Pt } {
   times.sort((a, b) => a - b)
   const ts = times.filter((t, i) => i === 0 || t - times[i - 1] > 1e-7)
   const hits = new Set(Object.values(AT).filter((s) => s > T0 && s < T1))
-  const at = ts.map((t) => sparkAt(t))
+  const at = ts.map((t) => sparkHere(t))
   // Whether the spark is out of sight between sample i and i + 1 (read at the middle).
-  const gone = ts.slice(0, -1).map((t, i) => sparkAt((t + ts[i + 1]) / 2).hidden)
+  const gone = ts.slice(0, -1).map((t, i) => sparkHere((t + ts[i + 1]) / 2).hidden)
   const fits = (i: number, j: number): boolean => {
     const [ax, ay] = at[i].p
     const [bx, by] = at[j].p
@@ -108,6 +217,26 @@ function lane(): { segs: Seg[]; end: Pt } {
   }
   return { segs, end: at[at.length - 1].p }
 }
+
+/**
+ * The crescendo's wide (land4 to the fortissimo): [t, cells, x, y], 22.5 to 24 cells tall. The spark on the top
+ * balloon's pilot sits low in the frame (two thirds down) with the whole balloon over it; each roar shoves the balloon
+ * up the frame, and the camera takes the next second or so to climb after it, so the two steps read as steps.
+ */
+const WIDE: [number, number, number, number][] = (() => {
+  // [t, cells, how far down the frame the spark is]
+  const keys: [number, number, number][] = [
+    [AT.land4, 22.5, 0.67],
+    [AT.land4 + 0.9, 23.4, 0.57],
+    [AT.glow, 24, 0.65],
+    [AT.glow + 0.9, 24, 0.55],
+    [AT.blast4, 23.6, 0.57],
+  ]
+  return keys.map(([t, cells, down]) => {
+    const [x, y] = sparkHere(t).p
+    return [t, cells, x + 0.65, y - (down - 0.5) * cells]
+  })
+})()
 
 export const balloons = part<BalloonsState>(
   {
@@ -170,7 +299,7 @@ export const balloons = part<BalloonsState>(
       }
       aloft(B.b2, n2(t), BLASTS.b2, LIT.b2, AT.whoosh2, POPS.b2, BAGS.b2, 3.7)
       aloft(B.b3, n3(t), BLASTS.b3, LIT.b3, AT.whoosh3, POPS.b3, BAGS.b3, 5.9)
-      aloft(B.b4, n4(t), BLASTS.b4, LIT.b4, T1, null, BAGS.b4, 8.2)
+      drawTop(p, hero, t)
     },
   },
   (slot) => {
@@ -207,18 +336,18 @@ export const balloons = part<BalloonsState>(
     { t: AT.whoosh2, cells: 11.6, off: [0.3, -0.7] },
     { t: AT.flare2, cells: 13, off: [0.4, -1.2] },
     { t: AT.land3, cells: 11.5, off: [0.4, -0.6] },
-    { t: AT.whoosh3, cells: 12, off: [0.4, -0.7] },
-    { t: AT.flare3, cells: 13.5, off: [0.4, -1.2] },
-    { t: AT.pop3, cells: 15, off: [0.6, -1.8] },
-    // The last float, and the camera goes wide: the whole regatta rising into the sunset, the spark on the highest.
-    { t: AT.pop3 + 0.9, cells: 21, off: [0.3, -0.6] },
-    { t: AT.land4, cells: 29, off: [0.4, 1.4] },
-    { t: AT.groupB, cells: 39, off: [0.6, 2.2] },
-    { t: AT.glow, cells: 44, off: [0.7, 2.0] },
-    // In on the top burner for the fortissimo, and into its flame.
-    { t: AT.glow + 0.75, cells: 38, off: [0.6, 1.2] },
-    { t: AT.blast4, cells: 15, off: [0.3, 0.2] },
-    { t: T1 - 0.45, cells: 5.4 },
-    { t: T1, cells: 2.4, hold: EXIT, w: 1 },
+    // The third stair is not framed like the first two: in close on the crown as the glow comes up inside, so the
+    // vent popping fills the frame, then the reveal as the spark floats up to the top balloon (phrase 11 begins).
+    { t: AT.whoosh3, cells: 11.4, off: [0.4, -0.7] },
+    { t: AT.flare3, cells: 9.6, off: [0.3, -1.0] },
+    { t: AT.pop3, cells: 8, off: [0.3, -0.9] },
+    { t: AT.pop3 + 0.45, cells: 10.5, off: [0.8, -1.3] },
+    // The crescendo: the top balloon whole, the spark on its pilot low in the frame, B3 dropping away below and the
+    // regatta round it. The camera climbs steadily; the balloon climbs in steps on its two roars, up through it.
+    ...WIDE.map(([t, cells, x, y]) => ({ t, cells, hold: [x, y] as Pt, w: 1 })),
+    // The fortissimo is the push: from the wide, in on the top burner, and into its flame on the door.
+    { t: AT.blast4 + 0.5, cells: 7, hold: add(sparkHere(AT.blast4 + 0.5).p, [0.35, -0.6]), w: 1 },
+    { t: T1 - 0.25, cells: 3.4, hold: add(sparkHere(T1 - 0.25).p, [0.05, -0.3]), w: 1 },
+    { t: T1, cells: 2.4, hold: EXIT4, w: 1 },
   ],
 )
