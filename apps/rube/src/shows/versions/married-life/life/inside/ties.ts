@@ -675,32 +675,44 @@ function ellieAt(T: number): Companion {
 /* ------------------------------------------------------------------ the light through the door */
 
 /**
- * The patch of low sun the front door's glass (four panes) throws on the hall's far wall, behind them. It jumps a
- * step on every downbeat of the mornings: the first dawn (bar 38), then each tie's morning and that day's evening,
- * spring, summer, autumn, winter, and a pale last spring. Evening lies lower and longer, reaching back to the wheel.
+ * The patch of sun the front door's glass (four panes) throws on the hall's far wall, in the clear paper between the
+ * wheel's rim and the stairs, beside the two of them: the house's clock. Each morning is a season, and the patch
+ * takes its light: a pale green-white spring, a deep gold summer, an amber autumn, a blue-white winter, and the
+ * spring again, paler, for the bow tie. Within each morning it steps on both downbeats: the morning's patch when the
+ * tie comes down, that day's evening (the same season, lower sun: a flatter, longer patch reaching back behind the
+ * wheel, warmer) when she knots it.
  */
 interface Light {
   rgb: [number, number, number]
+  /** Its strength: about what the patch's middle lays over the paper (0.4–0.5 reads at a glance). */
   a: number
   x0: number
   w: number
   top: number
+  h: number
   skew: number
 }
-const MORN = (rgb: [number, number, number], a: number, dx = 0): Light => ({ rgb, a, x0: 1.72 + dx, w: 0.6, top: -1.22, skew: 0.32 })
-const EVE = (rgb: [number, number, number], a: number): Light => ({ rgb, a, x0: 1.36, w: 0.92, top: -0.98, skew: 0.72 })
+type RGB = [number, number, number]
+/** High sun: a tall patch up the wall, its foot just clear of the stairs' treads. */
+const MORN = (rgb: RGB, a: number): Light => ({ rgb, a, x0: 1.74, w: 0.5, top: -1.74, h: 0.56, skew: 0.16 })
+/** Low sun: flatter and longer, leaning back towards the wheel. */
+const EVE = (rgb: RGB, a: number): Light => ({ rgb, a, x0: 1.8, w: 0.74, top: -1.62, h: 0.44, skew: 0.46 })
+/** The evening's light is the season's, warmed. */
+const warm = ([r, g, b]: RGB, f: number): RGB => [r + (255 - r) * f, g + (196 - g) * f, b + (120 - b) * f].map(Math.round) as RGB
+const SEASONS: RGB[] = [
+  [226, 250, 206], // spring: pale green-white
+  [255, 190, 64], // summer: deep gold
+  [250, 146, 56], // autumn: amber
+  [184, 210, 255], // winter: blue-white
+  [236, 250, 222], // spring again, paler
+]
 const LIGHTS: { t: number; l: Light }[] = [
-  { t: -Infinity, l: MORN([255, 242, 216], 0.26, 0.08) },
-  { t: TURNS[0], l: MORN([255, 240, 190], 0.44) },
-  { t: CINCH[0], l: EVE([255, 186, 132], 0.32) },
-  { t: TURNS[1], l: MORN([255, 246, 200], 0.5, -0.04) },
-  { t: CINCH[1], l: EVE([255, 170, 112], 0.34) },
-  { t: TURNS[2], l: MORN([255, 210, 140], 0.44, 0.04) },
-  { t: CINCH[2], l: EVE([238, 150, 104], 0.3) },
-  { t: TURNS[3], l: MORN([220, 232, 252], 0.46, 0.02) },
-  { t: CINCH[3], l: EVE([196, 186, 214], 0.3) },
-  { t: TURNS[4], l: MORN([250, 238, 214], 0.38) },
-  { t: CINCH[4], l: EVE([240, 188, 150], 0.28) },
+  // The first dawn, soft, as he steps onto the plate.
+  { t: -Infinity, l: MORN(SEASONS[0], 0.3) },
+  ...SEASONS.flatMap((rgb, j) => [
+    { t: TURNS[j], l: MORN(rgb, 0.5) },
+    { t: CINCH[j], l: EVE(warm(rgb, 0.22), 0.44) },
+  ]),
 ]
 /** The patch is there while the mornings are (from the hall's first sight to the sun wedge of the dance). */
 const lightEnv = (T: number): number => smooth(T, ENTER - 0.3, ENTER + 0.9) * (1 - smooth(T, 153.7, 154.9))
@@ -708,19 +720,22 @@ const lightEnv = (T: number): number => smooth(T, ENTER - 0.3, ENTER + 0.9) * (1
 function drawLightPatch(p: p5, k: number, l: Light, a: number): void {
   if (a <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const H = 0.8
-  const gap = 0.05
+  const H = l.h
+  const gap = 0.045
   const pw = (l.w - gap) / 2
   const ph = (H - gap) / 2
   const [r, g, b] = l.rgb
   ctx.save()
-  // Three layers, each a little larger and fainter: a soft edge, a penumbra, not a cut.
+  // Three layers, each a little larger: a soft edge, a penumbra, not a cut. The outer two each lay a quarter of `a`;
+  // the inner one makes up the rest, so the panes' middles, under all three, take `a` exactly.
+  const edge = 0.25 * a
+  const inner = 1 - (1 - a) / ((1 - edge) * (1 - edge))
   for (const [grow, f] of [
-    [0.05, 0.22],
-    [0.024, 0.3],
-    [0, 0.48],
+    [0.05, edge],
+    [0.024, edge],
+    [0, inner],
   ] as [number, number][]) {
-    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a * f})`
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${f})`
     ctx.beginPath()
     for (let cx = 0; cx < 2; cx++) {
       for (let cy = 0; cy < 2; cy++) {
@@ -989,15 +1004,17 @@ export const ties = part<TiesState>(
     const low = (cells: number): number => -(cells / 3 - HALF - 0.06)
     const key = (t: number, cells: number, x: number, y = low(cells)): PartShot => ({ t, cells, hold: [x, y], w: 1 })
     return [
-      // The mornings: the whole wheel, its top and its drop rod, with the two of them under it and the light behind
-      // them, closing in a little as the years go and opening again for the bow tie.
-      key(TURNS[0], 2.8, 1.0),
-      key(TURNS[1], 2.72, 1.05),
-      key(TURNS[2], 2.66, 1.08),
-      key(TURNS[3], 2.62, 1.08),
-      key(TURNS[4], 2.68, 1.08),
+      // The mornings: one slow crane, down and in and drifting towards the door, a different frame each morning and
+      // the wheel whole in every one, the patch of door light beside them: the first wide (the wheel, its plate, the
+      // stairs, the light); lower, on the knot; from her side, where she waits; on the two of them under the wheel;
+      // closest for the bow tie. Then out after her.
+      key(TURNS[0], 3.15, 1.0),
+      key(TURNS[1], 2.9, 1.12),
+      key(TURNS[2], 2.7, 1.36),
+      key(TURNS[3], 2.55, 1.42),
+      key(152.6, 2.45, 1.48),
       // Off to the gramophone after her, the wheel left behind.
-      key(153.5, 2.76, 1.9),
+      key(153.9, 2.72, 2.0),
       key(155.1, 2.92, 3.25),
       // The dance, on the loudest bars of the cue. On its first downbeat the gramophone is whole in the left third,
       // its record turning, the two of them coming into the middle of the frame; a slow crane up and out as they waltz
