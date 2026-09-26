@@ -785,7 +785,9 @@ const driverOn = (s: number): number => (s < 0 ? 0 : smooth(s, 0, 0.08) * (1 - s
  * the heavy chord after it (`POP`, 139.326) it jumps off the pin, drops to the field, bounces and rolls away to the
  * left into the dark, still spinning, its drivers still spraying, while the camera follows the spark the other way.
  * So it leaves the picture as part of the action and is never parked, half in frame, at the edge of the Titan's
- * shots. The bare stand stays, its pin sticking out.
+ * shots. Its stand goes over with it: the jump wrenches the pin and pulls the post over to the left, and the tripod
+ * tips on its left foot until the post's head is down on the field, one brace left pointing at the sky (`standTip`),
+ * so no bare post stands at the edge of the Titan's wide frame either.
  */
 const LOOSE = FLING
 const POP = 139.326
@@ -823,17 +825,48 @@ export function wheelAt(t: number): Pt {
   return [x, y]
 }
 
+/** The post's height, and the tip at which its head comes down on the field (the tripod on its left foot). */
+const POST_H = GY - (WHEEL[1] + 0.15)
+const TIP_TO = Math.PI - Math.atan(POST_H / 0.75)
+const TIP_KICK = 0.14
+const TIP_FALL = 0.6
+/**
+ * How far the stand has gone over (radians, its top to the left): jerked a little way over by the pin's wrench on the
+ * jump, all but stalled at its balance, then falling faster and faster until the post's head hits the field, with a
+ * small bounce.
+ */
+function standTip(t: number): number {
+  const u = t - POP
+  if (u <= 0) return 0
+  const a1 = 0.36
+  if (u < TIP_KICK) return a1 * (1 - (1 - u / TIP_KICK) ** 2)
+  const w = u - TIP_KICK
+  if (w < TIP_FALL) return a1 + (TIP_TO - a1) * (w / TIP_FALL) ** 2
+  const b = w - TIP_FALL
+  return TIP_TO - 0.07 * Math.exp(-b / 0.12) * Math.abs(Math.sin((Math.PI * b) / 0.16))
+}
+
 export function drawWheel(pen: Pen, L: Light[]): void {
   const { t, f } = pen
   const [sx, sy] = WHEEL
   if (sx + 4 < f.x0 - 10 || sx - 4 > f.x1) return
-  // The stand: a post and its two braces, with the iron pin the wheel turned on.
+  // The stand: a post and its two braces, with the iron pin the wheel turned on; after the jump, going over on its
+  // left foot.
+  const tip = standTip(t)
+  const ca = Math.cos(tip)
+  const sa = Math.sin(tip)
+  const px = sx - 0.75
+  const T = ([x, y]: Pt): Pt => {
+    const dx = x - px
+    const dy = y - GY
+    return [px + dx * ca + dy * sa, GY - dx * sa + dy * ca]
+  }
   const wood = shade(L, WOOD, WOOD_LIT, sx, (sy + GY) / 2)
-  bar(pen, [sx, GY], [sx, sy + 0.15], 0.22, wood)
-  bar(pen, [sx - 0.75, GY], [sx - 0.05, GY - 1.1], 0.09, wood)
-  bar(pen, [sx + 0.75, GY], [sx + 0.05, GY - 1.1], 0.09, wood)
+  bar(pen, T([sx, GY]), T([sx, sy + 0.15]), 0.22, wood)
+  bar(pen, T([sx - 0.75, GY]), T([sx - 0.05, GY - 1.1]), 0.09, wood)
+  bar(pen, T([sx + 0.75, GY]), T([sx + 0.05, GY - 1.1]), 0.09, wood)
   const [cx, cy] = wheelAt(t)
-  if (t >= POP) rectC(pen, sx - 0.05, sy - 0.05, sx + 0.05, sy + 0.16, shade(L, FW.iron, IRON_LIT, sx, sy, 0.1))
+  if (t >= POP) bar(pen, T([sx, sy - 0.05]), T([sx, sy + 0.16]), 0.1, shade(L, FW.iron, IRON_LIT, sx, sy, 0.1))
   if (cx + WHEEL_R + 0.5 < f.x0 || cx - WHEEL_R - 0.5 > f.x1) return
   const turn = -wheelTurn(t)
   const rimC = shade(L, WOOD, WOOD_LIT, cx, cy, 0.1)
