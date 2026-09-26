@@ -1,14 +1,15 @@
 import type p5 from 'p5'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
+import { R, laneAt, type Lane, type Pt } from '../../../../../parts'
 import { HAT, KIT_FLOOR, KIT_LAND, SNARE, drawKit, drawStick, type KitPiece } from '../drums'
 import { POSES, beatPose, blendPose, drawConductor, type Pose } from '../fletcher'
-import { alpha, box, part, scenery, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
+import { box, part, scenery, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
 import { BAND, BASS, FIRST, TUNE_ORIGIN, TUNE_PERIOD, tune } from '../music'
 import { G_EARTH, G_SNAP } from '../physics'
-import { KIT, SHOP } from '../worlds'
+import { KIT } from '../worlds'
 import { Path, beat, loudAt, since, swing, type Hit } from './room-path'
-import { ROOM, box4, drawPracticeRoom, inked, litAt, type RoomLook } from './room'
+import { BLOCK, STEEL, STEEL_LIT, block, dim, edgeOf } from './night-rig'
+import { ROOM, drawPracticeRoom, litAt, type RoomLook } from './room'
 
 /**
  * The practice room, the film's first shot (0 → 30.65: the drum intro alone, the bass from 21.11, the band on 30.65).
@@ -262,28 +263,43 @@ function stir(T: number): number {
   return Math.min(1, d)
 }
 
-/** The pair: the post and its clamp, the two sticks at their angles, a hinge block over each butt. */
+/**
+ * The pair: the post and its clamp, the two sticks at their angles, a hinge over each butt. Steel in the room's light,
+ * edged in its own dark, lit along its top (the night rig's finishes: this pair is its ancestor); the dark blocks
+ * edged in cream ink it had read as selection handles on a diagram in the backbeat's closes.
+ */
 function drawPair(p: p5, c: Ctx, angle: Record<Side, number>): void {
-  const { k, ink, weight, bg } = c
-  const chrome = KIT.chrome
+  const { k, weight, bg } = c
+  const lit = 0.9
+  const steel = dim(bg, STEEL, lit, 0.4)
   p.push()
-  // The clamp on the snare's hoop and the post up from it to the high hinge.
-  p.stroke(chrome)
+  p.strokeCap(p.ROUND)
+  // The post up from the clamp on the snare's hoop to the high hinge: a steel rod edged in its own dark.
+  p.stroke(edgeOf(steel))
+  p.strokeWeight(weight * 1.9)
+  p.line(POST.x * k, POST.foot * k, POST.x * k, PAIR.H.hinge[1] * k)
+  p.stroke(steel)
   p.strokeWeight(weight * 1.1)
   p.line(POST.x * k, POST.foot * k, POST.x * k, PAIR.H.hinge[1] * k)
-  inked(p, alpha(p, ink, 0.75), weight * 0.5, chrome)
-  box4(p, k, POST.clamp - 0.03, POST.foot - 0.05, POST.x + 0.04, POST.foot + 0.05)
+  // The clamp on the hoop: a steel jaw, a bolt through it.
+  block(p, c, POST.clamp - 0.03, POST.foot - 0.05, POST.x + 0.04, POST.foot + 0.05, steel, lit, STEEL_LIT, 0.015)
+  p.noStroke()
+  p.fill(edgeOf(steel))
+  p.ellipse((POST.x + 0.005) * k, POST.foot * k, 0.02 * k, 0.02 * k)
   // The sticks: hickory, the house's stick, from each hinge.
   for (const side of ['S', 'H'] as const) {
     const st = PAIR[side]
     const a = angle[side]
     drawStick(p, c, st.hinge, st.m === 1 ? a : Math.PI - a, st.len)
   }
-  // The hinge blocks over the butts.
+  // The hinges over the butts: a steel barrel on the post, a step darker, its pin through it.
+  const knuckle = dim(bg, BLOCK, lit, 0.5)
   for (const side of ['S', 'H'] as const) {
     const [hx, hy] = PAIR[side].hinge
-    inked(p, alpha(p, ink, 0.85), weight * 0.6, mixHex(bg, SHOP.black, 0.5))
-    box4(p, k, hx - 0.05, hy - 0.045, hx + 0.05, hy + 0.045)
+    block(p, c, hx - 0.05, hy - 0.036, hx + 0.05, hy + 0.036, knuckle, lit * 0.8, STEEL_LIT, 0.03)
+    p.noStroke()
+    p.fill(edgeOf(knuckle))
+    p.ellipse(hx * k, hy * k, 0.028 * k, 0.028 * k)
   }
   p.pop()
 }

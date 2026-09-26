@@ -22,20 +22,20 @@ import { LAMP, box4 } from './room'
 /** The room's deepest dark, that a finish's edge sinks toward. */
 const DARK = '#050404'
 /** Steel in the room's shadow (the rig's posts, clamps and hinges, the metronome's rod and weight): drums.ts's HARDWARE. */
-const STEEL = mixHex(KIT.chrome, KIT.shade, 0.42)
+export const STEEL = mixHex(KIT.chrome, KIT.shade, 0.42)
 /** The hinges' barrels: steel a step darker than the posts. */
-const BLOCK = mixHex(STEEL, KIT.shade, 0.55)
+export const BLOCK = mixHex(STEEL, KIT.shade, 0.55)
 /** White tape (the roll, the wound grip). */
 const TAPE = KIT.head
 /** The lamp's light caught on an edge: on wood, on steel, on tape. */
 const WOOD_LIT = mixHex(SHOP.wood, SHOP.tungsten, 0.62)
-const STEEL_LIT = mixHex(KIT.chrome, SHOP.tungsten, 0.35)
+export const STEEL_LIT = mixHex(KIT.chrome, SHOP.tungsten, 0.35)
 const TAPE_LIT = mixHex(KIT.head, SHOP.tungsten, 0.25)
 
 /** A finish as the light on it goes: toward the room's paper, as the night's props always did. */
-const dim = (bg: string, hex: string, lit: number, floor = 0.3): string => mixHex(bg, hex, floor + (1 - floor) * lit)
+export const dim = (bg: string, hex: string, lit: number, floor = 0.3): string => mixHex(bg, hex, floor + (1 - floor) * lit)
 /** A finish's own edge: its dark. */
-const edgeOf = (hex: string): string => mixHex(hex, DARK, 0.6)
+export const edgeOf = (hex: string): string => mixHex(hex, DARK, 0.6)
 /** Which side of `x` the lamp hangs: 1 right, -1 left. */
 const lampSide = (x: number): 1 | -1 => (LAMP.x >= x ? 1 : -1)
 
@@ -63,7 +63,7 @@ function litEdge(p: p5, k: number, a: Pt, b: Pt, hex: string, lit: number, w: nu
  * A box by its corners (its corners rounded by `r`), filled and edged in its own dark, lit along its top and its
  * lamp-side end.
  */
-function block(p: p5, c: Ctx, x0: number, y0: number, x1: number, y1: number, fill: string, lit: number, hi: string, r = 0): void {
+export function block(p: p5, c: Ctx, x0: number, y0: number, x1: number, y1: number, fill: string, lit: number, hi: string, r = 0): void {
   const { k, weight } = c
   if (r > 0) {
     p.push()
