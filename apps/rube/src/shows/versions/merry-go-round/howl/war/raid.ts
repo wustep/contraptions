@@ -405,6 +405,8 @@ interface Site {
   far?: boolean
   /** Already burning when we come (the raid began before). */
   before?: boolean
+  /** The house across the street it burns in (`FRONTS`): the stick's roofs. */
+  house?: number
 }
 
 const SITES: Site[] = [
@@ -415,7 +417,7 @@ const SITES: Site[] = [
   // The lead bomber, down beyond the roofs.
   { x: LEAD_DOWN[0], y: LEAD_DOWN[1], w: 1.4, t: CRASH, flare: 2.2, burn: 0.9, seed: 20, far: true },
   // The great ship's stick through the roofs across the street.
-  ...STICK_ROOFS.map(([x, y], i): Site => ({ x, y, w: 1.35, t: STICK[i], flare: 2.8, burn: 1.15, seed: 30 + i })),
+  ...STICK_ROOFS.map(([x, y], i): Site => ({ x, y, w: 1.35, t: STICK[i], flare: 2.8, burn: 1.15, seed: 30 + i, house: 5 - i })),
 ]
 
 /** How tall a site's flames are at `t`: nothing before its flare, up at once, settling, and growing as it burns. */
@@ -911,6 +913,74 @@ function drawNight(p: p5, k: number, t: number, f: Frame): void {
   ctx.restore()
 }
 
+/** The shop's side of the street in this frame: its house's east wall (the street's houses start here), its west end. */
+const SHOP_EAST = TOWN_AT.wall[1] - OX
+const SHOP_WEST = TOWN_AT.shop[0] - 0.4 - OX
+
+/**
+ * The shop's floor where the set cuts it open, seen from the street: the town draws it as the workroom's boards over
+ * the cellar's dark, which under the raid's night stood a step darker than the cobbles beside it, a slab. Drawn before
+ * the night, so the night goes over it as it goes over the cobbles: the pavement one tone from the shop to the street.
+ */
+function drawShopFloor(p: p5, k: number, t: number): void {
+  const tone = outside(t)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  const g = ctx.createLinearGradient(SHOP_WEST * k, 0, SHOP_EAST * k, 0)
+  const col = tone(mixHex(TOWN.cobble, TOWN.cobbleDark, 0.3))
+  g.addColorStop(0, rgba(col, 0.72))
+  g.addColorStop(0.9, rgba(col, 0.72))
+  g.addColorStop(1, rgba(col, 0.55))
+  ctx.fillStyle = g
+  ctx.fillRect(SHOP_WEST * k, (GROUND + 0.02) * k, (SHOP_EAST - SHOP_WEST) * k, 0.48 * k)
+  ctx.restore()
+}
+
+/**
+ * The shop's house (its cut-open workroom too) and the houses west of it, in the raid's night. Plain plaster with no
+ * fire in it and no smoke over it, beside the burning street it read as a paler panel with a ruled edge down the
+ * shop's east wall. A little more of the night over it, feathered out across that wall so there is no edge; the
+ * street's smoke drifting over its roof and upper storey and on across the wall; and, once the house next door burns,
+ * that fire's light on the shop's east end.
+ */
+function drawShopSide(p: p5, k: number, t: number, f: Frame): void {
+  if (f.x0 > SHOP_EAST + 2.5) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  const a = 0.16 + 0.06 * smooth(t, BLACKOUT[0] - 0.4, BLACKOUT[5] + 0.6)
+  const g = ctx.createLinearGradient((SHOP_EAST - 1.2) * k, 0, (SHOP_EAST + 1.8) * k, 0)
+  g.addColorStop(0, rgba(INDIGO, a))
+  g.addColorStop(0.5, rgba(INDIGO, a * 0.45))
+  g.addColorStop(1, rgba(INDIGO, 0))
+  ctx.fillStyle = g
+  const x1 = Math.min(f.x1, SHOP_EAST + 1.8)
+  // Down to the ground line: the floor's front below it is the pavement, one tone with the cobbles (`drawShopFloor`).
+  ctx.fillRect(f.x0 * k, f.y0 * k, (x1 - f.x0) * k, (Math.min(f.y1, GROUND) - f.y0) * k)
+  ctx.restore()
+  // The street's smoke over its roof and upper storey: long soft banks of every size, drifting slowly east and on
+  // over the seam into the street's own smoke; lit a little from under where they are low.
+  const thick = 0.1 + 0.14 * smooth(t, 209, 214) + 0.08 * smooth(t, 222, 229)
+  for (let i = 0; i < 14; i++) {
+    const span = 26
+    const x = ((((hash(i, 1, 81) * span + 0.22 * t) % span) + span) % span) + SHOP_WEST - 6
+    const r = 1.1 + 1.3 * hash(i, 2, 81)
+    if (x + r * 1.6 < f.x0 || x - r * 1.6 > f.x1) continue
+    const y = -6.2 - 7.5 * hash(i, 3, 81) + 0.3 * Math.sin(t * 0.35 + i)
+    const low = Math.max(0, Math.min(1, (y + 11) / 5))
+    // Thinning out past the house next door's middle, so the bank has no end of its own.
+    const fade = 1 - smooth(x, SHOP_EAST + 1, SHOP_EAST + 4)
+    puff(p, k, x, y, r, mixHex(mixHex(TOWN.smoke, TOWN.nightHigh, 0.45), TOWN.ember, 0.25 * low), thick * (0.6 + 0.4 * hash(i, 4, 81)) * fade, 0.5)
+  }
+  // The house next door burning (the stick's last bomb): its fire's light on the shop's east end, flickering.
+  const next = t - HIT[0]
+  if (next > 0) {
+    const fl = 0.8 + 0.2 * wobble(t * 6.1, 7)
+    const heat = smooth(next, 0.1, 1.6) * fl
+    glow(p, k, SHOP_EAST - 0.2, FRONTS[0].eaves - 0.6, 3.6, TOWN.fire, 0.1 * heat, 1.3)
+    glow(p, k, SHOP_EAST - 0.4, GROUND - 2.4, 2.8, TOWN.ember, 0.08 * heat, 1)
+  }
+}
+
 function drawSky(p: p5, k: number, t: number, f: Frame): void {
   // The town burning under the roofs lights the smoke just over them, more as the night goes on; above that the
   // night is indigo.
@@ -1166,15 +1236,167 @@ function drawStreetBurst(p: p5, k: number, W: number, ink: string, t: number): v
   sparks(p, k, cx, GROUND - 0.4, u, 22, 7, 94)
 }
 
-function drawSite(p: p5, k: number, s: Site, t: number): void {
+/** The shop's roof, as `town.ts` draws it (its eaves over the second storey, the ridge 5.4 over them, 0.4 overhang). */
+const SHOP_EAVES = TOWN_AT.ceil - 0.32 - 5.6
+const SHOP_RIDGE = SHOP_EAVES - 5.4
+
+/** The roof's triangle of the house across the street `j`, as `town.ts` draws it. */
+const roofTri = (j: number): Pt[] => {
+  const f = FRONTS[j]
+  return [
+    [f.x0 - 0.25, f.eaves + 0.05],
+    [f.xc, f.ridge],
+    [f.x1 + 0.25, f.eaves + 0.05],
+  ]
+}
+
+/** The line of the street's roofs against the sky at `x` (the highest roof there); Infinity where no roof stands. */
+function roofTop(x: number): number {
+  let y = Infinity
+  const gable = (x0: number, x1: number, eaves: number, ridge: number, over: number) => {
+    const a = x0 - over
+    const b = x1 + over
+    const m = (x0 + x1) / 2
+    if (x < a || x > b) return
+    const u = x < m ? (x - a) / (m - a) : (b - x) / (b - m)
+    y = Math.min(y, eaves + (ridge - eaves) * u)
+  }
+  for (const f of FRONTS) gable(f.x0, f.x1, f.eaves + 0.05, f.ridge, 0.25)
+  gable(SHOP_WEST, SHOP_EAST, SHOP_EAVES + 0.1, SHOP_RIDGE, 0.4)
+  return y
+}
+
+/** Clip to the sky over the street's roofs, so what is drawn beyond them goes down behind their line. */
+function clipAboveRoofs(ctx: CanvasRenderingContext2D, k: number, f: Frame): void {
+  const xs: number[] = []
+  const n = Math.ceil((f.x1 - f.x0) / 0.1)
+  for (let i = 0; i <= n; i++) xs.push(f.x0 + ((f.x1 - f.x0) * i) / n)
+  // The ridges and eaves exactly, so the line never nibbles a corner.
+  for (let j = 0; j < FRONTS.length; j++) for (const [x] of roofTri(j)) if (x > f.x0 && x < f.x1) xs.push(x)
+  for (const x of [SHOP_WEST - 0.4, (SHOP_WEST + SHOP_EAST) / 2, SHOP_EAST + 0.4]) if (x > f.x0 && x < f.x1) xs.push(x)
+  xs.sort((a, b) => b - a)
+  ctx.beginPath()
+  ctx.moveTo(f.x0 * k, (f.y0 - 1) * k)
+  ctx.lineTo(f.x1 * k, (f.y0 - 1) * k)
+  for (const x of xs) ctx.lineTo(x * k, Math.min(f.y1 + 1, roofTop(x)) * k)
+  ctx.closePath()
+  ctx.clip()
+}
+
+const polyPath = (ctx: CanvasRenderingContext2D, k: number, pts: Pt[]) => {
+  ctx.beginPath()
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+}
+
+/**
+ * The town burning beyond the roofs: the far fires and their smoke go down behind the street's roofline (the raid is
+ * drawn over the set, so without it they floated as bars of flame on the near roofs), each seated a little below that
+ * line so only its tongues and its glow come up over it.
+ */
+function drawFarFires(p: p5, k: number, t: number, f: Frame): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  clipAboveRoofs(ctx, k, f)
+  for (let i = 0; i < SITES.length; i++) {
+    const s = SITES[i]
+    if (!s.far) continue
+    const h = flames(s, t)
+    if (h <= 0.01) continue
+    const top = roofTop(s.x)
+    const y = Number.isFinite(top) ? Math.max(s.y, top + 0.3) : s.y
+    const hh = h * 1.15 + (y - s.y) * 0.5
+    const u = t - s.t
+    glow(p, k, s.x, y - 0.4 * hh, 1.4 + 1.1 * hh, TOWN.fire, 0.1 * Math.min(1.6, hh), 0.8)
+    if (!s.before && u < 0.5) glow(p, k, s.x, y - 0.8, 4.5, TOWN.fireHot, 0.35 * Math.exp(-u / 0.12) * 0.7)
+    fire(p, k, s.x, y, s.w * (0.8 + 0.2 * Math.min(1, h)), hh, { t, seed: s.seed, lean: 0.14, light: 0.7 })
+    if (!s.before) sparks(p, k, s.x, y - 0.4, u, 10, 5.5, s.seed)
+  }
+  for (let i = 0; i < SITES.length; i++) if (SITES[i].far) smoke(p, k, SMOKES[i], t)
+  ctx.restore()
+}
+
+/**
+ * A roof burning across the street, seated in its roof: the bomb's ragged hole in the slates, charred at its rim and
+ * lit orange from inside; the slates round it warmed, and the roof's own edges catching the light near it; the flames
+ * coming up out of the hole (their base hidden under its lower lip, so never a ruled line), over the ridge and into the
+ * night.
+ */
+function drawRoofFire(p: p5, k: number, W: number, s: Site, t: number): void {
   const h = flames(s, t)
-  if (h <= 0.01) return
-  const light = s.far ? 0.7 : 1
+  if (h <= 0.01 || s.house === undefined) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const tri = roofTri(s.house)
   const u = t - s.t
-  glow(p, k, s.x, s.y - 0.4 * h, 1.4 + 1.1 * h, TOWN.fire, (s.far ? 0.1 : 0.16) * Math.min(1.6, h), 0.8)
-  if (!s.before && u < 0.5) glow(p, k, s.x, s.y - 0.8, 4.5, TOWN.fireHot, 0.35 * Math.exp(-u / 0.12) * light)
-  fire(p, k, s.x, s.y, s.w * (0.8 + 0.2 * Math.min(1, h)), h, { t, seed: s.seed, lean: 0.14, light })
-  if (!s.before) sparks(p, k, s.x, s.y - 0.4, u, s.far ? 10 : 16, 5.5, s.seed)
+  const fl = 0.78 + 0.22 * wobble(t * 5.3, s.seed)
+  const heat = Math.min(1.3, h) * fl
+  // The roof's half-width at the hole's height; the hole a little inside it.
+  const across = (s.y - tri[1][1]) / (tri[0][1] - tri[1][1])
+  const half = across * (tri[2][0] - tri[0][0]) * 0.5
+  const hw = Math.min(0.62, 0.8 * half) * (0.3 + 0.7 * smooth(u, 0, 0.12))
+  const hh = 0.19 + 0.05 * hash(s.seed, 1, 83)
+  const cy = s.y + 0.08
+  const hole: Pt[] = Array.from({ length: 11 }, (_, i) => {
+    const a = (2 * Math.PI * (i + 0.4 * (hash(i, s.seed, 84) - 0.5))) / 11
+    // Jagged: every other corner bitten in, so its lip is broken slates, never a smooth curve.
+    const r = (i % 2 ? 0.62 : 0.86) + 0.34 * hash(i, s.seed, 85)
+    return [s.x + hw * r * Math.cos(a), cy + hh * (0.7 + 0.45 * hash(i, s.seed, 86)) * Math.sin(a)]
+  })
+  // The warmed slates, and the hole: both inside the roof.
+  ctx.save()
+  polyPath(ctx, k, tri)
+  ctx.clip()
+  glow(p, k, s.x, cy, 1.9, TOWN.ember, 0.26 * heat, 0.75)
+  glow(p, k, s.x, cy - 0.1, 0.9, TOWN.fire, 0.18 * heat, 0.7)
+  ctx.save()
+  ctx.translate(s.x * k, cy * k)
+  ctx.scale(1.12, 1.2)
+  ctx.translate(-s.x * k, -cy * k)
+  polyPath(ctx, k, hole)
+  ctx.fillStyle = rgba(mixHex('#1C110E', TOWN.ember, 0.2), 0.5)
+  ctx.fill()
+  ctx.restore()
+  polyPath(ctx, k, hole)
+  const g = ctx.createRadialGradient(s.x * k, (cy + 0.05) * k, 0, s.x * k, (cy + 0.05) * k, hw * 1.1 * k)
+  g.addColorStop(0, rgba(TOWN.fireHot, 0.95))
+  g.addColorStop(0.5, rgba(TOWN.fire, 0.92))
+  g.addColorStop(1, rgba(mixHex(TOWN.ember, '#1C110E', 0.35), 0.95))
+  ctx.fillStyle = g
+  ctx.fill()
+  ctx.restore()
+  // The roof's edges catching the light, strongest nearest the fire.
+  ctx.save()
+  const e = ctx.createRadialGradient(s.x * k, cy * k, 0, s.x * k, cy * k, 2.3 * k)
+  e.addColorStop(0, rgba(TOWN.fire, Math.min(0.8, 0.55 * heat)))
+  e.addColorStop(1, rgba(TOWN.fire, 0))
+  ctx.strokeStyle = e
+  ctx.lineWidth = W * 1.1
+  ctx.lineJoin = 'round'
+  ctx.beginPath()
+  ctx.moveTo(tri[0][0] * k, tri[0][1] * k)
+  ctx.lineTo(tri[1][0] * k, tri[1][1] * k)
+  ctx.lineTo(tri[2][0] * k, tri[2][1] * k)
+  ctx.stroke()
+  ctx.restore()
+  // Its light into the night, and the flash as it catches.
+  glow(p, k, s.x, cy - 0.4 * h, 1.3 + 1.0 * h, TOWN.fire, 0.13 * Math.min(1.6, h), 0.8)
+  if (u < 0.5) glow(p, k, s.x, cy - 0.8, 4.5, TOWN.fireHot, 0.35 * Math.exp(-u / 0.12))
+  // The flames, up out of the hole: clipped along its lower lip.
+  const lip = hole.filter(([, y]) => y >= cy).sort((a, b) => b[0] - a[0])
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo((s.x - 4) * k, (cy - 9) * k)
+  ctx.lineTo((s.x + 4) * k, (cy - 9) * k)
+  ctx.lineTo((s.x + 4) * k, cy * k)
+  ctx.lineTo((s.x + hw * 1.3) * k, cy * k)
+  for (const [x, y] of lip) ctx.lineTo(x * k, y * k)
+  ctx.lineTo((s.x - hw * 1.3) * k, cy * k)
+  ctx.lineTo((s.x - 4) * k, cy * k)
+  ctx.closePath()
+  ctx.clip()
+  fire(p, k, s.x, cy + hh * 0.7, hw * 2.1, h, { t, seed: s.seed, lean: 0.14, light: 1 })
+  ctx.restore()
+  sparks(p, k, s.x, cy - 0.3, u, 16, 5.5, s.seed)
 }
 
 function drawShip(p: p5, k: number, W: number, ink: string, t: number): void {
@@ -1695,19 +1917,20 @@ export const raid = part<{ begin: number }>(
       const { k, ink, weight: W } = c
       const f = frame(p, k)
       p.push()
+      drawShopFloor(p, k, t)
       drawNight(p, k, t, f)
+      drawShopSide(p, k, t, f)
       drawSky(p, k, t, f)
       drawFarShip(p, k, W, ink, t)
       // Beyond the roofs: fires and their smoke, and the burning quarter past the street's end.
-      for (let i = 0; i < SITES.length; i++) if (SITES[i].far) drawSite(p, k, SITES[i], t)
-      for (let i = 0; i < SITES.length; i++) if (SITES[i].far) smoke(p, k, SMOKES[i], t)
+      drawFarFires(p, k, t, f)
       drawQuarter(p, k, t, f)
       drawLamps(p, k, t)
       // The houses across the street: their lights out, then their fire; the roofs burning, and their smoke.
       drawWindows(p, k, W, ink, t)
       drawShade(p, k, t)
       drawDust(p, k, t)
-      for (let i = 0; i < SITES.length; i++) if (!SITES[i].far) drawSite(p, k, SITES[i], t)
+      for (let i = 0; i < SITES.length; i++) if (!SITES[i].far) drawRoofFire(p, k, W, SITES[i], t)
       for (let i = 0; i < SITES.length; i++) if (!SITES[i].far) smoke(p, k, SMOKES[i], t)
       embers(p, k, 0, STREET_END, -8, t, B - 3, 6, 5)
       // The sky's war.
