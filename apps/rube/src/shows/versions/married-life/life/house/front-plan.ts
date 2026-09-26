@@ -30,8 +30,12 @@ export const HOUSE = {
   roof: [-0.45, 8.85] as Pt,
   /** The front gable over the bay: its foot on the eaves, its apex. */
   gable: { x0: 0.05, x1: 4.35, apex: -7.5 },
-  /** The bay window: its glass from sill to head, its two side facets' width, the top of its little roof. */
-  bay: { x0: 0.45, x1: 3.95, sill: -0.6, head: -2.85, facet: 0.46, top: -3.18 },
+  /**
+   * The bay window: its glass from sill to head, its two side facets' width, the top of its little roof. The sill is
+   * the room's floor (P), the glass down to it, so anyone indoors stands on its line and is seen whole through the
+   * glass (with the sill above the floor, Carl alone at the end showed only his top as he tied the balloon on).
+   */
+  bay: { x0: 0.45, x1: 3.95, sill: P, head: -2.85, facet: 0.46, top: -3.18 },
   /** The front door's opening. */
   door: { x0: 4.3, x1: 5.05, top: -2.45 },
   /** The porch: its floor from the bay to the top of the steps; its roof's underside. */
