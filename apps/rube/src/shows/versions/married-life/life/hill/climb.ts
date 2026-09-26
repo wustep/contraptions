@@ -21,13 +21,17 @@ import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
  * and starts up the flank behind him, tiring: she stops to rest, goes on a little, and can go no further. She slips
  * the smallest way, and on 174.672 she gives way: she sinks, and rolls back the short way she climbed, down onto the
  * stone's worn top, and comes to rest there. No bounce, no hit on her: the struck thing is the basket, thrown off
- * his top as he starts toward her, landing on the path behind him (174.672) and tipping over onto its side
- * (175.409). He comes back down to her, old and careful, and stops beside her on the stone with a little space
- * between them (`CUTS.hospital`: Ellie at +0.45, level). The basket lies where it fell, up the path.
+ * his top as he lurches toward her, landing on the path behind him (174.672) and tipping over onto its side
+ * (175.409). He does not stop: he hurries down after her, faster than he has gone since the dance (about 0.9 cells/s
+ * along the ground), and eases to rest beside her on the stone by 177.3. He leans to her; she answers with the
+ * smallest roll toward him (178.8 to 179.5), and he straightens for the cut, where she is at +0.43 of him (the seam,
+ * `CUTS.hospital`, says 0.45 within 0.03: the hospital's bed is that far from his chair, so they cannot touch here).
+ * The basket lies where it fell, up the path.
  *
- * The camera: from the cut's framing it carries on pulling out to the whole hill, the tree on its crest whole and
- * the two of them small at its foot, and does not stay there: as she follows him up it comes in to the two of them
- * (2.8 cells by 173.4), close for her stall and her giving way, and goes with him down to her.
+ * The camera: from the cut's framing it carries on pulling out over the hill, the tree's trunk and crown at the
+ * frame's upper left and the two of them small at its foot (under 2 s wider than 6 cells), and comes in again as she
+ * follows him up: 2.4 cells on her stall, 2.2 on her as she gives way, 2.1 after her to the stone (the basket left
+ * out of the frame), 2.0 as he reaches her, 1.9 on the two of them; then a breath out for the cut.
  */
 
 /** Where Carl comes in, in the hill's cells: on the lane, a little short of the stone (he stops clear of it). */
@@ -51,13 +55,14 @@ const T = {
   go: 169.7,
   /** He stops on the slope to wait for her, and looks back. */
   top: 173.3,
-  /** He starts, and the basket is thrown; it lands, and it tips over. */
+  /** He starts toward her as she slips, and the basket is thrown off his top; it lands, and it tips over. */
   jolt: 174.42,
   fall: 174.672,
   tip: 175.409,
-  /** He comes back down to her, slowly, and stops beside her on the stone. */
-  down: 175.25,
-  beside: 179.0,
+  /** He hurries down after her, and is beside her on the stone; he leans to her, and straightens for the cut. */
+  beside: 177.3,
+  lean: 177.05,
+  rise: 179.75,
 }
 
 /** Her times: a step past him, back, up onto the stone, the climb, the rest, the last push, the slip, the give. */
@@ -76,7 +81,10 @@ const E = {
   /** She starts to slip, the smallest way; and she gives way: she sinks, and rolls back onto the stone, and is still. */
   sag: 174.3,
   give: 174.672,
-  settle: 174.672 + 2.75,
+  settle: 174.672 + 2.3,
+  /** She answers his lean: the smallest roll toward him. */
+  answer: 178.8,
+  answered: 179.5,
 }
 
 /* ------------------------------------------------------------------ her give-way, worked out once */
@@ -91,6 +99,11 @@ const GIVE_X = HIGH + (SLIP_V * (E.give - E.sag)) / 2
 /** Where she comes to rest, on the stone's worn top; and him, at the cut's distance, on it too. */
 const HER_REST = STEP.x1 - 0.27
 const HIS_REST = HER_REST - CUTS.hospital.ellie![0]
+/**
+ * Her answer: how far she rolls toward him (so on the cut she is 0.43 from him, inside the seam's 0.03). The seam
+ * (`CUTS.hospital.ellie`, 0.45) is what keeps them from touching here: the hospital's bed is that far from his chair.
+ */
+const NUDGE = 0.02
 /**
  * The roll back: from the slip's speed, gathering down the flank and slowing on the flat of the stone to stillness (a
  * Hermite ease from `SLIP_V` to rest), so she is never thrown and never bounces.
@@ -140,10 +153,40 @@ const CLIMB = (() => {
 const B = STEP.x1
 const CLIMB_FROM = B - 0.18
 const CLIMB_TO = STEP.x0 - 1.6
-const JOLT_TO = CLIMB_TO + 0.07
+const JOLT_TO = CLIMB_TO + 0.08
 
-/** The widest of the establishing shot: when, how many cells, and the frame's middle in the hill's cells. */
-const WIDE = [170.75, 10.2, 3.5, 0.2] as const
+/**
+ * The widest of the establishing shot: when, how many cells, and the frame's middle in the hill's cells. Not the
+ * whole tree (Zoom would need 9.5 cells to hold it and her at the lane): its crown breaks the frame's upper left.
+ */
+const WIDE = [170.75, 9.0, 4.25, -0.4] as const
+
+/**
+ * His run down to her: from the jolt's landing (moving already, `RUN.v0`), gathering to his top speed, holding it,
+ * and easing to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal
+ * cells/s; on the flank that is about 0.9 along the ground at its fastest.
+ */
+const RUN = (() => {
+  const v0 = (2 * (JOLT_TO - CLIMB_TO)) / (T.fall - T.jolt)
+  const ta = 0.45
+  const td = 1.2
+  const span = T.beside - T.fall
+  const tc = span - ta - td
+  const d = HIS_REST - JOLT_TO
+  const vp = (d - (v0 * ta) / 2) / (ta / 2 + tc + td / 2)
+  /** The integral of a smoothstep from 0 to `u`. */
+  const I = (u: number) => u * u * u - (u * u * u * u) / 2
+  const at = (tau: number): number => {
+    if (tau <= 0) return 0
+    if (tau < ta) return v0 * tau + (vp - v0) * ta * I(tau / ta)
+    const a = v0 * ta + ((vp - v0) * ta) / 2
+    if (tau < ta + tc) return a + vp * (tau - ta)
+    const b = a + vp * tc
+    const u = Math.min(1, (tau - ta - tc) / td)
+    return b + vp * td * (u - I(u))
+  }
+  return { v0, vp, at }
+})()
 
 /** Carl in the hill's cells at show time `t`. */
 function carl(t: number): Pt {
@@ -170,10 +213,9 @@ function carl(t: number): Pt {
     const x = lerp(CLIMB_TO, JOLT_TO, u)
     return [x, ridge(x) - 4 * 0.05 * u * (1 - u)]
   }
-  if (t < T.down) return [JOLT_TO, ridge(JOLT_TO)]
   if (t < T.beside) {
-    // Down the slope to her and onto the stone: slow to start, careful, easing to a stop beside her.
-    const x = lerp(JOLT_TO, HIS_REST, ease((t - T.down) / (T.beside - T.down)))
+    // Down the slope after her and onto the stone, as fast as he has gone in years, easing to a stop beside her.
+    const x = JOLT_TO + RUN.at(t - T.fall)
     return [x, ridge(x)]
   }
   return [HIS_REST, STEP.y]
@@ -182,11 +224,14 @@ function carl(t: number): Pt {
 /** Whether he is off the ground at `t` (a hop): upright then. */
 const aloft = (t: number) => t > T.up && t < T.onStep
 
-/** The lean of the ground under a square standing at `x`: the skyline's slope averaged over his footprint. */
+/**
+ * The lean of the ground under a square standing at `x`: the line between the ground under his two bottom corners (so
+ * it changes smoothly as he walks from the flank onto the flat of the stone, never a step at a time).
+ */
 function groundTilt(x: number): number {
-  let s = 0
-  for (let i = -4; i <= 4; i++) s += Math.atan(ridgeSlope(x + (i / 4) * HALF))
-  return s / 9
+  // The ground he stands on: the flank, then the flat of the stone and the lane beyond it (level, as `ridgeSlope`).
+  const ground = (u: number) => (u >= STEP.x0 ? STEP.y : ridge(u))
+  return Math.atan((ground(x + HALF) - ground(x - HALF)) / (2 * HALF))
 }
 
 /** How Carl holds himself: with the ground, upright in a hop, a look back at her, and a small squash on each landing. */
@@ -201,8 +246,10 @@ function bearing(t: number): { tilt: number; squash: number } {
     const to = groundTilt(carl(b)[0])
     tilt = u < 0.5 ? from * (1 - ease(u * 2)) : to * ease((u - 0.5) * 2)
   }
-  // He stops and looks back down at her, and holds the look.
-  tilt += 0.1 * smooth(t, T.top, T.top + 0.35) * (1 - smooth(t, T.down, T.down + 0.6))
+  // He stops and looks back down at her, and holds the look until he runs (the slope's lean takes over).
+  tilt += 0.1 * smooth(t, T.top, T.top + 0.35) * (1 - smooth(t, T.fall, T.fall + 0.5))
+  // Beside her, he leans to her; after her answer he straightens, upright for the cut (his chair's side is upright).
+  tilt += 0.12 * smooth(t, T.lean, T.beside + 0.45) * (1 - smooth(t, T.rise, END - 0.05))
   let squash = 0
   for (const at of [T.onStep, T.fall]) {
     const ago = t - at
@@ -247,7 +294,8 @@ function ellie(t: number): Pt {
     const tau = t - E.sag
     return on(HIGH + (0.5 * SLIP_V * tau * tau) / (E.give - E.sag))
   }
-  return on(giveX(t))
+  // Given way, and still; then the smallest roll toward him.
+  return on(giveX(t) - NUDGE * smooth(t, E.answer, E.answered))
 }
 
 /* ------------------------------------------------------------------ the stone */
@@ -375,7 +423,7 @@ export const climb = part<ClimbState>(
   },
   (slot) => {
     // Carl's lane: his path sampled phase by phase, so every landing is a segment's end, exactly.
-    const phases = [BEGIN, T.stop, T.up, T.onStep, T.go, T.top, T.jolt, T.fall, T.down, T.beside, END]
+    const phases = [BEGIN, T.stop, T.up, T.onStep, T.go, T.top, T.jolt, T.fall, T.beside, END]
     const at = (t: number): Pt => {
       const [x, y] = carl(t)
       return L(x, y)
@@ -413,16 +461,20 @@ export const climb = part<ClimbState>(
     const h = (x: number, y: number): Pt => L(x, y)
     const [cx, cy] = L(HIS_REST, STEP.y)
     return [
-      // The cut's pull-out carries on out to the whole hill, the tree on its crest whole and the two of them small at
-      // its foot, and does not stay: as she turns back to follow him up it comes in again.
+      // The cut's pull-out carries on out over the hill, its tree's crown breaking the frame's upper left, the two of
+      // them at its foot, and does not stay: as she turns back to follow him up it comes in again.
       { t: 168.9, cells: 4.2, hold: h(8.7, 1.42) },
       { t: WIDE[0], cells: WIDE[1], hold: h(WIDE[2], WIDE[3]) },
-      { t: 172.2, cells: 5.4, hold: h(6.05, 1.02) },
-      // Close on the two of them as she climbs after him and tires; settled before she gives way.
-      { t: 174.0, cells: 2.85, hold: h(7.3, 1.48) },
-      { t: 174.95, cells: 2.74, hold: h(7.42, 1.52) },
-      // With her as she rolls back onto the stone, and with him as he comes down to her.
-      { t: 177.3, cells: 2.95, hold: h(7.95, 1.52) },
+      { t: 172.2, cells: 4.6, hold: h(6.3, 1.15) },
+      // In on the two of them: her stall below him; on her as she gives way; after her back to the stone, the basket
+      // left behind up the path; on the stone as he reaches her; and the two of them and nothing else.
+      { t: 174.0, cells: 2.4, hold: h(7.0, 1.47) },
+      { t: E.give, cells: 2.2, hold: h(7.22, 1.58) },
+      { t: 175.6, cells: 2.1, hold: h(7.72, 1.74) },
+      { t: T.beside, cells: 2.0, hold: h(8.5, 1.86) },
+      { t: 179.0, cells: 1.9, hold: h(8.55, 1.88) },
+      // A breath out for the cut (`CUTS.hospital`), wide enough for the balloon on the far side and over to her side,
+      // so the basket up the path stays out of the frame; the hospital's lamp key goes on from here.
       { t: slot.end, cells: CUTS.hospital.cells, hold: [cx + CUTS.hospital.frame[0], cy + CUTS.hospital.frame[1]] },
     ]
   },

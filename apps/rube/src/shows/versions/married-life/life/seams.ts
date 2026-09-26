@@ -81,11 +81,11 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   hospital: {
     t: CUT.hospital,
     v: [0, 0],
-    cells: 3.6,
-    frame: [0.22, -0.6],
+    cells: 2.7,
+    frame: [0.6, -0.7],
     ellie: [0.45, 0],
     balloon: true,
-    what: 'Carl at rest beside her, level with her: on the hill where she fell; on the far side, in a chair at her bedside, the bed as high as the chair, and the balloon is his',
+    what: 'Carl at rest beside her, level with her, close: on the hill where she fell; on the far side, in a chair at her bedside, the bed as high as the chair, the balloon he has brought her over him (he gives it to her there)',
   },
   funeral: {
     t: CUT.funeral,
