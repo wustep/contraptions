@@ -67,6 +67,14 @@ export function light(T: number): number {
 /** Lit colour: `hex` as the fire shows it, sunk toward the rock where it does not reach. */
 const lit = (hex: string, L: number, dark = STONE.deep, floor = 0.14): string => mixHex(dark, hex, floor + (1 - floor) * L)
 
+/**
+ * The edge of anything made in the drum room (barrels, hoops, trestles, the kettle, the galleries, the clubs): old
+ * wood's shadow, darker than the wood at every light. A cream edge made the drums and their lacing the palest line
+ * art in the show (they read as drawings of drums, and the clubs as bones).
+ */
+const EDGE = mixHex(WORKS.wood, STONE.deep, 0.62)
+const edgeC = (L: number, floor = 0.5): string => mixHex(STONE.deep, EDGE, floor + (1 - floor) * L)
+
 /** A blow's thump: 0 before `at`, up to 1 over `rise` seconds, then dying away. */
 export function thump(T: number, at: number, rise = 0.035, decay = 0.12): number {
   const s = T - at
@@ -194,9 +202,9 @@ const galleryOf = (dr: Drummer): Gallery => GALLERIES.find((g) => g.drum === dr.
 const facing = (dr: Drummer): 1 | -1 => (dr.x < drumOf(dr).cx ? 1 : -1)
 
 function drawGalleries(p: p5, c: Ctx, L: number, dy: number): void {
-  const { ink, weight } = c
+  const { weight } = c
   // Background timber: a dimmer edge than the drums', so the ladders sit back and do not frame the drum in pale lines.
-  const inkC = mixHex(STONE.deep, ink, 0.18 + 0.32 * L)
+  const inkC = edgeC(L, 0.35)
   const wood = lit(WORKS.wood, L)
   const timber = lit(WORKS.timber, L)
   p.push()
@@ -265,10 +273,10 @@ function vaultAt(x: number): number {
  * banked, a tall fire as the drumming fans it (the canonical `flame`: pointed, never round).
  */
 export function drawFire(p: p5, c: Ctx, x: number, T: number, L: number, seed: number, jolt: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const lit1 = caught(seed - 1, T)
   const y = FLOOR + jolt * 0.3
-  const inkC = mixHex(STONE.deep, ink, 0.24 + 0.71 * L)
+  const inkC = edgeC(L)
   const glowing = mixHex(mixHex(STONE.deep, WORKS.rust, 0.35 + 0.25 * lit1), LAMP.flame, (0.1 + 0.55 * L) * lit1)
   p.push()
   p.strokeJoin(p.ROUND)
@@ -298,7 +306,7 @@ export function drawFire(p: p5, c: Ctx, x: number, T: number, L: number, seed: n
   for (const [i, [dx, w, h]] of stones.entries()) {
     const sx = x + dx
     const j = hash(i, seed, 2)
-    p.stroke(mixHex(STONE.deep, ink, 0.2 + 0.35 * L))
+    p.stroke(edgeC(L, 0.3))
     p.strokeWeight(weight * 0.7)
     p.fill(lit(STONE.mid, L, STONE.deep, 0.3))
     shape(p, c, [[sx - w / 2, y], [sx - w * 0.45, y - h * 0.7], [sx - w * 0.1, y - h * (0.95 + 0.1 * j)], [sx + w * 0.3, y - h * 0.9], [sx + w / 2, y - h * 0.35], [sx + w * 0.48, y]])
@@ -423,10 +431,10 @@ export function kettleTilt(T: number): number {
 
 /** The kettle: a deep riveted iron bowl on three splayed legs, a skin on it, tipped toward the war-drum. */
 export function drawKettle(p: p5, c: Ctx, T: number, L: number, layer: 'back' | 'front'): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const t = kettleTilt(T)
   const { cx, rx, ry, depth } = KETTLE
-  const inkC = mixHex(STONE.deep, ink, 0.4 + 0.55 * L)
+  const inkC = edgeC(L)
   const bowlC = lit(mixHex(WORKS.iron, WORKS.rust, 0.35), L, STONE.deep, 0.3)
   const steel = lit(WORKS.steel, L, STONE.deep, 0.3)
   const skin = lit(WORKS.skin, L, STONE.deep, 0.35)
@@ -520,8 +528,8 @@ export function drawKettle(p: p5, c: Ctx, T: number, L: number, layer: 'back' | 
  * where the clubs aim, not where the drummers look.)
  */
 export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number, layer: 'back' | 'front', jolt: number, _peerX?: number): void {
-  const { k, ink, weight } = c
-  const inkC = mixHex(STONE.deep, ink, 0.24 + 0.71 * L)
+  const { k, weight } = c
+  const inkC = edgeC(L)
   const skinC = lit(WORKS.skin, L)
   const cy = d.skin + jolt
   const burst = n === 3 ? smooth(T, BURST - 0.005, BURST + 0.08) : 0
@@ -653,8 +661,8 @@ export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number,
 
 /** The great drum's trestle: two A-legs on the floor either side of the pit, a cross-piece on each. */
 function drawTrestle(p: p5, c: Ctx, d: Drum, L: number, jolt: number): void {
-  const { ink, weight } = c
-  const inkC = mixHex(STONE.deep, ink, 0.24 + 0.71 * L)
+  const { weight } = c
+  const inkC = edgeC(L)
   const wood = lit(WORKS.wood, L)
   const y0 = d.bottom + jolt + d.ry * 0.5
   p.push()
@@ -678,7 +686,7 @@ function drawTrestle(p: p5, c: Ctx, d: Drum, L: number, jolt: number): void {
 
 /** The burst: a ragged hole in the great drum's skin, torn flaps hanging into it, the dark of the barrel inside. */
 function drawHole(p: p5, c: Ctx, h: { x: number; y: number; rx: number; ry: number }, T: number, L: number): void {
-  const { ink, weight } = c
+  const { weight } = c
   const pts: Poly = []
   const n = 15
   for (let i = 0; i < n; i++) {
@@ -687,7 +695,7 @@ function drawHole(p: p5, c: Ctx, h: { x: number; y: number; rx: number; ry: numb
     pts.push([h.x + Math.cos(a) * h.rx * r, h.y + Math.sin(a) * h.ry * r])
   }
   p.push()
-  p.stroke(mixHex(STONE.deep, ink, 0.3 + 0.5 * L))
+  p.stroke(edgeC(L))
   p.strokeWeight(weight * 0.8)
   p.fill(mixHex(STONE.deep, WORKS.wood, 0.25))
   shape(p, c, pts)
@@ -865,7 +873,7 @@ export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, pe
  * a flail; as the arm comes down it turns onto the skin, so its head lands on `aim`.
  */
 function drawClub(p: p5, c: Ctx, hand: [number, number], angle: number, aim: Pt, size: number, L: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const grip: Pt = [hand[0] + 0.05 * size * Math.cos(angle), hand[1] + 0.05 * size * Math.sin(angle)]
   const cos = Math.cos(angle)
   const free = angle - 0.35 - 0.8 * cos * cos
@@ -893,7 +901,7 @@ function drawClub(p: p5, c: Ctx, hand: [number, number], angle: number, aim: Pt,
   ]
   p.push()
   p.strokeJoin(p.ROUND)
-  p.stroke(mixHex(STONE.deep, ink, 0.35 + 0.6 * L))
+  p.stroke(edgeC(L))
   p.strokeWeight(weight * 0.9)
   p.fill(lit(WORKS.wood, L))
   shape(p, c, pts)

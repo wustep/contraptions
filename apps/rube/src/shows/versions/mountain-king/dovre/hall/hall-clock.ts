@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { G_EARTH } from '../physics'
-import { CODA_CHORDS, P, eighth, onset } from '../music'
+import { CODA_CHORDS, P, eighth, eighthAt, onset } from '../music'
 
 /**
  * The hall's score: every moment the court part (40.19 → 58.02) and the wake part (58.02 → 74.42) are timed to,
@@ -217,10 +217,13 @@ export const TAILS: Record<'A' | 'B' | 'C', Tail> = {
 }
 const TAIL_ON = on(TAIL_TOP)
 
-/** Tiptoes: a hop onto each landing, low; `lift` its height. */
-function tiptoe(path: Path, lands: [number, number][], lift = 0.1, lead = 0.62): void {
+/**
+ * Tiptoes: a hop onto each landing, low; `lift` its height. Each leaves on the grid's eighth before the note it lands
+ * on, so a tiptoe goes from one note to the next and the stillness between them is the held note.
+ */
+function tiptoe(path: Path, lands: [number, number][], lift = 0.1): void {
   for (const [t, x] of lands) {
-    const takeoff = Math.max(path.t, t - lead * (t - path.t))
+    const takeoff = Math.max(path.t, eighth(eighthAt(t) - 1))
     if (takeoff > path.t + 1e-6) path.rest(takeoff)
     path.hop([x, 0], t, lift)
   }
@@ -229,15 +232,14 @@ function tiptoe(path: Path, lands: [number, number][], lift = 0.1, lead = 0.62):
 export const PEER_PATH: Path = (() => {
   const a = new Path(COURT_BEGIN, [-0.5, 0])
   // Phrase 4. At rest on the threshold; three careful tiptoes on the run's quarter notes; still on the held note.
-  a.rest(COURT_BEGIN + 0.32)
   tiptoe(a, [[q4(2), 0.02], [q4(4), 0.48], [q4(6), 0.92]], 0.11)
   // Onto the first tail (it gives a little under him); it flicks and tosses him on; the sleeper snorts as he lands.
   const la = TAILS.A.land
-  a.rest(q4(7) + 0.02).hop([la, TAIL_ON], TAIL_A, 0.2)
+  a.rest(q4(7)).hop([la, TAIL_ON], TAIL_A, 0.2)
   a.go([la, TAIL_ON + 0.025], TAIL_A + 0.12, 'out').go([la, TAIL_ON + 0.01], FLICK_A - 0.02, 'inout')
   a.hop([2.55, 0], SNORT_A, 0.42)
   // Frozen while the sparks go up and the torch catches; then a scurry on the run up (every eighth).
-  a.rest(q4(15) + 0.05)
+  a.rest(q4(15))
   a.hop([2.95, 0], q4(16), 0.09)
   const scurry1 = [q4(17), q4(18), q4(19), q4(20), q4(21), q4(22), q4(23)]
   scurry1.forEach((t, i) => a.hop([2.95 + 0.51 * (i + 1), 0], t, 0.075))
@@ -247,20 +249,19 @@ export const PEER_PATH: Path = (() => {
   a.go([lb, TAIL_ON + 0.025], TAIL_B + 0.12, 'out').go([lb, TAIL_ON + 0.01], FLICK_B - 0.02, 'inout')
   a.hop([7.95, 0], SNORT_B, 0.42)
   // Phrase 5: still through the held notes, then the tiptoes again, and the elder's tail.
-  a.rest(q5(0) - 0.3)
-  tiptoe(a, [[q5(0), 8.45], [q5(2), 8.92], [q5(4), 9.32], [q5(6), 9.66]], 0.11, 0.55)
+  tiptoe(a, [[q5(0), 8.45], [q5(2), 8.92], [q5(4), 9.32], [q5(6), 9.66]], 0.11)
   const lc = TAILS.C.land
-  a.rest(q5(7) + 0.02).hop([lc, TAIL_ON], TAIL_C, 0.22)
+  a.rest(q5(7)).hop([lc, TAIL_ON], TAIL_C, 0.22)
   a.go([lc, TAIL_ON + 0.03], TAIL_C + 0.14, 'out').go([lc, TAIL_ON + 0.01], FLICK_C - 0.02, 'inout')
   // The elder's tail is heavier: a higher toss, over the elder's knees.
   a.hop([11.75, 0], SNORT_C, 0.62)
   // Watching the fire run away along the chain overhead; then scurrying under it toward the throne.
-  a.rest(q5(15) + 0.05)
+  a.rest(q5(15))
   a.hop([12.15, 0], q5(16), 0.09)
   const scurry2 = [q5(17), q5(18), q5(19), q5(20), q5(21), q5(22), q5(23)]
   scurry2.forEach((t, i) => a.hop([12.15 + 0.4 * (i + 1), 0], t, 0.07))
   // The last steps, slowing, to stand before the throne.
-  tiptoe(a, [[q5(24), 15.18], [q5(26), 15.38], [q5(28), 15.5]], 0.07, 0.5)
+  tiptoe(a, [[q5(24), 15.18], [q5(26), 15.38], [q5(28), 15.5]], 0.07)
   a.rest(WAKE_BEGIN)
 
   // Wake. Still while the heads turn; a start back at the first "Slay him!".

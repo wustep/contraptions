@@ -26,6 +26,10 @@ export interface CartLook {
   load?: number
 }
 
+/** A cart's edge: old wood's shadow, darker than the cart at every light (never the page's cream). */
+const EDGE = mixHex(WORKS.wood, STONE.deep, 0.62)
+const edgeIn = (c: Pen, light: number): string => mixHex(c.bg, EDGE, 0.45 + 0.55 * Math.min(1, light))
+
 /** Colours in this light: the dark is the rock the cart sinks into. */
 function shade(hex: string, light: number, bg: string): string {
   return mixHex(bg, hex, 0.28 + 0.72 * Math.max(0, Math.min(1, light)))
@@ -184,7 +188,7 @@ function heap(p: p5, c: Pen, light: number, ink: string, load: number, seed: num
 export function drawOreCart(p: p5, c: Pen, x: number, y: number, look: CartLook): void {
   const k = c.k
   const s = PEER_CART
-  const ink = mixHex(c.bg, c.ink, 0.35 + 0.65 * Math.min(1, look.light))
+  const ink = edgeIn(c, look.light)
   p.push()
   p.translate(x * k, y * k)
   p.rotate(look.tilt)
@@ -219,7 +223,7 @@ export function drawTrollCart(p: p5, c: Pen, x: number, y: number, look: TrollCa
   const k = c.k
   const s = TROLL_CART
   const light = look.light
-  const ink = mixHex(c.bg, c.ink, 0.35 + 0.65 * Math.min(1, light))
+  const ink = edgeIn(c, light)
   p.push()
   p.translate(x * k, y * k)
   p.rotate(look.tilt)

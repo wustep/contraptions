@@ -66,7 +66,9 @@ function readShowFiles(): Work[] {
     return m?.[2].replace(/\\(.)/g, '$1')
   }
   for (const work of readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
-    for (const file of readdirSync(`${root}/${work}`).filter((f) => f.endsWith('.show.ts')).sort()) {
+    // By the take's name, as the registry sorts them, so a work's own page carries its first take's card.
+    const takes = readdirSync(`${root}/${work}`).filter((f) => f.endsWith('.show.ts')).map((f) => f.slice(0, -'.show.ts'.length)).sort()
+    for (const file of takes.map((t) => `${t}.show.ts`)) {
       const at = versionPath(`versions/${work}/${file}`)
       if (!at) continue
       const src = readFileSync(`${root}/${work}/${file}`, 'utf8')

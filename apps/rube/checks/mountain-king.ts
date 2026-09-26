@@ -13,7 +13,7 @@ import onsetsFile from '../../../scripts/shows/plans/mountain-king-onsets.json'
 import { show as mountainShow } from '../src/shows/versions/mountain-king/dovre'
 import { ORDER } from '../src/shows/versions/mountain-king/dovre/score'
 import { STRIKES } from '../src/shows/versions/mountain-king/dovre/hits'
-import { CODA_SHOT, PLAN, SEAM_SHOT, WOMAN_LEAD } from '../src/shows/versions/mountain-king/dovre/seams'
+import { CODA_SHOT, HEART_SHOT, PLAN, SEAM_SHOT, WOMAN_LEAD } from '../src/shows/versions/mountain-king/dovre/seams'
 import { CARDS, CREDITS_OK, DURATION, creditsAt } from '../src/shows/versions/mountain-king/dovre/credits'
 import { BEATS, CODA, CODA_CHORDS, LAST1, LAST2, P, RECORDING, THEME_START, TUNE_END, beatAt, eighth } from '../src/shows/versions/mountain-king/dovre/music'
 import { REST } from '../src/shows/versions/mountain-king/dovre/mountain'
@@ -113,11 +113,14 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
 
   // The seams' contract (`seams.ts`): the camera on SEAM_SHOT's framing at every builder's seam, and at a drop the
   // ball falling straight down onto the next part's entry.
-  // The coda's first chord (runaway → fall) is the one wide seam: the machine coming apart over him (CODA_SHOT).
-  // A seam inside one builder's room ('own': court → wake, gears → runaway) is not a hand-off: its framing is free.
-  const shotAt = (pl: (typeof PLAN)[keyof typeof PLAN]) => (pl.name === 'runaway' ? CODA_SHOT.cells : SEAM_SHOT.cells)
+  // Two seams are wide: the coda's first chord (runaway → fall), the machine coming apart over him (CODA_SHOT), and
+  // the drop into the heart on the third statement (drum → gears), the machine he falls into already in the frame
+  // (HEART_SHOT). A seam inside one builder's room ('own': court → wake, gears → runaway) is not a hand-off: its
+  // framing is free.
+  const WIDE: Record<string, number> = { runaway: CODA_SHOT.cells, drum: HEART_SHOT.cells }
+  const shotAt = (pl: (typeof PLAN)[keyof typeof PLAN]) => WIDE[pl.name] ?? SEAM_SHOT.cells
   const badCam = Object.values(PLAN).filter((pl) => pl.out !== 'own' && Math.abs(cam(pl.end).cells - shotAt(pl)) > 0.01).map((pl) => pl.end.toFixed(2))
-  check('mountain king: the camera is on the seam framing (6 cells, following) at every hand-off, wide on the coda\'s', badCam.length === 0, badCam.join(', '))
+  check('mountain king: the camera is on the seam framing (6 cells, following) at every hand-off, wide into the heart and on the coda\'s', badCam.length === 0, badCam.join(', '))
   const badDrop: string[] = []
   for (const pl of Object.values(PLAN)) {
     if (pl.out !== 'drop') continue
@@ -131,8 +134,8 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   const lowDrop = Object.values(PLAN).filter((pl) => pl.out === 'drop').filter((pl) => {
     const f = cam(pl.end)
     const dy = show.where(pl.end)[1] - f.y
-    // The coda's wide seam: low in the frame, still well inside it under Zoom.
-    return dy < 0 || dy > (pl.name === 'runaway' ? f.cells / 1.5 / 2 - 0.6 : 1.0)
+    // The wide seams: low in the frame, still well inside it under Zoom.
+    return dy < 0 || dy > (pl.name in WIDE ? f.cells / 1.5 / 2 - 0.6 : 1.0)
   })
   check('mountain king: every drop lands a little under the middle of the frame (not at its foot)', lowDrop.length === 0, lowDrop.map((pl) => pl.name).join(', '))
   const end = show.where(perf.duration)

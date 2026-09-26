@@ -157,7 +157,27 @@ const ROPE0: Pt = [BRAZIERS[2].x, -2.3]
 const CROWN: Pt = [THRONE.x, -6.05]
 const ROPE1: Pt = [THRONE.x, -6.95]
 const SAG = 1.0
-const rope = (u: number): Pt => [ROPE0[0] + (ROPE1[0] - ROPE0[0]) * u, ROPE0[1] + (ROPE1[1] - ROPE0[1]) * u + SAG * 4 * u * (1 - u)]
+/** Where the crown-lamp's shackle is (its three chains' meeting point): on the hook until the first blow, then with the lamp. */
+function shackleAt(t: number): Pt {
+  if (t < LAMP_SNAP) return ROPE1
+  const cr = crownAt(t)
+  const [ax, ay] = shackleOff(cr.down)
+  return [cr.x + ax * Math.cos(cr.tilt) - ay * Math.sin(cr.tilt), cr.y + ax * Math.sin(cr.tilt) + ay * Math.cos(cr.tilt)]
+}
+/** The shackle from the ring's middle: over it on its chains, slumping onto it once the lamp is down. */
+const shackleOff = (down: number): Pt =>
+  down < 0 ? [0, ROPE1[1] - CROWN[1]] : [0.18 * (1 - Math.exp(-down / 0.08)), -(0.14 + (CROWN[1] - ROPE1[1] - 0.14) * Math.exp(-down / 0.06))]
+/**
+ * The oiled rope at t: from the post to the hook. On the first blow the hook's chain tears out of the vault and the
+ * lamp, the hook and the chain come down together, so the rope's east end is dragged down with them onto the dais
+ * and it hangs from the post to the fallen lamp, slacker.
+ */
+const ropeAt = (t: number) => {
+  const e = t < LAMP_SNAP ? ROPE1 : shackleAt(t)
+  const f = t < LAMP_SNAP ? 0 : Math.min(1, (t - LAMP_SNAP) / (LAMP_LANDS - LAMP_SNAP))
+  const sag = SAG * (1 - 0.55 * f)
+  return (u: number): Pt => [ROPE0[0] + (e[0] - ROPE0[0]) * u, ROPE0[1] + (e[1] - ROPE0[1]) * u + sag * 4 * u * (1 - u)]
+}
 const LANTERN_U = [0, 0.36, 0.7]
 /** How far along the rope the fire has run (0 at the first lantern, 1 at the crown-lamp). */
 function burnt(t: number): number {
@@ -166,6 +186,38 @@ function burnt(t: number): number {
   if (t <= ts[0]) return 0
   for (let i = 1; i < ts.length; i++) if (t <= ts[i]) return us[i - 1] + ((us[i] - us[i - 1]) * (t - ts[i - 1])) / (ts[i] - ts[i - 1])
   return 1
+}
+
+/**
+ * The crown-lamp comes down on the collapse: the first hammer blow snaps it off its hook, it falls clear of the
+ * toppling throne and lands on the dais on the third blow (with the throne and a slab of the vault), rocks flat and
+ * burns on there, low, until the last blow puts every light out. Nothing is left hanging over the throne but the
+ * hook's iron chain, which holds the oiled rope.
+ */
+/** How the hung lamps swing (rad): a slow drift, and the mountain's shakes. */
+function swayAt(t: number): number {
+  const [qx, qy] = quake(t)
+  return 0.02 * Math.sin(t * 1.3) + 6 * (qx + 0.5 * qy)
+}
+const LAMP_SNAP = HAMMERS[0]
+const LAMP_LANDS = HAMMERS[2]
+const LAMP_REST = DAIS.top - 0.14
+function crownAt(t: number): { x: number; y: number; tilt: number; down: number } {
+  const [x, y0] = CROWN
+  if (t < LAMP_SNAP) return { x, y: y0, tilt: 0, down: -1 }
+  if (t < LAMP_LANDS) {
+    // It leaves the hook as it was swinging (turned about the hook), and tips further as it falls.
+    const a = swayAt(LAMP_SNAP) * 0.6
+    const hang = CROWN[1] - ROPE1[1]
+    const [sx, sy] = [ROPE1[0] - hang * Math.sin(a), ROPE1[1] + hang * Math.cos(a)]
+    const u = (t - LAMP_SNAP) / (LAMP_LANDS - LAMP_SNAP)
+    return { x: sx + (x + 0.12 - sx) * u * u, y: sy + (LAMP_REST - sy) * u * u, tilt: a + (0.22 - a) * u * u, down: -1 }
+  }
+  // It lands on its east edge with a clang, slaps flat and rocks a little, long and damped.
+  const s = t - LAMP_LANDS
+  const tilt = 0.22 * Math.exp(-s / 0.05) * Math.cos(s * 30) * (s < 0.1 ? 1 : 0) + 0.06 * Math.exp(-s / 0.4) * Math.sin((2 * Math.PI * s) / 0.36)
+  const hop = s < 0.16 ? 0.06 * Math.sin((Math.PI * s) / 0.16) : 0
+  return { x: x + 0.12, y: LAMP_REST - hop, tilt, down: s }
 }
 
 /** A brazier's embers: how hot, breathing with the sleeper beside it (brighter on the out-breath). */
@@ -201,12 +253,17 @@ function lightsAt(t: number, poses: Pose[]): Light[] {
   LANTERNS.forEach((at, i) => {
     const s = burning(t, at + (i === 0 ? 0.12 : 0), HAMMERS[2 + i])
     if (s > 0) {
-      const [x, y] = rope(LANTERN_U[i])
+      const [x, y] = ropeAt(t)(LANTERN_U[i])
       out.push({ x, y: y + 0.7, s: s * flicker(t, i + 7) * flare, r: 4.4, w: 0.8, col: LAMP.glow })
     }
   })
   const cs = burning(t, CROWN_LAMP, HAMMERS[5])
-  if (cs > 0) out.push({ x: CROWN[0], y: CROWN[1] + 0.4, s: cs * flicker(t, 11) * flare, r: 8.6, w: 1.0, col: LAMP.glow })
+  if (cs > 0) {
+    // Once it is down on the dais it lights the hall from low, and less far.
+    const cr = crownAt(t)
+    const low = cr.down >= 0 ? 1 : 0
+    out.push({ x: cr.x, y: cr.y + 0.4 - 0.5 * low, s: cs * flicker(t, 11) * flare * (1 - 0.3 * low), r: 8.6 - 2.4 * low, w: 1.0, col: LAMP.glow })
+  }
   return out
 }
 
@@ -301,16 +358,131 @@ function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number): voi
     const band = 0.07
     poly(p, k, [...lip, ...[...lip].reverse().map(([x, y], j): Pt => [x, y + band * (0.7 + 0.6 * hash(r, j, 76))])])
   }
-  // The court's ways out at the west end of each bench: low dark archways into the trolls' warren.
+  // The court's ways out at the west end of each bench: low dark archways into the trolls' warren (clear of the
+  // west door's pier).
   p.fill(mixHex(STONE.deep, TROLL.shade, 0.35))
   for (const y of [ROW_Y[1], ROW_Y[2], GALLERY_Y]) {
     const h = 1.15
+    const [a, b] = [0.86, 1.56]
     p.beginShape()
-    p.vertex(0.3 * k, y * k)
-    p.vertex(0.3 * k, (y - h * 0.7) * k)
-    p.bezierVertex(0.3 * k, (y - h) * k, 1.05 * k, (y - h) * k, 1.05 * k, (y - h * 0.7) * k)
-    p.vertex(1.05 * k, y * k)
+    p.vertex(a * k, y * k)
+    p.vertex(a * k, (y - h * 0.7) * k)
+    p.bezierVertex(a * k, (y - h) * k, b * k, (y - h) * k, b * k, (y - h * 0.7) * k)
+    p.vertex(b * k, y * k)
     p.endShape(p.CLOSE)
+  }
+}
+
+/**
+ * The hall's west door: a round-topped doorway hewn through a pier of the living rock between the tunnel's end and
+ * the hall, about 1.7 cells high, its jambs ragged, the rock whole over it. The tunnel's lit end is framed by stone,
+ * and its light falls off through the passage into the hall. The pier is the rock itself (the paper), so it is seen
+ * by its lit edges: the west face and the arch's soffit in the tunnel's light, the east face in the hall's.
+ */
+const DOOR_W = -0.05
+const DOOR_E = 0.76
+const DOOR_TOP = FL - 1.7
+const DOOR_SPRING = FL - 1.3
+/** The arch's soffit, west to east: a hewn round head from the west jamb over to the east, a little uneven. */
+const SOFFIT: Pt[] = (() => {
+  const out: Pt[] = []
+  const mid = (DOOR_W + DOOR_E) / 2
+  const half = (DOOR_E - DOOR_W) / 2 - 0.06
+  for (let j = 0; j <= 12; j++) {
+    const a = Math.PI * (1 - j / 12)
+    const rough = j === 0 || j === 12 ? 0 : 0.022 * (hash(j, 81) - 0.5)
+    out.push([mid + half * Math.cos(a) + rough, DOOR_SPRING - (DOOR_SPRING - DOOR_TOP) * Math.sin(a) + rough])
+  }
+  return out
+})()
+/** The pier's west face (the tunnel's end), top to the jamb's foot, and its east face (the hall's wall), jamb up. */
+const PIER_WEST: Pt[] = [[DOOR_W - 0.02, -3.45], [DOOR_W + 0.03, -2.8], [DOOR_W - 0.04, -2.5], [DOOR_W + 0.02, -2.05], [DOOR_W - 0.03, -1.62], [DOOR_W + 0.01, DOOR_SPRING - 0.1], [DOOR_W - 0.02, DOOR_SPRING + 0.1], [DOOR_W + 0.05, DOOR_SPRING + 0.16]]
+const PIER_EAST: Pt[] = [[DOOR_E - 0.05, DOOR_SPRING + 0.14], [DOOR_E + 0.02, DOOR_SPRING + 0.09], [DOOR_E - 0.01, DOOR_SPRING - 0.12], [DOOR_E + 0.05, -1.95], [DOOR_E - 0.01, -2.45], [DOOR_E + 0.04, -3.0], [DOOR_E - 0.02, -3.6], [DOOR_E - 0.08, -4.25], [DOOR_E - 0.14, -4.8]]
+
+/**
+ * A rectangle (cells) filled with `col` fading in from alpha 0 at x0 to 1 at x1, eased (a smooth ramp, no bands).
+ * A raw canvas gradient inside save/restore, so p5's own fill is untouched.
+ */
+function fadeIn(p: p5, k: number, x0: number, x1: number, y0: number, y1: number, col: string): void {
+  const ctx = ctxOf(p)
+  const cc = p.color(col)
+  const rgb = `${p.red(cc)},${p.green(cc)},${p.blue(cc)}`
+  ctx.save()
+  const g = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
+  for (let j = 0; j <= 8; j++) {
+    const u = j / 8
+    g.addColorStop(u, `rgba(${rgb},${(u * u * (3 - 2 * u)).toFixed(4)})`)
+  }
+  ctx.fillStyle = g
+  ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+  ctx.restore()
+}
+
+function drawDoorway(p: p5, c: Pen, t: number, lit: (x: number, y: number) => number, passage: string): void {
+  const k = c.k
+  // The tunnel's lamps light its end (the tunnels part lights them as the flame chases him down to the door).
+  const L = ease(t, 36, 39.5) * (1 - ease(t, HAMMERS[5], HAMMERS[5] + 0.6))
+  p.noStroke()
+  // The passage under the arch: the tunnel's light falling off into the dark of the hall's first ledge.
+  const x1 = 0.34
+  const [py0, py1] = [DOOR_TOP - 0.02, FL + 0.02]
+  fadeIn(p, k, DOOR_W, x1, py0, py1, passage)
+  p.fill(passage)
+  p.rect(x1 * k, py0 * k, (DOOR_E + 0.06 - x1) * k, (py1 - py0) * k)
+  // The pier, the rock itself, the doorway cut out of its foot.
+  p.fill(STONE.deep)
+  poly(p, k, [...PIER_WEST, ...SOFFIT, ...PIER_EAST, [DOOR_W + 0.2, -4.8]])
+  // The arch's hewn reveal, lit from the tunnel: deepest at the west jamb where the lamps reach it, thinning to
+  // nothing past the crown, in the tunnel's own warm stone (a face in the light, not an outline). The pier's west
+  // face needs no edge: the rock against the lit tunnel is edge enough.
+  if (L > 0.02) {
+    p.fill(mixHex(STONE.deep, mixHex(STONE.mid, LAMP.glow, 0.4), 0.25 + 0.55 * L))
+    const lower: Pt[] = SOFFIT.slice(0, 9)
+    const upper = lower.map(([x, y], j): Pt => {
+      const w = 0.12 * Math.pow(1 - j / 8, 1.3)
+      return [x + w * 0.45, y - w]
+    })
+    poly(p, k, [[DOOR_W + 0.05, DOOR_SPRING + 0.16], ...lower, ...upper.reverse(), [DOOR_W + 0.15, DOOR_SPRING + 0.08]])
+  }
+  // The east face, in the hall's own light once it has one: a dim worn edge.
+  const le = 0.5 * lit(DOOR_E + 0.5, -1.4)
+  if (le > 0.08) {
+    const pts = PIER_EAST.slice(0, -2)
+    p.fill(mixHex(STONE.deep, STONE.mid, Math.min(1, le)))
+    poly(p, k, [...pts, ...[...pts].reverse().map(([x, y], j): Pt => [x - 0.05 * (0.7 + 0.6 * hash(j, 83)), y])])
+  }
+}
+
+/**
+ * The hall's cover, before he reaches its door: from the doorway east the hall is solid rock to look at (the
+ * opening's wide sees the whole mountain). It opens from the door outward, a soft edge moving east from 39.3 as
+ * the tunnels' light spills in and the hall's embers are seen, the edge softening as it goes.
+ */
+const OPENS = 39.3
+function coverAt(t: number): { x: number; f: number } {
+  const u = Math.max(0, Math.min(1, (t - OPENS) / 1.1))
+  const f = 0.5 + 3.0 * u
+  return { x: DOOR_E - 0.35 + f + 8 * u * u + 26 * u ** 4, f }
+}
+function drawCover(p: p5, c: Pen, t: number): void {
+  const { x, f } = coverAt(t)
+  const x0 = x - f
+  const END = 30.9
+  if (x0 >= END + 0.5) return
+  const k = c.k
+  const [Y0, Y1] = [-12.7, 1.5]
+  p.noStroke()
+  fadeIn(p, k, x0, x, Y0, Y1, STONE.deep)
+  if (x < END) {
+    p.fill(STONE.deep)
+    p.rect(x * k, Y0 * k, (END - x) * k, (Y1 - Y0) * k)
+  }
+  // And the hatch's shaft under the floor, as the edge passes over it.
+  const mid = (HATCH.x0 + HATCH.x1) / 2
+  const h = Math.max(0, Math.min(1, (mid - x0) / f))
+  if (h > 0.002) {
+    p.fill(alpha(p, STONE.deep, h))
+    p.rect((HATCH.x0 - 0.6) * k, 1.4 * k, (HATCH.x1 - HATCH.x0 + 1.2) * k, 7.8 * k)
   }
 }
 
@@ -428,26 +600,60 @@ function drawPillar(p: p5, c: Pen, i: number, t: number, lights: Light[]): void 
   }
 }
 
-/** A brazier on the bench: an iron basket on short legs, banked embers, the flare. */
+/** Iron in the hall at a light level: near-black in the dark, a worn steel grey where the light reaches it. */
+const ironAt = (lit: number): string => mixHex(mixHex(WORKS.iron, STONE.dark, 0.3), WORKS.steel, 0.6 * Math.max(0, Math.min(1, lit)))
+/** Iron's own edge: darker than the iron, never a cream line. */
+const IRON_EDGE = mixHex(WORKS.iron, STONE.deep, 0.55)
+
+/** A bar of iron from a to b, `w` cells thick (a filled quad, so it keeps its weight at any zoom). */
+function bar(p: p5, k: number, a: Pt, b: Pt, w: number): void {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+  const nx = (-(b[1] - a[1]) / L) * (w / 2)
+  const ny = ((b[0] - a[0]) / L) * (w / 2)
+  poly(p, k, [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]])
+}
+
+/**
+ * A brazier on the bench: an iron fire-bowl on three splayed legs (the back one between the two in front), each on
+ * a small turned-out foot; a deep bowl with a rolled rim, banked embers heaped in it, the flare. All of it iron, edged
+ * darker than itself: in the dark it is a black shape against the ledge, and the light turns it steel.
+ */
 function drawBrazier(p: p5, c: Pen, x: number, t: number, heat: number, flare: number, lit: number): void {
   const k = c.k
   const y0 = ROW_Y[0]
   const yb = BRAZIER_Y
-  const inkC = mixHex(STONE.dark, c.ink, 0.3 + 0.5 * lit)
-  p.stroke(inkC)
-  p.strokeWeight(Math.max(1, 0.05 * k))
-  for (const s of [-1, 1]) p.line((x + s * 0.12) * k, (yb + 0.02) * k, (x + s * 0.22) * k, y0 * k)
-  p.strokeWeight(c.weight * 0.9)
-  p.fill(mixHex(WORKS.iron, WORKS.steel, 0.3 * lit))
-  poly(p, k, [[x - 0.3, yb - 0.17], [x + 0.3, yb - 0.17], [x + 0.2, yb + 0.03], [x - 0.2, yb + 0.03]])
-  // The embers heaped in it: a dark mound, cracked with red that glows with the breath, amber in the flare.
-  const hot = Math.max(0, Math.min(1, 0.25 + 0.5 * heat + flare))
   const top = yb - 0.17
+  const belly = top + 0.31
+  const hot = Math.max(0, Math.min(1, 0.25 + 0.5 * heat + flare))
+  const iron = ironAt(lit)
+  p.stroke(IRON_EDGE)
+  p.strokeWeight(Math.max(0.75, c.weight * 0.6))
+  // The back leg, a shade darker, its foot a little higher (it stands further back on the ledge).
+  p.fill(mixHex(iron, STONE.deep, 0.35))
+  bar(p, k, [x + 0.02, belly - 0.05], [x + 0.07, y0 - 0.035], 0.05)
+  // The two front legs, splayed out from under the bowl.
+  p.fill(iron)
+  for (const s of [-1, 1]) bar(p, k, [x + s * 0.14, belly - 0.08], [x + s * 0.29, y0 - 0.02], 0.06)
+  // Their feet: small flat pads turned outward.
+  p.fill(mixHex(iron, STONE.deep, 0.15))
+  for (const s of [-1, 1]) poly(p, k, [[x + s * 0.25, y0], [x + s * 0.26, y0 - 0.045], [x + s * 0.34, y0 - 0.035], [x + s * 0.36, y0]])
+  // The bowl: deep and round-bottomed, the embers' glow warming its upper side.
+  p.fill(mixHex(iron, WORKS.rust, 0.12 * hot))
+  poly(p, k, [
+    [x - 0.3, top], [x + 0.3, top], [x + 0.29, top + 0.09], [x + 0.24, top + 0.2], [x + 0.12, belly - 0.01], [x - 0.12, belly - 0.01],
+    [x - 0.24, top + 0.2], [x - 0.29, top + 0.09],
+  ], true)
+  // The embers heaped in it: a dark mound, cracked with red that glows with the breath, amber in the flare.
   p.noStroke()
-  p.fill(mixHex(TROLL.shade, WORKS.rust, 0.25 + 0.35 * hot))
-  poly(p, k, [[x - 0.27, top], [x - 0.2, top - 0.07], [x - 0.08, top - 0.1], [x + 0.03, top - 0.13], [x + 0.14, top - 0.09], [x + 0.24, top - 0.05], [x + 0.27, top]], true)
+  p.fill(mixHex(TROLL.shade, WORKS.rust, 0.2 + 0.3 * hot))
+  poly(p, k, [[x - 0.26, top + 0.02], [x - 0.2, top - 0.05], [x - 0.08, top - 0.08], [x + 0.03, top - 0.1], [x + 0.14, top - 0.07], [x + 0.22, top - 0.04], [x + 0.26, top + 0.02]], true)
   p.fill(mixHex(WORKS.rust, LAMP.core, Math.max(0, hot - 0.45) * 0.9))
-  poly(p, k, [[x - 0.19, top], [x - 0.12, top - 0.05], [x - 0.02, top - 0.07], [x + 0.06, top - 0.09], [x + 0.13, top - 0.05], [x + 0.19, top]], true)
+  poly(p, k, [[x - 0.17, top + 0.01], [x - 0.11, top - 0.035], [x - 0.02, top - 0.05], [x + 0.06, top - 0.065], [x + 0.13, top - 0.035], [x + 0.17, top + 0.01]], true)
+  // The rim: a rolled lip a little wider than the bowl, over the embers' foot, catching their glow from above.
+  p.stroke(IRON_EDGE)
+  p.strokeWeight(Math.max(0.75, c.weight * 0.6))
+  p.fill(mixHex(mixHex(iron, WORKS.steel, 0.25), WORKS.rust, 0.25 * hot))
+  poly(p, k, [[x - 0.34, top - 0.005], [x + 0.34, top - 0.005], [x + 0.32, top + 0.045], [x - 0.32, top + 0.045]])
   if (flare > 0.02) for (let j = 0; j < 3; j++) flame(p, c, x - 0.14 + 0.14 * j, yb - 0.17, (0.2 + 0.75 * flare) * (0.75 + 0.35 * hash(j, 13)), t, j * 3 + x, Math.min(1, flare * 1.6))
 }
 
@@ -505,8 +711,8 @@ function drawTail(p: p5, c: Pen, tail: Tail, flick: number, lit: number, hide: s
       pts[j] = [ox + dx * Math.cos(ang) - dy * Math.sin(ang), oy + dx * Math.sin(ang) + dy * Math.cos(ang)]
     }
   }
-  const pen = dim(c, lit)
-  const inkC = mixHex(c.bg, pen.ink, 0.4 + 0.6 * lit)
+  // The tail's edge is the troll's own (troll.ts): the hide's shadow, never the page's cream.
+  const inkC = mixHex(c.bg, mixHex(TROLL.shade, hide, 0.3), 0.35 + 0.65 * lit)
   const hideC = mixHex(c.bg, hide, 0.3 + 0.7 * lit)
   const n = pts.length - 1
   p.noFill()
@@ -539,16 +745,16 @@ function drawTail(p: p5, c: Pen, tail: Tail, flick: number, lit: number, hide: s
 function drawLamps(p: p5, c: Pen, t: number, lit: number, sway: number): void {
   const k = c.k
   const b = burnt(t)
-  const iron = mixHex(WORKS.iron, c.ink, 0.25 + 0.3 * lit)
+  const rope = ropeAt(t)
+  const iron = ironAt(lit)
   // The rope's west end is tied to an iron post standing on the end of the court's first ledge (no chain from the
-  // vault: a full-height line through every wide shot of the hall); the crown-lamp's short chain from the vault.
-  p.stroke(iron)
-  p.strokeWeight(Math.max(1, c.weight * 0.7))
-  p.line(ROPE1[0] * k, vaultY(ROPE1[0]) * k, ROPE1[0] * k, ROPE1[1] * k)
+  // vault: a full-height line through every wide shot of the hall); the crown-lamp's hook hangs from the vault on a
+  // real iron chain, a finger thick, its links showing.
+  drawHookChain(p, k, t, lit)
   const post: Pt = [ROPE0[0] - 0.12, ROW_Y[1]]
-  p.stroke(mixHex(c.bg, c.ink, 0.25 + 0.35 * lit))
+  p.stroke(IRON_EDGE)
   p.strokeWeight(c.weight * 0.8)
-  p.fill(mixHex(WORKS.iron, STONE.deep, 0.3))
+  p.fill(mixHex(iron, STONE.deep, 0.3))
   p.beginShape()
   p.vertex((post[0] - 0.05) * k, post[1] * k)
   p.vertex((post[0] - 0.035) * k, (ROPE0[1] - 0.18) * k)
@@ -584,34 +790,131 @@ function drawLamps(p: p5, c: Pen, t: number, lit: number, sway: number): void {
     const l = burning(t, at + (i === 0 ? 0.12 : 0), HAMMERS[2 + i])
     drawLantern(p, dim(c, Math.max(l, lit)), x, y, { lit: l, t, seed: i + 7, size: 0.4, hang: 0.28, swing: sway * (1 + 0.3 * i) })
   })
-  // The crown-lamp: an iron ring on three chains, its five flames catching one after another around it.
+  // The crown-lamp: an iron ring on three chains from its hook, its five flames catching one after another around
+  // it. On the first hammer blow the hook's shackle snaps and it falls (`crownAt`).
   const cl = burning(t, CROWN_LAMP, HAMMERS[5])
-  const [cx, cy] = CROWN
+  const cr = crownAt(t)
+  const cx = cr.x
+  const cy = cr.y
   p.push()
-  p.translate(ROPE1[0] * k, ROPE1[1] * k)
-  p.rotate(sway * 0.6)
-  p.translate(-ROPE1[0] * k, -ROPE1[1] * k)
-  p.stroke(iron)
-  p.strokeWeight(Math.max(1, c.weight * 0.7))
-  for (const s of [-1, 0, 1]) p.line((cx + s * 0.85) * k, cy * k, ROPE1[0] * k, ROPE1[1] * k)
-  p.stroke(mixHex(c.bg, c.ink, 0.3 + 0.5 * lit))
-  p.strokeWeight(c.weight)
-  p.fill(mixHex(WORKS.iron, WORKS.steel, 0.3 * lit))
+  if (cr.down < 0 && t < LAMP_SNAP) {
+    p.translate(ROPE1[0] * k, ROPE1[1] * k)
+    p.rotate(sway * 0.6)
+    p.translate(-ROPE1[0] * k, -ROPE1[1] * k)
+  } else {
+    p.translate(cx * k, cy * k)
+    p.rotate(cr.tilt)
+    p.translate(-cx * k, -cy * k)
+  }
+  // Its three chains meet in a shackle over it; once it is down they slump onto the ring.
+  const off = shackleOff(cr.down)
+  const apex: Pt = [cx + off[0], cy + off[1]]
+  for (const s of [-1, 0, 1]) drawChain(p, k, [cx + s * 0.85, cy], apex, lit, 0.032)
+  p.stroke(IRON_EDGE)
+  p.strokeWeight(Math.max(0.75, c.weight * 0.8))
+  p.fill(ironAt(0.5 * lit))
   p.ellipse(cx * k, cy * k, 1.9 * k, 0.26 * k)
   p.noStroke()
-  p.fill(mixHex(c.bg, STONE.dark, 0.5))
+  p.fill(mixHex(STONE.deep, STONE.dark, 0.5))
   p.ellipse(cx * k, (cy - 0.02) * k, 1.55 * k, 0.12 * k)
+  // Knocked flat on the dais, its flames duck and come back low.
+  const knock = cr.down < 0 ? 1 : 0.35 + 0.4 * ease(cr.down, 0.05, 0.6)
   for (let j = 0; j < 5; j++) {
     const fx = cx - 0.76 + 0.38 * j
     const fy = cy - 0.08
     const lj = ease(t, CROWN_LAMP - 0.05 + 0.06 * j, CROWN_LAMP + 0.2 + 0.06 * j) * (1 - ease(t, HAMMERS[5], HAMMERS[5] + 0.25))
-    p.stroke(mixHex(c.bg, c.ink, 0.3 + 0.4 * lit))
-    p.strokeWeight(c.weight * 0.7)
-    p.fill(WORKS.iron)
+    p.stroke(IRON_EDGE)
+    p.strokeWeight(Math.max(0.75, c.weight * 0.6))
+    p.fill(ironAt(0.5 * lit))
     p.rect((fx - 0.07) * k, (fy - 0.04) * k, 0.14 * k, 0.08 * k)
-    if (lj > 0) flame(p, c, fx, fy - 0.04, 0.26 * cl + 0.06, t, j + 20, lj)
+    if (lj > 0) flame(p, c, fx, fy - 0.04, (0.26 * cl + 0.06) * knock, t, j + 20, lj)
   }
   p.pop()
+  // Its landing throws chips off the dais.
+  if (cr.down >= 0 && cr.down < 0.6) {
+    const s = cr.down
+    p.noStroke()
+    for (let j = 0; j < 9; j++) {
+      const side = j % 2 ? 1 : -1
+      const px = cx + side * (0.5 + 0.5 * hash(j, 57)) + side * (1.2 + 1.4 * hash(j, 58)) * s
+      const py = DAIS.top - (1.6 + 1.4 * hash(j, 59)) * s + 0.5 * 14 * s * s
+      if (py > DAIS.top + 0.02) continue
+      p.fill(alpha(p, mixHex(STONE.mid, STONE.light, 0.4), 1 - s / 0.6))
+      const r = 0.04 + 0.04 * hash(j, 60)
+      poly(p, k, [[px - r, py], [px, py - r * 0.8], [px + r, py + r * 0.2], [px + r * 0.1, py + r]])
+    }
+  }
+}
+
+/**
+ * The hook's chain from the vault: an iron chain a finger thick. On the first blow it tears out of the vault and comes
+ * down with the lamp, whole; once the lamp is down on the dais it drops the last of its length onto it in a heap.
+ */
+const HOOK_CHAIN = ROPE1[1] - vaultY(ROPE1[0]) - 0.05
+function drawHookChain(p: p5, k: number, t: number, lit: number): void {
+  const w = 0.07
+  if (t < LAMP_SNAP) {
+    drawChain(p, k, [ROPE1[0], ROPE1[1] - HOOK_CHAIN], ROPE1, lit, w)
+    return
+  }
+  const h = shackleAt(t)
+  const cr = crownAt(t)
+  if (cr.down < 0) {
+    drawChain(p, k, [h[0], h[1] - HOOK_CHAIN], h, lit, w)
+    return
+  }
+  // Down: the chain still standing over the shackle falls onto it, and lies along the dais beside the ring.
+  const s = cr.down
+  const v = (LAMP_REST - CROWN[1]) * 2 / (LAMP_LANDS - LAMP_SNAP)
+  const standing = Math.max(0, HOOK_CHAIN - v * s - 15 * s * s)
+  if (standing > 0.01) drawChain(p, k, [h[0], h[1] - standing], h, lit, w)
+  const lying = Math.min(1, (HOOK_CHAIN - standing) / HOOK_CHAIN)
+  if (lying > 0.02) drawChain(p, k, [cr.x + 0.95, DAIS.top - 0.04], [cr.x + 0.95 + 0.9 * lying, DAIS.top - 0.035], lit, w)
+}
+
+/**
+ * An iron chain from a to b, `w` cells thick: a dark core with its links along it, face-on and edge-on in turn, so it
+ * reads as iron links (not a line) close up and as a solid dark cord in a wide.
+ */
+function drawChain(p: p5, k: number, a: Pt, b: Pt, lit: number, w = 0.05): void {
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1])
+  if (L < 0.01) return
+  const ux = (b[0] - a[0]) / L
+  const uy = (b[1] - a[1]) / L
+  const ang = Math.atan2(uy, ux)
+  p.noStroke()
+  // In a wide the links are a pixel or two: drawn, they would read as a dotted line. There it is a solid dark cord,
+  // iron in the light only a little.
+  if (w * k < 4.5) {
+    p.fill(mixHex(IRON_EDGE, WORKS.steel, 0.25 * Math.max(0, Math.min(1, lit))))
+    bar(p, k, a, b, Math.max(w, 1.6 / k))
+    return
+  }
+  p.fill(IRON_EDGE)
+  bar(p, k, a, b, w * 0.55)
+  const link = w * 2.3
+  const n = Math.max(1, Math.round(L / link))
+  const face = ironAt(lit)
+  for (let i = 0; i < n; i++) {
+    const m = (i + 0.5) / n
+    const x = a[0] + (b[0] - a[0]) * m
+    const y = a[1] + (b[1] - a[1]) * m
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(ang)
+    if (i % 2 === 0) {
+      // Face-on: an oval ring.
+      p.fill(face)
+      p.ellipse(0, 0, (L / n) * 1.15 * k, w * k)
+      p.fill(IRON_EDGE)
+      p.ellipse(0, 0, (L / n) * 0.55 * k, w * 0.35 * k)
+    } else {
+      // Edge-on: a flat bar.
+      p.fill(mixHex(face, IRON_EDGE, 0.35))
+      p.rect(-(L / n) * 0.55 * k, -w * 0.22 * k, (L / n) * 1.1 * k, w * 0.44 * k)
+    }
+    p.pop()
+  }
 }
 
 /** The dais: two broad steps of dressed stone. */
@@ -679,8 +982,9 @@ function throneTilt(t: number): number {
 function drawThrone(p: p5, c: Pen, t: number, lit: number): void {
   const k = c.k
   const { x, seat, w } = THRONE
-  // The trolls' own edge: the hide's shadow warmed a little by the ink (troll.ts), not a cream line.
-  const inkC = mixHex(c.bg, mixHex(TROLL.shade, c.ink, 0.3 + 0.25 * lit), 0.35 + 0.65 * lit)
+  // The trolls' own edge (troll.ts): a shadow darker than the bone and the rock it edges, no cream in it (the tusks
+  // outlined in cream read as two pale hoops).
+  const inkC = mixHex(c.bg, mixHex(TROLL.shade, STONE.dark, 0.3), 0.35 + 0.65 * lit)
   const pivot: Pt = [x + w / 2 + 0.1, DAIS.top]
   p.push()
   p.translate(pivot[0] * k, pivot[1] * k)
@@ -731,7 +1035,9 @@ export function drawKing(p: p5, c: Pen, pose: KingPose, lit: number): TrollDrawn
   const by = hy - Math.sin(ang) * L * SCEPTRE.grip
   const tx = hx + Math.cos(ang) * L * (1 - SCEPTRE.grip)
   const ty = hy + Math.sin(ang) * L * (1 - SCEPTRE.grip)
-  const inkC = mixHex(c.bg, c.ink, 0.35 + 0.65 * lit)
+  // The staff, the head and the crown edged in shadow like the King himself (a cream casing made the sceptre a white
+  // stick and the crown a drawing of one).
+  const inkC = mixHex(c.bg, TROLL.shade, 0.35 + 0.65 * lit)
   p.stroke(inkC)
   p.strokeWeight(Math.max(1, 0.11 * k + c.weight))
   p.line(bx * k, by * k, tx * k, ty * k)
@@ -1117,6 +1423,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   drawRoom(p, c, 0.1 + 0.5 * hallLit)
   drawDripstones(p, c, t, lights)
   if (seen(0, 13)) drawTerraces(p, c, lit)
+  if (seen(-0.5, 1.5)) drawDoorway(p, c, t, lit, mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * 0.3 * lit(6, (ROW_Y[0] + FL) / 2)))
   // The pools of light on the rock, before anything they light; the pillars stand dark against them, lit at the rim.
   for (const l of lights) glow(p, c, l.x, l.y, l.r * 0.95, Math.min(0.45, 0.3 * l.s), l.col)
   for (let i = 0; i < PILLARS.length; i++) if (seen(PILLARS[i] - 3.5, PILLARS[i] + 3.5)) drawPillar(p, c, i, t, lights)
@@ -1135,7 +1442,10 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   TORCHES.forEach((tc, i) => {
     if (!seen(tc.foot[0] - 1, tc.foot[0] + 1)) return
     const l = burning(t, tc.at, tc.out)
-    drawTorch(p, dim(c, Math.max(l, lit(tc.foot[0], tc.foot[1]))), tc.foot[0], tc.foot[1], { lit: l * (1 + 0.3 * shout(t)), t, seed: i + 3, side: tc.side, size: TORCH_SIZE })
+    // The sconce edged in iron (its bracket and cup), not the canonical torch's cream ink: unlit it is a dark
+    // bracket on the pillar, lit it goes steel.
+    const around = Math.max(l, lit(tc.foot[0], tc.foot[1]))
+    drawTorch(p, { ...c, ink: mixHex(IRON_EDGE, WORKS.steel, 0.45 * around), weight: c.weight * 1.25 }, tc.foot[0], tc.foot[1], { lit: l * (1 + 0.3 * shout(t)), t, seed: i + 3, side: tc.side, size: TORCH_SIZE })
   })
 
   // The dais, the throne, the King.
@@ -1149,7 +1459,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   }
 
   // The lamps over the approach and the throne, swinging with the mountain.
-  const sway = 0.02 * Math.sin(t * 1.3) + 6 * (qx + 0.5 * qy)
+  const sway = swayAt(t)
   if (seen(ROPE0[0] - 1, ROPE1[0] + 1.5)) drawLamps(p, c, t, lit(16, -4), sway)
 
   // The front row's braziers, the tails down over the bench, the front row.
@@ -1159,7 +1469,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
     p.push()
     if (tip) {
       // Knocked over by a hammer blow: it topples off its foot, its embers poured out (the spilled fire).
-      const pivot: Pt = [b.x + Math.sign(tip) * 0.22, ROW_Y[0]]
+      const pivot: Pt = [b.x + Math.sign(tip) * 0.32, ROW_Y[0]]
       p.translate(pivot[0] * c.k, pivot[1] * c.k)
       p.rotate(tip)
       p.translate(-pivot[0] * c.k, -pivot[1] * c.k)
@@ -1196,22 +1506,16 @@ export function drawHall(p: p5, c: Pen, t: number): void {
     drawCrack(p, c, t, crackFrom)
   }
   drawRubble(p, c, t)
-  // Dark before the chain reaches it: until he is at its west door the hall is solid rock to look at (the opening's
-  // wide sees the whole mountain), and it opens under the tunnels' light as he comes down to it.
-  const unseen = 1 - ease(t, 38.9, 40.3)
-  if (unseen > 0.002) {
-    p.noStroke()
-    p.fill(alpha(p, STONE.deep, unseen))
-    p.rect(0.3 * k, -12.7 * k, 30.6 * k, 14.2 * k)
-    p.rect((HATCH.x0 - 0.6) * k, 1.4 * k, (HATCH.x1 - HATCH.x0 + 1.2) * k, 7.8 * k)
-  }
-  // The opening wide (44 cells, the whole mountain) also sees the floor's west end and the doorway's sill, west of the
-  // cover: rock too, until the camera is down at the pig. Not longer: from there it is the tunnels' approach to the door.
+  // Dark before the chain reaches it: until he is at its west door the hall is solid rock to look at, and it opens
+  // from the door outward as he comes down to it.
+  drawCover(p, c, t)
+  // The opening wide (44 cells, the whole mountain) also sees the floor's west end, the doorway and the cover's soft
+  // edge: rock too, until the camera is down at the pig. Not longer: from there it is the tunnels' approach to the door.
   const sill = 1 - ease(t, 7.4, 8.2)
   if (sill > 0.002) {
     p.noStroke()
     p.fill(alpha(p, STONE.deep, sill))
-    p.rect(-2.2 * k, -12.7 * k, 2.5 * k, 14.2 * k)
+    p.rect(-2.2 * k, -12.7 * k, (2.2 + coverAt(t).x) * k, 14.2 * k)
   }
   p.pop()
 }

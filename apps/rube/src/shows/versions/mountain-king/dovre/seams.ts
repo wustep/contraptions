@@ -82,5 +82,14 @@ export const SEAM_SHOT = { cells: 6, off: [0, -0.5] as Pt }
  */
 export const CODA_SHOT = { cells: 10.0, world: [51.3, 31.4] as Pt, w: 0.85 }
 
+/**
+ * The drop into the heart (drum → gears, the third statement's first note): the second seam that is not close. The
+ * fortissimo breaks on the drum (100.83) in a 9-cell wide, so a 6-cell seam there was a dive in and a pull straight
+ * back out over the loudest downbeat. Instead the frame only tilts down with him from the burst, a little closer,
+ * and lands him in a shot that already holds the machine he falls into: the hammer, the anvil and the furnace's
+ * mouth. A held point in WORLD cells (the gears' part turns it into its own frame).
+ */
+export const HEART_SHOT = { cells: 8.0, world: [57.8, 31.1] as Pt, w: 0.85 }
+
 /** At a 'rest' seam where she is with him, the Woman in Green rests this far ahead of Peer (centre to centre, same floor). */
 export const WOMAN_LEAD = 1.0
