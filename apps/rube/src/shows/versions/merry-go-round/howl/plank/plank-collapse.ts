@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
-import { CASTLE, MODULE_PIVOT, doorAt, drawCastle, onBody, puff, spline, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
+import { CASTLE, HULL_OUTLINE, MODULE_PIVOT, doorAt, drawCastle, onBody, puff, spline, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
 import { ROOM, WASTES } from '../worlds'
 import { BX0, c, CROUCH, deck, ring, T0, YG, type Deck } from './plank-rig'
 
@@ -48,11 +48,7 @@ export const deckOf = (c: Pt): Pt => [c[0], c[1] - DOOR[1]]
 /* ------------------------------------------------------------------ the hull's shape, and its plates */
 
 /** The hull's outline and the head's (the castle's own numbers): torn edges are drawn only inside the iron. */
-const HULL_O: Pt[] = (() => {
-  const top: Pt[] = [[-7.65, -12.2], [-6.3, -12.5], [-4.6, -12.3], [-2.2, -12.45], [0.4, -12.2], [2.9, -12.42], [5.0, -12.3], [6.05, -12.55]]
-  const under = spline([[6.05, -12.55], [6.45, -10.9], [6.75, -9.0], [6.3, -7.55], [5.1, -6.7], [3.1, -6.18], [0.8, -5.98], [-1.7, -6.03], [-3.9, -6.36], [-5.7, -7.0], [-7.1, -7.95], [-8.15, -9.15], [-8.6, -10.45], [-8.35, -11.55], [-7.65, -12.2]], 5)
-  return [...top, ...under.slice(1)]
-})()
+const HULL_O: Pt[] = [...HULL_OUTLINE]
 const HEAD_O: Pt[] = spline([[5.7, -12.55], [7.2, -12.6], [8.35, -12.3], [9.0, -11.6], [9.2, -10.3], [9.05, -9.3], [8.6, -8.95], [7.1, -8.82], [6.3, -8.4]], 5)
 
 /** The room's opening in the hull (standing cells): from the floor up to under the deck, torn at the edges. */

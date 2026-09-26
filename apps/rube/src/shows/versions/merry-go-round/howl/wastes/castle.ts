@@ -488,16 +488,89 @@ export function puff(p: p5, k: number, x: number, y: number, r: number, color: s
   ctx.restore()
 }
 
+/** One tongue of flame from a base (bw either side of x, at y) to a tip swept back, as a filled curve. */
+function tongue(p: p5, k: number, x: number, y: number, bw: number, h: number, sweep: number, wob: number) {
+  const X = (v: number) => v * k
+  const tx = x + sweep
+  const ty = y - h
+  p.beginShape()
+  p.vertex(X(x - bw), X(y))
+  p.bezierVertex(X(x - bw * 1.1), X(y - h * 0.45), X(tx - bw * 0.3 + wob), X(y - h * 0.72), X(tx), X(ty))
+  p.bezierVertex(X(tx + bw * 0.35 + wob * 0.5), X(y - h * 0.62), X(x + bw * 1.15), X(y - h * 0.4), X(x + bw), X(y))
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * Calcifer roaring out of the chimney's mouth (ex, ey, world cells): a sheaf of tongues of his fire leaping up and
+ * swept back on the wind, his three colours one inside the other, flames tearing off the tips as each roar dies,
+ * and a warm light thrown round it (a long soft haze, never a disc). `f` is how hard he is roaring now (0..1);
+ * `roars` are the roars' [time, strength] (for the torn-off flames). The walk's roar and the last chord's.
+ */
+export function drawChimneyFire(p: p5, k: number, t: number, ex: number, ey0: number, f: number, roars: readonly (readonly [number, number, ...number[]])[]): void {
+  if (f < 0.01) return
+  const ey = ey0 + 0.1
+  puff(p, k, ex - 0.8 * f, ey - 1.4 - 1.8 * f, 1.8 + 4.2 * f, CALCIFER.body, 0.14 * f, 1.3)
+  p.push()
+  p.noStroke()
+  // Torn-off flames rising off the tips as each roar dies.
+  for (const [n, [at, s]] of roars.entries()) {
+    for (let j = 0; j < 3; j++) {
+      const age = t - at - 0.06 * j
+      if (age < 0 || age > 0.7) continue
+      const u = age / 0.7
+      const h0 = s * (2.6 + 1.2 * hash(j, n, 85))
+      const x = ex + (hash(j, n, 86) - 0.5) * 0.9 - (0.5 + 1.1 * u) * h0 * 0.35
+      const y = ey - h0 * (0.85 + 0.5 * u)
+      const sz = s * (0.9 - 0.8 * u)
+      p.fill(alpha(p, CALCIFER.edge, 0.9 * (1 - u)))
+      tongue(p, k, x, y, 0.22 * sz, 1.1 * sz, -0.3 * sz, 0)
+      p.fill(alpha(p, CALCIFER.body, 0.9 * (1 - u)))
+      tongue(p, k, x, y - 0.05, 0.12 * sz, 0.7 * sz, -0.2 * sz, 0)
+    }
+  }
+  const SHEAF = [0.5, 0.78, 1, 0.7, 0.92, 0.6, 0.42]
+  const layers: [string, number, number][] = [[CALCIFER.edge, 1, 1], [CALCIFER.body, 0.72, 0.7], [CALCIFER.core, 0.42, 0.45]]
+  for (const [col, hs, ws] of layers) {
+    p.fill(col)
+    SHEAF.forEach((sh, i) => {
+      const x = ex + (i / (SHEAF.length - 1) - 0.5) * 1.3
+      const flick = 0.85 + 0.1 * Math.sin(t * 15 + i * 1.7) + 0.05 * Math.sin(t * 23 + i * 3.1)
+      const h = f * (1.1 + 4.1 * sh) * flick * hs
+      if (h < 0.05) return
+      const bw = (0.4 + 0.14 * hash(i, 87)) * ws * (0.6 + 0.4 * Math.min(1, f * 2))
+      tongue(p, k, x, ey, bw, h, -0.32 * h + 0.12 * Math.sin(t * 7 + i), 0.15 * Math.sin(t * 11 + i * 2))
+    })
+  }
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the castle */
 
-/** The hull's outline, standing: a patched deck line, then round under the belly and up the stern. */
+/**
+ * The hull's outline, standing: a patched deck line, then down the front (under the head), along the belly and up
+ * the stern plate by plate, each a little proud of the last: a boiler's bulge hanging under the stern, a riveted
+ * strongbox jutting off its end. A patched heap of iron, never one smooth oval. (The collapse tears it along the
+ * same outline: `HULL_OUTLINE`.)
+ */
 const HULL: Pt[] = (() => {
   const deck: Pt[] = [[-7.65, -12.2], [-6.3, -12.5], [-4.6, -12.3], [-2.2, -12.45], [0.4, -12.2], [2.9, -12.42], [5.0, -12.3], [6.05, -12.55]]
-  const under = spline([[6.05, -12.55], [6.45, -10.9], [6.75, -9.0], [6.3, -7.55], [5.1, -6.7], [3.1, -6.18], [0.8, -5.98], [-1.7, -6.03], [-3.9, -6.36], [-5.7, -7.0], [-7.1, -7.95], [-8.15, -9.15], [-8.6, -10.45], [-8.35, -11.55], [-7.65, -12.2]], 5)
-  return [...deck, ...under.slice(1)]
+  const front = spline([[6.05, -12.55], [6.45, -10.9], [6.75, -9.0], [6.3, -7.55]], 4)
+  const belly = spline([[6.3, -7.55], [5.1, -6.7], [4.3, -6.47]], 3)
+  const plates: Pt[] = [
+    [4.12, -6.3], [3.1, -6.16], [1.9, -6.02], [0.8, -5.97], [-0.5, -5.99], [-1.7, -6.03], [-2.9, -6.16], [-3.9, -6.36],
+    [-4.62, -6.5], [-4.78, -6.24], [-5.5, -6.02], [-6.25, -6.12], [-6.72, -6.5], [-6.9, -7.02], [-7.38, -7.42],
+    [-7.92, -8.08], [-8.25, -8.72], [-8.8, -8.82], [-9.38, -8.92], [-9.45, -10.24], [-8.72, -10.32], [-8.68, -11.02],
+    [-8.4, -11.62], [-7.65, -12.2],
+  ]
+  return [...deck, ...front.slice(1), ...belly.slice(1), ...plates]
 })()
-/** The belly's curve alone (the dark band under it). */
-const BELLY: Pt[] = spline([[6.3, -7.55], [5.1, -6.7], [3.1, -6.18], [0.8, -5.98], [-1.7, -6.03], [-3.9, -6.36], [-5.7, -7.0], [-7.1, -7.95], [-8.15, -9.15]], 6)
+export const HULL_OUTLINE: readonly Pt[] = HULL
+/** The belly's line alone (the dark band under it): from under the head to the stern's step. */
+const BELLY: Pt[] = (() => {
+  const i0 = HULL.findIndex(([x, y]) => x === 6.3 && y === -7.55)
+  const i1 = HULL.findIndex(([x, y]) => x === -7.92 && y === -8.08)
+  return HULL.slice(i0, i1 + 1)
+})()
 
 /** The head over the hull's front: the brow of the face, its eye, the upper lip. */
 const HEAD: Pt[] = spline([[5.7, -12.55], [7.2, -12.6], [8.35, -12.3], [9.0, -11.6], [9.2, -10.3], [9.05, -9.3], [8.6, -8.95], [7.1, -8.82], [6.3, -8.4]], 5)
@@ -666,6 +739,24 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
   // The cottage on the deck: plaster and timber, a steep slate roof, a dormer; a tall narrow house squeezed in
   // behind it, and a crooked cabin perched on its ridge (the film's rooms on rooms).
   module('house', () => {
+    // Behind it all, right of the chimney: a thin tower-house of plaster and timber leaning out to the right, its
+    // own steep slate hat (the film's rooms heaped on rooms, never level).
+    p.push()
+    p.translate(X(2.05), X(-16.1))
+    p.rotate(0.075)
+    inked(tone(mixHex(TOWN.plaster, WASTES.stone, 0.25)))
+    poly(p, k, [[-0.55, 0], [0.55, 0], [0.5, -4.35], [-0.52, -4.3]])
+    p.stroke(timber)
+    p.strokeWeight(W * 1.3)
+    line([-0.5, -2.2], [0.5, -2.25])
+    p.stroke(INK)
+    p.strokeWeight(W)
+    p.noFill()
+    poly(p, k, [[-0.55, 0], [0.55, 0], [0.5, -4.35], [-0.52, -4.3]])
+    inked(slate)
+    poly(p, k, [[-0.78, -4.2], [0.74, -4.28], [0.12, -5.75], [0.02, -5.8]])
+    glass(-0.22, -3.7, 0.42, 0.62, 0.1)
+    p.pop()
     // The narrow house: two storeys and a rust gable, a little balcony.
     inked(plaster)
     poly(p, k, [[-5.4, -12.25], [-3.2, -12.25], [-3.2, -17.3], [-5.4, -17.1]])
@@ -676,6 +767,16 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.strokeWeight(W)
     p.noFill()
     poly(p, k, [[-5.4, -12.25], [-3.2, -12.25], [-3.2, -17.3], [-5.4, -17.1]])
+    // A crooked stovepipe out of its gable, an elbow and a coolie hat.
+    for (const [c, w] of [[INK, 2.6], [ironDark, 1.4]] as [string, number][]) {
+      p.stroke(c)
+      p.strokeWeight(W * w)
+      line([-5.0, -17.4], [-5.05, -19.35])
+      line([-5.05, -19.35], [-5.45, -19.75])
+      line([-5.45, -19.75], [-5.45, -20.35])
+    }
+    inked(ironDark, W * 0.7)
+    poly(p, k, [[-5.8, -20.3], [-5.1, -20.3], [-5.45, -20.62]])
     inked(rust)
     poly(p, k, [[-5.75, -17.0], [-2.95, -17.4], [-4.25, -19.0]])
     glass(-4.7, -16.6, 0.62, 0.85)
@@ -756,6 +857,15 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
 
   // The pipes up the front, a valve, and a steam whistle.
   module('pipes', () => {
+    // A squat riveted tank lashed on the deck's front edge, behind the pipes, banded, a wheel valve on top.
+    inked(tone(mixHex(WASTES.rust, WASTES.ironDark, 0.3)))
+    poly(p, k, [[5.3, -12.3], [6.2, -12.3], [6.25, -13.7], [6.05, -13.85], [5.45, -13.85], [5.25, -13.7]])
+    p.stroke(alpha(p, INK, 0.6))
+    p.strokeWeight(W * 0.7)
+    line([5.28, -12.8], [6.22, -12.8])
+    line([5.26, -13.35], [6.24, -13.35])
+    inked(brass, W * 0.7)
+    p.rect(X(5.62), X(-14.15), X(0.26), X(0.3), X(0.04))
     for (const [x, top, c] of [[4.72, -16.5, iron], [5.02, -17.35, brass], [5.3, -15.9, rust]] as [number, number, string][]) {
       p.stroke(INK)
       p.strokeWeight(W * 3.2)
@@ -857,6 +967,28 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.fill(ironDark)
     p.rect(X(-2.35), X(-11.85), X(1.1), X(0.5), X(0.08))
     for (const x of [-2.1, -1.8, -1.5]) line([x, -11.78], [x, -11.42])
+    // Mismatched plating: a rusty plate low on the bow, a brass one on the stern, the strongbox's dark iron with its
+    // bands, and planks nailed over a hole in the boiler's bulge.
+    p.fill(tone(mixHex(WASTES.rust, WASTES.iron, 0.4)))
+    poly(p, k, [[3.5, -8.5], [5.6, -8.68], [5.85, -6.9], [3.62, -6.7]])
+    p.fill(tone(mixHex(WASTES.brass, WASTES.iron, 0.6)))
+    poly(p, k, [[-8.35, -10.05], [-6.95, -10.2], [-6.8, -8.55], [-8.0, -8.4]])
+    p.fill(ironDark)
+    poly(p, k, [[-9.6, -10.4], [-8.62, -10.45], [-8.58, -8.7], [-9.6, -8.75]])
+    p.stroke(alpha(p, INK, 0.55))
+    p.strokeWeight(W * 0.6)
+    line([-9.45, -9.95], [-8.62, -9.98])
+    line([-9.45, -9.2], [-8.6, -9.22])
+    p.stroke(INK)
+    p.strokeWeight(W * 0.6)
+    p.fill(wood)
+    for (const [x, y, a] of [[-6.3, -6.75, -0.12], [-5.75, -6.62, 0.05], [-5.2, -6.7, -0.04]] as [number, number, number][]) {
+      p.push()
+      p.translate(X(x), X(y))
+      p.rotate(a)
+      p.rect(X(-0.24), X(-0.62), X(0.48), X(1.1), X(0.03))
+      p.pop()
+    }
     ctx.restore()
     for (const [x, y] of [[-5.75, -9.75], [3.1, -9.55]] as Pt[]) {
       glass(x, y, 0.62, 0.7)

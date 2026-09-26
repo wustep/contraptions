@@ -512,7 +512,7 @@ export function drawPlume(p: p5, k: number, T: number): void {
       const x = ex + Math.cos(a0) * out * grow * 1.8 - 1.3 * age
       const y = ey - 0.4 - rise + Math.sin(a0) * out * grow * 0.9
       const r = 0.8 + 2.7 * grow + 0.7 * age
-      const a = 0.24 * Math.exp(-age / 1.2) * (n ? 0.8 : 1)
+      const a = 0.32 * Math.exp(-age / 1.3) * (n ? 0.8 : 1)
       puff(p, k, x, y, r, dark, a, 0.85)
     }
   }

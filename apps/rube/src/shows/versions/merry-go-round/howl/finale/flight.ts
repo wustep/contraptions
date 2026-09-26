@@ -5,8 +5,8 @@ import { alpha, box, carried, frame, hash, knock, part, smooth, type Company, ty
 import { bar, CHORD, DURATION, SEAM } from '../music'
 import { drawDeck, drawGrate, drawPipes, drawStar, PLANK_AFTER, PLANK_END } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
-import { CASTLE, doorAt, drawCastle, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
-import { wastesSky } from '../wastes/sky'
+import { CASTLE, doorAt, drawCastle, drawChimneyFire, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
+import { skyGradient } from '../wastes/sky'
 import { CALCIFER, WASTES } from '../worlds'
 
 /**
@@ -427,17 +427,15 @@ function drawClouds(p: p5, k: number, t: number, f: { x0: number; x1: number; y0
  * the frame, thicker as it goes), so the credits come over sky and clouds.
  */
 function veil(p: p5, k: number, t: number, f: { x0: number; x1: number; y0: number; y1: number }) {
-  const a = 0.9 * smooth(t, 303, 311)
+  // The sky's own gradient, placed exactly as the sky places it (so on a tall phone too), and whole by 311: the land
+  // is gone under the credits, top to bottom of any screen.
+  const a = smooth(t, 303, 311)
   if (a < 0.01) return
-  const { top, low } = wastesSky(t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.globalAlpha *= a
-  const g = ctx.createLinearGradient(0, f.y0 * k, 0, f.y1 * k)
-  g.addColorStop(0, top)
-  g.addColorStop(1, low)
-  ctx.fillStyle = g
-  ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+  ctx.fillStyle = skyGradient(ctx, k, t, f)
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   ctx.restore()
 }
 
@@ -580,61 +578,17 @@ function flareWindows(p: p5, k: number, t: number, L: Look) {
   p.pop()
 }
 
-/** One tongue of flame from a base (bw either side of x, at y) to a tip swept back, as a filled curve. */
-function tongue(p: p5, k: number, x: number, y: number, bw: number, h: number, sweep: number, wob: number) {
-  const X = (v: number) => v * k
-  const tx = x + sweep
-  const ty = y - h
-  p.beginShape()
-  p.vertex(X(x - bw), X(y))
-  p.bezierVertex(X(x - bw * 1.1), X(y - h * 0.45), X(tx - bw * 0.3 + wob), X(y - h * 0.72), X(tx), X(ty))
-  p.bezierVertex(X(tx + bw * 0.35 + wob * 0.5), X(y - h * 0.62), X(x + bw * 1.15), X(y - h * 0.4), X(x + bw), X(y))
-  p.endShape(p.CLOSE)
-}
-
 /**
  * Calcifer's roars out of the chimney: a sheaf of tongues of his fire leaping up out of its mouth and swept back on
  * the wind, his three colours one inside the other, flames tearing off the tips as they die, and a warm light
- * thrown on the sky and the roofs round it (a long soft haze, never a disc).
+ * thrown on the sky and the roofs round it (a long soft haze, never a disc). The castle's own (`drawChimneyFire`),
+ * as on the walk's roar: the same fire.
  */
 function drawFire(p: p5, k: number, t: number, L: Look) {
   const f = fireAt(t)
   if (f < 0.01) return
-  const [ex, ey0] = onCastle(L, CASTLE.chimney)
-  const ey = ey0 + 0.1
-  puff(p, k, ex - 0.8 * f, ey - 1.4 - 1.8 * f, 1.8 + 4.2 * f, CALCIFER.body, 0.14 * f, 1.3)
-  p.push()
-  p.noStroke()
-  // Torn-off flames rising off the tips as each roar dies.
-  for (const [n, [at, s]] of ROARS.entries()) {
-    for (let j = 0; j < 3; j++) {
-      const age = t - at - 0.06 * j
-      if (age < 0 || age > 0.7) continue
-      const u = age / 0.7
-      const h0 = s * (2.6 + 1.2 * hash(j, n, 85))
-      const x = ex + (hash(j, n, 86) - 0.5) * 0.9 - (0.5 + 1.1 * u) * h0 * 0.35
-      const y = ey - h0 * (0.85 + 0.5 * u)
-      const sz = s * (0.9 - 0.8 * u)
-      p.fill(alpha(p, CALCIFER.edge, 0.9 * (1 - u)))
-      tongue(p, k, x, y, 0.22 * sz, 1.1 * sz, -0.3 * sz, 0)
-      p.fill(alpha(p, CALCIFER.body, 0.9 * (1 - u)))
-      tongue(p, k, x, y - 0.05, 0.12 * sz, 0.7 * sz, -0.2 * sz, 0)
-    }
-  }
-  const SHEAF = [0.5, 0.78, 1, 0.7, 0.92, 0.6, 0.42]
-  const layers: [string, number, number][] = [[CALCIFER.edge, 1, 1], [CALCIFER.body, 0.72, 0.7], [CALCIFER.core, 0.42, 0.45]]
-  for (const [col, hs, ws] of layers) {
-    p.fill(col)
-    SHEAF.forEach((sh, i) => {
-      const x = ex + (i / (SHEAF.length - 1) - 0.5) * 1.3
-      const flick = 0.85 + 0.1 * Math.sin(t * 15 + i * 1.7) + 0.05 * Math.sin(t * 23 + i * 3.1)
-      const h = f * (1.1 + 4.1 * sh) * flick * hs
-      if (h < 0.05) return
-      const bw = (0.4 + 0.14 * hash(i, 87)) * ws * (0.6 + 0.4 * Math.min(1, f * 2))
-      tongue(p, k, x, ey, bw, h, -0.32 * h + 0.12 * Math.sin(t * 7 + i), 0.15 * Math.sin(t * 11 + i * 2))
-    })
-  }
-  p.pop()
+  const [ex, ey] = onCastle(L, CASTLE.chimney)
+  drawChimneyFire(p, k, t, ex, ey, f, ROARS)
 }
 
 /* ------------------------------------------------------------------ the stair of air: a cloud under every foot */
