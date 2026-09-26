@@ -1,9 +1,9 @@
 import type p5 from 'p5'
-import type { Pt, Seg } from '../../../../../parts'
-import { alpha, box, carried, knock, part, smooth, type Ctx } from '../kit'
+import { mixHex, type Pt, type Seg } from '../../../../../parts'
+import { alpha, box, carried, frame, knock, part, smooth, type Ctx } from '../kit'
 import { CUT } from '../music'
-import { INK } from '../worlds'
-import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED } from './church'
+import { CLINIC, HOME, INK } from '../worlds'
+import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED, waking } from './church'
 
 /**
  * The funeral (189.452 to 201.944): the same church, empty and grey.
@@ -204,6 +204,26 @@ function lane(begin: number, end: number, at: Pt): Seg[] {
   return segs
 }
 
+/**
+ * The hospital's night, carried across the cut and lifting: the same cold blue laid over the room as the ward's dusk
+ * (`clinic/hospital.ts`), a little deeper for the church's paler plaster, under the two of them (drawn before the
+ * cast, as the ward's is), gone as the grey morning comes up (`waking`).
+ */
+function night(p: p5, c: Ctx, T: number): void {
+  const a = 1 - waking(T)
+  if (a <= 0.003) return
+  const { k } = c
+  const f = frame(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.globalCompositeOperation = 'multiply'
+  const hex = mixHex(HOME.night, CLINIC.steel, 0.35)
+  const n = parseInt(hex.slice(1), 16)
+  ctx.fillStyle = `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${0.62 * a})`
+  ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
+  ctx.restore()
+}
+
 export const funeral = part<FuneralState>(
   {
     name: 'funeral',
@@ -216,6 +236,7 @@ export const funeral = part<FuneralState>(
       p.translate(-FUNERAL_AT[0] * c.k, -FUNERAL_AT[1] * c.k)
       drawRope(p, c.k, c.weight, T)
       p.pop()
+      night(p, c, T)
     },
   },
   (slot) => {

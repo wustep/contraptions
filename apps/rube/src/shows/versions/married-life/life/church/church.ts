@@ -125,6 +125,15 @@ export const FUN = {
 /** Whether a show time is the funeral's light (the church is seen twice: the wedding, and the funeral). */
 export const gloomy = (t: number): boolean => t > 100
 
+/**
+ * The funeral opens under the hospital's night (Stephen's note on transitions: open a cut under the last scene's
+ * light before waking it): at the cut the church is dim and blue, the glass dark, no beam; the grey morning comes up
+ * over it slowly, and the one pale beam and its dust come last. 0 at the cut, 1 once it is morning.
+ */
+export const waking = (t: number): number => smooth(t, FUN.from, FUN.from + 2.9)
+/** The beam and the dust in it: the last of the light to come. */
+export const beamUp = (t: number): number => smooth(t, FUN.from + 1.3, FUN.from + 3.4)
+
 /** The march's beats and the waltz's: the families' bounce and the organ's pump. */
 const PULSE = beatsIn(0, 24).map((b) => b.t)
 
@@ -281,7 +290,9 @@ export function paint(t: number) {
     bronze: grey(mixHex(HOME.brass, HOME.woodDark, 0.38), 0.25),
     cloth: grey(CHURCH.cloth, 0.2),
     gold: grey(CHURCH.glassGold, 0.35),
-    glass: [CHURCH.glassRed, CHURCH.glassBlue, CHURCH.glassGold, CHURCH.glassGreen].map((c) => mixHex(c, HILL.skyGrey, 0.62 * g)),
+    // At the funeral the glass is dull, nearly grey; at its cut, dark, as night glass is, lightening with the morning.
+    glass: [CHURCH.glassRed, CHURCH.glassBlue, CHURCH.glassGold, CHURCH.glassGreen].map((c) =>
+      g ? mixHex(mixHex(c, HILL.skyGrey, 0.8), HOME.night, 0.6 * (1 - waking(t))) : c),
   }
 }
 export type Paint = ReturnType<typeof paint>
@@ -904,14 +915,16 @@ function drawLight(p: p5, k: number, c: Paint, t: number): void {
   const [x0, x1, , y1] = WINDOWS[1]
   const src = y1 - 0.75
   const run = floor - src
-  beam(p, k, [[x0, src], [x1, src]], [[x0 + run * 0.5, floor], [x1 + run * 0.58, floor]], '#FFFFFF', 0.2)
+  const up = beamUp(t)
+  if (up <= 0.001) return
+  beam(p, k, [[x0, src], [x1, src]], [[x0 + run * 0.5, floor], [x1 + run * 0.58, floor]], '#FFFFFF', 0.2 * up)
   p.noStroke()
   for (let i = 0; i < 28; i++) {
     const u = (hash(i, 3) + t * (0.018 + 0.012 * hash(i, 5))) % 1
     const along = 1 - u
     const sx = x0 + (x1 - x0) * hash(i, 7) + run * 0.54 * along + 0.05 * Math.sin(t * 0.7 + i)
     const sy = src + run * along
-    const a = 0.6 * Math.sin(Math.PI * u) * (0.45 + 0.55 * hash(i, 9))
+    const a = 0.6 * up * Math.sin(Math.PI * u) * (0.45 + 0.55 * hash(i, 9))
     p.fill(alpha(p, '#FFFFFF', a))
     p.circle(sx * k, sy * k, (0.012 + 0.012 * hash(i, 11)) * k)
   }
