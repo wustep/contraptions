@@ -2004,10 +2004,11 @@ export function drawWash(pen: Pen): void {
       pools.push({ x: b.x, y: b.y - 1.2, col: FW.coalHot, a, r: 0.42 * w, mid: 0.45, tail: 0.35 })
       continue
     }
-    pools.push({ x: b.x, y: b.y, col: mixHex(b.col, FW.fwGold, 0.5), a, r: reach, mid: 0.45, tail: 0.5 })
+    pools.push({ x: b.x, y: b.y, col: mixHex(b.col, FW.fwGold, 0.5), a, r: Math.min(reach, 0.75 * w), mid: 0.45, tail: 0.4 })
   }
   const blast = t - TITAN_FIRE
-  if (blast >= 0 && blast < 0.5) pools.push({ x: TITAN_X, y: LIP - 1, col: FW.fwGold, a: Math.min(0.32, 0.26 * Math.exp(-blast / 0.08)), r: reach, mid: 0.45, tail: 0.5 })
+  // The Titan's launch lights the mortar and the smoke round it, not the whole sky.
+  if (blast >= 0 && blast < 0.5) pools.push({ x: TITAN_X, y: LIP - 1, col: FW.fwGold, a: Math.min(0.32, 0.26 * Math.exp(-blast / 0.08)), r: 0.42 * w, mid: 0.45, tail: 0.35 })
   if (!pools.length && flat < 0.004) return
   // The cap: where the pools overlap most they add up to no more than `WASH_CAP`.
   let peak = 0
