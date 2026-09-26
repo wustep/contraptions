@@ -413,7 +413,9 @@ export const practice = part<PracticeState>(
     // Back, for Fletcher in the doorway, and hold on the two of them.
     { t: beat(53), cells: 6.3, hold: at([1.4, -0.25]) },
     { t: GO, cells: 6.1, hold: at([1.55, -0.2]) },
-    // After him, following as the band comes in.
-    { t: slot.end, cells: 5, off: [0.9, -0.8] },
+    // After him down the corridor; then, just ahead of the band's first chord, the frame leans on past him toward
+    // the room, so the chord lands on the lit tiers playing (band.ts takes the seam's key over from here).
+    { t: slot.end - 0.8, cells: 5, off: [0.9, -0.8] },
+    { t: slot.end, cells: 5.3, off: [2.45, -0.95] },
   ],
 )

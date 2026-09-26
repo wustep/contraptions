@@ -65,9 +65,10 @@ export const band = part<BandState>(
     }
   },
   (slot: Slot): PartShot[] => [
-    // In the corridor as the band comes in: on its first chord the frame opens past the wall to the room lit and the
-    // tiers playing, him rolling toward its door; through the door with him.
-    { t: slot.begin, cells: 5, off: [0.9, -0.8] },
+    // In the corridor as the band comes in: the frame already leaning past him (practice.ts leads it there) so its
+    // first chord lands on the room lit and the tiers playing; opening on, him rolling toward its door; through the
+    // door with him.
+    { t: slot.begin, cells: 5.3, off: [2.45, -0.95] },
     { t: 31.9, cells: 6.6, hold: [4.0, -1.2], w: 0.8 },
     { t: DOOR_IN, cells: 7.1, hold: [4.4, -1.15], w: 0.7 },
     // The room opens: the tiers and the band, as he comes down them a step a bar.
