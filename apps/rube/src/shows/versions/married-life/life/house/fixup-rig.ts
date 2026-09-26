@@ -10,8 +10,8 @@ import { BLOWS, BRAKE, CART, CHAIR_LIFT, CHAIRS, FOLD, G, HOUSE, P, RAISE, SHOVE
  * The fix-up machine (the house builder's): a wooden cart Carl pushes along the front of the house. Its front wheel
  * turns a belt to the gear of a trip hammer, which the gear lifts slowly over each bar and lets fall on the downbeat;
  * the blow strikes the old wall just ahead of three stacked rollers, as tall as the house on a telescoping mast,
- * that leave the house new wherever they pass. A jib on the mast lifts the two armchairs off the lawn and lowers them
- * in through the empty bay. Drawn in the house world's cells; `fixup.ts` places it.
+ * that leave the house new wherever they pass. A jib on the mast lifts the two armchairs (his off the lawn by the
+ * porch, hers off the back of the deck) and swings them in over the sill through the empty bay. Drawn in the house world's cells; `fixup.ts` places it.
  */
 
 /** A rise from 0 to 1 at s = 0 that lands hard and rebounds a little, damped: a telescoping section hitting its stop. */
@@ -81,61 +81,125 @@ export function hammerAngle(T: number): number {
   return STRIKE + (RAISED - STRIKE) * u * u - rebound + caught(T - top)
 }
 
-/** The jib: its elevation (radians above level, pointing back over the deck) at T, and where its hook is. */
+/**
+ * The two chairs' ways in. Moving-in day: hers rides on the back of the cart's deck beside her from the start; his
+ * waits on the lawn in front of the porch, clear of the old bay's dark. On its beat the jib lifts each one and swings
+ * it sideways over the sill into the bay, to stand side by side: his first (bar 9 to 10), then hers (11 to 12).
+ */
 interface ChairFlight {
   who: 'carl' | 'ellie'
+  /** Where it lands in the room. */
   x: number
+  /** Where it waits: a fixed spot on the lawn, or a place on the deck (from the rollers' line, riding with the cart). */
+  lawn?: number
+  deck?: number
   down: number
   lift: number
   land: number
 }
 const FLIGHTS: ChairFlight[] = [
-  { who: 'carl', x: CHAIRS.carl, down: CHAIR_LIFT.carl[0], lift: CHAIR_LIFT.carl[1], land: CHAIR_LIFT.carl[2] },
-  { who: 'ellie', x: CHAIRS.ellie, down: CHAIR_LIFT.ellie[0], lift: CHAIR_LIFT.ellie[1], land: CHAIR_LIFT.ellie[2] },
+  { who: 'carl', x: CHAIRS.carl, lawn: 4.5, down: CHAIR_LIFT.carl[0], lift: CHAIR_LIFT.carl[1], land: CHAIR_LIFT.carl[2] },
+  { who: 'ellie', x: CHAIRS.ellie, deck: -2.05, down: CHAIR_LIFT.ellie[0], lift: CHAIR_LIFT.ellie[1], land: CHAIR_LIFT.ellie[2] },
 ]
-const REST_ELEV = 1.5
-/** Where a chair's floor is at T while it flies (G on the lawn, P once in), and whether it is indoors yet. */
-export function chairFloor(f: ChairFlight, T: number): { y: number; inside: boolean } {
-  if (T < f.lift) return { y: G, inside: false }
-  if (T >= f.land) return { y: P, inside: true }
-  const peak = f.lift + 0.52 * (f.land - f.lift)
-  const top = -0.98
-  if (T < peak) {
-    const u = (T - f.lift) / (peak - f.lift)
-    return { y: G + (top - G) * (u * u * (3 - 2 * u)), inside: false }
-  }
-  const u = (T - peak) / (f.land - peak)
-  return { y: top + (P - top) * (u * u), inside: true }
+/**
+ * The jib: a telescoping boom off the mast that luffs as it runs out, so its tip keeps near one height (a level-luffing
+ * crane): out over the porch's lawn for his chair, back over the deck for hers. Its fixed section (the length it has
+ * standing up at rest), its sliding one, and how much the tip's height gives as it reaches out.
+ */
+const BOOM = 1.8
+const SLIDE = 1.35
+const LUFF = 0.08
+/** How far back of the pivot the tip is at rest (the boom nearly upright, leaning back over the deck). */
+const REST_DX = BOOM * Math.cos(1.5)
+/** The top of the flight (the chair's floor), as high as the old one's. */
+const ARC_TOP = -0.98
+
+/** The deck's shudder as he shoves the cart off: it and whatever rides on it. */
+const deckJolt = (T: number): number => (T > SHOVE ? 0.015 * Math.exp(-(T - SHOVE) / 0.2) * Math.sin((T - SHOVE) * 25) : 0)
+
+/** Where a waiting chair is at T, and the floor under it. */
+function waiting(f: ChairFlight, T: number): { x: number; y: number } {
+  if (f.deck !== undefined) return { x: W(T) + f.deck, y: CART.deckY + deckJolt(T) }
+  return { x: f.lawn ?? f.x, y: G }
 }
 
-function jibAt(T: number): { elev: number; hook: number | null; flight: ChairFlight | null } {
-  const pivotX = W(T) + CART.jib[0]
-  const reachFor = (x: number) => Math.acos(Math.max(-1, Math.min(0.999, (pivotX - x) / CART.jibLength)))
-  const LEAD = 0.4
-  for (let i = 0; i < FLIGHTS.length; i++) {
-    const f = FLIGHTS[i]
-    const next = FLIGHTS[i + 1]
-    const start = f.down - LEAD
-    const end = next ? next.down - LEAD : f.land + 0.9
-    if (T < start || T >= end) continue
-    const want = reachFor(f.x)
-    if (T < f.down) {
-      // Swinging over to it from where it was (at rest, or over the last chair), paying out the hook.
-      const from = i === 0 ? REST_ELEV : reachFor(FLIGHTS[i - 1].x)
-      const u = smooth(T, start, f.down)
-      const tipY = CART.jib[1] - Math.sin(from + (want - from) * u) * CART.jibLength
-      const chairTop = G - CHAIR.back
-      return { elev: from + (want - from) * u, hook: tipY + 0.35 + (chairTop - tipY - 0.35) * u, flight: f }
-    }
-    if (T <= f.land) return { elev: want, hook: chairFloor(f, T).y - CHAIR.back, flight: f }
-    // Let go: the hook hauled up; after the last chair the jib swings back up to rest.
-    const u = smooth(T, f.land, f.land + 0.35)
-    const elev = next ? want : want + (REST_ELEV - want) * smooth(T, f.land + 0.1, f.land + 0.9)
-    const tipY = CART.jib[1] - Math.sin(elev) * CART.jibLength
-    const low = P - CHAIR.back
-    return { elev, hook: low + (tipY + 0.35 - low) * u, flight: f }
+/** The quintic Hermite from p0 (moving v0) to p1 at rest, with no kick in its pull at either end, over D, at u. */
+function glide(p0: number, v0: number, p1: number, D: number, u: number): number {
+  const u3 = u * u * u
+  const u4 = u3 * u
+  const u5 = u4 * u
+  const h1 = u - 6 * u3 + 8 * u4 - 3 * u5
+  const h5 = 10 * u3 - 15 * u4 + 6 * u5
+  return p0 + (p1 - p0) * h5 + v0 * D * h1
+}
+
+/** The bay's middle light, between its posts: the missing pane a chair goes in through. */
+const MIDDLE = [HOUSE.bay.x0 + HOUSE.bay.facet + 0.05, HOUSE.bay.x1 - HOUSE.bay.facet - 0.05]
+
+/**
+ * Where a chair is at T (its middle, the floor under it), whether it is indoors (in through the middle light, over the
+ * sill and going down), and how far it swings on its hook (radians, from how hard the swing pulls it sideways).
+ */
+export function chairAt(f: ChairFlight, T: number): { x: number; y: number; inside: boolean; sway: number } {
+  if (T < f.lift) return { ...waiting(f, T), inside: false, sway: 0 }
+  if (T >= f.land) return { x: f.x, y: P, inside: true, sway: 0 }
+  const D = f.land - f.lift
+  const from = waiting(f, f.lift)
+  // Up off the lawn (or the deck) to the top, then down onto the room's floor.
+  const peak = f.lift + 0.52 * D
+  let y: number
+  if (T < peak) {
+    const u = (T - f.lift) / (peak - f.lift)
+    y = from.y + (ARC_TOP - from.y) * (u * u * (3 - 2 * u))
+  } else {
+    const u = (T - peak) / (f.land - peak)
+    y = ARC_TOP + (P - ARC_TOP) * (u * u)
   }
-  return { elev: REST_ELEV, hook: null, flight: null }
+  // Sideways: from where it waited (carrying on at the cart's pace if it rode the deck) to its place, settled over
+  // it a moment before it touches down.
+  const XD = 0.92 * D
+  const v0 = f.deck !== undefined ? (W(f.lift + 1e-3) - W(f.lift - 1e-3)) / 2e-3 : 0
+  const xAt = (t: number) => (t >= f.lift + XD ? f.x : t <= f.lift ? from.x + v0 * (t - f.lift) : glide(from.x, v0, f.x, XD, (t - f.lift) / XD))
+  const x = xAt(T)
+  const h = 0.01
+  const ax = (xAt(T + h) - 2 * x + xAt(T - h)) / (h * h)
+  const sway = Math.max(-0.12, Math.min(0.12, 0.006 * ax))
+  const half = CHAIR.w / 2
+  const inside = T >= peak && x - half >= MIDDLE[0] && x + half <= MIDDLE[1]
+  return { x, y, inside, sway }
+}
+
+/** The jib's tip at T, as how far back of its pivot it is (negative: out ahead), and its hook (null: hauled short). */
+function jibAt(T: number): { dx: number; hook: number | null } {
+  const pivotX = W(T) + CART.jib[0]
+  const over = (x: number) => pivotX - x
+  const [his, hers] = FLIGHTS
+  const top = (f: ChairFlight, t: number) => chairAt(f, t).y - CHAIR.back
+  // Out over the porch's lawn to his chair: a slow swing over from rest, the hook paid out as it arrives.
+  const OUT = 1.7
+  if (T < his.down - OUT) return { dx: REST_DX, hook: null }
+  if (T < his.down) {
+    const dx = REST_DX + (over(his.lawn!) - REST_DX) * smooth(T, his.down - OUT, his.down)
+    const hauled = tipHeight(dx) + 0.35
+    return { dx, hook: hauled + (top(his, T) - hauled) * smooth(T, his.down - 1.05, his.down) }
+  }
+  if (T < his.land) return { dx: over(chairAt(his, T).x), hook: top(his, T) }
+  // Let go of his, the hook lifted clear, and set on hers on the deck just behind.
+  if (T < hers.down) {
+    const s = smooth(T, his.land, hers.down)
+    const x = his.x + (chairAt(hers, T).x - his.x) * s
+    return { dx: over(x), hook: top(his, his.land) + (top(hers, T) - top(his, his.land)) * s - 0.4 * Math.sin(Math.PI * s) }
+  }
+  if (T < hers.land) return { dx: over(chairAt(hers, T).x), hook: top(hers, T) }
+  // Let go: the hook hauled up (unhurried) as the boom draws in and stands back up to rest.
+  const dx = over(hers.x) + (REST_DX - over(hers.x)) * smooth(T, hers.land + 0.1, hers.land + 1.0)
+  const low = P - CHAIR.back
+  return { dx, hook: low + (tipHeight(dx) + 0.35 - low) * smooth(T, hers.land + 0.05, hers.land + 0.95) }
+}
+
+/** The tip's height (y) when it is `dx` back of the pivot: the boom's standing length upright, a little lower far out. */
+function tipHeight(dx: number): number {
+  return CART.jib[1] - Math.sqrt(BOOM * BOOM - LUFF * dx * dx)
 }
 
 /** The old paint knocked off the wall by a blow: a burst of chips, tumbling down and gone in a second. */
@@ -250,6 +314,7 @@ function wetBand(p: p5, k: number, T: number): void {
 
 export function drawRig(p: p5, k: number, weight: number, T: number): void {
   wetBand(p, k, T)
+  drawChairsFlying(p, k, weight, T)
   const w = W(T)
   const X = (v: number) => (w + v) * k
   const Y = (v: number) => v * k
@@ -257,18 +322,22 @@ export function drawRig(p: p5, k: number, weight: number, T: number): void {
   p.push()
   p.rectMode(p.CORNER)
 
-  // The jib (behind the mast): a boom off the mast's first section, its rope and hook.
+  // The jib (behind the mast): a boom off the mast's first section, its sliding section run out as far as it reaches,
+  // its rope and hook.
   const jib = jibAt(T)
   const [jx, jy] = CART.jib
-  const tipX = jx + Math.cos(Math.PI - jib.elev) * CART.jibLength
-  const tipY = jy - Math.sin(jib.elev) * CART.jibLength
+  const tipX = jx - jib.dx
+  const tipY = tipHeight(jib.dx)
+  const len = Math.hypot(jib.dx, jy - tipY)
   p.stroke(INK)
   p.strokeWeight(weight * 0.85)
-  p.fill(HOME.wood)
   p.push()
   p.translate(X(jx), Y(jy))
-  p.rotate(-(Math.PI - jib.elev))
-  p.rect(0, -0.045 * k, CART.jibLength * k, 0.09 * k, 0.02 * k)
+  p.rotate(Math.atan2(tipY - jy, -jib.dx))
+  p.fill(mixHex(HOME.wood, '#FFFFFF', 0.12))
+  p.rect(Math.max(0.2, len - SLIDE) * k, -0.03 * k, Math.min(SLIDE, len - 0.2) * k, 0.06 * k, 0.015 * k)
+  p.fill(HOME.wood)
+  p.rect(0, -0.045 * k, BOOM * k, 0.09 * k, 0.02 * k)
   p.pop()
   p.fill(HOME.woodDark)
   p.circle(X(tipX), Y(tipY), 0.12 * k)
@@ -336,7 +405,7 @@ export function drawRig(p: p5, k: number, weight: number, T: number): void {
   // The deck, its handle to Carl, its two wheels.
   const [d0, d1] = CART.deck
   const dy = CART.deckY
-  const jolt = T > SHOVE ? 0.015 * Math.exp(-(T - SHOVE) / 0.2) * Math.sin((T - SHOVE) * 25) : 0
+  const jolt = deckJolt(T)
   p.stroke(INK)
   p.strokeWeight(weight * 0.85)
   p.fill(HOME.wood)
@@ -399,27 +468,48 @@ export function drawRig(p: p5, k: number, weight: number, T: number): void {
   p.pop()
 }
 
-/** The chairs on the lawn and on the way up, outside the house: drawn in front of the bay's sill. */
-export function drawChairsOut(p: p5, k: number, weight: number, T: number): void {
-  for (const f of FLIGHTS) {
-    const { y, inside } = chairFloor(f, T)
-    if (inside) continue
-    drawChair(p, k, weight, f.who, f.x, y, 0, 1)
+/** One chair hanging on the hook (or standing), swung `sway` about the top of its back. */
+function hung(p: p5, k: number, weight: number, f: ChairFlight, c: { x: number; y: number; sway: number }): void {
+  if (Math.abs(c.sway) < 1e-4) {
+    drawChair(p, k, weight, f.who, c.x, c.y, 0, 1)
+    return
   }
+  const hookY = c.y - CHAIR.back
+  p.push()
+  p.translate(c.x * k, hookY * k)
+  p.rotate(c.sway)
+  drawChair(p, k, weight, f.who, 0, CHAIR.back, 0, 1)
+  p.pop()
 }
 
-/** The chairs going down into the room, seen only through the bay's glass (before they land, when the set takes them). */
-export function drawChairsIn(p: p5, k: number, weight: number, T: number): void {
+/** The chairs still waiting (on the lawn, on the deck), before the jib lifts them. */
+export function drawChairsOut(p: p5, k: number, weight: number, T: number): void {
+  for (const f of FLIGHTS) if (T < f.lift) hung(p, k, weight, f, chairAt(f, T))
+}
+
+/**
+ * The chairs on the hook, from the lift to the landing: outside, in front of the house; once in through the middle
+ * light, seen only through the bay. Drawn with the machine (`drawRig`), over the wet paint on the wall and under the
+ * mast, the jib and its rope.
+ */
+function drawChairsFlying(p: p5, k: number, weight: number, T: number): void {
   const { x0, x1, sill, head } = HOUSE.bay
   for (const f of FLIGHTS) {
-    const { y, inside } = chairFloor(f, T)
-    if (!inside || T >= f.land) continue
+    if (T < f.lift || T >= f.land) continue
+    const c = chairAt(f, T)
+    if (!c.inside) {
+      hung(p, k, weight, f, c)
+      continue
+    }
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
     ctx.beginPath()
     ctx.rect(x0 * k, head * k, (x1 - x0) * k, (sill - head) * k)
     ctx.clip()
-    drawChair(p, k, weight, f.who, f.x, y, 0, 1)
+    hung(p, k, weight, f, c)
     ctx.restore()
   }
 }
+
+/** (Nothing waits indoors: the chairs going in are the machine's load, drawn in `drawRig`, and once down the set's.) */
+export function drawChairsIn(_p: p5, _k: number, _weight: number, _T: number): void {}

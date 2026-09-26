@@ -11,11 +11,13 @@ import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
  *
- * They come along the lane at the hill's foot, walking right, Ellie a step ahead as she always is, the picnic basket
- * (the tickets in it) on Carl's top. At the fieldstone where the path leaves the lane he stops, and for once he
- * leads: he steps up onto it (169.482) and starts up the flank toward the tree on the crest, the picnic place, eager
- * with his surprise. She has stopped a step past him; she comes back, and follows him up onto the stone, slowly
- * (171.543).
+ * They come along the lane at the hill's foot, Carl walking right to where Ellie stands ahead of him, the picnic
+ * basket (the tickets in it) on his top. At the fieldstone where the path leaves the lane he stops, and for once he
+ * leads: he steps up onto it (169.482) and starts up the flank toward their tree at the top of the path (`treeX`), the
+ * picnic place, eager
+ * with his surprise. She is standing a little way ahead on the lane, looking along it (she was out at the front door,
+ * her back to the hall, while he stamped the tickets); as he steps up she comes back, and follows him up onto the
+ * stone, slowly (171.543).
  *
  * The held note: he climbs, slower and slower, and stops to wait for her, turned to look back. She crosses the stone
  * and starts up the flank behind him, tiring: she stops to rest, goes on a little, and can go no further. She slips
@@ -28,10 +30,11 @@ import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
  * `CUTS.hospital`, says 0.45 within 0.03: the hospital's bed is that far from his chair, so they cannot touch here).
  * The basket lies where it fell, up the path.
  *
- * The camera: from the cut's framing it carries on pulling out over the hill, the tree's trunk and crown at the
- * frame's upper left and the two of them small at its foot (under 2 s wider than 6 cells), and comes in again as she
- * follows him up: 2.4 cells on her stall, 2.2 on her as she gives way, 2.1 after her to the stone (the basket left
- * out of the frame), 2.0 as he reaches her, 1.9 on the two of them; then a breath out for the cut.
+ * The camera: from the cut's framing it carries on pulling out over the hill to their tree whole at the top of the
+ * path, the two of them small at the flank's foot (5.9 cells at its widest, never over 6), and comes in again as she
+ * follows him up, the trunk's foot left at the upper left: 2.4 cells on her stall, 2.2 on her as she gives way, 2.1
+ * after her to the stone (the basket left out of the frame), 2.0 as he reaches her, 1.9 on the two of them; then a
+ * breath out for the cut.
  */
 
 /** Where Carl comes in, in the hill's cells: on the lane, a little short of the stone (he stops clear of it). */
@@ -65,11 +68,10 @@ const T = {
   rise: 179.75,
 }
 
-/** Her times: a step past him, back, up onto the stone, the climb, the rest, the last push, the slip, the give. */
+/** Her times: back from ahead of him, up onto the stone, the climb, the rest, the last push, the slip, the give. */
 const E = {
-  stop: BEGIN + 1.2,
-  back: 169.65,
-  foot: 170.55,
+  back: 169.1,
+  foot: 170.75,
   hop: 171.25,
   onStep: 171.543,
   /** Across the stone and up the flank after him, eager at first, tiring; she stops to rest. */
@@ -262,13 +264,9 @@ const tire = (u: number) => {
 
 /** Ellie in the hill's cells at show time `t`. */
 function ellie(t: number): Pt {
-  const x0 = START_X + CUTS.climb.ellie![0]
-  if (t < E.stop) {
-    const tau = t - BEGIN
-    const a = 0.6 / (E.stop - BEGIN)
-    return [x0 + 0.6 * tau - 0.5 * a * tau * tau, LANE_Y]
-  }
-  const far = x0 + 0.3 * (E.stop - BEGIN)
+  // Standing ahead on the lane from the cut (she was out at the door, looking out, while he stamped the tickets), until
+  // she comes back to follow him up.
+  const far = START_X + CUTS.climb.ellie![0]
   const foot = STEP.x1 + 0.16
   if (t < E.back) return [far, LANE_Y]
   if (t < E.foot) return [lerp(far, foot, ease((t - E.back) / (E.foot - E.back))), LANE_Y]
@@ -455,12 +453,17 @@ export const climb = part<ClimbState>(
     const h = (x: number, y: number): Pt => L(x, y)
     const [cx, cy] = L(HIS_REST, STEP.y)
     return [
-      // The cut's slow draw back from the tickets carries on out over the held note, one breath: on the two of them at
-      // the step as he turns up the hill, then the flank he leads her up, rising to the crest's edge; and as she
-      // follows him up it comes in again, never quicker than it went out.
-      { t: 168.9, cells: 3.6, hold: h(9.35, 1.3) },
-      { t: 170.6, cells: 5.0, hold: h(7.1, 1.0) },
-      { t: 172.3, cells: 3.65, hold: h(6.95, 1.35) },
+      // The cut's slow draw back from the tickets carries on out over the held note, one breath: from the two of them at
+      // the stone as he turns up the hill, out to their tree whole at the top of the path he leads her up, its crown
+      // whole from 170.3 to 170.9 while she is still on the lane (under Zoom she keeps the frame from going lower, so
+      // the tree stands where this frame can hold it: hill.ts `TREE_AUTUMN_X`); and as she follows him up it comes in
+      // again, the trunk's foot left at the upper left of the close. Out and in at an even cruise, 0.35 and 0.33 log/s
+      // at the most.
+      { t: 168.9, cells: 3.7, hold: h(9.1, 1.15) },
+      { t: 169.8, cells: 4.95, hold: h(8.1, 0.6) },
+      { t: 170.6, cells: 5.95, hold: h(7.35, 0.3) },
+      { t: 171.6, cells: 4.7, hold: h(7.25, 0.65) },
+      { t: 172.8, cells: 3.25, hold: h(7.05, 1.2) },
       // In on the two of them: her stall below him; on her as she gives way; after her back to the stone, the basket
       // left behind up the path; on the stone as he reaches her; and the two of them and nothing else.
       { t: 174.0, cells: 2.4, hold: h(7.0, 1.47) },
