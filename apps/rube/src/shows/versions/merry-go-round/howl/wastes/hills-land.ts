@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, type Pt } from '../../../../../parts'
 import { frame, hash } from '../kit'
 import { drawTurnip } from '../cast'
 import { WASTES } from '../worlds'
@@ -113,6 +113,83 @@ function scatter(i: number): { x: number; kind: 'heather' | 'rock' | 'none'; w: 
 const TREE = 47
 const STONE = 29
 
+/** Fill with a colour at an alpha (0..1). */
+function fillA(p: p5, hex: string, a: number): void {
+  const c = p.color(hex)
+  c.setAlpha(Math.max(0, Math.min(1, a)) * 255)
+  p.fill(c)
+}
+
+/** A band hung under the ground's edge: from `d0(x)` to `d1(x)` below it (cells, y down). */
+function band(p: p5, k: number, pts: Pt[], d0: (x: number) => number, d1: (x: number) => number): void {
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(x * k, (y + d0(x)) * k)
+  for (let i = pts.length - 1; i >= 0; i--) p.vertex(pts[i][0] * k, (pts[i][1] + d1(pts[i][0])) * k)
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * The knoll she climbs: a broad round rise just behind the lane, swelling up from the level ground well before the
+ * hedge and cresting a little over the hilltop, so the lane's own short climb reads as a path going up its flank.
+ * It sinks back under the near ground on both sides (it is only ever seen above the lane).
+ */
+const KNOLL = { x: 2.9, w: 2.7, h: 0.66 }
+const knollTop = (x: number): number => FLOOR - KNOLL.h * Math.exp(-(((x - KNOLL.x) / KNOLL.w) ** 2))
+
+/** A lumpy round volume (foliage, a cushion of heather): its edge wanders by `seed`, never a clean ellipse. */
+function blob(p: p5, k: number, x: number, y: number, rx: number, ry: number, seed: number): void {
+  const n = 40
+  p.beginShape()
+  for (let i = 0; i < n; i++) {
+    const th = (i / n) * Math.PI * 2
+    const r = 1 + 0.06 * Math.sin(3 * th + seed * 1.7) + 0.035 * Math.sin(5 * th + seed * 3.1)
+    p.vertex((x + Math.cos(th) * rx * r) * k, (y + Math.sin(th) * ry * r) * k)
+  }
+  p.endShape(p.CLOSE)
+}
+
+/** A heather clump: a mound of uneven cushions, a dark mass under muted tops and a few lit sprigs. No ink. */
+function drawHeather(p: p5, k: number, x: number, y: number, w: number, h: number, seed: number, c: string, T: number): void {
+  const base = mixHex(c, WASTES.moss, 0.3)
+  const deep = landTone(mixHex(mixHex(c, WASTES.heatherDeep, 0.55), WASTES.moss, 0.25), T, 1)
+  const body = landTone(base, T, 1)
+  const lit = landTone(mixHex(base, WASTES.mist, 0.3), T, 1)
+  const sway = 0.012 * Math.sin(T * 0.9 + x * 0.7)
+  p.noStroke()
+  // Its shadow on the ground.
+  fillA(p, landTone(mixHex(WASTES.moss, WASTES.rockDark, 0.45), T, 1), 0.3)
+  p.ellipse(x * k, (y + 0.03) * k, w * 1.05 * k, 0.09 * k)
+  // The cushions: a count and sizes of their own, the biggest and tallest a little off the middle.
+  const n = 5 + Math.floor(hash(seed, 1, 71) * 4)
+  const peak = 0.3 + hash(seed, 2, 71) * 0.4
+  const lumps: [number, number, number, number][] = []
+  for (let j = 0; j < n; j++) {
+    const u = (j + 0.15 + hash(seed, j + 3, 71) * 0.7) / n
+    const near = Math.exp(-((u - peak) ** 2) / 0.05)
+    const rx = w * (0.07 + 0.13 * near + 0.05 * hash(seed, j + 11, 71))
+    const ry = rx * (0.7 + 0.25 * hash(seed, j + 27, 71))
+    const tall = h * (0.3 + 0.7 * near) * (0.8 + 0.3 * hash(seed, j + 19, 71))
+    const lx = x - w / 2 + u * w
+    lumps.push([lx + (sway * tall) / h, y + 0.03 - Math.max(tall - ry, ry * 0.4), rx, ry])
+  }
+  // The mass, from the ground up to each cushion (no gap under them).
+  p.fill(deep)
+  p.beginShape()
+  p.vertex((x - w * 0.5) * k, (y + 0.05) * k)
+  for (const [lx, ly] of lumps) p.vertex(lx * k, ly * k)
+  p.vertex((x + w * 0.5) * k, (y + 0.05) * k)
+  p.endShape(p.CLOSE)
+  for (const [j, [lx, ly, rx, ry]] of lumps.entries()) blob(p, k, lx, ly, rx, ry, seed + j)
+  // Their tops, lit from the upper left, smaller and off-centre so the dark shows under them.
+  p.fill(body)
+  for (const [j, [lx, ly, rx, ry]] of lumps.entries()) blob(p, k, lx - rx * 0.1, ly - ry * 0.18, rx * 0.8, ry * 0.72, seed + j + 7)
+  p.fill(lit)
+  for (const [j, [lx, ly, rx, ry]] of lumps.entries()) {
+    if (hash(seed, j + 35, 71) < 0.4) continue
+    blob(p, k, lx - rx * 0.3, ly - ry * 0.45, rx * 0.36, ry * 0.26, seed + j + 13)
+  }
+}
+
 /** The land: far ranges with mist between, then the near ground (heather, moss, rock) along `ground`. */
 export function drawLand(p: p5, k: number, weight: number, ink: string, T: number): void {
   const f = frame(p, k)
@@ -120,29 +197,39 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
   p.push()
   p.rectMode(p.CORNER)
   for (const layer of LAYERS) drawLayer(p, k, f, layer, T, fog)
-  // The near ground.
   const C = f.y1 - f.y0
-  const step = Math.max(0.08, C / 160)
-  const pts: Pt[] = []
-  for (let x = f.x0 - 1; x <= f.x1 + 1 + step; x += step) pts.push([x, ground(x)])
+  const step = Math.max(0.05, C / 200)
   const inkT = landTone(ink, T, 1)
   p.noStroke()
+  // The knoll behind the lane, where it shows.
+  const kx0 = Math.max(f.x0 - 1, KNOLL.x - 3 * KNOLL.w)
+  const kx1 = Math.min(f.x1 + 1, KNOLL.x + 2.5 * KNOLL.w)
+  if (kx1 > kx0) {
+    p.fill(mixHex(landTone(mixHex(WASTES.hill, WASTES.hillFar, 0.4), T, 0.9), MIST, fog * 0.15))
+    p.beginShape()
+    for (let x = kx0; x <= kx1 + step; x += step) p.vertex(x * k, knollTop(x) * k)
+    p.vertex(kx1 * k, (FLOOR + 1) * k)
+    p.vertex(kx0 * k, (FLOOR + 1) * k)
+    p.endShape(p.CLOSE)
+  }
+  // The near ground: a filled slope whose top edge is the lane itself. No stroke.
+  const pts: Pt[] = []
+  for (let x = f.x0 - 1; x <= f.x1 + 1 + step; x += step) pts.push([x, ground(x)])
   p.fill(landTone(WASTES.hill, T, 1))
   p.beginShape()
   for (const [x, y] of pts) p.vertex(x * k, y * k)
   p.vertex((f.x1 + 1) * k, (f.y1 + 2) * k)
   p.vertex((f.x0 - 1) * k, (f.y1 + 2) * k)
   p.endShape(p.CLOSE)
-  // A darker band of moss a little under the edge, so the ground has a body.
-  p.fill(landTone(mixHex(WASTES.hill, WASTES.moss, 0.55), T, 1))
-  p.beginShape()
-  for (const [x, y] of pts) p.vertex(x * k, (y + 0.5 + 0.12 * Math.sin(x * 0.7)) * k)
-  p.vertex((f.x1 + 1) * k, (f.y1 + 2) * k)
-  p.vertex((f.x0 - 1) * k, (f.y1 + 2) * k)
-  p.endShape(p.CLOSE)
-  // Drifts of heather over the ground's body: soft patches, no ink.
-  p.noStroke()
-  p.fill(landTone(mixHex(WASTES.hill, WASTES.heather, 0.28), T, 1))
+  // Its body deepens toward us in soft steps of moss, their edges wandering, so there is no band to see.
+  const deepen = landTone(mixHex(WASTES.hill, WASTES.moss, 0.75), T, 1)
+  const bottom = f.y1 + 2
+  for (let i = 0; i < 6; i++) {
+    fillA(p, deepen, 0.1)
+    band(p, k, pts, (x) => 0.3 + i * 0.22 + 0.09 * Math.sin(x * 0.37 + i * 1.7) + 0.05 * Math.sin(x * 1.1 + i), (x) => bottom - ground(x))
+  }
+  // Drifts of heather in the ground's body: soft uneven patches of overlapping cushions, no ink.
+  const drift = landTone(mixHex(WASTES.hill, WASTES.heather, 0.3), T, 1)
   const j0 = Math.floor((f.x0 - 6) / 4.3)
   const j1 = Math.ceil((f.x1 + 6) / 4.3)
   for (let j = j0; j <= j1; j++) {
@@ -150,18 +237,20 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
     const cx = j * 4.3 + hash(j, 2, 61) * 2.5
     const w = 1.6 + hash(j, 3, 61) * 2.8
     const d = 0.35 + hash(j, 4, 61) * 1.1
-    const top: Pt[] = []
-    for (let i = 0; i <= 12; i++) {
-      const x = cx - w / 2 + (w * i) / 12
-      top.push([x, ground(x) + d - 0.16 * Math.sin((Math.PI * i) / 12)])
+    for (let m = 0; m < 7; m++) {
+      const ex = cx + (hash(j, m + 5, 62) - 0.5) * w * 0.8
+      const rx = w * (0.1 + 0.16 * hash(j, m + 13, 62))
+      const ry = rx * (0.22 + 0.12 * hash(j, m + 21, 62))
+      fillA(p, drift, 0.28)
+      p.ellipse(ex * k, (ground(ex) + d + (hash(j, m + 29, 62) - 0.5) * 0.16) * k, 2 * rx * k, 2 * ry * k)
     }
-    p.beginShape()
-    for (const [x, y] of top) p.vertex(x * k, y * k)
-    for (let i = 12; i >= 0; i--) {
-      const x = cx - w / 2 + (w * i) / 12
-      p.vertex(x * k, (ground(x) + d + 0.22 * Math.sin((Math.PI * i) / 12)) * k)
-    }
-    p.endShape(p.CLOSE)
+  }
+  // The lip: the edge darkens softly just under the lane (turf over the bank), thicker in a wide so it still reads.
+  const lipW = Math.max(1, Math.sqrt(C / 6))
+  const lip = landTone(mixHex(WASTES.moss, WASTES.rockDark, 0.32), T, 1)
+  for (const [h, a] of [[0.03, 0.3], [0.07, 0.24], [0.13, 0.18], [0.22, 0.12]] as Pt[]) {
+    fillA(p, lip, a)
+    band(p, k, pts, () => 0, (x) => h * lipW * (1 + 0.25 * Math.sin(x * 2.3 + h * 40)))
   }
   // The tree and the stone on the moor, behind the edge.
   drawTree(p, k, weight, inkT, T)
@@ -195,29 +284,9 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
       p.vertex((q.x + q.w * 0.15) * k, (y + 0.1) * k)
       p.endShape(p.CLOSE)
     } else {
-      // A clump: three soft bumps on the ground line.
-      p.stroke(inkT)
-      p.strokeWeight(weight * 0.55)
-      p.fill(landTone(q.c, T, 1))
-      const bumps: Pt[] = [[q.x - q.w * 0.5, y + 0.06]]
-      for (let j = 0; j < 3; j++) {
-        const bx = q.x - q.w * 0.5 + ((j + 0.5) / 3) * q.w
-        bumps.push([bx, y - q.h * (0.7 + 0.3 * hash(i, j, 11)) * (j === 1 ? 1 : 0.8)])
-      }
-      bumps.push([q.x + q.w * 0.5, y + 0.06])
-      const curve = spline(bumps, 5)
-      p.beginShape()
-      for (const [x, yy] of curve) p.vertex(x * k, yy * k)
-      p.endShape(p.CLOSE)
+      drawHeather(p, k, q.x, y, q.w * 0.85, q.h * 1.2 + 0.1, i, q.c, T)
     }
   }
-  // The ground's edge, inked.
-  p.noFill()
-  p.stroke(inkT)
-  p.strokeWeight(weight)
-  p.beginShape()
-  for (const [x, y] of pts) p.vertex(x * k, y * k)
-  p.endShape()
   p.pop()
 }
 
@@ -281,50 +350,81 @@ function shake(T: number): number {
   return v
 }
 
+/** The hedge's own ground at world x: it sits on the knoll's foot, its roots a little into the bank. */
+const hedgeFoot = (x: number): number => ground(x) + 0.1
+
+/** The hedge's height (0..1 of `HEDGE.h`) at u (-1 at its left end, 1 at its right): a full round dome. */
+const dome = (u: number): number => Math.pow(Math.max(0, 1 - u * u), 0.6)
+
+/** Its silhouette at T: a scalloped dome over its own sloping ground, thrashing about its root when shaken. */
 function hedgeShape(T: number, back: boolean): Pt[] {
   const { x0, x1, h } = HEDGE
   const cx = (x0 + x1) / 2
-  const g = ground(cx)
+  const rx = ((x1 - x0) / 2) * (back ? 0.97 : 1)
+  const tall = h * (back ? 0.9 : 0.84)
   const sh = shake(T)
-  const rx = ((x1 - x0) / 2) * (back ? 1.04 : 0.96)
-  const ry = h * (back ? 1.04 : 0.93)
-  const pts: Pt[] = []
-  const n = 40
+  const top: Pt[] = []
+  const n = 44
   for (let i = 0; i <= n; i++) {
-    const th = Math.PI + (i / n) * Math.PI
-    const lump = 1 + 0.075 * Math.sin(7 * th + (back ? 1.9 : 0.4) + sh * 0.25) + 0.035 * Math.sin(13 * th + 1.1)
-    // It thrashes about its root: the top swings most.
-    const top = -Math.sin(th)
-    pts.push([cx + Math.cos(th) * rx * lump + sh * 0.05 * top * top, g + 0.08 + Math.sin(th) * ry * lump])
+    const u = -1 + (2 * i) / n
+    const th = Math.PI * (1 + i / n)
+    const v = dome(u)
+    const lump = 1 + 0.05 * Math.sin(7 * th + (back ? 2.6 : 0.4) + sh * 0.25) + 0.025 * Math.sin(13 * th + 1.1)
+    const x = cx + u * rx + sh * 0.05 * v * v
+    top.push([x, hedgeFoot(cx + u * rx) - tall * v * lump])
+  }
+  const pts: Pt[] = [...top]
+  for (let i = n; i >= 0; i--) {
+    const x = cx - rx + (2 * rx * i) / n
+    pts.push([x, hedgeFoot(x) + 0.04])
   }
   return pts
 }
 
-/** The hedge: its back half (behind what is in it) or its front (over it). */
-export function drawHedge(p: p5, k: number, weight: number, ink: string, T: number, back: boolean): void {
+/** The foliage volumes over the front: where (u across, v up), how big (of `HEDGE.h`), and whether heather. Top first. */
+const CLUMPS: [number, number, number, boolean][] = [
+  [-0.12, 0.86, 0.3, false],
+  [0.38, 0.8, 0.27, false],
+  [0.66, 0.52, 0.2, true],
+  [-0.55, 0.56, 0.3, false],
+  [0.22, 0.5, 0.4, false],
+  [-0.78, 0.2, 0.18, true],
+  [-0.3, 0.2, 0.36, false],
+  [0.66, 0.2, 0.26, false],
+]
+
+/** The hedge: its back (dark foliage behind what is in it) or its front (layered volumes over it). No outline. */
+export function drawHedge(p: p5, k: number, _weight: number, _ink: string, T: number, back: boolean): void {
   const pts = hedgeShape(T, back)
+  const { x0, x1, h } = HEDGE
+  const cx = (x0 + x1) / 2
+  const rx = (x1 - x0) / 2
+  const sh = shake(T)
   p.push()
-  p.stroke(ink)
-  p.strokeWeight(weight * (back ? 0.8 : 0.9))
-  p.fill(back ? mixHex(WASTES.moss, WASTES.heatherDeep, 0.45) : mixHex(WASTES.moss, WASTES.hill, 0.15))
+  p.noStroke()
+  p.fill(back ? mixHex(WASTES.moss, WASTES.heatherDeep, 0.48) : mixHex(WASTES.moss, WASTES.heatherDeep, 0.36))
   p.beginShape()
   for (const [x, y] of pts) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
-  if (!back) {
-    // Its flowers: a few small sprigs of heather, never beads.
-    p.noStroke()
-    p.fill(WASTES.heather)
-    for (let i = 0; i < 6; i++) {
-      const x = HEDGE.x0 + 0.2 + hash(i, 1, 21) * (HEDGE.x1 - HEDGE.x0 - 0.4)
-      const top = pts.reduce((b, q) => (Math.abs(q[0] - x) < Math.abs(b[0] - x) ? q : b), pts[0])[1]
-      const y = top + 0.12 + hash(i, 2, 21) * 0.3
-      p.push()
-      p.translate(x * k, y * k)
-      p.rotate(-0.5 + hash(i, 3, 21))
-      p.ellipse(0, 0, 0.14 * k, 0.07 * k)
-      p.ellipse(0.05 * k, -0.05 * k, 0.1 * k, 0.05 * k)
-      p.pop()
-    }
+  if (back) {
+    p.pop()
+    return
+  }
+  // Each volume: a body, a lit top up and to the left (the afternoon light), and a sprig of light on it.
+  for (const [i, [u, v, r, heather]] of CLUMPS.entries()) {
+    const rr = r * h
+    const lift = v * dome(u) + 0.015 * Math.sin(T * 1.3 + i * 2.1) * v
+    const x = cx + u * rx + sh * 0.05 * lift * lift
+    const y = hedgeFoot(cx + u * rx) - h * lift + rr * 0.5
+    const body = heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.45), WASTES.heatherDeep, 0.15) : mixHex(WASTES.moss, WASTES.hill, 0.1 * hash(i, 2, 23))
+    const cap = heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.6), WASTES.mist, 0.18) : mixHex(WASTES.moss, WASTES.hill, 0.5)
+    const glint = heather ? mixHex(WASTES.heather, WASTES.mist, 0.35) : mixHex(WASTES.hill, WASTES.mist, 0.25)
+    p.fill(body)
+    blob(p, k, x, y, 1.15 * rr, 0.9 * rr, i * 3 + 1)
+    p.fill(cap)
+    blob(p, k, x - rr * 0.22, y - rr * 0.3, 0.78 * rr, 0.52 * rr, i * 3 + 2)
+    p.fill(glint)
+    blob(p, k, x - rr * 0.42, y - rr * 0.5, 0.3 * rr, 0.17 * rr, i * 3 + 3)
   }
   p.pop()
 }
