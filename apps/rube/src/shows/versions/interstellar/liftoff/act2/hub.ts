@@ -525,8 +525,13 @@ function drawBay(p: p5, c: Ctx, T: number): void {
   outline(p, tone(p, ink, 0.18), weight * 0.6)
   p.circle(0, 0, X(2 * 2.2))
   p.circle(0, 0, X(2 * 1.4))
-  solid(p, tone(p, ink, 0.6), weight * 0.6, DUST.light)
+  // The spindle's end: a bolted cap in the wall, faint like the rings round it. (It was a pale disc in a dark ring,
+  // a ball's size and colour right beside the cockpit, and it read as another ball.)
   p.circle(0, 0, X(0.6))
+  p.circle(0, 0, X(0.22))
+  p.noStroke()
+  p.fill(tone(p, ink, 0.25))
+  for (let i = 0; i < 6; i++) p.circle(X(Math.cos((i / 6) * TAU + 0.3) * 0.2), X(Math.sin((i / 6) * TAU + 0.3) * 0.2), X(0.03))
   // Bay lamps round the inside of the collar: on when the car arrives.
   const on = smooth(T, LAND - 0.05, LAND + 0.1)
   for (let i = 0; i < 12; i++) {
