@@ -104,8 +104,8 @@ export const walk = part<null>(
     const cross = w([48, past[1] + 1.7 - 29 / 2])
     return [
       // The castle over her on the hill, its stair dropping; in on her as she jumps for it and climbs.
-      { t: DROP, cells: 27, hold: w([HILLTOP[0] - 1.6, -8.0]) },
-      { t: 123.5, cells: 15, hold: w([HILLTOP[0] + 0.5, -4.6]) },
+      { t: DROP, cells: 12.6, hold: w([HILLTOP[0] + 2.1, -4.55]) },
+      { t: 123.5, cells: 11.6, hold: w([HILLTOP[0] + 1.6, -3.85]) },
       { t: CATCH, cells: 10.5, hold: w([HILLTOP[0] + 1.1, -2.9]) },
       // With her up the stair (she climbs across the frame), and as she comes up onto the porch the camera starts
       // back, and goes on back through the roar (128.0, 128.37): the whole castle, from its feet to Calcifer's fire

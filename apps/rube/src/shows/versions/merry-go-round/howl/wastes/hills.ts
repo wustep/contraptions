@@ -73,10 +73,12 @@ export const hills = part<null>(
     // the fog.
     { t: 114.3, cells: 5.8, hold: [1.0, -1.55] },
     { t: 117.3, cells: 6.4, hold: [1.1, -1.8] },
-    // The fog, and what is in it: wider on each thud.
-    { t: THUD[0], cells: 9.5, hold: [HILLTOP[0] - 2.6, -3.3] },
-    { t: THUD[1], cells: 17, hold: [HILLTOP[0] - 3.8, -4.7] },
-    { t: slot.end, cells: 30, hold: [HILLTOP[0] - 3.4, -9.0] },
+    // The fog, and what is in it, framed from her: low on the crest a little left of middle, the castle's legs and
+    // face coming out of the fog over her and cropped by the top of the frame (its size is in the crop), the eye
+    // lighting on her. Out a step on each thud, then a slow push in to her as it comes on.
+    { t: THUD[0], cells: 9.5, hold: [HILLTOP[0] + 0.6, -3.1] },
+    { t: THUD[1], cells: 13.5, hold: [HILLTOP[0] + 2.6, -4.95] },
+    { t: slot.end, cells: 13.2, hold: [HILLTOP[0] + 2.4, -4.85] },
   ],
 )
 
