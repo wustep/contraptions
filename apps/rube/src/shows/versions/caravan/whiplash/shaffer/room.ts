@@ -145,7 +145,7 @@ export function drawPracticeRoom(p: p5, c: Ctx, look: RoomLook): void {
 }
 
 function backWall(p: p5, c: Ctx, look: RoomLook): void {
-  const { k, bg, ink, weight } = c
+  const { k, bg, weight } = c
   const { x0, x1, ceil, floor } = ROOM
   // The wall itself, dark, then the panels on it, each as lit as the lamp makes its middle.
   p.noStroke()
@@ -177,7 +177,9 @@ function backWall(p: p5, c: Ctx, look: RoomLook): void {
       const ax = px0 + i * (pw + gap)
       const ay = py0 + j * (ph + gap)
       const lit = Math.min(1, litAt(look, ax + pw / 2, ay + ph / 2))
-      inked(p, alpha(p, ink, 0.05 + 0.12 * lit), weight * 0.5, mixHex(bg, SHOP.panel, 0.18 + 0.82 * lit))
+      // Each panel edged in the wall's dark, its bevel the only light line (a pale ring round every panel made the
+      // wall a grid of outlines in the closes).
+      inked(p, alpha(p, SHOP.black, 0.3 + 0.15 * lit), weight * 0.5, mixHex(bg, SHOP.panel, 0.18 + 0.82 * lit))
       p.rect((ax + pw / 2) * k, (ay + ph / 2) * k, pw * k, ph * k, 0.05 * k)
       // The bevel: a lighter line along the top, a darker along the bottom.
       p.stroke(alpha(p, SHOP.window, 0.04 + 0.12 * lit))
