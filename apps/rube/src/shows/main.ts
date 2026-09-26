@@ -78,7 +78,7 @@ let releaseSound = (): void => {}
 let joinedAt = 0
 let overview = false
 let zoom = false
-let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
+let size: FrameSize = FRAME_SIZES.find((s) => s.label === '1080p') ?? FRAME_SIZES[FRAME_SIZES.length - 1]
 let recording: AbortController | null = null
 
 // YouTube's player for the music, where a version names its upload. Shown, in the Show card: its terms want it seen.
