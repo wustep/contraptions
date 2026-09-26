@@ -29,6 +29,10 @@ export const GEARS_HITS: number[] = uniq([
   PISTONS,
   BELLOWS,
   OFF_FLY,
+  // The first flick's landing on the hammer's head, and his hop off it at the top of its lift onto the flywheel's
+  // side: each on an eighth.
+  kt(194.5),
+  kt(207.5),
   ...HOPS.flatMap((h) => [kt(h.k), kt(h.off)]),
 ]).filter((t) => t >= T0 - 1e-6 && t < T1 - 1e-6)
 
