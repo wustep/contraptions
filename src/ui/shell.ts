@@ -36,7 +36,7 @@ interface ModeLink {
 
 export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
-  { mode: 'machine', label: 'Machine', path: '/' },
+  { mode: 'machine', label: 'Machine', path: '/machine/' },
   // TODO: Builder is rough — re-enable when ready
   // { mode: 'builder', label: 'Builder', path: '/builder/' },
   { mode: 'playground', label: 'Playground', path: '/playground/' },
