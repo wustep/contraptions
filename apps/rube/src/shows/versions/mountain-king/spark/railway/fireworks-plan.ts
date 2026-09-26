@@ -461,25 +461,165 @@ const shell = (from: number, to: number, a: Pt, b: Pt, burst: Omit<Burst, 'at' |
   BURSTS.push({ ...burst, at: to, x: b[0], y: b[1], seed: BURSTS.length + 1 })
 }
 
-/* The racks: a comet from each tube as the spark crosses the rack, breaking into a small star on the next backbeat. */
+/** Rises and bursts whose smoke is made here rather than by the loop at the end (so it stays thin, and far). */
+const OWN_SMOKE = new Set<Rise | Burst>()
+const SKY_COLS = [FW.fwGold, FW.fwRed, FW.fwGreen, FW.fwViolet, FW.fwBlue, FW.fwWhite]
+
+/*
+ * The racks are Roman candles. Each tube fires a comet as the spark crosses its rack (one, two, three, four), and then
+ * again on every backbeat after, each star breaking into a small burst on the next backbeat and climbing a little
+ * higher than the last. So the sky over the racks builds a backbeat at a time: 1, 3, 6, 10 comets a backbeat, and
+ * every burst still in the air as the next volley goes up.
+ */
 export const RACK_COLS = [[FW.fwGold], [FW.fwRed, FW.fwRed], [FW.fwGreen, FW.fwWhite, FW.fwGreen], [FW.fwViolet, FW.fwBlue, FW.fwBlue, FW.fwViolet]]
+/** How many stars each rack's candles fire, a backbeat apart. */
+const CANDLE_SHOTS = [5, 5, 5, 4]
 export const rackTube = (i: number, j: number): { x: number; lean: number } => {
   const n = RACK_N[i]
   const c = j - (n - 1) / 2
   return { x: RACK_X[i] + c * 0.3, lean: c * 0.16 }
 }
 for (let i = 0; i < 4; i++) {
-  const next = i < 3 ? RACK_AT[i + 1] : GERB_AT
   for (let j = 0; j < RACK_N[i]; j++) {
     const tube = rackTube(i, j)
     const muzzle: Pt = [tube.x + Math.sin(tube.lean) * TUBE_H, GY - Math.cos(tube.lean) * TUBE_H]
-    // Each a little different: how high it climbs, how wide it breaks.
-    const up = 2.0 + 0.25 * i + 0.9 * hash(i, j, 3)
-    const b: Pt = [muzzle[0] + Math.sin(tube.lean) * up * 1.4, muzzle[1] - up]
-    const v = 7.4 * (0.75 + 0.45 * hash(i, j, 4))
-    shell(RACK_AT[i], next, muzzle, b, { kind: 'small', col: RACK_COLS[i][j], n: 11 + Math.round(5 * hash(i, j, 5)), v, k: 4.0, gs: 6.5, life: 0.95, trail: 0.22, wash: 0.12 }, true)
+    for (let s = 0; s < CANDLE_SHOTS[i]; s++) {
+      const at = beat(259 + 2 * i + 2 * s)
+      const next = beat(261 + 2 * i + 2 * s)
+      // Each a little different: how high it climbs, how wide it breaks. Every star climbs higher than the one before.
+      let up = s === 0 ? 2.0 + 0.25 * i + 0.9 * hash(i, j, 3) : 2.5 + 0.6 * s + 0.25 * i + 0.8 * hash(i * 7 + s, j, 13)
+      // Never breaking on the spark: well clear of it as it rides the gerb up.
+      for (let tries = 0; tries < 8; tries++) {
+        const b: Pt = [muzzle[0] + Math.sin(tube.lean) * up * 1.4, muzzle[1] - up]
+        const sp = sparkAt(next)
+        if (Math.hypot(b[0] - sp[0], b[1] - sp[1]) >= 2.2) break
+        up += 0.35
+      }
+      const b: Pt = [muzzle[0] + Math.sin(tube.lean) * up * 1.4, muzzle[1] - up]
+      const v = 7.4 * (0.75 + 0.45 * hash(i * 7 + s, j, 4)) * (1 + 0.06 * s)
+      const col = s === 0 ? RACK_COLS[i][j] : SKY_COLS[(i + 2 * j + 3 * s) % SKY_COLS.length]
+      shell(at, next, muzzle, b, { kind: 'small', col, n: 11 + 2 * s + Math.round(5 * hash(i * 7 + s, j, 5)), v, k: 4.0, gs: 6.5, life: 0.95 + 0.05 * s, trail: 0.22, wash: s === 0 ? 0.12 : 0.035 }, true)
+      // A repeat's smoke is a wisp: the first shot's puff already hangs there.
+      if (s > 0) {
+        OWN_SMOKE.add(RISES[RISES.length - 1])
+        OWN_SMOKE.add(BURSTS[BURSTS.length - 1])
+      }
+    }
   }
 }
+
+/*
+ * The festival across the river. From the gerb on, the other crews on the far bank answer every backbeat: their
+ * shells go up off the far bank (only the flash of each launch is seen, and its glint in the water), and break over
+ * the wire on the next backbeat, more of them each bar and bigger, until the last volley breaks on the crash. They
+ * break in the sky the spark is crossing (behind it and ahead of it, never on it), so the whole of the last phrase
+ * is a sky filling up over the Niagara.
+ */
+/** The far bank: where the plain meets the river (`drawGround`'s river top). */
+const FAR_BANK = GY - 1.3
+const VOLLEY_N = [1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7]
+const VOLLEY_KINDS: Kind[] = ['peony', 'chrys', 'palm', 'peony', 'willow', 'chrys', 'peony']
+/**
+ * Where the moon is, near enough, from the spark: it holds its place in the frame (`night.ts`), and the camera rides
+ * the wire a little ahead of the spark, then draws back over the last bar (measured off the sheets). No shell breaks
+ * on it: a burst round the moon makes the moon its bright round core.
+ */
+const MOON_KEYS: [number, number, number][] = [
+  [128.5, 5.3, -0.4],
+  [132.9, 5.2, -0.6],
+  [133.3, 3.8, -2.2],
+  [133.7, 3.2, -2.2],
+]
+const moonFrom = (t: number): Pt => {
+  if (t >= CRASH - 0.05) return [34.1, 0.9]
+  let i = 0
+  while (i < MOON_KEYS.length - 2 && t > MOON_KEYS[i + 1][0]) i++
+  const [ta, xa, ya] = MOON_KEYS[i]
+  const [tb, xb, yb] = MOON_KEYS[i + 1]
+  const u = Math.max(0, Math.min(1, (t - ta) / (tb - ta)))
+  const sp = sparkAt(t)
+  return [sp[0] + xa + (xb - xa) * u, sp[1] + ya + (yb - ya) * u]
+}
+const volleyBursts: Burst[] = []
+VOLLEY_N.forEach((m, v) => {
+  const from = beat(267 + 2 * v)
+  const to = v < VOLLEY_N.length - 1 ? beat(269 + 2 * v) : CRASH
+  const sp = sparkAt(to)
+  // The last two volleys break higher: the camera is drawing back to see the whole curtain.
+  const late = to > TIP_AT - 0.1
+  const x0 = sp[0] - 4.0
+  const x1 = sp[0] + 8.0
+  for (let i = 0; i < m; i++) {
+    const h = hash(v, i, 21)
+    const want = x0 + ((i + 0.5 + 0.7 * (hash(v, i, 22) - 0.5)) * (x1 - x0)) / m
+    const y0 = late ? WIRE_Y - 1.6 - 2.0 * h : Math.min(WIRE_Y, sp[1]) - 0.5 - 0.8 * h
+    let y = y0
+    const kind = VOLLEY_KINDS[(v + 3 * i) % VOLLEY_KINDS.length]
+    const col = SKY_COLS[(2 * v + 5 * i + 1) % SKY_COLS.length]
+    // Bigger each bar: more stars, thrown wider, flashing harder.
+    const grow = v / (VOLLEY_N.length - 1)
+    const sv = (6.6 + 3.2 * grow) * (0.85 + 0.3 * hash(v, i, 24))
+    const big: Omit<Burst, 'at' | 'x' | 'y' | 'seed'> =
+      kind === 'palm'
+        ? { kind, col: col === FW.fwWhite ? FW.fwRed : col, tail: FW.fwGold, n: 8, v: sv, k: 2.2, gs: 4.8, life: 1.5, trail: 0.5, wash: 0.05 + 0.08 * grow }
+        : kind === 'willow'
+          ? { kind, col: FW.fwGold, tail: FW.fwGold, n: 26, v: sv * 0.8, k: 2.8, gs: 5.2, life: 1.8, trail: 0.7, wash: 0.05 + 0.07 * grow }
+          : { kind, col, tail: kind === 'chrys' ? FW.fwGold : undefined, n: Math.round(20 + 14 * grow), v: sv, k: 3.6, gs: 6, life: 1.15 + 0.3 * grow, trail: 0.28, wash: 0.05 + 0.1 * grow }
+    // Where the sky is too full for a big shell, a small one (a finale mixes its calibres).
+    const small: Omit<Burst, 'at' | 'x' | 'y' | 'seed'> = { kind: 'small', col, n: 14 + Math.round(4 * grow), v: 5.2 + 1.2 * grow, k: 4.0, gs: 6.5, life: 1.0, trail: 0.22, wash: 0.04 }
+    // Where it may break: in the frame; the spark keeps a clear patch of sky while the stars fly out (their drooping
+    // trails may fall past it later); not on the moon; and apart from every other shell still burning, so each reads
+    // as its own.
+    const fits = (bx: number, burst: Omit<Burst, 'at' | 'x' | 'y' | 'seed'>, y: number): boolean => {
+      const reach = burst.v / burst.k
+      if (bx < x0 - 1.0 || bx > x1 + 0.5) return false
+      // Not straight over it either: a burst breaking above the spark reads as the spark's own.
+      if (Math.abs(bx - sp[0]) < 1.4 && sp[1] - y < 2.8) return false
+      for (let s = 0; s <= burst.life * 0.5; s += 0.05) {
+        const sp2 = sparkAt(Math.min(to + s, CRASH))
+        const E = (1 - Math.exp(-burst.k * s)) / burst.k
+        const cy = y + (burst.gs / burst.k) * (s - E)
+        if (Math.hypot(bx - sp2[0], cy - sp2[1]) < 0.95 * reach * (1 - Math.exp(-burst.k * s)) + (burst.kind === 'palm' ? 1.5 : 0.9)) return false
+      }
+      // The moon rides with the camera, so it slides across the sky behind a burst: keep it off the bright part.
+      for (let s = 0; s <= 0.55; s += 0.05) {
+        const mo = moonFrom(to + s)
+        if (Math.hypot(bx - mo[0], y - mo[1]) < 1.4 + 0.5 * reach * (1 - Math.exp(-burst.k * s))) return false
+      }
+      return volleyBursts.every((o) => o.at + o.life * 0.6 < to || Math.hypot(bx - o.x, y - o.y) >= 0.35 * (reach + o.v / o.k) + (o.at === to ? 0.7 : 0.2))
+    }
+    // The nearest place that fits to where it was aimed: at its height, or a little lower behind the spark (over the
+    // curtain it has lit) or higher, then the same for a small shell.
+    let x = NaN
+    let burst = big
+    search: for (const option of [big, small]) {
+      for (let d = 0; d <= 6; d += 0.25) {
+        for (const dy of [0, 1.0, -0.7]) {
+          for (const bx of [want + d, want - d]) {
+            if (dy > 0 && bx > sp[0] - 2.4) continue
+            if (fits(bx, option, y0 + dy)) {
+              x = bx
+              y = y0 + dy
+              burst = option
+              break search
+            }
+          }
+        }
+      }
+    }
+    if (Number.isNaN(x)) continue
+    const b: Pt = [x, y]
+    const a: Pt = [x - (hash(v, i, 23) - 0.5) * 1.2, FAR_BANK]
+    // A far shell's rise: a silver tail, dim at its launch (it is across the water).
+    const rise: Rise = { from, to, a, b, col: FW.fwWhite }
+    RISES.push(rise)
+    const bb: Burst = { ...burst, at: to, x: b[0], y: b[1], seed: BURSTS.length + 1 }
+    BURSTS.push(bb)
+    volleyBursts.push(bb)
+    OWN_SMOKE.add(rise)
+    OWN_SMOKE.add(bb)
+  }
+})
 
 /* The finale's battery: eight guns in a long rack, chain-fused down the coda. */
 export const BATTERY_X0 = CRASH_AT[0] + 0.95
@@ -578,9 +718,15 @@ export interface Puff {
 export const WIND: Pt = [0.32, -0.06]
 export const PUFFS: Puff[] = []
 const puff = (at: number, x: number, y: number, r0: number, r1: number, life: number, a: number) => PUFFS.push({ at, x, y, r0, r1, life, a, seed: PUFFS.length + 1 })
-for (const r of RISES) puff(r.from + 0.03, r.a[0], r.a[1] - 0.2, 0.25, r.comet ? 0.8 : 1.2, r.comet ? 4 : 7, r.comet ? 0.22 : r.col === FW.fwWhite ? 0.14 : 0.32)
+for (const r of RISES) {
+  if (!OWN_SMOKE.has(r)) puff(r.from + 0.03, r.a[0], r.a[1] - 0.2, 0.25, r.comet ? 0.8 : 1.2, r.comet ? 4 : 7, r.comet ? 0.22 : r.col === FW.fwWhite ? 0.14 : 0.32)
+  // A candle's repeat: a wisp off its mouth. A far shell: haze hanging over the far bank (drawn behind the field).
+  else if (r.comet) puff(r.from + 0.03, r.a[0], r.a[1] - 0.2, 0.15, 0.5, 3, 0.08)
+  else puff(r.from + 0.05, r.a[0], GY - 2.3, 0.3, 1.1, 6, 0.08)
+}
 for (const b of BURSTS) {
-  if (b.kind === 'mine') puff(b.at + 0.12, b.x, b.y - 0.6, 0.5, 2.4, 10, 0.34)
+  if (OWN_SMOKE.has(b)) puff(b.at + 0.4, b.x, b.y + 0.3, 0.5, b.kind === 'small' ? 0.8 : 1.5, 6, b.kind === 'small' ? 0.05 : 0.06)
+  else if (b.kind === 'mine') puff(b.at + 0.12, b.x, b.y - 0.6, 0.5, 2.4, 10, 0.34)
   else if (b.kind === 'salute') puff(b.at + 0.18, b.x, b.y, 0.7, 1.8, 7, 0.22)
   else if (b.kind === 'small') puff(b.at + 0.3, b.x, b.y, 0.3, 1.0, 5, 0.14)
   else puff(b.at + 0.45, b.x, b.y + 0.3, 0.9, 0.4 * (b.v / b.k) + 1, 10, b.kind === 'titan' ? 0.34 : 0.24)
