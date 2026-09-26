@@ -69,6 +69,8 @@ export class Show {
    * apart and read as a string of other balls). A show opts in by overriding it.
    */
   public readonly trail?: 'discs' | 'smear'
+  /** Optional: true while the show wants no trail at all behind its balls (unset: always a trail). */
+  trailOff?(t: number): boolean
 
   constructor(
     public readonly seed: string,

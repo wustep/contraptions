@@ -339,7 +339,9 @@ export function drawWorld(
   if (here.balls) paintRiders(p, show, t, here, sx, sy, k, weight)
   else if (!here.hidden && here.scale > 0) {
     const spin = (here.x - u.pieces[0].col) / R
-    if (!here.ball.ghost && show.trail === 'smear') {
+    if (show.trailOff?.(t)) {
+      // The show has asked for no trail here (Mountain King's geyser: a streak down the white column read as a stain).
+    } else if (!here.ball.ghost && show.trail === 'smear') {
       const pts: { x: number; y: number; scale: number }[] = []
       for (let i = 4; i >= 1; i--) {
         const back = show.at(t - i * 0.022)
@@ -399,7 +401,9 @@ function paintRiders(
   for (const rider of riders) {
     const scale = rider.scale ?? 1
     if (scale <= 0.02) continue
-    if (!rider.ghost && show.trail === 'smear') {
+    if (show.trailOff?.(t)) {
+      // No trail while the show asks for none.
+    } else if (!rider.ghost && show.trail === 'smear') {
       const pts: { x: number; y: number; scale: number }[] = []
       for (let n = 0; n < backs.length; n++) {
         const prev = backs[n].balls?.find((b) => b.id === rider.id)
@@ -433,21 +437,38 @@ function paintRiders(
 }
 
 /**
- * A ball's trail as one tapered streak (a show's `trail: 'smear'`): from the oldest sample, thin and faint, to the
- * ball, a little under its width, one fill so nothing overlaps into beads. Nothing when it has barely moved.
+ * A ball's trail as one tapered streak (a show's `trail: 'smear'`): from the oldest sample, thin and clear, to the
+ * ball, a little under its width, faded along its length so it never reads as a stain. It is never longer than
+ * `SMEAR_MAX` (the oldest samples are trimmed to that arc length): at a fast drop four samples span a cell or more,
+ * a streak of three or four ball widths. Nothing when it has barely moved.
  */
+const SMEAR_MAX = 2.5 * R
 function smear(
   p: p5,
-  pts: { x: number; y: number; scale: number }[],
+  all: { x: number; y: number; scale: number }[],
   color: string,
   sx: (x: number) => number,
   sy: (y: number) => number,
   k: number,
 ): void {
-  if (pts.length < 2) return
+  if (all.length < 2) return
+  // Walk back from the ball, keeping at most SMEAR_MAX of arc; the last kept segment is cut to fit.
+  const pts: { x: number; y: number; scale: number }[] = [all[all.length - 1]]
   let len = 0
-  for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y)
-  if (len < 0.12) return
+  for (let i = all.length - 2; i >= 0; i--) {
+    const a = pts[0]
+    const b = all[i]
+    const d = Math.hypot(b.x - a.x, b.y - a.y)
+    if (len + d >= SMEAR_MAX) {
+      const f = d > 1e-9 ? (SMEAR_MAX - len) / d : 0
+      pts.unshift({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, scale: a.scale + (b.scale - a.scale) * f })
+      len = SMEAR_MAX
+      break
+    }
+    pts.unshift(b)
+    len += d
+  }
+  if (pts.length < 2 || len < 0.12) return
   const n = pts.length - 1
   const left: [number, number][] = []
   const right: [number, number][] = []
@@ -463,16 +484,27 @@ function smear(
     left.push([sx(pts[i].x) + nx, sy(pts[i].y) + ny])
     right.push([sx(pts[i].x) - nx, sy(pts[i].y) - ny])
   }
+  // Clear at the tail to about 0.3 at the ball, along the streak's own line. Straight onto the canvas, inside a
+  // save and restore, so p5's note of the fill it last set stays true.
   const c = p.color(color)
-  c.setAlpha(255 * Math.min(0.34, 0.12 + 0.12 * len))
-  p.push()
-  p.noStroke()
-  p.fill(c)
-  p.beginShape()
-  for (const [x, y] of left) p.vertex(x, y)
-  for (let i = right.length - 1; i >= 0; i--) p.vertex(right[i][0], right[i][1])
-  p.endShape(p.CLOSE)
-  p.pop()
+  const rgb = `${Math.round(p.red(c))}, ${Math.round(p.green(c))}, ${Math.round(p.blue(c))}`
+  const top = Math.min(0.3, 0.1 + 0.2 * (len / SMEAR_MAX))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const tail = pts[0]
+  const head = pts[n]
+  const g = ctx.createLinearGradient(sx(tail.x), sy(tail.y), sx(head.x), sy(head.y))
+  g.addColorStop(0, `rgba(${rgb}, 0)`)
+  g.addColorStop(0.55, `rgba(${rgb}, ${(top * 0.45).toFixed(3)})`)
+  g.addColorStop(1, `rgba(${rgb}, ${top.toFixed(3)})`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(left[0][0], left[0][1])
+  for (let i = 1; i < left.length; i++) ctx.lineTo(left[i][0], left[i][1])
+  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1])
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
 }
 
 function drawBackdrop(
