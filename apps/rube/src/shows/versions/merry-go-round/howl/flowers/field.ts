@@ -579,16 +579,22 @@ export const field = part<FieldState>(
   },
   () => {
     const keys: PartShot[] = [
-      { t: BANG + 1.55, cells: 5.6, off: [1.0, -0.1] },
-      { t: LAND, cells: 6.4, off: [1.9, -0.9] },
+      // The door bangs wide on the slow waltz's hit and the camera goes back from it and down, out under the porch
+      // into the valley: by the time they have waltzed down to the meadow the picture is the valley, the lake and
+      // the mountains, the castle getting up behind them at the left.
+      { t: BANG + 1.1, cells: 8.2, off: [2.5, 1.3] },
+      { t: LAND, cells: 10, off: [3.4, -2.2] },
       { t: BOARD, cells: 6.8, off: [1.4, -1.4] },
       { t: TIP, cells: 7.8, off: [2.2, 0.6] },
       { t: GATES[1], cells: 7.8, off: [1.8, 0.8] },
       { t: TROUGH, cells: 8.0, off: [1.3, 0.6] },
       { t: CLACK, cells: 8.0, hold: [X_REST + 2.0, GR - 2.5], w: 0.75 },
-      { t: FLEET - 0.1, cells: 6.6, hold: [X_REST + 1.3, GR - 2.35], w: 0.8 },
-      { t: WINGS, cells: 9.6, hold: [X_REST + 2.2, GR - 3.4], w: 0.8 },
-      { t: STONES[1], cells: 7.8, off: [1.1, -0.7] },
+      // The build: out wide and up, and held, the fleet crossing the sky over the mountains (and the lake, in its
+      // reflection), Howl rising off the shore into the bird toward it; then in on her running for the castle.
+      { t: FLEET - 0.1, cells: 10.5, hold: [X_REST + 2.6, GR - 3.25], w: 1 },
+      { t: WINGS, cells: 11.2, hold: [X_REST + 2.2, GR - 3.5], w: 1 },
+      { t: STONES[0], cells: 10.2, off: [1.5, -2.2] },
+      { t: STONES[1], cells: 8.6, off: [1.2, -1.2] },
       { t: b(4), cells: 7.0, off: [0.6, -0.3] },
       { t: PORCH, cells: 5.2, off: [0.8, -0.6] },
       { t: END, cells: 4.5, off: [0.9, -0.8] },
@@ -709,7 +715,7 @@ function fleetShips(T: number, cx: number): { x: number; y: number; sc: number; 
   if (T < FLEET - 0.2) return out
   for (let i = 0; i < 3; i++) {
     const u = T - FLEET - i * 0.7
-    out.push({ x: cx - 8.6 + i * 1.3 + u * 1.2, y: YH - 3.1 + i * 0.5 + Math.sin(T * 0.8 + i) * 0.04, sc: 0.24 - i * 0.03, a: smooth(u, -0.3, 1.1) })
+    out.push({ x: cx - 7.8 + i * 2.3 + u * 1.2, y: YH - 3.3 + i * 0.55 + Math.sin(T * 0.8 + i) * 0.04, sc: 0.34 - i * 0.04, a: smooth(u, -0.3, 1.1) })
   }
   return out
 }
@@ -1455,20 +1461,25 @@ function drawTrough(p: p5, k: number, W: number, ink: string, T: number): void {
  */
 function drawStones(p: p5, k: number, W: number, ink: string, T: number): void {
   p.push()
-  RUN.stones.forEach(([x0, x1], i) => {
+  RUN.stones.forEach(([a0, a1], i) => {
+    // Each its own boulder: wider or narrower than her footing, more or less rounded, a different grey.
+    const x0 = a0 - 0.08 - 0.42 * hash(i, 61)
+    const x1 = a1 + 0.04 + 0.3 * hash(i, 62)
     const w = (x1 - x0) / 2 + 0.06
-    const h = GW - GR + 0.03
+    const h = GW - GR + 0.03 + 0.06 * hash(i, 63)
     p.push()
     p.translate(((x0 + x1) / 2) * k, GR * k)
     p.rotate(ring(T - STONES[i], 0.045, 15, 0.2))
     p.stroke(ink)
     p.strokeWeight(W)
-    p.fill(WASTES.rock)
+    p.fill(mixHex(WASTES.rock, WASTES.rockDark, 0.3 * hash(i, 64)))
+    const flat = 0.3 + 0.35 * hash(i, 65)
+    const lean = 0.12 * (hash(i, 66) - 0.5)
     p.beginShape()
-    p.vertex((-w - 0.1) * k, h * k)
-    p.bezierVertex((-w - 0.14) * k, (h * 0.35) * k, (-w + 0.02) * k, -0.02 * k, (-w * 0.45) * k, -0.02 * k)
-    p.vertex((w * 0.45) * k, -0.02 * k)
-    p.bezierVertex((w - 0.02) * k, -0.02 * k, (w + 0.14) * k, (h * 0.35) * k, (w + 0.1) * k, h * k)
+    p.vertex((-w - 0.1 - lean) * k, h * k)
+    p.bezierVertex((-w - 0.16 - lean) * k, (h * 0.3) * k, (-w + 0.02) * k, (-0.04 * hash(i, 67)) * k, (-w * flat) * k, -0.02 * k)
+    p.vertex((w * flat * 0.8) * k, -0.02 * k)
+    p.bezierVertex((w - 0.02) * k, (-0.04 * hash(i, 68)) * k, (w + 0.18 + lean) * k, (h * 0.3) * k, (w + 0.1 + lean) * k, h * k)
     p.endShape(p.CLOSE)
     p.noStroke()
     p.fill(alpha(p, WASTES.rockDark, 0.5))

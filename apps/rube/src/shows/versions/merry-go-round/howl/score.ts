@@ -3,7 +3,7 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { box, lay, standing, type Chain, type Link } from './kit'
-import { CLIMAX, CURSE, DURATION, HEART, SEAM, SLOW } from './music'
+import { CLIMAX, CURSE, DURATION, HEART, SEAM } from './music'
 import { CastleShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { SOPHIE_YOUNG, type WorldKey } from './worlds'
 import { town, TOWN_BOX, CURSE_AT, RAID_AT } from './town/town'
@@ -100,21 +100,24 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
 })
 
 /**
- * The camera takes the show's biggest hits in the body: on each it pushes in a little, at once, and eases back.
- * Only the great ones.
+ * The camera takes the show's biggest hits in the body: on each it pushes in a little, at once (18 ms), and eases
+ * back slowly (τ 1 s, gone to nothing by 3.5 s): the hit is sharp, the recovery long and damped. Only the great ones.
  */
+// (Not the slow waltz's hit: there the camera goes back from the door into the valley, and a push-in would fight it.)
 const PUNCHES: [number, number][] = [
   [CURSE, 0.8],
-  [SLOW, 0.5],
   [CLIMAX, 1],
   [HEART, 0.7],
 ]
+const PUNCH_TAU = 1
+const PUNCH_FOR = 3.5
 function punch(t: number): number {
   let v = 0
+  const floor = Math.exp(-PUNCH_FOR / PUNCH_TAU)
   for (const [at, s] of PUNCHES) {
     const u = t - at
-    if (u < 0 || u > 1.6) continue
-    v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.34)
+    if (u < 0 || u > PUNCH_FOR) continue
+    v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * ((Math.exp(-u / PUNCH_TAU) - floor) / (1 - floor))
   }
   return v
 }
