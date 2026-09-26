@@ -616,9 +616,10 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .stage-play:hover { background: #22201a; border-color: var(--accent); }
 .stage-play svg { width: 13px; height: 13px; fill: currentColor; display: block; }
 
-/* A show on its way, or one that would not come: said on the stage, in the
-   play button's place and dress, since the panel that also says it starts
-   hidden. A load that lands quickly never shows it: it fades in after a beat. */
+/* A show (or a Playground shelf) on its way, or one that would not come:
+   said on the stage, in the play button's place and dress, since the panel
+   starts hidden. A load that lands quickly never shows it: it fades in after
+   a beat. */
 .stage-note {
   position: absolute;
   left: 50%;

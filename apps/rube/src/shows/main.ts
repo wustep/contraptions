@@ -323,12 +323,14 @@ stageRoot.append(stageNote)
 
 // The stage is the play button. Not a press on something standing on it, and not the press that only brought the
 // held sound in: that one owed the sound, and the picture keeps going.
-stageRoot.addEventListener('click', (e) => {
-  if (!transport || recording || e.button !== 0) return
+// The stage outlives this visit, so the listener is taken off it on the way out.
+const onStageClick = (e: MouseEvent) => {
+  if (!alive || !transport || recording || e.button !== 0) return
   if (e.target instanceof Element && e.target.closest('button, a, iframe, input')) return
   if (performance.now() - joinedAt < 700) return
   toggle()
-})
+}
+stageRoot.addEventListener('click', onStageClick)
 
 // On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
 // tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
@@ -774,6 +776,7 @@ if (import.meta.env.DEV) {
     releaseSound()
     shell.holdPeek(false)
     cancelAnimationFrame(raf)
+    stageRoot.removeEventListener('click', onStageClick)
     window.removeEventListener('pointerup', endScrub)
     window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)

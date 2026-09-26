@@ -282,6 +282,8 @@ const seedInput = el('input', {
 seedInput.addEventListener('change', () => {
   const next = seedInput.value.trim()
   if (next && next !== seed) reroll(next)
+  // An emptied field is not a seed: the show keeps its own, and the field says it again.
+  else if (!next) seedInput.value = seed
 })
 const rerollBtn = el('button', { class: 'primary', title: 'A new seed, a new show (R)' }, ['Reroll', el('kbd', {}, ['R'])])
 rerollBtn.addEventListener('click', () => reroll())
