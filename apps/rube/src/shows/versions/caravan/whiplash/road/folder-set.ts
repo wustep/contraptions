@@ -37,9 +37,9 @@ export const KX = 9.5
 /** Where Fletcher conducts from: his head (his ball). */
 export const FLETCH: Pt = [12.9, FL - 3.2]
 /** The band's riser, and its players: saxophones in front on the floor, trumpets behind on the riser. */
-export const RISER = { x0: 13.9, x1: 17.25, h: 0.55 }
-export const SAXES = [14.45, 15.4, 16.35]
-export const TRUMPETS = [14.9, 15.85, 16.8]
+export const RISER = { x0: 14.2, x1: 17.4, h: 0.55 }
+export const SAXES = [14.75, 15.7, 16.65]
+export const TRUMPETS = [15.2, 16.15, 17.1]
 /** The side wall (cut through) and its loading door. */
 export const WALL = { x0: 18.4, x1: 18.8, door: 3.3 }
 /** Where the backstage ends on the left, and the ceiling. */
@@ -91,6 +91,8 @@ export function drawBackstageLight(p: p5, c: Ctx, light: number): void {
 
 /** An edge on the dark: the case's own shadow, darker than the paper, never a pale line. */
 const DARK_EDGE = '#101317'
+/** The players: darker than the drape behind them. */
+const FIGURE = '#07090C'
 
 /**
  * A road case: black laminate, edged in its own dark; aluminium only where the tubes' light catches it (along the
@@ -347,7 +349,7 @@ export function drawWing(p: p5, c: Ctx, x0: number, x1: number, light: number, f
 
 /** The stage: its wooden floor and lip, the dark behind, the batten of lamps overhead. */
 export function drawStage(p: p5, c: Ctx, light: number, f: { x0: number; x1: number; y0: number }): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = Math.max(f.x0 - 1, WING_L.x0)
   const x1 = Math.min(f.x1 + 1, WALL.x0)
   if (x1 <= x0) return
@@ -356,18 +358,23 @@ export function drawStage(p: p5, c: Ctx, light: number, f: { x0: number; x1: num
   p.noStroke()
   p.fill(lit(c, mixHex(ROAD.deep, ROAD.curtain, 0.35), 0.35 + 0.65 * light))
   rect(p, k, x0, Math.max(f.y0 - 1, -8), x1, FL)
-  // The floor: dark wood, its lip, and the house below it in the dark.
-  solid(p, lit(c, ink, 0.25 + 0.4 * light), weight * 0.8, lit(c, mixHex(ROAD.curtain, ROAD.sodium, 0.22), 0.4 + 0.6 * light))
+  // The floor: dark wood, its lip, and the house below it in the dark; the floor's front edge lit, no outline.
+  solid(p, DARK_EDGE, weight * 0.6, lit(c, mixHex(ROAD.curtain, ROAD.sodium, 0.22), 0.4 + 0.6 * light))
   rect(p, k, x0, FL, x1, FL + 0.3)
+  p.stroke(hexA(ROAD.sodium, 0.1 + 0.3 * light))
+  p.strokeWeight(weight * 0.7)
+  seg(p, k, [x0, FL + 0.02], [x1, FL + 0.02])
   p.noStroke()
   p.fill(mixHex(c.bg, ROAD.deep, 0.6))
   rect(p, k, x0, FL + 0.3, x1, FL + 3)
   // The batten: a pipe high over the stage, its lamps pointed down at the kit, at Fletcher, at the band.
-  outline(p, lit(c, ink, 0.25 + 0.35 * light), weight * 1.2)
+  outline(p, DARK_EDGE, weight * 1.6)
   seg(p, k, [x0, BATTEN], [x1, BATTEN])
+  outline(p, hexA(ROAD.sodium, 0.06 + 0.16 * light), weight * 0.5)
+  seg(p, k, [x0, BATTEN + 0.03], [x1, BATTEN + 0.03])
   for (const lx of LAMPS) {
     if (lx < x0 - 0.5 || lx > x1 + 0.5) continue
-    solid(p, lit(c, ink, 0.25 + 0.45 * light), weight * 0.6, lit(c, ROAD.asphalt, 0.5 + 0.5 * light))
+    solid(p, DARK_EDGE, weight * 0.6, lit(c, ROAD.asphalt, 0.5 + 0.5 * light))
     p.push()
     p.translate(lx * k, (BATTEN + 0.25) * k)
     p.rotate(0.12)
@@ -402,20 +409,27 @@ export interface BandLook {
   accent: (seat: number) => number
 }
 
-/** The competition's band behind Fletcher: dark seated figures, their stands' pale pages, their horns catching the light. */
+/**
+ * The competition's band behind Fletcher: seated figures darker than the drape behind them, the lamps' light along
+ * their heads and shoulders (in the drape's own slate the horns and stands floated with no one holding them), their
+ * stands' pale pages, their horns catching the light. The front row stands clear of Fletcher's reach.
+ */
 export function drawBand(p: p5, c: Ctx, s: BandLook): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const L = 0.3 + 0.7 * s.light
   p.push()
-  // The riser for the trumpets.
-  solid(p, lit(c, ink, 0.2 + 0.4 * s.light), weight * 0.6, lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.5), L))
+  // The riser for the trumpets: filled, its top lit, no outline (a cream box round it read as a diagram of one).
+  solid(p, DARK_EDGE, weight * 0.5, lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.5), L))
   rect(p, k, RISER.x0, FL - RISER.h, RISER.x1, FL)
+  p.stroke(hexA(ROAD.sodium, 0.12 + 0.3 * s.light))
+  p.strokeWeight(weight * 0.7)
+  seg(p, k, [RISER.x0 + 0.03, FL - RISER.h + 0.02], [RISER.x1 - 0.03, FL - RISER.h + 0.02])
   const rows: [number[], number, 'trumpet' | 'sax'][] = [[TRUMPETS, FL - RISER.h, 'trumpet'], [SAXES, FL, 'sax']]
   rows.forEach(([xs, floor, horn], row) => {
     xs.forEach((x, i) => {
       const seat = row * 10 + i
       const a = s.accent(seat)
-      const body = lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.35), 0.4 + 0.6 * s.light)
+      const body = mixHex(c.bg, FIGURE, 0.6 + 0.3 * s.light)
       // The chair: a dark seat on legs.
       solid(p, DARK_EDGE, weight * 0.5, lit(c, ROAD.deep, L))
       rect(p, k, x - 0.28, floor - 0.95, x + 0.3, floor - 0.87)
@@ -427,11 +441,12 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       poly(p, k, [[x - 0.26, floor - 0.95], [x + 0.62, floor - 0.95], [x + 0.62, floor - 0.02], [x + 0.46, floor - 0.02], [x + 0.46, floor - 0.72], [x - 0.26, floor - 0.72]])
       rect(p, k, x - 0.3, floor - 2.1, x + 0.3, floor - 0.9, 0.22)
       rect(p, k, x - 0.22, floor - 2.66, x + 0.22, floor - 2.12, 0.18)
-      // A rim of light on the shoulder toward the lamps.
-      p.stroke(hexA(ROAD.sodium, 0.12 + 0.35 * s.light))
+      // The lamps' light along the top of the head and the shoulders.
+      p.stroke(hexA(ROAD.sodium, 0.16 + 0.4 * s.light))
       p.strokeWeight(weight * 0.8)
       p.noFill()
       p.arc((x + 0.02) * k, (floor - 1.9) * k, 0.56 * k, 0.4 * k, Math.PI * 1.05, Math.PI * 1.75)
+      p.arc(x * k, (floor - 2.38) * k, 0.4 * k, 0.5 * k, Math.PI * 1.12, Math.PI * 1.88)
       // The stand in front of him, and its pale page (a few ruled bars, nothing written).
       outline(p, DARK_EDGE, weight * 1.1)
       seg(p, k, [x - 0.78, floor], [x - 0.78, floor - 1.55])
@@ -446,7 +461,7 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       for (const v of [0.12, 0.22, 0.32]) seg(p, k, [x - 1.02, floor - 1.6 - v], [x - 0.56, floor - 1.6 - v])
       // The horn: a trumpet up at the lips or down, a saxophone's crook and bell; lifted on the band's hits.
       const brass = lit(c, mixHex(ROAD.sodium, ROAD.deep, 0.3), 0.3 + 0.7 * s.light)
-      solid(p, lit(c, ink, 0.2 + 0.5 * s.light), weight * 0.55, brass)
+      solid(p, mixHex(brass, ROAD.deep, 0.6), weight * 0.5, brass)
       p.push()
       if (horn === 'trumpet') {
         p.translate((x - 0.24) * k, (floor - 2.36 + 0.55 * (1 - s.up)) * k)
@@ -469,10 +484,11 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
 
 /** The hall's side wall, cut through, with its roll-up loading door: `open` 0 shut to 1 up in its drum. */
 export function drawWall(p: p5, c: Ctx, open: number, light: number, f: { y0: number }): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const { x0, x1, door } = WALL
   p.push()
-  solid(p, lit(c, ink, 0.3 + 0.4 * light), weight * 0.7, lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.4), 0.5 + 0.5 * light))
+  // Cut through: filled, edged in its own dark (a cream box round the cut read as a diagram of a wall).
+  solid(p, DARK_EDGE, weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.4), 0.5 + 0.5 * light))
   rect(p, k, x0, Math.max(f.y0 - 1, -9), x1, FL - door)
   rect(p, k, x0, FL, x1, FL + 3)
   // The door's drum over the opening, and the door: slats, rolled up into the drum as it opens.
@@ -480,9 +496,9 @@ export function drawWall(p: p5, c: Ctx, open: number, light: number, f: { y0: nu
   rect(p, k, x0 - 0.12, FL - door - 0.35, x1 + 0.12, FL - door + 0.02, 0.06)
   const h = door * (1 - Math.max(0, Math.min(1, open)))
   if (h > 0.02) {
-    solid(p, lit(c, ink, 0.3 + 0.4 * light), weight * 0.6, lit(c, mixHex(ROAD.paint, ROAD.car, 0.5), 0.35 + 0.4 * light))
+    solid(p, DARK_EDGE, weight * 0.5, lit(c, mixHex(ROAD.paint, ROAD.car, 0.5), 0.35 + 0.4 * light))
     rect(p, k, x0 + 0.08, FL - door, x1 - 0.08, FL - door + h)
-    outline(p, lit(c, ink, 0.2 + 0.3 * light), weight * 0.4)
+    outline(p, hexA(DARK_EDGE, 0.5), weight * 0.4)
     for (let y = FL - door + 0.22; y < FL - door + h; y += 0.22) seg(p, k, [x0 + 0.08, y], [x1 - 0.08, y])
   }
   p.pop()
