@@ -83,7 +83,7 @@ export const deep = part<DeepState>(
     { t: T_SLAM + 0.3, cells: 5.0, hold: [5.4, 1.7], w: 0.5 },
     // The water to the wheel; she goes first.
     { t: T_WHEEL, cells: 5.4, hold: [7.6, 2.6], w: 0.55 },
-    { t: T_HIS_BUCKET - 0.4, cells: 5.4, hold: [8.4, 3.2], w: 0.5 },
+    { t: T_HIS_BUCKET - 0.4, cells: 6.1, hold: [8.4, 3.2], w: 0.5 },
     // The pull back on the second phrase, peaking on the hammer's first blow: the gallery lit behind him, the wheel
     // turning, the hammer. Then in again on him as the third blow throws him out.
     { t: F(4), cells: 10, hold: [8.0, 2.9], w: 0.85 },
