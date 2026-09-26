@@ -14,6 +14,7 @@ import {
   FLOOR_Y,
   HALF,
   HISS,
+  strainAt,
   JAW_TOP,
   LEHR,
   MOULD_X,
@@ -236,8 +237,10 @@ function inset(pts: Pt[], cx: number, cy: number, d: number): Pt[] {
 }
 
 /**
- * Molten glass: it glows from inside, white-gold at its heart and deep orange at its skin, with the day's light on
- * its shoulder. `hollow` 0..1 shows a blown bubble's thin wall (its inside paler). `a` fades it all.
+ * Molten glass: seen through, it glows from its heart, white-gold, low down where the glass is thickest; at its skin
+ * it is a darker, burnt amber, so it reads as a lump of hot glass and not as a lamp (nor as the spark grown big).
+ * The day's window shines on its shoulder, crisp. `hollow` 0..1 shows a blown bubble's thin wall (its inside paler).
+ * `a` fades it all.
  */
 function molten(pen: Pen, pts: Pt[], heat: number, hollow: number, a = 1): void {
   let cx = 0
@@ -257,32 +260,39 @@ function molten(pen: Pen, pts: Pt[], heat: number, hollow: number, a = 1): void 
   cx /= pts.length
   cy /= pts.length
   const size = Math.max(x1 - x0, y1 - y0) / 2
-  glow(pen, cx, cy, size * 2.2 + 0.5, GLASS.furnace, 0.32 * heat * a, size * 0.5)
-  // The skin: deep orange, going to the glass's own colour as it cools.
-  const skin = mixHex(glassColor(heat), GLASS.brick, 0.28 * heat)
+  // A little of the furnace's warmth round it: never a glowing ball of light.
+  glow(pen, cx, cy, size * 1.8 + 0.4, GLASS.furnace, 0.16 * heat * a, size * 0.5)
+  // The skin: a burnt amber while it is hot, going to the glass's own colour as it cools.
+  const skin = mixHex(glassColor(heat), GLASS.brickDeep, 0.38 * heat)
   shape(pen, pts, rgba(skin, a), 0)
-  // The heart: white-gold, glowing out from inside.
+  // The heart, seen through the glass: white-gold, low in it and well inside the skin.
   const { ctx, k } = pen
-  const g = ctx.createRadialGradient(cx * k, (cy + size * 0.1) * k, 0, cx * k, cy * k, size * 1.05 * k)
-  g.addColorStop(0, rgba(GLASS.moltenHot, 0.95 * heat * a))
-  g.addColorStop(0.55, rgba(mixHex(GLASS.moltenHot, GLASS.molten, 0.5), 0.75 * heat * a))
+  const hy = cy + (y1 - y0) * 0.12
+  const hr = size * 0.84
+  const g = ctx.createRadialGradient(cx * k, hy * k, 0, cx * k, hy * k, hr * k)
+  g.addColorStop(0, rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.5), 0.95 * heat * a))
+  g.addColorStop(0.35, rgba(GLASS.moltenHot, 0.88 * heat * a))
+  g.addColorStop(0.72, rgba(GLASS.molten, 0.5 * heat * a))
   g.addColorStop(1, rgba(GLASS.molten, 0))
   fillWith(pen, pts, g)
   // A blown bubble: its inside, paler, inside a wall.
   if (hollow > 0.01) {
     const wall = Math.max(0.06, size * 0.16)
-    fillWith(pen, inset(pts, cx, cy, wall), rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.45), 0.55 * hollow * a))
+    fillWith(pen, inset(pts, cx, cy, wall), rgba(mixHex(GLASS.moltenHot, GLASS.light, 0.45), 0.4 * hollow * a))
   }
-  // The day on its shoulder: a streak of window light round its upper west.
-  const streak: Pt[] = []
-  for (const [x, y] of pts) {
-    const ang = Math.atan2(y - cy, x - cx)
-    if (ang > -2.55 && ang < -1.75) streak.push([cx + (x - cx) * 0.8, cy + (y - cy) * 0.8])
-  }
-  if (streak.length > 1) {
+  // The day on it: a crisp streak of window light round its upper west shoulder, and a faint one low on the east.
+  const reflect = (lo: number, hi: number, at: number, alpha: number, width: number) => {
+    const streak: Pt[] = []
+    for (const [x, y] of pts) {
+      const ang = Math.atan2(y - cy, x - cx)
+      if (ang > lo && ang < hi) streak.push([cx + (x - cx) * at, cy + (y - cy) * at])
+    }
+    if (streak.length < 2) return
     streak.sort((p, q) => Math.atan2(p[1] - cy, p[0] - cx) - Math.atan2(q[1] - cy, q[0] - cx))
-    strokeLine(pen, streak, rgba(GLASS.light, 0.85 * a), Math.max(1.2, 0.05 * pen.k))
+    strokeLine(pen, streak, rgba(GLASS.light, alpha * a), width)
   }
+  reflect(-2.6, -1.7, 0.78, 0.92, Math.max(1.6, 0.065 * k))
+  reflect(0.35, 0.95, 0.84, 0.35, Math.max(1, 0.035 * k))
   shape(pen, pts, null, 0.7, rgba(WARM_INK(pen.ink), a))
 }
 
@@ -435,7 +445,7 @@ export function drawMouldStand(pen: Pen, t: number): void {
 }
 
 /** A half of the mould, `s` -1 west, 1 east, swung `a` open (0 shut, π open flat). */
-function mouldHalf(pen: Pen, s: -1 | 1, a: number, heat: number): void {
+function mouldHalf(pen: Pen, s: -1 | 1, a: number, heat: number, strain = 0): void {
   const hx = MOULD_X + s * HALF
   const top = JAW_TOP
   const bot = BASE_Y - 0.01
@@ -469,8 +479,11 @@ function mouldHalf(pen: Pen, s: -1 | 1, a: number, heat: number): void {
       const ly = ft + (fb - ft) * 0.5
       shape(pen, roundBox(Math.min(fx, fx + s * 0.1) - 0.02, ly - 0.14, Math.max(fx, fx + s * 0.1) + 0.02, ly + 0.14, 0.04), GLASS.steel, 0.7)
     }
-    // Shut on hot glass, the seam breathes its glow.
-    if (heat > 0.01 && a < 0.2) glow(pen, fx, (ft + fb) / 2 + 0.2, 0.5, GLASS.molten, 0.35 * heat)
+    // Shut on hot glass, the seam breathes its glow; blown into, it flares, and a line of the glass shows in it.
+    if (heat > 0.01 && a < 0.2) {
+      glow(pen, fx, (ft + fb) / 2 + 0.2, 0.5 + 0.25 * strain, GLASS.molten, (0.35 + 0.4 * strain) * heat)
+      if (strain > 0.02 && s === 1) strokeLine(pen, [[fx, ft + 0.18], [fx, fb - 0.06]], rgba(GLASS.moltenHot, 0.85 * strain * heat), Math.max(1, (0.018 + 0.03 * strain) * pen.k))
+    }
   } else {
     // Its inside, turned to us: the bottle's half-shape sunk in it, sooted black, glowing a while after the glass.
     shape(pen, face, mixHex(GLASS.iron, GLASS.steel, 0.3), 1)
@@ -514,8 +527,11 @@ export function drawMould(pen: Pen, t: number, front: boolean): void {
   if (a > Math.PI * 0.78 === front) return
   // The mould stays hot for a while after it lets the bottle go.
   const heat = smooth(t, CLAP - 0.05, CLAP + 0.1) * (1 - smooth(t, OPEN + 0.3, OPEN + 2.2))
-  mouldHalf(pen, -1, a, heat)
-  mouldHalf(pen, 1, a, heat)
+  // Blown into, the halves strain on their hinges: the seam opens a hair and closes.
+  const strain = strainAt(t)
+  const give = a < 0.2 ? 0.05 * strain : 0
+  mouldHalf(pen, -1, a + give, heat, strain)
+  mouldHalf(pen, 1, a + give, heat, strain)
 }
 
 /** A soft round of steam: white at its middle, gone at its edge. */

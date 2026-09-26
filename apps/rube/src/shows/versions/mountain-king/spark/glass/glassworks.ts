@@ -125,11 +125,11 @@ function shots(begin: number): PartShot[] {
     // With the cart down the rail: the bubble on the right, the bellows working behind it.
     { t: PUFFS[0] + 0.3, cells: 4.6, off: [-1.3, 0.75], w: 0 },
     { t: PUFFS[2], cells: 4.6, off: [-1.0, 0.8], w: 0 },
-    // The droop into the mould; the slam; in slowly while it hisses.
+    // The droop into the mould; the slam; in on the blows, down along the seam as it flares, to the spark on the tip.
     { t: STOP + 0.2, cells: 4.3, hold: [MOULD_X - 0.1, 2.35], w: 0.8 },
     { t: CLAP + 0.1, cells: 3.9, hold: [MOULD_X, 2.4], w: 1 },
-    { t: OPEN - 0.2, cells: 3.45, hold: [MOULD_X, 2.4], w: 1 },
-    // Open; the belt takes the bottle; the neck cracks off.
+    { t: OPEN - 0.25, cells: 3.05, hold: [MOULD_X - 0.2, 2.15], w: 1 },
+    // Open (back out, the release); the belt takes the bottle; the neck cracks off.
     { t: OPEN + 0.8, cells: 3.9, hold: [MOULD_X + 0.05, 2.6], w: 1 },
     { t: SNAP + 0.3, cells: 4.5, hold: [MOULD_X + 0.9, 2.7], w: 0.7 },
     // Down the lehr, its fires under the belt, and back to see the whole shop: the lehr, the rack, the furnace.

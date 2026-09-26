@@ -39,6 +39,18 @@ export const STOP = e(6, 20)
 export const CLAP = e(6, 24)
 /** The wet mould hisses. */
 export const HISS = [e(6, 26), e(6, 28)] as const
+/**
+ * The blow: shut, the mould is blown into on the two notes after the slam (the hisses), the glass pressed out to its
+ * iron. 0 at rest; up at once on each, and dying over a third of a second: its seam glows, its halves strain.
+ */
+export function strainAt(t: number): number {
+  let v = 0
+  for (const at of HISS) {
+    const u = t - at
+    if (u > 0) v += (1 - Math.exp(-u / 0.03)) * Math.exp(-u / 0.35)
+  }
+  return Math.min(1, v)
+}
 /** Phrase 7's first note: the mould unlatches and swings open on a glowing bottle, its halves clanking onto their stops. */
 export const OPEN = e(7, 0)
 export const OPENED = e(7, 2)
@@ -138,6 +150,12 @@ function pipeShake(t: number): number {
   if (t > CLAP) {
     const u = t - CLAP
     y += 0.03 * Math.exp(-u / 0.16) * Math.sin(u * 44)
+  }
+  // Each blow into the shut mould jolts the pipe a little: the spark on its tip rides it.
+  for (const at of HISS) {
+    if (t <= at) continue
+    const u = t - at
+    y += 0.018 * Math.exp(-u / 0.14) * Math.sin(u * 40)
   }
   if (t > SNAP) {
     const u = t - SNAP
@@ -489,7 +507,9 @@ export function glassOutline(t: number): Pt[] {
     const c = Math.cos(a)
     // The gather's west end draws in round the pipe: a pear on its tip.
     const pinch = c < 0 ? 1 - 0.45 * c * c * neckIn : 1
-    const round: Pt = [b.cx + b.rx * c, b.cy + b.ry * s * pinch + sag * 0.9 * Math.max(0, s) ** 2]
+    // Heavy glass hangs: narrower over the top, fuller and lower at the bottom, a pear and not a balloon.
+    const pear = 1 + 0.1 * s
+    const round: Pt = [b.cx + b.rx * c * pear, b.cy + b.ry * s * pinch + (sag * 0.9 + 0.14 * b.ry) * Math.max(0, s) ** 2]
     if (d <= 0) {
       out.push(round)
       continue
