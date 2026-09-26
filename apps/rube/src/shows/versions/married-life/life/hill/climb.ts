@@ -11,12 +11,13 @@ import { autumn, LANE_Y, ridge, ridgeSlope, STEP } from './hill'
 /**
  * CLIMB (167.706 to 180.413): the same hill, years later, in autumn. A held note, and then the piano.
  *
- * They come along the lane at the hill's foot, walking right, Ellie a step ahead as she always is, the picnic basket
- * (the tickets in it) on Carl's top. At the fieldstone where the path leaves the lane he stops, and for once he
+ * They come along the lane at the hill's foot, Carl walking right to where Ellie stands ahead of him, the picnic
+ * basket (the tickets in it) on his top. At the fieldstone where the path leaves the lane he stops, and for once he
  * leads: he steps up onto it (169.482) and starts up the flank toward their tree at the top of the path (`treeX`), the
  * picnic place, eager
- * with his surprise. She has stopped a step past him; she comes back, and follows him up onto the stone, slowly
- * (171.543).
+ * with his surprise. She is standing a little way ahead on the lane, looking along it (she was out at the front door,
+ * her back to the hall, while he stamped the tickets); as he steps up she comes back, and follows him up onto the
+ * stone, slowly (171.543).
  *
  * The held note: he climbs, slower and slower, and stops to wait for her, turned to look back. She crosses the stone
  * and starts up the flank behind him, tiring: she stops to rest, goes on a little, and can go no further. She slips
@@ -67,11 +68,10 @@ const T = {
   rise: 179.75,
 }
 
-/** Her times: a step past him, back, up onto the stone, the climb, the rest, the last push, the slip, the give. */
+/** Her times: back from ahead of him, up onto the stone, the climb, the rest, the last push, the slip, the give. */
 const E = {
-  stop: BEGIN + 1.2,
-  back: 169.65,
-  foot: 170.55,
+  back: 169.1,
+  foot: 170.75,
   hop: 171.25,
   onStep: 171.543,
   /** Across the stone and up the flank after him, eager at first, tiring; she stops to rest. */
@@ -264,13 +264,9 @@ const tire = (u: number) => {
 
 /** Ellie in the hill's cells at show time `t`. */
 function ellie(t: number): Pt {
-  const x0 = START_X + CUTS.climb.ellie![0]
-  if (t < E.stop) {
-    const tau = t - BEGIN
-    const a = 0.6 / (E.stop - BEGIN)
-    return [x0 + 0.6 * tau - 0.5 * a * tau * tau, LANE_Y]
-  }
-  const far = x0 + 0.3 * (E.stop - BEGIN)
+  // Standing ahead on the lane from the cut (she was out at the door, looking out, while he stamped the tickets), until
+  // she comes back to follow him up.
+  const far = START_X + CUTS.climb.ellie![0]
   const foot = STEP.x1 + 0.16
   if (t < E.back) return [far, LANE_Y]
   if (t < E.foot) return [lerp(far, foot, ease((t - E.back) / (E.foot - E.back))), LANE_Y]

@@ -79,9 +79,12 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
     v: [0.6, 0],
     cells: 2.7,
     frame: [0.55, -0.72],
-    ellie: [0.36, 0],
+    // She is out at the open front door, her back to the hall, while the tickets go into the basket (his surprise):
+    // standing on the porch's edge, looking out at the evening, as he sets off after her; on the hill she is standing
+    // that far ahead on the lane, and he walks up to her.
+    ellie: [1.1, 0],
     basket: true,
-    what: 'setting out for the picnic, walking right, level, the basket (the tickets in it) on his top, Ellie a step ahead; on the far side, the foot of the hill',
+    what: 'setting out for the picnic, walking right, level, the basket (the tickets in it) on his top, Ellie standing ahead of him, looking out; on the far side, the foot of the hill',
   },
   hospital: {
     t: CUT.hospital,

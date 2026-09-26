@@ -648,13 +648,19 @@ const ellieToDoor = spline([
   { t: PEDAL_ON, x: 7.9, v: 0.25 },
   { t: DOOR_OPEN, x: 8.2, v: 0.12 },
 ])
-/** After the door: back from it to wait beside him, a lean out to look at the evening, and waiting. */
-const ELLIE_WAIT = PEDAL.x + 0.36
+/**
+ * After the door: she goes out through it onto the porch's edge and stays there, looking out at the evening with her
+ * back to the hall (her dot turned out and up), a lean out toward it, and waiting: the tickets are his surprise, and
+ * she does not see them go into the basket. Where she waits is the cut's (`CUTS.climb.ellie`) from where he is on the
+ * lid; on the hill she is standing that far along the lane ahead of him.
+ */
+const CARL_AT_SHUT = PEDAL.x + 0.5 * WALK_A * (SHUT - STAMP2) ** 2
+const ELLIE_WAIT = CARL_AT_SHUT + CUTS.climb.ellie![0]
 const ellieAtDoor = spline([
-  { t: DOOR_OPEN, x: 8.2, v: -0.1 },
-  { t: 164.9, x: ELLIE_WAIT, v: 0 },
+  { t: DOOR_OPEN, x: 8.2, v: 0.12 },
+  { t: 164.5, x: ELLIE_WAIT, v: 0 },
   { t: 165.35, x: ELLIE_WAIT, v: 0 },
-  { t: 165.95, x: ELLIE_WAIT + 0.08, v: 0 },
+  { t: 165.95, x: ELLIE_WAIT + 0.06, v: 0 },
   { t: 166.6, x: ELLIE_WAIT, v: 0 },
 ])
 
@@ -689,9 +695,7 @@ function ellieAt(T: number): Companion {
   if (T < DANCE[0]) return { x: ellieToDance(T), y: 0 }
   if (T < EMBRACE) return ellieDancing(T)
   if (T < DOOR_OPEN) return { x: ellieToDoor(T), y: 0 }
-  if (T < STAMP2) return { x: ellieAtDoor(T), y: 0 }
-  const dt = Math.min(T, SHUT) - STAMP2
-  return { x: ELLIE_WAIT + 0.5 * WALK_A * dt * dt, y: 0 }
+  return { x: ellieAtDoor(T), y: 0 }
 }
 
 /* ------------------------------------------------------------------ the light through the door */
