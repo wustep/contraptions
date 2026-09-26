@@ -52,12 +52,49 @@ const DRIFT1 = 301.25
 const DRIFT = 3.2
 /** How steep the stair of air is it walks up (cells up a cell along). */
 const SLOPE = 0.27
-/** The breath's two-shot on the porch: how many cells tall, where the camera sits from her, when it goes back (the
- * pull-back to the chord's frame runs from there to 302.2, easing into the hit). */
-const TWO = 7.4
-const TWO_OFF: Pt = [0.85, -0.6]
-const TWO_IN = 300.4
-const TWO_OUT = 301.0
+/**
+ * The breath's two-shot on the porch: how many cells tall, and where she sits in it (how far right of and below the
+ * middle, in frames; left and up are negative). The camera eases in to it across the whole breath, from the flag's
+ * bar to `PORCH_AT`, never faster than half a scale a second, and holds it until the chord starts the pull-back.
+ */
+const PORCH = 12
+const PORCH_FX = -0.05
+const PORCH_FY = 0.16
+const PORCH_FROM = 298.6
+const PORCH_AT = 301.3
+/**
+ * The pull-back: the chord starts it at full pace, and it dies away (τ, seconds) into the credits' frame. The frame
+ * rises off her a little quicker than it opens (`OPEN_LEAD`), so the chimney's fire comes into it early.
+ */
+const OPEN_TAU = 1.3
+const OPEN_LEAD = 0.8
+const OPEN_TO = 305.3
+
+/**
+ * A move's progress, 0 → 1 over [t0, t1]: eased in over `a` seconds and out over `b` (half-cosine ramps) with an
+ * even pace between, so its fastest is 1 / (t1 - t0 - (a + b) / 2) of the move a second.
+ */
+function cruise(t: number, t0: number, t1: number, a: number, b: number): number {
+  const v = 1 / (t1 - t0 - (a + b) / 2)
+  const s = t - t0
+  const r = t1 - t
+  if (s <= 0) return 0
+  if (r <= 0) return 1
+  if (s < a) return v * (s / 2 - (a / (2 * Math.PI)) * Math.sin((Math.PI * s) / a))
+  if (r < b) return 1 - v * (r / 2 - (b / (2 * Math.PI)) * Math.sin((Math.PI * r) / b))
+  return v * (a / 2 + s - a)
+}
+
+/**
+ * A move that starts on a hit, 0 → 1 over [t0, t1]: the punch's shape turned outward, at full pace almost at once
+ * (a 30 ms attack) and dying away with `tau` to its end.
+ */
+function burst(t: number, t0: number, t1: number, tau: number): number {
+  const a = 0.03
+  const F = (u: number) => tau * (1 - Math.exp(-u / tau)) - ((a * tau) / (a + tau)) * (1 - Math.exp((-u * (a + tau)) / (a * tau)))
+  const u = Math.max(0, Math.min(t1 - t0, t - t0))
+  return F(u) / F(t1 - t0)
+}
 
 /* ------------------------------------------------------------------ placing the castle on the plank */
 
@@ -908,38 +945,62 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
-    // The two-shot on the porch: the camera this far from her (cells), so the pair sit low and left of middle with
-    // the door and its hood over Howl's shoulder.
-    const two = (t: number, cells: number): PartShot => ({ t, cells, off: TWO_OFF, w: 0 })
-    // The chord's frame: the whole castle, big, from the cloud under its first foot to the fire over its chimney,
-    // set a little right of middle so the smoke rolls back into the open left. Placed where it is on the chord.
-    const O = look(CHORD[0]).O
-    const chordAt: Pt = [O[0] - 3.2, O[1] - 12.3]
+    // A move of the follow between two framings (cells, and where she sits in the frame), along a progress 0 → 1
+    // for the scale (`at`) and one for her place in the frame (`place`, the same unless given), laid down as a key at
+    // each of `times` so the camera's curve through them is the move's own.
+    type Framed = [cells: number, fx: number, fy: number]
+    const glide = (times: number[], from: Framed, to: Framed, at: (t: number) => number, place = at): PartShot[] =>
+      times.map((t) => {
+        const q = at(t)
+        const r = place(t)
+        const cells = Math.exp(Math.log(from[0]) + (Math.log(to[0]) - Math.log(from[0])) * q)
+        return follow(t, cells, from[1] + (to[1] - from[1]) * r, from[2] + (to[2] - from[2]) * r)
+      })
+    /** Every `dt` strictly inside (t0, t1). */
+    const every = (t0: number, t1: number, dt: number): number[] => {
+      const n = Math.max(1, Math.round((t1 - t0) / dt))
+      return Array.from({ length: n - 1 }, (_, i) => t0 + ((t1 - t0) * (i + 1)) / n)
+    }
+    // The whole castle as the flag comes home, as a framing of her (so the move in from it rides the castle).
+    const wide = ((): Framed => {
+      const [cx, cy] = mid(PORCH_FROM, 0.8, -3.2)
+      const [hx, hy] = sophieP(PORCH_FROM)
+      const cells = 31
+      return [cells, (hx - cx) / (cells * (16 / 9)), (hy - cy) / cells]
+    })()
+    const porch: Framed = [PORCH, PORCH_FX, PORCH_FY]
+    // The credits' first frame: the castle going small, low and right, the sky above it open for the words.
+    const credits: Framed = [42, 0.17, 0.23]
     return [
-      // The dive over their heads into the grate, and the plank heaving up. (Out, carrying on through each key to the
-      // next, until the breath.)
-      hold(294.05, 8.8, [her[0] + 0.7, her[1] - 0.99]),
-      // Out as the pieces come home, a piece a bar, until the whole castle is in the frame, always with sky over
-      // what has come (the hull on the tutti's great note, the turrets, the chimney, the flag).
-      hold(294.8, 17.5, mid(HULL, 0.3, 1.2)),
-      hold(295.9, 22, mid(FACE + 0.2, 0.5, 0.2)),
-      hold(297.1, 28.5, mid(HOUSE + 0.3, 0.6, -2.0)),
-      hold(298.6, 31, mid(298.6, 0.8, -3.2)),
-      hold(299.15, 30, mid(299.15, 0.5, -2.8)),
-      // The breath is theirs: in to the porch, a two-shot of the two of them side by side (her silver, his
-      // cornflower) as the windows light and the door swings open on the warm room behind them, drifting with the
-      // castle as it goes out over the gorge.
-      two(TWO_IN, TWO),
-      // Easing out a little as the door opens, so the pull-back grows out of it with no stop.
-      two(TWO_OUT, TWO + 0.4),
-      // Then back, easing all the way into the hit, to the whole castle as its legs let down onto the air; held,
-      // still, for the chord (the first foot down on a cloud, the three roars of fire, every window flaring, the
-      // smoke rolling up and back).
-      hold(302.2, 31, chordAt),
-      hold(302.95, 31, chordAt),
-      hold(304.0, 37, mid(304.0, -8.5, -5.5)),
+      // The dive over their heads into the grate (Calcifer's flare starts the camera going back), the plank heaving
+      // up, and the hull flying in and locking on around it on the tutti's great note while the frame is still
+      // opening, so the widening is the castle arriving. Never faster than half a scale a second.
+      hold(DIVE, 7.3, [her[0] + 0.7, her[1] - 0.99]),
+      hold(HULL, 13.6, mid(HULL, 0.3, 1.2)),
+      // Out on through the pieces coming home, a piece a bar, until the whole castle is in the frame, always with sky
+      // over what has come (the face, the cottage and the back turret, the chimney, the flag).
+      hold(295.9, 20.5, mid(FACE + 0.2, 0.5, 0.2)),
+      hold(297.1, 27.5, mid(HOUSE + 0.3, 0.6, -2.0)),
+      // The whole castle as the flag flutters home; then the breath is theirs: in, slowly, across the whole of it, to
+      // the porch, a two-shot of the two of them side by side (her silver, his cornflower) as the windows light, the
+      // door swings open on the warm room behind them and the legs let down; and held there, riding the castle.
+      follow(PORCH_FROM, ...wide),
+      ...glide(every(PORCH_FROM, PORCH_AT, 0.15), wide, porch, (t) => cruise(t, PORCH_FROM, PORCH_AT, 0.6, 0.9)),
+      follow(PORCH_AT, ...porch),
+      follow(CHORD[0], ...porch),
+      // The chord starts the pull-back: out at once on its first stroke and easing long, so the three roars of fire
+      // and every window flaring come as the whole castle opens up in the frame, and on into the credits' frame as it
+      // walks away up the sky. (Keys close at the attack, where the move is quickest to change; none in its last
+      // half second, so its tail settles into the credits' slow drift out.)
+      ...glide(
+        [0.03, 0.07, 0.12, 0.2, 0.3, ...every(0.3, OPEN_TO - CHORD[0] - 0.5, 0.2)].map((u) => CHORD[0] + u),
+        porch,
+        credits,
+        (t) => burst(t, CHORD[0], OPEN_TO, OPEN_TAU),
+        (t) => burst(t, CHORD[0], OPEN_TO, OPEN_LEAD),
+      ),
       // Then with it, up the sky, going small, under the credits.
-      follow(305.3, 42, 0.17, 0.23),
+      follow(OPEN_TO, ...credits),
       // Lower and further right before the cast card comes up, so its flag stays under the card's last row and
       // clear of the words on any window.
       follow(308, 45.3, 0.24, 0.32),
