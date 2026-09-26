@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, part, smooth, type Companion, type Ctx, type Pose } from '../kit'
-import { AT, bar, beat, CUT, SEAM } from '../music'
+import { AT, bar, beat, beatsIn, CUT, SEAM } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawBook } from '../props/book'
 import { INSIDE } from './inside'
+import { COCKED, FOOT, HIS, SLAMS, standing, TOUCHDOWN } from './jar-clock'
 import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-motion'
 
 /**
@@ -24,10 +25,12 @@ import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-mo
  * On the waltz's return (100.357) the book opens on his top: its top board swings over on the spine and comes down
  * flat, and Paradise Falls rises out of the gutter in cut paper, at her eye level; on bar 1 (100.78) a cut-paper
  * jungle folds up either side. She turns to it, and lights up: she hops down off the stump on the house's side
- * (101.314) and is away home ahead of him; she bumps the door in on bar 2 (102.046); he follows her in with the book
- * open, it folds shut, slowly, on bar 2's third beat (102.899), and as he goes on in it slides back off his top and
- * drops onto the bookcase's bottom shelf, where it lives, on bar 3 (the seam). At the seam (`SEAM.jar`) he is at the house's (0.3, 0)
- * moving right at 0.8, and she a step ahead: the living room, the jar.
+ * (101.314) and is away home ahead of him; she bumps the door in on bar 2 (102.046). He has turned for home on bar 1
+ * with the book open on his top, and walks after her, easing into an even pace (about 1.3 cells a second: the jar's
+ * `walkHome`, one walk from here to his seesaw); the book folds shut, slowly, on bar 2's third beat (102.899); he
+ * comes in through the back door on bar 3 (the seam, `SEAM.jar`, at the house's (-0.96, 0)), and as he goes past the
+ * bookcase the book slides back off his top and drops onto its bottom shelf, where it lives, on bar 4. She is well
+ * ahead, away to the ladder: the living room, the jar.
  *
  * Frame: this part's cells are the house's inside moved by `YARD_AT` (so the house's x is this frame's x - 0.1);
  * everything below is written in the house's cells and moved once.
@@ -87,17 +90,48 @@ const SHUT = beat('jar', 2, 3)
 const E_HOP = 101.0
 const E_DOWN = 101.314
 
+/** The book comes to rest on its shelf, once he has gone past it: bar 4. */
+const REST = bar('jar', 4)
+
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const YARD_HITS: number[] = [NUDGE, LAND, PUSH_OUT, OPEN, FLAP, E_DOWN, PUSH_IN, SHUT, SEAM.jar]
+export const YARD_HITS: number[] = [NUDGE, LAND, PUSH_OUT, OPEN, FLAP, E_DOWN, PUSH_IN, SHUT, REST]
 
 /* ------------------------------------------------------------------ Carl */
 
 const C0 = -0.6
 const C_DOOR = DOOR.x + 0.13
 const C_OUT = -1.62
-const C_GO = 101.2
+/** He turns for home on bar 1, the book open on his top. */
+const C_GO = FLAP
 /** Out to her, slowly; round in front of her (a little quicker as he passes), and stopping where she is looking. */
 const walk = pchip([94.348, 95.9, 97.036, 97.7, 98.836], [C_OUT, -1.95, -2.35, -2.95, STOP])
+
+/**
+ * The walk home, from where he stood with the book to the foot of his seesaw in the living room: one walk across the
+ * seam, the yard's and then the jar's (`jar.ts` rides it to the foot). He eases into it from rest on bar 1 over a
+ * second, keeps an even pace (about 1.34 cells a second, an old-fashioned brisk walk, never a run), and eases onto
+ * the speed his hop up onto the plank carries him at, taking off on its pickup (`HOME_BY`).
+ */
+export const HOME_BY: number = (() => {
+  const three = beatsIn(SLAMS[0] - 0.6, SLAMS[0]).filter((b) => b.pos === 3)
+  return three[three.length - 1].t
+})()
+const HOME_IN = 1.0
+const HOME_OUT = 0.6
+const HOME_END_V = (standing(HIS, COCKED)[0] - FOOT[0]) / (SLAMS[0] - TOUCHDOWN - HOME_BY)
+const HOME_V = (FOOT[0] - STOP - (HOME_END_V * HOME_OUT) / 2) / (HOME_BY - C_GO - HOME_IN / 2 - HOME_OUT / 2)
+export function walkHome(T: number): number {
+  const s = Math.max(0, Math.min(HOME_BY - C_GO, T - C_GO))
+  const D = HOME_BY - C_GO
+  // Raised-cosine ramps either side of the even pace, so it gathers and eases with no jolt.
+  const inDist = (u: number) => HOME_V * (u / 2 - (HOME_IN / (2 * Math.PI)) * Math.sin((Math.PI * u) / HOME_IN))
+  if (s <= HOME_IN) return STOP + inDist(s)
+  const cruiseTo = D - HOME_OUT
+  if (s <= cruiseTo) return STOP + inDist(HOME_IN) + HOME_V * (s - HOME_IN)
+  const u = s - cruiseTo
+  const out = HOME_V * u + (HOME_END_V - HOME_V) * (u / 2 - (HOME_OUT / (2 * Math.PI)) * Math.sin((Math.PI * u) / HOME_OUT))
+  return STOP + inDist(HOME_IN) + HOME_V * (cruiseTo - HOME_IN) + out
+}
 
 /** Carl's x (he stays on the ground throughout). */
 function carlX(T: number): number {
@@ -116,9 +150,8 @@ function carlX(T: number): number {
   // Outside, a while; then out to her.
   if (T <= 94.348) return C_OUT
   if (T <= 98.836) return walk(T)
-  if (T <= C_GO) return STOP
   // After her, home.
-  return hermite(STOP, 0, 0.3, 0.8, E - C_GO, (T - C_GO) / (E - C_GO))
+  return walkHome(T)
 }
 const carl = (T: number): Pt => [carlX(T), 0]
 
@@ -182,8 +215,22 @@ function top(T: number): { x: number; y: number; tilt: number } {
 
 /** When it starts to fall from the bookcase: so that from its top it lands on his on the note. */
 const FALL_FROM = LAND - Math.sqrt((2 * (GROUND - 0.26 - CASE.top)) / 12)
-/** The book slides back off his top as he goes on in, and drops onto its shelf on the jar waltz's bar 3. */
-const REST = SEAM.jar
+/**
+ * As he goes on in past the bookcase, the book slides back off his top (it lags him, slowing evenly from his pace to
+ * rest) and drops onto its shelf on REST: SLIDE is when it starts, where his pace carried on for the slide's time
+ * would take it just to the shelf. Found once by halving.
+ */
+const SLIDE: number = (() => {
+  let a = SHUT
+  let b = REST
+  for (let i = 0; i < 40; i++) {
+    const m = (a + b) / 2
+    const v = (walkHome(m + 1e-3) - walkHome(m - 1e-3)) / 2e-3
+    if (walkHome(m) + (v * (REST - m)) / 2 - BOOK_HOME < 0) a = m
+    else b = m
+  }
+  return (a + b) / 2
+})()
 
 interface BookAt {
   x: number
@@ -224,11 +271,13 @@ function bookAt(T: number): BookAt {
   const open = T >= SHUT ? 0 : Math.min(openUp, fold)
   const pop = T >= SHUT ? 0 : Math.min(popUp, popFold)
   const flap = T >= SHUT ? 0 : Math.min(flapUp, flapFold)
-  const t = top(Math.min(T, SHUT))
-  if (T < SHUT) return { x: t.x, y: t.y, tilt: t.tilt, open, pop, flap, front: true }
-  // Off his top as he goes on in (it lags him, sliding back), tipping a little, and down onto the shelf.
-  const u = clamp01((T - SHUT) / (REST - SHUT))
-  const x = hermite(t.x, 0, BOOK_HOME, 0, REST - SHUT, u)
+  const t = top(Math.min(T, SLIDE))
+  if (T < SLIDE) return { x: t.x, y: t.y, tilt: t.tilt, open, pop, flap, front: true }
+  // Off his top as he goes on in (it lags him, sliding back from his pace to rest), tipping a little, and down onto
+  // the shelf.
+  const u = clamp01((T - SLIDE) / (REST - SLIDE))
+  const v0 = (walkHome(SLIDE + 1e-3) - walkHome(SLIDE - 1e-3)) / 2e-3
+  const x = hermite(t.x, v0, BOOK_HOME, 0, REST - SLIDE, u)
   const y = t.y + (CASE.low - t.y) * u * u
   const tilt = -0.22 * Math.sin(Math.PI * u) * (1 - u * 0.3)
   if (T < REST) return { x, y, tilt, open: 0, pop: 0, flap: 0, front: true }
@@ -533,7 +582,7 @@ export const yard = part<YardState>(
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (T) => carlPose(T) }]
     return {
       cells: box(at(-8.5), -5, at(1.3), 1),
-      exit: [at(0.8), 0] as Pt,
+      exit: [at(walkHome(E) + 0.5), 0] as Pt,
       lane: { segs, fire: NUDGE - slot.begin },
       state: { begin: slot.begin },
       company: [{ from: slot.begin, to: slot.end, at: her }],
@@ -551,9 +600,10 @@ export const yard = part<YardState>(
     { t: 98.9, cells: 3.5, hold: [at(-3.1), -0.95], w: 1 },
     { t: OPEN, cells: 2.72, hold: [at(-3.18), -0.7], w: 1 },
     { t: 101.2, cells: 2.58, hold: [at(-3.08), -0.67], w: 1 },
-    // After them, home: eased out of the close, not snapped back from it.
-    { t: 102.4, cells: 3.25, hold: [at(-2.0), -0.86], w: 1 },
-    { t: E, cells: 4.1, hold: [at(0.45), -0.9], w: 1 },
+    // After them, home: one even move that sets off as he does and leads him at his own pace, eased out of the close
+    // (on across the seam: jar.ts carries it on to his seesaw).
+    { t: 102.3, cells: 3.3, hold: [at(-2.0), -0.84], w: 1 },
+    { t: E, cells: 3.85, hold: [at(-0.52), -0.93], w: 1 },
   ],
 )
 

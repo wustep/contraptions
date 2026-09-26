@@ -159,7 +159,7 @@ const FALLS_CLOUD: Shape = {
   billows: [
     // 0-2: the cliff's core, already a mesa when it comes: a body, broad shoulders under the lip, a broader foot.
     { x: 0, y: 0.02, r: 0.42 },
-    { x: 0, y: -0.27, r: 0.25, w: 1.5 },
+    { x: 0, y: -0.27, r: 0.25, w: 1.75 },
     { x: 0, y: 0.31, r: 0.3, w: 1.6 },
     // 3-7: its left side, stacked from the lip down, stepping out a little as it falls.
     { x: -0.36, y: -0.32, r: 0.11 },
@@ -288,6 +288,14 @@ const PUFFS: Puff[] = (() => {
 
 /** When the falls pour: their puff reaches the lip. */
 const POUR = PUFFS.find((p) => p.to === LIP)!.join
+
+/**
+ * How deep in its shade the falls' cliff face is: none while only its core has come (alone, a waisted pale-blue blob
+ * with a puff landing in it read as a figure 8), deepening as its sides join, so it turns from the sun as it becomes
+ * a cliff.
+ */
+const FALLS_PUFFS = PUFFS.filter((p) => p.shape === 'falls')
+const faceShade = (t: number): number => smooth(t, FALLS_PUFFS[0].join, FALLS_PUFFS[1].join + 0.35)
 
 /** The ease of a puff along its line: shot out fast, slowing, and still moving a little as it joins (the hit). */
 const along = (u: number): number => u + 0.7 * u * (1 - u)
@@ -535,7 +543,7 @@ function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   for (const g of shape.groups) {
     const list = g.of.map((i) => got.get(i)).filter((b): b is Billow => !!b)
     if (shape.smooth) mass(p, k, list)
-    else if (g.face) cliff(p, k, list, g.tone ?? 0)
+    else if (g.face) cliff(p, k, list, (g.tone ?? 0) * faceShade(t))
     else cloud(p, k, list, g.tone ?? 0)
     // The falls pour from under the lit lip (its puffs drawn over their heads) down the face, into the mist at its foot.
     if (key === 'falls' && g === shape.groups[0]) drawPour(p, k, t)
@@ -610,6 +618,10 @@ function drawTrails(p: p5, k: number, t: number): void {
     const tail = along(Math.max(0, Math.min(1, (age - LAG) / rise)))
     if (head - tail < 1e-3) continue
     const size = 0.75 + 0.3 * puff.amp
+    // Once the knot has joined, the trail goes with it: drawn up into the shape it would shrink to a bright dot
+    // inside it (in the falls' first mass, a dot in a waisted blob read as a figure 8).
+    const gone = 1 - smooth(age, rise - 0.05, rise + 0.22)
+    if (gone <= 0.002) continue
     // Sample the line densely enough that it is one column, never a row of beads.
     const [ax, ay] = line(goal, tail)
     const [bx, by] = line(goal, head)
@@ -619,7 +631,7 @@ function drawTrails(p: p5, k: number, t: number): void {
       const e = tail + (head - tail) * s
       const [x, y] = line(goal, e)
       const r = (0.03 + 0.055 * s) * size * (0.8 + 0.5 * e)
-      p.fill(alpha(p, HILL.cloud, 0.1 + 0.2 * s))
+      p.fill(alpha(p, HILL.cloud, (0.1 + 0.2 * s) * gone))
       p.circle(X(x, k), X(y, k), X(2 * r, k))
     }
   }

@@ -117,12 +117,12 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
   shape(ring)
   ctx.fill()
   ctx.shadowColor = 'transparent'
-  // The stylesheet's plain `.swatch` also reaches it: a 2px border in the gold of its line, inside the disc.
+  // A ring in the gold of its line inside the disc, a share of the card's unit, as the stylesheet draws it.
   ctx.fillStyle = GOLD
   shape(0)
   ctx.fill()
   ctx.fillStyle = slab ? spec.slice(5) : spec
-  shape(-2)
+  shape(-u * 0.28)
   ctx.fill()
 }
 

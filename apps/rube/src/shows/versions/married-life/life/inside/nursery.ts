@@ -743,8 +743,10 @@ export const nursery = part<NurseryState>(
       p.pop()
     },
     // The storey below is unlit while the nursery plays, as a doll's house lights only the room in play: under Zoom
-    // the frame keeps a sixth of its height below their floor, and the living room's props have no job there yet. It
-    // is lit again when the long take starts in the yard (84.376).
+    // the frame keeps a sixth of its height below their floor, and the living room's props have no job there yet. A
+    // night veil, not ink: its rooms, floor and fireplace stay faintly there (a phone held upright shows the whole
+    // storey under the nursery, and inked it was half the picture as one flat slab). It is lit again when the long
+    // take starts in the yard (84.376).
     over: (p, s, c) => {
       const T = c.t + s.begin
       if (T < CUT.nursery - 0.01 || T > E + 0.01) return
@@ -755,8 +757,8 @@ export const nursery = part<NurseryState>(
       p.push()
       p.rectMode(p.CORNER)
       p.noStroke()
-      p.fill(mixHex(HOME.section, INK, 0.55))
-      px(p, k, x0, top, x1, INSIDE.ground + 3 - OY)
+      p.fill(alpha(p, mixHex(INK, HOME.night, 0.45), 0.74))
+      px(p, k, x0, top, x1, INSIDE.ground + 9 - OY)
       // The slab's underside catches a little of the nursery's light.
       p.fill(alpha(p, HOME.section, 0.8))
       px(p, k, x0, top, x1, top + 0.04)
