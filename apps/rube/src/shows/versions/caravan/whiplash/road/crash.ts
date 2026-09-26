@@ -243,14 +243,15 @@ export const crash = part<CrashState>(
       // In the seat as the door slams; away over the curb, the frame opening round him as he gathers speed.
       { t: slot.begin, cells: 4.4, off: [0.9, -0.6] },
       { t: CURB_F, cells: 5.0, off: [1.2, -0.9] },
-      { t: LAMP_T[3], cells: 5.8, off: [1.0, -1.3] },
-      // Low and close on him at the wheel at speed, the lamps whipping over him and lighting as they pass; then
-      // back, wide, the road lit behind him and dark ahead.
-      { t: LAMP_T[6], cells: 2.9, off: [0.25, -0.3] },
-      { t: LAMP_T[11], cells: 3.1, off: [0.3, -0.35] },
+      { t: LAMP_T[2], cells: 5.8, off: [1.0, -1.3] },
+      // Settling low and close on him at the wheel over five lamps as the lamps come every beat, whipping over him
+      // and lighting as they pass; held there; then back over six, wide, the road lit behind him and dark ahead.
+      // (Pushed in and out over two or three lamps each, the drive read as a lunge in and out.)
+      { t: LAMP_T[7], cells: 2.9, off: [0.25, -0.3] },
+      { t: LAMP_T[12], cells: 3.1, off: [0.3, -0.35] },
       // Out over the river: wide, low, the lamps doubled in the water.
-      { t: LAMP_T[16], cells: 8.8, off: [0.3, 0.15] },
-      { t: LAMP_T[19], cells: 8.8, off: [0.5, 0.05] },
+      { t: LAMP_T[18], cells: 8.8, off: [0.3, 0.15] },
+      { t: LAMP_T[20], cells: 8.8, off: [0.5, 0.05] },
       { t: LAMP_T[23], cells: 7.2, off: [-0.4, -1.8] },
       { t: LAMP_T[28], cells: 7.6, off: [0.8, -1.9] },
       // Leaning ahead into the dark road; then up and back, long and high, to hold both of them as the truck's high
