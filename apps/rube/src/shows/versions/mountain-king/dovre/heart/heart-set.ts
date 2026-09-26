@@ -90,7 +90,8 @@ import { GOV_LEVER, drawTrolls, govLever } from './heart-trolls'
 const SHADOW = mixHex(STONE.deep, STONE.dark, 0.5)
 /** A colour in the light `lit` (0 a silhouette a step above the rock, 1 fully lit). */
 const tone = (hex: string, lit: number): string => mixHex(SHADOW, hex, 0.16 + 0.84 * clamp01(lit))
-const inkOf = (c: Pen, lit: number): string => mixHex(STONE.dark, c.ink, 0.12 + 0.88 * clamp01(lit))
+/** The iron's edge: a thin line a little lighter than the metal, never a pale outline (the machine is mass, not line art). */
+const inkOf = (c: Pen, lit: number): string => mixHex(STONE.dark, c.ink, 0.1 + 0.36 * clamp01(lit))
 /** Iron as the furnace lights it: a warm grey, lighter than the rock behind it. */
 const IRON = mixHex(WORKS.iron, WORKS.steel, 0.42)
 const IRON_DARK = mixHex(WORKS.iron, WORKS.steel, 0.15)
@@ -679,7 +680,7 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   const iron = warm(tone(IRON_DARK, lit * 0.85), f * 0.4)
   drawFlywheelFrame(p, c, lit)
   const spin = Math.abs(flySpin(T))
-  const opts = { fill: iron, ink, w: c.weight * 1.1, spokes: FLYWHEEL.spokes, rim: 0.36, hub: 0.46, blur: clamp01((spin - 2.2) / 3.5), lip: warm(tone(WORKS.steel, lit), f), spoke: 0.3 }
+  const opts = { fill: iron, ink, w: c.weight * 0.8, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip: warm(tone(WORKS.steel, lit), f), spoke: 0.44 }
   const angle = FLY_PHASE + flyAngle(T)
   const split = flySplit(T)
   if (split <= 0) {
@@ -906,17 +907,32 @@ function drawPipe(p: p5, c: Pen, T: number, L: number): void {
 
 /* ------------------------------------------------------------------ the governor */
 
-/** Its weights, once they fly: from where each let go, out and away into the dark. */
+/**
+ * Its weights, once they fly: from where each let go, thrown out and up, and down under their weight onto the floor
+ * below (the pit's, or the ledge's after striking the wall), where they lie: nothing hangs in the air or vanishes.
+ */
 function flyingWeight(j: number, T: number): Pt | null {
   const t0 = GOV_WEIGHTS[j]
   if (T < t0) return null
   const a = T - t0
-  if (a > 0.7) return null
   const alpha = govAlpha(t0)
   const r = GOV.arm * Math.sin(alpha)
   const y0 = GOV.top + GOV.arm * Math.cos(alpha)
   const side = j === 0 ? -1 : 1
-  return [GOV.x + side * (r + 7.5 * a), y0 - 1.6 * a + 4 * a * a]
+  const vx = j === 0 ? 5.2 : 3.4
+  const g = 12
+  const x0 = GOV.x + side * r
+  let x = x0 + side * vx * a
+  // The east one strikes the wall and drops down it.
+  const wall = WALL_R - 0.4
+  if (x > wall) x = wall
+  const floor = (x > LEDGE_LIP ? DECK : PIT) - 0.24
+  const y = y0 - 3.0 * a + 0.5 * g * a * a
+  if (y < floor) return [x, y]
+  // Down: where it lands it lies, with a small skip.
+  const land = (3.0 + Math.sqrt(9 + 2 * g * (floor - y0))) / g
+  const after = a - land
+  return [x, floor - 0.12 * Math.max(0, Math.sin(after * 11)) * Math.exp(-after / 0.12)]
 }
 
 function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front'): void {
@@ -956,15 +972,14 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     p.rectMode(p.CORNER)
     p.rect((x - 0.26) * k, (y + 0.14) * k, 0.52 * k, 0.05 * k)
   }
-  const rod = (a0: Pt, b0: Pt, wgt = 2.4) => {
+  // Its arms are forged bars with weight, not wires.
+  const rod = (a0: Pt, b0: Pt) => {
     const A = tp(a0)
     const B = tp(b0)
     p.stroke(ink)
-    p.strokeWeight(c.weight * wgt)
-    p.line(A[0] * k, A[1] * k, B[0] * k, B[1] * k)
-    p.stroke(steel)
-    p.strokeWeight(c.weight * wgt * 0.5)
-    p.line(A[0] * k, A[1] * k, B[0] * k, B[1] * k)
+    p.strokeWeight(c.weight * 0.6)
+    p.fill(iron)
+    bar(p, k, A, B, 0.13, 0.1)
   }
   const arms = (wt: (typeof wts)[number]) => {
     if (wt.gone) {
@@ -1046,15 +1061,28 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     poly(p, k, [hang([0.16, seat]), hang([YOKE_SEAT + 0.42 - gx, seat]), hang([YOKE_SEAT + 0.42 - gx, seat + 0.1]), hang([0.16, seat + 0.1])])
     poly(p, k, [hang([YOKE_SEAT + 0.34 - gx, seat - 0.12]), hang([YOKE_SEAT + 0.42 - gx, seat - 0.12]), hang([YOKE_SEAT + 0.42 - gx, seat]), hang([YOKE_SEAT + 0.34 - gx, seat])])
   }
-  // The stops: a clang and a flash of sparks off the pivot.
-  if (part === 'front' && T >= GOV_STOPS && T < GOV_STOPS + 0.4) {
+  // The stops: a clang off the pivot, a brief warm flash on the iron and a spray of sparks falling away (no ring of
+  // rays).
+  if (part === 'front' && T >= GOV_STOPS && T < GOV_STOPS + 0.7) {
     const a0 = T - GOV_STOPS
-    for (let s = 0; s < 8; s++) {
-      const ang = (s / 8) * Math.PI * 2 + 0.3
-      const d = 0.2 + 2.2 * a0
-      alphaStroke(p, LAMP.core, 1 - a0 / 0.4)
-      p.strokeWeight(c.weight * 0.9)
-      p.line((gx + Math.cos(ang) * d) * k, (top + Math.sin(ang) * d + 3 * a0 * a0) * k, (gx + Math.cos(ang) * (d + 0.1)) * k, (top + Math.sin(ang) * (d + 0.1) + 3 * a0 * a0) * k)
+    const flash = Math.exp(-a0 / 0.07)
+    p.noStroke()
+    alphaFill(p, LAMP.glow, 0.28 * flash)
+    p.ellipse(gx * k, (top + 0.05) * k, 0.9 * k, 0.6 * k)
+    for (let s = 0; s < 9; s++) {
+      const ang = -Math.PI / 2 + (hash(s, 61) - 0.5) * 2.6
+      const v = 1.6 + 1.8 * hash(s, 62)
+      const life = 0.35 + 0.3 * hash(s, 63)
+      if (a0 > life) continue
+      const x = gx + Math.cos(ang) * v * a0
+      const y = top + Math.sin(ang) * v * a0 + 6 * a0 * a0
+      const len = 0.05 + 0.05 * hash(s, 64)
+      alphaStroke(p, LAMP.core, 1 - a0 / life)
+      p.strokeWeight(c.weight * 0.8)
+      const vx = Math.cos(ang) * v
+      const vy = Math.sin(ang) * v + 12 * a0
+      const n = Math.hypot(vx, vy) || 1
+      p.line(x * k, y * k, (x - (vx / n) * len) * k, (y - (vy / n) * len) * k)
     }
   }
 }
