@@ -330,14 +330,17 @@ function shots(): PartShot[] {
     k(123.85, 3.5, [3.95, -1.0]),
     k(PUSH2 + 0.05, 3.1, [5.3, -0.9]),
     k(126.4, 4.2, [6.35, -1.1]),
-    // The storm gathers; out wide for the tree through the roof and the jar thrown over by the blow, the roof
-    // above the nursery's ceiling in the frame; the limb winched out and the hole boarded.
-    k(127.0, 5.4, [6.4, -1.62]),
-    k(128.4, 8.3, [7.25, -2.78]),
-    k(129.9, 9.45, [7.7, -3.2]),
-    k(131.4, 9.5, [7.95, -3.15]),
-    k(133.3, 8.8, [8.35, -2.72]),
-    k(135.3, 8.1, [9.3, -2.55]),
+    // The storm gathers: out and up past the nursery to the whole house, its roof and the garden tree over the
+    // ridge, so the limb is seen to come down through the roof (TREE) and the jar thrown over by the blow; in again
+    // as the cradle rights and the limb is winched out, the nursery's ceiling well inside the frame while the hole is
+    // boarded.
+    k(127.3, 6.6, [7.0, -2.05]),
+    k(128.3, 12.6, [9.1, -4.2]),
+    k(129.2, 16.0, [10.2, -5.3]),
+    k(130.4, 16.4, [10.3, -5.4]),
+    k(131.7, 11.5, [9.0, -3.8]),
+    k(133.3, 10.0, [8.6, -3.1]),
+    k(135.3, 9.2, [9.3, -2.85]),
     // The sun: in again to the two of them, on their way to the hall.
     k(137.3, 5.8, [10.9, -1.6], 0.75),
     { t: END, cells: 5.6, off: [0.9, -1.1], w: 0 },
