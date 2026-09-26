@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
+import { laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { drawCalcifer, drawTurnip, drawWings } from '../cast'
 import { alpha, box, carried, frame, hash, part, smooth, type Company, type PartShot } from '../kit'
 import { CASTLE, puff, drawLeg } from '../wastes/castle'
@@ -8,8 +8,99 @@ import { COLLAPSE_HITS, drawCollapse } from './plank-collapse'
 import { drawBack, drawGround, STONES } from './plank-land'
 import {
   BUCKLE, BX0, BX_IMP, c, calciferAt, deck, DECK, DOWN, drive, FOOTFALLS, FREE, GO, ground, HEART, HOWL_IN, HOWL_LAND,
-  howlAt, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, PUT, sophieAt, STIR, T0, T1, turnipAt, wingsAt, YG,
+  howlAt, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, PUT, sophieAt, sophieU, STIR, T0, T1, turnipAt, wingsAt, YG,
 } from './plank-rig'
+
+/**
+ * Tending him on the run: while the camera is close on the deck (c14 → c16, pairs of feet landing on each), the lurch
+ * of every stride rocks her back half a pace from the grate, and on each downbeat she comes in to him at its rim
+ * again, and he flares up and looks round at her. Eased both ways, so she never jerks; outside the close she is
+ * exactly where the rig has her (at the grate's rim: she never steps into it).
+ */
+const TENDS = [c(14), c(15), c(16)]
+/** 0..1: how far in to him she is at a downbeat (1 on it), eased in over 0.4 s and out over 0.6 s. */
+function tend(t: number): number {
+  for (const b of TENDS) {
+    if (t >= b - 0.4 && t <= b) return smooth(t, b - 0.4, b)
+    if (t > b && t <= b + 0.6) return 1 - smooth(t, b, b + 0.6)
+  }
+  return 0
+}
+/** How far back along the deck the run rocks her between downbeats. */
+const TEND_BACK = 0.2
+function tendOff(t: number): number {
+  const w = smooth(t, TENDS[0] - 1.0, TENDS[0] - 0.4) * (1 - smooth(t, TENDS[2] + 0.6, TENDS[2] + 1.3))
+  return -TEND_BACK * w * (1 - tend(t))
+}
+/** Sophie on the plank, with the tending on the run (the rig's `sophieAt` otherwise, exactly). */
+const herAt = (t: number): Pt => {
+  const o = tendOff(t)
+  return o !== 0 ? onDeck(t, sophieU(t) + o, -R) : sophieAt(t)
+}
+
+/**
+ * Granite tors on the moor along the run: stacked slabs of weathered rock with heather at their feet, the plank's
+ * legs striding past them, so its speed reads across the locked-off wides. Only on the flat moor, ahead of the wreck.
+ */
+const TORS: { x: number; h: number; lean: number }[] = [
+  { x: 14.5, h: 1.7, lean: 0.12 },
+  { x: 22.5, h: 2.6, lean: -0.08 },
+  { x: 31, h: 1.35, lean: 0.1 },
+  { x: 40.5, h: 2.2, lean: -0.12 },
+]
+const TOR = mixHex(WASTES.rock, WASTES.stone, 0.35)
+const TOR_SHADE = mixHex(WASTES.rockDark, WASTES.rock, 0.25)
+
+function drawTors(p: p5, k: number, W: number, ink: string, f: { x0: number; x1: number }) {
+  for (const [n, tor] of TORS.entries()) {
+    if (tor.x < f.x0 - 3 || tor.x > f.x1 + 3) continue
+    const g = ground(tor.x)
+    // Three or four slabs, each narrower than the one under it, set a little askew, stacked from the turf.
+    const slabs: [number, number, number, number][] = []
+    let y = g + 0.06
+    let w = tor.h * 1.15
+    let cx = tor.x
+    const count = tor.h > 2 ? 4 : 3
+    for (let i = 0; i < count; i++) {
+      const hh = (tor.h / count) * (1.05 - 0.12 * i + 0.1 * hash(n, i, 51))
+      slabs.push([cx, y - hh, hh, w])
+      y -= hh - 0.02
+      cx += tor.lean * hh + (hash(n, i, 52) - 0.5) * 0.18
+      w *= 0.72 + 0.1 * hash(n, i, 53)
+    }
+    p.push()
+    p.stroke(ink)
+    p.strokeWeight(W * 0.8)
+    for (const [sx, top, hh, sw] of slabs) {
+      p.fill(TOR)
+      p.rect((sx - sw / 2) * k, top * k, sw * k, hh * k, Math.min(sw, hh) * 0.42 * k)
+      // The shade under each slab's belly and down its lee side.
+      p.push()
+      p.noStroke()
+      p.fill(alpha(p, TOR_SHADE, 0.75))
+      p.rect((sx - sw / 2 + 0.06) * k, (top + hh * 0.62) * k, (sw - 0.12) * k, hh * 0.3 * k, hh * 0.15 * k)
+      p.rect((sx + sw * 0.18) * k, (top + 0.05) * k, sw * 0.26 * k, hh * 0.85 * k, hh * 0.13 * k)
+      p.pop()
+    }
+    p.pop()
+    // Heather and moss in clumps round its foot, of every size.
+    p.push()
+    p.noStroke()
+    for (let j = 0; j < 9; j++) {
+      const side = j % 2 ? 1 : -1
+      const x = tor.x + side * (tor.h * 0.45 + 0.5 * hash(n, j, 54))
+      const big = 0.5 + 0.9 * hash(n, j, 55)
+      const gy = ground(x)
+      p.fill(hash(n, j, 56) < 0.5 ? WASTES.heather : WASTES.heatherDeep)
+      p.ellipse(x * k, (gy - 0.1 * big + 0.03) * k, 0.3 * big * k, 0.22 * big * k)
+      if (hash(n, j, 57) < 0.4) {
+        p.fill(mixHex(WASTES.moss, WASTES.rockDark, 0.2))
+        p.ellipse((x + 0.12) * k, (gy - 0.02) * k, 0.4 * big * k, 0.1 * big * k)
+      }
+    }
+    p.pop()
+  }
+}
 
 /**
  * The castle falls apart; the plank on legs; the heart given back; the slide to the cliff; the cadenza
@@ -200,6 +291,7 @@ export const plank = part<PlankState>(
       if (PLANK_AFTER.land || t <= T1) {
         drawBack(p, k, W, ink, f)
         drawGround(p, k, W, ink, f)
+        drawTors(p, k, W, ink, f)
       }
       const plankOn = t <= T1 || PLANK_AFTER.plank
       const d = deck(t)
@@ -239,7 +331,17 @@ export const plank = part<PlankState>(
         if (cal.star > 0) drawStar(p, k, t, cal.at, cal.star)
         p.push()
         p.translate(cal.at[0] * k, cal.at[1] * k)
-        drawCalcifer(p, k, W, ink, { t, size: cal.size, weak: cal.weak, look: cal.look, lean: cal.lean, mouth: cal.mouth, shut: cal.shut })
+        // As she leans in to him on the run he burns up a little and looks round at her.
+        const tn = tend(t)
+        drawCalcifer(p, k, W, ink, {
+          t,
+          size: cal.size * (1 + 0.16 * tn),
+          weak: cal.weak * (1 - 0.35 * tn),
+          look: [cal.look[0] - 1.7 * tn, cal.look[1] - 0.1 * tn],
+          lean: cal.lean * (1 - 0.5 * tn),
+          mouth: cal.mouth + 0.15 * tn,
+          shut: cal.shut * (1 - tn),
+        })
         p.pop()
       }
       // The heart: a warm light through Howl as Calcifer goes into him, and a flare as he comes out free.
@@ -280,7 +382,7 @@ export const plank = part<PlankState>(
   },
   (slot) => {
     const dur = slot.end - slot.begin
-    const segs = carried((u) => sophieAt(slot.begin + u), 0, dur, Math.round(dur * 40))
+    const segs = carried((u) => herAt(slot.begin + u), 0, dur, Math.round(dur * 40))
     const lane: Lane = { segs, fire: 0 }
     const end = laneAt(lane, dur)
     const howl: Company = {
@@ -319,30 +421,35 @@ export const plank = part<PlankState>(
       hold(247.4, 25, [BX0 - 1.5, -2.8]),
       hold(250.7, 22, [BX0 + 0.5, -1.5]),
       hold(252.3, 14, [BX0 + 2, 2.8]),
-      // The run: with it, ahead of it, low enough for the feet.
-      follow(253.8, 11.5, [2.4, 2.8]),
-      follow(257.5, 10.5, [2.7, 2.6]),
-      // Out, once, for the size of the wastes it runs across; back in for Howl.
-      follow(260.0, 16.5, [4.2, 1.2]),
-      follow(262.6, 11.5, [2.6, 2.3]),
-      // Howl out of the sky: up to meet him; then in on the two of them.
-      follow(264.4, 11.5, [1.6, 0.3]),
-      follow(266.4, 8.5, [2.3, 0.8]),
+      // The run, two framings in turn on the downbeats. A locked-off wide it crosses left to right, the wreck and its
+      // dust left behind (c10 → c12, drifting a touch); in close on the deck, legs cut at the knee, while she leans in
+      // to tend him on c14, c15 and c16; out again to a second locked-off wide, the tors going by under its legs, that
+      // Howl comes down into out of the sky and lands on (c18 → c21); then in on the two of them.
+      hold(c(10), 12.5, [4.2, 2.9]),
+      hold(c(12) + 0.55, 12.6, [4.6, 2.9]),
+      follow(c(14), 5.0, [0.6, 0.6]),
+      follow(c(16), 5.3, [0.65, 0.6]),
+      hold(c(18), 17, [31.5, 1.65]),
+      hold(c(20), 16.4, [32.3, 1.45]),
+      hold(HOWL_LAND, 15.2, [33.6, 1.2]),
+      follow(267.5, 8.5, [2.3, 0.8]),
       follow(269.2, 6.0, [1.6, 0.2]),
       follow(271.4, 4.0, [0.6, -0.35]),
       follow(272.8, 3.7, [0.45, -0.5]),
       follow(274.4, 5.2, [0.8, -0.4]),
       // The slide: with it, then a locked-off wide it crosses into, held while it comes to rest at the brink; then a
-      // slow push in to the two of them for the cadenza (Howl's stir and the glance on 286.38, 286.92, 287.36, the
-      // star crossing over them), and out a little toward the finale's framing.
+      // slow push in to the two of them for the cadenza (Howl's stir and the glance on 286.38, 286.92, 287.36), low
+      // in the frame, with the sky over them where the little star turns: he sits in its top third (about 2.6–2.9
+      // over her, 1.7–2.1 to her right), wholly in the frame on every turn, under Zoom too. Then out a little on
+      // toward the finale's first framing (8.8 cells), for the dive over their heads.
       follow(276.9, 7.5, [2.2, -0.4]),
       follow(279.6, 8.2, [2.8, -0.3]),
       hold(281.3, 8.8, lock),
       hold(283.9, 8.6, [lock[0] + 0.1, lock[1] + 0.05]),
-      hold(286.1, 4.6, [end[0] + 0.25, end[1] - 0.6]),
-      hold(289.0, 4.3, [end[0] + 0.2, end[1] - 0.62]),
-      hold(291.3, 4.6, [end[0] + 0.3, end[1] - 0.7]),
-      hold(slot.end, 5, [end[0] + 0.4, end[1] - 0.8]),
+      hold(286.1, 6.4, [end[0] + 0.8, end[1] - 1.4]),
+      hold(289.0, 5.85, [end[0] + 0.92, end[1] - 1.48]),
+      hold(291.3, 5.4, [end[0] + 1.02, end[1] - 1.55]),
+      hold(slot.end, 6.2, [end[0] + 0.85, end[1] - 1.35]),
     ]
   },
 )
