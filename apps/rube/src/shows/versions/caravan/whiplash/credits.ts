@@ -58,8 +58,25 @@ export const LAST_GONE = (() => {
   return last.at + FORM + last.hold + GO
 })()
 
-/** Where a card's top middle sits, as shares of the 16:9 frame: the middle, high, over the arch. */
+/** Where a card's top middle sits, as shares of the 16:9 frame: the middle, high, over the stage's back wall. */
 const AT: [number, number] = [0.5, 0.1]
+
+/**
+ * Where the cards go on this page. On a screen much taller than 16:9 (a phone held upright) the stage shows far
+ * more above the frame than below the machine, and the page centres the 16:9 box, which would set the cards on the
+ * machine: there they go high in the empty band over it instead. In the check (no page) the frame's own place.
+ */
+function place(): [number, number] {
+  if (typeof document === 'undefined') return AT
+  const stage = document.getElementById('stage')
+  const W = stage?.clientWidth ?? 0
+  const H = stage?.clientHeight ?? 0
+  if (!W || !H) return AT
+  const fh = (Math.min(W, (H * 16) / 9) * 9) / 16
+  const spare = (H - fh) / 2
+  if (spare < fh * 0.25) return AT
+  return [0.5, (-spare + 0.07 * H) / fh]
+}
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -73,10 +90,11 @@ function lightOf(card: Card, t: number): { light: number; rise: number } {
 export function creditsAt(t: number): TitleCard[] {
   if (t < CREDITS_AT) return []
   const out: TitleCard[] = []
+  const at = place()
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `caravan-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT })
+    out.push({ key: `caravan-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at })
   })
   return out
 }

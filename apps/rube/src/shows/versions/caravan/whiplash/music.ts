@@ -75,7 +75,7 @@ const mark = (name: string): number => data.landmarks[name] as number
 /** The recording's length. The show runs on past it, in silence, for the credits (`DURATION`). */
 export const RECORDING = data.duration
 /** The show's length: the recording, the final cut-off's ring, and the credits over the dark hall after it. */
-export const DURATION = 576
+export const DURATION = 575.5
 
 /* ------------------------------------------------------------------ onsets */
 
