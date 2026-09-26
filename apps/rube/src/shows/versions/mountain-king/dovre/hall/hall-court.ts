@@ -34,25 +34,28 @@ export interface Courtier {
   station?: { tail: number; flick: number; snort: number; toward: number }
   /** Where it goes when the front row comes down after him (x on the floor), and its grab. */
   chase?: { to: number; grab?: number }
+  /** Who it is at a glance: horns, snout, hat, heads, build, moss (`troll.ts`); no two neighbours share one. */
+  kind?: Pick<TrollLook, 'horns' | 'snout' | 'hat' | 'heads' | 'build' | 'moss'>
 }
 
 export const COURT: Courtier[] = [
   // The front row, on the floor's bench: the three sleepers whose tails he treads on, and one between.
-  { row: 0, x: 2.3, size: 1.55, seed: 101, doze: 0.55, station: { tail: TAIL_A, flick: FLICK_A, snort: SNORT_A, toward: 1 }, chase: { to: 11.4 } },
-  { row: 0, x: 6.3, size: 1.65, seed: 102, doze: -0.55, station: { tail: TAIL_B, flick: FLICK_B, snort: SNORT_B, toward: -1 }, chase: { to: 12.9 } },
-  { row: 0, x: 8.4, size: 1.5, seed: 103, doze: 0.18, chase: { to: 14.1 } },
-  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB } },
+  { row: 0, x: 2.3, size: 1.5, seed: 101, hide: TROLL.slate, doze: 0.55, station: { tail: TAIL_A, flick: FLICK_A, snort: SNORT_A, toward: 1 }, chase: { to: 11.4 }, kind: { snout: 'hooked', hat: 'hood', build: 'squat', moss: 'tufts' } },
+  { row: 0, x: 6.3, size: 1.75, seed: 102, hide: TROLL.bark, doze: -0.55, station: { tail: TAIL_B, flick: FLICK_B, snort: SNORT_B, toward: -1 }, chase: { to: 12.9 }, kind: { horns: 'ram', moss: 'beard' } },
+  { row: 0, x: 8.4, size: 1.3, seed: 103, hide: TROLL.rust, doze: 0.18, chase: { to: 14.1 }, kind: { snout: 'pig', hat: 'birch', build: 'tall', moss: 'bare' } },
+  // The elder, three-headed (after Kittelsen), the one whose eyes open first.
+  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB }, kind: { heads: 3, moss: 'crest' } },
   // The ledges: fewer, and no two alike (a big one slumped, small ones leaning in), clear of the pillars (4.3, 9.5).
   // Staggered, so no two stand one over the other in a column (the tiers must not read as shelves).
-  { row: 1, x: 3.2, size: 1.3, seed: 111, doze: 0.45 },
-  { row: 1, x: 6.95, size: 1.9, seed: 113, hide: TROLL.old, doze: -0.5 },
-  { row: 1, x: 11.25, size: 1.25, seed: 115, doze: 0.2 },
-  { row: 2, x: 1.3, size: 1.5, seed: 122, doze: -0.35 },
-  { row: 2, x: 8.3, size: 1.2, seed: 124, doze: 0.4 },
-  // The gallery in the dark: silhouettes, their eyes the only thing that shows.
-  { row: 3, x: 2.6, size: 1.2, seed: 131, doze: 0.2 },
-  { row: 3, x: 5.95, size: 1.1, seed: 133, doze: 0.25 },
-  { row: 3, x: 10.3, size: 1.15, seed: 136, doze: -0.25 },
+  { row: 1, x: 3.2, size: 1.05, seed: 111, hide: TROLL.birch, doze: 0.45, kind: { snout: 'wart', hat: 'pot' } },
+  { row: 1, x: 6.95, size: 2.45, seed: 113, hide: TROLL.old, doze: -0.5, kind: { horns: 'broken', build: 'hump', moss: 'beard' } },
+  { row: 1, x: 11.25, size: 1.4, seed: 115, hide: TROLL.slate, doze: 0.2, kind: { snout: 'hooked', hat: 'twigs', build: 'tall' } },
+  { row: 2, x: 1.3, size: 1.7, seed: 122, hide: TROLL.rust, doze: -0.35, kind: { horns: 'cow', snout: 'pig', build: 'squat' } },
+  { row: 2, x: 8.3, size: 1.0, seed: 124, doze: 0.4, kind: { snout: 'wart', hat: 'hood', build: 'tall', moss: 'tufts' } },
+  // The gallery in the dark: silhouettes, their eyes the only thing that shows (and their outlines: horns, a hat).
+  { row: 3, x: 2.6, size: 1.2, seed: 131, doze: 0.2, kind: { horns: 'ram' } },
+  { row: 3, x: 5.95, size: 1.35, seed: 133, doze: 0.25, kind: { hat: 'birch' } },
+  { row: 3, x: 10.3, size: 1.0, seed: 136, doze: -0.25, kind: { horns: 'broken' } },
 ]
 
 export const SEAT_Y = (row: number): number => (row === 3 ? GALLERY_Y : ROW_Y[row])
@@ -238,6 +241,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
       arms: Math.max(0, Math.min(1, arms)),
       seed: c.seed,
       hide: c.hide,
+      ...c.kind,
       phase,
       noTail: true,
     },
