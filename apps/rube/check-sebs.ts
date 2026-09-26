@@ -21,9 +21,8 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
   const show = sebsShow
   const cam = perf.camera!
 
-  check("sebs: the chrome is a faint byline, Directed by wustep, under the take Seb's",
-    version.label === "Seb's" && version.title === 'La La Land' && version.note === undefined &&
-    version.director?.name === 'wustep' && version.director.href === 'https://x.com/wustep')
+  check('sebs: in the picker it is Epilogue, Opus 5.5, with no note and no byline',
+    version.label === 'Opus 5.5' && version.title === 'Epilogue' && version.note === undefined && !('director' in version))
   check('sebs: the whole mix from zero (the Epilogue, then The End), credited to Justin Hurwitz and La La Land',
     perf.show === show && near(perf.duration, DURATION) && DURATION > MIX_END - 0.2 && near(END_AT, 464) && (perf.soundtrack?.offset ?? 0) === 0 &&
     !!perf.soundtrack?.src?.includes('la-la-land-sebs-mix-demo') &&

@@ -6,9 +6,8 @@ Nothing here claims any right to it.
 The music is Son Lux's *Come Recover (Empathy Fight)*, the finale cue of *Everything Everywhere All at Once*
 (Daniels, 2022). The attribution is in `docs/promo/EEAAO_COME_RECOVER_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=come-recover&take=opus55-all-at-once`. In the Shows picker it is **All at Once**, under
-the work **Come Recover**, with "Directed by wustep" set small and faint beneath it. The name links to
-https://x.com/wustep.
+Open it at `/shows/?show=come-recover&take=opus55-all-at-once`. In the Shows picker it is the work **Everything**,
+whose one take is **Opus**. A work with one take has no Version row, so the panel reads "Everything · Opus".
 
 ## What it is
 
@@ -231,8 +230,7 @@ to 332.
   - set by the page;
   - opening on "Directed by Claude Opus 5.5", and naming Evelyn, Joy, Waymond, Son Lux, the cue, the film, Daniels and p5.js;
   - with no demo disclaimer on the frame. The attribution file keeps it.
-- **The panel:** Come Recover is one take, All at Once, with the byline "Directed by wustep" and no model or
-  tech-demo line.
+- **The panel:** the work is Everything, one take, Opus, with no note and no byline.
 
 ## How it is built
 
@@ -263,9 +261,8 @@ to 332.
   - `multi/`: `skins.ts` is thirteen worlds as skins for one seesaw. Parts: `surf`, `mosaic`.
   - `void/`: `bagel.ts` is the everything bagel, driven by the pull and then by the peak, plus the drawings of the
     things it swallows. Parts: `pull`, `peak`.
-- **The shared files.** The hooks in `registry.ts`, `main.ts`, `styles.css` and `engine.ts` are byte-for-byte the
-  same hunks as Liftoff's (PR #88), so the two PRs merge in either order:
-  - `ShowVersion.director`, the byline;
+- **The shared files.** The hooks in `registry.ts`, `main.ts`, `styles.css` and `engine.ts` came in with Liftoff
+  (PR #88):
   - `Performance.titles` and the page's words layer, for the credits;
   - `Framing.angle`, the camera roll, which is unused here.
 - **Rebuilding the audio.** `sh scripts/eeaao-cue.sh <fetched cue>` rebuilds the file, and

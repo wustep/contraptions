@@ -6,7 +6,7 @@ The music is Hans Zimmer's *Cornfield Chase* and then *No Time for Caution*, bot
 - `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`;
 - `docs/promo/INTERSTELLAR_NO_TIME_FOR_CAUTION_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=interstellar&take=opus55`. In the Shows picker it is its own work, **Interstellar** (it was a take of Cornfield Chase called Liftoff until it grew to two cues of the score), and under it, faint, "Directed by wustep", the name a link to https://x.com/wustep.
+Open it at `/shows/?show=interstellar&take=opus55`. In the Shows picker it is its own work, **Voyage** (it was a take of Cornfield Chase called Liftoff until it grew to two cues of the score, then a work called Interstellar).
 
 ## What it is
 
@@ -366,6 +366,7 @@ The last pass had it wrong. The old woman in the far-side house on Cooper Statio
    - In the Shows picker the take is **Liftoff**.
    - The panel shows "Directed by wustep" in place of the one-shot tech-demo note, set small in the faintest grey. The name links to https://x.com/wustep and is underlined only on hover.
    - `ShowVersion.director` is a new optional field. Other takes keep their notes.
+   - (Since removed: the picker has no bylines, and the work is now called Voyage.)
    - The music credit ("tech demo only, not for release") stays: it is about the recordings.
    - The credits' title card now reads just "Liftoff" and "Cornfield Chase".
 

@@ -105,8 +105,8 @@ lane, or a piece in or out of a world, means rearranging it and running
 procedural machine under a steady beat, and a struck bar on every strike,
 made in the page. `check:shows` still walks that module. It is not a show.
 
-`come-recover/opus55-all-at-once` (All at Once, with a faint "Directed by
-wustep" byline from `ShowVersion.director`) is a one-shot Opus 5.5 take on Son
+`come-recover/opus55-all-at-once` (in the picker, **Everything**, one take,
+**Opus**) is a one-shot Opus 5.5 take on Son
 Lux's *Come Recover (Empathy Fight)*, the finale cue of *Everything Everywhere
 All at Once*. The recording is copyrighted and demo only
 (`docs/promo/EEAAO_COME_RECOVER_ATTRIBUTION.txt`). Every piece is new. The show
@@ -171,8 +171,7 @@ the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
 
-`interstellar/opus55` (Interstellar, with a faint "Directed by wustep" byline
-in the panel from `ShowVersion.director`) is its own work: two cues of the
+`interstellar/opus55` (in the picker, **Voyage**) is its own work: two cues of the
 score, Cornfield Chase and then No Time for Caution, so it is not a take of
 Cornfield Chase, and its one take carries no subtitle (the panel shows the
 title alone when the label repeats it). Every piece is new. It is not a
@@ -203,7 +202,7 @@ built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the secon
 from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
 (`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
 
-`la-la-land/opus55-sebs` (**Seb's**, "Directed by wustep") is a one-shot take on
+`la-la-land/opus55-sebs` (in the picker, **Opus 5.5** under **Epilogue**) is a one-shot take on
 Justin Hurwitz's *Epilogue* from La La Land, and then *The End*, 510 s in all.
 Every piece in it is new, and so are its places: Seb's club, Lipton's, a
 theatre, a white studio and a painted Hollywood, an audition in shadow play, a
@@ -217,8 +216,8 @@ against it (`apps/rube/check-sebs.ts`). The recordings are copyrighted and
 demo only: `docs/promo/LA_LA_LAND_SEBS_ATTRIBUTION.txt`. The whole story is in
 `docs/promo/LA_LA_LAND_SEBS.md`.
 
-`la-la-land/fable51-epilogue` (Epilogue, with a faint "Directed by wustep"
-byline in the panel) is Justin Hurwitz's *Epilogue* from La La Land, demo
+`la-la-land/fable51-epilogue` (in the picker, **Fable 5.1** under
+**Epilogue**) is Justin Hurwitz's *Epilogue* from La La Land, demo
 only (`docs/promo/LALALAND_EPILOGUE_ATTRIBUTION.txt`), played whole from its
 first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
 built on the same kit as Liftoff: `show.ts` holds three universes on one

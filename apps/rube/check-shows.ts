@@ -67,6 +67,8 @@ async function main(): Promise<void> {
   check('a visit starts the show', /if \(current\) void open\(current, linked \? 'link' : true\)/.test(player) && /else void play\(\)/.test(player))
   check('a named show link plays, and holds the sound only when the browser refuses it', /const linked = !!params\.get\('show'\)/.test(player) && /async function playLinked/.test(player) && /soundHeld = true/.test(player) && player.includes('The browser is holding the sound'))
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
+  check('a work with one take has no Version row to pick from', /work\.versions\.length === 1\) takeField\.hidden = true/.test(player))
+  check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
   check('Z toggles Zoom and O toggles Overview', /case 'z':/.test(player) && /case 'o':/.test(player) && player.includes('Zoom in on the action (Z)') && player.includes('Zoom out to the whole world (O)'))
 
   /* ------------------------------------------------------------------ the registry */
@@ -132,20 +134,23 @@ async function main(): Promise<void> {
   }
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
-  check('the Shows tab opens Clair de Lune, Take B', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
-  check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
-  check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
-  check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('the Shows tab opens Clair de Lune\'s one take', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
+  check('Clair de Lune is take-b, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
+  check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
+  check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
+  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
   check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
-  check('Come Recover is one take, All at Once: its model in its name, and in the panel a faint byline, Directed by wustep, and no model or tech-demo line',
-    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].label === 'All at Once' && allAtOnce[0].note === undefined &&
-    allAtOnce[0].director?.name === 'wustep' && allAtOnce[0].director.href === 'https://x.com/wustep')
+  check('come-recover is Everything, one take, Opus, with no note',
+    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus' && allAtOnce[0].note === undefined)
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
   const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
-  check('La La Land has the Epilogue take beside Seb\'s, with a faint byline (Directed by wustep) and no model or tech-demo line',
-    lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && epilogueTake?.label === 'Epilogue' && epilogueTake?.note === undefined &&
-    epilogueTake?.director?.name === 'wustep' && epilogueTake?.director?.href === 'https://x.com/wustep')
+  check('la-la-land is Epilogue, two takes, Fable 5.1 then Opus 5.5, with no notes',
+    lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
+    lalaland.map((v) => v.label).join('|') === 'Fable 5.1|Opus 5.5' && epilogueTake?.label === 'Fable 5.1')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two music-syncs', cornfield.map((v) => v.label).join('|') === '[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
@@ -153,10 +158,8 @@ async function main(): Promise<void> {
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
   const liftoffTake = interstellar?.versions[0]
-  check('Interstellar is its own work of one take, titled Interstellar and labelled the same (no subtitle)',
-    !!interstellar && interstellar.title === 'Interstellar' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Interstellar')
-  check('Interstellar\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
-    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot|liftoff/i.test(liftoffTake.label))
+  check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
+    !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
   check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'opus55-music-sync')?.take === 'opus55-music-sync')
   for (const work of shipped.works) {
     for (const version of work.versions) {
