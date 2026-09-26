@@ -55,7 +55,7 @@ const BANG = SEAM.field
 const STEP_OFF = s(1, 2)
 const LAND = s(2, 2)
 /** The castle gets up behind them, and shuts its door; its first stride away. */
-const RISE: [number, number] = [s(1, 3), s(2, 3)]
+const RISE: [number, number] = [STEP_OFF + 0.05, s(2, 2) + 0.2]
 const SHUT: [number, number] = [s(2), s(2, 2) + 0.4]
 const AWAY = [s(3), s(4), s(5), s(6), s(7)]
 /** Its three strides back across the lake, and its crouch into the water on b4. */
@@ -319,6 +319,18 @@ interface CastleNow {
   pose: CastlePose
 }
 const HAZE = mixHex(FLOWERS.mountainFar, FLOWERS.sky, 0.5)
+/** The valley's noon on the castle's near side: its iron warmed and lifted a little, never washed out. */
+const SUN = mixHex(FLOWERS.white, FLOWERS.yellow, 0.3)
+/**
+ * The air between us and the castle: a little sun on it close by (less once the fleet greys the sky), and only as
+ * much blue as a far thing takes on the far shore, where it is small. It is gone well before the castle is near, so
+ * the castle wading back reads as solid iron, never a ghost.
+ */
+function airOn(T: number, sc: number): { haze: number; to: string } {
+  const far = smooth(1 - sc, 0.4, 1 - S_FAR)
+  const sun = 0.08 * (1 - 0.6 * smooth(T, FLEET, FLEET + 3))
+  return { haze: lerp(sun, 0.46, far), to: mixHex(SUN, HAZE, far) }
+}
 function castleAt(T: number): CastleNow {
   const step = castleStep(T)
   // Going, it shrinks as a thing walking away does; coming back it wades to the middle of the lake on two strides,
@@ -339,6 +351,7 @@ function castleAt(T: number): CastleNow {
   // Smoke: a thread sitting, more walking, a great puff when the fleet comes.
   const walking = Math.min(1, Math.abs(castleStep(T + 0.2) - castleStep(T - 0.2)) * 2)
   const startle = T > FLEET ? Math.exp(-(T - FLEET) / 1.2) : 0
+  const air = airOn(T, sc)
   const pose: CastlePose = {
     t: T,
     step,
@@ -349,8 +362,8 @@ function castleAt(T: number): CastleNow {
     night: 0,
     door,
     dial,
-    haze: 0.78 * smooth(1 - sc, 0, 1 - S_FAR),
-    hazeTo: HAZE,
+    haze: air.haze,
+    hazeTo: air.to,
     dust: 0,
   }
   return { x: X_C0 + travel(step), s: sc, feet, pose }
@@ -564,10 +577,10 @@ export const field = part<FieldState>(
       company,
     }
   },
-  (slot) => {
+  () => {
     const keys: PartShot[] = [
-      { t: slot.begin + 0.9, cells: 5.0, off: [1.4, 0.7] },
-      { t: LAND, cells: 6.4, off: [2.2, -1.5] },
+      { t: BANG + 1.55, cells: 5.6, off: [1.0, -0.1] },
+      { t: LAND, cells: 6.4, off: [1.9, -0.9] },
       { t: BOARD, cells: 6.8, off: [1.4, -1.4] },
       { t: TIP, cells: 7.8, off: [2.2, 0.6] },
       { t: GATES[1], cells: 7.8, off: [1.8, 0.8] },
@@ -575,8 +588,9 @@ export const field = part<FieldState>(
       { t: CLACK, cells: 8.0, hold: [X_REST + 2.0, GR - 2.5], w: 0.75 },
       { t: FLEET - 0.1, cells: 6.6, hold: [X_REST + 1.3, GR - 2.35], w: 0.8 },
       { t: WINGS, cells: 9.6, hold: [X_REST + 2.2, GR - 3.4], w: 0.8 },
-      { t: STONES[1], cells: 7.8, off: [1.4, -1.1] },
-      { t: PORCH, cells: 5.3, off: [0.9, -0.9] },
+      { t: STONES[1], cells: 7.8, off: [1.1, -0.7] },
+      { t: b(4), cells: 7.0, off: [0.6, -0.3] },
+      { t: PORCH, cells: 5.2, off: [0.8, -0.6] },
       { t: END, cells: 4.5, off: [0.9, -0.8] },
     ]
     return keys
@@ -652,8 +666,10 @@ function drawRanges(p: p5, k: number, f: Frame, T: number, flip: boolean, which:
       const X = x0 + ((x1 - x0) * i) / n
       pts.push([X, ridge(r, X, f.cx)])
     }
+    // In the lake the ranges lie softer: toward the water's own blue, and their snow only a paler cap on them.
+    const body = mixHex(r.fill, FLOWERS.fleet, 0.12 * war)
     p.noStroke()
-    p.fill(mixHex(r.fill, FLOWERS.fleet, 0.12 * war))
+    p.fill(flip ? mixHex(body, FLOWERS.lake, 0.5) : body)
     p.beginShape()
     p.vertex(x0 * k, (YH + sgn * 0.6) * k)
     for (const [X, h] of pts) p.vertex(X * k, (YH - sgn * h) * k)
@@ -661,7 +677,7 @@ function drawRanges(p: p5, k: number, f: Frame, T: number, flip: boolean, which:
     p.endShape(p.CLOSE)
     if (r.snow > 8) continue
     // The snow: the peaks above the snowline, with a ragged lower edge.
-    p.fill(FLOWERS.snow)
+    p.fill(flip ? mixHex(mixHex(FLOWERS.snow, body, 0.45), FLOWERS.lake, 0.25) : FLOWERS.snow)
     let run: Pt[] = []
     const flush = () => {
       if (run.length > 2) {
@@ -669,7 +685,7 @@ function drawRanges(p: p5, k: number, f: Frame, T: number, flip: boolean, which:
         for (const [X, h] of run) p.vertex(X * k, (YH - sgn * h) * k)
         for (let j = run.length - 1; j >= 0; j--) {
           const [X, h] = run[j]
-          const edge = Math.max(r.snow, h - 0.5 - 0.35 * hash(Math.round(X * 8), 7))
+          const edge = flip ? Math.max(r.snow, h - 0.45) : Math.max(r.snow, h - 0.5 - 0.35 * hash(Math.round(X * 8), 7))
           p.vertex(X * k, (YH - sgn * Math.min(h, edge)) * k)
         }
         p.endShape(p.CLOSE)
@@ -841,7 +857,7 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (y1 - y0) * k)
   // What it reflects, faint.
-  ctx.globalAlpha = 0.28
+  ctx.globalAlpha = 0.22
   drawRanges(p, k, f, T, true, [0, 1])
   ctx.globalAlpha = 0.35
   drawFleet(p, k, W, ink, T, f.cx, true)
@@ -855,6 +871,25 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
     p.scale(1, -1)
     drawCastle(p, k * castle.s, W * Math.max(0.42, castle.s), ink, { ...castle.pose, smoke: 0 })
     p.pop()
+  }
+  ctx.globalAlpha = 1
+  // Ripples: fine lines of the water's own colour laid across what it reflects, breaking it up; closer together
+  // far off, and drifting slowly.
+  ctx.fillStyle = g
+  const yTop = depthY(GW, S_SHORE)
+  for (let j = 0; j < 46; j++) {
+    const y = yTop + 0.05 + 0.028 * j ** 1.45
+    if (y < y0 - 0.1 || y > y1 + 0.1) continue
+    const th = 0.02 + 0.0006 * j
+    // Close to us they are fainter: there the water is its own colour, and the lines must not become stripes.
+    const near = 1 - 0.65 * smooth(j, 14, 34)
+    const drift = Math.sin(T * 0.35 + j * 1.7) * 0.6
+    for (let x = Math.floor(f.x0 / 1.3) * 1.3 - 1.3; x < f.x1 + 1.3; x += 1.3) {
+      const q = Math.round(x / 1.3)
+      const len = 0.5 + 0.9 * hash(q, j, 91)
+      ctx.globalAlpha = (0.45 + 0.4 * hash(q, j, 92)) * near
+      ctx.fillRect((x + drift + 0.4 * hash(q, j, 93)) * k, y * k, len * k, th * k)
+    }
   }
   ctx.globalAlpha = 1
   // Light on the water: short strokes of shine, drifting.
@@ -1246,30 +1281,85 @@ function drawFlumeFront(p: p5, k: number, W: number, ink: string, T: number): vo
   p.pop()
 }
 
+/**
+ * The shower from a gate's flap: water let go under the flume's floor falls as a short sheet that breaks into
+ * streaks and drops, spreading a little, and is gone into the flowers; a few drops bounce up where it lands. Every
+ * drop falls as a drop does (from rest, under gravity), so the streaks stretch as they go and the shower keeps
+ * falling for a moment after the flap has shut.
+ */
+function drawShower(p: p5, k: number, W: number, g: number, T: number): void {
+  const x0 = BED_X[g]
+  const top = floorAt(x0) + 0.1
+  const H = GR - top
+  const TF = Math.sqrt((2 * H) / GRAVITY)
+  const flow = (t: number): number => flapOpen(g, t)
+  if (T < GATES[g] || (flow(T) < 0.01 && flow(T - TF) < 0.01 && T > GATES[g] + 1)) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const falling = mixHex(FLOWERS.lake, FLOWERS.lakeDeep, 0.2)
+  p.push()
+  // The sheet, just under the flap: whole for a hand's breadth, thinning to nothing as it breaks up.
+  const now = flow(T)
+  const sheet = Math.min(0.55, 0.5 * GRAVITY * Math.max(0, T - GATES[g]) ** 2)
+  if (now > 0.02 && sheet > 0.02) {
+    const gr = ctx.createLinearGradient(0, top * k, 0, (top + sheet) * k)
+    gr.addColorStop(0, alpha(p, falling, 0.8 * now).toString())
+    gr.addColorStop(1, alpha(p, falling, 0).toString())
+    ctx.fillStyle = gr
+    ctx.beginPath()
+    ctx.moveTo((x0 - 0.12) * k, top * k)
+    ctx.lineTo((x0 + 0.12) * k, top * k)
+    ctx.lineTo((x0 + 0.1) * k, (top + sheet) * k)
+    ctx.lineTo((x0 - 0.1) * k, (top + sheet) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  // The streaks and drops: each let go at its own moment, as much as the flap was letting through then.
+  const N = 44
+  p.strokeCap(p.ROUND)
+  for (let i = 0; i < N; i++) {
+    const a = (T + hash(i, g, 21) * TF) % TF
+    const w = flow(T - a)
+    if (w < 0.02) continue
+    const vx = (hash(i, g, 22) - 0.5) * 0.55
+    const x = x0 + (hash(i, g, 23) - 0.5) * 0.22 + vx * a
+    const y = top + 0.5 * GRAVITY * a * a
+    if (y < top + 0.12) continue
+    const len = Math.min(0.32, 0.05 + GRAVITY * a * 0.028)
+    const fade = w * (1 - smooth(y, GR - 0.55, GR - 0.04))
+    if (fade < 0.02) continue
+    if (i % 3 === 0) {
+      p.noStroke()
+      p.fill(alpha(p, mixHex(FLOWERS.lake, FLOWERS.white, 0.5), 0.9 * fade))
+      p.circle((x + vx * 0.02) * k, y * k, 0.05 * k)
+    } else {
+      p.stroke(alpha(p, i % 3 === 1 ? falling : mixHex(FLOWERS.lake, FLOWERS.white, 0.45), 0.9 * fade))
+      p.strokeWeight(W * (i % 3 === 1 ? 1.5 : 1.0))
+      p.line((x - vx * len * 0.1) * k, (y - len) * k, x * k, y * k)
+    }
+  }
+  // Where it comes down: a few drops thrown back up off the leaves.
+  p.noStroke()
+  for (let i = 0; i < 10; i++) {
+    const P = 0.3
+    const a = (T + hash(i, g, 24) * P) % P
+    const w = flow(T - a - TF)
+    if (w < 0.02) continue
+    const v = 0.9 + 0.7 * hash(i, g, 25)
+    const h = v * a - 0.5 * GRAVITY * a * a
+    if (h < 0) continue
+    const x = x0 + (hash(i, g, 26) - 0.5) * 0.6 + (hash(i, g, 27) - 0.5) * 0.4 * a
+    p.fill(alpha(p, mixHex(FLOWERS.lake, FLOWERS.white, 0.6), 0.8 * w * (1 - a / P)))
+    p.circle(x * k, (GR - 0.3 * (1 - Math.min(1, Math.abs(x - x0) * 2)) - h) * k, 0.035 * k)
+  }
+  p.pop()
+}
+
 /** The showers from the flaps, and the beds under them, opening. */
 function drawBeds(p: p5, k: number, W: number, T: number): void {
   p.push()
   for (let g = 0; g < 3; g++) {
     const x0 = BED_X[g]
-    const open = flapOpen(g, T)
-    if (open > 0.01) {
-      const top = floorAt(x0) + 0.12
-      const fallen = Math.min(1, (T - GATES[g]) / 0.45)
-      const y1 = lerp(top, GR - 0.05, fallen)
-      p.noStroke()
-      p.fill(alpha(p, FLOWERS.lake, 0.42 * open))
-      p.beginShape()
-      p.vertex((x0 - 0.1) * k, top * k)
-      p.vertex((x0 + 0.14) * k, top * k)
-      p.vertex((x0 + 0.02 + 0.55 * fallen) * k, y1 * k)
-      p.vertex((x0 - 0.02 - 0.55 * fallen) * k, y1 * k)
-      p.endShape(p.CLOSE)
-      p.fill(alpha(p, FLOWERS.white, 0.7 * open))
-      for (let i = 0; i < 9; i++) {
-        const u = ((T * 2.2 + i / 9) % 1) * fallen
-        p.circle((x0 + (hash(i, g, 3) - 0.5) * 1.1 * u) * k, lerp(top, GR, u) * k, 0.035 * k)
-      }
-    }
+    drawShower(p, k, W, g, T)
     // The bed: stems with buds, bowed and closed until the water reaches them; then they lift and open, one after
     // another outward from where the shower falls.
     for (let j = 0; j < 11; j++) {
