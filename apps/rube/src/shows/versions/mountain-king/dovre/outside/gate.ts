@@ -109,23 +109,26 @@ export const gate = part<GateState>(
     const at = (t: number) => slot.begin + t
     const hold = (x: number, y: number): Pt => [x, y]
     return [
-      // The whole Dovre at night over the horns' note: the west flank, the cliff with the gate at its foot, the summit
-      // over the hall, the east flank falling away; then a slow push in as they come up the flank. (Held west of the
-      // summit's middle, so the pig is in the frame from the first frame even under Zoom.)
+      // The whole Dovre at night on the horns' first breath: the west flank, the cliff with the gate at its foot, the
+      // summit over the hall, the east flank falling away. (Held west of the summit's middle, so the pig is in the
+      // frame from the first frame even under Zoom.) Then one steady push in on the riders, west and down, so the pig
+      // and both balls read by ~2 s and sit in the frame's lower left, the stair and the gate ahead of them, by the
+      // theme's first note (4.36).
       { t: at(0), cells: 44, hold: hold(23.2, -10.2), w: 1 },
-      { t: at(2.4), cells: 39, hold: hold(21.2, -9.0), w: 1 },
-      // Down to them as the theme begins, and after them up the flank.
+      { t: at(1.5), cells: 30, hold: hold(15.2, -7.2), w: 1 },
+      { t: at(4.36), cells: 13.5, hold: hold(10.0, -4.3), off: [3.6, -1.9], w: 1 },
+      // Down to them, and after them up the flank.
       { t: at(6.5), cells: 7.8, off: [1.4, -0.9], w: 0 },
       { t: at(8.6), cells: 6.5, hold: hold(15.4, -3.8), off: [1.1, -0.7], w: 0.4 },
       // Up the stair to the landing and the door (the pig left behind, out of the frame).
       { t: at(10.8), cells: 5.1, hold: hold(18.6, -4.55), w: 0.7 },
       { t: at(12.0), cells: 5.0, hold: hold(18.65, -4.6), w: 0.9 },
       // Back to take in the whole stair, the pig at its foot, as he creeps to the edge.
-      { t: at(13.55), cells: 5.5, hold: hold(15.95, -4.0), w: 1 },
-      // The pebble down the whole stair, in one frame.
-      { t: at(14.75), cells: 5.3, hold: hold(15.75, -3.25), w: 1 },
-      // Down with it through the drain into the works: the pan, the spark, the lamp.
-      { t: at(15.75), cells: 6.2, hold: hold(15.45, -2.15), w: 1 },
+      { t: at(13.55), cells: 5.2, hold: hold(15.85, -4.0), w: 1 },
+      // In close on the pebble down the stair, him a step behind it, the drain at the stair's foot already in the frame.
+      { t: at(14.3), cells: 4.8, hold: hold(15.6, -3.0), w: 1 },
+      // Its last step, the drop through the drain and the spark in the pan below, all in one frame with him leaning over.
+      { t: at(15.75), cells: 6.2, hold: hold(15.45, -2.6), w: 1 },
       // The whole machine: the pan sinking, the fire running under the stair, the door going down.
       { t: at(17.7), cells: 7.4, hold: hold(17.3, -1.9), w: 1 },
       // In on the door.
