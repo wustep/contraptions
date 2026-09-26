@@ -147,23 +147,24 @@ function shots(): PartShot[] {
     // The toss: one framing, held, from the throw through the stick's top to the catch and the slam.
     k(TOSS - 0.35, THROW.cells, THROW.hold),
     k(SLAM + 0.4, THROW.cells - 0.1, [THROW.hold[0] - 0.05, THROW.hold[1] + 0.05]),
-    // The snare under both sticks.
-    cu(293.552, CU.snare),
+    // The snare under both sticks, the arms up to him at the top of the frame.
+    k(293.552, 3.8, [-0.35, -1.38]),
     // The whole machine, and Fletcher watching from his podium.
     k(296.0, 8.4, [2.1, -1.7], 0.95),
     k(298.4, 8.0, [1.9, -1.6], 0.95),
     // In again: him, the snare and the hi-hat.
     k(300.6, 5.0, [-0.3, -1.45]),
     k(303.2, 4.6, [-0.2, -1.5]),
-    // The snare and the floor tom trading: both hands, close.
-    k(TRADE[0] + 0.7, 3.5, [-1.35, -0.35]),
-    k(310.3, 3.6, [-1.3, -0.4]),
+    // The snare and the floor tom trading: both hands, close, and him over them at the top of the frame.
+    k(TRADE[0] + 0.7, 4.0, [-1.2, -1.32]),
+    k(310.3, 3.9, [-1.25, -1.28]),
     // His head and the hi-hat again.
     k(312.6, 4.4, [0.05, -1.8]),
     k(314.8, 4.6, [-0.2, -1.6]),
-    // The kick drum's pulse: down the shin to the pedal and his boot on it.
-    cu(PULSE + 0.7, CU.pedal),
-    cu(318.6, CU.pedal, 0, -0.1),
+    // The kick drum's pulse: a tilt down the shin to his boot on the pedal, briefly; then all of him, head to foot.
+    cu(PULSE + 0.35, CU.pedal, 0.08, -0.5),
+    cu(317.8, CU.pedal, -0.05, 0.05),
+    k(319.7, 5.5, [-0.45, -0.25]),
     // Out to all of him, head to foot, and down to the snare as the frame flies out.
     k(UNSEAT - 0.5, 6.0, [-0.6, -0.7]),
     k(DOWN + 0.15, 5.2, [-0.55, -0.9]),
