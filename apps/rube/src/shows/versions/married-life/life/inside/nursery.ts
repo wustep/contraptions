@@ -742,6 +742,26 @@ export const nursery = part<NurseryState>(
       }
       p.pop()
     },
+    // The storey below is unlit while the nursery plays, as a doll's house lights only the room in play: under Zoom
+    // the frame keeps a sixth of its height below their floor, and the living room's props have no job there yet. It
+    // is lit again when the long take starts in the yard (84.376).
+    over: (p, s, c) => {
+      const T = c.t + s.begin
+      if (T < CUT.nursery - 0.01 || T > E + 0.01) return
+      const { k } = c
+      const x0 = INSIDE.backWall[0] - 1 - OX
+      const x1 = INSIDE.frontWall[1] + 1 - OX
+      const top = INSIDE.ceil - OY
+      p.push()
+      p.rectMode(p.CORNER)
+      p.noStroke()
+      p.fill(mixHex(HOME.section, INK, 0.55))
+      px(p, k, x0, top, x1, INSIDE.ground + 3 - OY)
+      // The slab's underside catches a little of the nursery's light.
+      p.fill(alpha(p, HOME.section, 0.8))
+      px(p, k, x0, top, x1, top + 0.04)
+      p.pop()
+    },
   },
   (slot) => {
     const knots = [C_GO, C_TAKE, ON_PEDAL, ...STAMPS, C_OFF_T, OFF, 69.8, 72.35]
