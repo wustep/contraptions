@@ -986,15 +986,23 @@ function drawSplashes(p: p5, k: number, T: number, cx: number): void {
       const x = X + fx * c.s
       p.fill(alpha(p, FLOWERS.white, 0.5 * fade))
       p.ellipse(x * k, Y * k, (0.9 + 1.2 * u) * bu.wide * c.s * 1.6 * k, 0.16 * c.s * k)
+      // The spray: streaks of every length along the way each is going (never round beads), thinning as they fall.
+      p.strokeCap(p.ROUND)
       for (let i = 0; i < 7; i++) {
         const dir = (hash(i, j, 61) - 0.5) * 1.6
         const v = (2.4 + 1.6 * hash(i, j, 62)) * c.s * (0.7 + bu.wide * 0.5)
         const dx = dir * v * u * 0.5
         const dy = -v * u + 0.5 * GRAVITY * c.s * u * u
         if (dy > 0.05) continue
-        p.fill(alpha(p, FLOWERS.white, 0.75 * fade))
-        p.circle((x + dx) * k, (Y + dy) * k, (0.05 + 0.04 * hash(i, j, 63)) * c.s * 1.6 * k)
+        const vx = dir * v * 0.5
+        const vy = -v + GRAVITY * c.s * u
+        const len = 0.045 + 0.06 * hash(i, j, 64)
+        const sp = Math.hypot(vx, vy) || 1
+        p.stroke(alpha(p, FLOWERS.white, (0.45 + 0.25 * hash(i, j, 65)) * fade))
+        p.strokeWeight((0.012 + 0.016 * hash(i, j, 63)) * c.s * 1.6 * k)
+        p.line((x + dx) * k, (Y + dy) * k, (x + dx - (vx / sp) * len * c.s) * k, (Y + dy - (vy / sp) * len * c.s) * k)
       }
+      p.noStroke()
     })
   }
   p.pop()
