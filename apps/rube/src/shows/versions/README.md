@@ -264,6 +264,32 @@ rendered as one period of a circle, and every note as it lands is written to
 (`apps/rube/checks/gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
+`caravan/opus55` (in the picker, **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
+(Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson), the film's finale and drum solo, played whole
+from its first sample and demo only (`apps/rube/src/shows/versions/caravan/ATTRIBUTION.txt`), with the credits after
+it in silence: 576 s. It tells the film in order over the recording, in three universes on one clock with a match
+cut between each (`caravan/whiplash/show.ts`): Shaffer (the practice room, the studio band, "not quite my tempo",
+the practice room at night), the road (the competition, the crash on the stop-time breaks), and Carnegie Hall (the
+sabotage, the solo, the hush, the build, the rubato, the finale). Parts are built to timed slots on the Liftoff kit,
+with company balls for Fletcher, his father and Tanner, and a director's clock for the people at Carnegie
+(`carnegie/conductor.ts`). The tune is on a 280 bpm click; the solo is free, so it strikes the recording's strokes
+drum by drum; the rubato strikes all 162 ride strokes one by one. Everything is measured once by
+`scripts/shows/caravan-onsets.py` into `scripts/shows/plans/caravan-onsets.json`, and `check:shows` holds every strike
+to it (`apps/rube/checks/caravan.ts`), with the people where the film has them and Fletcher's fist closing only on the
+last cut-off. The report is `apps/rube/src/shows/versions/caravan/CARAVAN.md`.
+
+`married-life/opus55` (in the picker, **Married Life**, one take, **Opus 5.5**) is Michael Giacchino's *Married
+Life* from Up, whole, demo only (`apps/rube/src/shows/versions/married-life/ATTRIBUTION.txt`): the film's montage
+of Carl and Ellie's life, told as one path cut the way the film cuts it. Every piece is new. The code is
+`married-life/life/`, on the same kit as Liftoff and Epilogue (parts built to timed slots, an authored camera, the
+end credits from `Performance.titles`), with Everything's legs and match cuts: four places come back (the church,
+the house, the hill, the clinic), and at each cut Carl holds still on the screen while the place and the year change
+round him. The stage draws no ball here: `life/cast.ts` draws Carl as a rounded square and Ellie round, and his
+balloon at the end. The waltz does not keep one tempo, so `scripts/shows/married-life-onsets.py` tracks it beat by
+beat (bars and their place in the bar) into `scripts/shows/plans/married-life-onsets.json`; `check:shows` holds
+every strike to it (`apps/rube/checks/married-life.ts`). The report is
+`apps/rube/src/shows/versions/married-life/MARRIED_LIFE.md`.
+
 `mountain-king/opus55` (in the picker, **Mountain King**, one take, **Opus 5.5**) is Grieg's *In the Hall of the
 Mountain King* played whole by a chain reaction that grows with the music, from one pebble tipped at the trolls'
 gate to the mountain's own machinery running away and the mountain coming down. It follows Ibsen: Peer Gynt (the

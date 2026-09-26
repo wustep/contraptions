@@ -38,7 +38,7 @@ npm run dev
 npm run build
 ```
 
-`npm run dev` serves Machine at [http://localhost:8791/](http://localhost:8791/). Explorations is at `/explorations/`, Shows at `/shows/`, and Playground at `/playground/`.
+`npm run dev` serves Machine at [http://localhost:8791/machine/](http://localhost:8791/machine/). `/` redirects there and keeps the query. Explorations is at `/explorations/`, Shows at `/shows/`, and Playground at `/playground/`.
 
 `npm run build` writes one `dist/` with the same paths. One Vite app serves every mode, in dev and in the build.
 
@@ -47,7 +47,7 @@ Old links still work. `/sandbox/` redirects to Explorations and `/rube/` redirec
 ## Where things are
 
 ```
-index.html, explorations/, shows/, playground/, builder/   one page per mode (sandbox/ and rube/ only redirect)
+machine/, explorations/, shows/, playground/, builder/   one page per mode (index.html, sandbox/ and rube/ only redirect)
 src/                          Explorations, and what every mode shares
   core/  contraptions/  worlds/  ui/
 apps/rube/                    Machine, and the modes built on it
