@@ -39,7 +39,8 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * on silently towards a sound that comes in late. A link that names the
  * show is the exception. That visit should already be going when it is
  * seen: sound if the browser allows it, and if it does not, the picture
- * anyway, with the sound brought in on the next click or key.
+ * anyway, with the sound brought in on the next click or key — and a
+ * Sound button on the stage so a phone with the panel away still says so.
  */
 
 const { works, problems } = discoverShows()
@@ -307,6 +308,13 @@ const bigPlayLabel = el('span', {}, ['Play'])
 const bigPlay = el('button', { type: 'button', class: 'stage-play' }, [icon(ICON.play), bigPlayLabel, el('kbd', {}, ['space'])])
 bigPlay.addEventListener('click', () => {
   bigPlay.blur()
+  if (soundHeld) {
+    soundHeld = false
+    joinedAt = performance.now()
+    setMuted(false)
+    if (transport && perf?.soundtrack) void music.play(transport.now())
+    return
+  }
   void play()
 })
 stageRoot.append(bigPlay)
@@ -522,9 +530,18 @@ function sync(): void {
   for (const b of speedSeg.node.querySelectorAll('button')) b.disabled = busy
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
-  musicBtn.classList.toggle('on', hasMusic && !muted)
-  musicBtn.replaceChildren(hasMusic ? (muted ? 'Music off' : 'Music on') : 'No music', ...(hasMusic ? [el('kbd', {}, ['M'])] : []))
-  musicBtn.title = hasMusic ? (muted ? 'Turn the music on (M)' : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.') : 'This version has no soundtrack'
+  musicBtn.classList.toggle('on', hasMusic && !muted && !soundHeld)
+  musicBtn.replaceChildren(
+    hasMusic ? (soundHeld ? 'Tap for sound' : muted ? 'Music off' : 'Music on') : 'No music',
+    ...(hasMusic ? [el('kbd', {}, ['M'])] : []),
+  )
+  musicBtn.title = hasMusic
+    ? soundHeld
+      ? 'The browser is holding the sound. Click or press M to bring it in.'
+      : muted
+        ? 'Turn the music on (M)'
+        : 'Turn the music off (M). The show keeps its time; a saved video keeps its music.'
+    : 'This version has no soundtrack'
   say(
     transportNote,
     perf?.soundtrack && music.state() === 'failed'
@@ -547,11 +564,13 @@ function sync(): void {
   stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
   retryBtn.hidden = !failed
 
-  // The stage's own play button: at the top, at the end, or where the browser is waiting for a press.
+  // The stage's own play button: at the top, at the end, where the browser is waiting for a press,
+  // or where a deep link is playing with the sound held — the panel may be hidden on a phone, so
+  // the stage itself must say that a tap brings the music in.
   const t = transport?.now() ?? 0
   const atEnd = !!transport && !transport.loop && t >= transport.duration
-  bigPlay.hidden = !ready || playing || busy || !(blocked || t <= 0 || atEnd)
-  bigPlayLabel.textContent = atEnd ? 'Replay' : 'Play'
+  bigPlay.hidden = !ready || busy || (playing ? !soundHeld : !(blocked || t <= 0 || atEnd))
+  bigPlayLabel.textContent = soundHeld ? 'Sound' : atEnd ? 'Replay' : 'Play'
 
   // Export.
   sizeSeg.set(FRAME_SIZES.indexOf(size))
@@ -659,7 +678,7 @@ function tick(): void {
       scrub.style.setProperty('--p', `${p * 100}%`)
     }
     // Leaving the top hides the stage's play button, and coming back to it shows it.
-    const wantBig = !transport.playing && !recording && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))
+    const wantBig = !recording && (soundHeld || (!transport.playing && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))))
     if (wantBig === bigPlay.hidden) sync()
     renderWords(t)
     followPanel(transport.playing)
