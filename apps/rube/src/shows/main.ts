@@ -235,7 +235,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     const wrong = performanceProblems(loaded)
     if (wrong.length) throw new Error(wrong.join(', '))
     perf = loaded
-    transport = new Transport({ duration: loaded.duration, heard: () => music.position() })
+    transport = new Transport({ duration: loaded.duration, heard: () => music.position(), loop: !!loaded.loop })
     transport.setSpeed(speed)
     music.load(loaded.soundtrack ?? null)
     stage.set(loaded)
@@ -479,7 +479,7 @@ function sync(): void {
 
   // The stage's own play button: at the top, at the end, or where the browser is waiting for a press.
   const t = transport?.now() ?? 0
-  const atEnd = !!transport && t >= transport.duration
+  const atEnd = !!transport && !transport.loop && t >= transport.duration
   bigPlay.hidden = !ready || playing || busy || !(blocked || t <= 0 || atEnd)
   bigPlayLabel.textContent = atEnd ? 'Replay' : 'Play'
 
@@ -565,7 +565,8 @@ function tick(): void {
   if (!alive) return
   if (transport) {
     const t = transport.now()
-    if (transport.playing && t >= transport.duration) {
+    // A show stops at its end; a loop has none.
+    if (transport.playing && !transport.loop && t >= transport.duration) {
       pause()
     }
     const text = `${clockText(t)} / ${clockText(transport.duration)}`
@@ -579,7 +580,7 @@ function tick(): void {
       scrub.style.setProperty('--p', `${p * 100}%`)
     }
     // Leaving the top hides the stage's play button, and coming back to it shows it.
-    const wantBig = !transport.playing && !recording && (blocked || t <= 0 || t >= transport.duration)
+    const wantBig = !transport.playing && !recording && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))
     if (wantBig === bigPlay.hidden) sync()
     renderWords(t)
   }

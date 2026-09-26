@@ -38,6 +38,12 @@ export interface SoundtrackSpec {
   credit?: string
   /** Where the credit leads. */
   href?: string
+  /**
+   * Seconds of recording, from `offset`, that repeat for as long as the show plays: a loop's music, played round
+   * without a gap at the seam. The recording should carry a little of the loop's own end before `offset` and of its
+   * start after it, so that a decoder that trims its edges a few samples differently still meets itself.
+   */
+  loop?: number
 }
 
 /** A version, loaded: everything the player needs to put it on the stage. */
@@ -57,6 +63,11 @@ export interface Performance {
   cuts?(t: number): boolean
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
+  /**
+   * The show is a loop: its end is its start, and the player goes round and round it rather than stopping at the end.
+   * A soundtrack for one says how long its loop is (`SoundtrackSpec.loop`), and that is the show's duration.
+   */
+  loop?: boolean
   /**
    * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
    * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
@@ -194,6 +205,7 @@ export function performanceProblems(p: Performance): string[] {
     if (!text(p.soundtrack.src)) out.push('the soundtrack has no src')
     const offset = p.soundtrack.offset ?? 0
     if (!Number.isFinite(offset) || offset < 0) out.push(`the soundtrack's offset is ${offset}`)
+    if (p.loop && p.soundtrack.loop !== p.duration) out.push(`a loop's soundtrack loops ${p.soundtrack.loop} s of a ${p.duration} s show`)
   }
   return out
 }

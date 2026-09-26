@@ -25,10 +25,13 @@ export interface TransportOptions {
   wall?: () => number
   /** Where the soundtrack is, in seconds of show, or null when it has no say. */
   heard?: () => number | null
+  /** Round and round: past the end is the start again, and the show never ends. */
+  loop?: boolean
 }
 
 export class Transport {
   readonly duration: number
+  readonly loop: boolean
   private readonly wall: () => number
   private readonly heard: () => number | null
   private base = 0
@@ -38,12 +41,19 @@ export class Transport {
 
   constructor(options: TransportOptions) {
     this.duration = options.duration
+    this.loop = !!options.loop
     this.wall = options.wall ?? (() => performance.now())
     this.heard = options.heard ?? (() => null)
   }
 
   private clamp(t: number): number {
-    return Math.max(0, Math.min(this.duration, Number.isFinite(t) ? t : 0))
+    const at = Number.isFinite(t) ? t : 0
+    if (this.loop) {
+      // Taken round the circle: the end is the start.
+      const u = at % this.duration
+      return u < 0 ? u + this.duration : u
+    }
+    return Math.max(0, Math.min(this.duration, at))
   }
 
   now(): number {
@@ -66,9 +76,9 @@ export class Transport {
     return this.rate
   }
 
-  /** At the end, with nowhere left to run. */
+  /** At the end, with nowhere left to run. A loop never is. */
   get ended(): boolean {
-    return this.now() >= this.duration
+    return !this.loop && this.now() >= this.duration
   }
 
   play(): void {
