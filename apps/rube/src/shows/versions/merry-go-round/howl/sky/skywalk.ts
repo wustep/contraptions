@@ -5,7 +5,7 @@ import { beatsIn } from '../music'
 import { DIAL, TOWN } from '../worlds'
 import { drawPerched, drawPigeon, drawSoldier } from './figures'
 import { ALLEY_EXIT, END, HOP_OFF, howlWalk, LAND_AT, LIFT, NOON_BAR, sophieWalk, STROKES, TOWER_X, W } from './path'
-import { G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
+import { CAFE, G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
 
 /**
  * The walk on the air (49.035 → 85.8): the sky builder's. The film's most famous minute.
@@ -16,10 +16,11 @@ import { G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
  * them; they walk on over the roofs, a step on every downbeat, hers small and stiff at first and freer bar by bar;
  * each chimney they pass over puffs up soft smoke on their step. On the swell (70.002) her step goes right over the
  * town hall's weathercock and sets it spinning, the clock's hand clicks onto noon, the bell below them swings into
- * its first stroke and the pigeons burst out of the belfry, and the camera pulls out to the whole town: the tower,
- * the square with the parade marching across it, the café, the two of them small and high over it all. Twelve
- * strokes of noon, one a bar, while they cross the sky over the square and come down, stepping, in a long S onto
- * the café's balcony, the last step small (81.369). He bows, hops up onto the rail's end on the next downbeat, and
+ * its first stroke and the pigeons burst out of the belfry, and the camera pulls out to the tower whole (bell, clock,
+ * weathercock), the two of them a fifth down against the sky, crossing past it. Twelve strokes of noon, one a bar,
+ * while they cross the sky over the square and come down, stepping, in a long S onto the café's balcony, the last
+ * step small (81.369); the camera comes down with them, and the square rises into the frame with the parade marching
+ * across it under them the other way, each man glancing up as they pass over. He bows, hops up onto the rail's end on the next downbeat, and
  * climbs the air away over the roofs, a step a bar, out of shot; she steps to the rail to watch him go. At 85.8 she is
  * at rest on the balcony, alone, and the cut takes her home.
  */
@@ -289,11 +290,18 @@ function drawRidgeBirds(p: p5, c: Ctx, t: number): void {
 
 /* ------------------------------------------------------------------ the parade */
 
-/** The parade crossing the square right to left: a flag-bearer and seven men, a step on every beat of the waltz. */
+/**
+ * The parade crossing the square right to left: a flag-bearer and seven men, a step on every beat of the waltz. It
+ * comes out along the café's front and into the square just as the camera comes down with the two of them onto it
+ * (the ground in the frame from about 77), so the two pass over the column going the other way: the standard under
+ * her at 77, the column's middle under them at 78, its tail at 79 as they come in over the café.
+ */
 const PARADE_BEATS = beatsIn(58, END + 1).map((b) => b.t)
-const LEAD_AT = 72.3
-const LEAD_X = SQUARE[0] + 2.0
+const LEAD_AT = 78.0
+const LEAD_X = SQUARE[1] - 3.6
 const PACE = 0.33
+/** How long the column is (the standard and seven men behind it). */
+const FILE = 0.74
 function drawParade(p: p5, c: Ctx, t: number): void {
   const { k, ink, weight } = c
   const L = lightAt(t)
@@ -305,9 +313,16 @@ function drawParade(p: p5, c: Ctx, t: number): void {
   const stride = 0.22 * (1 - 2 * u) * (j % 2 ? -1 : 1)
   const bob = 0.025 * Math.sin(Math.PI * u)
   const lead = LEAD_X - PACE * (t - LEAD_AT)
+  // Where the two of them are over the square: each man tips his head back a little as they pass over him (a glance
+  // up, never a stop in the step), and back to the front as they go on.
+  const [px, py] = sophieWalk(t)
+  const low = sm(py, -14.5, -9.5)
   for (let n = 0; n < 8; n++) {
-    const x = lead + n * 0.74
-    if (x > SQUARE[1] + 3 || x < SQUARE[0] - 2) continue
+    const x = lead + n * FILE
+    // Out of the frame on both sides whenever the square is in it (the street runs on past the café).
+    if (x > CAFE[1] + 6 || x < SQUARE[0] - 2) continue
+    const d = (px + 0.2 - x) / 1.4
+    const glance = low * Math.exp(-d * d)
     p.push()
     p.translate(x * k, (G - bob) * k)
     if (n === 0) {
@@ -331,7 +346,7 @@ function drawParade(p: p5, c: Ctx, t: number): void {
       }
       p.endShape(p.CLOSE)
     }
-    drawSoldier(p, k, weight, ink, { face: -1, stride: n % 2 ? -stride : stride, stiff: 1, arm: n === 0 ? 0.55 : 0, dark: L.dark })
+    drawSoldier(p, k, weight, ink, { face: -1, stride: n % 2 ? -stride : stride, stiff: 1, arm: n === 0 ? 0.55 : 0, dark: L.dark, lean: -0.1 * glance })
     p.pop()
   }
 }
@@ -394,7 +409,6 @@ export const skywalk = part<WalkState>(
     }
     const end = at(slot.end)
     const land = [LAND_AT[0] - E[0], LAND_AT[1] - E[1]]
-    const wide: Pt = [37 - E[0], -9.55]
     return [
       // The lift: the frame goes on from the alley's (a head of sky over her) and rises with them from the downbeat,
       // letting them climb up the frame only as fast as it keeps rising itself: never a dip under the lift.
@@ -412,12 +426,17 @@ export const skywalk = part<WalkState>(
       { t: W[16], cells: 5.6, off: [0.9, 1.25] },
       { t: W[18], cells: 7.8, hold: [28.0 - E[0], -13.3], w: 1 },
       { t: W[NOON_BAR], cells: 9.5, hold: [30.1 - E[0], -13.8], w: 1 },
-      // The swell: the whole town under them, the two of them against clear sky a fifth down; held while the town
-      // lands, then down to the balcony.
-      { t: W[21], cells: 17, hold: [wide[0] - 0.4, -11.9], w: 1 },
-      { t: W[23] + 0.6, cells: 16.5, hold: [wide[0] + 0.2, -11.7], w: 1 },
-      { t: W[26] + 0.1, cells: 10.5, off: [0.8, 1.2], w: 0 },
-      { t: W[28], cells: 5.8, off: [0.6, -0.2], w: 0 },
+      // The swell: out to the tower whole (the weathercock spinning, the bell swinging, the clock on noon) with the
+      // two of them a fifth down against clear sky, crossing the frame past it while the camera drifts after them.
+      { t: W[20] + 0.05, cells: 13, hold: [TOWER_X + 2.4 - E[0], -11.9], w: 1, off: [0.3, 3.8] },
+      { t: W[22] + 0.5, cells: 13, hold: [TOWER_X + 4.9 - E[0], -11.9], w: 1, off: [0.3, 3.8] },
+      // Then down with them as they come down (a fifth from the top all the way, within Zoom's margin), the square
+      // coming up into the bottom of the frame with the parade crossing it under them, and in to the balcony.
+      { t: W[24], cells: 13, off: [0.3, 3.8], w: 0 },
+      { t: W[25] + 0.3, cells: 13, off: [0.8, 3.7], w: 0 },
+      { t: W[26] + 0.1, cells: 12, off: [0.8, 3.6], w: 0 },
+      { t: W[27], cells: 9, off: [0.7, 1.75], w: 0 },
+      { t: W[28], cells: 5.8, off: [0.6, 0.2], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },
       { t: W[31] - 0.2, cells: 4.4, hold: [land[0] + 0.7, land[1] - 0.62], w: 1 },
       { t: slot.end, cells: 3.6, hold: [end[0] + 0.6, end[1] - 0.5], w: 1 },
