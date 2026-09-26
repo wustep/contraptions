@@ -1,9 +1,10 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { hash, smooth } from '../kit'
+import { smooth } from '../kit'
+import { drawFire as drawLicks } from '../fire'
 import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
 import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1, SLAM } from './glass-plan'
-import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, tongue, type Pen } from './glass-pen'
+import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, type Pen } from './glass-pen'
 
 /**
  * The glasshouse itself: whitewashed walls and tall windows with the day falling through them, a stone floor, the
@@ -127,26 +128,19 @@ function iron(pen: Pen, x0: number, y0: number, x1: number, y1: number): void {
 
 /* ------------------------------------------------------------------ fire */
 
-/** A fire seen through an opening: white-gold at the heart, flames rising, the rim dark red. */
+/**
+ * A fire seen through an opening: the furnace's glow deep inside, darker toward the crown of the arch, and licks of
+ * flame rising through it off the sill (`fire.ts`), forking and burning white where they cross, higher as it roars.
+ */
 function fireIn(pen: Pen, opening: Pt[], cx: number, cy: number, r: number, t: number, flare: number, seed: number): void {
   const { ctx, k } = pen
-  const g = ctx.createRadialGradient(cx * k, (cy + r * 0.3) * k, 0, cx * k, (cy + r * 0.15) * k, r * 1.3 * k)
-  g.addColorStop(0, FIRE.heart)
-  g.addColorStop(0.45, mixHex(FIRE.heart, FIRE.body, 0.5))
-  g.addColorStop(0.8, FIRE.body)
-  g.addColorStop(1, FIRE.rim)
+  const g = ctx.createLinearGradient(0, (cy + r * 1.05) * k, 0, (cy - r * 1.1) * k)
+  g.addColorStop(0, FIRE.body)
+  g.addColorStop(0.45, mixHex(FIRE.body, FIRE.rim, 0.55))
+  g.addColorStop(1, mixHex(FIRE.rim, GLASS.brickDeep, 0.45))
   fillWith(pen, opening, g)
   clipTo(pen, opening, () => {
-    // Tongues of flame licking up through it, each on its own flicker.
-    const n = 8
-    for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n
-      const ph = t * (2.1 + hash(i, seed) * 1.7) + hash(i, seed, 3) * 6.28
-      const x = cx - r + 2 * r * u + 0.06 * r * Math.sin(ph * 1.3)
-      const h = r * (0.9 + 0.35 * Math.sin(ph) + 0.25 * hash(i, seed, 5)) * (1 + 0.35 * flare)
-      const col = i % 2 ? rgba(FIRE.heart, 0.6) : rgba(FIRE.body, 0.65)
-      fillWith(pen, tongue(x, cy + r * 1.05, r * 0.42, h, 0.08 * r * Math.sin(ph * 0.8)), col)
-    }
+    drawLicks(ctx, k, { x0: cx - r * 1.1, x1: cx + r * 1.1, y: cy + r * 1.05, h: r * 1.9 * (1 + 0.35 * flare), n: 8, t, seed, pal: FIRE, alpha: 0.72, lean: 0.25 * r * Math.sin(t * 0.9 + seed) })
     // The opening's inner lip in shadow, across its top.
     const sh = ctx.createLinearGradient(0, (cy - r) * k, 0, (cy - r * 0.55) * k)
     sh.addColorStop(0, rgba(FIRE.rim, 0.85))
@@ -157,15 +151,9 @@ function fireIn(pen: Pen, opening: Pt[], cx: number, cy: number, r: number, t: n
 
 /** Flame curling out over the top of an opening and up the brick face: more of it as the fire breathes. */
 function breath(pen: Pen, x: number, y: number, hw: number, t: number, flare: number, seed: number): void {
-  const n = 5
-  for (let i = 0; i < n; i++) {
-    const u = (i + 0.5) / n
-    const ph = t * (1.7 + hash(i, seed) * 1.3) + hash(i, seed, 3) * 6.28
-    const bx = x - hw * 0.75 + hw * 1.5 * u
-    const hgt = (0.3 + 0.3 * Math.sin(ph) ** 2) * (0.5 + 1.1 * flare) * (1 - 0.45 * Math.abs(u - 0.5))
-    if (hgt < 0.05) continue
-    fillWith(pen, tongue(bx, y + 0.25, 0.3 * (hw / 0.8), hgt + 0.25, 0.1 * Math.sin(ph * 0.7)), rgba(i % 2 ? FIRE.body : FIRE.heart, 0.5 + 0.2 * flare))
-  }
+  const h = (0.45 + 0.35 * Math.sin(t * 1.9 + seed) ** 2) * (0.5 + 1.1 * flare)
+  if (h < 0.08) return
+  drawLicks(pen.ctx, pen.k, { x0: x - hw * 0.8, x1: x + hw * 0.8, y: y + 0.25, h: h + 0.25, n: 4, t, seed: seed + 40, pal: FIRE, alpha: 0.55 + 0.2 * Math.min(1, flare), bed: false })
 }
 
 /* ------------------------------------------------------------------ the glory hole */

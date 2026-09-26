@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { R, mixHex } from '../../../../parts'
+import { drawLick, type Lick } from './fire'
 import { frame, hash, scenery, smooth } from './kit'
 import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
 import { FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
@@ -366,41 +367,27 @@ export interface VeilState {
 const VEIL = { before: 0.3, after: 0.34 }
 const FLASH = { before: 0.022, after: 0.028 }
 
-/** A tongue of the veil: where its base is (shares of the frame), how big, its colour's place from rim to heart, its clock. */
-interface Tongue {
+/**
+ * The veil's licks: scattered at random over the frame (no rows), sized on a power law (a few tall, many short), each
+ * on its own clock as the band rises through the frame. The first few are big dark-red licks at the back, for depth.
+ */
+interface VeilLick {
   u: number
   v: number
-  w: number
-  h: number
-  hot: number
+  size: number
   rate: number
-  phase: number
+  seed: number
+  back: boolean
 }
-const TONGUES: Tongue[] = (() => {
-  const out: Tongue[] = []
-  // Three layers, back to front: big dark tongues, then the body, then small hot ones.
-  const layers = [
-    { cols: 6, rows: 3, w: 0.27, h: 0.7, hot: 0 },
-    { cols: 8, rows: 3, w: 0.17, h: 0.55, hot: 0.5 },
-    { cols: 9, rows: 2, w: 0.085, h: 0.42, hot: 1 },
-  ]
-  layers.forEach((L, n) => {
-    for (let j = 0; j < L.rows; j++)
-      for (let i = 0; i < L.cols; i++) {
-        const seed = n * 100 + j * 20 + i
-        out.push({
-          u: (i + 0.5 + 0.7 * (hash(seed, 1) - 0.5)) / L.cols,
-          v: (j + 0.75 + 0.6 * (hash(seed, 2) - 0.5)) / L.rows + 0.12,
-          w: L.w * (0.75 + 0.5 * hash(seed, 3)),
-          h: L.h * (0.7 + 0.6 * hash(seed, 4)),
-          hot: L.hot,
-          rate: 1.6 + 1.4 * hash(seed, 5),
-          phase: hash(seed, 6),
-        })
-      }
-  })
-  return out
-})()
+const VEIL_BACK = 6
+const VEIL_LICKS: VeilLick[] = Array.from({ length: 34 }, (_, i) => ({
+  u: hash(i, 401),
+  v: hash(i, 402),
+  size: i < VEIL_BACK ? 0.75 + 0.25 * hash(i, 403) : 0.32 + 0.68 * Math.pow(hash(i, 403), 2.2),
+  rate: 0.75 + 0.5 * hash(i, 404),
+  seed: 500 + i * 3.7,
+  back: i < VEIL_BACK,
+}))
 
 type RGB = [number, number, number]
 const lerp3 = (a: RGB, b: RGB, f: number): RGB => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
@@ -483,29 +470,52 @@ export const veil = () =>
       ctx.fillStyle = g
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, hgt * k)
       ctx.restore()
-      // The tongues, rising through it and flickering, hotter toward the middle of the fire. Each is one fire's or the
-      // other's, whole; the line between them is ragged.
-      p.push()
-      p.noStroke()
-      for (const tg of TONGUES) {
-        const life = (t * tg.rate * 0.9 + tg.phase) % 1
-        const bx = f.x0 + w * tg.u + 0.03 * w * Math.sin(t * 7 + tg.phase * 20)
-        const by = f.y0 + hgt * (tg.v - 0.22 * life)
-        const sv = sOf(bx, by - hgt * tg.h * 0.4)
-        const cv = cover(sv)
-        if (cv < 0.03) continue
-        const side = sideOf(sv + 0.22 * (tg.phase - 0.5))
-        const P = side < 0 ? OLD : NEW
-        const fade = Math.sin(Math.PI * life)
-        const hh = hgt * tg.h * (0.55 + 0.45 * cv) * (0.8 + 0.2 * Math.sin(t * 13 * tg.rate + tg.phase * 9))
-        const ww = w * tg.w * 0.5 * (0.6 + 0.4 * cv)
-        const hot = Math.min(1, tg.hot * (0.4 + 0.6 * cv))
-        const base = hot < 0.5 ? lerp3(P.rim, P.body, hot * 2) : lerp3(P.body, P.heart, (hot - 0.5) * 2)
-        tongue(p, k, bx, by, ww, hh, Math.sin(t * 3 + tg.phase * 12) * w * 0.02, css(lerp3(base, HOT, 0.6 * seam(side)), 0.8 * cv * fade))
+      // The licks, rising through it: the band climbs the frame, its tips drifting up and off the top, hotter toward
+      // the middle of the fire. Each is one fire's or the other's, whole; the line between them is ragged. The big dark
+      // ones burn at the back.
+      const ctx2 = p.drawingContext as CanvasRenderingContext2D
+      const since = d + span.before
+      for (const pass of [true, false]) {
+        ctx2.save()
+        ctx2.globalCompositeOperation = pass ? 'source-over' : 'screen'
+        for (const L of VEIL_LICKS) {
+          if (L.back !== pass) continue
+          // Where its root is now: coming up from under the frame and rising off its top.
+          const life = (L.v + since * L.rate * 1.1) % 1
+          const bx = f.x0 + w * (-0.05 + 1.1 * L.u)
+          const by = f.y1 + hgt * (0.3 - 1.25 * life)
+          const hh = hgt * (L.back ? 0.75 : 0.55) * L.size
+          const sv = sOf(bx, by - hh * 0.4)
+          const cv = cover(sv)
+          if (cv < 0.03) continue
+          const side = sideOf(sv + 0.22 * (hash(L.seed, 7) - 0.5))
+          const P = side < 0 ? OLD : NEW
+          const hot = 0.6 * seam(side)
+          const fade = Math.sin(Math.PI * Math.min(1, life * 1.15))
+          const lick: Lick = {
+            x: bx,
+            y: by,
+            w: Math.min(w * 0.075 * (0.6 + L.size), hh * 0.4),
+            h: hh * (0.55 + 0.45 * cv),
+            lean: w * 0.03 * Math.sin(t * 2.3 + L.seed),
+            t,
+            seed: L.seed,
+            root: L.back ? lerp3(P.rim, P.body, 0.5) : lerp3(lerp3(P.heart, P.body, 0.2), HOT, hot),
+            mid: L.back ? lerp3(P.rim, [20, 10, 8], 0.2) : lerp3(P.body, HOT, hot),
+            rim: L.back ? lerp3(P.rim, [20, 10, 8], 0.45) : lerp3(P.rim, HOT, hot * 0.6),
+            a: (L.back ? 0.7 : 0.75) * cv * fade,
+            tips: L.size > 0.55 ? (hash(L.seed, 9) > 0.6 ? 3 : 2) : 1,
+          }
+          drawLick(ctx2, k, lick)
+        }
+        ctx2.restore()
       }
-      p.pop()
       // The spark itself stays in front of its fire: a door never hides it.
+      // A soft shadow round it first (no edge), so its clean teardrop and gold heart stand in front of the fire.
       const here = show.at(t)
-      if (!here.hidden && here.scale > 0.05) drawSpark(p, k, here.x, here.y, t, here.scale, here.stretch, here.angle)
+      if (!here.hidden && here.scale > 0.05) {
+        shadow(ctx2, k, here.x, here.y, R * here.scale, R * here.scale + 0.5, 0.55 * (flash ? 0.6 : 1))
+        drawSpark(p, k, here.x, here.y, t, here.scale, here.stretch, here.angle)
+      }
     },
   })
