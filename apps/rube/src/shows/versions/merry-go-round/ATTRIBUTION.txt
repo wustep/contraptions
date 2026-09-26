@@ -1,0 +1,21 @@
+Merry-Go-Round of Life (Jinsei no Merry-Go-Round) — Joe Hisaishi
+From Howl's Moving Castle (Hauru no Ugoku Shiro), 2004. Music composed by Joe Hisaishi.
+Film: Howl's Moving Castle, written and directed by Hayao Miyazaki, Studio Ghibli, 2004; from the novel by
+Diana Wynne Jones (1986).
+
+The recording is Hisaishi's own concert arrangement (a piano theme, the waltz, a slow waltz in the major, a
+build, the climax a key higher, the last tutti), as uploaded to the artist's official, verified channel "Joe
+Hisaishi Official" as "Joe Hisaishi - Merry-Go-Round of Life (from Howl's Moving Castle)", linked to the album
+Dream Songs: The Essential Joe Hisaishi (Decca Gold / Universal Music, 2020):
+https://www.youtube.com/watch?v=f7SS57LFPco
+(The same recording is on the same channel as https://www.youtube.com/watch?v=Cj-AL-J98U0, with 0.46 s more
+silence before it.) Duration 5:11. The film's own soundtrack cut has no official upload to embed.
+Copyrighted — used for private Contraptions tech demos only; do not ship to production / public Shows without a
+licence.
+
+Files:
+- apps/rube/src/shows/versions/merry-go-round/merry-go-round-demo.mp3 — the cue as fetched (yt-dlp, audio only,
+  re-encoded at 128 kbit/s with ffmpeg). The show plays it whole from its first sample (offset 0); no edit, no gain
+  change. The show then runs on in silence for its end credits.
+- scripts/shows/plans/merry-go-round-onsets.json — the recording's onsets, its tracked beats and bars, and its
+  landmarks, measured by scripts/shows/merry-go-round-onsets.py; every strike in the show is held to it.
