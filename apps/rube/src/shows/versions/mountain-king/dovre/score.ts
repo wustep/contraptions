@@ -18,6 +18,7 @@ import { drum } from './under/drum'
 import { gears } from './heart/gears'
 import { runaway } from './heart/runaway'
 import { fall } from './finale/fall'
+import { keyLight, type KeyState } from './key'
 
 /**
  * The whole show, in order: who has the ball from when to when. Every part is told its slot and builds to it; this
@@ -58,12 +59,17 @@ export function compose(): { show: MountainShow; camera: (t: number) => Framing 
   // The sky and the far valley stand behind everything, in world cells (they are drawn only where there is sky).
   const sky: Placed = standing(mountain, 0, 0, box(-90, -70, 170, 40, 4), { on: true as const }, DURATION)
 
+  // Peer's key light, over every set and under him (`key.ts`): it reads where he is from the show, made just below.
+  const key: KeyState = { at: null }
+  const light: Placed = standing(keyLight, 0, 0, box(-90, -70, 170, 40, 4), key, DURATION)
+
   const show = new MountainShow(
-    [{ world: DOVRE, theme: MOUNTAIN_THEME, scenery: [sky], chain: chain.placed, from: 0 }],
+    [{ world: DOVRE, theme: MOUNTAIN_THEME, scenery: [sky], chain: chain.placed, after: [light], from: 0 }],
     DURATION,
     chain.riders,
     [...chain.company].sort((a, b) => a.from - b.from),
   )
+  key.at = (t) => show.at(t)
 
   let shots: Shot[] = [...chain.shots]
   if (!shots.some((s) => s.t <= 0)) shots.unshift({ t: 0, cells: 6 })
