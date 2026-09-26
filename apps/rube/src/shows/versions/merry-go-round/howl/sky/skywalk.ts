@@ -4,7 +4,7 @@ import { alpha, box, carried, hash, part, type Company, type Ctx, type PartShot 
 import { beatsIn } from '../music'
 import { DIAL, TOWN } from '../worlds'
 import { drawPerched, drawPigeon, drawSoldier } from './figures'
-import { ALLEY_EXIT, END, HOP_OFF, howlWalk, LAND_AT, LIFT, NOON_BAR, sophieWalk, STROKES, TOWER_X, W } from './path'
+import { ALLEY_EXIT, BALCONY, END, HOP_OFF, howlWalk, LAND_AT, LIFT, NOON_BAR, RAIL_TOP, sophieWalk, STROKES, TOWER_X, W } from './path'
 import { CAFE, G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
 
 /**
@@ -35,7 +35,7 @@ interface WalkState {
  * landing (bars 25 to 29); Howl's hop off the balcony, onto the rail (bar 30) and his push up off it (31); his next
  * step up the air (32) is as he leaves the frame, so it is not counted.
  */
-export const SKYWALK_HITS: number[] = [...new Set([...W.slice(1, 32), HOP_OFF])].sort((a, b) => a - b)
+export const SKYWALK_HITS: number[] = [...new Set([...W.slice(1, 33), HOP_OFF])].sort((a, b) => a - b)
 
 const E = ALLEY_EXIT
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
@@ -97,6 +97,48 @@ function drawSmoke(p: p5, c: Ctx, t: number): void {
     }
   })
   p.noStroke()
+}
+
+/* ------------------------------------------------------------------ his last step up the air */
+
+/**
+ * His last step up the air off the balcony, on the downbeat (84.72): the breath of it comes down over the rail, the
+ * geraniums in the box there toss, and a few petals lift off them and go tumbling down past her and over the edge,
+ * turning as they fall (each its own size and colour: never beads).
+ */
+const AIR_STEP = W[32]
+const PETALS = 9
+function drawPetals(p: p5, c: Ctx, t: number): void {
+  const since = t - AIR_STEP
+  if (since < 0 || since > 3.4) return
+  const { k } = c
+  const L = lightAt(t)
+  const fx0 = BALCONY[0] + 0.26
+  const fx1 = BALCONY[0] + 0.9
+  p.noStroke()
+  for (let i = 0; i < PETALS; i++) {
+    const a = since - 0.05 * hash(i, 1, 77)
+    if (a <= 0) continue
+    const x0 = fx0 + (fx1 - fx0) * hash(i, 2, 77)
+    const y0 = RAIL_TOP - 0.08 - 0.06 * hash(i, 3, 77)
+    // Up off the flowers on the breath, then carried right on it and sinking, faster as it slows.
+    const lift = 0.28 * (0.6 + 0.8 * hash(i, 4, 77)) * (1 - Math.exp(-a / 0.25))
+    const drift = (1.6 + 1.3 * hash(i, 5, 77)) * (1 - Math.exp(-a / 1.2))
+    const sink = 0.42 * a * a * (0.6 + 0.6 * hash(i, 6, 77))
+    const x = x0 + drift + 0.06 * Math.sin(a * (4 + 2 * hash(i, 7, 77)) + i)
+    const y = y0 - lift + sink
+    const turn = a * (5 + 4 * hash(i, 8, 77)) + i
+    const size = 0.035 + 0.03 * hash(i, 9, 77)
+    const fade = Math.min(1, a / 0.05) * (1 - Math.max(0, (a - 2.4) / 1.0))
+    if (fade <= 0) continue
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(turn * 0.6)
+    p.fill(alpha(p, L.tone(i % 3 === 1 ? TOWN.rose : TOWN.ribbon), 0.95 * fade))
+    // A petal turning over: its width comes and goes as it tumbles.
+    p.ellipse(0, 0, 2 * size * k * (0.35 + 0.65 * Math.abs(Math.cos(turn))), 1.2 * size * k)
+    p.pop()
+  }
 }
 
 /* ------------------------------------------------------------------ the washing */
@@ -368,6 +410,7 @@ export const skywalk = part<WalkState>(
         drawRidgeBirds(p, c, t)
       }
       drawSmoke(p, c, t)
+      drawPetals(p, c, t)
       if (t > 60 && t < END + 1) drawParade(p, c, t)
       drawPigeons(p, c, t)
       p.pop()
@@ -439,7 +482,11 @@ export const skywalk = part<WalkState>(
       { t: W[28], cells: 5.8, off: [0.6, 0.2], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },
       { t: W[31] - 0.2, cells: 4.4, hold: [land[0] + 0.7, land[1] - 0.62], w: 1 },
-      { t: slot.end, cells: 3.6, hold: [end[0] + 0.6, end[1] - 0.5], w: 1 },
+      // She watches him go: the frame eases back and up after him, so his last step up the air (84.72) is in it (its
+      // breath sends petals off the rail's geraniums down past her), and he goes on up out of the top before the cut;
+      // the shop opens on this framing.
+      { t: AIR_STEP, cells: 5.3, hold: [end[0] + 0.95, end[1] - 1.15], w: 1 },
+      { t: slot.end, cells: 5.0, hold: [end[0] + 0.8, end[1] - 1.0], w: 1 },
     ]
   },
 )
