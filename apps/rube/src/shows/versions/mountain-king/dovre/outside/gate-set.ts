@@ -645,18 +645,38 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   // The chamber and its pit: seen first in the spark's flash, then held by the lamp.
   const flash = sparkFlash(t)
   p.fill(worksFill(c, Math.max(lamp, 0.8 * flash)))
+  // Hewn, not built: its walls and roof ragged (a room cut in the rock, never a rounded box).
+  const rag = (i: number, n: number) => 0.07 * (hash(i, n, 91) - 0.5)
   p.beginShape()
   p.vertex(CHAMBER.x0 * k, (CHAMBER.y0 + 0.14) * k)
-  p.vertex((CHAMBER.x0 + 0.18) * k, CHAMBER.y0 * k)
-  p.vertex((CHAMBER.x1 - 0.12) * k, CHAMBER.y0 * k)
+  for (let i = 0; i <= 6; i++) {
+    const u = i / 6
+    p.vertex((CHAMBER.x0 + 0.12 + (CHAMBER.x1 - CHAMBER.x0 - 0.24) * u) * k, (CHAMBER.y0 + rag(i, 1) - 0.03 * Math.sin(Math.PI * u)) * k)
+  }
   p.vertex(CHAMBER.x1 * k, (CHAMBER.y0 + 0.12) * k)
+  for (let i = 1; i <= 3; i++) p.vertex((CHAMBER.x1 + rag(i, 2)) * k, (CHAMBER.y0 + 0.12 + ((CHAMBER.y1 - CHAMBER.y0 - 0.12) * i) / 4) * k)
   p.vertex(CHAMBER.x1 * k, CHAMBER.y1 * k)
   p.vertex(PIT.x1 * k, CHAMBER.y1 * k)
   p.vertex(PIT.x1 * k, PIT.y1 * k)
   p.vertex(PIT.x0 * k, PIT.y1 * k)
   p.vertex(PIT.x0 * k, CHAMBER.y1 * k)
   p.vertex(CHAMBER.x0 * k, CHAMBER.y1 * k)
+  for (let i = 3; i >= 1; i--) p.vertex((CHAMBER.x0 + rag(i, 3)) * k, (CHAMBER.y0 + 0.14 + ((CHAMBER.y1 - CHAMBER.y0 - 0.14) * i) / 4) * k)
   p.endShape(p.CLOSE)
+  // The lamp's light falls off toward the walls: their edges are in shadow, so the room has no hard rim of light.
+  if (lamp > 0.01) {
+    const cx = (CHAMBER.x0 + CHAMBER.x1) / 2
+    const cy = (CHAMBER.y0 + CHAMBER.y1) / 2
+    const r = (CHAMBER.x1 - CHAMBER.x0) * 0.9
+    const vg = (p.drawingContext as CanvasRenderingContext2D).createRadialGradient(cx * k, cy * k, r * 0.35 * k, cx * k, cy * k, r * k)
+    vg.addColorStop(0, 'rgba(0,0,0,0)')
+    vg.addColorStop(1, `rgba(0,0,0,${(0.45 * lamp).toFixed(3)})`)
+    const cx2 = p.drawingContext as CanvasRenderingContext2D
+    cx2.save()
+    cx2.fillStyle = vg
+    cx2.fillRect((CHAMBER.x0 - 0.1) * k, (CHAMBER.y0 - 0.1) * k, (CHAMBER.x1 - CHAMBER.x0 + 0.2) * k, (CHAMBER.y1 - CHAMBER.y0 + 0.1) * k)
+    cx2.restore()
+  }
   // The pit darkens with depth (the lamp is above it).
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const g = ctx.createLinearGradient(0, CHAMBER.y1 * k, 0, PIT.y1 * k)
