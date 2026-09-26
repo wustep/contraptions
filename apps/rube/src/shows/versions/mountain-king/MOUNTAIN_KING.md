@@ -153,8 +153,19 @@ first note is struck, and every coda chord but one pickup brings something down.
 - **Each mechanism is dark until it is lit.** In the heart every part stands as a near-black silhouette until the
   furnace's flare on its first note lights it, and the room steps up with each: the idle governor no longer stands
   lit for twenty seconds, and each phrase has one hero silhouette.
-- **The frame grows with the music.** The heart opens a step a phrase (7, 8.5, 9.2, 9.5 cells) and never goes back in;
-  its top stays under the drum's floor, so the room above never shows.
+- **The frame grows with the music.** The heart opens a step a phrase (8, 8.5, 9.2, 9.5 cells) and never goes back in;
+  across the room it travels with him (a light hold), up and down it holds (a camera key's `wy`), so its top stays
+  under the drum's floor and the room above never shows.
+- **The fortissimo is one tilt down.** The drop into the heart is the second wide seam (`seams.ts` `HEART_SHOT`, 8
+  cells on the hammer, the anvil and the furnace's mouth): from the drum's wide on the burst the frame only tilts
+  down with him, instead of diving close and pulling back out over the loudest downbeat. The heart's cover lifts
+  from the top down just ahead of him, under the drum's firelight falling down the shaft, so he is seen falling into
+  a place.
+- **The mountain has a pulse.** From the fortissimo the rock thumps down on every hammer blow and settles (`rock.ts`
+  `quake`, at most 0.03 cells, so his rides never slip on the machine), with a jolt on the fortissimo's downbeat.
+- **Take-offs are on the music too.** The court's tiptoes leave on the eighth before the note they land on; the
+  flywheel heaves on each blow and coasts; the yoke's arm gives under each landing and comes back slowly; the
+  geyser's jet falls back from the top over the last chord's ring-out.
 - **The bells have a cause on screen**: a shaft of cold light down the chimney's line on the first chord, where the
   frozen trolls look. The church is bigger, so its bell reads as the camera follows him east.
 - **The crash is the biggest picture**: slabs of the vault on the hammer blows, the braziers spilling fire that lights
@@ -173,7 +184,7 @@ first note is struck, and every coda chord but one pickup brings something down.
 the beat followed quarter by quarter; one mountain, no portal, no cut; the parts in order; Peer never jumping (0.04
 cells a millisecond) and never hidden more than 2 s; every strike on the music; the coda's first chord and the two
 last chords struck; every seam struck; every phrase struck on its first note; the coda's chords struck (a pickup
-may go by); Peer in the frame all the way, under Zoom too; the camera on the seam framing at every hand-off (wide on the coda's; a seam inside one builder's room is free); every drop
+may go by); Peer in the frame all the way, under Zoom too; the camera on the seam framing at every hand-off (wide into the heart and on the coda's; a seam inside one builder's room is free); every drop
 falling straight down for its last quarter second and landing a little under the middle of the frame; the Woman in
 Green never jumping, coming and going only out of shot, resting a cell ahead at the rest seams, and gone before the
 chase goes under the hall; every ball someone, once; Peer at rest in the hollow at the end; and the credits' words.
@@ -205,4 +216,8 @@ on their galleries, the heart's lit iron, his rides on the flywheel and the runa
 the opening's push-in, the pebble and the drain, no hatch before the crack and the throne's fall, the drum's wide
 burst, the machine carrying him through the heart) with a director's pass on story and staging (the key light, the
 heart's mechanisms lit one a phrase and its growing frame, the flywheel's crash, the bells' shaft, the hall coming
-down, the summit torn open, the arc followed, the mine's chase, her parting, the wake closer, the credits).
+down, the summit torn open, the arc followed, the mine's chase, her parting, the wake closer, the credits); and a
+fourth round (five fixers: the pumps' wave on the beat, the flywheel's heaves, the King's roar, the mine's push, the
+geyser's rams) with a director's pass on music and motion (the heart's wide seam and the fall into it, the
+mountain's pulse, the frame travelling with him, the tiptoes on the grid, the geyser's ring-out, the yoke's give,
+the camera's last stop-starts).
