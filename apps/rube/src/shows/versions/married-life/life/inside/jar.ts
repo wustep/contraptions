@@ -1,5 +1,6 @@
 import { laneAt, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, part, type Companion, type PartShot, type Pose } from '../kit'
+import { beatsIn } from '../music'
 import { drawRoom } from './jar-draw'
 import { drawStormOver, type Figure } from './jar-storm'
 import {
@@ -107,11 +108,18 @@ class Path {
 /* ------------------------------------------------------------------ Carl */
 
 const ON: Pt = standing(HIS, COCKED)
-/** The little hop up onto his end of the plank, from where he stands at its foot. */
-const ONTO = 0.5
-const ONTO_V = (ON[0] - FOOT[0]) / ONTO
-/** The in-place hop between strokes: the counterweight has lifted him back; he hops, and lands on the beat. */
-const HOP = 0.36
+/**
+ * Every hop onto his end (the first up from its foot, and each in place between strokes, once the counterweight has
+ * lifted him back) takes off on beat 3 of the bar before its stroke, the waltz's pickup, where the music lifts him,
+ * and lands TOUCHDOWN before the stroke's downbeat. `LIFT[i]` is the takeoff before `SLAMS[i]`.
+ */
+const LIFT: number[] = SLAMS.map((down) => {
+  const three = beatsIn(down - 0.6, down).filter((b) => b.pos === 3)
+  if (!three.length) throw new Error(`married life: jar: no pickup before the stroke at ${down}`)
+  return three[three.length - 1].t
+})
+/** The hop up onto his end from where he stands at its foot: how fast it carries him across, so the run into it matches. */
+const ontoV = (i: number): number => (ON[0] - FOOT[0]) / (SLAMS[i] - TOUCHDOWN - LIFT[i])
 const onPlank = (t: number): Pt => standing(HIS, plankAt(t))
 /** Walking down his plank, over its axle, to its low end (in the coin box's lee), at the end. */
 const DOWN_PLANK: [number, number] = [131.1, 133.5]
@@ -120,22 +128,25 @@ const walkDown = (t: number): Pt => standing(HIS + (0.5 - HIS) * smoothstep((t -
 /** Out to the hall at the end: from rest by his plank to the doorway, moving on at the seam's pace. */
 const OUT_FROM = 134.3
 const SEAM_V = 0.8
+/** How fast his limp reaches the plank's foot. */
+const LIMP_V = 0.7
 
 function carlPath(): Path {
   const c = new Path([0.3, 0], BEGIN, SEAM_V)
   // In from the yard, onto his end: the first stroke on bar 7.
-  c.glide(FOOT[0], SLAMS[0] - TOUCHDOWN - ONTO, ONTO_V).hop(ON, SLAMS[0] - TOUCHDOWN)
-  for (let i = 1; i <= 3; i++) c.ride(onPlank, SLAMS[i] - TOUCHDOWN - HOP).hop(ON, SLAMS[i] - TOUCHDOWN)
+  c.glide(FOOT[0], LIFT[0], ontoV(0)).hop(ON, SLAMS[0] - TOUCHDOWN)
+  for (let i = 1; i <= 3; i++) c.ride(onPlank, LIFT[i]).hop(ON, SLAMS[i] - TOUCHDOWN)
   // Down off it, pleased, as the fourth handful lands.
   c.ride(onPlank, DOWN - 0.366).hop(FOOT, DOWN)
   // The tyre: he goes to the window to look, and back to his seesaw.
-  c.hold(TYRE + 0.45).glide(3.2, 114.5, 0).hold(115.7).glide(FOOT[0], SLAMS[4] - TOUCHDOWN - ONTO, ONTO_V).hop(ON, SLAMS[4] - TOUCHDOWN)
-  c.ride(onPlank, SLAMS[5] - TOUCHDOWN - HOP).hop(ON, SLAMS[5] - TOUCHDOWN)
+  c.hold(TYRE + 0.45).glide(3.2, 114.5, 0).hold(115.7).glide(FOOT[0], LIFT[4], ontoV(4)).hop(ON, SLAMS[4] - TOUCHDOWN)
+  c.ride(onPlank, LIFT[5]).hop(ON, SLAMS[5] - TOUCHDOWN)
   // The lamp goes out: up the ladder, a reach, the kick, the fall.
   c.ride(onPlank, CLIMB[0] - 0.36).hop(T1, CLIMB[0]).hop(T2, CLIMB[1]).hold(KICK).hop(FELL, FALL)
   // Hurt, bandaged; he limps back to his machine and strokes twice more, lower now.
-  c.hold(123.1).glide(FOOT[0], SLAMS[6] - TOUCHDOWN - ONTO, ONTO_V, 0.5).hop(ON, SLAMS[6] - TOUCHDOWN)
-  c.ride(onPlank, SLAMS[7] - TOUCHDOWN - HOP).hop(ON, SLAMS[7] - TOUCHDOWN, 0.12)
+  // (A limp does not break into a run: he comes to the foot at a walk and the hop's own spring carries him across.)
+  c.hold(123.1).glide(FOOT[0], LIFT[6], LIMP_V, 0.5).hop(ON, SLAMS[6] - TOUCHDOWN)
+  c.ride(onPlank, LIFT[7]).hop(ON, SLAMS[7] - TOUCHDOWN, 0.12)
   // The storm. Then down his plank after her, off its end, and out.
   c.ride(onPlank, DOWN_PLANK[0]).ride(walkDown, DOWN_PLANK[1]).hop(OFF_PLANK, C_OFF).hold(OUT_FROM)
   const T = END - OUT_FROM
@@ -166,7 +177,9 @@ function elliePath(carlX: (t: number) => number): Path {
   e.hold(116.9).glide(SEAT[0], 118.0, 0)
   // He falls: down to him; she touches him; the bandage. Then up again, and she gives the jar over a second time.
   e.hold(120.85).hop([3.6, 0], TO_HIM).glide(FELL[0] + 0.37, TOUCH, 0)
-  e.hold(122.55).hop(T1, UP2[0]).hop(T2, UP2[1]).hold(123.5).hop(SEAT, UP2[2])
+  // (The last leap, onto the mantle, is quicker and flatter than the first: the camera is drawing back from the
+  // bandage then, and holds the two of them whole.)
+  e.hold(122.55).hop(T1, UP2[0]).hop(T2, UP2[1]).hold(123.62).hop(SEAT, UP2[2], 0.22)
   e.hold(124.25).glide(AGAINST[0], PUSH2, 0.3).glide(AGAINST[0] + 0.07, PUSH2 + 0.3, 0)
   e.hold(125.7).glide(SEAT[0], 126.8, 0)
   // The tree: a start. Then down onto his plank, ahead of him, down it, off it, and on with him to the hall.
@@ -207,7 +220,7 @@ function tiltAt(t: number): number {
     tilt += t < FALL ? flail * 0.9 + askew : askew
   }
   // The limp back to the seesaw, and the last of it on the way out.
-  if (t > 123.1 && t < SLAMS[6] - ONTO) tilt += 0.07 * Math.sin((2 * Math.PI * (t - 123.1)) / 0.75) * smoothstep((t - 123.1) / 0.4) * (1 - smoothstep((t - (SLAMS[6] - ONTO - 0.4)) / 0.4))
+  if (t > 123.1 && t < LIFT[6]) tilt += 0.07 * Math.sin((2 * Math.PI * (t - 123.1)) / 0.75) * smoothstep((t - 123.1) / 0.4) * (1 - smoothstep((t - (LIFT[6] - 0.4)) / 0.4))
   if (t > OUT_FROM && t < SUN + 0.8) tilt += 0.04 * Math.sin((2 * Math.PI * (t - OUT_FROM)) / 0.7) * (1 - smoothstep((t - OUT_FROM) / (SUN + 0.8 - OUT_FROM)))
   // The blow shakes him where he stands.
   tilt += 0.08 * ring(t - TREE, 0.25, 18)
@@ -215,10 +228,7 @@ function tiltAt(t: number): number {
 }
 
 /** Every takeoff: he crouches a moment before it (what makes a hop read as meant). */
-const TAKEOFFS: number[] = [
-  SLAMS[0] - TOUCHDOWN - ONTO, ...[1, 2, 3, 5, 7].map((i) => SLAMS[i] - TOUCHDOWN - HOP), DOWN - 0.366, SLAMS[4] - TOUCHDOWN - ONTO,
-  CLIMB[0] - 0.36, KICK, SLAMS[6] - TOUCHDOWN - ONTO, DOWN_PLANK[1],
-]
+const TAKEOFFS: number[] = [...LIFT, DOWN - 0.366, CLIMB[0] - 0.36, KICK, DOWN_PLANK[1]]
 
 function squashAt(t: number): number {
   let s = 0
@@ -285,11 +295,12 @@ export const jar = part<JarState>(
 )
 
 /**
- * The camera: every event its own move. A step in on each handful; left to the car as the tyre goes; in on the
- * cradle as she pushes, then out and right after the coins, down the chute to the wall; back to the ladder and the
- * lamp; in as he falls, and closer on the two of them for the bandage; the second pour the same in and out; out wide
- * as the storm comes, so the limb breaks through the roof inside the frame and the roof is patched in it; and in
- * again to follow them into the hall. Both stay whole inside the Zoom frame throughout (two thirds of the height,
+ * The camera: a step in on each handful; then a few long moves, each landed before its event. Left and out to the
+ * room between the car and the jar before the tyre goes; one move right onto the cradle, the chute and his machine
+ * for the pour, held there through the refill and the lamp; one push in as he climbs and falls, landed close on her
+ * touch; then one long draw back (never faster than 0.25 of a log step a second until the storm gathers) past the
+ * second pour to the whole house, so the limb breaks through the roof inside the frame and the roof is patched in
+ * it; and in again to follow them into the hall. Both stay whole inside the Zoom frame throughout (two thirds of the height,
  * 16:9, from the middle): with Carl on the floor at y 0 that keeps the middle within cells / 3 - 0.13 of it, and
  * while Ellie is on the mantle (y -1.48) or in the air over it, the frame can come no closer than about 2.8 cells
  * (3.4 at the top of her hops up onto it).
@@ -308,33 +319,34 @@ function shots(): PartShot[] {
     ...step(LANDS[0], 3.45, [5.3, -0.99]),
     ...step(LANDS[1], 3.25, [5.4, -0.93]),
     ...step(LANDS[2], 3.1, [5.45, -0.88]),
-    k(LANDS[3], 3.0, [4.95, -0.85]),
-    // The tyre: left to the car in the window as it goes (the whole car in frame by the blow), settling as the hubcap
-    // lands; held as he goes over to look. Then up with her as she climbs to the jar (the top of her hop onto the
-    // mantle sets 3.45).
-    k(113.05, 3.3, [3.5, -0.96]),
-    k(114.2, 3.3, [3.4, -0.96]),
-    k(115.05, 3.45, [4.2, -1.0]),
-    // Along the mantle with her, in on the cradle as she pushes; then out and right after the coins, down the chute
-    // to the slot in the wall; then back in to the machine for the refill's handful.
-    k(PUSH1, 3.1, [5.3, -0.9]),
-    k(117.6, 4.0, [6.3, -0.9]),
-    k(LANDS[4], 3.4, [5.2, -1.0]),
-    // The ladder and the lamp going out; in as he falls; closer on the two of them for her touch and the bandage. (At
-    // 121.0 she is at the top of her hop down off the mantle, and the frame can be no closer than 2.8 there.)
-    k(119.6, 3.45, [3.85, -1.38]),
-    k(FALL, 2.95, [3.78, -0.84]),
-    k(121.0, 2.82, [3.72, -0.795]),
-    k(122.3, 2.2, [3.04, -0.575]),
-    // Back out as she climbs again, along the mantle with her, in on the cradle for the second pour, out after it.
-    k(123.85, 3.5, [3.95, -1.0]),
-    k(PUSH2 + 0.05, 3.1, [5.3, -0.9]),
-    k(126.4, 4.2, [6.35, -1.1]),
+    // The tyre: one move left and out from the third handful (the fourth still lands in the frame) to the whole room
+    // between the car in the window and the jar on the mantle, landed before the blow, so the tyre goes in a still
+    // frame with what it will cost in it; then a slow drift right with her up the ladder (the top of her hop onto the
+    // mantle wants 3.4 cells), gathering into one move onto the cradle, the chute and his machine as she pushes. The
+    // frame stays there through the pour, the refill's two strokes and the lamp going out at its top edge, while the
+    // car drives off at the other.
+    k(LANDS[3], 3.32, [4.66, -0.9]),
+    k(112.5, 3.5, [4.25, -0.95]),
+    k(115.1, 3.56, [4.5, -1.0]),
+    k(PUSH1 - 0.1, 4.0, [5.42, -1.1]),
+    k(118.9, 3.9, [5.2, -1.1]),
+    // In, all the way, as he climbs, falls and she comes down to him: landed close on her touch, a drift while the
+    // bandage wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the
+    // mantle: no closer than 2.8 there.)
+    k(FALL, 3.1, [3.75, -0.85]),
+    k(TOUCH, 2.38, [3.07, -0.62]),
+    // Then one long move out toward the storm: gently at first, faster as she climbs the ladder and leaps to the
+    // mantle (she stays whole in Zoom: 2.5 cells as she reaches the tread, 2.95 at the top of her leap), past the
+    // cradle as she gives the jar over again, gathering into the storm's reveal.
+    k(UP2[0], 2.5, [3.25, -0.66]),
+    k(123.9, 2.97, [3.9, -0.82]),
+    k(PUSH2, 3.85, [5.2, -1.05]),
+    k(126.3, 4.8, [6.1, -1.5]),
     // The storm gathers: out and up past the nursery to the whole house, its roof and the garden tree over the
     // ridge, so the limb is seen to come down through the roof (TREE) and the jar thrown over by the blow; in again
     // as the cradle rights and the limb is winched out, the nursery's ceiling well inside the frame while the hole is
     // boarded.
-    k(127.3, 6.6, [7.0, -2.05]),
+    k(127.3, 7.0, [7.1, -2.15]),
     k(128.3, 12.6, [9.1, -4.2]),
     k(129.2, 16.0, [10.2, -5.3]),
     k(130.4, 16.4, [10.3, -5.4]),
