@@ -143,6 +143,16 @@ async function main(): Promise<void> {
   check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Première Arabesque and Voyage',
     shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
+
+  // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
+  const css = readFileSync(join(process.cwd(), 'src/ui/styles.css'), 'utf8')
+  const words = readFileSync(join(process.cwd(), 'apps/rube/src/shows/words.ts'), 'utf8')
+  const stageSrc = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
+  const cardFace = /\.stage-words \.card \{[^}]*font-family: ([^;]+);/.exec(css)?.[1]
+  check('a video\'s painted credits are set in the live cards\' face and colours',
+    !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
+  check('only a video\'s frame paints credits, and both canvases still refuse type',
+    (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
   check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,premiere-arabesque')
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',

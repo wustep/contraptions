@@ -180,7 +180,7 @@ The notes went back to the builders who made each part, who still had their cont
 
 The credits come after the last hit, over the quiet tail of the cue, while the family rests in the dark by the washer's
 glow. A card comes into focus, holds and goes out of focus as the next comes. The words are the page's
-(`Performance.titles(t)`, as in Liftoff): a show's canvas sets no type, so a saved frame or a recorded video has none.
+(`Performance.titles(t)`, as in Liftoff): a show's canvas sets no type, so a saved PNG has none; a saved video has them painted in (`shows/words.ts`).
 The canvas lays only a soft dark under them. The cards are:
 
 | Starts (s) | Role | Names | Fine print |
