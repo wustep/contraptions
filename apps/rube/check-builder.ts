@@ -330,7 +330,7 @@ for (const { dir, source } of shipped) {
 console.log('\nthe door')
 {
   check('the Builder is off the switch', MODE_LINKS.every((m) => m.mode !== 'builder'))
-  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'explorations,machine,playground,shows')
 }
 
 /* ------------------------------------------------------------------ who writes it */
