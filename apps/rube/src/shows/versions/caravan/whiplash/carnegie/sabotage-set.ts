@@ -2,15 +2,14 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { drawConductor } from '../fletcher'
 import { alpha, frame, type Ctx } from '../kit'
-import { FLETCHER, HALL } from '../worlds'
-import { CHART_H, CHART_W, STAND, chartAt, deskRock, doorAngle, fletcherAt, poseAt, stageLight, standSink, veil } from './sabotage-motion'
-import { DOOR, FLETCHER_HOME, FLOOR, LIP, PODIUM } from './stage'
+import { HALL } from '../worlds'
+import { CHART_H, CHART_W, doorAngle, veil } from './sabotage-motion'
+import { DOOR, FLOOR, LIP } from './stage'
 
 /**
- * What the sabotage draws round the hall (`hall.ts` draws the hall itself): Andrew's music stand and the chart
- * Fletcher throws onto it, Fletcher's rig while this part has him, the stage door that Jim opens, and the road's
+ * What the sabotage draws round the hall (`hall.ts` draws the hall itself), besides its stand and Fletcher (those
+ * are `sabotage.ts`'s own): the chart, the stage door that Jim opens, and the road's
  * darkness lifting off the hall after the match cut. Every function draws from show time `T`.
  *
  * The stage draws with `rectMode(CENTER)` (`engine.ts`); these props are laid out by their corners, so each sets
@@ -46,87 +45,6 @@ export function drawChart(p: p5, c: Ctx, at: Pt, turn: number, light = 1): void 
 }
 
 /* ------------------------------------------------------------------ the stand */
-
-/** A line with an ink edge: a black tube. */
-function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number, fill: string): void {
-  const { k, ink, weight } = c
-  p.stroke(ink)
-  p.strokeWeight(weight * (w + 1.2))
-  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-  p.stroke(fill)
-  p.strokeWeight(weight * w)
-  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-}
-
-/**
- * Andrew's music stand beside the hi-hat: three feet, a post in two tubes, a desk with a ledge. Empty until the
- * chart lands on it; it knocks and sways when it does; on the cut-off it sinks into the trap under it.
- */
-export function drawStand(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
-  const sink = standSink(T)
-  if (sink > 3.6) return
-  const rock = deskRock(T)
-  const x = STAND.x
-  const deskBottom = STAND.deskY + STAND.deskH / 2
-  const metal = mixHex(HALL.black, HALL.deep, 0.5)
-  p.push()
-  p.rectMode(p.CORNER)
-  // Below the stage floor is under the stage: whatever has sunk that far is gone.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(-40 * k, -40 * k, 80 * k, (FLOOR + 40) * k)
-  ctx.clip()
-  p.translate(x * k, (FLOOR + sink) * k)
-  p.rotate(rock.stand)
-  // The feet, the post's two tubes and the collar where they meet.
-  const hub = -0.34
-  tube(p, c, [0, hub], [-0.32, 0], 1.3, metal)
-  tube(p, c, [0, hub], [0.3, 0], 1.3, metal)
-  tube(p, c, [0, hub], [0.04, 0], 1.3, metal)
-  tube(p, c, [0, 0.02], [0, -1.45], 1.9, metal)
-  tube(p, c, [0, -1.45], [0, deskBottom - FLOOR], 1.4, metal)
-  solid(p, ink, weight * 0.6, metal)
-  p.rect(-0.045 * k, -1.52 * k, 0.09 * k, 0.12 * k, 0.02 * k)
-  // The desk, hinged at the top of the post, knocking on its hinge.
-  p.translate(0, (deskBottom - FLOOR) * k)
-  p.rotate(rock.desk)
-  solid(p, ink, weight * 0.8, HALL.black)
-  p.rect((-STAND.deskW / 2) * k, -STAND.deskH * k, STAND.deskW * k, STAND.deskH * k, 0.02 * k)
-  // The chart, once it is there, standing on the ledge.
-  const chart = chartAt(T)
-  if (chart.on === 'desk') drawChart(p, c, [0, -CHART_H / 2 - 0.04], 0, stageLight(T))
-  // The ledge in front of it.
-  solid(p, ink, weight * 0.7, metal)
-  p.rect((-STAND.deskW / 2 - 0.03) * k, -0.05 * k, (STAND.deskW + 0.06) * k, 0.06 * k, 0.015 * k)
-  ctx.restore()
-  p.pop()
-}
-
-/* ------------------------------------------------------------------ Fletcher */
-
-/** Fletcher's column, from the podium to the cup under his ball, leaning with him (as `drawConductor` draws it upright). */
-function column(p: p5, c: Ctx, head: Pt, floor: number): void {
-  const { k, ink, weight } = c
-  const base = FLETCHER_HOME[0]
-  const w = 0.09
-  const top = head[1] + 0.16
-  solid(p, ink, weight * 0.8, FLETCHER)
-  p.quad((base - w) * k, floor * k, (base + w) * k, floor * k, (head[0] + w * 0.6) * k, top * k, (head[0] - w * 0.6) * k, top * k)
-  p.rect((base - 0.2) * k, (floor - 0.04) * k, 0.4 * k, 0.05 * k, 0.02 * k)
-}
-
-/** Fletcher on his podium, and the chart while it is in his hand or in the air. */
-export function drawFletcher(p: p5, c: Ctx, T: number): void {
-  const head = fletcherAt(T)
-  const light = stageLight(T)
-  column(p, c, head, FLOOR - PODIUM.h)
-  const chart = chartAt(T)
-  if (chart.on === 'hand') drawChart(p, c, chart.at, chart.turn, light)
-  drawConductor(p, c, head, poseAt(T), { light })
-  if (chart.on === 'air') drawChart(p, c, chart.at, chart.turn, light)
-}
 
 /* ------------------------------------------------------------------ the stage door */
 
