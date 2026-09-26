@@ -82,14 +82,26 @@ export function heave(t: number): number {
  */
 export function startle(t: number): number {
   let a = 0
-  for (const c of CAT_CUES.ear) {
+  CAT_CUES.ear.forEach((c, i) => {
     const s = t - c
-    if (s < 0 || s > 2) continue
+    const [hold, down] = LISTEN[i]
+    if (s < 0 || s > down + 0.1) return
     const up = 1 - (1 - Math.min(1, s / 0.24)) ** 3
-    a = Math.max(a, up * (1 - smooth(s, 0.34, 1.85)))
-  }
+    a = Math.max(a, up * (1 - smooth(s, hold, down)))
+  })
   return a
 }
+
+/**
+ * How long the cat listens after each knock (seconds from it): its head held up until the first, and down again by
+ * the second. The first knock is seen close on the rack, and the camera draws back from it to the cat over the next
+ * three seconds, so the cat holds its head up, listening, long enough to be found doing it, and has only just put it
+ * down again when the second knock lifts it.
+ */
+const LISTEN: [number, number][] = [
+  [1.55, 2.95],
+  [0.34, 1.85],
+]
 
 /** How far the tail's tip is lifted by its twitch (42.455) or its lash on waking (149.815), and swung (cells). */
 function twitch(t: number): { lift: number; swing: number } {
@@ -129,11 +141,12 @@ function twitch(t: number): { lift: number; swing: number } {
  */
 function prick(t: number, far: boolean): number {
   let a = 0
-  for (const c of CAT_CUES.ear) {
-    const s = t - c - (far ? 0.08 : 0)
-    if (s < 0 || s > 2.2) continue
+  for (let i = 0; i < CAT_CUES.ear.length; i++) {
+    const s = t - CAT_CUES.ear[i] - (far ? 0.08 : 0)
+    const [held, down] = LISTEN[i]
+    if (s < 0 || s > down + 0.35) continue
     const on = 1 - (1 - Math.min(1, s / 0.16)) ** 3
-    const hold = on * (1 - smooth(s, 0.5, 1.9))
+    const hold = on * (1 - smooth(s, held + 0.16, down + 0.05))
     // Forward, then a swivel back and round again as it listens (two turns, damped).
     a += (far ? 0.26 : 0.34) * hold - (far ? 0.3 : 0.24) * smooth(s, 0.1, 0.3) * Math.sin(((s - 0.1) / 0.62) * Math.PI) * Math.exp(-Math.max(0, s - 0.1) / 0.55)
   }

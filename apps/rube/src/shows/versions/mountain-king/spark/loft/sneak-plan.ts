@@ -602,11 +602,11 @@ export const HITS: number[] = [
  * The camera. The loft whole on the horns (the candle, the bench, the stove and the cat asleep before it), then in on
  * the candle for the theme. With the hop into the pan it takes in the windlass and the pan in one frame and holds
  * while the pan goes down a notch a note. Close along the bench; the balance and the snuffer framed whole; with the
- * fling up to the pole; along the tightrope. Close on the rack for the jostle and the first knock (25.653) and its
- * knock again (26.57): the pair swinging together and the spark ducking fill the frame. Then, the spark frozen, the
- * camera draws back and down the room to find the cat by the stove (a look over its shoulder), and settles on the
- * two-shot as the spark tiptoes on to the pole's end, so the second knock (28.961) and the ear's flick are in one
- * frame. The cat is 21 cells east and 11 down, and the spark must stay inside the middle two thirds (Zoom), so that
+ * fling up to the pole; along the tightrope. Close on the rack for the jostle and the first knock (25.653): the pair
+ * swinging together and the spark ducking fill the frame. On the knock, the spark frozen, the camera starts to draw
+ * back and down the room (the knock again, 26.57, on the way), finds the cat by the stove with its head up listening
+ * (a look over the spark's shoulder), and has settled on the two-shot as the spark tiptoes on to the pole's end, so the
+ * second knock (28.961) and the cat's head coming up again are in one frame. The cat is 21 cells east and 11 down, and the spark must stay inside the middle two thirds (Zoom), so that
  * two-shot can be no tighter than about 16 cells. From it, in again to the arm and the hop onto the wheel, the whole
  * wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
  */
@@ -625,11 +625,14 @@ export const SHOTS: PartShot[] = [
   { t: 19.8, cells: 4.7, off: [-0.25, 0.55], w: 0 },
   { t: 22.7, cells: 6.0, off: [-0.3, 0.85], w: 0 },
   { t: 24.6, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
-  { t: 26.65, cells: 5.1, hold: [-14.6, -0.85], w: 1 },
-  { t: 27.55, cells: 10.2, hold: [-11.9, 1.0], w: 1 },
-  // The two-shot: the spark as far west as Zoom lets it be, so the cat's head is whole at the east edge until the
-  // ear's second flick is done (29.2).
-  { t: 28.35, cells: 16.9, hold: [-6.45, 3.4], w: 1 },
+  // Close on the first knock; the draw-back starts on it and eases out over the held beat (never faster than about
+  // half a scale a second), down the room to the cat, who is still listening with its head up when it comes in.
+  { t: BEAT.knocks[0], cells: 5.35, hold: [-14.45, -0.82], w: 1 },
+  { t: 27.1, cells: 9.4, hold: [-11.7, 0.95], w: 1 },
+  { t: 27.85, cells: 14.0, hold: [-8.7, 2.05], w: 1 },
+  // The two-shot, settled before the second knock: the spark as far west as Zoom lets it be, so the cat's head is
+  // whole at the east edge until the ear's second flick is done (29.2).
+  { t: 28.6, cells: 16.9, hold: [-6.45, 3.4], w: 1 },
   { t: 29.35, cells: 16.85, hold: [-6.5, 3.45], w: 1 },
   { t: 30.4, cells: 9.2, hold: [-15.4, 2.55], w: 0.85 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
