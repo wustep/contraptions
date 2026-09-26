@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine, easeOutQuad, lerp } from '../../../../../../../../src/core/ease'
-import { RIG, POSES, blendPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { RIG, POSES, beatPose, blendPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { smooth } from '../kit'
 import { BAND, QUIET, TEMPO, TUNE_ORIGIN, TUNE_PERIOD, level, tune } from '../music'
 import type { KitPiece } from '../drums'
@@ -335,19 +335,9 @@ export function fletcherPose(T: number): Pose {
  * tune's half notes: down into each ictus, a quick rebound, a float back up, a little in and out across the bar;
  * the left, toward the rhythm section, keeps a smaller time.
  */
-function conduct(T: number, head: Pt, size: number): Pose {
-  const sh = shoulders(head)
-  const k = (T - TUNE_ORIGIN) / TUNE_PERIOD
-  const u = k - Math.floor(k)
-  const bar = Math.floor(k) % 2
-  const lift = u < 0.12 ? 1 - u / 0.12 : Math.pow(Math.sin(((u - 0.12) / 0.88) * Math.PI * 0.5), 0.7)
-  const drop = 0.34 * size
-  const right: Pt = [head[0] - 0.6 + (bar ? 0.08 : -0.06) * (1 - lift), head[1] + 0.34 + drop * (1 - lift)]
-  const left: Pt = [head[0] + 0.56, head[1] + 0.5 + 0.4 * drop * (1 - lift)]
-  return {
-    right: reach(sh.right, right, Math.PI + 0.35 - 0.3 * (1 - lift), 'beat', 'down'),
-    left: reach(sh.left, left, -0.1 + 0.2 * (1 - lift), 'open', 'down'),
-  }
+function conduct(T: number, _head: Pt, size: number): Pose {
+  // The house's beat pattern (small and tight at the chest), on the tune's beats, sized by the band.
+  return beatPose((T - TUNE_ORIGIN) / TUNE_PERIOD, Math.min(1, size))
 }
 
 /** An arm pointing from `shoulder` at `target`, straight. */
@@ -474,16 +464,31 @@ export function tannerAt(T: number): Pt {
   return onKit(T)
 }
 
-/** On the snare: a small dip into the head on each of his strokes. */
+/**
+ * On the snare, playing: a real bounce off the head between his strokes (a beat apart, the band's time, and the
+ * band's hits between), landing on each one; the head gives a little under him as it answers.
+ */
 function onKit(T: number): Pt {
   const since = sinceStroke('snare', T)
-  const dip = since < 0.5 ? 0.035 * Math.exp(-since / 0.07) * (1 - Math.exp(-since / 0.012)) : 0
+  const dip = since < 0.5 ? 0.03 * Math.exp(-since / 0.07) * (1 - Math.exp(-since / 0.012)) : 0
+  let bounce = 0
+  const list = BY_PIECE.get('snare') ?? []
+  const j = list.findIndex((t) => t > T)
+  if (j > 0 && (T < TANNER_OFF - 0.02 || T > TANNER_ON + 0.02)) {
+    const a = list[j - 1]
+    const b = list[j]
+    const gap = b - a
+    // A stroke a beat or less apart is one bounce; a longer rest sits on the head and lifts off for the next.
+    const lift = Math.min(gap, 0.46)
+    const u = (T - (b - lift)) / lift
+    if (u > 0 && gap > 0.09) bounce = Math.min(0.13, Math.max(0.045, 0.28 * lift)) * 4 * u * (1 - u)
+  }
   // He reads his chart, to his left, as a page is due; and once, a long look at the alternate keeping time on
   // his chair (70 to 72.5).
   let look = 0
   for (const turn of TURNS) if (turn.page !== undefined) look += smooth(T, turn.page - 1.4, turn.page - 0.8) * (1 - smooth(T, turn.page, turn.page + 0.6))
   look += 1.6 * smooth(T, 70.0, 70.5) * (1 - smooth(T, 72.2, 73.0))
-  return [SNARE_AT[0] - 0.05 * Math.min(1.6, look), SNARE_AT[1] + dip]
+  return [SNARE_AT[0] - 0.05 * Math.min(1.6, look), SNARE_AT[1] + dip - bounce]
 }
 
 /* ------------------------------------------------------------------ the kit */
@@ -496,9 +501,13 @@ function onKit(T: number): Pt {
 function strokes(): { t: number; piece: KitPiece }[] {
   const out: { t: number; piece: KitPiece }[] = []
   const tanner = (a: number, b: number) => {
-    for (let k = Math.ceil((a - TUNE_ORIGIN) / TUNE_PERIOD); tune(k) < b; k++) out.push({ t: tune(k), piece: 'ride' })
+    // His time: a stroke on the snare every beat, his own (he is the ball on it). The band's hits between.
+    const beats: number[] = []
+    for (let k = Math.ceil((a - TUNE_ORIGIN) / TUNE_PERIOD); tune(k) < b; k++) beats.push(tune(k))
+    for (const t of beats) out.push({ t, piece: 'snare' })
     for (const o of bandHits(a, b, 0.9)) {
-      if (o.mid >= 0.8) out.push({ t: o.t, piece: 'snare' })
+      if (o.mid >= 0.8 && beats.every((t) => Math.abs(t - o.t) > 0.1)) out.push({ t: o.t, piece: 'snare' })
+      if (o.mid >= 0.8 && o.s >= 1.2) out.push({ t: o.t, piece: 'ride' })
       if (o.lo >= 0.7) out.push({ t: o.t, piece: 'kick' })
       if (o.s >= 1.5) out.push({ t: o.t, piece: 'crash' })
     }

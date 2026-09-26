@@ -77,12 +77,14 @@ export const band = part<BandState>(
     // Wide for the tutti: the trumpets stand, his hands go up, the page goes over in the breath.
     { t: 55.3, cells: 8.8, hold: [11.9, -1.25], w: 1 },
     { t: ANSWER + 0.6, cells: 8.8, hold: [12.4, -1.15], w: 1 },
-    // The alternate and the drummer, keeping the same time: Andrew on his seat, Tanner on his kit.
-    { t: 61.8, cells: 5.4, hold: [19.1, 0.55], w: 1 },
-    { t: 64.6, cells: 5.4, hold: [18.7, 0.5], w: 1 },
-    // A page, and Fletcher's eye on him; all three of them.
+    // The alternate and the drummer, keeping the same time: Andrew tapping on his seat, Tanner playing his kit.
+    { t: 61.8, cells: 4.4, hold: [19.4, 0.55], w: 1 },
+    { t: 64.4, cells: 4.3, hold: [19.3, 0.5], w: 1 },
+    // A page, and Fletcher's eye on him.
     { t: 67.2, cells: 5.8, hold: [16.6, 0.25], w: 1 },
-    { t: 71.0, cells: 6.6, hold: [17.9, 0.1], w: 1 },
+    // Across to the band at work, the bells lifting on its hits, Fletcher driving it; back to all three of them.
+    { t: 70.0, cells: 8.4, hold: [10.8, -1.05], w: 1 },
+    { t: 72.9, cells: 6.6, hold: [17.9, 0.1], w: 1 },
     { t: YOU, cells: 6.6, hold: [17.9, 0.15], w: 1 },
     // Onto the kit.
     { t: 78.3, cells: 5.4, hold: [19.9, 0.2], w: 1 },
