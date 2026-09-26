@@ -5,7 +5,7 @@ import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
 import { drawFacadeFront } from './front-house'
 import { FRONT_OVER, lookAt } from './front'
-import { BLOWS, BRAKE, CART, CHAIR_LIFT, CHAIRS, FOLD, HALT, P, PANE_AT, PRINT_AT, PRINTS, RAISE, SHOVE, SWINGS, TREADS, W } from './front-plan'
+import { BLOWS, BRAKE, CARL_STOP, carlOff, CART, CHAIR_LIFT, CHAIRS, FOLD, LET_GO, P, PANE_AT, PRINT_AT, PRINTS, RAISE, SHOVE, SWINGS, TREADS, W } from './front-plan'
 import { crouch, cubic, flight, pieces, trace, type Path } from './front-motion'
 import { drawChairsIn, drawChairsOut, drawRig, TOPS } from './fixup-rig'
 
@@ -18,8 +18,9 @@ import { drawChairsIn, drawChairsOut, drawRig, TOPS } from './fixup-rig'
  * all. On the way the jib swings his chair and then hers off the lawn and in through the empty bay (bars 10 and
  * 12); the hammer knocks the door straight on its hinges (12); the bay's missing pane slides home (13); the last
  * blow falls on the mailbox's post (17), and past the house the rollers fold down (18) as she hops for joy (19).
- * The cart stops with him under the mailbox (20): she presses her round print into its wet paint (21) and he his
- * square one beside it (22). She leaps over him (23) and leads him up the steps and in; she sits (27), the door
+ * He lets the cart go as the mast folds and it rolls on past the mailbox alone, the brake stopping it (20) while he
+ * walks to the box: she springs back to it and presses her round print into its wet paint (21), and he his square
+ * one beside it (22). She leaps over him (23) and leads him up the steps and in; she sits (27), the door
  * shuts behind him (28), and he sits beside her (29). The soft bars are the breath: side by side in their chairs,
  * looking out through the new window, the camera coming to them: the cut to the hill (`CUTS.hill`).
  *
@@ -53,7 +54,7 @@ const SEATED = (x: number): Pt => [x, P + CHAIR.sit]
 const FLOOR = P - 0.13
 
 const C = {
-  stop: W(HALT) + CART.carl,
+  stop: CARL_STOP.x,
   up: PRINT_AT.carl - 0.4,
   press: PRINT_AT.carl,
   off: PRINT_AT.carl + 0.09,
@@ -68,7 +69,9 @@ const C = {
 
 const carl: Path = pieces([
   [SHOVE, (T) => [XE + V_IN * (T - T0) - 0.5 * ACC * (T - T0) ** 2, 0]],
-  [HALT, (T) => [W(T) + CART.carl, 0]],
+  [LET_GO, (T) => [W(T) + CART.carl, 0]],
+  // He lets go as the mast folds and the cart rolls on without him; his own steps on to the box.
+  [CARL_STOP.at, (T) => [carlOff(T), 0]],
   [C.up, () => [C.stop, 0]],
   [C.press, (T) => flight(T, C.up, [C.stop, 0], C.press, PRINTS.carl)],
   [C.off, () => PRINTS.carl],
@@ -131,14 +134,14 @@ const ellie: Path = pieces([
 /* ------------------------------------------------------------------ how he holds himself */
 
 function carlPose(T: number): { tilt?: number; squash?: number } {
-  if (T < HALT + 0.6) {
-    // Leaning into the push as the cart surges, a jolt of squash on the shove, leaning back as it stops.
-    const v = (W(T + 0.03) - W(T - 0.03)) / 0.06
+  if (T < CARL_STOP.at + 0.3) {
+    // Leaning into the push as the cart surges, a jolt of squash on the shove, leaning back as he slows to a stop.
+    const v = (carl(T + 0.03)[0] - carl(T - 0.03)[0]) / 0.06
     const s = T - SHOVE
     const squash = s > 0 ? 0.14 * Math.exp(-s / 0.1) : 0
-    const back = Math.exp(-(((T - HALT) / 0.35) ** 2))
-    // (All of it eased out by the time he lets go of the cart, so he stands up straight without a flick.)
-    const u = Math.max(0, Math.min(1, (T - HALT - 0.2) / 0.4))
+    const back = Math.exp(-(((T - CARL_STOP.at) / 0.35) ** 2))
+    // (All of it eased out as he comes to rest under the box, so he stands up straight without a flick.)
+    const u = Math.max(0, Math.min(1, (T - CARL_STOP.at + 0.1) / 0.4))
     const off = 1 - u * u * (3 - 2 * u)
     return { tilt: (s < 0 ? 0 : Math.min(1, s / 0.15) * (0.06 + 0.1 * Math.min(1, v / 1.1)) - 0.1 * back) * off, squash }
   }
@@ -259,7 +262,7 @@ export const fixup = part<FixupState>(
     },
   },
   (slot) => {
-    const breaks = [SHOVE, HALT, C.up, C.press, C.off, C.down, C.walk, ...C.hops, C.seatUp, C.sit]
+    const breaks = [SHOVE, LET_GO, CARL_STOP.at, C.up, C.press, C.off, C.down, C.walk, ...C.hops, C.seatUp, C.sit]
     const segs = trace(carl, FIXUP_AT, slot.begin, slot.end, breaks)
     const end = carl(slot.end)
     const exit: Pt = [end[0] - FIXUP_AT[0] + 0.5, end[1] - FIXUP_AT[1]]
