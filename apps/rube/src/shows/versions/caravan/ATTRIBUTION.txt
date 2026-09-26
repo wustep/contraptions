@@ -1,0 +1,15 @@
+Caravan — Juan Tizol, Duke Ellington and Irving Mills; arranged by John Wasson
+From Whiplash (Original Motion Picture Soundtrack), 2014. 5AM Music Limited, under exclusive licence to Cutting Edge
+Music Services, LLC d/b/a Music.Film Recordings; distributed by Lakeshore Records.
+Film: Whiplash, written and directed by Damien Chazelle, Sony Pictures Classics, 2014.
+Official audio used for private Contraptions tech demos only (provided to YouTube by The Orchard Enterprises, the
+"John Wasson - Topic" upload):
+https://www.youtube.com/watch?v=38CRu1rCaKg
+Duration 9:15. Copyrighted — do not ship to production / public Shows without a licence.
+
+Files:
+- apps/rube/src/shows/versions/caravan/whiplash-caravan-demo.mp3 — the track as fetched (yt-dlp, audio only,
+  re-encoded at 128 kbit/s by scripts/shows/caravan-cue.sh). The show plays it whole from its first sample
+  (offset 0); no edit, no fade, no gain change.
+- scripts/shows/plans/caravan-onsets.json — the recording's onsets, the tune's 280 bpm click, the solo's strokes and
+  the ride cymbal's rubato, measured by scripts/shows/caravan-onsets.py; every strike in the show is held to it.
