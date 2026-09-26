@@ -5,7 +5,7 @@ import { alpha, box, carried, frame, hash, knock, part, smooth, type Companion, 
 import { CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHURCH, HOME, INK } from '../worlds'
-import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease, lift, paint, pchip, poly, rankLight, WED } from './church'
+import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease, lift, paint, poly, rankLight, WED } from './church'
 
 /**
  * The wedding (0 to 21.577): the show opens on the photograph.
@@ -25,10 +25,11 @@ import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease
  * rises onto her toes, his lean grows, and the camera pushes in to 2.1 cells on them, low in the frame under the
  * lower half of the east window over the altar, its light coming down out of the glass onto them.
  *
- * 17.757, waltz bar 1: the kiss, the last of the gap closed. The organ's great chord, the east window's light full on
- * the two of them, a warm second flash from the photographer out of frame (it is the photograph on the funeral's
- * easel), her family's arms in the air. The bell is pulled off and peals on bars 2, 3 and 4, petals thrown up over the
- * aisle; she spins away and he follows. The camera pulls out from the kiss on the swell and comes to rest on its crest
+ * 17.757, waltz bar 1: the kiss, the last of the gap closed, held through the bar. The organ's great chord, the east
+ * window's light full on the two of them, a warm second flash from the photographer out of frame (a wash, not a
+ * white-out: it is the photograph on the funeral's easel), her family's arms in the air. The bell is pulled off and
+ * peals on bars 2, 3 and 4, petals thrown up over the aisle; on bar 1's third beat she spins away and he follows. The
+ * camera pulls out from the kiss on the swell and comes to rest on its crest
  * (bar 3, the loudest bars of the cue), the whole nave and the bell swinging in its tower; then goes in after them
  * down the aisle. She hits the doors on 21.223 and they fly open on the morning; at 21.577 they are through them,
  * running level to the right at 1.6 cells a second, she a step ahead: the cut (`CUTS.house`).
@@ -110,12 +111,18 @@ const breathIn = (T: number): number =>
     const u = (T - a) / 0.2
     return u <= 0 ? v : v + u * u * Math.exp(2 * (1 - u))
   }, 0)
-/** How far she has risen onto her toes (her height's stretch less 1): step by step to the kiss, down as she spins away. */
-const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) * (1 - ease(T, 17.85, HER_RUN))
+/**
+ * How far she has risen onto her toes (her height's stretch less 1): step by step to the kiss, held on them through
+ * the kiss, and down as she pushes off to spin away.
+ */
+const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) * (1 - ease(T, HER_RUN - 0.2, HER_RUN + 0.06))
 
-/** She spins away on bar 1's second beat; he follows. She hits the doors on bar 4's second beat. */
-const HER_RUN = 18.123
-const HIS_RUN = 18.3
+/**
+ * The kiss is held through bar 1 (0.73 s, the families up and the first petals thrown over it); she spins away on its
+ * third beat and he follows a moment after. She hits the doors on bar 4's second beat.
+ */
+const HER_RUN = 18.483
+const HIS_RUN = 18.663
 const DOORS = 21.223
 /** Where the two are at the cut, world x, running 1.6 cells a second: he in the doorway, she out on the landing. */
 const CUT_CARL = CH.tower[1] - CH.wall / 2
@@ -124,8 +131,29 @@ const SPEED = 1.6
 
 /* ------------------------------------------------------------------ the two of them, as functions of show time (world cells) */
 
-const carlRun = pchip([HIS_RUN, 18.95, CUT.house], [ALTAR_CARL + KISS_STEP, ALTAR_CARL + 0.55, CUT_CARL], 0, SPEED)
-const ellieRun = pchip([HER_RUN, 18.75, CUT.house], [ALTAR_ELLIE - 0.08, ALTAR_ELLIE + 0.36, CUT_ELLIE], 0, SPEED)
+/**
+ * A run down the aisle from rest at `t0` (world x `x0`) to the cut (`x1`, at `SPEED`): the speed eases up over `up`
+ * seconds to a steady run, carries, and eases back to `SPEED` over the last `down` seconds (her through the doors
+ * as they check her; him in the doorway after her), with no lurch where any of it starts or stops.
+ */
+function aisle(t0: number, x0: number, x1: number, up: number, down: number): (T: number) => number {
+  const tc = CUT.house
+  const S = (u: number) => u * u * u - (u * u * u * u) / 2
+  const run = (x1 - x0 - (SPEED * down) / 2) / (tc - t0 - up / 2 - down / 2)
+  const ta = t0 + up
+  const tb = tc - down
+  const xa = x0 + (run * up) / 2
+  const xb = xa + run * (tb - ta)
+  return (T) => {
+    if (T <= t0) return x0
+    if (T < ta) return x0 + run * up * S((T - t0) / up)
+    if (T < tb) return xa + run * (T - ta)
+    if (T < tc) return xb + run * (T - tb) + (SPEED - run) * down * S((T - tb) / down)
+    return x1 + SPEED * (T - tc)
+  }
+}
+const carlRun = aisle(HIS_RUN, ALTAR_CARL + KISS_STEP, CUT_CARL, 0.77, 0.5)
+const ellieRun = aisle(HER_RUN, ALTAR_ELLIE - 0.08, CUT_ELLIE, 0.9, 0.5)
 
 function carl(T: number): Pt {
   if (T >= HIS_RUN) return [carlRun(T), 0]
@@ -177,7 +205,7 @@ function carlPose(T: number): { tilt: number; squash: number } {
   // Stepped away, he looks back at the pews; he stops looking as he steps back in.
   const glance = 0.07 * smooth(T, 6.1, 6.6) * (1 - smooth(T, 7.3, 7.85))
   // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; straightened as he runs.
-  const lean = toward(T, HIS_LEAN) * (1 - ease(T, 18.05, HIS_RUN + 0.35))
+  const lean = toward(T, HIS_LEAN) * (1 - ease(T, HER_RUN - 0.07, HIS_RUN + 0.35))
   // Each step of it a small settle as it lands.
   for (const [, b] of TOWARD) squash += 0.025 * (T < b ? ease(T, b - 0.12, b) : knock(T - b, 0.16))
   return { tilt: step + glance + lean, squash }
@@ -479,16 +507,16 @@ function drawExposure(p: p5, c: Ctx, T: number): void {
     box2(p, k, f.x0, f.y0, f.x1, f.y1)
   }
   // The second photograph, on the kiss (the one on the funeral's easel): the photographer out of frame to the right
-  // and below, where his rig went; a softer, warmer flash from there, lighter than air (it adds light; it does not
-  // grey), strongest on the side it comes from.
-  const warm = T >= KISS ? 0.36 * knock(T - KISS, 0.14) : 0
+  // and below, where his rig went; a soft warm wash from there, not a white-out (it adds light; it does not grey),
+  // strongest on the side it comes from and under a third even there, so the two of them touching are seen through it.
+  const warm = T >= KISS ? knock(T - KISS, 0.16) * Math.min(1, (T - KISS) / 0.02) : 0
   if (warm > 0.004) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
     ctx.save()
     ctx.globalCompositeOperation = 'screen'
     const g = ctx.createLinearGradient(f.x1 * k, f.y1 * k, f.x0 * k, f.y0 * k)
-    g.addColorStop(0, `rgba(255, 244, 222, ${Math.min(1, warm * 1.5)})`)
-    g.addColorStop(1, `rgba(255, 244, 222, ${warm * 0.45})`)
+    g.addColorStop(0, `rgba(255, 226, 178, ${0.28 * warm})`)
+    g.addColorStop(1, `rgba(255, 226, 178, ${0.1 * warm})`)
     ctx.fillStyle = g
     ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
     ctx.restore()
