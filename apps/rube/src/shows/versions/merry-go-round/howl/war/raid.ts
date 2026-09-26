@@ -2126,13 +2126,16 @@ export const raid = part<{ begin: number }>(
       sky(222.2, 13.1, 16.9, -7.55),
       // Back on her, frozen on the beam looking up; she drives it down (222.65), and pumps, a stroke a bar.
       { ...her(r(2, 3), 5.0, LX + 1.9, 0.57, BRAKE.up), cut: true },
-      her(r(4), 7.2, LX + 1.8, 0.36, PUMP),
-      her(r(5), 8.2, LX + 1.9, 0.33, PUMP),
-      // A medium over her as the stick comes down the roofs to the one over her and on to the shop's.
-      her(r(6), 11.0, LX + 1.3, 0.33, PUMP),
-      her(r(8), 11.0, LX + 0.5, 0.33, PUMP),
-      her(r(9), 8.6, LX + 1.4, 0.33, PUMP),
-      her(r(10), 9.6, LX + 0.9, 0.345, PUMP),
+      her(r(4), 7.0, LX + 1.8, 0.4, PUMP),
+      her(r(5), 7.3, LX + 1.9, 0.41, PUMP),
+      her(r(6), 7.4, LX + 1.6, 0.41, PUMP),
+      her(r(7) - 0.03, 7.4, LX + 1.4, 0.41, PUMP),
+      // On r7 a cut out to the whole street, two bars, the roofs whole with the sky over them, as the stick comes down
+      // the roofs a bomb a downbeat to the one over her and on toward the shop's; on r9 back in to her on the beam.
+      { ...her(r(7), 13.4, LX + 0.2, 0.22, PUMP), cut: true },
+      her(r(9) - 0.03, 13.6, LX - 0.2, 0.22, PUMP),
+      { ...her(r(9), 7.3, LX + 1.4, 0.41, PUMP), cut: true },
+      her(r(10), 7.4, LX + 0.9, 0.41, PUMP),
       // Look up on her step down: Howl goes into the bay and the ship blows (231.805, 232.153) over the hat shop.
       sky(r(10, 3), 13.0, 1.2, -7.55, true),
       sky(232.45, 13.4, 0.9, -7.55),
