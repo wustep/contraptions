@@ -7,8 +7,9 @@ import { CHURCH, HILL, HOME, INK } from '../worlds'
  * The hill set: their picnic hill, seen from the side. Standing scenery for the whole show, drawn from show time
  * (`c.t`) in the hill world's cells from the set's origin.
  *
- * A green hill rising from a country lane on the right to a broad crest with one big tree on its left; beyond it
- * the valley, the town small and pale, the far hills, and a big sky. The path up is the hill's own skyline: from a
+ * A green hill rising from a country lane on the right to a broad crest with one big tree (left of it in summer, on
+ * the near flank's shoulder years later: `treeX`); beyond it the valley, the town small and pale, the far hills, and
+ * a big sky. The path up is the hill's own skyline: from a
  * stone step at the lane (`STEP`) it climbs the flank to the crest, so whoever walks it is seen against the sky.
  * The lane runs along the hill's foot in front of it.
  *
@@ -30,11 +31,19 @@ export const LANE_Y = 2.1
 export const STEP = { x0: 8.15, x1: 9.05, y: LANE_Y - 0.13 }
 /** The foot of the path: the step's face, on the lane. */
 export const FOOT_X = STEP.x1
-/** The tree on the crest: its trunk's foot. */
-export const TREE_X = -3.5
-
 /** Summer to autumn, by show time: 0 for the clouds, 1 for the climb. */
 export const autumn = (t: number): number => smooth(t, 100, 150)
+/** Their tree: its trunk's foot. In summer on the far shoulder, over the crest where they lie and watch the clouds. */
+export const TREE_X = -3.5
+/**
+ * Years later the tree stands on the near flank's shoulder, at the top of the path he leads her up: the picnic place,
+ * which he nearly reaches and she never does. The climb is seen from the lane, so this is where the tree has to be for
+ * the fall to happen under it. Only one season is ever on screen, so each has the tree where it is seen.
+ */
+export const TREE_AUTUMN_X = 5.2
+/** Where the tree's foot is at show time `t`. */
+export const treeX = (t: number): number => (autumn(t) > 0.5 ? TREE_AUTUMN_X : TREE_X)
+
 
 /**
  * A shoulder of the hill: from level at its top, steepening (to `max` at 0.625 of the way), then easing a little
@@ -151,6 +160,8 @@ export function leaf(p: p5, k: number, x: number, y: number, a: number, s: numbe
 /** The tree's falling leaves in autumn, as a pure function of time: each leaf lets go, drifts down and away, and is gone. */
 function fallingLeaves(p: p5, k: number, t: number, au: number, f: { x0: number; x1: number; y0: number; y1: number }): void {
   if (au < 0.05) return
+  const tx = treeX(t)
+  const base = ridge(tx)
   const col = [HILL.leafAutumn, mixHex(HILL.leafAutumn, HOME.yellow, 0.4), mixHex(HILL.leafAutumn, HILL.bark, 0.35)]
   const n = 34
   const life = 9
@@ -160,8 +171,8 @@ function fallingLeaves(p: p5, k: number, t: number, au: number, f: { x0: number;
     const u = ((t + phase) % life) / life
     const seed = i * 31 + cycle * 7
     // Let go from somewhere in the crown; the breeze takes them right and down, swaying.
-    const x0 = TREE_X - 1.4 + 3.3 * hash(seed, 1)
-    const y0 = -2.6 + 1.2 * (hash(seed, 2) - 0.5)
+    const x0 = tx - 1.4 + 3.3 * hash(seed, 1)
+    const y0 = base - 2.4 + 1.2 * (hash(seed, 2) - 0.5)
     const drift = 3.5 + 6 * hash(seed, 3)
     const x = x0 + drift * u + 0.35 * Math.sin(u * 9 + hash(seed, 4) * 6)
     const y = y0 + 4.6 * u + 0.12 * Math.sin(u * 13 + i)
@@ -385,7 +396,7 @@ export const hillSet = scenery<null>({
     }
 
     // The tree's trunk and limbs (the crown is drawn over the parts, so their clouds pass behind it).
-    const tx = TREE_X
+    const tx = treeX(t)
     const ty0 = R
     const base = ridge(tx)
     if (tx + 3 > f.x0 && tx - 3 < f.x1) {
@@ -395,12 +406,15 @@ export const hillSet = scenery<null>({
       p.stroke(INK)
       p.strokeWeight(weight)
       p.fill(bark)
-      // The trunk: short and stout, flaring at its foot, forking into its limbs.
+      // The trunk: short and stout, flaring at its foot, forking into its limbs. Both shoulders of the hill slope, so
+      // its foot follows the ground (from the foot's height) and neither side floats.
+      const ground = (x: number) => ridge(x) - base + ty0
       p.beginShape()
-      p.vertex(X(tx - 0.4), X(ty0))
-      p.bezierVertex(X(tx - 0.2), X(ty0 - 0.12), X(tx - 0.19), X(ty0 - 0.5), X(tx - 0.16), X(-1.12))
+      p.vertex(X(tx - 0.4), X(ground(tx - 0.4)))
+      p.bezierVertex(X(tx - 0.2), X(ground(tx - 0.2) - 0.12), X(tx - 0.19), X(ty0 - 0.5), X(tx - 0.16), X(-1.12))
       p.vertex(X(tx + 0.17), X(-1.14))
-      p.bezierVertex(X(tx + 0.2), X(ty0 - 0.5), X(tx + 0.21), X(ty0 - 0.12), X(tx + 0.42), X(ty0))
+      p.bezierVertex(X(tx + 0.2), X(ty0 - 0.5), X(tx + 0.21), X(ground(tx + 0.21) - 0.12), X(tx + 0.42), X(ground(tx + 0.42)))
+      for (let x = tx + 0.32; x > tx - 0.4; x -= 0.1) p.vertex(X(x), X(ground(x)))
       p.endShape(p.CLOSE)
       for (const l of LIMBS) limb(p, k, tx, l)
       // Bare twigs show in autumn, through the thinning crown.
@@ -425,8 +439,8 @@ export const hillSet = scenery<null>({
     const { k, t, weight } = c
     const au = autumn(t)
     const f = frame(p, k)
-    const tx = TREE_X
-    if (tx + 3.5 > f.x0 && tx - 3.5 < f.x1 && f.y0 < -1) {
+    const tx = treeX(t)
+    if (tx + 3.5 > f.x0 && tx - 3.5 < f.x1 && f.y0 < ridge(tx) - 1.3) {
       p.push()
       p.translate(0, ridge(tx) * k)
       // The crown: clumps from the back forward, each inked round its outside, shaded under, lit on top.

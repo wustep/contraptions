@@ -722,30 +722,6 @@ function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
 /** How much of the rod's swing he rides at `T` (the part's `rides`): none of the roll's fan, where he sits at its centre. */
 const ridden = (T: number): number => (T <= RIDE_END || T >= COCK ? 1 : 1 - smooth(T, RIDE_END, RIDE_END + 0.45))
 
-/**
- * The hall's light coming up with the swell: a broad warm wash over the stage, the machine and the kit (over the
- * part's own light, `rubato.ts`), held to the burst and let down slowly after it. Never a core: it is as wide as the
- * stage.
- */
-function drawSurge(p: p5, c: Ctx, T: number): void {
-  const a = 0.15 * surge(T)
-  if (a < 0.003) return
-  const { k } = c
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const cx = (PIVOT_X + 0.6) * k
-  const cy = (FLOOR - 1.6) * k
-  const r = 8.5 * k
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-  g.addColorStop(0, `rgba(227, 176, 91, ${a.toFixed(3)})`)
-  g.addColorStop(0.5, `rgba(227, 176, 91, ${(a * 0.55).toFixed(3)})`)
-  g.addColorStop(1, 'rgba(227, 176, 91, 0)')
-  ctx.fillStyle = g
-  ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
-  ctx.restore()
-}
-
 /** The metronome at show time `T`: nothing while it is under the stage. */
 export function drawMetronome(p: p5, c: Ctx, T: number): void {
   const dy = lift(T)
@@ -786,5 +762,4 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
   // The cradle where he sits: on the rod while he rides its swing, still at the fan's centre while it blurs past.
   drawCradle(p, c, dy, th * ridden(T), r)
   ctx.restore()
-  drawSurge(p, c, T)
 }

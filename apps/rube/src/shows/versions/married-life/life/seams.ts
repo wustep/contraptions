@@ -32,8 +32,10 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   house: {
     t: CUT.house,
     v: [1.6, 0],
-    cells: 5,
-    frame: [0.9, -0.9],
+    // Wide, as the wedding's pull-out lands on bar 4's peal: the bell whole over the doorway as they run out under it;
+    // on the far side the move out to the old house carries on from here. The middle 1.9 over him (Zoom allows 2.02).
+    cells: 6.45,
+    frame: [0.9, -1.9],
     ellie: [0.36, 0],
     what: 'out of the church\'s doors at a run, level, heading right, Ellie a step ahead; on the far side the same run, up the path to the old house',
   },
@@ -64,8 +66,11 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   yard: {
     t: CUT.yard,
     v: [0, 0],
-    cells: 3.9,
-    frame: [-1.4, -0.7],
+    // Close, from the close on the two of them in the office: under Zoom this is about as close as a cut can be that
+    // holds her at his right in the office and her on her stump 2.07 to his left in the yard; and no further right of
+    // him than the yard's window, whose sill would show as a sliver at the edge.
+    cells: 2.8,
+    frame: [-0.72, -0.5],
     ellie: null,
     what: 'Carl at rest: in the office chair; on the far side, alone inside the back door, looking out at her. Ellie is out in the yard, left of him',
   },
@@ -74,9 +79,12 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
     v: [0.6, 0],
     cells: 2.7,
     frame: [0.55, -0.72],
-    ellie: [0.36, 0],
+    // She is out at the open front door, her back to the hall, while the tickets go into the basket (his surprise):
+    // standing on the porch's edge, looking out at the evening, as he sets off after her; on the hill she is standing
+    // that far ahead on the lane, and he walks up to her.
+    ellie: [1.1, 0],
     basket: true,
-    what: 'setting out for the picnic, walking right, level, the basket (the tickets in it) on his top, Ellie a step ahead; on the far side, the foot of the hill',
+    what: 'setting out for the picnic, walking right, level, the basket (the tickets in it) on his top, Ellie standing ahead of him, looking out; on the far side, the foot of the hill',
   },
   hospital: {
     t: CUT.hospital,
@@ -90,10 +98,10 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   funeral: {
     t: CUT.funeral,
     v: [0, 0],
-    // As wide as the hand-over's framing and a touch wider, the middle about a cell over him: the balloon whole over
-    // her under Zoom up to the cut, and the camera drawing back slowly through it into the empty church (it drifted in
-    // to 3.1 and out again, and cut the balloon's crown under Zoom for the last second).
-    cells: 3.47,
+    // Wider than the hand-over's framing, the middle about a cell over him: the balloon whole over her under Zoom up to
+    // the cut, and the camera drawing back slowly through it, from her touch on, into the empty church (it drifted in to
+    // 3.1 and out again, and cut the balloon's crown under Zoom for the last second; held at 3.4 it parked for 4 s).
+    cells: 3.8,
     frame: [0.3, -0.96],
     ellie: null,
     balloon: true,

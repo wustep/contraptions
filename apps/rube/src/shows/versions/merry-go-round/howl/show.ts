@@ -63,6 +63,8 @@ function boundsOf(pieces: Placed[]): Box {
 export class CastleShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
+  /** The camera's cuts inside a place (`Shot.cut`), in show seconds: the score fills it; the checks read it. */
+  cameraCuts: number[] = []
 
   constructor(
     readonly legs: Leg[],

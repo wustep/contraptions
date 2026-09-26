@@ -9,7 +9,7 @@ import { WASTES } from '../worlds'
 import { laneThrough, TURNIP_TO_WALK } from './hills'
 import { drawFog, drawPlume, drawTurnipAt } from './hills-land'
 import {
-  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
+  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
   stepAt, TAKEOFF, TURNIP_LANDINGS, W, WIDE,
 } from './walk-plan'
 
@@ -98,40 +98,51 @@ export const walk = part<null>(
       const [x, y] = onCastle(T, CASTLE.door)
       return w([x + dx, y - FLOOR + dy])
     }
+    // The wide the strides are held in: the whole castle, feet to flag, at one size for all three.
+    const WHOLE = 30
     // The third great stride is watched from a lock-off: the castle crosses it past the thorn tree (world x 47),
     // whole from its feet to its flag, its feet a cell and a half above the frame's foot.
     const past = castleAt(W(78)).at
-    const cross = w([48, past[1] + 1.7 - 29 / 2])
+    const cross = w([48, past[1] + 1.7 - WHOLE / 2])
+    // Where the castle sits down in the night: the whole of it, centred on its seat, a little lower in the frame than
+    // in the strides' (the porch comes down as it sits, and she with it).
+    const seat = castleAt(SETTLE + 1).at
+    const NIGHT = WHOLE + 2
+    const night = w([seat[0] + 0.4, seat[1] + 3.5 - NIGHT / 2])
     return [
       // The castle over her on the hill, its stair dropping; in on her as she jumps for it and climbs.
       { t: DROP, cells: 12.6, hold: w([HILLTOP[0] + 2.1, -4.55]) },
       { t: 123.5, cells: 11.6, hold: w([HILLTOP[0] + 1.6, -3.85]) },
       { t: CATCH, cells: 10.5, hold: w([HILLTOP[0] + 1.1, -2.9]) },
-      // With her up the stair (she climbs across the frame), and as she comes up onto the porch the camera starts
-      // back, and goes on back through the roar (128.0, 128.37): the whole castle, from its feet to Calcifer's fire
-      // leaping out of the chimney at the top of the frame, her small and low on the porch under the lantern, the
-      // first time we see the engine.
-      { t: CLIMB[2] + 0.2, cells: 10.5, off: [1.0, -1.6] },
-      { t: CLIMB[5], cells: 12.5, off: [1.3, -2.6] },
-      { t: ROAR[0], cells: 29.2, off: [3.0, -6.1] },
-      // The three great strides (131.43, 133.72, 135.94), each seen its own way. The first alongside it, the whole
-      // castle feet to flag, a foot coming down near the frame's foot in its dust; the second in on her aboard, the
-      // hull heaving under her and the lantern swinging; the third out again to the lock-off as it strides past the
-      // thorn tree. The camera arrives on each as the foot lands.
-      { t: W(74), cells: 29.6, off: [3.4, -7.0] },
-      { t: W(76), cells: 10.4, off: [2.7, -1.05] },
-      { t: W(78), cells: 29, hold: cross },
-      // Night comes: in on her on the porch, a third from the left and a third up, the lantern over her and the door
-      // beside her, the dark land sliding by under the porch, as the windows light.
-      { t: 138.7, cells: 6.8, off: [1.75, -1.1] },
-      { t: 140.4, cells: 6.5, off: [1.75, -1.08] },
+      // With her up the stair (she climbs across the frame), and as she nears the porch the camera starts back, one
+      // long pull (2.7 s) that is still easing out through the roar (128.0, 128.37) instead of braking into it: the
+      // whole castle, from its feet to Calcifer's fire leaping out of the chimney at the top of the frame, her small
+      // and low on the porch under the lantern, the first time we see the engine.
+      { t: 125.3, cells: 10.5, off: [1.0, -1.6] },
+      { t: ROAR[0], cells: 28.4, off: [2.9, -6.0] },
+      { t: 129.3, cells: 29.7, off: [3.2, -6.6] },
+      // The three great strides (131.43, 133.72, 135.94), held whole at one size so each hull drop and its dust read
+      // alike: the first two alongside it, the camera travelling with it; for the third it lets the castle go and
+      // settles into the lock-off a stride early, so the castle strides past the thorn tree across a still frame.
+      { t: W(74), cells: WHOLE, off: [3.4, -7.0] },
+      { t: W(77), cells: WHOLE, hold: cross },
+      { t: 136.3, cells: WHOLE, hold: cross },
+      // Night comes: one long move in (136.3 → 140.4, one even swell never faster than half a log a second; the two
+      // keys between are placed so it neither dips nor surges) to her on the porch, a third from the left and a
+      // third up, the lantern over her and the door beside her, the dark land sliding by under the porch, as the
+      // windows light; then a slow creep on in.
+      { t: 138.2, cells: 15, off: [2.3, -2.6] },
+      { t: 139.4, cells: 9.75, off: [1.95, -1.6] },
+      { t: 140.4, cells: 7.4, off: [1.75, -1.1] },
+      { t: 141.6, cells: 6.6, off: [1.75, -1.08] },
       { t: 143.2, cells: 6.2, off: [1.7, -1.05] },
-      // Out a little to watch it walk on into the dark, its windows lit, the lit porch the brightest thing in the
-      // frame; it slows, and sits.
-      { t: 145.6, cells: 12.5, off: [2.8, -1.3] },
-      { t: LAST, cells: 14, off: [2.8, -0.9] },
-      { t: SETTLE + 0.1, cells: 13.5, hold: door(SETTLE + 0.1, 0.4, -1.4) },
-      { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95) },
+      // Then, on a footfall, a cut out to the whole castle small against the night, feet to flag with the night over
+      // it: it walks on into the middle of a still frame, its windows lit and the porch's lantern the brightest thing
+      // in it, slows as the music fades, and sits on the last note (148.805); a breath, and on the latch (150.686) a cut
+      // in to the door, which opens on the room's light.
+      { t: W(86), cells: NIGHT, hold: night, cut: true },
+      { t: LATCH - 0.3, cells: NIGHT - 2.5, hold: [night[0], night[1] + 1.1] },
+      { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95), cut: true },
       { t: slot.end, cells: 4, off: [0.9, -0.7] },
     ]
   },

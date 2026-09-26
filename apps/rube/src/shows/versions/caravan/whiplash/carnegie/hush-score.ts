@@ -1,7 +1,7 @@
 import type { KitPiece } from '../drums'
 import { CYMBALS, ONSETS } from '../music'
 import type { KitStroke } from '../stub'
-import { H_BACK, H_WALK, KNOCK } from './conductor'
+import { H_BACK, KNOCK } from './conductor'
 import { TARGETS, type Arm, type Grip } from './solo-score'
 
 /**
@@ -11,10 +11,10 @@ import { TARGETS, type Arm, type Grip } from './solo-score'
  *
  * - Soft on the snare, alone, under the frame hanging limp (`SETTLE`); he leaps back up into its cup and lands on
  *   the loud stroke that knocks the crash askew (`KNOCK`): the frame's right stick is what knocks it.
- * - The frame plays the hush: its right arm the hi-hat's pulse, and the left the ride's while Fletcher is at the kit
- *   setting the crash straight (the right arm hangs out of his way, `H_REST`); both arms the
- *   bursts round the kit (the crash again: it holds); the left arm the ride's soft pulse while the camera finds his
- *   father.
+ * - The frame plays the hush: from the knock until Fletcher has gone back, its right arm drops and hangs out of the
+ *   crash's way (`H_REST`), so the tipped cymbal stands clear the whole time he walks over and sets it straight, and
+ *   the left arm keeps the pulse on the ride; then the right arm the hi-hat's pulse again; both arms the bursts round
+ *   the kit (the crash again: it holds); the left arm the ride's soft pulse while the camera finds his father.
  * - He leaves the cup on the ride's last stroke, down onto the rack tom and the snare for the build; the frame goes
  *   limp and flies out as the build's engine rises.
  */
@@ -61,15 +61,20 @@ export const SETTLE: Land[] = [323.79, 324.313, 324.99, 325.75, 326.136, 326.519
   piece: 'snare' as const,
   lift: i === 4 ? 0.2 : i === 6 ? 0.3 : 0.12,
 }))
-/** The right arm off the crash onto the hi-hat. */
-const OFF_CRASH = on(328.603)
-/** The hush's pulse, on the hi-hat, while Fletcher comes across and sets the crash straight. */
-const HAT_PULSE = pulse(OFF_CRASH + 0.2, 343.87, 0.8, 0.25)
 /**
- * While Fletcher is at the kit, the frame's right arm hangs out of his way (it would reach across his body to the
- * hi-hat) and the pulse goes over to the ride, on the left arm: the drummer making room for him.
+ * The hush's pulse after the knock (its first stroke the cymbal hit a third of a second after it), while Fletcher
+ * comes across and sets the crash straight.
  */
-export const H_REST: [number, number] = [H_WALK[1] - 1.2, H_BACK[0] + 0.4]
+const PULSE = pulse(KNOCK + 0.3, 343.87, 0.8, 0.25)
+/**
+ * From the knock until Fletcher has gone back, the frame's right arm drops and hangs (its elbow tucked in toward the
+ * body, `solo-rig.ts`) and the pulse goes over to the ride, on the left arm: the drummer making room. Playing the
+ * hi-hat, its sleeve crossed the crash's left third for the whole walk, so the one thing Fletcher comes to fix was
+ * never seen whole; and at the kit it would reach across his body. The lean toward the ride carries the right
+ * shoulder off the crash's raised left rim too. It starts just after the knock's stroke, so the stick is on the rim
+ * when it lands, and the arm falls away from the cymbal as it tips.
+ */
+export const H_REST: [number, number] = [KNOCK + 0.2, H_BACK[0] + 0.4]
 const restPiece = (t: number): 'hat' | 'ride' => (t > H_REST[0] - 0.15 && t < H_REST[1] + 0.15 ? 'ride' : 'hat')
 /** The bursts, round the kit: which drum each loud stroke is on, by where its sound is. */
 const BURSTS: Land[] = [
@@ -109,11 +114,10 @@ export const H_UNSEAT = RIDE_PULSE[RIDE_PULSE.length - 1]
 /** The frame flies out, up into the flies, as the build's engine rises. */
 export const H_FLY: [number, number] = [370.2, 373.2]
 
-/** What the frame plays, in order: the knock, the hat's pulse, the bursts, the ride's pulse. */
+/** What the frame plays, in order: the knock, the pulse (the ride's, then the hat's), the bursts, the ride's pulse. */
 const FRAME_PLAYS: Land[] = [
   { t: KNOCK, piece: 'crash' },
-  { t: OFF_CRASH, piece: 'hat' },
-  ...HAT_PULSE.map((t) => ({ t, piece: restPiece(t) })),
+  ...PULSE.map((t) => ({ t, piece: restPiece(t) })),
   ...BURSTS,
   { t: TO_RIDE, piece: 'ride' },
   ...RIDE_PULSE.map((t) => ({ t, piece: 'ride' as const })),

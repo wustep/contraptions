@@ -71,6 +71,8 @@ export interface PartShot {
   cells: number
   hold?: Pt
   w?: number
+  /** The hold's weight up and down, where it differs from `w` (camera.ts). */
+  wy?: number
   off?: Pt
 }
 
@@ -193,7 +195,7 @@ export interface Link {
 export interface Chain {
   placed: Placed[]
   /** The camera keys the parts asked for, moved into the world. */
-  shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
+  shots: { t: number; cells: number; hold?: Pt; w?: number; wy?: number; off?: Pt }[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
   /** The parts' spans of company, in world cells. */

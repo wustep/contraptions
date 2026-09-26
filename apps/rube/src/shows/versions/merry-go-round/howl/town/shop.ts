@@ -49,6 +49,8 @@ const LAND = 10.728
 const SEAT = 11.349
 /** The ram breathes steam again. */
 const PUFF = 11.918
+/** She rocks the press's treadle on the theme's melody, and the ram tamps the felt again on each note. */
+const ROCKS = [12.498, 13.827]
 /** She rolls on toward the hinge, and the ram begins to lift. */
 const EASE_OFF = 14.338
 /** The ram back up against its stop. */
@@ -90,6 +92,7 @@ export const SHOP_HITS: number[] = [
   LAND,
   SEAT,
   PUFF,
+  ...ROCKS,
   RAM_UP,
   ONTO,
   ...TURNS,
@@ -210,10 +213,27 @@ const sink = curve([
   [LAND, 0, 1.1],
   [SEAT, 1, 2.1],
 ])
+/**
+ * A rock: the free end gives up a little under her just before the note (eased up), and she comes down on it on the
+ * note (gathering, a hit), the ram tamping the felt again.
+ */
+function rockLift(t: number): number {
+  let v = 0
+  for (const at of ROCKS) {
+    const s = t - at
+    if (s <= -0.34 || s > 0) continue
+    v += s < -0.14 ? 0.16 * smooth(s, -0.34, -0.14) : 0.16 * (1 - ((s + 0.14) / 0.14) ** 2)
+  }
+  return v
+}
 function pressed(t: number): number {
   if (t <= LAND) return 0
   if (t < SEAT) return sink(t)
-  if (t < EASE_OFF) return 1 - 0.04 * Math.abs(ring(t - SEAT, 1, 26, 0.08))
+  if (t < EASE_OFF) {
+    let knock = Math.abs(ring(t - SEAT, 1, 26, 0.08))
+    for (const at of ROCKS) knock += 0.7 * Math.abs(ring(t - at, 1, 26, 0.08))
+    return 1 - 0.04 * knock - rockLift(t)
+  }
   return 1 - smooth(t, EASE_OFF, RAM_UP - 0.04)
 }
 const T_LEN = Math.hypot(T_FREE[0] - T_HINGE[0], T_FREE[1] - T_HINGE[1])
@@ -256,7 +276,9 @@ const trolley = curve([
   [PAN, AT_STAND, 0],
 ])
 /** How the hat wobbles on its block after a knock. */
-const wobble = (t: number): number => ring(t - TURNS[0], 0.05, 22, 0.16) + ring(t - PAN, 0.07, 20, 0.2) + ring(t - SEAT, 0.02, 30, 0.1) + ring(t - RAISED, 0.04, 18, 0.22)
+const wobble = (t: number): number =>
+  ring(t - TURNS[0], 0.05, 22, 0.16) + ring(t - PAN, 0.07, 20, 0.2) + ring(t - SEAT, 0.02, 30, 0.1) + ring(t - RAISED, 0.04, 18, 0.22) +
+  ring(t - ROCKS[0], 0.012, 30, 0.1) + ring(t - ROCKS[1], 0.012, 30, 0.1)
 
 /** Where she is along the floor from the press to the sewing plate: rolling down the treadle, then rocking. */
 const rollX = curve([
@@ -1188,7 +1210,7 @@ function drawSteam(p: p5, c: Ctx, t: number): void {
   const ry = ramTop(t) + RAM_H
   const col = mixHex(TOWN.plaster, TOWN.canal, 0.15)
   // The bursts: out from under the ram's skirt both ways, rising and spreading, on the seat, the breath and the lift.
-  for (const [at, s] of [[SEAT, 1], [PUFF, 0.75], [RAM_UP, 0.9]] as const) {
+  for (const [at, s] of [[SEAT, 1], [PUFF, 0.75], [ROCKS[0], 0.5], [ROCKS[1], 0.55], [RAM_UP, 0.9]] as const) {
     const u = t - at
     if (u < 0 || u > 2.4) continue
     for (let i = 0; i < 7; i++) {

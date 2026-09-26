@@ -50,6 +50,11 @@ export interface Tie {
   to: number
   /** Where it is tied at show time `s`, in the world cells of the leg it happens in. */
   at: (s: number) => Pt
+  /**
+   * The string's length while it is tied here, if not its own (`BALLOON_SIZE.string`): taken in as the knot goes
+   * across, and let out again over a couple of seconds after the span ends (the cast's `stringAt`).
+   */
+  string?: number
 }
 
 /** Ellie's spans, in world cells, each tied to the world it happens in. */

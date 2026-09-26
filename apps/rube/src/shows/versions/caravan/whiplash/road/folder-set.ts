@@ -10,8 +10,9 @@ import { cone, glow, hexA, lit, pool, poly, rect, seg, wash } from './crash-pain
  * case backstage): everything that stands still while the story happens in front of it. Left to right:
  *
  *   the vending machine (-5.3 .. -3.1) | a step case | the trap case he sits on (-1.1 .. 0.1) | two long road cases
- *   (to 4.5) | the stage-left wing | the stage: the kit (snare at 9.5), Fletcher's place (12.9), the band on its
- *   riser (13.9 .. 17.2) | the stage-right wing | the side wall with its loading door (18.4 .. 18.8) | outside
+ *   (to 4.5) | the stage-left wing | the stage: the kit (snare at 9.5), the drummer's bare stand (11.5),
+ *   Fletcher's place (13.15), the band on its riser (13.9 .. 17.2) | the stage-right wing | the side wall with its
+ *   loading door (18.4 .. 18.8) | outside
  *
  * The floor is at y = FL everywhere (the kit's own floor: `drums.ts` KIT_FLOOR). A cell is about a foot. Every
  * colour here is dimmed toward the paper by the light it stands in (`lit`), so the set can open dark and wake.
@@ -35,7 +36,7 @@ export const WING_R = { x0: 17.5, x1: 18.1 }
 /** The kit's origin (the ball on its snare) on the stage. */
 export const KX = 9.5
 /** Where Fletcher conducts from: his head (his ball). */
-export const FLETCH: Pt = [12.9, FL - 3.2]
+export const FLETCH: Pt = [13.15, FL - 3.2]
 /** The band's riser, and its players: saxophones in front on the floor, trumpets behind on the riser. */
 export const RISER = { x0: 14.2, x1: 17.4, h: 0.55 }
 export const SAXES = [14.75, 15.7, 16.65]
@@ -494,6 +495,46 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       p.pop()
     })
   })
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the drummer's stand */
+
+/**
+ * The drummer's stand beside the hi-hat: the band's kind, lit as theirs are, and bare. Tanner's chart went with his
+ * folder, so the kit's desk has nothing on it beside a band full of lit pages, and Andrew plays past it from memory.
+ * The desk is turned toward the kit and leans back (as Carnegie's stand's), its top edge and its ledge lit; its face
+ * dark and empty. `top` is the desk's top edge at its spine.
+ */
+export const DRUM_STAND = { x: KX + 2.0, top: -1.5, w: 0.78, h: 0.56 }
+
+export function drawDrumStand(p: p5, c: Ctx, light: number): void {
+  const { k, weight } = c
+  const L = 0.3 + 0.7 * light
+  const x = DRUM_STAND.x
+  const hinge = DRUM_STAND.top + DRUM_STAND.h
+  const hub = FL - 0.36
+  p.push()
+  // Tripod and post, dark steel, the lamps along its lit side.
+  outline(p, DARK_EDGE, weight * 1.1)
+  seg(p, k, [x - 0.3, FL], [x, hub])
+  seg(p, k, [x + 0.28, FL], [x, hub])
+  seg(p, k, [x, FL], [x, hinge])
+  p.stroke(hexA(ROAD.sodium, 0.1 + 0.3 * light))
+  p.strokeWeight(weight * 0.4)
+  seg(p, k, [x - 0.02, hub], [x - 0.02, hinge])
+  // The desk (`u` across from its middle, `v` up from its hinge, negative), turned toward the kit and leaning back.
+  const q = (u: number, v: number): Pt => [x + 0.46 * u - 0.34 * v, hinge + 0.08 * u + 0.93 * v]
+  const W = DRUM_STAND.w / 2
+  const H = DRUM_STAND.h
+  solid(p, DARK_EDGE, weight * 0.8, lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.35), L))
+  poly(p, k, [q(-W, -H), q(W, -H), q(W, 0), q(-W, 0)])
+  // Its top edge and the ledge along its foot catch the lamps; between them, nothing.
+  p.noStroke()
+  p.fill(hexA(ROAD.sodium, 0.12 + 0.45 * light))
+  poly(p, k, [q(-W, -H), q(W, -H), q(W, -H + 0.035), q(-W, -H + 0.035)])
+  solid(p, DARK_EDGE, weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.sodium, 0.35), L))
+  poly(p, k, [q(-W - 0.03, -0.05), q(W + 0.03, -0.05), q(W + 0.03, 0.02), q(-W - 0.03, 0.02)])
   p.pop()
 }
 

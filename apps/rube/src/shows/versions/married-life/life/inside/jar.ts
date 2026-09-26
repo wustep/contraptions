@@ -310,32 +310,54 @@ export const jar = part<JarState>(
  * (3.4 at the top of her hops up onto it).
  */
 /**
- * The storm's pull-out as keys along one curve: the zoom a Hermite in log cells from the pour (carrying on the draw
- * back's pace) to rest at STORM_WIDE on STORM_IN; across, even in the zoom's progress; the frame's middle rising with
- * the cells it opens (nearly linear in cells), which keeps Carl on his plank (y -0.48) inside the Zoom frame all the
- * way out, and at the widest puts the crown's top (y -14.45) inside the frame. Sampled closer at
- * the ends, where it turns, so the director's monotone cubic through the samples is the curve.
+ * The storm's pull-out as keys along one curve: the zoom's pace in log cells a second picks up from the draw-back's
+ * (DRAW_BACK) as she reaches the jar (STORM_FROM), eases up to an even cruise, and eases down to rest at STORM_WIDE on
+ * STORM_IN, running on into the slight drift after; across, even in the zoom's progress; the frame's middle rising
+ * with the cells it opens (nearly linear in cells), which keeps Carl on his plank (y -0.48) inside the Zoom frame all
+ * the way out, and at the widest puts the crown's top (y -14.45) inside the frame. It is as long as the storm allows,
+ * landing just before the limb starts down (TREE - 0.22), and a cruise rather than a bell, so its fastest (about 0.55
+ * log/s) is no faster than the gust needs. Sampled finely, so the director's monotone cubic through them is the curve.
  */
-const STORM_IN = 128.4
+const DRAW_BACK = { t: 123.9, cells: 2.97, at: [3.9, -0.82] as Pt, pace: 0.196 }
+const STORM_FROM = 124.9
+const STORM_IN = 128.55
 const STORM_WIDE = { cells: 17.2, at: [10.4, -5.95] as Pt }
+/** Where the draw-back has the frame at `t`: on its way to the pour's framing (3.85 cells at (5.2, -1.05) on PUSH2). */
+function drawBackAt(t: number): { cells: number; at: Pt } {
+  const f = (t - DRAW_BACK.t) / (PUSH2 - DRAW_BACK.t)
+  const [x, y] = DRAW_BACK.at
+  return { cells: DRAW_BACK.cells * Math.exp(DRAW_BACK.pace * (t - DRAW_BACK.t)), at: [x + (5.2 - x) * f, y + (-1.05 - y) * f] }
+}
 function stormOut(k: (t: number, cells: number, hold: Pt) => PartShot): PartShot[] {
-  const [c0, x0, y0] = [3.85, 5.2, -1.05]
+  const { cells: c0, at: [x0, y0] } = drawBackAt(STORM_FROM)
   const { cells: c1, at: [x1, y1] } = STORM_WIDE
-  const D = STORM_IN - PUSH2
+  const T = STORM_IN - STORM_FROM
   const L0 = Math.log(c0)
   const L1 = Math.log(c1)
-  const m0 = 0.196 * D
-  const m1 = (Math.log(17.4 / c1) / (130.4 - STORM_IN)) * D
+  // The pace: from the draw-back's, a raised-cosine ease up over UP s to the cruise, and one down over DOWN s to the
+  // drift's. The cruise is what makes the whole come out at L1.
+  const v0 = DRAW_BACK.pace
+  const v1 = Math.log(17.4 / c1) / (130.4 - STORM_IN)
+  const UP = 0.7
+  const DOWN = 1.15
+  const vp = (L1 - L0 - (UP * v0) / 2 - (DOWN * v1) / 2) / (T - UP / 2 - DOWN / 2)
+  /** Log cells gone `x` s into an ease from pace `a` to `b` over `len` s. */
+  const ease = (a: number, b: number, len: number, x: number) => ((a + b) / 2) * x + ((a - b) / 2) * (len / Math.PI) * Math.sin((Math.PI * x) / len)
+  const logAt = (tau: number): number => {
+    if (tau <= UP) return L0 + ease(v0, vp, UP, tau)
+    const cruise = L0 + ease(v0, vp, UP, UP) + vp * (tau - UP)
+    return tau <= T - DOWN ? cruise : cruise - vp * (tau - (T - DOWN)) + ease(vp, v1, DOWN, tau - (T - DOWN))
+  }
   const out: PartShot[] = []
-  const n = 14
-  for (let i = 1; i <= n; i++) {
-    const u = (1 - Math.cos((Math.PI * i) / n)) / 2
-    const L = (2 * u ** 3 - 3 * u ** 2 + 1) * L0 + (u ** 3 - 2 * u ** 2 + u) * m0 + (-2 * u ** 3 + 3 * u ** 2) * L1 + (u ** 3 - u ** 2) * m1
+  const n = 28
+  for (let i = 0; i <= n; i++) {
+    const tau = (T * i) / n
+    const L = i === n ? L1 : logAt(tau)
     const c = Math.exp(L)
     const s = (L - L0) / (L1 - L0)
     // (A little behind the cells: his last stroke, 127.431, drops his end of the plank as the frame opens.)
     const up = ((c - c0) / (c1 - c0)) ** 1.15
-    out.push(k(PUSH2 + D * u, c, [x0 + (x1 - x0) * s, y0 + (y1 - y0) * up]))
+    out.push(k(STORM_FROM + tau, c, [x0 + (x1 - x0) * s, y0 + (y1 - y0) * up]))
   }
   return out
 }
@@ -361,25 +383,28 @@ function shots(): PartShot[] {
     // between the car in the window and the jar on the mantle, landed before the blow, so the tyre goes in a still
     // frame with what it will cost in it; then a slow drift right with her up the ladder (the top of her hop onto the
     // mantle wants 3.4 cells), gathering into one move onto the cradle, the chute and his machine as she pushes. The
-    // frame stays there through the pour, the refill's two strokes and the lamp going out at its top edge, while the
-    // car drives off at the other.
+    // frame stays there through the pour and the refill's two strokes while the car drives off at the other edge.
     k(LANDS[3], 3.32, [4.66, -0.9]),
     k(112.5, 3.5, [4.25, -0.95]),
     k(115.1, 3.56, [4.5, -1.0]),
     k(PUSH1 - 0.1, 4.0, [5.42, -1.1]),
-    k(118.9, 3.9, [5.2, -1.1]),
-    // In, all the way, as he climbs, falls and she comes down to him: landed close on her touch, a drift while the
-    // bandage wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the
-    // mantle: no closer than 2.8 there.)
+    // The lamp: the refill's second stroke shakes it and it sputters out, whole in the frame's top with its cord going
+    // up out of it; the frame looks up with him as he climbs to it (as low as Zoom lets it go while he is still on
+    // the plank), and holds the lamp over him on the ladder's top as the ladder kicks, so it is the lamp he falls
+    // reaching for.
+    k(LAMP_OUT, 3.92, [5.1, -1.18]),
+    k(KICK, 3.7, [4.35, -1.3]),
+    // In, all the way, as he falls and she comes down to him: landed close on her touch, a drift while the bandage
+    // wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the mantle:
+    // no closer than 2.8 there.)
     k(FALL, 3.1, [3.75, -0.85]),
     k(TOUCH, 2.38, [3.07, -0.62]),
     // Then one long move out toward the storm: gently at first, faster as she climbs the ladder and leaps to the
     // mantle (she stays whole in Zoom: 2.5 cells as she reaches the tread, 2.95 at the top of her leap), past the
     // cradle as she gives the jar over again, gathering into the storm's reveal.
     k(UP2[0], 2.5, [3.25, -0.66]),
-    k(123.9, 2.97, [3.9, -0.82]),
-    k(PUSH2, 3.85, [5.2, -1.05]),
-    // The storm gathers: from the pour, one move out and up past the nursery to the whole house, its roof and the
+    k(DRAW_BACK.t, DRAW_BACK.cells, DRAW_BACK.at),
+    // The storm gathers: as she reaches the jar, one move out and up past the nursery to the whole house, its roof and the
     // garden tree's whole crown over the ridge, landed before the limb comes down (TREE), so the limb, the jar thrown
     // over by the blow and the thunder all fall in a still frame; a slight drift; then in again as the cradle rights and
     // the limb is winched out, the nursery's ceiling well inside the frame while the hole is boarded.

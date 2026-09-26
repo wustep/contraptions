@@ -140,23 +140,45 @@ export function bellAt(t: number): number {
 
 /**
  * The shop's display carousel by the counter (the window's carousel): a brass pole on a round plinth, three arms of
- * hats turning slowly all day. At closing, Sophie's weight on its pedal (88.33) brakes it a step on each of three
- * downbeats and it folds its arms down for the night (92.42): the curse part strikes these.
+ * hats turning slowly all day. At night it turns by clockwork, a tick round on each of the waltz's downbeats from the
+ * cut (85.80, 86.89, 87.98), drifting between; Sophie's weight on its pedal (88.33) makes each tick smaller (the
+ * brakes, 89.10 and 90.18), stops it on 91.31, and it folds its arms down for the night (92.42): the curse part strikes
+ * these.
  */
 export const DISPLAY = { x: 6.95, arms: [-0.98, -1.34, -1.7], top: -2.02, reach: 0.34 }
 export const DISPLAY_ON = 88.329
 export const DISPLAY_BRAKE = [89.101, 90.175, 91.307]
 export const DISPLAY_FOLD = 92.415
+/** The night's clockwork ticks: on the downbeats from the cut, then the two brakes, each a smaller tick. */
+export const DISPLAY_TICKS = [85.804, 86.889, 87.98]
+const TICKS: [number, number][] = [...DISPLAY_TICKS.map((t): [number, number] => [t, 1]), [DISPLAY_BRAKE[0], 0.6], [DISPLAY_BRAKE[1], 0.3]]
 const SPIN = 0.5
-/** How far round it has turned at `t`: a steady turn, slowed a third on each brake, stopped on the last. */
+/** Where the steady day's turn gives way to the night's clockwork (the shop is off the screen then). */
+const NIGHT = 85.2
+const TICK = 0.62
+/** A tick: a quick eased turn a hair past, and back (a clockwork's catch), over about a third of a second. */
+const tickAt = (s: number): number => (s <= 0 ? 0 : 1 - Math.exp(-s / 0.07) * (1 + s / 0.07) + 0.05 * Math.exp(-s / 0.14) * Math.sin(s * 16))
+/** How far round it has turned at `t`: steady all day; at night a tick on each downbeat, smaller under the brakes, stopped. */
 export function displayTurn(t: number): number {
+  if (t < NIGHT) return SPIN * t
   const [b0, b1, b2] = DISPLAY_BRAKE
-  if (t < b0) return SPIN * t
-  let a = SPIN * b0
-  a += (SPIN * 2) / 3 * (Math.min(t, b1) - b0)
-  if (t > b1) a += (SPIN / 3) * (Math.min(t, b2) - b1)
+  // A slow drift between the ticks, slower under each brake, still on the last.
+  let a = SPIN * NIGHT + 0.14 * (Math.min(t, b0) - NIGHT)
+  if (t > b0) a += 0.07 * (Math.min(t, b1) - b0)
+  if (t > b1) a += 0.03 * (Math.min(t, b2) - b1)
+  for (const [at, size] of TICKS) a += TICK * size * tickAt(t - at)
+  // Stopped on the last brake: a jolt, and still.
   if (t > b2) a += 0.04 * Math.sin(Math.min(t - b2, 0.6) * 9) * Math.exp(-(t - b2) / 0.18)
   return a
+}
+/** The arms' hop on each tick (their hats jump on the catch and settle): 0 at rest. */
+export function displayHop(t: number): number {
+  let h = 0
+  for (const [at, size] of TICKS) {
+    const s = t - at
+    if (s > 0 && s < 1) h += size * (1 - Math.exp(-s / 0.025)) * Math.exp(-s / 0.13)
+  }
+  return h
 }
 /** Its arms folded down: 0 out, 1 down (for the night, and on through the war). */
 export function displayFold(t: number): number {
@@ -1319,7 +1341,7 @@ function drawDisplay(p: p5, k: number, W: number, ink: string, t: number, inTone
     const r = reach * (1 - fold)
     const tipX = x + r * Math.sin(it.a)
     const drop = fold * (0.55 - it.i * 0.05)
-    const tipY = it.y + drop + 0.04 * it.z * (1 - fold)
+    const tipY = it.y + drop + 0.04 * it.z * (1 - fold) - 0.05 * displayHop(t) * (1 - fold)
     p.stroke(inTone(TOWN.gold))
     p.strokeWeight(X(0.025))
     p.line(X(x), X(it.y), X(tipX), X(tipY))

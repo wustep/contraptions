@@ -152,8 +152,6 @@ const YH = GR - 3.2
 /** Where a point of the ground at world `x`, height `y`, `sc` deep (1 on her plane, less further off) is on the screen. */
 const depthX = (x: number, sc: number, cx: number): number => cx + (x - cx) * sc
 const depthY = (y: number, sc: number): number => YH + (y - YH) * sc
-/** How deep the ground seen at screen height `y` is (for a surface at height `h`). */
-const depthAt = (y: number, h = GR): number => (y - YH) / (h - YH)
 
 /* ------------------------------------------------------------------ where things stand */
 
@@ -736,26 +734,58 @@ function drawFleet(p: p5, k: number, W: number, ink: string, T: number, cx: numb
 const S_SHORE = S_FAR + 0.02
 const farShore = (x: number): number => S_SHORE + 0.018 * Math.sin(x * 0.31) + 0.01 * Math.sin(x * 0.83 + 1)
 const leftShore = (sc: number): number => (sc >= 1 ? L0 + 2.4 * (sc - 1) : L0 - 12.5 * (1 - sc) ** 0.85)
-const inLake = (x: number, sc: number): boolean => sc >= farShore(x) && x > leftShore(sc) - 0.1
+/**
+ * Its near shore. No 16:9 frame of this part sees the water this close (the deepest a frame's foot reaches with the
+ * lake in it is 2.07, as she rolls out of the trough; the turn starts at 2.18), so it changes nothing there; a phone held upright, seeing on down below the 16:9 box, sees the left shore
+ * round into it and the lake end in grass, not run on off the bottom of the picture as a thin blue wedge.
+ */
+const S_NEAR = 2.5
+const S_TURN = 0.32
+const X_TURN = leftShore(S_NEAR - S_TURN)
+const R_TURN = 2.2
+const nearShore = (x: number): number => S_NEAR + smooth(x, X_TURN + R_TURN, X_TURN + R_TURN + 4) * (0.035 * Math.sin(x * 0.23 + 0.7) + 0.015 * Math.sin(x * 0.61))
+const inLake = (x: number, sc: number): boolean => sc >= farShore(x) && x > leftShore(sc) - 0.1 && sc <= nearShore(x)
 
-/** The lake's outline on the screen, for the camera where it is now. */
-function lakeOutline(f: Frame): Pt[] {
+/**
+ * The lake's outline on the screen, for the camera where it is now: along the near shore from off the right of the
+ * frame, round the turn into the left shore, up it to the far shore, and along that off the right again. Each point
+ * carries how thick the bank's lip is there (`lip`).
+ */
+function lakeOutline(f: Frame): { pts: Pt[]; lip: number[] } {
   const cx = f.cx
   const pts: Pt[] = []
-  const sBot = depthAt(f.y1 + 0.5, GW)
-  for (let i = 0; i <= 24; i++) {
-    const sc = lerp(sBot, S_SHORE, i / 24)
-    pts.push([depthX(leftShore(sc), sc, cx), depthY(GW, sc)])
+  const lip: number[] = []
+  const at = (x: number, sc: number, t: number) => {
+    pts.push([depthX(x, sc, cx), depthY(GW, sc)])
+    lip.push(t)
+  }
+  const leftLip = (sc: number): number => Math.min(0.2, 0.06 + 0.14 * clamp01((sc - S_SHORE) / (1 - S_SHORE)))
+  // The near shore, right to left.
+  const x0 = X_TURN + R_TURN
+  const xn = Math.max(x0 + 1, cx + (f.x1 + 1 - cx) / S_NEAR)
+  for (let i = 0; i <= 30; i++) at(lerp(xn, x0, i / 30), nearShore(lerp(xn, x0, i / 30)), 0.08)
+  // The turn: a quarter of an ellipse, from along the near shore to up the left one.
+  for (let i = 1; i < 12; i++) {
+    const a = ((1 - i / 12) * Math.PI) / 2
+    const sc = S_NEAR - S_TURN + S_TURN * Math.sin(a)
+    at(X_TURN + R_TURN * (1 - Math.cos(a)), sc, lerp(leftLip(sc), 0.08, Math.sin(a)))
+  }
+  // Up the left shore to the far one, finely enough that no chord cuts across its bend (a coarse one drew a thin blue
+  // wedge down into the grass).
+  for (let i = 0; i <= 72; i++) {
+    const sc = lerp(S_NEAR - S_TURN, S_SHORE, i / 72)
+    at(leftShore(sc), sc, leftLip(sc))
   }
   const xl = leftShore(S_SHORE)
   const xr = cx + (f.x1 + 1 - cx) / S_SHORE
   for (let i = 0; i <= 40; i++) {
     const x = lerp(xl, xr, i / 40)
-    const sc = farShore(x)
-    pts.push([depthX(x, sc, cx), depthY(GW, sc)])
+    at(x, farShore(x), 0.06)
   }
-  pts.push([f.x1 + 1, f.y1 + 1])
-  return pts
+  // Down the right, off the frame, to where it began.
+  pts.push([Math.max(f.x1 + 1, pts[0][0]), pts[pts.length - 1][1]], [Math.max(f.x1 + 1, pts[0][0]), pts[0][1]])
+  lip.push(0, 0)
+  return { pts, lip }
 }
 function tracePath(ctx: CanvasRenderingContext2D, k: number, pts: Pt[]): void {
   ctx.moveTo(pts[0][0] * k, pts[0][1] * k)
@@ -776,36 +806,121 @@ function drawMeadow(p: p5, k: number, f: Frame, y0: number, y1: number): void {
   ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (y1 - top) * k)
 }
 
+/**
+ * The meadow's flower colours: warm ones and white only. Nothing lilac, blue or grey, which is the two of them
+ * (Howl's cornflower, her lavender-grey going chestnut): a flower in their colours beside them reads as a third ball.
+ */
+const ROSE = mixHex(FLOWERS.pink, FLOWERS.coral, 0.45)
 /** Drifts of flowers across the meadow: which colour grows thick where, by world x and depth. */
 function drift(x: number, sc: number): { c: string; d: number } {
   const band = Math.sin(x * 0.21 + sc * 11) + Math.sin(x * 0.07 - sc * 5 + 2)
   const i = Math.floor(((band + 2) / 4) * 4.999)
-  const cs = [FLOWERS.white, FLOWERS.yellow, FLOWERS.pink, FLOWERS.lilac, FLOWERS.yellow]
+  const cs = [FLOWERS.white, FLOWERS.yellow, FLOWERS.pink, ROSE, FLOWERS.yellow]
   return { c: cs[Math.max(0, Math.min(4, i))], d: 0.35 + 0.65 * Math.abs(Math.sin(x * 0.37 + sc * 7.3)) }
+}
+/** A flower head's eye: a warm dot in the middle of the petals. */
+const EYE: Record<string, string> = {
+  [FLOWERS.white]: FLOWERS.yellow,
+  [FLOWERS.yellow]: mixHex(FLOWERS.yellow, FLOWERS.coral, 0.55),
+  [FLOWERS.pink]: FLOWERS.yellow,
+  [ROSE]: FLOWERS.yellow,
+  [FLOWERS.coral]: mixHex(FLOWERS.yellow, FLOWERS.white, 0.3),
+}
+/** No head is bigger than a third of a ball across its middle, however near: never a round thing their size. */
+const HEAD = FLOOR / 3
+
+/**
+ * Their way through the meadow, kept to plain grass: the waltz down off the porch (the two of them), and along her
+ * plane from where they land to the water's edge (to the wheel, where Howl walks on under the flume, where she rolls
+ * out of the trough, and where the two of them stand and wait at the lake). As polylines in (world x, screen y).
+ */
+const LANE: Pt[][] = (() => {
+  const her: Pt[] = [[-0.5, 0]]
+  const his: Pt[] = [[-0.5 + 2 * PAIR, 0]]
+  for (let i = 0; i <= 16; i++) {
+    const T = lerp(STEP_OFF, LAND, i / 16)
+    her.push(herDown(T))
+    his.push(hisDown(T))
+  }
+  return [her, his, [[X_LAND - 2 * PAIR, M], [X_EDGE + 0.5, M]]]
+})()
+const LANE_BOX = (() => {
+  const all = LANE.flat()
+  return {
+    x0: Math.min(...all.map((q) => q[0])) - 1,
+    x1: Math.max(...all.map((q) => q[0])) + 1,
+    y0: Math.min(...all.map((q) => q[1])) - 1,
+    y1: Math.max(...all.map((q) => q[1])) + 1,
+  }
+})()
+/** How far a point of the meadow is from their way. */
+function fromLane(x: number, y: number): number {
+  if (x < LANE_BOX.x0 || x > LANE_BOX.x1 || y < LANE_BOX.y0 || y > LANE_BOX.y1) return Infinity
+  let best = Infinity
+  for (const line of LANE) {
+    for (let i = 0; i < line.length - 1; i++) {
+      const [ax, ay] = line[i]
+      const [bx, by] = line[i + 1]
+      const dx = bx - ax
+      const dy = by - ay
+      const u = clamp01(((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy || 1))
+      best = Math.min(best, Math.hypot(x - ax - u * dx, y - ay - u * dy))
+    }
+  }
+  return best
 }
 
 /**
- * The meadow's flowers, in rows back to the horizon: heads only far off, a head on a stem near. Every head of a
- * colour goes in one path, so the field is a few fills, not thousands.
+ * The meadow's flowers, in rows back to the horizon: small flat heads far off; near, on stems, each a little floret
+ * of three to five petals round an eye, or an upright spike of buds; never one round dot. None along their way (a
+ * ragged-edged lane about 0.8 cell each side, fixed to the ground so nothing comes or goes as the camera moves).
+ * Every head of a colour goes in one path, so the field is a few fills, not thousands.
  */
 function drawSpecks(p: p5, k: number, f: Frame, T: number, near: boolean): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const paths = new Map<string, Path2D>()
+  const eyes = new Map<string, Path2D>()
   const stems = new Path2D()
-  const add = (c: string): Path2D => {
-    let q = paths.get(c)
+  const add = (m: Map<string, Path2D>, c: string): Path2D => {
+    let q = m.get(c)
     if (!q) {
       q = new Path2D()
-      paths.set(c, q)
+      m.set(c, q)
     }
     return q
   }
-  const rows = near ? [1.04, 1.1, 1.17, 1.25, 1.34, 1.45, 1.58] : [0.3, 0.33, 0.37, 0.41, 0.46, 0.51, 0.57, 0.63, 0.7, 0.77, 0.84, 0.91, 0.97]
+  const blob = (q: Path2D, x: number, y: number, rx: number, ry: number, rot: number) => {
+    q.moveTo((x + rx * Math.cos(rot)) * k, (y + rx * Math.sin(rot)) * k)
+    q.ellipse(x * k, y * k, rx * k, ry * k, rot, 0, Math.PI * 2)
+  }
+  // A flower head at (hx, hy): an upright spike of three or four buds, smaller toward the top, or a floret of three
+  // to five petals round a warm eye, tilted a little toward us.
+  const head = (c: string, hx: number, hy: number, r: number, spike: boolean, n: number, rot: number) => {
+    if (spike) {
+      for (let q = 0; q < n; q++) {
+        const br = r * 0.5 * (1 - 0.14 * q)
+        blob(add(paths, c), hx, hy - q * r * 0.72, br * 0.8, br, 0)
+      }
+      return
+    }
+    for (let q = 0; q < n; q++) {
+      const a = rot + (q * 2 * Math.PI) / n
+      const ex = Math.cos(a)
+      const ey = Math.sin(a) * 0.7
+      blob(add(paths, c), hx + ex * r * 0.5, hy + ey * r * 0.5, r * 0.5, r * 0.26, Math.atan2(ey, ex))
+    }
+    blob(add(eyes, EYE[c] ?? FLOWERS.yellow), hx, hy, r * 0.24, r * 0.2, 0)
+  }
+  // Rows back to the horizon, closer together far off; many small heads, so the meadow is a carpet of colour
+  // without any one of them being a thing her size.
+  const rows = near
+    ? [1.03, 1.07, 1.11, 1.16, 1.21, 1.27, 1.33, 1.4, 1.48, 1.58]
+    : Array.from({ length: 22 }, (_, j) => 0.3 * (0.97 / 0.3) ** (j / 21))
   for (let j = 0; j < rows.length; j++) {
     const sc = rows[j]
     const Y = depthY(GR, sc)
     if (Y < f.y0 - 0.5 || Y > f.y1 + 1) continue
-    const d = 0.55 / Math.max(0.45, sc)
+    const d = (near ? 0.36 : 0.3) / Math.max(0.45, sc)
     const xw0 = f.cx + (f.x0 - 1 - f.cx) / sc
     const xw1 = f.cx + (f.x1 + 1 - f.cx) / sc
     for (let i = Math.floor(xw0 / d); i <= Math.ceil(xw1 / d); i++) {
@@ -814,22 +929,38 @@ function drawSpecks(p: p5, k: number, f: Frame, T: number, near: boolean): void 
       if (hash(i, j, 12) > dr.d) continue
       if (inLake(x, sc)) continue
       if (sc > 0.98 && sc < 1 + RACE_D / (GR - YH) + 0.05 && x > PIT[0] - 0.35 && x < PIT[1] + 0.35) continue
-      const X = depthX(x, sc, f.cx)
       const yy = Y + (hash(i, j, 13) - 0.5) * 0.12 * sc
+      const stem = near ? (0.1 + 0.14 * hash(i, j, 17)) * sc : 0
+      if (fromLane(x, yy - stem) < 0.6 + 0.4 * hash(i, j, 18)) continue
+      const X = depthX(x, sc, f.cx)
       const c = hash(i, j, 14) < 0.72 ? dr.c : [FLOWERS.white, FLOWERS.coral, FLOWERS.yellow][Math.floor(hash(i, j, 15) * 3)]
-      const r = (0.028 + 0.03 * hash(i, j, 16)) * sc
-      if (near) {
-        const stem = (0.12 + 0.2 * hash(i, j, 17)) * sc
-        const sway = Math.sin(T * 1.3 + x * 0.7) * 0.03 * sc
-        stems.moveTo(X * k, yy * k)
-        stems.lineTo((X + sway) * k, (yy - stem) * k)
-        const q = add(c)
-        q.moveTo((X + sway + r) * k, (yy - stem) * k)
-        q.arc((X + sway) * k, (yy - stem) * k, r * k, 0, Math.PI * 2)
-      } else {
-        const q = add(c)
-        q.moveTo((X + r) * k, yy * k)
-        q.ellipse(X * k, yy * k, r * k, r * 0.8 * k, 0, 0, Math.PI * 2)
+      if (!near) {
+        // Far off, a head is a fleck wider than it is tall: a flower seen from the side.
+        const rf = (0.03 + 0.03 * hash(i, j, 16)) * sc
+        blob(add(paths, c), X, yy, Math.min(HEAD, rf * 1.3), rf * 0.6, 0)
+        continue
+      }
+      const r = Math.min(HEAD, (0.024 + 0.022 * hash(i, j, 16)) * sc)
+      // Near, a plant: a stem to its head, and in a spray one or two more on shorter branches off it.
+      const sway = Math.sin(T * 1.3 + x * 0.7) * 0.03 * sc
+      const hx = X + sway
+      const hy = yy - stem
+      stems.moveTo(X * k, yy * k)
+      stems.lineTo(hx * k, hy * k)
+      const spike = hash(i, j, 19) < 0.3
+      const n = spike ? (hash(i, j, 20) < 0.5 ? 3 : 4) : 3 + Math.floor(hash(i, j, 20) * 2.999)
+      const rot = hash(i, j, 21) * Math.PI * 2 + T * 0.2 * (hash(i, j, 22) - 0.5)
+      head(c, hx, hy, r, spike, n, rot)
+      const more = spike ? 0 : Math.floor(hash(i, j, 23) * 2.6)
+      for (let q = 0; q < more; q++) {
+        const side = (q === 0) === hash(i, j, 24) < 0.5 ? 1 : -1
+        const fx = X + (hx - X) * 0.55
+        const fy = yy - stem * (0.45 + 0.15 * q)
+        const bx = fx + side * (0.07 + 0.05 * hash(i, j, 25 + q)) * sc + sway * 0.6
+        const by = fy - stem * (0.28 + 0.12 * hash(i, j, 27 + q))
+        stems.moveTo(fx * k, fy * k)
+        stems.lineTo(bx * k, by * k)
+        head(c, bx, by, r * 0.78, false, n, rot + 1.1 * (q + 1))
       }
     }
   }
@@ -838,9 +969,11 @@ function drawSpecks(p: p5, k: number, f: Frame, T: number, near: boolean): void 
     ctx.lineWidth = Math.max(0.6, k * 0.012)
     ctx.stroke(stems)
   }
-  for (const [c, q] of paths) {
-    ctx.fillStyle = c
-    ctx.fill(q)
+  for (const m of [paths, eyes]) {
+    for (const [c, q] of m) {
+      ctx.fillStyle = c
+      ctx.fill(q)
+    }
   }
 }
 
@@ -850,7 +983,7 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
   p.push()
   ctx.save()
   ctx.beginPath()
-  tracePath(ctx, k, lakeOutline(f))
+  tracePath(ctx, k, lakeOutline(f).pts)
   ctx.clip()
   ctx.beginPath()
   ctx.rect(-1e5, y0 * k, 2e5, (y1 - y0) * k)
@@ -910,10 +1043,25 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
   p.pop()
 }
 
-/** The lake's banks: a soft darker lip where the meadow meets the water; never an inked line. */
+/**
+ * The lake's banks: a soft darker lip where the meadow meets the water, all round the shore (out to the left on the
+ * left shore, up on the far one, down on the near one); never an inked line.
+ */
 function drawBanks(p: p5, k: number, f: Frame, y0: number, y1: number): void {
-  const pts = lakeOutline(f)
+  const { pts, lip } = lakeOutline(f)
   const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The shore only (the last two points close it off the frame). Out from the water is to the left of the way the
+  // outline runs: (dy, -dx) on the screen.
+  const n = pts.length - 2
+  const out: Pt[] = []
+  for (let i = 0; i < n; i++) {
+    const a = pts[Math.max(0, i - 1)]
+    const c = pts[Math.min(n - 1, i + 1)]
+    const dx = c[0] - a[0]
+    const dy = c[1] - a[1]
+    const d = Math.hypot(dx, dy) || 1
+    out.push([pts[i][0] + (dy / d) * lip[i], pts[i][1] - (dx / d) * lip[i]])
+  }
   p.push()
   ctx.save()
   ctx.beginPath()
@@ -922,12 +1070,8 @@ function drawBanks(p: p5, k: number, f: Frame, y0: number, y1: number): void {
   p.noStroke()
   p.fill(alpha(p, FLOWERS.meadowDeep, 0.8))
   p.beginShape()
-  for (let i = 0; i <= 24; i++) p.vertex(pts[i][0] * k, pts[i][1] * k)
-  for (let i = 24; i >= 0; i--) p.vertex((pts[i][0] - 0.08 - 0.12 * (1 - i / 24)) * k, (pts[i][1] - 0.02) * k)
-  p.endShape(p.CLOSE)
-  p.beginShape()
-  for (let i = 25; i < pts.length - 1; i++) p.vertex(pts[i][0] * k, pts[i][1] * k)
-  for (let i = pts.length - 2; i >= 25; i--) p.vertex(pts[i][0] * k, (pts[i][1] - 0.06) * k)
+  for (let i = 0; i < n; i++) p.vertex(pts[i][0] * k, pts[i][1] * k)
+  for (let i = n - 1; i >= 0; i--) p.vertex(out[i][0] * k, out[i][1] * k)
   p.endShape(p.CLOSE)
   ctx.restore()
   p.pop()
@@ -1018,7 +1162,8 @@ function drawSplashes(p: p5, k: number, T: number, cx: number): void {
 function drawPetals(p: p5, k: number, T: number): void {
   const u = T - LAND
   if (u < 0 || u > 2.4) return
-  const cols = [FLOWERS.white, FLOWERS.pink, FLOWERS.yellow, FLOWERS.lilac]
+  // Warm and white only (see `drift`): nothing in their colours flies up round them.
+  const cols = [FLOWERS.white, FLOWERS.pink, FLOWERS.yellow, FLOWERS.coral]
   p.push()
   p.noStroke()
   for (const [x0, n] of [[X_LAND, 0], [X_LAND - 2 * PAIR, 1]] as [number, number][]) {
@@ -1393,19 +1538,42 @@ function drawBeds(p: p5, k: number, W: number, T: number): void {
       p.fill(FLOWERS.meadowDeep)
       const ls = hash(j, g, 8) > 0.5 ? 1 : -1
       p.ellipse((x + ls * 0.07) * k, (GR - hgt * 0.3) * k, 0.16 * k, 0.06 * k)
+      // Every other stem forks near the top into a second, smaller head: a spray, so the bed blooms as a mass of
+      // small flowers, none of them near a ball's size (Howl waits among them).
+      const heads: [number, number, number][] = [[hx, hy, 1]]
+      if (j % 2 === 1) {
+        const fx = lerp(x, hx, 0.7)
+        const fy = GR - hgt * 0.62
+        const side = hash(j, g, 10) > 0.5 ? 1 : -1
+        const bx = fx + side * (0.1 + 0.04 * hash(j, g, 11)) + sway * 0.7
+        const by = hy + 0.08 + 0.05 * hash(j, g, 12)
+        p.stroke(FLOWERS.meadowDeep)
+        p.strokeWeight(W * 0.6)
+        p.line(fx * k, fy * k, bx * k, by * k)
+        p.noStroke()
+        heads.push([bx, by, 0.75])
+      }
       const col = BED_COLORS[g]
-      if (o < 0.02) {
-        p.fill(mixHex(FLOWERS.meadowDeep, col, 0.4))
-        p.ellipse(hx * k, hy * k, 0.08 * k, 0.12 * k)
-      } else {
-        const r = (0.07 + 0.08 * hash(j, g, 9)) * (0.35 + 0.65 * o)
+      for (const [ux, uy, sz] of heads) {
+        if (o < 0.02) {
+          p.fill(mixHex(FLOWERS.meadowDeep, col, 0.4))
+          p.ellipse(ux * k, uy * k, 0.06 * sz * k, 0.09 * sz * k)
+          continue
+        }
+        const r = (0.045 + 0.03 * hash(j, g, 9)) * (0.35 + 0.65 * o) * sz
         p.fill(col)
-        for (let q = 0; q < 6; q++) {
-          const a = (q / 6) * Math.PI * 2 + j
-          p.ellipse((hx + Math.cos(a) * r * 0.62) * k, (hy + Math.sin(a) * r * 0.5) * k, r * 0.95 * k, r * 0.62 * k)
+        for (let q = 0; q < 5; q++) {
+          const a = (q / 5) * Math.PI * 2 + j
+          const ex = Math.cos(a)
+          const ey = Math.sin(a) * 0.75
+          p.push()
+          p.translate((ux + ex * r * 0.55) * k, (uy + ey * r * 0.55) * k)
+          p.rotate(Math.atan2(ey, ex))
+          p.ellipse(0, 0, r * 1.05 * k, r * 0.55 * k)
+          p.pop()
         }
         p.fill(g === 0 ? FLOWERS.coral : FLOWERS.yellow)
-        p.circle(hx * k, hy * k, r * 0.6 * k)
+        p.circle(ux * k, uy * k, r * 0.5 * k)
       }
     }
   }
@@ -1567,7 +1735,7 @@ function drawField(p: p5, k: number, W: number, ink: string, T: number, T0: numb
   ctx.save()
   ctx.beginPath()
   ctx.rect(-1e5, GR * k, 2e5, 1e5)
-  tracePath(ctx, k, lakeOutline(f))
+  tracePath(ctx, k, lakeOutline(f).pts)
   ctx.clip('evenodd')
   drawMeadow(p, k, f, GR, f.y1 + 1)
   ctx.restore()

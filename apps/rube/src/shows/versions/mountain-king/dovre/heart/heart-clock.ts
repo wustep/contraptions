@@ -436,8 +436,30 @@ export const sleeveY = (T: number): number => GOV.top + 2 * GOV.arm * Math.cos(g
 export const YOKE_GOES = kt(286.5)
 /** Where he sits on the yoke. */
 export const YOKE_SEAT = CHIMNEY_X
-/** The yoke's seat under him at T (y of its top): hung below the collar; it stops where it gave way. */
-export const yokeSeatY = (T: number): number => sleeveY(Math.min(T, YOKE_GOES)) + YOKE_DROP
+/** The yoke's arm where it hangs from the collar at T (y of its top): it stops where it gave way. */
+export const yokeHangY = (T: number): number => sleeveY(Math.min(T, YOKE_GOES)) + YOKE_DROP
+/**
+ * The beats he lands on the yoke's seat: onto it off the last pump head (260), each buck's landing a beat after its
+ * blow (263 to 271, 283, 285), and back onto it off the racing heads (281).
+ */
+const YOKE_LANDS = [260, 263, 265, 267, 269, 271, 281, 283, 285]
+/**
+ * How far the seat's end gives under him (cells, down): the arm flexes on each landing, down within about 60 ms,
+ * and comes back slowly, so he is caught rather than stopped dead and the next blow throws him off a seat still
+ * rising. It is his path's floor (`heart-path.ts` rides it) and the arm's drawn end (`heart-set.ts`).
+ */
+const GIVE = 0.1
+export function yokeGive(T: number): number {
+  const t = Math.min(T, YOKE_GOES)
+  let g = 0
+  for (const k of YOKE_LANDS) {
+    const s = t - kt(k)
+    if (s > 0 && s < 1.2) g += (GIVE * (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 0.18)) / 0.62
+  }
+  return g
+}
+/** The yoke's seat under him at T (y of its top): the arm's end, hung below the collar, giving under his landings. */
+export const yokeSeatY = (T: number): number => yokeHangY(T) + yokeGive(T)
 
 /* ------------------------------------------------------------------ the pipe and its valve */
 

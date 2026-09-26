@@ -1,5 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot, type Pose } from '../kit'
+import { CREDITS_AT } from '../credits'
 import { CUT, DURATION } from '../music'
 import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
@@ -14,9 +15,9 @@ import { crouch, cubic, pieces, stepUp, trace, type Path } from './front-motion'
  * note, resting on the second (204.138, 204.899, 207.006); on the porch the latch gives on a note (208.155) and the
  * door swings in; he goes in, and it shuts behind him (211.801). Through the bay window he crosses the room to her
  * chair and ties the balloon to it (214.93), so it floats over the empty seat; then to his own, and sits (219.312),
- * the chair taking him with a slow settle. He reaches over and the lamp comes on (222.703). The credits come over
- * the house (226.197) as the camera draws back from the window to the whole house at night: the one lit window,
- * the street lamps coming on down the street on the piano's notes, the first stars.
+ * the chair taking him with a slow settle. He reaches over and the lamp comes on (222.703), and the lit room is held
+ * for a phrase. The credits come over the house (232.745) as the camera draws back from the window to the whole house
+ * at night: the one lit window, the street lamps coming on down the street on the piano's notes, the first stars.
  *
  * Nothing of the fix-up's machine remains but what it made: the house (faded now, the roof patched where the tree
  * came through), the prints on the mailbox, the two chairs.
@@ -112,6 +113,59 @@ export const ALONE_TIE: { from: number; at: Pt } | null = { from: ALONE.tie, at:
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
 export const ALONE_HITS: number[] = [...ALONE.steps, ALONE.latch, ALONE.shut, ALONE.tie, ALONE.sit, ALONE.lamp, ...LAMPS.map((l) => l.at), STAR.on].sort((a, b) => a - b)
 
+/** The lit room held for one more phrase of the piano: the draw back starts on its strong note (224.758). */
+const DRAW_FROM = 224.758
+/**
+ * Where the frame's middle is for each width on the way out (world cells): the lit window, the house at dusk, the roof,
+ * and the sky over it, the house sinking to the frame's foot. He stays inside the Zoom frame (a third of its height
+ * from its middle) the whole way.
+ */
+const OUT: [number, number, number][] = [
+  [3.05, 2.3, -1.78],
+  [5.4, 2.6, -2.4],
+  [9.5, 3.3, -3.5],
+  [12.6, 3.8, -4.6],
+  [14.3, 4.1, -5.45],
+  [16.5, 4.2, -6.15],
+  [19.3, 4.2, -7.05],
+  [23.1, 4.25, -8.15],
+  [27.0, 4.25, -9.15],
+]
+function middleAt(cells: number): Pt {
+  for (let i = 1; i < OUT.length; i++) {
+    const [c0, x0, y0] = OUT[i - 1]
+    const [c1, x1, y1] = OUT[i]
+    if (cells <= c1 || i === OUT.length - 1) {
+      const u = Math.max(0, Math.min(1, (cells - c0) / (c1 - c0)))
+      return [x0 + (x1 - x0) * u, y0 + (y1 - y0) * u]
+    }
+  }
+  return [OUT[0][1], OUT[0][2]]
+}
+/**
+ * From the lit room, one draw back without a stop: from rest (a Hermite in log cells) past the roof by the first card
+ * (`CREDITS_AT`, 12.6 cells), so every card comes over the sky; then an even draw back (the same share of the frame
+ * each second, so it never slows to a park) to 27 cells at the end: the house small under the stars. Its fastest is
+ * about 0.27 log/s, half way.
+ */
+function drawBack(key: (t: number, cells: number, x: number, y: number) => PartShot): PartShot[] {
+  const [a, b] = [DRAW_FROM, CREDITS_AT]
+  const L0 = Math.log(OUT[0][0])
+  const L1 = Math.log(12.6)
+  const even = Math.log(27 / 12.6) / (DURATION - b)
+  const m1 = even * (b - a)
+  const out: PartShot[] = []
+  const at = (t: number, c: number) => key(t, c, ...middleAt(c))
+  const n = 10
+  for (let i = 1; i <= n; i++) {
+    const u = (1 - Math.cos((Math.PI * i) / n)) / 2
+    const L = (3 * u * u - 2 * u * u * u) * (L1 - L0) + L0 + (u * u * u - u * u) * m1
+    out.push(at(a + (b - a) * u, Math.exp(L)))
+  }
+  for (const t of [235.5, 238.5, 241.5, 244.5, 247.5, 250.5, 253.0, 255.5, DURATION]) out.push(at(t, 12.6 * Math.exp(even * (t - b))))
+  return out
+}
+
 function shotsFor(): PartShot[] {
   const at = ALONE_AT
   const key = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - at[0], y - at[1]], w: 1 })
@@ -129,20 +183,10 @@ function shotsFor(): PartShot[] {
     key(ALONE.sit, 3.6, 2.2, -1.7),
     // Slowly in on the two chairs, his and hers with the balloon over it, until he reaches over and the lamp comes on.
     key(ALONE.lamp, 3.2, 2.3, -1.8),
-    // From the lamp, one long draw back without a stop: the lit window, the house at dusk, the roof, and past it to the
-    // sky before the first card comes (227.695), so every card is over the sky; and on, slower and slower, to the end:
-    // the house small under the stars. He stays inside the Zoom frame (a third of its height from its middle) the
-    // whole way.
-    key(225.0, 5.4, 2.6, -2.4),
-    key(226.9, 9.5, 3.3, -3.5),
-    key(228.6, 12.6, 3.8, -4.6),
-    // From here an even draw back (the same share of the frame each second, so it never slows to a park), the house
-    // sinking to the frame's foot and the sky opening over it.
-    key(233.5, 14.3, 4.1, -5.45),
-    key(239.0, 16.5, 4.2, -6.15),
-    key(245.0, 19.3, 4.2, -7.05),
-    key(252.0, 23.1, 4.25, -8.15),
-    key(DURATION, 27.0, 4.25, -9.15),
+    // The lit room held for a phrase, still creeping in: him in his chair, the lamp, the room going warm, the balloon
+    // over her empty chair.
+    key(DRAW_FROM, OUT[0][0], OUT[0][1], OUT[0][2]),
+    ...drawBack(key),
   ]
 }
 

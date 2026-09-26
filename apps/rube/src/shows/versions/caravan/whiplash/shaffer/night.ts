@@ -6,9 +6,9 @@ import { LOUD, QUIET, tune } from '../music'
 import { G_EARTH, G_SNAP } from '../physics'
 import { KIT } from '../worlds'
 import { Path, beat, since, swing, type Hit } from './room-path'
-import { PULL, ROOM, drawPracticeRoom, drawRoomDark, litAt, type RoomLook } from './room'
+import { LAMP, PULL, ROOM, drawPracticeRoom, drawRoomDark, lampMouth, litAt, rgba, type RoomLook } from './room'
 import {
-  GLASS, GLASS_FLOOR, GLASS_SURFACE, STICKS, drawGlassBack, drawGlassFront, drawMetronome, drawRig, drawStool, onStick, stickAngle,
+  GLASS, GLASS_FLOOR, GLASS_SURFACE, METRONOME, STICKS, drawGlassBack, drawGlassFront, drawMetronome, drawRig, drawStool, onStick, stickAngle,
   type Side,
 } from './night-rig'
 
@@ -228,8 +228,10 @@ function lookAt(T: number): RoomLook {
     T,
     light: lampLight(T),
     sway: lampSway(T),
-    ambient: 0.07,
-    hall: 0.12,
+    // Night: the lamp is the only light. What the room shows beyond its cone is next to nothing, and the corridors'
+    // fixtures are all but out (`nightDark` takes the rest down to black).
+    ambient: 0.02,
+    hall: 0.03,
     left: ENTRY_X,
     right: ROOM.x1 + ROOM.wall + 1.4,
     pull: pullSwing(T),
@@ -251,6 +253,7 @@ function drawNight(p: p5, s: NightState, c: Ctx): void {
   p.push()
   p.translate(KN[0] * k, KN[1] * k)
   drawPracticeRoom(p, c, look)
+  nightDark(p, c, look, 'wall')
   drawMetronome(p, c, T, lit(2.9, -1.3))
   drawStool(p, c, lit(2.85, 1.2))
   drawGlassBack(p, c, lit(3.0, 0.4))
@@ -270,8 +273,123 @@ function drawNight(p: p5, s: NightState, c: Ctx): void {
     // The strip from the roll shows while he lays the tape, and is torn off as he reaches the grip's end.
     laying: T > GRIP && T < TAPED ? smooth(T, GRIP, GRIP + 0.08) * (1 - smooth(taped(ball, T)[1], 0.43, 0.46)) : 0,
   })
+  nightDark(p, c, look, 'reach')
   drawRoomDark(p, c, look)
   p.pop()
+}
+
+let darkCanvas: HTMLCanvasElement | null = null
+
+/**
+ * The night itself: beyond the lamp's reach the set goes to black. A layer of the paper's dark with the light cut out
+ * of it, laid twice:
+ *
+ * - `wall`, over the room and the corridors before anything stands in them: nearly black, cut only by the cone (from
+ *   the shade to the floor, swinging with it) and the floor's spill. The panels, the doors and the corridors fall
+ *   away; only the wedge of wall behind the cone keeps its grain.
+ * - `reach`, over the kit and the props, lighter: the pool round the drill, the cone, and the clock on its shelf and
+ *   the glass on its stool (at the cone's edge, caught by it). The kit's far drums and stands go into the dark.
+ *
+ * So what reads is the kit under the lamp, the metronome, the ice water, the red dab and the tape. The ball, drawn by
+ * the stage after the part, keeps his own colour.
+ */
+function nightDark(p: p5, c: Ctx, look: RoomLook, pass: 'wall' | 'reach'): void {
+  if (typeof document === 'undefined') return
+  // The dark comes up with the lamp (the eye adjusting to it), and stays when the bulb goes: one pool of light, then
+  // black. Before the lamp the corridor keeps its faint read and the room its own dark (`drawRoomDark`).
+  const T = look.T
+  const on = Math.min(1, Math.max(0, look.light))
+  const full = pass === 'wall' ? 0.94 : 0.8
+  const A = T < LAMP_ON ? 0 : full * (T < BULB ? Math.min(1, on / 0.5) : 1 - 0.25 * smooth(T, BULB + 0.1, BULB + 0.9))
+  if (A < 0.005) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cw = ctx.canvas.width
+  const ch = ctx.canvas.height
+  if (!darkCanvas) darkCanvas = document.createElement('canvas')
+  if (darkCanvas.width !== cw || darkCanvas.height !== ch) {
+    darkCanvas.width = cw
+    darkCanvas.height = ch
+  }
+  const g = darkCanvas.getContext('2d')
+  if (!g) return
+  const { k } = c
+  g.save()
+  g.setTransform(1, 0, 0, 1, 0, 0)
+  g.globalCompositeOperation = 'source-over'
+  g.clearRect(0, 0, cw, ch)
+  g.setTransform(ctx.getTransform())
+  const x0 = look.left ?? ROOM.x0 - ROOM.wall
+  const x1 = look.right ?? ROOM.x1 + ROOM.wall
+  g.fillStyle = rgba(c.bg, A)
+  g.fillRect(x0 * k, (ROOM.ceil - 0.6) * k, (x1 - x0) * k, (ROOM.floor + 0.02 - ROOM.ceil + 0.6) * k)
+  // The light, cut out of the dark as far as the lamp is on (a flash is no brighter than the room as drawn).
+  const L = Math.min(1, Math.max(0, look.light))
+  if (L > 0.003) {
+    g.globalCompositeOperation = 'destination-out'
+    const hole = (x: number, y: number, rx: number, ry: number, a: number, core = 0.35) => {
+      g.save()
+      g.translate(x * k, y * k)
+      g.scale(1, ry / rx)
+      const q = g.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+      q.addColorStop(0, `rgba(0,0,0,${a})`)
+      q.addColorStop(core, `rgba(0,0,0,${a})`)
+      q.addColorStop(0.5 + core / 2, `rgba(0,0,0,${a * 0.4})`)
+      q.addColorStop(1, 'rgba(0,0,0,0)')
+      g.fillStyle = q
+      g.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+      g.restore()
+    }
+    // The cone: a soft-edged wedge from just inside the shade to the floor, turned with the swing (a conic gradient
+    // about the wedge's apex, so its edges are soft all the way down).
+    const [mx, my] = lampMouth(look.sway)
+    const depth = (ROOM.floor - my) / Math.cos(look.sway)
+    const spread = pass === 'wall' ? 1.8 : 2.4
+    const lip = LAMP.mouth * 0.42
+    const up = (lip * depth) / (spread - lip)
+    const half = Math.atan(spread / (depth + up))
+    g.save()
+    g.translate(mx * k, my * k)
+    g.rotate(-look.sway)
+    g.translate(0, -up * k)
+    const w = half / (Math.PI * 2)
+    const cone = g.createConicGradient(0, 0, 0)
+    const down = 0.25
+    const peak = (pass === 'wall' ? 0.72 : 1) * L
+    cone.addColorStop(down - w * 1.8, 'rgba(0,0,0,0)')
+    cone.addColorStop(down - w * 1.1, `rgba(0,0,0,${0.5 * peak})`)
+    cone.addColorStop(down - w * 0.5, `rgba(0,0,0,${peak})`)
+    cone.addColorStop(down + w * 0.5, `rgba(0,0,0,${peak})`)
+    cone.addColorStop(down + w * 1.1, `rgba(0,0,0,${0.5 * peak})`)
+    cone.addColorStop(down + w * 1.8, 'rgba(0,0,0,0)')
+    g.fillStyle = cone
+    const reach = depth + up + 0.4
+    g.fillRect(-reach * k, 0, 2 * reach * k, reach * k)
+    g.restore()
+    // The shade itself, and the ceiling right round it, faintly.
+    hole(mx, my - 0.12, 0.5, 0.36, 0.7 * L, 0.2)
+    // The floor's spill, long and low: the boards, the stands' feet, the kick's pedal.
+    const fx = mx + Math.tan(look.sway) * (ROOM.floor - my)
+    hole(fx, ROOM.floor - 0.25, 3.8, 0.8, 0.75 * L, 0.25)
+    if (pass === 'reach') {
+      // The pool round the drill: where the lamp's light is (`litAt`'s centre), the kit under it.
+      hole(pool0(look.sway), 0.0, 2.9, 2.3, L, 0.35)
+      // The clock on its shelf and the glass on its stool, at the cone's edge: caught by it.
+      hole(METRONOME.x, METRONOME.base - 0.3, 0.6, 0.55, 0.9 * L, 0.35)
+      hole(GLASS.x, (GLASS.top + GLASS.bottom) / 2, 0.55, 0.6, 0.9 * L, 0.35)
+    }
+  }
+  g.restore()
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.drawImage(darkCanvas, 0, 0)
+  ctx.restore()
+}
+
+/** The lamp's light's centre across the room, for a swing (as `litAt` has it). */
+function pool0(sway: number): number {
+  const [mx, my] = lampMouth(sway)
+  return (mx + Math.tan(sway) * (ROOM.floor - my)) * 0.6 + LAMP.x * 0.2 - 0.18
 }
 
 function overNight(p: p5, s: NightState, c: Ctx): void {
@@ -312,11 +430,11 @@ export const night = part<NightState>(
     { t: slot.begin, cells: 5, off: [0.9, -0.8] },
     { t: LAMP_ON + 0.6, cells: 5.8, hold: at([-2.4, -0.45]), w: 0.75 },
     { t: KICK, cells: 5.5, hold: at([-0.5, -0.2]) },
-    // The drill, scored to the tune's phrases: close on the sticks; back for the whole of it, the metronome ticking on
-    // its shelf and the bulb over him; in again as it goes faster; in to the red dab on the head when it comes.
-    { t: DRILL + 0.4, cells: 3.9, hold: at([0.45, -0.5]) },
-    { t: beat(326), cells: 6.0, hold: at([1.15, -1.45]) },
-    { t: beat(334), cells: 3.3, hold: at([0.3, -0.4]) },
+    // The drill, scored to the tune's phrases, and each phrase a step closer: the sticks against the clock on its
+    // shelf; nearer the sticks as it goes faster; nearer still; in to the red dab on the head when it comes.
+    { t: DRILL + 0.4, cells: 4.5, hold: at([1.15, -0.75]) },
+    { t: beat(326), cells: 3.7, hold: at([0.7, -0.55]) },
+    { t: beat(334), cells: 3.0, hold: at([0.35, -0.4]) },
     { t: BLOOD, cells: 2.25, hold: at([0.15, -0.08]) },
     // To the glass, and back.
     { t: SPLASH, cells: 3.1, hold: at([2.3, -0.05]) },
@@ -324,14 +442,13 @@ export const night = part<NightState>(
     // The tape, close.
     { t: GRIP, cells: 2.4, hold: at([0.55, -0.35]) },
     { t: TAPED, cells: 2.5, hold: at([0.4, -0.3]) },
-    // The drill again, grimmer: close on the sticks; back to the clock and the bulb as it speeds up and the lamp
-    // begins to swing; close; the clock and him; out wide as the swing grows widest; and in, through the last
-    // strokes, to him.
-    { t: beat(356), cells: 3.4, hold: at([0.3, -0.4]) },
-    { t: beat(366), cells: 6.3, hold: at([1.0, -1.6]) },
-    { t: beat(376), cells: 3.2, hold: at([0.35, -0.4]) },
-    { t: beat(384), cells: 4.6, hold: at([1.4, -0.9]) },
-    { t: beat(391), cells: 5.6, hold: at([0.0, -0.75]) },
+    // The drill again, grimmer: back to the sticks and the clock, then a step closer every phrase as it speeds up and
+    // the lamp's pool swings wider across them, until the last strokes fill the frame with the sticks and the dab.
+    { t: beat(356), cells: 4.6, hold: at([1.05, -0.8]) },
+    { t: beat(366), cells: 3.9, hold: at([0.75, -0.6]) },
+    { t: beat(376), cells: 3.3, hold: at([0.45, -0.45]) },
+    { t: beat(384), cells: 2.8, hold: at([0.3, -0.35]) },
+    { t: beat(391), cells: 2.4, hold: at([0.2, -0.25]) },
     // Dark, and in on him at rest: the match cut to the road.
     { t: REST_AT + 0.12, cells: 3.5, hold: at(REST), w: 1 },
     { t: slot.end, cells: 3.5, hold: at(REST), w: 1 },

@@ -58,3 +58,9 @@ export const ARCH = { x0: -12.5, x1: 21.5, top: -11 }
 /** The frame of a wide on the whole stage, and of a close one on the kit: two framings every part can start from. */
 export const WIDE = { hold: [4.5, -2.8] as Pt, cells: 19 }
 export const CLOSE = { hold: [KIT_AT[0] - 0.9, KIT_AT[1] - 0.6] as Pt, cells: 4.2 }
+/**
+ * The film's turn, framed at the seam between the sabotage and the solo: the drummer on the snare in the left third,
+ * Fletcher on his podium in the right with his cut-off's hands still out, through the count-in and the solo's first
+ * stroke. (Every other Carnegie seam is `CLOSE`.)
+ */
+export const TURN = { hold: [1.75, -0.5] as Pt, cells: 6.35 }

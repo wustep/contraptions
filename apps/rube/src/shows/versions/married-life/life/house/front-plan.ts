@@ -109,9 +109,11 @@ const KNOTS: [number, number][] = [
   [bar('waltz', 15), 6.85],
   [bar('waltz', 16), 7.7],
   [bar('waltz', 17), 8.6],
-  [bar('waltz', 18), 9.5],
-  [bar('waltz', 19), 10.45],
-  [bar('waltz', 20), 11.22],
+  // Past the post: his last push as the mast folds, and he lets go (18); it rolls on alone, the brake biting on 20
+  // with its deck's tail 0.8 clear of the box (8.54 to 9.26), so the box stands alone on its post for the prints.
+  [bar('waltz', 18), 9.9],
+  [bar('waltz', 19), 11.55],
+  [bar('waltz', 20), 12.4],
 ]
 /** The shove: Carl runs into the cart's handle and it starts. The run's end: the cart at rest. */
 export const SHOVE = KNOTS[0][0]
@@ -120,12 +122,17 @@ export const HALT = KNOTS[KNOTS.length - 1][0]
 export const KICK = 0.42
 /** The last blow: past it, the cart rolls on free of the lilt and comes to rest. */
 const BLOW_END = bar('waltz', 17)
-/** Past the house: the speeds it rolls on at, each knot's, to rest at the last. */
-const SPEED_ON: number[] = KNOTS.map((k, i) => {
-  if (i === KNOTS.length - 1) return 0
-  if (i === 0 || k[0] <= BLOW_END) return 0
-  return 0.8 * ((KNOTS[i + 1][1] - KNOTS[i - 1][1]) / (KNOTS[i + 1][0] - KNOTS[i - 1][0]))
-})
+/** He lets go of the handle as the mast folds (bar 18); from there the cart rolls on free and he walks to the box. */
+export const LET_GO = bar('waltz', 18)
+/**
+ * Past the last blow, each knot's speed: his last push brings it up to speed into his letting go (18), then it
+ * coasts (19) and the brake stops it (20). The two free bars fall off slowly, then bite.
+ */
+const FREE: Map<number, number> = new Map([
+  [LET_GO, 1.95],
+  [bar('waltz', 19), 1.3],
+])
+const SPEED_ON: number[] = KNOTS.map(([t]) => FREE.get(t) ?? 0)
 
 function hermite(a: number, va: number, b: number, vb: number, T: number, u: number): number {
   const u2 = u * u
@@ -162,6 +169,19 @@ export function W(T: number): number {
 /** How far the fix-up has got at x: true where the house is new at T. Before the run nothing is; after it, all is. */
 export const renewed = (x: number, T: number): boolean => T >= HALT || x < W(T)
 
+/**
+ * Carl after he lets go (`LET_GO`): his own few steps on, from the handle at the cart's speed, slowing to a stop
+ * under the left of the mailbox (where the handle used to leave him) as the cart rolls on away from him.
+ */
+export const CARL_STOP = { x: 8.6, at: beat('waltz', 19, 3) - 0.15 }
+export function carlOff(T: number): number {
+  const x0 = W(LET_GO) + CART.carl
+  const v0 = FREE.get(LET_GO) ?? 0
+  if (T <= LET_GO) return W(T) + CART.carl
+  if (T >= CARL_STOP.at) return CARL_STOP.x
+  return hermite(x0, v0, CARL_STOP.x, 0, CARL_STOP.at - LET_GO, (T - LET_GO) / (CARL_STOP.at - LET_GO))
+}
+
 /** The cart's parts from the rollers' line: its middle, its deck's ends, its wheels, Carl at the handle, Ellie's spot on the deck. */
 export const CART = {
   mid: -1.2,
@@ -182,7 +202,7 @@ export const CART = {
 
 /** The trip hammer's blows: every downbeat along the house, the last on the mailbox's post. */
 export const BLOWS: number[] = KNOTS.filter(([t]) => t > SHOVE + 0.1 && t <= bar('waltz', 17) + 0.01).map(([t]) => t)
-/** Past the house the cart rolls on, lighter, and comes to rest on bar 20 with Carl under the mailbox: its brake drops against the wheel. */
+/** Past the house the cart rolls on alone, lighter, and comes to rest on bar 20 well past the mailbox: its brake drops against the wheel. */
 export const BRAKE = HALT
 
 /** The mast's upper two sections telescope up after the shove, a section a beat, and fold down as the cart stops. */
@@ -200,7 +220,7 @@ export const PANE_AT = beat('waltz', 13, 3)
 export const DOOR_HUNG = bar('waltz', 12)
 /** The mailbox: the last blow, on its post, knocks it straight and its flag up (seen new as the rollers pass it). */
 export const FLAG_AT = bar('waltz', 17)
-/** The prints: hers, pressed on bar 21 from the cart; his beside it on bar 22, from the ground. */
+/** The prints: hers, pressed on bar 21 (she springs back to the box off the cart's tail); his beside it on bar 22, from the ground. */
 export const PRINT_AT = { ellie: bar('waltz', 21), carl: bar('waltz', 22) }
 
 /** The front door's leaf, open 0..1 (inward), at show time T: the fix-up's comings and goings, and his at the end. */
