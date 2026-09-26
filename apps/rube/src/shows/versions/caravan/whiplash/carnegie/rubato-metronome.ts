@@ -63,8 +63,8 @@ export function seatOnDrum(d: Drum, depth: number, since: number, dx = 0): Pt {
 
 /* ------------------------------------------------------------------ geometry */
 
-/** The rod's width: what meets the rims. */
-const ROD_W = 0.07
+/** The rod's width: a brass bar, and what meets the rims. */
+const ROD_W = 0.09
 /** The pivot's height: on the case's crown, above both cymbals. Its x is solved so the two stops are the same angle. */
 export const PIVOT_Y = KY - 3.05
 /** The rims the long arm meets: the ride's right rim (tick) and the crash's left rim (tock). */
@@ -392,13 +392,38 @@ function caseOutline(dy: number): Poly {
   ]
 }
 
-/** Walnut; the window in its face a shade deeper. */
-const WOOD = mixHex(HALL.floor, HALL.black, 0.3)
-const WINDOW = mixHex(HALL.floor, HALL.black, 0.62)
-/** The fittings' gilt, a touch lifted: they stand in front of the case, outside the relit part, so the hall's light is in it already. */
+/**
+ * The machine's materials. The stage's light falls from above and a little from the house's left (the solo's pool is
+ * left of the kit), so every part of it has a lit side and a side in shadow, and the gilt catches only on the lit one.
+ * Its edges are drawn dark, never in the house's pale ink: it is a solid thing in walnut and brass, not a drawing of one.
+ */
+const EDGE = mixHex(HALL.black, HALL.floor, 0.3)
+/** Walnut: the front face (warmest at the crown, where the light falls), its lit bevel, its bevel in shadow, the plinth. */
+const FACE_HI = mixHex(HALL.floor, HALL.gold, 0.36)
+const FACE = mixHex(HALL.floor, HALL.gold, 0.14)
+const FACE_LOW = mixHex(HALL.floor, HALL.black, 0.32)
+const BEVEL_LIT = mixHex(HALL.floor, HALL.gold, 0.22)
+const BEVEL_DARK = mixHex(HALL.floor, HALL.black, 0.66)
+const PLINTH = mixHex(HALL.floor, HALL.black, 0.45)
+/** The window's recess, and the scale plate in it: aged ivory, lit from above. */
+const WINDOW = mixHex(HALL.floor, HALL.black, 0.76)
+const PLATE_HI = mixHex(HALL.beam, HALL.gilt, 0.5)
+const PLATE_LOW = mixHex(HALL.gilt, HALL.floor, 0.55)
+/** The case's gilt fittings: the gilt a touch lifted, its lit edge, its side in shadow. */
 const GILT = mixHex(HALL.gilt, HALL.beam, 0.15)
-/** The bob's brass: the gilt, darker, so it never outshines the weight above. */
-const BRASS = mixHex(HALL.gilt, HALL.black, 0.28)
+const GILT_HI = mixHex(HALL.gilt, HALL.beam, 0.55)
+const GILT_LOW = mixHex(HALL.gilt, HALL.black, 0.4)
+/** The rod: a brass bar, a highlight down its lit side and its shadow down the other. */
+const ROD_BRASS = mixHex(HALL.gilt, HALL.black, 0.12)
+const ROD_HI = mixHex(HALL.gilt, HALL.beam, 0.5)
+const ROD_SHADE = mixHex(HALL.gilt, HALL.black, 0.5)
+/** The bob's brass: the gilt, darker, so it never outshines the weight above; its lit top, its shadowed side. */
+const BRASS = mixHex(HALL.gilt, HALL.black, 0.24)
+const BRASS_HI = mixHex(HALL.gilt, HALL.beam, 0.32)
+const BRASS_LOW = mixHex(HALL.gilt, HALL.black, 0.56)
+/** The swing's blur and the roll's fan: the rod's brass, caught in the light. */
+const SMEAR = mixHex(ROD_BRASS, HALL.beam, 0.25)
+
 /** Where the winding key stands out of the case's right side, and how far it has been turned at `T`. */
 const KEY_Y = CASE_TOP + 1.3
 function keyTurn(T: number): number {
@@ -409,6 +434,31 @@ function keyTurn(T: number): number {
 function path(ctx: CanvasRenderingContext2D, k: number, poly: Poly): void {
   poly.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
   ctx.closePath()
+}
+
+/** Fill `poly` with a vertical gradient, `hi` at `y0` to `lo` at `y1`. Saved and restored, so p5's own fill stays true. */
+function shaded(ctx: CanvasRenderingContext2D, k: number, poly: Poly, y0: number, hi: string, y1: number, lo: string): void {
+  ctx.save()
+  const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
+  g.addColorStop(0, hi)
+  g.addColorStop(1, lo)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  path(ctx, k, poly)
+  ctx.fill()
+  ctx.restore()
+}
+
+/** A tall panel from `y0` to `y1` about `x`, `w(y)` either side, its top an arch rising `rise` in the middle. */
+function arched(x: number, y0: number, y1: number, w: (y: number) => number, rise: number): Poly {
+  const out: Poly = []
+  const n = 10
+  for (let i = 0; i <= n; i++) {
+    const u = -1 + (2 * i) / n
+    out.push([x + u * w(y0), y0 - rise * (1 - u * u)])
+  }
+  out.push([x + w(y1), y1], [x - w(y1), y1])
+  return out
 }
 
 /** The drums that stand in front of the case (their silhouettes, a hair generous): what the rod passes behind. */
@@ -431,111 +481,181 @@ function drumHoles(ctx: CanvasRenderingContext2D, k: number): void {
   }
 }
 
+/** How much of the stage's light the case holds at `T`: more as the music grows, most at the top of the swell. */
+const caseLit = (T: number): number => clamp(0.5 + 0.35 * level(T) + 0.2 * surge(T))
+
 /**
- * The case, as a metronome's reads at a glance: a tall walnut pyramid, gilt at its edges, and the tall window in its
- * face with the pale scale down it (no marks), which the long arm swings across. Its fittings (`drawFittings`) stand
- * proud of it.
+ * The case, as a metronome's reads at a glance: a tall walnut pyramid with its light in it. The front face lit from
+ * above (warm at the crown, darker toward the stage), a bevel down each side (the house's left in the light, the right
+ * in shadow), a plinth at its foot, and gilt only down the lit arris. In the face, a tall arched window, dark, with the
+ * ivory scale plate in it (no marks), which the long arm swings across. Its fittings (`drawFittings`) stand proud of it.
  */
 function drawCase(p: p5, c: Ctx, dy: number, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   const top = CASE_TOP + dy
   const base = FLOOR + dy
   const x = PIVOT_X
-  const inset = (y: number) => caseHalf(y - dy) * 0.52
-  solid(p, ink, weight * 0.9, WOOD)
-  p.quad((x - CASE_HALF_TOP) * k, top * k, (x + CASE_HALF_TOP) * k, top * k, (x + CASE_HALF_BASE) * k, base * k, (x - CASE_HALF_BASE) * k, base * k)
-  // The window: from under the crown to just above the rack tom, its sides following the case's, a gilt frame round it.
-  const w0 = top + 0.24
+  const lit = caseLit(T)
+  const half = (y: number) => caseHalf(y - dy)
+  const face = (y: number) => 0.06 + (half(y) - 0.06) * 0.7
+  const on = (s: number, w: (y: number) => number, y: number): [number, number] => [(x + s * w(y)) * k, y * k]
+  const quad = (a: [number, number], b: [number, number], d: [number, number], e: [number, number]) => p.quad(...a, ...b, ...d, ...e)
+  p.noStroke()
+  // The whole pyramid in the shadowed bevel's walnut, and the lit bevel over its left side.
+  p.fill(BEVEL_DARK)
+  quad(on(-1, half, top), on(1, half, top), on(1, half, base), on(-1, half, base))
+  p.fill(mixHex(BEVEL_DARK, BEVEL_LIT, 0.55 + 0.45 * lit))
+  quad(on(-1, half, top), on(-1, face, top), on(-1, face, base), on(-1, half, base))
+  // The front face.
+  const facePoly: Poly = [
+    [x - face(top), top],
+    [x + face(top), top],
+    [x + face(base), base],
+    [x - face(base), base],
+  ]
+  shaded(ctx, k, facePoly, top, mixHex(FACE, FACE_HI, lit), base - 0.3, FACE_LOW)
+  // The plinth: a darker band across its foot, its top lip catching the light.
+  const pt = base - 0.34
+  p.fill(PLINTH)
+  quad(on(-1, half, pt), on(1, half, pt), on(1, half, base), on(-1, half, base))
+  p.fill(mixHex(PLINTH, FACE_HI, 0.25 + 0.3 * lit))
+  quad(on(-1, half, pt), on(1, half, pt), on(1, half, pt + 0.045), on(-1, half, pt + 0.045))
+  // The window: from under the crown to just above the rack tom, its sides following the face's, a dark recess. Its
+  // lower lip and its right reveal (which face the light) catch a little of it.
+  const w0 = top + 0.3
   const w1 = KY + RACK.top - 0.3 + dy
-  // The gilt catches more of the light as the music swells, and less as it nearly stops.
-  const glint = 0.45 + 0.5 * level(T)
-  p.stroke(alpha(p, HALL.gilt, glint + 0.1))
-  p.strokeWeight(weight * 0.6)
+  const win = (y: number) => half(y) * 0.46
+  const winPoly = arched(x, w0, w1, win, 0.12)
   p.fill(WINDOW)
   p.beginShape()
-  p.vertex((x - inset(w0)) * k, (w0 + 0.1) * k)
-  p.quadraticVertex(x * k, (w0 - 0.06) * k, (x + inset(w0)) * k, (w0 + 0.1) * k)
-  p.vertex((x + inset(w1)) * k, w1 * k)
-  p.vertex((x - inset(w1)) * k, w1 * k)
+  for (const [px, py] of winPoly) p.vertex(px * k, py * k)
   p.endShape(p.CLOSE)
-  // The scale down the window: a pale strip, no marks.
+  p.stroke(mixHex(FACE, FACE_HI, 0.3 + 0.5 * lit))
+  p.strokeWeight(weight * 0.7)
+  p.line(...on(1, win, w0 + 0.02), ...on(1, win, w1))
+  p.line(...on(-1, win, w1), ...on(1, win, w1))
   p.noStroke()
-  p.fill(alpha(p, HALL.beam, 0.3))
-  p.rect(x * k, ((w0 + 0.12 + w1 - 0.1) / 2) * k, 0.09 * k, (w1 - w0 - 0.22) * k, 0.03 * k)
-  // Gilt along the case's two edges, a little in.
-  p.stroke(alpha(p, HALL.gilt, glint))
-  p.strokeWeight(weight * 0.55)
-  for (const s of [-1, 1]) p.line((x + s * (CASE_HALF_TOP - 0.06)) * k, (top + 0.1) * k, (x + s * (CASE_HALF_BASE - 0.08)) * k, (base - 0.05) * k)
+  // The scale plate: aged ivory, set in the recess, lit at the top.
+  const plate = (y: number) => 0.075 + 0.04 * ((y - w0) / (w1 - w0))
+  shaded(ctx, k, arched(x, w0 + 0.12, w1 - 0.12, plate, 0.05), w0, mixHex(PLATE_LOW, PLATE_HI, 0.4 + 0.6 * lit), w1, PLATE_LOW)
+  // The gilt: down the lit arris only (the left bevel meeting the face), brighter as the music swells.
+  p.stroke(alpha(p, GILT_HI, 0.55 + 0.45 * lit))
+  p.strokeWeight(weight * 0.9)
+  p.line(...on(-1, face, top + 0.08), ...on(-1, face, pt - 0.02))
+  p.stroke(alpha(p, GILT, 0.35 + 0.4 * lit))
+  p.line(...on(-1, half, pt + 0.02), ...on(-0.2, half, pt + 0.02))
 }
 
-/** The case's gilt fittings: the crown the pivot stands on, and the winding key out of its right side, turning. (Rects are centred: the stage draws in `rectMode(CENTER)`.) */
+/**
+ * The case's gilt fittings: the crown the pivot stands on (lit along its top, darker on its right), and the winding key
+ * out of its right side, in shadow, turning. (Rects are centred: the stage draws in `rectMode(CENTER)`.)
+ */
 function drawFittings(p: p5, c: Ctx, dy: number, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const top = CASE_TOP + dy
   const x = PIVOT_X
-  solid(p, ink, weight * 0.7, GILT)
-  p.rect(x * k, (top - 0.01) * k, (2 * CASE_HALF_TOP + 0.14) * k, 0.1 * k, 0.02 * k)
+  const cw = 2 * CASE_HALF_TOP + 0.14
+  solid(p, EDGE, weight * 0.6, GILT)
+  p.rect(x * k, (top - 0.01) * k, cw * k, 0.1 * k, 0.02 * k)
+  p.noStroke()
+  p.fill(GILT_LOW)
+  p.rect((x + cw * 0.3) * k, (top + 0.012) * k, cw * 0.36 * k, 0.05 * k)
+  p.fill(GILT_HI)
+  p.rect((x - cw * 0.14) * k, (top - 0.045) * k, cw * 0.62 * k, 0.018 * k)
   // The key: a shaft and a flat bow, which shows its full height face on and a sliver edge on as it turns.
   const ky = KEY_Y + dy
   const kx = x + caseHalf(KEY_Y)
   const h = 0.05 + 0.13 * Math.abs(Math.cos(keyTurn(T)))
+  solid(p, EDGE, weight * 0.6, mixHex(GILT, GILT_LOW, 0.45))
   p.rect((kx + 0.06) * k, ky * k, 0.16 * k, 0.056 * k, 0.02 * k)
   p.rect((kx + 0.155) * k, ky * k, 0.07 * k, 2 * h * k, 0.035 * k)
 }
 
+/** The bob's outline: a long brass plumb on the long arm, pointed both ends (never a disc: nothing round near him). */
+const BOB_W = 0.12
+const BOB_CAP = 0.1
+function bobShape(p: p5, k: number): void {
+  const [b0, b1] = BOB
+  p.beginShape()
+  p.vertex(0, b0 * k)
+  p.vertex(BOB_W * k, (b0 + BOB_CAP) * k)
+  p.vertex(BOB_W * k, (b1 - BOB_CAP) * k)
+  p.vertex(0, b1 * k)
+  p.vertex(-BOB_W * k, (b1 - BOB_CAP) * k)
+  p.vertex(-BOB_W * k, (b0 + BOB_CAP) * k)
+  p.endShape(p.CLOSE)
+}
+
+/** The rod's bar, in its own frame (the short arm up, -y): from the fine tip to the long arm's end, rounded. */
+function bar(p: p5, k: number, w = ROD_W): void {
+  p.rect(0, ((ROD_LOW - ROD_UP) / 2) * k, w * k, (ROD_UP + ROD_LOW) * k, (w / 2) * k)
+}
+
 /**
- * The rod at `th`, both arms through the pivot: the short arm up to its fine tip, the long arm down past its brass
- * bob to the striker at its end; and the pivot's pin across it. (In the rod's own frame the short arm is up, -y.)
+ * The rod at `th`, both arms through the pivot: a brass bar, lit down its left side and shaded down its right, from
+ * the finial at the short arm's tip to the chrome striker at the long arm's end; the brass bob on the long arm, its
+ * top lit; and the pivot's pin across it. (In the rod's own frame the short arm is up, -y.)
  */
 function drawRod(p: p5, c: Ctx, dy: number, th: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  const hw = ROD_W / 2
+  const len = ROD_UP + ROD_LOW - 0.08
+  const mid = (ROD_LOW - ROD_UP) / 2
   p.push()
   p.translate(PIVOT_X * k, (PIVOT_Y + dy) * k)
   p.rotate(th)
-  p.stroke(ink)
-  p.strokeWeight(weight * 2.4)
-  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
-  p.stroke(KIT.chrome)
-  p.strokeWeight(weight * 1.3)
-  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
-  // The tip: a short spindle along the rod.
-  solid(p, ink, weight * 0.6, KIT.chrome)
-  p.ellipse(0, (-ROD_UP + 0.02) * k, 0.06 * k, 0.17 * k)
+  solid(p, EDGE, weight * 0.6, ROD_BRASS)
+  bar(p, k)
+  p.noStroke()
+  p.fill(ROD_SHADE)
+  p.rect(hw * 0.5 * k, mid * k, hw * 0.7 * k, len * k)
+  p.fill(ROD_HI)
+  p.rect(-hw * 0.42 * k, mid * k, hw * 0.46 * k, len * k)
+  // The tip: a short brass finial along the rod.
+  solid(p, EDGE, weight * 0.6, ROD_BRASS)
+  p.ellipse(0, (-ROD_UP + 0.03) * k, 0.12 * k, 0.2 * k)
+  p.noStroke()
+  p.fill(ROD_HI)
+  p.ellipse(-0.022 * k, (-ROD_UP + 0.01) * k, 0.03 * k, 0.1 * k)
   // The striker: a short chrome sleeve at the long arm's end, what meets the ride.
-  p.rect(0, (ROD_LOW - 0.07) * k, 0.085 * k, 0.15 * k, 0.02 * k)
-  // The bob: a long brass plumb on the long arm, pointed both ends (never a disc: nothing round near him).
+  solid(p, EDGE, weight * 0.6, KIT.chrome)
+  p.rect(0, (ROD_LOW - 0.07) * k, (ROD_W + 0.03) * k, 0.15 * k, 0.02 * k)
+  // The bob: brass, its upper cap in the light, its right side in shadow, a glint down its left.
   const [b0, b1] = BOB
-  const bw = 0.085
-  solid(p, ink, weight * 0.7, BRASS)
-  p.beginShape()
-  p.vertex(0, b0 * k)
-  p.vertex(bw * k, (b0 + 0.1) * k)
-  p.vertex(bw * k, (b1 - 0.1) * k)
-  p.vertex(0, b1 * k)
-  p.vertex(-bw * k, (b1 - 0.1) * k)
-  p.vertex(-bw * k, (b0 + 0.1) * k)
-  p.endShape(p.CLOSE)
-  p.stroke(alpha(p, HALL.beam, 0.35))
-  p.strokeWeight(weight * 0.5)
-  p.line(-0.03 * k, (b0 + 0.12) * k, -0.03 * k, (b1 - 0.12) * k)
-  // The pin: a small gilt block across the rod at the pivot.
-  solid(p, ink, weight * 0.6, GILT)
-  p.rect(0, 0, 0.17 * k, 0.07 * k, 0.02 * k)
+  solid(p, EDGE, weight * 0.6, BRASS)
+  bobShape(p, k)
+  p.noStroke()
+  const i = 0.012
+  p.fill(BRASS_LOW)
+  p.quad(0, (b0 + BOB_CAP) * k, (BOB_W - i) * k, (b0 + BOB_CAP) * k, (BOB_W - i) * k, (b1 - BOB_CAP) * k, 0, (b1 - i) * k)
+  p.fill(BRASS_HI)
+  p.triangle(-(BOB_W - i) * k, (b0 + BOB_CAP) * k, 0, (b0 + i * 1.5) * k, (BOB_W - i) * k, (b0 + BOB_CAP) * k)
+  p.fill(alpha(p, BRASS_HI, 0.8))
+  p.rect(-BOB_W * 0.55 * k, ((b0 + b1) / 2 + 0.02) * k, 0.028 * k, (b1 - b0 - 2 * BOB_CAP - 0.06) * k)
+  // The pin: a small gilt block across the rod at the pivot, lit along its top.
+  solid(p, EDGE, weight * 0.6, GILT)
+  p.rect(0, 0, 0.19 * k, 0.08 * k, 0.02 * k)
+  p.noStroke()
+  p.fill(GILT_HI)
+  p.rect(-0.02 * k, -0.022 * k, 0.12 * k, 0.016 * k)
   p.pop()
 }
 
-/** The weight's cradle under him: a gilt sleeve on the rod, a little wider at the top. */
+/** The weight's cradle under him: a gilt sleeve on the rod, a little wider at the top, lit along its lip. */
 function drawCradle(p: p5, c: Ctx, dy: number, th: number, r: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const y = -(r - R)
   p.push()
   p.translate(PIVOT_X * k, (PIVOT_Y + dy) * k)
   p.rotate(th)
-  solid(p, ink, weight * 0.8, HALL.gilt)
+  solid(p, EDGE, weight * 0.7, HALL.gilt)
   p.quad(-0.17 * k, (y - 0.005) * k, 0.17 * k, (y - 0.005) * k, 0.11 * k, (y + 0.12) * k, -0.11 * k, (y + 0.12) * k)
-  p.stroke(alpha(p, KIT.shade, 0.7))
-  p.strokeWeight(weight * 0.5)
-  p.line(-0.13 * k, (y + 0.055) * k, 0.13 * k, (y + 0.055) * k)
+  p.noStroke()
+  p.fill(GILT_LOW)
+  p.quad(0.05 * k, (y + 0.035) * k, 0.155 * k, (y + 0.035) * k, 0.105 * k, (y + 0.11) * k, 0.035 * k, (y + 0.11) * k)
+  p.fill(GILT_HI)
+  p.quad(-0.155 * k, (y + 0.004) * k, 0.1 * k, (y + 0.004) * k, 0.09 * k, (y + 0.025) * k, -0.145 * k, (y + 0.025) * k)
   p.pop()
 }
 
@@ -565,31 +685,21 @@ function drawBlur(p: p5, c: Ctx, dy: number, T: number, th: number, w = 1): void
   const d = Math.abs(back - th)
   if (d < 0.03 || w <= 0) return
   p.noStroke()
-  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.35), 0.16 * w * clamp((d - 0.03) / 0.2)))
+  p.fill(alpha(p, SMEAR, 0.16 * w * clamp((d - 0.03) / 0.2)))
   sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, back, th)
 }
 
-/** A ghost of the rod at `th`: where the eye catches it in the roll's blur. Its line and its bob, nothing else. */
+/** A ghost of the rod at `th`: where the eye catches it in the roll's blur. Its brass bar and its bob, nothing else. */
 function drawGhost(p: p5, c: Ctx, dy: number, th: number, a: number): void {
-  const { k, weight } = c
+  const { k } = c
   p.push()
   p.translate(PIVOT_X * k, (PIVOT_Y + dy) * k)
   p.rotate(th)
-  p.stroke(alpha(p, KIT.chrome, a))
-  p.strokeWeight(weight * 1.5)
-  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
-  const [b0, b1] = BOB
-  const bw = 0.085
   p.noStroke()
-  p.fill(alpha(p, mixHex(BRASS, HALL.gilt, 0.5), a * 0.8))
-  p.beginShape()
-  p.vertex(0, b0 * k)
-  p.vertex(bw * k, (b0 + 0.1) * k)
-  p.vertex(bw * k, (b1 - 0.1) * k)
-  p.vertex(0, b1 * k)
-  p.vertex(-bw * k, (b1 - 0.1) * k)
-  p.vertex(-bw * k, (b0 + 0.1) * k)
-  p.endShape(p.CLOSE)
+  p.fill(alpha(p, SMEAR, a))
+  bar(p, k, ROD_W * 0.75)
+  p.fill(alpha(p, mixHex(BRASS, BRASS_HI, 0.5), a * 0.8))
+  bobShape(p, k)
   p.pop()
 }
 
@@ -601,7 +711,7 @@ function drawGhost(p: p5, c: Ctx, dy: number, th: number, a: number): void {
 function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
   if (size < 0.004 || lit <= 0.002) return
   p.noStroke()
-  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.4), 0.07 * lit))
+  p.fill(alpha(p, SMEAR, 0.07 * lit))
   sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, -size, size)
   for (const s of [-1, 1]) {
     drawGhost(p, c, dy, s * 0.55 * size, 0.2 * lit)
@@ -638,7 +748,10 @@ function drawSurge(p: p5, c: Ctx, T: number): void {
 
 /**
  * The hall's light over what this part draws behind the kit (the case, and the drums redrawn in front of it): the
- * hall's own (`hall.ts` `hallLight`), which is drawn before any part and so never reaches them.
+ * hall's own (`hall.ts` `hallLight`), which the hall lays over its kit and which, drawn before any part, never reaches
+ * these. The case carries its own light in its fills (`drawCase`), so this is only the wash every object on the stage
+ * gets. If the hall ever draws its light under its objects instead, drop this call: the case stays lit by its fills,
+ * and the redrawn kit then matches the hall's unwashed one.
  */
 function relight(p: p5, c: Ctx, T: number): void {
   hallLight(p, c, T)
