@@ -127,43 +127,53 @@ function driveway(p: p5, c: Ctx, T: number): void {
     p.fill(HOME.stone)
     p.rect(x(x0), x(-1.07), x(x1 - x0), x(0.14))
 
-    // The car: rear to the left. It sags on its rear when the tyre goes, and stands level again once it is paid for.
+    // The car: a round-shouldered family car, rear to the left, whole in the window. It sags on its rear when the tyre
+    // goes, and stands level again once it is paid for.
     const car = carAt(T)
-    const REAR = 1.78
-    const FRONT = 3.2
-    const WHEEL = -1.11
-    const R = 0.1
-    p.push()
-    p.translate(x(FRONT), x(WHEEL + R))
-    p.rotate(-car.sag * 0.075)
-    p.translate(-x(FRONT), -x(WHEEL + R))
-    p.stroke(alpha(p, INK, 0.85))
-    p.strokeWeight(weight * 0.7)
-    // The wheels first (dark tyres, small hubs; the rear one flattens), then the body over their tops, the cabin.
-    for (const [wx, flat] of [[REAR, Math.max(0, car.sag)], [FRONT, 0]] as [number, number][]) {
-      p.fill(INK)
-      p.ellipse(x(wx), x(WHEEL + flat * 0.03), x(2 * R * (1 + flat * 0.25)), x(2 * R * (1 - flat * 0.32)))
-      if (wx === FRONT || T < TYRE || T >= FIXED - 0.2) {
-        p.noStroke()
-        p.fill(HOME.trim)
-        p.circle(x(wx), x(WHEEL + flat * 0.03), x(0.07))
-        p.stroke(alpha(p, INK, 0.85))
+    const REAR = 2.1
+    const FRONT = 3.0
+    const WHEEL = -1.14
+    const R = 0.13
+    // Paid for, it drives off (away to the right, gathering speed, out of the window): its job is done, and the
+    // window is only the drive and the hedge behind the fall and the bandage.
+    const go = Math.max(0, Math.min(1, (T - FIXED - 0.45) / 1.7))
+    const away = 2.4 * go * go
+    if (away < 2.35) {
+      p.push()
+      p.translate(x(away), 0)
+      p.translate(x(FRONT), x(WHEEL + R))
+      p.rotate(-car.sag * 0.075)
+      p.translate(-x(FRONT), -x(WHEEL + R))
+      p.stroke(alpha(p, INK, 0.85))
+      p.strokeWeight(weight * 0.7)
+      // The wheels first (dark tyres, small hubs; the rear one flattens), then the body over their tops, the cabin.
+      for (const [wx, flat] of [[REAR, Math.max(0, car.sag)], [FRONT, 0]] as [number, number][]) {
+        p.fill(INK)
+        p.ellipse(x(wx), x(WHEEL + flat * 0.03), x(2 * R * (1 + flat * 0.25)), x(2 * R * (1 - flat * 0.32)))
+        if (wx === FRONT || T < TYRE || T >= FIXED - 0.2) {
+          p.noStroke()
+          p.fill(HOME.trim)
+          p.circle(x(wx), x(WHEEL + flat * 0.03), x(0.09))
+          p.stroke(alpha(p, INK, 0.85))
+        }
       }
+      // The cabin, a rounded dome over the middle, a gentle slope behind and a steeper windscreen; its two windows.
+      p.fill(mixHex(HOME.yellow, '#F4DFA0', 0.25))
+      p.beginShape()
+      p.vertex(x(2.08), x(-1.44))
+      p.bezierVertex(x(2.16), x(-1.72), x(2.34), x(-1.79), x(2.56), x(-1.79))
+      p.bezierVertex(x(2.78), x(-1.79), x(2.88), x(-1.7), x(2.98), x(-1.44))
+      p.endShape(p.CLOSE)
+      p.noStroke()
+      p.fill(alpha(p, HOME.glass, 0.9))
+      p.quad(x(2.2), x(-1.46), x(2.3), x(-1.69), x(2.52), x(-1.73), x(2.52), x(-1.46))
+      p.quad(x(2.6), x(-1.46), x(2.6), x(-1.73), x(2.78), x(-1.69), x(2.86), x(-1.46))
+      p.stroke(alpha(p, INK, 0.85))
+      p.fill(HOME.yellow)
+      // The body: short and deep, round at both ends, over the wheels' tops.
+      p.rect(x(1.8), x(-1.47), x(1.5), x(0.3), x(0.12))
+      p.pop()
     }
-    p.fill(mixHex(HOME.yellow, '#F4DFA0', 0.25))
-    p.beginShape()
-    p.vertex(x(2.02), x(-1.38))
-    p.bezierVertex(x(2.1), x(-1.66), x(2.3), x(-1.7), x(2.55), x(-1.7))
-    p.bezierVertex(x(2.85), x(-1.7), x(2.95), x(-1.62), x(3.08), x(-1.38))
-    p.endShape(p.CLOSE)
-    p.noStroke()
-    p.fill(alpha(p, HOME.glass, 0.9))
-    p.quad(x(2.14), x(-1.4), x(2.24), x(-1.61), x(2.52), x(-1.64), x(2.52), x(-1.4))
-    p.quad(x(2.6), x(-1.4), x(2.6), x(-1.64), x(2.84), x(-1.61), x(2.96), x(-1.4))
-    p.stroke(alpha(p, INK, 0.85))
-    p.fill(HOME.yellow)
-    p.rect(x(1.42), x(-1.42), x(2.1), x(0.24), x(0.1))
-    p.pop()
 
     // The blow: a puff of dust off the drive, spreading and thinning.
     if (car.puff > 0 && car.puff < 1.4) {
