@@ -37,8 +37,8 @@ const CANDLE_LEN = 1.22
 export const CLICKS = [32.307, 33.433, 34.553, 35.672]
 /** The spark lands on its frame (the eighth after phrase 3's first note). */
 export const LAND = 31.465
-/** The spark leaves its frame for the ladle. */
-export const TAKEOFF = 36.303
+/** The spark leaves its frame for the ladle, on the eighth before the ladle's note (after a crouch). */
+export const TAKEOFF = 36.236
 
 /** Where the spark lands: carried on from LOFT-A's drop at the seam's velocity, under the loft's gravity. */
 const T0 = LAND - LOFT_SEAM

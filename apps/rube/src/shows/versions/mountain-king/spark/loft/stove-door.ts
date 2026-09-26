@@ -101,7 +101,7 @@ export function gripDip(t: number): number {
 }
 
 /** Show time the spark steps off the grip, down to the sill. */
-export const GRIP_OFF = 52.95
+export const GRIP_OFF = 53.066
 
 /** A door-local point (x from the hinge, y in the room) as it is seen with the door swung by `a`. */
 export const onDoor = (lx: number, y: number, a: number): Pt => [DOOR.hinge + lx * Math.cos(a), DOOR_MID + (y - DOOR_MID) * (1 + 0.1 * Math.sin(a) * (lx / DOOR_W))]

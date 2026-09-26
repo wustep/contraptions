@@ -8,6 +8,7 @@ import { FIRE_MOUTH, FLOOR_Y, HANDOFF } from './layout'
 import { DOOR_OPENS, GRIP_OFF, SILL, gripTop } from './stove-door'
 import { lightAt } from './stove-light'
 import { CLICKS, LADLE_LEN, LAND, LANDED, TAKEOFF, drawWheel, onLadle, seatAt, wheelCells } from './stove-wheel'
+import { ON_SPOOL, SPOOL_STEPS, drawSpool, onSpool, spoolCells } from './stove-spool'
 
 /**
  * LOFT-B: from phrase 3 (`LOFT_SEAM`, 31.185) to the first fire-door (`DOORS.glass`, 58.024). Laid at LOFT-A's exit,
@@ -17,12 +18,13 @@ import { CLICKS, LADLE_LEN, LAND, LANDED, TAKEOFF, drawWheel, onLadle, seatAt, w
  *   31.185  the spark drops off the drying rack onto a frame of the dipping wheel (31.465). Its weight turns the wheel:
  *           a click on each strong note (32.307, 33.433, 34.553), carrying it round and down, and on 35.672 the
  *           wheel stops with its frame low over the vat.
- *   36.783  it hops onto the ladle leaning on the vat and zips down the iron handle to the floor (37.900), rolls out
- *           along the boards under the bench and comes to rest (39.6): the sleeping cat is in front of it. It looks.
- *           Then three tiptoes on the phrase's first notes (40.185, 40.755, 41.325), and it stops short of the tail.
- *   42.455  the tail's tip twitches up right in front of it: it hops back (42.735). Then on 43.570 it hops onto the
- *           tail itself, and tiptoes along it (44.958, 45.235, 45.514), up onto the haunch (46.908), along the
- *           breathing back (47.465, 48.027, 49.150) to the shoulders (50.267), where an ear flicks beside it.
+ *   36.236  it crouches and hops onto the ladle leaning on the vat (36.783) and zips down the iron handle to the floor
+ *           (37.900), skids along the boards and hops up onto a reel of wick lying there (38.465): its weight sets the
+ *           reel rolling east, and it runs on top of it, a step a note (39.018, 39.648, 40.193, 40.776, 41.335), while
+ *           the reel slows and comes to rest against the tip of the sleeping cat's tail.
+ *   42.455  the tail's tip twitches up right in front of it: it flinches on the reel (42.735). Then it gathers itself
+ *           and hops onto the tail itself (43.570), and tiptoes along it (44.958, 45.235, 45.514), up onto the haunch
+ *           (46.908), along the breathing back (47.465, 48.027, 49.150) to the shoulders (50.267), where an ear flicks.
  *   51.384  the cat shifts in its sleep, a heave of the shoulders, and the spark is tossed up; at the top of the toss
  *           (51.663) the stove's hot draught takes it, and it rises up the iron face like an ember, swaying, and
  *           settles onto the latch's grip (52.504): the latch lifts, and the firebox door creaks open on the fire.
@@ -52,19 +54,13 @@ const LADLE_END = (() => {
   while (s < LADLE_LEN + 1 && onLadle(s)[1] < FY) s += 0.001
   return s
 })()
-/** The roll-out along the boards: it comes to rest here, and sees the cat. */
-const GLIDE_STOP = 39.6
-const LOOK_X = -3.9
-/** Three tiptoes toward the tail, on the phrase's first notes: it stops short of the tail on the third. */
-const TIPTOES: [number, number][] = [
-  [40.185, -3.25],
-  [40.755, -2.6],
-  [41.325, -1.95],
-]
-/** The twitch, and the hop back from it. */
+/** Off the ladle it skids along the boards to the reel, and hops up onto it (a crouch-free run-up: it is moving). */
+const HOP_UP = 38.182
+/** The twitch, and the flinch on the reel. */
 const TWITCH = CAT_CUES.stir[0]
-const BACK_AT = 42.735
-const BACK_X = -2.45
+const FLINCH = 42.735
+/** The take-off from the reel onto the tail, on an eighth. */
+const OFF_SPOOL = 43.02
 /** Onto the tail, and three tiptoes along it. */
 const ON_TAIL = 43.57
 const TAIL_STEPS: [number, number][] = [
@@ -108,10 +104,13 @@ export const STOVE_HITS: number[] = [
   LAND,
   ...CLICKS,
   ON_LADLE,
+  TAKEOFF,
   FLOOR_AT,
-  ...TIPTOES.map(([t]) => t),
+  ON_SPOOL,
+  ...SPOOL_STEPS,
   TWITCH,
-  BACK_AT,
+  FLINCH,
+  OFF_SPOOL,
   ON_TAIL,
   ...TAIL_STEPS.map(([t]) => t),
   HAUNCH[0],
@@ -204,25 +203,34 @@ function lane(slot: { begin: number; end: number }): Seg[] {
 
   // Off the rack, at the seam's velocity, down onto the frame.
   hop(LANDED, LAND)
-  // Riding the frame round and down.
-  ride(seatAt, TAKEOFF)
-  // A hop onto the ladle, the slide down it, the glide along the boards: one pace that runs down, from the handle
-  // through the floor to a stop.
+  // Riding the frame round and down; a crouch, and off it on the eighth.
+  ride(seatAt, TAKEOFF - 0.17)
+  crouch(TAKEOFF, seatAt)
+  // A hop onto the ladle, the slide down it, the skid along the boards: one pace that runs down, from the handle
+  // through the floor to the reel.
   hop(onLadle(LADLE_AT), ON_LADLE)
   const floorAt: Pt = [onLadle(LADLE_END)[0], FY]
-  const glide = LOOK_X - floorAt[0]
-  const vFloor = (2 * glide) / (GLIDE_STOP - FLOOR_AT)
+  const upOn = onSpool(ON_SPOOL)
+  const hopFrom: Pt = [upOn[0] - 0.55, FY]
+  const vHop = (upOn[0] - hopFrom[0]) / (ON_SPOOL - HOP_UP)
+  const skid = hopFrom[0] - floorAt[0]
+  const vFloor = Math.max(vHop, (2 * skid) / (HOP_UP - FLOOR_AT) - vHop)
   const slide = Math.hypot(floorAt[0] - now.p[0], floorAt[1] - now.p[1])
   const vLadle = Math.max(0.3, (2 * slide) / (FLOOR_AT - ON_LADLE) - vFloor)
   push({ to: floorAt, dur: FLOOR_AT - ON_LADLE, ramp: [vLadle, vFloor] }, FLOOR_AT)
-  push({ to: [LOOK_X, FY], dur: GLIDE_STOP - FLOOR_AT, ramp: [vFloor, 0] }, GLIDE_STOP)
-  // It looks at the cat; then tiptoes up to the tail, each step a note.
-  for (const [at, x] of TIPTOES) step([x, FY], at - 0.3, at, 0.09)
-  // The twitch: it hops back from the tail, then over the curl onto it.
-  hold(TWITCH)
-  hop([BACK_X, FY], BACK_AT)
-  hold(ON_TAIL - 0.62 - 0.17)
-  crouch(ON_TAIL - 0.62)
+  push({ to: hopFrom, dur: HOP_UP - FLOOR_AT, ramp: [vFloor, vHop] }, HOP_UP)
+  // Up onto the reel, and riding it as it rolls, a step a note, to rest against the tail.
+  hop(upOn, ON_SPOOL)
+  ride(onSpool, TWITCH)
+  // The twitch: it flinches up off the reel and back down onto it; then gathers itself and hops onto the tail.
+  const flinch = (t: number): Pt => {
+    const [x, y] = onSpool(t)
+    const u = (t - TWITCH) / (FLINCH - TWITCH)
+    return [x, y - 0.3 * Math.sin(Math.PI * Math.max(0, Math.min(1, u)))]
+  }
+  ride(flinch, FLINCH, 0.01)
+  ride(onSpool, OFF_SPOOL - 0.17)
+  crouch(OFF_SPOOL, onSpool)
   hop([0.02, tailTop(0.02, ON_TAIL)], ON_TAIL)
   // Tiptoes along the tail.
   ride(walk(tailTop, 0.02, TAIL_STEPS, 0.26, 0.07), TAIL_STEPS[2][0], 0.01)
@@ -265,8 +273,8 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   for (const [at, x] of BACKUP) step([x, SILL.y - R], at - 0.26, at, 0.06)
   for (const at of BOUNCES) step([LEAP_FROM[0], SILL.y - R], at - 0.3, at, 0.16)
   // A last settle back and down, gathering, and up into the leap into the fire.
-  step([LEAP_FROM[0] - 0.08, SILL.y - R + 0.07], LEAP_AT - 0.55, LEAP_AT - 0.12, 0)
-  push({ to: LEAP_FROM, dur: 0.12, ease: 'in' }, LEAP_AT)
+  step([LEAP_FROM[0] - 0.13, SILL.y - R + 0.09], LEAP_AT - 0.55, LEAP_AT - 0.08, 0)
+  push({ to: LEAP_FROM, dur: 0.08, ease: 'in' }, LEAP_AT)
   hop(FIRE_MOUTH, DOORS.glass)
   return segs
 }
@@ -279,11 +287,11 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // The wheel whole, the spark on its frame at its east side.
     { t: 32.7, cells: 9.6, hold: at(-20.3, 2.9), w: 0.8 },
     { t: 35.4, cells: 9.8, hold: at(-19.9, 4.2), w: 0.72 },
-    // Down the ladle and along the floor, low.
+    // Down the ladle and along the floor, low; with it on the reel as it rolls east, and the cat coming into the frame
+    // ahead of it, the whole sleeping cat, face and all, as the reel comes to rest against its tail.
     { t: 37.6, cells: 7.4, hold: at(-15.4, 8.3), w: 0.5 },
-    { t: 38.8, cells: 6.6, off: [1.8, -1.5] },
-    // It comes to rest and sees the cat: the whole sleeping cat, face and all, with the spark small before it.
-    { t: 40.1, cells: 8.2, hold: at(0.8, 8.7), w: 1 },
+    { t: 38.8, cells: 6.6, off: [1.9, -1.4] },
+    { t: 40.5, cells: 7.4, off: [2.6, -1.4], w: 0 },
     // The tail, the spark and the cat's sleeping face in one frame for the twitch; then one two-shot that drifts east
     // with it along the cat, the face always in.
     { t: 42.3, cells: 7.4, hold: at(1.65, 8.9), w: 1 },
@@ -314,11 +322,12 @@ export const stove = part<null>(
       p.push()
       p.translate(-O[0] * c.k, -O[1] * c.k)
       drawWheel(p, c.k, c.ink, c.weight, L, t)
+      drawSpool(p, c.k, c.ink, c.weight, L, t)
       p.pop()
     },
   },
   (slot) => ({
-    cells: wheelCells().map(loc),
+    cells: [...wheelCells(), ...spoolCells()].map(loc),
     exit: EXIT,
     lane: { segs: lane(slot), fire: CLICKS[0] - slot.begin },
     state: null,
