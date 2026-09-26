@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH } from '../drums'
 import { CHEST, POSES, RIG, beatPose, reachFromHead, type ArmPose, type HandShape, type Pose } from '../fletcher'
-import { BREAK, FINAL, LAST_CHORD, SOLO } from '../music'
+import { BREAK, FINAL, LAST_CHORD, RIDE, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
@@ -44,6 +44,15 @@ export const H_BACK: [number, number] = [341.2, 345.2]
 /** The build: from here he conducts Andrew's stomps, a beat every fourth, until the engine's sticks let go. */
 export const CONDUCT: [number, number] = [388.2, UNWIND]
 const BEATS: number[] = STOMPS.filter((t) => t > CONDUCT[0] - 1 && t < CONDUCT[1] + 1.5).filter((_, i) => i % 4 === 0)
+
+/**
+ * The rubato: from his podium he keeps the metronome's time with it, a small beat of his right hand on every stroke
+ * of the rod, slowing with it to the slowest (458.58) and quickening after, leaning in: the conductor keeping the
+ * drummer's own tempo, which is the show's answer to "not my tempo".
+ */
+export const RUBATO: [number, number] = [455.0, 468.8]
+const RUBATO_BEATS: number[] = RIDE.filter((t) => t > RUBATO[0] - 2 && t < RUBATO[1] + 2)
+const rubatoOn = (t: number): number => ease(t, RUBATO[0], RUBATO[0] + 1.5) * (1 - ease(t, RUBATO[1] - 1.8, RUBATO[1]))
 
 /** The finale: to the kit in the long roll, up to Andrew's height, the nod, and back. */
 export const F_WALK: [number, number] = [519.4, 522.8]
@@ -105,7 +114,10 @@ export function floorAt(T: number): number {
  * foot planted: a look close after he sets the crash straight, and the nod.
  */
 function leanAt(t: number): number {
-  if (t < 400) return -0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
+  // The solo: when the camera swings across to him (277.3-280.6) he is leaning a little toward the kit, watching.
+  const watch = -0.1 * ease(t, 277.2, 278.3) * (1 - ease(t, 280.0, 281.0))
+  if (t < 400) return watch - 0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
+  if (t < 480) return -0.1 * rubatoOn(t)
   // Turned in to him before the nod, and back once it is done (the nod itself is a bow: `bowAt`).
   return -0.2 * ease(t, NOD[0] - 0.9, NOD[0] + 0.1) * (1 - ease(t, NOD[1] - 0.3, NOD[1] + 0.7))
 }
@@ -201,12 +213,12 @@ function fixing(T: number): ArmPose {
 }
 
 
-/** Where he is in his beat at `t`: whole numbers on the stomps he beats. */
-function beatAt(t: number): number {
+/** Where he is in his beat at `t`: whole numbers on the beats he keeps (the stomps he beats, by default). */
+function beatAt(t: number, beats: readonly number[] = BEATS): number {
   let j = 0
-  while (j + 1 < BEATS.length && BEATS[j + 1] <= t) j++
-  const a = BEATS[j]
-  const b = BEATS[Math.min(j + 1, BEATS.length - 1)]
+  while (j + 1 < beats.length && beats[j + 1] <= t) j++
+  const a = beats[j]
+  const b = beats[Math.min(j + 1, beats.length - 1)]
   return j + (b > a ? clamp((t - a) / (b - a)) : 0)
 }
 
@@ -218,6 +230,8 @@ export function poseAt(t: number): Pose {
     const size = 0.3 + 0.6 * ease(t, CONDUCT[0], CONDUCT[0] + 16)
     return turnPose(POSES.rest, beatPose(beatAt(t), size), on)
   }
+  // The rubato: a small beat with the rod's strokes, the left hand still at his chest.
+  if (t > RUBATO[0] && t < RUBATO[1]) return turnPose(POSES.rest, beatPose(beatAt(t, RUBATO_BEATS), 0.32, true), rubatoOn(t))
   // The hush: his right hand up to the crash's rim, straightening it, and back down.
   if (t > GRIP[0] && t < LET_GO + 0.9) {
     const on = ease(t, GRIP[0], GRIP[1]) * (1 - ease(t, LET_GO, LET_GO + 0.9))
@@ -283,6 +297,9 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
  */
 export function jimAt(t: number): Pt {
   const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
-  const lean = hush + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
+  // Drawn toward the stage too when the solo's camera and the build's come to him.
+  const solo = 0.06 * ease(t, 304.2, 305.6) * (1 - ease(t, 307.2, 308.6))
+  const build = 0.06 * ease(t, 396.0, 397.4) * (1 - ease(t, 398.6, 400.0))
+  const lean = hush + solo + build + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
   return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
 }

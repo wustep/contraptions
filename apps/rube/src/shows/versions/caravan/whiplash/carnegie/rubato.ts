@@ -228,21 +228,29 @@ export const rubato = part<{ begin: number }>(
       { t: 440, cells: 7.8, hold: at(M + 2.2, -2.2), w: 1 },
       // Slowing: in on the whole pendulum, tall, as he climbs the rod: him at the top and the bob's tip meeting the
       // ride's rim both in the frame (centred between his top, -4.4, and the rim, -1.1), the camera drifting across
-      // as it pushes, slowest on the slowest stroke. Tight enough to feel, loose enough that every stroke is seen to
-      // land (5.2 cells still holds both under Zoom).
+      // as it pushes. Tight enough to feel, loose enough that every stroke is seen to land.
       { t: 446.6, cells: 5.7, hold: at(M + 0.55, -2.74), w: 1 },
       { t: 452.4, cells: 5.4, hold: at(M + 0.22, -2.76), w: 1 },
-      { t: 458.6, cells: 5.2, hold: at(M - 0.08, -2.75), w: 1 },
-      { t: 463.4, cells: 5.35, hold: at(M - 0.3, -2.72), w: 1 },
-      // Quickening: back out as he comes down the rod, the bob and the two rims, then the machine and the stage.
-      { t: 468.5, cells: 5.8, hold: at(M + 0.02, -2.6), w: 1 },
-      { t: 474, cells: 6.4, hold: at(M + 0.6, -2.3), w: 1 },
-      { t: 481, cells: 6.2, hold: at(-1.8, -2.2), w: 1 },
-      // The roll: in on him as the swing collapses into the shimmer, and on in through the swell as the fan widens
-      // and the light rises (him, the upper fan and the crown filling the frame by the top); then down with him as
-      // the rod flings him, landing close on the snare on the burst (the finale's key there is CLOSE).
-      { t: 485.0, cells: 4.4, hold: at(M + 0.1, -3.3), w: 1 },
-      { t: 494, cells: 3.9, hold: at(M + 0.05, -3.45), w: 1 },
+      { t: 455.0, cells: 5.3, hold: at(M + 0.07, -2.76), w: 1 },
+      // Then a truck right, landing on the slowest stroke, to a two-shot: the metronome in the left of the frame and
+      // Fletcher on his podium in the right, keeping its time with a small beat of his hand, slowing with it and
+      // quickening after (`conductor.ts` `RUBATO`). Every stroke still lands in frame.
+      { t: 458.58, cells: 6.6, hold: at(1.6, -2.2), w: 1 },
+      { t: 463.4, cells: 6.5, hold: at(1.5, -2.25), w: 1 },
+      { t: 466.5, cells: 6.4, hold: at(1.3, -2.3), w: 1 },
+      // Quickening: low and closer, the bob's tip on the two rims and him coming down the rod.
+      { t: 469.6, cells: 4.7, hold: at(-1.6, -2.9), w: 1 },
+      { t: 474, cells: 4.5, hold: at(-1.7, -2.85), w: 1 },
+      { t: 478, cells: 4.35, hold: at(-1.75, -2.72), w: 1 },
+      { t: 481, cells: 4.4, hold: at(-1.6, -2.6), w: 1 },
+      // The roll: out wide as the swing collapses into the shimmer, on the whole stage and the hall's light rising,
+      // Fletcher on his podium watching; a slow push from there, and then faster in, through the swell, to him and the fan filling the frame by the top;
+      // then down with him as the rod flings him, landing close on the snare on the burst (the finale's key there is
+      // CLOSE).
+      { t: 485.0, cells: 8.8, hold: at(1.6, -2.35), w: 1 },
+      { t: 490.0, cells: 7.8, hold: at(1.0, -2.55), w: 1 },
+      { t: 495.0, cells: 6.8, hold: at(0.3, -2.8), w: 1 },
+      { t: 498.5, cells: 5.2, hold: at(M + 0.15, -3.25), w: 1 },
       { t: 502.2, cells: 3.4, hold: at(M, -3.55), w: 1 },
       { t: 503.35, cells: 3.9, hold: at(-1.3, -2.3), w: 1 },
       { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
