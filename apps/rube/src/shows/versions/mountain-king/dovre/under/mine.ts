@@ -127,13 +127,13 @@ export const mine = part<MineState>(
     // Landing in the cart, then a look back up the tunnel at the two asleep in theirs, waking.
     { t: slot.begin, ...SEAM_SHOT },
     { t: BRAKE - 0.2, cells: 5.4, off: [-1.5, -0.75] },
-    // The chase in two framings. First wide down the tunnel: his cart in the front third, the trolls' cart coming out
-    // of the dark behind, the torches catching ahead of him one by one, so the gap is seen to close.
+    // The chase in one move. Wide down the tunnel: his cart in the front third, the trolls' cart coming out of the
+    // dark behind, the torches catching ahead of him one by one; then one even push in as the gap closes, 2.4 s of
+    // it, landing close on the first lunge (the trolls a cart's length behind) and still easing in through the grabs,
+    // so the frame arrives with the lunge instead of whipping onto it.
     { t: FIRST_CLACK + 0.5, cells: 8.0, off: [-2.3, -1.3] },
-    { t: LUNGES[0] - 1.0, cells: 7.6, off: [-2.1, -1.2] },
-    // Then close for the grabs: the trolls a cart's length behind, the lead lunging.
-    { t: LUNGES[0], cells: 5.0, off: [-0.9, -0.65] },
-    { t: LUNGES[2] - 0.35, cells: 5.1, off: [-0.7, -0.65] },
+    { t: LUNGES[0], cells: 5.15, off: [-0.9, -0.65] },
+    { t: LUNGES[2] - 0.35, cells: 5.0, off: [-0.7, -0.62] },
     // Phrase 9: back over the whole stope, the lit gallery behind, the switch ahead; held through the switch and the buffer.
     { t: WIDE, cells: 8.2, hold: [11.0, -1.0], w: 0.7 },
     { t: ONTO, cells: 7.2, hold: [11.2, -0.8], w: 0.7 },
