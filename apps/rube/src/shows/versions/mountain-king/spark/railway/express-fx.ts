@@ -74,30 +74,39 @@ const lip = (t: number): Pt => bodyPoint(t, 0, LIP_V)
 
 /* ------------------------------------------------------------------ smoke and steam */
 
-/** A soft cloud: lobes of one colour, a lighter crown toward the moon. `seed` keeps its shape its own. */
+/**
+ * A soft cloud: lobes of one colour, a lighter crown toward the moon. `seed` keeps its shape its own. Each lobe is a
+ * soft billow (dense in its middle, gone at its rim), so a plume is smoke rolling over itself, and a young puff at the
+ * chimney's lip is a warm smudge, never a disc or a ball beside the spark.
+ */
 function cloud(p: p5, k: number, x: number, y: number, r: number, a: number, body: string, lit: string, seed: number): void {
   if (a <= 0.01 || r <= 0.01) return
-  const X = (v: number) => v * k
-  p.noStroke()
-  const lobes = 5
-  const c = p.color(body)
-  c.setAlpha(255 * a)
-  p.fill(c)
-  for (let i = 0; i < lobes; i++) {
-    const ang = (i / lobes) * Math.PI * 2 + hash(seed, i) * 0.8
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const billow = (cx: number, cy: number, rr: number, [R, G, B]: [number, number, number], al: number) => {
+    const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, rr * k)
+    g.addColorStop(0, `rgba(${R}, ${G}, ${B}, ${al})`)
+    g.addColorStop(0.55, `rgba(${R}, ${G}, ${B}, ${al * 0.92})`)
+    g.addColorStop(0.8, `rgba(${R}, ${G}, ${B}, ${al * 0.5})`)
+    g.addColorStop(1, `rgba(${R}, ${G}, ${B}, 0)`)
+    ctx.fillStyle = g
+    ctx.fillRect((cx - rr) * k, (cy - rr) * k, 2 * rr * k, 2 * rr * k)
+  }
+  ctx.save()
+  const B = rgb(body)
+  for (let i = 0; i < 5; i++) {
+    const ang = (i / 5) * Math.PI * 2 + hash(seed, i) * 0.8
     const d = r * (0.35 + 0.25 * hash(seed, i, 2))
     const rr = r * (0.55 + 0.35 * hash(seed, i, 3))
-    p.circle(X(x + Math.cos(ang) * d), X(y + Math.sin(ang) * d * 0.8), X(rr * 2))
+    billow(x + Math.cos(ang) * d, y + Math.sin(ang) * d * 0.8, rr * 1.22, B, Math.min(1, a * 1.1))
   }
-  const l = p.color(lit)
-  l.setAlpha(255 * a * 0.8)
-  p.fill(l)
+  const L = rgb(lit)
   for (let i = 0; i < 3; i++) {
     const ang = -Math.PI * (0.35 + 0.18 * i) + hash(seed, i, 4) * 0.3
     const d = r * 0.4
     const rr = r * (0.38 + 0.2 * hash(seed, i, 5))
-    p.circle(X(x + Math.cos(ang) * d), X(y + Math.sin(ang) * d * 0.8), X(rr * 2))
+    billow(x + Math.cos(ang) * d, y + Math.sin(ang) * d * 0.8, rr * 1.25, L, a * 0.72)
   }
+  ctx.restore()
 }
 
 const rgb = (hex: string): [number, number, number] => {
