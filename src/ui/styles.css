@@ -90,6 +90,7 @@ body.peek-tucks .panel-peek {
 }
 body.peek-tucks.peek-near .panel-peek,
 body.peek-tucks.peek-greet .panel-peek,
+body.peek-tucks.peek-hold .panel-peek,
 body.peek-tucks .panel-peek:focus-visible {
   opacity: 1;
   translate: none;

@@ -277,7 +277,6 @@ function undo(): void {
 /* ------------------------------------------------------------------ panel */
 
 const shell = createShell(panelRoot, 'builder')
-shell.setSeed(seed)
 
 /** Where the outcome of an action is said: under the prompt, the build, and the file controls. One at a time. */
 const outcomes: HTMLElement[] = []
@@ -1069,7 +1068,6 @@ function sync(): void {
   play.replaceChildren(paused ? playIcon : pauseIcon)
   play.classList.toggle('paused', paused)
   seedNote.textContent = seed
-  shell.setSeed(seed)
   storeWarn.hidden = storeKept()
   machineLink.href = `/?seed=${encodeURIComponent(seed)}&world=${encodeURIComponent(build.name)}`
   document.title = `${build.name} · builder · contraptions`

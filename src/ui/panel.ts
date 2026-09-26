@@ -392,7 +392,6 @@ export function createPanel(
       lastComp = comp
       lastView = view
       if (document.activeElement !== seedInput) seedInput.value = comp.options.seed
-      shell.setSeed(comp.options.seed)
       modeBox.set(comp.options.mode)
       showFor(comp.options.mode, comp.options.catalog)
       themeBox.set(comp.options.theme)

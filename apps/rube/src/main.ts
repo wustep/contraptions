@@ -469,7 +469,6 @@ const pauseIcon = icon(ICON.pause)
 
 function sync(): void {
   if (document.activeElement !== seedInput) seedInput.value = seed
-  shell.setSeed(seed)
   play.replaceChildren(paused ? playIcon : pauseIcon)
   play.classList.toggle('paused', paused)
   speedSeg.set(speed)
