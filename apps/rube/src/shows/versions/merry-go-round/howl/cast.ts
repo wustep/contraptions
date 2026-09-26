@@ -361,8 +361,8 @@ export interface DoorOpts {
 }
 
 /**
- * The castle's door, the one door of the show: a heavy plank door in a timber frame, and over it the colour dial, a
- * brass disc with four coloured pips and a pointer that says where the door opens. Drawn in elevation, sill at the
+ * The castle's door, the one door of the show: a heavy plank door in a timber frame, and on its lintel the colour
+ * dial, a flat half-disc plate with four coloured notches and a lever that says where the door opens. Drawn in elevation, sill at the
  * origin, the opening centred on x = 0. Opening, the leaf swings toward us on its left hinge (it narrows and
  * darkens), and what is through it (`view`) shows in the opening.
  */
@@ -413,24 +413,27 @@ export function drawDoor(p: p5, k: number, weight: number, ink: string, o: DoorO
       p.circle((-w / 2 + lw - 0.1) * k, -h * 0.5 * k, 0.07 * k)
     }
   }
-  // The dial over the lintel: a brass disc, four pips, and the pointer.
-  const cy = -h - f - dr - 0.04
+  // The dial on the lintel: a flat half-disc plate of dark brass, its four colours as notches round its rim, and a
+  // lever that swings from the plate's foot to the colour where the door opens. Flat, low and dark: never a disc.
+  const cy = -h - f
+  const R = dr * 0.9
+  const plate = mixHex(DIAL.brass, o.woodDark, 0.45)
   p.stroke(alpha(p, ink, light))
   p.strokeWeight(weight * 0.8)
-  p.fill(alpha(p, DIAL.brass, light))
-  p.circle(0, cy * k, 2 * dr * k)
+  p.fill(alpha(p, plate, light))
+  p.arc(0, cy * k, 2 * R * k, 2 * R * k, Math.PI, 2 * Math.PI, p.CHORD)
+  p.strokeCap(p.SQUARE)
   for (let i = 0; i < 4; i++) {
     const a = -Math.PI / 2 + ((i - 1.5) * Math.PI) / 5
-    p.strokeWeight(weight * 0.5)
-    p.fill(alpha(p, DIAL_ORDER[i], light))
-    p.circle(Math.cos(a) * dr * 0.62 * k, (cy + Math.sin(a) * dr * 0.62) * k, dr * 0.42 * k)
+    p.stroke(alpha(p, DIAL_ORDER[i], light))
+    p.strokeWeight(weight * 2.2)
+    p.line(Math.cos(a) * R * 0.66 * k, (cy + Math.sin(a) * R * 0.66) * k, Math.cos(a) * R * 0.9 * k, (cy + Math.sin(a) * R * 0.9) * k)
   }
   const pa = -Math.PI / 2 + ((o.dial - 1.5) * Math.PI) / 5
-  p.strokeWeight(weight * 1.1)
-  p.line(0, cy * k, Math.cos(pa) * dr * 0.5 * k, (cy + Math.sin(pa) * dr * 0.5) * k)
-  p.noStroke()
-  p.fill(alpha(p, ink, light))
-  p.circle(0, cy * k, dr * 0.22 * k)
+  p.strokeCap(p.ROUND)
+  p.stroke(alpha(p, ink, light))
+  p.strokeWeight(weight * 1.3)
+  p.line(0, (cy - 0.01) * k, Math.cos(pa) * R * 1.08 * k, (cy - 0.01 + Math.sin(pa) * R * 1.08) * k)
   p.pop()
 }
 

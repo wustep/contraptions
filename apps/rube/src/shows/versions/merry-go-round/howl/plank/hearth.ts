@@ -334,9 +334,10 @@ export const hearth = part<HearthState>(
       [237.6, along(237.6), -0.72, 4.0],
       [239.4, along(239.4), -0.7, 3.85],
       [241.2, along(241.2), -0.64, 3.7],
-      [242.5, along(242.5), -0.56, 3.5],
-      [243.45, rest, -0.5, 3.4],
-      [slot.end, rest, -0.5, 3.4],
+      [242.5, along(242.5), -0.5, 3.5],
+      // Low enough that the door's dial is wholly out of the top of the frame, never half on its edge.
+      [243.45, rest, -0.4, 3.4],
+      [slot.end, rest, -0.4, 3.4],
     ]
     return keys.map(([t, hx, hy, cells]): PartShot => ({ t, cells, hold: [fx(hx), hy], w: 1 }))
   },
