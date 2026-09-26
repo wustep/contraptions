@@ -6,6 +6,7 @@ import { drawStick, KICK, KIT_FLOOR, SNARE, type KitPiece } from '../drums'
 import type { Ctx } from '../kit'
 import { SOLO } from '../music'
 import { KIT } from '../worlds'
+import { mixHex } from '../../../../../parts'
 import { ACCENTS, CATCH, FOOT_DOWN, HOLD, LEAP, RIG_DOWN, RIG_UP, SEATED, SLAM, STICK, STROKES, TARGETS, TOSS, UNSEAT, strokesOf, type Arm, type Grip, type Stroke } from './solo-score'
 
 /**
@@ -214,31 +215,99 @@ function footLift(T: number): number {
 
 /* ------------------------------------------------------------------ drawing */
 
-/** A length of chrome tube: an ink edge and the bright core, like the kit's stands but heavier. */
+/** The frame's metal: a dark chrome that holds its silhouette against the warm wall, and the light along its top. */
+export const STEEL = mixHex(KIT.chrome, KIT.lacquer, 0.58)
+const STEEL_EDGE = mixHex(STEEL, KIT.lacquer, 0.45)
+
+/**
+ * A length of tube: dark chrome, a darker edge under it, and one lit edge along its upper side (the stage's light is
+ * above), so it reads as a solid rod, not a pale outline.
+ */
 export function tube(p: p5, c: Ctx, a: Pt, b: Pt, w0: number): void {
-  const { k, ink, weight } = c
-  // A little under the weight it was first drawn at: in the wide shots the heavier tubes read as scaffolding.
-  const w = w0 * 0.82
-  p.stroke(ink)
-  p.strokeWeight(weight * w)
+  const { k, weight } = c
+  const w = weight * w0 * 0.82
+  p.strokeCap(p.ROUND)
+  p.stroke(STEEL_EDGE)
+  p.strokeWeight(w)
   p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+  p.stroke(STEEL)
+  p.strokeWeight(w * 0.72)
+  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+  // The lit edge: on the side of the tube that faces up.
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const L = Math.hypot(dx, dy) || 1
+  let nx = dy / L
+  let ny = -dx / L
+  if (ny > 0) {
+    nx = -nx
+    ny = -ny
+  }
+  const off = w * 0.2
   p.stroke(KIT.chrome)
-  p.strokeWeight(weight * w * 0.55)
-  p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+  p.strokeWeight(w * 0.16)
+  p.line(a[0] * k + nx * off, a[1] * k + ny * off, b[0] * k + nx * off, b[1] * k + ny * off)
 }
 
-/** A clamp: a black block across a joint, `len` along `ang`, `w` across, with a wing screw. */
-export function clampBlock(p: p5, c: Ctx, at: Pt, ang: number, len: number, w: number): void {
-  const { k, ink, weight } = c
+/**
+ * A joint: a round hub in the tube's dark chrome (sized from `len` and `w`, the old clamp's), a darker rim, one
+ * small highlight on its upper side. Never bright, never ball-sized.
+ */
+export function clampBlock(p: p5, c: Ctx, at: Pt, _ang: number, len: number, w: number): void {
+  const { k, weight } = c
+  const d = Math.min(0.13, 0.72 * Math.max(len, w))
   p.push()
   p.translate(at[0] * k, at[1] * k)
-  p.rotate(ang)
-  solid(p, ink, weight * 0.8, KIT.lacquer)
-  p.rect((-len / 2) * k, (-w / 2) * k, len * k, w * k, 0.025 * k)
-  p.stroke(KIT.chrome)
+  p.stroke(STEEL_EDGE)
   p.strokeWeight(weight * 0.9)
-  p.line(0, (-w / 2) * k, 0, (-w / 2 - 0.045) * k)
+  p.fill(STEEL)
+  p.circle(0, 0, d * k)
+  p.noFill()
+  p.stroke(KIT.chrome)
+  p.strokeWeight(weight * 0.8)
+  p.arc(0, 0, d * 0.62 * k, d * 0.62 * k, Math.PI * 1.1, Math.PI * 1.55)
   p.pop()
+}
+
+/**
+ * The yoke across the shoulders, bowed up under his head, and the cradle his head sits in: a shallow shaped dish of
+ * the same dark chrome, its lit rim along the top (not a black half-disc under him).
+ */
+export function drawYoke(p: p5, c: Ctx, L: Pt, R: Pt): void {
+  const { k, weight } = c
+  const mid: Pt = [(L[0] + R[0]) / 2, (L[1] + R[1]) / 2 - 0.05]
+  p.noFill()
+  p.strokeCap(p.ROUND)
+  for (const [w, col] of [[4.4, STEEL_EDGE], [3.2, STEEL]] as const) {
+    p.stroke(col)
+    p.strokeWeight(weight * w)
+    p.bezier(L[0] * k, L[1] * k, (L[0] + 0.3) * k, (mid[1] - 0.12) * k, (R[0] - 0.3) * k, (mid[1] - 0.12) * k, R[0] * k, R[1] * k)
+  }
+  p.stroke(KIT.chrome)
+  p.strokeWeight(weight * 0.7)
+  p.bezier(L[0] * k, (L[1] - 0.02) * k, (L[0] + 0.3) * k, (mid[1] - 0.14) * k, (R[0] - 0.3) * k, (mid[1] - 0.14) * k, R[0] * k, (R[1] - 0.02) * k)
+  // The cradle: a shallow dish, its top the rim he sits in, its underside curved.
+  const top = mid[1] - 0.1
+  const half = 0.2
+  p.stroke(STEEL_EDGE)
+  p.strokeWeight(weight * 0.8)
+  p.fill(STEEL)
+  p.beginShape()
+  for (let i = 0; i <= 16; i++) {
+    const u = i / 16
+    const x = mid[0] - half + 2 * half * u
+    p.vertex(x * k, (top + 0.1 * Math.sin(Math.PI * u) ** 0.8 + 0.012) * k)
+  }
+  for (let i = 16; i >= 0; i--) {
+    const u = i / 16
+    const x = mid[0] - half * 0.82 + 2 * half * 0.82 * u
+    p.vertex(x * k, (top + 0.035 * Math.sin(Math.PI * u)) * k)
+  }
+  p.endShape(p.CLOSE)
+  p.noFill()
+  p.stroke(KIT.chrome)
+  p.strokeWeight(weight * 0.7)
+  p.line((mid[0] - half * 0.95) * k, (top + 0.004) * k, (mid[0] - half * 0.55) * k, (top + 0.022) * k)
 }
 
 /**
@@ -272,10 +341,9 @@ function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
 
 /** The yoke, the cup, and the two lines up into the flies. */
 function drawFrame(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const L = shoulder('left', T)
   const R = shoulder('right', T)
-  const mid: Pt = [(L[0] + R[0]) / 2, (L[1] + R[1]) / 2 - 0.05]
   // The lines, up out of sight, fading into the dark above the light.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const q of [L, R]) {
@@ -293,17 +361,7 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
     ctx.stroke()
     ctx.restore()
   }
-  // The yoke: a bar across the shoulders, bowed up under the cup.
-  p.noFill()
-  for (const [w, col] of [[5.4, ink], [3.0, KIT.chrome]] as const) {
-    p.stroke(col)
-    p.strokeWeight(weight * w)
-    p.bezier(L[0] * k, L[1] * k, (L[0] + 0.3) * k, (mid[1] - 0.12) * k, (R[0] - 0.3) * k, (mid[1] - 0.12) * k, R[0] * k, R[1] * k)
-  }
-  // The cup his head sits in: a black crescent on the yoke.
-  const cup: Pt = [mid[0], mid[1] - 0.09]
-  solid(p, ink, weight * 0.8, KIT.lacquer)
-  p.arc(cup[0] * k, cup[1] * k, 0.42 * k, 0.26 * k, 0.05, Math.PI - 0.05, p.CHORD)
+  drawYoke(p, c, L, R)
 }
 
 function drawFoot(p: p5, c: Ctx, T: number): void {

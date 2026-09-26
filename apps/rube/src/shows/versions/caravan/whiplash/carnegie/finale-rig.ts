@@ -8,7 +8,7 @@ import { CYMBALS, KICKS, SNARES, level } from '../music'
 import { KIT } from '../worlds'
 import { NOD_BACK } from './conductor'
 import { CHORD_HIT, CUT, F_FLY, F_LEAP, F_SEATED, ROLL, STICKS_UP } from './finale-clock'
-import { FORE, LIMP, NECK, SHOULDER_AT, UPPER, ampOf, clampBlock, elbowOf, liftShape, smoother, tube, upSign } from './solo-rig'
+import { FORE, LIMP, NECK, SHOULDER_AT, UPPER, ampOf, clampBlock, drawYoke, elbowOf, liftShape, smoother, tube, upSign } from './solo-rig'
 import { HOLD, STICK, TARGETS, type Arm, type Grip } from './solo-score'
 
 /**
@@ -358,10 +358,9 @@ function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
 }
 
 function drawFrame(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const L = shoulder('left', T)
   const R = shoulder('right', T)
-  const mid: Pt = [(L[0] + R[0]) / 2, (L[1] + R[1]) / 2 - 0.05]
   // The lines, up out of sight, fading into the dark above the light.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const q of [L, R]) {
@@ -378,15 +377,7 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
     ctx.stroke()
     ctx.restore()
   }
-  p.noFill()
-  for (const [w, col] of [[5.4, ink], [3.0, KIT.chrome]] as const) {
-    p.stroke(col)
-    p.strokeWeight(weight * w)
-    p.bezier(L[0] * k, L[1] * k, (L[0] + 0.3) * k, (mid[1] - 0.12) * k, (R[0] - 0.3) * k, (mid[1] - 0.12) * k, R[0] * k, R[1] * k)
-  }
-  const cup: Pt = [mid[0], mid[1] - 0.09]
-  solid(p, ink, weight * 0.8, KIT.lacquer)
-  p.arc(cup[0] * k, cup[1] * k, 0.42 * k, 0.26 * k, 0.05, Math.PI - 0.05, p.CHORD)
+  drawYoke(p, c, L, R)
 }
 
 function drawFoot(p: p5, c: Ctx, T: number): void {
