@@ -169,6 +169,32 @@ export function anchorIn(show: LifeShow, s: number, leg: number): Pt {
 }
 
 /**
+ * How far Ellie's mark (her dot, which way she looks) is turned at `t`: the ball's own roll, her place over `R`, in the
+ * place she is in. At a match cut her place on the screen carries across but her place in the new world's cells does
+ * not, so the roll alone would flick her dot round on the cut: across it she goes on looking the way she was, and
+ * turns to the new place's own look over `LOOK_ROUND` seconds (the short way round, eased at both ends).
+ */
+const LOOK_ROUND = 1.6
+export function ellieSpin(show: LifeShow, t: number): number {
+  const e = show.ellie(t)
+  if (!e) return 0
+  const own = e.x / R
+  const leg = show.owner(t)
+  const t0 = leg > 0 ? show.legs[leg].from : -Infinity
+  if (t - t0 >= LOOK_ROUND) return own
+  const before = show.ellie(t0 - 1e-4)
+  const after = show.ellie(t0 + 1e-4)
+  if (!before || !after) return own
+  // Only where she is in the same place in the picture on both sides (not where the cut finds her somewhere else).
+  const [bx, by] = carry(show, [before.x, before.y], leg - 1, leg)
+  if (Math.hypot(bx - after.x, by - after.y) > 0.05) return own
+  const d = ellieSpin(show, t0 - 1e-4) - after.x / R
+  const turn = d - 2 * Math.PI * Math.round(d / (2 * Math.PI))
+  const u = Math.max(0, Math.min(1, (t - t0) / LOOK_ROUND))
+  return own + turn * (1 - u * u * u * (u * (u * 6 - 15) + 10))
+}
+
+/**
  * The balloon's string at `t`, from the knot to where it is tied: its own length, or a tie's (`Tie.string`), taken in
  * over the second after the knot arrives (the balloon settling down to her) and let out again over 2.2 s after the
  * tie's span ends, so across the cut it rises back to its length. Quintic eases: no kick at either end.
@@ -296,7 +322,7 @@ export const cast = scenery<CastState>({
           p.pop()
         },
       )
-      const spin = ellie.x / R
+      const spin = ellieSpin(show, t)
       const size = ellie.scale ?? 1
       // Settled a little onto the floor with the years: flattened on the vertical about her bottom, under whatever
       // squash or stretch a part gives her.
