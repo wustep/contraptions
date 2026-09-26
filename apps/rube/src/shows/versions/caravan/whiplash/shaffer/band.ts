@@ -3,7 +3,8 @@ import { box, part, type Company, type PartShot, type Slot } from '../kit'
 import { ONSETS, QUIET, TEMPO } from '../music'
 import { KX, KY, PIT, ROOM_TOP, WALL_R } from './band-plan'
 import {
-  ANSWER, BAND_WALK, BEAT, BUMP, DOOR_IN, DOOR_SHUT, FILL, LANDINGS, PIT_BOUNCES, SEATED, SEAT_TAPS, TANNER_DOWN, THERE, TURNS, YOU,
+  ANSWER, BAND_WALK, BEAT, BUMP, DOOR_IN, DOOR_SHUT, FILL, LANDINGS, PEAK, PIT_BOUNCES, SEATED, SEAT_TAPS, TANNER_DOWN, THERE, TURNS, TUTTI,
+  YOU,
 } from './band-motion'
 import { ROOM_KIT, fletcherHead, tannerAt } from './band-people'
 import { drawBandRoom } from './bandroom'
@@ -24,6 +25,10 @@ import { drawBandRoom } from './bandroom'
  * The room is `bandroom.ts` (drawn here for both parts), the timing and his path `band-motion.ts`, the people
  * `band-people.ts`.
  */
+
+/** The first page after he is seated, and the tutti's page (his hop down from it). */
+const FIRST = TURNS[0] as Required<(typeof TURNS)[number]>
+const TUTTI_DOWN = TURNS[2].down as number
 
 const upBeats = [LANDINGS[0], LANDINGS[1]].map((t) => t + BEAT / 2)
 const turnBeats = TURNS.flatMap((t) => [t.up, t.page, t.down]).filter((t): t is number => t !== undefined)
@@ -73,21 +78,36 @@ export const band = part<BandState>(
     { t: THERE + 0.4, cells: 6.2, hold: [13.8, 0.55], w: 1 },
     // His place: the chair, the chart; Fletcher at the edge of it.
     { t: SEATED, cells: 5.8, hold: [16.0, 0.4], w: 1 },
-    { t: 49.4, cells: 5.8, hold: [16.3, 0.3], w: 1 },
+    // The first page, as an insert: in on the chart as he hops up onto its ledge, the desk big in frame and Fletcher's
+    // hand at its edge, the page carried over by him; out again with his hop down to the seat.
+    { t: FIRST.up - 2.4 * BEAT, cells: 3.5, hold: [15.75, 0.1], w: 1 },
+    { t: FIRST.up, cells: 2.45, hold: [15.45, -0.72], w: 1 },
+    { t: FIRST.page + 0.04, cells: 2.4, hold: [15.42, -0.74], w: 1 },
+    { t: FIRST.down + 0.6, cells: 4.7, hold: [15.6, 0.25], w: 1 },
     // Back to take in the saxophones and trombones at work, the conductor, the page turner.
     { t: 51.6, cells: 7.4, hold: [13.3, -0.4], w: 1 },
-    // Wide for the tutti: the trumpets stand, his hands go up, the page goes over in the breath.
-    { t: 55.3, cells: 8.8, hold: [11.9, -1.25], w: 1 },
-    { t: ANSWER + 0.6, cells: 8.8, hold: [12.4, -1.15], w: 1 },
+    { t: 53.95, cells: 7.2, hold: [13.0, -0.7], w: 1 },
+    // The tutti, up among the heads and the bells: the trumpets standing behind him as his beat grows; in on his two
+    // hands flung up on the biggest hit, the saxophones' bells lifting behind them, the chart under them; they drop
+    // to his chest as the page goes over in the breath; out with Andrew's hop down to his seat.
+    { t: TUTTI - 0.05, cells: 5.0, hold: [10.9, -1.85], w: 1 },
+    { t: TUTTI + 0.85, cells: 4.8, hold: [11.4, -1.85], w: 1 },
+    { t: PEAK - 0.08, cells: 3.85, hold: [14.0, -1.3], w: 1 },
+    { t: ANSWER + 0.34, cells: 3.4, hold: [14.5, -1.2], w: 1 },
+    { t: TUTTI_DOWN, cells: 4.4, hold: [16.3, 0.3], w: 1 },
     // The alternate and the drummer, keeping the same time: Andrew tapping on his seat, Tanner playing his kit.
     // (Loose enough that both balls stay inside under Zoom.)
     { t: 61.8, cells: 5.2, hold: [19.37, 0.62], w: 1 },
     { t: 64.4, cells: 5.1, hold: [19.35, 0.6], w: 1 },
     // A page, and Fletcher's eye on him.
-    { t: 67.2, cells: 5.8, hold: [16.6, 0.25], w: 1 },
-    // Across to the band at work, the bells lifting on its hits, Fletcher driving it; back to all three of them.
-    { t: 70.0, cells: 8.4, hold: [10.8, -1.05], w: 1 },
-    { t: 72.9, cells: 6.6, hold: [17.9, 0.1], w: 1 },
+    { t: 66.9, cells: 5.8, hold: [16.6, 0.25], w: 1 },
+    // Across and up to the band at work, then along the tiers at the bells' height: from the trumpets down past the
+    // trombones (centred on their hit, 71.58) to the saxophones, and on out to all three of them.
+    { t: 68.6, cells: 7.0, hold: [10.8, -0.5], w: 1 },
+    { t: 70.0, cells: 3.8, hold: [6.4, -1.8], w: 1 },
+    { t: 71.58, cells: 3.7, hold: [8.8, -1.1], w: 1 },
+    { t: 72.5, cells: 3.8, hold: [11.3, -0.45], w: 1 },
+    { t: 74.3, cells: 6.6, hold: [17.9, 0.1], w: 1 },
     { t: YOU, cells: 6.6, hold: [17.9, 0.15], w: 1 },
     // Onto the kit.
     { t: 78.3, cells: 5.4, hold: [19.9, 0.2], w: 1 },
