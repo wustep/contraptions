@@ -168,8 +168,51 @@ export function anchorIn(show: LifeShow, s: number, leg: number): Pt {
   return [own[0] + (tx - own[0]) * e, own[1] + (ty - own[1]) * e]
 }
 
-/** The balloon at `t`: where it is and where it is tied, in the cells of the leg on the stage. Null before it is his. */
+/**
+ * The balloon's string at `t`, from the knot to where it is tied: its own length, or a tie's (`Tie.string`), taken in
+ * over the second after the knot arrives (the balloon settling down to her) and let out again over 2.2 s after the
+ * tie's span ends, so across the cut it rises back to its length. Quintic eases: no kick at either end.
+ */
+function stringAt(show: LifeShow, t: number): number {
+  const ease = (u: number) => {
+    const v = Math.max(0, Math.min(1, u))
+    return v * v * v * (v * (v * 6 - 15) + 10)
+  }
+  let L = BALLOON_SIZE.string
+  for (const tie of show.ties) {
+    if (tie.string === undefined || t < tie.arrive - 0.1) continue
+    const into = ease((t - (tie.arrive - 0.1)) / 1.2)
+    const out = t < tie.to ? 0 : ease((t - tie.to) / 2.2)
+    L += (tie.string - BALLOON_SIZE.string) * into * (1 - out)
+  }
+  return L
+}
+
+/**
+ * The balloon at `t`: where it is and where it is tied, in the cells of the leg on the stage. Null before it is his.
+ * Across the cut where a short tie ends (her bedside into the church), the knot is his again but the balloon goes on
+ * from exactly where it was in the picture, and drifts over to where it rides on him while its string is let out.
+ */
 export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
+  const b = riding(show, t)
+  if (!b) return null
+  const leg = show.owner(t)
+  for (const tie of show.ties) {
+    if (tie.string === undefined || t < tie.to || t >= tie.to + 2.2) continue
+    const was = riding(show, tie.to - 1e-4)
+    const now = riding(show, tie.to + 1e-4)
+    if (!was || !now || show.owner(tie.to + 1e-4) !== leg) continue
+    const [wx, wy] = carry(show, was.at, show.owner(tie.to - 1e-4), leg)
+    const u = Math.min(1, (t - tie.to) / 2.2)
+    const left = 1 - u * u * u * (u * (u * 6 - 15) + 10)
+    b.at = [b.at[0] + (wx - now.at[0]) * left, b.at[1] + (wy - now.at[1]) * left]
+    b.sway += (was.sway - now.sway) * left
+  }
+  return b
+}
+
+/** Where the balloon rides at `t` on its string from where it is tied, lagging where it is tied in the still air. */
+function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number } | null {
   if (t < BALLOON_FROM) return null
   const leg = show.owner(t)
   // It follows where it is tied with a lag: an average of where it would rest over the last second and a half,
@@ -204,7 +247,7 @@ export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway
   let dx = x + drift - anchor[0]
   let dy = y - anchor[1]
   const d = Math.hypot(dx, dy) || 1
-  const L = BALLOON_SIZE.string + BALLOON_SIZE.ry
+  const L = stringAt(show, t) + BALLOON_SIZE.ry
   dx = (dx / d) * L
   dy = (dy / d) * L
   const at: Pt = [anchor[0] + dx, anchor[1] + dy]

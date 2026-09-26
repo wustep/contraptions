@@ -358,19 +358,17 @@ export const hospital = part<HospitalState>(
   },
   (slot) => [
     // From the hill's close framing (`CUTS.hospital`), out and over to the lamp as he reaches for it, and up, so the
-    // balloon over him comes whole into the frame; back to the two of them as he gives it to her, the knot going across
-    // and the balloon floating over to her; the least bit in for her roll toward him (185.655, the film's touch) and
-    // his answer. From her pillow to the balloon's top is about 2.2 cells: Zoom (1/1.5) holds it and the two of them
-    // whole only from about 3.35 cells, with the frame's middle near a cell above them. (The plain frame then shows a
-    // sliver of the room's cut ceiling at its top, as it shows the floor's at the bottom.)
+    // balloon over him comes whole into the frame (its string is long while he holds it: Zoom wants about 3.35 cells
+    // with the frame's middle near a cell over them). Then he gives it to her, tied short, and it comes down to float
+    // just over her; the camera comes in with it to the two of them, closing on her roll toward him (185.655, the
+    // film's touch) and his answer, the balloon whole over them under Zoom, and stays a moment.
     { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },
-    { t: HAND.to + 0.25, cells: 3.45, hold: [O + 0.42, -0.98], w: 1 },
-    { t: TOUCH + 0.1, cells: 3.42, hold: [O + 0.36, -0.97], w: 1 },
-    // Then, as she is still again, the leaving starts: one very slow draw back from her touch, unbroken, through the
-    // cut to the church (`CUTS.funeral`) and on into it, a held shot that is still alive (about 0.03 log/s: parked,
-    // these last seconds with her read as a stall). The balloon whole over her; across the cut it is his again, and
-    // drifts back over him in the empty church.
-    { t: 187.6, cells: 3.6, hold: [O + 0.32, -0.96], w: 1 },
+    { t: HAND.to, cells: 3.36, hold: [O + 0.4, -0.97], w: 1 },
+    { t: TOUCH + 0.6, cells: 2.7, hold: [O + 0.36, -0.63], w: 1 },
+    { t: 187.1, cells: 2.67, hold: [O + 0.35, -0.62], w: 1 },
+    // Then, as she is still again, the leaving starts: one slow draw back, unbroken, through the cut to the church
+    // (`CUTS.funeral`) and on into it. The balloon whole over her; across the cut it is his again, and drifts back over
+    // him in the empty church as its string is let out.
     { t: slot.end, cells: CUTS.funeral.cells, hold: [O + CUTS.funeral.frame[0], CUTS.funeral.frame[1]], w: 1 },
   ],
 )
