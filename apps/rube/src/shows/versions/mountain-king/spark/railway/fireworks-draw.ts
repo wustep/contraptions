@@ -672,19 +672,38 @@ export function drawWheel(pen: Pen, L: Light[]): void {
   bar(pen, [cx + 0.75, GY], [cx + 0.05, GY - 1.1], 0.09, wood)
   const turn = -turned(t)
   const rimC = shade(L, WOOD, WOOD_LIT, cx, cy, 0.1)
-  // The spokes.
-  for (let i = 0; i < 4; i++) {
-    const a = turn + (i * Math.PI) / 2
-    bar(pen, [cx, cy], [cx + Math.cos(a) * (WHEEL_R - 0.03), cy + Math.sin(a) * (WHEEL_R - 0.03)], 0.065, rimC)
+  const rimD = shade(L, mixHex(WOOD, CHAR, 0.55), WOOD, cx, cy, 0.1)
+  // Six spokes, tapering from the hub: a cartwheel, not a cross-hair.
+  for (let i = 0; i < 6; i++) {
+    const a = turn + (i * Math.PI) / 3
+    const ca = Math.cos(a)
+    const sa = Math.sin(a)
+    const r0 = 0.2
+    const r1 = WHEEL_R - 0.08
+    quad(pen, [
+      [cx + ca * r0 - sa * 0.07, cy + sa * r0 + ca * 0.07],
+      [cx + ca * r1 - sa * 0.04, cy + sa * r1 + ca * 0.04],
+      [cx + ca * r1 + sa * 0.04, cy + sa * r1 - ca * 0.04],
+      [cx + ca * r0 + sa * 0.07, cy + sa * r0 - ca * 0.07],
+    ], rimC)
   }
-  // The rim.
+  // The rim: a broad wooden felloe, its inner edge in shade.
   const { ctx, k } = pen
-  ctx.strokeStyle = rimC
-  ctx.lineWidth = 0.09 * k
+  ctx.lineWidth = 0.2 * k
+  ctx.strokeStyle = rimD
   ctx.beginPath()
-  ctx.arc(cx * k, cy * k, WHEEL_R * k, 0, Math.PI * 2)
+  ctx.arc(cx * k, cy * k, (WHEEL_R - 0.03) * k, 0, Math.PI * 2)
   ctx.stroke()
-  // The hub: a square iron plate, turning.
+  ctx.lineWidth = 0.12 * k
+  ctx.strokeStyle = rimC
+  ctx.beginPath()
+  ctx.arc(cx * k, cy * k, (WHEEL_R + 0.01) * k, 0, Math.PI * 2)
+  ctx.stroke()
+  // The hub: a round wooden nave with an iron plate over it, turning.
+  ctx.fillStyle = rimD
+  ctx.beginPath()
+  ctx.arc(cx * k, cy * k, 0.34 * k, 0, Math.PI * 2)
+  ctx.fill()
   const hub: Pt[] = [0, 1, 2, 3].map((i) => [cx + 0.24 * Math.cos(turn + Math.PI / 4 + (i * Math.PI) / 2), cy + 0.24 * Math.sin(turn + Math.PI / 4 + (i * Math.PI) / 2)])
   quad(pen, hub, shade(L, FW.iron, IRON_LIT, cx, cy, 0.2))
   // The drivers: short tubes on the rim, each pointing back against the turn.
