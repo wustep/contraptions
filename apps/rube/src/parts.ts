@@ -391,6 +391,7 @@ export function ball(
   stretch = 1,
   angle = 0,
   ghost = false,
+  mark = true,
 ): void {
   if (scale <= 0.02) return
   const d = 2 * R * k * scale
@@ -413,7 +414,7 @@ export function ball(
   }
   solid(p, ink, weight * Math.min(1, scale * 1.5 + 0.3), color)
   p.ellipse(0, 0, d * stretch, d)
-  if (stretch < 1.4) {
+  if (stretch < 1.4 && mark) {
     p.noStroke()
     p.fill(ink)
     p.circle(Math.cos(spin - angle) * R * k * 0.48 * scale, Math.sin(spin - angle) * R * k * 0.48 * scale, d * 0.2)

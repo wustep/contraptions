@@ -92,12 +92,13 @@ export interface Performance {
   loop?: boolean
   /**
    * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
-   * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
+   * canvas sets none (`stage.ts`). A saved video has the same cards painted into its frame (`words.ts`); a saved PNG has
+   * none. Left out, there are none.
    */
   titles?(t: number): TitleCard[]
 }
 
-/** One card of words over the stage, as the page is to set it at a moment. */
+/** One card of words over the stage, as the page is to set it at a moment (and a video's frame to paint it). */
 export interface TitleCard {
   /** Stable while the card is up: the page builds it once and only fades it. */
   key: string
@@ -119,10 +120,11 @@ export interface TitleCard {
   /** Where its top middle sits, as shares of the 16:9 frame. */
   at: [number, number]
   /**
-   * Where its top sits on a stage taller than 16:9 (a phone held upright), as a share of the whole stage's height
-   * instead of the frame's: for a card that belongs in the sky over a scene rather than on it. Optional.
+   * In a stage taller than 16:9 (a phone held upright), how far to lift it into the extra picture above the 16:9 box,
+   * as a share of that extra height: for a show whose credits come over a sky the tall stage shows more of. Left out,
+   * it stays where `at` puts it in the box.
    */
-  tall?: number
+  lift?: number
 }
 
 /** What a `.show.ts` file exports as its default. */

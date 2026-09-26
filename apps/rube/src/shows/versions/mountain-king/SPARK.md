@@ -1,6 +1,6 @@
 # Mountain King, Spark
 
-Open it at `/shows/?show=mountain-king&take=opus55-spark`. In the Shows picker it is **Spark**, a take of the work **Mountain King**. Directed by Claude Opus 5.5.
+Open it at `/shows/mountain-king/opus55-spark/` or `/shows/?show=mountain-king&take=opus55-spark`. In the Shows picker it is **Spark**, a take of the work **Mountain King**. Directed by Claude Opus 5.5.
 
 ## What it is
 
@@ -54,7 +54,7 @@ The three doors out are on phrase starts: 58.024 (statement 2), 82.053 (phrase 9
 - **The moon recedes as the fire takes the night.** It is laid out on the screen, not in the world. Off the smokestack it rises into its place as the camera pulls out, instead of standing beside the close-up spark. From the festival on it dims, its edge goes soft (a gradient; a canvas blur filter cost a whole frame in software) and a bank of smoke drifts across it, so from the Titan through the silence it is a smudge and the dying ember is the light (`railway/night.ts`, `moonLight`).
 - **Machines in the quiet stretches.** The two stretches of statement 1 and 2 that were a ball touring props are machines now: the reel of wick the spark rides across the loft's floor (`loft/stove-spool.ts`), and the ringing carriage in the glassworks (`glass/glass-plan.ts`, `drawCarriage`), whose bottles stand where its hammer comes down on each note, spaced wider as it speeds up.
 - **Nothing ball-sized near the hero.** The glory hole is an arched mouth on a sill, not a round port. The steam at the buffer stops is a soft wide sigh, not white puffs. Firework bursts are streaks and falling trails.
-- **The ending waits for the cat.** The stove door hangs open while the spark lands on its wick and swings late, slamming on the second last chord. The credits start at 154.2, after the cat has looked and gone back to sleep. They sit in the dark over the roof, and the camera frames the whole loft so the candle is below them with all its light. On a phone held upright they sit in the night sky over the roof: a title card may now carry an optional `tall`, its top as a share of the stage's height when the stage is much taller than 16:9 (`shows/registry.ts`, `shows/main.ts`).
+- **The ending waits for the cat.** The stove door hangs open while the spark lands on its wick and swings late, slamming on the second last chord. The credits start at 154.2, after the cat has looked and gone back to sleep. They sit in the dark over the roof, and the camera frames the whole loft so the candle is below them with all its light. On a phone held upright they lift most of the way into the night sky over the roof (the house's `lift` on a title card, 0.7).
 - **Known weaknesses.** The two-shot of the second knock (28.6 to 29.3 s) is as close as the Zoom check allows with the cat's head in, so the cat is small in it. On the Niagara wire (128.8 to 133.7 s) some of the far bank's bursts are cropped by the frame's top edge. The spent Catherine wheel stands whole at the left of the Titan's wide frame. The regatta's horizon stays at the same height through the crescendo; the climb reads from the regatta falling away below the top balloon.
 
 ## How it is built
@@ -71,6 +71,6 @@ The three doors out are on phrase starts: 58.024 (statement 2), 82.053 (phrase 9
 
 ## How to run it
 
-- `npx vite --port 8971 --strictPort`, then open `/shows/?show=mountain-king&take=opus55-spark`.
+- `npx vite --port 8971 --strictPort`, then open `/shows/mountain-king/opus55-spark/`.
 - `npm run check:shows` for the show's checks; `npm run build` runs every check and the site build.
 - The card: `npm run cards` with a dev server up redraws every take's card. Nothing else needs regenerating: the onsets file is measured once, and the mp3 is the recording as downloaded (`scripts/shows/mountain-king-cue.sh`).

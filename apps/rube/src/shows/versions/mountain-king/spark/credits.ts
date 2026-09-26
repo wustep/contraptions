@@ -67,8 +67,11 @@ export const LAST_GONE = (() => {
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, in the dark of the roof over the candle. */
 const AT: [number, number] = [0.5, 0.09]
-/** On a phone held upright the stage is much taller than the frame: there the cards sit in the night sky over the roof. */
-const TALL = 0.13
+/**
+ * On a phone held upright the stage is much taller than the frame: the cards lift most of the way into the extra
+ * picture above it, so they sit in the night sky over the roof.
+ */
+const LIFT = 0.7
 
 /** How far up a card is at `t` (0..1), and how far it still has to settle (hundredths of the frame). */
 function lightOf(card: Card, t: number): { light: number; rise: number } {
@@ -86,7 +89,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `spark-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, tall: TALL })
+    out.push({ key: `spark-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT })
   })
   return out
 }

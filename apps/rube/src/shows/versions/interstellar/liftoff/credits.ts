@@ -15,9 +15,9 @@ import { BALL, BRAND, MURPH } from './worlds'
  * focus, and the stars drift apart again. After the last, the camp holds
  * alone at dawn to the end.
  *
- * Two halves. The words are the page's: a show's canvas sets no type, and a
- * saved frame or a recorded video has none (`shows/stage.ts`), so the player
- * sets them over the frame from `creditsAt` in its own face. The starlight
+ * Two halves. The words are the page's: a show's canvas sets no type
+ * (`shows/stage.ts`), so the player sets them over the frame from `creditsAt`
+ * in its own face, and a saved video has them painted in (`shows/words.ts`). The starlight
  * is the canvas's: this scenery, drawn over everything.
  */
 
