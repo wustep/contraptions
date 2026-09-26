@@ -9,7 +9,7 @@ import { KIT, ROAD } from '../worlds'
 import { SEAT } from './crash-car'
 import { ease, kick, ring } from './crash-paint'
 import {
-  BAY_Y, BUTTON, CAN_X, FL, FLETCH, KX, MACHINE, SHELF_Y, WALL, WING_L, WING_R, drawBackstage, drawBackstageLight, drawBand, drawCases, drawDoorLight, drawFolder,
+  BAY_Y, BUTTON, CAN_X, FL, FLETCH, KX, MACHINE, SHELF_Y, TRAP, WALL, WING_L, WING_R, drawBackstage, drawBackstageLight, drawBand, drawCases, drawDoorLight, drawFolder,
   drawMachine, drawMachineLight, drawStage, drawStageLight, drawWall, drawWing, type MachineLook,
 } from './folder-set'
 
@@ -214,9 +214,10 @@ const ANDREW = (() => {
   a.hop([-2.6, FLOOR_Y], OFF, G_EARTH, (FLOOR_Y - 1.1) / 4)
   // Back up the cases: the step, the trap case; the lid is bare.
   a.go([-2.55, FLOOR_Y], CLIMB1, 'out').hop([-1.8, STEP_Y], UP1, 16).rest(CLIMB2).hop([-0.5, 0], UP2, 14)
-  a.rest(180.95).go([0.2, 0], 181.6).rest(181.8).go([0.3, 0], 182.1).go([0.2, 0], 182.45)
+  // Onto the spot where it lay; a look round it; and aside onto the next case as Tanner comes up.
+  a.rest(180.95).go([0.25, 0], 181.55).rest(181.85).go([0.38, 0], 182.05).go([0.25, 0], 182.3).go([0.7, 0], 182.85)
   // Fletcher: he shrinks at the shout, then rolls toward him ("I know it"); the point.
-  a.rest(184.85).go([0.1, 0], 185.15).go([0.55, 0], 185.85).rest(186.3)
+  a.rest(184.85).go([0.6, 0], 185.15).go([0.95, 0], 185.85).rest(186.3)
   // Along the cases and off their end, past the wing, onto the kit.
   a.go([4.46, 0], LEAP, 'in').hop(onKit('floor'), STROKES[0][0])
   // The number: from piece to piece on the band's hits.
@@ -262,9 +263,10 @@ const TANNER_B = new Path(180.7, [-6.0, FLOOR_Y])
   .hop([-1.8, STEP_Y], T_UP1)
   .hop([-0.5, 0], T_UP2, 15)
   .rest(182.75)
-  .go([-0.24, 0], 183.1)
-  .go([-0.6, 0], 183.55)
-  .go([-0.36, 0], 183.95)
+  // Onto the bare spot where his chart was, and back and forth over it: lost.
+  .go([0.15, 0], 183.2)
+  .go([-0.2, 0], 183.6)
+  .go([0.08, 0], 184.0)
   .go([-0.58, 0], 184.4)
   .rest(186.15)
   .go([-1.1, 0], 186.3, 'in')
@@ -405,11 +407,27 @@ function drawFolderPart(p: p5, s: FolderState, c: Ctx): void {
   if (fo) drawFolder(p, c, fo.x, 0.13, fo.rock, back)
   // Out of the dark on the cut: the backstage opens under the practice room's darkness and wakes with the tubes.
   if (back < 0.99) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
     p.noStroke()
     p.fill(c.bg)
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 1 - back
+    ctx.globalAlpha = 1 - back
     p.rect(((f.x0 + Math.min(f.x1, WING_L.x1)) / 2) * k, ((f.y0 + f.y1) / 2) * k, (Math.min(f.x1, WING_L.x1) - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
-    ;(p.drawingContext as CanvasRenderingContext2D).globalAlpha = 1
+    // The case he sits on stays faintly there from the first frame (its lid and the top of it, fading down into the
+    // dark), so he is sitting on something while the rest wakes round him.
+    ctx.save()
+    ctx.globalAlpha = 0.5 * (1 - back)
+    ctx.beginPath()
+    ctx.rect((TRAP.x0 - 0.2) * k, (TRAP.top - 0.2) * k, (TRAP.x1 - TRAP.x0 + 0.4) * k, 1.1 * k)
+    ctx.clip()
+    drawCases(p, c, 0.35)
+    const fade = ctx.createLinearGradient(0, (TRAP.top + 0.15) * k, 0, (TRAP.top + 0.9) * k)
+    fade.addColorStop(0, 'rgba(0,0,0,0)')
+    fade.addColorStop(1, c.bg)
+    ctx.globalAlpha = 1
+    ctx.fillStyle = fade
+    ctx.fillRect((TRAP.x0 - 0.3) * k, (TRAP.top + 0.15) * k, (TRAP.x1 - TRAP.x0 + 0.6) * k, 0.8 * k)
+    ctx.restore()
+    ctx.globalAlpha = 1
   }
   // The stage: the band behind Fletcher's place, the kit, Fletcher's rig.
   const up = ease(T, DOWNBEAT - 0.55, DOWNBEAT - 0.05) * (1 - ease(T, CORE + 1.2, CORE + 2.4))
@@ -458,20 +476,22 @@ export const folder = part<FolderState>(
     }
   },
   (slot: Slot): PartShot[] => [
-    // The match cut: held on him in the dark; the room waking round him; Tanner and the folder.
+    // The match cut: held on him in the dark; the room waking round him; Tanner and the folder, framed on the two of
+    // them and the folder on the lid (the framing the bare lid gets later).
     { t: slot.begin, cells: 3.5, hold: [-0.5, 0], w: 1 },
-    { t: LIGHTS + 0.3, cells: 3.9, hold: [-0.1, -0.15], w: 1 },
-    { t: HANDED, cells: 4.6, hold: [0.6, -0.3], w: 1 },
-    // Down the cases with him, and over to the machine (the folder left out of the frame).
-    { t: 175.4, cells: 4.6, hold: [-1.2, 0.35], w: 1 },
-    { t: 176.6, cells: 4.9, hold: [-4.7, 0.62], w: 1 },
-    { t: 179.1, cells: 4.9, hold: [-4.65, 0.62], w: 1 },
-    // Back up: the bare lid.
-    { t: 180.2, cells: 4.4, hold: [-1.5, 0.82], w: 1 },
-    { t: 181.4, cells: 4.4, hold: [-0.3, -0.05], w: 1 },
-    { t: 182.6, cells: 4.8, hold: [0.15, -0.25], w: 1 },
+    { t: LIGHTS + 0.3, cells: 3.7, hold: [-0.2, -0.15], w: 1 },
+    { t: HANDED, cells: 3.3, hold: [0.05, -0.3], w: 1 },
+    // Down the cases with him, the folder left on the lid behind him; over to the machine.
+    { t: 175.6, cells: 3.6, hold: [-0.45, -0.1], w: 1 },
+    { t: 176.9, cells: 4.9, hold: [-4.5, 0.6], w: 1 },
+    { t: 178.95, cells: 4.9, hold: [-4.55, 0.62], w: 1 },
+    // Back up, into the same frame as before: the lid bare. He rolls onto the spot and looks round it; Tanner comes
+    // up, onto the spot, lost.
+    { t: 180.8, cells: 3.2, hold: [0.05, -0.3], w: 1 },
+    { t: 182.3, cells: 3.25, hold: [0.12, -0.3], w: 1 },
+    { t: 183.4, cells: 3.4, hold: [0.3, -0.35], w: 1 },
     // Fletcher comes off the stage at them.
-    { t: 184.5, cells: 5.6, hold: [1.5, -0.55], w: 1 },
+    { t: 184.9, cells: 5.4, hold: [1.5, -0.55], w: 1 },
     { t: POINT, cells: 5.4, hold: [1.4, -0.5], w: 1 },
     // Along the cases, onto the kit; the number.
     { t: 187.6, cells: 5.4, hold: [3.4, -0.6], w: 1 },

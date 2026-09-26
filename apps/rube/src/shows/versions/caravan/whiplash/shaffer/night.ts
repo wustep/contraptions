@@ -168,10 +168,12 @@ function lampLight(T: number): number {
   const on = T - LAMP_ON
   if (on < 0.14) return Math.min(1, on / 0.05) * (1 - 0.35 * Math.exp(-((on - 0.07) ** 2) / 0.0006))
   if (T < BULB) {
-    // The last few seconds, swinging hard, the filament flickers.
+    // The last few seconds, swinging hard, the filament flickers; in the last half second it browns out, so the
+    // room is already going dark round him when it blows.
     const late = smooth(T, BULB - 4, BULB - 0.3)
     const f = hash(Math.floor(T * 24), 3, 11)
-    return 1 - late * (f > 0.72 ? 0.18 * (f - 0.72) / 0.28 : 0)
+    const brown = 1 - 0.5 * smooth(T, BULB - 0.6, BULB - 0.04)
+    return brown * (1 - late * (f > 0.72 ? 0.18 * (f - 0.72) / 0.28 : 0))
   }
   const s = T - BULB
   if (s < 0.045) return 1.3
