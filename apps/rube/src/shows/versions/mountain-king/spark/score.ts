@@ -14,6 +14,7 @@ import { sneak } from './loft/sneak'
 import { stove } from './loft/stove'
 import { home, HOME_AT } from './loft/home'
 import { glassworks, GLORY_AT } from './glass/glassworks'
+import { SLAM } from './glass/glass-plan'
 import { balloons, BURNER_AT } from './regatta/balloons'
 import { night } from './railway/night'
 import { express } from './railway/express'
@@ -74,12 +75,14 @@ const PLAN = (): LegPlan[] => [
 
 /**
  * The camera takes the show's biggest hits in the body: on each it pushes in a little, at once, and eases back. Only
- * the great ones: the doors into statements 2 and 3, the crash (the coda's first chord, the show's structural climax,
+ * the great ones: the doors into statements 2 and 3, the glassworks' carriage slamming home (80.18, statement 2's
+ * loudest note), the crash (the coda's first chord, the show's structural climax,
  * though it measures under the heaviest), the coda's heaviest chords, the six hammer blows (each a salute's flash-bang
  * in the field, the last the heaviest as the spark comes down in the ash), and the two last.
  */
 const PUNCHES: [number, number][] = [
   [DOORS.glass, 0.5],
+  [SLAM, 0.5],
   [DOORS.railway, 0.9],
   [CODA[0].t, 0.9],
   ...CODA.filter((c) => c.s >= 6).map((c) => [c.t, 0.7] as [number, number]),

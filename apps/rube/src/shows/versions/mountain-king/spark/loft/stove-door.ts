@@ -66,9 +66,10 @@ export function doorAngle(t: number): number {
   let a = WIDE * (1 - Math.exp(-b / 0.045))
   a -= 0.22 * Math.exp(-b / 0.16) * Math.max(0, Math.sin(Math.max(0, b - 0.09) * 11))
   if (t < BANG) {
-    // Drawn shut by the fire's draught: slow at first, faster and faster, and it slams on the chord.
-    const u = Math.max(0, (t - (BANG - 0.95)) / 0.95)
-    return Math.max(0, a * (1 - Math.pow(u, 2.4)))
+    // Drawn shut by the fire's draught, late: it hangs wide while the spark lands on its wick, then swings, faster and
+    // faster, and slams on the chord. (Seen face on, a door a quarter open already looks shut, so the swing is short.)
+    const u = Math.max(0, (t - (BANG - 0.55)) / 0.55)
+    return Math.max(0, a * (1 - Math.pow(u, 2.0)))
   }
   // After the bang: a small rattle against the frame, and still.
   const s = t - BANG
