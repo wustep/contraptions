@@ -199,6 +199,12 @@ const STONES: Stone[] = [
   dropped(45.35, -2.2, 8.13, 143.199, 1.1, 12, { spike: true, shatter: true }),
   dropped(50.15, -2.0, 8.13, 144.12, 0.7, 13),
   dropped(44.5, -2.3, 8.13, 144.84, 0.55, 14, { shatter: true }),
+  // The hammer blows: the vault itself comes down, a great slab on each of four blows (the braziers spill their
+  // fire on the other two, `hall.ts`), loosening in the vault a beat before and landing on the blow.
+  dropped(63.3, -0.3, 8.13, 145.345, 2.1, 40),
+  dropped(42.7, -0.5, 8.13, 145.847, 1.8, 41),
+  dropped(56.3, -1.9, 8.13, 146.107, 1.6, 42),
+  dropped(52.4, -2.5, 8.13, 146.348, 2.4, 43),
 ]
 
 /* ------------------------------------------------------------------ the cap, blown out */
@@ -304,16 +310,16 @@ const CAP_Y = -20.4
  */
 const TUMBLES: Laid[] = (
   [
-    { from: [47.0, CAP_Y], t0: LAST1, x1: 44.6, t1: 150.263, size: 0.72, seed: 21, roll: -3.1, dur: 1.9 },
-    { from: [48.2, CAP_Y], t0: LAST1, x1: 50.7, t1: 150.42, size: 0.62, seed: 22, roll: 1.5, dur: 1.5 },
+    { from: [47.0, CAP_Y], t0: LAST1, x1: 44.6, t1: 150.263, size: 1.45, seed: 21, roll: -3.1, dur: 1.9 },
+    { from: [48.2, CAP_Y], t0: LAST1, x1: 50.7, t1: 150.42, size: 1.2, seed: 22, roll: 1.5, dur: 1.5 },
     { from: [47.4, CAP_Y - 0.2], t0: LAST1, x1: 45.4, t1: 150.543, size: 0.46, seed: 23, roll: -2.3, dur: 1.5 },
-    { from: [46.6, CAP_Y + 0.1], t0: LAST1, x1: 42.3, t1: 150.995, size: 0.98, seed: 24, roll: -4.6, dur: 2.6 },
+    { from: [46.6, CAP_Y + 0.1], t0: LAST1, x1: 42.3, t1: 150.995, size: 1.9, seed: 24, roll: -4.6, dur: 2.6 },
     { from: [48.0, CAP_Y - 0.1], t0: LAST1, x1: 51.3, t1: 150.995, size: 0.42, seed: 25, roll: 1.1, dur: 1.2 },
-    { from: [48.6, CAP_Y + 0.1], t0: LAST1, x1: 52.5, t1: 151.248, size: 0.84, seed: 26, roll: 1.7, dur: 2.0 },
+    { from: [48.6, CAP_Y + 0.1], t0: LAST1, x1: 52.5, t1: 151.248, size: 1.6, seed: 26, roll: 1.7, dur: 2.0 },
     { from: [47.1, CAP_Y - 0.2], t0: LAST1, x1: 43.4, t1: 151.328, size: 0.56, seed: 27, roll: -3.2, dur: 2.0 },
-    // The surge throws the torn rim after them.
-    { from: [46.2, -20.6], t0: LAST2, x1: 44.9, t1: 150.42, size: 0.36, seed: 28, roll: -1.6, dur: 1.2 },
-    { from: [49.0, -20.8], t0: LAST2, x1: 50.0, t1: 150.263, size: 0.34, seed: 29, roll: 0.8, dur: 1.0 },
+    // The second chord tears the crown off after them: two great boulders of it, one down each flank.
+    { from: [46.0, -20.6], t0: LAST2, x1: 44.9, t1: 150.42, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
+    { from: [49.2, -20.8], t0: LAST2, x1: 50.3, t1: 150.263, size: 1.25, seed: 29, roll: 1.4, dur: 1.6 },
   ] as Tumble[]
 ).map(lay)
 
@@ -331,13 +337,15 @@ function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void 
     const x2 = b.x1 + b.roll
     puff(p, c, lx(x2) + q[0], ly(skyline(x2)) + q[1], T - b.t1 - b.dur * 0.55, b.size * 0.8, lit)
   }
-  const face = mixHex(STONE.dark, STONE.mid, 0.35 + 0.65 * lit)
-  const top = mixHex(STONE.mid, STONE.light, 0.3 + 0.7 * lit)
+  // Dark rock (the mountain's own), only the faces the dawn sees catching it.
+  const face = mixHex(STONE.deep, STONE.dark, 0.55 + 0.45 * lit)
+  const top = mixHex(STONE.mid, SKY.dawn, 0.12 + 0.3 * lit)
   const pts = turn(b.pts, where.angle)
   p.push()
   p.translate(x * k, y * k)
-  p.stroke(mixHex(ink, STONE.deep, 0.55))
-  p.strokeWeight(weight * 0.7)
+  p.stroke(mixHex(STONE.deep, '#000000', 0.25))
+  p.strokeWeight(weight * 0.6)
+  void ink
   p.fill(face)
   p.beginShape()
   for (const [a, v] of pts) p.vertex(a * k, v * k)
@@ -354,47 +362,43 @@ function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void 
 /* ------------------------------------------------------------------ the vent plugged */
 
 /**
- * After the blow-out the crater's torn rim falls back into the vent's throat: a jumble of blocks wedged in its top,
- * dropping in after the geyser has gone (on no strike: the chords have rung), so nothing straight-walled is left
- * open under the crater through the credits.
+ * After the blow-out the crater's torn rim falls back into the vent's throat: five dark boulders of different sizes,
+ * wedged at different angles across it and over the crater's lip, dropping in one after another (on no strike: the
+ * chords have rung), so nothing straight-walled is left open under the crater through the credits. Only their top
+ * faces catch the dawn; no pale outline (one outlined lump read as a cork).
  */
+const PLUG: { x: number; y: number; size: number; angle: number; seed: number; at: number }[] = [
+  { x: 47.35, y: -18.2, size: 1.05, angle: 0.5, seed: 61, at: 150.62 },
+  { x: 46.45, y: -18.75, size: 1.25, angle: -0.25, seed: 62, at: 150.78 },
+  { x: 48.35, y: -18.6, size: 1.35, angle: 0.3, seed: 63, at: 150.92 },
+  { x: 45.35, y: -19.5, size: 0.85, angle: 0.15, seed: 64, at: 151.05 },
+  { x: 49.55, y: -19.35, size: 0.95, angle: -0.45, seed: 65, at: 151.2 },
+]
 function plug(p: p5, c: Pen, T: number, q: Pt): void {
-  const { k, ink, weight } = c
+  const { k } = c
   const d = dawn(T)
-  // One mass of broken rock settling into the throat from the crater's lip, jagged across its top, its blocks' seams
-  // showing as dark cracks: not a stack of stones.
-  const at = 151.05
-  if (T < at - 0.55) return
-  const u = Math.min(1, Math.max(0, (T - (at - 0.55)) / 0.55))
-  const drop = 1.6 * (1 - u * u)
-  const X = (x: number) => (lx(x) + q[0]) * k
-  const Y = (y: number) => (ly(y + 0 - drop) + q[1]) * k
-  const top: Pt[] = [[46.6, -19.1], [46.95, -19.55], [47.25, -19.3], [47.6, -19.75], [47.95, -19.4], [48.2, -19.6], [48.45, -19.05]]
-  const pts: Pt[] = [...top, [48.4, -18.2], [48.1, -17.5], [47.5, -17.2], [46.9, -17.5], [46.65, -18.2]]
-  p.push()
-  p.stroke(mixHex(ink, STONE.deep, 0.65))
-  p.strokeWeight(weight * 0.6)
-  p.fill(mixHex(STONE.deep, STONE.dark, 0.7 + 0.3 * d))
-  p.beginShape()
-  for (const [x, y] of pts) p.vertex(X(x), Y(y))
-  p.endShape(p.CLOSE)
-  // Its top catches the day.
-  p.noStroke()
-  p.fill(mixHex(STONE.dark, STONE.mid, 0.3 + 0.5 * d))
-  p.beginShape()
-  for (const [x, y] of top) p.vertex(X(x), Y(y))
-  for (let i = top.length - 1; i >= 0; i--) p.vertex(X(top[i][0]), Y(top[i][1] + 0.12))
-  p.endShape(p.CLOSE)
-  // The seams between its blocks.
-  p.stroke(mixHex(STONE.deep, '#000000', 0.2))
-  p.strokeWeight(weight * 0.7)
-  p.noFill()
-  for (const seam of [[[47.25, -19.3], [47.1, -18.6], [47.4, -17.9]], [[47.95, -19.4], [48.05, -18.7], [47.8, -18.1]], [[47.1, -18.6], [47.75, -18.45], [48.05, -18.7]]] as Pt[][]) {
+  for (const b of PLUG) {
+    const t0 = b.at - 0.5
+    if (T < t0) continue
+    const u = Math.min(1, (T - t0) / 0.5)
+    // Falling in (gravity), then a small settle as it wedges.
+    const drop = 1.7 * (1 - u * u)
+    const settle = u >= 1 ? 0.05 * Math.exp(-(T - b.at) / 0.18) * Math.sin((T - b.at) * 22) : 0
+    const pts = turn(slabOf(b.seed, b.size), b.angle + settle + 0.35 * (1 - u))
+    p.push()
+    p.translate((lx(b.x) + q[0]) * k, (ly(b.y - drop) + q[1]) * k)
+    p.noStroke()
+    p.fill(mixHex(STONE.deep, STONE.dark, 0.5 + 0.3 * d))
     p.beginShape()
-    for (const [x, y] of seam) p.vertex(X(x), Y(y))
-    p.endShape()
+    for (const [a, v] of pts) p.vertex(a * k, v * k)
+    p.endShape(p.CLOSE)
+    p.fill(mixHex(STONE.dark, STONE.mid, 0.3 + 0.6 * d))
+    p.beginShape()
+    for (const [a, v] of pts) if (v < 0.04 * b.size) p.vertex(a * 0.8 * k, (v * 0.8 - 0.035 * b.size) * k)
+    p.endShape(p.CLOSE)
+    p.pop()
+    if (u >= 1) puff(p, c, lx(b.x) + q[0], ly(b.y) + q[1] + 0.3 * b.size, T - b.at, b.size * 0.8, 0.3 + 0.5 * d)
   }
-  p.pop()
 }
 
 /* ------------------------------------------------------------------ the trolls flee */
@@ -540,8 +544,8 @@ function drawRunners(p: p5, c: Pen, T: number, q: Pt, f: { x0: number; x1: numbe
  * and opens the east; the dawn and the geyser's glare show through them as they open, then they go dark.
  */
 const FLANKS = [
-  { from: 46.05, to: 39.6, at: LAST1, more: LAST2, seed: 31 },
-  { from: 49.0, to: 54.2, at: LAST2, more: LAST2, seed: 32 },
+  { from: 45.0, to: 39.6, at: LAST1, more: LAST2, seed: 31 },
+  { from: 50.1, to: 54.6, at: LAST2, more: LAST2, seed: 32 },
 ]
 
 function flankCracks(p: p5, c: Pen, T: number, q: Pt): void {
@@ -670,6 +674,59 @@ function dawnBurst(p: p5, c: Pen, T: number, f: { x0: number; x1: number; y0: nu
   ctx.restore()
 }
 
+/* ------------------------------------------------------------------ the bells' light */
+
+/** 0..1: the bells' shaft of light down the chimney's line into the heart, from the first chord, pulsing on the next two. */
+function bellLight(T: number): number {
+  if (T < CODA - 0.02) return 0
+  let a = smooth(T, CODA - 0.02, CODA + 0.3) * (1 - smooth(T, 135.5, 136.3))
+  for (const at of [135.146, 135.411]) if (T >= at - 0.03) a += 0.45 * smooth(T, at - 0.03, at + 0.02) * Math.exp(-(T - at) / 0.25)
+  return Math.min(1.3, a)
+}
+
+/**
+ * The bells (134.25), seen: a thin, cold-gold shaft of light falling from the heart's roof down the chimney's line onto
+ * the collar at its foot, soft-edged (a shaft, not a spotlight), where every troll in the room turns to look. It is
+ * the way out, shown before he takes it; the geyser fills it on the crash.
+ */
+function bellShaft(p: p5, c: Pen, T: number): void {
+  const a = bellLight(T)
+  if (a <= 0.005) return
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cx = lx(COL)
+  const top = ly(26.4)
+  const foot = ly(33.13)
+  const gold = rgb(mixHex(SKY.sun, SKY.morning, 0.35))
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  for (let i = 0; i < 5; i++) {
+    const v = (i + 1) / 5
+    const w0 = 0.12 + 0.3 * v
+    const w1 = 0.3 + 0.75 * v
+    const g = ctx.createLinearGradient(0, top * k, 0, foot * k)
+    g.addColorStop(0, `rgba(${gold},0)`)
+    g.addColorStop(0.18, `rgba(${gold},${(0.1 * a).toFixed(3)})`)
+    g.addColorStop(0.85, `rgba(${gold},${(0.075 * a).toFixed(3)})`)
+    g.addColorStop(1, `rgba(${gold},${(0.03 * a).toFixed(3)})`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((cx - w0) * k, top * k)
+    ctx.lineTo((cx + w0) * k, top * k)
+    ctx.lineTo((cx + w1) * k, foot * k)
+    ctx.lineTo((cx - w1) * k, foot * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  // Where it lands: a soft pool on the heart's floor round the collar.
+  const pool = ctx.createRadialGradient(cx * k, foot * k, 0, cx * k, foot * k, 1.4 * k)
+  pool.addColorStop(0, `rgba(${gold},${(0.22 * a).toFixed(3)})`)
+  pool.addColorStop(1, `rgba(${gold},0)`)
+  ctx.fillStyle = pool
+  ctx.fillRect((cx - 1.4) * k, (foot - 1.4) * k, 2.8 * k, 2.8 * k)
+  ctx.restore()
+}
+
 /* ------------------------------------------------------------------ the strikes */
 
 const LEGS = RISE.slice(1).map((b, i) => ({ a: RISE[i], b }))
@@ -771,6 +828,7 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - smooth(T, LAST2 + 0.9, LAST2 + 2.6)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1), shut: smooth(T, LAST2 + 1.2, LAST2 + 4) })
   if (T >= LAST2) plug(p, c, T, q)
   for (const fl of FLOORS) breach(p, c, ORIGIN, COL, fl, T, q)
+  bellShaft(p, c, T)
   collar(p, c, ORIGIN, COL, 33.13, q)
   capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, LAST1, (x) => skyline(x))
 
@@ -846,19 +904,24 @@ export const fall = part<State>(
       // lights, with him rising into the vent's mouth over it all.
       { t: 142.0, cells: 12.5, off: [0, -1.5] },
       { t: 143.5, cells: 14.5, hold: w(51.5, 1.2), w: 0.75 },
-      { t: 145.345, cells: 16.5, hold: w(53.5, 0.4), w: 0.9 },
-      { t: 146.107, cells: 16, hold: w(53.2, -0.4), w: 0.9 },
-      { t: 146.601, cells: 15, hold: w(52, -2.4), w: 0.8 },
-      // Up the dark vent after him through the silence, already opening out, so that by the roll the frame holds the
-      // summit whole, both flanks falling away from it and the sky over it: the cap blows out in a wide shot.
-      { t: 147.45, cells: 15.4, off: [0, -2.4] },
-      { t: 148.243, cells: 17.6, hold: w(48.3, -20.3), w: 0.9 },
+      // The hammer blows: the hall whole, opening out a little with each (16.5 to 18 cells), the vault's slabs and the
+      // spilled fires in it, and him surging into the vent's mouth over it.
+      { t: 145.345, cells: 16.5, hold: w(53.8, 1.0), w: 0.92 },
+      { t: 146.107, cells: 17.5, hold: w(53.2, 0.7), w: 0.94 },
+      { t: 146.601, cells: 18.5, hold: w(52, -0.5), w: 0.92 },
+      { t: 146.85, cells: 18, hold: w(50.6, -3.8), w: 0.9 },
+      // Up the dark vent after him through the silence, one even tilt (under a frame height a second), and in on him
+      // under the cap as the roll slams him against it; out again for the blow-out, the summit whole.
+      { t: 147.3, cells: 16.5, hold: w(48.8, -9.5), w: 0.9 },
+      { t: 148.0, cells: 13, hold: w(48.0, -17.5), w: 0.85 },
+      { t: 148.5, cells: 12, hold: w(48.0, -18.6), w: 0.85 },
       { t: LAST1, cells: 18.6, hold: w(48.6, -21.0), w: 0.95 },
       { t: LAST2, cells: 19.1, hold: w(49.3, -21.5), w: 0.92 },
-      // The plume surges out of the top of the frame; he is thrown across it east, the blocks tumbling down both flanks.
-      { t: 150.6, cells: 19.7, hold: w(51.3, -22.2), w: 0.82 },
-      { t: 151.8, cells: 19.9, hold: w(53.3, -22.4), w: 0.76 },
-      { t: 153.2, cells: 16.2, hold: w(56.3, -21.0), w: 0.62 },
+      // The plume surges; he is thrown across it east and the camera goes with him, close enough to see him (the
+      // plume and the broken summit behind him), down to the shoulder.
+      { t: 150.6, cells: 15, hold: w(51.0, -24.5), w: 0.5 },
+      { t: 151.4, cells: 12.5, hold: w(52.5, -25.0), w: 0.4 },
+      { t: 153.2, cells: 12, hold: w(56.5, -20.2), w: 0.55 },
       // In to him at rest in the hollow, the church in the valley: then one long crane back over the credits, from
       // the hollow to the whole mountain in cross-section at dawn, every place he lit on his way down still lit, the
       // broken hall dark, the chimney he came up: the lighting rule's payoff. (He stays in the frame under Zoom.)

@@ -58,14 +58,17 @@ export const CRATER = { x: 47.5, half: 1.55, depth: 1.8 }
 /** How much deeper than `skyline` the surface is at x, once the cap is blown out (LAST1): 0 elsewhere and before. */
 export function crater(x: number, t: number): number {
   if (t < LAST1) return 0
-  const dx = (x - CRATER.x) / CRATER.half
+  // The first chord blows the cap out; the second tears the crown off after it: the crater widens and deepens.
+  const more = smooth(t, LAST2, LAST2 + 0.15)
+  const half = CRATER.half + 1.25 * more
+  const dx = (x - CRATER.x) / half
   if (Math.abs(dx) >= 1) return 0
   const u = 1 - dx * dx
   // Broken, not turned: a little unevenness on the crater's walls.
   // Broken, not turned: stepped and uneven, a ledge left on each wall, the rim torn.
   const rough = 1 + 0.12 * Math.sin(dx * 7.3 + 1.1) + 0.07 * Math.sin(dx * 17.9) + 0.05 * Math.sign(Math.sin(dx * 11.7 + 0.4))
   const ledge = 0.22 * Math.exp(-Math.pow((Math.abs(dx) - 0.55) / 0.12, 2))
-  return (CRATER.depth * u * Math.sqrt(u) * rough - ledge * u) * smooth(t, LAST1, LAST1 + 0.08)
+  return ((CRATER.depth + 0.8 * more) * u * Math.sqrt(u) * rough - ledge * u) * smooth(t, LAST1, LAST1 + 0.08)
 }
 
 /** The mountain's surface at world x and show time t: the skyline, and the crater after the summit blows. */
@@ -332,7 +335,7 @@ function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number
   // A stave church after Borgund: steep dark shingled roofs stacked tight over a low skirt roof, each tier a short
   // wall and a steeper, narrower roof, dragon heads rearing from the upper gables, one tall spire; tarred black, the
   // east slopes catching the dawn. Tall and narrow: never the flared, spreading tiers of a pagoda.
-  const s = 1.3
+  const s = 1.8
   const u = (v: number) => v * s * k
   p.push()
   p.rectMode(p.CORNER)

@@ -16,7 +16,7 @@ import { LAST1, P, SILENCE } from './music'
  *   smoothstep), so it never reads as a second ball; screen-blended, warm amber inside the mountain, a cool moonlight
  *   outside it (before the tunnels and from the silence on);
  * - the rest of the frame darkened a little (13%) beyond about four cells from him, so he is always in the lightest
- *   part of it;
+ *   part of it (less in wide frames, none at 16 cells or more, where the story is the place);
  * - in a wide frame (9 cells or more) his cream rim a little wider, drawn as a ring under the ball.
  *
  * It fades while he is hidden (in a barrel, a pipe), and fades out as the credits' crane pulls back to the mountain.
@@ -74,13 +74,15 @@ export const keyLight = scenery<KeyState>({
 
     ctx.save()
     // The frame darkened beyond a few cells from him (wider in a wide frame, so a wide is not a spotlight).
-    if (DARK * fade > 0.005) {
+    // (Not in the widest frames: there the story is the place, not him.)
+    const dark = DARK * fade * (1 - smooth(cells, 11, 16))
+    if (dark > 0.005) {
       const near = Math.max(NEAR, cells * 0.2) * k
       const far = near * 1.9
       const g = ctx.createRadialGradient(x, y, near, x, y, far)
       g.addColorStop(0, 'rgba(0, 0, 0, 0)')
-      g.addColorStop(0.5, `rgba(0, 0, 0, ${(DARK * fade * 0.5).toFixed(3)})`)
-      g.addColorStop(1, `rgba(0, 0, 0, ${(DARK * fade).toFixed(3)})`)
+      g.addColorStop(0.5, `rgba(0, 0, 0, ${(dark * 0.5).toFixed(3)})`)
+      g.addColorStop(1, `rgba(0, 0, 0, ${dark.toFixed(3)})`)
       ctx.fillStyle = g
       const span = (cells * 2 + 20) * k
       ctx.fillRect(x - span, y - span, 2 * span, 2 * span)

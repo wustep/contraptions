@@ -96,6 +96,62 @@ const TORCHES = [
 const TORCH_SIZE = 0.6
 const torchFlame = (i: number): Pt => [TORCHES[i].foot[0] + TORCHES[i].side * TORCH_SIZE * 0.5, TORCHES[i].foot[1] - TORCH_SIZE * 0.95]
 
+/**
+ * The hammer blows shake the braziers off their ledge: each tips over on its blow and pours its embers onto the floor,
+ * where the spilled coals catch and burn up in a spreading fire. As the lamps go out one a blow, these take over, so
+ * the hall comes down brighter blow by blow, lit from below by its own fires. They burn down after the last chords.
+ */
+const SPILLS = [
+  { b: 0, at: HAMMERS[1], dir: 1 },
+  { b: 2, at: HAMMERS[3], dir: -1 },
+  { b: 1, at: HAMMERS[5], dir: 1 },
+]
+/** A brazier's tip (radians, the way it falls) at t. */
+function tipOf(b: number, t: number): number {
+  const sp = SPILLS.find((q) => q.b === b)
+  if (!sp || t < sp.at) return 0
+  const u = Math.min(1, (t - sp.at) / 0.22)
+  const settle = 1.25 + 0.08 * Math.exp(-(t - sp.at - 0.22) / 0.2) * Math.cos((t - sp.at - 0.22) * 18) * (u >= 1 ? 1 : 0)
+  return sp.dir * (u < 1 ? 1.25 * u * u : settle)
+}
+/** How big a spilled fire is (0..1): it catches on the blow, spreads, burns high, and dies down long after. */
+function spillFire(sp: (typeof SPILLS)[number], t: number): number {
+  if (t < sp.at + 0.08) return 0
+  const a = t - sp.at - 0.08
+  return Math.min(1, a / 0.35) * (1 - 0.85 * ease(t, 150, 158))
+}
+/** Where a spill's fire lies on the floor: its middle and half-width. */
+function spillAt(sp: (typeof SPILLS)[number], t: number): { x: number; half: number } {
+  const bx = BRAZIERS[sp.b].x
+  const spread = 1 - Math.exp(-Math.max(0, t - sp.at - 0.1) / 0.3)
+  return { x: bx + sp.dir * (0.55 + 0.6 * spread), half: 0.3 + 1.0 * spread }
+}
+/** The spilled fires on the floor: embers, and flames of uneven heights along them. */
+function drawSpills(p: p5, c: Pen, t: number): void {
+  const k = c.k
+  for (const [i, sp] of SPILLS.entries()) {
+    const f = spillFire(sp, t)
+    if (f <= 0.01) continue
+    const { x, half } = spillAt(sp, t)
+    p.noStroke()
+    p.fill(alpha(p, mixHex(WORKS.rust, LAMP.flame, 0.35), 0.9 * f))
+    p.beginShape()
+    p.vertex((x - half) * k, (FL + 0.01) * k)
+    for (let j = 0; j <= 6; j++) {
+      const u = j / 6
+      p.vertex((x - half + 2 * half * u) * k, (FL - 0.05 - 0.05 * Math.sin(u * Math.PI) * (0.6 + 0.4 * hash(i, j, 41))) * k)
+    }
+    p.vertex((x + half) * k, (FL + 0.01) * k)
+    p.endShape(p.CLOSE)
+    const n = 7
+    for (let j = 0; j < n; j++) {
+      const u = (j + 0.5) / n
+      const h = (0.45 + 0.6 * hash(i, j, 43)) * f * (0.6 + 0.4 * Math.sin(u * Math.PI))
+      flame(p, c, x - half + 2 * half * u, FL - 0.04, h, t, i * 7 + j, Math.min(1, f * 1.3))
+    }
+  }
+}
+
 /** The oiled rope: from the first lantern's hook, over the elder's brazier, up to the crown-lamp's hook over the throne. */
 const ROPE0: Pt = [BRAZIERS[2].x, -2.3]
 const CROWN: Pt = [THRONE.x, -6.05]
@@ -127,6 +183,13 @@ function lightsAt(t: number, poses: Pose[]): Light[] {
   for (const b of BRAZIERS) {
     const f = poses[b.who].puff
     out.push({ x: b.x, y: BRAZIER_Y - 0.1, s: Math.min(1, 0.5 * heatOf(t, b.who) + f), r: 2.1 + 2.4 * f, w: 0.75, col: mixHex(WORKS.rust, LAMP.glow, 0.35 + 0.5 * f) })
+  }
+  for (const sp of SPILLS) {
+    const f = spillFire(sp, t)
+    if (f > 0) {
+      const { x } = spillAt(sp, t)
+      out.push({ x, y: FL - 0.5, s: Math.min(1, f * (0.85 + 0.15 * flicker(t, sp.b + 20))), r: 6.2, w: 0.95, col: mixHex(LAMP.glow, LAMP.flame, 0.4) })
+    }
   }
   TORCHES.forEach((tc, i) => {
     const s = burning(t, tc.at, tc.out)
@@ -1090,7 +1153,21 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   if (seen(ROPE0[0] - 1, ROPE1[0] + 1.5)) drawLamps(p, c, t, lit(16, -4), sway)
 
   // The front row's braziers, the tails down over the bench, the front row.
-  for (const b of BRAZIERS) if (seen(b.x - 1, b.x + 1)) drawBrazier(p, c, b.x, t, heatOf(t, b.who), poses[b.who].puff, lit(b.x, BRAZIER_Y))
+  BRAZIERS.forEach((b, i) => {
+    if (!seen(b.x - 1.5, b.x + 1.5)) return
+    const tip = tipOf(i, t)
+    p.push()
+    if (tip) {
+      // Knocked over by a hammer blow: it topples off its foot, its embers poured out (the spilled fire).
+      const pivot: Pt = [b.x + Math.sign(tip) * 0.22, ROW_Y[0]]
+      p.translate(pivot[0] * c.k, pivot[1] * c.k)
+      p.rotate(tip)
+      p.translate(-pivot[0] * c.k, -pivot[1] * c.k)
+    }
+    drawBrazier(p, c, b.x, t, tip ? 0 : heatOf(t, b.who), tip ? 0 : poses[b.who].puff, lit(b.x, BRAZIER_Y))
+    p.pop()
+  })
+  drawSpills(p, c, t)
   ;(['A', 'B', 'C'] as const).forEach((id, i) => {
     const who = [0, 1, 3][i]
     const gone = ease(t, COURT_UP - 0.45, STEPS[0])
