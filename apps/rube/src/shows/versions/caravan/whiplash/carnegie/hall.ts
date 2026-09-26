@@ -7,7 +7,7 @@ import { drawConductor } from '../fletcher'
 import { alpha, frame, hash, scenery, type Ctx } from '../kit'
 import { CARNEGIE, CHORD, CUTOFF, FINAL, LAST_CHORD, SOLO, level, SHOUT_ORIGIN, SHOUT_PERIOD } from '../music'
 import { HALL, KIT } from '../worlds'
-import { baseAt, bowAt, crashAskew, fletcherAt, floorAt, poseAt } from './conductor'
+import { baseAt, bowAt, crashAskew, fletcherAt, floorAt, hushDoor, poseAt, riseAt, rubatoOn } from './conductor'
 import { ROLL, rolling } from './finale-clock'
 import { drawFinaleBody } from './finale-rig'
 import { CUE_FROM, cueAt, type Cue } from './light'
@@ -593,6 +593,9 @@ function darkOver(p: p5, c: Ctx, T: number, q: Cue): void {
   if (q.fl > 0.01 && T >= SOLO) {
     const [fx, fy] = fletcherAt(T)
     hole(g, k, fx + 0.1, fy + 1.3, 1.2, 2.8, q.fl, 0.45)
+    // In the rubato his beating hand rises above his head, out toward the metronome: the light reaches its whole travel.
+    const beating = rubatoOn(T)
+    if (beating > 0.01) hole(g, k, fx - 0.75, fy - 0.35, 0.8, 1.05, q.fl * beating, 0.5)
   }
   // The wings' warm spill, for Jim.
   const jim = T >= SOLO ? 0.85 * jimLit(T) : 0

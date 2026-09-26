@@ -56,13 +56,38 @@ export const CONDUCT: [number, number] = [388.2, UNWIND]
 const BEATS: number[] = STOMPS.filter((t) => t > CONDUCT[0] - 1 && t < CONDUCT[1] + 1.5).filter((_, i) => i % 4 === 0)
 
 /**
- * The rubato: from his podium he keeps the metronome's time with it, a small beat of his right hand on every stroke
- * of the rod, slowing with it to the slowest (458.58) and quickening after, leaning in: the conductor keeping the
- * drummer's own tempo, which is the show's answer to "not my tempo".
+ * The rubato: from his podium he keeps the metronome's time with it, his right hand alone beating every stroke of the
+ * rod, the hand falling into each stroke as the bob strikes and rebounding high, slowing with it to the slowest
+ * (458.58, one long slow fall a stroke) and quickening after, leaning in; the left hangs at his side, so the one
+ * thing moving is the hand that keeps the time: the conductor keeping the drummer's own tempo, which is the show's
+ * answer to "not my tempo".
  */
 export const RUBATO: [number, number] = [455.0, 468.8]
 const RUBATO_BEATS: number[] = RIDE.filter((t) => t > RUBATO[0] - 2 && t < RUBATO[1] + 2)
-const rubatoOn = (t: number): number => ease(t, RUBATO[0], RUBATO[0] + 1.5) * (1 - ease(t, RUBATO[1] - 1.8, RUBATO[1]))
+export const rubatoOn = (t: number): number => ease(t, RUBATO[0], RUBATO[0] + 1.5) * (1 - ease(t, RUBATO[1] - 1.8, RUBATO[1]))
+/** The rubato beat's ictus (relative to his head: his shoulder's height, out toward the metronome) and its rebound's share of a beat. */
+const RUBATO_ICTUS: Pt = [-0.9, 0.12]
+const REBOUND = 0.33
+
+/**
+ * His right hand in the rubato at `t`: on each stroke of the rod it is at the ictus, with a flick of the wrist; it
+ * rebounds up (quick, slowing to the top), hangs, and falls, gathering speed, into the next stroke. The slower the
+ * rod, the higher the rebound (0.45 to 0.8 cells) and the longer the fall. Continuous across every stroke: whatever
+ * the beat's size, the hand is at the ictus on it.
+ */
+function rubatoBeat(t: number): ArmPose {
+  let j = 0
+  while (j + 1 < RUBATO_BEATS.length && RUBATO_BEATS[j + 1] <= t) j++
+  const a = RUBATO_BEATS[j]
+  const b = RUBATO_BEATS[Math.min(j + 1, RUBATO_BEATS.length - 1)]
+  const span = b - a
+  const u = span > 0 ? clamp((t - a) / span) : 0
+  const h = u < REBOUND ? 1 - (1 - u / REBOUND) ** 2 : 1 - ((u - REBOUND) / (1 - REBOUND)) ** 2
+  const size = 0.45 + 0.35 * clamp((span - 0.3) / 0.6)
+  const w: Pt = [RUBATO_ICTUS[0] + 0.18 * h, RUBATO_ICTUS[1] - size * h]
+  const flick = (1 - h) ** 3
+  return reachFromHead(-1, w, Math.PI + 0.5 * h - 0.35 * flick, 'beat')
+}
 
 /** The finale: to the kit in the long roll, up to Andrew's height, the nod, and back. */
 export const F_WALK: [number, number] = [519.4, 522.8]
@@ -234,8 +259,8 @@ export function poseAt(t: number): Pose {
     const size = 0.3 + 0.6 * ease(t, CONDUCT[0], CONDUCT[0] + 16)
     return blendPose(POSES.rest, beatPose(beatAt(t), size), on)
   }
-  // The rubato: a small beat with the rod's strokes, the left hand still at his chest.
-  if (t > RUBATO[0] && t < RUBATO[1]) return blendPose(POSES.rest, beatPose(beatAt(t, RUBATO_BEATS), 0.32, true), rubatoOn(t))
+  // The rubato: his right hand beats the rod's strokes, the left hangs at his side.
+  if (t > RUBATO[0] && t < RUBATO[1]) return { left: POSES.rest.left, right: mixArm(POSES.rest.right, rubatoBeat(t), rubatoOn(t)) }
   // The hush: his right hand up to the crash's rim, straightening it, and back down.
   if (t > GRIP[0] && t < LET_GO + 0.9) {
     const on = ease(t, GRIP[0], GRIP[1]) * (1 - ease(t, LET_GO, LET_GO + 0.9))
