@@ -3,7 +3,7 @@ import { mixHex } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
 import { HOME, INK, carlAt, ellieAt } from '../worlds'
 import { drawChair, CHAIR } from '../props/chairs'
-import { CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
+import { ALONE, CHAIRS, DOOR_HUNG, EDGE, FLAG_AT, G, HOUSE, LAMP_X, MAILBOX, P, PANE_AT, PRINT_AT, PRINTS, TREADS, TREE_AT, type DoorSwing } from './front-plan'
 
 /**
  * The house from the street, drawn in one of its two conditions: `old` (the derelict clubhouse they bought: grey,
@@ -426,10 +426,11 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
   const { x0, x1, sill, head, facet } = HOUSE.bay
   p.push()
   p.rectMode(p.CORNER)
-  // The glass's sheen: two soft slants, fainter as the room behind it is lit.
+  // The glass's sheen: two soft slants, fainter as the room behind it is lit, and half as strong once he is home alone,
+  // so the glass between us and him is felt but does not grey him further.
   if (!L.old) {
     p.noStroke()
-    const a = 0.12 * (1 - 0.6 * L.lamp)
+    const a = 0.12 * (1 - 0.6 * L.lamp) * (1 - 0.5 * smooth(L.T, ALONE.latch, ALONE.shut))
     p.fill(alpha(p, '#FFFFFF', a))
     p.quad((x0 + facet + 0.25) * k, sill * k, (x0 + facet + 0.95) * k, head * k, (x0 + facet + 1.25) * k, head * k, (x0 + facet + 0.55) * k, sill * k)
     p.fill(alpha(p, '#FFFFFF', a * 0.6))
@@ -681,7 +682,8 @@ export function drawHouse(p: p5, k: number, weight: number, L: Look, chairsIn: {
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.8)
   p.fill(c.siding)
-  rect(p, k, b.x0 - 0.12, b.sill + 0.1, b.x1 + 0.12, P + 0.02)
+  // The apron under the bay's sill, down to the porch floor: none now the sill is the floor (it would cover the sill).
+  if (b.sill + 0.1 < P + 0.02) rect(p, k, b.x0 - 0.12, b.sill + 0.1, b.x1 + 0.12, P + 0.02)
   p.fill(c.roof)
   p.quad((b.x0 - 0.22) * k, (b.head - 0.12) * k, (b.x1 + 0.22) * k, (b.head - 0.12) * k, (b.x1 - 0.15) * k, b.top * k, (b.x0 + 0.15) * k, b.top * k)
 
