@@ -247,7 +247,12 @@ export const TITAN_W = 1.3
 export const TITAN_X = LEADER_FOOT[0] + 1.05
 export const LIP = GY - 2.75
 /** How high its shell carries the spark over the muzzle before it bursts. */
-export const TITAN_RISE = 5.8
+export const TITAN_RISE = 6.3
+/**
+ * The spark rides the shell's crown, so the shell's heart (where its stars break from) is a little under the spark:
+ * the spark starts in the flower's upper half.
+ */
+export const HEART_DROP = 0.7
 const WALL = TITAN_X - TITAN_W / 2
 const FOOT_R = WALL - R - 0.04 - LEADER_FOOT[0]
 const CLIMB_X = LEADER_FOOT[0] + FOOT_R
@@ -320,7 +325,7 @@ export const CRATE = { x0: REST[0] - 0.45 - 1.3, x1: REST[0] - 0.45, h: 0.95 }
  * by the air (linear drag, `DRAG`, solved so it comes down on the last hammer blow).
  */
 const FALL_T = DOWN - TITAN_BURST
-const FALL_VY = -1.2
+const FALL_VY = -3.4
 const DRAG = (() => {
   const H = GY - R - APEX[1]
   const yAt = (k: number) => (g / k) * FALL_T + (FALL_VY - g / k) * (1 - Math.exp(-k * FALL_T)) / k
@@ -426,9 +431,12 @@ export interface Burst {
   gs: number
   life: number
   trail: number
-  /** How much its flash washes the frame, 0..1. */
+  /** How much its flash washes the frame: 0..1, and over 1 (the Titan) holds the flash at its brightest longer. */
   wash: number
-  /** A mine sprays up from the ground in a fan this wide (radians) instead of all round. */
+  /**
+   * Its stars go out in a fan this wide either side of straight up (radians) instead of all round: a mine sprays up
+   * from the ground; the Titan leaves out only the few that would plunge straight down onto its own gun.
+   */
   fan?: number
   seed: number
 }
@@ -693,8 +701,17 @@ export const FLANK: Gun[] = [
 ]
 shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[0]), [TITAN_X - 4.2, GY - 6.4], { kind: 'palm', col: FW.fwRed, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
 shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[1]), [TITAN_X + 4.2, GY - 6.2], { kind: 'palm', col: FW.fwBlue, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
-/** The Titan's shell: the spark rides it up, so no rise of its own is drawn beyond the tail under the spark. */
-BURSTS.push({ at: TITAN_BURST, x: APEX[0], y: APEX[1], kind: 'titan', col: FW.fwWhite, tail: FW.fwGold, n: 116, v: 20, k: 3.1, gs: 4.6, life: 2.5, trail: 0.62, wash: 1.3, seed: 200 })
+/**
+ * The Titan's shell: the spark rides it up, so no rise of its own is drawn beyond the tail under the spark. The biggest
+ * burst of the show, on the loudest chord of the coda: its stars break out to about 11 cells (three quarters and more
+ * of the 18-cell frame's width), slower to open than the battery's, with long trails, so its head reads as one vast
+ * flower with the spark inside its upper half. Its flash is held at its brightest for a moment and gone by about 0.4 s
+ * (`wash` over 1 holds `drawWash`'s cap longer before it decays), in the warm gold of its light (`col`; the stars'
+ * own colours are the Titan's, in `drawBurst`). Its heart is about 8.5 cells up, so the few stars thrown straight down
+ * would plunge through the gun and into the ground: they are left out (`fan`), and the gun's own smoke stands there.
+ */
+export const TITAN: Burst = { at: TITAN_BURST, x: APEX[0], y: APEX[1] + HEART_DROP, kind: 'titan', col: FW.fwGold, tail: FW.fwGold, n: 150, v: 28, k: 2.5, gs: 4.2, life: 2.9, trail: 1.0, wash: 8, fan: Math.PI - 0.42, seed: 200 }
+BURSTS.push(TITAN)
 
 /* The salute barrage: six flash-bangs round the falling spark, from a rack of short tubes past the crate. */
 export const SALUTE_RACK: Pt = [REST[0] + 5.4, GY]
@@ -753,6 +770,20 @@ for (const b of BURSTS) {
   else if (b.kind === 'small') puff(b.at + 0.3, b.x, b.y, 0.3, 1.0, 5, 0.14)
   else puff(b.at + 0.45, b.x, b.y + 0.3, 0.9, 0.4 * (b.v / b.k) + 1, 10, b.kind === 'titan' ? 0.34 : 0.24)
 }
+/*
+ * The Titan's stars smoke as they burn: a thin haze where they have been, round the upper part of the flower (its
+ * lower part is the gun's own smoke). One bank of it lies across the moon: the moon holds its place in the frame
+ * (`night.ts`, 0.77 and 0.23 of it), so under the 18-cell framing (`fireworks.ts`: hold about [TITAN_X + 2.2, GY - 7.05]
+ * at 145.5) it is at about (TITAN_X + 10.8, GY - 11.9), where the flower's rim reaches about 145.55. From then the moon
+ * glows through the finale's smoke instead of standing crisp beside it. Re-measure if that framing changes.
+ */
+for (let i = 0; i < 9; i++) {
+  const ang = -Math.PI / 2 + (i / 8 - 0.5) * 2 * 2.1 + 0.25 * (hash(i, 231) - 0.5)
+  const r = 5.2 + 2.8 * hash(i, 232)
+  puff(TITAN_BURST + 0.3 + 0.3 * hash(i, 233), TITAN.x + Math.cos(ang) * r, TITAN.y + Math.sin(ang) * r, 0.6, 1.7 + 0.9 * hash(i, 234), 8, 0.09 + 0.05 * hash(i, 235))
+}
+const MOON_THEN: Pt = [TITAN_X + 10.8, GY - 11.9]
+puff(TITAN_BURST + 0.4, MOON_THEN[0] - 0.3, MOON_THEN[1] + 0.1, 1.3, 3.0, 9, 0.38)
 puff(TITAN_FIRE + 0.05, TITAN_X, LIP - 0.6, 0.6, 2.4, 10, 0.45)
 puff(TITAN_FIRE + 0.15, TITAN_X + 0.5, GY - 0.3, 0.5, 1.8, 9, 0.3)
 PUFFS.sort((a, b) => a.at - b.at)
