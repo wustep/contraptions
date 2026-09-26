@@ -383,6 +383,8 @@ export function createPanel(
   scrub.addEventListener('pointerdown', () => { scrubbing = true })
   const endScrub = () => { scrubbing = false }
   window.addEventListener('pointerup', endScrub)
+  // A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
+  window.addEventListener('pointercancel', endScrub)
 
   const playIcon = icon(ICON.play)
   const pauseIcon = icon(ICON.pause)
@@ -436,6 +438,7 @@ export function createPanel(
     },
     destroy() {
       window.removeEventListener('pointerup', endScrub)
+      window.removeEventListener('pointercancel', endScrub)
     },
   }
 }

@@ -391,6 +391,8 @@ let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
 const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
+// A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
+window.addEventListener('pointercancel', endScrub)
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
@@ -646,6 +648,7 @@ if (import.meta.env.DEV) {
     cancelAnimationFrame(raf)
     window.removeEventListener('popstate', onPop)
     window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     view.destroy()
     if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).rube
