@@ -14,12 +14,14 @@ import { SWITCH } from '../src/shows/versions/caravan/whiplash/score'
 import { STRIKES } from '../src/shows/versions/caravan/whiplash/hits'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/caravan/whiplash/credits'
 import { BASS, BREAKS, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
-import { poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
+import { fletcherAt, poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
+import { armPose as frameArm } from '../src/shows/versions/caravan/whiplash/carnegie/finale-rig'
+import { KIT_AT } from '../src/shows/versions/caravan/whiplash/carnegie/stage'
 import { poseAt as sabotagePose } from '../src/shows/versions/caravan/whiplash/carnegie/sabotage-motion'
 import { fletcherPose as bandPose } from '../src/shows/versions/caravan/whiplash/shaffer/band-people'
 import { fletcherPose as practicePose } from '../src/shows/versions/caravan/whiplash/shaffer/practice'
 import { folderPose } from '../src/shows/versions/caravan/whiplash/road/folder'
-import type { Pose } from '../src/shows/versions/caravan/whiplash/fletcher'
+import { RIG, type Pose } from '../src/shows/versions/caravan/whiplash/fletcher'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -152,6 +154,26 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   check('caravan: Fletcher\'s fist closes once, on the final cut-off, and nowhere before it',
     [poseAt(FINAL + 0.05).right.hand, poseAt(FINAL + 0.05).left.hand].includes('fist') && poseAt(FINAL - 0.1).right.hand !== 'fist' && poseAt(FINAL - 0.1).left.hand !== 'fist' && fists > 0 &&
     Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
+
+  // The last image: clear wall between the drummer's frame's steel fist (pinning the crash) and either of Fletcher's
+  // hands, from the cut-off to the end (the fist sat on his hanging hand: the machine handing him the stick).
+  const handAt = (side: 'left' | 'right', t: number): [number, number] => {
+    const h = fletcherAt(t)
+    const a = poseAt(t)[side]
+    const sx = h[0] + (side === 'right' ? -1 : 1) * RIG.shoulder
+    const sy = h[1] + RIG.drop
+    const d = a.up + a.bend + a.wrist
+    return [sx + Math.cos(a.up) * RIG.upper + Math.cos(a.up + a.bend) * RIG.fore + Math.cos(d) * 0.13, sy + Math.sin(a.up) * RIG.upper + Math.sin(a.up + a.bend) * RIG.fore + Math.sin(d) * 0.13]
+  }
+  let apart = Infinity
+  for (let t = FINAL; t < DURATION; t += 0.1) {
+    const g = frameArm('right', t).grip
+    for (const side of ['left', 'right'] as const) {
+      const hand = handAt(side, t)
+      apart = Math.min(apart, Math.hypot(hand[0] - (g[0] + KIT_AT[0]), hand[1] - (g[1] + KIT_AT[1])))
+    }
+  }
+  check('caravan: in the last image the frame\'s steel fist keeps clear of Fletcher\'s hands', apart >= 0.6, `${apart.toFixed(2)} cells`)
 
   // His arms never flip: stepped at 120 Hz through every part that draws him, no upper arm, forearm or hand turns
   // more than half a radian in a step (an unwrapped angle blended straight turned a forearm round in one frame).

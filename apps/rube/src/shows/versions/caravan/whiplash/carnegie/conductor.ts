@@ -235,10 +235,11 @@ export function poseAt(t: number): Pose {
   if (t < LAST_CHORD - 0.12) return blendPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
   // The chord: a downbeat with both hands, and up again, held high and open, rising a little as it swells.
   if (t < FINAL - 0.62) return { right: heldHigh(t), left: heldHigh(t, 'left') }
-  // The cut-off, with his left hand (the house's right, out over the clear wall past the bass's scroll: his right
-  // side is all the frame's arm and sticks). Open, it circles out and up (the breath before it), then comes down
-  // hard and closes ON the last stroke: the fist, at his eye line. It stops dead there and holds, no settle. The
-  // right hand comes down to his side during the circle and hangs still, so nothing moves on the cut but the fist.
+  // The cut-off, with his left hand (the house's right, out over clear wall: his right side is all the frame's arm
+  // and sticks). Open, it circles out and up (the breath before it), then comes down hard and closes ON the last
+  // stroke: the fist, at his eye line. It stops dead there and holds, no settle. The right hand comes down during
+  // the circle and hangs close at his side (`SIDE`), still, so nothing moves on the cut but the fist, and the frame's
+  // steel fist pinning the crash has clear wall between it and his hand.
   const shoulder: Pt = [RIG.shoulder, RIG.drop]
   const wristOf = (a: ArmPose): Pt => {
     const e: Pt = [shoulder[0] + Math.cos(a.up) * RIG.upper, shoulder[1] + Math.sin(a.up) * RIG.upper]
@@ -248,7 +249,7 @@ export function poseAt(t: number): Pose {
   const from = wristOf(held)
   // The palm turns out from the held chord's angle as the circle begins, not in one frame.
   const heldDir = held.up + held.bend + held.wrist
-  const right: ArmPose = mixArm(heldHigh(FINAL - 0.62), POSES.rest.right, ease(t, FINAL - 0.62, FINAL - 0.1))
+  const right: ArmPose = mixArm(heldHigh(FINAL - 0.62), SIDE, ease(t, FINAL - 0.62, FINAL - 0.1))
   let left: ArmPose
   if (t < CIRCLE) {
     // Out and up, open, the palm turning out: a small loop that bulges away from him.
@@ -265,10 +266,26 @@ export function poseAt(t: number): Pose {
     const w: Pt = [APEX[0] + (FIST[0] - APEX[0]) * u + bow, APEX[1] + (FIST[1] - APEX[1]) * u]
     left = reachFromHead(1, w, -1.55 + (1.55 - 0.35) * u, t >= FINAL - 0.02 ? 'fist' : 'open')
   }
+  // Held, and then lowered on the inside: the fist comes in to his chest and on down to hang at his side (blended
+  // joint by joint it swung out sideways first, the fist held out at arm's length like a signal).
   const down = ease(t, FINAL + 3.2, FINAL + 6.4)
   if (down <= 0) return { right, left }
-  return { right, left: { ...mixArm(left, POSES.rest.left, down), hand: down < 0.6 ? 'fist' : 'beat' } }
+  const v = 1 - down
+  const w: Pt = [v * v * FIST[0] + 2 * v * down * IN[0] + down * down * HANG[0], v * v * FIST[1] + 2 * v * down * IN[1] + down * down * HANG[1]]
+  return { right, left: reachFromHead(1, w, -0.35 + (HANG_DIR + 0.35) * down, down < 0.6 ? 'fist' : 'beat') }
 }
+
+/** The lowered fist's way down: pulled in toward his chest (`IN` bends the path), to hang at his side. */
+const IN: Pt = [-0.1, 0.5]
+const HANG: Pt = [0.55, 1.12]
+const HANG_DIR = 1.26
+
+/**
+ * His right hand (the house's left) from the cut-off to the end: hanging close at his side, the arm near straight
+ * down, the hand by his thigh. `POSES.rest` holds it out from his hip, and there it met the frame's steel fist on the
+ * crash's rim (the last image read as the machine handing him the stick).
+ */
+const SIDE: ArmPose = { up: Math.PI * 0.545, bend: -0.05, wrist: 0.04, hand: 'beat' }
 
 /** The loop's top, and where the fist stops: relative to his head (his left hand, on the house's right). */
 const APEX: Pt = [1.0, -0.95]
