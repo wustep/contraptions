@@ -661,7 +661,7 @@ GUNS.forEach((gun, i) => shell(LAUNCH[i], BURST_AT[i], gunMuzzle(gun), BATTERY_B
 export const MINES_X = [0, 1, 2, 3, 4].map((i) => BATTERY_X0 - 0.35 + 1.25 * i)
 const MINE_COLS = [FW.fwGold, FW.fwRed, FW.fwWhite, FW.fwGreen, FW.fwViolet]
 MINES_X.forEach((x, i) =>
-  BURSTS.push({ at: CRASH, x, y: GY - 0.3, kind: 'mine', col: MINE_COLS[i], tail: FW.fwGold, n: 22, v: 14.5 + 1.5 * hash(i, 9), k: 1.7, gs: 9, life: 1.5, trail: 0.3, wash: i === 2 ? 0.8 : 0.1, fan: 0.42, seed: 100 + i }),
+  BURSTS.push({ at: CRASH, x, y: GY - 0.3, kind: 'mine', col: MINE_COLS[i], tail: FW.fwGold, n: 30, v: 19.5 + 2.5 * hash(i, 9), k: 1.65, gs: 9, life: 1.7, trail: 0.34, wash: i === 2 ? 1.0 : 0.15, fan: 0.46, seed: 100 + i }),
 )
 
 /* The Titan, and the two guns flanking it. */
@@ -672,7 +672,7 @@ export const FLANK: Gun[] = [
 shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[0]), [TITAN_X - 4.2, GY - 6.4], { kind: 'palm', col: FW.fwRed, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
 shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[1]), [TITAN_X + 4.2, GY - 6.2], { kind: 'palm', col: FW.fwBlue, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
 /** The Titan's shell: the spark rides it up, so no rise of its own is drawn beyond the tail under the spark. */
-BURSTS.push({ at: TITAN_BURST, x: APEX[0], y: APEX[1], kind: 'titan', col: FW.fwWhite, tail: FW.fwGold, n: 88, v: 20, k: 3.1, gs: 4.6, life: 2.3, trail: 0.62, wash: 1.3, seed: 200 })
+BURSTS.push({ at: TITAN_BURST, x: APEX[0], y: APEX[1], kind: 'titan', col: FW.fwWhite, tail: FW.fwGold, n: 116, v: 20, k: 3.1, gs: 4.6, life: 2.5, trail: 0.62, wash: 1.3, seed: 200 })
 
 /* The salute barrage: six flash-bangs round the falling spark, from a rack of short tubes past the crate. */
 export const SALUTE_RACK: Pt = [REST[0] + 5.4, GY]

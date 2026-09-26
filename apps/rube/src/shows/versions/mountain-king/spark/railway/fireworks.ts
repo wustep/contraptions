@@ -7,7 +7,6 @@ import {
   BURSTS,
   CRACKLE,
   CRASH,
-  CRASH_AT,
   DART_END,
   DIVE,
   DOWN,
@@ -22,6 +21,7 @@ import {
   LEADER_AT,
   LEADER_FOOT,
   LIP,
+  MINES_X,
   OUT,
   PIECES,
   PUFFS,
@@ -189,21 +189,25 @@ export const fireworks = part<FireworksState>(
       { t: UNIT_AT[5], cells: 7.4, off: [1.7, 1.3] },
       // Pulling back over the last bars to show the whole curtain falling, and the finale waiting beyond it.
       { t: UNIT_AT[8] - 0.1, cells: 10.6, hold: [(HANG[0] + HANG[8]) / 2 + 4.4, GY - 3.9], w: 0.6 },
-      // The crash, and out for the finale over the battery and the wheel.
-      { t: CRASH, cells: 10, hold: [CRASH_AT[0] + 2.2, GY - 3.2], w: 0.75 },
+      // The crash: out wide as the mines go up along the whole battery, the ground in and their tops in the sky.
+      { t: CRASH + 0.35, cells: 12, hold: [MINES_X[2], GY - 4.3], w: 0.7 },
       { t: WHEEL_AT, cells: 11.5, hold: [WHEEL[0] - 2.6, GY - 4.6], w: 0.9 },
       { t: 137.6, cells: 11, hold: [WHEEL[0] - 1.0, GY - 4.6], w: 0.9 },
       { t: FLING, cells: 11, hold: [WHEEL[0] + 2.2, GY - 4.4], w: 0.85 },
-      // To the Titan, and in close for the climb up its leader.
-      { t: LEADER_AT, cells: 10.5, hold: [LEADER_FOOT[0] - 2.2, GY - 3.2], w: 0.85 },
+      // To the Titan, and in close for the climb up its leader. The pan carries on past the wheel so it goes out of the
+      // frame whole instead of standing half in at the edge.
+      { t: LEADER_AT, cells: 9.6, hold: [LEADER_FOOT[0] + 0.1, GY - 3.3], w: 0.85 },
       { t: 141.8, cells: 7.5, hold: [TITAN_X - 0.9, GY - 2.2], w: 0.8 },
       { t: DIVE - 0.1, cells: 6, hold: [TITAN_X - 0.5, LIP + 0.4], w: 0.7 },
       { t: TITAN_FIRE, cells: 6.8, hold: [TITAN_X, LIP - 0.6], w: 0.85 },
-      // Up with it into the biggest burst of the show.
-      { t: TITAN_BURST, cells: 14, hold: [TITAN_X + 0.4, APEX[1] + 2.4], w: 0.9 },
+      // Up with it into the biggest burst of the show, and out to the whole of it as it opens, the ground and the Titan
+      // under it: the widest frame of the finale, the burst's heart a little above the middle.
+      { t: TITAN_BURST, cells: 12.5, hold: [TITAN_X + 0.6, APEX[1] + 2.6], w: 0.9 },
+      { t: TITAN_BURST + 0.46, cells: 18, hold: [TITAN_X + 1.8, GY - 7.1], w: 1 },
       // Down with it through the salutes, into the ash, and in close by the crate's fire.
-      { t: 145.7, cells: 10, hold: [REST[0] - 0.9, GY - 3.3], w: 0.75 },
-      { t: DOWN, cells: 5.6, hold: [REST[0] - 0.4, GY - 1.4], w: 0.7 },
+      { t: 145.8, cells: 15, hold: [TITAN_X + 3.8, GY - 5.6], w: 0.95 },
+      { t: 146.2, cells: 11, hold: [REST[0] - 0.6, GY - 3.6], w: 0.85 },
+      { t: DOWN, cells: 7, hold: [REST[0] - 0.4, GY - 1.8], w: 0.7 },
       { t: 147.3, cells: 3.9, hold: [REST[0] - 0.35, GY - 0.8], w: 0.85 },
       { t: ROLL, cells: 2.9, hold: [REST[0] - 0.3, GY - 0.6], w: 0.9 },
       // The door: close on the spark, the crate's fire filling the frame.
