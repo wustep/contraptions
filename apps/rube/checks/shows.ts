@@ -513,6 +513,30 @@ async function main(): Promise<void> {
         check('liftoff: where they are, one ball each, each its own id, and no one else',
           two.every(({ t, b }) => b.length === 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0) && new Set(b.map((x) => x.id)).size === b.length) &&
           [60, 70, 130, 200, 245].every((t) => (show.at(t).balls?.length ?? 1) <= 1 + (show.brand(t) ? 1 : 0) + (show.murph(t) ? 1 : 0)))
+        // Under Zoom (1.5 times closer) Cooper stays in the frame, but for three shots that are about something bigger
+        // than him: the cage going up out of the top while Murph is kept back at the tower's foot, the whip through
+        // the sphere, and the pull-back from the replica to the whole ring.
+        const zoomAway: [number, number][] = [[74.9, 77.3], [103.7, 104.3], [130.4, 137.2]]
+        const zoomMiss: string[] = []
+        for (let t = 0; t <= MIX_END; t += 0.1) {
+          if (zoomAway.some(([a, b]) => t > a && t < b)) continue
+          const f = perf.camera!(t)
+          const a = f.angle ?? 0
+          const [hx, hy] = show.where(t)
+          const dx = hx - f.x
+          const dy = hy - f.y
+          const zc = f.cells / 1.5
+          if (!(Math.abs(dx * Math.cos(a) - dy * Math.sin(a)) < (zc * 8) / 9 && Math.abs(dx * Math.sin(a) + dy * Math.cos(a)) < zc / 2)) zoomMiss.push(t.toFixed(1))
+        }
+        check('liftoff: under Zoom Cooper is in the frame, but for the cage\'s climb, the whip through the sphere and the ring\'s reveal', zoomMiss.length === 0, zoomMiss.join(' '))
+        // Out of the wormhole's far mouth the whip hands over to the Ranger: the camera does not stop dead while it flies.
+        let slowest = Infinity
+        for (let t = cue(213) - 0.3; t < cue(213) + 0.6; t += 1 / 60) {
+          const a = perf.camera!(t)
+          const b = perf.camera!(t + 1 / 60)
+          slowest = Math.min(slowest, (Math.hypot(b.x - a.x, b.y - a.y) * 60) / b.cells)
+        }
+        check('liftoff: the whip out of the wormhole goes on with the Ranger, with no stop', slowest > 0.5, `${slowest.toFixed(2)} frames/s`)
         const young = show.brand(inOrbit[0])
         const old = show.brand(inOrbit[2])
         check('liftoff: up in orbit Brand\'s blue dims with the years, and she is her own blue again at the end',
