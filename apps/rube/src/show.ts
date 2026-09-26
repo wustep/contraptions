@@ -28,6 +28,13 @@ export interface ShowBall {
   stretch?: number
   /** Direction of travel, radians. */
   angle?: number
+  /**
+   * Where its mark sits (radians), for a rider that should not roll: a head, not a wheel. Absent, the mark turns with
+   * its travel as every ball's does; null draws no mark at all.
+   */
+  spin?: number | null
+  /** Its outline's colour, for a rider that should not wear the theme's ink (a dark head told by a dim warm rim). */
+  rim?: string
 }
 
 export interface ShowPoint extends UniversePoint {
