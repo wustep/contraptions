@@ -9,7 +9,7 @@ import { drawTroll, type Pen, type TrollLook } from '../troll'
 import { SKY, STONE, WORKS } from '../worlds'
 import { DRUM2, DRUMMERS, farEdge, FLOOR, LEAP } from '../under/drum-clock'
 import { breach, capCracks, collar, collarFront, dropped, G, hollowOf, puff, stone, thrown, vent, VENT, type Floor, type Stone } from './fall-rock'
-import { column, crown, plume, steam } from './fall-water'
+import { column, crown, plume } from './fall-water'
 
 /**
  * The director's: the coda (134.25 → the end). Ibsen's order: the bells ring, the trolls flee, the hall comes down,
@@ -719,7 +719,7 @@ function pressed(T: number, y: number): number {
 /** The plume's top at the height of the second chord's surge (world y): at the top edge of the wide frame over the summit. */
 const SURGE = -30.5
 
-function plumeAt(T: number): { top: number; h: number } {
+function plumeAt(T: number): { top: number } {
   const floor = skyline(COL) + 1.96
   // The surge: fast off his top at LAST2 (he is thrown off it east), easing into its height in about half a second.
   const u = T - LAST2
@@ -732,7 +732,7 @@ function plumeAt(T: number): { top: number; h: number } {
   // Then the water drains back down the vent, gathering speed, out of every frame.
   const drain = Math.max(0, T - (LAST2 + 9.5))
   const low = floor + 1.2 + (3 * drain * drain) / (drain + 1.2)
-  return { top: top * (1 - gone) + low * gone, h: smooth(T, LAST2, LAST2 + 0.5) * (1 - 0.85 * sink) * (1 - gone) }
+  return { top: top * (1 - gone) + low * gone }
 }
 
 function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
@@ -806,9 +806,7 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
     if (yb > yt) column(p, c, X, yb, yt, T, fo, sun)
     if (riding) crown(p, c, bx, by, T, fo, pressed(T, ball.y + ORIGIN[1]), sun)
     else {
-      const pl = plumeAt(T)
-      plume(p, c, X, ly(surface(COL, T)), ly(pl.top), T, pl.h, d, (x) => ly(surface(x + ORIGIN[0], T)))
-      steam(p, c, X, ly(surface(COL, T)) - 0.2, T, smooth(T, LAST2 + 6, LAST2 + 9) * (1 - smooth(T, LAST2 + 12, LAST2 + 17)), d)
+      plume(p, c, X, ly(surface(COL, T)), ly(plumeAt(T).top), T, d, (x) => ly(surface(x + ORIGIN[0], T)))
     }
   }
 }

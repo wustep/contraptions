@@ -43,15 +43,16 @@ export const COURT: Courtier[] = [
   { row: 0, x: 8.4, size: 1.5, seed: 103, doze: 0.18, chase: { to: 14.1 } },
   { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB } },
   // The ledges: fewer, and no two alike (a big one slumped, small ones leaning in), clear of the pillars (4.3, 9.5).
-  { row: 1, x: 1.55, size: 1.3, seed: 111, doze: 0.45 },
+  // Staggered, so no two stand one over the other in a column (the tiers must not read as shelves).
+  { row: 1, x: 3.2, size: 1.3, seed: 111, doze: 0.45 },
   { row: 1, x: 6.95, size: 1.9, seed: 113, hide: TROLL.old, doze: -0.5 },
   { row: 1, x: 11.25, size: 1.25, seed: 115, doze: 0.2 },
-  { row: 2, x: 2.7, size: 1.5, seed: 122, doze: -0.35 },
-  { row: 2, x: 7.85, size: 1.2, seed: 124, doze: 0.4 },
+  { row: 2, x: 1.3, size: 1.5, seed: 122, doze: -0.35 },
+  { row: 2, x: 8.3, size: 1.2, seed: 124, doze: 0.4 },
   // The gallery in the dark: silhouettes, their eyes the only thing that shows.
-  { row: 3, x: 1.6, size: 1.2, seed: 131, doze: 0.2 },
-  { row: 3, x: 6.3, size: 1.1, seed: 133, doze: 0.25 },
-  { row: 3, x: 10.6, size: 1.15, seed: 136, doze: -0.25 },
+  { row: 3, x: 2.6, size: 1.2, seed: 131, doze: 0.2 },
+  { row: 3, x: 5.95, size: 1.1, seed: 133, doze: 0.25 },
+  { row: 3, x: 10.3, size: 1.15, seed: 136, doze: -0.25 },
 ]
 
 export const SEAT_Y = (row: number): number => (row === 3 ? GALLERY_Y : ROW_Y[row])

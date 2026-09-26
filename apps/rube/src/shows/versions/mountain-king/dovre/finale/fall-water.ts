@@ -315,7 +315,7 @@ type Pt2 = [number, number]
  * caller's top for the column (the burst climbs over it); `sun` the dawn on its east side. The caller's own
  * envelope (`_h`) is replaced by the burst's clock.
  */
-export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: number, _h: number, sun: number, ground: (x: number) => number): void {
+export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: number, sun: number, ground: (x: number) => number): void {
   const u = T - LAST2
   if (u < 0 || yBase - yTop < 0.05) return
   const { left } = burst(u)
@@ -362,8 +362,3 @@ export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: 
   p.pop()
 }
 
-/**
- * Steam off the crater once the geyser has sunk: none. The burst is gone before the credits, and nothing rises from
- * the crater over them (a pale strand at the frame's edge read as the column still standing).
- */
-export function steam(_p: p5, _c: Pen, _x: number, _y: number, _T: number, _a: number, _sun: number): void {}
