@@ -457,46 +457,85 @@ export interface ShipOpts {
 }
 
 /**
- * A flying warship, the film's: a long iron hull like a whale's, a bridge tower, and rows of flapping oar-wings
- * along its belly, beating slowly. About 6 cells long; the origin is the middle of its keel. Seen far off (small,
- * pale) it is the war crossing the sky; close, the war builder's.
+ * A flying warship, the film's: an ironclad hull with a ram prow and a raked stern, a stacked superstructure (a
+ * deckhouse, the bridge over it, two raked funnels, a mast at the bow), and along its flank a row of long wing-oars
+ * of uneven length that beat slowly in a ripple from bow to stern. About 6 cells long; the origin is the middle of its
+ * keel, and the keel under it is plain (the war builder cuts its bomb bay there). Faces right; `face: -1` for left.
+ * Seen far off (small, pale) it is the war crossing the sky; close, the war builder's.
  */
 export function drawWarship(p: p5, k: number, weight: number, ink: string, o: ShipOpts): void {
   const light = o.light ?? 1
   const c = o.color ?? WASTES.warship
+  const dark = mixHex(c, '#000000', 0.22)
+  const X = (v: number) => v * k
   p.push()
   p.scale(o.face ?? 1, 1)
   p.stroke(alpha(p, ink, light))
   p.strokeWeight(weight)
-  // The oar-wings, under the hull, beating in a ripple from bow to stern.
-  p.fill(alpha(p, mixHex(c, '#FFFFFF', 0.15), light))
-  for (let i = 0; i < 9; i++) {
-    const x = -2.4 + i * 0.58
-    const a = 0.5 + 0.35 * Math.sin(o.t * 2.2 - i * 0.5)
+  // The wing-oars, behind the hull: each on a pivot along the flank, a long shaft broadening to a blade, swept back
+  // and beating slowly, the ripple running from the bow aft. Uneven: longest amidships.
+  const OARS: [number, number][] = [[1.75, 0.95], [1.05, 1.3], [0.3, 1.5], [-0.5, 1.35], [-1.25, 1.1], [-1.9, 0.8]]
+  p.fill(alpha(p, mixHex(c, '#FFFFFF', 0.12), light))
+  OARS.forEach(([x, len], i) => {
+    const beat = Math.sin(o.t * 1.5 - i * 0.7)
+    const a = 0.72 + 0.28 * beat
     p.push()
-    p.translate(x * k, 0.1 * k)
+    p.translate(X(x), X(0.02))
     p.rotate(a)
     p.beginShape()
-    p.vertex(0, 0)
-    p.vertex(0.08 * k, 0.9 * k)
-    p.vertex(-0.14 * k, 0.8 * k)
+    p.vertex(0, X(-0.03))
+    p.vertex(X(len * 0.55), X(-0.05))
+    p.vertex(X(len), X(-0.13 - 0.04 * beat))
+    p.vertex(X(len * 1.04), X(0.08))
+    p.vertex(X(len * 0.55), X(0.05))
+    p.vertex(0, X(0.04))
     p.endShape(p.CLOSE)
     p.pop()
-  }
-  // The hull: long, round-nosed, tapering to the stern.
+  })
+  // The hull: a ram at the bow, the keel long and nearly straight, the stern raked up.
   p.fill(alpha(p, c, light))
   p.beginShape()
-  p.vertex(3.0 * k, -0.35 * k)
-  p.bezierVertex(3.2 * k, -0.1 * k, 3.0 * k, 0.3 * k, 2.4 * k, 0.4 * k)
-  p.vertex(-2.6 * k, 0.28 * k)
-  p.bezierVertex(-3.0 * k, 0.2 * k, -3.1 * k, -0.2 * k, -2.8 * k, -0.45 * k)
-  p.vertex(2.6 * k, -0.6 * k)
+  p.vertex(X(2.75), X(-0.5))
+  p.bezierVertex(X(2.95), X(-0.3), X(3.15), X(-0.05), X(3.3), X(0.12))
+  p.bezierVertex(X(3.0), X(0.3), X(2.7), X(0.4), X(2.3), X(0.42))
+  p.vertex(X(-2.2), X(0.38))
+  p.bezierVertex(X(-2.7), X(0.34), X(-3.0), X(0.1), X(-3.1), X(-0.32))
+  p.vertex(X(-2.85), X(-0.52))
   p.endShape(p.CLOSE)
-  // The bridge tower and a stack.
-  p.fill(alpha(p, mixHex(c, '#000000', 0.2), light))
+  // Its armour belt, and a row of gun ports along it (small, square, uneven).
+  p.fill(alpha(p, dark, light))
+  p.beginShape()
+  p.vertex(X(3.05), X(-0.12))
+  p.vertex(X(-2.95), X(-0.08))
+  p.vertex(X(-2.98), X(0.02))
+  p.vertex(X(3.12), X(-0.02))
+  p.endShape(p.CLOSE)
+  p.noStroke()
+  p.fill(alpha(p, mixHex(dark, '#000000', 0.3), light))
+  for (const x of [2.2, 1.55, 0.7, -0.15, -0.95, -1.9]) p.rect(X(x - 0.06), X(-0.35), X(0.12), X(0.1))
+  p.stroke(alpha(p, ink, light))
+  // The superstructure: a long deckhouse, the bridge stacked over its fore end, two raked funnels aft, a mast forward.
   p.rectMode(p.CORNER)
-  p.rect(-0.2 * k, -1.25 * k, 1.1 * k, 0.68 * k)
-  p.rect(-1.4 * k, -1.0 * k, 0.3 * k, 0.45 * k)
+  p.fill(alpha(p, mixHex(c, '#FFFFFF', 0.06), light))
+  p.rect(X(-1.7), X(-0.92), X(3.0), X(0.42))
+  p.fill(alpha(p, dark, light))
+  p.rect(X(0.35), X(-1.38), X(1.05), X(0.46))
+  p.noStroke()
+  p.fill(alpha(p, mixHex(c, '#FFFFFF', 0.35), light * 0.8))
+  p.rect(X(0.45), X(-1.28), X(0.85), X(0.08))
+  p.stroke(alpha(p, ink, light))
+  p.fill(alpha(p, dark, light))
+  for (const [x, h] of [[-0.55, 0.78], [-1.2, 0.62]] as [number, number][]) {
+    p.beginShape()
+    p.vertex(X(x), X(-0.92))
+    p.vertex(X(x + 0.28), X(-0.92))
+    p.vertex(X(x + 0.16), X(-0.92 - h))
+    p.vertex(X(x - 0.14), X(-0.92 - h))
+    p.endShape(p.CLOSE)
+  }
+  p.strokeWeight(weight * 0.9)
+  p.line(X(2.1), X(-0.5), X(2.0), X(-1.75))
+  p.line(X(2.05), X(-1.25), X(1.55), X(-1.1))
   p.pop()
 }
 
