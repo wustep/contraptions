@@ -290,6 +290,55 @@ export function drive(T: number): number {
   return g
 }
 
+/**
+ * The pinion's heaves. The axle does not turn the pinion evenly: it is driven off the hammer's shaft, so it shoves on
+ * each blow (every 1 and 3, the oom) from the cam's first regular blow to the governor. Each heave is a quick advance
+ * over about a tenth of a second, a coast as the great wheel's weight runs on, and a damped settle of its teeth back
+ * against the pinion's. Between any two blows it covers exactly what `drive` does, so the flywheel is where it always
+ * was on every blow (FLY, the flick, the governor) and only its gait between them changes. The last heave (onto the
+ * governor) runs out into the runaway's pace instead of settling, so the machine never stops again.
+ */
+const HEAVE = OOM_K.filter((k) => k >= 196 && k <= 256).map(kt)
+/** The push's rise and the coast's decay (seconds). */
+const PUSH = 0.03
+const COAST = 0.13
+const PUSH_COAST = (PUSH * COAST) / (PUSH + COAST)
+/** The settle: its size (a share of the heave), its period and its decay (seconds); it comes in as the push ends. */
+const SETTLE = 0.07
+const SETTLE_W = (Math.PI * 2) / 0.2
+const SETTLE_DECAY = 0.09
+const SETTLE_IN = 0.05
+/** One heave's advance `s` seconds after its blow (0 at the blow, ~1 once it has settled), unscaled. */
+function heaveRaw(s: number): number {
+  const push = COAST * (1 - Math.exp(-s / COAST)) - PUSH_COAST * (1 - Math.exp(-s / PUSH_COAST))
+  const inn = 1 - Math.exp(-s / SETTLE_IN)
+  const settle = -SETTLE * Math.exp(-s / SETTLE_DECAY) * Math.sin(s * SETTLE_W) * inn * inn
+  return push / (COAST - PUSH_COAST) + settle
+}
+/**
+ * A heave over [0, L] seconds: 0 at the blow and 1 on the next, still at the start, and leaving at `v1` (a share of
+ * the heave a second) at the end. A cubic `k·s²(s − L)/L²` (nothing at either end, no pace at the start) trims the
+ * pace at the end to exactly `v1`.
+ */
+function heave(s: number, L: number, v1: number): number {
+  const eps = 1e-4
+  const end = heaveRaw(L)
+  const vEnd = (end - heaveRaw(L - eps)) / eps / end
+  return heaveRaw(s) / end + ((v1 - vEnd) * s * s * (s - L)) / (L * L)
+}
+/** The mountain's axle as the pinion feels it: `drive`, in heaves on the blows until the governor. */
+export function turn(T: number): number {
+  if (T <= HEAVE[0] || T >= HEAVE[HEAVE.length - 1]) return drive(T)
+  const { i } = since(HEAVE, T)
+  const a = HEAVE[i]
+  const b = HEAVE[i + 1]
+  const da = drive(a)
+  const db = drive(b)
+  // The last heave runs out into the runaway's pace (drive's, just past the governor), as a share of the heave.
+  const v1 = i + 2 === HEAVE.length ? (drive(b + 1e-3) - db) / 1e-3 / (db - da) : 0
+  return da + (db - da) * heave(T - a, b - a, v1)
+}
+
 /** The pinion's arm: 0 hanging clear, 1 swung up into mesh (on FLY, with a clank). */
 export const pinionIn = (T: number): number => {
   if (T < FLY - 0.16) return 0
@@ -309,15 +358,15 @@ export function pinionAt(T: number): Pt {
 /** Radians the pinion turns per beat of drive: the flywheel's rim covers ~one cell a second at the start. */
 const PINION_RATE = 0.5
 /** The pinion's angle (clockwise turns are positive, y down): it turns from the first blow, meshed or not. */
-export const pinionAngle = (T: number): number => -drive(T) * PINION_RATE
+export const pinionAngle = (T: number): number => -turn(T) * PINION_RATE
 /**
  * The flywheel's angle. Still until the pinion is in its teeth; from then it turns with the pinion, the other way,
- * rim for rim; after the break it stops, split.
+ * rim for rim, in its heaves (a lurch on each blow, a coast) until the governor; after the break it stops, split.
  */
 export function flyAngle(T: number): number {
   if (T < FLY) return 0
-  const d = Math.min(drive(T), drive(BREAK))
-  return (d - drive(FLY)) * PINION_RATE * (PINION_R / FLY_R)
+  const d = Math.min(turn(T), drive(BREAK))
+  return (d - turn(FLY)) * PINION_RATE * (PINION_R / FLY_R)
 }
 /** The flywheel's angular pace, radians a second (for its blur). */
 export function flySpin(T: number): number {
