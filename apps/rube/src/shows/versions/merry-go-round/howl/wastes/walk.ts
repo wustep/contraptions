@@ -100,8 +100,10 @@ export const walk = part<null>(
       // watch it slow and sit; in on the door.
       { t: 138.7, cells: 19, off: [2.0, -3.4] },
       { t: 140.4, cells: 9, off: [0.9, -1.2] },
-      { t: 144.2, cells: 9.5, off: [1.0, -1.3] },
-      { t: LAST, cells: 15, off: [1.0, -2.4] },
+      { t: 143.2, cells: 9.5, off: [1.0, -1.3] },
+      // Out again to watch it walk on into the dark, its windows lit, and slow, and sit.
+      { t: 145.6, cells: 19, off: [2.6, -4.6] },
+      { t: LAST, cells: 20, off: [2.4, -5.0] },
       { t: SETTLE + 0.1, cells: 15, hold: door(SETTLE + 0.1, 0.4, -2.6) },
       { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95) },
       { t: slot.end, cells: 4, off: [0.9, -0.7] },
