@@ -77,7 +77,7 @@ export const deep = part<DeepState>(
     // Under the xylophone with them: the slabs and the drips playing the phrase over them, held in the frame
     // through its first bars, down to the beam and the cup.
     { t: E(4), cells: 6.4, hold: [2.4, -1.3], w: 0.55 },
-    { t: E(10), cells: 6.6, hold: [3.3, -0.4], w: 0.5 },
+    { t: E(10), cells: 6.0, hold: [3.3, -0.4], w: 0.5 },
     // The beam and the cup, and the tip.
     { t: T_CUP, cells: 5.6, hold: [4.6, 0.6], w: 0.55 },
     { t: T_SLAM + 0.3, cells: 5.0, hold: [5.4, 1.7], w: 0.5 },
