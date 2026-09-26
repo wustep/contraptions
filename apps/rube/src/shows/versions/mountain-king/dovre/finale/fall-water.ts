@@ -14,7 +14,7 @@ import { SKY, STONE } from '../worlds'
  * - through the silence it lets go of him (`below`): the last hammer blow throws him on up the vent, the water falls
  *   back away under him, and on the roll a fresh jet comes up the dark vent and slams into him;
  * - after the second of the last two chords it bursts out of the summit past the top of the frame (`burst`), falls
- *   back, and is gone before the credits (151.8).
+ *   back from the top down over the ring-out, raining spray on the crater, and is gone before the credits (153.7).
  */
 
 /** The column's body: the wet stone's blue, deeper, so the froth on it reads. */
@@ -37,11 +37,17 @@ function below(T: number): number {
   return Math.min(0.5 * SAG * (T - LET_GO) * (T - LET_GO), JET * (ROLL - T))
 }
 
-/** After the last chord (u = T - LAST2): how far the burst's jet climbs over the caller's top (then falls back), how open its head is, and how much of it is left. */
+/**
+ * After the last chord (u = T - LAST2): how far the burst's jet climbs over the caller's top (then falls back), how
+ * open its head is, and how much of it is left. The jet climbs for about 0.7 s, then its top falls back under about
+ * half of gravity (the water under it still rising into it) and runs down the column from the top for about a second
+ * and a half, down into the crater and the vent, while the last chord rings out; what is left thins after that and is
+ * gone well before the credits (153.7).
+ */
 function burst(u: number): { up: number; open: number; left: number } {
   const s = Math.min(1, Math.max(0, u / 0.65))
-  const up = 3 * (1 - (1 - s) * (1 - s) * (1 - s)) - 14 * Math.max(0, u - 0.7) ** 2
-  return { up, open: smooth(u, 0, 0.45), left: 1 - smooth(u, 1.15, 1.9) }
+  const up = 3 * (1 - (1 - s) * (1 - s) * (1 - s)) - 4.2 * Math.max(0, u - 0.72) ** 2
+  return { up, open: smooth(u, 0, 0.45), left: 1 - smooth(u, 2.1, 3.0) }
 }
 
 /* ------------------------------------------------------------------ the column */
@@ -93,7 +99,7 @@ export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T
   // Loose: the top is not pushing anything (he is away above it, or it is out in the open on its own).
   const loose = Math.max(smooth(below(T), 0.03, 0.4), T >= LAST2 ? 1 : 0)
   // 0..1 how much a loose head is falling back (1) rather than driving up (0).
-  const falling = T >= LAST2 ? smooth(T - LAST2, 0.6, 1.0) : T > LET_GO && T < ROLL && 0.5 * SAG * (T - LET_GO) ** 2 < JET * (ROLL - T) ? 1 : 0
+  const falling = T >= LAST2 ? smooth(T - LAST2, 0.6, 1.1) : T > LET_GO && T < ROLL && 0.5 * SAG * (T - LET_GO) ** 2 < JET * (ROLL - T) ? 1 : 0
   const n = Math.max(10, Math.min(420, Math.ceil(len * 12)))
   const rows: Row[] = []
   for (let i = 0; i <= n; i++) {
@@ -325,10 +331,11 @@ export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: 
   const topAt = (v: number) => yTop - burst(v).up
   p.push()
   p.noStroke()
-  // Streaks peel off the jet's upper part (most near its top), thrown up and out to both sides, and arc over.
-  const N = 90
+  // Streaks peel off the jet's upper part (most near its top), thrown up and out to both sides, and arc over; they
+  // go on peeling off its falling head as it runs back down, thrown less high, raining back on the crater and flanks.
+  const N = 150
   for (let i = 0; i < N; i++) {
-    const t0 = 0.95 * Math.pow((i + hash(i, 60)) / N, 1.3)
+    const t0 = 1.9 * Math.pow((i + hash(i, 60)) / N, 1.5)
     const tau = u - t0
     if (tau <= 0) continue
     const s = hash(i, 61) < 0.5 ? -1 : 1
@@ -337,7 +344,7 @@ export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: 
     const y0 = top0 + along * 0.45 * Math.max(0, yBase - top0)
     const x0 = x + s * profile(y0 - top0, 9, 0.6, smooth(t0, 0, 0.45)) * (0.7 + 0.3 * hash(i, 68))
     const vx = s * (1.2 + 2.8 * hash(i, 62))
-    const vy = -(1.5 + 5 * hash(i, 63)) * (1 - 0.35 * along)
+    const vy = -(1.5 + 5 * hash(i, 63)) * (1 - 0.35 * along) * (1 - 0.65 * smooth(t0, 0.7, 1.6))
     const g = 8
     const at = (q: number): Pt2 => [x0 + vx * q, y0 + vy * q + 0.5 * g * q * q]
     const head = at(tau)
