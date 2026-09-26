@@ -1,15 +1,16 @@
 import type p5 from 'p5'
 import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { box, knock, part, smooth, type PartShot } from '../kit'
-import { SEAM } from '../music'
+import { DOOR } from '../cast'
+import { level, SEAM } from '../music'
 import { G } from '../physics'
 import { CASTLE, drawCastle, drawChimneyFire } from './castle'
 import { WASTES } from '../worlds'
 import { laneThrough, TURNIP_TO_WALK } from './hills'
 import { drawFog, drawPlume, drawTurnipAt } from './hills-land'
 import {
-  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard, TAKEOFF,
-  TURNIP_LANDINGS, W, WIDE,
+  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
+  stepAt, TAKEOFF, TURNIP_LANDINGS, W, WIDE,
 } from './walk-plan'
 
 /**
@@ -55,7 +56,11 @@ export const walk = part<null>(
       if ((cs.pose.haze ?? 0) < 0.985) {
         p.push()
         p.translate(cs.at[0] * k, cs.at[1] * k)
-        drawCastle(p, k, c.weight, c.ink, cs.pose)
+        // From nightfall the door stands ajar on the room's warm light (Markl's left it off the latch), until the latch.
+        // The latch then opens it on from there, and the pickup flings it wide.
+        const ajar = AJAR * ajarAt(T)
+        const pose = { ...cs.pose, door: ajar + (cs.pose.door ?? 0) * (1 - ajar) }
+        drawCastle(p, k, c.weight, c.ink, pose)
         p.pop()
         if ((cs.pose.haze ?? 0) < 0.4) drawLantern(p, k, c.weight, c.ink, T)
         drawPlume(p, k, T)
@@ -93,34 +98,39 @@ export const walk = part<null>(
       const [x, y] = onCastle(T, CASTLE.door)
       return w([x + dx, y - FLOOR + dy])
     }
-    // Where the camera waits for the great strides: the castle crosses it on the loudest.
-    const mid = castleAt(W(76)).at
-    const cross = w([mid[0] - 1.5, mid[1] - 10.2])
+    // The third great stride is watched from a lock-off: the castle crosses it past the thorn tree (world x 47),
+    // whole from its feet to its flag, its feet a cell and a half above the frame's foot.
+    const past = castleAt(W(78)).at
+    const cross = w([48, past[1] + 1.7 - 29 / 2])
     return [
       // The castle over her on the hill, its stair dropping; in on her as she jumps for it and climbs.
       { t: DROP, cells: 27, hold: w([HILLTOP[0] - 1.6, -8.0]) },
       { t: 123.5, cells: 15, hold: w([HILLTOP[0] + 0.5, -4.6]) },
       { t: CATCH, cells: 10.5, hold: w([HILLTOP[0] + 1.1, -2.9]) },
       // With her up the stair (she climbs across the frame), and as she comes up onto the porch the camera starts
-      // back, and goes on back through the roar (128.0, 128.37): her small and low on the porch under the lantern,
-      // the whole castle over her and Calcifer's fire and smoke out of the chimney at the top of the frame, the first
-      // time we see the engine. On out to the wide without a stop.
+      // back, and goes on back through the roar (128.0, 128.37): the whole castle, from its feet to Calcifer's fire
+      // leaping out of the chimney at the top of the frame, her small and low on the porch under the lantern, the
+      // first time we see the engine.
       { t: CLIMB[2] + 0.2, cells: 10.5, off: [1.0, -1.6] },
       { t: CLIMB[5], cells: 12.5, off: [1.3, -2.6] },
-      { t: ROAR[0], cells: 25, off: [2.4, -7.5] },
-      // Out wide for the three great strides (131.43, 133.72, 135.94): locked off, the castle striding across the
-      // frame past the thorn tree, a silhouette on the dusk, the smoke of the roar still hanging over it.
-      { t: 130.9, cells: 33, hold: cross },
-      { t: 136.3, cells: 33, hold: cross },
-      // Night comes: back in on her, riding the porch against the lit door as the windows light; out a little to
-      // watch it slow and sit; in on the door.
-      { t: 138.7, cells: 19, off: [2.0, -3.4] },
-      { t: 140.4, cells: 9, off: [0.9, -1.2] },
-      { t: 143.2, cells: 9.5, off: [1.0, -1.3] },
-      // Out again to watch it walk on into the dark, its windows lit, and slow, and sit.
-      { t: 145.6, cells: 19, off: [2.6, -4.6] },
-      { t: LAST, cells: 20, off: [2.4, -5.0] },
-      { t: SETTLE + 0.1, cells: 15, hold: door(SETTLE + 0.1, 0.4, -2.6) },
+      { t: ROAR[0], cells: 29.2, off: [3.0, -6.1] },
+      // The three great strides (131.43, 133.72, 135.94), each seen its own way. The first alongside it, the whole
+      // castle feet to flag, a foot coming down near the frame's foot in its dust; the second in on her aboard, the
+      // hull heaving under her and the lantern swinging; the third out again to the lock-off as it strides past the
+      // thorn tree. The camera arrives on each as the foot lands.
+      { t: W(74), cells: 29.6, off: [3.4, -7.0] },
+      { t: W(76), cells: 10.4, off: [2.7, -1.05] },
+      { t: W(78), cells: 29, hold: cross },
+      // Night comes: in on her on the porch, a third from the left and a third up, the lantern over her and the door
+      // beside her, the dark land sliding by under the porch, as the windows light.
+      { t: 138.7, cells: 6.8, off: [1.75, -1.1] },
+      { t: 140.4, cells: 6.5, off: [1.75, -1.08] },
+      { t: 143.2, cells: 6.2, off: [1.7, -1.05] },
+      // Out a little to watch it walk on into the dark, its windows lit, the lit porch the brightest thing in the
+      // frame; it slows, and sits.
+      { t: 145.6, cells: 12.5, off: [2.8, -1.3] },
+      { t: LAST, cells: 14, off: [2.8, -0.9] },
+      { t: SETTLE + 0.1, cells: 13.5, hold: door(SETTLE + 0.1, 0.4, -1.4) },
       { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95) },
       { t: slot.end, cells: 4, off: [0.9, -0.7] },
     ]
@@ -133,50 +143,107 @@ export const walk = part<null>(
  */
 export const WALK_HITS: number[] = [...new Set([...FEET, DROP, TAKEOFF, CATCH, ...CLIMB, ...ROAR, ...TURNIP_LANDINGS.filter((t) => t > SEAM.walk), SETTLE, LATCH, WIDE])].sort((a, b) => a - b)
 
+/** How far the door stands ajar at night (the latch, 150.686, then opens it on to about a third). */
+const AJAR = 0.2
+/** The door easing ajar as night comes (from 139.6), and held there. */
+const ajarAt = (T: number): number => smooth(T, 139.6, 141.2)
+
 /**
- * The porch lantern: a small square brass lantern hung from the left end of the hood over the door, right over where
- * she rides. Lit as the dusk comes on, it washes the iron behind her and the planks under her warm, so at night she
- * reads as a small figure against its light, never lost on the grey iron. (Square, and two cells over her head: never
- * a round bright thing near her.)
+ * The porch lantern: a small square brass lantern hung on a short chain from the left end of the hood over the door,
+ * two cells over where she rides, swinging to the gait. Lit as she climbs, and full as the dusk comes on, it lays a
+ * soft warm oval on the iron and the planks round her (centred on her, soft and wide, never a core), so at night
+ * she reads as a small figure in its light, never lost on the grey iron. From nightfall a blade of warm light from
+ * the door standing ajar falls across the porch planks behind her. (Square, and two cells over her head: never a
+ * round bright thing near her.)
  */
 function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): void {
   const [dx, dy] = CASTLE.door
   const hook = onCastle(T, [dx - 0.9, dy - 2.62])
-  const sway = 0.05 * Math.sin(T * 2.3) * (1 - smooth(T, SETTLE, SETTLE + 1.5))
-  const lx = hook[0] + sway
-  const ly = hook[1] + 0.42
-  // Lit as she climbs to it (so she reads against the grey iron from the porch on), and brighter as the dusk comes.
+  // It swings on its chain to the gait: the body surges and checks on every stride (quick mid-stride, slow as a foot
+  // lands), so the lantern lags it and swings back; wider on the loud strides, still once it has sat.
+  const still = 1 - smooth(T, SETTLE - 0.6, SETTLE + 1.6)
+  const angle = (0.07 + 0.2 * level(T)) * Math.sin(2 * Math.PI * stepAt(T) - 2.2) * still
+  const L = 0.28
+  const lx = hook[0] - L * Math.sin(angle)
+  const ly = hook[1] + L * Math.cos(angle)
+  // Lit as she climbs to it (so she reads against the grey iron from the porch on), and full as the dusk comes.
   const lit = Math.max(0.6 * smooth(T, CLIMB[0], CLIMB[5]), smooth(T, 136.4, 139.6))
   const X = (v: number) => v * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   p.push()
-  // The light on the hull and the porch, soft and wide, behind everything that stands on the porch.
   if (lit > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(X(lx), X(ly + 0.6), 0, X(lx), X(ly + 0.6), X(2.6))
-    g.addColorStop(0, `rgba(255, 214, 150, ${0.42 * lit})`)
-    g.addColorStop(0.45, `rgba(255, 200, 130, ${0.16 * lit})`)
+    // The light on the iron and the porch, behind everything that stands on it: a soft warm oval centred where she
+    // rides, a plateau that fades out, never a core. A wider, fainter wash ties it to the lantern.
+    const [px, py] = onCastle(T, [CASTLE.ride[0], CASTLE.ride[1] - FLOOR])
+    ctx.save()
+    ctx.translate(X(px), X(py))
+    ctx.scale(1, 0.8)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, X(1.3))
+    g.addColorStop(0, `rgba(255, 208, 140, ${0.6 * lit})`)
+    g.addColorStop(0.35, `rgba(255, 204, 136, ${0.5 * lit})`)
+    g.addColorStop(0.7, `rgba(255, 196, 128, ${0.2 * lit})`)
     g.addColorStop(1, 'rgba(255, 190, 120, 0)')
     ctx.fillStyle = g
-    ctx.fillRect(X(lx - 2.7), X(ly - 2.1), X(5.4), X(4.8))
+    ctx.fillRect(X(-1.35), X(-1.35), X(2.7), X(2.7))
+    ctx.restore()
+    const h = ctx.createRadialGradient(X(lx), X(ly + 0.9), 0, X(lx), X(ly + 0.9), X(2.4))
+    h.addColorStop(0, `rgba(255, 206, 140, ${0.14 * lit})`)
+    h.addColorStop(1, 'rgba(255, 190, 120, 0)')
+    ctx.fillStyle = h
+    ctx.fillRect(X(lx - 2.4), X(ly - 1.5), X(4.8), X(4.8))
   }
-  // Its chain, and the lantern: a brass cap, four glass panes lit from within, a brass foot.
+  const ajar = ajarAt(T)
+  if (ajar > 0.01) {
+    // The blade from the door ajar: the gap at the opening's free (right) edge lit from the room, and out of it
+    // across the planks toward and under her, brightest at the gap and fading as it goes.
+    const gap = DOOR.w * (1 - Math.cos((AJAR * ajar * Math.PI) / 2 * 0.96)) + 0.015
+    const edge = dx + DOOR.w / 2
+    const q = [onCastle(T, [edge - gap, dy - DOOR.h]), onCastle(T, [edge, dy - DOOR.h]), onCastle(T, [edge, dy]), onCastle(T, [edge - gap, dy])]
+    // (Once the latch lifts, the room itself shows in the widening gap.)
+    ctx.fillStyle = `rgba(255, 216, 150, ${0.9 * ajar * (1 - smooth(T, LATCH, LATCH + 0.45))})`
+    ctx.beginPath()
+    q.forEach(([x, y], i) => (i ? ctx.lineTo(X(x), X(y)) : ctx.moveTo(X(x), X(y))))
+    ctx.closePath()
+    ctx.fill()
+    const sill = onCastle(T, [edge - gap / 2, dy])
+    const gapX = sill[0]
+    const top = sill[1] - 0.03
+    const g = ctx.createLinearGradient(X(gapX), 0, X(gapX - 2.1), 0)
+    g.addColorStop(0, `rgba(255, 214, 150, ${0.62 * ajar})`)
+    g.addColorStop(0.3, `rgba(255, 204, 138, ${0.36 * ajar})`)
+    g.addColorStop(1, 'rgba(255, 196, 128, 0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(X(gapX + gap / 2), X(top))
+    ctx.lineTo(X(gapX - gap / 2), X(top))
+    ctx.lineTo(X(gapX - 2.1), X(top + 0.14))
+    ctx.lineTo(X(gapX - 2.1), X(top + 0.23))
+    ctx.lineTo(X(gapX + gap / 2), X(top + 0.23))
+    ctx.closePath()
+    ctx.fill()
+  }
+  // Its chain, and the lantern: a brass cap, four glass panes lit from within, a brass foot, hanging plumb from
+  // the chain's end as it swings.
   p.stroke(ink)
   p.strokeWeight(weight * 0.6)
-  p.line(X(hook[0]), X(hook[1]), X(lx), X(ly - 0.14))
+  p.line(X(hook[0]), X(hook[1]), X(lx), X(ly))
+  p.translate(X(lx), X(ly))
+  p.rotate(angle)
   p.rectMode(p.CENTER)
   p.strokeWeight(weight * 0.7)
   p.fill(mixHex(WASTES.ironDark, WASTES.window, 0.85 * lit))
-  p.rect(X(lx), X(ly), X(0.15), X(0.2), X(0.02))
+  p.rect(0, X(0.14), X(0.15), X(0.2), X(0.02))
   p.fill(WASTES.brass)
-  p.triangle(X(lx - 0.11), X(ly - 0.1), X(lx + 0.11), X(ly - 0.1), X(lx), X(ly - 0.2))
-  p.rect(X(lx), X(ly + 0.12), X(0.17), X(0.04))
+  p.triangle(X(-0.11), X(0.04), X(0.11), X(0.04), 0, X(-0.06))
+  p.rect(0, X(0.26), X(0.17), X(0.04))
+  p.pop()
   if (lit > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createRadialGradient(X(lx), X(ly), 0, X(lx), X(ly), X(0.45))
+    const cx = lx - 0.14 * Math.sin(angle)
+    const cy = ly + 0.14 * Math.cos(angle)
+    const g = ctx.createRadialGradient(X(cx), X(cy), 0, X(cx), X(cy), X(0.45))
     g.addColorStop(0, `rgba(255, 227, 163, ${0.4 * lit})`)
     g.addColorStop(1, 'rgba(255, 227, 163, 0)')
     ctx.fillStyle = g
-    ctx.fillRect(X(lx - 0.45), X(ly - 0.45), X(0.9), X(0.9))
+    ctx.fillRect(X(cx - 0.45), X(cy - 0.45), X(0.9), X(0.9))
   }
-  p.pop()
 }
