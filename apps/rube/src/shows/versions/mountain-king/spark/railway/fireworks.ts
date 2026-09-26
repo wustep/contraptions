@@ -177,20 +177,23 @@ export const fireworks = part<FireworksState>(
   },
   (slot) => {
     const shots: PartShot[] = [
-      // Thrown off the engine and down: the camera leads it down to the field.
-      { t: IN + 0.55, cells: 7.0, off: [0.8, 0.3] },
+      // Thrown off the engine and down: the camera leads it down to the field, low enough that the rail and the racks
+      // stay in under it while it is high.
+      { t: IN + 0.55, cells: 7.4, off: [0.8, 1.3] },
       // Along the racks, room above for the comets.
       { t: 125.3, cells: 7.2, off: [1.1, -1.7] },
       { t: 126.9, cells: 7.6, off: [1.0, -1.85] },
       // Up on the gerb.
       { t: SURGE_AT, cells: 8.0, off: [0.8, -0.3] },
-      // Along the wire, close, the curtain pouring under it and catching a length a backbeat.
-      { t: UNIT_AT[0] + 0.1, cells: 7.2, off: [1.5, 1.2] },
-      { t: UNIT_AT[5], cells: 7.4, off: [1.7, 1.3] },
+      // Along the wire, riding close and leading it, the curtain pouring under it and catching a length a backbeat,
+      // and the sky over the wire in the frame, filling a volley a backbeat.
+      { t: UNIT_AT[0] + 0.1, cells: 6.6, off: [1.6, -0.3] },
+      { t: UNIT_AT[5], cells: 6.5, off: [1.7, -0.35] },
       // Pulling back over the last bars to show the whole curtain falling, and the finale waiting beyond it.
       { t: UNIT_AT[8] - 0.1, cells: 10.6, hold: [(HANG[0] + HANG[8]) / 2 + 4.4, GY - 3.9], w: 0.6 },
-      // The crash: out wide as the mines go up along the whole battery, the ground in and their tops in the sky.
-      { t: CRASH + 0.35, cells: 12, hold: [MINES_X[2], GY - 4.3], w: 0.7 },
+      // The crash: out to the widest frame since the trestle as the mines go up together along the whole battery, the
+      // ground and the wheel in and their fans reaching the frame's top.
+      { t: CRASH + 0.35, cells: 16, hold: [MINES_X[2] + 0.6, GY - 6.6], w: 0.7 },
       { t: WHEEL_AT, cells: 11.5, hold: [WHEEL[0] - 2.6, GY - 4.6], w: 0.9 },
       { t: 137.6, cells: 11, hold: [WHEEL[0] - 1.0, GY - 4.6], w: 0.9 },
       { t: FLING, cells: 11, hold: [WHEEL[0] + 2.2, GY - 4.4], w: 0.85 },

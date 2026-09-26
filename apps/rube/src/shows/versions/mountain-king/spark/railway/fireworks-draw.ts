@@ -1503,11 +1503,11 @@ export function drawBurst(pen: Pen, b: Burst): void {
   if (b.kind === 'salute') return drawSalute(pen, placed(b), s)
   if (b.kind === 'small') return drawSmall(pen, b, s)
   // Not in its first hundredth: a burst that small is a dot, and a dot near the spark is a second ball.
-  if (s < 0.01 || s > b.life) return
+  if (s < 0.01 || s > lifeOf(b)) return
   const reach = b.v / b.k + 2
   if (b.x + reach < f.x0 || b.x - reach > f.x1 || b.y + reach + 3 < f.y0 || b.y - reach > f.y1) return
   ctx.lineCap = 'round'
-  const fadeAll = 1 - smooth(s, b.life * 0.45, b.life)
+  const fadeAll = 1 - smooth(s, lifeOf(b) * 0.45, lifeOf(b))
   const stars = (count: number, speed: number, trail: number, col: string, tail: string, width: number, salt: number, sub = false) => {
     for (let i = 0; i < count; i++) {
       let ang: number
@@ -1549,9 +1549,15 @@ export function drawBurst(pen: Pen, b: Burst): void {
   if (clipped) ctx.restore()
 }
 
+/**
+ * How long a burst's stars burn: their own life, but every star in the sky is out by the silence (`HUSH`), so the
+ * silence is the stillest frame of the show and nothing is still falling in it.
+ */
+const lifeOf = (b: Burst): number => (b.at < HUSH ? Math.min(b.life, HUSH - 0.04 - b.at) : b.life)
+
 function drawStarsOf(pen: Pen, b: Burst, s: number, stars: (count: number, speed: number, trail: number, col: string, tail: string, width: number, salt: number) => void): void {
   const { ctx, k } = pen
-  const fadeAll = 1 - smooth(s, b.life * 0.45, b.life)
+  const fadeAll = 1 - smooth(s, lifeOf(b) * 0.45, lifeOf(b))
   switch (b.kind) {
     case 'crossette': {
       const split = 0.34
@@ -1993,8 +1999,12 @@ export function drawWash(pen: Pen): void {
       continue
     }
     const a = Math.min(0.32, b.wash * 0.24 * Math.exp(-s / 0.11))
-    const col = b.kind === 'mine' ? FW.coalHot : mixHex(b.col, FW.fwGold, 0.5)
-    pools.push({ x: b.x, y: b.y, col, a, r: reach, mid: 0.45, tail: 0.5 })
+    if (b.kind === 'mine') {
+      // The mines light the battery and the smoke over it, low and warm, not the whole sky.
+      pools.push({ x: b.x, y: b.y - 1.2, col: FW.coalHot, a, r: 0.42 * w, mid: 0.45, tail: 0.35 })
+      continue
+    }
+    pools.push({ x: b.x, y: b.y, col: mixHex(b.col, FW.fwGold, 0.5), a, r: reach, mid: 0.45, tail: 0.5 })
   }
   const blast = t - TITAN_FIRE
   if (blast >= 0 && blast < 0.5) pools.push({ x: TITAN_X, y: LIP - 1, col: FW.fwGold, a: Math.min(0.32, 0.26 * Math.exp(-blast / 0.08)), r: reach, mid: 0.45, tail: 0.5 })
