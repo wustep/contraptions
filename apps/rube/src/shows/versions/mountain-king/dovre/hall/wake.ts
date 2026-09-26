@@ -125,14 +125,17 @@ export const wake = part<{ begin: number }>(
     { t: 59.9, cells: 7.0, hold: [X(12.3), -1.85], w: 1 },
     // East to the King as his eyes open over him, the nodding court still at the frame's west side; out a little as
     // he rises and roars, and as the court stands.
-    { t: 61.65, cells: 6.9, hold: [X(15.0), -1.85], w: 1 },
-    { t: 63.9, cells: 7.2, hold: [X(15.5), -1.85], w: 1 },
-    { t: 66.6, cells: 7.4, hold: [X(15.6), -1.9], w: 0.95 },
+    // Close (6.3 cells: he is the story, a fifth bigger than at 7), the floor low in the frame. East with her as she
+    // turns to him and goes, the King rising between them; she walks out of its east side before the roar.
+    { t: 61.65, cells: 6.4, hold: [X(16.6), -1.85], w: 1 },
+    { t: 63.45, cells: 6.3, hold: [X(17.7), -1.85], w: 1 },
+    { t: 64.6, cells: 6.3, hold: [X(16.3), -1.85], w: 1 },
+    { t: 66.6, cells: 6.4, hold: [X(15.6), -1.9], w: 0.95 },
     // The chase: up the dais, through the King's feet, to its end.
-    { t: 68.5, cells: 7.4, hold: [X(17.4), -1.7], w: 0.6 },
-    { t: 70.4, cells: 7.0, hold: [X(21.0), -1.9], w: 0.7 },
+    { t: 68.5, cells: 6.4, hold: [X(17.4), -1.7], w: 0.6 },
+    { t: 70.4, cells: 6.2, hold: [X(21.0), -1.8], w: 0.7 },
     // The blow, the crack, the hatch, and down the shaft after him.
-    { t: 71.4, cells: 7.2, hold: [X(23.4), -1.6], w: 0.8 },
+    { t: 71.4, cells: 6.5, hold: [X(23.4), -1.6], w: 0.8 },
     // Close on the fissure racing from the sceptre's head to the hatch, so the lurch and the fall read big.
     { t: 72.6, cells: 5.4, hold: [X(24.2), -0.7], w: 0.7 },
     { t: 73.45, cells: 5.5, hold: [X(26.9), 1.2], w: 0.6 },

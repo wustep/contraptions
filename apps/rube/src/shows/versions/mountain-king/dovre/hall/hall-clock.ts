@@ -315,12 +315,16 @@ export const WOMAN_PATH: Path = (() => {
   w.hop([16.75, on(DAIS.step)], 55.1, 0.22)
   w.hop([17.35, on(DAIS.top)], 55.45, 0.22)
   w.go([17.9, on(DAIS.top)], 56.1, 'out')
-  // At his side as the court wakes; she slips away east along the dais, down, and out of the east door.
-  w.rest(60.85)
-  w.go([22.55, on(DAIS.top)], 62.2, 'inout')
-  w.hop([23.05, on(DAIS.step)], 62.45, 0.14)
-  w.hop([23.6, 0], 62.7, 0.14)
-  w.go([27.2, 0], 63.8, 'lin')
+  // At his side as the court wakes. As her father's eyes open she turns to Peer (a lean his way, held a beat: her
+  // last look at him), then goes east along the dais at a walk, on the notes, down its steps, and away toward the
+  // east tunnel: out of the frame before the roar, out of the east door after it.
+  w.rest(q6(12))
+  w.go([17.62, on(DAIS.top)], q6(13), 'out')
+  w.rest(q6(14))
+  w.go([22.55, on(DAIS.top)], q6(20), 'inout')
+  w.hop([23.05, on(DAIS.step)], q6(21), 0.14)
+  w.hop([23.6, 0], q6(22), 0.14)
+  w.go([27.2, 0], 64.75, 'in')
   w.go([31.5, 0], 65.2, 'out')
   return w
 })()
