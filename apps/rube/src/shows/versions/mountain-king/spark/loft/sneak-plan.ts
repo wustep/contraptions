@@ -18,8 +18,8 @@ import { WICK_LEFT } from './sneak-beats'
  *   13.47      up into the balance's pan; the beam sinks and its far end trips the snuffer's latch (14.583)
  *   15.70      the snuffer's cone clangs down on the other pan and the spark is flung up onto the rack's pole (16.816)
  *   16.8-24.5  the tightrope, hopping the wick of every pair of hanging candles
- *   25.653     a pair it jostled knocks together: the cat's ear flicks, the spark freezes
- *   28.961     again, at the pole's end
+ *   25.653     a pair it jostled knocks together, seen close: the spark freezes; the camera draws back to the cat
+ *   28.961     again, at the pole's end, in a two-shot: the cat's ear flicks, the spark freezes
  *   30.012     it leaps into the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
  *   31.185     it hops off onto the wheel: `HANDOFF`, moving (0.9, 0.9)
  */
@@ -602,9 +602,13 @@ export const HITS: number[] = [
  * The camera. The loft whole on the horns (the candle, the bench, the stove and the cat asleep before it), then in on
  * the candle for the theme. With the hop into the pan it takes in the windlass and the pan in one frame and holds
  * while the pan goes down a notch a note. Close along the bench; the balance and the snuffer framed whole; with the
- * fling up to the pole; along the tightrope. Out wide for the two knocks, so the cat's ear and the spark are in one
- * frame (the spark kept inside the middle two thirds, so it stays in under Zoom); in again to the arm and the hop onto
- * the wheel, the whole wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
+ * fling up to the pole; along the tightrope. Close on the rack for the jostle and the first knock (25.653) and its
+ * knock again (26.57): the pair swinging together and the spark ducking fill the frame. Then, the spark frozen, the
+ * camera draws back and down the room to find the cat by the stove (a look over its shoulder), and settles on the
+ * two-shot as the spark tiptoes on to the pole's end, so the second knock (28.961) and the ear's flick are in one
+ * frame. The cat is 21 cells east and 11 down, and the spark must stay inside the middle two thirds (Zoom), so that
+ * two-shot can be no tighter than about 16 cells. From it, in again to the arm and the hop onto the wheel, the whole
+ * wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
  */
 export const SHOTS: PartShot[] = [
   { t: 0.001, cells: 15.6, hold: [-3.0, 4.4], w: 1 },
@@ -620,8 +624,13 @@ export const SHOTS: PartShot[] = [
   { t: 16.9, cells: 5.6, off: [-0.35, 0.75], w: 0 },
   { t: 19.8, cells: 4.7, off: [-0.25, 0.55], w: 0 },
   { t: 22.7, cells: 6.0, off: [-0.3, 0.85], w: 0 },
-  { t: 25.4, cells: 16.9, hold: [-6.3, 3.4], w: 1 },
-  { t: 29.05, cells: 16.7, hold: [-6.35, 3.38], w: 1 },
+  { t: 24.6, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
+  { t: 26.65, cells: 5.1, hold: [-14.6, -0.85], w: 1 },
+  { t: 27.55, cells: 10.2, hold: [-11.9, 1.0], w: 1 },
+  // The two-shot: the spark as far west as Zoom lets it be, so the cat's head is whole at the east edge until the
+  // ear's second flick is done (29.2).
+  { t: 28.35, cells: 16.9, hold: [-6.45, 3.4], w: 1 },
+  { t: 29.35, cells: 16.85, hold: [-6.5, 3.45], w: 1 },
   { t: 30.4, cells: 9.2, hold: [-15.4, 2.55], w: 0.85 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
 ]
