@@ -56,11 +56,17 @@ export const home = part<null>(
       // the right, the candle it is going to on the left. It is settled on that picture as the spark comes down.
       { t: slot.begin + 0.3, cells: 6.4, hold: w(3.6, 2.5), w: 0.6 },
       { t: LAST[0] - 0.1, cells: 7.3, hold: w(2.6, 1.75), w: 1 },
-      // The bang: the same close frame, the door as big as the candle's whole height, already easing down and out.
-      { t: LAST[1], cells: 7.6, hold: w(2.7, 1.9), w: 1 },
-      // Follow-through: a long damped move down and out from the bang to whoever it woke, arriving as the cat's head
-      // is up and it is staring at the candle: the floor and the whole cat in, as tight as Zoom allows while it keeps the
-      // spark in (Zoom's centre is the camera's, so it may sit no more than about 0.31 of the frame below the wick).
+      // It lands on the wick in the close frame, which is already easing on out: one move (no stop on the landing, or the
+      // pull would have to whip) down and out to the two-shot for the bang, arriving before the chord so the bang lands
+      // on a settled picture: the candle on the left, the shut firebox door in the middle, the sleeping cat's head at the
+      // bottom (its shut eye about a cell above the frame's edge), so its eye is seen to snap open on 149.815. As low as
+      // Zoom allows while it keeps the spark in (Zoom's centre is the camera's, so it may sit no more than about 0.31 of
+      // the frame below the wick).
+      { t: LAST[1] - 0.06, cells: 13.3, hold: w(2.9, 4.1), w: 1 },
+      // The bang: the same two-shot, drifting on out (the punch is the score's).
+      { t: LAST[1], cells: 13.42, hold: w(2.92, 4.14), w: 1 },
+      // Follow-through: a long damped move down and out as the cat's head comes up and it stares at the candle: the
+      // floor and the whole cat in.
       { t: LAST[1] + 0.95, cells: 14.0, hold: w(3.0, 4.35), w: 1 },
       { t: LAST[1] + 2.45, cells: 14.3, hold: w(2.8, 4.45), w: 1 },
       // The cat tucks back in; the camera draws back to the whole loft in the dark for the credits, the candle its one
