@@ -382,10 +382,13 @@ function shots(): PartShot[] {
     k(157.6, 2.6, -1.8, 6.4),
     // The knocks: across to the table and the door; Markl.
     k(158.5, 0.4, -1.4, 5.6),
-    k(159.9, 0.3, -1.25, 5.0),
-    // Porthaven.
-    k(161.4, 0.6, -1.2, 4.8),
-    k(162.8, 0.4, -1.2, 5.0),
+    // Porthaven, on the flow's first wave: from the dial's click the frame rides the swell in to the door (her in the
+    // rocking chair at its right edge), so the sea, the harbour and the gull crossing on the crest fill it, the caller
+    // bowing on the note; then back out to the room as the door closes, for the black.
+    k(MT.blue, 0.32, -1.3, 5.15),
+    k(160.5, 0.75, -1.02, 3.3),
+    k(161.9, 0.72, -1.04, 3.2),
+    k(163.2, 0.55, -1.19, 5.0),
     // Howl at the door, and across to the fire.
     k(163.8, 1.1, -1.15, 5.0),
     k(165.0, 1.8, -0.95, 4.6),
