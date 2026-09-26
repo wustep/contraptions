@@ -69,6 +69,7 @@ import {
   spindleFall,
   valveLift,
   valveSpit,
+  yokeHangY,
   yokeSeatY,
 } from './heart-clock'
 import { LAND_ANGLE } from './heart-path'
@@ -1188,15 +1189,18 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     p.rect(0, 0, 0.4 * k, 0.26 * k, 0.04 * k)
     p.pop()
     // The yoke hung from the collar, its seat out under the chimney. When it goes it swings away from under him.
-    const seat = yokeSeatY(T) - sy
+    // The arm hangs level from its bar; its seat end flexes down under his landings (`yokeGive`).
+    const seat = yokeHangY(T) - sy
+    const give = yokeSeatY(T) - yokeHangY(T)
     const swing = T < YOKE_GOES ? 0 : 1.35 * ease((T - YOKE_GOES) / 0.3) + 0.12 * Math.sin((T - YOKE_GOES) * 7) * Math.exp(-(T - YOKE_GOES) / 0.5)
     const hang = (q: Pt): Pt => tp(rotAbout([gx + q[0], sy + q[1]], [gx + 0.21, sy], swing))
     p.stroke(ink)
     p.strokeWeight(c.weight)
     p.fill(iron)
     poly(p, k, [hang([0.16, 0]), hang([0.26, 0]), hang([0.26, seat]), hang([0.16, seat])])
-    poly(p, k, [hang([0.16, seat]), hang([YOKE_SEAT + 0.42 - gx, seat]), hang([YOKE_SEAT + 0.42 - gx, seat + 0.1]), hang([0.16, seat + 0.1])])
-    poly(p, k, [hang([YOKE_SEAT + 0.34 - gx, seat - 0.12]), hang([YOKE_SEAT + 0.42 - gx, seat - 0.12]), hang([YOKE_SEAT + 0.42 - gx, seat]), hang([YOKE_SEAT + 0.34 - gx, seat])])
+    const end = seat + give * ((YOKE_SEAT + 0.42 - gx - 0.16) / (YOKE_SEAT - gx - 0.16))
+    poly(p, k, [hang([0.16, seat]), hang([YOKE_SEAT + 0.42 - gx, end]), hang([YOKE_SEAT + 0.42 - gx, end + 0.1]), hang([0.16, seat + 0.1])])
+    poly(p, k, [hang([YOKE_SEAT + 0.34 - gx, end - 0.12]), hang([YOKE_SEAT + 0.42 - gx, end - 0.12]), hang([YOKE_SEAT + 0.42 - gx, end]), hang([YOKE_SEAT + 0.34 - gx, end])])
   }
   // The stops: a clang off the pivot, a brief warm flash on the iron and a spray of sparks falling away (no ring of
   // rays).
