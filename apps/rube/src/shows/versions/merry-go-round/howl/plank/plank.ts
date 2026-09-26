@@ -533,8 +533,12 @@ export const plank = part<PlankState>(
     const PEAK_X = 2.6
     const PEAK_Y = -0.55
     return [
-      // The collapse: out from her and him to the whole castle coming down, then in again as the plank stands.
-      hold(244.35, 4.8, [her0[0] + 0.25, her0[1] - 0.9]),
+      // The collapse: close on her with Calcifer as the hearth breaks round them and the flag and the chimney go
+      // (c1, c1.2); then, on the bar (c2, the back turret snapping), a cut out to the castle tearing apart, going on
+      // back slowly to the whole of it coming down; then in again as the plank stands.
+      hold(244.5, 4.5, [her0[0] + 0.25, her0[1] - 0.88]),
+      hold(245.0, 5.1, [her0[0] + 0.2, her0[1] - 0.98]),
+      { ...hold(c(2), 23, [BX0 - 1.3, -3.7]), cut: true },
       hold(247.4, 25, [BX0 - 1.5, -2.8]),
       hold(250.7, 22, [BX0 + 0.5, -1.5]),
       hold(252.3, 14, [BX0 + 2, 2.8]),
