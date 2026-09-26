@@ -18,7 +18,25 @@ export interface Shot {
   w?: number
   /** Added to the follow: frame ahead of the ball, or above it. */
   off?: Pt
+  /**
+   * The move from this key to the next runs on its own curve instead of the monotone cubic, from rest to rest (both
+   * keys are stops). `whip`: a whip pan, a smootherstep, no jolt leaving or landing. `hit`: a move struck by the
+   * music, quickest a third of the way in and then a long settle, landing with no jolt (a hit can be sharp; what
+   * follows it is long and damped).
+   */
+  ease?: 'whip' | 'hit'
+  /** With `ease`: the zoom opens by this much (log of cells) at the move's middle, so the stage streams past. */
+  open?: number
 }
+
+/** The curves a move can run on, 0..1 over u 0..1, each still at both ends. */
+const EASES = {
+  // Perlin's smootherstep: its acceleration nil at both ends.
+  whip: (u: number): number => u * u * u * (u * (6 * u - 15) + 10),
+  // 1 - (1-u)^3 (1+3u): at rest at both ends, fastest at a third, the second half a long settle with no jolt at its end.
+  hit: (u: number): number => 1 - (1 - u) ** 3 * (1 + 3 * u),
+}
+type Ease = (u: number) => number
 
 /**
  * One channel of the framing across the keys: monotone cubic (Fritsch-Carlson), so a move that goes on the same
@@ -27,12 +45,13 @@ export interface Shot {
  * are the channel's value at the start and end of the move from key i to key i + 1; where they disagree at a key
  * (a hold that only one side has, and that side's weight is nil there), the key is a stop.
  */
-function channel(ts: number[], left: number[], right: number[]): (i: number, u: number) => number {
+function channel(ts: number[], left: number[], right: number[], eases: (Ease | undefined)[] = []): (i: number, u: number) => number {
   const n = ts.length
   const h = (i: number) => ts[i + 1] - ts[i]
   const d = (i: number) => (h(i) > 1e-6 ? (right[i] - left[i]) / h(i) : 0)
   const m: number[] = new Array(n).fill(0)
   for (let i = 1; i < n - 1; i++) {
+    if (eases[i] || eases[i - 1]) continue
     if (Math.abs(right[i - 1] - left[i]) > 1e-9 || h(i - 1) <= 1e-6 || h(i) <= 1e-6) continue
     const a = d(i - 1)
     const b = d(i)
@@ -43,6 +62,8 @@ function channel(ts: number[], left: number[], right: number[]): (i: number, u: 
   }
   return (i, u) => {
     if (i >= n - 1 || u <= 0) return left[i]
+    const e = eases[i]
+    if (e) return left[i] + (right[i] - left[i]) * e(Math.min(1, u))
     const H = h(i)
     const u2 = u * u
     const u3 = u2 * u
@@ -70,6 +91,7 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
   const n = keys.length
   const ts = keys.map((k) => k.t)
+  const eases = keys.map((k, i) => (i < n - 1 && k.ease ? EASES[k.ease] : undefined))
   const ends = (get: (a: Shot, b: Shot) => [number, number]) => {
     const l: number[] = []
     const r: number[] = []
@@ -78,10 +100,14 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
       l.push(x)
       r.push(y)
     }
-    return channel(ts, l, r)
+    return channel(ts, l, r, eases)
   }
   // The zoom goes in even steps of scale, not of cells: a pull-back from one cell to ten opens as evenly as it closes.
-  const cellsAt = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])
+  const logCells = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])
+  const cellsAt = (i: number, u: number): number => {
+    const e = eases[i]
+    return logCells(i, u) + (e ? (keys[i].open ?? 0) * Math.sin(Math.PI * e(Math.max(0, Math.min(1, u)))) : 0)
+  }
   const wAt = ends((a, b) => [weight(a), weight(b)])
   const offX = ends((a, b) => [(a.off ?? [0, 0])[0], (b.off ?? [0, 0])[0]])
   const offY = ends((a, b) => [(a.off ?? [0, 0])[1], (b.off ?? [0, 0])[1]])

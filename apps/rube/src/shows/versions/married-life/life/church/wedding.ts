@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import type { Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Companion, type Ctx } from '../kit'
 import { CUT } from '../music'
@@ -12,23 +12,28 @@ import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease
  * The first frame is sepia: the two of them at the altar, posed, the photographer's camera on its tripod in the
  * front row, its flash tray up. 0.441: the powder fires, the frame goes white, and the white fades onto the living
  * church in colour. Its job done, the tripod folds its legs and sinks out of the frame (gone by 2.5 s), and the camera
- * pulls out once to the whole church (a reveal under 2 s), then comes in on the organ playing the Wedding March,
- * jazzed: 3.5 cells, the organ whole at the left, the two of them at the right. Every note stretches its rank's pipes
+ * pulls out once to the whole church and its bell, lands on Carl's startled hop (3.448), holds it for half a second,
+ * then eases in on the organ playing the Wedding March, jazzed: 3.5 cells, the organ whole at the left, the two of
+ * them at the right. Every note stretches its rank's pipes
  * up and puffs air from their mouths, its bellows drawn down and pumped back up by a crank on the beat. The camera
  * carries on right across the altar to the pews, Carl's family grey and still in the front one, Ellie's bright ones
  * bobbing behind, and comes back in on the two of them by 14 s. Ellie can't keep still: she bobs on the beat and hops
  * on the accents; Carl, stiff, edges away from her along the step and back, hops once when she lands beside him,
- * once on his own (9.613, and she hops as he lands), and once when she bumps him (12.202). The march slows; they turn
- * to each other; he leans in, and the camera pushes in to 2 cells on them under the east window.
+ * once on his own (9.613, and she hops as he lands), and once when she bumps him (12.202). The march slows, and they
+ * turn to each other a step at a time on its slowing notes (15.412, 15.946, 16.811, 17.212): she rolls closer and
+ * rises onto her toes, his lean grows, and the camera pushes in to 2.1 cells on them, low in the frame under the
+ * lower half of the east window over the altar, its light coming down out of the glass onto them.
  *
- * 17.757, waltz bar 1: the kiss, held still. The organ's great chord, the east window's light full on the two of
- * them, a warm second flash from the photographer out of frame (it is the photograph on the funeral's easel), her
- * family's arms in the air. The bell is pulled off and peals on bars 2, 3 and 4, petals thrown up over the aisle; she
- * spins away and he follows, and the camera pulls out as they run down the aisle; she hits the doors on 21.223 and
- * they fly open on the morning; at 21.577 they are through them, running level to the right at 1.6 cells a second,
- * she a step ahead: the cut (`CUTS.house`).
+ * 17.757, waltz bar 1: the kiss, the last of the gap closed. The organ's great chord, the east window's light full on
+ * the two of them, a warm second flash from the photographer out of frame (it is the photograph on the funeral's
+ * easel), her family's arms in the air. The bell is pulled off and peals on bars 2, 3 and 4, petals thrown up over the
+ * aisle; she spins away and he follows. The camera pulls out from the kiss on the swell and comes to rest on its crest
+ * (bar 3, the loudest bars of the cue), the whole nave and the bell swinging in its tower; then goes in after them
+ * down the aisle. She hits the doors on 21.223 and they fly open on the morning; at 21.577 they are through them,
+ * running level to the right at 1.6 cells a second, she a step ahead: the cut (`CUTS.house`).
  *
- * The part's frame is the church world's, shifted by `WEDDING_AT` (Carl at the altar is its (-0.5, 0)).
+ * The part's frame is the church world's, shifted by `WEDDING_AT` (Carl at the altar is its (-0.5, 0)). The camera's
+ * keys are in the church world's cells.
  */
 
 /** Where this part's entry cell is, in its world's cells (the score starts its leg here). */
@@ -81,10 +86,38 @@ const SHUFFLE_BACK: [number, number][] = [
 const STEP = 0.1
 /** She bumps him on the march's strongest onset. */
 const BUMP = 12.202
+/**
+ * The turn to each other, step by step on the slowing march's onsets (15.412, 15.946, 16.811, 17.212): on each she
+ * rolls a little closer and rises a little taller, and his lean grows; the last step closes the gap on the kiss.
+ */
+const TOWARD: [number, number][] = [
+  [15.412, 15.72],
+  [15.946, 16.26],
+  [16.811, 17.12],
+  [17.212, KISS],
+]
+/** How far each step rolls her toward him, rises her (her height's stretch), leans him (radians toward her). */
+const HER_ROLL = [0.02, 0.015, 0.02, 0.025]
+const HER_RISE = [0.035, 0.03, 0.025, 0.01]
+const HIS_LEAN = [0.035, 0.035, 0.04, 0.04]
+/** He closes the last of the gap with her on the kiss, and runs from there. */
+const KISS_STEP = 0.02
+const toward = (T: number, amounts: number[]): number => TOWARD.reduce((v, [a, b], i) => v + amounts[i] * ease(T, a, b), 0)
+/** A breath in on each step: up from rest to 1 a fifth of a second after its onset, and a long damped settle. */
+const breathIn = (T: number): number =>
+  TOWARD.reduce((v, [a]) => {
+    const u = (T - a) / 0.2
+    return u <= 0 ? v : v + u * u * Math.exp(2 * (1 - u))
+  }, 0)
+/** How far she has risen onto her toes (her height's stretch less 1): step by step to the kiss, down as she spins away. */
+const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) * (1 - ease(T, 17.85, HER_RUN))
+
 /** She spins away on bar 1's second beat; he follows. She hits the doors on bar 4's second beat. */
 const HER_RUN = 18.123
 const HIS_RUN = 18.3
 const DOORS = 21.223
+/** The swell's crest, where the camera's pull-out from the kiss comes to rest: waltz bar 3's second beat. */
+const SWELL = 20.201
 /** Where the two are at the cut, world x, running 1.6 cells a second: he in the doorway, she out on the landing. */
 const CUT_CARL = CH.tower[1] - CH.wall / 2
 const CUT_ELLIE = CUT_CARL + 0.36
@@ -92,13 +125,13 @@ const SPEED = 1.6
 
 /* ------------------------------------------------------------------ the two of them, as functions of show time (world cells) */
 
-const carlRun = pchip([HIS_RUN, 18.95, CUT.house], [ALTAR_CARL, ALTAR_CARL + 0.55, CUT_CARL], 0, SPEED)
+const carlRun = pchip([HIS_RUN, 18.95, CUT.house], [ALTAR_CARL + KISS_STEP, ALTAR_CARL + 0.55, CUT_CARL], 0, SPEED)
 const ellieRun = pchip([HER_RUN, 18.75, CUT.house], [ALTAR_ELLIE - 0.08, ALTAR_ELLIE + 0.36, CUT_ELLIE], 0, SPEED)
 
 function carl(T: number): Pt {
   if (T >= HIS_RUN) return [carlRun(T), 0]
   // The shuffle away and back; then pushed a little way along by her bump, and back to his place.
-  let x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6)
+  let x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6) + KISS_STEP * ease(T, TOWARD[3][0], KISS)
   for (const [a, b] of SHUFFLE_OUT) x -= STEP * ease(T, a, b)
   for (const [a, b] of SHUFFLE_BACK) x += STEP * ease(T, a, b)
   let y = 0
@@ -118,10 +151,11 @@ function ellie(T: number): Pt {
     x = ALTAR_ELLIE - 0.1 + 0.15 * (1 - (1 - u) * (1 - u))
   } else if (T >= 12.8) {
     x = ALTAR_ELLIE + 0.05 - 0.05 * ease(T, 12.8, 13.7)
-    // Turned to him: a little closer as the march slows, and in to the touch on the kiss.
-    x -= 0.03 * ease(T, 14.25, 15.4) + 0.05 * ease(T, 16.811, KISS)
+    // Turned to him: a roll closer on each of the slowing march's onsets, the last into the touch on the kiss.
+    x -= toward(T, HER_ROLL)
   }
-  let y = -0.032 * bounce(T) * restless(T)
+  // Risen onto her toes: taller about her bottom, so she stays on the floor.
+  let y = -0.032 * bounce(T) * restless(T) - R * rise(T)
   for (const [a, b] of ELLIE_HOPS) y -= lift(T, a, b, HER_G)
   return [x, y]
 }
@@ -143,10 +177,11 @@ function carlPose(T: number): { tilt: number; squash: number } {
   }
   // Stepped away, he looks back at the pews; he stops looking as he steps back in.
   const glance = 0.07 * smooth(T, 6.1, 6.6) * (1 - smooth(T, 7.3, 7.85))
-  // A nervous nod on the march's last phrase: a small bow and back, slow.
-  const nod = 0.08 * ease(T, 15.412, 15.75) * (1 - ease(T, 15.95, 16.6))
-  const lean = 0.15 * ease(T, 16.811, KISS) * (1 - ease(T, 18.05, HIS_RUN + 0.35))
-  return { tilt: step + glance + nod + lean, squash }
+  // His lean toward her, growing a step on each of the slowing march's onsets into the kiss; straightened as he runs.
+  const lean = toward(T, HIS_LEAN) * (1 - ease(T, 18.05, HIS_RUN + 0.35))
+  // Each step of it a small settle as it lands.
+  for (const [, b] of TOWARD) squash += 0.025 * (T < b ? ease(T, b - 0.12, b) : knock(T - b, 0.16))
+  return { tilt: step + glance + lean, squash }
 }
 
 /* ------------------------------------------------------------------ the photographer */
@@ -461,6 +496,32 @@ function drawExposure(p: p5, c: Ctx, T: number): void {
   }
 }
 
+/* ------------------------------------------------------------------ the pull-out on the swell */
+
+/**
+ * The camera's one move from the kiss to the swell's crest, as keys along one curve: the zoom eases out from rest on
+ * the kiss and comes to rest on the crest, in even steps of scale (a cubic in log cells); the frame rises with the
+ * cells it opens (linear in cells, not in their log), so under Zoom the two of them, running along the floor, stay
+ * inside its bottom third all the way out; across, it eases out after them and arrives drifting on with them at
+ * `drift` cells a second, so only the zoom and the rise come to rest on the crest. Sampled closer at the ends, where
+ * the curve turns, so the director's monotone cubic through the samples is the curve.
+ */
+const PULL = { from: KISS, to: SWELL, cells: [2.1, 6.4], x: [0.285, 2.95], y: [-0.52, -1.97], drift: 1.3 }
+function pullOut<K>(key: (t: number, cells: number, x: number, y: number) => K): K[] {
+  const { from, to, cells, x, y, drift } = PULL
+  const across = (drift * (to - from)) / (x[1] - x[0])
+  const n = 20
+  const out: K[] = []
+  for (let i = 1; i <= n; i++) {
+    const u = (1 - Math.cos((Math.PI * i) / n)) / 2
+    const s = u * u * (3 - 2 * u)
+    const c = cells[0] * Math.pow(cells[1] / cells[0], s)
+    const up = (c - cells[0]) / (cells[1] - cells[0])
+    out.push(key(from + (to - from) * u, c, x[0] + (x[1] - x[0]) * (s + (u * u * u - u * u) * across), y[0] + (y[1] - y[0]) * up))
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface WeddingState {
@@ -526,7 +587,9 @@ export const wedding = part<WeddingState>(
     const segs = lane(carl, slot.begin, slot.end, at)
     const her = (T: number): Companion => {
       const [x, y] = ellie(T)
-      return { x: x - at[0], y: y - at[1] }
+      const up = rise(T)
+      // Risen, she is a touch taller (stretched on the vertical); round again as she spins away.
+      return up > 1e-4 ? { x: x - at[0], y: y - at[1], stretch: 1 + up, angle: Math.PI / 2 } : { x: x - at[0], y: y - at[1] }
     }
     const [bx0, by0, bx1, by1] = CHURCH_BOX
     return {
@@ -541,34 +604,49 @@ export const wedding = part<WeddingState>(
   (slot) => {
     const at = WEDDING_AT
     const key = (t: number, cells: number, x: number, y: number) => ({ t, cells, hold: [x - at[0], y - at[1]] as Pt, w: 1 })
-    // The photograph; one reveal of the whole church (over 5 cells for under 2 s, done by 4.5); in on the organ
-    // playing, the two of them at the right of it, and on across the altar to the families in the pews; back in on
-    // the two of them by 14 s; a push to 2 cells for the kiss under the east window, held there until the run; then
-    // one pull-out on the swell, from rest, taking the bell and the run down the aisle, onto the doors at the cut.
-    // (Under Zoom the two of them stay whole throughout: the organ frames keep them in its right third.)
+    // The photograph; one reveal of the whole church and its bell, landed on Carl's startled hop (3.448) and let
+    // drift for half a second before it eases in on the organ playing, the two of them at the right of it; on across
+    // the altar to the families in the pews; back in on the two of them by 14 s; in to 2.1 cells for the kiss under the
+    // east window, its light on them. From the kiss, one pull-out on the swell that comes to rest on its crest (waltz bar 3, the
+    // loudest bars of the cue) with the bell pealing in its tower at the top of the frame, the families up and the
+    // petals over the aisle; then after the two of them down the aisle to the doors, in to 5 cells for the cut.
+    // (Under Zoom the two of them stay whole throughout: the wide frames keep them just inside its bottom third.)
     return [
       // The photograph: the two of them left of centre, the camera and its tray at the right, a slow drift in on it
       // through the flash, while the rig folds away.
       key(0.001, 3.1, 1.46, -0.5),
       key(1.3, 3.0, 1.4, -0.52),
-      // Out, once, as the march gets going: organ, altar, families, tower, bell, doors.
-      key(3.4, 6.0, 0.9, -1.72),
+      // Out, once, as the march gets going: organ, altar, families, tower, bell, doors; landed on his hop, and a
+      // breath held on it.
+      key(CARL_HOPS[0][0], 6.0, 0.9, -1.72),
+      key(3.95, 5.9, 0.78, -1.69),
       // In on the organ, whole at the left (every rank breathing on the loud bars), the two of them at the right.
-      key(5.3, 3.5, -1.33, -0.9),
+      key(6.1, 3.5, -1.3, -0.9),
       // Carried across it to the right as it plays on,
       key(7.7, 3.35, -0.95, -0.88),
       // past the two of them (her hops, his hop) to the pews: his family still, hers bobbing.
       key(10.1, 3.15, 1.35, -0.8),
-      // Back in on the two of them: her bump (12.202) on the way, there as the march slows.
-      key(13.9, 2.4, 0.3, -0.34),
-      key(16.811, 2.1, 0.27, -0.24),
-      // The kiss, centred at 2 cells, the east window's light on them; held still until he runs.
-      key(KISS, 2.0, 0.26, -0.2),
-      key(HIS_RUN, 2.0, 0.26, -0.2),
-      // Out on the whole swell, the petals over the aisle, following them to the doors; and on out, without a stop,
-      // through the cut into the house's opening.
-      key(20.5, 4.7, 3.05, -0.95),
-      // The cut (`CUTS.house`): 5 cells, Carl 0.9 left of centre and 0.9 below it.
+      // Back in on the two of them: her bump (12.202) on the way, there as the march slows. The frame's middle rises
+      // only (-0.8 to -0.52), so there is no tilt back.
+      key(13.9, 2.4, 0.33, -0.57),
+      // Then a creep in, level, as they turn to each other, the edges held: the altar whole at the left with its
+      // candles and flowers, his parents' pew whole at the right, the next pew out (its seat's lip is 0.02 past the
+      // pew's back, x 2.17; the frame's right edge is 2.15 on the kiss). The top edge (-1.57) cuts the east window
+      // (sill -1.05, arch -2.3) near its middle and the lancets (sill -1.3) a third up, so each reads as a window,
+      // its glass in rows, and the kiss's light comes out of glass we see. (A frame edge a hair above a sill left a
+      // stray grey bar; one below the sill cut the candles and filled 40% of the frame with the foundation and soil.
+      // The window whole needs 3.4 cells: Zoom holds them only within a third of the frame's height of its middle: here the
+      // middle at most 0.57 over their centres.)
+      key(TOWARD[0][0], 2.2, 0.305, -0.54),
+      key(16.811, 2.12, 0.29, -0.525),
+      // The kiss at 2.1 cells, the two of them low in the frame under the east window's light.
+      key(KISS, 2.1, 0.285, -0.52),
+      // Out from it on the swell, from rest, to its crest (bar 3's second beat): the whole nave, altar to tower, the
+      // bell swinging whole in the belfry at the top, the families up, the petals; the two of them running low in it.
+      ...pullOut(key),
+      // Settled there on the crest, drifting on after them,
+      key(SWELL + 0.25, 6.3, 3.28, -1.95),
+      // and in after them to the doors. The cut (`CUTS.house`): 5 cells, Carl 0.9 left of centre and 0.9 below it.
       key(slot.end, 5, CUT_CARL + 0.9, -0.9),
     ].filter((s) => s.t >= slot.begin && s.t <= slot.end)
   },

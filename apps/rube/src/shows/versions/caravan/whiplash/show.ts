@@ -28,7 +28,8 @@ export interface Stage {
   scenery: Placed[]
   /** The ball's parts, in order of time. */
   chain: Placed[]
-  /** What is laid over everything, the ball included: light and weather, drawn in their `over`. */
+  /** What is laid over everything, the ball included: light and weather, drawn in their `over`. A `draw` here comes
+   * after every part and before the balls. */
   after?: Placed[]
   /** Show time from which this universe is on the stage. */
   from: number

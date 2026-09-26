@@ -1,9 +1,10 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH } from '../drums'
-import { CHEST, POSES, RIG, beatPose, reachFromHead, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { CHEST, POSES, RIG, beatPose, blendPose, mixArm, reachFromHead, wrapAngle, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BREAK, FINAL, LAST_CHORD, RIDE, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
+import { pushOff } from './rubato-hits'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
 /**
@@ -163,7 +164,8 @@ export function crashAskew(T: number): number {
   const set = slip * (1 - u)
   // Straight, and the last small rock as his hand leaves it.
   const after = T > FIX[1] ? 0.018 * Math.exp(-(T - FIX[1]) / 0.45) * Math.sin(2 * Math.PI * 1.5 * (T - FIX[1])) : 0
-  return set + after
+  // And in the rubato, giving under him as he springs off it for the metronome's weight, and ringing after.
+  return set + after + pushOff(T)
 }
 
 /** The crash's right rim, in the Carnegie frame, at an angle `a` off its level (its tilt plus how askew it is). */
@@ -187,18 +189,8 @@ function reach(shoulder: Pt, target: Pt, dir: number, hand: HandShape): ArmPose 
   const up = base - a
   const e: Pt = [shoulder[0] + Math.cos(up) * U, shoulder[1] + Math.sin(up) * U]
   const fa = Math.atan2(target[1] - e[1], target[0] - e[0])
-  return { up, bend: fa - up, wrist: dir - fa, hand }
+  return { up: wrapAngle(up), bend: wrapAngle(fa - up), wrist: wrapAngle(dir - fa), hand }
 }
-
-/** Between two arm poses, `u` 0..1, the upper arm turning the short way round (hanging to raised goes out to the side, not across the chest). */
-function mixArm(a: ArmPose, b: ArmPose, u: number): ArmPose {
-  let d = b.up - a.up
-  while (d > Math.PI) d -= Math.PI * 2
-  while (d < -Math.PI) d += Math.PI * 2
-  return { up: a.up + d * u, bend: a.bend + (b.bend - a.bend) * u, wrist: a.wrist + (b.wrist - a.wrist) * u, hand: u < 0.5 ? a.hand : b.hand }
-}
-/** Between two poses, each arm the short way round. */
-const turnPose = (a: Pose, b: Pose, u: number): Pose => ({ left: mixArm(a.left, b.left, u), right: mixArm(a.right, b.right, u) })
 
 /** His right hand on the crash's rim while he straightens it. */
 function fixing(T: number): ArmPose {
@@ -228,10 +220,10 @@ export function poseAt(t: number): Pose {
   if (t > CONDUCT[0] && t < CONDUCT[1] + 1.4) {
     const on = ease(t, CONDUCT[0], CONDUCT[0] + 1.6) * (1 - ease(t, CONDUCT[1], CONDUCT[1] + 1.3))
     const size = 0.3 + 0.6 * ease(t, CONDUCT[0], CONDUCT[0] + 16)
-    return turnPose(POSES.rest, beatPose(beatAt(t), size), on)
+    return blendPose(POSES.rest, beatPose(beatAt(t), size), on)
   }
   // The rubato: a small beat with the rod's strokes, the left hand still at his chest.
-  if (t > RUBATO[0] && t < RUBATO[1]) return turnPose(POSES.rest, beatPose(beatAt(t, RUBATO_BEATS), 0.32, true), rubatoOn(t))
+  if (t > RUBATO[0] && t < RUBATO[1]) return blendPose(POSES.rest, beatPose(beatAt(t, RUBATO_BEATS), 0.32, true), rubatoOn(t))
   // The hush: his right hand up to the crash's rim, straightening it, and back down.
   if (t > GRIP[0] && t < LET_GO + 0.9) {
     const on = ease(t, GRIP[0], GRIP[1]) * (1 - ease(t, LET_GO, LET_GO + 0.9))
@@ -240,27 +232,32 @@ export function poseAt(t: number): Pose {
   if (t < BREAK + 0.2) return POSES.rest
   // In the silence before the last chord, both hands come up, open: the band ready.
   const ready = POSES.ready
-  if (t < LAST_CHORD - 0.12) return turnPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
+  if (t < LAST_CHORD - 0.12) return blendPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
   // The chord: a downbeat with both hands, and up again, held high and open, rising a little as it swells.
   if (t < FINAL - 0.62) return { right: heldHigh(t), left: heldHigh(t, 'left') }
-  // The cut-off, with his left hand (the house's right, out over the clear wall past the bass's scroll: his right
-  // side is all the frame's arm and sticks). Open, it circles out and up (the breath before it), then comes down
-  // hard and closes ON the last stroke: the fist, at his eye line. It stops dead there and holds, no settle. The
-  // right hand comes down to his side during the circle and hangs still, so nothing moves on the cut but the fist.
+  // The cut-off, with his left hand (the house's right, out over clear wall: his right side is all the frame's arm
+  // and sticks). Open, it circles out and up (the breath before it), then comes down hard and closes ON the last
+  // stroke: the fist, at his eye line. It stops dead there and holds, no settle. The right hand comes down during
+  // the circle and hangs close at his side (`SIDE`), still, so nothing moves on the cut but the fist, and the frame's
+  // steel fist pinning the crash has clear wall between it and his hand.
   const shoulder: Pt = [RIG.shoulder, RIG.drop]
   const wristOf = (a: ArmPose): Pt => {
     const e: Pt = [shoulder[0] + Math.cos(a.up) * RIG.upper, shoulder[1] + Math.sin(a.up) * RIG.upper]
     return [e[0] + Math.cos(a.up + a.bend) * RIG.fore, e[1] + Math.sin(a.up + a.bend) * RIG.fore]
   }
-  const from = wristOf(heldHigh(FINAL - 0.62, 'left'))
-  const right: ArmPose = mixArm(heldHigh(FINAL - 0.62), POSES.rest.right, ease(t, FINAL - 0.62, FINAL - 0.1))
+  const held = heldHigh(FINAL - 0.62, 'left')
+  const from = wristOf(held)
+  // The palm turns out from the held chord's angle as the circle begins, not in one frame.
+  const heldDir = held.up + held.bend + held.wrist
+  const right: ArmPose = mixArm(heldHigh(FINAL - 0.62), SIDE, ease(t, FINAL - 0.62, FINAL - 0.1))
   let left: ArmPose
   if (t < CIRCLE) {
     // Out and up, open, the palm turning out: a small loop that bulges away from him.
     const u = ease(t, FINAL - 0.62, CIRCLE)
     const bulge = Math.sin(Math.PI * u) * 0.12
     const w: Pt = [from[0] + (APEX[0] - from[0]) * u + bulge, from[1] + (APEX[1] - from[1]) * u]
-    left = reachFromHead(1, w, -1.2 - 0.35 * u, 'open')
+    const dir = -1.2 - 0.35 * u
+    left = reachFromHead(1, w, heldDir + wrapAngle(dir - heldDir) * ease(t, FINAL - 0.62, FINAL - 0.4), 'open')
   } else {
     // The strike: gathering speed all the way down, round the outside, and stopping on the stroke.
     const v = clamp((t - CIRCLE) / (FINAL - CIRCLE))
@@ -269,10 +266,26 @@ export function poseAt(t: number): Pose {
     const w: Pt = [APEX[0] + (FIST[0] - APEX[0]) * u + bow, APEX[1] + (FIST[1] - APEX[1]) * u]
     left = reachFromHead(1, w, -1.55 + (1.55 - 0.35) * u, t >= FINAL - 0.02 ? 'fist' : 'open')
   }
+  // Held, and then lowered on the inside: the fist comes in to his chest and on down to hang at his side (blended
+  // joint by joint it swung out sideways first, the fist held out at arm's length like a signal).
   const down = ease(t, FINAL + 3.2, FINAL + 6.4)
   if (down <= 0) return { right, left }
-  return { right, left: { ...mixArm(left, POSES.rest.left, down), hand: down < 0.6 ? 'fist' : 'beat' } }
+  const v = 1 - down
+  const w: Pt = [v * v * FIST[0] + 2 * v * down * IN[0] + down * down * HANG[0], v * v * FIST[1] + 2 * v * down * IN[1] + down * down * HANG[1]]
+  return { right, left: reachFromHead(1, w, -0.35 + (HANG_DIR + 0.35) * down, down < 0.6 ? 'fist' : 'beat') }
 }
+
+/** The lowered fist's way down: pulled in toward his chest (`IN` bends the path), to hang at his side. */
+const IN: Pt = [-0.1, 0.5]
+const HANG: Pt = [0.55, 1.12]
+const HANG_DIR = 1.26
+
+/**
+ * His right hand (the house's left) from the cut-off to the end: hanging close at his side, the arm near straight
+ * down, the hand by his thigh. `POSES.rest` holds it out from his hip, and there it met the frame's steel fist on the
+ * crash's rim (the last image read as the machine handing him the stick).
+ */
+const SIDE: ArmPose = { up: Math.PI * 0.545, bend: -0.05, wrist: 0.04, hand: 'beat' }
 
 /** The loop's top, and where the fist stops: relative to his head (his left hand, on the house's right). */
 const APEX: Pt = [1.0, -0.95]
@@ -297,9 +310,8 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
  */
 export function jimAt(t: number): Pt {
   const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
-  // Drawn toward the stage too when the solo's camera and the build's come to him.
+  // Drawn toward the stage too when the solo's camera comes to him.
   const solo = 0.06 * ease(t, 304.2, 305.6) * (1 - ease(t, 307.2, 308.6))
-  const build = 0.06 * ease(t, 396.0, 397.4) * (1 - ease(t, 398.6, 400.0))
-  const lean = hush + solo + build + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
+  const lean = hush + solo + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
   return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
 }

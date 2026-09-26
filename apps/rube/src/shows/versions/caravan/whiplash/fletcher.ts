@@ -54,9 +54,14 @@ export const POSES = {
   fist: { right: arm(-Math.PI * 0.75, 0.55, -0.1, 'fist'), left: arm(Math.PI * 0.4, 0.1, -0.05, 'beat') },
 } satisfies Record<string, Pose>
 
+/** An angle wrapped into (-pi, pi]. */
+export const wrapAngle = (a: number): number => a - 2 * Math.PI * Math.ceil((a - Math.PI) / (2 * Math.PI))
+
 /**
  * An arm reaching its wrist to `target` (relative to the head) from the shoulder on `side` (-1 his right, the
- * house's left; +1 his left): two links, the elbow on the low side, the hand pointing along `dir` in `shape`.
+ * house's left; +1 his left): two links, the elbow on the low side, the hand pointing along `dir` in `shape`. Every
+ * angle comes back wrapped into (-pi, pi]: `atan2` jumps a whole turn as the forearm passes the horizontal, and
+ * unwrapped, that jump became a real turn of the forearm in one frame wherever a blend was running.
  */
 export function reachFromHead(side: -1 | 1, target: Pt, dir: number, shape: HandShape): ArmPose {
   const U = RIG.upper
@@ -71,7 +76,7 @@ export function reachFromHead(side: -1 | 1, target: Pt, dir: number, shape: Hand
   const ex = side * RIG.shoulder + Math.cos(up) * U
   const ey = RIG.drop + Math.sin(up) * U
   const fa = Math.atan2(target[1] - ey, target[0] - ex)
-  return arm(up, fa - up, dir - fa, shape)
+  return arm(wrapAngle(up), wrapAngle(fa - up), wrapAngle(dir - fa), shape)
 }
 
 /**
@@ -95,20 +100,24 @@ export function beatPose(phase: number, size = 0.7, hold = false): Pose {
   return { right, left }
 }
 
-/** Between two poses, `u` 0..1 (ease it yourself), each shoulder turning the short way round. A hand's shape changes halfway. */
-export function blendPose(a: Pose, b: Pose, u: number): Pose {
-  const m = (x: ArmPose, y: ArmPose): ArmPose => {
-    let d = y.up - x.up
-    while (d > Math.PI) d -= 2 * Math.PI
-    while (d < -Math.PI) d += 2 * Math.PI
-    return {
-      up: x.up + d * u,
-      bend: x.bend + (y.bend - x.bend) * u,
-      wrist: x.wrist + (y.wrist - x.wrist) * u,
-      hand: u < 0.5 ? x.hand : y.hand,
-    }
+/**
+ * Between two arm poses, `u` 0..1 (ease it yourself), every joint turning the short way round: the shoulder (a
+ * hanging arm raised goes out to the side, not across the chest), the elbow and the wrist (an angle a whole turn
+ * off its twin is the same arm, and lerped straight it swung the forearm round in one frame). A hand's shape
+ * changes halfway.
+ */
+export function mixArm(x: ArmPose, y: ArmPose, u: number): ArmPose {
+  return {
+    up: x.up + wrapAngle(y.up - x.up) * u,
+    bend: x.bend + wrapAngle(y.bend - x.bend) * u,
+    wrist: x.wrist + wrapAngle(y.wrist - x.wrist) * u,
+    hand: u < 0.5 ? x.hand : y.hand,
   }
-  return { left: m(a.left, b.left), right: m(a.right, b.right) }
+}
+
+/** Between two poses, `u` 0..1 (ease it yourself), each arm by `mixArm`. The one blend every part uses. */
+export function blendPose(a: Pose, b: Pose, u: number): Pose {
+  return { left: mixArm(a.left, b.left, u), right: mixArm(a.right, b.right, u) }
 }
 
 export interface ConductorLook {

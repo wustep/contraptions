@@ -8,8 +8,9 @@ import { wordPainter } from './words'
 
 /**
  * A show's stage. The live canvas fills whatever the panel leaves, as
- * Machine's does; a file is a frame of its own, 16:9 at a size that was
- * asked for, painted by the same one function.
+ * Machine's does; a file is a frame of its own at a size that was asked for
+ * (16:9, or Shorts' 9:16 with the 16:9 show letterboxed), painted by the
+ * same one function.
  *
  * The rule of this stage is that **the canvas is the picture and nothing
  * else**. The title, the credit, the clock, the play button: all of it is
@@ -34,27 +35,55 @@ export interface FrameSize {
   label: string
   w: number
   h: number
+  /**
+   * How a canvas that is not 16:9 is filled when a file is made.
+   * `expand` (default): the live stage's rule — see more world around the
+   * composed frame, never less of it.
+   * `letterbox`: keep the 16:9 composition whole and pad the rest black.
+   * Shorts use letterbox: shows are staged for 16:9, so inventing vertical
+   * FOV or cropping the sides would break framing; black bars are honest.
+   */
+  fit?: 'expand' | 'letterbox'
 }
 
-/** The sizes a show is saved at. */
+/** The sizes a show is saved at. Default in the panel is 1080p. */
 export const FRAME_SIZES: FrameSize[] = [
   { label: '720p', w: 1280, h: 720 },
   { label: '1080p', w: 1920, h: 1080 },
+  // YouTube Shorts: 1080×1920 (9:16). Letterbox the 16:9 show — see FrameSize.fit.
+  { label: 'Shorts', w: 1080, h: 1920, fit: 'letterbox' },
 ]
 
-/** One frame of a show, into the whole of whatever canvas `p` has. */
-export function paintShow(p: p5, perf: Performance, t: number, overview = false, zoom = false): void {
+/** Where the 16:9 composition sits inside a saved frame. */
+export function contentRect(size: FrameSize): { x: number; y: number; w: number; h: number } {
+  if (size.fit !== 'letterbox') return { x: 0, y: 0, w: size.w, h: size.h }
+  const w = size.w
+  const h = Math.round(size.w / ASPECT)
+  return { x: 0, y: Math.floor((size.h - h) / 2), w, h }
+}
+
+/** One frame of a show into `dest` (defaults to the whole of `p`). */
+export function paintShow(
+  p: p5,
+  perf: Performance,
+  t: number,
+  overview = false,
+  zoom = false,
+  dest?: { x: number; y: number; w: number; h: number },
+): void {
   const time = Math.max(0, Math.min(perf.duration, t))
   const here = perf.show.at(time)
   const cam = perf.camera?.(time) ?? followCamera(perf.show, time, here)
   // Zoom is a tighter follow. Overview is the whole world and wins if both are asked.
   const follow = zoom && !overview ? { ...cam, cells: cam.cells / FOLLOW_ZOOM } : cam
-  const W = p.width
-  const H = p.height
+  const x = dest?.x ?? 0
+  const y = dest?.y ?? 0
+  const W = dest?.w ?? p.width
+  const H = dest?.h ?? p.height
   // The composed frame is always whole: a stage wider or taller than 16:9 sees more world around it, never less of it.
   const k = Math.min(W / ASPECT, H) / follow.cells
   const full = overview ? overviewCamera(here.universe.bounds, W, H) : null
-  drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x: 0, y: 0, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
+  drawWorld(p, perf.show, time, here, full ?? follow, full?.scale ?? k, { x, y, w: W, h: H }, perf.cuts ? perf.cuts(time) : true)
 }
 
 /** No glyph reaches this canvas. The arcade's digits are drawn as pixels and are picture; lettering is not. */
@@ -132,7 +161,9 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
     holder.hidden = !shown
     host.append(holder)
     let at = 0
-    const words = shown && !full && showing.titles ? wordPainter(size.w, size.h) : null
+    const box = contentRect(size)
+    // Credits sit on the 16:9 composition, not on the letterbox bars.
+    const words = shown && !full && showing.titles ? wordPainter(box.w, box.h, box.x, box.y) : null
     const p = new p5((s: p5) => {
       s.setup = () => {
         s.pixelDensity(1)
@@ -142,7 +173,8 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         s.noLoop()
       }
       s.draw = () => {
-        paintShow(s, showing, at, full, tight)
+        if (size.fit === 'letterbox') s.background(0)
+        paintShow(s, showing, at, full, tight, size.fit === 'letterbox' ? box : undefined)
         if (words) words(s.drawingContext as CanvasRenderingContext2D, showing.titles!(Math.max(0, Math.min(showing.duration, at))))
       }
     })

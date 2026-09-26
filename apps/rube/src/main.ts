@@ -282,6 +282,8 @@ const seedInput = el('input', {
 seedInput.addEventListener('change', () => {
   const next = seedInput.value.trim()
   if (next && next !== seed) reroll(next)
+  // An emptied field is not a seed: the show keeps its own, and the field says it again.
+  else if (!next) seedInput.value = seed
 })
 const rerollBtn = el('button', { class: 'primary', title: 'A new seed, a new show (R)' }, ['Reroll', el('kbd', {}, ['R'])])
 rerollBtn.addEventListener('click', () => reroll())
@@ -391,6 +393,8 @@ let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
 const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
+// A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
+window.addEventListener('pointercancel', endScrub)
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
@@ -576,12 +580,18 @@ const onKey = (e: KeyboardEvent) => {
   // focused button keeps only its activation keys, so the rest still work.
   if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
   if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
-  switch (e.key) {
+  // N / n are deliberate opposites (previous / next world). Caps Lock must
+  // not silence every other key on the panel.
+  if (e.key === 'N') {
+    if (!catalogOn) prevWorld()
+    return
+  }
+  switch (e.key.toLowerCase()) {
     case ' ':
       e.preventDefault()
       setPaused(!paused)
       break
-    case 'Escape':
+    case 'escape':
       back()
       break
     case 'r':
@@ -589,9 +599,6 @@ const onKey = (e: KeyboardEvent) => {
       break
     case 'n':
       if (!catalogOn) nextWorldNow()
-      break
-    case 'N':
-      if (!catalogOn) prevWorld()
       break
     case 'o':
       if (viewName() === 'show') setOverview(!overview)
@@ -608,11 +615,11 @@ const onKey = (e: KeyboardEvent) => {
     case 'p':
       shell.toggle()
       break
-    case 'ArrowRight':
+    case 'arrowright':
       setPaused(true)
       seek(now() + (e.shiftKey ? 1 : 1 / 60))
       break
-    case 'ArrowLeft':
+    case 'arrowleft':
       setPaused(true)
       seek(now() - (e.shiftKey ? 1 : 1 / 60))
       break
@@ -646,6 +653,7 @@ if (import.meta.env.DEV) {
     cancelAnimationFrame(raf)
     window.removeEventListener('popstate', onPop)
     window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     view.destroy()
     if (import.meta.env.DEV) delete (window as unknown as Record<string, unknown>).rube

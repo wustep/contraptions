@@ -11,7 +11,7 @@ import { baseAt, bowAt, crashAskew, fletcherAt, floorAt, poseAt } from './conduc
 import { ROLL, rolling } from './finale-clock'
 import { drawFinaleBody } from './finale-rig'
 import { drawDrummerBody } from './solo-rig'
-import { ARCH, BASS, DOOR, FLOOR, JIM_WINGS, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
+import { ARCH, DOOR, FLOOR, JIM_WINGS, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
 import { sinceStroke } from './strokes'
 
 /**
@@ -23,7 +23,8 @@ import { sinceStroke } from './strokes'
  * - the stage floor and its lip, the house below in the dark (the velvet backs of the front rows in the spill);
  * - the band on three risers, each player a dark figure behind a big-band stand with its lamp, horns gilt and up
  *   when they play, lifting on the chorus's accents;
- * - the grand piano (side on, lid up), the upright bass in its stand, Fletcher's podium, the stage door;
+ * - the grand piano (side on, lid up), Fletcher's podium, the stage door (no upright bass: with no player it had no
+ *   job, and every time Fletcher crossed between the kit and his podium its scroll rose out of his head);
  * - the kit, answering every Carnegie part's strokes (`strokes.ts`), its crash knocked askew in the hush until
  *   Fletcher sets it straight (`conductor.ts`), its snare trembling under the finale's roll, its cymbals choked on
  *   the cut-off;
@@ -131,7 +132,6 @@ export const hall = scenery<HallState>({
     door(p, c, T)
     band(p, c, T)
     piano(p, c, T)
-    bass(p, c, T)
     podium(p, c, T)
     p.push()
     p.translate(KIT_AT[0] * c.k, KIT_AT[1] * c.k)
@@ -346,68 +346,6 @@ function piano(p: p5, c: Ctx, T: number): void {
   p.rect((x1 - 0.02) * k, (rim + 0.21) * k, 0.26 * k, 0.12 * k, 0.02 * k)
 }
 
-/** The upright bass in its stand beside the kit (its player is off): a dark varnished body, rim-lit. */
-function bass(p: p5, c: Ctx, T: number): void {
-  const { k, weight } = c
-  const ink = EDGE
-  const lit = 0.35 + 0.65 * Math.max(kitLight(T) * 0.6, bandLight(T))
-  const x = BASS.x + 0.3
-  const foot = FLOOR - 0.28
-  const H = 2.3
-  const body = mixHex(HALL.deep, HALL.floor, 0.3 + 0.3 * lit)
-  const y = (v: number) => -v * H * k
-  p.push()
-  p.translate(x * k, foot * k)
-  p.rotate(-0.06)
-  // The stand: a low black cradle under the lower bout, and the end pin to the floor.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.9)
-  p.line(0, 0, 0.02 * k, 0.26 * k)
-  solid(p, ink, weight * 0.7, HALL.black)
-  p.rect(-0.55 * k, -0.18 * k, 1.1 * k, 0.1 * k, 0.03 * k)
-  p.rect(-0.07 * k, -0.1 * k, 0.14 * k, 0.36 * k, 0.02 * k)
-  // The body: lower bout, the waist with its C-bouts, the upper bout sloping in to the neck.
-  solid(p, ink, weight * 0.9, body)
-  p.beginShape()
-  p.vertex(0, y(0))
-  p.bezierVertex(0.5 * k, y(0), 0.66 * k, y(0.1), 0.64 * k, y(0.28))
-  p.bezierVertex(0.62 * k, y(0.4), 0.46 * k, y(0.44), 0.4 * k, y(0.5))
-  p.bezierVertex(0.36 * k, y(0.55), 0.5 * k, y(0.6), 0.5 * k, y(0.7))
-  p.bezierVertex(0.5 * k, y(0.84), 0.3 * k, y(0.92), 0.12 * k, y(1))
-  p.vertex(-0.12 * k, y(1))
-  p.bezierVertex(-0.3 * k, y(0.92), -0.5 * k, y(0.84), -0.5 * k, y(0.7))
-  p.bezierVertex(-0.5 * k, y(0.6), -0.36 * k, y(0.55), -0.4 * k, y(0.5))
-  p.bezierVertex(-0.46 * k, y(0.44), -0.62 * k, y(0.4), -0.64 * k, y(0.28))
-  p.bezierVertex(-0.66 * k, y(0.1), -0.5 * k, y(0), 0, y(0))
-  p.endShape(p.CLOSE)
-  // The f-holes: two thin dark slits either side of the bridge.
-  p.noFill()
-  p.stroke(mixHex(body, HALL.black, 0.75))
-  p.strokeWeight(weight * 1.1)
-  for (const s of [-1, 1]) p.bezier(s * 0.2 * k, y(0.54), s * 0.28 * k, y(0.46), s * 0.14 * k, y(0.4), s * 0.22 * k, y(0.3))
-  // The bridge and the tailpiece, the fingerboard up the neck, the pegbox and its scroll.
-  solid(p, ink, weight * 0.6, mixHex(HALL.floor, HALL.beam, 0.35 * lit))
-  p.rect(-0.13 * k, y(0.44), 0.26 * k, 0.08 * k, 0.02 * k)
-  solid(p, ink, weight * 0.7, HALL.black)
-  p.quad(-0.07 * k, y(0.08), 0.07 * k, y(0.08), 0.1 * k, y(0.28), -0.1 * k, y(0.28))
-  p.quad(-0.05 * k, y(0.52), 0.05 * k, y(0.52), 0.07 * k, y(1.72), -0.07 * k, y(1.72))
-  solid(p, ink, weight * 0.8, body)
-  p.rect(-0.06 * k, y(1.87), 0.12 * k, 0.16 * H * k, 0.04 * k)
-  p.noFill()
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.8)
-  p.arc(0.03 * k, y(1.88), 0.18 * k, 0.18 * k, Math.PI * 0.9, Math.PI * 2.4)
-  // The strings, faint, from the tailpiece over the bridge and up the fingerboard.
-  p.stroke(alpha(p, HALL.beam, 0.2 * lit))
-  p.strokeWeight(weight * 0.4)
-  for (const s of [-0.025, 0.025]) p.line(s * k, y(0.24), s * 1.4 * k, y(1.7))
-  // The rim light down its right side.
-  p.stroke(alpha(p, HALL.gold, 0.16 + 0.3 * lit))
-  p.strokeWeight(weight * 0.9)
-  p.bezier(0.5 * k, y(0.62), 0.5 * k, y(0.75), 0.4 * k, y(0.88), 0.14 * k, y(0.99))
-  p.pop()
-}
-
 function podium(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
   solid(p, EDGE, weight * 0.8, HALL.black)
@@ -581,10 +519,10 @@ export function hallLight(p: p5, c: Ctx, T: number): void {
 
 /**
  * How much the wings' light is up for Jim, 0..1: while the camera is with him. The solo's look across at him
- * (`solo.ts`, 304.8-307.9), the hush's visit (358.6-367.8), and the build's (`fast.ts`, 396.7-398.9).
+ * (`solo.ts`, 304.8-307.9) and the hush's visit (358.6-367.8). The build stays on the machine.
  */
 export function jimLit(T: number): number {
-  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.6, 367.8), visit(T, 395.4, 400.4))
+  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.6, 367.8))
 }
 
 const smoothIn = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))

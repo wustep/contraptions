@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { POSES, RIG, beatPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { POSES, RIG, beatPose, mixArm, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BUTTON, CARNEGIE, CHORD, SOLO, SHOUT_ORIGIN, SHOUT_PERIOD, level } from '../music'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT } from './stage'
 
@@ -226,13 +226,6 @@ function lift(ph: number): number {
 }
 
 const arm = (up: number, bend: number, wrist: number, hand: HandShape): ArmPose => ({ up, bend, wrist, hand })
-/** An arm's angles eased from `a` to `b`, the shoulder turning the short way round. The hand's shape changes halfway. */
-function mixArm(a: ArmPose, b: ArmPose, u: number): ArmPose {
-  let d = b.up - a.up
-  while (d > Math.PI) d -= 2 * Math.PI
-  while (d < -Math.PI) d += 2 * Math.PI
-  return { up: a.up + d * u, bend: a.bend + (b.bend - a.bend) * u, wrist: a.wrist + (b.wrist - a.wrist) * u, hand: u < 0.5 ? a.hand : b.hand }
-}
 
 /** His beat's size: the louder the band, the bigger. */
 const size = (T: number): number => 0.58 + 0.38 * clamp((level(T) - 0.5) / 0.4)

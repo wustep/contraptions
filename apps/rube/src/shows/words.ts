@@ -117,21 +117,23 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
   shape(ring)
   ctx.fill()
   ctx.shadowColor = 'transparent'
-  // The stylesheet's plain `.swatch` also reaches it: a 2px border in the gold of its line, inside the disc.
+  // A ring in the gold of its line inside the disc, a share of the card's unit, as the stylesheet draws it.
   ctx.fillStyle = GOLD
   shape(0)
   ctx.fill()
   ctx.fillStyle = slab ? spec.slice(5) : spec
-  shape(-2)
+  shape(-u * 0.28)
   ctx.fill()
 }
 
 /**
- * A painter of cards over a frame `w` × `h` (16:9, the whole of it). Each card
- * is set on the painter's own canvas and laid over `into` at its light, out
- * of focus as it comes and goes, as the page fades and blurs its DOM.
+ * A painter of cards over a frame `w` × `h` (the 16:9 composition). Each card
+ * is set on the painter's own canvas and laid over `into` at (`dx`, `dy`) at
+ * its light, out of focus as it comes and goes, as the page fades and blurs
+ * its DOM. Shorts pass the letterboxed content's origin so credits sit on the
+ * picture, not the bars.
  */
-export function wordPainter(w: number, h: number): (into: CanvasRenderingContext2D, cards: TitleCard[]) => void {
+export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: CanvasRenderingContext2D, cards: TitleCard[]) => void {
   const surface = document.createElement('canvas')
   surface.width = w
   surface.height = h
@@ -147,7 +149,7 @@ export function wordPainter(w: number, h: number): (into: CanvasRenderingContext
       into.globalAlpha = Math.min(1, c.light)
       into.globalCompositeOperation = 'source-over'
       into.filter = c.light > 0.995 ? 'none' : `blur(${((1 - c.light) * h * 0.012).toFixed(2)}px)`
-      into.drawImage(surface, 0, 0)
+      into.drawImage(surface, dx, dy)
       into.restore()
     }
   }

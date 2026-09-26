@@ -27,15 +27,16 @@ const GO = 1.0
 const OVERLAP = 0.25
 
 /**
- * The credits start once he has sat down and the lamp is on, and the camera has drawn back past the roof: a note of
- * the piano's last phrases (227.695), so the first card comes over the sky, not over the house.
+ * The credits start once he has sat down and the lamp is on, and the camera has drawn back past the roof: the
+ * strongest note of the piano's phrase there (228.403), late enough that the first card forms over the sky with the
+ * chimney well under its name (a note sooner, 227.695, it formed over the chimney's cap).
  */
-export const CREDITS_AT = 227.695
+export const CREDITS_AT = 228.403
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 3.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 3.0, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.2,
+    hold: 4.1,
     role: 'With',
     names: [
       // Carl is square: the page's small bar in the disc's footprint.
@@ -43,9 +44,9 @@ const script: Omit<Card, 'at'>[] = [
       ['Ellie Fredricksen', 'the coral ball', ELLIE],
     ],
   },
-  { hold: 4.4, role: 'Music', names: ['Michael Giacchino'], notes: ['“Married Life”', 'from Up (2009)'] },
-  { hold: 4.0, role: 'After', names: ['Up'], notes: ['a film by Pete Docter, co-directed by Bob Peterson', 'Pixar Animation Studios (2009)'] },
-  { hold: 2.8, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 4.3, role: 'Music', names: ['Michael Giacchino'], notes: ['“Married Life”', 'from Up (2009)'] },
+  { hold: 3.9, role: 'After', names: ['Up'], notes: ['a film by Pete Docter, co-directed by Bob Peterson', 'Pixar Animation Studios (2009)'] },
+  { hold: 2.7, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
@@ -65,9 +66,14 @@ export const LAST_GONE = (() => {
 })()
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, over the sky. */
-const AT: [number, number] = [0.5, 0.055]
+export const AT: [number, number] = [0.5, 0.045]
 /** On a phone held upright the stage shows more sky over the house: the cards go up into it. */
-const LIFT = 0.62
+export const LIFT = 0.62
+/**
+ * Where the cards lie, as shares of the 16:9 frame from its top middle: the widest card's half-width and the lowest
+ * card's foot. The set puts out any star there while they are up (a star under a letter read as a mark in it).
+ */
+export const CARD_ZONE = { half: 0.2, foot: AT[1] + 0.19 }
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
