@@ -90,7 +90,7 @@ export interface Pen {
 
 /** Draw a troll standing (or sitting) with its feet's middle at (x, y), cells, of the caller's frame. */
 export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook): TrollDrawn {
-  const { k, ink, weight, bg } = c
+  const { k, weight, bg } = c
   const H = look.size * k
   const pose = look.pose ?? 'stand'
   const face = Math.max(-1, Math.min(1, look.face ?? 0))
@@ -106,9 +106,10 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   const shade = mixHex(dark, TROLL.shade, 0.6 + 0.4 * lit)
   const tuft = mixHex(dark, TROLL.old, 0.4 + 0.6 * lit)
   const bone = mixHex(dark, TROLL.bone, 0.15 + 0.85 * lit)
-  // The edge: a thin line of the hide's own shadow warmed a little by the page's ink, not a pale outline: a troll is a
-  // mass (a lump of hillside), and a court of cream-outlined trolls read as plush toys on shelves.
-  const inkC = mixHex(dark, mixHex(TROLL.shade, ink, 0.3 + 0.25 * lit), 0.35 + 0.65 * lit)
+  // The edge: a thin line of the hide's own shadow, darker than the hide at every light, with no page ink in it: a
+  // troll is a mass (a lump of hillside). Any cream in the edge (even half of it) made the lit King and the court read
+  // as cream line art with outlined sausage limbs, plush toys on shelves.
+  const inkC = mixHex(dark, mixHex(TROLL.shade, hide0, 0.3), 0.35 + 0.65 * lit)
   const w = weight * (0.75 + 0.25 * Math.min(1.6, look.size / 1.6))
 
   // Build: how broad, how long the nose, how big the ears.
