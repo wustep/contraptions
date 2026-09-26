@@ -5,7 +5,7 @@ import { alpha, box, carried, frame, hash, knock, part, smooth, type Company, ty
 import { bar, CHORD, DURATION, SEAM } from '../music'
 import { drawDeck, drawGrate, drawPipes, drawStar, PLANK_AFTER, PLANK_END } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
-import { CASTLE, doorAt, drawCastle, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
+import { CASTLE, doorAt, drawCastle, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
 import { wastesSky } from '../wastes/sky'
 import { CALCIFER, WASTES } from '../worlds'
 
@@ -192,7 +192,8 @@ function poseAt(t: number): CastlePose {
     lean: j.lean - 0.07 * smooth(t, WALK0, WALK0 + 2.6),
     // Sat on the air it sits level; as its legs let down its feet find the stair of air it will walk up.
     ground: (x: number) => -SLOPE * x * smooth(t, UNFOLD0, UNFOLD1),
-    noLegs: t < HULL,
+    // Its legs are this part's to draw (folded for flight) until they have let down.
+    noLegs: t < UNFOLD1,
     modules: mods,
     lights: smooth(t, 299.3, 301.6),
     door: smooth(t, 299.4, 300.6),
@@ -251,6 +252,48 @@ const howlP = (t: number): Pt => {
   return [x, y - R]
 }
 
+/* ------------------------------------------------------------------ its legs, folded for flight */
+
+/**
+ * Flying, the castle carries its legs folded up under it as a bird does: each thigh laid back under the belly, the
+ * shin folded forward under it, the toes curled. Where each foot is tucked, from its own hip (standing cells).
+ */
+const TUCK_FRONT: Pt = [0.1, 0.4]
+const TUCK_BACK: Pt = [0.3, 0.6]
+const FLEGS: { hip: Pt; far: boolean; foot: number; tuck: Pt }[] = [
+  { hip: [CASTLE.hips[1][0] + FAR[0], CASTLE.hips[1][1] + FAR[1]], far: true, foot: 3, tuck: TUCK_BACK },
+  { hip: [CASTLE.hips[0][0] + FAR[0], CASTLE.hips[0][1] + FAR[1]], far: true, foot: 2, tuck: TUCK_FRONT },
+  { hip: CASTLE.hips[1], far: false, foot: 1, tuck: TUCK_BACK },
+  { hip: CASTLE.hips[0], far: false, foot: 0, tuck: TUCK_FRONT },
+]
+const LEG_NEAR = WASTES.iron
+const LEG_FAR = mixHex(WASTES.ironDark, WASTES.night, 0.2)
+
+/**
+ * The legs while they are this part's (the castle draws its own once they are down): folded, then over the breath
+ * let down to where the castle's own standing legs are, so the hand-over at `UNFOLD1` is seamless. The far pair
+ * goes behind the castle, the near pair over it. Drawn in the castle's frame (the caller is at its origin).
+ */
+function flightLegs(p: p5, k: number, W: number, ink: string, pose: CastlePose, which: 'far' | 'near') {
+  const down = smooth(pose.t, UNFOLD0, UNFOLD1)
+  const stand: CastlePose = { ...pose, sit: 0 }
+  const feet = down > 0 ? feetAt(stand) : null
+  for (const leg of FLEGS) {
+    if (leg.far !== (which === 'far')) continue
+    const hip = onBody(pose, leg.hip)
+    const tucked = onBody(pose, [leg.hip[0] + leg.tuck[0], leg.hip[1] + leg.tuck[1]])
+    let foot = tucked
+    if (feet) {
+      // The castle's own standing foot, hung from where the hip is now.
+      const h0 = onBody(stand, leg.hip)
+      const f = feet[leg.foot].at
+      const to: Pt = [f[0] + hip[0] - h0[0], f[1] + hip[1] - h0[1]]
+      foot = [tucked[0] + (to[0] - tucked[0]) * down, tucked[1] + (to[1] - tucked[1]) * down]
+    }
+    drawLeg(p, k, W, ink, hip, foot, leg.far ? LEG_FAR : LEG_NEAR, 1 - down, 0.5 * (1 - down))
+  }
+}
+
 /** The plank's deck while it is still to be seen: its middle and its turn. */
 function deckAt(t: number): { x: number; y: number; rot: number } {
   const L = look(t)
@@ -263,6 +306,19 @@ const onDeckF = (t: number, u: number, v: number): Pt => {
   const c = Math.cos(d.rot)
   const s = Math.sin(d.rot)
   return [d.x + u * c - v * s, d.y + u * s + v * c]
+}
+
+/**
+ * The plank's back end runs far out behind the hull's stern, where the hull cannot hide it: as the hull comes down
+ * over it, it goes, a soft edge sweeping from the broken end forward, done by the lock, stopping short of the grate
+ * (Calcifer is still in it) and well short of where they stand. Deck u left of which it is gone.
+ */
+const FEATHER = 1.5
+const WIPE_STEPS = 16
+const WIPE_TO = DECK.grate - 1.7
+const plankWipe = (t: number): number => {
+  const from = DECK.back - FEATHER - 0.4
+  return from + (WIPE_TO - from) * smooth(t, HULL - 0.5, HULL)
 }
 
 /* ------------------------------------------------------------------ Calcifer */
@@ -480,19 +536,39 @@ export const flight = part<null>(
       veil(p, k, t, f)
       drawClouds(p, k, t, f)
       const L = look(t)
-      // The plank, until the hull has it: its deck, its pipes, the grate (lit once he is back in it), then him.
-      const fade = 1 - smooth(t, HULL + 0.05, HULL + 0.55)
+      // The plank, until the hull has it: its deck, its pipes, the grate (lit once he is back in it), then him. Its
+      // back end, which the hull cannot cover, goes first, as the hull comes down over it (`plankWipe`); what is
+      // left, inside the hull and under the porch, goes under the lock's steam.
+      const fade = 1 - smooth(t, HULL, HULL + 0.4)
       if (fade > 0.001) {
         const ctx = p.drawingContext as CanvasRenderingContext2D
         const was = ctx.globalAlpha
-        ctx.globalAlpha = was * fade
         const d = deckAt(t)
+        const plank = () => {
+          drawDeck(p, k, W, ink)
+          drawPipes(p, k, W, ink, smooth(t, DIVE, DIVE + 0.4))
+          drawGrate(p, k, W, ink, t, 0.35 + 0.65 * smooth(t, DIVE - 0.05, DIVE + 0.05), 0)
+        }
         p.push()
         p.translate(d.x * k, d.y * k)
         p.rotate(d.rot)
-        drawDeck(p, k, W, ink)
-        drawPipes(p, k, W, ink, smooth(t, DIVE, DIVE + 0.4))
-        drawGrate(p, k, W, ink, t, 0.35 + 0.65 * smooth(t, DIVE - 0.05, DIVE + 0.05), 0)
+        const edge = plankWipe(t)
+        if (edge <= DECK.back - 0.3) {
+          ctx.globalAlpha = was * fade
+          plank()
+        } else {
+          // A soft edge: nested copies, each from its own step of the feather on, each adding to the last, so the
+          // plank goes from gone to whole across it with no seam between the steps.
+          for (let i = 0; i < WIPE_STEPS; i++) {
+            p.push()
+            ctx.beginPath()
+            ctx.rect((edge + (FEATHER * i) / (WIPE_STEPS - 1)) * k, -6 * k, 40 * k, 12 * k)
+            ctx.clip()
+            ctx.globalAlpha = was * (1 - (1 - (fade * (i + 1)) / WIPE_STEPS) / (1 - (fade * i) / WIPE_STEPS))
+            plank()
+            p.pop()
+          }
+        }
         p.pop()
         ctx.globalAlpha = was
       }
@@ -524,7 +600,9 @@ export const flight = part<null>(
           p.translate((px + ox) * k, (py + oy) * k)
           p.rotate(g.rot * (1 - u) * (1 - u))
           p.translate((L.O[0] - px) * k, (L.O[1] - py) * k)
-          drawCastle(p, k, W, ink, { ...L.pose, modules: mods, noLegs: !g.legs, roar: 0, eye: 0, jaw: 0, lights: 0, door: 0 })
+          if (g.legs) flightLegs(p, k, W, ink, L.pose, 'far')
+          drawCastle(p, k, W, ink, { ...L.pose, modules: mods, noLegs: true, roar: 0, eye: 0, jaw: 0, lights: 0, door: 0 })
+          if (g.legs) flightLegs(p, k, W, ink, L.pose, 'near')
           p.pop()
         }
       }
@@ -532,7 +610,10 @@ export const flight = part<null>(
       if (t >= HULL) {
         p.push()
         p.translate(L.O[0] * k, L.O[1] * k)
+        const folded = t < UNFOLD1
+        if (folded) flightLegs(p, k, W, ink, L.pose, 'far')
         drawCastle(p, k, W, ink, L.pose)
+        if (folded) flightLegs(p, k, W, ink, L.pose, 'near')
         p.pop()
       }
       flying(true)
@@ -577,21 +658,29 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
+    // Close on the two of them on the porch, the door behind them (a follow: the castle is still drifting).
+    const close = (t: number, cells: number): PartShot => ({ t, cells, off: [0.9, -1.4], w: 0 })
     return [
-      // The dive over their heads into the grate, and the plank heaving up.
-      // (Out all the way, never turning back: the camera carries on through each key to the next.)
+      // The dive over their heads into the grate, and the plank heaving up. (Out, carrying on through each key to the
+      // next, until the breath.)
       hold(294.05, 8.8, [her[0] + 0.7, her[1] - 0.99]),
-      // Out as the pieces come home, a piece a bar, until the whole castle is in the frame.
-      hold(294.8, 14.5, mid(HULL, 0.3, 4.2)),
-      hold(295.9, 20, mid(FACE + 0.2, 0.5, 1.6)),
-      hold(297.1, 25, mid(HOUSE + 0.3, 0.6, -0.4)),
-      hold(298.6, 28.5, mid(298.6, 0.8, -0.2)),
-      // Out over the gorge; the legs let down; the first step on the air, on the chord, across the frame.
-      hold(300.3, 30.5, mid(300.3, 1.2, 0.6)),
-      hold(301.6, 33, mid(301.6, 1.8, 2.4)),
-      hold(302.5, 34, mid(302.5, 1.2, 2.2)),
+      // Out as the pieces come home, a piece a bar, until the whole castle is in the frame, always with sky over
+      // what has come (the hull on the tutti's great note, the turrets, the chimney, the flag).
+      hold(294.8, 17.5, mid(HULL, 0.3, 1.2)),
+      hold(295.9, 22, mid(FACE + 0.2, 0.5, 0.2)),
+      hold(297.1, 28.5, mid(HOUSE + 0.3, 0.6, -2.0)),
+      hold(298.6, 31, mid(298.6, 0.8, -3.2)),
+      hold(299.2, 30, mid(299.2, 0.5, -2.8)),
+      // The breath: in to the two of them side by side on its porch as the windows light and the door swings open on
+      // the warm room behind them, while its legs let down.
+      close(300.5, 8.6),
+      close(301.0, 8.0),
+      // The chord: out again as it takes its first step, the whole castle and the sky over its chimney for the three
+      // roars, the bursts blooming up and back into the frame's open left.
+      hold(302.35, 31, mid(302.35, -4, -5)),
+      hold(303.7, 37, mid(303.7, -8.5, -5.5)),
       // Then with it, up the sky, going small, under the credits.
-      follow(304.4, 40, 0.17, 0.23),
+      follow(305.3, 42, 0.17, 0.23),
       follow(312, 48, 0.2, 0.25),
       follow(324, 55, 0.21, 0.25),
       follow(DURATION, 60, 0.21, 0.25),
