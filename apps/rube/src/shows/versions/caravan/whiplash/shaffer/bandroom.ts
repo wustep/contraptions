@@ -12,7 +12,7 @@ import {
   TIERS, WALL_L, WALL_R, type Section,
 } from './band-plan'
 import { ANSWER, TUTTI, doorL, pageAt } from './band-motion'
-import { chairAt, fletcherFloor, fletcherHead, fletcherPose, sinceStroke } from './band-people'
+import { chairAt, fletcherBase, fletcherFloor, fletcherHead, fletcherPose, sinceStroke } from './band-people'
 import { drawChair, drawChartStand, drawPlayer, drawPlayerStand, lit, type Playing } from './bandroom-props'
 import { doorR, spill } from './tempo-motion'
 
@@ -114,7 +114,7 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   const chair = chairAt(T)
   // Fletcher stands behind everything in the pit (the chart, the chair, the drums): over Andrew's shoulder at the kit.
   if (chair.held) drawChair(p, c, [chair.x, chair.y], -1, L, chair.turn, chair.scale)
-  if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), light: 0.5 + 0.5 * L })
+  if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), base: fletcherBase(T), light: 0.5 + 0.5 * L })
   const pg = pageAt(T)
   drawChartStand(p, c, STAND.x, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L)
   if (!chair.held) drawChair(p, c, [chair.x, chair.y], -1, chair.behind ? L * 0.75 : L, chair.turn, chair.scale)

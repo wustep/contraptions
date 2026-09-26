@@ -99,15 +99,15 @@ function build(): Walk {
   }
   w.rest(COUNT1[0] - BEAT)
   w.bounces(COUNT1)
-  flinch(SLAP1, -0.1, 0.9)
+  flinch(SLAP1, -0.2, 0.9)
   w.rest(COUNT2[0] - BEAT)
   w.bounces(COUNT2)
-  flinch(SLAP2, -0.12, 0.9)
+  flinch(SLAP2, -0.24, 0.9)
   // The answer: a small roll toward him, and back.
   w.rest(ANSWER - 0.2)
   w.ease([SNARE[0] + 0.06, SNARE[1]], ANSWER + 0.25, 'inout')
   w.ease(SNARE, ANSWER + 0.9, 'inout')
-  flinch(SLAP3, -0.18, 1.3)
+  flinch(SLAP3, -0.3, 1.3)
   // Trial four: in time with the hand, to the last stop.
   w.rest(WITH[0] - BEAT)
   w.bounces(WITH)

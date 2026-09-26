@@ -67,26 +67,32 @@ function path(keys: Key[]): (T: number) => Pt {
 const FLOOR_HEAD = PIT - FLETCHER_H
 /** When he leaves his podium for the kit (Andrew is off the chart's ledge by then, ahead of him). */
 export const LEAVE = 78.55
-/** Behind the kit for the test, over Andrew's shoulder: his left hand reaches the snare's far side. */
-export const TEST_HEAD: Pt = [KX + 0.45, KY - 0.74]
-const CLOSE_HEAD: Pt = [KX + 0.37, KY - 0.47]
+/**
+ * For the test he stands up beside the kit, tall, just behind the hi-hat (his column's foot planted there,
+ * `STAND_X`, the snare's right edge), towering over Andrew: his near hand (his right) reaches the snare's hoop; the far one
+ * rests on his hip. He leans in from the planted foot: close at his ear for "rushing or dragging?", and a little
+ * for the counts.
+ */
+export const STAND_X = KX + 0.85
+const TEST_HEAD: Pt = [STAND_X, FLOOR_HEAD]
+const CLOSE_HEAD: Pt = [KX + 0.58, FLOOR_HEAD + 0.24]
 const GRAB_HEAD: Pt = [17.85, 0.1]
 const CARRY_HEAD: Pt = [18.55, FLOOR_HEAD - 0.1]
 const THROW_HEAD: Pt = [18.85, FLOOR_HEAD - 0.06]
-const EAR_HEAD: Pt = [KX + 0.36, KY - 0.48]
+const EAR_HEAD: Pt = [KX + 0.74, FLOOR_HEAD + 0.06]
 
 const walkKeys: Key[] = [
   [BAND, ...FLETCHER_HOME],
   [LEAVE, ...FLETCHER_HOME],
   // Off the podium, and round behind the chair, the chart and the drums to stand over Andrew's shoulder.
   [LEAVE + 0.45, PODIUM.x + PODIUM.w / 2 + 0.25, FLOOR_HEAD],
-  // Over the drums' tops (his head clear of the rack tom), then down to Andrew's shoulder.
-  [81.05, KX - 0.5, FLOOR_HEAD - 0.08],
+  // Behind the drums (his head clear of the rack tom), to his place behind the hi-hat.
+  [81.05, KX - 0.1, FLOOR_HEAD - 0.08],
   [81.75, ...TEST_HEAD],
   [LEAN, ...TEST_HEAD],
   [LEAN + 0.9, ...CLOSE_HEAD],
   [STEADY[0] - 0.1, ...CLOSE_HEAD],
-  [STEADY[0] + 0.45, KX + 0.3, FLOOR_HEAD],
+  [STEADY[0] + 0.45, KX + 0.7, FLOOR_HEAD],
   // Away behind the drums to the chair, down to it, up with it, back toward the kit, the wind-up and the throw.
   [94.3, ...GRAB_HEAD],
   [94.55, ...GRAB_HEAD],
@@ -119,14 +125,15 @@ export function standsOn(x: number): number {
 /** Where Fletcher's head (his ball) is at `T`, band frame: the walk, the small bob of his time, and his glances. */
 export function fletcherHead(T: number): Pt {
   let [x, y] = walk(T)
-  // At the kit: his head goes in toward Andrew with each stop and each slap, and eases back.
+  // At the kit: his head goes in toward Andrew with each stop, and down hard with each slap, and eases back.
   for (const at of [STOP1, STOP2, SLAP1, SLAP2, SLAP3, STOP3]) {
     const a = T - (at - 0.06)
     if (a <= 0 || a > 1.6) continue
+    const slap = at === SLAP1 || at === SLAP2 || at === SLAP3
     const hard = at === SLAP3 ? 1.4 : at === STOP3 ? 1.2 : 1
     const j = hard * (1 - Math.exp(-a / 0.05)) * Math.exp(-a / 0.35)
-    x -= 0.1 * j
-    y += 0.07 * j
+    x -= (slap ? 0.12 : 0.1) * j
+    y += (slap ? 0.14 : 0.07) * j
   }
   if (conducting(T)) {
     // Keeping time: a nod into each ictus.
@@ -150,8 +157,25 @@ export function fletcherHead(T: number): Pt {
   return [x, y]
 }
 
+/**
+ * Where his column's foot is across the room at `T`: under his head, except at the kit for the test, where it stays
+ * planted behind the hi-hat and he leans in from it.
+ */
+export function fletcherBase(T: number): number {
+  const x = walk(T)[0]
+  const planted =
+    smooth(T, 81.55, 81.8) * (1 - smooth(T, STEADY[0] - 0.1, STEADY[0] + 0.25)) + smooth(T, 100.9, 101.3) * (1 - smooth(T, POINT + 0.6, POINT + 0.95))
+  return lerp(x, STAND_X, planted)
+}
+
 /** Fletcher's column stands on this (the podium's top or the pit floor), at `T`. */
-export const fletcherFloor = (T: number): number => standsOn(fletcherHead(T)[0])
+export const fletcherFloor = (T: number): number => standsOn(fletcherBase(T))
+
+/** How far his chest is tipped off upright by the lean from his planted foot (as `drawConductor` tips it). */
+function leanOf(T: number): number {
+  const [hx, hy] = fletcherHead(T)
+  return Math.atan2(fletcherFloor(T) - hy, fletcherBase(T) - hx) - Math.PI / 2
+}
 
 /** While he is on his podium, conducting the band. */
 export const conducting = (T: number): boolean => T < LEAVE || T > tune(291.3)
@@ -201,6 +225,10 @@ const PALM: Pt = [KX + 0.64, KY - 0.02]
 const HOOP: Pt = [KX + 0.62, KY - 0.0]
 /** The top of his hand's stroke over the snare. */
 const TOP: Pt = [KX + 0.7, KY - 0.5]
+/** The counts: his open palm up over Andrew's head, fingers up. */
+const RAISED: Pt = [KX + 0.14, KY - 1.18]
+/** His far hand on his hip (his left, on the house's right): the upper arm out, the forearm back in to the waist. */
+const AKIMBO: ArmPose = { up: 1.0, bend: 1.414, wrist: -0.84, hand: 'beat' }
 
 /** His beating hand over the snare: down to the head's height on each `ictus`, a quick lift, a float back up. */
 function patHand(T: number, ictus: (T: number) => number, size = 1): Pt {
@@ -247,10 +275,22 @@ export function fletcherPose(T: number): Pose {
   if (T < 81.2) return blendPose(beatAt(size), POSES.rest, smooth(T, LEAVE - 0.1, LEAVE + 0.4))
 
   const rest = POSES.rest
-  const left = (target: Pt, dir: number, shape: HandShape) => reach(sh.left, target, dir, shape)
-  const leftAt = (target: Pt, dir: number, shape: HandShape, u: number): Pose => ({ right: rest.right, left: blend(rest.left, left(target, dir, shape), u) })
+  // At the kit his chest leans off the planted column: a target is taken into the leaning chest's frame first.
+  const lean = leanOf(T)
+  const into = (q: Pt): Pt => {
+    const dx = q[0] - head[0]
+    const dy = q[1] - head[1]
+    const c = Math.cos(-lean)
+    const s = Math.sin(-lean)
+    return [head[0] + dx * c - dy * s, head[1] + dx * s + dy * c]
+  }
+  /** His near hand (his right, toward Andrew) at `target`; the far one on his hip, out of the way. */
+  const near = (target: Pt, dir: number, shape: HandShape, u = 1): Pose => ({
+    right: blend(rest.right, reach(sh.right, into(target), dir - lean, shape), u),
+    left: blend(rest.left, AKIMBO, u),
+  })
 
-  // Trials one and two: his left hand counts in and keeps time over the snare; the palm comes down flat on each stop.
+  // Trials one and two: his near hand counts in and keeps time over the snare; the palm comes down flat on each stop.
   if (T < STEADY[0] - 0.2) {
     const inn = smooth(T, 81.2, 81.6)
     let target = patHand(T, onBeat)
@@ -273,11 +313,11 @@ export function fletcherPose(T: number): Pose {
       shape = 'open'
       dir = lerp(dir, Math.PI + 0.2, hover)
     }
-    return leftAt(target, dir, shape, inn)
+    return near(target, dir, shape, inn)
   }
 
   // Trial three: he leaves the hand and goes for the chair.
-  if (T < 94.2) return blendPose(leftAt(TOP, Math.PI - 0.2, 'open', 1), rest, smooth(T, STEADY[0] - 0.2, STEADY[0] + 0.5))
+  if (T < 94.2) return blendPose(near(TOP, Math.PI - 0.2, 'open'), rest, smooth(T, STEADY[0] - 0.2, STEADY[0] + 0.5))
   if (T < CRASH + 0.4) {
     const grip = chairGrip(T)
     const rightDir = Math.atan2(grip[1] - sh.right[1], grip[0] - sh.right[0])
@@ -293,22 +333,28 @@ export function fletcherPose(T: number): Pose {
     return blendPose(blendPose({ right: r, left: l }, through, after), rest, settle * 0.6)
   }
 
-  // The counts: his left hand raised, and slapped down on the hoop by Andrew's ear on each four.
-  if (T < WITH[0] - 0.3) {
-    const slaps = [SLAP1, SLAP2, SLAP3]
-    let raise = smooth(T, 100.3, 101.1)
-    let target: Pt = [KX + 0.74, KY - 0.66]
-    for (const s of slaps) {
-      // A long wind-up, high over the hi-hat, and down hard.
-      const wind = smooth(T, s - 0.65, s - 0.14) * (1 - smooth(T, s - 0.12, s))
-      const hit = smooth(T, s - 0.1, s) * (1 - smooth(T, s + 0.35, s + 1.1))
-      target = [target[0] + 0.1 * wind, target[1] - 0.3 * wind]
-      target = [lerp(target[0], HOOP[0], hit), lerp(target[1], HOOP[1], hit)]
+  // The counts: his open palm raised by Andrew's ear, chopping down with him on one, two, three; on four a wind-up,
+  // high and back, and the palm slapped down flat on the hoop by his ear.
+  const counting = (): Pose => {
+    const raise = smooth(T, 100.3, 101.1)
+    let target: Pt = [...RAISED]
+    let dir = -Math.PI / 2 - 0.35
+    for (const c of [...COUNT1, ...COUNT2]) {
+      const chop = smooth(T, c - 0.09, c) * (1 - smooth(T, c + 0.03, c + 0.34))
+      target = [target[0] - 0.03 * chop, target[1] + 0.16 * chop]
     }
-    return leftAt(target, Math.PI + 0.05, 'open', raise)
+    for (const s of [SLAP1, SLAP2, SLAP3]) {
+      const wind = smooth(T, s - 0.6, s - 0.14) * (1 - smooth(T, s - 0.12, s))
+      const hit = smooth(T, s - 0.1, s) * (1 - smooth(T, s + 0.45, s + 1.1))
+      target = [target[0] + 0.14 * wind, target[1] - 0.34 * wind]
+      target = [lerp(target[0], HOOP[0], hit), lerp(target[1], HOOP[1], hit)]
+      dir = lerp(dir - 0.3 * wind, Math.PI + 0.05, hit)
+    }
+    return near(target, dir, 'open', raise)
   }
+  if (T < WITH[0] - 0.3) return counting()
 
-  // Trial four: in time with him, stroke for stroke, to the last stop; then he points him off, at Tanner.
+  // Trial four: in time with him, stroke for stroke, to the last stop; then his far hand points him off, at Tanner.
   if (T < POINT + 1.3) {
     const inn = smooth(T, WITH[0] - 0.3, WITH[0])
     let target = patHand(T, onBeat)
@@ -320,9 +366,10 @@ export function fletcherPose(T: number): Pose {
       shape = down > 0.5 ? 'open' : shape
       dir = lerp(dir, Math.PI + 0.02, down)
     }
-    let pose = leftAt(target, dir, shape, inn)
+    // From where the counts leave his palm (on the hoop after the last slap) into the time.
+    let pose = blendPose(counting(), near(target, dir, shape), inn)
     const point = smooth(T, POINT - 0.2, POINT + 0.05)
-    if (point > 0) pose = { ...pose, left: blend(pose.left, pointFrom(sh.left, TANNER_ASIDE), point) }
+    if (point > 0) pose = { ...pose, left: blend(pose.left, pointFrom(sh.left, into(TANNER_ASIDE)), point) }
     return pose
   }
 
