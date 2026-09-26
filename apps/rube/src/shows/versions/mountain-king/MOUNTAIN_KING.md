@@ -46,7 +46,7 @@ into the public domain. Musopen's FLAC from Wikimedia Commons (154.091 s) is re-
 The YouTube cue is the orchestra's label upload ("Czech National Symphony Orchestra, Prague - Topic", `k8HCJS4FflY`).
 Cross-correlated against the file it is the same recording sample for sample (lag 0, the same length), so
 `youtube: [{ id: 'k8HCJS4FflY' }]` runs on the same clock with no offset. The file is the fallback and the export's
-audio. The show runs on to 179 s: the credits in silence over the dawn.
+audio. The show runs on to 176 s: the credits in silence over the dawn.
 
 It was chosen for the arc the brief asked for: a nearly silent opening on the horns' low note; the theme in bassoons
 and plucked basses, pianissimo, for 54 s; the accelerando and crescendo through a second statement; a fortissimo
@@ -67,7 +67,7 @@ local quadratic through ±6 beats. 289 beats, 4.361 to 133.969, within 9.3 ms rm
 | 101.95 to 133.97 | statement 3, phrases 12 to 17, fortissimo: low band on 1 and 3, cymbals on 2 and 4 | 0.37 to 0.29 s |
 | 134.25 to 147.0 | the coda: a crash, chord pairs, six hammer blows (145.34 to 146.60) | 23 measured chords |
 | 147.0 to 149.8 | a silence, the roll (148.24), the two last chords (149.515, 149.815) | |
-| 151.8 to 179 | the credits, in silence | |
+| 153.7 to 176 | the credits, in silence, once he has landed | |
 
 The form was checked by matching each phrase's chroma against the theme: the B phrases are the theme a fifth up.
 `music.ts` has `beat(k)`, `eighth(j)`, `phrase(n)`, `beatAt(t)`, the theme eighth by eighth (`THEME`, `SOUNDED`), the
@@ -88,11 +88,11 @@ part's entry on a phrase's downbeat).
 | 58.02 | wake | `hall/wake.ts` | The court wakes: the elder's eyes open, then the heads turn to him a column a note, the dark gallery's eyes with them. He backs away a step with every other column of heads, up onto the dais's step on "Slay him!" (60.17) and off it as the King's eyes open; she slips out of the east door; the King rises, steps off his throne and roars, arms and sceptre high, and the roar blows Peer back a cell. The court stands and comes down after him. A grab closes on air; he runs under the roaring King between his feet. On the biggest accent (71.36) the sceptre smashes the dais behind him, a fissure runs to the trolls' hatch, and the hatch swings open under him. |
 | 74.42 | mine | `under/mine.ts` (mirrored) | He drops onto the ore in a cart; the chock pops and it creeps off. Two troll miners wake in their cart up the tunnel and knock their brake off. His wheels clack over a rail joint on every sounded note (the joints are laid where the notes fall), and each torch on the timbering catches from a spark as he passes. The trolls gain and lunge; his wheel trips a lever that throws the switch behind him, and they run up the catch ramp into the buffer. His cart hits the stop block at the shaft and pitches him down it. |
 | 89.23 | drum | `under/drum.ts` | He lands on an iron kettle-drum (the first stroke), which throws him to the trolls' war-drum, where drummers on timber galleries behind it swing their clubs over and down onto the skin and bounce him a beat at a time, each hop as high as the theme's note. On phrase 10's accent they throw him to the great drum on its trestle over the pit; three drummers bring both clubs down on the backbeats, his bounces rising, and hold him up under the vault for a bar while they wind up. On the fortissimo (100.83) the skin bursts under him and he falls through the barrel and down the pit. |
-| 101.95 | gears | `heart/gears.ts` (mirrored) | The mountain's heart, dark. He drops onto a cocked trip hammer; its first blow sparks the furnace alight. From then on the hammer falls on 1 and 3 and the furnace flares on 2 and 4 (the oom-pah). Every eight bars a new mechanism engages, and the furnace flares on its first note: the flywheel (107.75; he rides it from its top and a tooth flicks him off onto the pump heads), three pumps (113.36, head to head on the beats, two chaser trolls grabbing), the great bellows (118.72, the furnace white, the strokes doubled). |
-| 124.01 | runaway | `heart/runaway.ts` (mirrored) | The keeper throws in the governor and a pump flings Peer onto its yoke, which lifts him and bucks him higher on each blow, then throws him across the machine onto the overspeeding flywheel, which whips him over its top onto the pumps and back to the yoke. The safety valve blows; the keeper sits on it and is thrown off. The governor comes apart, held in one wide shot of the whole heart: its arms hit their stops with a clang, the weights fly off and crash to the floor, the yoke swings out from under him, and the spindle snaps and splits the flywheel as he lands at the chimney's foot on the coda's first chord. |
-| 134.25 | fall | `finale/fall.ts` | The bells (Ibsen): every troll in the mountain freezes and looks up. He drops into an iron standpipe and plugs it like a cork; the heart's crew bolt for their doors on the pickup and the crash. The crash blows him out on a geyser, and it rams him up through every level he came down: against each floor's underside on a chord, through it on the next, chunks thrown up and landing on either side. Each room's trolls flee on a chord as he bursts up into it: the war-drum's drummers leap off their rim (their clubs dropping on the skin), two miners bolt along the gallery, the court flees its ledges row by row as he comes up through the hall's floor. Up through the hall as it comes down round him (a wide shot of the hall: the pillars one a chord, then on the six hammer blows the throne toppling and the lights going out one a blow, him surging up into the vent's mouth over it). The last blow throws him up the dark vent; he coasts through the silence to a stop under the summit's cap; the roll slams him against it and it cracks with dawn light. The first last chord blows the cap out; the second throws him east in a long arc under the last stars. He lands on the east shoulder, bounces once and rocks to rest in a grassy hollow. The dawn comes up, the stave church's bell swinging in the valley, the crater's rubble drops into the vent, and over the credits the camera cranes back from him in the hollow to the whole mountain in cross-section at dawn: every place he lit on his way down still lit, the broken hall dark, the chimney he came up. |
+| 101.95 | gears | `heart/gears.ts` (mirrored) | The mountain's heart, dark (covered until he drops into it). He drops onto a cocked trip hammer and rides its head, jolted off and caught on every blow; its first blow sparks the furnace alight. From then on the hammer falls on 1 and 3 and the furnace flares on 2 and 4 (the oom-pah). Every eight bars a new mechanism engages: a near-black silhouette until the furnace's flare on its first note lights it, and the room a step brighter with each, the frame opening a step each phrase: the flywheel (107.75; he rides up its side and a tooth throws him onto the pump heads), three pumps (113.36, head to head on the beats, two chaser trolls grabbing), the great bellows (118.72, two cells long, raised into the furnace's mouth, the furnace white, the strokes doubled; he surfs the pumps' wave). |
+| 124.01 | runaway | `heart/runaway.ts` (mirrored) | The keeper throws in the governor and a pump flings Peer onto its yoke, which lifts him and bucks him higher on each blow, then throws him across the machine onto the overspeeding flywheel, which whips him over its top onto the pumps and back to the yoke. The safety valve blows; the keeper sits on it and is thrown off. The governor comes apart, held in one wide shot of the whole heart (9.5 to 10 cells from the gears' last phrase on): its arms hit their stops with a clang, the weights fly off and crash to the floor, the yoke swings out from under him, and the spindle snaps and splits the flywheel as he lands at the chimney's foot on the coda's first chord: the halves tear off the axle, fall into the pit and crash in front of the furnace, which blasts out once. |
+| 134.25 | fall | `finale/fall.ts` | The bells (Ibsen): a thin cold-gold shaft of light falls down the chimney's line onto the collar, and every troll in the mountain freezes and looks up. He drops into an iron standpipe and plugs it like a cork; the heart's crew bolt for their doors on the pickup and the crash. The crash blows him out on a geyser, and it rams him up through every level he came down: against each floor's underside on a chord, through it on the next, chunks thrown up and landing on either side. Each room's trolls flee on a chord as he bursts up into it: the war-drum's drummers leap off their rim (their clubs dropping on the skin), two miners bolt along the gallery, the court flees its ledges row by row as he comes up through the hall's floor. Up through the hall as it comes down round him (a wide shot of the hall: the pillars one a chord, then on the six hammer blows the throne falling in two blows, great slabs of the vault crashing down, the braziers toppling and their coals burning up on the floor as the lamps go out one a blow, him surging up into the vent's mouth over it). The last blow throws him up the dark vent (one even tilt after him); he coasts through the silence to a stop under the summit's cap, and the camera comes in on him there; the roll slams him against it and it cracks with dawn light. The first last chord blows the cap out; the second tears the crown off, great dark boulders tumbling down both flanks, and throws him east in a long arc under the last stars, the camera going with him. He lands on the east shoulder, bounces once and rocks to rest in a grassy hollow. The dawn comes up, the stave church's bell swinging in the valley, the crater's rubble drops into the vent, and over the credits the camera cranes back from him in the hollow to the whole mountain in cross-section at dawn: every place he lit on his way down still lit, the broken hall dark, the chimney he came up. |
 
-**Strikes**: 374 in all, gathered by `dovre/hits.ts`: every part's `_HITS` in the tune (each on an eighth of the grid
+**Strikes**: 388 in all, gathered by `dovre/hits.ts`: every part's `_HITS` in the tune (each on an eighth of the grid
 or a measured onset), and the finale's and the hall's collapse in the coda (each on a measured onset). Every phrase's
 first note is struck, and every coda chord but one pickup brings something down.
 
@@ -146,6 +146,22 @@ first note is struck, and every coda chord but one pickup brings something down.
   throat; the sunk door is inside the rock.
 - **The stave church** is after Borgund: steep tarred roofs stacked tight over a skirt roof, a wall under each, dragon
   heads on the upper gables, one spire (the first pass read as a pagoda).
+- **Peer carries a key light** (`key.ts`): a soft flat-topped pool round him, warm inside the mountain and moonlight
+  outside, the frame a little darker beyond four cells from him (not in the widest frames, where the story is the
+  place), and a wider cream rim in wide frames. Nothing in the mountain was lit by him, and the brightest things in
+  frame were the fires, the orange nearest his red: he sank into them.
+- **Each mechanism is dark until it is lit.** In the heart every part stands as a near-black silhouette until the
+  furnace's flare on its first note lights it, and the room steps up with each: the idle governor no longer stands
+  lit for twenty seconds, and each phrase has one hero silhouette.
+- **The frame grows with the music.** The heart opens a step a phrase (7, 8.5, 9.2, 9.5 cells) and never goes back in;
+  its top stays under the drum's floor, so the room above never shows.
+- **The bells have a cause on screen**: a shaft of cold light down the chimney's line on the first chord, where the
+  frozen trolls look. The church is bigger, so its bell reads as the camera follows him east.
+- **The crash is the biggest picture**: slabs of the vault on the hammer blows, the braziers spilling fire that lights
+  the hall from below as its lamps go out, the flywheel's halves crashing into the furnace, the summit's crown torn
+  off in boulders. The trail is off on the geyser (`Show.trailOff`) and never longer than 2.5 R elsewhere.
+- **Credits after the landing**, a size up and in cream over the pale sky (`TitleCard.scale`, `plain`), lifted into
+  a tall phone's sky (`lift`).
 - **Peer is in the frame all the way, under Zoom too** (`check:shows` walks it every 20 ms).
 - **Traps**: the stage's `rectMode` is CENTER (every set laid out by corners sets CORNER inside its push); a raw
   gradient leaves p5's fill cache stale (`kit.ts` `honest`); a Vite reload during `shot.mjs` or `film.mjs` freezes or
@@ -157,7 +173,7 @@ first note is struck, and every coda chord but one pickup brings something down.
 the beat followed quarter by quarter; one mountain, no portal, no cut; the parts in order; Peer never jumping (0.04
 cells a millisecond) and never hidden more than 2 s; every strike on the music; the coda's first chord and the two
 last chords struck; every seam struck; every phrase struck on its first note; the coda's chords struck (a pickup
-may go by); Peer in the frame all the way, under Zoom too; the camera on the seam framing at every seam (wide on the coda's); every drop
+may go by); Peer in the frame all the way, under Zoom too; the camera on the seam framing at every hand-off (wide on the coda's; a seam inside one builder's room is free); every drop
 falling straight down for its last quarter second and landing a little under the middle of the frame; the Woman in
 Green never jumping, coming and going only out of shot, resting a cell ahead at the rest seams, and gone before the
 chase goes under the hall; every ball someone, once; Peer at rest in the hollow at the end; and the credits' words.
@@ -185,4 +201,8 @@ notes; five fixers, one file each (the drum's drummers, the heart's first blow, 
 summit's blow-out); a director's pass on the cross-cutting notes (the bells and the flight, the coda's wide
 seam, the court, the King, the heart's iron, the mountain at both ends, the trail) with the whole film watched again
 at 1×; and a second round of fixers (the gate's pebble and knocks, Peer backing away through the wake, the drummers
-on their galleries, the heart's lit iron, his rides on the flywheel and the runaway).
+on their galleries, the heart's lit iron, his rides on the flywheel and the runaway); and a third round (five fixers:
+the opening's push-in, the pebble and the drain, no hatch before the crack and the throne's fall, the drum's wide
+burst, the machine carrying him through the heart) with a director's pass on story and staging (the key light, the
+heart's mechanisms lit one a phrase and its growing frame, the flywheel's crash, the bells' shaft, the hall coming
+down, the summit torn open, the arc followed, the mine's chase, her parting, the wake closer, the credits).
