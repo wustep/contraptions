@@ -62,15 +62,22 @@ export const court = part<HallState>(
   (slot: Slot): PartShot[] => [
     { t: slot.begin, ...SEAM_SHOT },
     // In at the door: the dark hall opens round them, the first sleeper and its brazier.
-    { t: 41.9, cells: 7.4, hold: [2.4, -1.8], w: 0.75 },
-    { t: 44.3, cells: 6.3, hold: [3.0, -1.55], w: 0.85 },
-    // The scurry to the second tail, the pillar's other torch.
-    { t: 46.7, cells: 6.4, hold: [6.3, -1.4], w: 0.65 },
-    { t: 48.7, cells: 6.8, hold: [5.9, -1.75], w: 0.85 },
-    // Back to see the court asleep in its tiers, the two torches, the throne dark beyond.
-    { t: 50.7, cells: 9.6, hold: [8.4, -2.9], w: 0.85 },
-    // The elder, its brazier, the lantern.
-    { t: 52.6, cells: 7.0, hold: [11.8, -1.7], w: 0.8 },
+    { t: 41.35, cells: 6.6, hold: [1.5, -1.45], w: 0.7 },
+    // Station 1, low and close: the tail trodden, the flick, the snort into the brazier; up with the sparks to the torch.
+    { t: TAIL_A - 0.1, cells: 5.7, hold: [2.45, -1.0], w: 0.85 },
+    { t: SNORT_A, cells: 5.55, hold: [2.75, -1.05], w: 0.9 },
+    { t: TORCH_A + 0.1, cells: 5.85, hold: [3.2, -1.85], w: 0.9 },
+    // The scurry east along the sleepers' feet.
+    { t: 45.6, cells: 6.0, hold: [5.2, -1.2], w: 0.5 },
+    // Station 2, the same, closer to the sleeper: the brazier flares west; the frame opens up and on as the pillar's
+    // other torch catches, and runs on east along the court (one move, no stop) to the goal: the throne, dark.
+    { t: TAIL_B - 0.1, cells: 5.7, hold: [6.3, -1.0], w: 0.85 },
+    { t: SNORT_B, cells: 5.65, hold: [6.5, -1.05], w: 0.9 },
+    { t: TORCH_B + 0.2, cells: 6.25, hold: [7.2, -1.9], w: 0.9 },
+    { t: 50.1, cells: 8.1, hold: [13.6, -2.35], w: 0.9 },
+    // Station 3, the elder, close: the rope runs up out of the frame, east, where the throne was.
+    { t: TAIL_C + 0.05, cells: 5.8, hold: [12.4, -1.05], w: 0.85 },
+    { t: SNORT_C + 0.1, cells: 5.8, hold: [12.7, -1.35], w: 0.9 },
     // The fire runs to the crown-lamp; the King lit; she goes up to him.
     { t: 55.0, cells: 9.2, hold: [15.3, -2.9], w: 0.9 },
     // His last steps to the foot of the dais.
