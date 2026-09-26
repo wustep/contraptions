@@ -153,7 +153,7 @@ async function main(): Promise<void> {
     lalaland.map((v) => v.label).join('|') === 'Fable 5.1|Opus 5.5' && epilogueTake?.label === 'Fable 5.1')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels are the two music-syncs', cornfield.map((v) => v.label).join('|') === '[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
+  check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')

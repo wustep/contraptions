@@ -138,14 +138,14 @@ in `docs/promo/CLAIR_TAKE_B_ARRANGEMENT.md`. `check:clair:b` checks stock lanes,
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
-`cornfield-chase/tech-demo` ([Grok 4.7] Music-sync) is the music-sync take
+`cornfield-chase/tech-demo` (Grok 4.7) is the music-sync take
 that stays in the picker, beside the Opus one. `cornfield-chase/multiball`
 and `cornfield-chase/voices` are not in the picker. All three are one-shot
 tech demos of Hans Zimmer's Cornfield Chase, not finished public Shows. The
 recording is copyrighted; the credit stays in
 `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`.
 
-`cornfield-chase/opus55-music-sync` ([Opus 5.5] Music-sync) is a separate
+`cornfield-chase/opus55-music-sync` (Opus 5.5) is a separate
 one-shot eval take on the same recording, generated stock only by
 `npm run generate:cornfield:opus55`. Its targets are measured rather than
 assumed: `scripts/cornfield-opus55-onsets.py` reads the recording once and
