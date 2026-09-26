@@ -202,9 +202,11 @@ export const fireworks = part<FireworksState>(
       { t: WHEEL_AT, cells: 13.6, hold: [WHEEL[0] - 2.6, GY - 4.6], w: 0.9 },
       { t: 137.6, cells: 11, hold: [WHEEL[0] - 1.0, GY - 4.6], w: 0.9 },
       { t: FLING, cells: 11, hold: [WHEEL[0] + 2.2, GY - 4.4], w: 0.85 },
-      // To the Titan, and in close for the climb up its leader. The pan carries on past the wheel so it goes out of the
-      // frame whole instead of standing half in at the edge.
-      { t: LEADER_AT, cells: 9.6, hold: [LEADER_FOOT[0] + 0.1, GY - 3.3], w: 0.85 },
+      // To the Titan at the same width, so the heaviest chord's gold chrysanthemum (140.273) breaks whole over the
+      // leader's foot as the spark lands; then in close over the second crescendo for the climb up the leader. The pan
+      // carries on past the wheel so it goes out of the frame whole instead of standing half in at the edge.
+      { t: LEADER_AT, cells: 11, hold: [LEADER_FOOT[0] + 0.3, GY - 4.2], w: 0.85 },
+      { t: LEADER_AT + 0.6, cells: 10.7, hold: [LEADER_FOOT[0] + 0.1, GY - 3.95], w: 0.85 },
       { t: 141.8, cells: 7.5, hold: [TITAN_X - 0.9, GY - 2.2], w: 0.8 },
       { t: DIVE - 0.1, cells: 6, hold: [TITAN_X - 0.5, LIP + 0.4], w: 0.7 },
       { t: TITAN_FIRE, cells: 6.8, hold: [TITAN_X, LIP - 0.6], w: 0.85 },
