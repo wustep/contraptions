@@ -389,37 +389,66 @@ const CLOUDS: { x: number; y: number; w: number; s: number }[] = (() => {
   return out
 })()
 
+/** A soft round of colour: solid through its middle, fading out over its edge (a cloud's heap, never an outline). */
+function softHeap(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, rgb: string, a: number): void {
+  if (a <= 0.004 || rx <= 0.01) return
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.55, `rgba(${rgb}, ${a})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(0, 0, rx, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+const rgbHex = (hex: string): string => {
+  const n = parseInt(hex.slice(1, 7), 16)
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+}
+
+/**
+ * The clouds the castle walks up among: two heaps of uneven size on each, on a long soft cool underside, lit from
+ * above (and gold as the evening comes); soft volume with soft edges, never a row of even beads on a ruled base.
+ * The town's clouds, drawn the same way.
+ */
 function drawClouds(p: p5, k: number, t: number, f: { x0: number; x1: number; y0: number; y1: number; cx: number; cy: number }) {
   const show = smooth(t, 295, 299.5)
   if (show <= 0.01) return
   const gold = smooth(t, 304, 322)
-  const lit = mixHex(WASTES.cloud, WASTES.gold, 0.35 * gold)
-  const under = mixHex(mixHex(WASTES.cloud, WASTES.slate, 0.25), WASTES.dusk, 0.25 * gold)
-  p.push()
-  p.noStroke()
-  p.rectMode(p.CORNER)
+  const lit = rgbHex(mixHex(WASTES.cloud, WASTES.gold, 0.35 * gold))
+  const under = rgbHex(mixHex(mixHex(WASTES.cloud, WASTES.slate, 0.3), WASTES.dusk, 0.3 * gold))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   for (const cl of CLOUDS) {
     const cx = cl.x + (t - T1) * 0.12
     const base = cl.y
     if (cx + cl.w < f.x0 - 2 || cx - cl.w > f.x1 + 2 || base - cl.w * 0.4 > f.y1 + 1 || base < f.y0 - 2) continue
-    const n = Math.max(4, Math.round(cl.w / 1.05))
+    const a = show * (0.7 + 0.25 * hash(cl.s, 67))
+    const n = Math.max(6, Math.round(cl.w / 0.9))
+    const p1 = 0.3 + 0.15 * hash(cl.s, 9)
+    const p2 = 0.62 + 0.18 * hash(cl.s, 10)
+    const h2 = 0.45 + 0.3 * hash(cl.s, 11)
     const puffs: [number, number, number][] = []
     for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n
-      const peak = 0.4 + 0.2 * hash(cl.s, 9)
-      const bell = Math.exp(-(((u - peak) / 0.3) ** 2))
-      const r = cl.w * (0.045 + 0.12 * bell) * (0.75 + 0.5 * hash(i, cl.s))
-      const x = cx - cl.w / 2 + u * cl.w + (hash(i, cl.s, 2) - 0.5) * 0.5
-      puffs.push([x, base - r * (0.5 + 0.45 * bell) - 0.2 * hash(i, cl.s, 3), r])
+      const u = (i + 0.3 + 0.4 * hash(i, cl.s, 4)) / n
+      const bell = Math.max(Math.exp(-(((u - p1) / 0.2) ** 2)), h2 * Math.exp(-(((u - p2) / 0.16) ** 2)))
+      const r = cl.w * (0.05 + 0.13 * bell) * (0.7 + 0.6 * hash(i, cl.s))
+      const x = cx - cl.w / 2 + u * cl.w + (hash(i, cl.s, 2) - 0.5) * 0.6
+      puffs.push([x, base - r * (0.35 + 0.5 * bell) - 0.25 * hash(i, cl.s, 3), r])
     }
-    const a = show * (0.55 + 0.25 * hash(cl.s, 67))
-    p.fill(alpha(p, under, 0.55 * a))
-    for (const [x, y, r] of puffs) p.ellipse(x * k, (y + r * 0.12) * k, 2 * r * k, 1.8 * r * k)
-    p.rect((cx - cl.w / 2 + 0.4) * k, (base - 0.5) * k, (cl.w - 0.8) * k, 0.5 * k, 0.25 * k)
-    p.fill(alpha(p, lit, 0.8 * a))
-    for (const [x, y, r] of puffs) p.ellipse((x - r * 0.1) * k, (y - r * 0.16) * k, 1.66 * r * k, 1.42 * r * k)
+    // The underside: a long soft shadow, flatter than the heaps and thinning out at the ends.
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n
+      const end = Math.sin(Math.PI * u)
+      softHeap(ctx, (cx - cl.w / 2 + u * cl.w) * k, (base - 0.35) * k, (0.9 + 1.1 * end) * k, (0.45 + 0.4 * end) * k, under, 0.42 * end * a)
+    }
+    for (const [x, y, r] of puffs) softHeap(ctx, x * k, (y + r * 0.18) * k, 1.05 * r * k, 0.9 * r * k, under, 0.5 * a)
+    // The lit tops, a little up and to the left of each heap.
+    for (const [x, y, r] of puffs) softHeap(ctx, (x - r * 0.12) * k, (y - r * 0.18) * k, 0.95 * r * k, 0.82 * r * k, lit, 0.85 * a)
   }
-  p.pop()
 }
 
 /**
@@ -518,19 +547,21 @@ function bursts(p: p5, k: number, t: number) {
     const age = t - at
     if (age < 0 || age > 6) continue
     const [ex, ey] = onCastle(look(at), CASTLE.chimney)
-    const fade = s * Math.min(1, age * 10) * Math.exp(-age / 2.2)
-    const warm = 0.38 * Math.exp(-age / 0.5)
+    const fade = s * Math.min(1, age * 10) * Math.exp(-age / 1.4)
+    const warm = 0.3 * Math.exp(-age / 0.45)
     const lit = mixHex(STEAM, CALCIFER.body, warm)
     for (let i = 0; i < 11; i++) {
       const h1 = hash(i, n, 81)
       const h2 = hash(i, n, 82)
       const h3 = hash(i, n, 83)
-      // Thrown up fast, slowing as it rolls out; the later billows of a roar a touch behind the first.
+      // Thrown up fast in a column that leans back on the wind of its walking, slowing as it rolls out, each billow
+      // its own size and height (never one round mass); the later billows of a roar a touch behind the first.
       const go = 1 - Math.exp(-Math.max(0, age - 0.03 * i) / 0.5)
       const side = (h1 - 0.5) * 2
-      const x = ex + side * (0.6 + 3.4 * go) - (1.1 + 0.5 * h2) * age
-      const y = ey - 0.8 - (2.4 + 4.6 * h2) * go - 0.35 * age + Math.abs(side) * 1.1 * go
-      const r = (1.3 + (2.2 + 1.8 * h3) * go + 0.35 * age) * (0.75 + 0.25 * s)
+      const up = i / 10
+      const x = ex + side * (0.4 + 1.3 * go) - (1.4 + 0.6 * h2) * age - 1.6 * up * go
+      const y = ey - 0.6 - (1.4 + 7.2 * up + 1.2 * h2) * go - 0.45 * age
+      const r = (0.7 + (0.9 + 1.6 * h3 * (1 - 0.4 * up)) * go + 0.28 * age) * (0.75 + 0.25 * s)
       const a = fade * (0.6 + 0.3 * h3)
       puff(p, k, x + 0.18 * r, y + 0.3 * r, r, shade, 0.6 * a, 0.9)
       puff(p, k, x - 0.12 * r, y - 0.14 * r, r * 0.86, lit, 0.9 * a, 0.9)

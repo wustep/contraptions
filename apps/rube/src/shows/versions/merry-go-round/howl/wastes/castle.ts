@@ -509,7 +509,7 @@ function tongue(p: p5, k: number, x: number, y: number, bw: number, h: number, s
 export function drawChimneyFire(p: p5, k: number, t: number, ex: number, ey0: number, f: number, roars: readonly (readonly [number, number, ...number[]])[]): void {
   if (f < 0.01) return
   const ey = ey0 + 0.1
-  puff(p, k, ex - 0.8 * f, ey - 1.4 - 1.8 * f, 1.8 + 4.2 * f, CALCIFER.body, 0.14 * f, 1.3)
+  puff(p, k, ex - 0.5 * f, ey - 1.2 - 1.4 * f, 1.4 + 2.4 * f, CALCIFER.body, 0.12 * f, 1.4)
   p.push()
   p.noStroke()
   // Torn-off flames rising off the tips as each roar dies.
