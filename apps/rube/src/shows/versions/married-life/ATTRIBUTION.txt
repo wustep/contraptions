@@ -1,0 +1,13 @@
+Married Life — Michael Giacchino
+From Up (Original Motion Picture Soundtrack), 2009. Walt Disney Records.
+Film: Up, directed by Pete Docter, co-directed by Bob Peterson, Pixar Animation Studios, 2009.
+Official audio used for private Contraptions tech demos only (the label's "Michael Giacchino - Topic" upload,
+provided to YouTube by Universal Music Group, ℗ 2009 Walt Disney Records):
+https://www.youtube.com/watch?v=2rn-vMbFglI
+Duration 4:11. Copyrighted — do not ship to production / public Shows without a licence.
+
+Files:
+- apps/rube/src/shows/versions/married-life/married-life-demo.mp3 — the cue as fetched (yt-dlp, audio only,
+  re-encoded at 128 kbit/s). The show plays it whole from its first sample (offset 0); no edit, no gain change.
+- scripts/shows/plans/married-life-onsets.json — the recording's onsets, its tracked beats and bars, and its
+  landmarks, measured by scripts/shows/married-life-onsets.py; every strike in the show is held to it.
