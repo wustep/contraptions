@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH } from '../drums'
-import { POSES, RIG, beatPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { POSES, RIG, beatPose, reachFromHead, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BREAK, FINAL, LAST_CHORD, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
@@ -50,7 +50,16 @@ export const F_WALK: [number, number] = [519.4, 522.8]
 export const NOD: [number, number] = [527.5, 529.9]
 /** Andrew's nod back, in the drummer's frame. */
 export const NOD_BACK: [number, number] = [529.25, 530.75]
-export const F_BACK: [number, number] = [530.9, 534.8]
+/**
+ * After the nod he does not go back to his podium: he gives Andrew room for the last fill (a small step back, a
+ * little lower), and stays by the kit, eye to eye, to the end: the film keeps him there. In the silence he rises to
+ * Andrew's height again, his hands up for the band's chord, and cuts it off there.
+ */
+export const F_BACK: [number, number] = [530.9, 533.4]
+/** How far he steps back and sinks for the last fill, and when he comes up again (the silence). */
+const BACK_X = 0
+const BACK_SINK = 0.4
+const UP_AGAIN: [number, number] = [BREAK + 0.2, LAST_CHORD - 0.3]
 
 /** Where he stands to set the crash straight, and to nod: right of the hi-hat. How far his column rises for each. */
 const FIX_X = 1.95
@@ -73,13 +82,13 @@ function away(T: number, go: [number, number], back: [number, number]): number {
 function xAt(T: number): number {
   const home = FLETCHER_HOME[0]
   if (T < 400) return home + (FIX_X - home) * away(T, H_WALK, H_BACK)
-  return home + (NOD_X - home) * away(T, F_WALK, F_BACK)
+  return home + (NOD_X - home) * ease(T, F_WALK[0], F_WALK[1]) + BACK_X * away(T, F_BACK, UP_AGAIN)
 }
 
 /** How far his column has risen above his height: to reach the crash, and to meet Andrew's eyes. */
 function riseAt(T: number): number {
   if (T < 400) return FIX_RISE * ease(T, H_WALK[1] - 0.9, GRIP[0] + 0.2) * (1 - ease(T, H_BACK[0] - 0.9, H_BACK[0] + 0.4))
-  return NOD_RISE * ease(T, F_WALK[1] - 1.2, F_WALK[1] + 0.6) * (1 - ease(T, F_BACK[0] - 0.9, F_BACK[0] + 0.5))
+  return NOD_RISE * ease(T, F_WALK[1] - 1.2, F_WALK[1] + 0.6) - BACK_SINK * away(T, F_BACK, UP_AGAIN)
 }
 
 /** Where his column stands at `T`: the podium's top, or the stage floor once he has stepped off its front edge. */
@@ -91,15 +100,31 @@ export function floorAt(T: number): number {
   return FLOOR - PODIUM.h * (1 - s)
 }
 
+/**
+ * How far his head leans off his column toward Andrew (negative: toward the kit, on the house's left), the column's
+ * foot planted: a look close after he sets the crash straight, and the nod.
+ */
+function leanAt(t: number): number {
+  if (t < 400) return -0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
+  // Turned in to him before the nod, the nod itself rolling his head a little further in, and back once Andrew answers.
+  return -0.2 * ease(t, NOD[0] - 0.9, NOD[0] + 0.1) * (1 - ease(t, NOD_BACK[1] - 0.2, NOD_BACK[1] + 0.8)) - 0.05 * nodAt(t)
+}
+
+/** The nod: one slow, deep dip of his head, held, and up again (0..1). */
+function nodAt(t: number): number {
+  return ease(t, NOD[0], NOD[0] + 0.75) - ease(t, NOD[0] + 1.55, NOD[1])
+}
+
+/** Where his column's foot is across the stage at `t` (his head is off it when he leans). */
+export const baseAt = (t: number): number => xAt(t)
+
 /** Where Fletcher's head (his ball) is at `t` (show seconds), in the Carnegie frame. */
 export function fletcherAt(t: number): Pt {
   const x = xAt(t)
-  // The nod: a slow dip of his whole head, once, and back.
-  const nod = 0.17 * Math.sin(Math.PI * clamp((t - NOD[0]) / (NOD[1] - NOD[0]))) ** 2
-  // A lean toward Andrew at the kit, and a small breath the rest of the time.
-  const lean = -0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
+  const nod = 0.16 * nodAt(t)
+  // A small breath the rest of the time.
   const breath = 0.012 * Math.sin((t - SOLO) * 1.3)
-  return [x + lean, floorAt(t) - TALL - riseAt(t) + nod + breath]
+  return [x + leanAt(t), floorAt(t) - TALL - riseAt(t) + nod + breath]
 }
 
 /* ------------------------------------------------------------------ the crash */
@@ -165,8 +190,6 @@ function fixing(T: number): ArmPose {
   return reach(shoulder, wrist, Math.PI + a, 'open')
 }
 
-/** The cut-off's fist: his elbow out at his shoulder, the forearm up, the fist closed beside his head. */
-const CUT_FIST: ArmPose = { up: -Math.PI * 0.94, bend: 1.42, wrist: 0.05, hand: 'fist' }
 
 /** Where he is in his beat at `t`: whole numbers on the stomps he beats. */
 function beatAt(t: number): number {
@@ -195,23 +218,51 @@ export function poseAt(t: number): Pose {
   const ready = POSES.ready
   if (t < LAST_CHORD - 0.12) return turnPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
   // The chord: a downbeat with both hands, and up again, held high and open, rising a little as it swells.
-  if (t < FINAL - 0.62) {
-    const hit = Math.exp(-Math.max(0, t - LAST_CHORD) / 0.16) * clamp((t - (LAST_CHORD - 0.12)) / 0.12)
-    const swell = ease(t, LAST_CHORD + 0.3, FINAL - 0.7)
-    const lift = (x: ArmPose, s: number): ArmPose => ({ ...x, up: x.up + s * (0.32 * hit - 0.1 * swell), bend: x.bend - s * 0.2 * hit })
-    return { right: lift(ready.right, -1), left: lift(ready.left, 1) }
+  if (t < FINAL - 0.62) return { right: heldHigh(t), left: heldHigh(t, 'left') }
+  // The cut-off, with his left hand (the house's right, out over the clear wall past the bass's scroll: his right
+  // side is all the frame's arm and sticks). Open, it circles out and up (the breath before it), then comes down
+  // hard and closes ON the last stroke: the fist, at his eye line. It stops dead there and holds, no settle. The
+  // right hand comes down to his side during the circle and hangs still, so nothing moves on the cut but the fist.
+  const shoulder: Pt = [RIG.shoulder, RIG.drop]
+  const wristOf = (a: ArmPose): Pt => {
+    const e: Pt = [shoulder[0] + Math.cos(a.up) * RIG.upper, shoulder[1] + Math.sin(a.up) * RIG.upper]
+    return [e[0] + Math.cos(a.up + a.bend) * RIG.fore, e[1] + Math.sin(a.up + a.bend) * RIG.fore]
   }
-  // The cut-off: the right hand rises, open, and comes down hard to beside his head, closing on the last stroke: the
-  // fist. The left drops with it. Held, then lowered in the dark.
-  const wind = ease(t, FINAL - 0.62, FINAL - 0.16)
-  const cut = ease(t, FINAL - 0.16, FINAL)
-  const high: ArmPose = { ...ready.right, up: ready.right.up + 0.1 + 0.3 * wind, bend: ready.right.bend - 0.35 * wind }
-  const right: ArmPose = mixArm(high, CUT_FIST, cut)
-  right.hand = t >= FINAL - 0.02 ? 'fist' : 'open'
-  const left: ArmPose = mixArm(ready.left, POSES.rest.left, ease(t, FINAL - 0.06, FINAL + 0.6))
+  const from = wristOf(heldHigh(FINAL - 0.62, 'left'))
+  const right: ArmPose = mixArm(heldHigh(FINAL - 0.62), POSES.rest.right, ease(t, FINAL - 0.62, FINAL - 0.1))
+  let left: ArmPose
+  if (t < CIRCLE) {
+    // Out and up, open, the palm turning out: a small loop that bulges away from him.
+    const u = ease(t, FINAL - 0.62, CIRCLE)
+    const bulge = Math.sin(Math.PI * u) * 0.12
+    const w: Pt = [from[0] + (APEX[0] - from[0]) * u + bulge, from[1] + (APEX[1] - from[1]) * u]
+    left = reachFromHead(1, w, -1.2 - 0.35 * u, 'open')
+  } else {
+    // The strike: gathering speed all the way down, round the outside, and stopping on the stroke.
+    const v = clamp((t - CIRCLE) / (FINAL - CIRCLE))
+    const u = v * v * v
+    const bow = Math.sin(Math.PI * u) * 0.14
+    const w: Pt = [APEX[0] + (FIST[0] - APEX[0]) * u + bow, APEX[1] + (FIST[1] - APEX[1]) * u]
+    left = reachFromHead(1, w, -1.55 + (1.55 - 0.35) * u, t >= FINAL - 0.02 ? 'fist' : 'open')
+  }
   const down = ease(t, FINAL + 3.2, FINAL + 6.4)
   if (down <= 0) return { right, left }
-  return { left, right: { ...mixArm(right, POSES.rest.right, down), hand: down < 0.6 ? 'fist' : 'beat' } }
+  return { right, left: { ...mixArm(left, POSES.rest.left, down), hand: down < 0.6 ? 'fist' : 'beat' } }
+}
+
+/** The loop's top, and where the fist stops: relative to his head (his left hand, on the house's right). */
+const APEX: Pt = [1.0, -0.95]
+const FIST: Pt = [0.7, -0.24]
+/** When the loop turns into the strike. */
+const CIRCLE = FINAL - 0.17
+
+/** The chord held: both hands high and open, a little higher as it swells, at `t`. */
+function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
+  const ready = POSES.ready
+  const hit = Math.exp(-Math.max(0, t - LAST_CHORD) / 0.16) * clamp((t - (LAST_CHORD - 0.12)) / 0.12)
+  const swell = ease(t, LAST_CHORD + 0.3, FINAL - 0.7)
+  const lift = (x: ArmPose, s: number): ArmPose => ({ ...x, up: x.up + s * (0.32 * hit - 0.1 * swell), bend: x.bend - s * 0.2 * hit })
+  return side === 'right' ? lift(ready.right, -1) : lift(ready.left, 1)
 }
 
 /* ------------------------------------------------------------------ Jim */

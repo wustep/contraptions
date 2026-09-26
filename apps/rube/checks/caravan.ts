@@ -145,7 +145,7 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   let fists = 0
   for (let t = SOLO; t < DURATION; t += 0.05) if (poseAt(t).right.hand === 'fist' || poseAt(t).left.hand === 'fist') fists++
   check('caravan: Fletcher\'s fist closes once, on the final cut-off, and nowhere before it',
-    poseAt(FINAL + 0.05).right.hand === 'fist' && poseAt(FINAL - 0.1).right.hand !== 'fist' && fists > 0 &&
+    [poseAt(FINAL + 0.05).right.hand, poseAt(FINAL + 0.05).left.hand].includes('fist') && poseAt(FINAL - 0.1).right.hand !== 'fist' && poseAt(FINAL - 0.1).left.hand !== 'fist' && fists > 0 &&
     Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
 
   const crowd = [5, 60, 150, 190, 250, 300, 460, 545].map((t) => show.at(t).balls ?? [])

@@ -165,7 +165,9 @@ const awake = (T: number): number => smoother((T - (F_LEAP + 0.04)) / (F_SEATED 
 /** His head (the ball's centre) in the cup, in the kit's frame. */
 export function headAt(T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
-  return [NECK[0], NECK[1] + bob(T) * w + rigDrop(T)]
+  // His answer to Fletcher's nod: the ball tips in the cup toward him (the house's right) as it dips.
+  const tip = 0.075 * Math.sin(Math.PI * clamp((T - (NOD_BACK[0] - 0.25)) / (NOD_BACK[1] - NOD_BACK[0] + 0.5))) ** 2
+  return [NECK[0] + tip, NECK[1] + bob(T) * w + rigDrop(T)]
 }
 
 function shoulder(arm: Arm, T: number): Pt {

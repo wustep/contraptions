@@ -7,7 +7,7 @@ import { drawConductor } from '../fletcher'
 import { alpha, frame, hash, scenery, type Ctx } from '../kit'
 import { CARNEGIE, CHORD, CUTOFF, FINAL, LAST_CHORD, SOLO, level, SHOUT_ORIGIN, SHOUT_PERIOD } from '../music'
 import { HALL, KIT } from '../worlds'
-import { crashAskew, fletcherAt, floorAt, poseAt } from './conductor'
+import { baseAt, crashAskew, fletcherAt, floorAt, poseAt } from './conductor'
 import { ROLL, rolling } from './finale-clock'
 import { ARCH, BASS, DOOR, FLOOR, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
 import { sinceStroke } from './strokes'
@@ -124,7 +124,7 @@ export const hall = scenery<HallState>({
     p.translate(KIT_AT[0] * c.k, KIT_AT[1] * c.k)
     drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), askew: { crash: crashAskew(T) } })
     p.pop()
-    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * bandLight(T)) })
+    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), base: baseAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * bandLight(T)) })
     hallLight(p, c, T)
     p.pop()
   },

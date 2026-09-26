@@ -2,7 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot } from '../kit'
 import { KICKS } from '../music'
 import type { KitStroke } from '../stub'
-import { F_BACK, F_WALK, NOD } from './conductor'
+import { F_BACK, F_WALK, NOD, NOD_BACK } from './conductor'
 import { CHORD_HIT, CUT, F_FLY, F_LEAP, F_SEATED, ROLL, STICKS_UP } from './finale-clock'
 import { FRAME_STROKES, drawFinaleRig, headAt } from './finale-rig'
 import { FLOOR_SEAT, Path, RACK_SEAT, SNARE_SEAT } from './path'
@@ -81,26 +81,30 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // In the frame: the march.
     k(F_SEATED + 0.4, 6.0, [-1.2, -1.7]),
     k(514.6, 5.2, [-1.0, -1.5]),
-    // The roll: in on the sticks and his head; Fletcher comes; the two heads; the nod.
-    k(ROLL[0], 4.8, [-0.9, -1.5]),
-    k(F_WALK[0] + 1.6, 6.4, [0.6, -1.5]),
-    k(F_WALK[1] + 1.2, 5.0, [0.2, -2.1]),
-    k(NOD[0], 4.4, [0.15, -2.3]),
-    k(NOD[1] + 0.9, 4.3, [0.05, -2.3]),
-    // Fletcher goes back: the whole stage, his father at the door, the band waiting in the dark.
-    k(F_BACK[0] + 2.2, 9.2, [-1.9, -1.2]),
-    // The last fill, close; the sticks up in the silence.
+    // The long roll, not the solo's framings: low and close on the snare, the two sticks a blur on its head; up
+    // with Fletcher as he comes across; the two heads, level, for the nod, tighter through Andrew's answer.
+    k(ROLL[0] + 0.5, 3.1, [-0.62, -0.5]),
+    k(ROLL[0] + 1.9, 3.3, [-0.55, -0.62]),
+    k(F_WALK[0] + 2.2, 6.2, [0.9, -1.6]),
+    k(F_WALK[1] + 1.6, 3.7, [0.15, -2.4]),
+    k(NOD[0] - 0.2, 3.4, [0.1, -2.45]),
+    k(NOD_BACK[1] + 0.3, 3.2, [0.05, -2.45]),
+    // He steps back to give him the fill: the whole stage, his father at the door, the band waiting in the dark.
+    k(F_BACK[0] + 3.1, 9.2, [-1.9, -1.2]),
+    // The last fill, close; the sticks up in the silence, and Fletcher's hands coming up beside him.
     k(ROLL[1] + 0.6, 5.6, [-1.0, -1.6]),
     k(539.8, 4.6, [-0.85, -1.75]),
-    k(STICKS_UP, 5.8, [-0.8, -1.9]),
-    // Back through the silence to the band: the chord, everything at once, and the fist.
+    k(STICKS_UP, 5.6, [-0.1, -2.1]),
+    // Back through the silence to the band: the chord, everything at once; then in, through its crescendo, on the
+    // two of them: his fist and Andrew in the frame's cup, both well inside the frame (and under Zoom).
     k(CHORD_HIT - 0.2, 11.0, [3.0, -2.4]),
-    k(CHORD_HIT + 2.6, 10.2, [2.7, -2.3]),
-    // In on the two of them for the cut-off: his hand, Andrew in the frame's cup.
-    k(CUT, 5.6, [1.9, -1.95]),
-    // Still, and slowly back as the hall goes dark under the credits.
-    k(CUT + 3.5, 5.9, [1.85, -1.95]),
-    k(slot.end, 10.5, [1.8, -2.6]),
+    k(CHORD_HIT + 1.6, 10.4, [2.8, -2.3]),
+    k(CUT - 0.3, 4.0, [0.58, -2.55]),
+    // Held on the fist; then slowly back to the whole stage going dark, the machine low in the frame so the cards
+    // come up over clear wall; still drifting out to the last frame.
+    k(CUT + 2.4, 3.92, [0.56, -2.57]),
+    k(556.2, 11.0, [0.3, -3.4]),
+    k(slot.end, 12.0, [0.4, -3.6]),
   ]
 }
 
