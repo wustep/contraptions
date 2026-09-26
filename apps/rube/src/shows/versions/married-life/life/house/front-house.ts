@@ -513,20 +513,43 @@ function mailbox(p: p5, k: number, weight: number, L: Look, c: Pal): void {
   p.fill(dusk(L, L.old ? mixHex(HOME.pink, DUST, 0.6) : mixHex('#D9574B', '#B98A82', L.age)))
   p.rect(0.2 * k, -0.07 * k, 0.16 * k, 0.1 * k)
   p.pop()
-  // The prints: his square, her round, pressed into the wet paint; flat paint, no outline, a shade darker at the rim.
+  // The prints: two hands pressed into the wet paint, fingers up, the thumbs reaching toward each other, so they read
+  // as a pair of hands and never as two more of them: small (a palm under half his width), in a paint
+  // tone (the box's own colour pressed darker, only tinted with theirs), no outline. His palm is square, hers round.
   if (!L.old) {
     const print = (who: 'carl' | 'ellie', at: number) => {
       if (T < at) return
       const col = who === 'carl' ? carlAt(at) : ellieAt(at)
       const [px, py] = PRINTS[who]
-      const s = 0.2
+      const side = who === 'carl' ? -1 : 1
+      const paint = mixHex(mixHex(body, col, 0.42), INK, 0.22 + 0.1 * L.age)
+      p.push()
+      p.translate(X(px), Y(py + 0.02))
+      p.rotate(side * 0.06)
       p.noStroke()
-      p.fill(alpha(p, dusk(L, mixHex(col, '#FFFFFF', 0.08 + 0.25 * L.age)), 0.92))
-      if (who === 'carl') p.rect(X(px - s / 2), Y(py - s / 2), s * k, s * k, 0.05 * k)
-      else p.ellipse(X(px), Y(py), s * k, s * 0.94 * k)
-      p.fill(alpha(p, dusk(L, mixHex(col, INK, 0.35)), 0.35))
-      if (who === 'carl') p.rect(X(px - s / 2 + 0.03), Y(py - s / 2 + 0.03), (s - 0.06) * k, (s - 0.06) * k, 0.03 * k)
-      else p.ellipse(X(px + 0.01), Y(py + 0.01), (s - 0.07) * k, (s - 0.08) * k)
+      p.fill(alpha(p, dusk(L, paint), 0.86))
+      p.rectMode(p.CENTER)
+      const pw = 0.11
+      const ph = 0.1
+      if (who === 'carl') p.rect(0, 0, pw * k, ph * k, 0.025 * k)
+      else p.ellipse(0, 0, pw * 1.04 * k, ph * 1.06 * k)
+      // Four fingers, a little splayed, the middle ones longest; the thumb out to the side, lower.
+      const lens = [0.052, 0.07, 0.066, 0.05]
+      for (let i = 0; i < 4; i++) {
+        const fx = (-0.0375 + i * 0.025) * -side
+        const ang = (i - 1.5) * 0.09 * -side
+        p.push()
+        p.translate(fx * k, (-ph / 2 + 0.008) * k)
+        p.rotate(ang)
+        p.rect(0, -lens[i] / 2 * k, 0.021 * k, lens[i] * k, 0.0105 * k)
+        p.pop()
+      }
+      p.push()
+      p.translate(-side * (pw / 2 - 0.008) * k, 0.005 * k)
+      p.rotate(-side * 0.95)
+      p.rect(0, -0.026 * k, 0.024 * k, 0.052 * k, 0.012 * k)
+      p.pop()
+      p.pop()
     }
     print('carl', PRINT_AT.carl)
     print('ellie', PRINT_AT.ellie)
