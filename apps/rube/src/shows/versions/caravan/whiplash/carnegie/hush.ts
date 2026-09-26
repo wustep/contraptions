@@ -81,13 +81,18 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(351.6, 3.5, [-0.8, -1.25], 0.6),
     k(354.0, 4.6, [-1.3, -1.2], 0.55),
     k(356.1, 3.3, [-0.9, -1.25]),
-    // To the ride; then a slow move across the stage to his father at the stage door: Jim low at the left in the
-    // wings' light, the frame and his son small in their pool at the right, the whole width of the stage between
-    // them; and back to the kit.
+    // To the ride; then across the stage to his father at the stage door, alone in the wings' light under its lit
+    // window (the solo's and the build's looks at him are closer, and keep the window out),
+    // leaning toward the stage (`conductor.ts` `jimAt`, `hall.ts` `jimLit`); and out from him across the whole width
+    // of the stage to his son, small in the frame in their pool at the right: the look from father to son. Back to
+    // the kit for the ride's last stroke.
     k(357.9, 5.4, [-2.1, -1.4]),
-    k(360.6, 6.6, [(JIM[0] + KIT_AT[0] - 0.8) / 2, -0.35]),
-    k(364.4, 6.4, [(JIM[0] + KIT_AT[0] - 0.8) / 2 - 0.15, -0.3]),
-    k(367.0, 5.6, [-2.0, -1.2]),
+    k(358.9, 5.3, [-2.45, -1.3]),
+    k(361.0, 3.9, [JIM[0] - 0.1, JIM[1] - 1.7]),
+    k(362.6, 3.75, [JIM[0] + 0.0, JIM[1] - 1.7]),
+    k(364.8, 6.5, [(JIM[0] + KIT_AT[0] - 0.8) / 2 - 0.15, -0.3]),
+    k(366.0, 6.4, [(JIM[0] + KIT_AT[0] - 0.8) / 2 + 0.05, -0.35]),
+    k(367.4, 5.6, [-2.0, -1.2]),
     k(368.6, 5.2, [-1.1, -1.35]),
     { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
   ]
