@@ -53,23 +53,26 @@ export const home = part<null>(
     const w = (x: number, y: number): Pt => [x - HOME_AT[0], y - HOME_AT[1]]
     return [
       // One move, over the leap: from the dash's close frame (carried across the door, 4.4 cells) out to the two-shot,
-      // the zoom quickest while the spark is in the air (about 2 log/s), so the eye rides the spark and not the lens.
-      // The frame flies with it: up and left over the arc's top (this key is the arc's crest; the pull keeps going
+      // the zoom quickest while the spark is in the air (about 2.3 log/s, even on both sides of the crest), so the eye
+      // rides the spark and not the lens. The frame flies with it: up and left over the arc's top (this key is the arc's crest; the pull keeps going
       // through it), then down and out as it comes down onto the wick, so the spark sits near the same place on the
-      // screen, about a third across and a fifth down, all the way (Zoom keeps it, 0.94 of Zoom's half-frame at most).
-      { t: slot.begin + 0.39, cells: 8.2, hold: w(4.2, 2.0), w: 1 },
-      // The move arrives and settles ON the first last chord, as the spark lands: the candle on the left, the open
-      // firebox door in the middle, the sleeping cat's head at the bottom (its shut eye about a cell above the frame's
-      // edge), so its eye is seen to snap open on 149.815. As low as Zoom allows while it keeps the spark in (Zoom's
-      // centre is the camera's, so it may sit no more than about 0.31 of the frame below the wick).
-      { t: LAST[0], cells: 13.3, hold: w(2.9, 4.1), w: 1 },
-      // Then all but still between the two chords (drifting out under 0.1 log/s), so each is a punch (the score's) on a
-      // settled picture, and the bang lands on the same two-shot.
-      { t: LAST[1], cells: 13.42, hold: w(2.92, 4.14), w: 1 },
-      // Follow-through: a long damped move down and out as the cat's head comes up and it stares at the candle: the
-      // floor and the whole cat in.
-      { t: LAST[1] + 0.95, cells: 14.0, hold: w(3.0, 4.35), w: 1 },
-      { t: LAST[1] + 2.45, cells: 14.3, hold: w(2.8, 4.45), w: 1 },
+      // screen, about a third across and a fifth down, all the way (Zoom keeps it, 0.96 of its half-frame at most).
+      { t: slot.begin + 0.39, cells: 9.0, hold: w(4.2, 2.0), w: 1 },
+      // The move arrives and settles ON the first last chord, as the spark lands: a two-shot, wide and low enough that
+      // both halves of the punchline are whole: the candle on the left with its flame well clear of the top (about 13%
+      // down), the open firebox door in the middle, and the sleeping cat's head and shoulders on the floor below it (its
+      // shut eye about four-fifths down), so its eye is seen to snap open on 149.815. As low as Zoom allows with the
+      // spark in (Zoom's centre is the camera's, so it may sit no more than a third of the frame below the wick; this
+      // is 0.32).
+      { t: LAST[0], cells: 15.8, hold: w(1.5, 5.05), w: 1 },
+      // Then all but still between the two chords (drifting out under 0.05 log/s), so each is a punch (the score's) on
+      // a settled picture, and the bang lands on the same two-shot.
+      { t: LAST[1], cells: 15.9, hold: w(1.5, 5.1), w: 1 },
+      // Follow-through: over half a second the frame eases down a little as the cat's head comes up, so under Zoom
+      // (which crops to its middle) the head rises into the bottom of the crop, whole, while the spark stays in at the
+      // top; then a slow creep on out while it stares at the candle.
+      { t: LAST[1] + 0.5, cells: 16.3, hold: w(1.3, 5.16), w: 1 },
+      { t: LAST[1] + 2.45, cells: 16.5, hold: w(1.0, 5.2), w: 1 },
       // The cat tucks back in; the camera draws back to the whole loft in the dark for the credits, the candle its one
       // warm light, the dark of the roof above it for the cards.
       { t: CREDITS_AT + 1.4, cells: 21.5, hold: w(-3.4, 1.5), w: 1 },
