@@ -412,13 +412,13 @@ function sync(): void {
   // The picker.
   empty.hidden = works.length > 0
   workList.node.hidden = takeField.hidden = about.hidden = works.length === 0
-  // A work whose one take is the work itself (labelled with its title) has no versions to pick between: no row for it.
-  if (work && work.versions.length === 1 && work.versions[0].label === work.title) takeField.hidden = true
+  // A work with one take has no versions to pick between: no row for it.
+  if (work && work.versions.length === 1) takeField.hidden = true
   if (current) workList.set(current.work)
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
     takeChips = work.versions.map((version) => {
-      const b = el('button', { type: 'button', title: version.director ? `Directed by ${version.director.name}` : (version.note ?? version.label) }, [version.label])
+      const b = el('button', { type: 'button', title: version.note ?? version.label }, [version.label])
       b.addEventListener('click', () => {
         if (version !== current && !recording) void open(version, true)
       })
@@ -437,10 +437,7 @@ function sync(): void {
     if (loading) lines.push(el('br'), 'Loading…')
     else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
     else {
-      // A byline, where the take has one, in place of its note: faint, the name a quiet link.
-      if (current.director) {
-        lines.push(el('br'), el('span', { class: 'byline' }, ['Directed by ', el('a', { href: current.director.href, target: '_blank', rel: 'noreferrer' }, [current.director.name])]))
-      } else if (current.note) lines.push(el('br'), current.note)
+      if (current.note) lines.push(el('br'), current.note)
       const credit = perf?.soundtrack?.credit
       if (credit) {
         const href = perf?.soundtrack?.href

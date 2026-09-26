@@ -2,7 +2,7 @@
 
 Copyrighted recordings. This is a private tech demo and a one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it. Attribution: `docs/promo/LA_LA_LAND_SEBS_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=la-la-land&take=opus55-sebs`. In the Shows picker it is **Seb's**, under La La Land, with "Directed by wustep" under it, faint, the name a link to https://x.com/wustep.
+Open it at `/shows/?show=la-la-land&take=opus55-sebs`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
 
 ## What it is
 
@@ -75,7 +75,7 @@ The club at the end is the club at the start, built again where the thread comes
 ## How it keeps time, and what `check:shows` holds it to
 
 Each part is handed a slot (the show time the ball arrives, the time it must leave) and builds its lane out of timed waypoints, so a strike lands where the music is by construction. `apps/rube/check-sebs.ts`, run by `npm run check:shows`, holds:
-- the chrome (Seb's, Directed by wustep), the mix, its length and its credit;
+- the chrome (Opus 5.5 under Epilogue, no byline), the mix, its length and its credit;
 - the end credits: after the band, set by the page: directed by Claude Opus 5.5 (machines, drawings and code), then the four balls, Justin Hurwitz, both cues and p5.js;
 - ten places in the film's order, the club again at the end, and every change of place under a full cover; no portal, no cut drawn;
 - Seb never jumps (0.04 cells a millisecond) and is never hidden for more than 2.5 s;
@@ -102,6 +102,6 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 - **Shared infra**, byte for byte the same as Liftoff's (#88), so either can land first:
   - `Framing.angle` and the roll in `drawWorld`, which this take does not use;
   - `Performance.titles` and the page's words layer, for the credits;
-  - `ShowVersion.director`, for the byline;
+  - `ShowVersion.director`, for the byline (since removed: the picker has no bylines);
   - the styles for both.
 - **Rebuilding the audio.** `sh scripts/sebs-mix.sh` rebuilds the mix from the two sources, and `python3 scripts/sebs-onsets.py` measures it again. Neither needs to run unless the mix changes.

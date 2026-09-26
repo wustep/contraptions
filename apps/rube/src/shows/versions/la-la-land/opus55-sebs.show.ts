@@ -1,8 +1,7 @@
 import { defineShow } from '../../registry'
 
 export default defineShow({
-  title: 'La La Land',
-  label: "Seb's",
-  director: { name: 'wustep', href: 'https://x.com/wustep' },
+  title: 'Epilogue',
+  label: 'Opus 5.5',
   async load() { return (await import('./sebs')).performance },
 })

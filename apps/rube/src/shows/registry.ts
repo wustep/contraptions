@@ -95,11 +95,6 @@ export interface ShowVersion {
   label: string
   /** One line on what this take is trying. */
   note?: string
-  /**
-   * Who directed it, set small and faint under the take in the panel, the name a link: "Directed by wustep". A
-   * take with a byline shows it in place of its note.
-   */
-  director?: { name: string; href: string }
   load(): Promise<Performance>
 }
 
@@ -150,13 +145,11 @@ export function readShows(found: Record<string, unknown>): Registry {
       continue
     }
     const v = found[path] as Partial<ShowVersion> | null | undefined
-    const director = v?.director
-    const badDirector = director !== undefined && (typeof director !== 'object' || !director || !text(director.name) || !/^https:\/\//.test(String(director.href)))
-    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string') || badDirector) {
+    if (!v || typeof v !== 'object' || !text(v.title) || !text(v.label) || typeof v.load !== 'function' || (v.note !== undefined && typeof v.note !== 'string')) {
       problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, director: v.director, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
       works.push({ work: at.work, title: v.title, versions: [version] })
