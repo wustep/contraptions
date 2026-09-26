@@ -53,23 +53,24 @@ const DRIFT = 3.2
 /** How steep the stair of air is it walks up (cells up a cell along). */
 const SLOPE = 0.27
 /**
- * The breath's two-shot on the porch: how many cells tall, and where she sits in it (how far right of and below the
- * middle, in frames; left and up are negative). The camera eases in to it across the whole breath, from the flag's
- * bar to `PORCH_AT`, never faster than half a scale a second, and holds it until the chord starts the pull-back.
+ * The breath's two-shot on the porch: a cut in on the flag coming home (f6), how many cells tall, and where she sits
+ * in it (how far right of and below the middle, in frames; left and up are negative): the two of them side by side,
+ * the door right of them swinging open on the warm room, the windows over them lighting. Held through the breath,
+ * riding the castle, easing in a touch, until the chord's cut.
  */
-const PORCH = 12
-const PORCH_FX = -0.05
-const PORCH_FY = 0.16
-const PORCH_FROM = 298.6
-const PORCH_AT = 301.3
+const PORCH = 4.6
+const PORCH_TO = 4.3
+const PORCH_FX = -0.07
+const PORCH_FY = 0.14
 /**
  * The chord: a cut from the porch to the whole castle, on its first stroke. How many cells tall, and how far down the
- * frame Calcifer's chimney mouth sits (a fifth: head-room for the three roars and the smoke thrown up on them, the two
- * of them on the porch in the lower middle, the feet and the cloud under the first on the air in). Then held while the
- * roars ring, and eased out, one slow move, into the credits' frame as it walks away up the sky (`OPEN_TO`).
+ * frame Calcifer's chimney mouth sits (three tenths: under Zoom, half as close again, it is a fifth down, so the three
+ * roars and the smoke thrown up on them are in the frame either way; the two of them on the porch in the lower middle,
+ * the feet and the cloud under the first on the air in). Then held while the roars ring, and eased out, one slow
+ * move, into the credits' frame as it walks away up the sky (`OPEN_TO`).
  */
-const CHORD_CELLS = 30.5
-const CHIMNEY_DOWN = 0.2
+const CHORD_CELLS = 34
+const CHIMNEY_DOWN = 0.3
 const OPEN_TO = 306.2
 /** Where she sits in the frame gets to the credits' place sooner than the scale does. */
 const PLACED = 305.4
@@ -991,16 +992,10 @@ export const flight = part<null>(
       const n = Math.max(1, Math.round((t1 - t0) / dt))
       return Array.from({ length: n - 1 }, (_, i) => t0 + ((t1 - t0) * (i + 1)) / n)
     }
-    // The whole castle as the flag comes home, as a framing of her (so the move in from it rides the castle).
-    const wide = ((): Framed => {
-      const [cx, cy] = mid(PORCH_FROM, 0.8, -3.2)
-      const [hx, hy] = sophieP(PORCH_FROM)
-      const cells = 31
-      return [cells, (hx - cx) / (cells * (16 / 9)), (hy - cy) / cells]
-    })()
     const porch: Framed = [PORCH, PORCH_FX, PORCH_FY]
-    // The chord's cut: the whole castle, Calcifer's chimney mouth a fifth down the frame (the three roars go up into
-    // the sky over it), the castle a little left of middle (its smoke leans back, it walks on to the right).
+    // The chord's cut: the whole castle, Calcifer's chimney mouth three tenths down the frame (the three roars go up
+    // into the sky over it, under Zoom too), the castle a little left of middle (its smoke leans back, it walks on to
+    // the right).
     const chord = ((): Framed => {
       const L = look(CHORD[0])
       const [, ey] = onCastle(L, CASTLE.chimney)
@@ -1011,21 +1006,26 @@ export const flight = part<null>(
     })()
     const [first, ...later] = CREDITS_FRAMES
     return [
-      // The dive over their heads into the grate (Calcifer's flare starts the camera going back), the plank heaving
-      // up, and the hull flying in and locking on around it on the tutti's great note while the frame is still
-      // opening, so the widening is the castle arriving. Never faster than half a scale a second.
+      // The dive over their heads into the grate, Calcifer's flare, and the plank heaving up off the ledge on his fire:
+      // close on the two of them, riding it up.
       hold(DIVE, 7.3, [her[0] + 0.7, her[1] - 0.99]),
-      hold(HULL, 13.6, mid(HULL, 0.3, 1.2)),
-      // Out on through the pieces coming home, a piece a bar, until the whole castle is in the frame, always with sky
-      // over what has come (the face, the cottage and the back turret, the chimney, the flag).
-      hold(295.9, 20.5, mid(FACE + 0.2, 0.5, 0.2)),
-      hold(297.1, 27.5, mid(HOUSE + 0.3, 0.6, -2.0)),
-      // The whole castle as the flag flutters home; then the breath is theirs: in, slowly, across the whole of it, to
-      // the porch, a two-shot of the two of them side by side (her silver, his cornflower) as the windows light, the
-      // door swings open on the warm room behind them and the legs let down; and held there, riding the castle.
-      follow(PORCH_FROM, ...wide),
-      ...glide(every(PORCH_FROM, PORCH_AT, 0.15), wide, porch, (t) => cruise(t, PORCH_FROM, PORCH_AT, 0.6, 0.9)),
-      follow(PORCH_AT, ...porch),
+      follow(DIVE + 1.2, 7.5, -0.06, 0.15),
+      follow(HULL - 0.03, 7.7, -0.06, 0.17),
+      // The castle comes home, cut on the tutti's downbeats. On its great note (the hull and its legs locking on round
+      // the plank) a cut out to the whole of it arriving, sky over it for what is to come, the face flying in on f3;
+      // on f4 in to the two of them as the cottage and the back turret come down over their heads and lock on; on f5
+      // out again for Calcifer's chimney (his fire up it at once) and the flag fluttering home on the wind that took it.
+      { ...hold(HULL, 19, mid(HULL, 0.4, -2.2)), cut: true },
+      hold(HOUSE - 0.03, 21, mid(FACE + 0.3, 0.6, -2.6)),
+      { ...follow(HOUSE, 7.7, -0.06, 0.3), cut: true },
+      follow(CHIMNEY - 0.03, 7.4, -0.06, 0.29),
+      { ...hold(CHIMNEY, 29, mid(CHIMNEY, 0.6, -2.4)), cut: true },
+      hold(FLAG - 0.03, 30, mid(FLAG, 0.7, -2.6)),
+      // On the flag, the breath is theirs: a cut in to the porch, the two of them side by side (her silver, his
+      // cornflower) as the windows over them light and the door swings open on the warm room behind them; held there,
+      // riding the castle as it drifts out over the gorge and lets its legs down, easing in a touch.
+      { ...follow(FLAG, ...porch), cut: true },
+      follow(CHORD[0] - 0.03, PORCH_TO, PORCH_FX, PORCH_FY),
       // The chord is a cut, on its first stroke: from the porch to the whole castle, its first foot coming down on the
       // air, every window flaring, and the three roars of fire out of the chimney in the sky over it. Held (barely
       // moving) while they ring, then one slow move out into the credits' frame as it walks away up the sky.
