@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../parts'
 import { solid } from '../../../../../../../src/core/draw'
 import type { Ctx } from './kit'
-import { FLETCHER, HANDS } from './worlds'
+import { FLETCHER, HALL, HANDS } from './worlds'
 
 /**
  * Terence Fletcher as a machine: the conductor. Canonical: every part that shows him draws him with
@@ -38,7 +38,7 @@ export interface Pose {
 /** Lengths, in cells. The ball (his head) is 0.26 across; his arms are long, his hands large, so they read. */
 export const RIG = { shoulder: 0.24, drop: 0.17, upper: 0.52, fore: 0.48, hand: 0.3, cup: 0.2 }
 /** His chest: a black shirt-front from the shoulders to the waist, where the column goes on down. */
-export const CHEST = { top: 0.1, half: 0.31, waist: 1.12, halfWaist: 0.14 }
+export const CHEST = { top: 0.1, half: 0.34, waist: 1.12, halfWaist: 0.15 }
 
 const arm = (up: number, bend: number, wrist: number, hand: HandShape): ArmPose => ({ up, bend, wrist, hand })
 
@@ -128,10 +128,32 @@ export interface ConductorLook {
   bow?: number
 }
 
+/** His edge: the black's own dark, never cream. He is told from the wall by light, not by a line. */
+const EDGE = '#0B0A09'
+/** His sleeves: a breath lighter than the shirt-front, so an arm across the chest still reads. */
+const SLEEVE = mixHex(FLETCHER, HANDS, 0.07)
+/** The rim light along his top edges (the key light is above him, a little to the house's left). */
+const RIM = HALL.gold
+/** A hand's edge: the skin's own shadow. */
+const HAND_EDGE = mixHex(HANDS, FLETCHER, 0.5)
+
+/** A thin warm rim from a to b (in pixels). */
+function rimLine(p: p5, a: Pt, b: Pt, w: number, alpha: number): void {
+  if (alpha <= 0.01) return
+  const col = p.color(RIM)
+  col.setAlpha(255 * alpha)
+  p.stroke(col)
+  p.strokeWeight(w)
+  p.noFill()
+  p.line(a[0], a[1], b[0], b[1])
+}
+
 /** Fletcher's rig and hands round his ball at `head` (the stage draws the ball itself). */
 export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: ConductorLook = {}): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const [hx, hy] = head
+  const light = look.light ?? 1
+  const rim = 0.2 + 0.3 * light
   // The lean: the body's axis from his head down to the column's foot, as a turn of the chest and arms about the head.
   let lean = look.floor !== undefined && look.base !== undefined ? Math.atan2(look.floor - hy, look.base - hx) - Math.PI / 2 : 0
   // The column's top: just under the cup; in a bow, at the waist, the chest turned further than the column.
@@ -150,67 +172,119 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
   p.push()
   // Laid out by corners (the stage draws in rectMode(CENTER)): the base plate, the hands.
   p.rectMode(p.CORNER)
-  // The column, from the floor to the cup (under the chest).
+  // The column, from the floor to the waist: wide enough to read as his trousers, and his shoes on the floor.
   if (look.floor !== undefined) {
-    solid(p, ink, weight * 0.8, FLETCHER)
-    const w = 0.09
+    solid(p, EDGE, weight * 0.8, FLETCHER)
     const bx = look.base ?? hx
-    p.quad((bx - w) * k, look.floor * k, (bx + w) * k, look.floor * k, (tx + w * 0.6) * k, ty * k, (tx - w * 0.6) * k, ty * k)
-    p.rect((bx - 0.2) * k, (look.floor - 0.04) * k, 0.4 * k, 0.05 * k, 0.02 * k)
+    // The waist, where the chest ends (in a bow the chest is turned further, so the column meets it lower).
+    const wx = bow ? tx : hx - CHEST.waist * Math.sin(lean)
+    const wy = bow ? ty : hy + CHEST.waist * Math.cos(lean)
+    p.quad((bx - 0.1) * k, look.floor * k, (bx + 0.1) * k, look.floor * k, (wx + 0.125) * k, wy * k, (wx - 0.125) * k, wy * k)
+    p.rect((bx - 0.2) * k, (look.floor - 0.06) * k, 0.4 * k, 0.07 * k, 0.03 * k, 0.03 * k, 0.01 * k, 0.01 * k)
+    // A dark crease down the middle (two legs, standing together), and the light along the key side.
+    p.stroke(EDGE)
+    p.strokeWeight(weight * 0.7)
+    p.line(bx * k, (look.floor - 0.07) * k, (bx + (wx - bx) * 0.72) * k, (look.floor + (wy - look.floor) * 0.72) * k)
+    rimLine(p, [(bx - 0.095) * k, (look.floor - 0.08) * k], [(wx - 0.12) * k, (wy + 0.06) * k], weight * 0.9, rim * 0.6)
   }
   p.translate(hx * k, hy * k)
   if (lean + bow) p.rotate(lean + bow)
   // The chest: a black shirt-front, square at the shoulders and narrowing to the waist, so the rig reads as a man.
-  solid(p, ink, weight * 0.8, FLETCHER)
+  solid(p, EDGE, weight * 0.8, FLETCHER)
   const top = CHEST.top
   const waist = CHEST.waist
+  const H = CHEST.half
   p.beginShape()
-  p.vertex((-CHEST.half + 0.06) * k, top * k)
-  p.vertex((CHEST.half - 0.06) * k, top * k)
-  p.quadraticVertex(CHEST.half * k, top * k, CHEST.half * k, (top + 0.08) * k)
-  p.quadraticVertex((CHEST.half - 0.02) * k, (top + 0.55) * k, CHEST.halfWaist * k, waist * k)
+  p.vertex((-H + 0.07) * k, top * k)
+  p.vertex((H - 0.07) * k, top * k)
+  p.quadraticVertex(H * k, top * k, H * k, (top + 0.09) * k)
+  p.quadraticVertex((H - 0.03) * k, (top + 0.6) * k, CHEST.halfWaist * k, waist * k)
   p.vertex(-CHEST.halfWaist * k, waist * k)
-  p.quadraticVertex((-CHEST.half + 0.02) * k, (top + 0.55) * k, -CHEST.half * k, (top + 0.08) * k)
-  p.quadraticVertex(-CHEST.half * k, top * k, (-CHEST.half + 0.06) * k, top * k)
+  p.quadraticVertex((-H + 0.03) * k, (top + 0.6) * k, -H * k, (top + 0.09) * k)
+  p.quadraticVertex(-H * k, top * k, (-H + 0.07) * k, top * k)
   p.endShape(p.CLOSE)
+  // The light along the tops of his shoulders, and down the key side of the chest.
+  if (rim > 0.01) {
+    const col = p.color(RIM)
+    col.setAlpha(255 * rim)
+    p.stroke(col)
+    p.strokeWeight(weight * 1.0)
+    p.noFill()
+    p.beginShape()
+    p.vertex(-H * k, (top + 0.1) * k)
+    p.quadraticVertex(-H * k, (top + 0.005) * k, (-H + 0.07) * k, (top + 0.005) * k)
+    p.vertex((H - 0.07) * k, (top + 0.005) * k)
+    p.quadraticVertex(H * k, (top + 0.005) * k, H * k, (top + 0.1) * k)
+    p.endShape()
+    col.setAlpha(255 * rim * 0.45)
+    p.stroke(col)
+    p.bezier(-H * k, (top + 0.12) * k, (-H + 0.02) * k, (top + 0.4) * k, (-H + 0.06) * k, (top + 0.62) * k, -(CHEST.halfWaist + 0.04) * k, (waist - 0.2) * k)
+  }
   // The arms, over the chest, behind the cup.
-  drawArm(p, c, [-RIG.shoulder, RIG.drop], pose.right, look.light ?? 1)
-  drawArm(p, c, [RIG.shoulder, RIG.drop], pose.left, look.light ?? 1)
-  // The cup the ball sits in: a black crescent under it.
-  solid(p, ink, weight * 0.8, FLETCHER)
+  drawArm(p, c, [-RIG.shoulder, RIG.drop], pose.right, light, lean + bow)
+  drawArm(p, c, [RIG.shoulder, RIG.drop], pose.left, light, lean + bow)
+  // The cup the ball sits in: his collar, a black crescent under it.
+  solid(p, EDGE, weight * 0.8, FLETCHER)
   p.arc(0, 0.02 * k, (RIG.cup * 2 + 0.06) * k, (RIG.cup + 0.12) * k, 0.05, Math.PI - 0.05, p.CHORD)
   p.pop()
 }
 
-function drawArm(p: p5, c: Ctx, shoulder: Pt, a: ArmPose, light: number): void {
-  const { k, ink, weight } = c
+/**
+ * One arm: the sleeve as two filled, tapered black limbs (0.17 of a cell at the shoulder, 0.12 at the wrist) with a
+ * round elbow, a warm rim along whichever edge faces up (turned by `turn`, the body's lean), and the hand.
+ */
+function drawArm(p: p5, c: Ctx, shoulder: Pt, a: ArmPose, light: number, turn = 0): void {
+  const { k, weight } = c
   const elbow: Pt = [shoulder[0] + Math.cos(a.up) * RIG.upper, shoulder[1] + Math.sin(a.up) * RIG.upper]
   const fa = a.up + a.bend
   const wrist: Pt = [elbow[0] + Math.cos(fa) * RIG.fore, elbow[1] + Math.sin(fa) * RIG.fore]
-  // The sleeve: two black strokes with an ink edge, thicker at the shoulder.
-  for (const [w, col] of [[weight * 7.2, ink], [weight * 5.4, FLETCHER]] as const) {
-    p.stroke(col)
-    p.strokeWeight(w)
-    p.noFill()
-    p.line(shoulder[0] * k, shoulder[1] * k, elbow[0] * k, elbow[1] * k)
-    p.strokeWeight(w * 0.85)
-    p.line(elbow[0] * k, elbow[1] * k, wrist[0] * k, wrist[1] * k)
+  const rim = 0.2 + 0.3 * light
+  const limb = (from: Pt, to: Pt, w0: number, w1: number): void => {
+    const dx = to[0] - from[0]
+    const dy = to[1] - from[1]
+    const L = Math.hypot(dx, dy) || 1e-6
+    const nx = -dy / L
+    const ny = dx / L
+    solid(p, EDGE, weight * 0.7, SLEEVE)
+    p.quad(
+      (from[0] + nx * w0 / 2) * k, (from[1] + ny * w0 / 2) * k,
+      (to[0] + nx * w1 / 2) * k, (to[1] + ny * w1 / 2) * k,
+      (to[0] - nx * w1 / 2) * k, (to[1] - ny * w1 / 2) * k,
+      (from[0] - nx * w0 / 2) * k, (from[1] - ny * w0 / 2) * k,
+    )
+    // The rim on the upper edge, as the stage sees it (the normal whose screen-y points up, the lean included).
+    const up = Math.sin(turn) * nx + Math.cos(turn) * ny < 0 ? 1 : -1
+    const inset = 0.012
+    rimLine(
+      p,
+      [(from[0] + up * nx * (w0 / 2 - inset)) * k, (from[1] + up * ny * (w0 / 2 - inset)) * k],
+      [(to[0] + up * nx * (w1 / 2 - inset)) * k, (to[1] + up * ny * (w1 / 2 - inset)) * k],
+      weight * 0.9,
+      rim * 0.8,
+    )
   }
+  limb(shoulder, elbow, 0.17, 0.145)
+  limb(elbow, wrist, 0.14, 0.12)
+  // The shoulder and the elbow: round, filled, so the arm bends rather than folds.
+  p.noStroke()
+  p.fill(SLEEVE)
+  p.circle(shoulder[0] * k, shoulder[1] * k, 0.165 * k)
+  p.circle(elbow[0] * k, elbow[1] * k, 0.14 * k)
   drawHand(p, c, wrist, fa + a.wrist, a.hand, light)
 }
 
 /** One hand at `wrist`, pointing along `angle`, in `shape`. Pale, simple, big enough to read. */
 export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandShape, light = 1): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   // Drawn at 0.24 of a cell and scaled up to the rig's hand, so the four shapes keep their proportions.
   const s = RIG.hand / 0.24
-  const L = 0.24
   p.push()
   p.rectMode(p.CORNER)
   p.translate(wrist[0] * k, wrist[1] * k)
   p.rotate(angle)
   p.scale(s)
-  solid(p, ink, (weight * 0.7) / s, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
+  const edge = light >= 1 ? HAND_EDGE : mixHex(FLETCHER, HAND_EDGE, 0.3 + 0.7 * light)
+  solid(p, edge, (weight * 0.7) / s, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
   if (shape === 'fist') {
     // The closed fist, front on and larger than an open hand, so it reads at a glance: a short wrist out of the
     // sleeve, the heel of the hand, four curled fingers side by side (a dark crease between each, their rounded ends
@@ -219,7 +293,7 @@ export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandSha
     const sw = (weight * 0.7) / s / 1.3
     const skin = light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light)
     // The wrist, and the heel of the hand: a squarish block.
-    solid(p, ink, sw, skin)
+    solid(p, edge, sw, skin)
     p.rect(-0.07 * k, -0.05 * k, 0.1 * k, 0.1 * k, 0.02 * k)
     p.rect(0.0 * k, -0.112 * k, 0.15 * k, 0.224 * k, 0.05 * k, 0.03 * k, 0.03 * k, 0.05 * k)
     // The four fingers, curled: short rounded ends in a row (as long as they are wide), a dark crease between each.
@@ -228,29 +302,36 @@ export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandSha
       const y0 = -0.112 + i * fw
       // The middle two stand a little proud of the outer two: a fist's knuckle line is not flat.
       const top = 0.2 + (i === 1 || i === 2 ? 0.01 : 0)
-      solid(p, ink, sw * 0.9, skin)
+      solid(p, edge, sw * 0.9, skin)
       p.rect(0.11 * k, y0 * k, (top - 0.11) * k, fw * k, 0.01 * k, 0.028 * k, 0.028 * k, 0.01 * k)
     }
     // The thumb, laid across the fingers' lower joints from the outer side, its tip past the second finger.
-    solid(p, ink, sw * 0.9, skin)
+    solid(p, edge, sw * 0.9, skin)
     p.rect(0.085 * k, -0.045 * k, 0.052 * k, 0.175 * k, 0.026 * k)
   } else if (shape === 'point') {
-    // The palm, curled fingers, and the index straight out.
+    // The palm, the other three fingers curled into it (a row of knuckles), the thumb tucked along them, and the index
+    // straight out, long and thin: unmistakably a point.
     p.rect(0, -0.07 * k, 0.13 * k, 0.14 * k, 0.05 * k)
-    p.rect(0.1 * k, -0.07 * k, (L - 0.02) * k, 0.045 * k, 0.022 * k)
+    p.rect(0.1 * k, -0.02 * k, 0.07 * k, 0.09 * k, 0.012 * k, 0.035 * k, 0.035 * k, 0.012 * k)
+    p.rect(0.1 * k, -0.07 * k, 0.25 * k, 0.042 * k, 0.021 * k)
+    p.rect(0.02 * k, -0.098 * k, 0.1 * k, 0.04 * k, 0.02 * k)
   } else {
-    // An open hand: a palm and four fingers together, a thumb apart. `beat` curls the fingers a little.
+    // An open hand: a palm, four fingers side by side with a hair of light between them, and the thumb well apart.
+    // `beat` curls the fingers a little.
     const curl = shape === 'beat' ? 0.35 : 0
-    p.rect(0, -0.075 * k, 0.12 * k, 0.15 * k, 0.04 * k)
+    p.rect(0, -0.072 * k, 0.125 * k, 0.144 * k, 0.04 * k)
     p.push()
-    p.translate(0.11 * k, 0)
+    p.translate(0.105 * k, 0)
     p.rotate(curl)
-    p.rect(0, -0.07 * k, (L - 0.1) * k, 0.14 * k, 0.05 * k)
+    const fw = 0.031
+    const gap = (0.144 - 4 * fw) / 3
+    const lens = [0.11, 0.122, 0.112, 0.088]
+    for (let i = 0; i < 4; i++) p.rect(0, (-0.072 + i * (fw + gap)) * k, lens[i] * k, fw * k, 0.015 * k)
     p.pop()
     p.push()
-    p.translate(0.05 * k, -0.07 * k)
-    p.rotate(-0.7)
-    p.rect(0, -0.025 * k, 0.1 * k, 0.05 * k, 0.025 * k)
+    p.translate(0.035 * k, -0.068 * k)
+    p.rotate(-0.95)
+    p.rect(0, -0.022 * k, 0.1 * k, 0.044 * k, 0.022 * k)
     p.pop()
   }
   p.pop()

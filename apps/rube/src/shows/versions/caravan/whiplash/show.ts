@@ -1,11 +1,14 @@
-import { ballAt, laneAt, type Pt } from '../../../../parts'
+import { ballAt, laneAt, mixHex, type Pt } from '../../../../parts'
 import type { Box, Placed } from '../../../../plan'
 import { Show, type ShowBall, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
 import type { Company, Who } from './kit'
-import { ANDREW, FLETCHER, FLETCHER_ID, JIM, JIM_ID, TANNER, TANNER_ID } from './worlds'
+import { ANDREW, FLETCHER, FLETCHER_ID, HALL, JIM, JIM_ID, TANNER, TANNER_ID } from './worlds'
+
+/** Fletcher's head's outline: a dim warm rim. */
+const FLETCHER_RIM = mixHex(FLETCHER, HALL.gold, 0.42)
 
 /**
  * Caravan as a `Show`: universes on one clock, and no portal between them (after Liftoff's and Epilogue's
@@ -180,7 +183,8 @@ export class CaravanShow extends Show {
     const b = span?.at(time)
     const { id, color } = PEOPLE[who]
     if (!b) return null
-    // Fletcher's ball is a man's head on his rig: no rolling mark on it (it read as an eye, or a mouth, as he walked).
-    return who === 'fletcher' ? { ...b, id, color: b.color ?? color, spin: null } : { ...b, id, color: b.color ?? color }
+    // Fletcher's ball is a man's head on his rig: no rolling mark on it (it read as an eye, or a mouth, as he walked),
+    // and a dim warm rim rather than the cream ink, like the light along his shoulders (`fletcher.ts`).
+    return who === 'fletcher' ? { ...b, id, color: b.color ?? color, spin: null, rim: FLETCHER_RIM } : { ...b, id, color: b.color ?? color }
   }
 }

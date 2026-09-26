@@ -33,6 +33,8 @@ export interface ShowBall {
    * its travel as every ball's does; null draws no mark at all.
    */
   spin?: number | null
+  /** Its outline's colour, for a rider that should not wear the theme's ink (a dark head told by a dim warm rim). */
+  rim?: string
 }
 
 export interface ShowPoint extends UniversePoint {
