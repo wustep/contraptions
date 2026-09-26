@@ -1,11 +1,13 @@
 import type p5 from 'p5'
 import type { Pt, Seg } from '../../../../../parts'
-import { box, part, type Ctx, type PartShot, type Slot } from '../kit'
+import { OPEN } from '../hall/hall-clock'
+import { alpha, box, part, type Ctx, type PartShot, type Slot } from '../kit'
 import { quake } from '../rock'
 import { SEAM_SHOT } from '../seams'
 import type { Pen } from '../troll'
+import { STONE } from '../worlds'
 import {
-  BEGIN, BRAKE, CRASH, END, EXIT, FIRST_CLACK, LAND, LUNGES, MINE_STRIKES, ONTO, PEER_CART, PEER_EVENTS, RAIL, SHAFT, STOP, TROLL_CART, WIDE,
+  BEGIN, BRAKE, CRASH, END, EXIT, FIRST_CLACK, FLOOR_Y, LAND, LUNGES, MINE_STRIKES, ONTO, PEER_CART, PEER_EVENTS, RAIL, SHAFT, STOP, TROLL_CART, WIDE,
   binTip, ease, jolt, lightAt, peerAt, peerCartX, trollAct, trollCart, trollS,
 } from './mine-clock'
 import { drawOreCart, drawTrollCart } from './mine-cart'
@@ -38,14 +40,91 @@ interface MineState {
 /** Every strike, show seconds: the landing, the trolls' brake, every clack, the lever, the blade, the buffer, the stop, the bounce. */
 export const MINE_HITS: number[] = MINE_STRIKES
 
+/*
+ * Dark until the hatch opens. The mine lies under the hall's floor, and a tall frame (a phone held upright) sees down
+ * into it through the whole court and the wake: until the hatch swings open under him it is solid rock to look at.
+ * As he drops, the cover lifts from the trapdoor down, well ahead of him (he is still in the hatch when it is gone),
+ * with a soft upper edge, as the heart's does.
+ */
+/** The trapdoor shaft's top: the underside of the hall's floor. */
+const COVER_TOP = -7.4
+/** Down to under the stope's floor (the rails' sleepers and the lever's foot sit on it). */
+const COVER_BOTTOM = FLOOR_Y + 0.5
+const COVER_FEATHER = 1.0
+const LIFT = 0.4
+/** The stope's roof, lowest point with its broken corners (`mine-set.ts` ROOF): the throat runs down to it. */
+const ROOF_TOP = -3.8
+/** The areas the cover spans, part frame: the throat under the hatch, the stope and its tunnel, the shaft to the drum. */
+const COVERED: [number, number, number, number][] = [
+  [-1.5, COVER_TOP, 0.5, ROOF_TOP],
+  [-5.6, ROOF_TOP, 23.3, COVER_BOTTOM],
+  [SHAFT[0] - 0.15, COVER_BOTTOM, SHAFT[1] + 0.15, 8.3],
+]
+const coverEdge = (T: number): number => COVER_TOP + (COVER_BOTTOM + COVER_FEATHER - COVER_TOP) * ease(T, OPEN, OPEN + LIFT)
+
+function drawCover(p: p5, k: number, T: number): void {
+  const edge = coverEdge(T)
+  if (edge >= COVER_BOTTOM + COVER_FEATHER) return
+  p.push()
+  p.noStroke()
+  p.rectMode(p.CORNER)
+  // The shaft down to the drum is far off in the dark (20 cells from him): it goes with the stope's floor.
+  for (const [x0, y0, x1, y1] of edge >= COVER_BOTTOM ? COVERED.slice(0, 2) : COVERED) {
+    const top = Math.max(y0, edge)
+    if (top < y1) {
+      p.fill(STONE.deep)
+      p.rect(x0 * k, top * k, (x1 - x0) * k, (y1 - top) * k)
+    }
+    // The upper edge is soft: a feather of bands over the cell above it, fading out upward.
+    const n = 10
+    for (let i = 0; i < n; i++) {
+      const a = edge - COVER_FEATHER * (1 - i / n)
+      const b = Math.min(y1, a + COVER_FEATHER / n)
+      const aa = Math.max(y0, a)
+      if (b <= aa) continue
+      p.fill(alpha(p, STONE.deep, (i + 0.5) / n))
+      p.rect(x0 * k, aa * k, (x1 - x0) * k, (b - aa) * k)
+    }
+  }
+  p.pop()
+}
+
+/**
+ * The trapdoor's shaft as a throat in the rock: rock-dark where it leaves the hall's floor, opening onto the tunnel's
+ * back wall at its foot, so it never stands as a lighter block under the hatch. Laid over the hall's light down it
+ * too: the light comes out of the dark throat onto his cart instead of lighting a box.
+ */
+function drawThroat(p: p5, c: Pen): void {
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const bg = p.color(c.bg)
+  const rgb = `${p.red(bg)},${p.green(bg)},${p.blue(bg)}`
+  const g = ctx.createLinearGradient(0, COVER_TOP * k, 0, -0.95 * k)
+  g.addColorStop(0, `rgba(${rgb},1)`)
+  g.addColorStop(0.45, `rgba(${rgb},0.92)`)
+  g.addColorStop(0.8, `rgba(${rgb},0.6)`)
+  g.addColorStop(1, `rgba(${rgb},0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect(-1.45 * k, COVER_TOP * k, 1.9 * k, (-0.95 - COVER_TOP) * k)
+  ctx.restore()
+}
+
 function drawMine(p: p5, s: MineState, c: Ctx): void {
   const T = c.t + s.begin
   const pen: Pen = { k: c.k, ink: c.ink, weight: c.weight, bg: c.bg }
   const [qx, qy] = quake(T)
   p.push()
   p.translate(qx * c.k, qy * c.k)
+  // Before the hatch opens, nothing of the mine: only the rock over it.
+  if (T < OPEN) {
+    drawCover(p, c.k, T)
+    p.pop()
+    return
+  }
   drawRooms(p, pen)
   drawLight(p, pen, T)
+  drawThroat(p, pen)
   drawTimbers(p, pen, T)
   drawTorches(p, pen, T)
   drawSiding(p, pen, T)
@@ -82,12 +161,13 @@ function drawMine(p: p5, s: MineState, c: Ctx): void {
     tip: binTip(T),
     load: 1 - 0.75 * ease(T, STOP + 0.12, STOP + 0.55),
   })
+  drawCover(p, c.k, T)
   p.pop()
 }
 
 function drawMineOver(p: p5, s: MineState, c: Ctx): void {
   const T = c.t + s.begin
-  if (T < FIRST_CLACK - 0.1 || T > STOP + 2.5) return
+  if (T < OPEN || T < FIRST_CLACK - 0.1 || T > STOP + 2.5) return
   const pen: Pen = { k: c.k, ink: c.ink, weight: c.weight, bg: c.bg }
   const [qx, qy] = quake(T)
   p.push()
