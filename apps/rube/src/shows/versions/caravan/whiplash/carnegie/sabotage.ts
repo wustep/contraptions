@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
-import { drawConductor } from '../fletcher'
+import { RIG, drawConductor, type ArmPose, type Pose } from '../fletcher'
 import { box, carried, part, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { CARNEGIE, SOLO, shout } from '../music'
 import type { KitStroke } from '../stub'
@@ -43,15 +43,16 @@ import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM, WIDE } from './stage'
  * back, walks on, sits at the kit, and begins alone. Here, on this music:
  *
  * - **The match cut (242.34).** He sits on the snare in the road's darkness; the hall wakes on the chorus's first big
- *   hit (243.30), and the camera draws back to the whole stage: the band on its risers, Fletcher on his podium
- *   conducting with a chart in his hand, and the small yellow ball at a silent kit.
+ *   hit (243.30), and the camera draws back to the whole stage and holds there: the arch, the band on its risers,
+ *   Fletcher on his podium conducting with a chart in his hand, and the small yellow ball at a silent kit.
  * - **The chart (247.51 → 248.16).** Fletcher cocks his hand and flings the chart across the stage; it turns once in
  *   the air and lands square on Andrew's empty stand, which knocks and sways. His finger stays on Andrew: "you".
- * - **He can't (248.2 → 258.1).** Andrew rolls to the drum's edge to look at it, close; shrinks back when Fletcher
- *   leans his way. Then he tries to play: three times on the chorus's beats he lifts off the snare to strike, and
- *   each time he hangs through the beat and sinks back, smaller, the head dead under him, while the band plays on.
- *   The band's three hits knock him back toward the far rim; he looks at the chart, up the stage to Fletcher, back
- *   at the chart, and Fletcher's finger lands on 258.11.
+ * - **He can't (248.2 → 258.1).** Andrew rolls to the drum's edge to look at it, close, the chart and him together
+ *   while Fletcher's finger stays on him. He rolls back to the middle and tries to play: three times, on the
+ *   chorus's beats, he lifts off the head as high as a stick comes up for a stroke, stalls at the top through the
+ *   beat, and sinks back with nothing struck, the head dead under him, each smaller, a roll toward the chart between
+ *   them. The third hangs until the band's first big hit; the band's three hits knock him back toward the far rim;
+ *   he looks at the chart, up the stage to Fletcher, back at the chart, and Fletcher's finger lands on 258.11.
  * - **The walk-off (258.5 → 262.03).** He rolls off the drum, drops to the floor on the beat, and goes fast to the
  *   stage door. On the band's last hit (261.13) the door swings open and his father is standing in the light.
  * - **The chord (262.03 → 266.1).** They meet, close, not pressed, and hold while it swells. He backs off, turns.
@@ -87,33 +88,48 @@ const S = (u: number): number => {
 }
 
 /**
- * His three tries at the chart, on the chorus's beats: he lifts off the snare to strike (up just before the beat,
- * as a stick comes up), hangs there through the beat while the band plays it, and sinks back onto the head, softly,
- * with nothing struck. Each one smaller: giving up.
+ * His three tries at the chart, each a stroke that never comes. On the chorus's beat he lifts off the head as far as a
+ * stick comes up for a real stroke, stalls at the top through the beat while the band plays it, and sinks back onto
+ * the head with nothing struck: no rebound, the head dead under him. Each smaller than the last. The third stalls
+ * until the band's first big hit, which drops him.
  */
-const TRIES: { at: number; h: number }[] = [
-  { at: shout(22), h: 0.26 },
-  { at: shout(24), h: 0.18 },
-  { at: shout(26), h: 0.1 },
+const TRIES: { at: number; h: number; up: number; stall: number; down: number }[] = [
+  { at: shout(20), h: 0.66, up: 0.36, stall: 0.25, down: 0.5 },
+  { at: shout(24), h: 0.5, up: 0.34, stall: 0.26, down: 0.48 },
+  { at: shout(28), h: 0.34, up: 0.32, stall: HITS3[0] - shout(28), down: 0.42 },
 ]
-/** The lift (quick off the head, slowing into the top just before the beat), the hang over it, and the fall back. */
-const LIFT = 0.3
-const HANG = 0.03
-const SINK = 0.46
 
 /** How high off the snare's head the tries hold him at `T` (0 on the head). */
 function tries(T: number): number {
   let h = 0
-  for (const { at, h: top } of TRIES) {
+  for (const { at, h: top, up, stall, down } of TRIES) {
     const s = T - at
-    if (s < -LIFT || s > HANG + SINK) continue
-    // Up: most of the height early, like a stick coming up. Down: slow to leave the top, falling faster, and at
-    // the head no stroke, no rebound: the fall dies on it.
-    const up = S(1 - Math.pow(1 - clamp((s + LIFT) / (LIFT - 0.02)), 1.3))
-    const down = S(Math.pow(clamp((s - HANG) / SINK), 1.5))
-    h += top * (up - down)
+    if (s < -up || s > stall + down) continue
+    // Up: most of the height early, like a stick coming up, easing into the top just before the beat. The stall:
+    // hanging there, sagging a little. Down: slow to leave the top, falling, and dying on the head (no stroke).
+    const rise = S(1 - Math.pow(1 - clamp((s + up) / (up - 0.03)), 1.12))
+    const sag = 0.05 * S(s / stall)
+    const fall = S(Math.pow(clamp((s - stall) / down), 1.4))
+    h += top * (rise - sag) * (1 - fall)
   }
   return h
+}
+
+/** A move of `d` from `t0` over `dur`, eased at both ends (the motion's own `move`). */
+const move = (T: number, t0: number, dur: number, d: number): number => d * S((T - t0) / dur)
+
+/**
+ * Where the tries put him across the head, on top of the motion's path: the motion's own drift back to the middle
+ * (250.95 and 251.85) taken out, and in its place a roll back from the edge to play (-0.34, the same distance, so
+ * nothing is left over when he leaves the drum), and between the tries a quick roll toward the stand and back: a
+ * glance at the chart.
+ */
+function across(T: number): number {
+  const undo = move(T, 250.95, 0.6, 0.1) + move(T, 251.85, 1.5, 0.24)
+  const back = move(T, 249.82, 0.5, -0.34)
+  const look1 = move(T, 251.53, 0.3, 0.17) - move(T, 251.86, 0.27, 0.17)
+  const look2 = move(T, 253.24, 0.28, 0.14) - move(T, 253.55, 0.27, 0.14)
+  return undo + back + look1 + look2
 }
 
 /** After the band's hits: he looks at the chart, up the stage to Fletcher, back at the chart; all of it gone before he leaves the drum. */
@@ -121,11 +137,11 @@ function glance(T: number): number {
   return 0.1 * S((T - 256.55) / 0.35) + 0.11 * (S((T - 256.98) / 0.32) - S((T - 257.4) / 0.32)) - 0.1 * S((T - 257.93) / 0.47)
 }
 
-/** Andrew at show time `T`: the motion's path, with his tries and his glances on it (both nothing outside the silent stretch). */
+/** Andrew at show time `T`: the motion's path, with his tries and his glances on it (all nothing outside the silent stretch). */
 function andrew(T: number): Pt {
   const [x, y] = andrewAt(T)
   if (T <= LANDS || T >= LEAVE) return [x, y]
-  return [x + glance(T), y - tries(T)]
+  return [x + across(T) + glance(T), y - tries(T)]
 }
 
 /* ------------------------------------------------------------------ the stand */
@@ -268,6 +284,28 @@ function drawThrown(p: p5, c: Ctx, T: number, light: number): void {
   p.pop()
 }
 
+/** The finger that lands with the chart stays on him while he goes to look at it, and lets go as he rolls back to try. */
+const HOLD_POINT = { from: 248.6, to: 250.25, release: 0.55 }
+
+/** An arm's angles eased from `a` to `b`, the shoulder the short way round (as the motion's own blend). */
+function mixArm(a: ArmPose, b: ArmPose, u: number): ArmPose {
+  let d = b.up - a.up
+  while (d > Math.PI) d -= 2 * Math.PI
+  while (d < -Math.PI) d += 2 * Math.PI
+  return { up: a.up + d * u, bend: a.bend + (b.bend - a.bend) * u, wrist: a.wrist + (b.wrist - a.wrist) * u, hand: u < 0.5 ? a.hand : b.hand }
+}
+
+/** Fletcher's hands as the motion has them, but with the finger held on Andrew (where he is drawn) through `HOLD_POINT`. */
+function pose(T: number): Pose {
+  const base = poseAt(T)
+  if (T < HOLD_POINT.from || T > HOLD_POINT.to + HOLD_POINT.release) return base
+  const [hx, hy] = fletcherAt(T)
+  const [ax, ay] = andrew(T)
+  const point: ArmPose = { up: Math.atan2(ay - (hy + RIG.drop), ax - (hx - RIG.shoulder)), bend: 0.05, wrist: 0, hand: 'point' }
+  if (T <= HOLD_POINT.to) return { left: base.left, right: point }
+  return { left: base.left, right: mixArm(point, base.right, easeInOutSine((T - HOLD_POINT.to) / HOLD_POINT.release)) }
+}
+
 /** Fletcher on his podium, and the chart while it is in his hand or in the air. */
 function drawFletcher(p: p5, c: Ctx, T: number): void {
   const head = fletcherAt(T)
@@ -275,7 +313,7 @@ function drawFletcher(p: p5, c: Ctx, T: number): void {
   column(p, c, head, FLOOR - PODIUM.h)
   const chart = chartAt(T)
   if (chart.on === 'hand') drawChart(p, c, chart.at, chart.turn, light)
-  drawConductor(p, c, head, poseAt(T), { light })
+  drawConductor(p, c, head, pose(T), { light })
   if (chart.on === 'air') drawThrown(p, c, T, light)
 }
 
@@ -286,7 +324,9 @@ interface SabotageState {
 /** Andrew's lane, in slot seconds: sampled from `andrew` stretch by stretch, then the count-in's bounces. */
 function lane(begin: number): Seg[] {
   const segs: Seg[] = []
-  for (const { from, to, rate } of PATH) {
+  for (const { from, to, rate: r } of PATH) {
+    // The silent stretch finely too: the tries lift him quickly.
+    const rate = from === LANDS ? Math.max(r, 120) : r
     const n = rate > 0 ? Math.max(1, Math.ceil((to - from) * rate)) : 1
     segs.push(...carried(andrew, from, to, n))
   }
@@ -335,15 +375,18 @@ export const sabotage = part<SabotageState>(
     // The match cut: the road's frame, held on him in the dark until the lights come up.
     { t: slot.begin, cells: 3.5, hold: [...KIT_AT] as Pt, w: 1 },
     { t: LIGHTS, cells: 3.5, hold: [...KIT_AT] as Pt, w: 1 },
-    // Back to the whole stage on the chorus, a breath there, then in on the two of them for the throw.
-    { t: 245.8, cells: WIDE.cells, hold: WIDE.hold, w: 1 },
-    { t: 247.4, cells: 6.2, hold: [2.25, -1.05], w: 1 },
-    // The chart between them: Fletcher keeping time on one side, Andrew on the other, Fletcher leaning his way.
-    { t: 248.7, cells: 5.5, hold: [1.7, -0.85], w: 1 },
-    { t: 249.95, cells: 5.1, hold: [1.5, -0.8], w: 1 },
-    // In on Andrew for his tries (the chart on its stand still in frame), held while he gives up.
-    { t: 251.3, cells: 3.55, hold: [0.05, -0.5], w: 1 },
-    { t: 253.55, cells: 3.35, hold: [-0.1, -0.46], w: 1 },
+    // The reveal: out from him on the lights, slowing long into the whole hall (the arch, the band, the house), held
+    // there while the chorus plays, drifting; then one long push through the throw, Fletcher to the kit, arriving
+    // close on the wrong chart and him together, the finger that sent it still on him.
+    { t: 245.4, cells: 18.4, hold: [4.4, -2.7], w: 1 },
+    { t: 246.7, cells: WIDE.cells + 0.1, hold: [WIDE.hold[0], WIDE.hold[1] - 0.05], w: 1 },
+    { t: LANDS, cells: 7.4, hold: [2.1, -1.2], w: 1 },
+    { t: 249.7, cells: 3.2, hold: [1.0, -0.72], w: 1 },
+    { t: 250.3, cells: 3.15, hold: [0.9, -0.7], w: 1 },
+    // His first try close, the chart beside him; then a slow widening through the other two until Fletcher is in the
+    // frame too, keeping the band going on the other side of the chart; on out into the band's three hits.
+    { t: 251.2, cells: 3.55, hold: [0.35, -0.62], w: 1 },
+    { t: 253.9, cells: 4.9, hold: [1.75, -0.95], w: 1 },
     // Drawing back over two seconds into the band's three hits: the band playing past the small still ball.
     { t: 255.9, cells: 8.4, hold: [3.1, -1.5], w: 1 },
     // The two of them as he looks from the chart to Fletcher, and for Fletcher's finger, easing toward the wings.
