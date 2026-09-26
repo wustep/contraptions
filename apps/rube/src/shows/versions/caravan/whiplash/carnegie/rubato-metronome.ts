@@ -16,18 +16,21 @@ import { BOARD } from './rubato-hits'
  * clock (all pure functions of show time, which the lane and the drawing both read, so he never slides off it), and
  * its drawing.
  *
- * A metronome as tall as a man and a half, in walnut and gilt, rises out of the stage behind the kit. Its rod stands
- * between the hall's ride and crash, pivoted low in the case behind the rack tom; swung, its side strikes the ride's
- * rim at the left of its swing (tick) and the crash's rim at the right (tock), and the stops are placed so the two
- * angles are the same. Andrew is the sliding weight. The phase comes from the measured strokes (`RIDE`): a monotone
- * cubic through them, so the rod reaches a stop exactly on each; his place on the rod comes from the period, as a
- * real metronome's weight does (up the rod is slower): the log of the local half-period, smoothed over a few
- * strokes, mapped onto the rod. How hard the rod meets each stop follows the music: soft and slow, it arrives
- * nearly at rest (a kiss); fast and loud, it strikes at speed and rebounds.
+ * A metronome with its works in the open, in walnut and gilt, rises out of the stage behind the kit: a tall pyramid
+ * case, and on its crown, above both cymbals, the pivot. From the pivot the rod runs both ways, as a real
+ * metronome's does: the short arm up, with the sliding weight (Andrew, in a gilt cradle); the long arm down, with its
+ * brass bob, swinging in front of the case. The long arm is what strikes: its tip meets the ride's rim at the left of
+ * its swing (tick) and its side the crash's rim at the right (tock), and the pivot is placed so the two angles are
+ * the same. The phase comes from the measured strokes (`RIDE`): a monotone cubic through them, so the rod reaches a
+ * stop exactly on each. His place on the rod comes from the tempo, as a real metronome's weight does (up the rod is
+ * slower; fast, he sits down on the pivot): the farther the rod swings in a moment, the nearer the pivot he rides, so
+ * he himself never moves faster than a slow roll however fast it ticks. How hard the rod meets each stop follows
+ * the music: soft and slow, it arrives nearly at rest (a kiss); fast and loud, it strikes at speed and rebounds.
  *
- * After the last stroke the swing collapses into a shimmer too fast to count (the roll), growing with the swell;
- * before the burst the rod leans back and tosses him onto the snare; left without its weight it rings down to
- * upright, and sinks back into the stage.
+ * Until he boards, the rod is parked leaning (a metronome switched off); his landing tips it over into the first tick. After the last stroke
+ * the swing collapses into a shimmer too fast to count (the roll), growing with the swell; before the burst the rod
+ * leans back with him and tosses him onto the snare; left without its weight, the bob rings it down to upright, and
+ * it sinks back into the stage.
  */
 
 const [KX, KY] = KIT_AT
@@ -58,47 +61,62 @@ export function seatOnDrum(d: Drum, depth: number, since: number, dx = 0): Pt {
 
 /* ------------------------------------------------------------------ geometry */
 
-/** The rod: its width (what meets the rims) and its length above the pivot. */
+/** The rod's width: what meets the rims. */
 const ROD_W = 0.07
-export const ROD_LEN = 4.75
-/** The pivot's height: low in the case, behind the rack tom. Its x is solved so the two stops are the same angle. */
-export const PIVOT_Y = KY
-/** The rims the rod meets: the ride's right rim (the left stop) and the crash's left rim (the right stop). */
+/** The pivot's height: on the case's crown, above both cymbals. Its x is solved so the two stops are the same angle. */
+export const PIVOT_Y = KY - 3.05
+/** The rims the long arm meets: the ride's right rim (tick) and the crash's left rim (tock). */
 const RIDE_RIM = onCymbal(RIDE_CYMBAL, RIDE_CYMBAL.w / 2, 0)
 const CRASH_RIM = onCymbal(CRASH, -CRASH.w / 2, 0)
-/** The angle (from upright, positive to the right) at which the rod's side meets a rim from a pivot at `px`. */
+/**
+ * The rod's angle (its short arm's, from upright, positive to the right) at which the long arm's side meets a rim
+ * below the pivot at `px`: `side` 1 for a rim to the right (the arm's right side meets it), -1 to the left.
+ */
 function stopAngle(px: number, rim: Pt, side: -1 | 1): number {
   const dx = rim[0] - px
   const dy = rim[1] - PIVOT_Y
-  return Math.atan2(dx, -dy) - side * Math.asin(ROD_W / 2 / Math.hypot(dx, dy))
+  return -(Math.atan2(dx, dy) - side * Math.asin(ROD_W / 2 / Math.hypot(dx, dy)))
 }
 /** The pivot's x: the one from which the ride and the crash stop the rod at the same angle either side. */
 export const PIVOT_X = (() => {
-  let lo = -3.2
-  let hi = -0.9
+  let lo = KX - 3
+  let hi = KX + 1
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2
-    if (stopAngle(mid, RIDE_RIM, -1) + stopAngle(mid, CRASH_RIM, 1) > 0) lo = mid
-    else hi = mid
+    if (stopAngle(mid, RIDE_RIM, -1) + stopAngle(mid, CRASH_RIM, 1) > 0) hi = mid
+    else lo = mid
   }
   return (lo + hi) / 2
 })()
-/** How far the rod swings either side of upright: to the ride's rim, and to the crash's. */
-export const SWING = stopAngle(PIVOT_X, CRASH_RIM, 1)
+/** How far the rod swings either side of upright: the long arm to the ride's rim (short arm right), and to the crash's. */
+export const SWING = stopAngle(PIVOT_X, RIDE_RIM, -1)
+/** The long arm: to just past where its tip meets the ride. How far down it the crash's rim meets its side. */
+const RIDE_REACH = Math.hypot(RIDE_RIM[0] - PIVOT_X, RIDE_RIM[1] - PIVOT_Y)
+export const CRASH_REACH = Math.hypot(CRASH_RIM[0] - PIVOT_X, CRASH_RIM[1] - PIVOT_Y)
+const ROD_LOW = RIDE_REACH + 0.04
+/** The bob on the long arm, from and to (clear of the crash's rim). */
+const BOB: [number, number] = [0.62, Math.min(1.08, CRASH_REACH - 0.14)]
 
-/** Andrew's range on the rod: from the pivot, fastest to slowest; and where he rides out the roll (at his fastest). */
-export const R_MIN = 3.0
-export const R_MAX = 4.3
+/**
+ * Andrew's range on the short arm, from the pivot: sat down on the pivot's cradle (fastest) to high (slowest); where he
+ * rides out the roll; and the fastest he is ever carried, cells a second (the house trail beads above about five).
+ */
+export const R_MIN = 0.4
+export const R_MAX = 1.42
 export const R_LOW = R_MIN
+const V_CAP = 4.2
+/** The short arm: above his highest place, its fine tip. (`ROD_LEN` is its length, as the part reads it.) */
+const ROD_UP = R_MAX + 0.42
+export const ROD_LEN = ROD_UP
 
-/** The case: a tall pyramid in walnut, on the floor, its apex below the weight's lowest place. */
-const CASE_TOP = KY - 2.3
-const CASE_HALF_TOP = 0.25
+/** The case: a tall pyramid in walnut, on the floor, its crown just under the pivot. */
+const CASE_TOP = PIVOT_Y + 0.07
+const CASE_HALF_TOP = 0.24
 const CASE_HALF_BASE = 1.0
 const caseHalf = (y: number): number => CASE_HALF_TOP + ((CASE_HALF_BASE - CASE_HALF_TOP) * (y - CASE_TOP)) / (FLOOR - CASE_TOP)
 
 /** How far below its place it starts (and ends): all of it under the stage. */
-const DROP = FLOOR - (PIVOT_Y - ROD_LEN) + 0.4
+const DROP = FLOOR - (PIVOT_Y - ROD_UP - 0.1) + 0.4
 
 /* ------------------------------------------------------------------ the clock */
 
@@ -109,28 +127,31 @@ const SINK: [number, number] = [505.7, 509.5]
 const N = RIDE.length
 export const RIDE_END = RIDE[N - 1]
 /**
- * The shimmer fades, the rod leans back with him (the cock: slow, so the toss is anticipated), swings, and lets him
- * go onto the snare on the burst.
+ * The cock: the shimmer gone, the whole machine crouches (sinks a little into the stage) as the rod leans back with
+ * him, slow, so the toss is anticipated; then it swings forward and lets him go onto the snare on the burst. The
+ * crouch is what lets him clear the crash's rim: from the pivot's full height, any throw onto the snare grazes it.
  */
 export const COCK = 502.4
-const BACK_AT = 503.0
-const THETA_BACK = -0.42
-const T_FLY = 0.72
+const BACK_AT = 502.95
+const THETA_BACK = -0.62
+const CROUCH = 1.1
+const T_FLY = 0.65
 export const RELEASE = BURST - T_FLY
-/** Through the roll he settles to the bottom of his range (his fastest place), clear of the case's cap. */
+/** Through the roll he settles to the bottom of his range (his fastest place), just clear of the pivot. */
 const DESCEND: [number, number] = [RIDE_END + 0.8, COCK - 0.7]
 
 /** How far below its place the whole metronome is at `T` (cells). */
 export function lift(T: number): number {
   if (T <= RISE[0] || T >= SINK[1]) return DROP
   if (T < RISE[1]) return DROP * (1 - easeInOutSine((T - RISE[0]) / (RISE[1] - RISE[0])))
-  if (T <= SINK[0]) return 0
-  return DROP * easeInOutSine((T - SINK[0]) / (SINK[1] - SINK[0]))
+  if (T <= COCK) return 0
+  if (T <= BACK_AT) return CROUCH * easeInOutSine((T - COCK) / (BACK_AT - COCK))
+  if (T <= SINK[0]) return CROUCH
+  return CROUCH + (DROP - CROUCH) * easeInOutSine((T - SINK[0]) / (SINK[1] - SINK[0]))
 }
 
 // The strokes' gaps, and the monotone cubic through (stroke time, stroke number): the rod's phase.
 const GAP = RIDE.slice(1).map((t, i) => t - RIDE[i])
-const MID = RIDE.slice(1).map((t, i) => (t + RIDE[i]) / 2)
 const SLOPE = (() => {
   const d = GAP.map((g) => 1 / g)
   const m = new Array<number>(N)
@@ -159,34 +180,6 @@ function phase(T: number): number {
   return (2 * u3 - 3 * u2 + 1) * lo + (u3 - 2 * u2 + u) * h * SLOPE[lo] + (-2 * u3 + 3 * u2) * (lo + 1) + (u3 - u2) * h * SLOPE[lo + 1]
 }
 
-/** The local half-period at `T`: the strokes' gaps, smoothed over a few strokes (what sets his place on the rod). */
-function halfPeriod(T: number): number {
-  let s = 0
-  let w = 0
-  for (let i = 0; i < GAP.length; i++) {
-    const d = (T - MID[i]) / 0.38
-    if (d > 4 || d < -4) continue
-    const k = Math.exp(-d * d)
-    s += k * GAP[i]
-    w += k
-  }
-  return w > 0 ? s / w : T < MID[0] ? GAP[0] : GAP[GAP.length - 1]
-}
-/** The smoothed half-period sampled once, and its extremes. */
-const TABLE = (() => {
-  const step = 0.02
-  const h: number[] = []
-  for (let t = RIDE[0]; t <= RIDE_END + step; t += step) h.push(halfPeriod(Math.min(t, RIDE_END)))
-  return { step, h, lo: Math.min(...h), hi: Math.max(...h) }
-})()
-/** His place on the rod while it keeps the rubato: the log of the half-period, from R_MIN (fastest) to R_MAX. */
-function rRide(T: number): number {
-  const x = (clamp(T, RIDE[0], RIDE_END) - RIDE[0]) / TABLE.step
-  const i = Math.min(TABLE.h.length - 2, Math.floor(x))
-  const h = TABLE.h[i] + (TABLE.h[i + 1] - TABLE.h[i]) * (x - i)
-  return R_MIN + ((R_MAX - R_MIN) * Math.log(h / TABLE.lo)) / Math.log(TABLE.hi / TABLE.lo)
-}
-
 /**
  * One half-swing, stop to stop, `u` 0..1 → -1..1: a pendulum's arc cut off at the stops. `a` near 1 is the whole
  * half of a free swing (it reaches each stop nearly at rest); smaller, the stops cut in sooner and it meets them at
@@ -200,12 +193,64 @@ const FREE = RIDE.map((t, j) => {
   return clamp(0.46 + 0.5 * smooth(h, 0.16, 0.6) - 0.22 * level(t), 0.45, 0.96)
 })
 
-/** The rod through the rubato: pushed off by his landing, then stop to stop on every stroke. */
+/** Parked, until he boards: the rod leaning toward him on the crash (the short arm right), a metronome switched off. */
+const PARK = 0.22
+
+/**
+ * The rod through the rubato: parked; his weight landing on it tips it on over into the first tick on the ride; then
+ * stop to stop on every stroke (the short arm right, the long arm on the ride, on the even strokes).
+ */
 function tickTock(T: number): number {
-  if (T <= RIDE[0]) return -SWING * half(0.5 + 0.5 * clamp((T - BOARD) / (RIDE[0] - BOARD)), FREE[0])
+  if (T <= BOARD) return PARK
+  if (T <= RIDE[0]) return PARK + (SWING - PARK) * (1 - Math.cos((Math.PI / 2) * ((T - BOARD) / (RIDE[0] - BOARD))))
   const f = phase(T)
   const i = Math.min(N - 2, Math.floor(f))
-  return (i % 2 === 0 ? 1 : -1) * SWING * half(f - i, FREE[i + 1])
+  return (i % 2 === 0 ? -1 : 1) * SWING * half(f - i, FREE[i + 1])
+}
+
+/**
+ * How fast the rod turns around `T` (radians a second): the peak of every swing near it, held over a quarter second
+ * either side and then smoothed, so that it leads each quickening and trails each slowing. What sets his place.
+ */
+const TURN = (() => {
+  const step = 0.02
+  const sub = 8
+  const bins: number[] = []
+  for (let t = BOARD; t <= RIDE_END + step; t += step) {
+    let m = 0
+    for (let j = 0; j < sub; j++) {
+      const a = t + (j * step) / sub
+      const b = a + step / sub
+      m = Math.max(m, Math.abs(tickTock(Math.min(b, RIDE_END)) - tickTock(Math.min(a, RIDE_END))) / (step / sub))
+    }
+    bins.push(m)
+  }
+  const HOLD = 13
+  const env = bins.map((_, i) => Math.max(...bins.slice(Math.max(0, i - HOLD), i + HOLD + 1)))
+  const SIGMA = 12
+  const w = env.map((_, i) => {
+    let s = 0
+    let n = 0
+    for (let j = Math.max(0, i - 3 * SIGMA); j <= Math.min(env.length - 1, i + 3 * SIGMA); j++) {
+      const d = (j - i) / SIGMA
+      const g = Math.exp((-d * d) / 2)
+      s += g * env[j]
+      n += g
+    }
+    // Never below the held peak by much: the smoothing may only round its corners.
+    return Math.max(s / n, 0.92 * env[i])
+  })
+  return { step, w }
+})()
+/**
+ * His place on the rod while it keeps the rubato: as near the pivot as keeps him under V_CAP, from R_MIN to R_MAX.
+ * Before the first stroke (the empty weight, and the tip over into it) it is where the first strokes want him.
+ */
+function rRide(T: number): number {
+  const x = (clamp(T, RIDE[0], RIDE_END) - BOARD) / TURN.step
+  const i = Math.min(TURN.w.length - 2, Math.floor(x))
+  const w = TURN.w[i] + (TURN.w[i + 1] - TURN.w[i]) * (x - i)
+  return clamp(V_CAP / Math.max(w, 1e-3), R_MIN, R_MAX)
 }
 
 // The roll: the half-period falls from the last stroke's to a shimmer's, and the swing dies from the stops to a
@@ -225,7 +270,7 @@ export function rollSize(T: number): number {
   const e = Math.exp(-(T - RIDE_END) / TAU_A)
   return SWING * e + tremble(T) * (1 - e)
 }
-const roll = (T: number): number => rollSize(T) * Math.cos(Math.PI * rollPhase(T - RIDE_END))
+const roll = (T: number): number => -rollSize(T) * Math.cos(Math.PI * rollPhase(T - RIDE_END))
 
 /** A cubic from (t0, x0, slope v0) to (t1, x1, slope v1). */
 function hermite(t: number, t0: number, x0: number, v0: number, t1: number, x1: number, v1: number): number {
@@ -247,11 +292,11 @@ export const LANDING: Pt = [KX, KY]
  */
 export const { THETA_REL, OMEGA_REL } = (() => {
   const need = (th: number): Pt => {
-    const [x, y] = onRod(th, R_LOW)
+    const [x, y] = onRod(th, R_LOW, CROUCH)
     return [(LANDING[0] - x) / T_FLY, (LANDING[1] - y) / T_FLY - (G_EARTH * T_FLY) / 2]
   }
-  let lo = -0.9
-  let hi = 0.6
+  let lo = -1.2
+  let hi = 0.8
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2
     const [vx, vy] = need(mid)
@@ -263,7 +308,7 @@ export const { THETA_REL, OMEGA_REL } = (() => {
   return { THETA_REL: th, OMEGA_REL: Math.hypot(vx, vy) / R_LOW }
 })()
 
-/** Left without its weight, it rings down fast to upright. */
+/** Left without its weight, the bob rings it down fast to upright. */
 const W_FREE = 2 * Math.PI * 2.4
 const TAU_FREE = 0.7
 function free(T: number): number {
@@ -274,7 +319,6 @@ function free(T: number): number {
 
 /** The rod's angle from upright at `T` (radians, positive to the right). */
 export function rodAt(T: number): number {
-  if (T <= BOARD) return 0
   if (T <= RIDE_END) return tickTock(T)
   if (T <= COCK) return roll(T)
   if (T <= BACK_AT) return hermite(T, COCK, roll(COCK), 0, BACK_AT, THETA_BACK, 0)
@@ -284,7 +328,6 @@ export function rodAt(T: number): number {
 
 /** How far up the rod the weight is at `T` (with him on it from BOARD to RELEASE). */
 export function weightAt(T: number): number {
-  if (T <= RIDE[0]) return rRide(RIDE[0])
   if (T <= RIDE_END) return rRide(T)
   const r1 = rRide(RIDE_END)
   return r1 + (R_LOW - r1) * easeInOutSine(clamp((T - DESCEND[0]) / (DESCEND[1] - DESCEND[0])))
@@ -315,8 +358,10 @@ const WOOD = mixHex(HALL.floor, HALL.black, 0.3)
 const WINDOW = mixHex(HALL.floor, HALL.black, 0.62)
 /** The fittings' gilt, a touch lifted: they stand in front of the case, outside the relit part, so the hall's light is in it already. */
 const GILT = mixHex(HALL.gilt, HALL.beam, 0.15)
+/** The bob's brass: the gilt, darker, so it never outshines the weight above. */
+const BRASS = mixHex(HALL.gilt, HALL.black, 0.28)
 /** Where the winding key stands out of the case's right side, and how far it has been turned at `T`. */
-const KEY_Y = CASE_TOP + 1.0
+const KEY_Y = CASE_TOP + 1.3
 function keyTurn(T: number): number {
   const wound = 3 * Math.PI * easeInOutSine(clamp((T - RISE[0] - 0.4) / (RISE[1] - RISE[0])))
   return wound - 0.04 * Math.max(0, T - BOARD)
@@ -349,7 +394,8 @@ function drumHoles(ctx: CanvasRenderingContext2D, k: number): void {
 
 /**
  * The case, as a metronome's reads at a glance: a tall walnut pyramid, gilt at its edges, and the tall window in its
- * face with the pale scale down it (no marks), where the rod swings. Its fittings (`drawFittings`) stand proud of it.
+ * face with the pale scale down it (no marks), which the long arm swings across. Its fittings (`drawFittings`) stand
+ * proud of it.
  */
 function drawCase(p: p5, c: Ctx, dy: number, T: number): void {
   const { k, ink, weight } = c
@@ -359,9 +405,9 @@ function drawCase(p: p5, c: Ctx, dy: number, T: number): void {
   const inset = (y: number) => caseHalf(y - dy) * 0.52
   solid(p, ink, weight * 0.9, WOOD)
   p.quad((x - CASE_HALF_TOP) * k, top * k, (x + CASE_HALF_TOP) * k, top * k, (x + CASE_HALF_BASE) * k, base * k, (x - CASE_HALF_BASE) * k, base * k)
-  // The window: from under the cap to the pivot, its sides following the case's, a gilt frame round it.
-  const w0 = top + 0.2
-  const w1 = PIVOT_Y + dy - 0.1
+  // The window: from under the crown to just above the rack tom, its sides following the case's, a gilt frame round it.
+  const w0 = top + 0.24
+  const w1 = KY + RACK.top - 0.3 + dy
   // The gilt catches more of the light as the music swells, and less as it nearly stops.
   const glint = 0.45 + 0.5 * level(T)
   p.stroke(alpha(p, HALL.gilt, glint + 0.1))
@@ -383,14 +429,13 @@ function drawCase(p: p5, c: Ctx, dy: number, T: number): void {
   for (const s of [-1, 1]) p.line((x + s * (CASE_HALF_TOP - 0.06)) * k, (top + 0.1) * k, (x + s * (CASE_HALF_BASE - 0.08)) * k, (base - 0.05) * k)
 }
 
-/** The case's gilt fittings: the cap with its short point, and the winding key out of its right side, turning. (Rects are centred: the stage draws in `rectMode(CENTER)`.) */
+/** The case's gilt fittings: the crown the pivot stands on, and the winding key out of its right side, turning. (Rects are centred: the stage draws in `rectMode(CENTER)`.) */
 function drawFittings(p: p5, c: Ctx, dy: number, T: number): void {
   const { k, ink, weight } = c
   const top = CASE_TOP + dy
   const x = PIVOT_X
   solid(p, ink, weight * 0.7, GILT)
-  p.rect(x * k, (top - 0.025) * k, (2 * CASE_HALF_TOP + 0.14) * k, 0.09 * k, 0.02 * k)
-  p.triangle((x - 0.12) * k, (top - 0.07) * k, (x + 0.12) * k, (top - 0.07) * k, x * k, (top - 0.26) * k)
+  p.rect(x * k, (top - 0.01) * k, (2 * CASE_HALF_TOP + 0.14) * k, 0.1 * k, 0.02 * k)
   // The key: a shaft and a flat bow, which shows its full height face on and a sliver edge on as it turns.
   const ky = KEY_Y + dy
   const kx = x + caseHalf(KEY_Y)
@@ -399,30 +444,44 @@ function drawFittings(p: p5, c: Ctx, dy: number, T: number): void {
   p.rect((kx + 0.155) * k, ky * k, 0.07 * k, 2 * h * k, 0.035 * k)
 }
 
-/** The rod from its pivot, at `th`, and its fine tip; `ghosts` are where it just was (the eye's blur). */
-function drawRod(p: p5, c: Ctx, dy: number, th: number, ghosts: number[] = []): void {
+/**
+ * The rod at `th`, both arms through the pivot: the short arm up to its fine tip, the long arm down past its brass
+ * bob to the striker at its end; and the pivot's pin across it. (In the rod's own frame the short arm is up, -y.)
+ */
+function drawRod(p: p5, c: Ctx, dy: number, th: number): void {
   const { k, ink, weight } = c
-  const px = PIVOT_X * k
-  const py = (PIVOT_Y + dy) * k
-  ghosts.forEach((g, i) => {
-    p.stroke(alpha(p, KIT.chrome, 0.2 * (1 - i / ghosts.length)))
-    p.strokeWeight(weight * 1.9)
-    p.line(px, py, px + Math.sin(g) * ROD_LEN * k, py - Math.cos(g) * ROD_LEN * k)
-  })
-  const tx = px + Math.sin(th) * ROD_LEN * k
-  const ty = py - Math.cos(th) * ROD_LEN * k
+  p.push()
+  p.translate(PIVOT_X * k, (PIVOT_Y + dy) * k)
+  p.rotate(th)
   p.stroke(ink)
   p.strokeWeight(weight * 2.4)
-  p.line(px, py, tx, ty)
+  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
   p.stroke(KIT.chrome)
   p.strokeWeight(weight * 1.3)
-  p.line(px, py, tx, ty)
+  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
   // The tip: a short spindle along the rod.
-  p.push()
-  p.translate(tx, ty)
-  p.rotate(th)
   solid(p, ink, weight * 0.6, KIT.chrome)
-  p.ellipse(0, 0.02 * k, 0.06 * k, 0.17 * k)
+  p.ellipse(0, (-ROD_UP + 0.02) * k, 0.06 * k, 0.17 * k)
+  // The striker: a short chrome sleeve at the long arm's end, what meets the ride.
+  p.rect(0, (ROD_LOW - 0.07) * k, 0.085 * k, 0.15 * k, 0.02 * k)
+  // The bob: a long brass plumb on the long arm, pointed both ends (never a disc: nothing round near him).
+  const [b0, b1] = BOB
+  const bw = 0.085
+  solid(p, ink, weight * 0.7, BRASS)
+  p.beginShape()
+  p.vertex(0, b0 * k)
+  p.vertex(bw * k, (b0 + 0.1) * k)
+  p.vertex(bw * k, (b1 - 0.1) * k)
+  p.vertex(0, b1 * k)
+  p.vertex(-bw * k, (b1 - 0.1) * k)
+  p.vertex(-bw * k, (b0 + 0.1) * k)
+  p.endShape(p.CLOSE)
+  p.stroke(alpha(p, HALL.beam, 0.35))
+  p.strokeWeight(weight * 0.5)
+  p.line(-0.03 * k, (b0 + 0.12) * k, -0.03 * k, (b1 - 0.12) * k)
+  // The pin: a small gilt block across the rod at the pivot.
+  solid(p, ink, weight * 0.6, GILT)
+  p.rect(0, 0, 0.17 * k, 0.07 * k, 0.02 * k)
   p.pop()
 }
 
@@ -441,21 +500,42 @@ function drawCradle(p: p5, c: Ctx, dy: number, th: number, r: number): void {
   p.pop()
 }
 
+/** The rod's two arms between angles `a0` and `a1`: one filled shape, a bow tie through the pivot. */
+function sweep(p: p5, k: number, px: number, py: number, a0: number, a1: number): void {
+  const n = 8
+  p.beginShape()
+  p.vertex(px, py)
+  for (let i = 0; i <= n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n
+    p.vertex(px + Math.sin(a) * ROD_UP * k, py - Math.cos(a) * ROD_UP * k)
+  }
+  p.vertex(px, py)
+  for (let i = 0; i <= n; i++) {
+    const a = a1 + ((a0 - a1) * i) / n
+    p.vertex(px - Math.sin(a) * ROD_LOW * k, py + Math.cos(a) * ROD_LOW * k)
+  }
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * The eye's blur of a fast swing: one soft filled wedge over where the rod was in the last frame or so, fainter the
+ * narrower it is; nothing when it is slow.
+ */
+function drawBlur(p: p5, c: Ctx, dy: number, T: number, th: number): void {
+  const back = rodAt(T - 1 / 50)
+  const d = Math.abs(back - th)
+  if (d < 0.03) return
+  p.noStroke()
+  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.35), 0.16 * clamp((d - 0.03) / 0.2)))
+  sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, back, th)
+}
+
 /** The blur of the roll: a faint fan where the rod trembles. */
 function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
   if (size < 0.004) return
-  const { k } = c
-  const px = PIVOT_X * k
-  const py = (PIVOT_Y + dy) * k
   p.noStroke()
   p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.4), 0.3 * lit))
-  p.beginShape()
-  p.vertex(px, py)
-  for (let i = 0; i <= 8; i++) {
-    const a = -size + (2 * size * i) / 8
-    p.vertex(px + Math.sin(a) * ROD_LEN * k, py - Math.cos(a) * ROD_LEN * k)
-  }
-  p.endShape(p.CLOSE)
+  sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, -size, size)
 }
 
 /**
@@ -464,14 +544,6 @@ function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
  */
 function relight(p: p5, c: Ctx, T: number): void {
   hallLight(p, c, T)
-}
-
-/** The rod's recent angles, for the blur of a fast swing: none when it is slow. */
-function blurOf(T: number, th: number): number[] {
-  const out: number[] = []
-  const dt = 1 / 240
-  for (let i = 1; i <= 4; i++) out.push(rodAt(T - i * dt))
-  return Math.abs(out[3] - th) > 0.02 ? out : []
 }
 
 /** The metronome at show time `T`: nothing while it is under the stage. */
@@ -484,15 +556,14 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
   const r = weightAt(T)
   const outline = caseOutline(dy)
 
-  // Behind the kit: the case and the rod's foot, the drums drawn again in front of them (the hall's kit, struck as
-  // the hall strikes it), and the hall's light over it all. Only inside the case's outline, so nothing else changes.
+  // Behind the kit: the case, the drums drawn again in front of it (the hall's kit, struck as the hall strikes it),
+  // and the hall's light over it all. Only inside the case's outline, so nothing else changes.
   if (outline.length) {
     ctx.save()
     ctx.beginPath()
     path(ctx, k, outline)
     ctx.clip()
     drawCase(p, c, dy, T)
-    drawRod(p, c, dy, th)
     p.push()
     p.translate(KX * k, KY * k)
     drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), without: ['ride', 'crash'] })
@@ -501,14 +572,15 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
     ctx.restore()
   }
 
-  // In front of the case and above the kit: the rod, its blur, the cradle. Never over a drum, never under the stage.
+  // In front of the case and the cymbals, behind the drums: the crown, the blur, the rod, the cradle. Never under the stage.
   ctx.save()
   drumHoles(ctx, k)
-  const size = T > RIDE_END && T < COCK ? rollSize(T) : 0
   if (outline.length) drawFittings(p, c, dy, T)
-  // The blur only once the swing has become a shimmer (a wide one would read as a beam of light).
+  const size = T > RIDE_END && T < COCK ? rollSize(T) : 0
+  // The roll's fan only once the swing has become a shimmer (a wide one would read as a beam of light).
   if (size > 0 && size < 0.12) drawFan(p, c, dy, size, level(T) * smooth(T, RIDE_END + 0.6, RIDE_END + 1.6))
-  drawRod(p, c, dy, th, blurOf(T, th))
+  else drawBlur(p, c, dy, T, th)
+  drawRod(p, c, dy, th)
   drawCradle(p, c, dy, th, r)
   ctx.restore()
 }
