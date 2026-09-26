@@ -59,7 +59,7 @@ const VAULT_AT = 146.348
  * band where two boxes cross a hollow).
  */
 export const ROOMS: Room[] = [
-  { name: 'heart', x0: 44.0, x1: 64.0, y0: 26.3, y1: 34.2, roof: 26.8, floor: 33.13, from: 45.6, to: 62.4, at: HEART_AT, out: 0.35, dark: 0.84, slabs: 6, size: [1.2, 2.4] },
+  { name: 'heart', x0: 44.0, x1: 64.0, y0: 26.3, y1: 36.6, roof: 26.8, floor: 33.13, from: 45.6, to: 62.4, at: HEART_AT, out: 0.35, dark: 0.84, slabs: 6, size: [1.2, 2.4] },
   { name: 'drum', x0: 44.0, x1: 64.0, y0: 18.3, y1: 26.3, roof: 19.0, floor: 25.95, from: 45.6, to: 62.4, at: DRUM_AT[0], then: DRUM_AT[1], out: 0.3, dark: 0.84, slabs: 6, size: [1.1, 2.2] },
   { name: 'mine', x0: 42.0, x1: 74.0, y0: 9.7, y1: 18.3, roof: 10.6, floor: 17.13, from: 44.5, to: 70.5, at: MINE_AT[0], then: MINE_AT[1], out: 0.3, dark: 0.84, slabs: 8, size: [1.0, 2.2] },
   // The hall and the tunnels behind it, one box (they go dark together, so no seam where they meet): its dust only
