@@ -491,9 +491,11 @@ function drawHouse(p: p5, k: number, W: number, ink: string, h: House, index: nu
   p.line(X(d + 0.4), X(G - 1.95), X(d + 0.4), X(G - 0.05))
   // A window beside the door on the ground floor.
   const gx = d > h.x0 + h.w / 2 ? h.x0 + 0.35 : h.x0 + h.w - 1.05
-  if (gx + 0.7 < x1 && gx > h.x0) window(p, k, W, ink, { x: gx, y: G - 2.1, w: 0.7, h: 1.2 }, 1, night && hash(index + 30, 1) > 0.4, tone, false)
+  // The houses west of the shop go dark in the war's blackout with it (the war builder puts out the ones across the way).
+  const lamps = night && !(index < 0 && blackedOut(t))
+  if (gx + 0.7 < x1 && gx > h.x0) window(p, k, W, ink, { x: gx, y: G - 2.1, w: 0.7, h: 1.2 }, 1, lamps && hash(index + 30, 1) > 0.4, tone, false)
   // The upper windows: shutters, and a box of flowers under each.
-  h.wins.forEach((win, j) => window(p, k, W, ink, win, index >= 0 ? shutterAt(index, j, t) : 1, night && hash(index + 20, j) > 0.3, tone, true))
+  h.wins.forEach((win, j) => window(p, k, W, ink, win, index >= 0 ? shutterAt(index, j, t) : 1, lamps && hash(index + 20, j) > 0.3, tone, true))
 }
 
 /** The timber framing of an upper floor: posts at the corners, a rail, and braces in the end panels. */
