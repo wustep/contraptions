@@ -286,9 +286,14 @@ export const curse = part<CurseState>(
       // Home at the counter, the lamp lit; then the carousel by it, turned down for the night.
       { t: 86.4, cells: 3.7, hold: H(6.55, -0.62), w: 1 },
       { t: DISPLAY_ON, cells: 3.9, hold: H(6.75, -0.95), w: 1 },
-      // Wider as she goes to the door: the dark shape coming along the street outside.
-      { t: 92.0, cells: 4.5, hold: H(7.5, -1.2), w: 1 },
-      { t: BELL, cells: 5.1, hold: H(8.1, -1.4), w: 1 },
+      // While she brakes the carousel the frame opens out to the right, onto the street past the door: the vast dark
+      // shape comes into it on the first heavy step (91.31) and on along the street to the door, the camera easing a
+      // little toward the door on each step. Dread before the bell.
+      { t: 89.8, cells: 4.6, hold: H(8.1, -1.25), w: 1 },
+      { t: STEPS[0], cells: 5.45, hold: H(9.25, -1.55), w: 1 },
+      { t: STEPS[1], cells: 5.3, hold: H(9.2, -1.52), w: 1 },
+      { t: STEPS[2], cells: 5.15, hold: H(9.05, -1.48), w: 1 },
+      { t: BELL + 0.4, cells: 5.1, hold: H(8.5, -1.42), w: 1 },
       // The Witch fills the shop.
       { t: 97.6, cells: 5.4, hold: H(7.3, -1.45), w: 1 },
       { t: LOOM[0], cells: 4.9, hold: H(6.8, -1.25), w: 1 },
