@@ -414,12 +414,13 @@ export function puff(p: p5, c: Pen, x: number, y: number, since: number, size: n
 const STUB = { half: 0.17, rise: 0.075, lip: 0.2 }
 
 export function collar(p: p5, c: Pen, o: Pt, x: number, top: number, q: Pt): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const X = x - o[0] + q[0]
   const Y = top - o[1] + q[1]
   p.push()
   p.rectMode(p.CORNER)
-  p.stroke(mixHex(ink, WORKS.iron, 0.45))
+  // Iron edged in darker iron, like the heart's machine (a half-cream edge made the pipe a drawing of one).
+  p.stroke(mixHex(WORKS.iron, STONE.deep, 0.5))
   p.strokeWeight(weight * 0.8)
   // The pipe going down through the floor, and a flange where it meets the floor.
   p.fill(mixHex(WORKS.iron, STONE.deep, 0.3))
@@ -440,7 +441,8 @@ export function collarFront(p: p5, c: Pen, o: Pt, x: number, top: number, q: Pt)
   const Y = top - o[1] + q[1]
   p.push()
   p.rectMode(p.CORNER)
-  p.stroke(mixHex(ink, WORKS.iron, 0.45))
+  // Iron edged in darker iron, like the heart's machine (a half-cream edge made the pipe a drawing of one).
+  p.stroke(mixHex(WORKS.iron, STONE.deep, 0.5))
   p.strokeWeight(weight * 0.8)
   // The stub, standing a little above the floor, and its flanged lip.
   p.fill(WORKS.iron)
