@@ -172,7 +172,7 @@ export const flame = () =>
       // in front of the fire instead of being one more spark of it. No edge: it fades in off the heart and out again.
       if (s.world === 'railway' && t > FESTIVAL - 0.2 && t < SILENCE + 0.3) {
         const on = smooth(t, FESTIVAL - 0.2, FESTIVAL + 0.6) * (1 - smooth(t, SILENCE - 0.3, SILENCE + 0.3))
-        shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 4, 0.036 * hb), 0.5 * on)
+        shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 3.4, 0.03 * hb), 0.36 * on, [12, 10, 22], 1.55)
       }
       // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
       // It blooms as the wick catches on the first last chord.
@@ -208,19 +208,34 @@ export const flame = () =>
 
 /**
  * A soft shadow round the spark (cells: the heart's radius `r`, the shadow's reach `out`), clear of the heart itself
- * so it never dulls it: what lifts it off a bright fire behind it. Drawn before the flame.
+ * so it never dulls it: what lifts it off a bright fire behind it. Drawn before the flame. It takes the flame's shape,
+ * not a disc's: `tall` draws it out upward along the flame (its middle a little up the flame), so it reads as the
+ * fire behind giving way round the flame and never as a dark ring or a hole. `col` is its colour: the darkest of
+ * whatever it lies on (a fire's rim at a door, the night at the festival).
  */
-export function shadow(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, r: number, out: number, a: number): void {
+export function shadow(
+  ctx: CanvasRenderingContext2D,
+  k: number,
+  x: number,
+  y: number,
+  r: number,
+  out: number,
+  a: number,
+  col: [number, number, number] = [12, 10, 22],
+  tall = 1,
+): void {
   if (a <= 0.01 || out <= r) return
-  const g = ctx.createRadialGradient(x * k, y * k, r * 0.95 * k, x * k, y * k, out * k)
-  const col = '12, 10, 22'
-  g.addColorStop(0, `rgba(${col}, 0)`)
-  g.addColorStop(Math.min(0.5, (r * 0.6) / out + 0.08), `rgba(${col}, ${(a * 0.9).toFixed(3)})`)
-  g.addColorStop(0.55, `rgba(${col}, ${(a * 0.45).toFixed(3)})`)
-  g.addColorStop(1, `rgba(${col}, 0)`)
+  const c = col.map((v) => Math.round(v)).join(', ')
+  const g = ctx.createRadialGradient(0, 0, r * 0.95 * k, 0, 0, out * k)
+  g.addColorStop(0, `rgba(${c}, 0)`)
+  g.addColorStop(Math.min(0.5, (r * 0.6) / out + 0.08), `rgba(${c}, ${(a * 0.9).toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(${c}, ${(a * 0.45).toFixed(3)})`)
+  g.addColorStop(1, `rgba(${c}, 0)`)
   ctx.save()
+  ctx.translate(x * k, (y - (tall - 1) * out * 0.45) * k)
+  ctx.scale(1, tall)
   ctx.fillStyle = g
-  ctx.fillRect((x - out) * k, (y - out) * k, out * 2 * k, out * 2 * k)
+  ctx.fillRect(-out * k, -out * k, out * 2 * k, out * 2 * k)
   ctx.restore()
 }
 
@@ -251,8 +266,8 @@ const rgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => pars
 /**
  * The spark's heart: the ball, drawn here instead of by the stage (the show hands the stage no ball, `SparkShow.at`),
  * so it is a flame's heart and not a marble: no ink ring, no spinning dot, no trail of beads. Hot, it is gold going to
- * orange at its edge; in the silence it is an ember gone to ash with a dull red heart that breathes. Drawn out along
- * its way at a door, as the stage would.
+ * orange at its edge; in the silence it is an ember gone to ash with a dull red heart that breathes. At a door it
+ * stays round and trails a short smear behind it (`stretch` says how much, `angle` which way it is going).
  */
 export function drawSpark(p: p5, k: number, x: number, y: number, t: number, scale = 1, stretch = 1, angle = 0): void {
   if (scale <= 0.02) return
@@ -267,7 +282,25 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
   ctx.save()
   ctx.translate(x * k, y * k)
   ctx.rotate(angle)
-  ctx.scale(Math.max(1, stretch), 1)
+  // Through a door the heart stays round. What it went through trails off it: a short smear behind it along the way
+  // it came, from its own colour at the heart to nothing, never more than a heart and a half long.
+  if (stretch > 1.01 && ash < 0.5) {
+    const tail = r + Math.min(2, (stretch - 1) * 1.5) * r
+    const half = r * 0.8
+    const [br, bg, bb] = rgb(body)
+    const [xr, xg, xb] = rgb(edge)
+    const sg = ctx.createLinearGradient(0, 0, -tail, 0)
+    sg.addColorStop(0, `rgba(${br}, ${bg}, ${bb}, 0.85)`)
+    sg.addColorStop(0.5, `rgba(${xr}, ${xg}, ${xb}, 0.4)`)
+    sg.addColorStop(1, `rgba(${xr}, ${xg}, ${xb}, 0)`)
+    ctx.fillStyle = sg
+    ctx.beginPath()
+    ctx.moveTo(0, -half)
+    ctx.quadraticCurveTo(-tail * 0.45, -half * 0.7, -tail, 0)
+    ctx.quadraticCurveTo(-tail * 0.45, half * 0.7, 0, half)
+    ctx.closePath()
+    ctx.fill()
+  }
   if (ash < 0.02) {
     const g = ctx.createRadialGradient(0, -0.25 * r, 0.05 * r, 0, 0, r)
     g.addColorStop(0, core)
@@ -540,7 +573,13 @@ export const veil = () =>
       // A soft shadow round it first (no edge), so its clean teardrop and gold heart stand in front of the fire.
       const here = show.at(t)
       if (!here.hidden && here.scale > 0.05) {
-        shadow(ctx2, k, here.x, here.y, R * here.scale, R * here.scale + 0.5, 0.55 * (flash ? 0.6 : 1))
+        // Only as much as the fire is behind it (none once the new world shows through), in the darkest of that
+        // fire's colours, so on a fire it is the fire going deeper round the flame and never a navy hole or a grey disc.
+        const at = sOf(here.x, here.y)
+        const behind = cover(at)
+        const P = sideOf(at) < 0 ? OLD : NEW
+        const deep = lerp3(P.rim, [20, 10, 8], 0.4)
+        shadow(ctx2, k, here.x, here.y, R * here.scale, R * here.scale + 0.42, 0.5 * behind * (flash ? 0.6 : 1), deep, 1.6)
         drawSpark(p, k, here.x, here.y, t, here.scale, here.stretch, here.angle)
       }
     },
