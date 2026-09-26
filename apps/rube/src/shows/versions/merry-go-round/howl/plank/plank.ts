@@ -59,6 +59,27 @@ function watching(t: number): number {
 }
 
 /**
+ * Calcifer comes out of Howl's chest (FREE): a spark at his breast that swells to his full size and brightness over
+ * `EMERGE` as it rises out of him onto the rig's spiral, joining it at the rig's own speed (the blend's rate is nil
+ * at its end). Before FREE and after the swell, the rig's pose exactly.
+ */
+const EMERGE = 0.3
+function freed(t: number, cal: ReturnType<typeof calciferAt>): ReturnType<typeof calciferAt> & { light: number } {
+  if (t < FREE || t >= FREE + EMERGE || !cal.shown) return { ...cal, light: 1 }
+  const e = smooth(t, FREE, FREE + EMERGE)
+  const [hx, hy] = howlAt(t)
+  // His breast, high on the front of Howl's ball (the ball is drawn over the parts), so the spark shows over its
+  // crown from the first frame.
+  const chest: Pt = [hx + 0.04, hy - 0.125]
+  return {
+    ...cal,
+    at: [chest[0] + (cal.at[0] - chest[0]) * e, chest[1] + (cal.at[1] - chest[1]) * e],
+    size: cal.size * (0.25 + 0.75 * e),
+    light: 0.5 + 0.5 * e,
+  }
+}
+
+/**
  * Howl is spent: on each of his last heavy strokes a feather or two tears loose from his wings, and more on the
  * landing, and they tumble away behind the running plank, falling slowly and fading. Blades like his own, never round.
  */
@@ -396,7 +417,7 @@ export const plank = part<PlankState>(
         steamAndDust(p, k, t, legs)
       }
       // Calcifer.
-      const cal = calciferAt(t)
+      const cal = freed(t, calciferAt(t))
       if (cal.shown && (t <= T1 || PLANK_AFTER.star)) {
         if (cal.star > 0) drawStar(p, k, t, cal.at, cal.star)
         p.push()
@@ -421,6 +442,7 @@ export const plank = part<PlankState>(
           lean: cal.lean * (1 - 0.5 * tn),
           mouth: cal.mouth + 0.15 * tn,
           shut: cal.shut * (1 - tn),
+          light: cal.light,
         })
         p.pop()
       }
@@ -437,10 +459,13 @@ export const plank = part<PlankState>(
         puff(p, k, (hx + sx) / 2, (hy + sy) / 2, 0.55 + 0.3 * Math.min(1, hu), CALCIFER.core, b * 0.7)
         puff(p, k, sx, sy, 0.6 + 0.35 * Math.min(1, hu), CALCIFER.core, b)
       }
+      // His warmth as he comes out: it swells with him out of Howl's chest, rides up with him and fades.
       const fu = t - FREE
-      if (fu > 0 && fu < 1) {
-        const [hx, hy] = howlAt(FREE)
-        puff(p, k, hx, hy - 0.2, 0.5 + fu * 0.6, CALCIFER.body, 0.3 * Math.exp(-fu / 0.25))
+      if (fu > 0 && fu < 1.6) {
+        const [fx, fy] = freed(t, calciferAt(t)).at
+        const e = smooth(fu, 0, EMERGE)
+        const glow = 0.26 * (0.3 + 0.7 * e) * smooth(fu, 0, 0.06) * Math.exp(-Math.max(0, fu - EMERGE) / 0.35)
+        puff(p, k, fx, fy - 0.08, 0.2 + 0.35 * e + 0.25 * Math.max(0, fu - EMERGE), CALCIFER.body, glow)
       }
       // Howl's wings, under his ball.
       if (t >= HOWL_IN && t <= T1 + 0.5) {
@@ -503,28 +528,31 @@ export const plank = part<PlankState>(
     const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, off, w: 0 })
     const hold = (t: number, cells: number, at: Pt): PartShot => ({ t, cells, hold: at, w: 1 })
     const lock: Pt = [BX_IMP + 3.1, end[1] - 0.85]
+    const WIDE_X = 4.6
+    const WIDE_Y = -1.4
+    const PEAK_X = 2.6
+    const PEAK_Y = -0.55
     return [
       // The collapse: out from her and him to the whole castle coming down, then in again as the plank stands.
       hold(244.35, 4.8, [her0[0] + 0.25, her0[1] - 0.9]),
       hold(247.4, 25, [BX0 - 1.5, -2.8]),
       hold(250.7, 22, [BX0 + 0.5, -1.5]),
       hold(252.3, 14, [BX0 + 2, 2.8]),
-      // The run, two framings in turn on the downbeats. A locked-off wide it crosses left to right, the wreck and its
-      // dust left behind (c10 → c12, drifting a touch); in close on the deck, legs cut at the knee, while she leans in
-      // to tend him on c14, c15 and c16; out again to a wide running with it, the tors going by under its legs, with
-      // the bird a speck high up coming down (c18 → c19): the camera never stops, out and straight in again. Then, in through bar 19 to land on his first heavy
-      // stroke (c20), a two-shot running with the plank: the whole deck low in the frame, grate to prow, and the sky
-      // over it that he comes down out of, big, beating down on the accents onto the prow on the loudest note (c21),
-      // held some three seconds while she turns from Calcifer to him; then in on the two of them for the heart.
+      // The run: wide, close, wide, close, each change a long easy move (three seconds or so, never faster than half
+      // a scale a second). A locked-off wide it crosses left to right, the wreck and its dust left behind; from bar 11
+      // in on the deck, legs cut at the knee, by the time she leans in to tend him on c14, c15 and c16; out again from
+      // c16 to a wide running with it, the tors going by under its legs, the bird high up coming down over it; and
+      // from there in again all the way through his strokes and his landing on the loudest note (c21), still moving
+      // as he comes down onto the prow, to a two-shot of the deck at 5.5 cells, the prow a third in from the right.
+      // It settles there while she turns from Calcifer to him and lifts him out; then in on the two of them for the
+      // heart.
       hold(c(10), 12.5, [4.2, 2.9]),
-      hold(c(12) + 0.55, 12.6, [4.6, 2.9]),
-      follow(c(14), 5.0, [0.6, 0.6]),
+      hold(255.25, 12.2, [4.45, 2.9]),
+      follow(c(14), 5.2, [0.6, 0.6]),
       follow(c(16), 5.3, [0.65, 0.6]),
-      follow(c(18), 17, [4.6, 0.7]),
-      follow(c(19), 15.2, [3.9, 0.2]),
-      follow(c(20), 8.8, [2.4, -1.3]),
-      follow(HOWL_LAND, 8.5, [2.4, -1.0]),
-      follow(267.6, 8.2, [2.3, -0.65]),
+      follow(263.3, 12.5, [WIDE_X, WIDE_Y]),
+      follow(266.2, 5.5, [PEAK_X, PEAK_Y]),
+      follow(267.6, 5.75, [2.5, -0.5]),
       follow(269.2, 6.0, [1.6, -0.4]),
       follow(271.4, 4.0, [0.6, -0.35]),
       follow(272.8, 3.7, [0.45, -0.5]),
