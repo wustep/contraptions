@@ -74,7 +74,7 @@ first second to its last.
 
 ## What is here
 
-The picker is the `.show.ts` files. Off that list, and so not in Shows: Clair de Lune Take A, Première Arabesque Take A, the metronome, and the Cornfield Chase takes that are not music-sync (multi-ball and trails). Clair Take B, Première Take B, Liftoff, the two Cornfield Chase music-sync takes, and Come Recover's All at Once stay. The scores and checks for the takes that left the picker are still on disk.
+The picker is the `.show.ts` files. Off that list, and so not in Shows: Clair de Lune Take A, Première Arabesque Take A, the metronome, and the Cornfield Chase takes that are not music-sync (multi-ball and trails). Clair Take B, Première Take B, Interstellar (its own work; it was the Liftoff take of Cornfield Chase), the two Cornfield Chase music-sync takes, and Come Recover's All at Once stay. The scores and checks for the takes that left the picker are still on disk.
 
 `premiere-arabesque/take-a` is a real show: Debussy's Première Arabesque to
 Patrizia Prati's recording, the machine walking Regular, Forest, Aqua,
@@ -171,12 +171,14 @@ the hits landed. The clip starts about 70s into the recording and runs 48s.
 The arrangement note is `docs/promo/CORNFIELD_CHASE_VOICES.md`, and the clip
 is `docs/promo/cornfield-chase-voices-demo.webm`.
 
-`cornfield-chase/opus55-liftoff` (Liftoff, with a faint "Directed by wustep"
-byline in the panel from `ShowVersion.director`) is a second Opus 5.5 take
-on the same recording, with every piece new. It is not a
+`interstellar/opus55` (Interstellar, with a faint "Directed by wustep" byline
+in the panel from `ShowVersion.director`) is its own work: two cues of the
+score, Cornfield Chase and then No Time for Caution, so it is not a take of
+Cornfield Chase, and its one take carries no subtitle (the panel shows the
+title alone when the label repeats it). Every piece is new. It is not a
 stock arrangement: two worlds made for it, a farm in the dust years and the
 dark past it, and a rocket between them in place of a portal. The show lives
-in `cornfield-chase/liftoff/`. `show.ts` holds two universes on one clock
+in `interstellar/liftoff/`. `show.ts` holds two universes on one clock
 that share cells, and the stage changes universe while the rocket is inside
 the cloud. Each part is handed a slot (the time the ball arrives, the time
 it leaves, the onsets it must strike) and builds its lane from timed
@@ -194,9 +196,44 @@ the far-side house, where she sends him on; neither ever jumping, and each
 coming and going only out of shot. It ends with credits after the music, in silence: the words are set
 by the page from `Performance.titles(t)` (a show's canvas sets no type), and
 the starlight they come out of is the canvas's. The report is
-`docs/promo/CORNFIELD_CHASE_LIFTOFF.md`.
+`docs/promo/INTERSTELLAR.md`.
 It has a second act on a second cue, Zimmer's *No Time for Caution*, also demo
 only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-demo.mp3`,
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
 from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
 (`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
+
+`la-la-land/opus55-sebs` (**Seb's**, "Directed by wustep") is a one-shot take on
+Justin Hurwitz's *Epilogue* from La La Land, and then *The End*, 510 s in all.
+Every piece in it is new, and so are its places: Seb's club, Lipton's, a
+theatre, a white studio and a painted Hollywood, an audition in shadow play, a
+globe, a Paris jazz club, painted Paris and the stars, a home movie, the drive,
+and Seb's again, with the city of stars round it at both ends. The code is
+`la-la-land/sebs/` (a Liftoff-style kit: parts built to timed slots, company
+balls, an authored camera, covers that the stage changes place under). The mix
+is built by `scripts/sebs-mix.sh` and measured once by `scripts/sebs-onsets.py`
+into `scripts/show-plans/sebs-onsets.json`; `check:shows` holds every strike
+against it (`apps/rube/check-sebs.ts`). The recordings are copyrighted and
+demo only: `docs/promo/LA_LA_LAND_SEBS_ATTRIBUTION.txt`. The whole story is in
+`docs/promo/LA_LA_LAND_SEBS.md`.
+
+`la-la-land/fable51-epilogue` (Epilogue, with a faint "Directed by wustep"
+byline in the panel) is Justin Hurwitz's *Epilogue* from La La Land, demo
+only (`docs/promo/LALALAND_EPILOGUE_ATTRIBUTION.txt`), played whole from its
+first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
+built on the same kit as Liftoff: `show.ts` holds three universes on one
+clock that share cells (the real club, the dream as the club's own stage
+dressed in painted flats, and the club again where the dream's last set is
+struck), and the stage changes universe on the kiss and on the drop out of
+the peak. Each part is handed a slot and builds its lane from timed
+waypoints, so its strikes land on the measured onsets in
+`scripts/show-plans/lalaland-epilogue-onsets.json` (measured once by
+`scripts/lalaland-epilogue-onsets.py`: the piano's notes, the swing's, the
+waltz's and the number's combs, and the free stretches' onsets) by
+construction. `epilogue/hits.ts` gathers every strike, and `check:shows`
+measures each against the file, holds the ball to one continuous path,
+never hidden long, and holds Mia (the yellow ball, company) to the story:
+at her table for the kiss, with him through the dream, at her table again at
+the end, her husband only in the club at the end, neither ever jumping or
+appearing in shot. The credits run over the last chords, set by the page
+from `Performance.titles(t)`. The report is `docs/promo/LALALAND_EPILOGUE.md`.

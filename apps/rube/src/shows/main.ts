@@ -412,6 +412,8 @@ function sync(): void {
   // The picker.
   empty.hidden = works.length > 0
   workList.node.hidden = takeField.hidden = about.hidden = works.length === 0
+  // A work whose one take is the work itself (labelled with its title) has no versions to pick between: no row for it.
+  if (work && work.versions.length === 1 && work.versions[0].label === work.title) takeField.hidden = true
   if (current) workList.set(current.work)
   workList.node.classList.toggle('disabled', busy)
   if (work && (takeChips.length !== work.versions.length || takeChips.some((c, i) => c.version !== work.versions[i]))) {
@@ -430,7 +432,8 @@ function sync(): void {
   }
   const lines: (Node | string)[] = []
   if (current) {
-    lines.push(el('b', {}, [`${current.title} · ${current.label}`]))
+    // A take that is the work (its label repeats the title) is named once.
+    lines.push(el('b', {}, [current.label === current.title ? current.title : `${current.title} · ${current.label}`]))
     if (loading) lines.push(el('br'), 'Loading…')
     else if (failed) lines.push(el('br'), `Would not load: ${failed}`)
     else {
@@ -446,7 +449,7 @@ function sync(): void {
     }
   }
   about.replaceChildren(...lines)
-  document.title = current ? `${current.title}, ${current.label} · contraptions` : 'contraptions · shows'
+  document.title = current ? `${current.label === current.title ? current.title : `${current.title}, ${current.label}`} · contraptions` : 'contraptions · shows'
 
   // The transport.
   transportSec.hidden = exportSec.hidden = works.length === 0
