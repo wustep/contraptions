@@ -290,3 +290,41 @@ beat (bars and their place in the bar) into `scripts/shows/plans/married-life-on
 every strike to it (`apps/rube/checks/married-life.ts`). The report is
 `apps/rube/src/shows/versions/married-life/MARRIED_LIFE.md`.
 
+`merry-go-round/opus55` (in the picker, **Merry-Go-Round**, one take, **Opus 5.5**) is Joe Hisaishi's concert
+arrangement of the *Merry-Go-Round of Life* from Howl's Moving Castle, whole, demo only
+(`apps/rube/src/shows/versions/merry-go-round/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
+Every piece is new. It follows the film: Sophie the hatter (the one ball, whose colour is her age), the walk on
+the air with Howl, the Witch's curse, Turnip Head, the castle that walks, Calcifer in the hearth, the colour dial on
+the door, the flower fields, the war, the castle falling apart to one plank on legs, the heart given back, and the
+castle made again, walking away up the sky. The code is `merry-go-round/howl/`, on the same kit as Liftoff and Epilogue (parts built to timed
+slots, an authored camera, the end credits from `Performance.titles`), with Everything's legs and match cuts: four
+places (the hatter's town, the wastes, the castle's room, the flower fields), each one set however often it is
+visited, and nearly every cut a step through the castle's door. The arrangement changes pace from stretch to
+stretch, so `scripts/shows/merry-go-round-onsets.py` tracks each stretch beat by beat (bars and their place in the
+bar) into `scripts/shows/plans/merry-go-round-onsets.json`; `check:shows` holds every strike to it
+(`apps/rube/checks/merry-go-round.ts`). The report is `apps/rube/src/shows/versions/merry-go-round/MERRY_GO_ROUND.md`.
+`mountain-king/opus55` (in the picker, **Mountain King**, one take, **Opus 5.5**) is Grieg's *In the Hall of the
+Mountain King* played whole by a chain reaction that grows with the music, from one pebble tipped at the trolls'
+gate to the mountain's own machinery running away and the mountain coming down. It follows Ibsen: Peer Gynt (the
+red ball) and the Woman in Green (the green ball, company) ride a great pig to the Dovre King's hall; the court
+wakes, "Slay him!", the chase goes down through the mines, the trolls' drum and the mountain's heart; the bells, the
+collapse, and Peer on the hillside at dawn. The trolls and the King are drawn, never balls. One place, one path, one
+take: the mountain in cross-section (`mountain-king/dovre/`, a Liftoff-style kit whose `lay` can lay a part mirrored,
+so the levels stack under the hall). The recording is the Czech National Symphony Orchestra's for Musopen, public
+domain, so it ships with the show; the YouTube cue is the same recording, sample for sample. It is an accelerando, so
+the beat is followed quarter note by quarter note (`scripts/shows/mountain-king-onsets.py` →
+`scripts/shows/plans/mountain-king-onsets.json`), and `check:shows` holds every strike against it
+(`apps/rube/checks/mountain-king.ts`). Licences: `apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`; the
+report is `apps/rube/src/shows/versions/mountain-king/MOUNTAIN_KING.md`.
+`mountain-king/opus55-spark` (in the picker, **Mountain King**, take **Spark**) is Grieg's *In the Hall of the
+Mountain King* in the Czech National Symphony Orchestra's public-domain Musopen recording, whole, with the credits
+after it in silence: 179 s (`apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`). A candle's flame slips off
+its wick while the cat sleeps, and every fire is a door: out through the stove into a glassworks, a balloon regatta
+at sunset and a runaway night express that ends at a fireworks festival, and home through every fire on the roll
+before the last two chords. The code is `mountain-king/spark/`, on the Liftoff kit with Everything's legs and match
+cuts (the doors are on phrases 6, 9 and 12, and on the roll's strokes); the stage draws no ball, `spark/fx.ts` draws
+the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb, so
+`scripts/shows/mountain-king-onsets.py` tracked every quarter into `scripts/shows/plans/mountain-king-onsets.json`;
+`check:shows` holds every strike to it (`apps/rube/checks/spark.ts`). The report is
+`apps/rube/src/shows/versions/mountain-king/SPARK.md`.
+

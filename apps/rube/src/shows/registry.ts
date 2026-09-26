@@ -125,6 +125,10 @@ export interface TitleCard {
    * it stays where `at` puts it in the box.
    */
   lift?: number
+  /** Optional: the card's type this many times its usual size (unset: 1, every show's credits as they were). */
+  scale?: number
+  /** Optional: the role and the cast's "as" lines in the card's own cream, not gold (for credits over a light sky). */
+  plain?: boolean
 }
 
 /** What a `.show.ts` file exports as its default. */

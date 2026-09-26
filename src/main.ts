@@ -142,6 +142,8 @@ export function start(shell: Shell): () => void {
     // focused button keeps only its activation keys, so the rest still work.
     if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return
     if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return
+    // Enter on a focused link (a mode tab, the byline, the credit) follows it; it is not a reroll.
+    if (t instanceof HTMLAnchorElement && e.key === 'Enter') return
     // A focused listbox owns its keys outright (it also stops propagation on
     // the ones it handles; this is the belt to that suspender).
     if (t instanceof HTMLElement && t.closest('.lb')) return

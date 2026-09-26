@@ -73,6 +73,10 @@ async function activate(mode: ShellMode): Promise<void> {
     mount = await loadMount(mode)
   } catch (err) {
     console.error(err)
+    // The address and the lit tab already say the new mode, and the old one is still on the stage; a second click
+    // would be ignored as the mode on its way. A reload lands on the address as its own page. The browser keeps a
+    // module that would not fetch as failed for the life of this one, and after a deploy the old chunk is gone.
+    if (token === generation) location.reload()
     return
   }
   // A newer click or a back step won while this one was loading.
