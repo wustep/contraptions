@@ -474,6 +474,179 @@ const OWN_SMOKE = new Set<Rise | Burst>()
 const SKY_COLS = [FW.fwGold, FW.fwRed, FW.fwGreen, FW.fwViolet, FW.fwBlue, FW.fwWhite]
 
 /*
+ * What the audience sees of the sky. The moon holds its place in the frame (`night.ts`), so it rides with the camera
+ * and slides across the sky behind every burst; and the frame's top cuts off whatever breaks too high. So every shell
+ * here is placed against the show's own camera, measured into `CAM`. **Re-measure it whenever the camera changes** (the
+ * keys in `fireworks.ts`, the last of `express.ts`'s that carry into the festival, or the punches in `score.ts`): it is
+ * the camera's middle and height, less the part's place in the world (`show.where(t) - sparkAt(t)`), and the untracked
+ * `dev/fireworks-plan.ts-p1-probe.ts` prints it (`table`) and audits every burst against it (`audit`).
+ */
+
+/** The show's camera over the festival in this part's cells: the frame's middle (x, y) and its height, every 0.05 s from `CAM_T0` to 147.2. */
+const CAM_T0 = 124.05
+const CAM_DT = 0.05
+// prettier-ignore
+const CAM: number[] = [
+  0.33, 2.84, 9.95, 0.38, 2.66, 9.75, 0.48, 2.45, 9.44, 0.65, 2.23, 9.07, 0.88, 2.04, 8.66, 1.20, 1.91, 8.25,
+  1.57, 1.85, 7.86, 1.98, 1.87, 7.53, 2.41, 1.99, 7.27, 2.80, 2.18, 7.08, 3.12, 2.43, 7.00, 3.37, 2.69, 7.00,
+  3.60, 2.92, 7.01, 3.84, 3.10, 7.01, 4.07, 3.24, 7.02, 4.29, 3.36, 7.04, 4.51, 3.43, 7.05, 4.72, 3.48, 7.07,
+  4.92, 3.49, 7.08, 5.12, 3.49, 7.10, 5.31, 3.47, 7.12, 5.49, 3.45, 7.14, 5.67, 3.43, 7.15, 5.84, 3.42, 7.17,
+  6.01, 3.43, 7.19, 6.17, 3.46, 7.20, 6.33, 3.50, 7.21, 6.48, 3.53, 7.23, 6.63, 3.54, 7.24, 6.78, 3.55, 7.25,
+  6.92, 3.55, 7.26, 7.07, 3.54, 7.28, 7.21, 3.53, 7.29, 7.36, 3.53, 7.30, 7.50, 3.52, 7.31, 7.65, 3.52, 7.32,
+  7.79, 3.51, 7.34, 7.94, 3.50, 7.35, 8.08, 3.50, 7.36, 8.23, 3.49, 7.37, 8.37, 3.48, 7.38, 8.51, 3.48, 7.40,
+  8.65, 3.47, 7.41, 8.79, 3.47, 7.42, 8.93, 3.47, 7.43, 9.07, 3.47, 7.44, 9.21, 3.46, 7.46, 9.36, 3.46, 7.47,
+  9.50, 3.46, 7.48, 9.64, 3.46, 7.49, 9.78, 3.45, 7.51, 9.92, 3.45, 7.52, 10.06, 3.45, 7.53, 10.20, 3.45, 7.55,
+  10.34, 3.44, 7.56, 10.48, 3.44, 7.57, 10.62, 3.43, 7.59, 10.75, 3.42, 7.60, 10.88, 3.41, 7.61, 11.02, 3.39, 7.63,
+  11.14, 3.38, 7.65, 11.26, 3.36, 7.67, 11.38, 3.34, 7.68, 11.48, 3.31, 7.70, 11.58, 3.29, 7.72, 11.67, 3.26, 7.75,
+  11.76, 3.23, 7.77, 11.83, 3.19, 7.79, 11.90, 3.14, 7.81, 11.95, 3.09, 7.83, 12.00, 3.04, 7.85, 12.04, 2.98, 7.87,
+  12.07, 2.92, 7.89, 12.10, 2.85, 7.91, 12.12, 2.79, 7.92, 12.13, 2.73, 7.94, 12.15, 2.67, 7.95, 12.16, 2.61, 7.97,
+  12.17, 2.56, 7.98, 12.18, 2.51, 7.99, 12.19, 2.46, 7.99, 12.21, 2.42, 8.00, 12.24, 2.37, 8.00, 12.28, 2.34, 8.00,
+  12.34, 2.34, 7.97, 12.42, 2.36, 7.93, 12.52, 2.40, 7.87, 12.64, 2.47, 7.81, 12.77, 2.54, 7.73, 12.93, 2.64, 7.65,
+  13.09, 2.73, 7.57, 13.26, 2.84, 7.49, 13.44, 2.94, 7.41, 13.62, 3.03, 7.34, 13.80, 3.11, 7.29, 13.97, 3.19, 7.24,
+  14.14, 3.24, 7.21, 14.30, 3.27, 7.20, 14.45, 3.29, 7.20, 14.60, 3.31, 7.20, 14.76, 3.34, 7.20, 14.92, 3.36, 7.20,
+  15.08, 3.38, 7.20, 15.24, 3.40, 7.20, 15.40, 3.42, 7.20, 15.57, 3.43, 7.20, 15.73, 3.45, 7.20, 15.89, 3.46, 7.21,
+  16.05, 3.48, 7.21, 16.21, 3.49, 7.21, 16.37, 3.51, 7.21, 16.53, 3.52, 7.21, 16.69, 3.53, 7.21, 16.85, 3.55, 7.21,
+  17.01, 3.56, 7.21, 17.17, 3.57, 7.22, 17.32, 3.58, 7.22, 17.48, 3.59, 7.22, 17.64, 3.60, 7.22, 17.80, 3.61, 7.23,
+  17.96, 3.62, 7.23, 18.12, 3.63, 7.23, 18.28, 3.64, 7.23, 18.43, 3.65, 7.24, 18.59, 3.66, 7.24, 18.75, 3.66, 7.24,
+  18.91, 3.67, 7.24, 19.06, 3.68, 7.25, 19.22, 3.68, 7.25, 19.38, 3.69, 7.25, 19.53, 3.70, 7.26, 19.69, 3.70, 7.26,
+  19.85, 3.71, 7.27, 20.00, 3.71, 7.27, 20.16, 3.72, 7.27, 20.32, 3.72, 7.28, 20.47, 3.72, 7.28, 20.63, 3.73, 7.29,
+  20.78, 3.73, 7.29, 20.94, 3.73, 7.30, 21.09, 3.73, 7.30, 21.25, 3.74, 7.31, 21.40, 3.74, 7.31, 21.56, 3.74, 7.32,
+  21.72, 3.74, 7.32, 21.87, 3.74, 7.33, 22.03, 3.74, 7.33, 22.18, 3.74, 7.34, 22.34, 3.74, 7.34, 22.50, 3.74, 7.35,
+  22.65, 3.73, 7.36, 22.81, 3.73, 7.36, 22.96, 3.73, 7.37, 23.12, 3.73, 7.37, 23.28, 3.72, 7.38, 23.43, 3.72, 7.39,
+  23.59, 3.72, 7.40, 23.74, 3.71, 7.40, 23.89, 3.70, 7.42, 24.04, 3.68, 7.44, 24.17, 3.64, 7.48, 24.29, 3.60, 7.52,
+  24.41, 3.55, 7.57, 24.51, 3.50, 7.62, 24.61, 3.44, 7.69, 24.70, 3.37, 7.76, 24.78, 3.31, 7.84, 24.85, 3.24, 7.92,
+  24.91, 3.16, 8.02, 24.97, 3.09, 8.11, 25.02, 3.02, 8.21, 25.06, 2.94, 8.32, 25.10, 2.87, 8.43, 25.13, 2.80, 8.55,
+  25.16, 2.74, 8.67, 25.19, 2.67, 8.79, 25.21, 2.61, 8.91, 25.22, 2.56, 9.04, 25.24, 2.51, 9.17, 25.25, 2.46, 9.30,
+  25.26, 2.42, 9.42, 25.27, 2.39, 9.55, 25.27, 2.36, 9.68, 25.28, 2.34, 9.81, 25.28, 2.33, 9.93, 25.28, 2.33, 10.05,
+  25.28, 2.33, 10.16, 25.29, 2.34, 10.27, 25.29, 2.37, 10.38, 25.30, 2.40, 10.47, 25.32, 2.43, 10.56, 25.34, 2.48, 10.64,
+  25.40, 2.52, 10.72, 25.50, 2.56, 10.81, 25.64, 2.60, 10.90, 25.81, 2.64, 10.99, 26.02, 2.67, 11.08, 26.25, 2.69, 11.17,
+  26.51, 2.71, 11.26, 26.79, 2.71, 11.35, 27.10, 2.71, 11.43, 27.42, 2.70, 11.52, 27.75, 2.67, 11.60, 28.09, 2.64, 11.67,
+  28.44, 2.58, 11.74, 28.79, 2.52, 11.42, 29.14, 2.45, 11.50, 29.49, 2.38, 11.60, 29.82, 2.30, 11.68, 30.13, 2.23, 11.75,
+  30.43, 2.15, 11.80, 30.70, 2.08, 11.84, 30.95, 2.01, 11.86, 31.21, 1.94, 11.86, 31.46, 1.88, 11.86, 31.72, 1.82, 11.85,
+  31.97, 1.78, 11.83, 32.21, 1.74, 11.81, 32.44, 1.71, 11.78, 32.67, 1.69, 11.74, 32.88, 1.67, 11.71, 33.08, 1.66, 11.67,
+  33.27, 1.64, 11.64, 33.43, 1.64, 11.60, 33.58, 1.63, 11.57, 33.72, 1.63, 11.54, 33.83, 1.63, 11.51, 33.92, 1.64, 11.49,
+  33.99, 1.65, 11.19, 34.06, 1.66, 11.19, 34.13, 1.67, 11.21, 34.19, 1.68, 11.23, 34.25, 1.69, 11.24, 34.30, 1.70, 11.25,
+  34.35, 1.71, 11.25, 34.40, 1.72, 11.26, 34.45, 1.73, 11.26, 34.49, 1.74, 11.25, 34.53, 1.75, 11.25, 34.57, 1.75, 11.24,
+  34.61, 1.76, 11.23, 34.65, 1.77, 11.22, 34.68, 1.77, 10.94, 34.72, 1.78, 10.94, 34.75, 1.78, 10.97, 34.79, 1.79, 10.99,
+  34.82, 1.79, 11.01, 34.86, 1.79, 11.02, 34.89, 1.79, 11.03, 34.92, 1.79, 11.04, 34.95, 1.79, 11.04, 34.99, 1.79, 11.04,
+  35.02, 1.79, 11.04, 35.05, 1.79, 11.04, 35.09, 1.78, 11.04, 35.12, 1.78, 11.04, 35.15, 1.77, 11.04, 35.19, 1.77, 11.03,
+  35.22, 1.76, 11.03, 35.26, 1.75, 11.03, 35.30, 1.74, 11.02, 35.33, 1.73, 11.02, 35.37, 1.72, 11.01, 35.41, 1.70, 11.01,
+  35.44, 1.69, 11.01, 35.48, 1.68, 11.00, 35.52, 1.66, 11.00, 35.56, 1.65, 11.00, 35.60, 1.63, 11.00, 35.65, 1.61, 11.00,
+  35.69, 1.60, 11.00, 35.73, 1.58, 11.00, 35.77, 1.57, 11.00, 35.82, 1.56, 11.00, 35.87, 1.55, 11.00, 35.92, 1.54, 11.00,
+  35.97, 1.53, 11.00, 36.02, 1.53, 11.00, 36.07, 1.52, 11.00, 36.13, 1.52, 11.00, 36.18, 1.53, 11.00, 36.24, 1.54, 11.00,
+  36.31, 1.55, 11.00, 36.37, 1.56, 11.00, 36.45, 1.58, 11.00, 36.52, 1.60, 11.00, 36.60, 1.63, 11.00, 36.69, 1.65, 11.00,
+  36.79, 1.68, 11.00, 36.89, 1.71, 11.00, 37.00, 1.74, 11.00, 37.12, 1.77, 11.00, 37.25, 1.80, 11.00, 37.39, 1.82, 11.00,
+  37.54, 1.85, 11.00, 37.69, 1.87, 11.00, 37.86, 1.88, 11.00, 38.03, 1.89, 11.00, 38.21, 1.90, 11.00, 38.39, 1.91, 11.00,
+  38.58, 1.91, 11.00, 38.79, 1.91, 11.00, 39.03, 1.92, 10.99, 39.32, 1.93, 10.97, 39.65, 1.95, 10.94, 40.00, 1.97, 10.91,
+  40.39, 1.99, 10.87, 40.80, 2.03, 10.82, 41.23, 2.07, 10.77, 41.67, 2.12, 10.71, 42.12, 2.17, 10.65, 42.57, 2.23, 10.58,
+  43.02, 2.29, 10.51, 43.47, 2.36, 10.44, 43.91, 2.44, 10.37, 44.34, 2.52, 10.29, 44.74, 2.60, 10.22, 45.13, 2.68, 10.14,
+  45.48, 2.76, 10.06, 45.80, 2.84, 9.99, 46.08, 2.92, 9.91, 46.32, 3.00, 9.84, 46.52, 3.07, 9.77, 46.66, 3.14, 9.70,
+  46.74, 3.20, 9.63, 46.77, 3.26, 9.35, 46.79, 3.31, 9.27, 46.81, 3.37, 9.24, 46.83, 3.42, 9.20, 46.84, 3.47, 9.16,
+  46.85, 3.52, 9.11, 46.86, 3.57, 9.06, 46.87, 3.62, 9.00, 46.88, 3.67, 8.95, 46.88, 3.71, 8.89, 46.88, 3.75, 8.83,
+  46.89, 3.79, 8.76, 46.89, 3.83, 8.70, 46.89, 3.87, 8.63, 46.89, 3.91, 8.57, 46.90, 3.94, 8.50, 46.90, 3.97, 8.43,
+  46.90, 4.01, 8.36, 46.90, 4.04, 8.29, 46.90, 4.06, 8.23, 46.90, 4.09, 8.16, 46.90, 4.11, 8.09, 46.91, 4.13, 8.02,
+  46.91, 4.15, 7.95, 46.91, 4.16, 7.89, 46.91, 4.17, 7.82, 46.91, 4.18, 7.75, 46.91, 4.18, 7.69, 46.92, 4.18, 7.62,
+  46.92, 4.18, 7.56, 46.92, 4.17, 7.50, 46.92, 4.16, 7.44, 46.93, 4.15, 7.37, 46.93, 4.14, 7.29, 46.94, 4.13, 7.22,
+  46.95, 4.11, 7.14, 46.96, 4.10, 7.06, 46.97, 4.08, 6.99, 46.98, 4.07, 6.91, 46.99, 4.05, 6.83, 47.00, 4.03, 6.75,
+  47.01, 4.01, 6.67, 47.02, 3.99, 6.60, 47.04, 3.97, 6.53, 47.05, 3.94, 6.46, 47.07, 3.92, 6.39, 47.09, 3.90, 6.33,
+  47.11, 3.88, 6.27, 47.13, 3.85, 6.22, 47.15, 3.83, 6.17, 47.17, 3.81, 6.13, 47.20, 3.79, 6.09, 47.22, 3.77, 6.06,
+  47.25, 3.76, 6.03, 47.27, 3.74, 6.02, 47.30, 3.73, 6.00, 47.33, 3.71, 6.00, 47.36, 3.70, 6.00, 47.39, 3.68, 6.02,
+  47.41, 3.65, 6.03, 47.44, 3.62, 6.06, 47.47, 3.58, 6.09, 47.50, 3.53, 6.13, 47.53, 3.47, 6.17, 47.56, 3.40, 6.22,
+  47.59, 3.33, 6.27, 47.62, 3.25, 6.33, 47.64, 3.17, 6.39, 47.67, 3.08, 6.46, 47.70, 2.98, 6.53, 47.73, 2.88, 6.60,
+  47.76, 2.77, 6.68, 47.79, 2.66, 6.76, 47.82, 2.55, 6.84, 47.84, 2.41, 6.96, 47.87, 2.25, 7.10, 47.89, 2.07, 7.26,
+  47.91, 1.87, 7.46, 47.94, 1.66, 7.68, 47.96, 1.45, 7.93, 47.99, 1.23, 8.21, 48.02, 1.00, 8.51, 48.05, 0.78, 8.83,
+  48.09, 0.56, 9.18, 48.12, 0.35, 9.55, 48.17, 0.15, 9.95, 48.21, -0.04, 10.36, 48.26, -0.21, 10.79, 48.32, -0.36, 11.23,
+  48.38, -0.49, 11.68, 48.44, -0.59, 12.13, 48.51, -0.66, 12.43, 48.60, -0.72, 12.81, 48.70, -0.77, 13.49, 48.82, -0.80, 14.27,
+  48.95, -0.84, 15.08, 49.09, -0.87, 15.88, 49.22, -0.89, 16.63, 49.36, -0.91, 17.26, 49.49, -0.93, 17.69, 49.61, -0.93, 17.87,
+  49.71, -0.93, 17.80, 49.81, -0.93, 17.62, 49.90, -0.93, 17.64, 49.99, -0.92, 17.64, 50.08, -0.91, 17.64, 50.17, -0.89, 17.57,
+  50.28, -0.87, 17.32, 50.39, -0.85, 17.30, 50.53, -0.82, 17.27, 50.68, -0.79, 17.23, 50.91, -0.67, 17.00, 51.25, -0.41, 16.38,
+  51.64, -0.05, 15.82, 52.08, 0.39, 15.13, 52.50, 0.87, 14.37, 52.89, 1.37, 13.58, 53.22, 1.85, 12.62, 53.45, 2.29, 11.90,
+  53.57, 2.66, 11.27, 53.62, 3.00, 10.62, 53.67, 3.35, 9.89, 53.71, 3.68, 9.07, 53.75, 4.00, 8.41, 53.78, 4.27, 7.82,
+  53.80, 4.50, 7.31, 53.81, 4.66, 6.90, 53.83, 4.79, 6.41, 53.83, 4.90, 6.11, 53.84, 4.99, 5.83, 53.84, 5.07, 5.57,
+  53.84, 5.14, 5.32, 53.85, 5.21, 5.09, 53.84, 5.26, 4.88, 53.84, 5.30, 4.69, 53.84, 5.34, 4.52, 53.84, 5.38, 4.36,
+  53.84, 5.41, 4.22, 53.84, 5.43, 4.09,
+]
+const CAM_N = CAM.length / 3 - 1
+function camAt(t: number): { x: number; y: number; h: number } {
+  const f = Math.max(0, Math.min(CAM_N, (t - CAM_T0) / CAM_DT))
+  const i = Math.min(CAM_N - 1, Math.floor(f))
+  const u = f - i
+  const at = (j: number): number => CAM[3 * i + j] + (CAM[3 * i + 3 + j] - CAM[3 * i + j]) * u
+  return { x: at(0), y: at(1), h: at(2) }
+}
+/** The moon at show time `t`: 0.77 and 0.23 of the 16:9 frame, 0.15 of its height across (`night.ts` `moonPlace`). */
+function moonOf(t: number): { x: number; y: number; r: number } {
+  const c = camAt(t)
+  return { x: c.x + (0.27 * 16 * c.h) / 9, y: c.y - 0.27 * c.h, r: 0.075 * c.h }
+}
+const frameTop = (t: number): number => {
+  const c = camAt(t)
+  return c.y - c.h / 2
+}
+
+type Shape = Omit<Burst, 'at' | 'x' | 'y' | 'seed'>
+/** How far a burst's stars fly out (their speed over the air's drag). */
+const reachOf = (sh: Shape): number => sh.v / sh.k
+/** A burst's heart `s` seconds after it breaks: it sinks with its stars. */
+const heartY = (y: number, sh: Shape, s: number): number => y + (sh.gs / sh.k) * (s - (1 - Math.exp(-sh.k * s)) / sh.k)
+/**
+ * Off the moon: for its first half second (or its life, if shorter) the whole flower, out to its reach, stays half a
+ * cell clear of the moon's disc. A burst round the moon makes the moon its bright round core.
+ */
+function clearOfMoon(at: number, x: number, y: number, sh: Shape): boolean {
+  const need = reachOf(sh) + 0.5
+  for (let s = 0; s <= Math.min(0.5, sh.life) + 1e-9; s += 0.05) {
+    const m = moonOf(at + s)
+    if (Math.hypot(x - m.x, heartY(y, sh, s) - m.y) < m.r + need) return false
+  }
+  return true
+}
+/** Under the frame's top: its highest stars stay 0.3 cells inside the frame for the first 0.3 s, while it is a flower. */
+function underTop(at: number, y: number, sh: Shape): boolean {
+  for (let s = 0; s <= 0.3 + 1e-9; s += 0.05) if (y - reachOf(sh) - 0.3 < frameTop(at + s)) return false
+  return true
+}
+/** The heart's nearest pass by the spark over the burst's first half second. */
+function sparkGap(at: number, x: number, y: number, sh: Shape): number {
+  let d = Infinity
+  for (let s = 0; s <= 0.5 + 1e-9; s += 0.05) {
+    const sp = sparkAt(at + s)
+    d = Math.min(d, Math.hypot(x - sp[0], heartY(y, sh, s) - sp[1]))
+  }
+  return d
+}
+/**
+ * For a shell whose place is set by hand: where it was set if that is off the moon, else the nearest place that is,
+ * going away from the moon first, with its heart in the frame, well up off the ground, and no nearer the spark.
+ */
+function offMoon(at: number, p: Pt, sh: Shape): Pt {
+  if (clearOfMoon(at, p[0], p[1], sh)) return p
+  const keep = Math.min(sparkGap(at, p[0], p[1], sh), 0.9 * reachOf(sh))
+  const m = moonOf(at)
+  const away = Math.atan2(p[1] - m.y, p[0] - m.x)
+  const turns = Array.from({ length: 24 }, (_, i) => (i % 2 ? -1 : 1) * Math.ceil(i / 2) * (Math.PI / 12)).filter((a, i, all) => all.indexOf(a) === i)
+  for (let d = 0.25; d <= 7; d += 0.25) {
+    for (const turn of turns) {
+      const x = p[0] + d * Math.cos(away + turn)
+      const y = p[1] + d * Math.sin(away + turn)
+      const c = camAt(at)
+      if (Math.abs(x - c.x) > (8 * c.h) / 9 - 0.5 || y < c.y - c.h / 2 + 0.5 || y > GY - 2) continue
+      if (clearOfMoon(at, x, y, sh) && sparkGap(at, x, y, sh) >= keep) return [x, y]
+    }
+  }
+  return p
+}
+/**
+ * Whether a burst breaks on the moon (for a check). Mines are fans thrown up off the ground, so their heart is on the
+ * ground, not in the sky; the Titan's flower is meant to take the whole sky, and a bank of its smoke is laid across the
+ * moon (`MOON_THEN`) so the moon is a smudge behind it.
+ */
+export function onMoon(b: Burst): boolean {
+  if (b.kind === 'mine' || b.kind === 'titan') return false
+  return !clearOfMoon(b.at, b.x, b.y, b)
+}
+
+/*
  * The racks are Roman candles. Each tube fires a comet as the spark crosses its rack (one, two, three, four), and then
  * again on every backbeat after, each star breaking into a small burst on the next backbeat and climbing a little
  * higher than the last. So the sky over the racks builds a backbeat at a time: 1, 3, 6, 10 comets a backbeat, and
@@ -494,6 +667,9 @@ for (let i = 0; i < 4; i++) {
     for (let s = 0; s < CANDLE_SHOTS[i]; s++) {
       const at = beat(259 + 2 * i + 2 * s)
       const next = beat(261 + 2 * i + 2 * s)
+      const v = 7.4 * (0.75 + 0.45 * hash(i * 7 + s, j, 4)) * (1 + 0.06 * s)
+      const col = s === 0 ? RACK_COLS[i][j] : SKY_COLS[(i + 2 * j + 3 * s) % SKY_COLS.length]
+      const star: Shape = { kind: 'small', col, n: 11 + 2 * s + Math.round(5 * hash(i * 7 + s, j, 5)), v, k: 4.0, gs: 6.5, life: 0.95 + 0.05 * s, trail: 0.22, wash: s === 0 ? 0.12 : 0.035 }
       // Each a little different: how high it climbs, how wide it breaks. Every star climbs higher than the one before.
       let up = s === 0 ? 2.0 + 0.25 * i + 0.9 * hash(i, j, 3) : 2.5 + 0.6 * s + 0.25 * i + 0.8 * hash(i * 7 + s, j, 13)
       // Never breaking on the spark: well clear of it as it rides the gerb up.
@@ -503,10 +679,16 @@ for (let i = 0; i < 4; i++) {
         if (Math.hypot(b[0] - sp[0], b[1] - sp[1]) >= 2.2) break
         up += 0.35
       }
+      // But never over the frame's top either: the camera is down with the spark on the gerb and the wire, so the
+      // later stars climb only as high as the sky the frame shows, and break whole in it.
+      let ceiling = -Infinity
+      for (let q = 0; q <= 0.3 + 1e-9; q += 0.05) ceiling = Math.max(ceiling, frameTop(next + q) + reachOf(star) + 0.3)
+      up = Math.min(up, muzzle[1] - ceiling)
       const b: Pt = [muzzle[0] + Math.sin(tube.lean) * up * 1.4, muzzle[1] - up]
-      const v = 7.4 * (0.75 + 0.45 * hash(i * 7 + s, j, 4)) * (1 + 0.06 * s)
-      const col = s === 0 ? RACK_COLS[i][j] : SKY_COLS[(i + 2 * j + 3 * s) % SKY_COLS.length]
-      shell(at, next, muzzle, b, { kind: 'small', col, n: 11 + 2 * s + Math.round(5 * hash(i * 7 + s, j, 5)), v, k: 4.0, gs: 6.5, life: 0.95 + 0.05 * s, trail: 0.22, wash: s === 0 ? 0.12 : 0.035 }, true)
+      const sp = sparkAt(next)
+      // A star with no room left to break in the sky the frame shows, clear of the spark and the moon: its tube is spent.
+      if (up < 1.2 || Math.hypot(b[0] - sp[0], b[1] - sp[1]) < 2.2 || !clearOfMoon(next, b[0], b[1], star)) continue
+      shell(at, next, muzzle, b, star, true)
       // A repeat's smoke is a wisp: the first shot's puff already hangs there.
       if (s > 0) {
         OWN_SMOKE.add(RISES[RISES.length - 1])
@@ -521,55 +703,13 @@ for (let i = 0; i < 4; i++) {
  * shells go up off the far bank (only the flash of each launch is seen, and its glint in the water), and break over
  * the wire on the next backbeat, more of them each bar and bigger, until the last volley breaks on the crash. They
  * break in the sky the spark is crossing (behind it and ahead of it, never on it), so the whole of the last phrase
- * is a sky filling up over the Niagara.
+ * is a sky filling up over the Niagara. Where the frame is close on the wire they break low, at the wire and under it,
+ * behind the pouring curtain (they are across the river): whole in the frame, and never round the moon.
  */
 /** The far bank: where the plain meets the river (`drawGround`'s river top). */
 const FAR_BANK = GY - 1.3
 const VOLLEY_N = [1, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7]
 const VOLLEY_KINDS: Kind[] = ['peony', 'chrys', 'palm', 'peony', 'willow', 'chrys', 'peony']
-/**
- * Where the moon is, from the spark: it holds its place in the frame (`night.ts`), so it rides with the camera, which
- * runs the wire a little ahead of the spark, draws back over the last bar and opens out on the crash. Offsets from the
- * spark, measured from the show's own camera every 0.3 s (the director's `dev` moon probe; re-measure if the camera
- * keys in `fireworks.ts` change). No shell breaks on it: a burst round the moon makes the moon its bright round core.
- */
-const MOON_KEYS: [number, number, number][] = [
-  [127.30, 4.65, -4.21],
-  [127.60, 4.52, -3.73],
-  [127.90, 4.64, -3.04],
-  [128.20, 4.75, -2.81],
-  [128.50, 5.23, -1.18],
-  [128.80, 5.28, -0.81],
-  [129.10, 5.29, -0.72],
-  [129.40, 5.34, -0.69],
-  [129.70, 5.37, -0.68],
-  [130.00, 5.40, -0.67],
-  [130.30, 5.43, -0.67],
-  [130.60, 5.46, -0.67],
-  [130.90, 5.49, -0.68],
-  [131.20, 5.51, -0.68],
-  [131.50, 5.54, -0.69],
-  [131.80, 5.56, -0.71],
-  [132.10, 5.55, -0.84],
-  [132.40, 5.35, -1.28],
-  [132.70, 4.99, -1.83],
-  [133.00, 4.51, -2.32],
-  [133.30, 3.94, -2.58],
-  [133.60, 3.32, -2.51],
-  [133.90, 4.10, -3.31],
-  [134.20, 6.00, -5.96],
-  [134.50, 6.57, -4.37],
-  [134.80, 6.40, -2.92],
-]
-const moonFrom = (t: number): Pt => {
-  let i = 0
-  while (i < MOON_KEYS.length - 2 && t > MOON_KEYS[i + 1][0]) i++
-  const [ta, xa, ya] = MOON_KEYS[i]
-  const [tb, xb, yb] = MOON_KEYS[i + 1]
-  const u = Math.max(0, Math.min(1, (t - ta) / (tb - ta)))
-  const sp = sparkAt(t)
-  return [sp[0] + xa + (xb - xa) * u, sp[1] + ya + (yb - ya) * u]
-}
 const volleyBursts: Burst[] = []
 VOLLEY_N.forEach((m, v) => {
   const from = beat(267 + 2 * v)
@@ -589,44 +729,42 @@ VOLLEY_N.forEach((m, v) => {
     // Bigger each bar: more stars, thrown wider, flashing harder.
     const grow = v / (VOLLEY_N.length - 1)
     const sv = (6.6 + 3.2 * grow) * (0.85 + 0.3 * hash(v, i, 24))
-    const big: Omit<Burst, 'at' | 'x' | 'y' | 'seed'> =
+    const big: Shape =
       kind === 'palm'
         ? { kind, col: col === FW.fwWhite ? FW.fwRed : col, tail: FW.fwGold, n: 8, v: sv, k: 2.2, gs: 4.8, life: 1.5, trail: 0.5, wash: 0.05 + 0.08 * grow }
         : kind === 'willow'
           ? { kind, col: FW.fwGold, tail: FW.fwGold, n: 26, v: sv * 0.8, k: 2.8, gs: 5.2, life: 1.8, trail: 0.7, wash: 0.05 + 0.07 * grow }
           : { kind, col, tail: kind === 'chrys' ? FW.fwGold : undefined, n: Math.round(20 + 14 * grow), v: sv, k: 3.6, gs: 6, life: 1.15 + 0.3 * grow, trail: 0.28, wash: 0.05 + 0.1 * grow }
     // Where the sky is too full for a big shell, a small one (a finale mixes its calibres).
-    const small: Omit<Burst, 'at' | 'x' | 'y' | 'seed'> = { kind: 'small', col, n: 14 + Math.round(4 * grow), v: 5.2 + 1.2 * grow, k: 4.0, gs: 6.5, life: 1.0, trail: 0.22, wash: 0.04 }
-    // Where it may break: in the frame; the spark keeps a clear patch of sky while the stars fly out (their drooping
-    // trails may fall past it later); not on the moon; and apart from every other shell still burning, so each reads
-    // as its own.
-    const fits = (bx: number, burst: Omit<Burst, 'at' | 'x' | 'y' | 'seed'>, y: number): boolean => {
-      const reach = burst.v / burst.k
+    const small: Shape = { kind: 'small', col, n: 14 + Math.round(4 * grow), v: 5.2 + 1.2 * grow, k: 4.0, gs: 6.5, life: 1.0, trail: 0.22, wash: 0.04 }
+    // Where it may break: in the frame, its flower whole under the frame's top; the spark keeps a clear patch of sky
+    // while the stars fly out (their drooping trails may fall past it later); off the moon; and apart from every other
+    // shell still burning, so each reads as its own.
+    const fits = (bx: number, burst: Shape, y: number): boolean => {
+      const reach = reachOf(burst)
       if (bx < x0 - 1.0 || bx > x1 + 0.5) return false
+      const c = camAt(to)
+      if (Math.abs(bx - c.x) > (8 * c.h) / 9 - 0.6) return false
       // Not straight over it either: a burst breaking above the spark reads as the spark's own.
       if (Math.abs(bx - sp[0]) < 1.4 && sp[1] - y < 2.8) return false
       for (let s = 0; s <= burst.life * 0.5; s += 0.05) {
         const sp2 = sparkAt(Math.min(to + s, CRASH))
-        const E = (1 - Math.exp(-burst.k * s)) / burst.k
-        const cy = y + (burst.gs / burst.k) * (s - E)
-        if (Math.hypot(bx - sp2[0], cy - sp2[1]) < 0.95 * reach * (1 - Math.exp(-burst.k * s)) + (burst.kind === 'palm' ? 1.5 : 0.9)) return false
+        if (Math.hypot(bx - sp2[0], heartY(y, burst, s) - sp2[1]) < 0.95 * reach * (1 - Math.exp(-burst.k * s)) + (burst.kind === 'palm' ? 1.5 : 0.9)) return false
       }
-      // The moon rides with the camera, so it slides across the sky behind a burst: keep it off the bright part.
-      for (let s = 0; s <= 0.55; s += 0.05) {
-        const mo = moonFrom(to + s)
-        if (Math.hypot(bx - mo[0], y - mo[1]) < 1.4 + 0.5 * reach * (1 - Math.exp(-burst.k * s))) return false
-      }
+      if (!underTop(to, y, burst) || !clearOfMoon(to, bx, y, burst)) return false
       return volleyBursts.every((o) => o.at + o.life * 0.6 < to || Math.hypot(bx - o.x, y - o.y) >= 0.35 * (reach + o.v / o.k) + (o.at === to ? 0.7 : 0.2))
     }
-    // The nearest place that fits to where it was aimed: at its height, or a little lower behind the spark (over the
-    // curtain it has lit) or higher, then the same for a small shell.
+    // The nearest place that fits to where it was aimed: at its height, or lower, down to a cell and a half under the
+    // wire (they are across the river, so a low one breaks behind the curtain), or a little higher; then the same for
+    // a small shell. A big shell broken low is better than a small one broken high.
     let x = NaN
     let burst = big
     search: for (const option of [big, small]) {
       for (let d = 0; d <= 6; d += 0.25) {
-        for (const dy of [0, 1.0, -0.7]) {
+        for (const dy of [0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, -0.7]) {
+          // (On the last two the camera has drawn back over the whole curtain and the finale: they stay up in the sky.)
+          if (y0 + dy > WIRE_Y + 1.5 || (late && dy > 1.0)) continue
           for (const bx of [want + d, want - d]) {
-            if (dy > 0 && bx > sp[0] - 2.4) continue
             if (fits(bx, option, y0 + dy)) {
               x = bx
               y = y0 + dy
@@ -657,7 +795,7 @@ export const GUN_H = 1.3
 export const GUN_W = 0.36
 const LAUNCH = [CRASH, C(1), C(2), C(3), T5_AT, T6_AT, C(7), C(8)]
 const BURST_AT = [C(2), C(3), C(4), C(5), C(7), C(8), C(9), C(10)]
-const BATTERY_BURSTS: Omit<Burst, 'at' | 'x' | 'y' | 'seed'>[] = [
+const BATTERY_BURSTS: Shape[] = [
   { kind: 'chrys', col: FW.fwGold, tail: FW.fwGold, n: 64, v: 15, k: 3.3, gs: 5.5, life: 2.0, trail: 0.5, wash: 0.9 },
   { kind: 'peony', col: FW.fwRed, n: 46, v: 13, k: 3.6, gs: 6, life: 1.7, trail: 0.3, wash: 0.85 },
   { kind: 'palm', col: FW.fwGreen, tail: FW.fwGold, n: 9, v: 8.5, k: 2.0, gs: 4.5, life: 2.1, trail: 0.6, wash: 0.55 },
@@ -667,8 +805,11 @@ const BATTERY_BURSTS: Omit<Burst, 'at' | 'x' | 'y' | 'seed'>[] = [
   { kind: 'peony', col: FW.fwWhite, tail: FW.fwRed, n: 42, v: 12.5, k: 3.6, gs: 6, life: 1.7, trail: 0.3, wash: 0.5 },
   { kind: 'chrys', col: FW.fwGreen, tail: FW.fwGold, n: 60, v: 15, k: 3.3, gs: 5.5, life: 2.0, trail: 0.5, wash: 0.9 },
 ]
-/** Where each battery shell bursts: over the battery and the wheel, rippling right with the chain toward the Titan. */
-const BATTERY_B: Pt[] = [
+/**
+ * Where each battery shell bursts: over the battery and the wheel, rippling right with the chain toward the Titan, and
+ * each moved off the moon if the camera has brought the moon there (`offMoon`).
+ */
+const BATTERY_B: Pt[] = ([
   [WHEEL[0] - 5.2, GY - 7.3],
   [WHEEL[0] - 8.6, GY - 5.9],
   [WHEEL[0] - 1.2, GY - 6.6],
@@ -677,7 +818,7 @@ const BATTERY_B: Pt[] = [
   [WHEEL[0] + 5.4, GY - 6.8],
   [LEADER_FOOT[0] - 3.8, GY - 5.8],
   [LEADER_FOOT[0] + 0.4, GY - 7.2],
-]
+] as Pt[]).map((b, i) => offMoon(BURST_AT[i], b, BATTERY_BURSTS[i]))
 /** Each gun is laid toward where its shell will burst. */
 export const GUNS: Gun[] = LAUNCH.map((at, i) => {
   const x = BATTERY_X0 + 0.66 * i
@@ -694,13 +835,18 @@ MINES_X.forEach((x, i) =>
   BURSTS.push({ at: CRASH, x, y: GY - 0.3, kind: 'mine', col: MINE_COLS[i], tail: FW.fwGold, n: 30, v: 19.5 + 2.5 * hash(i, 9), k: 1.65, gs: 9, life: 1.7, trail: 0.34, wash: i === 2 ? 1.0 : 0.15, fan: 0.46, seed: 100 + i }),
 )
 
-/* The Titan, and the two guns flanking it. */
+/*
+ * The Titan's two escort guns, both on its leader's side. The moon hangs up and right of the Titan in its frame, and a
+ * shell broken on the right puts the moon at its heart; so the second gun stands behind the first and lays its shell
+ * lower and farther out, a blue palm under the red one, and the sky right of the Titan is the moon's.
+ */
 export const FLANK: Gun[] = [
   { x: LEADER_FOOT[0] - 0.85, y: GY, w: 0.34, h: 1.25, lean: -0.3, fires: [DIVE] },
-  { x: TITAN_X + 1.3, y: GY, w: 0.34, h: 1.25, lean: 0.3, fires: [DIVE] },
+  { x: LEADER_FOOT[0] - 1.55, y: GY, w: 0.34, h: 1.1, lean: -0.42, fires: [DIVE] },
 ]
-shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[0]), [TITAN_X - 4.2, GY - 6.4], { kind: 'palm', col: FW.fwRed, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
-shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[1]), [TITAN_X + 4.2, GY - 6.2], { kind: 'palm', col: FW.fwBlue, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 })
+const FLANK_PALM: Shape = { kind: 'palm', col: FW.fwRed, tail: FW.fwGold, n: 9, v: 9, k: 2.0, gs: 4.5, life: 2.1, trail: 0.65, wash: 0.6 }
+shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[0]), offMoon(FLANK_BURST, [TITAN_X - 4.2, GY - 6.4], FLANK_PALM), FLANK_PALM)
+shell(DIVE, FLANK_BURST, gunMuzzle(FLANK[1]), offMoon(FLANK_BURST, [TITAN_X - 5.8, GY - 3.4], FLANK_PALM), { ...FLANK_PALM, col: FW.fwBlue })
 /**
  * The Titan's shell: the spark rides it up, so no rise of its own is drawn beyond the tail under the spark. The biggest
  * burst of the show, on the loudest chord of the coda: its stars break out to about 11 cells (three quarters and more
@@ -716,15 +862,16 @@ BURSTS.push(TITAN)
 /* The salute barrage: six flash-bangs round the falling spark, from a rack of short tubes past the crate. */
 export const SALUTE_RACK: Pt = [REST[0] + 5.4, GY]
 const SALUTE_OFF: Pt[] = [[-1.7, -0.5], [1.6, -1.1], [-1.4, 1.0], [1.9, 0.4], [-2.1, -0.9], [1.3, -1.7]]
+const SALUTE: Shape = { kind: 'salute', col: FW.fwWhite, n: 20, v: 55, k: 26, gs: 0, life: 0.34, trail: 0.17, wash: 0.6 }
 export const SALUTES = HAMMERS.map((at, j) => {
   const s = sparkAt(at)
-  const b: Pt = [s[0] + SALUTE_OFF[j][0], Math.min(GY - 1.6, s[1] + SALUTE_OFF[j][1])]
+  const b = offMoon(at, [s[0] + SALUTE_OFF[j][0], Math.min(GY - 1.6, s[1] + SALUTE_OFF[j][1])], SALUTE)
   const a: Pt = [SALUTE_RACK[0] - 0.3 + 0.12 * j, GY - 0.55]
   return { at, from: at - 0.42, a, b }
 })
 SALUTES.forEach((s, j) => {
   RISES.push({ from: s.from, to: s.at, a: s.a, b: s.b, col: FW.fwWhite })
-  BURSTS.push({ at: s.at, x: s.b[0], y: s.b[1], kind: 'salute', col: FW.fwWhite, n: 20, v: 55, k: 26, gs: 0, life: 0.34, trail: 0.17, wash: j === 5 ? 0.9 : 0.6, seed: 300 + j })
+  BURSTS.push({ ...SALUTE, at: s.at, x: s.b[0], y: s.b[1], wash: j === 5 ? 0.9 : 0.6, seed: 300 + j })
 })
 
 BURSTS.sort((a, b) => a.at - b.at)
