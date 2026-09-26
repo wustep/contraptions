@@ -650,6 +650,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 /* One who is not a ball (TARS): a square in the disc's own footprint, so it and its line sit in the column with the balls. */
 .stage-words .cast .swatch.slab { border-radius: 0.1em; }
+/* A card over a light sky (`TitleCard.plain`): its role and "as" lines in the card's cream, not gold. */
+.stage-words .card.plain .role, .stage-words .card.plain .cast .as { color: #ECE5D3; }
 .stage-words .note { font-size: calc(var(--u) * 1.95); font-style: italic; opacity: 0.8; margin-top: calc(var(--u) * 0.9); }
 .stage-words .card .name + .note { margin-top: calc(var(--u) * 1.6); }
 .stage-words .note.fine { font-size: calc(var(--u) * 1.65); opacity: 0.58; margin-top: calc(var(--u) * 1.4); }

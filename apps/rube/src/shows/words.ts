@@ -14,7 +14,7 @@ import type { TitleCard } from './registry'
 
 const FACE = '"Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif'
 const INK = '#ECE5D3'
-const GOLD = '#D9A441'
+const GOLD_INK = '#D9A441'
 const GLOW = 'rgba(244, 238, 223, 0.28)'
 /** The page's own line height, which the role and the notes inherit. */
 const LEADING = 1.5
@@ -52,7 +52,9 @@ function line(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 }
 
 /** One card, whole, at full light: its top middle at (cx, y). */
-function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u: number): void {
+function card(ctx: CanvasRenderingContext2D, c: TitleCard, cx: number, y: number, u0: number): void {
+  const u = u0 * (c.scale ?? 1)
+  const GOLD = c.plain ? INK : GOLD_INK
   const glow = u * 1.4
   if (c.role) {
     y += line(ctx, c.role.toUpperCase(), cx, y, { size: u * 1.9, weight: 600, spacing: 0.34 }, LEADING, GOLD, 0)
@@ -118,7 +120,7 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
   ctx.fill()
   ctx.shadowColor = 'transparent'
   // The stylesheet's plain `.swatch` also reaches it: a 2px border in the gold of its line, inside the disc.
-  ctx.fillStyle = GOLD
+  ctx.fillStyle = GOLD_INK
   shape(0)
   ctx.fill()
   ctx.fillStyle = slab ? spec.slice(5) : spec

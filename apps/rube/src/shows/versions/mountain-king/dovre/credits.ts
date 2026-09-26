@@ -4,8 +4,9 @@ import { END, LAST2 } from './music'
 import { PEER, TROLL, WOMAN } from './worlds'
 
 /**
- * The end credits: after the last chord has rung out, over the dawn, a card at a time, set by the page
- * (`Performance.titles`), since a show's canvas sets no type. They come up high in the frame, over the sky, and the
+ * The end credits: once he has landed on the shoulder, over the dawn, a card at a time, set by the page
+ * (`Performance.titles`), since a show's canvas sets no type. They come up high in the frame, over the sky, a size up
+ * and in cream (amber on the pale sky read weakly); on a tall phone they go up into the sky over the 16:9 box. The
  * last is gone before the end.
  */
 
@@ -19,17 +20,20 @@ export interface Card {
   notes?: string[]
 }
 
-const FORM = 1.3
-const GO = 1.0
+const FORM = 1.0
+const GO = 0.8
 const OVERLAP = 0.2
 
-/** The credits start once the last chord has rung out. */
-export const CREDITS_AT = END + 0.5
+/** The credits start once the last chord has rung out and he has come down on the shoulder (153.17) and bounced. */
+export const CREDITS_AT = Math.max(END + 0.5, 153.7)
+/** A size up from the page's usual, and how far into a tall stage's extra sky they go. */
+const SCALE = 1.3
+const LIFT = 0.62
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.6, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 2.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 3.8,
+    hold: 3.4,
     role: 'With',
     names: [
       ['Peer Gynt', 'the red ball', PEER],
@@ -37,14 +41,14 @@ const script: Omit<Card, 'at'>[] = [
       ['The Mountain King', 'and his trolls', `slab:${TROLL.hide}`],
     ],
   },
-  { hold: 2.4, role: 'After', names: ['Henrik Ibsen'], notes: ['Peer Gynt (1867), Act Two'] },
+  { hold: 2.0, role: 'After', names: ['Henrik Ibsen'], notes: ['Peer Gynt (1867), Act Two'] },
   {
-    hold: 3.8,
+    hold: 3.2,
     role: 'Music',
     names: ['Edvard Grieg'],
     notes: ['“In the Hall of the Mountain King”, from Peer Gynt', 'Czech National Symphony Orchestra, for Musopen · public domain'],
   },
-  { hold: 2.2, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 1.8, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
@@ -64,7 +68,7 @@ export const LAST_GONE = (() => {
 })()
 
 /** The show's length: the recording's last chord, its ring, and the credits over the dawn after it. */
-export const DURATION = Math.ceil(LAST_GONE + 1.5)
+export const DURATION = Math.ceil(LAST_GONE + 1.5 - 1e-6)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: the middle, high, over the sky. */
 const AT: [number, number] = [0.5, 0.07]
@@ -84,7 +88,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `mountain-king-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT })
+    out.push({ key: `mountain-king-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT, scale: SCALE, plain: true })
   })
   return out
 }
