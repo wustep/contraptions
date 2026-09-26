@@ -1,3 +1,4 @@
+import '../analytics'
 import { modeFromPath } from './mode-path'
 import { clientNavigation, createShell, type Shell, type ShellMode } from './shell'
 

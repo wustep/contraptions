@@ -28,7 +28,7 @@ Every world is new for this take, and there are no portals. A rocket carries the
 4. **Cooper Station** (127.5 to 207.5 s): the O'Neill cylinder from the film's last reel, seen end-on from inside. The replica farmhouse on its museum plinth, a working farm on the ring, a baseball game on the ground where it stands on end, the far-side house where old Murph waits, and a lift up a spoke to the Ranger in the hub.
 5. **Outside** (207.5 to 262.7 s): the Ranger undocks from the spinning station, crosses Saturn, goes into the wormhole, and lands at Brand's camp on Edmunds' planet, where they meet.
 
-Every part is new: the pieces, the worlds, the palettes, the sky, and the camera. Nothing comes from Machine's worlds or from the other takes. The one thing shared with the earlier [Opus 5.5] Music-sync take is the onset file for Cornfield Chase, `scripts/show-plans/cornfield-opus55-onsets.json`. That file is a measurement of the recording.
+Every part is new: the pieces, the worlds, the palettes, the sky, and the camera. Nothing comes from Machine's worlds or from the other takes. The one thing shared with the earlier Opus 5.5 take is the onset file for Cornfield Chase, `scripts/show-plans/cornfield-opus55-onsets.json`. That file is a measurement of the recording.
 
 ## The company
 

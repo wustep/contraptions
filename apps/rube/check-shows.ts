@@ -144,8 +144,8 @@ async function main(): Promise<void> {
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
   check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
-  check('come-recover is Everything, one take, Opus, with no note',
-    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus' && allAtOnce[0].note === undefined)
+  check('come-recover is Everything, one take, Opus 5.5, with no note',
+    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
   const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
   check('la-la-land is Epilogue, two takes, Fable 5.1 then Opus 5.5, with no notes',
@@ -153,7 +153,7 @@ async function main(): Promise<void> {
     lalaland.map((v) => v.label).join('|') === 'Fable 5.1|Opus 5.5' && epilogueTake?.label === 'Fable 5.1')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels are the two music-syncs', cornfield.map((v) => v.label).join('|') === '[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
+  check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
   // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
   const interstellar = shipped.works.find((w) => w.work === 'interstellar')
