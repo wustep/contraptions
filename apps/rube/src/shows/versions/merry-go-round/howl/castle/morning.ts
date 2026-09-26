@@ -373,9 +373,7 @@ export const morning = part<{ begin: number }>(
 function shots(): PartShot[] {
   const k = (t: number, x: number, y: number, cells: number): PartShot => ({ t, cells, hold: [x - OX, y] })
   return [
-    // The dark room: toward the fire's eyes, the two of them across it.
-    k(152.9, 1.5, -0.8, 4.2),
-    // Up to the engine as it coughs into life.
+    // The dark room (the camera comes in with her through the door and settles as she stops): up to the engine as it coughs into life.
     k(154.0, 1.9, -1.2, 4.8),
     // The machine running: engine, shaft, the shutters; the chair.
     k(155.3, 2.7, -1.75, 6.2),
@@ -403,8 +401,7 @@ function shots(): PartShot[] {
     // Howl at the bell-pull: the dial to green.
     k(174.6, -0.9, -1.05, 4.4),
     k(176.2, -0.1, -0.8, 4.2),
-    // Out, into the light: held still as they cross it.
-    k(177.3, 1.15, -0.72, 4.0),
-    k(MT.out, 1.2, -0.7, 4.0),
+    // Out, into the light: the camera lets go of the room and goes with them through the door.
+    { t: MT.out, cells: 4.0, off: [0.9, -0.7] },
   ]
 }

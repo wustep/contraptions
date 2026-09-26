@@ -1542,7 +1542,7 @@ export const raid = part<{ begin: number }>(
     // happens over the roofs, and the whole wide for the ship's end alone.
     const on = (t: number, cells: number, lead: number, low = 0.26): PartShot => ({ t, cells, hold: [WAY(t).p[0] + lead, -low * cells] })
     return [
-      { t: 206.3, cells: 4.7, hold: [sophieAt(206.3)[0] + 0.9, -0.82] },
+      { t: 206.3, cells: 4.7, off: [0.9, -0.82] },
       on(207.3, 5.4, 1.2, 0.2),
       on(208.4, 6.2, 1.5, 0.22),
       on(209.6, 7.0, 1.8, 0.24),

@@ -50,9 +50,13 @@ function channel(ts: number[], left: number[], right: number[]): (i: number, u: 
   }
 }
 
-export function director(where: (t: number) => Pt, shots: Shot[], duration: number): (t: number) => Framing {
-  const keys = [...shots].sort((a, b) => a.t - b.t)
-  const follow = (t: number): Pt => {
+/**
+ * Where a follow puts the camera at `t`: the ball smoothed over a short window that leans a little ahead. The score
+ * hands it a `where` that carries the ball on past its own leg at the speed it crosses the cut, so a follow on either
+ * side of a moving cut goes on at her speed instead of slowing to a stop on it.
+ */
+export function follower(where: (t: number) => Pt, duration: number): (t: number) => Pt {
+  return (t: number): Pt => {
     let x = 0
     let y = 0
     let sum = 0
@@ -66,6 +70,11 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
     }
     return [x / sum, y / sum]
   }
+}
+
+export function director(where: (t: number) => Pt, shots: Shot[], duration: number): (t: number) => Framing {
+  const keys = [...shots].sort((a, b) => a.t - b.t)
+  const follow = follower(where, duration)
   const weight = (k: Shot): number => k.w ?? (k.hold ? 1 : 0)
   // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
   const n = keys.length
@@ -85,8 +94,17 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   const wAt = ends((a, b) => [weight(a), weight(b)])
   const offX = ends((a, b) => [(a.off ?? [0, 0])[0], (b.off ?? [0, 0])[0]])
   const offY = ends((a, b) => [(a.off ?? [0, 0])[1], (b.off ?? [0, 0])[1]])
-  const holdX = ends((a, b) => [(a.hold ?? b.hold ?? [0, 0])[0], (b.hold ?? a.hold ?? [0, 0])[0]])
-  const holdY = ends((a, b) => [(a.hold ?? b.hold ?? [0, 0])[1], (b.hold ?? a.hold ?? [0, 0])[1]])
+  // A follow key's hold is where the follow has the camera at that key, so a move between a follow and a hold goes
+  // from where the camera is to where it is going, and carries its speed on through the next key instead of
+  // stopping on it.
+  const at = keys.map((k): Pt => {
+    if (k.hold) return k.hold
+    const [fx, fy] = follow(k.t)
+    const [ox, oy] = k.off ?? [0, 0]
+    return [fx + ox, fy + oy]
+  })
+  const holdX = ends((a, b) => [at[keys.indexOf(a)][0], at[keys.indexOf(b)][0]])
+  const holdY = ends((a, b) => [at[keys.indexOf(a)][1], at[keys.indexOf(b)][1]])
   return (t: number): Framing => {
     let i = 0
     while (i + 1 < n && keys[i + 1].t <= t) i++

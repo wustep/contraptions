@@ -298,7 +298,8 @@ export const curse = part<CurseState>(
       { t: 103.8, cells: 4.5, hold: H(6.85, -1.05), w: 1 },
       // The mirror, and out of the door.
       { t: GLANCE, cells: 4.2, hold: H(8.05, -0.9), w: 1 },
-      { t: slot.end, cells: 4.5, hold: H(W0 + 0.08 + 0.9, -0.8), w: 1 },
+      // Out of the door on a follow, so the camera goes on with her through the cut into the hills.
+      { t: slot.end, cells: 4.5, off: [0.9, -0.8] },
     ]
   },
 )

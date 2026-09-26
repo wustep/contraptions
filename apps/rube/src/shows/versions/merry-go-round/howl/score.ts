@@ -1,6 +1,6 @@
 import type { BallState, Pt } from '../../../../parts'
 import type { Framing } from '../../../registry'
-import { director, type Shot } from './camera'
+import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { box, lay, standing, type Chain, type Link } from './kit'
 import { CLIMAX, CURSE, DURATION, HEART, SEAM, SLOW } from './music'
@@ -157,19 +157,38 @@ export function compose(): { show: CastleShow; camera: (t: number) => Framing } 
   // The camera: one director per leg, each following the ball only inside its own leg, and each leg opening on
   // exactly the framing the last one closed on, carried by the cut: a match cut on Sophie. Inside a leg, at a seam
   // between two parts, the incoming part's keys win: the outgoing part's keys after its own slot are dropped.
+  //
+  // A follow sees her carried on past either end of its leg at the speed she crosses the cut (so it neither slows to a
+  // stop on the cut nor starts from one). Where she crosses a cut moving, the leg opens on a follow, offset so the
+  // framing is exactly the one carried across: the camera goes on at her speed through the cut. Where she crosses at
+  // rest, it opens on a hold of that framing.
   const cams: ((t: number) => Framing)[] = []
   legs.forEach((leg, i) => {
     const chain = chains[i]
     const slots = chain.placed.map((pl) => [pl.start, pl.start + pl.span] as const)
     const keys: Shot[] = chain.shots.filter((s) => s.t > leg.from + 1e-6 && s.t <= leg.to + 1e-6 && slots.some(([a, b]) => s.t >= a - 1e-6 && s.t <= b + 1e-6))
+    const a0 = show.where(leg.from)
+    const a1 = show.where(Math.min(leg.to - 1e-6, leg.from + 0.02))
+    const b1 = show.where(leg.to - 1e-6)
+    const b0 = show.where(Math.max(leg.from, leg.to - 0.02))
+    const vIn: Pt = [(a1[0] - a0[0]) / 0.02, (a1[1] - a0[1]) / 0.02]
+    const vOut: Pt = [(b1[0] - b0[0]) / 0.02, (b1[1] - b0[1]) / 0.02]
+    const where = (s: number): Pt => {
+      if (s < leg.from) return [a0[0] + vIn[0] * (s - leg.from), a0[1] + vIn[1] * (s - leg.from)]
+      if (s > leg.to - 1e-6) return [b1[0] + vOut[0] * (s - leg.to), b1[1] + vOut[1] * (s - leg.to)]
+      return show.where(s)
+    }
     if (i === 0) keys.unshift(keys.length ? { ...keys[0], t: 0 } : { t: 0, cells: 5 })
     else {
       const f = cams[i - 1](leg.from)
       const [sx, sy] = show.shift(i - 1, i)
-      keys.unshift({ t: leg.from, cells: f.cells, hold: [f.x + sx, f.y + sy], w: 1 })
+      const carried: Pt = [f.x + sx, f.y + sy]
+      if (Math.hypot(vIn[0], vIn[1]) > 0.05) {
+        const [fx, fy] = follower(where, DURATION)(leg.from)
+        keys.unshift({ t: leg.from, cells: f.cells, off: [carried[0] - fx, carried[1] - fy], w: 0 })
+      } else keys.unshift({ t: leg.from, cells: f.cells, hold: carried, w: 1 })
     }
     if (keys.length === 1) keys.push({ t: Math.min(leg.to, leg.from + 1.2), cells: 5 })
-    const where = (s: number): Pt => show.where(Math.max(leg.from, Math.min(leg.to - 1e-6, s)))
     cams.push(director(where, keys, DURATION))
   })
   const camera = (t: number): Framing => {
