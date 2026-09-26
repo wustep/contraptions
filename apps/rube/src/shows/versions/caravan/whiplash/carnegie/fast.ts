@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
+import { drawStick } from '../drums'
 import { alpha, box, carried, part, route, type Ctx, type PartShot, type Slot, type Way } from '../kit'
 import { level } from '../music'
 import { G_EARTH } from '../physics'
@@ -28,7 +29,7 @@ import { ARCH, CLOSE, FLOOR, JIM_WINGS, KIT_AT, RISERS } from './stage'
  * gives in (388.2): a two-shot, the engine and his hand coming up to beat with the stomps. On the build's biggest
  * kick (394.62) a second stage: the post telescopes up, a second head swings round off it over the rack tom and
  * seats, and from then its two sticks double the roll's accents on the tom. Across the stage to his father in the
- * wings for the loudest phrase's arrival (396.7), the stage's light lifted on him (`drawWings`); back to the whole
+ * wings for the loudest phrase's arrival (396.7), the stage's light lifted on him (`hall.ts` `jimLit`); back to the whole
  * grown machine and Fletcher conducting it with his whole arm. Then in on the peak (404-405), and out to the whole
  * hall in its pool of light, the light up with the music and the band watching from the dark, held; then a hard push
  * in onto the sticks' blur (414.5), and up to him on the treadle with Fletcher's beating hand at the edge of the
@@ -195,9 +196,7 @@ function build(slot: Slot) {
   segs[segs.length - 1] = { ...segs[segs.length - 1], to: snare }
 
   return {
-    // The machine's own cells, and the wings where his father stands (the stage's light lifts on him there while
-    // the camera visits him: `drawWings`).
-    cells: [...box(-2.5, -3, 3, 3), ...box(JIM_WINGS[0] - 1, JIM_WINGS[1] - 2, JIM_WINGS[0] + 1, JIM_WINGS[1])],
+    cells: box(-2.5, -3, 3, 3),
     exit: [0, 0] as Pt,
     lane: { segs, fire: at(BOUNCE) },
     state: { begin: slot.begin },
@@ -293,19 +292,9 @@ function withAlpha(p: p5, a: number, fn: () => void): void {
   ctx.globalAlpha = was
 }
 
-/** A stick from its butt to its tip: the canon's ink and hickory, with its bead. */
+/** A stick from its butt to its tip, in cells: the kit's own (`drums.ts` `drawStick`), hickory with its bead. */
 function stick(p: p5, c: Ctx, butt: Pt, tip: Pt): void {
-  const { k, ink, weight } = c
-  p.stroke(ink)
-  p.strokeWeight(weight * 2.6)
-  p.line(butt[0] * k, butt[1] * k, tip[0] * k, tip[1] * k)
-  p.stroke(KIT.hickory)
-  p.strokeWeight(weight * 1.3)
-  p.line(butt[0] * k, butt[1] * k, tip[0] * k, tip[1] * k)
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(KIT.hickory)
-  p.ellipse(tip[0] * k, tip[1] * k, 0.07 * k, 0.05 * k)
+  drawStick(p, c, butt, Math.atan2(tip[1] - butt[1], tip[0] - butt[0]), Math.hypot(tip[0] - butt[0], tip[1] - butt[1]))
 }
 
 /** A rack stick's butt and tip with its tip `h` over the head, turned about its hinge. */
@@ -326,7 +315,9 @@ function pose2(which: 'left' | 'right', h: number): { butt: Pt; tip: Pt } {
 function drawRack(p: p5, c: Ctx, T: number): void {
   const up = tubeAt(T)
   if (up < 0.004) return
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  // Its edges in the iron's own dark, never the cream ink (as the engine's).
+  const ink = mixHex(HALL.black, KIT.shade, 0.22)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const { yaw, lift } = rackHead(T)
   // All of it rides the tube: `drop` is how far below its full height it still is.
@@ -477,32 +468,6 @@ function drawSwell(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
-/** The camera's visit to his father: up over the move there, down over the move back. */
-const wingsOn = (T: number): number => ease((T - (JIM_IN - 1.2)) / 1.4) * (1 - ease((T - (JIM_OUT - 0.2)) / 1.6))
-
-/**
- * The stage's light in the wings, lifted while the camera is with his father (as the hall lifts it for the hush's
- * visit): the same low warm pool on the floor at his feet, laid over the hall's own faint one.
- */
-function drawWings(p: p5, c: Ctx, T: number): void {
-  const on = wingsOn(T)
-  if (on < 0.002) return
-  const { k } = c
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const r = 1.9 * k
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.translate((JIM_WINGS[0] + 0.25) * k, (FLOOR - 0.55) * k)
-  ctx.scale(1, 0.62)
-  const q = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
-  q.addColorStop(0, `rgba(227, 176, 91, ${(0.12 * on).toFixed(3)})`)
-  q.addColorStop(0.55, `rgba(227, 176, 91, ${(0.045 * on).toFixed(3)})`)
-  q.addColorStop(1, 'rgba(227, 176, 91, 0)')
-  ctx.fillStyle = q
-  ctx.fillRect(-r, -r, 2 * r, 2 * r)
-  ctx.restore()
-}
-
 export const fast = part<FastState>(
   {
     name: 'fast',
@@ -511,7 +476,6 @@ export const fast = part<FastState>(
       drawEngine(p, c, T)
       drawRack(p, c, T)
       drawSwell(p, c, T)
-      drawWings(p, c, T)
     },
   },
   build,

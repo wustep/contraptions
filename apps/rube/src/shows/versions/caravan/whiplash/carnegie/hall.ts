@@ -581,10 +581,10 @@ export function hallLight(p: p5, c: Ctx, T: number): void {
 
 /**
  * How much the wings' light is up for Jim, 0..1: while the camera is with him. The solo's look across at him
- * (`solo.ts`, 304.8-307.9), the hush's visit (358.6-367.8), and the build's (`fast.ts`, 395.5-399.2).
+ * (`solo.ts`, 304.8-307.9), the hush's visit (358.6-367.8), and the build's (`fast.ts`, 396.7-398.9).
  */
 export function jimLit(T: number): number {
-  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.6, 367.8), visit(T, 395.3, 399.4))
+  return Math.max(visit(T, 303.6, 308.4), visit(T, 358.6, 367.8), visit(T, 395.4, 400.4))
 }
 
 const smoothIn = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))

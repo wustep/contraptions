@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt } from '../../../../../parts'
+import { drawStick } from '../drums'
 import { alpha, hash, type Ctx } from '../kit'
 import { level } from '../music'
 import { HALL, KIT } from '../worlds'
@@ -141,19 +142,9 @@ const ease = (u: number): number => {
   return v * v * (3 - 2 * v)
 }
 
-/** A stick from its butt to its tip, in cells: the canon's ink and hickory, with its bead at the tip. */
+/** A stick from its butt to its tip, in cells: the kit's own (`drums.ts` `drawStick`), hickory with its bead. */
 function stick(p: p5, c: Ctx, butt: Pt, tip: Pt): void {
-  const { k, ink, weight } = c
-  p.stroke(ink)
-  p.strokeWeight(weight * 2.6)
-  p.line(butt[0] * k, butt[1] * k, tip[0] * k, tip[1] * k)
-  p.stroke(KIT.hickory)
-  p.strokeWeight(weight * 1.3)
-  p.line(butt[0] * k, butt[1] * k, tip[0] * k, tip[1] * k)
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(KIT.hickory)
-  p.ellipse(tip[0] * k, tip[1] * k, 0.07 * k, 0.05 * k)
+  drawStick(p, c, butt, Math.atan2(tip[1] - butt[1], tip[0] - butt[0]), Math.hypot(tip[0] - butt[0], tip[1] - butt[1]))
 }
 
 /** The stick's butt and tip when its tip is `h` over the head (turned about its hinge). */

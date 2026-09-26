@@ -7,7 +7,7 @@ import { alpha, smooth, type Ctx } from '../kit'
 import { BURST, RIDE, level } from '../music'
 import { G_EARTH } from '../physics'
 import { HALL, KIT } from '../worlds'
-import { hallLight, kitLight, kitSince } from './hall'
+import { kitLight, kitSince } from './hall'
 import { FLOOR, KIT_AT } from './stage'
 import { BOARD } from './rubato-hits'
 
@@ -746,17 +746,6 @@ function drawSurge(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
-/**
- * The hall's light over what this part draws behind the kit (the case, and the drums redrawn in front of it): the
- * hall's own (`hall.ts` `hallLight`), which the hall lays over its kit and which, drawn before any part, never reaches
- * these. The case carries its own light in its fills (`drawCase`), so this is only the wash every object on the stage
- * gets. If the hall ever draws its light under its objects instead, drop this call: the case stays lit by its fills,
- * and the redrawn kit then matches the hall's unwashed one.
- */
-function relight(p: p5, c: Ctx, T: number): void {
-  hallLight(p, c, T)
-}
-
 /** The metronome at show time `T`: nothing while it is under the stage. */
 export function drawMetronome(p: p5, c: Ctx, T: number): void {
   const dy = lift(T)
@@ -767,8 +756,9 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
   const r = cradleAt(T)
   const outline = caseOutline(dy)
 
-  // Behind the kit: the case, the drums drawn again in front of it (the hall's kit, struck as the hall strikes it),
-  // and the hall's light over it all. Only inside the case's outline, so nothing else changes.
+  // Behind the kit: the case, and the drums drawn again in front of it (the hall's kit, struck as the hall strikes
+  // it). Only inside the case's outline, so nothing else changes. (The hall's light falls under everything on the
+  // stage, so none is laid over these; the case carries its own light in its fills.)
   if (outline.length) {
     ctx.save()
     ctx.beginPath()
@@ -779,7 +769,6 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
     p.translate(KX * k, KY * k)
     drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), without: ['ride', 'crash'] })
     p.pop()
-    relight(p, c, T)
     ctx.restore()
   }
 
