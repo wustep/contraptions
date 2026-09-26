@@ -19,8 +19,8 @@ import { KIT_FLOOR, KIT_LAND, type KitPiece } from '../drums'
 
 /** The corridor's floor top, and the ball's centre rolling on it. */
 export const G = FLOOR
-/** The corridor's ceiling. */
-export const CORRIDOR_TOP = -3.3
+/** The corridor's ceiling: the practice rooms' corridor's (`room.ts` `ROOM.hall`), which this one carries on. */
+export const CORRIDOR_TOP = G - 4.6
 
 /** The wall between the corridor and the room, and the door in it (hinged on the room's side, opening inward). */
 export const WALL_L = { x0: 2.35, x1: 2.65 }
@@ -85,8 +85,8 @@ export const TANNER_ASIDE: Pt = [25.05, PIT - R]
 /** The wall between the room and the far corridor, and its door (hinged on the corridor's side, opening outward). */
 export const WALL_R = { x0: 25.85, x1: 26.15 }
 export const DOOR_R_TOP = PIT - 2.95
-/** The far corridor's ceiling. */
-export const CORRIDOR_R_TOP = PIT - 3.3
+/** The far corridor's ceiling: the practice rooms' corridor's height, which the night part carries on. */
+export const CORRIDOR_R_TOP = PIT - 4.6
 
 /** The ball on the pit floor. */
 export const PIT_Y = PIT - R

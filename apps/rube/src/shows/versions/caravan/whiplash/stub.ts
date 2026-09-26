@@ -17,6 +17,7 @@ export function stub(name: string, width: number, rise = 0): Part<{ begin: numbe
       draw: (p, _s, c) => {
         const { k, ink, weight } = c
         p.push()
+        p.rectMode(p.CORNER)
         p.stroke(ink)
         p.strokeWeight(weight * 0.5)
         p.noFill()

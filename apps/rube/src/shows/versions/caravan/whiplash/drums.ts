@@ -36,7 +36,7 @@ export interface Drum {
   w: number
   depth: number
 }
-/** A cymbal: its bell's centre, its width across, and its tilt (radians; positive dips its left edge). */
+/** A cymbal: its bell's centre, its width across, and its tilt (radians; positive dips its RIGHT edge, as p5 turns). */
 export interface Cymbal {
   x: number
   y: number
@@ -53,14 +53,20 @@ export const HAT: Cymbal = { x: 1.55, y: -0.64, w: 1.17, tilt: 0 }
 export const RIDE: Cymbal = { x: -3.05, y: -1.35, w: 1.72, tilt: 0.13 }
 export const CRASH: Cymbal = { x: 0.5, y: -2.1, w: 1.45, tilt: -0.17 }
 
+/** Where the ball's centre sits on a cymbal `dx` from its bell: on the tilted bow's top, the dome's rise included. */
+function seat(s: Cymbal, dx: number): Pt {
+  const dome = 0.085 * 0.9 * Math.sin(Math.PI * Math.max(0, Math.min(1, dx / s.w + 0.5)))
+  return [s.x + dx * Math.cos(s.tilt), s.y + dx * Math.sin(s.tilt) - dome - 0.13]
+}
+
 /** Where the ball rests on each surface (its centre). The kick's is on its pedal's footboard. */
 export const KIT_LAND: Record<KitPiece, Pt> = {
   snare: [0, 0],
   rack: [RACK.x, RACK.top - 0.13],
   floor: [FLOOR_TOM.x, FLOOR_TOM.top - 0.13],
   hat: [HAT.x - 0.28, HAT.y - 0.16],
-  ride: [RIDE.x + 0.45, RIDE.y - 0.13 - 0.45 * Math.sin(RIDE.tilt) - 0.02],
-  crash: [CRASH.x + 0.35, CRASH.y - 0.13 + 0.35 * Math.sin(-CRASH.tilt) - 0.02],
+  ride: seat(RIDE, 0.45),
+  crash: seat(CRASH, 0.35),
   kick: [KICK.x + 0.78, KIT_FLOOR - 0.2],
 }
 
@@ -78,6 +84,8 @@ export interface KitLook {
   light?: number
   /** Leave a piece out (a part that draws its own snare as a machine, say). */
   without?: KitPiece[]
+  /** A cymbal knocked askew on its stand: radians added to its tilt (Carnegie's crash, in the hush). */
+  askew?: Partial<Record<'ride' | 'crash', number>>
 }
 
 const never = (): number => Infinity
@@ -101,14 +109,16 @@ export function drawKit(p: p5, c: Ctx, look: KitLook = {}): void {
   const light = look.light ?? 1
   const skip = new Set(look.without ?? [])
   p.push()
+  // Laid out by corners (the stage draws in rectMode(CENTER)): the lugs, the pedal's footboard.
+  p.rectMode(p.CORNER)
   // Back to front: the ride and the floor tom, the kick, the rack tom, the snare, the hi-hat, the crash.
-  if (!skip.has('ride')) cymbal(p, c, RIDE, cymbalSwing(since('ride'), 0.08, 1.4), light, true)
+  if (!skip.has('ride')) cymbal(p, c, RIDE, cymbalSwing(since('ride'), 0.08, 1.4) + (look.askew?.ride ?? 0), light, true)
   if (!skip.has('floor')) drum(p, c, FLOOR_TOM, shell, headDip(since('floor'), 0.06), light, 'legs')
   if (!skip.has('kick')) kick(p, c, shell, since('kick'), light)
   if (!skip.has('rack')) drum(p, c, RACK, shell, headDip(since('rack'), 0.05), light, 'mount')
   if (!skip.has('snare')) drum(p, c, SNARE, shell, headDip(since('snare'), 0.045), light, 'stand', look.blood)
   if (!skip.has('hat')) hat(p, c, look.hat ?? 0, since('hat'), light)
-  if (!skip.has('crash')) cymbal(p, c, CRASH, cymbalSwing(since('crash'), 0.16, 1.2), light, true)
+  if (!skip.has('crash')) cymbal(p, c, CRASH, cymbalSwing(since('crash'), 0.16, 1.2) + (look.askew?.crash ?? 0), light, true)
   p.pop()
 }
 

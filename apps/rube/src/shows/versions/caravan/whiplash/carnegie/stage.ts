@@ -35,10 +35,11 @@ export const FLETCHER_HOME: Pt = [PODIUM.x, FLOOR - PODIUM.h - 3.2]
 /** The stage door in the wings (house left), where Jim waits, and where he stands to watch the solo. */
 export const DOOR = { x: -9.2, w: 1.5, h: 4.2 }
 export const JIM_DOOR: Pt = [DOOR.x + 0.2, FLOOR - 0.13]
-export const JIM_WINGS: Pt = [DOOR.x + 1.6, FLOOR - 0.13]
+/** Just out of the doorway, clear of the piano's tail: where he stands to watch his son. */
+export const JIM_WINGS: Pt = [DOOR.x + 1.05, FLOOR - 0.13]
 
 /** The piano (a black grand, side on) and the upright bass: the rest of the rhythm section, beside the kit. */
-export const PIANO = { x: -6.4, w: 3.4 }
+export const PIANO = { x: -6.05, w: 3.3 }
 export const BASS = { x: 2.7 }
 
 /** The band's three risers, saxophones in front, then trombones, then trumpets, and how high each stands. */

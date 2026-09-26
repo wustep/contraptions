@@ -36,7 +36,9 @@ export interface Pose {
 }
 
 /** Lengths, in cells. The ball (his head) is 0.26 across; his arms are long, his hands large, so they read. */
-export const RIG = { shoulder: 0.2, drop: 0.16, upper: 0.42, fore: 0.4, hand: 0.24, cup: 0.2 }
+export const RIG = { shoulder: 0.24, drop: 0.17, upper: 0.52, fore: 0.48, hand: 0.3, cup: 0.2 }
+/** His chest: a black shirt-front from the shoulders to the waist, where the column goes on down. */
+const CHEST = { top: 0.1, half: 0.31, waist: 1.12, halfWaist: 0.14 }
 
 const arm = (up: number, bend: number, wrist: number, hand: HandShape): ArmPose => ({ up, bend, wrist, hand })
 
@@ -90,6 +92,8 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
   const [hx, hy] = head
   const cupY = hy + 0.1
   p.push()
+  // Laid out by corners (the stage draws in rectMode(CENTER)): the base plate, the hands.
+  p.rectMode(p.CORNER)
   // The column, from the floor to the cup.
   if (look.floor !== undefined) {
     solid(p, ink, weight * 0.8, FLETCHER)
@@ -97,7 +101,20 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
     p.quad((hx - w) * k, look.floor * k, (hx + w) * k, look.floor * k, (hx + w * 0.6) * k, (cupY + 0.06) * k, (hx - w * 0.6) * k, (cupY + 0.06) * k)
     p.rect((hx - 0.2) * k, (look.floor - 0.04) * k, 0.4 * k, 0.05 * k, 0.02 * k)
   }
-  // The arms, behind the cup.
+  // The chest: a black shirt-front, square at the shoulders and narrowing to the waist, so the rig reads as a man.
+  solid(p, ink, weight * 0.8, FLETCHER)
+  const top = hy + CHEST.top
+  const waist = hy + CHEST.waist
+  p.beginShape()
+  p.vertex((hx - CHEST.half + 0.06) * k, top * k)
+  p.vertex((hx + CHEST.half - 0.06) * k, top * k)
+  p.quadraticVertex((hx + CHEST.half) * k, top * k, (hx + CHEST.half) * k, (top + 0.08) * k)
+  p.quadraticVertex((hx + CHEST.half - 0.02) * k, (top + 0.55) * k, (hx + CHEST.halfWaist) * k, waist * k)
+  p.vertex((hx - CHEST.halfWaist) * k, waist * k)
+  p.quadraticVertex((hx - CHEST.half + 0.02) * k, (top + 0.55) * k, (hx - CHEST.half) * k, (top + 0.08) * k)
+  p.quadraticVertex((hx - CHEST.half) * k, top * k, (hx - CHEST.half + 0.06) * k, top * k)
+  p.endShape(p.CLOSE)
+  // The arms, over the chest, behind the cup.
   drawArm(p, c, [hx - RIG.shoulder, hy + RIG.drop], pose.right, look.light ?? 1)
   drawArm(p, c, [hx + RIG.shoulder, hy + RIG.drop], pose.left, look.light ?? 1)
   // The cup the ball sits in: a black crescent under it.
@@ -112,7 +129,7 @@ function drawArm(p: p5, c: Ctx, shoulder: Pt, a: ArmPose, light: number): void {
   const fa = a.up + a.bend
   const wrist: Pt = [elbow[0] + Math.cos(fa) * RIG.fore, elbow[1] + Math.sin(fa) * RIG.fore]
   // The sleeve: two black strokes with an ink edge, thicker at the shoulder.
-  for (const [w, col] of [[weight * 5.2, ink], [weight * 3.6, FLETCHER]] as const) {
+  for (const [w, col] of [[weight * 7.2, ink], [weight * 5.4, FLETCHER]] as const) {
     p.stroke(col)
     p.strokeWeight(w)
     p.noFill()
@@ -126,16 +143,20 @@ function drawArm(p: p5, c: Ctx, shoulder: Pt, a: ArmPose, light: number): void {
 /** One hand at `wrist`, pointing along `angle`, in `shape`. Pale, simple, big enough to read. */
 export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandShape, light = 1): void {
   const { k, ink, weight } = c
-  const L = RIG.hand
+  // Drawn at 0.24 of a cell and scaled up to the rig's hand, so the four shapes keep their proportions.
+  const s = RIG.hand / 0.24
+  const L = 0.24
   p.push()
+  p.rectMode(p.CORNER)
   p.translate(wrist[0] * k, wrist[1] * k)
   p.rotate(angle)
-  solid(p, ink, weight * 0.7, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
+  p.scale(s)
+  solid(p, ink, (weight * 0.7) / s, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
   if (shape === 'fist') {
     // A closed fist: a rounded block, the knuckles a soft ridge, the thumb wrapped across.
     p.rect(0, -0.085 * k, 0.17 * k, 0.17 * k, 0.06 * k)
     p.noFill()
-    p.strokeWeight(weight * 0.5)
+    p.strokeWeight((weight * 0.5) / s)
     p.line(0.13 * k, -0.06 * k, 0.13 * k, 0.06 * k)
     p.line(0.04 * k, 0.03 * k, 0.12 * k, 0.03 * k)
   } else if (shape === 'point') {

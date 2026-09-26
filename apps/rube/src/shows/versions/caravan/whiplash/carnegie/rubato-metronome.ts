@@ -4,12 +4,11 @@ import { solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH, FLOOR_TOM, KICK, RACK, RIDE as RIDE_CYMBAL, SNARE, drawKit, headDip, type Cymbal, type Drum } from '../drums'
 import { alpha, smooth, type Ctx } from '../kit'
-import { BURST, FINAL, RIDE, SOLO, level } from '../music'
+import { BURST, RIDE, level } from '../music'
 import { G_EARTH } from '../physics'
 import { HALL, KIT } from '../worlds'
-import { bandLight, kitLight } from './hall'
-import { ARCH, FLOOR, KIT_AT } from './stage'
-import { sinceStroke } from './strokes'
+import { hallLight, kitLight, kitSince } from './hall'
+import { FLOOR, KIT_AT } from './stage'
 import { BOARD } from './rubato-hits'
 
 /**
@@ -461,31 +460,10 @@ function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
 
 /**
  * The hall's light over what this part draws behind the kit (the case, and the drums redrawn in front of it): the
- * same wash and pool as `hall.ts` `light()`, which is drawn before any part and so never reaches them.
+ * hall's own (`hall.ts` `hallLight`), which is drawn before any part and so never reaches them.
  */
 function relight(p: p5, c: Ctx, T: number): void {
-  const { k } = c
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const pool = T < SOLO ? 0 : T < FINAL ? 1 : 1 - easeInOutSine(clamp((T - FINAL - 1) / 7))
-  const wash = 0.08 + 0.1 * bandLight(T) + 0.05 * level(T)
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  const g = ctx.createLinearGradient(0, (ARCH.top + 2) * k, 0, FLOOR * k)
-  g.addColorStop(0, 'rgba(227, 176, 91, 0)')
-  g.addColorStop(1, `rgba(227, 176, 91, ${wash.toFixed(3)})`)
-  ctx.fillStyle = g
-  ctx.fillRect(ARCH.x0 * k, (ARCH.top + 2) * k, (ARCH.x1 - ARCH.x0) * k, (FLOOR - ARCH.top - 2) * k)
-  if (pool > 0.001) {
-    const cx = (KIT_AT[0] - 1.2) * k
-    const cy = (KIT_AT[1] + 0.2) * k
-    const r = 4.2 * k
-    const q = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-    q.addColorStop(0, `rgba(255, 241, 207, ${(0.16 * pool).toFixed(3)})`)
-    q.addColorStop(1, 'rgba(255, 241, 207, 0)')
-    ctx.fillStyle = q
-    ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
-  }
-  ctx.restore()
+  hallLight(p, c, T)
 }
 
 /** The rod's recent angles, for the blur of a fast swing: none when it is slow. */
@@ -517,7 +495,7 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
     drawRod(p, c, dy, th)
     p.push()
     p.translate(KX * k, KY * k)
-    drawKit(p, c, { shell: KIT.lacquer, since: (piece) => sinceStroke(piece, T), light: kitLight(T), without: ['ride', 'crash'] })
+    drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), without: ['ride', 'crash'] })
     p.pop()
     relight(p, c, T)
     ctx.restore()

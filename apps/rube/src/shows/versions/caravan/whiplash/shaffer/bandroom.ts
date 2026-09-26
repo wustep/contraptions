@@ -136,7 +136,8 @@ function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   p.push()
   p.rectMode(p.CORNER)
   p.noStroke()
-  p.fill(mixHex(c.bg, SHOP.deep, 0.75))
+  // The same dark as the practice rooms' corridor it carries on from (`room.ts`).
+  p.fill(mixHex(c.bg, SHOP.deep, 0.62))
   p.rect(x0 * k, CORRIDOR_TOP * k, (x1 - x0) * k, (G - CORRIDOR_TOP) * k)
   // A skirting board, and the carpet's edge.
   p.fill(mixHex(SHOP.deep, SHOP.wood, 0.3))
@@ -356,7 +357,7 @@ export function drawFarCorridor(p: p5, c: Ctx, T: number, x1: number): void {
   p.push()
   p.rectMode(p.CORNER)
   p.noStroke()
-  p.fill(mixHex(c.bg, SHOP.deep, 0.6))
+  p.fill(mixHex(c.bg, SHOP.deep, 0.62))
   p.rect(x0 * k, CORRIDOR_R_TOP * k, (x1 - x0) * k, (PIT - CORRIDOR_R_TOP) * k)
   p.fill(mixHex(SHOP.deep, SHOP.wood, 0.22))
   p.rect(x0 * k, (PIT - 0.18) * k, (x1 - x0) * k, 0.18 * k)

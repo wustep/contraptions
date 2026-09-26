@@ -22,10 +22,10 @@ import { ACCENTS, CATCH, FOOT_DOWN, HOLD, LEAP, RIG_DOWN, RIG_UP, SEATED, SLAM, 
 /** Where his head (the ball's centre) sits in the cup when the frame is at rest. */
 export const NECK: Pt = [-0.78, -2.62]
 /** The shoulders, from the head. */
-const SHOULDER_AT: Record<Arm, Pt> = { left: [-0.86, 0.24], right: [0.84, 0.24] }
+export const SHOULDER_AT: Record<Arm, Pt> = { left: [-0.86, 0.24], right: [0.84, 0.24] }
 /** The arms: upper and fore, in cells. */
-const UPPER = 1.2
-const FORE = 1.13
+export const UPPER = 1.2
+export const FORE = 1.13
 
 /** How far above its playing height the frame is at `T`: high in the flies, down on the solo's first stroke, up at the end. */
 export function rigDrop(T: number): number {
@@ -44,12 +44,12 @@ export function rigDrop(T: number): number {
 /** Whether the machine is anywhere to be seen at `T`. */
 export const rigOut = (T: number): boolean => T <= SOLO || T >= RIG_UP
 
-const smoother = (x: number): number => {
+export const smoother = (x: number): number => {
   const u = clamp(x)
   return u * u * u * (u * (u * 6 - 15) + 10)
 }
 /** The rebound: up fast off the head, a float at the top, and down fast into the next stroke. */
-const liftShape = (u: number): number => Math.sin(Math.PI * Math.pow(clamp(u), 0.72))
+export const liftShape = (u: number): number => Math.sin(Math.PI * Math.pow(clamp(u), 0.72))
 
 /* ------------------------------------------------------------------ his head */
 
@@ -103,9 +103,9 @@ function shoulder(arm: Arm, T: number): Pt {
 /* ------------------------------------------------------------------ an arm's stroke */
 
 /** How big a backswing is: bigger for a longer wait and a louder stroke to come. */
-const ampOf = (gap: number, s: number): number => clamp(0.18 + 1.45 * gap, 0.2, 0.9) * (0.62 + 0.38 * clamp(s / 1.8))
+export const ampOf = (gap: number, s: number): number => clamp(0.18 + 1.45 * gap, 0.2, 0.9) * (0.62 + 0.38 * clamp(s / 1.8))
 /** Which way turns the tip up, for a stick at `ang`: a stick pointing right lifts turning back, one pointing left turning on. */
-const upSign = (ang: number): number => -Math.cos(ang) / Math.max(0.35, Math.abs(Math.cos(ang)))
+export const upSign = (ang: number): number => -Math.cos(ang) / Math.max(0.35, Math.abs(Math.cos(ang)))
 
 export interface ArmPose {
   grip: Pt
@@ -114,7 +114,7 @@ export interface ArmPose {
 }
 
 /** An arm hanging limp from its shoulder, the stick down: flying in and out. */
-const LIMP: Record<Arm, { off: Pt; ang: number }> = {
+export const LIMP: Record<Arm, { off: Pt; ang: number }> = {
   left: { off: [-0.05, 1.32], ang: Math.PI / 2 + 0.08 },
   right: { off: [0.48, 1.2], ang: Math.PI / 2 - 0.26 },
 }
@@ -215,7 +215,7 @@ function footLift(T: number): number {
 /* ------------------------------------------------------------------ drawing */
 
 /** A length of chrome tube: an ink edge and the bright core, like the kit's stands but heavier. */
-function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number): void {
+export function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number): void {
   const { k, ink, weight } = c
   p.stroke(ink)
   p.strokeWeight(weight * w)
@@ -226,7 +226,7 @@ function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number): void {
 }
 
 /** A clamp: a black block across a joint, `len` along `ang`, `w` across, with a wing screw. */
-function clampBlock(p: p5, c: Ctx, at: Pt, ang: number, len: number, w: number): void {
+export function clampBlock(p: p5, c: Ctx, at: Pt, ang: number, len: number, w: number): void {
   const { k, ink, weight } = c
   p.push()
   p.translate(at[0] * k, at[1] * k)
@@ -243,7 +243,7 @@ function clampBlock(p: p5, c: Ctx, at: Pt, ang: number, len: number, w: number):
  * Where the elbow is, for a shoulder and a wrist. An elbow bends one way only, so it never flips: the house's left
  * arm bends out to the left (and up, reaching left), the right arm out to the right (and up, reaching right).
  */
-function elbowOf(s: Pt, w: Pt, bend: -1 | 1): Pt {
+export function elbowOf(s: Pt, w: Pt, bend: -1 | 1): Pt {
   const dx = w[0] - s[0]
   const dy = w[1] - s[1]
   const d = Math.max(Math.abs(UPPER - FORE) + 1e-3, Math.min(UPPER + FORE - 1e-3, Math.hypot(dx, dy)))
@@ -338,6 +338,8 @@ function drawFoot(p: p5, c: Ctx, T: number): void {
 export function drawRig(p: p5, c: Ctx, T: number): void {
   if (rigOut(T)) return
   p.push()
+  // The clamps are laid out round their joints by corners (the stage draws in rectMode(CENTER)).
+  p.rectMode(p.CORNER)
   drawFoot(p, c, T)
   drawFrame(p, c, T)
   drawArm(p, c, 'left', T)
