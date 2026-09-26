@@ -127,11 +127,13 @@ function swatch(ctx: CanvasRenderingContext2D, spec: string, x: number, base: nu
 }
 
 /**
- * A painter of cards over a frame `w` × `h` (16:9, the whole of it). Each card
- * is set on the painter's own canvas and laid over `into` at its light, out
- * of focus as it comes and goes, as the page fades and blurs its DOM.
+ * A painter of cards over a frame `w` × `h` (the 16:9 composition). Each card
+ * is set on the painter's own canvas and laid over `into` at (`dx`, `dy`) at
+ * its light, out of focus as it comes and goes, as the page fades and blurs
+ * its DOM. Shorts pass the letterboxed content's origin so credits sit on the
+ * picture, not the bars.
  */
-export function wordPainter(w: number, h: number): (into: CanvasRenderingContext2D, cards: TitleCard[]) => void {
+export function wordPainter(w: number, h: number, dx = 0, dy = 0): (into: CanvasRenderingContext2D, cards: TitleCard[]) => void {
   const surface = document.createElement('canvas')
   surface.width = w
   surface.height = h
@@ -147,7 +149,7 @@ export function wordPainter(w: number, h: number): (into: CanvasRenderingContext
       into.globalAlpha = Math.min(1, c.light)
       into.globalCompositeOperation = 'source-over'
       into.filter = c.light > 0.995 ? 'none' : `blur(${((1 - c.light) * h * 0.012).toFixed(2)}px)`
-      into.drawImage(surface, 0, 0)
+      into.drawImage(surface, dx, dy)
       into.restore()
     }
   }
