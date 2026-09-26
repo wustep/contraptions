@@ -185,40 +185,63 @@ export function tube(p: p5, k: number, weight: number, x0: number, y0: number, x
 }
 
 /**
- * A visitor's chair, the clinic's one kind, facing us: a vinyl seat and a back panel on a bent steel tube. Its centre
- * at `x`; a sitter's bottom on the seat's top (y = SEAT), its feet on the floor. `dent` presses the seat's top down
- * under a sitter at `dentX` (she sinks into it).
+ * A visitor's chair, the clinic's one kind, facing us: a vinyl seat and a back on a bent steel tube. Its centre at
+ * `x`; a sitter's bottom on the seat's top (y = SEAT), its feet on the floor. `dent` presses the seat's top down under
+ * a sitter at `dentX` (she sinks into it).
  */
 /**
- * How a visitor's chair looks: the office's (a slate-teal vinyl, its back panel over the sitter's shoulders), or the
- * ward's, `low`: a warm brown vinyl and a back that stops below the sitter's top edge, so the old grey Carl in it
- * stands clear of it against the pale wall instead of reading as part of the chair.
+ * How a visitor's chair looks. The office's: a pale slate-teal vinyl, and for a back a wide, low, well-rounded band on
+ * its two uprights, level with the sitter's top edge, so nothing Carl-sized sits behind either of them (a square back
+ * panel over his shoulders read as a second, darker Carl stacked on him). The ward's, `low`: a warm brown vinyl and a
+ * back that stops below the sitter's top edge, so the old grey Carl in it stands clear of it against the pale wall.
  */
 export interface ChairLook {
   low?: boolean
 }
 
 export function drawVisitorChair(p: p5, k: number, weight: number, x: number, dent = 0, dentX = x, look: ChairLook = {}): void {
-  // A slate-teal vinyl, darker than either of them, so both read against it; in the ward, a warm mid brown.
-  const vinyl = look.low ? mixHex(mixHex(HOME.woodDark, HOME.wood, 0.3), CLINIC.chair, 0.2) : mixHex(mixHex(CLINIC.chair, HOME.leaf, 0.22), INK, 0.3)
-  const back = mixHex(vinyl, INK, 0.12)
-  // The back panel's top and bottom: behind the sitter's shoulders, or (low) behind his middle, under his top edge.
-  const [b0, b1] = look.low ? [-0.05, 0.1] : [-0.47, -0.1]
+  // The office's vinyl is lighter than his blue and a shade under her coral, darker than the wall behind: the ink
+  // outline carries the chair, not its value. In the ward, a warm mid brown.
+  const vinyl = look.low
+    ? mixHex(mixHex(HOME.woodDark, HOME.wood, 0.3), CLINIC.chair, 0.2)
+    : mixHex(mixHex(CLINIC.chair, HOME.leaf, 0.18), CLINIC.wall, 0.15)
+  const back = look.low ? mixHex(vinyl, INK, 0.12) : vinyl
+  const seat = look.low ? vinyl : mixHex(vinyl, INK, 0.15)
   p.push()
   p.translate(x * k, 0)
-  // The back: two uprights from behind the seat to the panel, and the panel.
-  const up = look.low ? (b0 + b1) / 2 : -0.2
-  tube(p, k, weight, -0.15, SEAT + 0.02, -0.15, up)
-  tube(p, k, weight, 0.15, SEAT + 0.02, 0.15, up)
-  p.stroke(INK)
-  p.strokeWeight(weight * 0.85)
-  p.fill(back)
-  p.rectMode(p.CORNER)
-  p.rect(-0.2 * k, b0 * k, 0.4 * k, (b1 - b0) * k, Math.min(0.07, (b1 - b0) * 0.35) * k)
-  // A stitched seam across the panel, near its top: vinyl, not wood.
-  p.stroke(alpha(p, CLINIC.light, 0.18))
-  p.strokeWeight(weight * 0.45)
-  p.line(-0.14 * k, (b0 + 0.08) * k, 0.14 * k, (b0 + 0.08) * k)
+  if (look.low) {
+    // The back: two uprights from behind the seat to the panel, and the panel, behind his middle, under his top edge.
+    const [b0, b1] = [-0.05, 0.1]
+    const up = (b0 + b1) / 2
+    tube(p, k, weight, -0.15, SEAT + 0.02, -0.15, up)
+    tube(p, k, weight, 0.15, SEAT + 0.02, 0.15, up)
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.85)
+    p.fill(back)
+    p.rectMode(p.CORNER)
+    p.rect(-0.2 * k, b0 * k, 0.4 * k, (b1 - b0) * k, Math.min(0.07, (b1 - b0) * 0.35) * k)
+    // A stitched seam across the panel, near its top: vinyl, not wood.
+    p.stroke(alpha(p, CLINIC.light, 0.18))
+    p.strokeWeight(weight * 0.45)
+    p.line(-0.14 * k, (b0 + 0.08) * k, 0.14 * k, (b0 + 0.08) * k)
+  } else {
+    // The back: a band 0.44 wide and 0.13 deep, its top level with his (-R), its ends round, on two uprights that
+    // stand just clear of his sides, so the tube shows between his edges and the band's ends.
+    const b0 = -R - 0.005
+    const b1 = b0 + 0.13
+    const bw = 0.22
+    tube(p, k, weight, -0.18, SEAT + 0.02, -0.18, (b0 + b1) / 2)
+    tube(p, k, weight, 0.18, SEAT + 0.02, 0.18, (b0 + b1) / 2)
+    p.stroke(INK)
+    p.strokeWeight(weight * 0.85)
+    p.fill(back)
+    p.rectMode(p.CORNER)
+    p.rect(-bw * k, b0 * k, 2 * bw * k, (b1 - b0) * k, 0.058 * k)
+    // The light along its top roll: vinyl, catching the room.
+    p.stroke(alpha(p, CLINIC.light, 0.32))
+    p.strokeWeight(weight * 0.5)
+    p.line((-bw + 0.06) * k, (b0 + 0.03) * k, (bw - 0.06) * k, (b0 + 0.03) * k)
+  }
   // The legs: one bent tube each side, splaying a little to the floor, a stretcher between.
   tube(p, k, weight, -0.19, SEAT + 0.07, -0.215, FLOOR - 0.02)
   tube(p, k, weight, 0.19, SEAT + 0.07, 0.215, FLOOR - 0.02)
@@ -236,7 +259,7 @@ export function drawVisitorChair(p: p5, k: number, weight: number, x: number, de
   }
   p.stroke(INK)
   p.strokeWeight(weight * 0.9)
-  p.fill(vinyl)
+  p.fill(seat)
   p.beginShape()
   p.vertex(-w * k, (SEAT + 0.03) * k)
   for (let i = 0; i <= 16; i++) {
