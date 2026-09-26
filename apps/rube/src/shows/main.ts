@@ -21,11 +21,13 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * written on a show's canvas (`stage.ts`), so what is in the panel — the
  * title, the credit, the clock — is in the panel and nowhere else.
  *
- * `?show=<work>&take=<take>` names a version, so a link is a take. A seed in
- * the URL is not the show's — a show is the same for everyone — but it is
- * kept and handed back to the mode switch, so a visit here does not lose the
- * machine that was being watched. `/shows/` with no work opens Clair de
- * Lune, Take B.
+ * `?show=<work>&take=<take>` names a version, so a link is a take. `/shows/`
+ * with no work opens Clair de Lune, Take B.
+ *
+ * The stage is the play button: a click or a tap anywhere on it plays or
+ * pauses. On a phone the panel stacks under the stage and would cover half
+ * the show, so it goes away while a show plays and comes back when it is
+ * paused. At a desk the panel's tab stands out on the edge while paused.
  *
  * A show opens playing, music and all, where the browser lets it. Where it
  * wants a gesture first, the show waits at the top with a play button on
@@ -46,8 +48,7 @@ export function start(shell: Shell): () => void {
   let alive = true
 
   const params = new URLSearchParams(location.search)
-const seed = params.get('seed') ?? ''
-/** The address named a show on arrival. A tab into Shows does not: it carries the seed, and the show is chosen here. */
+/** The address named a show on arrival. A tab into Shows does not: the show is chosen here. */
 const linked = !!params.get('show')
 
 /* ------------------------------------------------------------------ state */
@@ -66,6 +67,8 @@ let muted = false
 /** The link is playing, and the browser is holding the sound until a gesture. Not the visitor's own mute. */
 let soundHeld = false
 let releaseSound = (): void => {}
+/** When a press last only brought the held sound in, so the same press does not also pause the stage. */
+let joinedAt = 0
 let overview = false
 let zoom = false
 let size: FrameSize = FRAME_SIZES[FRAME_SIZES.length - 1]
@@ -82,7 +85,6 @@ const loads = new Map<Version, Promise<Performance>>()
 
 function writeUrl(): void {
   const q = new URLSearchParams()
-  if (seed) q.set('seed', seed)
   if (current) {
     q.set('show', current.work)
     q.set('take', current.take)
@@ -176,6 +178,7 @@ function armSound(): void {
     // The music control does the unmuting itself, and starts the sound with it.
     if (musicControl) return
     soundHeld = false
+    joinedAt = performance.now()
     if (muted) setMuted(false)
     // Space would also pause. The gesture only owed the sound; the picture stays.
     if ((key === ' ' || key === 'Enter') && transport?.playing) {
@@ -268,7 +271,6 @@ function step(dir: 1 | -1): void {
 
 /* ------------------------------------------------------------------ panel */
 
-shell.setSeed(seed)
 
 // Show — which music, and which take of it. It leads, as the seed does elsewhere.
 const showCard = el('section', { class: 'seed-card show-card' }, [el('div', { class: 'section-title' }, ['Show'])])
@@ -301,6 +303,26 @@ bigPlay.addEventListener('click', () => {
   void play()
 })
 stageRoot.append(bigPlay)
+
+// The stage is the play button. Not a press on something standing on it, and not the press that only brought the
+// held sound in: that one owed the sound, and the picture keeps going.
+stageRoot.addEventListener('click', (e) => {
+  if (!transport || recording || e.button !== 0) return
+  if (e.target instanceof Element && e.target.closest('button, a, iframe, input')) return
+  if (performance.now() - joinedAt < 700) return
+  toggle()
+})
+
+// On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
+// tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
+const phone = window.matchMedia('(max-width: 820px)')
+let wasPlaying: boolean | null = null
+function followPanel(playing: boolean): void {
+  if (playing === wasPlaying) return
+  wasPlaying = playing
+  if (phone.matches) shell.setPanel(!playing)
+  shell.holdPeek(!playing)
+}
 
 // Transport — the clock, over the whole show.
 const transportSec = section(panelRoot, 'Transport', 'transport')
@@ -603,6 +625,7 @@ function tick(): void {
     const wantBig = !transport.playing && !recording && (blocked || t <= 0 || (!transport.loop && t >= transport.duration))
     if (wantBig === bigPlay.hidden) sync()
     renderWords(t)
+    followPanel(transport.playing)
   }
   raf = requestAnimationFrame(tick)
 }
@@ -705,6 +728,7 @@ if (import.meta.env.DEV) {
   return () => {
     alive = false
     releaseSound()
+    shell.holdPeek(false)
     cancelAnimationFrame(raf)
     window.removeEventListener('pointerup', endScrub)
     window.removeEventListener('keydown', onKey)

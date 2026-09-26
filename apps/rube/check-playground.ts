@@ -33,8 +33,8 @@ async function main(): Promise<void> {
   console.log('\nthe door')
   const tab = MODE_LINKS.find((m) => m.mode === 'playground')
   check('the Playground is a mode, at /playground/', tab?.path === '/playground/' && tab.label === 'Playground')
-  check('it is the last tab on the switch', MODE_LINKS[MODE_LINKS.length - 1] === tab)
-  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  check('it is the third tab on the switch, before Shows', MODE_LINKS[2] === tab)
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'explorations,machine,playground,shows')
 
   /* ---------------------------------------------------------------- before anything is fetched */
 

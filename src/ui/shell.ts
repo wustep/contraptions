@@ -7,8 +7,8 @@
  * to music), the Builder and the Playground (where pieces and worlds wait
  * to be let into Machine) fill the middle with their own sections, built
  * from the same helpers, so they read as siblings — one frame, different
- * dials — and moving between them is a switch at the top of the panel that
- * carries the seed across. On those four, a tab click stays in this
+ * dials — and moving between them is a switch at the top of the panel. A
+ * switch starts the mode afresh: it does not carry a seed across. On those four, a tab click stays in this
  * document: the address changes and the stage is swapped, and the brand,
  * the switch and the panel's open or closed state are not built again.
  * The links stay real addresses, so a deep link, a modified click and the
@@ -35,17 +35,15 @@ interface ModeLink {
 }
 
 export const MODE_LINKS: readonly ModeLink[] = [
-  { mode: 'machine', label: 'Machine', path: '/' },
   { mode: 'explorations', label: 'Explorations', path: '/explorations/' },
-  { mode: 'shows', label: 'Shows', path: '/shows/' },
+  { mode: 'machine', label: 'Machine', path: '/' },
   // TODO: Builder is rough — re-enable when ready
   // { mode: 'builder', label: 'Builder', path: '/builder/' },
   { mode: 'playground', label: 'Playground', path: '/playground/' },
+  { mode: 'shows', label: 'Shows', path: '/shows/' },
 ]
 
 export interface Shell {
-  /** Refresh the mode links so a switch carries the current seed along. */
-  setSeed(seed: string): void
   /** Light the tab for `mode`. The chrome stays; only the mark moves. */
   setMode(mode: ShellMode): void
   /** The panel, which scrolls. */
@@ -55,6 +53,13 @@ export interface Shell {
   /** Hide the panel, or bring it back. */
   toggle(): void
   hidden(): boolean
+  /**
+   * Put the panel out or away for the mode's own reasons (Shows on a phone: away while a show plays), without
+   * taking the keyboard and without writing it into the session's choice.
+   */
+  setPanel(open: boolean): void
+  /** Keep the peek tab standing on the edge rather than tucked in (Shows at a desk, while a show is paused). */
+  holdPeek(on: boolean): void
   /** Clear the stage of every piece of chrome, or put it all back as it was. */
   toggleBare(): void
 }
@@ -206,9 +211,10 @@ export function credit(root: HTMLElement): void {
 }
 
 /**
- * A quiet byline at the foot of every panel. It sits after the slot a mode
- * fills, so it stays last when that slot is cleared and filled again.
- * External, so it leaves the page the way the Okazz credit does.
+ * A quiet byline at the foot of every panel, with the source beside it. It
+ * sits after the slot a mode fills, so it stays last when that slot is
+ * cleared and filled again. External, so it leaves the page the way the
+ * Okazz credit does.
  */
 function byline(root: HTMLElement): void {
   root.append(el('footer', { class: 'byline' }, [
@@ -218,6 +224,12 @@ function byline(root: HTMLElement): void {
       target: '_blank',
       rel: 'noreferrer',
     }, ['Stephen Wu']),
+    ' · ',
+    el('a', {
+      href: 'https://github.com/wustep/contraptions',
+      target: '_blank',
+      rel: 'noreferrer',
+    }, ['GitHub']),
   ]))
 }
 
@@ -477,13 +489,17 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     root,
     body,
     setMode,
-    setSeed(seed) {
-      for (const { m, a } of links) {
-        a.href = seed ? `${m.path}?seed=${encodeURIComponent(seed)}` : m.path
-      }
-    },
     toggle,
     hidden: () => document.body.classList.contains('hide-panel'),
+    setPanel(open) {
+      if (document.body.classList.contains('bare')) return
+      document.body.classList.remove('peek-greet')
+      document.body.classList.toggle('hide-panel', !open)
+      hideTip()
+    },
+    holdPeek(on) {
+      document.body.classList.toggle('peek-hold', on)
+    },
     toggleBare,
   }
 }

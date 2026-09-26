@@ -57,7 +57,7 @@ async function main(): Promise<void> {
   console.log('\nthe door')
   const tab = MODE_LINKS.find((m) => m.mode === 'shows')
   check('Shows is a mode, at /shows/', tab?.path === '/shows/' && tab.label === 'Shows')
-  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'machine,explorations,shows,playground')
+  check('the switch is four modes, always', MODE_LINKS.map((m) => m.mode).join() === 'explorations,machine,playground,shows')
   check('a tab is the path it has always been', modeFromPath('/') === 'machine' && modeFromPath('/explorations/') === 'explorations' && modeFromPath('/shows/') === 'shows' && modeFromPath('/playground/') === 'playground')
   check('a deep link without the slash, or with index.html, is the same tab', modeFromPath('/shows') === 'shows' && modeFromPath('/shows/index.html') === 'shows' && modeFromPath('/index.html') === 'machine')
   check('the Builder is not a tab', modeFromPath('/builder/') === null)
