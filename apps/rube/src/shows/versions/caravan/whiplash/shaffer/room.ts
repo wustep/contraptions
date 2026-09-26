@@ -325,9 +325,10 @@ function section(p: p5, c: Ctx, look: RoomLook): void {
   box4(p, k, x0 - wall, ceil - 0.6, x1 + wall, ceil)
   if (look.left !== undefined) box4(p, k, look.left, ceil - 0.6, x0 - wall, hall)
   if (look.right !== undefined) box4(p, k, x1 + wall, ceil - 0.6, look.right, hall)
-  // The floor, one line through both doorways.
-  p.stroke(alpha(p, ink, 0.4 + 0.45 * lit))
-  p.strokeWeight(weight * 1.1)
+  // The floor, one edge through both doorways, catching the lamp's light (warm lit wood, not the cream ink: a full
+  // line along the ground read as a drawing of the floor).
+  p.stroke(alpha(p, mixHex(SHOP.wood, SHOP.tungsten, 0.5), 0.22 + 0.45 * lit))
+  p.strokeWeight(weight * 1.0)
   p.noFill()
   p.line(Math.min(lx, x0 - wall) * k, floor * k, Math.max(rx, x1 + wall) * k, floor * k)
   // A sill across each doorway: a worn oak strip, a hair proud of the floor.
@@ -336,6 +337,9 @@ function section(p: p5, c: Ctx, look: RoomLook): void {
     box4(p, k, a - 0.04, floor - 0.035, b + 0.04, floor)
   }
 }
+
+/** The corridor doors' and their windows' edges: their own dark, not the cream ink (light, not line). */
+const DOOR_EDGE = mixHex(SHOP.black, SHOP.deep, 0.3)
 
 /** A corridor from `a` to `b` (kit frame): its dark back wall, the doors of other rooms, the ceiling's fixtures. */
 function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 | 1): void {
@@ -384,10 +388,10 @@ function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 
     const b = Math.max(hinge, far)
     if (a > x0 - 0.01 && b < x1 + 0.01) {
       const lit = Math.min(1, 0.3 * h + 0.55 * light)
-      inked(p, alpha(p, ink, 0.2 + 0.3 * lit), weight * 0.7, mixHex(bg, SHOP.wood, 0.25 + 0.45 * lit))
+      inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.7, mixHex(bg, SHOP.wood, 0.25 + 0.45 * lit))
       box4(p, k, a, floor - DOOR_H, b, floor - 0.62)
       const wx = (a + b) / 2
-      inked(p, alpha(p, ink, 0.2 + 0.3 * lit), weight * 0.6, mixHex(mixHex(bg, SHOP.black, 0.6), SHOP.window, 0.35 * light))
+      inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(mixHex(bg, SHOP.black, 0.6), SHOP.window, 0.35 * light))
       box4(p, k, wx - 0.16, floor - DOOR_H + 0.55, wx + 0.16, floor - DOOR_H + 1.25)
       p.stroke(alpha(p, ink, 0.25 + 0.35 * lit))
       p.strokeWeight(weight * 1.1)
@@ -402,9 +406,9 @@ function corridor(p: p5, c: Ctx, look: RoomLook, a: number, b: number, side: -1 
     if (cx - DOOR_W / 2 < x0 + 0.1 || cx + DOOR_W / 2 > x1 - 0.1) continue
     const near = Math.exp(-Math.abs(cx - doorX) / 3) * light
     const lit = Math.min(1, 0.25 * h + 0.35 * near)
-    inked(p, alpha(p, ink, 0.16 + 0.3 * lit), weight * 0.7, mixHex(bg, SHOP.wood, 0.2 + 0.45 * lit))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.7, mixHex(bg, SHOP.wood, 0.2 + 0.45 * lit))
     box4(p, k, cx - DOOR_W / 2, floor - DOOR_H, cx + DOOR_W / 2, floor - 0.62)
-    inked(p, alpha(p, ink, 0.1 + 0.25 * lit), weight * 0.6, mixHex(bg, SHOP.black, 0.6))
+    inked(p, alpha(p, DOOR_EDGE, 0.9), weight * 0.6, mixHex(bg, SHOP.black, 0.6))
     box4(p, k, cx - 0.16, floor - DOOR_H + 0.55, cx + 0.16, floor - DOOR_H + 1.25)
     p.stroke(alpha(p, SHOP.window, 0.05 + 0.12 * lit))
     p.strokeWeight(weight * 0.5)
