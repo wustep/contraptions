@@ -711,8 +711,8 @@ function drawTail(p: p5, c: Pen, tail: Tail, flick: number, lit: number, hide: s
       pts[j] = [ox + dx * Math.cos(ang) - dy * Math.sin(ang), oy + dx * Math.sin(ang) + dy * Math.cos(ang)]
     }
   }
-  const pen = dim(c, lit)
-  const inkC = mixHex(c.bg, pen.ink, 0.4 + 0.6 * lit)
+  // The tail's edge is the troll's own (troll.ts): the hide's shadow, never the page's cream.
+  const inkC = mixHex(c.bg, mixHex(TROLL.shade, hide, 0.3), 0.35 + 0.65 * lit)
   const hideC = mixHex(c.bg, hide, 0.3 + 0.7 * lit)
   const n = pts.length - 1
   p.noFill()
@@ -982,8 +982,9 @@ function throneTilt(t: number): number {
 function drawThrone(p: p5, c: Pen, t: number, lit: number): void {
   const k = c.k
   const { x, seat, w } = THRONE
-  // The trolls' own edge: the hide's shadow warmed a little by the ink (troll.ts), not a cream line.
-  const inkC = mixHex(c.bg, mixHex(TROLL.shade, c.ink, 0.3 + 0.25 * lit), 0.35 + 0.65 * lit)
+  // The trolls' own edge (troll.ts): a shadow darker than the bone and the rock it edges, no cream in it (the tusks
+  // outlined in cream read as two pale hoops).
+  const inkC = mixHex(c.bg, mixHex(TROLL.shade, STONE.dark, 0.3), 0.35 + 0.65 * lit)
   const pivot: Pt = [x + w / 2 + 0.1, DAIS.top]
   p.push()
   p.translate(pivot[0] * k, pivot[1] * k)
@@ -1034,7 +1035,9 @@ export function drawKing(p: p5, c: Pen, pose: KingPose, lit: number): TrollDrawn
   const by = hy - Math.sin(ang) * L * SCEPTRE.grip
   const tx = hx + Math.cos(ang) * L * (1 - SCEPTRE.grip)
   const ty = hy + Math.sin(ang) * L * (1 - SCEPTRE.grip)
-  const inkC = mixHex(c.bg, c.ink, 0.35 + 0.65 * lit)
+  // The staff, the head and the crown edged in shadow like the King himself (a cream casing made the sceptre a white
+  // stick and the crown a drawing of one).
+  const inkC = mixHex(c.bg, TROLL.shade, 0.35 + 0.65 * lit)
   p.stroke(inkC)
   p.strokeWeight(Math.max(1, 0.11 * k + c.weight))
   p.line(bx * k, by * k, tx * k, ty * k)
