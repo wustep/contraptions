@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type PartShot } from '../kit'
-import { CODA, LAST1, LAST2 } from '../music'
+import { BLOW, CODA, LAST1, LAST2, ROLL } from '../music'
 import { dawn, REST, skyline, surface } from '../mountain'
 import { quake } from '../rock'
 import { CODA_SHOT } from '../seams'
@@ -10,6 +10,7 @@ import { SKY, STONE, WORKS } from '../worlds'
 import { DRUM2, DRUMMERS, farEdge, FLOOR, LEAP } from '../under/drum-clock'
 import { breach, capCracks, collar, collarFront, dropped, G, hollowOf, puff, stone, thrown, vent, VENT, type Floor, type Stone } from './fall-rock'
 import { column, crown, plume } from './fall-water'
+import { drawRuin } from './fall-ruin'
 
 /**
  * The director's: the coda (134.25 → the end). Ibsen's order: the bells ring, the trolls flee, the hall comes down,
@@ -20,19 +21,21 @@ import { column, crown, plume } from './fall-water'
  *   135.41  the crash: he is blown out of it on a geyser, the dancing ball on a fountain, and rammed up the heart
  *           against the drum's floor (136.11), which cracks, and bursts on 136.36; up the drum room, rammed against
  *           the mine's floor (138.60), which cracks, and bursts on 139.07; up the mine to the hall's floor (140.05),
- *           which bursts on 140.27. Chunks of each floor are thrown up round him and land on the floor they came from;
- *           stones let go of the ceilings and come down past him, on the chords.
- *   140.8   he floats up through the hall as it comes down round him (the hall part's collapse; a stalactite and blocks
- *           of its vault here, on 143.20, 144.12, 144.84), into the vent over it.
- *   145.35  the six hammer blows: six short surges into the vent's mouth, the hall seen whole below him as its
- *           pillars and throne come down and its lights go out one a blow; the last throws him up the dark vent.
- *   147.0   the silence: he coasts up it to a stop under the summit's cap and hangs there, the dust hanging.
- *   148.24  the roll: the geyser slams him up against the cap (148.49), and the cap cracks, light coming through.
- *   149.52  the first of the last two chords: the cap is blown out and he with it, out of the summit into the dawn.
- *   149.82  the second: the plume's second surge throws him clear, east, in a long arc under the last stars; the cap's
- *           blocks come down on the flanks as the chord rings; he lands on the east shoulder (153.17), bounces
- *           (153.61), rolls into the grassy hollow there and rocks to rest; the geyser sinks to a burble; the stave
- *           church's bell rings on in the valley (`mountain.ts`); the camera cranes up and back over the credits.
+ *           which bursts on 140.27. Each room's trolls flee on its chords, in an 11 to 13-cell frame that holds them.
+ *   141.05  up through the hall and into the vent over it, the frame pulling back in one move to the whole mountain
+ *           in cross-section (143.20), the white jet the one line through every room, leading the eye to him.
+ *   143.20  the mountain comes down bottom up behind him, a room a chord, its lights going out as it falls
+ *           (`fall-ruin.ts`): the heart, the drum room (143.93/144.12), the mine (144.84/145.08), the hall's ledges,
+ *           throne and pillars on the hammer blows, its vault on 146.35; he surges up the vent on every chord and is
+ *           rammed against the summit's cap on the vault's.
+ *   146.60  the last blow: the cap blows out, the crown's boulders go up, and the jet throws him out of the mountain.
+ *   147.0   the silence: the frame held still on the dark, fallen rooms and their dust, him high in his arc over the
+ *           east flank; the geyser falls back.
+ *   148.24  the roll: the crown's two great boulders come down on the flanks and the frame pushes in to the shoulder
+ *           as he comes down to it.
+ *   149.52  the first of the last two chords: he lands on the east shoulder in the dawn, the church bell swinging.
+ *   149.82  the second: he bounces into the grassy hollow, the sun's rim breaks the far ridge; he rocks to rest as
+ *           the chord rings out (151.3), and the camera cranes back over the credits to the ruined mountain.
  *
  * The part is laid where the heart's runaway leaves the ball: its entry is the chimney's foot, world (47.5, 33), so
  * this frame's origin is world (48, 33) (`ORIGIN`). Everything here is laid out in world cells (the rooms' floors,
@@ -52,10 +55,10 @@ const FLOORS: Floor[] = [
   { top: 17.13, bot: 18.5, crack: 138.598, burst: 139.072 },
   { top: 8.13, bot: 10.0, crack: 140.045, burst: 140.273 },
 ]
-/** The summit's cap: from the vent's top up to the surface; it bursts on the first of the last two chords. */
-const CAP: Floor = { top: -21, bot: VENT.top, crack: 148.491, burst: LAST1 }
-/** The roll's accents that crack the cap. */
-const CAP_CRACKS = [148.243, 148.491, 148.981]
+/** The summit's cap: from the vent's top up to the surface; rammed on the vault's chord, it bursts on the last blow. */
+const CAP: Floor = { top: -21, bot: VENT.top, crack: 146.348, burst: BLOW }
+/** The hammer blows that crack the cap: the one before he reaches it, and the one he is rammed into it on. */
+const CAP_CRACKS = [146.107, 146.348]
 
 /* ------------------------------------------------------------------ Peer's way up */
 
@@ -94,27 +97,21 @@ const RISE: Leg[] = [
   // Up the mine, rammed into the hall's floor; it cracks; it bursts.
   { at: 140.045, y: 10.18, v1: RAM, ram: true },
   { at: 140.273, y: 10.15, pin: true },
-  { at: 140.8, y: 7.0, v1: 2.2 },
-  // Floating up through the hall as it comes down, to the vent's mouth in its vault.
-  { at: 143.199, y: 2.4, v0: 2.2 },
-  { at: 144.12, y: 0.3, v1: 0.4 },
-  { at: 144.84, y: -1.7, v1: 0.5 },
-  { at: 145.345, y: -3.5, v1: 0.5 },
-  // The six hammer blows: six short surges up into the vent, over the hall as its lights go out.
-  { at: 145.597, y: -4.0, v1: 0.3 },
-  { at: 145.847, y: -4.5, v1: 0.3 },
-  { at: 146.107, y: -5.0, v1: 0.3 },
-  { at: 146.348, y: -5.5, v1: 0.3 },
-  { at: 146.601, y: -6.0, v1: 0.3 },
-  // The last blow throws him up the dark vent; he coasts through the silence to a stop under the cap, hangs, and
-  // begins to sink.
-  { at: 148.08, y: -17.6, v1: 0.05 },
-  { at: 148.243, y: -17.45 },
-  // The roll: slammed up against the cap, and held there while it cracks.
-  { at: 148.491, y: VENT.top + R + 0.05, v1: RAM, ram: true },
-  { at: LAST1, y: VENT.top + R + 0.01, pin: true },
-  // Blown out of the summit, up over the crown to a near-stop, where the second chord's surge throws him east.
-  { at: LAST2, y: -22.6, v1: 0.1 },
+  // Up through the hall as its court flees, gathering again on the next chord, into the vent's mouth in its vault.
+  { at: 141.046, y: 6.3, v1: 2.2 },
+  { at: 143.199, y: -3.0, v1: 2.4 },
+  // Up the vent as the mountain comes down under him, a room a chord: a surge on every chord, easing between.
+  { at: 143.926, y: -6.75, v1: 2.4 },
+  { at: 144.12, y: -7.75, v1: 2.4 },
+  { at: 144.84, y: -11.47, v1: 2.4 },
+  { at: 145.079, y: -12.7, v1: 2.4 },
+  { at: 145.345, y: -14.07, v1: 2.4 },
+  { at: 145.597, y: -15.37, v1: 2.4 },
+  { at: 145.847, y: -16.66, v1: 2.4 },
+  { at: 146.107, y: -18.0, v1: 2.4 },
+  // The vault's chord rams him against the summit's cap; it holds for one blow more.
+  { at: 146.348, y: VENT.top + R + 0.05, v1: RAM, ram: true },
+  { at: BLOW, y: VENT.top + R + 0.01, pin: true },
 ]
 
 /** The blow's give while he is pinned: down this far and back, damped (critically), peaking this long after the hit. */
@@ -126,13 +123,13 @@ function give(t: number, dur: number): number {
   return GIVE * u * Math.exp(1 - u) * (1 - smooth(t, dur - 0.1, dur))
 }
 
-/** Out of the summit: the long arc east, under this gravity, to the shoulder. */
-const G_FLIGHT = 4.4
-/** Where he lands on the east shoulder (world x) and when; where the bounce puts him down again, and when. */
-const LAND = { x: 56.9, t: 153.17 }
-const BOUNCE = { x: 57.75, t: 153.611 }
-/** Rolling into the hollow and rocking there until he lies still, by this time. */
-const STILL = 159.6
+/** Out of the summit: the long arc east through the silence, under this gravity, to the shoulder. */
+const G_FLIGHT = 4.0
+/** Where he lands on the east shoulder (world x), on the first last chord; where the bounce puts him down, on the second. */
+const LAND = { x: 56.6, t: LAST1 }
+const BOUNCE = { x: 57.5, t: LAST2 }
+/** Rolling into the hollow and rocking there until he lies still, as the last chord rings out. */
+const STILL = 151.3
 
 const onGround = (x: number): Pt => [lx(x), ly(skyline(x) - R)]
 
@@ -140,13 +137,13 @@ const onGround = (x: number): Pt => [lx(x), ly(skyline(x) - R)]
 function rolling(T: number): number {
   const v0 = (BOUNCE.x - LAND.x) / (BOUNCE.t - LAND.t)
   const x0 = BOUNCE.x - REST[0]
-  const tau = 0.95
-  const w = (Math.PI * 2) / 2.3
+  const tau = 0.42
+  const w = (Math.PI * 2) / 1.15
   // x = REST + A e^(-t/τ) cos(ωt + φ), matched to where and how fast the bounce sets him down.
   const a = x0
   const b = -(v0 + x0 / tau) / w
   const t = T - BOUNCE.t
-  const settle = 1 - smooth(T, STILL - 2.2, STILL)
+  const settle = 1 - smooth(T, STILL - 0.9, STILL)
   return REST[0] + Math.exp(-t / tau) * (a * Math.cos(w * t) + b * Math.sin(w * t)) * settle
 }
 
@@ -187,7 +184,7 @@ function lane(begin: number, end: number): Lane {
   // The arc: a real throw from where the plume leaves him to the shoulder.
   const out: Pt = [X, ly(RISE[RISE.length - 1].y)]
   const land = onGround(LAND.x)
-  const T1 = LAND.t - LAST2
+  const T1 = LAND.t - BLOW
   segs.push({ from: out, to: land, dur: T1, arc: (G_FLIGHT * T1 * T1) / 8 })
   // The bounce: small, quick, down again a little further on.
   const T2 = BOUNCE.t - LAND.t
@@ -218,17 +215,16 @@ const STONES: Stone[] = [
   // The hall's floor.
   thrown([47.2, 8.8], 140.273, 45.9, 8.13, 141.046, 0.48, 10),
   thrown([47.85, 8.9], 140.273, 49.3, 8.13, 141.524, 0.55, 11),
-  // The hall's vault coming down round him: a stalactite, then blocks.
-  dropped(45.35, -2.2, 8.13, 143.199, 1.1, 12, { spike: true, shatter: true }),
-  dropped(50.15, -2.0, 8.13, 144.12, 0.7, 13),
-  dropped(44.5, -2.3, 8.13, 144.84, 0.55, 14, { shatter: true }),
-  // The hammer blows: the vault itself comes down, a great slab on each of four blows (the braziers spill their
-  // fire on the other two, `hall.ts`), loosening in the vault a beat before and landing on the blow.
-  dropped(63.3, -0.3, 8.13, 145.345, 2.1, 40),
-  dropped(42.7, -0.5, 8.13, 145.847, 1.8, 41),
-  dropped(56.3, -1.9, 8.13, 146.107, 1.6, 42),
-  dropped(52.4, -2.5, 8.13, 146.348, 2.4, 43),
+  // The hall's vault itself comes down on its chord and the last blow: great slabs of it, loosening a beat before and
+  // landing on the chord (drawn over the hall's dark, `VAULT_SLABS`), clear of the vent's column.
+  dropped(63.3, -0.3, 8.13, 146.348, 2.1, 40),
+  dropped(42.7, -0.5, 8.13, 146.348, 1.8, 41),
+  dropped(56.3, -1.9, 8.13, 146.601, 1.6, 42),
+  dropped(51.9, -2.5, 8.13, 146.601, 2.4, 43),
 ]
+
+/** The vault's slabs: drawn over the hall's dark (the fall part's `over`), the rest under it. */
+const VAULT_SLABS = STONES.filter((st) => st.seed >= 40)
 
 /* ------------------------------------------------------------------ the cap, blown out */
 
@@ -326,25 +322,27 @@ function blockAt(b: Laid, T: number): { at: Pt; angle: number } | null {
 /** Under the cap (world y), where the blocks start. */
 const CAP_Y = -20.4
 /**
- * The cap's blocks. The first chord blows them up and out both sides of the summit; the second chord's surge throws
- * the torn rim after them. They come down on the flanks as the chord rings (each on a measured onset) and tumble on
- * down: the west flank is the steeper, so they go further there; on the east they stop short of the shoulder where
- * he will land.
+ * The cap's blocks. The last hammer blow blows them up and out both sides of the summit, and they come down on the
+ * flanks as the silence falls and tumble on down, slowing (the west flank is the steeper, so they go further there;
+ * on the east they stop short of the shoulder where he will land). The crown's two great boulders are thrown higher
+ * and come down on the roll's two accents, one down each flank. Only those two landings strike.
  */
 const TUMBLES: Laid[] = (
   [
-    { from: [47.0, CAP_Y], t0: LAST1, x1: 44.6, t1: 150.263, size: 1.45, seed: 21, roll: -3.1, dur: 1.9 },
-    { from: [48.2, CAP_Y], t0: LAST1, x1: 50.7, t1: 150.42, size: 1.2, seed: 22, roll: 1.5, dur: 1.5 },
-    { from: [47.4, CAP_Y - 0.2], t0: LAST1, x1: 45.4, t1: 150.543, size: 0.46, seed: 23, roll: -2.3, dur: 1.5 },
-    { from: [46.6, CAP_Y + 0.1], t0: LAST1, x1: 42.3, t1: 150.995, size: 1.9, seed: 24, roll: -4.6, dur: 2.6 },
-    { from: [48.0, CAP_Y - 0.1], t0: LAST1, x1: 51.3, t1: 150.995, size: 0.42, seed: 25, roll: 1.1, dur: 1.2 },
-    { from: [48.6, CAP_Y + 0.1], t0: LAST1, x1: 52.5, t1: 151.248, size: 1.6, seed: 26, roll: 1.7, dur: 2.0 },
-    { from: [47.1, CAP_Y - 0.2], t0: LAST1, x1: 43.4, t1: 151.328, size: 0.56, seed: 27, roll: -3.2, dur: 2.0 },
-    // The second chord tears the crown off after them: two great boulders of it, one down each flank.
-    { from: [46.0, -20.6], t0: LAST2, x1: 44.9, t1: 150.42, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
-    { from: [49.2, -20.8], t0: LAST2, x1: 50.3, t1: 150.263, size: 1.25, seed: 29, roll: 1.4, dur: 1.6 },
+    { from: [47.0, CAP_Y], t0: BLOW, x1: 44.6, t1: 147.36, size: 1.45, seed: 21, roll: -3.1, dur: 1.9 },
+    { from: [48.2, CAP_Y], t0: BLOW, x1: 50.7, t1: 147.42, size: 1.2, seed: 22, roll: 1.5, dur: 1.5 },
+    { from: [47.4, CAP_Y - 0.2], t0: BLOW, x1: 45.4, t1: 147.28, size: 0.46, seed: 23, roll: -2.3, dur: 1.5 },
+    { from: [46.6, CAP_Y + 0.1], t0: BLOW, x1: 42.3, t1: 147.62, size: 1.9, seed: 24, roll: -4.6, dur: 2.6 },
+    { from: [48.0, CAP_Y - 0.1], t0: BLOW, x1: 51.3, t1: 147.5, size: 0.42, seed: 25, roll: 1.1, dur: 1.2 },
+    { from: [48.6, CAP_Y + 0.1], t0: BLOW, x1: 52.5, t1: 147.7, size: 1.6, seed: 26, roll: 1.7, dur: 2.0 },
+    { from: [47.1, CAP_Y - 0.2], t0: BLOW, x1: 43.4, t1: 147.55, size: 0.56, seed: 27, roll: -3.2, dur: 2.0 },
+    // The crown, torn off: two great boulders of it thrown high, one down each flank on the roll.
+    { from: [46.0, -20.6], t0: BLOW, x1: 44.9, t1: ROLL, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
+    { from: [49.2, -20.8], t0: BLOW, x1: 50.3, t1: 148.491, size: 1.25, seed: 29, roll: 1.4, dur: 1.6 },
   ] as Tumble[]
 ).map(lay)
+/** The two that strike: the crown's boulders on the roll. */
+const CROWN_LANDS = [ROLL, 148.491]
 
 /** Draw a block of the cap at T, lit by the dawn, and its dust where it lands and where it lies down. */
 function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void {
@@ -562,13 +560,13 @@ function drawRunners(p: p5, c: Pen, T: number, q: Pt, f: { x0: number; x1: numbe
 /* ------------------------------------------------------------------ the flanks cracking */
 
 /**
- * The cracks the last chords open along the skyline: from the crater's rim down each flank, a little under the
- * surface, jagged, with a branch or two down into the rock. The first chord opens the west one, the second runs it on
- * and opens the east; the dawn and the geyser's glare show through them as they open, then they go dark.
+ * The cracks the blow-out and the roll open along the skyline: from the crater's rim down each flank, a little under
+ * the surface, jagged, with a branch or two down into the rock. The last blow opens the west one, the roll runs it on
+ * and opens the east; the glare shows through them as they open, then they go dark.
  */
 const FLANKS = [
-  { from: 45.0, to: 39.6, at: LAST1, more: LAST2, seed: 31 },
-  { from: 50.1, to: 54.6, at: LAST2, more: LAST2, seed: 32 },
+  { from: 45.0, to: 39.6, at: BLOW, more: ROLL, seed: 31 },
+  { from: 50.1, to: 54.6, at: ROLL, more: 148.491, seed: 32 },
 ]
 
 function flankCracks(p: p5, c: Pen, T: number, q: Pt): void {
@@ -631,12 +629,10 @@ function flankCracks(p: p5, c: Pen, T: number, q: Pt): void {
 
 const rgb = (hex: string): string => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',')
 
-/** 0..1: the light up through the crater, a burst on each of the last two chords, dying back into the dawn. */
+/** 0..1: the glare up through the crater as the cap blows out, dying back into the night as the silence falls. */
 function burstAt(T: number): number {
-  let a = 0
-  if (T >= LAST1) a += smooth(T, LAST1, LAST1 + 0.05) * Math.exp(-(T - LAST1) / 0.7)
-  if (T >= LAST2) a += 0.75 * smooth(T, LAST2, LAST2 + 0.05) * Math.exp(-(T - LAST2) / 0.9)
-  return Math.min(1, a)
+  if (T < BLOW) return 0
+  return Math.min(1, smooth(T, BLOW, BLOW + 0.05) * Math.exp(-(T - BLOW) / 0.8))
 }
 
 /**
@@ -773,9 +769,9 @@ const KICKS = LEGS.filter(({ a, b }) => b.v0 === undefined && a.y - b.y > 0.05).
 /** When a ceiling stops him: the end of every leg that rams him into one. */
 const STOPS = LEGS.filter(({ b }) => b.ram).map(({ b }) => b.at)
 
-/** Every strike of the finale: his landing in the collar, the kicks and the stops, the throw, each stone's landing, the cap's cracks, the arc's two touches. */
+/** Every strike of the finale: his landing in the collar, the kicks and the stops, the blow-out, each stone's landing, the crown's two boulders, the cap's cracks, the landing and the bounce. */
 export const FALL_HITS: number[] = (() => {
-  const all = [CODA, ...KICKS, ...STOPS, LAST2, ...STONES.map((s) => s.t1), ...TUMBLES.map((b) => b.t1), ...CAP_CRACKS, LAND.t, BOUNCE.t].sort((a, b) => a - b)
+  const all = [CODA, ...KICKS, ...STOPS, BLOW, ...STONES.map((s) => s.t1), ...CROWN_LANDS, ...CAP_CRACKS, LAND.t, BOUNCE.t].sort((a, b) => a - b)
   const out: number[] = []
   for (const t of all) if (!out.some((u) => Math.abs(u - t) < 0.02)) out.push(t)
   return out
@@ -806,28 +802,47 @@ function pressed(T: number, y: number): number {
 }
 
 /**
- * The geyser once he has left it (world y of its top), and how big its head still is: the second chord's surge
- * drives it straight up, out of the top of the wide frame, and holds it there (the water's own burst, in
- * `fall-water.ts`, climbs on over this top, falls back and is gone by the credits); later it sinks to a burble in the
- * crater and goes down into the vent.
+ * The geyser once he has left it (world y of its top): the last blow's surge drives it straight up out of the
+ * summit as it throws him east (the water's own burst, in `fall-water.ts`, climbs on over this top and falls back
+ * through the silence); then it sinks to a burble in the crater and drains down the vent before the crater's rubble
+ * drops into it.
  */
-/** The plume's top at the height of the second chord's surge (world y): at the top edge of the wide frame over the summit. */
-const SURGE = -30.5
+const SURGE = -27.5
 
 function plumeAt(T: number): { top: number } {
   const floor = skyline(COL) + 1.96
-  // The surge: fast off his top at LAST2 (he is thrown off it east), easing into its height in about half a second.
-  const u = T - LAST2
+  // The surge: fast out of the crater as he is thrown off it east, easing into its height in about half a second.
+  const u = T - BLOW
   const surge = 1 - Math.pow(1 - Math.min(1, Math.max(0, u) / 0.55), 2.2)
-  const high = -22.6 + (SURGE + 22.6) * surge + 0.2 * Math.sin(u * 2.1) * smooth(T, LAST2 + 0.4, LAST2 + 1.2)
-  const sink = smooth(T, LAST2 + 1.5, LAST2 + 4.6)
-  const gone = smooth(T, LAST2 + 6, LAST2 + 9.5)
+  const high = -21.2 + (SURGE + 21.2) * surge + 0.2 * Math.sin(u * 2.1) * smooth(T, BLOW + 0.4, BLOW + 1.2)
+  const sink = smooth(T, BLOW + 0.8, BLOW + 1.9)
+  const gone = smooth(T, BLOW + 1.6, BLOW + 2.7)
   const burble = floor - 0.6 + 0.1 * Math.sin(T * 3.1)
   const top = high * (1 - sink) + burble * sink
   // Then the water drains back down the vent, gathering speed, out of every frame.
-  const drain = Math.max(0, T - (LAST2 + 9.5))
+  const drain = Math.max(0, T - (BLOW + 2.7))
   const low = floor + 1.2 + (3 * drain * drain) / (drain + 1.2)
   return { top: top * (1 - gone) + low * gone }
+}
+
+/** The geyser's column: from the collar up to him while he rides it, then up out of the summit on its own. */
+function jet(p: p5, s: State, c: Pen & { t: number }, T: number, withCrown: boolean): void {
+  if (T < 135.411) return
+  const f = frame(p, c.k)
+  const X = lx(COL)
+  const ball = laneAt(s.lane, Math.max(0, c.t))
+  const fo = force(T)
+  const riding = T < BLOW
+  const top = riding ? ball.y + R * 0.55 : ly(plumeAt(T).top)
+  // Only the stretch of the column in view is drawn.
+  const yb = Math.min(0.06, f.y1 + 2)
+  const yt = Math.max(top, f.y0 - 2)
+  const d = dawn(T)
+  const sun = T >= BLOW ? d : 0
+  if (yb > yt) column(p, c, X, yb, yt, T, fo, sun)
+  if (!withCrown) return
+  if (riding) crown(p, c, ball.x, ball.y, T, fo, pressed(T, ball.y + ORIGIN[1]), sun)
+  else plume(p, c, X, ly(surface(COL, T)), ly(plumeAt(T).top), T, d, (x) => ly(surface(x + ORIGIN[0], T)))
 }
 
 function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
@@ -842,9 +857,9 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   const by = T < CODA ? 0 : ball.y
   const bx = T < CODA ? X : ball.x
 
-  // The dust of the collapse hanging in the rooms (under everything this part draws): thickening with the chords,
-  // held in the silence, gone once he is out.
-  const haze = 0.13 * smooth(T, CODA, CODA + 2.5) * (1 - smooth(T, LAST1, LAST1 + 1.0))
+  // The dust of the chords hanging in the rooms he bursts up through (under everything this part draws), while the
+  // frame is close on him; in the wide of the whole mountain each fallen room has its own (`fall-ruin.ts`).
+  const haze = 0.13 * smooth(T, CODA, CODA + 2.5) * (1 - smooth(T, 141.0, 143.0))
   if (haze > 0.003) {
     p.push()
     p.noStroke()
@@ -862,9 +877,10 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   // The vent shows as he comes up the hall toward it, wet once the spray is in it.
   // Before the coda there is no vent: the summit is solid rock over the hall's smoke hole (the opening wide sees it).
   // After the blow-out the day comes down it only while the geyser is up; then the crater's rubble plugs its top.
-  const inVent = smooth(T, 142.6, 145.0) * (1 - 0.8 * smooth(T, LAST2 + 8, LAST2 + 16))
-  if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - smooth(T, LAST2 + 0.9, LAST2 + 2.6)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1), shut: smooth(T, LAST2 + 1.2, LAST2 + 4) }, surface(COL, T) + 0.15)
-  if (T >= LAST2) plug(p, c, T, q)
+  const inVent = smooth(T, 142.6, 145.0) * (1 - 0.8 * smooth(T, BLOW + 6, BLOW + 14))
+  const day = T >= BLOW ? smooth(T, BLOW, BLOW + 0.6) * (1 - smooth(T, BLOW + 1.0, BLOW + 2.4)) : 0.25 * smooth(T, CAP_CRACKS[0], BLOW)
+  if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day, shut: smooth(T, BLOW + 1.7, BLOW + 2.8) }, surface(COL, T) + 0.15)
+  if (T >= PLUG[0].at - 0.5) plug(p, c, T, q)
   for (const fl of FLOORS) breach(p, c, ORIGIN, COL, fl, T, q)
   bellShaft(p, c, T)
   // The standpipe is the heart's: nothing of it until the heart's cover has lifted past the floor (it stood alone in
@@ -877,10 +893,10 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
     collar(p, c, ORIGIN, COL, 33.13, q)
     ctx.restore()
   }
-  capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, LAST1, (x) => skyline(x))
+  capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, BLOW, (x) => skyline(x))
 
-  // The last chords: the dawn bursting up through the crater, the flanks cracking along the skyline.
-  if (T >= LAST1) {
+  // The blow-out: the glare up through the crater, the flanks cracking along the skyline.
+  if (T >= BLOW) {
     dawnBurst(p, c, T, f)
     flankCracks(p, c, T, q)
   }
@@ -888,55 +904,48 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   // The trolls in the drum room and the mine, fleeing on the chords as he comes up through their floors.
   if (T < 142) drawRunners(p, c, T, q, f)
 
-  // What comes down, and what is thrown up.
-  for (const st of STONES) stone(p, c, ORIGIN, st, T, q, 0.55)
+  // What comes down, and what is thrown up (the vault's slabs are drawn over the hall's dark, in `over`).
+  for (const st of STONES) if (!VAULT_SLABS.includes(st)) stone(p, c, ORIGIN, st, T, q, 0.55)
   for (const b of TUMBLES) drawBlock(p, c, b, T, q, 0.35 + 0.55 * d)
 
-  // The geyser: from the collar up to him while he rides it, then up out of the summit on its own.
-  const foot = 0.06
+  // The geyser: spitting round him in the collar, then from the collar up to him, then out of the summit.
   if (T >= 135.146 && T < 135.411) {
     // Stopped by him: only spitting round him.
     crown(p, c, bx, by, T, 0.5, 0, 0, smooth(T, 135.146, 135.2))
   } else if (T >= CODA + 0.3 && T < 135.146) {
     crown(p, c, bx, by, T, 0.3, 0, 0, 0.35 * smooth(T, CODA + 0.3, CODA + 0.7))
   }
-  if (T >= 135.411) {
-    const fo = force(T)
-    const riding = T < LAST2
-    const top = riding ? by + R * 0.55 : ly(plumeAt(T).top)
-    // Only the stretch of the column in view is drawn.
-    const yb = Math.min(foot, f.y1 + 2)
-    const yt = Math.max(top, f.y0 - 2)
-    const sun = T >= LAST1 ? d : 0
-    if (yb > yt) column(p, c, X, yb, yt, T, fo, sun)
-    if (riding) crown(p, c, bx, by, T, fo, pressed(T, ball.y + ORIGIN[1]), sun)
-    else {
-      plume(p, c, X, ly(surface(COL, T)), ly(plumeAt(T).top), T, d, (x) => ly(surface(x + ORIGIN[0], T)))
-    }
-  }
+  jet(p, s, c, T, true)
 }
 
 export const fall = part<State>(
   {
     name: 'fall',
     draw: (p, s, c) => drawFall(p, s, c),
-    // Over the ball: the front of the standpipe's mouth, so he sits down inside it when he drops on it.
+    // Over the ball: the front of the standpipe's mouth, so he sits down inside it when he drops on it; then the
+    // mountain coming down over every room (he is up the vent above them by then).
     over: (p, s, c) => {
-      const pipe = collarSeen(s.begin + c.t)
-      if (pipe <= 0) return
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      ctx.save()
-      ctx.globalAlpha = pipe
-      collarFront(p, c, ORIGIN, COL, 33.13, quake(s.begin + c.t))
-      ctx.restore()
+      const T = s.begin + c.t
+      const q = quake(T)
+      const pipe = collarSeen(T)
+      if (pipe > 0) {
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        ctx.save()
+        ctx.globalAlpha = pipe
+        collarFront(p, c, ORIGIN, COL, 33.13, q)
+        ctx.restore()
+      }
+      drawRuin(p, c, T, ORIGIN, q, () => jet(p, s, c, T, false))
+      for (const st of VAULT_SLABS) stone(p, c, ORIGIN, st, T, q, 0.45)
     },
   },
   (slot) => {
     const l = lane(slot.begin, slot.end)
     const rest = onGround(REST[0])
     return {
-      // The chimney from the heart to the summit, the plume over it, and the east shoulder where he comes to rest.
-      cells: box(-5.5, -64, 13, 1.5, 1),
+      // The whole mountain under the summit, every room the collapse darkens (world x 20 to 75), the plume over it,
+      // and the east shoulder where he comes to rest.
+      cells: box(-28, -64, 27, 1.5, 1),
       exit: [rest[0] + 0.5, rest[1]] as Pt,
       lane: l,
       state: { begin: slot.begin, lane: l },
@@ -945,61 +954,58 @@ export const fall = part<State>(
   (slot): PartShot[] => {
     const w = (x: number, y: number): Pt => [lx(x), ly(y)]
     // Each floor he is pinned under: its crack and burst, where he is pinned (world y), the frame's cells at each, the
-    // frame's lift over him, and a key between bursts (time, cells) where the camera follows him free.
+    // frame's lift over him, and a key between bursts (time, cells) where the camera follows him free. Wide enough
+    // (11 to 13 cells) that each room's trolls, fleeing on its chords, are in the frame with him.
     const PIN_HOLD = 0.7
     const PINS: [number, number, number, [number, number], number, [number, number] | null][] = [
-      [FLOORS[0].crack, FLOORS[0].burst, 26.68, [7.4, 7.5], -0.4, [137.25, 8.0]],
-      [FLOORS[1].crack, FLOORS[1].burst, 18.68, [8.5, 8.8], -0.4, [139.6, 9.35]],
-      [FLOORS[2].crack, FLOORS[2].burst, 10.18, [9.75, 10], -0.5, null],
+      [FLOORS[0].crack, FLOORS[0].burst, 26.68, [10.8, 11.0], -0.9, [137.25, 11.4]],
+      [FLOORS[1].crack, FLOORS[1].burst, 18.68, [11.8, 12.0], -0.9, [139.6, 12.3]],
+      [FLOORS[2].crack, FLOORS[2].burst, 10.18, [12.6, 13.0], -1.2, null],
     ]
     return [
       // The machine broken over him, wide (the runaway's last keys hold the same): he drops into the collar low in it.
       { t: slot.begin, cells: CODA_SHOT.cells, hold: w(CODA_SHOT.world[0], CODA_SHOT.world[1]), w: CODA_SHOT.w },
-      // One slow push in on the corked collar while the heart's crew bolt for its doors on the pickup and the crash;
-      // held on him until the crash, then one eased tilt up as it blows him out.
-      { t: 135.146, cells: 8.3, hold: w(48.7, 31.5), w: 0.85 },
-      { t: 135.411, cells: 7.9, hold: w(47.9, 31.5), w: 0.75 },
+      // Held on the corked collar while the heart's crew bolt for its doors on the pickup and the crash, the whole
+      // broken machine in the frame; then one eased tilt up as it blows him out.
+      { t: 135.146, cells: 10.2, hold: w(49.4, 31.0), w: 0.85 },
+      { t: 135.411, cells: 10.4, hold: w(48.6, 30.6), w: 0.75 },
       // Pinned under a floor the camera holds on him from the crack to the burst (the follow's lead would otherwise
       // climb the frame away from him to the burst), and tilts up with him as it lets him go; moving, it leads.
       // (Between two pins it follows him free, its hold passing evenly from one pin to the next, unweighted.)
       ...PINS.flatMap(([crack, burst, y, cells, lift, next], i): PartShot[] => [
-        { t: crack, cells: cells[0], hold: w(COL, y + lift), w: PIN_HOLD, off: [0, lift] },
-        { t: burst, cells: cells[1], hold: w(COL, y + lift), w: PIN_HOLD, off: [0, lift] },
-        ...(next ? [{ t: next[0], cells: next[1], hold: w(COL, (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [0, lift] as Pt }] : []),
+        { t: crack, cells: cells[0], hold: w(COL + 1.5, y + lift), w: PIN_HOLD, off: [0, lift] },
+        { t: burst, cells: cells[1], hold: w(COL + 1.5, y + lift), w: PIN_HOLD, off: [0, lift] },
+        ...(next ? [{ t: next[0], cells: next[1], hold: w(COL + 1.5, (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [0, lift] as Pt }] : []),
       ]),
-      // The hall, wide, coming down round him: the pillars one a chord, then on the hammer blows the throne and the
-      // lights, with him rising into the vent's mouth over it all.
-      { t: 142.0, cells: 12.5, off: [0, -1.5] },
-      { t: 143.5, cells: 14.5, hold: w(51.5, 1.2), w: 0.75 },
-      // The hammer blows: the hall whole, opening out a little with each (16.5 to 18 cells), the vault's slabs and the
-      // spilled fires in it, and him surging into the vent's mouth over it.
-      { t: 145.345, cells: 16.5, hold: w(53.8, 1.0), w: 0.92 },
-      { t: 146.107, cells: 17.5, hold: w(53.2, 0.7), w: 0.94 },
-      { t: 146.601, cells: 18.5, hold: w(52, -0.5), w: 0.92 },
-      { t: 146.85, cells: 18, hold: w(50.6, -3.8), w: 0.9 },
-      // Up the dark vent after him through the silence, one even tilt (under a frame height a second), in on him
-      // under the cap by the roll, and from the roll one move out for the blow-out, the summit whole.
-      { t: 147.3, cells: 16.5, hold: w(48.8, -9.5), w: 0.9 },
-      { t: 148.243, cells: 13, hold: w(48.0, -17.8), w: 0.85 },
-      { t: LAST1, cells: 18.6, hold: w(48.6, -21.0), w: 0.95 },
-      { t: LAST2, cells: 18.8, hold: w(49.3, -21.5), w: 0.92 },
-      // The plume surges; he is thrown across it east and the camera goes with him, close enough to see him (the
-      // plume and the broken summit behind him), down to the shoulder.
-      { t: 150.6, cells: 15, hold: w(51.0, -24.5), w: 0.5 },
-      { t: 151.4, cells: 12.5, hold: w(52.5, -25.0), w: 0.4 },
-      { t: 153.2, cells: 12, hold: w(56.5, -20.2), w: 0.55 },
-      // In to him at rest in the hollow, the church in the valley: then one long crane back over the credits, from
-      // the hollow to the whole mountain in cross-section at dawn, every place he lit on his way down still lit, the
-      // broken hall dark, the chimney he came up: the lighting rule's payoff. (He stays in the frame under Zoom.)
-      { t: 156, cells: 12.6, hold: w(61, -19.9), w: 0.9 },
-      { t: 160.5, cells: 15.5, hold: w(60.6, -19.6), w: 0.95 },
-      // (The summit kept under the cards, which sit on the sky over it: at least a third of the way down the frame
-      // while the Music card is up (to 171.7), a quarter under p5.js, and the heart's floor off the bottom edge.)
-      { t: 164.5, cells: 24, hold: w(57, -16.5), w: 0.97 },
-      { t: 168.5, cells: 40, hold: w(51, -15.0), w: 0.98 },
-      { t: 170.9, cells: 49, hold: w(49.5, -12.7), w: 0.985 },
-      { t: 172.5, cells: 60, hold: w(47, -7.2), w: 0.99 },
-      { t: slot.end, cells: 80, hold: w(46, -1.0), w: 1 },
+      // Up through the hall as its court flees, and one eased pull back from the hall to the whole mountain in
+      // cross-section, the summit to the heart's floor, the white jet the one line through every room.
+      { t: 141.046, cells: 16, hold: w(49.5, 5.0), w: 0.8 },
+      { t: 143.199, cells: 56, hold: w(52, 6.0), w: 1 },
+      // The rooms come down bottom up behind him: the frame lifts a little with the fall as each lower room goes
+      // dark (never more than a few cells a second), so his climb to the cap stays in the frame.
+      { t: 144.12, cells: 56, hold: w(52.2, 4.3), w: 1 },
+      { t: 145.079, cells: 55.5, hold: w(52.5, 2.2), w: 1 },
+      { t: 145.847, cells: 55, hold: w(52.8, 0.1), w: 1 },
+      { t: 146.601, cells: 54, hold: w(53.2, -2.4), w: 1 },
+      // The silence: held on the fallen rooms and their dust (only the slowest creep in), him high in his arc over
+      // the east flank.
+      { t: 147.1, cells: 54, hold: w(53.5, -6.0), w: 1 },
+      { t: 148.1, cells: 51, hold: w(54.0, -7.0), w: 1 },
+      // The roll: one push in to the east shoulder as he comes down to it, the church in the valley beyond, going on
+      // in through the landing and the bounce.
+      { t: LAST1, cells: 24, hold: w(60.4, -19.6), w: 1 },
+      { t: LAST2, cells: 21.5, hold: w(60.6, -19.7), w: 1 },
+      // In on him in the hollow as he rocks to rest, the church and the rising sun in the frame; then one long crane
+      // up and back over the credits to the broken summit at dawn, the valley, the church and the sun: the mountain
+      // is dark inside now (every room fallen), so the frame gives it the lower third and the morning the rest. (It
+      // stays east and high enough that the church, on the far layer, stays over the flank; he stays in the frame
+      // under Zoom.)
+      { t: 151.3, cells: 15, hold: w(60.8, -19.9), w: 1 },
+      { t: 153.5, cells: 14.2, hold: w(61.0, -20.0), w: 1 },
+      { t: 157.0, cells: 17, hold: w(61.4, -20.5), w: 1 },
+      { t: 161.0, cells: 24, hold: w(62.0, -21.2), w: 1 },
+      { t: 165.0, cells: 32, hold: w(62.5, -21.8), w: 1 },
+      { t: slot.end, cells: 40, hold: w(63.0, -22.2), w: 1 },
     ]
   },
 )

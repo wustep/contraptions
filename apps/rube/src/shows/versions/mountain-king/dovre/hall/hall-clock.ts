@@ -124,10 +124,16 @@ export const FLEE = [chord(140.05), chord(140.27), chord(141.05), chord(141.05)]
 /** The pillars crack on the next pairs; the floor over the chimney's column breaks open. */
 export const CRACKS = [chord(139.07), chord(139.33), chord(140.05)]
 export const FLOOR_BREAK = chord(140.27)
-/** The pillars come down, one a chord: P1, P2, P3. */
-export const PILLAR_FALL = [chord(143.2), chord(144.12), chord(145.08)]
-/** The six hammer blows: the throne topples, the vault drops its stalactites, the lights go out one a blow. */
+/**
+ * The six hammer blows, as the mountain comes down bottom up under him (`fall-ruin.ts`): the court's ledges slump on
+ * the first two, the throne topples and the pillars come down on the next two, the vault on the fifth; the lights go
+ * out one a blow.
+ */
 export const HAMMERS = CODA_CHORDS.filter((c) => c.t >= 145.3).map((c) => c.t)
+/** The pillars come down (their tops landing) with the throne: P1 and P2 on the third blow, P3 on the fourth. */
+export const PILLAR_FALL = [HAMMERS[2], HAMMERS[2], HAMMERS[3]]
+/** The court's ledges slump: the upper two on the first blow, the lower two on the second. */
+export const LEDGE_FALL = [HAMMERS[1], HAMMERS[1], HAMMERS[0], HAMMERS[0]]
 
 /* ------------------------------------------------------------------ paths */
 

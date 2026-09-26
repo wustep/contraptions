@@ -191,6 +191,11 @@ export function notesIn(a: number, b: number): number[] {
  * a few single blows; and the run of six hammer blows 145.34 … 146.60.
  */
 export const CODA_CHORDS: readonly { t: number; s: number; g: number }[] = data.coda.chords
+/**
+ * The last of the six hammer blows (146.60): the summit's cap blows out and the geyser throws Peer out of the mountain,
+ * east, into the silence. (The rooms under it have come down on the chords before it, bottom up.)
+ */
+export const BLOW = CODA_CHORDS[CODA_CHORDS.length - 1].t
 
 /* ------------------------------------------------------------------ loudness */
 
