@@ -229,27 +229,37 @@ export const hillSet = scenery<null>({
     band(f.cx * 0.82, 0.05, 0.22, 0.52, 4, hill2)
     band(f.cx * 0.75, -0.35, 0.05, 0.9, 7, field)
 
-    // The town in the valley, small and pale: a row of roofs and a steeple, where their church is.
+    // The town in the valley, far off in the haze: one soft roofline, the houses run together under their gables,
+    // and a steeple where their church is. A single pale shape, no gaps, no outline, so it never reads as a row of
+    // marks.
     const townShift = f.cx * 0.78
     const ty = horizon + 0.05
     const town = mixHex(mixHex(HOME.roof, HILL.sky, 0.72), mixHex(HOME.roofOld, HILL.skyGrey, 0.72), au)
     const walls = mixHex(mixHex(HILL.grass, HILL.sky, 0.72), mixHex(HOME.trim, HILL.skyGrey, 0.7), au)
-    for (let i = 0; i < 9; i++) {
-      const x = townShift + 4.4 + i * 0.3 + 0.12 * hash(i, 21)
-      if (x < f.x0 - 1 || x > f.x1 + 1) continue
-      const h = 0.1 + 0.07 * hash(i, 22)
-      const w = 0.2 + 0.06 * hash(i, 23)
-      p.fill(alpha(p, walls, 0.5))
-      p.rect(X(x - w / 2), X(ty - h), X(w), X(h))
-      p.fill(alpha(p, town, 0.5))
-      p.triangle(X(x - w / 2 - 0.02), X(ty - h), X(x + w / 2 + 0.02), X(ty - h), X(x), X(ty - h - 0.12))
-      if (i === 4) {
-        // The steeple.
-        p.fill(alpha(p, walls, 0.5))
-        p.rect(X(x - 0.07), X(ty - h - 0.34), X(0.14), X(0.34))
-        p.fill(alpha(p, town, 0.5))
-        p.triangle(X(x - 0.09), X(ty - h - 0.34), X(x + 0.09), X(ty - h - 0.34), X(x), X(ty - h - 0.7))
+    const tx0 = townShift + 4.2
+    const tx1 = townShift + 7.0
+    if (tx1 > f.x0 - 1 && tx0 < f.x1 + 1) {
+      p.noStroke()
+      p.fill(alpha(p, mixHex(town, walls, 0.45), 0.42))
+      p.beginShape()
+      p.vertex(X(tx0), X(ty))
+      for (let i = 0; i < 9; i++) {
+        const x = tx0 + 0.16 + i * 0.3 + 0.06 * hash(i, 21)
+        const h = 0.1 + 0.07 * hash(i, 22)
+        const w = 0.3
+        p.vertex(X(x - w / 2), X(ty - h))
+        if (i === 4) {
+          // The steeple.
+          p.vertex(X(x - 0.07), X(ty - h))
+          p.vertex(X(x - 0.07), X(ty - h - 0.34))
+          p.vertex(X(x), X(ty - h - 0.7))
+          p.vertex(X(x + 0.07), X(ty - h - 0.34))
+          p.vertex(X(x + 0.07), X(ty - h))
+        } else p.vertex(X(x), X(ty - h - 0.1))
+        p.vertex(X(x + w / 2), X(ty - h))
       }
+      p.vertex(X(tx0 + 0.16 + 8 * 0.3 + 0.2), X(ty))
+      p.endShape(p.CLOSE)
     }
 
     // The hill: the crest and its flank, filled down past the lane; its skyline inked once.
