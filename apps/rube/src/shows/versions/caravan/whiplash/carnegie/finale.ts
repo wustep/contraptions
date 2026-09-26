@@ -101,13 +101,15 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(CHORD_HIT - 0.2, 11.0, [3.0, -2.4]),
     k(CHORD_HIT + 1.6, 10.4, [2.8, -2.3]),
     k(CUT - 0.3, 4.0, [0.58, -2.55]),
-    // Held on the fist; then back to the whole stage going dark, the machine low in the frame so the cards come up
-    // over clear wall; and on back, slowly, to the whole proscenium by the last frame.
+    // Held on the fist; then out, not far, to the last image and held there: the frame with Andrew in its cup and
+    // Fletcher beside him in the spot that stays on them while the band and the house go dark, low in the frame so
+    // the cards come up over the wall above; then slowly in on the two of them to the end (a key past the end, so
+    // the camera is still moving on the last frame).
     k(CUT + 2.4, 3.92, [0.56, -2.57]),
-    k(556.2, 10.0, [0.3, -2.35]),
-    k(566.0, 13.1, [0.55, -3.8]),
-    // (A key past the end, so the camera is still going back on the last frame rather than easing to a stop.)
-    k(slot.end + 4, 19.0, [0.9, -5.6]),
+    k(556.2, 8.6, [0.35, -2.2]),
+    k(559.6, 7.6, [0.32, -2.32]),
+    k(567.0, 6.0, [0.27, -2.5]),
+    k(slot.end + 3, 4.8, [0.22, -2.64]),
   ]
 }
 
