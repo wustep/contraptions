@@ -3,7 +3,7 @@ import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { R, laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
 import { HAT, KIT_FLOOR, KIT_LAND, SNARE, drawKit, drawStick, type KitPiece } from '../drums'
 import { POSES, beatPose, blendPose, drawConductor, type Pose } from '../fletcher'
-import { alpha, box, part, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
+import { alpha, box, part, scenery, smooth, type Companion, type Ctx, type PartShot, type Slot } from '../kit'
 import { BAND, BASS, FIRST, TUNE_ORIGIN, TUNE_PERIOD, tune } from '../music'
 import { G_EARTH, G_SNAP } from '../physics'
 import { KIT, SHOP } from '../worlds'
@@ -343,12 +343,9 @@ interface PracticeState {
   lane: Lane
 }
 
-function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
-  const T = c.t + s.begin
-  const { k } = c
-  const b = laneAt(s.lane, c.t)
-  const ball: Pt = [b.x - K[0], b.y - K[1]]
-  const look: RoomLook = {
+/** The room's light and air at `T`. */
+function roomLook(T: number): RoomLook {
+  return {
     T,
     light: 1,
     sway: swing(BLOWS, T),
@@ -359,13 +356,25 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
     dust: stir(T),
     backlit: smooth(T, F_FROM, BASS - 0.4) * (1 - smooth(T, F_GONE - 0.8, F_GONE + 0.6)),
   }
+}
+
+/** Fletcher's rig at `T`, in the kit's frame (his head is the company ball the stage draws over it). */
+function drawFletcher(p: p5, c: Ctx, T: number, look: RoomLook): void {
+  const head = fletcherAt(T)
+  drawConductor(p, c, head, fletcherPose(T), { floor: KIT_FLOOR, light: Math.min(1, litAt(look, head[0], 0) + 0.25) })
+}
+
+function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
+  const T = c.t + s.begin
+  const { k } = c
+  const b = laneAt(s.lane, c.t)
+  const ball: Pt = [b.x - K[0], b.y - K[1]]
+  const look = roomLook(T)
   p.push()
   p.translate(K[0] * k, K[1] * k)
   drawPracticeRoom(p, c, look)
-  if (T >= F_FROM && T < F_GONE) {
-    const head = fletcherAt(T)
-    drawConductor(p, c, head, fletcherPose(T), { floor: KIT_FLOOR, light: Math.min(1, litAt(look, head[0], 0) + 0.25) })
-  }
+  // In the doorway he is drawn here, behind the kit; once he goes, the stage draws him (`fletcherOut`).
+  if (T >= F_FROM && T < F_LEAVE) drawFletcher(p, c, T, look)
   drawKit(p, c, {
     shell: KIT.oxblood,
     since: (piece) => since(KIT_HITS, piece, T),
@@ -375,6 +384,27 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
   drawPair(p, c, { S: pairAngle('S', T, PAIR_HITS.S, ball), H: pairAngle('H', T, PAIR_HITS.H, ball) })
   p.pop()
 }
+
+/**
+ * Fletcher on his way out (`F_LEAVE` → `F_GONE`), drawn by the Shaffer stage after every part (`score.ts`, the
+ * stage's `after`), so over the band room's corridor as well as this one. Drawn by this part, he was cut off at the
+ * band set's left edge (which comes after this part in the chain and covers it) while his head, a company ball drawn
+ * over every set, carried on alone across the corridor wall: a hollow ring at head height. Placed at this part's
+ * origin; it is told show time.
+ */
+export const fletcherOut = scenery<null>({
+  name: 'practice-fletcher',
+  draw: (p, _s, c) => {
+    const T = c.t
+    if (T < F_LEAVE || T >= F_GONE) return
+    p.push()
+    p.translate(K[0] * c.k, K[1] * c.k)
+    drawFletcher(p, c, T, roomLook(T))
+    p.pop()
+  },
+})
+/** The cells he walks out through, in this part's frame (the stage draws `fletcherOut` whenever any are in view). */
+export const FLETCHER_OUT_CELLS: Pt[] = box(DOOR_X + K[0] - 2, K[1] + HEAD_Y - 2, DOOR_X + K[0] + 12, K[1] + KIT_FLOOR + 0.6)
 
 export const practice = part<PracticeState>(
   {
