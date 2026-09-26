@@ -342,13 +342,31 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
 /* ------------------------------------------------------------------ Jim */
 
 /**
- * Where Jim is at `t`: in the wings by the stage door, watching; drawn a little toward the stage when the camera
- * comes to him in the hush (his son alone on the ride, far across the stage), and at the nod.
+ * The hush's look at Jim: the stage door opens again (358.5) and he stands in it, in the corridor's light, where he
+ * held his son under the chord; a small ball in a lit doorway reads across the stage where a ball on a dark floor
+ * did not. He steps back out into the wings once the camera has gone back to the kit (367.2), and the door closes.
+ */
+const HUSH_DOOR = { open: [358.5, 359.5] as [number, number], shut: [368.0, 369.3] as [number, number] }
+const IN_DOOR: [number, number] = [358.7, 359.95]
+const OUT_DOOR: [number, number] = [367.2, 368.4]
+/** Where he stands in the doorway: just inside its stage edge, the corridor's light behind him. */
+const DOORWAY_X = DOOR.x + 0.18
+
+/** How far the stage door is open in the hush (radians, as the sabotage's `doorAngle`: 1.36 wide open). */
+export function hushDoor(t: number): number {
+  return 1.3 * ease(t, HUSH_DOOR.open[0], HUSH_DOOR.open[1]) * (1 - ease(t, HUSH_DOOR.shut[0], HUSH_DOOR.shut[1]))
+}
+
+/**
+ * Where Jim is at `t`: in the wings by the stage door, watching; in the doorway's light for the hush's look at him,
+ * drawn toward the stage (his son alone on the ride, far across it); drawn toward it too for the solo's look, and at
+ * the nod.
  */
 export function jimAt(t: number): Pt {
-  const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
+  const inDoor = ease(t, IN_DOOR[0], IN_DOOR[1]) * (1 - ease(t, OUT_DOOR[0], OUT_DOOR[1]))
+  const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.6, 367.2))
   // Drawn toward the stage too when the solo's camera comes to him.
   const solo = 0.06 * ease(t, 304.2, 305.6) * (1 - ease(t, 307.2, 308.6))
   const lean = hush + solo + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
-  return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
+  return [JIM_WINGS[0] + (DOORWAY_X - JIM_WINGS[0]) * inDoor + lean, JIM_WINGS[1]]
 }

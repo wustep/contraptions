@@ -246,12 +246,18 @@ function onLeaf(q: [Pt, Pt, Pt, Pt], u: number, v: number): Pt {
  * stage floor. Only while the door is open; the leaf (`drawDoorLeaf`, over the balls) covers the rest.
  */
 export function drawDoorway(p: p5, c: Ctx, T: number): void {
-  const angle = doorAngle(T)
+  drawOpenDoorway(p, c, doorAngle(T), swell(T))
+}
+
+/**
+ * The lit corridor in the stage door's opening and its light on the stage floor, the door open `angle` radians and
+ * the light swelled `sw` (0..1) into the air before it. The sabotage's meeting, and the hush's look at Jim (`hall.ts`).
+ */
+export function drawOpenDoorway(p: p5, c: Ctx, angle: number, sw: number): void {
   if (angle <= 0.001) return
   const { k, weight } = c
   const ink = '#050404'
   // Open, and brighter as the band's held chord swells behind the two of them.
-  const sw = swell(T)
   const open = clamp(angle / 0.9) * (0.85 + 0.25 * sw)
   const x0 = DOOR_X0
   const x1 = DOOR_X0 + DOOR.w
@@ -326,9 +332,23 @@ function swell(T: number): number {
  * open, it narrows toward its hinge and its window goes dark.
  */
 export function drawDoorLeaf(p: p5, c: Ctx, T: number): void {
+  drawLeafAt(p, c, doorAngle(T))
+  // Under the road's darkness, like everything else, just after the cut.
+  const v = veil(T)
+  if (v > 0.001) {
+    const { k } = c
+    p.push()
+    p.noStroke()
+    p.fill(alpha(p, c.bg, v))
+    p.rect((DOOR_X0 - 0.1) * k, (DOOR_TOP - 0.1) * k, (DOOR.w + 0.2) * k, (DOOR.h + 0.2) * k)
+    p.pop()
+  }
+}
+
+/** The stage door's leaf open `angle` radians (0: shut, exactly the hall's door). */
+export function drawLeafAt(p: p5, c: Ctx, angle: number): void {
   const { k, weight } = c
   const ink = '#050404'
-  const angle = doorAngle(T)
   const face = mixHex(mixHex(c.bg, HALL.deep, 0.8), HALL.black, 0.6 * Math.sin(angle))
   p.push()
   p.rectMode(p.CORNER)
@@ -350,13 +370,6 @@ export function drawDoorLeaf(p: p5, c: Ctx, T: number): void {
     p.noStroke()
     p.fill(alpha(p, HALL.gold, 0.5 * (1 - clamp(angle / 0.7))))
     p.quad(w[0][0] * k, w[0][1] * k, w[1][0] * k, w[1][1] * k, w[2][0] * k, w[2][1] * k, w[3][0] * k, w[3][1] * k)
-  }
-  // Under the road's darkness, like everything else, just after the cut.
-  const v = veil(T)
-  if (v > 0.001) {
-    p.noStroke()
-    p.fill(alpha(p, c.bg, v))
-    p.rect((DOOR_X0 - 0.1) * k, (DOOR_TOP - 0.1) * k, (DOOR.w + 0.2) * k, (DOOR.h + 0.2) * k)
   }
   p.pop()
 }

@@ -14,6 +14,7 @@ import { CUE_FROM, cueAt, type Cue } from './light'
 import { drawDrummerBody } from './solo-rig'
 import { ARCH, DOOR, FLOOR, JIM_WINGS, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
 import { sinceStroke } from './strokes'
+import { drawLeafAt, drawOpenDoorway } from './sabotage-set'
 
 /**
  * Carnegie Hall: the stage and everything on it that is not a part's own machine. Scenery, drawn from show time,
@@ -267,6 +268,20 @@ function door(p: p5, c: Ctx, T: number): void {
   p.noStroke()
   p.fill(frameCol)
   p.rect((x - DOOR.w / 2 - 0.12) * k, (FLOOR - DOOR.h - 0.12) * k, (DOOR.w + 0.24) * k, (DOOR.h + 0.12) * k)
+  // Open for the hush's look at Jim (`conductor.ts` `hushDoor`): the lit corridor behind him, as at the meeting.
+  const open = T >= SOLO ? hushDoor(T) : 0
+  if (open > 0.001) {
+    drawOpenDoorway(p, c, open, 0.35 * clamp(open / 1.3))
+    drawLeafAt(p, c, open)
+    p.push()
+    p.rectMode(p.CORNER)
+    p.noStroke()
+    const lit = 0.25 + 0.5 * jimLit(T)
+    p.fill(alpha(p, HALL.gilt, 0.35 * lit))
+    p.rect((x + DOOR.w / 2) * k, (FLOOR - DOOR.h - 0.12) * k, 0.12 * k, (DOOR.h + 0.12) * k)
+    p.pop()
+    return
+  }
   p.fill(leaf)
   p.rect((x - DOOR.w / 2) * k, (FLOOR - DOOR.h) * k, DOOR.w * k, DOOR.h * k)
   // The lit edge: the frame's stage side and its head, in the spill.
@@ -599,7 +614,8 @@ function darkOver(p: p5, c: Ctx, T: number, q: Cue): void {
   }
   // The wings' warm spill, for Jim.
   const jim = T >= SOLO ? 0.85 * jimLit(T) : 0
-  if (jim > 0.01) hole(g, k, JIM_WINGS[0] + 0.45, FLOOR - 1.8, 2.4, 2.8, jim, 0.45)
+  // (Over to the door while it is open for him, so its lit opening is inside the light.)
+  if (jim > 0.01) hole(g, k, JIM_WINGS[0] + 0.45 - 0.95 * clamp(hushDoor(T) / 1.3), FLOOR - 1.8, 2.4, 2.8, jim, 0.45)
   ctx.save()
   ctx.setTransform(1, 0, 0, 1, 0, 0)
   ctx.globalCompositeOperation = 'source-over'
