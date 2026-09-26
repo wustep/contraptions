@@ -459,14 +459,12 @@ export const express = part<State>(
       { t: bb(227), cells: 9.5, hold: CROSS.hold, w: 0.12, off: [0, 0.6] },
       { t: bb(229), cells: 17, hold: CROSS.hold, w: CROSS.w, off: [0, 0.9] },
       { t: bb(239), cells: 16, hold: CROSS.hold, w: CROSS.w, off: [0, 0.9] },
-      // Off the trestle, in on the whole engine, looking on down the line to the terminus; along the boiler after the
-      // hidden spark to the chimney; up with it as it is thrown.
-      { t: bb(243), cells: 7.0, w: 0, off: [1.9, -1.2] },
-      { t: bb(249), cells: 6.3, w: 0, off: [1.8, -1.15] },
-      { t: T_IN, cells: 6.2, w: 0, off: [1.3, -0.9] },
-      // The brakes: low enough to see the wheels grind the rail as the heat runs up the boiler to the chimney.
-      { t: T_BRAKE, cells: 6.4, w: 0, off: [1.8, 0.5] },
-      { t: T_OUT, cells: 6.4, w: 0, off: [1.0, 1.4] },
+      // Off the trestle, in on the whole engine, looking on down the line to the terminus, riding with it (the crank
+      // goes round inside a steady picture); then forward along the boiler with the hidden spark's heat to the chimney
+      // as the brakes grind, and up with it as it is thrown.
+      { t: bb(242), cells: 8.0, hold: [engineX(bb(242)) - 3.0, RAIL_Y - 2.0], w: 0, off: [1.9, -1.2] },
+      ...riding(bb(243.5), T_IN, 7.0, 6.4, -3.0, 2.0),
+      ...riding(T_IN, T_OUT, 6.4, 6.4, -3.0, 2.0, 1.0, 3.1).slice(1),
       // The buffer stops: out a little, the engine's front and the stops in the lower third as they meet, the spark
       // flung high over them.
       { t: slot.end, cells: 8, hold: [engineX(T_STOP) + 1.4, RAIL_Y - 3.8], w: 0.85 },
@@ -478,14 +476,17 @@ export const express = part<State>(
 /**
  * Camera keys that ride with the engine from `a` to `b`: a key a quarter, each held on the same point of the engine
  * (`u` along it, `v` up from the rail), so the monotone moves between them carry the camera at the train's own speed
- * and the engine stands still in the frame while the line runs past. `c0` to `c1` cells over the stretch.
+ * and the engine stands still in the frame while the line runs past. `c0` to `c1` cells over the stretch; the point
+ * can move along the engine from (u, v) to (u1, v1), eased.
  */
-function riding(a: number, b: number, c0: number, c1: number, u: number, v: number): PartShot[] {
+function riding(a: number, b: number, c0: number, c1: number, u: number, v: number, u1 = u, v1 = v): PartShot[] {
   const n = Math.max(1, Math.round((beatAt(b) - beatAt(a)) * 1))
   const out: PartShot[] = []
   for (let i = 0; i <= n; i++) {
     const t = a + ((b - a) * i) / n
-    out.push({ t, cells: c0 + ((c1 - c0) * i) / n, hold: [engineX(t) + u, RAIL_Y - v], w: 1 })
+    const f = i / n
+    const e = f * f * (3 - 2 * f)
+    out.push({ t, cells: c0 + (c1 - c0) * f, hold: [engineX(t) + u + (u1 - u) * e, RAIL_Y - (v + (v1 - v) * e)], w: 1 })
   }
   return out
 }
