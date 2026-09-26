@@ -93,7 +93,7 @@ const E = {
   jump: bar('waltz', 5),
   land: beat('waltz', 5, 3),
   joy: bar('waltz', 19),
-  up: PRINT_AT.ellie - 0.34,
+  up: PRINT_AT.ellie - 0.5,
   press: PRINT_AT.ellie,
   leap: 39.6,
   leapLand: bar('waltz', 23),
@@ -219,10 +219,12 @@ function shotsFor(): PartShot[] {
     // Wide: the house half old, half new, the rollers as tall as it.
     key(31.6, 8.4, 5.1, -2.6),
     key(33.6, 9.6, 5.9, -2.95),
-    // Past the house: the whole of it new, the cart rolling away from it, the rollers folding; then in to the mailbox.
+    // Past the house: the whole of it new, the cart rolling away from it, the rollers folding; then in to the mailbox,
+    // leaning back toward the steps once she is off the cart, so the parked cart (its beat over) is out but for the
+    // end of its deck, and its mast wholly out of the frame.
     key(35.6, 10.0, 6.5, -2.95),
-    key(38.7, 4.5, 8.85, -1.0),
-    key(40.0, 4.4, 8.75, -1.05),
+    key(38.7, 4.5, 8.2, -1.0),
+    key(40.0, 4.4, 7.8, -1.05),
     // With them back to the house, up the steps and in.
     key(41.3, 5.0, 7.2, -1.35),
     key(42.9, 5.2, 5.4, -1.55),
