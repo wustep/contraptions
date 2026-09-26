@@ -100,6 +100,41 @@ function cloud(p: p5, k: number, x: number, y: number, r: number, a: number, bod
   }
 }
 
+const rgb = (hex: string): [number, number, number] => {
+  const n = parseInt(hex.slice(1, 7), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+/**
+ * A low haze: an ellipse `rx` by `ry` cells with no edge at all, its alpha falling off smoothly from the middle to
+ * nothing. For steam that must hang in front of the machine without reading as a ball (a disc edge is what makes a
+ * puff a ball).
+ */
+function haze(p: p5, k: number, x: number, y: number, rx: number, ry: number, a: number, color: [number, number, number]): void {
+  if (a <= 0.005 || rx <= 0.01 || ry <= 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [r, g, b] = color
+  ctx.save()
+  ctx.translate(x * k, y * k)
+  ctx.scale(rx / ry, 1)
+  const R = ry * k
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
+  // Near-Gaussian: flat-ish heart, a long shoulder, nothing left at the rim.
+  grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${a})`)
+  grad.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, ${a * 0.82})`)
+  grad.addColorStop(0.55, `rgba(${r}, ${g}, ${b}, ${a * 0.45})`)
+  grad.addColorStop(0.78, `rgba(${r}, ${g}, ${b}, ${a * 0.14})`)
+  grad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
+  ctx.fillStyle = grad
+  ctx.fillRect(-R, -R, 2 * R, 2 * R)
+  ctx.restore()
+}
+
+/** The steam's grey at night: never brighter than the moonlit boiler once it is laid over the dark. */
+const STEAM_GREY = rgb(mixHex(STEAM, RAILWAY.smoke, 0.45))
+/** The cocks' last sigh at the buffer stops: the same grey, a touch lighter in the festival's light. */
+const SIGH = rgb(mixHex(STEAM, RAILWAY.smoke, 0.35))
+
 /** The exhaust: every chuff a puff shot up out of the chimney, left in the air as the train runs out from under it. */
 export function exhaust(p: p5, k: number, t: number, x0: number, x1: number): void {
   const LIFE = 3.2
@@ -143,22 +178,37 @@ export function exhaust(p: p5, k: number, t: number, x0: number, x1: number): vo
   }
 }
 
-/** Steam from the cylinder cocks as it starts away: white, low round the front wheels, left behind as it goes. */
+/**
+ * Steam from the cylinder cocks as it starts away: a few wide flat grey clouds let down out of the cylinder's ends,
+ * spreading low along the rail under the axles and left behind as the train pulls out of them. Faint (the drivers and
+ * rods must read through it as they take hold), gone within about a second and a half of the lurch.
+ */
 export function cocks(p: p5, k: number, t: number): void {
-  const END = T_DOOR + 2.4
-  if (t < T_DOOR || t > END + 1.2) return
+  const EVERY = 0.15
+  const END = T_DOOR + 1.35
+  const LIFE = 1.3
+  if (t < T_DOOR || t > END + LIFE) return
+  const AXLE_Y = RAIL_Y - 0.9
   for (let i = 0; ; i++) {
-    const born = T_DOOR + i * 0.06
+    const born = T_DOOR + i * EVERY
     if (born > Math.min(t, END)) break
     const a = t - born
-    if (a > 1.1) continue
-    const strength = 1 - (born - T_DOOR) / (END - T_DOOR)
+    if (a > LIFE) continue
+    const strength = 1 - 0.65 * ((born - T_DOOR) / (END - T_DOOR))
+    // Swells in over a tenth of a second (no pop), then thins away.
+    const fade = (1 - Math.exp(-a / 0.1)) * Math.pow(1 - a / LIFE, 1.5)
     for (const [u, dir] of [[CYL.u1 + 0.05, 1], [CYL.u0 - 0.05, -1]] as const) {
-      const [ex, ey] = [engineX(born) + u, RAIL_Y - CYL.v + CYL.r]
-      const x = ex + dir * 1.1 * (1 - Math.exp(-a / 0.3)) + (hash(i, u > 1 ? 1 : 2) - 0.5) * 0.3
-      const y = ey + 0.25 * (1 - Math.exp(-a / 0.4)) - 0.35 * a
-      const r = (0.12 + 0.55 * (1 - Math.exp(-a / 0.35))) * (0.6 + 0.4 * strength)
-      cloud(p, k, x, y, r, 0.55 * strength * Math.pow(1 - a / 1.1, 1.4), STEAM, STEAM, i * 3 + (dir > 0 ? 1 : 2))
+      const [ex, ey] = [engineX(born) + u, RAIL_Y - CYL.v + CYL.r + 0.05]
+      const out = 1 - Math.exp(-a / 0.35)
+      const x = ex + dir * (0.5 + 0.2 * hash(i, dir > 0 ? 11 : 12)) * out
+      // Let down to the rail and lying along it: from the cock below the cylinder, never up past the axles.
+      const y = ey + (RAIL_Y - 0.32 - ey) * (1 - Math.exp(-a / 0.3))
+      const rx = (0.35 + 1.05 * (1 - Math.exp(-a / 0.45))) * (0.75 + 0.25 * strength)
+      const ry = Math.min(rx * 0.38, RAIL_Y - AXLE_Y - 0.12)
+      const A = 0.19 * strength * fade
+      haze(p, k, x, y, rx, ry, A, STEAM_GREY)
+      // A second, lower and longer lobe trailing it, so the cloud is a drift along the rail, not an oval.
+      haze(p, k, x - dir * 0.35 * out - 0.2 * out, y + 0.08, rx * 1.3, ry * 0.7, A * 0.7, STEAM_GREY)
     }
   }
 }
@@ -561,8 +611,8 @@ export function blowOff(p: p5, k: number, t: number, at: number): void {
 export function impact(p: p5, k: number, t: number): void {
   const a = t - T_STOP
   if (a < 0 || a > 2.2) return
-  const DUST = mixHex(RAILWAY.smoke, RAILWAY.crate, 0.35)
-  const DUST_LIT = mixHex(DUST, RAILWAY.moon, 0.3)
+  const DUST = rgb(mixHex(RAILWAY.smoke, RAILWAY.crate, 0.35))
+  const DUST_LIT = rgb(mixHex(mixHex(RAILWAY.smoke, RAILWAY.crate, 0.35), RAILWAY.moon, 0.3))
   p.push()
   for (let i = 0; i < 7; i++) {
     const s = a - i * 0.02
@@ -571,19 +621,25 @@ export function impact(p: p5, k: number, t: number): void {
     const reach = 0.5 + 0.9 * hash(i, 101)
     const x = BUFFER_STOP + side * reach * (1 - Math.exp(-s / 0.3)) + 0.1
     const y = RAIL_Y - 0.25 - 0.9 * hash(i, 102) * (1 - Math.exp(-s / 0.4)) - 0.08 * s
-    const r = 0.1 + 0.45 * (1 - Math.exp(-s / 0.45)) * (0.7 + 0.5 * hash(i, 103))
-    cloud(p, k, x, y, r, 0.6 * Math.pow(1 - s / 2.2, 1.6), DUST, DUST_LIT, 1600 + i)
+    const r = 0.18 + 0.6 * (1 - Math.exp(-s / 0.45)) * (0.7 + 0.5 * hash(i, 103))
+    // Edgeless, like the sigh: a kick of dust is a haze low on the ballast, not a heap of grey balls by the buffer.
+    const A = 0.36 * (1 - Math.exp(-s / 0.05)) * Math.pow(1 - s / 2.2, 1.6)
+    haze(p, k, x, y, r * 1.35, r * 0.8, A, DUST)
+    haze(p, k, x - side * 0.15 * r, y - 0.35 * r, r * 0.9, r * 0.55, A * 0.5, DUST_LIT)
   }
   for (let i = 0; i < 6; i++) {
     const s = a - 0.05 - i * 0.04
     if (s <= 0 || s > 1.6) continue
     const [ex, ey] = [engineX(T_STOP) + (i % 2 ? CYL.u1 + 0.1 : CYL.u0 - 0.1), RAIL_Y - CYL.v + CYL.r]
     const dir = i % 2 ? 1 : -1
-    // A soft wide sigh, never a bright ball of steam by the wheels (the spark is the only round bright thing).
+    // A soft wide sigh, never a bright ball of steam by the wheels (the spark is the only round bright thing): edgeless
+    // haze, flat and low, swelling in rather than appearing.
     const x = ex + dir * 1.4 * (1 - Math.exp(-s / 0.35))
-    const y = ey + 0.2 * (1 - Math.exp(-s / 0.4)) - 0.25 * s
-    const r = 0.2 + 0.85 * (1 - Math.exp(-s / 0.4))
-    cloud(p, k, x, y, r, 0.2 * Math.pow(1 - s / 1.6, 1.4), mixHex(STEAM, RAILWAY.smoke, 0.35), STEAM, 1700 + i)
+    const y = ey + 0.3 * (1 - Math.exp(-s / 0.4)) - 0.1 * s
+    const rx = 0.45 + 1.15 * (1 - Math.exp(-s / 0.45))
+    const A = 0.14 * (1 - Math.exp(-s / 0.12)) * Math.pow(1 - s / 1.6, 1.4)
+    haze(p, k, x, y, rx, rx * 0.45, A, SIGH)
+    haze(p, k, x + dir * 0.3 * rx, y + 0.1, rx * 1.25, rx * 0.3, A * 0.6, SIGH)
   }
   p.pop()
 }
