@@ -39,9 +39,10 @@ const BODY = mixHex(SHOP.black, SHOP.deep, 0.4)
  */
 export function drawChair(p: p5, c: Ctx, at: Pt, facing: 1 | -1, light: number, turn = 0, scale = 1, quiet = false): void {
   const { k, weight } = c
-  // A chair in the band's rows is part of the dark: no ink edge, the steel only a shade off the black.
-  const ink = quiet ? mixHex(SHOP.black, c.bg, 0.4) : c.ink
-  const steel = quiet ? mixHex(SHOP.black, SHOP.panel, 0.35 + 0.25 * light) : lit(KIT.chrome, light * 0.85)
+  // A chair in the band's rows is part of the dark: no ink edge, the steel only a shade off the black. The
+  // alternate's chair is black steel too, edged in its own dark, the lamp catching its upper edges.
+  const ink = quiet ? mixHex(SHOP.black, c.bg, 0.4) : SHOP.black
+  const steel = quiet ? mixHex(SHOP.black, SHOP.panel, 0.35 + 0.25 * light) : mixHex(SHOP.black, KIT.chrome, 0.2 + 0.2 * light)
   const shell = quiet ? mixHex(SHOP.black, SHOP.deep, 0.25) : lit(SHOP.black, 0.35 + 0.65 * light)
   const f = facing
   const back = BACK_H - SEAT_H
@@ -52,7 +53,7 @@ export function drawChair(p: p5, c: Ctx, at: Pt, facing: 1 | -1, light: number, 
   const K = k
   const X = (v: number) => v * f * K
   const Y = (v: number) => v * K
-  // The frame: tubes with an ink edge, the steel catching the light.
+  // The frame: tubes with a dark edge, the steel catching the lamp along the side toward it.
   const tube = (pts: Pt[], w = 1) => {
     for (const [sw, col] of [[weight * 2.6 * w, ink], [weight * 1.5 * w, steel]] as const) {
       p.stroke(col)
@@ -60,6 +61,13 @@ export function drawChair(p: p5, c: Ctx, at: Pt, facing: 1 | -1, light: number, 
       p.noFill()
       p.beginShape()
       for (const [x, y] of pts) p.vertex(X(x), Y(y))
+      p.endShape()
+    }
+    if (!quiet) {
+      p.stroke(alpha(p, SHOP.tungsten, 0.4 * light))
+      p.strokeWeight(weight * 0.5 * w)
+      p.beginShape()
+      for (const [x, y] of pts) p.vertex(X(x) - weight * 0.45 * w, Y(y))
       p.endShape()
     }
   }
@@ -312,7 +320,9 @@ export function drawPlayerStand(p: p5, c: Ctx, foot: Pt, light: number, glow: nu
  * `turned` pages have gone over; `u` is how far the one going over has got (its free corner carried by the ball).
  */
 export function drawChartStand(p: p5, c: Ctx, x: number, ledge: number, w: number, h: number, floor: number, turned: number, u: number, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  // Black, edged in its own dark; the lamp catches the top of the desk and the post's lit side.
+  const ink = SHOP.black
   const K = k
   const col = lit(SHOP.black, 0.45 + 0.55 * light)
   const hub = floor - 0.42
@@ -336,6 +346,13 @@ export function drawChartStand(p: p5, c: Ctx, x: number, ledge: number, w: numbe
   p.vertex((x + half) * K, ledge * K)
   p.vertex((x - half) * K, ledge * K)
   p.endShape(p.CLOSE)
+  p.stroke(alpha(p, SHOP.tungsten, 0.45 * light))
+  p.strokeWeight(weight * 0.8)
+  p.line((x - half + 0.02) * K, (top + 0.012) * K, (x + half - 0.02) * K, (top + 0.012) * K)
+  p.stroke(alpha(p, SHOP.tungsten, 0.3 * light))
+  p.strokeWeight(weight * 0.5)
+  p.line((x - 0.02) * K, (hub - 0.05) * K, (x - 0.02) * K, (ledge + 0.1) * K)
+  solid(p, ink, weight * 0.9, col)
   p.beginShape()
   p.vertex((x - half - 0.05) * K, (ledge - 0.02) * K)
   p.vertex((x + half + 0.05) * K, (ledge - 0.02) * K)

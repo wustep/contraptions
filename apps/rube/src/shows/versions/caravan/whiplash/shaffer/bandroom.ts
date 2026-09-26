@@ -8,7 +8,7 @@ import { alpha, frame, hash, smooth, type Ctx } from '../kit'
 import { BAND, ONSETS, QUIET, TUNE_ORIGIN, TUNE_PERIOD } from '../music'
 import { KIT, SHOP } from '../worlds'
 import {
-  CORRIDOR_R_TOP, CORRIDOR_TOP, DOOR_R_TOP, DOOR_TOP, DOOR_W, G, KX, KY, PIT, PODIUM, PODIUM_TOP, ROOM_TOP, SEAT_H, STAND,
+  CORRIDOR_R_TOP, CORRIDOR_TOP, DOOR_R_TOP, DOOR_TOP, DOOR_W, G, KX, KY, PIT, PODIUM, PODIUM_TOP, ROOM_TOP, SEAT_H, STAND, standShove,
   TIERS, WALL_L, WALL_R, type Section,
 } from './band-plan'
 import { ANSWER, TUTTI, doorL, pageAt } from './band-motion'
@@ -110,20 +110,31 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   if (f.x0 < WALL_L.x1 + 0.5) corridor(p, c, T, f)
   shell(p, c, f, L)
   for (const tier of TIERS) if (f.x1 > tier.x0 - 2 && f.x0 < tier.x1 + 2) section(p, c, T, tier, L)
+  // The lamps' light in the air and on the pages, under the pit's dark things (Fletcher, the chart's stand, the
+  // chair, the drums), so they stay dark against the lit wall.
+  glow(p, c, T, f, L)
   podium(p, c, L)
   const chair = chairAt(T)
   // Fletcher stands behind everything in the pit (the chart, the chair, the drums): over Andrew's shoulder at the kit.
   if (chair.held) drawChair(p, c, [chair.x, chair.y], -1, L, chair.turn, chair.scale)
   if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), base: fletcherBase(T), light: 0.5 + 0.5 * L })
   const pg = pageAt(T)
-  drawChartStand(p, c, STAND.x, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L)
+  const shove = standShove(T)
+  p.push()
+  if (shove.tilt) {
+    const foot: Pt = [STAND.x + shove.dx, PIT]
+    p.translate(foot[0] * c.k, foot[1] * c.k)
+    p.rotate(shove.tilt)
+    p.translate(-foot[0] * c.k, -foot[1] * c.k)
+  }
+  drawChartStand(p, c, STAND.x + shove.dx, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L)
+  p.pop()
   if (!chair.held) drawChair(p, c, [chair.x, chair.y], -1, chair.behind ? L * 0.75 : L, chair.turn, chair.scale)
   p.push()
   p.translate(KX * c.k, KY * c.k)
   drawKit(p, c, { shell: KIT.lacquer, since: (piece: KitPiece) => sinceStroke(piece, T), light: 0.45 + 0.55 * L })
   p.pop()
   doors(p, c, T, L)
-  glow(p, c, T, f, L)
   p.pop()
 }
 
@@ -200,6 +211,31 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
   p.rect(TIERS[2].x1 * k, (PIT - 1.15) * k, (x1 - TIERS[2].x1) * k, 1.15 * k)
   p.fill(alpha(p, SHOP.tungsten, 0.08 * L))
   p.rect(TIERS[2].x1 * k, (PIT - 1.15) * k, (x1 - TIERS[2].x1) * k, 0.04 * k)
+  // The tier lamps' spill on the pit's back wall: a warm field behind the podium, the chart and the kit, as the
+  // practice room's lamp lights its wall, so the black things in the pit (Fletcher, the drums) stand against light.
+  if (L > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, ROOM_TOP * k, (x1 - x0) * k, (PIT - ROOM_TOP) * k)
+    ctx.clip()
+    const cx = (PODIUM.x + KX) / 2 + 0.3
+    const cy = PIT - 2.4
+    const rx = 7.4
+    ctx.translate(cx * k, cy * k)
+    ctx.scale(1, 0.55)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+    const warm = mixHex(SHOP.wood, SHOP.tungsten, 0.3)
+    const n = parseInt(warm.slice(1), 16)
+    const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+    g.addColorStop(0, `rgba(${rgb}, ${(0.85 * L).toFixed(3)})`)
+    g.addColorStop(0.45, `rgba(${rgb}, ${(0.62 * L).toFixed(3)})`)
+    g.addColorStop(0.8, `rgba(${rgb}, ${(0.2 * L).toFixed(3)})`)
+    g.addColorStop(1, `rgba(${rgb}, 0)`)
+    ctx.fillStyle = g
+    ctx.fillRect(-rx * k, -rx * k, 2 * rx * k, 2 * rx * k)
+    ctx.restore()
+  }
   // The tiered floor, down to the pit: one dark mass, its treads lighter, its risers in shadow.
   const floorCol = mixHex(SHOP.deep, SHOP.wood, 0.3 + 0.25 * L)
   p.noStroke()
@@ -273,10 +309,10 @@ function section(p: p5, c: Ctx, T: number, tier: (typeof TIERS)[number], L: numb
 }
 
 function podium(p: p5, c: Ctx, L: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   p.push()
   p.rectMode(p.CORNER)
-  solid(p, ink, weight, lit(SHOP.black, 0.5 + 0.5 * L))
+  solid(p, SHOP.black, weight, lit(SHOP.black, 0.5 + 0.5 * L))
   p.rect((PODIUM.x - PODIUM.w / 2) * k, PODIUM_TOP * k, PODIUM.w * k, PODIUM.h * k, 0.03 * k)
   p.noStroke()
   p.fill(alpha(p, SHOP.tungsten, 0.15 * L))
