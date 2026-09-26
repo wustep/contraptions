@@ -5,7 +5,7 @@ import { sparkIn } from '../fx'
 import { alpha, box, frame, hash, scenery, smooth } from '../kit'
 import { THEME, onsetsIn } from '../music'
 import { LOFT } from '../worlds'
-import { BENCH, CANDLE, DOOR, FLOOR_Y, ROOM, SKYLIGHT, WICK } from './layout'
+import { BENCH, CANDLE, DOOR, FLOOR_Y, ROOM, SKYLIGHT, STOVE, WICK } from './layout'
 import { WICK_BACK, WICK_LEFT, candleLit } from './sneak-beats'
 import { doorOpen, fireRoar } from './stove-door'
 
@@ -707,6 +707,85 @@ function smoke(p: p5, k: number, t: number): void {
   }
 }
 
+/**
+ * Outside the cut-open room, for a frame taller than the room (a phone held upright): over the ridge, the roof's cut
+ * and the night over it, a few stars, the stovepipe's cap and its thread of smoke. Drawn over (not under the room's
+ * light), so it is dark by its own colours.
+ */
+function outside(p: p5, k: number, ink: string, w: number, t: number): void {
+  const f = frame(p, k)
+  const roofTop = RIDGE.y0 - 0.55
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  if (f.y0 < RIDGE.y0) {
+    const sky = ctx.createLinearGradient(0, f.y0 * k, 0, roofTop * k)
+    sky.addColorStop(0, LOFT.soot)
+    sky.addColorStop(1, mixHex(LOFT.night, LOFT.moonDeep, 0.45))
+    ctx.save()
+    ctx.fillStyle = sky
+    ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (roofTop - f.y0 + 1) * k)
+    ctx.restore()
+    // Stars, a few, on a fixed scatter, one or two breathing.
+    p.noStroke()
+    for (let gx = Math.floor(f.x0 / 3); gx <= Math.ceil(f.x1 / 3); gx++) {
+      for (let gy = Math.floor(f.y0 / 3); gy * 3 < roofTop - 0.6; gy++) {
+        if (hash(gx, gy, 41) > 0.42) continue
+        const sx = gx * 3 + 3 * hash(gx, gy, 42)
+        const sy = gy * 3 + 3 * hash(gx, gy, 43)
+        if (sy > roofTop - 0.6) continue
+        const a = 0.35 + 0.35 * hash(gx, gy, 44) + 0.15 * Math.sin(t * (0.7 + hash(gx, gy, 45)) + gx)
+        const sz = 0.04 + 0.04 * hash(gx, gy, 46)
+        p.fill(alpha(p, LOFT.moon, a))
+        rectC(p, k, sx, sy, sx + sz, sy + sz)
+      }
+    }
+    // The roof's cut: slates over the boards, along the whole ridge.
+    solid(p, ink, w * 0.7, mixHex(LOFT.soot, LOFT.moonDeep, 0.3))
+    rectC(p, k, ROOM.x0 - 1.4, roofTop, ROOM.x1 + 1.4, roofTop + 0.3)
+    solid(p, ink, w * 0.7, mixHex(LOFT.beam, LOFT.soot, 0.35))
+    rectC(p, k, ROOM.x0 - 1.4, roofTop + 0.3, ROOM.x1 + 1.4, RIDGE.y0)
+    // The stovepipe out through the roof: a cap against the sky, the moon on its edge, and the banked fire's smoke.
+    const px = STOVE.pipeX
+    solid(p, ink, w * 0.8, LOFT.iron)
+    rectC(p, k, px - 0.45, roofTop - 1.5, px + 0.45, RIDGE.y0)
+    p.fill(alpha(p, LOFT.moon, 0.28))
+    p.noStroke()
+    rectC(p, k, px + 0.25, roofTop - 1.45, px + 0.4, roofTop)
+    solid(p, ink, w * 0.8, LOFT.iron)
+    p.beginShape()
+    p.vertex((px - 0.8) * k, (roofTop - 1.5) * k)
+    p.vertex(px * k, (roofTop - 2.05) * k)
+    p.vertex((px + 0.8) * k, (roofTop - 1.5) * k)
+    p.endShape(p.CLOSE)
+    p.noStroke()
+    for (let i = 0; i < 9; i++) {
+      const life = 6
+      const age = (((t + i * (life / 9)) % life) + life) % life
+      const u = age / life
+      const x = px + 0.35 * age + 0.25 * Math.sin(age * 0.9 + i)
+      const y = roofTop - 1.75 - 0.75 * age
+      const r = 0.25 + 0.3 * age
+      p.fill(alpha(p, mixHex(LOFT.moonDeep, LOFT.moon, 0.2), 0.09 * Math.sin(Math.PI * u) ** 1.5))
+      p.ellipse(x * k, y * k, r * 2.2 * k, r * 1.5 * k)
+    }
+  }
+}
+
+/** Under the floor's cut, for a tall frame: the dark of the house below, with its ceiling's laths. Lit as the room is. */
+function underneath(p: p5, k: number): void {
+  const f = frame(p, k)
+  const below = ROOM.y1 + 2
+  if (f.y1 > below) {
+    p.noStroke()
+    p.fill(LOFT.soot)
+    rectC(p, k, f.x0 - 1, below - 0.01, f.x1 + 1, f.y1 + 1)
+    // The ceiling of the room below: its laths, faint.
+    p.fill(mixHex(LOFT.soot, LOFT.wall, 0.7))
+    rectC(p, k, f.x0 - 1, below + 0.2, f.x1 + 1, below + 0.55)
+    p.fill(mixHex(LOFT.soot, LOFT.wall, 0.45))
+    for (let x = Math.floor(f.x0 / 2.6) * 2.6; x < f.x1 + 1; x += 2.6) rectC(p, k, x, below + 0.55, x + 0.35, below + 1.4)
+  }
+}
+
 /* ------------------------------------------------------------------ the room */
 
 export const room = scenery<null>({
@@ -719,6 +798,7 @@ export const room = scenery<null>({
     p.push()
     shell(p, k, ink, w, see)
     floor(p, k, ink, w, see)
+    underneath(p, k)
     exitDoor(p, k, ink, w, see)
     wallShelf(p, k, ink, w, see)
     bench(p, k, ink, w, see)
@@ -740,6 +820,12 @@ export const room = scenery<null>({
     // The shaft's dust, glowing over everything.
     const f = frame(p, c.k)
     if (f.x0 < PATCH[0] + 4 && f.y1 > SKYLIGHT.y0) shaftGlow(p, c.k, c.t)
+    // What a tall frame sees past the room's cut.
+    if (f.y0 < RIDGE.y0) {
+      p.push()
+      outside(p, c.k, c.ink, c.weight, c.t)
+      p.pop()
+    }
   },
 })
 
