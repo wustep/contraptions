@@ -537,8 +537,11 @@ function plume(p: p5, k: number, t: number) {
     const age = t - tau
     if (age < 0 || age > life) continue
     const [ex, ey] = onCastle(look(tau), [CASTLE.chimney[0] - 0.05, CASTLE.chimney[1] + 0.1])
-    const x = ex - 0.55 * age + Math.sin(tau * 3.1) * 0.25 * age
-    const y = ey - 1.3 * age + 0.06 * age * age
+    // Under the credits the wind comes round behind it: each puff let go from 305 on drifts on with the castle and
+    // rises less, so the smoke leans up and a little ahead, away from the words over its left shoulder.
+    const wind = smooth(tau, 305, 308)
+    const x = ex + (-0.55 + 3.1 * wind) * age + Math.sin(tau * 3.1) * 0.25 * age
+    const y = ey - (1.3 - 0.45 * wind) * age + 0.06 * age * age
     puff(p, k, x, y, 0.45 + 0.75 * age, col, 0.42 * (1 - age / life) * Math.min(1, age * 5), 0.9)
   }
 }
@@ -937,9 +940,13 @@ export const flight = part<null>(
       hold(304.0, 37, mid(304.0, -8.5, -5.5)),
       // Then with it, up the sky, going small, under the credits.
       follow(305.3, 42, 0.17, 0.23),
-      follow(312, 48, 0.2, 0.25),
-      follow(324, 55, 0.21, 0.25),
-      follow(DURATION, 60, 0.21, 0.25),
+      // Lower and further right before the cast card comes up, so its flag stays under the card's last row and
+      // clear of the words on any window.
+      follow(308, 45.3, 0.24, 0.32),
+      follow(312, 48, 0.24, 0.32),
+      follow(316, 50.6, 0.235, 0.31),
+      follow(324, 55, 0.22, 0.3),
+      follow(DURATION, 60, 0.21, 0.29),
     ]
   },
 )

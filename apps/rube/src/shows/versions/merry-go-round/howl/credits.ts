@@ -22,6 +22,8 @@ export interface Card {
   role?: string
   names: (string | [string, string] | [string, string, string])[]
   notes?: string[]
+  /** Where this card's top middle sits, if not at `AT` (the cast, the tallest, sits a little higher). */
+  place?: [number, number]
 }
 
 const FORM = 1.3
@@ -33,6 +35,7 @@ const script: Omit<Card, 'at'>[] = [
   {
     hold: 4.6,
     role: 'With',
+    place: [0.39, 0.075],
     names: [
       ['Sophie', 'the chestnut ball, silver at the end', SOPHIE_YOUNG],
       ['Howl', 'the cornflower ball', HOWL],
@@ -95,7 +98,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `merry-go-round-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT })
+    out.push({ key: `merry-go-round-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: card.place ?? AT })
   })
   return out
 }
