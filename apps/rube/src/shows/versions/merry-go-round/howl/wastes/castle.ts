@@ -122,6 +122,13 @@ export interface CastlePose {
   eye?: number
   /** How far the jaw is open, 0..1, besides its own working as it walks. */
   jaw?: number
+  /**
+   * The heavy walk in 3/4, and how big (1 its usual weight; more on a great stride). Each footfall drops the hull
+   * fast onto the downbeat, and it heaves back up in two pushes on beats 2 and 3; the heap on top squashes on the
+   * landing a moment after the hull and gives back, damped; the jaw clacks and the pipes rattle on 2 and 3. 0 or left
+   * out: the old soft bob, once a stride.
+   */
+  gait?: number
 }
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
@@ -135,6 +142,49 @@ export function bob(step: number): number {
   return 0.26 * Math.cos(2 * Math.PI * (u - 0.07)) - 0.02
 }
 
+const sm01 = (v: number) => {
+  const u = clamp01(v)
+  return u * u * (3 - 2 * u)
+}
+/** Where beats 2 and 3 fall in a step's phase (the walk's steps are slow as a foot lands, quick mid-stride). */
+const BEATS = [0.29, 0.71]
+/**
+ * The heavy gait's drop and heave (cells, down positive) for a step phase: from the top it drops fast as the foot
+ * lands on the downbeat, the weight coming down onto it and stopping (eased, a landing); then it heaves back up in
+ * two pushes, one on each of beats 2 and 3, and is at the top again for the next downbeat. Oom, pah, pah.
+ */
+function heave(step: number): number {
+  const f = step - Math.floor(step)
+  const top = -0.3
+  const bottom = 0.28
+  if (f < 0.12) {
+    const v = f / 0.12
+    return top + (bottom - top) * (1 - (1 - v) * (1 - v))
+  }
+  const S = 0.5 * sm01((f - 0.15) / 0.28) + 0.5 * sm01((f - 0.57) / 0.28)
+  return bottom + (top - bottom) * S
+}
+/** The deck line the heap stands on: everything above it (house, turrets, chimney, pipes, flag) squashes about it. */
+const HEAP_BASE = -12.3
+/** The heap's squash (its height's share, 1 at rest) and lag (a lean back, as a shear) a moment after each landing. */
+function heapOf(pose: CastlePose): { s: number; sh: number } {
+  const g = pose.gait ?? 0
+  if (g <= 0) return { s: 1, sh: 0 }
+  const still = 1 - clamp01(pose.sit ?? 0)
+  const f = pose.step - Math.floor(pose.step)
+  // The landing reaches the heap about 0.08 of a bar late: it squashes, springs back a little past, and settles.
+  const ring = (e: number) => (e <= 0 ? 0 : Math.exp(-e / 0.17) * Math.sin((2 * Math.PI * e) / 0.38))
+  const r = ring(f - 0.06) + ring(f + 1 - 0.06)
+  return { s: 1 - 0.022 * g * still * r, sh: -0.012 * g * still * r }
+}
+/** A standing point, with the heap's squash if it is above the deck. */
+function heaped(pose: CastlePose, at: Pt): Pt {
+  if (at[1] >= HEAP_BASE || !pose.gait) return at
+  const { s, sh } = heapOf(pose)
+  const dy = at[1] - HEAP_BASE
+  return [at[0] + sh * dy, HEAP_BASE + dy * s]
+}
+
 /** The pivot the body pitches about: the hips' middle. */
 const PIV: Pt = [0, -6.9]
 
@@ -145,11 +195,14 @@ const rock = (step: number) => 0.014 * Math.sin(Math.PI * step + 0.5)
 function carriage(pose: CastlePose): { lean: number; lift: number } {
   const sit = clamp01(pose.sit ?? 0)
   const still = 1 - sit
-  return { lean: (pose.lean ?? 0) + rock(pose.step) * still, lift: bob(pose.step) * still + sag(sit) }
+  const g = pose.gait ?? 0
+  const lift = g > 0 ? heave(pose.step) * g : bob(pose.step)
+  return { lean: (pose.lean ?? 0) + rock(pose.step) * still, lift: lift * still + sag(sit) }
 }
 
 /** A standing point of the body where it is at a pose (pitched, bobbed, sat). */
-function bodyAt(pose: CastlePose, at: Pt): Pt {
+function bodyAt(pose: CastlePose, standing: Pt): Pt {
+  const at = heaped(pose, standing)
   const { lean, lift } = carriage(pose)
   const c = Math.cos(lean)
   const s = Math.sin(lean)
@@ -630,6 +683,14 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.rotate(lean)
     p.translate(X(-PIV[0]), X(-PIV[1]))
   }
+  // The heap on the deck (the heavy gait): squashed about the deck line a moment after each landing, and rattled.
+  const heap = heapOf(pose)
+  const UPPER: ModuleId[] = ['house', 'chimney', 'turretBack', 'turretFront', 'pipes', 'flag', 'cannonTop']
+  const gait = (pose.gait ?? 0) * walking
+  const beatAge = (b: number) => {
+    const e = u - b
+    return e < 0 ? e + 1 : e
+  }
   // A module: drawn in the body's frame, moved and turned about its own base, fading as it goes.
   const module = (id: ModuleId, draw: () => void) => {
     const m = mods[id]
@@ -639,6 +700,20 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
     p.push()
     if (gone > 0) ctx.globalAlpha *= 1 - gone
     body()
+    if (gait > 0 && UPPER.includes(id)) {
+      p.translate(0, X(HEAP_BASE))
+      p.applyMatrix(1, 0, heap.sh, heap.s, 0, 0)
+      p.translate(0, X(-HEAP_BASE))
+      if (id === 'pipes') {
+        // The pipes rattle on beats 2 and 3.
+        let r = 0
+        for (const b of BEATS) {
+          const e = beatAge(b)
+          r += Math.exp(-e / 0.05) * Math.sin(e * 90)
+        }
+        p.translate(X(0.035 * gait * r), 0)
+      }
+    }
     if (m) {
       const [px, py] = MODULE_PIVOT[id]
       p.translate(X(px + (m.dx ?? 0)), X(py + (m.dy ?? 0)))
@@ -1086,7 +1161,13 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
 
   // The jaw: a hinged iron plate with teeth, working as it walks, and the drawbridge tongue hanging from it.
   module('jaw', () => {
-    const open = (0.05 + 0.07 * Math.max(0, Math.sin(2 * Math.PI * (u - 0.15)))) * walking + 0.35 * clamp01(pose.jaw ?? 0)
+    // The heavy gait: the jaw clacks shut on beats 2 and 3 (open a moment before each, snapped shut on it).
+    const clack = BEATS.reduce((a, b) => {
+      const e = u - (b - 0.14)
+      return a + (e > 0 && e < 0.14 ? Math.sin((Math.PI * e) / 0.14) ** 2 * (e / 0.14) : 0)
+    }, 0)
+    const soft = 0.07 * Math.max(0, Math.sin(2 * Math.PI * (u - 0.15)))
+    const open = (0.05 + (gait > 0 ? 0.11 * clack * Math.min(1.4, gait) : soft)) * walking + 0.35 * clamp01(pose.jaw ?? 0)
     p.push()
     p.translate(X(6.45), X(-8.35))
     p.rotate(open)

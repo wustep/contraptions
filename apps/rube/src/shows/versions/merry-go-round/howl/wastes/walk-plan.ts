@@ -303,6 +303,10 @@ function lurch(T: number): number {
   return kick
 }
 
+/** The heavy walk in 3/4, heavier on the roar and the three great strides (a smooth swell round each, never a step). */
+const GREAT = [128.0, 131.43, 133.72, 135.94]
+const gaitAt = (T: number): number => 1 + 0.35 * Math.max(...GREAT.map((g) => Math.exp(-(((T - g) / 0.8) ** 2))))
+
 let X0 = 0
 /** The castle's origin (world) and its pose at show time T. */
 export function castleAt(T: number): { at: Pt; pose: CastlePose } {
@@ -319,6 +323,7 @@ export function castleAt(T: number): { at: Pt; pose: CastlePose } {
   const pose: CastlePose = {
     t: T,
     step: s,
+    gait: gaitAt(T),
     travel: (q) => travel(q),
     ground: (gx) => ground(x + gx) - y,
     lean: slope + lurch(T),
