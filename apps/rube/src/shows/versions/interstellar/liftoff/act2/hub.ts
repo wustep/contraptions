@@ -384,6 +384,7 @@ export const hub = part<HubState>(
       const h = HB(0, 0)
       return [q[0] + (h[0] - q[0]) * f, q[1] + (h[1] - q[1]) * f]
     }
+    const low: Pt = [mid(cue(166), 0)[0] - IN[0] * 1.5, mid(cue(166), 0)[1] - IN[1] * 1.5]
     return [
       // The gate, framed as the ballpark pulls out from the meeting (it leaves this key to the hub): the car, him in it,
       // and her on the floor outside. Then out with the car as it lurches off.
@@ -393,8 +394,10 @@ export const hub = part<HubState>(
       // the car climbs up through the frame, its lit landings trailing below it, while the station turns round it; then
       // up with it into the float.
       { t: cue(162), cells: 6, off: lead(1.0) },
-      { t: cue(163.5), cells: 10, hold: mid(cue(166), 0), w: 0.95 },
-      { t: cue(166.5), cells: 10, hold: mid(cue(166), 0), w: 0.95 },
+      // (Held a cell and a half lower down the spoke than where the car is on 166, so that the car comes up into the
+      // frame's lower part rather than along its bottom edge, and is still in under Zoom, 1.5 times closer.)
+      { t: cue(163.5), cells: 10, hold: low, w: 0.95 },
+      { t: cue(166.5), cells: 10, hold: low, w: 0.95 },
       // The step on 168: out wide, the car halfway up the spoke and the hub ahead of it.
       { t: cue(168.5), cells: 8.6, hold: mid(cue(168.5), 0.42), w: 0.8 },
       { t: BRAKE, cells: 7, hold: mid(BRAKE, 0.45), w: 0.9 },
