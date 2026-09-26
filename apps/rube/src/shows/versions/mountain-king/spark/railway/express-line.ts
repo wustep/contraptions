@@ -168,11 +168,12 @@ export function pose(t: number): { lift: number; pitch: number } {
     lift += 0.028 * Math.exp(-a / 0.1) * Math.sin(a * 28)
     pitch += 0.004 * Math.exp(-a / 0.12) * Math.sin(a * 22)
   }
-  // The brakes: the nose goes down and stays down while it slides; at the buffer stops it bows and rocks back.
+  // The brakes: the nose dips a little and stays down while it slides; at the buffer stops it bows and rocks back. A
+  // hundred tons of iron: the dip is small (under a degree and a half all told), the rock slow.
   const br = t - T_BRAKE
-  if (br > 0) pitch += 0.03 * (1 - Math.exp(-br / 0.12)) * (t < T_STOP ? 1 : Math.exp(-(t - T_STOP) / 0.5))
+  if (br > 0) pitch += 0.01 * (1 - Math.exp(-br / 0.12)) * (t < T_STOP ? 1 : Math.exp(-(t - T_STOP) / 0.5))
   const hit = t - T_STOP
-  if (hit > 0) pitch += 0.035 * Math.sin(Math.min(Math.PI, hit * 14)) * Math.exp(-hit / 0.5) + 0.012 * Math.sin(hit * 7) * Math.exp(-hit / 0.8) * (hit > 0.22 ? 1 : 0)
+  if (hit > 0) pitch += 0.015 * Math.sin(Math.min(Math.PI, hit * 11)) * Math.exp(-hit / 0.55) + 0.005 * Math.sin(hit * 6) * Math.exp(-hit / 0.9) * (hit > 0.28 ? 1 : 0)
   return { lift, pitch }
 }
 

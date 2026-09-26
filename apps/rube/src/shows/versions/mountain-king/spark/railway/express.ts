@@ -1,7 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { box, frame, knock, part, route, smooth, type PartShot } from '../kit'
-import { beat, DOORS, FESTIVAL } from '../music'
+import { beat, beatAt, DOORS, FESTIVAL } from '../music'
 import { G_RAIL } from '../physics'
 import {
   BOARD,
@@ -259,7 +259,7 @@ function motionAt(t: number): Pt {
 }
 
 /** The way through the engine, in its cells: the ashpan, the firebox, the tubes, the smokebox, the chimney. */
-const WAY: Pt[] = [
+const CORNERS: Pt[] = [
   [(MOUTH.u0 + MOUTH.u1) / 2, (MOUTH.v0 + MOUTH.v1) / 2 - 0.05],
   [-5.45, 1.7],
   [-5.0, 2.75],
@@ -269,6 +269,25 @@ const WAY: Pt[] = [
   [0, 3.6],
   [0, LIP_V],
 ]
+/**
+ * The same way with its corners rounded (a Catmull-Rom curve through them, finely cut), so the heat running through
+ * the iron turns each corner instead of changing speed and direction at once.
+ */
+const WAY: Pt[] = (() => {
+  const out: Pt[] = [CORNERS[0]]
+  const at = (i: number): Pt => CORNERS[Math.max(0, Math.min(CORNERS.length - 1, i))]
+  for (let i = 0; i < CORNERS.length - 1; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)]
+    for (let j = 1; j <= 16; j++) {
+      const u = j / 16
+      const u2 = u * u
+      const u3 = u2 * u
+      const c = (a: number, b: number, c2: number, d: number) => 0.5 * (2 * b + (-a + c2) * u + (2 * a - 5 * b + 4 * c2 - d) * u2 + (-a + 3 * b - 3 * c2 + d) * u3)
+      out.push([c(p0[0], p1[0], p2[0], p3[0]), c(p0[1], p1[1], p2[1], p3[1])])
+    }
+  }
+  return out
+})()
 const WAY_LEN: number[] = (() => {
   const out = [0]
   for (let i = 1; i < WAY.length; i++) out.push(out[i - 1] + Math.hypot(WAY[i][0] - WAY[i - 1][0], WAY[i][1] - WAY[i - 1][1]))
@@ -424,11 +443,17 @@ export const express = part<State>(
       { t: bb(195), cells: 5.6, w: 0, off: [-0.4, 1.0] },
       { t: bb(199), cells: 5.2, w: 0, off: [0.3, 0.8] },
       { t: bb(205), cells: 4.8, w: 0, off: [0.3, 0.45] },
-      // Down to the wheels: the spark on the crank pin, the rods; creeping in over the phrase as it builds.
-      { t: bb(208), cells: 4.3, w: 0, off: [0.1, -0.35] },
-      { t: bb(216), cells: 3.9, w: 0, off: [0.0, -0.3] },
-      { t: bb(223), cells: 3.5, w: 0, off: [-0.1, -0.25] },
-      { t: bb(224) + 0.1, cells: 3.6, w: 0, off: [0.0, -0.3] },
+      // Down to the wheels: the spark caught on the crank pin. (The hold, unweighted here, is where the ride below
+      // starts on the engine, so the camera takes up the engine's speed as it hands over instead of stopping for it.)
+      { t: bb(208), cells: 4.3, hold: [engineX(bb(208)) - 2.9, RAIL_Y - 2.2], w: 0, off: [0.1, -0.35] },
+      // Phrase 13: out to the whole engine side on, running away with the telegraph poles whipping past a backbeat
+      // apart, the spark a light going along the rods. The camera rides with the engine, not the spark, so the crank
+      // circles inside a steady picture.
+      ...riding(bb(210), bb(215), 9.0, 9.4, -2.9, 2.2),
+      // Back in on the motion for the way back along the rods, still riding with the engine.
+      ...riding(bb(217), bb(224), 4.6, 4.2, -2.5, 1.15),
+      // The whistle, and the line opens out ahead: back to following the spark before the trestle's wide.
+      { t: bb(225.3), cells: 5.0, hold: [engineX(bb(225.3)) - 2.5, RAIL_Y - 1.15], w: 0, off: [0.4, -0.4] },
       // The trestle: out to the whole train, and the camera lags it, so the train crosses the frame and the moon's
       // face from left to right while the whistle shrieks (see `crossing`).
       { t: bb(227), cells: 9.5, hold: CROSS.hold, w: 0.12, off: [0, 0.6] },
@@ -441,12 +466,29 @@ export const express = part<State>(
       { t: T_IN, cells: 6.2, w: 0, off: [1.3, -0.9] },
       // The brakes: low enough to see the wheels grind the rail as the heat runs up the boiler to the chimney.
       { t: T_BRAKE, cells: 6.4, w: 0, off: [1.8, 0.5] },
-      { t: T_OUT, cells: 6.2, w: 0, off: [1.0, 1.3] },
-      { t: slot.end, cells: 6, w: 0, off: [0.9, 0.85] },
+      { t: T_OUT, cells: 6.4, w: 0, off: [1.0, 1.4] },
+      // The buffer stops: out a little, the engine's front and the stops in the lower third as they meet, the spark
+      // flung high over them.
+      { t: slot.end, cells: 8, hold: [engineX(T_STOP) + 1.4, RAIL_Y - 3.8], w: 0.85 },
     ]
     return shots.filter((s) => s.t > slot.begin && s.t <= slot.end + 1e-6)
   },
 )
+
+/**
+ * Camera keys that ride with the engine from `a` to `b`: a key a quarter, each held on the same point of the engine
+ * (`u` along it, `v` up from the rail), so the monotone moves between them carry the camera at the train's own speed
+ * and the engine stands still in the frame while the line runs past. `c0` to `c1` cells over the stretch.
+ */
+function riding(a: number, b: number, c0: number, c1: number, u: number, v: number): PartShot[] {
+  const n = Math.max(1, Math.round((beatAt(b) - beatAt(a)) * 1))
+  const out: PartShot[] = []
+  for (let i = 0; i <= n; i++) {
+    const t = a + ((b - a) * i) / n
+    out.push({ t, cells: c0 + ((c1 - c0) * i) / n, hold: [engineX(t) + u, RAIL_Y - v], w: 1 })
+  }
+  return out
+}
 
 /** For the check and the director: where the spark leaves the express (world cells), and its velocity then. */
 export const EXPRESS_EXIT: Pt = [THROWN[0] + 0.5, THROWN[1]]
