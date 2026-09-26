@@ -32,8 +32,10 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   house: {
     t: CUT.house,
     v: [1.6, 0],
-    cells: 5,
-    frame: [0.9, -0.9],
+    // Wide, as the wedding's pull-out lands on bar 4's peal: the bell whole over the doorway as they run out under it;
+    // on the far side the move out to the old house carries on from here. The middle 1.9 over him (Zoom allows 2.02).
+    cells: 6.45,
+    frame: [0.9, -1.9],
     ellie: [0.36, 0],
     what: 'out of the church\'s doors at a run, level, heading right, Ellie a step ahead; on the far side the same run, up the path to the old house',
   },

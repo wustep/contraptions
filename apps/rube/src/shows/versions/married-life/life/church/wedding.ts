@@ -3,6 +3,7 @@ import { mixHex, R, type Pt } from '../../../../../parts'
 import type { Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Companion, type Ctx } from '../kit'
 import { CUT } from '../music'
+import { CUTS } from '../seams'
 import { CHURCH, HOME, INK } from '../worlds'
 import { ALTAR_CARL, ALTAR_ELLIE, bounce, box2, CH, CHURCH_BOX, drawPetals, ease, lift, paint, pchip, poly, rankLight, WED } from './church'
 
@@ -116,8 +117,6 @@ const rise = (T: number): number => (toward(T, HER_RISE) + 0.018 * breathIn(T)) 
 const HER_RUN = 18.123
 const HIS_RUN = 18.3
 const DOORS = 21.223
-/** The swell's crest, where the camera's pull-out from the kiss comes to rest: waltz bar 3's second beat. */
-const SWELL = 20.201
 /** Where the two are at the cut, world x, running 1.6 cells a second: he in the doorway, she out on the landing. */
 const CUT_CARL = CH.tower[1] - CH.wall / 2
 const CUT_ELLIE = CUT_CARL + 0.36
@@ -499,14 +498,25 @@ function drawExposure(p: p5, c: Ctx, T: number): void {
 /* ------------------------------------------------------------------ the pull-out on the swell */
 
 /**
- * The camera's one move from the kiss to the swell's crest, as keys along one curve: the zoom eases out from rest on
- * the kiss and comes to rest on the crest, in even steps of scale (a cubic in log cells); the frame rises with the
- * cells it opens (linear in cells, not in their log), so under Zoom the two of them, running along the floor, stay
- * inside its bottom third all the way out; across, it eases out after them and arrives drifting on with them at
- * `drift` cells a second, so only the zoom and the rise come to rest on the crest. Sampled closer at the ends, where
- * the curve turns, so the director's monotone cubic through the samples is the curve.
+ * The camera's one move from the kiss to bar 4's peal, as keys along one curve: the zoom eases out from rest on the
+ * kiss and comes to rest on the peal, in even steps of scale (a cubic in log cells), so bars 2 and 3 are heard as the
+ * frame opens toward the bell and bar 4's peal is the bell seen whole, swinging (6.5 cells is about the least that
+ * holds it with the two of them inside Zoom's third); the frame rises with the cells it opens (linear in cells,
+ * not in their log), so under Zoom the two of them, running along the floor, stay inside its bottom third all the way
+ * out; across, it eases out after them and arrives drifting on with them at `drift` cells a second toward the cut's
+ * framing (`CUTS.house`), so only the zoom and the rise come to rest. It never comes back in: the fix-up opens on out
+ * from the cut. Sampled closer at the ends, where the curve turns, so the director's monotone cubic through the
+ * samples is the curve. (Landed on the crest, 20.2, it peaked at 0.68 log/s; over the three bars, about 0.54.)
  */
-const PULL = { from: KISS, to: SWELL, cells: [2.1, 6.4], x: [0.285, 2.95], y: [-0.52, -1.97], drift: 1.3 }
+const PULL_DRIFT = 1.45
+const PULL = {
+  from: KISS,
+  to: WED.peal[2],
+  cells: [2.1, 6.5],
+  x: [0.285, CUT_CARL + CUTS.house.frame[0] - PULL_DRIFT * (CUT.house - WED.peal[2])],
+  y: [-0.52, -1.95],
+  drift: PULL_DRIFT,
+}
 function pullOut<K>(key: (t: number, cells: number, x: number, y: number) => K): K[] {
   const { from, to, cells, x, y, drift } = PULL
   const across = (drift * (to - from)) / (x[1] - x[0])
@@ -607,9 +617,9 @@ export const wedding = part<WeddingState>(
     // The photograph; one reveal of the whole church and its bell, landed on Carl's startled hop (3.448) and let
     // drift for half a second before it eases in on the organ playing, the two of them at the right of it; on across
     // the altar to the families in the pews; back in on the two of them by 14 s; in to 2.1 cells for the kiss under the
-    // east window, its light on them. From the kiss, one pull-out on the swell that comes to rest on its crest (waltz bar 3, the
-    // loudest bars of the cue) with the bell pealing in its tower at the top of the frame, the families up and the
-    // petals over the aisle; then after the two of them down the aisle to the doors, in to 5 cells for the cut.
+    // east window, its light on them. From the kiss, one pull-out on the swell (the loudest bars of the cue) that comes
+    // to rest on bar 4's peal with the bell whole in its tower at the top of the frame, the families up and the petals
+    // over the aisle; then after the two of them down the aisle and out of the doors at that distance, into the cut.
     // (Under Zoom the two of them stay whole throughout: the wide frames keep them just inside its bottom third.)
     return [
       // The photograph: the two of them left of centre, the camera and its tray at the right, a slow drift in on it
@@ -641,13 +651,12 @@ export const wedding = part<WeddingState>(
       key(16.811, 2.12, 0.29, -0.525),
       // The kiss at 2.1 cells, the two of them low in the frame under the east window's light.
       key(KISS, 2.1, 0.285, -0.52),
-      // Out from it on the swell, from rest, to its crest (bar 3's second beat): the whole nave, altar to tower, the
-      // bell swinging whole in the belfry at the top, the families up, the petals; the two of them running low in it.
+      // Out from it on the swell, from rest, over three bars to bar 4's peal: the whole nave, altar to tower, the bell
+      // swinging whole in the belfry at the top, the families up, the petals; the two of them running low in it.
       ...pullOut(key),
-      // Settled there on the crest, drifting on after them,
-      key(SWELL + 0.25, 6.3, 3.28, -1.95),
-      // and in after them to the doors. The cut (`CUTS.house`): 5 cells, Carl 0.9 left of centre and 0.9 below it.
-      key(slot.end, 5, CUT_CARL + 0.9, -0.9),
+      // Then on after them to the doors at the same distance, the bell whole over the doorway as they run out under
+      // it: the cut (`CUTS.house`), Carl 0.9 left of centre and low.
+      key(slot.end, CUTS.house.cells, CUT_CARL + CUTS.house.frame[0], CUTS.house.frame[1]),
     ].filter((s) => s.t >= slot.begin && s.t <= slot.end)
   },
 )
