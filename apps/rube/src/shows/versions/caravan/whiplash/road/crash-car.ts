@@ -82,11 +82,31 @@ function crumple(u: number, v: number, nose: number): UV {
 /** The roof pressed down toward the belt line: `roof` 1 is CRUSHED at the top. */
 const crush = (u: number, v: number, roof: number): UV => (roof > 0 && v > 0.9 ? [u, v - CRUSHED * roof * ((v - 0.9) / (CAR_H - 0.9))] : [u, v])
 
+/**
+ * The car's tones. It is edged in its own dark (a deep steel), never the cream ink: at the drive's close range an ink
+ * contour turns it into a line drawing against the sodium-lit road. The panel lines inside the silhouette are that
+ * dark at low alpha; the one bright line is the lamps' light along the roof and over the wheel arches (`sky`), which
+ * fades as the car turns over (the lamps are overhead).
+ */
+/** The sodium lamps' light caught on the car's top edges. */
+const SKY = mixHex(ROAD.sodium, ROAD.paint, 0.4)
+
+function carTones(c: Ctx, q: CarPose, L: number) {
+  const l = Math.min(1, L)
+  const up = Math.max(0, Math.cos(q.th))
+  return {
+    paint: lit(c, ROAD.car, Math.min(1.15, 0.28 + 0.72 * L)),
+    edge: lit(c, mixHex(ROAD.deep, ROAD.car, 0.3), 0.55 + 0.45 * l),
+    seam: hexA(mixHex(ROAD.deep, ROAD.car, 0.12), 0.26 + 0.18 * l),
+    /** The roof line's lit edge: its alpha, in `SKY`. */
+    sky: (0.16 + 0.42 * l) * up * up,
+  }
+}
+
 export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
   const { k, weight } = c
   const L = Math.max(0, s.light)
-  const ink = lit(c, c.ink, Math.min(1, 0.35 + 0.65 * L))
-  const paint = lit(c, ROAD.car, Math.min(1.15, 0.28 + 0.72 * L))
+  const { paint, edge, seam, sky } = carTones(c, q, L)
   const bend = (u: number, v: number): UV => {
     const a = crumple(u, v, s.nose)
     return crush(a[0], a[1], s.roof)
@@ -110,7 +130,7 @@ export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
   }
   p.push()
   // The wheels, behind the body's skirt.
-  for (let i = 0; i < 2; i++) wheel(p, c, q, WHEELS[i], i === 1 && s.spin !== undefined ? s.spin : s.turn, L, ink)
+  for (let i = 0; i < 2; i++) wheel(p, c, q, WHEELS[i], i === 1 && s.spin !== undefined ? s.spin : s.turn, L)
   // The body: the trunk, the greenhouse, the long hood; wheel arches cut into its skirt.
   const body: UV[] = [[0.05, 0.3], [0.0, 0.44], [0.02, 0.66], [0.12, 0.8], [0.8, 0.86], [1.2, 1.29], [1.34, CAR_H], [2.28, CAR_H], [2.42, 1.29], [2.86, 0.9], [3.44, 0.83], [3.57, 0.75], [CAR_LEN, 0.56], [3.57, 0.34], [3.48, 0.3]]
   for (const [cx, dir] of [[WHEELS[1], 1], [WHEELS[0], 1]] as const) {
@@ -120,17 +140,17 @@ export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
       body.push([cx + Math.cos(a) * 0.37, 0.3 + Math.sin(a) * 0.1 + (i > 0 && i < 8 ? Math.sin(a) * 0.12 : 0)])
     }
   }
-  solid(p, ink, weight, paint)
+  solid(p, edge, weight, paint)
   shape(body)
   // The glass: the rear side window and the front, a pillar between; broken glass is a dark hole with a few teeth.
   const glass = s.glass > 0.5 ? hexA(ROAD.deep, 0.92) : hexA(mixHex(ROAD.deep, ROAD.car, 0.25 + 0.2 * L), 0.9)
-  solid(p, ink, weight * 0.6, glass)
+  solid(p, seam, weight * 0.5, glass)
   shape([[0.9, 0.9], [1.24, 1.26], [1.34, 1.29], [1.72, 1.29], [1.72, 0.9]])
   shape([[1.8, 0.9], [1.8, 1.29], [2.3, 1.29], [2.4, 1.25], [2.74, 0.92], [2.74, 0.9]])
   if (s.glass < 0.5) {
     // A glint across each pane: the lamps' light on the glass.
-    p.stroke(hexA(ROAD.paint, 0.18 + 0.25 * Math.min(1, L)))
-    p.strokeWeight(weight * 0.8)
+    p.stroke(hexA(ROAD.paint, 0.12 + 0.18 * Math.min(1, L)))
+    p.strokeWeight(weight * 0.7)
     line([1.1, 0.96], [1.3, 1.22])
     line([2.02, 0.95], [2.28, 1.24])
   } else {
@@ -139,23 +159,23 @@ export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
     for (const [a, b, cc] of [[[0.92, 0.92], [1.04, 0.92], [0.97, 1.02]], [[1.62, 1.28], [1.71, 1.28], [1.7, 1.16]], [[2.6, 0.92], [2.73, 0.92], [2.68, 1.02]], [[1.81, 1.27], [1.93, 1.28], [1.82, 1.18]]] as UV[][]) shape([a, b, cc])
   }
   // The seams: the trunk lid, the doors, the hood.
-  outline(p, ink, weight * 0.55)
+  outline(p, seam, weight * 0.5)
   line([0.8, 0.86], [0.78, 0.62])
   line([0.9, 0.86], [0.9, 0.34])
   line([1.76, 0.9], [1.76, 0.34])
   line([2.86, 0.9], [2.8, 0.34])
   // The bumpers: dark bands across the ends.
-  solid(p, ink, weight * 0.6, lit(c, ROAD.asphalt, 0.5 + 0.5 * L))
+  solid(p, edge, weight * 0.5, lit(c, ROAD.asphalt, 0.5 + 0.5 * L))
   shape([[-0.03, 0.3], [0.18, 0.3], [0.18, 0.44], [-0.03, 0.44]])
   shape([[3.42, 0.3], [3.62, 0.3], [3.62, 0.44], [3.42, 0.44]])
   // The lamps: a pale headlamp at the nose, a red one at the tail; lit, and their light.
   const head = pt(3.56, 0.64)
   const nose = pt(4.4, 0.62)
   const dir: Pt = [nose[0] - head[0], nose[1] - head[1]]
-  solid(p, ink, weight * 0.5, s.lamps > 0.2 ? mixHex(ROAD.paint, '#FFFFFF', 0.4 * s.lamps) : lit(c, ROAD.paint, 0.5 + 0.4 * L))
+  solid(p, edge, weight * 0.5, s.lamps > 0.2 ? mixHex(ROAD.paint, '#FFFFFF', 0.4 * s.lamps) : lit(c, ROAD.paint, 0.5 + 0.4 * L))
   shape([[3.46, 0.6], [3.585, 0.6], [3.59, 0.7], [3.48, 0.72]])
   const tail = s.brake > 0.05 ? mixHex(ROAD.brake, '#FF6A55', 0.5 * s.brake) : lit(c, ROAD.brake, 0.45 + 0.4 * L)
-  solid(p, ink, weight * 0.5, tail)
+  solid(p, edge, weight * 0.5, tail)
   shape([[0.0, 0.5], [0.1, 0.5], [0.12, 0.64], [0.02, 0.64]])
   if (s.lamps > 0.01) {
     const [hx, hy] = head
@@ -168,14 +188,40 @@ export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
     glow(p, c, tx, ty, 0.6, 0.4 * s.brake, ROAD.brake)
   }
   // The mirror at the foot of the windshield.
-  solid(p, ink, weight * 0.5, paint)
+  solid(p, edge, weight * 0.5, paint)
   shape([[2.66, 0.9], [2.8, 0.93], [2.8, 1.02], [2.7, 1.0]])
+  // The lamps' light along the roof line (brightest on the flat of the roof, less down the pillars) and over the
+  // tops of the wheel arches: the one bright edge the car has.
+  if (sky > 0.01) {
+    const rim = (a: number) => hexA(SKY, sky * a)
+    // One stroke each (overlapping segments would bead at the corners).
+    p.noFill()
+    p.strokeWeight(weight * 0.9)
+    p.stroke(rim(1))
+    p.beginShape()
+    for (const [u, v] of [[1.22, 1.3], [1.34, CAR_H], [2.28, CAR_H], [2.4, 1.3]] as UV[]) {
+      const [x, y] = pt(u, v)
+      p.vertex(x * k, y * k)
+    }
+    p.endShape()
+    p.stroke(rim(0.55))
+    p.strokeWeight(weight * 0.7)
+    for (const cx of WHEELS) {
+      p.beginShape()
+      for (let i = 2; i <= 6; i++) {
+        const a = (i / 8) * Math.PI
+        const [x, y] = pt(cx + Math.cos(a) * 0.37, 0.3 + Math.sin(a) * 0.22)
+        p.vertex(x * k, y * k)
+      }
+      p.endShape()
+    }
+  }
   // The door open: where it was, the dark of the cabin, the driver's seat in it (its cushion and its back).
   if (s.door > 0.01) {
-    solid(p, ink, weight * 0.6, lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.4), 0.6 + 0.4 * L))
+    solid(p, seam, weight * 0.5, lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.4), 0.6 + 0.4 * L))
     shape([[DOOR.u0, DOOR.v0 + 0.04], [DOOR.u1 + 0.02, DOOR.v0 + 0.04], [DOOR.u1 + 0.02, 0.92], [2.4, 1.25], [2.3, 1.29], [DOOR.u0, 1.29]])
     const seat = lit(c, mixHex(ROAD.asphalt, ROAD.truck, 0.25), 0.5 + 0.5 * L)
-    solid(p, ink, weight * 0.5, seat)
+    solid(p, seam, weight * 0.5, seat)
     shape([[1.84, SEAT[1] - 0.2], [2.5, SEAT[1] - 0.2], [2.46, SEAT[1] - 0.1], [1.86, SEAT[1] - 0.1]])
     shape([[1.8, SEAT[1] - 0.2], [1.94, SEAT[1] - 0.2], [1.9, 1.24], [1.82, 1.26], [1.78, 1.2]])
   }
@@ -186,8 +232,7 @@ export function drawCar(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
 export function drawCarOver(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
   const { k, weight } = c
   const L = Math.max(0, s.light)
-  const ink = lit(c, c.ink, Math.min(1, 0.35 + 0.65 * L))
-  const paint = lit(c, ROAD.car, Math.min(1.15, 0.28 + 0.72 * L))
+  const { paint, edge, seam } = carTones(c, q, L)
   const pt = (u: number, v: number): Pt => {
     const a = crumple(u, v, s.nose)
     const b = crush(a[0], a[1], s.roof)
@@ -208,39 +253,43 @@ export function drawCarOver(p: p5, c: Ctx, q: CarPose, s: CarLook): void {
   const u0 = DOOR.u1 - w
   const lift = 0.05 * open
   if (open < 0.02) {
-    solid(p, ink, weight * 0.7, paint)
+    // Shut, its outline is only the panel's gap: a low line in the car's dark.
+    solid(p, seam, weight * 0.5, paint)
     shape([[DOOR.u0, DOOR.v0 + 0.04], [DOOR.u1 + 0.06, DOOR.v0 + 0.04], [DOOR.u1 + 0.08, 0.9], [DOOR.u0, 0.9]])
-    solid(p, ink, weight * 0.45, lit(c, ROAD.asphalt, 0.6 + 0.4 * L))
+    solid(p, seam, weight * 0.4, lit(c, ROAD.asphalt, 0.6 + 0.4 * L))
     shape([[1.9, 0.76], [2.1, 0.76], [2.1, 0.8], [1.9, 0.8]])
   } else {
     // Swung out on its front hinge: its skin narrowed toward the hinge, its free edge (a dark strip) nearer the
-    // house and so a little taller; the empty window frame over it.
-    const edge = lit(c, mixHex(ROAD.car, ROAD.deep, 0.55), 0.4 + 0.6 * L)
-    solid(p, ink, weight * 0.7, paint)
+    // house and so a little taller; the empty window frame over it (the door's own steel, not a cream line).
+    const strip = lit(c, mixHex(ROAD.car, ROAD.deep, 0.55), 0.4 + 0.6 * L)
+    solid(p, edge, weight * 0.7, paint)
     shape([[u0, DOOR.v0 - lift], [DOOR.u1 + 0.06, DOOR.v0 + 0.04], [DOOR.u1 + 0.08, 0.9], [u0, 0.9 + lift]])
-    solid(p, ink, weight * 0.5, edge)
+    solid(p, edge, weight * 0.5, strip)
     shape([[u0 - 0.06, DOOR.v0 - lift], [u0, DOOR.v0 - lift], [u0, 0.9 + lift], [u0 - 0.06, 0.9 + lift]])
-    outline(p, ink, weight * 0.6)
+    outline(p, paint, weight * 0.6)
     const a = pt(u0, 0.9 + lift)
     const b = pt(u0 + w * 0.12, 1.29 + lift)
     const cc = pt(DOOR.u1 + 0.02, 1.27)
     p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
     p.line(b[0] * k, b[1] * k, cc[0] * k, cc[1] * k)
-    solid(p, ink, weight * 0.45, lit(c, ROAD.asphalt, 0.6 + 0.4 * L))
+    solid(p, seam, weight * 0.4, lit(c, ROAD.asphalt, 0.6 + 0.4 * L))
     shape([[u0 + w * 0.2, 0.76], [u0 + w * 0.2 + 0.12 * Math.cos(open * 1.25) + 0.03, 0.76], [u0 + w * 0.2 + 0.12 * Math.cos(open * 1.25) + 0.03, 0.8], [u0 + w * 0.2, 0.8]])
   }
   p.pop()
 }
 
-function wheel(p: p5, c: Ctx, q: CarPose, u: number, turn: number, L: number, ink: string): void {
+/** A wheel: a dark tyre edged in the road's deep, a dull steel hub with no ring, dark spokes. */
+function wheel(p: p5, c: Ctx, q: CarPose, u: number, turn: number, L: number): void {
   const { k, weight } = c
+  const l = Math.min(1, L)
   const [x, y] = carPt(q, u, WHEEL_R)
-  solid(p, ink, weight, lit(c, ROAD.asphalt, 0.7 + 0.3 * Math.min(1, L)))
+  solid(p, ROAD.deep, weight * 0.8, lit(c, ROAD.asphalt, 0.7 + 0.3 * l))
   p.circle(x * k, y * k, 2 * WHEEL_R * k)
-  solid(p, ink, weight * 0.6, lit(c, mixHex(ROAD.car, ROAD.paint, 0.4), 0.35 + 0.65 * Math.min(1, L)))
+  p.noStroke()
+  p.fill(lit(c, mixHex(ROAD.car, ROAD.asphalt, 0.3), 0.35 + 0.6 * l))
   p.circle(x * k, y * k, 1.05 * WHEEL_R * k)
   // Five spokes, turning: they show the speed, and a wheel spinning on after the crash.
-  outline(p, ink, weight * 0.55)
+  outline(p, hexA(ROAD.deep, 0.85), weight * 0.55)
   for (let i = 0; i < 5; i++) {
     const a = turn + q.th + (i / 5) * Math.PI * 2
     p.line(x * k, y * k, (x + Math.cos(a) * WHEEL_R * 0.5) * k, (y + Math.sin(a) * WHEEL_R * 0.5) * k)
