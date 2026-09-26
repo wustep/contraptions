@@ -20,8 +20,26 @@ import {
   MOULD_X,
   NECK_W,
   OPEN,
+  CATCH,
+  CX0,
+  CX_END,
+  CUP_UP,
+  HAM,
   ORGAN,
   PINGS,
+  RAIL_PITCH,
+  RAIL_X,
+  SANDBOX,
+  SHEAVE,
+  SLAM,
+  WEIGHT,
+  carriageDip,
+  carriageX,
+  hammerAngle,
+  hammerPivot,
+  railTop,
+  sheaveTurn,
+  weightBottom,
   PIPE_LEN,
   PIPE_R,
   PIPE_UP,
@@ -654,35 +672,190 @@ function tunedPts(b: Tuned, dx: number): Pt[] {
 
 /** The stepped rack: oak treads on a stringer that climbs toward the furnace, on posts down to the floor. */
 export function drawRack(pen: Pen): void {
+  const n = ORGAN.length
   const steps = ORGAN.map((b, i) => {
     const x0 = i === 0 ? RACK.x0 : (ORGAN[i - 1].x + b.x) / 2
-    const x1 = i === ORGAN.length - 1 ? RACK.x1 : (b.x + ORGAN[i + 1].x) / 2
+    const x1 = i === n - 1 ? RACK.x1 : (b.x + ORGAN[i + 1].x) / 2
     return { x0, x1, y: b.base }
   })
   const TREAD = 0.1
   const DEEP = 0.32
-  // The posts, a pair under every other step, and a stretcher low down.
-  const posts = [steps[0].x0 + 0.12, steps[2].x0 + 0.05, steps[4].x0 + 0.05, steps[6].x1 - 0.14]
-  for (const [i, x] of posts.entries()) {
-    const y = steps[Math.min(6, i * 2)].y + TREAD
-    shape(pen, box4(x - 0.06, y, x + 0.06, FLOOR_Y), GLASS.woodDeep, 0.7)
-  }
+  // The posts: under the first step, every other step, and the last.
+  const posts: [number, number][] = [[steps[0].x0 + 0.12, 0]]
+  for (let i = 2; i < n - 1; i += 2) posts.push([steps[i].x0 + 0.05, i])
+  posts.push([steps[n - 1].x1 - 0.14, n - 1])
+  for (const [x, i] of posts) shape(pen, box4(x - 0.06, steps[i].y + TREAD, x + 0.06, FLOOR_Y), GLASS.woodDeep, 0.7)
   shape(pen, box4(RACK.x0 + 0.06, FLOOR_Y - 0.62, RACK.x1 - 0.08, FLOOR_Y - 0.52), GLASS.woodDeep, 0.7)
   // The stringer: a board under the treads, stepped along its top, its underside a straight climb.
-  const under = (x: number) => steps[0].y + DEEP + 0.3 + ((steps[6].y + DEEP) - (steps[0].y + DEEP + 0.3)) * ((x - RACK.x0) / (RACK.x1 - RACK.x0))
+  const last = steps[n - 1]
+  const under = (x: number) => steps[0].y + DEEP + 0.3 + ((last.y + DEEP) - (steps[0].y + DEEP + 0.3)) * ((x - RACK.x0) / (RACK.x1 - RACK.x0))
   const stringer: Pt[] = []
-  for (const s of steps) stringer.push([s.x0, s.y + TREAD], [s.x1, s.y + TREAD])
+  for (const st of steps) stringer.push([st.x0, st.y + TREAD], [st.x1, st.y + TREAD])
   stringer.push([RACK.x1, under(RACK.x1)], [RACK.x0, under(RACK.x0)])
   shape(pen, stringer, GLASS.wood, 0.9)
   strokeLine(pen, [[RACK.x0 + 0.05, under(RACK.x0) - 0.07], [RACK.x1 - 0.05, under(RACK.x1) - 0.07]], rgba(GLASS.woodDeep, 0.45), thin(pen, 0.5))
   // The treads, their nosings lit.
-  for (const s of steps) {
-    shape(pen, box4(s.x0 - 0.03, s.y, s.x1 + 0.03, s.y + TREAD), mixHex(GLASS.wood, GLASS.light, 0.18), 0.7)
+  for (const st of steps) {
+    shape(pen, box4(st.x0 - 0.03, st.y, st.x1 + 0.03, st.y + TREAD), mixHex(GLASS.wood, GLASS.light, 0.18), 0.7)
   }
+}
+
+/** The rail's posts, standing on the rack behind the bottles, and the iron standard at its foot. Drawn behind the organ. */
+export function drawRailPosts(pen: Pen): void {
+  const post = (x: number, y0: number) => {
+    const top = railTop(x) + 0.12
+    shape(pen, box4(x - 0.055, top, x + 0.055, y0), GLASS.iron, 0.6)
+    strokeLine(pen, [[x - 0.03, top + 0.05], [x - 0.03, y0 - 0.02]], rgba(GLASS.steel, 0.5), thin(pen, 0.4))
+    // A knee under the rail.
+    shape(pen, [[x - 0.05, top + 0.28], [x - 0.3, top - 0.01 + 0.3 * 0.2959], [x + 0.3, top + 0.01 - 0.3 * 0.2959], [x + 0.05, top + 0.28]], GLASS.iron, 0.5)
+  }
+  // Two on the rack, in the widest gaps, so the rail reads as a rail and not a banister.
+  for (const i of [1, 3]) post((ORGAN[i].x + ORGAN[i + 1].x) / 2 - 0.12, ORGAN[i].base)
+  // The standard at the foot, past the lehr's end, on its own foot plate.
+  const sx = RAIL_X.x0 + 0.95
+  post(sx, FLOOR_Y)
+  shape(pen, box4(sx - 0.2, FLOOR_Y - 0.06, sx + 0.2, FLOOR_Y), GLASS.iron, 0.6)
+}
+
+/** A point in the carriage's own frame: `u` along the rail from its cup's middle, `v` up off the rail's top. */
+function onCarriage(cx: number, dip: number, u: number, v: number): Pt {
+  const c = Math.cos(RAIL_PITCH)
+  const sn = Math.sin(RAIL_PITCH)
+  const bx = cx
+  const by = railTop(cx) + dip
+  return [bx + u * c + v * sn, by - u * sn - v * c]
+}
+
+/**
+ * The ringing carriage and all it works: the rail, the catch, the carriage and its cup, its hammer, the buffer at the
+ * rail's head, the wheel the cable runs over, the counterweight's rope, the crucible of cullet and its box of sand.
+ * Drawn over the organ (the hammer comes down on the mouths in front of them).
+ */
+export function drawCarriage(pen: Pen, t: number): void {
+  const cx = carriageX(t)
+  const dip = carriageDip(t)
+  const at = (u: number, v: number) => onCarriage(cx, dip, u, v)
+  const lit = (a: number) => rgba(GLASS.steel, a)
+  // The box of sand the crucible lands in, on the floor in front of the furnace.
+  const sb = SANDBOX
+  shape(pen, box4(sb.x0, sb.top, sb.x1, FLOOR_Y), GLASS.wood, 0.8)
+  shape(pen, box4(sb.x0 + 0.06, sb.top - 0.02, sb.x1 - 0.06, sb.top + 0.1), GLASS.sand, 0.5)
+  strokeLine(pen, [[sb.x0 + 0.05, sb.top + 0.45], [sb.x1 - 0.05, sb.top + 0.45]], rgba(GLASS.woodDeep, 0.5), thin(pen, 0.5))
+  // Sand thrown up by the landing, falling back.
+  const land = t - SLAM
+  if (land > 0 && land < 0.7) {
+    for (let i = 0; i < 14; i++) {
+      const vx = (hash(i, 51) - 0.5) * 2.4
+      const vy = -1.4 - 1.6 * hash(i, 52)
+      const x = WEIGHT.x + (hash(i, 53) - 0.5) * 0.5 + vx * land
+      const y = sb.top + vy * land + 6 * land * land
+      if (y > sb.top + 0.02) continue
+      shape(pen, box4(x - 0.018, y - 0.018, x + 0.018, y + 0.018), rgba(GLASS.sand, 1 - land / 0.7), 0)
+    }
+    glow(pen, WEIGHT.x, sb.top - 0.15, 0.9, GLASS.sand, 0.45 * Math.exp(-land / 0.18))
+  }
+  // The crucible: a tapered fireclay pot heaped with broken glass, on a bail, the rope up to the wheel's drum.
+  const wb = weightBottom(t)
+  const wt = wb - WEIGHT.h
+  strokeLine(pen, [[WEIGHT.x, SHEAVE.y], [WEIGHT.x, wt - 0.2]], GLASS.woodDeep, Math.max(1, 0.035 * pen.k))
+  const clay = mixHex(GLASS.sand, GLASS.brick, 0.35)
+  shape(pen, arcPts(WEIGHT.x, wt - 0.02, WEIGHT.w * 1.02, 0.22, Math.PI, 2 * Math.PI, 10), null, 0.7)
+  const cullet = [GLASS.glass, GLASS.amber, GLASS.cobalt, GLASS.glassDeep, GLASS.glass]
+  for (let i = 0; i < 9; i++) {
+    const x = WEIGHT.x + (hash(i, 61) - 0.5) * 0.46
+    const y = wt + 0.02 - 0.09 * hash(i, 62) - 0.05 * (1 - Math.abs(x - WEIGHT.x) / 0.3)
+    const r = 0.05 + 0.04 * hash(i, 63)
+    const a = hash(i, 64) * 3
+    shape(pen, [0, 1, 2].map((j) => [x + r * Math.cos(a + j * 2.1), y + r * 0.8 * Math.sin(a + j * 2.1)] as Pt), rgba(cullet[i % 5], 0.9), 0.4)
+  }
+  shape(pen, [[WEIGHT.x - WEIGHT.w, wt], [WEIGHT.x + WEIGHT.w, wt], [WEIGHT.x + WEIGHT.w * 0.78, wb], [WEIGHT.x - WEIGHT.w * 0.78, wb]], clay, 0.9)
+  shape(pen, box4(WEIGHT.x - WEIGHT.w - 0.03, wt - 0.04, WEIGHT.x + WEIGHT.w + 0.03, wt + 0.06), mixHex(clay, GLASS.light, 0.15), 0.7)
+  strokeLine(pen, [[WEIGHT.x - WEIGHT.w * 0.6, wt + 0.12], [WEIGHT.x - WEIGHT.w * 0.5, wb - 0.08]], rgba(GLASS.light, 0.35), thin(pen, 0.6))
+  // The wheel at the rail's head, on an arm off the furnace's buckstay: a grooved rim, a cast web, the small drum.
+  const S = SHEAVE
+  strokeLine(pen, [[S.x, S.y], [S.x + 1.35, S.y - 0.25]], GLASS.iron, Math.max(1.5, 0.09 * pen.k))
+  const turnA = sheaveTurn(t)
+  shape(pen, arcPts(S.x, S.y, S.r, S.r, 0, Math.PI * 2, 28), GLASS.iron, 0.8)
+  shape(pen, arcPts(S.x, S.y, S.r * 0.82, S.r * 0.82, 0, Math.PI * 2, 24), GLASS.steel, 0.5)
+  for (let i = 0; i < 5; i++) {
+    const a = turnA + (i / 5) * Math.PI * 2
+    const hx = S.x + Math.cos(a) * S.r * 0.52
+    const hy = S.y + Math.sin(a) * S.r * 0.52
+    shape(pen, arcPts(hx, hy, S.r * 0.14, S.r * 0.14, 0, Math.PI * 2, 10), GLASS.iron, 0)
+  }
+  shape(pen, arcPts(S.x, S.y, S.drum, S.drum, 0, Math.PI * 2, 16), mixHex(GLASS.iron, GLASS.woodDeep, 0.4), 0.6)
+  shape(pen, arcPts(S.x, S.y, 0.05, 0.05, 0, Math.PI * 2, 8), GLASS.iron, 0.5)
+  // The rail: an iron bar climbing over the bottles to the buffer at its head, its top lit.
+  const r0 = RAIL_X.x0
+  const r1 = RAIL_X.x1
+  shape(pen, [[r0, railTop(r0)], [r1, railTop(r1)], [r1, railTop(r1) + 0.12], [r0, railTop(r0) + 0.12]], GLASS.iron, 0.7)
+  strokeLine(pen, [[r0 + 0.02, railTop(r0) + 0.02], [r1 - 0.02, railTop(r1) + 0.02]], lit(0.8), thin(pen, 0.5))
+  // The buffer: an iron block at the head with a leather pad, squashed by the slam.
+  const squash = land > 0 ? 0.05 * Math.exp(-land / 0.12) : 0
+  const bx = CX_END + 0.47
+  const buf = (u: number, v: number) => onCarriage(bx, 0, u, v)
+  shape(pen, [buf(0.08, 0), buf(0.3, 0), buf(0.3, 0.32), buf(0.08, 0.32)], GLASS.iron, 0.7)
+  shape(pen, [buf(squash, 0.03), buf(0.08, 0.03), buf(0.08, 0.29), buf(squash, 0.29)], LEATHER, 0.6)
+  // The catch at the foot: a pawl that holds the carriage's tail, knocked up as the spark lands and it lurches off.
+  const trip = smooth(t, CATCH - 0.02, CATCH + 0.12)
+  const cp = onCarriage(CX0 - 0.55, 0, 0, 0)
+  const pa = -RAIL_PITCH - 0.25 - 1.0 * trip
+  shape(pen, [cp, [cp[0] + 0.3 * Math.cos(pa), cp[1] + 0.3 * Math.sin(pa)], [cp[0] + 0.3 * Math.cos(pa) + 0.04, cp[1] + 0.3 * Math.sin(pa) + 0.05], [cp[0] + 0.04, cp[1] + 0.03]], GLASS.iron, 0.6)
+  // The cable, from the carriage's nose up to the top of the wheel, where it winds on.
+  const hook = at(0.5, 0.26)
+  const dx = S.x - hook[0]
+  const dy = S.y - hook[1]
+  const d = Math.hypot(dx, dy)
+  const base = Math.atan2(dy, dx)
+  const off = Math.acos(Math.min(1, S.r / d))
+  const tan: Pt = [S.x + S.r * Math.cos(base + Math.PI + off), S.y + S.r * Math.sin(base + Math.PI + off)]
+  const top: Pt = tan[1] < S.y ? tan : [S.x + S.r * Math.cos(base + Math.PI - off), S.y + S.r * Math.sin(base + Math.PI - off)]
+  strokeLine(pen, [hook, top], GLASS.iron, Math.max(1, 0.04 * pen.k))
+  strokeLine(pen, [hook, top], lit(0.45), Math.max(0.6, 0.012 * pen.k))
+  // The carriage: two flanged wheels on the rail, an iron body, the cup the spark rides in, its nose.
+  const wheelR = 0.11
+  for (const u of [-0.3, 0.3]) {
+    const [wx, wy] = at(u, wheelR)
+    shape(pen, arcPts(wx, wy, wheelR, wheelR, 0, Math.PI * 2, 14), GLASS.iron, 0.6)
+    const spin = (cx - CX0) / wheelR
+    strokeLine(pen, [[wx + Math.cos(spin) * wheelR * 0.6, wy + Math.sin(spin) * wheelR * 0.6], [wx - Math.cos(spin) * wheelR * 0.6, wy - Math.sin(spin) * wheelR * 0.6]], lit(0.6), thin(pen, 0.4))
+  }
+  shape(pen, [at(-0.52, 0.15), at(0.48, 0.15), at(0.54, 0.34), at(-0.46, 0.34)], GLASS.iron, 0.8)
+  strokeLine(pen, [at(-0.44, 0.31), at(0.5, 0.31)], lit(0.6), thin(pen, 0.5))
+  // The cup: a shallow iron dish on a short stem, the spark sitting in it.
+  const cupRim = CUP_UP - 0.04
+  shape(pen, [at(-0.05, 0.33), at(0.05, 0.33), at(0.06, cupRim - 0.08), at(-0.06, cupRim - 0.08)], GLASS.iron, 0.5)
+  const dish: Pt[] = []
+  for (let i = 0; i <= 10; i++) {
+    const a = Math.PI * (i / 10)
+    dish.push(at(-0.22 * Math.cos(a), cupRim - 0.1 * Math.sin(a)))
+  }
+  shape(pen, dish, mixHex(GLASS.iron, GLASS.steel, 0.3), 0.7)
+  // The hammer: its arm off the nose, its head a short iron mallet across the arm's end.
+  const [px, py] = hammerPivot(cx)
+  const pivot: Pt = [px, py + dip]
+  const a = hammerAngle(t) - RAIL_PITCH
+  const head: Pt = [pivot[0] + HAM.len * Math.cos(a), pivot[1] + HAM.len * Math.sin(a)]
+  strokeLine(pen, [pivot, head], GLASS.iron, Math.max(1.4, 0.065 * pen.k))
+  const nx = -Math.sin(a)
+  const ny = Math.cos(a)
+  const ax = Math.cos(a)
+  const ay = Math.sin(a)
+  const hh = 0.13
+  const hw = HAM.head * 1.2
+  const mallet: Pt[] = [
+    [head[0] - ax * hw * 0.3 - nx * hh, head[1] - ay * hw * 0.3 - ny * hh],
+    [head[0] + ax * hw - nx * hh, head[1] + ay * hw - ny * hh],
+    [head[0] + ax * hw + nx * hh, head[1] + ay * hw + ny * hh],
+    [head[0] - ax * hw * 0.3 + nx * hh, head[1] - ay * hw * 0.3 + ny * hh],
+  ]
+  shape(pen, mallet, GLASS.iron, 0.7)
+  shape(pen, arcPts(pivot[0], pivot[1], 0.045, 0.045, 0, Math.PI * 2, 8), GLASS.steel, 0.5)
 }
 
 export function drawOrgan(pen: Pen, t: number): void {
   drawRack(pen)
+  drawRailPosts(pen)
   for (let i = 0; i < ORGAN.length; i++) {
     const b = ORGAN[i]
     const ring = ringOf(i, t)
@@ -705,7 +878,7 @@ export function drawOrgan(pen: Pen, t: number): void {
       }
       shape(pen, [...surf, [b.x + dx + b.w, b.base + 0.1], [b.x + dx - b.w, b.base + 0.1]], rgba(GLASS.water, 0.6), 0)
       strokeLine(pen, surf, rgba(GLASS.light, 0.85), thin(pen, 0.55))
-      // Struck, the light on it flashes.
+      // Struck, the light in it flashes.
       if (ring > 0.02) {
         const x = b.x + dx - b.w * 0.5
         strokeLine(pen, [[x, mouth + b.h * 0.3], [x, b.base - 0.15]], rgba(GLASS.light, ring), Math.max(1.5, 0.1 * pen.k))
@@ -713,5 +886,12 @@ export function drawOrgan(pen: Pen, t: number): void {
       }
     })
     shape(pen, pts, null, 0.8)
+    // Struck, its rim flashes white where the hammer hit, and the flash runs down its lip.
+    if (ring > 0.03) {
+      const lip = pts.slice(0, 7)
+      const lipW = pts.slice(pts.length - 6)
+      strokeLine(pen, [...lipW, ...lip], rgba(GLASS.light, Math.min(1, 1.2 * ring)), Math.max(1.5, 0.07 * pen.k))
+      glow(pen, b.x + dx, mouth + 0.04, 0.45 + 0.25 * b.w, GLASS.light, 0.75 * ring)
+    }
   }
 }

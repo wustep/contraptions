@@ -3,6 +3,7 @@ import { frame, type Ctx } from '../kit'
 import {
   drawBench,
   drawBottle,
+  drawCarriage,
   drawCart,
   drawGlassOnPipe,
   drawLehr,
@@ -17,7 +18,7 @@ import { drawFurnace, drawOven, drawRoom } from './glass-shop'
 
 /**
  * GLASS's drawing, back to front: the whitewashed room and its daylight; the two fires (the great furnace at the
- * east, the glory hole's oven at the west); the organ on its rack; the mould's stand, and its halves when they lie
+ * east, the glory hole's oven at the west); the organ on its rack and the rail's posts; the mould's stand, and its halves when they lie
  * open behind the bottle's way; the lehr; the bottle, and the mould's halves when they are shut round it; the bench,
  * the blowing cart and the glass on its pipe; the thread; the steam. `t` is show time.
  */
@@ -41,6 +42,7 @@ export function drawGlassworks(p: p5, c: Ctx, t: number): void {
   drawGlassOnPipe(pen, t)
   drawThread(pen, t)
   drawSteam(pen, t)
+  drawCarriage(pen, t)
   p.pop()
 }
 

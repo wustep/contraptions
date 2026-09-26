@@ -6,6 +6,7 @@ import {
   AT_PLOP,
   BELT_GO,
   BELT_STOP,
+  CATCH,
   CLAP,
   DRAW,
   END_X,
@@ -17,18 +18,20 @@ import {
   MOULD_X,
   OPEN,
   OPENED,
+  ORGAN,
   PINGS,
   PLOP,
   PUFFS,
   RINGS,
   S1,
+  SANDBOX,
+  SLAM,
   SNAP,
-  SPRINGS,
   STOP,
   TINK,
   inBottle,
+  inCup,
   onGlass,
-  onTuned,
   riseAt,
 } from './glass-plan'
 import { drawGlassworks, overGlassworks } from './glass-draw'
@@ -50,14 +53,16 @@ import { drawGlassworks, overGlassworks } from './glass-draw'
  * and cools a step (70.96, 71.95, 72.93): orange, amber, green. The camera draws back to show the whole shop: the
  * lehr, a rack of finished bottles, and the great furnace at the far end.
  *
- * Phrase 8, the B: brittle. The belt stops at the rack (74.42). The spark hops up the seven tuned bottles, a mouth a
- * note, each ringing as it lands (75.40, 76.38, 77.34, 78.30, 79.25, 80.18), the last the great demijohn under the
- * furnace's working port (81.12), whose ring flings it up into the draught: drawn into the port's fire, rising, for
- * the door (82.053).
+ * Phrase 8, the B: brittle. The belt stops at the rack (74.42), and the spark hops up off the bottle into the cup of
+ * an iron carriage on a rail that climbs over the tuned bottles to the furnace (75.40). Its weight trips the catch;
+ * a crucible of cullet on a chain over the wheel at the rail's head hauls it up, faster and faster, and its hammer
+ * drops and rings a bottle on each big note (76.38, 77.34, 78.30, 79.25). On 80.18, the phrase's loudest, it slams
+ * into the buffer, the hammer rings the great demijohn, the crucible lands in its sand box, and the spark is flung on
+ * up toward the great furnace's port; on 81.12 the port roars as the draught takes it in, for the door (82.053).
  */
 
 /** Every strike this part makes (show seconds). */
-export const GLASS_HITS: number[] = [TINK, PLOP, ...PUFFS, STOP, CLAP, ...HISS, OPEN, OPENED, BELT_GO, SNAP, ...PINGS, BELT_STOP, HOP_OFF, ...RINGS, ...SPRINGS]
+export const GLASS_HITS: number[] = [TINK, PLOP, ...PUFFS, STOP, CLAP, ...HISS, OPEN, OPENED, BELT_GO, SNAP, ...PINGS, BELT_STOP, HOP_OFF, CATCH, ...RINGS, DRAW]
   .filter((t, i, all) => all.indexOf(t) === i)
   .sort((a, b) => a - b)
 
@@ -97,14 +102,11 @@ export const glassworks = part<GlassState>(
     // the pipe while the mould works, then the bottle on the belt down the lehr.
     segs.push(...ride(onGlass, PLOP, CLAP))
     segs.push(...ride(inBottle, CLAP, HOP_OFF))
-    // Up the organ: a hop to each mouth on its note, a spring off a quarter later.
-    segs.push(...hop(inBottle(HOP_OFF), HOP_OFF, onTuned(0, RINGS[0]), RINGS[0]))
-    for (let i = 0; i < SPRINGS.length; i++) {
-      segs.push(...ride((T) => onTuned(i, T), RINGS[i], SPRINGS[i]))
-      segs.push(...hop(onTuned(i, SPRINGS[i]), SPRINGS[i], onTuned(i + 1, RINGS[i + 1]), RINGS[i + 1]))
-    }
-    // The demijohn's ring flings it up, and the draught takes it into the port.
-    segs.push(...carried((u) => riseAt(u + slot.begin), at(DRAW), at(S1), 30))
+    // Up off the bottle into the carriage's cup; riding it up the rail to the slam.
+    segs.push(...hop(inBottle(HOP_OFF), HOP_OFF, inCup(CATCH), CATCH))
+    segs.push(...ride(inCup, CATCH, SLAM))
+    // Flung on out of the cup, and the draught takes it into the port.
+    segs.push(...carried((u) => riseAt(u + slot.begin), at(SLAM), at(S1), 60))
     const end = riseAt(S1)
     return {
       cells: box(-4.8, -9, FURNACE.x1 + 1, FLOOR_Y + 1),
@@ -135,13 +137,18 @@ function shots(begin: number): PartShot[] {
     // Down the lehr, its fires under the belt, and back to see the whole shop: the lehr, the rack, the furnace.
     { t: PINGS[0], cells: 5.0, off: [0.9, 1.15], w: 0 },
     { t: PINGS[2] - 0.2, cells: 8.8, hold: [END_X + 2.4, 0.9], w: 0.9 },
-    { t: BELT_STOP + 0.2, cells: 5.4, hold: [END_X + 1.3, 1.3], w: 0.6 },
-    // Up the organ, the port above.
-    { t: RINGS[1], cells: 4.9, off: [0.7, 0.35], w: 0 },
-    { t: RINGS[4], cells: 4.6, off: [0.5, 0.1], w: 0 },
-    { t: RINGS[5] + 0.2, cells: 4.3, off: [0.35, -0.35], w: 0 },
-    // Into the fire: close on the spark, the port's flame filling the frame.
-    { t: DRAW + 0.35, cells: 3.2, off: [0, -0.3], w: 0 },
+    // The carriage at rest on its rail over the first bottles; the spark hops up into its cup.
+    { t: BELT_STOP + 0.2, cells: 5.2, hold: [END_X + 1.5, 0.9], w: 0.75 },
+    { t: CATCH, cells: 5.0, hold: [END_X + 1.9, 0.75], w: 0.8 },
+    // Up the rail with it, a little ahead, so each bottle is in before the hammer comes down on it.
+    { t: RINGS[1], cells: 5.0, off: [1.0, 0.45], w: 0 },
+    { t: RINGS[3], cells: 5.6, off: [1.2, 0.5], w: 0 },
+    // Out to the whole machine for the slam: the buffer, the demijohn, the wheel, the crucible landing in the sand.
+    { t: SLAM - 0.25, cells: 7.0, hold: [ORGAN[ORGAN.length - 1].x - 0.1, SANDBOX.top - 2.95], w: 0.9 },
+    { t: SLAM + 0.05, cells: 7.0, hold: [ORGAN[ORGAN.length - 1].x + 0.05, SANDBOX.top - 3.2], w: 0.9 },
+    { t: SLAM + 0.55, cells: 6.2, hold: [ORGAN[ORGAN.length - 1].x + 0.3, -1.1], w: 0.55 },
+    // Up with it to the port as the draught takes it (81.12); into the fire: close on the spark, the flame filling it.
+    { t: DRAW + 0.45, cells: 3.2, off: [0, -0.3], w: 0 },
     { t: S1, cells: SEAMS.regatta.cells, w: 0 },
   ]
 }

@@ -2,7 +2,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
-import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1 } from './glass-plan'
+import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1, SLAM } from './glass-plan'
 import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, tongue, type Pen } from './glass-pen'
 
 /**
@@ -228,8 +228,12 @@ export function drawOven(pen: Pen, v: View, t: number): void {
 
 /* ------------------------------------------------------------------ the furnace */
 
-/** How hard the furnace's port breathes: it gathers as the spark comes up the organ, and roars as it draws it in. */
-const portFlare = (t: number): number => 0.35 * smooth(t, RINGS[3], RINGS[5] + 0.3) + 0.9 * smooth(t, DRAW - 0.15, S1) - 0.8 * smooth(t, S1 + 0.8, S1 + 3)
+/** How hard the furnace's port breathes: it gathers as the carriage climbs, roars on 81.12 as it draws the spark in. */
+const portFlare = (t: number): number =>
+  0.35 * smooth(t, RINGS[2], SLAM + 0.3) +
+  0.9 * smooth(t, DRAW - 0.3, S1) +
+  (t > DRAW ? 0.7 * (1 - Math.exp(-(t - DRAW) / 0.03)) * Math.exp(-(t - DRAW) / 0.4) : 0) -
+  0.8 * smooth(t, S1 + 0.8, S1 + 3)
 
 export function drawFurnace(pen: Pen, v: View, t: number): void {
   const { x0, x1, top } = FURNACE

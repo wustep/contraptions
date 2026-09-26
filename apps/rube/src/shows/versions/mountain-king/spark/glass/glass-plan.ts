@@ -59,14 +59,24 @@ export const BELT_GO = e(7, 4)
 export const SNAP = e(7, 10)
 /** The bottle crosses into each cooler part of the lehr, and pings as it cools. */
 export const PINGS = [e(7, 18), e(7, 22), e(7, 26)] as const
-/** The belt comes to rest at its end; the spark hops off onto the organ. */
+/**
+ * Phrase 8, the B: the ringing carriage. The belt comes to rest at its end (74.42), and the spark hops up off the
+ * bottle into the cup of an iron carriage on a rail that climbs over the tuned bottles to the furnace (lands 75.40).
+ * Its weight trips the carriage's catch, and a counterweight on a chain over a wheel at the rail's head hauls it up,
+ * faster and faster; its hammer drops and rings a bottle on each big note (76.38, 77.34, 78.30, 79.25). On 80.18,
+ * the phrase's loudest note, it slams into the buffer at the rail's head, the hammer rings the great demijohn, the
+ * counterweight lands in its sand box, and the spark is flung on up out of the cup toward the furnace's port. On
+ * 81.12 the port roars as the draught takes it in.
+ */
 export const BELT_STOP = e(8, 0)
 export const HOP_OFF = e(8, 2)
-/** Seven bottles rung, one a note of the B phrase (its big ones, and bar 3's quieter downbeat); a spring off each a quarter later. */
-export const RINGS = [e(8, 4), e(8, 8), e(8, 12), e(8, 16), e(8, 20), e(8, 24), e(8, 28)] as const
-export const SPRINGS = [e(8, 6), e(8, 10), e(8, 14), e(8, 18), e(8, 22), e(8, 26)] as const
-/** The last, the great demijohn under the furnace's port, flings it up into the draught. */
-export const DRAW = RINGS[6]
+/** Into the carriage's cup: the catch trips, and it lurches off up the rail. */
+export const CATCH = e(8, 4)
+/** The hammer rings a bottle on each of the phrase's big notes; the last is the demijohn, as the carriage slams home. */
+export const RINGS = [e(8, 8), e(8, 12), e(8, 16), e(8, 20), e(8, 24)] as const
+export const SLAM = RINGS[4]
+/** The port roars as the furnace's draught takes the spark in. */
+export const DRAW = e(8, 28)
 
 /* ------------------------------------------------------------------ the shop */
 
@@ -342,9 +352,56 @@ export const ZONES = PINGS.map((at) => MOULD_X + beltAt(at))
 /** The lehr's bed, from under the mould to past the belt's end. */
 export const LEHR = { x0: MOULD_X - 1.45, x1: END_X + 0.9 }
 
-/* ------------------------------------------------------------------ the bottle organ */
+/* ------------------------------------------------------------------ the bottle organ and the ringing carriage */
 
-/** The seven tuned bottles: where each stands (its base's middle), its size and glass. Bigger to the east. */
+/** Where the spark sits in the lehr's bottle's mouth. */
+export const LEHR_SEAT = MOUTH_Y - R + SINK
+
+/**
+ * The line the tuned bottles' mouths stand on, climbing toward the furnace, and the rail over it: parallel, `RAIL_UP`
+ * above, so the carriage's hammer reaches every mouth alike.
+ */
+const LINE = { x: 11.2, y: LEHR_SEAT - 0.3 + R - SINK, slope: 0.2959 }
+export const mouthLine = (x: number): number => LINE.y - LINE.slope * (x - LINE.x)
+export const RAIL_UP = 0.62
+/** The rail's top at `x` (the carriage's wheels run on it). */
+export const railTop = (x: number): number => mouthLine(x) - RAIL_UP
+/** The rail's pitch (radians, positive climbing east). */
+export const RAIL_PITCH = Math.atan(LINE.slope)
+
+/** Where the carriage stands at rest (its cup's middle), and where it stops against the buffer. */
+export const CX0 = END_X + 0.75
+/** From the cup to where the hammer's head strikes a mouth, along x. */
+export const HAM_DX = 0.78
+/** The demijohn, the great last bottle, stands under the rail's head. */
+const DEMI_X = 17.28
+export const CX_END = DEMI_X - HAM_DX
+/** The lurch as the catch trips (its ease, seconds), and the counterweight's pull: a start and a steady gain. */
+const LURCH = 0.12
+const V0 = 0.35
+const RUN = SLAM - CATCH
+const ACC = (2 * (CX_END - CX0 - V0 * (RUN - LURCH))) / (RUN * RUN)
+/** How far the carriage has come up the rail, along x, `tau` seconds after the catch trips. */
+const runOf = (tau: number): number => (tau <= 0 ? 0 : V0 * (tau - LURCH * (1 - Math.exp(-tau / LURCH))) + 0.5 * ACC * tau * tau)
+/** Its speed along x when it hits the buffer. */
+export const V_SLAM = V0 * (1 - Math.exp(-RUN / LURCH)) + ACC * RUN
+/**
+ * The carriage's cup's middle (x) at `t`: at rest, hauled up the rail from the catch, gathering speed, and stopped dead
+ * by the buffer at the slam (a small bounce back off its leather, settling).
+ */
+export function carriageX(t: number): number {
+  if (t <= CATCH) return CX0
+  if (t <= SLAM) return CX0 + runOf(t - CATCH)
+  const u = t - SLAM
+  return CX_END - 0.09 * (1 - Math.exp(-u / 0.035)) * Math.exp(-u / 0.22)
+}
+/** The carriage's dip as the spark lands in it (cells, down), damped. */
+export function carriageDip(t: number): number {
+  const u = t - CATCH
+  return u > 0 ? 0.045 * Math.exp(-u / 0.12) * Math.cos(u * 30) * (u < 0.02 ? u / 0.02 : 1) : 0
+}
+
+/** The tuned bottles: where each stands (its base's middle), its size and glass. Bigger to the east. */
 export interface Tuned {
   x: number
   base: number
@@ -355,60 +412,138 @@ export interface Tuned {
   /** How full of water (0..1 of the body). */
   water: number
 }
-/** Where the spark sits in the lehr's bottle's mouth. */
-export const LEHR_SEAT = MOUTH_Y - R + SINK
-/** The spark's height sitting in each bottle's mouth: a rising line up the rack toward the furnace's port. */
-const SEATS = [0, 1, 2, 3, 4, 5, 6].map((i) => LEHR_SEAT - 0.3 - 0.29 * i)
 const SIZES: [number, number, number][] = [
   // height, half width, neck
-  [1.3, 0.25, 0.1],
-  [1.42, 0.31, 0.105],
-  [1.52, 0.27, 0.11],
-  [1.64, 0.35, 0.115],
-  [1.78, 0.31, 0.12],
-  [1.95, 0.4, 0.13],
+  [1.32, 0.25, 0.1],
+  [1.5, 0.31, 0.105],
+  [1.7, 0.29, 0.115],
+  [1.95, 0.38, 0.125],
   [2.3, 0.62, 0.14],
 ]
-const GLASSES: Tuned['glass'][] = ['glass', 'cobalt', 'amber', 'glassDeep', 'glass', 'cobalt', 'glassDeep']
-const WATER = [0.8, 0.65, 0.7, 0.5, 0.55, 0.45, 0.35]
+const GLASSES: Tuned['glass'][] = ['glass', 'cobalt', 'amber', 'glassDeep', 'glassDeep']
+const WATER = [0.8, 0.65, 0.6, 0.45, 0.35]
+/** Each stands where the hammer comes down on its mouth on its note: spaced wider as the carriage speeds up. */
 export const ORGAN: Tuned[] = SIZES.map(([h, w, neck], i) => {
-  const x = END_X + 1.2 + 0.98 * i + (i === 6 ? 0.2 : 0)
-  const mouth = SEATS[i] + R - SINK
+  const x = carriageX(RINGS[i]) + HAM_DX
+  const mouth = mouthLine(x)
   return { x, base: mouth + h, h, w, neck, glass: GLASSES[i], water: WATER[i] }
 })
-/** Where the spark sits in bottle `i`'s mouth. */
-export const mouthOf = (i: number): Pt => [ORGAN[i].x, SEATS[i]]
 
-/** How hard bottle `i` is ringing at `t`: 1 as it is struck, dying away. The last rings longest. */
+/** How hard bottle `i` is ringing at `t`: 1 as it is struck, dying away. The demijohn rings longest. */
 export function ringOf(i: number, t: number): number {
   const u = t - RINGS[i]
   if (u < 0) return 0
-  return Math.exp(-u / (i === 6 ? 1.1 : 0.55))
+  return Math.exp(-u / (i === ORGAN.length - 1 ? 1.2 : 0.6))
 }
+/** A rung bottle shivers side to side, a little, dying fast. */
+export function shiverOf(i: number, t: number): number {
+  const u = t - RINGS[i]
+  if (u < 0) return 0
+  return (i === ORGAN.length - 1 ? 0.024 : 0.016) * Math.exp(-u / 0.2) * Math.sin(u * 70)
+}
+
+/** The hammer: its arm's pivot on the carriage's nose, the arm's length, its head's radius. */
+export const HAM = { nose: 0.34, len: 0.0, head: 0.075 }
+/** The pivot's place for a carriage at `cx`: on its nose, at the rail's top. */
+export const hammerPivot = (cx: number): Pt => [cx + HAM.nose, railTop(cx + HAM.nose) - 0.04]
+/** Where its head comes down on a mouth, for a carriage at `cx`: on the lip, a touch west of the middle. */
+const hitPoint = (cx: number): Pt => [cx + HAM_DX - 0.03, mouthLine(cx + HAM_DX) - HAM.head]
+HAM.len = Math.hypot(hitPoint(CX0)[0] - hammerPivot(CX0)[0], hitPoint(CX0)[1] - hammerPivot(CX0)[1])
+/** The arm's angle below the carriage's own line when it strikes, and when it is lifted clear. */
+const HIT_A = Math.atan2(hitPoint(CX0)[1] - hammerPivot(CX0)[1], hitPoint(CX0)[0] - hammerPivot(CX0)[0]) - RAIL_PITCH * -1
+const UP_A = -0.3
+/**
+ * The hammer's arm angle (radians, below the line of the rail; the rail climbs, so the world angle is this less the
+ * pitch): lifted clear by its cam, it drops onto each mouth on the note, bounces, and is lifted again.
+ */
+export function hammerAngle(t: number): number {
+  let a = UP_A
+  for (let i = 0; i < RINGS.length; i++) {
+    const T = RINGS[i]
+    const u = t - T
+    if (u < -0.1 || u > 0.5) continue
+    if (u < 0) {
+      // It drops, gathering speed, onto the mouth.
+      const f = (u + 0.1) / 0.1
+      a = UP_A + (HIT_A - UP_A) * f * f
+    } else {
+      // A bounce off the glass, then the cam lifts it clear again.
+      const bounce = 0.35 * Math.exp(-u / 0.05) * Math.abs(Math.sin(u * 30))
+      a = HIT_A - bounce - (HIT_A - UP_A) * smooth(u, 0.08, 0.34)
+    }
+  }
+  return a
+}
+/** The hammer's head at `t` (world cells). */
+export function hammerHead(t: number): Pt {
+  const [px, py] = hammerPivot(carriageX(t))
+  const a = hammerAngle(t) - RAIL_PITCH
+  return [px + HAM.len * Math.cos(a), py + HAM.len * Math.sin(a)]
+}
+
+/** Where the spark sits in the carriage's cup. */
+export const CUP_UP = 0.4
+export function inCup(t: number): Pt {
+  const x = carriageX(t)
+  return [x, railTop(x) - CUP_UP + carriageDip(t)]
+}
+
+/** The rail: from behind the carriage's rest to the buffer at its head. */
+export const RAIL_X = { x0: CX0 - 0.75, x1: CX_END + 0.62 }
+/** The wheel at the rail's head that the chain runs over, and its small drum that winds the counterweight's rope. */
+export const SHEAVE = { x: CX_END + 1.6, y: railTop(CX_END + 1.6) + 0.12, r: 0.34, drum: 0.13 }
+/** The counterweight: a clay crucible full of cullet on a rope from the drum, landing in a box of sand on the slam. */
+const WX = SHEAVE.x + SHEAVE.drum
+export const SANDBOX = { x0: WX - 0.42, x1: WX + 0.6, top: 3.9 }
+const WEIGHT_H = 0.78
+/** The crucible's bottom (y) at `t`: it comes down a third as fast as the carriage goes up. */
+export function weightBottom(t: number): number {
+  const ratio = SHEAVE.drum / SHEAVE.r
+  const run = (carriageX(Math.min(t, SLAM)) - CX0) / Math.cos(RAIL_PITCH)
+  const full = (CX_END - CX0) / Math.cos(RAIL_PITCH)
+  const land = SANDBOX.top + 0.04
+  const y = land - ratio * (full - run)
+  // It sinks into the sand a little and settles.
+  if (t > SLAM) return land + 0.05 * (1 - Math.exp(-(t - SLAM) / 0.06))
+  return y
+}
+export const WEIGHT = { x: WX, h: WEIGHT_H, w: 0.3 }
+/** The sheave's turn (radians): as the chain winds onto it. */
+export const sheaveTurn = (t: number): number => (carriageX(t) - CX0) / Math.cos(RAIL_PITCH) / SHEAVE.r
 
 /* ------------------------------------------------------------------ the furnace, and the draught out */
 
 /**
- * The last climb: the demijohn's ring flings the spark up off its mouth, and the furnace's draught takes it, faster
- * and faster, to the seam's velocity at the door.
+ * The fling: the slam stops the carriage dead, and the spark flies on out of the cup, its own speed up the rail and a
+ * kick up off the cup's lip. The furnace's draught takes it (it slows as the fling is spent, then is drawn up faster
+ * and faster), to the seam's velocity at the door.
  */
 const V_OUT = SEAMS.regatta.v
-export const RISE = S1 - DRAW
-const V_FLING: Pt = [V_OUT[0], -1.25]
-const A_UP = (V_OUT[1] - V_FLING[1]) / RISE
-export function riseAt(t: number): Pt {
-  const [x, y] = mouthOf(6)
-  const u = Math.max(0, Math.min(RISE, t - DRAW))
-  return [x + V_FLING[0] * u, y + V_FLING[1] * u + 0.5 * A_UP * u * u]
-}
+export const RISE = S1 - SLAM
+const P_FLING: Pt = inCup(SLAM - 1e-6)
+const V_FLING: Pt = [V_SLAM * 0.95, -V_SLAM * Math.tan(RAIL_PITCH) - 3.1]
 /** Where the spark is at the door out. */
-export const OUT: Pt = riseAt(S1)
+export const OUT: Pt = [P_FLING[0] + 1.42, P_FLING[1] - 3.45]
+export function riseAt(t: number): Pt {
+  const u = Math.max(0, Math.min(1, (t - SLAM) / RISE))
+  const T = RISE
+  const u2 = u * u
+  const u3 = u2 * u
+  const h00 = 2 * u3 - 3 * u2 + 1
+  const h10 = u3 - 2 * u2 + u
+  const h01 = -2 * u3 + 3 * u2
+  const h11 = u3 - u2
+  return [
+    h00 * P_FLING[0] + h10 * T * V_FLING[0] + h01 * OUT[0] + h11 * T * V_OUT[0],
+    h00 * P_FLING[1] + h10 * T * V_FLING[1] + h01 * OUT[1] + h11 * T * V_OUT[1],
+  ]
+}
 /** The great furnace's working port: an arch, its heart where the spark goes in. */
 export const PORT = { x: OUT[0] + 0.05, y: OUT[1] - 0.05, w: 2.1, h: 2.6 }
 /** The furnace's brick: its west face, its east end, the top of its wall (its crown rises over it). */
 export const FURNACE = { x0: PORT.x - 2.2, x1: PORT.x + 5.4, top: PORT.y - PORT.h / 2 - 1.3 }
-/** The stepped rack the organ stands on: a step under each bottle, up to the furnace's face. */
-export const RACK = { x0: ORGAN[0].x - 0.5, x1: ORGAN[6].x + 0.78 }
+/** The stepped rack the organ stands on: a step under each bottle, up to the demijohn. */
+export const RACK = { x0: ORGAN[0].x - 0.55, x1: ORGAN[ORGAN.length - 1].x + 0.66 }
 
 /* ------------------------------------------------------------------ the shape of the glass on the pipe */
 
@@ -543,21 +678,6 @@ export function inBottle(t: number): Pt {
   // Until the belt takes it, the mouth is the collar on the pipe's tip, and shakes with it.
   const shake = t < BELT_GO ? ty - PIPE_STOP : 0
   return [x, y - R + SINK + shake]
-}
-
-/** A rung bottle shivers side to side, a little, dying fast. */
-export function shiverOf(i: number, t: number): number {
-  const u = t - RINGS[i]
-  if (u < 0) return 0
-  return 0.014 * Math.exp(-u / 0.18) * Math.sin(u * 70)
-}
-
-/** Where the spark sits in bottle `i`'s mouth, the bottle ringing under it. */
-export function onTuned(i: number, t: number): Pt {
-  const [x, y] = mouthOf(i)
-  const u = t - RINGS[i]
-  const dip = u > 0 ? 0.045 * (u / 0.06) * Math.exp(1 - u / 0.06) : 0
-  return [x + shiverOf(i, t), y + dip]
 }
 
 /** Where the spark lands in the gather: on its crown as the cart sits on its rest. */
