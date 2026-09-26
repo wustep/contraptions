@@ -62,7 +62,7 @@ const BACK_SINK = 0.4
 const UP_AGAIN: [number, number] = [BREAK + 0.2, LAST_CHORD - 0.3]
 
 /** Where he stands to set the crash straight, and to nod: right of the hi-hat. How far his column rises for each. */
-const FIX_X = 1.95
+const FIX_X = 1.72
 const FIX_RISE = 1.1
 const NOD_X = 1.62
 const NOD_RISE = 1.62
@@ -267,8 +267,12 @@ function heldHigh(t: number, side: 'right' | 'left' = 'right'): ArmPose {
 
 /* ------------------------------------------------------------------ Jim */
 
-/** Where Jim is at `t`: in the wings by the stage door, watching; drawn a little toward the stage at the nod. */
+/**
+ * Where Jim is at `t`: in the wings by the stage door, watching; drawn a little toward the stage when the camera
+ * comes to him in the hush (his son alone on the ride, far across the stage), and at the nod.
+ */
 export function jimAt(t: number): Pt {
-  const lean = 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
+  const hush = 0.08 * ease(t, 359.6, 361.4) * (1 - ease(t, 365.2, 367.4))
+  const lean = hush + 0.07 * ease(t, NOD[0] - 0.5, NOD[1]) * (1 - ease(t, FINAL + 2, FINAL + 5))
   return [JIM_WINGS[0] + lean, JIM_WINGS[1]]
 }

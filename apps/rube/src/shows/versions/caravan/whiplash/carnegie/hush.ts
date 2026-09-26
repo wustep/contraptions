@@ -184,17 +184,22 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(H_WALK[1] + 0.4, 5.8, [1.2, -1.45]),
     k(FIX[0] + 0.5, 4.5, [0.85, -1.6]),
     k(LET_GO + 0.9, 4.1, [1.05, -1.35]),
-    // He goes back; the bursts round the kit.
+    // He goes back; the bursts round the kit, the camera close and going with him, drum to drum: the rack and the
+    // snare, down to the floor tom, up with him to the crash (it holds now), the snare's little roll low and close.
     k(H_BACK[0] + 1.2, 6.2, [0.9, -1.05]),
-    k(345.0, 5.6, [-1.2, -0.85]),
-    k(348.6, 5.8, [-0.8, -1.2]),
-    k(351.8, 5.2, [-0.6, -0.9]),
-    k(355.6, 5.2, [-1.4, -0.8]),
-    // To the ride; then across to his father at the stage door, watching his son at the far side of the kit.
-    k(TO_RIDE + 0.4, 5.6, [-2.4, -1.05]),
-    k(361.2, 6.4, [-5.65, 0.15]),
-    k(365.6, 6.0, [-5.4, 0.2]),
-    k(368.4, 5.8, [-1.9, -0.8]),
+    { t: 345.0, cells: 3.7, hold: [-0.75, -0.55], w: 0.55 },
+    { t: 347.0, cells: 3.4, hold: [0.1, -0.35], w: 0.55 },
+    { t: 348.9, cells: 4.2, hold: [0.0, -1.35], w: 0.6 },
+    { t: 351.6, cells: 3.3, hold: [-0.6, -0.4], w: 0.6 },
+    { t: 354.0, cells: 3.8, hold: [-0.7, -0.6], w: 0.55 },
+    k(356.1, 3.0, [-0.55, -0.3]),
+    // To the ride; then across the dark stage to his father at the stage door, close, leaning toward the stage to
+    // see his son; and back across to him, small, alone on the ride.
+    k(TO_RIDE + 0.4, 5.4, [-1.9, -1.05]),
+    k(360.9, 3.3, [-7.6, 1.2]),
+    k(364.2, 3.15, [-7.55, 1.18]),
+    k(366.9, 6.8, [-4.0, -0.35]),
+    k(368.5, 5.4, [-1.7, -0.8]),
     { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
   ]
 }

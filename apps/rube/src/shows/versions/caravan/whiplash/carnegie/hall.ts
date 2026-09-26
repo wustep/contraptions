@@ -9,7 +9,7 @@ import { CARNEGIE, CHORD, CUTOFF, FINAL, LAST_CHORD, SOLO, level, SHOUT_ORIGIN, 
 import { HALL, KIT } from '../worlds'
 import { baseAt, crashAskew, fletcherAt, floorAt, poseAt } from './conductor'
 import { ROLL, rolling } from './finale-clock'
-import { ARCH, BASS, DOOR, FLOOR, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
+import { ARCH, BASS, DOOR, FLOOR, JIM_WINGS, KIT_AT, LIP, PIANO, PODIUM, RISERS } from './stage'
 import { sinceStroke } from './strokes'
 
 /**
@@ -466,5 +466,27 @@ export function hallLight(p: p5, c: Ctx, T: number): void {
     ctx.fillStyle = q
     ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
   }
+  // The stage's light spilling into the wings where his father stands to watch: faint all through the solo, up a
+  // little while the camera is with him in the hush, and out with the hall at the end. Low and wide, on the floor.
+  const wings = T < SOLO ? 0 : (0.35 + 0.65 * visit(T, 358.6, 367.8)) * smoothIn(T, SOLO, SOLO + 3) * (1 - smoothIn(T, FINAL + 2, FINAL + 9))
+  if (wings > 0.001) {
+    const cx = (JIM_WINGS[0] + 0.25) * k
+    const cy = (FLOOR - 0.55) * k
+    const r = 1.9 * k
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.scale(1, 0.62)
+    const q = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    q.addColorStop(0, `rgba(227, 176, 91, ${(0.13 * wings).toFixed(3)})`)
+    q.addColorStop(0.55, `rgba(227, 176, 91, ${(0.05 * wings).toFixed(3)})`)
+    q.addColorStop(1, 'rgba(227, 176, 91, 0)')
+    ctx.fillStyle = q
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    ctx.restore()
+  }
   ctx.restore()
 }
+
+const smoothIn = (t: number, a: number, b: number): number => easeInOutSine(clamp((t - a) / (b - a)))
+/** 0..1: up over the first second and a half of [a, b], down over its last. */
+const visit = (t: number, a: number, b: number): number => smoothIn(t, a, a + 1.5) * (1 - smoothIn(t, b - 1.5, b))
