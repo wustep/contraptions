@@ -238,12 +238,13 @@ export const rubato = part<{ begin: number }>(
       { t: 468.5, cells: 5.8, hold: at(M + 0.02, -2.6), w: 1 },
       { t: 474, cells: 6.4, hold: at(M + 0.6, -2.3), w: 1 },
       { t: 481, cells: 6.2, hold: at(-1.8, -2.2), w: 1 },
-      // The roll: in on him as the swing collapses into the shimmer; then one long draw back through the swell as
-      // the blur widens and the light rises, to the whole machine, the kit and Fletcher on his podium; then down
-      // with him as the rod flings him, landing close on the snare on the burst (the finale's key there is CLOSE).
-      { t: 485.0, cells: 4.4, hold: at(M + 0.15, -3.25), w: 1 },
-      { t: 502.2, cells: 8.6, hold: at(-1.0, -1.7), w: 1 },
-      { t: 503.35, cells: 5.6, hold: at(-1.6, -2.2), w: 1 },
+      // The roll: in on him as the swing collapses into the shimmer, and on in through the swell as the fan widens
+      // and the light rises (him, the upper fan and the crown filling the frame by the top); then down with him as
+      // the rod flings him, landing close on the snare on the burst (the finale's key there is CLOSE).
+      { t: 485.0, cells: 4.4, hold: at(M + 0.1, -3.3), w: 1 },
+      { t: 494, cells: 3.9, hold: at(M + 0.05, -3.45), w: 1 },
+      { t: 502.2, cells: 3.4, hold: at(M, -3.55), w: 1 },
+      { t: 503.35, cells: 3.9, hold: at(-1.3, -2.3), w: 1 },
       { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
     ]
   },
