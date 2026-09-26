@@ -215,8 +215,10 @@ function footLift(T: number): number {
 /* ------------------------------------------------------------------ drawing */
 
 /** A length of chrome tube: an ink edge and the bright core, like the kit's stands but heavier. */
-export function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number): void {
+export function tube(p: p5, c: Ctx, a: Pt, b: Pt, w0: number): void {
   const { k, ink, weight } = c
+  // A little under the weight it was first drawn at: in the wide shots the heavier tubes read as scaffolding.
+  const w = w0 * 0.82
   p.stroke(ink)
   p.strokeWeight(weight * w)
   p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
@@ -279,7 +281,9 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
   for (const q of [L, R]) {
     const g = ctx.createLinearGradient(0, (q[1] - 5) * k, 0, q[1] * k)
     g.addColorStop(0, 'rgba(183, 178, 167, 0)')
-    g.addColorStop(1, 'rgba(183, 178, 167, 0.5)')
+    // Bright while it flies in and out; dim once it hangs still at its height (in the wide shots two long lines up
+    // the frame's full height were the strongest lines in it).
+    g.addColorStop(1, `rgba(183, 178, 167, ${(0.16 + 0.34 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)).toFixed(3)})`)
     ctx.save()
     ctx.strokeStyle = g
     ctx.lineWidth = weight * 0.8

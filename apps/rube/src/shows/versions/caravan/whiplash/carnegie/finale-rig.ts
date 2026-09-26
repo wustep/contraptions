@@ -329,7 +329,8 @@ function drawFrame(p: p5, c: Ctx, T: number): void {
   for (const q of [L, R]) {
     const g = ctx.createLinearGradient(0, (q[1] - 5) * k, 0, q[1] * k)
     g.addColorStop(0, 'rgba(183, 178, 167, 0)')
-    g.addColorStop(1, 'rgba(183, 178, 167, 0.5)')
+    // Bright while it flies in; dim once it hangs still at its height.
+    g.addColorStop(1, `rgba(183, 178, 167, ${(0.16 + 0.34 * Math.min(1, Math.abs(rigDrop(T)) / 0.6)).toFixed(3)})`)
     ctx.save()
     ctx.strokeStyle = g
     ctx.lineWidth = weight * 0.8
