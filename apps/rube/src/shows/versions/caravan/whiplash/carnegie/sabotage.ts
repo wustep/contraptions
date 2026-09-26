@@ -6,11 +6,9 @@ import { RIG, drawConductor, type ArmPose, type Pose } from '../fletcher'
 import { box, carried, part, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { CARNEGIE, SOLO, shout } from '../music'
 import type { KitStroke } from '../stub'
-import { HALL } from '../worlds'
+import { HALL, JIM } from '../worlds'
 import {
   BOUNCES,
-  CHART_H,
-  CHART_W,
   COUNT,
   DOOR_OPENS,
   FLING,
@@ -33,7 +31,7 @@ import {
   standSink,
 } from './sabotage-motion'
 import { drawChart, drawDoorLeaf, drawDoorway, drawVeil } from './sabotage-set'
-import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM } from './stage'
+import { FLETCHER_HOME, FLOOR, KIT_AT, PODIUM, TURN } from './stage'
 
 /**
  * Carnegie Hall, 242.34 → 270.52: the sabotage. The last chorus (`shout`), the band's held chord, the cut-off.
@@ -45,8 +43,10 @@ import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM } from './stage'
  * - **The match cut (242.34).** He sits on the snare in the road's darkness; the hall wakes on the chorus's first big
  *   hit (243.30), and the camera draws back to the whole stage and holds there: the arch, the band on its risers,
  *   Fletcher on his podium conducting with a chart in his hand, and the small yellow ball at a silent kit.
- * - **The chart (247.51 → 248.16).** Fletcher cocks his hand and flings the chart across the stage; it turns once in
- *   the air and lands square on Andrew's empty stand, which knocks and sways. His finger stays on Andrew: "you".
+ * - **The chart (247.51 → 248.16).** Andrew's own part stands on his desk, a cream page like the band's. Fletcher
+ *   cocks his hand and flings a different chart, a part in a heavy oxblood cover, across the stage; it turns once in
+ *   the air and lands square over Andrew's page, knocking it askew and half off the desk, which knocks and sways
+ *   (`sabotage-set.ts` draws both charts). His finger stays on Andrew: "you".
  * - **He can't (248.2 → 258.1).** Andrew rolls to the drum's edge to look at it, close, the chart and him together
  *   while Fletcher's finger stays on him. He rolls back to the middle and tries to play: three times, on the
  *   chorus's beats, he lifts off the head as high as a stick comes up for a stroke, stalls at the top through the
@@ -62,8 +62,9 @@ import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM } from './stage'
  *   269.92, 270.23, and the solo's first stroke, 270.52.
  *
  * The frame is Carnegie's (`stage.ts`): the ball enters on the snare (-0.5, 0) and leaves there, exit [0, 0]. This
- * part has Fletcher and Jim for its slot; at its end Fletcher is at FLETCHER_HOME in POSES.rest and Jim at
- * JIM_WINGS, at rest. It draws Fletcher's rig while it has him (the hall draws it after).
+ * part has Fletcher and Jim for its slot; at its end Fletcher is at FLETCHER_HOME, frozen in his cut-off (`CUT`,
+ * his head turned to the kit), and Jim at JIM_WINGS, at rest. Jim watches the reveal from the front row of the house
+ * and goes to the stage door unseen. It draws Fletcher's rig while it has him (the hall draws it after).
  */
 
 /** His strokes on the hall's kit: none while the band plays. The landing on the cut-off, the count-in, the first stroke of the solo. */
@@ -154,39 +155,6 @@ function andrew(T: number): Pt {
 const DESK = { a: 0.46, b: 0.08, c: -0.34, d: 0.93 }
 const onDesk = (u: number, v: number): Pt => [DESK.a * u + DESK.c * v, DESK.b * u + DESK.d * v]
 const DESK_BOTTOM = STAND.deskY + STAND.deskH / 2
-/** Where the chart's middle is when it lies on the desk, in the part's frame (the desk at rest). */
-const CHART_REST: Pt = (() => {
-  const [x, y] = onDesk(0, -0.05 - CHART_H / 2)
-  return [STAND.x + x, DESK_BOTTOM + y]
-})()
-
-/** A quad of four desk points, in pixels. */
-function deskQuad(p: p5, k: number, q: Pt[]): void {
-  p.quad(q[0][0] * k, q[0][1] * k, q[1][0] * k, q[1][1] * k, q[2][0] * k, q[2][1] * k, q[3][0] * k, q[3][1] * k)
-}
-
-/** The wrong chart lying on the desk: a pale page, foreshortened with it, four staves ruled across. Nothing that reads as writing. */
-function deskChart(p: p5, c: Ctx, light: number): void {
-  const { k, ink, weight } = c
-  const paper = mixHex(HALL.deep, mixHex(HALL.beam, HALL.floor, 0.3), 0.35 + 0.65 * light)
-  const v1 = -0.05
-  const v0 = v1 - CHART_H
-  const u0 = -CHART_W / 2
-  const u1 = CHART_W / 2
-  solid(p, ink, weight * 0.6, paper)
-  deskQuad(p, k, [onDesk(u0, v0), onDesk(u1, v0), onDesk(u1, v1), onDesk(u0, v1)])
-  p.stroke(mixHex(paper, HALL.black, 0.7))
-  p.strokeWeight(Math.max(0.6, weight * 0.45))
-  for (let staff = 0; staff < 4; staff++) {
-    const vs = v0 + 0.08 + staff * 0.105
-    for (let line = 0; line < 4; line++) {
-      const a = onDesk(u0 + 0.04, vs + line * 0.014)
-      const b = onDesk(u1 - 0.04, vs + line * 0.014)
-      p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-    }
-  }
-}
-
 /** The edge of anything dark on the stage (the hall's own). */
 const EDGE = '#050404'
 
@@ -201,10 +169,16 @@ function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number, fill: string): void {
   p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
 }
 
+/** A quad of four desk points, in pixels. */
+function deskQuad(p: p5, k: number, q: Pt[]): void {
+  p.quad(q[0][0] * k, q[0][1] * k, q[1][0] * k, q[1][1] * k, q[2][0] * k, q[2][1] * k, q[3][0] * k, q[3][1] * k)
+}
+
 /**
  * Andrew's music stand beside the hi-hat: three feet, a post in two tubes, and a desk turned toward the kit, a
- * lit ledge leaning back (never a flat black board face-on, which reads as a screen). Empty until the chart lands
- * on it; it knocks and sways when it does; on the cut-off it sinks into the trap under it.
+ * lit ledge leaning back (never a flat black board face-on, which reads as a screen). The charts on it are drawn over
+ * it by `sabotage-set.ts` (`drawVeil`), in its exact frame; it knocks and sways when Fletcher's lands; on the cut-off
+ * it sinks into the trap under it.
  */
 function drawStand(p: p5, c: Ctx, T: number): void {
   const { k, weight } = c
@@ -245,7 +219,6 @@ function drawStand(p: p5, c: Ctx, T: number): void {
   // Its top edge, lit.
   solid(p, ink, weight * 0.5, lip)
   deskQuad(p, k, [onDesk(-W, -H), onDesk(W, -H), onDesk(W, -H + 0.035), onDesk(-W, -H + 0.035)])
-  if (chartAt(T).on === 'desk') deskChart(p, c, light)
   // The ledge along the bottom that the page stands on.
   solid(p, ink, weight * 0.7, lip)
   deskQuad(p, k, [onDesk(-W - 0.03, -0.05), onDesk(W + 0.03, -0.05), onDesk(W + 0.03, 0.02), onDesk(-W - 0.03, 0.02)])
@@ -254,28 +227,6 @@ function drawStand(p: p5, c: Ctx, T: number): void {
 }
 
 /* ------------------------------------------------------------------ Fletcher and the throw */
-
-/**
- * The chart in the air: from his hand, turning once, onto the desk. It is a page tumbling, so it narrows as it
- * turns edge-on, and comes down turned the desk's way, so it lies on it exactly as the desk draws it.
- */
-function drawThrown(p: p5, c: Ctx, T: number, light: number): void {
-  const from = chartAt(FLING)
-  const u = clamp((T - FLING) / (LANDS - FLING))
-  const arc = (9 * (LANDS - FLING) ** 2) / 8
-  const x = from.at[0] + (CHART_REST[0] - from.at[0]) * u
-  const y = from.at[1] + (CHART_REST[1] - from.at[1]) * u - arc * 4 * u * (1 - u)
-  const turn = from.turn + (-2 * Math.PI - from.turn) * easeInOutSine(u)
-  // A tumble about its long side (full width in his hand, edge-on mid-flight), coming round to the desk's own turn
-  // and lean, so the page that lands is the page the desk then draws.
-  const e = easeInOutSine(u)
-  const tumble = Math.max(0.12, Math.abs(Math.cos(Math.PI * e)))
-  p.push()
-  p.translate(x * c.k, y * c.k)
-  p.applyMatrix(tumble * (1 + (DESK.a - 1) * e), DESK.b * e, DESK.c * e, 1 + (DESK.d - 1) * e, 0, 0)
-  drawChart(p, c, [0, 0], turn, light)
-  p.pop()
-}
 
 /** The finger that lands with the chart stays on him while he goes to look at it, and lets go as he rolls back to try. */
 const HOLD_POINT = { from: 248.6, to: 250.25, release: 0.55 }
@@ -299,7 +250,7 @@ function pose(T: number): Pose {
   return { left: base.left, right: mixArm(point, base.right, easeInOutSine((T - HOLD_POINT.to) / HOLD_POINT.release)) }
 }
 
-/** Fletcher on his podium, and the chart while it is in his hand or in the air. */
+/** Fletcher on his podium, and the chart while it is in his hand (`sabotage-set.ts` draws it in the air and on the desk). */
 function drawFletcher(p: p5, c: Ctx, T: number): void {
   const head = fletcherAt(T)
   const light = stageLight(T)
@@ -307,7 +258,6 @@ function drawFletcher(p: p5, c: Ctx, T: number): void {
   if (chart.on === 'hand') drawChart(p, c, chart.at, chart.turn, light)
   // His column's foot planted on the podium, his head leaning off it (as the hall draws him from the solo on).
   drawConductor(p, c, head, pose(T), { light, floor: FLOOR - PODIUM.h, base: FLETCHER_HOME[0] })
-  if (chart.on === 'air') drawThrown(p, c, T, light)
 }
 
 interface SabotageState {
@@ -349,6 +299,17 @@ const person = (fn: (t: number) => Pt) => (t: number): Companion => {
   return { x, y }
 }
 
+/**
+ * Jim as the stage wants him: in the house for the reveal, his blue-grey dimmed toward the dark rows and faintly
+ * warmed by the stage's spill (a pale ball glowing in a dark house read as a lamp); himself again by the time the
+ * door opens on him (he crosses unseen).
+ */
+const jim = (t: number): Companion => {
+  const [x, y] = jimAt(t)
+  const seated = 1 - clamp((t - 252) / 4)
+  return seated > 0 ? { x, y, color: mixHex(mixHex(JIM, HALL.deep, 0.3 * seated), HALL.gold, 0.08 * seated) } : { x, y }
+}
+
 export const sabotage = part<SabotageState>(
   {
     name: 'sabotage',
@@ -375,7 +336,7 @@ export const sabotage = part<SabotageState>(
     state: { begin: slot.begin },
     company: [
       { who: 'fletcher' as const, from: slot.begin, to: slot.end, at: person(fletcherAt) },
-      { who: 'jim' as const, from: slot.begin, to: slot.end, at: person(jimAt) },
+      { who: 'jim' as const, from: slot.begin, to: slot.end, at: jim },
     ],
   }),
   (slot): PartShot[] => [
@@ -408,10 +369,13 @@ export const sabotage = part<SabotageState>(
     { t: 262.03, cells: 3.6, hold: [-8.95, 1.15], w: 1 },
     { t: 265.7, cells: 3.0, hold: [-8.95, 1.3], w: 1 },
     { t: 266.1, cells: 3.05, hold: [-8.85, 1.28], w: 1 },
-    // Back across with him to the kit, settling on it wide enough for the leap and Fletcher's cut; in to the solo.
+    // Back across with him to the kit, settling on it wide enough for the leap and Fletcher's cut; then the two of
+    // them, held through the count-in: the drummer on the snare in the left third, Fletcher in the right with his
+    // open hands still out where the band stopped, his head turned to the kit. The solo goes in on the ball only
+    // after its first stroke (`solo.ts`), so the seam is this same frame (`TURN`).
     { t: 267.4, cells: 6.0, hold: [-4.6, 0.55], w: 1 },
     { t: 268.75, cells: 6.6, hold: [0.3, 0.05], w: 1 },
-    { t: LANDED, cells: 6.3, hold: [0.15, -0.3], w: 1 },
-    { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
+    { t: LANDED, cells: TURN.cells + 0.1, hold: [TURN.hold[0] - 0.05, TURN.hold[1] + 0.03], w: 1 },
+    { t: slot.end, cells: TURN.cells, hold: TURN.hold, w: 1 },
   ],
 )

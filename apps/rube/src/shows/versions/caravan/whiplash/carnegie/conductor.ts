@@ -5,7 +5,8 @@ import { CHEST, POSES, RIG, beatPose, blendPose, mixArm, reachFromHead, wrapAngl
 import { BREAK, FINAL, LAST_CHORD, RIDE, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
 import { pushOff } from './rubato-hits'
-import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
+import { CUT, STUN_LEAN } from './sabotage-motion'
+import { DOOR, FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
 /**
  * Fletcher, Jim and the crash cymbal from the solo's first stroke (270.52) to the end, in the Carnegie frame
@@ -16,7 +17,9 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
  *
  * What the film has, and where it is here:
  *
- * - **The solo.** Fletcher on his podium, watching. Jim in the wings by the stage door, watching.
+ * - **The solo.** Fletcher cut the band off, and the drummer did not stop. His open hands stay out where the band
+ *   stopped, his head turned hard to the kit, until the solo's camera whips across to him (`STUNNED`); only then do
+ *   they come down, and he sinks into listening. Jim in the wings by the stage door, watching.
  * - **The hush: the cymbal.** Andrew lands on the crash on a loud stroke (`KNOCK`) and knocks it askew on its stand;
  *   it hangs there, tipped. Fletcher comes down off the podium, crosses to the kit, rises on his column to reach
  *   it, and sets it straight with one hand (`FIX`); a look at Andrew, close; back to the podium.
@@ -30,6 +33,12 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
  */
 
 /* ------------------------------------------------------------------ the clock */
+
+/**
+ * The solo's first phrase: frozen in his cut-off from the solo's first stroke until the camera's whip lands on him on
+ * the phrase's big hit (`solo.ts`, 277.96); then his hands come down and his head eases back to a listening lean.
+ */
+export const STUNNED: [number, number] = [277.96, 280.5]
 
 /** The hush: Andrew lands on the crash and knocks it askew. */
 export const KNOCK = 327.84
@@ -115,8 +124,9 @@ export function floorAt(T: number): number {
  * foot planted: a look close after he sets the crash straight, and the nod.
  */
 function leanAt(t: number): number {
-  // The solo: when the camera swings across to him (277.3-280.6) he is leaning a little toward the kit, watching.
-  const watch = -0.1 * ease(t, 277.2, 278.3) * (1 - ease(t, 280.0, 281.0))
+  // The solo: turned hard to the kit from the cut-off (the sabotage turned him), easing to a listening lean as his
+  // hands come down under the camera's look (`STUNNED`), and upright again once it has gone back to the kit.
+  const watch = t < 290 ? -STUN_LEAN * (1 - ease(t, STUNNED[0], STUNNED[1])) - 0.1 * ease(t, STUNNED[0], STUNNED[1]) * (1 - ease(t, 281.6, 283.4)) : 0
   if (t < 400) return watch - 0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
   if (t < 480) return -0.1 * rubatoOn(t)
   // Turned in to him before the nod, and back once it is done (the nod itself is a bow: `bowAt`).
@@ -216,6 +226,8 @@ function beatAt(t: number, beats: readonly number[] = BEATS): number {
 
 /** What his hands do at `t`. */
 export function poseAt(t: number): Pose {
+  // The solo's first phrase: the cut-off held, then lowered to his sides once the camera has found him.
+  if (t < STUNNED[1]) return blendPose(CUT, POSES.rest, ease(t, STUNNED[0], STUNNED[1]))
   // The build: drawn in, he conducts him, bigger as it goes.
   if (t > CONDUCT[0] && t < CONDUCT[1] + 1.4) {
     const on = ease(t, CONDUCT[0], CONDUCT[0] + 1.6) * (1 - ease(t, CONDUCT[1], CONDUCT[1] + 1.3))
