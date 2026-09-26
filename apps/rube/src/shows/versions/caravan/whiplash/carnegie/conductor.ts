@@ -130,7 +130,7 @@ function xAt(T: number): number {
 }
 
 /** How far his column has risen above his height: to reach the crash, and to meet Andrew's eyes. */
-function riseAt(T: number): number {
+export function riseAt(T: number): number {
   if (T < 400) return FIX_RISE * ease(T, H_WALK[1] - 0.9, GRIP[0] + 0.2) * (1 - ease(T, H_BACK[0] - 0.9, H_BACK[0] + 0.4))
   return NOD_RISE * ease(T, F_WALK[1] - 1.2, F_WALK[1] + 0.6) - BACK_SINK * away(T, F_BACK, UP_AGAIN)
 }

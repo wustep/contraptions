@@ -121,7 +121,7 @@ export const hall = scenery<HallState>({
     drawFinaleBody(p, c, T)
     drawKit(p, c, { shell: KIT.lacquer, since: (piece) => kitSince(piece, T), light: kitLight(T), askew: { crash: crashAskew(T) } })
     p.pop()
-    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), base: baseAt(T), bow: bowAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * Math.min(1, bandLight(T))) })
+    if (T >= SOLO) drawConductor(p, c, fletcherAt(T), poseAt(T), { floor: floorAt(T), base: baseAt(T), bow: bowAt(T), rise: riseAt(T), light: Math.max(kitLight(T), 0.55 + 0.45 * Math.min(1, bandLight(T))) })
     p.pop()
   },
 })
