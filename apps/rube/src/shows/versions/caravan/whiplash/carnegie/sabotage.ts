@@ -33,7 +33,7 @@ import {
   standSink,
 } from './sabotage-motion'
 import { drawChart, drawDoorLeaf, drawDoorway, drawVeil } from './sabotage-set'
-import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM, WIDE } from './stage'
+import { CLOSE, FLETCHER_HOME, FLOOR, KIT_AT, PODIUM } from './stage'
 
 /**
  * Carnegie Hall, 242.34 → 270.52: the sabotage. The last chorus (`shout`), the band's held chord, the cut-off.
@@ -329,6 +329,20 @@ function lane(begin: number): Seg[] {
   return segs
 }
 
+/**
+ * The reveal's whole hall: reached from the lights, held while the chorus plays, left for the two-shot. A shade
+ * tighter than the hall's `WIDE` (the arch's crown, the stage door, the band's last riser and a strip of the house
+ * all still in), so the way out and the way back in are both short enough to stay slow.
+ */
+const REVEAL = { wide: 245.5, leave: 245.85, cells: 16.8, hold: [4.4, -3.1] as Pt }
+
+/**
+ * The story's two-shot: Fletcher on his podium with the chart cocked, the kit with its empty desk between them,
+ * the floor under both. Settled before the fling (247.51), held still through the landing (248.16), and left only
+ * when the chart has lain there a moment.
+ */
+const TWO_SHOT = { at: 247.32, until: 248.4, cells: 6.85, hold: [1.48, -1.0] as Pt }
+
 /** A person's place as the stage wants it, from a function of show time. */
 const person = (fn: (t: number) => Pt) => (t: number): Companion => {
   const [x, y] = fn(t)
@@ -369,12 +383,14 @@ export const sabotage = part<SabotageState>(
     { t: slot.begin, cells: 3.5, hold: [...KIT_AT] as Pt, w: 1 },
     { t: LIGHTS, cells: 3.5, hold: [...KIT_AT] as Pt, w: 1 },
     // The reveal: out from him on the lights, slowing long into the whole hall (the arch, the band, the house), held
-    // there while the chorus plays, drifting; then one long push through the throw, Fletcher to the kit, arriving
-    // close on the wrong chart and him together, the finger that sent it still on him.
-    { t: 245.4, cells: 18.4, hold: [4.4, -2.7], w: 1 },
-    { t: 246.7, cells: WIDE.cells + 0.1, hold: [WIDE.hold[0], WIDE.hold[1] - 0.05], w: 1 },
-    { t: LANDS, cells: 7.4, hold: [2.1, -1.2], w: 1 },
-    { t: 249.7, cells: 3.2, hold: [1.0, -0.72], w: 1 },
+    // there while the chorus plays. Then in, once (leaving and landing with no jolt), to a still two-shot of the story
+    // (Fletcher with the chart cocked in his hand, the kit and its empty desk), settled before he throws; held through the throw and the landing,
+    // so the page crosses a frame that stays put. Only then the slow push to the wrong chart and him together, the
+    // finger that sent it still on him.
+    { t: REVEAL.wide, cells: REVEAL.cells, hold: REVEAL.hold, w: 1 },
+    { t: REVEAL.leave, cells: REVEAL.cells + 0.25, hold: [REVEAL.hold[0] + 0.03, REVEAL.hold[1] - 0.03], w: 1, ease: 'whip' },
+    { t: TWO_SHOT.at, cells: TWO_SHOT.cells, hold: TWO_SHOT.hold, w: 1 },
+    { t: TWO_SHOT.until, cells: TWO_SHOT.cells - 0.12, hold: [TWO_SHOT.hold[0] - 0.02, TWO_SHOT.hold[1] + 0.01], w: 1 },
     { t: 250.3, cells: 3.15, hold: [0.9, -0.7], w: 1 },
     // His first try close, the chart beside him; then a slow widening through the other two until Fletcher is in the
     // frame too, keeping the band going on the other side of the chart; on out into the band's three hits.
