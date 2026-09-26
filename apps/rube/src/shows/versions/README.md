@@ -27,6 +27,8 @@ export default defineShow({
   title: 'Clair de Lune', // the same in every take of this work
   label: 'Take A',
   note: 'One line on what this take is trying.',
+  about: 'One sentence for a shared link: what the music is.', // the share card's line
+  still: 120, // seconds of show where the share card's picture is taken
   async load() {
     const { ClairDeLune } = await import('./take-a')
     const show = new ClairDeLune()
@@ -45,6 +47,14 @@ export default defineShow({
   },
 })
 ```
+
+Every take has its own page, `/shows/<work>/<take>/` (and the work's first
+take is also `/shows/<work>/`), written by the build with the take's own
+share card: its title, `about`, and a still at `still`
+(`../share.ts`, `vite.config.ts`). The pictures are
+`public/shows/<work>/<take>.png`, made by `npm run cards` against a running
+dev server (`scripts/show-cards.mjs`, which can also draw a contact sheet
+to choose `still` from). The build fails on a take with no picture.
 
 The page reads every version file before it shows a picker, so the file
 itself imports only `defineShow`, types, and the recording's URL. The score,

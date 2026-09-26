@@ -71,6 +71,8 @@ export interface ShowStage {
   set(perf: Performance | null): void
   /** The frame at `t` as a PNG at `size`: the picture alone. */
   savePng(filename: string, size: FrameSize, t: number): Promise<void>
+  /** The same PNG, handed back rather than saved: for share cards (`scripts/show-cards.mjs`). */
+  png(size: FrameSize, t: number): Promise<Blob | null>
   /**
    * The whole show as a video at `size`, picture and music, played through
    * once at `speed`. Resolves true when a file was saved, false when
@@ -155,17 +157,20 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         host.style.removeProperty('--paper')
       }
     },
-    async savePng(filename, size, t) {
-      if (!perf) return
+    async png(size, t) {
+      if (!perf) return null
       const f = frame(size, perf, false)
       try {
         f.paint(t)
-        const blob = await new Promise<Blob | null>((resolve) => f.canvas.toBlob(resolve, 'image/png'))
-        if (!blob) throw new Error('The frame could not be encoded.')
-        downloadBlob(blob, `${filename}.png`)
+        return await new Promise<Blob | null>((resolve) => f.canvas.toBlob(resolve, 'image/png'))
       } finally {
         f.remove()
       }
+    },
+    async savePng(filename, size, t) {
+      const blob = await this.png(size, t)
+      if (!blob) throw new Error('The frame could not be encoded.')
+      downloadBlob(blob, `${filename}.png`)
     },
     async saveVideo(filename, size, speed, monitor, signal, progress) {
       const showing = perf

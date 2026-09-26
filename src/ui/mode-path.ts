@@ -2,8 +2,9 @@ import { MODE_LINKS, type ShellMode } from './shell'
 
 /**
  * Which tab a path is. `/`, `/shows/`, `/shows` and `/shows/index.html` are
- * the same mode, so a deep link and a client switch agree. Anything else —
- * the Builder, an old redirect — is not a tab.
+ * the same mode, so a deep link and a client switch agree. A show's own
+ * page, `/shows/<work>/`, is Shows. Anything else — the Builder, an old
+ * redirect — is not a tab.
  */
 export function modeFromPath(pathname: string): ShellMode | null {
   let path = pathname
@@ -11,5 +12,6 @@ export function modeFromPath(pathname: string): ShellMode | null {
   if (path === '') path = '/'
   if (!path.endsWith('/')) path += '/'
   if (path === '/') return 'machine'
+  if (/^\/shows\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?$/.test(path)) return 'shows'
   return MODE_LINKS.find((m) => m.path === path)?.mode ?? null
 }

@@ -7,5 +7,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Gymnopédie',
   label: 'Opus 5.5',
+  about: "Satie's Gymnopédie No. 1 and two Gnossiennes, as a Rube Goldberg machine going round a small sea planet, forever.",
+  still: 211.6,
   async load() { return (await import('./orbit')).performance },
 })

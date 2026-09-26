@@ -8,5 +8,7 @@ import { defineShow } from '../../registry'
 export default defineShow({
   title: 'Voyage',
   label: 'Voyage',
+  about: "Hans Zimmer's Cornfield Chase, then No Time for Caution, from Interstellar, as one Rube Goldberg machine that leaves the farm for space.",
+  still: 240.4,
   async load() { return (await import('./liftoff')).performance },
 })
