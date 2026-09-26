@@ -74,32 +74,39 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
   const k = (t: number, cells: number, hold: Pt): PartShot => ({ t, cells, hold, w: 1 })
   return [
     { t: slot.begin, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
-    // Round the toms, the metronome going down behind; up to see the frame come down out of the flies.
-    k(505.2, 5.4, [-1.7, -0.6]),
-    k(F_FLY[0] + 0.6, 7.2, [-1.5, -2.0]),
+    // The kick march: close and low on the toms, the ball bouncing round them and the metronome going down into the
+    // stage at the top of the frame. Only as the frame comes down out of the flies does the camera open, just ahead
+    // of it breaking the top edge, and up to where it hangs.
+    k(505.2, 4.5, [-1.75, -0.7]),
+    k(F_FLY[0] - 0.35, 4.8, [-1.7, -0.95]),
+    k(F_FLY[0] + 0.85, 7.1, [-1.5, -2.0]),
     k(F_FLY[1], 7.0, [-1.4, -2.1]),
     // In the frame: the march.
     k(F_SEATED + 0.4, 6.0, [-1.2, -1.7]),
     k(514.6, 5.2, [-1.0, -1.5]),
     // The long roll, not the solo's framings: low and close on the snare, the two sticks a blur on its head; up
-    // with Fletcher as he comes across; the two heads, level, for the nod, tighter through Andrew's answer.
+    // with Fletcher as he comes across.
     k(ROLL[0] + 0.5, 3.1, [-0.62, -0.5]),
     k(F_WALK[1], 4.6, [0.4, -1.9]),
-    k(F_WALK[1] + 1.6, 3.7, [0.15, -2.4]),
-    // The nod itself tight on the two heads (Fletcher bowing in, Andrew's answer, the second small nod), both
-    // inside the frame under Zoom.
-    k(NOD[0] - 0.2, 2.85, [0.08, -2.42]),
-    k(NOD_BACK[1] + 0.3, 2.7, [0.05, -2.4]),
+    // The nod is Fletcher approving the roll, so the roll stays in the shot: the two heads, level, in the top third,
+    // the sticks' blur on the snare along the bottom; a little tighter through Andrew's answer. Both heads inside
+    // under Zoom.
+    k(F_WALK[1] + 1.6, 4.3, [0.14, -1.6]),
+    k(NOD[0] - 0.2, 4.1, [0.1, -1.52]),
+    k(NOD_BACK[1] + 0.3, 3.85, [0.08, -1.6]),
     // He steps back to give him the fill: out, one move, to the whole stage, his father at the door, the band
     // waiting in the dark; held there (drifting) through the end of the roll; then one slow push in for the fill.
     k(F_BACK[0] + 2.75, 9.0, [-1.9, -1.3]),
     k(535.6, 8.7, [-1.75, -1.4]),
     k(539.8, 4.6, [-0.85, -1.75]),
+    // The silence held still: sticks up, his hands up, a frozen breath.
     k(STICKS_UP, 5.6, [-0.1, -2.1]),
-    // Back through the silence to the band: the chord, everything at once; then in, through its crescendo, on the
-    // two of them: his fist and Andrew in the frame's cup, both well inside the frame (and under Zoom).
-    k(CHORD_HIT - 0.2, 11.0, [3.0, -2.4]),
-    k(CHORD_HIT + 1.6, 10.4, [2.8, -2.3]),
+    // The chord blows the frame open, on its attack, to the whole stage: the kit, Fletcher and every riser of the
+    // band (to x 19), and Andrew still inside under Zoom. Struck on the attack, the open slows long into the wide and
+    // comes to rest there (`ease: 'hit'`) rather than stopping dead on it; then in, through its crescendo, on the two
+    // of them: his fist and Andrew in the frame's cup, both well inside the frame (and under Zoom).
+    { ...k(CHORD_HIT, 5.6, [-0.1, -2.1]), ease: 'hit' },
+    k(CHORD_HIT + 2.0, 14.2, [6.45, -2.55]),
     k(CUT - 0.3, 4.0, [0.58, -2.55]),
     // Held on the fist; then out, not far, to the last image and held there: the frame with Andrew in its cup and
     // Fletcher beside him in the spot that stays on them while the band and the house go dark, low in the frame so
