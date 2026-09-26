@@ -2,6 +2,7 @@ import { laneAt, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { box, carried, part, type Companion, type PartShot, type Pose } from '../kit'
 import { beatsIn } from '../music'
 import { drawRoom } from './jar-draw'
+import { HOME_BY, walkHome } from './yard'
 import { drawStormOver, type Figure } from './jar-storm'
 import {
   BEGIN, BOARDS, C_OFF, CLIMB, COCKED, DOWN, END, E_OFF, FALL, FELL, FIXED, FLASH1, FLASH2, FOOT, HIS, HUBCAP, KICK, LAMP_OUT,
@@ -32,7 +33,8 @@ import {
  * in it, the dust starting. She rolls down his plank ahead of him, he walks down after her, and they go on to the
  * hall, older (AGE 0.12 to 0.35), into the ties.
  *
- * The part's frame: its entry cell is INSIDE (0.8, 0); everything here is placed in INSIDE cells and moved by ENTRY.
+ * The part's frame: its entry cell is half a cell ahead of where Carl comes in (INSIDE (-0.46, 0), just inside the back
+ * door, on his walk home); everything here is placed in INSIDE cells and moved by ENTRY.
  */
 
 /** Unused: this part carries on from the one before it in the house's one long take (the score chains it). */
@@ -42,7 +44,7 @@ export const JAR_AT: Pt = [0, 0]
 export const TREE_AT = TREE
 
 /** This part's entry cell, in the house's INSIDE cells. */
-const ENTRY: Pt = [0.8, 0]
+const ENTRY: Pt = [walkHome(BEGIN) + 0.5, 0]
 const L = (q: Pt): Pt => [q[0] - ENTRY[0], q[1] - ENTRY[1]]
 const G = 12
 
@@ -132,9 +134,11 @@ const SEAM_V = 0.8
 const LIMP_V = 0.7
 
 function carlPath(): Path {
-  const c = new Path([0.3, 0], BEGIN, SEAM_V)
-  // In from the yard, onto his end: the first stroke on bar 7.
-  c.glide(FOOT[0], LIFT[0], ontoV(0)).hop(ON, SLAMS[0] - TOUCHDOWN)
+  // In from the yard at the walk he came home at (yard.ts `walkHome`, one walk across the seam), onto his end: the
+  // first stroke on bar 7.
+  if (Math.abs(HOME_BY - LIFT[0]) > 1e-6) throw new Error('married life: jar: the walk home ends off the first takeoff')
+  const c = new Path([walkHome(BEGIN), 0], BEGIN)
+  c.ride((t) => [walkHome(t), 0], LIFT[0], 60).hop(ON, SLAMS[0] - TOUCHDOWN)
   for (let i = 1; i <= 3; i++) c.ride(onPlank, LIFT[i]).hop(ON, SLAMS[i] - TOUCHDOWN)
   // Down off it, pleased, as the fourth handful lands.
   c.ride(onPlank, DOWN - 0.366).hop(FOOT, DOWN)
@@ -283,8 +287,8 @@ export const jar = part<JarState>(
     const her: Lane = { segs: ellie.segs, fire: 0 }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (t) => ({ tilt: tiltAt(t), squash: squashAt(t) }) }]
     return {
-      cells: box(-2.5, -13, 14.5, 1),
-      exit: [12.75, 0],
+      cells: box(-1.7 - ENTRY[0], -13, 15.3 - ENTRY[0], 1),
+      exit: [13.55 - ENTRY[0], 0],
       lane,
       state: { begin: slot.begin, carl: lane },
       company: [{ from: slot.begin, to: slot.end, at: (t): Companion => { const at = laneAt(her, t - slot.begin); return { x: at.x, y: at.y } } }],
@@ -310,11 +314,14 @@ function shots(): PartShot[] {
   /** A step in that lands on `at` and rests there a moment (the frame settles with the coins, then moves on). */
   const step = (at: number, cells: number, hold: Pt): PartShot[] => [k(at, cells, hold), k(at + 0.27, cells, hold)]
   return [
-    // In with him to the machine. Then a step in on each handful as it drops into the slot, pushing off as the next
-    // flies: his plank, the jar filling a notch at a time, and her on the ladder counting them in. The slot stays in
-    // the top of the frame; the coins' apex may leave it.
-    k(104.6, 4.6, [3.6, -1.2], 0.6),
-    k(106.9, 3.65, [5.2, -1.03], 0.95),
+    // In with him to the machine, the yard's move carried on at his pace, landed before the first stroke. Then a step
+    // in on each handful as it drops into the slot, pushing off as the next flies: his plank, the jar filling a notch
+    // at a time, and her on the ladder counting them in. The slot stays in the top of the frame; the coins' apex may
+    // leave it.
+    k(104.4, 4.1, [1.4, -1.0]),
+    k(105.5, 4.05, [3.0, -1.02]),
+    k(106.5, 3.8, [4.35, -1.02]),
+    k(107.35, 3.65, [5.2, -1.03]),
     k(SLAMS[0] + 0.13, 3.65, [5.2, -1.03]),
     ...step(LANDS[0], 3.45, [5.3, -0.99]),
     ...step(LANDS[1], 3.25, [5.4, -0.93]),
