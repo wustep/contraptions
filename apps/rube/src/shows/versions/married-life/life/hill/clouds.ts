@@ -184,16 +184,17 @@ const BABY: Shape = {
   rise: 1.45,
   size: 1.22,
   billows: curled(0.12, [
-    // 0-4: its round back and belly, its bottom, a billow along its back, its leg drawn up under it, its foot.
-    { x: -0.12, y: 0.04, r: 0.35 },
-    { x: -0.46, y: 0.12, r: 0.25 },
-    { x: -0.3, y: -0.14, r: 0.17, w: 1.4, a: -0.4 },
-    { x: -0.12, y: 0.3, r: 0.14, w: 2.3, a: -0.1 },
-    { x: 0.2, y: 0.34, r: 0.09, w: 1.6, a: 0.2 },
-    // 5-7: its head, big; its round cheek; the one curl of hair on its crown.
-    { x: 0.45, y: -0.14, r: 0.37 },
-    { x: 0.7, y: 0.04, r: 0.155 },
-    { x: 0.5, y: -0.5, r: 0.06, w: 2.2, a: -0.35 },
+    // 0-4: its body lying long and low (a baby's head is the biggest thing about it), its round bottom, a billow
+    // along its back, its leg drawn up under it, its foot.
+    { x: -0.2, y: 0.12, r: 0.26, w: 1.55 },
+    { x: -0.6, y: 0.1, r: 0.22 },
+    { x: -0.28, y: -0.06, r: 0.15, w: 1.7, a: -0.15 },
+    { x: -0.1, y: 0.33, r: 0.12, w: 2.3, a: -0.12 },
+    { x: 0.17, y: 0.37, r: 0.085, w: 1.6, a: 0.2 },
+    // 5-7: its head, big and set a little high; its round cheek; the one curl of hair on its crown.
+    { x: 0.47, y: -0.12, r: 0.39 },
+    { x: 0.73, y: 0.07, r: 0.15 },
+    { x: 0.52, y: -0.54, r: 0.06, w: 2.2, a: -0.35 },
     // 8: its hand under its chin.
     { x: 0.33, y: 0.2, r: 0.1, w: 1.5, a: -0.3 },
   ]),
