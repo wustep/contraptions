@@ -353,9 +353,13 @@ export const town = scenery<null>({
     ctx.fillStyle = g
     ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
     // The sun's warmth low in the east at dawn: a soft band over the roofs.
-    if (t < SEAM.alley + 2) glow(p, k, 12, -9, 16, TOWN.glow, 0.22 * smooth(t, 1, 9) * (1 - smooth(t, 30, 44)))
+    // (It fades out by 44 on its own; drawn until then, so it never steps off.)
+    if (t < 44) glow(p, k, 12, -9, 16, TOWN.glow, 0.22 * smooth(t, 1, 9) * (1 - smooth(t, 30, 44)))
 
-    const mine = t < SEAM.alley + 3 || (t >= SEAM.curse - 0.5 && t < 150) || t >= 200
+    // The street's houses and the far town stand left of the alley's mouth (x = 26). They are drawn whenever the
+    // frame reaches that far left, never cut off on a clock: the alley's camera keeps a strip of the last house in
+    // shot until the lift carries it right and up (~50), and a house must never vanish while it is on screen.
+    const mine = f.x0 < TOWN_AT.street[1] + 1.5 && (t < 150 || t >= 200)
     if (mine) {
       // The far town: roofs and the church's tower, pale with distance, a little parallax.
       drawFar(p, k, f, tone, night)
