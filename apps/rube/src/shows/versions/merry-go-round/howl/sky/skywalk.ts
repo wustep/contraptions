@@ -456,9 +456,9 @@ export const skywalk = part<WalkState>(
       // The lift: the frame goes on from the alley's (a head of sky over her) and rises with them from the downbeat,
       // letting them climb up the frame only as fast as it keeps rising itself: never a dip under the lift.
       { t: LIFT + 0.6, cells: 5.6, off: [0.35, -0.8] },
-      { t: W[2], cells: 5.8, off: [0.4, 0.75] },
-      { t: W[4], cells: 6.2, off: [0.5, 1.2] },
-      { t: W[6], cells: 6.8, off: [0.8, 1.5] },
+      { t: W[2], cells: 6.9, off: [0.4, 0.4] },
+      { t: W[4], cells: 7.1, off: [0.5, 0.95] },
+      { t: W[6], cells: 7.0, off: [0.8, 1.45] },
       // Over the roofs the camera goes a little slower than they walk: they cross the frame, the roofs pass under.
       // (Framed with a fifth of the frame over them, so they keep a margin under Zoom.)
       // Close on them over the roofs (the lift and glide of each step reads), the roofs passing under, and under each
@@ -479,7 +479,7 @@ export const skywalk = part<WalkState>(
       { t: W[25] + 0.3, cells: 13, off: [0.8, 3.7], w: 0 },
       { t: W[26] + 0.1, cells: 12, off: [0.8, 3.6], w: 0 },
       { t: W[27], cells: 9, off: [0.7, 1.75], w: 0 },
-      { t: W[28], cells: 5.8, off: [0.6, 0.2], w: 0 },
+      { t: W[28], cells: 5.8, off: [0.6, -0.6], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },
       { t: W[31] - 0.2, cells: 4.4, hold: [land[0] + 0.7, land[1] - 0.62], w: 1 },
       // She watches him go: the frame eases back and up after him, so his last step up the air (84.72) is in it (its
