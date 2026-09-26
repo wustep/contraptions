@@ -220,6 +220,23 @@ export const inside = scenery<null>({
     // The partition, above the doorway downstairs; upstairs, whole but for a door's width.
     rect(p, k, H.partition[0], H.ceil, H.partition[1], H.doorway)
     rect(p, k, H.partition[0], H.ceilUp, H.partition[1], H.groundUp - 2.1)
+    // Under each, the doorway: the partition's far part seen end on through the opening (its papered reveal), cased
+    // in trim with a lintel like the other doors, so the stub reads as the wall over a door, not a beam hanging.
+    p.push()
+    p.noStroke()
+    for (const [head, foot, a, b] of [[H.doorway, H.ground, paper, hallPaper], [H.groundUp - 2.1, H.groundUp, nurseryPaper, hallPaper]]) {
+      p.fill(mixHex(mixHex(a as string, b as string, 0.5), section, 0.16))
+      rect(p, k, H.partition[0], head as number, H.partition[1], foot as number)
+      p.fill(HOME.trim)
+      rect(p, k, H.partition[0] - 0.06, head as number, H.partition[0] + 0.02, (foot as number) - 0.1)
+      rect(p, k, H.partition[1] - 0.02, head as number, H.partition[1] + 0.06, (foot as number) - 0.1)
+      rect(p, k, H.partition[0] - 0.09, head as number, H.partition[1] + 0.09, (head as number) + 0.08)
+      p.stroke(alpha(p, ink, 0.35))
+      p.strokeWeight(weight * 0.5)
+      p.line((H.partition[0] - 0.09) * k, ((head as number) + 0.08) * k, (H.partition[1] + 0.09) * k, ((head as number) + 0.08) * k)
+      p.noStroke()
+    }
+    p.pop()
     // The upstairs floor and the ceiling over it; the ground floor's slab on its foundation.
     rect(p, k, H.backWall[0], H.ceil, H.frontWall[1], H.groundUp)
     rect(p, k, H.backWall[0], H.ceilUp - 0.12, H.frontWall[1], H.ceilUp)
