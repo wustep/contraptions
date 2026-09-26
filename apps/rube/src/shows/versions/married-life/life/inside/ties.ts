@@ -1,10 +1,10 @@
 import type p5 from 'p5'
-import { ball, mixHex, R, type Pt, type Seg } from '../../../../../parts'
+import { mixHex, R, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, part, smooth, type Companion, type Ctx, type PartShot, type Pose, type Slot } from '../kit'
 import { AGE, AT, bar, beat, SEAM } from '../music'
 import { G_EARTH } from '../physics'
 import { BOW_FROM, HALF } from '../cast'
-import { CHURCH, ellieAt as ellieColor, HOME, INK } from '../worlds'
+import { CHURCH, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
 import { DESK, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
@@ -25,9 +25,10 @@ import { BOW, drawTie } from './ties-tie'
  * step on every downbeat, morning to evening and season to season; his steps shorten, her rolls slow.
  *
  * The dance. She bumps the gramophone's lever (bar 49); the needle drops (bar 50); they meet (bar 51) at the loudest
- * of the waltz and waltz the length of the hall in a pool of warm light: a rise on every downbeat, a sway on the two
- * and three, she circling him (behind him, round, in front of him) once every two bars; they come to rest in each
- * other's arms on the accent of bar 55.
+ * of the waltz and waltz the length of the hall in a pool of warm light, in hold, she at his right: a rise on every
+ * downbeat, a sway on the two and three; on bar 53 she turns out under his arm and back; they come to rest in each
+ * other's arms on the accent of bar 55. The camera has the gramophone whole at the start and the desk and her
+ * painting whole at the end, and all of it at the top of its crane.
  *
  * The tickets. The evening comes in, and the lamp over her painting of Paradise Falls lights (bar 56): he sees it, a
  * long look. He steps onto the pedal in the floor by the desk (bar 57); the desk's leaf lets go and the picnic basket
@@ -303,11 +304,20 @@ function pattern(p: p5, look: Look, k: number, weight: number): void {
   }
 }
 
+/**
+ * How much larger than drawn the long ties are, across and down: broad enough that each change reads at a glance on
+ * him from across the hall, the point still a little above his bottom edge (0.226 × 1.08 of his 0.26).
+ */
+const LOOK_SIZE: Pt = [1.3, 1.08]
+
 /** A collar and one of the long ties, at (`x`, `y`) in cells (the collar's top middle), hanging along `angle`. */
 function drawLook(p: p5, k: number, weight: number, look: Look, x: number, y: number, angle = 0, snug = 1): void {
   p.push()
   p.translate(x * k, y * k)
   p.rotate(angle)
+  p.scale(LOOK_SIZE[0], LOOK_SIZE[1])
+  // Its lines as thick as everything else's.
+  weight /= Math.sqrt(LOOK_SIZE[0] * LOOK_SIZE[1])
   p.rectMode(p.CORNER)
   // Loose, the knot sits a little low and the blade with it.
   p.translate(0, (1 - snug) * 0.016 * k)
@@ -381,19 +391,25 @@ function lilted(X: number[], V: number): (T: number) => number {
   }
 }
 
-/** Carl down the hall: 3.0 to 6.3, the length of the open floor between the gramophone and the desk. */
-const P0 = 3.0
-const M1 = 6.3
-const pairAt = lilted([P0, 3.85, 4.7, 5.5, M1], 0.95)
+/** Carl down the hall, the length of the open floor between the gramophone and the desk, a bar at a time. */
+const P0 = 3.25
+const M1 = 6.05
+const pairAt = lilted([P0, 3.95, 4.65, 5.35, M1], 0.8)
 /**
- * Where she is round him: 0 at his right (ahead), then in front of him (negative sine), π at his left, then behind him
- * and back. Twice round. This way round her pass in front goes against their travel, so it reads slow and whole, and
- * the quick pass is the one behind him.
+ * Where she is: always at his right, in hold, a little apart, so the two never run together into one shape. Bars 51
+ * and 52 they waltz in hold; on 53, the loudest bar, she turns out under his arm to arm's length and rolls back in by
+ * its end; on 54 they close into the embrace, still a little apart. Her roll out and back turns her through most of
+ * a turn and back.
  */
-const orbitFwd = lilted([0, Math.PI, 2 * Math.PI, 3 * Math.PI, 4 * Math.PI], 3.1)
-const orbitAt = (T: number): number => -orbitFwd(T)
-/** How far she circles from him, centre to centre; closer into the embrace, still a little apart. */
-const radiusAt = (T: number): number => 0.43 - 0.16 * smooth(T, DANCE[3] + 0.25, EMBRACE)
+const HOLD_GAP = 0.32
+const EMBRACE_GAP = 0.28
+const TURN_OUT = 0.26
+/** Her turn out under his arm, 0..1..0 over bar 53: out through its first two beats, back in on its third. */
+const turnOutAt = (T: number): number => {
+  const L = DANCE[3] - DANCE[2]
+  return smooth(T, DANCE[2] + 0.04 * L, DANCE[2] + 0.46 * L) * (1 - smooth(T, DANCE[2] + 0.5 * L, DANCE[3] - 0.02 * L))
+}
+const gapAt = (T: number): number => HOLD_GAP + TURN_OUT * turnOutAt(T) - (HOLD_GAP - EMBRACE_GAP) * smooth(T, DANCE[3] + 0.2, EMBRACE)
 /** The bar the dance is in, and how far through it. */
 function danceBar(T: number): { i: number; u: number } | null {
   if (T < DANCE[0] || T >= EMBRACE) return null
@@ -406,9 +422,13 @@ function riseAt(T: number): number {
   const b = danceBar(T)
   return b ? 6.75 * b.u * (1 - b.u) ** 2 : 0
 }
-/** Behind him she is higher and smaller (further away); in front of him, a little lower and larger. */
-const depthY = (s: number): number => -0.075 * s - 0.045 * s * Math.tanh(3 * s)
-const depthScale = (s: number): number => 1 - 0.1 * s - 0.04 * s * Math.tanh(3 * s)
+/** The sway of the waltz: one way through the two and three of a bar, the other way through the next. */
+function swayAt(T: number): number {
+  const b = danceBar(T)
+  return b ? (b.i % 2 ? -1 : 1) * Math.sin(Math.PI * clamp01((b.u - 0.3) / 0.7)) : 0
+}
+/** How much they are in the dance: in from the approach, out through the embrace. */
+const inDanceAt = (T: number): number => smooth(T, DANCE[0] - 0.3, DANCE[0] + 0.15) * (1 - smooth(T, EMBRACE - 0.4, EMBRACE + 0.3))
 /** The warm pool of light they dance in: it gathers as the needle drops and gives way to the picture lamp. */
 const poolAt = (T: number): number => smooth(T, NEEDLE + 0.2, DANCE[0] + 0.5) * (1 - smooth(T, EMBRACE + 0.4, LAMP + 0.6))
 
@@ -442,14 +462,14 @@ const LEAVE = BOW_ON + 0.38
 const OUT_LAST = WHEEL.x + STEP_OUT[4]
 const carlToDance = spline([
   { t: LEAVE, x: OUT_LAST, v: 0 },
-  { t: 154.3, x: 1.52, v: 0.62 },
-  { t: 155.3, x: 2.4, v: 0.78 },
+  { t: 154.3, x: 1.62, v: 0.72 },
+  { t: 155.3, x: 2.6, v: 0.85 },
   { t: DANCE[0], x: P0, v: 0 },
 ])
 const carlToDesk = spline([
   { t: EMBRACE, x: M1, v: 0 },
-  { t: EMBRACE + 0.3, x: M1 + 0.01, v: 0.05 },
-  { t: LAMP + 0.2, x: 6.95, v: 0.45 },
+  { t: EMBRACE + 0.35, x: M1 + 0.02, v: 0.08 },
+  { t: LAMP + 0.3, x: 6.95, v: 0.6 },
   { t: PEDAL_ON, x: PEDAL.x, v: 0 },
 ])
 /** The walk out: from rest on the pedal to 0.6 cells a second at the cut, evenly gathering. */
@@ -534,13 +554,14 @@ function carlPose(T: number): { tilt: number; squash: number } {
   // His steps out and back each morning, and the walk to the dance floor: a lean into the way he goes. (His speed is
   // nil at both ends of each window, so the lean comes and goes with it.)
   if ((T > PLATE + 0.22 && T < DANCE[0]) || (T > EMBRACE && T < PEDAL_ON)) tilt += Math.max(-0.12, Math.min(0.12, 0.1 * speedAt(T)))
-  // The dance: a lean towards her as she goes round him, a sway on the two and three (one way, then the other), the
-  // push up off each downbeat.
-  const inDance = smooth(T, DANCE[0] - 0.3, DANCE[0] + 0.15) * (1 - smooth(T, EMBRACE - 0.4, EMBRACE + 0.3))
+  // The dance: a lean towards her in hold, a sway on the two and three (one way, then the other), the push up off each
+  // downbeat; as she turns out under his arm he draws himself up and leans after her.
+  const inDance = inDanceAt(T)
   if (inDance > 0) {
-    tilt += 0.07 * Math.cos(orbitAt(T)) * inDance
-    const b = danceBar(T)
-    if (b) tilt += (b.i % 2 ? -1 : 1) * 0.07 * Math.sin(Math.PI * clamp01((b.u - 0.3) / 0.7)) * inDance
+    tilt += (0.04 + 0.07 * swayAt(T)) * inDance
+    const out = turnOutAt(T)
+    tilt += 0.05 * out
+    sq -= 0.07 * out
     for (const t of DANCE.slice(0, 4)) sq += impulse(T, t, 0.045, 0.16)
   }
   // Into her arms on the accent, a lean towards her held and let go.
@@ -601,14 +622,14 @@ const ellieToLever = spline([
 ])
 const ellieToDance = spline([
   { t: LEVER, x: 1.82, v: 0.15 },
-  { t: 155.2, x: 2.78, v: 0.8 },
-  { t: DANCE[0], x: P0 + 0.43, v: 0 },
+  { t: 155.2, x: 2.9, v: 0.8 },
+  { t: DANCE[0], x: P0 + HOLD_GAP, v: 0 },
 ])
 const ellieToDoor = spline([
-  { t: EMBRACE, x: M1 + 0.27, v: 0 },
-  { t: EMBRACE + 0.3, x: M1 + 0.28, v: 0.05 },
-  { t: LAMP, x: 7.3, v: 0.6 },
-  { t: PEDAL_ON, x: 7.95, v: 0.2 },
+  { t: EMBRACE, x: M1 + EMBRACE_GAP, v: 0 },
+  { t: EMBRACE + 0.35, x: M1 + EMBRACE_GAP + 0.02, v: 0.08 },
+  { t: LAMP + 0.1, x: 7.1, v: 0.6 },
+  { t: PEDAL_ON, x: 7.9, v: 0.25 },
   { t: DOOR_OPEN, x: 8.2, v: 0.12 },
 ])
 /** After the door: back from it to wait beside him, a lean out to look at the evening, and waiting. */
@@ -621,15 +642,17 @@ const ellieAtDoor = spline([
   { t: 166.6, x: ELLIE_WAIT, v: 0 },
 ])
 
-/** Her place in the dance, and whether she is in front of him there (the cast draws her behind him; see `over`). */
-function ellieDancing(T: number): { x: number; y: number; scale: number; front: boolean } {
-  const phi = orbitAt(T)
-  const s = Math.sin(phi)
+/**
+ * Her place in the dance: at his right, rising with him on each downbeat, leaning into the sway opposite his (towards
+ * him when he leans to her), a little taller on the rise.
+ */
+function ellieDancing(T: number): Companion {
+  const inDance = inDanceAt(T)
   return {
-    x: pairAt(T) + radiusAt(T) * Math.cos(phi),
-    y: depthY(s) - RISE_ELLIE * riseAt(T),
-    scale: depthScale(s),
-    front: s < 0,
+    x: pairAt(T) + gapAt(T),
+    y: -RISE_ELLIE * riseAt(T),
+    stretch: 1 - 0.05 * riseAt(T) * inDance - 0.03 * inDance,
+    angle: -0.09 * swayAt(T) * inDance,
   }
 }
 
@@ -642,10 +665,7 @@ function ellieAt(T: number): Companion {
   }
   if (T < LEVER) return { x: ellieToLever(T), y: 0 }
   if (T < DANCE[0]) return { x: ellieToDance(T), y: 0 }
-  if (T < EMBRACE) {
-    const e = ellieDancing(T)
-    return { x: e.x, y: e.y, scale: e.scale }
-  }
+  if (T < EMBRACE) return ellieDancing(T)
   if (T < DOOR_OPEN) return { x: ellieToDoor(T), y: 0 }
   if (T < STAMP2) return { x: ellieAtDoor(T), y: 0 }
   const dt = Math.min(T, SHUT) - STAMP2
@@ -880,12 +900,6 @@ export const ties = part<TiesState>(
       const age = AGE(T)
       const [cx] = carlAt(T)
       const top = carlTop(T)
-      // In the dance, when she passes in front of him she is drawn again here, over him (the cast draws her first).
-      // She crosses to the front and back only at his sides, a clear step from him, so the hand-over never shows.
-      if (T >= DANCE[0] && T < EMBRACE) {
-        const e = ellieDancing(T)
-        if (e.front) ball(p, k, INK, weight, ellieColor(T), e.x * k, e.y * k, c.spin(e.x), e.scale, 1, 0, false)
-      }
       // While he stands under the wheel, the collar at the bottom sits on him.
       const under = T >= PLATE - 0.05 ? 1 - smooth(Math.abs(cx - WHEEL.x), 0.03, 0.12) : 0
       for (let i = 0; i < 6; i++) {
@@ -967,30 +981,38 @@ export const ties = part<TiesState>(
   },
   (): PartShot[] => {
     const cut = carlAt(SHUT)
+    /**
+     * The frame's middle as low as it may sit with `cells` and still keep his whole square (and her ball beside him)
+     * inside the Zoom frame (1.5× closer, about the same middle), with a little to spare: the lower the middle, the
+     * more of the wall above them is in the picture, the wheel's top, her painting.
+     */
+    const low = (cells: number): number => -(cells / 3 - HALF - 0.06)
+    const key = (t: number, cells: number, x: number, y = low(cells)): PartShot => ({ t, cells, hold: [x, y], w: 1 })
     return [
-      // The mornings: in on his front and the wheel, the light behind them, closing in as the years go and opening
-      // again for the bow tie.
-      { t: TURNS[0], cells: 2.3, hold: [1.0, -0.6], w: 1 },
-      { t: TURNS[1], cells: 2.05, hold: [1.08, -0.5], w: 1 },
-      { t: TURNS[2], cells: 1.9, hold: [1.13, -0.45], w: 1 },
-      { t: TURNS[3], cells: 1.85, hold: [1.12, -0.43], w: 1 },
-      { t: TURNS[4], cells: 1.95, hold: [1.1, -0.46], w: 1 },
-      // Off to the gramophone after her, and the wheel left behind.
-      { t: 153.5, cells: 2.2, hold: [1.6, -0.5], w: 1 },
-      { t: 155.1, cells: 2.45, hold: [2.7, -0.45], w: 1 },
-      // The dance, on the loudest bars of the cue: close, a travelling shot a little ahead of them down the hall in
-      // the warm pool of the lamp, the gramophone going out of the frame at the left; wider again for the embrace.
-      { t: DANCE[0] + 0.25, cells: 2.3, hold: [3.62, -0.44], w: 1 },
-      { t: DANCE[1], cells: 2.2, hold: [4.3, -0.46], w: 1 },
-      { t: DANCE[2], cells: 2.15, hold: [5.1, -0.46], w: 1 },
-      { t: DANCE[3], cells: 2.18, hold: [5.9, -0.47], w: 1 },
-      { t: EMBRACE, cells: 2.4, hold: [6.55, -0.52], w: 1 },
+      // The mornings: the whole wheel, its top and its drop rod, with the two of them under it and the light behind
+      // them, closing in a little as the years go and opening again for the bow tie.
+      key(TURNS[0], 2.8, 1.0),
+      key(TURNS[1], 2.72, 1.05),
+      key(TURNS[2], 2.66, 1.08),
+      key(TURNS[3], 2.62, 1.08),
+      key(TURNS[4], 2.68, 1.08),
+      // Off to the gramophone after her, the wheel left behind.
+      key(153.5, 2.76, 1.9),
+      key(155.1, 2.92, 3.25),
+      // The dance, on the loudest bars of the cue. On its first downbeat the gramophone is whole in the left third,
+      // its record turning, the two of them coming into the middle of the frame; a slow crane up and out as they waltz
+      // down the hall, until on the turn out (bar 53) the whole of it is in: the gramophone, the floor, the desk and
+      // her painting; then in again onto the embrace, the desk and the painting whole at the right.
+      key(DANCE[0], 3.1, 4.3),
+      key(DANCE[2] + 0.2, 3.5, 4.93),
+      key(EMBRACE, 3.3, 5.9),
       // The painting, lit: a long look, him small under it.
-      { t: LAMP + 0.45, cells: 3.45, hold: [7.15, -1.0], w: 1 },
-      // In on the machine, the basket and him; her at the door. Closer on the cadence, so the two tickets are seen
-      // leaving the slot and dropping into the basket; then out after her on the follow-through, into the cut.
-      { t: 163.6, cells: 2.55, hold: [7.45, -0.62], w: 1 },
-      { t: 166.2, cells: 2.46, hold: [7.56, -0.66], w: 1 },
+      key(LAMP + 0.45, 3.45, 7.15),
+      // On the machine, the basket and him, her at the door, the painting whole over them all the way to the cut, so
+      // the two tickets are seen leaving the slot and dropping into the basket under it; then out after her on the
+      // follow-through, into the cut.
+      key(163.6, 3.4, 7.5),
+      key(166.95, 3.3, 7.9),
       // The cut: framed as `CUTS.climb` says.
       { t: SHUT, cells: CUTS.climb.cells, hold: [cut[0] + CUTS.climb.frame[0], cut[1] + CUTS.climb.frame[1]], w: 1 },
     ]
