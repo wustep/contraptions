@@ -236,3 +236,13 @@ at her table for the kiss, with him through the dream, at her table again at
 the end, her husband only in the club at the end, neither ever jumping or
 appearing in shot. The credits run over the last chords, set by the page
 from `Performance.titles(t)`. The report is `docs/promo/LALALAND_EPILOGUE.md`.
+
+`gymnopedie/opus55` (in the picker, **Gymnopédie**, one take, **Opus 5.5**) is Satie's Gymnopédie No. 1 and
+Gnossiennes Nos. 1 and 3 round a small sea planet once a period, as a loop with no seam. It is the first show that
+loops: `Performance.loop` and `SoundtrackSpec.loop`, a `Transport` that goes round, and a soundtrack that plays a
+loop gaplessly from a decoded buffer at 1× (`soundtrack.ts`). The music is played for it by
+`scripts/satie-render.py` from the Mutopia Project's engravings on the Salamander Grand Piano's samples (CC BY 3.0),
+rendered as one period of a circle, and every note as it lands is written to
+`scripts/show-plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
+(`apps/rube/check-gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
+`docs/promo/SATIE_GYMNOPEDIE_ATTRIBUTION.txt`; the report is `docs/promo/GYMNOPEDIE.md`.

@@ -37,6 +37,7 @@ import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX 
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from './src/shows/versions/interstellar/liftoff/show'
 import { checkSebs } from './check-sebs'
+import { checkGymnopedie } from './check-gymnopedie'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -139,10 +140,10 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Première Arabesque and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
-  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
+  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,premiere-arabesque')
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
@@ -375,6 +376,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
+      if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
