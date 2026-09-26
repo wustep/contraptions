@@ -109,17 +109,21 @@ export const credits = scenery<null>({
     const { k } = c
     const f = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const w = f.x1 - f.x0
-    const h = f.y1 - f.y0
-    const cx = (f.x0 + w * AT[0]) * k
-    const cy = (f.y0 + h * (AT[1] + 0.13)) * k
+    // The 16:9 box the page sets the words in (as wide as the frame, or as tall; centred): the shade goes under the
+    // words wherever the frame is taller than wide, never in the empty sky over them.
+    const w = Math.min(f.x1 - f.x0, ((f.y1 - f.y0) * 16) / 9)
+    const h = (w * 9) / 16
+    const bx = (f.x0 + f.x1) / 2 - w / 2
+    const by = (f.y0 + f.y1) / 2 - h / 2
+    const cx = (bx + w * AT[0]) * k
+    const cy = (by + h * (AT[1] + 0.13)) * k
     const rx = w * 0.36 * k
     ctx.save()
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(28, 34, 58, ${0.2 * bed})`)
-    g.addColorStop(0.6, `rgba(28, 34, 58, ${0.1 * bed})`)
+    g.addColorStop(0, `rgba(28, 34, 58, ${0.15 * bed})`)
+    g.addColorStop(0.6, `rgba(28, 34, 58, ${0.07 * bed})`)
     g.addColorStop(1, 'rgba(28, 34, 58, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)

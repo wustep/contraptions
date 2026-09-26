@@ -57,7 +57,11 @@ export const sky = scenery<null>({
     const f = frame(p, k)
     const { top, low } = wastesSky(t)
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const g = ctx.createLinearGradient(0, f.y0 * k, 0, f.y1 * k)
+    // Over the 16:9 box the show is composed for (the one the page sets the credits in), extended flat beyond it: on a
+    // tall phone the sky over the words is the same as on a wide screen.
+    const h = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+    const my = (f.y0 + f.y1) / 2
+    const g = ctx.createLinearGradient(0, (my - h / 2) * k, 0, (my + h / 2) * k)
     g.addColorStop(0, top)
     g.addColorStop(1, low)
     ctx.fillStyle = g
