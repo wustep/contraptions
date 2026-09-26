@@ -90,18 +90,48 @@ import { GOV_LEVER, drawTrolls, govLever } from './heart-trolls'
 const SHADOW = mixHex(STONE.deep, STONE.dark, 0.5)
 /** A colour in the light `lit` (0 a silhouette a step above the rock, 1 fully lit). */
 const tone = (hex: string, lit: number): string => mixHex(SHADOW, hex, 0.16 + 0.84 * clamp01(lit))
-/** The iron's edge: a thin line a little lighter than the metal, never a pale outline (the machine is mass, not line art). */
-const inkOf = (c: Pen, lit: number): string => mixHex(STONE.dark, c.ink, 0.1 + 0.36 * clamp01(lit))
+/**
+ * The iron's edge: a thin line darker than the metal, so every part reads as a lit mass against the rock, never as a
+ * pale outline (the machine is mass, not line art).
+ */
+const inkOf = (_c: Pen, lit: number): string => mixHex(mixHex(STONE.deep, '#000000', 0.35), STONE.dark, 0.35 * clamp01(lit))
+/** A lamp's own iron: its cage keeps the old, lighter edge (a lantern is drawn by its line). */
+const lampInk = (c: Pen, lit: number): string => mixHex(STONE.dark, c.ink, 0.1 + 0.36 * clamp01(lit))
 /** Iron as the furnace lights it: a warm grey, lighter than the rock behind it. */
 const IRON = mixHex(WORKS.iron, WORKS.steel, 0.42)
 const IRON_DARK = mixHex(WORKS.iron, WORKS.steel, 0.15)
+/** A lit iron face (the flywheel's, the pumps' barrels): a step lighter again, so the big parts read as weight. */
+const IRON_FACE = mixHex(WORKS.iron, WORKS.steel, 0.62)
 /** Warmed by the fire on a flare (a surface facing the furnace). */
 const warm = (hex: string, f: number): string => mixHex(hex, LAMP.glow, clamp01(f) * 0.22)
 
-/** The room's light at T: the furnace's (its base and the flare on the backbeat). */
+/**
+ * The surges: the ff's downbeat (he lands, and the banked coals breathe up) and each new mechanism as it engages. The
+ * furnace and every lamp flare on them, rising over the 40 ms before (so the light lands on the note) and dying
+ * over half a second.
+ */
+const KICKS: [number, number][] = [[T0, 1.5], [FLY, 1], [PISTONS, 1], [BELLOWS, 1], [GOVERNOR, 1.1], [VALVE_AT, 1.1]]
+function surge(T: number): number {
+  let s = 0
+  for (const [t, size] of KICKS) {
+    const a = T - t
+    if (a < -0.04) continue
+    s += size * (a < 0 ? 1 + a / 0.04 : Math.exp(-a / 0.45))
+  }
+  return s
+}
+/** The furnace as the set draws it: the clock's fire, woken on the downbeat by his landing, flaring on the surges. */
+function fireAt(T: number): ReturnType<typeof furnace> {
+  const f = furnace(T)
+  const woke = smoothstep(T, T0 - 0.03, T0 + 0.05)
+  const s = surge(T) * (T >= BREAK ? 0 : 1)
+  return { base: Math.max(f.base, 0.28 * woke * (T >= BREAK ? 0.6 : 1)), flare: Math.max(f.flare, s), heat: f.heat }
+}
+
+/** The room's light at T: the furnace's (its base and the flare on the backbeat, and the surges). */
 export function roomLight(T: number): { lit: number; flare: number; fire: ReturnType<typeof furnace> } {
-  const fire = furnace(T)
-  const lit = 0.08 + 0.92 * clamp01(fire.base) + 0.12 * fire.flare
+  const fire = fireAt(T)
+  const lit = 0.08 + 0.92 * clamp01(fire.base) + 0.12 * fire.flare + 0.18 * surge(T)
   return { lit: clamp01(lit), flare: fire.flare, fire }
 }
 /** How lit a thing standing at x is: the furnace is in the middle of the pit, the ends of the room darker. */
@@ -109,13 +139,14 @@ const litAt = (L: number, x: number, own = 0): number => clamp01(L * (1 - 0.04 *
 
 /** The lamps: each caught as its part of the machine starts, and burning from then on. */
 const LAMPS: { at: Pt; on: number; hang: number; torch?: number }[] = [
-  { at: [-1.3, -2.4], on: PAH[0] + 0.25, hang: 0, torch: 1 },
-  { at: [0.95, -5.98], on: PAH[0] + 0.5, hang: 0.55 },
-  { at: [9.95, -6.12], on: FLY + 0.3, hang: 0.85 },
-  { at: [11.35, -6.05], on: PISTONS + 0.3, hang: 0.72 },
-  { at: [WALL_R, -2.6], on: GOVERNOR + 0.35, hang: 0, torch: -1 },
+  { at: [-1.3, -2.4], on: T0, hang: 0, torch: 1 },
+  { at: [0.95, -5.98], on: PAH[0], hang: 0.55 },
+  { at: [9.95, -6.12], on: FLY, hang: 0.85 },
+  { at: [11.35, -6.05], on: PISTONS, hang: 0.72 },
+  { at: [WALL_R, -2.6], on: GOVERNOR, hang: 0, torch: -1 },
 ]
-const lampLit = (T: number, on: number): number => smoothstep(T, on, on + 0.4)
+/** A lamp catches on its note (a short rise into it, so it is burning on the beat). */
+const lampLit = (T: number, on: number): number => smoothstep(T, on - 0.04, on + 0.06)
 /** The light a lamp throws on things near it. */
 function lampsAt(T: number, x: number): number {
   let l = 0
@@ -208,20 +239,27 @@ function gear(
   }
   p.endShape(p.CLOSE)
   if (o.lip) {
-    // The rim's inner edge catches the fire (upper left, where the furnace is below and in front).
+    // The rim's faces toward the fire (below) catch it: broad bands of light on the iron, not lines. The light is
+    // fixed while the wheel turns under it, so a fast wheel keeps a steady lit rim.
     p.noFill()
-    alphaStroke(p, o.lip, 0.85)
-    p.strokeWeight(o.w * 1.6)
-    p.arc(0, 0, (rimIn + 0.07) * 2 * k, (rimIn + 0.07) * 2 * k, Math.PI * 0.35, Math.PI * 0.95)
-    alphaStroke(p, o.lip, 0.5)
-    p.arc(0, 0, (r - ded - 0.05) * 2 * k, (r - ded - 0.05) * 2 * k, Math.PI * 0.4, Math.PI * 0.9)
+    p.strokeCap(p.SQUARE)
+    const band = (o.rim ?? 0.3) * 0.34
+    alphaStroke(p, o.lip, 0.7)
+    p.strokeWeight(band * k)
+    p.arc(0, 0, (rimIn + band / 2) * 2 * k, (rimIn + band / 2) * 2 * k, Math.PI * 0.18, Math.PI * 0.82)
+    alphaStroke(p, o.lip, 0.35)
+    p.strokeWeight(band * 0.8 * k)
+    p.arc(0, 0, (r - ded - band * 0.4) * 2 * k, (r - ded - band * 0.4) * 2 * k, Math.PI * 0.25, Math.PI * 0.75)
+    p.strokeCap(p.ROUND)
   }
   if (o.spokes) {
     const hub = o.hub ?? 0.36
     const sw = o.spoke ?? 0.26
-    const drawSpokes = (off: number, a: number) => {
-      alphaStroke(p, o.ink, a)
-      p.strokeWeight(o.w)
+    const drawSpokes = (off: number, a: number, grow: number, inked: boolean) => {
+      if (inked) {
+        alphaStroke(p, o.ink, a)
+        p.strokeWeight(o.w)
+      } else p.noStroke()
       alphaFill(p, o.fill, a)
       for (let s = 0; s < o.spokes!; s++) {
         const aa = angle + off + (s / o.spokes!) * Math.PI * 2
@@ -229,8 +267,8 @@ function gear(
         const sa = Math.sin(aa)
         const nx = -sa
         const ny = ca
-        const w0 = sw
-        const w1 = sw * 0.62
+        const w0 = sw * grow
+        const w1 = sw * 0.62 * grow
         p.beginShape()
         p.vertex((ca * hub * 0.8 + (nx * w0) / 2) * k, (sa * hub * 0.8 + (ny * w0) / 2) * k)
         p.vertex((ca * (rimIn + 0.03) + (nx * w1) / 2) * k, (sa * (rimIn + 0.03) + (ny * w1) / 2) * k)
@@ -240,11 +278,17 @@ function gear(
       }
     }
     if (blur > 0.02) {
+      // Too fast to see: the web a translucent disc of its own iron, the spokes two or three soft ghosts smeared
+      // behind the true one (filled, never lines or rings).
       p.noStroke()
-      alphaFill(p, o.fill, 0.3 * blur)
-      p.circle(0, 0, rimIn * 2 * k)
-      for (let g = 0; g < 3; g++) drawSpokes(-g * 0.1 * blur, (1 - blur) * (1 - g * 0.3) + 0.14)
-    } else drawSpokes(0, 1)
+      alphaFill(p, o.fill, 0.22 + 0.4 * blur)
+      p.circle(0, 0, (rimIn + 0.02) * 2 * k)
+      const ghosts = blur > 0.5 ? 3 : 2
+      for (let g = ghosts - 1; g >= 0; g--) {
+        const a = g === 0 ? 1 - 0.7 * blur : (0.42 - 0.12 * g) * (0.5 + 0.5 * blur)
+        drawSpokes(-g * 0.17 * blur, a, 1 + 0.9 * blur * (g + 1) * 0.5, g === 0 && blur < 0.3)
+      }
+    } else drawSpokes(0, 1, 1, true)
     p.stroke(o.ink)
     p.strokeWeight(o.w)
     p.fill(o.fill)
@@ -369,7 +413,7 @@ function drawRoom(p: p5, c: Pen, L: number): void {
 /** The furnace's mouth in the pit's back wall: a stone arch, the coals, the fire. */
 function drawFurnace(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
-  const { base, flare, heat } = furnace(T)
+  const { base, flare, heat } = fireAt(T)
   const x0 = FURNACE.x - FURNACE.w / 2
   const x1 = FURNACE.x + FURNACE.w / 2
   const top = FURNACE.top
@@ -472,7 +516,7 @@ function drawHammer(p: p5, c: Pen, T: number, L: number): void {
   const ink = inkOf(c, lit)
   const w = c.weight
   const phi = hammerPhi(T)
-  const f = furnace(T).flare
+  const f = fireAt(T).flare
   const timber = tone(WORKS.wood, lit)
   const timberLit = warm(tone(WORKS.timber, lit), f)
   const iron = warm(tone(IRON, lit), f)
@@ -675,12 +719,14 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   const engaged = T >= FLY
   const lit = litAt(L, fx, lampsAt(T, fx)) * (engaged ? 1 : 0.8)
   const ink = inkOf(c, lit)
-  const f = furnace(T).flare
-  // Dark against the fire behind it: a silhouette with its rim's edge lit.
-  const iron = warm(tone(IRON_DARK, lit * 0.85), f * 0.4)
+  const f = fireAt(T).flare
+  // The hero's weight: a lit iron face (about 0.6 of full light once it engages, a little less while it waits),
+  // warmed on the flares; its lower half stands dark against the fire behind it.
+  const face = clamp01(L * 1.25) * lerp(0.46, 0.64, smoothstep(T, FLY - 0.04, FLY + 0.25))
+  const iron = warm(tone(IRON_FACE, face), f * 0.5)
   drawFlywheelFrame(p, c, lit)
   const spin = Math.abs(flySpin(T))
-  const opts = { fill: iron, ink, w: c.weight * 0.8, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip: warm(tone(WORKS.steel, lit), f), spoke: 0.44 }
+  const opts = { fill: iron, ink, w: c.weight * 0.9, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip: warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), spoke: 0.44 }
   const angle = FLY_PHASE + flyAngle(T)
   const split = flySplit(T)
   if (split <= 0) {
@@ -766,9 +812,9 @@ function drawPistons(p: p5, c: Pen, T: number, L: number): void {
   const on = T >= PISTONS
   const lit = litAt(L, 10.5, lampsAt(T, 10.5)) * (on ? 1 : 0.75)
   const ink = inkOf(c, lit)
-  const f = furnace(T).flare
-  const iron = warm(tone(IRON, lit), f * 0.5)
-  const dark = tone(IRON_DARK, lit)
+  const f = fireAt(T).flare
+  const iron = warm(tone(IRON_FACE, lit * 0.9), f * 0.5)
+  const dark = tone(IRON, lit * 0.8)
   const steel = tone(WORKS.steel, lit)
   p.stroke(ink)
   p.strokeWeight(c.weight)
@@ -863,45 +909,58 @@ function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const wt: Pt = [end[0] - 0.05, end[1] + 0.12]
   p.line((end[0] - 0.05) * k, end[1] * k, wt[0] * k, wt[1] * k)
   p.rect((wt[0] - 0.14) * k, wt[1] * k, 0.28 * k, 0.2 * k, 0.03 * k)
-  // The blow: a jet of spray straight up out of the valve, pulsing on the beats; choked to spurts while the keeper
-  // sits on the lever, full once it throws him.
-  const spit = valveSpit(T)
-  if (spit > 0.02) {
-    const { ago } = since(OOM, T)
-    const pulse = Number.isFinite(ago) ? 0.6 + 0.4 * Math.exp(-ago / 0.12) : 0.6
-    const h = (0.6 + 3.0 * spit) * pulse
-    const base = DECK - 0.4
-    const water = mixHex(STONE.wet, SKY.star, 0.35)
-    const foam = mixHex(STONE.wet, SKY.star, 0.75)
-    const col = (wBase: number, wTop: number, a: number, hex: string) => {
-      p.noStroke()
-      alphaFill(p, hex, a)
-      p.beginShape()
-      const n = 10
-      for (let i = 0; i <= n; i++) {
-        const u = i / n
-        const hw = lerp(wBase, wTop, u) * (1 + 0.15 * Math.sin(u * 9 - T * 20))
-        p.vertex((vx - hw) * k, (base - h * u) * k)
-      }
-      for (let i = n; i >= 0; i--) {
-        const u = i / n
-        const hw = lerp(wBase, wTop, u) * (1 + 0.15 * Math.sin(u * 9 - T * 20 + 1))
-        p.vertex((vx + hw) * k, (base - h * u) * k)
-      }
-      p.endShape(p.CLOSE)
+  // The blow: steam out of the valve in soft billows that rise, spread and thin (never a solid jet).
+  drawSteam(p, c, vx, DECK - 0.4, T)
+}
+
+/**
+ * The safety valve's steam: soft billows that rise from its mouth, spreading and thinning as they go. A stream of
+ * small puffs (choked while the keeper holds the lever down, full once it throws him), a bigger billow on every blow.
+ * Each puff is three unequal lobes at low alpha, so they merge into cloud and never read as beads or a cone.
+ */
+const STEAM_DT = 0.075
+const STEAM_LIFE = 1.35
+function drawSteam(p: p5, c: Pen, x0: number, y0: number, T: number): void {
+  if (T < VALVE_AT - 0.02 || T > BREAK + 0.6 + STEAM_LIFE) return
+  const { k } = c
+  const cool = mixHex(STONE.wet, SKY.star, 0.5)
+  // The side toward the forge is warmed by it.
+  const fired = mixHex(cool, LAMP.glow, 0.18)
+  p.noStroke()
+  const puff = (e: number, s: number, big: boolean, seed: number) => {
+    const a = T - e
+    if (a < 0 || a > STEAM_LIFE || s <= 0.01) return
+    const u = a / STEAM_LIFE
+    const v0 = (2.0 + 2.4 * s) * (big ? 1.2 : 1)
+    const tau = 0.5
+    const rise = v0 * tau * (1 - Math.exp(-a / tau))
+    const drift = (hash(seed, 7, 1) - 0.5) * 0.8 * u + 0.2 * u * u
+    const r = (0.09 + (big ? 0.78 : 0.5) * Math.pow(u, 0.55)) * (0.75 + 0.5 * s) * (0.8 + 0.4 * hash(seed, 3, 2))
+    // Thin at the mouth (a young puff is small and would read as a bead), fullest as it opens out, thinning away.
+    const alpha = (big ? 0.26 : 0.15) * s * Math.pow(1 - u, 1.7) * smoothstep(a, 0, 0.16)
+    const cx = x0 + drift
+    const cy = y0 - 0.05 - rise
+    for (let j = 0; j < 3; j++) {
+      const ang = hash(seed, j, 4) * Math.PI * 2 + a * 1.1 * (j % 2 ? 1 : -1)
+      const d = r * 0.55
+      const rr = r * (0.58 + 0.34 * hash(seed, j, 5))
+      alphaFill(p, j === 0 ? fired : cool, alpha)
+      p.ellipse((cx + Math.cos(ang) * d) * k, (cy + Math.sin(ang) * d * 0.6) * k, rr * 2.5 * k, rr * 1.8 * k)
     }
-    col(0.09, 0.32, 0.45 * spit, water)
-    col(0.04, 0.12, 0.8 * spit, foam)
-    // Drops thrown out of its head, falling back.
-    for (let s2 = 0; s2 < 8; s2++) {
-      const u = (T * 1.9 + s2 / 8) % 1
-      const side = s2 % 2 ? 1 : -1
-      const x = vx + side * (0.15 + 0.5 * u) * (0.6 + 0.4 * hash(s2, 3, 1))
-      const y = base - h + 1.6 * u * u - 0.6 * u
-      alphaStroke(p, foam, 0.7 * spit * (1 - u))
-      p.strokeWeight(c.weight)
-      p.line(x * k, y * k, x * k, (y + 0.12) * k)
-    }
+  }
+  const j0 = Math.max(0, Math.ceil((T - STEAM_LIFE - VALVE_AT) / STEAM_DT))
+  const j1 = Math.floor((T - VALVE_AT) / STEAM_DT)
+  for (let j = j0; j <= j1; j++) {
+    const e = VALVE_AT + j * STEAM_DT
+    const { ago } = since(OOM, e)
+    const pulse = Number.isFinite(ago) && ago >= 0 ? 0.5 + 0.5 * Math.exp(-ago / 0.12) : 0.5
+    puff(e, valveSpit(e) * pulse, false, j)
+  }
+  for (let i = 0; i < OOM.length; i++) {
+    const e = OOM[i]
+    if (e > T) break
+    if (e < VALVE_AT - 0.02 || e < T - STEAM_LIFE) continue
+    puff(e + 0.01, valveSpit(e + 0.01), true, 500 + i)
   }
 }
 
@@ -940,7 +999,7 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
   const on = T >= GOVERNOR
   const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0)) * (on ? 1 : 0.8)
   const ink = inkOf(c, lit)
-  const iron = tone(IRON, lit)
+  const iron = tone(IRON_FACE, lit * 0.9)
   const steel = tone(WORKS.steel, lit)
   const gx = GOV.x
   const foot: Pt = [gx, DECK - 0.55]
@@ -979,7 +1038,7 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     p.stroke(ink)
     p.strokeWeight(c.weight * 0.6)
     p.fill(iron)
-    bar(p, k, A, B, 0.13, 0.1)
+    bar(p, k, A, B, 0.19, 0.15)
   }
   const arms = (wt: (typeof wts)[number]) => {
     if (wt.gone) {
@@ -1015,12 +1074,11 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     // The spindle, snapped at its foot once it falls.
     const s0 = tp([gx, top])
     const s1 = tp(foot)
+    // A turned steel shaft with body, not a stroke.
     p.stroke(ink)
-    p.strokeWeight(c.weight * 3.2)
-    p.line(s0[0] * k, s0[1] * k, s1[0] * k, s1[1] * k)
-    p.stroke(steel)
-    p.strokeWeight(c.weight * 1.6)
-    p.line(s0[0] * k, s0[1] * k, s1[0] * k, s1[1] * k)
+    p.strokeWeight(c.weight * 0.7)
+    p.fill(steel)
+    bar(p, k, s0, s1, 0.15)
     // The cap on top.
     p.push()
     p.translate(s0[0] * k, s0[1] * k)
@@ -1096,19 +1154,25 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   p.push()
   p.translate(qx * k, qy * k)
   drawRoom(p, c, L)
-  const fire = furnace(T)
-  glow(p, c, FURNACE.x, 0.9, 7.8 + 1.5 * fire.heat, 0.1 + 0.22 * fire.base + 0.2 * fire.flare)
-  glow(p, c, FURNACE.x, 1.4, 3.4, 0.1 * fire.base + 0.34 * fire.flare, WORKS.rust)
+  const fire = fireAt(T)
+  const s = surge(T)
+  // The forge is the light: a low warm pool over the pit (not a haze over the room), and the fire's own blaze on the
+  // back wall right behind the flywheel's lower half, so the wheel stands dark against it.
+  glow(p, c, FURNACE.x, 1.3, 5.4 + 0.8 * fire.heat, 0.05 + 0.12 * fire.base + 0.1 * fire.flare)
+  glow(p, c, FURNACE.x, 1.4, 3.4, 0.1 * fire.base + 0.3 * fire.flare, WORKS.rust)
+  glow(p, c, FURNACE.x, -0.45, 3.1 + 0.3 * fire.heat, clamp01(0.3 * fire.base + 0.22 * fire.flare + 0.12 * fire.heat), WORKS.rust)
+  glow(p, c, FURNACE.x, -0.3, 2.3, clamp01(0.22 * fire.base + 0.26 * fire.flare), LAMP.flame)
   if (T < PAH[0]) glow(p, c, FURNACE.x, 2.2, 1.6, 0.12, WORKS.rust)
+  // The lamps' pools are small: each lights its own bit of rock, and swells on the surges.
   for (const l of LAMPS) {
     const on = lampLit(T, l.on)
-    if (on > 0) glow(p, c, l.at[0], l.at[1] + l.hang + 0.3, 2.6, 0.24 * on * flicker(T, l.at[0]))
+    if (on > 0) glow(p, c, l.at[0], l.at[1] + l.hang + 0.25, 0.8 + 0.25 * s, clamp01(0.3 * on * flicker(T, l.at[0]) * (1 + 0.6 * s)))
   }
   for (const l of LAMPS) {
     const on = lampLit(T, l.on)
     const swing = 0.04 * Math.sin(T * 1.7 + l.at[0]) * smoothstep(T, T0, T0 + 3) + 0.3 * quake(T)[0]
     // A cold lamp is iron in the dark: its ink as dim as the room round it until it catches.
-    const pen = { ...c, ink: inkOf(c, Math.max(on, litAt(L, l.at[0]))) }
+    const pen = { ...c, ink: lampInk(c, Math.max(on, litAt(L, l.at[0]))) }
     if (l.torch) drawTorch(p, pen, l.at[0] + (l.torch > 0 ? 0.03 : -0.03), l.at[1], { lit: on, t: T, seed: l.at[0], side: l.torch })
     else drawLantern(p, pen, l.at[0], l.at[1], { lit: on, t: T, seed: l.at[0], hang: l.hang, swing })
   }
