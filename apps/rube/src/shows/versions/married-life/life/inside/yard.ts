@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, part, smooth, type Companion, type Ctx, type Pose } from '../kit'
 import { AT, bar, beat, beatsIn, CUT, SEAM } from '../music'
 import { HOME, INK } from '../worlds'
@@ -20,12 +20,15 @@ import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-mo
  * note) he leans into the little bookcase by the door: it rocks, and her adventure book, left overhanging its top,
  * tips off onto him (89.304). He pushes out through the screen door (90.813: it swings out and back on its spring
  * hinges, ringing down), stops outside, and as the music gathers walks out to her, slowly, under the sheet, round
- * in front of the stump (under her) and stops a little way off, where she is looking.
+ * in front of the tall stump (under her, the book passing below her with daylight between them, at his slowest
+ * even pace, not his quickest) and eases to a stop a little way off, where she is looking, just before the music
+ * turns. The frame goes on ahead of him off the house as he goes round: the bookcase is out of it by 97.4.
  *
  * On the waltz's return (100.357) the book opens on his top: its top board swings over on the spine and comes down
  * flat, and Paradise Falls rises out of the gutter in cut paper, at her eye level; on bar 1 (100.78) a cut-paper
- * jungle folds up either side. She turns to it, and lights up: she hops down off the stump on the house's side
- * (101.314) and is away home ahead of him; she bumps the door in on bar 2 (102.046). He has turned for home on bar 1
+ * jungle folds up either side. She turns up to it and leans in; on bar 1 she comes up onto her toes (the wedding's
+ * rise), settles into a little crouch, and hops down off the stump on the house's side (101.314), away home ahead of
+ * him; she bumps the door in on bar 2 (102.046). He has turned for home on bar 1
  * with the book open on his top, and walks after her, easing into an even pace (about 1.3 cells a second: the jar's
  * `walkHome`, one walk from here to his seesaw); the book folds shut, slowly, on bar 2's third beat (102.899); he
  * comes in through the back door on bar 3 (the seam, `SEAM.jar`, at the house's (-0.96, 0)), and as he goes past the
@@ -57,11 +60,21 @@ const BOOK_HOME = 0
 /** The tree, and Ellie under it (her dot, the ball's own mark, turned down and away from the house). */
 const TREE = { x: -4.3, cx: -3.75, cy: -2.75 }
 const ELLIE_X = -2.666
-/** She sits on the tree's old stump, up out of his way: he passes in front of it, under her. */
-const STUMP = { x: ELLIE_X, w: 0.52, top: GROUND - 0.45 }
+/**
+ * She sits on the tree's old stump, up out of his way: he passes in front of it, under her. Tall enough that the
+ * book on his top (its board and strap up to 0.37 over the ground's balls' centres) passes under her with daylight
+ * between them, 0.12 at the least: he goes round below her, not through her.
+ */
+const STUMP = { x: ELLIE_X, w: 0.52, top: GROUND - 0.62 }
 const SEAT = STUMP.top - 0.13
-/** How far she rolls back on it to look at the book: her dot turns from down and away to the picture. */
-const TURN = 0.064
+/** How far she rolls back on it as the book opens: her dot lifts from down and away, up to the picture. */
+const TURN = 0.15
+/** And leans in to it: her height stretched along an axis tipped this far toward the book, by this much. */
+const LEAN_TIP = 0.5
+const LEAN = 0.12
+/** Up onto her toes on bar 1 (her height's stretch, as at the wedding), and the little crouch she hops from. */
+const RISE = 0.17
+const CROUCH = 0.05
 /** Where he stops: round in front of her, where she is looking, far enough off that the book opens flat between them. */
 const STOP = ELLIE_X - 0.98
 /** The clothesline, from a hook on the house to the tree, and the sheet on it. */
@@ -103,8 +116,27 @@ const C_DOOR = DOOR.x + 0.13
 const C_OUT = -1.62
 /** He turns for home on bar 1, the book open on his top. */
 const C_GO = FLAP
-/** Out to her, slowly; round in front of her (a little quicker as he passes), and stopping where she is looking. */
-const walk = pchip([94.348, 95.9, 97.036, 97.7, 98.836], [C_OUT, -1.95, -2.35, -2.95, STOP])
+/**
+ * Out to her, slowly: he gathers from rest, comes on at his best pace (about 0.55 cells a second) while he is still
+ * short of her, then eases as he goes round in front of the stump, under her (about 0.45), and slows the rest of the
+ * way into where she is looking, at rest a breath before the book opens. His pace is written as a speed over time
+ * (smooth, one hump easing to a long even pass) and summed once into a table.
+ */
+const WALK_FROM = 94.348
+const WALK_TO = 99.85
+const walk: (T: number) => number = (() => {
+  const speed = pchip([WALK_FROM, 95.0, 95.6, 96.1, 97.0, 97.9, 98.5, 99.2, WALK_TO], [0, 0.36, 0.5, 0.44, 0.4, 0.4, 0.36, 0.2, 0])
+  const N = 2200
+  const dt = (WALK_TO - WALK_FROM) / N
+  const run = [0]
+  for (let i = 1; i <= N; i++) run.push(run[i - 1] + speed(WALK_FROM + (i - 0.5) * dt) * dt)
+  const scale = (C_OUT - STOP) / run[N]
+  return (T: number) => {
+    const f = clamp01((T - WALK_FROM) / (WALK_TO - WALK_FROM)) * N
+    const i = Math.min(N - 1, Math.floor(f))
+    return C_OUT - scale * (run[i] + (run[i + 1] - run[i]) * (f - i))
+  }
+})()
 
 /**
  * The walk home, from where he stood with the book to the foot of his seesaw in the living room: one walk across the
@@ -148,8 +180,8 @@ function carlX(T: number): number {
   if (T <= PUSH_OUT) return hermite(C0, 0, C_DOOR, -0.5, PUSH_OUT - 89.95, (T - 89.95) / (PUSH_OUT - 89.95))
   if (T <= 92.3) return hermite(C_DOOR, -0.5, C_OUT, 0, 92.3 - PUSH_OUT, (T - PUSH_OUT) / (92.3 - PUSH_OUT))
   // Outside, a while; then out to her.
-  if (T <= 94.348) return C_OUT
-  if (T <= 98.836) return walk(T)
+  if (T <= WALK_FROM) return C_OUT
+  if (T <= WALK_TO) return walk(T)
   // After her, home.
   return walkHome(T)
 }
@@ -168,16 +200,63 @@ function carlPose(T: number): { tilt: number; squash: number } {
 
 /* ------------------------------------------------------------------ Ellie */
 
-const E_DOWN_X = -2.25
+const E_DOWN_X = -2.2
+/** Her hop down: a little up and out off the stump's edge before she drops (the arc's gravity, cells/s²). */
+const E_HOP_G = 16
 const E_HOP_V = (E_DOWN_X - (ELLIE_X + TURN)) / (E_DOWN - E_HOP)
 const ellieHome = pchip([E_DOWN, PUSH_IN, E], [E_DOWN_X, DOOR.x - 0.13, 0.66], E_HOP_V, 0.8)
-/** Ellie: on the stump, still; turning to the book as it opens; down off the stump and away home ahead of him. */
+/** How far she has rolled back on the stump: turning up to the book as it opens, over half a second. */
+const turnAt = (T: number): number => TURN * inout((T - OPEN) / 0.5)
+/** Her lean in to the pop-up as the falls rise; it straightens as she comes up onto her toes. */
+const leanAt = (T: number): number => LEAN * inout((T - OPEN) / 0.42) * (1 - inout((T - (FLAP - 0.24)) / 0.3))
+/**
+ * Her height's stretch less 1: up onto her toes as the jungle folds up (landing on bar 1), down again, into a small
+ * crouch on the hop, which she springs out of as she leaves the stump.
+ */
+function riseAt(T: number): number {
+  if (T <= FLAP - 0.24) return 0
+  if (T <= FLAP) return RISE * inout((T - (FLAP - 0.24)) / 0.24)
+  if (T <= E_HOP) return RISE - (RISE + CROUCH) * inout((T - FLAP) / (E_HOP - FLAP))
+  return -CROUCH * (1 - inout((T - E_HOP) / 0.12))
+}
+/**
+ * Her shape on the stump: stretched by `s` along an axis `a` (screen radians; pi/2 is upright, less than that tipped
+ * toward the book), her bottom held where it sits at `(x, bottom)`. Returns her centre, and the stretch and angle
+ * to draw her with.
+ */
+function sat(x: number, bottom: number, s: number, a: number): { x: number; y: number; stretch: number; angle: number } {
+  const A = R * s
+  const h = Math.hypot(A * Math.sin(a), R * Math.cos(a))
+  const dx = ((A * A - R * R) * Math.sin(a) * Math.cos(a)) / h
+  return { x: x - dx, y: bottom - h, stretch: s, angle: a }
+}
+/** Ellie's shape at `T`: round, but for the lean, the rise and the crouch (from the book opening to her landing). */
+function ellieShape(T: number, x: number, bottom: number): { x: number; y: number; stretch: number; angle: number } {
+  const lean = leanAt(T)
+  const up = riseAt(T)
+  const w = Math.abs(lean) + Math.abs(up)
+  const a = Math.PI / 2 - (w > 1e-9 ? (LEAN_TIP * Math.abs(lean)) / w : 0)
+  return sat(x, bottom, 1 + lean + up, a)
+}
+/** Ellie: on the stump, still; turning up to the book as it opens; up on her toes; down off the stump and away home ahead of him. */
 function ellie(T: number): Pt {
   if (T <= OPEN) return [ELLIE_X, SEAT]
-  if (T <= OPEN + 0.55) return [ELLIE_X + TURN * inout((T - OPEN) / 0.55), SEAT]
-  if (T <= E_HOP) return [ELLIE_X + TURN, SEAT]
-  if (T <= E_DOWN) return hopAt([ELLIE_X + TURN, SEAT], [E_DOWN_X, 0], E_DOWN - E_HOP, 12, (T - E_HOP) / (E_DOWN - E_HOP))
+  if (T <= E_HOP) {
+    const s = ellieShape(T, ELLIE_X + turnAt(T), STUMP.top)
+    return [s.x, s.y]
+  }
+  if (T <= E_DOWN) {
+    const [x, y] = hopAt([ELLIE_X + TURN, SEAT], [E_DOWN_X, 0], E_DOWN - E_HOP, E_HOP_G, (T - E_HOP) / (E_DOWN - E_HOP))
+    // The crouch springs out over the hop's first moment (her centre rises with her height, her bottom where it was).
+    return [x, y + R * CROUCH * (1 - inout((T - E_HOP) / 0.12))]
+  }
   return [ellieHome(T), 0]
+}
+/** Her stretch and its axis, when she has one. */
+function ellieForm(T: number): { stretch: number; angle: number } | null {
+  if (T <= OPEN || T > E_HOP + 0.12) return null
+  const s = ellieShape(T, 0, 0)
+  return Math.abs(s.stretch - 1) > 1e-4 ? { stretch: s.stretch, angle: s.angle } : null
 }
 
 /* ------------------------------------------------------------------ the door, the bookcase, the book */
@@ -549,7 +628,7 @@ export const yard = part<YardState>(
       const g = greyAt(T)
       const w = windAt(T)
       p.push()
-      p.translate(OX * k, 0)
+      p.translate(-OX * k, 0)
       p.rectMode(p.CORNER)
       tree(p, c, T, g, w)
       stump(p, c, g)
@@ -566,18 +645,19 @@ export const yard = part<YardState>(
       const b = bookAt(T)
       if (!b.front) return
       p.push()
-      p.translate(OX * c.k, 0)
+      p.translate(-OX * c.k, 0)
       p.rectMode(p.CORNER)
       drawBookAt(p, c, b, 0.15)
       p.pop()
     },
   },
   (slot) => {
-    const knots = [86.0, 86.639, 87.3, 88.3, 88.78, NUDGE, 89.95, PUSH_OUT, 92.3, 94.348, 98.836, C_GO]
+    const knots = [86.0, 86.639, 87.3, 88.3, 88.78, NUDGE, 89.95, PUSH_OUT, 92.3, WALK_FROM, WALK_TO, C_GO]
     const segs = laneOf((T) => [at(carlX(T)), 0], slot.begin, slot.end, knots, 60)
     const her = (T: number): Companion => {
       const [x, y] = ellie(T)
-      return { x: at(x), y }
+      const form = ellieForm(T)
+      return form ? { x: at(x), y, stretch: form.stretch, angle: form.angle } : { x: at(x), y }
     }
     const pose: Pose[] = [{ from: slot.begin, to: slot.end, at: (T) => carlPose(T) }]
     return {
@@ -596,11 +676,16 @@ export const yard = part<YardState>(
     // a breath in on him for the book. Under Zoom both stay whole.
     { t: 87.4, cells: 3.22, hold: [at(-1.64), -0.84], w: 1 },
     { t: 89.6, cells: 3.14, hold: [at(-1.58), -0.84], w: 1 },
-    // Out with him, and along as he walks out to her, a little wider (the window still out of the frame).
+    // Out with him, and along as he walks out to her, a little wider (the window still out of the frame). As he goes
+    // round in front of her the frame goes on ahead of him, off the house, to where he is going: the bookcase's beat
+    // is over, and by 97.3 it is clear of the frame's right edge (the back door's wall just inside it), not left cut
+    // there while he walks.
     { t: 92.4, cells: 3.34, hold: [at(-1.88), -0.86], w: 1 },
-    { t: 95.8, cells: 3.36, hold: [at(-2.22), -0.86], w: 1 },
-    // The two of them, closer, and in close on the book as it opens and the falls rise, and on her turning to it.
-    { t: 98.9, cells: 3.24, hold: [at(-3.1), -0.84], w: 1 },
+    { t: 95.4, cells: 3.36, hold: [at(-2.25), -0.86], w: 1 },
+    { t: 97.6, cells: 3.14, hold: [at(-3.3), -0.85], w: 1 },
+    // The two of them, closer, as he comes to rest where she is looking; and in close on the book as it opens and the
+    // falls rise, and on her turning up to it.
+    { t: 99.0, cells: 3.06, hold: [at(-3.32), -0.84], w: 1 },
     { t: OPEN, cells: 2.72, hold: [at(-3.18), -0.7], w: 1 },
     { t: 101.2, cells: 2.58, hold: [at(-3.08), -0.67], w: 1 },
     // After them, home: one even move that sets off as he does and leads him at his own pace, eased out of the close
