@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { R } from '../../../../parts'
 import type { ShowPoint } from '../../../../show'
 import { scenery, smooth } from './kit'
-import { LAST1, P, SILENCE } from './music'
+import { LAST1, LAST2, P, SILENCE } from './music'
 
 /**
  * The key light: Peer's own light, so a stranger finds him in one glance in any frame. Nothing in the mountain is
@@ -19,7 +19,8 @@ import { LAST1, P, SILENCE } from './music'
  *   part of it (less in wide frames, none at 16 cells or more, where the story is the place);
  * - in a wide frame (9 cells or more) his cream rim a little wider, drawn as a ring under the ball.
  *
- * It fades while he is hidden (in a barrel, a pipe), and fades out as the credits' crane pulls back to the mountain.
+ * It fades while he is hidden (in a barrel, a pipe), and fades out as the credits' crane pulls back to the mountain
+ * (the pool sooner: from his landing in the hollow, warmed to the dawn meanwhile).
  */
 
 /** Where Peer is, what the engine draws (late-bound: the show is made after its stages). */
@@ -44,6 +45,8 @@ function inside(T: number): number {
 
 const WARM = [247, 184, 102]
 const COOL = [168, 186, 222]
+/** Outside after the blow-out the moonlight warms to the dawn's, so no cold grey disc sits on the morning sky. */
+const DAWN = [242, 196, 141]
 
 function visible(at: (t: number) => ShowPoint, T: number): number {
   // Averaged over a fifth of a second either side, so the light fades as he goes out of sight instead of popping.
@@ -87,11 +90,17 @@ export const keyLight = scenery<KeyState>({
       const span = (cells * 2 + 20) * k
       ctx.fillRect(x - span, y - span, 2 * span, 2 * span)
     }
-    // The pool: flat where he is, then a smoothstep to nothing.
-    if (seen > 0.01) {
+    // The pool: flat where he is, then a smoothstep to nothing. Gone soon after he lands in the hollow (153.2): out
+    // on the hillside at dawn the day lights him, and the pool only sat on the sky under the first card.
+    // (Out under the open sky after the last chord it is fainter, and warms to the dawn as he flies, so no cold grey
+    // disc rides with him across the sky.)
+    const pool = seen * (1 - smooth(T, 153.2, 155.0)) * (1 - 0.4 * smooth(T, LAST2, LAST2 + 0.8))
+    if (pool > 0.01) {
       const w = inside(T)
-      const rgb = WARM.map((v, i) => Math.round(COOL[i] + (v - COOL[i]) * w)).join(', ')
-      const a = STRENGTH * seen * (0.85 + 0.15 * w)
+      const morn = smooth(T, 150.2, 151.8)
+      const out = COOL.map((v, i) => v + (DAWN[i] - v) * morn)
+      const rgb = WARM.map((v, i) => Math.round(out[i] + (v - out[i]) * w)).join(', ')
+      const a = STRENGTH * pool * (0.85 + 0.15 * w)
       const g = ctx.createRadialGradient(x, y, 0, x, y, POOL * k)
       g.addColorStop(0, `rgba(${rgb}, ${a.toFixed(3)})`)
       g.addColorStop(FLAT / POOL, `rgba(${rgb}, ${a.toFixed(3)})`)
