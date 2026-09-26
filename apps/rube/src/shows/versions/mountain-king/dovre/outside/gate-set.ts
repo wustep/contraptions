@@ -5,7 +5,7 @@ import { drawLantern, flame, glow } from '../lantern'
 import { hollow, slab } from '../rock'
 import { dawn, skyline } from '../mountain'
 import type { Pen } from '../troll'
-import { LAMP, SKY, STONE, WORKS } from '../worlds'
+import { LAMP, SKY, STONE, TROLL, WORKS } from '../worlds'
 import {
   CHAMBER,
   CHANNEL,
@@ -31,6 +31,7 @@ import {
   FLAME,
   flameFront,
   panJolt,
+  pebbleStops,
   pawlLift,
   SLOT_LAMP,
   slotLamp,
@@ -203,29 +204,197 @@ export function drawStair(p: p5, c: Pen, t: number): void {
   stone(p, c, t, LANDING.x0, DOOR.x0, LANDING.top, ring(LANDING_HITS, t) * 0.6, 1)
 }
 
-/** The drain at the stair's foot: a dark hole in the path, down into the works. */
-export function drawDrain(p: p5, c: Pen, lit: number): void {
-  const { k } = c
-  p.push()
-  p.noStroke()
-  p.fill(mixHex(STONE.deep, '#000000', 0.35))
-  p.beginShape()
-  p.vertex(DRAIN.x0 * k, (skyline(DRAIN.x0) - 0.01) * k)
-  p.vertex(DRAIN.x1 * k, (skyline(DRAIN.x1) - 0.01) * k)
-  p.vertex(DRAIN.x1 * k, CHAMBER.y0 * k)
-  p.vertex(DRAIN.x0 * k, CHAMBER.y0 * k)
-  p.endShape(p.CLOSE)
-  // Once the lamp below is lit, a little of its light comes up the hole.
+/**
+ * The show's time for the drawings that are not handed it (`drawDrain` takes only the lamp): `drawWorksHollows`, drawn
+ * first each frame, leaves it here.
+ */
+let seenT = 0
+
+/**
+ * The drain's crevice, world cells: a ragged split in the path at the stair's foot, narrowing down to the works'
+ * chamber roof. Its top follows the path (a hair over it, so the turf's rim is covered); the pebble's fall runs down
+ * its middle (13.95 at the lip, 13.79 at the roof).
+ */
+const DRAIN_PTS: Pt[] = (() => {
+  const s = (x: number) => skyline(x)
+  return [
+    [DRAIN.x0, s(DRAIN.x0) - 0.012],
+    [13.41, s(13.41) + 0.1],
+    [13.38, s(13.38) + 0.2],
+    [13.46, s(13.46) + 0.31],
+    [13.51, CHAMBER.y0 - 0.18],
+    [13.58, CHAMBER.y0],
+    [13.98, CHAMBER.y0],
+    [13.95, CHAMBER.y0 - 0.17],
+    [14.01, CHAMBER.y0 - 0.35],
+    [13.97, CHAMBER.y0 - 0.52],
+    [DRAIN.x1, s(DRAIN.x1) - 0.012],
+  ]
+})()
+/** How many of `DRAIN_PTS` are the west wall, top to bottom. */
+const DRAIN_WEST = 6
+const DRAIN_TOP = Math.min(skyline(DRAIN.x0), skyline(DRAIN.x1))
+
+function crevicePath(ctx: CanvasRenderingContext2D, k: number): void {
+  ctx.beginPath()
+  DRAIN_PTS.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+}
+
+/**
+ * The drain at the stair's foot: a ragged crevice in the path, down into the works. Its throat is dark at the top and
+ * goes down into the mountain's own dark (so it has no floor of its own); its west wall catches the sky; a stone lip
+ * on its west side, the stair's foot stone on its east. Once the lamp below is lit, its light comes up the hole.
+ */
+export function drawDrain(p: p5, c: Pen, lit: number, t = seenT): void {
+  const { k, ink, weight } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const rgb = (hex: string) => {
+    const col = p.color(hex)
+    return `${p.red(col)},${p.green(col)},${p.blue(col)}`
+  }
+  ctx.save()
+  crevicePath(ctx, k)
+  ctx.clip()
+  // The throat: black at the lip, fading down into the rock (or the lit chamber) at its foot.
+  const floor = mixHex(c.bg, STONE.dark, Math.max(0, Math.min(1, lit)))
+  const g = ctx.createLinearGradient(0, DRAIN_TOP * k, 0, CHAMBER.y0 * k)
+  g.addColorStop(0, `rgb(${rgb(mixHex(c.bg, '#000000', 0.55))})`)
+  g.addColorStop(0.45, `rgb(${rgb(mixHex(c.bg, '#000000', 0.4))})`)
+  g.addColorStop(1, `rgb(${rgb(floor)})`)
+  ctx.fillStyle = g
+  ctx.fillRect((DRAIN.x0 - 0.1) * k, (DRAIN_TOP - 0.2) * k, (DRAIN.x1 - DRAIN.x0 + 0.2) * k, (CHAMBER.y0 - DRAIN_TOP + 0.25) * k)
+  // The west wall's face, catching the sky over the hole: a band inside the wall, fading with depth.
+  const wall = rgb(nightMix(mixHex(STONE.mid, STONE.dark, 0.35), t, 0.3))
+  const w = ctx.createLinearGradient(0, DRAIN_TOP * k, 0, (DRAIN_TOP + 0.42) * k)
+  w.addColorStop(0, `rgba(${wall},0.95)`)
+  w.addColorStop(1, `rgba(${wall},0)`)
+  ctx.beginPath()
+  for (let i = 0; i < DRAIN_WEST; i++) ctx.lineTo(DRAIN_PTS[i][0] * k, DRAIN_PTS[i][1] * k)
+  for (let i = DRAIN_WEST - 1; i >= 0; i--) ctx.lineTo((DRAIN_PTS[i][0] + 0.075 + 0.02 * Math.sin(i * 2.1)) * k, (DRAIN_PTS[i][1] + 0.02) * k)
+  ctx.closePath()
+  ctx.fillStyle = w
+  ctx.fill()
+  // The east wall, under the foot stone: in its own shadow, a darker band.
+  const e = ctx.createLinearGradient(0, DRAIN_TOP * k, 0, (DRAIN_TOP + 0.5) * k)
+  e.addColorStop(0, 'rgba(0,0,0,0.35)')
+  e.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = e
+  ctx.fillRect((DRAIN.x1 - 0.12) * k, DRAIN_TOP * k, 0.14 * k, 0.5 * k)
+  // Once the lamp below is lit, its light comes up the hole.
   if (lit > 0.01) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
-    const top = Math.min(skyline(DRAIN.x0), skyline(DRAIN.x1))
-    const g = ctx.createLinearGradient(0, CHAMBER.y0 * k, 0, top * k)
-    g.addColorStop(0, `rgba(247,184,102,${0.22 * lit})`)
-    g.addColorStop(1, 'rgba(247,184,102,0)')
+    const l = ctx.createLinearGradient(0, CHAMBER.y0 * k, 0, DRAIN_TOP * k)
+    l.addColorStop(0, `rgba(247,184,102,${0.3 * lit})`)
+    l.addColorStop(1, `rgba(247,184,102,${0.04 * lit})`)
+    ctx.fillStyle = l
+    ctx.fillRect((DRAIN.x0 - 0.1) * k, (DRAIN_TOP - 0.2) * k, (DRAIN.x1 - DRAIN.x0 + 0.2) * k, (CHAMBER.y0 - DRAIN_TOP + 0.25) * k)
+  }
+  ctx.restore()
+  // The west lip: a stone set in the turf's edge, its top in the moonlight, its east face broken off into the hole.
+  const x0 = DRAIN.x0 - 0.3
+  const s0 = skyline(x0)
+  const s1 = skyline(DRAIN.x0)
+  const lip: Pt[] = [
+    [x0, s0 + 0.1],
+    [x0 + 0.02, s0 - 0.03],
+    [x0 + 0.1, s0 - 0.07],
+    [DRAIN.x0 - 0.06, s1 - 0.08],
+    [DRAIN.x0 + 0.03, s1 - 0.04],
+    [DRAIN.x0 + 0.05, s1 + 0.06],
+    [DRAIN.x0 + 0.02, s1 + 0.14],
+    [DRAIN.x0 - 0.12, s1 + 0.17],
+  ]
+  p.push()
+  p.stroke(alpha(p, mixHex(ink, STONE.deep, 0.5), 0.55))
+  p.strokeWeight(weight * 0.6)
+  p.fill(nightMix(mixHex(STONE.mid, STONE.dark, 0.35), t, 0.28))
+  p.beginShape()
+  for (const [x, y] of lip) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
+  // Its lit edge: the top and the rim over the hole.
+  p.noFill()
+  p.stroke(nightMix(STONE.light, t, 0.3))
+  p.strokeWeight(Math.max(1, 0.045 * k))
+  p.beginShape()
+  for (let i = 1; i <= 4; i++) p.vertex(lip[i][0] * k, (lip[i][1] + 0.018) * k)
+  p.endShape()
+  if (lit > 0.01) {
+    // And from below, the lamp's warmth on its broken face.
+    p.stroke(alpha(p, LAMP.glow, 0.35 * lit))
+    p.strokeWeight(Math.max(1, 0.03 * k))
+    p.line((DRAIN.x0 + 0.045) * k, (s1 + 0.04) * k, (DRAIN.x0 + 0.025) * k, (s1 + 0.13) * k)
+  }
+  p.pop()
+}
+
+/** The spark's flash (0 → 1 → 0): it jumps up at once on the pan's note and dies in a fraction of a second. */
+function sparkFlash(t: number): number {
+  const d = t - TIMES.pan
+  if (d < 0 || d > 0.9) return 0
+  return Math.min(1, d / 0.025) * Math.exp(-Math.max(0, d - 0.025) / 0.16)
+}
+
+/**
+ * The spark seen from above: at the pan's note the flash fills the drain's throat and spills warm over its mouth, and
+ * a few sparks fly up the hole and out over the path before they die.
+ */
+function drawDrainFlash(p: p5, c: Pen, t: number): void {
+  const f = sparkFlash(t)
+  const d = t - TIMES.pan
+  if (f < 0.01 && (d < 0 || d > 0.6)) return
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  if (f >= 0.01) {
     ctx.save()
+    crevicePath(ctx, k)
+    ctx.clip()
+    const g = ctx.createLinearGradient(0, CHAMBER.y0 * k, 0, DRAIN_TOP * k)
+    g.addColorStop(0, `rgba(255,213,138,${0.85 * f})`)
+    g.addColorStop(1, `rgba(240,166,75,${0.4 * f})`)
     ctx.fillStyle = g
-    ctx.fillRect(DRAIN.x0 * k, top * k, (DRAIN.x1 - DRAIN.x0) * k, (CHAMBER.y0 - top) * k)
+    ctx.fillRect((DRAIN.x0 - 0.1) * k, (DRAIN_TOP - 0.2) * k, (DRAIN.x1 - DRAIN.x0 + 0.2) * k, (CHAMBER.y0 - DRAIN_TOP + 0.25) * k)
     ctx.restore()
+    // Over the mouth: a tall soft wash, above the path only (the rock is lit from inside by the hollows).
+    const mx = (DRAIN.x0 + DRAIN.x1) / 2
+    ctx.save()
+    ctx.beginPath()
+    for (let x = DRAIN.x0 - 0.6; x <= DRAIN.x1 + 0.6; x += 0.1) ctx.lineTo(x * k, skyline(x) * k)
+    ctx.lineTo((DRAIN.x1 + 0.6) * k, (DRAIN_TOP - 1.2) * k)
+    ctx.lineTo((DRAIN.x0 - 0.6) * k, (DRAIN_TOP - 1.2) * k)
+    ctx.closePath()
+    ctx.clip()
+    ctx.translate(mx * k, DRAIN_TOP * k)
+    ctx.scale(0.55, 1)
+    const r = 0.95 * k
+    const w = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    w.addColorStop(0, `rgba(247,184,102,${0.32 * f})`)
+    w.addColorStop(0.5, `rgba(247,184,102,${0.1 * f})`)
+    w.addColorStop(1, 'rgba(247,184,102,0)')
+    ctx.fillStyle = w
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    ctx.restore()
+  }
+  // Sparks up the hole: from the dish, up through the chamber and the throat, out over the path, and gone.
+  p.push()
+  for (let i = 0; i < 5; i++) {
+    const life = 0.3 + 0.16 * hash(i, 61)
+    const u = d / life
+    if (u < 0 || u > 1) continue
+    const sx = PAN.x - 0.19 + 0.08 * (hash(i, 62) - 0.5)
+    const sy = PAN.dish - 0.05
+    const tx = 13.6 + 0.35 * hash(i, 63)
+    const ty = skyline(tx) - 0.25 - 0.45 * hash(i, 64)
+    const e = 1 - (1 - u) * (1 - u)
+    const x = sx + (tx - sx) * e
+    const y = sy + (ty - sy) * e
+    // Its streak behind it, shortening as it slows.
+    const back = 0.16 * (1 - u)
+    const len = Math.hypot(tx - sx, ty - sy)
+    const col = p.color(i % 2 ? LAMP.flame : LAMP.core)
+    col.setAlpha(255 * (1 - u * u))
+    p.stroke(col)
+    p.strokeWeight(Math.max(1, 0.022 * k * (1 - 0.4 * u)))
+    p.line(x * k, y * k, (x - ((tx - sx) / len) * back) * k, (y - ((ty - sy) / len) * back) * k)
   }
   p.pop()
 }
@@ -434,8 +603,11 @@ export function drawPawl(p: p5, c: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the works */
 
-/** The rock of the works where no light reaches: a hair above the paper, so nothing shows in the night's wide shot. */
-const worksFill = (lit: number): string => mixHex(mixHex(STONE.deep, STONE.dark, 0.12), STONE.dark, Math.max(0, Math.min(1, lit)))
+/**
+ * The rock of the works: the paper itself where no light reaches (so the hollows are not there at all in the night's
+ * wide shots, however bright the screen), a cave's back wall where the light has come.
+ */
+const worksFill = (c: Pen, lit: number): string => mixHex(c.bg, STONE.dark, Math.max(0, Math.min(1, lit)))
 
 /** How lit the works are at x: the lamp's pool in the chamber, and the gutter's fire wherever it has run. */
 export function worksLight(t: number, x: number): number {
@@ -451,26 +623,28 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   const { k } = c
   const lamp = worksLamp(t)
   const front = flameFront(t)
+  seenT = t
   p.push()
   p.rectMode(p.CORNER)
   p.noStroke()
   // The channel, and the housing under the door's slot.
-  p.fill(worksFill(0))
+  p.fill(worksFill(c, 0))
   p.rect(CHANNEL.x0 * k, CHANNEL.y0 * k, (CHANNEL.x1 - CHANNEL.x0) * k, (CHANNEL.y1 - CHANNEL.y0) * k)
   p.rect((P2[0] - 0.32) * k, SLOT.y1 * k, 1.25 * k, (CHANNEL.y1 - SLOT.y1) * k)
   // Lit where the fire has run: the channel's back wall warms behind it.
   if (front !== null) {
     const x1 = Math.min(CHANNEL.x1, front + 0.2)
-    p.fill(worksFill(0.55))
+    p.fill(worksFill(c, 0.55))
     p.rect(CHANNEL.x0 * k, CHANNEL.y0 * k, Math.max(0, x1 - CHANNEL.x0) * k, (CHANNEL.y1 - CHANNEL.y0) * k)
   }
   const sl = slotLamp(t)
   if (sl > 0.01) {
-    p.fill(worksFill(0.7 * sl))
+    p.fill(worksFill(c, 0.7 * sl))
     p.rect((P2[0] - 0.32) * k, SLOT.y1 * k, 1.25 * k, (CHANNEL.y1 - SLOT.y1) * k)
   }
-  // The chamber and its pit.
-  p.fill(worksFill(lamp))
+  // The chamber and its pit: seen first in the spark's flash, then held by the lamp.
+  const flash = sparkFlash(t)
+  p.fill(worksFill(c, Math.max(lamp, 0.8 * flash)))
   p.beginShape()
   p.vertex(CHAMBER.x0 * k, (CHAMBER.y0 + 0.14) * k)
   p.vertex((CHAMBER.x0 + 0.18) * k, CHAMBER.y0 * k)
@@ -494,6 +668,7 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   ctx.restore()
   // The lamps' pools on the back walls; the fire's glow running along the channel.
   if (lamp > 0.01) glow(p, c, WORKS_LAMP[0] + 0.25, WORKS_LAMP[1] + 1.0, 1.7, 0.45 * lamp)
+  if (flash > 0.01) glow(p, c, PAN.x - 0.1, PAN.dish - 0.6, 1.3, 0.5 * flash)
   if (front !== null && front < FLAME.x1 + 0.2) glow(p, c, front, RUN_Y + 0.1, 0.9, 0.5 * Math.min(1, (t - FLAME.t0) / 0.2))
   if (sl > 0.01) glow(p, c, SLOT_LAMP[0], SLOT_LAMP[1] + 0.25, 1.3, 0.45 * sl)
   p.pop()
@@ -718,6 +893,7 @@ export function drawWorks(p: p5, c: Pen, t: number, drop: number): void {
   const ls = worksLight(t, SLOT_LAMP[0])
   seen(ls / 0.25, () => drawLantern(p, c, SLOT_LAMP[0], SLOT.y1, { lit: sl, t, seed: 5, size: 0.26, hang: 0.08 }))
   drawSparks(p, c, t)
+  drawDrainFlash(p, c, t)
 }
 
 /** Flint on iron: a few sparks off the dish as the pebble lands, one of them up into the lamp. */
@@ -750,23 +926,110 @@ function drawSparks(p: p5, c: Pen, t: number): void {
 
 /* ------------------------------------------------------------------ the pebble */
 
-/** The pebble: a small grey chip of flint, angular, turning as it tumbles. Never round, never near ball-sized. */
+/** The stair's stops of the pebble (the first two, the tip, depend on the slot's end; these do not). */
+let stairStops: Pt[] | null = null
+function pebbleMarks(): Pt[] {
+  if (!stairStops) stairStops = pebbleStops(22.323).slice(2, 8).map((s) => s.p)
+  return stairStops
+}
+
+/** The chip's outline, its own frame (x along its long side): six flaked corners, flatter than it is long. */
+const CHIP: Pt[] = [1.15, 0.95, 1.05, 0.9, 1.1, 0.85].map((f, i) => {
+  const a = (i / 6) * Math.PI * 2 + 0.2
+  const r = PEBBLE_R * 1.35 * f
+  return [Math.cos(a) * r * 1.2, Math.sin(a) * r * 0.88]
+})
+
+/**
+ * The pebble: a chip of pale flint, warm like bone against the stair's blue-grey, angular, turning as it tumbles. Its
+ * facets take the light by which way they face, its upper edges catch the sky. On each step it strikes, flint on
+ * stone: a nick of light and two sparks. Never round, never near ball-sized.
+ */
 export function drawPebble(p: p5, c: Pen, t: number, at: Pt, turn: number): void {
-  const { k, ink, weight } = c
-  const r = PEBBLE_R
+  const { k, weight } = c
+  drawTicks(p, c, t)
+  const cs = Math.cos(turn)
+  const sn = Math.sin(turn)
+  const rot = ([x, y]: Pt): Pt => [cs * x - sn * y, sn * x + cs * y]
+  const pts = CHIP.map(rot)
+  // Its lowest corner on the stone it rests on (it is drawn bigger than the radius it moves by).
+  const lift = Math.max(0, Math.max(...pts.map(([, y]) => y)) - PEBBLE_R)
+  const X = (x: number) => (at[0] + x) * k
+  const Y = (y: number) => (at[1] - lift + y) * k
+  const flint = nightMix(mixHex(TROLL.bone, WORKS.skin, 0.5), t, 0.18)
+  const dark = mixHex(flint, WORKS.wood, 0.45)
+  const pale = mixHex(flint, TROLL.bone, 0.6)
   p.push()
-  p.translate(at[0] * k, at[1] * k)
-  p.rotate(turn)
-  p.stroke(alpha(p, ink, 0.7))
-  p.strokeWeight(weight * 0.5)
-  p.fill(nightMix(mixHex(STONE.light, STONE.wet, 0.3), t, 0.15))
+  p.stroke(alpha(p, mixHex(STONE.deep, WORKS.wood, 0.3), 0.85))
+  p.strokeWeight(Math.max(1, weight * 0.55))
+  p.fill(flint)
   p.beginShape()
-  const shape = [1.15, 0.95, 1.05, 0.9, 1.1, 0.85]
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2 + 0.2
-    p.vertex(Math.cos(a) * r * shape[i] * 1.25 * k, Math.sin(a) * r * shape[i] * 0.95 * k)
-  }
+  for (const [x, y] of pts) p.vertex(X(x), Y(y))
   p.endShape(p.CLOSE)
+  // Two facets, a ridge between them off the middle: each shaded by how much it faces up (continuous as it turns).
+  p.noStroke()
+  const ridge = rot([PEBBLE_R * 0.18, -PEBBLE_R * 0.12])
+  for (const [a, b] of [[0, 3], [3, 6]] as const) {
+    const face = pts.slice(a, b + 1).map((_, j) => pts[(a + j) % 6])
+    const mid = face.reduce((m, q) => m + q[1], 0) / face.length
+    const up = Math.max(-1, Math.min(1, -mid / (PEBBLE_R * 0.9)))
+    p.fill(up > 0 ? alpha(p, pale, 0.75 * up) : alpha(p, dark, -0.75 * up))
+    p.beginShape()
+    p.vertex(X(ridge[0]), Y(ridge[1]))
+    for (const [x, y] of face) p.vertex(X(x), Y(y))
+    p.endShape(p.CLOSE)
+  }
+  // The lit rim: each edge as bright as it faces the sky.
+  p.strokeCap(p.ROUND)
+  p.strokeWeight(Math.max(1, 0.018 * k))
+  const rim = mixHex(TROLL.bone, SKY.star, 0.4)
+  for (let i = 0; i < 6; i++) {
+    const [ax, ay] = pts[i]
+    const [bx, by] = pts[(i + 1) % 6]
+    const len = Math.hypot(bx - ax, by - ay) || 1
+    // The outward normal of a counter-clockwise (screen: y down) edge.
+    const ny = -(bx - ax) / len
+    const lit = Math.max(0, -ny)
+    if (lit < 0.05) continue
+    p.stroke(alpha(p, rim, 0.9 * lit))
+    p.line(X(ax + (bx - ax) * 0.1), Y(ay + (by - ay) * 0.1), X(bx - (bx - ax) * 0.1), Y(by - (by - ay) * 0.1))
+  }
   p.pop()
-  void smooth
+}
+
+/** Flint on stone: at each step the pebble strikes, a nick of light where it hit and two sparks off it. */
+function drawTicks(p: p5, c: Pen, t: number): void {
+  const { k } = c
+  const marks = pebbleMarks()
+  p.push()
+  p.strokeCap(p.ROUND)
+  TIMES.pebble.forEach((at, i) => {
+    const d = t - at
+    if (d < 0 || d > 0.24) return
+    const [x, y0] = marks[i]
+    const y = y0 + PEBBLE_R
+    // The nick: a short bright line along the tread's lip, gone in a tenth of a second.
+    const n = Math.max(0, 1 - d / 0.11)
+    if (n > 0) {
+      p.stroke(alpha(p, LAMP.core, 0.95 * n))
+      p.strokeWeight(Math.max(1, 0.03 * k))
+      const w = 0.05 + 0.05 * (1 - n)
+      p.line((x - w) * k, y * k, (x + w) * k, y * k)
+    }
+    // Two sparks thrown up off it, back and ahead, falling as they die.
+    for (const side of [-1, 1]) {
+      const life = 0.2 + 0.04 * hash(i, side + 70)
+      const u = d / life
+      if (u > 1) continue
+      const vx = side * (0.5 + 0.35 * hash(i, side + 71))
+      const vy = -(1.3 + 0.5 * hash(i, side + 72))
+      const sx = x + vx * d
+      const sy = y + vy * d + 0.5 * 9 * d * d
+      const col = side < 0 ? LAMP.core : LAMP.flame
+      p.stroke(alpha(p, col, 1 - u * u))
+      p.strokeWeight(Math.max(1, 0.02 * k * (1 - 0.5 * u)))
+      p.line(sx * k, sy * k, (sx - vx * 0.03) * k, (sy - (vy + 9 * d) * 0.03) * k)
+    }
+  })
+  p.pop()
 }
