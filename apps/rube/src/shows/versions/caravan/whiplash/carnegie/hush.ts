@@ -61,15 +61,16 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold, w })
   return [
     { t: slot.begin, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
-    // Up from the snare to take in the frame hanging over it, and the cup he leaps for; the knock.
+    // Up from the snare to take in the frame hanging over it, and the cup he leaps for; the knock, a step closer and
+    // over to the crash, so the cymbal it tips is a subject of the frame.
     k(325.4, 5.2, [-0.9, -1.35]),
-    k(KNOCK, 5.4, [-0.8, -1.7]),
+    k(KNOCK, 4.7, [-0.4, -1.85]),
     k(330.2, 5.0, [-0.3, -1.75]),
     // Back to see Fletcher come down off his podium and across; in on the hand on the crash, and the two heads
     // either side of it.
     k(H_WALK[0] + 1.6, 8.4, [1.9, -1.55]),
     k(H_WALK[1] + 0.4, 5.8, [0.5, -1.95]),
-    k(FIX[0] + 0.5, 4.5, [0.25, -2.2]),
+    k(FIX[0] + 0.5, 3.95, [0.5, -2.15]),
     k(LET_GO + 0.9, 4.1, [0.2, -2.15]),
     // He goes back; the bursts round the kit, both arms, his head over them at the top of the frame. In close on the
     // rack tom and the snare, along to the floor tom; out on the crash (it holds now), with Fletcher back on his

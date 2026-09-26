@@ -609,7 +609,18 @@ export function elbowSwing(s: Pt, w: Pt, bend: number): Pt {
 const RIGHT_UNDER: [number, number] = [UNSEAT + 0.8, UNSEAT + 2.4]
 /** The arms' widths, in cells: tapered limbs, round joints. */
 export const ARM_W = { upper: [0.26, 0.21], fore: [0.2, 0.15], elbow: 0.22, shoulder: 0.3 } as const
-const rightBend = (T: number): number => -1 + 2 * smoother((T - RIGHT_UNDER[0]) / (RIGHT_UNDER[1] - RIGHT_UNDER[0]))
+/**
+ * The knock in the hush: as he leaps for the cup the right elbow swings out again, up over the crash, so the upper
+ * arm clears the disc when the stick comes down on its rim; it swings back under as the arm drops to hang out of
+ * Fletcher's way (`H_REST`). Tucked under for the stroke, the elbow sat on the crash's right rim and the sleeve lay
+ * across the cymbal the whole time it tipped.
+ */
+const KNOCK_OUT: [number, number] = [H_LEAP, H_SEATED + 0.35]
+export const rightBend = (T: number): number => {
+  const under = -1 + 2 * smoother((T - RIGHT_UNDER[0]) / (RIGHT_UNDER[1] - RIGHT_UNDER[0]))
+  const out = smoother((T - KNOCK_OUT[0]) / 0.4) * (1 - smoother((T - KNOCK_OUT[1]) / 0.6))
+  return under - 2 * out
+}
 
 function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const pose = armPose(arm, T)
