@@ -11,7 +11,7 @@ import {
   CORRIDOR_R_TOP, CORRIDOR_TOP, DOOR_R_TOP, DOOR_TOP, DOOR_W, G, KX, KY, PIT, PODIUM, PODIUM_TOP, ROOM_TOP, SEAT_H, STAND, standShove,
   TIERS, WALL_L, WALL_R, type Section,
 } from './band-plan'
-import { ANSWER, TUTTI, doorL, pageAt } from './band-motion'
+import { ANSWER, TUTTI, doorL, pageAt, turnerAt } from './band-motion'
 import { chairAt, fletcherBase, fletcherFloor, fletcherHead, fletcherPose, sinceStroke } from './band-people'
 import { drawChair, drawChartStand, drawPlayer, drawPlayerStand, lit, type Playing } from './bandroom-props'
 import { doorR, spill } from './tempo-motion'
@@ -141,7 +141,7 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
     p.rotate(shove.tilt)
     p.translate(-foot[0] * c.k, -foot[1] * c.k)
   }
-  drawChartStand(p, c, STAND.x + shove.dx, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L)
+  drawChartStand(p, c, STAND.x + shove.dx, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L, turnerAt(T))
   p.pop()
   // Fletcher stands behind the chair and the drums (over Andrew's shoulder at the kit), but in front of the chart's
   // stand: he walks past it on the house side to put Andrew on the kit, and his head (a company ball, drawn over every

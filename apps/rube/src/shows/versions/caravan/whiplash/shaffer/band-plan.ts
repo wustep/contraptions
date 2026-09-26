@@ -82,6 +82,24 @@ export const SEAT_H = 1.05
 /** How high the chair's back stands above the floor. */
 export const BACK_H = 2.02
 export const SEAT: Pt = [CHAIR_X - 0.04, PIT - SEAT_H - R]
+/**
+ * The page-turner on Tanner's stand: a small machine with one job. A treadle at the stand's foot, hinged on the post
+ * just above the tripod's hub, its pad out to the left toward the chair; a rod beside the post from its tail up to
+ * the desk; and a sprung wire arm hinged at the top of the desk, over the spine. His drop onto the pad trips the
+ * arm, which sweeps across the desk and carries the page over; its spring swings it back. Measured from the stand's
+ * spine at the floor (`x`, `PIT`), so it goes wherever the stand goes (Fletcher shoves it aside at 93.82).
+ *
+ * `pivot` the treadle's hinge (dx, up from the floor); `reach` the pad's middle out along it; `rest`/`pressed` its
+ * angle below the horizontal toward the pad (the pad end up at rest); `arm` the arm's length from its hinge, and
+ * `swing` its angle off straight down at rest (to the right, just past the desk's edge: it catches the page there).
+ */
+export const TURNER = { pivot: [0.03, 0.5] as Pt, reach: 0.46, rest: -0.2, pressed: 0.22, arm: 0.74, swing: 1.24 }
+/** The treadle's pad at angle `a` (its middle), for a stand whose spine is at `x`. */
+export const padAt = (a: number, x = STAND.x): Pt => [x + TURNER.pivot[0] - TURNER.reach * Math.cos(a), PIT - TURNER.pivot[1] + TURNER.reach * Math.sin(a)]
+/** The ball on the pad: where he lands (the treadle up) and where it gives to under him. */
+export const PAD_UP: Pt = [padAt(TURNER.rest)[0], padAt(TURNER.rest)[1] - 0.045 - R]
+export const PAD_DOWN: Pt = [padAt(TURNER.pressed)[0], padAt(TURNER.pressed)[1] - 0.045 - R]
+
 /** The ball on the ledge: its right end (where he waits to turn) and its left (where the page lands). */
 export const LEDGE_R: Pt = [STAND.x + STAND.w / 2 - 0.2, STAND.ledge - R]
 export const LEDGE_L: Pt = [STAND.x - STAND.w / 2 + 0.22, STAND.ledge - R]
