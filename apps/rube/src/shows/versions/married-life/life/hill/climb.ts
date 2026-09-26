@@ -156,12 +156,6 @@ const CLIMB_TO = STEP.x0 - 1.6
 const JOLT_TO = CLIMB_TO + 0.08
 
 /**
- * The widest of the establishing shot: when, how many cells, and the frame's middle in the hill's cells. Not the
- * whole tree (Zoom would need 9.5 cells to hold it and her at the lane): its crown breaks the frame's upper left.
- */
-const WIDE = [170.75, 9.0, 4.25, -0.4] as const
-
-/**
  * His run down to her: from the jolt's landing (moving already, `RUN.v0`), gathering to his top speed, holding it,
  * and easing to rest beside her; a velocity that rises and falls by smoothsteps, so it never kicks. Horizontal
  * cells/s; on the flank that is about 0.9 along the ground at its fastest.
@@ -461,11 +455,12 @@ export const climb = part<ClimbState>(
     const h = (x: number, y: number): Pt => L(x, y)
     const [cx, cy] = L(HIS_REST, STEP.y)
     return [
-      // The cut's pull-out carries on out over the hill, its tree's crown breaking the frame's upper left, the two of
-      // them at its foot, and does not stay: as she turns back to follow him up it comes in again.
-      { t: 168.9, cells: 4.2, hold: h(8.7, 1.42) },
-      { t: WIDE[0], cells: WIDE[1], hold: h(WIDE[2], WIDE[3]) },
-      { t: 172.2, cells: 4.6, hold: h(6.3, 1.15) },
+      // The cut's slow draw back from the tickets carries on out over the held note, one breath: on the two of them at
+      // the step as he turns up the hill, then the flank he leads her up, rising to the crest's edge; and as she
+      // follows him up it comes in again, never quicker than it went out.
+      { t: 168.9, cells: 3.6, hold: h(9.35, 1.3) },
+      { t: 170.6, cells: 5.0, hold: h(7.1, 1.0) },
+      { t: 172.3, cells: 3.65, hold: h(6.95, 1.35) },
       // In on the two of them: her stall below him; on her as she gives way; after her back to the stone, the basket
       // left behind up the path; on the stone as he reaches her; and the two of them and nothing else.
       { t: 174.0, cells: 2.4, hold: h(7.0, 1.47) },

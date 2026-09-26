@@ -14,9 +14,9 @@ import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WAR
  * room darkens with it. As it goes he leans to the lamp on the bedside table and it comes on, on its note (182.433):
  * the one warm light. Then he leans to her and gives her the balloon: the knot goes across from his corner to her,
  * arriving on the strong note 184.883 (`HAND`), and it floats over her. On the strongest note (185.655) she turns the
- * smallest roll toward him, the film's touch; he answers with a lean. The camera stays close on the two of them, and
- * breathes back out for the cut (189.452): he is sitting upright, at rest, and she is gone. The far side is the empty
- * church, where the balloon is his again, drifting back over him.
+ * smallest roll toward him, the film's touch; he answers with a lean. The camera stays on the two of them and the
+ * balloon over them, and drifts in for the cut (189.452): he is sitting upright, at rest, and she is gone. The far side
+ * is the empty church, where the balloon is his again, drifting back over him.
  *
  * Frame: Carl's seat is (-0.5, 0) (in at rest, out at rest: `exit` is [0, 0]); the set draws the room, and its window,
  * from the same point (`WARD`); this part draws the bed, the table and its lamp, his chair, and the light.
@@ -44,7 +44,7 @@ const TOUCH = 185.655
 export const HAND = { lean: 183.7, from: 184.45, to: 184.883 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music): the lamp, and her roll. */
-export const HOSPITAL_HITS: number[] = [CLICK, TOUCH]
+export const HOSPITAL_HITS: number[] = [CLICK, HAND.to, TOUCH]
 
 /* ------------------------------------------------------------------ the room's things (room cells, from his seat) */
 
@@ -357,15 +357,18 @@ export const hospital = part<HospitalState>(
     }
   },
   (slot) => [
-    // From the hill's close framing (`CUTS.hospital`), a little out and over to the lamp as he reaches for it; back
-    // to the two of them as he gives her the balloon, the knot going across and the balloon floating over to her; in
-    // a little for her roll toward him (185.655, the film's touch) and his answer; the balloon whole over them.
-    { t: CLICK, cells: 3.05, hold: [O + 0.02, -0.72], w: 1 },
-    { t: HAND.to + 0.25, cells: 2.95, hold: [O + 0.42, -0.8], w: 1 },
-    { t: TOUCH + 0.1, cells: 2.8, hold: [O + 0.36, -0.76], w: 1 },
-    { t: 187.2, cells: 2.75, hold: [O + 0.34, -0.75], w: 1 },
-    // Then, as she is still again, a slow breath back out for the cut to the church (`CUTS.funeral`): the balloon
-    // over her; across the cut it is his again, and drifts back over him in the empty church.
+    // From the hill's close framing (`CUTS.hospital`), out and over to the lamp as he reaches for it, and up, so the
+    // balloon over him comes whole into the frame; back to the two of them as he gives it to her, the knot going across
+    // and the balloon floating over to her; the least bit in for her roll toward him (185.655, the film's touch) and
+    // his answer. From her pillow to the balloon's top is about 2.2 cells: Zoom (1/1.5) holds it and the two of them
+    // whole only from about 3.35 cells, with the frame's middle near a cell above them. (The plain frame then shows a
+    // sliver of the room's cut ceiling at its top, as it shows the floor's at the bottom.)
+    { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },
+    { t: HAND.to + 0.25, cells: 3.45, hold: [O + 0.42, -0.98], w: 1 },
+    { t: TOUCH + 0.1, cells: 3.42, hold: [O + 0.36, -0.97], w: 1 },
+    { t: 187.2, cells: 3.4, hold: [O + 0.34, -0.96], w: 1 },
+    // Then, as she is still again, a slow drift in on them for the cut to the church (`CUTS.funeral`): the balloon
+    // over her; across the cut it is his again, and drifts back over him in the empty church, as the frame opens out.
     { t: slot.end, cells: CUTS.funeral.cells, hold: [O + CUTS.funeral.frame[0], CUTS.funeral.frame[1]], w: 1 },
   ],
 )

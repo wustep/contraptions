@@ -643,11 +643,15 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 }
 .stage-words .cast .who { text-align: right; }
 .stage-words .cast .as { text-align: left; font-style: italic; font-size: 0.62em; color: #D9A441; text-shadow: none; }
-/* The ball they are: a small disc with the show's ink edge, sitting on the line. */
+/* The ball they are: a small disc with the show's ink edge, sitting on the line. The panel's `.swatch` (padding and a
+   2px border) would make it 18px on any stage; here it is 0.78em whole, its gold ring a share of the card's unit, as
+   a saved video paints it (words.ts). */
 .stage-words .cast .swatch {
   display: inline-block;
   width: 0.78em;
   height: 0.78em;
+  padding: 0;
+  border: calc(var(--u) * 0.28) solid currentColor;
   margin-right: 0.45em;
   border-radius: 50%;
   vertical-align: -0.08em;

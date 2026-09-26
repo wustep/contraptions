@@ -316,9 +316,8 @@ function room(p: p5, k: number, weight: number, L: Look, chairsIn: { carl: boole
   p.fill(wall)
   rect(p, k, x0, head - 0.1, x1, P)
   if (!L.old) {
-    // A picture rail, and the skirting and floor.
-    p.fill(alpha(p, dusk(L, HOME.woodDark), 0.5))
-    rect(p, k, x0, -2.25, x1, -2.2)
+    // The skirting and floor. (No picture rail: at the end the balloon floats over her chair at its height, and a
+    // line behind the balloon's lower third read as a cut through it.)
     p.fill(dusk(L, mixHex(HOME.woodDark, HOME.lamp, 0.2 * lit)))
     rect(p, k, x0, P - 0.1, x1, P)
     // The lamp's pool of light on the wall, soft.
@@ -412,7 +411,7 @@ function bayGlass(p: p5, k: number, L: Look): void {
 
 /**
  * What stands in front of anyone indoors: the bay's frame (its head, its sill, the posts between its three faces,
- * the middle pane's bars) and the glass's sheen, the wall between the bay and the door, and the door's jambs. The
+ * the middle pane's mullion) and the glass's sheen, the wall between the bay and the door, and the door's jambs. The
  * parts draw it in their `over`, so the two of them are indoors behind it.
  */
 export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swings: DoorSwing[] = []): void {
@@ -436,7 +435,9 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
     p.fill(alpha(p, '#FFFFFF', a * 0.6))
     p.quad((x1 - facet - 0.9) * k, sill * k, (x1 - facet - 0.35) * k, head * k, (x1 - facet - 0.2) * k, head * k, (x1 - facet - 0.75) * k, sill * k)
   }
-  // The frame: head, sill, the two posts where the faces turn, the middle pane's bars.
+  // The frame: head, sill, the two posts where the faces turn, the middle pane's mullion. The middle light has no
+  // transom: at the end the balloon over her chair spans −2.77 … −2.07, head to lamp, so any bar across it cuts the
+  // balloon or the lampshade; its glass runs whole from head to floor, a picture window between two transomed sides.
   p.stroke(c.ink)
   p.strokeWeight(weight * 0.8)
   p.fill(c.trim)
@@ -449,7 +450,6 @@ export function drawFacadeFront(p: p5, k: number, weight: number, L: Look, swing
     p.noStroke()
     p.fill(c.trim)
     rect(p, k, mx - 0.03, head, mx + 0.03, sill)
-    rect(p, k, x0 + facet, -2.2, x1 - facet, -2.15)
     p.stroke(alpha(p, c.ink, 0.5))
     p.strokeWeight(weight * 0.4)
     p.line((mx - 0.03) * k, head * k, (mx - 0.03) * k, sill * k)
