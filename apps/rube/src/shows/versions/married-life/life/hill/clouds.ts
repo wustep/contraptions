@@ -18,14 +18,15 @@ import { TREE_X } from './hill'
  * -  bars 32 to 35: four puffs make an airship, the adventurer's airship, and it drifts off over the valley;
  * -  bars 36 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, a flat-topped cliff of cloud
  *    in shadow with its falls pouring bright off the lip, where they always meant to go;
- * -  bars 40 to 45, the crescendo: the puffs stay low and near, over the two of them, and the head that comes on bar
- *    42 makes it a sleeping baby, curled on its side, a fist at its cheek. He starts; she rolls close to him.
+ * -  bars 40 to 45, the crescendo: the puffs stay low and near, over the two of them: a soft bundle, a leg, and the
+ *    head that comes on bar 42 makes it a baby, sitting up; on bar 43 its arm reaches out. He starts; she rolls close
+ *    to him.
  *
  * At the cut they lie close, at rest, looking up at it (`CUTS.nursery`: Ellie at +0.36), and it becomes the mobile
  * over the crib.
  *
- * The camera rises with the first puffs to the whole sky, holds the two dreams, and comes down again with the baby
- * onto the two of them.
+ * The camera rises with the first puffs to a frame of the sky over them (5.5 cells at most, so the two of them stay
+ * figures, not specks), drifts right as the falls come, and comes down again with the baby onto the two of them.
  */
 
 /** Cells to pixels. */
@@ -108,21 +109,14 @@ interface Shape {
 
 const range = (from: number, n: number) => Array.from({ length: n }, (_, i) => from + i)
 
-/** Billows turned `a` about their middle: a figure curled a little, its head down. */
-function curled(a: number, billows: Billow[]): Billow[] {
-  const c = Math.cos(a)
-  const s = Math.sin(a)
-  return billows.map((b) => ({ ...b, x: b.x * c - b.y * s, y: b.x * s + b.y * c, a: (b.a ?? 0) + a }))
-}
-
 /**
  * The airship: one long soft body, fuller at the nose, a fin above and below at its tail, and a small gondola slung
  * under its belly. Heading right, off over the valley.
  */
 const AIRSHIP: Shape = {
-  at: (t) => [1.9 + 0.12 * (t - BEGIN), -4.35 + 0.05 * Math.sin(t * 0.7)],
-  rise: 2.3,
-  size: 1.55,
+  at: (t) => [-0.3 + 0.1 * (t - BEGIN), -3.55 + 0.04 * Math.sin(t * 0.7)],
+  rise: 2.1,
+  size: 1.25,
   billows: [
     // 0: the body.
     { x: 0.02, y: 0.02, r: 0.33, w: 3.1 },
@@ -146,9 +140,9 @@ const AIRSHIP: Shape = {
  * bank of mist, its face in shadow, and the falls pouring bright off the middle of its lip.
  */
 const FALLS_CLOUD: Shape = {
-  at: (t) => [6.2 + 0.03 * (t - BEGIN), -3.2 + 0.04 * Math.sin(t * 0.5 + 1)],
-  rise: 2.6,
-  size: 1.45,
+  at: (t) => [4.25 + 0.035 * (t - BEGIN), -2.8 + 0.04 * Math.sin(t * 0.5 + 1)],
+  rise: 2.3,
+  size: 1.1,
   billows: [
     // 0-2: the cliff's mass.
     { x: 0, y: 0.02, r: 0.46, w: 1.95 },
@@ -176,30 +170,37 @@ const FALLS_CLOUD: Shape = {
 }
 
 /**
- * The sleeping baby: curled on its side, its big round head on the right, its back rounded, its knees drawn up
- * under it, a fist at its cheek and a curl of hair on top. Low and near, over the two of them.
+ * The baby: a little one sitting up, facing right, as a baby sits, its round head the biggest thing about it (a button
+ * of a nose and a round cheek in profile, one curl of hair on its crown), its body a small soft bundle on a round
+ * bottom, its leg out in front with the foot turned up, and one arm reaching up and out in front of it (drawn over it,
+ * a fist at its end). Its bottom is billowed, so it is still a cloud. Low over the two of them, near enough to read
+ * whole at a glance: a head over a body with a neck between is what makes it a baby and not a pair of puffs (a baby
+ * lying down read as two lumps side by side).
  */
 const BABY: Shape = {
-  at: (t) => [-0.44 + 0.02 * (t - BEGIN), -1.97 + 0.025 * Math.sin(t * 0.9)],
-  rise: 1.45,
-  size: 1.22,
-  billows: curled(0.12, [
-    // 0-4: its body lying long and low (a baby's head is the biggest thing about it), its round bottom, a billow
-    // along its back, its leg drawn up under it, its foot.
-    { x: -0.2, y: 0.12, r: 0.26, w: 1.55 },
-    { x: -0.6, y: 0.1, r: 0.22 },
-    { x: -0.28, y: -0.06, r: 0.15, w: 1.7, a: -0.15 },
-    { x: -0.1, y: 0.33, r: 0.12, w: 2.3, a: -0.12 },
-    { x: 0.17, y: 0.37, r: 0.085, w: 1.6, a: 0.2 },
-    // 5-7: its head, big and set a little high; its round cheek; the one curl of hair on its crown.
-    { x: 0.47, y: -0.12, r: 0.39 },
-    { x: 0.73, y: 0.07, r: 0.15 },
-    { x: 0.52, y: -0.54, r: 0.06, w: 2.2, a: -0.35 },
-    // 8: its hand under its chin.
-    { x: 0.33, y: 0.2, r: 0.1, w: 1.5, a: -0.3 },
-  ]),
-  puffs: [[0, 1, 2], [3, 4], [5, 6, 7], [8], [], []],
-  groups: [{ of: [0, 1, 2, 3, 4] }, { of: [5, 6, 7] }, { of: [8] }],
+  at: (t) => [-0.42 + 0.01 * (t - BEGIN), -1.7 + 0.02 * Math.sin(t * 0.9)],
+  rise: 1.2,
+  size: 0.9,
+  billows: [
+    // 0-3: its body: its round bottom, its middle, and the billows along the bottom of it.
+    { x: -0.1, y: 0.3, r: 0.24, w: 1.45 },
+    { x: -0.02, y: 0.05, r: 0.3, w: 0.95 },
+    { x: -0.36, y: 0.4, r: 0.13, w: 1.3 },
+    { x: -0.02, y: 0.46, r: 0.11, w: 1.5 },
+    // 4-5: its leg out in front, and its foot turned up.
+    { x: 0.3, y: 0.38, r: 0.11, w: 2.3, a: -0.05 },
+    { x: 0.54, y: 0.31, r: 0.075, w: 0.85, a: 0.35 },
+    // 6-9: its head; its cheek; its nose; the curl on its crown.
+    { x: 0.06, y: -0.46, r: 0.32 },
+    { x: 0.22, y: -0.32, r: 0.15 },
+    { x: 0.36, y: -0.42, r: 0.065 },
+    { x: 0, y: -0.8, r: 0.045, w: 2.2, a: -0.6 },
+    // 10-11: its arm reaching up and out, and its fist.
+    { x: 0.28, y: 0, r: 0.06, w: 2.4, a: -0.8 },
+    { x: 0.42, y: -0.15, r: 0.08 },
+  ],
+  puffs: [[0, 1, 2, 3], [4, 5], [6, 7, 8, 9], [10, 11], [], []],
+  groups: [{ of: [0, 1, 2, 3, 4, 5] }, { of: [6, 7, 8, 9] }, { of: [10, 11] }],
 }
 
 const SHAPES: Record<ShapeKey, Shape> = { airship: AIRSHIP, falls: FALLS_CLOUD, baby: BABY }
@@ -357,6 +358,37 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
   ctx.restore()
 }
 
+/**
+ * A cloud drawn as ONE smooth mass (the baby): a halo, the whole of it in shade, then (inside it only) the whole of it
+ * again lifted a fixed small way, and the light lifted further, so the shade and the body show only as a band along
+ * its underside and under whatever stands out of it, never round each billow: no inner seams, one silhouette.
+ */
+function mass(p: p5, k: number, billows: Billow[]): void {
+  if (!billows.length) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  p.noStroke()
+  p.fill(alpha(p, HILL.cloud, 0.22))
+  for (const b of billows) oval(p, k, b, 1.07)
+  p.fill(mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.14))
+  for (const b of billows) oval(p, k, b, 1)
+  ctx.save()
+  ctx.beginPath()
+  for (const b of billows) {
+    const rx = X(b.r * (b.w ?? 1), k)
+    const ry = X(b.r, k)
+    ctx.moveTo(X(b.x, k) + rx * Math.cos(b.a ?? 0), X(b.y, k) + rx * Math.sin(b.a ?? 0))
+    ctx.ellipse(X(b.x, k), X(b.y, k), rx, ry, b.a ?? 0, 0, Math.PI * 2)
+  }
+  ctx.clip()
+  const lift = (d: number, c: string) => {
+    p.fill(c)
+    for (const b of billows) oval(p, k, { ...b, y: b.y - d }, 1.0)
+  }
+  lift(0.035, mixHex(HILL.cloud, HILL.cloudShade, 0.45))
+  lift(0.085, HILL.cloud)
+  ctx.restore()
+}
+
 function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   const shape = SHAPES[key]
   const got = billowsOf(key, t)
@@ -364,7 +396,8 @@ function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   drawWisps(p, k, key, t)
   for (const g of shape.groups) {
     const list = g.of.map((i) => got.get(i)).filter((b): b is Billow => !!b)
-    cloud(p, k, list, g.tone ?? 0)
+    if (key === 'baby') mass(p, k, list)
+    else cloud(p, k, list, g.tone ?? 0)
     // The falls pour between the cliff and the mist at its foot: a bright ribbon off the middle of the lip.
     if (key === 'falls' && g === shape.groups[1]) drawPour(p, k, t)
   }
@@ -578,34 +611,44 @@ function drawPlumes(p: p5, k: number, t: number): void {
   }
 }
 
-/** The blanket: red and cream check, lying on the grass, a fold at its far end. */
+/**
+ * The blanket, lying on the grass: a solid red field, its fold at the far end in shade. Seen this nearly edge on, a
+ * check is a row of dashes, so it comes up only when near (a cell 150 px and more on the screen), and faintly, as a
+ * weave in the red rather than stripes on it.
+ */
 function drawBlanket(p: p5, k: number, weight: number): void {
   const P = (v: number) => X(v, k)
   const { x0, x1 } = BLANKET
   const top = R - 0.012
   const bottom = R + 0.05
+  const edge = () => {
+    p.beginShape()
+    p.vertex(P(x0 + 0.03), P(top))
+    p.vertex(P(x1 - 0.04), P(top))
+    p.quadraticVertex(P(x1 + 0.05), P(top + 0.01), P(x1 + 0.03), P(bottom))
+    p.vertex(P(x0 - 0.02), P(bottom))
+    p.quadraticVertex(P(x0 - 0.04), P(top + 0.02), P(x0 + 0.03), P(top))
+    p.endShape(p.CLOSE)
+  }
   p.push()
   p.rectMode(p.CORNER)
   p.stroke(INK)
   p.strokeWeight(weight * 0.7)
-  p.fill(HOME.trim)
-  p.beginShape()
-  p.vertex(P(x0 + 0.03), P(top))
-  p.vertex(P(x1 - 0.04), P(top))
-  p.quadraticVertex(P(x1 + 0.05), P(top + 0.01), P(x1 + 0.03), P(bottom))
-  p.vertex(P(x0 - 0.02), P(bottom))
-  p.quadraticVertex(P(x0 - 0.04), P(top + 0.02), P(x0 + 0.03), P(top))
-  p.endShape(p.CLOSE)
+  p.fill(HILL.blanket)
+  edge()
   p.noStroke()
-  p.fill(alpha(p, HILL.blanket, 0.9))
-  const w = 0.11
-  for (let i = 0; x0 + i * w < x1; i++) {
-    if (i % 2) continue
-    const a = x0 + i * w
-    p.rect(P(a), P(top + 0.004), P(Math.min(w, x1 - a)), P(bottom - top - 0.008))
+  // The fold at its far end, a little darker.
+  p.fill(alpha(p, INK, 0.14))
+  p.rect(P(x1 - 0.16), P(top + 0.006), P(0.17), P(bottom - top - 0.012))
+  // The check: cream bands across it and one along it, only when near.
+  const near = smooth(k, 150, 260)
+  if (near > 0) {
+    p.fill(alpha(p, HOME.trim, 0.28 * near))
+    const w = 0.11
+    for (let i = 1; x0 + i * w < x1 - 0.18; i += 2) p.rect(P(x0 + i * w), P(top + 0.006), P(w), P(bottom - top - 0.012))
+    p.fill(alpha(p, HOME.trim, 0.2 * near))
+    p.rect(P(x0 + 0.02), P(top + (bottom - top) * 0.4), P(x1 - x0 - 0.2), P((bottom - top) * 0.22))
   }
-  p.fill(alpha(p, HILL.blanket, 0.35))
-  p.rect(P(x0), P(top + (bottom - top) * 0.35), P(x1 - x0), P((bottom - top) * 0.3))
   p.pop()
 }
 
@@ -652,7 +695,7 @@ export const clouds = part<CloudsState>(
       p.push()
       // Farthest first: the airship, the falls, then the baby, low and near.
       drawShape(p, k, 'airship', t)
-      if (f.x1 > 4) drawShape(p, k, 'falls', t)
+      if (f.x1 > 2.4) drawShape(p, k, 'falls', t)
       drawShape(p, k, 'baby', t)
       drawBlanket(p, k, weight)
       drawEngine(p, k, weight, t)
@@ -688,14 +731,15 @@ export const clouds = part<CloudsState>(
     }
   },
   (slot) => {
-    // Up with the first puffs to the whole sky, the two dreams held wide, and down again with the baby onto the two of
-    // them, looking up at it (`CUTS.nursery`).
+    // Up with the first puffs to the sky over them, never so wide that the two of them are specks (the dreams are built
+    // into a frame of 5.5 cells, the two of them and the engine along its foot, and inside Zoom's frame: dy under a
+    // third of the cells); a slow drift right as the falls come, and down again with the baby onto the two of them, looking up at it (`CUTS.nursery`).
     const c = (dx: number, dy: number): Pt => [CARL[0] + dx, CARL[1] + dy]
     return [
-      { t: slot.begin + 2.0, cells: 6.0, hold: c(1.6, -1.9) },
-      { t: slot.begin + 4.2, cells: 7.6, hold: c(2.6, -2.15) },
-      { t: slot.begin + 7.6, cells: 8.0, hold: c(3.05, -2.25) },
-      { t: slot.begin + 10.4, cells: 6.0, hold: c(1.3, -1.75) },
+      { t: slot.begin + 2.2, cells: 4.6, hold: c(0.8, -1.25) },
+      { t: slot.begin + 5.0, cells: 5.4, hold: c(1.45, -1.62) },
+      { t: slot.begin + 8.8, cells: 5.5, hold: c(2.2, -1.66) },
+      { t: slot.begin + 11.0, cells: 4.4, hold: c(0.7, -1.28) },
       { t: slot.end, cells: CUTS.nursery.cells, hold: c(CUTS.nursery.frame[0], CUTS.nursery.frame[1]) },
     ]
   },
