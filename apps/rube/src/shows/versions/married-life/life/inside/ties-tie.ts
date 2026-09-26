@@ -32,7 +32,7 @@ export const TIES: TieLook[] = [
   { kind: 'striped', w: 0.058, color: CHURCH.glassRed, accent: HOME.trim },
   { kind: 'knit', w: 0.05, color: HOME.wood, accent: HOME.woodDark },
   { kind: 'loud', w: 0.098, color: HOME.yellow, accent: HOME.pink },
-  { kind: 'bow', w: 0.17, color: mixHex(CHURCH.glassRed, INK, 0.38), accent: CHURCH.glassRed },
+  { kind: 'bow', w: 0.13, color: mixHex(CHURCH.glassRed, INK, 0.58), accent: mixHex(CHURCH.glassRed, INK, 0.3) },
 ]
 
 /** The bow tie: the last one she tied. */
@@ -122,7 +122,7 @@ export function drawTie(p: p5, k: number, weight: number, look: TieLook, x: numb
   p.rotate(angle)
   if (look.kind === 'bow') {
     collar(p, k, weight, light)
-    bowAt(p, k, weight, look, 0.03 + (1 - snug) * 0.012, light)
+    bowAt(p, k, weight, look, 0.042 + (1 - snug) * 0.012, light)
     p.pop()
     return
   }
@@ -158,28 +158,36 @@ export function drawTie(p: p5, k: number, weight: number, look: TieLook, x: numb
   p.pop()
 }
 
-/** The bow: two soft wings either side of a small knot, `y` below the collar's top (translated and turned already). */
+/**
+ * The bow: a knot and two wings flaring out from it, the shape every bow tie has (narrow at the knot, widest at the
+ * ends), `y` below the collar's top (translated and turned already). It sits in the collar's V where the long ties'
+ * knots sit, inside Carl's square: nothing of it rises above his top edge, and it is dark and small enough that it
+ * never reads as a pair of eyes on him.
+ */
 function bowAt(p: p5, k: number, weight: number, look: TieLook, y: number, light: number): void {
   const half = look.w / 2
+  const knot = 0.013
+  const end = 0.024
   p.stroke(alpha(p, INK, light))
-  p.strokeWeight(weight * 0.55)
+  p.strokeWeight(weight * 0.5)
   p.fill(alpha(p, look.color, light))
   for (const side of [-1, 1]) {
     p.beginShape()
-    p.vertex(side * 0.012 * k, (y - 0.016) * k)
-    p.bezierVertex(side * half * 0.55 * k, (y - 0.05) * k, side * half * k, (y - 0.042) * k, side * half * k, (y - 0.02) * k)
-    p.vertex(side * half * k, (y + 0.02) * k)
-    p.bezierVertex(side * half * k, (y + 0.042) * k, side * half * 0.55 * k, (y + 0.05) * k, side * 0.012 * k, (y + 0.016) * k)
+    p.vertex(side * knot * k, (y - knot * 0.8) * k)
+    p.bezierVertex(side * half * 0.5 * k, (y - end * 0.8) * k, side * half * 0.85 * k, (y - end) * k, side * half * k, (y - end) * k)
+    p.bezierVertex(side * half * 0.9 * k, (y - end * 0.3) * k, side * half * 0.9 * k, (y + end * 0.3) * k, side * half * k, (y + end) * k)
+    p.bezierVertex(side * half * 0.85 * k, (y + end) * k, side * half * 0.5 * k, (y + end * 0.8) * k, side * knot * k, (y + knot * 0.8) * k)
     p.endShape(p.CLOSE)
-    // A fold in each wing.
-    p.stroke(alpha(p, look.accent, 0.8 * light))
-    p.strokeWeight(weight * 0.4)
-    p.line(side * 0.03 * k, y * k, side * half * 0.72 * k, (y - 0.014) * k)
+    // A fold in each wing, toward the knot.
+    p.stroke(alpha(p, look.accent, 0.7 * light))
+    p.strokeWeight(weight * 0.35)
+    p.line(side * 0.024 * k, y * k, side * half * 0.62 * k, (y - 0.006) * k)
     p.stroke(alpha(p, INK, light))
-    p.strokeWeight(weight * 0.55)
+    p.strokeWeight(weight * 0.5)
   }
-  p.fill(alpha(p, mixHex(look.color, INK, 0.2), light))
-  p.rect(-0.018 * k, (y - 0.02) * k, 0.036 * k, 0.04 * k, 0.008 * k)
+  p.fill(alpha(p, mixHex(look.color, INK, 0.25), light))
+  p.rectMode(p.CENTER)
+  p.rect(0, y * k, 0.026 * k, 0.03 * k, 0.006 * k)
 }
 
 /**
