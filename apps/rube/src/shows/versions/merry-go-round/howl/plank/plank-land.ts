@@ -55,9 +55,17 @@ export function drawBack(p: p5, k: number, W: number, ink: string, v: View): voi
   layer(p, k, v, 0.1, mountains, low, FAR_MTN)
   layer(p, k, v, 0.35, hills, low, FAR_HILL, alpha(p, ink, 0.25).toString(), W * 0.5)
   layer(p, k, v, 0.6, nearHills, low, NEAR_HILL, alpha(p, ink, 0.35).toString(), W * 0.6)
+  // The mist lying on the moor, over the hills' feet, and on down at its full to the bottom of the view: as the far
+  // layers lift with the camera, whatever of them shows below the moor's line (behind the slope, the ledge, the drop)
+  // is always in it, never a bare stripe of range under a ruled edge. The gorge's far wall, nearer, stands over it.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const m = ctx.createLinearGradient(0, (YG - 1.6) * k, 0, (YG + 0.2) * k)
+  m.addColorStop(0, 'rgba(238, 241, 236, 0)')
+  m.addColorStop(1, 'rgba(238, 241, 236, 0.55)')
+  ctx.fillStyle = m
+  ctx.fillRect((v.x0 - 1) * k, (YG - 1.6) * k, (v.x1 + 2 - v.x0) * k, Math.max(1.8, v.y1 + 3.6 - YG) * k)
   // The gorge beyond the edge: its depth going blue-grey into the haze, and its far wall across the drop.
   if (v.x1 > LAND.edge) {
-    const ctx = p.drawingContext as CanvasRenderingContext2D
     // The far wall, a little higher than the ledge, its face going down into the haze (it moves a little slower).
     const x0 = LAND.edge + 2.8 + (v.cx - LAND.edge) * 0.12
     const lip = LAND.ledge - 1.3
@@ -96,13 +104,6 @@ export function drawBack(p: p5, k: number, W: number, ink: string, v: View): voi
     // (From behind the cliff's face, which covers its left edge: no seam at the face's foot.)
     ctx.fillRect((LAND.edge - 1.5) * k, (LAND.ledge + 0.5) * k, (v.x1 + 3.5 - LAND.edge) * k, (v.y1 + 2 - LAND.ledge) * k)
   }
-  // The mist lying on the moor, over the hills' feet.
-  const ctx = p.drawingContext as CanvasRenderingContext2D
-  const m = ctx.createLinearGradient(0, (YG - 1.6) * k, 0, (YG + 0.2) * k)
-  m.addColorStop(0, 'rgba(238, 241, 236, 0)')
-  m.addColorStop(1, 'rgba(238, 241, 236, 0.55)')
-  ctx.fillStyle = m
-  ctx.fillRect((v.x0 - 1) * k, (YG - 1.6) * k, (v.x1 + 2 - v.x0) * k, 1.8 * k)
 }
 
 /** Stones on the slope where the plank bumps over them (x), set by the part. */

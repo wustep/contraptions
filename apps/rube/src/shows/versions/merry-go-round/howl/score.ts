@@ -198,6 +198,7 @@ export function compose(): { show: CastleShow; camera: (t: number) => Framing } 
       } else keys.unshift({ t: leg.from, cells, hold: carried, w: 1 })
     }
     if (keys.length === 1) keys.push({ t: Math.min(leg.to, leg.from + 1.2), cells: 5 })
+    for (const k of keys) if (k.cut && k.t > leg.from + 1e-6) show.cameraCuts.push(k.t)
     cams.push(director(where, keys, DURATION))
   })
   const camera = (t: number): Framing => {

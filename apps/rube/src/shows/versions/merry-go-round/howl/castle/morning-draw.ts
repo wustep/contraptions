@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash } from '../kit'
+import { alpha, hash, smooth } from '../kit'
 import { CALCIFER, FLOWERS, ROOM, TOWN, WASTES } from '../worlds'
 import { puff, type Tone } from './room'
 import { basketAt, EGG_FLIGHT, eggsInBasket, eggsInPan, LOG, MT, PAN, panAt, calciferAt, TOSSES } from './morning-rig'
@@ -85,8 +85,9 @@ export function viewPorthaven(p: p5, k: number, W: number, ink: string, b: Box, 
   p.rect(X(b.x0 - 0.05), X(quay), X(b.x1 - b.x0 + 0.1), X(b.y1 - quay + 0.05))
   p.stroke(alpha(p, ink, 0.3))
   p.line(X(b.x0), X(quay + 0.16), X(b.x1), X(quay + 0.16))
-  // A gull, gliding across and gone: white, grey-backed, dark-tipped, its wings beating slowly.
-  const gu = (t - 159.6) / 2.8
+  // A gull, gliding across and gone, over the door's middle on the swell's crest (160.0): white, grey-backed,
+  // dark-tipped, its wings beating slowly.
+  const gu = (t - 159.3) / 1.4
   if (gu > 0 && gu < 1) {
     const gx = b.x1 + 0.25 - (b.x1 - b.x0 + 0.5) * gu
     const gy = b.y0 + 0.3 - 0.1 * Math.sin(gu * Math.PI)
@@ -112,10 +113,21 @@ export function viewPorthaven(p: p5, k: number, W: number, ink: string, b: Box, 
     p.triangle(X(0.065), X(-0.005), X(0.1), X(0.002), X(0.065), X(0.01))
     p.pop()
   }
-  // The caller: a fisherman on the quay, facing in, in a coat and a cap; he touches his cap, a bow, to Markl.
-  const bow = Math.exp(-Math.pow((t - 160.95) / 0.28, 2))
+  // The caller: a fisherman on the quay, facing in, in a coat and a cap; he touches his cap, a bow, to Markl, deepest
+  // on the note (160.461), and up again slowly.
+  const BOW = 160.461
+  const bow = t < BOW ? smooth(t, BOW - 0.3, BOW) : Math.exp(-Math.pow((t - BOW) / 0.55, 2))
   const cx = 0.14
   const sh = quay - 1.02 + 0.06 * bow
+  // He stands a pace back on the quay, right of the door's middle, so the sea, the mast and the gull show beside
+  // him: drawn at his old place and set back (smaller, feet on the quay's stones).
+  const S = 0.72
+  const standX = b.x0 + 0.66 * (b.x1 - b.x0)
+  const standY = quay + 0.24
+  p.push()
+  p.translate(X(standX), X(standY))
+  p.scale(S)
+  p.translate(-X(cx), -X(b.y1))
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
   // Coat: shoulders to the sill, a little wider at the hem; an ochre oilskin (never blue: a stranger in the door must
@@ -155,6 +167,7 @@ export function viewPorthaven(p: p5, k: number, W: number, ink: string, b: Box, 
   p.vertex(X(0.13), X(-0.15))
   p.vertex(X(-0.09), X(-0.15))
   p.endShape(p.CLOSE)
+  p.pop()
   p.pop()
 }
 
@@ -261,18 +274,23 @@ export function doorLeak(p: p5, k: number, W: number, dx: number, floor: number,
 /** Embers going up from the grate at `at`: a handful, rising and dying. */
 export function sparks(p: p5, k: number, t: number, at: number, n: number, force: number): void {
   const u0 = t - at
-  if (u0 < 0 || u0 > 1.3) return
+  if (u0 < 0 || u0 > 1.6) return
   const X = (v: number) => v * k
   p.noStroke()
+  // A scatter, never a row: each spark born on its own a moment after the note, from its own height in the fire, and
+  // each its own size (0.02 to 0.05 across).
   for (let i = 0; i < n; i++) {
-    const life = 0.6 + 0.6 * hash(i, at * 100)
-    const u = u0 / life
-    if (u >= 1) continue
-    const sx = LOG[0] + (hash(i, 7, at * 10) - 0.5) * 0.5
+    const born = i === 0 ? 0 : 0.25 * hash(i, 11, at * 10)
+    const life = 0.55 + 0.6 * hash(i, at * 100)
+    const u = (u0 - born) / life
+    if (u < 0 || u >= 1) continue
+    const sx = LOG[0] + (hash(i, 7, at * 10) - 0.5) * 0.6
     const x = sx + (hash(i, 8, at) - 0.5) * 0.5 * u + 0.05 * Math.sin(u * 9 + i)
-    const y = LOG[1] - 0.3 - force * (0.9 + 0.8 * hash(i, 9)) * u + 0.3 * u * u
+    const y0 = LOG[1] - 0.18 - 0.32 * hash(i, 12, at * 10)
+    const y = y0 - force * (0.9 + 0.8 * hash(i, 9)) * u + 0.3 * u * u
+    const size = 0.02 + 0.03 * hash(i, 13, at * 10)
     p.fill(alpha(p, i % 2 ? CALCIFER.core : CALCIFER.body, 0.95 * (1 - u)))
-    p.circle(X(x), X(y), Math.max(1, X(0.03 * (1 - 0.5 * u))))
+    p.circle(X(x), X(y), Math.max(1, X(size * (1 - 0.5 * u))))
   }
 }
 

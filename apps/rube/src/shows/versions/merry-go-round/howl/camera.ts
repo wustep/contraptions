@@ -18,6 +18,12 @@ export interface Shot {
   w?: number
   /** Added to the follow: frame ahead of the ball, or above it. */
   off?: Pt
+  /**
+   * A cut inside a place: up to this key the camera keeps the key before's framing (still following her, if that key
+   * follows), and on it every channel jumps to this key's. Nothing eases into it or carries speed across it. Only on
+   * a strike (the check holds it), and her place on the screen may change there.
+   */
+  cut?: boolean
 }
 
 /**
@@ -79,11 +85,13 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
   const n = keys.length
   const ts = keys.map((k) => k.t)
+  // A move onto a cut is no move: its channels stay at the key before's until the cut (so no tangent crosses it).
   const ends = (get: (a: Shot, b: Shot) => [number, number]) => {
     const l: number[] = []
     const r: number[] = []
     for (let i = 0; i < n; i++) {
-      const [x, y] = get(keys[i], keys[Math.min(i + 1, n - 1)])
+      const next = keys[Math.min(i + 1, n - 1)]
+      const [x, y] = get(keys[i], next.cut && i + 1 < n ? keys[i] : next)
       l.push(x)
       r.push(y)
     }

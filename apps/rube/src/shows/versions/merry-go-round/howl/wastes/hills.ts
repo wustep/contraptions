@@ -64,14 +64,16 @@ export const hills = part<null>(
     }
   },
   (slot): PartShot[] => [
-    // Walking in from the cut; the hedge and the stick; the flip over her head; up the hill with him behind her.
+    // Walking in from the cut; the hedge and the stick, close, for the tugs on the swell; then the frame opens with
+    // the flip (from the pop, easing out), so he somersaults whole against the sky over her head and lands on the bar
+    // in the wide; up the hill with him behind her.
     { t: slot.begin + 0.7, cells: 4.5, off: [0.9, -0.8] },
     { t: 109.9, cells: 4.1, hold: [AT_POLE + 0.3, -0.72] },
-    { t: POP + 0.1, cells: 4.5, hold: [0.1, -1.05] },
-    { t: LANDS + 0.3, cells: 4.6, hold: [-0.35, -0.95] },
+    { t: POP, cells: 4.25, hold: [AT_POLE + 0.15, -0.82] },
+    { t: LANDS + 0.25, cells: 6.3, hold: [-0.15, -1.75] },
     // Locked off on the hill: she climbs up across the frame, and he hops past her to the top, and back down into
     // the fog.
-    { t: 114.3, cells: 5.8, hold: [1.0, -1.55] },
+    { t: 114.3, cells: 5.95, hold: [1.0, -1.6] },
     { t: 117.3, cells: 6.4, hold: [1.1, -1.8] },
     // The fog, and what is in it, framed from her: low on the crest a little left of middle, the castle's legs and
     // face coming out of the fog over her and cropped by the top of the frame (its size is in the crop), the eye

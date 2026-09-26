@@ -52,12 +52,54 @@ const DRIFT1 = 301.25
 const DRIFT = 3.2
 /** How steep the stair of air is it walks up (cells up a cell along). */
 const SLOPE = 0.27
-/** The breath's two-shot on the porch: how many cells tall, where the camera sits from her, when it goes back (the
- * pull-back to the chord's frame runs from there to 302.2, easing into the hit). */
-const TWO = 7.4
-const TWO_OFF: Pt = [0.85, -0.6]
-const TWO_IN = 300.4
-const TWO_OUT = 301.0
+/**
+ * The breath's two-shot on the porch: how many cells tall, and where she sits in it (how far right of and below the
+ * middle, in frames; left and up are negative). The camera eases in to it across the whole breath, from the flag's
+ * bar to `PORCH_AT`, never faster than half a scale a second, and holds it until the chord starts the pull-back.
+ */
+const PORCH = 12
+const PORCH_FX = -0.05
+const PORCH_FY = 0.16
+const PORCH_FROM = 298.6
+const PORCH_AT = 301.3
+/**
+ * The chord: a cut from the porch to the whole castle, on its first stroke. How many cells tall, and how far down the
+ * frame Calcifer's chimney mouth sits (a fifth: head-room for the three roars and the smoke thrown up on them, the two
+ * of them on the porch in the lower middle, the feet and the cloud under the first on the air in). Then held while the
+ * roars ring, and eased out, one slow move, into the credits' frame as it walks away up the sky (`OPEN_TO`).
+ */
+const CHORD_CELLS = 30.5
+const CHIMNEY_DOWN = 0.2
+const OPEN_TO = 306.2
+/** Where she sits in the frame gets to the credits' place sooner than the scale does. */
+const PLACED = 305.4
+/**
+ * Under the credits: [time, cells, fx, fy] of the follow (where she sits right of and below the middle, in frames).
+ * The castle low and right of middle, small enough that flag to feet sit inside the middle two-thirds of the frame
+ * (what Zoom shows), and going smaller as it climbs away.
+ */
+export const CREDITS_FRAMES: [t: number, cells: number, fx: number, fy: number][] = [
+  [OPEN_TO, 52, 0.15, 0.12],
+  [312, 56, 0.15, 0.13],
+  [318, 60, 0.15, 0.14],
+  [326, 65, 0.145, 0.15],
+  [DURATION, 72, 0.14, 0.16],
+]
+
+/**
+ * A move's progress, 0 → 1 over [t0, t1]: eased in over `a` seconds and out over `b` (half-cosine ramps) with an
+ * even pace between, so its fastest is 1 / (t1 - t0 - (a + b) / 2) of the move a second.
+ */
+function cruise(t: number, t0: number, t1: number, a: number, b: number): number {
+  const v = 1 / (t1 - t0 - (a + b) / 2)
+  const s = t - t0
+  const r = t1 - t
+  if (s <= 0) return 0
+  if (r <= 0) return 1
+  if (s < a) return v * (s / 2 - (a / (2 * Math.PI)) * Math.sin((Math.PI * s) / a))
+  if (r < b) return 1 - v * (r / 2 - (b / (2 * Math.PI)) * Math.sin((Math.PI * r) / b))
+  return v * (a / 2 + s - a)
+}
 
 /* ------------------------------------------------------------------ placing the castle on the plank */
 
@@ -264,6 +306,21 @@ const sophieP = (t: number): Pt => {
 const howlP = (t: number): Pt => {
   const [x, y] = onCastle(look(t), [XH, CASTLE.door[1]])
   return [x, y - R]
+}
+
+/**
+ * The castle's box at `t` (walking, from `WALK0`), flag to toes and gun to gun, from Sophie's centre (cells): for the
+ * check that under the credits the whole castle stays inside what Zoom shows.
+ */
+export function flightCastleBox(t: number): { x0: number; y0: number; x1: number; y1: number } {
+  const L = look(t)
+  const [hx, hy] = sophieP(t)
+  const edges: Pt[] = [[-6.9, -25.75], [-8.9, -25.3], [-9.9, -15.6], [-9.5, -9.6], [10.9, -10.3], [6.9, -15.5]]
+  const pts: Pt[] = edges.map((q) => onCastle(L, q))
+  for (const f of feetAt(L.pose)) pts.push([L.O[0] + f.at[0] - 0.9, L.O[1] + f.at[1] + 0.2], [L.O[0] + f.at[0] + 1.1, L.O[1] + f.at[1] + 0.2])
+  const xs = pts.map((q) => q[0] - hx)
+  const ys = pts.map((q) => q[1] - hy)
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) }
 }
 
 /* ------------------------------------------------------------------ its legs, folded for flight */
@@ -537,12 +594,20 @@ function plume(p: p5, k: number, t: number) {
     const age = t - tau
     if (age < 0 || age > life) continue
     const [ex, ey] = onCastle(look(tau), [CASTLE.chimney[0] - 0.05, CASTLE.chimney[1] + 0.1])
-    // Under the credits the wind comes round behind it: each puff let go from 305 on drifts on with the castle and
-    // rises less, so the smoke leans up and a little ahead, away from the words over its left shoulder.
+    // Under the credits, walking up the sky, each puff let go from 305 on is left behind by the castle (it drifts on
+    // at a third of its pace and rises less than it climbs), so the smoke strings out low and back from the chimney, a
+    // thin leaning wisp that spreads and thins as it goes: short-lived and faint, never heaped into one bright round
+    // thing on the chimney's top.
     const wind = smooth(tau, 305, 308)
-    const x = ex + (-0.55 + 3.1 * wind) * age + Math.sin(tau * 3.1) * 0.25 * age
-    const y = ey - (1.3 - 0.45 * wind) * age + 0.06 * age * age
-    puff(p, k, x, y, 0.45 + 0.75 * age, col, 0.42 * (1 - age / life) * Math.min(1, age * 5), 0.9)
+    const span = life - 2.5 * wind
+    if (age > span) continue
+    // (It falls back from the chimney faster than it swells, so it draws out into a line and never balls up.)
+    const x = ex + (-0.55 + 1.35 * wind) * age + Math.sin(tau * 3.1) * 0.25 * age
+    const y = ey - (1.3 - 0.8 * wind) * age + (0.06 + 0.06 * wind) * age * age
+    const r = 0.45 - 0.2 * wind + (0.75 - 0.15 * wind) * age
+    const left = 1 - age / span
+    const a = (0.42 - 0.2 * wind) * left ** (1 + 0.8 * wind) * Math.min(1, age * 5)
+    puff(p, k, x, y, r, col, a, 0.9)
   }
 }
 
@@ -557,7 +622,9 @@ function bursts(p: p5, k: number, t: number) {
     const age = t - at
     if (age < 0 || age > 6) continue
     const [ex, ey] = onCastle(look(at), CASTLE.chimney)
-    const fade = s * Math.min(1, age * 10) * Math.exp(-age / 1.4)
+    // The column stands through the chord and its ring, and is thinned away by the time the first card comes up
+    // over the sky where it was (304.2 →), so it never lies under the words.
+    const fade = s * Math.min(1, age * 10) * Math.exp(-age / 1.4) * (1 - smooth(age, 1.1, 2.5))
     const warm = 0.3 * Math.exp(-age / 0.45)
     const lit = mixHex(STEAM, CALCIFER.body, warm)
     for (let i = 0; i < 11; i++) {
@@ -908,45 +975,73 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
-    // The two-shot on the porch: the camera this far from her (cells), so the pair sit low and left of middle with
-    // the door and its hood over Howl's shoulder.
-    const two = (t: number, cells: number): PartShot => ({ t, cells, off: TWO_OFF, w: 0 })
-    // The chord's frame: the whole castle, big, from the cloud under its first foot to the fire over its chimney,
-    // set a little right of middle so the smoke rolls back into the open left. Placed where it is on the chord.
-    const O = look(CHORD[0]).O
-    const chordAt: Pt = [O[0] - 3.2, O[1] - 12.3]
+    // A move of the follow between two framings (cells, and where she sits in the frame), along a progress 0 → 1
+    // for the scale (`at`) and one for her place in the frame (`place`, the same unless given), laid down as a key at
+    // each of `times` so the camera's curve through them is the move's own.
+    type Framed = [cells: number, fx: number, fy: number]
+    const glide = (times: number[], from: Framed, to: Framed, at: (t: number) => number, place = at): PartShot[] =>
+      times.map((t) => {
+        const q = at(t)
+        const r = place(t)
+        const cells = Math.exp(Math.log(from[0]) + (Math.log(to[0]) - Math.log(from[0])) * q)
+        return follow(t, cells, from[1] + (to[1] - from[1]) * r, from[2] + (to[2] - from[2]) * r)
+      })
+    /** Every `dt` strictly inside (t0, t1). */
+    const every = (t0: number, t1: number, dt: number): number[] => {
+      const n = Math.max(1, Math.round((t1 - t0) / dt))
+      return Array.from({ length: n - 1 }, (_, i) => t0 + ((t1 - t0) * (i + 1)) / n)
+    }
+    // The whole castle as the flag comes home, as a framing of her (so the move in from it rides the castle).
+    const wide = ((): Framed => {
+      const [cx, cy] = mid(PORCH_FROM, 0.8, -3.2)
+      const [hx, hy] = sophieP(PORCH_FROM)
+      const cells = 31
+      return [cells, (hx - cx) / (cells * (16 / 9)), (hy - cy) / cells]
+    })()
+    const porch: Framed = [PORCH, PORCH_FX, PORCH_FY]
+    // The chord's cut: the whole castle, Calcifer's chimney mouth a fifth down the frame (the three roars go up into
+    // the sky over it), the castle a little left of middle (its smoke leans back, it walks on to the right).
+    const chord = ((): Framed => {
+      const L = look(CHORD[0])
+      const [, ey] = onCastle(L, CASTLE.chimney)
+      const [cx] = onCastle(L, [1.2, -9])
+      const [hx, hy] = sophieP(CHORD[0])
+      const cy = ey + (0.5 - CHIMNEY_DOWN) * CHORD_CELLS
+      return [CHORD_CELLS, (hx - cx) / (CHORD_CELLS * (16 / 9)), (hy - cy) / CHORD_CELLS]
+    })()
+    const [first, ...later] = CREDITS_FRAMES
     return [
-      // The dive over their heads into the grate, and the plank heaving up. (Out, carrying on through each key to the
-      // next, until the breath.)
-      hold(294.05, 8.8, [her[0] + 0.7, her[1] - 0.99]),
-      // Out as the pieces come home, a piece a bar, until the whole castle is in the frame, always with sky over
-      // what has come (the hull on the tutti's great note, the turrets, the chimney, the flag).
-      hold(294.8, 17.5, mid(HULL, 0.3, 1.2)),
-      hold(295.9, 22, mid(FACE + 0.2, 0.5, 0.2)),
-      hold(297.1, 28.5, mid(HOUSE + 0.3, 0.6, -2.0)),
-      hold(298.6, 31, mid(298.6, 0.8, -3.2)),
-      hold(299.15, 30, mid(299.15, 0.5, -2.8)),
-      // The breath is theirs: in to the porch, a two-shot of the two of them side by side (her silver, his
-      // cornflower) as the windows light and the door swings open on the warm room behind them, drifting with the
-      // castle as it goes out over the gorge.
-      two(TWO_IN, TWO),
-      // Easing out a little as the door opens, so the pull-back grows out of it with no stop.
-      two(TWO_OUT, TWO + 0.4),
-      // Then back, easing all the way into the hit, to the whole castle as its legs let down onto the air; held,
-      // still, for the chord (the first foot down on a cloud, the three roars of fire, every window flaring, the
-      // smoke rolling up and back).
-      hold(302.2, 31, chordAt),
-      hold(302.95, 31, chordAt),
-      hold(304.0, 37, mid(304.0, -8.5, -5.5)),
+      // The dive over their heads into the grate (Calcifer's flare starts the camera going back), the plank heaving
+      // up, and the hull flying in and locking on around it on the tutti's great note while the frame is still
+      // opening, so the widening is the castle arriving. Never faster than half a scale a second.
+      hold(DIVE, 7.3, [her[0] + 0.7, her[1] - 0.99]),
+      hold(HULL, 13.6, mid(HULL, 0.3, 1.2)),
+      // Out on through the pieces coming home, a piece a bar, until the whole castle is in the frame, always with sky
+      // over what has come (the face, the cottage and the back turret, the chimney, the flag).
+      hold(295.9, 20.5, mid(FACE + 0.2, 0.5, 0.2)),
+      hold(297.1, 27.5, mid(HOUSE + 0.3, 0.6, -2.0)),
+      // The whole castle as the flag flutters home; then the breath is theirs: in, slowly, across the whole of it, to
+      // the porch, a two-shot of the two of them side by side (her silver, his cornflower) as the windows light, the
+      // door swings open on the warm room behind them and the legs let down; and held there, riding the castle.
+      follow(PORCH_FROM, ...wide),
+      ...glide(every(PORCH_FROM, PORCH_AT, 0.15), wide, porch, (t) => cruise(t, PORCH_FROM, PORCH_AT, 0.6, 0.9)),
+      follow(PORCH_AT, ...porch),
+      // The chord is a cut, on its first stroke: from the porch to the whole castle, its first foot coming down on the
+      // air, every window flaring, and the three roars of fire out of the chimney in the sky over it. Held (barely
+      // moving) while they ring, then one slow move out into the credits' frame as it walks away up the sky.
+      { ...follow(CHORD[0], ...chord), cut: true },
+      // (Her place in the frame leads the scale, so the castle is low and right, clear of the first card, as it
+      // comes up.)
+      ...glide(
+        every(CHORD[0], OPEN_TO, 0.2),
+        chord,
+        [first[1], first[2], first[3]],
+        (t) => cruise(t, CHORD[0], OPEN_TO, 1.4, 1.6),
+        (t) => cruise(t, CHORD[0], PLACED, 1.2, 1.4),
+      ),
+      follow(...first),
       // Then with it, up the sky, going small, under the credits.
-      follow(305.3, 42, 0.17, 0.23),
-      // Lower and further right before the cast card comes up, so its flag stays under the card's last row and
-      // clear of the words on any window.
-      follow(308, 45.3, 0.24, 0.32),
-      follow(312, 48, 0.24, 0.32),
-      follow(316, 50.6, 0.235, 0.31),
-      follow(324, 55, 0.22, 0.3),
-      follow(DURATION, 60, 0.21, 0.29),
+      ...later.map((f) => follow(...f)),
     ]
   },
 )

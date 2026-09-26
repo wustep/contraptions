@@ -462,15 +462,38 @@ function drawHearth(p: p5, c: C, tone: Tone, ink: string, t: number): void {
   p.rect(X(lx - 0.5), X(ly + 0.1), X(1.0), X(0.06))
   p.strokeWeight(W * 0.8)
   for (const dx of [-0.42, 0.42]) p.line(X(lx + dx), X(ly + 0.16), X(lx + dx), X(R.ground))
-  p.strokeWeight(W)
-  p.fill(tone(ROOM.woodDark))
-  p.rect(X(lx - 0.36), X(ly - 0.05), X(0.72), X(0.15), X(0.07))
-  // Embers glowing in the log's cracks, brighter as he is.
+  // The log: a round-ended billet in the grate, lit from above by him (its top warm, its underside dark), its cut end
+  // a paler ring toward us, and embers in its cracks, brighter as he is. It must read as a log in the dark room, never
+  // as two glowing dashes floating under him.
   const cal = calciferAt(t)
+  const lit = 0.35 + 0.45 * Math.min(1, cal.size)
+  p.strokeWeight(W)
+  p.fill(tone(mixHex(ROOM.woodDark, ROOM.wood, 0.25)))
+  p.rect(X(lx - 0.36), X(ly - 0.05), X(0.72), X(0.15), X(0.07))
   p.noStroke()
-  p.fill(alpha(p, CALCIFER.body, 0.35 + 0.4 * Math.min(1, cal.size)))
-  p.rect(X(lx - 0.24), X(ly + 0.03), X(0.2), X(0.025))
-  p.rect(X(lx + 0.06), X(ly + 0.05), X(0.18), X(0.022))
+  p.fill(alpha(p, mixHex(ROOM.wood, CALCIFER.body, 0.5), 0.6 * lit))
+  p.rect(X(lx - 0.31), X(ly - 0.035), X(0.6), X(0.045), X(0.022))
+  p.stroke(alpha(p, ink, 0.6))
+  p.strokeWeight(W * 0.5)
+  p.fill(tone(mixHex(ROOM.wood, '#C9A27A', 0.45)))
+  p.ellipse(X(lx + 0.3), X(ly + 0.025), X(0.1), X(0.14))
+  p.noFill()
+  p.ellipse(X(lx + 0.3), X(ly + 0.025), X(0.045), X(0.065))
+  // The cracks: short, uneven, each its own length and heat.
+  const cracks: [number, number, number, number, number][] = [
+    [-0.27, 0.035, -0.13, 0.05, 1],
+    [-0.08, 0.06, 0.02, 0.045, 0.6],
+    [0.07, 0.025, 0.19, 0.04, 0.85],
+  ]
+  for (const [x0, y0, x1, y1, heat] of cracks) {
+    const mx = lx + (x0 + x1) / 2
+    const my = ly + (y0 + y1) / 2 + 0.012
+    p.stroke(alpha(p, CALCIFER.body, (0.3 + 0.5 * lit) * heat))
+    p.strokeWeight(X(0.02))
+    p.line(X(lx + x0), X(ly + y0), X(mx), X(my))
+    p.line(X(mx), X(my), X(lx + x1), X(ly + y1))
+  }
+  p.noStroke()
   // The mantel shelf (bare: the engine stands on it).
   p.stroke(ink)
   p.strokeWeight(W)
