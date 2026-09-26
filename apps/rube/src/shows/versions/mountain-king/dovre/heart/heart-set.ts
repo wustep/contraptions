@@ -138,8 +138,12 @@ function fireAt(T: number): ReturnType<typeof furnace> {
 const SLEEP = 0.1
 const woken = (T: number, at: number): number => smoothstep(T, at - 0.04, at + 0.1)
 const awake = (T: number, at: number): number => lerp(SLEEP, 1, woken(T, at))
-/** How many of the four mechanisms are lit (0 to 1): the room brightens a step with each. */
-const mechanisms = (T: number): number => (woken(T, FLY) + woken(T, PISTONS) + woken(T, BELLOWS) + woken(T, GOVERNOR)) / 4
+/**
+ * How far the machine has grown (0 to 1): a step for each phrase's new mechanism (the flywheel, the pumps, the great
+ * bellows, the governor, the valve blowing), so the room brightens a step a phrase and the runaway is the brightest
+ * room in the mountain.
+ */
+const mechanisms = (T: number): number => (woken(T, FLY) + woken(T, PISTONS) + woken(T, BELLOWS) + woken(T, GOVERNOR) + woken(T, VALVE_AT)) / 5
 
 /** The room's light at T: the furnace's (its base and the flare on the backbeat, and the surges), and a step up for each mechanism lit. */
 export function roomLight(T: number): { lit: number; flare: number; fire: ReturnType<typeof furnace> } {
@@ -378,12 +382,15 @@ function ceilingAt(x: number): number {
   return -6.1
 }
 
+/** The back wall in the forge's full light: the lit rock, warmed. */
+const WALL_LIT = mixHex(mixHex(STONE.mid, STONE.light, 0.25), LAMP.glow, 0.14)
+
 function drawRoom(p: p5, c: Pen, L: number, lift = 0): void {
   const { k } = c
   p.noStroke()
-  // The back wall: dark rock, a little lighter with each mechanism the fire has lit (the runaway is the brightest
-  // room in the mountain).
-  p.fill(mixHex(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L), STONE.mid, 0.3 * clamp01(lift)))
+  // The back wall: dark rock, lighter and warmer with each mechanism the fire has lit (the runaway is the brightest
+  // room in the mountain: its walls in the forge's light).
+  p.fill(mixHex(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L), WALL_LIT, 0.78 * clamp01(lift)))
   poly(p, k, HOLLOW)
   // The tunnel mouths: a dark arch with a lit jamb.
   for (const d of DOORS) {
@@ -1242,7 +1249,7 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   const fire = fireAt(T)
   const s = surge(T)
   // The fire's light over the whole room, stepping up with each mechanism it has lit.
-  glow(p, c, FURNACE.x + 1.5, -1.6, 9.5, 0.09 * lift * (0.85 + 0.15 * fire.flare), LAMP.glow)
+  glow(p, c, FURNACE.x + 1.5, -1.6, 11, 0.27 * lift * (0.8 + 0.2 * fire.flare), LAMP.glow)
   // The forge is the light: a low warm pool over the pit (not a haze over the room), and the fire's own blaze on the
   // back wall right behind the flywheel's lower half, so the wheel stands dark against it.
   glow(p, c, FURNACE.x, 1.3, 5.4 + 0.8 * fire.heat, 0.05 + 0.12 * fire.base + 0.1 * fire.flare)
@@ -1253,7 +1260,7 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   // The lamps' pools are small: each lights its own bit of rock, and swells on the surges.
   for (const l of LAMPS) {
     const on = lampLit(T, l.on)
-    if (on > 0) glow(p, c, l.at[0], l.at[1] + l.hang + 0.25, 0.8 + 0.25 * s, clamp01(0.3 * on * flicker(T, l.at[0]) * (1 + 0.6 * s)))
+    if (on > 0) glow(p, c, l.at[0], l.at[1] + l.hang + 0.25, 0.8 + 0.25 * s + 1.2 * lift, clamp01(0.3 * on * flicker(T, l.at[0]) * (1 + 0.6 * s)))
   }
   for (const l of LAMPS) {
     const on = lampLit(T, l.on)
