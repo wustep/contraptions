@@ -4,6 +4,7 @@ import { drawWorld, drawingModes, followCamera, setupCanvas } from '../engine'
 import { overviewCamera } from '../overview'
 import { recordShow } from './record'
 import type { Performance } from './registry'
+import { wordPainter } from './words'
 
 /**
  * A show's stage. The live canvas fills whatever the panel leaves, as
@@ -12,11 +13,16 @@ import type { Performance } from './registry'
  *
  * The rule of this stage is that **the canvas is the picture and nothing
  * else**. The title, the credit, the clock, the play button: all of it is
- * the page's, in the panel or standing on the stage as DOM, and none of it
- * is ever painted. So a file is clean because there is nothing to leave
- * out. And the rule is kept by more than good manners: a show's canvas
- * cannot set type at all (`refuseType`), so a version that tried to letter
- * its frame would find nothing there, live or in the file.
+ * the page's, in the panel or standing on the stage as DOM. And the rule is
+ * kept by more than good manners: a show's canvas cannot set type at all
+ * (`refuseType`), so a version that tried to letter its frame would find
+ * nothing there, live or in the file.
+ *
+ * One exception, and only in a video: a show's end credits
+ * (`Performance.titles`). Live they are DOM over the stage; a recording takes
+ * the canvas alone, so the video's frame has the same cards painted over the
+ * picture (`words.ts`), set on a canvas of their own and laid on as an image.
+ * A PNG is still the picture alone.
  */
 
 /** The frame a show is composed for. A camera's `cells` is how many of them this frame shows top to bottom. */
@@ -69,7 +75,7 @@ export interface ShowStage {
   setZoom(on: boolean): void
   /** Put a version on the stage, or clear it. */
   set(perf: Performance | null): void
-  /** The frame at `t` as a PNG at `size`: the picture alone. */
+  /** The frame at `t` as a PNG at `size`: the picture alone, no credits. */
   savePng(filename: string, size: FrameSize, t: number): Promise<void>
   /** The same PNG, handed back rather than saved: for share cards (`scripts/shows/show-cards.mjs`). */
   png(size: FrameSize, t: number): Promise<Blob | null>
@@ -77,7 +83,9 @@ export interface ShowStage {
    * The whole show as a video at `size`, picture and music, played through
    * once at `speed`. Resolves true when a file was saved, false when
    * `signal` stopped it. The frame being recorded stands over the stage
-   * while it is made.
+   * while it is made. The show's credits are painted into it, since the
+   * page's words are not in a canvas's stream; Overview's file has none, as
+   * Overview live has none.
    */
   saveVideo(filename: string, size: FrameSize, speed: number, monitor: boolean, signal: AbortSignal, progress?: (done: number) => void): Promise<boolean>
   destroy(): void
@@ -114,7 +122,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
    * A canvas of exactly `size`, at one density, that paints a frame when it is
    * asked for one and at no other time. A video's stands over the stage while
    * it is made, fitted to it, so what is being saved is what is being looked
-   * at; a still's is never seen.
+   * at; a still's is never seen. Only a video's has the credits painted over it.
    */
   function frame(size: FrameSize, showing: Performance, shown: boolean): { canvas: HTMLCanvasElement; paint(t: number): void; remove(): void } {
     const full = overview
@@ -124,6 +132,7 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
     holder.hidden = !shown
     host.append(holder)
     let at = 0
+    const words = shown && !full && showing.titles ? wordPainter(size.w, size.h) : null
     const p = new p5((s: p5) => {
       s.setup = () => {
         s.pixelDensity(1)
@@ -132,7 +141,10 @@ export function createShowStage(host: HTMLElement, clock: { time(): number }): S
         refuseType(s)
         s.noLoop()
       }
-      s.draw = () => paintShow(s, showing, at, full, tight)
+      s.draw = () => {
+        paintShow(s, showing, at, full, tight)
+        if (words) words(s.drawingContext as CanvasRenderingContext2D, showing.titles!(Math.max(0, Math.min(showing.duration, at))))
+      }
     })
     return {
       canvas: canvasOf(p),

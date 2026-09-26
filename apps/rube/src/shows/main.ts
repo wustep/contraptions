@@ -413,6 +413,7 @@ videoBtn.addEventListener('click', () => {
   blocked = false
   const mine = (recording = new AbortController())
   const name = `${exportName()}${speed === 1 ? '' : `-${speed}x`}`
+  const words = credited() ? ', and the credits' : ', nothing written on it'
   say(exportNote, 'Playing the show through once to record it. Keep this tab in front.')
   sync()
   void stage
@@ -420,7 +421,7 @@ videoBtn.addEventListener('click', () => {
       videoBtn.textContent = `Stop · ${Math.round(done * 100)}%`
     })
     .then(
-      (saved) => say(exportNote, saved ? 'Saved: picture and music, nothing written on it.' : 'Stopped. No file was kept.', saved ? 'ok' : ''),
+      (saved) => say(exportNote, saved ? `Saved: picture and music${words}.` : 'Stopped. No file was kept.', saved ? 'ok' : ''),
       (err) => {
         console.error(err)
         say(exportNote, err instanceof Error ? err.message : String(err), 'bad')
@@ -544,14 +545,20 @@ function sync(): void {
   videoBtn.title = busy
     ? 'Stop the recording. No file is kept.'
     : canRecord
-      ? `The whole show as a video${perf?.soundtrack ? ', picture and music' : ''}, nothing written on it. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
+      ? `The whole show as a video${perf?.soundtrack ? ', picture and music' : ''}${credited() ? ', with its credits' : ', nothing written on it'}. It is played through once to be recorded, so it takes ${length}${speed === 1 ? '' : ` at ${speed}×`}.`
       : 'Video export needs a browser that can record the canvas.'
 }
 
 /* ------------------------------------------------------------------ words over the stage */
 
+/** Whether a video saved now has credits painted in: the show has them, and Overview (which has none) is off. */
+function credited(): boolean {
+  return !!perf?.titles && !overview
+}
+
 // End credits, where a show has them. A show's canvas sets no type, so the page sets them, over the composed
-// frame (16:9, whole, centred on the stage), in its own face. Not in Overview, and never in a recording.
+// frame (16:9, whole, centred on the stage), in its own face. Not in Overview. While a video is recorded its frame
+// stands over the stage with the same cards painted in (`words.ts`), so these stand down.
 const wordsLayer = el('div', { class: 'stage-words', 'aria-hidden': 'true' })
 stageRoot.append(wordsLayer)
 const wordCards = new Map<string, HTMLElement>()

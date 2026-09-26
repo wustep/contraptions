@@ -210,8 +210,8 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 There is no title card. After p5.js's card goes (about 287 s), the camp holds alone at dawn to the end, 291 s.
 
 **How it is built.**
-- The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved frame or a recorded video carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
-- The words are not drawn in Overview, and not in a recording.
+- The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved PNG carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
+- The words are not drawn in Overview. A saved video has the same cards painted into its frame (`shows/words.ts`), since a recording takes the canvas alone.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
