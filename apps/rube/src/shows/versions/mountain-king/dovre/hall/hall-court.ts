@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import type { TrollLook } from '../troll'
-import { beat, beatAt } from '../music'
+import { beat, beatAt, eighth, note } from '../music'
 import { TROLL } from '../worlds'
 import {
   BELLS, COURT_UP, CRIES, DAIS, FIRST_EYES, FL, FLEE, FLICK_A, FLICK_B, FLICK_C, GALLERY_Y, GRAB, KING_EYES, KING_GRAB, KING_RISE, KING_UP,
@@ -81,13 +81,48 @@ export function shout(t: number): number {
   return v
 }
 
-/** The court's heads nod on the beats, row against row, from the first shout until they stand. */
-function nod(t: number, row: number): number {
-  if (t < SLAY[0] + 0.4 || t > COURT_UP + 2) return 0
-  const b = beatAt(t) + (row % 2) * 1
-  const u = b / 2 - Math.floor(b / 2)
-  const env = ease(t, SLAY[0] + 0.4, SLAY[0] + 1.2) * (1 - ease(t, COURT_UP - 0.3, COURT_UP + 1.5))
-  return env * Math.pow(Math.max(0, Math.cos(u * Math.PI * 2)), 3)
+/**
+ * The court plays the theme with its heads. Awake (from the wake's first note until they stand), every head swings on
+ * each sounded note: toward Peer on the run's notes, back up to the King on the held ones, fast in (80 ms) and a long
+ * damped settle; the rows in canon (the front row on the note, the tiers an eighth later, the gallery's eyes a
+ * quarter later). `toPeer` is 0 (looking up at the King) to 1 (down at Peer); `jab` the punch of each note.
+ */
+function played(t: number, row: number): { toPeer: number; jab: number } {
+  const delay = row === 0 ? 0 : row === 3 ? 2 : 1
+  const now = Math.floor(beatAt(t) * 2) - delay
+  const resp = (s: number): number => (s <= 0 ? 0 : 1 - Math.exp(-s / 0.09) * Math.cos(s * 14))
+  let target = 1
+  let toPeer = 1
+  let jab = 0
+  for (let j = now - 8; j <= now; j++) {
+    if (j < 0 || !note(j).sounded) continue
+    const at = eighth(j + delay)
+    if (at > t) continue
+    const next = note(j + 1)
+    const aim = next.sounded ? 1 : 0
+    toPeer += (aim - target) * resp(t - at)
+    target = aim
+    const s = t - at
+    jab += Math.min(1, s / 0.04) * Math.exp(-s / 0.16)
+  }
+  // The first notes after a rest: settle from where the window began.
+  return { toPeer: Math.max(-0.2, Math.min(1.2, toPeer)), jab: Math.min(1, jab) }
+}
+
+/**
+ * Asleep, the court still keeps the tune: on each sounded note one sleeper's head bobs up and sinks back, a different
+ * sleeper each time (never the gallery), so the sleeping court plays the ostinato. 0..1 for courtier i.
+ */
+function bobbed(t: number, i: number): number {
+  const now = Math.floor(beatAt(t) * 2)
+  let v = 0
+  for (let j = now - 3; j <= now; j++) {
+    if (j < 0 || !note(j).sounded || (j * 4) % 9 !== i) continue
+    const s = t - eighth(j)
+    if (s < 0) continue
+    v += s < 0.07 ? s / 0.07 : Math.exp(-(s - 0.07) / 0.32)
+  }
+  return Math.min(1, v)
 }
 
 export interface Pose {
@@ -123,6 +158,9 @@ export function courtierAt(c: Courtier, t: number): Pose {
   let pose: TrollLook['pose'] = 'sit'
   let phase = 0
 
+  // Asleep, the ostinato: one sleeper's head bobs up on each note (see `bobbed`).
+  if (t < WAKE_BEGIN && c.row < 3) slump -= 0.3 * bobbed(t, COURT.indexOf(c))
+
   // A station's sleeper: the flinch when the tail is trodden, the flick, the snort into the brazier.
   if (c.station && t < WAKE_BEGIN) {
     const s = c.station
@@ -142,10 +180,17 @@ export function courtierAt(c: Courtier, t: number): Pose {
     const [px] = peer(t)
     const look = Math.max(-1, Math.min(1, (px - x) / 2.2))
     face = face + (look - face) * awake
-    // Their heads go down together on the beat, row against row: the court keeps the tune's pulse.
-    const n = nod(t, c.row)
-    slump = slump + (0.08 - slump) * ease(t, woke - 0.25, woke + 0.1) + 0.7 * n
-    y += 0.035 * c.size * n
+    slump = slump + (0.08 - slump) * ease(t, woke - 0.25, woke + 0.1)
+    // The heads play the theme, every one, the rows in canon: down at Peer on the run, up at the King on the held
+    // notes, a punch on each note; from the wake's first note until they stand.
+    const k = awake * (1 - ease(t, COURT_UP - 0.3, COURT_UP + 0.6))
+    if (k > 0) {
+      const { toPeer, jab } = played(t, c.row)
+      const king = Math.max(-1, Math.min(1, (18.8 - x) / 2.2))
+      face = face + (king + (look - king) * toPeer - face) * k
+      slump += k * (-0.3 + 0.36 * toPeer + 0.16 * jab)
+      y += 0.02 * c.size * jab * k
+    }
     eyes = 1.35 * ease(t, woke - 0.12, woke) - 0.3 * ease(t, woke + 0.3, woke + 1.0)
     const sh = shout(t)
     mouth = Math.max(mouth, 0.9 * sh * awake)

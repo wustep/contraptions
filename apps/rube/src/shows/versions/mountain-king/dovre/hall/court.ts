@@ -78,10 +78,9 @@ export const court = part<HallState>(
     // Station 3, the elder, close: the rope runs up out of the frame, east, where the throne was.
     { t: TAIL_C + 0.05, cells: 5.8, hold: [12.4, -1.05], w: 0.85 },
     { t: SNORT_C + 0.1, cells: 5.8, hold: [12.7, -1.35], w: 0.9 },
-    // The fire runs to the crown-lamp; the King lit; she goes up to him.
-    { t: 55.0, cells: 9.2, hold: [15.3, -2.9], w: 0.9 },
-    // His last steps to the foot of the dais.
-    { t: 57.1, cells: 6.6, hold: [15.9, -1.2], w: 0.6 },
+    // The fire runs to the crown-lamp; the King lit; she goes up to him. Held wide from here into the wake (`wake.ts`):
+    // the whole court and the dais in one frame, so the heads waking and playing the theme are all seen together.
+    { t: 55.0, cells: 9.6, hold: [14.6, -2.95], w: 0.9 },
     { t: slot.end, ...SEAM_SHOT },
   ],
 )

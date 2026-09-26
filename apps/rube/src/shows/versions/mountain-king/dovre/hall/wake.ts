@@ -119,10 +119,11 @@ export const wake = part<{ begin: number }>(
     ],
   }),
   (slot: Slot): PartShot[] => [
-    { t: slot.begin, ...SEAM_SHOT },
-    // West with the wave, as the heads turn to him: the lit court in the frame's west half, he backing away from it
-    // on its east side, the Woman at the frame's east edge on the dais. It turns on the held note before the shout.
-    { t: 59.9, cells: 7.0, hold: [X(12.3), -1.85], w: 1 },
+    // One held frame of the whole court and the dais (the court's own seam is free) from the first note through
+    // "Slay him!": the heads waking in a wave and swinging on every note of the theme, row after row in canon, he
+    // backing up onto the dais's step, the Woman at the King's side. No pan west and back.
+    { t: slot.begin, cells: 11.2, hold: [X(11.9), -3.0], w: 1 },
+    { t: SLAY[0] + 0.1, cells: 10.8, hold: [X(12.3), -2.9], w: 1 },
     // East to the King as his eyes open over him, the nodding court still at the frame's west side; out a little as
     // he rises and roars, and as the court stands.
     // Close (6.3 cells: he is the story, a fifth bigger than at 7), the floor low in the frame. East with her as she
