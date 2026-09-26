@@ -36,7 +36,7 @@ import {
  * a pure function of the clock, so it reads the same scrubbed, before its slot (dark: the fires banked, the
  * drummers not yet up) and after (lit, the war-drum's pair pounding on until the coda, then ducking away).
  *
- * Layers: `back` is drawn under the ball (the room, the fires, the skins, the drummers on the back rims); `front`
+ * Layers: `back` is drawn under the ball (the room and the drummers' galleries, the fires, the skins, the drummers); `front`
  * over it (each drum's near rim and barrel, so a ball that sinks into a skin, or falls through the burst one, goes
  * behind the drum as it should).
  */
@@ -159,6 +159,78 @@ export function caught(i: number, T: number): number {
   return smooth(T, at - 0.02, at + 0.5)
 }
 
+/* ------------------------------------------------------------------ the drummers' galleries */
+
+/**
+ * What the drummers stand on: a heavy plank behind the drum, a little above its far rim, so they reach over the rim
+ * and bring their clubs down on the skin in front of them (they never stand on the skin they beat). The war-drum has
+ * one at each end on a ladder beside it; the great drum one on a ladder at its west end for the two west drummers and
+ * a short one pinned into the east wall for the young one. Drawn with the room, so the fires,
+ * the skins and the barrels cover whatever of it is behind them.
+ */
+interface Gallery {
+  drum: 2 | 3
+  x0: number
+  x1: number
+  /** The plank's top (what their feet are on), part frame. */
+  top: number
+  /** Ladders down to the floor, by their west rail's x. */
+  ladders: number[]
+}
+/** How far the planks stand over the rim where the drummers are. */
+const LIFT = 0.16
+const GALLERIES: readonly Gallery[] = [
+  { drum: 2, x0: 2.85, x1: 4.3, top: farEdge(DRUM2, 3.6) - LIFT, ladders: [2.95] },
+  { drum: 2, x0: 6.5, x1: 7.95, top: farEdge(DRUM2, 7.2) - LIFT, ladders: [7.63] },
+  { drum: 3, x0: 10.7, x1: 13.35, top: farEdge(DRUM3, 12.65) - 0.7 * LIFT, ladders: [10.8] },
+  { drum: 3, x0: 15.8, x1: 17.05, top: farEdge(DRUM3, 16.45) - LIFT, ladders: [] },
+]
+const PLANK = 0.13
+const RAIL = 0.24
+
+const drumOf = (dr: Drummer): Drum => (dr.drum === 2 ? DRUM2 : DRUM3)
+const galleryOf = (dr: Drummer): Gallery => GALLERIES.find((g) => g.drum === dr.drum && dr.x >= g.x0 && dr.x <= g.x1) ?? GALLERIES[0]
+/** Which way a drummer faces: in, toward the middle of its skin (+1 east). Its arms swing through that side. */
+const facing = (dr: Drummer): 1 | -1 => (dr.x < drumOf(dr).cx ? 1 : -1)
+
+function drawGalleries(p: p5, c: Ctx, L: number, dy: number): void {
+  const { ink, weight } = c
+  // Background timber: a dimmer edge than the drums', so the ladders sit back and do not frame the drum in pale lines.
+  const inkC = mixHex(STONE.deep, ink, 0.18 + 0.32 * L)
+  const wood = lit(WORKS.wood, L)
+  const timber = lit(WORKS.timber, L)
+  p.push()
+  p.strokeJoin(p.ROUND)
+  for (const g of GALLERIES) {
+    const y = g.top + dy
+    // The ladders first, under the plank: two rails to the floor and rungs a short troll-step apart.
+    for (const lx of g.ladders) {
+      p.stroke(inkC)
+      p.strokeWeight(weight)
+      p.fill(wood)
+      for (const x of [lx, lx + RAIL]) shape(p, c, [[x - 0.035, y], [x + 0.035, y], [x + 0.035, FLOOR], [x - 0.035, FLOOR]])
+      p.strokeWeight(weight * 1.6)
+      p.stroke(inkC)
+      for (let ry = y + 0.4; ry < FLOOR - 0.15; ry += 0.46) p.line((lx + 0.035) * c.k, ry * c.k, (lx + RAIL - 0.035) * c.k, ry * c.k)
+      p.strokeWeight(weight * 0.8)
+      p.stroke(timber)
+      for (let ry = y + 0.4; ry < FLOOR - 0.15; ry += 0.46) p.line((lx + 0.035) * c.k, ry * c.k, (lx + RAIL - 0.035) * c.k, ry * c.k)
+    }
+    // The plank: a heavy beam, its top worn pale where they stand.
+    p.stroke(inkC)
+    p.strokeWeight(weight)
+    p.fill(wood)
+    shape(p, c, [[g.x0, y], [g.x1, y], [g.x1, y + PLANK], [g.x0, y + PLANK]])
+    p.noStroke()
+    p.fill(alpha(p, timber, 0.8))
+    shape(p, c, [[g.x0 + 0.02, y + 0.012], [g.x1 - 0.02, y + 0.012], [g.x1 - 0.02, y + 0.045], [g.x0 + 0.02, y + 0.045]])
+    // Pegged at the ends.
+    p.fill(inkC)
+    for (const x of [g.x0 + 0.1, g.x1 - 0.1]) p.ellipse(x * c.k, (y + PLANK * 0.62) * c.k, 0.035 * c.k, 0.035 * c.k)
+  }
+  p.pop()
+}
+
 export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
   hollow(p, c, ROOM, 0.12 + 0.75 * L)
   // The fire's light on the rock, over the hollow, before anything it lights.
@@ -172,6 +244,7 @@ export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
   hollow(p, c, [[SHAFT.x0, FLOOR - 0.02], [SHAFT.x1, FLOOR - 0.02], [SHAFT.x1 - 0.05, 3], [SHAFT.x1, SHAFT.bottom], [SHAFT.x0 + 0.04, SHAFT.bottom], [SHAFT.x0 - 0.04, 3.5]], 0.05 + 0.25 * L)
   slab(p, c, -1.0, SHAFT.x0, FLOOR, 0.05, 0.2 + 0.7 * L, 3)
   slab(p, c, SHAFT.x1, 17.0, FLOOR, 0.05, 0.2 + 0.7 * L, 4)
+  drawGalleries(p, c, L, jolt(T))
 }
 
 /** The vault's height at x (the room's polygon, top edge). */
@@ -251,15 +324,19 @@ export function faceOf(d: Drummer, peerX: number, T: number): number {
   return Math.max(-0.75, Math.min(0.75, (at - d.x) / 1.4))
 }
 
-/** A drummer's club: its length and how far it is turned in from the forearm (in toward the troll's middle). */
-const CLUB = { len: 0.3, turn: 1.0 }
+/** A drummer's club, its length in the troll's height. */
+const CLUB = { len: 0.32 }
 
 /**
- * Where a drummer's club comes down: with the arm hanging (the blow, `troll.ts`) the club is turned in, so its head
- * lands on the skin just in front of the troll's feet, a little to the side of the fist that holds it.
+ * Where a drummer's club comes down on the skin (world, part frame): `s` 1 its front fist's (the one on the side it
+ * faces, toward the middle of the skin), -1 its back fist's, just in front of it. On the far half of the skin, a
+ * little in from the rim, whatever the skin's depth there.
  */
-function clubHead(d: Drummer, face: number, s: number, rim: number): Pt {
-  return [d.x + 0.049 * face * d.size + s * 0.095 * d.size, rim + 0.075 * d.size]
+function strikeAt(dr: Drummer, s: number, dy: number): Pt {
+  const d = drumOf(dr)
+  const x = dr.x + facing(dr) * (s > 0 ? 0.36 : 0.1) * dr.size
+  const far = farEdge(d, x)
+  return [x, far + Math.max(0.05, 0.55 * (d.skin - far)) + dy]
 }
 
 /** Is drummer `d` pounding at blow time `at` (up on its rim, and its drum not burst)? */
@@ -280,7 +357,7 @@ export function drummerPhase(d: Drummer, T: number): number {
  * A blow on a skin, drawn on the skin's far part: a dent (a dark dip) and two grains of dust jumping off it. The
  * ball's landings dent the middle of the skin under him.
  */
-function drawDents(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, dy: number, peerX: number, L: number): void {
+function drawDents(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, dy: number, L: number): void {
   const k = c.k
   const shade = mixHex(WORKS.skin, WORKS.wood, 0.55)
   p.push()
@@ -302,7 +379,7 @@ function drawDents(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, dy: number, peer
     for (const dr of DRUMMERS) {
       if (dr.drum !== n || !pounds(dr, at)) continue
       for (const side of sides) {
-        const [x, y] = clubHead(dr, faceOf(dr, peerX, at), side, farEdge(d, dr.x) + dy)
+        const [x, y] = strikeAt(dr, side, dy)
         const a = thump(T, at, 0.03, 0.1)
         if (a > 0.02) {
           p.fill(alpha(p, shade, 0.6 * a))
@@ -439,9 +516,10 @@ export function drawKettle(p: p5, c: Ctx, T: number, L: number, layer: 'back' | 
 /**
  * A troll war-drum: a barrel of heavy staves, a hide laced over the top with rope running down to an iron band,
  * another band at the foot, and (the great drum) a trestle under it. `back` draws the skin (its dents, the burst);
- * `front` the near half of the skin again, its hoop, and the barrel, over the ball.
+ * `front` the near half of the skin again, its hoop, and the barrel, over the ball. (`_peerX` is unused: the dents are
+ * where the clubs aim, not where the drummers look.)
  */
-export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number, layer: 'back' | 'front', jolt: number, peerX: number): void {
+export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number, layer: 'back' | 'front', jolt: number, _peerX?: number): void {
   const { k, ink, weight } = c
   const inkC = mixHex(STONE.deep, ink, 0.24 + 0.71 * L)
   const skinC = lit(WORKS.skin, L)
@@ -461,7 +539,7 @@ export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number,
     p.stroke(alpha(p, mixHex(WORKS.skin, WORKS.wood, 0.35), 0.35))
     p.strokeWeight(weight * 3)
     p.ellipse(d.cx * k, (cy + 0.01) * k, 2 * d.rx * 0.9 * k, 2 * d.ry * 0.78 * k)
-    drawDents(p, c, d, n, T, jolt, peerX, L)
+    drawDents(p, c, d, n, T, jolt, L)
     if (burst > 0) drawHole(p, c, hole, T, L)
     p.pop()
     return
@@ -666,17 +744,51 @@ function drawShreds(p: p5, c: Ctx, T: number, L: number): void {
 /* ------------------------------------------------------------------ the drummers */
 
 /**
- * One drummer, standing on its drum's back rim, pounding it (the canonical troll, `strike`: a fist down on every
- * blow, its knees giving a little under each). It climbs up the drum's back in the bar before it joins (the same
- * swing of the arms, hand over hand), from the coda's first chord it freezes, and on the chords after it ducks down
- * behind the drum, gone.
+ * The stroke's timing. `troll.ts` eases every arm to rest at the bottom of its swing, which reads as a fist set down,
+ * not a blow; this hands it a phase that runs through that ease in no time, so the club comes down hard onto the
+ * skin, rebounds off it, rises slowing and is held high before the next. Paired (phrase 11 on) both fists strike
+ * together once a cycle; alternating (phrase 10) one does each half cycle, and the warp there is milder, since the
+ * other arm (mid-rise) feels it too. Monotone and continuous, blended by `pair`, so the change between is seamless.
+ */
+const STROKE_AT = 0.15
+function stroke(P: number, pair: number): number {
+  const warp = (per: number, amount: number): number => {
+    const v = (P - STROKE_AT) / per
+    const n = Math.floor(v)
+    const f = v - n
+    return STROKE_AT + per * (n + (1 - amount) * f + amount * (2 / Math.PI) * Math.asin(Math.sqrt(f)))
+  }
+  const alt = warp(0.5, 0.6)
+  return alt + (warp(1, 1) - alt) * pair
+}
+
+/** Clip `fn`'s drawing to above the line y (part frame), across the whole chamber. */
+function aboveLine(p: p5, c: Ctx, y: number, fn: () => void): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(-4 * c.k, -40 * c.k, 26 * c.k, (y + 40) * c.k)
+  ctx.clip()
+  fn()
+  ctx.restore()
+}
+
+/**
+ * One drummer, on its gallery behind the drum, pounding it (the canonical troll, `strike`: both arms swing through
+ * the front, toward the middle of the skin, from over its head down over the rim, the club's head landing on the skin
+ * in front of it; its knees give a little under each blow). It is drawn turned so its front is the side it faces, the
+ * skin's middle (the troll's arms always swing through its +x side). It climbs up from behind its plank in the bar
+ * before it joins; from the coda's first chord it freezes, and on the chords after it ducks down behind the drum,
+ * gone. The war-drum's pair step down onto the rim instead, and the finale has them leap off it.
  */
 export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, peerX: number, jolt: number): void {
-  const d = dr.drum === 2 ? DRUM2 : DRUM3
+  const d = drumOf(dr)
+  const g = galleryOf(dr)
+  const dir = facing(dr)
   const up = beat(dr.up)
   const climb = smooth(T, up - CLIMB, up)
   if (climb <= 0) return
-  // The war-drum's pair stay on the rim, frozen, until they leap off it (the finale draws them from then).
+  // The war-drum's pair stay up, frozen, until they leap off the rim (the finale draws them from then).
   const leap = LEAP[dr.seed]
   if (leap !== undefined && T >= leap) return
   const duck = leap !== undefined ? 0 : smooth(T, DUCK, DUCK + 0.8)
@@ -691,49 +803,79 @@ export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, pe
     // A war cry on the great blows of the second phrase, open-mouthed through the recovery.
     if (BLOWS[j] >= beat(176) - 0.01) shout = Math.max(shout, Math.exp(-(T - BLOWS[j]) / 0.3))
   }
+  const plank = g.top + jolt
   const rim = farEdge(d, dr.x) + jolt
-  const feet = rim + (1 - climb) * dr.size * 1.02 + duck * dr.size * 1.05 + 0.028 * dr.size * dip
+  // The pair's step down off the plank onto the rim, the last thing before their leap: a little hop forward.
+  const step = leap !== undefined ? smooth(T, leap - 0.42, leap - 0.1) : 0
+  const stand = plank + (rim - plank) * step - 0.1 * Math.sin(Math.PI * step)
+  const feet = stand + (1 - climb) * dr.size * 1.02 + duck * dr.size * 1.05 + 0.028 * dr.size * dip
   // The bells (the coda's first chord): the pair on the war-drum freeze and look up at the vault.
   const bells = leap !== undefined ? smooth(T, CODA - 0.05, CODA + 0.3) : 0
   const face = faceOf(dr, peerX, T) * (1 - bells)
   const stare = dr.drum === 3 ? smooth(T, BURST, BURST + 0.25) : 0
   const eyes = 1.05 + 0.4 * smooth(T, up - 0.4, up) * (1 - smooth(T, up + 0.2, up + 1.2)) + 0.45 * Math.max(stare, bells)
   const mouth = Math.max(0.8 * shout * smooth(T, up, up + 0.3), 0.45 * stare, 0.35 * bells)
+  const pair = pairAt(Math.min(T, dr.drum === 3 ? BURST : T))
+  // Turned about its own x so its front (the troll's +x) is the side it faces.
+  const turned = (fn: () => void) => {
+    p.push()
+    p.translate(dr.x * c.k, 0)
+    p.scale(dir, 1)
+    p.translate(-dr.x * c.k, 0)
+    fn()
+    p.pop()
+  }
   let hands: { at: [number, number]; angle: number }[] = []
-  aboveRim(p, c, d, jolt, 0.06, () => {
-    const drawn = drawTroll(p, c, dr.x, feet, {
-      size: dr.size,
-      pose: 'strike',
-      phase: drummerPhase(dr, T),
-      face,
-      eyes,
-      mouth,
-      // After the burst, the great drum's three lean their heads down over the hole he went through.
-      slump: 0.55 * stare - 0.35 * bells,
-      seed: dr.seed,
-      hide: dr.hide ?? TROLL.hide,
-      lit: 0.1 + 0.62 * L,
-      outward: true,
-      pair: pairAt(Math.min(T, dr.drum === 3 ? BURST : T)),
+  // Hidden behind its plank as it climbs, and (ducking) behind the drum; once it stands, only its feet's soles.
+  const cut = () =>
+    turned(() => {
+      const drawn = drawTroll(p, c, dr.x, feet, {
+        size: dr.size,
+        pose: 'strike',
+        phase: stroke(drummerPhase(dr, T), pair),
+        face: dir * face,
+        eyes,
+        mouth,
+        // After the burst, the great drum's three lean their heads down over the hole he went through.
+        slump: 0.55 * stare - 0.35 * bells,
+        seed: dr.seed,
+        hide: dr.hide ?? TROLL.hide,
+        lit: 0.1 + 0.62 * L,
+        pair,
+      })
+      hands = drawn?.hands ?? []
     })
-    hands = drawn?.hands ?? []
-  })
-  // The clubs, in front of it: behind the drum while it climbs, reaching down onto the skin once it is up.
+  if (step > 0) aboveRim(p, c, d, jolt, 0.06, cut)
+  else aboveLine(p, c, plank + 0.03, cut)
+  // The clubs, in front of it: behind the plank while it climbs, reaching down over the rim onto the skin once up.
   const reach = 0.06 + d.ry * 1.1 * smooth(T, up - 0.12, up)
-  aboveRim(p, c, d, jolt, reach, () => {
-    for (const [n, h] of hands.entries()) drawClub(p, c, h.at, h.angle, n === 0 ? -1 : 1, dr.size, L)
-  })
+  const aim = [strikeAt(dr, 1, jolt), strikeAt(dr, -1, jolt)].map(([x, y]): Pt => [dr.x + dir * (x - dr.x), y])
+  aboveRim(p, c, d, jolt, reach, () =>
+    aboveLine(p, c, climb < 1 || duck > 0 ? plank + 0.03 : 40, () =>
+      turned(() => {
+        for (const [n, h] of hands.entries()) drawClub(p, c, h.at, h.angle, n === 0 ? aim[1] : aim[0], dr.size, L)
+      }),
+    ),
+  )
 }
 
 /**
- * A troll's drumstick: a club of dark timber in its fist, thick at the head and blunt, turned in from the forearm
- * (in toward its middle when the arm hangs, over its head when the arm is up).
+ * A troll's drumstick: a club of dark timber in its fist, thick at the head and blunt. Drawn in the drummer's turned
+ * frame (its front is +x). Raised, it is cocked back over the fist; swinging through the front it trails upward like
+ * a flail; as the arm comes down it turns onto the skin, so its head lands on `aim`.
  */
-function drawClub(p: p5, c: Ctx, hand: [number, number], angle: number, s: number, size: number, L: number): void {
+function drawClub(p: p5, c: Ctx, hand: [number, number], angle: number, aim: Pt, size: number, L: number): void {
   const { k, ink, weight } = c
-  const th = angle + s * CLUB.turn * Math.sin(angle)
   const grip: Pt = [hand[0] + 0.05 * size * Math.cos(angle), hand[1] + 0.05 * size * Math.sin(angle)]
-  const len = CLUB.len * size
+  const cos = Math.cos(angle)
+  const free = angle - 0.35 - 0.8 * cos * cos
+  // How far down the swing the arm is: from level (0) to hanging (1).
+  const down = smooth(angle, 0.3, 1.45)
+  const toAim = Math.atan2(aim[1] - grip[1], aim[0] - grip[0])
+  const th = free + (toAim - free) * down
+  const base = CLUB.len * size
+  const dist = Math.hypot(aim[0] - grip[0], aim[1] - grip[1])
+  const len = base + (Math.max(0.8 * base, Math.min(1.25 * base, dist)) - base) * down
   const ux = Math.cos(th)
   const uy = Math.sin(th)
   const nx = -uy
