@@ -44,6 +44,28 @@ export interface SoundtrackSpec {
    * start after it, so that a decoder that trims its edges a few samples differently still meets itself.
    */
   loop?: number
+  /**
+   * The same music as the label's own YouTube uploads, which the page plays in place of `src` (`youtube.ts`). `src`
+   * stays: a saved video records the file, and the file plays wherever YouTube will not. One cue, or several laid
+   * end to end where `src` is a mix of them.
+   */
+  youtube?: YouTubeCue[]
+}
+
+/** A stretch of one YouTube video, laid on the show's timeline. */
+export interface YouTubeCue {
+  /** The video: `youtube.com/watch?v=<id>`. */
+  id: string
+  /** Seconds of show at which it comes in. Left out, 0. */
+  at?: number
+  /** Seconds into the video at `at`. Left out, 0. */
+  from?: number
+  /** Seconds of show at which it stops. Left out, it plays to the video's end. */
+  until?: number
+  /** Seconds it takes to come up from silence at `at`. */
+  fadeIn?: number
+  /** Seconds it takes to go down to silence at `until`. */
+  fadeOut?: number
 }
 
 /** A version, loaded: everything the player needs to put it on the stage. */
@@ -205,6 +227,16 @@ export function performanceProblems(p: Performance): string[] {
     if (!text(p.soundtrack.src)) out.push('the soundtrack has no src')
     const offset = p.soundtrack.offset ?? 0
     if (!Number.isFinite(offset) || offset < 0) out.push(`the soundtrack's offset is ${offset}`)
+    p.soundtrack.youtube?.forEach((c, i) => {
+      const name = `YouTube cue ${i + 1}`
+      if (!/^[\w-]{11}$/.test(c.id)) out.push(`${name} has no video id`)
+      const at = c.at ?? 0
+      const before = i > 0 ? (p.soundtrack!.youtube![i - 1].at ?? 0) : -Infinity
+      if (!Number.isFinite(at) || at < 0 || at <= before) out.push(`${name} comes in at ${at}, not after the one before it`)
+      if ((c.from ?? 0) < 0) out.push(`${name} starts ${c.from} s into its video`)
+      if (c.until !== undefined && !(c.until > at)) out.push(`${name} stops at ${c.until}, before it comes in`)
+      if ((c.fadeIn ?? 0) < 0 || (c.fadeOut ?? 0) < 0) out.push(`${name} has a negative fade`)
+    })
     if (p.loop && p.soundtrack.loop !== p.duration) out.push(`a loop's soundtrack loops ${p.soundtrack.loop} s of a ${p.duration} s show`)
   }
   return out

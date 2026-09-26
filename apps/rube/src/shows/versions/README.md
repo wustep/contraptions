@@ -71,6 +71,15 @@ first second to its last.
   with Machine's fit of the current world's bounds. Zoom sits closer on the
   follow camera. Each turns the other off. They affect live viewing
   and export without changing the music clock.
+- **A label's upload can play the music instead of the file.** Add
+  `youtube: [{ id }]` to the soundtrack and the page embeds that video in
+  the panel and listens to it for the clock (`../youtube.ts`). A mix of two
+  recordings is two cues: `{ id, at, from, until, fadeIn, fadeOut }`, where
+  `at` and `until` are seconds of show and `from` is seconds into the video,
+  as in Voyage. YouTube can only turn a video down, never up. Keep `src`:
+  a saved video records the file, the file plays wherever YouTube will not
+  (a blocker, an upload that refuses embedding), and `?music=file` plays it
+  on purpose, to compare the two.
 
 ## What is here
 

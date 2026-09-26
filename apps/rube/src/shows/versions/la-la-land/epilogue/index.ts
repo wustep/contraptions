@@ -21,5 +21,7 @@ export const performance: Performance = {
     offset: 0,
     credit: 'Justin Hurwitz · Epilogue · La La Land (2016)',
     href: 'https://www.youtube.com/watch?v=jQVvT_UKZ6w',
+    // The upload the file was fetched from, whole: the same clock, sample for sample.
+    youtube: [{ id: 'jQVvT_UKZ6w' }],
   },
 }
