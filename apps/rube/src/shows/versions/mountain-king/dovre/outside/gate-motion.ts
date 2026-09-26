@@ -21,7 +21,10 @@ import { G_EARTH, hop } from '../physics'
  *               note (C# D E F# D F#), hits the foot stone and drops through the drain beside the pig's snout,
  *   15.70       into the counterweight's pan under the path (the phrase's strongest note): a spark, and the lamp in
  *               the works catches. The pan sinks; the chain runs under the stair;
- *   15.98→20.11 the door sinks into the floor a notch a note, the pawl clicking on its rack (fourteen notes).
+ *   15.98→20.11 the door sinks into the floor a notch a note, the pawl clicking on its rack (fourteen notes). She
+ *               presses at it; he hops back down a step to watch. When its top is in reach she springs up onto it
+ *               (18.47 → 19.01, click to click) and rides it down a notch a click until it is the doorstep; he
+ *               hops back up.
  *   20.11 → end she rolls in over the sunk door, he follows; at rest inside on 22.32, she a cell ahead.
  */
 
@@ -225,6 +228,22 @@ const onLanding = (x: number): Pt => [x, LANDING.top - R]
 /** Up the stair a step a note: quick hops (a stiff gravity, so a hop in an eighth still clears the nosing). */
 const G_STEP = 30
 
+/** Where she presses at the door: against the rack's teeth down its west face. */
+const PRESS_X = DOOR.x0 - 0.075 - R - 0.012
+/** Where she gathers for the spring onto the door's top, and where she lands on it (its middle). */
+const LEAP_X = 19.5
+const DOOR_MID = (DOOR.x0 + DOOR.x1) / 2
+/** She takes off on one click and lands on the top on the click after next (indices into `TIMES.clicks`). */
+const LEAP = [7, 9] as const
+/** The spring's gravity: a real leap, high enough to clear the door's corner as it sinks under her. */
+const G_LEAP = 16
+/** How long the door takes to drop a notch (`doorDrop`: it falls into each click over this, easing in). */
+const NOTCH = 0.13
+/** A ball riding the door's top at `t`. */
+const onDoor = (t: number): Pt => [DOOR_MID, MOUTH.ceil + doorDrop(t) - R]
+/** Where he watches from: the top tread, a step down from the landing. */
+const WATCH_X = 17.78
+
 /** Her ways from the moment she leaves the pig (show seconds; she is the pig's until then). */
 export function womanWays(end: number): Way[] {
   const [t0, t1] = TIMES.womanLeap
@@ -238,10 +257,20 @@ export function womanWays(end: number): Way[] {
   w.push({ at: E(23), p: onLanding(19.5), ease: 'out' })
   w.push({ at: TIMES.knock, p: onLanding(DOOR.x0 - R - 0.07), ease: 'in' })
   w.push({ at: TIMES.knock + 0.75, p: onLanding(19.46), ease: 'out' })
-  // As the door starts to move she draws back a little.
-  w.push({ at: TIMES.clicks[0] + 0.1, p: onLanding(19.46) })
-  w.push({ at: TIMES.clicks[0] + 1.0, p: onLanding(19.34), ease: 'inout' })
-  w.push({ at: TIMES.open, p: onLanding(19.34) })
+  // The spark: she goes back to the door and presses at it (against the rack's teeth), as if she could help it down.
+  const C = TIMES.clicks
+  w.push({ at: TIMES.pan, p: onLanding(19.46) })
+  w.push({ at: C[1], p: onLanding(PRESS_X), ease: 'inout' })
+  w.push({ at: C[4], p: onLanding(PRESS_X) })
+  // As its top comes down within reach she draws back, gathers, and springs up onto it on a click ...
+  w.push({ at: C[5], p: onLanding(LEAP_X), ease: 'inout' })
+  w.push({ at: C[LEAP[0]], p: onLanding(LEAP_X) })
+  w.push(hop(w[w.length - 1], onDoor(C[LEAP[1]]), C[LEAP[1]], G_LEAP))
+  // ... and rides it down, a notch a note (the pawl's clicks), until its top is the doorstep.
+  for (let i = LEAP[1] + 1; i < C.length; i++) {
+    w.push({ at: C[i] - NOTCH, p: onDoor(C[i] - NOTCH) })
+    w.push({ at: C[i], p: onDoor(C[i]), ease: 'in' })
+  }
   // In over the sunk door, and at rest a cell ahead of where he will stop.
   w.push({ at: end, p: onLanding(22.5), ease: 'inout' })
   return w
@@ -264,10 +293,18 @@ export function peerWays(end: number): Way[] {
   // He leans over the edge to watch it go.
   w.push({ at: 14.35, p: onLanding(18.37) })
   w.push({ at: 15.05, p: onLanding(18.31), ease: 'inout' })
-  w.push({ at: 16.05, p: onLanding(18.31) })
-  // The door moving: he comes over to her.
-  w.push({ at: 17.5, p: onLanding(18.93), ease: 'inout' })
-  w.push({ at: TIMES.follow, p: onLanding(18.93) })
+  // The door's first clicks behind him: he hops back down a step, to see the door from below, and watches her.
+  const C = TIMES.clicks
+  // (A short low hop, a note long, so he stays in the frame as it looks down into the works.)
+  w.push({ at: C[2], p: onLanding(18.31) })
+  w.push(hop(w[w.length - 1], onTread(0, WATCH_X), C[3], G_EARTH))
+  // As she springs onto the door he edges forward on his step to see her ride it down.
+  w.push({ at: C[7], p: onTread(0, WATCH_X) })
+  w.push({ at: C[10], p: onTread(0, WATCH_X + 0.2), ease: 'inout' })
+  // When she is nearly down, up again (a step a note, as they came), and in after her.
+  w.push({ at: C[11], p: onTread(0, WATCH_X + 0.2) })
+  w.push(hop(w[w.length - 1], onLanding(18.62), C[12], G_STEP))
+  w.push({ at: TIMES.follow, p: onLanding(18.62) })
   w.push({ at: end, p: onLanding(21.5), ease: 'inout' })
   return w
 }
@@ -283,7 +320,7 @@ export function peerOnLanding(t: number, end: number): Pt {
 
 /* ------------------------------------------------------------------ the pebble */
 
-export const PEBBLE_R = 0.05
+export const PEBBLE_R = 0.06
 
 /** Where the pebble is at rest on the top step's very edge (where his nudge on the phrase's first note meets it). */
 export function pebbleRest(end: number): Pt {
@@ -341,7 +378,7 @@ export function doorDrop(t: number): number {
   const step = DOOR.travel / TIMES.clicks.length
   let d = 0
   for (const c of TIMES.clicks) {
-    const u = (t - (c - 0.13)) / 0.13
+    const u = (t - (c - NOTCH)) / NOTCH
     if (u <= 0) break
     d += step * (u >= 1 ? 1 : u * u)
   }

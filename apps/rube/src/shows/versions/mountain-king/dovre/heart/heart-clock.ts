@@ -21,9 +21,11 @@ import { PLAN } from '../seams'
  *
  * The story on the fortissimo (the third statement, quarter 0.37 s down to 0.29 s):
  *
- *   101.95  he drops onto the hammer's tail; the head, cocked in the dark, lets go
- *   102.69  the first blow: sparks into the furnace, and the tail flicks him up; 103.06 the furnace catches
- *   103–106 the hammer bats him up on the blows, and at 106.30 flings him across the room
+ *   101.95  he drops onto the hammer's tail (the fortissimo's downbeat): his weight knocks the catch out, and the
+ *           head, cocked in the dark, falls at once
+ *   102.32  the first blow, on the first crash of the cymbals: sparks into the furnace, which catches with a flare,
+ *           and the tail flings him high; the stoker and the keeper wake, the lamps catch behind them
+ *   103–106 the hammer bats him up on the blows (every 1 and 3 from 103.43), and at 106.30 flings him across the room
  *   107.75  he lands on the flywheel's rim as the pinion goes into its teeth: the flywheel lurches into motion
  *   107–112 carried up and over the top of the great wheel; 112.66 a tooth flicks him off its shoulder
  *   113.36  onto the first pump as the pumps start: from head to head, landing on 1 and 3, flung off on 2 and 4
@@ -63,11 +65,15 @@ const range = (a: number, b: number, step: number): number[] => {
   for (let k = a; k <= b; k += step) out.push(k)
   return out
 }
-/** The hammer's blows, on every 1 and 3 from the first (beats 194 … 288). */
-export const OOM_K = range(194, 288, 2)
+/**
+ * The hammer's blows. The first is the fall his landing trips, on the third statement's first crash (beat 193, the
+ * strongest onset of its first bar); the cam then takes over and strikes every 1 and 3 from bar 2 (beats 196 … 288).
+ * Beat 194 has no blow: a weak onset, and too soon after the first for the cam to lift the head.
+ */
+export const OOM_K = [193, ...range(196, 288, 2)]
 export const OOM = OOM_K.map(kt)
-/** The furnace's flares, on every 2 and 4 from the first (beats 195 … 287): the cymbals. */
-export const PAH_K = range(195, 287, 2)
+/** The furnace's flares, on every 2 and 4 (beats 193 … 287): the cymbals. The first is the first blow's: it catches. */
+export const PAH_K = range(193, 287, 2)
 export const PAH = PAH_K.map(kt)
 
 /* ------------------------------------------------------------------ small maths */
@@ -152,6 +158,8 @@ export const S_LAND = (() => {
 export const PHI_DOWN = 0.1
 /** The head's fall, seconds: quick and heavy. */
 const FALL = 0.2
+/** How long after he lands the catch lets go (his weight jars it out): the first fall runs from then to the first blow. */
+const TRIP = 0.05
 
 /** A point along the helve (distance `s` from the pivot) and `h` above its centreline, at angle phi. */
 export function onHelve(phi: number, s: number, h = 0): Pt {
@@ -170,17 +178,15 @@ export const ANVIL: Pt = onHelve(PHI_DOWN, HAMMER.head, -(HAMMER.thick / 2 + HAM
  * and lets it fall onto the next blow. After the last blow it lies on the anvil.
  */
 export function hammerPhi(T: number): number {
-  if (T < OOM[0] - FALL) {
-    // Armed in the dark; his landing jars it (the tail gives under him, and comes back).
-    const a = T - T0
-    return PHI_UP - (a >= 0 ? 0.04 * Math.exp(-a / 0.1) * Math.sin(a * 24) : 0)
-  }
   const { i, ago } = since(OOM, T)
   const next = OOM[i + 1]
   if (i < 0) {
-    // The first fall.
-    const u = clamp01((T - (OOM[0] - FALL)) / FALL)
-    return PHI_UP + (PHI_DOWN - PHI_UP) * u * u
+    // Armed in the dark; his landing jars it (the tail gives under him) and knocks the catch out: the head falls
+    // from rest, heavy, onto the first blow.
+    const a = T - T0
+    const jar = a >= 0 ? 0.04 * Math.exp(-a / 0.1) * Math.sin(a * 24) : 0
+    const u = clamp01((T - (T0 + TRIP)) / (OOM[0] - T0 - TRIP))
+    return PHI_UP - jar + (PHI_DOWN - PHI_UP) * u * u
   }
   // After blow i: a rebound off the anvil, then the lift (the cam), a hold, the fall onto blow i + 1.
   const rebound = 0.07 * Math.exp(-ago / 0.045) * Math.abs(Math.sin(ago * 38))
@@ -221,14 +227,16 @@ export const BELLOWS_GREAT = { x0: 7.72, x1: 9.25, y: PIT }
  * the great bellows; it gutters after the break.
  */
 export function furnace(T: number): { base: number; flare: number; heat: number } {
-  // The first blow's sparks land in the coals just before the first flare: it catches on the flare, all at once.
-  const lit = smoothstep(T, PAH[0] - 0.1, PAH[0])
-  const settle = smoothstep(T, PAH[0], PAH[0] + 0.6)
-  const base = lit * (0.3 + 0.15 * settle + 0.2 * smoothstep(T, FLY, PISTONS) + 0.2 * smoothstep(T, BELLOWS, BELLOWS + 2) + 0.15 * smoothstep(T, GOVERNOR, BREAK))
+  // The first blow shakes the banked coals up and throws its sparks in: it catches on the blow, all at once, and
+  // is burning steadily before the bar is out.
+  const lit = smoothstep(T, PAH[0] - 0.02, PAH[0] + 0.05)
+  const settle = smoothstep(T, PAH[0], PAH[0] + 0.7)
+  const base = lit * (0.34 + 0.13 * settle + 0.2 * smoothstep(T, FLY, PISTONS) + 0.2 * smoothstep(T, BELLOWS, BELLOWS + 2) + 0.15 * smoothstep(T, GOVERNOR, BREAK))
   const { i, ago } = since(PAH, T)
   const rise = 0.035
   let flare = 0
-  if (i >= 0) flare = Math.exp(-ago / (0.16 + 0.1 * smoothstep(T, BELLOWS, BELLOWS + 1) + (i === 0 ? 0.25 : 0)))
+  // The catch is the biggest flare before the great bellows, and the slowest to die down.
+  if (i >= 0) flare = (i === 0 ? 1.3 : 1) * Math.exp(-ago / (0.16 + 0.1 * smoothstep(T, BELLOWS, BELLOWS + 1) + (i === 0 ? 0.3 : 0)))
   // The rise before the next flare (so it swells onto the beat instead of switching on).
   const next = PAH[i + 1]
   if (next !== undefined && next - T < rise && i >= 0) flare = Math.max(flare, 1 - (next - T) / rise)
@@ -261,7 +269,7 @@ const PINION_SWING = 0.3
  */
 export function drive(T: number): number {
   const b = beatAt(T)
-  const b0 = 194
+  const b0 = OOM_K[0]
   if (b <= b0) return 0
   // A soft start over a beat (the heart's first turn), then the beat.
   const tau = 0.6

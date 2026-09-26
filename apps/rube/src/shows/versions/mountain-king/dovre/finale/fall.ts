@@ -1,13 +1,13 @@
 import type p5 from 'p5'
-import { laneAt, R, type Lane, type Pt, type Seg } from '../../../../../parts'
-import { alpha, box, carried, frame, knock, lastOf, part, smooth, type PartShot } from '../kit'
+import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
+import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type PartShot } from '../kit'
 import { CODA, LAST1, LAST2 } from '../music'
 import { dawn, REST, skyline, surface } from '../mountain'
 import { quake } from '../rock'
 import { SEAM_SHOT } from '../seams'
 import type { Pen } from '../troll'
-import { STONE } from '../worlds'
-import { breach, capCracks, collar, collarFront, dropped, G, stone, thrown, vent, VENT, type Floor, type Stone } from './fall-rock'
+import { SKY, STONE } from '../worlds'
+import { breach, capCracks, collar, collarFront, dropped, G, hollowOf, puff, stone, thrown, vent, VENT, type Floor, type Stone } from './fall-rock'
 import { column, crown, plume, steam } from './fall-water'
 
 /**
@@ -109,7 +109,7 @@ const RISE: Leg[] = [
 ]
 
 /** Out of the summit: the long arc east, under this gravity, to the shoulder. */
-const G_FLIGHT = 6
+const G_FLIGHT = 4.4
 /** Where he lands on the east shoulder (world x) and when; where the bounce puts him down again, and when. */
 const LAND = { x: 56.9, t: 153.17 }
 const BOUNCE = { x: 57.75, t: 153.611 }
@@ -177,9 +177,6 @@ function lane(begin: number, end: number): Lane {
 
 /* ------------------------------------------------------------------ what comes down */
 
-/** A block of the summit's cap, blown out on the first of the last chords, landing on a flank at `x` at t1. */
-const capBlock = (x0: number, t1: number, x: number, size: number, seed: number): Stone => thrown([x0, -20.35], LAST1, x, skyline(x), t1, size, seed)
-
 const STONES: Stone[] = [
   // The heart: two stones come down past him as he is blown up it.
   dropped(46.2, 27.1, 33.13, 136.11, 0.55, 1),
@@ -201,13 +198,295 @@ const STONES: Stone[] = [
   dropped(45.35, -2.2, 8.13, 143.199, 1.1, 12, { spike: true, shatter: true }),
   dropped(50.15, -2.0, 8.13, 144.12, 0.7, 13),
   dropped(44.5, -2.3, 8.13, 144.84, 0.55, 14, { shatter: true }),
-  // The cap: its blocks come down on the flanks as the last chord rings.
-  capBlock(46.95, 150.263, 44.1, 0.62, 15),
-  capBlock(48.1, 150.42, 51.0, 0.55, 16),
-  capBlock(47.2, 150.543, 45.7, 0.4, 17),
-  capBlock(46.7, 150.995, 42.4, 0.8, 18),
-  capBlock(48.35, 151.248, 52.6, 0.7, 19),
 ]
+
+/* ------------------------------------------------------------------ the cap, blown out */
+
+/**
+ * A block of the summit's cap: blown out of it at t0 from `from` (world), it lands on a flank at x1 on t1 (a measured
+ * onset of the ringing chord), and tumbles on down the flank over its corners, `roll` cells further (signed: west is
+ * negative), slowing, until it comes to lie on a flat face at t1 + `dur`. Only its landing strikes.
+ */
+interface Tumble {
+  from: Pt
+  t0: number
+  x1: number
+  t1: number
+  size: number
+  seed: number
+  roll: number
+  dur: number
+}
+
+/** A block's outline in its own frame: a rough slab of 6 or 7 corners, `size` across, broader than it is tall. */
+function slabOf(seed: number, size: number): Pt[] {
+  const n = 6 + Math.floor(hash(seed, 171) * 2)
+  const pts: Pt[] = []
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + 0.45 * (hash(seed, i, 172) - 0.5)
+    const r = size * (0.34 + 0.18 * hash(seed, i, 173))
+    pts.push([Math.cos(a) * r * 1.12, Math.sin(a) * r * 0.78])
+  }
+  return pts
+}
+
+const turn = (pts: Pt[], a: number): Pt[] => pts.map(([x, y]) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)])
+
+/** Where the block's middle sits (world y) at world x turned to `a`: its lowest corner on the ground, corner by corner. */
+function seat(pts: Pt[], x: number, a: number): number {
+  let y = Infinity
+  for (const [vx, vy] of turn(pts, a)) y = Math.min(y, skyline(x + vx) - vy)
+  return y
+}
+
+interface Laid extends Tumble {
+  pts: Pt[]
+  /** Its angle as it lands, and the angle it comes to lie at (a flat face down, turned the way it rolls). */
+  a1: number
+  a2: number
+  /** Where it lands (world y of its middle). */
+  y1: number
+  spin: number
+}
+
+function lay(b: Tumble): Laid {
+  const pts = slabOf(b.seed, b.size)
+  const dir = Math.sign(b.roll) || 1
+  const spin = (dir * (2.2 + 2.5 * hash(b.seed, 174))) / Math.sqrt(b.size)
+  const a1 = hash(b.seed, 175) * Math.PI + spin * (b.t1 - b.t0)
+  // Rolling over its corners it turns about as far as it goes over its half-width; it stops on the flattest face near
+  // there (the one that sits lowest), still turning the way it rolls.
+  const want = a1 + b.roll / (0.42 * b.size)
+  const x2 = b.x1 + b.roll
+  let a2 = want
+  let best = Infinity
+  for (let a = want - 1.1; a <= want + 1.1; a += 0.01) {
+    if ((a - a1) * dir < 0.3) continue
+    const h = skyline(x2) - seat(pts, x2, a)
+    if (h < best) {
+      best = h
+      a2 = a
+    }
+  }
+  return { ...b, pts, a1, a2, y1: seat(pts, b.x1, a1), spin }
+}
+
+/** How far along its roll a block is (0..1 of the distance), slowing to a stop: a long, damped recovery. */
+function rolled(b: Laid, T: number): number {
+  const u = Math.max(0, Math.min(1, (T - b.t1) / b.dur))
+  return 1 - Math.pow(1 - u, 2.4)
+}
+
+/** A block at show time T: its middle (world) and its angle; null before it is blown out. */
+function blockAt(b: Laid, T: number): { at: Pt; angle: number } | null {
+  if (T < b.t0) return null
+  if (T <= b.t1) {
+    const dur = b.t1 - b.t0
+    const u = T - b.t0
+    const vx = (b.x1 - b.from[0]) / dur
+    const vy = (b.y1 - b.from[1] - 0.5 * G * dur * dur) / dur
+    return { at: [b.from[0] + vx * u, b.from[1] + vy * u + 0.5 * G * u * u], angle: b.a1 - b.spin * (b.t1 - T) }
+  }
+  const r = rolled(b, T)
+  const angle = b.a1 + (b.a2 - b.a1) * r
+  const x = b.x1 + b.roll * r
+  return { at: [x, seat(b.pts, x, angle)], angle }
+}
+
+/** Under the cap (world y), where the blocks start. */
+const CAP_Y = -20.4
+/**
+ * The cap's blocks. The first chord blows them up and out both sides of the summit; the second chord's surge throws
+ * the torn rim after them. They come down on the flanks as the chord rings (each on a measured onset) and tumble on
+ * down: the west flank is the steeper, so they go further there; on the east they stop short of the shoulder where
+ * he will land.
+ */
+const TUMBLES: Laid[] = (
+  [
+    { from: [47.0, CAP_Y], t0: LAST1, x1: 44.6, t1: 150.263, size: 0.72, seed: 21, roll: -3.1, dur: 1.9 },
+    { from: [48.2, CAP_Y], t0: LAST1, x1: 50.7, t1: 150.42, size: 0.62, seed: 22, roll: 1.5, dur: 1.5 },
+    { from: [47.4, CAP_Y - 0.2], t0: LAST1, x1: 45.4, t1: 150.543, size: 0.46, seed: 23, roll: -2.3, dur: 1.5 },
+    { from: [46.6, CAP_Y + 0.1], t0: LAST1, x1: 42.3, t1: 150.995, size: 0.98, seed: 24, roll: -4.6, dur: 2.6 },
+    { from: [48.0, CAP_Y - 0.1], t0: LAST1, x1: 51.3, t1: 150.995, size: 0.42, seed: 25, roll: 1.1, dur: 1.2 },
+    { from: [48.6, CAP_Y + 0.1], t0: LAST1, x1: 52.5, t1: 151.248, size: 0.84, seed: 26, roll: 1.7, dur: 2.0 },
+    { from: [47.1, CAP_Y - 0.2], t0: LAST1, x1: 43.4, t1: 151.328, size: 0.56, seed: 27, roll: -3.2, dur: 2.0 },
+    // The surge throws the torn rim after them.
+    { from: [46.2, -20.6], t0: LAST2, x1: 44.9, t1: 150.42, size: 0.36, seed: 28, roll: -1.6, dur: 1.2 },
+    { from: [49.0, -20.8], t0: LAST2, x1: 50.0, t1: 150.263, size: 0.34, seed: 29, roll: 0.8, dur: 1.0 },
+  ] as Tumble[]
+).map(lay)
+
+/** Draw a block of the cap at T, lit by the dawn, and its dust where it lands and where it lies down. */
+function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void {
+  const where = blockAt(b, T)
+  if (!where) return
+  const { k, ink, weight } = c
+  const landed = T > b.t1
+  const qq: Pt = landed ? q : [0, 0]
+  const x = lx(where.at[0]) + qq[0]
+  const y = ly(where.at[1]) + qq[1]
+  if (landed) {
+    puff(p, c, lx(b.x1) + q[0], ly(skyline(b.x1)) + q[1], T - b.t1, b.size * 1.3, lit)
+    const x2 = b.x1 + b.roll
+    puff(p, c, lx(x2) + q[0], ly(skyline(x2)) + q[1], T - b.t1 - b.dur * 0.55, b.size * 0.8, lit)
+  }
+  const face = mixHex(STONE.dark, STONE.mid, 0.35 + 0.65 * lit)
+  const top = mixHex(STONE.mid, STONE.light, 0.3 + 0.7 * lit)
+  const pts = turn(b.pts, where.angle)
+  p.push()
+  p.translate(x * k, y * k)
+  p.stroke(mixHex(ink, STONE.deep, 0.55))
+  p.strokeWeight(weight * 0.7)
+  p.fill(face)
+  p.beginShape()
+  for (const [a, v] of pts) p.vertex(a * k, v * k)
+  p.endShape(p.CLOSE)
+  // Its lit top: the facet the sky sees, whichever way it has turned.
+  p.noStroke()
+  p.fill(top)
+  p.beginShape()
+  for (const [a, v] of pts) if (v < 0.06 * b.size) p.vertex(a * 0.78 * k, (v * 0.78 - 0.03 * b.size) * k)
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the flanks cracking */
+
+/**
+ * The cracks the last chords open along the skyline: from the crater's rim down each flank, a little under the
+ * surface, jagged, with a branch or two down into the rock. The first chord opens the west one, the second runs it on
+ * and opens the east; the dawn and the geyser's glare show through them as they open, then they go dark.
+ */
+const FLANKS = [
+  { from: 46.05, to: 39.6, at: LAST1, more: LAST2, seed: 31 },
+  { from: 49.0, to: 54.2, at: LAST2, more: LAST2, seed: 32 },
+]
+
+function flankCracks(p: p5, c: Pen, T: number, q: Pt): void {
+  const k = c.k
+  const X = (v: number) => (lx(v) + q[0]) * k
+  const Y = (v: number) => (ly(v) + q[1]) * k
+  p.push()
+  p.noStroke()
+  for (const fl of FLANKS) {
+    if (T < fl.at) continue
+    // How far it has run (0..1 of its length): half on the chord that opens it, the rest on the next.
+    const first = fl.at === fl.more ? 1 : 0.55
+    const run = first * smooth(T, fl.at, fl.at + 0.22) + (1 - first) * smooth(T, fl.more, fl.more + 0.3)
+    if (run <= 0.01) continue
+    const glow = Math.max(0, 1 - (T - fl.at) / 3.2) * (0.45 + 0.55 * Math.exp(-(T - fl.at) / 0.5))
+    // Its knots are fixed in the rock along its whole length (a zigzag stepping in and out, never a line drawn along
+    // the skyline); it runs out along them, so it never bunches up while it is short.
+    const n = 12
+    const knots: Pt[] = []
+    for (let i = 0; i <= n; i++) {
+      const u = (i + 0.35 * (hash(fl.seed, i, 183) - 0.5) * (i > 0 && i < n ? 1 : 0)) / n
+      const x = fl.from + (fl.to - fl.from) * u
+      const under = 0.3 + 0.45 * u + (i % 2 ? 0.16 : -0.1) * (0.6 + 0.8 * hash(fl.seed, i, 181)) * (i > 0 ? 1 : 0)
+      knots.push([x, skyline(x) + under])
+    }
+    const tip = run * n
+    const pts: Pt[] = knots.slice(0, Math.floor(tip) + 1)
+    if (tip < n && tip > Math.floor(tip)) {
+      const [x0, y0] = knots[Math.floor(tip)]
+      const [x1, y1] = knots[Math.floor(tip) + 1]
+      const f = tip - Math.floor(tip)
+      pts.push([x0 + (x1 - x0) * f, y0 + (y1 - y0) * f])
+    }
+    if (pts.length < 2) continue
+    // Widest at the rim, closing to nothing at its tip; wider as it opens. Once its light is out it is only a dark
+    // seam, and fades into the rock.
+    const width = (i: number) => (0.085 + 0.025 * smooth(T, fl.at, fl.at + 1)) * Math.pow(Math.max(0, 1 - i / Math.max(tip, 1e-3)), 0.8)
+    const lit = Math.min(1, glow)
+    const seam = 1 - 0.8 * smooth(T, fl.at + 2.2, fl.at + 5)
+    p.fill(alpha(p, mixHex(hollowOf(0), mixHex(SKY.dawn, SKY.sun, 0.4), lit), Math.max(lit, seam)))
+    p.beginShape()
+    pts.forEach(([x, y], i) => p.vertex(X(x), Y(y - width(i) / 2)))
+    for (let i = pts.length - 1; i >= 0; i--) p.vertex(X(pts[i][0]), Y(pts[i][1] + width(i) / 2))
+    p.endShape(p.CLOSE)
+    // Branches down into the rock from two of its knots.
+    const s = Math.sign(fl.to - fl.from)
+    for (const j of [3, 7]) {
+      if (j >= pts.length - 1) continue
+      const [bx, by] = pts[j]
+      // It grows as the crack runs on past it.
+      const len = (0.5 + 0.4 * hash(fl.seed, j, 182)) * Math.min(1, (tip - j) / 2.5)
+      const w = width(j) * 0.6
+      p.triangle(X(bx - w), Y(by), X(bx + w), Y(by), X(bx + s * len * 0.45), Y(by + len))
+    }
+  }
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the dawn bursting through */
+
+const rgb = (hex: string): string => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',')
+
+/** 0..1: the light up through the crater, a burst on each of the last two chords, dying back into the dawn. */
+function burstAt(T: number): number {
+  let a = 0
+  if (T >= LAST1) a += smooth(T, LAST1, LAST1 + 0.05) * Math.exp(-(T - LAST1) / 0.7)
+  if (T >= LAST2) a += 0.75 * smooth(T, LAST2, LAST2 + 0.05) * Math.exp(-(T - LAST2) / 0.9)
+  return Math.min(1, a)
+}
+
+/**
+ * The light that comes up out of the crater as the cap goes: a fan of warm light up through the hole, widening as it
+ * rises, and a warm wash over the sky round the summit. Only above the mountain's surface (clipped to the sky), and
+ * soft (light is the one gradient allowed): a burst, not a ring.
+ */
+function dawnBurst(p: p5, c: Pen, T: number, f: { x0: number; x1: number; y0: number }): void {
+  const a = burstAt(T)
+  if (a <= 0.005) return
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X0 = f.x0 - 1
+  const X1 = f.x1 + 1
+  const top = f.y0 - 1
+  const step = Math.max(0.2, (X1 - X0) / 160)
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(X0 * k, top * k)
+  for (let x = X0; x <= X1 + step; x += step) ctx.lineTo(x * k, ly(surface(Math.min(x, X1) + ORIGIN[0], T)) * k)
+  ctx.lineTo(X1 * k, top * k)
+  ctx.closePath()
+  ctx.clip()
+  const cx = lx(COL)
+  const floor = ly(surface(COL, T))
+  const sun = rgb(SKY.sun)
+  const warm = rgb(SKY.dawn)
+  // The wash: the sky round the summit warmed from the crater.
+  const R0 = 9
+  const wash = ctx.createRadialGradient(cx * k, floor * k, 0, cx * k, floor * k, R0 * k)
+  wash.addColorStop(0, `rgba(${sun},${0.26 * a})`)
+  wash.addColorStop(0.35, `rgba(${warm},${0.16 * a})`)
+  wash.addColorStop(1, `rgba(${warm},0)`)
+  ctx.fillStyle = wash
+  ctx.fillRect((cx - R0) * k, (floor - R0) * k, 2 * R0 * k, 2 * R0 * k)
+  // The fan: straight up out of the crater, widening as it rises; laid as thin wedges one inside the next, so it is
+  // brightest in its middle and its edges are soft (a shaft of light, not a spotlight's cone).
+  const H = 13
+  const layers = 7
+  for (let i = 0; i < layers; i++) {
+    const v = (i + 1) / layers
+    const base = 0.35 + 0.95 * v
+    const spread = 0.9 + 3.6 * v
+    const strength = 0.62 / layers
+    const g = ctx.createLinearGradient(0, floor * k, 0, (floor - H) * k)
+    g.addColorStop(0, `rgba(${sun},${strength * a})`)
+    g.addColorStop(0.4, `rgba(${warm},${strength * 0.5 * a})`)
+    g.addColorStop(1, `rgba(${warm},0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo((cx - base) * k, (floor + 0.4) * k)
+    ctx.lineTo((cx + base) * k, (floor + 0.4) * k)
+    ctx.lineTo((cx + spread) * k, (floor - H) * k)
+    ctx.lineTo((cx - spread) * k, (floor - H) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.restore()
+}
 
 /* ------------------------------------------------------------------ the strikes */
 
@@ -219,7 +498,7 @@ const STOPS = LEGS.filter(({ a, b }) => b.v1 === 0 && a.y - b.y > 0.05).map(({ b
 
 /** Every strike of the finale: his landing in the collar, the kicks and the stops, the throw, each stone's landing, the cap's cracks, the arc's two touches. */
 export const FALL_HITS: number[] = (() => {
-  const all = [CODA, ...KICKS, ...STOPS, LAST2, ...STONES.map((s) => s.t1), ...CAP_CRACKS, LAND.t, BOUNCE.t].sort((a, b) => a - b)
+  const all = [CODA, ...KICKS, ...STOPS, LAST2, ...STONES.map((s) => s.t1), ...TUMBLES.map((b) => b.t1), ...CAP_CRACKS, LAND.t, BOUNCE.t].sort((a, b) => a - b)
   const out: number[] = []
   for (const t of all) if (!out.some((u) => Math.abs(u - t) < 0.02)) out.push(t)
   return out
@@ -250,13 +529,20 @@ function pressed(T: number, y: number): number {
 }
 
 /**
- * The geyser once he has left it (world y of its top), and how big its head still is: it goes on up after throwing
- * him (the second chord's surge), stands a moment, sinks to a burble in the crater, and goes down into the vent.
+ * The geyser once he has left it (world y of its top), and how big its head still is: the second chord's surge
+ * drives it straight up, out of the top of the wide frame, and holds it there (the water's own burst, in
+ * `fall-water.ts`, climbs on over this top, falls back and is gone by the credits); later it sinks to a burble in the
+ * crater and goes down into the vent.
  */
+/** The plume's top at the height of the second chord's surge (world y): at the top edge of the wide frame over the summit. */
+const SURGE = -30.5
+
 function plumeAt(T: number): { top: number; h: number } {
   const floor = skyline(COL) + 1.96
-  const up = smooth(T, LAST2, LAST2 + 1.0)
-  const high = -22.6 + (-27.9 + 22.6) * (1 - (1 - up) * (1 - up)) + 0.2 * Math.sin((T - LAST2) * 2.1) * up
+  // The surge: fast off his top at LAST2 (he is thrown off it east), easing into its height in about half a second.
+  const u = T - LAST2
+  const surge = 1 - Math.pow(1 - Math.min(1, Math.max(0, u) / 0.55), 2.2)
+  const high = -22.6 + (SURGE + 22.6) * surge + 0.2 * Math.sin(u * 2.1) * smooth(T, LAST2 + 0.4, LAST2 + 1.2)
   const sink = smooth(T, LAST2 + 1.5, LAST2 + 4.6)
   const gone = smooth(T, LAST2 + 6, LAST2 + 9.5)
   const burble = floor - 0.6 + 0.1 * Math.sin(T * 3.1)
@@ -303,11 +589,15 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   collar(p, c, ORIGIN, COL, 33.13, q)
   capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, LAST1, (x) => skyline(x))
 
-  // What comes down, and what is thrown up.
-  for (const st of STONES) {
-    const outside = st.from[1] < -19
-    stone(p, c, ORIGIN, st, T, q, outside ? 0.35 + 0.55 * d : 0.55)
+  // The last chords: the dawn bursting up through the crater, the flanks cracking along the skyline.
+  if (T >= LAST1) {
+    dawnBurst(p, c, T, f)
+    flankCracks(p, c, T, q)
   }
+
+  // What comes down, and what is thrown up.
+  for (const st of STONES) stone(p, c, ORIGIN, st, T, q, 0.55)
+  for (const b of TUMBLES) drawBlock(p, c, b, T, q, 0.35 + 0.55 * d)
 
   // The geyser: from the collar up to him while he rides it, then up out of the summit on its own.
   const foot = 0.06
@@ -372,17 +662,18 @@ export const fall = part<State>(
       { t: 145.345, cells: 16.5, hold: w(53.5, 0.4), w: 0.9 },
       { t: 146.107, cells: 16, hold: w(53.2, -0.4), w: 0.9 },
       { t: 146.601, cells: 15, hold: w(52, -2.4), w: 0.8 },
-      // Up the dark vent after him, through the silence; the roll.
-      { t: 147.45, cells: 9.5, off: [0, -1.0] },
-      { t: 148.243, cells: 8, off: [0, -0.6] },
-      // Held on the cap as it bursts, so he comes out of the bottom of the frame into it.
-      { t: LAST1, cells: 8, hold: w(47.5, -20.4), w: 0.8 },
-      // Out, and back to take in the summit, the plume, the dawn and his arc (kept under the first credit card).
-      { t: 150.4, cells: 11.5, hold: w(49.5, -24.5), w: 0.6 },
-      { t: 151.8, cells: 14.5, hold: w(53.5, -26.9), w: 0.85 },
-      { t: 153.2, cells: 12, hold: w(56.5, -21.2), w: 0.55 },
-      // At rest in the hollow, the church in the valley: then one long, even crane up and back over the credits,
-      // to the whole dawn valley with him small on the hillside (it never stops: an even zoom, geometric keys).
+      // Up the dark vent after him through the silence, already opening out, so that by the roll the frame holds the
+      // summit whole, both flanks falling away from it and the sky over it: the cap blows out in a wide shot.
+      { t: 147.45, cells: 15.4, off: [0, -2.4] },
+      { t: 148.243, cells: 17.6, hold: w(48.3, -20.3), w: 0.9 },
+      { t: LAST1, cells: 18.6, hold: w(48.6, -21.0), w: 0.95 },
+      { t: LAST2, cells: 19.1, hold: w(49.3, -21.5), w: 0.92 },
+      // The plume surges out of the top of the frame; he is thrown across it east, the blocks tumbling down both flanks.
+      { t: 150.6, cells: 19.7, hold: w(51.3, -22.2), w: 0.82 },
+      { t: 151.8, cells: 19.9, hold: w(53.3, -22.4), w: 0.76 },
+      { t: 153.2, cells: 16.2, hold: w(56.3, -21.0), w: 0.62 },
+      // In to him at rest in the hollow, the church in the valley: then one long, even crane up and back over
+      // the credits, to the whole dawn valley with him small on the hillside (it never stops: geometric keys).
       { t: 156, cells: 12.6, hold: w(61, -19.9), w: 0.9 },
       { t: 162, cells: 14.7, hold: w(61.4, -20.8), w: 0.95 },
       { t: 168.5, cells: 17.4, hold: w(61.8, -21.9), w: 0.97 },
