@@ -263,3 +263,15 @@ rendered as one period of a circle, and every note as it lands is written to
 `scripts/shows/plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
 (`apps/rube/checks/gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
+
+`married-life/opus55` (in the picker, **Married Life**, one take, **Opus 5.5**) is Michael Giacchino's *Married
+Life* from Up, whole, demo only (`apps/rube/src/shows/versions/married-life/ATTRIBUTION.txt`): the film's montage
+of Carl and Ellie's life, told as one path cut the way the film cuts it. Every piece is new. The code is
+`married-life/life/`, on the same kit as Liftoff and Epilogue (parts built to timed slots, an authored camera, the
+end credits from `Performance.titles`), with Everything's legs and match cuts: four places come back (the church,
+the house, the hill, the clinic), and at each cut Carl holds still on the screen while the place and the year change
+round him. The stage draws no ball here: `life/cast.ts` draws Carl as a rounded square and Ellie round, and his
+balloon at the end. The waltz does not keep one tempo, so `scripts/shows/married-life-onsets.py` tracks it beat by
+beat (bars and their place in the bar) into `scripts/shows/plans/married-life-onsets.json`; `check:shows` holds
+every strike to it (`apps/rube/checks/married-life.ts`). The report is
+`apps/rube/src/shows/versions/married-life/MARRIED_LIFE.md`.
