@@ -12,9 +12,9 @@ import { doorOpen, fireRoar } from './stove-door'
 /**
  * LOFT-A's: the loft itself, drawn from show time for the whole show. The chandler's loft seen side-on, a dollhouse
  * cut open, at night. The plaster back wall and its posts, the wall plate, the underside of the roof (boards between
- * rafters) up to the ridge beam, the skylight with the moon behind it, the floor and its section, the long oak bench
- * with its lower shelf, the wall shelf over the bench (the pan lift hangs from it), the plank door at the east end,
- * and the candle on its pewter chamberstick. The stove and the cat are LOFT-B's (`hearth.ts`); the sneak's machines
+ * rafters) up to the ridge beam, the skylight with the moon behind it, the floor and its section (and the room below,
+ * dark), the long oak bench with its lower shelf, the wall shelf over the bench (the pan lift hangs from it), the plank
+ * door at the east end, and the candle on its pewter chamberstick. The stove and the cat are LOFT-B's (`hearth.ts`); the sneak's machines
  * (the pan lift, the balance, the snuffer, the drying rack, the candle arm) are `sneak.ts`'s.
  *
  * **Light.** The room is drawn in its lit colours, and at the end of its `draw` it multiplies what it has drawn by a
@@ -49,9 +49,32 @@ const RIDGE = { y0: -14.1, y1: -13.62 }
 const RAFTERS = [-25.2, -16.8, -9.2, -1.4, 12.6]
 /** The end posts of the timber frame, and the end walls' cut. */
 const POSTS = [-29.35, 15.35]
-/** The floor's cut: boards, then the joists, then the dark of the room below. */
+/**
+ * The floor's cut, top down: the boards; the joists' void (dark, the joists' narrow ends standing in it); the lath and
+ * plaster ceiling of the room below, one continuous board under them; then the room below, dark.
+ */
 const BOARDS = FLOOR_Y + 0.42
-const JOISTS = FLOOR_Y + 1.25
+const JOISTS = FLOOR_Y + 1.18
+const LATH = JOISTS + 0.11
+const CEILING = LATH + 0.2
+/** The joists' ends, 0.28 across, on an uneven spacing (old timbers, set by eye), so no row of dashes reads. */
+const JOIST_XS = (() => {
+  const out: number[] = []
+  for (let i = 0, x = ROOM.x0 + 1.1; x < ROOM.x1 - 0.4; i++, x += 2.55 + 1.1 * hash(i, 71)) out.push(x)
+  return out
+})()
+/**
+ * Where the loft's light gets down into the room below: gaps between the boards over cracks in the ceiling's plaster.
+ * Each is a place along the floor (x), how long its crack is along the ceiling (cells), and how far its light falls.
+ */
+const LEAKS = (() => {
+  const out: { x: number; len: number; drop: number; s: number }[] = []
+  for (let i = 0, x = ROOM.x0 + 0.7; x < ROOM.x1 - 0.3; i++, x += 0.6 + 1.1 * hash(i, 81)) {
+    if (hash(i, 82) < 0.2) continue
+    out.push({ x, len: 0.2 + 0.6 * hash(i, 83), drop: 2.6 + 2.8 * hash(i, 84), s: 0.55 + 0.45 * hash(i, 85) })
+  }
+  return out
+})()
 /** The bench: its top's thickness, its apron, its legs and the lower shelf between them. */
 const TOP = BENCH.top + 0.34
 const APRON = TOP + 0.44
@@ -217,11 +240,11 @@ function shaftAt(x: number, y: number): number {
 const SHAFT_A = 0.36
 
 /** The light at (x, y) as an RGB multiplier, 0..1 a channel: what the map multiplies there. */
-function lightRGB(x: number, y: number, t: number): [number, number, number] {
+function lightRGB(x: number, y: number, t: number, list: Pool[] = pools(t)): [number, number, number] {
   const out: [number, number, number] = [AMBIENT_RGB[0], AMBIENT_RGB[1], AMBIENT_RGB[2]]
   const sh = shaftAt(x, y) * SHAFT_A
   for (let i = 0; i < 3; i++) out[i] += MOON_RGB[i] * sh
-  for (const pl of pools(t)) {
+  for (const pl of list) {
     const u = Math.hypot((x - pl.x) / pl.rx, (y - pl.y) / pl.ry)
     const v = falloff(u, pl.fall) * pl.a
     if (v <= 0) continue
@@ -425,17 +448,32 @@ function skylight(p: p5, k: number, ink: string, w: number, see: See): void {
   rectC(p, k, x0, my - 0.06, x1, my + 0.06)
 }
 
-/** The floor's cut: the boards, the joists, the dark below; the skirting along the wall's foot. */
+/**
+ * The floor's cut: the boards; under them the joists' void, their narrow ends standing in it; the room below's lath and
+ * plaster ceiling nailed across their feet in one continuous band; the skirting along the wall's foot.
+ */
 function floor(p: p5, k: number, ink: string, w: number, see: See): void {
-  if (!see(ROOM.x0, ROOM.x1, FLOOR_Y - 0.5, ROOM.y1 + 1)) return
+  if (!see(ROOM.x0, ROOM.x1, FLOOR_Y - 0.5, CEILING + 0.5)) return
   p.noStroke()
-  p.fill(LOFT.soot)
-  rectC(p, k, ROOM.x0 - 1.2, JOISTS, ROOM.x1 + 1.2, ROOM.y1 + 2)
-  // Joists, end-on, under the boards.
-  p.fill(LOFT.beam)
-  rectC(p, k, ROOM.x0 - 1.2, BOARDS, ROOM.x1 + 1.2, JOISTS)
-  p.fill(LOFT.soot)
-  for (let x = ROOM.x0 + 1.5; x < ROOM.x1; x += 2.6) if (see(x - 1, x + 3)) rectC(p, k, x, BOARDS + 0.1, x + 1.9, JOISTS)
+  // The void between the joists: the boards' undersides in their own shadow, dark timber, not a black bar.
+  p.fill(mixHex(LOFT.beam, LOFT.soot, 0.35))
+  rectC(p, k, ROOM.x0 - 1.2, BOARDS, ROOM.x1 + 1.2, LATH)
+  // The joists' ends: narrow timbers, their tops against the boards, a little light caught on their west faces.
+  for (const x of JOIST_XS) {
+    if (!see(x - 0.3, x + 0.3)) continue
+    p.fill(mixHex(LOFT.beamLit, LOFT.beam, 0.45))
+    rectC(p, k, x - 0.14, BOARDS, x + 0.14, LATH)
+    p.fill(mixHex(LOFT.beamLit, LOFT.woodLit, 0.3))
+    rectC(p, k, x - 0.14, BOARDS, x - 0.08, LATH)
+  }
+  // The ceiling below: the laths across the joists' feet, then its plaster, one band the length of the house.
+  p.fill(mixHex(LOFT.beamLit, LOFT.beam, 0.3))
+  rectC(p, k, ROOM.x0 - 1.2, LATH - 0.005, ROOM.x1 + 1.2, LATH + 0.1)
+  p.fill(mixHex(LOFT.wallLit, LOFT.wall, 0.45))
+  rectC(p, k, ROOM.x0 - 1.2, LATH + 0.1, ROOM.x1 + 1.2, CEILING)
+  p.stroke(alpha(p, ink, 0.6))
+  p.strokeWeight(w * 0.5)
+  p.line((ROOM.x0 - 1.2) * k, CEILING * k, (ROOM.x1 + 1.2) * k, CEILING * k)
   solid(p, ink, w * 0.9, mixHex(LOFT.woodLit, LOFT.wood, 0.3))
   rectC(p, k, ROOM.x0 - 1.2, FLOOR_Y, ROOM.x1 + 1.2, BOARDS)
   // Skirting.
@@ -770,20 +808,89 @@ function outside(p: p5, k: number, ink: string, w: number, t: number): void {
   }
 }
 
-/** Under the floor's cut, for a tall frame: the dark of the house below, with its ceiling's laths. Lit as the room is. */
-function underneath(p: p5, k: number): void {
+/** The room below's air: just under its ceiling, then a little way down, then the dark it falls to. */
+const BELOW_TOP = '#15121a'
+const BELOW_MID = '#0d0b10'
+const BELOW_DEEP = '#08070a'
+/** Its ceiling's laths seen from below, as the loft's roof boards are: strips under the cut, going into the dark. */
+const LATHS = { n: 6, h: 0.15, gap: 0.035 }
+const LATH_TOP = '#30251f'
+const LATH_LOW = '#1a1417'
+const LEAK_RGB = rgbOf(mixHex(LOFT.glow, LOFT.ember, 0.25))
+
+/**
+ * Under the floor's cut: the room below, dark, unlit by the loft's map (the floor is between them) and drawn after it.
+ * Its ceiling's laths show as strips under the cut, fading into air a shade off black, which falls to the dark further
+ * down. The loft's light gets through where the boards have gaps over cracks in the plaster: a crack glowing on the
+ * cut's underside, a warm patch on the laths round it, and a soft wash falling below. How warm is read from the loft's
+ * own light just above that place on the floor, so they glow under the stove all the time and wherever the spark goes.
+ */
+function underneath(p: p5, k: number, t: number): void {
   const f = frame(p, k)
-  const below = ROOM.y1 + 2
-  if (f.y1 > below) {
-    p.noStroke()
-    p.fill(LOFT.soot)
-    rectC(p, k, f.x0 - 1, below - 0.01, f.x1 + 1, f.y1 + 1)
-    // The ceiling of the room below: its laths, faint.
-    p.fill(mixHex(LOFT.soot, LOFT.wall, 0.7))
-    rectC(p, k, f.x0 - 1, below + 0.2, f.x1 + 1, below + 0.55)
-    p.fill(mixHex(LOFT.soot, LOFT.wall, 0.45))
-    for (let x = Math.floor(f.x0 / 2.6) * 2.6; x < f.x1 + 1; x += 2.6) rectC(p, k, x, below + 0.55, x + 0.35, below + 1.4)
+  const top = CEILING + 0.02
+  if (f.y1 < LATH || f.x1 < ROOM.x0 - 1.2 || f.x0 > ROOM.x1 + 1.2) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  const x0 = Math.max(f.x0 - 1, ROOM.x0)
+  const x1 = Math.min(f.x1 + 1, ROOM.x1)
+  if (f.y1 > top) {
+    // Past the house's end walls, and deep down, only the dark.
+    ctx.fillStyle = BELOW_DEEP
+    ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (f.y1 - top + 1) * k)
+    if (x1 > x0) {
+      const deep = 9
+      const air = ctx.createLinearGradient(0, top * k, 0, (top + deep) * k)
+      air.addColorStop(0, BELOW_TOP)
+      air.addColorStop(0.3, BELOW_MID)
+      air.addColorStop(1, BELOW_DEEP)
+      ctx.fillStyle = air
+      ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, Math.min(deep, f.y1 + 1 - top) * k)
+      // The laths, each a little darker than the one above, the last all but gone.
+      for (let i = 0; i < LATHS.n; i++) {
+        const y = top + 0.03 + i * (LATHS.h + LATHS.gap)
+        if (y > f.y1) break
+        ctx.globalAlpha = 1 - i / (LATHS.n + 0.5)
+        ctx.fillStyle = mixHex(LATH_TOP, LATH_LOW, i / (LATHS.n - 1))
+        ctx.fillRect(x0 * k, y * k, (x1 - x0) * k, LATHS.h * k)
+      }
+      ctx.globalAlpha = 1
+    }
   }
+  // The leaks, where the loft's warm light stands on the floor above them.
+  const list = pools(t)
+  const floor0 = AMBIENT_RGB[0] / 255
+  const c = `${LEAK_RGB[0]}, ${LEAK_RGB[1]}, ${LEAK_RGB[2]}`
+  const soft = (cx: number, cy: number, rx: number, ry: number, a: number, stops: [number, number][]) => {
+    ctx.save()
+    ctx.translate(cx * k, cy * k)
+    ctx.scale(1, ry / rx)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx * k)
+    for (const [u, v] of stops) g.addColorStop(u, `rgba(${c}, ${a * v})`)
+    ctx.fillStyle = g
+    // Only below the cut: the lower half of the ellipse.
+    ctx.fillRect(-rx * k, ((top - cy) * k * rx) / ry, 2 * rx * k, rx * k * 2)
+    ctx.restore()
+  }
+  ctx.globalCompositeOperation = 'lighter'
+  for (const g of LEAKS) {
+    if (g.x + 2 < f.x0 || g.x - 2 > f.x1) continue
+    const [r, gg] = lightRGB(g.x, FLOOR_Y - 0.3, t, list)
+    const warm = Math.min(1, Math.max(0, (r + gg) / 2 - floor0 - 0.02) / 0.4) * g.s
+    if (warm < 0.015) continue
+    const h = g.len / 2
+    // The crack on the cut's underside, brightest in its middle.
+    const crack = ctx.createLinearGradient((g.x - h) * k, 0, (g.x + h) * k, 0)
+    crack.addColorStop(0, `rgba(${c}, 0)`)
+    crack.addColorStop(0.5, `rgba(${c}, ${0.55 * warm})`)
+    crack.addColorStop(1, `rgba(${c}, 0)`)
+    ctx.fillStyle = crack
+    ctx.fillRect((g.x - h) * k, (CEILING - 0.05) * k, g.len * k, 0.07 * k)
+    if (f.y1 < top) continue
+    // The warm patch it throws on the laths round it, and its light washing softly down into the room.
+    soft(g.x, top, h + 1.1, 1.05, 0.34 * warm, STOPS)
+    soft(g.x, top, 1.1 + 0.3 * g.drop, g.drop, 0.15 * warm, STOPS)
+  }
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the room */
@@ -798,7 +905,6 @@ export const room = scenery<null>({
     p.push()
     shell(p, k, ink, w, see)
     floor(p, k, ink, w, see)
-    underneath(p, k)
     exitDoor(p, k, ink, w, see)
     wallShelf(p, k, ink, w, see)
     bench(p, k, ink, w, see)
@@ -815,6 +921,8 @@ export const room = scenery<null>({
     p.pop()
     // The light, over the room and what was drawn into it.
     lightMap(p, k, t)
+    // The room below, under the floor: its own dark, and the loft's light leaking down into it.
+    underneath(p, k, t)
   },
   over: (p, _s, c) => {
     // The shaft's dust, glowing over everything.
