@@ -409,7 +409,11 @@ const pauseIcon = icon(ICON.pause)
 music.onChange(() => sync())
 // A press on YouTube's own player moves the show with it.
 music.onPlayer((playing) => {
-  if (recording || !transport) return
+  // A recording owns the show, and plays the file: YouTube's player is put back to silence.
+  if (recording || !transport) {
+    if (playing) music.pause()
+    return
+  }
   if (playing && !transport.playing) void play()
   else if (!playing && transport.playing) pause()
 })

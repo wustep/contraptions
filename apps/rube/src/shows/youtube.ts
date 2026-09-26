@@ -44,6 +44,7 @@ interface YTPlayer {
   seekTo(seconds: number, allowSeekAhead: boolean): void
   cueVideoById(o: { videoId: string; startSeconds?: number }): void
   getCurrentTime(): number
+  getDuration(): number
   getPlayerState(): number
   getPlaybackRate(): number
   setPlaybackRate(rate: number): void
@@ -224,6 +225,16 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     return found
   }
 
+  /**
+   * Where a cue is done, in seconds of show: at its `until`, or where its video runs out, whichever is first. A show
+   * may run on past its music (Voyage's last seconds are silent), and a player sent past its video's end starts it
+   * again from the top.
+   */
+  const end = (d: Deck): number => {
+    const length = d.player && d.ready ? d.player.getDuration() : 0
+    return length > 0 ? Math.min(d.cue.until, d.cue.at + length - d.cue.from - 0.05) : d.cue.until
+  }
+
   /** Where a cue's video should be at show time `t`. */
   const videoAt = (d: Deck, t: number) => d.cue.from + (t - d.cue.at)
 
@@ -290,7 +301,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     const now = at(t)
     raise(now)
     for (const d of decks) {
-      const inside = d === now && t < d.cue.until
+      const inside = d === now && t < end(d)
       if (wanted && inside) start(d, t, false)
       else if (d.running) stop(d)
     }
@@ -300,6 +311,12 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     window.clearTimeout(patience)
     const done = pending
     pending = null
+    if (done && result === 'blocked') {
+      // The show goes back to waiting for a press, and so does every player: none may sound under a stopped show.
+      wanted = false
+      keepTime(false)
+      for (const x of decks) if (x.running) stop(x)
+    }
     done?.(result)
   }
 
@@ -313,8 +330,9 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (pending && current) settleRefusal('playing')
       else if (!d.running && current && theirs) toldPlayer(true)
     } else if (state === PAUSED) {
-      if (pending && current) {
-        // Started and taken back at once: the browser wants a gesture first.
+      if (pending && current && theirs) {
+        // Asked to play and left paused, long after its seek has settled: the browser wants a gesture first. (A pause
+        // close on our own word is the seek's echo, and a refusal that stays silent is caught by the wait in `begin`.)
         settleRefusal('blocked')
       } else if (d.running && current && wanted && theirs) {
         d.running = false
@@ -327,7 +345,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   function begin(): Promise<PlayResult> {
     arrange(shown)
     const d = at(shown)
-    if (!d || shown >= d.cue.until) return Promise.resolve<PlayResult>('playing')
+    if (!d || shown >= end(d)) return Promise.resolve<PlayResult>('playing')
     const began = performance.now()
     return new Promise<PlayResult>((resolve) => {
       pending = resolve
@@ -337,7 +355,6 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
           // Slow to come, not refused: give it longer.
           if (d.state === BUFFERING && performance.now() - began < PATIENCE_BUFFERING) return wait()
           // It never started: the browser is holding it for a gesture.
-          for (const x of decks) if (x.running) stop(x)
           settleRefusal('blocked')
         }, PATIENCE)
       }
@@ -345,10 +362,32 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     })
   }
 
-  return {
+  /** When the show's time was last followed, so a hidden tab can carry it on. */
+  let followedAt = 0
+  let api: YouTubeSoundtrack
+
+  /**
+   * A tab in the background draws no frames, so the page stops telling the music where the show is, but the music
+   * plays on, and the next cue must still come in on time. So while it plays the music also keeps its own time,
+   * a few times a second: where the cue being heard is, or, between cues, the wall carried on from the last word.
+   */
+  let keeper = 0
+  const keepTime = (on: boolean) => {
+    window.clearInterval(keeper)
+    keeper = on
+      ? window.setInterval(() => {
+          if (!wanted || status !== 'ready' || !document.hidden) return
+          const heard = api.position()
+          api.follow(heard ?? shown + ((performance.now() - followedAt) / 1000) * speed)
+        }, 200)
+      : 0
+  }
+
+  return (api = {
     load(spec: SoundtrackSpec | null) {
       const mine = ++generation
       wanted = false
+      keepTime(false)
       settleRefusal('silent')
       const left = waiting
       waiting = []
@@ -434,13 +473,14 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     },
     follow(t) {
       shown = t
+      followedAt = performance.now()
       if (!wanted || status !== 'ready') return
       const now = at(t)
       for (const d of decks) {
         if (!d.player || !d.ready) continue
         const lead = d.cue.at - t
         if (d === now) {
-          if (t >= d.cue.until) {
+          if (t >= end(d)) {
             if (d.running) stop(d)
             continue
           }
@@ -454,7 +494,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
             raise(d)
           }
           setVolume(d, level(d, t))
-        } else if (lead > 0 && lead <= PREROLL && d.cue.from >= lead && !d.running) {
+        } else if (lead > 0 && lead <= PREROLL * speed && d.cue.from >= lead && !d.running) {
           // Next in, and its video has room before its entry: start it now, silently, so it is running when it is heard.
           start(d, t, true)
         } else if (lead > 0 && d.early) {
@@ -463,7 +503,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         } else if (lead <= 0 && d.running) {
           // Still sounding after the next has come in: it plays out to its own end and fade.
           setVolume(d, level(d, t))
-          if (t >= d.cue.until) stop(d)
+          if (t >= end(d)) stop(d)
         }
       }
     },
@@ -471,6 +511,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       if (!decks.length || status === 'failed') return Promise.resolve<PlayResult>('silent')
       wanted = true
       shown = Math.max(0, t)
+      followedAt = performance.now()
+      keepTime(true)
       settleRefusal('playing')
       if (status !== 'ready') {
         // The players are still coming. The music is asked for, so the picture waits for it, as it waits for a file.
@@ -483,8 +525,10 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     },
     pause() {
       wanted = false
+      keepTime(false)
       settleRefusal('playing')
-      for (const d of decks) if (d.running) stop(d)
+      // Ours, and any the viewer started from YouTube's own player.
+      for (const d of decks) if (d.running || d.state === PLAYING || d.state === BUFFERING) stop(d)
     },
     seek(t) {
       shown = Math.max(0, t)
@@ -514,5 +558,5 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       const d = at(shown)
       return d?.player && d.ready ? d.cue.at + d.player.getCurrentTime() - d.cue.from : null
     },
-  }
+  })
 }
