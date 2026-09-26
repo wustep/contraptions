@@ -195,9 +195,12 @@ function shots(): PartShot[] {
     // His head and the hi-hat again.
     k(312.6, 4.4, [0.05, -1.8]),
     k(314.8, 4.6, [-0.2, -1.6]),
-    // The kick drum's pulse: a tilt down the shin to his boot on the pedal, briefly; then all of him, head to foot.
-    cu(PULSE + 0.35, CU.pedal, 0.08, -0.5),
-    cu(317.8, CU.pedal, -0.05, 0.05),
+    // The kick drum's pulse: all of him, head to foot, his head at the top edge and the pedal at the bottom; a short
+    // dip down the shin to the knee and his boot on the pedal (his head out for about a second), and straight back up.
+    { ...k(PULSE - 0.2, 5.2, [-0.5, -0.42]), ease: 'whip', open: 0 },
+    { ...k(317.28, 3.9, [-0.36, 0.78]), ease: 'whip', open: 0 },
+    { ...k(317.48, 3.88, [-0.36, 0.8]), ease: 'whip', open: 0 },
+    k(318.6, 5.2, [-0.5, -0.4]),
     k(319.7, 5.5, [-0.45, -0.25]),
     // Out to all of him, head to foot, and down to the snare as the frame goes limp over him.
     k(UNSEAT - 0.5, 6.0, [-0.85, -0.7]),
