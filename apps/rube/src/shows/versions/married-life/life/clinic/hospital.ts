@@ -2,18 +2,21 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, part, type Companion, type Ctx, type Pose } from '../kit'
 import { CLINIC, HOME, INK } from '../worlds'
+import { CUTS } from '../seams'
 import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WARD, WARD_APART, wardDusk, WINDOW } from './clinic'
 
 /**
  * HOSPITAL (180.413 to 189.452): her bed, the balloon he brought her, the day going down. Strings and piano, free.
  *
  * She lies in the bed at the height of his chair, a little to his right (`CUTS.hospital`), turned up to the ceiling,
- * very still. He sits at her bedside with the balloon (the cast draws it, tied to him) over him. Behind them the
- * window's sky goes from gold to rose to night over the nine seconds, and the room darkens with it. As it goes he
- * leans to the lamp on the bedside table and it comes on, on its note (182.433): the one warm light. On the strongest
- * note (185.655) she turns the smallest roll toward him, the film's touch; he answers with a lean. The camera pushes
- * in on the two of them for it, and breathes back out to him and the balloon, and on the cut (189.452) he is sitting upright, at rest, the
- * balloon over him, and she is gone: the far side is the empty church.
+ * very still. He sits at her bedside in a low-backed chair with the balloon he has brought her (the cast draws it,
+ * tied to him) over him. Behind them the window's sky goes from gold to rose to night over the nine seconds, and the
+ * room darkens with it. As it goes he leans to the lamp on the bedside table and it comes on, on its note (182.433):
+ * the one warm light. Then he leans to her and gives her the balloon: the knot goes across from his corner to her,
+ * arriving on the strong note 184.883 (`HAND`), and it floats over her. On the strongest note (185.655) she turns the
+ * smallest roll toward him, the film's touch; he answers with a lean. The camera stays close on the two of them, and
+ * breathes back out for the cut (189.452): he is sitting upright, at rest, and she is gone. The far side is the empty
+ * church, where the balloon is his again, drifting back over him.
  *
  * Frame: Carl's seat is (-0.5, 0) (in at rest, out at rest: `exit` is [0, 0]); the set draws the room, and its window,
  * from the same point (`WARD`); this part draws the bed, the table and its lamp, his chair, and the light.
@@ -32,6 +35,13 @@ const REACH = 181.52
 const CLICK = 182.433
 /** The strongest note of the hospital: she rolls toward him. */
 const TOUCH = 185.655
+
+/**
+ * He gives her the balloon: he leans to her from `lean`, and at the full of it the knot passes from his top corner to
+ * her (`from` to `to`, quickly, so it is never long in the air between them), arriving on the strong note 184.883; it
+ * floats over her from then to the cut (`score.ts` ties it to her).
+ */
+export const HAND = { lean: 183.7, from: 184.45, to: 184.883 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music): the lamp, and her roll. */
 export const HOSPITAL_HITS: number[] = [CLICK, TOUCH]
@@ -53,11 +63,16 @@ const PILLOW = { x0: 0.1, x1: 0.9 }
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
 const inout = (u: number) => { const v = clamp01(u); return v * v * (3 - 2 * v) }
 
-/** Carl's bearing: over to the lamp and back, and, after her touch, a little toward her, sitting up again by the cut. */
+/**
+ * Carl's bearing: over to the lamp and back; then to her with the balloon, well over as the knot goes across, and
+ * back a little, still turned to her when she rolls to him (TOUCH), and a touch further for his answer; sitting up
+ * again by the cut.
+ */
 function tilt(T: number): number {
   const reach = -0.3 * inout((T - REACH) / (CLICK - REACH)) * (1 - inout((T - CLICK - 0.08) / 1.45))
-  const answer = 0.075 * inout((T - TOUCH - 0.25) / 1.15) * (1 - inout((T - 187.55) / 1.6))
-  return reach + answer
+  const give = 0.18 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.1 * inout((T - HAND.to - 0.05) / 0.95)
+  const answer = 0.045 * inout((T - TOUCH - 0.2) / 1.0)
+  return reach + (give + answer) * (1 - inout((T - 187.55) / 1.6))
 }
 
 /**
@@ -318,7 +333,7 @@ export const hospital = part<HospitalState>(
       drawTable(p, k, weight)
       drawLamp(p, k, weight, T)
       drawBed(p, k, weight, ex, wardDusk(T).dim)
-      drawVisitorChair(p, k, weight, 0)
+      drawVisitorChair(p, k, weight, 0, 0, 0, { low: true })
       p.pop()
       dusk(p, c, T)
     },
@@ -342,13 +357,15 @@ export const hospital = part<HospitalState>(
     }
   },
   (slot) => [
-    // A little over to the lamp as he reaches for it, and then one slow push in on the two of them, so that her roll
-    // toward him (185.655, the film's touch) and his lean are the picture; the balloon stays whole over him.
-    { t: CLICK, cells: 3.4, hold: [O - 0.02, -0.66], w: 1 },
-    { t: TOUCH, cells: 2.86, hold: [O + 0.3, -0.72], w: 1 },
-    { t: 186.9, cells: 2.8, hold: [O + 0.3, -0.72], w: 1 },
-    // Then, as she is still again, a slow breath back out to him and the balloon for the cut to the church
-    // (`CUTS.funeral`), where he is alone.
-    { t: slot.end, cells: 3.6, hold: [O + 0.22, -0.6], w: 1 },
+    // From the hill's close framing (`CUTS.hospital`), a little out and over to the lamp as he reaches for it; back
+    // to the two of them as he gives her the balloon, the knot going across and the balloon floating over to her; in
+    // a little for her roll toward him (185.655, the film's touch) and his answer; the balloon whole over them.
+    { t: CLICK, cells: 3.05, hold: [O + 0.02, -0.72], w: 1 },
+    { t: HAND.to + 0.25, cells: 2.95, hold: [O + 0.42, -0.8], w: 1 },
+    { t: TOUCH + 0.1, cells: 2.8, hold: [O + 0.36, -0.76], w: 1 },
+    { t: 187.2, cells: 2.75, hold: [O + 0.34, -0.75], w: 1 },
+    // Then, as she is still again, a slow breath back out for the cut to the church (`CUTS.funeral`): the balloon
+    // over her; across the cut it is his again, and drifts back over him in the empty church.
+    { t: slot.end, cells: CUTS.funeral.cells, hold: [O + CUTS.funeral.frame[0], CUTS.funeral.frame[1]], w: 1 },
   ],
 )

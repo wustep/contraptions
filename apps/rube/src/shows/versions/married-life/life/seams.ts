@@ -90,11 +90,11 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   funeral: {
     t: CUT.funeral,
     v: [0, 0],
-    cells: 3.6,
-    frame: [0.22, -0.6],
+    cells: 3.1,
+    frame: [0.3, -0.65],
     ellie: null,
     balloon: true,
-    what: 'Carl at rest in a chair, the balloon over him: at her bedside; on the far side, alone in the front pew of the church. She is gone',
+    what: 'Carl at rest in a chair: at her bedside, the balloon tied to her and over her; on the far side, alone in the front pew of the church, the balloon his again and drifting back over him. She is gone',
   },
   home: {
     t: CUT.home,

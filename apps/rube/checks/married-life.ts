@@ -11,6 +11,7 @@ import { CUTS } from '../src/shows/versions/married-life/life/seams'
 import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/married-life/life/worlds'
 import { BALLOON_FROM, balloonAt, HALF } from '../src/shows/versions/married-life/life/cast'
 import { R } from '../src/parts'
+import { HAND } from '../src/shows/versions/married-life/life/clinic/hospital'
 import type { LifeShow } from '../src/shows/versions/married-life/life/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -227,8 +228,40 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
   check('married life: they grow old together: his blue and her coral grey with the years, and hers is the colour she is drawn in',
     same(carlAt(1), CARL) && same(ellieAt(1), ELLIE) && !same(carlAt(200), CARL) && !same(ellieAt(175), ELLIE) &&
     [10, 100, 150, 175].every((t) => show.ellie(t)?.color === ellieAt(t)) && [10, 150].every((t) => show.ellie(t)?.id === ELLIE_ID))
-  check('married life: the balloon is his from the hospital to the end, and not before',
-    !balloonAt(show, BALLOON_FROM - 0.01) && !!balloonAt(show, BALLOON_FROM + 0.01) && !!balloonAt(show, DURATION) && near(BALLOON_FROM, CUT.hospital))
+  // The balloon: he brings it into the hospital, gives it to her at her bedside, and it is his again from the church
+  // on; it never jumps in a place (across a cut it moves with the cut, as everything does).
+  const knotOnHim = (t: number) => {
+    const b = balloonAt(show, t)
+    const [x, y] = show.where(t)
+    return !!b && Math.hypot(b.anchor[0] - x - HALF * 0.7, b.anchor[1] - y + HALF * 0.9) < 0.06
+  }
+  const knotOnHer = (t: number) => {
+    const b = balloonAt(show, t)
+    const e = show.ellie(t)
+    return !!b && !!e && Math.hypot(b.anchor[0] - e.x - 0.03, b.anchor[1] - e.y + R * 0.92) < 0.02
+  }
+  const overHer = (() => {
+    const t = HAND.to + 1.5
+    const b = balloonAt(show, t)
+    const e = show.ellie(t)
+    const [x] = show.where(t)
+    return !!b && !!e && Math.abs(b.at[0] - e.x - 0.18) < 0.12 && b.at[0] > x + 0.35
+  })()
+  check('married life: the balloon comes in with him to the hospital, is hers at her bedside, and his again from the church to the end',
+    !balloonAt(show, BALLOON_FROM - 0.01) && knotOnHim(BALLOON_FROM + 0.01) && knotOnHim(HAND.from - 0.01) && knotOnHer(HAND.to + 0.05) &&
+      knotOnHer(CUT.funeral - 0.01) && overHer && knotOnHim(CUT.funeral + 0.01) && !!balloonAt(show, DURATION) && near(BALLOON_FROM, CUT.hospital),
+    `on him at ${BALLOON_FROM + 0.01}: ${knotOnHim(BALLOON_FROM + 0.01)}, on her at ${HAND.to + 0.05}: ${knotOnHer(HAND.to + 0.05)}, over her: ${overHer}, his in the church: ${knotOnHim(CUT.funeral + 0.01)}`)
+  let balloonJump = 0
+  let balloonJumpAt = 0
+  for (let t = BALLOON_FROM + 0.004; t <= DURATION; t += 0.004) {
+    if (show.owner(t) !== show.owner(t - 0.004)) continue
+    const a = balloonAt(show, t - 0.004)
+    const b = balloonAt(show, t)
+    if (!a || !b) continue
+    const d = Math.hypot(b.at[0] - a.at[0], b.at[1] - a.at[1])
+    if (d > balloonJump) { balloonJump = d; balloonJumpAt = t }
+  }
+  check('married life: the balloon never jumps in a place (no more than 0.04 cells in 4 ms)', balloonJump <= 0.04, `${balloonJump.toFixed(3)} at ${balloonJumpAt.toFixed(3)} s`)
 
   // The end credits: words the page sets over the house, after he has sat down, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

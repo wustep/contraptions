@@ -1,4 +1,4 @@
-import type { BallState, Pt } from '../../../../parts'
+import { R, type BallState, type Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
@@ -18,7 +18,7 @@ import { clouds, CLOUDS_AT } from './hill/clouds'
 import { climb, CLIMB_AT } from './hill/climb'
 import { clinicSet, CLINIC_BOX } from './clinic/clinic'
 import { doctor, DOCTOR_AT } from './clinic/doctor'
-import { hospital, HOSPITAL_AT } from './clinic/hospital'
+import { HAND, hospital, HOSPITAL_AT } from './clinic/hospital'
 import { inside, INSIDE_BOX } from './inside/inside'
 import { nursery, NURSERY_AT } from './inside/nursery'
 import { yard, YARD_AT } from './inside/yard'
@@ -142,7 +142,22 @@ export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
 
   const show = new LifeShow(legs, sets, DURATION, company.sort((a, b) => a.from - b.from), poses)
   castState.show = show
-  if (ALONE_TIE) show.tie = { from: ALONE_TIE.from, at: [ALONE_AT[0] + ALONE_TIE.at[0], ALONE_AT[1] + ALONE_TIE.at[1]] }
+  // The balloon's ties. At her bedside he gives it to her: the knot goes across from his corner to her, and it floats
+  // over her while she is there (to the cut: across it, in the church, it is his again). At the end he ties it to her
+  // chair.
+  show.ties.push({
+    from: HAND.from,
+    arrive: HAND.to,
+    to: CUT.funeral,
+    at: (s) => {
+      const e = show.ellie(s)
+      return e ? [e.x + 0.03, e.y - R * 0.92] : show.where(s)
+    },
+  })
+  if (ALONE_TIE) {
+    const at: Pt = [ALONE_AT[0] + ALONE_TIE.at[0], ALONE_AT[1] + ALONE_TIE.at[1]]
+    show.ties.push({ from: ALONE_TIE.from, arrive: ALONE_TIE.from + 1.2, to: Infinity, at: () => at })
+  }
 
   // The camera: one take. Every leg's keys go to one director, in cells unrolled across the cuts: each leg's cells
   // are moved back by the sum of the cuts' shifts before it, so Carl's path is continuous in them, and so is the

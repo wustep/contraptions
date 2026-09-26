@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { ball, R, type Pt } from '../../../../parts'
 import { alpha, scenery } from './kit'
-import { AT, bar } from './music'
+import { AGE, AT, bar } from './music'
 import type { LifeShow } from './show'
 import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
@@ -16,8 +16,10 @@ import { drawBowTie } from './inside/ties-tie'
  *
  * Ellie is round and rolls, the way every ball in this house has always been drawn (`parts.ts` `ball`).
  *
- * Both leave the stage's short trail when they move. The balloon is Carl's from the hospital on: tied to his top
- * corner, it lags behind him as a balloon in still air does, and leans a little.
+ * Both leave the stage's short trail when they move. The balloon comes in with Carl at the hospital, tied to his top
+ * corner; it lags behind him as a balloon in still air does, and leans a little. He gives it to her at her bedside
+ * (`show.ties`: the knot goes across to her); across the cut to the church it is his again, over the pew, and it
+ * drifts back over him: she is gone. At the end he ties it to her chair.
  *
  * One of these stands in every world's scenery, last, and draws in its `over`, so the two of them come after every
  * part's drawing and before every part's front: where the stage would have drawn a ball.
@@ -89,27 +91,41 @@ function slopeAt(show: LifeShow, t: number): number {
   return n ? sum / n : 0
 }
 
-/** Where Carl is at `s`, carried into leg `leg`'s cells across any cut between (so what lags him lags on the screen). */
-function carlIn(show: LifeShow, s: number, leg: number): Pt {
-  const own = show.owner(s)
-  const [x, y] = show.where(s)
-  if (own === leg) return [x, y]
+/** A point in leg `from`'s cells, carried into leg `leg`'s across any cut between (so what lags lags on the screen). */
+function carry(show: LifeShow, [x, y]: Pt, from: number, leg: number): Pt {
+  if (from === leg) return [x, y]
   let dx = 0
   let dy = 0
-  if (own < leg) for (let i = own; i < leg; i++) { const [a, b] = show.shift(i, i + 1); dx += a; dy += b }
-  else for (let i = own; i > leg; i--) { const [a, b] = show.shift(i, i - 1); dx += a; dy += b }
+  if (from < leg) for (let i = from; i < leg; i++) { const [a, b] = show.shift(i, i + 1); dx += a; dy += b }
+  else for (let i = from; i > leg; i--) { const [a, b] = show.shift(i, i - 1); dx += a; dy += b }
   return [x + dx, y + dy]
 }
 
-/** Where the balloon's string is tied at `s`, in leg `leg`'s cells: his top corner, or (at the end) where it is tied off. */
-function anchorIn(show: LifeShow, s: number, leg: number): Pt {
+/** Where Carl is at `s`, carried into leg `leg`'s cells. */
+function carlIn(show: LifeShow, s: number, leg: number): Pt {
+  return carry(show, show.where(s), show.owner(s), leg)
+}
+
+/**
+ * Where the balloon's string is tied at `s`, in leg `leg`'s cells: his top corner, or where a tie span has it (to her
+ * at her bedside, to her chair at the end), the knot carried across from him to it over the span's first moments.
+ */
+export function anchorIn(show: LifeShow, s: number, leg: number): Pt {
   const [cx, cy] = carlIn(show, s, leg)
-  const own: Pt = [cx + HALF * 0.7, cy - HALF * 0.9]
-  const tie = show.tie
-  if (!tie || s < tie.from || show.owner(s) !== show.owner(tie.from)) return own
-  const u = Math.min(1, (s - tie.from) / 1.2)
-  const e = u * u * (3 - 2 * u)
-  return [own[0] + (tie.at[0] - own[0]) * e, own[1] + (tie.at[1] - own[1]) * e]
+  // His top corner, turned and flattened as a part poses him (the pose alone: cheap, and where he leans with it).
+  const pose = show.pose(s)
+  const tilt = pose?.tilt ?? 0
+  const sq = (pose?.squash ?? 0) + 0.07 * AGE(s)
+  const ox = HALF * 0.7 * (1 + 0.6 * sq)
+  const oy = -HALF * 0.9 + 2 * HALF * sq
+  const own: Pt = [cx + ox * Math.cos(tilt) - oy * Math.sin(tilt), cy + ox * Math.sin(tilt) + oy * Math.cos(tilt)]
+  const here = show.owner(s)
+  const tie = show.ties.find((t) => s >= t.from && s < t.to && here === show.owner(t.from))
+  if (!tie) return own
+  const u = Math.min(1, (s - tie.from) / Math.max(0.05, tie.arrive - tie.from))
+  const e = u * u * u * (u * (u * 6 - 15) + 10)
+  const [tx, ty] = carry(show, tie.at(s), here, leg)
+  return [own[0] + (tx - own[0]) * e, own[1] + (ty - own[1]) * e]
 }
 
 /** The balloon at `t`: where it is and where it is tied, in the cells of the leg on the stage. Null before it is his. */
@@ -117,21 +133,31 @@ export function balloonAt(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway
   if (t < BALLOON_FROM) return null
   const leg = show.owner(t)
   // It follows where it is tied with a lag: an average of where it would rest over the last second and a half,
-  // the recent weighing most. No overshoot: a balloon in still air is all drag.
+  // the recent weighing most. No overshoot: a balloon in still air is all drag. The average is taken on a fixed grid
+  // of instants and eased between two of them, so where the knot changes hands at a cut (a step in where it is
+  // tied) the balloon still drifts smoothly: no sample ever slides across the step.
   const rest: Pt = [BALLOON_REST[0] - HALF * 0.7, BALLOON_REST[1] + HALF * 0.9]
-  let x = 0
-  let y = 0
-  let w = 0
-  for (let i = 0; i <= 30; i++) {
-    const s = Math.max(BALLOON_FROM, t - i * 0.05)
-    const [ax, ay] = anchorIn(show, s, leg)
-    const wi = Math.exp(-(i * 0.05) / 0.4)
-    x += (ax + rest[0]) * wi
-    y += (ay + rest[1]) * wi
-    w += wi
+  const D = 0.025
+  const average = (g: number): Pt => {
+    let ax = 0
+    let ay = 0
+    let w = 0
+    for (let i = 0; i <= 60; i++) {
+      const s = Math.max(BALLOON_FROM, g - i * D)
+      const [px, py] = anchorIn(show, s, leg)
+      const wi = Math.exp(-(i * D) / 0.4)
+      ax += (px + rest[0]) * wi
+      ay += (py + rest[1]) * wi
+      w += wi
+    }
+    return [ax / w, ay / w]
   }
-  x /= w
-  y /= w
+  const g0 = Math.floor(t / D) * D
+  const f = (t - g0) / D
+  const a0 = average(g0)
+  const a1 = average(g0 + D)
+  const x = a0[0] + (a1[0] - a0[0]) * f
+  const y = a0[1] + (a1[1] - a0[1]) * f
   const anchor = anchorIn(show, t, leg)
   // The string is taut: the balloon rides it at its length from the knot, drifting a little in the air.
   const drift = Math.sin(t * 0.9) * 0.05 + Math.sin(t * 0.37 + 1) * 0.04

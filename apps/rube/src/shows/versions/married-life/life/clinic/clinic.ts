@@ -189,24 +189,36 @@ export function tube(p: p5, k: number, weight: number, x0: number, y0: number, x
  * at `x`; a sitter's bottom on the seat's top (y = SEAT), its feet on the floor. `dent` presses the seat's top down
  * under a sitter at `dentX` (she sinks into it).
  */
-export function drawVisitorChair(p: p5, k: number, weight: number, x: number, dent = 0, dentX = x): void {
-  // A slate-teal vinyl, darker than either of them, so both read against it.
-  const vinyl = mixHex(mixHex(CLINIC.chair, HOME.leaf, 0.22), INK, 0.3)
+/**
+ * How a visitor's chair looks: the office's (a slate-teal vinyl, its back panel over the sitter's shoulders), or the
+ * ward's, `low`: a warm brown vinyl and a back that stops below the sitter's top edge, so the old grey Carl in it
+ * stands clear of it against the pale wall instead of reading as part of the chair.
+ */
+export interface ChairLook {
+  low?: boolean
+}
+
+export function drawVisitorChair(p: p5, k: number, weight: number, x: number, dent = 0, dentX = x, look: ChairLook = {}): void {
+  // A slate-teal vinyl, darker than either of them, so both read against it; in the ward, a warm mid brown.
+  const vinyl = look.low ? mixHex(mixHex(HOME.woodDark, HOME.wood, 0.3), CLINIC.chair, 0.2) : mixHex(mixHex(CLINIC.chair, HOME.leaf, 0.22), INK, 0.3)
   const back = mixHex(vinyl, INK, 0.12)
+  // The back panel's top and bottom: behind the sitter's shoulders, or (low) behind his middle, under his top edge.
+  const [b0, b1] = look.low ? [-0.05, 0.1] : [-0.47, -0.1]
   p.push()
   p.translate(x * k, 0)
-  // The back: two uprights from behind the seat to the panel, and the panel, low behind the sitter's shoulders.
-  tube(p, k, weight, -0.15, SEAT + 0.02, -0.15, -0.2)
-  tube(p, k, weight, 0.15, SEAT + 0.02, 0.15, -0.2)
+  // The back: two uprights from behind the seat to the panel, and the panel.
+  const up = look.low ? (b0 + b1) / 2 : -0.2
+  tube(p, k, weight, -0.15, SEAT + 0.02, -0.15, up)
+  tube(p, k, weight, 0.15, SEAT + 0.02, 0.15, up)
   p.stroke(INK)
   p.strokeWeight(weight * 0.85)
   p.fill(back)
   p.rectMode(p.CORNER)
-  p.rect(-0.2 * k, -0.47 * k, 0.4 * k, 0.37 * k, 0.07 * k)
+  p.rect(-0.2 * k, b0 * k, 0.4 * k, (b1 - b0) * k, Math.min(0.07, (b1 - b0) * 0.35) * k)
   // A stitched seam across the panel, near its top: vinyl, not wood.
   p.stroke(alpha(p, CLINIC.light, 0.18))
   p.strokeWeight(weight * 0.45)
-  p.line(-0.14 * k, -0.39 * k, 0.14 * k, -0.39 * k)
+  p.line(-0.14 * k, (b0 + 0.08) * k, 0.14 * k, (b0 + 0.08) * k)
   // The legs: one bent tube each side, splaying a little to the floor, a stretcher between.
   tube(p, k, weight, -0.19, SEAT + 0.07, -0.215, FLOOR - 0.02)
   tube(p, k, weight, 0.19, SEAT + 0.07, 0.215, FLOOR - 0.02)

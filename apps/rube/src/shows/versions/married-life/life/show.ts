@@ -40,6 +40,18 @@ export interface WorldSet {
   after: Placed[]
 }
 
+/**
+ * A span where the balloon's string is tied somewhere other than his top corner: the knot is carried across from him
+ * over `from` to `arrive`, and stays there until `to` (or the end of the leg it starts in, whichever is first).
+ */
+export interface Tie {
+  from: number
+  arrive: number
+  to: number
+  /** Where it is tied at show time `s`, in the world cells of the leg it happens in. */
+  at: (s: number) => Pt
+}
+
 /** Ellie's spans, in world cells, each tied to the world it happens in. */
 export type Spans = (Company & { world: WorldKey })[]
 
@@ -70,8 +82,11 @@ function boundsOf(pieces: Placed[]): Box {
 export class LifeShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
-  /** Where the balloon is tied off at the end, in world cells, and from when (the house builder's `ALONE_TIE`). */
-  tie: { from: number; at: Pt } | null = null
+  /**
+   * Where the balloon's string is tied when it is not his: at her bedside (he gives it to her), and at the end (to
+   * her chair). Each span is tied to the leg it starts in; out of it, the balloon is his again.
+   */
+  ties: Tie[] = []
 
   constructor(
     readonly legs: Leg[],
