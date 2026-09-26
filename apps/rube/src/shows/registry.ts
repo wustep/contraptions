@@ -128,6 +128,13 @@ export interface ShowVersion {
   label: string
   /** One line on what this take is trying. */
   note?: string
+  /**
+   * One sentence for a link to this take when it is shared: what the music is, said to someone who has not seen the
+   * page. The share card's words (`share.ts`). Left out, the card says the title and the site's own line.
+   */
+  about?: string
+  /** Seconds of show at which the share card's picture is taken (`scripts/show-cards.mjs`). */
+  still?: number
   load(): Promise<Performance>
 }
 
@@ -182,7 +189,7 @@ export function readShows(found: Record<string, unknown>): Registry {
       problems.push(`${path}: the default export is not a show: it needs a title, a label and load()`)
       continue
     }
-    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, load: v.load }
+    const version: Version = { ...at, title: v.title, label: v.label, note: v.note, about: v.about, still: v.still, load: v.load }
     const work = works.find((w) => w.work === at.work)
     if (!work) {
       works.push({ work: at.work, title: v.title, versions: [version] })

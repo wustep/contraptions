@@ -6,6 +6,7 @@ import { SHOW_SPEEDS, Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
 import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
+import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack } from './soundtrack'
 import './youtube.css'
 import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
@@ -21,8 +22,11 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * written on a show's canvas (`stage.ts`), so what is in the panel — the
  * title, the credit, the clock — is in the panel and nowhere else.
  *
- * `?show=<work>&take=<take>` names a version, so a link is a take. `/shows/`
- * with no work opens Clair de Lune, Take B.
+ * A show has its own address, `/shows/<work>/` or `/shows/<work>/<take>/`,
+ * a page of its own with its own share card (`share.ts`), and the address
+ * bar keeps to it as the show changes, so a link is a take.
+ * `?show=<work>&take=<take>` still names one. `/shows/` with no work opens
+ * Clair de Lune, Take B.
  *
  * The stage is the play button: a click or a tap anywhere on it plays or
  * pauses. On a phone the panel stacks under the stage and would cover half
@@ -49,11 +53,14 @@ export function start(shell: Shell): () => void {
 
   const params = new URLSearchParams(location.search)
 /** The address named a show on arrival. A tab into Shows does not: the show is chosen here. */
-const linked = !!params.get('show')
+const pathShow = showFromPath(location.pathname)
+const linked = !!pathShow || !!params.get('show')
 
 /* ------------------------------------------------------------------ state */
 
-let current: Version | null = pickVersion(works, params.get('show'), params.get('take'))
+let current: Version | null = pathShow
+  ? pickVersion(works, pathShow.work, pathShow.take)
+  : pickVersion(works, params.get('show'), params.get('take'))
 let perf: Performance | null = null
 let transport: Transport | null = null
 /** Counts every version opened, so a load that comes back late knows it has been overtaken. */
@@ -83,14 +90,14 @@ const stage = createShowStage(stageRoot, { time: () => transport?.now() ?? 0 })
 /** A version is loaded once: its machine and its music are the same every time it is come back to. */
 const loads = new Map<Version, Promise<Performance>>()
 
+/** The show's own address (`share.ts`), keeping only the dev's `?music=`. */
 function writeUrl(): void {
   const q = new URLSearchParams()
-  if (current) {
-    q.set('show', current.work)
-    q.set('take', current.take)
-  }
+  const musicParam = params.get('music')
+  if (musicParam) q.set('music', musicParam)
   const query = q.toString()
-  history.replaceState(null, '', query ? `?${query}` : location.pathname)
+  const path = current ? showPath(works, current.work, current.take) : '/shows/'
+  history.replaceState(history.state, '', `${path}${query ? `?${query}` : ''}`)
 }
 
 /* ------------------------------------------------------------------ transport */
@@ -483,7 +490,8 @@ function sync(): void {
     }
   }
   about.replaceChildren(...lines)
-  document.title = current ? `${current.label === current.title ? current.title : `${current.title}, ${current.label}`} · contraptions` : 'contraptions · shows'
+  // The tab says what a link to it says (`share.ts`).
+  document.title = (current && shareCard(works, current.work, current.take)?.title) || 'Shows · contraptions'
 
   // The transport.
   transportSec.hidden = exportSec.hidden = works.length === 0
@@ -722,6 +730,16 @@ if (import.meta.env.DEV) {
     state: () => ({ version: current ? `${current.work}/${current.take}` : null, playing: transport?.playing ?? false, speed, muted, soundHeld, overview, zoom, blocked, loading, failed, music: music.state(), source: music.source(), fellBack: music.fellBack(), heard: music.position(), duration: perf?.duration ?? 0, recording: recording !== null }),
     togglePanel: () => shell.toggle(),
     canvas: () => stageRoot.querySelector('canvas') as HTMLCanvasElement,
+    /** The version that is up, at `t`, as a PNG data URL `w` × `h`: share cards and their contact sheets. */
+    still: async (t: number, w: number, h: number) => {
+      const blob = await stage.png({ label: 'card', w, h }, t)
+      if (!blob) return null
+      return await new Promise<string>((resolve) => {
+        const r = new FileReader()
+        r.onload = () => resolve(String(r.result))
+        r.readAsDataURL(blob)
+      })
+    },
   }
 }
 
