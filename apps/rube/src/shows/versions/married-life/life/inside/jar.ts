@@ -383,16 +383,20 @@ function shots(): PartShot[] {
     // between the car in the window and the jar on the mantle, landed before the blow, so the tyre goes in a still
     // frame with what it will cost in it; then a slow drift right with her up the ladder (the top of her hop onto the
     // mantle wants 3.4 cells), gathering into one move onto the cradle, the chute and his machine as she pushes. The
-    // frame stays there through the pour, the refill's two strokes and the lamp going out at its top edge, while the
-    // car drives off at the other.
+    // frame stays there through the pour and the refill's two strokes while the car drives off at the other edge.
     k(LANDS[3], 3.32, [4.66, -0.9]),
     k(112.5, 3.5, [4.25, -0.95]),
     k(115.1, 3.56, [4.5, -1.0]),
     k(PUSH1 - 0.1, 4.0, [5.42, -1.1]),
-    k(118.9, 3.9, [5.2, -1.1]),
-    // In, all the way, as he climbs, falls and she comes down to him: landed close on her touch, a drift while the
-    // bandage wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the
-    // mantle: no closer than 2.8 there.)
+    // The lamp: the refill's second stroke shakes it and it sputters out, whole in the frame's top with its cord going
+    // up out of it; the frame looks up with him as he climbs to it (as low as Zoom lets it go while he is still on
+    // the plank), and holds the lamp over him on the ladder's top as the ladder kicks, so it is the lamp he falls
+    // reaching for.
+    k(LAMP_OUT, 3.92, [5.1, -1.18]),
+    k(KICK, 3.7, [4.35, -1.3]),
+    // In, all the way, as he falls and she comes down to him: landed close on her touch, a drift while the bandage
+    // wraps. (At 120.2 he is at the top of his fall, and at 121.0 she is at the top of her hop down off the mantle:
+    // no closer than 2.8 there.)
     k(FALL, 3.1, [3.75, -0.85]),
     k(TOUCH, 2.38, [3.07, -0.62]),
     // Then one long move out toward the storm: gently at first, faster as she climbs the ladder and leaps to the

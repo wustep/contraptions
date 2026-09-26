@@ -265,17 +265,31 @@ function garden(p: p5, c: Ctx, T: number): void {
 /* ------------------------------------------------------------------ the lamp and the ladder */
 
 function lampLight(p: p5, k: number, T: number): void {
-  const { lit } = lampAt(T)
+  const { lit, swing } = lampAt(T)
   if (lit <= 0.01) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const cx = LAMP.x * k
-  const cy = (LAMP.rim + 0.3) * k
   ctx.save()
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 1.9 * k)
-  g.addColorStop(0, `rgba(255, 227, 166, ${0.22 * lit})`)
+  // Hung from the ceiling and swinging with the lamp: a warm bloom round the shade on the wall, and a soft cone of
+  // light down from its rim, so that when it sputters and goes out the room is seen to lose it.
+  ctx.translate(LAMP.x * k, LAMP.ceil * k)
+  ctx.rotate(swing)
+  const rim = LAMP.cord + 0.2
+  const g = ctx.createRadialGradient(0, (rim + 0.02) * k, 0, 0, (rim + 0.02) * k, 1.5 * k)
+  g.addColorStop(0, `rgba(255, 227, 166, ${0.34 * lit})`)
   g.addColorStop(1, 'rgba(255, 227, 166, 0)')
   ctx.fillStyle = g
-  ctx.fillRect(cx - 1.9 * k, cy - 1.9 * k, 3.8 * k, 3.8 * k)
+  ctx.fillRect(-1.5 * k, (rim - 1.5) * k, 3 * k, 3 * k)
+  const cone = ctx.createLinearGradient(0, rim * k, 0, (rim + 1.8) * k)
+  cone.addColorStop(0, `rgba(255, 232, 178, ${0.3 * lit})`)
+  cone.addColorStop(1, 'rgba(255, 232, 178, 0)')
+  ctx.fillStyle = cone
+  ctx.beginPath()
+  ctx.moveTo(-0.17 * k, rim * k)
+  ctx.lineTo(0.17 * k, rim * k)
+  ctx.lineTo(0.8 * k, (rim + 1.8) * k)
+  ctx.lineTo(-0.8 * k, (rim + 1.8) * k)
+  ctx.closePath()
+  ctx.fill()
   ctx.restore()
 }
 
