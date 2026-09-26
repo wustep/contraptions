@@ -14,8 +14,8 @@ import { bellAt, CH, CHURCH_BOX, ease, FOOT, FUN, gloomy, paint, pchip, SEATED, 
  * altar: the wedding's kiss, framed again, with nobody in it; white lilies, and the wedding photograph on an easel
  * where the two of them stood.
  *
- * He gets up (slowly: he slides off the seat and lets himself down to the floor, on 193.66) and walks down the aisle
- * the way they ran, at half the pace, into the porch under the tower, where the bell's rope comes down beside the
+ * He gets up (slowly: he slides off the seat and lets himself down to the floor, on 192.052) and walks down the aisle
+ * the way they ran, at an old man's pace, into the porch under the tower, where the bell's rope comes down beside the
  * doors. As he comes to it the rope starts to move (the bell is swinging up, out of sight), and the camera rises with
  * it, widening, to arrive on 197.712, the strongest onset of the whole cue: the whole empty church, the bell they were
  * married under tolling once at the top of the frame, the rope jolting and swaying beside him at the bottom. It
@@ -31,24 +31,29 @@ export const FUNERAL_AT: Pt = [SEATED[0] + 0.5, SEATED[1]]
 
 /* ------------------------------------------------------------------ the clock */
 
-/** He leans forward to get up; lets himself down off the seat to the floor (on an onset). */
-const LEAN = 192.45
-const DOWN = 193.66
+/**
+ * He leans forward to get up as the grey morning comes up, and lets himself down off the seat to the floor (on the
+ * phrase's strong onset, 192.052). An old man: he has the whole of the walk to take slowly (under 0.6 cells a second
+ * in the aisle, about 0.65 at most out of the doors, slower than he climbed the hill), so he goes early.
+ */
+const LEAN = 191.0
+const DOWN = 192.052
 /** He walks from the pew to the porch under the tower, and stands there. */
-const WALK = 193.95
-const HALT = 197.55
-/** Where he stops: just inside the porch, the rope a step to his right and his balloon clear of it. */
-const PORCH = CH.tower[0] + 0.15
+const WALK = 192.2
+const HALT = 197.5
+/** Where he stops: in the porch, the rope a step to his right and his balloon clear of it. */
+const PORCH = CH.tower[0] + 0.25
 /** The toll, and its answer; then out, and down the steps. */
 const TOLL = FUN.toll
 const ANSWER = FUN.answer
-const OUT = 198.5
+const OUT = 198.05
 /** Where he stands on the floor after getting up. */
 const STOOD: Pt = [SEATED[0] - 0.2, 0]
 
-const aisle = pchip([WALK, 194.9, 196.75, HALT], [STOOD[0], STOOD[0] + 0.4, PORCH - 0.52, PORCH], 0, 0)
-/** Out through the doors and down: slower on the steps, at rest at their foot. */
-const out = pchip([OUT, 199.75, 200.7, 201.4, CUT.home], [PORCH, CH.landing[1] - 0.5, CH.landing[1] + 0.17, CH.landing[1] + 0.64, FOOT[0]], 0, 0)
+/** Down the aisle at an even, slow pace (about half a cell a second), easing from rest and to rest. */
+const aisle = pchip([WALK, 193.0, 194.9, 196.8, HALT], [STOOD[0], STOOD[0] + 0.21, STOOD[0] + 1.2, PORCH - 0.23, PORCH], 0, 0)
+/** Out through the doors and down, at the same even pace (the steps' foot is fixed: `CUTS.home`), at rest there. */
+const out = pchip([OUT, 198.55, 199.9, 201.05, CUT.home], [PORCH, PORCH + 0.19, PORCH + 1.07, PORCH + 1.84, FOOT[0]], 0, 0)
 
 /** The height of his centre going down the steps: on each tread until he is over its edge, then down to the next. */
 function stepY(x: number): number {
@@ -256,12 +261,12 @@ export const funeral = part<FuneralState>(
     const at = FUNERAL_AT
     const key = (t: number, cells: number, x: number, y: number) => ({ t, cells, hold: [x - at[0], y - at[1]] as Pt, w: 1 })
     return [
-      // Off him to the altar: the kiss's framing, with nobody in it, and him at its edge.
-      key(192.6, 3.6, 0.3, -0.66),
-      // With him, slowly, as he gets up and goes.
-      key(194.4, 4.1, 1.35, -0.9),
+      // Off him to the altar: the kiss's framing, with nobody in it, and him at its edge, still in the pew.
+      key(191.2, 3.6, 0.3, -0.66),
+      // With him, slowly, as he gets up and goes down the aisle.
+      key(193.6, 4.0, 1.5, -0.88),
       // Into the porch with him, the rope hanging beside the doors.
-      key(196.1, 4.85, 2.7, -1.25),
+      key(196.0, 4.85, 2.75, -1.25),
       // As the rope starts to move, up it and out, widening, to arrive on the toll: the whole empty church, the bell
       // well inside the top of the frame, the rope down to him, and him whole at the bottom even under Zoom.
       key(TOLL, 7.5, 3.25, -2.05),
