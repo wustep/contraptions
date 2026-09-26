@@ -263,3 +263,17 @@ rendered as one period of a circle, and every note as it lands is written to
 `scripts/shows/plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
 (`apps/rube/checks/gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
+
+`merry-go-round/opus55` (in the picker, **Merry-Go-Round**, one take, **Opus 5.5**) is Joe Hisaishi's concert
+arrangement of the *Merry-Go-Round of Life* from Howl's Moving Castle, whole, demo only
+(`apps/rube/src/shows/versions/merry-go-round/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
+Every piece is new. It follows the film: Sophie the hatter (the one ball, whose colour is her age), the walk on
+the air with Howl, the Witch's curse, Turnip Head, the castle that walks, Calcifer in the hearth, the colour dial on
+the door, the flower fields, the war, the castle falling apart to one plank on legs, the heart given back, and the
+castle flying. The code is `merry-go-round/howl/`, on the same kit as Liftoff and Epilogue (parts built to timed
+slots, an authored camera, the end credits from `Performance.titles`), with Everything's legs and match cuts: four
+places (the hatter's town, the wastes, the castle's room, the flower fields), each one set however often it is
+visited, and nearly every cut a step through the castle's door. The arrangement changes pace from stretch to
+stretch, so `scripts/shows/merry-go-round-onsets.py` tracks each stretch beat by beat (bars and their place in the
+bar) into `scripts/shows/plans/merry-go-round-onsets.json`; `check:shows` holds every strike to it
+(`apps/rube/checks/merry-go-round.ts`). The report is `apps/rube/src/shows/versions/merry-go-round/MERRY_GO_ROUND.md`.

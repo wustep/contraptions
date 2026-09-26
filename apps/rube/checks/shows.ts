@@ -38,6 +38,7 @@ import ntfcOnsets from '../../../scripts/shows/plans/liftoff-ntfc-onsets.json'
 import type { LiftoffShow } from '../src/shows/versions/interstellar/liftoff/show'
 import { checkSebs } from './sebs'
 import { checkGymnopedie } from './gymnopedie'
+import { checkMerryGoRound } from './merry-go-round'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -140,10 +141,13 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Première Arabesque and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Merry-Go-Round, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Merry-Go-Round|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
-  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,premiere-arabesque')
+  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land, Merry-Go-Round and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,merry-go-round,premiere-arabesque')
+  const merryGoRound = shipped.works.find((w) => w.work === 'merry-go-round')?.versions ?? []
+  check('merry-go-round is Merry-Go-Round, one take, Opus 5.5, with no note',
+    merryGoRound.map((v) => v.take).join(',') === 'opus55' && merryGoRound[0].title === 'Merry-Go-Round' && merryGoRound[0].label === 'Opus 5.5' && merryGoRound[0].note === undefined)
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
@@ -377,6 +381,7 @@ async function main(): Promise<void> {
       }
       if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
       if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)
+      if (work.work === 'merry-go-round' && version.take === 'opus55') checkMerryGoRound(perf, version, check)
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
