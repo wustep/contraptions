@@ -453,7 +453,9 @@ export const drum = part<DrumState>(
     }
   },
   (slot): PartShot[] => [
-    { t: slot.begin, ...SEAM_SHOT },
+    // The seam's framing (6 cells, following), leaning east into the room he falls into, so the room is seen (its
+    // banked fires, the kettle, the drums) and not the rock of its west wall.
+    { t: slot.begin, ...SEAM_SHOT, off: [1.7, SEAM_SHOT.off[1]] },
     // The kettle's three strokes: the landing settles first (the camera eases out of the dive onto him on the kettle,
     // a held point, over a beat), and only then leans the way he will be thrown.
     { t: beat(161.2), cells: 6.1, hold: [-0.2, -0.55], w: 0.75, off: [0.2, -0.3] },

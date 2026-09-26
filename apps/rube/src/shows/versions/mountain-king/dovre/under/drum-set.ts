@@ -49,7 +49,8 @@ import {
  * light grow bar by bar with the crescendo, and stay.
  */
 export function light(T: number): number {
-  let a = 0.06
+  // The banked fires' own glow: enough to see the room by as he falls into it (it has been waiting in the dark).
+  let a = 0.11
   a += 0.18 * smooth(T, BEGIN - 0.02, BEGIN + 0.7)
   for (const d of DRUMMERS) a += 0.12 * smooth(T, beat(d.up) - 0.35, beat(d.up) + 0.8)
   a += 0.1 * smooth(T, FF - 1.4, FF + 0.4)
@@ -277,7 +278,10 @@ export function drawFire(p: p5, c: Ctx, x: number, T: number, L: number, seed: n
   const lit1 = caught(seed - 1, T)
   const y = FLOOR + jolt * 0.3
   const inkC = edgeC(L)
-  const glowing = mixHex(mixHex(STONE.deep, WORKS.rust, 0.35 + 0.25 * lit1), LAMP.flame, (0.1 + 0.55 * L) * lit1)
+  const bank = 0.5 + 0.5 * Math.sin(T * 1.3 + seed * 2.1)
+  const glowing = mixHex(mixHex(STONE.deep, WORKS.rust, 0.55 + 0.1 * bank + 0.1 * lit1), LAMP.flame, (0.1 + 0.55 * L) * lit1)
+  // Banked, the embers breathe a low red glow onto the floor and the barrels near them.
+  if (lit1 < 0.99) glow(p, c, x, y - 0.15, 1.5, (0.1 + 0.05 * bank) * (1 - lit1), WORKS.rust)
   p.push()
   p.strokeJoin(p.ROUND)
   // The embers' bed, then two logs crossed over it, their ends glowing.
