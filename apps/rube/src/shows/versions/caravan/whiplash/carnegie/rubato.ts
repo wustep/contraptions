@@ -224,13 +224,17 @@ export const rubato = part<{ begin: number }>(
       // The climb, and onto the weight: the metronome's head, the two cymbals, the swing.
       { t: 431.3, cells: 6.1, hold: at(-1.5, -2.05), w: 1 },
       { t: 433.6, cells: 5.4, hold: at(M, -2.55), w: 1 },
-      // Slowing: in, and up with him, drifting a little toward the ride as it nears the slowest stroke (on the ride).
-      { t: 442, cells: 5.15, hold: at(M, -2.7), w: 1 },
-      { t: 451, cells: 4.8, hold: at(M - 0.2, -2.9), w: 1 },
-      { t: 458.6, cells: 4.5, hold: at(M - 0.3, -3.0), w: 1 },
-      // Quickening: back out, drifting back.
-      { t: 466, cells: 4.8, hold: at(M + 0.1, -2.9), w: 1 },
-      { t: 474, cells: 5.4, hold: at(M, -2.6), w: 1 },
+      // Back for the whole of it: the metronome over the kit in its pool, Fletcher on his podium, watching.
+      { t: 440, cells: 7.8, hold: at(M + 2.2, -2.2), w: 1 },
+      // Slowing: in, closer and closer as he climbs the rod, to him alone at its top on the slowest stroke, swinging
+      // slowly through the dark; held there a moment.
+      { t: 447, cells: 4.2, hold: at(M, -3.0), w: 1 },
+      { t: 455, cells: 3.1, hold: at(M + 0.05, -3.85), w: 1 },
+      { t: 458.6, cells: 2.85, hold: at(M + 0.05, -3.95), w: 1 },
+      { t: 462.5, cells: 3.1, hold: at(M + 0.05, -3.75), w: 1 },
+      // Quickening: back out as he comes down the rod, the bob and the two rims, then the machine and the stage.
+      { t: 468, cells: 4.6, hold: at(M, -2.8), w: 1 },
+      { t: 474, cells: 6.4, hold: at(M + 0.6, -2.3), w: 1 },
       { t: 481, cells: 6.2, hold: at(-1.8, -2.2), w: 1 },
       // The roll: in on him as the swing collapses into the shimmer; then one long draw back through the swell as
       // the blur widens and the light rises, to the whole machine, the kit and Fletcher on his podium; then down
