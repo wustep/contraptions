@@ -408,35 +408,76 @@ export function drawDesk(p: p5, k: number, weight: number, s: DeskState, age: nu
   p.fill(brass)
   p.circle(x1 * k, (top + thick / 2) * k, 0.028 * k)
 
-  // The ticket machine.
+  // The ticket press: a red-enamelled cabinet with brass trim, a roll of blank tickets in a cradle on its top feeding
+  // down into it, the window on its reel of places, a hand lever on its left that throws down on each stamp, and a
+  // big brass-lipped slot on its right where the tickets come out.
   const mx = MACHINE.x
   const mh = MACHINE.half
+  const enamel = mixHex(mixHex(HOME.roof, CHURCH.glassRed, 0.35), '#8E6A60', age * 0.5)
+  const enamelDark = mixHex(enamel, INK, 0.35)
   p.push()
   p.translate(s.shake * 0.006 * k, 0)
-  // The stamp's plunger over it: a rod through a collar, a round-topped knob.
-  const drop = s.stamp * 0.06
+  // The hand lever, behind the body: a pivot boss low on its left, the arm up and out, a grip on its end. It throws
+  // down with the stamp and springs back.
+  const pivot: [number, number] = [mx - mh + 0.04, MACHINE.top + 0.3]
+  const lever = -2.15 + 0.75 * s.stamp
+  const arm = 0.46
+  const gx = pivot[0] + Math.cos(lever) * arm
+  const gy = pivot[1] + Math.sin(lever) * arm
+  p.stroke(INK)
+  p.strokeWeight(weight * 2.2)
+  p.line(pivot[0] * k, pivot[1] * k, gx * k, gy * k)
+  p.stroke(IRON_LIGHT)
+  p.strokeWeight(weight * 1.0)
+  p.line(pivot[0] * k, pivot[1] * k, gx * k, gy * k)
+  p.push()
+  p.translate(gx * k, gy * k)
+  p.rotate(lever + Math.PI / 2)
   p.stroke(INK)
   p.strokeWeight(weight * 0.7)
-  p.fill(IRON_LIGHT)
-  rect(p, k, mx - 0.022, MACHINE.top - 0.17 + drop, mx + 0.022, MACHINE.top + 0.02)
-  p.fill(CHURCH.glassRed)
-  p.arc(mx * k, (MACHINE.top - 0.16 + drop) * k, 0.13 * k, 0.1 * k, Math.PI, Math.PI * 2, p.CHORD)
-  p.fill(IRON)
-  rect(p, k, mx - 0.055, MACHINE.top - 0.035, mx + 0.055, MACHINE.top + 0.005, 0.01)
-  // The body: a cast-iron box, a little taller than wide, with a brass band.
-  p.fill(IRON)
+  p.fill(mixHex(HOME.woodDark, INK, 0.1))
+  rect(p, k, -0.035, -0.09, 0.035, 0.03, 0.02)
+  p.pop()
+  // The body: a cabinet a little taller than wide, its top rounded over, on a brass plinth.
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.8)
+  p.fill(enamel)
   p.beginShape()
-  p.vertex((mx - mh) * k, top * k)
-  p.vertex((mx - mh + 0.02) * k, (MACHINE.top + 0.05) * k)
-  p.bezierVertex((mx - mh + 0.03) * k, (MACHINE.top - 0.005) * k, (mx + mh - 0.03) * k, (MACHINE.top - 0.005) * k, (mx + mh - 0.02) * k, (MACHINE.top + 0.05) * k)
-  p.vertex((mx + mh) * k, top * k)
+  p.vertex((mx - mh) * k, (top - 0.03) * k)
+  p.vertex((mx - mh + 0.015) * k, (MACHINE.top + 0.08) * k)
+  p.bezierVertex((mx - mh + 0.02) * k, (MACHINE.top + 0.0) * k, (mx + mh - 0.02) * k, (MACHINE.top + 0.0) * k, (mx + mh - 0.015) * k, (MACHINE.top + 0.08) * k)
+  p.vertex((mx + mh) * k, (top - 0.03) * k)
   p.endShape(p.CLOSE)
   p.fill(brass)
-  rect(p, k, mx - mh + 0.005, top - 0.07, mx + mh - 0.005, top - 0.045)
+  rect(p, k, mx - mh - 0.03, top - 0.045, mx + mh + 0.03, top, 0.01)
+  rect(p, k, mx - mh + 0.01, MACHINE.top + 0.1, mx + mh - 0.01, MACHINE.top + 0.125)
+  // The lever's pivot boss on the body's side.
+  p.fill(brass)
+  p.circle(pivot[0] * k, pivot[1] * k, 0.07 * k)
+  p.noStroke()
+  p.fill(INK)
+  p.circle(pivot[0] * k, pivot[1] * k, 0.022 * k)
+  // The roll of blank tickets on top, lying in its brass cradle, its strip running down into the body.
+  const ry = MACHINE.top - 0.075
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.6)
+  p.fill(brass)
+  p.quad((mx - 0.2) * k, (MACHINE.top + 0.02) * k, (mx + 0.2) * k, (MACHINE.top + 0.02) * k, (mx + 0.16) * k, (ry + 0.02) * k, (mx - 0.16) * k, (ry + 0.02) * k)
+  p.strokeWeight(weight * 0.7)
+  p.fill(HOME.trim)
+  rect(p, k, mx - 0.19, ry - 0.07, mx + 0.19, ry + 0.05, 0.05)
+  p.stroke(alpha(p, INK, 0.4))
+  p.strokeWeight(weight * 0.4)
+  for (const u of [-0.1, 0.0, 0.1]) p.line((mx + u) * k, (ry - 0.06) * k, (mx + u) * k, (ry + 0.04) * k)
+  p.noStroke()
+  p.fill(CHURCH.glassRed)
+  rect(p, k, mx - 0.19, ry - 0.07, mx - 0.15, ry + 0.05, 0.02)
   // The window on the reel: a brass bezel, the picture rolling behind glass.
   const [ww, wh] = MACHINE.window
   const wx0 = mx - ww / 2
   const wy0 = MACHINE.wy - wh / 2
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.7)
   p.fill(brass)
   rect(p, k, wx0 - 0.03, wy0 - 0.03, wx0 + ww + 0.03, wy0 + wh + 0.03, 0.02)
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -458,12 +499,20 @@ export function drawDesk(p: p5, k: number, weight: number, s: DeskState, age: nu
   p.stroke(INK)
   p.strokeWeight(weight * 0.7)
   rect(p, k, wx0, wy0, wx0 + ww, wy0 + wh)
-  // The slot the tickets come out of, on the right: a dark mouth in a brass lip.
+  // A cream panel under the window where a ticket clerk's card would be (blank: no words, ever).
+  p.fill(alpha(p, HOME.trim, 0.9))
+  p.strokeWeight(weight * 0.5)
+  rect(p, k, mx - 0.12, MACHINE.wy + 0.16, mx + 0.12, MACHINE.wy + 0.24, 0.015)
+  // The slot the tickets come out of, on the right: a dark mouth in a brass lip, big enough to see them come.
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.7)
   p.fill(brass)
-  rect(p, k, mx + mh - 0.01, MACHINE.wy - 0.045, mx + mh + 0.035, MACHINE.wy + 0.005, 0.008)
+  rect(p, k, mx + mh - 0.015, MACHINE.wy - 0.1, mx + mh + 0.05, MACHINE.wy + 0.06, 0.012)
   p.noStroke()
+  p.fill(enamelDark)
+  rect(p, k, mx + mh + 0.005, MACHINE.wy - 0.08, mx + mh + 0.04, MACHINE.wy + 0.04)
   p.fill(INK)
-  rect(p, k, mx + mh, MACHINE.wy - 0.028, mx + mh + 0.03, MACHINE.wy - 0.012)
+  rect(p, k, mx + mh + 0.012, MACHINE.wy - 0.07, mx + mh + 0.034, MACHINE.wy + 0.03)
   p.pop()
   p.pop()
 }
@@ -477,13 +526,13 @@ export function drawTicket(p: p5, k: number, weight: number, x: number, y: numbe
   p.stroke(alpha(p, INK, light))
   p.strokeWeight(weight * 0.5)
   p.fill(alpha(p, HOME.trim, light))
-  p.rect(0, 0, 0.19 * k, 0.095 * k, 0.01 * k)
+  p.rect(0, 0, 0.28 * k, 0.14 * k, 0.014 * k)
   p.noStroke()
   p.fill(alpha(p, CHURCH.glassRed, light))
-  p.rect(-0.065 * k, 0, 0.045 * k, 0.088 * k)
+  p.rect(-0.095 * k, 0, 0.065 * k, 0.13 * k)
   // A band of the falls' purple: where it goes.
   p.fill(alpha(p, FALLS.cliff, 0.9 * light))
-  p.rect(0.035 * k, 0.015 * k, 0.09 * k, 0.016 * k)
+  p.rect(0.05 * k, 0.022 * k, 0.13 * k, 0.024 * k)
   p.pop()
 }
 

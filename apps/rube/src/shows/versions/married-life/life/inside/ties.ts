@@ -6,6 +6,7 @@ import { G_EARTH } from '../physics'
 import { BOW_FROM, HALF } from '../cast'
 import { CHURCH, ellieAt as ellieColor, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
+import { CUTS } from '../seams'
 import { DESK, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
 import { BOW, drawTie } from './ties-tie'
 
@@ -986,11 +987,12 @@ export const ties = part<TiesState>(
       { t: EMBRACE, cells: 2.9, hold: [6.75, -0.5], w: 1 },
       // The painting, lit: a long look, him small under it.
       { t: LAMP + 0.45, cells: 3.45, hold: [7.15, -1.0], w: 1 },
-      // In on the machine, the basket and him; her at the door.
+      // In on the machine, the basket and him; her at the door. Closer on the cadence, so the two tickets are seen
+      // leaving the slot and dropping into the basket; then out after her on the follow-through, into the cut.
       { t: 163.6, cells: 2.55, hold: [7.45, -0.62], w: 1 },
-      { t: 165.95, cells: 2.6, hold: [7.55, -0.66], w: 1 },
-      // The cut: out after her, framed as `CUTS.climb` says.
-      { t: SHUT, cells: 5, hold: [cut[0] + 0.8, cut[1] - 0.9], w: 1 },
+      { t: 166.2, cells: 2.46, hold: [7.56, -0.66], w: 1 },
+      // The cut: framed as `CUTS.climb` says.
+      { t: SHUT, cells: CUTS.climb.cells, hold: [cut[0] + CUTS.climb.frame[0], cut[1] + CUTS.climb.frame[1]], w: 1 },
     ]
   },
 )

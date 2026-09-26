@@ -75,7 +75,10 @@ function skyAt(t: number): string {
   if (t < CUT.doctor) return HOME.sky
   if (t < 95) return grey
   if (t < 101) return mixHex(grey, HOME.sky, (t - 95) / 6)
-  return mixHex(HOME.sky, '#D9D3C4', Math.max(0, Math.min(1, (t - 140) / 25)))
+  // The late years go pale; and on the evening of the tickets the sky past the front door warms to dusk, so the
+  // porch is an evening outside, not a pale wall.
+  const late = mixHex(HOME.sky, '#D9D3C4', Math.max(0, Math.min(1, (t - 140) / 12)))
+  return mixHex(late, mixHex(HOME.dusk, '#D9A38C', 0.35), Math.max(0, Math.min(1, (t - 156) / 6)))
 }
 
 function rect(p: p5, k: number, x0: number, y0: number, x1: number, y1: number): void {
@@ -231,11 +234,24 @@ export const inside = scenery<null>({
     rect(p, k, H.backWall[0] - 0.08, H.backDoorTop - 0.1, H.backWall[1] + 0.02, H.backDoorTop)
     rect(p, k, H.frontWall[0] - 0.02, H.frontDoorTop - 0.1, H.frontWall[1] + 0.08, H.frontDoorTop)
 
-    // The porch: its boards and a post, out past the front door.
+    // The porch: its boards, a post, and its rail along the far side (a top rail, a bottom rail, the balusters
+    // between), out past the front door.
     p.stroke(ink)
     p.strokeWeight(weight * 0.8)
-    p.fill(mixHex(HOME.trim, '#E6DCC8', age))
+    const porchWood = mixHex(HOME.trim, '#E6DCC8', age)
+    p.fill(porchWood)
     rect(p, k, H.frontWall[1], H.ground, H.porch[1], H.ground + 0.22)
+    if (f.x1 > H.frontWall[1] && f.x0 < H.porch[1]) {
+      const r0 = H.frontWall[1] + 0.08
+      const r1 = H.porch[1] - 0.25
+      p.strokeWeight(weight * 0.6)
+      p.fill(mixHex(porchWood, '#CFC3AE', 0.35))
+      for (let bx = r0 + 0.12; bx < r1 - 0.06; bx += 0.2) rect(p, k, bx - 0.028, H.ground - 0.78, bx + 0.028, H.ground - 0.1)
+      p.strokeWeight(weight * 0.8)
+      p.fill(porchWood)
+      rect(p, k, r0, H.ground - 0.86, r1, H.ground - 0.76)
+      rect(p, k, r0, H.ground - 0.12, r1, H.ground - 0.06)
+    }
     rect(p, k, H.porch[1] - 0.25, H.eavesY + 3.2, H.porch[1] - 0.12, H.ground)
     p.fill(mixHex(HOME.roof, HOME.roofOld, age))
     p.quad(H.frontWall[1] * k, (H.eavesY + 3.1) * k, (H.porch[1] + 0.2) * k, (H.eavesY + 3.4) * k, (H.porch[1] + 0.2) * k, (H.eavesY + 3.6) * k, H.frontWall[1] * k, (H.eavesY + 3.3) * k)

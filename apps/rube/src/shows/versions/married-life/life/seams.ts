@@ -72,8 +72,8 @@ export const CUTS: Record<keyof typeof CUT, Cut> = {
   climb: {
     t: CUT.climb,
     v: [0.6, 0],
-    cells: 5,
-    frame: [0.8, -0.9],
+    cells: 3.6,
+    frame: [0.55, -0.72],
     ellie: [0.36, 0],
     basket: true,
     what: 'setting out for the picnic, walking right, level, the basket (the tickets in it) on his top, Ellie a step ahead; on the far side, the foot of the hill',

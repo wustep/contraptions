@@ -449,7 +449,7 @@ export const climb = part<ClimbState>(
     return [
       // The cut's pull-out carries on out to the establishing shot: the whole hill, the tree on its crest, the two of
       // them small at its foot. It holds while he climbs, easing in a little.
-      { t: 169.6, cells: 9.4, hold: h(4.75, -0.2) },
+      { t: 169.95, cells: 9.4, hold: h(4.75, -0.2) },
       { t: 171.6, cells: 8.3, hold: h(5.15, 0.0) },
       // In on the two of them as she climbs after him and tires; settled before she gives way.
       { t: 173.8, cells: 3.4, hold: h(7.6, LANE_Y - 0.75) },
