@@ -21,11 +21,12 @@ import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-mo
  * hinges, ringing down), stops outside, and as the music gathers walks out to her, slowly, under the sheet, round
  * in front of the stump (under her) and stops a little way off, where she is looking.
  *
- * On the waltz's return (100.357) the book opens on his top: the board stands up with her painting of Paradise
- * Falls inside it, at her eye level, and on bar 1 (100.78) a cut-paper jungle folds up in front. She turns to it,
- * and lights up: she hops down off the stump on the house's side (101.314) and is away home ahead of him; she bumps
- * the door in on bar 2 (102.046); he follows her in with the book open, and it folds shut (102.899) and slides off
- * his top onto the bookcase's bottom shelf, where it lives. At the seam (`SEAM.jar`) he is at the house's (0.3, 0)
+ * On the waltz's return (100.357) the book opens on his top: its top board swings over on the spine and comes down
+ * flat, and Paradise Falls rises out of the gutter in cut paper, at her eye level; on bar 1 (100.78) a cut-paper
+ * jungle folds up either side. She turns to it, and lights up: she hops down off the stump on the house's side
+ * (101.314) and is away home ahead of him; she bumps the door in on bar 2 (102.046); he follows her in with the book
+ * open, it folds shut, slowly, on bar 2's third beat (102.899), and as he goes on in it slides back off his top and
+ * drops onto the bookcase's bottom shelf, where it lives, on bar 3 (the seam). At the seam (`SEAM.jar`) he is at the house's (0.3, 0)
  * moving right at 0.8, and she a step ahead: the living room, the jar.
  *
  * Frame: this part's cells are the house's inside moved by `YARD_AT` (so the house's x is this frame's x - 0.1);
@@ -58,8 +59,8 @@ const STUMP = { x: ELLIE_X, w: 0.52, top: GROUND - 0.45 }
 const SEAT = STUMP.top - 0.13
 /** How far she rolls back on it to look at the book: her dot turns from down and away to the picture. */
 const TURN = 0.064
-/** Where he stops: round in front of her, where she is looking, a little way off. */
-const STOP = ELLIE_X - 0.74
+/** Where he stops: round in front of her, where she is looking, far enough off that the book opens flat between them. */
+const STOP = ELLIE_X - 0.98
 /** The clothesline, from a hook on the house to the tree, and the sheet on it. */
 const LINE: [Pt, Pt] = [
   [INSIDE.backWall[0], -1.72],
@@ -87,7 +88,7 @@ const E_HOP = 101.0
 const E_DOWN = 101.314
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
-export const YARD_HITS: number[] = [NUDGE, LAND, PUSH_OUT, OPEN, FLAP, E_DOWN, PUSH_IN, SHUT]
+export const YARD_HITS: number[] = [NUDGE, LAND, PUSH_OUT, OPEN, FLAP, E_DOWN, PUSH_IN, SHUT, SEAM.jar]
 
 /* ------------------------------------------------------------------ Carl */
 
@@ -181,14 +182,15 @@ function top(T: number): { x: number; y: number; tilt: number } {
 
 /** When it starts to fall from the bookcase: so that from its top it lands on his on the note. */
 const FALL_FROM = LAND - Math.sqrt((2 * (GROUND - 0.26 - CASE.top)) / 12)
-/** The book slides off his top onto its shelf from the moment it shuts, and comes to rest. */
-const REST = SHUT + 0.3
+/** The book slides back off his top as he goes on in, and drops onto its shelf on the jar waltz's bar 3. */
+const REST = SEAM.jar
 
 interface BookAt {
   x: number
   y: number
   tilt: number
   open: number
+  pop: number
   flap: number
   /** Drawn in front of him (riding him or falling), or with the bookcase. */
   front: boolean
@@ -196,7 +198,7 @@ interface BookAt {
 
 /** The book at `T`: on the bookcase's top, falling, on his top (opening, standing, folding), sliding onto its shelf. */
 function bookAt(T: number): BookAt {
-  const shut = { open: 0, flap: 0 }
+  const shut = { open: 0, pop: 0, flap: 0 }
   if (T < NUDGE) return { x: BOOK_X0, y: CASE.top, tilt: 0, ...shut, front: false }
   if (T < FALL_FROM) {
     // The bookcase goes out from under it: it stays, and tips over the edge.
@@ -209,20 +211,28 @@ function bookAt(T: number): BookAt {
     const t = top(LAND)
     return { x: BOOK_X0 + (t.x - BOOK_X0) * inout(u), y: CASE.top + 6 * s * s, tilt: -0.3 * Math.sin((Math.PI / 2) * (1 + u)), ...shut, front: true }
   }
-  // Opening on the waltz's return: the board stands with the note, a paper wobble after; the jungle on bar 1.
-  const openUp = T < OPEN ? clamp01((T - (OPEN - 0.4)) / 0.4) ** 2 : 1 - 0.05 * Math.exp(-(T - OPEN) / 0.14) * Math.abs(Math.sin((T - OPEN) * 16))
+  // Opening on the waltz's return: the top board swings over on its spine and comes down flat on the note, a
+  // paper wobble after; the falls rise out of the gutter over the next beat; the jungle folds up on bar 1.
+  const openUp = T < OPEN ? clamp01((T - (OPEN - 0.42)) / 0.42) ** 1.6 : 1
+  const popUp = T < OPEN ? 0 : 1 - (1 - clamp01((T - OPEN) / 0.38)) ** 2
   const flapUp = T < FLAP ? clamp01((T - (FLAP - 0.2)) / 0.2) ** 2 : 1 - 0.08 * Math.exp(-(T - FLAP) / 0.12) * Math.abs(Math.sin((T - FLAP) * 18))
-  // Folding as they come in: the jungle first, then the board claps shut on its beat.
-  const fold = 1 - clamp01((T - (SHUT - 0.34)) / 0.34) ** 2
-  const flapFold = 1 - inout((T - (SHUT - 0.55)) / 0.25)
+  // Folding as they come in, slowly: the jungle first, then the falls lie down, then the board comes over and
+  // shuts on its beat.
+  const flapFold = 1 - inout((T - (SHUT - 0.8)) / 0.28)
+  const popFold = 1 - inout((T - (SHUT - 0.62)) / 0.3)
+  const fold = 1 - inout((T - (SHUT - 0.5)) / 0.5)
   const open = T >= SHUT ? 0 : Math.min(openUp, fold)
+  const pop = T >= SHUT ? 0 : Math.min(popUp, popFold)
   const flap = T >= SHUT ? 0 : Math.min(flapUp, flapFold)
   const t = top(Math.min(T, SHUT))
-  if (T < SHUT) return { x: t.x, y: t.y, tilt: t.tilt, open, flap, front: true }
-  // Off his top and onto the shelf (the shelf is his height), coming to rest.
-  const v = (top(SHUT + 0.01).x - top(SHUT - 0.01).x) / 0.02
-  const x = hermite(t.x, v, BOOK_HOME, 0, REST - SHUT, (T - SHUT) / (REST - SHUT))
-  return { x, y: CASE.low, tilt: 0, open: 0, flap: 0, front: T < REST }
+  if (T < SHUT) return { x: t.x, y: t.y, tilt: t.tilt, open, pop, flap, front: true }
+  // Off his top as he goes on in (it lags him, sliding back), tipping a little, and down onto the shelf.
+  const u = clamp01((T - SHUT) / (REST - SHUT))
+  const x = hermite(t.x, 0, BOOK_HOME, 0, REST - SHUT, u)
+  const y = t.y + (CASE.low - t.y) * u * u
+  const tilt = -0.22 * Math.sin(Math.PI * u) * (1 - u * 0.3)
+  if (T < REST) return { x, y, tilt, open: 0, pop: 0, flap: 0, front: true }
+  return { x: BOOK_HOME, y: CASE.low, tilt: 0, open: 0, pop: 0, flap: 0, front: false }
 }
 
 /* ------------------------------------------------------------------ drawing */
@@ -478,7 +488,7 @@ interface YardState {
 }
 
 function drawBookAt(p: p5, c: Ctx, b: BookAt, age: number): void {
-  drawBook(p, c.k, c.weight, b.x, b.y, { open: b.open, flap: b.flap, tilt: b.tilt, age })
+  drawBook(p, c.k, c.weight, b.x, b.y, { open: b.open, pop: b.pop, flap: b.flap, tilt: b.tilt, age })
 }
 
 export const yard = part<YardState>(
@@ -537,11 +547,12 @@ export const yard = part<YardState>(
     // Out with him, and along as he walks out to her.
     { t: 92.4, cells: 4.05, hold: [at(-1.75), -1.0], w: 1 },
     { t: 95.8, cells: 4.0, hold: [at(-2.2), -1.02], w: 1 },
-    // The two of them, closer, and closer again for the book.
-    { t: 98.9, cells: 3.5, hold: [at(-2.95), -0.98], w: 1 },
-    { t: 100.7, cells: 3.2, hold: [at(-2.95), -1.0], w: 1 },
+    // The two of them, closer, and in close on the book as it opens and the falls rise, and on her turning to it.
+    { t: 98.9, cells: 3.5, hold: [at(-3.1), -0.95], w: 1 },
+    { t: OPEN, cells: 2.72, hold: [at(-3.18), -0.7], w: 1 },
+    { t: 100.95, cells: 2.56, hold: [at(-3.15), -0.66], w: 1 },
     // After them, home.
-    { t: 101.6, cells: 3.5, hold: [at(-2.4), -0.95], w: 1 },
+    { t: 101.75, cells: 3.3, hold: [at(-2.5), -0.86], w: 1 },
     { t: 102.5, cells: 3.9, hold: [at(-1.1), -0.92], w: 1 },
     { t: E, cells: 4.3, hold: [at(0.6), -0.9], w: 1 },
   ],
