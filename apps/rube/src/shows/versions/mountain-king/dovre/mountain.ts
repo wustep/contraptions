@@ -22,10 +22,14 @@ import { LAMP, SKY, STONE, WORKS } from './worlds'
 /** The skyline's corners, world cells: where the mountain's surface is. Between them, a smooth line. */
 export const SKYLINE: Pt[] = [
   [-90, 34], [-60, 26], [-38, 14], [-22, 6.5], [-10, 2.2], [0, 0.13], [8, -1.3], [14, -2.5], [19.8, -3.87],
-  // The cliff over the gate: the gate is cut into its foot.
-  [20.1, -9.5], [26, -12.5], [34, -15.5], [42, -19.5], [48, -21],
+  // The cliff over the gate: the gate is cut into its foot. Then a mountain's slope, not a hump: it climbs in steps
+  // of rock, a steep riser and a long tread (points closer than a cell are joined straight, so a riser is sharp), to
+  // a crown of two blunt rock towers either side of the summit, which the finale's blow-out breaks open between them.
+  [20.1, -9.5], [22.8, -10.15], [23.35, -11.75], [23.95, -11.9], [27.6, -12.9], [28.2, -14.5], [28.85, -14.7], [32.8, -15.6],
+  [33.35, -17.2], [33.95, -17.4], [37.9, -18.3], [38.4, -19.5], [39.05, -19.65], [42.55, -20.2], [43.2, -22.55], [43.95, -22.75],
+  [44.35, -20.85], [44.6, -20.55], [48, -21], [50.4, -20.8], [50.8, -22.45], [51.45, -22.6], [51.9, -20.9],
   // The east flank: down from the summit to a shoulder with a grassy hollow in it, then down to the valley.
-  [52, -20.35], [55.5, -18.9], [58.5, -17.95], [61.5, -18.2], [65, -15.8], [70, -11.2], [82, -2], [96, 9],
+  [52.4, -20.25], [55.5, -18.9], [58.5, -17.95], [61.5, -18.2], [65, -15.8], [70, -11.2], [82, -2], [96, 9],
   [112, 20], [130, 30], [170, 40],
 ]
 
@@ -176,7 +180,7 @@ export const mountain = scenery<MountainState>({
       const ox = f.cx * (1 - sf)
       const oy = f.cy * (1 - sf)
       p.noStroke()
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < 150; i++) {
         const sx = -80 + 240 * hash(i, 1) + ox
         const sy = -70 + 70 * hash(i, 2) + oy
         if (sx < x0 || sx > x1 || sy < top || sy > bottom) continue
@@ -187,7 +191,7 @@ export const mountain = scenery<MountainState>({
         const col = p.color(SKY.star)
         col.setAlpha(255 * a)
         p.fill(col)
-        const r = (0.03 + 0.04 * hash(i, 5)) * k * (f.y1 - f.y0 > 20 ? 1.4 : 1)
+        const r = Math.max(1.3, (0.03 + 0.04 * hash(i, 5)) * k * (f.y1 - f.y0 > 20 ? 1.6 : 1))
         p.ellipse(sx * k, sy * k, r, r)
       }
     }
@@ -252,6 +256,10 @@ export const mountain = scenery<MountainState>({
     // chord (the bells that send the trolls running) and rings on over the credits.
     drawChurch(p, k, CHURCH[0] + ox, CHURCH[1] + oy, t, d)
 
+    // The mountain breathes: a slow wisp of steam from the summit's smoke hole, the chimney the finale blows open.
+    // Only while the mountain is whole, and only on the sky.
+    if (t < CODA + 1) steam(ctx, k, t)
+
     ctx.restore()
 
     // The upper flanks, from the cliff over the gate eastward: a skin of turf over the rock, dark at night, green in
@@ -273,6 +281,33 @@ export const mountain = scenery<MountainState>({
     }
   },
 })
+
+/** The steam's wisps: born at the summit's smoke hole, rising and drifting east, spreading and thinning. */
+function steam(ctx: CanvasRenderingContext2D, k: number, t: number): void {
+  const fade = 1 - smooth(t, CODA - 0.5, CODA + 1)
+  const PERIOD = 9
+  for (let i = 0; i < 5; i++) {
+    const age = (((t + (i * PERIOD) / 5) % PERIOD) + PERIOD) % PERIOD
+    const u = age / PERIOD
+    const x = 47.6 + 0.45 * age + 0.25 * Math.sin(age * 0.7 + i)
+    const y = -21.25 - 0.55 * age - 0.02 * age * age
+    const w = 0.5 + 0.32 * age
+    const a = 0.2 * Math.min(1, age / 1.2) * (1 - u) * (1 - u) * fade
+    if (a <= 0.004) continue
+    const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, w * k)
+    g.addColorStop(0, `rgba(200,208,224,${a.toFixed(3)})`)
+    g.addColorStop(0.55, `rgba(200,208,224,${(a * 0.45).toFixed(3)})`)
+    g.addColorStop(1, 'rgba(200,208,224,0)')
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.rotate(-0.25)
+    ctx.scale(1, 0.5)
+    ctx.translate(-x * k, -y * k)
+    ctx.fillStyle = g
+    ctx.fillRect((x - w) * k, (y - w) * k, 2 * w * k, 2 * w * k)
+    ctx.restore()
+  }
+}
 
 /** The turf on the upper flanks, from x0 to x1: a skin of grass over the rock, tufts on it, none in the crater. */
 function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: number, d: number): void {

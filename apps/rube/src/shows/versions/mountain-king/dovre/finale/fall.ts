@@ -329,16 +329,16 @@ const CAP_Y = -20.4
  */
 const TUMBLES: Laid[] = (
   [
-    { from: [47.0, CAP_Y], t0: BLOW, x1: 44.6, t1: 147.36, size: 1.45, seed: 21, roll: -3.1, dur: 1.9 },
-    { from: [48.2, CAP_Y], t0: BLOW, x1: 50.7, t1: 147.42, size: 1.2, seed: 22, roll: 1.5, dur: 1.5 },
-    { from: [47.4, CAP_Y - 0.2], t0: BLOW, x1: 45.4, t1: 147.28, size: 0.46, seed: 23, roll: -2.3, dur: 1.5 },
-    { from: [46.6, CAP_Y + 0.1], t0: BLOW, x1: 42.3, t1: 147.62, size: 1.9, seed: 24, roll: -4.6, dur: 2.6 },
-    { from: [48.0, CAP_Y - 0.1], t0: BLOW, x1: 51.3, t1: 147.5, size: 0.42, seed: 25, roll: 1.1, dur: 1.2 },
-    { from: [48.6, CAP_Y + 0.1], t0: BLOW, x1: 52.5, t1: 147.7, size: 1.6, seed: 26, roll: 1.7, dur: 2.0 },
-    { from: [47.1, CAP_Y - 0.2], t0: BLOW, x1: 43.4, t1: 147.55, size: 0.56, seed: 27, roll: -3.2, dur: 2.0 },
+    { from: [47.0, CAP_Y], t0: BLOW, x1: 42.3, t1: 147.36, size: 1.45, seed: 21, roll: -2.6, dur: 1.9 },
+    { from: [48.2, CAP_Y], t0: BLOW, x1: 52.7, t1: 147.42, size: 1.2, seed: 22, roll: 1.3, dur: 1.5 },
+    { from: [47.4, CAP_Y - 0.2], t0: BLOW, x1: 42.0, t1: 147.28, size: 0.46, seed: 23, roll: -2.0, dur: 1.5 },
+    { from: [46.6, CAP_Y + 0.1], t0: BLOW, x1: 40.4, t1: 147.62, size: 1.9, seed: 24, roll: -3.6, dur: 2.6 },
+    { from: [48.0, CAP_Y - 0.1], t0: BLOW, x1: 53.0, t1: 147.5, size: 0.42, seed: 25, roll: 1.0, dur: 1.2 },
+    { from: [48.6, CAP_Y + 0.1], t0: BLOW, x1: 53.6, t1: 147.7, size: 1.6, seed: 26, roll: 1.5, dur: 2.0 },
+    { from: [47.1, CAP_Y - 0.2], t0: BLOW, x1: 41.6, t1: 147.55, size: 0.56, seed: 27, roll: -3.0, dur: 2.0 },
     // The crown, torn off: two great boulders of it thrown high, one down each flank on the roll.
-    { from: [46.0, -20.6], t0: BLOW, x1: 44.9, t1: ROLL, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
-    { from: [49.2, -20.8], t0: BLOW, x1: 50.3, t1: 148.491, size: 1.25, seed: 29, roll: 1.4, dur: 1.6 },
+    { from: [46.0, -20.6], t0: BLOW, x1: 41.9, t1: ROLL, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
+    { from: [49.2, -20.8], t0: BLOW, x1: 52.7, t1: 148.491, size: 1.25, seed: 29, roll: 1.2, dur: 1.6 },
   ] as Tumble[]
 ).map(lay)
 /** The two that strike: the crown's boulders on the roll. */

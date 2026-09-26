@@ -142,15 +142,16 @@ export function drawRuin(p: p5, c: Pen, T: number, o: Pt, q: Pt, jet: () => void
       ctx.fillRect(X(r.x0 + 0.4), Y(r.y0 + 0.3), (r.x1 - r.x0 - 0.8) * k, (r.y1 - r.y0 - 0.6) * k)
     })
   })
-  // The dust it is full of: a haze that rolls down from the roof as it lets go and hangs, thickest low, catching
-  // what light is left (never clouds or discs).
+  // The dust it is full of: a haze that settles as the roof lets go and hangs, thickest low, catching what light is
+  // left (never clouds or discs).
   ROOMS.forEach((r) => {
     const since = T - r.at
     if (since <= 0) return
+    // Only in the room's lower half, which is as wide as the room (a vault's arch would show a box's corners).
     const front = smooth(since, 0, 0.9)
-    const a = 0.13 * smooth(since, 0, 0.3) * (1 - 0.5 * smooth(T, BLOW + 4, BLOW + 16))
-    const y0 = r.roof
-    const y1 = r.roof + (r.floor - r.roof) * (0.25 + 0.75 * front)
+    const a = 0.11 * smooth(since, 0, 0.3) * (1 - 0.5 * smooth(T, BLOW + 4, BLOW + 16))
+    const y0 = r.roof + (r.floor - r.roof) * 0.45
+    const y1 = y0 + (r.floor - y0) * (0.3 + 0.7 * front)
     soft(ctx, k, () => {
       // STONE.light's grey.
       const g = ctx.createLinearGradient(0, Y(y0), 0, Y(y1))
