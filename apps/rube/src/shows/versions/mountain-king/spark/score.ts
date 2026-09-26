@@ -33,7 +33,7 @@ import { dashGlass, dashRegatta } from './dash'
  *   101.95   DOOR. Statement 3, fortissimo: out of the smokestack of the night express, which runs away
  *   124.01   the festival: thrown into the fireworks field; the fuses; the coda's 23 chords are the finale
  *   147.0    silence: smoke, and the spark all but out in the ash
- *   148.24   the roll: it flares, and dashes home back through three fires (148.33, 148.40, 148.49)
+ *   148.24   the roll: it flares, and dashes home back through three fires (148.33, 148.56, 148.82)
  *   149.515  onto its wick. 149.815: the stove door bangs, the cat wakes, looks, and sleeps. The credits, in silence.
  */
 
@@ -74,11 +74,13 @@ const PLAN = (): LegPlan[] => [
 
 /**
  * The camera takes the show's biggest hits in the body: on each it pushes in a little, at once, and eases back. Only
- * the great ones: the doors into statements 2 and 3, the coda's heaviest chords, and the two last.
+ * the great ones: the doors into statements 2 and 3, the crash (the coda's first chord, the show's structural climax,
+ * though it measures under the heaviest), the coda's heaviest chords, and the two last.
  */
 const PUNCHES: [number, number][] = [
   [DOORS.glass, 0.5],
   [DOORS.railway, 0.9],
+  [CODA[0].t, 0.9],
   ...CODA.filter((c) => c.s >= 6).map((c) => [c.t, 0.7] as [number, number]),
   [LAST[0], 0.6],
   [LAST[1], 1],
