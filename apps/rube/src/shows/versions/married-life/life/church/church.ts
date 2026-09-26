@@ -352,152 +352,147 @@ export function beam(p: p5, k: number, top: [Pt, Pt], foot: [Pt, Pt], hex: strin
 }
 
 /**
- * A head in profile, facing left, centred on (0, 0) in the figure's scaled units, with its hat: brow, nose and chin
- * toward the altar, the skull's round at the back, and a hat or hair on every one of them, so no head reads as a ball.
+ * The congregation, at the leads' own scale and in their language (Carl boxy, Ellie round): each one a flat,
+ * unoutlined heads-and-shoulders silhouette on a pew's seat, the seat's front hiding everything below the shoulders,
+ * so they peek up out of the pew as Carl does at the funeral. Head and shoulders are one colour, one shape; the head
+ * is half a ball across and always wears a hat or hair, and a small nose turns it to the altar (left), so no head reads
+ * as a ball. The tallest, hat and all, stands about 1.5 of Carl above the seat.
  */
-function head(p: p5, X: (v: number) => number, color: string, hat: Hat, trim?: string): void {
-  p.fill(color)
-  p.beginShape()
-  p.vertex(X(0.04), X(0.12))
-  p.bezierVertex(X(0.13), X(0.08), X(0.14), X(-0.08), X(0.08), X(-0.12))
-  p.bezierVertex(X(0.03), X(-0.16), X(-0.08), X(-0.15), X(-0.1), X(-0.07))
-  p.bezierVertex(X(-0.105), X(-0.045), X(-0.11), X(-0.03), X(-0.135), X(0.0))
-  p.vertex(X(-0.11), X(0.03))
-  p.bezierVertex(X(-0.11), X(0.07), X(-0.1), X(0.11), X(-0.05), X(0.12))
-  p.endShape(p.CLOSE)
-  p.fill(trim ?? color)
-  const top = -0.13
-  switch (hat) {
-    case 'fedora':
-      p.rect(X(-0.2), X(top + 0.005), X(0.36), X(0.035), X(0.015))
-      p.beginShape()
-      p.vertex(X(-0.11), X(top + 0.01))
-      p.vertex(X(-0.1), X(top - 0.1))
-      p.bezierVertex(X(-0.05), X(top - 0.14), X(-0.01), X(top - 0.07), X(0.02), X(top - 0.12))
-      p.bezierVertex(X(0.06), X(top - 0.14), X(0.1), X(top - 0.12), X(0.11), X(top - 0.1))
-      p.vertex(X(0.12), X(top + 0.01))
-      p.endShape(p.CLOSE)
-      break
-    case 'bowler':
-      p.rect(X(-0.16), X(top + 0.01), X(0.31), X(0.03), X(0.015))
-      p.arc(X(-0.005), X(top + 0.025), X(0.23), X(0.26), Math.PI, 2 * Math.PI, p.CHORD)
-      break
-    case 'cap':
-      p.arc(X(0.01), X(top + 0.05), X(0.26), X(0.16), Math.PI, 2 * Math.PI, p.CHORD)
-      p.rect(X(-0.22), X(top + 0.03), X(0.14), X(0.03), X(0.015))
-      break
-    case 'cloche':
-      p.beginShape()
-      p.vertex(X(0.15), X(top + 0.13))
-      p.bezierVertex(X(0.17), X(top - 0.1), X(-0.14), X(top - 0.12), X(-0.14), X(top + 0.06))
-      p.vertex(X(-0.18), X(top + 0.09))
-      p.endShape(p.CLOSE)
-      break
-    case 'flowers':
-      p.rect(X(-0.12), X(top - 0.05), X(0.24), X(0.07), X(0.03))
-      p.fill(mixHex(trim ?? color, CHURCH.cloth, 0.65))
-      for (let i = 0; i < 3; i++) p.ellipse(X(0.07 - i * 0.055), X(top - 0.065 - (i === 1 ? 0.02 : 0)), X(0.06), X(0.045))
-      break
-    case 'feather':
-      p.rect(X(-0.12), X(top - 0.035), X(0.24), X(0.06), X(0.025))
-      p.beginShape()
-      p.vertex(X(-0.01), X(top - 0.03))
-      p.bezierVertex(X(0.02), X(top - 0.19), X(0.1), X(top - 0.27), X(0.22), X(top - 0.3))
-      p.bezierVertex(X(0.14), X(top - 0.22), X(0.09), X(top - 0.13), X(0.08), X(top - 0.03))
-      p.endShape(p.CLOSE)
-      break
-    case 'bun':
-      p.beginShape()
-      p.vertex(X(-0.08), X(top + 0.02))
-      p.bezierVertex(X(-0.05), X(top - 0.09), X(0.12), X(top - 0.12), X(0.17), X(top - 0.01))
-      p.bezierVertex(X(0.2), X(top + 0.05), X(0.17), X(top + 0.13), X(0.11), X(top + 0.14))
-      p.endShape(p.CLOSE)
-      break
-    case 'bald':
-      break
-  }
-}
-
-export type Hat = 'fedora' | 'bowler' | 'cloche' | 'flowers' | 'feather' | 'bun' | 'bald' | 'cap'
+export type Hat = 'bowler' | 'pillbox' | 'feather' | 'flowers' | 'bouffant' | 'sunhat' | 'bow' | 'cap'
 
 export interface Sit {
-  /** How far the hips are off the seat (cells): a bounce. */
+  /** How far off the seat (cells): a bob. */
   lift?: number
-  /** 0: the hand in the lap; 1: the arm straight up. */
+  /** 0: the hand down, out of sight; 1: the arm up over the head. */
   arm?: number
-  /** Tipped back (positive) or forward from the hips, radians. */
+  /** Tipped back (positive) or forward, radians, about the seat. */
   lean?: number
   trim?: string
 }
 
+/** A boxy head and shoulders (his family): square shoulders, a square head, a flat-crowned hat. */
+function boxyBust(p: p5, U: (v: number) => number, bottom: number, color: string, hat: Hat, trim: string): void {
+  p.push()
+  p.rectMode(p.CORNER)
+  p.fill(color)
+  // Shoulders: a block, its top corners a little rounded, square at the bottom (hidden in the pew).
+  p.rect(U(-0.13), U(-0.19), U(0.25), U(bottom + 0.19), U(0.05), U(0.05), 0, 0)
+  // The head: a rounded square set forward on them, and the nose's nub toward the altar.
+  p.rect(U(-0.09), U(-0.325), U(0.14), U(0.15), U(0.03))
+  p.rect(U(-0.115), U(-0.27), U(0.03), U(0.035), U(0.01))
+  p.fill(trim)
+  if (hat === 'bowler') {
+    // A hard hat, flat-crowned: the brim, then the crown.
+    p.rect(U(-0.12), U(-0.335), U(0.2), U(0.022), U(0.01))
+    p.rect(U(-0.085), U(-0.395), U(0.13), U(0.065), U(0.025), U(0.025), 0, 0)
+  } else if (hat === 'pillbox') {
+    // A pillbox hat, and her hair in a square roll at the back of her neck.
+    p.rect(U(-0.07), U(-0.37), U(0.11), U(0.05), U(0.012))
+    p.rect(U(0.02), U(-0.255), U(0.05), U(0.07), U(0.015))
+  }
+  p.pop()
+}
+
+/** A round head and shoulders (her family): sloped round shoulders, a round head, a hat that is never a dome alone. */
+function roundBust(p: p5, U: (v: number) => number, bottom: number, color: string, hat: Hat, trim: string): void {
+  p.fill(color)
+  // Shoulders: a soft dome down into the pew.
+  p.beginShape()
+  p.vertex(U(-0.14), U(bottom))
+  p.vertex(U(-0.14), U(-0.05))
+  p.bezierVertex(U(-0.14), U(-0.15), U(-0.08), U(-0.2), U(0), U(-0.2))
+  p.bezierVertex(U(0.08), U(-0.2), U(0.13), U(-0.15), U(0.13), U(-0.05))
+  p.vertex(U(0.13), U(bottom))
+  p.endShape(p.CLOSE)
+  // The head, a little forward, and the nose.
+  p.ellipse(U(-0.015), U(-0.255), U(0.13), U(0.14))
+  p.ellipse(U(-0.078), U(-0.25), U(0.035), U(0.028))
+  p.fill(trim)
+  switch (hat) {
+    case 'feather':
+      // A small round hat and one long feather curling up and back.
+      p.arc(U(0), U(-0.305), U(0.15), U(0.09), Math.PI, 2 * Math.PI, p.CHORD)
+      p.beginShape()
+      p.vertex(U(0.01), U(-0.33))
+      p.bezierVertex(U(0.04), U(-0.39), U(0.1), U(-0.42), U(0.17), U(-0.42))
+      p.bezierVertex(U(0.12), U(-0.4), U(0.07), U(-0.36), U(0.05), U(-0.315))
+      p.endShape(p.CLOSE)
+      break
+    case 'flowers':
+      // A band of flowers across the crown, three small blooms of two sizes.
+      p.arc(U(-0.005), U(-0.3), U(0.14), U(0.08), Math.PI, 2 * Math.PI, p.CHORD)
+      p.fill(mixHex(trim, CHURCH.cloth, 0.6))
+      p.ellipse(U(-0.05), U(-0.335), U(0.04), U(0.034))
+      p.ellipse(U(0.0), U(-0.35), U(0.05), U(0.042))
+      p.ellipse(U(0.05), U(-0.33), U(0.036), U(0.03))
+      break
+    case 'bouffant':
+      // Her hair piled high and back, over the head's crown (the face left clear).
+      p.beginShape()
+      p.vertex(U(-0.07), U(-0.29))
+      p.bezierVertex(U(-0.08), U(-0.37), U(0.02), U(-0.39), U(0.07), U(-0.36))
+      p.bezierVertex(U(0.11), U(-0.33), U(0.1), U(-0.25), U(0.06), U(-0.21))
+      p.bezierVertex(U(0.03), U(-0.25), U(-0.02), U(-0.28), U(-0.07), U(-0.29))
+      p.endShape(p.CLOSE)
+      break
+    case 'sunhat':
+      // A wide soft brim, the crown on it.
+      p.ellipse(U(-0.01), U(-0.31), U(0.26), U(0.035))
+      p.arc(U(0), U(-0.315), U(0.12), U(0.1), Math.PI, 2 * Math.PI, p.CHORD)
+      break
+    case 'cap':
+      // A boy's cap: the crown, its peak toward the altar.
+      p.arc(U(0.005), U(-0.3), U(0.14), U(0.1), Math.PI, 2 * Math.PI, p.CHORD)
+      p.ellipse(U(-0.085), U(-0.303), U(0.08), U(0.022))
+      break
+    case 'bow':
+      // A child's hair bow: two little wings and the knot.
+      p.triangle(U(0.0), U(-0.335), U(-0.06), U(-0.37), U(-0.055), U(-0.305))
+      p.triangle(U(0.0), U(-0.335), U(0.06), U(-0.37), U(0.055), U(-0.305))
+      p.rect(U(-0.015), U(-0.35), U(0.03), U(0.03), U(0.008))
+      break
+  }
+}
+
 /**
- * Someone sitting in a pew, as the congregation are drawn: one flat, unoutlined silhouette in profile, facing left to
- * the altar: the shin down to the floor, the thigh along the seat, the back, the head with its hat, and an arm that
- * lies in the lap or goes up. `x` is the hip on the seat at height `seat`; `s` the scale (1 a grown man).
+ * Someone in a pew. `x` is the middle of the shoulders, `seat` the seat's top; `s` the scale (1 a grown-up);
+ * `boxy` his family's shapes, or hers. Everything below the seat's top is left to the pew (drawn after) to hide.
  */
-export function sitter(p: p5, k: number, x: number, seat: number, s: number, color: string, hat: Hat, o: Sit = {}): void {
+export function sitter(p: p5, k: number, x: number, seat: number, s: number, color: string, hat: Hat, boxy: boolean, o: Sit = {}): void {
   const lift = o.lift ?? 0
   const arm = Math.max(0, Math.min(1, o.arm ?? 0))
-  const X = (v: number) => v * s * k
-  const hip = seat - lift
-  const floor = (CH.floor - hip) / s
+  const U = (v: number) => v * s * k
+  // Down past the seat's top even at the highest bob, so no hem ever shows over the pew.
+  const bottom = (0.09 + lift) / s
+  const trim = o.trim ?? color
   p.push()
-  p.translate(x * k, hip * k)
+  p.translate(x * k, (seat - lift) * k)
+  p.rotate(o.lean ?? 0)
   p.noStroke()
-  // Legs a shade darker than the rest (trousers, stockings), so they read as legs and sit back.
-  p.fill(mixHex(color, INK, 0.22))
-  // The shin and the foot, from the knee down to the floor.
-  p.beginShape()
-  p.vertex(X(-0.44), X(-0.07))
-  p.vertex(X(-0.28), X(-0.07))
-  p.vertex(X(-0.26), X(floor - 0.07))
-  p.vertex(X(-0.22), X(floor - 0.035))
-  p.vertex(X(-0.22), X(floor))
-  p.vertex(X(-0.5), X(floor))
-  p.vertex(X(-0.48), X(floor - 0.06))
-  p.vertex(X(-0.4), X(floor - 0.08))
-  p.endShape(p.CLOSE)
-  // The body in one piece: the lap along the seat out to the knee, up the front to the shoulder, over it and down the
-  // back to the seat (tipped back a little by `lean` about the hips).
-  p.fill(color)
-  p.push()
-  p.rotate(o.lean ?? 0)
-  p.beginShape()
-  p.vertex(X(0.11), X(0))
-  p.vertex(X(-0.44), X(0))
-  p.bezierVertex(X(-0.5), X(0), X(-0.5), X(-0.15), X(-0.44), X(-0.15))
-  p.vertex(X(-0.16), X(-0.15))
-  p.bezierVertex(X(-0.13), X(-0.22), X(-0.12), X(-0.34), X(-0.1), X(-0.4))
-  p.bezierVertex(X(-0.08), X(-0.47), X(0.07), X(-0.48), X(0.1), X(-0.42))
-  p.bezierVertex(X(0.14), X(-0.3), X(0.14), X(-0.12), X(0.11), X(0))
-  p.endShape(p.CLOSE)
-  p.pop()
-  p.rotate(o.lean ?? 0)
-  // The neck, the head.
-  p.rect(X(-0.045), X(-0.53), X(0.085), X(0.1))
-  p.push()
-  p.translate(X(-0.01), X(-0.61))
-  head(p, X, color, hat, o.trim)
-  p.pop()
-  // The arm, from the shoulder to the lap, or up over the head.
-  const mix = (a: Pt, b: Pt): Pt => [a[0] + (b[0] - a[0]) * arm, a[1] + (b[1] - a[1]) * arm]
-  const elbow = mix([0.05, -0.2], [-0.1, -0.62])
-  const hand = mix([-0.08, -0.2], [-0.12, -0.88])
-  p.noFill()
-  p.stroke(color)
-  p.strokeWeight(X(0.1))
-  p.strokeCap(p.ROUND)
-  p.strokeJoin(p.ROUND)
-  p.beginShape()
-  p.vertex(X(0.01), X(-0.39))
-  p.vertex(X(elbow[0]), X(elbow[1]))
-  p.vertex(X(hand[0]), X(hand[1]))
-  p.endShape()
+  // The arm up (hers, on the kiss): from the shoulder, the elbow out toward the altar, the hand over the hat.
+  if (arm > 0.02) {
+    const mix = (a: Pt, b: Pt): Pt => [a[0] + (b[0] - a[0]) * arm, a[1] + (b[1] - a[1]) * arm]
+    const elbow = mix([0.02, -0.08], [-0.1, -0.27])
+    const hand = mix([0.0, -0.06], [-0.07, -0.43])
+    p.noFill()
+    p.stroke(color)
+    p.strokeWeight(U(0.05))
+    p.strokeCap(p.ROUND)
+    p.strokeJoin(p.ROUND)
+    p.beginShape()
+    p.vertex(U(0.02), U(-0.13))
+    p.vertex(U(elbow[0]), U(elbow[1]))
+    p.vertex(U(hand[0]), U(hand[1]))
+    p.endShape()
+    p.noStroke()
+  }
+  if (boxy) boxyBust(p, U, bottom, color, hat, trim)
+  else roundBust(p, U, bottom, color, hat, trim)
   p.pop()
 }
 
 /** Where a sitter's raised hand is, in cells: where the petals leave from. */
-export const handOf = (x: number, seat: number, s: number, lift: number): Pt => [x - 0.12 * s, seat - lift - 0.88 * s]
+export const handOf = (x: number, seat: number, s: number, lift: number): Pt => [x - 0.07 * s, seat - lift - 0.42 * s]
 
 /**
  * A pew in profile: a solid oak bench, not a chair. Its end board runs from the floor up under the seat and rises
@@ -933,9 +928,10 @@ function drawLight(p: p5, k: number, c: Paint, t: number): void {
 /* ------------------------------------------------------------------ the families, in the pews */
 
 /**
- * Who sits where at the wedding. The front pew is Carl's family: his parents, grey, bolt upright, still (his mother
- * leans back a little at the kiss). The two behind are Ellie's: bright, many, bobbing on every beat of the march; on the
- * kiss they are up out of their seats with their arms in the air, and the ones who throw, throw petals.
+ * Who sits where at the wedding, at the leads' scale. The front pew is Carl's family: his parents, grey, boxy, bolt
+ * upright and still (his mother tips back a little at the kiss). The two behind are Ellie's: warm, round, more of
+ * them, children in front, bobbing on every beat of the march; on the kiss they come up in their seats with an arm in the air, and the
+ * ones who throw, throw petals. In each pew the far one sits a little to the right, paler, and is drawn first.
  */
 interface Folk {
   pew: number
@@ -951,27 +947,35 @@ interface Folk {
   throws: boolean
 }
 const soft = (hex: string, f = 0.2) => mixHex(hex, CHURCH.plaster, f)
+const far = (hex: string) => mixHex(hex, CHURCH.plaster, 0.3)
 const HER = CHURCH.herSide
 const HIS = CHURCH.hisSide
+/** A warm peach and a rose for her family, from her side's own coral, yellow and pink. */
+const PEACH = mixHex(HER[0], HER[1], 0.55)
+const ROSE = mixHex(HER[3], HER[0], 0.35)
 export const FOLK: Folk[] = [
-  { pew: 0, dx: 0.08, s: 0.78, color: HIS[2], hat: 'bowler', hers: false, every: 1, off: 0, amp: 0, throws: false },
-  { pew: 0, dx: -0.06, s: 0.72, color: HIS[1], hat: 'cloche', trim: HIS[0], hers: false, every: 1, off: 0, amp: 0, throws: false },
-  { pew: 1, dx: 0.1, s: 0.82, color: soft(HER[4], 0.25), hat: 'fedora', trim: mixHex(HER[4], INK, 0.3), hers: true, every: 2, off: 0, amp: 0.05, throws: true },
-  { pew: 1, dx: -0.03, s: 0.76, color: soft(HER[1]), hat: 'flowers', trim: soft(HER[3], 0.1), hers: true, every: 1, off: 0, amp: 0.045, throws: true },
-  { pew: 1, dx: -0.16, s: 0.58, color: soft(HER[2], 0.1), hat: 'cap', trim: mixHex(HER[2], INK, 0.3), hers: true, every: 1, off: 0.5, amp: 0.07, throws: false },
-  { pew: 2, dx: 0.1, s: 0.78, color: soft(HER[3], 0.1), hat: 'feather', trim: soft(HER[0], 0.15), hers: true, every: 1, off: 0, amp: 0.045, throws: true },
-  { pew: 2, dx: -0.1, s: 0.72, color: soft(HER[1], 0.35), hat: 'bun', trim: mixHex(HER[1], HOME.woodDark, 0.5), hers: true, every: 1, off: 0, amp: 0.05, throws: true },
+  // His: the mother beyond, the father near the aisle.
+  { pew: 0, dx: 0.1, s: 0.93, color: far(HIS[1]), hat: 'pillbox', trim: HIS[2], hers: false, every: 1, off: 0, amp: 0, throws: false },
+  { pew: 0, dx: -0.07, s: 1, color: HIS[2], hat: 'bowler', trim: mixHex(HIS[2], INK, 0.45), hers: false, every: 1, off: 0, amp: 0, throws: false },
+  // Hers, the first of their pews: an aunt beyond, her mother, and a girl in front of her.
+  { pew: 1, dx: 0.12, s: 0.96, color: far(soft(HER[2], 0.15)), hat: 'sunhat', trim: far(soft(HER[1], 0.1)), hers: true, every: 1, off: 0.5, amp: 0.022, throws: false },
+  { pew: 1, dx: -0.02, s: 1, color: soft(HER[1], 0.12), hat: 'feather', trim: soft(HER[0], 0.1), hers: true, every: 1, off: 0, amp: 0.026, throws: true },
+  { pew: 1, dx: -0.14, s: 0.7, color: soft(PEACH, 0.1), hat: 'bow', trim: soft(HER[0], 0.1), hers: true, every: 1, off: 0.5, amp: 0.034, throws: false },
+  // The second: a cousin beyond, her aunt with the flowers, and a boy in front.
+  { pew: 2, dx: 0.12, s: 0.96, color: far(ROSE), hat: 'bouffant', trim: far(mixHex(HER[1], HOME.woodDark, 0.5)), hers: true, every: 2, off: 0, amp: 0.028, throws: true },
+  { pew: 2, dx: -0.02, s: 1, color: soft(HER[3], 0.1), hat: 'flowers', trim: soft(HER[0], 0.1), hers: true, every: 1, off: 0, amp: 0.026, throws: true },
+  { pew: 2, dx: -0.14, s: 0.72, color: soft(HER[2], 0.1), hat: 'cap', trim: mixHex(HER[2], INK, 0.3), hers: true, every: 1, off: 0.5, amp: 0.034, throws: false },
 ]
 
-/** How far a sitter's hips are off the seat at `t`: still for the photograph, on the beat through the march, up on the kiss. */
+/** How far a sitter is off the seat at `t`: still for the photograph, bobbing on the beat through the march, up on the kiss. */
 export function folkLift(f: Folk, t: number): number {
   if (!f.hers) return 0
   const march = smooth(t, 1.1, 1.5)
   const up = smooth(t, WED.kiss - 0.02, WED.kiss + 0.16)
-  return f.amp * bounce(t, f.every, f.off) * march * (1 + 0.8 * up) + 0.07 * up
+  return f.amp * bounce(t, f.every, f.off) * march * (1 + 0.6 * up) + 0.04 * up
 }
 
-/** How high a sitter's arm is: in the lap, and up from the kiss (waving on the beat), for her family. */
+/** How high a sitter's arm is: out of sight, and up from the kiss (waving on the beat), for her family. */
 export function folkArm(f: Folk, t: number): number {
   if (!f.hers) return 0
   const up = smooth(t, WED.kiss, WED.kiss + 0.22)
@@ -980,13 +984,13 @@ export function folkArm(f: Folk, t: number): number {
 
 function drawFolk(p: p5, k: number, t: number): void {
   if (gloomy(t)) return
-  const lean = 0.1 * smooth(t, WED.kiss + 0.1, WED.kiss + 0.9)
+  const lean = 0.08 * smooth(t, WED.kiss + 0.1, WED.kiss + 0.9)
   for (const f of FOLK) {
     const x = CH.pews[f.pew] + f.dx
-    sitter(p, k, x, CH.seat, f.s, f.color, f.hat, {
+    sitter(p, k, x, CH.seat, f.s, f.color, f.hat, !f.hers, {
       lift: folkLift(f, t),
       arm: folkArm(f, t),
-      lean: f.hat === 'cloche' ? lean : 0,
+      lean: f.hat === 'pillbox' ? lean : 0,
       trim: f.trim,
     })
   }
