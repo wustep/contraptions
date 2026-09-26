@@ -322,7 +322,9 @@ export const plank = part<PlankState>(
       // The run: with it, ahead of it, low enough for the feet.
       follow(253.8, 11.5, [2.4, 2.8]),
       follow(257.5, 10.5, [2.7, 2.6]),
-      follow(262.3, 10.5, [2.6, 2.5]),
+      // Out, once, for the size of the wastes it runs across; back in for Howl.
+      follow(260.0, 16.5, [4.2, 1.2]),
+      follow(262.6, 11.5, [2.6, 2.3]),
       // Howl out of the sky: up to meet him; then in on the two of them.
       follow(264.4, 11.5, [1.6, 0.3]),
       follow(266.4, 8.5, [2.3, 0.8]),
