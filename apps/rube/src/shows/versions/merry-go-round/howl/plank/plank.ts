@@ -32,10 +32,80 @@ function tendOff(t: number): number {
   const w = smooth(t, TENDS[0] - 1.0, TENDS[0] - 0.4) * (1 - smooth(t, TENDS[2] + 0.6, TENDS[2] + 1.3))
   return -TEND_BACK * w * (1 - tend(t))
 }
-/** Sophie on the plank, with the tending on the run (the rig's `sophieAt` otherwise, exactly). */
+/**
+ * Howl coming home (c20 → c22): the deck jolts under his landing on the loudest note and she starts up off the boards
+ * with it, then turns from Calcifer's grate toward the prow (a lean, at the grate's rim), and settles back to lift
+ * Calcifer out on c23. Eased both ways: the start rises from rest over 0.2 s and comes down over half a second.
+ */
+function startle(t: number): number {
+  return 0.1 * smooth(t, HOWL_LAND, HOWL_LAND + 0.2) * (1 - smooth(t, HOWL_LAND + 0.2, HOWL_LAND + 0.75))
+}
+function turnTo(t: number): number {
+  return 0.06 * smooth(t, HOWL_LAND + 0.1, HOWL_LAND + 0.8) * (1 - smooth(t, LIFT_OUT - 0.75, LIFT_OUT - 0.05))
+}
+/** Sophie on the plank, with the tending on the run and her turn to Howl (the rig's `sophieAt` otherwise, exactly). */
 const herAt = (t: number): Pt => {
-  const o = tendOff(t)
-  return o !== 0 ? onDeck(t, sophieU(t) + o, -R) : sophieAt(t)
+  const o = tendOff(t) + turnTo(t)
+  const up = startle(t)
+  return o !== 0 || up !== 0 ? onDeck(t, sophieU(t) + o, -R - up) : sophieAt(t)
+}
+
+/**
+ * Calcifer watches the bird come down out of the sky: his eyes go up to him from c19 and follow him onto the prow, and
+ * are his own again (forward, into the wind) by the time she lifts him out. How much, 0..1.
+ */
+function watching(t: number): number {
+  return smooth(t, c(19) - 0.3, c(19) + 0.5) * (1 - smooth(t, HOWL_LAND + 0.9, LIFT_OUT - 0.3))
+}
+
+/**
+ * Howl is spent: on each of his last heavy strokes a feather or two tears loose from his wings, and more on the
+ * landing, and they tumble away behind the running plank, falling slowly and fading. Blades like his own, never round.
+ */
+const SHED: { t: number; n: number }[] = [
+  { t: 264.649, n: 1 },
+  { t: 265.427, n: 1 },
+  { t: HOWL_LAND, n: 2 },
+]
+const SHED_LIFE = 2.4
+function drawFeathers(p: p5, k: number, W: number, ink: string, t: number) {
+  const edge = mixHex(HOWL_BIRD, '#6F6A86', 0.5)
+  for (const [si, sh] of SHED.entries()) {
+    const a = t - sh.t
+    if (a <= 0 || a > SHED_LIFE) continue
+    const [bx, by] = howlAt(sh.t)
+    const [bx0, by0] = howlAt(sh.t - 0.05)
+    // His speed as it tears loose; the air takes it off in about a third of a second.
+    const vx = (bx - bx0) / 0.05
+    const vy = (by - by0) / 0.05
+    const drag = 0.32
+    const carry = drag * (1 - Math.exp(-a / drag))
+    for (let j = 0; j < sh.n; j++) {
+      const side = j % 2 ? 1 : -1
+      const r = hash(si, j, 61)
+      const x0 = bx + side * (0.35 + 0.3 * r)
+      const y0 = by - 0.05 - 0.15 * hash(si, j, 62)
+      // Falling slowly, rocking side to side as a feather does.
+      const x = x0 + vx * carry * 0.6 - 0.25 * a + 0.12 * Math.sin(a * (3.2 + r) + j)
+      const y = y0 + vy * carry * 0.4 + 0.38 * a + 0.06 * a * a
+      const fade = 1 - smooth(a, SHED_LIFE * 0.55, SHED_LIFE)
+      // A flight feather: a broad vane, round at the tip, narrowing to its quill.
+      const len = 0.4 + 0.08 * hash(si, j, 63)
+      const wid = 0.075
+      p.push()
+      p.translate(x * k, y * k)
+      p.rotate(side * 0.6 + 1.1 * Math.sin(a * (2.4 + r) + si) + 0.4 * a)
+      p.stroke(alpha(p, ink, 0.85 * fade))
+      p.strokeWeight(W * 0.5)
+      p.fill(alpha(p, j % 2 ? edge : HOWL_BIRD, fade))
+      p.beginShape()
+      p.vertex(-len * 0.5 * k, 0)
+      p.bezierVertex(-len * 0.2 * k, -wid * 0.7 * k, len * 0.25 * k, -wid * 1.1 * k, len * 0.5 * k, -wid * 0.2 * k)
+      p.bezierVertex(len * 0.56 * k, wid * 0.35 * k, len * 0.2 * k, wid * 0.8 * k, -len * 0.5 * k, 0)
+      p.endShape(p.CLOSE)
+      p.pop()
+    }
+  }
 }
 
 /**
@@ -333,11 +403,21 @@ export const plank = part<PlankState>(
         p.translate(cal.at[0] * k, cal.at[1] * k)
         // As she leans in to him on the run he burns up a little and looks round at her.
         const tn = tend(t)
+        // Watching Howl come down: his eyes on the bird.
+        const wa = watching(t)
+        let look: Pt = [cal.look[0] - 1.7 * tn, cal.look[1] - 0.1 * tn]
+        if (wa > 0) {
+          const [hx, hy] = howlAt(t)
+          const dx = hx - cal.at[0]
+          const dy = hy - cal.at[1] + 0.3
+          const dl = Math.max(0.01, Math.hypot(dx, dy))
+          look = [look[0] + (dx / dl - look[0]) * wa, look[1] + (dy / dl - look[1]) * wa]
+        }
         drawCalcifer(p, k, W, ink, {
           t,
           size: cal.size * (1 + 0.16 * tn),
           weak: cal.weak * (1 - 0.35 * tn),
-          look: [cal.look[0] - 1.7 * tn, cal.look[1] - 0.1 * tn],
+          look,
           lean: cal.lean * (1 - 0.5 * tn),
           mouth: cal.mouth + 0.15 * tn,
           shut: cal.shut * (1 - tn),
@@ -366,6 +446,7 @@ export const plank = part<PlankState>(
           p.pop()
         }
       }
+      drawFeathers(p, k, W, ink, t)
       // Turnip Head at the edge.
       if (PLANK_AFTER.turnip || t <= T1) {
         const th = turnipAt(t)
@@ -423,17 +504,21 @@ export const plank = part<PlankState>(
       hold(252.3, 14, [BX0 + 2, 2.8]),
       // The run, two framings in turn on the downbeats. A locked-off wide it crosses left to right, the wreck and its
       // dust left behind (c10 → c12, drifting a touch); in close on the deck, legs cut at the knee, while she leans in
-      // to tend him on c14, c15 and c16; out again to a second locked-off wide, the tors going by under its legs, that
-      // Howl comes down into out of the sky and lands on (c18 → c21); then in on the two of them.
+      // to tend him on c14, c15 and c16; out again to a wide running with it, the tors going by under its legs, with
+      // the bird a speck high up coming down (c18 → c19): the camera never stops, out and straight in again. Then, in through bar 19 to land on his first heavy
+      // stroke (c20), a two-shot running with the plank: the whole deck low in the frame, grate to prow, and the sky
+      // over it that he comes down out of, big, beating down on the accents onto the prow on the loudest note (c21),
+      // held some three seconds while she turns from Calcifer to him; then in on the two of them for the heart.
       hold(c(10), 12.5, [4.2, 2.9]),
       hold(c(12) + 0.55, 12.6, [4.6, 2.9]),
       follow(c(14), 5.0, [0.6, 0.6]),
       follow(c(16), 5.3, [0.65, 0.6]),
-      hold(c(18), 17, [31.5, 1.65]),
-      hold(c(20), 16.4, [32.3, 1.45]),
-      hold(HOWL_LAND, 15.2, [33.6, 1.2]),
-      follow(267.5, 8.5, [2.3, 0.8]),
-      follow(269.2, 6.0, [1.6, 0.2]),
+      follow(c(18), 17, [4.6, 0.7]),
+      follow(c(19), 15.2, [3.9, 0.2]),
+      follow(c(20), 8.8, [2.4, -1.3]),
+      follow(HOWL_LAND, 8.5, [2.4, -1.0]),
+      follow(267.6, 8.2, [2.3, -0.65]),
+      follow(269.2, 6.0, [1.6, -0.4]),
       follow(271.4, 4.0, [0.6, -0.35]),
       follow(272.8, 3.7, [0.45, -0.5]),
       follow(274.4, 5.2, [0.8, -0.4]),
