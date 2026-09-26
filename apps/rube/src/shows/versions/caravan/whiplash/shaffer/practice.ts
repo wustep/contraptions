@@ -25,11 +25,13 @@ import { ROOM, drawPracticeRoom, lampMouth, litAt, rgba, type RoomLook } from '.
  * stroke a bar from stick to stick, the lamp over him still swinging from the loud part, dust in its light. (The
  * night part's two-stick drill rig on the snare is this pair's return.)
  *
- * On the bass (21.11) Fletcher is in the far doorway, black against the corridor. He keeps time with his hand, a
- * beat a stroke, twice the ball's: and the pair doubles (the film's "double-time"). He points: you. Andrew waits on
- * the right stick; Fletcher goes, fast, down the corridor toward the band room; Andrew goes after him, off the
- * hi-hat's far edge and out through the door, rolling right at 1.6 cells a second as the band comes in (the band
- * part takes him on in the corridor).
+ * On the bass (21.11) Fletcher is in the far doorway, black against the corridor. Andrew sees him: the next stroke
+ * tosses him high and out toward the door, a glance, and from then on every hop leans toward the doorway at its top.
+ * Fletcher keeps time with his hand, a beat a stroke, twice the ball's: and the pair doubles (the film's
+ * "double-time"). He points: you. Andrew comes up off the right stick toward him and hangs there, turned to him, a
+ * beat longer than a hop, and drops back onto it as Fletcher goes, fast, down the corridor toward the band room;
+ * Andrew goes after him, off the hi-hat's far edge and out through the door, rolling right at 1.6 cells a second as
+ * the band comes in (the band part takes him on in the corridor).
  *
  * Frame: the kit's origin (the ball on the snare's head) is `K`; the room (`room.ts`) is drawn round it.
  */
@@ -141,6 +143,8 @@ interface Stroke {
   arc: number
   /** The stick of the pair this stroke is played with, if any. */
   on?: Side
+  /** How far the flight that lands here leans toward the doorway on its way over (cells; `leanFlight`). */
+  lean?: number
 }
 const S = (t: number, piece: Piece, arc: number, p?: Pt): Stroke => ({ t, piece, arc, p })
 /** A stroke of the pair: he lands on stick `on`, and it strikes its head. */
@@ -195,8 +199,24 @@ const GROOVE: Stroke[] = [
 // beat (51 to 62), and he ends on the right stick.
 for (let k = 34; k <= 50; k += 2) GROOVE.push(P(beat(k), (k / 2) % 2 === 1 ? 'H' : 'S', 0.62))
 for (let k = 51; k <= 62; k++) GROOVE.push(P(beat(k), k % 2 === 1 ? 'S' : 'H'))
+/**
+ * He has seen Fletcher. The stroke after the man stops in the doorway (beat 50, on the right stick) tosses him higher
+ * and out toward the door, a glance, before he drops onto the left stick; from then on every hop leans toward the
+ * doorway at its top, a little more and a little higher each beat, as he plays for the man keeping his time.
+ */
+for (const s of GROOVE) {
+  if (s.t < beat(51) - 1e-6) continue
+  const u = clamp((s.t - beat(52)) / (beat(62) - beat(52)))
+  if (s.t < beat(52) - 1e-6) {
+    s.arc = 1.05
+    s.lean = 0.65
+  } else {
+    s.arc = 0.7 + 0.12 * u
+    s.lean = 0.2 + 0.14 * u
+  }
+}
 
-/** He waits on the right stick while Fletcher points, and goes on this beat: his weight off it is its last stroke. */
+/** He is up off the right stick toward Fletcher while he points, and lands on it again on this beat, as he goes. */
 const GO = tune(64)
 /** Off the stick's tip onto the hi-hat's far edge; then three skips along the floor to the doorway, at his leaving pace. */
 const OUT_HAT = beat(65)
@@ -225,16 +245,70 @@ const PAIR_HITS: Record<Side, number[]> = {
 
 /* ------------------------------------------------------------------ the path */
 
+/**
+ * A hop from `a` to `b` (kit frame, `u` 0 → 1 evenly in time) whose top leans `lean` cells toward the doorway (to the
+ * right): the house's hop, `arc` over its chord, pushed right on the door's side of the flight (late when it flies
+ * toward the door, early when it flies away), so both ways it rises toward the door and the post between the sticks
+ * is still cleared high.
+ */
+function leanFlight(a: Pt, b: Pt, arc: number, lean: number): (u: number) => Pt {
+  const toward = b[0] > a[0]
+  return (u) => {
+    const side = toward ? 6.75 * u * u * (1 - u) : 6.75 * u * (1 - u) * (1 - u)
+    const lift = arc * 4 * u * (1 - u)
+    return [a[0] + (b[0] - a[0]) * u + lean * side, a[1] + (b[1] - a[1]) * u - lift]
+  }
+}
+
+/** Straight pieces a second for a ridden flight: fine enough that its gravity reads as a curve, not as corners. */
+const CARRY_RATE = 240
+
+/**
+ * On his point, up off the right stick toward him and held at the top, turned to him, a beat longer than a hop, then
+ * down onto the stick again on the beat he goes: `from` show time → `GO`. The rise slows to nothing at the top, the
+ * top drifts a little nearer the door and sinks a hair, and the drop starts from rest (every join at rest, no pop).
+ */
+const LOOK_TOP: Pt = [SEAT.H[0] + 0.5, SEAT.H[1] - 0.6]
+const LOOK_RISE = 0.24
+const LOOK_FALL = 0.245
+function lookUp(from: number): (T: number) => Pt {
+  const top0: Pt = [LOOK_TOP[0] - 0.06, LOOK_TOP[1]]
+  const top1: Pt = [LOOK_TOP[0], LOOK_TOP[1] + 0.03]
+  const hang = GO - LOOK_FALL
+  return (T) => {
+    const t = T - from
+    if (t < LOOK_RISE) {
+      const v = t / LOOK_RISE
+      const e = 1 - (1 - v) * (1 - v)
+      return [SEAT.H[0] + (top0[0] - SEAT.H[0]) * e, SEAT.H[1] + (top0[1] - SEAT.H[1]) * e]
+    }
+    if (T < hang) {
+      const e = smooth(T, from + LOOK_RISE, hang)
+      return [top0[0] + (top1[0] - top0[0]) * e, top0[1] + (top1[1] - top0[1]) * e]
+    }
+    const v = clamp((T - hang) / LOOK_FALL)
+    const e = v * v
+    return [top1[0] + (SEAT.H[0] - top1[0]) * e, top1[1] + (SEAT.H[1] - top1[1]) * e]
+  }
+}
+
 function build(begin: number): Path {
   const path = new Path(begin, [-0.5, 0])
   for (const s of STROKES) {
     const q = s.p ?? KIT_LAND[s.piece as KitPiece]
-    // He waits on the right stick while Fletcher points, and his weight comes off it on the beat he goes.
+    const d = s.t - path.T
+    // On the right stick while Fletcher points: up toward him, held, and down onto it again on the beat he goes.
     if (s.t === GO) {
-      path.hold(GO)
+      const look = lookUp(path.T)
+      path.carry((T) => at(look(T)), GO, Math.max(8, Math.ceil(d * CARRY_RATE)))
       continue
     }
-    const d = s.t - path.T
+    if (s.lean) {
+      const t0 = path.T
+      const fly = leanFlight([path.p[0] - K[0], path.p[1] - K[1]], q, s.arc, s.lean)
+      path.carry((T) => at(fly((T - t0) / d)), s.t, Math.max(8, Math.ceil(d * CARRY_RATE)))
+      continue
+    }
     path.hop(at(q), s.t, d > 1e-6 ? (8 * s.arc) / (d * d) : G_SNAP)
   }
   path.v = V_OUT
