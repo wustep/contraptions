@@ -9,7 +9,7 @@ import { YARD_HITS } from './earth/yard'
 import { TRUCK_BEATS, TRUCK_NOTES, TRUCK_ORGAN } from './earth/truck'
 import { GANTRY_HITS } from './earth/gantry'
 import { COMBINE_HITS } from './earth/combine'
-import { GATE_HITS } from './earth/gate'
+import { GATE_HITS, MURPH_BASE_HITS } from './earth/gate'
 import { ROCKET_HITS } from './rocket'
 import { EDMUNDS_HITS } from './act2/edmunds'
 import { UNDOCK_HITS } from './act2/undock'
@@ -49,6 +49,7 @@ export const STRIKES: Strikes = {
     pickup: TRUCK_BEATS,
     combine: COMBINE_HITS,
     gate: GATE_HITS,
+    murph: MURPH_BASE_HITS,
     gantry: GANTRY_HITS,
     rocket: ROCKET_HITS,
     endurance: ENDURANCE_HITS,

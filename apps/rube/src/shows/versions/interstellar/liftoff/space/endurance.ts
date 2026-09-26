@@ -498,10 +498,11 @@ export const endurance = part<EnduranceState>(
       { t: beat(153.5), cells: 7.4, hold: [c[0] - 0.6, c[1] + 3.3], w: 0.85 },
       // The ring whole as the ball comes up at it; in a little for the clamp.
       { t: beat(155.2), cells: 8.2, hold: [c[0], c[1] + 1.1], w: 0.9 },
-      { t: beat(156), cells: 6.6, hold: [c[0] + 0.05, c[1] + 1.5], w: 0.9 },
+      // (On the line from the ring's framing to the airlock's, so the drift down to them keeps an even pace through it.)
+      { t: beat(156), cells: 6.6, hold: [c[0] + 0.3, c[1] + 1.58], w: 0.9 },
       // In on the two of them at the airlock and the kick, low on the right.
       { t: beat(157), cells: 4.8, hold: [c[0] + 0.62, c[1] + 2.1], w: 0.9 },
-      { t: beat(158), cells: 4.8, hold: [c[0] + 1.15, c[1] + 1.8], w: 0.85 },
+      { t: beat(158), cells: 4.8, hold: [c[0] + 1.15, c[1] + 2.15], w: 0.85 },
       // Then with them up the side, closer: the trapdoor takes him and shuts, and the frame stays a beat on her.
       { t: beat(159), cells: 4.3, off: [-0.25, 0.1], w: 0 },
       { t: beat(160), cells: 3.6, off: [-0.3, 0.2], w: 0 },

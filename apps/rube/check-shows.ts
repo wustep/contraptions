@@ -25,16 +25,16 @@ import { CARDS as EPILOGUE_CARDS, CREDITS_OK as EPILOGUE_CREDITS_OK, creditsAt a
 import { KISS_AT, ROOM } from './src/shows/versions/la-la-land/epilogue/room'
 import { MIA as MIA_HEX, HUSBAND as HUSBAND_HEX } from './src/shows/versions/la-la-land/epilogue/worlds'
 import type { EpilogueShow } from './src/shows/versions/la-la-land/epilogue/show'
-import { STRIKES } from './src/shows/versions/cornfield-chase/liftoff/hits'
-import { SWITCH } from './src/shows/versions/cornfield-chase/liftoff/score'
-import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/cornfield-chase/liftoff/music'
-import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/cornfield-chase/liftoff/credits'
-import { FALL_NOTES, GHOST_REST } from './src/shows/versions/cornfield-chase/liftoff/earth/house'
-import { IN_BED, WAKE } from './src/shows/versions/cornfield-chase/liftoff/act2/replica'
-import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/cornfield-chase/liftoff/act2/edmunds'
-import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/cornfield-chase/liftoff/worlds'
+import { STRIKES } from './src/shows/versions/interstellar/liftoff/hits'
+import { SWITCH } from './src/shows/versions/interstellar/liftoff/score'
+import { ACT2, DURATION as LIFTOFF_END, IGNITION, LAST as LAST_HIT, MIX_END, UNDOCK, beat as chaseBeat, cue } from './src/shows/versions/interstellar/liftoff/music'
+import { CARDS as LIFTOFF_CARDS, CREDITS_OK, creditsAt } from './src/shows/versions/interstellar/liftoff/credits'
+import { FALL_NOTES, GHOST_REST } from './src/shows/versions/interstellar/liftoff/earth/house'
+import { IN_BED, WAKE } from './src/shows/versions/interstellar/liftoff/act2/replica'
+import { CAMP_MEET as LIFTOFF_CAMP_MEET } from './src/shows/versions/interstellar/liftoff/act2/edmunds'
+import { BRAND as BRAND_HEX, MURPH as MURPH_HEX, MURPH_YOUNG as MURPH_YOUNG_HEX } from './src/shows/versions/interstellar/liftoff/worlds'
 import ntfcOnsets from '../../scripts/show-plans/liftoff-ntfc-onsets.json'
-import type { LiftoffShow } from './src/shows/versions/cornfield-chase/liftoff/show'
+import type { LiftoffShow } from './src/shows/versions/interstellar/liftoff/show'
 import { checkSebs } from './check-sebs'
 
 let failures = 0
@@ -135,19 +135,23 @@ async function main(): Promise<void> {
   check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,la-la-land,premiere-arabesque')
+  check('the shows are Clair de Lune, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
   const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
   check('La La Land has the Epilogue take beside Seb\'s, with a faint byline (Directed by wustep) and no model or tech-demo line',
     lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && epilogueTake?.label === 'Epilogue' && epilogueTake?.note === undefined &&
     epilogueTake?.director?.name === 'wustep' && epilogueTake?.director?.href === 'https://x.com/wustep')
-  check('Cornfield Chase is Liftoff and the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-liftoff,opus55-music-sync,tech-demo')
+  check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
-  check('Cornfield Chase labels are Liftoff and the two music-syncs', cornfield.map((v) => v.label).join('|') === 'Liftoff|[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
-  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.filter((v) => v.take !== 'opus55-liftoff').every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')) === true)
-  const liftoffTake = cornfield.find((v) => v.take === 'opus55-liftoff')
-  check('Liftoff\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
-    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot/i.test(liftoffTake.label))
+  check('Cornfield Chase labels are the two music-syncs', cornfield.map((v) => v.label).join('|') === '[Opus 5.5] Music-sync|[Grok 4.7] Music-sync')
+  check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
+  // Interstellar (two cues of the score, so its own work): one take, which is the work, no subtitle.
+  const interstellar = shipped.works.find((w) => w.work === 'interstellar')
+  const liftoffTake = interstellar?.versions[0]
+  check('Interstellar is its own work of one take, titled Interstellar and labelled the same (no subtitle)',
+    !!interstellar && interstellar.title === 'Interstellar' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Interstellar')
+  check('Interstellar\'s chrome is a faint byline, Directed by wustep, and no model or tech-demo line',
+    !!liftoffTake && liftoffTake.note === undefined && liftoffTake.director?.name === 'wustep' && liftoffTake.director.href === 'https://x.com/wustep' && !/opus|tech demo|one-shot|liftoff/i.test(liftoffTake.label))
   check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'opus55-music-sync')?.take === 'opus55-music-sync')
   for (const work of shipped.works) {
     for (const version of work.versions) {
@@ -362,7 +366,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
       if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
-      if (work.work === 'cornfield-chase' && version.take === 'opus55-liftoff') {
+      if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.src?.includes('interstellar-liftoff-mix-demo') &&
@@ -458,9 +462,9 @@ async function main(): Promise<void> {
         check('liftoff: no ghost in Act II: he wakes a ball, and stays one', [ACT2 - 0.05, ACT2 + 0.3, 150, 200, 250].every((t) => !show.at(t).ball.ghost))
         // The company, as in the film. Dr. Amelia Brand (blue) is NASA's: she joins Cooper at the base, out of the
         // bunker the drone led him to, rides with him to the ring, where a trapdoor parts them, and waits in orbit over
-        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): she rocks
-        // on the porch as he goes, stows away in the truck's bed, follows him to the base and is kept back by TARS at
-        // the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
+        // Miller while her years go by. His daughter Murph is a child on the farm (a smaller, lighter slate): in her bed
+        // at dawn she watches the books fall, follows him downstairs and out onto the porch, stows away in the truck's
+        // bed, follows him to the base and is kept back by TARS at the tower. On Cooper Station he finds her again, old (slate), in the far-side house: she comes to him, and
         // sends him on. At the end he finds Brand at her camp on Edmunds' planet, and they meet.
         const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
           if (!b || (b.scale ?? 1) <= 0.02) return false
@@ -478,8 +482,8 @@ async function main(): Promise<void> {
         const atCamp = [LIFTOFF_CAMP_MEET + 0.5, MIX_END - 0.5, 270, LIFTOFF_END - 0.5]
         const station = [177, 178.5, 179.25, 180.5]
         const brandAway = [1, 6, 12.4, 16.5, 22, 28, 31, 40, 45, 50, 56, 60, 115, 118, 124, 130, 140, 150, ...station, 190, 215]
-        const murphAway = [1, 60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
-        const murphYoung = [17.5, 18.5, 19.5, 33, 40, 48, 73.5, 75.3, 78]
+        const murphAway = [60, 100, 130, 140, 150, 190, 215, 250, 260, 280]
+        const murphYoung = [0, 3, 6, 10, 14, 16.4, 17.5, 18.5, 19.5, 33, 40, 48, 68.8, 69.6, 74, 75.3, 78]
         const miss: string[] = []
         for (const t of [...withHim, ...inOrbit, ...atCamp]) if (!inShot(t, show.brand(t))) miss.push(`Brand not in shot ${t}`)
         for (const t of brandAway) if (inShot(t, show.brand(t))) miss.push(`Brand in shot ${t}`)

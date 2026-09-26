@@ -60,7 +60,7 @@ const SEATED = beat(124)
 const DARK = Array.from({ length: 10 }, (_, i) => beat(124 + i))
 const ARM_BACK = beat(128)
 
-export const GANTRY_HITS = [IN, ...LAMPS, SEATED, ...DARK.slice(1), ARM_BACK]
+export const GANTRY_HITS = [KNOCK, IN, ...LAMPS, SEATED, ...DARK.slice(1), ARM_BACK]
 
 /* ------------------------------------------------------------------ her way to the window */
 
@@ -174,13 +174,17 @@ export const gantry = part<GantryState>(
     { t: RISE[0] + 0.6, cells: 7.4, off: [0.9, -0.4] },
     // The tower's foot and the cage going up out of it: Murph racing up the apron after them, TARS's slab across her
     // way (120), into it (120½), and again (122). Held, the cage rising up through the top of the frame.
-    { t: beat(119.6), cells: 7.0, hold: [0.1, -2.5], w: 0.95 },
-    { t: beat(122.2), cells: 7.6, hold: [0.2, -2.9], w: 0.95 },
-    // Wide on the tower and the rocket, but centred high enough that under Zoom the window stays well inside the frame.
-    { t: SEATED, cells: 12, hold: [RX - 0.5, -5.4] },
+    // (Low enough that under Zoom, 1.5 times closer, she and the slab are still in at the bottom.)
+    { t: beat(119.6), cells: 7.0, hold: [0.1, -2.0], w: 0.95 },
+    { t: beat(122.2), cells: 7.6, hold: [0.2, -2.2], w: 0.95 },
+    // The two-shot of the countdown: the two of them in the window at the top of the frame, and at the foot of the
+    // tower, at the bottom, Murph, kept back by TARS, looking up. Held while the lamps go out, to the arm swinging back.
+    // (Under Zoom, 1.5 times closer, it keeps the window: the two of them are the shot's lead.)
+    { t: SEATED, cells: 9.8, hold: [RX - 1.5, -4.6] },
+    { t: beat(130.5), cells: 9.8, hold: [RX - 1.4, -4.6] },
     // The countdown: a slow push in on the two in the window as the lamps go out, and the ignition throws it wide again.
     // Close enough, by the last lamp, that the two of them read as two, side by side at the glass.
-    { t: beat(133), cells: 5.4, hold: [RX - 0.4, -6.8] },
+    { t: beat(133), cells: 6.0, hold: [RX - 0.4, -6.6] },
   ],
 )
 

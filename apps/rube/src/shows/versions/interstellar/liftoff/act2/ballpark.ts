@@ -719,9 +719,13 @@ export const ballpark = part<BallparkState>(
       { t: SPIN1 + 0.5, cells: 5.5, hold: wall(5.4, 2.1), w: 1 },
       { t: HIT, cells: 5.5, hold: wall(5.5, 2.1), w: 1 },
       { t: cue(141.6), cells: 13, hold: mid(flightAt(cue(141.6)), tower, 0.3), w: 0.7 },
-      { t: cue(144.4), cells: 44, hold: [AX[0] + 0.8, AX[1] + 1.2], w: 1 },
-      { t: cue(147.4), cells: 38, hold: [AX[0] - 2.2, AX[1] - 0.6], w: 1 },
-      { t: cue(150), cells: 17, hold: mid(flightAt(cue(150)), house, 0.5), w: 0.9 },
+      // The whole station, once, as he leaves the ballpark's side of it: the scale of the thing.
+      { t: cue(143.4), cells: 34, hold: [AX[0] + 0.8, AX[1] + 1.2], w: 1 },
+      // Then in with him as he crosses the air over the lit spindle, and as the camera's roll begins the whole station
+      // turns round him; the far side's house comes up under him.
+      { t: cue(145.6), cells: 12, off: [-1.4, 1.2], w: 0 },
+      { t: cue(148.2), cells: 12.5, off: [-1.6, 2.0], w: 0.25, hold: mid(flightAt(cue(149)), house, 0.35) },
+      { t: cue(150), cells: 14, hold: mid(flightAt(cue(150)), house, 0.5), w: 0.9 },
       { t: TREE, cells: 9.5, hold: mid(flightAt(TREE), house, 0.3), w: 1 },
       { t: WINDOW + 0.1, cells: 5.6, hold: U(A_HOUSE, WIN.x - 0.5, WIN.y + 0.45), w: 1 },
       // The room: the trapdoor, her chair and the floor she crosses, framed for the camera's roll, which has the house
@@ -1860,7 +1864,10 @@ function drawShards(p: p5, c: Ctx, T: number): void {
         const s2 = Math.min(b, tb)
         px = xb + slide * s2
         py = b < tb ? floor - vb * b + 0.5 * G * b * b : floor
-        ang = sl.spin * tHit + sl.spin * 0.3 * s2
+        // It comes to rest flat on the boards, as glass does, not stood on end.
+        const spun = sl.spin * tHit + sl.spin * 0.3 * s2
+        const flat = Math.round(spun / Math.PI) * Math.PI
+        ang = spun + (flat - spun) * smooth(b, 0, tb + 0.12)
       }
       px = clamp(px, WELL[1] + 0.12, H_R - 0.14)
       // A glint as each one turns face-on to us.

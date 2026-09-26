@@ -407,7 +407,8 @@ function plan(begin: number, end: number): Plan {
 
 /* ------------------------------------------------------------------ the part */
 
-const HIT_BEATS = [116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131]
+/** A beat each, and the and of 122: off the last spout into the tram's tray. */
+const HIT_BEATS = [116, 117, 118, 119, 120, 121, 122, 122.5, 123, 124, 125, 126, 127, 128, 129, 130, 131]
 export const RIM_HITS = HIT_BEATS.map((k) => cue(k))
 
 function cellsOf(): Pt[] {
