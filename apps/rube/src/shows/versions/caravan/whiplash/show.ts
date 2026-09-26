@@ -179,6 +179,8 @@ export class CaravanShow extends Show {
     const span = this.company.find((s) => s.who === who && time >= s.from && time < s.to)
     const b = span?.at(time)
     const { id, color } = PEOPLE[who]
-    return b ? { ...b, id, color: b.color ?? color } : null
+    if (!b) return null
+    // Fletcher's ball is a man's head on his rig: no rolling mark on it (it read as an eye, or a mouth, as he walked).
+    return who === 'fletcher' ? { ...b, id, color: b.color ?? color, spin: null } : { ...b, id, color: b.color ?? color }
   }
 }

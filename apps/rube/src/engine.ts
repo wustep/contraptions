@@ -409,8 +409,8 @@ function paintRiders(
       }
     }
     const angle = rider.angle ?? Math.atan2(rider.vy ?? 0, rider.vx ?? 1)
-    const spin = (rider.x - u.pieces[0].col) / R
-    ball(p, k, u.theme.ink, weight, rider.color, sx(rider.x), sy(rider.y), spin, scale, rider.stretch ?? 1, angle, !!rider.ghost)
+    const spin = rider.spin ?? (rider.x - u.pieces[0].col) / R
+    ball(p, k, u.theme.ink, weight, rider.color, sx(rider.x), sy(rider.y), spin, scale, rider.stretch ?? 1, angle, !!rider.ghost, rider.spin !== null)
   }
 }
 
