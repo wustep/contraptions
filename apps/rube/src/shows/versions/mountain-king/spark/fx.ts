@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { R, mixHex } from '../../../../parts'
 import { frame, hash, scenery, smooth } from './kit'
-import { LAST, ROLL, SILENCE, THEME, level } from './music'
+import { KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
 import type { SparkShow } from './show'
 import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from './worlds'
 
@@ -27,7 +27,21 @@ export function heat(t: number): number {
   const flare = t >= ROLL ? 1.6 * Math.exp(-(t - ROLL) / 0.8) : 0
   const home = smooth(t, LAST[0] - 0.05, LAST[0] + 0.9)
   const live = grown * (1 - out) + 0.06 * out + flare
-  return live * (1 - home) + 1 * home
+  return (live * (1 - home) + 1 * home) * freeze(t)
+}
+
+/**
+ * On the rack, when the candles knock and the cat half wakes (`KNOCKS`), the spark holds its breath: its flame
+ * ducks to about 60% at once and comes back over most of a second.
+ */
+function freeze(t: number): number {
+  let d = 0
+  for (const at of KNOCKS) {
+    const u = t - at
+    if (u <= 0 || u > 1.6) continue
+    d = Math.max(d, smooth(u, 0, 0.1) * Math.exp(-Math.max(0, u - 0.1) / 0.32))
+  }
+  return 1 - 0.4 * d
 }
 
 /* ------------------------------------------------------------------ where the spark is, for the sets it lights */
@@ -88,6 +102,11 @@ export const flame = () =>
       const h = heat(t)
       if (h <= 0.01) return
       const { k } = c
+      // All but out (the silence): no flame to speak of, but a tiny guttering tongue off the coal that flickers up on
+      // each breath and nearly dies between, so it is still a fire.
+      const ash = 1 - smooth(h, 0.1, 0.45)
+      if (ash > 0.02) guttering(p, k, here.x, here.y, t, ash)
+      if (ash > 0.98) return
       // The spark's velocity over the last few hundredths, in its own leg: the flame streams back from it.
       const a = show.where(t - 0.04)
       const b = show.where(t)
@@ -109,16 +128,37 @@ export const flame = () =>
       const glow = R * (5 + 6 * Math.min(2.5, h)) * k
       const g = ctx.createRadialGradient(x * k, y * k, R * k, x * k, y * k, glow)
       const dark = s.world === 'loft' || s.world === 'railway'
-      g.addColorStop(0, `rgba(255, 196, 120, ${dark ? 0.2 : 0.1})`)
+      g.addColorStop(0, `rgba(255, 196, 120, ${(dark ? 0.2 : 0.1) * (1 - 0.45 * ash)})`)
       g.addColorStop(1, 'rgba(255, 196, 120, 0)')
       ctx.fillStyle = g
       ctx.fillRect(x * k - glow, y * k - glow, glow * 2, glow * 2)
+      if (ash > 0.02) ctx.globalAlpha = 1 - ash
       tongue(p, k, x, y, wide * 1.15, len * up * 1.1, lean, FLAME_RIM)
       tongue(p, k, x, y, wide * 0.8, len * up * 0.82, lean * 0.85, SPARK)
       tongue(p, k, x, y + R * 0.1, wide * 0.42, len * up * 0.5, lean * 0.6, FLAME_CORE)
       p.pop()
     },
   })
+
+/** The ember's last tongue: a small flame off the top of the coal, rising on its breath and all but gone between. */
+function guttering(p: p5, k: number, x: number, y: number, t: number, ash: number): void {
+  const b = emberBreath(t - 0.12)
+  const g = b * b
+  const flick = 0.5 + 0.5 * Math.sin(t * 29 + 0.7) * Math.sin(t * 17.3)
+  const len = R * (0.35 + 1.35 * g) * (0.85 + 0.3 * flick)
+  const wide = R * (0.5 + 0.35 * g)
+  const lean = R * 0.35 * Math.sin(t * 3.1) + R * 0.15 * (flick - 0.5)
+  const base = y - R * 0.05
+  p.push()
+  p.noStroke()
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.globalAlpha = ash * smooth(g, 0.04, 0.5)
+  tongue(p, k, x + R * 0.1, base, wide, len, lean, FLAME_RIM)
+  tongue(p, k, x + R * 0.1, base + R * 0.04, wide * 0.6, len * 0.66, lean * 0.7, SPARK)
+  ctx.globalAlpha = ash * smooth(g, 0.3, 0.9)
+  tongue(p, k, x + R * 0.1, base + R * 0.06, wide * 0.3, len * 0.36, lean * 0.5, FLAME_CORE)
+  p.pop()
+}
 
 /* ------------------------------------------------------------------ the spark itself */
 
@@ -135,7 +175,7 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
   const r = R * k * scale
   // 0 while it burns; 1 in the silence, when it is all but out.
   const ash = 1 - smooth(heat(t), 0.1, 0.45)
-  const breathe = 0.5 + 0.5 * Math.sin(t * 2.6)
+  const breathe = emberBreath(t)
   const core = mixHex(FLAME_CORE, mixHex(FLAME_RIM, ASH, 0.35 - 0.2 * breathe), ash)
   const body = mixHex(SPARK, mixHex(ASH, FLAME_RIM, 0.25), ash)
   const edge = mixHex(FLAME_RIM, mixHex(ASH, LOFT.soot, 0.45), ash)
@@ -144,15 +184,94 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
   ctx.translate(x * k, y * k)
   ctx.rotate(angle)
   ctx.scale(Math.max(1, stretch), 1)
-  const g = ctx.createRadialGradient(0, -0.25 * r, 0.05 * r, 0, 0, r)
-  g.addColorStop(0, core)
-  g.addColorStop(0.55, body)
-  g.addColorStop(1, edge)
+  if (ash < 0.02) {
+    const g = ctx.createRadialGradient(0, -0.25 * r, 0.05 * r, 0, 0, r)
+    g.addColorStop(0, core)
+    g.addColorStop(0.55, body)
+    g.addColorStop(1, edge)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(0, 0, r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+    return
+  }
+  // Going out, it is a coal and not a coin: a small, flat, broken clinker lying in the ash, crusted dark grey, lit
+  // from under where it lies and through its cracks by a red heart that breathes.
+  const n = 8
+  const shrink = 1 - 0.18 * ash
+  const outline: [number, number][] = []
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2 + 0.2
+    const lump = 1 + ash * (0.3 * (hash(i, 71) - 0.5))
+    const wide = 1 + 0.22 * ash
+    const flat = 1 - 0.36 * ash
+    outline.push([Math.cos(a) * r * lump * wide * shrink, (Math.sin(a) * lump * flat + 0.3 * ash) * r * shrink])
+  }
+  const path = () => {
+    ctx.beginPath()
+    for (let i = 0; i <= n; i++) {
+      const [ax, ay] = outline[i % n]
+      const [bx, by] = outline[(i + 1) % n]
+      // Mostly straight broken faces, their corners only a little rounded.
+      const mx = (ax + bx) / 2
+      const my = (ay + by) / 2
+      if (i === 0) ctx.moveTo(mx, my)
+      else {
+        const [px, py] = outline[(i - 1 + n) % n]
+        ctx.lineTo(ax + (px - ax) * 0.18, ay + (py - ay) * 0.18)
+        ctx.quadraticCurveTo(ax, ay, ax + (bx - ax) * 0.18, ay + (by - ay) * 0.18)
+        ctx.lineTo(mx, my)
+      }
+    }
+    ctx.closePath()
+  }
+  const crust = mixHex(ASH, LOFT.soot, 0.35)
+  const [er, eg, eb] = rgb(mixHex(FLAME_RIM, SPARK, 0.3 * breathe))
+  path()
+  const g = ctx.createLinearGradient(0, -r * 0.6, 0, r * 0.75)
+  g.addColorStop(0, mixHex(edge, mixHex(crust, ASH, 0.25), ash))
+  g.addColorStop(0.55, mixHex(body, crust, ash))
+  g.addColorStop(1, mixHex(core, mixHex(crust, FLAME_RIM, 0.35 + 0.35 * breathe), ash))
   ctx.fillStyle = g
-  ctx.beginPath()
-  ctx.arc(0, 0, r, 0, Math.PI * 2)
   ctx.fill()
+  ctx.save()
+  path()
+  ctx.clip()
+  // Its underside glows where it lies in the ash, swelling and ebbing with each breath.
+  const under = ctx.createRadialGradient(0, 0.9 * r, 0, 0, 0.9 * r, 1.1 * r)
+  under.addColorStop(0, `rgba(${er}, ${eg}, ${eb}, ${((0.35 + 0.55 * breathe) * ash).toFixed(3)})`)
+  under.addColorStop(1, `rgba(${er}, ${eg}, ${eb}, 0)`)
+  ctx.fillStyle = under
+  ctx.fillRect(-r * 1.6, -r * 1.2, r * 3.2, r * 2.6)
+  // Cracks across its crust, glowing through: fine wandering lines that run mostly across it, brighter on the breath.
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = `rgba(${er}, ${eg}, ${eb}, ${((0.2 + 0.6 * breathe) * ash).toFixed(3)})`
+  ctx.lineWidth = Math.max(0.7, 0.06 * r)
+  for (let i = 0; i < 2; i++) {
+    let cx = -0.75 * r + 0.35 * r * hash(i, 81)
+    let cy = (0.05 + 0.3 * i + 0.1 * hash(i, 82)) * r
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    for (let j = 0; j < 5; j++) {
+      cx += (0.22 + 0.16 * hash(i, j, 83)) * r
+      cy += (hash(i, j, 84) - 0.5) * 0.22 * r
+      ctx.lineTo(cx, cy)
+    }
+    ctx.stroke()
+  }
   ctx.restore()
+  ctx.restore()
+}
+
+/**
+ * The ember's breath in the silence, 0..1: it glows up and ebbs about once a second, never quite steady, the way a
+ * coal does in a draught.
+ */
+export function emberBreath(t: number): number {
+  const b = 0.5 + 0.5 * Math.sin(t * 5.4 + 0.35 * Math.sin(t * 2.1))
+  return b * b * (3 - 2 * b)
 }
 
 /**

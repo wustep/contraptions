@@ -202,5 +202,8 @@ export const FESTIVAL = phrase(16)
 /** Where the loft's two builders hand the spark on: phrase 3, the second B. */
 export const LOFT_SEAM = phrase(3)
 
+/** Phrase 2's two big notes, where the rack's candles knock together and the cat half wakes (`CAT_CUES.ear`). */
+export const KNOCKS = [25.653, 28.961] as const
+
 /** When the credits start: after the last chord has died away, and the cat has looked at the candle and gone back to sleep. */
 export const CREDITS_AT = 154.2
