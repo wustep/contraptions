@@ -16,6 +16,7 @@ import {
   GY,
   HAMMERS,
   HANG,
+  HUSH,
   IN,
   LAND_AT,
   LEADER_AT,
@@ -192,9 +193,13 @@ export const fireworks = part<FireworksState>(
       // Pulling back over the last bars to show the whole curtain falling, and the finale waiting beyond it.
       { t: UNIT_AT[8] - 0.1, cells: 10.6, hold: [(HANG[0] + HANG[8]) / 2 + 4.4, GY - 3.9], w: 0.6 },
       // The crash: out to the widest frame since the trestle as the mines go up together along the whole battery, the
-      // ground and the wheel in and their fans reaching the frame's top.
-      { t: CRASH + 0.35, cells: 16, hold: [MINES_X[2] + 0.6, GY - 6.6], w: 0.7 },
-      { t: WHEEL_AT, cells: 11.5, hold: [WHEEL[0] - 2.6, GY - 4.6], w: 0.9 },
+      // ground and the wheel in and their fans reaching the frame's top. The pull-back settles as the crash lands, so
+      // its punch hits a camera coming to rest, and the wide holds while the fans climb and top out (drifting a little
+      // toward the wheel with the spark's lob). Then a short push lands on the rim with the spark, and the rest of the
+      // way in goes slowly over the wheel's spin-up.
+      { t: CRASH + 0.15, cells: 15.8, hold: [MINES_X[2] + 0.6, GY - 6.6], w: 0.7 },
+      { t: WHEEL_AT - 0.36, cells: 15.6, hold: [MINES_X[2] + 1.6, GY - 6.2], w: 0.75 },
+      { t: WHEEL_AT, cells: 13.6, hold: [WHEEL[0] - 2.6, GY - 4.6], w: 0.9 },
       { t: 137.6, cells: 11, hold: [WHEEL[0] - 1.0, GY - 4.6], w: 0.9 },
       { t: FLING, cells: 11, hold: [WHEEL[0] + 2.2, GY - 4.4], w: 0.85 },
       // To the Titan, and in close for the climb up its leader. The pan carries on past the wheel so it goes out of the
@@ -207,11 +212,12 @@ export const fireworks = part<FireworksState>(
       // under it: the widest frame of the finale, the burst's heart a little above the middle.
       { t: TITAN_BURST, cells: 12.5, hold: [TITAN_X + 0.6, APEX[1] + 2.6], w: 0.9 },
       { t: TITAN_BURST + 0.46, cells: 18, hold: [TITAN_X + 1.8, GY - 7.1], w: 1 },
-      // Down with it through the salutes, into the ash, and in close by the crate's fire.
-      { t: 145.8, cells: 17.5, hold: [TITAN_X + 2.8, GY - 7.0], w: 0.97 },
-      { t: 146.25, cells: 11.5, hold: [REST[0] - 0.6, GY - 3.7], w: 0.85 },
-      { t: DOWN, cells: 7, hold: [REST[0] - 0.4, GY - 1.8], w: 0.7 },
-      { t: 147.3, cells: 3.9, hold: [REST[0] - 0.35, GY - 0.8], w: 0.85 },
+      // Down with it through the salutes from the first hammer blow, one even descent so each flash-bang is a step
+      // nearer, landing with it in the ash on the last; then easing in by the crate's fire so the camera has all but
+      // stopped as the silence starts, and only creeps in toward the roll.
+      { t: DOWN, cells: 5.7, hold: [REST[0] - 0.4, GY - 1.8], w: 0.7 },
+      { t: HUSH, cells: 4.3, hold: [REST[0] - 0.35, GY - 0.8], w: 0.85 },
+      { t: HUSH + 0.65, cells: 3.75, hold: [REST[0] - 0.33, GY - 0.7], w: 0.87 },
       { t: ROLL, cells: 2.9, hold: [REST[0] - 0.3, GY - 0.6], w: 0.9 },
       // The door: close on the spark, the crate's fire filling the frame.
       { t: OUT, cells: 2.4, hold: sparkAt(OUT), w: 1 },
