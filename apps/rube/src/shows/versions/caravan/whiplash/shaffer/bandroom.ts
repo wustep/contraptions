@@ -202,7 +202,8 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
   p.rect(TIERS[2].x1 * k, (PIT - 1.15) * k, (x1 - TIERS[2].x1) * k, 0.04 * k)
   // The tiered floor, down to the pit: one dark mass, its treads lighter, its risers in shadow.
   const floorCol = mixHex(SHOP.deep, SHOP.wood, 0.3 + 0.25 * L)
-  solid(p, ink, weight, floorCol)
+  p.noStroke()
+  p.fill(floorCol)
   p.beginShape()
   p.vertex(x0 * k, TIERS[0].top * k)
   for (const t of TIERS) {
@@ -213,6 +214,16 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
   p.vertex(x1 * k, bottom * k)
   p.vertex(x0 * k, bottom * k)
   p.endShape(p.CLOSE)
+  // Its treads and risers in ink, not the mass's cut ends (those ran down the frame as lines at the walls).
+  outline(p, ink, weight)
+  p.beginShape()
+  p.vertex(x0 * k, TIERS[0].top * k)
+  for (const t of TIERS) {
+    p.vertex(t.x1 * k, t.top * k)
+    p.vertex(t.x1 * k, (t.top + 0.8) * k)
+  }
+  p.vertex(x1 * k, PIT * k)
+  p.endShape()
   p.noStroke()
   for (const t of TIERS) {
     p.fill(alpha(p, SHOP.black, 0.3))
@@ -235,7 +246,9 @@ function shell(p: p5, c: Ctx, f: ReturnType<typeof frame>, L: number): void {
   }
   // The walls at either end, cut through: lintels over the doors, the rest solid.
   const wall = mixHex(c.bg, SHOP.deep, 0.35)
-  solid(p, ink, weight, wall)
+  // Filled, no contour: an ink edge round them ran as long hairlines down the frame at the corridor seams.
+  p.noStroke()
+  p.fill(wall)
   p.rect(WALL_L.x0 * k, (ROOM_TOP - 0.4) * k, (WALL_L.x1 - WALL_L.x0) * k, (DOOR_TOP - ROOM_TOP + 0.4) * k)
   p.rect(WALL_R.x0 * k, (ROOM_TOP - 0.4) * k, (WALL_R.x1 - WALL_R.x0) * k, (DOOR_R_TOP - ROOM_TOP + 0.4) * k)
   // Above the corridors: the building, dark.
@@ -287,7 +300,10 @@ function leaf(p: p5, c: Ctx, hinge: number, floor: number, top: number, open: nu
   const x1 = hinge + dir * w
   const wood = lit(SHOP.wood, 0.35 + 0.65 * light)
   p.push()
-  solid(p, ink, weight, wood)
+  // Shut, the leaf is the wall's thickness: its edge soft, so it is not a bright line the height of the frame.
+  p.stroke(alpha(p, ink, 0.3 + 0.7 * Math.sin(a)))
+  p.strokeWeight(weight)
+  p.fill(wood)
   p.beginShape()
   p.vertex(x0 * k, top * k)
   p.vertex(x1 * k, (floor - h * grow) * k)

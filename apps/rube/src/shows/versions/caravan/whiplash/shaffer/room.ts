@@ -57,6 +57,8 @@ export interface RoomLook {
   left?: number
   /** The right corridor's far end, in the kit's frame (drawn from the right wall to there); none when unset. */
   right?: number
+  /** The corridor's light behind the right doorway, 0..1: someone stands in it, black against it. */
+  backlit?: number
   /** The pull-cord's toggle, swung by a knock: radians. */
   pull?: number
   /** The dust in the lamp's light, 0..1: stirred by the kit. */
@@ -289,23 +291,45 @@ function section(p: p5, c: Ctx, look: RoomLook): void {
       ctx.fillRect(a * k, lintel * k, (b - a) * k, (floor - lintel) * k)
     }
   }
+  // The corridor's light behind the right doorway: the opening pale, and a cool glow round it spilling both ways,
+  // so whoever stands in it is black against the light.
+  const back = look.backlit ?? 0
+  if (back > 0.005 && look.right !== undefined) {
+    const g = ctx.createLinearGradient(0, lintel * k, 0, floor * k)
+    g.addColorStop(0, rgba(SHOP.window, 0.22 * back))
+    g.addColorStop(1, rgba(SHOP.window, 0.38 * back))
+    ctx.fillStyle = g
+    ctx.fillRect(x1 * k, lintel * k, wall * k, (floor - lintel) * k)
+    ctx.save()
+    ctx.globalCompositeOperation = 'lighter'
+    const cx = (x1 + wall / 2 + 0.25) * k
+    const cy = (floor - 1.9) * k
+    ctx.translate(cx, cy)
+    ctx.scale(0.62, 1)
+    const r = 2.6 * k
+    const q = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+    q.addColorStop(0, rgba(SHOP.window, 0.2 * back))
+    q.addColorStop(0.5, rgba(SHOP.window, 0.08 * back))
+    q.addColorStop(1, rgba(SHOP.window, 0))
+    ctx.fillStyle = q
+    ctx.fillRect(-r, -r, 2 * r, 2 * r)
+    ctx.restore()
+  }
+  // The building's mass round the rooms: the walls, the lintels and the ceilings as dark planes, no outlines (an
+  // ink contour round them read as stray stepped hairlines at the frame's edges).
+  p.noStroke()
+  p.fill(mixHex(bg, SHOP.black, 0.45))
+  for (const [face, out, side] of [[x0, x0 - wall, look.left], [x1, x1 + wall, look.right]] as const) {
+    box4(p, k, Math.min(face, out), ceil - 0.6, Math.max(face, out), side !== undefined ? lintel : floor)
+  }
+  box4(p, k, x0 - wall, ceil - 0.6, x1 + wall, ceil)
+  if (look.left !== undefined) box4(p, k, look.left, ceil - 0.6, x0 - wall, hall)
+  if (look.right !== undefined) box4(p, k, x1 + wall, ceil - 0.6, look.right, hall)
+  // The floor, one line through both doorways.
   p.stroke(alpha(p, ink, 0.4 + 0.45 * lit))
   p.strokeWeight(weight * 1.1)
   p.noFill()
-  // The floor, one line through both doorways.
   p.line(Math.min(lx, x0 - wall) * k, floor * k, Math.max(rx, x1 + wall) * k, floor * k)
-  // The room's ceiling, and its walls down to the lintels.
-  p.line(x0 * k, ceil * k, x1 * k, ceil * k)
-  for (const [face, out, side] of [[x0, x0 - wall, look.left], [x1, x1 + wall, look.right]] as const) {
-    p.line(face * k, ceil * k, face * k, lintel * k)
-    p.line(face * k, lintel * k, out * k, lintel * k)
-    if (side !== undefined) p.line(out * k, lintel * k, out * k, hall * k)
-    else p.line(out * k, lintel * k, out * k, floor * k)
-  }
-  // The corridors' ceilings.
-  p.stroke(alpha(p, ink, 0.3 + 0.25 * lit))
-  if (look.left !== undefined) p.line(look.left * k, hall * k, (x0 - wall) * k, hall * k)
-  if (look.right !== undefined) p.line((x1 + wall) * k, hall * k, look.right * k, hall * k)
   // A sill across each doorway: a worn oak strip, a hair proud of the floor.
   for (const [a, b] of [[x0 - wall, x0], [x1, x1 + wall]]) {
     inked(p, alpha(p, ink, 0.5), weight * 0.6, mixHex(bg, SHOP.wood, 0.3 + 0.5 * lit))
@@ -453,6 +477,9 @@ function lamp(p: p5, c: Ctx, look: RoomLook): void {
 
 /** The pull-cord by the left doorway, and its toggle (a short wooden bar) at ball height. */
 function pullCord(p: p5, c: Ctx, look: RoomLook): void {
+  // Only where a part uses it (the night's switch); the practice room's lamp is on already, and a bare cord there
+  // was a hairline with no job.
+  if (look.pull === undefined) return
   const { k, bg, ink, weight } = c
   const lit = Math.min(1, litAt(look, PULL.x, 0))
   const a = look.pull ?? 0
