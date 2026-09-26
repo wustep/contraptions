@@ -17,6 +17,7 @@ import { GRID, strictTake, strikes } from './src/shows/versions/metronome/metron
 import { Show } from './src/show'
 import type { StockShow } from './src/shows/stock/show'
 import cornfieldOnsets from '../../scripts/show-plans/cornfield-opus55-onsets.json'
+import { checkAllAtOnce } from './check-shows-all-at-once'
 import epilogueOnsets from '../../scripts/show-plans/lalaland-epilogue-onsets.json'
 import { STRIKES as EPILOGUE_STRIKES } from './src/shows/versions/la-la-land/epilogue/hits'
 import { INTO, OUT } from './src/shows/versions/la-la-land/epilogue/score'
@@ -135,7 +136,11 @@ async function main(): Promise<void> {
   check('Clair de Lune is Take B, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is Take B', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is Take B only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
-  check('the shows are Clair de Lune, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
+  check('the shows are Clair de Lune, Come Recover, Cornfield Chase, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'clair-de-lune,come-recover,cornfield-chase,interstellar,la-la-land,premiere-arabesque')
+  const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
+  check('Come Recover is one take, All at Once: its model in its name, and in the panel a faint byline, Directed by wustep, and no model or tech-demo line',
+    allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].label === 'All at Once' && allAtOnce[0].note === undefined &&
+    allAtOnce[0].director?.name === 'wustep' && allAtOnce[0].director.href === 'https://x.com/wustep')
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
   const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
   check('La La Land has the Epilogue take beside Seb\'s, with a faint byline (Directed by wustep) and no model or tech-demo line',
@@ -190,6 +195,7 @@ async function main(): Promise<void> {
         }
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
       }
+      if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
       if (work.work === 'cornfield-chase' && version.take === 'tech-demo') {
         check('cornfield: the whole recording, with the demo credit',
           near(perf.duration, 126.984) &&

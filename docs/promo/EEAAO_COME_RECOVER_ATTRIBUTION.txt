@@ -1,0 +1,12 @@
+Come Recover (Empathy Fight) — Son Lux (Ryan Lott, Rafiq Bhatia, Ian Chang)
+From Everything Everywhere All at Once (Original Motion Picture Soundtrack), A24 Music, 2022
+Film: Everything Everywhere All at Once, written and directed by Daniels (Daniel Kwan and Daniel Scheinert), A24, 2022
+Official audio used for private Contraptions tech demos only (provided to YouTube by Virgin Music Group for A24 Music):
+https://www.youtube.com/watch?v=IOh1H06Cx0w
+Duration 7:14. Copyrighted — do not ship to production / public Shows without a licence.
+
+Files:
+- docs/promo/eeaao-come-recover-demo.mp3 — what Come Recover, All at Once plays: the cue from its first sample to
+  5:32, fading out over its last nine seconds. No other edit: every onset is the recording's own. Built from the
+  fetched cue by scripts/eeaao-cue.sh, and measured by scripts/eeaao-onsets.py into
+  scripts/show-plans/eeaao-onsets.json.
