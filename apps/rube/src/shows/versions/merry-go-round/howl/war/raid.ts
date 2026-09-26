@@ -1296,7 +1296,8 @@ const polyPath = (ctx: CanvasRenderingContext2D, k: number, pts: Pt[]) => {
  */
 function drawFarFires(p: p5, k: number, t: number, f: Frame): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.save()
+  // (p5's push and pop round the clip: the fires inside it set p5 fills, and p5's pop re-reads its cached fill.)
+  p.push()
   clipAboveRoofs(ctx, k, f)
   for (let i = 0; i < SITES.length; i++) {
     const s = SITES[i]
@@ -1313,7 +1314,7 @@ function drawFarFires(p: p5, k: number, t: number, f: Frame): void {
     if (!s.before) sparks(p, k, s.x, y - 0.4, u, 10, 5.5, s.seed)
   }
   for (let i = 0; i < SITES.length; i++) if (SITES[i].far) smoke(p, k, SMOKES[i], t)
-  ctx.restore()
+  p.pop()
 }
 
 /**
@@ -1383,7 +1384,7 @@ function drawRoofFire(p: p5, k: number, W: number, s: Site, t: number): void {
   if (u < 0.5) glow(p, k, s.x, cy - 0.8, 4.5, TOWN.fireHot, 0.35 * Math.exp(-u / 0.12))
   // The flames, up out of the hole: clipped along its lower lip.
   const lip = hole.filter(([, y]) => y >= cy).sort((a, b) => b[0] - a[0])
-  ctx.save()
+  p.push()
   ctx.beginPath()
   ctx.moveTo((s.x - 4) * k, (cy - 9) * k)
   ctx.lineTo((s.x + 4) * k, (cy - 9) * k)
@@ -1395,7 +1396,7 @@ function drawRoofFire(p: p5, k: number, W: number, s: Site, t: number): void {
   ctx.closePath()
   ctx.clip()
   fire(p, k, s.x, cy + hh * 0.7, hw * 2.1, h, { t, seed: s.seed, lean: 0.14, light: 1 })
-  ctx.restore()
+  p.pop()
   sparks(p, k, s.x, cy - 0.3, u, 16, 5.5, s.seed)
 }
 
