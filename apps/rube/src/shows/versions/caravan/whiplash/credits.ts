@@ -75,7 +75,7 @@ function place(): [number, number] {
   const fh = (Math.min(W, (H * 16) / 9) * 9) / 16
   const spare = (H - fh) / 2
   if (spare < fh * 0.25) return AT
-  return [0.5, (-spare + 0.07 * H) / fh]
+  return [0.5, (-spare + 0.035 * H) / fh]
 }
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {

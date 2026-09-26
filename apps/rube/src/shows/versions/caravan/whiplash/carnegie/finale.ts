@@ -84,8 +84,7 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // The long roll, not the solo's framings: low and close on the snare, the two sticks a blur on its head; up
     // with Fletcher as he comes across; the two heads, level, for the nod, tighter through Andrew's answer.
     k(ROLL[0] + 0.5, 3.1, [-0.62, -0.5]),
-    k(ROLL[0] + 1.9, 3.3, [-0.55, -0.62]),
-    k(F_WALK[0] + 2.2, 6.2, [0.9, -1.6]),
+    k(F_WALK[1], 4.6, [0.4, -1.9]),
     k(F_WALK[1] + 1.6, 3.7, [0.15, -2.4]),
     k(NOD[0] - 0.2, 3.4, [0.1, -2.45]),
     k(NOD_BACK[1] + 0.3, 3.2, [0.05, -2.45]),
@@ -100,11 +99,13 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(CHORD_HIT - 0.2, 11.0, [3.0, -2.4]),
     k(CHORD_HIT + 1.6, 10.4, [2.8, -2.3]),
     k(CUT - 0.3, 4.0, [0.58, -2.55]),
-    // Held on the fist; then slowly back to the whole stage going dark, the machine low in the frame so the cards
-    // come up over clear wall; still drifting out to the last frame.
+    // Held on the fist; then back to the whole stage going dark, the machine low in the frame so the cards come up
+    // over clear wall; and on back, slowly, to the whole proscenium by the last frame.
     k(CUT + 2.4, 3.92, [0.56, -2.57]),
-    k(556.2, 11.0, [0.3, -3.4]),
-    k(slot.end, 12.0, [0.4, -3.6]),
+    k(556.2, 10.0, [0.3, -3.3]),
+    k(566.0, 13.1, [0.55, -4.25]),
+    // (A key past the end, so the camera is still going back on the last frame rather than easing to a stop.)
+    k(slot.end + 4, 19.0, [0.9, -5.6]),
   ]
 }
 
