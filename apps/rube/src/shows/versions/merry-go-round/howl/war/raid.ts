@@ -1818,9 +1818,10 @@ export const raid = part<{ begin: number }>(
       // the roofs across from her.
       her(214.35, 13.0, 7.45, 0.185),
       her(215.6, 12.8, 7.4, 0.185),
-      // In on her: she glances up at him (216.78), the bomber dives into her frame, his wing turns its bomb aside
-      // over her head, it bursts up the street and she ducks; the fire takes the house over the crater.
-      her(b(13), 8.8, sx(b(13)) + 2.0, 0.25),
+      // Cut in on her (on her push, the bar's third beat): she glances up at him (216.78), the bomber dives into her
+      // frame, his wing turns its bomb aside over her head, it bursts up the street and she ducks; the fire takes the
+      // house over the crater.
+      { ...her(b(12, 3), 8.8, sx(b(13)) + 2.0, 0.25), cut: true },
       her(b(14), 9.4, 7.2, 0.22),
       her(b(15), 9.4, 7.0, 0.29),
       her(r(1), 9.6, 7.3, 0.31),
@@ -1834,9 +1835,11 @@ export const raid = part<{ begin: number }>(
       // A medium over her as the stick comes down the roofs to the one over her and on to the shop's.
       her(r(6), 11.0, LX + 1.3, 0.33, PUMP),
       her(r(8), 11.0, LX + 0.5, 0.33, PUMP),
-      // In on her again as he tears at the bay; out as she steps down, to the second wide: the ship blowing.
+      // In on her again as he tears at the bay; then, on her step down (the bar's third beat), a cut out to the second
+      // wide, so the ship blows (231.805) in the whole frame.
       her(r(9), 8.6, LX + 1.4, 0.33, PUMP),
-      her(r(10), 9.6, LX + 0.9, 0.31, PUMP),
+      her(r(10), 9.6, LX + 0.9, 0.345, PUMP),
+      { ...her(r(10, 3), 15.4, 3.0, 0.185), cut: true },
       her(r(11), 15.6, 2.9, 0.185),
       her(232.35, 16.0, 2.2, 0.185),
       // In on her, running home.
