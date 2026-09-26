@@ -4,6 +4,7 @@ import { CRASH } from '../drums'
 import { CHEST, POSES, RIG, beatPose, blendPose, mixArm, reachFromHead, wrapAngle, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BREAK, FINAL, LAST_CHORD, RIDE, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
+import { pushOff } from './rubato-hits'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
 /**
@@ -163,7 +164,8 @@ export function crashAskew(T: number): number {
   const set = slip * (1 - u)
   // Straight, and the last small rock as his hand leaves it.
   const after = T > FIX[1] ? 0.018 * Math.exp(-(T - FIX[1]) / 0.45) * Math.sin(2 * Math.PI * 1.5 * (T - FIX[1])) : 0
-  return set + after
+  // And in the rubato, giving under him as he springs off it for the metronome's weight, and ringing after.
+  return set + after + pushOff(T)
 }
 
 /** The crash's right rim, in the Carnegie frame, at an angle `a` off its level (its tilt plus how askew it is). */

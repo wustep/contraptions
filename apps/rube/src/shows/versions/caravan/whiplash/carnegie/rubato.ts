@@ -9,7 +9,7 @@ import { CRASH, RACK, SNARE, cymbalSwing } from '../drums'
 import { box, part, smooth, type Ctx } from '../kit'
 import { RIDE, SNARES, level } from '../music'
 import { G_EARTH } from '../physics'
-import { BOARD, CRASH_AT, LAND, RACK_AT, RACK_TAP, TAPS } from './rubato-hits'
+import { BOARD, CRASH_AT, LAND, PUSH_OFF, RACK_AT, RACK_TAP, TAPS, pushOff } from './rubato-hits'
 import {
   COCK,
   LANDING,
@@ -196,9 +196,10 @@ export const rubato = part<{ begin: number }>(
     // The leap onto the crash, riding it as it swings under him; a lean toward the metronome (his glance at it),
     // and the leap onto the weight.
     const lean = (T: number) => CRASH_LX - LEAN * easeInSine(clamp((T - (BOARD - 1.0)) / 0.4))
-    const onCrash = (T: number) => seatOnCymbal(CRASH, lean(T), cymbalSwing(T - CRASH_AT, 0.16, 1.2))
+    // He crouches into the crash before he springs (it gives under him: `pushOff`), and it swings up after him.
+    const onCrash = (T: number) => seatOnCymbal(CRASH, lean(T), cymbalSwing(T - CRASH_AT, 0.16, 1.2) + pushOff(T))
     path.hop(onCrash(CRASH_AT), CRASH_AT)
-    path.ride(onCrash, BOARD - 0.6, 120)
+    path.ride(onCrash, PUSH_OFF, 120)
     path.hop(riding(BOARD), BOARD)
     // On the weight: every stroke a sample, and the swing between them; the roll (still, at the centre of the
     // shimmer); the lean back; the toss.
