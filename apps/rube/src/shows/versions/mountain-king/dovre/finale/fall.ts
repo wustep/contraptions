@@ -4,9 +4,10 @@ import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type Par
 import { CODA, LAST1, LAST2 } from '../music'
 import { dawn, REST, skyline, surface } from '../mountain'
 import { quake } from '../rock'
-import { SEAM_SHOT } from '../seams'
-import type { Pen } from '../troll'
-import { SKY, STONE } from '../worlds'
+import { CODA_SHOT } from '../seams'
+import { drawTroll, type Pen, type TrollLook } from '../troll'
+import { SKY, STONE, WORKS } from '../worlds'
+import { DRUM2, DRUMMERS, farEdge, FLOOR, LEAP } from '../under/drum-clock'
 import { breach, capCracks, collar, collarFront, dropped, G, hollowOf, puff, stone, thrown, vent, VENT, type Floor, type Stone } from './fall-rock'
 import { column, crown, plume, steam } from './fall-water'
 
@@ -350,6 +351,141 @@ function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void 
   p.pop()
 }
 
+/* ------------------------------------------------------------------ the trolls flee */
+
+/**
+ * Ibsen: the bells ring, the trolls flee shrieking. Each room's flight is on a chord while the camera is in that room
+ * (the heart's crew, `heart-trolls.ts`; the court, `hall-court.ts`); these are the ones in the drum room and the mine
+ * as he comes up through them. Frozen by the bells, looking up, until their chord; then away, out of the frame.
+ */
+interface Runner {
+  /** Where its feet are (world) while it stands frozen, from `seen` (the drum's are drawn by the drum part till then). */
+  at: Pt
+  seen: number
+  /** The chord it bolts on. */
+  go: number
+  /** A leap first (off a drum's rim): where its feet come down (world), and when. */
+  land?: Pt
+  landAt?: number
+  /** Then along the floor this way, cells/s. */
+  dir: 1 | -1
+  speed: number
+  size: number
+  seed: number
+  lit: number
+  /** Its clubs, dropped where it stood (the drummers'): they fall onto the skin, world y. */
+  clubs?: number
+}
+
+/** The war-drum's rim under a drummer's feet, world y (the drum part's frame is world (46, 25)). */
+const rimAt = (x: number): number => 25 + farEdge(DRUM2, x)
+
+const RUNNERS: Runner[] = [
+  // The war-drum's pair: the west one, beside the burst, leaps on it, east over its drum and away; the east one on the
+  // next chord. Their clubs drop on the skin.
+  ...DRUMMERS.filter((d) => d.drum === 2 && LEAP[d.seed] !== undefined).map((d, i): Runner => ({
+    at: [46 + d.x, rimAt(d.x)],
+    seen: LEAP[d.seed],
+    go: LEAP[d.seed],
+    land: [46 + DRUM2.cx + DRUM2.rx + 0.9 + 0.6 * i, 25 + FLOOR],
+    landAt: LEAP[d.seed] + (i === 0 ? 0.62 : 0.5),
+    dir: 1,
+    speed: 4.2,
+    size: d.size,
+    seed: d.seed,
+    lit: 0.72,
+    clubs: 25 + DRUM2.skin,
+  })),
+  // Two miners in the gallery, frozen under the timbers: one bolts east as the floor cracks beside him, the other,
+  // further on, as it bursts (west is the shaft down to the drum).
+  { at: [49.7, 17.97], seen: 136.4, go: 138.598, dir: 1, speed: 4.2, size: 1.55, seed: 41, lit: 0.62 },
+  { at: [53.5, 17.97], seen: 136.4, go: 139.072, dir: 1, speed: 4.0, size: 1.75, seed: 42, lit: 0.62 },
+]
+
+/** A runner at T: its feet (world), its pose; null when it is not to be drawn. */
+function runnerAt(r: Runner, T: number): { at: Pt; look: TrollLook } | null {
+  if (T < r.seen) return null
+  // Frozen, head back, looking up at the vault.
+  if (T < r.go) return { at: r.at, look: { size: r.size, seed: r.seed, pose: 'stand', face: 0, slump: -0.35, eyes: 1.5, mouth: 0.35, arms: 0.25, lit: r.lit } }
+  let x: number
+  let y: number
+  let air = 0
+  let t0 = r.go
+  let x0 = r.at[0]
+  let y0 = r.at[1]
+  if (r.land && r.landAt) {
+    const T1 = r.landAt - r.go
+    if (T < r.landAt) {
+      // The leap: a crouch into it, then a bound east over the drum, arms flung up.
+      const u = (T - r.go) / T1
+      const lift = 0.9
+      x = r.at[0] + (r.land[0] - r.at[0]) * u
+      y = r.at[1] + (r.land[1] - r.at[1]) * u - lift * 4 * u * (1 - u)
+      air = Math.sin(Math.PI * u)
+      return { at: [x, y], look: { size: r.size, seed: r.seed, pose: 'run', phase: 0.25, face: r.dir, eyes: 1.5, mouth: 0.8, arms: 0.35 + 0.5 * air, lit: r.lit } }
+    }
+    t0 = r.landAt
+    x0 = r.land[0]
+    y0 = r.land[1]
+  }
+  // Away along the floor, gathering speed from where it came down (or stood).
+  const run = T - t0
+  const lead = r.land ? 0.1 : 0.3
+  const dist = r.speed * (run - lead * (1 - Math.exp(-run / lead)))
+  x = x0 + r.dir * dist
+  y = y0
+  // The knees give as it comes down from the leap.
+  const give = r.land ? 0.06 * r.size * Math.exp(-run / 0.12) * Math.min(1, run / 0.03) : 0
+  return { at: [x, y + give], look: { size: r.size, seed: r.seed, pose: 'run', phase: dist / (0.55 * r.size), face: r.dir, eyes: 1.5, mouth: 0.75, arms: 0.3 * Math.exp(-run / 0.6), slump: -0.1, lit: r.lit } }
+}
+
+/** A dropped club lying on the skin (after falling from the fist onto it): dark timber, thick at the head. */
+function droppedClub(p: p5, c: Pen, x: number, y0: number, skin: number, T: number, t0: number, side: number, q: Pt): void {
+  if (T < t0) return
+  const k = c.k
+  const fallT = 0.26
+  const u = Math.min(1, (T - t0) / fallT)
+  const y = y0 + (skin - y0) * u * u
+  // Turning as it falls, lying along the skin once down, with a small bounce.
+  const lie = side * (0.12 + 0.04 * side)
+  const a = (1 - u) * (-side * 1.2) + u * lie + (u >= 1 ? 0.05 * Math.exp(-(T - t0 - fallT) / 0.08) * Math.sin((T - t0 - fallT) * 40) : 0)
+  const len = 0.5
+  const pts: Pt[] = [
+    [-len / 2, -0.02],
+    [len * 0.3, -0.045],
+    [len / 2, -0.03],
+    [len / 2, 0.03],
+    [len * 0.3, 0.045],
+    [-len / 2, 0.02],
+  ]
+  p.push()
+  p.translate((lx(x) + q[0]) * k, (ly(y) - 0.04 + q[1]) * k)
+  p.rotate(a)
+  p.stroke(mixHex(STONE.deep, c.ink, 0.7))
+  p.strokeWeight(c.weight * 0.8)
+  p.fill(mixHex(WORKS.wood, STONE.deep, 0.25))
+  p.beginShape()
+  for (const [u2, v] of pts) p.vertex(u2 * k, v * k)
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
+function drawRunners(p: p5, c: Pen, T: number, q: Pt, f: { x0: number; x1: number; y0: number; y1: number }): void {
+  for (const r of RUNNERS) {
+    if (r.clubs !== undefined) {
+      droppedClub(p, c, r.at[0] - 0.35, r.at[1] - r.size * 0.55, r.clubs, T, r.go, -1, q)
+      droppedClub(p, c, r.at[0] + 0.3, r.at[1] - r.size * 0.6, r.clubs, T, r.go + 0.04, 1, q)
+    }
+    const w = runnerAt(r, T)
+    if (!w) continue
+    const x = lx(w.at[0]) + q[0]
+    const y = ly(w.at[1]) + q[1]
+    // Gone once it is out of the frame (it never comes back).
+    if (x < f.x0 - 3 || x > f.x1 + 3) continue
+    drawTroll(p, c, x, y, { ...w.look, noTail: false })
+  }
+}
+
 /* ------------------------------------------------------------------ the flanks cracking */
 
 /**
@@ -595,6 +731,9 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
     flankCracks(p, c, T, q)
   }
 
+  // The trolls in the drum room and the mine, fleeing on the chords as he comes up through their floors.
+  if (T < 142) drawRunners(p, c, T, q, f)
+
   // What comes down, and what is thrown up.
   for (const st of STONES) stone(p, c, ORIGIN, st, T, q, 0.55)
   for (const b of TUMBLES) drawBlock(p, c, b, T, q, 0.35 + 0.55 * d)
@@ -646,11 +785,12 @@ export const fall = part<State>(
   (slot): PartShot[] => {
     const w = (x: number, y: number): Pt => [lx(x), ly(y)]
     return [
-      { t: slot.begin, ...SEAM_SHOT },
-      // Up the chimney: pulling back a little at each floor, looking up the way he is going.
-      // Held on the pipe while he stops it, so the burst starts in the frame.
-      { t: 135.146, cells: 6, hold: w(COL, 32.6), w: 0.8 },
-      { t: 135.411, cells: 6.3, hold: w(COL, 32.2), w: 0.55 },
+      // The machine broken over him, wide (the runaway's last keys hold the same): he drops into the collar low in it.
+      { t: slot.begin, cells: CODA_SHOT.cells, hold: w(CODA_SHOT.world[0], CODA_SHOT.world[1]), w: CODA_SHOT.w },
+      // One slow push in on the corked collar while the heart's crew bolt for its doors on the pickup and the crash;
+      // held on him until the crash, then one eased tilt up as it blows him out.
+      { t: 135.146, cells: 8.3, hold: w(48.7, 31.5), w: 0.85 },
+      { t: 135.411, cells: 7.9, hold: w(47.9, 31.5), w: 0.75 },
       // Pinned under a floor the camera settles on him (it would otherwise run on ahead to the burst); moving, it leads.
       { t: 136.11, cells: 7.4, off: [0, -0.4] },
       { t: 138.598, cells: 8.5, off: [0, -0.4] },

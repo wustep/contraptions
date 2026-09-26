@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, knock, lastOf, smooth, type Ctx } from '../kit'
 import { flame, flicker, glow } from '../lantern'
-import { beat, FF } from '../music'
+import { beat, CODA, FF } from '../music'
 import { hollow, quake, slab, stalactite } from '../rock'
 import { drawTroll } from '../troll'
 import { LAMP, STONE, TROLL, WORKS } from '../worlds'
@@ -16,6 +16,7 @@ import {
   DRUM3,
   DRUMMERS,
   DUCK,
+  LEAP,
   FLOOR,
   KETTLE,
   KETTLE_Y,
@@ -675,7 +676,10 @@ export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, pe
   const up = beat(dr.up)
   const climb = smooth(T, up - CLIMB, up)
   if (climb <= 0) return
-  const duck = smooth(T, DUCK, DUCK + 0.8)
+  // The war-drum's pair stay on the rim, frozen, until they leap off it (the finale draws them from then).
+  const leap = LEAP[dr.seed]
+  if (leap !== undefined && T >= leap) return
+  const duck = leap !== undefined ? 0 : smooth(T, DUCK, DUCK + 0.8)
   if (duck >= 1) return
   // The knees give under each of its own blows.
   const { i } = lastOf(BLOWS, T)
@@ -689,10 +693,12 @@ export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, pe
   }
   const rim = farEdge(d, dr.x) + jolt
   const feet = rim + (1 - climb) * dr.size * 1.02 + duck * dr.size * 1.05 + 0.028 * dr.size * dip
-  const face = faceOf(dr, peerX, T)
+  // The bells (the coda's first chord): the pair on the war-drum freeze and look up at the vault.
+  const bells = leap !== undefined ? smooth(T, CODA - 0.05, CODA + 0.3) : 0
+  const face = faceOf(dr, peerX, T) * (1 - bells)
   const stare = dr.drum === 3 ? smooth(T, BURST, BURST + 0.25) : 0
-  const eyes = 1.05 + 0.4 * smooth(T, up - 0.4, up) * (1 - smooth(T, up + 0.2, up + 1.2)) + 0.45 * stare
-  const mouth = Math.max(0.8 * shout * smooth(T, up, up + 0.3), 0.45 * stare)
+  const eyes = 1.05 + 0.4 * smooth(T, up - 0.4, up) * (1 - smooth(T, up + 0.2, up + 1.2)) + 0.45 * Math.max(stare, bells)
+  const mouth = Math.max(0.8 * shout * smooth(T, up, up + 0.3), 0.45 * stare, 0.35 * bells)
   let hands: { at: [number, number]; angle: number }[] = []
   aboveRim(p, c, d, jolt, 0.06, () => {
     const drawn = drawTroll(p, c, dr.x, feet, {
@@ -703,7 +709,7 @@ export function drawDrummer(p: p5, c: Ctx, dr: Drummer, T: number, L: number, pe
       eyes,
       mouth,
       // After the burst, the great drum's three lean their heads down over the hole he went through.
-      slump: 0.55 * stare,
+      slump: 0.55 * stare - 0.35 * bells,
       seed: dr.seed,
       hide: dr.hide ?? TROLL.hide,
       lit: 0.1 + 0.62 * L,

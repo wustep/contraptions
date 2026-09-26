@@ -285,6 +285,12 @@ const phaseOfBeat = phaseCurve()
 export const FREEZE = CODA
 /** And duck down behind their drums on the chords that follow, gone. */
 export const DUCK = CODA + 0.9
+/**
+ * Except the war-drum's two, who are in the finale's frame as he bursts up through their floor: frozen on their rim
+ * by the bells, they leap off it (the finale draws them from here, `finale/fall.ts`), the west one on the burst, the
+ * east one on the next chord. By seed.
+ */
+export const LEAP: Readonly<Record<number, number>> = { 8: 136.36, 3: 137.118 }
 
 /** The drummers' strike phase at show time `t` (frozen from the coda). */
 export function phase(t: number): number {

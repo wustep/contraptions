@@ -75,5 +75,12 @@ export const PLAN: Record<'gate' | 'deep' | 'court' | 'wake' | 'mine' | 'drum' |
 /** The camera at every builder's seam, on both sides of it: following the ball, a little above it, 6 cells tall. */
 export const SEAM_SHOT = { cells: 6, off: [0, -0.5] as Pt }
 
+/**
+ * The one seam that is not close: the coda's first chord (runaway → fall). The machine comes apart over him there
+ * (the governor's weights, the flywheel), so the camera is pulled back to hold the whole of it, and he drops into the
+ * collar low in the frame. A held point in WORLD cells: each part turns it into its own frame.
+ */
+export const CODA_SHOT = { cells: 10.0, world: [51.3, 31.4] as Pt, w: 0.85 }
+
 /** At a 'rest' seam where she is with him, the Woman in Green rests this far ahead of Peer (centre to centre, same floor). */
 export const WOMAN_LEAD = 1.0

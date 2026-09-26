@@ -116,8 +116,11 @@ export const OPEN = q7(27)
 const chord = (t: number): number => CODA_CHORDS.reduce((b, c) => (Math.abs(c.t - t) < Math.abs(b - t) ? c.t : b), CODA_CHORDS[0].t)
 /** The bells: the court freezes and looks up. */
 export const BELLS = chord(134.25)
-/** They flee on the chord pairs. */
-export const FLEE = [chord(135.15), chord(135.41), chord(136.11), chord(136.36)]
+/**
+ * They stay frozen, looking up, until he bursts up through their floor; then they flee, row by row, on the chords
+ * (the crack under them, the burst, the next chord), in the frame as he comes up through the hall.
+ */
+export const FLEE = [chord(140.05), chord(140.27), chord(141.05), chord(141.05)]
 /** The pillars crack on the next pairs; the floor over the chimney's column breaks open. */
 export const CRACKS = [chord(139.07), chord(139.33), chord(140.05)]
 export const FLOOR_BREAK = chord(140.27)

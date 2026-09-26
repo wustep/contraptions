@@ -161,17 +161,22 @@ function keeper(T: number): Pose {
   // Down, dazed; ducking the governor's weights; then the bells: he looks up, and gets up and goes.
   const bells = T >= BREAK
   const duck = smoothstep(T, GOV_STOPS - 0.1, GOV_STOPS + 0.1) * (1 - smoothstep(T, BREAK - 0.2, BREAK))
-  if (T < BREAK + 0.9) {
+  if (T < PICK - 0.25) {
     return {
       x: 15.02,
       y: DECK,
       look: { ...base, pose: 'sit', rise: 0, face: bells ? -0.15 : -0.5, eyes: bells ? 1.5 : 0.7 + 0.5 * duck, slump: bells ? 0 : 0.5 + 0.5 * duck, arms: 0.45 * duck, mouth: bells ? 0.6 : 0 },
     }
   }
-  const up = smoothstep(T, BREAK + 0.9, BREAK + 1.4)
-  const w = walk(T, BREAK + 1.3, BREAK + 2.3, 15.02, 16.2, 0.5)
-  return { x: w.x, y: DECK, gone: smoothstep(T, BREAK + 1.6, BREAK + 2.2), look: { ...base, pose: up < 1 ? 'sit' : 'run', rise: up, phase: w.phase, face: 1, eyes: 1.4, mouth: 0.6 } }
+  // Up on the pickup, and out of the ledge's door on the crash.
+  const up = smoothstep(T, PICK - 0.25, PICK + 0.05)
+  const w = walk(T, CRASH - 0.05, CRASH + 0.9, 15.02, 16.2, 0.5)
+  return { x: w.x, y: DECK, gone: smoothstep(T, CRASH + 0.35, CRASH + 0.9), look: { ...base, pose: up < 1 ? 'sit' : 'run', rise: up, phase: w.phase, face: 1, eyes: 1.4, mouth: 0.6 } }
 }
+
+/** The coda's pickup and crash (the chord pair after the bells): the crew bolt on them. */
+const PICK = 135.146
+const CRASH = 135.411
 
 /* ------------------------------------------------------------------ the stoker */
 
@@ -187,8 +192,9 @@ function stoker(T: number): Pose {
   const shove = smoothstep(T, FLY - 0.35, FLY - 0.08) * (1 - smoothstep(T, FLY + 0.15, FLY + 0.55))
   // After the bells: frozen, then away to the gallery's door.
   if (T >= BREAK) {
-    const w = walk(T, BREAK + 1.0, BREAK + 2.6, STOKE.x, DOOR_L, 0.5)
-    return { x: w.x, y: PIT, gone: smoothstep(T, BREAK + 2.1, BREAK + 2.6), look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: w.moving ? -1 : 0, eyes: 1.5, mouth: 0.5, arms: w.moving ? 0 : 0.7 } }
+    // Frozen by the bells; he bolts on the pickup.
+    const w = walk(T, PICK - 0.05, PICK + 1.35, STOKE.x, DOOR_L, 0.5)
+    return { x: w.x, y: PIT, gone: smoothstep(T, PICK + 0.9, PICK + 1.35), look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: w.moving ? -1 : 0, eyes: 1.5, mouth: 0.5, arms: w.moving ? 0 : 0.7 } }
   }
   const pump = push(T)
   // Glances at Peer between strokes; the pumping itself looks down at the board.
@@ -264,13 +270,15 @@ function chaser(j: number, T: number): Pose | null {
   // The governor's spindle comes down across the pumps: they throw themselves clear, back across the pit; the bells
   // freeze them; then away into the tunnel.
   const x0 = ch.pump - 1.5 - 0.7 * j
-  if (T < BREAK + 1.0 + 0.2 * j) {
+  const bolt = (j === 0 ? PICK : CRASH) - 0.05
+  if (T < bolt) {
     const w = walk(T, GOV_SNAP, GOV_SNAP + 0.55, ch.pump, x0, 0.6)
     const frozen = T >= BREAK
     return { x: w.x, y: PIT, look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: frozen ? 0 : -1, eyes: 1.5, mouth: 0.7, arms: frozen ? 0.35 : 0.2 } }
   }
-  const w = walk(T, BREAK + 1.0 + 0.2 * j, BREAK + 3.0 + 0.3 * j, x0, DOOR_L, 0.6)
-  return { x: w.x, y: PIT, gone: smoothstep(T, BREAK + 2.5 + 0.3 * j, BREAK + 3.0 + 0.3 * j), look: { ...base, pose: 'run', phase: w.phase, face: -1, eyes: 1.4, mouth: 0.6 } }
+  // The bells freeze them; they bolt on the pickup and the crash, one each, for the tunnel.
+  const w = walk(T, bolt, bolt + 1.5 + 0.2 * j, x0, DOOR_L, 0.6)
+  return { x: w.x, y: PIT, gone: smoothstep(T, bolt + 1.0 + 0.2 * j, bolt + 1.5 + 0.2 * j), look: { ...base, pose: 'run', phase: w.phase, face: -1, eyes: 1.4, mouth: 0.6 } }
 }
 
 /* ------------------------------------------------------------------ drawing */

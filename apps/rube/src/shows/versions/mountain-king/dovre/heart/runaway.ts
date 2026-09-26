@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type PartShot } from '../kit'
-import { PLAN, SEAM_SHOT } from '../seams'
+import { CODA_SHOT, PLAN, SEAM_SHOT } from '../seams'
 import { GOVERNOR, GOV_SNAP, GOV_STOPS, GOV_WEIGHTS, OOM, PAH, RUN_DX, T1, T2, VALVE_AT, VALVE_THROW, YOKE_GOES, kt } from './heart-clock'
 import { ON_YOKE, YOKE_BUCKS, laneOf } from './heart-path'
 
@@ -49,6 +49,9 @@ export const runaway = part<{ begin: number }>(
   }),
   (slot): PartShot[] => {
     const at = (t: number, cells: number, hold?: Pt, w?: number, off?: Pt): PartShot => ({ t, cells, hold, w, off })
+    // CODA_SHOT's world point in this frame (laid mirrored from world x 51: the chimney's foot is this frame's exit),
+    // nudged by dx, dy world cells.
+    const coda = (dx: number, dy: number): Pt => [PLAN.runaway.exit[0] - 0.5 - (CODA_SHOT.world[0] + dx - 47.5), CODA_SHOT.world[1] + dy - 33]
     return [
       { t: slot.begin, ...SEAM_SHOT },
       // Flung onto the yoke: the governor, the whole of it, spinning up with him on it.
@@ -57,9 +60,11 @@ export const runaway = part<{ begin: number }>(
       // The valve blows and the keeper sits on it: wide on the whole machine past control.
       at(VALVE_AT + 0.2, 11.0, g(7.4, -2.4), 0.7),
       at(VALVE_THROW, 7.0, g(12.4, -2.4), 0.45),
-      // The governor comes apart over him; he drops.
-      at(YOKE_GOES, 6.8, g(13.0, -2.8), 0.35),
-      { t: slot.end, ...SEAM_SHOT },
+      // The governor opens past its stops: back, to hold the whole machine as it comes apart over him (the weights
+      // flung, the flywheel split), and he drops into the collar low in the frame on the coda's first chord.
+      at(GOV_STOPS, 10.0, coda(0, 0), 0.82),
+      at(GOV_SNAP, CODA_SHOT.cells, coda(0, 0), CODA_SHOT.w),
+      { t: slot.end, cells: CODA_SHOT.cells, hold: coda(0, 0), w: CODA_SHOT.w },
     ]
   },
 )
