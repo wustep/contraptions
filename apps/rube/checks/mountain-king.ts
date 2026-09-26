@@ -2,9 +2,10 @@
  * The checks for Mountain King (`versions/mountain-king/opus55.show.ts`), run by `check:shows`: Grieg's "In the
  * Hall of the Mountain King", one ball through the Dovre mountain, every strike on the recording.
  *
- * PRE-PRODUCTION: the skeleton. What every stub already keeps (the picker, the soundtrack, one place, one path,
- * strikes on the music, the seams' contract, the Woman in Green's continuity, the credits). The integration adds
- * what only the built parts can keep: every part striking its phrases, the densest stretches, the collapse.
+ * The picker, the soundtrack, one place, one path, strikes on the music, the seams' contract, the Woman in Green's
+ * continuity, the credits; and what the built parts keep: every phrase of the theme struck, the coda's chords
+ * struck, Peer in the frame all the way (under Zoom too), every drop landing in the frame, and Peer at rest on the
+ * hillside at the end.
  */
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
@@ -14,7 +15,8 @@ import { ORDER } from '../src/shows/versions/mountain-king/dovre/score'
 import { STRIKES } from '../src/shows/versions/mountain-king/dovre/hits'
 import { PLAN, SEAM_SHOT, WOMAN_LEAD } from '../src/shows/versions/mountain-king/dovre/seams'
 import { CARDS, CREDITS_OK, DURATION, creditsAt } from '../src/shows/versions/mountain-king/dovre/credits'
-import { BEATS, CODA, LAST1, LAST2, P, RECORDING, THEME_START, TUNE_END, beatAt, eighth } from '../src/shows/versions/mountain-king/dovre/music'
+import { BEATS, CODA, CODA_CHORDS, LAST1, LAST2, P, RECORDING, THEME_START, TUNE_END, beatAt, eighth } from '../src/shows/versions/mountain-king/dovre/music'
+import { REST } from '../src/shows/versions/mountain-king/dovre/mountain'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -90,6 +92,25 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   check('mountain king: every seam is struck (a phrase\'s first note: the part handed the ball lands on it)',
     [PLAN.deep, PLAN.court, PLAN.wake, PLAN.mine, PLAN.drum, PLAN.gears, PLAN.runaway].every((pl) => all.some((t) => Math.abs(t - pl.begin) <= 0.03)) && all.some((t) => Math.abs(t - CODA) <= 0.03))
 
+  const struck = (t: number, eps = 0.03) => all.some((s) => Math.abs(s - t) <= eps)
+  const bare = P.map((t, i) => [i, t] as const).filter(([, t]) => !struck(t))
+  check('mountain king: every playing of the theme is struck on its first note (eighteen phrases)', bare.length === 0, bare.map(([i, t]) => `${i} at ${t.toFixed(2)}`).join(', '))
+  // A pickup (a chord with the next within 0.3 s) may go by; every other chord of the coda brings something down.
+  const chords = CODA_CHORDS.map((c) => c.t)
+  const loose = chords.filter((t, i) => !struck(t, 0.035) && !(i + 1 < chords.length && chords[i + 1] - t < 0.3))
+  check('mountain king: the coda\'s chords are struck (the collapse, on the chords; a pickup may go by)', loose.length === 0 && chords.length >= 20, loose.map((t) => t.toFixed(2)).join(', '))
+
+  // Peer is in the frame from the first frame to the last, under Zoom (1.5 times closer) too.
+  const outs: number[] = []
+  for (let t = 0; t <= perf.duration; t += 0.02) {
+    const b = show.at(t)
+    if (b.hidden || b.scale <= 0.02) continue
+    const f = cam(t)
+    const cells = f.cells / 1.5
+    if (Math.abs(b.x - f.x) > (cells * 16) / 9 / 2 - 0.13 || Math.abs(b.y - f.y) > cells / 2 - 0.13) outs.push(t)
+  }
+  check('mountain king: Peer is in the frame all the way, under Zoom too', outs.length === 0, outs.slice(0, 6).map((t) => t.toFixed(2)).join(', '))
+
   // The seams' contract (`seams.ts`): the camera on SEAM_SHOT's framing at every builder's seam, and at a drop the
   // ball falling straight down onto the next part's entry.
   const seams = Object.values(PLAN).map((pl) => pl.end)
@@ -105,6 +126,15 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
     }
   }
   check('mountain king: at every drop the ball falls straight down for its last quarter second', badDrop.length === 0, badDrop.join(', '))
+  const lowDrop = Object.values(PLAN).filter((pl) => pl.out === 'drop').filter((pl) => {
+    const dy = show.where(pl.end)[1] - cam(pl.end).y
+    return dy < 0 || dy > 1.0
+  })
+  check('mountain king: every drop lands a little under the middle of the frame (not at its foot)', lowDrop.length === 0, lowDrop.map((pl) => pl.name).join(', '))
+  const end = show.where(perf.duration)
+  const still = show.where(160)
+  check('mountain king: at the end Peer lies still in the hollow on the east shoulder, at sunrise',
+    Math.hypot(end[0] - REST[0], end[1] - REST[1]) < 0.01 && Math.hypot(end[0] - still[0], end[1] - still[1]) < 0.001)
 
   // The Woman in Green: she never jumps where she can be seen, comes and goes only out of shot, rests WOMAN_LEAD
   // ahead of Peer at the rest seams she is at, and is gone before the chase goes under the hall.

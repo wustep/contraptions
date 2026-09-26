@@ -11,6 +11,14 @@ import { DRUM_HITS } from './under/drum'
 import { GEARS_HITS } from './heart/gears'
 import { RUNAWAY_HITS } from './heart/runaway'
 import { FALL_HITS } from './finale/fall'
+import { BELLS, CRACKS, FLEE, FLOOR_BREAK, HAMMERS, PILLAR_FALL } from './hall/hall-clock'
+
+/**
+ * The hall's own collapse in the coda (`hall.ts` draws it for any time): the court freezing at the bells, fleeing on
+ * the chord pairs, the pillars cracking, the floor breaking over the chimney, the pillars coming down, and on each
+ * hammer blow the throne, the vault's stalactites and the lights. Each is on a chord of the coda.
+ */
+const HALL_COLLAPSE: number[] = [...new Set([BELLS, ...FLEE, ...CRACKS, FLOOR_BREAK, ...PILLAR_FALL, ...HAMMERS])].sort((a, b) => a - b)
 
 export interface Strikes {
   /** The tune (4.36 to 134): an eighth of the grid (`eighth(j)`, ±30 ms), or a measured onset (±35 ms). */
@@ -32,5 +40,6 @@ export const STRIKES: Strikes = {
   },
   free: {
     fall: FALL_HITS,
+    hall: HALL_COLLAPSE,
   },
 }

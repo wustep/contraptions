@@ -1,25 +1,31 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../parts'
+import { mixHex, R, type Pt } from '../../../../parts'
 import { frame, hash, scenery, smooth } from './kit'
 import { CODA, LAST1, LAST2 } from './music'
-import { SKY, STONE } from './worlds'
+import { LAMP, SKY, STONE, WORKS } from './worlds'
 
 /**
  * The mountain seen from outside: the director's scenery, drawn first, behind everything. The paper is the rock, so
  * the mountain itself is what is not drawn; this draws the sky above its skyline, the stars, the far ridges and the
- * valley beyond, the stave church in the east valley whose bell rings the trolls out, and the dawn that comes up
- * through the coda.
+ * valley beyond, the stave church in the east valley whose bell rings the trolls out, the turf on the upper flanks,
+ * and the dawn that comes up once Peer is out.
  *
  * World cells (the gate part's entry is 0, 0; y down). The skyline is `skyline(x)`: the west flank the gate part's
  * path climbs, a cliff with the troll gate at its foot (x ≈ 20, the gate part's exit is inside it at 21.5, -4), the
- * slope up to the summit over the hall (x ≈ 48, y ≈ -21), and the long east flank down to the valley.
+ * slope up to the summit over the hall (x ≈ 48, y ≈ -21), and the east flank: a grassy shoulder with a hollow in it
+ * (`REST`, where Peer comes to rest at sunrise) and the long fall to the valley.
+ *
+ * The finale blows the summit's cap out on the first of the last two chords: from then the surface has a crater
+ * (`surface(x, t)`); `skyline(x)` is always the intact mountain.
  */
 
 /** The skyline's corners, world cells: where the mountain's surface is. Between them, a smooth line. */
 export const SKYLINE: Pt[] = [
   [-90, 34], [-60, 26], [-38, 14], [-22, 6.5], [-10, 2.2], [0, 0.13], [8, -1.3], [14, -2.5], [19.8, -3.87],
   // The cliff over the gate: the gate is cut into its foot.
-  [20.1, -9.5], [26, -12.5], [34, -15.5], [42, -19.5], [48, -21], [53, -20.2], [60, -16], [70, -9], [82, -1], [96, 9],
+  [20.1, -9.5], [26, -12.5], [34, -15.5], [42, -19.5], [48, -21],
+  // The east flank: down from the summit to a shoulder with a grassy hollow in it, then down to the valley.
+  [52, -20.35], [55.5, -18.9], [58.5, -17.95], [61.5, -18.2], [65, -15.8], [70, -11.2], [82, -2], [96, 9],
   [112, 20], [130, 30], [170, 40],
 ]
 
@@ -46,22 +52,81 @@ export function skyline(x: number): number {
 /** The summit, world cells: the chimney comes out here in the finale. */
 export const SUMMIT: Pt = [48, -21]
 
-/** How far the dawn has come at show time `t`: 0 all night, rising through the coda, 1 once Peer is out. */
-export const dawn = (t: number): number => smooth(t, CODA, LAST2 + 3)
+/** The crater the finale blows in the summit: centred on the chimney (x 47.5), this wide each side, this deep. */
+export const CRATER = { x: 47.5, half: 1.55, depth: 1.8 }
+
+/** How much deeper than `skyline` the surface is at x, once the cap is blown out (LAST1): 0 elsewhere and before. */
+export function crater(x: number, t: number): number {
+  if (t < LAST1) return 0
+  const dx = (x - CRATER.x) / CRATER.half
+  if (Math.abs(dx) >= 1) return 0
+  const u = 1 - dx * dx
+  // Broken, not turned: a little unevenness on the crater's walls.
+  // Broken, not turned: stepped and uneven, a ledge left on each wall, the rim torn.
+  const rough = 1 + 0.12 * Math.sin(dx * 7.3 + 1.1) + 0.07 * Math.sin(dx * 17.9) + 0.05 * Math.sign(Math.sin(dx * 11.7 + 0.4))
+  const ledge = 0.22 * Math.exp(-Math.pow((Math.abs(dx) - 0.55) / 0.12, 2))
+  return (CRATER.depth * u * Math.sqrt(u) * rough - ledge * u) * smooth(t, LAST1, LAST1 + 0.08)
+}
+
+/** The mountain's surface at world x and show time t: the skyline, and the crater after the summit blows. */
+export const surface = (x: number, t: number): number => skyline(x) + crater(x, t)
+
+/** The hollow in the east shoulder, world cells: the lowest point of the skyline there, where a ball comes to rest. */
+export const REST: Pt = (() => {
+  let best = 58.5
+  for (let x = 56; x <= 61; x += 0.005) if (skyline(x) > skyline(best)) best = x
+  const x = Math.round(best * 1000) / 1000
+  return [x, skyline(x) - R]
+})()
+
+/**
+ * How far the dawn has come at show time `t`: 0 all night; it starts just before Peer bursts out of the summit (so
+ * he comes out under the last stars, the east pale) and is full morning as the credits run.
+ */
+export const dawn = (t: number): number => smooth(t, LAST1 - 3, LAST2 + 14)
+
+/** The morning's high sky: still a deep blue once the sun is up (the zenith stays blue longest). */
+const ZENITH = mixHex(SKY.morning, SKY.night, 0.5)
 
 /** The sky's colour at world height y and show time t (for a part that paints sky, e.g. through the gate). */
 export function skyAt(y: number, t: number): string {
   const d = dawn(t)
   const u = Math.max(0, Math.min(1, (y + 50) / 70))
   const night = mixHex(SKY.night, SKY.dusk, u * u)
-  const day = mixHex(SKY.morning, SKY.dawn, u * u)
-  return mixHex(night, day, d)
+  if (d <= 0) return night
+  // Day is laid out for the finale's framing: high sky over the summit, peach low over the far ridges (y ≈ -14).
+  // The low sky warms first; the zenith stays blue longest, so the dawn goes through rose and not through grey.
+  const v = Math.max(0, Math.min(1, (y + 38) / 24))
+  // The morning's own colours by height: a deep blue high up (where the credits are set: the words need a dark
+  // ground), the pale blue lower, and the warm band over the far ridges where the sun comes up.
+  const w = Math.max(0, Math.min(1, (y + 27) / 10))
+  const band = w < 0.4 ? mixHex(ZENITH, SKY.morning, smooth(w, 0, 0.4)) : mixHex(SKY.morning, SKY.dawn, Math.pow((w - 0.4) / 0.6, 1.3))
+  const day = mixHex(band, mixHex(SKY.morning, SKY.dawn, Math.pow(v, 1.7)), 0.25)
+  const here = Math.max(0, Math.min(1, d * (0.75 + 0.9 * v)))
+  const between = mixHex(mixHex(SKY.dusk, SKY.dawn, 0.55 * v + 0.15), day, here)
+  return mixHex(night, between, Math.min(1, here * 1.6))
 }
 
 /** The far valley's parallax: a far thing at (X, Y) is drawn at X + cx·(1 − F), Y + cy·(1 − F) for a camera at (cx, cy). */
 const FAR = 0.22
-/** The stave church in the east valley, on the far layer (its apparent place in the finale's framing; tune there). */
-export const CHURCH: Pt = [18, -2.4]
+/** The stave church in the east valley, on the far layer (its X there, and the height of the ground it stands on). */
+export const CHURCH: Pt = [19.2, 0.35]
+/** The sun, on the far layer: it comes up behind the far peaks, a little east of the church. */
+const SUN_X = 23.4
+
+/** The far peaks (Rondane), far-layer cells: sharp tops, rounded cols. */
+function ridgeA(X: number): number {
+  const peak = 1 - Math.abs(Math.sin(X * 0.21 + 0.2))
+  const peak2 = 1 - Math.abs(Math.sin(X * 0.47 + 2.1))
+  return -0.9 - 1.9 * Math.pow(peak, 1.6) * (0.7 + 0.3 * Math.sin(X * 0.05 + 1)) - 0.45 * Math.pow(peak2, 2) + 0.2 * Math.sin(X * 1.3)
+}
+
+/** The valley's near hills, far-layer cells: low and rolling, flat where the church stands. */
+function ridgeB(X: number): number {
+  const h = 0.55 + 0.55 * Math.sin(X * 0.13 + 2) + 0.28 * Math.sin(X * 0.31 + 1) + 0.08 * Math.sin(X * 1.1)
+  const flat = Math.exp(-Math.pow((X - CHURCH[0]) / 1.6, 2))
+  return h * (1 - flat) + CHURCH[1] * flat
+}
 
 interface MountainState {
   on: true
@@ -79,23 +144,25 @@ export const mountain = scenery<MountainState>({
     // Only where the skyline is in the frame: inside the mountain there is no sky to draw.
     const step = Math.max(0.25, (x1 - x0) / 160)
     let above = false
-    for (let x = x0; x <= x1; x += step) if (skyline(x) > top) above = true
+    for (let x = x0; x <= x1; x += step) if (surface(x, t) > top) above = true
     if (!above) return
     const d = dawn(t)
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    const edge = (x: number) => surface(Math.min(x, x1), t)
 
     ctx.save()
-    // The sky: the region above the skyline, clipped, so everything on the far layer stays behind the mountain.
+    // The sky: the region above the surface, clipped, so everything on the far layer stays behind the mountain.
     ctx.beginPath()
     ctx.moveTo(x0 * k, top * k)
-    for (let x = x0; x <= x1 + step; x += step) ctx.lineTo(x * k, skyline(Math.min(x, x1)) * k)
+    for (let x = x0; x <= x1 + step; x += step) ctx.lineTo(x * k, edge(x) * k)
     ctx.lineTo(x1 * k, top * k)
     ctx.closePath()
     ctx.clip()
-    const bottom = Math.max(...[x0, (x0 + x1) / 2, x1].map(skyline)) + 1
+    let low = -Infinity
+    for (let x = x0; x <= x1 + step; x += step * 4) low = Math.max(low, edge(x))
+    const bottom = low + 1
     const g = ctx.createLinearGradient(0, top * k, 0, bottom * k)
-    g.addColorStop(0, skyAt(top, t))
-    g.addColorStop(1, skyAt(bottom, t))
+    for (const u of [0, 0.25, 0.5, 0.75, 1]) g.addColorStop(u, skyAt(top + (bottom - top) * u, t))
     ctx.fillStyle = g
     ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (bottom - top) * k)
 
@@ -110,7 +177,9 @@ export const mountain = scenery<MountainState>({
         const sy = -70 + 70 * hash(i, 2) + oy
         if (sx < x0 || sx > x1 || sy < top || sy > bottom) continue
         const tw = 0.6 + 0.4 * Math.sin(t * (0.8 + hash(i, 3)) + i)
-        const a = (1 - d) * tw * (0.35 + 0.65 * hash(i, 4))
+        // Some go before others as the east pales.
+        const a = Math.max(0, 1 - d * (1.2 + 0.8 * hash(i, 6))) * tw * (0.35 + 0.65 * hash(i, 4))
+        if (a <= 0.01) continue
         const col = p.color(SKY.star)
         col.setAlpha(255 * a)
         p.fill(col)
@@ -119,96 +188,213 @@ export const mountain = scenery<MountainState>({
       }
     }
 
-    // The far ridges: two bands of mountains beyond, darker at night, blue at dawn.
     const ox = f.cx * (1 - FAR)
     const oy = f.cy * (1 - FAR)
-    for (const [band, depth, col] of [[0, 0.0, mixHex(SKY.far, SKY.morning, 0.55 * d)], [1, 1.0, mixHex(mixHex(SKY.far, STONE.deep, 0.5), '#6F86A6', 0.6 * d)]] as const) {
-      p.noStroke()
-      p.fill(col)
-      p.beginShape()
-      for (let x = x0 - 2; x <= x1 + 2; x += step * 2) {
-        const X = x - ox
-        const ridge = -1.2 + 1.2 * band + depth * 0 + 0.9 * Math.sin(X * 0.09 + band * 2) + 0.5 * Math.sin(X * 0.23 + 1 + band) + 0.25 * Math.sin(X * 0.61 + band * 4)
-        p.vertex(x * k, (ridge + oy) * k)
-      }
-      p.vertex((x1 + 2) * k, bottom * k)
-      p.vertex((x0 - 2) * k, bottom * k)
-      p.endShape(p.CLOSE)
-    }
 
-    // The sun: at dawn, a rim over the far ridge in the east, then half a disc. Far away (never near Peer).
-    if (d > 0.3) {
-      const sx = 40 + ox
-      const sy = -1.5 + oy - 1.2 * smooth(t, LAST1, LAST2 + 8)
-      const glowR = 10
+    // The sun's light, behind everything on the far layer: a broad warm pool over the east, then the sun itself.
+    if (d > 0.02) {
+      const sx = SUN_X + ox
+      const sy = ridgeA(SUN_X) + oy + 1.1 - 1.9 * smooth(t, LAST2 + 2, LAST2 + 27)
+      const glowR = 13
       const gg = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, glowR * k)
-      const a = 0.5 * (d - 0.3) / 0.7
+      const a = 0.55 * d
       gg.addColorStop(0, `rgba(255,227,166,${a})`)
-      gg.addColorStop(1, 'rgba(255,227,166,0)')
+      gg.addColorStop(0.3, `rgba(242,196,141,${a * 0.45})`)
+      gg.addColorStop(1, 'rgba(242,196,141,0)')
       ctx.fillStyle = gg
       ctx.fillRect((sx - glowR) * k, (sy - glowR) * k, 2 * glowR * k, 2 * glowR * k)
+      // The disc: big and far, rising out of the far peaks (they are drawn over its lower part).
+      const disc = p.color(mixHex(SKY.dawn, SKY.sun, 0.75))
+      disc.setAlpha(255 * smooth(d, 0.25, 0.6))
+      p.noStroke()
+      p.fill(disc)
+      p.ellipse(sx * k, sy * k, 1.9 * k, 1.9 * k)
     }
 
-    // The stave church in the east valley, far off: stacked roofs, and its bell in the little tower beside it,
-    // which swings from the coda's first chord (the bells that send the trolls running) and rings on after.
+    // The far peaks: dark at night, blue and hazy at dawn.
+    const aCol = mixHex(SKY.far, mixHex(SKY.morning, SKY.dusk, 0.35), 0.7 * d)
+    p.noStroke()
+    p.fill(aCol)
+    p.beginShape()
+    for (let x = x0 - 2; x <= x1 + 2; x += step) p.vertex(x * k, (ridgeA(x - ox) + oy) * k)
+    p.vertex((x1 + 2) * k, bottom * k)
+    p.vertex((x0 - 2) * k, bottom * k)
+    p.endShape(p.CLOSE)
+
+    // The valley's hills, nearer: at night nearly the rock's own dark; at dawn a blue-green in the shadow.
+    const bCol = mixHex(mixHex(SKY.far, STONE.deep, 0.5), mixHex(SKY.grass, SKY.dusk, 0.55), 0.75 * d)
+    p.fill(bCol)
+    p.beginShape()
+    for (let x = x0 - 2; x <= x1 + 2; x += step) p.vertex(x * k, (ridgeB(x - ox) + oy) * k)
+    p.vertex((x1 + 2) * k, bottom * k)
+    p.vertex((x0 - 2) * k, bottom * k)
+    p.endShape(p.CLOSE)
+
+    // Morning mist lying along the valley floor, drifting east.
+    if (d > 0.05) {
+      const drift = (t - CODA) * 0.06
+      for (let i = 0; i < 5; i++) {
+        const X = CHURCH[0] - 9 + i * 4.6 + drift + 1.3 * Math.sin(i * 2.1)
+        const Y = ridgeB(X) + 0.55 + 0.15 * Math.sin(i * 1.7)
+        const mist = p.color(mixHex(SKY.morning, SKY.sun, 0.35))
+        mist.setAlpha(255 * 0.2 * d * (0.7 + 0.3 * Math.sin(i * 3.1 + t * 0.1)))
+        p.fill(mist)
+        p.ellipse((X + ox) * k, (Y + oy) * k, (4.4 + 1.2 * Math.sin(i)) * k, 0.42 * k)
+      }
+    }
+
+    // The stave church in the east valley, standing on the hills, and its bell, which swings from the coda's first
+    // chord (the bells that send the trolls running) and rings on over the credits.
     drawChurch(p, k, CHURCH[0] + ox, CHURCH[1] + oy, t, d)
 
     ctx.restore()
-    // The skyline's edge: the mountain's rim catches the sky's light (a soft line, not an ink stroke).
-    p.noFill()
-    const rim = p.color(mixHex(STONE.mid, SKY.dawn, 0.5 * d))
-    rim.setAlpha(120 + 100 * d)
-    p.stroke(rim)
-    p.strokeWeight(Math.max(1, 0.05 * k))
-    p.beginShape()
-    for (let x = x0; x <= x1 + step; x += step) p.vertex(x * k, skyline(Math.min(x, x1)) * k)
-    p.endShape()
+
+    // The upper flanks, from the cliff over the gate eastward: a skin of turf over the rock, dark at night, green in
+    // the dawn, a few tufts on the shoulder. (The west flank below the cliff is the gate part's.)
+    const tx0 = Math.max(x0, 20.2)
+    if (tx0 < x1) drawTurf(p, k, tx0, x1, step, t, d)
+
+    // West of the cliff, the skyline's edge: the mountain's rim catches the sky's light (a soft line, not an ink stroke).
+    const rx1 = Math.min(x1, 20.2)
+    if (rx1 > x0) {
+      p.noFill()
+      const rim = p.color(mixHex(STONE.mid, SKY.dawn, 0.5 * d))
+      rim.setAlpha(120 + 100 * d)
+      p.stroke(rim)
+      p.strokeWeight(Math.max(1, 0.05 * k))
+      p.beginShape()
+      for (let x = x0; x <= rx1 + step; x += step) p.vertex(Math.min(x, rx1) * k, skyline(Math.min(x, rx1)) * k)
+      p.endShape()
+    }
   },
 })
 
-/** The stave church, tiny and far: a dark tarred silhouette with a lit window at night, its bell beside it. */
+/** The turf on the upper flanks, from x0 to x1: a skin of grass over the rock, tufts on it, none in the crater. */
+function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: number, d: number): void {
+  const grass = mixHex(mixHex(SKY.grass, SKY.night, 0.72), SKY.grass, d)
+  const earth = mixHex(mixHex(WORKS.wood, STONE.deep, 0.55), mixHex(WORKS.wood, STONE.deep, 0.25), d)
+  const thick = 0.17
+  p.push()
+  p.noStroke()
+  // The earth under the grass, then the grass itself, both following the surface; where the crater is, the turf is
+  // gone and the broken rock shows.
+  for (const [col, depth] of [[earth, thick + 0.16], [grass, thick]] as const) {
+    p.fill(col)
+    p.beginShape()
+    for (let x = x0; x <= x1 + step; x += step / 2) {
+      const X = Math.min(x, x1)
+      p.vertex(X * k, surface(X, t) * k)
+    }
+    for (let x = x1; x >= x0 - step; x -= step / 2) {
+      const X = Math.max(x, x0)
+      const gone = crater(X, t) > 0.02 ? 0 : 1
+      const ragged = depth * (0.85 + 0.15 * Math.sin(X * 5.3) * Math.sin(X * 1.7))
+      p.vertex(X * k, (surface(X, t) + ragged * gone) * k)
+    }
+    p.endShape(p.CLOSE)
+  }
+  // The crater's broken lip: the rock's lit edge where the cap came off.
+  if (t >= LAST1 && x0 < CRATER.x + CRATER.half && x1 > CRATER.x - CRATER.half) {
+    p.fill(mixHex(STONE.mid, STONE.light, 0.4 + 0.4 * d))
+    p.beginShape()
+    const a = CRATER.x - CRATER.half
+    const b = CRATER.x + CRATER.half
+    for (let x = a; x <= b; x += 0.05) p.vertex(x * k, surface(x, t) * k)
+    for (let x = b; x >= a; x -= 0.05) p.vertex(x * k, (surface(x, t) + 0.09 + 0.05 * Math.sin(x * 9)) * k)
+    p.endShape(p.CLOSE)
+  }
+  // Tufts: small clumps of blades standing up out of the turf. None in the crater, none in the hollow where he lies.
+  const tuft = mixHex(mixHex(SKY.grass, SKY.night, 0.6), mixHex(SKY.grass, SKY.sun, 0.25), d)
+  p.fill(tuft)
+  const first = Math.ceil(x0 / 0.55)
+  for (let i = first; i * 0.55 <= x1; i++) {
+    if (hash(i, 7) < 0.45) continue
+    const X = i * 0.55 + 0.4 * hash(i, 8)
+    if (Math.abs(X - CRATER.x) < 1.8) continue
+    if (Math.abs(X - REST[0]) < 0.45) continue
+    const y = surface(X, t) + 0.03
+    const h = 0.1 + 0.12 * hash(i, 9)
+    const sway = 0.03 * Math.sin(t * 0.9 + i)
+    for (let b = -1; b <= 1; b++) {
+      const bx = X + b * 0.05
+      p.triangle((bx - 0.025) * k, y * k, (bx + 0.025) * k, y * k, (bx + b * 0.05 + sway) * k, (y - h * (b === 0 ? 1 : 0.7)) * k)
+    }
+  }
+  p.pop()
+}
+
+/**
+ * The stave church, far off: a dark tarred silhouette with three stacked roofs, a ridge turret and its spire, the
+ * gables' dragon heads; beside it the free-standing bell house, its bell swinging. At night a lit window. (x, y) is
+ * the middle of its base, cells.
+ */
 function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number): void {
-  const s = 0.55
+  const s = 1.05
+  const u = (v: number) => v * s * k
   p.push()
   p.rectMode(p.CORNER)
   p.translate(x * k, y * k)
   p.noStroke()
-  const tar = mixHex(SKY.tar, '#6A5A4A', 0.35 * d)
+  const tar = mixHex(SKY.tar, mixHex(SKY.tar, SKY.far, 0.5), 0.35 * d)
+  const lit = mixHex(SKY.tar, SKY.dawn, 0.35 * d)
   p.fill(tar)
-  // Three stacked roofs narrowing upward, a spire on top.
-  for (let i = 0; i < 3; i++) {
-    const w = (1.3 - i * 0.35) * s
-    const yy = -i * 0.42 * s
-    p.triangle(-w * 0.6 * k, yy * k, w * 0.6 * k, yy * k, 0, (yy - 0.36 * s) * k)
-    p.rect(-w * 0.42 * k, (yy - 0.02) * k, w * 0.84 * k, 0.22 * s * k)
-  }
-  p.triangle(-0.1 * s * k, -1.2 * s * k, 0.1 * s * k, -1.2 * s * k, 0, -1.75 * s * k)
-  p.rect(-0.62 * s * k, 0, 1.24 * s * k, 0.5 * s * k)
+  // The nave's walls and the three roofs, each narrower and higher, a short wall between them.
+  p.quad(u(-0.46), 0, u(0.46), 0, u(0.46), u(-0.2), u(-0.46), u(-0.2))
+  const roofs: [number, number, number][] = [[0.62, -0.18, 0.2], [0.42, -0.44, 0.18], [0.26, -0.66, 0.16]]
+  roofs.forEach(([w, yy, h], i) => {
+    p.fill(tar)
+    p.triangle(u(-w), u(yy), u(w), u(yy), 0, u(yy - h))
+    if (i < 2) p.quad(u(-w * 0.62), u(yy - h * 0.5), u(w * 0.62), u(yy - h * 0.5), u(w * 0.62), u(yy - h * 0.5 - 0.1), u(-w * 0.62), u(yy - h * 0.5 - 0.1))
+    // The eastern slope in the dawn light.
+    p.fill(lit)
+    p.triangle(0, u(yy - h), u(w), u(yy), u(w * 0.55), u(yy))
+    // Dragon heads: a small upswept hook at each end of the roof ridge.
+    if (i > 0) {
+      p.fill(tar)
+      for (const sd of [-1, 1]) p.triangle(u(sd * w * 0.9), u(yy - 0.02), u(sd * w * 1.1), u(yy - 0.02), u(sd * w * 1.12), u(yy - 0.12))
+    }
+  })
+  // The ridge turret and its spire.
+  p.fill(tar)
+  p.quad(u(-0.07), u(-0.82), u(0.07), u(-0.82), u(0.07), u(-0.94), u(-0.07), u(-0.94))
+  p.triangle(u(-0.09), u(-0.93), u(0.09), u(-0.93), 0, u(-1.34))
+  p.fill(lit)
+  p.triangle(0, u(-1.34), u(0.09), u(-0.93), u(0.03), u(-0.93))
   // A lit window at night.
   if (d < 0.8) {
-    const win = p.color('#F0A64B')
-    win.setAlpha(200 * (1 - d))
+    const win = p.color(LAMP.flame)
+    win.setAlpha(210 * (1 - d / 0.8))
     p.fill(win)
-    p.rect(-0.08 * s * k, 0.12 * s * k, 0.16 * s * k, 0.2 * s * k)
+    p.rect(u(-0.02), u(-0.1), u(0.07), u(0.1))
   }
-  // The bell tower: a little open frame to the right, the bell swinging in it.
-  const bx = 1.2 * s
+
+  // The bell house: two posts, an open belfry, a pyramid roof; the bell hangs from the beam and swings.
+  const bx = 0.95
   p.fill(tar)
-  p.rect(bx * k, -0.5 * s * k, 0.08 * s * k, 1.0 * s * k)
-  p.rect((bx + 0.5 * s) * k, -0.5 * s * k, 0.08 * s * k, 1.0 * s * k)
-  p.triangle((bx - 0.1 * s) * k, -0.5 * s * k, (bx + 0.68 * s) * k, -0.5 * s * k, (bx + 0.29 * s) * k, -0.85 * s * k)
-  const ring = t >= CODA ? Math.min(1, (t - CODA) / 1.5) * (t > LAST2 + 6 ? Math.exp(-(t - LAST2 - 6) / 6) : 1) : 0
-  const a = 0.7 * ring * Math.sin((t - CODA) * Math.PI * 1.05)
+  p.quad(u(bx - 0.2), 0, u(bx + 0.2), 0, u(bx + 0.17), u(-0.28), u(bx - 0.17), u(-0.28))
+  p.quad(u(bx - 0.17), u(-0.28), u(bx - 0.13), u(-0.28), u(bx - 0.13), u(-0.62), u(bx - 0.17), u(-0.62))
+  p.quad(u(bx + 0.13), u(-0.28), u(bx + 0.17), u(-0.28), u(bx + 0.17), u(-0.62), u(bx + 0.13), u(-0.62))
+  p.triangle(u(bx - 0.27), u(-0.6), u(bx + 0.27), u(-0.6), u(bx), u(-0.92))
+  p.fill(lit)
+  p.triangle(u(bx), u(-0.92), u(bx + 0.27), u(-0.6), u(bx + 0.12), u(-0.6))
+  // It is rung from the first chord and rings on, a long even swing, slowing only at the very end.
+  const ring = t >= CODA ? smooth(t, CODA, CODA + 1.2) * (1 - 0.55 * smooth(t, LAST2 + 20, LAST2 + 29)) : 0
+  const a = 0.95 * ring * Math.sin((t - CODA) * ((Math.PI * 2) / 1.7))
   p.push()
-  p.translate((bx + 0.33 * s) * k, -0.45 * s * k)
+  p.translate(u(bx), u(-0.58))
   p.rotate(a)
-  p.fill(mixHex(SKY.bell, SKY.sun, 0.3 * d))
+  p.fill(mixHex(SKY.bell, SKY.sun, 0.35 * d))
+  // A bell: shoulder, waist, flared lip; the clapper's tongue just showing below it.
   p.beginShape()
-  p.vertex(-0.07 * s * k, 0.02 * s * k)
-  p.vertex(0.07 * s * k, 0.02 * s * k)
-  p.vertex(0.14 * s * k, 0.3 * s * k)
-  p.vertex(-0.14 * s * k, 0.3 * s * k)
+  p.vertex(u(-0.045), u(0.03))
+  p.bezierVertex(u(-0.075), u(0.03), u(-0.08), u(0.1), u(-0.085), u(0.15))
+  p.bezierVertex(u(-0.09), u(0.19), u(-0.12), u(0.21), u(-0.125), u(0.225))
+  p.vertex(u(0.125), u(0.225))
+  p.bezierVertex(u(0.12), u(0.21), u(0.09), u(0.19), u(0.085), u(0.15))
+  p.bezierVertex(u(0.08), u(0.1), u(0.075), u(0.03), u(0.045), u(0.03))
   p.endShape(p.CLOSE)
+  p.fill(tar)
+  p.quad(u(-0.012), u(0.2), u(0.012), u(0.2), u(0.01), u(0.26), u(-0.01), u(0.26))
   p.pop()
   p.pop()
 }

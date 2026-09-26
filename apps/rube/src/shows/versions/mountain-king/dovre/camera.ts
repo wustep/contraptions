@@ -50,9 +50,12 @@ function channel(ts: number[], left: number[], right: number[]): (i: number, u: 
   }
 }
 
-export function director(where: (t: number) => Pt, shots: Shot[], duration: number): (t: number) => Framing {
-  const keys = [...shots].sort((a, b) => a.t - b.t)
-  const follow = (t: number): Pt => {
+/**
+ * Where a following camera looks at `t`: the ball's place averaged over a short window that leans a little ahead
+ * (0.6 s back, 0.8 s on). It lags a fall: the score reads it to put a landing where it wants it in the frame.
+ */
+export function follower(where: (t: number) => Pt, duration: number): (t: number) => Pt {
+  return (t: number): Pt => {
     let x = 0
     let y = 0
     let sum = 0
@@ -66,6 +69,11 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
     }
     return [x / sum, y / sum]
   }
+}
+
+export function director(where: (t: number) => Pt, shots: Shot[], duration: number): (t: number) => Framing {
+  const keys = [...shots].sort((a, b) => a.t - b.t)
+  const follow = follower(where, duration)
   const weight = (k: Shot): number => k.w ?? (k.hold ? 1 : 0)
   // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
   const n = keys.length

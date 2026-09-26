@@ -81,46 +81,66 @@ export function flame(p: p5, c: Pen, x: number, y: number, h: number, t: number,
 }
 
 /**
- * A hanging iron lantern: hook at (x, y), chain, a cage with a pitched cap and four panes, the flame inside. Its
- * pool of light is `glow`, drawn by the caller behind the set.
+ * A hanging iron lantern: hook at (x, y), chain, the bail (a hoop over the top: what says lantern and not a little
+ * roofed house), a squat cap, a glass that swells a little, two wire guards and a shallow foot; the flame inside.
+ * Its pool of light is `glow`, drawn by the caller behind the set.
  */
 export function drawLantern(p: p5, c: Pen, x: number, y: number, look: LightLook): void {
   const { k, ink, weight } = c
   const s = look.size ?? 0.34
   const hang = look.hang ?? 0.5
   const lit = Math.max(0, Math.min(1, look.lit))
+  const S = s * k
   p.push()
-  // The stage draws rects from their centre (the engine's drawing modes): these are laid out by corners.
-  p.rectMode(p.CORNER)
   p.translate(x * k, y * k)
   p.rotate(look.swing ?? 0)
   const iron = WORKS.iron
-  // The chain: short links, a line is enough at this size.
+  // The chain: a line is enough at this size.
   if (hang > 0) {
     p.stroke(mixHex(iron, ink, 0.25))
     p.strokeWeight(weight * 0.8)
     p.line(0, 0, 0, hang * k)
   }
   p.translate(0, hang * k)
-  // The cap: a little pitched roof with a ring.
+  // The bail: a hoop from the cap's sides up to the hook.
   p.stroke(ink)
-  p.strokeWeight(weight * 0.9)
-  p.fill(iron)
-  p.triangle(-s * 0.55 * k, s * 0.22 * k, s * 0.55 * k, s * 0.22 * k, 0, 0)
-  // The panes: glowing amber when lit, dark glass when not.
-  const glass = mixHex('#2A2621', LAMP.flame, 0.15 + 0.55 * lit)
-  p.fill(glass)
-  p.rect(-s * 0.4 * k, s * 0.22 * k, s * 0.8 * k, s * 0.62 * k)
-  // The flame inside.
-  flame(p, c, 0, s * 0.8, s * 0.46, look.t, look.seed ?? 0, lit)
-  // The cage's bars over the panes, and its base.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.9)
+  p.strokeWeight(weight * 0.8)
   p.noFill()
-  p.rect(-s * 0.4 * k, s * 0.22 * k, s * 0.8 * k, s * 0.62 * k)
-  p.line(0, s * 0.22 * k, 0, s * 0.84 * k)
+  p.arc(0, S * 0.24, S * 0.56, S * 0.48, Math.PI, Math.PI * 2)
+  // The glass: glowing amber when lit, dark when not; a little fuller in the middle.
+  const glass = mixHex('#2A2621', LAMP.flame, 0.15 + 0.55 * lit)
+  const gt = S * 0.3
+  const gb = S * 0.8
+  const bulge = (u: number) => S * (0.2 + 0.05 * Math.sin(Math.PI * u))
+  p.strokeWeight(weight * 0.9)
+  p.fill(glass)
+  p.beginShape()
+  for (let i = 0; i <= 8; i++) p.vertex(-bulge(i / 8), gt + ((gb - gt) * i) / 8)
+  for (let i = 8; i >= 0; i--) p.vertex(bulge(i / 8), gt + ((gb - gt) * i) / 8)
+  p.endShape(p.CLOSE)
+  // The flame inside.
+  flame(p, c, 0, s * 0.72, s * 0.36, look.t, look.seed ?? 0, lit)
+  // Two wire guards over the glass, following its swell.
+  p.noFill()
+  p.strokeWeight(weight * 0.6)
+  for (const side of [-1, 1]) {
+    p.beginShape()
+    for (let i = 0; i <= 8; i++) p.vertex(side * bulge(i / 8) * 0.55, gt + ((gb - gt) * i) / 8)
+    p.endShape()
+  }
+  // The cap: squat, rounded at the top; and the foot, a shallow dish.
+  p.strokeWeight(weight * 0.9)
   p.fill(iron)
-  p.rect(-s * 0.48 * k, s * 0.84 * k, s * 0.96 * k, s * 0.1 * k)
+  p.beginShape()
+  p.vertex(-S * 0.27, gt + S * 0.02)
+  p.bezierVertex(-S * 0.24, S * 0.16, -S * 0.1, S * 0.14, 0, S * 0.14)
+  p.bezierVertex(S * 0.1, S * 0.14, S * 0.24, S * 0.16, S * 0.27, gt + S * 0.02)
+  p.endShape(p.CLOSE)
+  p.beginShape()
+  p.vertex(-S * 0.26, gb - S * 0.01)
+  p.vertex(S * 0.26, gb - S * 0.01)
+  p.bezierVertex(S * 0.24, gb + S * 0.09, -S * 0.24, gb + S * 0.09, -S * 0.26, gb - S * 0.01)
+  p.endShape(p.CLOSE)
   p.pop()
 }
 

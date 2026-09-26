@@ -263,3 +263,17 @@ rendered as one period of a circle, and every note as it lands is written to
 `scripts/shows/plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
 (`apps/rube/checks/gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
+
+`mountain-king/opus55` (in the picker, **Mountain King**, one take, **Opus 5.5**) is Grieg's *In the Hall of the
+Mountain King* played whole by a chain reaction that grows with the music, from one pebble tipped at the trolls'
+gate to the mountain's own machinery running away and the mountain coming down. It follows Ibsen: Peer Gynt (the
+red ball) and the Woman in Green (the green ball, company) ride a great pig to the Dovre King's hall; the court
+wakes, "Slay him!", the chase goes down through the mines, the trolls' drum and the mountain's heart; the bells, the
+collapse, and Peer on the hillside at dawn. The trolls and the King are drawn, never balls. One place, one path, one
+take: the mountain in cross-section (`mountain-king/dovre/`, a Liftoff-style kit whose `lay` can lay a part mirrored,
+so the levels stack under the hall). The recording is the Czech National Symphony Orchestra's for Musopen, public
+domain, so it ships with the show; the YouTube cue is the same recording, sample for sample. It is an accelerando, so
+the beat is followed quarter note by quarter note (`scripts/shows/mountain-king-onsets.py` →
+`scripts/shows/plans/mountain-king-onsets.json`), and `check:shows` holds every strike against it
+(`apps/rube/checks/mountain-king.ts`). Licences: `apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`; the
+report is `apps/rube/src/shows/versions/mountain-king/MOUNTAIN_KING.md`.

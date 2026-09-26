@@ -45,6 +45,33 @@ export interface TrollLook {
   dark?: string
   /** Leave the tail off (a troll seen side-on against a wall, a seated row). */
   noTail?: boolean
+  /**
+   * Optional (the hall's King and court, getting up): 0..1 from seated to standing. 0 is `sit` (the body's base on
+   * (x, y)), 1 is `stand` (the feet on (x, y)); between, the legs unfold under the body as it lifts and narrows. When
+   * set it takes over the sitting or standing the pose would give; unset, every troll is exactly as before.
+   */
+  rise?: number
+  /**
+   * Optional (the drum's drummers, pounding): each arm swings out and up on its own side (unset, the left arm goes up
+   * across the chest), and the elbow straightens and bends through half-raised without a snap. Unset, every troll is
+   * exactly as before.
+   */
+  outward?: boolean
+  /**
+   * Optional (the drummers' two-handed blows), `strike` only: 0 the arms alternate (as unset), 1 both come down
+   * together on the phase's blow; between, the left arm's half-cycle lag shrinks, so the change is continuous.
+   */
+  pair?: number
+}
+
+/** Where a drawn troll's head and hands ended up, cells of the caller's frame: for a crown on the head, a thing in a hand. */
+export interface TrollDrawn {
+  /** The head's centre, its width, and the top of the skull. */
+  head: [number, number]
+  headW: number
+  crown: number
+  /** The left (-x) and right (+x) hands: where the mitt is, and the forearm's angle (radians, y down) it continues. */
+  hands: { at: [number, number]; angle: number }[]
 }
 
 const h01 = (n: number, s: number): number => {
@@ -62,7 +89,7 @@ export interface Pen {
 }
 
 /** Draw a troll standing (or sitting) with its feet's middle at (x, y), cells, of the caller's frame. */
-export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook): void {
+export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook): TrollDrawn {
   const { k, ink, weight, bg } = c
   const H = look.size * k
   const pose = look.pose ?? 'stand'
@@ -84,20 +111,26 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
 
   // Build: how broad, how long the nose, how big the ears.
   const broad = 0.92 + 0.22 * h01(seed, 1)
-  const noseLen = 0.2 + 0.1 * h01(seed, 2)
-  const earSize = 0.8 + 0.5 * h01(seed, 3)
+  // A potato of a nose, not a trunk: about as long as it is wide. Small pointed ears, not flaps.
+  const noseLen = 0.12 + 0.05 * h01(seed, 2)
+  const earSize = 0.75 + 0.35 * h01(seed, 3)
   const slump = look.slump ?? (pose === 'doze' ? 0.8 : pose === 'sit' ? 0.2 : 0)
   const eyes = look.eyes ?? (pose === 'doze' ? 0 : 1)
   const mouth = look.mouth ?? 0
   const sitting = pose === 'sit' || pose === 'doze'
+  // How far up it is, 0 seated to 1 standing (`rise`, or the pose's). Every length below is the seated one at 0 and
+  // the standing one at 1, exactly.
+  const stood = look.rise === undefined ? (sitting ? 0 : 1) : Math.max(0, Math.min(1, look.rise))
+  const mix = (a: number, b: number): number => (stood <= 0 ? a : stood >= 1 ? b : a + (b - a) * stood)
+  const drawn: TrollDrawn = { head: [x, y], headW: 0, crown: y, hands: [] }
   const dir = face >= 0 ? 1 : -1
   const side = Math.abs(face)
 
   // Heights (in H): a sitting troll's seat is its feet; it is shorter and wider.
-  const shoulder = sitting ? 0.55 : 0.72
+  const shoulder = mix(0.55, 0.72)
   const lean = pose === 'run' ? 0.1 * dir : 0
   const bob = pose === 'run' ? 0.03 * Math.abs(Math.sin(phase * Math.PI * 2)) : 0
-  const bodyW = 0.64 * broad * (sitting ? 1.1 : 1)
+  const bodyW = 0.64 * broad * mix(1.1, 1)
   // The head sits low and forward, sunk into the hump, toward where it looks.
   const headX = (0.14 * face + lean) * H
   const headY = -(shoulder - 0.02 - 0.12 * slump + bob) * H
@@ -107,7 +140,7 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   p.strokeJoin(p.ROUND)
 
   // The tail, behind: from the rump, away from where it looks, curling up at the end into a small dark tuft.
-  if (!look.noTail && !sitting) {
+  if (!look.noTail && stood >= 1) {
     const back = -dir
     const sway = Math.sin(phase * Math.PI * 2 + seed) * 0.04
     p.noFill()
@@ -135,8 +168,9 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
     p.pop()
   }
 
-  // Legs (standing and running): two short stumps and broad flat feet.
-  if (!sitting) {
+  // Legs (standing and running): two short stumps and broad flat feet. Getting up, they unfold from under it.
+  if (stood > 0.02) {
+    const L = stood >= 1 ? 1 : stood
     for (const s of [-1, 1]) {
       const stride = pose === 'run' ? Math.sin(phase * Math.PI * 2 + (s > 0 ? 0 : Math.PI)) : 0
       const lx = (s * 0.15 * broad + stride * 0.1 * dir) * H
@@ -145,17 +179,17 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
       p.strokeWeight(w)
       p.fill(hide)
       p.beginShape()
-      p.vertex(lx - 0.085 * H, -0.26 * H)
-      p.vertex(lx + 0.085 * H, -0.26 * H)
-      p.vertex(lx + 0.075 * H, -lift - 0.05 * H)
-      p.vertex(lx - 0.075 * H, -lift - 0.05 * H)
+      p.vertex(lx - 0.085 * H, -0.26 * H * L)
+      p.vertex(lx + 0.085 * H, -0.26 * H * L)
+      p.vertex(lx + 0.075 * H, (-lift - 0.05 * H) * L)
+      p.vertex(lx - 0.075 * H, (-lift - 0.05 * H) * L)
       p.endShape(p.CLOSE)
       // The foot: broad and flat, toes toward where it looks.
       const toe = side < 0.2 ? 0 : dir * 0.05 * H
       p.fill(hide)
       p.beginShape()
-      p.vertex(lx - 0.09 * H + toe * 0.3, -lift - 0.06 * H)
-      p.bezierVertex(lx + toe - 0.12 * H, -lift, lx + toe + 0.12 * H, -lift, lx + 0.09 * H + toe * 0.3, -lift - 0.06 * H)
+      p.vertex(lx - 0.09 * H + toe * 0.3, (-lift - 0.06 * H) * L)
+      p.bezierVertex(lx + toe - 0.12 * H, -lift * L, lx + toe + 0.12 * H, -lift * L, lx + 0.09 * H + toe * 0.3, (-lift - 0.06 * H) * L)
       p.endShape(p.CLOSE)
     }
   }
@@ -164,7 +198,7 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   const bw = bodyW * H
   const top = -shoulder * H
   const fwd = (0.07 * face + lean) * H
-  const base = sitting ? 0 : -0.22 * H
+  const base = mix(0, -0.22 * H)
   const hump = 0.08 * H * (0.4 + side)
   p.stroke(inkC)
   p.strokeWeight(w)
@@ -212,7 +246,8 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
     let a = raise
     if (pose === 'strike') {
       // The two arms alternate: up, and down hard on the beat (phase 0 is the blow).
-      const u = (phase + (s > 0 ? 0 : 0.5)) % 1
+      const lag = s > 0 ? 0 : 0.5 * (1 - Math.max(0, Math.min(1, look.pair ?? 0)))
+      const u = look.pair === undefined ? (phase + lag) % 1 : (((phase + lag) % 1) + 1) % 1
       a = u < 0.15 ? 1 - u / 0.15 : Math.min(1, (u - 0.15) / 0.7)
       a = a * a * (3 - 2 * a)
     }
@@ -220,14 +255,15 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
     const sx = fwd * 0.7 + s * bw * 0.42
     const sy = top + 0.12 * H
     // Hanging: down along the body to the knees. Raised: up and out over the head.
-    const ang = (1 - a) * (Math.PI / 2 - s * 0.16) + a * (-Math.PI / 2 + s * 0.5)
+    const ang = (1 - a) * (Math.PI / 2 - s * 0.16) + a * (-Math.PI / 2 + s * 0.5 + (look.outward && s < 0 ? 2 * Math.PI : 0))
     // Seated, the arms are folded short: the hands rest on the knees, not through the bench.
-    const up = (sitting ? 0.2 : 0.26) * H
-    const fore = (sitting ? 0.16 : 0.26) * H
+    const up = mix(0.2, 0.26) * H
+    const fore = mix(0.16, 0.26) * H
     const ex = sx + Math.cos(ang) * up + s * 0.03 * H * (1 - a)
     const ey = sy + Math.sin(ang) * up
     // The elbow bends the forearm a little inward (toward the body when hanging, toward the head when raised).
-    const ang2 = ang + s * (0.25 - 0.1 * a) * (a > 0.5 ? -1 : 1)
+    // The bend eases through half-raised (it used to flip sign at a = 0.5: a snap in every arm that moved through it).
+    const ang2 = ang + s * (0.25 - 0.1 * a) * Math.cos(Math.PI * a)
     const hx = ex + Math.cos(ang2) * fore
     const hy = ey + Math.sin(ang2) * fore
     p.stroke(inkC)
@@ -264,27 +300,33 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
     p.line(-0.018 * H, 0.06 * H, -0.02 * H, 0.1 * H)
     p.line(0.015 * H, 0.06 * H, 0.015 * H, 0.105 * H)
     p.pop()
+    drawn.hands.push({ at: [x + hx / k, y + hy / k], angle: ang2 })
   }
 
   // The head: sunk into the hump, a heavy brow, big ears, and the nose that says where it looks.
   const hw = 0.38 * H
   const hh = 0.3 * H
+  drawn.head = [x + headX / k, y + headY / k]
+  drawn.headW = hw / k
+  drawn.crown = y + (headY - hh * 0.55) / k
   p.push()
   p.translate(headX, headY)
-  // Ears first, behind the head: the far one hidden as the head turns.
+  // Ears first, behind the head: small and pointed, up and out like a leaf (a round flap reads as an elephant's);
+  // the far one hidden as the head turns.
   for (const s of [-1, 1]) {
-    const toward = s === dir && side > 0.2 ? 1 - side * 0.7 : 1
+    const toward = s === dir && side > 0.2 ? 1 - side * 0.6 : 1
     if (s !== dir && side > 0.85) continue
+    const e = earSize * H
     p.stroke(inkC)
     p.strokeWeight(w)
     p.fill(hide)
     p.push()
-    p.translate(s * hw * 0.42 - face * 0.04 * H, -hh * 0.1)
-    p.rotate(s * (0.35 + 0.15 * earSize))
+    p.translate(s * hw * 0.44 - face * 0.04 * H, -hh * 0.14)
+    p.rotate(s * 0.2)
     p.beginShape()
-    p.vertex(0, -0.03 * H)
-    p.bezierVertex(s * 0.08 * H * earSize, -0.1 * H * earSize, s * 0.2 * H * earSize * toward, -0.02 * H, s * 0.18 * H * earSize * toward, 0.03 * H)
-    p.bezierVertex(s * 0.14 * H * earSize * toward, 0.07 * H, s * 0.05 * H, 0.06 * H, 0, 0.04 * H)
+    p.vertex(0, -0.035 * H)
+    p.bezierVertex(s * 0.04 * e * toward, -0.07 * e, s * 0.09 * e * toward, -0.1 * e, s * 0.15 * e * toward, -0.12 * e)
+    p.bezierVertex(s * 0.13 * e * toward, -0.05 * e, s * 0.08 * e * toward, 0.03 * H, 0, 0.035 * H)
     p.endShape(p.CLOSE)
     p.pop()
   }
@@ -294,9 +336,9 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   // A heavy skull, flatter on top, the jaw wide.
   p.beginShape()
   p.vertex(-hw * 0.5, hh * 0.15)
-  p.bezierVertex(-hw * 0.55, -hh * 0.45, -hw * 0.2, -hh * 0.55, 0, -hh * 0.55)
-  p.bezierVertex(hw * 0.2, -hh * 0.55, hw * 0.55, -hh * 0.45, hw * 0.5, hh * 0.15)
-  p.bezierVertex(hw * 0.45, hh * 0.5, -hw * 0.45, hh * 0.5, -hw * 0.5, hh * 0.15)
+  p.bezierVertex(-hw * 0.56, -hh * 0.42, -hw * 0.25, -hh * 0.52, 0, -hh * 0.52)
+  p.bezierVertex(hw * 0.25, -hh * 0.52, hw * 0.56, -hh * 0.42, hw * 0.5, hh * 0.15)
+  p.bezierVertex(hw * 0.5, hh * 0.66, -hw * 0.5, hh * 0.66, -hw * 0.5, hh * 0.15)
   p.endShape(p.CLOSE)
   // Moss on the crown: a few tufts, not the same size.
   p.noStroke()
@@ -332,39 +374,47 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   p.strokeWeight(w * 1.3)
   p.noFill()
   p.arc(fx, eyeY + 0.004 * H, hw * 0.6, 0.075 * H, Math.PI * 1.1, Math.PI * 1.9)
-  // Mouth: a wide slit under the nose; open, a dark maw with two tusks.
-  const mx = fx + face * 0.06 * H
-  const my = hh * 0.3
+  // Mouth: a wide slit under the nose, its corners showing either side of it, and two stubby tusks up from the
+  // underjaw (what says troll and not elephant); open, a dark maw, the tusks either side of it.
+  const mx = fx + face * 0.07 * H
+  const my = hh * 0.4
+  const mw = 0.25 * H * (1 - 0.35 * side)
   if (mouth > 0.05) {
     p.stroke(inkC)
     p.strokeWeight(w)
     p.fill(TROLL.shade)
-    p.ellipse(mx, my + 0.02 * H * mouth, 0.16 * H, 0.1 * H * mouth)
-    p.noStroke()
-    p.fill(bone)
-    for (const s of [-1, 1]) p.triangle(mx + s * 0.05 * H, my - 0.005 * H, mx + s * 0.032 * H, my - 0.005 * H, mx + s * 0.042 * H, my + 0.035 * H * mouth)
+    p.ellipse(mx, my + 0.02 * H * mouth, mw * 0.85, 0.11 * H * mouth)
   } else {
     p.stroke(inkC)
     p.strokeWeight(w)
     p.noFill()
-    p.arc(mx, my - 0.01 * H, 0.15 * H, 0.045 * H, 0.1, Math.PI - 0.1)
+    p.arc(mx, my - 0.012 * H, mw, 0.045 * H, 0.1, Math.PI - 0.1)
   }
-  // The nose: a long, heavy potato of a nose. Face-on, a big drooping bulb over the mouth; turned, a club reaching
-  // out and down toward where it looks. Narrow where it leaves the brow, fat at the end.
+  for (const s of [-1, 1]) {
+    if (s !== dir && side > 0.6) continue
+    const tx = mx + s * mw * 0.4 * (s === dir ? 1 : 1 - side)
+    const ty = my + 0.01 * H + 0.03 * H * mouth
+    p.stroke(inkC)
+    p.strokeWeight(w * 0.7)
+    p.fill(bone)
+    p.triangle(tx - 0.018 * H, ty, tx + 0.018 * H, ty, tx + s * 0.006 * H, ty - 0.055 * H)
+  }
+  // The nose: a big lumpy potato. Face-on, a fat bulb over the middle of the mouth; turned, jutting out and a
+  // little down toward where it looks. Narrow where it leaves the brow, fat at the end, never longer than wide.
   const nl = noseLen * H
   const nbx = fx
   const nby = eyeY + 0.02 * H
-  const tipx = nbx + dir * nl * side * 0.9
-  const tipy = nby + nl * (0.55 + 0.25 * (1 - side)) + 0.04 * H * slump
-  const bulb = 0.075 * H * (1.2 - 0.3 * side)
+  const tipx = nbx + dir * nl * side * 1.1
+  const tipy = nby + nl * (0.35 + 0.3 * (1 - side)) + 0.025 * H * slump
+  const bulb = 0.078 * H * (1.2 - 0.25 * side)
   p.stroke(inkC)
   p.strokeWeight(w)
   p.fill(nosey)
   p.beginShape()
   p.vertex(nbx - 0.03 * H, nby)
-  p.bezierVertex(nbx - 0.035 * H + dir * side * 0.03 * H, nby + 0.06 * H, tipx - bulb * 1.1, tipy - bulb * 0.6, tipx - bulb, tipy)
+  p.bezierVertex(nbx - 0.045 * H + dir * side * 0.03 * H, nby + 0.03 * H, tipx - bulb * 1.15, tipy - bulb * 0.7, tipx - bulb, tipy)
   p.bezierVertex(tipx - bulb * 1.0, tipy + bulb * 0.9, tipx + bulb * 1.0, tipy + bulb * 0.9, tipx + bulb, tipy)
-  p.bezierVertex(tipx + bulb * 1.1, tipy - bulb * 0.6, nbx + 0.035 * H + dir * side * 0.03 * H, nby + 0.06 * H, nbx + 0.03 * H, nby)
+  p.bezierVertex(tipx + bulb * 1.15, tipy - bulb * 0.7, nbx + 0.045 * H + dir * side * 0.03 * H, nby + 0.03 * H, nbx + 0.03 * H, nby)
   p.endShape(p.CLOSE)
   // A nostril's shadow under the bulb.
   p.noStroke()
@@ -373,4 +423,5 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
   p.pop()
 
   p.pop()
+  return drawn
 }

@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
-import { director, type Shot } from './camera'
+import { director, follower, type Shot } from './camera'
 import { box, lay, standing } from './kit'
 import { DURATION } from './credits'
 import { CODA, P } from './music'
@@ -39,6 +39,9 @@ import { fall } from './finale/fall'
  * chimney rises through all of them.
  */
 
+/** How far under the middle of the frame a drop lands (cells: the seam shot is 6 tall). */
+const DROP_LOW = 0.35
+
 export function compose(): { show: MountainShow; camera: (t: number) => Framing } {
   const chain = lay({ col: 0, row: 0, begin: 0, ball: { color: PEER, ghost: false, id: 0 } }, [
     { part: gate, end: PLAN.gate.end },
@@ -68,7 +71,20 @@ export function compose(): { show: MountainShow; camera: (t: number) => Framing 
   // At every seam the two parts each put a key on the same instant; where they differ, the part being entered
   // wins, so no seam is a cut: the camera is one continuous take.
   shots = shots.filter((s, i) => !shots.some((o, j) => j > i && Math.abs(o.t - s.t) < 1e-6))
-  const follow = director((t) => show.where(t) as Pt, shots, DURATION)
+  // At a drop the follow lags the fall (it averages the last half second, when he was still high), so the landing
+  // would come at the foot of the frame, and under Zoom at its edge. The seam's key takes the lag back out, so he
+  // lands a little under the middle, with what he lands on in the frame; the keys either side ease it in and out.
+  const where = (t: number) => show.where(t) as Pt
+  const lagged = follower(where, DURATION)
+  for (const pl of Object.values(PLAN)) {
+    if (pl.out !== 'drop') continue
+    const key = shots.find((s) => Math.abs(s.t - pl.end) < 1e-6 && !s.hold)
+    if (!key) continue
+    const lag = where(pl.end)[1] - lagged(pl.end)[1]
+    const off = key.off ?? [0, 0]
+    key.off = [off[0], off[1] + Math.max(0, lag - DROP_LOW)]
+  }
+  const follow = director(where, shots, DURATION)
   return { show, camera: follow }
 }
 
