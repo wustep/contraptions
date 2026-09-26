@@ -978,13 +978,13 @@ export const ties = part<TiesState>(
       // Off to the gramophone after her, and the wheel left behind.
       { t: 153.5, cells: 2.2, hold: [1.6, -0.5], w: 1 },
       { t: 155.1, cells: 2.45, hold: [2.7, -0.45], w: 1 },
-      // The dance, on the loudest bars of the cue: a travelling shot a little ahead of them, down the hall, the
-      // gramophone going out of the frame at the left and her painting coming in at the right.
-      { t: DANCE[0] + 0.25, cells: 2.65, hold: [3.95, -0.38], w: 1 },
-      { t: DANCE[1], cells: 2.7, hold: [4.72, -0.4], w: 1 },
-      { t: DANCE[2], cells: 2.75, hold: [5.5, -0.42], w: 1 },
-      { t: DANCE[3], cells: 2.8, hold: [6.2, -0.45], w: 1 },
-      { t: EMBRACE, cells: 2.9, hold: [6.75, -0.5], w: 1 },
+      // The dance, on the loudest bars of the cue: close, a travelling shot a little ahead of them down the hall in
+      // the warm pool of the lamp, the gramophone going out of the frame at the left; wider again for the embrace.
+      { t: DANCE[0] + 0.25, cells: 2.3, hold: [3.62, -0.44], w: 1 },
+      { t: DANCE[1], cells: 2.2, hold: [4.3, -0.46], w: 1 },
+      { t: DANCE[2], cells: 2.15, hold: [5.1, -0.46], w: 1 },
+      { t: DANCE[3], cells: 2.18, hold: [5.9, -0.47], w: 1 },
+      { t: EMBRACE, cells: 2.4, hold: [6.55, -0.52], w: 1 },
       // The painting, lit: a long look, him small under it.
       { t: LAMP + 0.45, cells: 3.45, hold: [7.15, -1.0], w: 1 },
       // In on the machine, the basket and him; her at the door. Closer on the cadence, so the two tickets are seen
