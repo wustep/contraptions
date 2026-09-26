@@ -5,7 +5,7 @@ import { BREAKS } from '../music'
 import { G_EARTH } from '../physics'
 import { BLOOD, ROAD } from '../worlds'
 import {
-  BRAKE, CURB_F, CURB_R, DIES, DROP, END, FLASH, IMPACT, LAMP_T, LAND, LAST_LIGHT, POST_T, REST_X, ROAD_Y, ROLLS, T0, T_GO, TAIL, TRUCK_HIT_X, WRECK,
+  BRAKE, CURB_F, CURB_R, DIES, DROP, END, FLASH, IMPACT, LAMP_T, LAND, LAST_LIGHT, OUT, POST_T, REST_X, ROAD_Y, ROLLS, T0, T_GO, TAIL, TRUCK_HIT_X, WRECK,
   carAt, him, seatX, truckX,
 } from './crash-clock'
 import { WHEEL_R, carBox, carPt, drawCar, drawCarOver, drawTruck, type CarLook } from './crash-car'
@@ -26,8 +26,11 @@ import { glow, hexA, kick, poly } from './crash-paint'
  * through the silence between the breaks it turns over, slowly, and on the third (230.57) comes down on its roof;
  * then it rolls end over end, a slam on every break, and on the last and loudest (233.99) it stops against a lamp
  * post, on its roof. The post's lamp dies, and the lamps round the wreck go out one by one on the band's hits.
- * Hanging in his belt, he drops out of his seat (236.35), crawls out under the hood, stops, and goes on; the wreck's
- * last headlamp dies (241.06), and he comes to rest in the dark on 242.34: the stage changes to Carnegie Hall.
+ * Hanging in his belt, he drops out of his seat (236.35) and crawls back through the cabin and out under the trunk,
+ * onto the road on the side the car was going (it lies on its roof, nose back the way it came); he stumbles, stops,
+ * and goes on along the road the way he was driving, into the dark, as the lamp ahead of him dies; the wreck's last
+ * headlamp, pointing back the way he came, dies (241.06), and he comes to rest in the dark on 242.34: the stage
+ * changes to Carnegie Hall.
  *
  * He comes out of it hurt: from the drop to the cut, one thin dark streak of blood across the top of his head
  * (`drawCut`), the only blood in the show besides the practice snare's dab. His crawl is uneven, and he stumbles
@@ -347,12 +350,21 @@ export const crash = part<CrashState>(
       const [x, y, cells] = aim(t)
       tumble.push({ t, cells, hold: [x, y], w: 1 })
     }
-    // At rest: one held frame on the whole wreck in the right half and the road he crawls along in the left.
+    // At rest: held where the tumble's lead leaves it, on the whole wreck and the road behind it, while the lamps
+    // go out round it; then, as he drops and comes out past its tail, on ahead with him: the wreck and its post on
+    // the left, the dark road he goes on along on the right.
     const wreck = carBox(WRECK).map((q) => q[0])
-    const heldL = REST_X - 0.6
+    const wreckL = Math.min(...wreck)
+    const heldL = wreckL - 3.4
     const heldR = Math.max(...wreck) + 0.6
     const heldCells = Math.max(5.2, ((heldR - heldL) * 9) / 16)
     const held: Pt = [(heldL + heldR) / 2, ROAD_Y - 1.3]
+    // All of the post the wreck stopped against (it leans back over the road from the nose), not a pole cut by the
+    // edge; on the right, the dark road short of the next post, not a sliver of it on the edge.
+    const aheadL = wreckL - 2
+    const aheadR = REST_X + 2.2
+    const aheadCells = Math.max(5.2, ((aheadR - aheadL) * 9) / 16)
+    const ahead: Pt = [(aheadL + aheadR) / 2, ROAD_Y - 1.3]
     // How far ahead of him the frame leans at the flash: to halfway between him and the truck's front.
     const lead = (truckX(FLASH) - seatX(FLASH)) / 2 - 0.3
     return [
@@ -382,9 +394,12 @@ export const crash = part<CrashState>(
       { t: TAIL, cells: twoCells, hold: two, w: 1 },
       ...tumble,
       // Stopped: the frame settles on the wreck and the road beside it and holds while the lamps go out round him;
-      // he drops, comes out under the hood and crawls into the left half. Then in on him for the match cut.
+      // as he drops and comes out under the trunk it goes on ahead with him and holds while he crawls on into the
+      // dark. Then in on him for the match cut.
       { t: POST_T + 0.4, cells: heldCells, hold: held, w: 1 },
-      { t: LAST_LIGHT, cells: heldCells, hold: held, w: 1 },
+      { t: DROP, cells: heldCells, hold: held, w: 1 },
+      { t: OUT + 0.6, cells: aheadCells, hold: ahead, w: 1 },
+      { t: LAST_LIGHT, cells: aheadCells, hold: ahead, w: 1 },
       { t: END, cells: 3.5, hold: [rest[0], rest[1]], w: 1 },
     ]
   },

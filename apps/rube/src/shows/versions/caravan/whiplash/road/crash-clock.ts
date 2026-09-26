@@ -21,8 +21,11 @@ import { kick, ring } from './crash-paint'
  *   230.57  onto its roof; then end over end, a slam on every break, 230.99 to 233.67
  *   233.99  into a lamp post, on its roof, stopped (the last and loudest break)
  *   234.33  the post's lamp dies; the lamps round the wreck go out one by one, from the outside in
- *   236.36  he drops out of his seat, hurt; out under the hood; he crawls, stumbles, and goes on, alone
- *   241.06  the wreck's last headlamp dies; 242.34 he is at rest in the dark: Carnegie Hall
+ *   236.35  he drops out of his seat, hurt; back through the cabin and out under the trunk, on the side the car was
+ *           going; he crawls, stumbles, and goes on along the road the way he was driving, alone
+ *   239.14  the lamp ahead of him dies as he sets off again: he goes on into the dark
+ *   241.06  the wreck's last headlamp dies (it faces back the way he came); 242.34 he is at rest in the dark, further
+ *           on than the wreck: Carnegie Hall
  */
 
 const smoothstep = (t: number, a: number, b: number): number => {
@@ -303,9 +306,13 @@ function driving(t: number): CarPose {
 
 /** He drops out of his seat (hanging in his belt upside down) onto the roof's lining. */
 export const DROP = tune(551)
-/** Out under the hood, onto the road. */
-export const OUT = DROP + 0.95
-/** Up again, going on. */
+/**
+ * Clear of the wreck: back along the lining through the cabin and the broken rear window, and out under the trunk
+ * past its tail. The car lies on its roof with its nose back the way it came, so its tail is on the side it was
+ * going: he comes out onto the road ahead of it, the post and the lamps behind him.
+ */
+export const OUT = DROP + 1.45
+/** Up again, going on (as the lamp ahead of him dies: `DIES`). */
 export const ON = BREAKS[11] + 5.152
 /** The end: at rest in the dark. */
 export const END = 242.344
@@ -330,9 +337,12 @@ function inCar(t: number): Pt {
 
 /** The road under him, at rest after the crash. */
 const OUT_Y = ROAD_Y - 0.13
-/** Where he comes out from under the hood, and where he stops. */
-const OUT_X = carPt(WRECK, 3.35, LINER[1])[0] - 0.05
-export const REST_X = OUT_X - 3.0
+/** Where he lies on the roof's lining once he has dropped out of his belt. */
+const LINED: Pt = carPt(carAt(DROP + 0.2), LINER[0], LINER[1])
+/** Where he is clear of the wreck (the tail's bumper and his own width behind him), and where he stops: on down the
+ * road the way the car was going, past the next lamp's post. */
+const OUT_X = carPt(WRECK, 0, LINER[1])[0] + 0.1
+export const REST_X = OUT_X + 2.4
 
 /** Andrew at `t`, in the part's frame. */
 export function him(t: number): Pt {
@@ -340,19 +350,15 @@ export function him(t: number): Pt {
     const [u, v] = inCar(t)
     return carPt(carAt(t), u, v)
   }
-  const lined = carPt(carAt(DROP + 0.2), LINER[0], LINER[1])
-  if (t < OUT) {
-    // Along the lining toward the broken windshield, slowly.
-    const u = smoothstep(t, DROP + 0.35, OUT)
-    return [lined[0] + (OUT_X - lined[0]) * u, lined[1] + (OUT_Y - lined[1]) * u]
-  }
-  // The crawl: out from under the hood, in uneven pulls; he tries to rise, stumbles and stops to gather himself;
-  // and on, slowing to rest at the end.
-  return [crawl(uneven(t)), OUT_Y - stumble(t)]
+  // The crawl: back through the cabin and out under the trunk, in uneven pulls, and on along the road; he tries to
+  // rise, stumbles and stops to gather himself; and on, slowing to rest at the end. One path from the lining to the
+  // rest, so he never stops at the wreck's edge as if it were a line.
+  const y = LINED[1] + (OUT_Y - LINED[1]) * smoothstep(t, DROP + 0.35, OUT)
+  return [LINED[0] + crawl(uneven(t)), y - stumble(t)]
 }
 
 /** Where he stumbles: pitched forward and down onto the road, and the stop. */
-const STUMBLE = OUT + 0.95
+const STUMBLE = OUT + 0.7
 
 /**
  * He pushes up off the road a little, slowly, and his arms give: back down onto it, quicker than he rose, by
@@ -371,27 +377,37 @@ function stumble(t: number): number {
  * crawl's plan in its two moving stretches so it starts and ends where the plan does. Never runs backwards.
  */
 function uneven(t: number): number {
-  const pulls = (t0: number, t1: number, w: number): number => {
+  const pulls = (t0: number, t1: number, w: number, a: number): number => {
     if (t <= t0 || t >= t1) return 0
     const tau = t - t0
     const env = Math.sin((Math.PI * tau) / (t1 - t0)) ** 2
     const w2 = w * 1.63
-    return env * ((0.4 * Math.sin(w * tau)) / w + (0.18 * Math.sin(w2 * tau + 1.1)) / w2)
+    return a * env * ((0.4 * Math.sin(w * tau)) / w + (0.18 * Math.sin(w2 * tau + 1.1)) / w2)
   }
-  return t + pulls(OUT, STUMBLE - 0.4, 2 * Math.PI * 1.6) + pulls(ON, END - 0.5, 2 * Math.PI * 1.85)
+  // Half as strong through the cabin, where he is quickest: a full pull there surged to near four cells a second.
+  return t + pulls(DROP + 0.35, STUMBLE - 0.4, 2 * Math.PI * 1.6, 0.5) + pulls(ON, END - 0.5, 2 * Math.PI * 1.85, 1)
 }
 
-/** His distance along the road from where he comes out: slow, the stumble and a stop, then on, and at rest on the last beat. */
+/**
+ * How far he has come from the lining: out of the wreck quickest (the scramble), slow past its tail, the stumble and
+ * a stop, then on, and at rest on the last beat.
+ */
 const crawl = (() => {
+  const out = OUT_X - LINED[0]
   const pts: [number, number][] = [
-    [OUT, 0],
-    [STUMBLE - 0.13, 0.31],
-    [STUMBLE, 0.42],
-    [OUT + 1.5, 0.47],
-    [ON, 0.78],
-    [ON + 1.3, 1.9],
-    [END - 0.45, 2.85],
-    [END, 3.0],
+    [DROP + 0.35, 0],
+    [DROP + 0.65, 0.16 * out],
+    [OUT - 0.3, 0.72 * out],
+    [OUT, out],
+    // The stumble and the stop short of the next lamp's post (a ball against a post reads as touching it); past it
+    // only once he is on the move again.
+    [STUMBLE - 0.13, out + 0.17],
+    [STUMBLE, out + 0.22],
+    [ON - 0.3, out + 0.26],
+    [ON, out + 0.3],
+    [ON + 1.3, out + 1.3],
+    [END - 0.45, out + 2.2],
+    [END, REST_X - LINED[0]],
   ]
   const xs = pts.map((q) => q[0])
   const ys = pts.map((q) => q[1])
@@ -404,14 +420,13 @@ const crawl = (() => {
   m[0] = 0
   m[n - 1] = 0
   return (t: number): number => {
-    if (t <= xs[0]) return OUT_X
-    if (t >= xs[n - 1]) return OUT_X - ys[n - 1]
+    if (t <= xs[0]) return 0
+    if (t >= xs[n - 1]) return ys[n - 1]
     let i = 0
     while (i < n - 2 && t > xs[i + 1]) i++
     const h = xs[i + 1] - xs[i]
     const u = (t - xs[i]) / h
-    const y = (2 * u ** 3 - 3 * u ** 2 + 1) * ys[i] + (u ** 3 - 2 * u ** 2 + u) * h * m[i] + (-2 * u ** 3 + 3 * u ** 2) * ys[i + 1] + (u ** 3 - u ** 2) * h * m[i + 1]
-    return OUT_X - y
+    return (2 * u ** 3 - 3 * u ** 2 + 1) * ys[i] + (u ** 3 - 2 * u ** 2 + u) * h * m[i] + (-2 * u ** 3 + 3 * u ** 2) * ys[i + 1] + (u ** 3 - u ** 2) * h * m[i + 1]
   }
 })()
 
@@ -419,17 +434,18 @@ const crawl = (() => {
 
 /**
  * The lamps round the wreck, going out one by one after it stops: lamp index → the beat it dies on. The post's
- * lamp first (the wreck hit it); then from the outside in, so the light closes on him and the wreck: the far ones
- * first, the one over his crawl, and last the one over the wreck's tail.
+ * lamp first (the wreck hit it, at its nose); then from the outside in on each side, so the light closes on him:
+ * the far one behind, the one behind the wreck as he comes out past its tail, the one ahead of him as he sets off
+ * again (`ON`: he goes on into the dark), and last the one over him and the wreck's tail.
  */
 export const DIES: Map<number, number> = new Map([
   [POST_LAMP, 234.333],
-  [POST_LAMP + 2, 235.947],
-  [POST_LAMP - 2, 237.776],
-  [POST_LAMP - 1, 239.137],
+  [POST_LAMP - 2, 235.947],
+  [POST_LAMP - 1, 237.776],
+  [POST_LAMP + 2, 239.137],
   [POST_LAMP + 1, 240.192],
 ])
-/** The wreck's last headlamp, still burning along the road, dies. */
+/** The wreck's last headlamp, still burning back along the road the way he came, dies. */
 export const LAST_LIGHT = 241.059
 
 /** How lit lamp `i` is at `t`: dark until he passes under it, a flare on its beat, steady; out when it dies. */
