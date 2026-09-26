@@ -28,9 +28,10 @@ import { BOW, drawTie } from './ties-tie'
  * swells and waltz the length of the hall in a pool of warm light, in hold, she at his right: a rise on every
  * downbeat, a sway on the two and three. The swell crests from 51's third beat into 52's downbeat (156.75–157.5, the
  * loudest of the second half; by 53 it is 8–10 dB down): through it she turns out under his arm, at arm's length and
- * her highest on 52's downbeat, as the pool of light brightens and the camera's crane lands at its widest, and she
- * rolls back in by 53. They come to rest in each other's arms on the accent of bar 55. The camera has the gramophone
- * whole at the start and the desk and her painting whole at the end, and all of it at the top of its crane.
+ * her highest on 52's downbeat, as the pool of light brightens and the camera, come in with the swell, lands at its
+ * closest on the two of them, and she rolls back in by 53. They come to rest in each other's arms on the accent of
+ * bar 55. The camera has the gramophone whole at the start and the desk and her painting whole at the end, craning
+ * out to them as the two close into the embrace.
  *
  * The tickets. The evening comes in, and the lamp over her painting of Paradise Falls lights (bar 56): he sees it, a
  * long look. He steps onto the pedal in the floor by the desk (bar 57); the desk's leaf lets go and the picnic basket
@@ -1042,13 +1043,18 @@ export const ties = part<TiesState>(
       // gathers way, so it is still going strong as the music swells.
       key(153.9, 2.7, 2.3),
       key(155.1, 2.95, 3.2),
-      // The dance, on the swell. On its first downbeat the gramophone is in the left third, its record turning, the
-      // two of them coming into the frame; the crane goes on up and out through the swell as they waltz down the
-      // hall, and lands at its widest on its crest, 52's downbeat, as she turns out under his arm: the whole of it in,
-      // the gramophone, the floor, the desk and her painting. Then, as the music falls away, a slow drift in onto the
-      // embrace, the desk and the painting whole at the right.
-      key(DANCE[0], 3.2, 4.05),
-      key(DANCE[1], 3.5, 4.93),
+      // The dance, on the swell: the camera goes in with it. On its first downbeat the gramophone is whole in the left
+      // third, its record turning, the two of them meeting in front of it; then in, down the hall with them, to land
+      // closest on the crest, 52's downbeat, as she turns out under his arm: only the two of them, her at arm's length
+      // and her highest, in the warm pool as it swells, the room gone. That close sits between the horn's mouth
+      // (its rim reaches x 2.98) and the ticket press's hand lever (its grip 6.48), so neither is cut by the frame's
+      // edges, and it holds them left of the middle, with the floor they are waltzing into ahead of them. It stays
+      // close as the music falls away, drifting on with them more slowly than they go (they come to the middle), and
+      // then, as they close into each other's arms, cranes out to bring the desk and her painting in whole at the right.
+      // Zoom in 0.44 log over 2.2 s and out 0.45 over 2.2 s, neither faster than 0.3 log/s.
+      key(DANCE[0], 2.4, 3.9),
+      key(DANCE[1], 1.9, 4.73),
+      key(DANCE[2], 2.1, 5.0),
       key(EMBRACE, 3.3, 6.05),
       // The painting, lit: a long look, him small under it.
       key(LAMP + 0.45, 3.45, 7.15),
