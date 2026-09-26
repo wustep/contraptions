@@ -4,7 +4,7 @@ import { dawn } from '../mountain'
 import { quake } from '../rock'
 import { PLAN, SEAM_SHOT } from '../seams'
 import { drawPig } from './gate-pig'
-import { DOOR, doorDrop, pebbleAt, pebbleStops, peerWays, pigPose, riderAt, TIMES, womanWays, worksLamp, type PebbleStop } from './gate-motion'
+import { DOOR, doorDrop, doorKnock, pebbleAt, pebbleStops, peerWays, pigPose, riderAt, TIMES, womanWays, worksLamp, type PebbleStop } from './gate-motion'
 import { drawBoulders, drawDoor, drawDrain, drawFlank, drawLintel, drawMouth, drawPawl, drawPebble, drawStair, drawWorks, drawWorksHollows } from './gate-set'
 
 /**
@@ -33,7 +33,7 @@ const ALL: number[] = [
   TIMES.peerLeap[1],
   ...TIMES.womanHops,
   ...TIMES.peerHops,
-  TIMES.knock,
+  ...TIMES.knocks,
   TIMES.tip,
   ...TIMES.pebble,
   TIMES.pan,
@@ -42,7 +42,7 @@ const ALL: number[] = [
 
 /**
  * Every strike, show seconds: the pig's heavy steps; her leap and his onto the stair's foot and their hops up it; her
- * knock; the tip; the pebble on each step, the foot stone and the pan (the spark); the door's fourteen clicks.
+ * two knocks and her shove; the tip; the pebble on each step, the foot stone and the pan (the spark); the door's fourteen clicks.
  */
 export const GATE_HITS: number[] = ALL.filter((t, i) => i === 0 || t - ALL[i - 1] > 0.001)
 
@@ -62,7 +62,7 @@ export const gate = part<GateState>(
       drawWorksHollows(p, c, t)
       drawDrain(p, c, lamp)
       drawMouth(p, c, Math.min(1, drop / DOOR.travel))
-      drawDoor(p, c, t, drop, 0)
+      drawDoor(p, c, t, drop, doorKnock(t))
       drawStair(p, c, t)
       drawPawl(p, c, t)
       drawLintel(p, c, t)
