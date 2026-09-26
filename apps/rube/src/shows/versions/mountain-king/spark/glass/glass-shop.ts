@@ -1,5 +1,6 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
+import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
 import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1 } from './glass-plan'
 import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, tongue, type Pen } from './glass-pen'
@@ -172,7 +173,7 @@ function breath(pen: Pen, x: number, y: number, hw: number, t: number, flare: nu
 /** How hard the glory hole roars: it bursts as the spark comes out of it, and as it goes back through on the way home. */
 const gloryFlare = (t: number): number => {
   const out = t >= S0 - 0.3 ? Math.exp(-Math.max(0, t - S0) / 0.6) * smooth(t, S0 - 0.3, S0) : 0
-  const home = smooth(t, 148.25, 148.4) * (1 - smooth(t, 148.6, 149.4))
+  const home = smooth(t, DOORS.back[1] - 0.25, DOORS.back[1] - 0.05) * (1 - smooth(t, DOORS.back[2] + 0.05, DOORS.back[2] + 0.7))
   return Math.min(1.2, out + home)
 }
 

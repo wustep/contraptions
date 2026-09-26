@@ -1,12 +1,13 @@
 import type { Pt } from '../../../../../parts'
-import { box, part, route, type Way } from '../kit'
+import { box, carried, part, route, type Way } from '../kit'
 import { CREDITS_AT, DURATION, LAST } from '../music'
-import { G } from '../physics'
+import { homeLeapAt } from '../seams'
 import { FIRE_MOUTH, WICK } from './layout'
 
 /**
  * The director's: home. The spark bursts out of the loft stove's firebox door at the last return door
- * (`DOORS.back[2]`) and leaps up and left onto its wick, landing on the first last chord (`LAST[0]`). On the second
+ * (`DOORS.back[2]`) and leaps up and left over the bench's end, settling onto its wick on the first last chord
+ * (`LAST[0]`): quick out of the fire, slow onto the wick (`homeLeapAt` in `seams.ts`). On the second
  * (`LAST[1]`) the firebox door bangs shut behind it (`hearth.ts`) and the cat wakes. Then it burns on its wick, a
  * candle's flame, through the credits. The leg is laid with its entry (-0.5, 0) at `FIRE_MOUTH`.
  */
@@ -24,22 +25,26 @@ export const home = part<null>(
   { name: 'loft-home', draw: () => {} },
   (slot) => {
     const leap = LAST[0] - slot.begin
-    const ways: Way[] = [{ at: 0, p: [-0.5, 0] }]
-    // The leap: a parabola under the loft's gravity, launched at `HOME_LEAP` (the seam's velocity) and landing on the wick.
-    ways.push({ at: leap, p: ON_WICK, arc: (G * leap * leap) / 8 })
+    // The leap, sampled from the curve (in this leg's frame: the loft's cells less `HOME_AT`).
+    const segs = carried((u) => {
+      const [x, y] = homeLeapAt(u / leap)
+      return [x - HOME_AT[0], y - HOME_AT[1]]
+    }, 0, leap, 70)
     // A candle's flame on its wick: the landing settles in a small damped bob, then it is still.
+    const ways: Way[] = [{ at: leap, p: ON_WICK }]
     const bob: [number, number][] = [
-      [0.09, 0.05],
-      [0.2, -0.018],
-      [0.34, 0.01],
-      [0.52, 0],
+      [0.08, 0.04],
+      [0.2, -0.012],
+      [0.34, 0.006],
+      [0.5, 0],
     ]
     for (const [dt, dy] of bob) ways.push({ at: leap + dt, p: [ON_WICK[0], ON_WICK[1] + dy], ease: 'inout' })
     ways.push({ at: DURATION - slot.begin, p: ON_WICK })
+    segs.push(...route(ways))
     return {
       cells: box(ON_WICK[0] - 3, ON_WICK[1] - 3, 2, 2),
       exit: [ON_WICK[0] + 0.5, ON_WICK[1]],
-      lane: { segs: route(ways), fire: leap },
+      lane: { segs, fire: leap },
       state: null,
     }
   },
@@ -47,16 +52,26 @@ export const home = part<null>(
     // Home's frame is the loft's cells less `HOME_AT`: `w(x, y)` is a point of the loft.
     const w = (x: number, y: number): Pt => [x - HOME_AT[0], y - HOME_AT[1]]
     return [
-      // Out of the fire it follows the leap, drawing back.
-      { t: slot.begin + 0.3, cells: 6 },
-      // The two-shot for the two chords: the candle up and left, the stove and the cat under it, the floor in. Low
-      // enough to see the cat wake and look up at the candle; high enough that Zoom keeps the wick in.
-      { t: LAST[0] - 0.05, cells: 14.8, hold: w(2.0, 4.3), w: 0.92 },
-      { t: LAST[1] + 1.8, cells: 14.9, hold: w(1.9, 4.25), w: 1 },
-      // The cat settles; the camera draws back to the whole loft in the dark, the candle its one warm light, with the
-      // dark of the roof above it for the credits, and the room's east end just out of frame.
-      { t: CREDITS_AT + 2.2, cells: 20.6, hold: w(-2.6, 1.7), w: 1 },
-      { t: DURATION, cells: 22.4, hold: w(-4.3, 1.0), w: 1 },
+      // Out of the fire it draws back over the leap, so the whole arc has room: the open firebox door it came out of on
+      // the right, the candle it is going to on the left. It is settled on that picture as the spark comes down.
+      { t: slot.begin + 0.3, cells: 6.4, hold: w(3.6, 2.5), w: 0.6 },
+      { t: LAST[0] - 0.1, cells: 7.3, hold: w(2.6, 1.75), w: 1 },
+      // The bang: the same close frame, the door as big as the candle's whole height, already easing down and out.
+      { t: LAST[1], cells: 7.6, hold: w(2.7, 1.9), w: 1 },
+      // Follow-through: a long damped move down and out from the bang to whoever it woke, arriving as the cat's head
+      // is up and it is staring at the candle: the floor and the whole cat in, as tight as Zoom allows while it keeps the
+      // spark in (Zoom's centre is the camera's, so it may sit no more than about 0.31 of the frame below the wick).
+      { t: LAST[1] + 0.95, cells: 14.0, hold: w(3.0, 4.35), w: 1 },
+      { t: LAST[1] + 2.45, cells: 14.3, hold: w(2.8, 4.45), w: 1 },
+      // The cat tucks back in; the camera draws back to the whole loft in the dark for the credits, the candle its one
+      // warm light, the dark of the roof above it for the cards.
+      { t: CREDITS_AT + 1.4, cells: 21.5, hold: w(-3.4, 1.5), w: 1 },
+      // Then one slow creep through the credits toward the candle (a steady 2% closer a second, so the room is never
+      // still), ending on it a little above the middle, under the cards, the stove's glow beside it and the cat asleep
+      // just below the frame.
+      { t: CREDITS_AT + 3.0, cells: 20.6, hold: w(-2.9, 1.55), w: 1 },
+      { t: DURATION - 2, cells: 13.0, hold: w(1.0, 2.0), w: 1 },
+      { t: DURATION, cells: 12.6, hold: w(1.2, 2.0), w: 1 },
     ]
   },
 )
