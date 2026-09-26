@@ -60,9 +60,11 @@ export const band = part<BandState>(
     }
   },
   (slot: Slot): PartShot[] => [
-    // In the corridor, following, as the band comes in; through the door with him.
+    // In the corridor as the band comes in: on its first chord the frame opens past the wall to the room lit and the
+    // tiers playing, him rolling toward its door; through the door with him.
     { t: slot.begin, cells: 5, off: [0.9, -0.8] },
-    { t: DOOR_IN, cells: 5.4, off: [1.3, -0.9] },
+    { t: 31.9, cells: 6.6, hold: [4.0, -1.2], w: 0.8 },
+    { t: DOOR_IN, cells: 7.1, hold: [4.4, -1.15], w: 0.7 },
     // The room opens: the tiers and the band, as he comes down them a step a bar.
     { t: 34.4, cells: 8.2, hold: [7.2, -1.1], w: 0.7 },
     { t: LANDINGS[1], cells: 8.4, hold: [10.2, -0.7], w: 0.65 },
@@ -78,8 +80,9 @@ export const band = part<BandState>(
     { t: 55.3, cells: 8.8, hold: [11.9, -1.25], w: 1 },
     { t: ANSWER + 0.6, cells: 8.8, hold: [12.4, -1.15], w: 1 },
     // The alternate and the drummer, keeping the same time: Andrew tapping on his seat, Tanner playing his kit.
-    { t: 61.8, cells: 4.4, hold: [19.4, 0.55], w: 1 },
-    { t: 64.4, cells: 4.3, hold: [19.3, 0.5], w: 1 },
+    // (Loose enough that both balls stay inside under Zoom.)
+    { t: 61.8, cells: 5.2, hold: [19.37, 0.62], w: 1 },
+    { t: 64.4, cells: 5.1, hold: [19.35, 0.6], w: 1 },
     // A page, and Fletcher's eye on him.
     { t: 67.2, cells: 5.8, hold: [16.6, 0.25], w: 1 },
     // Across to the band at work, the bells lifting on its hits, Fletcher driving it; back to all three of them.
