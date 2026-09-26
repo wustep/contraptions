@@ -163,18 +163,32 @@ function lift(p: p5, k: number, ink: string, w: number, t: number, see: See): vo
       teeth.push([dx + Math.cos(a0) * 0.2, dy + Math.sin(a0) * 0.2], [dx + Math.cos(a1) * 0.25, dy + Math.sin(a1) * 0.25], [dx + Math.cos(a1) * 0.2, dy + Math.sin(a1) * 0.2])
     }
     poly(p, k, teeth)
-    solid(p, ink, w * 0.5, BRASS_DEEP)
-    for (let i = 0; i < 4; i++) {
-      const a = turn + (i / 4) * Math.PI * 2
-      bar(p, k, [dx, dy], [dx + Math.cos(a) * 0.17, dy + Math.sin(a) * 0.17], 0.035)
+    // Its face is a cast web, not spokes: a raised rim inside the teeth, and five lightening holes round the boss,
+    // so it reads as a wheel turning and never as a cross-hair.
+    p.noFill()
+    p.stroke(BRASS_DEEP)
+    p.strokeWeight(Math.max(1, 0.022 * k))
+    p.circle(dx * k, dy * k, 2 * 0.165 * k)
+    p.noStroke()
+    p.fill(BRASS_DEEP)
+    for (let i = 0; i < 5; i++) {
+      const a = turn + (i / 5) * Math.PI * 2
+      const hx = dx + Math.cos(a) * 0.105
+      const hy = dy + Math.sin(a) * 0.105
+      p.push()
+      p.translate(hx * k, hy * k)
+      p.rotate(a)
+      p.ellipse(0, 0, 0.05 * k, 0.07 * k)
+      p.pop()
     }
+    // The boss: a hex nut on the axle.
     solid(p, ink, w * 0.5, IRON)
-    poly(p, k, [
-      [dx - 0.045, dy],
-      [dx, dy - 0.045],
-      [dx + 0.045, dy],
-      [dx, dy + 0.045],
-    ])
+    const nut: Pt[] = []
+    for (let i = 0; i < 6; i++) {
+      const a = turn * 0.2 + (i / 6) * Math.PI * 2
+      nut.push([dx + Math.cos(a) * 0.045, dy + Math.sin(a) * 0.045])
+    }
+    poly(p, k, nut)
     // The pawl on the yoke, riding the ratchet: it lifts as a tooth slips under it and drops, a click, on each notch.
     const lift0: Pt = [dx - 0.36, dy - 0.24]
     const pa = 0.5 - 0.35 * pawlLift(t)
