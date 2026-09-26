@@ -27,16 +27,17 @@ const GO = 1.0
 const OVERLAP = 0.25
 
 /**
- * The credits start once he has sat down and the lamp is on, and the camera has drawn back past the roof: the
- * strongest note of the piano's phrase there (228.403), late enough that the first card forms over the sky with the
- * chimney well under its name (a note sooner, 227.695, it formed over the chimney's cap).
+ * The credits start once he has sat down, the lamp is on and the lit room has had a phrase of the piano to itself,
+ * and the camera has drawn back past the roof: the strongest note after it (232.745), so the first card forms over the
+ * sky with the chimney well under its name. The cards are held a little shorter (about 4.8 s each, whole) so the last
+ * is still gone by 256.9.
  */
-export const CREDITS_AT = 228.403
+export const CREDITS_AT = 232.745
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 3.0, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 2.3, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.1,
+    hold: 3.1,
     role: 'With',
     names: [
       // Carl is square: the page's small bar in the disc's footprint.
@@ -44,9 +45,9 @@ const script: Omit<Card, 'at'>[] = [
       ['Ellie Fredricksen', 'the coral ball', ELLIE],
     ],
   },
-  { hold: 4.3, role: 'Music', names: ['Michael Giacchino'], notes: ['“Married Life”', 'from Up (2009)'] },
-  { hold: 3.9, role: 'After', names: ['Up'], notes: ['a film by Pete Docter, co-directed by Bob Peterson', 'Pixar Animation Studios (2009)'] },
-  { hold: 2.7, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 3.25, role: 'Music', names: ['Michael Giacchino'], notes: ['“Married Life”', 'from Up (2009)'] },
+  { hold: 2.95, role: 'After', names: ['Up'], notes: ['a film by Pete Docter, co-directed by Bob Peterson', 'Pixar Animation Studios (2009)'] },
+  { hold: 2.05, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
