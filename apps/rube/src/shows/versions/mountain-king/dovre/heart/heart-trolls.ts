@@ -219,7 +219,7 @@ function stoker(T: number): Pose {
 const DOOR_L = 1.75
 const CHASE = [
   // The first goes to the great bellows when the keeper shouts; the second stays at the pumps after Peer.
-  { size: 1.9, seed: 21, enter: FLY + 1.2, stand: 9.85, pump: 9.2 },
+  { size: 1.9, seed: 21, enter: FLY + 1.2, stand: 9.85, pump: 9.45 },
   { size: 1.78, seed: 22, enter: FLY + 1.9, stand: 11.5, pump: 11.5 },
 ]
 

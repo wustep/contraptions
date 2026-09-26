@@ -8,7 +8,6 @@ import type { Pen } from '../troll'
 import {
   ANVIL,
   BELLOWS,
-  BELLOWS_GREAT,
   BELLOWS_SMALL,
   BREAK,
   CAM,
@@ -125,13 +124,26 @@ function fireAt(T: number): ReturnType<typeof furnace> {
   const f = furnace(T)
   const woke = smoothstep(T, T0 - 0.03, T0 + 0.05)
   const s = surge(T) * (T >= BREAK ? 0 : 1)
-  return { base: Math.max(f.base, 0.28 * woke * (T >= BREAK ? 0.6 : 1)), flare: Math.max(f.flare, s), heat: f.heat }
+  // The flywheel's halves crash down in front of it: the furnace blasts out once.
+  const blast = T >= HALVES_LAND - 0.03 ? 2.4 * (T < HALVES_LAND ? 1 + (T - HALVES_LAND) / 0.03 : Math.exp(-(T - HALVES_LAND) / 0.4)) : 0
+  return { base: Math.max(f.base, 0.28 * woke * (T >= BREAK ? 0.6 : 1)), flare: Math.max(f.flare, s, blast), heat: f.heat }
 }
 
-/** The room's light at T: the furnace's (its base and the flare on the backbeat, and the surges). */
+/**
+ * Each mechanism is a near-black silhouette (the rock's own colour, no lit edge) until the furnace's flare on its
+ * first note lights it, and it stays lit: so each phrase the lit machine is visibly bigger, and there is one hero
+ * silhouette at a time (the flywheel, the pumps, the great bellows, the governor).
+ */
+const SLEEP = 0.1
+const woken = (T: number, at: number): number => smoothstep(T, at - 0.04, at + 0.1)
+const awake = (T: number, at: number): number => lerp(SLEEP, 1, woken(T, at))
+/** How many of the four mechanisms are lit (0 to 1): the room brightens a step with each. */
+const mechanisms = (T: number): number => (woken(T, FLY) + woken(T, PISTONS) + woken(T, BELLOWS) + woken(T, GOVERNOR)) / 4
+
+/** The room's light at T: the furnace's (its base and the flare on the backbeat, and the surges), and a step up for each mechanism lit. */
 export function roomLight(T: number): { lit: number; flare: number; fire: ReturnType<typeof furnace> } {
   const fire = fireAt(T)
-  const lit = 0.08 + 0.92 * clamp01(fire.base) + 0.12 * fire.flare + 0.18 * surge(T)
+  const lit = 0.08 + 0.92 * clamp01(fire.base) + 0.12 * fire.flare + 0.18 * surge(T) + 0.4 * mechanisms(T)
   return { lit: clamp01(lit), flare: fire.flare, fire }
 }
 /** How lit a thing standing at x is: the furnace is in the middle of the pit, the ends of the room darker. */
@@ -365,10 +377,12 @@ function ceilingAt(x: number): number {
   return -6.1
 }
 
-function drawRoom(p: p5, c: Pen, L: number): void {
+function drawRoom(p: p5, c: Pen, L: number, lift = 0): void {
   const { k } = c
   p.noStroke()
-  p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L))
+  // The back wall: dark rock, a little lighter with each mechanism the fire has lit (the runaway is the brightest
+  // room in the mountain).
+  p.fill(mixHex(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L), STONE.mid, 0.3 * clamp01(lift)))
   poly(p, k, HOLLOW)
   // The tunnel mouths: a dark arch with a lit jamb.
   for (const d of DOORS) {
@@ -677,6 +691,31 @@ function bellows(p: p5, c: Pen, x0: number, x1: number, floor: number, open: num
   poly(p, k, [[noz - dir * 0.3 * size, bottom - 0.2], [noz + dir * 0.12, bottom - 0.12], [noz + dir * 0.12, bottom - 0.06], [noz - dir * 0.3 * size, bottom + 0.0]])
 }
 
+/**
+ * The great bellows (118.72, "everything"): two cells long, raised on a trestle at its nozzle end so it points up
+ * into the furnace's mouth, its boards closing hard on every stroke. Drawn in front of the troll who works it.
+ */
+const GREAT = { x0: 7.05, x1: 9.05, tilt: 0.2, size: 1.45 }
+function drawGreatBellows(p: p5, c: Pen, T: number, lit: number): void {
+  const { k } = c
+  const open = T < BELLOWS - 0.2 ? 0.8 : bellowsOpen(T, BELLOWS - 0.2)
+  const pivot: Pt = [GREAT.x1, PIT - 0.08]
+  // The trestle under the raised nozzle end: two splayed legs and a cross-bar.
+  const lift = (GREAT.x1 - GREAT.x0 - 0.35) * Math.sin(GREAT.tilt)
+  const lx = GREAT.x0 + 0.45
+  p.stroke(inkOf(c, lit))
+  p.strokeWeight(c.weight)
+  p.fill(tone(WORKS.wood, lit * 0.9))
+  bar(p, k, [lx - 0.22, PIT], [lx, PIT - 0.1 - lift], 0.1, 0.08)
+  bar(p, k, [lx + 0.22, PIT], [lx, PIT - 0.1 - lift], 0.1, 0.08)
+  p.push()
+  p.translate(pivot[0] * k, pivot[1] * k)
+  p.rotate(GREAT.tilt)
+  p.translate(-pivot[0] * k, -pivot[1] * k)
+  bellows(p, c, GREAT.x0, GREAT.x1, PIT, open, false, lit, GREAT.size)
+  p.pop()
+}
+
 /** How open a bellows is at T: it closes onto every flare (the puff), and opens again slowly. */
 function bellowsOpen(T: number, from: number): number {
   if (T < from) return 0.85
@@ -713,31 +752,74 @@ function drawFlywheelFrame(p: p5, c: Pen, lit: number): void {
   bar(p, k, [fx - 0.92, 0.95], [fx + 0.92, 0.95], 0.14)
 }
 
+/** The flywheel's halves after the break: when they hit the pit's floor (the furnace blasts out as they do). */
+const HALF_TEAR = 0.1
+const HALF_FALL = 0.42
+export const HALVES_LAND = BREAK + HALF_TEAR + HALF_FALL
+/**
+ * Where one half of the flywheel is at T (side 1 or -1 of the split): the wheel's centre as that half carries it, and
+ * how far it has turned. It tears off along the split (0.1 s), falls to the pit's floor turning (gravity), lands on its
+ * rim and rolls on it, rocking to rest bowl-down (a half disc rests with its cut face up), the two apart.
+ */
+function halfPose(side: number, T: number): { x: number; y: number; turn: number } {
+  const [fx, fy] = FLYWHEEL.at
+  const Rr = FLY_R + 0.12
+  const d: Pt = [Math.cos(SPLIT_DIR), Math.sin(SPLIT_DIR)]
+  const out: Pt = [-d[1] * side, d[0] * side]
+  // Turned so this half's inside points straight down: at rest on its rim. The nearer of the two ways round.
+  let rest = Math.PI / 2 - Math.atan2(out[1], out[0])
+  while (rest > Math.PI) rest -= 2 * Math.PI
+  while (rest < -Math.PI) rest += 2 * Math.PI
+  const dir = Math.sign(out[0]) || side
+  // Lands turned a little past its rest toward where it is going, and rolls back and forth to rest.
+  const over = -dir * 0.42
+  const restX = fx + dir * 1.75
+  const floorY = PIT - Rr
+  const a = T - BREAK
+  if (a <= 0) return { x: fx, y: fy, turn: 0 }
+  if (a < HALF_TEAR) {
+    const u = ease(a / HALF_TEAR)
+    return { x: fx + out[0] * 0.14 * u, y: fy + out[1] * 0.14 * u, turn: side * 0.06 * u }
+  }
+  const x0 = fx + out[0] * 0.14
+  const y0 = fy + out[1] * 0.14
+  const landX = restX + Rr * over
+  if (a < HALF_TEAR + HALF_FALL) {
+    const u = (a - HALF_TEAR) / HALF_FALL
+    const turn = lerp(side * 0.06, rest + over, u * (0.6 + 0.4 * u))
+    return { x: lerp(x0, landX, 1 - (1 - u) * (1 - u)), y: y0 + (floorY - y0) * u * u, turn }
+  }
+  // On the floor: a damped rock about the rest, rolling on the rim (x follows the turn).
+  const b = a - HALF_TEAR - HALF_FALL
+  const rock = over * Math.exp(-b / 0.45) * Math.cos(b * 7.5)
+  return { x: restX + Rr * rock, y: floorY, turn: rest + rock }
+}
+
 function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   const [fx, fy] = FLYWHEEL.at
-  const engaged = T >= FLY
-  const lit = litAt(L, fx, lampsAt(T, fx)) * (engaged ? 1 : 0.8)
+  const aw = awake(T, FLY)
+  const lit = litAt(L, fx, lampsAt(T, fx)) * aw
   const ink = inkOf(c, lit)
-  const f = fireAt(T).flare
-  // The hero's weight: a lit iron face (about 0.6 of full light once it engages, a little less while it waits),
-  // warmed on the flares; its lower half stands dark against the fire behind it.
-  const face = clamp01(L * 1.25) * lerp(0.46, 0.64, smoothstep(T, FLY - 0.04, FLY + 0.25))
+  const f = fireAt(T).flare * aw
+  // The hero's weight: a near-black silhouette against the fire until it engages; then a lit iron face (about 0.6
+  // of full light), warmed on the flares; its lower half stands dark against the fire behind it.
+  const face = clamp01(L * 1.25) * 0.64 * aw
   const iron = warm(tone(IRON_FACE, face), f * 0.5)
   drawFlywheelFrame(p, c, lit)
   const spin = Math.abs(flySpin(T))
-  const opts = { fill: iron, ink, w: c.weight * 0.9, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip: warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), spoke: 0.44 }
+  const lip = mixHex(iron, warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), woken(T, FLY))
+  const opts = { fill: iron, ink, w: c.weight * 0.9, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip, spoke: 0.44 }
   const angle = FLY_PHASE + flyAngle(T)
   const split = flySplit(T)
   if (split <= 0) {
     gear(p, c, FLYWHEEL.at, FLY_R, FLYWHEEL.teeth, angle, opts)
   } else {
-    // Split along the line the spindle struck: each half drops and falls away from the other, into the pit.
+    // Split along the line the spindle struck: the two halves tear off the axle, fall into the pit (one tumbling
+    // over as it goes), crash onto its floor in front of the furnace, and rock to rest bowl-down on their rims.
     const d: Pt = [Math.cos(SPLIT_DIR), Math.sin(SPLIT_DIR)]
     const nrm: Pt = [-d[1], d[0]]
-    const settle = (u: number) => 1 - Math.exp(-u * 5) * Math.cos(u * 9) * 0.3 - 0.7 * Math.exp(-u * 5)
-    const u = clamp01(split)
-    const s = settle(u)
+    const ctx = p.drawingContext as CanvasRenderingContext2D
     for (const side of [1, -1]) {
       const R = FLY_R + 0.4
       const half: Pt[] = [
@@ -746,19 +828,17 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
         [fx - d[0] * R + nrm[0] * side * R, fy - d[1] * R + nrm[1] * side * R],
         [fx - d[0] * R, fy - d[1] * R],
       ]
-      const drop: Pt = [nrm[0] * side * 0.55 * s, (0.75 + 0.35 * side) * s]
-      const tilt = side * 0.32 * s
+      const pose = halfPose(side, T)
       p.push()
-      p.translate((fx + drop[0]) * k, (fy + drop[1]) * k)
-      p.rotate(tilt)
+      p.translate(pose.x * k, pose.y * k)
+      p.rotate(pose.turn)
       p.translate(-fx * k, -fy * k)
-      const ctx = p.drawingContext as CanvasRenderingContext2D
       ctx.save()
       ctx.beginPath()
       half.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
       ctx.closePath()
       ctx.clip()
-      gear(p, c, FLYWHEEL.at, FLY_R, FLYWHEEL.teeth, angle, { ...opts, blur: 0 })
+      gear(p, c, FLYWHEEL.at, FLY_R, FLYWHEEL.teeth, angle, { ...opts, blur: clamp01((spin - 2.2) / 3.5) * (1 - split) })
       ctx.restore()
       // The broken edge: a jagged dark crack along the cut.
       p.stroke(ink)
@@ -787,7 +867,7 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
 function drawPinion(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   let at = pinionAt(T)
-  const lit = litAt(L, at[0], lampsAt(T, at[0])) * 0.95
+  const lit = litAt(L, at[0], lampsAt(T, at[0])) * 0.95 * awake(T, FLY)
   const ink = inkOf(c, lit)
   // After the break its arm has snapped and it has dropped to the pit's floor.
   const fall = T >= BREAK ? ease((T - BREAK) / 0.35) : 0
@@ -809,10 +889,9 @@ function drawPinion(p: p5, c: Pen, T: number, L: number): void {
 
 function drawPistons(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
-  const on = T >= PISTONS
-  const lit = litAt(L, 10.5, lampsAt(T, 10.5)) * (on ? 1 : 0.75)
+  const lit = litAt(L, 10.5, lampsAt(T, 10.5)) * awake(T, PISTONS)
   const ink = inkOf(c, lit)
-  const f = fireAt(T).flare
+  const f = fireAt(T).flare * woken(T, PISTONS)
   const iron = warm(tone(IRON_FACE, lit * 0.9), f * 0.5)
   const dark = tone(IRON, lit * 0.8)
   const steel = tone(WORKS.steel, lit)
@@ -854,7 +933,7 @@ function drawPistons(p: p5, c: Pen, T: number, L: number): void {
 /** The pipe from the pumps under the ledge to the rising main at the chimney's foot, and the valve on it. */
 function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
-  const lit = litAt(L, 13, lampsAt(T, 13.5))
+  const lit = litAt(L, 13, lampsAt(T, 13.5)) * awake(T, PISTONS)
   const ink = inkOf(c, lit)
   const iron = tone(IRON, lit)
   const steel = tone(WORKS.steel, lit)
@@ -997,7 +1076,7 @@ function flyingWeight(j: number, T: number): Pt | null {
 function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front'): void {
   const { k } = c
   const on = T >= GOVERNOR
-  const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0)) * (on ? 1 : 0.8)
+  const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0)) * awake(T, GOVERNOR)
   const ink = inkOf(c, lit)
   const iron = tone(IRON_FACE, lit * 0.9)
   const steel = tone(WORKS.steel, lit)
@@ -1153,9 +1232,12 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   const [qx, qy] = quake(T)
   p.push()
   p.translate(qx * k, qy * k)
-  drawRoom(p, c, L)
+  const lift = mechanisms(T)
+  drawRoom(p, c, L, lift)
   const fire = fireAt(T)
   const s = surge(T)
+  // The fire's light over the whole room, stepping up with each mechanism it has lit.
+  glow(p, c, FURNACE.x + 1.5, -1.6, 9.5, 0.09 * lift * (0.85 + 0.15 * fire.flare), LAMP.glow)
   // The forge is the light: a low warm pool over the pit (not a haze over the room), and the fire's own blaze on the
   // back wall right behind the flywheel's lower half, so the wheel stands dark against it.
   glow(p, c, FURNACE.x, 1.3, 5.4 + 0.8 * fire.heat, 0.05 + 0.12 * fire.base + 0.1 * fire.flare)
@@ -1181,25 +1263,63 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   const lit = (x: number) => litAt(L, x, lampsAt(T, x))
   drawPipe(p, c, T, L)
   bellows(p, c, BELLOWS_SMALL.x0, BELLOWS_SMALL.x1, PIT, bellowsOpen(T, PAH[1] - 0.2), true, lit(4.2), 0.8)
-  bellows(p, c, BELLOWS_GREAT.x0, BELLOWS_GREAT.x1, PIT, T < BELLOWS - 0.2 ? 0.8 : bellowsOpen(T, BELLOWS - 0.2), false, lit(8.6) * (T >= BELLOWS ? 1 : 0.75), 1.15)
   drawFlywheel(p, c, T, L)
   drawPinion(p, c, T, L)
   drawPistons(p, c, T, L)
   drawGovernor(p, c, T, L, 'back')
   drawHammer(p, c, T, L)
   drawTrolls(p, c, T, lit, 'pit')
+  // The great bellows in front of the troll who works it (he stands at its back end, behind it).
+  drawGreatBellows(p, c, T, lit(8.2) * awake(T, BELLOWS))
   drawTrolls(p, c, T, lit, 'ledge')
   drawGovernor(p, c, T, L, 'front')
   drawSparks(p, c, T)
   void VALVE_AT
   p.pop()
+  // Dark until he drops into it (the drum's frames look down the pit and must see only rock): the room is woken
+  // under the drum's light, on the downbeat he lands on.
+  const hide = 1 - smoothstep(T, T0 - 0.08, T0 + 0.12)
+  if (hide > 0.001) {
+    alphaFill(p, STONE.deep, hide)
+    p.noStroke()
+    p.rectMode(p.CORNER)
+    p.rect((WALL_L - 0.6) * k, ROOM_TOP * k, (WALL_R - WALL_L + 1.2) * k, (PIT + 0.7 - ROOM_TOP) * k)
+  }
+}
+
+/** The top of the heart's room (frame y), for the cover before its slot. */
+const ROOM_TOP = -6.3
+
+/** The furnace blowing out as the halves crash into its mouth: a spray of embers up and out of it, once. */
+function drawBlast(p: p5, c: Pen, T: number): void {
+  const a = T - HALVES_LAND
+  if (a < 0 || a > 1.2) return
+  const { k } = c
+  for (let s = 0; s < 26; s++) {
+    const h1 = hash(s, 3, 9)
+    const h2 = hash(s, 5, 9)
+    const life = 0.5 + 0.6 * hash(s, 7, 9)
+    if (a > life) continue
+    const ang = -Math.PI / 2 + (h1 - 0.5) * 2.6
+    const sp = 3.5 + 4.5 * h2
+    const vx = Math.cos(ang) * sp
+    const vy = Math.sin(ang) * sp
+    const x = FURNACE.x + (h1 - 0.5) * 1.6 + vx * a
+    const y = FURNACE.top + 0.6 + vy * a + 0.5 * 11 * a * a
+    const dt = 0.04
+    alphaStroke(p, s % 3 ? LAMP.flame : LAMP.core, (1 - a / life) * 0.95)
+    p.strokeWeight(c.weight * 1.1)
+    p.line(x * k, y * k, (x - vx * dt) * k, (y - (vy + 11 * a) * dt) * k)
+  }
 }
 
 /** In front of the ball: the dust the break shakes down, and what rises from the pit where the wheel's halves fell. */
 export function drawHeartOver(p: p5, c: Pen, T: number): void {
-  if (T < BREAK || T > BREAK + 6) return
+  if (T < T0) return
+  drawBlast(p, c, T)
+  if (T < HALVES_LAND || T > HALVES_LAND + 6) return
   const { k } = c
-  const a = T - BREAK
+  const a = T - HALVES_LAND
   const [qx, qy] = quake(T)
   p.push()
   p.translate(qx * k, qy * k)
