@@ -76,7 +76,8 @@ function onLeaf(q: [Pt, Pt, Pt, Pt], u: number, v: number): Pt {
 export function drawDoorway(p: p5, c: Ctx, T: number): void {
   const angle = doorAngle(T)
   if (angle <= 0.001) return
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  const ink = '#050404'
   // Open, and a little brighter as the band's held chord swells behind the two of them.
   const open = clamp(angle / 0.9) * (0.85 + 0.25 * easeInOutSine(clamp((T - 262.1) / 5)))
   const x0 = DOOR_X0
@@ -125,7 +126,8 @@ export function drawDoorway(p: p5, c: Ctx, T: number): void {
  * open, it narrows toward its hinge and its window goes dark.
  */
 export function drawDoorLeaf(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  const ink = '#050404'
   const angle = doorAngle(T)
   const face = mixHex(mixHex(c.bg, HALL.deep, 0.8), HALL.black, 0.6 * Math.sin(angle))
   p.push()

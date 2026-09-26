@@ -6,7 +6,7 @@ import { RIG, drawConductor, type ArmPose, type Pose } from '../fletcher'
 import { box, carried, part, route, type Companion, type Ctx, type PartShot, type Way } from '../kit'
 import { CARNEGIE, SOLO, shout } from '../music'
 import type { KitStroke } from '../stub'
-import { FLETCHER, HALL } from '../worlds'
+import { HALL } from '../worlds'
 import {
   BOUNCES,
   CHART_H,
@@ -187,10 +187,13 @@ function deskChart(p: p5, c: Ctx, light: number): void {
   }
 }
 
-/** A line with an ink edge: a black tube. */
+/** The edge of anything dark on the stage (the hall's own). */
+const EDGE = '#050404'
+
+/** A line with a dark edge: a black tube (no cream ink: the stage's light tells it from the wall). */
 function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number, fill: string): void {
-  const { k, ink, weight } = c
-  p.stroke(ink)
+  const { k, weight } = c
+  p.stroke(EDGE)
   p.strokeWeight(weight * (w + 1.2))
   p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
   p.stroke(fill)
@@ -204,7 +207,8 @@ function tube(p: p5, c: Ctx, a: Pt, b: Pt, w: number, fill: string): void {
  * on it; it knocks and sways when it does; on the cut-off it sinks into the trap under it.
  */
 function drawStand(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
+  const ink = EDGE
   const sink = standSink(T)
   if (sink > 3.6) return
   const rock = deskRock(T)
@@ -250,17 +254,6 @@ function drawStand(p: p5, c: Ctx, T: number): void {
 }
 
 /* ------------------------------------------------------------------ Fletcher and the throw */
-
-/** Fletcher's column, from the podium to the cup under his ball, leaning with him (as `drawConductor` draws it upright). */
-function column(p: p5, c: Ctx, head: Pt, floor: number): void {
-  const { k, ink, weight } = c
-  const base = FLETCHER_HOME[0]
-  const w = 0.09
-  const top = head[1] + 0.16
-  solid(p, ink, weight * 0.8, FLETCHER)
-  p.quad((base - w) * k, floor * k, (base + w) * k, floor * k, (head[0] + w * 0.6) * k, top * k, (head[0] - w * 0.6) * k, top * k)
-  p.rect((base - 0.2) * k, (floor - 0.04) * k, 0.4 * k, 0.05 * k, 0.02 * k)
-}
 
 /**
  * The chart in the air: from his hand, turning once, onto the desk. It is a page tumbling, so it narrows as it
@@ -310,10 +303,10 @@ function pose(T: number): Pose {
 function drawFletcher(p: p5, c: Ctx, T: number): void {
   const head = fletcherAt(T)
   const light = stageLight(T)
-  column(p, c, head, FLOOR - PODIUM.h)
   const chart = chartAt(T)
   if (chart.on === 'hand') drawChart(p, c, chart.at, chart.turn, light)
-  drawConductor(p, c, head, pose(T), { light })
+  // His column's foot planted on the podium, his head leaning off it (as the hall draws him from the solo on).
+  drawConductor(p, c, head, pose(T), { light, floor: FLOOR - PODIUM.h, base: FLETCHER_HOME[0] })
   if (chart.on === 'air') drawThrown(p, c, T, light)
 }
 
