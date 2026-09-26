@@ -688,10 +688,11 @@ const AXLES = [0.15, 0.58]
 /** Nose to the case, a hand clear of it (shelf cells): where it stands in the dark, and where the ghost lands on its roof. */
 const NOSE = CASE_R + 0.06
 const LURCHES = [12.632, 13.497, 14.124, 14.745, 15.139]
-export const TOY_NOTES = [...LURCHES]
 const LIP = 15.743
 /** He comes down off the tipped box onto the boards on this note. */
 const BOARDS = 15.557
+/** The lurches, and his landing on the boards (a measured note, and a hit he makes, so it is held to it). */
+export const TOY_NOTES = [...LURCHES, BOARDS]
 /** The box tips at the stairwell: when it starts, and how far. */
 const TIP: [number, number] = [15.17, 15.4]
 const DUMPED = 0.6

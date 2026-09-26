@@ -85,7 +85,7 @@ Every change of scene is scored and continuous. No cue or strike was moved for a
 | 139.5 to 179.5 s | replica → ring → ballpark → far-side house → spoke | One universe and one camera, continuous round the ring. |
 | 169.5 to 175 s | the flight → the far side | While the ball is in the air across the axis, the camera rolls a third of a turn with the ring. The far-side house, which stands on its head in the station's end-on view, comes down upright to meet it, and the reunion plays the right way up. The lift climbs straight up the screen. As gravity falls away near the hub (187.5 to 193.5 s) the camera rolls back, square again for the docking bay and the match cut outside. |
 | 207.5 s | the hub → outside | A match cut on the Ranger. The first frame outside keeps the hub's last framing, so the ship holds still on the screen while the bay turns to the dark round it. Then the camera pulls back to show the spinning station. |
-| 235.5 s | the wormhole → Edmunds' planet | The ship sinks to the sphere's centre. On beat 212 the far side opens there as a disc, and the camera goes through it. |
+| 235.5 s | the wormhole → Edmunds' planet | The ship sinks to the sphere's centre. On beat 212 the far side opens there as a disc, and the camera goes through it. The whip lands on the Ranger as it comes out of the far mouth (236.5 s) and goes on with it, with no stop. |
 
 ## The second cue
 
@@ -118,7 +118,7 @@ The music is the only clock.
     - the 96 bpm comb from the drop onward, beat *b* at 0.008 + 0.625·*b* s (±26 ms).
   - Act II: No Time for Caution's 60 bpm pulse, beats and eighths (±30 ms).
 - **What `check:shows` holds it to.**
-  - 352 strikes (219 in Act I, 133 in Act II), every one on a measured onset;
+  - 365 strikes (232 in Act I, 133 in Act II), every one on a measured onset;
   - more than 90% of Act I's beats from the drop to the last hit struck, and 123 of Act II's 129 beats;
   - the ball never jumps, through every change of world and every cut;
   - the ball is never hidden longer than 2.5 s;
@@ -126,6 +126,8 @@ The music is the only clock.
   - the end credits: after the music has stopped, set by the page, and naming Stephen Wu, Opus 5.5, p5.js, Hans Zimmer and both cues;
   - the stage is in the station from the accent, and outside from the undock;
   - the camera's roll: square everywhere but the far side, a third of a turn through the reunion, square again by the hub and the cut;
+  - under Zoom, Cooper in the frame every tenth of a second to the music's end, but for the cage's climb (75 to 77 s), the whip through the sphere (103.8 s) and the ring's reveal (130.5 to 137 s);
+  - the whip out of the wormhole never stopping while the Ranger flies;
   - Brand (the blue ball):
     - she is out of shot on the farm and through the drive (twelve sample times, 1 to 60 s);
     - she is in shot with him from the base to the ring (nine sample times, 72.5 to 101 s);
@@ -210,12 +212,20 @@ The music's last hit lights the camp's lamp (255.5 s), and the cue stops dead a 
 There is no title card. After p5.js's card goes (about 287 s), the camp holds alone at dawn to the end, 291 s.
 
 **How it is built.**
-- The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved frame or a recorded video carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
-- The words are not drawn in Overview, and not in a recording.
+- The words are the page's, not the canvas's. A show's canvas refuses type (`shows/stage.ts`), so that a saved PNG carries no words. `Performance.titles(t)` is a new, optional hook in `shows/registry.ts`. The Shows page (`shows/main.ts`) sets whatever it returns over the composed 16:9 frame, in a serif, sized in hundredths of the frame's height. It fades and blurs each card by its `light`.
+- The words are not drawn in Overview. A saved video has the same cards painted into its frame (`shows/words.ts`), since a recording takes the canvas alone.
 - The starlight is the canvas's: `liftoff/credits.ts`, a scenery drawn over everything in the outside universe.
 - The show's length is now `DURATION` (291 s), and the music's is `MIX_END` (262.741 s). After the recording ends, the player's clock carries on from the wall clock, as it always has for a soundtrack shorter than its show.
 
-## Stephen's notes 6 to 12 (latest)
+## Polish pass 3 (latest)
+
+- **The countdown.** The push in on the two of them in the window runs on to the ignition (83.76 s) and turns there. Before, it stopped at 83.1 s and the camera was already pulling back before the pedal came in.
+- **The whip out of the wormhole** lands on the Ranger, not on the mouth. It used to stop dead at 236.5 s with the ship still going about 4 cells a second, then start after it.
+- **The lift's wide hold** (186.6 to 190 s) sits a cell and a half lower on the spoke, so the car comes up through the frame's lower part and stays in under Zoom.
+- **The docking bay.** The spindle's end in the end wall was a pale disc in a dark ring, a ball's size, right beside the cockpit (192 to 207 s), and read as another ball. It is a faint bolted cap now.
+- **A strike.** His landing off the tin truck's box onto the boards (15.557 s, a measured note) is in the strike list.
+
+## Stephen's notes 6 to 12
 
 6. **No "Liftoff" in the credits.** The title card is gone. After p5.js's card the camp holds alone at dawn to the end, and a check holds that no card says "Liftoff".
 7. **The cloud deck is drawn with intent** (`cloud.ts`).

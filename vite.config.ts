@@ -5,9 +5,10 @@ import { versionPath, type Version, type Work } from './apps/rube/src/shows/regi
 import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/shows/share'
 
 /**
- * One site, one build, five modes and two forwarding addresses. Machine is
- * the front door (`/`, built from apps/rube); Explorations is the generator
- * it grew out of (`/explorations/`, built from src); Shows is Machine set to
+ * One site, one build, five modes and three forwarding addresses. Machine
+ * lives at `/machine/` (built from apps/rube). The site root `/` only
+ * forwards there, keeping the query. Explorations is the generator Machine
+ * grew out of (`/explorations/`, built from src); Shows is Machine set to
  * music (`/shows/`, built from apps/rube/src/shows); the Builder is where new
  * pieces and worlds for Machine are made (`/builder/`, built from
  * apps/rube/src/builder); the Playground is where pieces and worlds wait to
@@ -19,10 +20,28 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  */
 const here = fileURLToPath(new URL('.', import.meta.url))
 
+/**
+ * `/` is Machine's old address. Send it on to `/machine/`, query included.
+ * The built page does the same with a script, so a static host agrees.
+ */
+function rootToMachine(): Plugin {
+  const redirect: Connect.NextHandleFunction = (req, res, next) => {
+    const m = /^\/(\?.*)?$/.exec(req.url ?? '')
+    if (!m) return next()
+    res.writeHead(302, { Location: `/machine/${m[1] ?? ''}` })
+    res.end()
+  }
+  return {
+    name: 'root-to-machine',
+    configureServer: (server) => { server.middlewares.use(redirect) },
+    configurePreviewServer: (server) => { server.middlewares.use(redirect) },
+  }
+}
+
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|shows|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
+    const m = /^\/(explorations|machine|shows|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
     res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
     res.end()
@@ -155,7 +174,7 @@ function playgroundStaysLazy(): Plugin {
 
 export default defineConfig({
   appType: 'mpa',
-  plugins: [trailingSlash(), showPages(), playgroundStaysLazy()],
+  plugins: [rootToMachine(), trailingSlash(), showPages(), playgroundStaysLazy()],
   // Share cards and other files that must land at the site root (`/og.png`).
   publicDir: 'public',
   server: { port: 8791, open: false },
@@ -166,7 +185,8 @@ export default defineConfig({
     target: 'es2022',
     rollupOptions: {
       input: {
-        machine: `${here}index.html`,
+        machine: `${here}machine/index.html`,
+        home: `${here}index.html`,
         explorations: `${here}explorations/index.html`,
         shows: `${here}shows/index.html`,
         builder: `${here}builder/index.html`,

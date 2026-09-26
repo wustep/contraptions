@@ -515,9 +515,11 @@ export const edmunds = part<EdmundsState>(
 
 function shotsFor(slot: { begin: number; end: number }): PartShot[] {
   return [
-    // On the sphere as the ball goes in; then the whip to the far mouth, landing as the Ranger comes out.
+    // On the sphere as the ball goes in; then the whip to the far mouth, landing as the Ranger comes out. It lands
+    // on the ship, not on the mouth: the Ranger is still going about 4 cells a second, so the whip hands straight
+    // over to the follow and the frame goes on with it, instead of stopping dead and then starting after it.
     { t: slot.begin, cells: 7.5, hold: [-0.5, 0] },
-    { t: OUT, cells: 6.2, hold: [P0[0] + 0.3, P0[1] - 0.2] },
+    { t: OUT, cells: 6.2, off: [0.3, -0.2] },
     // With it down the sky, looking ahead and a little down.
     { t: RING + 0.3, cells: 5.8, off: [1.0, 0.2] },
     { t: RETRO[3] + 0.3, cells: 5.8, off: [0.6, 0.15] },
