@@ -237,25 +237,27 @@ export const crash = part<CrashState>(
     const land = at(LAND)
     const mid = at(ROLLS[3])
     const rest = him(END)
+    // How far ahead of him the frame leans at the flash: to halfway between him and the truck's front.
+    const lead = (truckX(FLASH) - seatX(FLASH)) / 2 - 0.3
     return [
       // In the seat as the door slams; away over the curb, the frame opening round him as he gathers speed.
       { t: slot.begin, cells: 4.4, off: [0.9, -0.6] },
       { t: CURB_F, cells: 5.0, off: [1.2, -0.9] },
       { t: LAMP_T[3], cells: 5.8, off: [1.0, -1.3] },
-      // Close on him in the car at speed, the lamps whipping over him and lighting as they pass; then back, wide,
-      // the road lit behind him and dark ahead.
-      { t: LAMP_T[6], cells: 4.6, off: [0.3, -0.7] },
-      { t: LAMP_T[11], cells: 4.6, off: [0.2, -0.7] },
+      // Low and close on him at the wheel at speed, the lamps whipping over him and lighting as they pass; then
+      // back, wide, the road lit behind him and dark ahead.
+      { t: LAMP_T[6], cells: 2.9, off: [0.25, -0.3] },
+      { t: LAMP_T[11], cells: 3.1, off: [0.3, -0.35] },
       // Out over the river: wide, low, the lamps doubled in the water.
       { t: LAMP_T[16], cells: 8.8, off: [0.3, 0.15] },
       { t: LAMP_T[19], cells: 8.8, off: [0.5, 0.05] },
       { t: LAMP_T[23], cells: 7.2, off: [-0.4, -1.8] },
       { t: LAMP_T[28], cells: 7.6, off: [0.8, -1.9] },
-      // The truck's lights far ahead: the frame widens and leans ahead to hold both.
-      { t: FLASH - 0.6, cells: 9.2, off: [2.6, -2.2] },
-      // The frame slows onto the crossing as he comes into it, and is still for the hit; then it goes with the car
-      // through its slow turn in the air.
-      { t: FLASH + 0.2, cells: 9.4, off: [2.8, -2.3] },
+      // Leaning ahead into the dark road; then up and back, long and high, to hold both of them as the truck's high
+      // beams flash far ahead: the car small on the left under its lamps, the truck coming on the right; and in as
+      // they close, still on the crossing for the hit; then with the car through its slow turn in the air.
+      { t: LAMP_T[33], cells: 9.6, off: [4.2, -2.6] },
+      { t: FLASH, cells: 18, off: [lead, -4.6] },
       { t: IMPACT, cells: 9.6, hold: [hit[0] - 1.0, ROAD_Y - 2.5], w: 1 },
       { t: TAIL + 0.5, cells: 9.8, hold: [tail[0] - 2.8, ROAD_Y - 2.9], w: 1 },
       { t: LAND, cells: 10.2, hold: [land[0] - 3.0, ROAD_Y - 2.6], w: 1 },
