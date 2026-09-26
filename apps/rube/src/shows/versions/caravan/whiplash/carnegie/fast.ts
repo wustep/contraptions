@@ -7,7 +7,7 @@ import type { KitStroke } from '../stub'
 import { HALL, KIT } from '../worlds'
 import { ACCENTS, BIG, BOUNCE, FIRST, FOLD, GO, HOP, HOP_MAX, LAND, LAST, LATCH, SHIFT, SLAM, STOMPS, UNWIND, hopHeight, sunk } from './fast-clock'
 import { BALL_X, LEVER, POST_X, drawEngine, leverTop } from './fast-engine'
-import { ARCH, CLOSE, FLOOR, KIT_AT, RISERS } from './stage'
+import { ARCH, CLOSE, FLOOR, JIM_WINGS, KIT_AT, RISERS } from './stage'
 
 /**
  * Carnegie Hall, the build (369.98 → 423.34): from the hush to the loudest and fastest playing of the solo, and
@@ -23,12 +23,16 @@ import { ARCH, CLOSE, FLOOR, KIT_AT, RISERS } from './stage'
  * back to its post; on his last stomp he rolls home across the lever onto the snare and settles there as the ride
  * begins (no strike). The engine sinks back into the stage.
  *
- * It grows in three stages on the music's phrases. The engine alone, close, from the roll (383). On the build's
- * biggest kick (394.62) a second stage: the post telescopes up, a second head swings round off it over the rack tom
- * and seats, and from then its two sticks double the roll's accents on the tom; the camera pulls back to the whole
- * machine and Fletcher conducting it. Then in on the peak (404-405), and out to the whole hall in its pool of light,
- * the light up with the music and the band watching from the dark, held; then a hard push in on the sticks' blur and
- * him stomping for the last push (414.5), until the unwind (421.72), when both heads fold away.
+ * It grows in three stages on the music's phrases. The engine alone: low and close on the kick (the treadle, the
+ * belt, the flywheel spinning up) into the roll (383), then up the post to the sticks as the roll runs away. Fletcher
+ * gives in (388.2): a two-shot, the engine and his hand coming up to beat with the stomps. On the build's biggest
+ * kick (394.62) a second stage: the post telescopes up, a second head swings round off it over the rack tom and
+ * seats, and from then its two sticks double the roll's accents on the tom. Across the stage to his father in the
+ * wings for the loudest phrase's arrival (396.7), the stage's light lifted on him (`drawWings`); back to the whole
+ * grown machine and Fletcher conducting it with his whole arm. Then in on the peak (404-405), and out to the whole
+ * hall in its pool of light, the light up with the music and the band watching from the dark, held; then a hard push
+ * in onto the sticks' blur (414.5), and up to him on the treadle with Fletcher's beating hand at the edge of the
+ * frame, until the unwind (421.72), when both heads fold away.
  *
  * The clock is `fast-clock.ts`, the drawing `fast-engine.ts` (the rack head and the light are drawn here). The frame
  * is Carnegie's (`stage.ts`).
@@ -191,7 +195,9 @@ function build(slot: Slot) {
   segs[segs.length - 1] = { ...segs[segs.length - 1], to: snare }
 
   return {
-    cells: box(-2.5, -3, 3, 3),
+    // The machine's own cells, and the wings where his father stands (the stage's light lifts on him there while
+    // the camera visits him: `drawWings`).
+    cells: [...box(-2.5, -3, 3, 3), ...box(JIM_WINGS[0] - 1, JIM_WINGS[1] - 2, JIM_WINGS[0] + 1, JIM_WINGS[1])],
     exit: [0, 0] as Pt,
     lane: { segs, fire: at(BOUNCE) },
     state: { begin: slot.begin },
@@ -205,6 +211,13 @@ const WIDE_IN = 409.3
 const WIDE_OUT = 412.55
 /** The push in lands on the phrase's loudest stroke (snare and cymbal together). */
 const PUSHED = 414.534
+/** Low on the kick through the spin-up; up to the sticks as the roll runs away; out to Fletcher as he gives in. */
+const KICK_LOW = 381.0
+const ROLL_UP = 386.8
+const TWO_SHOT = 389.1
+/** His father in the wings, on the arrival of the build's loudest phrase (396.70), for one phrase. */
+const JIM_IN = 396.7
+const JIM_OUT = 398.9
 
 function shots(slot: Slot): PartShot[] {
   const close = { cells: CLOSE.cells, hold: CLOSE.hold, w: 1 }
@@ -216,26 +229,37 @@ function shots(slot: Slot): PartShot[] {
     // the whole engine as it gathers speed.
     { t: LATCH, cells: 3.3, hold: [-0.2, -0.05], w: 1 },
     { t: BIG, cells: 3.3, hold: [0.75, 0.2], w: 1 },
-    { t: 381.4, cells: 4.0, hold: [0.35, 0.5], w: 1 },
-    // The first stage: the engine alone, close. The roll comes in; the sticks' blur; across to him stomping.
-    { t: SHIFT, cells: 3.7, hold: [0.3, 0.35], w: 1 },
-    { t: 386.8, cells: 3.1, hold: [-0.25, 0.1], w: 1 },
-    { t: 390.4, cells: 3.2, hold: [0.45, 0.2], w: 1 },
-    // The second stage: up to the post as it grows and the rack head swings round and seats on the big kick; then
-    // back to the whole machine, and Fletcher on his podium conducting it.
+    // The kick: down low and close on what his stomps drive, the treadle, the pushrod, the belt and the flywheel
+    // spinning up to a dark disc, him coming down into the top of the frame on every stomp.
+    { t: KICK_LOW, cells: 2.7, hold: [1.05, 0.9], w: 1 },
+    { t: SHIFT, cells: 2.65, hold: [1.12, 0.93], w: 1 },
+    { t: 385.5, cells: 2.6, hold: [1.19, 0.96], w: 1 },
+    // Tilt up the post to the sticks as the roll runs away (a stroke every 70 ms).
+    { t: ROLL_UP, cells: 3.1, hold: [-0.25, 0.05], w: 1 },
+    // He gives in: out and across to a two-shot, the engine on the left, Fletcher on the right, his hand coming up
+    // to beat with the stomps.
+    { t: TWO_SHOT, cells: 6.5, hold: [2.05, -0.45], w: 1 },
+    { t: 391.0, cells: 6.3, hold: [1.95, -0.5], w: 1 },
+    // The second stage: in to the post as it grows and the rack head swings round and seats on the biggest kick.
     { t: TUBE_UP[0] + 0.1, cells: 4.1, hold: [-0.45, -0.6], w: 1 },
     { t: SEAT, cells: 4.4, hold: [-0.6, -0.8], w: 1 },
-    { t: 397.4, cells: 6.2, hold: [1.6, -0.95], w: 1 },
-    { t: 400.6, cells: 6.5, hold: [1.85, -1.05], w: 1 },
+    // Across the dark stage to his father in the wings, watching, for the loudest phrase's arrival: by the stage
+    // door his son walked out to, in the stage's spill; a slow push in on him; and back.
+    { t: JIM_IN, cells: 3.6, hold: [JIM_WINGS[0] - 0.6, JIM_WINGS[1] - 0.87], w: 1 },
+    { t: JIM_OUT, cells: 3.15, hold: [JIM_WINGS[0] - 0.35, JIM_WINGS[1] - 0.72], w: 1 },
+    // The whole grown machine, both heads going, and Fletcher conducting it with his whole arm now.
+    { t: 401.3, cells: 7.2, hold: [1.7, -1.25], w: 1 },
+    { t: 402.7, cells: 6.9, hold: [1.55, -1.15], w: 1 },
     // In on the peak: both heads.
     { t: 404.265, cells: 3.5, hold: [-0.8, -0.45], w: 1 },
     { t: 405.461, cells: 3.4, hold: [-0.7, -0.4], w: 1 },
-    // The third stage: out to the whole hall, held; then a hard push in on the sticks and him for the last push.
+    // The third stage: out to the whole hall, held; then a hard push in onto the sticks' blur, held there; then up
+    // to him on the treadle, Fletcher's beating hand coming into the right edge of the frame.
     { t: WIDE_IN, cells: 13.6, hold: [3.2, -2.2], w: 1 },
     { t: WIDE_OUT, cells: 14.4, hold: [3.5, -2.45], w: 1 },
-    { t: PUSHED, cells: 3.0, hold: [0.15, 0.05], w: 1 },
-    { t: 416.665, cells: 2.75, hold: [0.4, 0.1], w: 1 },
-    { t: 419.9, cells: 3.2, hold: [-0.1, -0.1], w: 1 },
+    { t: PUSHED, cells: 2.8, hold: [-0.45, -0.25], w: 1 },
+    { t: 416.665, cells: 2.65, hold: [-0.35, -0.3], w: 1 },
+    { t: 419.9, cells: 3.4, hold: [1.45, -0.7], w: 1 },
     { t: LAST, cells: 4.2, hold: [-0.3, -0.25], w: 1 },
     { t: slot.end, ...close },
   ]
@@ -453,6 +477,32 @@ function drawSwell(p: p5, c: Ctx, T: number): void {
   ctx.restore()
 }
 
+/** The camera's visit to his father: up over the move there, down over the move back. */
+const wingsOn = (T: number): number => ease((T - (JIM_IN - 1.2)) / 1.4) * (1 - ease((T - (JIM_OUT - 0.2)) / 1.6))
+
+/**
+ * The stage's light in the wings, lifted while the camera is with his father (as the hall lifts it for the hush's
+ * visit): the same low warm pool on the floor at his feet, laid over the hall's own faint one.
+ */
+function drawWings(p: p5, c: Ctx, T: number): void {
+  const on = wingsOn(T)
+  if (on < 0.002) return
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const r = 1.9 * k
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.translate((JIM_WINGS[0] + 0.25) * k, (FLOOR - 0.55) * k)
+  ctx.scale(1, 0.62)
+  const q = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+  q.addColorStop(0, `rgba(227, 176, 91, ${(0.12 * on).toFixed(3)})`)
+  q.addColorStop(0.55, `rgba(227, 176, 91, ${(0.045 * on).toFixed(3)})`)
+  q.addColorStop(1, 'rgba(227, 176, 91, 0)')
+  ctx.fillStyle = q
+  ctx.fillRect(-r, -r, 2 * r, 2 * r)
+  ctx.restore()
+}
+
 export const fast = part<FastState>(
   {
     name: 'fast',
@@ -461,6 +511,7 @@ export const fast = part<FastState>(
       drawEngine(p, c, T)
       drawRack(p, c, T)
       drawSwell(p, c, T)
+      drawWings(p, c, T)
     },
   },
   build,
