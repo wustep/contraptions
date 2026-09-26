@@ -14,6 +14,7 @@ import {
   DRIVERS_AT,
   FLARE,
   FLANK,
+  FLING,
   GERB,
   GERB_AT,
   GUNS,
@@ -112,6 +113,54 @@ const IRON_LIT = FW.ironLit
 const GROUND = mixHex(FW.plain, FW.iron, 0.45)
 const ASHC = mixHex(FW.smoke, FW.iron, 0.55)
 
+/* ------------------------------------------------------------------ where the salutes break */
+
+/**
+ * How near (cells) a salute may break to the spark. The plan sets each one off the spark's path by an offset (some as
+ * close as 1.7); where it is drawn, it is pushed out along the line from the spark until it is this far from it at
+ * the bang and for the moment after, so its flash is a bang beside the spark, not a second light on top of it.
+ */
+const SALUTE_GAP = 2.15
+const SALUTE_AT = new Map<number, Pt>()
+for (const b of BURSTS) {
+  if (b.kind !== 'salute') continue
+  const q: Pt = [b.x, b.y]
+  for (let it = 0; it < 3; it++) {
+    for (const dt of [0, 0.08, 0.16, 0.24]) {
+      const sp = sparkAt(b.at + dt)
+      const dx = q[0] - sp[0]
+      const dy = q[1] - sp[1]
+      const d = Math.hypot(dx, dy) || 1e-6
+      if (d < SALUTE_GAP) {
+        q[0] = sp[0] + (dx / d) * SALUTE_GAP
+        q[1] = sp[1] + (dy / d) * SALUTE_GAP
+      }
+      // Never down on the field: if the floor holds it, it goes out sideways instead.
+      if (q[1] > GY - 1.6) {
+        q[1] = GY - 1.6
+        const ry = q[1] - sp[1]
+        const need = Math.sqrt(Math.max(0, SALUTE_GAP * SALUTE_GAP - ry * ry))
+        if (Math.abs(q[0] - sp[0]) < need) q[0] = sp[0] + Math.sign(q[0] - sp[0] || 1) * need
+      }
+    }
+  }
+  SALUTE_AT.set(b.at, q)
+}
+/** A burst as it is drawn: a salute at its drawn place, anything else as planned. */
+function placed(b: Burst): Burst {
+  if (b.kind !== 'salute') return b
+  const q = SALUTE_AT.get(b.at)
+  return q ? { ...b, x: q[0], y: q[1] } : b
+}
+/** A rise as it is drawn: a salute's shell goes up to where its salute is drawn. */
+function placedRise(r: Rise): Rise {
+  if (r.col !== FW.fwWhite) return r
+  const q = SALUTE_AT.get(r.to)
+  return q ? { ...r, b: q } : r
+}
+/** A salute's light: warm (a hot gold), never white, so its glow on the smoke and the ground is fire, not fog. */
+const SALUTE_LIGHT = mixHex(FW.fwGold, FW.coalHot, 0.45)
+
 /* ------------------------------------------------------------------ light */
 
 export interface Light {
@@ -133,12 +182,13 @@ export function lightsAt(t: number): Light[] {
       out.push({ x, y, r: 1.4 + 1.1 * Math.min(2.6, h), a: 0.55 * Math.min(1, 0.25 + h * 0.4), col: FW.fwGold })
     }
   }
-  for (const b of BURSTS) {
-    const s = t - b.at
+  for (const b0 of BURSTS) {
+    const s = t - b0.at
     if (s < 0 || s > 1.8) continue
+    const b = placed(b0)
     const size = b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75
     const decay = b.kind === 'salute' ? Math.exp(-s / 0.12) : 0.75 * Math.exp(-s / 0.3) + 0.25 * Math.exp(-s / 1.1)
-    out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay, col: b.kind === 'salute' ? FW.fwWhite : b.col })
+    out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay, col: b.kind === 'salute' ? SALUTE_LIGHT : b.col })
   }
   for (const r of RISES) {
     const s = t - r.from
@@ -729,18 +779,110 @@ export function driversLit(t: number): number {
 }
 const driverOn = (s: number): number => (s < 0 ? 0 : smooth(s, 0, 0.08) * (1 - smooth(s, DRIVER_BURN - 1.2, DRIVER_BURN)))
 
+/*
+ * The spent wheel. Once the last driver has burnt out (`SPENT`, the fling plus a driver's burn) the wheel is done: it
+ * runs down to a stop instead of creeping on, its rim and spokes char over about a second, the drivers' paper splits
+ * open where the fire came out, two lengths of the felloe crack off their joints and hang, and a thin thread of smoke
+ * rises off the hub. It is at the left of the Titan's wide frame (145-146) looking burnt out, not new.
+ */
+const SPENT = FLING + DRIVER_BURN
+/** How long the wheel takes to run down after it is spent (seconds, an exponential settle from the speed it has). */
+const RUN_DOWN = 1.1
+const TURN_SPENT = turned(SPENT)
+const OMEGA_SPENT = omega(SPENT)
+/** The wheel's turn as drawn: the plan's until it is spent, then running down smoothly to a stop. */
+function wheelTurn(t: number): number {
+  if (t <= SPENT) return turned(t)
+  return TURN_SPENT + OMEGA_SPENT * RUN_DOWN * (1 - Math.exp(-(t - SPENT) / RUN_DOWN))
+}
+/** How charred the spent wheel's wood is, 0..1. */
+const wheelChar = (t: number): number => smooth(t, SPENT, SPENT + 1.0)
+const wrapPi = (a: number): number => {
+  let v = (a + Math.PI) % (2 * Math.PI)
+  if (v < 0) v += 2 * Math.PI
+  return v - Math.PI
+}
+/** Where a felloe length's middle ends up on the screen (radians), once the wheel has stopped. */
+const TURN_END = TURN_SPENT + OMEGA_SPENT * RUN_DOWN
+const felloeMid = (i: number): number => -TURN_END + ((i + 0.5) * Math.PI) / 3
+const nearest = (want: number, not = -1): number => {
+  let best = 0
+  let bd = Infinity
+  for (let i = 0; i < 6; i++) {
+    const d = Math.abs(wrapPi(felloeMid(i) - want))
+    if (i !== not && d < bd) {
+      bd = d
+      best = i
+    }
+  }
+  return best
+}
+/**
+ * The two lengths of felloe that break: one on the wheel's left, one low on its right, each cracking off its lower
+ * joint and swinging down from the upper one to hang. `at` is when it cracks.
+ */
+const BROKEN = (() => {
+  const a = nearest(Math.PI - 0.15)
+  const b = nearest(0.55, a)
+  return [
+    { i: a, at: SPENT + 0.45 },
+    { i: b, at: SPENT + 0.95 },
+  ].map((br) => {
+    // It hangs from whichever of its two joints is higher once the wheel has stopped.
+    const a0 = -TURN_END + (br.i * Math.PI) / 3
+    const a1 = a0 + Math.PI / 3
+    return { ...br, pivotEnd: Math.sin(a0) < Math.sin(a1) ? 0 : 1 }
+  })
+})()
+/** The felloe's middle, from its centre: an arc's centroid (r sin(θ/2) / (θ/2), θ = π/3). */
+const FELLOE_C = (WHEEL_R * Math.sin(Math.PI / 6)) / (Math.PI / 6)
+/**
+ * How the `n`th broken length is turned about its joint at `t`: 0 while whole; once cracked, a damped swing from where
+ * it was to hanging straight down (it starts from rest, overshoots a little, and settles).
+ */
+function felloeHang(n: number, t: number, turn: number): { pivot: Pt; rot: number } | null {
+  const br = BROKEN[n]
+  const u = t - br.at
+  if (u <= 0) return null
+  const [cx, cy] = WHEEL
+  const a0 = turn + (br.i * Math.PI) / 3
+  const pa = br.pivotEnd === 0 ? a0 : a0 + Math.PI / 3
+  const pivot: Pt = [cx + Math.cos(pa) * WHEEL_R, cy + Math.sin(pa) * WHEEL_R]
+  const mid = a0 + Math.PI / 6
+  const c: Pt = [cx + Math.cos(mid) * FELLOE_C, cy + Math.sin(mid) * FELLOE_C]
+  const target = wrapPi(Math.PI / 2 - Math.atan2(c[1] - pivot[1], c[0] - pivot[0]))
+  const tau = 0.75
+  const w = (2 * Math.PI) / 1.25
+  const e = 1 - Math.exp(-u / tau) * (Math.cos(w * u) + Math.sin(w * u) / (w * tau))
+  return { pivot, rot: target * e }
+}
+const rotAbout = (q: Pt, pivot: Pt, rot: number): Pt => {
+  const c = Math.cos(rot)
+  const s = Math.sin(rot)
+  const dx = q[0] - pivot[0]
+  const dy = q[1] - pivot[1]
+  return [pivot[0] + dx * c - dy * s, pivot[1] + dx * s + dy * c]
+}
+/** Which felloe length (0..5) a place on the rim, in the wheel's own turn, lies on. */
+const felloeOf = (a: number): number => {
+  const v = ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
+  return Math.min(5, Math.floor(v / (Math.PI / 3)))
+}
+
 export function drawWheel(pen: Pen, L: Light[]): void {
   const { t, f } = pen
   const [cx, cy] = WHEEL
   if (cx + 4 < f.x0 || cx - 4 > f.x1) return
+  const ch = wheelChar(t)
+  const burn = (c: string, amt = 1): string => (ch > 0 ? mixHex(c, CHAR, ch * amt) : c)
   const wood = shade(L, WOOD, WOOD_LIT, cx, (cy + GY) / 2)
-  // The post and its two braces.
-  bar(pen, [cx, GY], [cx, cy + 0.15], 0.22, wood)
+  // The post and its two braces (scorched a little under the wheel, not burnt through).
+  bar(pen, [cx, GY], [cx, cy + 0.15], 0.22, burn(wood, 0.35))
   bar(pen, [cx - 0.75, GY], [cx - 0.05, GY - 1.1], 0.09, wood)
   bar(pen, [cx + 0.75, GY], [cx + 0.05, GY - 1.1], 0.09, wood)
-  const turn = -turned(t)
-  const rimC = shade(L, WOOD, WOOD_LIT, cx, cy, 0.1)
-  const rimD = shade(L, mixHex(WOOD, CHAR, 0.55), WOOD, cx, cy, 0.1)
+  const turn = -wheelTurn(t)
+  const rimC = burn(shade(L, WOOD, WOOD_LIT, cx, cy, 0.1 * (1 - ch)), 0.85)
+  const rimD = burn(shade(L, mixHex(WOOD, CHAR, 0.55), WOOD, cx, cy, 0.1 * (1 - ch)), 0.9)
   // Six spokes, tapering from the hub: a cartwheel, not a cross-hair.
   for (let i = 0; i < 6; i++) {
     const a = turn + (i * Math.PI) / 3
@@ -755,39 +897,130 @@ export function drawWheel(pen: Pen, L: Light[]): void {
       [cx + ca * r0 + sa * 0.07, cy + sa * r0 - ca * 0.07],
     ], rimC)
   }
-  // The rim: a broad wooden felloe, its inner edge in shade.
+  // The rim: six lengths of broad wooden felloe, their inner edge in shade. Two of them crack off once it is spent.
   const { ctx, k } = pen
-  ctx.lineWidth = 0.2 * k
-  ctx.strokeStyle = rimD
-  ctx.beginPath()
-  ctx.arc(cx * k, cy * k, (WHEEL_R - 0.03) * k, 0, Math.PI * 2)
-  ctx.stroke()
-  ctx.lineWidth = 0.12 * k
-  ctx.strokeStyle = rimC
-  ctx.beginPath()
-  ctx.arc(cx * k, cy * k, (WHEEL_R + 0.01) * k, 0, Math.PI * 2)
-  ctx.stroke()
+  const hangs = BROKEN.map((_, n) => felloeHang(n, t, turn))
+  const hangOf = (i: number) => {
+    const n = BROKEN.findIndex((br) => br.i === i)
+    return n < 0 ? null : hangs[n]
+  }
+  ctx.lineCap = 'butt'
+  for (let i = 0; i < 6; i++) {
+    const hang = hangOf(i)
+    const a0 = turn + (i * Math.PI) / 3
+    // Whole lengths overlap a hair at the joints so the rim reads as one; a broken one is its own piece.
+    const lap = hang ? -0.012 : 0.01
+    ctx.save()
+    if (hang) {
+      ctx.translate(hang.pivot[0] * k, hang.pivot[1] * k)
+      ctx.rotate(hang.rot)
+      ctx.translate(-hang.pivot[0] * k, -hang.pivot[1] * k)
+    }
+    ctx.lineWidth = 0.2 * k
+    ctx.strokeStyle = rimD
+    ctx.beginPath()
+    ctx.arc(cx * k, cy * k, (WHEEL_R - 0.03) * k, a0 - lap, a0 + Math.PI / 3 + lap)
+    ctx.stroke()
+    ctx.lineWidth = 0.12 * k
+    ctx.strokeStyle = rimC
+    ctx.beginPath()
+    ctx.arc(cx * k, cy * k, (WHEEL_R + 0.01) * k, a0 - lap, a0 + Math.PI / 3 + lap)
+    ctx.stroke()
+    ctx.restore()
+    if (hang) {
+      // The cracked end: a couple of splinters sticking out of the break, and the stub of the joint left on the spoke.
+      const br = BROKEN.find((b) => b.i === i)!
+      const fa = br.pivotEnd === 0 ? a0 + Math.PI / 3 : a0
+      const along = br.pivotEnd === 0 ? -1 : 1
+      const tip: Pt = [cx + Math.cos(fa) * WHEEL_R, cy + Math.sin(fa) * WHEEL_R]
+      const tan: Pt = [-Math.sin(fa) * along, Math.cos(fa) * along]
+      const nrm: Pt = [Math.cos(fa), Math.sin(fa)]
+      for (let sIdx = 0; sIdx < 2; sIdx++) {
+        const off = (sIdx - 0.5) * 0.09
+        const len = 0.12 + 0.07 * sIdx
+        const base: Pt = [tip[0] + nrm[0] * off, tip[1] + nrm[1] * off]
+        const end: Pt = [base[0] - tan[0] * len + nrm[0] * off * 0.6, base[1] - tan[1] * len + nrm[1] * off * 0.6]
+        const bw = 0.05
+        quad(pen, [rotAbout([base[0] + tan[0] * 0.02 + nrm[0] * bw / 2, base[1] + tan[1] * 0.02 + nrm[1] * bw / 2], hang.pivot, hang.rot), rotAbout(end, hang.pivot, hang.rot), rotAbout([base[0] + tan[0] * 0.02 - nrm[0] * bw / 2, base[1] + tan[1] * 0.02 - nrm[1] * bw / 2], hang.pivot, hang.rot)], rimC)
+      }
+      // The stub on the spoke it came off: a short ragged end of felloe.
+      ctx.lineWidth = 0.17 * k
+      ctx.strokeStyle = rimD
+      ctx.beginPath()
+      const stub = 0.07 * along
+      ctx.arc(cx * k, cy * k, (WHEEL_R - 0.01) * k, Math.min(fa, fa + stub), Math.max(fa, fa + stub))
+      ctx.stroke()
+    }
+  }
   // The hub: a round wooden nave with an iron plate over it, turning.
   ctx.fillStyle = rimD
   ctx.beginPath()
   ctx.arc(cx * k, cy * k, 0.34 * k, 0, Math.PI * 2)
   ctx.fill()
   const hub: Pt[] = [0, 1, 2, 3].map((i) => [cx + 0.24 * Math.cos(turn + Math.PI / 4 + (i * Math.PI) / 2), cy + 0.24 * Math.sin(turn + Math.PI / 4 + (i * Math.PI) / 2)])
-  quad(pen, hub, shade(L, FW.iron, IRON_LIT, cx, cy, 0.2))
-  // The drivers: short tubes on the rim, each pointing back against the turn.
+  quad(pen, hub, shade(L, FW.iron, IRON_LIT, cx, cy, 0.2 * (1 - ch)))
+  // The drivers: short tubes on the rim, each pointing back against the turn. Burnt out, each is split open along its
+  // back half where the fire came out, the two halves of the paper curling apart.
   for (let j = 0; j < DRIVERS; j++) {
     const a = driverAngle(j) + turn
+    const hang = hangOf(felloeOf(driverAngle(j)))
+    const at = (q: Pt): Pt => (hang ? rotAbout(q, hang.pivot, hang.rot) : q)
     const p0: Pt = [cx + Math.cos(a) * (WHEEL_R + 0.02), cy + Math.sin(a) * (WHEEL_R + 0.02)]
     // Tangent pointing clockwise on the screen: backwards, against the wheel's counterclockwise turn.
     const tx = -Math.sin(a)
     const ty = Math.cos(a)
+    const nx = Math.cos(a)
+    const ny = Math.sin(a)
     const s = t - DRIVERS_AT[j]
-    const body = shade(L, s > 0 ? CHAR : PAPER, TUBE_LIT, p0[0], p0[1], 0.1)
+    const split = smooth(s, DRIVER_BURN - 0.15, DRIVER_BURN + 0.35)
+    const body = burn(shade(L, s > 0 ? CHAR : PAPER, TUBE_LIT, p0[0], p0[1], 0.1), 0.6)
     // Lashed along the rim's outside, its mouth to the back.
-    const ox = Math.cos(a) * 0.07
-    const oy = Math.sin(a) * 0.07
-    bar(pen, [p0[0] + ox - tx * 0.3, p0[1] + oy - ty * 0.3], [p0[0] + ox + tx * 0.26, p0[1] + oy + ty * 0.26], 0.15, body)
-    bar(pen, [p0[0] + ox - tx * 0.06, p0[1] + oy - ty * 0.06], [p0[0] + ox + tx * 0.06, p0[1] + oy + ty * 0.06], 0.155, shade(L, s > 0 ? mixHex(BAND, CHAR, 0.5) : BAND, FW.signalRed, p0[0], p0[1], -0.1))
+    const ox = nx * 0.07
+    const oy = ny * 0.07
+    const P = (u: number, v = 0): Pt => at([p0[0] + ox + tx * u + nx * v, p0[1] + oy + ty * u + ny * v])
+    if (split <= 0.01) {
+      bar(pen, P(-0.3), P(0.26), 0.15, body)
+    } else {
+      // The whole front half, then the back half as two strips of paper splayed apart, a dark bore between them.
+      bar(pen, P(-0.3), P(-0.02), 0.15, body)
+      const gap = 0.05 * split
+      const flare = 0.07 * split
+      bar(pen, P(-0.02, 0), P(0.17, 0), 0.05 * split, mixHex(CHAR, FW.iron, 0.6))
+      bar(pen, P(-0.03, 0.04 + gap * 0.3), P(0.25 - 0.05 * split, 0.04 + gap + flare), 0.065, body)
+      bar(pen, P(-0.03, -0.04 - gap * 0.3), P(0.24 - 0.04 * split, -0.04 - gap - flare * 0.8), 0.065, body)
+    }
+    bar(pen, P(-0.06), P(0.06), 0.155, burn(shade(L, s > 0 ? mixHex(BAND, CHAR, 0.5) : BAND, FW.signalRed, p0[0], p0[1], -0.1), 0.7))
+  }
+  drawHubSmoke(pen)
+}
+
+/** A thin thread of smoke off the spent wheel's hub: narrow where it leaves the nave, widening and drifting downwind. */
+function drawHubSmoke(pen: Pen): void {
+  const { t, ctx, k } = pen
+  const on = smooth(t, SPENT + 0.2, SPENT + 1.2)
+  if (on <= 0.01) return
+  const [cx, cy] = WHEEL
+  const rate = 8
+  const life = 3.4
+  for (let i = Math.floor((t - life) * rate); i <= t * rate; i++) {
+    const born = i / rate
+    const a = t - born
+    if (a < 0 || a > life || born < SPENT + 0.2) continue
+    const u = a / life
+    const x = cx + 0.04 * (hash(i, 251) - 0.5) + (WIND[0] * 0.8 + 0.04) * a + 0.07 * Math.sin(a * 1.9 + i * 0.8) * u
+    const y = cy - 0.25 - 0.5 * a
+    const r = 0.05 + 0.22 * u
+    const al = 0.26 * on * smooth(a, 0, 0.35) * (1 - u) * (1 - u)
+    if (al < 0.004) continue
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.scale(1, 1.5)
+    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, r * k)
+    gr.addColorStop(0, rgba(FW.smoke, al))
+    gr.addColorStop(1, rgba(FW.smoke, 0))
+    ctx.fillStyle = gr
+    ctx.fillRect(-r * k, -r * k, 2 * r * k, 2 * r * k)
+    ctx.restore()
   }
 }
 
@@ -805,7 +1038,7 @@ export function drawDriverFire(pen: Pen): void {
     if (s0 < 0) continue
     // It catches: a spit of white.
     if (s0 < 0.15) {
-      const a = driverAngle(j) - turned(t)
+      const a = driverAngle(j) - wheelTurn(t)
       glow(pen, cx + Math.cos(a) * WHEEL_R, cy + Math.sin(a) * WHEEL_R, 0.7, FW.fwWhite, 0.3 * (1 - s0 / 0.15), 0.5)
     }
     const rate = 48
@@ -818,7 +1051,7 @@ export function drawDriverFire(pen: Pen): void {
       const on = driverOn(born - from)
       if (hash(i, j, 22) > on) continue
       // Where the driver's mouth was when this spark left it, and how it was moving.
-      const ang = driverAngle(j) - turned(born)
+      const ang = driverAngle(j) - wheelTurn(born)
       const mx = cx + Math.cos(ang) * (WHEEL_R + 0.09) - Math.sin(ang) * 0.26
       const my = cy + Math.sin(ang) * (WHEEL_R + 0.09) + Math.cos(ang) * 0.26
       const w = omega(born)
@@ -1214,8 +1447,9 @@ export function drawAsh(pen: Pen): void {
 /* ------------------------------------------------------------------ what goes up */
 
 /** A rising comet or shell: a head that is a short streak, and a glittering tail behind it. */
-export function drawRise(pen: Pen, r: Rise): void {
+export function drawRise(pen: Pen, r0: Rise): void {
   const { t, ctx, k } = pen
+  const r = placedRise(r0)
   if (t < r.from || t >= r.to) return
   // The tail, in time, but never longer than a cell and a half: a fast shell's is not a ruled line.
   const len = Math.hypot(r.b[0] - r.a[0], r.b[1] - r.a[1])
@@ -1266,7 +1500,7 @@ export function drawRise(pen: Pen, r: Rise): void {
 export function drawBurst(pen: Pen, b: Burst): void {
   const { t, ctx, k, f } = pen
   const s = t - b.at
-  if (b.kind === 'salute') return drawSalute(pen, b, s)
+  if (b.kind === 'salute') return drawSalute(pen, placed(b), s)
   if (b.kind === 'small') return drawSmall(pen, b, s)
   // Not in its first hundredth: a burst that small is a dot, and a dot near the spark is a second ball.
   if (s < 0.01 || s > b.life) return
@@ -1502,13 +1736,16 @@ function drawSalute(pen: Pen, b: Burst, s: number): void {
   const R = 0.95 + 0.5 * (1 - Math.exp(-s / 0.04)) + 0.3 * s
   ctx.save()
   ctx.globalCompositeOperation = 'source-over'
-  const heart = mixHex(mixHex(FW.smoke, FW.fwGold, 0.85 * inner), FW.fwWhite, 0.9 * flash)
-  const rim = mixHex(FW.smoke, mixHex(FW.fwGold, FW.coal, 0.4), 0.5 * inner)
+  // Lit from inside by fire: hot gold going to orange as it cools, never white (a white-hot heart the size of the
+  // spark, beside it, reads as a second spark), and thin: smoke with a fire in it, not a pale cloud.
+  const fire = mixHex(FW.fwGold, FW.coal, 0.3)
+  const heart = mixHex(mixHex(FW.smoke, fire, 0.8 * inner), FW.coalHot, 0.55 * flash)
+  const rim = mixHex(FW.smoke, mixHex(FW.fwGold, FW.coal, 0.5), 0.45 * inner)
   // An outer sheet, and a smaller brighter core torn differently, a little off the middle, away from the spark.
-  tornSmoke(pen, cx, cy, R, b.seed, toward, body * (0.4 + 0.25 * inner), heart, rim, s)
-  const ox = -Math.cos(toward) * 0.18 * R
-  const oy = -Math.sin(toward) * 0.14 * R
-  tornSmoke(pen, cx + ox, cy + oy, R * 0.62, b.seed + 17, toward, body * (0.15 + 0.6 * inner), mixHex(heart, FW.fwWhite, 0.3 * inner), heart, s)
+  tornSmoke(pen, cx, cy, R, b.seed, toward, body * (0.28 + 0.14 * inner), heart, rim, s)
+  const ox = -Math.cos(toward) * 0.22 * R
+  const oy = -Math.sin(toward) * 0.17 * R
+  tornSmoke(pen, cx + ox, cy + oy, R * 0.62, b.seed + 17, toward, body * (0.06 + 0.22 * inner), mixHex(heart, FW.coalHot, 0.25 * inner), heart, s)
   ctx.restore()
   // The starburst: short hard streaks thrown out in the first fifth of a second, at clumped, uneven angles and
   // reaches (some barely out of the smoke, some flung two cells), each a tapering sliver, thickest at its head.
@@ -1702,49 +1939,100 @@ export function drawEmbers(pen: Pen): void {
 }
 
 /**
- * The flash of a heavy shell or a salute: light thrown out from where it broke across the whole frame, warm for a
- * moment and gone. A pool round the burst, not a flat veil, so the night stays night round it.
+ * The flash of a heavy shell or a salute: light thrown out from where it broke, warm for a moment and gone. Pools of
+ * light round the bursts, never a flat veil: added light on a night sky greys it, so the sky away from the bang keeps
+ * its dark blue and the stars their contrast.
+ *
+ * - A salute is a flash-bang: a hot-gold pool about 4.5 cells round the bang, gone in a third of a second, over the
+ *   faintest warm lift of the whole frame (a tenth at most).
+ * - The Titan's flash is a warm gold pool round its heart that falls to nothing about 40% of the frame's width out.
+ * - Everything together is capped (`WASH_CAP` at the brightest point, `FLAT_CAP` for the whole frame), so when the
+ *   salutes go off over the Titan's flower the frame is lit, not fogged.
  */
+const WASH_CAP = 0.34
+const FLAT_CAP = 0.07
 export function drawWash(pen: Pen): void {
   const { t, ctx, k, f } = pen
   const w = f.x1 - f.x0
   const h = f.y1 - f.y0
   const reach = Math.hypot(w, h)
-  const flash = (x: number, y: number, col: string, a: number) => {
-    if (a < 0.004) return
-    const gr = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, reach * k)
-    gr.addColorStop(0, rgba(col, Math.min(0.32, a)))
-    gr.addColorStop(0.3, rgba(col, Math.min(0.32, a) * 0.45))
-    gr.addColorStop(1, rgba(col, 0))
-    ctx.fillStyle = gr
-    ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+  interface Pool {
+    x: number
+    y: number
+    col: string
+    /** At its heart. */
+    a: number
+    /** Where it has fallen to nothing (cells). */
+    r: number
+    /** How it falls off: the share of `a` left at 0.3 of the way out, and of that at 0.65 (0.5 is a straight fall). */
+    mid: number
+    tail: number
   }
-  ctx.save()
-  ctx.globalCompositeOperation = 'lighter'
-  for (const b of BURSTS) {
-    const s = t - b.at
-    if (s < 0 || s > 0.6 || b.wash <= 0) continue
+  const pools: Pool[] = []
+  let flat = 0
+  let flatCol: string = FW.fwGold
+  for (const b0 of BURSTS) {
+    const s = t - b0.at
+    if (s < 0 || s > 0.6 || b0.wash <= 0) continue
+    const b = placed(b0)
     if (b.kind === 'salute') {
-      // A flash-bang: the whole frame goes white-warm, brightest round the bang, and dies over a third of a second.
       const A = Math.min(0.5, 0.45 * (b.wash / 0.6) ** 0.5)
       const a = A * (0.3 * Math.exp(-s / 0.025) + 0.7 * Math.exp(-s / 0.11))
       if (a < 0.004) continue
-      const col = mixHex(FW.fwWhite, FW.fwGold, 0.22)
-      ctx.fillStyle = rgba(col, 0.6 * a)
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
-      const gr = ctx.createRadialGradient(b.x * k, b.y * k, 0, b.x * k, b.y * k, reach * 0.6 * k)
-      gr.addColorStop(0, rgba(col, 0.55 * a))
-      gr.addColorStop(1, rgba(col, 0))
-      ctx.fillStyle = gr
-      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      pools.push({ x: b.x, y: b.y, col: SALUTE_LIGHT, a: 0.62 * a, r: 4.5, mid: 0.4, tail: 0.3 })
+      if (0.16 * a > flat) {
+        flat = 0.16 * a
+        flatCol = mixHex(FW.fwGold, FW.coalHot, 0.3)
+      }
       continue
     }
-    const a = b.wash * 0.24 * Math.exp(-s / 0.11)
+    if (b.kind === 'titan') {
+      // Held at its brightest for a moment (wash over 1), then gone by about 0.45 s.
+      const a = Math.min(0.3, b.wash * 0.24 * Math.exp(-s / 0.11))
+      pools.push({ x: b.x, y: b.y, col: mixHex(FW.fwGold, FW.coalHot, 0.35), a, r: 0.4 * w, mid: 0.5, tail: 0.3 })
+      continue
+    }
+    const a = Math.min(0.32, b.wash * 0.24 * Math.exp(-s / 0.11))
     const col = b.kind === 'mine' ? FW.coalHot : mixHex(b.col, FW.fwGold, 0.5)
-    flash(b.x, b.y, col, a)
+    pools.push({ x: b.x, y: b.y, col, a, r: reach, mid: 0.45, tail: 0.5 })
   }
   const blast = t - TITAN_FIRE
-  if (blast >= 0 && blast < 0.5) flash(TITAN_X, LIP - 1, FW.fwGold, 0.26 * Math.exp(-blast / 0.08))
+  if (blast >= 0 && blast < 0.5) pools.push({ x: TITAN_X, y: LIP - 1, col: FW.fwGold, a: Math.min(0.32, 0.26 * Math.exp(-blast / 0.08)), r: reach, mid: 0.45, tail: 0.5 })
+  if (!pools.length && flat < 0.004) return
+  // The cap: where the pools overlap most they add up to no more than `WASH_CAP`.
+  let peak = 0
+  for (const q of pools) {
+    let sum = 0
+    for (const o of pools) {
+      const d = Math.hypot(q.x - o.x, q.y - o.y) / o.r
+      if (d < 1) sum += o.a * (d < 0.3 ? 1 - (1 - o.mid) * (d / 0.3) : o.mid * (1 - (d - 0.3) / 0.7))
+    }
+    peak = Math.max(peak, sum)
+  }
+  const scale = peak > WASH_CAP ? WASH_CAP / peak : 1
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  const fa = Math.min(FLAT_CAP, flat)
+  if (fa >= 0.004) {
+    ctx.fillStyle = rgba(flatCol, fa)
+    ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+  }
+  for (const q of pools) {
+    const a = q.a * scale
+    if (a < 0.004) continue
+    const x0 = Math.max(f.x0, q.x - q.r)
+    const x1 = Math.min(f.x1, q.x + q.r)
+    const y0 = Math.max(f.y0, q.y - q.r)
+    const y1 = Math.min(f.y1, q.y + q.r)
+    if (x1 <= x0 || y1 <= y0) continue
+    const gr = ctx.createRadialGradient(q.x * k, q.y * k, 0, q.x * k, q.y * k, q.r * k)
+    gr.addColorStop(0, rgba(q.col, a))
+    gr.addColorStop(0.3, rgba(q.col, a * q.mid))
+    gr.addColorStop(0.65, rgba(q.col, a * q.mid * q.tail))
+    gr.addColorStop(1, rgba(q.col, 0))
+    ctx.fillStyle = gr
+    ctx.fillRect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k)
+  }
   ctx.restore()
 }
 
