@@ -131,9 +131,7 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   glow(p, c, T, f, L)
   podium(p, c, L)
   const chair = chairAt(T)
-  // Fletcher stands behind everything in the pit (the chart, the chair, the drums): over Andrew's shoulder at the kit.
   if (chair.held) drawChair(p, c, [chair.x, chair.y], -1, L, chair.turn, chair.scale)
-  if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), base: fletcherBase(T), light: 0.5 + 0.5 * L })
   const pg = pageAt(T)
   const shove = standShove(T)
   p.push()
@@ -145,6 +143,10 @@ export function drawBandRoom(p: p5, c: Ctx, T: number): void {
   }
   drawChartStand(p, c, STAND.x + shove.dx, STAND.ledge, STAND.w, STAND.h, PIT, pg.turned, pg.u, L)
   p.pop()
+  // Fletcher stands behind the chair and the drums (over Andrew's shoulder at the kit), but in front of the chart's
+  // stand: he walks past it on the house side to put Andrew on the kit, and his head (a company ball, drawn over every
+  // part) sat on its lit pages as a black disc while his body went behind them. It is his path to shove it aside, too.
+  if (T >= BAND - 1e-6 && T < QUIET) drawConductor(p, c, fletcherHead(T), fletcherPose(T), { floor: fletcherFloor(T), base: fletcherBase(T), light: 0.5 + 0.5 * L })
   if (!chair.held) drawChair(p, c, [chair.x, chair.y], -1, chair.behind ? L * 0.75 : L, chair.turn, chair.scale)
   p.push()
   p.translate(KX * c.k, KY * c.k)
