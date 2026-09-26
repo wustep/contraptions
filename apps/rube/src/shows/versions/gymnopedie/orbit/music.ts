@@ -1,10 +1,10 @@
-import played from '../../../../../../../scripts/show-plans/satie-performance.json'
+import played from '../../../../../../../scripts/shows/plans/satie-performance.json'
 
 /**
- * The music, as it was played. `scripts/satie-render.py` plays Gymnopédie
+ * The music, as it was played. `scripts/shows/satie-render.py` plays Gymnopédie
  * No. 1, Gnossienne No. 1 and Gnossienne No. 3 on the Salamander Grand's
  * samples, from the Mutopia engravings, and writes down every note as it lands
- * in the file (`scripts/show-plans/satie-performance.json`). Nothing here is
+ * in the file (`scripts/shows/plans/satie-performance.json`). Nothing here is
  * measured off the audio and nothing needs to be: these are the notes the file
  * was made from, to the sample.
  *

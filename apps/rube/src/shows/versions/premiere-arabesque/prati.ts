@@ -1,4 +1,4 @@
-import recording from '../../../../../../docs/promo/premiere-arabesque-prati.mp3'
+import recording from './premiere-arabesque-prati.mp3'
 import type { Performance } from '../../registry'
 import { cameraAt, score, show } from '../../../timed/premiere-arabesque/show'
 

@@ -1,0 +1,12 @@
+Epilogue — Justin Hurwitz
+From La La Land (Original Motion Picture Soundtrack), 2016. Interscope Records.
+Official audio used for private Contraptions tech demos only (the label's
+"Justin Hurwitz - Topic" upload):
+https://www.youtube.com/watch?v=jQVvT_UKZ6w
+Duration 7:39. Copyrighted — do not ship to production / public Shows without a licence.
+
+Files:
+- apps/rube/src/shows/versions/la-la-land/lalaland-epilogue-demo.mp3 — the cue as fetched (yt-dlp, audio only, re-encoded at 128 kbit/s).
+  The show plays it whole from its first sample (offset 0); no edit, no gain change.
+- scripts/shows/plans/lalaland-epilogue-onsets.json — the recording's onsets, measured by
+  scripts/shows/lalaland-epilogue-onsets.py; every strike in the show is held to it.

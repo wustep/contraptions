@@ -5,9 +5,3 @@ dist
 out/
 .vercel
 *.mp4
-
-# Construct benchmark: sealed local records and minted suites, never workspaces
-bench/runs/*
-!bench/runs/README.md
-bench/suites/*
-!bench/suites/starter/

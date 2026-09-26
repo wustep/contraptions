@@ -1,4 +1,4 @@
-import recording from '../../../../../../docs/promo/cornfield-chase-zimmer.mp3'
+import recording from './cornfield-chase-zimmer.mp3'
 import type p5 from 'p5'
 import type { Theme } from '../../../../../../src/core/themes'
 import { R, ball, laneAt, laneTime, type BallState, type Lane, type Piece, type PieceCtx, type Pt, type Seg } from '../../../parts'

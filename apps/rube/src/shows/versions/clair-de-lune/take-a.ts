@@ -1,4 +1,4 @@
-import recording from '../../../../../../docs/promo/clair-de-lune-goedhart.ogg'
+import recording from './clair-de-lune-goedhart.ogg'
 import type { Performance } from '../../registry'
 import { StockShow } from '../../stock/show'
 import type { StockScore } from '../../stock/types'

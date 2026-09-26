@@ -1,4 +1,4 @@
-import recording from '../../../../../../../docs/promo/lalaland-epilogue-demo.mp3'
+import recording from '../lalaland-epilogue-demo.mp3'
 import type { Performance } from '../../../registry'
 import { DURATION } from './music'
 import { compose } from './score'

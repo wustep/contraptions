@@ -14,7 +14,7 @@ export const premiereArabesque = {
   checkpoint: false,
   duration: score.duration,
   audio: {
-    src: new URL('../../../../../docs/promo/premiere-arabesque-prati.mp3', import.meta.url).href,
+    src: new URL('../../shows/versions/premiere-arabesque/premiere-arabesque-prati.mp3', import.meta.url).href,
     offset: score.audioOffset,
   },
   phrases: score.phrases,

@@ -1,9 +1,9 @@
-import onsets from '../../../../../../../scripts/show-plans/eeaao-onsets.json'
+import onsets from '../../../../../../../scripts/shows/plans/eeaao-onsets.json'
 
 /**
  * The recording's clock: Son Lux's "Come Recover (Empathy Fight)", from Everything Everywhere All at Once, played
- * from its first sample (`docs/promo/eeaao-come-recover-demo.mp3`, `scripts/eeaao-cue.sh`). Measured once by
- * `scripts/eeaao-onsets.py` into `scripts/show-plans/eeaao-onsets.json`; `check:shows` holds every strike of this
+ * from its first sample (`apps/rube/src/shows/versions/come-recover/eeaao-come-recover-demo.mp3`, `scripts/shows/eeaao-cue.sh`). Measured once by
+ * `scripts/shows/eeaao-onsets.py` into `scripts/shows/plans/eeaao-onsets.json`; `check:shows` holds every strike of this
  * take against that file.
  *
  * - 0 to 142 s has no steady pulse. A chord and a silence (0 to 7.9), a sparse first minute with one great hit

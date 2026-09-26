@@ -1,0 +1,16 @@
+apps/rube/src/shows/versions/gymnopedie/satie-gymnopedie.mp3 — the music of the Gymnopédie show
+
+Composition: Erik Satie, Gymnopédie No. 1 (1888), Gnossienne No. 1 and Gnossienne No. 3 (1890). Public domain.
+
+Scores (read as MIDI by scripts/shows/satie-render.py; the notes are Satie's):
+  - Gymnopédie No. 1, Mutopia Project, Mutopia-2014/12/14-37, typeset by Evin Robertson. Public domain.
+  - Gnossienne No. 1, Mutopia Project, Mutopia-2015/07/23-2035, typeset by Knute Snortum. CC BY-SA 4.0.
+  - Gnossienne No. 3, Mutopia Project, Mutopia-2016/08/17-2131, typeset by Frédéric Duperray. CC BY-SA 4.0.
+  https://www.mutopiaproject.org/cgibin/make-table.cgi?Composer=SatieE
+
+Piano: Salamander Grand Piano V3 (Yamaha C5, 16 velocity layers), by Alexander Holm. CC BY 3.0.
+  https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html
+
+Performance and recording: rendered for this show by scripts/shows/satie-render.py (tempo, rubato, voicing, pedalling,
+room). No commercial or third-party recording is used. The recording is released under CC BY-SA 4.0, as the
+Gnossiennes' engravings ask.

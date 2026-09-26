@@ -1,4 +1,4 @@
-import recording from '../../../../../../../docs/promo/satie-gymnopedie.mp3'
+import recording from '../satie-gymnopedie.mp3'
 import type { Pt } from '../../../../parts'
 import type { Placed } from '../../../../plan'
 import type { Performance } from '../../../registry'
