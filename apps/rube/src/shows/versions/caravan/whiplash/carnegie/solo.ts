@@ -2,9 +2,9 @@ import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, route, type PartShot, type Way } from '../kit'
 import { HUSH, SOLO } from '../music'
 import type { KitStroke } from '../stub'
-import { KIT_AT, CLOSE } from './stage'
+import { KIT_AT, CLOSE, FLETCHER_HOME, JIM_WINGS } from './stage'
 import { drawRig, headAt, liftShape } from './solo-rig'
-import { ACCENTS, BALL, DOWN, LEAP, PULSE, SEATED, SLAM, STROKES, TOSS, TRADE, UNSEAT } from './solo-score'
+import { ACCENTS, BALL, DOWN, LEAP, PULSE, SEATED, SLAM, STROKES, TOSS, UNSEAT } from './solo-score'
 
 /**
  * Carnegie Hall, the solo (270.52 → 323.27): Andrew alone after the band's cut-off, the densest playing of the show.
@@ -116,15 +116,52 @@ const CU = {
 const THROW = { cells: 5.6, hold: [-0.3, -2.3] as Pt }
 
 /**
+ * The two watchers, in the part's frame (the hall's, not the kit's). Fletcher on his podium, his head on the right
+ * third so the room he looks across is toward the kit; his head, chest and both hands at his sides in, the bass's
+ * scroll at the left. Jim in the wings by the stage door, low on the left third looking across the stage, the floor
+ * a third up from the bottom.
+ */
+const FLETCHER_WATCH = { cells: 3.5, hold: [FLETCHER_HOME[0] - 0.8, FLETCHER_HOME[1] + 0.5] as Pt }
+const JIM_WATCH = { cells: 3.2, hold: [JIM_WINGS[0] - 0.05, JIM_WINGS[1] - 0.72] as Pt }
+/** The whole hall: Jim in the wings, the piano, the frame over the kit, the bass, Fletcher, the band, the front rows. */
+const HALL_WIDE = { cells: 12, hold: [1.0, -0.35] as Pt }
+
+/**
+ * A whip pan from framing `a` to framing `b` over [t0, t1], as keys the camera's monotone cubic runs through. One cubic
+ * between two rests leaves and lands with a jolt (its acceleration jumps at both ends, and a whip's distance makes
+ * that jump large); these keys follow a smootherstep instead, so it gathers speed and settles with none. The zoom
+ * opens a little at the middle of the move, so the stage streams past at a speed the eye can hold.
+ */
+function whip(t0: number, t1: number, a: PartShot, b: PartShot, open = 0.08, n = 8): PartShot[] {
+  const A = a.hold!
+  const B = b.hold!
+  const out: PartShot[] = []
+  for (let i = 0; i <= n; i++) {
+    const u = i / n
+    const s = u * u * u * (u * (6 * u - 15) + 10)
+    const cells = Math.exp(Math.log(a.cells) + (Math.log(b.cells) - Math.log(a.cells)) * s + open * Math.sin(Math.PI * s))
+    out.push({ t: t0 + (t1 - t0) * u, cells, hold: [A[0] + (B[0] - A[0]) * s, A[1] + (B[1] - A[1]) * s], w: 1 })
+  }
+  return out
+}
+
+/**
  * The camera, in the part's frame. Each key picks a subject: in close on the ball alone on the snare as the frame
  * comes down; out to the frame as he leaps into it; in to a close-up on each big hit (the crash and his head, the
- * snare under both sticks), a medium on him between; one framing held through the toss; a wide on the whole machine
- * and Fletcher watching; the snare and the floor tom trading, close; down the shin to the pedal for the kick drum's
- * pulse; out to all of him as he jumps down.
+ * snare under both sticks), a medium on him between; one framing held through the toss; a wide on the whole hall;
+ * the snare and the floor tom trading, close; down the shin to the pedal for the kick drum's pulse; out to all of him
+ * as he jumps down. Twice the camera whips across the stage to the two who watch him, the way the film cuts from the
+ * kit to them: Fletcher on his podium after the first big hit, and his father by the stage door as the trading
+ * starts; each held a few seconds, and whipped back to the kit on a loud stroke.
  */
 function shots(): PartShot[] {
   const k = (t: number, cells: number, hold: Pt, w = 1): PartShot => ({ t, cells, hold: at(hold), w })
   const cu = (t: number, f: { cells: number; hold: Pt }, dx = 0, dy = 0): PartShot => k(t, f.cells, [f.hold[0] + dx, f.hold[1] + dy])
+  /** A framing in the part's own frame (the hall's), for the watchers. */
+  const hall = (t: number, cells: number, hold: Pt): PartShot => ({ t, cells, hold, w: 1 })
+  const fletcher = (t: number, drift = 0): PartShot =>
+    hall(t, FLETCHER_WATCH.cells - 0.2 * drift, [FLETCHER_WATCH.hold[0] - 0.05 * drift, FLETCHER_WATCH.hold[1] + 0.02 * drift])
+  const jim = (t: number, drift = 0): PartShot => hall(t, JIM_WATCH.cells - 0.15 * drift, [JIM_WATCH.hold[0] + 0.05 * drift, JIM_WATCH.hold[1] - 0.02 * drift])
   return [
     { t: SOLO, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
     // In on him alone on the snare; the frame's sticks come down into the top of the shot.
@@ -135,10 +172,12 @@ function shots(): PartShot[] {
     k(274.5, 5.2, [-0.35, -1.6]),
     // The first big hit: the crash and his head.
     cu(276.288, CU.crash),
-    cu(277.5, CU.crash, -0.1, 0.1),
-    // Out to him: the snare and both sticks under his head, then the left, the rack tom.
-    k(279.6, 4.7, [-0.45, -1.4]),
-    k(281.4, 4.4, [-0.75, -1.45]),
+    // A whip across the stage to Fletcher on his podium, landing on the phrase's big hit (277.96): he is listening
+    // now, hands at his sides. Held on him, drifting in a little, and whipped back to the kit landing on the loudest
+    // stroke of the phrase (281.39), him over the snare and the rack tom.
+    ...whip(276.4, 277.96, cu(0, CU.crash, -0.02, 0.01), fletcher(0)),
+    fletcher(279.92, 1),
+    ...whip(279.92, 281.391, fletcher(0, 1), k(0, 4.4, [-0.75, -1.45])).slice(1),
     // Round the toms.
     k(283.4, 4.9, [-1.35, -1.25]),
     k(284.8, 4.8, [-1.3, -1.3]),
@@ -150,14 +189,19 @@ function shots(): PartShot[] {
     k(SLAM + 0.4, THROW.cells - 0.1, [THROW.hold[0] - 0.05, THROW.hold[1] + 0.05]),
     // The snare under both sticks, the arms up to him at the top of the frame.
     k(293.552, 3.8, [-0.35, -1.38]),
-    // The whole machine, and Fletcher watching from his podium.
-    k(296.0, 8.4, [2.1, -1.7], 0.95),
-    k(298.4, 8.0, [1.9, -1.6], 0.95),
+    // The whole hall: his father in the wings, the frame playing over the kit, Fletcher on his podium, the band, the
+    // front rows of the house below the lip. Held, easing in a little.
+    { t: 296.38, cells: HALL_WIDE.cells, hold: HALL_WIDE.hold, w: 1 },
+    { t: 298.754, cells: HALL_WIDE.cells - 0.6, hold: [HALL_WIDE.hold[0] - 0.1, HALL_WIDE.hold[1] - 0.05], w: 1 },
     // In again: him, the snare and the hi-hat.
     k(300.6, 5.0, [-0.3, -1.45]),
     k(303.2, 4.6, [-0.2, -1.5]),
+    // A whip across the dark stage to his father by the stage door, watching; the trading starts under him. Held, and
+    // whipped back to the kit landing on a loud snare stroke of the trade (308.99).
+    ...whip(303.45, 305.12, k(0, 4.55, [-0.22, -1.5]), jim(0)),
+    jim(307.45, 1),
     // The snare and the floor tom trading: both hands, close, and him over them at the top of the frame.
-    k(TRADE[0] + 0.7, 4.0, [-1.2, -1.32]),
+    ...whip(307.45, 308.988, jim(0, 1), k(0, 4.0, [-1.2, -1.32])).slice(1),
     k(310.3, 3.9, [-1.25, -1.28]),
     // His head and the hi-hat again.
     k(312.6, 4.4, [0.05, -1.8]),
