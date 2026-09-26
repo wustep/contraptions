@@ -385,7 +385,7 @@ function shots(): PartShot[] {
     // the limb is winched out, the nursery's ceiling well inside the frame while the hole is boarded.
     ...stormOut(k),
     k(130.4, 17.4, [10.45, -6.0]),
-    k(131.7, 11.5, [9.0, -3.8]),
+    k(131.7, 12.0, [9.05, -3.9]),
     k(133.3, 10.0, [8.6, -3.1]),
     k(135.3, 9.2, [9.3, -2.85]),
     // The sun: in again to the two of them, on their way to the hall.
