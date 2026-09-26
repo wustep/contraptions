@@ -173,8 +173,15 @@ function stepAt(t: number): number {
 /** The footfalls it strikes: the first three on the air, on the recording. */
 const STEPS_STRUCK = [CHORD[0], 303.444, 304.431]
 
-/** The chord: three roars of fire out of the chimney. */
-const ROARS: [number, number][] = [[CHORD[0], 1], [CHORD[1], 0.75], [CHORD[2], 1]]
+/** The chord: three roars of fire out of the chimney, and how long each takes to die back (the last the longest). */
+const ROARS: [number, number, number][] = [[CHORD[0], 1, 0.34], [CHORD[1], 0.8, 0.3], [CHORD[2], 1, 0.95]]
+
+/** Calcifer's fire out of the chimney, 0..1: licking up before the chord, then the three roars, dying back slow. */
+function fireAt(t: number): number {
+  let f = 0.2 * smooth(t, 301.75, CHORD[0]) * (1 - smooth(t, CHORD[2] + 0.6, CHORD[2] + 3))
+  for (const [at, s, tau] of ROARS) f = Math.max(f, s * knock(t - at, tau))
+  return f
+}
 
 /** How the castle holds itself at `t` (no position). */
 function poseAt(t: number): CastlePose {
@@ -183,8 +190,8 @@ function poseAt(t: number): CastlePose {
   const j = jolt(t)
   const walk = t > WALK0
   const step = walk ? stepAt(t) : 0
-  let roar = 0.55 * knock(t - CHIMNEY, 0.3)
-  for (const [at, s] of ROARS) roar = Math.max(roar, s * knock(t - at, 0.3))
+  // The chimney's lock flares in the castle's own drawing; the chord's roars are this part's (`drawFire`).
+  const roar = 0.55 * knock(t - CHIMNEY, 0.3)
   return {
     t,
     step,
@@ -500,20 +507,228 @@ function plume(p: p5, k: number, t: number) {
     const y = ey - 1.3 * age + 0.06 * age * age
     puff(p, k, x, y, 0.45 + 0.75 * age, col, 0.42 * (1 - age / life) * Math.min(1, age * 5), 0.9)
   }
-  // The chord's three roars: great soft bursts, billowing up and back.
+}
+
+/**
+ * The chord's three roars of smoke: great soft billows thrown up out of the chimney on each, lit orange from under
+ * by the fire as they leave it and cooling to a warm white, rolling up and back on the wind of its walking. Each
+ * billow is a volume (a shaded underside, a lit top), never an outline; the three run together into one column.
+ */
+function bursts(p: p5, k: number, t: number) {
+  const shade = mixHex(STEAM, WASTES.rock, 0.4)
   for (const [n, [at, s]] of ROARS.entries()) {
     const age = t - at
-    if (age < 0 || age > 4) continue
+    if (age < 0 || age > 6) continue
     const [ex, ey] = onCastle(look(at), CASTLE.chimney)
-    for (let i = 0; i < 12; i++) {
-      const a0 = hash(i, n, 81) * Math.PI * 2
-      const out = 0.5 + hash(i, n + 3, 81) * 1.6
-      const grow = 1 - Math.exp(-age / 0.55)
-      const x = ex + Math.cos(a0) * out * grow * 1.8 - 1.6 * age
-      const y = ey - 0.5 - (3.6 + 2.6 * hash(i, n + 5, 81)) * grow - 0.5 * age + Math.sin(a0) * out * grow * 0.9
-      puff(p, k, x, y, 0.8 + 2.4 * grow + 0.6 * age, STEAM, 0.3 * s * Math.exp(-age / 1.3), 0.9)
+    const fade = s * Math.min(1, age * 10) * Math.exp(-age / 2.2)
+    const warm = 0.38 * Math.exp(-age / 0.5)
+    const lit = mixHex(STEAM, CALCIFER.body, warm)
+    for (let i = 0; i < 11; i++) {
+      const h1 = hash(i, n, 81)
+      const h2 = hash(i, n, 82)
+      const h3 = hash(i, n, 83)
+      // Thrown up fast, slowing as it rolls out; the later billows of a roar a touch behind the first.
+      const go = 1 - Math.exp(-Math.max(0, age - 0.03 * i) / 0.5)
+      const side = (h1 - 0.5) * 2
+      const x = ex + side * (0.6 + 3.4 * go) - (1.1 + 0.5 * h2) * age
+      const y = ey - 0.8 - (2.4 + 4.6 * h2) * go - 0.35 * age + Math.abs(side) * 1.1 * go
+      const r = (1.3 + (2.2 + 1.8 * h3) * go + 0.35 * age) * (0.75 + 0.25 * s)
+      const a = fade * (0.6 + 0.3 * h3)
+      puff(p, k, x + 0.18 * r, y + 0.3 * r, r, shade, 0.6 * a, 0.9)
+      puff(p, k, x - 0.12 * r, y - 0.14 * r, r * 0.86, lit, 0.9 * a, 0.9)
     }
   }
+}
+
+/* ------------------------------------------------------------------ the chord: fire out of the chimney, every window */
+
+/** The castle's windows (standing cells: x, y, w, h), as `drawCastle` draws them, for their flare. */
+const WINDOWS: [number, number, number, number][] = [
+  [-6.95, -18.85, 0.5, 0.85], [-6.95, -16.35, 0.5, 0.85], [-6.95, -13.95, 0.5, 0.75], [-8.55, -18.05, 0.3, 0.55],
+  [-4.7, -16.6, 0.62, 0.85], [-4.7, -14.1, 0.62, 0.8], [-1.5, -20.2, 0.55, 0.6],
+  [-2.55, -15.95, 0.72, 0.9], [-0.6, -15.95, 0.72, 0.9], [1.3, -13.95, 0.68, 0.85], [-2.45, -13.95, 0.62, 0.8],
+  [-1.05, -17.75, 0.6, 0.7], [3.66, -14.9, 0.46, 0.7], [6.95, -15.45, 0.45, 0.8], [-5.75, -9.75, 0.62, 0.7], [3.1, -9.55, 0.62, 0.7],
+]
+const FLARE = mixHex(WASTES.window, '#FFFFFF', 0.45)
+
+/**
+ * Every window flares with each roar, the fire running out through the house from the hearth (a few hundredths of
+ * a second from the chimney to the farthest): the glass goes near white and a warm light spills round it.
+ */
+function flareWindows(p: p5, k: number, t: number, L: Look) {
+  if (t < CHORD[0] - 0.05 || t > CHORD[2] + 4) return
+  const [ax, ay] = onCastle(L, [0, -6.9])
+  const [bx, by] = onCastle(L, [1, -6.9])
+  const ang = Math.atan2(by - ay, bx - ax)
+  const chim = CASTLE.chimney
+  p.push()
+  p.noStroke()
+  p.rectMode(p.CORNER)
+  for (const [x, y, w, h] of WINDOWS) {
+    const c: Pt = [x + w / 2, y + h / 2]
+    const f = fireAt(t - 0.0015 * Math.hypot(c[0] - chim[0], c[1] - chim[1])) - 0.2 * smooth(t, 301.75, CHORD[0])
+    if (f < 0.01) continue
+    const [cx, cy] = onCastle(L, c)
+    puff(p, k, cx, cy, Math.max(w, h) * (1.3 + 1.4 * f), mixHex(WASTES.window, CALCIFER.core, 0.45), 0.5 * f, 1.15)
+    p.push()
+    p.translate(cx * k, cy * k)
+    p.rotate(ang)
+    p.fill(alpha(p, FLARE, Math.min(1, 1.3 * f)))
+    p.rect((-w / 2 + 0.05) * k, (-h / 2 + 0.05) * k, (w - 0.1) * k, (h - 0.1) * k, 0.05 * k)
+    p.pop()
+  }
+  p.pop()
+}
+
+/** One tongue of flame from a base (bw either side of x, at y) to a tip swept back, as a filled curve. */
+function tongue(p: p5, k: number, x: number, y: number, bw: number, h: number, sweep: number, wob: number) {
+  const X = (v: number) => v * k
+  const tx = x + sweep
+  const ty = y - h
+  p.beginShape()
+  p.vertex(X(x - bw), X(y))
+  p.bezierVertex(X(x - bw * 1.1), X(y - h * 0.45), X(tx - bw * 0.3 + wob), X(y - h * 0.72), X(tx), X(ty))
+  p.bezierVertex(X(tx + bw * 0.35 + wob * 0.5), X(y - h * 0.62), X(x + bw * 1.15), X(y - h * 0.4), X(x + bw), X(y))
+  p.endShape(p.CLOSE)
+}
+
+/**
+ * Calcifer's roars out of the chimney: a sheaf of tongues of his fire leaping up out of its mouth and swept back on
+ * the wind, his three colours one inside the other, flames tearing off the tips as they die, and a warm light
+ * thrown on the sky and the roofs round it (a long soft haze, never a disc).
+ */
+function drawFire(p: p5, k: number, t: number, L: Look) {
+  const f = fireAt(t)
+  if (f < 0.01) return
+  const [ex, ey0] = onCastle(L, CASTLE.chimney)
+  const ey = ey0 + 0.1
+  puff(p, k, ex - 0.8 * f, ey - 1.4 - 1.8 * f, 1.8 + 4.2 * f, CALCIFER.body, 0.14 * f, 1.3)
+  p.push()
+  p.noStroke()
+  // Torn-off flames rising off the tips as each roar dies.
+  for (const [n, [at, s]] of ROARS.entries()) {
+    for (let j = 0; j < 3; j++) {
+      const age = t - at - 0.06 * j
+      if (age < 0 || age > 0.7) continue
+      const u = age / 0.7
+      const h0 = s * (2.6 + 1.2 * hash(j, n, 85))
+      const x = ex + (hash(j, n, 86) - 0.5) * 0.9 - (0.5 + 1.1 * u) * h0 * 0.35
+      const y = ey - h0 * (0.85 + 0.5 * u)
+      const sz = s * (0.9 - 0.8 * u)
+      p.fill(alpha(p, CALCIFER.edge, 0.9 * (1 - u)))
+      tongue(p, k, x, y, 0.22 * sz, 1.1 * sz, -0.3 * sz, 0)
+      p.fill(alpha(p, CALCIFER.body, 0.9 * (1 - u)))
+      tongue(p, k, x, y - 0.05, 0.12 * sz, 0.7 * sz, -0.2 * sz, 0)
+    }
+  }
+  const SHEAF = [0.5, 0.78, 1, 0.7, 0.92, 0.6, 0.42]
+  const layers: [string, number, number][] = [[CALCIFER.edge, 1, 1], [CALCIFER.body, 0.72, 0.7], [CALCIFER.core, 0.42, 0.45]]
+  for (const [col, hs, ws] of layers) {
+    p.fill(col)
+    SHEAF.forEach((sh, i) => {
+      const x = ex + (i / (SHEAF.length - 1) - 0.5) * 1.3
+      const flick = 0.85 + 0.1 * Math.sin(t * 15 + i * 1.7) + 0.05 * Math.sin(t * 23 + i * 3.1)
+      const h = f * (1.1 + 4.1 * sh) * flick * hs
+      if (h < 0.05) return
+      const bw = (0.4 + 0.14 * hash(i, 87)) * ws * (0.6 + 0.4 * Math.min(1, f * 2))
+      tongue(p, k, x, ey, bw, h, -0.32 * h + 0.12 * Math.sin(t * 7 + i), 0.15 * Math.sin(t * 11 + i * 2))
+    })
+  }
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the stair of air: a cloud under every foot */
+
+/**
+ * Walking on the air, each foot comes down on a little cloud that gathers under it as it lands (the first on the
+ * last chord, blooming out soft under the weight) and melts away behind once the foot has lifted, so the stair of
+ * air it climbs reads as steps. Worked out once from the gait: where and when each foot lands and lifts.
+ */
+interface Footfall {
+  t: number
+  lift: number
+  at: Pt
+  far: boolean
+  size: number
+  /** How long before it lands the cloud gathers. */
+  form: number
+}
+/** When the walk reaches a step (it only climbs). */
+function timeOfStep(s: number): number {
+  let a = WALK0
+  let b = DURATION + 6
+  for (let i = 0; i < 40; i++) {
+    const m = (a + b) / 2
+    if (stepAt(m) < s) a = m
+    else b = m
+  }
+  return b
+}
+const FOOTFALLS: Footfall[] = (() => {
+  // As `feetAt` lists them: near front, near back, far front, far back; each leg lands every other step, on its phase.
+  const PHASE = [0, 1, 1, 0]
+  const out: Footfall[] = []
+  for (const [T, n] of STEP_KEYS) {
+    if (T > DURATION + 1) break
+    const L = look(T)
+    feetAt(L.pose).forEach((f, i) => {
+      if (n > 0 && PHASE[i] !== n % 2) return
+      const far = i >= 2
+      // All four let down onto the air in the breath; after that each lands on its step and lifts DUTY on.
+      const liftStep = n === 0 ? (PHASE[i] === 1 ? 0.2 : 1.2) : n + 1.2
+      out.push({
+        t: n === 0 ? UNFOLD1 : T,
+        lift: timeOfStep(liftStep),
+        at: [L.O[0] + f.at[0], L.O[1] + f.at[1]],
+        far,
+        size: (n === 1 ? 2.1 : 1.35) * (far ? 0.75 : 1),
+        form: n === 0 ? 0.6 : 0.35,
+      })
+    })
+  }
+  return out
+})()
+
+function footClouds(p: p5, k: number, t: number, far: boolean) {
+  const gold = smooth(t, 304, 322)
+  const lit = mixHex(WASTES.cloud, WASTES.gold, 0.35 * gold)
+  const under = mixHex(mixHex(WASTES.cloud, WASTES.slate, 0.45), WASTES.dusk, 0.25 * gold)
+  FOOTFALLS.forEach((ff, fi) => {
+    if (ff.far !== far || t < ff.t - ff.form || t > ff.lift + 2.2) return
+    const g = smooth(t, ff.t - ff.form, ff.t)
+    const left = Math.max(0, t - ff.lift)
+    const a = g * (1 - smooth(t, ff.lift, ff.lift + 2.2)) * (far ? 0.8 : 1)
+    if (a < 0.01) return
+    const since = Math.max(0, t - ff.t)
+    const spread = 1 - Math.exp(-since / 0.45)
+    const w = 2.6 * ff.size * (0.55 + 0.45 * g) * (1 + 0.18 * spread) + 1.2 * left
+    const cx = ff.at[0] + 0.35 - 0.3 * left
+    const top = ff.at[1] + 0.02
+    const n = Math.max(5, Math.round(w * 2.4))
+    const puffs: [number, number, number][] = []
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n
+      const bell = Math.exp(-(((u - 0.45) / 0.32) ** 2))
+      const r = w * (0.07 + 0.12 * bell) * (0.8 + 0.4 * hash(i, fi, 41))
+      const x = cx - w / 2 + u * w + (hash(i, fi, 42) - 0.5) * 0.3
+      // Flat along its underside, heaped up under the foot, the foot resting on its top.
+      puffs.push([x, top + 0.19 * w - 0.55 * r * bell + 0.1 * hash(i, fi, 43), r])
+    }
+    p.push()
+    for (const [x, y, r] of puffs) puff(p, k, x + 0.08 * r, y + 0.3 * r, r, under, 0.6 * a, 0.8)
+    for (const [x, y, r] of puffs) puff(p, k, x - 0.06 * r, y - 0.1 * r, r * 0.88, lit, 0.9 * a, 0.8)
+    // The weight coming down on it: soft billows rolled out along it either side from under the foot.
+    const bl = knock(since, 0.9) * (since > 0 ? 1 : 0)
+    if (bl > 0.02) {
+      for (let j = 0; j < 6; j++) {
+        const side = j % 2 ? 1 : -1
+        const d = (0.6 + 0.35 * j) * (0.4 + 1.1 * spread) * ff.size
+        const r = (0.35 + 0.5 * spread + 0.1 * j) * ff.size
+        puff(p, k, cx + side * d, top + 0.35 * ff.size - 0.25 * spread, r, lit, 0.55 * bl * a, 0.75)
+      }
+    }
+    p.pop()
+  })
 }
 
 /* ------------------------------------------------------------------ the part */
@@ -607,6 +822,8 @@ export const flight = part<null>(
         }
       }
       flying(false)
+      // The clouds under its far feet go behind it, those under the near feet over their toes.
+      footClouds(p, k, t, true)
       if (t >= HULL) {
         p.push()
         p.translate(L.O[0] * k, L.O[1] * k)
@@ -616,9 +833,13 @@ export const flight = part<null>(
         if (folded) flightLegs(p, k, W, ink, L.pose, 'near')
         p.pop()
       }
+      flareWindows(p, k, t, L)
+      footClouds(p, k, t, false)
       flying(true)
       lockBreath(p, k, t, L)
       plume(p, k, t)
+      bursts(p, k, t)
+      drawFire(p, k, t, L)
       p.pop()
     },
   },
@@ -658,8 +879,10 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
-    // Close on the two of them on the porch, the door behind them (a follow: the castle is still drifting).
-    const close = (t: number, cells: number): PartShot => ({ t, cells, off: [0.9, -1.4], w: 0 })
+    // The chord's frame: the whole castle, big, from the cloud under its first foot to the fire over its chimney,
+    // set a little right of middle so the smoke rolls back into the open left. Placed where it is on the chord.
+    const O = look(CHORD[0]).O
+    const chordAt: Pt = [O[0] - 3.2, O[1] - 12.3]
     return [
       // The dive over their heads into the grate, and the plank heaving up. (Out, carrying on through each key to the
       // next, until the breath.)
@@ -671,14 +894,12 @@ export const flight = part<null>(
       hold(297.1, 28.5, mid(HOUSE + 0.3, 0.6, -2.0)),
       hold(298.6, 31, mid(298.6, 0.8, -3.2)),
       hold(299.2, 30, mid(299.2, 0.5, -2.8)),
-      // The breath: in to the two of them side by side on its porch as the windows light and the door swings open on
-      // the warm room behind them, while its legs let down.
-      close(300.5, 8.6),
-      close(301.0, 8.0),
-      // The chord: out again as it takes its first step, the whole castle and the sky over its chimney for the three
-      // roars, the bursts blooming up and back into the frame's open left.
-      hold(302.35, 31, mid(302.35, -4, -5)),
-      hold(303.7, 37, mid(303.7, -8.5, -5.5)),
+      // The breath, one slow settle onto the chord's frame as the windows light, the door swings open behind the two
+      // of them and its legs let down onto the air; then held, still, for the chord (the first foot down on a cloud,
+      // the three roars of fire, every window flaring, the smoke rolling up and back).
+      hold(302.0, 31, chordAt),
+      hold(302.95, 31, chordAt),
+      hold(304.0, 37, mid(304.0, -8.5, -5.5)),
       // Then with it, up the sky, going small, under the credits.
       follow(305.3, 42, 0.17, 0.23),
       follow(312, 48, 0.2, 0.25),
