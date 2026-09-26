@@ -61,31 +61,39 @@ const CAP_CRACKS = [148.243, 148.491, 148.981]
 
 /**
  * His height (world y, his centre) at each moment the geyser does something, and how fast he is still going there
- * (v1, cells/s, upward; 0 rammed against a ceiling). Between two, gravity slows him evenly (a `ramp` segment): a hit
- * is sharp and the recovery long. `v0` instead of v1: the leg carries on from the one before without a kick.
+ * (v1, cells/s, upward). Between two, the leg is one even change of speed (a `ramp` segment): a hit is sharp and the
+ * recovery long. `v0` instead of v1: the leg carries on from the one before without a kick. `ram`: the leg slams him
+ * into a ceiling at v1 on a chord (a strike). `pin`: held against that ceiling until it gives, the blow's give first.
  */
 interface Leg {
   at: number
   y: number
   v1?: number
   v0?: number
+  ram?: true
+  pin?: true
 }
+/** How hard the geyser rams him into each ceiling (cells/s up as he hits it). */
+const RAM = 4.5
 const RISE: Leg[] = [
   { at: CODA, y: 33 },
   // In the collar, stopping it; the pickup lifts him a hair on the water spitting round him.
   { at: 135.146, y: 33 },
   { at: 135.411, y: 32.88, v1: 0 },
-  // Blown out, up the heart, rammed against the drum's floor; it cracks; it bursts.
-  { at: 136.11, y: 26.68, v1: 0 },
-  { at: 136.36, y: 26.65, v1: 0 },
-  { at: 137.118, y: 21.4, v1: 0.7 },
-  // Up the drum room to the mine's floor; it cracks, it bursts, a second surge (the crash) up the mine.
-  { at: 138.598, y: 18.68, v1: 0 },
-  { at: 139.072, y: 18.65, v1: 0 },
-  { at: 139.326, y: 16.0, v1: 7 },
-  // Up the mine to the hall's floor; it cracks; it bursts.
-  { at: 140.045, y: 10.18, v1: 0 },
-  { at: 140.273, y: 10.15, v1: 0 },
+  // Blown out, up the heart, rammed into the drum's floor on the chord; it cracks; it bursts.
+  { at: 136.11, y: 26.68, v1: RAM, ram: true },
+  { at: 136.36, y: 26.65, pin: true },
+  // Up the drum room; the surge dies under him, he tops out and sinks, and the next chord catches him and drives him
+  // up into the mine's floor (the room is too short to be thrown into it: he is pushed, gathering speed).
+  { at: 136.95, y: 22.6, v1: 0 },
+  { at: 137.118, y: 22.88 },
+  // The mine's floor; it cracks, it bursts, a second surge (the crash) up the mine.
+  { at: 138.598, y: 18.68, v1: RAM, ram: true },
+  { at: 139.072, y: 18.65, pin: true },
+  { at: 139.326, y: 16.0, v1: 3 },
+  // Up the mine, rammed into the hall's floor; it cracks; it bursts.
+  { at: 140.045, y: 10.18, v1: RAM, ram: true },
+  { at: 140.273, y: 10.15, pin: true },
   { at: 140.8, y: 7.0, v1: 2.2 },
   // Floating up through the hall as it comes down, to the vent's mouth in its vault.
   { at: 143.199, y: 2.4, v0: 2.2 },
@@ -103,11 +111,20 @@ const RISE: Leg[] = [
   { at: 148.08, y: -17.6, v1: 0.05 },
   { at: 148.243, y: -17.45 },
   // The roll: slammed up against the cap, and held there while it cracks.
-  { at: 148.491, y: VENT.top + R + 0.05, v1: 0 },
-  { at: LAST1, y: VENT.top + R + 0.01, v1: 0 },
-  // Blown out of the summit.
-  { at: LAST2, y: -22.6, v1: 3 },
+  { at: 148.491, y: VENT.top + R + 0.05, v1: RAM, ram: true },
+  { at: LAST1, y: VENT.top + R + 0.01, pin: true },
+  // Blown out of the summit, up over the crown to a near-stop, where the second chord's surge throws him east.
+  { at: LAST2, y: -22.6, v1: 0.1 },
 ]
+
+/** The blow's give while he is pinned: down this far and back, damped (critically), peaking this long after the hit. */
+const GIVE = 0.08
+const GIVE_TAU = 0.11
+/** How far under the ceiling the give has him, `t` s after the hit on a pin `dur` s long (back to nothing at its end). */
+function give(t: number, dur: number): number {
+  const u = t / GIVE_TAU
+  return GIVE * u * Math.exp(1 - u) * (1 - smooth(t, dur - 0.1, dur))
+}
 
 /** Out of the summit: the long arc east, under this gravity, to the shoulder. */
 const G_FLIGHT = 4.4
@@ -140,6 +157,12 @@ function lane(begin: number, end: number): Lane {
     const a = RISE[i - 1]
     const b = RISE[i]
     const dur = b.at - a.at
+    if (b.pin) {
+      // Pinned: knocked a hair down off the ceiling by the blow, pressed back up against it before it gives.
+      const at = (T: number): Pt => [X, ly(a.y + (b.y - a.y) * ((T - a.at) / dur) + give(T - a.at, dur))]
+      segs.push(...carried(at, a.at, b.at, Math.ceil(dur * 120)))
+      continue
+    }
     const len = Math.abs(b.y - a.y)
     const seg: Seg = { from: [X, ly(a.y)], to: [X, ly(b.y)], dur }
     if (len > 1e-6) {
@@ -732,8 +755,8 @@ function bellShaft(p: p5, c: Pen, T: number): void {
 const LEGS = RISE.slice(1).map((b, i) => ({ a: RISE[i], b }))
 /** When the geyser kicks him up: the start of every leg that rises and is not carried on from the one before. */
 const KICKS = LEGS.filter(({ a, b }) => b.v0 === undefined && a.y - b.y > 0.05).map(({ a }) => a.at)
-/** When a ceiling stops him dead: the end of every rising leg that ends at rest. */
-const STOPS = LEGS.filter(({ a, b }) => b.v1 === 0 && a.y - b.y > 0.05).map(({ b }) => b.at)
+/** When a ceiling stops him: the end of every leg that rams him into one. */
+const STOPS = LEGS.filter(({ b }) => b.ram).map(({ b }) => b.at)
 
 /** Every strike of the finale: his landing in the collar, the kicks and the stops, the throw, each stone's landing, the cap's cracks, the arc's two touches. */
 export const FALL_HITS: number[] = (() => {
@@ -889,6 +912,14 @@ export const fall = part<State>(
   },
   (slot): PartShot[] => {
     const w = (x: number, y: number): Pt => [lx(x), ly(y)]
+    // Each floor he is pinned under: its crack and burst, where he is pinned (world y), the frame's cells at each, the
+    // frame's lift over him, and a key between bursts (time, cells) where the camera follows him free.
+    const PIN_HOLD = 0.7
+    const PINS: [number, number, number, [number, number], number, [number, number] | null][] = [
+      [FLOORS[0].crack, FLOORS[0].burst, 26.68, [7.4, 7.5], -0.4, [137.25, 8.0]],
+      [FLOORS[1].crack, FLOORS[1].burst, 18.68, [8.5, 8.8], -0.4, [139.6, 9.35]],
+      [FLOORS[2].crack, FLOORS[2].burst, 10.18, [9.75, 10], -0.5, null],
+    ]
     return [
       // The machine broken over him, wide (the runaway's last keys hold the same): he drops into the collar low in it.
       { t: slot.begin, cells: CODA_SHOT.cells, hold: w(CODA_SHOT.world[0], CODA_SHOT.world[1]), w: CODA_SHOT.w },
@@ -896,10 +927,14 @@ export const fall = part<State>(
       // held on him until the crash, then one eased tilt up as it blows him out.
       { t: 135.146, cells: 8.3, hold: w(48.7, 31.5), w: 0.85 },
       { t: 135.411, cells: 7.9, hold: w(47.9, 31.5), w: 0.75 },
-      // Pinned under a floor the camera settles on him (it would otherwise run on ahead to the burst); moving, it leads.
-      { t: 136.11, cells: 7.4, off: [0, -0.4] },
-      { t: 138.598, cells: 8.5, off: [0, -0.4] },
-      { t: 140.273, cells: 10, off: [0, -0.5] },
+      // Pinned under a floor the camera holds on him from the crack to the burst (the follow's lead would otherwise
+      // climb the frame away from him to the burst), and tilts up with him as it lets him go; moving, it leads.
+      // (Between two pins it follows him free, its hold passing evenly from one pin to the next, unweighted.)
+      ...PINS.flatMap(([crack, burst, y, cells, lift, next], i): PartShot[] => [
+        { t: crack, cells: cells[0], hold: w(COL, y + lift), w: PIN_HOLD, off: [0, lift] },
+        { t: burst, cells: cells[1], hold: w(COL, y + lift), w: PIN_HOLD, off: [0, lift] },
+        ...(next ? [{ t: next[0], cells: next[1], hold: w(COL, (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [0, lift] as Pt }] : []),
+      ]),
       // The hall, wide, coming down round him: the pillars one a chord, then on the hammer blows the throne and the
       // lights, with him rising into the vent's mouth over it all.
       { t: 142.0, cells: 12.5, off: [0, -1.5] },
@@ -910,13 +945,12 @@ export const fall = part<State>(
       { t: 146.107, cells: 17.5, hold: w(53.2, 0.7), w: 0.94 },
       { t: 146.601, cells: 18.5, hold: w(52, -0.5), w: 0.92 },
       { t: 146.85, cells: 18, hold: w(50.6, -3.8), w: 0.9 },
-      // Up the dark vent after him through the silence, one even tilt (under a frame height a second), and in on him
-      // under the cap as the roll slams him against it; out again for the blow-out, the summit whole.
+      // Up the dark vent after him through the silence, one even tilt (under a frame height a second), in on him
+      // under the cap by the roll, and from the roll one move out for the blow-out, the summit whole.
       { t: 147.3, cells: 16.5, hold: w(48.8, -9.5), w: 0.9 },
-      { t: 148.0, cells: 13, hold: w(48.0, -17.5), w: 0.85 },
-      { t: 148.5, cells: 12, hold: w(48.0, -18.6), w: 0.85 },
+      { t: 148.243, cells: 13, hold: w(48.0, -17.8), w: 0.85 },
       { t: LAST1, cells: 18.6, hold: w(48.6, -21.0), w: 0.95 },
-      { t: LAST2, cells: 19.1, hold: w(49.3, -21.5), w: 0.92 },
+      { t: LAST2, cells: 18.8, hold: w(49.3, -21.5), w: 0.92 },
       // The plume surges; he is thrown across it east and the camera goes with him, close enough to see him (the
       // plume and the broken summit behind him), down to the shoulder.
       { t: 150.6, cells: 15, hold: w(51.0, -24.5), w: 0.5 },
