@@ -73,15 +73,18 @@ export const home = part<null>(
       // top; then a slow creep on out while it stares at the candle.
       { t: LAST[1] + 0.5, cells: 16.3, hold: w(1.3, 5.16), w: 1 },
       { t: LAST[1] + 2.45, cells: 16.5, hold: w(1.0, 5.2), w: 1 },
-      // The cat tucks back in; the camera draws back to the whole loft in the dark for the credits, the candle its one
-      // warm light, the dark of the roof above it for the cards.
-      { t: CREDITS_AT + 1.4, cells: 21.5, hold: w(-3.4, 1.5), w: 1 },
-      // Then one slow creep through the credits toward the candle (a steady 2% closer a second, so the room is never
-      // still), ending on it a little above the middle, under the cards, the stove's glow beside it and the cat asleep
-      // just below the frame.
-      { t: CREDITS_AT + 3.0, cells: 20.6, hold: w(-2.9, 1.55), w: 1 },
-      { t: DURATION - 2, cells: 13.0, hold: w(1.0, 2.0), w: 1 },
-      { t: DURATION, cells: 12.6, hold: w(1.2, 2.0), w: 1 },
+      // The cat tucks back in; in one unhurried move the camera draws back and up to the whole loft in the dark for
+      // the credits: the candle its one warm light in the middle, the cat asleep whole along the floor at the bottom,
+      // and the wall shelf over the bench (its jug's top at -4.2) a third of the way down, under the cards and their
+      // dark bed (the top 30%), so no word sits on it or on the windlass. The east wall's cut stays out (x1 < 16) and
+      // the dipping wheel is whole at the left. It arrives as the first card comes into focus, so the shelf has
+      // passed under the frame's top third before any word is over it.
+      { t: CREDITS_AT + 0.8, cells: 22.6, hold: w(-4.1, 0.15), w: 1 },
+      { t: CREDITS_AT + 3.0, cells: 23.0, hold: w(-4.5, -0.05), w: 1 },
+      // Then it drifts on out the same way, slower and slower, so the room is never still and the picture holds: the
+      // shelf a third down, the floor at the frame's foot, to the end.
+      { t: DURATION - 2, cells: 23.45, hold: w(-4.95, -0.28), w: 1 },
+      { t: DURATION, cells: 23.5, hold: w(-5.0, -0.3), w: 1 },
     ]
   },
 )
