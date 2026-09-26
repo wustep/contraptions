@@ -56,6 +56,12 @@ export class Show {
   public readonly solo: string | null
   /** The world every universe is built in, when pinned; null to go round the loop. */
   public readonly pinned: World | null
+  /**
+   * How a moving ball's trail is drawn: 'discs' (unset: four fading discs behind it, every show until Mountain King)
+   * or 'smear' (one tapered streak from where it was to where it is: at a fast fall the discs sit more than a ball
+   * apart and read as a string of other balls). A show opts in by overriding it.
+   */
+  public readonly trail?: 'discs' | 'smear'
 
   constructor(
     public readonly seed: string,

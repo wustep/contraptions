@@ -52,6 +52,8 @@ const PEOPLE: Record<Who, { id: number; color: string }> = {
 }
 
 export class MountainShow extends Show {
+  /** Peer's trail is one streak, not four discs: at the fast drops and the geyser's surges the discs read as more balls. */
+  override readonly trail = 'smear' as const
   private readonly stages: Stage[]
   private readonly worlds: Universe[]
 

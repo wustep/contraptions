@@ -211,26 +211,36 @@ export function capCracks(p: p5, c: Pen, o: Pt, x: number, T: number, q: Pt, at:
   p.noStroke()
   at.forEach((t0, i) => {
     if (T < t0) return
-    const grow = smooth(T, t0, t0 + 0.16)
-    const wide = 0.009 + 0.014 * smooth(T, t0, burst)
-    const x0 = x + (i - 1) * 0.2 + 0.05 * (hash(i, 51) - 0.5)
-    const x1 = x0 + (hash(i, 52) - 0.5) * 0.7
+    // A fissure opening down through the cap from the sky: widest at the surface, where the dawn gets in, narrowing to
+    // nothing short of the vent's roof, and clear of him to either side (never a line from the ball to the sky).
+    const grow = smooth(T, t0, t0 + 0.2)
+    const side = i % 2 === 0 ? -1 : 1
+    const x1 = x + side * (0.45 + 0.28 * i + 0.1 * hash(i, 52))
+    const x0 = x + side * (0.3 + 0.12 * i)
     const ceil = surf(x1)
-    const pts: Pt[] = []
-    for (let j = 0; j <= 5; j++) {
-      const u = (j / 5) * grow
-      pts.push([x0 + (x1 - x0) * u + 0.06 * (hash(i, j, 53) - 0.5) * (j > 0 && j < 5 ? 1 : 0), VENT.top + (ceil - VENT.top) * u])
+    const floor = VENT.top - 0.3
+    const mouth = (0.07 + 0.05 * hash(i, 54)) * (0.5 + 0.5 * smooth(T, t0, burst))
+    const n = 6
+    const mid: Pt[] = []
+    for (let j = 0; j <= n; j++) {
+      const u = j / n
+      const y = ceil + (floor - ceil) * u * grow
+      mid.push([x1 + (x0 - x1) * u + 0.07 * (hash(i, j, 53) - 0.5) * (j > 0 && j < n ? 1 : 0), y])
     }
-    p.fill(alpha(p, mixHex(SKY.dawn, SKY.star, 0.4), 0.85))
-    p.beginShape()
-    for (const [a, b] of pts) p.vertex(X(a - wide), Y(b))
-    for (let j = pts.length - 1; j >= 0; j--) p.vertex(X(pts[j][0] + wide * (1 - j / 6)), Y(pts[j][1]))
-    p.endShape(p.CLOSE)
+    const band = (w: number, col: string, a: number) => {
+      p.fill(alpha(p, col, a))
+      p.beginShape()
+      for (const [j, [a0, b0]] of mid.entries()) p.vertex(X(a0 - w * (1 - j / n) - 0.004), Y(b0))
+      for (let j = n; j >= 0; j--) p.vertex(X(mid[j][0] + w * (1 - j / n) + 0.004), Y(mid[j][1]))
+      p.endShape(p.CLOSE)
+    }
+    band(mouth * 2.6, SKY.dawn, 0.14)
+    band(mouth, mixHex(SKY.dawn, SKY.sun, 0.4), 0.8)
     // Grit sifting out of it, down the vent past him.
     p.fill(STONE.mid)
     for (let j = 0; j < 3; j++) {
       const u = (T - t0 + j * 0.23) % 0.7
-      const gx = x0 + (j - 1) * 0.12
+      const gx = x0 + side * 0.05 * j
       const gy = VENT.top + 0.5 * G * u * u
       p.ellipse(X(gx), Y(gy), 0.022 * k, 0.03 * k)
     }

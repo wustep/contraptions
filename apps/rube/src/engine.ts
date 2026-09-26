@@ -339,7 +339,16 @@ export function drawWorld(
   if (here.balls) paintRiders(p, show, t, here, sx, sy, k, weight)
   else if (!here.hidden && here.scale > 0) {
     const spin = (here.x - u.pieces[0].col) / R
-    if (!here.ball.ghost) {
+    if (!here.ball.ghost && show.trail === 'smear') {
+      const pts: { x: number; y: number; scale: number }[] = []
+      for (let i = 4; i >= 1; i--) {
+        const back = show.at(t - i * 0.022)
+        if (back.universe !== u || back.ball.id !== here.ball.id || back.hidden) continue
+        pts.push({ x: back.x, y: back.y, scale: back.scale })
+      }
+      pts.push({ x: here.x, y: here.y, scale: here.scale })
+      smear(p, pts, here.ball.color, sx, sy, k)
+    } else if (!here.ball.ghost) {
       for (let i = 4; i >= 1; i--) {
         const back = show.at(t - i * 0.022)
         if (back.universe !== u || back.ball.id !== here.ball.id || back.hidden) continue
@@ -390,7 +399,16 @@ function paintRiders(
   for (const rider of riders) {
     const scale = rider.scale ?? 1
     if (scale <= 0.02) continue
-    if (!rider.ghost) {
+    if (!rider.ghost && show.trail === 'smear') {
+      const pts: { x: number; y: number; scale: number }[] = []
+      for (let n = 0; n < backs.length; n++) {
+        const prev = backs[n].balls?.find((b) => b.id === rider.id)
+        if (!prev || backs[n].universe !== u || (prev.scale ?? 1) <= 0.02) continue
+        pts.push({ x: prev.x, y: prev.y, scale: prev.scale ?? 1 })
+      }
+      pts.push({ x: rider.x, y: rider.y, scale })
+      smear(p, pts, rider.color, sx, sy, k)
+    } else if (!rider.ghost) {
       for (let n = 0; n < backs.length; n++) {
         const i = 4 - n
         const prev = backs[n].balls?.find((b) => b.id === rider.id)
@@ -412,6 +430,49 @@ function paintRiders(
     const spin = (rider.x - u.pieces[0].col) / R
     ball(p, k, u.theme.ink, weight, rider.color, sx(rider.x), sy(rider.y), spin, scale, rider.stretch ?? 1, angle, !!rider.ghost)
   }
+}
+
+/**
+ * A ball's trail as one tapered streak (a show's `trail: 'smear'`): from the oldest sample, thin and faint, to the
+ * ball, a little under its width, one fill so nothing overlaps into beads. Nothing when it has barely moved.
+ */
+function smear(
+  p: p5,
+  pts: { x: number; y: number; scale: number }[],
+  color: string,
+  sx: (x: number) => number,
+  sy: (y: number) => number,
+  k: number,
+): void {
+  if (pts.length < 2) return
+  let len = 0
+  for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y)
+  if (len < 0.12) return
+  const n = pts.length - 1
+  const left: [number, number][] = []
+  const right: [number, number][] = []
+  for (let i = 0; i <= n; i++) {
+    const a = pts[Math.max(0, i - 1)]
+    const b = pts[Math.min(n, i + 1)]
+    const dx = sx(b.x) - sx(a.x)
+    const dy = sy(b.y) - sy(a.y)
+    const d = Math.hypot(dx, dy) || 1
+    const r = R * k * pts[i].scale * (0.15 + 0.7 * (i / n))
+    const nx = (-dy / d) * r
+    const ny = (dx / d) * r
+    left.push([sx(pts[i].x) + nx, sy(pts[i].y) + ny])
+    right.push([sx(pts[i].x) - nx, sy(pts[i].y) - ny])
+  }
+  const c = p.color(color)
+  c.setAlpha(255 * Math.min(0.34, 0.12 + 0.12 * len))
+  p.push()
+  p.noStroke()
+  p.fill(c)
+  p.beginShape()
+  for (const [x, y] of left) p.vertex(x, y)
+  for (let i = right.length - 1; i >= 0; i--) p.vertex(right[i][0], right[i][1])
+  p.endShape(p.CLOSE)
+  p.pop()
 }
 
 function drawBackdrop(
