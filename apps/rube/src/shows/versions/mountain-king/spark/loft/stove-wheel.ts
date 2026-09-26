@@ -155,7 +155,7 @@ export const seatAt = (t: number): Pt => onFrame(0, t, SEAT, HANG - R)
 /** The vat: a tall tub of staves and hoops, its rim, the warm tallow in it. */
 export const VAT = { x0: -23.35, x1: -18.55, rim: 6.3, wax: 6.52, lip: 0.2 }
 /** The ladle leaning on the vat: its bowl hooked over the east rim, its handle's end on the floor. */
-export const LADLE = { top: [VAT.x1 + 0.12, VAT.rim + 0.14] as Pt, foot: [-13.2, FLOOR_Y - 0.06] as Pt, thick: 0.14 }
+export const LADLE = { top: [VAT.x1 + 0.12, VAT.rim + 0.14] as Pt, foot: [-13.2, FLOOR_Y - 0.06] as Pt, thick: 0.19 }
 const LDX = LADLE.foot[0] - LADLE.top[0]
 const LDY = LADLE.foot[1] - LADLE.top[1]
 export const LADLE_LEN = Math.hypot(LDX, LDY)
@@ -332,16 +332,17 @@ export function drawWheel(p: p5, k: number, ink: string, weight: number, L: Ligh
     poly(p, k, hoop)
   }
 
-  // The ladle, leaning on the vat: its bowl hooked over the rim, the iron handle down to the floor.
+  // The ladle, leaning on the vat: its bowl hooked over the rim, the iron handle down to the floor. A dark iron shaft
+  // in the shadow under the bench, lit only where the spark (or the fire) is near it: never a pale line across the room.
   const [lx0, ly0] = LADLE.top
   const [lx1, ly1] = LADLE.foot
   const nx = -LU[1] * LADLE.thick * 0.5
   const ny = LU[0] * LADLE.thick * 0.5
   const handle: Pt[] = [[lx0 + nx, ly0 + ny], [lx1 + nx, ly1 + ny], [lx1 - nx, ly1 - ny], [lx0 - nx, ly0 - ny]]
-  p.fill(shade(L, (lx0 + lx1) / 2, (ly0 + ly1) / 2, mixHex(LOFT.ironLit, LOFT.pewter, 0.4), LOFT.pewter, 0.62, false))
-  p.strokeWeight(w * 0.6)
+  p.fill(shade(L, (lx0 + lx1) / 2, (ly0 + ly1) / 2, LOFT.iron, mixHex(LOFT.ironLit, LOFT.pewter, 0.5), 0.55, false))
+  p.strokeWeight(w * 0.7)
   poly(p, k, handle)
-  lightOn(p, k, L, handle, mixHex(LOFT.pewter, LOFT.glow, 0.4), 0.7)
+  lightOn(p, k, L, handle, mixHex(LOFT.pewter, LOFT.glow, 0.4), 0.8)
   // The bowl: a shallow cup over the rim, its mouth to the vat.
   const bowl: Pt[] = []
   for (let j = 0; j <= 12; j++) {
