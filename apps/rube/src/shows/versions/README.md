@@ -106,7 +106,7 @@ procedural machine under a steady beat, and a struck bar on every strike,
 made in the page. `check:shows` still walks that module. It is not a show.
 
 `come-recover/opus55-all-at-once` (in the picker, **Everything**, one take,
-**Opus**) is a one-shot Opus 5.5 take on Son
+**Opus 5.5**) is a one-shot Opus 5.5 take on Son
 Lux's *Come Recover (Empathy Fight)*, the finale cue of *Everything Everywhere
 All at Once*. The recording is copyrighted and demo only
 (`docs/promo/EEAAO_COME_RECOVER_ATTRIBUTION.txt`). Every piece is new. The show
