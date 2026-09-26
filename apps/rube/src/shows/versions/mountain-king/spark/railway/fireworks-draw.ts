@@ -3,7 +3,7 @@ import { mixHex, R, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { heat } from '../fx'
 import { FIRES, RAILWAY } from '../worlds'
-import { horizonAt, moonAt } from './night'
+import { horizonAt, moonAt, moonLight } from './night'
 import {
   BATTERY_X0,
   BURSTS,
@@ -313,7 +313,7 @@ export function drawGround(pen: Pen, L: Light[]): void {
       }
     }
     const m = moonAt(pen.p, k, t)
-    glints(m.x, 0.22, 0.7 + 0.8 * m.r, 7, FW.moonHalo, 11)
+    glints(m.x, 0.22 * moonLight(t), 0.7 + 0.8 * m.r, 7, FW.moonHalo, 11)
     // What burns in the sky burns in the river too, under it, shivering as the water moves.
     for (const l of L) {
       if (l.y > GY - 1.5 || l.a < 0.04) continue

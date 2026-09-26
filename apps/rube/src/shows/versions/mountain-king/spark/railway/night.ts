@@ -27,15 +27,28 @@ interface Frame {
 /**
  * The moon's place on the screen (x and y as fractions of the frame, its diameter as a fraction of the frame's height),
  * by show time. High on the right while the train runs; for the trestle (phrase 14, the wide shot) it hangs big and low
- * behind the train's middle, so the whole train crosses its face; then back up on the right for the festival.
+ * behind the train's middle, so the whole train crosses its face; then back up on the right for the festival. Out of
+ * the smokestack (101.95) the frame is close on the spark, so the moon waits low beyond the right edge and rises into
+ * its place as the camera pulls out to the station, instead of standing beside the spark.
  */
 function moonPlace(t: number): { x: number; y: number; d: number } {
   const wide = smooth(t, 113.2, 115.2) * (1 - smooth(t, 118.6, 120.6))
+  const late = 1 - smooth(t, 102.2, 103.6)
   return {
-    x: 0.77 + (0.5 - 0.77) * wide,
-    y: 0.23 + (0.335 - 0.23) * wide,
+    x: 0.77 + (0.5 - 0.77) * wide + 0.34 * late,
+    y: 0.23 + (0.335 - 0.23) * wide + 0.12 * late,
     d: 0.15 + (0.34 - 0.15) * wide,
   }
+}
+
+/**
+ * How bright the moon is, 0..1. Full over the station, the run and the trestle; as the fire takes the night over it
+ * recedes: dimmer with the festival (124), dimmer again under the finale's smoke (the crash, 134.25), and from the
+ * Titan (144.8) through the silence it is a dull smudge behind the smoke, so the dying ember is the brightest thing in
+ * the frame.
+ */
+export function moonLight(t: number): number {
+  return 1 - 0.28 * smooth(t, 124, 128.5) - 0.27 * smooth(t, 134.2, 138) - 0.33 * smooth(t, 144.4, 146.4)
 }
 
 /** Where the horizon is on the screen, as a fraction of the frame from the top: the camera's eye, a little low. */
@@ -102,22 +115,33 @@ function stars(p: p5, k: number, f: Frame, t: number, hy: number, moon: { x: num
   p.pop()
 }
 
-/** The moon: a soft halo, the disc, its seas. No outline, no bright core: a wide pale thing, never a ball. */
-function moon(p: p5, k: number, m: { x: number; y: number; r: number }): void {
+/**
+ * The moon: a soft halo, the disc, its seas. No outline, no bright core: a wide pale thing, never a ball. As it
+ * recedes (`moonLight`) the halo and the disc fade and the disc's edge goes soft, and a bank of the finale's smoke
+ * drifts across it.
+ */
+function moon(p: p5, k: number, m: { x: number; y: number; r: number }, t: number): void {
+  const light = moonLight(t)
+  const dim = 1 - light
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const halo = ctx.createRadialGradient(m.x * k, m.y * k, m.r * 0.9 * k, m.x * k, m.y * k, m.r * 3.2 * k)
-  halo.addColorStop(0, 'rgba(141, 156, 198, 0.32)')
-  halo.addColorStop(0.35, 'rgba(141, 156, 198, 0.1)')
+  halo.addColorStop(0, `rgba(141, 156, 198, ${0.32 * light})`)
+  halo.addColorStop(0.35, `rgba(141, 156, 198, ${0.1 * light})`)
   halo.addColorStop(1, 'rgba(141, 156, 198, 0)')
   ctx.fillStyle = halo
   ctx.fillRect((m.x - m.r * 3.2) * k, (m.y - m.r * 3.2) * k, m.r * 6.4 * k, m.r * 6.4 * k)
+  ctx.save()
+  // The disc, seen through more and more smoke: fainter, greyer, its edge blurred.
+  ctx.globalAlpha = 0.25 + 0.75 * light
+  const soft = dim * m.r * 0.22 * k
+  if (soft > 0.6) ctx.filter = `blur(${soft.toFixed(1)}px)`
   p.push()
   p.noStroke()
-  p.fill(RAILWAY.moon)
+  p.fill(mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.5 * dim))
   p.circle(m.x * k, m.y * k, m.r * 2 * k)
   // The seas: soft, irregular, the grey-blue of the halo.
   const sea = p.color(mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.42))
-  sea.setAlpha(150)
+  sea.setAlpha(150 * light)
   p.fill(sea)
   const blob = (cx: number, cy: number, rx: number, ry: number, seed: number) => {
     const at = (i: number): [number, number] => {
@@ -134,6 +158,34 @@ function moon(p: p5, k: number, m: { x: number; y: number; r: number }): void {
   blob(-0.05, 0.12, 0.26, 0.2, 3)
   blob(0.34, 0.22, 0.14, 0.18, 4)
   p.pop()
+  ctx.restore()
+  // The smoke bank: long soft wisps drifting slowly east across the moon's face, thicker as the finale goes on.
+  if (dim > 0.02) {
+    for (let i = 0; i < 5; i++) {
+      const x = m.x + m.r * (-2.6 + 1.3 * i + 0.9 * hash(i, 41) + 0.16 * (t - 124) * (0.7 + 0.5 * hash(i, 42)))
+      const wrap = ((x - m.x) / m.r + 3.2) % 6.4
+      const cx = m.x + (wrap - 3.2) * m.r
+      const cy = m.y + m.r * (0.9 * (hash(i, 43) - 0.5) + 0.12 * Math.sin(t * 0.3 + i))
+      const rr = m.r * (1.2 + 0.7 * hash(i, 44))
+      const a = dim * (0.5 + 0.3 * hash(i, 45)) * Math.min(1, (3.2 - Math.abs(wrap - 3.2)) / 1.2)
+      ctx.save()
+      ctx.translate(cx * k, cy * k)
+      ctx.scale(1, 0.42)
+      const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rr * k)
+      const col = mixHex(RAILWAY.smoke, RAILWAY.sky, 0.35)
+      gr.addColorStop(0, rgbaOf(col, 0.85 * a))
+      gr.addColorStop(0.55, rgbaOf(col, 0.45 * a))
+      gr.addColorStop(1, rgbaOf(col, 0))
+      ctx.fillStyle = gr
+      ctx.fillRect(-rr * k, -rr * k, 2 * rr * k, 2 * rr * k)
+      ctx.restore()
+    }
+  }
+}
+
+function rgbaOf(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
 }
 
 /** The plain from the horizon down: a band of moonlit haze at the horizon, darkening toward us. */
@@ -232,7 +284,7 @@ export const night = scenery<null>({
     p.push()
     sky(p, k, f, hy)
     stars(p, k, f, t, hy, m)
-    moon(p, k, m)
+    moon(p, k, m, t)
     plain(p, k, f, hy)
     // The far line, then the hedges nearer in, darker and quicker.
     country(p, k, f, hy, 0.004, 11, 1, 0, mixHex(RAILWAY.plain, RAILWAY.skyLow, 0.2))
