@@ -205,8 +205,14 @@ export function pigPose(t: number): PigPose {
   const since = t - TIMES.pan
   const startle = since <= 0 ? 0 : smooth(since, 0, 0.16) * Math.exp(-Math.max(0, since - 0.16) / 1.3)
   const doze = smooth(t, 19.0, 21.5)
-  head += -0.22 * lookUp + 0.5 * sniff - 0.38 * startle + 0.34 * doze
-  const ears = Math.min(1, 0.25 + 0.5 * lookUp + 0.9 * startle - 0.25 * doze + 0.3 * sniff)
+  // Each clatter of the pebble down the stair: its ears prick and its head comes up a little toward the sound.
+  let clatter = 0
+  for (const c of TIMES.pebble) {
+    const d = t - c
+    if (d > 0 && d < 1.2) clatter = Math.max(clatter, smooth(d, 0, 0.06) * Math.exp(-d / 0.3))
+  }
+  head += -0.22 * lookUp + 0.5 * sniff - 0.38 * startle + 0.34 * doze - 0.07 * clatter
+  const ears = Math.min(1, 0.25 + 0.5 * lookUp + 0.9 * startle - 0.25 * doze + 0.3 * sniff + 0.45 * clatter)
   const eyes = 1 - doze + 0.3 * startle
   const breath = 0.5 + 0.5 * Math.sin(t * (doze > 0.5 ? 1.6 : 2.6))
   const lift = 0.07 * moving
