@@ -5,7 +5,7 @@ import { alpha, box, carried, hash, part, route, smooth, type PartShot } from '.
 import { onsetsIn } from '../music'
 import { G } from '../physics'
 import { TOWN } from '../worlds'
-import { DOOR_AT, TOWN_AT, WAKE, glow, hatShape, inside, soft } from './town'
+import { DOOR_AT, TOWN_AT, WAKE, glow, hatShape, inside, outside, soft } from './town'
 import { along, curve, polar, ring, step } from './shop-kit'
 
 /**
@@ -72,6 +72,17 @@ const DOOR = 27.638
 const SHUT = 30.203
 
 /** Every strike of this part, in show seconds. */
+/**
+ * The street's lamps, still lit from the night: an iron post on the kerb, a lantern, and over it a snuffer cap on a
+ * counterweighted arm. As she comes by each, on the theme's strong notes, its arm drops and the cap comes down on the
+ * lantern's chimney: the flame goes out, a thread of smoke. The town's night put out in her wake, a lamp a phrase.
+ */
+const STREET_LAMPS: { x: number; t: number }[] = [
+  { x: 14.15, t: 30.203 },
+  { x: 20.55, t: 33.884 },
+  { x: 23.2, t: 35.84 },
+]
+
 export const SHOP_HITS: number[] = [
   ...NOTES,
   TOP,
@@ -91,7 +102,10 @@ export const SHOP_HITS: number[] = [
   DOOR,
   SHUT,
   ...WAKE.map((w) => w.t),
-].sort((a, b) => a - b)
+  ...STREET_LAMPS.map((l) => l.t),
+]
+  .filter((t, i, all) => all.indexOf(t) === i)
+  .sort((a, b) => a - b)
 
 /* ------------------------------------------------------------------ the rig: where everything stands */
 
@@ -423,7 +437,7 @@ export const shop = part<ShopState>(
       ]),
     ]
     return {
-      cells: box(-2.5, -4, 5.5, 1),
+      cells: box(-2.5, -4, 24.5, 1),
       exit: [EXIT_X + 0.5, 0],
       lane: { segs, fire: at(START) },
       state: { begin: slot.begin },
@@ -453,9 +467,10 @@ export const shop = part<ShopState>(
     { t: RAISED, cells: 4.3, hold: [4.2, -1.3], w: 1 },
     // Across the shop to the door.
     { t: DOOR, cells: 5.0, hold: [7.3, -1.4], off: [0.9, -1.25], w: 0.35 },
-    // The street, the town waking: wide, following, the houses' first floors in the frame.
-    { t: 30.2, cells: 7.2, off: [1.6, -2.15], w: 0 },
-    { t: 34.6, cells: 7.2, off: [1.5, -2.15], w: 0 },
+    // The street, the town waking: following her a third of the way up the frame, close enough that the fronts pass,
+    // the lamps put out as she comes by them.
+    { t: 30.2, cells: 6.2, off: [1.3, -1.2], w: 0 },
+    { t: 34.6, cells: 6.0, off: [1.2, -1.1], w: 0 },
     // Down to the alley's framing on the seam.
     { t: slot.end, cells: 5, hold: [EXIT_X + 0.9, -0.8], w: 1 },
   ],
@@ -479,7 +494,67 @@ function drawShop(p: p5, c: Ctx, t: number): void {
   drawSewing(p, c, t, tone)
   drawPedal(p, c, t, tone)
   drawSteam(p, c, t)
+  drawStreetLamps(p, c, t)
   p.pop()
+}
+
+function drawStreetLamps(p: p5, c: Ctx, t: number): void {
+  if (t > 44) return
+  const { k, ink, weight: W } = c
+  const X = (v: number) => v * k
+  const tone = outside(t)
+  const iron = tone(mixHex(TOWN.slateDark, '#000000', 0.25))
+  const HEAD = -3.35
+  for (const lamp of STREET_LAMPS) {
+    const { x } = lamp
+    const e = t - lamp.t
+    // The arm: up at rest (the counterweight holds it), dropping on the note, a small bounce on the cap, then still.
+    const drop = e < -0.14 ? 0 : e < 0 ? ((e + 0.14) / 0.14) ** 2 : 1 - 0.08 * Math.exp(-e / 0.12) * Math.abs(Math.sin(e * 26))
+    const lit = e < 0 ? 1 : Math.exp(-e / 0.12)
+    p.push()
+    // The post, its foot, and the crook the lantern hangs from.
+    p.stroke(ink)
+    p.strokeWeight(W * 0.8)
+    p.fill(iron)
+    p.rect(X(x - 0.05), X(HEAD + 0.2), X(0.1), X(FLOOR - HEAD - 0.2))
+    p.rect(X(x - 0.11), X(FLOOR - 0.22), X(0.22), X(0.22))
+    p.noFill()
+    p.stroke(iron)
+    p.strokeWeight(W * 1.6)
+    p.line(X(x), X(HEAD + 0.22), X(x), X(HEAD))
+    // The lantern: a four-paned box under a small cap, lit or out.
+    p.stroke(ink)
+    p.strokeWeight(W * 0.7)
+    p.fill(lit > 0.02 ? mixHex(tone(TOWN.slateDark), TOWN.glow, 0.9 * lit + 0.1) : tone(TOWN.slateDark))
+    p.rect(X(x - 0.12), X(HEAD + 0.02), X(0.24), X(0.3))
+    p.fill(iron)
+    p.triangle(X(x - 0.16), X(HEAD + 0.02), X(x + 0.16), X(HEAD + 0.02), X(x), X(HEAD - 0.12))
+    if (lit > 0.02) glow(p, k, x, HEAD + 0.17, 0.7, TOWN.glow, 0.3 * lit)
+    // The snuffer: an arm pivoted on the post under the lantern, a counterweight on its short end, the cap on its long
+    // one; up and back at rest, down over the lantern's chimney on the note.
+    const a = -1.15 + 1.15 * drop
+    const pv: Pt = [x + 0.05, HEAD + 0.4]
+    const tip: Pt = [pv[0] + 0.34 * Math.cos(a - 1.05), pv[1] + 0.34 * Math.sin(a - 1.05)]
+    const cw: Pt = [pv[0] - 0.14 * Math.cos(a - 1.05), pv[1] - 0.14 * Math.sin(a - 1.05)]
+    p.stroke(iron)
+    p.strokeWeight(W * 0.9)
+    p.line(X(cw[0]), X(cw[1]), X(tip[0]), X(tip[1]))
+    p.stroke(ink)
+    p.strokeWeight(W * 0.6)
+    p.fill(iron)
+    p.rect(X(cw[0] - 0.04), X(cw[1] - 0.04), X(0.08), X(0.08))
+    // The cap hangs plumb from the arm's end.
+    p.triangle(X(tip[0] - 0.08), X(tip[1] + 0.1), X(tip[0] + 0.08), X(tip[1] + 0.1), X(tip[0]), X(tip[1] - 0.04))
+    p.pop()
+    // A thread of smoke from the snuffed wick, drifting up and away.
+    if (e > 0 && e < 3) {
+      for (let j = 0; j < 5; j++) {
+        const age = e - j * 0.12
+        if (age <= 0) continue
+        soft(p, k, x + 0.12 * age + 0.03 * j, HEAD - 0.2 - 0.45 * age, 0.08 + 0.12 * age, TOWN.plasterShade, 0.28 * Math.exp(-age / 0.9))
+      }
+    }
+  }
 }
 
 /** In front of her: the cup's front lip while she rides it. */
