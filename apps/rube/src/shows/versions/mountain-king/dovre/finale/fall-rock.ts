@@ -130,7 +130,7 @@ function ventAt(y: number, x: number): [number, number] {
  * sees). Once the geyser's spray is in it its back wall shows wet and its sides round off, so it reads as a shaft;
  * then day comes down it from the top once the cap is gone.
  */
-export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number }): void {
+export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: number; day: number; shut?: number }): void {
   const k = c.k
   const X = (v: number) => (v - o[0] + q[0]) * k
   const Y = (v: number) => (v - o[1] + q[1]) * k
@@ -147,12 +147,13 @@ export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: numbe
     for (let j = rows.length - 1; j >= 0; j--) p.vertex(X(to(rows[j])), Y(rows[j][2]))
     p.endShape(p.CLOSE)
   }
-  const back = mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet)
+  // Once the crater's rubble has closed it, the shaft goes back to the dark of the rock round it (a trace of his way).
+  const back = mixHex(mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet), STONE.deep, 0.7 * (light.shut ?? 0))
   p.push()
   p.noStroke()
   p.fill(back)
   band((r) => r[0], (r) => r[1])
-  if (light.wet > 0.01) {
+  if (light.wet * (1 - (light.shut ?? 0)) > 0.01) {
     // One side a shade lighter where the rock turns toward us, broad and soft, so it reads as a shaft.
     p.fill(alpha(p, STONE.mid, 0.2 * light.wet))
     band((r) => r[0], (r) => r[0] + (r[1] - r[0]) * 0.22)

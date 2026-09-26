@@ -329,7 +329,10 @@ function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: num
  * the middle of its base, cells.
  */
 function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number): void {
-  const s = 1.05
+  // A stave church after Borgund: steep dark shingled roofs stacked tight over a low skirt roof, each tier a short
+  // wall and a steeper, narrower roof, dragon heads rearing from the upper gables, one tall spire; tarred black, the
+  // east slopes catching the dawn. Tall and narrow: never the flared, spreading tiers of a pagoda.
+  const s = 1.3
   const u = (v: number) => v * s * k
   p.push()
   p.rectMode(p.CORNER)
@@ -337,35 +340,51 @@ function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number
   p.noStroke()
   const tar = mixHex(SKY.tar, mixHex(SKY.tar, SKY.far, 0.5), 0.35 * d)
   const lit = mixHex(SKY.tar, SKY.dawn, 0.35 * d)
-  p.fill(tar)
-  // The nave's walls and the three roofs, each narrower and higher, a short wall between them.
-  p.quad(u(-0.46), 0, u(0.46), 0, u(0.46), u(-0.2), u(-0.46), u(-0.2))
-  const roofs: [number, number, number][] = [[0.62, -0.18, 0.2], [0.42, -0.44, 0.18], [0.26, -0.66, 0.16]]
-  roofs.forEach(([w, yy, h], i) => {
-    p.fill(tar)
-    p.triangle(u(-w), u(yy), u(w), u(yy), 0, u(yy - h))
-    if (i < 2) p.quad(u(-w * 0.62), u(yy - h * 0.5), u(w * 0.62), u(yy - h * 0.5), u(w * 0.62), u(yy - h * 0.5 - 0.1), u(-w * 0.62), u(yy - h * 0.5 - 0.1))
-    // The eastern slope in the dawn light.
-    p.fill(lit)
-    p.triangle(0, u(yy - h), u(w), u(yy), u(w * 0.55), u(yy))
-    // Dragon heads: a small upswept hook at each end of the roof ridge.
+  const quad = (pts: [number, number][], col: string) => {
+    p.fill(col)
+    p.beginShape()
+    for (const [a, b] of pts) p.vertex(u(a), u(b))
+    p.endShape(p.CLOSE)
+  }
+  // The skirt roof round the foot (the svalgang) on its posts, and the nave's wall over it.
+  quad([[-0.44, 0], [0.44, 0], [0.44, -0.05], [-0.44, -0.05]], mixHex(tar, SKY.far, 0.25))
+  quad([[-0.52, -0.04], [0.52, -0.04], [0.4, -0.19], [-0.4, -0.19]], tar)
+  quad([[0.12, -0.04], [0.52, -0.04], [0.4, -0.19], [0.1, -0.19]], lit)
+  // The tiers: a short wall, then a steep roof overhanging it: [wall half-width, wall foot y, eaves half-width,
+  // eaves y, ridge half-width, ridge y]. Each narrower and steeper: stepped, a building, not a tree.
+  const tiers: [number, number, number, number, number, number][] = [
+    [0.3, -0.18, 0.42, -0.31, 0.21, -0.57],
+    [0.19, -0.56, 0.29, -0.67, 0.13, -0.88],
+    [0.11, -0.87, 0.18, -0.97, 0.07, -1.1],
+  ]
+  tiers.forEach(([ww, wy, w0, y0, w1, y1], i) => {
+    quad([[-ww, wy], [ww, wy], [ww, y0], [-ww, y0]], mixHex(tar, SKY.far, 0.18))
+    quad([[-w0, y0], [w0, y0], [w1, y1], [-w1, y1]], tar)
+    // The east slope in the dawn light.
+    quad([[w0 * 0.3, y0], [w0, y0], [w1, y1], [w1 * 0.3, y1]], lit)
+    // Dragon heads: a neck rearing up and out from each end of the two upper ridges, a small jaw at its tip.
     if (i > 0) {
-      p.fill(tar)
-      for (const sd of [-1, 1]) p.triangle(u(sd * w * 0.9), u(yy - 0.02), u(sd * w * 1.1), u(yy - 0.02), u(sd * w * 1.12), u(yy - 0.12))
+      for (const sd of [-1, 1]) {
+        p.fill(tar)
+        p.beginShape()
+        p.vertex(u(sd * w1 * 0.6), u(y1 + 0.005))
+        p.bezierVertex(u(sd * (w1 + 0.06)), u(y1 - 0.02), u(sd * (w1 + 0.1)), u(y1 - 0.07), u(sd * (w1 + 0.17)), u(y1 - 0.17))
+        p.vertex(u(sd * (w1 + 0.12)), u(y1 - 0.14))
+        p.bezierVertex(u(sd * (w1 + 0.07)), u(y1 - 0.07), u(sd * (w1 + 0.02)), u(y1 - 0.045), u(sd * w1 * 0.5), u(y1 - 0.03))
+        p.endShape(p.CLOSE)
+      }
     }
   })
-  // The ridge turret and its spire.
-  p.fill(tar)
-  p.quad(u(-0.07), u(-0.82), u(0.07), u(-0.82), u(0.07), u(-0.94), u(-0.07), u(-0.94))
-  p.triangle(u(-0.09), u(-0.93), u(0.09), u(-0.93), 0, u(-1.34))
-  p.fill(lit)
-  p.triangle(0, u(-1.34), u(0.09), u(-0.93), u(0.03), u(-0.93))
+  // The spire: a short turret and a tall, needle-steep roof.
+  quad([[-0.065, -1.09], [0.065, -1.09], [0.065, -1.2], [-0.065, -1.2]], tar)
+  quad([[-0.1, -1.19], [0.1, -1.19], [0, -1.78]], tar)
+  quad([[0.025, -1.19], [0.1, -1.19], [0, -1.78]], lit)
   // A lit window at night.
   if (d < 0.8) {
     const win = p.color(LAMP.flame)
     win.setAlpha(210 * (1 - d / 0.8))
     p.fill(win)
-    p.rect(u(-0.02), u(-0.1), u(0.07), u(0.1))
+    p.rect(u(-0.025), u(-0.14), u(0.05), u(0.08))
   }
 
   // The bell house: two posts, an open belfry, a pyramid roof; the bell hangs from the beam and swings.
@@ -374,9 +393,9 @@ function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number
   p.quad(u(bx - 0.2), 0, u(bx + 0.2), 0, u(bx + 0.17), u(-0.28), u(bx - 0.17), u(-0.28))
   p.quad(u(bx - 0.17), u(-0.28), u(bx - 0.13), u(-0.28), u(bx - 0.13), u(-0.62), u(bx - 0.17), u(-0.62))
   p.quad(u(bx + 0.13), u(-0.28), u(bx + 0.17), u(-0.28), u(bx + 0.17), u(-0.62), u(bx + 0.13), u(-0.62))
-  p.triangle(u(bx - 0.27), u(-0.6), u(bx + 0.27), u(-0.6), u(bx), u(-0.92))
+  p.triangle(u(bx - 0.23), u(-0.6), u(bx + 0.23), u(-0.6), u(bx), u(-1.02))
   p.fill(lit)
-  p.triangle(u(bx), u(-0.92), u(bx + 0.27), u(-0.6), u(bx + 0.12), u(-0.6))
+  p.triangle(u(bx), u(-1.02), u(bx + 0.23), u(-0.6), u(bx + 0.09), u(-0.6))
   // It is rung from the first chord and rings on, a long even swing, slowing only at the very end.
   const ring = t >= CODA ? smooth(t, CODA, CODA + 1.2) * (1 - 0.55 * smooth(t, LAST2 + 20, LAST2 + 29)) : 0
   const a = 0.95 * ring * Math.sin((t - CODA) * ((Math.PI * 2) / 1.7))

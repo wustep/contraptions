@@ -1036,5 +1036,14 @@ export function drawHall(p: p5, c: Pen, t: number): void {
     drawCrack(p, c, t, crackFrom)
   }
   drawRubble(p, c, t)
+  // Dark before the chain reaches it: until he is at its west door the hall is solid rock to look at (the opening's
+  // wide sees the whole mountain), and it opens under the tunnels' light as he comes down to it.
+  const unseen = 1 - ease(t, 38.9, 40.3)
+  if (unseen > 0.002) {
+    p.noStroke()
+    p.fill(alpha(p, STONE.deep, unseen))
+    p.rect(0.3 * k, -12.7 * k, 30.6 * k, 14.2 * k)
+    p.rect((HATCH.x0 - 0.6) * k, 1.4 * k, (HATCH.x1 - HATCH.x0 + 1.2) * k, 7.8 * k)
+  }
   p.pop()
 }

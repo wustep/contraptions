@@ -109,10 +109,11 @@ export const gate = part<GateState>(
     const at = (t: number) => slot.begin + t
     const hold = (x: number, y: number): Pt => [x, y]
     return [
-      // The mountain at night: the flank, the cliff with the gate at its foot, the slope beyond. Still for the horns.
-      // (Held a little west of the cliff, so the pig is in the frame from the first frame even under Zoom.)
-      { t: at(0), cells: 27, hold: hold(12.5, -7.6), w: 1 },
-      { t: at(2.4), cells: 26.2, hold: hold(12.9, -7.3), w: 1 },
+      // The whole Dovre at night over the horns' note: the west flank, the cliff with the gate at its foot, the summit
+      // over the hall, the east flank falling away; then a slow push in as they come up the flank. (Held west of the
+      // summit's middle, so the pig is in the frame from the first frame even under Zoom.)
+      { t: at(0), cells: 44, hold: hold(23.2, -10.2), w: 1 },
+      { t: at(2.4), cells: 39, hold: hold(21.2, -9.0), w: 1 },
       // Down to them as the theme begins, and after them up the flank.
       { t: at(6.5), cells: 7.8, off: [1.4, -0.9], w: 0 },
       { t: at(8.6), cells: 6.5, hold: hold(15.4, -3.8), off: [1.1, -0.7], w: 0.4 },

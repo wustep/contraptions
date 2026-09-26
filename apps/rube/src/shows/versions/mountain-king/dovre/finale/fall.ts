@@ -351,6 +351,52 @@ function drawBlock(p: p5, c: Pen, b: Laid, T: number, q: Pt, lit: number): void 
   p.pop()
 }
 
+/* ------------------------------------------------------------------ the vent plugged */
+
+/**
+ * After the blow-out the crater's torn rim falls back into the vent's throat: a jumble of blocks wedged in its top,
+ * dropping in after the geyser has gone (on no strike: the chords have rung), so nothing straight-walled is left
+ * open under the crater through the credits.
+ */
+function plug(p: p5, c: Pen, T: number, q: Pt): void {
+  const { k, ink, weight } = c
+  const d = dawn(T)
+  // One mass of broken rock settling into the throat from the crater's lip, jagged across its top, its blocks' seams
+  // showing as dark cracks: not a stack of stones.
+  const at = 151.05
+  if (T < at - 0.55) return
+  const u = Math.min(1, Math.max(0, (T - (at - 0.55)) / 0.55))
+  const drop = 1.6 * (1 - u * u)
+  const X = (x: number) => (lx(x) + q[0]) * k
+  const Y = (y: number) => (ly(y + 0 - drop) + q[1]) * k
+  const top: Pt[] = [[46.6, -19.1], [46.95, -19.55], [47.25, -19.3], [47.6, -19.75], [47.95, -19.4], [48.2, -19.6], [48.45, -19.05]]
+  const pts: Pt[] = [...top, [48.4, -18.2], [48.1, -17.5], [47.5, -17.2], [46.9, -17.5], [46.65, -18.2]]
+  p.push()
+  p.stroke(mixHex(ink, STONE.deep, 0.65))
+  p.strokeWeight(weight * 0.6)
+  p.fill(mixHex(STONE.deep, STONE.dark, 0.7 + 0.3 * d))
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex(X(x), Y(y))
+  p.endShape(p.CLOSE)
+  // Its top catches the day.
+  p.noStroke()
+  p.fill(mixHex(STONE.dark, STONE.mid, 0.3 + 0.5 * d))
+  p.beginShape()
+  for (const [x, y] of top) p.vertex(X(x), Y(y))
+  for (let i = top.length - 1; i >= 0; i--) p.vertex(X(top[i][0]), Y(top[i][1] + 0.12))
+  p.endShape(p.CLOSE)
+  // The seams between its blocks.
+  p.stroke(mixHex(STONE.deep, '#000000', 0.2))
+  p.strokeWeight(weight * 0.7)
+  p.noFill()
+  for (const seam of [[[47.25, -19.3], [47.1, -18.6], [47.4, -17.9]], [[47.95, -19.4], [48.05, -18.7], [47.8, -18.1]], [[47.1, -18.6], [47.75, -18.45], [48.05, -18.7]]] as Pt[][]) {
+    p.beginShape()
+    for (const [x, y] of seam) p.vertex(X(x), Y(y))
+    p.endShape()
+  }
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the trolls flee */
 
 /**
@@ -719,8 +765,11 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
 
   // The vent over the hall, the floors' breaches, the collar at the foot.
   // The vent shows as he comes up the hall toward it, wet once the spray is in it.
+  // Before the coda there is no vent: the summit is solid rock over the hall's smoke hole (the opening wide sees it).
+  // After the blow-out the day comes down it only while the geyser is up; then the crater's rubble plugs its top.
   const inVent = smooth(T, 142.6, 145.0) * (1 - 0.8 * smooth(T, LAST2 + 8, LAST2 + 16))
-  vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - 0.85 * smooth(T, LAST2 + 5, LAST2 + 12)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1) })
+  if (T >= CODA) vent(p, c, ORIGIN, COL, q, { wet: inVent, day: T >= LAST1 ? smooth(T, LAST1, LAST1 + 0.6) * (1 - smooth(T, LAST2 + 0.9, LAST2 + 2.6)) : 0.25 * smooth(T, CAP_CRACKS[0], LAST1), shut: smooth(T, LAST2 + 1.2, LAST2 + 4) })
+  if (T >= LAST2) plug(p, c, T, q)
   for (const fl of FLOORS) breach(p, c, ORIGIN, COL, fl, T, q)
   collar(p, c, ORIGIN, COL, 33.13, q)
   capCracks(p, c, ORIGIN, COL, T, q, CAP_CRACKS, LAST1, (x) => skyline(x))
@@ -812,14 +861,15 @@ export const fall = part<State>(
       { t: 150.6, cells: 19.7, hold: w(51.3, -22.2), w: 0.82 },
       { t: 151.8, cells: 19.9, hold: w(53.3, -22.4), w: 0.76 },
       { t: 153.2, cells: 16.2, hold: w(56.3, -21.0), w: 0.62 },
-      // In to him at rest in the hollow, the church in the valley: then one long, even crane up and back over
-      // the credits, to the whole dawn valley with him small on the hillside (it never stops: geometric keys).
+      // In to him at rest in the hollow, the church in the valley: then one long crane back over the credits, from
+      // the hollow to the whole mountain in cross-section at dawn, every place he lit on his way down still lit, the
+      // broken hall dark, the chimney he came up: the lighting rule's payoff. (He stays in the frame under Zoom.)
       { t: 156, cells: 12.6, hold: w(61, -19.9), w: 0.9 },
-      { t: 162, cells: 14.7, hold: w(61.4, -20.8), w: 0.95 },
-      { t: 168.5, cells: 17.4, hold: w(61.8, -21.9), w: 0.97 },
-      { t: 174.5, cells: 20.3, hold: w(62.1, -23.0), w: 0.97 },
-      { t: 177.8, cells: 22.1, hold: w(62.2, -23.6), w: 0.97 },
-      { t: slot.end, cells: 22.8, hold: w(62.3, -23.75), w: 0.97 },
+      { t: 161, cells: 15.5, hold: w(60.6, -19.6), w: 0.95 },
+      { t: 166, cells: 24, hold: w(57, -15.5), w: 0.97 },
+      { t: 171, cells: 40, hold: w(51, -6.5), w: 0.98 },
+      { t: 175.5, cells: 58, hold: w(47, 1.2), w: 0.99 },
+      { t: slot.end, cells: 66, hold: w(46, 3.4), w: 1 },
     ]
   },
 )

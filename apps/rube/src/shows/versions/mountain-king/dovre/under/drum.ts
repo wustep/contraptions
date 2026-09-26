@@ -112,12 +112,13 @@ export const drum = part<DrumState>(
     { t: beat(174.8), cells: 8.4, hold: [9.0, -2.7], w: 0.6 },
     // The great drum: three drummers, two clubs each.
     { t: beat(177.8), cells: 7.2, hold: [13.3, -3.0], w: 0.5 },
-    { t: beat(181), cells: 7.1, hold: [13.8, -3.1], w: 0.55 },
-    { t: beat(185), cells: 7.4, hold: [14.1, -3.3], w: 0.55 },
+    // (Held west of him, so the frame's east edge stays near the room's east wall at x 17, not on the rock past it.)
+    { t: beat(181), cells: 6.9, hold: [12.5, -3.3], w: 0.8 },
+    { t: beat(185), cells: 6.6, hold: [12.25, -3.6], w: 0.85 },
     // The bar he hangs under the vault while they wind up.
-    { t: beat(187.5), cells: 8.0, hold: [14.4, -3.8], w: 0.6 },
+    { t: beat(187.5), cells: 6.8, hold: [12.35, -3.9], w: 0.85 },
     // The fortissimo: the burst.
-    { t: FF, cells: 7.2, hold: [14.9, -2.5], w: 0.45 },
+    { t: FF, cells: 6.3, hold: [12.9, -3.0], w: 0.7 },
     { t: slot.end, ...SEAM_SHOT },
   ],
 )

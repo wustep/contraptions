@@ -48,9 +48,10 @@ export const gears = part<{ begin: number }>(
     const at = (t: number, cells: number, hold?: Pt, w?: number, off?: Pt): PartShot => ({ t, cells, hold, w, off })
     return [
       { t: slot.begin, ...SEAM_SHOT },
-      // The first blow, close; then back to show the heart waking round him.
-      at(OOM[0], 6.3, undefined, 0, [1.3, -0.8]),
-      at(OOM[2], 8.0, [3.6, -1.9], 0.62),
+      // His landing trips the hammer; its first blow wakes the furnace: easing back as the heart wakes, the anvil, the
+      // furnace and the flywheel in the frame with him.
+      at(OOM[0], 6.45, [3.0, -1.2], 0.4),
+      at(kt(196), 9.0, [3.8, -1.9], 0.62),
       at(OOM[5], 8.3, [4.0, -2.4], 0.55),
       // The flywheel engages: wide on the great wheel.
       at(FLY, 9.6, [5.9, -1.7], 0.65),
