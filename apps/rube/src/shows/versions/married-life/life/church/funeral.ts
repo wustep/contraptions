@@ -303,9 +303,9 @@ export const funeral = part<FuneralState>(
     return [
       // Off him to the altar across the dawn, slowly, still drawing back from the hospital's close: the kiss's place,
       // with nobody in it, and him in the frame's right side. It arrives as he comes down off the pew, and turns with him.
-      key(192.0, 4.05, 0.85, -0.68),
+      key(192.0, 4.05, 0.85, -0.84),
       // With him, slowly, as he gets up and goes down the aisle.
-      key(193.6, 4.25, 1.5, -0.88),
+      key(193.6, 4.25, 1.5, -0.96),
       // Into the porch with him, the rope hanging beside the doors.
       key(196.0, 4.85, 2.75, -1.25),
       // As the rope starts to move, up it and out, widening, to arrive on the toll: the whole empty church, the bell
