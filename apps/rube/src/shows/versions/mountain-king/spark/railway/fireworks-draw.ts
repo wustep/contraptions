@@ -137,7 +137,7 @@ export function lightsAt(t: number): Light[] {
     const s = t - b.at
     if (s < 0 || s > 1.8) continue
     const size = b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75
-    const decay = b.kind === 'salute' ? Math.exp(-s / 0.07) : 0.75 * Math.exp(-s / 0.3) + 0.25 * Math.exp(-s / 1.1)
+    const decay = b.kind === 'salute' ? Math.exp(-s / 0.12) : 0.75 * Math.exp(-s / 0.3) + 0.25 * Math.exp(-s / 1.1)
     out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay, col: b.kind === 'salute' ? FW.fwWhite : b.col })
   }
   for (const r of RISES) {
@@ -288,46 +288,53 @@ export function drawGround(pen: Pen, L: Light[]): void {
     edge.addColorStop(1, rgba(FW.river, 1))
     ctx.fillStyle = edge
     ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (bank - top) * k)
-    // The river's moonlit ripples: long thin glints that drift.
-    for (let i = 0; i < 12; i++) {
-      const y = top + 0.08 + (bank - top - 0.12) * hash(i, 1)
-      const len = 0.5 + 1.3 * hash(i, 2)
-      const x = ((hash(i, 3) * 70 + t * 0.12 * (0.5 + hash(i, 4))) % 70) - 5
-      if (x + len < x0 || x > x1) continue
-      rectC(pen, x, y, x + len, y + 0.016, rgba(FW.moonHalo, (0.1 + 0.08 * hash(i, 5)) * fadeIn(x)))
-    }
-    // What burns in the sky is in the river too: broken glints under it, wider and fainter toward the near bank,
-    // shivering as the water moves.
-    additive(pen, () => {
-      ctx.lineCap = 'round'
-      for (const l of L) {
-        if (l.y > GY - 1.5 || l.a < 0.04) continue
-        const a0 = Math.min(1, l.a) * fadeIn(l.x)
-        if (a0 < 0.02) continue
-        const w = Math.min(1.6, 0.35 + l.r * 0.3)
-        const n = 7
-        for (let i = 0; i < n; i++) {
-          const u = (i + 0.5) / n
-          const y = top + 0.05 + (bank - top - 0.1) * u
-          const seed = Math.round(l.x * 7 + l.y * 3)
-          const shiver = Math.sin(t * (2.2 + hash(i, seed, 1)) + i * 1.9)
-          const half = w * (0.25 + 0.55 * hash(i, seed, 2)) * (0.8 + 0.4 * u)
-          const x = l.x + w * 0.3 * shiver * (hash(i, seed, 3) - 0.5)
-          line(pen, [[x - half, y], [x + half, y]], 0.035, rgba(l.col, 0.3 * a0 * (1 - 0.6 * u)))
-        }
+    // The water's own light: a few soft glints, only where something shines on it (the moon, a live burst), in a
+    // loose cluster under it, fading with distance from it. Soft tapered smears (a flattened glow), never hairlines, and
+    // never at an even pitch. Clipped to the river so none spills on the bank.
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x0 * k, top * k, (x1 - x0) * k, (bank - top) * k)
+    ctx.clip()
+    const band = bank - top
+    const glints = (lx: number, a0: number, spread: number, n: number, col: string, seed: number) => {
+      for (let i = 0; i < n; i++) {
+        // Nearer the source: a little more of them, and brighter; they thin out with distance down and sideways.
+        const u = hash(i, seed, 1) ** 1.4
+        const y = top + 0.06 + (band - 0.1) * u
+        const side = (hash(i, seed, 2) - 0.5) * 2
+        const drift = 0.12 * Math.sin(t * (0.6 + 0.5 * hash(i, seed, 3)) + i * 2.3)
+        const x = lx + side * spread * (0.3 + 0.7 * u) + drift
+        const d = Math.abs(x - lx) / Math.max(0.2, spread)
+        const shimmer = 0.6 + 0.4 * Math.sin(t * (1.4 + 1.2 * hash(i, seed, 4)) + i * 1.7)
+        const a = a0 * (1 - 0.55 * u) * Math.max(0, 1 - 0.8 * d) * shimmer * fadeIn(x)
+        if (a < 0.006) continue
+        const w = (0.28 + 0.4 * hash(i, seed, 5)) * (0.7 + 0.6 * u) * Math.max(0.4, spread / 1.2)
+        glow(pen, x, y, w, col, a, 0.09 + 0.05 * hash(i, seed, 6))
       }
-    })
+    }
+    const m = moonAt(pen.p, k, t)
+    glints(m.x, 0.22, 0.7 + 0.8 * m.r, 7, FW.moonHalo, 11)
+    // What burns in the sky burns in the river too, under it, shivering as the water moves.
+    for (const l of L) {
+      if (l.y > GY - 1.5 || l.a < 0.04) continue
+      const a0 = 0.5 * Math.min(1, l.a)
+      if (a0 < 0.02) continue
+      glints(l.x, a0, Math.min(1.6, 0.35 + l.r * 0.3), 4, l.col, 20 + parseInt(l.col.slice(1, 3), 16))
+    }
+    ctx.restore()
   }
   const g2 = ctx.createLinearGradient((STOPS + 0.2) * k, 0, (STOPS + 1.8) * k, 0)
   g2.addColorStop(0, rgba(GROUND, 0))
   g2.addColorStop(1, rgba(GROUND, 1))
   ctx.fillStyle = g2
   ctx.fillRect(x0 * k, bank * k, (x1 - x0) * k, (f.y1 + 1 - bank) * k)
-  const g3 = ctx.createLinearGradient((STOPS + 0.2) * k, 0, (STOPS + 1.8) * k, 0)
+  // The bank's moonlit lip: a soft band fading down into the field, not a ruled line.
+  const g3 = ctx.createLinearGradient(0, (bank - 0.02) * k, 0, (bank + 0.12) * k)
   g3.addColorStop(0, rgba(FW.moonHalo, 0))
-  g3.addColorStop(1, rgba(FW.moonHalo, 0.2))
+  g3.addColorStop(0.3, rgba(FW.moonHalo, 0.07))
+  g3.addColorStop(1, rgba(FW.moonHalo, 0))
   ctx.fillStyle = g3
-  ctx.fillRect(x0 * k, bank * k, (x1 - x0) * k, 0.025 * k)
+  ctx.fillRect(Math.max(x0, STOPS + 1.2) * k, (bank - 0.02) * k, (x1 - Math.max(x0, STOPS + 1.2)) * k, 0.14 * k)
   // Light on the ground under whatever is burning.
   for (const l of L) {
     if (l.a < 0.03) continue
@@ -487,8 +494,26 @@ export function drawFountain(pen: Pen): void {
 export function pourAt(j: number, t: number): number {
   const s = t - UNIT_AT[j]
   if (s < 0) return 0
-  return smooth(s, 0, 0.12) * (1 - smooth(s, POUR - 0.9, POUR))
+  return smooth(s, 0, 0.12) * (1 - smooth(s, POUR - 0.9, POUR)) * (1 - smooth(t, burnOut(j) - 0.45, burnOut(j)))
 }
+/**
+ * When the `j`th length has burnt out: the curtain dies from the first length to the last as the spark leaves the
+ * wire, thinning and sputtering, all of it gone by about 134.6 so the frame's left is clear for the crash.
+ */
+const burnOut = (j: number): number => 133.75 + 0.1 * j
+/** What is still in the air from the `j`th length burns out with it. */
+const curtainLeft = (j: number, t: number): number => 1 - smooth(t, burnOut(j) - 0.3, burnOut(j) + 0.08)
+/** The lances along a length: short tubes at uneven spacing, each its own length, a little askew. */
+const LANCES = HANG.map((_, j) => {
+  const out: { x: number; len: number; lean: number }[] = []
+  let x = -0.78 + 0.1 * hash(j, 201)
+  for (let i = 0; x < 0.8; i++) {
+    out.push({ x, len: 0.2 + 0.16 * hash(i, j, 202), lean: (hash(i, j, 203) - 0.5) * 0.22 })
+    // Bundled: some shoulder to shoulder, some with a gap.
+    x += hash(i, j, 204) < 0.6 ? 0.1 + 0.03 * hash(i, j, 205) : 0.2 + 0.14 * hash(i, j, 205)
+  }
+  return out
+})
 
 export function drawWire(pen: Pen, L: Light[]): void {
   const { f } = pen
@@ -504,41 +529,62 @@ export function drawWire(pen: Pen, L: Light[]): void {
   const pts: Pt[] = []
   for (let x = MAST_A; x <= MAST_B + 1e-6; x += 0.25) pts.push([x, wireY(x)])
   line(pen, pts, 0.022, rgba(FW.rail, 0.85))
-  // The Niagara's lengths, lashed along under it: a slim paper tube following the wire's sag, and a row of short
-  // lances pointing down from it, out of which the curtain pours.
+  // The Niagara's lengths, lashed along under it: each a loose bundle of short paper lances hanging mouth down, at
+  // uneven spacing and lengths, out of which the curtain pours.
   for (let j = 0; j < HANG.length; j++) {
     const cx = HANG[j]
     if (cx < f.x0 - 2 || cx > f.x1 + 2) continue
     const lit = pourAt(j, pen.t)
-    const body = shade(L, pen.t > UNIT_AT[j] ? CHAR : TUBE, TUBE_LIT, cx, wireY(cx) + 0.3, 0.25 * lit)
+    const spent = pen.t > UNIT_AT[j]
+    // Kraft paper by night: dark, warmed only by what burns near it (itself, once lit).
+    const dark = mixHex(spent ? CHAR : TUBE, FW.iron, 0.35)
+    // A thin lashing along the wire that holds the bundle.
     const run: Pt[] = []
     for (let i = 0; i <= 8; i++) {
-      const x = cx - 0.86 + (1.72 * i) / 8
-      run.push([x, wireY(x) + 0.12])
+      const x = cx - 0.84 + (1.68 * i) / 8
+      run.push([x, wireY(x) + 0.06])
     }
-    line(pen, run, 0.075, body)
-    for (let i = 0; i < 6; i++) {
-      const x = cx - 0.72 + (1.44 * i) / 5
-      const y = wireY(x) + 0.12
-      bar(pen, [x, y], [x, y + 0.2], 0.05, body)
+    line(pen, run, 0.03, shade(L, dark, TUBE_LIT, cx, wireY(cx) + 0.2, 0.15 * lit))
+    for (const ln of LANCES[j]) {
+      const x = cx + ln.x
+      const y = wireY(x) + 0.04
+      const end: Pt = [x + Math.sin(ln.lean) * ln.len, y + Math.cos(ln.lean) * ln.len]
+      const body = shade(L, dark, TUBE_LIT, end[0], end[1], 0.3 * lit)
+      // A fat little paper tube hanging off the wire: its body, a lit flank, and its mouth at the foot, dark until
+      // it catches and hot while it pours.
+      bar(pen, [x, y], end, 0.085, body)
+      bar(pen, [x - 0.022, y + 0.02], [end[0] - 0.022, end[1] - 0.02], 0.016, rgba(FW.crateLit, 0.08 + 0.25 * lit))
+      mouth(pen, end, ln.lean + Math.PI, 0.05, mixHex(body, FW.iron, 0.4), lit > 0.05 ? mixHex(FW.coal, FW.fwGold, 0.5 * lit) : FW.iron)
     }
   }
 }
 
-/** The curtain: gold falling from every lit length, the newest flaring as it catches. */
+/**
+ * The curtain: gold falling from every lit length, the newest flaring as it catches. Soft glowing streaks, each its
+ * own length and pace (a few quick and bright, most slower and dimmer), over a warm haze hanging under the wire; it
+ * thins and dies length by length as the spark leaves the wire (`burnOut`).
+ */
 export function drawCurtain(pen: Pen): void {
   const { t, ctx, k, f } = pen
-  const gn = 6.5
   ctx.lineCap = 'round'
   for (let j = 0; j < HANG.length; j++) {
     const cx = HANG[j]
     if (cx < f.x0 - 2 || cx > f.x1 + 2) continue
     const s0 = t - UNIT_AT[j]
-    if (s0 < 0 || s0 > POUR + 1.2) continue
+    const left = curtainLeft(j, t)
+    if (s0 < 0 || s0 > POUR + 1.2 || left <= 0.004) continue
     const y0 = wireY(cx) + 0.38
+    const on = pourAt(j, t)
+    // The haze: the light of the fall on its own smoke, a warm glow under the length, taller than wide.
+    if (on > 0.02) {
+      const hz = on * (0.85 + 0.15 * Math.sin(t * 7.3 + j * 2.1))
+      glow(pen, cx, y0 + 0.9, 1.25, FW.fwGold, 0.26 * hz, 1.35)
+      glow(pen, cx + 0.3 * Math.sin(t * 0.9 + j), y0 + 1.8, 1.1, FW.coal, 0.1 * hz, 1.2)
+    }
     // It catches: a flare along its length, and a gush of white sparks spat down and out from every lance at once.
     if (s0 < 0.3) glow(pen, cx, y0, 1.3, FW.fwWhite, 0.4 * (1 - s0 / 0.3), 0.3)
     if (s0 < 0.62) {
+      const gn = 6.5
       for (let i = 0; i < 36; i++) {
         // Spat over the first few hundredths, not all in one frame (which would be a row of beads).
         const sa = s0 - 0.06 * hash(i, j, 34)
@@ -551,7 +597,7 @@ export function drawCurtain(pen: Pen): void {
         const [px, py] = at(sa)
         const [qx, qy] = at(Math.max(0, sa - 0.07))
         const fade = 1 - sa / 0.55
-        ctx.strokeStyle = rgba(sa < 0.18 ? FW.fwWhite : FW.fwGold, 0.9 * fade)
+        ctx.strokeStyle = rgba(sa < 0.18 ? FW.fwWhite : FW.fwGold, 0.9 * fade * left)
         ctx.lineWidth = Math.max(0.7, 0.035 * k)
         ctx.beginPath()
         ctx.moveTo(qx * k, qy * k)
@@ -559,29 +605,51 @@ export function drawCurtain(pen: Pen): void {
         ctx.stroke()
       }
     }
-    const rate = 150
+    const rate = 120
     const from = UNIT_AT[j]
-    const start = Math.max(from, t - 1.1)
+    const start = Math.max(from, t - 1.3)
     for (let i = Math.floor((start - from) * rate); i <= (t - from) * rate; i++) {
-      const born = from + (i + 0.9 * (hash(i, j, 7) - 0.5)) / rate
+      const born = from + (i + 0.95 * (hash(i, j, 7) - 0.5)) / rate
       const a = t - born
       if (a < 0) continue
-      const on = pourAt(j, born)
-      if (on < 0.05 || hash(i, j, 9) > on) continue
-      const life = 0.85 + 0.25 * hash(i, j, 2)
+      const pour = pourAt(j, born)
+      if (pour < 0.05 || hash(i, j, 9) > pour) continue
+      // Each its own kind: a few quick hot ones, most slower, heavier with smoke, and dimmer.
+      const quick = hash(i, j, 5)
+      const gn = 3.2 + 4.2 * quick
+      const life = (0.7 + 0.55 * hash(i, j, 2)) * (1.15 - 0.3 * quick)
       if (a > life) continue
-      // Out of the row of lances: a curtain along the whole length.
-      const x = cx + (hash(i, j, 3) - 0.5) * 1.6
-      const ly = wireY(x) + 0.33
-      const at = (s: number): Pt => [x + (0.1 + 0.45 * (hash(i, j, 4) - 0.5)) * s, ly + 0.35 * s + 0.5 * gn * s * s]
-      const [px, py] = at(a)
-      const [qx, qy] = at(Math.max(0, a - 0.06))
-      const fade = 1 - a / life
-      ctx.strokeStyle = rgba(a < 0.1 ? FW.fwWhite : FW.fwGold, 0.8 * fade)
+      const x = cx + (hash(i, j, 3) - 0.5) * 1.62
+      const ly = wireY(x) + 0.3 + 0.08 * hash(i, j, 6)
+      const vx = 0.08 + 0.4 * (hash(i, j, 4) - 0.5)
+      const vy = 0.1 + 0.7 * hash(i, j, 8)
+      const at = (s: number): Pt => [x + vx * s, ly + vy * s + 0.5 * gn * s * s]
+      // Its streak: how far back in time it shows, varied, so the fall is never a ruled hatch.
+      const tail = 0.035 + 0.11 * hash(i, j, 10) ** 1.5
+      const fade = (1 - a / life) ** 1.3 * left * (0.45 + 0.55 * quick) * (0.85 + 0.15 * Math.sin(t * 31 + i))
+      if (fade < 0.02) continue
+      const hot = a < 0.08 ? FW.fwWhite : FW.fwGold
+      const p1 = at(a)
+      const pm = at(Math.max(0, a - tail * 0.45))
+      const p0 = at(Math.max(0, a - tail))
+      // A soft wide glow along it, then the bright thread at its head.
+      ctx.strokeStyle = rgba(FW.fwGold, 0.22 * fade)
+      ctx.lineWidth = Math.max(1.2, (0.07 + 0.04 * quick) * k)
+      ctx.beginPath()
+      ctx.moveTo(p0[0] * k, p0[1] * k)
+      ctx.lineTo(p1[0] * k, p1[1] * k)
+      ctx.stroke()
+      ctx.strokeStyle = rgba(hot, 0.35 * fade)
+      ctx.lineWidth = Math.max(0.6, 0.022 * k)
+      ctx.beginPath()
+      ctx.moveTo(p0[0] * k, p0[1] * k)
+      ctx.lineTo(pm[0] * k, pm[1] * k)
+      ctx.stroke()
+      ctx.strokeStyle = rgba(hot, 0.85 * fade)
       ctx.lineWidth = Math.max(0.7, 0.03 * k)
       ctx.beginPath()
-      ctx.moveTo(qx * k, qy * k)
-      ctx.lineTo(px * k, py * k)
+      ctx.moveTo(pm[0] * k, pm[1] * k)
+      ctx.lineTo(p1[0] * k, p1[1] * k)
       ctx.stroke()
     }
   }
@@ -1235,6 +1303,21 @@ export function drawBurst(pen: Pen, b: Burst): void {
       void sub
     }
   }
+  // A star that comes down to the field has burnt out: nothing from the sky is drawn over the ground.
+  const clipped = b.kind !== 'mine'
+  if (clipped) {
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(f.x0 * k, (f.y0 - 1) * k, (f.x1 - f.x0) * k, (GY - 0.04 - f.y0 + 1) * k)
+    ctx.clip()
+  }
+  drawStarsOf(pen, b, s, stars)
+  if (clipped) ctx.restore()
+}
+
+function drawStarsOf(pen: Pen, b: Burst, s: number, stars: (count: number, speed: number, trail: number, col: string, tail: string, width: number, salt: number) => void): void {
+  const { ctx, k } = pen
+  const fadeAll = 1 - smooth(s, b.life * 0.45, b.life)
   switch (b.kind) {
     case 'crossette': {
       const split = 0.34
@@ -1337,65 +1420,137 @@ function drawSmall(pen: Pen, b: Burst, s: number): void {
   }
 }
 
+/** How close (cells) a salute's streaks may come to the spark before they are cut short. */
+const CLEAR = 0.6
+/** The distance from `q` to the segment a..b. */
+function segDist(q: Pt, a: Pt, b: Pt): number {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const l2 = dx * dx + dy * dy || 1e-9
+  const u = Math.max(0, Math.min(1, ((q[0] - a[0]) * dx + (q[1] - a[1]) * dy) / l2))
+  return Math.hypot(q[0] - a[0] - u * dx, q[1] - a[1] - u * dy)
+}
+
 /**
- * A salute: a bang, not a flower. The frame's flash (`drawWash`), and where it broke a ragged puff of smoke lit from
- * inside, white at the bang and cooling through gold to grey; through the puff, a few glitter crackles pop at random
- * places and times, and go. No spokes, no ring, nothing at a shared radius.
+ * A salute's smoke: a torn, irregular sheet (notched and spiked round its edge, never a disc), `R` across at its
+ * widest, flattened on the side toward the spark so it never reaches for it. `bright` is how lit from inside.
+ */
+function tornSmoke(pen: Pen, cx: number, cy: number, R: number, seed: number, toward: number, a: number, heart: string, rim: string, s: number): void {
+  if (a < 0.004) return
+  const { ctx, k } = pen
+  const N = 30
+  const pts: Pt[] = []
+  for (let i = 0; i < N; i++) {
+    const th = (2 * Math.PI * (i + 0.5 * (hash(i, seed, 171) - 0.5))) / N
+    let r = 0.62 + 0.3 * hash(i, seed, 172) + 0.18 * Math.sin(th * 2 + seed) + 0.1 * Math.sin(th * 3 + seed * 1.7)
+    const tear = hash(i, seed, 173)
+    if (tear < 0.22) r *= 0.55 + 0.2 * hash(i, seed, 174)
+    else if (tear > 0.86) r *= 1.18 + 0.15 * hash(i, seed, 175)
+    // Flattened toward the spark.
+    r *= 1 - 0.38 * Math.max(0, Math.cos(th - toward))
+    // It stirs as it spreads.
+    r *= 1 + 0.05 * Math.sin(s * 3 + i * 1.3)
+    pts.push([cx + Math.cos(th) * r * R, cy + Math.sin(th) * r * R * 0.78])
+  }
+  ctx.save()
+  // Torn at the bang, softening as it spreads: smoke, not paper.
+  const soft = (0.015 + 0.16 * Math.min(1, s / 0.6)) * R * k
+  if (soft > 0.6) ctx.filter = `blur(${soft.toFixed(1)}px)`
+  const gr = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R * 1.2 * k)
+  gr.addColorStop(0, rgba(heart, a))
+  gr.addColorStop(0.45, rgba(mixHex(heart, rim, 0.5), a * 0.8))
+  gr.addColorStop(1, rgba(rim, a * 0.18))
+  ctx.fillStyle = gr
+  // Its edge: the midpoints joined by curves through the torn points, soft-cornered but ragged.
+  ctx.beginPath()
+  const mid = (i: number): Pt => {
+    const a0 = pts[i % N]
+    const b0 = pts[(i + 1) % N]
+    return [(a0[0] + b0[0]) / 2, (a0[1] + b0[1]) / 2]
+  }
+  const m0 = mid(0)
+  ctx.moveTo(m0[0] * k, m0[1] * k)
+  for (let i = 1; i <= N; i++) {
+    const c = pts[i % N]
+    const m = mid(i)
+    ctx.quadraticCurveTo(c[0] * k, c[1] * k, m[0] * k, m[1] * k)
+  }
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * A salute: a flash-bang, not a flower. The whole frame flashes (`drawWash`); where it broke, a ragged starburst of
+ * short hard white streaks 3-4 cells across, gone in a fifth of a second; behind it a torn sheet of smoke at least 2
+ * cells wide, lit white-gold from inside for about 0.2 s and cooling to grey as it spreads and drifts; a few crackles
+ * in it. The spark, 1.7 cells or more away, flinches: a spit of sparks thrown off it, away from the bang.
  */
 function drawSalute(pen: Pen, b: Burst, s: number): void {
   const { ctx, k, f } = pen
-  const LIFE = 1.3
+  const LIFE = 1.4
   if (s < 0 || s > LIFE) return
-  if (b.x + 3 < f.x0 || b.x - 3 > f.x1 || b.y + 3 < f.y0 || b.y - 3 > f.y1) return
-  // The puff: thrown out at once, then spreading slowly and drifting downwind; the plan's own puff (from 0.18 s)
-  // takes it over as this one thins.
-  const size = 0.45 + 0.85 * (1 - Math.exp(-s / 0.05)) + 0.3 * s
-  const flash = Math.exp(-s / 0.045)
-  const warm = Math.exp(-s / 0.13)
-  const body = (1 - smooth(s, 0.35, LIFE)) * smooth(s, 0, 0.015)
+  if (b.x + 3.5 < f.x0 || b.x - 3.5 > f.x1 || b.y + 3.5 < f.y0 || b.y - 3.5 > f.y1) return
+  const sp = sparkAt(pen.t)
   const cx = b.x + WIND[0] * s
   const cy = b.y + WIND[1] * s
+  const toward = Math.atan2(sp[1] - cy, sp[0] - cx)
+  const flash = Math.exp(-s / 0.04)
+  // Lit from inside for about 0.2 s, then only smoke.
+  const inner = 1 - smooth(s, 0.06, 0.3)
+  const body = smooth(s, 0, 0.012) * (1 - smooth(s, 0.22, 0.8))
+  const R = 0.95 + 0.5 * (1 - Math.exp(-s / 0.04)) + 0.3 * s
   ctx.save()
   ctx.globalCompositeOperation = 'source-over'
-  const lobes = 7
-  for (let j = 0; j < lobes; j++) {
-    // Uneven lobes, scattered off the middle: a ragged cloud, not a disc.
-    const ang = 2 * Math.PI * hash(j, b.seed, 151)
-    const off = size * (j === 0 ? 0.1 : 0.3 + 0.35 * hash(j, b.seed, 152))
-    const x = cx + Math.cos(ang) * off * 1.25
-    const y = cy + Math.sin(ang) * off * 0.8
-    const rr = size * (0.42 + 0.38 * hash(j, b.seed, 153))
-    // Lit from inside: lobes nearer the heart of the bang catch more of it.
-    const inner = 1 - off / (size * 0.75)
-    const lit = Math.max(0, Math.min(1, flash * (0.75 + 0.25 * inner) + 0.5 * warm * Math.max(0, inner)))
-    const col = mixHex(mixHex(FW.smoke, FW.fwGold, Math.min(1, lit * 1.1)), FW.fwWhite, flash * 0.9)
-    const a = body * (0.3 + 0.5 * flash + 0.2 * lit) * (0.75 + 0.25 * hash(j, b.seed, 154))
-    ctx.save()
-    ctx.translate(x * k, y * k)
-    ctx.scale(1, 0.75)
-    const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rr * k)
-    gr.addColorStop(0, rgba(col, a))
-    gr.addColorStop(0.55, rgba(col, a * 0.6))
-    gr.addColorStop(1, rgba(col, 0))
-    ctx.fillStyle = gr
-    ctx.fillRect(-rr * k, -rr * k, 2 * rr * k, 2 * rr * k)
-    ctx.restore()
-  }
+  const heart = mixHex(mixHex(FW.smoke, FW.fwGold, 0.85 * inner), FW.fwWhite, 0.9 * flash)
+  const rim = mixHex(FW.smoke, mixHex(FW.fwGold, FW.coal, 0.4), 0.5 * inner)
+  // An outer sheet, and a smaller brighter core torn differently, a little off the middle, away from the spark.
+  tornSmoke(pen, cx, cy, R, b.seed, toward, body * (0.4 + 0.25 * inner), heart, rim, s)
+  const ox = -Math.cos(toward) * 0.18 * R
+  const oy = -Math.sin(toward) * 0.14 * R
+  tornSmoke(pen, cx + ox, cy + oy, R * 0.62, b.seed + 17, toward, body * (0.15 + 0.6 * inner), mixHex(heart, FW.fwWhite, 0.3 * inner), heart, s)
   ctx.restore()
-  // The glitter: a few crackles, each at its own place in the puff (any distance from its middle) and its own
-  // moment, for a few frames.
-  const n = 18
-  for (let i = 0; i < n; i++) {
-    const at = 0.03 + 0.55 * hash(i, b.seed, 161) ** 1.3
+  // The starburst: short hard streaks thrown out in the first fifth of a second, at clumped, uneven angles and
+  // reaches (some barely out of the smoke, some flung two cells), each a tapering sliver, thickest at its head.
+  if (s < 0.26) {
+    const n = 30
+    for (let i = 0; i < n; i++) {
+      const ang = 2 * Math.PI * hash(i, b.seed, 181)
+      const reach = 0.7 + 1.45 * hash(i, b.seed, 182) ** 0.8
+      const head = reach * (0.3 + 0.7 * (1 - Math.exp(-s / (0.02 + 0.03 * hash(i, b.seed, 183)))))
+      const len = (0.12 + 0.55 * hash(i, b.seed, 184) ** 1.5) * (0.5 + 0.5 * reach / 2.1)
+      const tail = Math.max(0.2 + 0.3 * hash(i, b.seed, 188), head - len)
+      const al = 1 - smooth(s, 0.03 + 0.06 * hash(i, b.seed, 185), 0.14 + 0.1 * hash(i, b.seed, 186))
+      if (al <= 0.01 || head <= tail + 0.04) continue
+      const c = Math.cos(ang)
+      const sn = Math.sin(ang) * 0.85
+      // A little droop and a kink: thrown, not ruled.
+      const bend = (hash(i, b.seed, 189) - 0.5) * 0.12
+      const a: Pt = [b.x + c * tail, b.y + sn * tail]
+      const e: Pt = [b.x + c * head - sn * bend, b.y + sn * head + c * bend + 0.4 * s * s]
+      // Cut short of the spark.
+      if (segDist(sp, a, e) < CLEAR) continue
+      const wd = (0.018 + 0.04 * hash(i, b.seed, 187)) * (0.6 + 0.4 * reach / 2.1)
+      const dx = e[0] - a[0]
+      const dy = e[1] - a[1]
+      const l = Math.hypot(dx, dy) || 1
+      const nx = (-dy / l) * wd
+      const ny = (dx / l) * wd
+      quad(pen, [[a[0], a[1]], [e[0] - dx / l * wd * 0.6 + nx, e[1] - dy / l * wd * 0.6 + ny], [e[0], e[1]], [e[0] - dx / l * wd * 0.6 - nx, e[1] - dy / l * wd * 0.6 - ny]], rgba(i % 5 ? FW.fwWhite : FW.fwGold, 0.95 * al))
+    }
+  }
+  // The crackle: a few grains of glitter going off together at their own places in the smoke and their own moments.
+  for (let i = 0; i < 14; i++) {
+    const at = 0.08 + 0.55 * hash(i, b.seed, 161) ** 1.3
     const dur = 0.05 + 0.05 * hash(i, b.seed, 162)
     const u = (s - at) / dur
     if (u < 0 || u > 1) continue
     const ang = 2 * Math.PI * hash(i, b.seed, 163)
-    const d = size * (0.1 + 0.95 * hash(i, b.seed, 164))
-    const x = cx + Math.cos(ang) * d * 1.2
-    const y = cy + Math.sin(ang) * d * 0.8 + 0.4 * (s - at)
+    const d = R * (0.1 + 0.8 * hash(i, b.seed, 164))
+    const x = cx + Math.cos(ang) * d
+    const y = cy + Math.sin(ang) * d * 0.75 + 0.4 * (s - at)
+    if (Math.hypot(x - sp[0], y - sp[1]) < CLEAR + 0.2) continue
     const a = Math.sin(Math.PI * u)
-    // A crackle is a few grains of glitter going off together, scattered a little: no stroke, so no shape.
     for (let g = 0; g < 4; g++) {
       const gx = x + (hash(i, g, b.seed + 167) - 0.5) * 0.18
       const gy = y + (hash(i, g, b.seed + 168) - 0.5) * 0.14
@@ -1404,6 +1559,46 @@ function drawSalute(pen: Pen, b: Burst, s: number): void {
       ctx.fillRect((gx - sz / 2) * k, (gy - sz / 2) * k, sz * k, sz * k)
     }
   }
+  flinch(pen, b, s)
+}
+
+/**
+ * The spark flinches at a salute: the blast strips a spit of fire off it, thrown away from the bang and falling, and
+ * its warmth flares for a moment. (The spark itself is `fx.ts`'s; this is only what it sheds.)
+ */
+function flinch(pen: Pen, b: Burst, s: number): void {
+  if (s < 0 || s > 0.4) return
+  const { ctx, k } = pen
+  const p0 = sparkAt(b.at)
+  const p1 = sparkAt(b.at + 0.02)
+  const sv: Pt = [(p1[0] - p0[0]) / 0.02, (p1[1] - p0[1]) / 0.02]
+  const away = Math.atan2(p0[1] - b.y, p0[0] - b.x)
+  const here = sparkAt(pen.t)
+  glow(pen, here[0], here[1], 0.9, FW.fwGold, 0.3 * Math.exp(-s / 0.08), 1.2)
+  // What is thrown down stops at the field.
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(pen.f.x0 * k, (pen.f.y0 - 1) * k, (pen.f.x1 - pen.f.x0) * k, (GY - 0.02 - pen.f.y0 + 1) * k)
+  ctx.clip()
+  ctx.lineCap = 'round'
+  for (let i = 0; i < 14; i++) {
+    const ang = away + (hash(i, b.seed, 191) - 0.5) * 1.6
+    const v = 2.4 + 3.2 * hash(i, b.seed, 192)
+    const vx = sv[0] * 0.8 + Math.cos(ang) * v
+    const vy = sv[1] * 0.8 + Math.sin(ang) * v
+    const life = 0.2 + 0.18 * hash(i, b.seed, 193)
+    if (s > life) continue
+    const at = (u: number): Pt => [p0[0] + vx * u, p0[1] + vy * u + 3 * u * u]
+    const q1 = at(s)
+    const q0 = at(Math.max(0, s - 0.045))
+    ctx.strokeStyle = rgba(i % 3 ? FW.fwGold : FW.fwWhite, 0.9 * (1 - s / life))
+    ctx.lineWidth = Math.max(0.7, 0.035 * k)
+    ctx.beginPath()
+    ctx.moveTo(q0[0] * k, q0[1] * k)
+    ctx.lineTo(q1[0] * k, q1[1] * k)
+    ctx.stroke()
+  }
+  ctx.restore()
 }
 
 /** The Titan's stars crackle on the chord after it: white flecks all over, a moment. */
@@ -1529,9 +1724,23 @@ export function drawWash(pen: Pen): void {
   for (const b of BURSTS) {
     const s = t - b.at
     if (s < 0 || s > 0.6 || b.wash <= 0) continue
-    const salute = b.kind === 'salute'
-    const a = b.wash * (salute ? 0.36 * Math.exp(-s / 0.05) : 0.24 * Math.exp(-s / 0.11))
-    const col = salute ? FW.fwWhite : b.kind === 'mine' ? FW.coalHot : mixHex(b.col, FW.fwGold, 0.5)
+    if (b.kind === 'salute') {
+      // A flash-bang: the whole frame goes white-warm, brightest round the bang, and dies over a third of a second.
+      const A = Math.min(0.5, 0.45 * (b.wash / 0.6) ** 0.5)
+      const a = A * (0.3 * Math.exp(-s / 0.025) + 0.7 * Math.exp(-s / 0.11))
+      if (a < 0.004) continue
+      const col = mixHex(FW.fwWhite, FW.fwGold, 0.22)
+      ctx.fillStyle = rgba(col, 0.6 * a)
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      const gr = ctx.createRadialGradient(b.x * k, b.y * k, 0, b.x * k, b.y * k, reach * 0.6 * k)
+      gr.addColorStop(0, rgba(col, 0.55 * a))
+      gr.addColorStop(1, rgba(col, 0))
+      ctx.fillStyle = gr
+      ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)
+      continue
+    }
+    const a = b.wash * 0.24 * Math.exp(-s / 0.11)
+    const col = b.kind === 'mine' ? FW.coalHot : mixHex(b.col, FW.fwGold, 0.5)
     flash(b.x, b.y, col, a)
   }
   const blast = t - TITAN_FIRE
