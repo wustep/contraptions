@@ -8,7 +8,8 @@ import { FLOOR } from './stage'
 
 /**
  * The engine of the build, drawn in the Carnegie frame (`stage.ts`: the ball rests on the snare at (-0.5, 0)). A
- * treadle machine in black japanned iron with gilt lines, standing between the snare and the hi-hat:
+ * treadle machine in chrome tube and black cast iron, every part a filled form lit from above (no outlines), standing
+ * between the snare and the hi-hat:
  *
  *   the head over the snare: a short arm off the post, two sticks hinged under it at their butts, side by side and
  *     leaning the same way like a drummer's two hands, each lifted by a cam on the camshaft beneath it and let fall
@@ -56,10 +57,32 @@ const PULLEY: Pt = [POST_X, WHEEL.y]
 
 /* ------------------------------------------------------------------ colours */
 
-const IRON = mixHex(HALL.black, KIT.shade, 0.55)
-const IRON_LIT = mixHex(KIT.shade, KIT.chrome, 0.18)
-const BELT = mixHex(KIT.oxblood, KIT.shade, 0.45)
-const WOOD = mixHex(HALL.floor, KIT.hickory, 0.3)
+/** A filled material: the side away from the light, the body, and the strip the light catches. */
+interface Tone {
+  dark: string
+  body: string
+  lit: string
+}
+
+/** The post, the arm, the rod: the solo frame's dark chrome (`solo-rig.ts` `tube`), so the hall's machines are one make. */
+const STEEL_BODY = mixHex(KIT.chrome, KIT.lacquer, 0.58)
+const STEEL: Tone = { dark: mixHex(STEEL_BODY, KIT.lacquer, 0.45), body: STEEL_BODY, lit: KIT.chrome }
+/** The flywheel and its stand: black cast iron, warm in the hall's light. */
+const IRON_BODY = mixHex(HALL.black, KIT.shade, 0.55)
+const IRON: Tone = { dark: mixHex(HALL.black, KIT.shade, 0.22), body: IRON_BODY, lit: mixHex(KIT.shade, KIT.chrome, 0.35) }
+/** The wheel's ribs, a shade lighter than its web so they read turning. */
+const RIB = mixHex(IRON_BODY, KIT.chrome, 0.28)
+/** The belt: oxblood leather. */
+const BELT_BODY = mixHex(KIT.oxblood, KIT.shade, 0.35)
+const BELT: Tone = { dark: mixHex(BELT_BODY, KIT.lacquer, 0.5), body: BELT_BODY, lit: mixHex(KIT.oxblood, KIT.head, 0.3) }
+/** The treadle: a hickory plate. */
+const WOOD_BODY = mixHex(HALL.floor, KIT.hickory, 0.42)
+const WOOD: Tone = { dark: mixHex(HALL.floor, KIT.lacquer, 0.35), body: WOOD_BODY, lit: mixHex(WOOD_BODY, KIT.hickory, 0.6) }
+/** The cams: bright steel on the arm's dark face. */
+const CAM = mixHex(STEEL_BODY, KIT.chrome, 0.5)
+
+/** The stage's key light comes from above and a little from the house's left: every lit strip faces it. */
+const KEY: Pt = [-0.35, -0.94]
 
 /** The shutter a blur is drawn over, seconds: what a fast part's smear spans. */
 const SHUTTER = 1 / 45
@@ -72,6 +95,44 @@ function withAlpha(p: p5, a: number, fn: () => void): void {
   ctx.globalAlpha = was * Math.max(0, Math.min(1, a))
   fn()
   ctx.globalAlpha = was
+}
+
+/**
+ * A length of tube or bar from `a` to `b`, `w` cells across, filled: dark along the side away from the key light,
+ * the body, and one lit strip along the side that faces it. No outline.
+ */
+function tube(p: p5, k: number, a: Pt, b: Pt, w: number, tone: Tone, cap: 'round' | 'square' = 'round'): void {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const L = Math.hypot(dx, dy) || 1
+  let nx = dy / L
+  let ny = -dx / L
+  if (nx * KEY[0] + ny * KEY[1] < 0) {
+    nx = -nx
+    ny = -ny
+  }
+  p.strokeCap(cap === 'round' ? p.ROUND : p.SQUARE)
+  const run = (off: number, ww: number, col: string): void => {
+    p.stroke(col)
+    p.strokeWeight(ww * k)
+    p.line((a[0] + nx * off) * k, (a[1] + ny * off) * k, (b[0] + nx * off) * k, (b[1] + ny * off) * k)
+  }
+  run(0, w, tone.dark)
+  run(w * 0.1, w * 0.74, tone.body)
+  run(w * 0.27, w * 0.17, tone.lit)
+  p.strokeCap(p.ROUND)
+}
+
+/** A plate, corner at (x, y), `w` by `h` cells, filled the same way: dark below, the body, a lit strip along its top. */
+function plate(p: p5, k: number, x: number, y: number, w: number, h: number, tone: Tone, r = 0.02): void {
+  p.noStroke()
+  p.fill(tone.dark)
+  p.rect(x * k, y * k, w * k, h * k, r * k)
+  p.fill(tone.body)
+  p.rect(x * k, y * k, w * k, h * 0.7 * k, r * k)
+  p.fill(tone.lit)
+  const inset = Math.min(r, w * 0.2)
+  p.rect((x + inset) * k, (y + h * 0.1) * k, (w - 2 * inset) * k, Math.max(0.012, h * 0.16) * k, h * 0.08 * k)
 }
 
 const clamp01 = (u: number): number => Math.max(0, Math.min(1, u))
@@ -235,7 +296,7 @@ export function drawEngine(p: p5, c: Ctx, T: number): void {
   p.translate(Math.sin(T * 97) * 0.006 * hum * k, Math.sin(T * 131 + 1) * 0.005 * hum * k)
   frameBack(p, c)
   wheel(p, c, T)
-  belt(p, c)
+  belt(p, c, T)
   lever(p, c, T)
   drawHead(p, c, T)
   sweat(p, c, T)
@@ -246,65 +307,42 @@ export function drawEngine(p: p5, c: Ctx, T: number): void {
 /* ------------------------------------------------------------------ the frame and the post */
 
 function frameBack(p: p5, c: Ctx): void {
-  const { k, ink, weight } = c
+  const { k } = c
   const { x, y, r } = WHEEL
   const spread = r * 0.9
-  // The A-frame: two cast legs from the axle to the floor, a brace, feet.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(IRON)
+  // The A-frame: two cast iron legs from the axle to the floor, a brace between them, a foot under each.
+  tube(p, k, [x - spread * 0.7, FLOOR - 0.2], [x + spread * 0.7, FLOOR - 0.2], 0.06, IRON)
   for (const s of [-1, 1]) {
     const foot = x + s * spread
-    p.beginShape()
-    p.vertex((x + s * 0.04) * k, (y - 0.05) * k)
-    p.bezierVertex((x + s * 0.2) * k, (y + 0.22) * k, (foot - s * 0.04) * k, (FLOOR - 0.34) * k, (foot + s * 0.015) * k, (FLOOR - 0.05) * k)
-    p.vertex((foot + s * 0.12) * k, (FLOOR - 0.05) * k)
-    p.vertex((foot + s * 0.12) * k, FLOOR * k)
-    p.vertex((foot - s * 0.12) * k, FLOOR * k)
-    p.vertex((foot - s * 0.12) * k, (FLOOR - 0.05) * k)
-    p.bezierVertex((foot - s * 0.15) * k, (FLOOR - 0.38) * k, (x + s * 0.09) * k, (y + 0.26) * k, (x - s * 0.04) * k, (y + 0.05) * k)
-    p.endShape(p.CLOSE)
+    tube(p, k, [x + s * 0.02, y], [foot, FLOOR - 0.07], 0.12, IRON)
+    plate(p, k, foot - 0.14, FLOOR - 0.075, 0.28, 0.075, IRON)
   }
-  p.rect((x - spread * 0.78) * k, (FLOOR - 0.2) * k, spread * 1.56 * k, 0.05 * k, 0.02 * k)
-  // The post: the head's arm at its top, the belt's pulley, the lever's pivot.
-  p.rect((POST_X - 0.045) * k, POST_TOP * k, 0.09 * k, (FLOOR - POST_TOP) * k)
-  p.rect((POST_X - 0.13) * k, (FLOOR - 0.07) * k, 0.26 * k, 0.07 * k, 0.02 * k)
-  p.rect((POST_X - 0.065) * k, (POST_TOP - 0.05) * k, 0.13 * k, 0.07 * k, 0.02 * k)
-  // A gilt line down the post's face.
-  p.stroke(alpha(p, HALL.gilt, 0.75))
-  p.strokeWeight(weight * 0.5)
-  p.line(POST_X * k, (POST_TOP + 0.08) * k, POST_X * k, (FLOOR - 0.12) * k)
+  // The post: a chrome column from its foot plate to its cap. The head's arm rides it, the lever pivots on it, the
+  // belt's pulley turns at its foot.
+  tube(p, k, [POST_X, POST_TOP], [POST_X, FLOOR - 0.06], 0.14, STEEL, 'square')
+  plate(p, k, POST_X - 0.18, FLOOR - 0.085, 0.36, 0.085, STEEL)
+  plate(p, k, POST_X - 0.1, POST_TOP - 0.07, 0.2, 0.08, STEEL)
 }
 
 /* ------------------------------------------------------------------ the flywheel */
 
+/** How far a rib may smear before its smear meets the next rib's: from there on the web is one even blur. */
+const FULL = (Math.PI * 2) / 5
+
 function wheel(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k } = c
   const { x, y, r, rim, hub } = WHEEL
-  const turn = turns(T)
-  const a = turn * Math.PI * 2
-  const swept = Math.abs(spin(T)) * Math.PI * 2 * SHUTTER
+  const a = turns(T) * Math.PI * 2
+  const w = spin(T)
+  const swept = Math.abs(w) * Math.PI * 2 * SHUTTER
   p.push()
   p.translate(x * k, y * k)
-  // The web: a solid cast disc between hub and rim (it hides the stands behind it).
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(IRON)
-  p.circle(0, 0, 2 * (r - rim + 0.01) * k)
-  // Five curved ribs cast on its face: crisp when slow; at speed a soft smear of where they were over the shutter.
-  const copies = swept < 0.06 ? 1 : Math.min(9, 2 + Math.ceil(swept / 0.12))
-  for (let j = 0; j < copies; j++) {
-    const aj = copies === 1 ? a : a - (swept * j) / (copies - 1)
-    const fade = copies === 1 ? 1 : 1.6 / copies
-    withAlpha(p, fade, () => spokes(p, c, aj, copies === 1))
-  }
-  // The rim: a heavy ring, its outer edge cut in ratchet teeth for the pawl, a gilt line on its face.
+  p.noStroke()
+  // The rim: a heavy iron ring, its outer edge cut in ratchet teeth for the pawl; at speed the teeth run together.
   const teeth = 28
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.7)
-  p.fill(IRON_LIT)
-  p.beginShape()
   const blurTeeth = swept > 0.12
+  p.fill(IRON.body)
+  p.beginShape()
   for (let i = 0; i < teeth; i++) {
     const t0 = a + (i / teeth) * Math.PI * 2
     const t1 = a + ((i + 0.78) / teeth) * Math.PI * 2
@@ -315,69 +353,86 @@ function wheel(p: p5, c: Ctx, T: number): void {
       p.vertex(Math.cos(t1) * r * k, Math.sin(t1) * r * k)
     }
   }
-  p.beginContour()
-  for (let i = 32; i >= 0; i--) {
-    const t = (i / 32) * Math.PI * 2
-    p.vertex(Math.cos(t) * (r - rim) * k, Math.sin(t) * (r - rim) * k)
-  }
-  p.endContour()
   p.endShape(p.CLOSE)
-  const lit = 0.45 + 0.4 * level(T)
+  // The web: a solid cast disc inside the rim, in the rim's shadow.
+  p.fill(IRON.dark)
+  p.circle(0, 0, 2 * (r - rim) * k)
+  ribs(p, k, a, Math.sign(w) * swept)
+  // The boss the ribs run out of.
+  p.fill(IRON.body)
+  p.circle(0, 0, 2 * hub * k)
+  // One highlight, on the rim where the key light catches it, up with the music: a soft band and its bright core.
+  const lit = 0.5 + 0.4 * level(T)
   p.noFill()
-  p.stroke(alpha(p, HALL.gilt, lit))
-  p.strokeWeight(weight * 0.5)
-  p.circle(0, 0, 2 * (r - rim * 0.45) * k)
-  // The hub: a six-sided boss with the belt's pulley on it, the axle's nickel cap.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.7)
-  p.fill(IRON_LIT)
-  p.beginShape()
-  for (let i = 0; i < 6; i++) {
-    const t = a + (i / 6) * Math.PI * 2 + Math.PI / 6
-    p.vertex(Math.cos(t) * hub * k, Math.sin(t) * hub * k)
-  }
-  p.endShape(p.CLOSE)
-  p.fill(KIT.chrome)
-  p.circle(0, 0, 0.04 * k)
+  p.strokeCap(p.ROUND)
+  p.stroke(IRON.lit)
+  p.strokeWeight(rim * 0.55 * k)
+  p.arc(0, 0, 2 * (r - rim * 0.5) * k, 2 * (r - rim * 0.5) * k, Math.PI * 1.04, Math.PI * 1.5)
+  p.stroke(alpha(p, KIT.chrome, lit))
+  p.strokeWeight(rim * 0.26 * k)
+  p.arc(0, 0, 2 * (r - rim * 0.42) * k, 2 * (r - rim * 0.42) * k, Math.PI * 1.13, Math.PI * 1.38)
   p.pop()
 }
 
-/** Five S-curved ribs from the hub to the rim, turned by `a`: lighter iron, cast in relief on the web. */
-function spokes(p: p5, c: Ctx, a: number, edged: boolean): void {
-  const { k, weight } = c
+/**
+ * Five gently swept ribs from the boss to the rim, turned by `a`, cast in relief on the web. Their speed is a smear of
+ * the fill itself: each rib swept back over the shutter (`sweep`, radians, signed with the turning) as a fan whose
+ * fill thins as it widens, densest at the rib's leading edge. Past `FULL` the fans meet and the web is an even blur.
+ */
+function ribs(p: p5, k: number, a: number, sweep: number): void {
   const { r, rim, hub } = WHEEL
   const r0 = hub * 0.8
   const r1 = r - rim + 0.01
-  if (edged) {
-    p.stroke(mixHex(IRON, KIT.chrome, 0.35))
-    p.strokeWeight(weight * 0.4)
-  } else p.noStroke()
-  p.fill(IRON_LIT)
-  for (let i = 0; i < 5; i++) {
-    const b = a + (i / 5) * Math.PI * 2
-    const bend = 0.34
-    const w0 = 0.045
-    const w1 = 0.022
-    const at = (rad: number, ang: number): [number, number] => [Math.cos(ang) * rad * k, Math.sin(ang) * rad * k]
-    const [ax, ay] = at(r0, b - w0 / r0)
-    const [bx, by] = at(r1, b + bend - w1 / r1)
-    const [cx, cy] = at(r1, b + bend + w1 / r1)
-    const [dx, dy] = at(r0, b + w0 / r0)
-    const [m1x, m1y] = at((r0 + r1) / 2, b + bend * 0.2 - 0.05)
-    const [m2x, m2y] = at((r0 + r1) / 2, b + bend * 0.2 + 0.05)
-    p.beginShape()
-    p.vertex(ax, ay)
-    p.quadraticVertex(m1x, m1y, bx, by)
-    p.vertex(cx, cy)
-    p.quadraticVertex(m2x, m2y, dx, dy)
-    p.endShape(p.CLOSE)
+  const bend = 0.14
+  const w0 = 0.042
+  const w1 = 0.028
+  const N = 10
+  const s = Math.max(-FULL, Math.min(FULL, sweep))
+  // How far past a full smear it is: the fans fade into one even tint of the web.
+  const even = clamp01((Math.abs(sweep) - FULL) / FULL)
+  const hw = (w0 + w1) / (r0 + r1)
+  const layers = Math.abs(s) < 0.03 ? 1 : 5
+  p.noStroke()
+  for (let L = 1; L <= layers; L++) {
+    const sw = (s * L) / layers
+    const cover = (2 * hw) / (2 * hw + Math.abs(sw))
+    if (layers === 1) p.fill(RIB)
+    else p.fill(alpha(p, RIB, 0.36 * cover * (1 - even)))
+    for (let i = 0; i < 5; i++) {
+      const b = a + (i / 5) * Math.PI * 2
+      p.beginShape()
+      for (let j = 0; j <= N; j++) {
+        const u = j / N
+        const rr = r0 + (r1 - r0) * u
+        const at = b + bend * Math.pow(u, 1.6) + (w0 + (w1 - w0) * u) / rr + Math.max(0, -sw)
+        p.vertex(Math.cos(at) * rr * k, Math.sin(at) * rr * k)
+      }
+      for (let j = N; j >= 0; j--) {
+        const u = j / N
+        const rr = r0 + (r1 - r0) * u
+        const at = b + bend * Math.pow(u, 1.6) - (w0 + (w1 - w0) * u) / rr - Math.max(0, sw)
+        p.vertex(Math.cos(at) * rr * k, Math.sin(at) * rr * k)
+      }
+      p.endShape(p.CLOSE)
+    }
+  }
+  if (even > 0) {
+    // The even blur: the ribs' iron spread round the whole web.
+    p.noFill()
+    p.stroke(alpha(p, RIB, even * ((5 * 2 * hw) / (Math.PI * 2)) * 1.3))
+    p.strokeWeight((r1 - r0) * k)
+    p.circle(0, 0, (r0 + r1) * k)
+    p.noStroke()
   }
 }
 
 /* ------------------------------------------------------------------ the belt */
 
-function belt(p: p5, c: Ctx): void {
-  const { k, ink, weight } = c
+/** The belt's width, cells. */
+const BW = 0.055
+
+function belt(p: p5, c: Ctx, T: number): void {
+  const { k } = c
   const c1: Pt = [WHEEL.x, WHEEL.y]
   const r1 = 0.075
   const c2 = PULLEY
@@ -387,63 +442,88 @@ function belt(p: p5, c: Ctx): void {
   const L = Math.hypot(dx, dy)
   const base = Math.atan2(dy, dx)
   const beta = Math.acos((r1 - r2) / L)
+  // The two runs: a leather band, lit along its top.
   for (const s of [-1, 1]) {
     const t = base + s * beta
     const a: Pt = [c1[0] + Math.cos(t) * r1, c1[1] + Math.sin(t) * r1]
     const b: Pt = [c2[0] + Math.cos(t) * r2, c2[1] + Math.sin(t) * r2]
-    p.stroke(ink)
-    p.strokeWeight(weight * 1.6)
-    p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
-    p.stroke(BELT)
-    p.strokeWeight(weight * 0.8)
-    p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+    tube(p, k, a, b, BW, BELT)
   }
-  // The pulley at the post's foot, where the belt turns the drive that runs up the post to the camshaft.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(IRON)
-  p.circle(c2[0] * k, c2[1] * k, 2 * r2 * k)
-  p.fill(KIT.chrome)
-  p.circle(c2[0] * k, c2[1] * k, 0.035 * k)
+  // The pulleys, the belt wrapped round each: leather over iron, a nickel axle cap, and a key in the iron that turns
+  // with it (lost in the blur at speed).
+  const turn = turns(T) * Math.PI * 2
+  const swept = Math.abs(spin(T)) * Math.PI * 2 * SHUTTER
+  for (const [cc, rr, ang] of [
+    [c1, r1, turn],
+    [c2, r2, (turn * r1) / r2],
+  ] as const) {
+    p.noFill()
+    p.stroke(BELT.dark)
+    p.strokeWeight(BW * k)
+    p.circle(cc[0] * k, cc[1] * k, 2 * rr * k)
+    p.stroke(BELT.body)
+    p.strokeWeight(BW * 0.6 * k)
+    p.arc(cc[0] * k, cc[1] * k, 2 * (rr + BW * 0.08) * k, 2 * (rr + BW * 0.08) * k, Math.PI * 0.85, Math.PI * 2.15)
+    p.noStroke()
+    const inner = rr - BW / 2
+    p.fill(IRON.dark)
+    p.circle(cc[0] * k, cc[1] * k, 2 * inner * k)
+    p.fill(IRON.body)
+    p.circle((cc[0] - 0.006) * k, (cc[1] - 0.008) * k, 2 * inner * 0.82 * k)
+    const key = 1 - clamp01(swept / 0.45)
+    if (key > 0) {
+      p.fill(alpha(p, IRON.lit, key))
+      p.circle((cc[0] + Math.cos(ang) * inner * 0.6) * k, (cc[1] + Math.sin(ang) * inner * 0.6) * k, 0.02 * k)
+    }
+    p.fill(KIT.chrome)
+    p.circle(cc[0] * k, cc[1] * k, 0.028 * k)
+  }
 }
 
 /* ------------------------------------------------------------------ the lever and its pushrod */
 
 function lever(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k } = c
   const th = drawnAngle(T)
   const drop = (ROD_X - LEVER.x0) * Math.sin(th)
   const rod: Pt = [LEVER.x0 + (ROD_X - LEVER.x0) * Math.cos(th), LEVER.y + drop + LEVER.th / 2]
-  // The pushrod, down to the pawl on the rim's teeth near its top: nickel, with the pawl's hook at its foot, pushed
-  // down with the lever on every stomp.
+  // The pushrod, down to the pawl on the rim's teeth near its top: a chrome rod, with the pawl's hook at its foot,
+  // pushed down with the lever on every stomp.
   const ang = -Math.PI / 2 + 0.2
   const pawl: Pt = [WHEEL.x + Math.cos(ang) * (WHEEL.r + 0.02), WHEEL.y + Math.sin(ang) * (WHEEL.r + 0.02) + drop]
-  p.stroke(ink)
-  p.strokeWeight(weight * 1.9)
-  p.line(rod[0] * k, rod[1] * k, pawl[0] * k, pawl[1] * k)
-  p.stroke(KIT.chrome)
-  p.strokeWeight(weight * 0.9)
-  p.line(rod[0] * k, rod[1] * k, pawl[0] * k, pawl[1] * k)
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.7)
-  p.fill(KIT.chrome)
-  p.beginShape()
-  p.vertex((pawl[0] - 0.04) * k, (pawl[1] - 0.03) * k)
-  p.vertex((pawl[0] + 0.035) * k, (pawl[1] - 0.03) * k)
-  p.vertex((pawl[0] - 0.045) * k, (pawl[1] + 0.05) * k)
-  p.endShape(p.CLOSE)
-  // The lever: a hickory plank on its pivot at the post, a nickel shoe at the toe.
+  tube(p, k, rod, pawl, 0.055, STEEL)
+  p.noStroke()
+  const hook = (dx: number, dy: number, s: number): void => {
+    p.beginShape()
+    p.vertex((pawl[0] - 0.045 * s + dx) * k, (pawl[1] - 0.035 * s + dy) * k)
+    p.vertex((pawl[0] + 0.04 * s + dx) * k, (pawl[1] - 0.035 * s + dy) * k)
+    p.vertex((pawl[0] - 0.05 * s + dx) * k, (pawl[1] + 0.055 * s + dy) * k)
+    p.endShape(p.CLOSE)
+  }
+  p.fill(STEEL.dark)
+  hook(0, 0, 1)
+  p.fill(STEEL.body)
+  hook(-0.004, -0.006, 0.8)
+  p.fill(STEEL.lit)
+  p.rect((pawl[0] - 0.036) * k, (pawl[1] - 0.034) * k, 0.06 * k, 0.012 * k, 0.006 * k)
+  // The treadle: a hickory plate on its pivot at the post, the rod's clevis under it, a chrome shoe at the toe.
   p.push()
   p.translate(LEVER.x0 * k, LEVER.y * k)
   p.rotate(th)
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.7)
-  p.fill(WOOD)
-  p.rect(-0.06 * k, (-LEVER.th / 2) * k, (LEVER.x1 - LEVER.x0 + 0.06) * k, LEVER.th * k, 0.025 * k)
-  p.fill(KIT.chrome)
-  p.rect((LEVER.x1 - LEVER.x0 - 0.1) * k, (-LEVER.th / 2 - 0.005) * k, 0.1 * k, (LEVER.th + 0.01) * k, 0.02 * k)
-  p.fill(IRON)
-  p.circle(0, 0, 0.1 * k)
+  const run = LEVER.x1 - LEVER.x0
+  p.noStroke()
+  p.fill(STEEL.dark)
+  p.rect((ROD_X - LEVER.x0 - 0.035) * k, (LEVER.th / 2 + 0.02) * k, 0.07 * k, 0.045 * k, 0.012 * k)
+  // Deeper than the face he rides (`LEVER.th`): the plate's heft hangs below it.
+  const deep = LEVER.th + 0.035
+  plate(p, k, -0.07, -LEVER.th / 2, run + 0.07, deep, WOOD, 0.025)
+  plate(p, k, run - 0.11, -LEVER.th / 2 - 0.006, 0.11, deep + 0.012, STEEL, 0.02)
+  // The pivot's boss, and its pin.
+  p.noStroke()
+  p.fill(STEEL.dark)
+  p.circle(0, 0, 0.13 * k)
+  p.fill(STEEL.body)
+  p.circle(-0.006 * k, -0.008 * k, 0.1 * k)
   p.fill(KIT.chrome)
   p.circle(0, 0, 0.035 * k)
   p.pop()
@@ -451,8 +531,11 @@ function lever(p: p5, c: Ctx, T: number): void {
 
 /* ------------------------------------------------------------------ the head: arm, camshaft, cams, sticks */
 
+/** The arm's depth, cells: a chrome box beam, as heavy as the post. */
+const ARM_W = 0.14
+
 function drawHead(p: p5, c: Ctx, T: number): void {
-  const { k, ink, weight } = c
+  const { k } = c
   const { yaw, lift } = head(T)
   const cy = Math.cos((yaw * Math.PI) / 2)
   const X = (x: number): number => (POST_X + (x - POST_X) * cy) * k
@@ -474,45 +557,11 @@ function drawHead(p: p5, c: Ctx, T: number): void {
     }
   }
 
-  // The arm: off the post, out over the snare, the camshaft inside it, a gilt line along it.
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.6)
-  p.fill(IRON)
-  const x0 = Math.min(X(POST_X + 0.06), X(ARM_END))
-  const x1 = Math.max(X(POST_X + 0.06), X(ARM_END))
-  p.rect(x0 - 0.02 * k, Y(ARM_Y - 0.045), x1 - x0 + 0.04 * k, 0.09 * k, 0.025 * k)
-  p.stroke(alpha(p, HALL.gilt, 0.7))
-  p.strokeWeight(weight * 0.45)
-  if (x1 - x0 > 0.1 * k) p.line(x0 + 0.03 * k, Y(ARM_Y - 0.028), x1 - 0.03 * k, Y(ARM_Y - 0.028))
-
-  // A cam on the arm's face over each tail, turning with the camshaft: its lobe comes round and presses the tail
-  // down (the tip up at the top of its throw) and lets it go (the stick falls onto the head).
-  const psi = cams(T)
-  for (const [which, off] of [['left', 0], ['right', 0.5]] as const) {
-    const at = P(CAM_AT[which])
-    const u = psi + off
-    const rot = Math.PI / 2 + (u - Math.floor(u) - 0.5) * Math.PI * 2
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.7)
-    p.fill(IRON_LIT)
-    p.beginShape()
-    for (let i = 0; i < 20; i++) {
-      const t = (i / 20) * Math.PI * 2 - Math.PI
-      const rr = CAM_R + CAM_LOBE * Math.pow(Math.max(0, Math.cos(t)), 2.2)
-      p.vertex((at[0] + Math.cos(t + rot) * rr * Math.max(0.15, cy)) * k, (at[1] + Math.sin(t + rot) * rr) * k)
-    }
-    p.endShape(p.CLOSE)
-    p.noStroke()
-    p.fill(KIT.chrome)
-    p.circle(at[0] * k, at[1] * k, 0.022 * k)
-  }
-
   // A lug under the arm at each hinge, and its pin.
   for (const which of ['left', 'right'] as const) {
     const f = STICK[which].f
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.6)
-    p.fill(IRON)
+    p.noStroke()
+    p.fill(STEEL.dark)
     p.beginShape()
     p.vertex(X(f[0] - 0.04), Y(ARM_Y + 0.04))
     p.vertex(X(f[0] + 0.04), Y(ARM_Y + 0.04))
@@ -521,7 +570,42 @@ function drawHead(p: p5, c: Ctx, T: number): void {
     p.endShape(p.CLOSE)
     const pin = P(f)
     p.fill(KIT.chrome)
-    p.circle(pin[0] * k, pin[1] * k, 0.04 * k)
+    p.circle(pin[0] * k, pin[1] * k, 0.036 * k)
+  }
+
+  // The arm: a chrome box beam off the post, out over the snare, the camshaft inside it; a collar round the post
+  // where it rides.
+  const x0 = Math.min(X(POST_X), X(ARM_END)) - 0.03 * k
+  const x1 = Math.max(X(POST_X), X(ARM_END)) + 0.03 * k
+  plate(p, k, x0 / k, (Y(ARM_Y) - (ARM_W / 2) * k) / k, (x1 - x0) / k, ARM_W, STEEL, 0.035)
+  plate(p, k, POST_X - 0.1, ARM_Y - lift - ARM_W / 2 - 0.035, 0.2, ARM_W + 0.07, STEEL, 0.025)
+
+  // A cam on the arm's face over each tail, turning with the camshaft: its lobe comes round and presses the tail
+  // down (the tip up at the top of its throw) and lets it go (the stick falls onto the head). Bright steel with its
+  // shadow on the arm under it.
+  const psi = cams(T)
+  for (const [which, off] of [['left', 0], ['right', 0.5]] as const) {
+    const at = P(CAM_AT[which])
+    const u = psi + off
+    const rot = Math.PI / 2 + (u - Math.floor(u) - 0.5) * Math.PI * 2
+    const cam = (dx: number, dy: number): void => {
+      p.beginShape()
+      for (let i = 0; i < 24; i++) {
+        const t = (i / 24) * Math.PI * 2 - Math.PI
+        const rr = CAM_R + CAM_LOBE * Math.pow(Math.max(0, Math.cos(t)), 2.2)
+        p.vertex((at[0] + dx + Math.cos(t + rot) * rr * Math.max(0.15, cy)) * k, (at[1] + dy + Math.sin(t + rot) * rr) * k)
+      }
+      p.endShape(p.CLOSE)
+    }
+    p.noStroke()
+    p.fill(STEEL.dark)
+    cam(0.007, 0.012)
+    p.fill(CAM)
+    cam(0, 0)
+    p.fill(STEEL.dark)
+    p.circle(at[0] * k, at[1] * k, 0.03 * k)
+    p.fill(KIT.chrome)
+    p.circle(at[0] * k, at[1] * k, 0.014 * k)
   }
 }
 
