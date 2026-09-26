@@ -131,14 +131,23 @@ function moon(p: p5, k: number, m: { x: number; y: number; r: number }, t: numbe
   ctx.fillStyle = halo
   ctx.fillRect((m.x - m.r * 3.2) * k, (m.y - m.r * 3.2) * k, m.r * 6.4 * k, m.r * 6.4 * k)
   ctx.save()
-  // The disc, seen through more and more smoke: fainter, greyer, its edge blurred.
+  // The disc, seen through more and more smoke: fainter, greyer, its edge going soft (a gradient, not a blur filter,
+  // which costs a whole frame in software).
   ctx.globalAlpha = 0.25 + 0.75 * light
-  const soft = dim * m.r * 0.22 * k
-  if (soft > 0.6) ctx.filter = `blur(${soft.toFixed(1)}px)`
+  const edge = 0.015 + 0.3 * dim
+  const disc = mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.5 * dim)
+  const [dr, dg, db] = [1, 3, 5].map((i) => parseInt(disc.slice(i, i + 2), 16))
+  const outer = m.r * (1 + edge)
+  const g = ctx.createRadialGradient(m.x * k, m.y * k, 0, m.x * k, m.y * k, outer * k)
+  g.addColorStop(0, `rgba(${dr}, ${dg}, ${db}, 1)`)
+  g.addColorStop((1 - edge) / (1 + edge), `rgba(${dr}, ${dg}, ${db}, 1)`)
+  g.addColorStop(1, `rgba(${dr}, ${dg}, ${db}, 0)`)
+  ctx.fillStyle = g
+  ctx.fillRect((m.x - outer) * k, (m.y - outer) * k, 2 * outer * k, 2 * outer * k)
   p.push()
   p.noStroke()
-  p.fill(mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.5 * dim))
-  p.circle(m.x * k, m.y * k, m.r * 2 * k)
+  // p5 caches its fill and would not set it again over the raw gradient: set another first.
+  p.fill(0)
   // The seas: soft, irregular, the grey-blue of the halo.
   const sea = p.color(mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.42))
   sea.setAlpha(150 * light)
