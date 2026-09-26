@@ -9,7 +9,7 @@ import { WASTES } from '../worlds'
 import { laneThrough, TURNIP_TO_WALK } from './hills'
 import { drawFog, drawPlume, drawTurnipAt } from './hills-land'
 import {
-  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
+  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
   stepAt, TAKEOFF, TURNIP_LANDINGS, W, WIDE,
 } from './walk-plan'
 
@@ -104,6 +104,11 @@ export const walk = part<null>(
     // whole from its feet to its flag, its feet a cell and a half above the frame's foot.
     const past = castleAt(W(78)).at
     const cross = w([48, past[1] + 1.7 - WHOLE / 2])
+    // Where the castle sits down in the night: the whole of it, centred on its seat, a little lower in the frame than
+    // in the strides' (the porch comes down as it sits, and she with it).
+    const seat = castleAt(SETTLE + 1).at
+    const NIGHT = WHOLE + 2
+    const night = w([seat[0] + 0.4, seat[1] + 3.5 - NIGHT / 2])
     return [
       // The castle over her on the hill, its stair dropping; in on her as she jumps for it and climbs.
       { t: DROP, cells: 12.6, hold: w([HILLTOP[0] + 2.1, -4.55]) },
@@ -131,12 +136,13 @@ export const walk = part<null>(
       { t: 140.4, cells: 7.4, off: [1.75, -1.1] },
       { t: 141.6, cells: 6.6, off: [1.75, -1.08] },
       { t: 143.2, cells: 6.2, off: [1.7, -1.05] },
-      // Out a little to watch it walk on into the dark, its windows lit, the lit porch the brightest thing in the
-      // frame; it slows, and sits.
-      { t: 145.6, cells: 12.5, off: [2.8, -1.3] },
-      { t: LAST, cells: 14, off: [2.8, -0.9] },
-      { t: SETTLE + 0.1, cells: 13.5, hold: door(SETTLE + 0.1, 0.4, -1.4) },
-      { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95) },
+      // Then, on a footfall, a cut out to the whole castle small against the night, feet to flag with the night over
+      // it: it walks on into the middle of a still frame, its windows lit and the porch's lantern the brightest thing
+      // in it, slows as the music fades, and sits on the last note (148.805); a breath, and on the latch (150.686) a cut
+      // in to the door, which opens on the room's light.
+      { t: W(86), cells: NIGHT, hold: night, cut: true },
+      { t: LATCH - 0.3, cells: NIGHT - 2.5, hold: [night[0], night[1] + 1.1] },
+      { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95), cut: true },
       { t: slot.end, cells: 4, off: [0.9, -0.7] },
     ]
   },

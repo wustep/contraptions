@@ -130,9 +130,9 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
   }
   check('merry-go-round: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
 
-  // She can be found: outside the castle's whole-castle wides (the roar and the great strides, the collapse, the
-  // rebuild) and the credits, she is never under 5.5 px across at 640x360 for more than 1.5 s.
-  const WIDES: [number, number][] = [[126.5, 138], [245.5, 252.5], [294, 300.2], [301.2, DURATION]]
+  // She can be found: outside the castle's whole-castle wides (the roar and the great strides, its sitting down in the
+  // night, the collapse, the rebuild) and the credits, she is never under 5.5 px across at 640x360 for more than 1.5 s.
+  const WIDES: [number, number][] = [[126.5, 138], [144.9, 150.7], [245.1, 252.5], [294, 300.2], [301.2, DURATION]]
   let small = 0
   let smallest = 0
   let smallAt = 0
