@@ -8,8 +8,8 @@ import { CARL, ELLIE } from './worlds'
  * (`Performance.titles`), since a show's canvas sets no type. Each comes up high in the frame, holds, and goes as
  * the next comes; the last is gone before the end, so the film ends on the house alone.
  *
- * The canvas draws nothing for them: the camera has drawn back by then, so the first card comes over the house's upper
- * storey, the second over its roof, and the rest over the night sky, and the words read there by themselves.
+ * The canvas draws nothing for them: the camera has drawn back past the roof by then, so every card comes over the
+ * evening sky above the house, and the words read there by themselves.
  */
 
 export interface Card {
@@ -26,8 +26,11 @@ const FORM = 1.3
 const GO = 1.0
 const OVERLAP = 0.25
 
-/** The credits start once he has sat down in his chair: a note of the piano's last phrases. */
-export const CREDITS_AT = 226.197
+/**
+ * The credits start once he has sat down and the lamp is on, and the camera has drawn back past the roof: a note of
+ * the piano's last phrases (227.695), so the first card comes over the sky, not over the house.
+ */
+export const CREDITS_AT = 227.695
 
 const script: Omit<Card, 'at'>[] = [
   { hold: 3.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
@@ -62,7 +65,9 @@ export const LAST_GONE = (() => {
 })()
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, over the sky. */
-const AT: [number, number] = [0.5, 0.1]
+const AT: [number, number] = [0.5, 0.055]
+/** On a phone held upright the stage shows more sky over the house: the cards go up into it. */
+const LIFT = 0.62
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -79,7 +84,7 @@ export function creditsAt(t: number): TitleCard[] {
   CARDS.forEach((card, n) => {
     const { light, rise } = lightOf(card, t)
     if (light <= 0.001) return
-    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT })
+    out.push({ key: `married-life-credits-${n}`, role: card.role, names: card.names, notes: card.notes, light, rise, at: AT, lift: LIFT })
   })
   return out
 }

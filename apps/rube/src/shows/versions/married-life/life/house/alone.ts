@@ -104,28 +104,32 @@ function shotsFor(): PartShot[] {
   const key = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - at[0], y - at[1]], w: 1 })
   void CUTS
   return [
-    // The foot of his steps at dusk: easing up and back to take in the house as he climbs.
-    key(203.9, 4.9, 6.3, -1.45),
-    key(206.6, 4.8, 5.6, -1.5),
-    // In at the door with him; through the window across the room.
-    key(209.2, 4.5, 4.55, -1.5),
+    // In close on his three steps, the door and the porch rail, so each step on its note fills the frame; the mailbox's
+    // faded prints just inside its right edge, the rhyme. Held (drifting with him) to the latch.
+    key(203.7, 3.5, 6.42, -0.95),
+    key(206.4, 3.45, 6.36, -0.97),
+    key(ALONE.latch, 3.5, 6.3, -1.0),
+    // Then wider as he goes in; through the window across the room.
+    key(210.3, 4.3, 4.6, -1.4),
     key(212.6, 4.1, 3.4, -1.55),
     key(215.6, 3.8, 2.75, -1.65),
     key(ALONE.sit, 3.6, 2.2, -1.7),
     // Slowly in on the two chairs, his and hers with the balloon over it, until he reaches over and the lamp comes on.
     key(ALONE.lamp, 3.2, 2.3, -1.8),
-    // From the lamp, one long draw back without a stop: the lit window, the house at dusk, the roof and the sky, and
-    // on, slower and slower, to the end: the house small under the stars. The first card comes over the upper storey,
-    // the second over the roof, the rest over the sky. He stays inside the Zoom frame (a third of its height from
-    // its middle) the whole way.
-    key(225.2, 4.1, 2.5, -2.05),
-    key(228.3, 6.4, 3.0, -2.6),
-    key(232.3, 9.4, 3.6, -3.55),
-    key(236.5, 12.8, 4.1, -4.6),
-    key(241.0, 15.2, 4.2, -5.3),
-    key(247.0, 17.4, 4.2, -5.85),
-    key(255.0, 20.6, 4.25, -6.55),
-    key(DURATION, 22.0, 4.25, -6.95),
+    // From the lamp, one long draw back without a stop: the lit window, the house at dusk, the roof, and past it to the
+    // sky before the first card comes (227.695), so every card is over the sky; and on, slower and slower, to the end:
+    // the house small under the stars. He stays inside the Zoom frame (a third of its height from its middle) the
+    // whole way.
+    key(225.0, 5.4, 2.6, -2.4),
+    key(226.9, 9.5, 3.3, -3.5),
+    key(228.6, 12.6, 3.8, -4.6),
+    // From here an even draw back (the same share of the frame each second, so it never slows to a park), the house
+    // sinking to the frame's foot and the sky opening over it.
+    key(233.5, 14.3, 4.1, -5.45),
+    key(239.0, 16.5, 4.2, -6.15),
+    key(245.0, 19.3, 4.2, -7.05),
+    key(252.0, 23.1, 4.25, -8.15),
+    key(DURATION, 27.0, 4.25, -9.15),
   ]
 }
 

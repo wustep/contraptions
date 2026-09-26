@@ -157,7 +157,7 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     { what: 'the house made new, the machine as tall as it', from: 23.5, to: 37.6, cells: 10.2 },
     { what: 'the storm: the tree through the roof over the nursery, and the hole boarded', from: 127, to: 137.2, cells: 9.8 },
     { what: 'the one toll, the whole empty church and its bell', from: 196.5, to: 200, cells: 7.6 },
-    { what: 'the credits: the house small under the stars', from: CREDITS_AT - 2, to: perf.duration, cells: 23 },
+    { what: 'the credits: the house small under the stars', from: CREDITS_AT - 2, to: perf.duration, cells: 27.5 },
   ]
   const wide: string[] = []
   let wideFrom = -1

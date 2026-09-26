@@ -600,7 +600,8 @@ function renderWords(t: number): void {
       wordCards.set(c.key, node)
     }
     node.style.left = `${(W - fw) / 2 + c.at[0] * fw}px`
-    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh}px`
+    const lift = c.lift ? c.lift * Math.max(0, (H - fh) / 2) : 0
+    node.style.top = `${(H - fh) / 2 + (c.at[1] + (c.rise ?? 0) / 100) * fh - lift}px`
     node.style.opacity = c.light.toFixed(3)
     // Out of focus as it comes and goes: it comes into focus as it comes up.
     node.style.filter = c.light > 0.995 ? '' : `blur(${((1 - c.light) * fh * 0.012).toFixed(2)}px)`
