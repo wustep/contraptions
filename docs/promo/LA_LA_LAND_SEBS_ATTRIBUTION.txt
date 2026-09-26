@@ -1,0 +1,13 @@
+Epilogue — Justin Hurwitz
+The End — Justin Hurwitz
+From La La Land (Original Motion Picture Soundtrack), 2016
+Official audio (Interscope, the "Justin Hurwitz - Topic" uploads), used for private Contraptions tech demos only:
+https://www.youtube.com/watch?v=_vpCaKQXhMg (Epilogue, ~7:41)
+https://www.youtube.com/watch?v=PMbrnvyLTdg (The End, ~0:47)
+Copyrighted — do not ship to production / public Shows without a licence.
+
+Files:
+- docs/promo/la-la-land-epilogue-demo.m4a — Epilogue as fetched (yt-dlp, audio only, AAC).
+- docs/promo/la-la-land-the-end-demo.m4a — The End as fetched (yt-dlp, audio only, AAC).
+- docs/promo/la-la-land-sebs-mix-demo.mp3 — what the Seb's take plays: Epilogue whole from zero, then The End from
+  464.0 s. Built by scripts/sebs-mix.sh. No gain, no fades, no timing changes.

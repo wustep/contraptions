@@ -184,3 +184,38 @@ only: the show plays one mix of the two (`docs/promo/interstellar-liftoff-mix-de
 built by `scripts/liftoff-mix.sh`), Cornfield Chase untouched and then the second cue
 from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
 (`scripts/liftoff-ntfc-onsets.py` → `scripts/show-plans/liftoff-ntfc-onsets.json`).
+
+`la-la-land/opus55-sebs` (**Seb's**, "Directed by wustep") is a one-shot take on
+Justin Hurwitz's *Epilogue* from La La Land, and then *The End*, 510 s in all.
+Every piece in it is new, and so are its places: Seb's club, Lipton's, a
+theatre, a white studio and a painted Hollywood, an audition in shadow play, a
+globe, a Paris jazz club, painted Paris and the stars, a home movie, the drive,
+and Seb's again, with the city of stars round it at both ends. The code is
+`la-la-land/sebs/` (a Liftoff-style kit: parts built to timed slots, company
+balls, an authored camera, covers that the stage changes place under). The mix
+is built by `scripts/sebs-mix.sh` and measured once by `scripts/sebs-onsets.py`
+into `scripts/show-plans/sebs-onsets.json`; `check:shows` holds every strike
+against it (`apps/rube/check-sebs.ts`). The recordings are copyrighted and
+demo only: `docs/promo/LA_LA_LAND_SEBS_ATTRIBUTION.txt`. The whole story is in
+`docs/promo/LA_LA_LAND_SEBS.md`.
+
+`la-la-land/fable51-epilogue` (Epilogue, with a faint "Directed by wustep"
+byline in the panel) is Justin Hurwitz's *Epilogue* from La La Land, demo
+only (`docs/promo/LALALAND_EPILOGUE_ATTRIBUTION.txt`), played whole from its
+first sample, with every piece new. The show lives in `la-la-land/epilogue/`,
+built on the same kit as Liftoff: `show.ts` holds three universes on one
+clock that share cells (the real club, the dream as the club's own stage
+dressed in painted flats, and the club again where the dream's last set is
+struck), and the stage changes universe on the kiss and on the drop out of
+the peak. Each part is handed a slot and builds its lane from timed
+waypoints, so its strikes land on the measured onsets in
+`scripts/show-plans/lalaland-epilogue-onsets.json` (measured once by
+`scripts/lalaland-epilogue-onsets.py`: the piano's notes, the swing's, the
+waltz's and the number's combs, and the free stretches' onsets) by
+construction. `epilogue/hits.ts` gathers every strike, and `check:shows`
+measures each against the file, holds the ball to one continuous path,
+never hidden long, and holds Mia (the yellow ball, company) to the story:
+at her table for the kiss, with him through the dream, at her table again at
+the end, her husband only in the club at the end, neither ever jumping or
+appearing in shot. The credits run over the last chords, set by the page
+from `Performance.titles(t)`. The report is `docs/promo/LALALAND_EPILOGUE.md`.
