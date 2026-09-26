@@ -52,7 +52,7 @@ export function rollers(T: number): number[] {
 const STRIKE = Math.atan2(CART.strike[1] - CART.hammerPivot[1], CART.strike[0] - CART.hammerPivot[0])
 const RAISED = -0.2
 /** Each blow's bar's beat 3, where the hammer reaches the top: TOPS[i] follows BLOWS[i]. */
-const TOPS: number[] = BLOWS.map((t) => {
+export const TOPS: number[] = BLOWS.map((t) => {
   const b = beatsIn(t + 0.05, t + 1.5).find((x) => x.pos === 3)
   return b ? b.t : t + 0.68
 })

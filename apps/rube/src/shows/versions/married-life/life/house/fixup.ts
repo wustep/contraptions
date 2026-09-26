@@ -7,7 +7,7 @@ import { drawFacadeFront } from './front-house'
 import { FRONT_OVER, lookAt } from './front'
 import { BLOWS, BRAKE, CART, CHAIR_LIFT, CHAIRS, FOLD, HALT, P, PANE_AT, PRINT_AT, PRINTS, RAISE, SHOVE, SWINGS, TREADS, W } from './front-plan'
 import { crouch, cubic, flight, pieces, trace, type Path } from './front-motion'
-import { drawChairsIn, drawChairsOut, drawRig } from './fixup-rig'
+import { drawChairsIn, drawChairsOut, drawRig, TOPS } from './fixup-rig'
 
 /**
  * FIXUP (21.577 to 49.644, waltz bars 5 to 31): the house builder's. They come running out of the church and up the
@@ -171,6 +171,8 @@ export const FIXUP_HITS: number[] = [
   SHOVE,
   ...RAISE,
   ...BLOWS,
+  // The pawl catching the hammer at the top of its trip, on each blow's bar's third beat.
+  ...TOPS,
   CHAIR_LIFT.carl[2],
   CHAIR_LIFT.ellie[2],
   PANE_AT,
