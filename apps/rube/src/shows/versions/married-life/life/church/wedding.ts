@@ -48,6 +48,19 @@ const ELLIE_HOPS: [number, number][] = [
   [8.214, 8.499],
   [8.649, 8.969],
 ]
+/**
+ * His nervous shuffle, step by step along the altar step ([from, to] each, ending on the march's onsets): two small
+ * steps away from her on the phrase at 5.306, a look at the pews, and two back in beside her as she hops (8.214, 8.499).
+ */
+const SHUFFLE_OUT: [number, number][] = [
+  [5.306, 5.666],
+  [5.666, 6.031],
+]
+const SHUFFLE_BACK: [number, number][] = [
+  [7.848, 8.214],
+  [8.214, 8.499],
+]
+const STEP = 0.1
 /** She bumps him on the march's strongest onset. */
 const BUMP = 12.202
 /** She spins away on bar 1's second beat; he follows. She hits the doors on bar 4's second beat. */
@@ -66,8 +79,10 @@ const ellieRun = pchip([HER_RUN, 18.75, CUT.house], [ALTAR_ELLIE - 0.08, ALTAR_E
 
 function carl(T: number): Pt {
   if (T >= HIS_RUN) return [carlRun(T), 0]
-  // Pushed a little way along by her bump, and back to his place.
-  const x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6)
+  // The shuffle away and back; then pushed a little way along by her bump, and back to his place.
+  let x = ALTAR_CARL - 0.06 * ease(T, BUMP, CARL_HOPS[2][1]) + 0.06 * ease(T, 13.3, 14.6)
+  for (const [a, b] of SHUFFLE_OUT) x -= STEP * ease(T, a, b)
+  for (const [a, b] of SHUFFLE_BACK) x += STEP * ease(T, a, b)
   let y = 0
   for (const [a, b] of CARL_HOPS) y -= lift(T, a, b)
   return [x, y]
@@ -93,15 +108,27 @@ function ellie(T: number): Pt {
   return [x, y]
 }
 
-/** How he holds himself: a flinch at the flash, a squash on each landing, a glance at the pews, the lean into the kiss. */
+/** How he holds himself: a flinch at the flash, a squash on each landing, his shuffle, a glance at the pews, the lean into the kiss. */
 function carlPose(T: number): { tilt: number; squash: number } {
   let squash = 0.1 * knock(T - FLASH, 0.14) * (T >= FLASH ? Math.min(1, (T - FLASH) / 0.03) : 0)
   for (const [, b] of CARL_HOPS) squash += 0.09 * knock(T - b, 0.13)
-  const glance = 0.07 * smooth(T, 5.9, 6.5) * (1 - smooth(T, 7.3, 8.0))
+  // Each shuffling step: a lean into it, and a small settle as it lands.
+  let step = 0
+  for (const [dir, steps] of [
+    [-1, SHUFFLE_OUT],
+    [1, SHUFFLE_BACK],
+  ] as [number, [number, number][]][]) {
+    for (const [a, b] of steps) {
+      if (T > a && T < b) step += dir * 0.06 * Math.sin((Math.PI * (T - a)) / (b - a))
+      squash += 0.035 * (T < b ? ease(T, b - 0.1, b) : knock(T - b, 0.14))
+    }
+  }
+  // Stepped away, he looks back at the pews; he stops looking as he steps back in.
+  const glance = 0.07 * smooth(T, 6.1, 6.6) * (1 - smooth(T, 7.3, 7.85))
   // A nervous nod on the march's last phrase: a small bow and back, slow.
   const nod = 0.08 * ease(T, 15.412, 15.75) * (1 - ease(T, 15.95, 16.6))
   const lean = 0.15 * ease(T, 16.811, KISS) * (1 - ease(T, 18.05, HIS_RUN + 0.35))
-  return { tilt: glance + nod + lean, squash }
+  return { tilt: step + glance + nod + lean, squash }
 }
 
 /* ------------------------------------------------------------------ the photographer */
@@ -344,24 +371,25 @@ export const wedding = part<WeddingState>(
   (slot) => {
     const at = WEDDING_AT
     const key = (t: number, cells: number, x: number, y: number) => ({ t, cells, hold: [x - at[0], y - at[1]] as Pt, w: 1 })
+    // Few, long moves: in on the photograph; out once to the whole church, which is held as the establishing wide
+    // while it barely drifts; one slow push from there all the way into the kiss; at rest on the kiss; then one
+    // pull-out on the swell, from rest, taking the bell and the run down the aisle, settling onto the doors at the cut.
     return [
-      // The photograph: the two of them left of centre, the camera and its tray at the right; a slow push.
+      // The photograph: the two of them left of centre, the camera and its tray at the right; a slow push in on it,
+      // through the flash.
       key(0.001, 3.1, 1.46, -0.5),
-      key(1.9, 3.3, 1.3, -0.58),
-      // Over to the organ as it plays, the two of them at the right of it.
-      key(5.2, 4.6, -1.3, -1.2),
-      // Out to the whole church: the families, the tower, the doors.
-      key(8.0, 6.0, 0.9, -1.75),
-      // In on the two of them for her hops and his, and closest for her bump; then on into the kiss.
-      key(10.6, 4.2, 0.8, -0.95),
-      key(12.2, 3.2, 0.5, -0.6),
-      key(13.9, 4.0, 1.15, -0.86),
-      key(16.9, 3.1, -0.15, -0.6),
+      key(1.6, 2.9, 1.34, -0.54),
+      // Out, once, as the march gets going, to the whole church: organ, families, tower, bell, doors.
+      key(5.0, 6.0, 0.75, -1.95),
+      // Held as the establishing wide, only drifting in toward the altar.
+      key(8.0, 5.45, 0.55, -1.6),
+      // One continuous push from the wide into the kiss (her hops, his, her bump, the march slowing on the way).
       key(KISS, 2.65, -0.45, -0.55),
-      key(18.5, 3.4, 0.3, -0.72),
-      // Out on the swell to the bell pealing in its tower over the doors they run for; then in with them.
-      key(19.9, 5.8, 2.6, -1.9),
-      key(20.85, 5.2, 4.05, -1.2),
+      // At rest on the kiss and the great chord; the pull-out starts from rest on the follow-through, as he runs.
+      key(18.3, 2.65, -0.4, -0.56),
+      // Out on the whole swell, the petals over the aisle, following them to the doors; and on out, without a stop,
+      // through the cut into the house's opening.
+      key(20.5, 4.7, 3.05, -0.95),
       // The cut (`CUTS.house`): 5 cells, Carl 0.9 left of centre and 0.9 below it.
       key(slot.end, 5, CUT_CARL + 0.9, -0.9),
     ].filter((s) => s.t >= slot.begin && s.t <= slot.end)
