@@ -866,10 +866,11 @@ export const fall = part<State>(
       // broken hall dark, the chimney he came up: the lighting rule's payoff. (He stays in the frame under Zoom.)
       { t: 156, cells: 12.6, hold: w(61, -19.9), w: 0.9 },
       { t: 161, cells: 15.5, hold: w(60.6, -19.6), w: 0.95 },
+      // (The summit kept a fifth of the way down the frame, under the cards, which sit on the sky over it.)
       { t: 166, cells: 24, hold: w(57, -15.5), w: 0.97 },
-      { t: 171, cells: 40, hold: w(51, -6.5), w: 0.98 },
-      { t: 175.5, cells: 58, hold: w(47, 1.2), w: 0.99 },
-      { t: slot.end, cells: 66, hold: w(46, 3.4), w: 1 },
+      { t: 171, cells: 40, hold: w(51, -12), w: 0.98 },
+      { t: 175.5, cells: 60, hold: w(47, -3), w: 0.99 },
+      { t: slot.end, cells: 72, hold: w(46, 1.0), w: 1 },
     ]
   },
 )

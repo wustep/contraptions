@@ -67,7 +67,7 @@ export const LAST_GONE = (() => {
 export const DURATION = Math.ceil(LAST_GONE + 1.5)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: the middle, high, over the sky. */
-const AT: [number, number] = [0.5, 0.1]
+const AT: [number, number] = [0.5, 0.07]
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at

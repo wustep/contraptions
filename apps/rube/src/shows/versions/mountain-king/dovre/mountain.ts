@@ -99,7 +99,7 @@ export function skyAt(y: number, t: number): string {
   const v = Math.max(0, Math.min(1, (y + 38) / 24))
   // The morning's own colours by height: a deep blue high up (where the credits are set: the words need a dark
   // ground), the pale blue lower, and the warm band over the far ridges where the sun comes up.
-  const w = Math.max(0, Math.min(1, (y + 27) / 10))
+  const w = Math.max(0, Math.min(1, (y + 24) / 8.5))
   const band = w < 0.4 ? mixHex(ZENITH, SKY.morning, smooth(w, 0, 0.4)) : mixHex(SKY.morning, SKY.dawn, Math.pow((w - 0.4) / 0.6, 1.3))
   const day = mixHex(band, mixHex(SKY.morning, SKY.dawn, Math.pow(v, 1.7)), 0.25)
   const here = Math.max(0, Math.min(1, d * (0.75 + 0.9 * v)))
