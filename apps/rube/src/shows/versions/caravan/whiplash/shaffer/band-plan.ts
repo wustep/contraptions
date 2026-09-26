@@ -57,12 +57,26 @@ export const FLETCHER_H = 3.25
 export const FLETCHER_HOME: Pt = [PODIUM.x, PODIUM_TOP - FLETCHER_H]
 
 /**
- * Tanner's chart on its stand, which Andrew turns: facing the house, its ledge (where a ball can sit) along the
- * bottom of the desk. `x` is the spine.
+ * Tanner's chart on its stand, which Andrew turns: at the kit, just left of the floor tom, where the drummer reads
+ * it, with the alternate's chair beside it (Andrew, the chart and Tanner one group; Fletcher facing them from his
+ * podium). Facing the house, its ledge (where a ball can sit) along the bottom of the desk. `x` is the spine.
  */
-export const STAND = { x: 15.42, ledge: PIT - 2.55, w: 1.34, h: 1.02 }
+export const STAND = { x: 17.85, ledge: PIT - 2.55, w: 1.34, h: 1.02 }
+/**
+ * In the tempo test Fletcher storms from the kit to the chair and knocks the stand aside on his way (it is in his
+ * path): it skids left over the chair and rocks, and stays there. How far it has gone at `T` (cells, negative), and
+ * its rock (radians about its foot).
+ */
+export const SHOVE = { at: 93.82, dx: -1.3 }
+export function standShove(T: number): { dx: number; tilt: number } {
+  const a = T - SHOVE.at
+  if (a <= 0) return { dx: 0, tilt: 0 }
+  const u = Math.min(1, a / 0.5)
+  const out = 1 - Math.pow(1 - u, 3)
+  return { dx: SHOVE.dx * out, tilt: 0.13 * Math.exp(-a / 0.4) * Math.sin(a * 11) }
+}
 
-/** The alternate's chair, in profile, facing the stand and the podium (its back to the kit); the seat's top, and the ball on it. */
+/** The alternate's chair, in profile, facing the podium as the band does (its back to the stand and the kit); the seat's top, and the ball on it. */
 export const CHAIR_X = 16.78
 export const SEAT_H = 1.05
 /** How high the chair's back stands above the floor. */
