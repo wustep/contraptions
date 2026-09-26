@@ -31,9 +31,9 @@ const GO = 0.95
 const OVERLAP = 0.25
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 3.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 3.0, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.0,
+    hold: 3.8,
     role: 'With',
     names: [
       ['Spark', "the candle's flame", SPARK],
@@ -41,7 +41,7 @@ const script: Omit<Card, 'at'>[] = [
     ],
   },
   {
-    hold: 4.6,
+    hold: 4.4,
     role: 'Music',
     names: ['Edvard Grieg'],
     notes: ['“In the Hall of the Mountain King”, Peer Gynt Suite No. 1', 'played by the Czech National Symphony Orchestra for Musopen, in the public domain'],
@@ -65,8 +65,8 @@ export const LAST_GONE = (() => {
   return last.at + FORM + last.hold + GO
 })()
 
-/** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, over the dark of the roof. */
-const AT: [number, number] = [0.5, 0.12]
+/** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, in the dark of the roof over the candle. */
+const AT: [number, number] = [0.5, 0.09]
 
 /** How far up a card is at `t` (0..1), and how far it still has to settle (hundredths of the frame). */
 function lightOf(card: Card, t: number): { light: number; rise: number } {
@@ -92,7 +92,10 @@ export function creditsAt(t: number): TitleCard[] {
 /** How dark the bed under the words is at `t`: up with the first card, down after the last. */
 const bedAt = (t: number): number => clamp((t - CREDITS_AT + 0.4) / 1.6) * (1 - clamp((t - LAST_GONE + 0.4) / 1.8))
 
-/** The canvas's half: a soft dark where the words come, over everything in the loft. */
+/**
+ * The canvas's half: a soft dark across the top of the frame where the words come, gone well above the candle, so the
+ * words read over the roof and the candle keeps all its light.
+ */
 export const credits = scenery<null>({
   name: 'credits',
   draw: () => {},
@@ -102,20 +105,14 @@ export const credits = scenery<null>({
     const { k } = c
     const f = frame(p, k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
-    const w = f.x1 - f.x0
     const h = f.y1 - f.y0
-    const cx = (f.x0 + w * AT[0]) * k
-    const cy = (f.y0 + h * (AT[1] + 0.13)) * k
-    const rx = w * 0.36 * k
-    ctx.save()
-    ctx.translate(cx, cy)
-    ctx.scale(1, 0.42)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(8, 7, 10, ${0.55 * bed})`)
-    g.addColorStop(0.6, `rgba(8, 7, 10, ${0.3 * bed})`)
+    const g = ctx.createLinearGradient(0, f.y0 * k, 0, (f.y0 + h * 0.3) * k)
+    g.addColorStop(0, `rgba(8, 7, 10, ${0.5 * bed})`)
+    g.addColorStop(0.55, `rgba(8, 7, 10, ${0.3 * bed})`)
     g.addColorStop(1, 'rgba(8, 7, 10, 0)')
+    ctx.save()
     ctx.fillStyle = g
-    ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
+    ctx.fillRect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, h * 0.3 * k)
     ctx.restore()
   },
 })

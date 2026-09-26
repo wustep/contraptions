@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, route, type Way } from '../kit'
-import { DURATION, LAST } from '../music'
+import { CREDITS_AT, DURATION, LAST } from '../music'
 import { G } from '../physics'
 import { FIRE_MOUTH, WICK } from './layout'
 
@@ -43,14 +43,20 @@ export const home = part<null>(
       state: null,
     }
   },
-  (slot) => [
-    // Out of the fire it follows the leap, drawing back.
-    { t: slot.begin + 0.3, cells: 6 },
-    // Out of the fire the camera draws back to hold the candle, the stove door and the cat in one frame for the two
-    // chords (the frame's point is between them: the wick is at ON_WICK, the cat about [-2, 6], in this frame).
-    { t: LAST[0] - 0.05, cells: 14, hold: [-4, 0.4], w: 0.9 },
-    { t: LAST[1] + 1.5, cells: 14.3, hold: [-4, 0.4], w: 1 },
-    // The credits: the loft, dark, the candle and the sleeping cat small in the lower part, drawing back very slowly.
-    { t: DURATION, cells: 15.5, hold: [-4, -0.2], w: 1 },
-  ],
+  (slot) => {
+    // Home's frame is the loft's cells less `HOME_AT`: `w(x, y)` is a point of the loft.
+    const w = (x: number, y: number): Pt => [x - HOME_AT[0], y - HOME_AT[1]]
+    return [
+      // Out of the fire it follows the leap, drawing back.
+      { t: slot.begin + 0.3, cells: 6 },
+      // The two-shot for the two chords: the candle up and left, the stove and the cat under it, the floor in. Low
+      // enough to see the cat wake and look up at the candle; high enough that Zoom keeps the wick in.
+      { t: LAST[0] - 0.05, cells: 14.8, hold: w(2.0, 4.3), w: 0.92 },
+      { t: LAST[1] + 1.8, cells: 14.9, hold: w(1.9, 4.25), w: 1 },
+      // The cat settles; the camera draws back to the whole loft in the dark, the candle its one warm light, with the
+      // dark of the roof above it for the credits, and the room's east end just out of frame.
+      { t: CREDITS_AT + 2.2, cells: 20.6, hold: w(-2.6, 1.7), w: 1 },
+      { t: DURATION, cells: 22.4, hold: w(-4.3, 1.0), w: 1 },
+    ]
+  },
 )

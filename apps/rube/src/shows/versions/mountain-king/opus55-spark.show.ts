@@ -8,7 +8,7 @@ export default defineShow({
   title: 'Mountain King',
   label: 'Spark',
   about: "Grieg's In the Hall of the Mountain King as a Rube Goldberg machine: a candle's flame slips out through the fire, runs away across four worlds, and makes it home by the last chord.",
-  still: 131,
+  still: 116.4,
   async load() {
     return (await import('./spark')).performance
   },

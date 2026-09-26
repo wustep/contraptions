@@ -199,5 +199,5 @@ export const FESTIVAL = phrase(16)
 /** Where the loft's two builders hand the spark on: phrase 3, the second B. */
 export const LOFT_SEAM = phrase(3)
 
-/** When the credits start: after the last chord has died away. */
-export const CREDITS_AT = 151.9
+/** When the credits start: after the last chord has died away, and the cat has looked at the candle and gone back to sleep. */
+export const CREDITS_AT = 154.2

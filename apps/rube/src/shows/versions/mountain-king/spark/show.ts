@@ -180,6 +180,9 @@ export class SparkShow extends Show {
       here.stretch = Math.max(here.stretch, streak.stretch)
       here.angle = streak.angle
     }
+    // The stage draws no ball: the spark's heart is drawn with its flame (`fx.ts`), so it is a flame's and not a
+    // marble's, and leaves no beads behind it.
+    here.balls = []
     const ride = this.riders.find((r) => r.leg === owner && time >= r.from && time < r.to)
     if (ride) {
       const hero: ShowBall = {
@@ -192,7 +195,7 @@ export class SparkShow extends Show {
         stretch: here.stretch,
         angle: here.angle,
       }
-      here.balls = ride.fn(time, hero) ?? undefined
+      here.balls = ride.fn(time, hero) ?? []
     }
     return here
   }

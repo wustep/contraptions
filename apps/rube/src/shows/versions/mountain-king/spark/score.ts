@@ -3,7 +3,7 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { credits } from './credits'
-import { bound as sparkBound, flame, veil, type FlameState, type VeilState } from './fx'
+import { bound as sparkBound, ember, flame, veil, type FlameState, type VeilState } from './fx'
 import { box, lay, standing, type Chain, type Link } from './kit'
 import { CODA, DOORS, DURATION, FESTIVAL, LAST, LOFT_SEAM } from './music'
 import { SparkShow, type Leg, type Riders, type WorldSet } from './show'
@@ -145,7 +145,10 @@ export function compose(): { show: SparkShow; camera: (t: number) => Framing } {
     const cells = world === 'loft' ? [...ROOM_CELLS, ...cellsOf(world)] : cellsOf(world)
     const v: VeilState = { show: null, world }
     const f: FlameState = { show: null, world }
-    bound.push({ state: v }, { state: f })
+    const e: FlameState = { show: null, world }
+    bound.push({ state: v }, { state: f }, { state: e })
+    // The spark's heart first of all, so every part's `over` still comes after it; the veil and the flame last.
+    set.scenery.unshift(standing(ember(), 0, 0, cells, e, DURATION) as Placed)
     set.after.push(standing(veil(), 0, 0, cells, v, DURATION) as Placed)
     set.after.push(standing(flame(), 0, 0, cells, f, DURATION) as Placed)
   }

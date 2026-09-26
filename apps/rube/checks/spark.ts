@@ -101,7 +101,7 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
     const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
-  check('spark: under Zoom the spark never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+  check('spark: under Zoom the spark never leaves the frame', outOfZoom.length === 0, `${outOfZoom.length} out: ${outOfZoom.slice(0, 6).join(', ')}${outOfZoom.length > 6 ? ', …' : ''}`)
 
   // The spark is never out of sight for long.
   let hidden = 0
