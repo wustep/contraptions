@@ -39,6 +39,7 @@ import type { LiftoffShow } from '../src/shows/versions/interstellar/liftoff/sho
 import { checkSebs } from './sebs'
 import { checkGymnopedie } from './gymnopedie'
 import { checkCaravan } from './caravan'
+import { checkMarriedLife } from './married-life'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -148,8 +149,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Première Arabesque and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Married Life, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Married Life|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -161,9 +162,12 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land and Première', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,premiere-arabesque')
+  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land, Married Life and Première', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,married-life,premiere-arabesque')
   const caravan = shipped.works.find((w) => w.work === 'caravan')?.versions ?? []
   check('caravan is Caravan, one take, Opus 5.5, with no note', caravan.map((v) => v.take).join(',') === 'opus55' && caravan[0].title === 'Caravan' && caravan[0].label === 'Opus 5.5' && caravan[0].note === undefined)
+  const marriedLife = shipped.works.find((w) => w.work === 'married-life')?.versions ?? []
+  check('married-life is Married Life, one take, Opus 5.5, with no note',
+    marriedLife.map((v) => v.take).join(',') === 'opus55' && marriedLife[0].title === 'Married Life' && marriedLife[0].label === 'Opus 5.5' && marriedLife[0].note === undefined)
 
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
@@ -399,6 +403,8 @@ async function main(): Promise<void> {
       if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
       if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)
       if (work.work === 'caravan' && version.take === 'opus55') checkCaravan(perf, version, check)
+      if (work.work === 'married-life' && version.take === 'opus55') checkMarriedLife(perf, version, check)
+
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
           near(MIX_END, 262.741) && near(perf.duration, LIFTOFF_END) && LIFTOFF_END > MIX_END + 20 && (perf.soundtrack?.offset ?? 0) === 0 &&
