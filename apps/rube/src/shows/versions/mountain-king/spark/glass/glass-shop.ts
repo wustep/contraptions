@@ -1,9 +1,9 @@
 import { mixHex, type Pt } from '../../../../../parts'
-import { smooth } from '../kit'
+import { hash, smooth } from '../kit'
 import { drawFire as drawLicks } from '../fire'
 import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
-import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1, SLAM } from './glass-plan'
+import { DRAW, FLOOR_Y, FURNACE, GLORY, LEHR, OVEN, PORT, RINGS, S0, S1, SANDBOX, SLAM } from './glass-plan'
 import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, type Pen } from './glass-pen'
 
 /**
@@ -22,8 +22,14 @@ export interface View {
 
 /* ------------------------------------------------------------------ the room */
 
-const WINDOWS = [-8.2, 2.9, 9.2, 14.2]
-const WIN = { half: 1.15, top: -5.4, sill: -1.4 }
+/**
+ * Tall arched windows high in the back wall, a clerestory over the machines: in the lehr's and the carriage's frames
+ * (71.5-80, their tops down to about -3.4) they are above the frame and only their shafts of daylight come down
+ * through it to the floor. None stands by the furnace, so none slides in at the edge as the camera goes up to the
+ * port. A taller frame (a phone held upright) sees them whole.
+ */
+const WINDOWS = [-8.2, 2.9, 9.2]
+const WIN = { half: 1.15, top: -8.4, sill: -4.4 }
 /** The sun comes in from the upper west: the shafts lean east as they fall. */
 const LEAN = 0.5
 
@@ -45,18 +51,87 @@ export function drawRoom(pen: Pen, v: View): void {
     if (wx + WIN.half + LEAN * (FLOOR_Y - WIN.sill) < v.x0 - 1 || wx - WIN.half > v.x1 + 1) continue
     windowAt(pen, wx)
   }
-  // The floor: stone flags.
+  drawFloor(pen, v, x0, x1)
+}
+
+/** What stands on the floor and throws a shadow forward onto it (the sun is high in the west, behind the wall). */
+const FOOT: [number, number][] = [
+  [OVEN.x0, OVEN.x1],
+  [LEHR.x0, LEHR.x1],
+  [SANDBOX.x0, SANDBOX.x1],
+  [FURNACE.x0, FURNACE.x1],
+]
+/** How far toward us each course of flags ends (cells below the floor's back edge): wider as they come nearer. */
+const COURSES = [0.32, 0.75, 1.3, 2.0, 2.9, 4.05, 5.5, 7.3, 9.5, 12.2, 15.5, 19.5]
+
+/**
+ * The floor: stone flags seen from a little above, the back of the floor lit by the day and going a shade darker
+ * toward us. Courses of flags, wider as they come nearer, their joints faint and a little out of true; the pools of
+ * daylight from the windows lying forward across them; a soft shadow thrown forward under the oven, the lehr, the
+ * sand box and the furnace.
+ */
+function drawFloor(pen: Pen, v: View, x0: number, x1: number): void {
+  const { ctx, k } = pen
+  const y0 = FLOOR_Y
+  const y1 = Math.max(v.y1 + 1, FLOOR_Y + 3)
+  if (y0 > v.y1 + 0.5) return
   const floor = mixHex(GLASS.sand, GLASS.wallShade, 0.55)
-  shape(pen, box4(x0, FLOOR_Y, x1, Math.max(v.y1 + 1, FLOOR_Y + 3)), floor, 0)
-  strokeLine(pen, [[x0, FLOOR_Y], [x1, FLOOR_Y]], pen.ink, pen.w * 0.9)
-  // Pools of daylight on the floor, under each window.
+  const near = mixHex(floor, GLASS.iron, 0.13)
+  const g = ctx.createLinearGradient(0, y0 * k, 0, (y0 + 7) * k)
+  g.addColorStop(0, mixHex(floor, GLASS.light, 0.12))
+  g.addColorStop(0.35, floor)
+  g.addColorStop(1, near)
+  fillWith(pen, box4(x0, y0, x1, y1), g)
+  // Shadows thrown forward and a little east by what stands on it.
+  for (const [a, b] of FOOT) {
+    if (b + 1 < v.x0 || a - 1 > v.x1) continue
+    const sg = ctx.createLinearGradient(0, y0 * k, 0, (y0 + 0.6) * k)
+    sg.addColorStop(0, rgba(GLASS.iron, 0.2))
+    sg.addColorStop(1, rgba(GLASS.iron, 0))
+    fillWith(pen, [[a + 0.05, y0], [b, y0], [b + 0.45, y0 + 0.6], [a + 0.35, y0 + 0.6]], sg)
+  }
+  // The day through the windows lies forward across the flags, going on the way the shafts lean, and fades.
   for (const wx of WINDOWS) {
     const dx = LEAN * (FLOOR_Y - WIN.sill)
     const a = wx - WIN.half + dx
     const b = wx + WIN.half + dx
-    if (b + 1 < v.x0 || a - 1 > v.x1) continue
-    fillWith(pen, [[a, FLOOR_Y + 0.02], [b, FLOOR_Y + 0.02], [b + 0.35, FLOOR_Y + 0.5], [a + 0.35, FLOOR_Y + 0.5]], rgba(GLASS.light, 0.35))
+    const deep = 2.6
+    const run = LEAN * deep * 0.6
+    if (b + run + 1 < v.x0 || a - 1 > v.x1) continue
+    const lg = ctx.createLinearGradient(0, y0 * k, 0, (y0 + deep) * k)
+    lg.addColorStop(0, rgba(GLASS.light, 0.42))
+    lg.addColorStop(0.45, rgba(GLASS.light, 0.2))
+    lg.addColorStop(1, rgba(GLASS.light, 0))
+    fillWith(pen, [[a, y0 + 0.01], [b, y0 + 0.01], [b + run, y0 + deep], [a + run, y0 + deep]], lg)
   }
+  // The joints: one faint path, stroked once.
+  ctx.save()
+  ctx.strokeStyle = rgba(GLASS.iron, 0.16)
+  ctx.lineWidth = Math.max(0.6, pen.w * 0.5)
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  let top = y0
+  for (let i = 0; i < COURSES.length && top < v.y1 + 0.5; i++) {
+    const bottom = y0 + COURSES[i]
+    if (bottom > v.y0 - 0.5) {
+      const yb = bottom + 0.04 * (hash(i, 611) - 0.5)
+      ctx.moveTo((v.x0 - 1) * k, yb * k)
+      ctx.lineTo((v.x1 + 1) * k, (bottom + 0.04 * (hash(i, 612) - 0.5)) * k)
+      // Flags wider as they come nearer, laid broken-bond.
+      const w = 1.25 + 0.42 * (COURSES[i] + (i ? COURSES[i - 1] : 0)) * 0.5
+      const off = w * (0.5 * (i % 2) + 0.2 * hash(i, 613))
+      for (let c = Math.floor((v.x0 - 1 - off) / w); c * w + off <= v.x1 + 1; c++) {
+        const x = c * w + off + 0.18 * w * (hash(i, c, 614) - 0.5)
+        const lean = 0.06 * (bottom - top) * (hash(i, c, 615) - 0.5)
+        ctx.moveTo(x * k, top * k)
+        ctx.lineTo((x + lean) * k, bottom * k)
+      }
+    }
+    top = bottom
+  }
+  ctx.stroke()
+  ctx.restore()
+  strokeLine(pen, [[x0, FLOOR_Y], [x1, FLOOR_Y]], pen.ink, pen.w * 0.9)
 }
 
 function windowAt(pen: Pen, wx: number): void {
