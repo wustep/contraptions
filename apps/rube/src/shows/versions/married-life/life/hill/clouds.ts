@@ -12,20 +12,23 @@ import { TREE_X } from './hill'
  * They lie side by side on the blanket on the crest by the tree, looking up. Beside them on the grass stands Carl's
  * toy steam engine: a brass boiler on a little firebox, a chimney, and a flywheel that turns once a bar, steadily,
  * on the waltz. On every downbeat its crank comes round, the valve opens, the chimney's flap lifts and it chuffs one
- * puff of steam. The puffs rise, grow, and are carried off on the breeze into the sky, where they gather into
- * clouds, soft and uninked, and the clouds take the shapes of what the two of them dream of:
+ * puff of steam. The engine makes the clouds: each puff shoots up out of the chimney along one clear line, a knot of
+ * steam with its trail behind it, and on the NEXT downbeat it arrives and joins the shape being built, which swells by
+ * it (so every downbeat both launches a puff and grows the shape). The shapes are what the two of them dream of:
  *
- * -  bars 32 to 35: four puffs make an airship, the adventurer's airship, and it drifts off over the valley;
- * -  bars 36 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, a flat-topped cliff of cloud
- *    in shadow with its falls pouring bright off the lip, where they always meant to go;
- * -  bars 40 to 45, the crescendo: the puffs stay low and near, over the two of them: a soft bundle, a leg, and the
- *    head that comes on bar 42 makes it a baby, sitting up; on bar 43 its arm reaches out. He starts; she rolls close
- *    to him.
+ * -  bars 32 to 35: three puffs make an airship (body, tail fins, the gondola slung under it), whole on bar 35; it
+ *    sails off left, climbing, behind the tree;
+ * -  bars 35 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, a flat-topped cliff of cloud in
+ *    shadow; the fifth puff reaches its lip on bar 39 and the falls pour; then a gust takes it off right, out of the
+ *    frame by bar 41, while the camera comes down to the two of them;
+ * -  bars 39 to 45: low over the two of them, big and whole in the frame, a baby sitting up on a cushion of cloud: its
+ *    body (bar 40), its leg out in front (41), its head (42: now it is a baby), its arm reaching up and out (43), the
+ *    cloud it sits on (44, 45). He starts; she rolls close to him.
  *
- * At the cut they lie close, at rest, looking up at it (`CUTS.nursery`: Ellie at +0.36), and it becomes the mobile
- * over the crib.
+ * At the cut they lie close, at rest, looking up at it (`CUTS.nursery`: Ellie at +0.36), whole over them, and it
+ * becomes the mobile over the crib.
  *
- * The camera rises with the first puffs to a frame of the sky over them (5.5 cells at most, so the two of them stay
+ * The camera rises with the first puff to a frame of the sky over them (5.5 cells at most, so the two of them stay
  * figures, not specks), drifts right as the falls come, and comes down again with the baby onto the two of them.
  */
 
@@ -96,53 +99,61 @@ type ShapeKey = 'airship' | 'falls' | 'baby'
 interface Shape {
   /** Where its middle is at show time `t`, in this part's cells: each drifts on the breeze. */
   at(t: number): Pt
-  /** Seconds a puff takes from the chimney to its place. */
-  rise: number
   /** How big it is drawn: its billows are given at 1. */
   size: number
   billows: Billow[]
-  /** For each puff, in order, which billows it carries (none: a chuff that thins into the air). */
+  /** For each puff, in order, which billows it carries. */
   puffs: number[][]
   /** The billows by mass, back to front: each drawn whole over the one behind, so a head reads in front of a body. */
   groups: { of: number[]; tone?: number }[]
+  /** Drawn as one smooth mass (the airship, the baby), or billowed (the falls' cliff). */
+  smooth: boolean
 }
 
 const range = (from: number, n: number) => Array.from({ length: n }, (_, i) => from + i)
 
+/** How far a cloud has gone on a gust from `t0`: from rest, speeding up evenly to `v` cells a second by `t1`, then on at it. */
+function glide(t: number, t0: number, t1: number, v: number): number {
+  if (t <= t0) return 0
+  if (t < t1) return (0.5 * v * (t - t0) * (t - t0)) / (t1 - t0)
+  return 0.5 * v * (t1 - t0) + v * (t - t1)
+}
+
 /**
- * The airship: one long soft body, fuller at the nose, a fin above and below at its tail, and a small gondola slung
- * under its belly. Heading right, off over the valley.
+ * The airship: one long smooth body, its nose round and full (heading left), its tail tapering into a cross of fins,
+ * and a gondola slung under its belly on two struts, with sky between. Smooth, not billowed: a billowed back made it
+ * one more long cloud. Whole on bar 35; it sails off left, climbing, and is gone behind the tree before the baby.
  */
 const AIRSHIP: Shape = {
-  at: (t) => [-0.3 + 0.1 * (t - BEGIN), -3.55 + 0.04 * Math.sin(t * 0.7)],
-  rise: 2.1,
-  size: 1.25,
+  at: (t) => [0.3 - 0.04 * (t - BEGIN) - glide(t, 52.9, 54.2, 2.4), -2.5 - 0.15 * smooth(t, 53, 56) + 0.03 * Math.sin(t * 0.7)],
+  size: 1,
+  smooth: true,
   billows: [
-    // 0: the body.
-    { x: 0.02, y: 0.02, r: 0.33, w: 3.1 },
-    // 1-4: its back, and a round nose.
-    { x: -0.45, y: -0.14, r: 0.22, w: 1.4 },
-    { x: 0.08, y: -0.2, r: 0.24, w: 1.35 },
-    { x: 0.55, y: -0.12, r: 0.22, w: 1.3 },
-    { x: 0.82, y: 0.02, r: 0.27 },
-    // 5-6: the fins.
-    { x: -0.9, y: -0.22, r: 0.13, w: 2.0, a: -0.75 },
-    { x: -0.9, y: 0.24, r: 0.12, w: 2.0, a: 0.75 },
-    // 7: the gondola.
-    { x: 0.18, y: 0.44, r: 0.085, w: 2.8 },
+    // 0-2: the body; its full nose (left); its tapering tail.
+    { x: 0, y: 0, r: 0.3, w: 3.4 },
+    { x: -0.62, y: 0.01, r: 0.3, w: 1.45 },
+    { x: 0.92, y: 0, r: 0.19, w: 2.3 },
+    // 3-4: the fins, swept back.
+    { x: 1.2, y: -0.23, r: 0.095, w: 2.5, a: -0.62 },
+    { x: 1.2, y: 0.23, r: 0.095, w: 2.5, a: 0.62 },
+    // 5-7: the gondola, and the two struts it hangs from.
+    { x: -0.15, y: 0.52, r: 0.075, w: 3.1 },
+    { x: -0.33, y: 0.39, r: 0.085, w: 0.3 },
+    { x: 0.03, y: 0.39, r: 0.085, w: 0.3 },
   ],
-  puffs: [[0], [1, 2, 3, 4], [5, 6], [7]],
-  groups: [{ of: [5, 6] }, { of: [0, 1, 2, 3, 4] }, { of: [7] }],
+  puffs: [[0, 1, 2], [3, 4], [5, 6, 7]],
+  groups: [{ of: [3, 4] }, { of: [5, 6, 7] }, { of: [0, 1, 2] }],
 }
 
 /**
  * Paradise Falls, in cloud (the shape of Ellie's painting, `props/falls.ts`): a flat-topped cliff standing out of a
- * bank of mist, its face in shadow, and the falls pouring bright off the middle of its lip.
+ * bank of mist, its face in shadow, and the falls pouring bright off the middle of its lip. Off right on a gust after
+ * they pour.
  */
 const FALLS_CLOUD: Shape = {
-  at: (t) => [4.25 + 0.035 * (t - BEGIN), -2.8 + 0.04 * Math.sin(t * 0.5 + 1)],
-  rise: 2.3,
+  at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 57.6, 58.6, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
   size: 1.1,
+  smooth: false,
   billows: [
     // 0-2: the cliff's mass.
     { x: 0, y: 0.02, r: 0.46, w: 1.95 },
@@ -165,156 +176,190 @@ const FALLS_CLOUD: Shape = {
     { x: 0.4, y: 0.69, r: 0.26, w: 2.2 },
     { x: 1.1, y: 0.63, r: 0.19, w: 2.4 },
   ],
-  puffs: [[0, 1, 2], [3, 4, 5, 6], range(7, 5), [], range(12, 4)],
+  puffs: [[0, 1, 2], [3, 4, 5, 6], range(7, 5), range(12, 4)],
   groups: [{ of: range(0, 7), tone: 1 }, { of: range(7, 5) }, { of: range(12, 4), tone: 0.3 }],
 }
 
+/** Where the falls pour from, on the cliff's lip, in its own cells (before its size). */
+const LIP: Pt = [0.1, -0.42]
+
 /**
- * The baby: a little one sitting up, facing right, as a baby sits, its round head the biggest thing about it (a button
- * of a nose and a round cheek in profile, one curl of hair on its crown), its body a small soft bundle on a round
- * bottom, its leg out in front with the foot turned up, and one arm reaching up and out in front of it (drawn over it,
- * a fist at its end). Its bottom is billowed, so it is still a cloud. Low over the two of them, near enough to read
- * whole at a glance: a head over a body with a neck between is what makes it a baby and not a pair of puffs (a baby
- * lying down read as two lumps side by side).
+ * The baby: a little one sitting up on a cushion of cloud, facing right, as a baby sits. A big round head (a round
+ * cheek and a button of a nose in profile) on a short neck, a round tummy on a round bottom, one chubby leg out in
+ * front with its foot turned up, and one arm reaching up and out, a fist at its end, drawn over the rest. About a
+ * third of the frame tall at the cut, low and whole over the two of them. The neck is the pinch between the head's
+ * circle and the body's: head over body over bottom, three masses, is what makes it a baby and not a ghost.
  */
 const BABY: Shape = {
-  at: (t) => [-0.42 + 0.01 * (t - BEGIN), -1.7 + 0.02 * Math.sin(t * 0.9)],
-  rise: 1.2,
-  size: 0.9,
+  at: (t) => [-0.3 + 0.008 * (t - 57.9), -1.8 + 0.015 * Math.sin(t * 0.9)],
+  size: 0.8,
+  smooth: true,
   billows: [
-    // 0-3: its body: its round bottom, its middle, and the billows along the bottom of it.
-    { x: -0.1, y: 0.3, r: 0.24, w: 1.45 },
-    { x: -0.02, y: 0.05, r: 0.3, w: 0.95 },
-    { x: -0.36, y: 0.4, r: 0.13, w: 1.3 },
-    { x: -0.02, y: 0.46, r: 0.11, w: 1.5 },
-    // 4-5: its leg out in front, and its foot turned up.
-    { x: 0.3, y: 0.38, r: 0.11, w: 2.3, a: -0.05 },
-    { x: 0.54, y: 0.31, r: 0.075, w: 0.85, a: 0.35 },
-    // 6-9: its head; its cheek; its nose; the curl on its crown.
-    { x: 0.06, y: -0.46, r: 0.32 },
-    { x: 0.22, y: -0.32, r: 0.15 },
-    { x: 0.36, y: -0.42, r: 0.065 },
-    { x: 0, y: -0.8, r: 0.045, w: 2.2, a: -0.6 },
-    // 10-11: its arm reaching up and out, and its fist.
-    { x: 0.28, y: 0, r: 0.06, w: 2.4, a: -0.8 },
-    { x: 0.42, y: -0.15, r: 0.08 },
+    // 0-2: its bottom, its middle, and its round tummy in front.
+    { x: -0.12, y: 0.36, r: 0.22, w: 1.45 },
+    { x: -0.06, y: 0.06, r: 0.27, w: 0.88 },
+    { x: 0.1, y: 0.14, r: 0.19 },
+    // 3-4: its leg out in front, and its foot turned up.
+    { x: 0.26, y: 0.46, r: 0.12, w: 2.1, a: -0.08 },
+    { x: 0.52, y: 0.37, r: 0.085, w: 0.8, a: 0.35 },
+    // 5-7: its head, big for its body as a baby's is; its cheek; its nose. (A curl on its crown read as an ear.)
+    { x: 0.03, y: -0.47, r: 0.31 },
+    { x: 0.2, y: -0.34, r: 0.14 },
+    { x: 0.35, y: -0.45, r: 0.065 },
+    // 8-9: its arm reaching up and out, and its fist.
+    { x: 0.32, y: -0.14, r: 0.075, w: 3.1, a: -0.37 },
+    { x: 0.56, y: -0.24, r: 0.095 },
+    // 10-12: the cushion of cloud it sits on, long, low and overlapping, the baby sitting in it, so it reads as the cloud and not one more tier.
+    { x: -0.35, y: 0.6, r: 0.13, w: 1.9 },
+    { x: 0.1, y: 0.64, r: 0.12, w: 2.4 },
+    { x: 0.55, y: 0.6, r: 0.1, w: 1.9 },
   ],
-  puffs: [[0, 1, 2, 3], [4, 5], [6, 7, 8, 9], [10, 11], [], []],
-  groups: [{ of: [0, 1, 2, 3, 4, 5] }, { of: [6, 7, 8, 9] }, { of: [10, 11] }],
+  puffs: [[0, 1, 2], [3, 4], [5, 6, 7], [8, 9], [10, 11], [12]],
+  groups: [{ of: [10, 11, 12] }, { of: [0, 1, 2, 3, 4] }, { of: [5, 6, 7] }, { of: [8, 9] }],
 }
 
 const SHAPES: Record<ShapeKey, Shape> = { airship: AIRSHIP, falls: FALLS_CLOUD, baby: BABY }
 
 interface Puff {
+  /** Its chuff (a strike), and when it arrives and joins its shape (the next downbeat, or for the double its beat). */
   t0: number
+  join: number
   shape: ShapeKey
+  /** The billows it brings, or (none) the point of its shape it goes to: the falls' lip, where it becomes the water. */
   billows: number[]
+  to?: Pt
   amp: number
 }
 
-/** Every chuff, and what its puff becomes. */
+/** Every chuff, where its puff goes, and when it gets there: each arrives on the next downbeat. */
 const PUFFS: Puff[] = (() => {
-  const plan: [number, ShapeKey, number][] = [
-    [DOWNS[0], 'airship', 0],
-    [DOWNS[1], 'airship', 1],
-    [DOWNS[2], 'airship', 2],
-    [DOWNS[3], 'airship', 3],
-    [DOWNS[4], 'falls', 0],
-    [DOUBLE, 'falls', 1],
-    [DOWNS[5], 'falls', 2],
-    [DOWNS[6], 'falls', 3],
-    [DOWNS[7], 'falls', 4],
-    [DOWNS[8], 'baby', 0],
-    [DOWNS[9], 'baby', 1],
-    [DOWNS[10], 'baby', 2],
-    [DOWNS[11], 'baby', 3],
-    [DOWNS[12], 'baby', 4],
-    [DOWNS[13], 'baby', 5],
+  const next = (t: number) => bar('waltz', 32 + DOWNS.findIndex((d) => Math.abs(d - t) < 1e-6) + 1)
+  const plan: [number, number, ShapeKey, number | Pt][] = [
+    [DOWNS[0], next(DOWNS[0]), 'airship', 0],
+    [DOWNS[1], next(DOWNS[1]), 'airship', 1],
+    [DOWNS[2], next(DOWNS[2]), 'airship', 2],
+    [DOWNS[3], next(DOWNS[3]), 'falls', 0],
+    [DOWNS[4], next(DOWNS[4]), 'falls', 1],
+    [DOUBLE, beat('waltz', 37, 2), 'falls', 2],
+    [DOWNS[5], next(DOWNS[5]), 'falls', 3],
+    [DOWNS[6], next(DOWNS[6]), 'falls', LIP],
+    [DOWNS[7], next(DOWNS[7]), 'baby', 0],
+    [DOWNS[8], next(DOWNS[8]), 'baby', 1],
+    [DOWNS[9], next(DOWNS[9]), 'baby', 2],
+    [DOWNS[10], next(DOWNS[10]), 'baby', 3],
+    [DOWNS[11], next(DOWNS[11]), 'baby', 4],
+    [DOWNS[12], next(DOWNS[12]), 'baby', 5],
+    // Bar 45, just before the cut: the last chuff, still rising into the cushion as the scene becomes the nursery.
+    [DOWNS[13], next(DOWNS[13]), 'baby', [0.1, 0.62]],
   ]
-  return plan.map(([t0, shape, i]) => ({ t0, shape, billows: SHAPES[shape].puffs[i], amp: strength(t0) }))
+  return plan.map(([t0, join, shape, what]) => ({
+    t0,
+    join,
+    shape,
+    billows: typeof what === 'number' ? SHAPES[shape].puffs[what] : [],
+    to: typeof what === 'number' ? undefined : what,
+    amp: strength(t0),
+  }))
 })()
 
-/** When the falls pour (their puff's chuff). */
-const POUR = DOWNS[6]
+/** When the falls pour: their puff reaches the lip. */
+const POUR = PUFFS.find((p) => p.to === LIP)!.join
 
-/** Where each billow of a puff is at show time `t`, in this part's cells; nothing before its chuff. */
-function place(puff: Puff, t: number): Map<number, Billow> {
-  return flight(puff, t).billows
+/** The ease of a puff along its line: shot out fast, slowing, and still moving a little as it joins (the hit). */
+const along = (u: number): number => u + 0.7 * u * (1 - u)
+
+/** The line a puff flies along to `goal`: straight up out of the chimney, over, and up into its place from below. */
+function line(goal: Pt, e: number): Pt {
+  const H = Math.max(0.4, MOUTH[1] - goal[1])
+  const a = MOUTH
+  const b: Pt = [MOUTH[0], MOUTH[1] - 0.5 * H]
+  const c: Pt = [goal[0], goal[1] + 0.35 * H]
+  const q = 1 - e
+  return [
+    q * q * q * a[0] + 3 * q * q * e * b[0] + 3 * q * e * e * c[0] + e * e * e * goal[0],
+    q * q * q * a[1] + 3 * q * q * e * b[1] + 3 * q * e * e * c[1] + e * e * e * goal[1],
+  ]
+}
+
+/** Where a puff is going at show time `t`: the middle of its billows in their place, or its point. */
+function goalOf(puff: Puff, t: number): Pt {
+  const shape = SHAPES[puff.shape]
+  const S = shape.size
+  const [sx, sy] = shape.at(t)
+  if (!puff.billows.length) return [sx + (puff.to?.[0] ?? 0) * S, sy + (puff.to?.[1] ?? 0) * S]
+  const own = puff.billows.map((i) => shape.billows[i])
+  return [sx + (own.reduce((a, b) => a + b.x, 0) / own.length) * S, sy + (own.reduce((a, b) => a + b.y, 0) / own.length) * S]
 }
 
 /**
- * A puff in flight at show time `t`: its billows, and the loose wisps of vapour round it while it is young. Young
- * steam is a ragged tumbling knot, thin at its edges; it opens into its shape only as it nears its place, and the
- * wisps thin into the air.
+ * A puff at show time `t`: its billows (in flight a tumbling knot of steam round its heart, opening into its place as
+ * it arrives; then in its place, swelling a little as it joins and settling), and a knot with no place (the water, the
+ * last chuff) that thins as it arrives.
  */
-function flight(puff: Puff, t: number): { billows: Map<number, Billow>; wisps: Billow[]; heart: Pt | null } {
+function flight(puff: Puff, t: number): { billows: Map<number, Billow>; loose: Billow[] } {
   const billows = new Map<number, Billow>()
-  const wisps: Billow[] = []
+  const loose: Billow[] = []
   const age = t - puff.t0
-  if (age < 0 || !puff.billows.length) return { billows, wisps, heart: null }
+  if (age < 0) return { billows, loose }
   const shape = SHAPES[puff.shape]
-  const u = Math.min(1, age / shape.rise)
-  const e = 1 - Math.pow(1 - u, 2.4)
   const S = shape.size
-  const own = puff.billows.map((i) => shape.billows[i])
-  const cx = (own.reduce((a, b) => a + b.x, 0) / own.length) * S
-  const cy = (own.reduce((a, b) => a + b.y, 0) / own.length) * S
-  const [sx, sy] = shape.at(t)
-  const goal: Pt = [sx + cx, sy + cy]
-  // Up out of the chimney first, then bending off on the breeze toward its place: a quadratic curve.
-  const ctrl: Pt = [MOUTH[0] + 0.08 * (goal[0] - MOUTH[0]), goal[1] + 0.3 * (MOUTH[1] - goal[1])]
-  const q = (a: number, b: number, c: number) => (1 - e) * (1 - e) * a + 2 * (1 - e) * e * b + e * e * c
-  const px = q(MOUTH[0], ctrl[0], goal[0])
-  const py = q(MOUTH[1], ctrl[1], goal[1])
-  const m = smooth(u, 0.2, 0.95)
-  const young = 0.35 + 0.65 * Math.min(1, u * 2.5)
+  const rise = puff.join - puff.t0
+  const u = Math.min(1, age / rise)
+  const goal = goalOf(puff, t)
+  const [px, py] = line(goal, along(u))
+  const m = smooth(u, 0.45, 1)
   const seed = Math.round(puff.t0 * 1000)
+  // Steam grows as it rises; a louder chuff makes a bigger knot.
+  const grow = (0.55 + 0.45 * smooth(u, 0, 0.5)) * (0.75 + 0.3 * puff.amp)
+  // The swell when it joins: quick to come, slow to settle.
+  const late = age - rise
+  const swell = late > 0 ? 1 + 0.09 * puff.amp * smooth(late, 0, 0.07) * Math.exp(-late / 0.35) : 1
+  const breathe = (i: number) => 1 + 0.025 * Math.sin(t * 0.8 + i * 1.7)
+  const knot = (j: number, n: number) => {
+    const ang = (j / n) * Math.PI * 2 + hash(seed, j) * 1.5 + age * 1.6
+    const d = n > 1 ? (0.06 + 0.04 * hash(seed, j, 2)) * grow : 0
+    return { x: Math.cos(ang) * d, y: Math.sin(ang) * d, r: (0.1 + 0.04 * hash(seed, j, 3)) * grow }
+  }
+  if (!puff.billows.length) {
+    const fade = 1 - smooth(u, 0.7, 1)
+    if (fade <= 0) return { billows, loose }
+    for (let j = 0; j < 3; j++) {
+      const kb = knot(j, 3)
+      loose.push({ x: px + kb.x, y: py + kb.y, r: kb.r * fade })
+    }
+    return { billows, loose }
+  }
+  const [sx, sy] = shape.at(t)
   const n = puff.billows.length
+  const [gx, gy] = goal
   puff.billows.forEach((i, j) => {
     const b = shape.billows[i]
-    // The knot: each billow round the puff's heart, tumbling.
-    const ang = (j / n) * Math.PI * 2 + hash(seed, j) * 1.5 + age * 1.8
-    const d = n > 1 ? 0.07 + 0.05 * hash(seed, j, 2) : 0
-    const yx = Math.cos(ang) * d * young
-    const yy = Math.sin(ang) * d * young
-    const yr = (0.085 + 0.045 * hash(seed, j, 3)) * young
-    const breathe = 1 + 0.03 * Math.sin(t * 0.8 + i * 1.7)
+    const kb = knot(j, n)
+    // In flight about the heart; in place about its shape's middle (the heart has arrived at the goal by then).
+    const hx = px + (gx - px) * m
+    const hy = py + (gy - py) * m
     billows.set(i, {
-      x: px + yx + (b.x * S - cx - yx) * m,
-      y: py + yy + (b.y * S - cy - yy) * m,
-      r: (yr + (b.r * S - yr) * m) * breathe,
+      x: hx + kb.x * (1 - m) + (sx + b.x * S - gx) * m,
+      y: hy + kb.y * (1 - m) + (sy + b.y * S - gy) * m,
+      r: (kb.r + (b.r * S - kb.r) * m) * swell * breathe(i),
       w: 1 + ((b.w ?? 1) - 1) * m,
       a: (b.a ?? 0) * m,
     })
   })
-  const thin = 1 - smooth(u, 0.2, 0.85)
-  if (thin > 0) {
-    for (let j = 0; j < 4; j++) {
-      const ang = hash(seed, j, 5) * Math.PI * 2 + age * (1.6 + j * 0.4)
-      const d = (0.1 + 0.06 * hash(seed, j, 6)) * (0.6 + 0.8 * u)
-      wisps.push({ x: px + Math.cos(ang) * d, y: py + Math.sin(ang) * d * 0.8, r: (0.05 + 0.04 * hash(seed, j, 7)) * (0.7 + u) * thin })
-    }
-  }
-  return { billows, wisps, heart: [px, py] }
+  return { billows, loose }
 }
 
-/** Every billow of a cloud that has come so far, by index. */
-function billowsOf(key: ShapeKey, t: number): Map<number, Billow> {
-  const out = new Map<number, Billow>()
-  for (const puff of PUFFS) if (puff.shape === key) for (const [i, b] of place(puff, t)) out.set(i, b)
-  return out
-}
-
-/** The wisps round every young puff of a cloud: thin vapour, no shade. */
-function drawWisps(p: p5, k: number, key: ShapeKey, t: number): void {
-  p.noStroke()
+/** Every billow of a cloud that has come so far, by index; and the loose knots flying to it. */
+function billowsOf(key: ShapeKey, t: number): { got: Map<number, Billow>; loose: Billow[] } {
+  const got = new Map<number, Billow>()
+  const loose: Billow[] = []
   for (const puff of PUFFS) {
     if (puff.shape !== key) continue
-    for (const w of flight(puff, t).wisps) {
-      p.fill(alpha(p, HILL.cloud, 0.55))
-      p.circle(X(w.x, k), X(w.y, k), X(2 * w.r, k))
-    }
+    const f = flight(puff, t)
+    for (const [i, b] of f.billows) got.set(i, b)
+    loose.push(...f.loose)
   }
+  return { got, loose }
 }
 
 /** An oval billow, grown by `g` and moved by (dx, dy) of its own radius. */
@@ -324,6 +369,20 @@ function oval(p: p5, k: number, b: Billow, g: number, dx = 0, dy = 0): void {
   p.rotate(b.a ?? 0)
   p.ellipse(0, 0, X(2 * b.r * g * (b.w ?? 1), k), X(2 * b.r * g, k))
   p.pop()
+}
+
+/** Clip the canvas to the union of the billows (the caller restores). */
+function clipTo(p: p5, k: number, billows: Billow[]): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  for (const b of billows) {
+    const rx = X(b.r * (b.w ?? 1), k)
+    const ry = X(b.r, k)
+    ctx.moveTo(X(b.x, k) + rx * Math.cos(b.a ?? 0), X(b.y, k) + rx * Math.sin(b.a ?? 0))
+    ctx.ellipse(X(b.x, k), X(b.y, k), rx, ry, b.a ?? 0, 0, Math.PI * 2)
+  }
+  ctx.clip()
 }
 
 /**
@@ -342,15 +401,7 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
   for (const b of billows) oval(p, k, b, 1.09)
   p.fill(shadeC)
   for (const b of billows) oval(p, k, b, 1)
-  ctx.save()
-  ctx.beginPath()
-  for (const b of billows) {
-    const rx = X(b.r * (b.w ?? 1), k)
-    const ry = X(b.r, k)
-    ctx.moveTo(X(b.x, k) + rx * Math.cos(b.a ?? 0), X(b.y, k) + rx * Math.sin(b.a ?? 0))
-    ctx.ellipse(X(b.x, k), X(b.y, k), rx, ry, b.a ?? 0, 0, Math.PI * 2)
-  }
-  ctx.clip()
+  clipTo(p, k, billows)
   p.fill(bodyC)
   for (const b of billows) oval(p, k, b, 1.02, -0.04, -0.2)
   p.fill(litC)
@@ -359,9 +410,10 @@ function cloud(p: p5, k: number, billows: Billow[], tone = 0): void {
 }
 
 /**
- * A cloud drawn as ONE smooth mass (the baby): a halo, the whole of it in shade, then (inside it only) the whole of it
- * again lifted a fixed small way, and the light lifted further, so the shade and the body show only as a band along
- * its underside and under whatever stands out of it, never round each billow: no inner seams, one silhouette.
+ * A cloud drawn as ONE smooth mass (the airship, the baby): a halo, the whole of it in shade, then (inside it only)
+ * the whole of it again lifted a fixed small way, and the light lifted further, so the shade and the body show only
+ * as a band along its underside and under whatever stands out of it, never round each billow: no inner seams, one
+ * silhouette.
  */
 function mass(p: p5, k: number, billows: Billow[]): void {
   if (!billows.length) return
@@ -371,15 +423,7 @@ function mass(p: p5, k: number, billows: Billow[]): void {
   for (const b of billows) oval(p, k, b, 1.07)
   p.fill(mixHex(HILL.cloudShade, CHURCH.glassBlue, 0.14))
   for (const b of billows) oval(p, k, b, 1)
-  ctx.save()
-  ctx.beginPath()
-  for (const b of billows) {
-    const rx = X(b.r * (b.w ?? 1), k)
-    const ry = X(b.r, k)
-    ctx.moveTo(X(b.x, k) + rx * Math.cos(b.a ?? 0), X(b.y, k) + rx * Math.sin(b.a ?? 0))
-    ctx.ellipse(X(b.x, k), X(b.y, k), rx, ry, b.a ?? 0, 0, Math.PI * 2)
-  }
-  ctx.clip()
+  clipTo(p, k, billows)
   const lift = (d: number, c: string) => {
     p.fill(c)
     for (const b of billows) oval(p, k, { ...b, y: b.y - d }, 1.0)
@@ -391,26 +435,26 @@ function mass(p: p5, k: number, billows: Billow[]): void {
 
 function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   const shape = SHAPES[key]
-  const got = billowsOf(key, t)
-  if (!got.size) return
-  drawWisps(p, k, key, t)
+  const { got, loose } = billowsOf(key, t)
+  if (!got.size && !loose.length) return
   for (const g of shape.groups) {
     const list = g.of.map((i) => got.get(i)).filter((b): b is Billow => !!b)
-    if (key === 'baby') mass(p, k, list)
+    if (shape.smooth) mass(p, k, list)
     else cloud(p, k, list, g.tone ?? 0)
     // The falls pour between the cliff and the mist at its foot: a bright ribbon off the middle of the lip.
     if (key === 'falls' && g === shape.groups[1]) drawPour(p, k, t)
   }
+  for (const b of loose) mass(p, k, [b])
 }
 
-/** The falls: they begin at the lip when their chuff's steam gets there, and pour down to the mist. */
+/** The falls: they begin at the lip when their puff gets there, and pour down to the mist. */
 function drawPour(p: p5, k: number, t: number): void {
-  const pour = smooth(t, POUR + 1.1, POUR + 2.6)
+  const pour = smooth(t, POUR - 0.05, POUR + 0.75)
   if (pour <= 0) return
   const [fx, fy] = FALLS_CLOUD.at(t)
   const S = FALLS_CLOUD.size
   const P = (dx: number, dy: number) => p.vertex(X(fx + dx * S, k), X(fy + dy * S, k))
-  const y0 = -0.42
+  const y0 = LIP[1]
   const y1 = y0 + 1.12 * pour
   p.noStroke()
   p.fill(alpha(p, HILL.cloud, 0.45))
@@ -435,6 +479,38 @@ function drawPour(p: p5, k: number, t: number): void {
   P(0.21, y1)
   P(0.15, y1)
   p.endShape(p.CLOSE)
+}
+
+/**
+ * The trail of every puff in flight: the steam it leaves along its line, from the chimney's mouth up to the knot, a
+ * soft column thinnest at its tail. Its tail follows the knot a moment behind, so when the knot joins its shape the
+ * trail is drawn up into it after it and is gone.
+ */
+function drawTrails(p: p5, k: number, t: number): void {
+  p.noStroke()
+  for (const puff of PUFFS) {
+    const age = t - puff.t0
+    const rise = puff.join - puff.t0
+    const LAG = 0.4
+    if (age < 0 || age > rise + LAG) continue
+    const goal = goalOf(puff, t)
+    const head = along(Math.min(1, age / rise))
+    const tail = along(Math.max(0, Math.min(1, (age - LAG) / rise)))
+    if (head - tail < 1e-3) continue
+    const size = 0.75 + 0.3 * puff.amp
+    // Sample the line densely enough that it is one column, never a row of beads.
+    const [ax, ay] = line(goal, tail)
+    const [bx, by] = line(goal, head)
+    const n = Math.max(6, Math.ceil(Math.hypot(bx - ax, by - ay) / 0.025))
+    for (let i = 0; i <= n; i++) {
+      const s = i / n
+      const e = tail + (head - tail) * s
+      const [x, y] = line(goal, e)
+      const r = (0.03 + 0.055 * s) * size * (0.8 + 0.5 * e)
+      p.fill(alpha(p, HILL.cloud, 0.1 + 0.2 * s))
+      p.circle(X(x, k), X(y, k), X(2 * r, k))
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ the engine */
@@ -577,41 +653,6 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
 }
 
 /**
- * The plume of each fresh chuff: a spurt of vapour out of the chimney's mouth, drawn out upward, then a thinning
- * wisp from the mouth up to the young puff as it lifts away. A chuff that becomes nothing rises as the wisp alone.
- */
-function drawPlumes(p: p5, k: number, t: number): void {
-  p.noStroke()
-  for (const puff of PUFFS) {
-    const age = t - puff.t0
-    const life = puff.billows.length ? 0.9 : 2.2
-    if (age < 0 || age > life) continue
-    const fade = 1 - smooth(age, life * 0.2, life)
-    // Where the wisp reaches: the young puff's heart, or (with no puff) a rising end of its own.
-    const heart = flight(puff, t).heart
-    let top: Pt
-    if (heart) top = heart
-    else {
-      const rise = 0.15 + 1.0 * (1 - Math.pow(1 - Math.min(1, age / 2.2), 2))
-      top = [MOUTH[0] + 0.1 * rise, MOUTH[1] - rise]
-    }
-    // Its foot lets go of the mouth as the valve closes.
-    const let_ = smooth(age, 0.12, 0.6)
-    const from: Pt = [MOUTH[0] + (top[0] - MOUTH[0]) * let_ * 0.75, MOUTH[1] + (top[1] - MOUTH[1]) * let_ * 0.75]
-    const size = (0.55 + 0.45 * puff.amp) * (0.7 + 0.5 * smooth(age, 0, 0.3))
-    const n = 12
-    for (let i = 0; i <= n; i++) {
-      const s = i / n
-      const x = from[0] + (top[0] - from[0]) * s + 0.012 * Math.sin(age * 8 + i * 0.9)
-      const y = from[1] + (top[1] - from[1]) * s
-      const r = (0.035 + 0.06 * s) * size
-      p.fill(alpha(p, HILL.cloud, 0.42 * fade * (0.5 + 0.5 * s)))
-      p.ellipse(X(x, k), X(y - r * 0.3, k), X(2 * r * 0.8, k), X(2 * r * 1.35, k))
-    }
-  }
-}
-
-/**
  * The blanket, lying on the grass: a solid red field, its fold at the far end in shade. Seen this nearly edge on, a
  * check is a row of dashes, so it comes up only when near (a cell 150 px and more on the screen), and faintly, as a
  * weave in the red rather than stripes on it.
@@ -654,7 +695,7 @@ function drawBlanket(p: p5, k: number, weight: number): void {
 
 /* ------------------------------------------------------------------ the two of them */
 
-/** Ellie's one bounce of delight, when the airship is whole: up on the last beat of bar 37, down on bar 38. */
+/** Ellie's one bounce of delight, as the falls stand whole: up on the last beat of bar 37, down on bar 38 (their mist). */
 const HOP = { up: beat('waltz', 37, 3), down: bar('waltz', 38) }
 /** His start when the baby has its head: a small lift, down on the waltz. */
 const START = { up: beat('waltz', 43, 3) - 0.26, down: beat('waltz', 43, 3) }
@@ -699,7 +740,7 @@ export const clouds = part<CloudsState>(
       drawShape(p, k, 'baby', t)
       drawBlanket(p, k, weight)
       drawEngine(p, k, weight, t)
-      drawPlumes(p, k, t)
+      drawTrails(p, k, t)
       p.pop()
     },
   },
@@ -731,15 +772,18 @@ export const clouds = part<CloudsState>(
     }
   },
   (slot) => {
-    // Up with the first puffs to the sky over them, never so wide that the two of them are specks (the dreams are built
-    // into a frame of 5.5 cells, the two of them and the engine along its foot, and inside Zoom's frame: dy under a
-    // third of the cells); a slow drift right as the falls come, and down again with the baby onto the two of them, looking up at it (`CUTS.nursery`).
+    // Up with the first puff to the sky over them, never so wide that the two of them are specks (the dreams are built
+    // into a frame of 5.5 cells at most, the two of them and the engine along its foot, so each puff's line from the
+    // chimney to its shape is in the frame; inside Zoom's frame: dy under a third of the cells less his half); a slow
+    // drift right as the falls come (the airship sailing off left), and down again as the gust takes the falls, onto
+    // the baby whole over the two of them, closing in on it to the cut (`CUTS.nursery`).
     const c = (dx: number, dy: number): Pt => [CARL[0] + dx, CARL[1] + dy]
     return [
-      { t: slot.begin + 2.2, cells: 4.6, hold: c(0.8, -1.25) },
-      { t: slot.begin + 5.0, cells: 5.4, hold: c(1.45, -1.62) },
-      { t: slot.begin + 8.8, cells: 5.5, hold: c(2.2, -1.66) },
-      { t: slot.begin + 11.0, cells: 4.4, hold: c(0.7, -1.28) },
+      { t: slot.begin + 1.6, cells: 4.4, hold: c(0.6, -1.25) },
+      { t: slot.begin + 3.65, cells: 5.2, hold: c(1.4, -1.5) },
+      { t: slot.begin + 7.55, cells: 5.5, hold: c(2.2, -1.62) },
+      { t: slot.begin + 9.45, cells: 4.6, hold: c(0.4, -1.3) },
+      { t: slot.begin + 11.35, cells: 4.0, hold: c(0.25, -1.08) },
       { t: slot.end, cells: CUTS.nursery.cells, hold: c(CUTS.nursery.frame[0], CUTS.nursery.frame[1]) },
     ]
   },
