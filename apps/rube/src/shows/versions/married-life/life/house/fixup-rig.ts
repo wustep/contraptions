@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha, hash, lastOf, smooth } from '../kit'
+import { beatsIn } from '../music'
 import { HOME, INK } from '../worlds'
 import { CHAIR, drawChair } from '../props/chairs'
 import { BLOWS, BRAKE, CART, CHAIR_LIFT, CHAIRS, FOLD, G, HOUSE, P, RAISE, SHOVE, W } from './front-plan'
@@ -43,32 +44,41 @@ export function rollers(T: number): number[] {
   return [b0, b1, b2]
 }
 
-/** The trip hammer's angle (radians, clockwise from pointing right, about its pivot) at T: slow up, quick fall on each blow. */
+/**
+ * The trip hammer's angle (radians, clockwise from pointing right, about its pivot) at T. Each bar it rebounds off the
+ * wall and lies there a moment; the gear then trips it up, quick, into beat 3 (the melody's pickup), where the pawl
+ * catches it with a small recoil; it hangs there, cocked, and falls onto the next downbeat.
+ */
 const STRIKE = Math.atan2(CART.strike[1] - CART.hammerPivot[1], CART.strike[0] - CART.hammerPivot[0])
 const RAISED = -0.2
+/** Each blow's bar's beat 3, where the hammer reaches the top: TOPS[i] follows BLOWS[i]. */
+const TOPS: number[] = BLOWS.map((t) => {
+  const b = beatsIn(t + 0.05, t + 1.5).find((x) => x.pos === 3)
+  return b ? b.t : t + 0.68
+})
+/** How long the trip up takes, how long the fall. */
+const TRIP = 0.38
+const FALL = 0.13
+/** The recoil as the pawl catches it at the top (radians back down), s after the catch: one damped dip, then still. */
+const caught = (s: number): number => (s <= 0 ? 0 : 0.15 * Math.exp(-s / 0.06) * Math.sin(Math.min(Math.PI, s * 26)))
 export function hammerAngle(T: number): number {
-  const first = BLOWS[0]
-  const last = BLOWS[BLOWS.length - 1]
-  if (T < first - 1.2) return RAISED
   const { i } = lastOf(BLOWS, T)
-  const prev = i < 0 ? first - 1.05 : BLOWS[i]
   const next = i + 1 < BLOWS.length ? BLOWS[i + 1] : Infinity
-  const fall = 0.13
-  if (T >= last) {
-    // After the last blow it is lifted once more, and rests there.
-    const s = T - last
-    return STRIKE + (RAISED - STRIKE) * smooth(s, 0.05, 0.9) - 0.12 * Math.exp(-s / 0.06) * Math.sin(Math.min(Math.PI, s * 40))
+  if (T >= next - FALL) {
+    const u = (T - (next - FALL)) / FALL
+    return RAISED + (STRIKE - RAISED) * u * u + (i < 0 ? 0 : caught(T - TOPS[i]))
   }
-  if (T >= next - fall) {
-    const u = (T - (next - fall)) / fall
-    return RAISED + (STRIKE - RAISED) * u * u
-  }
-  // Rising: a small rebound off the wall first, then the gear lifts it steadily to the top of its travel.
+  // Before the first blow it hangs cocked from the start.
+  if (i < 0) return RAISED
+  const prev = BLOWS[i]
+  const top = TOPS[i]
+  // The rebound off the wall, lifting it clear a little (negative: up).
   const s = T - prev
-  const up = next - fall - prev
-  const rebound = i < 0 ? 0 : 0.1 * Math.exp(-s / 0.05) * Math.sin(Math.min(Math.PI, s * 35))
-  const u = Math.max(0, Math.min(1, (s - 0.06) / Math.max(0.1, up - 0.12)))
-  return (i < 0 ? RAISED : STRIKE + (RAISED - STRIKE) * (u * u * (3 - 2 * u))) - rebound
+  const rebound = 0.1 * Math.exp(-s / 0.05) * Math.sin(Math.min(Math.PI, s * 35))
+  // The trip: from rest on the wall, gathering speed, to the top on beat 3.
+  const start = Math.max(prev + 0.2, top - TRIP)
+  const u = Math.max(0, Math.min(1, (T - start) / (top - start)))
+  return STRIKE + (RAISED - STRIKE) * u * u - rebound + caught(T - top)
 }
 
 /** The jib: its elevation (radians above level, pointing back over the deck) at T, and where its hook is. */
