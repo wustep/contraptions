@@ -20,10 +20,12 @@ four places come back as a life brings them back.
 - **Carl is square and Ellie is round**, the film's own shape language. He is the thread, from the wedding to the
   end. She is company from the wedding to the hospital, and gone at the cut to the church. The cut is the loss, as
   in the film.
-- **They grow old in colour and pace, not in words.** His blue and her coral grey with the years (`AGE` in
-  `life/music.ts`), fastest through the ties. Young, they hop and bounce; old, they climb one step at a time. From
-  the last morning at the tie machine he wears the bow tie, as the old Carl does in the film. His balloon at the end
-  is his young blue, the one saturated thing left.
+- **They grow old in colour, bearing and pace, not in words.** His blue and her coral grey with the years (`AGE` in
+  `life/music.ts`): a few years at each of life's breaks in the jar (the tyre, his leg, the tree), then a decade a
+  morning in the ties, each step taken as she snugs his tie. With the years he settles (a touch shorter and wider,
+  his corners softer) and stoops a little as he walks; she settles onto the floor; their trails fade. Young, they hop
+  and bounce; old, they climb one step at a time. From the last morning at the tie machine he wears the bow tie, as
+  the old Carl does in the film. His balloon at the end is his young blue, the one saturated thing left.
 - **Nothing is written on the frame.** The credits are the page's.
 
 ## The cue
@@ -97,7 +99,9 @@ measured beat or onset.
   and it chuffs on every downbeat: each chuff is a knot of steam that flies up out of the chimney with a trail behind
   it, arrives on the next downbeat, joins the shape it belongs to and swells it.
 - Bars 32 to 35 build an airship (round nose, finned tail, a gondola slung under it), which sails off left. Bars 35
-  to 38 build Paradise Falls in cloud; on bar 39 the falls pour, and a gust takes it off. Bars 39 to 44 build **a
+  to 38 build Paradise Falls in cloud: her tepui, as tall as it is wide, sheer sides of heaped billows, a flat lit
+  top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
+  up where they land, and a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
   the mobile will be at the match cut. He starts; she rolls close. The camera stays at most 5.5 cells.
 
@@ -138,16 +142,22 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   plank, the flight and the jar for the four handfuls. The jar stands in **a brass cradle** that turns
   on a sprung knuckle at the mantle's end; under it a tin hopper feeds **a chute** down the wall to a slot, and what
   goes down the chute is gone, paid out of the house. Life breaks it open three times:
-  - the car's tyre, seen close through the window (the hubcap flies); she pushes the jar over in its cradle, the
-    coins run down the chute and out, and the cradle's spring sets it back on its feet, slowly;
+  - the tyre of their car (a round family car), seen close through the window (the hubcap flies); she pushes the jar
+    over in its cradle, the coins run down the chute and out, and the cradle's spring sets it back on its feet,
+    slowly. Paid for, the car drives off out of the window;
   - Carl's leg: he climbs the ladder for the pendant lamp, the ladder kicks, he falls (the camera in close), and her
     touch wraps a bandage round his foot; she pours the jar out again;
-  - the storm: the camera draws back to the whole house as it gathers, and the garden tree's limb breaks through the
-    roof into the nursery on the thunder (128.87), inside the frame; the blow throws the jar over by itself. The limb
-    is winched out, boards are nailed over the hole, and the sun breaks through.
+  - the storm: the camera draws back to the whole house as it gathers (about 16 cells: the house, its roof, and the
+    garden tree's crown over the ridge, bending in the gusts and whitened by each flash), and the tree's limb comes
+    down through the roof into the nursery on the thunder (128.87); the blow throws the jar over by itself. The camera
+    comes in as the limb is winched out, the nursery's ceiling well inside the frame while boards are nailed over the
+    hole, and the sun breaks through.
 - **The ties.** A wheel of ties stands in the hall and turns on the downbeats. Each morning a collar and tie comes
-  down onto him, and she snugs it on the next downbeat: five ties from five decades, the last a bow tie. They grey
-  as they go. The wheel, its drop rod and both of them are whole in the frame every morning. From then on the bow tie
+  down onto him, and she snugs it on the next downbeat: five ties from five decades, the last a bow tie, and on each
+  knot they are ten years older. The camera is one slow crane down and in over the five mornings, the wheel, its drop
+  rod and both of them whole in every frame. Beside them the patch of sun from the door's glass is the house's
+  clock: each morning a season (a pale spring, a deep gold summer, an amber autumn, a blue-white winter, a paler
+  spring), stepping to that day's evening, lower and warmer, when she knots the tie. From then on the bow tie
   sits small and dark in his collar, where the long ties' knots sat, below his top edge.
 - **The dance**, on the loudest bars of the cue: side by side, she at his right, rising on every downbeat and
   swaying on the two and three, across the open floor from the gramophone toward her painting. On bar 53, the
@@ -166,22 +176,28 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   as she follows. For once Carl leads, up the steep flank.
 - Close on them (2.8 cells), she climbs after him, tires, rests, pushes on and stalls. **On 174.67 she gives way**:
   she sinks, and rolls back the short way she climbed onto the fieldstone's worn top, and is still. No bounce. The
-  strike is the basket, thrown off his top as he turns; it lands up the path, on its side, and stays there. He comes
-  back down to her, slowly, and stops beside her on the stone.
+  strike is the basket, thrown off his top as he lurches toward her; it lands up the path, on its side, and stays
+  there. He does not stop: he hurries down after her, faster than he has gone in years, the camera in close with
+  them (2.4 to 1.9 cells, the basket left out of the frame), and eases to rest beside her on the stone. He leans to
+  her; she answers with the smallest roll toward him.
 
 ### The hospital (180.41 to 189.45 s): the clinic
 
-- Her bed is at his chair's height. The balloon is his: he has brought it. The sky in the window goes gold, rose,
-  violet, night. He tips to pull the lamp on (182.43). The camera pushes in on the two of them, the balloon whole
-  over him, and on 185.66 she rolls the smallest way toward him, and he answers with a lean.
+- Her bed is at his chair's height; his chair's back is low and brown, so the old grey Carl stands clear of it
+  against the pale wall. He has brought her the balloon. The sky in the window goes gold, rose, violet, night. He
+  tips to pull the lamp on (182.43). Then he leans to her and gives her the balloon: at the full of his lean the
+  string passes from his corner to her, arriving on 184.88, and the balloon drifts over and floats above her. On
+  185.66 she rolls the smallest way toward him, and he answers with a lean. The camera stays close (2.7 to 3.1
+  cells) on the two of them and the balloon.
 
 ### The funeral (189.45 to 201.94 s): the church, empty
 
 - The same church, empty. It opens under the hospital's night, dim and blue, the glass dark, and the grey morning
   comes up over it in three seconds, the one pale beam and its dust last. Carl sits alone in the front pew, the
-  balloon over him, the wedding photograph on an easel where they stood. The camera drifts to the wedding kiss's
-  framing, now empty.
-- He stands and walks the aisle slowly into the porch, where the bell's rope hangs. As it is pulled the camera rises
+  wedding photograph on an easel where they stood. Across the cut the balloon is his again: it drifts back from
+  where she was to over him. She is gone. The camera drifts to the wedding kiss's framing, now empty.
+- As the morning comes up he lets himself down off the pew (192.05) and walks the aisle at an old man's pace (about
+  half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
   the frame. Dust sifts down. He goes out in the silence and comes to rest at the foot of the steps.
 
@@ -227,8 +243,8 @@ window.
   millisecond). He is never hidden for more than 2.5 s. The stage draws no ball: the cast draws the two of them.
 - **Zoom and distance:** under Zoom (1.5× closer) his whole square and her whole ball stay in the frame. No shot wider
   than 6 cells lasts more than 2.5 s, except four named reveals, each held to its window and its widest: the house
-  made new (the machine as tall as it), the storm, the one toll, and the credits (up to 27.5 cells). The hill's wide is
-  no longer a reveal: it is under 2.5 s.
+  made new (the machine as tall as it), the storm (the whole house and its tree, up to 16.5 cells), the one toll,
+  and the credits (up to 27.5 cells). The hill's wide is no longer a reveal: it is under 2.5 s.
 - **The camera is one take:** at every cut its pan and zoom carry on through, carried by the cut, and where Carl is
   moving across a cut the camera does not come to rest there.
 - **The music:** every strike lands within 30 ms of a waltz beat or 35 ms of a measured onset. At least 80% of each
@@ -237,8 +253,9 @@ window.
 - **Ellie:** she is with him from the wedding to the hospital, and gone from the church on. She never jumps, and
   comes and goes only out of shot or at a cut. On the kiss they touch, close but not pressed. At every cut she is
   where the seam says, on both sides of it.
-- **The years:** his blue and her coral grey with age, and hers is the colour she is drawn in. The balloon is his
-  from the hospital to the end, and not before.
+- **The years:** his blue and her coral grey with age, and hers is the colour she is drawn in.
+- **The balloon:** it comes in with him to the hospital and not before; it is hers at her bedside, from his giving
+  it to the cut; it is his again from the church to the end; and it never jumps in a place.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -251,7 +268,9 @@ window.
     director (`camera.ts`, a monotone cubic through the keys) in cells unrolled across the cuts, so it is one take.
   - `seams.ts`: what the two of them are doing at each cut (velocity, framing, Ellie's offset, what he carries).
   - `cast.ts`: Carl (a rounded square that slides and leans with the slope), Ellie (a ball), their trails, the bow
-    tie and the balloon, drawn in every world between the parts' drawings and their fronts.
+    tie and the balloon, drawn in every world between the parts' drawings and their fronts; the years' bearing
+    (`bearingOfAge`) under every part's pose; the balloon's ties (`show.ties`: to her at the bedside, to her chair
+    at the end).
   - `music.ts`: the measured clock (`BEATS`, `bar`, `beat`, `onsets`, `AT`, `CUT`, `SEAM`) and `AGE`.
   - `kit.ts`: the part contract, Liftoff's and Epilogue's: `part`, `route`, `hop`, `carried`, `lay`, `frame`, and the
     p5 fill-cache guard. `worlds.ts` holds the palettes and the cast's colours.
@@ -302,14 +321,21 @@ window.
   portrait too, with an even draw-back to the end; the steps close; the storey under the nursery unlit; the jar's
   handfuls seen; the rollers as rollers, painting; the book's close eased out of; the glass's haze halved while he is
   alone, and the bay's apron dropped (it popped at 42.0 s).
+- **Critic 3, five fixers and the director's third pass.** The jar's camera a move for every event; the garden tree
+  over the roof, bending in the storm, and the limb that comes through it; the mornings as one crane, and the door's
+  light a season a morning; the falls cloud as her tepui, pouring; Carl hurrying down to her on the hill. Then the
+  storm seen whole, house, roof and tree; the balloon given to her at her bedside, and his again in the church; the
+  ward's chair low, so he stands clear of it; the years stepping on her knots, and a bearing for them (settled,
+  stooping as he walks); the widower's pace slowed in the church; their car a family car, driving off once paid for;
+  no lean that flips between frames (on the hill's stone, up the porch steps, at the cart, at home).
 
 ## Known limits
 
-- In the named reveals (the house made new, about 10 cells; the storm, about 9.5) and the hill's two-second wide
-  (10.2) the two of them are small. It is scale on purpose, and each is held to its window by the check.
+- In the named reveals (the house made new, about 10 cells; the storm, about 16) and the hill's two-second wide (9)
+  the two of them are small. It is scale on purpose, and each is held to its window by the check. In the hill's wide
+  the tree's crown comes into the frame before its trunk, for about half a second each way.
 - Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
   shows a sixth of its height below their floor, and the dance keeps them low in the frame.
-- The falls cloud reads as a flat grey block with a lit top until the water pours.
 - Card 1 fades in with the chimney's top just under its name; it is clear by the time it is sharp.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.
