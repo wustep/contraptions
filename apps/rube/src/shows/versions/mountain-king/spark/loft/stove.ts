@@ -182,6 +182,19 @@ function lane(slot: { begin: number; end: number }): Seg[] {
     hold(from)
     push({ to, dur: at - now.t, arc: lift, ease: 'inout' }, at)
   }
+  /**
+   * A crouch before a hop from where it is, taking off at `at`: down a little into what it stands on, then up into
+   * the jump, quickening, so the take-off is gathered and not a snap from a standstill. It takes the last 0.17 s of
+   * the stillness before the hop, so no strike moves. `from` is where it stands then, if what it stands on moves.
+   */
+  const crouch = (at: number, on?: (t: number) => Pt) => {
+    const still = now.p
+    const from = on ?? (() => still)
+    const dip = 0.06
+    const down = from(at - 0.07)
+    push({ to: [down[0], down[1] + dip], dur: at - 0.07 - now.t, ease: 'inout' }, at - 0.07)
+    push({ to: from(at), dur: 0.07, ease: 'in' }, at)
+  }
   /** Carried by something moving, sampled from the same function its drawing reads. */
   const ride = (fn: (t: number) => Pt, until: number, per = 0.02) => {
     const n = Math.max(1, Math.ceil((until - now.t) / per))
@@ -208,13 +221,16 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   // The twitch: it hops back from the tail, then over the curl onto it.
   hold(TWITCH)
   hop([BACK_X, FY], BACK_AT)
-  hold(ON_TAIL - 0.62)
+  hold(ON_TAIL - 0.62 - 0.17)
+  crouch(ON_TAIL - 0.62)
   hop([0.02, tailTop(0.02, ON_TAIL)], ON_TAIL)
   // Tiptoes along the tail.
   ride(walk(tailTop, 0.02, TAIL_STEPS, 0.26, 0.07), TAIL_STEPS[2][0], 0.01)
   // Up onto the haunch, along the back: it breathes under it.
   const hopUp = HAUNCH[0] - 0.55
-  ride(walk(tailTop, TAIL_STEPS[2][1], [], 0.26, 0), hopUp, 0.03)
+  const onTail = walk(tailTop, TAIL_STEPS[2][1], [], 0.26, 0)
+  ride(onTail, hopUp - 0.17, 0.03)
+  crouch(hopUp, onTail)
   hop([HAUNCH[1], catTop(HAUNCH[1], HAUNCH[0])], HAUNCH[0])
   ride(walk(catTop, HAUNCH[1], BACK_STEPS, 0.34, 0.09), HEAVE, 0.01)
   // The heave tosses it up off the shoulders; at the top of the toss the stove's draught takes it, and it rises up the
@@ -248,9 +264,9 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   hop([SILL_X, SILL.y - R], ON_SILL)
   for (const [at, x] of BACKUP) step([x, SILL.y - R], at - 0.26, at, 0.06)
   for (const at of BOUNCES) step([LEAP_FROM[0], SILL.y - R], at - 0.3, at, 0.16)
-  // A last settle back, and the leap into the fire.
-  step([LEAP_FROM[0] - 0.05, SILL.y - R], LEAP_AT - 0.5, LEAP_AT - 0.08, 0)
-  push({ to: LEAP_FROM, dur: 0.08, ease: 'in' }, LEAP_AT)
+  // A last settle back and down, gathering, and up into the leap into the fire.
+  step([LEAP_FROM[0] - 0.08, SILL.y - R + 0.07], LEAP_AT - 0.55, LEAP_AT - 0.12, 0)
+  push({ to: LEAP_FROM, dur: 0.12, ease: 'in' }, LEAP_AT)
   hop(FIRE_MOUTH, DOORS.glass)
   return segs
 }
