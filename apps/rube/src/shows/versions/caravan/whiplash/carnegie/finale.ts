@@ -86,12 +86,14 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(ROLL[0] + 0.5, 3.1, [-0.62, -0.5]),
     k(F_WALK[1], 4.6, [0.4, -1.9]),
     k(F_WALK[1] + 1.6, 3.7, [0.15, -2.4]),
-    k(NOD[0] - 0.2, 3.4, [0.1, -2.45]),
-    k(NOD_BACK[1] + 0.3, 3.2, [0.05, -2.45]),
-    // He steps back to give him the fill: the whole stage, his father at the door, the band waiting in the dark.
-    k(F_BACK[0] + 3.1, 9.2, [-1.9, -1.2]),
-    // The last fill, close; the sticks up in the silence, and Fletcher's hands coming up beside him.
-    k(ROLL[1] + 0.6, 5.6, [-1.0, -1.6]),
+    // The nod itself tight on the two heads (Fletcher bowing in, Andrew's answer, the second small nod), both
+    // inside the frame under Zoom.
+    k(NOD[0] - 0.2, 2.85, [0.08, -2.42]),
+    k(NOD_BACK[1] + 0.3, 2.7, [0.05, -2.4]),
+    // He steps back to give him the fill: out, one move, to the whole stage, his father at the door, the band
+    // waiting in the dark; held there (drifting) through the end of the roll; then one slow push in for the fill.
+    k(F_BACK[0] + 2.75, 9.0, [-1.9, -1.3]),
+    k(535.6, 8.7, [-1.75, -1.4]),
     k(539.8, 4.6, [-0.85, -1.75]),
     k(STICKS_UP, 5.6, [-0.1, -2.1]),
     // Back through the silence to the band: the chord, everything at once; then in, through its crescendo, on the
@@ -102,8 +104,8 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // Held on the fist; then back to the whole stage going dark, the machine low in the frame so the cards come up
     // over clear wall; and on back, slowly, to the whole proscenium by the last frame.
     k(CUT + 2.4, 3.92, [0.56, -2.57]),
-    k(556.2, 10.0, [0.3, -3.3]),
-    k(566.0, 13.1, [0.55, -4.25]),
+    k(556.2, 10.0, [0.3, -2.35]),
+    k(566.0, 13.1, [0.55, -3.8]),
     // (A key past the end, so the camera is still going back on the last frame rather than easing to a stop.)
     k(slot.end + 4, 19.0, [0.9, -5.6]),
   ]

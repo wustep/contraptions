@@ -8,7 +8,7 @@ import { CYMBALS, KICKS, SNARES, level } from '../music'
 import { KIT } from '../worlds'
 import { NOD_BACK } from './conductor'
 import { CHORD_HIT, CUT, F_FLY, F_LEAP, F_SEATED, ROLL, STICKS_UP } from './finale-clock'
-import { LIMP, NECK, SHOULDER_AT, ampOf, clampBlock, elbowOf, liftShape, smoother, tube, upSign } from './solo-rig'
+import { FORE, LIMP, NECK, SHOULDER_AT, UPPER, ampOf, clampBlock, elbowOf, liftShape, smoother, tube, upSign } from './solo-rig'
 import { HOLD, STICK, TARGETS, type Arm, type Grip } from './solo-score'
 
 /**
@@ -152,12 +152,17 @@ function bob(T: number): number {
   const held = smoother((T - STICKS_UP) / 0.35) * (1 - smoother((T - (CHORD_HIT - 0.12)) / 0.12))
   // The chord: thrown back, and slowly down.
   const thrown = T >= CHORD_HIT ? 0.2 * Math.exp(-(T - CHORD_HIT) / 0.5) * clamp((T - CHORD_HIT) / 0.05) : 0
-  // His nod back to Fletcher.
-  const nod = 0.11 * Math.sin(Math.PI * clamp((T - NOD_BACK[0]) / (NOD_BACK[1] - NOD_BACK[0]))) ** 2
   // The roll: a tremble with it.
   const tremble = T > ROLL[0] && T < ROLL[1] ? 0.012 * Math.sin(T * 47) * level(T) : 0
-  return (T < CUT + 0.02 ? v : 0) - 0.09 * held - thrown + nod + tremble
+  return (T < CUT + 0.02 ? v : 0) - 0.09 * held - thrown + tremble
 }
+
+/** His answer to Fletcher's nod (0..1): the whole yoke dips toward him, is held a moment, and comes up. */
+function answer(T: number): number {
+  return smoother((T - NOD_BACK[0]) / 0.35) * (1 - smoother((T - (NOD_BACK[1] - 0.45)) / 0.45))
+}
+/** How far the answer carries his head down and across toward Fletcher, and each shoulder down (the far one less). */
+const ANSWER = { head: [0.1, 0.17] as Pt, right: 0.15, left: 0.06, across: 0.05 }
 
 /** Awake (1) or limp (0): the arms come up as he leaps for the cup. */
 const awake = (T: number): number => smoother((T - (F_LEAP + 0.04)) / (F_SEATED - F_LEAP - 0.08))
@@ -165,14 +170,15 @@ const awake = (T: number): number => smoother((T - (F_LEAP + 0.04)) / (F_SEATED 
 /** His head (the ball's centre) in the cup, in the kit's frame. */
 export function headAt(T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
-  // His answer to Fletcher's nod: the ball tips in the cup toward him (the house's right) as it dips.
-  const tip = 0.075 * Math.sin(Math.PI * clamp((T - (NOD_BACK[0] - 0.25)) / (NOD_BACK[1] - NOD_BACK[0] + 0.5))) ** 2
-  return [NECK[0] + tip, NECK[1] + bob(T) * w + rigDrop(T)]
+  // His answer to Fletcher's nod: the head dips and tips toward him (the house's right), the yoke with it.
+  const a = answer(T)
+  return [NECK[0] + ANSWER.head[0] * a, NECK[1] + bob(T) * w + ANSWER.head[1] * a + rigDrop(T)]
 }
 
 function shoulder(arm: Arm, T: number): Pt {
   const w = smoother((T - F_SEATED) / 0.3)
-  return [NECK[0] + SHOULDER_AT[arm][0], NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + rigDrop(T)]
+  const a = answer(T)
+  return [NECK[0] + SHOULDER_AT[arm][0] + ANSWER.across * a, NECK[1] + SHOULDER_AT[arm][1] + bob(T) * 0.35 * w + ANSWER[arm] * a + rigDrop(T)]
 }
 
 /* ------------------------------------------------------------------ the arms */
@@ -184,6 +190,15 @@ interface ArmPose {
   blur: number
 }
 
+/**
+ * The house's right arm through the band's chord and the cut-off: low, the stick up from under the crash's rim (not
+ * down onto it from above, where the grip and the stick's butt would sit in the gap between Andrew and Fletcher, by
+ * his raised hands). It strikes the rim on the chord, rolls against it under the held chord, and on the cut-off it
+ * pins the rim and stops: the cymbal choked, the stick pointing up and away from him, below the two heads.
+ */
+const EDGE: Grip = { grip: [1.505, -1.226], ang: -Math.PI / 2 - 0.3 }
+const targetOf = (arm: Arm, s: Stroke): Grip => (arm === 'right' && (s.t === CUT || s.t === CHORD_HIT) ? EDGE : TARGETS[arm][s.piece]!)
+
 /** An arm playing its strokes: the rebound and the carry to the next, as the solo's frame plays them. */
 function playPose(arm: Arm, T: number): Grip {
   const list = ARM[arm]
@@ -191,8 +206,8 @@ function playPose(arm: Arm, T: number): Grip {
   while (j < list.length && list[j].t <= T) j++
   const prev = j > 0 ? list[j - 1] : { ...list[0], t: list[0].t - 0.6, s: 0.6 }
   const next = j < list.length ? list[j] : { ...list[list.length - 1], t: list[list.length - 1].t + 0.6, s: 0.6 }
-  const a = TARGETS[arm][prev.piece]!
-  const b = TARGETS[arm][next.piece]!
+  const a = targetOf(arm, prev)
+  const b = targetOf(arm, next)
   const gap = next.t - prev.t
   const u = clamp((T - prev.t) / gap)
   const e = smoother((u - 0.12) / 0.76)
@@ -250,9 +265,12 @@ function armPose(arm: Arm, T: number): ArmPose {
   // The held chord: a cymbal roll, the crash and the ride, under it; into the cut-off's last stroke.
   if (T > CHORD_HIT + 0.12 && T < CUT - 0.3) {
     const on = smoother((T - CHORD_HIT - 0.12) / 0.3)
-    const piece: KitPiece = arm === 'left' ? 'ride' : 'crash'
     const size = 0.03 + 0.03 * clamp((T - CHORD_HIT) / (CUT - CHORD_HIT))
-    g = mix(g, trembling(arm, piece, T, size, phase), on * (1 - smoother((T - (CUT - 0.6)) / 0.3)))
+    // The house's right arm taps the crash's rim from under it: the stick drawn back along itself and in again.
+    const w = 0.5 + 0.5 * Math.sin(2 * Math.PI * 7 * T + phase)
+    const edge: Grip = { grip: [EDGE.grip[0] - Math.cos(EDGE.ang) * size * 1.6 * w, EDGE.grip[1] - Math.sin(EDGE.ang) * size * 1.6 * w], ang: EDGE.ang }
+    const roll = arm === 'left' ? trembling(arm, 'ride', T, size, phase) : edge
+    g = mix(g, roll, on * (1 - smoother((T - (CUT - 0.6)) / 0.3)))
     blur = size * on
   }
   // After the cut-off: still, the sticks where they stopped, the arms settling a little in the dark.
@@ -294,11 +312,31 @@ function footLift(T: number): number {
 
 /* ------------------------------------------------------------------ drawing */
 
+/**
+ * Which way the house's right elbow bends: out (-1, as in the solo) until Fletcher comes to the kit, then under (+1),
+ * the arm kept low so nothing crosses between the two heads. It turns through the depth of the stage (a real elbow
+ * swinging toward the house), so the arm never stretches.
+ */
+const ELBOW_UNDER: [number, number] = [523.0, 524.6]
+function elbowSwing(s: Pt, w: Pt, bend: number): Pt {
+  const dx = w[0] - s[0]
+  const dy = w[1] - s[1]
+  const L = Math.hypot(dx, dy) || 1e-6
+  const d = Math.max(Math.abs(UPPER - FORE) + 1e-3, Math.min(UPPER + FORE - 1e-3, L))
+  const A = Math.acos(clamp((UPPER * UPPER + d * d - FORE * FORE) / (2 * UPPER * d), -1, 1))
+  const ux = dx / L
+  const uy = dy / L
+  // Along the reach, and across it (the side a positive bend turns toward).
+  const along = UPPER * Math.cos(A)
+  const across = UPPER * Math.sin(A) * bend
+  return [s[0] + ux * along - uy * across, s[1] + uy * along + ux * across]
+}
+
 function drawArm(p: p5, c: Ctx, arm: Arm, T: number): void {
   const pose = armPose(arm, T)
   const s = shoulder(arm, T)
   const w = pose.grip
-  const e = elbowOf(s, w, arm === 'left' ? 1 : -1)
+  const e = arm === 'left' ? elbowOf(s, w, 1) : elbowSwing(s, w, -1 + 2 * smoother((T - ELBOW_UNDER[0]) / (ELBOW_UNDER[1] - ELBOW_UNDER[0])))
   tube(p, c, s, e, 4.4)
   tube(p, c, e, w, 3.8)
   clampBlock(p, c, e, Math.atan2(w[1] - e[1], w[0] - e[0]), 0.15, 0.12)

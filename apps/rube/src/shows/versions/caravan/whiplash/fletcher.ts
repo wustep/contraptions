@@ -38,7 +38,7 @@ export interface Pose {
 /** Lengths, in cells. The ball (his head) is 0.26 across; his arms are long, his hands large, so they read. */
 export const RIG = { shoulder: 0.24, drop: 0.17, upper: 0.52, fore: 0.48, hand: 0.3, cup: 0.2 }
 /** His chest: a black shirt-front from the shoulders to the waist, where the column goes on down. */
-const CHEST = { top: 0.1, half: 0.31, waist: 1.12, halfWaist: 0.14 }
+export const CHEST = { top: 0.1, half: 0.31, waist: 1.12, halfWaist: 0.14 }
 
 const arm = (up: number, bend: number, wrist: number, hand: HandShape): ArmPose => ({ up, bend, wrist, hand })
 
@@ -121,6 +121,11 @@ export interface ConductorLook {
    * chest and arms tipped with the column (the arm poses are the body's own). Needs `floor`.
    */
   base?: number
+  /**
+   * A bow (radians; negative toward the house's left): the chest and arms turned further than the column, about his
+   * waist, so his head goes forward and down off it. Needs `floor`. The head passed in is already where the bow puts it.
+   */
+  bow?: number
 }
 
 /** Fletcher's rig and hands round his ball at `head` (the stage draws the ball itself). */
@@ -128,7 +133,20 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
   const { k, ink, weight } = c
   const [hx, hy] = head
   // The lean: the body's axis from his head down to the column's foot, as a turn of the chest and arms about the head.
-  const lean = look.floor !== undefined && look.base !== undefined ? Math.atan2(look.floor - hy, look.base - hx) - Math.PI / 2 : 0
+  let lean = look.floor !== undefined && look.base !== undefined ? Math.atan2(look.floor - hy, look.base - hx) - Math.PI / 2 : 0
+  // The column's top: just under the cup; in a bow, at the waist, the chest turned further than the column.
+  let tx = hx - 0.16 * Math.sin(lean)
+  let ty = hy + 0.16 * Math.cos(lean)
+  const bow = look.floor !== undefined ? look.bow ?? 0 : 0
+  if (bow) {
+    const r = CHEST.waist * 0.9
+    const bx = look.base ?? hx
+    for (let i = 0; i < 2; i++) {
+      tx = hx - r * Math.sin(lean + bow)
+      ty = hy + r * Math.cos(lean + bow)
+      lean = Math.atan2(look.floor! - ty, bx - tx) - Math.PI / 2
+    }
+  }
   p.push()
   // Laid out by corners (the stage draws in rectMode(CENTER)): the base plate, the hands.
   p.rectMode(p.CORNER)
@@ -137,13 +155,11 @@ export function drawConductor(p: p5, c: Ctx, head: Pt, pose: Pose, look: Conduct
     solid(p, ink, weight * 0.8, FLETCHER)
     const w = 0.09
     const bx = look.base ?? hx
-    const tx = hx - 0.16 * Math.sin(lean)
-    const ty = hy + 0.16 * Math.cos(lean)
     p.quad((bx - w) * k, look.floor * k, (bx + w) * k, look.floor * k, (tx + w * 0.6) * k, ty * k, (tx - w * 0.6) * k, ty * k)
     p.rect((bx - 0.2) * k, (look.floor - 0.04) * k, 0.4 * k, 0.05 * k, 0.02 * k)
   }
   p.translate(hx * k, hy * k)
-  if (lean) p.rotate(lean)
+  if (lean + bow) p.rotate(lean + bow)
   // The chest: a black shirt-front, square at the shoulders and narrowing to the waist, so the rig reads as a man.
   solid(p, ink, weight * 0.8, FLETCHER)
   const top = CHEST.top
@@ -196,17 +212,28 @@ export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandSha
   p.scale(s)
   solid(p, ink, (weight * 0.7) / s, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
   if (shape === 'fist') {
-    // The closed fist, side on and larger than an open hand: one rounded block, the fingers' fold a single ridge
-    // across it near its end, the thumb laid across its face. No separate knuckles: bumps on the end read as fingers.
+    // The closed fist, front on and larger than an open hand, so it reads at a glance: a short wrist out of the
+    // sleeve, the heel of the hand, four curled fingers side by side (a dark crease between each, their rounded ends
+    // the knuckles' row), and the thumb laid across them. Along +x is up the forearm, across (y) the fingers' row.
     p.scale(1.3)
     const sw = (weight * 0.7) / s / 1.3
-    p.strokeWeight(sw)
-    p.rect(-0.01 * k, -0.105 * k, 0.225 * k, 0.21 * k, 0.05 * k, 0.095 * k, 0.095 * k, 0.05 * k)
-    p.noFill()
-    p.strokeWeight(sw * 0.8)
-    p.arc(0.09 * k, 0, 0.12 * k, 0.17 * k, -1.1, 1.1)
-    solid(p, ink, sw * 0.9, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
-    p.rect(0.015 * k, 0.018 * k, 0.15 * k, 0.062 * k, 0.031 * k)
+    const skin = light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light)
+    // The wrist, and the heel of the hand: a squarish block.
+    solid(p, ink, sw, skin)
+    p.rect(-0.07 * k, -0.05 * k, 0.1 * k, 0.1 * k, 0.02 * k)
+    p.rect(0.0 * k, -0.112 * k, 0.15 * k, 0.224 * k, 0.05 * k, 0.03 * k, 0.03 * k, 0.05 * k)
+    // The four fingers, curled: short rounded ends in a row (as long as they are wide), a dark crease between each.
+    const fw = 0.056
+    for (let i = 0; i < 4; i++) {
+      const y0 = -0.112 + i * fw
+      // The middle two stand a little proud of the outer two: a fist's knuckle line is not flat.
+      const top = 0.2 + (i === 1 || i === 2 ? 0.01 : 0)
+      solid(p, ink, sw * 0.9, skin)
+      p.rect(0.11 * k, y0 * k, (top - 0.11) * k, fw * k, 0.01 * k, 0.028 * k, 0.028 * k, 0.01 * k)
+    }
+    // The thumb, laid across the fingers' lower joints from the outer side, its tip past the second finger.
+    solid(p, ink, sw * 0.9, skin)
+    p.rect(0.085 * k, -0.045 * k, 0.052 * k, 0.175 * k, 0.026 * k)
   } else if (shape === 'point') {
     // The palm, curled fingers, and the index straight out.
     p.rect(0, -0.07 * k, 0.13 * k, 0.14 * k, 0.05 * k)

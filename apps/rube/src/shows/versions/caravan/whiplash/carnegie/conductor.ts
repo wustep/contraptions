@@ -1,7 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH } from '../drums'
-import { POSES, RIG, beatPose, reachFromHead, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { CHEST, POSES, RIG, beatPose, reachFromHead, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BREAK, FINAL, LAST_CHORD, SOLO } from '../music'
 import { STOMPS, UNWIND } from './fast-clock'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
@@ -47,15 +47,15 @@ const BEATS: number[] = STOMPS.filter((t) => t > CONDUCT[0] - 1 && t < CONDUCT[1
 
 /** The finale: to the kit in the long roll, up to Andrew's height, the nod, and back. */
 export const F_WALK: [number, number] = [519.4, 522.8]
-export const NOD: [number, number] = [527.5, 529.9]
-/** Andrew's nod back, in the drummer's frame. */
-export const NOD_BACK: [number, number] = [529.25, 530.75]
+export const NOD: [number, number] = [527.5, 530.95]
+/** Andrew's nod back, in the drummer's frame: between Fletcher's deep nod and his second, smaller one. */
+export const NOD_BACK: [number, number] = [529.3, 530.35]
 /**
  * After the nod he does not go back to his podium: he gives Andrew room for the last fill (a small step back, a
  * little lower), and stays by the kit, eye to eye, to the end: the film keeps him there. In the silence he rises to
  * Andrew's height again, his hands up for the band's chord, and cuts it off there.
  */
-export const F_BACK: [number, number] = [530.9, 533.4]
+export const F_BACK: [number, number] = [531.05, 533.4]
 /** How far he steps back and sinks for the last fill, and when he comes up again (the silence). */
 const BACK_X = 0
 const BACK_SINK = 0.4
@@ -106,14 +106,22 @@ export function floorAt(T: number): number {
  */
 function leanAt(t: number): number {
   if (t < 400) return -0.12 * ease(t, LET_GO, LET_GO + 0.6) * (1 - ease(t, H_BACK[0] - 0.4, H_BACK[0] + 0.3))
-  // Turned in to him before the nod, the nod itself rolling his head a little further in, and back once Andrew answers.
-  return -0.2 * ease(t, NOD[0] - 0.9, NOD[0] + 0.1) * (1 - ease(t, NOD_BACK[1] - 0.2, NOD_BACK[1] + 0.8)) - 0.05 * nodAt(t)
+  // Turned in to him before the nod, and back once it is done (the nod itself is a bow: `bowAt`).
+  return -0.2 * ease(t, NOD[0] - 0.9, NOD[0] + 0.1) * (1 - ease(t, NOD[1] - 0.3, NOD[1] + 0.7))
 }
 
-/** The nod: one slow, deep dip of his head, held, and up again (0..1). */
+/**
+ * The nod (0..1): a deep one, down over half a second and held, the whole chest bowing toward Andrew off the column;
+ * up; Andrew answers (`NOD_BACK`); then a second, smaller nod, quicker: that's it.
+ */
 function nodAt(t: number): number {
-  return ease(t, NOD[0], NOD[0] + 0.75) - ease(t, NOD[0] + 1.55, NOD[1])
+  const first = ease(t, NOD[0], NOD[0] + 0.45) - ease(t, NOD[0] + 1.25, NOD[0] + 1.8)
+  const second = 0.55 * (ease(t, NOD[1] - 0.65, NOD[1] - 0.38) - ease(t, NOD[1] - 0.3, NOD[1]))
+  return first + second
 }
+
+/** His bow at `t` (radians, negative toward Andrew): the chest and arms turned off the column about the waist. */
+export const bowAt = (t: number): number => (t > 400 ? -0.36 * nodAt(t) : 0)
 
 /** Where his column's foot is across the stage at `t` (his head is off it when he leans). */
 export const baseAt = (t: number): number => xAt(t)
@@ -121,10 +129,12 @@ export const baseAt = (t: number): number => xAt(t)
 /** Where Fletcher's head (his ball) is at `t` (show seconds), in the Carnegie frame. */
 export function fletcherAt(t: number): Pt {
   const x = xAt(t)
-  const nod = 0.16 * nodAt(t)
+  // The bow swings his head forward and down about his waist; the head dips on the neck as well.
+  const b = bowAt(t)
+  const nod = 0.17 * (t > 400 ? nodAt(t) : 0)
   // A small breath the rest of the time.
   const breath = 0.012 * Math.sin((t - SOLO) * 1.3)
-  return [x + leanAt(t), floorAt(t) - TALL - riseAt(t) + nod + breath]
+  return [x + leanAt(t) + CHEST.waist * Math.sin(b), floorAt(t) - TALL - riseAt(t) + CHEST.waist * (1 - Math.cos(b)) + nod + breath]
 }
 
 /* ------------------------------------------------------------------ the crash */
