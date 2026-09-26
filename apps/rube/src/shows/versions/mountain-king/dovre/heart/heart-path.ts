@@ -14,7 +14,6 @@ import {
   T2,
   YOKE_GOES,
   YOKE_SEAT,
-  clamp01,
   flyAngle,
   hammerPhi,
   kt,
@@ -28,6 +27,9 @@ import {
  * Peer's path through the heart, one function of show time for both parts, in gears' frame. Each piece is a ride
  * (sampled from the same function the drawing uses), a flight (a parabola between two struck moments) or the last
  * straight fall. `lane(from, to, dx)` cuts it into a lane for a part's slot.
+ *
+ * Every take-off and landing is on a quarter of the grid (beats 193 … 287 are all struck: the blows on 1 and 3, the
+ * flares on 2 and 4), so the rhythm below is free to choose which beat does what.
  */
 
 type Piece =
@@ -38,17 +40,41 @@ type Piece =
 
 /** Where he sits on the flywheel: a hair outside its pitch circle, cradled in a gap between two teeth. */
 export const RIDE_F = FLY_R + 0.05
-/** When the flywheel lets him go (off its right shoulder) and where on it he is then. */
-export const OFF_FLY = kt(222)
+/** The flywheel's tooth pitch (radians): a gap is under him wherever he is set down a whole number of these along. */
+const FLY_W = (Math.PI * 2) / FLYWHEEL.teeth
+
+/**
+ * Phrase 13: he lands on top of the great wheel as it engages (FLY), is carried over its top, and a tooth flicks him
+ * off its shoulder on the phrase's second figure (beat 214): two seconds of ride, not five.
+ */
+export const FLICK = kt(214)
 const OFF_ANGLE = -0.9
-/** Where on the flywheel he lands (at FLY), so that he is at OFF_ANGLE when it lets him go. */
-export const LAND_ANGLE = OFF_ANGLE - (flyAngle(OFF_FLY) - flyAngle(FLY))
+/**
+ * By this beat he is off the wheel and on the pumps (gears.ts turns its camera from the wheel to the pumps here). He
+ * leaves the wheel at FLICK.
+ */
+export const OFF_FLY = kt(222)
+/** Where on the flywheel he lands (at FLY), so that he is at OFF_ANGLE when it lets him go: the top of the wheel. */
+export const LAND_ANGLE = OFF_ANGLE - (flyAngle(FLICK) - flyAngle(FLY))
 /** His angle on the flywheel at T while he rides it. */
 export const flyRideAngle = (T: number): number => LAND_ANGLE + flyAngle(T) - flyAngle(FLY)
 export const onFly = (T: number): Pt => polar(FLYWHEEL.at, RIDE_F, flyRideAngle(T))
 
 /** Where along the tail he lands on each bounce (from the pivot): creeping a little toward it. */
 const BOUNCE_S = [S_LAND, S_LAND + 0.05, S_LAND + 0.1, S_LAND + 0.15, S_LAND + 0.2]
+
+/**
+ * Off the wheel, before the pumps start (224): across the still heads on bar 3's run, one head a beat, away from the
+ * two trolls coming over the pit; the keeper stands on the ledge ahead, so back on the downbeat of bar 4; and on the
+ * held note he is still on the first head, cornered, as the trolls reach him and the pumps start under him.
+ */
+const SCAMPER: { k: number; i: number }[] = [
+  { k: 216, i: 0 },
+  { k: 217, i: 1 },
+  { k: 218, i: 2 },
+  { k: 219, i: 1 },
+  { k: 220, i: 0 },
+]
 
 /** The piston hops: the beat he lands on each head (at its bottom), which head, and the beat he is flung off it. */
 export const HOPS: { k: number; i: number; off: number }[] = [
@@ -71,8 +97,49 @@ export const HOPS: { k: number; i: number; off: number }[] = [
 ]
 /** He lands on the governor's yoke here. */
 export const ON_YOKE = kt(260)
-/** The beats the yoke bucks and tosses him (landing a beat later): each bar's 1, then from the valve every 1 and 3. */
-export const YOKE_BUCKS: number[] = [264, 268, 272, 274, 276, 278, 280, 282, 284]
+
+/**
+ * The runaway (phrases 16–17, the fastest music of the piece): the fastest ride of the show. Every take-off is on a
+ * blow (1 or 3) and every landing on a backbeat (2 or 4, the cymbals).
+ *
+ *   260     onto the yoke; it bucks him on the blows, higher each time: 262 (a quarter), 264 and 268 (three quarters,
+ *           a cell and more up among the governor's arms)
+ *   272     the valve blows beside him and the yoke throws him clean across the machine, over the pumps
+ *   275     onto the top of the flywheel, now overspeeding: it whips him over its top (a cell and a half a beat)
+ *   278     off its shoulder, down onto the first pump's head (279), which throws him back up onto the yoke (281)
+ *   282     the yoke's last buck: he is in the air as the governor hits its stops (284) and comes down
+ *           as its first weight flies (285); 286.5 the yoke gives way under him
+ */
+/** The beats the yoke bucks and tosses him (each lands on a backbeat): up and down on the yoke. */
+export const YOKE_BUCKS: number[] = [262, 264, 268, 282]
+/** How long each of those tosses is in the air (beats) and how high it goes (cells). */
+const TOSS: Record<number, { beats: number; h: number }> = {
+  262: { beats: 1, h: 0.36 },
+  264: { beats: 3, h: 1.0 },
+  268: { beats: 3, h: 1.28 },
+  282: { beats: 3, h: 0.9 },
+}
+/** Thrown across the machine, onto the wheel, off it, onto the first head, back onto the yoke. */
+const HURL = 272
+const ON_WHEEL = 275
+const OFF_WHEEL = 278
+const ON_HEAD = 279
+const BACK_ON_YOKE = 281
+/** Where on the wheel he comes down in the runaway (near the top, a little past it), set into a gap between two teeth. */
+const WHEEL_AIM = -1.86
+const WHEEL_AT = (() => {
+  const base = LAND_ANGLE + flyAngle(kt(ON_WHEEL)) - flyAngle(FLY)
+  return base + Math.round((WHEEL_AIM - base) / FLY_W) * FLY_W
+})()
+const onWheel = (T: number): Pt => polar(FLYWHEEL.at, RIDE_F, WHEEL_AT + flyAngle(T) - flyAngle(kt(ON_WHEEL)))
+/** The wheel's rim velocity under him at T (cells a second): what it throws him off with. */
+function wheelVel(T: number): Pt {
+  const dt = 0.004
+  const a = onWheel(T - dt)
+  const b = onWheel(T)
+  return [(b[0] - a[0]) / dt, (b[1] - a[1]) / dt]
+}
+
 /** Where he is on the first head at the seam: half a cell short of gears' exit. */
 const SEAM_DX = 9.5 - PISTON_X[0]
 
@@ -90,15 +157,24 @@ function pieces(): Piece[] {
     from = to
     t = OOM[n]
   })
-  const onto = onFly(FLY)
-  out.push({ t0: t, t1: FLY, kind: 'hop', from, to: onto, g: 10.5 })
-  // Carried up and over the top of the great wheel.
-  out.push({ t0: FLY, t1: OFF_FLY, kind: 'ride', at: onFly, hz: 30 })
-  // A tooth flicks him off its shoulder (beat 3), out over the rim onto the first head as the pistons start.
-  out.push({ t0: OFF_FLY, t1: PISTONS, kind: 'hop', from: onFly(OFF_FLY), to: onPiston(0, PISTONS, SEAM_DX), g: 16 })
+  // Up and over, down onto the top of the great wheel.
+  out.push({ t0: t, t1: FLY, kind: 'hop', from, to: onFly(FLY), g: 8.2 })
+  // Carried over the top of it.
+  out.push({ t0: FLY, t1: FLICK, kind: 'ride', at: onFly, hz: 30 })
+  // A tooth flicks him off its shoulder, out over the rim, down onto the first pump's head.
+  const head = (i: number, k: number): Pt => onPiston(i, kt(k), i === 0 ? SEAM_DX : 0)
+  out.push({ t0: FLICK, t1: kt(SCAMPER[0].k), kind: 'hop', from: onFly(FLICK), to: head(SCAMPER[0].i, SCAMPER[0].k), g: 16 })
+  // Across the still heads and back, a head a beat; then still on the first, cornered, till the pumps start.
+  for (let j = 1; j < SCAMPER.length; j++) {
+    const a = SCAMPER[j - 1]
+    const b = SCAMPER[j]
+    out.push({ t0: kt(a.k), t1: kt(b.k), kind: 'hop', from: head(a.i, a.k), to: head(b.i, b.k), g: 22 })
+  }
+  const last0 = SCAMPER[SCAMPER.length - 1]
+  out.push({ t0: kt(last0.k), t1: PISTONS, kind: 'ride', at: (T) => onPiston(last0.i, T, last0.i === 0 ? SEAM_DX : 0), hz: 20 })
   // The pistons.
   HOPS.forEach((h, j) => {
-    const dx = h.k === 256 || h.k === 224 || (h.i === 0) ? SEAM_DX : 0
+    const dx = h.i === 0 ? SEAM_DX : 0
     const i = h.i
     // Ride the head up from its bottom to its top.
     out.push({ t0: kt(h.k), t1: kt(h.off), kind: 'ride', at: (T) => onPiston(i, T, dx), hz: 120 })
@@ -112,20 +188,37 @@ function pieces(): Piece[] {
   // Flung from the first head over the other two onto the governor's yoke.
   const last = HOPS[HOPS.length - 1]
   out.push({ t0: kt(last.off), t1: ON_YOKE, kind: 'hop', from: onPiston(last.i, kt(last.off), SEAM_DX), to: [YOKE_SEAT, yokeSeatY(ON_YOKE) - R], g: 11 })
-  // Lifted on the yoke as the governor spins up; the yoke bucks under him on the blows, harder as it runs away:
-  // on each bar's downbeat at first, then on every 1 and 3; each time he is tossed up and comes down on the backbeat.
+
+  // The runaway. On the yoke, it lifts him as the governor spins up.
   const seat = (T: number): Pt => [YOKE_SEAT, yokeSeatY(T) - R]
   let at = ON_YOKE
-  for (const k of YOKE_BUCKS) {
+  const ride = (to: number) => {
+    if (to > at + 1e-6) out.push({ t0: at, t1: to, kind: 'ride', at: seat, hz: 60 })
+    at = to
+  }
+  const toss = (k: number) => {
+    const { beats, h } = TOSS[k]
     const up = kt(k)
-    const down = kt(k + 1)
-    if (up > at + 1e-6) out.push({ t0: at, t1: up, kind: 'ride', at: seat, hz: 60 })
-    const hgt = 0.1 + 0.32 * clamp01((k - 262) / 22)
+    const down = kt(k + beats)
+    ride(up)
     const T = down - up
-    out.push({ t0: up, t1: down, kind: 'hop', from: seat(up), to: seat(down), g: (8 * hgt) / (T * T) })
+    out.push({ t0: up, t1: down, kind: 'hop', from: seat(up), to: seat(down), g: (8 * h) / (T * T) })
     at = down
   }
-  out.push({ t0: at, t1: YOKE_GOES, kind: 'ride', at: seat, hz: 60 })
+  for (const k of YOKE_BUCKS) if (kt(k) < kt(HURL)) toss(k)
+  // Thrown across the machine onto the overspeeding wheel.
+  ride(kt(HURL))
+  out.push({ t0: kt(HURL), t1: kt(ON_WHEEL), kind: 'hop', from: seat(kt(HURL)), to: onWheel(kt(ON_WHEEL)), g: 12 })
+  // Whipped over its top.
+  out.push({ t0: kt(ON_WHEEL), t1: kt(OFF_WHEEL), kind: 'ride', at: onWheel, hz: 120 })
+  // Off its shoulder with the rim's own speed, down onto the first head.
+  out.push({ t0: kt(OFF_WHEEL), t1: kt(ON_HEAD), kind: 'fly', p0: onWheel(kt(OFF_WHEEL)), v0: wheelVel(kt(OFF_WHEEL)), p1: onPiston(0, kt(ON_HEAD), SEAM_DX) })
+  // The head throws him back up over the other two onto the yoke.
+  out.push({ t0: kt(ON_HEAD), t1: kt(BACK_ON_YOKE), kind: 'hop', from: onPiston(0, kt(ON_HEAD), SEAM_DX), to: seat(kt(BACK_ON_YOKE)), g: 15 })
+  at = kt(BACK_ON_YOKE)
+  // The last blows buck him on the yoke as the governor hits its stops.
+  for (const k of YOKE_BUCKS) if (kt(k) > at) toss(k)
+  ride(YOKE_GOES)
   // The yoke goes: straight down to the chimney's foot.
   out.push({ t0: YOKE_GOES, t1: T2, kind: 'fall', from: [CHIMNEY_X, yokeSeatY(YOKE_GOES) - R], to: [CHIMNEY_X, 0] })
   return out
@@ -185,4 +278,3 @@ export function laneOf(from: number, to: number, dx = 0): Seg[] {
   }
   return segs
 }
-
