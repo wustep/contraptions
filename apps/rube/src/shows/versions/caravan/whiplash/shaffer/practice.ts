@@ -257,6 +257,7 @@ function drawPractice(p: p5, s: PracticeState, c: Ctx): void {
     left: HALL_L,
     right: X_END,
     dust: stir(T),
+    backlit: smooth(T, F_FROM, BASS - 0.4) * (1 - smooth(T, F_GONE - 0.8, F_GONE + 0.6)),
   }
   p.push()
   p.translate(K[0] * k, K[1] * k)
@@ -297,12 +298,12 @@ export const practice = part<PracticeState>(
     // The film's first shot: down the long dark corridor to the one lit room at its end, pushing in to the kit.
     { t: slot.begin, cells: 9.2, hold: at([-3.9, -0.5]) },
     { t: beat(7), cells: 7.2, hold: at([-2.3, -0.35]) },
-    // The whole kit, its floor and its lamp, for the groove.
+    // The whole kit, its floor and its lamp, for the groove's first phrase, up to the crash; then in, close on the
+    // snare and the hi-hat for the backbeat; out with him down the toms for the fill, and the dive onto the pedal.
     { t: beat(15), cells: 5.55, hold: at([-0.85, -0.32]) },
-    { t: beat(23), cells: 5.5, hold: at([-0.85, -0.32]) },
-    // A little in for the fill; out for the dive onto the pedal.
-    { t: beat(21.75), cells: 5.45, hold: at([-0.85, -0.32]) },
-    { t: 11.741, cells: 5.05, hold: at([-0.95, -0.4]) },
+    { t: beat(19), cells: 3.5, hold: at([0.25, -0.3]) },
+    { t: beat(23), cells: 3.35, hold: at([0.3, -0.32]) },
+    { t: 11.741, cells: 5.3, hold: at([-1.15, -0.4]) },
     { t: beat(30), cells: 5.45, hold: at([-0.6, -0.2]) },
     // The wash: up on the cymbals and the lamp, the drums below, drifting in.
     { t: beat(34), cells: 4.9, hold: at([-0.8, -1.0]) },
