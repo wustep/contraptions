@@ -366,9 +366,11 @@ export const hospital = part<HospitalState>(
     { t: CLICK, cells: 3.3, hold: [O + 0.02, -0.93], w: 1 },
     { t: HAND.to + 0.25, cells: 3.45, hold: [O + 0.42, -0.98], w: 1 },
     { t: TOUCH + 0.1, cells: 3.42, hold: [O + 0.36, -0.97], w: 1 },
-    { t: 187.2, cells: 3.4, hold: [O + 0.34, -0.96], w: 1 },
-    // Then, as she is still again, a slow drift in on them for the cut to the church (`CUTS.funeral`): the balloon
-    // over her; across the cut it is his again, and drifts back over him in the empty church, as the frame opens out.
+    // Then, as she is still again, the leaving starts: one very slow draw back from her touch, unbroken, through the
+    // cut to the church (`CUTS.funeral`) and on into it, a held shot that is still alive (about 0.03 log/s: parked,
+    // these last seconds with her read as a stall). The balloon whole over her; across the cut it is his again, and
+    // drifts back over him in the empty church.
+    { t: 187.6, cells: 3.6, hold: [O + 0.32, -0.96], w: 1 },
     { t: slot.end, cells: CUTS.funeral.cells, hold: [O + CUTS.funeral.frame[0], CUTS.funeral.frame[1]], w: 1 },
   ],
 )
