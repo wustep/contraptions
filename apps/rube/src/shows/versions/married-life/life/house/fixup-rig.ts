@@ -175,7 +175,71 @@ function wheel(p: p5, k: number, weight: number, x: number, y: number, r: number
 }
 
 /** The machine at show time T. `chairsOutside` draws the chairs still on the lawn or on their way up (not yet in). */
+/** The rollers' width. */
+const RW = 0.46
+/** The helical seam's rise per turn. */
+const PITCH = 0.62
+
+/** The seam on a drum from `top` to `bottom`, turned `turn` radians: each turn's front half, left edge to right. */
+function helix(p: p5, weight: number, X: (v: number) => number, Y: (v: number) => number, top: number, bottom: number, turn: number, col: string): void {
+  p.noFill()
+  p.stroke(alpha(p, col, 0.9))
+  p.strokeWeight(weight * 0.75)
+  const phase = ((turn / (2 * Math.PI)) % 1 + 1) % 1
+  for (let n = -1; n * PITCH < bottom - top + PITCH; n++) {
+    p.beginShape()
+    let open = false
+    for (let i = 0; i <= 10; i++) {
+      const s = (i / 10) * Math.PI
+      const y = top + (n + phase + s / (2 * Math.PI)) * PITCH
+      if (y < top + 0.08 || y > bottom - 0.08) {
+        if (open) { p.endShape(); p.beginShape(); open = false }
+        continue
+      }
+      p.vertex(X(-(RW / 2 - 0.03) * Math.cos(s)), Y(y))
+      open = true
+    }
+    p.endShape()
+  }
+}
+
+/**
+ * The wet paint behind the rollers: a glossy band on the new wall that dries as they roll on, so the house is seen
+ * being painted, not wiped. Over the house's front only (the walls to the eaves), and only while they are on it.
+ */
+function wetBand(p: p5, k: number, T: number): void {
+  if (T <= SHOVE || T >= BRAKE) return
+  const w = W(T)
+  const edge = w - RW / 2 + 0.02
+  const dry = 0.95
+  const x0 = Math.max(HOUSE.x0, edge - dry)
+  const x1 = Math.min(HOUSE.x1, edge)
+  if (x1 <= x0) return
+  const [, , b2] = rollers(T)
+  const topY = Math.max(HOUSE.eaves, b2 - ROLL)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  const g = ctx.createLinearGradient((edge - dry) * k, 0, edge * k, 0)
+  g.addColorStop(0, 'rgba(47,138,114,0)')
+  g.addColorStop(0.5, 'rgba(47,138,114,0.16)')
+  g.addColorStop(1, 'rgba(47,138,114,0.42)')
+  ctx.fillStyle = g
+  ctx.fillRect(x0 * k, topY * k, (x1 - x0) * k, (G - topY) * k)
+  // The gloss: a few long soft streaks the roller's nap left, brightest where it is wettest.
+  const s = ctx.createLinearGradient((edge - dry * 0.6) * k, 0, edge * k, 0)
+  s.addColorStop(0, 'rgba(255,255,255,0)')
+  s.addColorStop(1, 'rgba(255,255,255,0.34)')
+  ctx.fillStyle = s
+  for (let i = 0; i < 7; i++) {
+    const y = topY + 0.35 + i * ((G - topY - 0.7) / 6) + 0.12 * hash(i, 3, 5)
+    const len = dry * (0.35 + 0.35 * hash(i, 9, 2))
+    ctx.fillRect(Math.max(x0, edge - len) * k, y * k, Math.min(len, edge - x0) * k, 0.035 * k)
+  }
+  ctx.restore()
+}
+
 export function drawRig(p: p5, k: number, weight: number, T: number): void {
+  wetBand(p, k, T)
   const w = W(T)
   const X = (v: number) => (w + v) * k
   const Y = (v: number) => v * k
@@ -216,45 +280,47 @@ export function drawRig(p: p5, k: number, weight: number, T: number): void {
   p.line(X(hub[0] - 0.07), Y(hub[1]), X(hx - 0.1), Y(hy))
   p.line(X(hub[0] + 0.07), Y(hub[1]), X(hx + 0.1), Y(hy))
 
-  // The mast's three rollers, the top one's in the roof's colour; bearings between them; the mast behind.
+  // The mast's three rollers, the top one's in the roof's colour; bearings between them; the mast behind. Their paint
+  // is wet: deeper and glossier than the dry siding they leave, so the stack stands out against new and old alike.
   const [b0, b1, b2] = rollers(T)
-  const paint = [HOME.siding, HOME.siding, HOME.roof]
+  const paint = [mixHex(HOME.siding, '#2F8A72', 0.4), mixHex(HOME.siding, '#2F8A72', 0.4), mixHex(HOME.roof, INK, 0.12)]
   p.stroke(INK)
   p.strokeWeight(weight * 0.8)
   p.fill(HOME.woodDark)
-  p.rect(X(CART.mast - 0.05), Y(b2 - ROLL - 0.05), 0.1 * k, (BASE - (b2 - ROLL - 0.05)) * k)
+  p.rect(X(CART.mast - 0.09), Y(b2 - ROLL - 0.05), 0.18 * k, (BASE - (b2 - ROLL - 0.05)) * k)
+  // The rollers' frame: a stile beside the drums, out to the side as a roller's handle is, with an arm to each end of
+  // each drum, so the stack reads as rollers held in a frame and not as a pipe on the wall.
+  const stile = -RW / 2 - 0.2
+  p.rect(X(stile - 0.05), Y(b2 - ROLL - 0.02), 0.1 * k, (BASE - (b2 - ROLL - 0.02)) * k, 0.03 * k)
+  for (const b of [b0, b1, b2]) {
+    for (const y of [b - ROLL + 0.0, b - 0.0]) p.rect(X(stile), Y(y - 0.035), (0.2 + 0.02) * k, 0.07 * k, 0.02 * k)
+  }
   for (const [n, b] of [
     [2, b2],
     [1, b1],
     [0, b0],
   ] as [number, number][]) {
     const top = b - ROLL
-    const rw = 0.36
     const col = paint[n]
     p.stroke(INK)
     p.strokeWeight(weight * 0.8)
     p.fill(col)
-    p.rect(X(-rw / 2), Y(top), rw * k, ROLL * k, 0.1 * k)
+    p.rect(X(-RW / 2), Y(top), RW * k, ROLL * k, 0.1 * k)
     // Its round: shade on the left, a wet shine on the right.
     p.noStroke()
     p.fill(alpha(p, mixHex(col, INK, 0.3), 0.55))
-    p.rect(X(-rw / 2 + 0.03), Y(top + 0.06), 0.09 * k, (ROLL - 0.12) * k, 0.04 * k)
-    p.fill(alpha(p, '#FFFFFF', 0.35))
-    p.rect(X(rw / 2 - 0.11), Y(top + 0.12), 0.04 * k, (ROLL - 0.24) * k, 0.02 * k)
-    // The nap turning past: soft tufts sliding across the drum as it rolls.
-    p.stroke(alpha(p, mixHex(col, INK, 0.28), 0.6))
-    p.strokeWeight(weight * 0.45)
-    for (let j = 0; j < 4; j++) {
-      const u = (((rolled / (Math.PI * rw)) * 4 + j) % 4) / 4
-      const xs = -rw / 2 + 0.05 + (rw - 0.1) * (0.5 - 0.5 * Math.cos(u * Math.PI))
-      for (let yy = top + 0.14; yy < b - 0.14; yy += 0.34) p.line(X(xs), Y(yy), X(xs), Y(yy + 0.16))
-    }
+    p.rect(X(-RW / 2 + 0.03), Y(top + 0.06), 0.1 * k, (ROLL - 0.12) * k, 0.04 * k)
+    // The seam wound round the drum: its front half seen, a slant that climbs as the drum turns, so the roll reads.
+    helix(p, weight, X, Y, top, b, rolled / (RW / 2), mixHex(col, INK, 0.4))
+    p.noStroke()
+    p.fill(alpha(p, '#FFFFFF', 0.4))
+    p.rect(X(RW / 2 - 0.12), Y(top + 0.12), 0.045 * k, (ROLL - 0.24) * k, 0.02 * k)
     // The yoke's caps.
     p.stroke(INK)
     p.strokeWeight(weight * 0.7)
     p.fill(HOME.woodDark)
-    p.rect(X(-rw / 2 - 0.04), Y(top - 0.05), (rw + 0.08) * k, 0.08 * k, 0.02 * k)
-    p.rect(X(-rw / 2 - 0.04), Y(b - 0.03), (rw + 0.08) * k, 0.08 * k, 0.02 * k)
+    p.rect(X(-RW / 2 - 0.05), Y(top - 0.06), (RW + 0.1) * k, 0.1 * k, 0.02 * k)
+    p.rect(X(-RW / 2 - 0.05), Y(b - 0.04), (RW + 0.1) * k, 0.1 * k, 0.02 * k)
   }
 
   // The deck, its handle to Carl, its two wheels.
