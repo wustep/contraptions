@@ -255,10 +255,11 @@ export const crash = part<CrashState>(
       { t: LAMP_T[23], cells: 7.2, off: [-0.4, -1.8] },
       { t: LAMP_T[28], cells: 7.6, off: [0.8, -1.9] },
       // Leaning ahead into the dark road; then up and back, long and high, to hold both of them as the truck's high
-      // beams flash far ahead: the car small on the left under its lamps, the truck coming on the right; and in as
-      // they close, still on the crossing for the hit; then with the car through its slow turn in the air.
+      // beams flash far ahead: the car small on the left under its lamps, the truck coming on the right (both inside
+      // the middle two thirds, so a Zoom crop keeps the car too); and in as they close, still on the crossing for the
+      // hit; then with the car through its slow turn in the air.
       { t: LAMP_T[33], cells: 9.6, off: [4.2, -2.6] },
-      { t: FLASH, cells: 18, off: [lead, -4.6] },
+      { t: FLASH, cells: 21, off: [lead - 0.8, -4.6] },
       { t: IMPACT, cells: 9.6, hold: [hit[0] - 1.0, ROAD_Y - 2.5], w: 1 },
       { t: TAIL + 0.5, cells: 9.8, hold: [tail[0] - 2.8, ROAD_Y - 2.9], w: 1 },
       { t: LAND, cells: 10.2, hold: [land[0] - 3.0, ROAD_Y - 2.6], w: 1 },
