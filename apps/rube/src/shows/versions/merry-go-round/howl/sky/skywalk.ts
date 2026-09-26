@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, hash, part, type Company, type Ctx, type PartShot } from '../kit'
 import { beatsIn } from '../music'
-import { TOWN } from '../worlds'
+import { DIAL, TOWN } from '../worlds'
 import { drawPerched, drawPigeon, drawSoldier } from './figures'
 import { ALLEY_EXIT, END, HOP_OFF, howlWalk, LAND_AT, LIFT, NOON_BAR, sophieWalk, STROKES, TOWER_X, W } from './path'
 import { G, LINE, lightAt, POTS, SQUARE, TOWER } from './set'
@@ -236,26 +236,25 @@ function drawParade(p: p5, c: Ctx, t: number): void {
     p.push()
     p.translate(x * k, (G - bob) * k)
     if (n === 0) {
-      // The flag: a tall pole and the kingdom's colours, streaming back over the column.
+      // The standard: a tall pole and one long swallow-tailed pennant of the king's wine red, streaming back over the
+      // column (one colour: no nation's flag).
       p.stroke(ink)
       p.strokeWeight(weight * 0.7)
       p.line(-0.1 * k, -0.6 * k, -0.1 * k, -2.55 * k)
       p.strokeWeight(weight * 0.55)
-      for (const [band, col] of [[0, TOWN.soldier], [1, TOWN.gold]] as const) {
-        p.fill(L.tone(col))
-        p.beginShape()
-        for (let q = 0; q <= 8; q++) {
-          const v = q / 8
-          const w = Math.sin(t * 3.4 - v * 4.5) * 0.09 * v
-          p.vertex((-0.1 + v * 1.25) * k, (-2.5 + band * 0.32 + w + v * 0.12) * k)
-        }
-        for (let q = 8; q >= 0; q--) {
-          const v = q / 8
-          const w = Math.sin(t * 3.4 - v * 4.5) * 0.09 * v
-          p.vertex((-0.1 + v * 1.25) * k, (-2.5 + (band + 1) * 0.32 + w + v * 0.12) * k)
-        }
-        p.endShape(p.CLOSE)
+      p.fill(L.tone(mixHex(DIAL.red, TOWN.soldier, 0.35)))
+      const wave = (v: number) => Math.sin(t * 3.4 - v * 4.5) * 0.09 * v
+      p.beginShape()
+      for (let q = 0; q <= 8; q++) {
+        const v = q / 8
+        p.vertex((-0.1 + v * 1.45) * k, (-2.5 + wave(v) + v * 0.16) * k)
       }
+      p.vertex((-0.1 + 1.12) * k, (-2.5 + 0.28 + wave(0.78) + 0.12) * k)
+      for (let q = 8; q >= 0; q--) {
+        const v = q / 8
+        p.vertex((-0.1 + v * 1.45) * k, (-2.5 + 0.56 - 0.1 * v + wave(v) + v * 0.16) * k)
+      }
+      p.endShape(p.CLOSE)
     }
     drawSoldier(p, k, weight, ink, { face: -1, stride: n % 2 ? -stride : stride, stiff: 1, arm: n === 0 ? 0.55 : 0, dark: L.dark })
     p.pop()
@@ -323,13 +322,16 @@ export const skywalk = part<WalkState>(
       { t: W[4], cells: 6.2, off: [0.5, 1.2] },
       { t: W[6], cells: 6.8, off: [0.8, 1.5] },
       // Over the roofs the camera goes a little slower than they walk: they cross the frame, the roofs pass under.
-      { t: W[8], cells: 6.0, hold: [12.9 - E[0], -11.65], w: 1 },
-      { t: W[13], cells: 5.7, hold: [18.1 - E[0], -11.8], w: 1 },
-      { t: W[16], cells: 6.2, hold: [23.0 - E[0], -12.0], w: 1 },
-      { t: W[18], cells: 7.8, hold: [28.0 - E[0], -12.85], w: 1 },
-      { t: W[NOON_BAR], cells: 9.5, hold: [30.1 - E[0], -13.15], w: 1 },
-      { t: W[21], cells: 20, hold: wide, w: 1 },
-      { t: W[24] + 0.3, cells: 20, hold: [wide[0] + 0.3, wide[1] + 0.05], w: 1 },
+      // (Framed with a fifth of the frame over them, so they keep a margin under Zoom.)
+      { t: W[8], cells: 6.0, hold: [12.9 - E[0], -12.0], w: 1 },
+      { t: W[13], cells: 5.7, hold: [18.1 - E[0], -12.15], w: 1 },
+      { t: W[16], cells: 6.2, hold: [23.0 - E[0], -12.35], w: 1 },
+      { t: W[18], cells: 7.8, hold: [28.0 - E[0], -13.3], w: 1 },
+      { t: W[NOON_BAR], cells: 9.5, hold: [30.1 - E[0], -13.8], w: 1 },
+      // The swell: the whole town under them, the two of them against clear sky a fifth down; held while the town
+      // lands, then down to the balcony.
+      { t: W[21], cells: 20, hold: [wide[0], wide[1] - 1.0], w: 1 },
+      { t: W[23] + 0.6, cells: 20, hold: [wide[0] + 0.3, wide[1] - 0.95], w: 1 },
       { t: W[26] + 0.1, cells: 10.5, off: [0.8, 1.2], w: 0 },
       { t: W[28], cells: 5.8, off: [0.6, -0.2], w: 0 },
       { t: W[29] + 0.1, cells: 4.8, hold: [land[0] + 0.62, land[1] - 0.55], w: 1 },

@@ -371,42 +371,71 @@ const REF_Y = -9.3
 const CLOUDS = [
   { x: 4, y: -19.8, w: 8.5, s: 1 },
   { x: 16, y: -22.5, w: 9, s: 2 },
-  { x: 32.6, y: -14.2, w: 13, s: 3 },
+  // Off to the right of the swell and its way down: never behind the two of them in the sky.
+  { x: 49, y: -13.0, w: 12, s: 3 },
   { x: 55, y: -21.2, w: 12, s: 4 },
   { x: 71, y: -18.4, w: 9, s: 5 },
 ]
+/** A soft round of colour: solid through its middle, fading out over its edge (a cloud's heap, never an outline). */
+function soft(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number, rgb: string, a: number): void {
+  if (a <= 0.004 || rx <= 0.01) return
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.scale(1, ry / rx)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+  g.addColorStop(0, `rgba(${rgb}, ${a})`)
+  g.addColorStop(0.55, `rgba(${rgb}, ${a})`)
+  g.addColorStop(1, `rgba(${rgb}, 0)`)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(0, 0, rx, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+const rgbOf = (hex: string): string => {
+  const n = parseInt(hex.slice(1), 16)
+  return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+}
+
 /**
- * Fair-weather clouds far off over the hills: long flat bases, heaped tops lit from above, the undersides cool;
- * soft volume, never outlined. They hardly move with the camera and drift on the wind.
+ * Fair-weather clouds far off over the hills: two or three heaps of uneven size on a soft, cool underside, lit from
+ * above; soft volume with soft edges, never outlined, never a row of even bumps on a ruled base. They hardly move with
+ * the camera and drift on the wind.
  */
 function clouds(p: p5, c: Ctx, L: Light, f: { x0: number; x1: number; cx: number; cy: number }): void {
   if (L.dark > 0.5) return
   const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   const ox = (f.cx - REF_X) * 0.88 + L.t * 0.05
   const oy = (f.cy - REF_Y) * 0.85
-  const lit = WASTES.cloud
-  const under = mixHex(WASTES.cloud, TOWN.slate, 0.28)
-  p.noStroke()
+  const lit = rgbOf(WASTES.cloud)
+  const under = rgbOf(mixHex(WASTES.cloud, TOWN.slate, 0.3))
   for (const cl of CLOUDS) {
     const cx = cl.x + ox
     if (cx + cl.w < f.x0 - 1 || cx - cl.w > f.x1 + 1) continue
     const base = cl.y + oy
-    const n = Math.max(4, Math.round(cl.w / 1.05))
+    const n = Math.max(6, Math.round(cl.w / 0.8))
+    // Two heaps, one bigger, at uneven places along it; small domes between and down its ends.
+    const p1 = 0.3 + 0.15 * hash(cl.s, 9)
+    const p2 = 0.62 + 0.18 * hash(cl.s, 10)
+    const h2 = 0.45 + 0.3 * hash(cl.s, 11)
     const puffs: [number, number, number][] = []
     for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n
-      // One main heap a little off centre, smaller domes down its flanks.
-      const peak = 0.4 + 0.2 * hash(cl.s, 9)
-      const bell = Math.exp(-(((u - peak) / 0.3) ** 2))
-      const r = cl.w * (0.045 + 0.12 * bell) * (0.75 + 0.5 * hash(i, cl.s))
-      const x = cx - cl.w / 2 + u * cl.w + (hash(i, cl.s, 2) - 0.5) * 0.5
-      puffs.push([x, base - r * (0.5 + 0.45 * bell) - 0.2 * hash(i, cl.s, 3), r])
+      const u = (i + 0.3 + 0.4 * hash(i, cl.s, 4)) / n
+      const bell = Math.max(Math.exp(-(((u - p1) / 0.2) ** 2)), h2 * Math.exp(-(((u - p2) / 0.16) ** 2)))
+      const r = cl.w * (0.05 + 0.13 * bell) * (0.7 + 0.6 * hash(i, cl.s))
+      const x = cx - cl.w / 2 + u * cl.w + (hash(i, cl.s, 2) - 0.5) * 0.6
+      puffs.push([x, base - r * (0.35 + 0.5 * bell) - 0.25 * hash(i, cl.s, 3), r])
     }
-    p.fill(alpha(p, under, 0.55))
-    for (const [x, y, r] of puffs) p.ellipse(x * k, (y + r * 0.12) * k, 2 * r * k, 1.8 * r * k)
-    rectC(p, cx - cl.w / 2 + 0.4, base - 0.5, cl.w - 0.8, 0.5, k, 0.25)
-    p.fill(alpha(p, lit, 0.8))
-    for (const [x, y, r] of puffs) p.ellipse((x - r * 0.1) * k, (y - r * 0.16) * k, 1.66 * r * k, 1.42 * r * k)
+    // The underside: a long soft shadow, flatter than the heaps and thinning out at the ends.
+    for (let i = 0; i < n; i++) {
+      const u = (i + 0.5) / n
+      const end = Math.sin(Math.PI * u)
+      soft(ctx, (cx - cl.w / 2 + u * cl.w) * k, (base - 0.35) * k, (0.9 + 1.1 * end) * k, (0.45 + 0.4 * end) * k, under, 0.42 * end)
+    }
+    for (const [x, y, r] of puffs) soft(ctx, x * k, (y + r * 0.18) * k, 1.05 * r * k, 0.9 * r * k, under, 0.5)
+    // The lit tops, a little up and to the left of each heap.
+    for (const [x, y, r] of puffs) soft(ctx, (x - r * 0.12) * k, (y - r * 0.18) * k, 0.95 * r * k, 0.82 * r * k, lit, 0.85)
   }
 }
 
@@ -912,21 +941,20 @@ function drawFlag(p: p5, c: Ctx, L: Light): void {
   p.line(x * k, y * k, tip[0] * k, tip[1] * k)
   const t = L.t
   p.strokeWeight(weight * 0.5)
-  for (const [band, col] of [[0, TOWN.shutter], [1, TOWN.plaster], [2, TOWN.ribbon]] as const) {
-    p.fill(L.tone(col))
-    p.beginShape()
-    for (let i = 0; i <= 8; i++) {
-      const u = i / 8
-      const w = Math.sin(t * 3.1 - u * 4) * 0.08 * u
-      p.vertex((tip[0] + u * 1.3) * k, (tip[1] + band * 0.26 + w + u * 0.1) * k)
-    }
-    for (let i = 8; i >= 0; i--) {
-      const u = i / 8
-      const w = Math.sin(t * 3.1 - u * 4) * 0.08 * u
-      p.vertex((tip[0] + u * 1.3) * k, (tip[1] + (band + 1) * 0.26 + w + u * 0.1) * k)
-    }
-    p.endShape(p.CLOSE)
+  // The café's own colour, the rose of its awning: one swallow-tailed pennant (one colour: no nation's flag).
+  p.fill(L.tone(TOWN.ribbon))
+  const wave = (u: number) => Math.sin(t * 3.1 - u * 4) * 0.08 * u
+  p.beginShape()
+  for (let i = 0; i <= 8; i++) {
+    const u = i / 8
+    p.vertex((tip[0] + u * 1.4) * k, (tip[1] + wave(u) + u * 0.12) * k)
   }
+  p.vertex((tip[0] + 1.05) * k, (tip[1] + 0.34 + wave(0.75) + 0.09) * k)
+  for (let i = 8; i >= 0; i--) {
+    const u = i / 8
+    p.vertex((tip[0] + u * 1.4) * k, (tip[1] + 0.7 - 0.12 * u + wave(u) + u * 0.12) * k)
+  }
+  p.endShape(p.CLOSE)
 }
 
 /* ------------------------------------------------------------------ the ground and the lane's shade */
