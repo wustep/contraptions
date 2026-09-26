@@ -11,8 +11,8 @@ import { CEIL, drawVisitorChair, FLOOR, hexA, lean, SEAT, tube, W_IN, W_OUT, WAR
  * very still. He sits at her bedside with the balloon (the cast draws it, tied to him) over him. Behind them the
  * window's sky goes from gold to rose to night over the nine seconds, and the room darkens with it. As it goes he
  * leans to the lamp on the bedside table and it comes on, on its note (182.433): the one warm light. On the strongest
- * note (185.655) she turns the smallest roll toward him, the film's touch; he answers with a lean. The camera breathes
- * out to the room and back in to him and the balloon, and on the cut (189.452) he is sitting upright, at rest, the
+ * note (185.655) she turns the smallest roll toward him, the film's touch; he answers with a lean. The camera pushes
+ * in on the two of them for it, and breathes back out to him and the balloon, and on the cut (189.452) he is sitting upright, at rest, the
  * balloon over him, and she is gone: the far side is the empty church.
  *
  * Frame: Carl's seat is (-0.5, 0) (in at rest, out at rest: `exit` is [0, 0]); the set draws the room, and its window,
@@ -342,9 +342,13 @@ export const hospital = part<HospitalState>(
     }
   },
   (slot) => [
-    // A slow breath out to the room, the window going down behind them, the lamp.
-    { t: 183.5, cells: 4.15, hold: [O - 0.12, -0.72], w: 1 },
-    // And back in to him and the balloon for the cut to the church (`CUTS.funeral`).
+    // A little over to the lamp as he reaches for it, and then one slow push in on the two of them, so that her roll
+    // toward him (185.655, the film's touch) and his lean are the picture; the balloon stays whole over him.
+    { t: CLICK, cells: 3.4, hold: [O - 0.02, -0.66], w: 1 },
+    { t: TOUCH, cells: 2.86, hold: [O + 0.3, -0.72], w: 1 },
+    { t: 186.9, cells: 2.8, hold: [O + 0.3, -0.72], w: 1 },
+    // Then, as she is still again, a slow breath back out to him and the balloon for the cut to the church
+    // (`CUTS.funeral`), where he is alone.
     { t: slot.end, cells: 3.6, hold: [O + 0.22, -0.6], w: 1 },
   ],
 )
