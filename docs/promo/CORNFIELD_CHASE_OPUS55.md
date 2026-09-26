@@ -1,4 +1,4 @@
-# Cornfield Chase, [Opus 5.5] Music-sync
+# Cornfield Chase, Opus 5.5
 
 Copyrighted recording. Private tech demo and eval one-shot only — do not ship this audio in a public build.
 Hans Zimmer, *Cornfield Chase*, from *Interstellar* (2014). Attribution: `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`.

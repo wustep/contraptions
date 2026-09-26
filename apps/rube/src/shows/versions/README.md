@@ -115,7 +115,7 @@ procedural machine under a steady beat, and a struck bar on every strike,
 made in the page. `check:shows` still walks that module. It is not a show.
 
 `come-recover/opus55-all-at-once` (in the picker, **Everything**, one take,
-**Opus**) is a one-shot Opus 5.5 take on Son
+**Opus 5.5**) is a one-shot Opus 5.5 take on Son
 Lux's *Come Recover (Empathy Fight)*, the finale cue of *Everything Everywhere
 All at Once*. The recording is copyrighted and demo only
 (`docs/promo/EEAAO_COME_RECOVER_ATTRIBUTION.txt`). Every piece is new. The show
@@ -147,14 +147,14 @@ in `docs/promo/CLAIR_TAKE_B_ARRANGEMENT.md`. `check:clair:b` checks stock lanes,
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
-`cornfield-chase/tech-demo` ([Grok 4.7] Music-sync) is the music-sync take
+`cornfield-chase/tech-demo` (Grok 4.7) is the music-sync take
 that stays in the picker, beside the Opus one. `cornfield-chase/multiball`
 and `cornfield-chase/voices` are not in the picker. All three are one-shot
 tech demos of Hans Zimmer's Cornfield Chase, not finished public Shows. The
 recording is copyrighted; the credit stays in
 `docs/promo/CORNFIELD_CHASE_ATTRIBUTION.txt`.
 
-`cornfield-chase/opus55-music-sync` ([Opus 5.5] Music-sync) is a separate
+`cornfield-chase/opus55-music-sync` (Opus 5.5) is a separate
 one-shot eval take on the same recording, generated stock only by
 `npm run generate:cornfield:opus55`. Its targets are measured rather than
 assumed: `scripts/cornfield-opus55-onsets.py` reads the recording once and
@@ -245,3 +245,13 @@ at her table for the kiss, with him through the dream, at her table again at
 the end, her husband only in the club at the end, neither ever jumping or
 appearing in shot. The credits run over the last chords, set by the page
 from `Performance.titles(t)`. The report is `docs/promo/LALALAND_EPILOGUE.md`.
+
+`gymnopedie/opus55` (in the picker, **Gymnopédie**, one take, **Opus 5.5**) is Satie's Gymnopédie No. 1 and
+Gnossiennes Nos. 1 and 3 round a small sea planet once a period, as a loop with no seam. It is the first show that
+loops: `Performance.loop` and `SoundtrackSpec.loop`, a `Transport` that goes round, and a soundtrack that plays a
+loop gaplessly from a decoded buffer at 1× (`soundtrack.ts`). The music is played for it by
+`scripts/satie-render.py` from the Mutopia Project's engravings on the Salamander Grand Piano's samples (CC BY 3.0),
+rendered as one period of a circle, and every note as it lands is written to
+`scripts/show-plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
+(`apps/rube/check-gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
+`docs/promo/SATIE_GYMNOPEDIE_ATTRIBUTION.txt`; the report is `docs/promo/GYMNOPEDIE.md`.

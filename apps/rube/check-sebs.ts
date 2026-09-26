@@ -87,6 +87,15 @@ export function checkSebs(perf: Performance, version: Version, check: Check): vo
     }
   }
   check('sebs: every strike lands on the music', count >= 300 && off.length === 0, `${count} strikes; off: ${off.slice(0, 12).join(', ')}`)
+  // The solo intro, checked against the mix's amplitude: each real attack, and none of the flux ghosts in the rests.
+  // 1.358 is F#4 (the 1.254 spike is a pre-echo); 14.338 would have been a forte hit on a decaying C#.
+  const intro = (STRIKES.opening ?? []).filter((t) => t < 19)
+  const introHas = (t: number) => intro.some((h) => Math.abs(h - t) < 1e-6)
+  const introNotes = [0.789, 1.358, 2.438, 2.995, 3.564, 4.458, 8.557, 9.067, 9.543, 10.031, 11.134, 12.353]
+  const introGhosts = [1.254, 6.594, 7.001, 13.212, 14.338]
+  check('sebs: the opening intro plays the piano\'s notes, on their attacks, and not the ghosts in the rests',
+    introNotes.every(introHas) && introGhosts.every((t) => !intro.some((h) => Math.abs(h - t) < 0.02)),
+    intro.map((t) => t.toFixed(3)).join(', '))
   const empty = Object.entries(STRIKES).filter(([, list]) => list.length === 0).map(([name]) => name)
   check('sebs: every part strikes', empty.length === 0, empty.join(', '))
   const all = Object.values(STRIKES).flat()

@@ -1,3 +1,4 @@
+import '../../../../src/analytics'
 import '../../../../src/ui/styles.css'
 import { downloadBlob } from '../../../../src/core/capture'
 import { makeRng } from '../../../../src/core/rng'

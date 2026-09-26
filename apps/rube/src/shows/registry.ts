@@ -39,6 +39,12 @@ export interface SoundtrackSpec {
   /** Where the credit leads. */
   href?: string
   /**
+   * Seconds of recording, from `offset`, that repeat for as long as the show plays: a loop's music, played round
+   * without a gap at the seam. The recording should carry a little of the loop's own end before `offset` and of its
+   * start after it, so that a decoder that trims its edges a few samples differently still meets itself.
+   */
+  loop?: number
+  /**
    * The same music as the label's own YouTube uploads, which the page plays in place of `src` (`youtube.ts`). `src`
    * stays: a saved video records the file, and the file plays wherever YouTube will not. One cue, or several laid
    * end to end where `src` is a mix of them.
@@ -79,6 +85,11 @@ export interface Performance {
   cuts?(t: number): boolean
   /** The music. Left out, the show is silent and runs on the wall clock. */
   soundtrack?: SoundtrackSpec
+  /**
+   * The show is a loop: its end is its start, and the player goes round and round it rather than stopping at the end.
+   * A soundtrack for one says how long its loop is (`SoundtrackSpec.loop`), and that is the show's duration.
+   */
+  loop?: boolean
   /**
    * Words over the stage at `t`: end credits. The page sets them in its own type over the frame, since a show's
    * canvas sets none (`stage.ts`), and a saved frame or a recorded video has none either. Left out, there are none.
@@ -226,6 +237,7 @@ export function performanceProblems(p: Performance): string[] {
       if (c.until !== undefined && !(c.until > at)) out.push(`${name} stops at ${c.until}, before it comes in`)
       if ((c.fadeIn ?? 0) < 0 || (c.fadeOut ?? 0) < 0) out.push(`${name} has a negative fade`)
     })
+    if (p.loop && p.soundtrack.loop !== p.duration) out.push(`a loop's soundtrack loops ${p.soundtrack.loop} s of a ${p.duration} s show`)
   }
   return out
 }
