@@ -28,9 +28,11 @@ import { BOARD } from './rubato-hits'
  * the music: soft and slow, it arrives nearly at rest (a kiss); fast and loud, it strikes at speed and rebounds.
  *
  * Until he boards, the rod is parked leaning (a metronome switched off); his landing tips it over into the first tick. After the last stroke
- * the swing collapses into a shimmer too fast to count (the roll), growing with the swell; before the burst the rod
- * leans back with him and tosses him onto the snare; left without its weight, the bob rings it down to upright, and
- * it sinks back into the stage.
+ * the swing narrows into a shimmer too fast to count (the roll), and then opens again with the swell into a fan the
+ * eye catches the rod in at a few places, brighter and wider as the music grows, the whole case juddering on its
+ * feet and him chattering in the cradle, the hall's light coming up; it gathers (the fan closes, the judder stills);
+ * the rod leans back with him and tosses him onto the snare; left without its weight, the bob rings it down to
+ * upright, and it sinks back into the stage.
  */
 
 const [KX, KY] = KIT_AT
@@ -144,7 +146,7 @@ const DESCEND: [number, number] = [RIDE_END + 0.8, COCK - 0.7]
 export function lift(T: number): number {
   if (T <= RISE[0] || T >= SINK[1]) return DROP
   if (T < RISE[1]) return DROP * (1 - easeInOutSine((T - RISE[0]) / (RISE[1] - RISE[0])))
-  if (T <= COCK) return 0
+  if (T <= COCK) return shake(T)
   if (T <= BACK_AT) return CROUCH * easeInOutSine((T - COCK) / (BACK_AT - COCK))
   if (T <= SINK[0]) return CROUCH
   return CROUCH + (DROP - CROUCH) * easeInOutSine((T - SINK[0]) / (SINK[1] - SINK[0]))
@@ -253,22 +255,55 @@ function rRide(T: number): number {
   return clamp(V_CAP / Math.max(w, 1e-3), R_MIN, R_MAX)
 }
 
-// The roll: the half-period falls from the last stroke's to a shimmer's, and the swing dies from the stops to a
-// tremble that grows with the swell. It never reaches a stop again, so it turns smoothly (a cosine): no bounce in
-// mid-air.
+// The roll: the half-period falls from the last stroke's to a shimmer's (ten swings a second: past counting, but
+// slow enough for the eye to catch the rod at a few places, as under a strobe), and the swing narrows from the stops
+// into a fan that opens again with the swell. It never reaches a stop again, so it turns smoothly (a cosine): no
+// bounce in mid-air.
 const H_END = GAP[N - 2]
-const H_SHIMMER = 0.042
+const H_SHIMMER = 0.05
 const TAU_H = 0.5
 const TAU_A = 0.2
-const SHIMMER = 0.03
+/** The fan's half-width, radians: narrow as the roll starts, wide at the top of the swell (well inside the stops). */
+const FAN: [number, number] = [0.08, 0.3]
 /** The phase through the roll, in half-swings, from the last stroke: the integral of 1 / half-period. */
 const rollPhase = (D: number): number => (D + TAU_H * Math.log((H_SHIMMER + (H_END - H_SHIMMER) * Math.exp(-D / TAU_H)) / H_END)) / H_SHIMMER
-/** The tremble's size at `T`, radians: growing through the swell, and gone before the cock. */
-const tremble = (T: number): number => SHIMMER * (0.35 + 0.65 * smooth(T, RIDE_END + 1, COCK - 0.8) + 0.6 * level(T)) * (1 - smooth(T, COCK - 0.5, COCK))
+/**
+ * How far into the swell `T` is, 0..1: by the clock and by the music's level together, so the machine grows with the
+ * crescendo and breathes with it. Held from the cock to the burst, and let down slowly after.
+ */
+export function surge(T: number): number {
+  const at = (u: number) =>
+    0.55 * smooth(u, RIDE_END + 0.4, COCK - 0.2) + 0.45 * clamp((level(u) - 0.37) / 0.2) * smooth(u, RIDE_END, RIDE_END + 1.2)
+  if (T <= RIDE_END) return 0
+  if (T <= COCK) return at(T)
+  if (T <= BURST) return at(COCK)
+  return at(COCK) * (1 - smooth(T, BURST + 0.3, BURST + 3.6))
+}
+/** The fan's size at `T`, radians: opening with the swell, and closing just before the cock (the machine gathers). */
+const fan = (T: number): number => (FAN[0] + (FAN[1] - FAN[0]) * surge(T)) * (1 - smooth(T, COCK - 0.4, COCK))
 /** The size of the swing through the roll, radians. */
 export function rollSize(T: number): number {
   const e = Math.exp(-(T - RIDE_END) / TAU_A)
-  return SWING * e + tremble(T) * (1 - e)
+  return SWING * e + fan(T) * (1 - e)
+}
+
+/**
+ * The machine straining under the roll: the whole metronome judders down on its feet and back (never above its
+ * place, so its foot stays in the trap), deeper as the swell grows, and still again as it gathers for the cock. Kept
+ * under ~50 cells/s² so he trembles with it without a jolt.
+ */
+const SHAKE = 0.03
+const F_SHAKE = 7.5
+const shakeSize = (T: number): number =>
+  T <= RIDE_END ? 0 : SHAKE * (0.3 + 0.7 * surge(T)) * smooth(T, RIDE_END + 0.3, RIDE_END + 1.6) * (1 - smooth(T, COCK - 0.4, COCK))
+function shake(T: number): number {
+  const s = shakeSize(T)
+  return s <= 0 ? 0 : (s * (1 - Math.cos(2 * Math.PI * F_SHAKE * (T - RIDE_END)))) / 2
+}
+/** He chatters in the cradle with it: a small lift off the weight, a beat behind the case's judder. */
+function chatter(T: number): number {
+  const s = shakeSize(T) * 0.5
+  return s <= 0 ? 0 : (s * (1 - Math.cos(2 * Math.PI * F_SHAKE * (T - RIDE_END) - 1.3))) / 2
 }
 const roll = (T: number): number => -rollSize(T) * Math.cos(Math.PI * rollPhase(T - RIDE_END))
 
@@ -326,11 +361,15 @@ export function rodAt(T: number): number {
   return free(T)
 }
 
-/** How far up the rod the weight is at `T` (with him on it from BOARD to RELEASE). */
-export function weightAt(T: number): number {
+/** How far up the rod the weight's cradle is at `T`. */
+function cradleAt(T: number): number {
   if (T <= RIDE_END) return rRide(T)
   const r1 = rRide(RIDE_END)
   return r1 + (R_LOW - r1) * easeInOutSine(clamp((T - DESCEND[0]) / (DESCEND[1] - DESCEND[0])))
+}
+/** How far up the rod he is at `T` (on it from BOARD to RELEASE): on the cradle, chattering in it through the roll. */
+export function weightAt(T: number): number {
+  return cradleAt(T) + chatter(T)
 }
 
 /** Andrew on the weight at `T`, in the part's frame. */
@@ -521,21 +560,80 @@ function sweep(p: p5, k: number, px: number, py: number, a0: number, a1: number)
  * The eye's blur of a fast swing: one soft filled wedge over where the rod was in the last frame or so, fainter the
  * narrower it is; nothing when it is slow.
  */
-function drawBlur(p: p5, c: Ctx, dy: number, T: number, th: number): void {
+function drawBlur(p: p5, c: Ctx, dy: number, T: number, th: number, w = 1): void {
   const back = rodAt(T - 1 / 50)
   const d = Math.abs(back - th)
-  if (d < 0.03) return
+  if (d < 0.03 || w <= 0) return
   p.noStroke()
-  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.35), 0.16 * clamp((d - 0.03) / 0.2)))
+  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.35), 0.16 * w * clamp((d - 0.03) / 0.2)))
   sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, back, th)
 }
 
-/** The blur of the roll: a faint fan where the rod trembles. */
-function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
-  if (size < 0.004) return
+/** A ghost of the rod at `th`: where the eye catches it in the roll's blur. Its line and its bob, nothing else. */
+function drawGhost(p: p5, c: Ctx, dy: number, th: number, a: number): void {
+  const { k, weight } = c
+  p.push()
+  p.translate(PIVOT_X * k, (PIVOT_Y + dy) * k)
+  p.rotate(th)
+  p.stroke(alpha(p, KIT.chrome, a))
+  p.strokeWeight(weight * 1.5)
+  p.line(0, -ROD_UP * k, 0, ROD_LOW * k)
+  const [b0, b1] = BOB
+  const bw = 0.085
   p.noStroke()
-  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.4), 0.3 * lit))
+  p.fill(alpha(p, mixHex(BRASS, HALL.gilt, 0.5), a * 0.8))
+  p.beginShape()
+  p.vertex(0, b0 * k)
+  p.vertex(bw * k, (b0 + 0.1) * k)
+  p.vertex(bw * k, (b1 - 0.1) * k)
+  p.vertex(0, b1 * k)
+  p.vertex(-bw * k, (b1 - 0.1) * k)
+  p.vertex(-bw * k, (b0 + 0.1) * k)
+  p.endShape(p.CLOSE)
+  p.pop()
+}
+
+/**
+ * The roll's blur, as the eye sees a rod swinging ten times a second: a faint fan over its whole sweep, and the rod
+ * caught at a few places in it, brightest at the two ends where a swing lingers, fainter halfway. Its width is the
+ * swing's, which opens with the swell; its brightness is the swell's.
+ */
+function drawFan(p: p5, c: Ctx, dy: number, size: number, lit: number): void {
+  if (size < 0.004 || lit <= 0.002) return
+  p.noStroke()
+  p.fill(alpha(p, mixHex(KIT.chrome, HALL.gold, 0.4), 0.07 * lit))
   sweep(p, c.k, PIVOT_X * c.k, (PIVOT_Y + dy) * c.k, -size, size)
+  for (const s of [-1, 1]) {
+    drawGhost(p, c, dy, s * 0.55 * size, 0.2 * lit)
+    drawGhost(p, c, dy, s * 0.97 * size, 0.46 * lit)
+  }
+}
+
+/** How much of the rod's swing he rides at `T` (the part's `rides`): none of the roll's fan, where he sits at its centre. */
+const ridden = (T: number): number => (T <= RIDE_END || T >= COCK ? 1 : 1 - smooth(T, RIDE_END, RIDE_END + 0.45))
+
+/**
+ * The hall's light coming up with the swell: a broad warm wash over the stage, the machine and the kit (over the
+ * part's own light, `rubato.ts`), held to the burst and let down slowly after it. Never a core: it is as wide as the
+ * stage.
+ */
+function drawSurge(p: p5, c: Ctx, T: number): void {
+  const a = 0.15 * surge(T)
+  if (a < 0.003) return
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cx = (PIVOT_X + 0.6) * k
+  const cy = (FLOOR - 1.6) * k
+  const r = 8.5 * k
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+  g.addColorStop(0, `rgba(227, 176, 91, ${a.toFixed(3)})`)
+  g.addColorStop(0.5, `rgba(227, 176, 91, ${(a * 0.55).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(227, 176, 91, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
+  ctx.restore()
 }
 
 /**
@@ -553,7 +651,7 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
   const { k } = c
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const th = rodAt(T)
-  const r = weightAt(T)
+  const r = cradleAt(T)
   const outline = caseOutline(dy)
 
   // Behind the kit: the case, the drums drawn again in front of it (the hall's kit, struck as the hall strikes it),
@@ -576,11 +674,15 @@ export function drawMetronome(p: p5, c: Ctx, T: number): void {
   ctx.save()
   drumHoles(ctx, k)
   if (outline.length) drawFittings(p, c, dy, T)
-  const size = T > RIDE_END && T < COCK ? rollSize(T) : 0
-  // The roll's fan only once the swing has become a shimmer (a wide one would read as a beam of light).
-  if (size > 0 && size < 0.12) drawFan(p, c, dy, size, level(T) * smooth(T, RIDE_END + 0.6, RIDE_END + 1.6))
-  else drawBlur(p, c, dy, T, th)
+  // Through the roll the swing's blur hands over to the fan (the rod caught at a few places, not one wide wedge,
+  // which would read as a beam), as bright as the swell; the fan closes as the machine gathers for the cock.
+  const roll = T > RIDE_END && T < COCK
+  const u = roll ? smooth(T, RIDE_END + 0.1, RIDE_END + 0.7) : 0
+  if (u < 1) drawBlur(p, c, dy, T, th, 1 - u)
+  if (u > 0) drawFan(p, c, dy, rollSize(T), u * (0.4 + 0.6 * surge(T)) * (1 - smooth(T, COCK - 0.3, COCK)))
   drawRod(p, c, dy, th)
-  drawCradle(p, c, dy, th, r)
+  // The cradle where he sits: on the rod while he rides its swing, still at the fan's centre while it blurs past.
+  drawCradle(p, c, dy, th * ridden(T), r)
   ctx.restore()
+  drawSurge(p, c, T)
 }
