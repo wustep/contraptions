@@ -44,7 +44,7 @@ const TOUCH = 185.655
 export const HAND = { lean: 183.7, from: 184.45, to: 184.883 }
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music): the lamp, and her roll. */
-export const HOSPITAL_HITS: number[] = [CLICK, TOUCH]
+export const HOSPITAL_HITS: number[] = [CLICK, HAND.to, TOUCH]
 
 /* ------------------------------------------------------------------ the room's things (room cells, from his seat) */
 

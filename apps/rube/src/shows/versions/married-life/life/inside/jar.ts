@@ -396,7 +396,7 @@ function shots(): PartShot[] {
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
 export const JAR_HITS: number[] = [
-  PERCH, SETTLE, ...SLAMS, ...LANDS, DOWN, TYRE, HUBCAP, ...UP1, PUSH1, POURS[0].stop, FIXED, LAMP_OUT, ...CLIMB, KICK, FALL,
+  PERCH, SETTLE, ...LIFT, ...SLAMS, ...LANDS, DOWN, TYRE, HUBCAP, ...UP1, PUSH1, POURS[0].stop, FIXED, LAMP_OUT, ...CLIMB, KICK, FALL,
   TO_HIM, TOUCH, ...UP2, PUSH2, POURS[1].stop, FLASH1, TREE, TOPPLE, THUNDER, ONTO_PLANK, FLASH2, E_OFF, C_OFF, WINCH, ...BOARDS, SUN, SKIP,
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)
