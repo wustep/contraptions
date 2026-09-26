@@ -27,7 +27,7 @@ import { COURT, SCEPTRE, courtierAt, kingAt, shout, type KingPose, type Pose } f
  *
  * Then the wake, the chase, the King's sceptre on the dais, the crack, the hatch (the trolls' way down to the mine)
  * opening under Peer. And in the coda: the court freezes at the bells and flees; the pillars crack and fall, one a
- * chord; the throne topples; stalactites fall from the vault; the lights go out one a hammer blow. The chimney's
+ * chord; the throne lurches and topples on two blows; stalactites fall from the vault; the lights go out one a hammer blow. The chimney's
  * column (x 7.5) is kept clear: its floor breaks open at `FLOOR_BREAK` so Peer can come up through it, and the vault
  * over it has always had its smoke hole.
  */
@@ -582,26 +582,51 @@ function horn(p: p5, k: number, line: Pt[], root: number): void {
   poly(p, k, [...l, ...r.reverse()])
 }
 
+/** How far the throne leans east (rad) about its dais corner: two blows to bring it down, and a long rock on its tusks. */
+const LYING = 1.35
+const THRONE_LEAN = 0.3
+const THRONE_LANDS = HAMMERS[2]
+function throneTilt(t: number): number {
+  const [h0, h1] = HAMMERS
+  if (t < h0) return 0
+  if (t < h1) {
+    // The first blow lurches it east on its corner; it rocks half way back and hangs there, off balance.
+    const s = t - h0
+    const up = 0.08
+    if (s < up) return THRONE_LEAN * (1 - (1 - s / up) ** 2)
+    return THRONE_LEAN - 0.5 * THRONE_LEAN * ease(s, up, h1 - h0)
+  }
+  const hang = 0.5 * THRONE_LEAN
+  if (t < THRONE_LANDS) {
+    // The second knocks it over: a shove, then gravity takes it, faster the further it goes.
+    const u = (t - h1) / (THRONE_LANDS - h1)
+    return hang + (LYING - hang) * (0.3 * u + 0.7 * u * u)
+  }
+  // It lands on its tusks and rocks on their curve, slow and damped: lifting first, a period of 0.65 s, still by ~1.2 s.
+  const s = t - THRONE_LANDS
+  return LYING - 0.08 * Math.exp(-s / 0.4) * Math.sin((2 * Math.PI * s) / 0.65)
+}
+
 /**
  * The throne: a seat hewn from the mountain, its back crested with three peaks (the Dovre's), gold on their tips, and
- * two great tusks rising behind it. It topples east on the first hammer blow, landing on the next.
+ * two great tusks rising behind it. The first hammer blow lurches it, the second topples it east (landing on the
+ * third), and it rocks to rest. Its edge and tusks are kept in the rock's and the hide's range: it frames the King,
+ * it does not out-shine him.
  */
 function drawThrone(p: p5, c: Pen, t: number, lit: number): void {
   const k = c.k
   const { x, seat, w } = THRONE
-  const tip = t >= HAMMERS[0] ? Math.min(1, Math.pow((t - HAMMERS[0]) / (HAMMERS[1] - HAMMERS[0]), 2)) : 0
-  const settle = t >= HAMMERS[1] ? 0.04 * ring(t - HAMMERS[1], 0.3, 18) : 0
-  const pen = dim(c, lit)
-  const inkC = mixHex(c.bg, pen.ink, 0.4 + 0.6 * lit)
+  // The trolls' own edge: the hide's shadow warmed a little by the ink (troll.ts), not a cream line.
+  const inkC = mixHex(c.bg, mixHex(TROLL.shade, c.ink, 0.3 + 0.25 * lit), 0.35 + 0.65 * lit)
   const pivot: Pt = [x + w / 2 + 0.1, DAIS.top]
   p.push()
   p.translate(pivot[0] * k, pivot[1] * k)
-  p.rotate(1.35 * tip + settle)
+  p.rotate(throneTilt(t))
   p.translate(-pivot[0] * k, -pivot[1] * k)
   p.stroke(inkC)
   p.strokeWeight(c.weight)
-  // The tusks, behind: out and up from the dais, curling in at their points.
-  p.fill(mixHex(c.bg, TROLL.bone, 0.22 + 0.42 * lit))
+  // The tusks, behind: out and up from the dais, curling in at their points; old bone, dulled toward the rock.
+  p.fill(mixHex(c.bg, TROLL.bone, 0.12 + 0.25 * lit))
   for (const s of [-1, 1]) {
     horn(p, k, [[x + s * 1.05, DAIS.top], [x + s * 1.75, -2.2], [x + s * 2.2, -3.9], [x + s * 2.05, -5.0], [x + s * 1.7, -5.45]], 0.42)
   }
@@ -694,47 +719,96 @@ export function drawKing(p: p5, c: Pen, pose: KingPose, lit: number): TrollDrawn
   return drawn
 }
 
-/** The floor of the hall: the slab, cut by the hatch's shaft and (from the collapse) the chimney's hole. */
+/**
+ * When the hatch is there to see: the floor is whole over it until the crack's last jump reaches it (`CRACK[1]`), and
+ * the fissure cuts the lid out of the slab and runs down round the shaft under it.
+ */
+const HATCH_CUT = CRACK[1] - 0.05
+const hatchCut = (t: number): number => ease(t, HATCH_CUT, CRACK[1] + 0.1)
+const FLOOR_DEPTH = 1.45
+/** The slab's ragged underside at x: set by x alone, so a piece's outline never changes when a hole opens beside it. */
+const FLOOR_STEP = 0.7
+const floorUnder = (x: number): number => {
+  const j = Math.round(x / FLOOR_STEP)
+  const r = 0.5 + 0.5 * Math.sin(j * 2.3) * Math.sin(j * 1.7 + 1)
+  return FL + FLOOR_DEPTH * (0.85 + 0.15 * r)
+}
+const floorFill = (l: number): string => mixHex(mixHex(STONE.deep, STONE.dark, 0.7), STONE.mid, 0.6 * l)
+
+/** The floor of the hall: the slab, cut (once the crack reaches it) by the hatch's shaft and (from the collapse) the chimney's hole. */
 function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number): void {
   const k = c.k
   const pieces: [number, number][] = []
   const broke = t >= FLOOR_BREAK
-  const holes: [number, number][] = [[HATCH.x0, HATCH.x1]]
-  if (broke) holes.unshift([CHIMNEY_X - 0.55, CHIMNEY_X + 0.55])
+  const cut = t >= HATCH_CUT
+  const holes: [number, number][] = []
+  if (broke) holes.push([CHIMNEY_X - 0.55, CHIMNEY_X + 0.55])
+  if (cut) holes.push([HATCH.x0, HATCH.x1])
   let from = -0.6
   for (const [a, b] of holes) {
     pieces.push([from, a])
     from = b
   }
   pieces.push([from, 30.6])
-  const depth = 1.45
+  const depth = FLOOR_DEPTH
+  // The slab is shaded by the light along it (not one flat shade a piece), so it has no seams, and a hole opening in
+  // it changes nothing but the hole.
+  const ctx = ctxOf(p)
+  const slab = (a: number, b: number): void => {
+    p.fill(floorFill(lit((a + b) / 2)))
+    const g = ctx.createLinearGradient(a * k, 0, b * k, 0)
+    const n = Math.max(1, Math.ceil(b - a))
+    for (let j = 0; j <= n; j++) g.addColorStop(j / n, floorFill(lit(a + ((b - a) * j) / n)))
+    ctx.fillStyle = g
+  }
   p.noStroke()
   for (const [a, b] of pieces) {
-    p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.7), STONE.mid, 0.6 * lit((a + b) / 2)))
+    slab(a, b)
     p.beginShape()
     p.vertex(a * k, FL * k)
     p.vertex(b * k, FL * k)
-    const n = Math.max(2, Math.round((b - a) * 1.4))
-    for (let j = n; j >= 0; j--) {
-      const u = j / n
-      const r = 0.5 + 0.5 * Math.sin(a * 3.1 + j * 2.3) * Math.sin(j * 1.7 + 1)
-      p.vertex((a + (b - a) * u) * k, (FL + depth * (0.85 + 0.15 * r)) * k)
+    p.vertex(b * k, floorUnder(b) * k)
+    for (let j = Math.floor(b / FLOOR_STEP); j * FLOOR_STEP > a; j--) {
+      const x = j * FLOOR_STEP
+      if (x < b) p.vertex(x * k, floorUnder(x) * k)
     }
+    p.vertex(a * k, floorUnder(a) * k)
     p.endShape(p.CLOSE)
-    // Its lit lip, in stretches, each as lit as the light over it.
-    const m = Math.max(1, Math.round((b - a) / 1.5))
-    for (let j = 0; j < m; j++) {
-      const x0 = a + ((b - a) * j) / m
-      const x1 = a + ((b - a) * (j + 1)) / m
-      p.fill(mixHex(STONE.dark, STONE.light, 0.15 + 0.8 * lit((x0 + x1) / 2)))
-      p.rect(x0 * k, FL * k, (x1 - x0) * k + 1, Math.max(1, 0.055 * k))
+    // Its lit lip, in stretches of a fixed grid, each as lit as the light over it.
+    for (let j = Math.floor(a / 1.5); j * 1.5 < b; j++) {
+      const x0 = Math.max(a, j * 1.5)
+      const x1 = Math.min(b, (j + 1) * 1.5)
+      if (x1 <= x0) continue
+      p.fill(mixHex(STONE.dark, STONE.light, 0.15 + 0.8 * lit(j * 1.5 + 0.75)))
+      p.rect(x0 * k, FL * k, (x1 - x0) * k + (x1 < b ? 1 : 0), Math.max(1, 0.055 * k))
     }
   }
-  // The hatch's shaft: always there under it, the trolls' way down to the mine.
-  p.fill(mixHex(STONE.deep, TROLL.shade, 0.25))
-  p.rect(HATCH.x0 * k, (FL + 0.18) * k, (HATCH.x1 - HATCH.x0) * k, (depth + 0.5) * k)
+  if (cut) {
+    // The hatch's shaft, the trolls' way down to the mine: the fissure runs down round it through the slab, the stone
+    // under the lid showing its dark from the top down.
+    const u = hatchCut(t)
+    const x0 = HATCH.x0
+    const w = HATCH.x1 - HATCH.x0
+    slab(x0, HATCH.x1)
+    p.beginShape()
+    p.vertex(x0 * k, FL * k)
+    p.vertex(HATCH.x1 * k, FL * k)
+    p.vertex(HATCH.x1 * k, floorUnder(HATCH.x1) * k)
+    p.vertex(x0 * k, floorUnder(x0) * k)
+    p.endShape(p.CLOSE)
+    const shaftTop = FL + 0.18
+    p.fill(mixHex(STONE.deep, TROLL.shade, 0.25))
+    p.rect(x0 * k, shaftTop * k, w * k, (depth + 0.5) * u * k)
+    // The fissure's two walls, down each side ahead of the dark.
+    const crackC = mixHex(STONE.deep, TROLL.shade, 0.15)
+    p.fill(crackC)
+    const down = Math.min(depth + 0.5, (depth + 0.5) * Math.min(1, u * 1.4))
+    p.rect((x0 - 0.03) * k, FL * k, 0.06 * k, down * k)
+    p.rect((HATCH.x1 - 0.03) * k, FL * k, 0.06 * k, down * k)
+  }
   if (broke) {
     // The chimney's column: the floor burst open, ragged teeth at its edges.
+    p.fill(mixHex(STONE.deep, TROLL.shade, 0.25))
     p.rect((CHIMNEY_X - 0.55) * k, FL * k, 1.1 * k, (depth + 0.5) * k)
     p.fill(mixHex(STONE.dark, STONE.mid, 0.4))
     for (const s of [-1, 1]) {
@@ -744,31 +818,40 @@ function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number): void {
   }
 }
 
-/** The hatch: a flagstone hinged at its east edge; it lurches when the crack reaches it, then swings down. */
-function drawHatch(p: p5, c: Pen, t: number, lit: number): void {
+/**
+ * The hatch: a flagstone hinged at its east edge. Until the crack reaches it, it is the floor; the fissure outlines it
+ * (its edge, its strap and hinge come up out of the slab's own stone), it lurches, then swings down.
+ */
+function drawHatch(p: p5, c: Pen, t: number, lit: number, floorC: string): void {
+  if (t < HATCH_CUT) return
   const k = c.k
+  const u = hatchCut(t)
   const lurch = 0.083 * ease(t, LURCH - 0.06, LURCH)
   let ang = lurch
   if (t >= OPEN) {
     const s = t - OPEN
-    const u = Math.min(1, s / 0.32)
-    ang = lurch + (Math.PI / 2 - lurch) * u * u - (s > 0.32 ? 0.2 * Math.exp(-(s - 0.32) / 0.6) * Math.sin((s - 0.32) * 9) : 0)
+    const v = Math.min(1, s / 0.32)
+    ang = lurch + (Math.PI / 2 - lurch) * v * v - (s > 0.32 ? 0.2 * Math.exp(-(s - 0.32) / 0.6) * Math.sin((s - 0.32) * 9) : 0)
   }
   const len = HATCH.x1 - HATCH.x0
   const jolt = t >= CRACK[1] ? 0.02 * ring(t - CRACK[1], 0.12, 40) : 0
   p.push()
   p.translate(HATCH.hinge * k, (FL + jolt) * k)
   p.rotate(-ang)
-  p.stroke(mixHex(c.bg, c.ink, 0.3 + 0.5 * lit))
+  // Its edge is the fissure's dark, not a pale line.
+  p.stroke(mixHex(floorC, mixHex(STONE.deep, TROLL.shade, 0.15), u))
   p.strokeWeight(c.weight)
-  p.fill(mixHex(STONE.dark, STONE.mid, 0.4 + 0.6 * lit))
+  p.fill(mixHex(floorC, mixHex(STONE.dark, STONE.mid, 0.4 + 0.6 * lit), u))
   p.rect(-len * k, 0, len * k, 0.18 * k)
   p.noStroke()
-  p.fill(mixHex(WORKS.iron, WORKS.steel, 0.4 * lit))
+  // The floor's worn lip along its top, as on the slab it was cut from.
+  p.fill(mixHex(STONE.dark, STONE.light, 0.15 + 0.8 * lit))
+  p.rect(-len * k, 0, len * k, Math.max(1, 0.055 * k))
+  p.fill(mixHex(floorC, mixHex(WORKS.iron, WORKS.steel, 0.4 * lit), u))
   p.rect(-len * k, 0.07 * k, len * 0.85 * k, 0.045 * k)
   p.pop()
   p.noStroke()
-  p.fill(WORKS.iron)
+  p.fill(mixHex(floorC, WORKS.iron, u))
   p.rect((HATCH.hinge - 0.05) * k, (FL - 0.02) * k, 0.12 * k, 0.1 * k)
 }
 
@@ -1025,7 +1108,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
 
   // The floor, the hatch, the crack.
   drawFloor(p, c, t, (x) => lit(x, 0))
-  if (seen(HATCH.x0 - 1, HATCH.x1 + 1)) drawHatch(p, c, t, lit(27.5, 0))
+  if (seen(HATCH.x0 - 1, HATCH.x1 + 1)) drawHatch(p, c, t, lit(27.5, 0), floorFill(lit((HATCH.x0 + HATCH.x1) / 2, 0)))
   if (t >= SMASH) {
     if (!crackFrom) {
       const hand = kingHand(p, c, kingAt(SMASH)) ?? [20.8, -2]
@@ -1044,6 +1127,14 @@ export function drawHall(p: p5, c: Pen, t: number): void {
     p.fill(alpha(p, STONE.deep, unseen))
     p.rect(0.3 * k, -12.7 * k, 30.6 * k, 14.2 * k)
     p.rect((HATCH.x0 - 0.6) * k, 1.4 * k, (HATCH.x1 - HATCH.x0 + 1.2) * k, 7.8 * k)
+  }
+  // The opening wide (44 cells, the whole mountain) also sees the floor's west end and the doorway's sill, west of the
+  // cover: rock too, until the camera is down at the pig. Not longer: from there it is the tunnels' approach to the door.
+  const sill = 1 - ease(t, 7.4, 8.2)
+  if (sill > 0.002) {
+    p.noStroke()
+    p.fill(alpha(p, STONE.deep, sill))
+    p.rect(-2.2 * k, -12.7 * k, 2.5 * k, 14.2 * k)
   }
   p.pop()
 }
