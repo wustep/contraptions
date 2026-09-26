@@ -7,10 +7,10 @@ import { drawHeart, drawHeartOver } from './heart-set'
 
 /**
  * The mountain's heart, the gears (101.95 → 124.01, phrases 12–15, A A B B, fortissimo), laid mirrored: the machine
- * the trolls built the hall on, woken by Peer's fall and growing a mechanism every phrase. The hammer bats him on
- * every 1 and 3, the furnace flares on every 2 and 4; he is flung onto the flywheel as it engages (107.75), off it
- * onto the pistons as they start (113.36), bounced higher when the great bellows come in (118.72), and is back down
- * on the first piston for the runaway (124.01). This part draws the whole room for both of the heart's parts
+ * the trolls built the hall on, woken by Peer's fall and growing a mechanism every phrase. He rides the hammer's
+ * head, jolted on every blow of the 1 and 3 while the furnace flares on every 2 and 4; hops onto the flywheel as it
+ * engages (107.75) and is carried up and over it, kicked down its face onto the pumps as they start (113.36),
+ * bounced higher when the great bellows come in (118.72), and is back on the first pump for the runaway (124.01). This part draws the whole room for both of the heart's parts
  * (`heart-set.ts`); its clock is `heart-clock.ts`, his path `heart-path.ts`.
  */
 
