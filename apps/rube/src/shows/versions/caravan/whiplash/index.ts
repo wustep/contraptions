@@ -19,7 +19,7 @@ export const performance: Performance = {
   soundtrack: {
     src: recording,
     offset: 0,
-    credit: 'Juan Tizol and Duke Ellington, arranged by John Wasson · Caravan · Whiplash (2014)',
+    credit: 'Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson · Caravan · Whiplash (2014)',
     href: 'https://www.youtube.com/watch?v=38CRu1rCaKg',
     // The upload the file was fetched from, whole: the same clock, sample for sample. The show runs on past its end,
     // in silence, for the credits.

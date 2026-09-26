@@ -153,12 +153,12 @@ export function drawHand(p: p5, c: Ctx, wrist: Pt, angle: number, shape: HandSha
   p.scale(s)
   solid(p, ink, (weight * 0.7) / s, light >= 1 ? HANDS : mixHex(FLETCHER, HANDS, 0.3 + 0.7 * light))
   if (shape === 'fist') {
-    // A closed fist: a rounded block, the knuckles a soft ridge, the thumb wrapped across.
-    p.rect(0, -0.085 * k, 0.17 * k, 0.17 * k, 0.06 * k)
-    p.noFill()
-    p.strokeWeight((weight * 0.5) / s)
-    p.line(0.13 * k, -0.06 * k, 0.13 * k, 0.06 * k)
-    p.line(0.04 * k, 0.03 * k, 0.12 * k, 0.03 * k)
+    // A closed fist: a squarer block than the open palm, the four knuckles a ridge along its end, the thumb wrapped
+    // across its face. Reads as a fist from across the hall.
+    p.rect(0, -0.1 * k, 0.21 * k, 0.2 * k, 0.07 * k, 0.05 * k, 0.05 * k, 0.07 * k)
+    for (let i = 0; i < 4; i++) p.ellipse(0.2 * k, (-0.075 + i * 0.05) * k, 0.06 * k, 0.05 * k)
+    p.strokeWeight((weight * 0.55) / s)
+    p.rect(0.05 * k, 0.015 * k, 0.12 * k, 0.05 * k, 0.025 * k)
   } else if (shape === 'point') {
     // The palm, curled fingers, and the index straight out.
     p.rect(0, -0.07 * k, 0.13 * k, 0.14 * k, 0.05 * k)

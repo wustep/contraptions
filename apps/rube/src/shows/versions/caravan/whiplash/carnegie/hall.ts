@@ -60,14 +60,14 @@ export function bandLight(t: number): number {
   if (t < CUTOFF) return 1
   if (t < LAST_CHORD - 0.05) return 1 - 0.72 * ease(t, CUTOFF, CUTOFF + 2.2)
   if (t < FINAL) return 0.28 + 0.72 * ease(t, LAST_CHORD - 0.05, LAST_CHORD + 0.13)
-  return 1 - 0.9 * ease(t, FINAL + 0.6, FINAL + 7)
+  return 1 - 0.92 * ease(t, FINAL + 0.6, FINAL + 7)
 }
 
 /** How lit the kit is at `t`: the stage's light, then the solo's pool, and down at the end. */
 export function kitLight(t: number): number {
   if (t < LIGHTS_UP + 0.5) return wake(t)
   if (t < FINAL) return 1
-  return 1 - 0.55 * ease(t, FINAL + 1.2, FINAL + 9)
+  return 1 - 0.72 * ease(t, FINAL + 1.2, FINAL + 12)
 }
 
 /** The solo's pool of light on the kit: it gathers as the band's chord is cut off, and goes out slowly at the end. */

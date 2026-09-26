@@ -38,7 +38,7 @@ const script: Omit<Card, 'at'>[] = [
       ['Carl Tanner', 'the olive ball', TANNER],
     ],
   },
-  { hold: 4.6, role: 'Music', names: ['Juan Tizol and Duke Ellington'], notes: ['“Caravan”, arranged by John Wasson', 'from Whiplash (2014)'] },
+  { hold: 4.6, role: 'Music', names: ['Juan Tizol, Duke Ellington and Irving Mills'], notes: ['“Caravan”, arranged by John Wasson', 'from the Whiplash soundtrack (2014), Lakeshore Records'] },
   { hold: 3.0, role: 'Drawn with', names: ['p5.js'] },
 ]
 

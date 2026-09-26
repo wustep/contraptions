@@ -130,9 +130,9 @@ function shots(slot: Slot): PartShot[] {
     { t: BIG, cells: 3.3, hold: [0.75, 0.2], w: 1 },
     { t: 381.4, cells: 4.0, hold: [0.35, 0.5], w: 1 },
     { t: SHIFT, cells: 3.7, hold: [0.3, 0.35], w: 1 },
-    // The roll: back to see all of it at full cry, and Fletcher on his podium, watching it.
+    // The roll: back to see all of it at full cry, and Fletcher on his podium, drawn in, conducting it.
     { t: 389.5, cells: 5.1, hold: [1.75, -0.15], w: 1 },
-    { t: 395.4, cells: 4.8, hold: [1.65, -0.1], w: 1 },
+    { t: 395.4, cells: 6.6, hold: [2.3, -0.55], w: 1 },
     // In on the peak, close on the sticks; across to him stomping; back out, Fletcher again; in for the last push.
     { t: 399.4, cells: 3.0, hold: [0.35, 0.15], w: 1 },
     { t: 403.2, cells: 3.0, hold: [0.05, 0.1], w: 1 },

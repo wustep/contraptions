@@ -1,8 +1,9 @@
 import type { Pt } from '../../../../../parts'
 import { clamp, easeInOutSine } from '../../../../../../../../src/core/ease'
 import { CRASH } from '../drums'
-import { POSES, RIG, blendPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
+import { POSES, RIG, beatPose, type ArmPose, type HandShape, type Pose } from '../fletcher'
 import { BREAK, FINAL, LAST_CHORD, SOLO } from '../music'
+import { STOMPS, UNWIND } from './fast-clock'
 import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
 
 /**
@@ -18,6 +19,8 @@ import { FLETCHER_HOME, FLOOR, JIM_WINGS, KIT_AT, PODIUM } from './stage'
  * - **The hush: the cymbal.** Andrew lands on the crash on a loud stroke (`KNOCK`) and knocks it askew on its stand;
  *   it hangs there, tipped. Fletcher comes down off the podium, crosses to the kit, rises on his column to reach
  *   it, and sets it straight with one hand (`FIX`); a look at Andrew, close; back to the podium.
+ * - **The build: he conducts him.** Through the loudest, fastest playing his right hand comes up and starts to beat
+ *   time with Andrew's stomps, small at first, then the whole arm, until the sticks let go (`CONDUCT`).
  * - **The finale: the nod.** In the long roll he comes back to the kit and rises until his head is level with
  *   Andrew's (in the drummer's frame), and nods, once, slowly (`NOD`); Andrew nods back. Back to the podium.
  * - **The end.** In the silence before the last chord his hands come up, open (the band ready); the chord, a
@@ -37,6 +40,10 @@ export const FIX: [number, number] = [337.63, 339.2]
 export const LET_GO = 339.55
 /** The look at Andrew, close, then down and back to the podium. */
 export const H_BACK: [number, number] = [341.2, 345.2]
+
+/** The build: from here he conducts Andrew's stomps, a beat every fourth, until the engine's sticks let go. */
+export const CONDUCT: [number, number] = [388.2, UNWIND]
+const BEATS: number[] = STOMPS.filter((t) => t > CONDUCT[0] - 1 && t < CONDUCT[1] + 1.5).filter((_, i) => i % 4 === 0)
 
 /** The finale: to the kit in the long roll, up to Andrew's height, the nod, and back. */
 export const F_WALK: [number, number] = [519.4, 522.8]
@@ -136,7 +143,15 @@ function reach(shoulder: Pt, target: Pt, dir: number, hand: HandShape): ArmPose 
   return { up, bend: fa - up, wrist: dir - fa, hand }
 }
 
-const mixArm = (a: ArmPose, b: ArmPose, u: number): ArmPose => blendPose({ left: a, right: a }, { left: b, right: b }, u).right
+/** Between two arm poses, `u` 0..1, the upper arm turning the short way round (hanging to raised goes out to the side, not across the chest). */
+function mixArm(a: ArmPose, b: ArmPose, u: number): ArmPose {
+  let d = b.up - a.up
+  while (d > Math.PI) d -= Math.PI * 2
+  while (d < -Math.PI) d += Math.PI * 2
+  return { up: a.up + d * u, bend: a.bend + (b.bend - a.bend) * u, wrist: a.wrist + (b.wrist - a.wrist) * u, hand: u < 0.5 ? a.hand : b.hand }
+}
+/** Between two poses, each arm the short way round. */
+const turnPose = (a: Pose, b: Pose, u: number): Pose => ({ left: mixArm(a.left, b.left, u), right: mixArm(a.right, b.right, u) })
 
 /** His right hand on the crash's rim while he straightens it. */
 function fixing(T: number): ArmPose {
@@ -150,8 +165,26 @@ function fixing(T: number): ArmPose {
   return reach(shoulder, wrist, Math.PI + a, 'open')
 }
 
+/** The cut-off's fist: his elbow out at his shoulder, the forearm up, the fist closed beside his head. */
+const CUT_FIST: ArmPose = { up: -Math.PI * 0.94, bend: 1.42, wrist: 0.05, hand: 'fist' }
+
+/** Where he is in his beat at `t`: whole numbers on the stomps he beats. */
+function beatAt(t: number): number {
+  let j = 0
+  while (j + 1 < BEATS.length && BEATS[j + 1] <= t) j++
+  const a = BEATS[j]
+  const b = BEATS[Math.min(j + 1, BEATS.length - 1)]
+  return j + (b > a ? clamp((t - a) / (b - a)) : 0)
+}
+
 /** What his hands do at `t`. */
 export function poseAt(t: number): Pose {
+  // The build: drawn in, he conducts him, bigger as it goes.
+  if (t > CONDUCT[0] && t < CONDUCT[1] + 1.4) {
+    const on = ease(t, CONDUCT[0], CONDUCT[0] + 1.6) * (1 - ease(t, CONDUCT[1], CONDUCT[1] + 1.3))
+    const size = 0.3 + 0.6 * ease(t, CONDUCT[0], CONDUCT[0] + 16)
+    return turnPose(POSES.rest, beatPose(beatAt(t), size), on)
+  }
   // The hush: his right hand up to the crash's rim, straightening it, and back down.
   if (t > GRIP[0] && t < LET_GO + 0.9) {
     const on = ease(t, GRIP[0], GRIP[1]) * (1 - ease(t, LET_GO, LET_GO + 0.9))
@@ -160,7 +193,7 @@ export function poseAt(t: number): Pose {
   if (t < BREAK + 0.2) return POSES.rest
   // In the silence before the last chord, both hands come up, open: the band ready.
   const ready = POSES.ready
-  if (t < LAST_CHORD - 0.12) return blendPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
+  if (t < LAST_CHORD - 0.12) return turnPose(POSES.rest, ready, ease(t, BREAK + 0.2, LAST_CHORD - 0.3))
   // The chord: a downbeat with both hands, and up again, held high and open, rising a little as it swells.
   if (t < FINAL - 0.62) {
     const hit = Math.exp(-Math.max(0, t - LAST_CHORD) / 0.16) * clamp((t - (LAST_CHORD - 0.12)) / 0.12)
@@ -168,13 +201,14 @@ export function poseAt(t: number): Pose {
     const lift = (x: ArmPose, s: number): ArmPose => ({ ...x, up: x.up + s * (0.32 * hit - 0.1 * swell), bend: x.bend - s * 0.2 * hit })
     return { right: lift(ready.right, -1), left: lift(ready.left, 1) }
   }
-  // The cut-off: the right hand winds up and comes down, and closes on the last stroke. The fist. Held, then lowered.
-  const wind = ease(t, FINAL - 0.62, FINAL - 0.14)
-  const cut = ease(t, FINAL - 0.14, FINAL)
-  const high: ArmPose = { ...ready.right, up: ready.right.up + 0.1 - 0.35 * wind, bend: ready.right.bend - 0.2 * wind }
-  const right: ArmPose = mixArm(high, POSES.fist.right, cut)
+  // The cut-off: the right hand rises, open, and comes down hard to beside his head, closing on the last stroke: the
+  // fist. The left drops with it. Held, then lowered in the dark.
+  const wind = ease(t, FINAL - 0.62, FINAL - 0.16)
+  const cut = ease(t, FINAL - 0.16, FINAL)
+  const high: ArmPose = { ...ready.right, up: ready.right.up + 0.1 + 0.3 * wind, bend: ready.right.bend - 0.35 * wind }
+  const right: ArmPose = mixArm(high, CUT_FIST, cut)
   right.hand = t >= FINAL - 0.02 ? 'fist' : 'open'
-  const left: ArmPose = mixArm(ready.left, POSES.rest.left, ease(t, FINAL + 0.2, FINAL + 2.4))
+  const left: ArmPose = mixArm(ready.left, POSES.rest.left, ease(t, FINAL - 0.06, FINAL + 0.6))
   const down = ease(t, FINAL + 3.2, FINAL + 6.4)
   if (down <= 0) return { right, left }
   return { left, right: { ...mixArm(right, POSES.rest.right, down), hand: down < 0.6 ? 'fist' : 'beat' } }

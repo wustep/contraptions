@@ -2,9 +2,9 @@
  * The checks for Caravan (`versions/caravan/opus55.show.ts`), run by `check:shows`: Whiplash's finale, one ball
  * through Shaffer, the road and Carnegie Hall, every strike on the recording.
  *
- * PRE-PRODUCTION: the skeleton. What every stub already keeps (the picker, the soundtrack, the places, one path,
- * strikes on the music, the people's continuity, the credits). The integration adds what only the built parts can
- * keep: the solo's density, the rubato stroke for stroke, the people where the film has them.
+ * The picker, the soundtrack, the places, one path, strikes on the music, the people's continuity, the credits; and
+ * what the built parts keep: the densest strike stretch in the catalogue, the solo's strong strokes struck, the
+ * rubato stroke for stroke, the crash's breaks, the people where the film has them, and the fist.
  */
 import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
@@ -13,7 +13,8 @@ import { show as caravanShow } from '../src/shows/versions/caravan/whiplash'
 import { SWITCH } from '../src/shows/versions/caravan/whiplash/score'
 import { STRIKES } from '../src/shows/versions/caravan/whiplash/hits'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/caravan/whiplash/credits'
-import { COMBS, CYMBALS, DURATION, FINAL, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
+import { BASS, BREAKS, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
+import { poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -82,8 +83,20 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
     }
   }
   check('caravan: every strike lands on the music', off.length === 0, `${count} strikes; off: ${off.slice(0, 12).join(', ')}`)
-  const all: number[] = Object.values(STRIKES).flatMap((g: Record<string, number[]>) => Object.values(g).flat())
+  const all: number[] = Object.values(STRIKES).flatMap((g: Record<string, number[]>) => Object.values(g).flat()).sort((a, b) => a - b)
   check('caravan: the final cut-off is struck', all.some((t) => Math.abs(t - FINAL) <= 0.03))
+  const struck = (t: number, eps: number) => all.some((s) => Math.abs(s - t) <= eps)
+  let dense = 0
+  for (let i = 0, j = 0; i < all.length; i++) {
+    while (all[i] - all[j] > 10) j++
+    dense = Math.max(dense, i - j + 1)
+  }
+  check('caravan: the solo is the densest strike stretch in the catalogue (60 or more strikes in some ten seconds)', dense >= 60, `${dense}`)
+  const strong = [...KICKS, ...SNARES, ...CYMBALS].filter((o) => o.t > SOLO && o.t < HUSH && o.s >= 1.0)
+  const missed = strong.filter((o) => !struck(o.t, 0.035))
+  check('caravan: the solo strikes its strong strokes (95% of every drum\'s strokes at 1.0 or more)', missed.length <= strong.length * 0.05, `${strong.length - missed.length} of ${strong.length}`)
+  check('caravan: the rubato strikes every stroke of the ride, one by one', RIDE.length === 162 && RIDE.every((r) => struck(r, 0.03)))
+  check('caravan: the crash strikes every one of the stop-time breaks', BREAKS.length === 12 && BREAKS.every((b) => struck(b, 0.03)))
 
   // The people: they never jump where they can be seen, and come and go only out of shot or at a change of place.
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
@@ -115,6 +128,26 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   check('caravan: Jim only at Carnegie, Tanner never there, Fletcher on his podium through the solo',
     [10, 100, 150, 200, 240].every((t) => !show.jim(t)) && [250, 300, 400, 500, 560].every((t) => !show.tanner(t)) &&
     [SOLO + 1, 300, 400, 500, 540].every((t) => !!show.fletcher(t)))
+  // Where the film has them: Fletcher in the practice room's doorway on the bass; Fletcher and Tanner in the band
+  // room; Tanner at the competition; Jim holding his son at the stage door under the held chord, close and not
+  // pressed; Jim in the wings through the solo; and the fist, once, on the cut-off.
+  const gap = (t: number, b: ShowBall | null) => {
+    if (!b) return Infinity
+    const [x, y] = show.where(t)
+    return Math.hypot(b.x - x, b.y - y)
+  }
+  check('caravan: Fletcher at the practice room\'s door on the bass; Fletcher and Tanner in the band room; Tanner at the competition',
+    !!show.fletcher(BASS + 1) && [40, 70, 100, 120].every((t) => !!show.fletcher(t) && !!show.tanner(t)) && [175, 185].every((t) => !!show.tanner(t)))
+  check('caravan: his father holds him at the stage door under the held chord (close, never flush)',
+    [CHORD + 0.8, CHORD + 2, CHORD + 3.2].every((t) => gap(t, show.jim(t)) >= 0.27 && gap(t, show.jim(t)) <= 0.45))
+  check('caravan: his father watches from the wings by the stage door, from the solo to the end',
+    [SOLO + 1, 300, 360, 450, 530, 570].every((t) => { const j = show.jim(t); return !!j && gap(t, j) > 4 }))
+  let fists = 0
+  for (let t = SOLO; t < DURATION; t += 0.05) if (poseAt(t).right.hand === 'fist' || poseAt(t).left.hand === 'fist') fists++
+  check('caravan: Fletcher\'s fist closes once, on the final cut-off, and nowhere before it',
+    poseAt(FINAL + 0.05).right.hand === 'fist' && poseAt(FINAL - 0.1).right.hand !== 'fist' && fists > 0 &&
+    Array.from({ length: Math.floor((FINAL - 0.05 - SOLO) / 0.05) }, (_, i) => SOLO + i * 0.05).every((t) => poseAt(t).right.hand !== 'fist' && poseAt(t).left.hand !== 'fist'))
+
   const crowd = [5, 60, 150, 190, 250, 300, 460, 545].map((t) => show.at(t).balls ?? [])
   check('caravan: every ball on the stage is someone, once', crowd.every((b) => new Set(b.map((x) => x.id)).size === b.length && b.length <= 4))
 

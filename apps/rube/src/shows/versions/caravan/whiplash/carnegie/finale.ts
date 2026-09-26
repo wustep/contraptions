@@ -90,15 +90,16 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     // Fletcher goes back: the whole stage, his father at the door, the band waiting in the dark.
     k(F_BACK[0] + 2.2, 9.2, [-1.9, -1.2]),
     // The last fill, close; the sticks up in the silence.
-    k(ROLL[1] + 0.6, 5.4, [-1.0, -1.6]),
-    k(539.8, 5.4, [-0.9, -1.7]),
+    k(ROLL[1] + 0.6, 5.6, [-1.0, -1.6]),
+    k(539.8, 4.6, [-0.85, -1.75]),
     k(STICKS_UP, 5.8, [-0.8, -1.9]),
     // Back through the silence to the band: the chord, everything at once, and the fist.
     k(CHORD_HIT - 0.2, 11.0, [3.0, -2.4]),
     k(CHORD_HIT + 2.6, 10.2, [2.7, -2.3]),
-    k(CUT, 7.4, [1.7, -2.0]),
+    // In on the two of them for the cut-off: his hand, Andrew in the frame's cup.
+    k(CUT, 5.6, [1.9, -1.95]),
     // Still, and slowly back as the hall goes dark under the credits.
-    k(CUT + 3.5, 7.6, [1.6, -2.0]),
+    k(CUT + 3.5, 5.9, [1.85, -1.95]),
     k(slot.end, 10.5, [1.8, -2.6]),
   ]
 }

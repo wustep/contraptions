@@ -190,10 +190,10 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     k(348.6, 5.8, [-0.8, -1.2]),
     k(351.8, 5.2, [-0.6, -0.9]),
     k(355.6, 5.2, [-1.4, -0.8]),
-    // To the ride; then the whole stage: his father at the stage door, Fletcher on his podium, the ball in its pool.
+    // To the ride; then across to his father at the stage door, watching his son at the far side of the kit.
     k(TO_RIDE + 0.4, 5.6, [-2.4, -1.05]),
-    k(361.2, 9.6, [-1.8, -0.4]),
-    k(365.6, 9.0, [-2.0, -0.55]),
+    k(361.2, 6.4, [-5.65, 0.15]),
+    k(365.6, 6.0, [-5.4, 0.2]),
     k(368.4, 5.8, [-1.9, -0.8]),
     { t: slot.end, cells: CLOSE.cells, hold: CLOSE.hold, w: 1 },
   ]
