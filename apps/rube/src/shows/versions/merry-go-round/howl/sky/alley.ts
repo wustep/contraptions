@@ -11,9 +11,9 @@ import { drawSet, lightAt } from './set'
  *
  * She comes in from the hat shop's street walking right, out of the sun into the shade of a lane between tall
  * houses. On the held D's first note a soldier leaning on the wall strikes a match for his pipe (38.278). She slows;
- * on 41.378 the two push off the wall and stamp into her way, and she stops short and shrinks back. Howl has been
- * coming up behind her from out of shot, quick, and eases in at her side; on 42.94 he nods, and the soldiers jerk
- * stiff as boards, about-face on the next note and march off a step a note into the side passage, and are gone.
+ * on 41.378 the two push off the wall and stamp into her way, and she stops short and shrinks back. Only then does
+ * Howl come into the frame, from behind her, quick, easing to rest at her side a hair from her; on 42.94 he nods,
+ * and the soldiers jerk stiff as boards, about-face on the next note and march off a step a note into the side passage, and are gone.
  * The two walk on. On 44.722 a blob man oozes out of the wall behind them, a stain that stands up; they hurry; on
  * 45.946 two more ooze out ahead: cornered. The soft notes are the blob men's lurching steps closing in (46.643,
  * 47.177, 47.671), their arms coming up. She presses back against Howl. On 49.035, the waltz's first downbeat, the
@@ -52,6 +52,7 @@ interface Soldier {
   stiff: number
   light: number
   lift: number
+  look: number
 }
 
 /** Where each soldier is and how he stands at show time `t`. `who` 0 is the smoker, 1 his mate. */
@@ -92,7 +93,11 @@ function soldierAt(who: 0 | 1, t: number): Soldier {
   const inDoor = clamp01((x - (p0 + 0.15)) / (p1 - p0 - 0.35))
   const gone = who === 0 ? sm(t, MARCH[4] - 0.05, MARCH[4] + 0.4) : sm(t, MARCH[3] - 0.1, MARCH[3] + 0.35)
   const light = 1 - Math.max(gone, inDoor * 0.35)
-  return { x, face, lean, stride, cross, arm, stiff, light, lift }
+  // Lounging at the lane's mouth before she comes, the smoker turned to his mate and his mate looking off down the
+  // lane; on the theme's last strong note (35.84), as she comes up the street, their heads come round to her.
+  const round = who === 0 ? sm(t, 35.84 - 0.18, 35.84 + 0.08) : sm(t, 35.84 - 0.08, 35.84 + 0.22)
+  const look = 1 - round
+  return { x, face, lean, stride, cross, arm, stiff, light, lift, look }
 }
 
 function drawSoldiers(p: p5, c: Ctx, t: number): void {
@@ -114,6 +119,7 @@ function drawSoldiers(p: p5, c: Ctx, t: number): void {
       pipe: who === 0,
       light: s.light,
       dark: L.dark,
+      look: s.look,
     })
     p.pop()
   }
@@ -247,7 +253,7 @@ export const alley = part<AlleyState>(
     const company: Company[] = [
       {
         who: 'howl',
-        from: 39.3,
+        from: 41.5,
         to: slot.end,
         at: (t) => {
           const h = howlAlley(t)
@@ -266,8 +272,10 @@ export const alley = part<AlleyState>(
   },
   (): PartShot[] => [
     { t: 39.4, cells: 4.7, off: [0.9, -0.8] },
-    { t: 41.1, cells: 4.3, hold: [2.15, -0.82], w: 0.85 },
-    { t: 42.9, cells: 4.2, hold: [2.3, -0.8], w: 0.9 },
+    // Close on the confrontation: her a third from the left, the two soldiers in her way, the passage beyond; the
+    // frame's left edge just behind her, so Howl comes into it only after the block.
+    { t: 41.1, cells: 3.9, hold: [3.15, -0.72], w: 1 },
+    { t: 42.9, cells: 3.9, hold: [3.2, -0.72], w: 1 },
     { t: 44.6, cells: 5.0, hold: [3.15, -0.95], w: 0.9 },
     { t: 46.4, cells: 6.0, hold: [4.3, -1.35], w: 1 },
     // On a follow the moment before the lift, so the camera rises with them into the air without a check.

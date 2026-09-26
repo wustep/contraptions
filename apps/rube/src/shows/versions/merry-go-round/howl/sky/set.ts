@@ -976,19 +976,55 @@ function mask(): HTMLCanvasElement | null {
   const img = g.createImageData(32, 64)
   for (let y = 0; y < 64; y++) {
     const v = y / 63
-    const a = v < 0.5 ? 0.45 * (v / 0.5) ** 2 : 0.45 + 0.55 * ((v - 0.5) / 0.5)
+    // Soft in from the sunlit walls high up, then a real shade the whole height of the lane's ground and first
+    // floors, deepest on the stones: the street is the sun, the lane the shadow.
+    const inn = Math.min(1, v / 0.32)
+    const a = inn * inn * (3 - 2 * inn) * (0.6 + 0.4 * v)
     for (let x = 0; x < 32; x++) {
       const u = x / 31
       const e = u * u * (3 - 2 * u)
       const i = (y * 32 + x) * 4
-      img.data[i] = 52
-      img.data[i + 1] = 58
-      img.data[i + 2] = 92
-      img.data[i + 3] = Math.round(255 * 0.3 * a * e)
+      img.data[i] = 46
+      img.data[i + 1] = 52
+      img.data[i + 2] = 86
+      img.data[i + 3] = Math.round(255 * 0.44 * a * e)
     }
   }
   g.putImageData(img, 0, 0)
   shadeMask = cv
+  return cv
+}
+
+let jettyMask: HTMLCanvasElement | null = null
+/**
+ * The shadow the lane's jettied upper storeys throw on the ground floor under them: dark right under the first
+ * floor's line, fading down the wall; soft in at the lane's mouth and out at the passage house's far end.
+ */
+function jetty(): HTMLCanvasElement | null {
+  if (jettyMask || typeof document === 'undefined') return jettyMask
+  const cv = document.createElement('canvas')
+  cv.width = 64
+  cv.height = 16
+  const g = cv.getContext('2d')
+  if (!g) return null
+  const img = g.createImageData(64, 16)
+  for (let y = 0; y < 16; y++) {
+    const v = y / 15
+    const down = (1 - v) ** 1.6
+    for (let x = 0; x < 64; x++) {
+      const u = x / 63
+      const a0 = Math.min(1, u / 0.2)
+      const a1 = Math.min(1, (1 - u) / 0.12)
+      const e = a0 * a0 * (3 - 2 * a0) * a1 * a1 * (3 - 2 * a1)
+      const i = (y * 64 + x) * 4
+      img.data[i] = 40
+      img.data[i + 1] = 44
+      img.data[i + 2] = 72
+      img.data[i + 3] = Math.round(255 * 0.3 * down * e)
+    }
+  }
+  g.putImageData(img, 0, 0)
+  jettyMask = cv
   return cv
 }
 
@@ -1022,6 +1058,14 @@ function drawShade(p: p5, c: Ctx, L: Light, f: { y0: number; y1: number }): void
   ctx.scale(-1, 1)
   ctx.drawImage(m, 0, 63, 32, 1, 0, G * k, out * k, (bottom - G) * k)
   ctx.restore()
+  // Under the jetties of the lane's two houses (the corner house and the passage's), from the first floor's line down.
+  const j = jetty()
+  if (j) {
+    ctx.save()
+    ctx.imageSmoothingEnabled = true
+    ctx.drawImage(j, 0, 0, 64, 16, x0 * k, (FLOORS[0] + 0.07) * k, (HOUSES[1].x1 - x0) * k, 1.1 * k)
+    ctx.restore()
+  }
 }
 
 /* ------------------------------------------------------------------ the whole set */

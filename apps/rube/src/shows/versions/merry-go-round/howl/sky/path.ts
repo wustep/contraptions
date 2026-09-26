@@ -148,13 +148,21 @@ const sophieAlleyX = profile(
   -0.5,
 )
 
-/** Howl in the alley: in from out of shot behind her, fast, easing to a stop at her side; then with her. */
-const HOWL_IN = 39.3
+/**
+ * Howl in the alley: out of shot until the soldiers have stamped into her way and she is shrinking back; then in
+ * from behind her, quick, easing to rest at her side a hair from her (0.30 apart: the film's arm round her
+ * shoulder) just before the nod; as the soldiers march off he eases back half a step, and walks on with her.
+ */
+const HOWL_IN = 41.5
+const HOWL_AT = 42.75
+const HOWL_SIDE = 0.3
 const howlAlleyX = profile(
   [
-    [HOWL_IN, 1.8],
-    [41.6, 1.8],
-    [42.5, 0],
+    [HOWL_IN, 2.4],
+    [42.0, 2.4],
+    [HOWL_AT, 0],
+    [43.25, 0],
+    [43.5, -0.36],
     [43.75, 0],
     [44.55, 1.15],
     [OOZE, 1.15],
@@ -162,7 +170,8 @@ const howlAlleyX = profile(
     [OOZE2, 1.45],
     [47.0, 0],
   ],
-  -3.55,
+  // Placed so he comes to rest HOWL_SIDE behind her at HOWL_AT.
+  sophieAlleyX(HOWL_AT) - HOWL_SIDE - (2.4 * (42.0 - HOWL_IN) + 1.2 * (HOWL_AT - 42.0)),
 )
 /** Howl's flick: a quick nod up on the note, settling. */
 const flick = (t: number): number => (t < FLICK ? 0 : -0.07 * (1 - Math.exp(-(t - FLICK) / 0.03)) * Math.exp(-(t - FLICK) / 0.22))
