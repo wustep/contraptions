@@ -25,13 +25,14 @@ import { BOW, drawTie } from './ties-tie'
  * step on every downbeat, morning to evening and season to season; his steps shorten, her rolls slow.
  *
  * The dance. She bumps the gramophone's lever (bar 49); the needle drops (bar 50); they meet (bar 51) as the waltz
- * swells and waltz the length of the hall in a pool of warm light, in hold, she at his right: a rise on every
- * downbeat, a sway on the two and three. The swell crests from 51's third beat into 52's downbeat (156.75–157.5, the
- * loudest of the second half; by 53 it is 8–10 dB down): through it she turns out under his arm, at arm's length and
- * her highest on 52's downbeat, as the pool of light brightens and the camera, come in with the swell, lands at its
- * closest on the two of them, and she rolls back in by 53. They come to rest in each other's arms on the accent of
- * bar 55. The camera has the gramophone whole at the start and the desk and her painting whole at the end, craning
- * out to them as the two close into the embrace.
+ * swells and waltz the length of the hall in a pool of warm light, in hold, she at his right, her side against his:
+ * a rise on every downbeat, a sway on the two and three. The swell crests from 51's third beat into 52's downbeat
+ * (156.75–157.5, the loudest of the second half; by 53 it is 8–10 dB down): through it she turns out from his side,
+ * rolling away along the floor to arm's length on 52's downbeat, as the pool of light brightens and the camera, come
+ * in with the swell, lands at its closest on the two of them under their wedding photograph on the wall, and she
+ * rolls back in to his side by 53. They come to rest in each other's arms on the accent of bar 55. The camera has the
+ * gramophone whole at the start and the desk and her painting whole at the end, craning out to them as the two close
+ * into the embrace.
  *
  * The tickets. The evening comes in, and the lamp over her painting of Paradise Falls lights (bar 56): he sees it, a
  * long look. He steps onto the pedal in the floor by the desk (bar 57); the desk's leaf lets go and the picnic basket
@@ -399,14 +400,15 @@ const P0 = 3.25
 const M1 = 6.05
 const pairAt = lilted([P0, 3.95, 4.65, 5.35, M1], 0.8)
 /**
- * Where she is: always at his right, in hold, a little apart, so the two never run together into one shape. Bar 51
- * they waltz in hold; on the crest of the swell (51's third beat into 52's downbeat, the loudest of the second half)
- * she turns out under his arm to arm's length, is out and at her highest on 52's downbeat, holds there to its two and
- * rolls back in by 53, as the music falls away; on 54 they close into the embrace, still a little apart. Her roll out
- * and back turns her through most of a turn and back.
+ * Where she is: always at his right, in hold, her side against his (their outlines a hair apart, never overlapping, so
+ * the two read as a couple in hold and still as two shapes). Bar 51 they waltz in hold; on the crest of the swell
+ * (51's third beat into 52's downbeat, the loudest of the second half) she turns out from his side, rolling away along
+ * the floor to arm's length, is out on 52's downbeat, holds there to its two and rolls back in to his side by 53, as
+ * the music falls away; on 54 they close into the embrace. Her roll out and back turns her through half a turn and
+ * back (her mark goes round with it), so it reads as a turn, not a hop: she never leaves the floor in it.
  */
-const HOLD_GAP = 0.32
-const EMBRACE_GAP = 0.28
+const HOLD_GAP = 0.272
+const EMBRACE_GAP = 0.266
 const TURN_OUT = 0.45
 /**
  * Her turn out under his arm, 0..1..0: out from the middle of bar 51, arriving at arm's length on 52's downbeat (the
@@ -417,13 +419,6 @@ const turnOutAt = (T: number): number => {
   const L1 = DANCE[2] - DANCE[1]
   return smooth(T, DANCE[0] + 0.5 * L0, DANCE[1]) * (1 - smooth(T, DANCE[1] + 0.3 * L1, DANCE[2] - 0.04 * L1))
 }
-/** Her lift through the turn out, 0..1..0: up through the crest to her highest on 52's downbeat, down by its three. */
-const liftAt = (T: number): number => {
-  const L1 = DANCE[2] - DANCE[1]
-  return smooth(T, DANCE[0] + 0.6 * (DANCE[1] - DANCE[0]), DANCE[1]) * (1 - smooth(T, DANCE[1], DANCE[1] + 0.62 * L1))
-}
-/** How high her lift takes her (cells): about twice a waltz step's rise. */
-const LIFT_ELLIE = 0.13
 const gapAt = (T: number): number => HOLD_GAP + TURN_OUT * turnOutAt(T) - (HOLD_GAP - EMBRACE_GAP) * smooth(T, DANCE[3] + 0.2, EMBRACE)
 /** The bar the dance is in, and how far through it. */
 function danceBar(T: number): { i: number; u: number } | null {
@@ -665,12 +660,12 @@ const ellieAtDoor = spline([
 
 /**
  * Her place in the dance: at his right, rising with him on each downbeat, leaning into the sway opposite his (towards
- * him when he leans to her), a little taller on the rise. Through the turn out her lift takes the place of the
- * waltz's rise (none of bar 52's own), so her highest is on 52's downbeat.
+ * him when he leans to her), a little taller on the rise. Through the turn out she rolls along the floor instead:
+ * her rise settles as she sets off from his side and comes back on bar 53.
  */
 function ellieRise(T: number): number {
   const k = T < DANCE[2] ? 1 - smooth(T, DANCE[0] + 0.5 * (DANCE[1] - DANCE[0]), DANCE[1]) : 1
-  return riseAt(T) * k + (LIFT_ELLIE / RISE_ELLIE) * liftAt(T)
+  return riseAt(T) * k
 }
 function ellieDancing(T: number): Companion {
   const inDance = inDanceAt(T)
@@ -813,6 +808,46 @@ function drawPool(p: p5, k: number, x: number, a: number): void {
   ctx.restore()
 }
 
+/* ------------------------------------------------------------------ their wedding photograph */
+
+/**
+ * Their wedding photograph on the hall's wall, above the chair rail over the open floor: the one the flash took at the
+ * start, the same drawing that stands on the funeral's easel (church.ts `drawPhotograph`), smaller and without its
+ * ribbon: a gilt frame, the sepia card, a square and a round one touching. The dance's crest is framed under it, so
+ * at the loudest bar of the second waltz they dance under the day they married. Its middle, and the top of its frame.
+ */
+const PHOTO = { x: 4.5, top: -1.335, s: 0.72 }
+function drawWeddingPhoto(p: p5, k: number, weight: number, age: number): void {
+  const { x, top, s } = PHOTO
+  const gold = mixHex(HOME.brass, '#B9A06A', age * 0.6)
+  const r = (x0: number, y0: number, x1: number, y1: number, rad = 0) => p.rect(x0 * k, y0 * k, (x1 - x0) * k, (y1 - y0) * k, rad * k)
+  p.push()
+  p.rectMode(p.CORNER)
+  // A faint shadow on the paper below and right of it: it hangs on the wall.
+  p.noStroke()
+  p.fill(alpha(p, INK, 0.1))
+  r(x - 0.26 * s + 0.018, top + 0.02, x + 0.26 * s + 0.018, top + 0.48 * s + 0.024, 0.01)
+  p.stroke(INK)
+  p.strokeWeight(weight * 0.7)
+  p.fill(gold)
+  r(x - 0.26 * s, top, x + 0.26 * s, top + 0.48 * s, 0.008)
+  p.noStroke()
+  // The card, warm sepia; its lower part (their floor) a shade darker.
+  p.fill(mixHex(HOME.paper, HOME.wood, 0.35))
+  r(x - 0.21 * s, top + 0.05 * s, x + 0.21 * s, top + 0.43 * s)
+  p.fill(alpha(p, mixHex(HOME.wood, INK, 0.2), 0.45))
+  r(x - 0.21 * s, top + 0.34 * s, x + 0.21 * s, top + 0.43 * s)
+  // The two of them, touching, standing on it: his square a little tipped towards her.
+  p.fill(mixHex(HOME.wood, INK, 0.4))
+  p.push()
+  p.translate((x - 0.05 * s) * k, (top + 0.29 * s) * k)
+  p.rotate(0.14)
+  p.rect(-0.045 * s * k, -0.045 * s * k, 0.09 * s * k, 0.09 * s * k, 0.01 * s * k)
+  p.pop()
+  p.circle((x + 0.042 * s) * k, (top + 0.29 * s) * k, 0.09 * s * k)
+  p.pop()
+}
+
 /* ------------------------------------------------------------------ the machines' states */
 
 /** The gramophone: the lever bumped, the arm over, the needle down, the record turning; the auto-stop after the dance. */
@@ -929,6 +964,7 @@ export const ties = part<TiesState>(
       drawSunWedge(p, k, sunAt(T), 5.6 - 1.4 * smooth(T, 158.6, 161.4))
       drawPool(p, k, pairAt(T) + 0.2 + 0.5 * TURN_OUT * turnOutAt(T), poolAt(T))
       drawPainting(p, k, weight, age)
+      drawWeddingPhoto(p, k, weight, age)
       const [cx] = carlAt(T)
       drawWheelFrame(p, k, weight, wheelTurn(T), pawlAt(T), plateY(T, cx), age)
       drawGramophone(p, k, weight, gramAt(T), age)
@@ -1045,15 +1081,16 @@ export const ties = part<TiesState>(
       key(155.1, 2.95, 3.2),
       // The dance, on the swell: the camera goes in with it. On its first downbeat the gramophone is whole in the left
       // third, its record turning, the two of them meeting in front of it; then in, down the hall with them, to land
-      // closest on the crest, 52's downbeat, as she turns out under his arm: only the two of them, her at arm's length
-      // and her highest, in the warm pool as it swells, the room gone. That close sits between the horn's mouth
+      // closest on the crest, 52's downbeat, as she rolls out from his side to arm's length: the two of them in the
+      // warm pool as it swells, under their wedding photograph (`PHOTO`, in the frame's upper third; the key a touch
+      // higher than `low` for it, which Zoom still allows). That close sits between the horn's mouth
       // (its rim reaches x 2.98) and the ticket press's hand lever (its grip 6.48), so neither is cut by the frame's
       // edges, and it holds them left of the middle, with the floor they are waltzing into ahead of them. It stays
       // close as the music falls away, drifting on with them more slowly than they go (they come to the middle), and
       // then, as they close into each other's arms, cranes out to bring the desk and her painting in whole at the right.
       // Zoom in 0.44 log over 2.2 s and out 0.45 over 2.2 s, neither faster than 0.3 log/s.
       key(DANCE[0], 2.4, 3.9),
-      key(DANCE[1], 1.9, 4.73),
+      key(DANCE[1], 1.9, 4.73, low(1.9) - 0.03),
       key(DANCE[2], 2.1, 5.0),
       key(EMBRACE, 3.3, 6.05),
       // The painting, lit: a long look, him small under it.
