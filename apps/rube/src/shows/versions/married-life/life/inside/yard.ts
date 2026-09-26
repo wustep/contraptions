@@ -590,14 +590,17 @@ export const yard = part<YardState>(
     }
   },
   () => [
-    // From the doctor's framing, a slow drift to him at the door; in on him for the book.
-    { t: 87.4, cells: 3.95, hold: [at(-1.7), -0.95], w: 1 },
-    { t: 89.6, cells: 3.85, hold: [at(-1.1), -0.95], w: 1 },
-    // Out with him, and along as he walks out to her.
-    { t: 92.4, cells: 4.05, hold: [at(-1.75), -1.0], w: 1 },
-    { t: 95.8, cells: 4.0, hold: [at(-2.2), -1.02], w: 1 },
+    // From the doctor's cut (`CUTS.yard`), a slow settle onto the two of them, a quarter larger than the old wide:
+    // her on the stump, him at the door, the frame between them (house x -1.6), the trunk and the sheet at its left,
+    // the living-room window (its sill from x 1.25) and the car in it out past its right. Then a breath in on him for
+    // the book. Under Zoom both stay whole.
+    { t: 87.4, cells: 3.22, hold: [at(-1.64), -0.84], w: 1 },
+    { t: 89.6, cells: 3.14, hold: [at(-1.58), -0.84], w: 1 },
+    // Out with him, and along as he walks out to her, a little wider (the window still out of the frame).
+    { t: 92.4, cells: 3.34, hold: [at(-1.88), -0.86], w: 1 },
+    { t: 95.8, cells: 3.36, hold: [at(-2.22), -0.86], w: 1 },
     // The two of them, closer, and in close on the book as it opens and the falls rise, and on her turning to it.
-    { t: 98.9, cells: 3.5, hold: [at(-3.1), -0.95], w: 1 },
+    { t: 98.9, cells: 3.24, hold: [at(-3.1), -0.84], w: 1 },
     { t: OPEN, cells: 2.72, hold: [at(-3.18), -0.7], w: 1 },
     { t: 101.2, cells: 2.58, hold: [at(-3.08), -0.67], w: 1 },
     // After them, home: one even move that sets off as he does and leads him at his own pace, eased out of the close
