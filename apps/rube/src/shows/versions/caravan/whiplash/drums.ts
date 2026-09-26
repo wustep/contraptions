@@ -124,29 +124,71 @@ export function drawKit(p: p5, c: Ctx, look: KitLook = {}): void {
 
 /** A stick: from its butt at `from`, `len` long, at `angle` (radians, 0 pointing right), with its tip. */
 export function drawStick(p: p5, c: Ctx, from: Pt, angle: number, len = 1.3): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const to: Pt = [from[0] + Math.cos(angle) * len, from[1] + Math.sin(angle) * len]
+  // Hickory, edged in its own shadow (no cream outline), the bead at the tip.
+  const edge = mixHex(KIT.hickory, KIT.shade, 0.75)
   p.push()
-  p.stroke(ink)
-  p.strokeWeight(weight * 2.6)
+  p.strokeCap(p.ROUND)
+  p.stroke(edge)
+  p.strokeWeight(weight * 2.5)
   p.line(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
   p.stroke(KIT.hickory)
-  p.strokeWeight(weight * 1.3)
+  p.strokeWeight(weight * 1.5)
   p.line(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
-  solid(p, ink, weight * 0.6, KIT.hickory)
+  solid(p, edge, weight * 0.6, KIT.hickory)
   p.ellipse(to[0] * k, to[1] * k, 0.07 * k, 0.05 * k)
   p.pop()
 }
 
 /* ------------------------------------------------------------------ the pieces */
 
-const shade = (hex: string, light: number): string => (light >= 0.999 ? hex : mixHex(KIT.shade, hex, 0.35 + 0.65 * light))
+/** How bright a colour is, 0..255 (for telling a dark finish from a light one). */
+const luma = (hex: string): number => 0.3 * parseInt(hex.slice(1, 3), 16) + 0.59 * parseInt(hex.slice(3, 5), 16) + 0.11 * parseInt(hex.slice(5, 7), 16)
+/** The stage's dark, that a dark finish sinks into as the light goes (never lifted toward a brown). */
+const DARK = '#050404'
+/**
+ * A colour as the light on it drops: a light finish (a head, bronze, chrome) sinks toward the kit's warm shadow; a
+ * dark one (black lacquer) toward the stage's dark, so it stays black instead of greying to the wall's value.
+ */
+const shade = (hex: string, light: number): string =>
+  light >= 0.999 ? hex : mixHex(luma(hex) < luma(KIT.shade) ? DARK : KIT.shade, hex, 0.35 + 0.65 * light)
+/**
+ * The stands, legs, spurs and mounts: chrome in the stage's shadow, a step down from the hoops, so the kit reads as
+ * drums on hardware and not as a drawing of lines.
+ */
+const HARDWARE = mixHex(KIT.chrome, KIT.shade, 0.42)
+/** A finish's own edge: its dark, never the cream ink. */
+const edgeOf = (hex: string): string => mixHex(hex, DARK, 0.6)
+
+/**
+ * Lit lacquer across a shell from `x0` to `x1` (pixels): dark at both edges, a warm lifted band about 30% across
+ * where the light from above and the house's left catches it, one narrow cream specular stripe in it, and the far
+ * side rolling off into shadow. A dark finish lifts toward bronze; a coloured one (the old oxblood) toward its head.
+ */
+function lacquer(ctx: CanvasRenderingContext2D, x0: number, x1: number, shell: string, light: number): CanvasGradient {
+  const body = shade(shell, light)
+  const dark = luma(shell) < 40
+  const edge = mixHex(body, DARK, 0.55)
+  const band = mixHex(body, dark ? KIT.bronze : KIT.head, (dark ? 0.2 : 0.1) + (dark ? 0.16 : 0.08) * light)
+  const spec = mixHex(body, KIT.head, (dark ? 0.35 : 0.3) + 0.3 * light)
+  const g = ctx.createLinearGradient(x0, 0, x1, 0)
+  g.addColorStop(0, edge)
+  g.addColorStop(0.1, body)
+  g.addColorStop(0.24, band)
+  g.addColorStop(0.3, spec)
+  g.addColorStop(0.335, band)
+  g.addColorStop(0.5, mixHex(body, band, 0.35))
+  g.addColorStop(0.78, body)
+  g.addColorStop(1, edge)
+  return g
+}
 
 
 /** A stand's post and its three feet, from `top` down to the floor. */
 function stand(p: p5, c: Ctx, x: number, top: number, spread = 0.42): void {
   const { k, weight } = c
-  p.stroke(KIT.chrome)
+  p.stroke(HARDWARE)
   p.strokeWeight(weight * 0.9)
   p.line(x * k, top * k, x * k, (KIT_FLOOR - 0.38) * k)
   p.strokeWeight(weight * 0.75)
@@ -157,7 +199,7 @@ function stand(p: p5, c: Ctx, x: number, top: number, spread = 0.42): void {
 
 /** A drum: its shell (with hoops and lugs), its head as a thin ellipse on top, dipping by `dip`. */
 function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number, mount: 'stand' | 'legs' | 'mount', blood = false): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x0 = d.x - d.w / 2
   const x1 = d.x + d.w / 2
   const eh = d.w * 0.11
@@ -165,27 +207,32 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
   const bottom = d.top + d.depth
   if (mount === 'stand') stand(p, c, d.x, bottom, 0.38)
   if (mount === 'legs') {
-    p.stroke(KIT.chrome)
+    p.stroke(HARDWARE)
     p.strokeWeight(weight * 0.8)
     for (const s of [-1, 1]) p.line((d.x + s * d.w * 0.44) * k, (bottom - 0.2) * k, (d.x + s * d.w * 0.6) * k, KIT_FLOOR * k)
   }
   if (mount === 'mount') {
-    p.stroke(KIT.chrome)
+    p.stroke(HARDWARE)
     p.strokeWeight(weight * 0.9)
     p.line(d.x * k, bottom * k, (KICK.x + 0.1) * k, (KICK.cy - KICK.r + 0.08) * k)
   }
-  // The shell: a rectangle with a rounded bottom edge, the lacquer in the light.
-  solid(p, ink, weight * 0.9, shade(shell, light))
-  p.beginShape()
-  p.vertex(x0 * k, top * k)
-  p.vertex(x1 * k, top * k)
-  p.vertex(x1 * k, bottom * k)
-  for (let i = 0; i <= 10; i++) {
-    const a = (i / 10) * Math.PI
-    p.vertex((d.x + (Math.cos(a) * d.w) / 2) * k, (bottom + Math.sin(a) * eh) * k)
-  }
-  p.vertex(x0 * k, top * k)
-  p.endShape(p.CLOSE)
+  // The shell: a rectangle with a rounded bottom edge, lit lacquer (a cylinder: dark edges, a warm band, a stripe of
+  // light), edged in its own dark.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(x0 * k, top * k)
+  ctx.lineTo(x1 * k, top * k)
+  ctx.lineTo(x1 * k, bottom * k)
+  ctx.ellipse(d.x * k, bottom * k, (d.w / 2) * k, eh * k, 0, 0, Math.PI)
+  ctx.closePath()
+  ctx.fillStyle = lacquer(ctx, x0 * k, x1 * k, shell, light)
+  ctx.fill()
+  ctx.lineWidth = weight * 0.9
+  ctx.lineJoin = 'round'
+  ctx.strokeStyle = edgeOf(shade(shell, light))
+  ctx.stroke()
+  ctx.restore()
   // Lugs: small chrome blocks round the shell's middle, fewer on a small drum.
   p.noStroke()
   p.fill(shade(mixHex(shell, KIT.chrome, 0.55), light))
@@ -196,12 +243,12 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
     const lean = Math.cos(u * Math.PI) * 0.02
     p.rect((lx - 0.022 + lean) * k, (top + d.depth * 0.34) * k, 0.044 * k, Math.min(0.16, d.depth * 0.3) * k, 0.02 * k)
   }
-  // The hoops: chrome bands at the top and bottom.
-  outline(p, KIT.chrome, weight * 1.1)
+  // The hoops: bright chrome bands at the top and bottom.
+  outline(p, shade(KIT.chrome, 0.4 + 0.6 * light), weight * 1.2)
   p.line(x0 * k, (top + 0.035) * k, x1 * k, (top + 0.035) * k)
   p.arc(d.x * k, bottom * k, d.w * k, 2 * eh * k, 0, Math.PI)
-  // The head: the struck skin, dipping at its middle.
-  solid(p, ink, weight * 0.8, shade(KIT.head, light))
+  // The head: the struck skin, dipping at its middle, edged by the hoop's shadow.
+  solid(p, mixHex(shade(KIT.head, light), KIT.shade, 0.55), weight * 0.8, shade(KIT.head, light))
   p.beginShape()
   for (let i = 0; i <= 16; i++) {
     const a = (i / 16) * Math.PI * 2
@@ -221,24 +268,29 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
 
 /** The kick: the front head, a circle facing the house, with its hoop and a port; a tremble when struck. */
 function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const shake = since >= 0 && since < 0.8 ? 0.012 * Math.exp(-since / 0.1) * Math.sin(since * 70) : 0
   const r = KICK.r * (1 + (since >= 0 && since < 0.5 ? 0.012 * Math.exp(-since / 0.07) : 0))
   // The spurs, out to the floor either side.
-  p.stroke(KIT.chrome)
+  p.stroke(HARDWARE)
   p.strokeWeight(weight * 0.8)
   for (const s of [-1, 1]) p.line((KICK.x + s * r * 0.8) * k, (KICK.cy + r * 0.45) * k, (KICK.x + s * r * 1.12) * k, KIT_FLOOR * k)
-  // The hoop (the shell's lacquer, as a ring) and the head inside it.
-  solid(p, ink, weight, shade(shell, light))
+  // The hoop (the shell's lacquer, as a ring, edged in its own dark) and the head inside it.
+  const hoop = shade(shell, light)
+  solid(p, edgeOf(hoop), weight, mixHex(hoop, KIT.chrome, 0.12))
   p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * r * k)
-  // The front head is the resonant one: dark, the shell's colour lifted a little, with a pale band near its rim, so the
-  // big circle stays quiet beside the ball.
-  solid(p, ink, weight * 0.8, shade(mixHex(shell, KIT.head, 0.16), light))
+  // The front head is the resonant one: a dark disc (the shell's colour lifted a little), so the big circle stays
+  // quiet beside the ball; the light catches its rim along the top and the house's left, and a soft band inside it.
+  const face = shade(mixHex(shell, KIT.head, 0.12), light)
+  solid(p, edgeOf(face), weight * 0.8, face)
   p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.08) * k)
   p.noFill()
-  p.stroke(shade(mixHex(shell, KIT.head, 0.38), light))
-  p.strokeWeight(weight * 1.4)
-  p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.2) * k)
+  p.stroke(mixHex(face, KIT.head, 0.12 + 0.1 * light))
+  p.strokeWeight(weight * 1.2)
+  p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.22) * k)
+  p.stroke(mixHex(face, KIT.head, 0.3 + 0.35 * light))
+  p.strokeWeight(weight * 1.5)
+  p.arc(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.1) * k, 2 * (r - 0.1) * k, Math.PI * 1.02, Math.PI * 1.62)
   // Tension rods: short chrome ticks round the hoop.
   p.stroke(shade(KIT.chrome, light))
   p.strokeWeight(weight * 0.9)
@@ -248,7 +300,7 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
   }
   // The pedal's footboard, at the kick's right foot, where the ball presses it.
   const press = since >= 0 && since < 0.4 ? Math.exp(-since / 0.06) : 0
-  solid(p, ink, weight * 0.7, shade(KIT.chrome, light))
+  solid(p, edgeOf(KIT.chrome), weight * 0.7, shade(KIT.chrome, light))
   p.push()
   p.translate((KICK.x + 0.55) * k, (KIT_FLOOR - 0.02) * k)
   p.rotate(-0.22 + 0.16 * press)
@@ -258,10 +310,10 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
 
 /** A cymbal: a thin bronze lens on its stand, swung by `swing` about its bell. */
 function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: boolean): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   stand(p, c, s.x + (boom ? 0.35 : 0), s.y + 0.25, 0.46)
   if (boom) {
-    p.stroke(KIT.chrome)
+    p.stroke(HARDWARE)
     p.strokeWeight(weight * 0.9)
     p.line((s.x + 0.35) * k, (s.y + 0.25) * k, s.x * k, (s.y + 0.04) * k)
   }
@@ -270,7 +322,8 @@ function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: bo
   p.rotate(s.tilt + swing)
   const w = s.w * k
   const h = 0.085 * k
-  solid(p, ink, weight * 0.8, shade(KIT.bronze, light))
+  const bronze = shade(KIT.bronze, light)
+  solid(p, mixHex(bronze, KIT.shade, 0.7), weight * 0.8, bronze)
   // The lens: a shallow dome over a flat underside, and the bell on top.
   p.beginShape()
   for (let i = 0; i <= 18; i++) {
@@ -284,27 +337,36 @@ function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: bo
   }
   p.endShape(p.CLOSE)
   p.ellipse(0, -h * 0.95, w * 0.2, h * 0.9)
-  // Lathe lines: two faint arcs across the bow, the light catching them.
+  // Lathe lines: two faint arcs across the bow, the light catching them; and the light along its top edge.
   p.noFill()
   p.stroke(shade(KIT.head, light * 0.7))
   p.strokeWeight(weight * 0.45)
   for (const f of [0.62, 0.86]) p.arc(0, h * 0.5, w * f, h * 1.9, Math.PI * 1.08, Math.PI * 1.92)
+  p.stroke(mixHex(bronze, KIT.head, 0.45 * light))
+  p.strokeWeight(weight * 0.7)
+  p.beginShape()
+  for (let i = 2; i <= 9; i++) {
+    const u = i / 18
+    p.vertex((u - 0.5) * w, -h * Math.sin(u * Math.PI) * 0.9 + weight * 0.3)
+  }
+  p.endShape()
   p.pop()
 }
 
 /** The hi-hat: two cymbals face to face on a stand, the top one lifted by `open`. */
 function hat(p: p5, c: Ctx, open: number, since: number, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const lift = 0.02 + 0.13 * Math.max(0, Math.min(1, open))
   const tick = since >= 0 && since < 0.5 ? 0.02 * Math.exp(-since / 0.06) : 0
   stand(p, c, HAT.x, HAT.y, 0.4)
   // The pull rod above the top cymbal.
-  p.stroke(KIT.chrome)
+  p.stroke(HARDWARE)
   p.strokeWeight(weight * 0.8)
   p.line(HAT.x * k, (HAT.y - lift - 0.3) * k, HAT.x * k, HAT.y * k)
   const w = HAT.w * k
   const h = 0.07 * k
-  solid(p, ink, weight * 0.8, shade(KIT.bronze, light))
+  const bronze = shade(KIT.bronze, light)
+  solid(p, mixHex(bronze, KIT.shade, 0.7), weight * 0.8, bronze)
   // Bottom cymbal, dome down; top cymbal, dome up.
   p.push()
   p.translate(HAT.x * k, HAT.y * k)
