@@ -311,6 +311,16 @@ bigPlay.addEventListener('click', () => {
 })
 stageRoot.append(bigPlay)
 
+// While a show loads, or when it would not, the stage says so: the panel says it too, but the panel starts hidden,
+// and a blank stage reads as broken. A failed load is tried again by a reload: the browser keeps a module that would
+// not fetch as failed for the life of the page, so asking again here gets the same answer. The address is the show.
+const stageNoteText = el('span')
+const retryBtn = el('button', { type: 'button' }, ['Reload'])
+retryBtn.addEventListener('click', () => location.reload())
+const stageNote = el('div', { class: 'stage-note', role: 'status' }, [stageNoteText, retryBtn])
+stageNote.hidden = true
+stageRoot.append(stageNote)
+
 // The stage is the play button. Not a press on something standing on it, and not the press that only brought the
 // held sound in: that one owed the sound, and the picture keeps going.
 stageRoot.addEventListener('click', (e) => {
@@ -347,6 +357,8 @@ let scrubbing = false
 scrub.addEventListener('pointerdown', () => { scrubbing = true })
 const endScrub = () => { scrubbing = false }
 window.addEventListener('pointerup', endScrub)
+// A touch that turns into a pan of the panel ends in a cancel, not an up: without this the bar stops following the show.
+window.addEventListener('pointercancel', endScrub)
 const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 playBtn.addEventListener('click', toggle)
 const speedSeg = segmented(SHOW_SPEEDS, (v) => `${v}×`, setSpeed)
@@ -526,6 +538,12 @@ function sync(): void {
               : '',
     perf?.soundtrack && music.state() === 'failed' ? 'bad' : '',
   )
+
+  // The stage's own word while there is no show on it.
+  stageNote.hidden = !current || !(loading || failed)
+  stageNote.classList.toggle('bad', !!failed)
+  stageNoteText.textContent = failed ? `${current?.title ?? 'This show'} would not load.` : `Loading ${current?.title ?? 'the show'}…`
+  retryBtn.hidden = !failed
 
   // The stage's own play button: at the top, at the end, or where the browser is waiting for a press.
   const t = transport?.now() ?? 0
@@ -757,6 +775,7 @@ if (import.meta.env.DEV) {
     shell.holdPeek(false)
     cancelAnimationFrame(raf)
     window.removeEventListener('pointerup', endScrub)
+    window.removeEventListener('pointercancel', endScrub)
     window.removeEventListener('keydown', onKey)
     recording?.abort()
     music.load(null)
