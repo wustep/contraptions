@@ -89,26 +89,45 @@ export function drawBackstageLight(p: p5, c: Ctx, light: number): void {
 
 /* ------------------------------------------------------------------ the cases */
 
-/** A road case: black laminate, aluminium edging at its corners and lid line, two latches and a handle. */
+/** An edge on the dark: the case's own shadow, darker than the paper, never a pale line. */
+const DARK_EDGE = '#101317'
+
+/**
+ * A road case: black laminate, edged in its own dark; aluminium only where the tubes' light catches it (along the
+ * top of the lid); the lid's seam, two dark latches with a glint on top, and the recessed handle.
+ */
 function roadCase(p: p5, c: Ctx, x0: number, x1: number, top: number, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const L = 0.3 + 0.7 * light
-  solid(p, lit(c, ink, 0.2 + 0.4 * light), weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.3), L))
+  const body = lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.3), L)
+  solid(p, DARK_EDGE, weight * 0.6, body)
   rect(p, k, x0, top, x1, FL, 0.03)
-  // The lid's seam, the aluminium edges, the latches, the recessed handle.
-  const al = lit(c, mixHex(ROAD.asphalt, mixHex(ROAD.paint, ROAD.car, 0.35), 0.45), L)
+  // The lit top edge (the tubes are overhead); the corners' aluminium in shadow, only a shade off the laminate.
+  const al = lit(c, mixHex(ROAD.asphalt, mixHex(ROAD.paint, ROAD.car, 0.35), 0.55), L)
+  const shadowAl = mixHex(body, al, 0.25)
   p.noStroke()
-  p.fill(al)
-  rect(p, k, x0, top, x1, top + 0.06, 0.02)
-  rect(p, k, x0, FL - 0.07, x1, FL, 0.02)
+  p.fill(shadowAl)
   rect(p, k, x0, top, x0 + 0.06, FL)
   rect(p, k, x1 - 0.06, top, x1, FL)
-  const seamY = top + Math.min(0.42, (FL - top) * 0.28)
-  outline(p, lit(c, mixHex(ROAD.deep, ROAD.paint, 0.3), 0.3 + 0.7 * light), weight * 0.6)
-  seg(p, k, [x0 + 0.06, seamY], [x1 - 0.06, seamY])
-  p.noStroke()
+  rect(p, k, x0, FL - 0.07, x1, FL, 0.02)
   p.fill(al)
-  for (const u of [0.18, 0.82]) rect(p, k, x0 + (x1 - x0) * u - 0.07, seamY - 0.05, x0 + (x1 - x0) * u + 0.07, seamY + 0.07, 0.015)
+  rect(p, k, x0, top, x1, top + 0.06, 0.02)
+  const seamY = top + Math.min(0.42, (FL - top) * 0.28)
+  outline(p, DARK_EDGE, weight * 0.8)
+  seg(p, k, [x0 + 0.06, seamY], [x1 - 0.06, seamY])
+  p.stroke(hexA(ROAD.paint, 0.12 * light))
+  p.strokeWeight(weight * 0.5)
+  seg(p, k, [x0 + 0.06, seamY + 0.03], [x1 - 0.06, seamY + 0.03])
+  // The latches: dark, a glint along their tops.
+  for (const u of [0.18, 0.82]) {
+    const lx = x0 + (x1 - x0) * u
+    solid(p, DARK_EDGE, weight * 0.5, lit(c, ROAD.deep, L))
+    rect(p, k, lx - 0.07, seamY - 0.05, lx + 0.07, seamY + 0.07, 0.015)
+    p.noStroke()
+    p.fill(hexA(ROAD.paint, 0.35 * light))
+    rect(p, k, lx - 0.05, seamY - 0.05, lx + 0.05, seamY - 0.03)
+  }
+  p.noStroke()
   p.fill(lit(c, ROAD.deep, L))
   const mid = (x0 + x1) / 2
   rect(p, k, mid - 0.22, seamY + 0.28, mid + 0.22, seamY + 0.4, 0.05)
@@ -116,12 +135,12 @@ function roadCase(p: p5, c: Ctx, x0: number, x1: number, top: number, light: num
 
 /** The trap case he sits on: a tall drum-hardware case, round, seen from the side: its lid a thin ellipse. */
 function trapCase(p: p5, c: Ctx, light: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const { x0, x1, top } = TRAP
   const L = 0.3 + 0.7 * light
   const mid = (x0 + x1) / 2
   const w = x1 - x0
-  solid(p, lit(c, ink, 0.2 + 0.4 * light), weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.2), L))
+  solid(p, DARK_EDGE, weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.deep, 0.2), L))
   p.beginShape()
   p.vertex(x0 * k, top * k)
   p.vertex(x1 * k, top * k)
@@ -131,11 +150,19 @@ function trapCase(p: p5, c: Ctx, light: number): void {
     p.vertex((mid + (Math.cos(a) * w) / 2) * k, (FL - 0.06 + Math.sin(a) * 0.06) * k)
   }
   p.endShape(p.CLOSE)
-  // The bands: dark straps round it, and the lid's rim.
-  outline(p, lit(c, mixHex(ROAD.asphalt, ROAD.paint, 0.3), 0.2 + 0.6 * light), weight * 1.2)
+  // Round: the light down its left side, a soft band, as on a drum's shell.
+  p.noStroke()
+  p.fill(hexA(ROAD.paint, 0.07 * light))
+  rect(p, k, x0 + w * 0.16, top + 0.06, x0 + w * 0.34, FL - 0.02)
+  // The bands: dark straps round it, and the lid's rim catching the tubes' light.
+  outline(p, DARK_EDGE, weight * 1.2)
   for (const y of [0.6, 1.45]) p.arc(mid * k, y * k, w * k, 0.12 * k, 0, Math.PI)
-  solid(p, lit(c, ink, 0.2 + 0.45 * light), weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.paint, 0.12), L))
+  solid(p, DARK_EDGE, weight * 0.6, lit(c, mixHex(ROAD.asphalt, ROAD.paint, 0.08), L))
   p.ellipse(mid * k, top * k, w * k, 0.13 * k)
+  p.noFill()
+  p.stroke(hexA(ROAD.paint, 0.4 * light))
+  p.strokeWeight(weight * 0.7)
+  p.arc(mid * k, top * k, w * k, 0.13 * k, Math.PI * 1.05, Math.PI * 1.95)
 }
 
 export function drawCases(p: p5, c: Ctx, light: number): void {
@@ -390,7 +417,7 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       const a = s.accent(seat)
       const body = lit(c, mixHex(ROAD.deep, ROAD.asphalt, 0.35), 0.4 + 0.6 * s.light)
       // The chair: a dark seat on legs.
-      solid(p, lit(c, ink, 0.15 + 0.35 * s.light), weight * 0.5, lit(c, ROAD.deep, L))
+      solid(p, DARK_EDGE, weight * 0.5, lit(c, ROAD.deep, L))
       rect(p, k, x - 0.28, floor - 0.95, x + 0.3, floor - 0.87)
       seg(p, k, [x - 0.24, floor - 0.87], [x - 0.24, floor])
       seg(p, k, [x + 0.26, floor - 0.87], [x + 0.26, floor])
@@ -406,8 +433,11 @@ export function drawBand(p: p5, c: Ctx, s: BandLook): void {
       p.noFill()
       p.arc((x + 0.02) * k, (floor - 1.9) * k, 0.56 * k, 0.4 * k, Math.PI * 1.05, Math.PI * 1.75)
       // The stand in front of him, and its pale page (a few ruled bars, nothing written).
-      outline(p, lit(c, ink, 0.2 + 0.4 * s.light), weight * 0.55)
+      outline(p, DARK_EDGE, weight * 1.1)
       seg(p, k, [x - 0.78, floor], [x - 0.78, floor - 1.55])
+      p.stroke(hexA(ROAD.sodium, 0.1 + 0.3 * s.light))
+      p.strokeWeight(weight * 0.4)
+      seg(p, k, [x - 0.8, floor - 0.1], [x - 0.8, floor - 1.55])
       p.noStroke()
       p.fill(lit(c, ROAD.paint, 0.25 + 0.55 * s.light))
       poly(p, k, [[x - 1.08, floor - 1.55], [x - 0.5, floor - 1.55], [x - 0.55, floor - 1.95], [x - 1.04, floor - 1.95]])
