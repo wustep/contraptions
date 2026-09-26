@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex } from '../../../../../parts'
-import { sparkIn } from '../fx'
+import { sparkIn, wickCatch } from '../fx'
 import { alpha, box, frame, hash, scenery, smooth } from '../kit'
 import { THEME, onsetsIn } from '../music'
 import { LOFT } from '../worlds'
@@ -170,7 +170,7 @@ function pools(t: number): Pool[] {
   // The spark: the only warm light in the room, wherever it is. It flickers as a flame does, and breathes with the horns.
   const s = sparkIn('loft', t)
   if (s) {
-    const power = Math.min(1.3, s.heat) * (s.hidden ? 0.35 : 1)
+    const power = (Math.min(1.3, s.heat) + 0.4 * wickCatch(t)) * (s.hidden ? 0.35 : 1)
     const flick = 1 + 0.035 * Math.sin(t * 17.3) + 0.025 * Math.sin(t * 29.1 + 2) + 0.02 * (hash(Math.floor(t * 24)) - 0.5)
     const lift = 1 + 0.12 * breath(t)
     const r = (1.45 + 0.8 * power) * lift

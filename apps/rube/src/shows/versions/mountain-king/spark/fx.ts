@@ -19,7 +19,8 @@ import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from '.
 /**
  * How big the spark's flame is at `t`: 1 is a candle's flame. It follows the orchestra (`level`), so the spark grows
  * as the music does, from a careful flicker in the loft to a comet on the night express. In the silence it all but
- * goes out; the roll fans it back; on the first last chord it is a candle's flame again, on its wick.
+ * goes out; the roll fans it back; on the first last chord the wick catches (a flare that settles to a candle's
+ * flame), and on the second the slam's draught makes it flinch.
  */
 export function heat(t: number): number {
   if (t < THEME) return 1
@@ -27,9 +28,32 @@ export function heat(t: number): number {
   // The silence: it sinks to an ember at once (the silence is the stillest frame), and the roll brings it roaring back.
   const out = smooth(t, SILENCE - 0.05, SILENCE + 0.3) * (1 - smooth(t, ROLL, ROLL + 0.12))
   const flare = t >= ROLL ? 1.6 * Math.exp(-(t - ROLL) / 0.8) : 0
-  const home = smooth(t, LAST[0] - 0.05, LAST[0] + 0.9)
+  // Nothing shrinks before the chord: the ease down to a candle's flame starts on it, under the wick's catch.
+  const home = smooth(t, LAST[0], LAST[0] + 0.9)
   const live = grown * (1 - out) + 0.06 * out + flare
-  return (live * (1 - home) + 1 * home) * freeze(t)
+  return (live * (1 - home) + 1 * home + catching(t)) * freeze(t) * draught(t)
+}
+
+/** The wick catching on the first last chord: a flare up in 25 ms, dying back with the ease (tau 0.35 s). */
+function catching(t: number): number {
+  return 1.1 * wickCatch(t)
+}
+
+/**
+ * The wick catching, 0..1: up in 25 ms on the first last chord, dying back over about a second. The flame flares by
+ * it, and the loft's light lifts with it (`set.ts`, `stove-light.ts`), which otherwise tops out below the spark's heat.
+ */
+export function wickCatch(t: number): number {
+  const u = t - LAST[0]
+  if (u <= 0 || u > 2.5) return 0
+  return smooth(u, 0, 0.025) * Math.exp(-Math.max(0, u - 0.025) / 0.35)
+}
+
+/** The stove door's slam on the second last chord: its draught ducks the flame to about 70%, back within 0.4 s. */
+function draught(t: number): number {
+  const u = t - LAST[1]
+  if (u <= 0 || u > 2) return 1
+  return 1 - 0.3 * smooth(u, 0, 0.02) * Math.exp(-Math.max(0, u - 0.02) / 0.14)
 }
 
 /**
@@ -151,10 +175,12 @@ export const flame = () =>
         shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 4, 0.036 * hb), 0.5 * on)
       }
       // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
-      const glow = Math.max(R * (5 + 6 * Math.min(2.5, h)), 0.11 * hb * Math.min(1, boost)) * k
+      // It blooms as the wick catches on the first last chord.
+      const caught = wickCatch(t)
+      const glow = Math.max(R * (5 + 6 * Math.min(2.5, h)), 0.11 * hb * Math.min(1, boost)) * (1 + 0.3 * caught) * k
       const g = ctx.createRadialGradient(x * k, y * k, R * k, x * k, y * k, glow)
       const dark = s.world === 'loft' || s.world === 'railway'
-      g.addColorStop(0, `rgba(255, 196, 120, ${(dark ? 0.2 : 0.1) * (1 - 0.45 * ash)})`)
+      g.addColorStop(0, `rgba(255, 196, 120, ${((dark ? 0.2 : 0.1) + 0.12 * caught) * (1 - 0.45 * ash)})`)
       g.addColorStop(1, 'rgba(255, 196, 120, 0)')
       ctx.fillStyle = g
       ctx.fillRect(x * k - glow, y * k - glow, glow * 2, glow * 2)
