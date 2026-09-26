@@ -615,7 +615,7 @@ const worksFill = (c: Pen, lit: number): string => mixHex(c.bg, STONE.dark, Math
  * How much of the gutter's oil is still burning: all of it until the door is down, then it burns down to embers over
  * about two and a half seconds with the slot's lamp, so the works under the path are dark as the tunnels begin.
  */
-const oilLeft = (t: number): number => 1 - 0.8 * smooth(t, TIMES.open + 0.5, TIMES.open + 3.0)
+const oilLeft = (t: number): number => 1 - 0.95 * smooth(t, TIMES.open + 0.5, TIMES.open + 3.0)
 
 /** How lit the works are at x: the lamp's pool in the chamber, and the gutter's fire wherever it has run. */
 export function worksLight(t: number, x: number): number {
@@ -697,7 +697,7 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   // The lamps' pools on the back walls; the fire's glow running along the channel.
   if (lamp > 0.01) glow(p, c, WORKS_LAMP[0] + 0.25, WORKS_LAMP[1] + 1.0, 1.7, 0.45 * lamp)
   if (flash > 0.01) glow(p, c, PAN.x - 0.1, PAN.dish - 0.6, 1.3, 0.5 * flash)
-  if (front !== null && front < FLAME.x1 + 0.2) glow(p, c, front, RUN_Y + 0.1, 0.9, 0.5 * Math.min(1, (t - FLAME.t0) / 0.2))
+  if (front !== null && front < FLAME.x1 + 0.2) glow(p, c, front, RUN_Y + 0.1, 0.9, 0.5 * Math.min(1, (t - FLAME.t0) / 0.2) * oilLeft(t))
   if (sl > 0.01) glow(p, c, SLOT_LAMP[0], SLOT_LAMP[1] + 0.25, 1.3, 0.45 * sl)
   p.pop()
 }
@@ -877,7 +877,7 @@ function drawFire(p: p5, c: Pen, t: number): void {
   p.push()
   p.noStroke()
   // The embers in the gutter, then the flame's body over them, then its hot inner line.
-  p.fill(mixHex(WORKS.rust, LAMP.flame, 0.3))
+  p.fill(mixHex(STONE.deep, mixHex(WORKS.rust, LAMP.flame, 0.3), 0.25 + 0.75 * left))
   p.rectMode(p.CORNER)
   p.rect(x0 * k, (y - 0.02) * k, (x1 - x0) * k, 0.04 * k)
   for (const [col, f, a] of [[LAMP.flame, 1, 0.85], [LAMP.core, 0.45, 0.9]] as const) {

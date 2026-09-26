@@ -490,7 +490,7 @@ export function flameFront(t: number): number | null {
  * pulley and a black notch cut into its glow sat at the frame's foot through the seam).
  */
 export const slotLamp = (t: number): number =>
-  smooth(t, TIMES.open - 0.05, TIMES.open + 0.35) * (1 - 0.88 * smooth(t, TIMES.open + 0.5, TIMES.open + 2.5))
+  smooth(t, TIMES.open - 0.05, TIMES.open + 0.35) * (1 - 0.96 * smooth(t, TIMES.open + 0.5, TIMES.open + 2.5))
 
 /** How bright a stair stone rings after something lands on it (0..1). */
 export function ring(times: readonly number[], t: number): number {
