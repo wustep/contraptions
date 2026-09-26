@@ -49,9 +49,9 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     v: [0, 0],
     cells: 4,
     frame: [0.3, -0.6],
-    howl: [0.36, 0],
+    howl: [-0.35, 0],
     markl: null,
-    what: 'the sky builder\'s own seam (both sides are theirs): at rest in the alley with Howl beside her, the moment before they step up into the air on the waltz\'s first downbeat',
+    what: 'the sky builder\'s own seam (both sides are theirs): at rest in the alley with Howl beside her on her left (he came up behind her), the moment before they step up into the air on the waltz\'s first downbeat',
   },
   curse: {
     t: SEAM.curse,

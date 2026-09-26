@@ -6,8 +6,8 @@ import { WASTES } from '../worlds'
 /**
  * The wastes' sky (the director's): a gradient over the whole frame, by show time, under everything the parts draw.
  * The hills and the castle walk in an afternoon that goes to dusk and night (107.9 → 152); the collapse is a grey
- * morning after the war that clears as the plank runs (243.6 → 292); the flight is a clean blue going gold under
- * the credits. Parts draw their own land, clouds and weather over it.
+ * morning after the war that clears as the plank runs (243.6 → 292); the flight is a clean blue going to an evening,
+ * deep at the top and gold low down, under the credits. Parts draw their own land, clouds and weather over it.
  */
 
 /** [show time, top, bottom] keys; the colours blend between them. */
@@ -22,8 +22,10 @@ const KEYS: [number, string, string][] = [
   [262, WASTES.grey, mixHex(WASTES.grey, WASTES.sky, 0.5)],
   [285, WASTES.skyHigh, WASTES.sky],
   [SEAM.flight + 4, WASTES.blue, mixHex(WASTES.sky, WASTES.cloud, 0.4)],
-  [312, mixHex(WASTES.blue, WASTES.skyHigh, 0.5), WASTES.gold],
-  [336, mixHex(WASTES.skyHigh, WASTES.night, 0.3), WASTES.gold],
+  // The flight into the evening: the top of the sky deepening (the credits' words are set over it), gold low down.
+  [306, mixHex(WASTES.blue, WASTES.night, 0.28), mixHex(WASTES.sky, WASTES.gold, 0.4)],
+  [318, mixHex(WASTES.skyHigh, WASTES.night, 0.5), mixHex(WASTES.gold, WASTES.dusk, 0.2)],
+  [336, mixHex(WASTES.night, WASTES.skyHigh, 0.38), mixHex(WASTES.dusk, WASTES.gold, 0.5)],
 ]
 
 /** The sky's top and bottom colours at show time `t`. */

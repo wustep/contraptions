@@ -270,7 +270,7 @@ arrangement of the *Merry-Go-Round of Life* from Howl's Moving Castle, whole, de
 Every piece is new. It follows the film: Sophie the hatter (the one ball, whose colour is her age), the walk on
 the air with Howl, the Witch's curse, Turnip Head, the castle that walks, Calcifer in the hearth, the colour dial on
 the door, the flower fields, the war, the castle falling apart to one plank on legs, the heart given back, and the
-castle flying. The code is `merry-go-round/howl/`, on the same kit as Liftoff and Epilogue (parts built to timed
+castle made again, walking away up the sky. The code is `merry-go-round/howl/`, on the same kit as Liftoff and Epilogue (parts built to timed
 slots, an authored camera, the end credits from `Performance.titles`), with Everything's legs and match cuts: four
 places (the hatter's town, the wastes, the castle's room, the flower fields), each one set however often it is
 visited, and nearly every cut a step through the castle's door. The arrangement changes pace from stretch to

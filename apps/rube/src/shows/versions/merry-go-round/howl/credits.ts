@@ -72,8 +72,9 @@ export const LAST_GONE = (() => {
   return last.at + FORM + last.hold + GO
 })()
 
-/** Where a card's top middle sits, as shares of the 16:9 frame: high in the middle, over the sky. */
-const AT: [number, number] = [0.5, 0.12]
+/** Where a card's top middle sits, as shares of the 16:9 frame: high and a little left, over the sky (the castle walks
+ * away low on the right). */
+const AT: [number, number] = [0.4, 0.11]
 
 function lightOf(card: Card, t: number): { light: number; rise: number } {
   const since = t - card.at
@@ -117,9 +118,9 @@ export const credits = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(20, 24, 40, ${0.34 * bed})`)
-    g.addColorStop(0.6, `rgba(20, 24, 40, ${0.18 * bed})`)
-    g.addColorStop(1, 'rgba(20, 24, 40, 0)')
+    g.addColorStop(0, `rgba(28, 34, 58, ${0.2 * bed})`)
+    g.addColorStop(0.6, `rgba(28, 34, 58, ${0.1 * bed})`)
+    g.addColorStop(1, 'rgba(28, 34, 58, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
     ctx.restore()
