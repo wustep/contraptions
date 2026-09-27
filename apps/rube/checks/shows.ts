@@ -11,7 +11,7 @@ import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, sectionOf, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
@@ -49,6 +49,7 @@ import { checkTheater } from './theater'
 import { PREROLL, WARM } from '../src/shows/youtube'
 import { checkLogogram } from './logogram'
 import { checkMagnum } from './magnum'
+import { checkKick } from './kick'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -177,8 +178,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Première Arabesque and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Logogram|Magnum|Married Life|Merry-Go-Round|Mountain King|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Kick|Logogram|Magnum|Married Life|Merry-Go-Round|Mountain King|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -190,7 +191,7 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Heptapod B, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, Première and Relax', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,heptapod-b,interstellar,la-la-land,married-life,merry-go-round,mountain-king,premiere-arabesque,relax')
+  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Heptapod B, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King, Première, Relax and Time', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,heptapod-b,interstellar,la-la-land,married-life,merry-go-round,mountain-king,premiere-arabesque,relax,time')
   const caravan = shipped.works.find((w) => w.work === 'caravan')?.versions ?? []
   check('caravan is Caravan, one take, Opus 5.5, with no note', caravan.map((v) => v.take).join(',') === 'opus55' && caravan[0].title === 'Caravan' && caravan[0].label === 'Opus 5.5' && caravan[0].note === undefined)
   const marriedLife = shipped.works.find((w) => w.work === 'married-life')?.versions ?? []
@@ -205,6 +206,9 @@ async function main(): Promise<void> {
   const magnum = shipped.works.find((w) => w.work === 'relax')?.versions ?? []
   check('relax is Magnum, one take, Opus 5.5, with no note',
     magnum.map((v) => v.take).join(',') === 'opus55' && magnum[0].title === 'Magnum' && magnum[0].label === 'Opus 5.5' && magnum[0].note === undefined)
+  const kick = shipped.works.find((w) => w.work === 'time')?.versions ?? []
+  check('time is Kick, one take, Opus 5.5, with no note, on the Movies shelf',
+    kick.map((v) => v.take).join(',') === 'opus55' && kick[0].title === 'Kick' && kick[0].label === 'Opus 5.5' && kick[0].note === undefined && sectionOf('time') === 'Movies')
   const mountainKing = shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []
   check('mountain-king is Mountain King, takes Opus 5.5 (A) and Opus 5.5 (B), with no notes',
     mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5 (A)|Opus 5.5 (B)')
@@ -238,7 +242,7 @@ async function main(): Promise<void> {
   check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
   const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
   check('the picker and Theater shelve the works as Machine, Movies and Ambient',
-    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Caravan, Epilogue, Everything, Logogram, Married Life, Merry-Go-Round, Mountain King, Voyage / Ambient: Gymnopédie', shelved.join(' / '))
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Caravan, Epilogue, Everything, Kick, Logogram, Magnum, Married Life, Merry-Go-Round, Mountain King, Voyage / Ambient: Gymnopédie', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -461,6 +465,7 @@ async function main(): Promise<void> {
       if (work.work === 'merry-go-round' && version.take === 'opus55') checkMerryGoRound(perf, version, check)
       if (work.work === 'heptapod-b' && version.take === 'opus55') checkLogogram(perf, version, check)
       if (work.work === 'relax' && version.take === 'opus55') checkMagnum(perf, version, check)
+      if (work.work === 'time' && version.take === 'opus55') checkKick(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',
