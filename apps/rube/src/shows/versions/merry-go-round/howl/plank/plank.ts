@@ -1181,6 +1181,21 @@ export const plank = part<PlankState>(
     // The deck close: her on the deck `top` of the way down the frame, the hips, the knees and what the feet throw up
     // under her; the feet just out of it. At 7.8 cells or less she holds the lead's floor (12 px at 640x360).
     const onDeckShot = (t: number, cells: number, ox: number, top = 0.3): PartShot => follow(t, cells, [ox, (0.5 - top) * cells])
+    // The crossing: the two-shot as she carries Calcifer the length of the deck to Howl. The follow's own lean (her
+    // smoothed as the camera's follower has her) is taken out, so Howl sits `hx` across the frame, exactly, and she
+    // walks in to him from the left; her on the deck `top` down, the far range behind all three.
+    const followed = (t: number): number => {
+      let x = 0
+      let sum = 0
+      for (let j = -12; j <= 16; j++) {
+        const w = 1 - Math.abs(j - 2) / 15
+        x += herAt(t + j * 0.05)[0] * w
+        sum += w
+      }
+      return x / sum
+    }
+    const cross = (t: number, cells: number, hx: number, top = 0.57): PartShot =>
+      follow(t, cells, [howlX(t)[0] - (hx - 0.5) * ((cells * 16) / 9) - followed(t), (0.5 - top) * cells])
     // The stop: on the contact, the brink and the drop under it; the cadenza: the two of them, the star over them.
     const JOLT_AT: Pt = [end[0] + 1.0, end[1] + 0.22]
     const CADENZA: Pt = [end[0] + 0.88, end[1] - 1.12]
@@ -1203,7 +1218,9 @@ export const plank = part<PlankState>(
       // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
-      // it and lands on the loudest note.
+      // it and lands on the loudest note; then, as she lifts Calcifer out, a cut in to the reunion: a two-shot on the
+      // deck with the far range behind and the legs out of it, Howl slumped at the right and her carrying Calcifer
+      // in to him from the left, the frame drifting on with her; and a slow push in on the two of them for the heart.
       { ...onDeckShot(c(8), 7.7, -3.1, 0.32), cut: true },
       onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.34),
       onDeckShot(c(10) + 0.4, 7.3, -2.6, 0.36),
@@ -1215,10 +1232,11 @@ export const plank = part<PlankState>(
       run(c(20) - 0.05, 10.4, 2.2, 1.5),
       { ...onDeckShot(c(20), 6.9, 2.7, 0.36), cut: true },
       onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.36),
-      onDeckShot(c(23), 6.6, 2.4, 0.35),
-      onDeckShot(c(25) + 0.2, 6.4, 2.0, 0.35),
-      // As she raises him to Howl: a cut in to the two of them for the heart.
-      { ...follow(RAISE, 4.1, [0.55, -0.4]), cut: true },
+      onDeckShot(LIFT_OUT - 0.05, 6.6, 2.4, 0.35),
+      { ...cross(LIFT_OUT, 4.7, 0.74), cut: true },
+      cross(c(24), 4.6, 0.71),
+      cross(c(25), 4.45, 0.66),
+      follow(RAISE, 4.1, [0.55, -0.4]),
       follow(272.8, 3.7, [0.45, -0.5]),
       follow(274.4, 5.2, [0.8, -0.4]),
       // The slide: with it, leading, Turnip Head leaping over the two of them off the stern and bounding on ahead
