@@ -453,11 +453,19 @@ const CLOUDS: { x: number; y: number; w: number; s: number }[] = (() => {
   const out: { x: number; y: number; w: number; s: number }[] = []
   // Sophie's height on the porch as it walks, cell by cell along.
   const her = (x: number) => DM[1] - 3.8 - SLOPE * (x - 72)
+  // Never a row: the sizes go big and small side by side (3:1 and more), the low ones stand at heights in tiers so no
+  // two neighbours share a baseline, and a few places are left open, so the low band has gaps of clear sky.
+  const SIZES = [6, 17, 9, 13.5, 5.5, 19, 8]
+  const TIERS = [0, 4.6, 1.7, 7.6, 3.1, 9.8]
   for (let i = 0; i < 26; i++) {
+    if (i % 5 === 3) continue
     const x = 60 + i * 7 + (hash(i, 61) - 0.5) * 5
     const below = hash(i, 62) < 0.5
-    const y = below ? her(x) + 3.5 + hash(i, 64) * 8 : her(x) - 3 - hash(i, 63) * 9
-    out.push({ x, y: Math.min(y, DM[1] - 7), w: 7 + hash(i, 65) * 12, s: i })
+    const y = below ? her(x) + 3.2 + TIERS[i % TIERS.length] + 1.2 * hash(i, 64) : her(x) - 3 - hash(i, 63) * 9
+    // None down in the land: one that would be is lifted clear of it by its own amount (a clamp to one height stood
+    // them all on one ruled line along the foot of the credits).
+    const lim = DM[1] - 7
+    out.push({ x, y: y > lim ? lim - 1.2 - 6 * hash(i, 68) : y, w: SIZES[i % SIZES.length] * (0.85 + 0.3 * hash(i, 65)), s: i })
   }
   return out
 })()
@@ -539,9 +547,10 @@ function homeward(p: p5, k: number, W: number, ink: string, t: number, f: { x0: 
   const w = f.x1 - f.x0
   const h = Math.min(f.y1 - f.y0, (w * 9) / 16)
   const my = (f.y0 + f.y1) / 2
+  // Far airships behind the clouds: a cool dusk slate, darker than the sky at their height (never the clouds' tan).
   const { low } = wastesSky(t)
-  const far = mixHex(WASTES.warship, low, 0.45)
-  const inkFar = mixHex(ink, low, 0.45)
+  const far = mixHex(mixHex(WASTES.warship, WASTES.slate, 0.5), low, 0.25)
+  const inkFar = mixHex(mixHex(ink, WASTES.slate, 0.3), low, 0.3)
   HOMEWARD.forEach(([lag, dy, size], i) => {
     const u = u0 - lag
     const len = 0.075 * w * size
@@ -1018,16 +1027,18 @@ function footClouds(p: p5, k: number, t: number, far: boolean) {
   const lit = mixHex(WASTES.cloud, WASTES.gold, 0.35 * gold)
   const under = mixHex(mixHex(WASTES.cloud, WASTES.slate, 0.45), WASTES.dusk, 0.25 * gold)
   FOOTFALLS.forEach((ff, fi) => {
-    if (ff.far !== far || t < ff.t - ff.form || t > ff.lift + 2.2) return
+    if (ff.far !== far || t < ff.t - ff.form || t > ff.lift + 1.4) return
     const g = smooth(t, ff.t - ff.form, ff.t)
     const left = Math.max(0, t - ff.lift)
-    const a = g * (1 - smooth(t, ff.lift, ff.lift + 2.2)) * (far ? 0.8 : 1)
+    // Behind it, once the foot has lifted, each melts away quickly, sinking a little and spreading as it goes: never a
+    // trail of like beads along the stair.
+    const a = g * (1 - smooth(t, ff.lift, ff.lift + 1.4)) * (far ? 0.8 : 1)
     if (a < 0.01) return
     const since = Math.max(0, t - ff.t)
     const spread = 1 - Math.exp(-since / 0.45)
     const w = 2.6 * ff.size * (0.55 + 0.45 * g) * (1 + 0.18 * spread) + 1.2 * left
     const cx = ff.at[0] + 0.35 - 0.3 * left
-    const top = ff.at[1] + 0.02
+    const top = ff.at[1] + 0.02 + 0.35 * left
     const n = Math.max(5, Math.round(w * 2.4))
     const puffs: [number, number, number][] = []
     for (let i = 0; i < n; i++) {
