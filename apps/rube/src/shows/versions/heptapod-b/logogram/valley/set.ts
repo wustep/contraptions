@@ -54,17 +54,24 @@ export function riseAt(t: number): number {
   const u = t - DEPART
   if (u <= 0) return 0
   const start = 0.6 * (1 - Math.exp(-u / 0.35))
-  const climb = 34 * Math.pow(sm(u, 0.2, 11.5), 1.6)
+  const climb = 44 * Math.pow(sm(u, 0.15, 8.5), 1.35)
   return -(start + climb)
 }
-/** How far the shell has gone to vapour: nothing until it has begun to rise, gone by ~195.6. */
+/**
+ * How far the shell has gone (drawn with `goes: 'fade'`: it pales into the air as a whole, no line anywhere): from
+ * soon after it starts up, even, gone by ~194.2. The cloud it rises into takes it from the top meanwhile.
+ */
 export function vanishAt(t: number): number {
-  return sm(t, DEPART + 0.9, DEPART + 9.3)
+  return clamp01((t - (DEPART + 0.7)) / 7.2)
 }
-/** How far the cloud has opened over the valley, and the fog lifted off it: 0 .. 1. */
+/** How far the cloud has opened over the valley where it went, and the fog lifted off it: 0 .. 1. */
 export function openAt(t: number): number {
-  return sm(t, DEPART + 1.5, DEPART + 10.2)
+  return sm(t, DEPART + 3.0, DEPART + 9.6)
 }
+/** The low cloud it goes up into: there from the cut back into the valley. */
+const deckAt = (t: number) => sm(t, DEPART - 1.25, DEPART - 0.3)
+/** The underside of that cloud, at x: lowering a little as it takes the shell. */
+const deckUnder = (x: number, t: number) => -142 + 40 * sm(t, DEPART, DEPART + 6.2) + 11 * (fbm(x / 22 + t * 0.012, 53) - 0.5)
 
 /* ------------------------------------------------------------------ the land */
 
@@ -144,7 +151,7 @@ const shiftOf = (d: number, cx: number, cy: number): Pt => {
 type F = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number }
 
 /** How much of the far land the ground mist takes, for a camera at height `cy`: none from the air, most from the meadow. */
-const lowHaze = (cy: number) => 0.92 * sm(cy, -16, -2.5)
+const lowHaze = (cy: number) => 0.7 * sm(cy, -16, -2.5)
 
 function drawLayer(ctx: CanvasRenderingContext2D, k: number, f: F, L: Layer, air: string, openNow = 0): void {
   const [sx, sy] = shiftOf(L.d, f.cx, f.cy)
@@ -153,7 +160,7 @@ function drawLayer(ctx: CanvasRenderingContext2D, k: number, f: F, L: Layer, air
   // Seen from low down, through the mist lying on the valley floor, the far land is paler still: from the meadow
   // itself the far distance is all but lost in it, and there is only the air over the near land.
   // And once the cloud has opened at the end, the air is lit: the far land paler in it.
-  const low = Math.min(0.95, lowHaze(f.cy) * Math.min(1, (1 - 1 / L.d) * 1.25) + 0.4 * openNow)
+  const low = Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / L.d) * 1.25) + 0.12 * openNow)
   ctx.fillStyle = mixHex(L.color, air, low)
   ctx.beginPath()
   ctx.moveTo((f.x0 - 1) * k, bottom * k)
@@ -165,6 +172,92 @@ function drawLayer(ctx: CanvasRenderingContext2D, k: number, f: F, L: Layer, air
   ctx.lineTo((f.x1 + 1) * k, bottom * k)
   ctx.closePath()
   ctx.fill()
+}
+
+/**
+ * The rest of the camp, farther up the valley on the second layer's floor: tents, a truck, a light tower, a mast, as
+ * soft silhouettes in the air between (seen from the meadow behind the near camp; specks in the wide).
+ */
+const FAR_CAMP: { kind: 'tent' | 'truck' | 'tower'; x: number; len: number }[] = [
+  { kind: 'tent', x: -41, len: 7.6 },
+  { kind: 'tent', x: -36.5, len: 5.5 },
+  { kind: 'truck', x: -33.2, len: 5.5 },
+  { kind: 'truck', x: -22, len: 5.5 },
+  { kind: 'tower', x: -18.6, len: 0 },
+  { kind: 'tent', x: -17, len: 6.5 },
+  { kind: 'tent', x: -12.5, len: 7 },
+]
+const FAR_D = 3.2
+function drawFarCamp(ctx: CanvasRenderingContext2D, k: number, f: F, air: string): void {
+  const [sx, sy] = shiftOf(FAR_D, f.cx, f.cy)
+  const s = 1 / FAR_D
+  const y0 = floorOf(FAR_D) + sy + 0.1 * s
+  if (y0 - 8 * s > f.y1 || y0 < f.y0) return
+  const low = Math.min(0.9, lowHaze(f.cy) * Math.min(1, (1 - 1 / FAR_D) * 1.25))
+  // Seen only from down on the meadow (from the air it is specks, and hidden by the shell).
+  const seen = sm(f.cy, -24, -10)
+  if (seen <= 0.01) return
+  ctx.save()
+  ctx.globalAlpha *= seen
+  ctx.fillStyle = mixHex(mixHex(VALLEY.ridge, VALLEY.oliveDark, 0.6), air, 0.25 + low * 0.45)
+  for (const it of FAR_CAMP) {
+    const x0 = it.x + sx
+    if (x0 + 9 * s < f.x0 || x0 > f.x1) continue
+    const X = (u: number) => (x0 + u * s) * k
+    const Y = (v: number) => (y0 - v * s) * k
+    ctx.beginPath()
+    if (it.kind === 'tent') {
+      ctx.moveTo(X(0), Y(0))
+      ctx.lineTo(X(0), Y(1.25))
+      ctx.lineTo(X(0.9), Y(2.45))
+      ctx.lineTo(X(it.len - 0.9), Y(2.45))
+      ctx.lineTo(X(it.len), Y(1.25))
+      ctx.lineTo(X(it.len), Y(0))
+    } else if (it.kind === 'truck') {
+      ctx.moveTo(X(0), Y(0.2))
+      ctx.lineTo(X(0), Y(2.35))
+      ctx.lineTo(X(0.25), Y(2.55))
+      ctx.lineTo(X(3.2), Y(2.55))
+      ctx.lineTo(X(3.4), Y(2.35))
+      ctx.lineTo(X(3.55), Y(2.25))
+      ctx.lineTo(X(4.6), Y(2.25))
+      ctx.lineTo(X(4.6), Y(1.6))
+      ctx.lineTo(X(5.5), Y(1.5))
+      ctx.lineTo(X(5.5), Y(0.2))
+    } else {
+      ctx.moveTo(X(-0.12), Y(0))
+      ctx.lineTo(X(-0.12), Y(7.2))
+      ctx.lineTo(X(-0.6), Y(7.2))
+      ctx.lineTo(X(-0.6), Y(7.8))
+      ctx.lineTo(X(0.6), Y(7.8))
+      ctx.lineTo(X(0.6), Y(7.2))
+      ctx.lineTo(X(0.12), Y(7.2))
+      ctx.lineTo(X(0.12), Y(0))
+    }
+    ctx.closePath()
+    ctx.fill()
+    // A tent's roof and a truck's canvas catch the sky: a paler band, so they read as things and not as blocks.
+    if (it.kind !== 'tower') {
+      const body: string = String(ctx.fillStyle)
+      ctx.fillStyle = mixHex(body, air, 0.35)
+      ctx.beginPath()
+      if (it.kind === 'tent') {
+        ctx.moveTo(X(0.06), Y(1.25))
+        ctx.lineTo(X(0.92), Y(2.4))
+        ctx.lineTo(X(it.len - 0.92), Y(2.4))
+        ctx.lineTo(X(it.len - 0.06), Y(1.25))
+      } else {
+        ctx.moveTo(X(0.05), Y(1.1))
+        ctx.lineTo(X(0.05), Y(2.3))
+        ctx.lineTo(X(3.35), Y(2.3))
+        ctx.lineTo(X(3.35), Y(1.1))
+      }
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = body
+    }
+  }
+  ctx.restore()
 }
 
 /** Mist lying in the valley's fold at a layer's foot: a soft band, a few slow swells along it. */
@@ -370,10 +463,33 @@ function drawFogBand(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
   if (slot > 0.01) lobe(ctx, k, SHELL_X, (y0 + y1) / 2, 5.5, 1.5, rgbOf(VALLEY.slotLight), 0.5 * slot * a, 0.35)
 }
 
-/** Mist lying on the meadow, thickest where the pour pools at the near ridge's foot. */
-function drawMist(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, a: number): void {
-  if (f.y1 < MEADOW - 4 || f.y0 > MEADOW + 1 || a <= 0.01) return
+/**
+ * Mist lying on the meadow, thickest where the pour pools at the near ridge's foot; close to, it lies in drifts that
+ * move slowly across the grass and rise off it, and at the end, as the cloud opens, it lifts and thins.
+ */
+function drawMist(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, a: number, open = 0): void {
+  if (f.y1 < MEADOW - 6 || f.y0 > MEADOW + 1 || a <= 0.01) return
   const fog = rgbOf(VALLEY.fog)
+  const cells = f.y1 - f.y0
+  const close = 1 - sm(cells, 9, 18)
+  if (close > 0.01) {
+    const g = 2.4
+    const drift = t * 0.28
+    const i0 = Math.floor((f.x0 - 3 - drift) / g)
+    const i1 = Math.ceil((f.x1 + 3 - drift) / g)
+    if (i1 - i0 < 200) {
+      for (let i = i0; i <= i1; i++) {
+        const x = i * g + drift + (hash(i, 41, 1) - 0.5) * g
+        // Each drift rises off the grass and thins on its own slow cycle; higher and fainter as the fog lifts.
+        const ph = (t * (0.05 + 0.03 * hash(i, 41, 2)) + hash(i, 41, 3)) % 1
+        const y = MEADOW - 0.1 - 0.3 * hash(i, 41, 4) - ph * (1.1 + 2.2 * open)
+        const r = (1.1 + 1.4 * hash(i, 41, 5)) * (1 + 0.7 * ph)
+        const al = 0.55 * close * Math.sin(Math.PI * ph) ** 1.5 * (1 - 0.35 * open) * (hash(i, 41, 6) < 0.7 ? 1 : 0)
+        lobe(ctx, k, x, y, r, r * 0.34, fog, al, 0.45)
+      }
+    }
+  }
+  a *= 1 - 0.5 * open
   band(ctx, k, f.x0 - 1, f.x1 + 1, MEADOW - 1.4, MEADOW + 0.2, fog, 0.35 * a)
   // Its swells, where they are big enough to be soft (in a wide it is the haze alone).
   const near = sm(k, 3, 10)
@@ -453,39 +569,40 @@ function drawCeiling(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, 
 }
 
 /**
- * The light coming through where the cloud has opened: long soft shafts, leaning, down through the air onto the
- * valley, in front of the far land. Composed in the world's own plane over the meadow where the shell was.
+ * The light coming through where the cloud has opened over where the shell was: long soft shafts, leaning a little,
+ * falling through the air onto the meadow under it, and pooling there on the grass.
  */
 function drawShafts(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number): void {
   if (open <= 0.02) return
   const light = rgbOf(VALLEY.floodlight)
-  const top = -175
-  const len = 185
+  const top = -132
+  const len = MEADOW - top
+  const lean = 0.1
   for (let j = 0; j < 6; j++) {
-    const x = SHELL_X - 40 + j * 17 + 4 * Math.sin(t * 0.05 + j) + (hash(j, 2, 43) - 0.5) * 8
-    const w = 4 + 5 * hash(j, 1, 43)
-    const a = (0.1 + 0.08 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.07, 0.5 + j * 0.07)
-    const lean = 0.3
-    const x0 = x - w
-    const x1 = x + w + len * lean
-    if (x1 + w * 3 < f.x0 || x0 - w > f.x1) continue
-    const g2 = ctx.createLinearGradient(0, top * k, 0, (top + len) * k)
+    const x = SHELL_X - 22 + j * 10 + 3 * Math.sin(t * 0.05 + j) + (hash(j, 2, 43) - 0.5) * 4
+    const w = 2.6 + 3.2 * hash(j, 1, 43)
+    const a = (0.11 + 0.08 * hash(j, 3, 43)) * sm(open, 0.05 + j * 0.06, 0.45 + j * 0.06)
+    if (a <= 0.004) continue
+    const foot = x + len * lean
+    if (Math.max(x, foot) + w * 4 < f.x0 || Math.min(x, foot) - w * 3 > f.x1) continue
+    const g2 = ctx.createLinearGradient(0, top * k, 0, MEADOW * k)
     g2.addColorStop(0, `rgba(${light}, 0)`)
-    g2.addColorStop(0.25, `rgba(${light}, ${a})`)
-    g2.addColorStop(0.8, `rgba(${light}, ${a * 0.8})`)
-    g2.addColorStop(1, `rgba(${light}, ${a * 0.3})`)
+    g2.addColorStop(0.2, `rgba(${light}, ${a})`)
+    g2.addColorStop(1, `rgba(${light}, ${a * 0.85})`)
     ctx.fillStyle = g2
-    for (const [grow, al] of [[2, 0.4], [1, 1]] as const) {
+    for (const [grow, al] of [[2.2, 0.35], [1, 1]] as const) {
       ctx.globalAlpha *= al
       ctx.beginPath()
       ctx.moveTo((x - w * grow) * k, top * k)
       ctx.lineTo((x + w * grow) * k, top * k)
-      ctx.lineTo((x + w * 2 * grow + len * lean) * k, (top + len) * k)
-      ctx.lineTo((x - w * 0.8 * grow + len * lean) * k, (top + len) * k)
+      ctx.lineTo((foot + w * 1.6 * grow) * k, MEADOW * k)
+      ctx.lineTo((foot - w * 1.2 * grow) * k, MEADOW * k)
       ctx.closePath()
       ctx.fill()
       ctx.globalAlpha /= al
     }
+    // Where it falls, the grass is lit.
+    lobe(ctx, k, foot + w * 0.2, MEADOW - 0.1, w * 2.4, 0.55, light, a * 2.2, 0.45)
   }
 }
 
@@ -504,7 +621,7 @@ function drawCrown(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, op
     const w = sm(x, -62, -30) * (1 - sm(x, 30, 62))
     const r = 12 + 8 * hash(i, 4, 51)
     const yy = y - 6 * hash(i, 5, 51) + rise * 0.3
-    lobe(ctx, k, x, yy, r, r * 0.34, cloud, 0.42 * w * (1 - open), 0.5)
+    lobe(ctx, k, x, yy, r, r * 0.34, cloud, 0.42 * w * (1 - open) * (1 - deckAt(t)), 0.5)
   }
 }
 
@@ -546,42 +663,104 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
 }
 
 /**
- * What the shell goes to: it thins from its crown down (the canonical drawing cuts it off at a line), and there, all
- * across it, it is cloud: soft vapour lying along that line and rising off it, spreading, into the cloud above.
+ * What comes off the shell as it goes: soft vapour shed from its flanks, all the way up, rising and spreading into
+ * the cloud above (which is drawn over it). Never along a line.
  */
-function drawVapour(ctx: CanvasRenderingContext2D, k: number, f: F, vanish: number, rise: number): void {
-  if (vanish <= 0.005 || vanish >= 0.999) return
+function drawVapour(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, vanish: number, rise: number): void {
+  if (vanish <= 0.01 || vanish >= 0.999) return
   const cloud = rgbOf(VALLEY.cloud)
   const shade = rgbOf(mixHex(VALLEY.cloud, VALLEY.cloudShade, 0.5))
-  const lineAt = (v: number) => {
-    const q = clamp01(v * 1.15)
-    const u = q * q * (3 - 2 * q)
-    return { u, y: BELLY + rise - SHELL_H + SHELL_H * u, half: shellHalf(u) * SHELL_W }
-  }
-  const now = lineAt(vanish)
-  const fade = 1 - sm(vanish, 0.86, 1)
-  // Along the line, across its whole width: the edge is cloud, never a cut.
-  const n = 14
-  for (let i = 0; i < n; i++) {
-    const x = SHELL_X - now.half * 1.05 + (2.1 * now.half * (i + 0.5)) / n + (hash(i, 7, 61) - 0.5) * 4
-    const r = 4 + now.half * 0.3 + 6 * hash(i, 8, 61)
-    const y = now.y - r * (0.1 + 0.5 * hash(i, 10, 61)) + 2 * Math.sin(vanish * 9 + i)
-    if (x + r < f.x0 || x - r > f.x1 || y + r < f.y0 || y - r > f.y1) continue
-    lobe(ctx, k, x, y, r, r * (0.5 + 0.25 * hash(i, 11, 61)), hash(i, 9, 61) < 0.4 ? shade : cloud, 0.5 * fade * sm(vanish, 0.005, 0.05), 0.5)
-  }
-  // Rising off it: each born on the line where it was when it was born, drifting up and out, spreading, thinning.
-  const m = 40
+  const m = 34
   for (let i = 0; i < m; i++) {
-    const born = 0.01 + 0.86 * (i / m) + 0.02 * hash(i, 1, 61)
-    const life = clamp01((vanish - born) / 0.3)
+    const born = 0.02 + 0.7 * hash(i, 1, 63)
+    const life = clamp01((vanish - born) / 0.28)
     if (life <= 0 || life >= 1) continue
-    const at = lineAt(born)
-    const side = hash(i, 3, 61) * 2 - 1
-    const x = SHELL_X + side * at.half * 0.9 + side * life * 8
-    const y = at.y - life * 22
-    const r = (5 + 7 * hash(i, 4, 61)) * (0.8 + 1.1 * life)
+    const u = 0.22 + 0.72 * hash(i, 2, 63)
+    const side = hash(i, 3, 63) < 0.5 ? -1 : 1
+    const x = SHELL_X + side * shellHalf(u) * SHELL_W * (0.82 + 0.16 * hash(i, 4, 63)) + side * life * 7
+    const y = BELLY + rise - SHELL_H * (1 - u) - life * 20 - 3 * Math.sin(t * 0.3 + i)
+    const r = (5 + 6 * hash(i, 5, 63)) * (0.8 + 0.9 * life)
     if (x + r < f.x0 || x - r > f.x1 || y + r < f.y0 || y - r > f.y1) continue
-    lobe(ctx, k, x, y, r, r * 0.55, cloud, 0.42 * Math.sin(Math.PI * life), 0.45)
+    lobe(ctx, k, x, y, r, r * 0.6, hash(i, 6, 63) < 0.35 ? shade : cloud, 0.34 * Math.sin(Math.PI * life), 0.45)
+  }
+}
+
+/**
+ * The low cloud the shell goes up into at the end, in front of it: a deck of soft billowed volumes whose underside
+ * takes the shell from the top as it rises, thin wisps drifting below it over what is left, and at last an opening
+ * over where it was, the light coming through (the shafts, drawn after the land).
+ */
+function drawDeck(ctx: CanvasRenderingContext2D, k: number, f: F, t: number, open: number): void {
+  const a = deckAt(t)
+  if (a <= 0.01) return
+  const mean = deckUnder(SHELL_X, t)
+  if (mean + 22 < f.y0 || mean - 90 > f.y1) return
+  const cloud = rgbOf(VALLEY.cloud)
+  const shade = rgbOf(mixHex(VALLEY.cloud, VALLEY.cloudShade, 0.65))
+  // Its underside is in its own shadow: greyer than the sky under it.
+  const under = rgbOf(mixHex(VALLEY.skyHigh, VALLEY.ridgeFar, 0.45))
+  const fog = rgbOf(VALLEY.fog)
+  const hole = (x: number) => open * sm(open * 70 - Math.abs(x - SHELL_X), -12, 24)
+  // The body: a dense fill above the underside, then rows of big soft volumes on it up past the frame's top, drifting.
+  const top = Math.min(f.y0 - 2, mean - 60)
+  const fill = ctx.createLinearGradient(0, top * k, 0, (mean - 6) * k)
+  fill.addColorStop(0, `rgba(${cloud}, ${0.96 * a})`)
+  fill.addColorStop(0.6, `rgba(${shade}, ${0.95 * a})`)
+  fill.addColorStop(0.88, `rgba(${under}, ${0.85 * a})`)
+  fill.addColorStop(1, `rgba(${under}, 0)`)
+  ctx.fillStyle = fill
+  if (open < 0.02) ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (mean - 6 - top) * k)
+  else {
+    // With the opening in it: the fill in strips, thinning where it has opened.
+    const n = 40
+    for (let i = 0; i < n; i++) {
+      const xa = f.x0 - 1 + ((f.x1 - f.x0 + 2) * i) / n
+      const xb = f.x0 - 1 + ((f.x1 - f.x0 + 2) * (i + 1)) / n
+      ctx.globalAlpha *= 1 - hole((xa + xb) / 2)
+      ctx.fillRect(xa * k, top * k, (xb - xa + 0.05) * k, (mean - 6 - top) * k)
+      ctx.globalAlpha /= Math.max(1e-3, 1 - hole((xa + xb) / 2))
+    }
+  }
+  const g = 13
+  const drift = t * 0.35
+  const i0 = Math.floor((f.x0 - 30 - drift) / g)
+  const i1 = Math.ceil((f.x1 + 30 - drift) / g)
+  if (i1 - i0 > 60) return
+  for (let i = i0; i <= i1; i++) {
+    const x = i * g + drift + (hash(i, 1, 57) - 0.5) * g * 0.8
+    const under = deckUnder(x, t)
+    const h = 1 - hole(x)
+    for (let r = 0; r < 6; r++) {
+      const y = under - 12 - r * 15 + (hash(i, r, 58) - 0.5) * 6
+      if (y + 25 < f.y0) break
+      const rad = 15 + 9 * hash(i, r, 59)
+      lobe(ctx, k, x, y, rad, rad * 0.6, r % 2 ? shade : cloud, Math.min(0.9, 0.62 + 0.1 * r) * a * h, 0.55)
+    }
+  }
+  // Its underside: billows, some lower than others, rolling slowly.
+  const g2 = 9
+  const j0 = Math.floor((f.x0 - 20 - drift * 0.8) / g2)
+  const j1 = Math.ceil((f.x1 + 20 - drift * 0.8) / g2)
+  for (let j = j0; j <= j1; j++) {
+    const x = j * g2 + drift * 0.8 + (hash(j, 2, 57) - 0.5) * g2
+    const rad = (7 + 8 * hash(j, 3, 57)) * (1 + 0.06 * Math.sin(t * 0.4 + j))
+    const y = deckUnder(x, t) - rad * 0.1 + 6 * hash(j, 4, 57) - 2
+    lobe(ctx, k, x, y, rad, rad * 0.62, hash(j, 5, 57) < 0.55 ? under : shade, 0.82 * a * (1 - hole(x)), 0.55)
+    // Its lit top, above.
+    lobe(ctx, k, x + rad * 0.2, y - rad * 0.45, rad * 0.8, rad * 0.4, cloud, 0.5 * a * (1 - hole(x)), 0.5)
+  }
+  // Below it, thin wisps drifting across over what is left of the shell: it is seen through them.
+  const g3 = 11
+  const k0 = Math.floor((f.x0 - 20 - drift * 1.4) / g3)
+  const k1 = Math.ceil((f.x1 + 20 - drift * 1.4) / g3)
+  const thin = a * sm(t, DEPART + 0.5, DEPART + 3) * (1 - 0.7 * open)
+  if (thin > 0.01) {
+    for (let j = k0; j <= k1; j++) {
+      const x = j * g3 + drift * 1.4 + (hash(j, 6, 57) - 0.5) * g3
+      const y = deckUnder(x, t) + 5 + 22 * hash(j, 7, 57)
+      const rad = 8 + 8 * hash(j, 8, 57)
+      lobe(ctx, k, x, y, rad, rad * 0.3, fog, 0.24 * thin * (1 - hole(x)), 0.45)
+    }
   }
 }
 
@@ -622,6 +801,7 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
   const lift = 1 - 0.8 * open
   LAYERS.forEach((L, i) => {
     drawLayer(ctx, k, f, L, low, open)
+    if (i === LAYERS.length - 1) drawFarCamp(ctx, k, f, low)
     for (const pour of L.pours) drawPour(ctx, k, f, L, pour, t + i * 17, open)
     if (i === 0) drawCeiling(ctx, k, f, t, open)
     drawFold(ctx, k, f, L, t, lift)
@@ -637,13 +817,14 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
     ctx.save()
     p.push()
     p.translate(SHELL_X * k, (BELLY + rise) * k)
-    drawShell(p, k, { t, h: SHELL_H, w: SHELL_W, slot: slotAt(t), slotW: SLOT_W, vanish, haze, air: mixHex(VALLEY.sky, VALLEY.cloud, 0.4 * open), puffs: false })
+    drawShell(p, k, { t, h: SHELL_H, w: SHELL_W, slot: slotAt(t), slotW: SLOT_W, vanish, haze, air: mixHex(VALLEY.sky, VALLEY.cloud, 0.4 * open), puffs: false, goes: 'fade' })
     p.pop()
     ctx.restore()
   }
   drawSlotLight(ctx, k, f, t, vanish, rise)
-  drawVapour(ctx, k, f, vanish, rise)
+  drawVapour(ctx, k, f, t, vanish, rise)
   drawCrown(ctx, k, f, t, open, rise)
+  drawDeck(ctx, k, f, t, open)
 
   // The near land: the hills either side (the near ridge on the left), then the meadow's floor.
   const n = 180
@@ -670,7 +851,7 @@ function drawValley(p: p5, k: number, t: number, ink: string, weight: number): v
     ctx.fillRect((f.x0 - 1) * k, (MEADOW + 0.12) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - MEADOW + 1) * k)
   }
   drawBank(ctx, k, f, t, open)
-  drawMist(ctx, k, f, t, 0.36 * lift)
+  drawMist(ctx, k, f, t, 0.36 * lift + 0.12 * open, open)
   drawShafts(ctx, k, f, t, open)
 
   // The camp's standing hardware: the road, the helideck, the tents, trucks and the comms mast.

@@ -2,6 +2,7 @@ import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { box, carried, part, scenery, type Company, type PartShot, type Riders, type Slot } from '../kit'
 import { HANNAH_OLDER, HANNAH_SCALE } from '../worlds'
+import { pulse } from '../music'
 import { drawGlare, drawHouse, type Body } from './house-draw'
 import {
   END,
@@ -226,6 +227,9 @@ export const LAKE_HITS: number[] = [
   PRO.look,
   PRO.lookToo,
   ...PRO.light,
+  // The first great pulse (8.911): the glare on the water has swelled to white, the frame all light (the director's
+  // veil peaks on it) and the place changes inside it.
+  pulse(37),
   // The first vision: the cut, and Hannah's leap (off, down) and skip.
   V1.cut,
   ...V1.bounce,

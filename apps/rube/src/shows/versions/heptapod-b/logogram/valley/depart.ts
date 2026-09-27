@@ -1,11 +1,10 @@
 import type { Pt } from '../../../../../parts'
-import { box, carried, frame, part, type PartShot } from '../kit'
+import { box, carried, part, type PartShot } from '../kit'
 import { pulse } from '../music'
 import { SEAMS } from '../seams'
-import { VALLEY } from '../worlds'
 import { MEADOW } from './geo'
-import { DEPART, openAt } from './set'
-import { lobe, rgbOf, sm } from './set-air'
+import { DEPART } from './set'
+import { sm } from './set-air'
 
 /**
  * The departure (185.330 → 196.783), the valley builder's: the meadow after. She is on the grass in the open,
@@ -31,6 +30,8 @@ export const AFTER_AT: Pt = [14.5, MEADOW - 0.13]
 const IAN_GO = pulse(799)
 const TOUCH = pulse(818)
 const CUT_IN = pulse(805)
+/** Her glance up, between the cut in and his reaching her. */
+const GLANCE = 193.0
 /** Where Ian waits, by the trucks, and where he comes to. */
 const IAN_FROM = 22.2
 const IAN_TO = 0.36
@@ -42,7 +43,10 @@ export const DEPART_HITS: number[] = [DEPART, IAN_GO, CUT_IN, TOUCH]
 function herAt(t: number): Pt {
   const look = t > DEPART ? -0.05 * Math.sin(Math.PI * Math.min(1, (t - DEPART) / 1.6)) * Math.exp(-Math.max(0, t - DEPART - 0.8) / 0.6) : 0
   const lean = 0.035 * Math.sin(Math.PI * sm(t, TOUCH - 0.5, TOUCH + 0.9))
-  return [-0.5 + look + lean, 0]
+  // A glance up to where it went (back and up to her left), before he reaches her.
+  const g = Math.max(0, Math.min(1, (t - GLANCE) / 1.7))
+  const glance = -0.07 * Math.sin(Math.PI * g) ** 2
+  return [-0.5 + look + lean + glance, 0]
 }
 
 /** Ian's x from her (frame cells) at `t`: waiting, then rolling to her side, easing to a stop at the touch. */
@@ -70,16 +74,8 @@ function ianX(t: number): number {
 export const depart = part<DepartState>(
   {
     name: 'depart',
-    draw: (p, s, c) => {
-      const t = c.t + s.begin
-      const open = openAt(t)
-      if (open <= 0.01) return
-      // The light coming through onto the meadow round them, as the cloud opens.
-      const f = frame(p, c.k)
-      if (f.y1 < -3 || f.y0 > 2) return
-      const ctx = p.drawingContext as CanvasRenderingContext2D
-      lobe(ctx, c.k, 1.5, 0.05, 9 + 6 * open, 0.9, rgbOf(VALLEY.floodlight), 0.22 * sm(open, 0.2, 1), 0.45)
-    },
+    // The meadow, the light and the fog are the set's; the part draws nothing of its own.
+    draw: () => {},
   },
   (slot) => {
     const dur = slot.end - slot.begin
@@ -114,7 +110,9 @@ function shotsFor(end: number): PartShot[] {
     { t: 189.2, cells: 161, hold: w(-8, -78.8), w: 1 },
     { t: CUT_IN - 0.03, cells: 149, hold: w(-8, -72.8), w: 1 },
     { t: CUT_IN, cells: 11, hold: w(12.6, -3.1), w: 1, cut: true },
-    { t: 194.0, cells: 6.6, hold: w(13.7, -1.9), w: 1 },
+    // With her glance, a little more of the sky over them.
+    { t: 193.75, cells: 8.6, hold: w(13.3, -2.75), w: 1 },
+    { t: 194.7, cells: 6.0, hold: w(13.9, -1.75), w: 1 },
     { t: 195.4, cells: 4.4, hold: w(14.25, -1.2), w: 1 },
     { t: end, cells: last.cells, hold: [her[0] + last.frame[0], her[1] + last.frame[1]], w: 1 },
   ]
