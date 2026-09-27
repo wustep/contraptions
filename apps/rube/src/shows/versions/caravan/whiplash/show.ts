@@ -51,6 +51,21 @@ function boundsOf(pieces: Placed[]): Box {
   return b
 }
 
+/**
+ * How Andrew's ball gives on a strike that turns him (a landing, a stomp, the metronome's swing reversing under him):
+ * flattened along the blow, and ringing back through a slight rebound elongation, gone in about a tenth of a second.
+ * Shape only: where he is, and every strike, stay exactly as the lanes put them.
+ */
+interface Impact {
+  t: number
+  /** The blow's direction (the change of his velocity), a unit vector in world cells. */
+  nx: number
+  ny: number
+  /** How hard, 0..1. */
+  a: number
+}
+const SQUASH = { max: 0.16, decay: 0.045, ring: 2 * Math.PI * 7.5, span: 0.22 }
+
 const PEOPLE: Record<Who, { id: number; color: string }> = {
   fletcher: { id: FLETCHER_ID, color: FLETCHER },
   jim: { id: JIM_ID, color: JIM },
@@ -61,7 +76,15 @@ export class CaravanShow extends Show {
   private readonly stages: Stage[]
   private readonly worlds: Universe[]
 
-  constructor(stages: Stage[], readonly duration: number, private readonly riders: Riders = [], private readonly company: Company[] = []) {
+  private impacts: Impact[] | null = null
+
+  constructor(
+    stages: Stage[],
+    readonly duration: number,
+    private readonly riders: Riders = [],
+    private readonly company: Company[] = [],
+    private readonly strikes: readonly number[] = [],
+  ) {
     super('caravan')
     this.stages = stages
     this.worlds = stages.map((s, index) => {
@@ -126,13 +149,61 @@ export class CaravanShow extends Show {
     return [placed.col + placed.mirror * at.x, placed.row + at.y]
   }
 
+  /** The strikes that turn him, each with its blow's direction and weight (found once, from his own path). */
+  private impactList(): Impact[] {
+    if (this.impacts) return this.impacts
+    const out: Impact[] = []
+    const h = 0.012
+    for (const ts of [...this.strikes].sort((a, b) => a - b)) {
+      const a = this.where(ts - h)
+      const b = this.where(ts)
+      const c = this.where(ts + h)
+      const dx = (c[0] - b[0] - (b[0] - a[0])) / h
+      const dy = (c[1] - b[1] - (b[1] - a[1])) / h
+      const dv = Math.hypot(dx, dy)
+      // A strike he rides through (a stick of the drummer's frame under his collar, a roll) barely turns him.
+      if (dv < 1.6) continue
+      out.push({ t: ts, nx: dx / dv, ny: dy / dv, a: Math.min(1, (dv - 1.6) / 6) })
+    }
+    this.impacts = out
+    return out
+  }
+
+  /** His squash at `t`: how much (positive flattens along the blow, negative draws out along it) and the blow's angle. */
+  squash(t: number): { e: number; angle: number } | null {
+    const list = this.impactList()
+    let lo = 0
+    let hi = list.length - 1
+    if (hi < 0 || list[0].t > t) return null
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1
+      if (list[mid].t <= t) lo = mid
+      else hi = mid - 1
+    }
+    const hit = list[lo]
+    const u = t - hit.t
+    if (u > SQUASH.span) return null
+    const e = SQUASH.max * hit.a * Math.exp(-u / SQUASH.decay) * Math.cos(SQUASH.ring * u)
+    return { e, angle: Math.atan2(hit.ny, hit.nx) }
+  }
+
   override at(t: number): ShowPoint {
     const time = this.clamp(t)
     const index = this.indexAt(time)
     const universe = this.worlds[index]
     const placed = this.holder(time)
     const into = time - placed.start
-    const point = laneAt(placed.lane, into)
+    const point = { ...laneAt(placed.lane, into) }
+    // The give on a blow: flatter along it and wider across (about the same area), in the lane's hand for the stage.
+    const sq = point.hidden ? null : this.squash(time)
+    let heroAngle = point.angle
+    if (sq && Math.abs(sq.e) > 1e-3) {
+      const across = 1 + 0.6 * sq.e
+      point.scale *= across
+      point.stretch *= (1 - sq.e) / across
+      heroAngle = sq.angle
+      point.angle = Math.atan2(Math.sin(sq.angle), placed.mirror * Math.cos(sq.angle))
+    }
     const ball = ballAt(placed.ballIn, placed.changes, into)
     const here: ShowPoint = {
       ...point,
@@ -155,7 +226,7 @@ export class CaravanShow extends Show {
         ghost: ball.ghost,
         scale: point.hidden ? 0 : point.scale,
         stretch: point.stretch,
-        angle: point.angle,
+        angle: heroAngle,
       }
       const balls = ride ? ride.fn(time, hero) : null
       here.balls = company.length ? [...(balls ?? [hero]), ...company] : balls ?? undefined

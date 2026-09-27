@@ -35,6 +35,8 @@ const REACH = 181.52
 const CLICK = 182.433
 /** The strongest note of the hospital: she rolls toward him. */
 const TOUCH = 185.655
+/** The next strong note: his answer, a lean to her, arrives on it. */
+const ANSWER = 186.532
 
 /**
  * He gives her the balloon: he leans to her from `lean`, and at the full of it the knot passes from his top corner to
@@ -65,13 +67,14 @@ const inout = (u: number) => { const v = clamp01(u); return v * v * (3 - 2 * v) 
 
 /**
  * Carl's bearing: over to the lamp and back; then to her with the balloon, well over as the knot goes across, and
- * back a little, still turned to her when she rolls to him (TOUCH), and a touch further for his answer; sitting up
+ * back a little, still turned to her when she rolls to him (TOUCH), and a touch further for his answer (on the next
+ * strong note, ANSWER: her gesture and his each have their note); sitting up
  * again by the cut.
  */
 function tilt(T: number): number {
   const reach = -0.3 * inout((T - REACH) / (CLICK - REACH)) * (1 - inout((T - CLICK - 0.08) / 1.45))
   const give = 0.18 * inout((T - HAND.lean) / (HAND.to - HAND.lean)) - 0.1 * inout((T - HAND.to - 0.05) / 0.95)
-  const answer = 0.045 * inout((T - TOUCH - 0.2) / 1.0)
+  const answer = 0.045 * inout((T - TOUCH - 0.15) / (ANSWER - TOUCH - 0.15))
   return reach + (give + answer) * (1 - inout((T - 187.55) / 1.6))
 }
 

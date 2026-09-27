@@ -38,9 +38,11 @@ CC BY-SA 4.0; samples CC BY 3.0 (Alexander Holm); the recording CC BY-SA 4.0.
   so at the end the ball is where it began, on the same stone, going the same way at the same speed. The camera turns a
   whole turn with it. Every shimmer runs on a whole number of cycles a period (`osc`). The day's colours are keyed to
   show time with the last key equal to the first. The ball's spin is rounded to whole turns a period.
-- At the seam the camera is all the way out: the planet small in the dark, the last resonance going. The title comes up
-  over it as the Gymnopédie's first bars begin, and the camera goes down to the ball on the first column as the melody
-  enters.
+- At the seam the camera is all the way out: the planet small in the dark, ringed with what the ball did in the night,
+  the last resonance going. The title comes up over it as the Gymnopédie's first bars begin, and the camera goes down
+  to the ball on the first column as the melody enters. On the way out and back in it keeps the ball's horizon in the
+  picture, curving away under the stars, and slides to the planet's middle only once the planet is nearly all in the
+  frame (`slideAt`), so the planet's dark face never fills it.
 
 ## The machine
 
@@ -50,16 +52,52 @@ low-gravity arc. A second quick note on the same stone is a small bounce (the th
 note whose key the chords strike again answers with a pulse. The ball goes as the music does: quick through the
 eighths, slow over the long notes, never stopping.
 
-One material a piece: the Gymnopédie at dawn and through the morning, slender columns and lintels in the sea; the
-first Gnossienne from dusk into the night, bronze beams on dark posts, each with a lamp the ball lights as it lands and
-which burns down slowly behind it, a thread of lights; the third Gnossienne under the moon, lotus leaves on stems, the
-long ones with a flower that opens when the ball comes. Every bass note sends a slow swell out across the sea from
-under the ball. A grace note is a glint on the ball just before it lands. Between the pieces the camera goes out over
-the curve of the planet to the sun going down, the lamps, the moon.
+One material a piece: the Gymnopédie at dawn and through the day, slender columns and lintels in the sea; the first
+Gnossienne from dusk into the night, bronze beams on dark posts, each with a lamp the ball lights as it lands; the
+third Gnossienne under the moon, lotus leaves on stems, floating, the long ones with a bud that opens into a flower
+when the ball comes. Between the pieces the camera goes out over the curve of the planet to the sun going down, the
+lamps, the moon.
+
+## The story
+
+A lamplighter's round, one day long. By day the ball walks the colonnade under the sun. At dusk it lights a lamp on
+every stone it comes down on, and under the moon it opens the flowers; what it does at night stays done, so behind it
+the lamps burn and the flowers are open, and ahead of it the lamps are dark and the flowers are buds. From far off the
+lamps are a thread of lights over the curve of the planet (the wide between the Gnossiennes), and at the seam the
+whole planet is ringed with them and, fainter, with the flowers: the night's way round, and dark on the day's side.
+Then dawn comes round, the lamps go out one by one and the flowers close (7 to 34 s), and the ball sets off again.
+
+## The music, answered
+
+One job to a voice, each answering its own notes from `satie-performance.json`:
+
+- The melody: the stones and the landings. Coming down on a note the ball gives up a little of its height, as far as
+  the note was played hard, and gets it back with a small rebound (`squash`); the stone sinks under it the same way.
+- The bass: the sea. Each bass note raises a swell under the ball that parts into two crests running out along the
+  sea either way at twice the ball's pace, dying over a few seconds; the crests catch the light, and the third
+  Gnossienne's leaves ride them (`swell`, `crest`, `float`).
+- The chords: the light on the water. Under the sun, under each lit lamp and under the moon lies a path of short
+  strokes of light on the sea, and each chord (its rolled notes heard as one) sets a different few of them flashing, as
+  hard as it was played, dying over half a second (`waterLight`).
+- A grace note: a spark where the ball is about to land, a breath before it does; in the first Gnossienne, at the
+  lamp's wick, which then catches.
+- The phrasing: the camera. It drifts out on a held note, more on a longer one, and in again as the next phrase
+  begins, following the melody like a slow spring, so a run of quick notes stays close and a run of long ones eases
+  back (`breath`). Its keys shape each piece: close as the first Gnossienne climbs to its top note, back over the thread
+  of lamps as it comes down; lower over the pond in the third, where the water and the moon's path are more of the
+  picture.
+- Loudness: the render's own level barely moves (a soft, pedalled piano), so the show answers how full the music is,
+  worked out from the notes (every note's weight, dying away, smoothed over a few seconds; `loudness`). It sets how
+  high the swells stand and how bright the light on the water is: calm in the Gymnopédie's long notes, fullest where the
+  Gnossiennes run on.
 
 ## Checks
 
 `check:shows` (`apps/rube/checks/gymnopedie.ts`): the picker entry, the credit, the three pieces in order; the loop
 (period, offset, a transport that goes round, the last moment equal to the first for the ball and the camera, a time a
 period on the same time); the ball never jumps, the seam included; every landing, bounce and restrike is a melody
-note's own attack and every melody note is one; the ball arrives on each stone as its note is struck; the titles.
+note's own attack and every melody note is one; the ball arrives on each stone as its note is struck, riding it; it
+squashes on every landing and bounce and at no other time; every bass note sends out a swell; every chord note belongs
+to one heard chord; the camera breathes only on held melody notes, never jumps in or out, and its breath and the
+loudness come round with the period; every lamp is dark until the ball lights it and burns until dawn, and every
+flower opens as the ball comes and closes at dawn, across the seam; the titles.

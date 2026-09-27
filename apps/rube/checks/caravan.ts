@@ -10,10 +10,11 @@ import type { Performance, Version } from '../src/shows/registry'
 import type { ShowBall } from '../src/show'
 import onsetsFile from '../../../scripts/shows/plans/caravan-onsets.json'
 import { show as caravanShow } from '../src/shows/versions/caravan/whiplash'
-import { SWITCH } from '../src/shows/versions/caravan/whiplash/score'
+import { PUNCHES, SWITCH, punch } from '../src/shows/versions/caravan/whiplash/score'
+import { strikeFlash } from '../src/shows/versions/caravan/whiplash/drums'
 import { STRIKES } from '../src/shows/versions/caravan/whiplash/hits'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/caravan/whiplash/credits'
-import { BASS, BREAKS, CARNEGIE, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, RECORDING, RIDE, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
+import { BASS, BREAKS, BURST, CARNEGIE, CHORD, COMBS, CYMBALS, DURATION, FINAL, HUSH, KICKS, LOUD, QUIET, RECORDING, RIDE, RUBATO, SNARES, SOLO } from '../src/shows/versions/caravan/whiplash/music'
 import { fletcherAt, poseAt } from '../src/shows/versions/caravan/whiplash/carnegie/conductor'
 import { armPose as frameArm } from '../src/shows/versions/caravan/whiplash/carnegie/finale-rig'
 import { KIT_AT } from '../src/shows/versions/caravan/whiplash/carnegie/stage'
@@ -104,6 +105,32 @@ export function checkCaravan(perf: Performance, version: Version, check: Check):
   check('caravan: the solo strikes its strong strokes (95% of every drum\'s strokes at 1.0 or more)', missed.length <= strong.length * 0.05, `${strong.length - missed.length} of ${strong.length}`)
   check('caravan: the rubato strikes every stroke of the ride, one by one', RIDE.length === 162 && RIDE.every((r) => struck(r, 0.03)))
   check('caravan: the crash strikes every one of the stop-time breaks', BREAKS.length === 12 && BREAKS.every((b) => struck(b, 0.03)))
+
+  // The frame answers the music. The camera's punches land only on the recording's hits and never where the score
+  // asks the frame to be still (the quiet stretch, the rubato); Andrew gives only on a strike, and briefly; a struck
+  // head's or cymbal's light is quick and gone within half a second.
+  const hits = [...data.onsets, ...KICKS, ...SNARES, ...CYMBALS].filter((o) => o.s >= 0.5)
+  const offHit = PUNCHES.filter(([t]) => !hits.some((o) => Math.abs(o.t - t) <= 0.02)).map(([t]) => t.toFixed(3))
+  const stillPunch = PUNCHES.filter(([t]) => (t >= QUIET && t < LOUD) || (t >= RUBATO && t < BURST - 0.01)).map(([t]) => t.toFixed(3))
+  let pushed = 0
+  for (let t = 0; t < DURATION; t += 0.005) pushed = Math.max(pushed, punch(t))
+  check('caravan: the camera punches only on the recording\'s hits (±20 ms), never in the quiet stretch or the rubato, 4.5% at most',
+    PUNCHES.length >= 20 && !offHit.length && !stillPunch.length && pushed <= 0.045,
+    `${PUNCHES.length} punches; off a hit: ${offHit.join(', ')}; where it is still: ${stillPunch.join(', ')}; deepest ${(100 * pushed).toFixed(1)}%`)
+  let give = 0
+  let stray = ''
+  for (let t = 0; t < DURATION; t += 0.004) {
+    const q = show.squash(t)
+    if (!q) continue
+    give = Math.max(give, Math.abs(q.e))
+    if (!stray && !all.some((s) => t - s >= 0 && t - s <= 0.23)) stray = `${t.toFixed(3)} s`
+  }
+  const hops = STRIKES.tune.practice
+  const hopsGiven = hops.filter((t) => show.squash(t + 0.001)).length
+  check('caravan: Andrew gives only just after a strike (16% at most), and on every hop of the practice groove',
+    !stray && give <= 0.16 + 1e-9 && hopsGiven >= hops.length * 0.9, `deepest ${(100 * give).toFixed(1)}%; stray ${stray}; ${hopsGiven} of ${hops.length} hops`)
+  check('caravan: a struck head lights on the stroke and is dark again within half a second',
+    strikeFlash(0) === 0 && strikeFlash(0.02) > 0.6 && strikeFlash(0.5) < 0.005 && strikeFlash(0.61) === 0 && strikeFlash(Infinity) === 0)
 
   // The people: they never jump where they can be seen, and come and go only out of shot or at a change of place.
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {

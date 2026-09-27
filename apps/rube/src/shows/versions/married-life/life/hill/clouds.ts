@@ -19,8 +19,9 @@ import { TREE_X } from './hill'
  * -  bars 32 to 35: three puffs make an airship (body, tail fins, the gondola slung under it), whole on bar 35; it
  *    sails off left, climbing, behind the tree;
  * -  bars 35 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, her tepui in cloud, as tall as it
- *    is wide, the sun on its left; the fifth puff reaches its lip on bar 39 and three falls pour; then a gust takes it
- *    off right, out of the frame by bar 41, while the camera comes down to the two of them;
+ *    is wide, the sun on its left; the fifth puff reaches its lip on bar 39 and three falls pour, held whole in the
+ *    frame through bar 40; then a gust takes it off right, out of the frame by bar 42, while the camera comes down to
+ *    the two of them;
  * -  bars 39 to 45: low over the two of them, big and whole in the frame, a baby sitting up on a cushion of cloud: its
  *    body (bar 40), its leg out in front (41), its head (42: now it is a baby), its arm reaching up and out (43), the
  *    cloud it sits on (44, 45). He starts; she rolls close to him.
@@ -153,7 +154,7 @@ const AIRSHIP: Shape = {
  * On bar 39 three ribbons pour off the lip; then a gust takes it off right.
  */
 const FALLS_CLOUD: Shape = {
-  at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 57.6, 58.6, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
+  at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 58.1, 59.1, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
   size: 1.1,
   smooth: false,
   billows: [
@@ -197,9 +198,9 @@ const LIP: Pt = [0.02, -0.5]
 
 /** The falls, three ribbons off the lip on bar 39: where each leaves the lip (its own cells), how wide, how late after the first. */
 const RIBBONS = [
-  { x: 0.02, w: 0.12, late: 0 },
-  { x: -0.19, w: 0.065, late: 0.09 },
-  { x: 0.21, w: 0.055, late: 0.17 },
+  { x: 0.02, w: 0.15, late: 0 },
+  { x: -0.19, w: 0.085, late: 0.09 },
+  { x: 0.21, w: 0.075, late: 0.17 },
 ]
 /** The mist's curls, one under each ribbon (the billows' indices, in the ribbons' order). */
 const CURLS = [22, 21, 23]
@@ -527,10 +528,29 @@ function mass(p: p5, k: number, billows: Billow[]): void {
   ctx.restore()
 }
 
+/**
+ * The whole cloud takes a breath as each puff joins it on its downbeat: it swells by a few hundredths, quick to come and
+ * slow to settle, so every bar lands in the sky as well as at the chimney.
+ */
+function breath(key: ShapeKey, t: number): number {
+  let v = 0
+  for (const puff of PUFFS) {
+    const late = t - puff.join
+    if (puff.shape !== key || late < 0 || late > 2.5) continue
+    v += 0.05 * puff.amp * smooth(late, 0, 0.06) * Math.exp(-late / 0.45)
+  }
+  return v
+}
+
 function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   const shape = SHAPES[key]
   const { got, loose } = billowsOf(key, t)
   if (!got.size && !loose.length) return
+  const swell = breath(key, t)
+  if (swell > 0) {
+    const [cx, cy] = shape.at(t)
+    for (const [i, b] of got) got.set(i, { ...b, x: cx + (b.x - cx) * (1 + swell), y: cy + (b.y - cy) * (1 + swell), r: b.r * (1 + swell) })
+  }
   if (key === 'falls') {
     // Each curl of the mist is small until its ribbon reaches it, then rises and swells where the water lands.
     CURLS.forEach((i, j) => {
@@ -652,8 +672,8 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   const g = R
   const P = (v: number) => X(v, k)
   const { ago, amp } = lastChuff(t)
-  // The engine gives a small shudder on each chuff, its boiler lifting on its bed and settling.
-  const kick = ago < 0.6 ? Math.exp(-ago / 0.07) * amp : 0
+  // The engine gives a shudder on each chuff, its boiler kicking up on its bed and settling.
+  const kick = ago < 0.6 ? smooth(ago, 0, 0.03) * Math.exp(-ago / 0.09) * amp : 0
   p.push()
   p.translate(P(E), P(g))
   p.scale(ENGINE.scale)
@@ -665,7 +685,7 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.fill(HOME.wood)
   p.rect(P(E - 0.52), P(g - 0.06), P(1.04), P(0.06), P(0.015))
   p.push()
-  p.translate(0, P(-0.012 * kick))
+  p.translate(0, P(-0.03 * kick))
   // The firebox, and the fire in it.
   p.fill(mixHex(INK, HILL.bark, 0.35))
   p.rect(P(E - 0.46), P(g - 0.24), P(0.44), P(0.18), P(0.02))
@@ -716,6 +736,27 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.fill(mixHex(HOME.brass, INK, 0.1))
   p.rect(0, P(-0.025), P(0.13), P(0.025), P(0.01))
   p.pop()
+  // The chuff itself: a cough of steam out of the mouth on the downbeat, round the knot that shoots up out of it,
+  // spreading and thinning in the air by the chimney as the knot goes on.
+  if (ago < 0.7) {
+    const open = 1 - Math.exp(-ago / 0.07)
+    const fade = Math.exp(-ago / 0.2) * Math.min(1, ago / 0.02)
+    const size = 0.75 + 0.4 * amp
+    const seed = Math.round((t - ago) * 1000)
+    const cough: Billow[] = [0, 1, 2, 3].map((j) => {
+      const side = (j - 1.5) / 1.5
+      return {
+        x: cx + side * (0.05 + 0.13 * open) * size + 0.02 * hash(seed, j, 5),
+        y: cy - (0.04 + (0.1 + 0.05 * hash(seed, j, 6)) * open * (1 - 0.4 * Math.abs(side))) * size,
+        r: (0.035 + (0.06 + 0.02 * hash(seed, j, 7)) * open) * size,
+      }
+    })
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha = 0.9 * fade
+    mass(p, k, cough)
+    ctx.restore()
+  }
   p.pop()
   // The standard that carries the flywheel's axle.
   p.stroke(INK)
@@ -905,8 +946,9 @@ export const clouds = part<CloudsState>(
     return [
       { t: slot.begin + 1.6, cells: 4.4, hold: c(0.6, -1.25) },
       { t: slot.begin + 3.65, cells: 5.2, hold: c(1.4, -1.5) },
-      { t: slot.begin + 7.55, cells: 5.5, hold: c(2.2, -1.62) },
-      { t: slot.begin + 9.45, cells: 4.6, hold: c(0.4, -1.3) },
+      // The falls held whole, pouring, until bar 40; then down to the baby as the gust takes them.
+      { t: bar('waltz', 40), cells: 5.5, hold: c(2.2, -1.62) },
+      { t: 59.6, cells: 4.6, hold: c(0.4, -1.3) },
       { t: slot.begin + 11.35, cells: 4.0, hold: c(0.25, -1.08) },
       { t: slot.end, cells: CUTS.nursery.cells, hold: c(CUTS.nursery.frame[0], CUTS.nursery.frame[1]) },
     ]

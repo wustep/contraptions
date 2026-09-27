@@ -485,9 +485,11 @@ export const shop = part<ShopState>(
     }
   },
   (slot): PartShot[] => [
-    // The dark workroom, close on her and the music box on the sill.
-    { t: 0, cells: 3.0, hold: [-0.8, -0.86], w: 1 },
-    { t: START + 0.5, cells: 3.0, hold: [-0.8, -0.9], w: 1 },
+    // The dark workroom: the whole music box on the sill a third of the way down and left of middle (canopy, comb and
+    // pin), so the first pluck is seen at its source, and her on the lift's foot below it; easing in to her by the
+    // lift's latch.
+    { t: 0, cells: 3.8, hold: [-0.73, -1.05], w: 1 },
+    { t: START + 0.5, cells: 3.8, hold: [-0.73, -1.08], w: 1 },
     // Up with her into the light.
     { t: TOP, cells: 3.2, hold: [-0.7, -1.52], w: 1 },
     { t: LAST, cells: 3.3, hold: [-0.5, -1.55], w: 1 },

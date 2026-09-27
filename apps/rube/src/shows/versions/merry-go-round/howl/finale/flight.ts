@@ -1,13 +1,13 @@
 import type p5 from 'p5'
-import { laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
-import { drawCalcifer } from '../cast'
+import { ball, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
+import { drawCalcifer, drawWarship } from '../cast'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
-import { bar, CHORD, DURATION, SEAM } from '../music'
+import { AIR_STEPS, bar, CHORD, DURATION, SEAM } from '../music'
 import { drawDeck, drawGrate, drawPipes, drawStar, PLANK_AFTER, PLANK_END } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
 import { CASTLE, doorAt, drawCastle, drawChimneyFire, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
-import { skyGradient } from '../wastes/sky'
-import { CALCIFER, WASTES } from '../worlds'
+import { skyGradient, wastesSky } from '../wastes/sky'
+import { CALCIFER, MARKL, MARKL_SCALE, WASTES } from '../worlds'
 
 /**
  * The finale (292.734 → the end): the director's. The last tutti, the last chord, and the credits over the sky.
@@ -53,23 +53,24 @@ const DRIFT = 3.2
 /** How steep the stair of air is it walks up (cells up a cell along). */
 const SLOPE = 0.27
 /**
- * The breath's two-shot on the porch: how many cells tall, and where she sits in it (how far right of and below the
- * middle, in frames; left and up are negative). The camera eases in to it across the whole breath, from the flag's
- * bar to `PORCH_AT`, never faster than half a scale a second, and holds it until the chord starts the pull-back.
+ * The breath's two-shot on the porch: a cut in on the flag coming home (f6), how many cells tall, and where she sits
+ * in it (how far right of and below the middle, in frames; left and up are negative): the two of them side by side,
+ * the door right of them swinging open on the warm room, the windows over them lighting. Held through the breath,
+ * riding the castle, easing in a touch, until the chord's cut.
  */
-const PORCH = 12
-const PORCH_FX = -0.05
-const PORCH_FY = 0.16
-const PORCH_FROM = 298.6
-const PORCH_AT = 301.3
+const PORCH = 4.6
+const PORCH_TO = 4.3
+const PORCH_FX = -0.07
+const PORCH_FY = 0.14
 /**
  * The chord: a cut from the porch to the whole castle, on its first stroke. How many cells tall, and how far down the
- * frame Calcifer's chimney mouth sits (a fifth: head-room for the three roars and the smoke thrown up on them, the two
- * of them on the porch in the lower middle, the feet and the cloud under the first on the air in). Then held while the
- * roars ring, and eased out, one slow move, into the credits' frame as it walks away up the sky (`OPEN_TO`).
+ * frame Calcifer's chimney mouth sits (three tenths: under Zoom, half as close again, it is a fifth down, so the three
+ * roars and the smoke thrown up on them are in the frame either way; the two of them on the porch in the lower middle,
+ * the feet and the cloud under the first on the air in). Then held while the roars ring, and eased out, one slow
+ * move, into the credits' frame as it walks away up the sky (`OPEN_TO`).
  */
-const CHORD_CELLS = 30.5
-const CHIMNEY_DOWN = 0.2
+const CHORD_CELLS = 34
+const CHIMNEY_DOWN = 0.3
 const OPEN_TO = 306.2
 /** Where she sits in the frame gets to the credits' place sooner than the scale does. */
 const PLACED = 305.4
@@ -180,8 +181,8 @@ function jolt(t: number): { y: number; lean: number } {
 
 /** The footfalls on the air: the first on the last chord, then its own slow pace. [time, step] keys. */
 const STEP_KEYS: [number, number][] = (() => {
-  const out: [number, number][] = [[WALK0, 0], [CHORD[0], 1], [303.444, 2], [304.431, 3], [305.459, 4]]
-  let t = 305.459
+  const out: [number, number][] = [[WALK0, 0], [CHORD[0], 1], ...AIR_STEPS.map((a, i): [number, number] => [a, i + 2])]
+  let t = AIR_STEPS[2]
   let per = 1.08
   let n = 4
   while (t < DURATION + 4) {
@@ -219,7 +220,7 @@ function stepAt(t: number): number {
   return (2 * u3 - 3 * u2 + 1) * s0 + (u3 - 2 * u2 + u) * h * STEP_M[i] + (-2 * u3 + 3 * u2) * s1 + (u3 - u2) * h * STEP_M[i + 1]
 }
 /** The footfalls it strikes: the first three on the air, on the recording. */
-const STEPS_STRUCK = [CHORD[0], 303.444, 304.431]
+const STEPS_STRUCK = [CHORD[0], AIR_STEPS[0], AIR_STEPS[1]]
 
 /** The chord: three roars of fire out of the chimney, and how long each takes to die back (the last the longest). */
 const ROARS: [number, number, number][] = [[CHORD[0], 1, 0.34], [CHORD[1], 0.8, 0.3], [CHORD[2], 1, 0.95]]
@@ -298,14 +299,22 @@ function onCastle(L: Look, at: Pt): Pt {
   return [L.O[0] + b[0], L.O[1] + b[1]]
 }
 
+/**
+ * The cottage and the back turret come down over their heads and lock on (f4): the porch jolts under them, and they
+ * look up at it, up on their toes (Howl a moment after her), and come down again before the chimney comes. How far
+ * up, cells (negative is up), `d` seconds after her.
+ */
+const lookUp = (t: number, d: number): number =>
+  -0.1 * smooth(t, HOUSE + d + 0.05, HOUSE + d + 0.36) * (1 - smooth(t, CHIMNEY - 0.55, CHIMNEY - 0.12))
+
 /** Sophie and Howl on the porch (their centres), the plank part's frame. */
 const sophieP = (t: number): Pt => {
   const [x, y] = onCastle(look(t), [XS, CASTLE.door[1]])
-  return [x, y - R]
+  return [x, y - R + lookUp(t, 0)]
 }
 const howlP = (t: number): Pt => {
   const [x, y] = onCastle(look(t), [XH, CASTLE.door[1]])
-  return [x, y - R]
+  return [x, y - R + lookUp(t, 0.1)]
 }
 
 /**
@@ -513,6 +522,39 @@ function drawClouds(p: p5, k: number, t: number, f: { x0: number; x1: number; y0
     // The lit tops, a little up and to the left of each heap.
     for (const [x, y, r] of puffs) softHeap(ctx, (x - r * 0.12) * k, (y - r * 0.18) * k, 0.95 * r * k, 0.82 * r * k, lit, 0.85 * a)
   }
+}
+
+/**
+ * The war going home, as the film ends on it: once the castle is away up the sky, far off and low in the evening the
+ * fleet's warships cross the other way in echelon, slow, their wing-oars barely beating, hazed by the distance.
+ * So far off that the camera's moves do not shift them, they are placed in the frame (the 16:9 box the sky is placed
+ * in): under the castle's feet and below the words, behind the clouds it walks past. [how far behind the lead along
+ * the way (box widths), up or down (box heights), size]
+ */
+const HOME: [number, number] = [313.5, 331.5]
+const HOMEWARD: [number, number, number][] = [[0, 0, 1], [0.11, -0.03, 0.86], [0.2, -0.055, 0.74]]
+function homeward(p: p5, k: number, W: number, ink: string, t: number, f: { x0: number; x1: number; y0: number; y1: number }) {
+  const u0 = (t - HOME[0]) / (HOME[1] - HOME[0])
+  if (u0 < -0.05 || u0 > 1.3) return
+  const w = f.x1 - f.x0
+  const h = Math.min(f.y1 - f.y0, (w * 9) / 16)
+  const my = (f.y0 + f.y1) / 2
+  const { low } = wastesSky(t)
+  const far = mixHex(WASTES.warship, low, 0.45)
+  const inkFar = mixHex(ink, low, 0.45)
+  HOMEWARD.forEach(([lag, dy, size], i) => {
+    const u = u0 - lag
+    const len = 0.075 * w * size
+    const x = f.x1 + len - u * (w + 2.5 * len)
+    if (x < f.x0 - len || x > f.x1 + len) return
+    const y = my + (0.31 + dy) * h + 0.004 * h * Math.sin(t * 0.7 + i * 1.7)
+    const sc = len / 6
+    p.push()
+    p.translate(x * k, y * k)
+    p.scale(sc)
+    drawWarship(p, k, W / sc, mixHex(inkFar, low, 0.15 * i), { t: 0.6 * t + i * 0.8, face: -1, color: mixHex(far, low, 0.12 * i), light: 1 })
+    p.pop()
+  })
 }
 
 /**
@@ -732,6 +774,121 @@ function porchLight(t: number, ctx: CanvasRenderingContext2D, k: number, L: Look
   wash([dx - 0.9, dy + 0.05], 1.8, 0.38, 0.34 * a)
 }
 
+/* ------------------------------------------------------------------ the cottage comes down over the porch */
+
+/**
+ * The cottage locking on over the porch (f4) shakes loose what the flight left on it: dust sifting down past the two
+ * of them in soft clumps from the seam under the house, and a few slates off its roof tumbling down past the porch's
+ * ends (never onto them) and on down into the gorge. Each is let go from the castle where it was at the lock, then
+ * falls in the world. Castle x, seconds after the lock, how fast.
+ */
+const SIFT = Array.from({ length: 8 }, (_, i) => ({
+  x: -3.3 + 4.1 * ((i + 0.5 * hash(i, 41)) / 8),
+  at: 0.02 + 0.55 * hash(i, 42),
+  r: 0.1 + 0.2 * hash(i, 43),
+  v: 1.2 + 1.3 * hash(i, 44),
+  dy: 0.9 * hash(i, 45),
+}))
+const SLATES = [
+  { x: -3.1, at: 0.03, vx: -0.35, spin: 7.5, w: 0.24 },
+  { x: 0.55, at: 0.1, vx: 0.3, spin: -9, w: 0.2 },
+  { x: 1.05, at: 0.22, vx: 0.4, spin: 6, w: 0.26 },
+  { x: -3.5, at: 0.34, vx: -0.2, spin: -6.5, w: 0.18 },
+  { x: 0.75, at: 0.47, vx: 0.2, spin: 8.5, w: 0.22 },
+]
+function shakenLoose(p: p5, k: number, W: number, ink: string, t: number) {
+  const u0 = t - HOUSE
+  if (u0 < 0 || u0 > 1.9) return
+  const seam = CASTLE.deck + 0.25
+  for (const d of SIFT) {
+    const u = u0 - d.at
+    if (u <= 0) continue
+    const [x0, y0] = onCastle(look(HOUSE + d.at), [d.x, seam + d.dy])
+    const y = y0 + d.v * u + 1.5 * u * u
+    const a = 0.42 * smooth(u, 0, 0.1) * Math.exp(-u / 0.75)
+    // A clump: two or three soft puffs strung down its fall, spreading as it goes.
+    for (let j = 0; j < 3; j++) puff(p, k, x0 + 0.05 * Math.sin(u * 3 + j), y - j * 0.14 * (1 + u), (d.r + 0.25 * u) * (1 - 0.2 * j), DUST, a * (1 - 0.3 * j), 0.8)
+  }
+  p.push()
+  p.rectMode(p.CENTER)
+  for (const sl of SLATES) {
+    const u = u0 - sl.at
+    if (u <= 0) continue
+    const [x0, y0] = onCastle(look(HOUSE + sl.at), [sl.x, CASTLE.deck - 1.3])
+    const x = x0 + sl.vx * u
+    const y = y0 + 3 * u + 6 * u * u
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(sl.spin * u)
+    p.stroke(ink)
+    p.strokeWeight(W * 0.6)
+    p.fill(WASTES.slate)
+    p.rect(0, 0, sl.w * k, sl.w * 0.42 * k, 0.015 * k)
+    p.pop()
+  }
+  p.pop()
+}
+
+/**
+ * The porch lantern (the walk's, `wastes/walk.ts`): a small square brass lantern on a short chain from the hood's
+ * left end, two and a half cells over them. It comes home with the hull, swings as each piece locks on (hardest as
+ * the cottage comes down over it), sways to the walk on the air, and is lit with the windows. Square and high over
+ * them: never a round bright thing by her. Drawn in the castle's frame (the caller is at its origin).
+ */
+function porchLantern(p: p5, k: number, W: number, ink: string, pose: CastlePose): void {
+  const t = pose.t
+  const [dx, dy] = CASTLE.door
+  const hook = onBody(pose, [dx - 0.9, dy - 2.62])
+  let angle = 0
+  for (const [at, a] of [[HULL, 0.2], [FACE, 0.08], [HOUSE, 0.4], [CHIMNEY, 0.18], [FLAG, 0.05]] as const) angle += a * ring(t - at, 0.95, 0.85)
+  if (t > WALK0) angle += 0.07 * Math.sin(2 * Math.PI * stepAt(t) - 2.2) * smooth(t, WALK0, WALK0 + 0.9)
+  const lit = pose.lights ?? 0
+  const L = 0.28
+  const lx = hook[0] - L * Math.sin(angle)
+  const ly = hook[1] + L * Math.cos(angle)
+  const X = (v: number) => v * k
+  p.push()
+  p.stroke(ink)
+  p.strokeWeight(W * 0.6)
+  p.line(X(hook[0]), X(hook[1]), X(lx), X(ly))
+  p.translate(X(lx), X(ly))
+  p.rotate(angle)
+  p.rectMode(p.CENTER)
+  p.strokeWeight(W * 0.7)
+  p.fill(mixHex(WASTES.ironDark, WASTES.window, 0.85 * lit))
+  p.rect(0, X(0.14), X(0.15), X(0.2), X(0.02))
+  p.fill(WASTES.brass)
+  p.triangle(X(-0.11), X(0.04), X(0.11), X(0.04), 0, X(-0.06))
+  p.rect(0, X(0.26), X(0.17), X(0.04))
+  p.pop()
+  if (lit > 0.01) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const cx = lx - 0.14 * Math.sin(angle)
+    const cy = ly + 0.14 * Math.cos(angle)
+    const g = ctx.createRadialGradient(X(cx), X(cy), 0, X(cx), X(cy), X(0.45))
+    g.addColorStop(0, `rgba(255, 227, 163, ${0.4 * lit})`)
+    g.addColorStop(1, 'rgba(255, 227, 163, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(X(cx - 0.45), X(cy - 0.45), X(0.9), X(0.9))
+  }
+}
+
+/**
+ * Markl, home: the door swinging open on the warm room behind the two of them shows him inside it, standing on the
+ * threshold in the hearth's light (the household together again, as the film ends on it), and he gives a little hop
+ * once it is wide. Drawn inside the door's opening (the door's frame, the sill's middle at the origin) by the castle,
+ * under the leaf, so the leaf opening is what shows him; the same small sage ball as at breakfast.
+ */
+const MARKL_X = 0.12
+const MARKL_HOP = 301.05
+function marklInDoor(k: number, W: number, ink: string, t: number) {
+  return (q: p5) => {
+    const u = (t - MARKL_HOP) / 0.36
+    const hop = u > 0 && u < 1 ? 0.11 * Math.sin(Math.PI * u) : 0
+    ball(q, k, ink, W, MARKL, MARKL_X * k, (-R * MARKL_SCALE - hop) * k, -2.5, MARKL_SCALE)
+  }
+}
+
 /* ------------------------------------------------------------------ the stair of air: a cloud under every foot */
 
 /**
@@ -844,6 +1001,7 @@ export const flight = part<null>(
       p.translate(-FO[0] * k, -FO[1] * k)
       const f = frame(p, k)
       veil(p, k, t, f)
+      homeward(p, k, W, ink, t, f)
       drawClouds(p, k, t, f)
       const L = look(t)
       // The plank, until the hull has it: its deck, its pipes, the grate (lit once he is back in it), then him. Its
@@ -912,6 +1070,7 @@ export const flight = part<null>(
           p.translate((L.O[0] - px) * k, (L.O[1] - py) * k)
           if (g.legs) flightLegs(p, k, W, ink, L.pose, 'far')
           drawCastle(p, k, W, ink, { ...L.pose, modules: mods, noLegs: true, roar: 0, eye: 0, jaw: 0, lights: 0, door: 0 })
+          if (g.legs) porchLantern(p, k, W, ink, { ...L.pose, lights: 0 })
           if (g.legs) flightLegs(p, k, W, ink, L.pose, 'near')
           p.pop()
         }
@@ -924,13 +1083,15 @@ export const flight = part<null>(
         p.translate(L.O[0] * k, L.O[1] * k)
         const folded = t < UNFOLD1
         if (folded) flightLegs(p, k, W, ink, L.pose, 'far')
-        drawCastle(p, k, W, ink, L.pose)
+        drawCastle(p, k, W, ink, { ...L.pose, doorView: marklInDoor(k, W, ink, t) })
+        porchLantern(p, k, W, ink, L.pose)
         if (folded) flightLegs(p, k, W, ink, L.pose, 'near')
         p.pop()
       }
       flareWindows(p, k, t, L)
       porchLight(t, p.drawingContext as CanvasRenderingContext2D, k, L)
       footClouds(p, k, t, false)
+      shakenLoose(p, k, W, ink, t)
       flying(true)
       lockBreath(p, k, t, L)
       plume(p, k, t)
@@ -975,6 +1136,11 @@ export const flight = part<null>(
       return [x + dx, y + dy]
     }
     const her = sophieP(T1)
+    // Where the camera is when it frames her as `follow` does, at `t` (a hold there does not ride her).
+    const onPorch = (t: number, cells: number, fx: number, fy: number): Pt => {
+      const [x, y] = sophieP(t)
+      return [x - fx * cells * (16 / 9), y - fy * cells]
+    }
     // A move of the follow between two framings (cells, and where she sits in the frame), along a progress 0 → 1
     // for the scale (`at`) and one for her place in the frame (`place`, the same unless given), laid down as a key at
     // each of `times` so the camera's curve through them is the move's own.
@@ -991,16 +1157,10 @@ export const flight = part<null>(
       const n = Math.max(1, Math.round((t1 - t0) / dt))
       return Array.from({ length: n - 1 }, (_, i) => t0 + ((t1 - t0) * (i + 1)) / n)
     }
-    // The whole castle as the flag comes home, as a framing of her (so the move in from it rides the castle).
-    const wide = ((): Framed => {
-      const [cx, cy] = mid(PORCH_FROM, 0.8, -3.2)
-      const [hx, hy] = sophieP(PORCH_FROM)
-      const cells = 31
-      return [cells, (hx - cx) / (cells * (16 / 9)), (hy - cy) / cells]
-    })()
     const porch: Framed = [PORCH, PORCH_FX, PORCH_FY]
-    // The chord's cut: the whole castle, Calcifer's chimney mouth a fifth down the frame (the three roars go up into
-    // the sky over it), the castle a little left of middle (its smoke leans back, it walks on to the right).
+    // The chord's cut: the whole castle, Calcifer's chimney mouth three tenths down the frame (the three roars go up
+    // into the sky over it, under Zoom too), the castle a little left of middle (its smoke leans back, it walks on to
+    // the right).
     const chord = ((): Framed => {
       const L = look(CHORD[0])
       const [, ey] = onCastle(L, CASTLE.chimney)
@@ -1011,21 +1171,28 @@ export const flight = part<null>(
     })()
     const [first, ...later] = CREDITS_FRAMES
     return [
-      // The dive over their heads into the grate (Calcifer's flare starts the camera going back), the plank heaving
-      // up, and the hull flying in and locking on around it on the tutti's great note while the frame is still
-      // opening, so the widening is the castle arriving. Never faster than half a scale a second.
+      // The dive over their heads into the grate, Calcifer's flare, and the plank heaving up off the ledge on his fire:
+      // close on the two of them, riding it up.
       hold(DIVE, 7.3, [her[0] + 0.7, her[1] - 0.99]),
-      hold(HULL, 13.6, mid(HULL, 0.3, 1.2)),
-      // Out on through the pieces coming home, a piece a bar, until the whole castle is in the frame, always with sky
-      // over what has come (the face, the cottage and the back turret, the chimney, the flag).
-      hold(295.9, 20.5, mid(FACE + 0.2, 0.5, 0.2)),
-      hold(297.1, 27.5, mid(HOUSE + 0.3, 0.6, -2.0)),
-      // The whole castle as the flag flutters home; then the breath is theirs: in, slowly, across the whole of it, to
-      // the porch, a two-shot of the two of them side by side (her silver, his cornflower) as the windows light, the
-      // door swings open on the warm room behind them and the legs let down; and held there, riding the castle.
-      follow(PORCH_FROM, ...wide),
-      ...glide(every(PORCH_FROM, PORCH_AT, 0.15), wide, porch, (t) => cruise(t, PORCH_FROM, PORCH_AT, 0.6, 0.9)),
-      follow(PORCH_AT, ...porch),
+      follow(DIVE + 1.2, 7.5, -0.06, 0.15),
+      follow(HULL - 0.03, 7.7, -0.06, 0.17),
+      // The castle comes home, cut on the tutti's downbeats. On its great note (the hull and its legs locking on round
+      // the plank) a cut out to the whole of it arriving, sky over it for what is to come, the face flying in on f3;
+      // on f4 in to the two of them as the cottage and the back turret come down over their heads and lock on; on f5
+      // out again for Calcifer's chimney (his fire up it at once) and the flag fluttering home on the wind that took it.
+      // The in-shot is their reaction to the cottage landing: held on the porch (not riding it), so the jolt shows,
+      // the lantern swings, dust and slates come down past them, and they look up.
+      { ...hold(HULL, 19, mid(HULL, 0.4, -2.2)), cut: true },
+      hold(HOUSE - 0.03, 21, mid(FACE + 0.3, 0.6, -2.6)),
+      { ...hold(HOUSE, 5.2, onPorch(HOUSE, 5.2, -0.08, 0.2)), cut: true },
+      hold(CHIMNEY - 0.03, 5.0, onPorch(CHIMNEY - 0.03, 5.0, -0.08, 0.2)),
+      { ...hold(CHIMNEY, 29, mid(CHIMNEY, 0.6, -2.4)), cut: true },
+      hold(FLAG - 0.03, 30, mid(FLAG, 0.7, -2.6)),
+      // On the flag, the breath is theirs: a cut in to the porch, the two of them side by side (her silver, his
+      // cornflower) as the windows over them light and the door swings open on the warm room behind them; held there,
+      // riding the castle as it drifts out over the gorge and lets its legs down, easing in a touch.
+      { ...follow(FLAG, ...porch), cut: true },
+      follow(CHORD[0] - 0.03, PORCH_TO, PORCH_FX, PORCH_FY),
       // The chord is a cut, on its first stroke: from the porch to the whole castle, its first foot coming down on the
       // air, every window flaring, and the three roars of fire out of the chimney in the sky over it. Held (barely
       // moving) while they ring, then one slow move out into the credits' frame as it walks away up the sky.

@@ -1,10 +1,10 @@
 import type p5 from 'p5'
-import { FLOOR, mixHex, type Pt, type Seg } from '../../../../../parts'
+import { FLOOR, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, part, route, smooth, type Company, type Companion, type PartShot, type Way } from '../kit'
 import { bar, BUILD, onset, SEAM } from '../music'
 import { G as GRAVITY, hop } from '../physics'
 import { DOOR, drawWarship, drawWings } from '../cast'
-import { CASTLE, doorAt, drawCastle, feetAt, STRIDE, type CastlePose } from '../wastes/castle'
+import { CASTLE, doorAt, drawCastle, feetAt, HULL_OUTLINE, onBody, STRIDE, type CastlePose } from '../wastes/castle'
 import { FLOWERS, HOWL, HOWL_BIRD, ROOM, TOWN, WASTES } from '../worlds'
 
 /**
@@ -33,12 +33,16 @@ import { FLOWERS, HOWL, HOWL_BIRD, ROOM, TOWN, WASTES } from '../worlds'
  *   the shore and she rolls out (195.773); the counterweight swings it back and it clacks on its stump on bar 11.
  * - **The water's edge** (197.0 → 199.6, the music all but silent). She stops at the lake. Howl comes and stands a
  *   step behind her. The castle sits across the water in its reflection.
- * - **The build** (199.639 → 205.86). The fleet comes out from behind the mountains and crosses the sky, and the
- *   lake. The castle starts up on the far shore. Howl looks up; his wings open (201.19) and he climbs away toward
- *   the war, out of shot. The castle wades back across to her low in the water, three strides quickening with the
- *   build (splashing on 201.19, 202.15, 203.06), and kneels into the water on 204.44 as the camera closes on her,
- *   its dial turning to red; she runs for it over the stepping stones, pushing off on the build's beats and landing
- *   on its strong notes; the door bangs open on 205.38 as she lands on its porch, and she is through it at 205.86.
+ * - **The build** (199.639 → 205.86). A cut out wide: three warships, dark iron, come on over the snowy range and
+ *   cross the valley, the lead one over the castle's roofline (the castle gone back into the haze), their reflection
+ *   sweeping across the lake under the two of them. The castle starts up on the far shore. A cut in on his wings
+ *   (201.19): he lifts off her side slowly, banked down to her, and hangs; she turns from the fleet to him. On the
+ *   bar's strong note (201.69) he goes, up and away to the left, and she takes half a step after him, following him
+ *   with her look out of the top of the picture; only then (202.10) does she turn to the stones. The castle wades
+ *   back across to her low in the water, three strides quickening with the build (splashing on 201.19, 202.15,
+ *   203.06), and kneels into the water on 204.44 as the camera closes on her, its dial turning to red; she runs for
+ *   it over two stepping stones, pushing off on the build's beats and landing on its strong notes; the door bangs
+ *   open on 205.38 as she lands on its porch, and she is through it at 205.86.
  *
  * Frame: she comes in at (-0.5, 0) on the castle's porch; the meadow is lower, by as much as the sat castle's door
  * is above its feet (`GR`). The castle is the castle builder's: everything here reads it through its API.
@@ -71,18 +75,27 @@ const GATES = [s(7), s(8), s(9)]
 const TROUGH = s(10)
 const OUT = s(10, 2)
 const CLACK = s(11)
-/** The build: the fleet, Howl's wings, the push-offs and the stones, the porch. */
+/**
+ * The build: the fleet; Howl's wings open and he lifts off her side, slowly, banked down to her, and hangs; on the
+ * bar's strong note (GO) he goes, up and away to the left, and she takes half a step after him; she watches him up
+ * out of the picture and turns to the stones (TURN); then the run: push-offs, two stones, the porch.
+ */
 const FLEET = BUILD
 const WINGS = b(1, 3)
-const PUSH = [b(2), b(2, 3), b(3, 3), b(4, 2)]
-const STONES = [onset(202.1), b(3), b(4)]
+const GO = b(2)
+const TURN = onset(202.1)
+const PUSH = [b(2, 3), b(3, 3), b(4, 2)]
+const STONES = [b(3), b(4)]
 const PORCH = b(4, 3)
 const END = SEAM.raid
+/** The door comes ajar as the castle kneels into the water for her (b4), the war's red light out of it. */
+const AJAR = b(4)
+const AJAR_OPEN = 0.5
 
 /** Every strike of this part, in show seconds. */
 export const FIELD_HITS: number[] = [
   BANG, LAND, AWAY[0], HOP_UP, BOARD, TIP, ...GATES, TROUGH, OUT, CLACK,
-  FLEET, RETURN[0], PUSH[0], STONES[0], RETURN[1], PUSH[1], STONES[1], PUSH[2], STONES[2], PUSH[3], PORCH,
+  FLEET, RETURN[0], GO, TURN, RETURN[1], PUSH[0], STONES[0], PUSH[1], STONES[1], PUSH[2], PORCH,
 ]
 
 /* ------------------------------------------------------------------ small tools */
@@ -215,11 +228,19 @@ const A_UP = angleFor(GR - 1.4, -1.2, 0.3)
 const A_DOWN = angleFor(M - 0.04, 0.2, 1.3)
 const TP: Pt = [F_OUT + 0.4 - seatOn([0, TP_Y], A_UP)[0], TP_Y]
 
-/** The shore: where she comes to rest, the water's edge. */
+/** The shore: where she rolls out of the cup, and the lake's left shore on her plane. */
 const X_OFF = TP[0] + seatOn([0, 0], A_DOWN)[0] + 0.42
-const X_REST = X_OFF + 1.25
-const L0 = X_REST + 0.42
-const X_EDGE = X_REST + 0.15
+const L0 = X_OFF + 1.67
+/**
+ * Howl waits at the see-saw's foot, a step beyond where the cup comes down, to hand her down: she rolls out of it
+ * and comes to rest a little short of him. In the silence the two of them walk on to the water together, him at the
+ * very edge and her a step behind, the same step apart all the way.
+ */
+const GAP = 0.44
+const H_SEE = X_OFF + 0.78
+const X_REST = H_SEE - GAP
+const H_EDGE = L0 - 0.2
+const X_EDGE = H_EDGE - GAP
 
 /* ------------------------------------------------------------------ her run for the door (worked out once) */
 
@@ -229,26 +250,29 @@ interface RunWay {
   arc?: number
   ramp?: [number, number]
 }
-/** The run: from rest at the edge, push-offs on the build's beats, landings on its strong notes, into the door. */
+/** Half a step after him as he goes: where she stands watching him out of the picture. */
+const AFTER = 0.16
+/**
+ * The run: from where she stood watching him, turning on the note (a first quick step) and running up to the bank's
+ * lip; push-offs on the build's beats, landings on its strong notes, into the door.
+ */
 function theRun(): { ways: RunWay[]; stones: [number, number][]; door: number } {
-  const V = [1.7, 1.45, 1.35, 1.3]
+  const V = [1.7, 1.45, 1.35]
+  const V_TURN = 0.3
   const ways: RunWay[] = []
   const stones: [number, number][] = []
-  const start = WINGS + 0.16
-  let x = X_EDGE
-  ways.push({ T: start, p: [x, M] })
-  x += (V[0] / 2) * (PUSH[0] - start)
-  ways.push({ T: PUSH[0], p: [x, M], ramp: [0, V[0]] })
-  for (let i = 0; i < 4; i++) {
-    const land = i < 3 ? STONES[i] : PORCH
+  let x = X_EDGE + AFTER + ((V_TURN + V[0]) / 2) * (PUSH[0] - TURN)
+  ways.push({ T: PUSH[0], p: [x, M], ramp: [V_TURN, V[0]] })
+  for (let i = 0; i < 3; i++) {
+    const land = i < 2 ? STONES[i] : PORCH
     const T = land - PUSH[i]
     const x1 = x + V[i] * T
     ways.push({ T: land, p: [x1, M], arc: (GRAVITY * T * T) / 8 })
-    const next = i < 3 ? PUSH[i + 1] : END
-    const v1 = i < 3 ? V[i + 1] : 1.0
+    const next = i < 2 ? PUSH[i + 1] : END
+    const v1 = i < 2 ? V[i + 1] : 1.0
     const x2 = x1 + ((V[i] + v1) / 2) * (next - land)
     ways.push({ T: next, p: [x2, M], ramp: [V[i], v1] })
-    if (i < 3) stones.push([x1 - 0.2, x2 + 0.16])
+    if (i < 2) stones.push([x1 - 0.2, x2 + 0.16])
     x = x2
   }
   return { ways, stones, door: x }
@@ -337,12 +361,14 @@ function castleAt(T: number): CastleNow {
   // Into the lake: the bottom falls away under it, so it wades deeper as it comes.
   const feet = step <= 5 ? GR : GR + DOOR_UP * smooth(step, 5.3, 8)
   const sit = castleSit(T)
-  // The door: half open as they come through, banged wide on the hit; shut as it gets up; banged open at the end.
+  // The door: half open as they come through, banged wide on the hit; shut as it gets up; come ajar on the war's
+  // light as it kneels for her; banged wide as she lands on the porch.
   let door: number
   if (T < BANG) door = lerp(0.72, 1, easeIn((T - (BANG - 0.12)) / 0.12))
   else if (T < SHUT[0]) door = 1 - Math.abs(ring(T - BANG, 0.07, 24, 0.12))
-  else if (T < PORCH - 0.43) door = 1 - smooth(T, SHUT[0], SHUT[1])
-  else if (T < PORCH) door = easeIn((T - (PORCH - 0.43)) / 0.43)
+  else if (T < AJAR) door = 1 - smooth(T, SHUT[0], SHUT[1])
+  else if (T < PORCH - 0.14) door = AJAR_OPEN * smooth(T, AJAR, AJAR + 0.6)
+  else if (T < PORCH) door = lerp(AJAR_OPEN, 1, easeIn((T - (PORCH - 0.14)) / 0.14))
   else door = 1 - Math.abs(ring(T - PORCH, 0.06, 24, 0.12))
   // The dial, green to red, as it crouches for her.
   const dial = 2 * smooth(T, b(3, 2), b(4) - 0.1) + ring(T - (b(4) - 0.1), 0.06, 26, 0.1)
@@ -350,18 +376,22 @@ function castleAt(T: number): CastleNow {
   const walking = Math.min(1, Math.abs(castleStep(T + 0.2) - castleStep(T - 0.2)) * 2)
   const startle = T > FLEET ? Math.exp(-(T - FLEET) / 1.2) : 0
   const air = airOn(T, sc)
+  // In the wide, while the fleet comes over it, it goes back into the haze: the dark ships are what the eye goes to.
+  // Solid iron again from the cut in to her.
+  const under = T < WINGS ? 0.45 * smooth(T, FLEET, FLEET + 0.8) : 0
   const pose: CastlePose = {
     t: T,
     step,
     sit,
     travel,
     smoke: Math.min(1, 0.3 + 0.35 * walking + 0.6 * startle),
-    lights: 0,
+    // Its lamps come up window by window as it wades back for her: the war is where it is going.
+    lights: smooth(T, b(2, 3), b(4) + 0.4),
     night: 0,
     door,
     dial,
-    haze: air.haze,
-    hazeTo: air.to,
+    haze: lerp(air.haze, 0.72, under),
+    hazeTo: mixHex(air.to, HAZE, under / 0.45),
     dust: 0,
   }
   return { x: X_C0 + travel(step), s: sc, feet, pose }
@@ -463,19 +493,22 @@ const hisDown = (T: number): Pt => {
 }
 const X_LAND = MID1[0] + PAIR
 
-/** Howl on the meadow: behind her to the wheel, along under the flume, back from the trough, and a step behind her at the water. */
+/**
+ * Howl on the meadow, always in her picture: behind her to the wheel, where he waits while it takes her up; over
+ * the race on its plank as she nears the top; then along the bank under the flume at her pace, a step ahead of
+ * her, so each bed opens behind him as she knocks its paddle; on to the see-saw's foot to hand her down; and on to
+ * the water with her, a step ahead.
+ */
 const H_WAIT_WHEEL = X_LOAD - 1.25
-const H_WAIT = TP[0] - LW - 0.55
-const H_STAND = X_EDGE - 0.62
+const H_LEAD = 0.6
 const howlWalk = eased([
   [LAND, X_LAND - 2 * PAIR],
   [BOARD - 0.2, H_WAIT_WHEEL],
   [BOARD + 1.4, H_WAIT_WHEEL],
-  [TIP, NX + 2.2],
-  [GATES[2], inFlume(GATES[2])[0] - 1.6],
-  [TROUGH - 0.2, H_WAIT],
-  [OUT + 0.3, H_WAIT],
-  [CLACK + 2.2, H_STAND],
+  ...[TIP, ...GATES, T_SPOUT].map((T): [number, number] => [T, inFlume(T)[0] + H_LEAD]),
+  [OUT, H_SEE],
+  [CLACK + 1.3, H_SEE],
+  [CLACK + 2.3, H_EDGE],
 ])
 function howlAt(T: number, T0: number): Companion | null {
   if (T < STEP_OFF) return { x: -0.5 + 0.6 * (T - T0) + 2 * PAIR, y: 0 }
@@ -486,20 +519,52 @@ function howlAt(T: number, T0: number): Companion | null {
   if (T < FLEET) return { x: howlWalk(T), y: M }
   // He looks up at the fleet: a lift toward it, and back.
   const look = 0.08 * smooth(T, FLEET + 0.1, FLEET + 0.6) * (1 - smooth(T, WINGS - 0.5, WINGS - 0.1))
-  const x0 = H_STAND - look * 0.5
+  const x0 = H_EDGE - look * 0.5
   const y0 = M - look
   if (T < WINGS) return { x: x0, y: y0 }
-  // The climb: from rest, up and away to the left, faster and faster, the bird coming over him.
-  const u = T - WINGS
-  const up = u < 1.3 ? 1.25 * u * u : 1.25 * 1.69 + 3.25 * (u - 1.3)
-  const left = u < 1.5 ? 0.4 * u * u : 0.9 + 1.2 * (u - 1.5)
+  const { up, left } = climbOf(T)
   return { x: x0 - left, y: y0 - up, color: mixHex(HOWL, HOWL_BIRD, smooth(T, WINGS, WINGS + 1.4)) }
+}
+/**
+ * The parting. As his wings open he lifts off her side, slowly (a third of a cell over the half bar), drifting a
+ * little toward her, and hangs there banked down to her, his body bobbing on the slow beats; on the bar's strong
+ * note (GO) he goes, up and away to the left, faster and faster, out of the top of her picture.
+ */
+const HANG_UP = 0.3
+const HANG_IN = 0.08
+const GO_UP = 13
+const GO_LEFT = 4.6
+function climbOf(T: number): { up: number; left: number } {
+  if (T <= WINGS) return { up: 0, left: 0 }
+  if (T < GO) {
+    const s = smooth(T, WINGS, GO)
+    const bob = 0.022 * Math.sin((T - WINGS) * 2 * Math.PI * 1.35) * smooth(T, WINGS + 0.15, WINGS + 0.4)
+    return { up: HANG_UP * s + bob * (1 - smooth(T, GO - 0.2, GO)), left: HANG_IN * s }
+  }
+  // Faster and faster until he is out of her picture (by about 0.85 s), then on at that pace.
+  const w = T - GO
+  const WC = 1
+  const q = (a: number): number => (w < WC ? 0.5 * a * w * w : 0.5 * a * WC * WC + a * WC * (w - WC))
+  return { up: HANG_UP + q(GO_UP), left: HANG_IN + q(GO_LEFT) }
+}
+/** His wings: which way he faces (radians, 0 right, up is -PI/2), and their beat. */
+function wingsOf(T: number): { heading: number; flap: number } {
+  // Up as they open, then banked over toward her (the wing on her side dipped) while he hangs; along his way up and
+  // to the left once he goes.
+  const bank = lerp(-1.7, -2.5, smooth(T, WINGS + 0.1, GO - 0.1))
+  const away = Math.atan2(-GO_UP, -GO_LEFT)
+  const heading = lerp(bank, away, smooth(T, GO, GO + 0.3))
+  // The beat quickens as he goes (the phase runs on continuously).
+  const w = Math.min(1, Math.max(0, T - GO))
+  return { heading, flap: 2 * Math.PI * (1.35 * (T - WINGS) + 0.9 * w * w + 1.8 * Math.max(0, T - GO - 1)) }
 }
 
 /* ------------------------------------------------------------------ the part */
 
 interface FieldState {
   begin: number
+  /** Her lane, so the war's light out of the door can catch her. */
+  lane: Lane
 }
 
 export const field = part<FieldState>(
@@ -507,7 +572,10 @@ export const field = part<FieldState>(
     name: 'field',
     flight: true,
     draw: (p, st, c) => drawField(p, c.k, c.weight, c.ink, st.begin + c.t, st.begin),
-    over: (p, st, c) => drawFlumeFront(p, c.k, c.weight, c.ink, st.begin + c.t),
+    over: (p, st, c) => {
+      drawFlumeFront(p, c.k, c.weight, c.ink, st.begin + c.t)
+      drawLightOnHer(p, c.k, st, st.begin + c.t)
+    },
   },
   (slot) => {
     const T0 = slot.begin
@@ -547,16 +615,28 @@ export const field = part<FieldState>(
     push([{ at: at(T_SPOUT), p: inFlume(T_SPOUT) }])
     const seatAt = (T: number): Pt => seatOn(TP, troughAngle(T))
     push([hop(last, seatAt(TROUGH), at(TROUGH))])
-    // The cup goes down with her; she rolls out onto the shore and comes to rest near the water.
+    // The cup goes down with her; she rolls out onto the shore and comes to rest a step short of Howl.
     ride(seatAt, OUT, 30)
     push([{ at: at(OUT + 0.3), p: [X_OFF, M] }])
     const vOff = (X_OFF - seatAt(OUT)[0]) / 0.3
     const tRest = OUT + 0.3 + (X_REST - X_OFF) / (vOff / 2)
     push([{ at: at(tRest), p: [X_REST, M], ramp: [vOff, 0] }])
-    // The silence: a small step to the very edge.
+    // The silence: on to the water's edge with him.
     push([
       { at: at(CLACK + 1.3), p: [X_REST, M] },
       { at: at(CLACK + 2.3), p: [X_EDGE, M], ease: 'inout' },
+    ])
+    // The fleet: she looks up at it as he does. As his wings open she turns from it to him (up and to her right);
+    // on the strong note he goes and she takes half a step after him, under where he rose; she follows him with her
+    // look up and over to the left until he is out of the picture, and only then turns to the stones.
+    push([
+      { at: at(FLEET + 0.45), p: [X_EDGE, M] },
+      { at: at(FLEET + 1.05), p: [X_EDGE, M - 0.07], ease: 'inout' },
+      { at: at(WINGS - 0.05), p: [X_EDGE, M - 0.07] },
+      { at: at(WINGS + 0.35), p: [X_EDGE + 0.04, M - 0.09], ease: 'inout' },
+      { at: at(GO), p: [X_EDGE + 0.04, M - 0.09] },
+      { at: at(GO + 0.28), p: [X_EDGE + AFTER + 0.02, M - 0.11], ease: 'out' },
+      { at: at(TURN), p: [X_EDGE + AFTER - 0.05, M - 0.12], ease: 'inout' },
     ])
     // The run for the door.
     for (const w of RUN.ways) {
@@ -571,30 +651,46 @@ export const field = part<FieldState>(
       cells: box(-14, YH - 12, X_DOOR1 + 14, GR + 5, 2),
       exit: [RUN.door + 0.5, M] as Pt,
       lane: { segs, fire: 0 },
-      state: { begin: T0 },
+      state: { begin: T0, lane: { segs, fire: 0 } },
       company,
     }
   },
   () => {
     const keys: PartShot[] = [
       // The door bangs wide on the slow waltz's hit and the picture opens wide on it (the score's scale match cut,
-      // `SEAMS.field.open`): the two of them on the porch high at the left, the meadow at the foot, the lake and the
-      // mountains across the rest. Held and breathing out a little through the first slow bar as they waltz down
-      // into the flowers, the castle getting up behind them, then settling on them as they land.
-      { t: LAND, cells: 11, off: [3.4, -2.2] },
-      { t: BOARD, cells: 6.8, off: [1.4, -1.4] },
-      { t: TIP, cells: 7.8, off: [2.2, 0.6] },
-      { t: GATES[1], cells: 7.8, off: [1.8, 0.8] },
-      { t: TROUGH, cells: 8.0, off: [1.3, 0.6] },
-      { t: CLACK, cells: 8.0, hold: [X_REST + 2.0, GR - 2.5], w: 0.75 },
-      // The build: out wide and up, and held, the fleet crossing the sky over the mountains (and the lake, in its
-      // reflection), Howl rising off the shore into the bird toward it; then in on her running for the castle.
-      { t: FLEET - 0.1, cells: 10.5, hold: [X_REST + 2.6, GR - 3.25], w: 1 },
-      { t: WINGS, cells: 11.2, hold: [X_REST + 2.2, GR - 3.5], w: 1 },
-      { t: STONES[0], cells: 10.2, off: [1.5, -2.2] },
-      { t: STONES[1], cells: 8.6, off: [1.2, -1.2] },
-      { t: b(4), cells: 7.0, off: [0.6, -0.3] },
-      { t: PORCH, cells: 5.2, off: [0.8, -0.6] },
+      // `SEAMS.field.open`): the castle sat in the valley, the two of them small at its door, the wheel, the lake and
+      // the mountains. The wide is the hit's alone: from it the camera settles straight in on the two of them as they
+      // waltz down, close by the time they land, and stays close through her machine (the mechanism cropped, never
+      // her), Howl in the picture with her all the way: below her at the wheel, walking the bank under the flume at
+      // her pace, waiting at the see-saw's foot. Along the flume she rides a little above the middle, so the castle
+      // walking off to sit across the lake is whole over her and the meadow at the foot is no more than it needs.
+      { t: STEP_OFF + 1.5, cells: 6.9, off: [1.5, -0.9] },
+      { t: LAND, cells: 6.8, off: [1.5, -0.9] },
+      { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
+      { t: TIP, cells: 6.8, off: [1.6, 0.45] },
+      { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },
+      { t: TROUGH, cells: 6.8, off: [1.2, -0.15] },
+      { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.1], w: 0.75 },
+      { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.3], w: 0.75 },
+      // The build: on its first note a cut out wide and up, the fleet coming dark over the mountains, the lead ship
+      // crossing over the castle's roofline, and its reflection sweeping across the lake under the two of them small
+      // at the water's edge looking up at it; on the bar's last strike (his wings) a cut in to the two of them, the
+      // frame tilting up a little after him as he goes and she watches him out of it; and on with her running for the
+      // castle.
+      { t: FLEET, cells: 10.5, hold: [X_REST + 2.6, GR - 3.25], w: 1, cut: true },
+      { t: WINGS - 0.03, cells: 10.8, hold: [X_REST + 2.6, GR - 3.4], w: 1 },
+      { t: WINGS, cells: 6.9, off: [0.85, -1.4], cut: true },
+      { t: GO, cells: 6.9, off: [0.85, -1.45] },
+      { t: TURN, cells: 7.0, off: [0.85, -1.65] },
+      // The castle comes back for her: on her first stone a cut out to the castle wading in across the lake to her,
+      // hull, face and lit house, its legs folding under it as it lets itself down into the water, her small on the
+      // stones at its foot against the bright lake (a bar, a named wide). On her second stone, as it lands kneeling, a
+      // cut back in low on her: the lake and its reflection the bottom half, the hull's keel at the middle, the door
+      // coming ajar on the war's red light over the water, and her last leap onto the porch.
+      { t: STONES[0], cells: 15.8, hold: [X_C1 + 0.4, M - 4.9], w: 1, cut: true },
+      { t: STONES[1] - 0.03, cells: 15.3, hold: [X_C1 + 0.3, M - 4.8], w: 1 },
+      { t: STONES[1], cells: 6.0, off: [0.6, 0.25], cut: true },
+      { t: PORCH, cells: 5.2, off: [0.8, -0.4] },
       { t: END, cells: 4.5, off: [0.9, -0.8] },
     ]
     return keys
@@ -705,25 +801,53 @@ function drawRanges(p: p5, k: number, f: Frame, T: number, flip: boolean, which:
 }
 
 /**
- * The fleet: three warships coming out from behind the far range at the left, small and pale, and crossing the sky
- * over the valley to the right in a line. So far off they move with the sky, not the ground.
+ * The fleet: three great warships in echelon, dark iron against the pale snowy range, coming on over it from the
+ * left and crossing the valley to the right; the lead one, biggest, passes over the castle's roofline, its oars
+ * sweeping through the tops of its towers, while the castle goes back into the haze (the wide, FLEET → WINGS). So far
+ * off they move with the sky, not the ground. Once the camera has gone in on her they slow and come on higher and a
+ * little nearer: overhead, out of her picture, where the near water reflects them.
  */
-function fleetShips(T: number, cx: number): { x: number; y: number; sc: number; a: number }[] {
-  const out: { x: number; y: number; sc: number; a: number }[] = []
+const SHIP_SC = [0.5, 0.46, 0.43]
+/** Aerial haze on the ones further back: a little, never enough to lose them against the range. */
+const SHIP_HAZE = [0, 0.1, 0.18]
+const SHIP_V = 3.4
+const SHIP_DARK = mixHex(FLOWERS.fleet, WASTES.ironDark, 0.6)
+interface Ship {
+  i: number
+  x: number
+  y: number
+  sc: number
+  a: number
+  /** In front of the castle: the lead ship, while it crosses over it in the wide. */
+  front: boolean
+}
+function fleetShips(T: number, cx: number): Ship[] {
+  const out: Ship[] = []
   if (T < FLEET - 0.2) return out
+  const u = T - FLEET
+  // At a steady pace across the wide; easing to a slow drift after it.
+  const U = WINGS - FLEET
+  const w = Math.max(0, u - U)
+  const run = SHIP_V * Math.min(u, U) + 0.8 * w + (SHIP_V - 0.8) * 0.5 * (1 - Math.exp(-w / 0.5))
+  const over = smooth(T, 202.0, 205.6)
   for (let i = 0; i < 3; i++) {
-    const u = T - FLEET - i * 0.7
-    out.push({ x: cx - 7.8 + i * 2.3 + u * 1.2, y: YH - 3.3 + i * 0.55 + Math.sin(T * 0.8 + i) * 0.04, sc: 0.34 - i * 0.04, a: smooth(u, -0.3, 1.1) })
+    const y = YH - 3.45 + i * 0.48 + Math.sin(T * 0.8 + i) * 0.04 - (2.1 + 0.35 * i) * over
+    const x = cx - 4.0 - 3.2 * i + run - 3.4 * over
+    const a = i === 0 ? smooth(u, -0.6, 0.05) : smooth(u, -0.35 + 0.35 * i, 0.3 + 0.35 * i)
+    out.push({ i, x, y, sc: SHIP_SC[i] * (1 + 0.3 * over), a, front: i === 0 && T < WINGS })
   }
   return out
 }
-function drawFleet(p: p5, k: number, W: number, ink: string, T: number, cx: number, flip: boolean): void {
+/** The ships (`which`: those behind the castle, those in front of it, or all), or their reflection (`flip`). */
+function drawFleet(p: p5, k: number, W: number, ink: string, T: number, cx: number, flip: boolean, which: 'back' | 'front' | 'all' = 'all'): void {
   for (const sh of fleetShips(T, cx)) {
     if (sh.a <= 0.01) continue
+    if ((which === 'back' && sh.front) || (which === 'front' && !sh.front)) continue
     p.push()
     p.translate(sh.x * k, (flip ? 2 * YH - sh.y : sh.y) * k)
     if (flip) p.scale(1, -1)
-    drawWarship(p, k * sh.sc, W * 0.55, mixHex(ink, FLOWERS.mountainFar, 0.4), { t: T, face: 1, color: mixHex(FLOWERS.fleet, FLOWERS.mountainFar, 0.2), light: sh.a })
+    const body = mixHex(SHIP_DARK, FLOWERS.mountainFar, SHIP_HAZE[sh.i])
+    drawWarship(p, k * sh.sc, W * 0.7, mixHex(ink, FLOWERS.mountainFar, 0.1 + SHIP_HAZE[sh.i]), { t: T, face: 1, color: body, light: sh.a })
     p.pop()
   }
 }
@@ -842,7 +966,7 @@ const LANE: Pt[][] = (() => {
     her.push(herDown(T))
     his.push(hisDown(T))
   }
-  return [her, his, [[X_LAND - 2 * PAIR, M], [X_EDGE + 0.5, M]]]
+  return [her, his, [[X_LAND - 2 * PAIR, M], [H_EDGE + 0.3, M]]]
 })()
 const LANE_BOX = (() => {
   const all = LANE.flat()
@@ -977,6 +1101,13 @@ function drawSpecks(p: p5, k: number, f: Frame, T: number, near: boolean): void 
   }
 }
 
+/** The lake's own colour at a height on the screen, below its far shore's pale band (as `drawLake`'s gradient has it). */
+function lakeAt(y: number, war: number): string {
+  const top = depthY(GW, S_SHORE)
+  const y35 = top + 0.35 * (GR + 2.5 - top)
+  return mixHex(FLOWERS.lake, mixHex(FLOWERS.lakeDeep, FLOWERS.fleet, 0.2 * war), clamp01((y - y35) / (GR + 2.5 - y35)))
+}
+
 /** The lake between two heights on the screen: the sky in it, the mountains and the fleet upside down, the castle's reflection. */
 function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number, y0: number, y1: number, castle: CastleNow | null): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -998,8 +1129,15 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
   // What it reflects, faint.
   ctx.globalAlpha = 0.22
   drawRanges(p, k, f, T, true, [0, 1])
-  ctx.globalAlpha = 0.35
-  drawFleet(p, k, W, ink, T, f.cx, true)
+  const near = y0 >= GW - 1e-6
+  // The fleet in it as dark as over it, the same in the far water and the near, so a reflection crossing from one
+  // to the other is one ship. Strong in the wide, sweeping under the two of them; from the cut in to her, quieter
+  // (the parting is theirs), and coming back up as she runs.
+  const SHIPS_IN_WATER = T < WINGS ? 0.6 : lerp(0.2, 0.28, smooth(T, PUSH[0], STONES[1]))
+  if (!near) {
+    ctx.globalAlpha = SHIPS_IN_WATER
+    drawFleet(p, k, W, ink, T, f.cx, true, 'back')
+  }
   if (castle) {
     ctx.globalAlpha = 0.3
     const X = depthX(castle.x, castle.s, f.cx)
@@ -1011,7 +1149,32 @@ function drawLake(p: p5, k: number, W: number, ink: string, f: Frame, T: number,
     drawCastle(p, k * castle.s, W * Math.max(0.42, castle.s), ink, { ...castle.pose, smoke: 0 })
     p.pop()
   }
+  if (!near) {
+    ctx.globalAlpha = SHIPS_IN_WATER
+    drawFleet(p, k, W, ink, T, f.cx, true, 'front')
+  }
   ctx.globalAlpha = 1
+  if (near) {
+    // Close to us the water reflects the sky high over the castle, not the castle: its reflection is strongest at
+    // its waterline and gone a couple of cells toward us, and there the fleet going over shows in the lake instead.
+    if (castle) {
+      const wl = depthY(GW, castle.s)
+      const top = wl + 0.45
+      const bot = Math.max(top + 2.6, y1)
+      const fade = ctx.createLinearGradient(0, top * k, 0, bot * k)
+      for (let i = 0; i <= 6; i++) {
+        const u = i / 6
+        const y = lerp(top, bot, u)
+        const a = 0.9 * smooth(y, top, top + 2.1)
+        fade.addColorStop(u, alpha(p, lakeAt(y, war), a).toString())
+      }
+      ctx.fillStyle = fade
+      ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (bot - top) * k)
+    }
+    ctx.globalAlpha = SHIPS_IN_WATER
+    drawFleet(p, k, W, ink, T, f.cx, true)
+    ctx.globalAlpha = 1
+  }
   // Ripples: fine lines of the water's own colour laid across what it reflects, breaking it up; closer together
   // far off, and drifting slowly.
   ctx.fillStyle = g
@@ -1696,7 +1859,291 @@ function drawRace(p: p5, k: number, W: number, ink: string, T: number): void {
   p.rect(x1 * k, (GR - 0.03) * k, 0.26 * k, (RACE_D + 0.1) * k, 0.03 * k)
   p.fill(mixHex(WASTES.stone, FLOWERS.meadowDeep, 0.25))
   p.rect((x0 - 0.3) * k, y1 * k, (x1 - x0 + 0.6) * k, 0.1 * k, 0.03 * k)
+  // A plank laid over it flush with the bank: the way Howl crosses to walk the flume with her.
+  p.stroke(ink)
+  p.strokeWeight(W * 0.8)
+  p.fill(WOOD)
+  p.rect((x0 - 0.5) * k, (GR - 0.005) * k, (x1 - x0 + 1.0) * k, 0.085 * k, 0.02 * k)
+  p.stroke(alpha(p, ink, 0.45))
+  p.strokeWeight(W * 0.5)
+  for (const x of [x0 - 0.38, x0 + 0.9, x1 - 0.7, x1 + 0.38]) p.line(x * k, (GR + 0.02) * k, (x + 0.02) * k, (GR + 0.06) * k)
   p.pop()
+}
+
+/* ------------------------------------------------------------------ drawing: the castle close, and the war's light */
+
+/** How much of the war's light is out of the door: from when it comes ajar, as it opens. */
+function warLight(T: number, c: CastleNow): number {
+  if (T < AJAR - 0.05) return 0
+  return clamp01((c.pose.door ?? 0) / AJAR_OPEN) * (0.75 + 0.25 * clamp01(((c.pose.door ?? 0) - AJAR_OPEN) / (1 - AJAR_OPEN)))
+}
+/** The fire's flicker in the light (the town burning beyond the door). */
+const flicker = (T: number): number => 0.5 + 0.5 * Math.sin(T * 13) * Math.sin(T * 5.3)
+/** The door's opening on the screen: the gap between the swung leaf and the jamb, its sill, its height. */
+function doorway(c: CastleNow, cx: number): { x0: number; x1: number; sill: number; h: number } {
+  const [dx, dy] = doorAt(c.pose)
+  const lw = DOOR.w * Math.cos((((c.pose.door ?? 0) * Math.PI) / 2) * 0.96)
+  const X = depthX(c.x, c.s, cx)
+  const Y = depthY(c.feet, c.s)
+  return { x0: X + (dx - DOOR.w / 2 + lw) * c.s, x1: X + (dx + DOOR.w / 2) * c.s, sill: Y + dy * c.s, h: DOOR.h * c.s }
+}
+
+/** The hull's plates where they come apart: the vertical seams, the horizontal ones, and the rows between. */
+const SEAMS_X = [-6.1, -3.7, -1.25, 1.35, 3.85, 5.65]
+const SEAMS_Y = [-11.35, -10.05, -8.1]
+const seamX = (x: number, y: number): number => x + Math.sin(((y + 12.6) / 7) * Math.PI) * x * 0.035
+const seamY = (y: number, x: number): number => (y === -10.05 ? y + 0.18 * Math.sin(x * 0.4) : y + 0.05 * Math.sin(x * 0.7 + y))
+/**
+ * What is not iron plate on the hull's near side, standing, as boxes that never overlap (the clip cuts them out
+ * even-odd): the door with its hood and the porch's rail, the porch and its brackets, the two windows, the fin, the
+ * face.
+ */
+const NOT_PLATE: [number, number, number, number][] = [
+  [CASTLE.door[0] - DOOR.w / 2 - 0.35, CASTLE.door[1] - DOOR.h - 0.75, CASTLE.porch[1] + 0.1, CASTLE.door[1] + 0.35],
+  [CASTLE.porch[0] - 0.1, CASTLE.door[1] - 0.2, CASTLE.door[0] - DOOR.w / 2 - 0.35, CASTLE.door[1] + 0.9],
+  [CASTLE.door[0] - DOOR.w / 2 - 0.35, CASTLE.door[1] + 0.35, CASTLE.porch[1] + 0.1, CASTLE.door[1] + 0.9],
+  [-6.05, -9.84, -4.8, -8.95],
+  [2.8, -9.65, 4.05, -8.75],
+  [-7.5, -11.4, -2.6, -9.86],
+  [5.6, -13, 9.5, -5],
+]
+
+/**
+ * The castle close up, as it kneels for her: the hull's iron in plates, not one grey plane. Each plate its own tone
+ * of iron, the seams between them, and a row of rivets along either side of each seam; the sun on the upper plates
+ * and the wet dark along the waterline. Drawn over the castle, in the hull's own frame, only where it is plate.
+ */
+function drawHullClose(p: p5, k: number, W: number, ink: string, T: number, cx: number, c: CastleNow): void {
+  const near = smooth(c.s, 0.55, 0.9)
+  if (near <= 0.01 || c.pose.step <= 5) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const X = depthX(c.x, c.s, cx)
+  const Y = depthY(c.feet, c.s)
+  const o = onBody(c.pose, [0, 0])
+  const e = onBody(c.pose, [1, 0])
+  const ks = k * c.s
+  p.push()
+  ctx.save()
+  p.translate(X * k, Y * k)
+  p.translate(o[0] * ks, o[1] * ks)
+  p.rotate(Math.atan2(e[1] - o[1], e[0] - o[0]))
+  const Q = (v: number) => v * ks
+  // Only on the plate: inside the hull, outside what is not plate.
+  ctx.beginPath()
+  HULL_OUTLINE.forEach(([x, y], i) => (i ? ctx.lineTo(Q(x), Q(y)) : ctx.moveTo(Q(x), Q(y))))
+  ctx.closePath()
+  for (const [a, b2, c2, d] of NOT_PLATE) {
+    ctx.moveTo(Q(a), Q(b2))
+    ctx.lineTo(Q(a), Q(d))
+    ctx.lineTo(Q(c2), Q(d))
+    ctx.lineTo(Q(c2), Q(b2))
+    ctx.closePath()
+  }
+  ctx.clip('evenodd')
+  ctx.globalAlpha *= near
+  // The plates: each a little lighter or darker than the next.
+  const xs = [-9.6, ...SEAMS_X, 7.0]
+  const ys = [-12.7, ...SEAMS_Y, -5.8]
+  p.noStroke()
+  for (let i = 0; i < xs.length - 1; i++) {
+    for (let j = 0; j < ys.length - 1; j++) {
+      const h = hash(i, j, 131)
+      p.fill(alpha(p, h < 0.5 ? '#FFFFFF' : '#000000', 0.035 + 0.06 * Math.abs(h - 0.5) * 2))
+      p.beginShape()
+      for (const [x, y] of [[xs[i], ys[j]], [xs[i + 1], ys[j]], [xs[i + 1], ys[j + 1]], [xs[i], ys[j + 1]]] as Pt[]) {
+        p.vertex(Q(seamX(x, y)), Q(seamY(y, x)))
+      }
+      p.endShape(p.CLOSE)
+    }
+  }
+  // The sun on the upper plates, and the wet dark along the waterline.
+  const sun = ctx.createLinearGradient(0, Q(-12.6), 0, Q(-8.6))
+  sun.addColorStop(0, alpha(p, SUN, 0.16).toString())
+  sun.addColorStop(1, alpha(p, SUN, 0).toString())
+  ctx.fillStyle = sun
+  ctx.fillRect(Q(-10), Q(-12.8), Q(20), Q(4.3))
+  const wet = ctx.createLinearGradient(0, Q(-6.9), 0, Q(-5.8))
+  wet.addColorStop(0, 'rgba(20, 24, 34, 0)')
+  wet.addColorStop(1, 'rgba(20, 24, 34, 0.32)')
+  ctx.fillStyle = wet
+  ctx.fillRect(Q(-10), Q(-6.9), Q(20), Q(1.2))
+  // The new seams (the castle draws the long ones), a line of ink a little lighter than its own.
+  p.noFill()
+  p.stroke(alpha(p, ink, 0.4))
+  p.strokeWeight(W * 0.55)
+  for (const y of [-11.35, -8.1]) {
+    p.beginShape()
+    for (let i = 0; i <= 24; i++) {
+      const x = -9.6 + (i / 24) * 16.6
+      p.vertex(Q(x), Q(seamY(y, x)))
+    }
+    p.endShape()
+  }
+  // Rivets: a row down either side of every seam, each a dark head with a glint of the sky on its top.
+  const heads = new Path2D()
+  const glints = new Path2D()
+  const R0 = 0.034
+  const rivet = (x: number, y: number) => {
+    heads.moveTo(Q(x + R0), Q(y))
+    heads.arc(Q(x), Q(y), Q(R0), 0, Math.PI * 2)
+    glints.moveTo(Q(x - 0.008 + R0 * 0.4), Q(y - 0.012))
+    glints.arc(Q(x - 0.008), Q(y - 0.012), Q(R0 * 0.4), 0, Math.PI * 2)
+  }
+  const PITCH = 0.26
+  for (const x0 of SEAMS_X) {
+    for (let y = -12.45; y < -5.9; y += PITCH) for (const side of [-0.1, 0.1]) rivet(seamX(x0, y) + side, y)
+  }
+  for (const y0 of SEAMS_Y) {
+    for (let x = -9.4; x < 6.9; x += PITCH) for (const side of [-0.1, 0.1]) rivet(x, seamY(y0, x) + side)
+  }
+  // Along the deck's edge and above the belly's dark band, one row each.
+  for (let x = -7.5; x < 6.0; x += PITCH) rivet(x, -12.05)
+  ctx.fillStyle = alpha(p, WASTES.ironDark, 0.85).toString()
+  ctx.fill(heads)
+  ctx.fillStyle = alpha(p, FLOWERS.white, 0.35).toString()
+  ctx.fill(glints)
+  ctx.restore()
+  p.pop()
+  // The war's light out of the door, on the plates round it and on the porch's boards.
+  const L = warLight(T, c)
+  if (L > 0.01) {
+    const d = doorway(c, cx)
+    const mx = (d.x0 + d.x1) / 2
+    const my = d.sill - d.h * 0.35
+    const g = ctx.createRadialGradient(mx * k, my * k, 0, mx * k, my * k, 2.6 * c.s * k)
+    const warm = mixHex(TOWN.ember, TOWN.fire, 0.35 + 0.3 * flicker(T))
+    g.addColorStop(0, alpha(p, warm, 0.34 * L).toString())
+    g.addColorStop(0.45, alpha(p, warm, 0.12 * L).toString())
+    g.addColorStop(1, alpha(p, warm, 0).toString())
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect((mx - 2.8) * k, (my - 2.8) * k, 5.6 * k, (d.sill + 0.25 - (my - 2.8)) * k)
+    ctx.restore()
+  }
+}
+
+/**
+ * The war's light on the lake: out of the open door it falls across the porch and the water toward us, a warm fan
+ * on the lake, and the doorway's own red lies in the water under it as a long broken column, the ripples breaking
+ * it into bars, longer and further apart the nearer they are; the stones she runs over catch it.
+ */
+function drawWarOnWater(p: p5, k: number, f: Frame, T: number, c: CastleNow): void {
+  const L = warLight(T, c)
+  if (L <= 0.01) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const d = doorway(c, f.cx)
+  const w = d.x1 - d.x0
+  if (w <= 0.01) return
+  const mx = (d.x0 + d.x1) / 2
+  const wl = depthY(GW, c.s)
+  const fl = flicker(T)
+  const warm = mixHex(TOWN.ember, TOWN.fire, 0.3 + 0.3 * fl)
+  const hot = mixHex(TOWN.fire, FLOWERS.yellow, 0.25 + 0.2 * fl)
+  const bot = f.y1 + 0.5
+  ctx.save()
+  ctx.beginPath()
+  tracePath(ctx, k, lakeOutline(f).pts)
+  ctx.clip()
+  ctx.beginPath()
+  ctx.rect(-1e5, wl * k, 2e5, 1e5)
+  ctx.clip()
+  // The fan: from the doorway's width at the sill, spreading as it comes toward us, fading; feathered at its
+  // sides (a few widening layers, each fainter), so it is light on water and never a beam with edges.
+  const fanWarm = mixHex(TOWN.fire, FLOWERS.yellow, 0.15 + 0.15 * fl)
+  for (let i = 0; i < 5; i++) {
+    const spread = 1.2 + 0.55 * i
+    const fan = ctx.createLinearGradient(0, wl * k, 0, (wl + 2.8) * k)
+    fan.addColorStop(0, alpha(p, fanWarm, 0.17 * L).toString())
+    fan.addColorStop(0.5, alpha(p, fanWarm, 0.07 * L).toString())
+    fan.addColorStop(1, alpha(p, fanWarm, 0).toString())
+    ctx.fillStyle = fan
+    ctx.beginPath()
+    ctx.moveTo((d.x0 - 0.1 - 0.12 * i) * k, wl * k)
+    ctx.lineTo((d.x1 + 0.1 + 0.12 * i) * k, wl * k)
+    ctx.lineTo((d.x1 + spread) * k, (wl + 2.9) * k)
+    ctx.lineTo((d.x0 - spread) * k, (wl + 2.9) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.globalCompositeOperation = 'screen'
+  // The column: the doorway's red lying in the water under it, a soft glow down the lake toward us, and on it the
+  // ripples' glints, each its own length and offset, breaking up and scattering wider the nearer they are.
+  const glow = ctx.createLinearGradient(0, wl * k, 0, bot * k)
+  glow.addColorStop(0, alpha(p, hot, 0.75 * L).toString())
+  glow.addColorStop(0.35, alpha(p, warm, 0.45 * L).toString())
+  glow.addColorStop(1, alpha(p, warm, 0.15 * L).toString())
+  ctx.fillStyle = glow
+  ctx.beginPath()
+  ctx.moveTo((d.x0 + 0.05) * k, wl * k)
+  ctx.lineTo((d.x1 - 0.05) * k, wl * k)
+  ctx.bezierCurveTo((d.x1 + 0.1) * k, (wl + 1) * k, (d.x1 + 0.35) * k, (bot - 1) * k, (d.x1 + 0.4) * k, bot * k)
+  ctx.lineTo((d.x0 - 0.4) * k, bot * k)
+  ctx.bezierCurveTo((d.x0 - 0.35) * k, (bot - 1) * k, (d.x0 - 0.1) * k, (wl + 1) * k, (d.x0 + 0.05) * k, wl * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.globalCompositeOperation = 'source-over'
+  for (let j = 0; j < 34; j++) {
+    const y = wl + 0.05 + 0.06 * j + 0.0035 * j * j + 0.03 * hash(j, 144)
+    if (y > bot) break
+    const far = clamp01((y - wl) / 3.5)
+    const th = 0.022 + 0.03 * far
+    const spread = w * (0.5 + 0.9 * far)
+    // Two or three glints to a ripple, apart.
+    const n = 1 + Math.floor(hash(j, 145) * 2.99)
+    for (let q = 0; q < n; q++) {
+      const drift = Math.sin(T * (1.4 + 0.5 * hash(j, q, 146)) + j * 1.7 + q * 2.1)
+      const x = mx + (hash(j, q, 147) - 0.5) * spread + drift * (0.04 + 0.12 * far)
+      const len = w * (0.18 + 0.4 * hash(j, q, 148)) * (1 - 0.35 * far) * (0.85 + 0.15 * Math.sin(T * 2.3 + j + q))
+      const a = L * (1 - 0.5 * far) * (0.55 + 0.45 * hash(j, q, 149))
+      ctx.fillStyle = alpha(p, far < 0.12 ? hot : warm, a).toString()
+      ctx.beginPath()
+      ctx.ellipse(x * k, y * k, (len / 2) * k, (th / 2) * k, 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  ctx.restore()
+  // The stones' wet tops catch it.
+  p.push()
+  p.noStroke()
+  RUN.stones.forEach(([a0, a1], i) => {
+    const sx = (a0 + a1) / 2
+    const reach = 1 - smooth(Math.abs(sx - mx), 0.5, 4.5)
+    if (reach <= 0.01) return
+    p.fill(alpha(p, hot, 0.35 * L * reach * (0.8 + 0.2 * hash(i, 143))))
+    p.ellipse(sx * k, (GR + 0.005) * k, (a1 - a0 + 0.35) * k, 0.06 * k)
+  })
+  p.pop()
+}
+
+/** The war's light out of the door on her, as she runs for it: her side toward the door warm, the other side her own. */
+function drawLightOnHer(p: p5, k: number, st: FieldState, T: number): void {
+  if (T < AJAR - 0.05 || T > END) return
+  const c = castleAt(T)
+  const L = warLight(T, c)
+  if (L <= 0.01) return
+  const at = laneAt(st.lane, T - st.begin)
+  if (at.hidden) return
+  const d = doorway(c, 0)
+  // (The doorway's x at the castle's own depth: the castle is on her plane now, so the camera's centre drops out.)
+  const mx = (d.x0 + d.x1) / 2
+  const my = d.sill - d.h * 0.4
+  const a = Math.atan2(my - at.y, mx - at.x)
+  const r = FLOOR * at.scale
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const reach = 1 - smooth(Math.hypot(mx - at.x, my - at.y), 1.5, 6)
+  if (reach <= 0.01) return
+  const warm = mixHex(TOWN.fire, FLOWERS.yellow, 0.2 + 0.2 * flicker(T))
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(at.x * k, at.y * k, r * 0.97 * k, 0, Math.PI * 2)
+  ctx.clip()
+  const g = ctx.createLinearGradient((at.x - Math.cos(a) * r) * k, (at.y - Math.sin(a) * r) * k, (at.x + Math.cos(a) * r) * k, (at.y + Math.sin(a) * r) * k)
+  g.addColorStop(0, alpha(p, warm, 0).toString())
+  g.addColorStop(0.3, alpha(p, warm, 0).toString())
+  g.addColorStop(1, alpha(p, warm, 0.85 * L * reach).toString())
+  ctx.fillStyle = g
+  ctx.fillRect((at.x - r) * k, (at.y - r) * k, 2 * r * k, 2 * r * k)
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the whole picture */
@@ -1709,7 +2156,7 @@ function drawField(p: p5, k: number, W: number, ink: string, T: number, T0: numb
   p.rectMode(p.CORNER)
   drawSky(p, k, f, T)
   drawRanges(p, k, f, T, false, [0])
-  drawFleet(p, k, W, ink, T, f.cx, false)
+  drawFleet(p, k, W, ink, T, f.cx, false, 'back')
   drawRanges(p, k, f, T, false, [1])
   // The ground back to the horizon, down to her plane, and what it reflects.
   const reflect = castle.s < 0.999 || castle.pose.step > 5 ? castle : null
@@ -1720,11 +2167,14 @@ function drawField(p: p5, k: number, W: number, ink: string, T: number, T0: numb
   drawSpecks(p, k, f, T, false)
   // The castle, where it is in the depth; if it is wading, the water over its legs.
   drawTheCastle(p, k, W, ink, T, f.cx, castle)
+  drawHullClose(p, k, W, ink, T, f.cx, castle)
   if (castle.feet > GR + 0.01 && castle.s < 0.999) {
     const wl = depthY(GW, castle.s)
     if (wl < GW) drawLake(p, k, W, ink, f, T, wl, GW, castle)
   }
   drawSplashes(p, k, T, f.cx)
+  // The lead ship over the castle's roofline, in the wide.
+  drawFleet(p, k, W, ink, T, f.cx, false, 'front')
   // Her machine.
   drawWheel(p, k, W, ink, T)
   drawPours(p, k, T)
@@ -1742,16 +2192,18 @@ function drawField(p: p5, k: number, W: number, ink: string, T: number, T0: numb
   drawLake(p, k, W, ink, f, T, GW, f.y1 + 1, castle.s >= 0.999 && castle.pose.step > 5 ? castle : null)
   drawBanks(p, k, f, GR, f.y1 + 1)
   drawStones(p, k, W, ink, T)
+  drawWarOnWater(p, k, f, T, castle)
   drawRace(p, k, W, ink, T)
   drawSpecks(p, k, f, T, true)
   drawPetals(p, k, T)
   // Howl's wings, under his ball.
   const h = howlAt(T, T0)
   if (h && T > WINGS - 0.1) {
-    const spread = smooth(T, WINGS, WINGS + 1.8)
+    const spread = smooth(T, WINGS, WINGS + 0.6)
+    const { heading, flap } = wingsOf(T)
     p.push()
     p.translate(h.x * k, h.y * k)
-    drawWings(p, k, W, ink, { t: T, spread, flap: (T - WINGS) * 2 * Math.PI * 1.35, heading: -2.2 + 0.4 * (1 - spread) })
+    drawWings(p, k, W, ink, { t: T, spread, flap, heading })
     p.pop()
   }
   p.pop()

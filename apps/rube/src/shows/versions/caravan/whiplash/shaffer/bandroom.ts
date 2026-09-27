@@ -168,6 +168,12 @@ function corridor(p: p5, c: Ctx, T: number, f: ReturnType<typeof frame>): void {
   // The same dark as the practice rooms' corridor it carries on from (`room.ts`).
   p.fill(mixHex(c.bg, SHOP.deep, 0.62))
   p.rect(x0 * k, CORRIDOR_TOP * k, (x1 - x0) * k, (G - CORRIDOR_TOP) * k)
+  // Under its floor, the building's floor carries on from the tiers' mass (`shell`), in the corridor's dark: the
+  // room's reveal holds the pit floor, so the section under the corridor is a third of the frame, and left as the
+  // stage's ground it read as a black slab, a letterbox at the frame's foot.
+  const under = mixHex(c.bg, mixHex(SHOP.deep, SHOP.wood, 0.3), 0.55)
+  p.fill(under)
+  p.rect(x0 * k, G * k, (WALL_L.x1 - x0) * k, (Math.max(PIT + 1, f.y1 + 1) - G) * k)
   // A skirting board, and the carpet's edge.
   p.fill(mixHex(SHOP.deep, SHOP.wood, 0.3))
   p.rect(x0 * k, (G - 0.18) * k, (x1 - x0) * k, 0.18 * k)

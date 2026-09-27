@@ -6,8 +6,8 @@ import { HOME_BY, walkHome } from './yard'
 import { drawStormOver, type Figure } from './jar-storm'
 import {
   BEGIN, BOARDS, C_OFF, CLIMB, COCKED, DOWN, END, E_OFF, FALL, FELL, FIXED, FLASH1, FLASH2, FOOT, HIS, HUBCAP, KICK, LAMP_OUT,
-  LANDS, ONTO_PLANK, PERCH, POURS, PUSH1, PUSH2, SEAT, SETTLE, SLAMS, SUN, T1, T2, THUNDER, TO_HIM, TOPPLE, TOUCH, TREE, TYRE,
-  UP1, UP2, WINCH, AGAINST, TOUCHDOWN, SKIP, plankAt, ring, smoothstep, standing,
+  COUNTS, LANDS, ONTO_PLANK, PERCH, POURS, PUSH1, PUSH2, SEAT, SETTLE, SLAMS, SUN, T1, T2, THUNDER, TO_HIM, TOPPLE, TOUCH, TREE, TYRE,
+  MANTLE_OFF, UP1, UP2, WINCH, AGAINST, TOUCHDOWN, SKIP, plankAt, ring, smoothstep, standing,
 } from './jar-clock'
 
 /**
@@ -171,13 +171,13 @@ function elliePath(carlX: (t: number) => number): Path {
   const vt = (T1[0] - 0.66 - Tr * (SEAM_V / 2)) / (leap + Tr / 2)
   e.run(SEAM_V, vt, Tr).hop(T1, PERCH)
   e.bob(SETTLE, 0.3, 0.05)
-  // Her job while he works the plank: she counts each handful in, a hop on her tread as it drops into the slot, each
-  // a little higher than the last as the brass climbs.
-  for (let i = 0; i < 4; i++) e.bob(LANDS[i], 0.36, 0.1 + 0.025 * i)
+  // Her job while he works the plank: she counts each handful in, up off her tread as it drops into the slot and down
+  // on the two (`COUNTS`), each hop a little higher than the last as the brass climbs.
+  for (let i = 0; i < 4; i++) e.bob(COUNTS[i], COUNTS[i] - LANDS[i], 0.1 + 0.025 * i)
   // The tyre: a start; then up to the jar and over with it.
   e.hold(TYRE).hop(T1, HUBCAP, 0.08)
-  e.hold(113.85).hop(T2, UP1[0]).hold(114.7).hop(SEAT, UP1[1])
-  e.hold(115.45).glide(AGAINST[0], PUSH1, 0.3).glide(AGAINST[0] + 0.07, PUSH1 + 0.3, 0)
+  e.hold(113.85).hop(T2, UP1[0]).hold(MANTLE_OFF).hop(SEAT, UP1[1])
+  e.hold(115.75).glide(AGAINST[0], PUSH1, 0.3).glide(AGAINST[0] + 0.07, PUSH1 + 0.3, 0)
   e.hold(116.9).glide(SEAT[0], 118.0, 0)
   // He falls: down to him; she touches him; the bandage. Then up again, and she gives the jar over a second time.
   e.hold(120.85).hop([3.6, 0], TO_HIM).glide(FELL[0] + 0.37, TOUCH, 0)
@@ -421,7 +421,7 @@ function shots(): PartShot[] {
 
 /** Every strike of this part, in show seconds (check:shows holds each to the music). */
 export const JAR_HITS: number[] = [
-  PERCH, SETTLE, ...LIFT, ...SLAMS, ...LANDS, DOWN, TYRE, HUBCAP, ...UP1, PUSH1, POURS[0].stop, FIXED, LAMP_OUT, ...CLIMB, KICK, FALL,
+  PERCH, SETTLE, ...LIFT, ...SLAMS, ...LANDS, ...COUNTS, DOWN, TYRE, HUBCAP, ...UP1, PUSH1, POURS[0].stop, FIXED, LAMP_OUT, ...CLIMB, KICK, FALL,
   TO_HIM, TOUCH, ...UP2, PUSH2, POURS[1].stop, FLASH1, TREE, TOPPLE, THUNDER, ONTO_PLANK, FLASH2, E_OFF, C_OFF, WINCH, ...BOARDS, SUN, SKIP,
 ]
   .filter((t, i, all) => all.findIndex((u) => Math.abs(u - t) < 1e-6) === i)

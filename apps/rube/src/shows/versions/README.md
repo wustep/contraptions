@@ -261,7 +261,10 @@ loop gaplessly from a decoded buffer at 1× (`soundtrack.ts`). The music is play
 `scripts/shows/satie-render.py` from the Mutopia Project's engravings on the Salamander Grand Piano's samples (CC BY 3.0),
 rendered as one period of a circle, and every note as it lands is written to
 `scripts/shows/plans/satie-performance.json`, which the show is timed to and `check:shows` holds it against
-(`apps/rube/checks/gymnopedie.ts`). The code is `gymnopedie/orbit/`. Licences:
+(`apps/rube/checks/gymnopedie.ts`). Each voice has one job: the melody the stones and the landings, the bass a swell
+on the sea, the chords the light on the water, the phrasing the camera's breath; and the lamps the ball lights at dusk
+and the flowers it opens under the moon stay lit and open until dawn, so the seam's wide shot is the planet ringed with
+its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
 `caravan/opus55` (in the picker, **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
@@ -273,7 +276,9 @@ the practice room at night), the road (the competition, the crash on the stop-ti
 sabotage, the solo, the hush, the build, the rubato, the finale). Parts are built to timed slots on the Liftoff kit,
 with company balls for Fletcher, his father and Tanner, and a director's clock for the people at Carnegie
 (`carnegie/conductor.ts`). The tune is on a 280 bpm click; the solo is free, so it strikes the recording's strokes
-drum by drum; the rubato strikes all 162 ride strokes one by one. Everything is measured once by
+drum by drum; the rubato strikes all 162 ride strokes one by one. The picture answers the strikes: the kit lights
+on every stroke, Andrew's ball gives on every blow that turns him, and the camera punches in on 28 of the band's
+biggest hits (`drums.ts` `strikeFlash`, `show.ts` `squash`, `score.ts` `PUNCHES`). Everything is measured once by
 `scripts/shows/caravan-onsets.py` into `scripts/shows/plans/caravan-onsets.json`, and `check:shows` holds every strike
 to it (`apps/rube/checks/caravan.ts`), with the people where the film has them and Fletcher's fist closing only on the
 last cut-off. The report is `apps/rube/src/shows/versions/caravan/CARAVAN.md`.

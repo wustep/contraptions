@@ -1,6 +1,6 @@
 import { R, type Pt } from '../../../../../parts'
 import { smooth } from '../kit'
-import { bar, CLIMAX, FINALE, HEART } from '../music'
+import { AIR_STEPS, bar, CHORD, CLIMAX, FINALE, HEART } from '../music'
 import { CALCIFER_HELD } from '../seams'
 import { CASTLE, FAR } from '../wastes/castle'
 
@@ -80,12 +80,24 @@ const FULL = c(10) + 0.55
 export const HOWL_IN = 262.75
 export const HOWL_LAND = c(21)
 export const SLUMP = c(21, 2)
-/** She lifts Calcifer out of the grate (the legs falter), carries him to Howl, raises him, and gives him back. */
+/**
+ * She lifts Calcifer out of the grate (the legs falter), carries him to Howl, brings him down in front of her and
+ * holds him out to Howl (on beat two), draws him back to her a little (the anticipation), and on beat three pushes him
+ * in: he goes small into Howl's breast on the next downbeat, the heart.
+ */
 export const LIFT_OUT = c(23)
 export const CARRY0 = c(23, 2)
 export const CARRY1 = c(26)
 export const RAISE = c(26, 2)
+export const PUSH = c(26, 3)
 export { HEART }
+/** Where she holds him out, from her: in front of her at her chest's height, on Howl's side; drawn back to her. */
+const OFFER: Pt = [0.3, -0.05]
+const GATHER: Pt = [0.21, -0.01]
+/** Where he goes into Howl, from Howl's middle: his breast on her side, low enough that the ball covers him. */
+const BREAST: Pt = [-0.07, 0.08]
+/** The draw-back: from a breath after the offer to the push. */
+const GATHER0 = RAISE + 0.1
 /** Calcifer comes out of Howl's chest free, a small star. */
 export const FREE = c(27, 2)
 /** The plank loses its legs, sits down on them, and slides. */
@@ -296,6 +308,9 @@ export function phaseOfBar(t: number): number {
 /** Sophie's place along the deck. */
 export function sophieU(t: number): number {
   let u = DECK.sophie + (DECK.sophieHeart - DECK.sophie) * smooth(t, CARRY0, CARRY1)
+  // The handover is hers: she draws back a little with him, leans into Howl as she pushes him in, and settles back
+  // slowly as the light spreads over her.
+  u += -0.03 * smooth(t, GATHER0, PUSH) + 0.16 * smooth(t, PUSH, HEART) - 0.13 * smooth(t, HEART + 0.45, HEART + 2.1)
   // In the cadenza she goes the last step to him.
   u += (DECK.sophieEnd - DECK.sophieHeart) * smooth(t, NEAR0, NEAR1)
   // Thrown forward a little when it stops against Turnip Head, and back.
@@ -355,7 +370,10 @@ export function wingsAt(t: number): { spread: number; beat: number; heading: num
   const [x1, y1] = howlAt(HOWL_LAND - 0.02)
   const from = Math.atan2(y1 - y0, x1 - x0)
   const to = -Math.PI / 2
-  return { spread: (1 - 0.34 * droop) * fold, beat: -1 + 2 * droop, heading: from + (to - from) * droop }
+  // As she gathers Calcifer to push him in, the drooping wings come up weakly, opening his breast to her (so the
+  // handover is seen, not hidden under a wing); they sink again as the heart goes in, and fold away.
+  const open = smooth(t, GATHER0 - 0.1, PUSH + 0.15) * (1 - smooth(t, HEART + 0.05, HEART + 0.9))
+  return { spread: (1 - 0.34 * droop) * fold, beat: -1 + 2 * droop - 1.55 * open, heading: from + (to - from) * droop }
 }
 
 /**
@@ -404,18 +422,44 @@ export function calciferAt(t: number): CalciferPose {
     const flare = 0.25 * pulse(t - PUT, 0.08) * Math.exp(-(t - PUT) / 0.5)
     return { ...base, at, size: (CALCIFER_HELD.size + 0.08 * u) * (1 + flare), lean: -0.7 * pace, mouth: 0.25 + 0.35 * pace + flare, look: [1, -0.2], shut: 0.3 * pace }
   }
-  if (t < HEART - 0.28) {
+  if (t < PUSH) {
+    // Out of the grate into her hands, carried; then (from CARRY1) down in front of her, held out to Howl on beat two
+    // with a little dip as he comes to rest there, and drawn back to her a touch, gathering for the push.
     const u = smooth(t, LIFT_OUT, LIFT_OUT + 0.22)
-    const [hx, hy] = hands(0.14 * smooth(t, RAISE, HEART - 0.35))
-    const at: Pt = [grate[0] + (hx - grate[0]) * u, grate[1] + (hy - grate[1]) * u - 0.15 * Math.sin(Math.PI * u)]
-    return { ...base, at, look: [1, 0], mouth: 0.2 }
+    const [hx, hy] = hands()
+    let at: Pt = [grate[0] + (hx - grate[0]) * u, grate[1] + (hy - grate[1]) * u - 0.15 * Math.sin(Math.PI * u)]
+    const o = smooth(t, CARRY1, RAISE)
+    const g = smooth(t, GATHER0, PUSH)
+    if (o > 0) {
+      const off: Pt = [OFFER[0] + (GATHER[0] - OFFER[0]) * g, OFFER[1] + (GATHER[1] - OFFER[1]) * g]
+      const hold: Pt = [her[0] + off[0], her[1] + off[1] + 0.03 * Math.sin(Math.PI * o)]
+      at = [at[0] + (hold[0] - at[0]) * o, at[1] + (hold[1] - at[1]) * o]
+    }
+    // Held out to Howl he looks at him and burns a little higher; drawn back, he crouches. Out of the grate he
+    // eases from his grate pose (still leaning into the run's last wind) into the held one, never a pop.
+    const pace = vRun(t) / V
+    const held = CALCIFER_HELD.size * (1 + 0.06 * o - 0.11 * g)
+    return {
+      ...base,
+      at,
+      size: held + (CALCIFER_HELD.size + 0.08 - held) * (1 - u),
+      lean: -0.7 * pace * (1 - u),
+      look: [1, -0.2 * (1 - u) + 0.1 * o],
+      mouth: (0.25 + 0.35 * pace) * (1 - u) + (0.2 + 0.1 * o) * u,
+      shut: 0.3 * pace * (1 - u),
+    }
   }
   if (t < HEART) {
-    // Into Howl's chest: from her raised hands into him, going small as he goes in.
-    const u = smooth(t, HEART - 0.28, HEART)
-    const [hx, hy] = hands(0.14)
+    // Into Howl's breast: from rest in her hands, gathering speed, going in with some left on the downbeat; he warms
+    // as he nears, and goes small into him (the ball covers him by the downbeat).
+    const s = (t - PUSH) / (HEART - PUSH)
+    const e = s * s * (2.2 - 1.2 * s)
+    const from: Pt = [her[0] + GATHER[0], her[1] + GATHER[1]]
     const [wx, wy] = howlAt(t)
-    return { ...base, at: [hx + (wx - hx) * u, hy + (wy + 0.12 - hy) * u], size: CALCIFER_HELD.size * (1 - 0.55 * u), look: [1, 0] }
+    const to: Pt = [wx + BREAST[0], wy + BREAST[1]]
+    const at: Pt = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e - 0.03 * Math.sin(Math.PI * e)]
+    const shrink = Math.pow(e, 1.1)
+    return { ...base, at, size: CALCIFER_HELD.size * 0.95 * (1 - 0.8 * shrink), weak: weak - 0.15 * e, look: [1, 0.1], mouth: 0.3 + 0.2 * e }
   }
   if (t < FREE) return { ...base, at: howlAt(t), shown: false }
   // Free: out of him, orange again, small, spiralling up out of sight; later back, turning over them.
@@ -507,19 +551,56 @@ export function drive(t: number): number {
 
 /* ------------------------------------------------------------------ Turnip Head */
 
-/** Turnip Head at the edge: hopping in place as it comes, bracing on his pole, stopping it, holding. */
-export function turnipAt(t: number): { at: Pt; hop: number; height: number; lean: number } {
+/**
+ * The castle's footfalls he hops it off on, from the brink: the three struck on the air after the chord and the next
+ * at the castle's own pace (`finale/flight.ts` STEP_KEYS). A hop a bar in three: off on the two, down on the
+ * downbeat, as he came up the hill; the veil has the land by the last.
+ */
+const WAVE_BARS: [number, number][] = [[CHORD[0], AIR_STEPS[0]], [AIR_STEPS[0], AIR_STEPS[1]], [AIR_STEPS[1], AIR_STEPS[2]], [AIR_STEPS[2], AIR_STEPS[2] + 1.1]]
+/** The castle comes home over him: the plank heaves up (f1 → f2), the hull locks, it drifts out over the gorge. */
+const HEAVE0 = bar('finale', 1, 2)
+const HULL_ON = bar('finale', 2, 2)
+const DRIFT_A = 297.0
+const DRIFT_B = 301.25
+
+/**
+ * Turnip Head at the edge: hopping in place as it comes, bracing on his pole, stopping it, holding; then, as the
+ * castle comes home, standing up straight and watching it go over him, and hopping it off from the brink on its
+ * footfalls, lifting his top hat at the top of every hop.
+ */
+export function turnipAt(t: number): { at: Pt; hop: number; height: number; lean: number; hat: number; look: [number, number] } {
   const at: Pt = [LAND.th, LAND.ledge - LAND.lip]
   let hop = 0
+  let height = 0.3
   for (const n of [33, 34, 35, 36]) {
     const a = c(n)
     const b = c(n, 3)
     if (t >= a && t < b) hop = (t - a) / (b - a)
   }
+  // The farewell: off on the two, down on the castle's footfall; the hat up off his head at the top.
+  let hat = 0
+  for (const [a, b] of WAVE_BARS) {
+    const off = a + (b - a) / 3
+    if (t >= off && t < b) {
+      hop = (t - off) / (b - off)
+      height = 0.42
+      hat = Math.pow(Math.sin(Math.PI * hop), 1.5)
+    }
+  }
   // Down from his last hop he plants his pole and braces into it (leaning toward the plank), is pushed back over
-  // the brink by it, and holds.
+  // the brink by it, and holds; on the tutti he stands up straight, and leans back a touch to watch it rise.
   const brace = -0.3 * smooth(t, c(36, 3), IMPACT)
   const push = 0.52 * smooth(t, IMPACT, IMPACT + 0.12) * (1 - smooth(t, IMPACT + 0.12, IMPACT + 1.6) * 0.6)
   const wobble = 0.05 * ring(t - IMPACT, 0.7, 0.45)
-  return { at, hop, height: 0.3, lean: brace + (t > IMPACT ? push + wobble : 0) }
+  const upright = smooth(t, FINALE + 0.15, FINALE + 1.15)
+  const watch = -0.05 * smooth(t, HEAVE0, HULL_ON + 0.4) * (1 - smooth(t, DRIFT_A, DRIFT_B))
+  const lean = (brace + (t > IMPACT ? push + wobble : 0)) * (1 - upright) + watch
+  // His face: to the star diving into the grate (up left), up at the castle as it comes home over him, and after
+  // it as it drifts out over the gorge (up right).
+  const toGrate = smooth(t, FINALE, FINALE + 0.6)
+  const up = smooth(t, HEAVE0 - 0.2, HULL_ON)
+  const out = smooth(t, DRIFT_A, DRIFT_B)
+  const lx = -0.8 * toGrate * (1 - up) - 0.25 * up * (1 - out) + 0.7 * out
+  const ly = -0.3 * toGrate * (1 - up) - 1 * up * (1 - out) - 0.75 * out
+  return { at, hop, height, lean, hat, look: [lx, ly] }
 }

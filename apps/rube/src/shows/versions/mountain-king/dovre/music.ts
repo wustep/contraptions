@@ -191,6 +191,17 @@ export function notesIn(a: number, b: number): number[] {
  * a few single blows; and the run of six hammer blows 145.34 … 146.60.
  */
 export const CODA_CHORDS: readonly { t: number; s: number; g: number }[] = data.coda.chords
+/**
+ * The last of the six hammer blows (146.60): the summit's cap blows out and the geyser throws Peer out of the mountain,
+ * east, into the silence. (The rooms under it have come down on the chords before it, bottom up.)
+ */
+export const BLOW = CODA_CHORDS[CODA_CHORDS.length - 1].t
+/**
+ * The chords the rooms under the hall come down on, bottom up (`finale/fall-ruin.ts`): each room's one great thing
+ * falls on its first chord (the heart's flywheel frame, the great drum, the mine's timbering), and its lights die
+ * after it has landed. The sets read these to bring their own hero down.
+ */
+export const RUIN = { heart: 143.199, drum: [143.926, 144.12] as const, mine: [144.84, 145.079] as const, vault: 146.348 }
 
 /* ------------------------------------------------------------------ loudness */
 
