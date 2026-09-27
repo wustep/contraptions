@@ -201,6 +201,26 @@ function fogBands(ctx: C2D, k: number, x0: number, x1: number, y: number, spread
 }
 
 /**
+ * Wisps of fog blowing slowly across the far shore: long thin streaks, each a few soft lobes along its length that
+ * change a little as it goes, carried left to right on the dawn air fast enough for the eye to follow.
+ */
+function wisps(ctx: C2D, k: number, x0: number, x1: number, y: number, spread: number, n: number, seed: number, color: string, a: number, tau: number, speed: number): void {
+  const span = x1 - x0
+  for (let i = 0; i < n; i++) {
+    const v = speed * (0.75 + 0.5 * hash(i, seed, 1))
+    const L = 1.2 + 1.3 * hash(i, seed, 2)
+    const th = 0.035 + 0.03 * hash(i, seed, 3)
+    const cx = x0 + ((((span * hash(i, seed, 4) + v * tau) % span) + span) % span)
+    const cy = y - spread * hash(i, seed, 5) + 0.02 * Math.sin(tau * 0.23 + i * 1.7)
+    const alpha = a * (0.6 + 0.4 * hash(i, seed, 6))
+    const breathe = 0.85 + 0.15 * Math.sin(tau * 0.31 + i * 2.3)
+    soft(ctx, k, cx - 0.32 * L, cy + 0.012, 0.42 * L * breathe, th * 0.8, color, alpha * 0.8)
+    soft(ctx, k, cx, cy, 0.55 * L, th, color, alpha)
+    soft(ctx, k, cx + 0.34 * L, cy - 0.015, 0.35 * L * (1.15 - 0.15 * breathe), th * 0.7, color, alpha * 0.85)
+  }
+}
+
+/**
  * The lake beyond the window: the sky, the far hills fading into the fog, the fir-dark hills round the lake with the
  * fog lying across them, the far shore's firs, the fog on the water, the water, and the sun behind the fog with its
  * light on the water. In the window's own cells for the camera of the first frame; `depth` moves it for any other.
@@ -235,6 +255,7 @@ function view(p: p5, k: number, f: Frame, L: Light): void {
     ctx.fillStyle = rgba(P.hill, 1)
     firs(ctx, k, x0, x1, ridge, H + 0.1, 0.1, 5)
     fogBands(ctx, k, x0, x1, H - 0.45, 0.35, 9, 6, P.fog, 0.55 * L.fog, tau, 2.0, 0.13)
+    if (L.kind === 'dawn') wisps(ctx, k, x0, x1, H - 0.55, 0.35, 5, 41, P.fog, 0.3 + 0.25 * L.fog, tau, 0.1)
     if (L.glow > 0.01) {
       // The sun behind the fog: a long glow low on the water's far edge (never a disc).
       soft(ctx, k, SUN[0], SUN[1] + 0.15, 3.4, 0.75, P.glow, 0.55 * L.glow)
@@ -250,6 +271,7 @@ function view(p: p5, k: number, f: Frame, L: Light): void {
     ctx.fillStyle = rgba(P.fir, 1)
     firs(ctx, k, x0, x1, (x) => H - 0.03 - 0.05 * (0.5 + 0.5 * Math.sin(x * 0.7 + 1)), H + 0.03, 0.46, 17)
     fogBands(ctx, k, x0, x1, H - 0.02, 0.2, 11, 8, P.fog, 0.8 * L.fog, tau, 1.7, 0.15)
+    if (L.kind === 'dawn' || L.kind === 'day') wisps(ctx, k, x0, x1, H - 0.04, 0.32, 9, 43, P.fog, (L.kind === 'day' ? 0.25 : 0.4) + 0.3 * L.fog, tau, 0.17)
     band(ctx, k, x0, x1, H - 0.4, H + 0.1, [
       [0, P.fog, 0],
       [0.75, P.fog, 0.5 * L.fog],

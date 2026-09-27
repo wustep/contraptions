@@ -167,12 +167,14 @@ class Walk {
  * short, and back a little (the recovery long and damped) to sit beside her. The spring lands near the top of its arc
  * (a child climbing up), just past the bench's end.
  */
-function toMother(start: number, o: { go: number; skips?: number[]; run?: number; spring: number; land: number; touch: number; end: number }): Lane {
+function toMother(start: number, o: { go: number; skips?: number[]; run?: number; spring: number; land: number; touch: number; end: number; lean?: number; back?: number }): Lane {
   const vTouch = 0.45
   const hop = o.land - o.spring
   const roll = o.touch - o.land
+  // Where her mother is as she reaches her (leaning toward her, at the end), and where she touches.
+  const touchX = TOUCH_X - (o.lean ?? 0)
   // Along the bench to her: from where she lands to where she touches, arriving at `vTouch`.
-  const vSpring = (2 * (TOUCH_X - LAND_X)) / roll - vTouch
+  const vSpring = (2 * (touchX - LAND_X)) / roll - vTouch
   const sprung = LAND_X - vSpring * hop
   const w = new Walk(start, [HANNAH_HOME, FLOOR_Y]).rest(o.go)
   const d = sprung - HANNAH_HOME
@@ -195,15 +197,34 @@ function toMother(start: number, o: { go: number; skips?: number[]; run?: number
   }
   w.hop(o.land, BENCH_Y - FLOOR_Y).roll(o.touch, vTouch)
   // The touch: she rebounds a little, softly, and comes to rest beside her.
-  const back = 0.22
-  const settle = o.touch + (2 * (TOUCH_X - SETTLE_X)) / back
+  const back = o.back ?? 0.22
+  const settle = o.touch + (2 * (touchX - SETTLE_X)) / back
   w.v = -back
   w.roll(settle, 0).rest(o.end)
   return w.lane()
 }
 
 export const HANNAH_PROLOGUE = toMother(0, { go: PRO.go, spring: PRO.spring, land: PRO.land, touch: PRO.touch, end: SCENES.prologue.end + 1 })
-export const HANNAH_END = toMother(SCENES.end.begin, { go: END.go, skips: END.skip, run: END.run, spring: END.spring, land: END.land, touch: END.touch, end: DURATION + 1 })
+/**
+ * Louise at the end: on the bench as in the first frame; when she looks at her daughter (knowing, this time) she turns
+ * toward her with a small roll, and leans there while she comes; the child's touch rocks her back to her place.
+ */
+export const LEAN = 0.07
+export const LOUISE_END: Lane = (() => {
+  const w = new Walk(SCENES.end.begin, SEAT).rest(END.knows)
+  const to: Pt = [SEAT[0] - LEAN, SEAT[1]]
+  w.segs.push({ from: SEAT, to, dur: 1.2, ease: 'inout' })
+  w.p = to
+  w.t = END.knows + 1.2
+  w.rest(END.touch)
+  w.segs.push({ from: to, to: SEAT, dur: 0.95, ease: 'out' })
+  w.p = SEAT
+  w.t = END.touch + 0.95
+  w.rest(DURATION)
+  return w.lane()
+})()
+
+export const HANNAH_END = toMother(SCENES.end.begin, { go: END.go, skips: END.skip, run: END.run, spring: END.spring, land: END.land, touch: END.touch, end: DURATION + 1, lean: LEAN, back: 0.13 })
 
 /** Older Hannah, in the second vision: she leans in against her, rests, and goes (along the bench, down off its end, out). */
 export const HANNAH_V2: Lane = (() => {
@@ -370,13 +391,13 @@ export const LOUISE_GAZE = {
     { at: SCENES.v2.end - 0.75, to: 0.75, dur: 0.7 },
   ]),
   v3: gaze(SCENES.v3.begin, -0.85, []),
+  // This time she looks at her daughter first (turning to her with a small roll), and watches her come.
   end: gaze(SCENES.end.begin, OUT, [
-    // This time she looks at her daughter first, and watches her come.
     { at: END.knows, to: AT_HANNAH_FAR, dur: 1.3 },
     { at: END.run, to: Math.PI - 0.36, dur: 0.45 },
     { at: END.land, to: AT_HANNAH, dur: 0.3 },
     { at: END.look, to: OUT - 0.1, dur: 1.8 },
-  ]),
+  ], (t) => (along(LOUISE_END, SCENES.end.begin, t)[0] - SEAT[0]) / R),
 }
 
 /** How far a rolling ball of radius `r` on a lane has turned (the mark rolls with her). */
@@ -435,31 +456,35 @@ function prologueLight(t: number): Light {
   return {
     kind: 'dawn',
     tau: t,
-    dim: 0.78 - 0.06 * before - 0.16 * catchUp - 0.16 * glare,
-    lum: Math.min(1, 0.1 + 0.08 * before + 0.45 * catchUp + 0.37 * glare),
-    fog: 0.85,
-    glow: 0.14 + 0.1 * before + 0.66 * catchUp + 0.1 * glare,
+    dim: 0.78 - 0.07 * before - 0.16 * catchUp - 0.16 * glare,
+    lum: Math.min(1, 0.1 + 0.14 * before + 0.42 * catchUp + 0.34 * glare),
+    fog: 0.85 - 0.1 * before,
+    glow: 0.14 + 0.13 * before + 0.63 * catchUp + 0.1 * glare,
     path: catchUp,
     glare,
     rain: 0,
   }
 }
 
-/** The same dawn at the end, slower: the fog glows and thins as the held tones die; after the touch the sun comes through. */
+/**
+ * The same dawn at the end, slower, and this time it comes: as the held tones die the light comes on over the lake
+ * (the water brightening, the fog thinning off the far shore, its firs coming out of it), and after the touch the
+ * sun comes through: the end of the one movement.
+ */
 function endLight(t: number): Light {
   const tau = t - SCENES.end.begin
   if (tau <= 0) return prologueLight(0)
   const first = prologueLight(0)
   const sun = rise(t, END.touch, 2.6) * sm(t, END.touch, END.touch + 0.6)
-  const warm = sm(t, SCENES.end.begin + 0.8, END.go)
+  const dawn = sm(t, SCENES.end.begin + 0.4, END.go + 0.4)
   return {
     kind: 'dawn',
     tau,
-    dim: first.dim - 0.1 * warm - 0.2 * sun,
-    lum: Math.min(1, first.lum + 0.2 * warm + 0.62 * sun),
-    fog: first.fog - 0.2 * sm(t, SCENES.end.begin + 1, 219) - 0.15 * sun,
-    glow: first.glow + 0.16 * warm + 0.6 * sun,
-    path: 0.85 * sun,
+    dim: first.dim - 0.18 * dawn - 0.18 * sun,
+    lum: Math.min(1, first.lum + 0.44 * dawn + 0.44 * sun),
+    fog: first.fog - 0.42 * dawn - 0.1 * sun,
+    glow: first.glow + 0.26 * dawn + 0.52 * sun,
+    path: 0.14 * dawn + 0.72 * sun,
     glare: 0.18 * sun,
     rain: 0,
   }

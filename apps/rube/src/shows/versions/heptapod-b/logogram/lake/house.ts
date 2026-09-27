@@ -10,6 +10,7 @@ import {
   HANNAH_PROLOGUE,
   HANNAH_V2,
   HR,
+  LOUISE_END,
   HR2,
   LOUISE_GAZE,
   PRO,
@@ -60,7 +61,10 @@ function bodies(t: number): Body[] {
   }
   if (t >= v2.begin - 1 && t < v2.end + 1) return [seat, at(along(HANNAH_V2, v2.begin, t), HR2)]
   if (t >= v3.begin - 1 && t < v3.end + 1) return [seat]
-  if (t >= end.begin - 1) return [seat, at(along(HANNAH_END, end.begin, Math.max(t, end.begin)), HR)]
+  if (t >= end.begin - 1) {
+    const u = Math.max(t, end.begin)
+    return [at(along(LOUISE_END, end.begin, u), R), at(along(HANNAH_END, end.begin, u), HR)]
+  }
   return [seat, at(along(HANNAH_PROLOGUE, 0, Math.min(t, prologue.end)), HR)]
 }
 
@@ -194,18 +198,19 @@ export const ending = part<null>(
   (slot) => ({
     cells: ROOM_CELLS,
     exit: [0, 0],
-    lane: { ...seated(slot), fire: END.touch - slot.begin },
+    lane: { ...LOUISE_END, fire: END.touch - slot.begin },
     state: null,
     riders: looking(LOUISE_GAZE.end),
     company: [hannahSpan(slot, HANNAH_END, SCENES.end.begin, HANNAH_SCALE, HANNAH_GAZE.end)],
   }),
   (slot) => [
-    // From the first frame (the score's), a very slow push toward the two of them, never stopping, while the tones die.
-    on(slot.begin + 1.2, 4.7, [1.22, -0.97]),
-    on(202.3, 4.25, [0.9, -0.85]),
-    on(END.go - 0.4, 3.72, [0.45, -0.7]),
-    // At rest on the touch; then back, slowly, to the whole window, and the two of them small at its end.
-    on(END.touch, 3.58, [0.15, -0.55]),
+    // From the first frame (the score's), a slow push toward the two of them, never stopping, while the tones die.
+    on(slot.begin + 1.2, 4.62, [1.18, -0.96]),
+    on(202.3, 4.0, [0.55, -0.8]),
+    on(END.go - 0.4, 3.42, [-0.62, -0.62]),
+    // Drifting with Hannah as she comes; at rest on the touch; then back, slowly, to the whole window, the two of them
+    // small at its end.
+    on(END.touch, 3.22, [-0.1, -0.5]),
     { t: 225, cells: 7.3, hold: [(WIN.x0 + WIN.x1) / 2, -1.42], w: 1 },
     { t: slot.end, cells: 7.75, hold: [(WIN.x0 + WIN.x1) / 2 - 0.08, -1.5], w: 1 },
   ],
