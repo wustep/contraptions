@@ -17,25 +17,35 @@ import { R } from '../src/parts'
 type Check = (name: string, ok: boolean, detail?: string) => void
 
 // She can be found (the check below): the named establishing wides, where she may be smaller than the lead's floor.
+// Each is two bars of its own music or less (so the slow waltz's, at 1.94 s a bar, may be longer than the waltz's, at
+// 1.1 s); where the music has no bars, WIDE_MAX.
 export const FLOOR_PX = 12
 export const WIDE_MAX = 2.35
+const DOWNBEATS = BEATS.filter((b) => b.pos === 1)
+/** How long a wide from `a` may last: to the second downbeat after the bar it starts in, or WIDE_MAX with no bars. */
+export function wideMax(a: number): number {
+  let i = -1
+  for (let j = 0; j < DOWNBEATS.length; j++) if (DOWNBEATS[j].t <= a + 0.05) i = j
+  const d = DOWNBEATS[i]
+  const e = DOWNBEATS[i + 2]
+  if (!d || !e || d.stretch !== e.stretch || a - d.t > 2.5) return WIDE_MAX
+  return e.t - a
+}
 export const WIDES: { what: string; a: number; b: number }[] = [
   { what: 'the swell: the whole town below the two of them', a: 70.002, b: 72.319 },
-  { what: 'the castle out of the fog over her', a: 120.053, b: 121.152 },
+  { what: 'the castle out of the fog over her, and its first stride out of it', a: 120.053, b: 122.276 },
   { what: 'the roar: the whole castle, his fire out of the chimney', a: 128.0, b: 129.138 },
-  { what: 'the first great stride', a: 131.431, b: 132.563 },
-  { what: 'the second great stride', a: 133.718, b: 134.838 },
-  { what: 'the third great stride, past the thorn tree', a: 135.935, b: 137.038 },
+  { what: 'the third great stride, the loudest: the castle striding past the thorn tree', a: 135.935, b: 138.217 },
   { what: 'the castle sits down in the night', a: 147.203, b: 148.805 },
-  { what: 'the valley opens on the slow waltz\'s hit', a: 178.051, b: 179.95 },
+  { what: 'the valley opens on the slow waltz\'s hit, held as they waltz down into it', a: 178.051, b: 180.622 },
   { what: 'the fleet over the mountains', a: 199.639, b: 201.189 },
   { what: 'the castle wades back across the lake for her and kneels', a: 203.064, b: 204.44 },
+  { what: 'the war: the street, its roofs and the fleet crossing the burning sky over them', a: 207.279, b: 208.614 },
   { what: 'the bombs walk down the roofs toward the shop', a: 227.103, b: 229.28 },
   { what: 'the whole castle tearing apart', a: 245.197, b: 247.461 },
   { what: 'the cottage and the face go down', a: 249.655, b: 251.797 },
   { what: 'the bird comes down out of the sky over the running plank', a: 262.536, b: 264.649 },
   { what: 'the hull and the face come home', a: 294.934, b: 296.815 },
-  { what: 'the chimney and the flag come home', a: 297.953, b: 299.108 },
   { what: 'the last chord: the whole castle, three roars', a: CHORD[0], b: CREDITS_AT },
 ]
 
@@ -171,10 +181,10 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
   check('merry-go-round: under the credits the whole castle stays inside the Zoom frame', castleOut <= 1, `${castleOut.toFixed(3)} at ${castleAt.toFixed(2)} s`)
 
   // She can be found. The lead's floor: at 640x360 she is never under 12 px across (a frame over 7.8 cells at her full
-  // size) for more than 0.3 s, but inside the named establishing wides (WIDES, above), each two bars of its music or
-  // less and most of them one, and under the credits. Each wide is there for the size of something she is small against.
-  const longWides = WIDES.filter((w) => w.b - w.a > WIDE_MAX + 1e-6)
-  check('merry-go-round: every establishing wide is two bars of its music or less (2.35 s)', longWides.length === 0,
+  // size) for more than 0.3 s, but inside the named establishing wides (WIDES, above), each two bars of its own music
+  // or less and most of them one, and under the credits. Each wide is there for the size of something she is small against.
+  const longWides = WIDES.filter((w) => w.b - w.a > wideMax(w.a) + 0.005)
+  check('merry-go-round: every establishing wide is two bars of its own music or less (2.35 s where it has no bars)', longWides.length === 0,
     longWides.map((w) => `${w.what} ${(w.b - w.a).toFixed(2)} s`).join(', '))
   let small = 0
   let smallest = 0
