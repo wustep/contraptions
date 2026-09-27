@@ -8,7 +8,7 @@ import { COLLAPSE_HITS, drawCollapse } from './plank-collapse'
 import { drawBack, drawGround, STONES } from './plank-land'
 import {
   BUCKLE, BX0, c, calciferAt, deck, DECK, DOWN, drive, FOOTFALLS, FREE, GLANCE, GO, ground, HEART, HOWL_IN, HOWL_LAND,
-  howlAt, howlU, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, phaseOfBar, PUT, RAISE, ring, sophieAt, sophieU,
+  HOVER_AT, howlAt, howlU, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, phaseOfBar, PUT, RAISE, ring, sophieAt, sophieU,
   STIR, T0, T1, turnipAt, wingsAt, YG, type Deck,
 } from './plank-rig'
 
@@ -118,7 +118,28 @@ function strain(t: number): number {
  * at its end). Before FREE and after the swell, the rig's pose exactly.
  */
 const EMERGE = 0.3
-function freed(t: number, cal: ReturnType<typeof calciferAt>): ReturnType<typeof calciferAt> & { light: number } {
+/**
+ * The cadenza's star turns low over the two of them, over the gap between them (1.75 cells over their middles, the
+ * top of his turn), not up at the crag's summit. The rig's hover (`HOVER_AT`, up and right, where the finale's dive
+ * starts from) is moved here by an offset over the whole of his coming down, and handed back after the cadenza's last
+ * note: from 291.95 to the tutti's downbeat (292.734) he lifts up and right into the rig's place, eased from rest to
+ * rest, gathering for the dive over their heads into the grate. `PLANK_END.star` stays the rig's.
+ */
+const OVER: Pt = (() => {
+  const s = sophieAt(T1)
+  const h = howlAt(T1)
+  const hv = HOVER_AT()
+  return [(s[0] + h[0]) / 2 + 0.06 - hv[0], (s[1] + h[1]) / 2 - 1.75 - hv[1]]
+})()
+const OVER_BACK = 291.95
+function overThem(t: number, at: Pt): Pt {
+  if (t < 280 || t > T1) return at
+  const w = 1 - smooth(t, OVER_BACK, T1)
+  return [at[0] + OVER[0] * w, at[1] + OVER[1] * w]
+}
+
+function freed(t: number, cal0: ReturnType<typeof calciferAt>): ReturnType<typeof calciferAt> & { light: number } {
+  const cal = { ...cal0, at: overThem(t, cal0.at) }
   if (t < FREE || t >= FREE + EMERGE || !cal.shown) return { ...cal, light: 1 }
   const e = smooth(t, FREE, FREE + EMERGE)
   const [hx, hy] = howlX(t)
@@ -788,34 +809,110 @@ function drawTorn(p: p5, k: number, W: number, ink: string, t: number, f: View) 
 }
 
 /**
- * The engine: Calcifer's grate feeds two brass steam pipes that run along the keel's face to the near hips, and on
- * into the legs' own knee pistons (the castle's legs). Drawn in deck cells.
+ * The engine: one brass steam pipe from Calcifer's grate to the near front hip (the leg nearest his fire), a real
+ * pipe and not a line: thick, inked, lit along its top and shaded under it, bent in elbows, strapped to the keel's
+ * face by iron brackets a cell apart with a bolted flange joint between each pair, a round wheel valve just off the
+ * grate, and a flange where it goes down into the hip. The warmer his fire, the warmer its brass. Drawn in deck cells.
  */
+const PIPE_Y = DECK.keel - 0.22
+/** Out of the grate's side over the boards, down the boards' edge, along the keel, and down into the hip. */
+const PIPE_DROP = DECK.grate + 0.5
+const PIPE_HIP = LEGS[0].u - 0.42
+const PIPE_VALVE = DECK.grate + 0.95
 export function drawPipes(p: p5, k: number, W: number, ink: string, heat: number) {
   const X = (v: number) => v * k
-  const y = DECK.keel - 0.2
+  const y = PIPE_Y
+  const top = -0.1
+  const bot = DECK.keel + 0.1
+  // Thick enough to be a pipe at every framing (never under 2.6 line weights across).
+  const bore = Math.max(0.085 * k, W * 2.6)
+  const brass = mixHex(WASTES.brass, CALCIFER.body, 0.25 * heat)
+  const lit = mixHex(brass, '#FFF3D6', 0.5)
+  const shade = mixHex(brass, IRON_DARK, 0.35)
+  const r = 0.14
+  const path = () => {
+    p.beginShape()
+    p.vertex(X(DECK.grate + 0.22), X(top))
+    p.vertex(X(PIPE_DROP - r), X(top))
+    p.quadraticVertex(X(PIPE_DROP), X(top), X(PIPE_DROP), X(top + r))
+    p.vertex(X(PIPE_DROP), X(y - r))
+    p.quadraticVertex(X(PIPE_DROP), X(y), X(PIPE_DROP + r), X(y))
+    p.vertex(X(PIPE_HIP - r), X(y))
+    p.quadraticVertex(X(PIPE_HIP), X(y), X(PIPE_HIP), X(y + r))
+    p.vertex(X(PIPE_HIP), X(bot))
+    p.endShape()
+  }
   p.push()
   p.noFill()
   p.strokeJoin(p.ROUND)
-  const brass = mixHex(WASTES.brass, CALCIFER.body, 0.25 * heat)
-  for (const [col, w] of [[ink, 2.8], [brass, 1.6]] as [string, number][]) {
-    p.stroke(col)
-    p.strokeWeight(W * w)
-    // Down from the grate over the boards' edge.
-    p.beginShape()
-    p.vertex(X(DECK.grate + 0.22), X(-0.05))
-    p.bezierVertex(X(DECK.grate + 0.42), X(0.02), X(DECK.grate + 0.3), X(y), X(DECK.grate), X(y))
-    p.endShape()
-    // Along the keel either way to the hips.
-    p.line(X(LEGS[1].u + 0.55), X(y), X(LEGS[0].u - 0.55), X(y))
-  }
-  // A valve at the grate's foot, and collars where the pipes go into the hips.
+  p.strokeCap(p.SQUARE)
+  p.rectMode(p.CENTER)
+  // Its ink edge, its brass, a shade along its underside and a highlight along its top.
+  p.stroke(ink)
+  p.strokeWeight(bore + W * 1.6)
+  path()
+  p.stroke(brass)
+  p.strokeWeight(bore)
+  path()
+  p.strokeWeight(Math.max(1, bore * 0.26))
+  p.stroke(shade)
+  p.line(X(PIPE_DROP + r), X(y) + bore * 0.3, X(PIPE_HIP - r), X(y) + bore * 0.3)
+  p.stroke(lit)
+  p.line(X(DECK.grate + 0.3), X(top) - bore * 0.22, X(PIPE_DROP - r), X(top) - bore * 0.22)
+  p.line(X(PIPE_DROP) - bore * 0.22, X(top + r), X(PIPE_DROP) - bore * 0.22, X(y - r))
+  p.line(X(PIPE_DROP + r), X(y) - bore * 0.24, X(PIPE_HIP - r), X(y) - bore * 0.24)
+  p.line(X(PIPE_HIP) - bore * 0.22, X(y + r), X(PIPE_HIP) - bore * 0.22, X(bot))
+  const fl = bore / k + 0.07
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  p.fill(WASTES.brass)
-  p.rect(X(DECK.grate - 0.12), X(y - 0.1), X(0.24), X(0.2), X(0.04))
-  p.fill(IRON_DARK)
-  for (const u of [LEGS[1].u + 0.55, LEGS[0].u - 0.55]) p.rect(X(u - 0.07), X(y - 0.09), X(0.14), X(0.18), X(0.03))
+  // Flanged joints about a cell apart along the keel, each a pair of bolted rims; a strap bracket to the keel between.
+  const run = PIPE_HIP - r - (PIPE_DROP + r)
+  const n = Math.max(1, Math.round(run / 1.05))
+  for (let i = 0; i <= n; i++) {
+    const u = PIPE_DROP + r + (run * i) / n
+    if (i > 0 && i < n) {
+      p.fill(shade)
+      p.rect(X(u - 0.028), X(y), X(0.05), X(fl), X(0.012))
+      p.rect(X(u + 0.028), X(y), X(0.05), X(fl), X(0.012))
+    }
+    const b = u + run / n / 2
+    if (i === n || Math.abs(b - PIPE_VALVE) < 0.25) continue
+    p.fill(IRON_DARK)
+    p.rect(X(b), X(y), X(0.07), X(fl + 0.1), X(0.02))
+    p.noStroke()
+    p.fill(mixHex(IRON_DARK, WASTES.mist, 0.35))
+    for (const s of [-1, 1]) p.circle(X(b), X(y + s * (fl + 0.1) * 0.36), Math.max(1.5, X(0.03)))
+    p.stroke(ink)
+  }
+  // Where it goes down into the hip: a bolted flange at the keel's underside.
+  p.fill(shade)
+  p.rect(X(PIPE_HIP), X(bot - 0.03), X(fl + 0.02), X(0.06), X(0.015))
+  // The valve: a squat bonnet on the pipe, a stem up out of it, and a handwheel with spokes, face on.
+  const vw = 0.11
+  const vy = y - 0.25
+  p.strokeWeight(W * 1.4)
+  p.line(X(PIPE_VALVE), X(y), X(PIPE_VALVE), X(vy))
+  p.strokeWeight(W * 0.8)
+  p.fill(shade)
+  p.rect(X(PIPE_VALVE), X(y), X(0.15), X(fl + 0.03), X(0.035))
+  p.fill(brass)
+  p.rect(X(PIPE_VALVE), X(y - fl / 2 - 0.02), X(0.08), X(0.05), X(0.012))
+  const rim = Math.max(W * 2, X(0.04))
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(rim + W * 1.4)
+  p.circle(X(PIPE_VALVE), X(vy), X(vw * 2))
+  p.stroke(mixHex(WASTES.rust, IRON_DARK, 0.25))
+  p.strokeWeight(rim)
+  p.circle(X(PIPE_VALVE), X(vy), X(vw * 2))
+  p.stroke(ink)
+  p.strokeWeight(W * 0.9)
+  for (let i = 0; i < 3; i++) {
+    const a = (i * Math.PI) / 3 + 0.3
+    p.line(X(PIPE_VALVE - Math.cos(a) * vw), X(vy - Math.sin(a) * vw), X(PIPE_VALVE + Math.cos(a) * vw), X(vy + Math.sin(a) * vw))
+  }
+  p.fill(brass)
+  p.circle(X(PIPE_VALVE), X(vy), X(0.05))
   p.pop()
 }
 
@@ -1223,6 +1320,7 @@ export const plank = part<PlankState>(
     // The stop: on the contact, the brink and the drop under it; the cadenza: the two of them, the star over them.
     const JOLT_AT: Pt = [end[0] + 1.0, end[1] + 0.22]
     const CADENZA: Pt = [end[0] + 0.88, end[1] - 1.12]
+    const deckY = PLANK_END.deck.y
     return [
       // The collapse, cut on the bars: close on her with Calcifer as the hearth breaks round them and the flag and
       // the chimney go (c1, c1.2); on c2 (the back turret snapping) a cut out to the whole castle tearing apart, two
@@ -1280,9 +1378,12 @@ export const plank = part<PlankState>(
       hold(IMPACT + 0.07, 5.2, [JOLT_AT[0] + 0.04, JOLT_AT[1] + 0.1]),
       hold(IMPACT + 0.6, 5.15, [JOLT_AT[0] - 0.01, JOLT_AT[1] - 0.02]),
       hold(284.4, 5.0, [JOLT_AT[0] - 0.05, JOLT_AT[1] - 0.2]),
-      // The cadenza: the two of them and the star, a push in so slow it reads as a held frame (never parked).
-      hold(285.9, 4.8, [CADENZA[0] - 0.1, CADENZA[1] + 0.06]),
-      hold(GLANCE, 4.3, [CADENZA[0] + 0.05, CADENZA[1] - 0.04]),
+      // The cadenza: the two of them and the star turning low over them, a push in so slow it reads as a held frame
+      // (never parked). The deck about two thirds of the way down (0.68), so the star turns inside the Zoom frame
+      // too, with Turnip Head at the right; from the glance the frame widens and tilts up with the star as it
+      // gathers for the dive.
+      hold(285.9, 4.8, [CADENZA[0] - 0.2, deckY - 0.18 * 4.8]),
+      hold(GLANCE, 4.45, [CADENZA[0] - 0.12, deckY - 0.18 * 4.45]),
       hold(slot.end, 5.9, [end[0] + 0.85, end[1] - 1.3]),
     ]
   },
@@ -1466,7 +1567,10 @@ function pebbles(p: p5, k: number, W: number, ink: string, t: number) {
   p.pop()
 }
 
-/** Calcifer as a star: fine rays that flare on the cadenza's high notes (and a soft light), never a disc. */
+/**
+ * Calcifer as a star: a soft glow and, behind his flame, a small soft sparkle of four short broad points with curved
+ * sides (never needles, never a crosshair) that swells a little on the cadenza's high notes. His face carries it.
+ */
 const TWINKLES = [286.383, 286.923, 287.364, 288.943, 289.814, 291.677]
 export function drawStar(p: p5, k: number, t: number, at: Pt, star: number) {
   let flare = 0.35
@@ -1475,16 +1579,30 @@ export function drawStar(p: p5, k: number, t: number, at: Pt, star: number) {
     if (u >= 0) flare = Math.max(flare, 0.35 + 0.65 * Math.exp(-u / 0.5))
   }
   const [x, y] = at
-  puff(p, k, x, y - 0.12, 0.45 + 0.25 * flare, CALCIFER.core, 0.22 * star * flare)
+  puff(p, k, x, y - 0.1, 0.5 + 0.22 * flare, CALCIFER.core, 0.24 * star * (0.55 + 0.45 * flare))
   p.push()
   p.noStroke()
-  p.translate(x * k, (y - 0.12) * k)
-  p.rotate(0.3 * Math.sin(t * 0.8))
-  for (let i = 0; i < 4; i++) {
-    const len = (i % 2 ? 0.26 : 0.4) * (0.6 + 0.6 * flare) * star
-    p.fill(alpha(p, CALCIFER.core, 0.85 * star))
-    p.rotate(Math.PI / 2)
-    p.triangle(-0.02 * k, 0, 0.02 * k, 0, 0, -len * k)
+  p.translate(x * k, (y - 0.1) * k)
+  p.rotate(0.25 * Math.sin(t * 0.8))
+  // Points under 0.22 cells up and down (the glow's layer too), 0.15 across; the waist between two points 0.045 from the middle, so each
+  // point's base is about 0.09 wide.
+  const long = (0.13 + 0.055 * flare) * star
+  const wide = (0.1 + 0.05 * flare) * star
+  const waist = 0.045 * star
+  const pts: Pt[] = [[0, -long], [wide, 0], [0, long], [-wide, 0]]
+  for (const [col, a, s] of [[CALCIFER.body, 0.45, 1.18], [CALCIFER.core, 0.9, 1]] as [string, number, number][]) {
+    p.fill(alpha(p, col, a * star))
+    p.beginShape()
+    p.vertex(pts[0][0] * s * k, pts[0][1] * s * k)
+    for (let i = 1; i <= 4; i++) {
+      const q = pts[i % 4]
+      const m = pts[i - 1]
+      // The side's control point pulled in toward the middle: a curved, concave side.
+      const cx = (Math.sign(m[0] + q[0]) || 0) * waist * s
+      const cy = (Math.sign(m[1] + q[1]) || 0) * waist * s
+      p.quadraticVertex(cx * k, cy * k, q[0] * s * k, q[1] * s * k)
+    }
+    p.endShape(p.CLOSE)
   }
   p.pop()
 }
