@@ -27,8 +27,9 @@ import { clamp01, hermite, hopAt, inout, laneOf, pchip, settle } from './home-mo
  * On the waltz's return (100.357) the book opens on his top: its top board swings over on the spine and comes down
  * flat, and Paradise Falls rises out of the gutter in cut paper, at her eye level; on bar 1 (100.78) a cut-paper
  * jungle folds up either side. She turns up to it and leans in; on bar 1 she comes up onto her toes (the wedding's
- * rise), settles into a little crouch, and hops down off the stump on the house's side (101.314), away home ahead of
- * him; she bumps the door in on bar 2 (102.046). He has turned for home on bar 1
+ * rise) and stays up on them through the bar, leaning in again on its two (101.198); then a little crouch, and she
+ * hops down off the stump on the house's side (101.732), away home ahead of him; she bumps the door in on bar 2's two
+ * (102.47). He has turned for home on bar 1
  * with the book open on his top, and walks after her, easing into an even pace (about 1.3 cells a second: the jar's
  * `walkHome`, one walk from here to his seesaw); the book folds shut, slowly, on bar 2's third beat (102.899); he
  * comes in through the back door on bar 3 (the seam, `SEAM.jar`, at the house's (-0.96, 0)), and as he goes past the
@@ -93,15 +94,19 @@ const NUDGE = 88.886
 const LAND = 89.304
 /** He pushes out through the screen door. */
 const PUSH_OUT = 90.813
-/** The waltz returns: the book opens. Bar 1: the jungle folds up. Bar 2: she bumps the door in. */
+/** The waltz returns: the book opens. Bar 1: the jungle folds up. Bar 2's two: she bumps the door in. */
 const OPEN = AT.book
 const FLAP = bar('jar', 1)
-const PUSH_IN = bar('jar', 2)
+const PUSH_IN = beat('jar', 2, 2)
 /** Bar 2's third beat: the book claps shut and slides onto its shelf. */
 const SHUT = beat('jar', 2, 3)
-/** She hops down off the stump, and lands on the grass on the note after bar 1. */
-const E_HOP = 101.0
-const E_DOWN = 101.314
+/**
+ * She stays up on her toes over the pop-up through bar 1 and leans in to it on its two (E_SET, her beat); then down
+ * into a little crouch, off the stump, and onto the grass on the note after its three.
+ */
+const E_SET = beat('jar', 1, 2)
+const E_HOP = 101.45
+const E_DOWN = 101.732
 
 /** The book comes to rest on its shelf, once he has gone past it: bar 4. */
 const REST = bar('jar', 4)
@@ -207,8 +212,12 @@ const E_HOP_V = (E_DOWN_X - (ELLIE_X + TURN)) / (E_DOWN - E_HOP)
 const ellieHome = pchip([E_DOWN, PUSH_IN, E], [E_DOWN_X, DOOR.x - 0.13, 0.66], E_HOP_V, 0.8)
 /** How far she has rolled back on the stump: turning up to the book as it opens, over half a second. */
 const turnAt = (T: number): number => TURN * inout((T - OPEN) / 0.5)
-/** Her lean in to the pop-up as the falls rise; it straightens as she comes up onto her toes. */
-const leanAt = (T: number): number => LEAN * inout((T - OPEN) / 0.42) * (1 - inout((T - (FLAP - 0.24)) / 0.3))
+/**
+ * Her lean in to the pop-up as the falls rise; it straightens as she comes up onto her toes; and, up on them, a second
+ * lean in, on the bar's two, before she goes.
+ */
+const leanAt = (T: number): number =>
+  LEAN * inout((T - OPEN) / 0.42) * (1 - inout((T - (FLAP - 0.24)) / 0.3)) + 0.7 * LEAN * inout((T - (E_SET - 0.26)) / 0.26) * (1 - inout((T - (E_SET + 0.06)) / 0.2))
 /**
  * Her height's stretch less 1: up onto her toes as the jungle folds up (landing on bar 1), down again, into a small
  * crouch on the hop, which she springs out of as she leaves the stump.
@@ -216,7 +225,8 @@ const leanAt = (T: number): number => LEAN * inout((T - OPEN) / 0.42) * (1 - ino
 function riseAt(T: number): number {
   if (T <= FLAP - 0.24) return 0
   if (T <= FLAP) return RISE * inout((T - (FLAP - 0.24)) / 0.24)
-  if (T <= E_HOP) return RISE - (RISE + CROUCH) * inout((T - FLAP) / (E_HOP - FLAP))
+  if (T <= E_SET) return RISE
+  if (T <= E_HOP) return RISE - (RISE + CROUCH) * inout((T - E_SET) / (E_HOP - E_SET))
   return -CROUCH * (1 - inout((T - E_HOP) / 0.12))
 }
 /**
