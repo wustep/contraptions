@@ -47,8 +47,9 @@ export const SWITCH = { road: LOUD, carnegie: CARNEGIE }
 /**
  * The camera takes the band's biggest hits in the body, the way the film's cutting lands on them: a push in of a few
  * percent, struck on the hit and eased back over a third of a second (after All at Once's `PUNCHES`). Only the hits
- * the whole band plays, and the few in the solo that stop the room; none in the quiet stretch, the hush or the
- * rubato, where the score asks the frame to be still. [show s, strength 0..1]
+ * the whole band plays, and the few in the solo that stop the room; none in the quiet stretch or the rubato, where the
+ * score asks the frame to be still, and in the hush only the knock that tips the crash. `check:shows` holds each to a
+ * measured hit. [show s, strength 0..1]
  */
 export const PUNCHES: readonly [number, number][] = [
   // The band room: the band comes in, the bump on the pit rail, the tutti and its peak, Fletcher's "you".
