@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { drawTorch, glow } from '../lantern'
+import { RUIN } from '../music'
 import type { Pen } from '../troll'
 import { GOLD, LAMP, STONE, WORKS } from '../worlds'
 import {
@@ -166,6 +167,24 @@ function beam(p: p5, c: Pen, x0: number, y0: number, x1: number, y1: number, w: 
 }
 
 /**
+ * The mine's great thing in the mountain's fall (on `RUIN.mine`, while the stope is still lit): its timbering racks
+ * over. Each set leans about its foot, faster as it goes, from the shaft's end (where the geyser broke through its
+ * roof) along the stope to the tunnel, a set after the next; the girts go with the posts, so the whole frame folds
+ * like a shelf pushed over, and lands with a small damped bounce. How far set `x` leans at T (radians); 0 before.
+ */
+const RACK_FROM = SHAFT[0] - 1.0
+export function rack(x: number, t: number): number {
+  const a = t - RUIN.mine[0] - 0.3 * clamp01(Math.abs(RACK_FROM - x) / 18)
+  if (a <= 0) return 0
+  const FALL = 0.38
+  const u = Math.min(1, a / FALL)
+  const b = Math.max(0, a - FALL)
+  return -(0.8 * u * u - (b > 0 ? 0.05 * Math.exp(-b / 0.12) * Math.abs(Math.sin(b * 20)) : 0))
+}
+/** Where a point of a set's post at height y is, the set leaning by `th` about its foot. */
+const racked = (x: number, y: number, th: number): Pt => (th ? [x + (FLOOR_Y - y) * Math.sin(th), FLOOR_Y - (FLOOR_Y - y) * Math.cos(th)] : [x, y])
+
+/**
  * The square sets: a post at every set (the far post of each pair; the near half of the mine is cut away), the caps
  * seen end on at each level, and girts along the gallery between them, up to the roof. In the tunnel, one set
  * holding its low roof.
@@ -180,30 +199,34 @@ export function drawTimbers(p: p5, c: Pen, t: number): void {
     const a = SETS[i]
     const b = SETS[i + 1]
     if (b - a > 3) continue
+    const ta = rack(a, t)
+    const tb = rack(b, t)
     for (const y of CAPS) {
       if (y < Math.max(roofAt(a), roofAt(b)) + 0.25) continue
-      beam(p, c, a, y + 0.02, b, y + 0.02, 0.13, lightAt((a + b) / 2, y, t))
+      beam(p, c, ...racked(a, y + 0.02, ta), ...racked(b, y + 0.02, tb), 0.13, lightAt((a + b) / 2, y, t))
     }
     // The roof's girt, under the rock between the posts' heads.
-    if (roofAt(a) < -1.8 && roofAt(b) < -1.8) beam(p, c, a, roofAt(a) + 0.1, b, roofAt(b) + 0.1, 0.13, lightAt((a + b) / 2, roofAt((a + b) / 2), t))
+    if (roofAt(a) < -1.8 && roofAt(b) < -1.8) beam(p, c, ...racked(a, roofAt(a) + 0.1, ta), ...racked(b, roofAt(b) + 0.1, tb), 0.13, lightAt((a + b) / 2, roofAt((a + b) / 2), t))
   }
   // The posts, each set up to the roof; the caps end on at every level.
   for (const x of SETS) {
     const roof = roofAt(x)
+    const th = rack(x, t)
     for (let lv = 0; lv < levels.length; lv++) {
       const y0 = levels[lv]
       const y1 = lv + 1 < levels.length ? levels[lv + 1] : roof
       if (y1 >= y0 - 0.3) break
       const top = Math.max(y1, roof)
       const l = lightAt(x, (y0 + top) / 2, t)
-      beam(p, c, x, y0, x, top + 0.02, 0.15, l)
+      beam(p, c, ...racked(x, y0, th), ...racked(x, top + 0.02, th), 0.15, l)
       if ((lv + 1 < levels.length && levels[lv + 1] > roof + 0.25) || (lv + 1 === levels.length && roof < -1.8)) {
         const cy = lv + 1 < levels.length ? levels[lv + 1] : roof + 0.12
+        const [qx, qy] = racked(x, cy, th)
         const lc = lightAt(x, cy, t)
         p.stroke(inkIn(c, lc * 0.8))
         p.strokeWeight(c.weight * 0.7)
         p.fill(shade(WORKS.wood, lc, STONE.dark, 0.18))
-        p.rect((x - 0.13) * k, (cy - 0.1) * k, 0.26 * k, 0.22 * k)
+        p.rect((qx - 0.13) * k, (qy - 0.1) * k, 0.26 * k, 0.22 * k)
       }
     }
   }
@@ -220,7 +243,10 @@ export function drawTorches(p: p5, c: Pen, t: number): void {
     const pen: Pen = { ...c, ink: inkIn(c, light) }
     // The end wall's torch leans out from the rock, the others from their posts.
     const wallSide = tr.x > SHAFT[1] ? -1 : 1
-    drawTorch(p, pen, tr.x + wallSide * 0.07, tr.y, { lit: Math.min(1, l), t, seed: tr.seed, side: wallSide, size: 0.36 })
+    // A post's torch goes over with its post as the timbering racks (the rock's stay where they are).
+    const onPost = SETS.includes(tr.x)
+    const [tx, ty] = onPost ? racked(tr.x, tr.y, rack(tr.x, t)) : [tr.x, tr.y]
+    drawTorch(p, pen, tx + wallSide * 0.07, ty, { lit: Math.min(1, l), t, seed: tr.seed, side: wallSide, size: 0.36 })
   }
 }
 

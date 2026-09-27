@@ -7,7 +7,7 @@ import { quake } from '../rock'
 import { HEART_SHOT, PLAN, SEAM_SHOT } from '../seams'
 import { STONE, WORKS } from '../worlds'
 import { BEGIN, BLOWS, BURST, BURST_B, BURST_X, DRUM2, DRUM3, DRUMMERS, END, FLOOR, LANDINGS, SHAFT, THROUGH, farEdge, landY, onSkin, type Drummer } from './drum-clock'
-import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light } from './drum-set'
+import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light, withGreatTilt } from './drum-set'
 
 /**
  * The trolls' drum (89.23 → 101.95; phrases 10 and 11, A A, the accelerando, the crescendo to the fortissimo).
@@ -390,7 +390,7 @@ export const drum = part<DrumState>(
       drawDrum(p, c, DRUM2, 2, T, L, 'back', j, peerX)
       for (const d of DRUMMERS) if (d.drum === 2) drawDrummer(p, c, d, T, L, peerX, j)
       drawDrum(p, c, DRUM3, 3, T, L, 'back', j, peerX)
-      drawTear(p, c, T, L, j, 'all')
+      withGreatTilt(p, c, T, j, () => drawTear(p, c, T, L, j, 'all'))
       for (const d of DRUMMERS) {
         if (d.drum !== 3) continue
         if (T > BURST) drawThrown(p, c, d, T, L, peerX, j)
@@ -418,8 +418,10 @@ export const drum = part<DrumState>(
       drawDrum(p, c, DRUM2, 2, T, L, 'front', j, peerX)
       drawDrum(p, c, DRUM3, 3, T, L, 'front', j, peerX)
       if (T > BURST) {
-        drawTear(p, c, T, L, j, 'near')
-        drawRags(p, c, T, L, j)
+        withGreatTilt(p, c, T, j, () => {
+          drawTear(p, c, T, L, j, 'near')
+          drawRags(p, c, T, L, j)
+        })
         drawShreds(p, c, T, L)
       }
       drawCeiling(p, c, T)

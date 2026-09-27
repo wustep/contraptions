@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
 import { glow } from '../lantern'
-import { BLOW } from '../music'
+import { BLOW, RUIN } from '../music'
 import type { Pen } from '../troll'
 import { G, stone, type Stone } from './fall-rock'
 
@@ -18,9 +18,12 @@ import { G, stone, type Stone } from './fall-rock'
  *   145.35 → 146.11 the hall's own collapse (`hall.ts`: the court's ledges, then the throne and the pillars);
  *   146.35          the hall's vault, and the tunnels behind it go dark with it.
  *
- * Each room's lights die over a fraction of a second after its chord (to a few embers: nothing is lit again), its
- * roof's slabs let go on the chord and crash onto its floor, and its dust rolls down from the roof and hangs there
- * through the silence and after. Drawn over the rooms (the fall part's `over`), so nothing a room's own set draws on
+ * Each room's one great thing comes down on its chord while the room is still lit, drawn by its own set (the heart's
+ * flywheel frame splays and drops onto the broken halves, the great drum's trestle buckles and it lurches into the
+ * pit's mouth, the mine's timbering racks over): a silhouette big enough to read at 56 cells, where a roof slab is a
+ * few pixels. Its lights die after it has landed (`fall`), to a few embers (nothing is lit again); its roof's slabs
+ * let go on the chord and crash onto its floor, and its dust rolls down from the roof and hangs there through the
+ * silence and after. Drawn over the rooms (the fall part's `over`), so nothing a room's own set draws on
  * top shows through; Peer is above all of it by then, in the vent.
  *
  * World cells, drawn in the fall part's frame (`o` is that frame's origin in the world).
@@ -38,9 +41,11 @@ export interface Room {
   floor: number
   from: number
   to: number
-  /** The chord it falls on (the lights begin to die, the roof lets go), and a second chord that brings more down. */
+  /** The chord it falls on (its great thing comes down, the roof lets go), and a second chord that brings more down. */
   at: number
   then?: number
+  /** How long its great thing takes to come down (s): its lights begin to die only then. */
+  fall: number
   /** How long its lights take to die (s), and how dark it ends (the rest is its embers). */
   out: number
   dark: number
@@ -49,29 +54,31 @@ export interface Room {
   size: [number, number]
 }
 
-const HEART_AT = 143.199
-const DRUM_AT = [143.926, 144.12] as const
-const MINE_AT = [144.84, 145.079] as const
-const VAULT_AT = 146.348
+const HEART_AT = RUIN.heart
+const DRUM_AT = RUIN.drum
+const MINE_AT = RUIN.mine
+const VAULT_AT = RUIN.vault
 
 /**
  * The rooms, bottom up. Their boxes meet on the rock between them, so no two overlap (a double dark would show as a
  * band where two boxes cross a hollow).
  */
 export const ROOMS: Room[] = [
-  { name: 'heart', x0: 44.0, x1: 64.0, y0: 26.3, y1: 36.6, roof: 26.8, floor: 33.13, from: 45.6, to: 62.4, at: HEART_AT, out: 0.35, dark: 0.84, slabs: 6, size: [1.2, 2.4] },
-  { name: 'drum', x0: 44.0, x1: 64.0, y0: 18.3, y1: 26.3, roof: 19.0, floor: 25.95, from: 45.6, to: 62.4, at: DRUM_AT[0], then: DRUM_AT[1], out: 0.3, dark: 0.84, slabs: 6, size: [1.1, 2.2] },
-  { name: 'mine', x0: 42.0, x1: 74.0, y0: 9.7, y1: 18.3, roof: 10.6, floor: 17.13, from: 44.5, to: 70.5, at: MINE_AT[0], then: MINE_AT[1], out: 0.3, dark: 0.84, slabs: 8, size: [1.0, 2.2] },
+  { name: 'heart', x0: 44.0, x1: 64.0, y0: 26.3, y1: 36.6, roof: 26.8, floor: 33.13, from: 45.6, to: 62.4, at: HEART_AT, fall: 0.45, out: 0.35, dark: 0.84, slabs: 6, size: [1.2, 2.4] },
+  { name: 'drum', x0: 44.0, x1: 64.0, y0: 18.3, y1: 26.3, roof: 19.0, floor: 25.95, from: 45.6, to: 62.4, at: DRUM_AT[0], then: DRUM_AT[1], fall: 0.45, out: 0.3, dark: 0.84, slabs: 6, size: [1.1, 2.2] },
+  // The mine's roof is the stope's timbered top (~13.5), not the box's: slabs from higher fell out of solid rock.
+  { name: 'mine', x0: 42.0, x1: 74.0, y0: 9.7, y1: 18.3, roof: 13.4, floor: 17.13, from: 44.5, to: 70.5, at: MINE_AT[0], then: MINE_AT[1], fall: 0.7, out: 0.3, dark: 0.84, slabs: 8, size: [1.0, 2.2] },
   // The hall and the tunnels behind it, one box (they go dark together, so no seam where they meet): its dust only
   // in the hall (from..to), its slabs the vault's own (`fall.ts`).
-  { name: 'hall', x0: 20.3, x1: 72.0, y0: -9.2, y1: 9.7, roof: -2.6, floor: 8.13, from: 41.0, to: 69.0, at: VAULT_AT, out: 0.8, dark: 0.8, slabs: 0, size: [1.4, 2.6] },
+  { name: 'hall', x0: 20.3, x1: 72.0, y0: -9.2, y1: 9.7, roof: -2.6, floor: 8.13, from: 41.0, to: 69.0, at: VAULT_AT, fall: 0, out: 0.8, dark: 0.8, slabs: 0, size: [1.4, 2.6] },
 ]
 
-/** 0..1: how far a room's lights have died at T (a flicker on the way out, never back on). */
+/** 0..1: how far a room's lights have died at T (a flicker on the way out, never back on), after its great thing lands. */
 export function outOf(r: Room, T: number): number {
-  if (T < r.at) return 0
-  const u = smooth(T, r.at, r.at + r.out)
-  const flick = 0.18 * Math.sin((T - r.at) * 53 + r.x0) * (1 - u) * smooth(T, r.at, r.at + 0.06)
+  const at = r.at + r.fall
+  if (T < at) return 0
+  const u = smooth(T, at, at + r.out)
+  const flick = 0.18 * Math.sin((T - at) * 53 + r.x0) * (1 - u) * smooth(T, at, at + 0.06)
   return Math.max(0, Math.min(1, u + flick))
 }
 
@@ -179,7 +186,7 @@ export function drawRuin(p: p5, c: Pen, T: number, o: Pt, q: Pt, jet: () => void
   // The embers: small, low, warm, breathing; they dim over the credits but never quite go.
   for (const e of EMBERS) {
     const r = ROOMS.find((x) => x.name === e.room)!
-    const on = smooth(T, r.at + 0.2, r.at + r.out + 0.4)
+    const on = smooth(T, r.at + r.fall + 0.2, r.at + r.fall + r.out + 0.4)
     if (on <= 0) continue
     const breathe = 0.75 + 0.25 * Math.sin(T * 1.7 + e.at[0])
     const a = on * breathe * (1 - 0.45 * smooth(T, BLOW + 6, BLOW + 20))

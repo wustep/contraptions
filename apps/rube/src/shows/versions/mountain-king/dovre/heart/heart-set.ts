@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { drawLantern, drawTorch, flame, flicker, glow } from '../lantern'
+import { RUIN } from '../music'
 import { quake } from '../rock'
 import { LAMP, SKY, STONE, WORKS } from '../worlds'
 import type { Pen } from '../troll'
@@ -986,15 +987,44 @@ const PIN_PHASE = (() => {
   return MESH + Math.PI - pinionAngle(FLY) - frac(0.5 - uf) * PIN_W
 })()
 
-function drawFlywheelFrame(p: p5, c: Pen, lit: number, S: Sleep): void {
+/**
+ * How far the flywheel's frame has come down (the heart's great thing in the mountain's fall, on its chord `RUIN.heart`,
+ * while the room is still lit): each leg swings out about its foot, falling faster as it goes (gravity), lands against
+ * the broken halves with a small damped bounce, and the cross-piece drops to the pit's floor between them. 0 before.
+ */
+function frameFall(T: number): { lean: number; drop: number; turn: number } {
+  const a = T - RUIN.heart
+  if (a <= 0) return { lean: 0, drop: 0, turn: 0 }
+  const FALL = 0.42
+  const u = Math.min(1, a / FALL)
+  const b = Math.max(0, a - FALL)
+  const lean = 0.85 * u * u - (b > 0 ? 0.06 * Math.exp(-b / 0.12) * Math.abs(Math.sin(b * 18)) : 0)
+  // The cross-piece: free fall (12 cells/s²) from its pins to the floor, a slight turn as one end goes first.
+  const drop = Math.min(PIT - 0.07 - 0.95, 6 * a * a)
+  return { lean, drop, turn: 0.35 * Math.min(1, a / 0.5) }
+}
+
+function drawFlywheelFrame(p: p5, c: Pen, lit: number, S: Sleep, T = 0): void {
   const { k } = c
   const [fx, fy] = FLYWHEEL.at
   p.stroke(S.ink(inkOf(c, lit)))
   p.strokeWeight(c.weight)
   p.fill(S.fill(tone(WORKS.wood, lit * 0.9)))
-  bar(p, k, [fx - 1.35, PIT], [fx - 0.12, fy + 0.1], 0.32, 0.22)
-  bar(p, k, [fx + 1.35, PIT], [fx + 0.12, fy + 0.1], 0.32, 0.22)
-  bar(p, k, [fx - 0.92, 0.95], [fx + 0.92, 0.95], 0.14)
+  const f = frameFall(T)
+  // Each leg about its foot, out by `lean` (the far one a little further: they never fall as a mirror pair).
+  for (const side of [-1, 1]) {
+    const foot: Pt = [fx + side * 1.35, PIT]
+    const top: Pt = [fx + side * 0.12, fy + 0.1]
+    const th = side * f.lean * (side > 0 ? 1.08 : 1)
+    const dx = top[0] - foot[0]
+    const dy = top[1] - foot[1]
+    const cs = Math.cos(th)
+    const sn = Math.sin(th)
+    bar(p, k, foot, [foot[0] + dx * cs - dy * sn, foot[1] + dx * sn + dy * cs], 0.32, 0.22)
+  }
+  const cy = 0.95 + f.drop
+  const h = 0.92
+  bar(p, k, [fx - h * Math.cos(f.turn), cy - h * Math.sin(f.turn)], [fx + h * Math.cos(f.turn), cy + h * Math.sin(f.turn)], 0.14)
 }
 
 /** The flywheel's halves after the break: when they hit the pit's floor (the furnace blasts out as they do). */
@@ -1053,7 +1083,7 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   const face = clamp01(L * 1.25) * 0.64
   const litIron = warm(tone(IRON_FACE, face), f * 0.5)
   const iron = S.fill(litIron)
-  drawFlywheelFrame(p, c, lit, asleep(T, FLY, fx, 0.9))
+  drawFlywheelFrame(p, c, lit, asleep(T, FLY, fx, 0.9), T)
   const spin = Math.abs(flySpin(T))
   const lip = mixHex(iron, warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), S.w)
   const paint = S.w < 1 ? wallPaint(p, c, T, FLYWHEEL.at, litIron, S.w) : undefined
