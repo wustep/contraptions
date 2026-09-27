@@ -916,6 +916,9 @@ interface TurnipPose {
   lean: number
   /** How far his pole bows (radians from foot to top). */
   bow: number
+  /** His hat lifted (a doff) and where his face turns (`drawTurnip`). */
+  hat?: number
+  look?: [number, number]
 }
 function turnipP(t: number): TurnipPose | null {
   if (t >= c(33, 3)) {
@@ -965,7 +968,7 @@ function bowAt(t: number): number {
  */
 function drawTurnipBent(p: p5, k: number, W: number, ink: string, t: number, pose: TurnipPose) {
   if (Math.abs(pose.bow) < 0.004) {
-    drawTurnip(p, k, W, ink, { t, hop: pose.hop, height: pose.height, lean: pose.lean })
+    drawTurnip(p, k, W, ink, { t, hop: pose.hop, height: pose.height, lean: pose.lean, hat: pose.hat, look: pose.look })
     return
   }
   const N = 6
@@ -984,7 +987,7 @@ function drawTurnipBent(p: p5, k: number, W: number, ink: string, t: number, pos
     ctx.beginPath()
     ctx.rect(-1.2 * k, (y1 - 0.004) * k, 2.4 * k, (y0 - y1 + (i === 0 ? 0.2 : 0.008)) * k)
     ctx.clip()
-    drawTurnip(p, k, W, ink, { t, hop: 0, height: 0, lean: 0 })
+    drawTurnip(p, k, W, ink, { t, hop: 0, height: 0, lean: 0, hat: pose.hat, look: pose.look })
     p.pop()
     jx += Math.sin(th) * (L / N)
     jy -= Math.cos(th) * (L / N)

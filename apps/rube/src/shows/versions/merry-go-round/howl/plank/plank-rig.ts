@@ -1,6 +1,6 @@
 import { R, type Pt } from '../../../../../parts'
 import { smooth } from '../kit'
-import { bar, CLIMAX, FINALE, HEART } from '../music'
+import { AIR_STEPS, bar, CHORD, CLIMAX, FINALE, HEART } from '../music'
 import { CALCIFER_HELD } from '../seams'
 import { CASTLE, FAR } from '../wastes/castle'
 
@@ -551,19 +551,56 @@ export function drive(t: number): number {
 
 /* ------------------------------------------------------------------ Turnip Head */
 
-/** Turnip Head at the edge: hopping in place as it comes, bracing on his pole, stopping it, holding. */
-export function turnipAt(t: number): { at: Pt; hop: number; height: number; lean: number } {
+/**
+ * The castle's footfalls he hops it off on, from the brink: the three struck on the air after the chord and the next
+ * at the castle's own pace (`finale/flight.ts` STEP_KEYS). A hop a bar in three: off on the two, down on the
+ * downbeat, as he came up the hill; the veil has the land by the last.
+ */
+const WAVE_BARS: [number, number][] = [[CHORD[0], AIR_STEPS[0]], [AIR_STEPS[0], AIR_STEPS[1]], [AIR_STEPS[1], AIR_STEPS[2]], [AIR_STEPS[2], AIR_STEPS[2] + 1.1]]
+/** The castle comes home over him: the plank heaves up (f1 → f2), the hull locks, it drifts out over the gorge. */
+const HEAVE0 = bar('finale', 1, 2)
+const HULL_ON = bar('finale', 2, 2)
+const DRIFT_A = 297.0
+const DRIFT_B = 301.25
+
+/**
+ * Turnip Head at the edge: hopping in place as it comes, bracing on his pole, stopping it, holding; then, as the
+ * castle comes home, standing up straight and watching it go over him, and hopping it off from the brink on its
+ * footfalls, lifting his top hat at the top of every hop.
+ */
+export function turnipAt(t: number): { at: Pt; hop: number; height: number; lean: number; hat: number; look: [number, number] } {
   const at: Pt = [LAND.th, LAND.ledge - LAND.lip]
   let hop = 0
+  let height = 0.3
   for (const n of [33, 34, 35, 36]) {
     const a = c(n)
     const b = c(n, 3)
     if (t >= a && t < b) hop = (t - a) / (b - a)
   }
+  // The farewell: off on the two, down on the castle's footfall; the hat up off his head at the top.
+  let hat = 0
+  for (const [a, b] of WAVE_BARS) {
+    const off = a + (b - a) / 3
+    if (t >= off && t < b) {
+      hop = (t - off) / (b - off)
+      height = 0.42
+      hat = Math.pow(Math.sin(Math.PI * hop), 1.5)
+    }
+  }
   // Down from his last hop he plants his pole and braces into it (leaning toward the plank), is pushed back over
-  // the brink by it, and holds.
+  // the brink by it, and holds; on the tutti he stands up straight, and leans back a touch to watch it rise.
   const brace = -0.3 * smooth(t, c(36, 3), IMPACT)
   const push = 0.52 * smooth(t, IMPACT, IMPACT + 0.12) * (1 - smooth(t, IMPACT + 0.12, IMPACT + 1.6) * 0.6)
   const wobble = 0.05 * ring(t - IMPACT, 0.7, 0.45)
-  return { at, hop, height: 0.3, lean: brace + (t > IMPACT ? push + wobble : 0) }
+  const upright = smooth(t, FINALE + 0.15, FINALE + 1.15)
+  const watch = -0.05 * smooth(t, HEAVE0, HULL_ON + 0.4) * (1 - smooth(t, DRIFT_A, DRIFT_B))
+  const lean = (brace + (t > IMPACT ? push + wobble : 0)) * (1 - upright) + watch
+  // His face: to the star diving into the grate (up left), up at the castle as it comes home over him, and after
+  // it as it drifts out over the gorge (up right).
+  const toGrate = smooth(t, FINALE, FINALE + 0.6)
+  const up = smooth(t, HEAVE0 - 0.2, HULL_ON)
+  const out = smooth(t, DRIFT_A, DRIFT_B)
+  const lx = -0.8 * toGrate * (1 - up) - 0.25 * up * (1 - out) + 0.7 * out
+  const ly = -0.3 * toGrate * (1 - up) - 1 * up * (1 - out) - 0.75 * out
+  return { at, hop, height, lean, hat, look: [lx, ly] }
 }
