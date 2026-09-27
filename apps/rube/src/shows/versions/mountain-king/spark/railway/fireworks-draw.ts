@@ -1747,6 +1747,11 @@ export function crateSmoulder(t: number): number {
 const charred = (t: number): number => smooth(t, TITAN_FIRE + 0.15, HUSH)
 /** The smoulder's slow breath. */
 const breath = (t: number): number => 0.72 + 0.18 * Math.sin(t * 2.3) + 0.1 * Math.sin(t * 5.1 + 1.3)
+/**
+ * How far the crate's and the ash's embers are let down in the silence, 0..1, so the spark lying by them is the
+ * brightest point in the frame and never one coal among theirs: from the hush to the roll's flare.
+ */
+const hushed = (t: number): number => smooth(t, HUSH - 0.1, HUSH + 0.25) * (1 - smooth(t, FLARE - 0.05, FLARE + 0.02))
 
 /** The crate's broken end: a ragged mouth. */
 const crateMouth = (): Pt[] => {
@@ -1777,7 +1782,8 @@ export function drawCrate(pen: Pen, L: Light[]): void {
     rimStrip(pen, [x0 + 0.025, GY - h + 0.02], [x0 + 0.025, GY], 0.05, rim.col, 0.8 * rim.a * rim.left, 0.12)
   }
   if (sm <= 0.01) return
-  const b = breath(t) * sm
+  const quiet = 1 - 0.6 * hushed(t)
+  const b = breath(t) * sm * quiet
   additive(pen, () => {
     // The slats smoulder: the seams and the burnt edges glow red where the fire got into them, unevenly, breathing.
     ctx.lineCap = 'round'
@@ -1818,7 +1824,7 @@ export function drawCrate(pen: Pen, L: Light[]): void {
       const x = x1 - 0.32 + 0.3 * hash(i, 125)
       const y = GY - 0.04 - 0.12 * hash(i, 126)
       const on = 0.5 + 0.5 * Math.sin(t * (1.1 + 0.9 * hash(i, 127)) + i * 1.9)
-      ctx.fillStyle = rgba(i % 3 ? FW.coal : FW.coalHot, 0.7 * sm * on)
+      ctx.fillStyle = rgba(i % 3 ? FW.coal : mixHex(FW.coal, FW.coalHot, 1 - hushed(t)), 0.7 * sm * on * quiet)
       ctx.fillRect((x - 0.025) * pen.k, (y - 0.014) * pen.k, 0.05 * pen.k, 0.028 * pen.k)
     }
   })
@@ -1972,7 +1978,9 @@ export function drawAsh(pen: Pen): void {
         const y = GY - hgt(u) * (0.25 + 0.5 * hash(i, 53, hp.seed))
         const br = 0.5 + 0.5 * Math.sin(t * (1.3 + hash(i, 54, hp.seed)) + i * 1.7)
         // Flat smudges of red in the grey, not beads: small, low and dim beside the spark lying in it.
-        glint(pen, x, y, 0.035 + 0.02 * hash(i, 55, hp.seed), i % 4 ? FW.coal : mixHex(FW.coal, FW.coalHot, 0.4), 0.45 * a * br, 0.4)
+        // In the silence the heap by the crate, where the spark lies, is let down to a dull red (`hushed`).
+        const dim = hp.seed === 2 ? 1 - 0.65 * hushed(t) : 1
+        glint(pen, x, y, 0.035 + 0.02 * hash(i, 55, hp.seed), i % 4 ? FW.coal : mixHex(FW.coal, FW.coalHot, 0.4), 0.45 * a * br * dim, 0.4)
       }
     })
   }

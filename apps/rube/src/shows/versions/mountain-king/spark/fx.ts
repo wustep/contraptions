@@ -163,8 +163,8 @@ export const flame = () =>
       if (here.hidden || here.scale <= 0.05) return
       const h = heat(t)
       if (h <= 0.01) return
-      // All but out (the silence): no flame to speak of, but a tiny guttering tongue off the coal that flickers up on
-      // each breath and nearly dies between, so it is still a fire.
+      // All but out (the silence): no flame to speak of, but a small guttering tongue off the dulled heart that never
+      // goes out, rising on each breath and sinking between, so it is still a fire and still the spark.
       const ash = 1 - smooth(h, 0.1, 0.45)
       if (ash > 0.02) guttering(p, c.k, here.x, here.y, t, ash)
       if (ash > 0.98) return
@@ -269,23 +269,29 @@ export function shadow(
   ctx.restore()
 }
 
-/** The ember's last tongue: a small flame off the top of the coal, rising on its breath and all but gone between. */
+/**
+ * The ember's last tongue: a small flame off the top of the coal that never quite goes out. Between breaths it is a
+ * low guttering tongue about a quarter of a candle's flame, leaning and shrinking in the night air; on each breath it
+ * rises to over half again. So in the silence the spark is barely alive, never gone.
+ */
 function guttering(p: p5, k: number, x: number, y: number, t: number, ash: number): void {
   const b = emberBreath(t - 0.12)
   const g = b * b
   const flick = 0.5 + 0.5 * Math.sin(t * 29 + 0.7) * Math.sin(t * 17.3)
-  const len = R * (0.35 + 1.35 * g) * (0.85 + 0.3 * flick)
-  const wide = R * (0.5 + 0.35 * g)
-  const lean = R * 0.35 * Math.sin(t * 3.1) + R * 0.15 * (flick - 0.5)
-  const base = y - R * 0.05
+  // Rooted where the candle's flame is (0.35 R up the heart), so even at its lowest its tip stands clear of the heart.
+  const len = R * (1.25 + 1.0 * g) * (0.88 + 0.24 * flick)
+  const wide = R * (0.55 + 0.3 * g)
+  const lean = R * (0.3 * Math.sin(t * 3.1) + 0.12 * Math.sin(t * 1.3 + 0.4)) + R * 0.15 * (flick - 0.5)
+  const base = y - R * 0.35
   p.push()
   p.noStroke()
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.globalAlpha = ash * smooth(g, 0.04, 0.5)
-  tongue(p, k, x + R * 0.1, base, wide, len, lean, FLAME_RIM)
-  tongue(p, k, x + R * 0.1, base + R * 0.04, wide * 0.6, len * 0.66, lean * 0.7, SPARK)
-  ctx.globalAlpha = ash * smooth(g, 0.3, 0.9)
-  tongue(p, k, x + R * 0.1, base + R * 0.06, wide * 0.3, len * 0.36, lean * 0.5, FLAME_CORE)
+  ctx.globalAlpha = ash * (0.78 + 0.22 * g)
+  tongue(p, k, x + R * 0.05, base, wide, len, lean, FLAME_RIM)
+  ctx.globalAlpha = ash * (0.62 + 0.38 * g)
+  tongue(p, k, x + R * 0.05, base + R * 0.04, wide * 0.6, len * 0.66, lean * 0.7, SPARK)
+  ctx.globalAlpha = ash * (0.3 + 0.6 * g)
+  tongue(p, k, x + R * 0.05, base + R * 0.06, wide * 0.3, len * 0.36, lean * 0.5, FLAME_CORE)
   p.pop()
 }
 
@@ -343,71 +349,47 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
     ctx.restore()
     return
   }
-  // Going out, it is a coal and not a coin: a small, flat, broken clinker lying in the ash, crusted dark grey, lit
-  // from under where it lies and through its cracks by a red heart that breathes.
-  const n = 8
-  const shrink = 1 - 0.18 * ash
-  const outline: [number, number][] = []
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + 0.2
-    const lump = 1 + ash * (0.3 * (hash(i, 71) - 0.5))
-    const wide = 1 + 0.22 * ash
-    const flat = 1 - 0.36 * ash
-    outline.push([Math.cos(a) * r * lump * wide * shrink, (Math.sin(a) * lump * flat + 0.3 * ash) * r * shrink])
-  }
-  const path = () => {
+  // Going out, it is still the spark: its round heart, only dulled and crusted with ash over the top, the red of it
+  // breathing up through the crust from underneath where it lies, never a flat pebble or one more coal. (Its tongue of
+  // flame never quite goes out either: `guttering`.)
+  const rr = r * (1 - 0.1 * ash)
+  const dullCore = mixHex(SPARK, FLAME_RIM, 0.55 - 0.35 * breathe)
+  const dullBody = mixHex(FLAME_RIM, ASH, 0.38 - 0.14 * breathe)
+  const dullEdge = mixHex(FLAME_RIM, LOFT.soot, 0.55)
+  const heart = () => {
     ctx.beginPath()
-    for (let i = 0; i <= n; i++) {
-      const [ax, ay] = outline[i % n]
-      const [bx, by] = outline[(i + 1) % n]
-      // Mostly straight broken faces, their corners only a little rounded.
-      const mx = (ax + bx) / 2
-      const my = (ay + by) / 2
-      if (i === 0) ctx.moveTo(mx, my)
-      else {
-        const [px, py] = outline[(i - 1 + n) % n]
-        ctx.lineTo(ax + (px - ax) * 0.18, ay + (py - ay) * 0.18)
-        ctx.quadraticCurveTo(ax, ay, ax + (bx - ax) * 0.18, ay + (by - ay) * 0.18)
-        ctx.lineTo(mx, my)
-      }
-    }
-    ctx.closePath()
+    ctx.arc(0, 0, rr, 0, Math.PI * 2)
   }
-  const crust = mixHex(ASH, LOFT.soot, 0.35)
-  const [er, eg, eb] = rgb(mixHex(FLAME_RIM, SPARK, 0.3 * breathe))
-  path()
-  const g = ctx.createLinearGradient(0, -r * 0.6, 0, r * 0.75)
-  g.addColorStop(0, mixHex(edge, mixHex(crust, ASH, 0.25), ash))
-  g.addColorStop(0.55, mixHex(body, crust, ash))
-  g.addColorStop(1, mixHex(core, mixHex(crust, FLAME_RIM, 0.35 + 0.35 * breathe), ash))
+  heart()
+  const g = ctx.createRadialGradient(0, 0.3 * rr, 0.05 * rr, 0, 0.1 * rr, rr)
+  g.addColorStop(0, mixHex(core, dullCore, ash))
+  g.addColorStop(0.55, mixHex(body, dullBody, ash))
+  g.addColorStop(1, mixHex(edge, dullEdge, ash))
   ctx.fillStyle = g
   ctx.fill()
   ctx.save()
-  path()
+  heart()
   ctx.clip()
-  // Its underside glows where it lies in the ash, swelling and ebbing with each breath.
-  const under = ctx.createRadialGradient(0, 0.9 * r, 0, 0, 0.9 * r, 1.1 * r)
-  under.addColorStop(0, `rgba(${er}, ${eg}, ${eb}, ${((0.35 + 0.55 * breathe) * ash).toFixed(3)})`)
-  under.addColorStop(1, `rgba(${er}, ${eg}, ${eb}, 0)`)
-  ctx.fillStyle = under
-  ctx.fillRect(-r * 1.6, -r * 1.2, r * 3.2, r * 2.6)
-  // Cracks across its crust, glowing through: fine wandering lines that run mostly across it, brighter on the breath.
+  // The ash over its top: a grey film, thickest at the crown and gone by its middle, thinning as it breathes.
+  const [ar, ag, ab] = rgb(mixHex(ASH, LOFT.soot, 0.25))
+  const crust = ctx.createLinearGradient(0, -rr, 0, 0.25 * rr)
+  crust.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, ${((0.85 - 0.3 * breathe) * ash).toFixed(3)})`)
+  crust.addColorStop(0.6, `rgba(${ar}, ${ag}, ${ab}, ${((0.35 - 0.2 * breathe) * ash).toFixed(3)})`)
+  crust.addColorStop(1, `rgba(${ar}, ${ag}, ${ab}, 0)`)
+  ctx.fillStyle = crust
+  ctx.fillRect(-rr, -rr, 2 * rr, 1.3 * rr)
+  // One fine crack across the crust, glowing through it on the breath.
+  const [er, eg, eb] = rgb(mixHex(FLAME_RIM, SPARK, 0.4 * breathe))
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  ctx.strokeStyle = `rgba(${er}, ${eg}, ${eb}, ${((0.2 + 0.6 * breathe) * ash).toFixed(3)})`
-  ctx.lineWidth = Math.max(0.7, 0.06 * r)
-  for (let i = 0; i < 2; i++) {
-    let cx = -0.75 * r + 0.35 * r * hash(i, 81)
-    let cy = (0.05 + 0.3 * i + 0.1 * hash(i, 82)) * r
-    ctx.beginPath()
-    ctx.moveTo(cx, cy)
-    for (let j = 0; j < 5; j++) {
-      cx += (0.22 + 0.16 * hash(i, j, 83)) * r
-      cy += (hash(i, j, 84) - 0.5) * 0.22 * r
-      ctx.lineTo(cx, cy)
-    }
-    ctx.stroke()
-  }
+  ctx.strokeStyle = `rgba(${er}, ${eg}, ${eb}, ${((0.15 + 0.55 * breathe) * ash).toFixed(3)})`
+  ctx.lineWidth = Math.max(0.7, 0.07 * rr)
+  ctx.beginPath()
+  ctx.moveTo(-0.8 * rr, -0.28 * rr)
+  ctx.lineTo(-0.3 * rr, -0.4 * rr)
+  ctx.lineTo(0.1 * rr, -0.3 * rr)
+  ctx.lineTo(0.55 * rr, -0.46 * rr)
+  ctx.stroke()
   ctx.restore()
   ctx.restore()
 }
