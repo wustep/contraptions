@@ -64,6 +64,9 @@ export const T = {
   ianSuit: b(150.181),
   /** The first logogram. */
   first: b(153.06),
+  /** Her lexicon whole: she reads it all back, and her question goes up on the board. */
+  frieze: b(190.943),
+  question: b(192.789),
   /** The last: "weapon". */
   weapon: b(196.795),
   out: SEAM.dark,
@@ -89,13 +92,12 @@ export const BOARDS: { t: number; who: 'louise' | 'ian' }[] = [
   { t: b(181.133), who: 'ian' },
   { t: b(185.08), who: 'ian' },
   { t: b(188.012), who: 'ian' },
-  { t: b(190.943), who: 'ian' },
-  { t: b(192.789), who: 'ian' },
-  { t: b(194.81), who: 'ian' },
+  // The question, in their writing.
+  { t: T.question, who: 'ian' },
 ]
 
 /** Her touches at the glass after the palm: each one is answered. */
-export const TOUCHES: number[] = [b(161.025), b(169.61), b(177.186), b(181.133), b(182.149), b(185.08), b(188.012), b(189.005), b(190.943), b(192.789), T.weapon]
+export const TOUCHES: number[] = [b(161.025), b(169.61), b(177.186), b(181.133), b(182.149), b(185.08), T.frieze, T.weapon]
 
 /* ------------------------------------------------------------------ their writing */
 
@@ -124,30 +126,26 @@ const SPOT: Record<Writer, Pt[]> = {
     [8.85, -1.85],
   ],
   costello: [
-    [13.3, -7.2],
-    [13.7, -6.5],
-    [13.0, -7.5],
-    [13.6, -6.8],
+    [13.9, -4.35],
+    [13.6, -3.55],
+    [14.1, -4.8],
+    [13.8, -4.0],
   ],
 }
 
 /**
- * The lexicon: where each read logogram hangs in the dark over the chamber, and how big. The first near the glass and
- * large; the rest spreading back over the room and up into its height, smaller as they go, never two the same size.
+ * The lexicon: a frieze along the chamber's back wall, over their heads, where each read logogram is pinned up in the
+ * order she read it, lit: the first near the glass, the rest going back down the room. Seven, and no two one size.
  */
+export const FRIEZE_Y = -3.45
 export const LEXICON: { c: Pt; R: number }[] = [
-  { c: [5.35, -4.5], R: 0.98 },
-  { c: [3.3, -5.6], R: 0.72 },
-  { c: [1.45, -4.15], R: 0.84 },
-  { c: [5.25, -6.95], R: 0.52 },
-  { c: [-0.3, -5.75], R: 0.64 },
-  { c: [2.35, -7.1], R: 0.46 },
-  { c: [-1.95, -4.1], R: 0.7 },
-  { c: [6.55, -5.95], R: 0.36 },
-  { c: [0.55, -7.45], R: 0.42 },
-  { c: [-2.1, -6.9], R: 0.52 },
-  { c: [3.9, -7.9], R: 0.34 },
-  { c: [-3.6, -5.4], R: 0.58 },
+  { c: [5.9, FRIEZE_Y], R: 0.44 },
+  { c: [4.55, FRIEZE_Y], R: 0.29 },
+  { c: [3.2, FRIEZE_Y], R: 0.38 },
+  { c: [1.85, FRIEZE_Y], R: 0.26 },
+  { c: [0.5, FRIEZE_Y], R: 0.36 },
+  { c: [-0.85, FRIEZE_Y], R: 0.3 },
+  { c: [-2.2, FRIEZE_Y], R: 0.41 },
 ]
 
 function writings(): Logo[] {
@@ -169,14 +167,10 @@ function writings(): Logo[] {
   add(TOUCHES[3], 'costello', 1.3, 1.1, 1077, 0.2)
   add(TOUCHES[4], 'abbott', 1.2, 1.2, 1091, -0.6)
   add(TOUCHES[5], 'costello', 1.1, 1.05, 1105, 1.1)
-  add(TOUCHES[6], 'abbott', 1.0, 1.2, 1112, 0.5)
-  add(TOUCHES[7], 'costello', 0.9, 1.0, 1126, -0.2)
-  add(TOUCHES[8], 'abbott', 0.9, 1.15, 1133, 0.8)
-  add(TOUCHES[9], 'costello', 0.9, 1.05, 1147, -0.9)
   // Each board lifts off whatever has closed on the glass: read.
   for (const board of BOARDS) {
     for (const l of out) {
-      if (l.lift !== null || l.born + l.form > board.t - 0.05) continue
+      if (l.lift !== null || l.born + l.form > board.t - 0.05 || slot >= LEXICON.length) continue
       l.lift = board.t
       l.slot = slot++
     }
@@ -212,16 +206,16 @@ export function abbott(t: number): Stand {
   const come = smooth(t, T.abbott - 0.2, T.abbott + 3.1)
   const loom = smooth(t, T.abbott - 0.1, T.abbott + 0.9)
   const reel = smooth(t, T.blast, T.blast + 2.6)
-  const x = lerp(14.4, 12.3, come) + 3.4 * reel
+  const x = lerp(13.4, 11.4, come) + 3.4 * reel
   const fog = Math.min(0.96, lerp(0.95, 0.2, come) + 0.7 * reel)
   const agitated = t > T.bomb - 1 && t < T.blast ? 0.06 * Math.sin((t - T.bomb) * 5.3) : 0
-  return { x, y: 1.35, s: 8.0, fog, lean: agitated + 0.55 * reel * (1 - 0.3 * reel), alpha: loom * (1 - 0.55 * reel) }
+  return { x, y: 3.2, s: 8.6, fog, lean: agitated + 0.55 * reel * (1 - 0.3 * reel), alpha: loom * (1 - 0.55 * reel) }
 }
 export function costello(t: number): Stand {
   const come = smooth(t, T.costello - 0.2, T.costello + 3.3)
   const loom = smooth(t, T.costello - 0.1, T.costello + 0.9)
   const back = smooth(t, T.blast, T.blast + 3)
-  return { x: lerp(18.8, 16.9, come) + 1.8 * back, y: 2.0, s: 8.6, fog: Math.min(0.95, lerp(0.95, 0.4, come) + 0.4 * back), lean: -0.05, alpha: loom * (1 - 0.5 * back) }
+  return { x: lerp(15.8, 13.9, come) + 1.8 * back, y: 1.3, s: 7.2, fog: Math.min(0.95, lerp(0.95, 0.5, come) + 0.35 * back), lean: -0.05, alpha: loom * (1 - 0.5 * back) }
 }
 
 /* ------------------------------------------------------------------ her path, and Ian's */
@@ -260,11 +254,13 @@ function contactWays(): Way[] {
   // The suit falls away; she goes to the glass alone.
   w.push(at(b(146.141), PLATE))
   w.push(at(T.palm, TOUCH, 'inout'))
-  // The palm: she stays pressed to it, easing and pressing again; the first logogram: she draws back to see it.
-  w.push(at(T.palm + 1.6, TOUCH - 0.05, 'inout'))
-  w.push(at(b(152.062), TOUCH, 'inout'))
-  w.push(at(b(154.059), TOUCH - 0.42, 'inout'))
-  w.push(at(b(155.109), TOUCH - 0.46, 'inout'))
+  // The palm: she stays pressed to it, eases off, and presses again; the first logogram: she draws back to see it,
+  // Ian beside her.
+  w.push(at(T.palm + 1.25, TOUCH - 0.13, 'inout'))
+  w.push(at(T.palm + 2.35, TOUCH, 'inout'))
+  w.push(at(T.first - 0.25, TOUCH))
+  w.push(at(b(154.059), TOUCH - 0.3, 'inout'))
+  w.push(at(b(155.109), TOUCH - 0.3))
   // The exchange, on the chords: back to the plate (her board), forward to the glass (their answer).
   const legs: [number, number, number][] = [
     [b(155.109), BOARDS[1].t, PLATE],
@@ -302,7 +298,12 @@ function ianContactWays(): Way[] {
   w.push(at(T.suit + 0.3, 3.2))
   w.push(at(T.suit + 1.3, 3.42, 'out'))
   w.push(at(T.ianSuit - 0.4, 3.3, 'inout'))
-  w.push(at(T.ianSuit + 1.2, 3.22, 'inout'))
+  // His suit off, he comes up beside her at the glass for the first logogram, and they draw back from it together.
+  w.push(at(T.ianSuit + 0.55, 3.3))
+  w.push(at(T.first - 0.25, TOUCH - 0.29, 'inout'))
+  w.push(at(b(154.059), TOUCH - 0.59, 'inout'))
+  w.push(at(T.first + 1.55, TOUCH - 0.59))
+  w.push(at(T.first + 3.55, 3.22, 'inout'))
   // Behind her board while she works it, drifting a little.
   w.push(at(b(166.615), 3.1, 'inout'))
   w.push(at(b(174.428), 3.22, 'inout'))

@@ -81,7 +81,7 @@ export function mouthAt(t: number): Pt {
 }
 
 /** The hush as he tells her: the room falls back into its haze round the two of them, and stays back. */
-export const hush = (t: number): number => smooth(t, T_TOUCH - 0.5, T_TOUCH + 1.2)
+export const hush = (t: number): number => smooth(t, T_TOAST + 0.6, T_TOUCH + 1.0)
 
 /* ------------------------------------------------------------------ Louise and Shang */
 
@@ -137,7 +137,8 @@ export interface WorldShot {
 export const GALA_SHOTS: WorldShot[] = [
   { t: T_PEDAL + 0.25, cells: 5.0, hold: [-1.3, -1.35] },
   { t: T_T3 + 0.4, cells: 6.5, hold: [0.2, -1.75] },
-  { t: T_TOAST + 0.6, cells: 5.8, hold: [-0.4, -1.45] },
-  { t: T_TOUCH, cells: 5.0, hold: [-0.3, -1.15] },
+  { t: T_TOAST + 0.25, cells: 5.4, hold: [-0.4, -1.3] },
+  // The whisper: in close on the two of them touching, the tower's light behind them, and out again to the seam.
+  { t: T_TOUCH + 1.2, cells: 3.0, hold: [HER_END[0] - 0.08, HER_END[1] - 0.32] },
   { t: T_OUT, cells: 4.4, hold: [HER_END[0] + 0.8, HER_END[1] - 0.8] },
 ]

@@ -288,7 +288,7 @@ export function pedalAt(t: number): number {
 /* ------------------------------------------------------------------ the daylight */
 
 /** Where the cloud opens, over where the shell went up: the sun comes through there. */
-export const SUN_GAP: Pt = [SHELL_X - 6, -57]
+export const SUN_GAP: Pt = [SHELL_X - 2, -51]
 /** Where she watches the shell go from: the light reaches her there on the chord after it breaks through. */
 export const WATCH_X = 11
 
@@ -300,7 +300,8 @@ export const WATCH_X = 11
 export function daylight(t: number): { glow: number; sun: number; reach: number } {
   if (t < G.gone) return { glow: 0, sun: 0, reach: 0 }
   const glow = smooth(t, G.gone + 0.3, G.sun + 0.2)
-  const sun = smooth(t, G.sun - 0.05, G.sun + 2.2)
+  // The sun comes on as the cloud tears, at once; what grows after is how far it has reached.
+  const sun = smooth(t, G.sun - 0.05, G.sun + 0.6)
   const rate = (WATCH_X - SUN_GAP[0]) / (G.lit - G.sun)
   const s = Math.max(0, t - G.sun)
   // A little slow to start (the light has to find the ground), then on along the valley.

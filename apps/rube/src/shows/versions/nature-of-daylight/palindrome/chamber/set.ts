@@ -12,6 +12,7 @@ import {
   FRANTIC,
   GX,
   JAMB,
+  FRIEZE_Y,
   LEXICON,
   LINTEL,
   LOGOS,
@@ -76,7 +77,7 @@ export const ring = (seed: number): Ring => {
 }
 
 /** The palm's centre when it presses the glass at her touch (Abbott's). */
-export const PALM: Pt = [FAR + 0.52, -0.12]
+export const PALM: Pt = [FAR + 1.25, -0.02]
 /** Where Abbott strikes the glass in the bomb. */
 const SLAM: Pt = [FAR + 0.95, -1.5]
 
@@ -142,9 +143,10 @@ export function logoAt(l: Logo, t: number): { c: Pt; R: number; turn: number; v:
   const v = smooth(t, l.lift, l.lift + 2.8)
   const to = LEXICON[l.slot]
   // Up and over: a curve that rises first, then drifts across the glass into the dark.
-  const mid: Pt = [(l.c[0] + to.c[0]) / 2 + 0.8, Math.min(l.c[1], to.c[1]) - 1.2]
+  const mid: Pt = [(l.c[0] + to.c[0]) / 2 + 0.8, Math.min(l.c[1], to.c[1]) - 2.4]
   const q = (a: number, m: number, b: number) => (1 - v) * (1 - v) * a + 2 * (1 - v) * v * m + v * v * b
-  return { c: [q(l.c[0], mid[0], to.c[0]), q(l.c[1], mid[1], to.c[1])], R: lerp(l.R, to.R, v), turn: l.turn * v, v }
+  // It shrinks to its word's size early, and comes down into its place from above.
+  return { c: [q(l.c[0], mid[0], to.c[0]), q(l.c[1], mid[1], to.c[1])], R: lerp(l.R, to.R, smooth(v, 0, 0.55)), turn: 0, v }
 }
 
 /* ------------------------------------------------------------------ the set */
@@ -485,6 +487,16 @@ function glass(ctx: Ctx, k: number, t: number, f: Frame, wake: number): void {
       tg.addColorStop(1, rgba(SHELL.glow, 0))
       ctx.fillStyle = tg
       ctx.fillRect(x - 0.12 * k, cy - h, w + 0.12 * k, 2 * h)
+      // And it spills onto her side: a tall soft light on the wall at the glass, where she is.
+      ctx.save()
+      ctx.translate(x, cy)
+      ctx.scale(1, 2.1)
+      const sp = ctx.createRadialGradient(0, 0, 0, 0, 0, 1.1 * k)
+      sp.addColorStop(0, rgba(SHELL.fogLit, 0.32 * touch))
+      sp.addColorStop(1, rgba(SHELL.fogLit, 0))
+      ctx.fillStyle = sp
+      ctx.fillRect(-1.1 * k, -1.1 * k, 1.1 * k, 2.2 * k)
+      ctx.restore()
     }
   }
   // The slam: the whole slab shivers bright.
@@ -633,39 +645,71 @@ function pour(ctx: Ctx, k: number, t: number, f: Frame): void {
   void f
 }
 
-/** The lexicon: every logogram read, hung lit in the dark over them, breathing; and those on their way up to it. */
+/** A read logogram as the frieze keeps it: the same ring, its ink heavier. */
+const heavyOf = new Map<number, Ring>()
+const heavy = (seed: number): Ring => {
+  let r = heavyOf.get(seed)
+  if (!r) {
+    const base = ring(seed)
+    r = { ...base, w: (a) => base.w(a) * 1.75 }
+    heavyOf.set(seed, r)
+  }
+  return r
+}
+
+/**
+ * The lexicon: every logogram she has read, pinned up on a pale card in a row along the back wall over their heads, in
+ * the order she read it (as the film's linguists pinned theirs up), lit by the glass: nearer it, brighter. Each crosses
+ * the glass pale and lands dark on its card. On the chord she reads it all back, the cards light one after another.
+ */
 function lexicon(p: p5, ctx: Ctx, k: number, t: number): void {
-  const dim = 1 - 0.35 * smooth(t, T.weapon, T.weapon + 0.8)
-  // The next session is another day: the dark over them is dark again.
-  const session = t > T.bomb - 1 ? 0 : 1
-  const shake = t >= T.blast ? Math.exp(-(t - T.blast) / 0.9) : 0
-  const lost = smooth(t, T.blast + 0.1, T.blast + 2.4)
-  LOGOS.forEach((l, i) => {
+  const dim = 1 - 0.4 * smooth(t, T.weapon, T.weapon + 0.8)
+  // The next session is another day: the wall over them is dark again.
+  if (t > T.bomb - 1) return
+  // The wall lit softly where the words are pinned, as far along as they reach.
+  const pinned = LOGOS.filter((l) => l.lift !== null && t >= l.lift + 2.3)
+  if (pinned.length) {
+    const far = Math.min(...pinned.map((l) => LEXICON[l.slot].c[0] - LEXICON[l.slot].R))
+    const x0 = far - 1.2
+    const x1 = GX
+    const rx = (x1 - x0) / 2
+    const ry = 1.3
+    const a = (0.06 + 0.012 * pinned.length) * dim
+    ctx.save()
+    ctx.translate(((x0 + x1) / 2) * k, FRIEZE_Y * k)
+    ctx.scale(rx / ry, 1)
+    const wash = ctx.createRadialGradient(0, 0, 0, 0, 0, ry * k)
+    wash.addColorStop(0, rgba(SHELL.fogLit, a))
+    wash.addColorStop(1, rgba(SHELL.fogLit, 0))
+    ctx.fillStyle = wash
+    ctx.fillRect(-ry * k, -ry * k, 2 * ry * k, 2 * ry * k)
+    ctx.restore()
+  }
+  LOGOS.forEach((l) => {
     if (l.lift === null || t < l.lift) return
     const at = logoAt(l, t)
-    // Dark ink on their side, pale and lit on ours: it turns as it crosses the glass.
     const cross = smooth(at.c[0], GX + 0.9, GX - 0.9)
-    const color = mix(SHELL.ink, SHELL.fogLit, cross)
-    const a = (0.95 - 0.1 * cross) * (at.v >= 1 ? dim * session : 1) * (1 - lost)
-    if (a <= 0.003) return
-    const breathe = 0.35 + 0.25 * Math.sin(t * 0.6 + i * 1.3)
-    // The blast blows them back down the chamber and they go out.
-    const blown = t >= T.blast ? 1 - Math.exp(-(t - T.blast) / 0.5) : 0
-    const jx = shake * 0.12 * Math.sin(t * 41 + i * 3) - blown * (1.4 + 0.9 * hash(i, 3, 12))
-    const jy = shake * 0.1 * Math.sin(t * 37 + i * 5) - blown * 0.5 * hash(i, 4, 12) + Math.max(0, t - T.blast) * 0.25
+    const pin = smooth(t, l.lift + 2.3, l.lift + 2.8)
+    const read = t >= T.frieze + 0.17 * l.slot ? Math.exp(-(t - (T.frieze + 0.17 * l.slot)) / 1.1) : 0
+    const light = Math.sqrt(lightAt(at.c[0], t))
     ctx.save()
-    ctx.globalAlpha *= a
-    ctx.translate((at.c[0] + jx) * k, (at.c[1] + jy) * k)
-    ctx.rotate(at.turn + 0.03 * Math.sin(t * 0.25 + i) + blown * (hash(i, 5, 12) - 0.5) * 1.6)
-    if (cross > 0.3) {
-      // Lit: a faint soft light behind it (wider than it, no bright middle).
-      const gl = ctx.createRadialGradient(0, 0, at.R * 0.6 * k, 0, 0, at.R * 1.9 * k)
-      gl.addColorStop(0, rgba(SHELL.fogLit, 0.07 * cross))
-      gl.addColorStop(1, rgba(SHELL.fogLit, 0))
-      ctx.fillStyle = gl
-      ctx.fillRect(-at.R * 2 * k, -at.R * 2 * k, at.R * 4 * k, at.R * 4 * k)
+    ctx.translate(at.c[0] * k, at.c[1] * k)
+    if (pin > 0.001) {
+      // The card, a little askew as a hand pins it; lit by the glass, and by her reading.
+      ctx.save()
+      ctx.rotate((hash(l.slot, 3, 21) - 0.5) * 0.07)
+      const side = (2 * at.R + 0.4) * k
+      ctx.globalAlpha *= pin
+      ctx.fillStyle = mix(SHELL.dark, SHELL.board, Math.min(1, (0.3 + 0.6 * light) * dim + 0.25 * read))
+      ctx.fillRect(-side / 2, -side / 2, side, side)
+      ctx.fillStyle = rgba(SHELL.dark, 0.3)
+      ctx.fillRect(-side / 2, side / 2 - 0.03 * k, side, 0.03 * k)
+      ctx.restore()
     }
-    drawInk(p, k, 0, 0, at.R, ring(l.seed), 1, { color, bloom: breathe, tendrils: 1 - cross })
+    // Dark ink on their side; pale while it crosses our dark; dark again on its card.
+    const pale = mix(SHELL.fogLit, SHELL.glow, 0.5)
+    const color = mix(mix(SHELL.ink, pale, cross), SHELL.ink, pin)
+    drawInk(p, k, 0, 0, at.R, cross > 0.5 ? heavy(l.seed) : ring(l.seed), 1, { color, tendrils: 1 })
     ctx.restore()
   })
 }
@@ -832,12 +876,18 @@ function fallenSuits(ctx: Ctx, k: number, t: number): void {
       const bounce = u > 0.53 ? 0.1 * Math.exp(-(u - 0.53) / 0.18) * Math.abs(Math.sin((u - 0.53) * 16)) : 0
       const ang = side * (Math.PI / 2) * (fall - bounce)
       const slide = side * (crack + 0.16 * smooth(u, 0.3, 1.4))
+      const gone = smooth(u, 0.75, 2.1)
+      if (gone >= 1) continue
       ctx.save()
-      ctx.translate((at[0] + slide + side * SUIT.w * 0.5) * k, FLOOR * k)
+      // They go down into the floor as they fade: nothing is left lying there.
+      ctx.beginPath()
+      ctx.rect((at[0] - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
+      ctx.clip()
+      ctx.translate((at[0] + slide + side * SUIT.w * 0.5) * k, (FLOOR + 0.3 * gone) * k)
       ctx.rotate(ang)
       ctx.translate(-side * SUIT.w * 0.5 * k, 0)
       suitPath(ctx, k, side)
-      ctx.globalAlpha *= 1 - smooth(u, 1.6, 5)
+      ctx.globalAlpha *= 1 - gone
       ctx.fillStyle = mix(SHELL.dark, SHELL.suit, light * (side < 0 ? 0.75 : 1))
       ctx.fill()
       ctx.restore()

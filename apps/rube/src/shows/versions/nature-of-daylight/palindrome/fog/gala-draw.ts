@@ -9,6 +9,7 @@ import {
   bottleAngle,
   BRIM,
   COUPE,
+  HER_END,
   hush,
   coupeAt,
   mouthAt,
@@ -121,96 +122,96 @@ function chandelier(ctx: Ctx, k: number, f: Frame, x: number, t: number, i: numb
 
 /* ------------------------------------------------------------------ the crowd */
 
+/**
+ * The guests: people at the cast's own scale, as the whole show has them, but never cast: small muted dark discs, no
+ * mark, no outline, a faint rim of the room's light; standing in loose knots about the room and by the tower. On the
+ * toast a few lift a tiny glass, a glint over the disc. None stands near where Louise and Shang are at either cut.
+ */
 interface Guest {
   x: number
-  h: number
-  face: 1 | -1
-  dress: boolean
+  d: number
   glass: boolean
   seed: number
 }
 const GUESTS: Guest[] = [
-  { x: -9.2, h: 3.1, face: 1, dress: false, glass: true, seed: 1 },
-  { x: -8.3, h: 2.85, face: -1, dress: true, glass: true, seed: 2 },
-  { x: -6.1, h: 3.2, face: 1, dress: false, glass: false, seed: 3 },
-  { x: -5.2, h: 2.9, face: -1, dress: true, glass: true, seed: 4 },
-  { x: -1.4, h: 3.15, face: 1, dress: false, glass: true, seed: 5 },
-  { x: 2.6, h: 2.95, face: -1, dress: true, glass: true, seed: 6 },
-  { x: 3.5, h: 3.2, face: -1, dress: false, glass: true, seed: 7 },
-  { x: 6.3, h: 3.05, face: 1, dress: false, glass: false, seed: 8 },
-  { x: 7.1, h: 2.8, face: -1, dress: true, glass: true, seed: 9 },
-  { x: 9.8, h: 3.1, face: -1, dress: false, glass: true, seed: 10 },
-  { x: 11.0, h: 2.9, face: 1, dress: true, glass: true, seed: 11 },
+  // Farthest back.
+  { x: -7.6, d: 0.64, glass: false, seed: 1 },
+  { x: -3.9, d: 0.64, glass: true, seed: 2 },
+  { x: 3.4, d: 0.64, glass: true, seed: 3 },
+  { x: 8.4, d: 0.64, glass: false, seed: 4 },
+  { x: 12.1, d: 0.64, glass: true, seed: 5 },
+  // Far.
+  { x: -6.3, d: 0.76, glass: true, seed: 6 },
+  { x: -5.98, d: 0.76, glass: false, seed: 7 },
+  { x: 4.25, d: 0.76, glass: true, seed: 8 },
+  { x: 4.58, d: 0.76, glass: false, seed: 9 },
+  { x: 6.9, d: 0.76, glass: true, seed: 10 },
+  { x: 9.25, d: 0.76, glass: false, seed: 11 },
+  { x: 9.58, d: 0.76, glass: true, seed: 12 },
+  { x: 11.5, d: 0.76, glass: false, seed: 13 },
+  // Nearer: a knot beyond the tower, and knots across the room.
+  { x: -4.45, d: 0.88, glass: true, seed: 14 },
+  { x: -4.12, d: 0.88, glass: false, seed: 15 },
+  { x: 2.4, d: 0.88, glass: true, seed: 16 },
+  { x: 2.72, d: 0.88, glass: false, seed: 17 },
+  { x: 3.06, d: 0.88, glass: true, seed: 18 },
+  { x: 5.45, d: 0.88, glass: false, seed: 19 },
+  { x: 5.8, d: 0.88, glass: true, seed: 20 },
+  { x: 7.6, d: 0.88, glass: true, seed: 21 },
+  { x: 7.94, d: 0.88, glass: false, seed: 22 },
+  // In her own plane, well away from where she and Shang go: by the tower's far side, and far over on the right.
+  { x: -5.25, d: 1, glass: true, seed: 23 },
+  { x: -4.9, d: 1, glass: false, seed: 24 },
+  { x: -4.58, d: 1, glass: true, seed: 25 },
+  { x: 10.3, d: 1, glass: false, seed: 26 },
+  { x: 10.64, d: 1, glass: true, seed: 27 },
 ]
 
-/** A guest: a dark figure, drawn, never a ball: shoulders, a dress or a suit, an arm with a coupe that rises for the toast. */
-function guest(ctx: Ctx, k: number, x: number, y: number, h: number, g: Guest, t: number, color: string): void {
-  const sway = 0.012 * h * Math.sin(t * 0.5 + g.seed * 1.7)
-  const sh = y - h * 0.8
-  const hx = x + sway
-  ctx.fillStyle = color
-  // Body.
-  ctx.beginPath()
-  if (g.dress) {
-    ctx.moveTo((hx - h * 0.09) * k, sh * k)
-    ctx.quadraticCurveTo((hx - h * 0.07) * k, (y - h * 0.5) * k, (x - h * 0.15) * k, y * k)
-    ctx.lineTo((x + h * 0.15) * k, y * k)
-    ctx.quadraticCurveTo((hx + h * 0.07) * k, (y - h * 0.5) * k, (hx + h * 0.09) * k, sh * k)
-  } else {
-    ctx.moveTo((hx - h * 0.12) * k, sh * k)
-    ctx.lineTo((hx - h * 0.1) * k, (y - h * 0.45) * k)
-    ctx.lineTo((x - h * 0.075) * k, y * k)
-    ctx.lineTo((x - h * 0.015) * k, y * k)
-    ctx.lineTo((x) * k, (y - h * 0.4) * k)
-    ctx.lineTo((x + h * 0.015) * k, y * k)
-    ctx.lineTo((x + h * 0.075) * k, y * k)
-    ctx.lineTo((hx + h * 0.1) * k, (y - h * 0.45) * k)
-    ctx.lineTo((hx + h * 0.12) * k, sh * k)
+function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
+  const h = hush(t)
+  const body = GALA.guests
+  for (const g of GUESTS) {
+    const drift = 0.018 * Math.sin(t * 0.35 + g.seed * 1.7)
+    const [x, y] = seen(f, g.d, g.x + drift, 0)
+    const r = 0.13 * g.d
+    if (x < f.x0 - 1 || x > f.x1 + 1) continue
+    // Deeper, the more of the room's haze on it; and more again as the room falls back for the whisper.
+    const haze = (1 - g.d) * 0.9 + 0.35 * h
+    ctx.fillStyle = mix(body, GALA.roomLit, Math.min(0.85, haze))
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
+    ctx.fill()
+    // The room's light, faint along its top.
+    ctx.strokeStyle = rgba(mix(GALA.lightWarm, GALA.roomLit, 0.45), 0.3 * (1 - 0.6 * h))
+    ctx.lineWidth = Math.max(0.6, 0.012 * k * g.d)
+    ctx.beginPath()
+    ctx.arc(x * k, y * k, (r - 0.006 * g.d) * k, Math.PI * 1.15, Math.PI * 1.75)
+    ctx.stroke()
+    if (!g.glass) continue
+    // The toast: a tiny glass lifted over it, catching the light.
+    const up = smooth(t, T_TOAST + 0.07 * (g.seed % 6), T_TOAST + 0.6 + 0.07 * (g.seed % 6)) * (1 - smooth(t, T_TOAST + 3.3, T_TOAST + 4.3))
+    if (up < 0.02) continue
+    const gx = x + 0.035 * g.d
+    const gy = y - r - (0.03 + 0.11 * up) * g.d
+    const w = 0.075 * g.d
+    ctx.fillStyle = rgba(mix(GALA.lightWarm, GALA.light, 0.5), (0.25 + 0.65 * up) * (1 - 0.5 * h))
+    ctx.beginPath()
+    ctx.moveTo((gx - w / 2) * k, (gy - 0.03 * g.d) * k)
+    ctx.lineTo((gx + w / 2) * k, (gy - 0.03 * g.d) * k)
+    ctx.lineTo((gx + w * 0.15) * k, gy * k)
+    ctx.lineTo((gx - w * 0.15) * k, gy * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillRect(gx * k - 0.4, gy * k, 0.8, 0.035 * g.d * k)
   }
-  ctx.closePath()
-  ctx.fill()
-  // Neck and head: an upright oval, a little turned.
-  ctx.fillRect((hx - h * 0.02) * k, (sh - h * 0.05) * k, h * 0.04 * k, h * 0.06 * k)
-  ctx.beginPath()
-  ctx.ellipse((hx + g.face * h * 0.008) * k, (y - h * 0.9) * k, h * 0.047 * k, h * 0.064 * k, 0, 0, Math.PI * 2)
-  ctx.fill()
-  if (!g.glass) return
-  // The arm: at the waist with its glass, then raised for the toast.
-  const up = smooth(t, T_TOAST + 0.08 * (g.seed % 4), T_TOAST + 0.75 + 0.08 * (g.seed % 4)) * (1 - smooth(t, T_TOAST + 3.4, T_TOAST + 4.6))
-  const s0: Pt = [hx + g.face * h * 0.1, sh + h * 0.02]
-  const hand: Pt = [hx + g.face * h * (0.17 + 0.05 * up), y - h * (0.5 + 0.44 * up)]
-  const elbow: Pt = [hx + g.face * h * (0.16 - 0.02 * up), y - h * (0.6 + 0.14 * up)]
-  ctx.strokeStyle = color
-  ctx.lineWidth = Math.max(1, h * 0.045 * k)
-  ctx.lineCap = 'round'
-  ctx.beginPath()
-  ctx.moveTo(s0[0] * k, s0[1] * k)
-  ctx.lineTo(elbow[0] * k, elbow[1] * k)
-  ctx.lineTo(hand[0] * k, hand[1] * k)
-  ctx.stroke()
-  // The coupe in the hand: catching the light as it rises.
-  const cw = h * 0.07
-  ctx.fillStyle = rgba(mix(GALA.glass, GALA.lightWarm, 0.5), 0.35 + 0.45 * up)
-  ctx.beginPath()
-  ctx.moveTo((hand[0] - cw / 2) * k, (hand[1] - h * 0.05) * k)
-  ctx.lineTo((hand[0] + cw / 2) * k, (hand[1] - h * 0.05) * k)
-  ctx.lineTo((hand[0] + cw * 0.18) * k, (hand[1] - h * 0.02) * k)
-  ctx.lineTo((hand[0] - cw * 0.18) * k, (hand[1] - h * 0.02) * k)
-  ctx.closePath()
-  ctx.fill()
 }
 
-function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
-  // Two ranks: the far one smaller and deeper in the room's haze.
-  const h = 0.3 * hush(t)
-  for (const [d, haze, pick] of [[0.6, 0.34, 0], [0.74, 0.16, 1]] as const) {
-    GUESTS.forEach((g, i) => {
-      if (i % 2 !== pick) return
-      const [x, y] = seen(f, d, g.x + (pick ? 0 : 1.3), FLOOR_Y)
-      if (x < f.x0 - 2 || x > f.x1 + 2) return
-      guest(ctx, k, x, y, g.h * d, g, t, mix(GALA.guests, GALA.roomLit, haze + h))
-    })
-  }
+/** The room falls back into its haze round the two of them as he tells her. */
+function haze(ctx: Ctx, k: number, f: Frame, t: number): void {
+  const h = hush(t)
+  if (h <= 0.005) return
+  ctx.fillStyle = rgba(mix(GALA.roomLit, GALA.lightWarm, 0.1), 0.5 * h)
+  ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
 }
 
 /* ------------------------------------------------------------------ the tower */
@@ -301,6 +302,19 @@ function tower(ctx: Ctx, k: number, t: number): void {
     rg.addColorStop(1, rgba(GALA.lightWarm, 0))
     ctx.fillStyle = rg
     ctx.fillRect(-1.6 * k, -1.6 * k, 3.2 * k, 3.2 * k)
+    ctx.restore()
+  }
+  // In the whisper the tower's light reaches the two of them on the floor beside it.
+  const h = hush(t)
+  if (h > 0.01) {
+    ctx.save()
+    ctx.translate((HER_END[0] + 0.1) * k, (FLOOR_Y + 0.05) * k)
+    ctx.scale(1, 0.3)
+    const wg = ctx.createRadialGradient(0, 0, 0, 0, 0, 1.3 * k)
+    wg.addColorStop(0, rgba(GALA.lightWarm, 0.16 * h))
+    wg.addColorStop(1, rgba(GALA.lightWarm, 0))
+    ctx.fillStyle = wg
+    ctx.fillRect(-1.3 * k, -1.3 * k, 2.6 * k, 2.6 * k)
     ctx.restore()
   }
   // The round table: a cloth over its top, a dark pedestal and foot.
@@ -413,6 +427,7 @@ export function drawGala(p: p5, k: number, t: number): void {
   chandelier(ctx, k, f, -3.2, t, 1)
   chandelier(ctx, k, f, 5.4, t, 2)
   crowd(ctx, k, f, t)
+  haze(ctx, k, f, t)
   // The foreground floor's sheen, and the tower's light lying on it.
   const sheen = ctx.createLinearGradient(0, FLOOR_Y * k, 0, (FLOOR_Y + 1.5) * k)
   sheen.addColorStop(0, rgba(GALA.lightWarm, 0.1))

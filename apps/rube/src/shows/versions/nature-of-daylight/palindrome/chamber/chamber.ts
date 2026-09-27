@@ -100,43 +100,68 @@ const on = (t: number, dx: number, dy: number): Pt => {
   return [q[0] + dx, q[1] + dy]
 }
 
+/**
+ * Contact's shot plan. Set-ups, cut on the strikes: close on her at the threshold, following them in; a medium toward
+ * the glass as it wakes; one wide that holds both heptapods whole, head to foot, over the tiny humans; close for the
+ * board and the suit; a close two-shot of her and the palm through the glass; then the exchange as shot and reverse
+ * shot, her side (the board, the plate, the frieze of what she has read) on each board, the glass (her touch, their
+ * answer, the two of them whole) on each touch; the lexicon complete, wide; in on "weapon"; and down to the seam. She is
+ * always about a third of the way up the frame.
+ */
+const HER_SIDE = { cells: 8, hold: [2.5, -1.33] as Pt }
+const THE_GLASS = { cells: 9, hold: [8.6, -2.05] as Pt }
 function contactShots(): PartShot[] {
-  const b = nearestBeat
-  return [
-    // The threshold in the dark (the seam's framing), then back as they go in and the glass comes up.
-    { t: T.in + 0.9, cells: 4.3, hold: on(T.in + 0.9, 0.95, -0.75) },
-    { t: T.wake - 1.2, cells: 7.4, hold: [3.9, -1.9] },
-    { t: T.wake + 0.6, cells: 9.6, hold: [6.2, -2.9] },
-    // They come out of the white: the whole of it, held.
-    { t: T.abbott + 2.2, cells: 12.6, hold: [8.4, -4.0] },
-    { t: T.costello + 2.4, cells: 13.2, hold: [9.0, -4.2] },
-    { t: T.board0 - 0.02, cells: 13.0, hold: [8.9, -4.15] },
-    // The board up, in her suit: nothing answers. Then the suit, closer.
-    { t: T.board0, cells: 6.2, hold: [5.6, -1.9], cut: true },
-    { t: T.suit + 0.2, cells: 5.0, hold: on(T.suit, 0.55, -1.0) },
-    { t: T.suit + 1.3, cells: 4.7, hold: on(T.suit, 0.9, -0.95) },
-    // To the glass alone; the palm.
-    { t: T.palm - 0.4, cells: 5.0, hold: [7.35, -1.0] },
-    { t: T.palm + 2.2, cells: 4.4, hold: [7.3, -0.85] },
-    // The first logogram over them, and on her first board it lifts off, read, and goes up over the glass.
-    { t: T.first + 1.0, cells: 8.6, hold: [7.9, -2.75] },
-    { t: T.first + 2.4, cells: 8.9, hold: [7.7, -2.85] },
-    { t: b(159.126), cells: 9.4, hold: [6.6, -3.0] },
-    { t: TOUCHES[0] + 1.6, cells: 9.8, hold: [7.4, -3.1] },
-    // Her second board, close: then back to see what she read go up into the dark.
-    { t: BOARDS[2].t, cells: 5.0, hold: [4.9, -1.0], cut: true },
-    { t: b(166.615), cells: 6.4, hold: [5.1, -1.8] },
-    { t: TOUCHES[1] - 0.2, cells: 9.2, hold: [6.2, -2.9] },
-    { t: BOARDS[3].t + 1.5, cells: 10.0, hold: [5.8, -3.1] },
-    { t: TOUCHES[2] + 1.0, cells: 10.4, hold: [5.6, -3.2] },
-    // Faster, fuller: the lexicon filling the dark.
-    { t: b(186.073), cells: 11.0, hold: [5.5, -3.4] },
-    { t: b(191.843), cells: 11.3, hold: [5.4, -3.45] },
-    { t: b(193.817), cells: 11.4, hold: [5.4, -3.45] },
-    // "Weapon": in on it.
-    { t: T.weapon + 0.6, cells: 6.2, hold: [7.35, -1.55] },
-    { t: T.out - 0.05, cells: 4.2, hold: [REST + 0.85, -0.7] },
+  const keys: PartShot[] = [
+    // The threshold in the dark (the seam's framing), following them in as the light comes down the floor to them.
+    { t: T.in + 0.9, cells: 4.3, hold: on(T.in + 0.9, 0.9, -0.72) },
+    { t: T.in + 3.6, cells: 4.5, hold: on(T.in + 3.6, 0.95, -0.75) },
+    { t: T.wake - 0.1, cells: 4.6, hold: on(T.wake - 0.1, 1.0, -0.77) },
+    // The glass wakes: toward it, from behind them.
+    { t: T.wake, cells: 6.5, hold: [6.3, -1.08], cut: true },
+    { t: T.abbott - 0.1, cells: 6.3, hold: [6.3, -1.05] },
+    // Out of the white: both of them whole, over the two small figures before the glass.
+    { t: T.abbott, cells: 10.4, hold: [8.9, -1.73], cut: true },
+    { t: T.board0 - 0.1, cells: 10.0, hold: [8.8, -1.67] },
+    // The board, and the suit: close.
+    { t: T.board0, cells: 3.8, hold: [4.35, -0.63], cut: true },
+    { t: nearestBeat(146.141), cells: 3.8, hold: [4.45, -0.63] },
+    // To the glass alone, the limb coming down to meet her.
+    { t: T.palm - 0.25, cells: 4.3, hold: [6.3, -0.72] },
+    // The palm: hand to hand through the glass, close, held.
+    { t: T.palm, cells: 3.1, hold: [7.72, -0.05], cut: true },
+    { t: T.first - 0.1, cells: 3.0, hold: [7.62, -0.05] },
+    // The first logogram, the two of them side by side before it.
+    { t: T.first, cells: THE_GLASS.cells, hold: THE_GLASS.hold, cut: true },
+    { t: BOARDS[1].t - 0.1, cells: THE_GLASS.cells * 0.97, hold: [THE_GLASS.hold[0] - 0.1, THE_GLASS.hold[1] + 0.03] },
   ]
+  // The exchange: her side on each board, the glass on each touch.
+  const turns: { t: number; side: 'her' | 'glass' }[] = [
+    { t: BOARDS[1].t, side: 'her' },
+    { t: TOUCHES[0], side: 'glass' },
+    { t: BOARDS[2].t, side: 'her' },
+    { t: TOUCHES[1], side: 'glass' },
+    { t: BOARDS[3].t, side: 'her' },
+    { t: TOUCHES[2], side: 'glass' },
+    { t: BOARDS[4].t, side: 'her' },
+    { t: TOUCHES[4], side: 'glass' },
+    { t: BOARDS[5].t, side: 'her' },
+  ]
+  turns.forEach((turn, i) => {
+    const s = turn.side === 'her' ? HER_SIDE : THE_GLASS
+    const next = turns[i + 1]?.t ?? BOARDS[6].t
+    keys.push({ t: turn.t, cells: s.cells, hold: s.hold, cut: true })
+    // A breath in while it holds.
+    keys.push({ t: next - 0.1, cells: s.cells * 0.97, hold: [s.hold[0] + (turn.side === 'her' ? 0.1 : -0.1), s.hold[1] + 0.03] })
+  })
+  keys.push(
+    // The lexicon complete: everything at once, wide; she reads it back, and asks.
+    { t: BOARDS[6].t, cells: 10.5, hold: [5.8, -2.35], cut: true },
+    { t: nearestBeat(194.81), cells: 10.2, hold: [6.0, -2.25] },
+    // "Weapon": in on it.
+    { t: T.weapon, cells: 4.2, hold: [7.45, -0.56], cut: true },
+    { t: T.out - 0.05, cells: 4.2, hold: [REST + 0.85, -0.7] },
+  )
+  return keys
 }
 
 function bombShots(): PartShot[] {

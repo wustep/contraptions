@@ -149,15 +149,17 @@ export const going = part<ValleyState>(
       { ...hold(o, G.down, 72, 3, -31), cut: true },
       hold(o, 316.8, 74, 3, -33),
       hold(o, G.gone, 76, 3, -35),
-      // The cloud where it went; it opens, and the light comes down the valley.
-      hold(o, 320.6, 77, 2.5, -36.5),
-      hold(o, G.sun, 78, 2.5, -37.5),
-      hold(o, 324.3, 72, 3.5, -33),
-      // Down the light to her, and Ian coming to her through it.
-      hold(o, 325.6, 45, 8.5, -14),
-      hold(o, 327.4, 20, 12.3, -4.6),
-      hold(o, G.touch, 9, 14.5, -2.2),
-      hold(o, 332.2, 5.6, 14.8, -1.3),
+      // The hush: the cloud churning where it went, and a slow push toward the place, where it will tear.
+      hold(o, 320.7, 71, 1, -32),
+      hold(o, G.sun, 67, -1, -29.5),
+      // The tear; the shafts; the light sweeping along the floor: down with it toward her.
+      hold(o, 324.5, 63, 2, -26.5),
+      hold(o, 326.0, 59, 4, -24.5),
+      // The light reaches her: cut in to them, the horizon high and the lit meadow under them, as he comes across it.
+      { ...hold(o, G.lit, 7.2, 15.2, 1.1), cut: true },
+      hold(o, 328.3, 7.0, 14.9, 1.0),
+      hold(o, G.touch, 6.0, 14.7, 0.55),
+      hold(o, 332.2, 5.0, 14.9, -0.25),
       // The home seam: 4.4 cells, [0.8, -0.8] on her.
       hold(o, slot.end, 4.4, MEET[0] + 0.8, MEET[1] - 0.8),
     ]

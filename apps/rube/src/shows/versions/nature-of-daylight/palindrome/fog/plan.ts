@@ -21,11 +21,13 @@ import { SEAM, beats, chords, nearestBeat } from '../music'
  *            read, spreads and pales into the white beneath her; and Costello, drawn back into the white, holds out its
  *            palm on her right and begins a small logogram there, where Hannah will be on the other side of the cut.
  *   250.120  at rest in the white, the small ring half written. (The swing on the lawn: what she is shown.)
- *   257.683  back: the small ring writing on from Costello's palm, a stroke on the chord and on the two strongest beats
- *            after it, and she floats to it...
- *   262.374  ...and touches it as its two ends meet on her side, the palm on the other: it closes; she understands.
+ *   257.683  back: the small ring writing on from Costello's palm and growing on each stroke (the chord, and the two
+ *            strongest beats after it) until it and she are the whole frame; the fog gathers grey round it as its ends
+ *            come round to her, and she floats to it...
+ *   262.374  ...and touches it as its two ends meet on her side, the palm on the other: it closes, and the white floods
+ *            out from it over everything but it and her, for a beat: she knows.
  *   264.237  the vision lets her go: the palm draws back, the ring rises and pales, and she comes down out of it.
- *   266.124  at rest, the small ring over her on her right. (The gala, years on.)
+ *   266.124  at rest, the ring a ghost over her on her right. (The gala, years on.)
  */
 
 export const TAU = Math.PI * 2
@@ -191,7 +193,7 @@ export function smallR(t: number): number {
 }
 export const smallTendrils = (t: number): number => easeOut((t - T_KNOW) / 1.1)
 export const smallBloom = (t: number): number => smooth(t, T_KNOW, T_KNOW + 3.2)
-export const smallFade = (t: number): number => 0.55 * smooth(t, T_DOWN, T_GALA + 0.5)
+export const smallFade = (t: number): number => 0.8 * smooth(t, T_DOWN, T_GALA + 0.3)
 /** Its drawn radius, as `drawInk` has it. */
 const smallRp = (t: number): number => smallR(t) * (1 + 0.04 * smallBloom(t) + 0.25 * smallFade(t))
 /** The point of its ink nearest her (where its ends meet): it stays put as it grows, so it grows away from her. */
@@ -238,7 +240,7 @@ export function smallU(t: number): number {
   return 1
 }
 /** Before she knows: the fog gathers grey round the ring as its ends come round to her. */
-export const gathering = (t: number): number => 0.3 * smooth(t, SMALL_STEPS[2], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW - 0.03, T_KNOW + 0.12))
+export const gathering = (t: number): number => 0.5 * smooth(t, SMALL_STEPS[2], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW - 0.03, T_KNOW + 0.12))
 /** She knows: on the chord the white floods out from the ring over everything but it and her, holds for a beat, and
  * settles. `a` its strength, `r` how far out it has come (a share of the frame). */
 export function flood(t: number): { a: number; r: number } {
@@ -354,12 +356,11 @@ export const FOG1_SHOTS: WorldShot[] = [
   { t: T_OUT, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
 ]
 /** When she knows: the ring and her, the whole of the frame. */
-const KNOW_MID: Pt = [(TOUCH_AT[0] + smallC(T_KNOW)[0]) / 2, (TOUCH_AT[1] + smallC(T_KNOW)[1]) / 2 - 0.05]
+const KNOW_MID: Pt = [0.4 * TOUCH_AT[0] + 0.6 * smallC(T_KNOW)[0], 0.4 * TOUCH_AT[1] + 0.6 * smallC(T_KNOW)[1] - 0.05]
 export const FOG2_SHOTS: WorldShot[] = [
   { t: T_BACK + 1.8, cells: 4.35, hold: [(her(T_OUT, [1.05, -0.95])[0] + KNOW_MID[0]) / 2, (her(T_OUT, [1.05, -0.95])[1] + KNOW_MID[1]) / 2] },
-  { t: T_KNOW, cells: 3.95, hold: KNOW_MID },
-  { t: T_KNOW + 0.94, cells: 3.8, hold: KNOW_MID },
-  { t: T_DOWN, cells: 3.9, hold: [KNOW_MID[0] + 0.05, KNOW_MID[1] - 0.12] },
+  { t: T_KNOW, cells: 4.25, hold: KNOW_MID },
+  { t: T_KNOW + 0.94, cells: 4.1, hold: KNOW_MID },
+  { t: T_DOWN, cells: 4.2, hold: [KNOW_MID[0] - 0.05, KNOW_MID[1] - 0.1] },
   { t: T_GALA, cells: 4.4, hold: her(T_GALA, [0.8, -0.8]) },
-]) },
 ]

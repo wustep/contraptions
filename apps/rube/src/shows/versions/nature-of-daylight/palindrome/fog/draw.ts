@@ -15,16 +15,17 @@ import {
   greatFade,
   greatTendrils,
   greatTurn,
+  flood,
+  gathering,
   greatU,
-  knowing,
   RG,
   JETS,
-  RS,
   SMALL,
   SMALL_TURN,
   smallBloom,
   smallC,
   smallFade,
+  smallR,
   smallTendrils,
   smallU,
   T_OUT,
@@ -228,22 +229,33 @@ function small(p: p5, k: number, f: Frame, t: number): void {
   const u = smallU(t)
   if (u <= 0) return
   const c = smallC(t)
-  const kn = knowing(t)
-  if (kn > 0.005) {
-    // The light of it: the fog whitening out from the ring, wide and soft, no core.
-    const ctx = p.drawingContext as Ctx
-    const R = (f.y1 - f.y0) * (0.55 + 0.25 * kn)
-    const g = ctx.createRadialGradient(c[0] * k, c[1] * k, 0, c[0] * k, c[1] * k, R * k)
-    g.addColorStop(0, rgba(FOG.white, 0.75 * kn))
-    g.addColorStop(0.5, rgba(FOG.white, 0.4 * kn))
-    g.addColorStop(1, rgba(FOG.white, 0))
-    ctx.fillStyle = g
-    ctx.fillRect((c[0] - R) * k, (c[1] - R) * k, 2 * R * k, 2 * R * k)
+  const R = smallR(t)
+  const ctx = p.drawingContext as Ctx
+  const diag = Math.hypot(f.x1 - f.x0, f.y1 - f.y0)
+  // As its ends come round to her the fog gathers grey about it...
+  const g = gathering(t)
+  if (g > 0.005) {
+    const gr = ctx.createRadialGradient(c[0] * k, c[1] * k, R * 0.9 * k, c[0] * k, c[1] * k, diag * 0.75 * k)
+    gr.addColorStop(0, rgba(FOG.deep, 0))
+    gr.addColorStop(1, rgba(mix(FOG.deep, FOG.shadow, 0.5), g))
+    ctx.fillStyle = gr
+    ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+  }
+  // ...and when they meet at her touch the white floods out from it over everything but it and her.
+  const fl = flood(t)
+  if (fl.a > 0.005) {
+    const reach = R * 1.2 + diag * fl.r
+    const gr = ctx.createRadialGradient(c[0] * k, c[1] * k, 0, c[0] * k, c[1] * k, reach * k)
+    gr.addColorStop(0, rgba(FOG.white, fl.a))
+    gr.addColorStop(0.75, rgba(FOG.white, fl.a * 0.92))
+    gr.addColorStop(1, rgba(FOG.white, 0))
+    ctx.fillStyle = gr
+    ctx.fillRect((c[0] - reach) * k, (c[1] - reach) * k, 2 * reach * k, 2 * reach * k)
   }
   p.push()
   p.translate(c[0] * k, c[1] * k)
   p.rotate(SMALL_TURN)
-  drawInk(p, k, 0, 0, RS, SMALL, u, { tendrils: smallTendrils(t), bloom: smallBloom(t), fade: smallFade(t) })
+  drawInk(p, k, 0, 0, R, SMALL, u, { tendrils: smallTendrils(t), bloom: smallBloom(t), fade: smallFade(t) })
   p.pop()
 }
 

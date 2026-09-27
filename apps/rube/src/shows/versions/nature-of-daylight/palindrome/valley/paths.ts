@@ -149,10 +149,10 @@ const ON_PEDAL: Pt = [PEDAL.x0 + 0.2, -0.055]
 /** Where she watches from, and where they meet. */
 const WATCH: Pt = [WATCH_X, 0]
 export const MEET: Pt = [14.2, 0]
-export const IAN_FROM: Pt = [23.2, 0]
+export const IAN_FROM: Pt = [21.5, 0]
 const OFF = G.down + 0.1
 const REST = 317.9
-const IAN_GO = 325.0
+const IAN_GO = 323.8
 const SETTLE = 331.7
 
 /** How high the pedal's plate holds her above the grass at `t` (it rises again as she leaves it). */

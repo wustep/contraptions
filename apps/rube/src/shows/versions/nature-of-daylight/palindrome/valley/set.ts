@@ -3,7 +3,7 @@ import type { Pt } from '../../../../../parts'
 import { drawShell, mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { SHELL, VALLEY } from '../worlds'
-import { A, CLOUD_HIGH, CLOUD_LOW, daylight, deckAt, G, hingeAt, LIFT, MEADOW, pedalAt, PEDAL, rampFrame, SHELL_X, shellAt, shellSeen, slotAt, SLOT_W, TENTS } from './geo'
+import { A, CLOUD_HIGH, CLOUD_LOW, daylight, deckAt, G, hingeAt, LIFT, MEADOW, pedalAt, PEDAL, rampFrame, SHELL_X, shellAt, shellSeen, slotAt, SLOT_W, SUN_GAP, TENTS } from './geo'
 import { drawHeli, heliAt, washAt } from './heli'
 import { drawAir, drawFarShafts, drawGap, drawHaze, drawRays, drawShadows, drawSunlight, drawSunWash, sunAt } from './light'
 import { herArrive, herSuited, HER_IN, HER_OUT, ianArrive, IAN_EXIT } from './paths'
@@ -203,18 +203,35 @@ function drawCloud(ctx: Ctx, k: number, f: Frame, t: number): void {
 function drawHeave(ctx: Ctx, k: number, t: number, front: boolean): void {
   const body = lit(VALLEY.cloud, t)
   const shade = lit(VALLEY.cloudShade, t)
-  for (const [at, close] of [[G.heave1, false], [G.heave2, false], [G.gone, true]] as [number, boolean][]) {
-    if (close !== front) continue
+  if (front) {
+    // Gone: the cloud closes over the place it went, and goes on churning there through the hush, folding in on
+    // itself, darker underneath, until it tears open in the same place.
+    const s = t - G.gone
+    const span = G.sun + 0.9 - G.gone
+    if (s < -0.05 || s > span) return
+    const a = smooth(s, -0.05, 0.4) * (1 - smooth(t, G.sun - 0.15, G.sun + 0.9))
+    const u = clamp01(s / span)
+    const [gx, gy] = SUN_GAP
+    // Heavier as it gathers: the cloud there thick and dark underneath, the light behind it.
+    const heavy = mix(shade, VALLEY.steelDark, 0.25 + 0.2 * u)
+    blob(ctx, k, gx, gy - 2 + 2 * u, 27 - 5 * u, 8, heavy, (0.45 + 0.2 * u) * a, 0.35)
+    for (let i = 0; i < 6; i++) {
+      const turn = (i % 2 ? 1 : -1) * s * (0.28 + 0.06 * i)
+      const ang = i * 1.05 + turn
+      const r = (15 - 6 * u) * (0.55 + 0.45 * hash(i, 97, 1))
+      const x = gx + Math.cos(ang) * r * 1.5
+      const y = gy - 3 + Math.sin(ang) * r * 0.32 + 1.5 * u
+      const size = 9 + 5 * hash(i, 97, 2)
+      blob(ctx, k, x, y + 1.6, size * 1.05, 3.6, heavy, 0.6 * a, 0.3)
+      blob(ctx, k, x, y - 0.6, size * 0.9, 2.6, mix(body, heavy, 0.25 + 0.35 * u), 0.7 * a, 0.4)
+    }
+    return
+  }
+  for (const at of [G.heave1, G.heave2]) {
     const s = t - at
     if (s < -0.05 || s > 3.6) continue
     const u = ease(s / 3.4)
     const a = smooth(s, -0.05, 0.35) * Math.pow(1 - clamp01(s / 3.6), 1.3)
-    if (close) {
-      // Closing: the deck's underside sags and folds in over the place it went, and settles.
-      blob(ctx, k, SHELL_X, -57 + 3 * u, 22 + 10 * u, 5.5 + 2 * u, shade, 0.45 * a, 0.3)
-      blob(ctx, k, SHELL_X, -60 + 2 * u, 19 + 9 * u, 4.6 + 2 * u, body, 0.7 * a, 0.35)
-      continue
-    }
     const y = at === G.heave1 ? -50 : -55
     for (const dir of [-1, 1]) {
       const x = SHELL_X + dir * (16 + 30 * u)
@@ -240,16 +257,16 @@ function drawLand(ctx: Ctx, k: number, f: Frame, t: number): void {
   const far = farness(f)
   if (f.y0 < MEADOW) {
     // The range beyond the valley's end, far and pale, its tops in the cloud.
-    silhouette(ctx, k, f, (x) => MEADOW - farRange(x), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridgeFar, VALLEY.sky, 0.42), mix(VALLEY.ridgeFar, VALLEY.sky, 0.72), -50))
+    silhouette(ctx, k, f, (x) => MEADOW - farRange(x), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridgeFar, VALLEY.sky, 0.42 - 0.2 * d.sun), mix(VALLEY.ridgeFar, VALLEY.sky, 0.72 - 0.25 * d.sun), -50))
     // The valley's high walls on either side, going up into the cloud.
-    silhouette(ctx, k, f, (x) => MEADOW - (highWalls(x) + farEnd(x) * 1.5 + 6), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridgeFar, VALLEY.ridge, 0.3), mix(VALLEY.ridgeFar, VALLEY.sky, 0.5)))
+    silhouette(ctx, k, f, (x) => MEADOW - (highWalls(x) + farEnd(x) * 1.5 + 6), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridgeFar, VALLEY.ridge, 0.3 + 0.3 * d.sun), mix(VALLEY.ridgeFar, VALLEY.sky, 0.5 - 0.25 * d.sun)))
     // The cloud's skirt along them.
-    strata(ctx, k, f, t, { y: -34, spread: 7, len: 22, tall: 3.2, color: lit(VALLEY.fog, t), a: 0.42 * (1 - 0.4 * d.sun), seed: 51, drift: 0.2 })
+    strata(ctx, k, f, t, { y: -34, spread: 7, len: 22, tall: 3.2, color: lit(VALLEY.fog, t), a: 0.42 * (1 - 0.6 * d.sun), seed: 51, drift: 0.2 })
     // The far end of the valley, low in the haze behind the shell's foot.
-    silhouette(ctx, k, f, (x) => MEADOW - farEnd(x), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridge, VALLEY.fog, 0.3), mix(VALLEY.ridge, VALLEY.fog, 0.5), MEADOW - 8))
+    silhouette(ctx, k, f, (x) => MEADOW - farEnd(x), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.ridge, VALLEY.fog, 0.3 - 0.15 * d.sun), mix(VALLEY.ridge, VALLEY.fog, 0.5 - 0.2 * d.sun), MEADOW - 8))
     // The spurs, nearer and darker, coming down to the meadow on either side.
     silhouette(ctx, k, f, (x) => MEADOW - spurs(x), MEADOW + 1, slopeFill(ctx, k, t, mix(VALLEY.hill, VALLEY.ridge, 0.35), mix(VALLEY.ridge, VALLEY.sky, 0.4)))
-    strata(ctx, k, f, t, { y: -14, spread: 5, len: 16, tall: 2.2, color: lit(VALLEY.fog, t), a: 0.38 * (1 - 0.4 * d.sun), seed: 52, drift: 0.16 })
+    strata(ctx, k, f, t, { y: -14, spread: 5, len: 16, tall: 2.2, color: lit(VALLEY.fog, t), a: 0.38 * (1 - 0.6 * d.sun), seed: 52, drift: 0.16 })
     // The trees along the far side of the meadow, dark at their feet, hazier at their crowns.
     const tg = ctx.createLinearGradient(0, (MEADOW - 2) * k, 0, MEADOW * k)
     const clear = 1 - 0.55 * d.sun
@@ -298,8 +315,8 @@ function rim(ctx: Ctx, k: number, f: Frame, yAt: (x: number) => number, w: numbe
 /** The mist lying on the valley floor, in front of everything on it: long low banks, thinning in the daylight. */
 function drawFloorMist(ctx: Ctx, k: number, f: Frame, t: number): void {
   const d = daylight(t)
-  const thin = 1 - 0.55 * d.sun
-  const col = lit(VALLEY.fog, t, d.sun * 0.6)
+  const thin = 1 - 0.5 * d.sun
+  const col = mix(lit(VALLEY.fog, t), VALLEY.floodlight, 0.45 * d.sun)
   const far = farness(f)
   // Along the far side of the meadow, among the camp: only seen from away.
   strata(ctx, k, f, t, { y: MEADOW - 1.6, spread: 0.8, len: 9, tall: 1.4, color: col, a: 0.4 * thin * far, seed: 53, drift: 0.2 })
@@ -336,6 +353,86 @@ function drawGrass(ctx: Ctx, k: number, f: Frame, t: number): void {
     ctx.quadraticCurveTo((x + lean * h * 0.4) * k, (base - h * 0.6) * k, (x + lean * h) * k, (base - h) * k)
     ctx.stroke()
   }
+  ctx.restore()
+}
+
+/**
+ * The grass of the meadow toward us, seen close in the going: tufts in rows that grow and spread as they come nearer
+ * (the ground seen a little from above), leaning in the air. `each` is told every tuft: where, how tall, its seed.
+ */
+function tufts(f: Frame, each: (x: number, y: number, h: number, i: number, j: number) => void): void {
+  let y = MEADOW + 0.1
+  let j = 0
+  while (y < f.y1 + 0.4 && j < 60) {
+    const depth = Math.min(4, y - MEADOW)
+    const dx = 0.15 + 0.12 * depth
+    const size = 0.07 + 0.075 * depth
+    const i0 = Math.floor(f.x0 / dx) - 1
+    const i1 = Math.ceil(f.x1 / dx) + 1
+    for (let i = i0; i <= i1; i++) each(i * dx + (hash(i, j, 81) - 0.5) * dx, y + (hash(i, j, 83) - 0.5) * 0.08, size * (0.55 + 0.8 * hash(i, j, 82)), i, j)
+    y += 0.13 + 0.1 * depth
+    j++
+  }
+}
+const fieldFade = (f: Frame, t: number) => (t > 300 ? 1 - smooth(f.y1 - f.y0, 11, 18) : 0)
+
+function drawField(ctx: Ctx, k: number, f: Frame, t: number): void {
+  const fade = fieldFade(f, t)
+  if (fade <= 0.01 || f.y1 < MEADOW + 0.2) return
+  const dark = rgba(mix(VALLEY.meadowDark, VALLEY.hill, 0.3), 0.42 * fade)
+  const pale = rgba(mix(VALLEY.grass, VALLEY.meadow, 0.3), 0.5 * fade)
+  ctx.save()
+  ctx.lineCap = 'round'
+  let row = -1
+  const flush = () => {
+    ctx.strokeStyle = dark
+    ctx.stroke(darkPath)
+    ctx.strokeStyle = pale
+    ctx.stroke(palePath)
+  }
+  let darkPath = new Path2D()
+  let palePath = new Path2D()
+  tufts(f, (x, y, h, i, j) => {
+    if (j !== row) {
+      if (row >= 0) flush()
+      darkPath = new Path2D()
+      palePath = new Path2D()
+      ctx.lineWidth = Math.max(0.6, (0.018 + 0.012 * Math.min(4, y - MEADOW)) * k)
+      row = j
+    }
+    const lean = 0.3 * Math.sin(t * 0.7 + x * 0.5 + y) + 0.15
+    for (let b = 0; b < 2; b++) {
+      const path = hash(i, j * 3 + b, 84) > 0.5 ? palePath : darkPath
+      const bx = x + (b - 0.5) * h * 0.25
+      const bl = lean + (b - 0.5) * 0.5
+      path.moveTo(bx * k, y * k)
+      path.quadraticCurveTo((bx + bl * h * 0.35) * k, (y - h * 0.6) * k, (bx + bl * h) * k, (y - h) * k)
+    }
+  })
+  if (row >= 0) flush()
+  ctx.restore()
+}
+
+/** Dew on the grass in the sun: now and then a blade's tip catches the light, and lets it go. */
+function drawDew(ctx: Ctx, k: number, f: Frame, t: number): void {
+  const fade = fieldFade(f, t)
+  if (fade <= 0.01 || daylight(t).sun <= 0.01) return
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = rgba(VALLEY.floodlight, 1)
+  tufts(f, (x, y, h, i, j) => {
+    if (hash(i, j, 85) > 0.09) return
+    const sun = sunAt(t, x)
+    if (sun < 0.3) return
+    const tw = Math.pow(Math.max(0, Math.sin(t * (1.6 + hash(i, j, 86)) + hash(i, j, 87) * 6.283)), 10)
+    if (tw < 0.03) return
+    const lean = 0.3 * Math.sin(t * 0.7 + x * 0.5 + y) + 0.15
+    const r = (0.012 + 0.006 * Math.min(4, y - MEADOW)) * (0.6 + 0.6 * tw)
+    ctx.globalAlpha = tw * sun * fade
+    ctx.beginPath()
+    ctx.arc((x - h * 0.12 + (lean - 0.25) * h) * k, (y - h) * k, Math.max(0.6, r * k), 0, Math.PI * 2)
+    ctx.fill()
+  })
   ctx.restore()
 }
 
@@ -778,9 +875,11 @@ export function drawValley(p: p5, k: number, t: number): void {
   drawWake(ctx, k, t)
   drawHeli(p, k, t)
   drawGrass(ctx, k, f, t)
+  drawField(ctx, k, f, t)
   drawSunWash(ctx, k, f, t)
   drawSunlight(ctx, k, t, f.x0, f.x1, smooth(f.y1 - f.y0, 10, 40))
   drawShadows(ctx, k, t)
+  drawDew(ctx, k, f, t)
   drawFloorMist(ctx, k, f, t)
   drawRays(ctx, k, t, smooth(f.y1 - f.y0, 6, 30))
   ctx.restore()
