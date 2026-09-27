@@ -71,10 +71,10 @@ export const hills = part<null>(
     { t: 109.9, cells: 4.1, hold: [AT_POLE + 0.3, -0.72] },
     { t: POP, cells: 4.25, hold: [AT_POLE + 0.15, -0.82] },
     { t: LANDS + 0.25, cells: 6.3, hold: [-0.15, -1.75] },
-    // Locked off on the hill: she climbs up across the frame, and he hops past her to the top, and back down into
-    // the fog.
-    { t: 114.3, cells: 5.95, hold: [1.0, -1.6] },
-    { t: 117.3, cells: 6.4, hold: [1.1, -1.8] },
+    // On the hill, closer: she climbs up across the frame, a little under the middle (her grey is the hill's light, so
+    // she is kept big), and he hops past her to the top, and back down into the fog.
+    { t: 114.3, cells: 5.0, hold: [0.55, -0.95] },
+    { t: 117.3, cells: 5.2, hold: [1.35, -1.2] },
     // The fog, and what is in it, framed from her: low on the crest a little left of middle, the fog rolling up the
     // lane where he went, the first thud in it; on the second thud a cut out, her small on the crest, the castle's legs
     // and face coming out of the fog over her and cropped by the top of the frame (its size is in the crop), the eye
