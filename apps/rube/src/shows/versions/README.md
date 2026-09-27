@@ -328,3 +328,19 @@ the spark and its flame. The accelerando from 104 to 198 bpm has no steady comb,
 `check:shows` holds every strike to it (`apps/rube/checks/spark.ts`). The report is
 `apps/rube/src/shows/versions/mountain-king/SPARK.md`.
 
+
+`heptapod-b/opus55` (in the picker, **Logogram**, one take, **Opus 5.5**) is Jóhann Jóhannsson's *Heptapod B* from
+*Arrival*, whole, demo only (`apps/rube/src/shows/versions/heptapod-b/ATTRIBUTION.txt`), and then the end credits in
+the quiet after it. Every piece is new. It follows the film's spine as a circle: it opens in the lake house by the long
+window, Louise (the orange ball) and her daughter Hannah (the little peach one), which the film lets us take for the
+past; then the shell over the valley in Montana, the helicopter, the base, the scissor lift into the slot, the shaft
+where gravity turns (the camera turns with it), the chamber and its glass, the heptapods coming out of the fog, a palm
+on the glass, and their ink; through the glass she rides their logograms as tracks, and sees Hannah (the film's
+flashes), and writes one herself; the shell goes to vapour; Ian (the blue ball) comes to her; and the last scene opens
+on the show's first frame. The code is `heptapod-b/logogram/`, on the same kit as Liftoff and Merry-Go-Round (parts
+built to timed slots, an authored camera with a roll, match cuts between four places, two of them inside a white-out,
+the end credits from `Performance.titles`). The cue is one pulse that never changes pace (0.238715 s, 798 pulses from
+6.76 s to 197 s) under loops of 7, 13 and 18 pulses, so `scripts/shows/heptapod-b-onsets.py` fits one comb and moves
+every pulse onto its own attack, with the free murmurs' and the coda's onsets, into
+`scripts/shows/plans/heptapod-b-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/logogram.ts`).
+The report is `apps/rube/src/shows/versions/heptapod-b/LOGOGRAM.md`.

@@ -180,10 +180,21 @@ export interface HeptapodOpts {
    * origin), and how far it has gone (0 standing .. 1 there). At the end of its reach the tip opens into a palm.
    */
   reach?: { limb: number; to: Pt; u: number }
+  /**
+   * Optional (the chamber builder's): how deep in the fog the reaching limb and its palm are once it has reached, 0
+   * clear .. 1 gone; a limb reaching for the glass comes out of the fog the body is in. Unset, it is the body's `fog`.
+   */
+  reachFog?: number
   /** How open the reaching limb's palm is, 0 a closed tip .. 1 the seven fingers splayed flat on the glass. */
   palm?: number
   /** Lean, radians, the whole body (a slow sway toward something). */
   lean?: number
+  /**
+   * Optional (the chamber builder's, for a gait): where each limb's tip is, cells from the origin, in place of its
+   * standing foot and sway. A part that walks a heptapod lifts and sets each tip down itself; a limb left undefined
+   * stands on its own foot. A `reach` still applies on top.
+   */
+  tips?: (Pt | undefined)[]
 }
 
 /** The seven limbs' feet, as shares of `h` from the origin, left to right; 3 is the front one, toward us. */
@@ -205,8 +216,9 @@ export function heptapodTip(o: HeptapodOpts, i: number): Pt {
   const who = o.who ?? 0
   const f = FEET[i]
   const sway = Math.sin(t * (0.55 + 0.07 * i + 0.05 * who) + i * 1.7) * 0.02
-  let x = (f[0] + sway) * h
-  let y = f[1] * h
+  const own = o.tips?.[i]
+  let x = own ? own[0] : (f[0] + sway) * h
+  let y = own ? own[1] : f[1] * h
   if (o.reach && o.reach.limb === i) {
     const u = smooth01(o.reach.u)
     x += (o.reach.to[0] - x) * u
@@ -234,7 +246,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   // The body: from its crown down to where the limbs leave it.
   const top = -h + bob
   const hip = -0.5 * h + bob
-  const bw = (0.13 + 0.02 * who) * h
+  const bw = (0.17 + 0.02 * who) * h
   const colorAt = (depth: number) => mixHex(base, air, Math.min(1, fog + depth * 0.35 * (1 - fog)))
   ctx.save()
   ctx.globalAlpha *= light
@@ -245,7 +257,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
   const limb = (i: number) => {
     const d = DEPTH[i]
     // Each limb leaves the body from inside it, just above the hip, so no limb's root is ever a cut end.
-    const rootX = (i - 3) * 0.028 * h + Math.sin(lean) * (hip - top) * 0.2
+    const rootX = (i - 3) * 0.036 * h + Math.sin(lean) * (hip - top) * 0.2
     const root: Pt = [rootX, hip - 0.05 * h]
     const tip = heptapodTip(o, i)
     const reaching = o.reach && o.reach.limb === i ? smooth01(o.reach.u) : 0
@@ -254,11 +266,12 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const out = tip[0] - root[0]
     const drop = tip[1] - root[1]
     const sway = Math.sin(t * (0.43 + 0.05 * i) + i * 2.3 + who) * 0.02 * h
-    const rise = (0.06 + 0.07 * (Math.abs(i - 3) / 3)) * h
+    const rise = (0.03 + 0.05 * (Math.abs(i - 3) / 3)) * h
     const c1: Pt = [root[0] + out * 0.38 + sway * 0.5, root[1] - rise * (1 - reaching)]
     const c2: Pt = [tip[0] - out * (0.12 - 0.1 * reaching) + sway, root[1] + drop * (0.1 + 0.55 * reaching) - rise * 0.35 * (1 - reaching)]
-    const w0 = (0.042 - 0.01 * d) * h
-    const w1 = 0.006 * h
+    // Heavy limbs, like trunks: thick well out from the body, tapering late to a blunt tip.
+    const w0 = (0.072 - 0.012 * d) * h
+    const w1 = 0.011 * h
     const n = 28
     const left: Pt[] = []
     const right: Pt[] = []
@@ -276,13 +289,16 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
       const dy = j ? y - py : c1[1] - root[1]
       const l = Math.hypot(dx, dy) || 1
       // Thick from the body through the shoulder, then tapering long to a fine tip; the skin's folds a faint pulse.
-      const width = (w1 + (w0 - w1) * (1 - u) ** 1.7) * (1 + 0.1 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + 0.035 * Math.sin(u * 29 + i))
+      const width = (w1 + (w0 - w1) * (1 - u) ** 1.25) * (1 + 0.08 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + 0.03 * Math.sin(u * 29 + i))
       left.push([x - (dy / l) * width, y + (dx / l) * width])
       right.push([x + (dy / l) * width, y - (dx / l) * width])
       px = x
       py = y
     }
-    const col = colorAt(d)
+    const col =
+      reaching > 0 && o.reachFog !== undefined
+        ? mixHex(base, air, Math.min(1, fog + (clamp01(o.reachFog) - fog) * reaching + d * 0.35 * (1 - fog)))
+        : colorAt(d)
     // Its root, rounded, so the front limb (drawn over the body) never shows a square end.
     p.fill(alpha(p, col, 0.95))
     p.ellipse(root[0] * k, root[1] * k, w0 * 2.05 * k, w0 * 2.05 * k)
@@ -405,6 +421,14 @@ export interface LogogramOpts {
   color?: string
   /** Opacity. */
   light?: number
+  /**
+   * Optional (the fog builder's): blots besides its own, where a writer pressed: each at `a` (in its own turn, like
+   * `start`), `size` and `width` as the seed's own blots have them, swelling in with `grow` (0 none .. 1 whole; 1 if
+   * unset). `logogramAt` counts them, so a ball ridden on the ring rides over them.
+   */
+  marks?: { a: number; size: number; width: number; grow?: number }[]
+  /** Optional (the fog builder's): radians over which a forming end tapers (0.5 if unset). */
+  taper?: number
 }
 
 interface Blot {
@@ -460,7 +484,7 @@ const angDist = (a: number, b: number) => {
  * half-thickness, in cells. What a part rides the ball on: the inner edge is at `mid - half`, the outer at
  * `mid + half`, so a ball rolling inside it sits at `mid - half - R` from the centre.
  */
-export function logogramAt(o: Pick<LogogramOpts, 'r' | 'seed'>, a: number): { mid: number; half: number } {
+export function logogramAt(o: Pick<LogogramOpts, 'r' | 'seed' | 'marks'>, a: number): { mid: number; half: number } {
   const s = shapeOf(o.seed)
   const [p0, p1, p2, p3, p4] = s.phases
   const mid = o.r * (1 + 0.03 * Math.sin(3 * a + p0) + 0.018 * Math.sin(5 * a + p1) + 0.01 * Math.sin(9 * a + p2))
@@ -468,6 +492,12 @@ export function logogramAt(o: Pick<LogogramOpts, 'r' | 'seed'>, a: number): { mi
   for (const b of s.blots) {
     const d = angDist(a, b.a) / b.width
     half += o.r * b.size * Math.exp(-d * d * 2)
+  }
+  if (o.marks) {
+    for (const b of o.marks) {
+      const d = angDist(a, b.a) / b.width
+      if (d < 4) half += o.r * b.size * clamp01(b.grow ?? 1) * Math.exp(-d * d * 2)
+    }
   }
   return { mid, half }
 }
@@ -501,7 +531,7 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
     const { mid, half } = logogramAt(o, a)
     // The leading ends taper as they form, so the ink reads as running round, not as a cut.
     const toEnd = Math.min(angDist(a, start + span), angDist(a, start - span))
-    const taper = ring >= 0.999 ? 1 : smooth01(toEnd / 0.5)
+    const taper = ring >= 0.999 ? 1 : smooth01(toEnd / Math.max(1e-3, o.taper ?? 0.5))
     const hw = half * taper * spread
     const c = Math.cos(a + spin)
     const si = Math.sin(a + spin)
@@ -582,24 +612,61 @@ export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
 }
 
 /**
- * A spray of ink leaving a limb's tip toward where a logogram will form: a soft dark plume that swells and thins as
- * it goes. `u` is how far it has gone (0 at the tip .. 1 arrived, when the logogram begins to form there).
+ * A jet of ink leaving a limb's tip toward where a logogram will form, the way ink squirted into water goes: a thin
+ * dark stream from the tip, widening as it goes, its head billowing out into a soft cloud that spreads as it slows.
+ * `u` is how far it has gone (0 at the tip .. 1 arrived, when the logogram begins to form there); past 1 its cloud
+ * lingers there and thins by 1.6. Uninked, soft.
  */
 export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color = FOG.ink, light = 1): void {
-  const v = clamp01(u)
-  if (v <= 0 || v >= 1 || light <= 0.01) return
+  // Past 1 the stream is gone and its cloud lingers where it arrived, thinning, while the logogram forms out of it.
+  if (u <= 0 || u >= 1.6 || light <= 0.01) return
+  const v = Math.min(1, u)
+  const linger = 1 - smooth01((u - 1) / 0.6)
+  light *= linger
+  const len = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1
+  // The head decelerates as it goes (ink in water): fast out of the tip, slowing into its cloud.
+  const reach = 1 - (1 - v) * (1 - v)
+  const nx = -(to[1] - from[1]) / len
+  const ny = (to[0] - from[0]) / len
+  const bow = 0.12 * len
+  const at = (w: number): Pt => [
+    from[0] + (to[0] - from[0]) * w + nx * bow * Math.sin(Math.PI * w),
+    from[1] + (to[1] - from[1]) * w + ny * bow * Math.sin(Math.PI * w),
+  ]
+  const fade = 1 - smooth01((v - 0.7) / 0.3)
   p.push()
   p.noStroke()
-  const n = 9
-  for (let i = 0; i < n; i++) {
-    const w = v - (i / n) * 0.35
-    if (w <= 0) continue
-    const x = from[0] + (to[0] - from[0]) * w
-    const y = from[1] + (to[1] - from[1]) * w - Math.sin(Math.PI * w) * 0.4
-    const r = 0.12 + 0.5 * w
-    p.fill(alpha(p, color, 0.22 * (1 - i / n) * (1 - v * 0.6) * light))
-    p.ellipse(x * k, y * k, r * 2 * k, r * 1.6 * k)
+  // The stream: from the tip to the head, thin at the tip, widening; thinning away as the head arrives.
+  const n = 18
+  const left: Pt[] = []
+  const right: Pt[] = []
+  for (let j = 0; j <= n; j++) {
+    const w = (j / n) * reach
+    const [x, y] = at(w)
+    const [x2, y2] = at(Math.min(1, w + 0.01))
+    const dx = x2 - x
+    const dy = y2 - y
+    const l = Math.hypot(dx, dy) || 1
+    const half = (0.015 + 0.07 * (j / n) * reach) * len * 0.35 * (0.6 + 0.4 * fade)
+    left.push([x - (dy / l) * half, y + (dx / l) * half])
+    right.push([x + (dy / l) * half, y - (dx / l) * half])
   }
+  p.fill(alpha(p, color, 0.55 * fade * light))
+  p.beginShape()
+  for (const [x, y] of left) p.vertex(x * k, y * k)
+  for (let j = right.length - 1; j >= 0; j--) p.vertex(right[j][0] * k, right[j][1] * k)
+  p.endShape(p.CLOSE)
+  // The head: a billow of soft overlapping clouds, opening as it slows.
+  const [hx, hy] = at(reach)
+  const r = (0.06 + 0.22 * reach) * len * 0.5
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * TAU + v * 1.3
+    const off = r * (0.25 + 0.35 * reach)
+    p.fill(alpha(p, color, (0.16 + 0.06 * (i % 2)) * light * (0.5 + 0.5 * fade)))
+    p.ellipse((hx + Math.cos(a) * off) * k, (hy + Math.sin(a) * off) * k, r * (1.1 + 0.3 * Math.sin(i * 2.3)) * k, r * (0.9 + 0.3 * Math.cos(i * 1.7)) * k)
+  }
+  p.fill(alpha(p, color, 0.35 * light * fade))
+  p.ellipse(hx * k, hy * k, r * 0.9 * k, r * 0.75 * k)
   p.pop()
 }
 
