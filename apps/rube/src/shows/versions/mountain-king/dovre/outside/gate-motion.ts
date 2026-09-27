@@ -466,8 +466,15 @@ export function panJolt(t: number): number {
   return 0.035 * (d / 0.05) * Math.exp(1 - d / 0.05) * (d < 2 ? 1 : 0)
 }
 
-/** The lamp in the works: dark until the spark, then it catches over a third of a second. */
-export const worksLamp = (t: number): number => smooth(t, TIMES.pan + 0.05, TIMES.pan + 0.45)
+/**
+ * The works burning down once the door is down (its job done): from 0 to 1 over the second after the last click, so
+ * the lamps, the pulleys and the gutter are dark by the time the frame goes in at the door (~21.5; lit, they sat half
+ * in at the frame's foot after their beat).
+ */
+export const worksOut = (t: number): number => smooth(t, TIMES.open + 0.35, TIMES.open + 1.3)
+
+/** The lamp in the works: dark until the spark, then it catches over a third of a second; out with the works. */
+export const worksLamp = (t: number): number => smooth(t, TIMES.pan + 0.05, TIMES.pan + 0.45) * (1 - 0.96 * worksOut(t))
 
 /**
  * The trickle of burning oil: the lamp catching spills a drop of fire into the oil gutter under the chain, and it runs
@@ -486,11 +493,10 @@ export function flameFront(t: number): number | null {
 }
 /**
  * The lamp under the door: catches as the fire reaches it, on the last click, and with the door down (its job done)
- * burns down to embers over two seconds, so the slot and the works under it go dark before the tunnels (the lit
- * pulley and a black notch cut into its glow sat at the frame's foot through the seam).
+ * burns down to embers with the works, so the slot and the works under it are dark as the frame goes in at the door
+ * (the lit pulley and a black notch cut into its glow sat at the frame's foot through the seam).
  */
-export const slotLamp = (t: number): number =>
-  smooth(t, TIMES.open - 0.05, TIMES.open + 0.35) * (1 - 0.96 * smooth(t, TIMES.open + 0.5, TIMES.open + 2.5))
+export const slotLamp = (t: number): number => smooth(t, TIMES.open - 0.05, TIMES.open + 0.35) * (1 - 0.96 * worksOut(t))
 
 /** How bright a stair stone rings after something lands on it (0..1). */
 export function ring(times: readonly number[], t: number): number {
