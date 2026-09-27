@@ -66,9 +66,9 @@ export const TOPPLE = onset(129.271)
 export const THUNDER = J(27)
 export const RIGHTED3 = J(28, 2)
 export const FLASH2 = J(29)
-/** Down the plank, off it, and out: Ellie onto the plank, off it; Carl off it. */
+/** Down the plank, off it, and out: Ellie onto the plank, off it (on 30's two); Carl off it (on 31's one). */
 export const ONTO_PLANK = J(28)
-export const E_OFF = J(30)
+export const E_OFF = J(30, 2)
 export const C_OFF = J(31)
 /** The limb winched out as the storm's last flash goes; three boards over the hole; the sun breaks through; she skips. */
 export const WINCH = J(29)
