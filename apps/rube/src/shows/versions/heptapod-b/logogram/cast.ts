@@ -42,6 +42,12 @@ export interface ShellOpts {
    * passes false and draws the vapour itself, soft, along the line where it thins.
    */
   puffs?: boolean
+  /**
+   * Optional: how it goes. 'crown' (unset: it thins from the top down, the part still there below a line) or 'fade'
+   * (the whole of it pales into the air at once, no line anywhere: for a shell that rises into cloud, the cloud drawn
+   * over its top by the caller).
+   */
+  goes?: 'crown' | 'fade'
 }
 
 /** How far the belly's oval is sunk below the belly's line and cut flat there: the keel the slot is in. */
@@ -83,11 +89,11 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
     pts.push([-shellHalf(u) * w, Math.min(0, -h + u * h + KEEL)])
   }
   // As it goes, it thins from the top down: the part still there is below `keep`.
-  const keep = vanish <= 0 ? -h - 1 : -h + h * smooth01(vanish * 1.15)
+  const keep = vanish <= 0 || o.goes === 'fade' ? -h - 1 : -h + h * smooth01(vanish * 1.15)
   const body = mixHex(VALLEY.shell, air, haze * 0.85)
   const bodyDark = mixHex(VALLEY.shellDark, air, haze * 0.8)
   const rim = mixHex(VALLEY.shellLight, air, haze * 0.7)
-  const fade = 1 - smooth01((vanish - 0.35) / 0.65)
+  const fade = o.goes === 'fade' ? 1 - smooth01(vanish) : 1 - smooth01((vanish - 0.35) / 0.65)
   ctx.save()
   ctx.globalAlpha *= fade
   // The body: lighter where the sky is on it (top and left), darkest at the belly.
@@ -192,8 +198,10 @@ export interface HeptapodOpts {
   /**
    * A limb reaching out: which limb (0..6, 3 is the middle one, toward us), the point it reaches for (cells from the
    * origin), and how far it has gone (0 standing .. 1 there). At the end of its reach the tip opens into a palm.
+   * Optional `bow` (the fog builder's): a long reach bows instead of straightening, by this share of its length to
+   * one side (positive to its right as it goes, negative to its left), and slims toward its tip.
    */
-  reach?: { limb: number; to: Pt; u: number }
+  reach?: { limb: number; to: Pt; u: number; bow?: number }
   /**
    * Optional (the chamber builder's): how deep in the fog the reaching limb and its palm are once it has reached, 0
    * clear .. 1 gone; a limb reaching for the glass comes out of the fog the body is in. Unset, it is the body's `fog`.
@@ -283,6 +291,18 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
     const rise = (0.03 + 0.05 * (Math.abs(i - 3) / 3)) * h
     const c1: Pt = [root[0] + out * 0.38 + sway * 0.5, root[1] - rise * (1 - reaching)]
     const c2: Pt = [tip[0] - out * (0.12 - 0.1 * reaching) + sway, root[1] + drop * (0.1 + 0.55 * reaching) - rise * 0.35 * (1 - reaching)]
+    // A bowed reach: its middle pushed off the straight line to one side (only where `reach.bow` is given).
+    const bow = reaching > 0 && o.reach?.bow ? o.reach.bow * reaching : 0
+    if (bow) {
+      const len = Math.hypot(out, drop) || 1
+      const bx = (-drop / len) * bow * len
+      const by = (out / len) * bow * len
+      c1[0] += bx * 0.95
+      c1[1] += by * 0.95
+      c2[0] += bx * 0.6
+      c2[1] += by * 0.6
+    }
+    const slim = 1 - 0.4 * Math.min(1, Math.abs(bow) * 3)
     // Heavy limbs, like trunks: thick well out from the body, tapering late to a blunt tip.
     const w0 = (0.072 - 0.012 * d) * h
     const w1 = 0.011 * h
@@ -303,7 +323,7 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
       const dy = j ? y - py : c1[1] - root[1]
       const l = Math.hypot(dx, dy) || 1
       // Thick from the body through the shoulder, then tapering long to a fine tip; the skin's folds a faint pulse.
-      const width = (w1 + (w0 - w1) * (1 - u) ** 1.25) * (1 + 0.08 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + 0.03 * Math.sin(u * 29 + i))
+      const width = (w1 + (w0 - w1) * (1 - u) ** 1.25) * (1 + 0.08 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + 0.03 * Math.sin(u * 29 + i)) * (1 - (1 - slim) * u)
       left.push([x - (dy / l) * width, y + (dx / l) * width])
       right.push([x + (dy / l) * width, y - (dx / l) * width])
       px = x

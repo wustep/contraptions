@@ -145,12 +145,12 @@ export const shaft = part<ShaftState>(
       { t: TURN + 1.7, cells: 5.5, hold: [X_LAND + 1.3, 1.75], w: 1 },
       // Settled: the deck at the left edge, the corridor opening right; then drawing back as they set off.
       { t: TURN + 3.0, cells: 6.2, hold: [L(TURN + 3)[0] + 2.0, 1.4], w: 1 },
-      { t: 75.2, cells: 9.2, hold: [6.2, 0.2], w: 1 },
-      // The whole shaft: the mouth's daylight at one end, the white at the other, the two of them small between.
-      { t: 77.4, cells: 12.6, hold: [8.4, -0.5], w: 1 },
-      { t: 80.6, cells: 12.2, hold: [9.4, -0.4], w: 1 },
-      // In to them for the last ribs and the chamber.
-      { t: 83.3, cells: 7.2, off: [1.3, -1.2], w: 0 },
+      // One breath of the whole shaft: the mouth's daylight at one end, the white at the other, the two of them small
+      // between; then back in to them, moving with them past the beam and the lit ribs.
+      { t: 76.0, cells: 11.8, hold: [7.4, -0.35], w: 1 },
+      { t: 77.7, cells: 11.4, hold: [7.9, -0.3], w: 1 },
+      { t: 79.9, cells: 6.6, off: [1.2, -1.15], w: 0 },
+      { t: 83.3, cells: 6.2, off: [1.1, -1.05], w: 0 },
       { t: T_END, cells: 5, off: [0.91, -0.9], w: 0 },
     ]
     return keys.filter((k) => k.t > slot.begin && k.t <= slot.end + 1e-6)

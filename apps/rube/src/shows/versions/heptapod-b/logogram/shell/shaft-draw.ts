@@ -55,11 +55,17 @@ const FLOOR_STONE = SHELL.floor
 const AIR = mixHex(SHELL.dark, SHELL.wall, 0.3)
 /** Where light meets the stone: a soft lit lip that fades into it. */
 const LIP = rgb(mixHex(SHELL.wallLit, SHELL.glowWarm, 0.4))
-const STEEL = mixHex(VALLEY.steel, SHELL.dark, 0.38)
-const STEEL_DARK = mixHex(VALLEY.steelDark, SHELL.dark, 0.45)
-/** The lift's arms, olive drab as outside, in the dark. */
-const ARM_NEAR = mixHex(VALLEY.olive, SHELL.dark, 0.3)
-const ARM_FAR = mixHex(VALLEY.olive, SHELL.dark, 0.6)
+/**
+ * The lift and its deck in the dark: dark steel silhouettes against the throat's daylight and the beam, their only
+ * light a thin edge on the side toward the daylight below them.
+ */
+const RIG_INK = SHELL.dark
+const STEEL = mixHex(VALLEY.steel, SHELL.dark, 0.7)
+const STEEL_DARK = mixHex(VALLEY.steelDark, SHELL.dark, 0.62)
+const ARM_NEAR = mixHex(VALLEY.olive, SHELL.dark, 0.72)
+const ARM_FAR = mixHex(VALLEY.olive, SHELL.dark, 0.86)
+/** How much of the throat's daylight reaches a point of the rig, from its depth below the deck's plate (deck-local y). */
+const rigLit = (y: number) => clamp01(0.3 + 0.28 * (y - 0.3))
 const DAY = VALLEY.fog
 const WARM = SHELL.glowWarm
 
@@ -452,17 +458,17 @@ export function drawMistFront(p: p5, c: Ctx, t: number): void {
 
 /** The lift's top under the deck, the deck (cast's), the lamp's switch and cable, and the floodlight on its post. */
 export function drawDeckRig(p: p5, c: Ctx, t: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   const x = deckX(t)
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.push()
   p.translate(x * k, 0)
-  // Turned a quarter: the deck's own up is the shell's +x, its length runs along y.
+  // Turned a quarter: the deck's own up is the shell's +x, its length runs along y (the throat is its +y, below it).
   p.rotate(Math.PI / 2)
   // The lift's tower under the deck, as the valley side has it (seven stages of 2.5-long arms, a thin beam between
   // each): the top stage still opening as the deck comes up to its stops, the rest open, down through the throat
   // into the daylight, dark against it.
-  const bar = (a: Pt, b: Pt, w: number) => {
+  const quad = (a: Pt, b: Pt, w: number) => {
     const dx = b[0] - a[0]
     const dy = b[1] - a[1]
     const l = Math.hypot(dx, dy) || 1
@@ -470,39 +476,63 @@ export function drawDeckRig(p: p5, c: Ctx, t: number): void {
     const ny = (dx / l) * w
     p.quad((a[0] + nx) * k, (a[1] + ny) * k, (b[0] + nx) * k, (b[1] + ny) * k, (b[0] - nx) * k, (b[1] - ny) * k, (a[0] - nx) * k, (a[1] - ny) * k)
   }
+  // A thin lit edge along a bar's side that faces down the throat, as bright as the daylight reaching it there.
+  const edges: [Pt, Pt, number][] = []
+  const litEdge = (a: Pt, b: Pt, w: number) => {
+    const dx = b[0] - a[0]
+    const dy = b[1] - a[1]
+    const l = Math.hypot(dx, dy) || 1
+    let nx = -dy / l
+    let ny = dx / l
+    if (ny < 0) {
+      nx = -nx
+      ny = -ny
+    }
+    edges.push([[a[0] + nx * w, a[1] + ny * w], [b[0] + nx * w, b[1] + ny * w], rigLit((a[1] + b[1]) / 2)])
+  }
   const CXU = 0.4
   const ARM = 2.5
   const th = 0.085
   let yb = R + 0.14
+  p.stroke(RIG_INK)
   for (let s = 0; s < 4; s++) {
     const hx = s === 0 ? TOP_STAGE + (x - deckX(T0)) : 2.045
     const v = Math.max(0, Math.min(ARM * 0.995, hx - 0.06))
     const half = Math.sqrt(ARM * ARM - v * v) / 2
     const top = yb + th / 2
     const bot = yb + hx - th / 2
-    p.stroke(ink)
-    p.strokeWeight(weight * 0.8)
+    p.strokeWeight(weight * 0.7)
     p.fill(ARM_FAR)
-    bar([CXU + half, bot], [CXU - half, top], th / 2)
+    quad([CXU + half, bot], [CXU - half, top], th / 2)
     p.fill(ARM_NEAR)
-    bar([CXU - half, bot], [CXU + half, top], th / 2)
+    quad([CXU - half, bot], [CXU + half, top], th / 2)
+    litEdge([CXU - half, bot], [CXU + half, top], th / 2)
     p.fill(STEEL_DARK)
-    p.strokeWeight(weight * 0.6)
+    p.strokeWeight(weight * 0.5)
     for (const q of [[CXU - half, bot], [CXU + half, bot], [CXU - half, top], [CXU + half, top]] as Pt[]) p.circle(q[0] * k, q[1] * k, 0.064 * k)
-    p.fill(STEEL)
     p.circle(CXU * k, ((top + bot) / 2) * k, 0.09 * k)
     yb += hx
     // The beam under it.
-    p.fill(STEEL_DARK)
-    p.strokeWeight(weight * 0.7)
+    p.strokeWeight(weight * 0.6)
     p.rectMode(p.CORNER)
     p.rect((CXU - 1.2) * k, yb * k, 2.4 * k, 0.03 * k)
+    edges.push([[CXU - 1.2, yb + 0.03], [CXU + 1.2, yb + 0.03], rigLit(yb)])
     yb += 0.03
   }
-  // The deck itself, with its work light (cast's): the switch pressed in as she rolls against it, the lamp lit.
+  // The deck itself, with its work light (cast's), in the same dark steel: the switch pressed in as she rolls
+  // against it, the lamp lit.
   const lu = louiseAt(Math.min(t, TURN))[1]
   const press = clamp01((lu - (SWITCH_U - R)) / PRESS)
-  drawDeck(p, k, DECK[0], DECK[1], { ink, weight, steel: STEEL, lamp: { on: clamp01(floodOn(t)), switchAt: SWITCH_U, press, tilt: -FLOOD_TILT, body: STEEL_DARK } })
+  drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, lamp: { on: clamp01(floodOn(t)), switchAt: SWITCH_U, press, tilt: -FLOOD_TILT, body: STEEL_DARK } })
+  // The plate's underside, over the throat, catches its light.
+  edges.push([[DECK[0], R + 0.14], [DECK[1], R + 0.14], rigLit(0.3) * 1.2])
+  p.noFill()
+  p.strokeCap(p.ROUND)
+  for (const [a, b, l] of edges) {
+    p.stroke(alpha(p, DAY, 0.55 * l))
+    p.strokeWeight(weight * 0.55)
+    p.line(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+  }
   p.pop()
   // The beam: a soft cone of light up the shaft (the stone stops it: only the shaft's air is lit).
   const on = floodOn(t)
@@ -543,11 +573,11 @@ export function drawDeckRig(p: p5, c: Ctx, t: number): void {
 
 /** The deck's near toe board, over the balls' feet. */
 export function drawDeckOver(p: p5, c: Ctx, t: number): void {
-  const { k, ink, weight } = c
+  const { k, weight } = c
   p.push()
   p.translate(deckX(t) * k, 0)
   p.rotate(Math.PI / 2)
-  drawDeck(p, k, DECK[0], DECK[1], { ink, weight, steel: STEEL, over: true })
+  drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, over: true })
   p.pop()
 }
 
