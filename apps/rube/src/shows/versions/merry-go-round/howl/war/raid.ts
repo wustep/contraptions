@@ -2337,7 +2337,9 @@ export const raid = part<{ begin: number }>(
     const PUMP = -1.5
     const LX = JOURNEY.x1 - BRAKE.reach
     const sx = (t: number) => WAY(t).p[0]
-    const UP = 0.19
+    // Her place up the frame while she pushes and runs: low enough that under Zoom her whole ball stays well inside the
+    // foot (within 0.75 of its half-height), and her closes' tops still under the eaves.
+    const UP = 0.25
     return [
       { t: 206.3, cells: 4.7, off: [0.9, -0.82] },
       // The war, established: on b6 a cut out over the street to the roofs and the fire-lit sky, the fleet crossing it
@@ -2346,7 +2348,7 @@ export const raid = part<{ begin: number }>(
       // b7, as she reaches its push bar and the first light goes out, back in to her.
       { ...her(b(6), WAR_WIDE, sx(b(6)) + 10.0, 0.18), cut: true },
       her(b(7) - 0.03, WAR_WIDE - 0.3, sx(b(7)) + 9.8, 0.18),
-      { ...her(b(7), 5.9, sx(b(7)) + 1.5, 0.22), cut: true },
+      { ...her(b(7), 5.9, sx(b(7)) + 1.5, UP), cut: true },
       // Pushing the engine up the street, the lights going out along it behind her, the far stick's flashes on her.
       her(209.9, 6.2, sx(209.9) + 1.8, UP),
       her(b(9), 6.2, sx(b(9)) + 1.8, UP),
@@ -2365,8 +2367,8 @@ export const raid = part<{ begin: number }>(
       { ...her(b(11, 2), 5.4, 6.25, 0.3), cut: true },
       her(216.2, 5.4, 6.4, 0.3),
       her(218.2, 5.4, 6.55, 0.3),
-      her(220.1, 5.4, 6.7, 0.3),
-      her(BAY_OPEN - 0.02, 5.4, 6.8, 0.3),
+      her(220.1, 5.4, 6.55, 0.3),
+      her(BAY_OPEN - 0.02, 5.4, 6.65, 0.3),
       // Look up as she lands on it: the great warship over the roofs, its bay opening, the searchlight on it; a bar.
       sky(BAY_OPEN, 13.0, 17.4, -7.55, true),
       sky(222.2, 13.1, 16.9, -7.55),
@@ -2382,15 +2384,16 @@ export const raid = part<{ begin: number }>(
       { ...her(r(7), 13.4, LX + 0.2, 0.22, PUMP), cut: true },
       her(r(9) - 0.03, 13.6, LX - 0.2, 0.22, PUMP),
       { ...her(r(9), 7.3, LX + 1.4, 0.41, PUMP), cut: true },
-      her(r(10), 7.4, LX + 0.9, 0.41, PUMP),
+      // Framed for her stepping down off the beam onto the street before the look up (her whole ball in Zoom's foot).
+      her(r(10), 7.4, LX + 0.9, 0.44, PUMP),
       // Look up on her step down: Howl goes into the bay and the ship blows (231.805, 232.153) over the hat shop.
       sky(r(10, 3), 13.0, 1.2, -7.55, true),
       sky(232.45, 13.4, 0.9, -7.55),
       // On her, running home.
-      { ...her(r(12), 6.2, sx(r(12)) - 1.1, 0.2), cut: true },
-      her(233.6, 6.2, sx(233.6) - 1.0, 0.2),
-      her(234.6, 5.9, sx(234.6) - 0.6, 0.2),
-      her(235.6, 5.4, sx(235.6) - 0.3, 0.21),
+      { ...her(r(12), 6.2, sx(r(12)) - 1.1, UP), cut: true },
+      her(233.6, 6.2, sx(233.6) - 1.0, UP),
+      her(234.6, 5.9, sx(234.6) - 0.6, UP),
+      her(235.6, 5.4, sx(235.6) - 0.3, UP),
       { t: E, cells: SEAMS.hearth.cells, hold: [INSIDE[0] + SEAMS.hearth.frame[0], SEAMS.hearth.frame[1]] },
     ]
   },

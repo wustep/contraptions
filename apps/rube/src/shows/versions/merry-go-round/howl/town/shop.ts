@@ -488,8 +488,8 @@ export const shop = part<ShopState>(
     // The dark workroom: the whole music box on the sill a third of the way down and left of middle (canopy, comb and
     // pin), so the first pluck is seen at its source, and her on the lift's foot below it; easing in to her by the
     // lift's latch.
-    { t: 0, cells: 3.8, hold: [-0.73, -1.05], w: 1 },
-    { t: START + 0.5, cells: 3.8, hold: [-0.73, -1.08], w: 1 },
+    { t: 0, cells: 3.95, hold: [-0.73, -1.0], w: 1 },
+    { t: START + 0.5, cells: 3.95, hold: [-0.73, -1.03], w: 1 },
     // Up with her into the light.
     { t: TOP, cells: 3.2, hold: [-0.7, -1.52], w: 1 },
     { t: LAST, cells: 3.3, hold: [-0.5, -1.55], w: 1 },
@@ -497,17 +497,17 @@ export const shop = part<ShopState>(
     { t: 8.4, cells: 3.6, hold: [0.45, -1.42], w: 1 },
     { t: 9.9, cells: 3.75, hold: [1.15, -1.25], w: 1 },
     // The press.
-    { t: SEAT, cells: 3.5, hold: [1.7, -1.05], w: 1 },
-    { t: RAM_UP, cells: 3.45, hold: [2.15, -0.98], w: 1 },
+    { t: SEAT, cells: 3.55, hold: [1.7, -0.98], w: 1 },
+    { t: RAM_UP, cells: 3.5, hold: [2.15, -0.92], w: 1 },
     // The sewing treadle, the ribbon.
     { t: TURNS[0], cells: 3.4, hold: [2.85, -0.88], w: 1 },
     // In close while the ribbon goes round the crown, and back out for the flick.
     { t: RIBBON_ON, cells: 3.1, hold: [2.95, -0.8], w: 1 },
     { t: CUT, cells: 3.0, hold: [3.0, -0.78], w: 1 },
-    { t: TURNS[3], cells: 3.35, hold: [3.1, -0.88], w: 1 },
+    { t: TURNS[3], cells: 3.35, hold: [3.1, -0.84], w: 1 },
     // The stand rises.
-    { t: PAN, cells: 3.8, hold: [3.75, -1.15], w: 1 },
-    { t: RAISED, cells: 4.3, hold: [4.2, -1.3], w: 1 },
+    { t: PAN, cells: 3.9, hold: [3.75, -1.08], w: 1 },
+    { t: RAISED, cells: 4.5, hold: [4.2, -1.25], w: 1 },
     // Across the shop to the door.
     { t: DOOR, cells: 5.0, hold: [7.3, -1.4], off: [0.9, -1.25], w: 0.35 },
     // The street, the town waking: following her a third of the way up the frame, close enough that the fronts pass,

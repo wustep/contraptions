@@ -677,7 +677,9 @@ export const field = part<FieldState>(
       { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
       { t: TIP, cells: 6.8, off: [1.6, 0.45] },
       { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },
-      { t: TROUGH, cells: 7.05, hold: [X_REST + 0.45, GR - 2.2], w: 1 },
+      // (A touch wider than the flume's, its top where it was and its foot lower, so her whole ball stays inside the Zoom
+      // frame's foot as she drops to the grass.)
+      { t: TROUGH, cells: 7.35, hold: [X_REST + 0.45, GR - 2.05], w: 1 },
       { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.77], w: 0.75 },
       { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.57], w: 0.75 },
       // The build: on its first note a cut out wide and up, the fleet coming dark over the mountains, the lead ship

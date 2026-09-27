@@ -152,17 +152,24 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
   check('merry-go-round: the camera never whips: its zoom under 0.6 of a scale a second but for the punches, its cuts and the floor\'s knock',
     whip <= 0.6, `${whip.toFixed(2)} log/s at ${whipAt.toFixed(2)} s`)
 
-  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
+  // Under Zoom (half as close again as the show's camera) her whole ball stays inside the frame wherever she is to be
+  // seen, with a margin: its far edge within 0.9 of the half-frame (a centre test let a half-cut ball pass). Inside the
+  // named wides, where she is small against something, her centre stays in the frame.
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     const h = show.at(t)
     if (h.hidden || h.scale < 0.3) continue
     const f = cam(t)
     const cells = f.cells / 1.5
-    const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
-    if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
+    const hw = (cells * 16) / 9 / 2
+    const hh = cells / 2
+    const wide = WIDES.some((w) => t >= w.a - 0.01 && t <= w.b + 0.01)
+    const r = wide ? 0 : R * (h.scale ?? 1)
+    const u = Math.max((Math.abs(h.x - f.x) + r) / hw, (Math.abs(h.y - f.y) + r) / hh)
+    if (u > (wide ? 1 : 0.9)) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)}${wide ? ', a wide' : ''})`)
   }
-  check('merry-go-round: under Zoom the ball never leaves the frame', outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
+  check('merry-go-round: under Zoom her whole ball stays inside the frame, its far edge within 0.9 of the half-frame (her centre in it in the named wides)',
+    outOfZoom.length === 0, outOfZoom.slice(0, 6).join(', '))
 
   // Under the credits the whole castle (flag to toes, gun to gun) stays inside the Zoom frame, so nothing of it is cut
   // by the frame's edge while the words are up. From 0.3 s into the first card's 1.3 s fade (5% light): until then the

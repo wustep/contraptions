@@ -127,7 +127,7 @@ export const walk = part<null>(
       // little as she jumps for its foot.
       { t: DROP - 0.03, cells: FOG_WIDE[2].cells, hold: w(FOG_WIDE[2].at) },
       { t: DROP, cells: 7.3, hold: hill(-0.2, -2.0), cut: true },
-      { t: CATCH, cells: 6.9, hold: hill(0.35, -2.1) },
+      { t: CATCH, cells: 6.9, hold: hill(0.35, -1.9) },
       // Up the stair with her, a tread a beat, to the porch.
       { t: CLIMB[2], cells: 6.4, off: [0.75, -0.85] },
       { t: CLIMB[6], cells: CLOSE, off: close },

@@ -1368,9 +1368,9 @@ export const plank = part<PlankState>(
       // frame tightening on the contact. Close (6.5 → 6.2 cells, 14–15 px) and low, her 0.4 down the frame, so she
       // and the deck ride against the crag's long shoulder with the moor's mist under the deck line, at rest on the
       // brink by 283.0 for the brake's cut.
-      follow(276.2, 6.5, [2.2, 0.1]),
-      follow(277.6, 6.4, [2.9, 0.45]),
-      follow(279.0, 6.35, [3.3, 0.5]),
+      follow(276.2, 6.5, [1.9, 0.1]),
+      follow(277.6, 6.4, [2.1, 0.45]),
+      follow(279.0, 6.35, [2.5, 0.5]),
       hold(281.2, 6.3, [end[0] - 1.6, end[1] + 0.6]),
       hold(282.9, 6.2, [end[0] - 0.4, end[1] + 0.55]),
       // The stop: a cut in on the contact, jolted by it; the settling; then in to the cadenza's one still frame.

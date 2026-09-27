@@ -278,7 +278,8 @@ export const alley = part<AlleyState>(
     { t: 42.9, cells: 3.9, hold: [3.2, -0.72], w: 1 },
     { t: 44.6, cells: 5.0, hold: [3.15, -0.95], w: 0.9 },
     { t: 46.4, cells: 6.0, hold: [4.3, -1.35], w: 1 },
-    // On a follow the moment before the lift, so the camera rises with them into the air without a check.
-    { t: 48.7, cells: 5.7, off: [4.8 - (ALLEY_EXIT[0] - 0.5), -1.6] },
+    // On a follow the moment before the lift, so the camera rises with them into the air without a check (her low, but
+    // her whole ball well inside the Zoom frame's foot as the follow leans up ahead of the rise).
+    { t: 48.7, cells: 5.7, off: [4.8 - (ALLEY_EXIT[0] - 0.5), -1.1] },
   ],
 )
