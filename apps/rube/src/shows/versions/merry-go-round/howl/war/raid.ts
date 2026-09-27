@@ -529,8 +529,21 @@ function shard(p: p5, k: number, shape: Pt[]): void {
 
 /* ------------------------------------------------------------------ Howl */
 
-/** Howl the bird, from out of the dark over the roofs to up into the smoke after the ship. */
+/**
+ * How many cells tall the war's establishing wide is (b6 → b7): the street, the roofs and the sky over them, her small
+ * at its foot.
+ */
+const WAR_WIDE = 20
+/**
+ * Howl the bird: first among the fleet as it crosses the sky in the establishing wide (b6 → b7), weaving through the
+ * bombers; then up and away back into the dark (out of her close), from which he comes in on the lead bomber; to up
+ * into the smoke after the ship.
+ */
 const HOWL_KEYS: Key[] = [
+  { t: 206.9, p: [31.8, -15.4], v: [-3.4, 0.5] },
+  { t: 207.9, p: [28.4, -13.9], v: [-3.0, 0.9] },
+  { t: 208.9, p: [25.8, -14.6], v: [-1.8, -1.6] },
+  { t: 210.2, p: [30.5, -20.5], v: [5.5, -2.5] },
   { t: 212.15, p: [27.0, -16.2 + LOW], v: [-11, 3.0] },
   { t: TEAR[0], p: [inFormation(0, TEAR[0])[0] + 0.75, inFormation(0, TEAR[0])[1] + 0.05], v: [-8.5, 0.7] },
   { t: TEAR[1], p: [inFormation(0, TEAR[1])[0] - 0.95, inFormation(0, TEAR[1])[1] + 0.1], v: [-8.0, -0.3], out: [-5.5, -4.2] },
@@ -1248,11 +1261,16 @@ function drawQuarter(p: p5, k: number, t: number, f: Frame): void {
     const x = x0 - 1 + i * 1.5 + 0.4 * hash(i, 8, 41)
     glow(p, k, x, GROUND - 0.6, 2.6 + 0.6 * hash(i, 9, 41), TOWN.fire, 0.16 * Math.min(1, (i + 0.5) / 2.5), 0.7)
   }
-  for (let i = 0; i < 8; i++) {
-    const x = x0 + 0.7 + i * 1.6 + 0.4 * hash(i, 5, 41)
+  // The fires themselves: a few, of every size, in uneven clumps with gaps of smoke between (never a row of the same
+  // flame along the ground), the far ones smaller and lower in the smoke.
+  let x = x0 + 0.5
+  for (let i = 0; i < 9; i++) {
+    x += 0.9 + 2.1 * hash(i, 5, 41)
     if (x > f.x1 + 2) break
-    const h = (1.0 + 1.1 * hash(i, 7, 41)) * (0.85 + 0.15 * wobble(t * 1.3, i))
-    fire(p, k, x, GROUND + 0.1, 1.4 + 0.6 * hash(i, 6, 41), h, { t, seed: 200 + i, lean: 0.2, light: 0.95 })
+    if (hash(i, 3, 41) < 0.3) continue
+    const far = hash(i, 4, 41)
+    const h = (0.7 + 2.0 * hash(i, 7, 41) * (1 - 0.5 * far)) * (0.85 + 0.15 * wobble(t * 1.3, i))
+    fire(p, k, x, GROUND + 0.1 - 0.5 * far, (0.9 + 1.2 * hash(i, 6, 41)) * (1 - 0.35 * far), h, { t, seed: 200 + i, lean: 0.2, light: 0.95 - 0.35 * far })
   }
 }
 
@@ -2237,8 +2255,13 @@ export const raid = part<{ begin: number }>(
     const UP = 0.19
     return [
       { t: 206.3, cells: 4.7, off: [0.9, -0.82] },
-      { t: 207.3, cells: 5.4, hold: [sx(207.3) + 1.2, -0.2 * 5.4] },
-      her(208.4, 5.9, sx(208.4) + 1.5, 0.22),
+      // The war, established: on b6 a cut out over the street to the roofs and the fire-lit sky, the fleet crossing it
+      // right to left, the far warship's bulk over the roofs, Howl a black bird among the bombers, the far bombs'
+      // flashes behind the roofs, the street's windows still lit, and her small at the foot, going for the engine; on
+      // b7, as she reaches its push bar and the first light goes out, back in to her.
+      { ...her(b(6), WAR_WIDE, sx(b(6)) + 11.2, 0.18), cut: true },
+      her(b(7) - 0.03, WAR_WIDE - 0.3, sx(b(7)) + 11.0, 0.18),
+      { ...her(b(7), 5.9, sx(b(7)) + 1.5, 0.22), cut: true },
       // Pushing the engine up the street, the lights going out along it behind her, the far stick's flashes on her.
       her(209.9, 6.2, sx(209.9) + 1.8, UP),
       her(b(9), 6.2, sx(b(9)) + 1.8, UP),
