@@ -241,32 +241,118 @@ export function viewMeadow(p: p5, k: number, b: Box, t: number): void {
   }
 }
 
-/** The light a door lets in: a fan on the floor in front of it, in the colour of where it opens. */
-export function doorLight(p: p5, k: number, dx: number, floor: number, open: number, color: string, a: number): void {
-  if (open < 0.02 || a <= 0) return
-  const X = (v: number) => v * k
-  const w = 0.475
-  p.noStroke()
-  p.fill(alpha(p, color, a * open))
-  p.quad(X(dx - w), X(floor), X(dx + w), X(floor), X(dx + w + 0.55), X(floor + 0.7), X(dx - w - 0.35), X(floor + 0.7))
-  p.fill(alpha(p, color, a * 0.5 * open))
-  p.quad(X(dx - w), X(floor - 2.05), X(dx + w), X(floor - 2.05), X(dx + w + 0.7), X(floor + 0.7), X(dx - w - 0.5), X(floor + 0.7))
+/** The door's opening: half its width and its height (as `cast.ts`'s `DOOR`). */
+const DOOR_HW = 0.475
+const DOOR_H = 2.05
+/** The floor's boards: how deep their top band runs below the surface before the cut face (as `room.ts` draws it). */
+const BOARDS = 0.16
+
+/** Daylight, not a gel: a place's colour warmed a little toward the room's sun. */
+const warmed = (color: string, by = 0.3): string => mixHex(color, ROOM.sun, by)
+
+const rgba = (hex: string, a: number): string => {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${Math.max(0, Math.min(1, a)).toFixed(3)})`
 }
 
-/** A place's light leaking round a shut door's edges once the dial is set on it. */
+/**
+ * A soft pool of light on the floor's boards at `dx`: an elliptical falloff from the door's foot (`rx` across, `ry`
+ * down), screened over the wood so it lightens and tints it, clipped to the boards' top band so it never runs over
+ * the ink of the floor's edge or down the cut face.
+ */
+function boardPool(ctx: CanvasRenderingContext2D, k: number, dx: number, floor: number, rx: number, ry: number, color: string, a: number): void {
+  const X = (v: number) => v * k
+  // Clear of the floor's inked top edge and of the line along the cut face.
+  const ink = Math.max(1.5, 0.02 * k)
+  const top = X(floor) + ink
+  const bot = X(floor + BOARDS) - 0.7 * ink
+  if (bot <= top) return
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(X(dx - rx) - 1, top, X(2 * rx) + 2, bot - top)
+  ctx.clip()
+  ctx.globalCompositeOperation = 'screen'
+  ctx.translate(X(dx), X(floor))
+  ctx.scale(X(rx), X(ry))
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, rgba(color, a))
+  g.addColorStop(0.3, rgba(color, a * 0.78))
+  g.addColorStop(0.62, rgba(color, a * 0.3))
+  g.addColorStop(0.85, rgba(color, a * 0.08))
+  g.addColorStop(1, rgba(color, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(-1, 0, 2, 1)
+  ctx.restore()
+}
+
+/**
+ * The light an open door lets in: a soft pool on the boards at its foot, widening as it swings open, in the colour of
+ * where it opens warmed a little. Only the floor: the wall the door is set in is never lit by it.
+ */
+export function doorLight(p: p5, k: number, dx: number, floor: number, open: number, color: string, a: number): void {
+  if (open < 0.02 || a <= 0) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Quick to come as it cracks open (the leak under a shut door hands over to it), full as it stands wide.
+  const o = Math.sqrt(Math.min(1, open))
+  boardPool(ctx, k, dx, floor, 0.75 + 0.55 * o, BOARDS * 1.5, warmed(color), Math.min(0.85, 3.2 * a * o))
+}
+
+/**
+ * A soft glow along one gap of a shut door, from the bright corner `c` along the edge to `e`: an elliptical falloff
+ * `half` px either side of the gap and the whole edge long, clipped to the edge's own side of the corner, so it fades
+ * along its length as well as across it.
+ */
+function gapGlow(ctx: CanvasRenderingContext2D, c: Pt, e: Pt, half: number, color: string, a: number): void {
+  const dx = e[0] - c[0]
+  const dy = e[1] - c[1]
+  const len = Math.hypot(dx, dy)
+  if (len < 1) return
+  ctx.save()
+  ctx.translate(c[0], c[1])
+  ctx.rotate(Math.atan2(dy, dx))
+  ctx.beginPath()
+  ctx.rect(0, -half, len, 2 * half)
+  ctx.clip()
+  ctx.scale(len * 1.1, half)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
+  g.addColorStop(0, rgba(color, a))
+  g.addColorStop(0.3, rgba(color, a * 0.55))
+  g.addColorStop(0.65, rgba(color, a * 0.16))
+  g.addColorStop(1, rgba(color, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(0, -1, 1, 2)
+  ctx.restore()
+}
+
+/**
+ * A place's light leaking round a shut door once the dial is set on it: a soft glow a few px wide in the gaps along the
+ * leaf's top and its free edge, brightest where they meet and fading along each, and a thin pool on the boards from
+ * under it. Never a stroked line.
+ */
 export function doorLeak(p: p5, k: number, W: number, dx: number, floor: number, color: string, a: number): void {
   if (a <= 0.01) return
   const X = (v: number) => v * k
-  const w = 0.475
-  const h = 2.05
-  p.noFill()
-  p.stroke(alpha(p, color, 0.9 * a))
-  p.strokeWeight(Math.max(1, W * 1.1))
-  p.line(X(dx - w + 0.01), X(floor - h + 0.02), X(dx + w - 0.01), X(floor - h + 0.02))
-  p.line(X(dx + w - 0.01), X(floor - h + 0.02), X(dx + w - 0.01), X(floor - 0.01))
-  p.noStroke()
-  p.fill(alpha(p, color, 0.35 * a))
-  p.quad(X(dx - w), X(floor), X(dx + w), X(floor), X(dx + w + 0.25), X(floor + 0.3), X(dx - w - 0.15), X(floor + 0.3))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const light = warmed(color, 0.35)
+  const half = Math.max(3, W * 3.4)
+  const corner: Pt = [X(dx + DOOR_HW), X(floor - DOOR_H)]
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  gapGlow(ctx, corner, [X(dx - DOOR_HW), corner[1]], half, light, 0.75 * a)
+  gapGlow(ctx, corner, [corner[0], X(floor)], half, light, 0.75 * a)
+  // The corner itself: a round glow in the quarter the two edges leave, so they meet without a notch.
+  ctx.beginPath()
+  ctx.rect(corner[0], corner[1] - half, half, half)
+  ctx.clip()
+  const g = ctx.createRadialGradient(corner[0], corner[1], 0, corner[0], corner[1], half)
+  g.addColorStop(0, rgba(light, 0.75 * a))
+  g.addColorStop(0.3, rgba(light, 0.75 * a * 0.55))
+  g.addColorStop(0.65, rgba(light, 0.75 * a * 0.16))
+  g.addColorStop(1, rgba(light, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(corner[0], corner[1] - half, half, half)
+  ctx.restore()
+  boardPool(ctx, k, dx, floor, 0.62, BOARDS * 1.1, light, 0.4 * a)
 }
 
 /* ------------------------------------------------------------------ Calcifer's sparks and the bellows' breath */
