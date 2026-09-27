@@ -1,12 +1,12 @@
 import type p5 from 'p5'
 import { ball, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
-import { drawCalcifer } from '../cast'
+import { drawCalcifer, drawWarship } from '../cast'
 import { alpha, box, carried, frame, hash, knock, part, smooth, type Company, type PartShot } from '../kit'
 import { AIR_STEPS, bar, CHORD, DURATION, SEAM } from '../music'
 import { drawDeck, drawGrate, drawPipes, drawStar, PLANK_AFTER, PLANK_END } from '../plank/plank'
 import { calciferAt, DECK, LAND, T1 } from '../plank/plank-rig'
 import { CASTLE, doorAt, drawCastle, drawChimneyFire, drawLeg, FAR, feetAt, MODULE_PIVOT, onBody, puff, STRIDE, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
-import { skyGradient } from '../wastes/sky'
+import { skyGradient, wastesSky } from '../wastes/sky'
 import { CALCIFER, MARKL, MARKL_SCALE, WASTES } from '../worlds'
 
 /**
@@ -525,6 +525,39 @@ function drawClouds(p: p5, k: number, t: number, f: { x0: number; x1: number; y0
 }
 
 /**
+ * The war going home, as the film ends on it: once the castle is away up the sky, far off and low in the evening the
+ * fleet's warships cross the other way in echelon, slow, their wing-oars barely beating, hazed by the distance.
+ * So far off that the camera's moves do not shift them, they are placed in the frame (the 16:9 box the sky is placed
+ * in): under the castle's feet and below the words, behind the clouds it walks past. [how far behind the lead along
+ * the way (box widths), up or down (box heights), size]
+ */
+const HOME: [number, number] = [313.5, 331.5]
+const HOMEWARD: [number, number, number][] = [[0, 0, 1], [0.11, -0.03, 0.86], [0.2, -0.055, 0.74]]
+function homeward(p: p5, k: number, W: number, ink: string, t: number, f: { x0: number; x1: number; y0: number; y1: number }) {
+  const u0 = (t - HOME[0]) / (HOME[1] - HOME[0])
+  if (u0 < -0.05 || u0 > 1.3) return
+  const w = f.x1 - f.x0
+  const h = Math.min(f.y1 - f.y0, (w * 9) / 16)
+  const my = (f.y0 + f.y1) / 2
+  const { low } = wastesSky(t)
+  const far = mixHex(WASTES.warship, low, 0.45)
+  const inkFar = mixHex(ink, low, 0.45)
+  HOMEWARD.forEach(([lag, dy, size], i) => {
+    const u = u0 - lag
+    const len = 0.075 * w * size
+    const x = f.x1 + len - u * (w + 2.5 * len)
+    if (x < f.x0 - len || x > f.x1 + len) return
+    const y = my + (0.31 + dy) * h + 0.004 * h * Math.sin(t * 0.7 + i * 1.7)
+    const sc = len / 6
+    p.push()
+    p.translate(x * k, y * k)
+    p.scale(sc)
+    drawWarship(p, k, W / sc, mixHex(inkFar, low, 0.15 * i), { t: 0.6 * t + i * 0.8, face: -1, color: mixHex(far, low, 0.12 * i), light: 1 })
+    p.pop()
+  })
+}
+
+/**
  * High up: the land far below goes into the haze of the sky itself as it climbs (the sky's own gradient laid over
  * the frame, thicker as it goes), so the credits come over sky and clouds.
  */
@@ -968,6 +1001,7 @@ export const flight = part<null>(
       p.translate(-FO[0] * k, -FO[1] * k)
       const f = frame(p, k)
       veil(p, k, t, f)
+      homeward(p, k, W, ink, t, f)
       drawClouds(p, k, t, f)
       const L = look(t)
       // The plank, until the hull has it: its deck, its pipes, the grate (lit once he is back in it), then him. Its
