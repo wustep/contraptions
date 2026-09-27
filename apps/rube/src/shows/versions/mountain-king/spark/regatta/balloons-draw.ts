@@ -1,8 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
-import { flameBoost } from '../fx'
+import { drawSpark, flameBoost } from '../fx'
 import { alpha, frame, hash } from '../kit'
-import { REGATTA } from '../worlds'
+import { FLAME_CORE, FLAME_RIM, REGATTA, SPARK } from '../worlds'
 import { ANAT, AT, clamp01, DUSK, rot, ss, type Balloon } from './balloons-plan'
 
 /**
@@ -160,17 +160,22 @@ export function rideOf(b: Balloon, t: number): Ride | null {
   return { t, hold, cut }
 }
 
-/** A flame's teardrop on the canvas (pixels): base at (0, 0), `h` tall up -y, `w` at its belly, its tip swung `lean`. */
-function teardrop(ctx: CanvasRenderingContext2D, w: number, h: number, lean: number): void {
+/**
+ * A flame's tongue on the canvas (pixels), the shape fx's flame draws: base at (0, `dy`), `h` tall up -y, `w` at its
+ * belly, its tip swung `lean`.
+ */
+function silkTongue(ctx: CanvasRenderingContext2D, w: number, h: number, lean: number, dy = 0): void {
   ctx.beginPath()
   const n = 18
   for (let i = 0; i <= n; i++) {
     const a = (i / n) * Math.PI * 2
     const u = (1 - Math.cos(a)) / 2
-    const belly = Math.sin(Math.PI * Math.pow(u, 0.62)) * (1 - 0.4 * u)
-    const x = Math.sin(a) * w * 0.5 * belly + lean * u * u
-    if (i === 0) ctx.moveTo(x, -h * u)
-    else ctx.lineTo(x, -h * u)
+    const side = Math.sin(a)
+    const belly = Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
+    const x = side * w * 0.5 * belly + lean * u * u
+    const y = dy - h * u + w * 0.25 * (1 - u) * Math.abs(side) * 0.3
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
   }
   ctx.closePath()
 }
@@ -178,8 +183,8 @@ function teardrop(ctx: CanvasRenderingContext2D, w: number, h: number, lean: num
 /**
  * The spark seen through the silk, as a flame behind a lampshade: the burner's roar coming up through the skirt and
  * the mouth as a stream of light that runs up the hot air to it, a tight bloom on the silk round it that lights the
- * gores and seams near it, its flame's teardrop, and its heart, crisp and white-gold, the brightest thing in the
- * frame. Clipped to the envelope and its skirt (`sleeve`). `end` is the spark (or, once it has popped out, the crown
+ * gores and seams near it, and over that the spark as it is everywhere else: its orange-gold heart and its flame, in
+ * fx's colours and at fx's size, so it reads as the same flame seen through silk and never as a white bead. Clipped to the envelope and its skirt (`sleeve`). `end` is the spark (or, once it has popped out, the crown
  * the stream dies away into); `spark` is whether it is still in there.
  */
 function drawSparkInSilk(
@@ -272,44 +277,33 @@ function drawSparkInSilk(
     ctx.fillStyle = bg
     ctx.fillRect(sx * k - B0, (sy - 0.12) * k - B0, 2 * B0, 2 * B0)
 
-    // Its flame: the teardrop the spark wears everywhere, seen through the silk (a rim and a gold body), about three
-    // hearts tall, standing up the envelope's axis and flickering as it does outside.
+    // The spark itself, the same character it is everywhere else (fx's own heart and flame, in fx's colours), only
+    // seen through the silk: its orange-gold heart at its true size, and over it the three tongues of its teardrop
+    // (rim, body, core) as long as they are outside, standing up the envelope's axis and flickering as they do there.
+    // The bloom on the gores under it says "inside"; the flame is never whiter or smaller than it is in the open.
+    ctx.globalCompositeOperation = 'source-over'
+    drawSpark(p, k, sx, sy, t)
     const f = frame(p, k)
     const hb = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
     const boost = flameBoost(t, hb, h)
     const flick = 0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)
-    const len = Math.max(4.2 * R, R * (2.1 + 0.25 * flick) * h * boost * 1.15)
+    const len = R * (2.1 + 0.25 * flick) * h * boost
     const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick) * Math.sqrt(boost)
-    const lean = (0.05 * Math.sin(t * 7) + flick * 0.6) * R
+    const lean = 0.05 * Math.sin(t * 7) * R + flick * R * 0.6
     ctx.save()
     ctx.translate(sx * k, (sy - R * 0.35) * k)
     ctx.rotate(pose.a)
-    ctx.globalCompositeOperation = 'source-over'
-    const tg = ctx.createLinearGradient(0, 0, 0, -len * k)
-    tg.addColorStop(0, `rgba(255, 200, 110, ${0.6 * fade})`)
-    tg.addColorStop(0.55, `rgba(245, 140, 60, ${0.55 * fade})`)
-    tg.addColorStop(1, `rgba(232, 103, 43, ${0.5 * fade})`)
-    ctx.fillStyle = tg
-    teardrop(ctx, wide * 1.1 * k, len * k, lean * k)
-    ctx.fill()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = `rgba(255, 226, 160, ${0.45 * fade})`
-    teardrop(ctx, wide * 0.6 * k, len * 0.62 * k, lean * 0.7 * k)
-    ctx.fill()
+    ctx.globalAlpha = fade
+    for (const [w, l, n, col, dy] of [
+      [1.15, 1.1, 1, FLAME_RIM, 0],
+      [0.8, 0.82, 0.85, SPARK, 0],
+      [0.42, 0.5, 0.6, FLAME_CORE, R * 0.1],
+    ] as const) {
+      ctx.fillStyle = col
+      silkTongue(ctx, wide * w * k, len * l * k, lean * n * k, dy * k)
+      ctx.fill()
+    }
     ctx.restore()
-
-    // The heart: crisp, white-gold, its true size out to a soft edge at 1.4 times it.
-    ctx.globalCompositeOperation = 'lighter'
-    const r = 1.4 * R * k
-    const hg = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, r)
-    hg.addColorStop(0, `rgba(255, 252, 236, ${0.9 * fade})`)
-    hg.addColorStop(0.62, `rgba(255, 240, 196, ${0.9 * fade})`)
-    hg.addColorStop(0.74, `rgba(255, 214, 140, ${0.55 * fade})`)
-    hg.addColorStop(1, 'rgba(255, 200, 120, 0)')
-    ctx.fillStyle = hg
-    ctx.beginPath()
-    ctx.arc(sx * k, sy * k, r, 0, Math.PI * 2)
-    ctx.fill()
   }
   ctx.restore()
 }
@@ -412,7 +406,7 @@ export function drawEnvelope(
   poly(p, k, rim)
 
   // The light inside: the burner's, from the mouth up. Only in the silk. While the spark rides up inside, the lantern
-  // is let down by 30%, so the spark's heart outshines it.
+  // is let down by 30%, so the spark and the bloom round it stand out of it.
   if (warm > 0.01) {
     ctx.save()
     pathOf(ctx, k, body)
