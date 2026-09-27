@@ -12,6 +12,7 @@ import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
@@ -74,6 +75,16 @@ async function main(): Promise<void> {
   check('the site root only forwards to Machine', modeFromPath('/') === null && modeFromPath('/index.html') === null)
   const door = readFileSync(join(process.cwd(), 'index.html'), 'utf8')
   check('the front door keeps the query on the way to Machine', door.includes("location.replace('/machine/' + location.search + location.hash)"))
+  // The old addresses forward straight to where their mode lives now, in one hop, keeping the query.
+  for (const [old, to] of [['sandbox', '/explorations/'], ['rube', '/machine/']]) {
+    const forward = readFileSync(join(process.cwd(), `${old}/index.html`), 'utf8')
+    check(`/${old}/ forwards to ${to} and keeps the query`, forward.includes(`location.replace('${to}' + location.search + location.hash)`) && forward.includes(`url=${to}"`))
+  }
+  // Every page the build writes answers without its slash too, as a static host would.
+  const vite = readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')
+  const pages = [...vite.matchAll(/\$\{here\}([a-z]+)\/index\.html/g)].map((m) => m[1])
+  const slashless = /\^\\\/\(([a-z|]+)\|shows/.exec(vite)?.[1].split('|') ?? []
+  check('every page the build writes has its slash added', pages.length >= 8 && pages.every((p) => slashless.includes(p)), pages.filter((p) => !slashless.includes(p)).join(', '))
   const machinePage = readFileSync(join(process.cwd(), 'machine/index.html'), 'utf8')
   check('Machine is its own page', machinePage.includes('src="/apps/rube/src/main.ts"'))
   check('the Builder is not a tab', modeFromPath('/builder/') === null)
@@ -154,6 +165,12 @@ async function main(): Promise<void> {
   }
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
+  // A take's own address, and the one the page writes back, name that take again, and are Shows.
+  const unaddressed = shipped.works.flatMap((w) => w.versions).filter((v) => [showPath(shipped.works, v.work, v.take), `/shows/${v.work}/${v.take}/`].some((path) => {
+    const at = showFromPath(path)
+    return modeFromPath(path) !== 'shows' || !at || pickVersion(shipped.works, at.work, at.take) !== v
+  }))
+  check('every take\'s address opens that take', unaddressed.length === 0, unaddressed.map((v) => `${v.work}/${v.take}`).join(', '))
   check('the Shows tab opens Clair de Lune\'s one take', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
   check('Clair de Lune is take-b, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')

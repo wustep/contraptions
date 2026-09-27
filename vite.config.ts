@@ -1,24 +1,25 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Connect, type Plugin } from 'vite'
-import { versionPath, type Version, type Work } from './apps/rube/src/shows/registry'
+import { readShows, type ShowVersion, type Work } from './apps/rube/src/shows/registry'
 import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/shows/share'
 
 /**
- * One site, one build, five modes and three forwarding addresses. Machine
- * lives at `/machine/` (built from apps/rube). The site root `/` only
- * forwards there, keeping the query. Explorations is the generator Machine
- * grew out of (`/explorations/`, built from src); Shows is Machine set to
- * music (`/shows/`, built from apps/rube/src/shows); the Builder is where new
- * pieces and worlds for Machine are made (`/builder/`, built from
- * apps/rube/src/builder); the Playground is where pieces and worlds wait to
- * be let into Machine (`/playground/`, built from apps/rube/src/playground).
- * Theater (`/theater/`) is every show, shuffled, one after another; it is
- * off the mode switch until visited.
- * `/sandbox/` is where Explorations used to live and `/rube/` where Machine
- * did; both only redirect, keeping the seed. One dev server serves all of
- * it, and one `vite build` writes all of it into dist/ with the core the
- * modes share split into common chunks.
+ * One site, one build: six pages and three forwarding addresses.
+ *
+ *   /machine/        Machine (apps/rube)
+ *   /explorations/   the generator Machine grew out of (src)
+ *   /shows/          Machine set to music (apps/rube/src/shows), and a page per show:
+ *                    /shows/<work>/ and /shows/<work>/<take>/ (`showPages`, `share.ts`)
+ *   /theater/        every show, shuffled; off the mode switch until visited (`shell.ts`)
+ *   /playground/     pieces and worlds waiting to be let into Machine (apps/rube/src/playground)
+ *   /builder/        where new pieces and worlds are made (apps/rube/src/builder); not on the switch
+ *
+ * `/` forwards to `/machine/`, `/sandbox/` (where Explorations used to live)
+ * to `/explorations/`, and `/rube/` (where Machine did) to `/machine/`, each
+ * keeping the query. `/shows/?show=<work>&take=<take>` still opens a show.
+ * One dev server serves all of it, and one `vite build` writes all of it
+ * into dist/ with the core the modes share split into common chunks.
  */
 const here = fileURLToPath(new URL('.', import.meta.url))
 
@@ -58,31 +59,27 @@ function trailingSlash(): Plugin {
 /**
  * The Shows as the build finds them, read from the version files' own words: a crawler needs a show's title, line
  * and picture in the page it fetches, before any script runs (`share.ts`). A version file is a few literal lines,
- * so its title, label and `about` are read from the text; the page reads the same files by Vite's glob.
+ * so its title, label and `about` are read from the text, and handed to the same `readShows` the page's glob goes
+ * through, so the build and the page agree on which take is a work's first.
  */
 function readShowFiles(): Work[] {
   const root = `${here}apps/rube/src/shows/versions`
-  const works: Work[] = []
+  const found: Record<string, ShowVersion> = {}
   const quoted = (src: string, key: string): string | undefined => {
     const m = new RegExp(`\\b${key}:\\s*(['"\`])((?:\\\\.|(?!\\1)[\\s\\S])*)\\1`).exec(src)
     return m?.[2].replace(/\\(.)/g, '$1')
   }
-  for (const work of readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort()) {
-    // By the take's name, as the registry sorts them, so a work's own page carries its first take's card.
-    const takes = readdirSync(`${root}/${work}`).filter((f) => f.endsWith('.show.ts')).map((f) => f.slice(0, -'.show.ts'.length)).sort()
-    for (const file of takes.map((t) => `${t}.show.ts`)) {
-      const at = versionPath(`versions/${work}/${file}`)
-      if (!at) continue
+  for (const work of readdirSync(root, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)) {
+    for (const file of readdirSync(`${root}/${work}`).filter((f) => f.endsWith('.show.ts'))) {
       const src = readFileSync(`${root}/${work}/${file}`, 'utf8')
       const title = quoted(src, 'title')
       const label = quoted(src, 'label')
       if (!title || !label) throw new Error(`shows: ${work}/${file} names no title or label that the build can read`)
-      const version: Version = { ...at, title, label, about: quoted(src, 'about'), load: () => Promise.reject(new Error('build only')) }
-      const w = works.find((o) => o.work === work)
-      if (w) w.versions.push(version)
-      else works.push({ work, title, versions: [version] })
+      found[`versions/${work}/${file}`] = { title, label, about: quoted(src, 'about'), load: () => Promise.reject(new Error('build only')) }
     }
   }
+  const { works, problems } = readShows(found)
+  if (problems.length) throw new Error(`shows:\n  ${problems.join('\n  ')}`)
   return works
 }
 
