@@ -3,8 +3,7 @@
 Copyrighted recording, used for a private tech demo only. Nothing here claims any right to it. Attribution is in
 `apps/rube/src/shows/versions/caravan/ATTRIBUTION.txt`.
 
-Open it at `/shows/caravan/` or `/shows/?show=caravan&take=opus55` (add `&music=file` to play the demo file instead
-of the label's YouTube upload). In the picker it is **Caravan**, one take, **Opus 5.5**.
+Open it at `/shows/caravan/` (add `?music=file` to play the demo file instead of the label's YouTube upload). In the picker it is **Caravan**, one take, **Opus 5.5**.
 
 ## What it is
 
@@ -233,7 +232,7 @@ second.
 ## How to run it
 
 ```
-npx vite --port 8931 --strictPort                 # then /shows/?show=caravan&take=opus55
+npx vite --port 8931 --strictPort                 # then /shows/caravan/
 npm run check:shows                               # the Caravan block is apps/rube/checks/caravan.ts
 node dev/shot.mjs --from 323 --to 370 --n 24 --out hush.png   # contact sheets (untracked dev/ tools)
 node dev/film.mjs --from 500 --to 575.4 --out end.webm        # 1x film, reports fps

@@ -4,8 +4,8 @@
 
 Both full takes load in Shows and their openings can be scrubbed forward and backward. The complete arrangements are generated; this checkpoint is a place for opening notes while full-take verification continues.
 
-- [Première Take B, local](http://localhost:8791/shows/?show=premiere-arabesque&take=take-b)
-- [Clair Take A, local](http://localhost:8791/shows/?show=clair-de-lune&take=take-a)
+- [Première Take B, local](http://localhost:8791/shows/premiere-arabesque/)
+- Clair Take A, since taken out of the picker (Clair's one take is now Take B, [local](http://localhost:8791/shows/clair-de-lune/))
 
 Use the Transport slider to review 0:00–0:30. Press O or click Overview to see the current world; press it again to follow the ball. Music and picture remain on the same clock.
 

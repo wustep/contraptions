@@ -3,8 +3,7 @@
 Michael Giacchino's *Married Life*, from Up (2009), as a Rube Goldberg machine: the film's montage of Carl and
 Ellie's life, from the wedding to Carl alone in the house, in the film's order. Directed by Claude Opus 5.5.
 
-In the picker it is **Married Life**, one take, **Opus 5.5**. The page is `/shows/married-life/`, or
-`/shows/?show=married-life&take=opus55`.
+In the picker it is **Married Life**, one take, **Opus 5.5**. The page is `/shows/married-life/`.
 
 ## What it is
 

@@ -452,7 +452,7 @@ function report(score: StockScore, cues: { piece: string; target: number; actual
   lines.push('- The camera opens up while the piano is alone and tightens when the organ is running. Overview is for looking at a whole map; the recording is Zoom.')
   lines.push('- The Arcade score pops are on. The ticket pays what this chase earned.', '')
   lines.push('## How to watch', '')
-  lines.push('`npm run dev`, then `/shows/?show=cornfield-chase&take=tech-demo`. Leave Zoom on. Overview, if you want the route, is the whole map and turns Zoom off. Record at 1080p with music.', '')
+  lines.push('`npm run dev`, then `/shows/cornfield-chase/grok47/`. Leave Zoom on. Overview, if you want the route, is the whole map and turns Zoom off. Record at 1080p with music.', '')
   lines.push('| Section | Start | Camera, before Zoom | What the machines do |')
   lines.push('| --- | ---: | --- | --- |')
   lines.push('| Piano over the field | 0:00 | wide, about 9 cells | long Forest pieces, targets in view before the hit |')

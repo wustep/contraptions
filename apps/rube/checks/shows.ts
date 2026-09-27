@@ -5,13 +5,14 @@
  *
  *   npm run check:shows
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
 import { SPEEDS, speedLabel } from '../../../src/ui/view'
-import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { RENAMED_TAKES, performanceProblems, pickVersion, readShows, shelves, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
+import { showFromPath, showPath } from '../src/shows/share'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
 import { GRID, strictTake, strikes } from '../src/shows/versions/metronome/metronome'
@@ -75,6 +76,16 @@ async function main(): Promise<void> {
   check('the site root only forwards to Machine', modeFromPath('/') === null && modeFromPath('/index.html') === null)
   const door = readFileSync(join(process.cwd(), 'index.html'), 'utf8')
   check('the front door keeps the query on the way to Machine', door.includes("location.replace('/machine/' + location.search + location.hash)"))
+  // The old addresses forward straight to where their mode lives now, in one hop, keeping the query.
+  for (const [old, to] of [['sandbox', '/explorations/'], ['rube', '/machine/']]) {
+    const forward = readFileSync(join(process.cwd(), `${old}/index.html`), 'utf8')
+    check(`/${old}/ forwards to ${to} and keeps the query`, forward.includes(`location.replace('${to}' + location.search + location.hash)`) && forward.includes(`url=${to}"`))
+  }
+  // Every page the build writes answers without its slash too, as a static host would.
+  const vite = readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')
+  const pages = [...vite.matchAll(/\$\{here\}([a-z]+)\/index\.html/g)].map((m) => m[1])
+  const slashless = /\^\\\/\(([a-z|]+)\|shows/.exec(vite)?.[1].split('|') ?? []
+  check('every page the build writes has its slash added', pages.length >= 8 && pages.every((p) => slashless.includes(p)), pages.filter((p) => !slashless.includes(p)).join(', '))
   const machinePage = readFileSync(join(process.cwd(), 'machine/index.html'), 'utf8')
   check('Machine is its own page', machinePage.includes('src="/apps/rube/src/main.ts"'))
   check('the Builder is not a tab', modeFromPath('/builder/') === null)
@@ -155,6 +166,12 @@ async function main(): Promise<void> {
   }
   const shipped = readShows(found)
   check('every version file is a version', shipped.problems.length === 0, shipped.problems.join(' · '))
+  // A take's own address, and the one the page writes back, name that take again, and are Shows.
+  const unaddressed = shipped.works.flatMap((w) => w.versions).filter((v) => [showPath(shipped.works, v.work, v.take), `/shows/${v.work}/${v.take}/`].some((path) => {
+    const at = showFromPath(path)
+    return modeFromPath(path) !== 'shows' || !at || pickVersion(shipped.works, at.work, at.take) !== v
+  }))
+  check('every take\'s address opens that take', unaddressed.length === 0, unaddressed.map((v) => `${v.work}/${v.take}`).join(', '))
   check('the Shows tab opens Clair de Lune\'s one take', pickVersion(shipped.works, null, null)?.work === 'clair-de-lune' && pickVersion(shipped.works, null, null)?.take === 'take-b')
   check('Clair de Lune is take-b, and a missing take falls to it', pickVersion(shipped.works, 'clair-de-lune', null)?.take === 'take-b' && pickVersion(shipped.works, 'clair-de-lune', 'take-a')?.take === 'take-b')
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
@@ -196,11 +213,11 @@ async function main(): Promise<void> {
   check('come-recover is Everything, one take, Opus 5.5, with no note',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
-  const epilogueTake = lalaland.find((v) => v.take === 'opus55-sebs')
+  const epilogueTake = lalaland.find((v) => v.take === 'opus5-5')
   check('la-la-land is Epilogue, two takes, Opus 5.5 then Fable 5.1, with no notes and Opus as default',
-    lalaland.map((v) => v.take).join(',') === 'opus55-sebs,fable51-epilogue' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
-    lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus55-sebs')
-  check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
+    lalaland.map((v) => v.take).join(',') === 'opus5-5,fable5-1' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
+    lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus5-5')
+  check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55,grok47' && pickVersion(shipped.works, 'cornfield-chase', null)?.take === 'opus55')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
   check('Cornfield Chase music-sync notes say these are one-shot tech demos', cornfield.every((v) => /pure tech demo/i.test(v.note ?? '') && /one-shot/i.test(v.note ?? '')))
@@ -209,7 +226,19 @@ async function main(): Promise<void> {
   const liftoffTake = interstellar?.versions[0]
   check('interstellar is Voyage, its own work of one take, labelled the same (no subtitle), with no note',
     !!interstellar && interstellar.title === 'Voyage' && interstellar.versions.length === 1 && liftoffTake?.take === 'opus55' && liftoffTake.label === 'Voyage' && liftoffTake.note === undefined)
-  check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'opus55-music-sync')?.take === 'opus55-music-sync')
+  check('a named take is still that take', pickVersion(shipped.works, 'cornfield-chase', 'grok47')?.take === 'grok47')
+  // A renamed take's old address still opens it, in the page and as a page the build writes (`vite.config.ts`).
+  const renamed = Object.entries(RENAMED_TAKES).flatMap(([work, old]) => Object.entries(old).map(([was, now]) => ({ work, was, now })))
+  const lost = renamed.filter(({ work, was, now }) => {
+    const at = showFromPath(`/shows/${work}/${was}/`)
+    return !at || pickVersion(shipped.works, at.work, at.take)?.take !== now || pickVersion(shipped.works, work, now)?.take !== now || !existsSync(join(process.cwd(), `public/shows/${work}/${now}.png`))
+  })
+  check('a renamed take\'s old address opens the take, and its new name is a shipped take with a card',
+    renamed.length === 4 && lost.length === 0, lost.map((r) => `${r.work}/${r.was}`).join(', '))
+  check('the build writes a renamed take\'s old address as a page', /RENAMED_TAKES\[w\.work\]/.test(readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')))
+  const shelved = shelves(shipped.works).map((s) => `${s.section}: ${s.works.map((w) => w.title).join(', ')}`)
+  check('the picker and Theater shelve the works as Machine, Movies and Ambient',
+    shelved.join(' / ') === 'Machine: Clair de Lune, Cornfield Chase, Première Arabesque / Movies: Caravan, Epilogue, Everything, Logogram, Married Life, Merry-Go-Round, Mountain King, Voyage / Ambient: Gymnopédie', shelved.join(' / '))
   for (const work of shipped.works) {
     for (const version of work.versions) {
       const perf = await version.load()
@@ -248,7 +277,7 @@ async function main(): Promise<void> {
         check('Clair B: the camera settles with the ball inside the Zoom frame', visible)
       }
       if (work.work === 'come-recover' && version.take === 'opus55-all-at-once') checkAllAtOnce(perf, check)
-      if (work.work === 'cornfield-chase' && version.take === 'tech-demo') {
+      if (work.work === 'cornfield-chase' && version.take === 'grok47') {
         check('cornfield: the whole recording, with the demo credit',
           near(perf.duration, 126.984) &&
           (perf.soundtrack?.offset ?? 0) === 0 &&
@@ -259,7 +288,7 @@ async function main(): Promise<void> {
         check('cornfield: the closing frame stays wide enough for the souvenirs', !!endCam && endCam.cells >= 8)
         check('cornfield: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
-      if (work.work === 'la-la-land' && version.take === 'fable51-epilogue') {
+      if (work.work === 'la-la-land' && version.take === 'fable5-1') {
         check('epilogue: the whole recording from zero, credited to Justin Hurwitz and La La Land, ending after the last chord',
           (perf.soundtrack?.offset ?? 0) === 0 && !!perf.soundtrack?.src?.includes('lalaland-epilogue-demo') && near(perf.duration, EPILOGUE_END) &&
           EPILOGUE_END > LAST_CHORDS[LAST_CHORDS.length - 1] + 1 && EPILOGUE_END <= epilogueOnsets.duration &&
@@ -397,7 +426,7 @@ async function main(): Promise<void> {
         void SWING_MID
         void BUILD
       }
-      if (work.work === 'cornfield-chase' && version.take === 'opus55-music-sync') {
+      if (work.work === 'cornfield-chase' && version.take === 'opus55') {
         check('cornfield opus55: the whole recording from zero, with the demo credit',
           near(perf.duration, 126.984) && (perf.soundtrack?.offset ?? 0) === 0 &&
           !!perf.soundtrack?.credit?.includes('Hans Zimmer') && !!perf.soundtrack?.credit?.toLowerCase().includes('demo') &&
@@ -423,7 +452,7 @@ async function main(): Promise<void> {
         check('cornfield opus55: the closing frame holds the photograph and the ticket', !!endCam && endCam.cells >= 7.5)
         check('cornfield opus55: the closing portal does not iris the picture away', perf.cuts?.(perf.duration - 1) === false && perf.cuts?.(30) === true)
       }
-      if (work.work === 'la-la-land' && version.take === 'opus55-sebs') checkSebs(perf, version, check)
+      if (work.work === 'la-la-land' && version.take === 'opus5-5') checkSebs(perf, version, check)
       if (work.work === 'gymnopedie' && version.take === 'opus55') checkGymnopedie(perf, version, check)
       if (work.work === 'mountain-king' && version.take === 'opus55') checkMountainKing(perf, version, check)
       if (work.work === 'caravan' && version.take === 'opus55') checkCaravan(perf, version, check)

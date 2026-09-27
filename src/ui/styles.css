@@ -383,6 +383,18 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 .lb-opt.sel { color: var(--accent); }
 .lb-opt.sel .lb-glyph { color: var(--accent); }
 
+/* A heading over a run of options: small capitals, as a section title. */
+.lb-group + .lb-group { margin-top: 4px; }
+.lb-group-head, .pool-group-head {
+  padding: 6px 8px 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  user-select: none;
+}
+
 /* Palette pill: the theme's paper as the pill, its inks as the dots. */
 .lb-swatch {
   display: inline-flex;
@@ -742,6 +754,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .pool-row input { margin: 0; accent-color: var(--accent); cursor: pointer; }
 .pool-row input:disabled { cursor: default; }
 .pool-row.on { color: var(--accent); }
+.pool-group { display: flex; flex-direction: column; gap: 1px; }
+.pool-group-head { padding: 5px 6px 2px; }
 .pool-row.on::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
 
 /* ---- builder -------------------------------------------------------- */

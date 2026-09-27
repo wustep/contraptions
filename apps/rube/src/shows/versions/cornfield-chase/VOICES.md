@@ -2,7 +2,7 @@
 
 Private tech demo. The recording is Hans Zimmer's *Cornfield Chase* (Interstellar, 2014), used only here. It is not cleared for a public Shows release. Credit stays in the panel.
 
-Open `/shows/?show=cornfield-chase&take=voices`. Zoom is the frame this take was composed for: both lanes, and the targets ahead of the ball, sit inside it.
+It is not in the picker (`voices.ts` has no `.show.ts`), so no address opens it. Zoom is the frame this take was composed for: both lanes, and the targets ahead of the ball, sit inside it.
 
 ## The clip
 

@@ -5,7 +5,7 @@ Studio Ghibli, 2004), played by a Rube Goldberg machine. One ball, one path, 376
 music. In the picker it is **Merry-Go-Round**, one take, **Opus 5.5**. The recording is copyrighted and used as a
 demo only (`ATTRIBUTION.txt`). Every piece is new.
 
-Open it at `/shows/?show=merry-go-round&take=opus55`.
+Open it at `/shows/merry-go-round/`.
 
 ## What it is
 
@@ -177,8 +177,8 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
 
 ## How to run and look
 
-- The dev server: `npx vite --port 8951 --strictPort`, then `/shows/?show=merry-go-round&take=opus55`
-  (`&music=file` plays the local file instead of YouTube).
+- The dev server: `npx vite --port 8951 --strictPort`, then `/shows/merry-go-round/`
+  (`?music=file` plays the local file instead of YouTube).
 - `npm run check:shows` for the checks; `npm run build` runs every check.
 - The probes and the camera tools the show was made with (`dev/shot.mjs`, `dev/film.mjs`, `dev/jerk.ts`,
   `dev/cam.ts`, `dev/pace.ts`) are untracked; they are the ones Liftoff and Epilogue left.
