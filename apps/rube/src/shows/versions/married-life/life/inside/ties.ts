@@ -848,9 +848,12 @@ function drawCrestLight(p: p5, k: number, a: number): void {
     ctx.closePath()
     ctx.fill()
   }
-  // Where it lands: a warm glow on the wall low behind them, and the floor lit.
+  // Where it lands: a warm glow on the wall low behind them (only the wall: the floor's cut edge stays dark).
   const mid = (CREST.from + CREST.to) / 2
   const r = 1.1 * k
+  ctx.beginPath()
+  ctx.rect((mid - 2) * k, (FLOOR - 2) * k, 4 * k, 2 * k)
+  ctx.clip()
   ctx.translate(mid * k, (FLOOR - 0.25) * k)
   ctx.scale(1.35, 0.5)
   const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
