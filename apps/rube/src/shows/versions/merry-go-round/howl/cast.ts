@@ -336,6 +336,21 @@ export interface WingsOpts {
   /** The way he flies, radians (0 right). */
   heading?: number
   light?: number
+  /**
+   * Optional colours (each part that leaves them out keeps the bird as it was): the blades' body and their lighter
+   * alternate, and the outline (the ink when left out). The war draws him near black, and draws the same wings a
+   * hair lower in the fire's colour first, so the fire below catches his undersides.
+   */
+  body?: string
+  edge?: string
+  line?: string
+  /**
+   * Optional: draw him as a whole bird, not a fan of blades round a point (the war sets it; the field and the plank
+   * leave it out and keep their wings). A dark teardrop body along his heading, from a short wedge of tail to a head with
+   * a hooked beak (his ball at the chest); each wing a broad arm rooted on a shoulder line, a straight leading edge and
+   * the long feathers only at the hand; the beat raises and lowers the whole arm.
+   */
+  torso?: boolean
 }
 
 /**
@@ -348,16 +363,21 @@ export function drawWings(p: p5, k: number, weight: number, ink: string, o: Wing
   if (s <= 0.01) return
   const light = o.light ?? 1
   const beat = o.flap === undefined ? 0.15 : Math.sin(o.flap)
-  const edge = mixHex(HOWL_BIRD, '#6F6A86', 0.5)
+  const body = o.body ?? HOWL_BIRD
+  const edge = o.edge ?? mixHex(HOWL_BIRD, '#6F6A86', 0.5)
+  if (o.torso) {
+    drawBird(p, k, weight, ink, o, s, beat, body, edge, light)
+    return
+  }
   p.push()
   p.rotate(o.heading ?? 0)
-  p.stroke(alpha(p, ink, 0.9 * light))
+  p.stroke(alpha(p, o.line ?? ink, 0.9 * light))
   p.strokeWeight(weight * 0.55)
   // The tail: five feathers fanned behind.
   for (let i = -2; i <= 2; i++) {
     p.push()
     p.rotate(Math.PI + i * 0.16 * s)
-    p.fill(alpha(p, i % 2 ? edge : HOWL_BIRD, light))
+    p.fill(alpha(p, i % 2 ? edge : body, light))
     p.beginShape()
     p.vertex(0.06 * k, -0.03 * k)
     p.quadraticVertex(0.3 * k * s, -0.05 * k, 0.46 * k * s, 0)
@@ -374,7 +394,7 @@ export function drawWings(p: p5, k: number, weight: number, ink: string, o: Wing
       const len = (0.34 + 0.07 * i - 0.004 * i * i) * s
       p.push()
       p.rotate(-0.18 + i * 0.1)
-      p.fill(alpha(p, i % 2 ? HOWL_BIRD : edge, light))
+      p.fill(alpha(p, i % 2 ? body : edge, light))
       p.beginShape()
       p.vertex(0.05 * k, -0.035 * k)
       p.quadraticVertex(len * 0.6 * k, -0.07 * k, len * k, 0)
@@ -384,6 +404,90 @@ export function drawWings(p: p5, k: number, weight: number, ink: string, o: Wing
     }
     p.pop()
   }
+  p.pop()
+}
+
+/**
+ * `drawWings` with `torso`: the whole bird, seen from below as he flies along `heading` (forward +x, the wings out
+ * along ±y). Back to front: the tail's wedge, each wing's primaries then its arm over their roots, the body over the
+ * wings' roots; the stage's ball sits on the chest.
+ */
+function drawBird(p: p5, k: number, weight: number, ink: string, o: WingsOpts, s: number, beat: number, body: string, edge: string, light: number): void {
+  const B = (x0: number, y0: number, x1: number, y1: number, x2: number, y2: number) =>
+    p.bezierVertex(x0 * k, y0 * k, x1 * k, y1 * k, x2 * k, y2 * k)
+  p.push()
+  p.rotate(o.heading ?? 0)
+  p.stroke(alpha(p, o.line ?? ink, 0.9 * light))
+  p.strokeWeight(weight * 0.55)
+  p.strokeJoin(p.ROUND)
+  // The tail: a short wedge, narrower than a wing, ending in three shallow points.
+  const tx = -0.08 - (0.1 + 0.12 * s)
+  p.fill(alpha(p, edge, light))
+  p.beginShape()
+  for (const [x, y] of [[-0.06, -0.045], [tx, -0.095], [tx + 0.035, -0.045], [tx - 0.012, 0], [tx + 0.035, 0.045], [tx, 0.095], [-0.06, 0.045]]) {
+    p.vertex(x * k, y * k)
+  }
+  p.endShape(p.CLOSE)
+  // The wings. Each is built along its own span (u, out from the shoulder) and chord (v, forward); the beat raises the
+  // whole arm, which from below sweeps it back and shortens it, and brings it down forward and long.
+  const span = s * (1 - 0.18 * Math.abs(beat))
+  const sweep = 0.1 - beat * 0.42 * s
+  for (const side of [-1, 1]) {
+    p.push()
+    p.scale(1, side)
+    p.translate(0.02 * k, -0.075 * k)
+    p.rotate(-Math.PI / 2 + sweep)
+    const P = (u: number, v: number): [number, number] => [u * span * k, v * k]
+    // The hand's long feathers, fanned from the wrist, the foremost reaching furthest.
+    const HAND: [number, number, number, number][] = [
+      // root u, root v, angle (0 straight out, + forward), length
+      [0.3, -0.035, -0.62, 0.2],
+      [0.31, -0.01, -0.42, 0.24],
+      [0.32, 0.015, -0.24, 0.27],
+      [0.325, 0.04, -0.07, 0.29],
+      [0.33, 0.06, 0.09, 0.28],
+    ]
+    HAND.forEach(([ru, rv, a, len], i) => {
+      const du = Math.cos(a), dv = Math.sin(a)
+      const nu = -dv, nv = du
+      const w = 0.028
+      const at = (f: number, n: number) => P(ru + du * len * f + nu * n, rv + dv * len * f + nv * n)
+      p.fill(alpha(p, i % 2 ? edge : body, light))
+      p.beginShape()
+      p.vertex(...at(0, w))
+      p.bezierVertex(...at(0.45, w * 1.25), ...at(0.8, w * 0.9), ...at(1, 0))
+      p.bezierVertex(...at(0.8, -w * 0.8), ...at(0.45, -w * 1.1), ...at(0, -w))
+      p.endShape(p.CLOSE)
+    })
+    // The arm: a straight leading edge out to the wrist, the trailing edge a row of soft secondaries back to the body.
+    p.fill(alpha(p, body, light))
+    p.beginShape()
+    p.vertex(...P(0, 0.05))
+    p.vertex(...P(0.33, 0.07))
+    p.bezierVertex(...P(0.355, 0.066), ...P(0.365, 0.04), ...P(0.35, 0.0))
+    const TRAIL: [number, number][] = [[0.35, 0.0], [0.28, -0.1], [0.2, -0.13], [0.12, -0.135], [0.04, -0.12], [-0.01, -0.07]]
+    for (let i = 1; i < TRAIL.length; i++) {
+      const [u0, v0] = TRAIL[i - 1]
+      const [u1, v1] = TRAIL[i]
+      // Each feather's end a little bow out behind.
+      p.bezierVertex(...P(u0 - 0.01, v0 - 0.035), ...P(u1 + 0.02, v1 - 0.03), ...P(u1, v1))
+    }
+    p.endShape(p.CLOSE)
+    p.pop()
+  }
+  // The body: a teardrop from the tail's root to the chest, a neck, and the head with its hooked beak.
+  p.fill(alpha(p, body, light))
+  p.beginShape()
+  p.vertex(-0.14 * k, 0)
+  B(-0.1, -0.06, -0.04, -0.095, 0.03, -0.09)
+  B(0.1, -0.085, 0.13, -0.05, 0.175, -0.052)
+  B(0.215, -0.078, 0.275, -0.062, 0.29, -0.02)
+  B(0.315, -0.015, 0.345, -0.004, 0.352, 0.02)
+  B(0.335, 0.014, 0.31, 0.02, 0.29, 0.024)
+  B(0.275, 0.062, 0.215, 0.078, 0.175, 0.052)
+  B(0.13, 0.05, 0.1, 0.085, 0.03, 0.09)
+  B(-0.04, 0.095, -0.1, 0.06, -0.14, 0)
+  p.endShape(p.CLOSE)
   p.pop()
 }
 

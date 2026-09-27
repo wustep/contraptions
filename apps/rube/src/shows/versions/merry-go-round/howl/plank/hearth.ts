@@ -1,5 +1,5 @@
 import type p5 from 'p5'
-import { laneAt, mixHex, type Lane, type Pt } from '../../../../../parts'
+import { laneAt, mixHex, R as BALL_R, type Lane, type Pt } from '../../../../../parts'
 import { director, type Shot } from '../camera'
 import { DOOR, drawCalcifer, drawDoor } from '../cast'
 import { ROOM_AT, roomTone } from '../castle/room'
@@ -42,6 +42,9 @@ const BUCK_DOWN = 240.268
 export const HEARTH_LIFT = 243.008
 const LIFT = HEARTH_LIFT
 const T1 = 243.635
+
+/** How close the camera is on the two of them for the breath (cells tall), and so on the climax's cut. */
+export const HEARTH_CELLS = 2.4
 
 /** Room x to the part's frame. */
 const fx = (x: number) => x - HEARTH_AT[0]
@@ -222,11 +225,14 @@ function cracks(p: p5, k: number, t: number, open: number) {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.lineCap = 'butt'
-  // One gap: a soft wide glow and a hot thin core, each brighter and dimmer along it where the boards are warped.
+  // One gap: a soft glow round it in widening faint layers and a hot thin core, each brighter and dimmer along it where
+  // the boards are warped (light through a crack, never a ruled line).
   const gap = (x0: number, y0: number, x1: number, y1: number, seed: number, strength: number) => {
     for (const [wid, a, rgb] of [
-      [0.075, 0.28, '240, 138, 58'],
-      [0.022, 1, '255, 214, 140'],
+      [0.2, 0.07, '240, 138, 58'],
+      [0.12, 0.12, '240, 138, 58'],
+      [0.06, 0.2, '246, 160, 80'],
+      [0.018, 0.9, '255, 214, 140'],
     ] as const) {
       const g = ctx.createLinearGradient(x0 * k, y0 * k, x1 * k, y1 * k)
       for (let i = 0; i <= 6; i++) {
@@ -434,6 +440,135 @@ function street(p: p5, k: number, t: number, b: { x0: number; y0: number; x1: nu
   }
 }
 
+/* ------------------------------------------------------------------ lit by him */
+
+/**
+ * The room in the bombing is lit by Calcifer alone: a night veil over it with a warm hole round him, clear within
+ * about a cell of him and the full night by about three, so the grate, the mantel over it and the boards before it
+ * are in his light and the door, the lantern and the far wall go into the dark. The flashes through the door's cracks
+ * (and, before the slam, the burning street through the open door) are the only other light. `holes` are the lit
+ * places ([x, y, clear radius, gone radius, how much], cells in the current transform); `box` is what the veil covers.
+ * Drawn on a canvas of its own and laid over, so the holes cut the veil and never the room.
+ */
+let veilCanvas: HTMLCanvasElement | null = null
+export function fireVeil(p: p5, k: number, a: number, holes: [number, number, number, number, number][], box: { x0: number; y0: number; x1: number; y1: number }): void {
+  if (a < 0.005 || typeof document === 'undefined') return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const { width, height } = ctx.canvas
+  if (!veilCanvas) veilCanvas = document.createElement('canvas')
+  if (veilCanvas.width !== width || veilCanvas.height !== height) {
+    veilCanvas.width = width
+    veilCanvas.height = height
+  }
+  const v = veilCanvas.getContext('2d')
+  if (!v) return
+  v.setTransform(1, 0, 0, 1, 0, 0)
+  v.globalCompositeOperation = 'source-over'
+  v.clearRect(0, 0, width, height)
+  v.setTransform(ctx.getTransform())
+  v.fillStyle = `rgba(${NIGHT_RGB}, ${a.toFixed(4)})`
+  v.fillRect(box.x0 * k, box.y0 * k, (box.x1 - box.x0) * k, (box.y1 - box.y0) * k)
+  v.globalCompositeOperation = 'destination-out'
+  for (const [x, y, r0, r1, h] of holes) {
+    if (h < 0.005) continue
+    const g = v.createRadialGradient(x * k, y * k, 0, x * k, y * k, r1 * k)
+    const c = Math.min(0.99, r0 / r1)
+    g.addColorStop(0, `rgba(0, 0, 0, ${h})`)
+    g.addColorStop(c, `rgba(0, 0, 0, ${h})`)
+    g.addColorStop(c + (1 - c) * 0.35, `rgba(0, 0, 0, ${0.4 * h})`)
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    v.fillStyle = g
+    v.fillRect((x - r1) * k, (y - r1) * k, 2 * r1 * k, 2 * r1 * k)
+  }
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.drawImage(veilCanvas, 0, 0)
+  ctx.restore()
+}
+const NIGHT_RGB = (() => {
+  const h = ROOM.night.replace('#', '')
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)).join(', ')
+})()
+/** His light on what is nearest him: a low warm wash, soft all the way out (never a disc). */
+export function warmth(p: p5, k: number, at: Pt, r: number, a = 1): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const [x, y] = [at[0], at[1] - 0.2]
+  const R = r * 2.2
+  ctx.save()
+  ctx.globalCompositeOperation = 'soft-light'
+  const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, R * k)
+  g.addColorStop(0, `rgba(255, 150, 70, ${(0.55 * a).toFixed(3)})`)
+  g.addColorStop(0.5, `rgba(255, 140, 60, ${(0.25 * a).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(255, 140, 60, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect((x - R) * k, (y - R) * k, 2 * R * k, 2 * R * k)
+  ctx.restore()
+}
+/**
+ * Her side toward him, lit by him as she comes into his light: a warm crescent on her ball's edge that faces him,
+ * stronger the nearer she is. Clipped to her ball.
+ */
+function fireSide(p: p5, k: number, her: Pt, him: Pt, r: number): void {
+  const d = Math.hypot(him[0] - her[0], him[1] - her[1])
+  const a = 0.5 * (1 - smooth(d, r * 0.9, r * 3.2))
+  if (a < 0.01) return
+  const ux = (him[0] - her[0]) / Math.max(0.01, d)
+  const uy = (him[1] - her[1]) / Math.max(0.01, d)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const rr = BALL_R * 0.97
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(her[0] * k, her[1] * k, rr * k, 0, Math.PI * 2)
+  ctx.clip()
+  ctx.globalCompositeOperation = 'screen'
+  const [gx, gy] = [her[0] + ux * rr * 1.25, her[1] + uy * rr * 1.25]
+  const g = ctx.createRadialGradient(gx * k, gy * k, 0, gx * k, gy * k, rr * 1.5 * k)
+  g.addColorStop(0, `rgba(255, 160, 80, ${a.toFixed(3)})`)
+  g.addColorStop(0.6, `rgba(255, 150, 70, ${(0.45 * a).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(255, 150, 70, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect((her[0] - rr) * k, (her[1] - rr) * k, 2 * rr * k, 2 * rr * k)
+  ctx.restore()
+}
+/** How dark the room is away from him (the veil's alpha). */
+export const HEARTH_DARK = 0.8
+
+/** How hard he is cowering at `t` (1 on a hit, dying away). */
+function cower(t: number): number {
+  let v = 0
+  for (const h of HIT) {
+    const u = t - h
+    if (u >= 0) v = Math.max(v, Math.exp(-u / 0.45))
+  }
+  return v
+}
+/** Her lane, as the part builds it. */
+const LANE: Lane = { segs: route(ways()), fire: 0 }
+/**
+ * Where Calcifer is at `t` (room cells: his base's middle), how big, and how far his light reaches (the hole's clear
+ * radius): breathing with his flame, shrinking as he cowers on each hit, and opening up as she takes him. The part
+ * draws him here, and `plank-collapse.ts` lights the room it holds on the climax's cut from here.
+ */
+export function hearthGlow(t: number): { at: Pt; size: number; lifted: number; r: number } {
+  const at = laneAt(LANE, t - T0)
+  const her: Pt = [at.x + HEARTH_AT[0], at.y]
+  const flinch = cower(t)
+  const lifted = smooth(t, LIFT - 0.02, LIFT + 0.14)
+  const [lx, ly] = ROOM_AT.log
+  const heldX = her[0] + CALCIFER_HELD.at[0]
+  const heldY = her[1] + CALCIFER_HELD.at[1]
+  const since = t - LIFT
+  const startle = since < 0 ? 0 : (1 - Math.exp(-since / 0.05)) * Math.exp(-since / 0.18)
+  const grow = smooth(t, LIFT, SETTLED)
+  const size = ((0.45 - 0.08 * flinch) * (1 - grow) + CALCIFER_HELD.size * grow) * (1 + 0.08 * startle)
+  const bounce = hop(t - JOLT, 0.09) * (1 - lifted)
+  const cx = lx + (heldX - lx) * lifted
+  const cy = ly + (heldY - ly) * lifted - bounce
+  const breathe = 1 + 0.06 * Math.sin(t * 7.3) + 0.04 * Math.sin(t * 12.1 + 1)
+  const r = (0.95 * breathe * (1 - 0.3 * flinch * (1 - lifted)) + 0.25 * startle) * (size / 0.45)
+  return { at: [cx, cy], size, lifted, r }
+}
+
 /* ------------------------------------------------------------------ the part */
 
 interface HearthState {
@@ -475,47 +610,65 @@ export const hearth = part<HearthState>(
         woodDark: mixHex(ROOM.woodDark, ROOM.night, 0.35),
         view: (q, b) => street(q, k, t, b),
       })
-      cracks(p, k, t, open)
       p.pop()
-      // The fire's light from the open door on the boards, gone when it shuts.
+      // The fire's light from the open door on the boards, gone when it shuts: a soft pool thrown in across the floor
+      // from the sill, never a hard-edged wedge. (Its raw gradient inside save and restore: p5's fill cache stays true.)
       if (open > 0.02) {
         const dx = ROOM_AT.door[0]
         const g = ROOM_AT.ground
-        p.noStroke()
-        p.fill(alpha(p, TOWN.fire, 0.22 * open))
-        p.quad((dx - 0.47) * k, g * k, (dx + 0.47) * k, g * k, (dx + 1.6) * k, (g + 0.6) * k, (dx - 0.2) * k, (g + 0.6) * k)
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const n = parseInt(TOWN.fire.slice(1, 7), 16)
+        const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+        const a = 0.3 * Math.sqrt(open)
+        const r = (0.8 + 0.45 * open) * k
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect((dx - 3) * k, g * k, 6 * k, 1.5 * k)
+        ctx.clip()
+        ctx.translate((dx + 0.5) * k, (g + 0.2) * k)
+        ctx.scale(1, 0.34)
+        const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+        pool.addColorStop(0, `rgba(${rgb}, ${a})`)
+        pool.addColorStop(0.4, `rgba(${rgb}, ${a * 0.5})`)
+        pool.addColorStop(1, `rgba(${rgb}, 0)`)
+        ctx.fillStyle = pool
+        ctx.fillRect(-r, -r, 2 * r, 2 * r)
+        ctx.restore()
       }
 
       lantern(p, k, W, ink, t)
       mantel(p, k, W, ink, t)
+      // Dust from the beams (under his light: it shows where he lights it, and goes into the dark away from him).
+      // (From the beams: on a phone held upright the frame's top is far over them, in the dark over the set.)
+      dust(p, k, t, ROOM_AT.ceil - 0.2)
+
+      // The room lit by him alone: the night over it, his light a warm hole round him, and the street's fire through
+      // the door while it stands open.
+      const glowNow = hearthGlow(t)
+      const [dcx, dcy] = ROOM_AT.door
+      fireVeil(p, k, HEARTH_DARK, [
+        [glowNow.at[0], glowNow.at[1] - 0.25, glowNow.r, glowNow.r * 2.6, 1],
+        [dcx, dcy - DOOR.h / 2, 0.55, 2.2, 0.85 * smooth(open, 0.02, 0.4)],
+      ], { x0: f.x0 - 1, y0: f.y0 - 1, x1: f.x1 + 1, y1: f.y1 + 1 })
+      // A warm breath of his light on what is nearest him (the grate's mouth, the boards before it, the mantel's
+      // underside), so the hole is firelight, not only less night.
+      warmth(p, k, glowNow.at, glowNow.r)
+      // The war through the shut door's cracks, over the dark.
+      p.push()
+      p.translate(ROOM_AT.door[0] * k, ROOM_AT.door[1] * k)
+      cracks(p, k, t, open)
+      p.pop()
 
       // Calcifer: cowering small in the grate, flinching at every hit and looking to her as she comes. In the still
       // of the breath he sinks, spent, his eyes half shut on his log, until her touch: on the note his eyes fly open
       // onto her, his mouth drops open and he flares, and she draws him out, carried in her hands (`CALCIFER_HELD`).
       const at = laneAt(s.lane, t - T0)
       const her: Pt = [at.x + HEARTH_AT[0], at.y]
-      let flinch = 0
-      for (const h of HIT) {
-        const u = t - h
-        if (u >= 0) flinch = Math.max(flinch, Math.exp(-u / 0.45))
-      }
-      // Her ball is at the lip against his belly on the note, so his base is all but in her hands already: the lift
-      // takes him the last few hundredths up into them, and from there on he goes wherever she does.
-      const lifted = smooth(t, LIFT - 0.02, LIFT + 0.14)
-      const [lx, ly] = ROOM_AT.log
-      const heldX = her[0] + CALCIFER_HELD.at[0]
-      const heldY = her[1] + CALCIFER_HELD.at[1]
+      const flinch = cower(t)
+      const { size, lifted } = glowNow
+      const [cx, cy] = glowNow.at
+      const [lx] = ROOM_AT.log
       const near = 1 - smooth(Math.abs(lx - her[0]), 0.6, 3.5)
-      // He grows into her hands as she draws him out (his grate size to his held size by the time she is at rest),
-      // with a small flare of surprise at the touch that dies away before the cut.
-      const since = t - LIFT
-      const startle = since < 0 ? 0 : (1 - Math.exp(-since / 0.05)) * Math.exp(-since / 0.18)
-      const grow = smooth(t, LIFT, SETTLED)
-      const size = ((0.45 - 0.08 * flinch) * (1 - grow) + CALCIFER_HELD.size * grow) * (1 + 0.08 * startle)
-      // The buck throws him up off his log too.
-      const bounce = hop(t - JOLT, 0.09) * (1 - lifted)
-      const cx = lx + (heldX - lx) * lifted
-      const cy = ly + (heldY - ly) * lifted - bounce
       // His look, onto her: from his eyes toward her middle, as far as the eye allows.
       const eyeY = cy - 0.36 * size
       const dx = her[0] - cx
@@ -542,10 +695,19 @@ export const hearth = part<HearthState>(
       })
       p.pop()
 
-      // Dust from the beams, and the bombs' light, over everything in the room.
-      // (From the beams: on a phone held upright the frame's top is far over them, in the dark over the set.)
-      dust(p, k, t, ROOM_AT.ceil - 0.2)
+      // The bombs' light, over everything in the room.
       flash(p, k, t, f)
+      p.pop()
+    },
+    over: (p, s, c) => {
+      const t = s.begin + c.t
+      if (t < T0 || t > T1 + 0.05) return
+      // Her fire side: as she comes toward him she walks into his light, warm on the side of her that faces him.
+      const at = laneAt(s.lane, t - T0)
+      const g = hearthGlow(t)
+      p.push()
+      p.translate(-HEARTH_AT[0] * c.k, -HEARTH_AT[1] * c.k)
+      fireSide(p, c.k, [at.x + HEARTH_AT[0], at.y], g.at, g.r)
       p.pop()
     },
   },
@@ -560,23 +722,28 @@ export const hearth = part<HearthState>(
     }
   },
   (slot, built) => {
-    // Two moves across the room with her, from the doorway's framing to her and him at the hearth. Through the first
-    // bombs it drifts a little way in and comes to rest just as the floor bucks; the buck knocks the whole room in
-    // the frame, sharp, and rings down in about 0.6 s; then, the room settling, it pushes on in to the hearth and
-    // comes to rest there as the breath begins (242.4), so her reach into the grate is the only move in the frame.
+    // Through the first bombs a drift in from the doorway's framing; from the slam the frame leaves the door and
+    // closes on the two of them, centred between her and the grate as she crosses to him (3.4 cells by the floor's
+    // buck, 2.8 by the last bomb, 2.4 as the breath begins), so the grate's mouth and his face fill its right half and
+    // she comes in from the left: her reach into the grate on the breath's note is a close two-shot. The buck knocks
+    // the whole room in the frame, sharp, and rings down in about 0.6 s; the camera is at rest from the breath (242.4),
+    // so her reach is the only move in the frame.
     const x = (t: number) => laneAt(built.lane, Math.min(slot.end, t) - slot.begin).x + HEARTH_AT[0]
     const from = x(slot.begin) + 0.9
     const rest = x(slot.end)
     const STILL = 242.4
     const along = (t: number) => from + (rest - from) * (0.3 * smooth(t, slot.begin, JOLT) + 0.7 * smooth(t, JOLT + 0.4, STILL))
+    // Between her and him: from the slam on, the frame's middle is half-way from her to his log.
+    const between = (t: number) => (x(Math.min(t, STILL)) + ROOM_AT.log[0]) / 2
+    const across = (t: number) => along(t) + (between(t) - along(t)) * smooth(t, SLAM - 0.2, JOLT - 0.3)
     // The height and the size: eased through these by the camera's own curve.
     const coarse: [number, number, number][] = [
       [237.6, -0.72, 4.0],
-      [JOLT, -0.7, 3.86],
-      [241.2, -0.64, 3.7],
-      // Low enough that the door's dial is wholly out of the top of the frame, never half on its edge.
-      [STILL, -0.3, 3.4],
-      [slot.end, -0.3, 3.4],
+      [SLAM, -0.68, 3.9],
+      [JOLT, -0.52, 3.4],
+      [241.2, -0.47, 2.8],
+      [STILL, -0.44, HEARTH_CELLS],
+      [slot.end, -0.44, HEARTH_CELLS],
     ]
     const base = director(() => [0, 0], coarse.map(([t, hy, cells]): Shot => ({ t, cells, hold: [0, hy], w: 1 })), slot.end + 1)
     // The knock: the frame thrown down and aside at once (the room jumping up in it) and rung down, each swing a
@@ -590,11 +757,11 @@ export const hearth = part<HearthState>(
       [0.48, -0.003, 0.003, 1],
       [0.62, 0, 0, 1],
     ]
-    const times = [237.6, 238.3, 239.0, 239.5, ...knock.map(([u]) => JOLT + u), 241.0, 241.5, 241.95, STILL, 243.0, slot.end]
+    const times = [237.6, 238.3, SLAM, 239.0, 239.5, ...knock.map(([u]) => JOLT + u), 240.8, 241.2, 241.6, 241.95, STILL, 243.0, slot.end]
     return times.map((t): PartShot => {
       const b = base(t)
       const [, kx, ky, kc] = knock.find(([u]) => Math.abs(JOLT + u - t) < 1e-9) ?? [0, 0, 0, 1]
-      return { t, cells: b.cells * kc, hold: [fx(along(t)) + kx, b.y + ky], w: 1 }
+      return { t, cells: b.cells * kc, hold: [fx(across(t)) + kx, b.y + ky], w: 1 }
     })
   },
 )

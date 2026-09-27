@@ -65,6 +65,16 @@ export class CastleShow extends Show {
   private readonly worlds: Universe[]
   /** The camera's cuts inside a place (`Shot.cut`), in show seconds: the score fills it; the checks read it. */
   cameraCuts: number[] = []
+  /** If a trail is ever drawn, one streak, never four discs. */
+  override readonly trail = 'smear' as const
+  /**
+   * No trail behind anyone, ever. The camera rides with her almost the whole film (the castle's porch, the deck, the
+   * air, the tub), and a trail samples her past places in the world: it hung a string of fading discs off her that
+   * rose off her as the hull dropped and trailed her on the running deck, a second ball on the hero.
+   */
+  override trailOff(): boolean {
+    return true
+  }
 
   constructor(
     readonly legs: Leg[],

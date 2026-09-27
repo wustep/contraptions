@@ -8,7 +8,7 @@ import { COLLAPSE_HITS, drawCollapse } from './plank-collapse'
 import { drawBack, drawGround, STONES } from './plank-land'
 import {
   BUCKLE, BX0, c, calciferAt, deck, DECK, DOWN, drive, FOOTFALLS, FREE, GLANCE, GO, ground, HEART, HOWL_IN, HOWL_LAND,
-  howlAt, howlU, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, phaseOfBar, PUT, RAISE, ring, sophieAt, sophieU,
+  HOVER_AT, howlAt, howlU, IMPACT, LAND, legAt, LEGS, LIFT_OUT, onDeck, phaseOfBar, PUT, RAISE, ring, sophieAt, sophieU,
   STIR, T0, T1, turnipAt, wingsAt, YG, type Deck,
 } from './plank-rig'
 
@@ -118,7 +118,28 @@ function strain(t: number): number {
  * at its end). Before FREE and after the swell, the rig's pose exactly.
  */
 const EMERGE = 0.3
-function freed(t: number, cal: ReturnType<typeof calciferAt>): ReturnType<typeof calciferAt> & { light: number } {
+/**
+ * The cadenza's star turns low over the two of them, over the gap between them (1.75 cells over their middles, the
+ * top of his turn), not up at the crag's summit. The rig's hover (`HOVER_AT`, up and right, where the finale's dive
+ * starts from) is moved here by an offset over the whole of his coming down, and handed back after the cadenza's last
+ * note: from 291.95 to the tutti's downbeat (292.734) he lifts up and right into the rig's place, eased from rest to
+ * rest, gathering for the dive over their heads into the grate. `PLANK_END.star` stays the rig's.
+ */
+const OVER: Pt = (() => {
+  const s = sophieAt(T1)
+  const h = howlAt(T1)
+  const hv = HOVER_AT()
+  return [(s[0] + h[0]) / 2 + 0.06 - hv[0], (s[1] + h[1]) / 2 - 1.75 - hv[1]]
+})()
+const OVER_BACK = 291.95
+function overThem(t: number, at: Pt): Pt {
+  if (t < 280 || t > T1) return at
+  const w = 1 - smooth(t, OVER_BACK, T1)
+  return [at[0] + OVER[0] * w, at[1] + OVER[1] * w]
+}
+
+function freed(t: number, cal0: ReturnType<typeof calciferAt>): ReturnType<typeof calciferAt> & { light: number } {
+  const cal = { ...cal0, at: overThem(t, cal0.at) }
   if (t < FREE || t >= FREE + EMERGE || !cal.shown) return { ...cal, light: 1 }
   const e = smooth(t, FREE, FREE + EMERGE)
   const [hx, hy] = howlX(t)
@@ -357,26 +378,39 @@ function drawBrink(p: p5, k: number, W: number, ink: string, f: View) {
     const y = brinkY(x) + 1.1 + 0.9 * hash(i, 92)
     puff(p, k, x, y, 0.9 + 0.6 * hash(i, 93), WASTES.mist, 0.3, 0.35)
   }
-  // The rock of the rim: a ragged band, its face in shade.
-  p.stroke(ink)
-  p.strokeWeight(W)
+  // The rock of the rim: a ragged band, its face in shade. Where the gorge swings away and the brink goes down into
+  // the mist, the band thins to nothing and its ink fades with it (never an ink line running down into the mist).
+  const fade = (x: number) => 1 - smooth(brinkDrop(x), 1.5, 3.5)
+  const faceT = (x: number) => face(x) * fade(x)
+  p.noStroke()
   p.fill(BRINK_ROCK)
   p.beginShape()
   xs.forEach((x, i) => p.vertex(x * k, ys[i] * k))
-  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + face(xs[i])) * k)
+  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + faceT(xs[i])) * k)
   p.endShape(p.CLOSE)
-  p.noStroke()
   p.fill(alpha(p, WASTES.rockDark, 0.7))
   p.beginShape()
-  xs.forEach((x, i) => p.vertex(x * k, (ys[i] + face(x) * 0.55) * k))
-  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + face(xs[i])) * k)
+  xs.forEach((x, i) => p.vertex(x * k, (ys[i] + faceT(x) * 0.55) * k))
+  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + faceT(xs[i])) * k)
   p.endShape(p.CLOSE)
+  // Its outline, top and foot, fading where the band thins.
+  p.noFill()
+  p.strokeWeight(W)
+  p.strokeCap(p.SQUARE)
+  for (let i = 1; i < xs.length; i++) {
+    const a = Math.min(fade(xs[i - 1]), fade(xs[i]))
+    if (a < 0.02) continue
+    p.stroke(alpha(p, ink, a))
+    p.line(xs[i - 1] * k, ys[i - 1] * k, xs[i] * k, ys[i] * k)
+    p.line(xs[i - 1] * k, (ys[i - 1] + faceT(xs[i - 1])) * k, xs[i] * k, (ys[i] + faceT(xs[i])) * k)
+  }
+  p.strokeCap(p.ROUND)
   // Cracks down its face, now and then.
   p.stroke(alpha(p, ink, 0.45))
   p.strokeWeight(W * 0.55)
   for (let i = Math.floor(x0 / 0.9); i <= Math.ceil(x1 / 0.9); i++) {
     const x = i * 0.9 + hash(i, 94) * 0.5
-    if (x < x0 || x > x1 || hash(i, 95) < 0.45) continue
+    if (x < x0 || x > x1 || hash(i, 95) < 0.45 || fade(x) < 0.6) continue
     const y = brinkY(x)
     p.line(x * k, (y + 0.06) * k, (x + 0.06) * k, (y + face(x) * 0.8) * k)
   }
@@ -476,11 +510,33 @@ function farWall(cx: number) {
   const face = (y: number) => x0 + 0.3 * Math.sin(y * 1.7) + 0.18 * Math.sin(y * 4.1) + (y - lip) * 0.08
   return { x0, lip, face }
 }
-/** The crag's height over the ledge, from its left foot to where it meets the far wall's top (x from the wall). */
+/**
+ * The crag's height over the ledge, from its left foot to where it meets the far wall's top (x from the wall). Its
+ * long shoulder (from -27.5 to -8) runs back behind the slope, so on the slide down it she and the deck ride against
+ * the dark range from 278 on, never the moor's pale mist (her silver is the mist's own light); the mist lies at its
+ * foot, under the deck.
+ */
 const CRAG_H: [number, number][] = [
-  [-11, -0.8], [-9.4, 0.6], [-8.2, 1.7], [-7.0, 2.1], [-6.0, 2.9], [-5.0, 3.55], [-4.3, 3.45], [-3.5, 4.05], [-2.7, 4.3],
-  [-1.9, 3.95], [-1.2, 3.0], [-0.5, 2.0], [0, 1.5],
+  [-27.5, -0.8], [-25.5, 1.1], [-23.6, 2.3], [-21.4, 3.1], [-19.4, 3.75], [-17.9, 3.6], [-16.4, 3.15], [-14.6, 2.8],
+  [-12.8, 2.6], [-11.0, 2.4], [-9.6, 2.2], [-8.2, 2.15], [-7.0, 2.35], [-6.0, 2.9], [-5.0, 3.55], [-4.3, 3.45],
+  [-3.5, 4.05], [-2.7, 4.3], [-1.9, 3.95], [-1.2, 3.0], [-0.5, 2.0], [0, 1.5],
 ]
+/** A lit band down the crag's skyline, `xa` → `xb` (x from the wall), tapering in over `ta` and out over `tb`. */
+function cragLit(p: p5, k: number, x0: number, sky: (x: number) => number, xa: number, xb: number, ta: number, tb: number) {
+  const th = (x: number) => {
+    const s = x - x0
+    const a = ta > 0 ? smooth(s, xa, xa + ta) : 1
+    const b = tb > 0 ? 1 - smooth(s, xb - tb, xb) : 1
+    return a * b
+  }
+  p.beginShape()
+  for (let x = x0 + xa; x < x0 + xb; x += 0.12) p.vertex(x * k, (sky(x) + 0.02) * k)
+  for (let x = x0 + xb; x > x0 + xa; x -= 0.12) {
+    const w = th(x)
+    p.vertex((x - (0.25 + 0.12 * Math.sin(x * 2.2)) * w) * k, (sky(x) + 0.02 + (0.48 + 0.2 * Math.sin(x * 1.7)) * w) * k)
+  }
+  p.endShape(p.CLOSE)
+}
 function cragH(s: number): number {
   if (s <= CRAG_H[0][0]) return CRAG_H[0][1]
   for (let i = 0; i < CRAG_H.length - 1; i++) {
@@ -538,10 +594,9 @@ function drawCrag(p: p5, k: number, W: number, ink: string, f: View) {
   p.endShape()
   p.noStroke()
   p.fill(alpha(p, mixHex(FAR_MTN, WASTES.mist, 0.15), 0.55))
-  p.beginShape()
-  for (let x = xl + 2.4; x < x0 - 3.1; x += 0.12) p.vertex(x * k, (sky(x) + 0.02) * k)
-  for (let x = x0 - 3.1; x > xl + 2.4; x -= 0.12) p.vertex((x - 0.25 - 0.12 * Math.sin(x * 2.2)) * k, (sky(x) + 0.5 + 0.2 * Math.sin(x * 1.7)) * k)
-  p.endShape(p.CLOSE)
+  // (Up the long shoulder's rise, and down the crag's own face from its saddle, as before.)
+  cragLit(p, k, x0, sky, -25.2, -19.2, 1.2, 1.6)
+  cragLit(p, k, x0, sky, -10.2, -3.1, 1.4, 0)
   // Its lee face in shade, from the summit down toward the far wall.
   p.fill(alpha(p, WASTES.night, 0.2))
   p.beginShape()
@@ -767,34 +822,110 @@ function drawTorn(p: p5, k: number, W: number, ink: string, t: number, f: View) 
 }
 
 /**
- * The engine: Calcifer's grate feeds two brass steam pipes that run along the keel's face to the near hips, and on
- * into the legs' own knee pistons (the castle's legs). Drawn in deck cells.
+ * The engine: one brass steam pipe from Calcifer's grate to the near front hip (the leg nearest his fire), a real
+ * pipe and not a line: thick, inked, lit along its top and shaded under it, bent in elbows, strapped to the keel's
+ * face by iron brackets a cell apart with a bolted flange joint between each pair, a round wheel valve just off the
+ * grate, and a flange where it goes down into the hip. The warmer his fire, the warmer its brass. Drawn in deck cells.
  */
+const PIPE_Y = DECK.keel - 0.22
+/** Out of the grate's side over the boards, down the boards' edge, along the keel, and down into the hip. */
+const PIPE_DROP = DECK.grate + 0.5
+const PIPE_HIP = LEGS[0].u - 0.42
+const PIPE_VALVE = DECK.grate + 0.95
 export function drawPipes(p: p5, k: number, W: number, ink: string, heat: number) {
   const X = (v: number) => v * k
-  const y = DECK.keel - 0.2
+  const y = PIPE_Y
+  const top = -0.1
+  const bot = DECK.keel + 0.1
+  // Thick enough to be a pipe at every framing (never under 2.6 line weights across).
+  const bore = Math.max(0.085 * k, W * 2.6)
+  const brass = mixHex(WASTES.brass, CALCIFER.body, 0.25 * heat)
+  const lit = mixHex(brass, '#FFF3D6', 0.5)
+  const shade = mixHex(brass, IRON_DARK, 0.35)
+  const r = 0.14
+  const path = () => {
+    p.beginShape()
+    p.vertex(X(DECK.grate + 0.22), X(top))
+    p.vertex(X(PIPE_DROP - r), X(top))
+    p.quadraticVertex(X(PIPE_DROP), X(top), X(PIPE_DROP), X(top + r))
+    p.vertex(X(PIPE_DROP), X(y - r))
+    p.quadraticVertex(X(PIPE_DROP), X(y), X(PIPE_DROP + r), X(y))
+    p.vertex(X(PIPE_HIP - r), X(y))
+    p.quadraticVertex(X(PIPE_HIP), X(y), X(PIPE_HIP), X(y + r))
+    p.vertex(X(PIPE_HIP), X(bot))
+    p.endShape()
+  }
   p.push()
   p.noFill()
   p.strokeJoin(p.ROUND)
-  const brass = mixHex(WASTES.brass, CALCIFER.body, 0.25 * heat)
-  for (const [col, w] of [[ink, 2.8], [brass, 1.6]] as [string, number][]) {
-    p.stroke(col)
-    p.strokeWeight(W * w)
-    // Down from the grate over the boards' edge.
-    p.beginShape()
-    p.vertex(X(DECK.grate + 0.22), X(-0.05))
-    p.bezierVertex(X(DECK.grate + 0.42), X(0.02), X(DECK.grate + 0.3), X(y), X(DECK.grate), X(y))
-    p.endShape()
-    // Along the keel either way to the hips.
-    p.line(X(LEGS[1].u + 0.55), X(y), X(LEGS[0].u - 0.55), X(y))
-  }
-  // A valve at the grate's foot, and collars where the pipes go into the hips.
+  p.strokeCap(p.SQUARE)
+  p.rectMode(p.CENTER)
+  // Its ink edge, its brass, a shade along its underside and a highlight along its top.
+  p.stroke(ink)
+  p.strokeWeight(bore + W * 1.6)
+  path()
+  p.stroke(brass)
+  p.strokeWeight(bore)
+  path()
+  p.strokeWeight(Math.max(1, bore * 0.26))
+  p.stroke(shade)
+  p.line(X(PIPE_DROP + r), X(y) + bore * 0.3, X(PIPE_HIP - r), X(y) + bore * 0.3)
+  p.stroke(lit)
+  p.line(X(DECK.grate + 0.3), X(top) - bore * 0.22, X(PIPE_DROP - r), X(top) - bore * 0.22)
+  p.line(X(PIPE_DROP) - bore * 0.22, X(top + r), X(PIPE_DROP) - bore * 0.22, X(y - r))
+  p.line(X(PIPE_DROP + r), X(y) - bore * 0.24, X(PIPE_HIP - r), X(y) - bore * 0.24)
+  p.line(X(PIPE_HIP) - bore * 0.22, X(y + r), X(PIPE_HIP) - bore * 0.22, X(bot))
+  const fl = bore / k + 0.07
   p.stroke(ink)
   p.strokeWeight(W * 0.8)
-  p.fill(WASTES.brass)
-  p.rect(X(DECK.grate - 0.12), X(y - 0.1), X(0.24), X(0.2), X(0.04))
-  p.fill(IRON_DARK)
-  for (const u of [LEGS[1].u + 0.55, LEGS[0].u - 0.55]) p.rect(X(u - 0.07), X(y - 0.09), X(0.14), X(0.18), X(0.03))
+  // Flanged joints about a cell apart along the keel, each a pair of bolted rims; a strap bracket to the keel between.
+  const run = PIPE_HIP - r - (PIPE_DROP + r)
+  const n = Math.max(1, Math.round(run / 1.05))
+  for (let i = 0; i <= n; i++) {
+    const u = PIPE_DROP + r + (run * i) / n
+    if (i > 0 && i < n) {
+      p.fill(shade)
+      p.rect(X(u - 0.028), X(y), X(0.05), X(fl), X(0.012))
+      p.rect(X(u + 0.028), X(y), X(0.05), X(fl), X(0.012))
+    }
+    const b = u + run / n / 2
+    if (i === n || Math.abs(b - PIPE_VALVE) < 0.25) continue
+    p.fill(IRON_DARK)
+    p.rect(X(b), X(y), X(0.07), X(fl + 0.1), X(0.02))
+    p.noStroke()
+    p.fill(mixHex(IRON_DARK, WASTES.mist, 0.35))
+    for (const s of [-1, 1]) p.circle(X(b), X(y + s * (fl + 0.1) * 0.36), Math.max(1.5, X(0.03)))
+    p.stroke(ink)
+  }
+  // Where it goes down into the hip: a bolted flange at the keel's underside.
+  p.fill(shade)
+  p.rect(X(PIPE_HIP), X(bot - 0.03), X(fl + 0.02), X(0.06), X(0.015))
+  // The valve: a squat bonnet on the pipe, a stem up out of it, and a handwheel with spokes, face on.
+  const vw = 0.11
+  const vy = y - 0.25
+  p.strokeWeight(W * 1.4)
+  p.line(X(PIPE_VALVE), X(y), X(PIPE_VALVE), X(vy))
+  p.strokeWeight(W * 0.8)
+  p.fill(shade)
+  p.rect(X(PIPE_VALVE), X(y), X(0.15), X(fl + 0.03), X(0.035))
+  p.fill(brass)
+  p.rect(X(PIPE_VALVE), X(y - fl / 2 - 0.02), X(0.08), X(0.05), X(0.012))
+  const rim = Math.max(W * 2, X(0.04))
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(rim + W * 1.4)
+  p.circle(X(PIPE_VALVE), X(vy), X(vw * 2))
+  p.stroke(mixHex(WASTES.rust, IRON_DARK, 0.25))
+  p.strokeWeight(rim)
+  p.circle(X(PIPE_VALVE), X(vy), X(vw * 2))
+  p.stroke(ink)
+  p.strokeWeight(W * 0.9)
+  for (let i = 0; i < 3; i++) {
+    const a = (i * Math.PI) / 3 + 0.3
+    p.line(X(PIPE_VALVE - Math.cos(a) * vw), X(vy - Math.sin(a) * vw), X(PIPE_VALVE + Math.cos(a) * vw), X(vy + Math.sin(a) * vw))
+  }
+  p.fill(brass)
+  p.circle(X(PIPE_VALVE), X(vy), X(0.05))
   p.pop()
 }
 
@@ -1202,14 +1333,15 @@ export const plank = part<PlankState>(
     // The stop: on the contact, the brink and the drop under it; the cadenza: the two of them, the star over them.
     const JOLT_AT: Pt = [end[0] + 1.0, end[1] + 0.22]
     const CADENZA: Pt = [end[0] + 0.88, end[1] - 1.12]
+    const deckY = PLANK_END.deck.y
     return [
       // The collapse, cut on the bars: close on her with Calcifer as the hearth breaks round them and the flag and
       // the chimney go (c1, c1.2); on c2 (the back turret snapping) a cut out to the whole castle tearing apart, two
       // bars; on c4 back in to her, the hull torn in plates over her head, pushing in; on c6 out again to the whole
       // of it, the cottage and the face going down; on c8 in to her on the plank standing up in the dust, the wreck
       // at the left, and on with her as it runs (c9).
-      hold(244.5, 4.5, [her0[0] + 0.25, her0[1] - 0.88]),
-      hold(245.0, 5.1, [her0[0] + 0.2, her0[1] - 0.98]),
+      hold(244.5, 3.0, [her0[0] + 0.33, her0[1] - 0.62]),
+      hold(245.0, 3.5, [her0[0] + 0.28, her0[1] - 0.72]),
       { ...hold(c(2), 23, [BX0 - 1.3, -3.7]), cut: true },
       hold(247.3, 24.2, [BX0 - 1.45, -3.1]),
       { ...onDeckShot(c(4), 7.4, -0.3, 0.44), cut: true },
@@ -1221,9 +1353,11 @@ export const plank = part<PlankState>(
       // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
-      // it and lands on the loudest note; then, as she lifts Calcifer out, a cut in to the reunion: a two-shot on the
-      // deck with the far range behind and the legs out of it, Howl slumped at the right and her carrying Calcifer
-      // in to him from the left, the frame drifting on with her; and a slow push in on the two of them for the heart.
+      // it and lands on the loudest note, the deck line a little under the middle and open sky over it, so his last
+      // swoop and his landing, wings spread, cross the middle of the frame (only the near leg's knee at its foot);
+      // then, as she lifts Calcifer out, a cut in to the reunion: a two-shot on the deck with the far range behind and
+      // the legs out of it, Howl slumped at the right and her carrying Calcifer in to him from the left, the frame
+      // drifting on with her; and a slow push in on the two of them for the heart.
       { ...onDeckShot(c(8), 7.7, -3.1, 0.32), cut: true },
       onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.34),
       onDeckShot(c(10) + 0.4, 7.3, -2.6, 0.36),
@@ -1233,9 +1367,9 @@ export const plank = part<PlankState>(
       { ...run(c(18), 10.6, 2.4, 1.5), cut: true },
       run(c(19) + 0.5, 10.6, 2.2, 1.5),
       run(c(20) - 0.05, 10.4, 2.2, 1.5),
-      { ...onDeckShot(c(20), 6.9, 2.7, 0.36), cut: true },
-      onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.36),
-      onDeckShot(LIFT_OUT - 0.05, 6.6, 2.4, 0.35),
+      { ...onDeckShot(c(20), 6.9, 2.7, 0.54), cut: true },
+      onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.545),
+      onDeckShot(LIFT_OUT - 0.05, 6.6, 2.4, 0.55),
       { ...cross(LIFT_OUT, 4.7, 0.74), cut: true },
       cross(c(24), 4.6, 0.71),
       cross(c(25), 4.45, 0.66),
@@ -1244,20 +1378,25 @@ export const plank = part<PlankState>(
       follow(274.4, 5.2, [0.8, -0.4]),
       // The slide: with it, leading, Turnip Head leaping over the two of them off the stern and bounding on ahead
       // down the slope; then ahead of it to the brink, where he has landed and turns to it, the plank coming in, the
-      // frame tightening on the contact.
-      follow(276.2, 6.8, [2.4, -0.4]),
-      follow(277.6, 7.6, [3.2, -0.5]),
-      follow(279.0, 7.6, [3.8, -0.6]),
-      hold(281.2, 7.6, [end[0] - 1.9, end[1] - 0.4]),
-      hold(282.9, 6.6, [end[0] - 0.5, end[1] - 0.15]),
+      // frame tightening on the contact. Close (6.5 → 6.2 cells, 14–15 px) and low, her 0.4 down the frame, so she
+      // and the deck ride against the crag's long shoulder with the moor's mist under the deck line, at rest on the
+      // brink by 283.0 for the brake's cut.
+      follow(276.2, 6.5, [1.9, 0.1]),
+      follow(277.6, 6.4, [2.1, 0.45]),
+      follow(279.0, 6.35, [2.5, 0.5]),
+      hold(281.2, 6.3, [end[0] - 1.6, end[1] + 0.6]),
+      hold(282.9, 6.2, [end[0] - 0.4, end[1] + 0.55]),
       // The stop: a cut in on the contact, jolted by it; the settling; then in to the cadenza's one still frame.
       { ...hold(IMPACT, 5.2, JOLT_AT), cut: true },
       hold(IMPACT + 0.07, 5.2, [JOLT_AT[0] + 0.04, JOLT_AT[1] + 0.1]),
       hold(IMPACT + 0.6, 5.15, [JOLT_AT[0] - 0.01, JOLT_AT[1] - 0.02]),
       hold(284.4, 5.0, [JOLT_AT[0] - 0.05, JOLT_AT[1] - 0.2]),
-      // The cadenza: the two of them and the star, a push in so slow it reads as a held frame (never parked).
-      hold(285.9, 4.8, [CADENZA[0] - 0.1, CADENZA[1] + 0.06]),
-      hold(GLANCE, 4.3, [CADENZA[0] + 0.05, CADENZA[1] - 0.04]),
+      // The cadenza: the two of them and the star turning low over them, a push in so slow it reads as a held frame
+      // (never parked). The deck about two thirds of the way down (0.68), so the star turns inside the Zoom frame
+      // too, with Turnip Head at the right; from the glance the frame widens and tilts up with the star as it
+      // gathers for the dive.
+      hold(285.9, 4.85, [CADENZA[0] - 0.2, deckY - 0.18 * 4.85]),
+      hold(GLANCE, 4.2, [CADENZA[0] - 0.04, deckY - 0.18 * 4.2]),
       hold(slot.end, 5.9, [end[0] + 0.85, end[1] - 1.3]),
     ]
   },
@@ -1441,7 +1580,10 @@ function pebbles(p: p5, k: number, W: number, ink: string, t: number) {
   p.pop()
 }
 
-/** Calcifer as a star: fine rays that flare on the cadenza's high notes (and a soft light), never a disc. */
+/**
+ * Calcifer as a star: a soft glow and, behind his flame, a small soft sparkle of four short broad points with curved
+ * sides (never needles, never a crosshair) that swells a little on the cadenza's high notes. His face carries it.
+ */
 const TWINKLES = [286.383, 286.923, 287.364, 288.943, 289.814, 291.677]
 export function drawStar(p: p5, k: number, t: number, at: Pt, star: number) {
   let flare = 0.35
@@ -1450,16 +1592,30 @@ export function drawStar(p: p5, k: number, t: number, at: Pt, star: number) {
     if (u >= 0) flare = Math.max(flare, 0.35 + 0.65 * Math.exp(-u / 0.5))
   }
   const [x, y] = at
-  puff(p, k, x, y - 0.12, 0.45 + 0.25 * flare, CALCIFER.core, 0.22 * star * flare)
+  puff(p, k, x, y - 0.1, 0.5 + 0.22 * flare, CALCIFER.core, 0.24 * star * (0.55 + 0.45 * flare))
   p.push()
   p.noStroke()
-  p.translate(x * k, (y - 0.12) * k)
-  p.rotate(0.3 * Math.sin(t * 0.8))
-  for (let i = 0; i < 4; i++) {
-    const len = (i % 2 ? 0.26 : 0.4) * (0.6 + 0.6 * flare) * star
-    p.fill(alpha(p, CALCIFER.core, 0.85 * star))
-    p.rotate(Math.PI / 2)
-    p.triangle(-0.02 * k, 0, 0.02 * k, 0, 0, -len * k)
+  p.translate(x * k, (y - 0.1) * k)
+  p.rotate(0.25 * Math.sin(t * 0.8))
+  // Points under 0.22 cells up and down (the glow's layer too), 0.15 across; the waist between two points 0.045 from the middle, so each
+  // point's base is about 0.09 wide.
+  const long = (0.13 + 0.055 * flare) * star
+  const wide = (0.1 + 0.05 * flare) * star
+  const waist = 0.045 * star
+  const pts: Pt[] = [[0, -long], [wide, 0], [0, long], [-wide, 0]]
+  for (const [col, a, s] of [[CALCIFER.body, 0.45, 1.18], [CALCIFER.core, 0.9, 1]] as [string, number, number][]) {
+    p.fill(alpha(p, col, a * star))
+    p.beginShape()
+    p.vertex(pts[0][0] * s * k, pts[0][1] * s * k)
+    for (let i = 1; i <= 4; i++) {
+      const q = pts[i % 4]
+      const m = pts[i - 1]
+      // The side's control point pulled in toward the middle: a curved, concave side.
+      const cx = (Math.sign(m[0] + q[0]) || 0) * waist * s
+      const cy = (Math.sign(m[1] + q[1]) || 0) * waist * s
+      p.quadraticVertex(cx * k, cy * k, q[0] * s * k, q[1] * s * k)
+    }
+    p.endShape(p.CLOSE)
   }
   p.pop()
 }

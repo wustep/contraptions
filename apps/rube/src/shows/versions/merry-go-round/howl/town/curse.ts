@@ -181,8 +181,13 @@ function witchHand(t: number): number {
 }
 /** Her glove's fingers, spread wide on the curse and closing as the hand goes back. */
 const witchSpread = (t: number): number => (t <= CURSE ? 0 : (1 - Math.exp(-(t - CURSE) / 0.04)) * (1 - smooth(t, CURSE + 0.7, CURSE + 1.3)))
-/** She faces into the shop, and turns to go once she is out of the door. */
-const witchFace = (t: number): number => -1 + 2 * smooth(t, 104.9, 105.35)
+/**
+ * She faces into the shop the whole time, laughing at Sophie as she backs out through the door the way she came and
+ * off to the right. Never turned: a figure this broad flipped through zero reads as a card, a hairline in the doorway.
+ */
+const witchFace = (_t: number): number => -1
+/** How far the night outside has her: lit by the lamp inside, sinking into the street's dark through the doorway. */
+const witchDark = (x: number): number => 0.3 + 0.25 * smooth(x, W1 - 0.3, W1 + 0.9)
 
 /** Where her glove is (the palm's middle), in town cells: the same transforms `drawTheWitch` and `drawWitch` make. */
 function glove(t: number): Pt {
@@ -313,10 +318,11 @@ export const curse = part<CurseState>(
       // shape comes into it on the first heavy step (91.31) and on along the street to the door, the camera easing a
       // little toward the door on each step. Dread before the bell.
       { t: 89.8, cells: 4.6, hold: H(8.1, -1.25), w: 1 },
-      { t: STEPS[0], cells: 5.45, hold: H(9.25, -1.55), w: 1 },
-      { t: STEPS[1], cells: 5.3, hold: H(9.2, -1.52), w: 1 },
-      { t: STEPS[2], cells: 5.15, hold: H(9.05, -1.48), w: 1 },
-      { t: BELL + 0.4, cells: 5.1, hold: H(8.5, -1.42), w: 1 },
+      // (Her low, but her whole ball inside the Zoom frame's foot with a margin.)
+      { t: STEPS[0], cells: 5.45, hold: H(9.25, -1.4), w: 1 },
+      { t: STEPS[1], cells: 5.3, hold: H(9.2, -1.37), w: 1 },
+      { t: STEPS[2], cells: 5.15, hold: H(9.05, -1.33), w: 1 },
+      { t: BELL + 0.4, cells: 5.1, hold: H(8.5, -1.3), w: 1 },
       // The Witch fills the shop.
       { t: 97.6, cells: 5.4, hold: H(7.3, -1.45), w: 1 },
       { t: LOOM[0], cells: 4.9, hold: H(6.8, -1.25), w: 1 },
@@ -475,7 +481,7 @@ function drawTheWitch(p: p5, k: number, W: number, ink: string, t: number): void
     hand: witchHand(t),
     spread: witchSpread(t),
     look: [-1, 0.8],
-    dark: x > W1 + 0.3 ? 0.55 : 0.3,
+    dark: witchDark(x),
   })
   ctx.restore()
   p.pop()

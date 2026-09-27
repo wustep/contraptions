@@ -109,8 +109,13 @@ function scatter(i: number): { x: number; kind: 'heather' | 'rock' | 'none'; w: 
   return { x, kind: 'none', w, h: 0, c: WASTES.moss }
 }
 
-/** Where the one tree on the moor stands (a wind-bent thorn: the walk's milestone), and the standing stone. */
-const TREE = 47
+/**
+ * Where the one tree on the moor stands (a wind-bent thorn: the walk's milestone), and the standing stone. The tree
+ * stands clear ahead of the castle's front feet as the third great stride's lock-off opens (135.94), so the whole castle
+ * strides up to it and over it in the two bars; drawn a size up (`TREE_SIZE`) so its wind-bent crown reads there.
+ */
+const TREE = 54.5
+const TREE_SIZE = 1.3
 const STONE = 29
 
 /** Fill with a colour at an alpha (0..1). */
@@ -146,6 +151,98 @@ function blob(p: p5, k: number, x: number, y: number, rx: number, ry: number, se
     p.vertex((x + Math.cos(th) * rx * r) * k, (y + Math.sin(th) * ry * r) * k)
   }
   p.endShape(p.CLOSE)
+}
+
+/**
+ * The heather brae her lane climbs through: the knoll's near face along her way up, deep heather in the shade of its
+ * own cushions (a bank behind the lane and a verge in front of it), so her grey reads light on dark all the way up.
+ * `braeAt` is how much of it there is at world x: none out on the level lane or down on the moor, all of it from the
+ * hedge's foot to the crest. The far hills keep their mist.
+ */
+const BRAE = { x0: -4.2, x1: 4.4, h: 0.66 }
+const braeAt = (x: number): number => sm((x - BRAE.x0) / 2.6) * (1 - sm((x - BRAE.x1 + 1.6) / 1.6))
+/** Its shades: the shadowed body, the back row a step lighter, the bloom on the tops and the lit sprigs. */
+const BRAE_DEEP = mixHex(mixHex(WASTES.moss, WASTES.heatherDeep, 0.3), '#000000', 0.4)
+const BRAE_BACK = mixHex(mixHex(WASTES.moss, WASTES.heatherDeep, 0.3), '#000000', 0.2)
+const BRAE_BLOOM = mixHex(WASTES.heather, '#000000', 0.28)
+const BRAE_LIT = mixHex(mixHex(WASTES.heather, WASTES.moss, 0.35), WASTES.mist, 0.12)
+
+/** A row of heather cushions along the lane, x0 → x1: each one's centre (x, y), radii, and how much brae it stands in. */
+function cushions(x0: number, x1: number, salt: number, size: number, top: (x: number, s: number, i: number) => number): [number, number, number, number, number, number][] {
+  const out: [number, number, number, number, number, number][] = []
+  const step = 0.27 * size
+  for (let i = Math.floor(x0 / step) - 1; i <= Math.ceil(x1 / step) + 1; i++) {
+    const x = (i + 0.5 + (hash(i, 1, salt) - 0.5) * 0.7) * step
+    const s = braeAt(x)
+    if (s < 0.04) continue
+    const rx = size * (0.13 + 0.17 * hash(i, 2, salt) ** 1.5) * (0.3 + 0.7 * s)
+    const ry = rx * (0.6 + 0.22 * hash(i, 3, salt))
+    out.push([x, top(x, s, i) + ry * 0.55, rx, ry, s, i])
+  }
+  return out
+}
+
+/** The bank behind the lane: a back row of cushions a shade lighter, the dark mass in front, bloom on its tops. */
+function drawBrae(p: p5, k: number, f: ReturnType<typeof frame>, T: number, fog: number): void {
+  const x0 = Math.max(f.x0 - 1, BRAE.x0)
+  const x1 = Math.min(f.x1 + 1, BRAE.x1)
+  if (x1 <= x0) return
+  const tone = (c: string, a = 0.12) => mixHex(landTone(c, T, 1), MIST, fog * a)
+  // Its height over the lane at x: long swells and dips along it and each cushion its own, never a level shelf.
+  const rise = (x: number, s: number, lift: number, i: number, salt: number): number =>
+    ground(x) - s * (BRAE.h + lift) * (0.78 + 0.18 * Math.sin(x * 1.25 + 0.6) + 0.09 * Math.sin(x * 3.1 + 2.2) + 0.12 * (hash(i, 5, salt) - 0.5))
+  const back = cushions(x0, x1, 81, 1.1, (x, s, i) => rise(x, s, 0.12, i, 81))
+  const front = cushions(x0, x1, 83, 1, (x, s, i) => rise(x, s, -0.04, i, 83))
+  p.fill(tone(BRAE_BACK, 0.2))
+  for (const [x, y, rx, ry, , i] of back) blob(p, k, x, y, rx * 1.05, ry, i * 5 + 1)
+  // The mass, from under the lane up to each front cushion (no gap under them), and the cushions over it.
+  const step = 0.1
+  p.fill(tone(BRAE_DEEP))
+  p.beginShape()
+  for (const [x, y] of front) p.vertex(x * k, y * k)
+  for (let x = x1; x >= x0 - step; x -= step) p.vertex(x * k, (ground(x) + 0.2) * k)
+  p.endShape(p.CLOSE)
+  for (const [x, y, rx, ry, , i] of front) blob(p, k, x, y, rx, ry, i * 5 + 2)
+  // Bloom in patches over the tops (a muted purple sheen, lit from the upper left), and now and then a lit sprig:
+  // all at the bank's crest, above her.
+  const bloom = tone(mixHex(BRAE_BLOOM, BRAE_DEEP, 0.3))
+  for (const [x, y, rx, ry, s, i] of front) {
+    const patch = 0.5 + 0.5 * Math.sin(x * 0.9 + 1.3) + 0.35 * (hash(i, 6, 83) - 0.5)
+    if (s < 0.35 || patch < 0.35) continue
+    const w = 0.45 + 0.4 * Math.min(1, patch)
+    p.fill(bloom)
+    blob(p, k, x - rx * 0.14, y - ry * 0.3, rx * w, ry * w * 0.62, i * 5 + 3)
+    if (hash(i, 4, 83) < 0.72) continue
+    p.fill(tone(BRAE_LIT, 0.2))
+    blob(p, k, x - rx * 0.32, y - ry * 0.55, rx * 0.28, ry * 0.18, i * 5 + 4)
+  }
+}
+
+/**
+ * The verge in front of the lane: low heather cushions whose tops are the lane's edge, fading down into the green. A
+ * shade lighter than the bank's face (their tops face the sky), so the lane reads as the step between the two.
+ */
+function drawVerge(p: p5, k: number, f: ReturnType<typeof frame>, T: number, fog: number): void {
+  const x0 = Math.max(f.x0 - 1, BRAE.x0)
+  const x1 = Math.min(f.x1 + 1, BRAE.x1)
+  if (x1 <= x0) return
+  const verge = mixHex(landTone(mixHex(BRAE_DEEP, BRAE_BACK, 0.45), T, 1), MIST, fog * 0.1)
+  // A soft shade under it first, so the cushions' lower edge fades into the ground's body instead of ending on a line.
+  const step = 0.05
+  const pts: Pt[] = []
+  for (let x = x0; x <= x1 + step; x += step) pts.push([x, ground(x)])
+  for (const [d, a] of [[0.24, 0.14], [0.34, 0.1], [0.48, 0.06]] as Pt[]) {
+    fillA(p, verge, a)
+    band(p, k, pts, () => 0, (x) => braeAt(x) * d * (1 + 0.25 * Math.sin(x * 1.7 + d * 9)))
+  }
+  const row = cushions(x0, x1, 87, 0.7, (x) => ground(x) + 0.01)
+  p.fill(verge)
+  p.beginShape()
+  // Its top a hair over the lane's edge, so no seam of the green shows between it and the bank.
+  for (let x = x0; x <= x1 + step; x += step) p.vertex(x * k, (ground(x) - 0.02) * k)
+  for (let i = row.length - 1; i >= 0; i--) p.vertex(row[i][0] * k, (row[i][1] + row[i][3] * 0.2) * k)
+  p.endShape(p.CLOSE)
+  for (const [x, y, rx, ry, , i] of row) blob(p, k, x, y + ry * 0.15, rx * 1.1, ry * 0.8, i * 7 + 5)
 }
 
 /** A heather clump: a mound of uneven cushions, a dark mass under muted tops and a few lit sprigs. No ink. */
@@ -212,6 +309,8 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
     p.vertex(kx0 * k, (FLOOR + 1) * k)
     p.endShape(p.CLOSE)
   }
+  // The heather brae on its near face, along her way up.
+  drawBrae(p, k, f, T, fog)
   // The near ground: a filled slope whose top edge is the lane itself. No stroke.
   const pts: Pt[] = []
   for (let x = f.x0 - 1; x <= f.x1 + 1 + step; x += step) pts.push([x, ground(x)])
@@ -252,6 +351,8 @@ export function drawLand(p: p5, k: number, weight: number, ink: string, T: numbe
     fillA(p, lip, a)
     band(p, k, pts, () => 0, (x) => h * lipW * (1 + 0.25 * Math.sin(x * 2.3 + h * 40)))
   }
+  // The brae's verge under the lane, where she climbs.
+  drawVerge(p, k, f, T, fog)
   // The tree and the stone on the moor, behind the edge.
   drawTree(p, k, weight, inkT, T)
   drawStone(p, k, weight, inkT, T)
@@ -296,8 +397,12 @@ function drawTree(p: p5, k: number, weight: number, ink: string, T: number): voi
   const trunk = landTone(WASTES.wood, T, 1)
   const leaf = landTone(mixHex(WASTES.moss, WASTES.heatherDeep, 0.3), T, 1)
   const sway = Math.sin(T * 0.8) * 0.06
+  p.push()
+  p.translate(TREE * k, y * k)
+  p.scale(TREE_SIZE)
+  p.translate(-TREE * k, -y * k)
   p.stroke(ink)
-  p.strokeWeight(weight)
+  p.strokeWeight(weight / TREE_SIZE)
   p.fill(trunk)
   const bark = spline([[TREE + 0.3, y + 0.1], [TREE + 0.2, y - 1.0], [TREE - 0.3, y - 2.0], [TREE - 1.2, y - 2.7], [TREE - 1.05, y - 2.9], [TREE - 0.05, y - 2.25], [TREE + 0.5, y - 1.1], [TREE + 0.65, y + 0.1]], 4)
   p.beginShape()
@@ -317,6 +422,33 @@ function drawTree(p: p5, k: number, weight: number, ink: string, T: number): voi
   p.beginShape()
   for (const [x, yy] of pts) p.vertex(x * k, yy * k)
   p.endShape(p.CLOSE)
+  // Its foliage: shade under the crown and lighter clumps along its top, in tufts streaming away from the wind (so seen
+  // close, from the porch as the castle walks over it, it is a thorn's crown, never a flat blob).
+  p.noStroke()
+  const shade = landTone(mixHex(WASTES.moss, WASTES.heatherDeep, 0.6), T, 1)
+  const top = landTone(mixHex(WASTES.moss, '#C9D29A', 0.35), T, 1)
+  for (let i = 0; i < 7; i++) {
+    const u = (i + 0.5) / 7
+    const x = cx + (u - 0.5) * 3.1 + sway * 0.5
+    const lump = Math.sin(Math.PI * u)
+    p.fill(shade)
+    p.ellipse(x * k, (cy + 0.28 + 0.06 * hash(i, 71)) * k, (0.75 + 0.35 * hash(i, 72)) * k, (0.32 + 0.12 * lump) * k)
+  }
+  for (let i = 0; i < 6; i++) {
+    const u = (i + 0.3 + 0.4 * hash(i, 73)) / 6
+    const x = cx + (u - 0.5) * 3.0 + sway
+    const lump = Math.sin(Math.PI * u)
+    p.fill(top)
+    p.ellipse(x * k, (cy - 0.42 - 0.22 * lump + 0.08 * hash(i, 74)) * k, (0.55 + 0.3 * hash(i, 75)) * k, (0.24 + 0.1 * lump) * k)
+  }
+  // The outline once more over the tufts, so they sit inside it.
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(weight / TREE_SIZE)
+  p.beginShape()
+  for (const [x, yy] of pts) p.vertex(x * k, yy * k)
+  p.endShape(p.CLOSE)
+  p.pop()
 }
 
 /** A standing stone, taller than the castle's foot. */
@@ -402,7 +534,8 @@ export function drawHedge(p: p5, k: number, _weight: number, _ink: string, T: nu
   const sh = shake(T)
   p.push()
   p.noStroke()
-  p.fill(back ? mixHex(WASTES.moss, WASTES.heatherDeep, 0.48) : mixHex(WASTES.moss, WASTES.heatherDeep, 0.36))
+  // Its heart in shade, as deep as the brae it grows out of (she passes in front of its foot).
+  p.fill(back ? mixHex(BRAE_DEEP, '#000000', 0.12) : BRAE_DEEP)
   p.beginShape()
   for (const [x, y] of pts) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
@@ -416,13 +549,16 @@ export function drawHedge(p: p5, k: number, _weight: number, _ink: string, T: nu
     const lift = v * dome(u) + 0.015 * Math.sin(T * 1.3 + i * 2.1) * v
     const x = cx + u * rx + sh * 0.05 * lift * lift
     const y = hedgeFoot(cx + u * rx) - h * lift + rr * 0.5
-    const body = heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.45), WASTES.heatherDeep, 0.15) : mixHex(WASTES.moss, WASTES.hill, 0.1 * hash(i, 2, 23))
-    const cap = heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.6), WASTES.mist, 0.18) : mixHex(WASTES.moss, WASTES.hill, 0.5)
+    // The low volumes sit in the hedge's own shade (the brae's dark, where she passes), the high ones in the light.
+    const shade = 1 - sm((v - 0.56) / 0.26)
+    const body = mixHex(heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.45), WASTES.heatherDeep, 0.15) : mixHex(WASTES.moss, WASTES.hill, 0.1 * hash(i, 2, 23)), BRAE_DEEP, 0.3 + 0.65 * shade)
+    const cap = mixHex(heather ? mixHex(mixHex(WASTES.moss, WASTES.heather, 0.6), WASTES.mist, 0.18) : mixHex(WASTES.moss, WASTES.hill, 0.5), heather ? mixHex(BRAE_BLOOM, BRAE_DEEP, 0.3) : mixHex(BRAE_DEEP, BRAE_BACK, 0.45), 0.9 * shade)
     const glint = heather ? mixHex(WASTES.heather, WASTES.mist, 0.35) : mixHex(WASTES.hill, WASTES.mist, 0.25)
     p.fill(body)
     blob(p, k, x, y, 1.15 * rr, 0.9 * rr, i * 3 + 1)
     p.fill(cap)
     blob(p, k, x - rr * 0.22, y - rr * 0.3, 0.78 * rr, 0.52 * rr, i * 3 + 2)
+    if (shade > 0.5) continue
     p.fill(glint)
     blob(p, k, x - rr * 0.42, y - rr * 0.5, 0.3 * rr, 0.17 * rr, i * 3 + 3)
   }
