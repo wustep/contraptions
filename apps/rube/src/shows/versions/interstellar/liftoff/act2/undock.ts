@@ -465,14 +465,14 @@ export const undock = part<UndockState>(
       { t: cue(194.4), cells: 9.4, off: [ship(cue(194.4))[0] - 1.9 - ballAt(cue(194.4))[0], 0.5 - ballAt(cue(194.4))[1]], w: 0 },
       // Away: out wider as it goes, and Saturn's limb comes up on the right.
       { t: cue(195.5), cells: 8.6, off: [2.2, 0.8], w: 0 },
-      { t: cue(197.8), cells: 11.5, off: [3.6, 2.3], w: 0 },
+      { t: cue(197.8), cells: 9.6, off: [3.0, 2.0], w: 0 },
       // Over the cloud tops, close; then out over the rings.
       { t: cue(200.6), cells: 7.8, off: [1.9, 0.8], w: 0 },
       { t: cue(203.2), cells: 8.4, off: [2.1, 1.0], w: 0 },
       // Looking ahead as the engine stops: the sphere comes up on the right.
-      { t: cue(205.3), cells: 10, off: [3.4, 1.0], w: 0 },
+      { t: cue(205.3), cells: 9, off: [2.8, 0.9], w: 0 },
       // The two in one frame as it brakes, then in on the sphere.
-      { t: cue(207), cells: 12, hold: [(near[0] + SPHERE[0]) / 2 + 0.5, (near[1] + SPHERE[1]) / 2 + 0.4], w: 0.9 },
+      { t: cue(207), cells: 10.8, hold: [(near[0] + SPHERE[0]) / 2 - 0.25, (near[1] + SPHERE[1]) / 2 + 0.4], w: 0.9 },
       { t: cue(208.6), cells: 9.6, hold: [SPHERE[0] - DIR_IN[0] * 1.9, SPHERE[1] - DIR_IN[1] * 1.9], w: 0.9 },
       { t: CONTACT, cells: 8, hold: [SPHERE[0] - DIR_IN[0] * 1.2, SPHERE[1] - DIR_IN[1] * 1.2], w: 0.95 },
       { t: slot.end - 0.02, cells: 7.5, hold: SPHERE, w: 1 },

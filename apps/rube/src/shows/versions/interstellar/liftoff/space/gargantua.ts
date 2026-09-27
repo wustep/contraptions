@@ -483,12 +483,12 @@ export const gargantua = part<GargState>(
       // Miller's last framing, then out to the hole as the Ranger comes round.
       { t: slot.begin, cells: 8, hold: [-1.44, 0.43], w: 0.85 },
       { t: CATCH, cells: 5.4, hold: [C[0] + 0.55, C[1] + 0.1], w: 0.75 },
-      { t: NODE_A, cells: 6.8, hold: [C[0] + 0.25, C[1] + 0.1], w: 0.85 },
+      { t: NODE_A, cells: 6.4, hold: [C[0] + 0.25, C[1] + 0.1], w: 0.85 },
       // Stand back for the whole of it: the disk end to end, the dark, the halo over it.
-      { t: BEHIND + 0.3, cells: 7.6, hold: [C[0], C[1] - 0.1], w: 1 },
-      { t: NODE_B, cells: 7.2, hold: [C[0], C[1] - 0.1], w: 1 },
+      { t: BEHIND + 0.3, cells: 7.2, hold: [C[0], C[1] - 0.1], w: 1 },
+      { t: NODE_B, cells: 6.8, hold: [C[0], C[1] - 0.1], w: 1 },
       // The second pass, close in over the top: the lensed halo fills the frame.
-      { t: CREST, cells: 4.0, hold: [C[0], C[1] - 0.45], w: 0.92 },
+      { t: CREST, cells: 4.3, hold: [C[0], C[1] - 0.35], w: 0.92 },
       { t: NODE_B2, cells: 4.3, hold: [C[0], C[1] - 0.05], w: 0.95 },
       { t: RELEASE, cells: 4.6, hold: [C[0], C[1]], w: 0.95 },
       { t: HORIZON, cells: 3.4, hold: F, w: 1 },
@@ -609,14 +609,18 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   p.translate(X(h.cx), X(h.cy))
   p.rotate(TILT)
   p.noFill()
-  // The haze the disk sits in, soft and wide.
+  // The disk's glow tapers into space without a rounded bar at either end.
   if (A > 0.004) {
-    p.strokeCap(p.ROUND)
-    for (const [wd, a] of [[0.5, 0.07], [0.26, 0.12]] as Pt[]) {
-      p.stroke(alpha(p, DARK.amber, a * A))
-      p.strokeWeight(X(wd * r))
-      p.line(X(-DISK * 0.8 * r), 0, X(DISK * 0.8 * r), 0)
-    }
+    const reach = X(DISK * r)
+    ctx.save()
+    ctx.scale(1, 0.075)
+    const haze = ctx.createRadialGradient(0, 0, 0, 0, 0, reach)
+    haze.addColorStop(0, rgba(DARK.gold, 0.3 * A))
+    haze.addColorStop(0.45, rgba(DARK.amber, 0.16 * A))
+    haze.addColorStop(1, rgba(DARK.amber, 0))
+    ctx.fillStyle = haze
+    ctx.fillRect(-reach, -reach, reach * 2, reach * 2)
+    ctx.restore()
   }
   // The far side of the disk, bent over the top of the dark and under it by the lensing: near and big, broad bands of
   // light, hottest where they hug the dark and going off into the haze.
@@ -637,8 +641,32 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.fill()
     ctx.restore()
   }
-  band(Math.PI + 0.01, TAU - 0.01, 1.7, Math.min(1, 0.95 * A * (1 + 0.4 * bright)), 0.4)
+  band(Math.PI + 0.01, TAU - 0.01, 1.55, Math.min(1, 0.95 * A * (1 + 0.4 * bright)), 0.32)
   band(0.01, Math.PI - 0.01, 1.25, Math.min(1, 0.5 * A * (1 + 0.4 * bright)), 0.2)
+  // Ribbons within the lensed disk resolve its curve through the glow. The approaching side is hotter.
+  if (A > 0.004) {
+    ctx.save()
+    const ribbon = ctx.createLinearGradient(X(-1.5 * r), 0, X(1.5 * r), 0)
+    ribbon.addColorStop(0, rgba(DARK.amber, 0))
+    ribbon.addColorStop(0.22, rgba(WHITE, 0.65 * A))
+    ribbon.addColorStop(0.52, rgba(DARK.gold, 0.48 * A))
+    ribbon.addColorStop(0.85, rgba(DARK.amber, 0.15 * A))
+    ribbon.addColorStop(1, rgba(DARK.amber, 0))
+    ctx.strokeStyle = ribbon
+    for (let i = 0; i < 4; i++) {
+      const rr = X(r * (1.065 + i * 0.068))
+      ctx.lineWidth = X(r * (0.013 - i * 0.002))
+      ctx.beginPath()
+      ctx.ellipse(X(-0.018 * i * r), 0, rr, rr * (1 + i * 0.025), 0, Math.PI + 0.07, TAU - 0.07)
+      ctx.stroke()
+    }
+    ctx.globalAlpha *= 0.4
+    ctx.lineWidth = X(r * 0.012)
+    ctx.beginPath()
+    ctx.ellipse(0, 0, X(1.075 * r), X(1.1 * r), 0, 0.08, Math.PI - 0.08)
+    ctx.stroke()
+    ctx.restore()
+  }
   // The dark.
   p.noStroke()
   p.fill(VOID.bg)
@@ -654,7 +682,7 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   // the middle, tapering to nothing out along it, its left side (coming at us) the brighter.
   if (A > 0.004) {
     const L = DISK * r
-    const half = 0.085 * r
+    const half = 0.11 * r
     ctx.save()
     const g = ctx.createLinearGradient(X(-L), 0, X(L), 0)
     const a = Math.min(1, A * (1 + 0.5 * bright))
@@ -673,9 +701,22 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.closePath()
     ctx.fill()
     ctx.restore()
-    p.stroke(alpha(p, WHITE, 0.7 * a))
-    p.strokeWeight(Math.max(1, X(0.012 * r)))
-    p.line(X(-L * 0.55), 0, X(L * 0.55), 0)
+    // A few narrow streams keep the hot band from reading as one solid stripe.
+    ctx.save()
+    const streams = ctx.createLinearGradient(X(-L), 0, X(L), 0)
+    streams.addColorStop(0, rgba(WHITE, 0))
+    streams.addColorStop(0.34, rgba(WHITE, 0.85 * a))
+    streams.addColorStop(0.6, rgba(WHITE, 0.4 * a))
+    streams.addColorStop(1, rgba(DARK.gold, 0))
+    ctx.strokeStyle = streams
+    ctx.lineWidth = Math.max(0.5, X(0.009 * r))
+    for (let i = -1; i <= 1; i++) {
+      ctx.beginPath()
+      ctx.moveTo(X(-L * 0.9), 0)
+      ctx.quadraticCurveTo(X(-r * 0.35), X(i * half * 1.05), X(L * 0.85), 0)
+      ctx.stroke()
+    }
+    ctx.restore()
   }
   p.pop()
 }
