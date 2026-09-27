@@ -224,8 +224,9 @@ function costello(t: number, f: Frame): Staged {
     t,
     h,
     who: 1,
-    // Behind her way it is a soft mass in the white; over it, a shape in fog.
-    fog: far ? 0.5 : 0.42,
+    // Behind her way it is a soft mass far back in the white (the rings she rides are the picture); over it, a shape
+    // in fog.
+    fog: far ? 0.68 : 0.42,
     air: FOG.white,
     color: FOG.heptapod,
     reach: costelloReach(t, f, at, h, d),

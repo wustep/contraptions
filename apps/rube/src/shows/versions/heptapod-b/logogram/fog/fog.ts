@@ -102,13 +102,14 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
 export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
   const top = at(slot.end)
   return [
-    { t: 143.1, cells: 4.8, off: [0.8, -0.6], w: 0 },
-    // Wider for the long arcs, leading her, so the ring written for her is seen before she comes down into it.
-    { t: 145.0, cells: 5.9, off: [1.9, -0.4], w: 0 },
-    { t: 147.7, cells: 6.4, off: [2.3, -0.3], w: 0 },
-    { t: 150.4, cells: 6.4, off: [2.3, -0.4], w: 0 },
-    { t: 152.4, cells: 6.0, off: [1.6, -0.4], w: 0 },
-    { t: 153.2, cells: 5.8, off: [0.6, -0.45], w: 0 },
+    { t: 143.1, cells: 5.4, off: [0.9, -0.6], w: 0 },
+    // Wide for the long arcs, leading her, so the ring written for her is seen whole, before she comes down into it,
+    // and the one she leaves is still there behind her.
+    { t: 145.0, cells: 8.0, off: [1.9, -0.4], w: 0 },
+    { t: 147.7, cells: 8.8, off: [2.2, -0.3], w: 0 },
+    { t: 150.4, cells: 8.8, off: [2.2, -0.4], w: 0 },
+    { t: 152.4, cells: 8.2, off: [1.6, -0.4], w: 0 },
+    { t: 153.2, cells: 7.2, off: [0.6, -0.45], w: 0 },
     // The toss: the frame goes up with her and waits at the top of the ring written round her.
     { t: 154.6, cells: 5.0, off: [0.2, -0.5], w: 0 },
     { t: 155.75, cells: 4.3, hold: [top[0] + 0.45, top[1] - 0.5], w: 1 },
