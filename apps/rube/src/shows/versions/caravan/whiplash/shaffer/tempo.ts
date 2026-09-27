@@ -85,9 +85,10 @@ export const tempo = part<TempoState>(
       // Leaned in at his ear: rushing, or dragging? Close on the two heads.
       at(LEAN + 1.0, 2.9, [22.45, -0.2]),
       at(92.6, 4.6, [21.6, -0.1]),
-      // Wide enough for the chair: Fletcher going for it behind him, and back with it.
+      // Wide enough for the chair: Fletcher going for it behind him, and back with it; Tanner by the door kept inside
+      // the frame's right edge the whole way (it drifted across him).
       at(94.3, 6.8, [19.7, 0.1]),
-      at(97.2, 6.6, [19.0, -0.7]),
+      at(97.2, 6.6, [19.45, -0.7]),
       at(THROW, 6.5, [19.55, -0.7]),
       at(WALL + 0.3, 6.3, [21.3, -0.4]),
       // The counts, a steady two-shot pushing in a little on each slap: his palm raised by Andrew's ear, chopping
@@ -108,8 +109,10 @@ export const tempo = part<TempoState>(
       at(DROP_OFF + 0.2, 5.4, [22.9, 0.9]),
       at(TANNER_ON + 0.5, 5.1, [23.3, 1.2]),
       at(LOOK + 0.15, 5.05, [23.15, 1.25]),
-      { t: PUSH, cells: 5, off: [0.9, -0.8] },
-      { t: slot.end, cells: 5, off: [0.9, -0.8] },
+      // Low in the frame through the far door and on into the night, the cut under the corridor's floor at the
+      // frame's foot (centred on him it was 40% of the frame, a black slab).
+      { t: PUSH, cells: 5, off: [0.9, -1.55] },
+      { t: slot.end, cells: 5, off: [0.9, -1.55] },
     ]
   },
 )

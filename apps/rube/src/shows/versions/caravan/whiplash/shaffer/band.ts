@@ -70,26 +70,30 @@ export const band = part<BandState>(
     // In the corridor as the band comes in: the frame already leaning past him (practice.ts leads it there) so its
     // first chord lands on the room lit and the tiers playing; opening on, him rolling toward its door; through the
     // door with him.
-    { t: slot.begin, cells: 5.3, off: [2.45, -0.95] },
-    { t: 31.9, cells: 6.6, hold: [4.0, -1.2], w: 0.8 },
-    { t: DOOR_IN, cells: 7.1, hold: [4.4, -1.15], w: 0.7 },
+    // The corridor sits low in the frame, the cut under its floor at the frame's foot: centred on him, half the frame
+    // under the floor was the building's section, a black slab like a letterbox.
+    { t: slot.begin, cells: 5.3, off: [2.45, -1.6] },
+    { t: 31.9, cells: 6.6, hold: [4.0, -1.6], w: 0.8 },
+    { t: DOOR_IN, cells: 7.1, hold: [4.4, -1.45], w: 0.7 },
     // The room opens: the tiers and the band, as he comes down them a step a bar.
     { t: 34.4, cells: 8.2, hold: [7.2, -1.1], w: 0.7 },
     { t: LANDINGS[1], cells: 8.4, hold: [10.2, -0.7], w: 0.65 },
     // Up against the podium: him small at Fletcher's feet, Fletcher above.
     { t: BUMP, cells: 6.2, hold: [13.5, 0.55], w: 1 },
     { t: THERE + 0.4, cells: 6.2, hold: [13.8, 0.55], w: 1 },
-    // His place: the chair, the chart; Fletcher at the edge of it.
-    { t: SEATED, cells: 5.8, hold: [16.9, 0.4], w: 1 },
-    // The first page, as an insert on the page-turner: the whole stand, from the arm over its desk to the treadle at
-    // its foot, the chair's back at the left; he drops onto the treadle on the downbeat and the arm takes the page
-    // over; a slow push in on the desk as the arm swings back; out again with his hop up to the seat, one pull-out
-    // that opens past Fletcher's reach (his whole figure on the podium by 49.3, never his hand parked alone at the
-    // edge) and carries on, leaning left, out to the room.
-    { t: FIRST.press - 2 * BEAT - 0.5, cells: 4.3, hold: [STAND.x - 0.35, 0.55], w: 1 },
-    { t: FIRST.press, cells: 4.05, hold: [STAND.x - 0.2, 0.5], w: 1 },
-    { t: FIRST.page + 0.5, cells: 3.7, hold: [STAND.x - 0.1, 0.25], w: 1 },
-    { t: FIRST.down + 0.6, cells: 5.5, hold: [STAND.x - 0.75, 0.4], w: 1 },
+    // His place: the chair, the chart, Tanner at the kit; Fletcher whole on his podium at the left of it.
+    { t: SEATED, cells: 5.8, hold: [17.3, 0.4], w: 1 },
+    // The first page, as an insert on the page-turner and the group it serves: Andrew on his chair, the whole stand
+    // from the arm over its desk to the treadle at its foot, and Tanner on the snare keeping the time Andrew taps.
+    // Fletcher is out of it: its left edge stays past his beating hand (15.07 at its reach), so he is never cut in
+    // half at the edge through the insert, and its right edge keeps Tanner in by more than his radius. He drops onto
+    // the treadle on the downbeat and the arm takes the page over; a slow push in on the desk as the arm swings back;
+    // out again with his hop up to the seat, one pull-out that opens past Fletcher's whole figure on the podium and
+    // carries on, leaning left, out to the room.
+    { t: FIRST.press - 2 * BEAT - 0.5, cells: 4.3, hold: [19.0, 0.55], w: 1 },
+    { t: FIRST.press, cells: 4.1, hold: [18.95, 0.5], w: 1 },
+    { t: FIRST.page + 0.5, cells: 3.9, hold: [18.9, 0.3], w: 1 },
+    { t: FIRST.down + 0.6, cells: 5.5, hold: [17.5, 0.4], w: 1 },
     // Back to take in the saxophones and trombones at work, the conductor, the page turner.
     { t: 51.6, cells: 7.4, hold: [13.3, -0.4], w: 1 },
     { t: 53.95, cells: 7.2, hold: [13.0, -0.7], w: 1 },
