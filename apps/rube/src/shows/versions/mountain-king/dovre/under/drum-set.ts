@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, knock, lastOf, smooth, type Ctx } from '../kit'
 import { flame, flicker, glow } from '../lantern'
-import { beat, CODA, FF, RUIN } from '../music'
+import { beat, CODA, FF, RUIN, ruinLight } from '../music'
 import { hollow, quake, slab, stalactite } from '../rock'
 import { drawTroll } from '../troll'
 import { LAMP, STONE, TROLL, WORKS } from '../worlds'
@@ -267,9 +267,11 @@ function roomPath(ctx: CanvasRenderingContext2D, k: number): void {
 export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
   // The back wall: the dark hollow, warmed toward lit rock as the fires catch and the drumming fans them.
   const base = mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, Math.min(1, 0.12 + 0.75 * L))
+  // In the mountain's fall the room is at full light, and its fires leap on its chords as the roof cracks.
+  const ruin = ruinLight(T, RUIN.drum)
   p.push()
   p.noStroke()
-  p.fill(mixHex(base, WALL_LIT, wallLift(T, L)))
+  p.fill(mixHex(base, WALL_LIT, Math.min(1, wallLift(T, L) + 0.1 * ruin.up + 0.12 * ruin.flare)))
   shape(p, c, ROOM)
   p.pop()
   // The fire's light on the rock, over the wall, before anything it lights; held inside the hollow, so the solid
@@ -279,7 +281,7 @@ export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
   roomPath(ctx, c.k)
   ctx.clip()
   for (const [i, x] of FIRES.entries()) {
-    const f = flicker(T, i * 3 + 1) * caught(i, T)
+    const f = flicker(T, i * 3 + 1) * caught(i, T) * (1 + 0.7 * ruin.flare)
     // The broad wash: the whole room warmed from its fires, fading up into the vault and out to its ends.
     glow(p, c, x, FIRE_Y - 1.2, 8.5, (0.07 + 0.11 * L) * f)
     // The pool: the fire's own blaze on the wall behind it, growing with every drummer.

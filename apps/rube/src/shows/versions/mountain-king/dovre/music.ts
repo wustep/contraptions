@@ -203,6 +203,24 @@ export const BLOW = CODA_CHORDS[CODA_CHORDS.length - 1].t
  */
 export const RUIN = { heart: 143.199, drum: [143.926, 144.12] as const, mine: [144.84, 145.079] as const, vault: 146.348 }
 
+/**
+ * Each room at full light for its fall, so the cross-section reads as the places he went through, one lit room over
+ * another, before the collapse puts them out. `up` (0..1) comes up as the frame pulls back to the mountain (142.5 →
+ * 143.0), for every room at once; `flare` (0..1) is the room's own fires leaping on its chord as the roof cracks
+ * (in over 60 ms, dying over about a third of a second, and again on a second chord). The sets read it where they
+ * light their own hollows; `fall-ruin.ts`'s dark takes over once the room has come down.
+ */
+export function ruinLight(T: number, chords: readonly number[]): { up: number; flare: number } {
+  const e = (a: number, b: number) => {
+    const u = Math.max(0, Math.min(1, (T - a) / (b - a)))
+    return u * u * (3 - 2 * u)
+  }
+  const up = e(142.5, 143.0)
+  let flare = 0
+  for (const at of chords) if (T > at - 0.03) flare = Math.max(flare, e(at - 0.03, at + 0.03) * Math.exp(-Math.max(0, T - at - 0.03) / 0.33))
+  return { up, flare }
+}
+
 /* ------------------------------------------------------------------ loudness */
 
 /**

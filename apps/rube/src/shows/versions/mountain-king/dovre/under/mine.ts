@@ -3,6 +3,7 @@ import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { OPEN } from '../hall/hall-clock'
 import { alpha, box, part, type Ctx, type PartShot, type Slot } from '../kit'
 import { flicker, glow } from '../lantern'
+import { RUIN, ruinLight } from '../music'
 import { quake } from '../rock'
 import { SEAM_SHOT } from '../seams'
 import type { Pen } from '../troll'
@@ -245,6 +246,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   ctx.save()
   clipRoom(ctx, k, false)
   // The torches: how many have caught, and the stretch of gallery they light.
+  const ruin = ruinLight(T, RUIN.mine)
   let n = 0
   let x0 = Infinity
   let x1 = -Infinity
@@ -257,7 +259,8 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   }
   if (n > 0) {
     // The gallery's wash: the rock face between the lit torches, warmer with each; reaching on to the next set.
-    const a = Math.min(0.24, 0.04 + 0.024 * n) * lightsOut(T)
+    // In the mountain's fall the stope is at full light, and its torches leap on its chords as the roof cracks.
+    const a = Math.min(0.36, 0.04 + 0.024 * n + 0.08 * ruin.up + 0.1 * ruin.flare) * lightsOut(T)
     const gx0 = x0 - 2.2
     const gx1 = x1 + 1.4
     const g = ctx.createLinearGradient(gx0 * k, 0, gx1 * k, 0)
@@ -272,7 +275,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   for (const tr of TORCHES) {
     const l = torchLit(tr, T)
     if (l <= 0.01) continue
-    const f = flicker(T, tr.seed)
+    const f = flicker(T, tr.seed) * (1 + 0.7 * ruin.flare)
     const m = Math.min(1, l)
     // The near pool (as it was), and the wide throw on the rock face, flaring as it catches.
     glow(p, c, tr.x + 0.15, tr.y - 0.35, 3.1 * m, 0.2 * l * f)

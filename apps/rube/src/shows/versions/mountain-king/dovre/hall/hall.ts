@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, frame, hash } from '../kit'
 import { drawLantern, drawTorch, flame, flicker } from '../lantern'
-import { beatAt } from '../music'
+import { beatAt, ruinLight } from '../music'
 import { quake, stalactite } from '../rock'
 import { drawTroll, type Pen, type TrollDrawn } from '../troll'
 import { GOLD, LAMP, STONE, TROLL, WORKS } from '../worlds'
@@ -1709,12 +1709,16 @@ export function drawHall(p: p5, c: Pen, t: number): void {
 
   const poses = COURT.map((cr) => courtierAt(cr, t))
   const lights = lightsAt(t, poses)
+  // In the mountain's fall, the whole hall in the cross-section at full light (its fires stirred by the quake), a
+  // broad light over the hollow that goes down with its lights as the hammer blows put them out one a blow.
+  const fallen = ruinLight(t, []).up * (1 - ease(t, HAMMERS[0] - 0.05, HAMMERS[5] + 0.1))
+  if (fallen > 0.01) lights.push({ x: 15.5, y: -1.2, s: fallen, r: 0, w: 1, col: LAMP.glow, pool: 15.5, squash: 0.6, cap: 0.42 * fallen })
   // How lit the hall is as a whole (each light the chain catches lifts it a step), and the ambient that gives: the
   // light the fires throw about the hollow, under their pools.
-  const hallLit = Math.min(1, lights.reduce((s, l) => s + (l.w > 0.6 ? l.s * 0.2 : 0), 0))
+  const hallLit = Math.max(fallen, Math.min(1, lights.reduce((s, l) => s + (l.w > 0.6 && l.r > 0 ? l.s * 0.2 : 0), 0)))
   // Both come up as the hall's cover opens from the door, so its soft edge never shows a lit wall at the jamb.
   const poolsUp = ease(t, OPENS - 0.1, OPENS + 1.0)
-  const amb = 0.18 * hallLit * poolsUp
+  const amb = Math.max(0.18 * hallLit * poolsUp, 0.3 * fallen)
   const lit = (x: number, y: number) => Math.min(1, litAt(lights, x, y) + amb)
 
   drawRoom(p, c, 0.1 + 0.5 * hallLit)

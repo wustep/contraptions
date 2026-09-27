@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash } from '../kit'
 import { drawLantern, drawTorch, flame, flicker, glow } from '../lantern'
-import { RUIN } from '../music'
+import { RUIN, ruinLight } from '../music'
 import { quake } from '../rock'
 import { LAMP, SKY, STONE, WORKS } from '../worlds'
 import type { Pen } from '../troll'
@@ -132,7 +132,9 @@ function fireAt(T: number): ReturnType<typeof furnace> {
   const s = surge(T) * (T >= BREAK ? 0 : 1)
   // The flywheel's halves crash down in front of it: the furnace blasts out once.
   const blast = T >= HALVES_LAND - 0.03 ? 2.4 * (T < HALVES_LAND ? 1 + (T - HALVES_LAND) / 0.03 : Math.exp(-(T - HALVES_LAND) / 0.4)) : 0
-  return { base: Math.max(f.base, 0.28 * woke * (T >= BREAK ? 0.6 : 1)), flare: Math.max(f.flare, s, blast), heat: f.heat }
+  // In the mountain's fall the forge burns up again for the cross-section, and leaps on the heart's chord.
+  const ruin = ruinLight(T, [RUIN.heart])
+  return { base: Math.max(f.base, 0.28 * woke * (T >= BREAK ? 0.6 : 1), 0.6 * ruin.up), flare: Math.max(f.flare, s, blast, 1.4 * ruin.flare), heat: f.heat }
 }
 
 /**
