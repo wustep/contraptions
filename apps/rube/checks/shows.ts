@@ -45,6 +45,7 @@ import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
 import { checkTheater } from './theater'
+import { PREROLL, WARM } from '../src/shows/youtube'
 import { checkLogogram } from './logogram'
 
 let failures = 0
@@ -629,6 +630,14 @@ async function main(): Promise<void> {
       }
     }
   }
+
+  /* ------------------------------------------------------------------ the music, ahead */
+
+  console.log('\nthe music, ahead')
+  // A cue is warmed (fetched, then parked) before it is run early, and runs early long enough for YouTube to come
+  // out of a seek and be put on time before it is heard.
+  check('a YouTube cue runs early for several seconds before its entry', PREROLL >= 6)
+  check('a YouTube cue is warmed well before it runs early', WARM >= PREROLL * 3)
 
   /* ------------------------------------------------------------------ the clock */
 

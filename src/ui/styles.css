@@ -354,8 +354,13 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   display: none;
   position: fixed;
   z-index: 40;
+  /* The ceiling; `place()` cuts it to the room beside the trigger. */
   max-height: 380px;
+  max-width: calc(100vw - 16px);
   overflow-y: auto;
+  /* A list scrolled to its end stops there, not the panel or page under it. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -569,7 +574,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
-  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; }
+  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; overscroll-behavior: contain; }
   .panel-peek {
     top: auto;
     right: auto;

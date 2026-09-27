@@ -28,6 +28,7 @@ import { WORKSHOP } from '../src/worlds/goldberg/workshop'
 import { tracksCatalog } from '../src/worlds/tracks/build'
 import { reactors } from '../src/worlds/tracks/reactors'
 import { drawTrack, type Kind } from '../src/worlds/tracks/track'
+import { fitPopup } from '../src/ui/listbox'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -915,6 +916,19 @@ function runDraw(name: string, state: unknown, draw: (p: p5, u: number) => void)
     return
   }
   check(`draw ${name}`, snapshot(state) === before)
+}
+
+console.log('\nlistbox')
+{
+  // A phone: 700 tall, a trigger a little past the middle. The 380 px Show list fits neither side whole, so it goes
+  // where the room is and scrolls inside itself.
+  const up = fitPopup(380, 410, 380, 700)
+  check('listbox flips above when there is more room there', up.top >= 8 && up.top + up.maxHeight <= 380)
+  check('listbox is cut to the room above, not its own height', up.maxHeight < 380 && up.maxHeight >= 120)
+  const down = fitPopup(100, 130, 200, 700)
+  check('listbox drops below when it fits there, whole', down.top === 134 && down.maxHeight === 200)
+  const squeeze = fitPopup(40, 70, 380, 300)
+  check('listbox never runs off the bottom', squeeze.top + squeeze.maxHeight <= 300 - 8)
 }
 
 console.log('\ndraw')
