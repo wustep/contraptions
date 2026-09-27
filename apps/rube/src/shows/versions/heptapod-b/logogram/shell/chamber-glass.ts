@@ -299,10 +299,11 @@ function drawSwell(p: p5, k: number, t: number): void {
   if (w <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const f = frame(p, k)
-  // From the glass: the light fills the air over the floor first, the floor itself last.
+  // From the glass: the light fills the air over the floor first, and the floor close behind it (never a dark slab
+  // left standing in the white).
   const g = ctx.createLinearGradient(0, (GLASS_BOT - 0.4) * k, 0, (GLASS_BOT + 3) * k)
   g.addColorStop(0, rgba(SHELL.glow, 0.6 * w))
-  g.addColorStop(1, rgba(SHELL.glow, 0.25 * w * w))
+  g.addColorStop(1, rgba(SHELL.glow, 0.85 * w ** 1.5))
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
 }

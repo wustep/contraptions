@@ -87,7 +87,7 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
   const R1 = RINGS.find((r) => r.key === 'R1')!
   const her0 = at(slot.begin)
   return [
-    // Carried in from the chamber's framing (5.6) under the white; easing in to the palm's cup as the veil clears,
+    // Carried in from the chamber's framing (5.8) under the white; easing in to the palm's cup as the veil clears,
     // then back a little to take in the ring written beside her.
     { t: 131.6, cells: 3.8, hold: [her0[0] + 0.1, her0[1] - 0.55], w: 1 },
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },

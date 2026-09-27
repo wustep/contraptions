@@ -290,6 +290,15 @@ export function ringForm(t: number): number {
   return Math.min(1, f)
 }
 
+/**
+ * The ring's size at `t`: RING_R until it closes, then swelling with the voices, slowly and then faster, a tenth
+ * larger by the loudest moment (the white takes it at its largest).
+ */
+export function ringR(t: number): number {
+  const u = clamp01((t - CLOSE) / (OUT - CLOSE))
+  return RING_R * (1 + 0.09 * u * u)
+}
+
 /** Where the two ends meet the ink pools: a blot that lands on CLOSE and settles. */
 function meetMark(t: number): { a: number; size: number; width: number; grow: number }[] {
   if (t <= CLOSE) return []
@@ -396,6 +405,6 @@ export function drawInk(p: p5, k: number, t: number, seen: Seen): void {
   const spin = spinAt(t)
   p.push()
   p.translate(RING_AT[0] * k, RING_AT[1] * k)
-  drawLogogram(p, k, { r: RING_R, seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink, marks: meetMark(t) })
+  drawLogogram(p, k, { r: ringR(t), seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink, marks: meetMark(t) })
   p.pop()
 }

@@ -13,7 +13,7 @@ import type { LogogramShow } from '../src/shows/versions/heptapod-b/logogram/sho
 import { rollAt } from '../src/shows/versions/heptapod-b/logogram/shell/shaft'
 import { TURN_FOR } from '../src/shows/versions/heptapod-b/logogram/shell/shaft-path'
 import { CLOSE } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-path'
-import { RING_AT, RING_R } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-heptapods'
+import { RING_AT, ringR } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-heptapods'
 import { BROW, V1_AT } from '../src/shows/versions/heptapod-b/logogram/lake/house-plan'
 import { CUT_IN } from '../src/shows/versions/heptapod-b/logogram/valley/depart'
 import { R } from '../src/parts'
@@ -146,7 +146,7 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
   const cropped: string[] = []
   for (let t = CLOSE; t <= veilFrom; t += 0.05) {
     const f = cam(t)
-    const reach = RING_R * 1.12
+    const reach = ringR(t) * 1.12
     if (Math.abs(ring[0] - f.x) + reach > (f.cells * 16) / 9 / 2 || Math.abs(ring[1] - f.y) + reach > f.cells / 2) cropped.push(t.toFixed(2))
   }
   check('logogram: the first logogram closes on a pulse and hangs whole in the frame from then until the white, over three seconds and a half',
