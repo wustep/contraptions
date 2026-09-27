@@ -34,18 +34,25 @@ export const T_IAN_LEAP = pulse(296)
 export const L_TOUCH = [pulse(298), pulse(301), pulse(303), pulse(304)] as const
 /** His, a pulse behind hers. */
 export const I_TOUCH = [pulse(299), pulse(302), pulse(304), pulse(305)] as const
-/** Her low hops over the ribs: [lift off, land] (every landing on a pulse, every hop two pulses long). */
+/**
+ * Her low hops over the ribs: [lift off, land], each on a pulse. The first lifts off on 73.120 (three pulses long,
+ * the highest); the last is over the threshold ridge just inside the opening.
+ */
 export const L_HOPS: readonly [number, number][] = [
-  [pulse(307), pulse(309)],
+  [pulse(306), pulse(309)],
   [pulse(339), pulse(341)],
   [pulse(349), pulse(351)],
+  [pulse(355), pulse(357)],
 ]
-/** His, over the same ribs, a little after her. */
+/** His, over the same ribs, a little after her: over the threshold he lands on the seam itself (85.786). */
 export const I_HOPS: readonly [number, number][] = [
   [pulse(310), pulse(312)],
   [pulse(340), pulse(342)],
   [pulse(350), pulse(352)],
+  [pulse(357), pulse(359)],
 ]
+/** The deck's lamp knocks on its bracket's stop as gravity settles (pulse 300). */
+export const T_KNOCK = pulse(300)
 
 /* ------------------------------------------------------------------ gravity */
 
@@ -269,8 +276,19 @@ function bounces(touch: readonly number[], x0: number, vx: number): Stretch[] {
 }
 
 /** Louise's hop speeds (the ribs follow from where she is), her cruise, and the speed she leaves at (SEAMS.chamber). */
-const L_HOP_V = [0.95, 1.25, 1.1]
 const V_EXIT = 0.9
+/**
+ * Her speed over the threshold, solved so that Ian, half a cell behind her, lands from his hop over the same ridge
+ * exactly at the seam, at the seam's speed: her distance from the ridge to the seam is 0.48 + his half-hop.
+ */
+const V_LIP = (() => {
+  const after = T_END - L_HOPS[3][1]
+  const dE = L_HOPS[3][1] - L_HOPS[3][0]
+  const dI = I_HOPS[3][1] - I_HOPS[3][0]
+  return (0.48 + (V_EXIT * dI) / 2 - (V_EXIT * after) / 2) / (after / 2 + dE / 2)
+})()
+const L_HOP_V = [0.95, 1.25, 1.1, V_LIP]
+const I_HOP_V = [0.95, 1.25, 1.045, V_EXIT]
 
 function louiseFloor(): Stretch[] {
   const land = LEAP.vel(L_TOUCH[0])
@@ -295,6 +313,8 @@ function louiseFloor(): Stretch[] {
   hop(1)
   roll(L_HOPS[2][0], L_HOP_V[2])
   hop(2)
+  roll(L_HOPS[3][0], L_HOP_V[3])
+  hop(3)
   roll(T_END, V_EXIT)
   return out
 }
@@ -316,8 +336,11 @@ export const RIBS: Rib[] = (() => {
   const b = HOP_RIBS[1]
   const n = Math.max(1, Math.round((b - a) / 2.5) - 1)
   for (let i = 1; i <= n; i++) xs.push(a + ((b - a) * i) / (n + 1) + 0.22 * Math.sin(i * 2.3))
-  const c = HOP_RIBS[2]
-  if (X_END - c > 2.4) xs.push(c + (X_END - c) * 0.55)
+  for (let i = 3; i < HOP_RIBS.length; i++) {
+    const c = HOP_RIBS[i - 1]
+    const d = HOP_RIBS[i]
+    if (d - c > 2.4) xs.push(c + (d - c) * 0.55)
+  }
   return xs.sort((p, q) => p - q).map((x, i) => ({ x, h: 0.095 + 0.02 * Math.sin(i * 1.7 + 0.4), w: 0.38 + 0.05 * Math.cos(i * 2.1) }))
 })().filter((r) => r.x > X_LIP + 0.5 && r.x < X_END - 0.4)
 
@@ -355,13 +378,13 @@ function ianFloor(): Stretch[] {
     last = ss[ss.length - 1]
   }
   I_HOPS.forEach(([t0, t1], i) => {
-    const v = L_HOP_V[i] * (i === I_HOPS.length - 1 ? 0.95 : 1)
+    const v = I_HOP_V[i]
     const x0 = HOP_RIBS[i] - (v * (t1 - t0)) / 2
     push(bridge(last.t1, endOf(last), last.v1, t0, x0, v))
     push([{ t0, t1, x0, v0: v, v1: v, hop: true }])
   })
-  // To the seam: half a cell behind her, at her speed.
-  push(bridge(last.t1, endOf(last), last.v1, T_END, X_END - 0.48, V_EXIT))
+  // To the seam, half a cell behind her, at her speed (his last hop, over the threshold, lands on it).
+  if (last.t1 < T_END - 1e-9) push(bridge(last.t1, endOf(last), last.v1, T_END, X_END - 0.48, V_EXIT))
   return out
 }
 const I_FLOOR = ianFloor()

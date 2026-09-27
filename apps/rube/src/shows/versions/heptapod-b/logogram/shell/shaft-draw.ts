@@ -16,6 +16,7 @@ import {
   ribRise,
   SWITCH_U,
   T0,
+  T_KNOCK,
   T_ON,
   T_SWITCH,
   THROAT,
@@ -80,12 +81,29 @@ export function floodOn(t: number): number {
     return 0.5 * Math.exp(-s / 0.045) + 0.22 * Math.exp(-Math.max(0, s - 0.11) / 0.03) * (s > 0.11 ? 1 : 0)
   }
   const s = t - T_ON
-  return Math.min(1, 0.35 + s / 0.06) * (1 + 0.1 * Math.exp(-s / 0.25))
+  // The knock on its bracket jolts it: a blink.
+  const jolt = t >= T_KNOCK ? 1 - 0.3 * Math.exp(-(t - T_KNOCK) / 0.06) : 1
+  return Math.min(1, 0.35 + s / 0.06) * (1 + 0.1 * Math.exp(-s / 0.25)) * jolt
+}
+/**
+ * The lamp's lean on its yoke, radians toward the deck's near end. Balanced leaning a little up the shaft's middle in
+ * Earth's pull; as gravity turns it tips toward the new floor and knocks on its bracket's stop on T_KNOCK, rebounding,
+ * damped, and settles there. The beam goes with it.
+ */
+export function lampTilt(t: number): number {
+  const t0 = TURN + 0.2
+  if (t <= t0) return 0.12
+  if (t < T_KNOCK) {
+    const u = (t - t0) / (T_KNOCK - t0)
+    return 0.12 - 0.16 * u * u
+  }
+  const s = t - T_KNOCK
+  return -0.04 + 0.03 * Math.abs(Math.sin((Math.PI * s) / 0.19)) * Math.exp(-s / 0.22)
 }
 /** The flood's lens (its centre) and the direction it throws, in the part's frame, at `t`. */
-const FLOOD_TILT = -0.12
 export function floodLens(t: number): { at: Pt; dir: Pt } {
-  return { at: [deckX(t) + DECK_LAMP_LENS.up, DECK[1] - DECK_LAMP_LENS.back], dir: [Math.cos(FLOOD_TILT), Math.sin(FLOOD_TILT)] }
+  const a = -lampTilt(t)
+  return { at: [deckX(t) + DECK_LAMP_LENS.up, DECK[1] - DECK_LAMP_LENS.back], dir: [Math.cos(a), Math.sin(a)] }
 }
 const BEAM_HALF = 0.3
 const BEAM_LEN = 17
@@ -523,7 +541,7 @@ export function drawDeckRig(p: p5, c: Ctx, t: number): void {
   // against it, the lamp lit.
   const lu = louiseAt(Math.min(t, TURN))[1]
   const press = clamp01((lu - (SWITCH_U - R)) / PRESS)
-  drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, lamp: { on: clamp01(floodOn(t)), switchAt: SWITCH_U, press, tilt: -FLOOD_TILT, body: STEEL_DARK } })
+  drawDeck(p, k, DECK[0], DECK[1], { ink: RIG_INK, weight, steel: STEEL, lamp: { on: clamp01(floodOn(t)), switchAt: SWITCH_U, press, tilt: lampTilt(t), body: STEEL_DARK } })
   // The plate's underside, over the throat, catches its light.
   edges.push([[DECK[0], R + 0.14], [DECK[1], R + 0.14], rigLit(0.3) * 1.2])
   p.noFill()

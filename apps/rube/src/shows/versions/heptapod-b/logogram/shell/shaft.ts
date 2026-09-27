@@ -17,6 +17,7 @@ import {
   T_IAN_LEAP,
   T_LEAP,
   T0,
+  T_KNOCK,
   T_ON,
   T_STOP,
   T_SWITCH,
@@ -63,7 +64,7 @@ export const rollAt = (t: number): number => {
 
 /** Every strike, show seconds. */
 export const SHAFT_HITS: number[] = [
-  ...new Set([T_STOP, T_SWITCH, T_ON, T_LEAP, T_IAN_LEAP, ...L_TOUCH, ...I_TOUCH, ...L_HOPS.flat(), ...I_HOPS.flat()]),
+  ...new Set([T_STOP, T_SWITCH, T_ON, T_LEAP, T_IAN_LEAP, T_KNOCK, ...L_TOUCH, ...I_TOUCH, ...L_HOPS.flat(), ...I_HOPS.flat()]),
 ].sort((a, b) => a - b)
 
 interface ShaftState {
