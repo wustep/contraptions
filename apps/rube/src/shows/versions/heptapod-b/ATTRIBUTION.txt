@@ -1,0 +1,20 @@
+Heptapod B — Jóhann Jóhannsson
+From Arrival (Original Motion Picture Soundtrack), Deutsche Grammophon, 2016.
+℗ 2016 Paramount Pictures / Xenolinguistics, LLC, under exclusive license to Deutsche Grammophon GmbH, Berlin.
+Composed by Jóhann Jóhannsson, with Joan La Barbara (composer, lyricist), as the label's release credits them.
+Film: Arrival, directed by Denis Villeneuve, Paramount Pictures, 2016; screenplay by Eric Heisserer, from Ted Chiang's
+"Story of Your Life" (1998).
+
+The recording is the soundtrack's own, as uploaded to YouTube by the label ("Provided to YouTube by Universal Music
+Group", the "Jóhann Jóhannsson" topic channel, auto-generated), video KzaqrQuwr1k:
+https://www.youtube.com/watch?v=KzaqrQuwr1k
+(Deutsche Grammophon's own channel has the same track as a pseudo-video, F0ahB25FJ6o.) Duration 3:42.
+Copyrighted — used for a private Contraptions tech demo only; do not ship to production / public Shows without a
+licence.
+
+Files:
+- apps/rube/src/shows/versions/heptapod-b/heptapod-b-demo.mp3 — the cue as fetched (yt-dlp, audio only, re-encoded
+  at 128 kbit/s with ffmpeg). The show plays it whole from its first sample (offset 0); no edit, no gain change. The
+  show then runs on in silence for its end credits.
+- scripts/shows/plans/heptapod-b-onsets.json — the recording's pulse (one comb, every pulse on its own attack), its
+  onsets and its landmarks, measured by scripts/shows/heptapod-b-onsets.py; every strike in the show is held to it.

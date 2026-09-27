@@ -43,6 +43,7 @@ import { checkCaravan } from './caravan'
 import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
+import { checkLogogram } from './logogram'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -152,8 +153,8 @@ async function main(): Promise<void> {
   check('Première is take-b only', shipped.works.find((w) => w.work === 'premiere-arabesque')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune is take-b only', shipped.works.find((w) => w.work === 'clair-de-lune')?.versions.map((v) => v.take).join(',') === 'take-b')
   check('Clair de Lune\'s and Première\'s one takes are called Take A', ['clair-de-lune', 'premiere-arabesque'].every((w) => shipped.works.find((x) => x.work === w)?.versions[0]?.label === 'Take A'))
-  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Married Life, Merry-Go-Round, Mountain King, Première Arabesque and Voyage',
-    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Married Life|Merry-Go-Round|Mountain King|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
+  check('in the picker the works are Caravan, Clair de Lune, Cornfield Chase, Epilogue, Everything, Gymnopédie, Logogram, Married Life, Merry-Go-Round, Mountain King, Première Arabesque and Voyage',
+    shipped.works.map((w) => w.title).sort().join('|') === 'Caravan|Clair de Lune|Cornfield Chase|Epilogue|Everything|Gymnopédie|Logogram|Married Life|Merry-Go-Round|Mountain King|Première Arabesque|Voyage', shipped.works.map((w) => w.title).join('|'))
   check('no take carries a byline', shipped.works.every((w) => w.versions.every((v) => !('director' in v))))
 
   // Credits live are the page's DOM; a video has them painted into its frame (`words.ts`). The two are one look.
@@ -165,7 +166,7 @@ async function main(): Promise<void> {
     !!cardFace && words.includes(`'${cardFace}'`) && ['#ECE5D3', '#D9A441'].every((c) => css.includes(c) && words.includes(`'${c}'`)), cardFace)
   check('only a video\'s frame paints credits, and both canvases still refuse type',
     (stageSrc.match(/wordPainter\(/g) ?? []).length === 1 && /const words = shown && !full/.test(stageSrc) && (stageSrc.match(/refuseType\((p|s)\)/g) ?? []).length === 2)
-  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King and Première', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,interstellar,la-la-land,married-life,merry-go-round,mountain-king,premiere-arabesque')
+  check('the shows are Caravan, Clair de Lune, Come Recover, Cornfield Chase, Gymnopédie, Heptapod B, Interstellar, La La Land, Married Life, Merry-Go-Round, Mountain King and Première', shipped.works.map((w) => w.work).sort().join(',') === 'caravan,clair-de-lune,come-recover,cornfield-chase,gymnopedie,heptapod-b,interstellar,la-la-land,married-life,merry-go-round,mountain-king,premiere-arabesque')
   const caravan = shipped.works.find((w) => w.work === 'caravan')?.versions ?? []
   check('caravan is Caravan, one take, Opus 5.5, with no note', caravan.map((v) => v.take).join(',') === 'opus55' && caravan[0].title === 'Caravan' && caravan[0].label === 'Opus 5.5' && caravan[0].note === undefined)
   const marriedLife = shipped.works.find((w) => w.work === 'married-life')?.versions ?? []
@@ -174,6 +175,9 @@ async function main(): Promise<void> {
   const merryGoRound = shipped.works.find((w) => w.work === 'merry-go-round')?.versions ?? []
   check('merry-go-round is Merry-Go-Round, one take, Opus 5.5, with no note',
     merryGoRound.map((v) => v.take).join(',') === 'opus55' && merryGoRound[0].title === 'Merry-Go-Round' && merryGoRound[0].label === 'Opus 5.5' && merryGoRound[0].note === undefined)
+  const logogram = shipped.works.find((w) => w.work === 'heptapod-b')?.versions ?? []
+  check('heptapod-b is Logogram, one take, Opus 5.5, with no note',
+    logogram.map((v) => v.take).join(',') === 'opus55' && logogram[0].title === 'Logogram' && logogram[0].label === 'Opus 5.5' && logogram[0].note === undefined)
   const mountainKing = shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []
   check('mountain-king is Mountain King, takes Opus 5.5 and Spark, with no notes',
     mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5|Spark')
@@ -416,6 +420,7 @@ async function main(): Promise<void> {
       if (work.work === 'married-life' && version.take === 'opus55') checkMarriedLife(perf, version, check)
       if (work.work === 'mountain-king' && version.take === 'opus55-spark') checkSpark(perf, version, check)
       if (work.work === 'merry-go-round' && version.take === 'opus55') checkMerryGoRound(perf, version, check)
+      if (work.work === 'heptapod-b' && version.take === 'opus55') checkLogogram(perf, version, check)
 
       if (work.work === 'interstellar' && version.take === 'opus55') {
         check('liftoff: the whole mix from zero (Cornfield Chase, then No Time for Caution), credited to Hans Zimmer and Interstellar, and the credits after it',

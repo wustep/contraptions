@@ -1,0 +1,651 @@
+import type p5 from 'p5'
+import { mixHex, R, type Pt } from '../../../../parts'
+import { alpha, hash } from './kit'
+import { FOG, SHELL, VALLEY } from './worlds'
+
+/**
+ * The canonical drawings of the show's recurring things (the director's): the shell, the heptapods, their ink, and
+ * the lift's deck. Every part that shows one of these calls it from here, so the shell is one shell and a heptapod is
+ * one heptapod everywhere. If one needs something it does not do, say so in your report; do not draw your own.
+ *
+ * Every function draws in cells about the origin the caller has translated to (`p.translate(x * k, y * k)`), with
+ * `k` pixels a cell, and leaves p5's state as it found it. None of them draws text, dashed lines or hairline rings.
+ * None is inked: the shell is a mass against the sky, the heptapods are shapes in fog, the ink is ink.
+ */
+
+const TAU = Math.PI * 2
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v))
+const smooth01 = (u: number) => {
+  const v = clamp01(u)
+  return v * v * (3 - 2 * v)
+}
+
+/* ------------------------------------------------------------------ the shell */
+
+export interface ShellOpts {
+  /** Show time: for the slow drift of its haze. */
+  t: number
+  /** Height in cells (150 over the meadow). Its width is `w` (0.42 of the height if unset). */
+  h?: number
+  w?: number
+  /** The slot in its belly: 0 shut, 1 open (a dark slot `slotW` cells wide, its light spilling down). */
+  slot?: number
+  slotW?: number
+  /** 0 solid .. 1 gone: it turns to vapour from its edges in and its top down, and the vapour drifts up. */
+  vanish?: number
+  /** 0 clear .. 1 lost in the cloud: how far the air between us and it pales it. */
+  haze?: number
+  /** The colour the air pales it toward (the sky's, by default). */
+  air?: string
+}
+
+/** The shell's half-width at `u` from its top (0) to its belly (1), as a share of its width: a stone stood on edge. */
+export function shellHalf(u: number): number {
+  const v = clamp01(u)
+  // An upright oval, a little fuller in its lower half, round at the crown and at the belly: never a point.
+  const q = Math.pow(v, 1.08)
+  return 0.5 * Math.pow(Math.sin(Math.PI * q), 0.52) * (1 + 0.03 * Math.sin(TAU * q + 0.6))
+}
+
+/**
+ * The shell, hanging: its belly's lowest point at the origin, its top `h` cells up. A smooth dark stone of a thing,
+ * lens-thin, its left edge catching the sky, faint strata across its face, and the slot in its belly when it opens.
+ */
+export function drawShell(p: p5, k: number, o: ShellOpts): void {
+  const h = o.h ?? 150
+  const w = o.w ?? h * 0.42
+  const vanish = clamp01(o.vanish ?? 0)
+  const haze = clamp01(o.haze ?? 0)
+  const air = o.air ?? VALLEY.sky
+  if (vanish >= 0.999) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const n = 140
+  // The outline, from the top round the right side to the belly and back up the left.
+  const pts: Pt[] = []
+  // Sampled closer together toward its ends, where it turns fastest, so the crown and the belly are round, not cut.
+  const at = (i: number) => (1 - Math.cos((Math.PI * i) / n)) / 2
+  for (let i = 0; i <= n; i++) {
+    const u = at(i)
+    pts.push([shellHalf(u) * w, -h + u * h])
+  }
+  for (let i = n; i >= 0; i--) {
+    const u = at(i)
+    pts.push([-shellHalf(u) * w, -h + u * h])
+  }
+  // As it goes, it thins from the top down: the part still there is below `keep`.
+  const keep = vanish <= 0 ? -h - 1 : -h + h * smooth01(vanish * 1.15)
+  const body = mixHex(VALLEY.shell, air, haze * 0.85)
+  const bodyDark = mixHex(VALLEY.shellDark, air, haze * 0.8)
+  const rim = mixHex(VALLEY.shellLight, air, haze * 0.7)
+  const fade = 1 - smooth01((vanish - 0.35) / 0.65)
+  ctx.save()
+  ctx.globalAlpha *= fade
+  // The body: lighter where the sky is on it (top and left), darkest at the belly.
+  const g = ctx.createLinearGradient(-w * 0.5 * k, -h * k, w * 0.35 * k, 0)
+  g.addColorStop(0, rim)
+  g.addColorStop(0.35, body)
+  g.addColorStop(1, bodyDark)
+  ctx.fillStyle = g
+  ctx.beginPath()
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, Math.max(y, keep) * k) : ctx.moveTo(x * k, Math.max(y, keep) * k)))
+  ctx.closePath()
+  ctx.fill()
+  // The rim light down its left edge, soft.
+  ctx.save()
+  ctx.clip()
+  const rl = ctx.createLinearGradient(-w * 0.5 * k, 0, -w * 0.3 * k, 0)
+  rl.addColorStop(0, mixHex(VALLEY.shellLight, air, 0.25 + haze * 0.5))
+  rl.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.globalAlpha *= 0.55
+  ctx.fillStyle = rl
+  ctx.fillRect(-w * 0.55 * k, -h * k, w * 0.3 * k, h * k)
+  ctx.globalAlpha /= 0.55
+  // Its grain: a few broad, soft, uneven bands of shade across its face, never lines.
+  const bands = 6
+  for (let b = 0; b < bands; b++) {
+    const y = -h * (0.14 + 0.76 * (b / bands) + 0.06 * (hash(b, 3, 11) - 0.5))
+    const bh = h * (0.035 + 0.03 * hash(b, 5, 11))
+    const sg = ctx.createLinearGradient(0, y * k, 0, (y + bh) * k)
+    const a = (b % 2 ? 0.018 : 0.035) * (1 - haze)
+    const tone = b % 2 ? '255,255,255' : '0,0,0'
+    sg.addColorStop(0, `rgba(${tone},0)`)
+    sg.addColorStop(0.5, `rgba(${tone},${a})`)
+    sg.addColorStop(1, `rgba(${tone},0)`)
+    ctx.fillStyle = sg
+    ctx.fillRect(-w * 0.6 * k, y * k, w * 1.2 * k, bh * k)
+  }
+  ctx.restore()
+  // The slot: a dark mouth in the belly, its light spilling down in a soft fall.
+  const slot = clamp01(o.slot ?? 0)
+  if (slot > 0.001 && vanish < 0.3) {
+    const sw = (o.slotW ?? 2.6) * slot
+    const sd = 0.9
+    const spill = ctx.createLinearGradient(0, 0, 0, 14 * k)
+    spill.addColorStop(0, `rgba(243,241,230,${0.22 * slot * (1 - haze)})`)
+    spill.addColorStop(1, 'rgba(243,241,230,0)')
+    ctx.fillStyle = spill
+    ctx.beginPath()
+    ctx.moveTo(-sw * 0.5 * k, 0)
+    ctx.lineTo(sw * 0.5 * k, 0)
+    ctx.lineTo(sw * 1.6 * k, 14 * k)
+    ctx.lineTo(-sw * 1.6 * k, 14 * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = mixHex(VALLEY.slot, air, haze * 0.6)
+    ctx.fillRect(-sw * 0.5 * k, -sd * k, sw * k, sd * k)
+    ctx.fillStyle = `rgba(243,241,230,${0.5 * slot * (1 - haze)})`
+    ctx.fillRect(-sw * 0.5 * k, -sd * 0.35 * k, sw * k, sd * 0.12 * k)
+  }
+  ctx.restore()
+  // The vapour it goes to: soft puffs peeling off its edges and rising.
+  if (vanish > 0.02) {
+    const puffs = 42
+    for (let i = 0; i < puffs; i++) {
+      const u = 0.05 + 0.9 * hash(i, 1, 31)
+      const side = hash(i, 2, 31) < 0.5 ? -1 : 1
+      const born = 0.05 + 0.75 * (1 - u) * 0.8 + 0.15 * hash(i, 3, 31)
+      const life = clamp01((vanish - born) / 0.45)
+      if (life <= 0 || life >= 1) continue
+      const x0 = side * shellHalf(u) * w * (0.8 + 0.2 * hash(i, 4, 31))
+      const y0 = -h + u * h
+      const x = x0 + side * life * w * 0.25
+      const y = y0 - life * h * 0.35
+      const r = (2 + 5 * hash(i, 5, 31)) * (0.6 + life)
+      p.noStroke()
+      p.fill(alpha(p, mixHex(VALLEY.cloud, air, 0.3), 0.55 * Math.sin(Math.PI * life)))
+      p.ellipse(x * k, y * k, r * 2 * k, r * 1.3 * k)
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ the heptapods */
+
+export interface HeptapodOpts {
+  /** Show time: its limbs sway on their own slow clocks, never on the music. */
+  t: number
+  /** Height from the floor to the top of its body, cells. */
+  h: number
+  /** Which one: Abbott (0, the larger, stiller) or Costello (1). It changes the gait and the lean. */
+  who?: 0 | 1
+  /** How deep in the fog: 0 clear, 1 gone. It pales and softens. */
+  fog?: number
+  /** The fog's colour, which it pales toward. */
+  air?: string
+  /** Its colour when clear. */
+  color?: string
+  /** Opacity. */
+  light?: number
+  /**
+   * A limb reaching out: which limb (0..6, 3 is the middle one, toward us), the point it reaches for (cells from the
+   * origin), and how far it has gone (0 standing .. 1 there). At the end of its reach the tip opens into a palm.
+   */
+  reach?: { limb: number; to: Pt; u: number }
+  /** How open the reaching limb's palm is, 0 a closed tip .. 1 the seven fingers splayed flat on the glass. */
+  palm?: number
+  /** Lean, radians, the whole body (a slow sway toward something). */
+  lean?: number
+}
+
+/** The seven limbs' feet, as shares of `h` from the origin, left to right; 3 is the front one, toward us. */
+const FEET: Pt[] = [
+  [-0.62, 0.02],
+  [-0.4, 0.05],
+  [-0.2, -0.02],
+  [0.02, 0.06],
+  [0.22, -0.01],
+  [0.43, 0.04],
+  [0.6, 0.0],
+]
+/** How far back each limb is (0 the front, toward us .. 1 behind): the back ones are paler. */
+const DEPTH = [0.7, 0.35, 0.8, 0, 0.75, 0.3, 0.65]
+
+/** Where limb `i`'s tip is (cells from the origin), standing or reaching: where its ink comes from. */
+export function heptapodTip(o: HeptapodOpts, i: number): Pt {
+  const { h, t } = o
+  const who = o.who ?? 0
+  const f = FEET[i]
+  const sway = Math.sin(t * (0.55 + 0.07 * i + 0.05 * who) + i * 1.7) * 0.02
+  let x = (f[0] + sway) * h
+  let y = f[1] * h
+  if (o.reach && o.reach.limb === i) {
+    const u = smooth01(o.reach.u)
+    x += (o.reach.to[0] - x) * u
+    y += (o.reach.to[1] - y) * u
+  }
+  return [x, y]
+}
+
+/**
+ * A heptapod standing in fog, its origin on the floor under its body: a tall trunk of a body, seven limbs arching
+ * down from under it to the floor like the fingers of a hand stood on its fingertips. Uninked: a shape in the fog,
+ * its back limbs paler than its front ones, its edges softened by the air. The limbs sway on slow clocks of their own.
+ */
+export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
+  const { h, t } = o
+  const who = o.who ?? 0
+  const fog = clamp01(o.fog ?? 0)
+  const air = o.air ?? FOG.white
+  const base = o.color ?? FOG.heptapod
+  const light = o.light ?? 1
+  if (light <= 0.01 || fog >= 0.995 || h * k < 2) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const bob = Math.sin(t * 0.37 + who * 2.1) * 0.012 * h
+  const lean = (o.lean ?? 0) + Math.sin(t * 0.21 + who) * 0.02
+  // The body: from its crown down to where the limbs leave it.
+  const top = -h + bob
+  const hip = -0.5 * h + bob
+  const bw = (0.13 + 0.02 * who) * h
+  const colorAt = (depth: number) => mixHex(base, air, Math.min(1, fog + depth * 0.35 * (1 - fog)))
+  ctx.save()
+  ctx.globalAlpha *= light
+  p.push()
+  p.noStroke()
+  // Limbs first, the back ones before the front, then the body over their roots, then the front limb over the body.
+  const order = [0, 2, 4, 6, 1, 5, 3]
+  const limb = (i: number) => {
+    const d = DEPTH[i]
+    // Each limb leaves the body from inside it, just above the hip, so no limb's root is ever a cut end.
+    const rootX = (i - 3) * 0.028 * h + Math.sin(lean) * (hip - top) * 0.2
+    const root: Pt = [rootX, hip - 0.05 * h]
+    const tip = heptapodTip(o, i)
+    const reaching = o.reach && o.reach.limb === i ? smooth01(o.reach.u) : 0
+    // Out from under the body and down to the floor, like the ribs of an umbrella: a shoulder that rises a little as
+    // it leaves, then a long fall to the tip. A reaching limb straightens toward what it reaches for.
+    const out = tip[0] - root[0]
+    const drop = tip[1] - root[1]
+    const sway = Math.sin(t * (0.43 + 0.05 * i) + i * 2.3 + who) * 0.02 * h
+    const rise = (0.06 + 0.07 * (Math.abs(i - 3) / 3)) * h
+    const c1: Pt = [root[0] + out * 0.38 + sway * 0.5, root[1] - rise * (1 - reaching)]
+    const c2: Pt = [tip[0] - out * (0.12 - 0.1 * reaching) + sway, root[1] + drop * (0.1 + 0.55 * reaching) - rise * 0.35 * (1 - reaching)]
+    const w0 = (0.042 - 0.01 * d) * h
+    const w1 = 0.006 * h
+    const n = 28
+    const left: Pt[] = []
+    const right: Pt[] = []
+    let px = root[0]
+    let py = root[1]
+    for (let j = 0; j <= n; j++) {
+      const u = j / n
+      const a = (1 - u) ** 3
+      const b = 3 * u * (1 - u) ** 2
+      const c = 3 * u * u * (1 - u)
+      const e = u ** 3
+      const x = a * root[0] + b * c1[0] + c * c2[0] + e * tip[0]
+      const y = a * root[1] + b * c1[1] + c * c2[1] + e * tip[1]
+      const dx = j ? x - px : c1[0] - root[0]
+      const dy = j ? y - py : c1[1] - root[1]
+      const l = Math.hypot(dx, dy) || 1
+      // Thick from the body through the shoulder, then tapering long to a fine tip; the skin's folds a faint pulse.
+      const width = (w1 + (w0 - w1) * (1 - u) ** 1.7) * (1 + 0.1 * Math.sin(Math.PI * Math.min(1, u * 1.6)) + 0.035 * Math.sin(u * 29 + i))
+      left.push([x - (dy / l) * width, y + (dx / l) * width])
+      right.push([x + (dy / l) * width, y - (dx / l) * width])
+      px = x
+      py = y
+    }
+    const col = colorAt(d)
+    // Its root, rounded, so the front limb (drawn over the body) never shows a square end.
+    p.fill(alpha(p, col, 0.95))
+    p.ellipse(root[0] * k, root[1] * k, w0 * 2.05 * k, w0 * 2.05 * k)
+    // A soft edge: the same shape a little wider and faint under it, then the limb.
+    for (const [grow, a] of [[1.4, 0.16], [1, 0.95]] as const) {
+      p.fill(alpha(p, col, a))
+      p.beginShape()
+      for (let j = 0; j < left.length; j++) {
+        const mx = (left[j][0] + right[j][0]) / 2
+        const my = (left[j][1] + right[j][1]) / 2
+        p.vertex((mx + (left[j][0] - mx) * grow) * k, (my + (left[j][1] - my) * grow) * k)
+      }
+      for (let j = right.length - 1; j >= 0; j--) {
+        const mx = (left[j][0] + right[j][0]) / 2
+        const my = (left[j][1] + right[j][1]) / 2
+        p.vertex((mx + (right[j][0] - mx) * grow) * k, (my + (right[j][1] - my) * grow) * k)
+      }
+      p.endShape(p.CLOSE)
+    }
+    // The palm: at the end of a reach the tip opens into seven fingers, flat against whatever it touches.
+    if (reaching > 0.6 && (o.palm ?? 0) > 0.01) {
+      drawPalm(p, k, tip, 0.1 * h * (o.palm ?? 0), col, t + i)
+    }
+  }
+  for (const i of order.slice(0, 6)) limb(i)
+  // The body: a tall trunk, rounded at the crown, fullest a third of the way down, drawing in to the hip where the
+  // limbs leave it; a little lean, and a few soft folds down it.
+  const col = colorAt(0.1)
+  const bodyPts: Pt[] = []
+  const nb = 56
+  const bodyH = hip - top + 0.06 * h
+  for (let j = 0; j <= nb; j++) {
+    const a = (j / nb) * TAU
+    // v: 0 at the crown, 1 at the hip, round the right side and back up the left.
+    const v = (1 - Math.cos(a)) / 2
+    const side = Math.sin(a) >= 0 ? 1 : -1
+    const profile = Math.pow(Math.sin(Math.PI * Math.min(1, v * 0.92 + 0.04)), 0.62) * (1 - 0.32 * v * v)
+    const half = bw * profile * (1 + 0.04 * Math.sin(5 * v + who * 2 + (side > 0 ? 0 : 1.3)))
+    const x = side * half + Math.sin(lean) * (1 - v) * bodyH * 0.35
+    const y = top + bodyH * v
+    bodyPts.push([x, y])
+  }
+  p.fill(alpha(p, col, 0.16))
+  p.beginShape()
+  const midY = top + bodyH / 2
+  for (const [x, y] of bodyPts) p.vertex(x * 1.14 * k, (midY + (y - midY) * 1.05) * k)
+  p.endShape(p.CLOSE)
+  p.fill(alpha(p, col, 0.97))
+  p.beginShape()
+  for (const [x, y] of bodyPts) p.vertex(x * k, y * k)
+  p.endShape(p.CLOSE)
+  // Folds: two or three long soft darker bands down the trunk, and the crown a shade lighter where the light is.
+  const fold = mixHex(col, '#000000', 0.12 * (1 - fog))
+  for (let f = 0; f < 3; f++) {
+    const fx = (-0.45 + 0.42 * f + 0.06 * who) * bw
+    p.fill(alpha(p, fold, 0.35))
+    p.beginShape()
+    for (let j = 0; j <= 12; j++) {
+      const v = 0.15 + 0.75 * (j / 12)
+      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 - bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
+    }
+    for (let j = 12; j >= 0; j--) {
+      const v = 0.15 + 0.75 * (j / 12)
+      p.vertex((fx + Math.sin(lean) * (1 - v) * bodyH * 0.35 + bw * 0.035 * Math.sin(Math.PI * v)) * k, (top + bodyH * v) * k)
+    }
+    p.endShape(p.CLOSE)
+  }
+  p.pop()
+  limb(order[6])
+  ctx.restore()
+}
+
+/**
+ * A palm pressed flat: a round centre and seven fingers splayed evenly round it, each tapering to a blunt tip. `r`
+ * is the fingers' reach in cells. Drawn in `col` about `at`.
+ */
+export function drawPalm(p: p5, k: number, at: Pt, r: number, col: string, phase = 0): void {
+  if (r * k < 1) return
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, col, 0.97))
+  p.translate(at[0] * k, at[1] * k)
+  p.circle(0, 0, r * 0.62 * k)
+  for (let i = 0; i < 7; i++) {
+    const a = -Math.PI / 2 + (i / 7) * TAU + 0.03 * Math.sin(phase * 0.3 + i)
+    const len = r * (0.92 + 0.08 * Math.sin(i * 2.1))
+    const w0 = r * 0.16
+    const w1 = r * 0.07
+    const ca = Math.cos(a)
+    const sa = Math.sin(a)
+    p.beginShape()
+    p.vertex((ca * r * 0.2 - sa * w0) * k, (sa * r * 0.2 + ca * w0) * k)
+    p.vertex((ca * len - sa * w1) * k, (sa * len + ca * w1) * k)
+    p.vertex(ca * (len + w1) * k, sa * (len + w1) * k)
+    p.vertex((ca * len + sa * w1) * k, (sa * len - ca * w1) * k)
+    p.vertex((ca * r * 0.2 + sa * w0) * k, (sa * r * 0.2 - ca * w0) * k)
+    p.endShape(p.CLOSE)
+  }
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ their ink */
+
+export interface LogogramOpts {
+  /** Radius of its ring, cells. */
+  r: number
+  /** Which sentence: every seed is its own logogram (its thickness, its blots, its tendrils). */
+  seed: number
+  /** Show time: the ink breathes and drifts. */
+  t: number
+  /** How far it has formed, 0 nothing .. 1 whole. The ring closes by 0.7, its tendrils reach out after. */
+  form: number
+  /** How far it has gone, 0 whole .. 1 gone: it softens, spreads and pales. */
+  fade?: number
+  /** Where on the ring it began, radians (0 is to the right, going clockwise on the screen). */
+  start?: number
+  /** Its turn, radians. */
+  spin?: number
+  /** Its colour. */
+  color?: string
+  /** Opacity. */
+  light?: number
+}
+
+interface Blot {
+  a: number
+  size: number
+  width: number
+}
+interface Tendril {
+  a: number
+  len: number
+  curl: number
+  inward: boolean
+  drop: boolean
+}
+interface Shape {
+  phases: number[]
+  blots: Blot[]
+  tendrils: Tendril[]
+}
+
+const shapes = new Map<number, Shape>()
+function shapeOf(seed: number): Shape {
+  const got = shapes.get(seed)
+  if (got) return got
+  const phases = [0, 1, 2, 3, 4].map((i) => hash(seed, i, 71) * TAU)
+  const blots: Blot[] = []
+  const nb = 3 + Math.floor(hash(seed, 9, 71) * 3)
+  for (let i = 0; i < nb; i++) blots.push({ a: hash(seed, 10 + i, 71) * TAU, size: 0.05 + 0.07 * hash(seed, 20 + i, 71), width: 0.18 + 0.25 * hash(seed, 30 + i, 71) })
+  const tendrils: Tendril[] = []
+  const nt = 4 + Math.floor(hash(seed, 40, 71) * 4)
+  for (let i = 0; i < nt; i++) {
+    tendrils.push({
+      a: hash(seed, 41 + i, 71) * TAU,
+      len: 0.18 + 0.4 * hash(seed, 51 + i, 71),
+      curl: (hash(seed, 61 + i, 71) - 0.5) * 1.6,
+      inward: hash(seed, 71 + i, 71) < 0.25,
+      drop: hash(seed, 81 + i, 71) < 0.55,
+    })
+  }
+  const s = { phases, blots, tendrils }
+  shapes.set(seed, s)
+  return s
+}
+
+/** Angular distance, wrapped to [0, π]. */
+const angDist = (a: number, b: number) => {
+  const d = Math.abs((((a - b) % TAU) + TAU) % TAU)
+  return Math.min(d, TAU - d)
+}
+
+/**
+ * The ring at angle `a` (radians, in the logogram's own turn, before `spin`): the radius of its middle line and its
+ * half-thickness, in cells. What a part rides the ball on: the inner edge is at `mid - half`, the outer at
+ * `mid + half`, so a ball rolling inside it sits at `mid - half - R` from the centre.
+ */
+export function logogramAt(o: Pick<LogogramOpts, 'r' | 'seed'>, a: number): { mid: number; half: number } {
+  const s = shapeOf(o.seed)
+  const [p0, p1, p2, p3, p4] = s.phases
+  const mid = o.r * (1 + 0.03 * Math.sin(3 * a + p0) + 0.018 * Math.sin(5 * a + p1) + 0.01 * Math.sin(9 * a + p2))
+  let half = o.r * (0.03 + 0.022 * (0.5 + 0.5 * Math.sin(2 * a + p3)) + 0.008 * Math.sin(7 * a + p4))
+  for (const b of s.blots) {
+    const d = angDist(a, b.a) / b.width
+    half += o.r * b.size * Math.exp(-d * d * 2)
+  }
+  return { mid, half }
+}
+
+/**
+ * A logogram: a ring of ink hanging in the air, thick and thin by turns, with blots on it and tendrils curling off
+ * it, some ending in a drop, its edges soft the way ink is in water. It forms from where it began both ways round
+ * at once (a heptapod writes the whole sentence at once), closes, then puts out its tendrils.
+ */
+export function drawLogogram(p: p5, k: number, o: LogogramOpts): void {
+  const form = clamp01(o.form)
+  const fade = clamp01(o.fade ?? 0)
+  const light = (o.light ?? 1) * (1 - smooth01(fade))
+  if (form <= 0.001 || light <= 0.01 || o.r * k < 2) return
+  const s = shapeOf(o.seed)
+  const color = o.color ?? FOG.ink
+  const start = o.start ?? -Math.PI / 2
+  const spin = o.spin ?? 0
+  const ring = smooth01(form / 0.7)
+  const reach = smooth01((form - 0.62) / 0.38)
+  const spread = 1 + 0.5 * fade
+  const breathe = 1 + 0.01 * Math.sin(o.t * 0.9 + o.seed)
+  const n = 160
+  // The arc that has formed: from `start` both ways, meeting on the far side as `ring` reaches 1.
+  const span = Math.PI * ring
+  const inArc = (a: number) => angDist(a, start) <= span + 1e-6
+  const outer: Pt[] = []
+  const inner: Pt[] = []
+  for (let i = 0; i <= n; i++) {
+    const a = start - span + (2 * span * i) / n
+    const { mid, half } = logogramAt(o, a)
+    // The leading ends taper as they form, so the ink reads as running round, not as a cut.
+    const toEnd = Math.min(angDist(a, start + span), angDist(a, start - span))
+    const taper = ring >= 0.999 ? 1 : smooth01(toEnd / 0.5)
+    const hw = half * taper * spread
+    const c = Math.cos(a + spin)
+    const si = Math.sin(a + spin)
+    outer.push([c * (mid + hw) * breathe, si * (mid + hw) * breathe])
+    inner.push([c * (mid - hw) * breathe, si * (mid - hw) * breathe])
+  }
+  p.push()
+  p.noStroke()
+  // Haze, then body: the soft edge of ink in water, then the ink.
+  const passes: [number, number][] = fade > 0 ? [[2.6 * spread, 0.05], [1.7 * spread, 0.1], [1, 0.9 - 0.4 * fade]] : [[2.4, 0.05], [1.6, 0.11], [1, 0.92]]
+  for (const [grow, a] of passes) {
+    p.fill(alpha(p, color, a * light))
+    p.beginShape()
+    for (let i = 0; i < outer.length; i++) {
+      const mx = (outer[i][0] + inner[i][0]) / 2
+      const my = (outer[i][1] + inner[i][1]) / 2
+      p.vertex((mx + (outer[i][0] - mx) * grow) * k, (my + (outer[i][1] - my) * grow) * k)
+    }
+    for (let i = inner.length - 1; i >= 0; i--) {
+      const mx = (outer[i][0] + inner[i][0]) / 2
+      const my = (outer[i][1] + inner[i][1]) / 2
+      p.vertex((mx + (inner[i][0] - mx) * grow) * k, (my + (inner[i][1] - my) * grow) * k)
+    }
+    p.endShape(p.CLOSE)
+  }
+  // Tendrils: curling strokes off the ring, tapering, some ending in a drop.
+  if (reach > 0.001) {
+    s.tendrils.forEach((td, i) => {
+      if (!inArc(td.a)) return
+      const grow = smooth01((reach - i * 0.06) / 0.7)
+      if (grow <= 0.001) return
+      const { mid, half } = logogramAt(o, td.a)
+      const dir = td.inward ? -1 : 1
+      const r0 = mid + dir * half * 0.6
+      const len = td.len * o.r * grow
+      const steps = 14
+      const left: Pt[] = []
+      const right: Pt[] = []
+      for (let j = 0; j <= steps; j++) {
+        const u = j / steps
+        const rr = r0 + dir * len * u
+        const aa = td.a + td.curl * u * u * (len / Math.max(0.1, o.r)) + 0.02 * Math.sin(o.t * 0.7 + i + u * 3)
+        const x = Math.cos(aa + spin) * rr * breathe
+        const y = Math.sin(aa + spin) * rr * breathe
+        const w = half * 0.55 * (1 - u * 0.85) * spread
+        const tx = -Math.sin(aa + spin)
+        const ty = Math.cos(aa + spin)
+        left.push([x + tx * w, y + ty * w])
+        right.push([x - tx * w, y - ty * w])
+      }
+      for (const [g, a] of [[1.8, 0.1], [1, 0.9 - 0.4 * fade]] as const) {
+        p.fill(alpha(p, color, a * light))
+        p.beginShape()
+        for (let j = 0; j < left.length; j++) {
+          const mx = (left[j][0] + right[j][0]) / 2
+          const my = (left[j][1] + right[j][1]) / 2
+          p.vertex((mx + (left[j][0] - mx) * g) * k, (my + (left[j][1] - my) * g) * k)
+        }
+        for (let j = right.length - 1; j >= 0; j--) {
+          const mx = (left[j][0] + right[j][0]) / 2
+          const my = (left[j][1] + right[j][1]) / 2
+          p.vertex((mx + (right[j][0] - mx) * g) * k, (my + (right[j][1] - my) * g) * k)
+        }
+        p.endShape(p.CLOSE)
+      }
+      if (td.drop && grow > 0.85) {
+        const u = 1.12
+        const rr = r0 + dir * len * u
+        const aa = td.a + td.curl * (len / Math.max(0.1, o.r))
+        // A drop: small, dark, never ball-sized (its width is a fraction of the ring's thickness).
+        const d = Math.min(half * 0.9, R * 0.6) * spread
+        p.fill(alpha(p, color, (0.85 - 0.4 * fade) * light * smooth01((grow - 0.85) / 0.15)))
+        p.ellipse(Math.cos(aa + spin) * rr * breathe * k, Math.sin(aa + spin) * rr * breathe * k, d * 2 * k, d * 1.6 * k)
+      }
+    })
+  }
+  p.pop()
+}
+
+/**
+ * A spray of ink leaving a limb's tip toward where a logogram will form: a soft dark plume that swells and thins as
+ * it goes. `u` is how far it has gone (0 at the tip .. 1 arrived, when the logogram begins to form there).
+ */
+export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color = FOG.ink, light = 1): void {
+  const v = clamp01(u)
+  if (v <= 0 || v >= 1 || light <= 0.01) return
+  p.push()
+  p.noStroke()
+  const n = 9
+  for (let i = 0; i < n; i++) {
+    const w = v - (i / n) * 0.35
+    if (w <= 0) continue
+    const x = from[0] + (to[0] - from[0]) * w
+    const y = from[1] + (to[1] - from[1]) * w - Math.sin(Math.PI * w) * 0.4
+    const r = 0.12 + 0.5 * w
+    p.fill(alpha(p, color, 0.22 * (1 - i / n) * (1 - v * 0.6) * light))
+    p.ellipse(x * k, y * k, r * 2 * k, r * 1.6 * k)
+  }
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the lift's deck */
+
+/**
+ * The scissor lift's deck, which carries them up into the shell: seen side on, the ball's rest line at y = 0 (the
+ * deck's top at y = R), from `x0` to `x1` cells. A steel plate with a toe board, and a guard rail behind: two end
+ * posts and a top rail and mid rail. `over` draws only the near toe board, for a part to draw after the ball.
+ * The lift builder and the shaft builder both show it, so it is one deck.
+ */
+export function drawDeck(p: p5, k: number, x0: number, x1: number, o: { ink: string; weight: number; steel?: string; over?: boolean }): void {
+  const steel = o.steel ?? VALLEY.steel
+  const top = R
+  const plate = 0.14
+  p.push()
+  p.rectMode(p.CORNER)
+  p.stroke(o.ink)
+  p.strokeWeight(o.weight)
+  if (o.over) {
+    // The near toe board: a low lip along the deck's front edge.
+    p.fill(mixHex(steel, '#000000', 0.12))
+    p.rect(x0 * k, (top - 0.06) * k, (x1 - x0) * k, 0.06 * k)
+    p.pop()
+    return
+  }
+  // The rail behind: posts at the ends and every cell and a half, a top rail and a mid rail.
+  const railH = 1.05
+  p.strokeWeight(o.weight * 0.9)
+  p.stroke(mixHex(o.ink, steel, 0.35))
+  const posts = Math.max(2, Math.round((x1 - x0) / 1.5) + 1)
+  for (let i = 0; i < posts; i++) {
+    const x = x0 + 0.06 + ((x1 - x0 - 0.12) * i) / (posts - 1)
+    p.line(x * k, top * k, x * k, (top - railH) * k)
+  }
+  p.line((x0 + 0.06) * k, (top - railH) * k, (x1 - 0.06) * k, (top - railH) * k)
+  p.line((x0 + 0.06) * k, (top - railH * 0.5) * k, (x1 - 0.06) * k, (top - railH * 0.5) * k)
+  // The plate.
+  p.stroke(o.ink)
+  p.strokeWeight(o.weight)
+  p.fill(steel)
+  p.rect(x0 * k, top * k, (x1 - x0) * k, plate * k)
+  p.pop()
+}
+
+/* ------------------------------------------------------------------ the chamber's glass */
+
+/** The glass's light: the white the chamber's far wall is, and the colour the fog behind it is lit. */
+export const GLASS = { face: SHELL.screen, edge: SHELL.screenEdge, fog: SHELL.fogLit }
