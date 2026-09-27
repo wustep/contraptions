@@ -204,7 +204,9 @@ export function compose(): { show: LogogramShow; camera: (t: number) => Framing 
       // The show's first frame: FIRST, held on her where she starts. The last scene opens on it again.
       keys.unshift({ t: 0, cells: FIRST.cells, hold: [a0[0] + FIRST.frame[0], a0[1] + FIRST.frame[1]], w: 1 })
     } else {
-      const prev = cams[i - 1](leg.from)
+      // The last leg's framing at the cut, turned as that leg had it just before (the roll is a function of time, and
+      // at the cut into the shaft it is already the incoming leg's).
+      const prev = { ...cams[i - 1](leg.from), angle: rollAt(leg.from - 1e-6) }
       const seam = Object.values(SEAMS).find((m) => m.cut && Math.abs(m.t - leg.from) < 1e-3)
       const scale = seam?.open ? seam.open / prev.cells : 1
       // Where she was on the screen, as the last leg left her: (her - centre) / cells, turned by its roll.

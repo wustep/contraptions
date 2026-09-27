@@ -433,7 +433,8 @@ function drawLift(p: p5, s: LiftState, c: Ctx): void {
   p.push()
   p.translate(0, (top - PLATE_BOT) * k)
   drawExtension(d, t)
-  drawDeck(p, k, DECK[0], DECK[1], { ink, weight })
+  // The work light on the far post is the shaft's (it lights it in the mouth); here it is dark, so the deck is one deck.
+  drawDeck(p, k, DECK[0], DECK[1], { ink, weight, lamp: { on: 0, switchAt: 0.49 } })
   p.pop()
   intoTheDark(ctx, k, top - PLATE_BOT)
   ctx.restore()
