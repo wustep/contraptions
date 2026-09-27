@@ -181,8 +181,13 @@ function witchHand(t: number): number {
 }
 /** Her glove's fingers, spread wide on the curse and closing as the hand goes back. */
 const witchSpread = (t: number): number => (t <= CURSE ? 0 : (1 - Math.exp(-(t - CURSE) / 0.04)) * (1 - smooth(t, CURSE + 0.7, CURSE + 1.3)))
-/** She faces into the shop, and turns to go once she is out of the door. */
-const witchFace = (t: number): number => -1 + 2 * smooth(t, 104.9, 105.35)
+/**
+ * She faces into the shop the whole time, laughing at Sophie as she backs out through the door the way she came and
+ * off to the right. Never turned: a figure this broad flipped through zero reads as a card, a hairline in the doorway.
+ */
+const witchFace = (_t: number): number => -1
+/** How far the night outside has her: lit by the lamp inside, sinking into the street's dark through the doorway. */
+const witchDark = (x: number): number => 0.3 + 0.25 * smooth(x, W1 - 0.3, W1 + 0.9)
 
 /** Where her glove is (the palm's middle), in town cells: the same transforms `drawTheWitch` and `drawWitch` make. */
 function glove(t: number): Pt {
@@ -475,7 +480,7 @@ function drawTheWitch(p: p5, k: number, W: number, ink: string, t: number): void
     hand: witchHand(t),
     spread: witchSpread(t),
     look: [-1, 0.8],
-    dark: x > W1 + 0.3 ? 0.55 : 0.3,
+    dark: witchDark(x),
   })
   ctx.restore()
   p.pop()
