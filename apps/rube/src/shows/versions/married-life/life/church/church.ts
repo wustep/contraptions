@@ -161,6 +161,16 @@ export function rankLight(r: number, t: number): number {
   return Math.max(v, 0.14 * playing)
 }
 
+/**
+ * The empty church at the funeral: nobody plays, but the one toll fills it, and the organ's pipes ring with it (the
+ * gold they went on every note of the march), fading as the bell dies away; less at the answer.
+ */
+export function tollRing(t: number): number {
+  if (!gloomy(t) || t < FUN.toll) return 0
+  const on = (s: number, a: number, d: number) => (t < s ? 0 : a * Math.min(1, (t - s) / 0.05) * Math.exp(-(t - s) / d))
+  return on(FUN.toll, 0.55, 0.9) + on(FUN.answer, 0.22, 0.7)
+}
+
 /** The reservoir's fill (0 empty, 1 full): drawn down by every note, pumped back up by the feeder on the beat. */
 export function bellowsFill(t: number): number {
   if (gloomy(t)) return 0.2
@@ -542,7 +552,7 @@ const PIPES = (() => {
 function drawOrgan(p: p5, k: number, c: Paint, weight: number, t: number): void {
   const [ox0, ox1] = CH.organ
   const imp = CH.impost
-  const lit = (r: number) => (c.g ? 0 : rankLight(r, t))
+  const lit = (r: number) => (c.g ? tollRing(t) : rankLight(r, t))
   // The pipes, back row first: body, gleam, mouth, conical foot; lit gold as their rank speaks.
   for (const pipe of PIPES) {
     const L = lit(pipe.rank)

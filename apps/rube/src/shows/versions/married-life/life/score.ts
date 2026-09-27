@@ -3,7 +3,7 @@ import type { Placed } from '../../../../plan'
 import type { Framing } from '../../../registry'
 import { director, type Shot } from './camera'
 import { box, lay, standing, type Chain, type Link } from './kit'
-import { CUT, DURATION, SEAM } from './music'
+import { AT, CUT, DURATION, SEAM } from './music'
 import { LifeShow, type Leg, type Spans, type WorldSet } from './show'
 import { CARL, type WorldKey } from './worlds'
 import { cast, type CastState } from './cast'
@@ -93,6 +93,21 @@ const SETS = (): Record<WorldKey, WorldSet> => ({
   hill: { scenery: [standing(hillSet, 0, 0, boxed(HILL_BOX), null, DURATION)], after: [] },
   clinic: { scenery: [standing(clinicSet, 0, 0, boxed(CLINIC_BOX), null, DURATION)], after: [] },
 })
+
+/**
+ * The blows the camera takes: the heaviest notes of the cue, felt through the frame itself. Each is a damped swing
+ * from rest (a fraction `amp` of the frame's height at its fullest, over a `period`, dying away over `decay` seconds),
+ * so it starts on the note and settles, and the move it lands in carries on under it.
+ */
+export const JOLTS: { t: number; amp: number; period: number; decay: number }[] = [{ t: AT.church, amp: 0.01, period: 0.5, decay: 0.3 }]
+function jolt(t: number): number {
+  let y = 0
+  for (const j of JOLTS) {
+    const u = t - j.t
+    if (u > 0) y += j.amp * Math.exp(-u / j.decay) * Math.sin((2 * Math.PI * u) / j.period)
+  }
+  return y
+}
 
 /** Every leg's camera keys, as the camera has them (for the probes). */
 export const KEYS: Shot[][] = []
@@ -191,7 +206,7 @@ export function compose(): { show: LifeShow; camera: (t: number) => Framing } {
   const camera = (t: number): Framing => {
     const f = take(t)
     const [ux, uy] = unroll[show.owner(t)]
-    return { ...f, x: f.x + ux, y: f.y + uy }
+    return { ...f, x: f.x + ux, y: f.y + jolt(t) * f.cells + uy }
   }
   return { show, camera }
 }

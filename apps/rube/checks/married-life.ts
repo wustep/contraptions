@@ -5,11 +5,14 @@
 import type { Performance, Version } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/married-life-onsets.json'
 import { STRIKES } from '../src/shows/versions/married-life/life/hits'
-import { AT, BEATS, CUT, DURATION, ONSETS, RECORDING, SEAM } from '../src/shows/versions/married-life/life/music'
+import { AT, BEATS, CUT, DURATION, ONSETS, PIANO, RECORDING, SEAM } from '../src/shows/versions/married-life/life/music'
 import { CARDS, CREDITS_AT, CREDITS_OK, creditsAt } from '../src/shows/versions/married-life/life/credits'
 import { CUTS } from '../src/shows/versions/married-life/life/seams'
 import { CARL, ELLIE, ELLIE_ID, carlAt, ellieAt } from '../src/shows/versions/married-life/life/worlds'
-import { BALLOON_FROM, balloonAt, HALF } from '../src/shows/versions/married-life/life/cast'
+import { BALLOON_FROM, balloonAt, HALF, LEANS, STIRS } from '../src/shows/versions/married-life/life/cast'
+import { JOLTS } from '../src/shows/versions/married-life/life/score'
+import { FUN } from '../src/shows/versions/married-life/life/church/church'
+import { ALONE } from '../src/shows/versions/married-life/life/house/front-plan'
 import { R } from '../src/parts'
 import { HAND } from '../src/shows/versions/married-life/life/clinic/hospital'
 import type { LifeShow } from '../src/shows/versions/married-life/life/show'
@@ -263,6 +266,16 @@ export function checkMarriedLife(perf: Performance, version: Version, check: Che
     if (d > balloonJump) { balloonJump = d; balloonJumpAt = t }
   }
   check('married life: the balloon never jumps in a place (no more than 0.04 cells in 4 ms)', balloonJump <= 0.04, `${balloonJump.toFixed(3)} at ${balloonJumpAt.toFixed(3)} s`)
+
+  // The heaviest note is felt through the frame, and only it: the camera takes one blow, on the toll, a damped swing of
+  // at most 1.5% of the frame's height. The balloon is stirred by the toll and its answer and nothing else; at home it
+  // leans toward him only on the piano's own notes, after he has sat down and before the credits.
+  const pianoNote = (t: number) => PIANO.some((n) => Math.abs(n.t - t) <= 0.01)
+  check('married life: the frame takes a blow only on the toll (at most 1.5% of its height), the balloon is stirred only by the toll and its answer, and at home it leans only on the piano\'s notes',
+    JOLTS.length === 1 && near(JOLTS[0].t, AT.church) && JOLTS[0].amp <= 0.015 &&
+      STIRS.length === 2 && near(STIRS[0].t, FUN.toll) && near(STIRS[1].t, FUN.answer) &&
+      LEANS.length > 0 && LEANS.every((l) => pianoNote(l.t) && l.t > ALONE.sit && l.t < CREDITS_AT),
+    `jolts ${JOLTS.map((j) => j.t.toFixed(3)).join(', ')}; stirs ${STIRS.map((x) => x.t.toFixed(3)).join(', ')}; leans ${LEANS.map((l) => l.t.toFixed(3)).join(', ')}`)
 
   // The end credits: words the page sets over the house, after he has sat down, owing what is owed.
   const said = CARDS.map((c) => [c.role ?? '', ...c.names.flat(), ...(c.notes ?? [])].join(' ')).join(' | ')

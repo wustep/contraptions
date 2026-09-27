@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type Companion, type PartShot, type Pose } from '../kit'
-import { bar, beat, CUT } from '../music'
+import { bar, beat, BEATS, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
 import { drawFacadeFront } from './front-house'
@@ -20,7 +20,7 @@ import { drawChairsIn, drawChairsOut, drawRig, TOPS } from './fixup-rig'
  * blow falls on the mailbox's post (17), and past the house the rollers fold down (18) as she hops for joy (19).
  * He lets the cart go as the mast folds and it rolls on past the mailbox alone, the brake stopping it (20) while he
  * walks to the box: she springs back to it and presses her round print into its wet paint (21), and he his square
- * one beside it (22). She leaps over him (23) and leads him up the steps and in; she sits (27), the door
+ * one beside it (22). She leaps over him (landing on 23's two, the phrase's strongest attack) and leads him up the steps and in; she sits (27), the door
  * shuts behind him (28), and he sits beside her (29). The soft bars are the breath: side by side in their chairs,
  * looking out through the new window, the camera coming to them: the cut to the hill (`CUTS.hill`).
  *
@@ -95,14 +95,24 @@ const E = {
   joy: bar('waltz', 19),
   up: PRINT_AT.ellie - 0.5,
   press: PRINT_AT.ellie,
-  leap: 39.6,
-  leapLand: bar('waltz', 23),
+  // Over him off the box on 22's third beat, landing on 23's two: the phrase's strongest attack, and hers.
+  leap: beat('waltz', 22, 3),
+  leapLand: beat('waltz', 23, 2),
   leapTo: [7.75, 0] as Pt,
   hops: [41.2, bar('waltz', 24), beat('waltz', 24, 2), beat('waltz', 24, 3)],
   front: CHAIRS.ellie + 0.14,
   seatUp: 44.15,
   sit: bar('waltz', 27),
 }
+/**
+ * Riding the deck, she answers every blow: the cart kicks on the one, and she is jolted up off the boards and comes
+ * down on the two (the waltz's first pah), before the pawl takes the hammer on the three. The whole bar is played.
+ */
+const BOUNCES: [number, number][] = BLOWS.filter((b) => b > beat('waltz', 5, 3) + 0.5 && b < bar('waltz', 19) - 0.6).map((b) => {
+  const two = BEATS.find((x) => x.stretch === 'waltz' && x.pos === 2 && x.t > b && x.t < b + 0.6)
+  if (!two) throw new Error(`married life: fixup: no two after the blow at ${b}`)
+  return [b, two.t]
+})
 /** Her running start: a little quicker than him, into her leap onto the cart. */
 const eRun = (T: number) => XE + CUTS.house.ellie![0] + V_IN * (T - T0) + 0.45 * (T - T0) ** 2
 /** On the deck: the settle after her landing, the rock back when he shoves, the hop for joy past the house. */
@@ -111,7 +121,11 @@ function onDeck(T: number): Pt {
   const s = T - SHOVE
   const jolt = s > 0 ? -0.08 * (1 - Math.exp(-s / 0.07)) * Math.exp(-s / 0.45) : 0
   const u = (T - (E.joy - 0.38)) / 0.38
-  const hop = u > 0 && u < 1 ? 0.16 * 4 * u * (1 - u) : 0
+  let hop = u > 0 && u < 1 ? 0.16 * 4 * u * (1 - u) : 0
+  for (const [b, two] of BOUNCES) {
+    const v = (T - b) / (two - b)
+    if (v > 0 && v < 1) hop += 0.075 * 4 * v * (1 - v)
+  }
   return [W(T) + CART.ellie + settle + jolt, DECK - hop]
 }
 const deckEnd = onDeck(E.up)
@@ -180,6 +194,7 @@ export const FIXUP_HITS: number[] = [
   CHAIR_LIFT.ellie[2],
   PANE_AT,
   ...FOLD,
+  ...BOUNCES.map(([, two]) => two),
   E.joy,
   BRAKE,
   PRINT_AT.ellie,

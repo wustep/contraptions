@@ -23,22 +23,31 @@ function onset(t: number): number {
 export const BEGIN = SEAM.jar
 export const END = SEAM.ties
 
-/** Ellie leaps onto the ladder's first tread; she settles. */
+/** Ellie leaps onto the ladder's first tread; she settles, on the next bar's two (its accent, hers). */
 export const PERCH = J(5)
-export const SETTLE = J(6)
+export const SETTLE = J(6, 2)
 /** He lands on his end this long before the stroke; the plank thumps the floor on the beat. */
 export const TOUCHDOWN = 0.1
 /** Carl's strokes on the seesaw (the plank's thump), and where each handful lands in the jar (the next downbeat). */
 export const SLAMS = [J(7), J(8), J(9), J(10), J(16), J(17), J(24), J(25)]
 export const LANDS = [J(8), J(9), J(10), J(11), J(17), J(18), J(25), J(26)]
+/**
+ * Her count: each handful drops into the slot on the downbeat and she is up off her tread with it, coming down on the
+ * waltz's two, the first pah after his oom, so the bar is answered: his stroke on the one, the coins in, her hop on the two.
+ */
+export const COUNTS = [J(8, 2), J(9, 2), J(10, 2), J(11, 2)]
 /** He hops down, pleased, as the fourth handful lands. */
 export const DOWN = J(11)
 /** The tyre blows (after a held breath in the music); the hubcap lands; the car stands level again. */
 export const TYRE = J(11, 3)
 export const HUBCAP = J(12)
 export const FIXED = onset(117.702)
-/** Ellie up the ladder to the jar and over: tread 2, the mantle, the push. */
-export const UP1 = [J(13), J(14)]
+/**
+ * Ellie up the ladder to the jar and over: tread 2; the mantle, off the ladder on 13's third beat and landing on the
+ * strongest attack of the next bar (just after its downbeat); the push.
+ */
+export const UP1 = [J(13), onset(115.496)]
+export const MANTLE_OFF = J(13, 3)
 export const PUSH1 = J(15)
 /** The refill's second stroke shakes the lamp out; he climbs; the ladder kicks; he falls. */
 export const LAMP_OUT = J(17, 2)
@@ -57,9 +66,9 @@ export const TOPPLE = onset(129.271)
 export const THUNDER = J(27)
 export const RIGHTED3 = J(28, 2)
 export const FLASH2 = J(29)
-/** Down the plank, off it, and out: Ellie onto the plank, off it; Carl off it. */
+/** Down the plank, off it, and out: Ellie onto the plank, off it (on 30's two); Carl off it (on 31's one). */
 export const ONTO_PLANK = J(28)
-export const E_OFF = J(30)
+export const E_OFF = J(30, 2)
 export const C_OFF = J(31)
 /** The limb winched out as the storm's last flash goes; three boards over the hole; the sun breaks through; she skips. */
 export const WINCH = J(29)
