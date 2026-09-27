@@ -4,7 +4,7 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
+import { performanceProblems, pickVersion, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
 import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
@@ -345,7 +345,8 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  items: works.map((w) => ({ value: w.work, label: w.title, note: w.versions.length === 1 ? '1 version' : `${w.versions.length} versions` })),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     if (next && !recording) void open(next, true)

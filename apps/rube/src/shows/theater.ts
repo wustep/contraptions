@@ -2,7 +2,7 @@ import { registerMode } from '../../../../src/ui/mode-host'
 import { ICON, el, icon, section, type Shell } from '../../../../src/ui/shell'
 import { start, works } from './player'
 import { createPlaylist } from './playlist'
-import type { Version } from './registry'
+import { currentTake, SECTIONS, sectionOf, type Version } from './registry'
 
 /**
  * Theater: every show, one after another, for leaving on. It is the Shows
@@ -39,7 +39,11 @@ function nameOf(v: Version): string {
 function readOff(): Set<string> {
   try {
     const v = localStorage.getItem(OFF_STORE)
-    const off = new Set(v ? (JSON.parse(v) as string[]) : [])
+    // A take left out under a name it has since lost is still left out.
+    const off = new Set((v ? (JSON.parse(v) as string[]) : []).map((id) => {
+      const [work, take] = id.split('/')
+      return take ? `${work}/${currentTake(work, take)}` : id
+    }))
     // A pool with nothing in it would have nothing to play: all of it, then.
     return takes.every((t) => off.has(idOf(t))) ? new Set() : off
   } catch {
@@ -159,21 +163,28 @@ function mount(shell: Shell): () => void {
       nextBtn.addEventListener('click', skip)
       const upNext = el('div', { class: 'row up-next' }, [el('div', { class: 'readout' }, ['Up next', el('br'), nextName]), nextBtn])
       const list = el('div', { class: 'pool', role: 'group', 'aria-label': 'Shows in the running order' })
-      // By title, as it reads: a work's folder is not always its title. Within a work,
-      // keep the registry's take order so the preferred take leads here too.
+      // On the picker's shelves (Machine, Movies, Ambient), and by title on each, as it reads: a work's folder is
+      // not always its title. Within a work, keep the registry's take order so the preferred take leads here too.
       const versionOrder = new Map(takes.map((v, i) => [idOf(v), i]))
-      rows = [...takes].sort((a, b) => {
-        const byTitle = a.title.localeCompare(b.title)
-        if (byTitle) return byTitle
-        if (a.work === b.work) return versionOrder.get(idOf(a))! - versionOrder.get(idOf(b))!
-        return nameOf(a).localeCompare(nameOf(b))
-      }).map((v) => {
-        const id = idOf(v)
-        const box = el('input', { type: 'checkbox' })
-        box.addEventListener('change', () => setIn(id, box.checked))
-        const row = el('label', { class: 'pool-row', title: v.note ?? nameOf(v) }, [box, el('span', {}, [nameOf(v)])])
-        list.append(row)
-        return { id, box, row }
+      rows = SECTIONS.flatMap((shelf) => {
+        const on = takes.filter((v) => sectionOf(v.work) === shelf).sort((a, b) => {
+          const byTitle = a.title.localeCompare(b.title)
+          if (byTitle) return byTitle
+          if (a.work === b.work) return versionOrder.get(idOf(a))! - versionOrder.get(idOf(b))!
+          return nameOf(a).localeCompare(nameOf(b))
+        })
+        if (!on.length) return []
+        const head = el('div', { class: 'pool-group-head', id: `pool-${shelf.toLowerCase()}` }, [shelf])
+        const group = el('div', { class: 'pool-group', role: 'group', 'aria-labelledby': head.id }, [head])
+        list.append(group)
+        return on.map((v) => {
+          const id = idOf(v)
+          const box = el('input', { type: 'checkbox' })
+          box.addEventListener('change', () => setIn(id, box.checked))
+          const row = el('label', { class: 'pool-row', title: v.note ?? nameOf(v) }, [box, el('span', {}, [nameOf(v)])])
+          group.append(row)
+          return { id, box, row }
+        })
       })
       sec.append(upNext)
       if (canFullscreen()) {

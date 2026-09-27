@@ -10,12 +10,52 @@ versions/<work>/<take>.show.ts
 `<work>` is the music (`clair-de-lune`), `<take>` is this run at it (`take-a`),
 both in lower case and hyphens. Drop the file in and it is in the picker at
 `/shows/`, grouped with the other takes of the same work, in file order.
-Nothing else keeps a list. A link to it is `/shows/?show=<work>&take=<take>`.
+Nothing else keeps a list. A link to it is `/shows/<work>/<take>/`, and the
+work's first take is also `/shows/<work>/`. `/shows/?show=<work>&take=<take>`
+still opens it, and `/theater/?show=<work>&take=<take>` starts Theater on it.
 `/shows/` with no work opens Clair de Lune, Take B.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a
 third.
+
+## Names
+
+The folder and file names are addresses, so they are chosen once:
+
+- **Work**: `versions/<work>/`, which is also `/shows/<work>/` and
+  `public/shows/<work>/`. It names the music (`clair-de-lune`, `heptapod-b`),
+  not the picker's title, which is the version file's `title` and can change
+  freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
+  `interstellar` **Voyage**, `la-la-land` **Epilogue**. The write-up says
+  which is which.
+- **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
+  card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
+  `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
+  model's point as a hyphen (`opus5-5`, `fable5-1`). A second take by the same
+  hand adds its code name (`opus55-spark`). Don't repeat the work's name in it.
+  Takes sort by name, and the first is the work's own page, unless the registry
+  puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
+- **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
+  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  (Gymnopédie). A work is Movies unless `SHELVED` in `../registry.ts` names it.
+- **Code**: a take that is more than a score file keeps its code in a folder
+  named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
+  the take id carries a code name, the folder uses the same one. A take's code
+  keeps its name when the take is renamed (`la-la-land/sebs/`,
+  `cornfield-chase/tech-demo.ts`).
+- **Write-up**: `<NAME>.md`, after the code name or the picker's title
+  (`SPARK.md`, `CARAVAN.md`). It opens with the take's address.
+- **Attribution**: one `ATTRIBUTION.txt` per work. A take with a recording of
+  its own adds `<NAME>_ATTRIBUTION.txt` (`la-la-land/SEBS_ATTRIBUTION.txt`).
+
+A name already shipped stays, even where it misses these (`come-recover/opus55-all-at-once`
+is Everything's only take, with its code name in the id). Renaming a take moves a public link
+and its card, so the old name goes in `RENAMED_TAKES` (`../registry.ts`): the page opens the old
+address as the take and writes the new one back, and the build writes a page at the old address
+too. Four have moved: `la-la-land/opus55-sebs` → `opus5-5`, `la-la-land/fable51-epilogue` →
+`fable5-1`, `cornfield-chase/opus55-music-sync` → `opus55`, `cornfield-chase/tech-demo` → `grok47`.
+A work has no such map yet, so renaming one waits for it.
 
 ## The file
 
@@ -118,7 +158,7 @@ resonance plays over the finished machine. A change to any stock piece's
 lane, or a piece in or out of a world, means rearranging it and running
 `generate:clair` again.
 
-`cornfield-chase/tech-demo` is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
+`cornfield-chase/grok47` is a private tech demo for Hans Zimmer's Cornfield Chase, not part of the public catalog tour. `npm run generate:cornfield` writes it from stock lanes: Forest for the piano, one portal on the drop, then the Arcade on the chase pulse. The recording is copyrighted. See `apps/rube/src/shows/versions/cornfield-chase/ARRANGEMENT.md`.
 
 `metronome/` is not in the picker. It is a worked example of a time map: a
 procedural machine under a steady beat, and a struck bar on every strike,
@@ -157,14 +197,14 @@ in `apps/rube/src/shows/versions/clair-de-lune/TAKE_B_ARRANGEMENT.md`. `check:cl
 map handoffs, motif placement, native colors, cue precision and the whale's
 open water. Generating Take B never writes Take A's plan, score or report.
 
-`cornfield-chase/tech-demo` (Grok 4.7) is the music-sync take
+`cornfield-chase/grok47` (Grok 4.7; its code is `tech-demo.ts`) is the music-sync take
 that stays in the picker, beside the Opus one. `cornfield-chase/multiball`
 and `cornfield-chase/voices` are not in the picker. All three are one-shot
 tech demos of Hans Zimmer's Cornfield Chase, not finished public Shows. The
 recording is copyrighted; the credit stays in
 `apps/rube/src/shows/versions/cornfield-chase/ATTRIBUTION.txt`.
 
-`cornfield-chase/opus55-music-sync` (Opus 5.5) is a separate
+`cornfield-chase/opus55` (Opus 5.5; its code is `opus55-music-sync.ts`) is a separate
 one-shot eval take on the same recording, generated stock only by
 `npm run generate:cornfield:opus55`. Its targets are measured rather than
 assumed: `scripts/shows/cornfield-opus55-onsets.py` reads the recording once and
@@ -219,7 +259,7 @@ built by `scripts/shows/liftoff-mix.sh`), Cornfield Chase untouched and then the
 from its bar-26 accent. Act II's strikes are held to that cue's measured organ pulse
 (`scripts/shows/liftoff-ntfc-onsets.py` → `scripts/shows/plans/liftoff-ntfc-onsets.json`).
 
-`la-la-land/opus55-sebs` (in the picker, **Opus 5.5** under **Epilogue**) is a one-shot take on
+`la-la-land/opus5-5` (in the picker, **Opus 5.5** under **Epilogue**) is a one-shot take on
 Justin Hurwitz's *Epilogue* from La La Land, and then *The End*, 510 s in all.
 Every piece in it is new, and so are its places: Seb's club, Lipton's, a
 theatre, a white studio and a painted Hollywood, an audition in shadow play, a
@@ -233,7 +273,7 @@ against it (`apps/rube/checks/sebs.ts`). The recordings are copyrighted and
 demo only: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`. The whole story is in
 `apps/rube/src/shows/versions/la-la-land/SEBS.md`.
 
-`la-la-land/fable51-epilogue` (in the picker, **Fable 5.1** under
+`la-la-land/fable5-1` (in the picker, **Fable 5.1** under
 **Epilogue**) is Justin Hurwitz's *Epilogue* from La La Land, demo
 only (`apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`), played whole from its
 first sample, with every piece new. The show lives in `la-la-land/epilogue/`,

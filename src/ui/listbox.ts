@@ -25,6 +25,8 @@ export interface ListboxItem {
   swatches?: ListboxSwatches
   /** Small leading glyph, e.g. a mini layout diagram. Cloned per use. */
   glyph?: SVGSVGElement
+  /** The heading this option sits under in the list. Items of a group should be adjacent. */
+  group?: string
 }
 
 export interface Listbox {
@@ -134,7 +136,7 @@ export function createListbox(config: {
   /** A finger down on an option: it is chosen on lifting, unless the finger scrolled the list instead. */
   let touched: { i: number; y: number } | null = null
 
-  const bindOption = (item: ListboxItem, i: number): HTMLElement => {
+  const bindOption = (item: ListboxItem, i: number, parent: HTMLElement): HTMLElement => {
     const opt = make('div', 'lb-opt')
     opt.id = `${id}-${i}`
     opt.setAttribute('role', 'option')
@@ -154,13 +156,27 @@ export function createListbox(config: {
       touched = null
       if (t && t.i === i && Math.abs(e.clientY - t.y) < 10) choose(i)
     })
-    pop.append(opt)
+    parent.append(opt)
     return opt
   }
 
+  /** Options under a heading sit in a group named by it; the heading is not an option, so the keys pass over it. */
   const rebuildOptions = () => {
     pop.replaceChildren()
-    optionEls = items.map(bindOption)
+    let group: HTMLElement = pop
+    optionEls = items.map((item, i) => {
+      if (item.group !== undefined && item.group !== items[i - 1]?.group) {
+        const head = make('div', 'lb-group-head')
+        head.id = `${id}-g${i}`
+        head.textContent = item.group
+        group = make('div', 'lb-group')
+        group.setAttribute('role', 'group')
+        group.setAttribute('aria-labelledby', head.id)
+        group.append(head)
+        pop.append(group)
+      } else if (item.group === undefined) group = pop
+      return bindOption(item, i, group)
+    })
   }
 
   rebuildOptions()
