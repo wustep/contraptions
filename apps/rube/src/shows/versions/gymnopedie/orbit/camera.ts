@@ -133,8 +133,13 @@ export const wideAt = (cells: number): number => smooth(Math.log(cells), Math.lo
  */
 const slideAt = (cells: number): number => smooth(Math.log(cells), Math.log(66), Math.log(WHOLE))
 
-/** Where the frame's middle is over the sea when close: a little over the stones' middle height. */
+/**
+ * Where the frame's middle is over the sea when close: a little over the stones' middle height; lower on the pond of
+ * the third Gnossienne, so the water and the moon's path on it are more of the picture.
+ */
 const LOOK = 1.75
+const POND = 1.3
+const lookAt = (t: number): number => LOOK + (POND - LOOK) * smooth(wrap(t), GN3.from - 8, GN3.from + 4)
 /** Ahead of the ball, cells: it has room to go. */
 const LEAD = 0.55
 
@@ -143,7 +148,7 @@ export function camera(t: number): Framing {
   const w = slideAt(cells)
   const u = along(t) + LEAD
   // Close, the frame's middle is over the ball's way; wide, it slides to the planet's middle.
-  const [fx, fy] = polar(u, LOOK)
+  const [fx, fy] = polar(u, lookAt(t))
   const x = fx * (1 - w)
   const y = fy * (1 - w)
   return { x, y, cells, angle: -u / RADIUS }

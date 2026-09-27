@@ -354,19 +354,32 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   p.vertex(K(0.03), K(-h))
   p.endShape(p.CLOSE)
   if (!flower) return
-  // The flower at the leaf's far end: a bud until the ball comes, then open.
+  // The flower at the leaf's far end: a small closed bud, green at its foot, until the ball comes; then open, pale,
+  // and lit a little by the moon, so the way the ball has come is a line of flowers and the way ahead is buds.
   const fx = w - Math.min(0.24, w * 0.25)
   const fy = -h - 0.02
+  if (open > 0.02) {
+    const ctx = p.drawingContext as Ctx2D
+    const r = K(0.34)
+    const cy = K(fy - 0.09)
+    const g = ctx.createRadialGradient(K(fx), cy, 0, K(fx), cy, r)
+    g.addColorStop(0, `rgba(246, 226, 232, ${(0.22 * open).toFixed(3)})`)
+    g.addColorStop(1, 'rgba(246, 226, 232, 0)')
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(K(fx) - r, cy - r, 2 * r, 2 * r)
+    ctx.restore()
+  }
   p.stroke(ink)
   p.strokeWeight(weight * 0.8)
   for (const i of [-2, 2, -1, 1, 0]) {
-    const a = i * (0.16 + 0.34 * open)
-    const len = 0.16 + 0.04 * open - Math.abs(i) * 0.018
+    const a = i * (0.1 + 0.4 * open)
+    const len = 0.12 + 0.09 * open - Math.abs(i) * 0.018
     p.push()
     p.translate(K(fx), K(fy))
     p.rotate(a)
-    p.fill(mixHex('#E4B9C0', '#F7E9E6', Math.abs(i) / 3))
-    p.ellipse(0, K(-len / 2), K(0.06 + 0.025 * open), K(len))
+    p.fill(mixHex(mixHex('#9DB59A', '#D8A9B3', 0.55), mixHex('#EFC6CD', '#FBF1EE', Math.abs(i) / 3), open))
+    p.ellipse(0, K(-len / 2), K(0.05 + 0.035 * open), K(len))
     p.pop()
   }
 }
