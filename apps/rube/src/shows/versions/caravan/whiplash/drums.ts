@@ -102,6 +102,19 @@ export function cymbalSwing(since: number, amp = 0.14, ring = 1.1): number {
   return amp * Math.exp(-since / ring) * Math.sin(Math.PI * 2 * 1.6 * since + 0.35) * (1 - Math.exp(-since / 0.02))
 }
 
+/**
+ * How a struck piece answers in light, 0..1: the skin or the bronze catching the lamp as it gives. Quick on the
+ * stroke and gone in a breath, so a kit struck on the music shows the music (the dip and the swing alone moved a
+ * head by a pixel or two). Geometry never reads this: the ball's seats stay where `headDip` and `cymbalSwing` put them.
+ */
+export function strikeFlash(since: number, decay = 0.075): number {
+  if (!(since >= 0) || since > 8 * decay) return 0
+  return Math.exp(-since / decay) * (1 - Math.exp(-since / 0.006))
+}
+
+/** The warm white a struck head or a struck cymbal lifts toward. */
+const GLINT = '#FFF4DC'
+
 /** The whole kit, in the kit's frame (the snare's landing point at 0, 0). */
 export function drawKit(p: p5, c: Ctx, look: KitLook = {}): void {
   const since = look.since ?? never
@@ -112,13 +125,13 @@ export function drawKit(p: p5, c: Ctx, look: KitLook = {}): void {
   // Laid out by corners (the stage draws in rectMode(CENTER)): the lugs, the pedal's footboard.
   p.rectMode(p.CORNER)
   // Back to front: the ride and the floor tom, the kick, the rack tom, the snare, the hi-hat, the crash.
-  if (!skip.has('ride')) cymbal(p, c, RIDE, cymbalSwing(since('ride'), 0.08, 1.4) + (look.askew?.ride ?? 0), light, true)
-  if (!skip.has('floor')) drum(p, c, FLOOR_TOM, shell, headDip(since('floor'), 0.06), light, 'legs')
+  if (!skip.has('ride')) cymbal(p, c, RIDE, cymbalSwing(since('ride'), 0.08, 1.4) + (look.askew?.ride ?? 0), light, true, since('ride'))
+  if (!skip.has('floor')) drum(p, c, FLOOR_TOM, shell, headDip(since('floor'), 0.06), light, 'legs', false, since('floor'))
   if (!skip.has('kick')) kick(p, c, shell, since('kick'), light)
-  if (!skip.has('rack')) drum(p, c, RACK, shell, headDip(since('rack'), 0.05), light, 'mount')
-  if (!skip.has('snare')) drum(p, c, SNARE, shell, headDip(since('snare'), 0.045), light, 'stand', look.blood)
+  if (!skip.has('rack')) drum(p, c, RACK, shell, headDip(since('rack'), 0.05), light, 'mount', false, since('rack'))
+  if (!skip.has('snare')) drum(p, c, SNARE, shell, headDip(since('snare'), 0.045), light, 'stand', look.blood, since('snare'))
   if (!skip.has('hat')) hat(p, c, look.hat ?? 0, since('hat'), light)
-  if (!skip.has('crash')) cymbal(p, c, CRASH, cymbalSwing(since('crash'), 0.16, 1.2) + (look.askew?.crash ?? 0), light, true)
+  if (!skip.has('crash')) cymbal(p, c, CRASH, cymbalSwing(since('crash'), 0.16, 1.2) + (look.askew?.crash ?? 0), light, true, since('crash'))
   p.pop()
 }
 
@@ -207,8 +220,11 @@ function stand(p: p5, c: Ctx, x: number, top: number, spread = 0.42): void {
 }
 
 /** A drum: its shell (with hoops and lugs), its head as a thin ellipse on top, dipping by `dip`. */
-function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number, mount: 'stand' | 'legs' | 'mount', blood = false): void {
+function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number, mount: 'stand' | 'legs' | 'mount', blood = false, since = Infinity): void {
   const { k, weight } = c
+  // The stroke's light: the skin flares toward a warm white and the top hoop glints, both gone in a breath. In the
+  // dark (a kit at 0.3 of the lamp) it is dimmer but still there, the one thing that catches what light there is.
+  const flash = strikeFlash(since) * (0.45 + 0.4 * light)
   const x0 = d.x - d.w / 2
   const x1 = d.x + d.w / 2
   const eh = d.w * 0.11
@@ -248,10 +264,12 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
   }
   // The hoops: bright chrome bands at the top and bottom.
   outline(p, shade(KIT.chrome, 0.4 + 0.6 * light), weight * 1.2)
-  p.line(x0 * k, (top + 0.035) * k, x1 * k, (top + 0.035) * k)
   p.arc(d.x * k, bottom * k, d.w * k, 2 * eh * k, 0, Math.PI)
-  // The head: the struck skin, dipping at its middle, edged by the hoop's shadow.
-  solid(p, mixHex(shade(KIT.head, light), KIT.shade, 0.55), weight * 0.8, shade(KIT.head, light))
+  outline(p, mixHex(shade(KIT.chrome, 0.4 + 0.6 * light), GLINT, 0.8 * flash), weight * (1.2 + 0.6 * flash))
+  p.line(x0 * k, (top + 0.035) * k, x1 * k, (top + 0.035) * k)
+  // The head: the struck skin, dipping at its middle, edged by the hoop's shadow; lit by the stroke.
+  const skin = mixHex(shade(KIT.head, light), GLINT, Math.min(1, 1.15 * flash))
+  solid(p, mixHex(shade(KIT.head, light), KIT.shade, 0.55 * (1 - 0.6 * flash)), weight * 0.8, skin)
   p.beginShape()
   for (let i = 0; i <= 16; i++) {
     const a = (i / 16) * Math.PI * 2
@@ -272,8 +290,11 @@ function drum(p: p5, c: Ctx, d: Drum, shell: string, dip: number, light: number,
 /** The kick: the front head, a circle facing the house, with its hoop and a port; a tremble when struck. */
 function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void {
   const { k, weight } = c
-  const shake = since >= 0 && since < 0.8 ? 0.012 * Math.exp(-since / 0.1) * Math.sin(since * 70) : 0
-  const r = KICK.r * (1 + (since >= 0 && since < 0.5 ? 0.012 * Math.exp(-since / 0.07) : 0))
+  const shake = since >= 0 && since < 0.8 ? 0.016 * Math.exp(-since / 0.1) * Math.sin(since * 70) : 0
+  const r = KICK.r * (1 + (since >= 0 && since < 0.5 ? 0.022 * Math.exp(-since / 0.07) : 0))
+  // The beater's thump shows on the front head as a breath of light through the port side of it: the inner band
+  // and the rim's lit arc lift, and settle.
+  const flash = strikeFlash(since, 0.1) * (0.4 + 0.4 * light)
   // The spurs, out to the floor either side.
   for (const s of [-1, 1]) rod(p, c, KICK.x + s * r * 0.8, KICK.cy + r * 0.45, KICK.x + s * r * 1.12, KIT_FLOOR, 0.8)
   // The hoop (the shell's lacquer, as a ring, edged in its own dark) and the head inside it.
@@ -286,11 +307,11 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
   solid(p, edgeOf(face), weight * 0.8, face)
   p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.08) * k)
   p.noFill()
-  p.stroke(mixHex(face, KIT.head, 0.12 + 0.1 * light))
-  p.strokeWeight(weight * 1.2)
+  p.stroke(mixHex(face, KIT.head, 0.12 + 0.1 * light + 0.45 * flash))
+  p.strokeWeight(weight * (1.2 + 1.2 * flash))
   p.circle(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.22) * k)
-  p.stroke(mixHex(face, KIT.head, 0.3 + 0.35 * light))
-  p.strokeWeight(weight * 1.5)
+  p.stroke(mixHex(face, GLINT, Math.min(1, 0.3 + 0.35 * light + 0.5 * flash)))
+  p.strokeWeight(weight * (1.5 + 0.8 * flash))
   p.arc(KICK.x * k, (KICK.cy + shake) * k, 2 * (r - 0.1) * k, 2 * (r - 0.1) * k, Math.PI * 1.02, Math.PI * 1.62)
   // Tension rods: short chrome ticks round the hoop.
   p.stroke(shade(KIT.chrome, light))
@@ -310,8 +331,12 @@ function kick(p: p5, c: Ctx, shell: string, since: number, light: number): void 
 }
 
 /** A cymbal: a thin bronze lens on its stand, swung by `swing` about its bell. */
-function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: boolean): void {
+function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: boolean, since = Infinity): void {
   const { k, weight } = c
+  // Struck bronze flares toward pale gold and shimmers as it rings: a quick flare, then a fine flicker along the
+  // lit edge that dies with the swing.
+  const flare = strikeFlash(since, 0.11) * (0.5 + 0.4 * light)
+  const ring = since >= 0 && since < 2 ? Math.exp(-since / 0.5) * (0.55 + 0.45 * Math.sin(since * 47)) * (0.5 + 0.5 * light) : 0
   stand(p, c, s.x + (boom ? 0.35 : 0), s.y + 0.25, 0.46)
   if (boom) rod(p, c, s.x + 0.35, s.y + 0.25, s.x, s.y + 0.04, 0.9)
   p.push()
@@ -319,8 +344,8 @@ function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: bo
   p.rotate(s.tilt + swing)
   const w = s.w * k
   const h = 0.085 * k
-  const bronze = shade(KIT.bronze, light)
-  solid(p, mixHex(bronze, KIT.shade, 0.7), weight * 0.8, bronze)
+  const bronze = mixHex(shade(KIT.bronze, light), GLINT, 0.7 * flare)
+  solid(p, mixHex(bronze, KIT.shade, 0.7 * (1 - flare)), weight * 0.8, bronze)
   // The lens: a shallow dome over a flat underside, and the bell on top.
   p.beginShape()
   for (let i = 0; i <= 18; i++) {
@@ -339,8 +364,8 @@ function cymbal(p: p5, c: Ctx, s: Cymbal, swing: number, light: number, boom: bo
   p.stroke(shade(KIT.head, light * 0.7))
   p.strokeWeight(weight * 0.45)
   for (const f of [0.62, 0.86]) p.arc(0, h * 0.5, w * f, h * 1.9, Math.PI * 1.08, Math.PI * 1.92)
-  p.stroke(mixHex(bronze, KIT.head, 0.45 * light))
-  p.strokeWeight(weight * 0.7)
+  p.stroke(mixHex(bronze, GLINT, Math.min(1, 0.45 * light + 0.5 * ring + 0.4 * flare)))
+  p.strokeWeight(weight * (0.7 + 0.7 * Math.max(ring, flare)))
   p.beginShape()
   for (let i = 2; i <= 9; i++) {
     const u = i / 18
@@ -355,6 +380,7 @@ function hat(p: p5, c: Ctx, open: number, since: number, light: number): void {
   const { k, weight } = c
   const lift = 0.02 + 0.13 * Math.max(0, Math.min(1, open))
   const tick = since >= 0 && since < 0.5 ? 0.02 * Math.exp(-since / 0.06) : 0
+  const flare = strikeFlash(since, 0.07) * (0.5 + 0.4 * light)
   stand(p, c, HAT.x, HAT.y, 0.4)
   // The pull rod above the top cymbal.
   rod(p, c, HAT.x, HAT.y - lift - 0.3, HAT.x, HAT.y, 0.8)
@@ -370,6 +396,8 @@ function hat(p: p5, c: Ctx, open: number, since: number, light: number): void {
   p.endShape(p.CLOSE)
   p.translate(0, -(lift + tick) * k)
   p.rotate(tick * 3)
+  const top = mixHex(bronze, GLINT, 0.7 * flare)
+  solid(p, mixHex(top, KIT.shade, 0.7 * (1 - flare)), weight * 0.8, top)
   p.beginShape()
   for (let i = 0; i <= 14; i++) p.vertex(((i / 14) - 0.5) * w, -h * Math.sin((i / 14) * Math.PI))
   p.endShape(p.CLOSE)
