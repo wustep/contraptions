@@ -100,6 +100,8 @@ export function checkOstinato(perf: Performance, version: ShowVersion, check: Ch
   // the collapse.
   const wides: [number, number][] = [
     ...STATEMENTS.flatMap((s, k) => (lapOf(k).round === 1 ? [[s.t + 12.5 * BAR, s.t + 18 * BAR] as [number, number]] : [])),
+    // From the ninth statement, the storeys under the ball playing along with it.
+    ...STATEMENTS.flatMap((s, k) => (k >= 8 && lapOf(k).round === 0 ? [[s.t + 8.5 * BAR, s.t + 16.4 * BAR] as [number, number]] : [])),
     [bar(328), bar(334.8)],
     [bar(336.5), LAST + 1.6],
   ]

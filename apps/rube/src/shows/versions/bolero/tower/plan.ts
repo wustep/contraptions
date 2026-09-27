@@ -216,15 +216,16 @@ export const LOOPS: Loop[] = TOWER.map((st) => {
  * Monotone cubic through knots (Fritsch-Carlson): the ball's arc length against time never runs back and carries its
  * speed smoothly through every key, quick through a run and slow over a held note.
  */
-export function monotone(knots: [number, number][]): (x: number) => number {
+export function monotone(knots: [number, number][], rest = false): (x: number) => number {
   const n = knots.length
   const xs = knots.map((k) => k[0])
   const ys = knots.map((k) => k[1])
   const d: number[] = []
   for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]))
   const m: number[] = new Array(n).fill(0)
-  m[0] = d[0]
-  m[n - 1] = d[n - 2]
+  // From rest and to rest when asked: out of the lift's cup and into it.
+  m[0] = rest ? 0 : d[0]
+  m[n - 1] = rest ? 0 : d[n - 2]
   for (let i = 1; i < n - 1; i++) {
     if (d[i - 1] * d[i] <= 0) m[i] = 0
     else {
@@ -251,7 +252,7 @@ export function monotone(knots: [number, number][]): (x: number) => number {
   }
 }
 
-export const ARC = LOOPS.map((l) => monotone(l.knots))
+export const ARC = LOOPS.map((l) => monotone(l.knots, true))
 
 /* ------------------------------------------------------------------ the lift */
 
@@ -293,7 +294,7 @@ export interface Ride {
 }
 
 /** One step of the lift: quick, eased at both ends, done well before the next stroke. */
-export const STEP = 0.1
+export const STEP = 0.13
 export function ride(from: number, to: number, s0: number, s1: number): Ride {
   const i0 = lastIndex(STROKES, from) + 1
   const i1 = lastIndex(STROKES, to - STEP)

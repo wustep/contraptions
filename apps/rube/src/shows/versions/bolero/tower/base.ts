@@ -3,7 +3,8 @@ import { outline, solid } from '../../../../../../../src/core/draw'
 import type { PieceCtx } from '../../../../parts'
 import { BAR, BEAT, COLLAPSE, LAST, SNARE, STROKES, T0, lastIndex, loud, pluck } from './music'
 import { DRUM } from './plan'
-import { BRASS, DRUM_RED, INK, IRON, NIGHT, PAPER, alpha, deep, frameOf, honest, pale, ring, smooth } from './look'
+import { BRASS, DRUM_RED, GOLD, INK, IRON, NIGHT, PAPER, alpha, deep, frameOf, honest, pale, ring, smooth } from './look'
+import { gilt } from './gold'
 import { DUSK } from './credits'
 
 /**
@@ -49,6 +50,7 @@ export function stickLift(t: number): number {
 
 export function drawGround(p: p5, c: PieceCtx): void {
   const { k, weight } = c
+  goldLight(p, k, c.t)
   dusk(p, k, c.t)
   p.push()
   p.noStroke()
@@ -198,6 +200,19 @@ function mallet(p: p5, k: number, weight: number, pivot: { x: number; y: number 
   p.pop()
   solid(p, INK, weight * 0.8, BRASS)
   p.circle(pivot.x * k, pivot.y * k, 0.07 * k)
+}
+
+/** E major: the paper warms to gold for its eight bars, and cools again as C comes back. */
+function goldLight(p: p5, k: number, t: number): void {
+  const g = gilt(t)
+  if (g <= 0) return
+  const f = frameOf(p, k)
+  p.push()
+  p.noStroke()
+  p.fill(alpha(p, GOLD, 0.2 * g))
+  p.rectMode(p.CORNERS)
+  p.rect(f.x0 * k, f.y0 * k, f.x1 * k, f.y1 * k)
+  p.pop()
 }
 
 /** Night coming down over the ruins after the last chord: the frame dims, and the sky darkens from the top. */

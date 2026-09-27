@@ -65,21 +65,26 @@ const FALLS: Record<string, Fall> = (() => {
       const c0: Pt = [(side * b.w) / 4, (b.floor + b.top) / 2]
       // The roof lets go on the collapse's first stroke, and every storey after the one over it, down to the lowest.
       const release = COLLAPSE + (TOWER.length - n) * 0.1
-      const vx = side * (0.7 + 0.22 * n)
-      const spin = side * (0.55 + 0.05 * n)
+      // Out from the mast, clear of the drum, the higher ones further; turned outward as it falls, to lie tilted low
+      // on the heap (the roof, the highest, turned most).
+      const vx = side * (2.1 + 0.3 * n)
+      const lie = side * (0.2 + 0.035 * n)
       // Falling until its lowest corner is on the ground (the heap: a little higher for each storey already down).
       const floor = -0.04 - 0.07 * (TOWER.length - n)
-      let land = 0
-      for (let d = 0; d < 6; d += 0.004) {
-        const a = spin * d
-        const cx = c0[0] + vx * d
-        const cy = c0[1] + 0.5 * FALL_G * d * d
-        const low = Math.max(...corners(n).map(([x, y]) => cy + x * Math.sin(a) + y * Math.cos(a)))
-        if (low >= floor) {
-          land = d
-          break
+      const landing = (spin: number): number => {
+        for (let d = 0; d < 6; d += 0.004) {
+          const a = spin * d
+          const cy = c0[1] + 0.5 * FALL_G * d * d
+          const low = Math.max(...corners(n).map(([x, y]) => cy + x * Math.sin(a) + y * Math.cos(a)))
+          if (low >= floor) return d
         }
-        void cx
+        return 6
+      }
+      let spin = lie
+      let land = landing(spin)
+      for (let i = 0; i < 6; i++) {
+        spin = lie / Math.max(0.2, land)
+        land = landing(spin)
       }
       out[`${n}${side}`] = { release, c0, vx, spin, land }
     }
@@ -88,14 +93,14 @@ const FALLS: Record<string, Fall> = (() => {
 })()
 
 /** A half's pose at `t`: how far its middle has moved and how far it has turned about it. */
-export function fall(n: number, side: -1 | 1, t: number): { dx: number; dy: number; a: number; c0: Pt; u: number } {
+export function fall(n: number, side: -1 | 1, t: number): { dx: number; dy: number; a: number; c0: Pt; u: number; down: number } {
   const f = FALLS[`${n}${side}`]
-  if (t <= f.release) return { dx: 0, dy: 0, a: 0, c0: f.c0, u: 0 }
+  if (t <= f.release) return { dx: 0, dy: 0, a: 0, c0: f.c0, u: 0, down: 0 }
   const d = Math.min(t - f.release, f.land)
   // After it lands: a short settle, a rock of its turn, and still.
   const after = t - f.release - f.land
   const settle = after > 0 ? Math.exp(-after / 0.18) * Math.sin(after * 26) * 0.035 : 0
-  return { dx: f.vx * d, dy: 0.5 * FALL_G * d * d, a: f.spin * d + settle * Math.sign(f.spin), c0: f.c0, u: Math.min(1, d / f.land) }
+  return { dx: f.vx * d, dy: 0.5 * FALL_G * d * d, a: f.spin * d + settle * Math.sign(f.spin), c0: f.c0, u: Math.min(1, d / f.land), down: Math.max(0, after) }
 }
 /** When the last half comes down. */
 export const DOWN = Math.max(...Object.values(FALLS).map((f) => f.release + f.land))
@@ -149,6 +154,8 @@ export function inFrame(p: p5, k: number, n: number, t: number, fn: (side: -1 | 
     p.rotate(f.a)
     p.translate(-f.c0[0] * k, -f.c0[1] * k)
     const ctx = p.drawingContext as CanvasRenderingContext2D
+    // Down, the ruins go quiet, so the drum and the ball stand out of them.
+    ctx.globalAlpha *= 1 - 0.55 * smooth(f.down, 0.4, 2.6)
     ctx.beginPath()
     if (side < 0) ctx.rect(-1000 * k, -1000 * k, 1000 * k, 2000 * k)
     else ctx.rect(0, -1000 * k, 1000 * k, 2000 * k)

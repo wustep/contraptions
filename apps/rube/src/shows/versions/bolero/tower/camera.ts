@@ -31,9 +31,9 @@ interface Key {
 
 const mid = (n: number): number => (TOWER[n].top + TOWER[n].floor) / 2
 /** The storey whole, a little of the storey over it and the one under it. */
-const whole = (n: number): number => Math.max(TOWER[n].w * 0.7, TOWER[n].floor - TOWER[n].top + 1.6)
+const whole = (n: number): number => Math.max(TOWER[n].w * 0.84, TOWER[n].floor - TOWER[n].top + 1.6)
 /** How much a frame of the storey whole leans to follow the ball along it (so it never leaves a closer frame). */
-const LEAN = 0.45
+const LEAN = 0.12
 /** Close on the ball along a rail: the storey's height and some. */
 const close = (n: number): number => Math.max(3.4, Math.min(5.8, (TOWER[n].floor - TOWER[n].top) * 1.45))
 /** The tower so far, from the drum to storey n's top, and the bud over it. */
@@ -61,7 +61,18 @@ function keys(): Key[] {
       out.push({ t: S - 0.3, cells: whole(n), hold, w: 1 - LEAN })
       // In on it, and along the upper rail with it; round the U-turn; back along the lower rail.
       out.push({ t: at(3), cells: close(n), hold: [0, mid(n) - 0.15], w: 0, wy: 0.9 })
-      out.push({ t: at(14.5), cells: close(n) * 1.05, hold: [0, mid(n) + 0.1], w: 0, wy: 0.9 })
+      if (k >= 8) {
+        // From the ninth statement the storeys under it with its theme play along: on the lower rail, back to see
+        // them, three storeys (five for the tuttis) all playing the tune at once.
+        const below = Math.max(0, n - (single ? 4 : 2))
+        const top = TOWER[n].top - 0.3
+        const bottom = TOWER[below].floor + 0.3
+        out.push({ t: at(8.2), cells: close(n) * 1.1, hold: [0, mid(n) - 0.1], w: 0, wy: 0.9 })
+        out.push({ t: at(11), cells: bottom - top, hold: [0, (top + bottom) / 2], w: 0.75 })
+        out.push({ t: at(13.4), cells: bottom - top, hold: [0, (top + bottom) / 2], w: 0.75 })
+      } else {
+        out.push({ t: at(14.5), cells: close(n) * 1.05, hold: [0, mid(n) + 0.1], w: 0, wy: 0.9 })
+      }
       if (!single) {
         // Out to the storey whole for the lift up to the upper rail again.
         out.push({ t: at(16.6), cells: whole(n), hold, w: 1 - LEAN })
@@ -100,9 +111,9 @@ function keys(): Key[] {
   out.push({ t: COLLAPSE + 1.2, cells: allCells + 3, hold: [0, all[1] + 3.5] })
   // Down to the drum as the ball lands on it, and back a little into the night for the credits.
   out.push({ t: LAST + 0.1, cells: 16, hold: [0, -5.5] })
-  out.push({ t: LAST + 2.2, cells: 5.4, hold: [0, DRUM.head - 1.2] })
-  out.push({ t: CREDITS_AT + 1, cells: 7.5, hold: [0, DRUM.head - 2.2] })
-  out.push({ t: CREDITS_AT + 14, cells: 9, hold: [0, DRUM.head - 2.4] })
+  out.push({ t: LAST + 2.8, cells: 6.2, hold: [0, DRUM.head - 1.5] })
+  out.push({ t: CREDITS_AT + 1, cells: 8.2, hold: [0, DRUM.head - 2.3] })
+  out.push({ t: CREDITS_AT + 14, cells: 9.4, hold: [0, DRUM.head - 2.6] })
   return out.sort((a, b) => a.t - b.t)
 }
 

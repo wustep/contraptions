@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../src/core/draw'
 import { mixHex, type PieceCtx } from '../../../../parts'
-import { STATEMENTS } from './music'
+import { STATEMENTS, STROKES } from './music'
 import { LOOPS, R, TOWER, UNFOLD, lapOf, onLoop, sOf, statementsOn, unfoldsAt, type Key, type Storey } from './plan'
 import { GOLD, INK, IRON, PAPER, STOREY_COLORS, clamp, deep, easeOut, pale, ring, smooth } from './look'
 import { where } from './ball'
@@ -45,6 +45,15 @@ function since(times: number[], t: number): number {
   return best
 }
 
+/**
+ * When a storey's keys flip up: in the order they will be played, a handful on each of the drum's 14 strokes in the
+ * second bar of its unfold (the unfold is the two bars of drum alone before its first statement).
+ */
+const FLIPS: number[][] = TOWER.map((st) => {
+  const from = unfoldsAt(st.n) + UNFOLD / 2 - 0.05
+  return STROKES.filter((s) => s >= from && s < unfoldsAt(st.n) + UNFOLD - 0.1)
+})
+
 /** How far a storey has unfolded, 0 (folded into the bud) to 1. */
 export const openOf = (n: number, t: number): number => clamp((t - unfoldsAt(n)) / UNFOLD)
 
@@ -82,8 +91,6 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
   const floorOpen = easeOut(smooth(open, 0, 0.32))
   const posts = easeOut(smooth(open, 0.26, 0.5))
   const rails = smooth(open, 0.38, 0.62)
-  const keysFrom = 0.5
-  const keysTo = 0.96
 
   const floorFill = deep(color, 0.35)
   // The floor, in two halves hinged at the mast.
@@ -165,7 +172,8 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
   const unplayed = pale(IRON, 0.78)
   const thin = weight * 0.42
   for (const key of loop.keys) {
-    const up = easeOut(smooth(open, keysFrom + ((keysTo - keysFrom) * key.i) / N, keysFrom + ((keysTo - keysFrom) * key.i) / N + 0.08))
+    const flip = FLIPS[n][Math.min(FLIPS[n].length - 1, Math.floor((key.i * FLIPS[n].length) / N))]
+    const up = easeOut(smooth(t, flip, flip + 0.14))
     if (up <= 0) continue
     const a = railAt(st, key.s0 + 0.008)
     const b = railAt(st, key.s1 - 0.008)
