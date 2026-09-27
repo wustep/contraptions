@@ -96,6 +96,51 @@ const HERB_DRY = mixHex(ROOM.copper, ROOM.plasterShade, 0.45)
 /** The wainscot: how high its boards run up the back wall from the floor's surface, and their wood (L ≈ 0.08). */
 const WAINSCOT = 1.1
 const PANEL = mixHex(ROOM.woodDark, ROOM.wood, 0.2)
+/**
+ * The wainscot along the back wall between room x `x0` and `x1`: dark boards from the floor to a cap rail about 1.1
+ * cells up, each its own width and shade with dark seams between, a skirting, and a lighter cap rail with its lit edge.
+ * The boards are laid from the wall's left end whatever the span, so the collapse's hold of the wall (`plank-collapse.ts`)
+ * shows the same boards as the room.
+ */
+export function drawWainscot(p: p5, k: number, W: number, ink: string, tone: (hex: string) => string, x0: number, x1: number): void {
+  const R = ROOM_AT
+  const X = (v: number) => v * k
+  const top = R.ground - WAINSCOT
+  p.push()
+  p.rectMode(p.CORNER)
+  p.noStroke()
+  p.fill(tone(PANEL))
+  p.rect(X(x0), X(top), X(x1 - x0), X(WAINSCOT))
+  for (let x = R.wallL, i = 0; x < x1; i++) {
+    const w = 0.42 + 0.1 * hash(i, 11)
+    const e = Math.min(R.wallR, x + w)
+    if (e > x0) {
+      const a = Math.max(x, x0)
+      const b = Math.min(e, x1)
+      p.noStroke()
+      p.fill(tone(mixHex(PANEL, hash(i, 13) < 0.5 ? ROOM.woodDark : ROOM.wood, 0.12 + 0.14 * hash(i, 17))))
+      p.rect(X(a), X(top), X(b - a), X(WAINSCOT))
+      if (e < R.wallR && e < x1) {
+        p.stroke(alpha(p, ink, 0.45))
+        p.strokeWeight(W * 0.5)
+        p.line(X(e), X(top + 0.06), X(e), X(R.ground - 0.1))
+      }
+    }
+    x = e
+  }
+  p.stroke(alpha(p, ink, 0.6))
+  p.strokeWeight(W * 0.6)
+  p.fill(tone(mixHex(ROOM.woodDark, ROOM.night, 0.3)))
+  p.rect(X(x0), X(R.ground - 0.1), X(x1 - x0), X(0.1))
+  p.stroke(ink)
+  p.strokeWeight(W * 0.8)
+  p.fill(tone(ROOM.wood))
+  p.rect(X(x0), X(top - 0.07), X(x1 - x0), X(0.09))
+  p.noStroke()
+  p.fill(alpha(p, tone(mixHex(ROOM.wood, ROOM.plaster, 0.45)), 0.8))
+  p.rect(X(x0), X(top - 0.07) + W * 0.5, X(x1 - x0), Math.max(1, X(0.022)))
+  p.pop()
+}
 /** How high the pan's bail rises over its rim, to the ring the trolley's chain holds. */
 const BAIL = 0.22
 
@@ -156,37 +201,9 @@ export const room = scenery<null>({
     // The back wall: plaster above, and a wainscot of dark boards from the floor to a cap rail about 1.1 cells up, so
     // anyone at the table or on the floor (her grey, Markl's sage, Howl's blue) sits against dark wood, not cream; the
     // plaster over it keeps the room light. Then the soot of years over the hearth.
-    const top = R.ground - WAINSCOT
     p.fill(tone(ROOM.plaster))
     p.rect(X(R.wallL), X(R.ceil), X(R.wallR - R.wallL), X(R.ground - R.ceil))
-    p.fill(tone(PANEL))
-    p.rect(X(R.wallL), X(top), X(R.wallR - R.wallL), X(WAINSCOT))
-    // The boards: each its own width and a shade of its own, the seams between them dark.
-    for (let x = R.wallL, i = 0; x < R.wallR; i++) {
-      const w = 0.42 + 0.1 * hash(i, 11)
-      const x1 = Math.min(R.wallR, x + w)
-      p.noStroke()
-      p.fill(tone(mixHex(PANEL, hash(i, 13) < 0.5 ? ROOM.woodDark : ROOM.wood, 0.12 + 0.14 * hash(i, 17))))
-      p.rect(X(x), X(top), X(x1 - x), X(WAINSCOT))
-      if (x1 < R.wallR) {
-        p.stroke(alpha(p, ink, 0.45))
-        p.strokeWeight(W * 0.5)
-        p.line(X(x1), X(top + 0.06), X(x1), X(R.ground - 0.1))
-      }
-      x = x1
-    }
-    // The skirting along the floor, and the cap rail: a lighter moulding with its lit edge, inked.
-    p.stroke(alpha(p, ink, 0.6))
-    p.strokeWeight(W * 0.6)
-    p.fill(tone(mixHex(ROOM.woodDark, ROOM.night, 0.3)))
-    p.rect(X(R.wallL), X(R.ground - 0.1), X(R.wallR - R.wallL), X(0.1))
-    p.stroke(ink)
-    p.strokeWeight(W * 0.8)
-    p.fill(tone(ROOM.wood))
-    p.rect(X(R.wallL), X(top - 0.07), X(R.wallR - R.wallL), X(0.09))
-    p.noStroke()
-    p.fill(alpha(p, tone(mixHex(ROOM.wood, ROOM.plaster, 0.45)), 0.8))
-    p.rect(X(R.wallL), X(top - 0.07) + W * 0.5, X(R.wallR - R.wallL), Math.max(1, X(0.022)))
+    drawWainscot(p, k, W, ink, tone, R.wallL, R.wallR)
     p.noStroke()
     for (let i = 0; i < 6; i++) {
       p.fill(alpha(p, tone(ROOM.soot), 0.05))

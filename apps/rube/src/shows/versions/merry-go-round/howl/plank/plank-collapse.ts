@@ -3,7 +3,8 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
 import { CASTLE, HULL_OUTLINE, MODULE_PIVOT, doorAt, drawCastle, onBody, puff, spline, type CastlePose, type ModuleId, type ModuleMove } from '../wastes/castle'
 import { DOOR as DOOR_SIZE, drawDoor } from '../cast'
-import { ROOM_AT, roomTone } from '../castle/room'
+import { drawWainscot, ROOM_AT, roomTone } from '../castle/room'
+import { fireVeil, HEARTH_DARK, hearthGlow, warmth } from './hearth'
 import { ROOM, WASTES } from '../worlds'
 import { BX0, c, CROUCH, DECK, deck, ring, T0, YG, type Deck } from './plank-rig'
 
@@ -394,18 +395,11 @@ function wall(p: p5, k: number, W: number, ink: string, t: number) {
   p.translate(X(ROOM_OFF[0]), X(ROOM_OFF[1]))
   p.rectMode(p.CORNER)
   const [x0, x1] = [-3.3, 5.3]
-  // The plaster, and the wainscot of boards below its dado rail.
+  // The plaster, and the room's wainscot of dark boards under its cap rail (the same boards, `drawWainscot`).
   p.noStroke()
   p.fill(tone(ROOM.plaster))
   p.rect(X(x0), X(R.ceil - 0.5), X(x1 - x0), X(R.ground - R.ceil + 0.5))
-  p.fill(tone(ROOM.plasterShade))
-  p.rect(X(x0), X(-0.95), X(x1 - x0), X(R.ground + 0.95))
-  p.stroke(alpha(p, ink, 0.14))
-  p.strokeWeight(W * 0.45)
-  for (let x = R.wallL + 0.45, i = 0; x < x1; x += 0.45 + 0.08 * Math.sin(i * 2.7), i++) if (x > x0) p.line(X(x), X(-0.9), X(x), X(R.ground))
-  p.stroke(alpha(p, ink, 0.6))
-  p.strokeWeight(W * 0.8)
-  p.line(X(x0), X(-0.95), X(x1), X(-0.95))
+  drawWainscot(p, k, W, ink, tone, x0, x1)
   p.noStroke()
   for (let i = 0; i < 6; i++) {
     p.fill(alpha(p, tone(ROOM.soot), 0.05))
@@ -500,6 +494,13 @@ function wall(p: p5, k: number, W: number, ink: string, t: number) {
     glow(lx, ly + 0.3, 1.3, '255, 196, 120', 0.13 * w)
     glow((hx0 + hx1) / 2, -0.6, 3.4, '255, 150, 70', 0.3 * w)
     ctx.restore()
+  }
+  // As the hearth left it: the room in the dark but for Calcifer in her hands, his light round him, going with the
+  // lamp tone into the day as the wall breaks (so the cut never brightens the room).
+  if (w > 0.01) {
+    const g = hearthGlow(T0 - 0.001)
+    fireVeil(p, k, HEARTH_DARK * w, [[g.at[0], g.at[1] - 0.25, g.r, g.r * 2.6, 1]], { x0, y0: R.ceil - 0.5, x1, y1: R.ground + 0.02 })
+    warmth(p, k, g.at, g.r, w)
   }
   p.pop()
 }

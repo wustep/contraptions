@@ -1229,8 +1229,8 @@ export const plank = part<PlankState>(
       // bars; on c4 back in to her, the hull torn in plates over her head, pushing in; on c6 out again to the whole
       // of it, the cottage and the face going down; on c8 in to her on the plank standing up in the dust, the wreck
       // at the left, and on with her as it runs (c9).
-      hold(244.5, 4.5, [her0[0] + 0.25, her0[1] - 0.88]),
-      hold(245.0, 5.1, [her0[0] + 0.2, her0[1] - 0.98]),
+      hold(244.5, 3.0, [her0[0] + 0.33, her0[1] - 0.62]),
+      hold(245.0, 3.5, [her0[0] + 0.28, her0[1] - 0.72]),
       { ...hold(c(2), 23, [BX0 - 1.3, -3.7]), cut: true },
       hold(247.3, 24.2, [BX0 - 1.45, -3.1]),
       { ...onDeckShot(c(4), 7.4, -0.3, 0.44), cut: true },
