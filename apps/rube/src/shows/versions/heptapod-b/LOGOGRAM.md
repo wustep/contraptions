@@ -12,7 +12,7 @@ Open it at `/shows/heptapod-b/opus55/` (or `/shows/?show=heptapod-b&take=opus55`
 ## What it is
 
 A Rube Goldberg machine plays the cue from its first sample, 3:42, and the end credits run on in the quiet after it:
-4:06 in all. It is one ball on one path through four places, and it is a circle, as the film is: the last scene opens
+4:08 in all. It is one ball on one path through four places, and it is a circle, as the film is: the last scene opens
 on the show's first frame.
 
 - **Louise Banks** is the orange ball (`#E2672C`), hazmat orange, the suit the team wears into the shell. She is the
@@ -74,6 +74,8 @@ side agree without seeing each other.
 - **The visions** are hard cuts on hard pulses (139.476, 156.177, 163.126 s), the film's flashes.
 - **The circle.** The cut into the last scene is a scale match cut that opens on the show's first frame exactly
   (`FIRST`), her place on the screen carried.
+- **Three punches** (`PUNCHES` in `score.ts`): the camera pushes in a little, at once, and eases back over seconds, on
+  gravity's turn (70.513), the palm meeting her on the glass (119.658) and the great logogram closing (183.182).
 
 ## In order
 
@@ -85,7 +87,7 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 8.911 | the first great pulse (1.46) | the valley | Out of the white: the helicopter hanging in the cloud, Louise and Ian in its side window. It lurches off (9.741), pushes out of the cloud bank (11.099), and tops the crest on 16.283 (1.31): the great wide, the valley under low cloud, the fog pouring over the ridges, and the shell hanging over the meadow, the helicopter a speck against it. Nose up (18.013), and down to the pad on 22.059. |
 | 22.059 | the pulse whole | the base | The door hits its stop; out onto the helideck, Ian after her. Her machine: into a bucket whose rope is wound on the generator's flywheel, which thuds down and tips her out; the engine coughs and catches (28.021), puffing on every pulse, each puff as big as the pulse is hard; a plank tipped onto the switch; the mast's lamps come on one a pulse. **The first burst (36.368 → 37.808): the slot in the shell's belly opens in six steps**, its light spilling down on the camp, and the floods answer (38.534, 38.772, 39.735). Up the steps onto the lift's deck. |
 | 43.758 | a hard pulse (1.16) | the lift | The scissor lift's engine catches; its seven stages open one after another from the bottom, each surging, stopping on its ram's end and latching on a pulse. Up into the band of fog under the belly (52.849), out of it on 54.509 (1.43), the fog it dragged up flung off; the look up at the belly's dome; the deck rising into the slot. |
-| 65.985 | the third layer | the shaft | Inside: the deck in the shaft's mouth, the camera turned a quarter, the valley's daylight glowing up the throat. The deck knocks home (67.431); she presses the work light's switch (68.383) and it catches (68.621), its beam going up the shaft. **On the great burst (70.513) she leaps and gravity turns under her**: her path the throw in a turning gravity, onto the wall that becomes the floor, the camera turning square after her, the dust turning with gravity. Landings and damped bounces on the burst's hard pulses, Ian a pulse behind. Then the long shaft to the light, low floating hops over its ribs. |
+| 65.985 | the third layer | the shaft | Inside: the deck in the shaft's mouth, the camera turned a quarter, the valley's daylight glowing up the throat. The deck knocks home (67.431); she presses the work light's switch (68.383) and it catches (68.621), its beam going up the shaft. **On the great burst (70.513) she leaps and gravity turns under her**: her path the throw in a turning gravity, onto the wall that becomes the floor, the camera turning square after her, the dust turning with gravity. Landings and damped bounces on the burst's hard pulses, Ian a pulse behind; the work light tips on its yoke and knocks its bracket (71.703). Then the long shaft to the light in stone, its length shown in one breath, low floating hops over its ribs (the first leaving on 73.120), and a threshold ridge at the opening that Ian hops after her, landing on 85.786. |
 | 85.786 | a hard pulse (1.04) | the chamber | Out onto the chamber's floor in the dark. The glass wakes in two steps (87.226, 87.464): a great wall of white light. The walk to it; a shadow in the fog behind it, darkening on unseen footfalls (94.128, 96.044, 97.007). **Abbott comes out of the white on 97.239 (1.17)**, each limb set down on a hard pulse; **Costello on 101.303 (1.13)**. The grand wide: the glass, two giants, the two of them tiny at its foot. Abbott's limb reaches down, its tip opens into a palm (118.700), and **presses flat on the glass on 119.658 as she reaches it**. Costello's jet of ink (121.574), and the first logogram blooms in the fog (122.061 → 129), on the loudest swell. |
 | 130.409 | the loudest swell | the fog | White. Beyond the glass she rests in the cup of Abbott's palm; Costello's jet goes down and a ring blooms from its bottom both ways round; the palm closes and she drops onto the ring as it arrives (133.573), and it closes over her (136.499), putting out its tendrils a pulse at a time. |
 | 139.476 | a hard pulse | the lake house | Summer on the grass by the shore: little Hannah running ahead, Louise after her; a leap, a skip. |
@@ -93,9 +95,9 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 | 156.177 | a hard pulse (1.14) | the lake house | By the window, soft day: Hannah older, leaning on her; then she goes, off the bench and out of frame. |
 | 160.015 | | the fog | A crescent carries her once round. |
 | 163.126 | the hardest pulse after 8.911 (1.48) | the lake house | The window at dusk, the rain running on the panes, a drop landing on each hard pulse; Louise alone on the bench. |
-| 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136). It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half, a blot of hers on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)**, the tendrils fling out, and the ring's turn slows to rest. |
+| 166.243 | the push | the fog | **She writes.** Flung up out of the crescent, she comes to the top of her rise where the great ring begins under her (168.136). It turns; she is its pen at its bottom, and Costello's front limb the pen at its top; each writes half. She works it like a ball in a turning drum: the ink carries her up the rising wall to a hang, and each group of hard pulses lets her go on its first (170.051, 173.383, and the biggest ride on 179.368), so she rolls back down through the rest, a blot pressed where she is on every one of the push's 21 hard pulses. **The halves meet on 183.182 (1.26)** with her still at the bottom, the tendrils fling out, and the ring's turn slows to rest. |
 | 185.330 | the pulse thins | the valley | The meadow after. The shell rises into the cloud and goes; the cloud opens, the light comes down, the fog lifts. Ian comes to her across the meadow, and they touch (195.344). |
-| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. The sun comes through the fog on the water; the camera draws back to the whole window, the two of them small in it, for the credits. |
+| 196.783 | the last clear pulse | the lake house | The first frame again. The held tones die. On the last flutter Hannah sets off (208.631), skips, dashes, springs and lands in the prologue's rhythm, and touches her on **212.312 (3.7)**. The sun comes through the fog on the water; the camera draws back to the whole window by 216.3, the two of them small in it, for the credits over the wall above it. |
 
 ## The company
 
@@ -109,12 +111,12 @@ Times are show seconds; pulse *k* is `pulse(k)`, and a strength in brackets is h
 
 ## End credits
 
-The last flutter has rung away (214.6 s). Over the lake house the credits come, a card at a time, set by the page from
+The last flutter has rung away, and the camera has drawn back to the whole window (216.3 s). From 216.6 s over the wall above it the credits come, a card at a time, set by the page from
 `Performance.titles(t)` (a show's canvas sets no type): Directed by Claude Opus 5.5; With Louise Banks (the orange
 ball), Ian Donnelly (the blue ball), Hannah (the little peach ball), Abbott and Costello (heptapods); Music, Jóhann
 Jóhannsson, "Heptapod B", with Joan La Barbara, from the soundtrack (Deutsche Grammophon, 2016); After Arrival, a film
 by Denis Villeneuve, from Ted Chiang's "Story of Your Life"; Drawn with p5.js. There is no title card. After the last
-card the room holds to the end, 246 s.
+card the room holds to the end, 248 s.
 
 ## What check:shows holds
 
@@ -148,6 +150,32 @@ card the room holds to the end, 246 s.
 - **How it was made:** a director (Claude Opus 5.5) measured the cue, wrote the kit, the seams, the canonical drawings
   and a stub for every part so the show ran end to end, then six builders (lake, valley, lift, shaft, chamber, fog)
   built the parts in parallel from one brief, and rounds of director's notes followed.
+
+## Director's passes
+
+What was watched (1 fps strips of the whole film, dense sheets round every cut, the probes for velocity jumps,
+camera stop-starts and parked holds, a music audit of the cue's hard pulses) and what changed because of it:
+- **The heptapods** read as spiders at first: their limbs are heavy now, trunks, with a lower shoulder and a fuller
+  body; a long reach bows and whitens into the fog instead of standing as a pole.
+- **Their ink** left a limb as a small dark comet: it is a jet now, a thin stream widening to a billowing head that
+  lingers where the ring forms.
+- **The shell's belly** had its slot as a box hanging off a round bottom: it has a shallow flat keel, the slot cut
+  into the hull. It **goes** by rising into a cloud deck drawn in front of it and paling as a whole, never along a line.
+- **The shaft** was a pale box with a hairline outline: it is stone now, as mass, lit only where light falls, with
+  the rig as silhouettes against the daylight; its length is shown in one breath, not held for six seconds.
+- **The walk to the glass** was one frame for nine seconds: the camera travels with them and Abbott's shadow deepens
+  in the fog on his unseen footfalls.
+- **The first logogram** closed while the camera pushed in on the palm: the frame holds the whole ring on the loudest
+  swell, and the push happens under the veil.
+- **The fog** was bare white between rings: Costello looms at depth, the written logograms hang pale in the air, and
+  the camera leads her to the next ring.
+- **The push** had her still at the bottom of the turning ring through the cue's most driving stretch: she works it
+  now, carried up its wall and let go on the hard pulses.
+- **The end** held one frame for twelve seconds and brought the credits over the bright window: the dawn comes on
+  visibly, the push goes on to the touch, and the camera draws back to the whole window before the first card.
+- **Two seams** were the director's mistakes, caught by builders: the roll carried at the wrong angle into the
+  shaft's mouth, and the last cut's framing not scaled to `FIRST`.
+- **Every hard pulse of the cue** (strength 1 or more) is struck: 214 strikes, none on a near-silent pulse.
 
 ## Arrival nods
 
