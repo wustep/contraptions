@@ -58,6 +58,8 @@ function boundsOf(pieces: Placed[]): Box {
 export class SparkShow extends Show {
   private readonly keys: WorldKey[]
   private readonly worlds: Universe[]
+  /** The camera's cuts inside a world (`Shot.cut`), show seconds, in order: the score collects them from the keys. */
+  cameraCuts: number[] = []
 
   constructor(
     readonly legs: Leg[],

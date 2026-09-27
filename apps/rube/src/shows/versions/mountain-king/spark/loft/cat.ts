@@ -104,12 +104,12 @@ export function startle(t: number): number {
 
 /**
  * How long the cat listens after each knock (seconds from it): its head held up until the first, and down again by
- * the second. The first knock is seen close on the rack, and the camera draws back from it to the cat over the next
- * two and a half seconds (it comes into the frame about 28.1), so the cat holds its head up, listening, long enough to
- * be found doing it, puts it down, and has only just got it down when the second knock lifts it again: a double take.
+ * the second. The first knock is seen close on the rack; the reverse shot cuts to the cat on 28.133, so it is found
+ * with its head up and the amber slit still showing (up until 28.25), settles (down by 28.65, the eye shut) and
+ * rests a good 0.3 s before the second knock (28.961) snaps its head straight back up: a double take, not a bob.
  */
 const LISTEN: [number, number][] = [
-  [2.75, 3.22],
+  [2.6, 3.0],
   [0.34, 1.85],
 ]
 

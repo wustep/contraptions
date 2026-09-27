@@ -5,7 +5,7 @@
 import type { Performance, Version } from '../src/shows/registry'
 import onsets from '../../../scripts/shows/plans/mountain-king-onsets.json'
 import { STRIKES } from '../src/shows/versions/mountain-king/spark/hits'
-import { CODA, CREDITS_AT, DOORS, DURATION, FESTIVAL, GRID, LAST, LOFT_SEAM, MUSIC_END, ROLL, SILENCE, THEME, THEME_END, phrase } from '../src/shows/versions/mountain-king/spark/music'
+import { CAMERA_CUTS, CAT_SHOT, CODA, CREDITS_AT, DOORS, DURATION, FESTIVAL, GRID, LAST, LOFT_SEAM, MUSIC_END, ROLL, SILENCE, THEME, THEME_END, phrase } from '../src/shows/versions/mountain-king/spark/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/mountain-king/spark/credits'
 import { WICK } from '../src/shows/versions/mountain-king/spark/loft/layout'
 import { BURSTS, sparkAt } from '../src/shows/versions/mountain-king/spark/railway/fireworks-plan'
@@ -40,7 +40,14 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
   const onOnset = (t: number, min = 0.5, tol = 0.03) => o.onsets.some((x) => x.s >= min && Math.abs(x.t - t) <= tol)
   check('spark: the dash home is on the roll\'s strokes, after the silence, before the first last chord',
     DOORS.back.every((t) => t > ROLL && t < LAST[0] && onOnset(t, 0.3, 0.012)) && show.legs.slice(4).every((l, i) => near(l.from, DOORS.back[i])))
-  check('spark: no portal drawn, and no cut', [0, 58.1, 101.9, 134.3, 148.5, 170].every((t) => perf.cuts?.(t) === false))
+  check('spark: no portal iris drawn', [0, 58.1, 101.9, 134.3, 148.5, 170].every((t) => perf.cuts?.(t) === false))
+  // The camera cuts inside a world only where the score says (the knocks' reverse shot), each on an eighth of the
+  // theme's tracked beat, and the cutaway to the cat is short.
+  const cuts = show.cameraCuts
+  check('spark: the camera cuts inside a world only for the knocks\' reverse shot, each on an eighth of the theme, the cutaway under 1.5 s',
+    cuts.length === CAMERA_CUTS.length && cuts.every((c, i) => near(c, CAMERA_CUTS[i])) &&
+    cuts.every((c) => GRID.some((g) => Math.abs(g - c) <= 0.005)) && CAT_SHOT[1] - CAT_SHOT[0] < 1.5,
+    cuts.map((c) => c.toFixed(3)).join(', '))
 
   // One spark, one path: in a world it never jumps; at a door the camera carries it, so on the screen it holds still.
   let jump = 0
@@ -63,14 +70,16 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
       if (d > jump) { jump = d; jumpAt = t }
     }
     const s = onScreen(t)
-    const ds = Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
+    // The camera's own cuts (held above) move the spark on the screen; nothing else may.
+    const cutHere = cuts.some((c) => c > t - 0.001 - 1e-9 && c <= t + 1e-9)
+    const ds = cutHere ? 0 : Math.hypot(s[0] - prevS[0], s[1] - prevS[1])
     if (ds > screen) { screen = ds; screenAt = t }
     prev = here
     prevLeg = leg
     prevS = s
   }
   check('spark: inside a world the spark never jumps (no more than 0.04 cells a millisecond)', jump <= 0.04, `${jump.toFixed(3)} at ${jumpAt.toFixed(3)} s`)
-  check('spark: every door is a match cut: on the screen the spark never jumps (no more than 1% of the frame a millisecond)', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
+  check('spark: every door is a match cut: on the screen the spark never jumps (no more than 1% of the frame a millisecond) but at the camera\'s own cuts', screen <= 0.01, `${screen.toFixed(4)} at ${screenAt.toFixed(3)} s`)
 
   // It starts on its wick, and it is back on it on the first last chord, to stay.
   const [wx, wy] = WICK
@@ -93,17 +102,18 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
     bigChords.filter((c) => !hit(c.t)).map((c) => c.t.toFixed(3)).join(', '))
   check('spark: nothing is struck in the silence', !all.some((t) => t > SILENCE + 0.05 && t < ROLL - 0.05))
 
-  // Under Zoom (half as close again as the show's camera) the spark stays in the frame wherever it is to be seen.
+  // Under Zoom (half as close again as the show's camera) the spark stays in the frame wherever it is to be seen: all
+  // but the cutaway to the cat, which is the cat's shot.
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     const h = show.at(t)
-    if (h.hidden || h.scale < 0.3) continue
+    if (h.hidden || h.scale < 0.3 || (t >= CAT_SHOT[0] && t < CAT_SHOT[1])) continue
     const f = cam(t)
     const cells = f.cells / 1.5
     const u = Math.max(Math.abs(h.x - f.x) / ((cells * 16) / 9 / 2), Math.abs(h.y - f.y) / (cells / 2))
     if (u > 1) outOfZoom.push(`${t.toFixed(2)} (${u.toFixed(2)})`)
   }
-  check('spark: under Zoom the spark never leaves the frame', outOfZoom.length === 0, `${outOfZoom.length} out: ${outOfZoom.slice(0, 6).join(', ')}${outOfZoom.length > 6 ? ', …' : ''}`)
+  check('spark: under Zoom the spark never leaves the frame, but in the cutaway to the cat', outOfZoom.length === 0, `${outOfZoom.length} out: ${outOfZoom.slice(0, 6).join(', ')}${outOfZoom.length > 6 ? ', …' : ''}`)
 
   // The spark is never out of sight for long.
   let hidden = 0

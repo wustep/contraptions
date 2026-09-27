@@ -18,6 +18,14 @@ export interface Shot {
   w?: number
   /** Added to the follow: frame ahead of the ball, or above it. */
   off?: Pt
+  /**
+   * A cut inside a world (after Merry-Go-Round's `Shot.cut`): up to this key the camera keeps the key before's
+   * framing, and on it every channel jumps to this key's. The spark's place on the screen may change there, so the
+   * check holds every cut to the music (`CAMERA_CUTS` in `music.ts`). A cut interrupts a move rather than ending it:
+   * the key just before it keeps the speed it came in with (lay it a millisecond before the cut), and the move after
+   * it starts at its own speed, so a camera riding the engine is at the train's speed from the first frame.
+   */
+  cut?: boolean
 }
 
 /**
@@ -27,7 +35,7 @@ export interface Shot {
  * are the channel's value at the start and end of the move from key i to key i + 1; where they disagree at a key
  * (a hold that only one side has, and that side's weight is nil there), the key is a stop.
  */
-function channel(ts: number[], left: number[], right: number[]): (i: number, u: number) => number {
+function channel(ts: number[], left: number[], right: number[], cuts: boolean[] = []): (i: number, u: number) => number {
   const n = ts.length
   const h = (i: number) => ts[i + 1] - ts[i]
   const d = (i: number) => (h(i) > 1e-6 ? (right[i] - left[i]) / h(i) : 0)
@@ -40,6 +48,12 @@ function channel(ts: number[], left: number[], right: number[]): (i: number, u: 
     const w1 = 2 * h(i) + h(i - 1)
     const w2 = h(i) + 2 * h(i - 1)
     m[i] = (w1 + w2) / (w1 / a + w2 / b)
+  }
+  // At a cut (`Shot.cut`): the key before it keeps the slope it came in on, and the cut starts on the slope it goes
+  // out on (one-sided ends, which never overshoot), so the cut interrupts a move rather than braking it to a stop.
+  for (let i = 0; i < n; i++) {
+    if (cuts[i + 1] && i >= 1 && h(i - 1) > 1e-6) m[i] = d(i - 1)
+    if (cuts[i] && i < n - 1 && h(i) > 1e-6) m[i] = d(i)
   }
   return (i, u) => {
     if (i >= n - 1 || u <= 0) return left[i]
@@ -70,15 +84,18 @@ export function director(where: (t: number) => Pt, shots: Shot[], duration: numb
   // Each move's two ends, channel by channel, as the move itself has them (a key with no hold takes its partner's).
   const n = keys.length
   const ts = keys.map((k) => k.t)
+  const cuts = keys.map((k, i) => i > 0 && !!k.cut)
+  // A move onto a cut is no move: its channels stay at the key before's until the cut (so no tangent crosses it).
   const ends = (get: (a: Shot, b: Shot) => [number, number]) => {
     const l: number[] = []
     const r: number[] = []
     for (let i = 0; i < n; i++) {
-      const [x, y] = get(keys[i], keys[Math.min(i + 1, n - 1)])
+      const next = keys[Math.min(i + 1, n - 1)]
+      const [x, y] = get(keys[i], cuts[i + 1] ? keys[i] : next)
       l.push(x)
       r.push(y)
     }
-    return channel(ts, l, r)
+    return channel(ts, l, r, cuts)
   }
   // The zoom goes in even steps of scale, not of cells: a pull-back from one cell to ten opens as evenly as it closes.
   const cellsAt = ends((a, b) => [Math.log(a.cells), Math.log(b.cells)])

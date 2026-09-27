@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { carried, smooth, type PartShot } from '../kit'
-import { LOFT_SEAM, THEME, inPhrase, onset } from '../music'
+import { CAT_SHOT, LOFT_SEAM, THEME, inPhrase, onset } from '../music'
 import { G } from '../physics'
 import { SEAMS } from '../seams'
 import { BENCH, HANDOFF, RACK, WICK } from './layout'
@@ -19,9 +19,9 @@ import { WICK_LEFT } from './sneak-beats'
  *   13.47      up into the balance's pan; the beam sinks and its far end trips the snuffer's latch (14.583)
  *   15.70      the snuffer's cone clangs down on the other pan and the spark is flung up onto the rack's pole (16.816)
  *   16.8-24.5  the tightrope, hopping the wick of every pair of hanging candles
- *   25.653     a pair it jostled knocks together, seen close: the spark freezes; the camera draws back to the cat
- *   28.961     again, at the pole's end, in a two-shot: the cat's ear flicks, the spark freezes
- *   29.24      it crouches on the pole's free end, which gives under it; springs on the pair's knock again (29.513)
+ *   25.653     a pair it jostled knocks together, seen close: the spark freezes, and tiptoes on to the pole's end
+ *   28.133     cut to the cat, listening; 28.961 the knock again is heard over it, and its head snaps back up
+ *   29.237     cut back: it crouches on the pole's free end, which gives under it; springs on the pair's knock again (29.513)
  *   30.012     and lands in the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
  *   31.185     it hops off onto the wheel: `HANDOFF`, moving (0.9, 0.9)
  */
@@ -272,9 +272,10 @@ function spanShape(x: number, xl: number): number {
  * it; then a flat, quick drop into the dish.
  */
 const LEAP = {
-  crouch: q(2, 25),
+  /** The cut back to it from the cat (phrase 2's eighth 25). */
+  crouch: CAT_SHOT[1],
   /** The bottom of the crouch, and how low and how far west it is there. */
-  low: q(2, 25) + 0.2,
+  low: CAT_SHOT[1] + 0.2,
   dip: 0.04,
   lean: 0.035,
   /** The spring: on the knock, moving about 1.5 cells/s, and off the end quickening over `push`. */
@@ -717,12 +718,13 @@ export const HITS: number[] = [
  * the candle for the theme. With the hop into the pan it takes in the windlass and the pan in one frame and holds
  * while the pan goes down a notch a note. Close along the bench; the balance and the snuffer framed whole; with the
  * fling up to the pole; along the tightrope. Close on the rack for the jostle and the first knock (25.653): the pair
- * swinging together and the spark ducking fill the frame. On the knock, the spark frozen, the camera starts to draw
- * back and down the room (the knock again, 26.57, on the way), finds the cat by the stove with its head up listening
- * (a look over the spark's shoulder), and has settled on the two-shot as the spark tiptoes on to the pole's end, so the
- * second knock (28.961) and the cat's head coming up again are in one frame. The cat is 21 cells east and 11 down, and the spark must stay inside the middle two thirds (Zoom), so that
- * two-shot can be no tighter than about 16 cells. From it, in again to the arm and the hop onto the wheel, the whole
- * wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
+ * swinging together and the spark ducking fill the frame. Then a reverse shot on two cuts on the theme's eighths
+ * (`CAT_SHOT`): the camera stays close on the spark as it tiptoes on to the pole's end, cuts to the cat by the stove,
+ * whole, its head up, listening (it settles, and the second knock, 28.961, snaps its head back up and flicks an ear),
+ * and cuts back to the spark frozen at the pole's end, which crouches and leaps for the candle arm. The spark and the
+ * cat are 21 cells apart, so no one frame can hold both close; two cuts show each at a size that reads. From the cut
+ * back, one unhurried move out to the arm and the wheel, arriving with the hand-on (LOFT-B's first framing, 9.4
+ * cells, follows on from it without a bounce).
  */
 export const SHOTS: PartShot[] = [
   // The whole loft for the first horn call, then one push in from it (1.168) that arrives on the candle with the
@@ -751,17 +753,19 @@ export const SHOTS: PartShot[] = [
   { t: 23.2, cells: 10.2, off: [-1.0, 2.0], w: 0 },
   { t: 24.25, cells: 10.6, off: [-1.2, 2.2], w: 0 },
   { t: 25.35, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
-  // Close on the first knock; the draw-back starts on it and eases out over the held beat, down the room to the cat,
-  // who is still listening with its head up when it comes in (about 28.1: the frame has to be about 17 cells before
-  // Zoom keeps the spark with the cat's head in).
+  // Close on the first knock, and staying close: along the pole with it through the knock again (26.570) and the two
+  // tiptoes to its end (27.340, 27.858), easing out a little and still moving as it cuts.
   { t: BEAT.knocks[0], cells: 5.35, hold: [-14.45, -0.82], w: 1 },
-  { t: 27.1, cells: 10.6, hold: [-11.0, 1.1], w: 1 },
-  { t: 27.8, cells: 15.8, hold: [-7.2, 2.85], w: 1 },
-  // The two-shot, wide enough that both are whole and clear of the edges: the spark frozen on the pole a cell and more
-  // inside the west edge, the cat's head with room on the east. It is found listening, puts its head down, and the
-  // second knock lifts it again (a double take); held until the ear's flick is done and the head is up.
-  // From it, one unhurried move back in to the arm and the wheel, arriving with the hand-on (not a snap in and a stop).
-  { t: 28.35, cells: 19.3, hold: [-5.85, 3.3], w: 1 },
-  { t: 29.45, cells: 19.15, hold: [-6.15, 3.25], w: 1 },
+  { t: BEAT.reknocks[0], cells: 5.5, hold: [-14.9, -1.0], w: 1 },
+  { t: CAT_SHOT[0] - 0.001, cells: 5.8, hold: [-15.9, -1.25], w: 1 },
+  // Cut to the cat (the reverse shot): whole, its head a third in from the east edge, the stove's legs and the vent's
+  // glow over it, a band of the floor's section under it; creeping in so the shot never parks. The second knock is
+  // heard over it and seen as the head snapping up and an ear flicking.
+  { t: CAT_SHOT[0], cells: 6.0, hold: [5.25, 9.15], w: 1, cut: true },
+  { t: CAT_SHOT[1] - 0.001, cells: 5.7, hold: [5.3, 9.1], w: 1 },
+  // Cut back to the spark frozen at the pole's end, all but still while it crouches; the one move out to the arm and
+  // the wheel gathers as it springs (29.513), arriving with the hand-on.
+  { t: CAT_SHOT[1], cells: 5.8, hold: [-16.5, -1.25], w: 1, cut: true },
+  { t: BEAT.reknocks[1], cells: 5.85, hold: [-16.56, -1.2], w: 1 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
 ]

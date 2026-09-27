@@ -214,6 +214,14 @@ export const WINDUP = [beat(93), beat(94)] as const
 export const KNOCKS = [25.653, 28.961] as const
 
 /**
+ * The knocks' reverse shot (`loft/sneak-plan.ts`): the camera cuts from the spark at the pole's end to the cat on
+ * phrase 2's eighth 21, found listening with its head up, the second knock heard over it and seen as its head snapping
+ * up; and cuts back to the spark, frozen, on eighth 25.
+ */
+export const CAT_SHOT = [inPhrase(2, 21), inPhrase(2, 25)] as const
+export const CAMERA_CUTS = [CAT_SHOT[0], CAT_SHOT[1]] as const
+
+/**
  * The cat's look on the bang (the second last chord): its head snaps up at the door that banged over it, then turns
  * round and down onto the candle, where its gaze arrives (`on`) and holds until it tucks back down (`off`). The
  * candle's flame plays innocent under it (`fx.ts`): it ducks and holds dead still from `on`, and flickers again from
