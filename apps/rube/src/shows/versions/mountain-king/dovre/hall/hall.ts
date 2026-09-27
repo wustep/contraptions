@@ -1019,7 +1019,8 @@ function drawLamps(p: p5, c: Pen, t: number, lit: number, sway: number): void {
       p.strokeWeight(Math.max(1.5, c.weight * (pass === 0 ? 2.3 : 1.3)))
       for (let j = 0; j + 1 < pts.length; j++) {
         const cj = pass === 0 ? mixHex(col(j), STONE.deep, 0.55) : col(j)
-        p.stroke(a < 1 ? alpha(p, cj, a) : cj)
+        if (a < 1) p.stroke(alpha(p, cj, a))
+        else p.stroke(cj)
         p.line(pts[j][0] * k, pts[j][1] * k, pts[j + 1][0] * k, pts[j + 1][1] * k)
       }
     }
