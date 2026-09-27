@@ -1,5 +1,5 @@
 /**
- * The checks for La La Land · Seb's (`versions/la-la-land/opus55-sebs.show.ts`), run by `check:shows`. Kept in
+ * The checks for La La Land · Seb's (`versions/la-la-land/opus5-5.show.ts`), run by `check:shows`. Kept in
  * their own file: the show is large, and so is what it promises.
  */
 import type { Performance, Version } from '../src/shows/registry'

@@ -38,21 +38,33 @@ npm run dev
 npm run build
 ```
 
-`npm run dev` serves Machine at [http://localhost:8791/machine/](http://localhost:8791/machine/). `/` redirects there and keeps the query. Explorations is at `/explorations/`, Shows at `/shows/`, and Playground at `/playground/`.
+`npm run dev` serves Machine at [http://localhost:8791/machine/](http://localhost:8791/machine/). `npm run build` writes one `dist/` with the same paths. One Vite app serves every mode, in dev and in the build.
 
-`npm run build` writes one `dist/` with the same paths. One Vite app serves every mode, in dev and in the build.
+## Addresses
 
-Old links still work. `/sandbox/` redirects to Explorations and `/rube/` redirects to Machine, both keeping the seed.
+| Path | What is there |
+| --- | --- |
+| `/machine/` | Machine |
+| `/explorations/` | Explorations |
+| `/shows/` | Shows, opening on Clair de Lune |
+| `/shows/<work>/` | a show: the work's first take, with its own share card |
+| `/shows/<work>/<take>/` | one take of a show, with its own share card |
+| `/theater/` | every show, shuffled, one after another. It joins the mode switch only once you have been there |
+| `/playground/` | Playground |
+| `/builder/` | the Builder (hidden) |
+
+Old links still work. `/` goes to `/machine/`, `/sandbox/` to `/explorations/` and `/rube/` to `/machine/`, all keeping the query. `/shows/?show=<work>&take=<take>` still opens a show, and so does `/theater/?show=<work>&take=<take>`. A take that has been renamed still opens at its old address (`/shows/la-la-land/opus55-sebs/` is now `/shows/la-la-land/opus5-5/`). A path without its trailing slash works too. `<work>` and `<take>` are folder and file names under `apps/rube/src/shows/versions/`; see its README.
 
 ## Where things are
 
 ```
-machine/, explorations/, shows/, playground/, builder/   one page per mode (index.html, sandbox/ and rube/ only redirect)
+machine/, explorations/, shows/, theater/, playground/, builder/   one page per mode
+index.html, sandbox/, rube/     old addresses, which only redirect
 src/                          Explorations, and what every mode shares
   core/  contraptions/  worlds/  ui/
 apps/rube/                    Machine, and the modes built on it
   src/pieces/                 the pieces, a folder per world
-  src/shows/                  Shows: player, soundtrack, share cards; STOCK_SHOWS_PLAN.md, REVIEW_STATUS.md
+  src/shows/                  Shows and Theater: player, soundtrack, share cards; STOCK_SHOWS_PLAN.md, REVIEW_STATUS.md
     versions/<work>/          one piece of music: its takes (*.show.ts), recording, attribution and write-ups
   src/playground/             pieces and worlds waiting to be let in; REJECTED.md
   src/builder/                the Builder (hidden)
@@ -61,7 +73,7 @@ apps/rube/                    Machine, and the modes built on it
 scripts/                      Explorations' check, and new-contraption
   shows/                      arrangements, onset measurements, audio mixes, share cards
     plans/                    piece orders and measured onsets the shows are built from
-public/                       share cards and other files served at the root
+public/                       share cards (public/shows/<work>/<take>.png) and other files served at the root
 ```
 
 Each show's notes live beside it, in `apps/rube/src/shows/versions/<work>/`. The recordings there are for private demos only; see each `ATTRIBUTION.txt`.

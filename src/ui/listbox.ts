@@ -25,6 +25,8 @@ export interface ListboxItem {
   swatches?: ListboxSwatches
   /** Small leading glyph, e.g. a mini layout diagram. Cloned per use. */
   glyph?: SVGSVGElement
+  /** The heading this option sits under in the list. Items of a group should be adjacent. */
+  group?: string
 }
 
 export interface Listbox {
@@ -35,6 +37,26 @@ export interface Listbox {
 }
 
 let uid = 0
+
+/** Clear of the viewport's edges, and the least room a list is squeezed into before it would sooner flip. */
+const EDGE = 8
+const GAP = 4
+const MIN_ROOM = 120
+
+/**
+ * Where the popup goes for a trigger at `top`..`bottom` in a viewport `viewport` tall: below it, or above it when
+ * there is more room there and not enough below, and never taller than the room on its side, so it scrolls inside
+ * itself rather than running off the screen. On a phone the panel is a short strip at the foot of the screen, and a
+ * list that only flipped would still overhang the top.
+ */
+export function fitPopup(top: number, bottom: number, height: number, viewport: number): { top: number; maxHeight: number } {
+  const below = viewport - bottom - GAP - EDGE
+  const above = top - GAP - EDGE
+  const down = below >= height || below >= above
+  const room = Math.max(Math.min(MIN_ROOM, height), down ? below : above)
+  const h = Math.min(height, room)
+  return { top: Math.round(Math.max(EDGE, down ? bottom + GAP : top - GAP - h)), maxHeight: Math.floor(h) }
+}
 
 function make(tag: string, cls: string): HTMLElement {
   const n = document.createElement(tag)
@@ -111,25 +133,50 @@ export function createListbox(config: {
 
   let optionEls: HTMLElement[] = []
 
-  const bindOption = (item: ListboxItem, i: number): HTMLElement => {
+  /** A finger down on an option: it is chosen on lifting, unless the finger scrolled the list instead. */
+  let touched: { i: number; y: number } | null = null
+
+  const bindOption = (item: ListboxItem, i: number, parent: HTMLElement): HTMLElement => {
     const opt = make('div', 'lb-opt')
     opt.id = `${id}-${i}`
     opt.setAttribute('role', 'option')
     renderContent(opt, item, true)
-    opt.addEventListener('pointerenter', () => setActive(i))
-    // pointerdown, not click: it wins the race against the outside-click
-    // closer, and feels as immediate as a native select.
+    opt.addEventListener('pointerenter', () => setActive(i, false))
+    // A mouse chooses on pointerdown, not click: it wins the race against the
+    // outside-click closer, and feels as immediate as a native select. A
+    // finger going down is as likely the start of a scroll through the list,
+    // so a touch chooses on lifting, and not at all if the list moved.
     opt.addEventListener('pointerdown', (e) => {
       e.preventDefault()
-      choose(i)
+      if (e.pointerType === 'mouse') choose(i)
+      else touched = { i, y: e.clientY }
     })
-    pop.append(opt)
+    opt.addEventListener('pointerup', (e) => {
+      const t = touched
+      touched = null
+      if (t && t.i === i && Math.abs(e.clientY - t.y) < 10) choose(i)
+    })
+    parent.append(opt)
     return opt
   }
 
+  /** Options under a heading sit in a group named by it; the heading is not an option, so the keys pass over it. */
   const rebuildOptions = () => {
     pop.replaceChildren()
-    optionEls = items.map(bindOption)
+    let group: HTMLElement = pop
+    optionEls = items.map((item, i) => {
+      if (item.group !== undefined && item.group !== items[i - 1]?.group) {
+        const head = make('div', 'lb-group-head')
+        head.id = `${id}-g${i}`
+        head.textContent = item.group
+        group = make('div', 'lb-group')
+        group.setAttribute('role', 'group')
+        group.setAttribute('aria-labelledby', head.id)
+        group.append(head)
+        pop.append(group)
+      } else if (item.group === undefined) group = pop
+      return bindOption(item, i, group)
+    })
   }
 
   rebuildOptions()
@@ -137,6 +184,9 @@ export function createListbox(config: {
   // Grabbing the popup's scrollbar must not steal focus from the trigger —
   // the blur handler would close the list mid-drag.
   pop.addEventListener('pointerdown', (e) => e.preventDefault())
+  // The browser took the finger for a scroll.
+  pop.addEventListener('pointercancel', () => (touched = null))
+  pop.addEventListener('scroll', () => (touched = null), { passive: true })
 
   node.append(trigger, pop)
 
@@ -153,36 +203,68 @@ export function createListbox(config: {
     else trigger.removeAttribute('aria-activedescendant')
   }
 
-  const setActive = (i: number) => {
+  /** `reveal` scrolls it into view: for the keys, never under a pointer, where it would jump the list mid-gesture. */
+  const setActive = (i: number, reveal = true) => {
     active = Math.max(0, Math.min(items.length - 1, i))
     paint()
-    optionEls[active]?.scrollIntoView({ block: 'nearest' })
+    if (reveal) optionEls[active]?.scrollIntoView({ block: 'nearest' })
   }
 
   const place = () => {
     const r = trigger.getBoundingClientRect()
     pop.style.minWidth = `${r.width}px`
-    pop.style.left = `${Math.round(r.left)}px`
-    // Measure invisibly, then drop below the trigger — or flip above when the
-    // viewport bottom would clip the list.
+    // Measure invisibly at full height, then drop below the trigger or flip
+    // above it, cut to the room on that side (`fitPopup`).
     pop.style.visibility = 'hidden'
     pop.style.display = 'block'
-    const ph = pop.offsetHeight
-    const below = window.innerHeight - r.bottom - 8
-    const top = below >= ph || below >= r.top - 8 ? r.bottom + 4 : r.top - ph - 4
-    pop.style.top = `${Math.round(Math.max(8, top))}px`
+    pop.style.maxHeight = ''
+    const scrolled = pop.scrollTop
+    const fit = fitPopup(r.top, r.bottom, pop.offsetHeight, window.innerHeight)
+    pop.style.maxHeight = `${fit.maxHeight}px`
+    pop.style.top = `${fit.top}px`
+    pop.style.left = `${Math.round(Math.max(EDGE, Math.min(r.left, window.innerWidth - pop.offsetWidth - EDGE)))}px`
+    pop.scrollTop = scrolled
     pop.style.visibility = ''
+  }
+
+  /** Where the trigger can be seen: the window, cut to each scrolling box it sits in (the panel). */
+  const sight = (): { top: number; bottom: number } => {
+    let top = 0
+    let bottom = window.innerHeight
+    for (let n = node.parentElement; n; n = n.parentElement) {
+      if (!/auto|scroll/.test(getComputedStyle(n).overflowY)) continue
+      const r = n.getBoundingClientRect()
+      top = Math.max(top, r.top)
+      bottom = Math.min(bottom, r.bottom)
+    }
+    return { top, bottom }
+  }
+
+  // A scroll outside the list (the panel, the page) or a resize (a phone's
+  // toolbar folding away as the finger moves) would leave the fixed popup
+  // behind its trigger. It follows the trigger instead, and closes only once
+  // the trigger has gone out of sight: closing on any scroll shut the list
+  // mid-gesture on a phone.
+  let follow = 0
+  const onMove = () => {
+    if (follow) return
+    follow = requestAnimationFrame(() => {
+      follow = 0
+      if (!open) return
+      const r = trigger.getBoundingClientRect()
+      const seen = sight()
+      if (r.bottom <= seen.top || r.top >= seen.bottom) close()
+      else place()
+    })
   }
 
   const onOutside = (e: PointerEvent) => {
     if (e.target instanceof Node && node.contains(e.target)) return
     close()
   }
-  // A scroll anywhere outside the list (the panel, the page) would drag the
-  // fixed-position popup away from its trigger; closing is what native menus do.
   const onScroll = (e: Event) => {
     if (e.target instanceof Node && pop.contains(e.target)) return
-    close()
+    onMove()
   }
 
   const show = () => {
@@ -194,7 +276,7 @@ export function createListbox(config: {
     optionEls[active]?.scrollIntoView({ block: 'nearest' })
     document.addEventListener('pointerdown', onOutside, true)
     window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', close)
+    window.addEventListener('resize', onMove)
     window.addEventListener('blur', close)
   }
 
@@ -204,8 +286,9 @@ export function createListbox(config: {
     pop.style.display = ''
     paint()
     document.removeEventListener('pointerdown', onOutside, true)
+    touched = null
     window.removeEventListener('scroll', onScroll, true)
-    window.removeEventListener('resize', close)
+    window.removeEventListener('resize', onMove)
     window.removeEventListener('blur', close)
   }
 

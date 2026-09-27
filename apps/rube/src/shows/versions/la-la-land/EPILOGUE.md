@@ -4,7 +4,7 @@ Copyrighted recording. This is a private tech demo only. Do not ship this audio 
 
 The music is Justin Hurwitz's *Epilogue* from *La La Land* (2016). Attribution is in `apps/rube/src/shows/versions/la-la-land/EPILOGUE_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=la-la-land&take=fable51-epilogue`. In the Shows picker it is **Fable 5.1**, a take of the work **Epilogue**.
+Open it at `/shows/la-la-land/fable5-1/`. In the Shows picker it is **Fable 5.1**, a take of the work **Epilogue**.
 
 ## What it is
 

@@ -4,9 +4,9 @@ import { createListbox } from '../../../../src/ui/listbox'
 import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
-import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
+import { performanceProblems, pickVersion, shelves, type Performance, type TitleCard, type Version } from './registry'
 import { showCard as shareCard, showFromPath, showPath } from './share'
-import { createSoundtrack } from './soundtrack'
+import { createSoundtrack, prefetchSoundtrack } from './soundtrack'
 import './youtube.css'
 import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
 
@@ -58,7 +58,12 @@ export interface ShowsHost {
   panel(root: HTMLElement, skip: () => void): void
   /** A take is going on the stage. */
   opened?(version: Version): void
+  /** The take `next()` would give, without moving on: loaded, and its music fetched, while this one plays. */
+  upNext?(): Version | null
 }
+
+/** How long a show has played before the next one is fetched: the one on the stage has the line to itself first. */
+const WARM_NEXT = 15000
 
 /** Every take the page found, once: Shows and Theater hold the same versions, so a load is shared between them. */
 export const { works, problems } = discoverShows()
@@ -107,10 +112,36 @@ let recording: AbortController | null = null
 const playerHost = el('div', { class: 'yt-host' })
 playerHost.hidden = true
 /** `?music=file` plays the site's own file even where YouTube could, to hear the two side by side. */
-const music = createSoundtrack(playerHost, params.get('music') === 'file' ? 'file' : 'youtube')
+const musicPrefer = params.get('music') === 'file' ? 'file' : 'youtube'
+const music = createSoundtrack(playerHost, musicPrefer)
 const stage = createShowStage(stageRoot, { time: () => transport?.now() ?? 0 })
 /** A version is loaded once: its machine and its music are the same every time it is come back to. */
 const loads = new Map<Version, Promise<Performance>>()
+
+function loadOf(version: Version): Promise<Performance> {
+  let load = loads.get(version)
+  if (!load) {
+    load = version.load()
+    loads.set(version, load)
+  }
+  return load
+}
+
+/** The host's next take, readied in the background so the handover to it is not cold. */
+let warmTimer = 0
+function warmNext(): void {
+  window.clearTimeout(warmTimer)
+  const mine = generation
+  warmTimer = window.setTimeout(() => {
+    const up = host?.upNext?.()
+    if (!alive || mine !== generation || !up || up === current) return
+    loadOf(up).then(
+      (p) => prefetchSoundtrack(p.soundtrack, musicPrefer),
+      // Tried again, for real, when it comes up.
+      () => loads.delete(up),
+    )
+  }, WARM_NEXT)
+}
 
 /** The show's own address (`share.ts`), keeping only the dev's `?music=`. */
 function writeUrl(): void {
@@ -264,12 +295,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
   writeUrl()
   sync()
   try {
-    let load = loads.get(version)
-    if (!load) {
-      load = version.load()
-      loads.set(version, load)
-    }
-    const loaded = await load
+    const loaded = await loadOf(version)
     if (!alive || mine !== generation) return
     const wrong = performanceProblems(loaded)
     if (wrong.length) throw new Error(wrong.join(', '))
@@ -279,6 +305,7 @@ async function open(version: Version, thenPlay: boolean | 'link'): Promise<void>
     lastT = 0
     music.load(loaded.soundtrack ?? null)
     stage.set(loaded)
+    if (host?.upNext) warmNext()
   } catch (err) {
     if (!alive || mine !== generation) return
     // A version that would not load may load next time; one that loaded wrong will not.
@@ -318,7 +345,8 @@ panelRoot.append(showCard)
 const workList = createListbox({
   label: 'Show',
   value: current?.work ?? '',
-  items: works.map((w) => ({ value: w.work, label: w.title, note: w.versions.length === 1 ? '1 version' : `${w.versions.length} versions` })),
+  // On their shelves (`registry.ts`): Machine, Movies, Ambient.
+  items: shelves(works).flatMap((s) => s.works.map((w) => ({ value: w.work, label: w.title, group: s.section }))),
   onChange: (work) => {
     const next = pickVersion(works, work, null)
     if (next && !recording) void open(next, true)
@@ -848,6 +876,7 @@ if (import.meta.env.DEV) {
 
   return () => {
     alive = false
+    window.clearTimeout(warmTimer)
     releaseSound()
     shell.holdPeek(false)
     cancelAnimationFrame(raf)

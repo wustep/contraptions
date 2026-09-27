@@ -6,7 +6,7 @@ The music is Hans Zimmer's *Cornfield Chase* and then *No Time for Caution*, bot
 - `apps/rube/src/shows/versions/cornfield-chase/ATTRIBUTION.txt`;
 - `apps/rube/src/shows/versions/interstellar/ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=interstellar&take=opus55`. In the Shows picker it is its own work, **Voyage** (it was a take of Cornfield Chase called Liftoff until it grew to two cues of the score, then a work called Interstellar).
+Open it at `/shows/interstellar/`. In the Shows picker it is its own work, **Voyage** (it was a take of Cornfield Chase called Liftoff until it grew to two cues of the score, then a work called Interstellar).
 
 ## What it is
 

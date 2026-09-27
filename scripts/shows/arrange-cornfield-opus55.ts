@@ -28,6 +28,7 @@ import { worldByName, type World } from '../../apps/rube/src/worlds'
 import { stockPlacement } from './stock-placement'
 
 const FOLDER = 'apps/rube/src/shows/versions/cornfield-chase'
+// The code's name, kept when the take became `cornfield-chase/opus55`.
 const TAKE = 'opus55-music-sync'
 const BALL0: BallState = { color: '#E76B31', ghost: false, id: 0 }
 

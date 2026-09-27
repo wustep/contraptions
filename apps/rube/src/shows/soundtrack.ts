@@ -199,6 +199,54 @@ interface Looper {
 let context: AudioContext | null = null
 const decoded = new Map<string, Promise<AudioBuffer>>()
 
+/**
+ * Recordings fetched whole, ahead of need. An element streaming a file reads it as it goes, and on a phone (where
+ * Safari ignores `preload` until the first play) it can fall behind the playhead and hold the show mid-song. A file
+ * already in memory never does. So a version's file is fetched whole when it is put up, and Theater's next one while
+ * this one plays (`prefetchSoundtrack`); the element takes the whole file in place of the stream once it is here and
+ * the element is standing still. A few are kept: the one up, the one next, the one before.
+ */
+const KEEP = 3
+const fetched = new Map<string, { blob: Promise<Blob>; url: string | null }>()
+
+function fetchWhole(src: string): Promise<Blob> {
+  let got = fetched.get(src)
+  if (got) {
+    // Most recent last.
+    fetched.delete(src)
+    fetched.set(src, got)
+    return got.blob
+  }
+  const entry: { blob: Promise<Blob>; url: string | null } = { blob: Promise.resolve(new Blob()), url: null }
+  entry.blob = fetch(src)
+    .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`${r.status} for ${src}`))))
+    .then((blob) => {
+      entry.url = URL.createObjectURL(blob)
+      return blob
+    })
+  entry.blob.catch(() => fetched.delete(src))
+  fetched.set(src, entry)
+  for (const [key, old] of fetched) {
+    if (fetched.size <= KEEP) break
+    fetched.delete(key)
+    // An element may still be reading it; a revoked URL it has already opened plays on.
+    if (old.url) URL.revokeObjectURL(old.url)
+  }
+  return entry.blob
+}
+
+/** The whole file's own URL, if it has already come. */
+const wholeUrl = (src: string): string | null => fetched.get(src)?.url ?? null
+
+/**
+ * Fetch a version's recording ahead of its turn. Only one the file will play: YouTube's players cannot be loaded
+ * before their show is up, and the file under a YouTube version is only its fallback.
+ */
+export function prefetchSoundtrack(spec: SoundtrackSpec | null | undefined, prefer: MusicSource = 'youtube'): void {
+  if (!spec?.src || (spec.youtube?.length && prefer === 'youtube')) return
+  fetchWhole(spec.src).catch(() => {})
+}
+
 function audioContext(): AudioContext | null {
   if (context) return context
   const Ctor = (globalThis as { AudioContext?: typeof AudioContext }).AudioContext
@@ -212,7 +260,7 @@ function decode(src: string): Promise<AudioBuffer> {
   if (!job) {
     const ctx = audioContext()
     job = ctx
-      ? fetch(src).then((r) => r.arrayBuffer()).then((data) => ctx.decodeAudioData(data))
+      ? fetchWhole(src).then((b) => b.arrayBuffer()).then((data) => ctx.decodeAudioData(data))
       : Promise.reject(new Error('no audio context'))
     decoded.set(src, job)
     job.catch(() => decoded.delete(src))
@@ -327,6 +375,23 @@ function createFileSoundtrack(): Soundtrack {
   audio.addEventListener('canplay', () => { if (spec) set('ready') })
   audio.addEventListener('error', () => { if (spec) set('failed') })
 
+  /**
+   * Hand the element the whole file in place of the stream, once it has come, and only while nothing is playing and
+   * no play is waiting: a play is where the stream is, and a change of source under it would be heard. Tried when the
+   * file comes and at every pause. The next play finds it loading and waits for canplay, as it does after `load`.
+   */
+  const takeWhole = () => {
+    const url = spec ? wholeUrl(spec.src) : null
+    if (!url || audio.src === url || !audio.paused || looper.started || waiting.length || status === 'failed') return
+    const at = audio.currentTime
+    status = 'loading'
+    audio.src = url
+    audio.playbackRate = speed
+    if (at > 0) audio.currentTime = at
+    audio.load()
+    changed()
+  }
+
   return {
     load(next) {
       audio.pause()
@@ -359,11 +424,21 @@ function createFileSoundtrack(): Soundtrack {
         return
       }
       status = 'loading'
-      audio.src = next.src
+      // The whole file if it came ahead (Theater's next, a version put up before), else the stream while it comes.
+      audio.src = wholeUrl(next.src) ?? next.src
       // A new source puts the rate back to the default.
       audio.playbackRate = speed
       audio.load()
       changed()
+      if (!wholeUrl(next.src)) {
+        const mine = next
+        fetchWhole(next.src).then(
+          () => {
+            if (spec === mine) takeWhole()
+          },
+          () => {},
+        )
+      }
     },
     state: () => status,
     position() {
@@ -421,6 +496,7 @@ function createFileSoundtrack(): Soundtrack {
     pause() {
       stopBuffer()
       audio.pause()
+      takeWhole()
     },
     seek(at) {
       if (!spec || status === 'failed') return

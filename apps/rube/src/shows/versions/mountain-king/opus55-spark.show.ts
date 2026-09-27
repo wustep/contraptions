@@ -6,7 +6,7 @@ import { defineShow } from '../../registry'
  */
 export default defineShow({
   title: 'Mountain King',
-  label: 'Spark',
+  label: 'Opus 5.5 (B)',
   about: "Grieg's In the Hall of the Mountain King as a Rube Goldberg machine: a candle's flame slips out through the fire, runs away across four worlds, and makes it home by the last chord.",
   still: 116.4,
   async load() {

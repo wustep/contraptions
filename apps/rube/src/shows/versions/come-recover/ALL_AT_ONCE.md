@@ -6,7 +6,7 @@ Nothing here claims any right to it.
 The music is Son Lux's *Come Recover (Empathy Fight)*, the finale cue of *Everything Everywhere All at Once*
 (Daniels, 2022). The attribution is in `apps/rube/src/shows/versions/come-recover/ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=come-recover&take=opus55-all-at-once`. In the Shows picker it is the work **Everything**,
+Open it at `/shows/come-recover/`. In the Shows picker it is the work **Everything**,
 whose one take is **Opus 5.5**. A work with one take has no Version row, so the panel reads "Everything · Opus 5.5".
 
 ## What it is

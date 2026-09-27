@@ -354,8 +354,13 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
   display: none;
   position: fixed;
   z-index: 40;
+  /* The ceiling; `place()` cuts it to the room beside the trigger. */
   max-height: 380px;
+  max-width: calc(100vw - 16px);
   overflow-y: auto;
+  /* A list scrolled to its end stops there, not the panel or page under it. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -377,6 +382,18 @@ input.seed:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0
 .lb-opt.act { background: var(--raised); }
 .lb-opt.sel { color: var(--accent); }
 .lb-opt.sel .lb-glyph { color: var(--accent); }
+
+/* A heading over a run of options: small capitals, as a section title. */
+.lb-group + .lb-group { margin-top: 4px; }
+.lb-group-head, .pool-group-head {
+  padding: 6px 8px 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  user-select: none;
+}
 
 /* Palette pill: the theme's paper as the pill, its inks as the dots. */
 .lb-swatch {
@@ -569,7 +586,7 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
   body.bare { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 0; }
   /* Stacked below the stage the panel scrolls within its own band, so the
      artwork keeps most of the screen. */
-  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; }
+  #panel { border-left: none; border-top: 1px solid var(--line); max-height: 46vh; max-height: 46svh; overscroll-behavior: contain; }
   .panel-peek {
     top: auto;
     right: auto;
@@ -737,6 +754,8 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .pool-row input { margin: 0; accent-color: var(--accent); cursor: pointer; }
 .pool-row input:disabled { cursor: default; }
 .pool-row.on { color: var(--accent); }
+.pool-group { display: flex; flex-direction: column; gap: 1px; }
+.pool-group-head { padding: 5px 6px 2px; }
 .pool-row.on::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
 
 /* ---- builder -------------------------------------------------------- */
