@@ -20,7 +20,7 @@ import { drawChairsIn, drawChairsOut, drawRig, TOPS } from './fixup-rig'
  * blow falls on the mailbox's post (17), and past the house the rollers fold down (18) as she hops for joy (19).
  * He lets the cart go as the mast folds and it rolls on past the mailbox alone, the brake stopping it (20) while he
  * walks to the box: she springs back to it and presses her round print into its wet paint (21), and he his square
- * one beside it (22). She leaps over him (23) and leads him up the steps and in; she sits (27), the door
+ * one beside it (22). She leaps over him (landing on 23's two, the phrase's strongest attack) and leads him up the steps and in; she sits (27), the door
  * shuts behind him (28), and he sits beside her (29). The soft bars are the breath: side by side in their chairs,
  * looking out through the new window, the camera coming to them: the cut to the hill (`CUTS.hill`).
  *
@@ -95,8 +95,9 @@ const E = {
   joy: bar('waltz', 19),
   up: PRINT_AT.ellie - 0.5,
   press: PRINT_AT.ellie,
-  leap: 39.6,
-  leapLand: bar('waltz', 23),
+  // Over him off the box on 22's third beat, landing on 23's two: the phrase's strongest attack, and hers.
+  leap: beat('waltz', 22, 3),
+  leapLand: beat('waltz', 23, 2),
   leapTo: [7.75, 0] as Pt,
   hops: [41.2, bar('waltz', 24), beat('waltz', 24, 2), beat('waltz', 24, 3)],
   front: CHAIRS.ellie + 0.14,
