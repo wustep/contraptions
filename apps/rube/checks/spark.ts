@@ -9,6 +9,7 @@ import { CODA, CREDITS_AT, DOORS, DURATION, FESTIVAL, GRID, LAST, LOFT_SEAM, MUS
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/mountain-king/spark/credits'
 import { WICK } from '../src/shows/versions/mountain-king/spark/loft/layout'
 import { BURSTS, sparkAt } from '../src/shows/versions/mountain-king/spark/railway/fireworks-plan'
+import { MOON_GONE, moonLight } from '../src/shows/versions/mountain-king/spark/railway/night'
 import type { SparkShow } from '../src/shows/versions/mountain-king/spark/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -116,10 +117,11 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
   check('spark: the spark is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s at ${longAt.toFixed(2)}`)
   // No firework breaks on the moon, against the show's own camera (so a camera change that leaves the plan's measured
   // `CAM` stale fails here): for its first half second each flower, out to its reach, keeps clear of the moon's disc,
-  // which holds 0.77 and 0.23 of the frame. Mines (fans off the ground) and the Titan (smoke laid over the moon) aside.
+  // which holds 0.77 and 0.23 of the frame. Mines (fans off the ground) and the Titan (smoke laid over the moon) aside,
+  // and every shell after the crash's smoke has taken the moon (`moonLight` under `MOON_GONE`): then there is no moon.
   const onMoon: string[] = []
   for (const b of BURSTS) {
-    if (b.kind === 'mine' || b.kind === 'titan') continue
+    if (b.kind === 'mine' || b.kind === 'titan' || moonLight(b.at) < MOON_GONE) continue
     for (let s = 0; s <= Math.min(0.5, b.life) + 1e-9; s += 0.05) {
       const t = b.at + s
       const f = cam(t)

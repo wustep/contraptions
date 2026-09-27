@@ -5,6 +5,7 @@ import { G_RAIL } from '../physics'
 import { HOME_LEAP, SEAMS } from '../seams'
 import { RAILWAY } from '../worlds'
 import { FIELD } from './express-line'
+import { MOON_GONE, moonLight } from './night'
 
 /**
  * FIREWORKS, worked out once: where everything in the festival's launch field stands, when each thing goes off, and
@@ -636,6 +637,8 @@ const heartY = (y: number, sh: Shape, s: number): number => y + (sh.gs / sh.k) *
  * cell clear of the moon's disc. A burst round the moon makes the moon its bright round core.
  */
 function clearOfMoon(at: number, x: number, y: number, sh: Shape): boolean {
+  // Once the crash's smoke has taken the moon, there is no moon to keep clear of: the finale has the whole sky.
+  if (moonLight(at) < MOON_GONE) return true
   const need = reachOf(sh) + 0.5
   for (let s = 0; s <= Math.min(0.5, sh.life) + 1e-9; s += 0.05) {
     const m = moonOf(at + s)
