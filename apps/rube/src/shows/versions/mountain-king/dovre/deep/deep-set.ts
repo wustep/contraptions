@@ -1,12 +1,12 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, hash, knock } from '../kit'
-import { flicker, glow } from '../lantern'
+import { drawTorch, flicker, glow } from '../lantern'
 import { drip, hollow, stalactite } from '../rock'
 import type { Pen } from '../troll'
 import { LAMP, SKY, STONE } from '../worlds'
 import {
-  BARS, BEGIN, CUP_DRIPS, CUP_TIP, DOOR_X0, DRIPS, FRONTS, G1, G2, LAMPS, RAMP0, RAMP1, SHOWERS, STEPS, T2_X0, T2_X1, T3_X0, T3_X1, XYLO,
+  BARS, BEGIN, CUP_DRIPS, CUP_TIP, DOOR_X0, DRIPS, E, FRONTS, G1, G2, LAMPS, RAMP0, RAMP1, SHOWERS, STEPS, T2_X0, T2_X1, T3_X0, T3_X1, XYLO,
   Y_DOOR, Y_T2, Y_T3, barTop, barX, fillet, gutterAt, litOf, reached, tipY, tread, type Front, type Gutter,
 } from './deep-plan'
 
@@ -21,6 +21,77 @@ import {
 
 /* ------------------------------------------------------------------ light */
 
+/**
+ * The wheel's torch. The upper gutter ends at the flume's head; from there a runnel cut in the wall runs on, down
+ * over the wheel's top, to a torch in an iron bracket over the pit. The flame that came back along the gutter from
+ * the slam runs on down it, gathering speed downhill, and the torch catches on E(26) (29.51, a sounded note) as he
+ * rolls out onto the flume: the wheel, its buckets, the rider and the hammer's tail and bar are in its light from
+ * then on, before the hammer's own lantern lights on the first blow. (Not a strike of the part's: a light of the
+ * set's, landing on the note.)
+ */
+const RUNNEL_PTS: Pt[] = [[7.25, 0.75], [8.2, 0.98], [9.35, 1.8], [10.32, 2.89]]
+const RUNNEL: Gutter = (() => {
+  const s = [0]
+  for (let i = 1; i < RUNNEL_PTS.length; i++) s.push(s[i - 1] + Math.hypot(RUNNEL_PTS[i][0] - RUNNEL_PTS[i - 1][0], RUNNEL_PTS[i][1] - RUNNEL_PTS[i - 1][1]))
+  return { pts: RUNNEL_PTS, s }
+})()
+const WHEEL_TORCH = { at: [10.4, 2.9] as Pt, catch: E(26), seed: 10, size: 0.44 }
+/** Where its flame burns (the torch's cup is half its size out from the foot and nearly its size up). */
+const WHEEL_FLAME: Pt = [WHEEL_TORCH.at[0] + WHEEL_TORCH.size * 0.5, WHEEL_TORCH.at[1] - WHEEL_TORCH.size * 1.15]
+const wheelLit = (t: number): number => {
+  const u = Math.max(0, Math.min(1, (t - WHEEL_TORCH.catch) / 0.35))
+  return u * u * (3 - 2 * u)
+}
+/** The runnel's front: from the gutter's end (as the gutter's own front reaches it) to the torch, speeding up downhill. */
+const RUNNEL_FRONT: Front = (() => {
+  const L = RUNNEL.s[RUNNEL.s.length - 1]
+  const t0 = LAMPS[3].catch + 0.2
+  const t1 = WHEEL_TORCH.catch
+  return { g: RUNNEL, keys: [[t0, 0], [t0 + 0.45 * (t1 - t0), 0.28 * L], [t0 + 0.75 * (t1 - t0), 0.62 * L], [t1, L]] }
+})()
+
+/** A burning light's pool on the wall: where it centres, how lit it is, and how far its light reaches. */
+interface Light {
+  x: number
+  y: number
+  lit: number
+  /** The pool's reach, cells, and how far it lifts the wall to lit stone at its middle. */
+  r: number
+  wall: number
+  /** A broad pool (a big flame over a pit) keeps its light further out. */
+  broad?: boolean
+  seed: number
+}
+/** Every burning light of the tunnels at t. */
+function lights(t: number): Light[] {
+  const out: Light[] = []
+  for (const l of LAMPS) {
+    const lit = litOf(l, t)
+    if (lit > 0) out.push({ x: l.at[0] + (l.hang > 0 ? 0 : 0.17), y: l.at[1] + (l.hang > 0 ? 0.3 : -0.3), lit, r: 4.2, wall: 0.62, seed: l.seed })
+  }
+  // The flame running down the runnel carries its own light with it, the chase seen on the wall.
+  const [t0, t1] = [RUNNEL_FRONT.keys[0][0], RUNNEL_FRONT.keys[RUNNEL_FRONT.keys.length - 1][0]]
+  if (t > t0 && t < t1 + 0.35) {
+    const u = Math.min(1, (t - t0) / (t1 - t0))
+    const keys = RUNNEL_FRONT.keys
+    let s = keys[keys.length - 1][1]
+    for (let i = 1; i < keys.length; i++) {
+      if (t <= keys[i][0]) {
+        s = keys[i - 1][1] + ((keys[i][1] - keys[i - 1][1]) * (t - keys[i - 1][0])) / (keys[i][0] - keys[i - 1][0])
+        break
+      }
+    }
+    const [x, y] = gutterAt(RUNNEL, s)
+    const a = Math.min(1, u * 4) * (1 - wheelLit(t))
+    if (a > 0) out.push({ x, y: y - 0.1, lit: 0.75 * a, r: 3.2, wall: 0.62, seed: 12 })
+  }
+  const w = wheelLit(t)
+  // The wheel's torch burns bigger (a fat pine torch over a pit) and lights the pit down to the landing.
+  // Its pool hangs a little under the flame: the light falls into the pit, not up on the roof.
+  if (w > 0) out.push({ x: WHEEL_FLAME[0] - 0.2, y: WHEEL_FLAME[1] + 0.9, lit: w, r: 6.4, wall: 0.8, broad: true, seed: WHEEL_TORCH.seed })
+  return out
+}
+
 /** How lit a point is at show time t: the gate's cool light near the mouth, and every lantern that has caught. */
 export function lightAt(x: number, y: number, t: number): number {
   let v = 0.05 + 0.3 * Math.max(0, 1 - (x + 0.8) / 4.6) * Math.max(0, 1 - Math.abs(y + 0.8) / 4)
@@ -30,6 +101,8 @@ export function lightAt(x: number, y: number, t: number): number {
     const d = Math.hypot(x - l.at[0], y - l.at[1] - 0.2)
     v += lit * 0.9 * Math.pow(Math.max(0, 1 - d / 4.2), 1.4)
   }
+  const w = wheelLit(t)
+  if (w > 0) v += w * 0.95 * Math.pow(Math.max(0, 1 - Math.hypot(x - WHEEL_FLAME[0], y - WHEEL_FLAME[1]) / 5.8), 1.2)
   return Math.min(1, v)
 }
 
@@ -127,6 +200,36 @@ export function rim(p: p5, c: Pen, pts: Pt[], depth: number, lit: number): void 
   p.pop()
 }
 
+/** The back wall where a flame lights it: the lit stone, a little warm (the pool's amber goes over it). */
+const WALL_LIT = mixHex(STONE.mid, LAMP.glow, 0.1)
+
+/**
+ * The wall's own light round a flame: the hollow's dark lifted to lit stone near it, falling off to nothing at `r`.
+ * Pools that overlap add up towards the lit stone, never past it. (A raw gradient in its own save/restore, so p5's
+ * cached fill stays true.)
+ */
+function wallPool(p: p5, c: Pen, x: number, y: number, r: number, a: number, broad = false): void {
+  if (a <= 0.003) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cx = x * c.k
+  const cy = y * c.k
+  const R = r * c.k
+  const col = p.color(WALL_LIT)
+  const rgb = `${p.red(col)},${p.green(col)},${p.blue(col)}`
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R)
+  g.addColorStop(0, `rgba(${rgb},${a})`)
+  g.addColorStop(0.25, `rgba(${rgb},${a * (broad ? 0.95 : 0.8)})`)
+  g.addColorStop(0.55, `rgba(${rgb},${a * (broad ? 0.66 : 0.38)})`)
+  if (broad) g.addColorStop(0.8, `rgba(${rgb},${a * 0.26})`)
+  g.addColorStop(1, `rgba(${rgb},0)`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.arc(cx, cy, R, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+}
+
 /** The rock: the hollow, the lanterns' pools and the gate's light on its walls, and the floors. */
 export function drawRock(p: p5, c: Pen, T: number): void {
   hollow(p, c, OUTLINE, 0)
@@ -139,10 +242,11 @@ export function drawRock(p: p5, c: Pen, T: number): void {
   ctx.clip()
   // The gate's summer-night light, cool and faint, at the tunnel's mouth.
   glow(p, c, -0.9, -0.7, 4.2, 0.16, mixHex(SKY.dusk, STONE.wet, 0.5))
-  for (const l of LAMPS) {
-    const lit = litOf(l, T)
-    if (lit > 0) glow(p, c, l.at[0] + (l.hang > 0 ? 0 : 0.17), l.at[1] + (l.hang > 0 ? 0.3 : -0.3), 3.9, 0.42 * lit * flicker(T, l.seed), LAMP.glow)
-  }
+  const ls = lights(T)
+  // Each burning flame lifts the wall round it to lit stone (the dark before the slam has none: nothing burns yet),
+  for (const l of ls) wallPool(p, c, l.x, l.y, l.r, l.wall * l.lit, l.broad)
+  // and its amber pool goes over that.
+  for (const l of ls) glow(p, c, l.x, l.y, l.r * 0.93, 0.42 * l.lit * flicker(T, l.seed), LAMP.glow)
   ctx.restore()
 }
 
@@ -255,6 +359,24 @@ function drawGutter(p: p5, c: Pen, g: Gutter, T: number): void {
   rim(p, c, g.pts, 0.13, lightAt(mid[0], mid[1], T) * 0.8)
 }
 
+/**
+ * The runnel to the wheel's torch: a groove cut down the wall, not a shelf (a lit rim on a long diagonal read as a
+ * track he might roll on): only its dark channel, soft against the lit wall, and the embers in it once it has burned.
+ */
+function drawRunnel(p: p5, c: Pen, T: number): void {
+  const k = c.k
+  const lit = lightAt(8.8, 1.4, T)
+  p.push()
+  p.noFill()
+  p.strokeJoin(p.ROUND)
+  p.stroke(mixHex(STONE.dark, STONE.deep, 0.3 + 0.4 * (1 - lit)))
+  p.strokeWeight(Math.max(1.2, 0.065 * k))
+  p.beginShape()
+  for (const [x, y] of RUNNEL.pts) p.vertex(x * k, y * k)
+  p.endShape()
+  p.pop()
+}
+
 /** The flame running along a gutter: one tongue of fire, tallest where it has just come, burning down behind to embers. */
 function drawBurn(p: p5, c: Pen, f: Front, T: number): void {
   const k = c.k
@@ -303,7 +425,14 @@ function drawBurn(p: p5, c: Pen, f: Front, T: number): void {
 export function drawFire(p: p5, c: Pen, T: number): void {
   drawGutter(p, c, G1, T)
   drawGutter(p, c, G2, T)
+  drawRunnel(p, c, T)
   for (const f of FRONTS) drawBurn(p, c, f, T)
+  drawBurn(p, c, RUNNEL_FRONT, T)
+  // The wheel's torch, on the wall over the pit (behind the flume, the wheel and the hammer's arm, drawn after this).
+  const lit = wheelLit(T)
+  const [x, y] = WHEEL_TORCH.at
+  const pen: Pen = { ...c, ink: inkAt(c.ink, Math.max(0.15 * lit, lightAt(x, y, T) * 0.6)) }
+  drawTorch(p, pen, x, y - 0.01, { lit, t: T, seed: WHEEL_TORCH.seed, size: WHEEL_TORCH.size, side: 1 })
 }
 
 /** Sparks: short amber streaks thrown up and out, falling, gone within the second. */
