@@ -141,6 +141,10 @@ function mount(shell: Shell): () => void {
       const id = playlist.next()
       return id ? byId.get(id)! : null
     },
+    upNext() {
+      const id = playlist.peek()
+      return id ? byId.get(id)! : null
+    },
     opened(version) {
       // A take put on by the host has already been counted; one that got here another way is counted now.
       if (playlist.current !== idOf(version)) playlist.play(idOf(version))

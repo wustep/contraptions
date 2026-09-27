@@ -27,7 +27,16 @@ import type { PlayResult, Soundtrack, SoundtrackState } from './soundtrack'
  */
 
 /** How long before its entry a cue is started, silently, where its video has that much before it. */
-const PREROLL = 4
+export const PREROLL = 8
+/**
+ * How long before its entry a cue is warmed: played a moment, silently, then parked where it will start, so its
+ * video is already buffered when it comes in. A cue from its video's first second has no room to run early (`PREROLL`),
+ * and would otherwise start cold, holding the picture while it loads. Only while the show plays: the viewer has
+ * pressed play by then, so the silent start needs no gesture of its own.
+ */
+export const WARM = 45
+/** How long a warming cue plays before it is parked: enough for YouTube to have fetched well past its start. */
+const WARM_FOR = 1500
 /** How far a cue running early may be off the show's time before it is put back on it. */
 const TRUE = 0.02
 /** How long a play may sit unstarted before it counts as refused. One still buffering is waited for, to a limit. */
@@ -174,6 +183,8 @@ interface Deck {
   lead: number
   /** When it last began to move, so it is judged only once it is running steadily. */
   movingAt: number
+  /** Warming ahead of its entry (`WARM`): 'on' while it plays silently, 'done' once parked, buffered. */
+  warm: 'no' | 'on' | 'done'
   ear: ReturnType<typeof listener>
 }
 
@@ -256,6 +267,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
 
   const start = (d: Deck, t: number, early: boolean) => {
     if (!d.player || !d.ready) return
+    if (d.warm === 'on') d.warm = 'done'
     d.running = true
     d.early = early
     d.toldAt = performance.now()
@@ -269,6 +281,8 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   }
 
   const stop = (d: Deck) => {
+    // Stopped mid-warm: it warms again when the show next plays towards it.
+    if (d.warm === 'on') d.warm = 'no'
     d.running = false
     d.early = false
     d.toldAt = performance.now()
@@ -291,6 +305,27 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     d.player!.seekTo(videoAt(d, t) + d.lead, true)
   }
 
+  /** Where a cue will be started from: as far before its entry as `PREROLL` runs it, or its video's first second. */
+  const parkAt = (d: Deck) => Math.max(0, d.cue.from - PREROLL * speed)
+
+  /** Play a cue ahead of its entry, silently, to have YouTube fetch it; `follow` parks it once it has played a moment. */
+  const warmUp = (d: Deck) => {
+    if (!d.player || !d.ready) return
+    d.warm = 'on'
+    d.toldAt = performance.now()
+    setVolume(d, 0)
+    d.player.setPlaybackRate(speed)
+    d.player.seekTo(parkAt(d), true)
+    d.player.playVideo()
+  }
+
+  const park = (d: Deck) => {
+    d.warm = 'done'
+    d.toldAt = performance.now()
+    d.player!.pauseVideo()
+    d.player!.seekTo(parkAt(d), true)
+  }
+
   /** Which player is seen: the one being heard, or the first before anything is. */
   const raise = (top: Deck | null) => {
     for (const d of decks) d.box.classList.toggle('on', d === (top ?? decks[0]))
@@ -303,7 +338,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     for (const d of decks) {
       const inside = d === now && t < end(d)
       if (wanted && inside) start(d, t, false)
-      else if (d.running) stop(d)
+      else if (d.running || d.warm === 'on') stop(d)
     }
   }
 
@@ -409,7 +444,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         const mount = document.createElement('div')
         box.append(mount)
         host.append(box)
-        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, ear: listener() }
+        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', ear: listener() }
       })
       raise(null)
       loadApi().then(
@@ -500,6 +535,12 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         } else if (lead > 0 && d.early) {
           setVolume(d, 0)
           ontime(d, t)
+        } else if (lead > 0 && d.warm === 'on') {
+          setVolume(d, 0)
+          if (d.state === PLAYING && performance.now() - d.movingAt >= WARM_FOR) park(d)
+        } else if (lead > 0 && lead <= WARM * speed && d.warm === 'no' && !d.running) {
+          // Coming up: fetch it now, while there is time, rather than at its entry.
+          warmUp(d)
         } else if (lead <= 0 && d.running) {
           // Still sounding after the next has come in: it plays out to its own end and fade.
           setVolume(d, level(d, t))
@@ -528,7 +569,7 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       keepTime(false)
       settleRefusal('playing')
       // Ours, and any the viewer started from YouTube's own player.
-      for (const d of decks) if (d.running || d.state === PLAYING || d.state === BUFFERING) stop(d)
+      for (const d of decks) if (d.running || d.warm === 'on' || d.state === PLAYING || d.state === BUFFERING) stop(d)
     },
     seek(t) {
       shown = Math.max(0, t)
