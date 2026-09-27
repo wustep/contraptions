@@ -4,8 +4,8 @@ import { box, carried, part, route, type Company, type PartShot, type Way } from
 import { drawCalcifer, drawDoor } from '../cast'
 import { G } from '../physics'
 import { FLOWERS, MARKL_SCALE, ROOM, TOWN } from '../worlds'
-import { drawPan, drawTableTop, ROOM_AT, roomTone } from './room'
-import { BELLOWS, calciferAt, dialAt, doorAt, doorJolt, LOG, MT, PAN, panAt, PULL, seatAt, STOOL, TABLE } from './morning-rig'
+import { drawPan, ROOM_AT, roomTone, type Tone } from './room'
+import { BELLOWS, calciferAt, dialAt, doorAt, doorJolt, LOG, MT, PAN, panAt, pchip, PULL, seatAt, STOOL, TOSSES } from './morning-rig'
 import { doorLeak, doorLight, drawBasket, drawEggs, drawPanEggs, gust, knockDust, licks, sparks, viewMeadow, viewNight, viewPorthaven, viewWar } from './morning-draw'
 
 /**
@@ -18,18 +18,20 @@ import { doorLeak, doorLight, drawBasket, drawEggs, drawPanEggs, gust, knockDust
  * works the bellows (155.23, 155.87, 156.51): Calcifer's breath. The pump gushes at the sink (155.00); the shaft winds
  * the shutters' cord until they fly open (156.10) and the morning floods in; Calcifer roars up (156.35).
  *
- * Two knocks (157.95, 158.31). Markl, asleep at the table, jumps down (158.53), leaps for the bell-pull, and the dial
- * clicks to blue (159.36): the door opens on Porthaven, the sea, a gull, a caller who bows. It closes; Markl runs
- * back to his seat (163.70) as the dial twitches, and whips round to black (163.83): the door flies open and Howl is
- * standing in it. Calcifer flares for him (164.14); Howl knocks the trolley's lever as he passes (164.61), the door
- * bangs behind him (165.05), and the trolley brings the pan along the ceiling and lets it down onto Calcifer, who
- * puffs up under it until Howl is beside him: then he bows his head (165.79). Sophie tosses the eggs from the basket
- * on her chair's arm; they crack on the rim (166.01, 166.47, 166.73, 167.44); Calcifer eats the shells, grumbling,
+ * Two knocks (157.95, 158.31). Markl, asleep on his stool at the table, jumps down (158.53), leaps for the
+ * bell-pull, and the dial clicks to blue (159.36): the door opens on Porthaven, the sea, a gull, a caller who bows. It closes; Markl runs
+ * back up onto his stool (163.70) as the dial twitches, and whips round to black (163.83): the door flies open and
+ * Howl is standing in it, and she turns in her chair from the fire to him. Calcifer flares for him (164.14): Howl checks
+ * his step and looks up at her (their first meeting since the balcony, and she is old now); then on, knocking the
+ * trolley's lever as he passes (164.61), the door banging behind him (165.05), under her chair and past the grate to
+ * Calcifer's far side, while the trolley brings the pan along the ceiling and lets it down onto Calcifer, who puffs up
+ * under it and bows his head (165.79). Sophie tosses the eggs from the basket on her chair's arm; they crack on the rim (166.01, 166.47, 166.73, 167.44); Calcifer eats the shells, grumbling,
  * and gulps the last (167.90). The trolley lifts the pan (168.19) and carries it to the table; she gets down (168.62)
- * and follows it; it lands (170.89) in front of Markl. She is up on her stool (172.33); they eat. Howl pulls the
- * bell-pull and the dial sweeps back to green (174.72), the meadow's light round the door's edges; she gets down
- * (175.28) and they go to the door together; the latch (177.42) and it flies open on the flower fields; they step
- * through on the slow waltz's hit (178.051, the field's).
+ * and follows it, Howl behind her; it lands (170.89) in front of Markl. She is up on her stool (172.33), Howl
+ * standing at her side; they eat. On the beat before the green Howl steps to the bell-pull and hops to pull it, and
+ * the dial sweeps back to green (174.72), the meadow's light round the door's edges; she gets down (175.28) and they
+ * go to the door together, Markl bobbing goodbye from his stool; the latch (177.42) and it flies open on the flower
+ * fields; they step through on the slow waltz's hit (178.051, the field's).
  *
  * Coordinates in this file are the ROOM's cells (the rig's), turned into the part's frame (`MORNING_AT` to the right)
  * only for the lane, the company and the camera; drawing translates once.
@@ -77,14 +79,90 @@ export const MORNING_HITS: number[] = [
 /* ------------------------------------------------------------------ the paths (room cells) */
 
 const arcFor = (T: number) => (G * T * T) / 8
-/** Markl's centre on the floor, and on the bench behind the table. */
+/**
+ * Markl's stool: a twin of hers, a touch taller (he is small), standing in front of the table between its legs and
+ * clear of the pan's handle. He sits whole on it at her height, the two of them side by side at the table; never
+ * behind the table with its top cutting him to a half-ball on the edge. `x` its middle, `seat` its seat's top.
+ */
+const M_STOOL = { x: -2.65, seat: -0.3 }
+/** Markl's centre on the floor, and on his stool. */
 const M_FLOOR = ROOM_AT.ground - 0.13 * MARKL_SCALE
-const M_SEAT = TABLE.top
+const M_SEAT = M_STOOL.seat - 0.13 * MARKL_SCALE
 const SOPHIE_STOOL: Pt = [STOOL.x, STOOL.seat - 0.13]
 /** When she climbs out of the chair. */
 const LEAVE = 168.25
 /** When Howl is first in the room: behind the shut door, just before it flies open. */
 const HOWL_FROM = 163.45
+/** Where Howl stands at the hearth: on Calcifer's far side, clear of her chair's rocker and its bellows. */
+const HOWL_HEARTH = 3.38
+/** Where Howl stands at breakfast: at the table's right end, beside her stool, left of the bell-pull's tassel. */
+const HOWL_TABLE = -1.35
+/** Where he stands to pull the bell-pull: a ball's width clear of the tassel's line, on the table's side. */
+const HOWL_PULL = PULL.x - 0.39
+/** When he is at the table, walked in behind her. */
+const HOWL_SET = 172.8
+
+/**
+ * Howl from the door flying open to the table (room cells): out of the doorway; on Calcifer's flare he checks his
+ * step (164.14 → 164.44) and looks up at her in the chair; on past the lever (164.61), under her chair and in front
+ * of the grate to Calcifer's far side as the pan comes down; there through the eggs. When the pan lifts he follows it
+ * back across the room, behind her all the way (never nearer than half a cell), and stands beside her stool.
+ */
+const howlX = pchip([
+  [163.8, 0.3],
+  [MT.black, 0.3],
+  [164.0, 0.49],
+  [MT.howlFlare, 0.6],
+  [164.3, 0.635],
+  [164.44, 0.7],
+  [MT.lever, 0.92],
+  [164.95, 1.5],
+  [165.35, 2.25],
+  [165.75, 2.95],
+  [166.05, 3.28],
+  [166.35, HOWL_HEARTH],
+  [168.1, HOWL_HEARTH],
+  [168.6, 3.05],
+  [169.2, 2.1],
+  [169.8, 1.0],
+  [170.4, 0.05],
+  [171.0, -0.55],
+  [171.6, -0.88],
+  [172.0, -1.08],
+  [172.4, -1.27],
+  [HOWL_SET, HOWL_TABLE],
+])
+/** His look up at her on the flare: a lift toward her, held, let down as he goes on. */
+const howlLift = pchip([
+  [164.08, 0],
+  [164.24, -0.045],
+  [164.4, -0.038],
+  [164.56, 0],
+])
+const howlHome = (t: number): Pt => [howlX(t), howlLift(t)]
+
+/**
+ * Her look, while she sits: on the door flying open she turns in the chair from the fire to it (a lean toward the
+ * door, sitting up), holds on him through his look, and follows him back round to the fire as he passes.
+ */
+const lookX = pchip([
+  [MT.black, 0],
+  [MT.black + 0.16, -0.05],
+  [164.45, -0.05],
+  [164.9, -0.01],
+  [165.3, 0.035],
+  [TOSSES[0] - 0.05, 0],
+])
+const lookY = pchip([
+  [MT.black, 0],
+  [MT.black + 0.16, -0.02],
+  [164.45, -0.02],
+  [165.0, 0],
+])
+const seatLook = (t: number): Pt => {
+  const [x, y] = seatAt(t)
+  return [x + lookX(t), y + lookY(t)]
+}
 
 /**
  * A run along the floor from `from` to `x1` in `T` seconds: speed `v0` at the start to `vMid`, then down to `v1`
@@ -139,12 +217,12 @@ function paths(begin: number): Paths {
   const K: Way = { at: r(MT.out), p: [0.3, 0], ramp: [v0, 0.6] }
   const sophie: Seg[] = [
     ...route([A, B, C, D, E]),
-    ...carried(seatAt, MT.seat, LEAVE, Math.round((LEAVE - MT.seat) * 30)),
+    ...carried(seatLook, MT.seat, LEAVE, Math.round((LEAVE - MT.seat) * 30)),
     ...route([{ at: r(LEAVE), p: seat1 }, F, ...walk, H, ...nods, J, K]),
   ]
 
-  /* Markl: asleep behind the table; the knocks; the bell-pull; the door; back to his seat; breakfast. */
-  const m0: Pt = [-2.42, M_SEAT]
+  /* Markl: asleep on his stool at the table; the knocks; the bell-pull; the door; back up on his stool; breakfast. */
+  const m0: Pt = [M_STOOL.x, M_SEAT]
   const markl: Way[] = [
     { at: r(MT.in), p: m0 },
     { at: r(153.3), p: [m0[0], M_SEAT + 0.008], ease: 'inout' },
@@ -155,11 +233,12 @@ function paths(begin: number): Paths {
     { at: r(158.078), p: [m0[0], M_SEAT - 0.045], ease: 'out' },
   ]
   const mHop = MT.marklDown - 158.078
-  markl.push({ at: r(MT.marklDown), p: [-1.6, M_FLOOR], arc: arcFor(mHop) })
-  const mLandV = (-1.6 - m0[0]) / mHop
+  const mLand = -1.7
+  markl.push({ at: r(MT.marklDown), p: [mLand, M_FLOOR], arc: arcFor(mHop) })
+  const mLandV = (mLand - m0[0]) / mHop
   const mTug = 158.96
   const mRunEnd = -1.05
-  const mRunV1 = (2 * (mRunEnd + 1.6)) / (mTug - MT.marklDown) - mLandV
+  const mRunV1 = (2 * (mRunEnd - mLand)) / (mTug - MT.marklDown) - mLandV
   markl.push({ at: r(mTug), p: [mRunEnd, M_FLOOR], ramp: [mLandV, mRunV1] })
   const mTugT = MT.blue - mTug
   const mAfter: Pt = [mRunEnd + mRunV1 * mTugT, M_FLOOR]
@@ -174,13 +253,16 @@ function paths(begin: number): Paths {
     { at: r(161.66), p: [0.1, M_FLOOR], ease: 'in' },
     { at: r(162.0), p: [0.1, M_FLOOR] },
     { at: r(162.4), p: [-0.38, M_FLOOR], ease: 'inout' },
-    { at: r(163.31), p: [-1.6, M_FLOOR], ease: 'inout' },
+    { at: r(163.25), p: [-1.65, M_FLOOR], ease: 'inout' },
   )
-  const mUpT = MT.marklUp - 163.31
-  markl.push({ at: r(MT.marklUp), p: [-2.22, M_SEAT], arc: arcFor(mUpT) })
-  const mSlideV = 0.62 / mUpT
-  markl.push({ at: r(MT.marklUp + 0.4 / mSlideV), p: m0, ramp: [mSlideV, 0] })
-  // At the table: a lean to watch the eggs; a bounce as the pan comes down to him; eating; a goodbye.
+  // Up onto his stool on the dial's twitch, landing a little short of its middle and settling to it.
+  const mUpT = MT.marklUp - 163.25
+  const mSettle = 0.1
+  markl.push({ at: r(MT.marklUp), p: [m0[0] + mSettle, M_SEAT], arc: arcFor(mUpT) })
+  const mSlideV = (-1.65 - (m0[0] + mSettle)) / mUpT
+  markl.push({ at: r(MT.marklUp + (2 * mSettle) / mSlideV), p: m0, ramp: [mSlideV, 0] })
+  // On the stool: a lean to watch the eggs; a bounce as the pan comes down to him; eating; a bob of goodbye as the
+  // two of them go out.
   const lean = (at: number, dx: number, dy = 0): Way => ({ at: r(at), p: [m0[0] + dx, M_SEAT + dy], ease: 'inout' })
   markl.push(
     lean(166.2, 0.05, -0.01),
@@ -198,33 +280,67 @@ function paths(begin: number): Paths {
     lean(174.6, 0),
     lean(176.1, -0.06, 0.01),
     lean(176.5, 0),
-    lean(177.1, 0.02, -0.04),
-    lean(177.35, 0.02),
-    lean(177.6, 0.02, -0.04),
-    lean(177.85, 0),
+    lean(177.05, 0.02, -0.055),
+    lean(177.33, 0.02),
+    lean(177.6, 0.02, -0.05),
+    lean(177.88, 0),
     { at: r(MT.out), p: m0 },
   )
 
-  /* Howl: behind the door as it flies open; across the room, knocking the lever; beside Calcifer; to the table. */
+  /* Howl: behind the door as it flies open; his look at her; past the lever to Calcifer's far side; to the table
+     behind her; on the beat before the green, a step to the bell-pull and a hop to pull it. */
   const h0: Pt = [0.3, 0]
-  const howl: Way[] = [
-    { at: r(HOWL_FROM), p: h0 },
-    { at: r(MT.black), p: h0 },
-    { at: r(MT.black + 0.8), p: [0.92, 0], ramp: [0, 1.55] },
+  const hSet: Pt = [HOWL_TABLE, 0]
+  const hPull: Pt = [HOWL_PULL, 0]
+  const hUp = MT.green - 0.337
+  const howl: Seg[] = [
+    ...route([
+      { at: r(HOWL_FROM), p: h0 },
+      { at: r(MT.black), p: h0 },
+    ]),
+    ...carried(howlHome, MT.black, HOWL_SET, Math.round((HOWL_SET - MT.black) * 30)),
+    ...route([
+      { at: r(HOWL_SET), p: hSet },
+      // At the table: a lean to her as she eats.
+      { at: r(173.3), p: [HOWL_TABLE - 0.045, -0.02], ease: 'inout' },
+      { at: r(173.85), p: hSet, ease: 'inout' },
+      { at: r(174.2), p: hSet },
+      { at: r(hUp), p: hPull, ease: 'inout' },
+      // Up and in toward the tassel, and down with it on the green.
+      { at: r(hUp + 0.17), p: [HOWL_PULL + 0.05, -0.11], ease: 'out' },
+      { at: r(MT.green), p: hPull, ease: 'in' },
+    ]),
   ]
-  howl.push(...run(howl[howl.length - 1], 2.35, MT.bow - (MT.black + 0.8), 1.55, 1.6, 0))
-  howl.push(
-    { at: r(168.9), p: [2.35, 0] },
-    { at: r(172.2), p: [PULL.x, 0], ease: 'inout' },
-    { at: r(MT.green - 0.337), p: [PULL.x, 0] },
-    { at: r(MT.green), p: [PULL.x, 0], arc: arcFor(0.337) },
-  )
-  return { sophie, markl: { segs: route(markl), fire: 0 }, howl: { segs: route(howl), fire: 0 } }
+  return { sophie, markl: { segs: route(markl), fire: 0 }, howl: { segs: howl, fire: 0 } }
 }
 
 const smoothstep = (t: number, a: number, b: number): number => {
   const u = Math.max(0, Math.min(1, (t - a) / (b - a)))
   return u * u * (3 - 2 * u)
+}
+
+/**
+ * Markl's stool (room cells; drawn in the part's own frame): the build of hers (a plank seat, splayed legs, a rung),
+ * a little narrower. It stands in front of the table, so it is drawn here, over the room's table.
+ */
+function drawMarklStool(p: p5, k: number, W: number, ink: string, tone: Tone): void {
+  const X = (v: number) => v * k
+  const { x, seat } = M_STOOL
+  const g = ROOM_AT.ground
+  const top = 0.1
+  const foot = 0.12
+  const at = (y: number) => top + ((foot - top) * (y - seat)) / (g - seat)
+  p.push()
+  p.rectMode(p.CORNER)
+  p.stroke(ink)
+  p.strokeWeight(W * 0.8)
+  for (const s of [-1, 1]) p.line(X(x + s * top), X(seat + 0.06), X(x + s * foot), X(g))
+  const rung = seat + 0.22
+  p.line(X(x - at(rung)), X(rung), X(x + at(rung)), X(rung))
+  p.strokeWeight(W)
+  p.fill(tone(ROOM.wood))
+  p.rect(X(x - 0.15), X(seat), X(0.3), X(0.065))
+  p.pop()
 }
 
 /* ------------------------------------------------------------------ what is through the door */
@@ -259,6 +375,7 @@ export const morning = part<{ begin: number }>(
       p.push()
       p.translate(-OX * k, 0)
       p.rectMode(p.CORNER)
+      drawMarklStool(p, k, W, ink, tone)
       // The door, and what is through it.
       const [dx, dy] = ROOM_AT.door
       const open = doorAt(T)
@@ -322,8 +439,6 @@ export const morning = part<{ begin: number }>(
       const { tone, ink } = roomTone(T, c.ink)
       p.push()
       p.translate(-OX * k, 0)
-      // Markl sits behind the table: its top is in front of him.
-      if (T < 158.2 || T > MT.marklUp - 0.2) drawTableTop(p, k, W, ink, tone)
       // Howl behind the door until it opens: the leaf is in front of him.
       if (T > 163.4 && T < MT.black + 0.3) {
         const [dx, dy] = ROOM_AT.door
@@ -343,8 +458,8 @@ export const morning = part<{ begin: number }>(
       const q = laneAt(P.markl, t - slot.begin)
       return { x: q.x - OX, y: q.y, scale: MARKL_SCALE }
     }
-    // From the bell-pull he waits for her by the door, then walks with her, a step ahead, into the light.
-    const a = PULL.x
+    // From the bell-pull he waits for her, then walks with her, a step ahead, to the door and into the light.
+    const a = HOWL_PULL
     const beside = (u: number) => {
       const b = laneAt(sophieRoom, u - slot.begin).x + 0.36
       const e = 0.25 * (1 - smoothstep(u, 177.3, 178.0))
@@ -392,9 +507,9 @@ function shots(): PartShot[] {
     // Howl at the door, and across to the fire.
     k(163.8, 1.1, -1.15, 5.0),
     k(165.0, 1.8, -0.95, 4.6),
-    // Breakfast on Calcifer.
-    k(166.0, 2.05, -0.78, 3.9),
-    k(167.6, 2.1, -0.76, 3.7),
+    // Breakfast on Calcifer: her in the chair, him on Calcifer's far side.
+    k(166.0, 2.2, -0.78, 3.9),
+    k(167.6, 2.25, -0.76, 3.7),
     // The pan goes up and away to the table; she follows it.
     k(168.5, 1.7, -1.2, 4.6),
     k(169.8, -0.1, -1.4, 5.2),

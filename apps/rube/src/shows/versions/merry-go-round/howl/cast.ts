@@ -178,6 +178,10 @@ export interface TurnipOpts {
   /** Upside down in a bush (1), as she finds him; 0 upright. */
   flip?: number
   light?: number
+  /** His top hat lifted off his head and tipped to his right, 0 on (the default) → 1 raised: a doff. */
+  hat?: number
+  /** Where his painted face turns, each -1..1: right (+) or left, down (+) or up. */
+  look?: readonly [number, number]
 }
 
 /**
@@ -241,22 +245,27 @@ export function drawTurnip(p: p5, k: number, weight: number, ink: string, o: Tur
   p.noStroke()
   p.fill(alpha(p, TURNIP.top, light))
   p.arc(0, -0.08 * k, 0.29 * k, 0.15 * k, Math.PI, 2 * Math.PI, p.CHORD)
-  // The painted face: two dots and a smile, in ink.
+  // The painted face: two dots and a smile, in ink, turned where he looks.
+  const lx = (o.look?.[0] ?? 0) * 0.055 * k
+  const ly = (o.look?.[1] ?? 0) * 0.045 * k
   p.fill(alpha(p, ink, 0.85 * light))
-  p.circle(-0.05 * k, 0.0, 0.028 * k)
-  p.circle(0.05 * k, 0.0, 0.028 * k)
+  p.circle(-0.05 * k + lx, ly, 0.028 * k)
+  p.circle(0.05 * k + lx, ly, 0.028 * k)
   p.noFill()
   p.stroke(alpha(p, ink, 0.85 * light))
   p.strokeWeight(w * 0.55)
-  p.arc(0, 0.035 * k, 0.1 * k, 0.05 * k, 0.2, Math.PI - 0.2)
-  // The hat: a battered topper, a little askew.
+  p.arc(lx, 0.035 * k + ly, 0.1 * k, 0.05 * k, 0.2, Math.PI - 0.2)
+  // The hat: a battered topper, a little askew; lifted off and tipped about its brim.
+  const hat = Math.max(0, Math.min(1, o.hat ?? 0))
   p.rotate(-0.12)
+  p.translate(0.07 * hat * k, (-0.13 - 0.3 * hat) * k)
+  p.rotate(0.5 * hat)
   p.stroke(alpha(p, ink, light))
   p.strokeWeight(w * 0.85)
   p.fill(alpha(p, TURNIP.hat, light))
   p.rectMode(p.CORNER)
-  p.rect(-0.1 * k, -0.37 * k, 0.2 * k, 0.24 * k, 0.02 * k)
-  p.rect(-0.17 * k, -0.15 * k, 0.34 * k, 0.04 * k, 0.02 * k)
+  p.rect(-0.1 * k, -0.24 * k, 0.2 * k, 0.24 * k, 0.02 * k)
+  p.rect(-0.17 * k, -0.02 * k, 0.34 * k, 0.04 * k, 0.02 * k)
   p.pop()
   p.pop()
 }

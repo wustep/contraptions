@@ -16,6 +16,29 @@ import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 
+// She can be found (the check below): the named establishing wides, where she may be smaller than the lead's floor.
+export const FLOOR_PX = 12
+export const WIDE_MAX = 2.35
+export const WIDES: { what: string; a: number; b: number }[] = [
+  { what: 'the swell: the whole town below the two of them', a: 70.002, b: 72.319 },
+  { what: 'the castle out of the fog over her', a: 120.053, b: 121.152 },
+  { what: 'the roar: the whole castle, his fire out of the chimney', a: 128.0, b: 129.138 },
+  { what: 'the first great stride', a: 131.431, b: 132.563 },
+  { what: 'the second great stride', a: 133.718, b: 134.838 },
+  { what: 'the third great stride, past the thorn tree', a: 135.935, b: 137.038 },
+  { what: 'the castle sits down in the night', a: 147.203, b: 148.805 },
+  { what: 'the valley opens on the slow waltz\'s hit', a: 178.051, b: 179.95 },
+  { what: 'the fleet over the mountains', a: 199.639, b: 201.189 },
+  { what: 'the castle wades back across the lake for her and kneels', a: 203.064, b: 204.44 },
+  { what: 'the bombs walk down the roofs toward the shop', a: 227.103, b: 229.28 },
+  { what: 'the whole castle tearing apart', a: 245.197, b: 247.461 },
+  { what: 'the cottage and the face go down', a: 249.655, b: 251.797 },
+  { what: 'the bird comes down out of the sky over the running plank', a: 262.536, b: 264.649 },
+  { what: 'the hull and the face come home', a: 294.934, b: 296.815 },
+  { what: 'the chimney and the flag come home', a: 297.953, b: 299.108 },
+  { what: 'the last chord: the whole castle, three roars', a: CHORD[0], b: CREDITS_AT },
+]
+
 export function checkMerryGoRound(perf: Performance, version: ShowVersion, check: Check): void {
   const show = perf.show as CastleShow
   const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -147,22 +170,28 @@ export function checkMerryGoRound(perf: Performance, version: ShowVersion, check
   }
   check('merry-go-round: under the credits the whole castle stays inside the Zoom frame', castleOut <= 1, `${castleOut.toFixed(3)} at ${castleAt.toFixed(2)} s`)
 
-  // She can be found: outside the castle's whole-castle wides (the roar and the great strides, its sitting down in the
-  // night, the collapse, the rebuild) and the credits, she is never under 5.5 px across at 640x360 for more than 1.5 s.
-  const WIDES: [number, number][] = [[126.5, 138], [144.9, 150.7], [245.1, 252.5], [294, 300.2], [301.2, DURATION]]
+  // She can be found. The lead's floor: at 640x360 she is never under 12 px across (a frame over 7.8 cells at her full
+  // size) for more than 0.3 s, but inside the named establishing wides (WIDES, above), each two bars of its music or
+  // less and most of them one, and under the credits. Each wide is there for the size of something she is small against.
+  const longWides = WIDES.filter((w) => w.b - w.a > WIDE_MAX + 1e-6)
+  check('merry-go-round: every establishing wide is two bars of its music or less (2.35 s)', longWides.length === 0,
+    longWides.map((w) => `${w.what} ${(w.b - w.a).toFixed(2)} s`).join(', '))
   let small = 0
   let smallest = 0
   let smallAt = 0
-  for (let t = 0; t <= perf.duration; t += 0.05) {
+  let smallPx = 99
+  for (let t = 0; t <= CREDITS_AT; t += 0.02) {
     const h = show.at(t)
     const px = (2 * R * (h.scale ?? 1) * 360) / cam(t).cells
-    small = !h.hidden && px < 5.5 && !WIDES.some(([a, b]) => t >= a && t <= b) ? small + 0.05 : 0
+    small = !h.hidden && px < FLOOR_PX && !WIDES.some((w) => t >= w.a - 0.01 && t <= w.b + 0.01) ? small + 0.02 : 0
     if (small > smallest) {
       smallest = small
       smallAt = t
+      smallPx = px
     }
   }
-  check('merry-go-round: she can be found: never under 5.5 px across for more than 1.5 s outside the castle\'s great wides and the credits', smallest <= 1.5, `${smallest.toFixed(2)} s to ${smallAt.toFixed(2)}`)
+  check(`merry-go-round: she can be found: never under ${FLOOR_PX} px across for more than 0.3 s outside the named wides and the credits`,
+    smallest <= 0.3, `worst ${smallest.toFixed(2)} s to ${smallAt.toFixed(2)} (${smallPx.toFixed(1)} px)`)
 
   // The ball is never out of sight for long.
   let hidden = 0

@@ -18,9 +18,9 @@ const EYE = 3.8
 
 const MOOR = mixHex(WASTES.moss, WASTES.hill, 0.45)
 const MOOR_DARK = mixHex(WASTES.moss, WASTES.rockDark, 0.3)
-/** The far range: a deep blue-slate, well under Sophie's grey (and over Howl's ink), so both stand out against it at
- * the heart. */
-const FAR_MTN = mixHex(mixHex(WASTES.slate, WASTES.mist, 0.3), '#5F7AA6', 0.3)
+/** The far range: a deep storm blue-slate, well under Sophie's grey (about half her light) and over Howl's ink, so
+ * both stand out against it on the run and at the heart. */
+const FAR_MTN = mixHex(mixHex(WASTES.slate, WASTES.mist, 0.1), '#4F6690', 0.35)
 const FAR_HILL = mixHex(WASTES.hillFar, WASTES.mist, 0.28)
 const NEAR_HILL = mixHex(WASTES.hill, WASTES.hillFar, 0.4)
 
