@@ -308,11 +308,12 @@ export const funeral = part<FuneralState>(
       key(193.6, 4.25, 1.5, -0.96),
       // Into the porch with him, the rope hanging beside the doors.
       key(196.0, 4.85, 2.75, -1.25),
-      // As the rope starts to move, up it and out, widening, to arrive on the toll: the whole empty church, the bell
-      // well inside the top of the frame, the rope down to him, and him whole at the bottom even under Zoom.
-      key(TOLL, 7.5, 3.25, -2.05),
+      // As the rope starts to move, up it and out, widening, to arrive on the toll: the whole empty church, the organ
+      // at its left end (its pipes ring with the toll) to the tower and the steps at its right, the bell well inside
+      // the top of the frame, the rope down to him, and him whole at the bottom even under Zoom.
+      key(TOLL, 7.5, 2.3, -1.92),
       // The answer; then down with the dust as he goes.
-      key(OUT, 7.45, 3.6, -1.95),
+      key(OUT, 7.45, 2.75, -1.85),
       key(199.95, 5.7, 5.0, -1.3),
       // Down the steps to the cut (`CUTS.home`): 4.5 cells, Carl 0.6 left of centre and 1.1 below it.
       key(slot.end, 4.5, FOOT[0] + 0.6, FOOT[1] - 1.1),
