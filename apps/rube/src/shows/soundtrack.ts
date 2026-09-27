@@ -368,7 +368,8 @@ function createFileSoundtrack(): Soundtrack {
         await new Promise<void>((resolve) => {
           waiting.push(resolve)
         })
-        if (spec !== mine || status !== 'ready') return 'silent'
+        // Read again: the wait may have changed it (TypeScript narrowed it to 'loading' above).
+        if (spec !== mine || (status as SoundtrackState) !== 'ready') return 'silent'
       }
       if (buffered()) {
         const mine = spec
