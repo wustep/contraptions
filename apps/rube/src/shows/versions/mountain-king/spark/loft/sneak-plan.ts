@@ -286,14 +286,18 @@ export const onPole = (x: number, t: number): Pt => [x, ON_POLE + poleSag(x, t)]
  */
 export function pairSwing(i: number, t: number): [number, number] {
   const pair = PAIRS[i]
+  // Each landing sways the pairs near it, and more with every landing along the pole (the walk getting bolder), and
+  // the pairs it has passed swing on longer, so the rack behind the spark builds toward the jostle.
   let common = 0
-  for (const l of LANDINGS) {
+  LANDINGS.forEach((l, j) => {
     const u = t - l.t
-    if (u <= 0 || u > 6) continue
+    if (u <= 0 || u > 7) return
     const d = Math.abs(l.x - pair.x)
-    if (d > 1.3) continue
-    common += 0.07 * (1 - d / 1.3) * Math.exp(-u / 1.3) * Math.sin(u * 2.9) * (l.x < pair.x ? 1 : -1)
-  }
+    const reach = 1.3 + 0.12 * j
+    if (d > reach) return
+    const behind = l.x < pair.x ? 1 : 0.6
+    common += 0.07 * (1 + 0.28 * j) * behind * (1 - d / reach) * Math.exp(-u / (1.3 + 0.15 * j)) * Math.sin(u * 2.9) * (l.x < pair.x ? 1 : -1)
+  })
   let apart = 0
   const k = KNOCKERS.indexOf(i)
   if (k >= 0) {
@@ -625,8 +629,13 @@ export const SHOTS: PartShot[] = [
   { t: 15.55, cells: 5.2, hold: [-5.55, 0.5], w: 0.9 },
   { t: 16.9, cells: 5.6, off: [-0.35, 0.75], w: 0 },
   { t: 19.8, cells: 4.7, off: [-0.25, 0.55], w: 0 },
-  { t: 22.7, cells: 6.0, off: [-0.3, 0.85], w: 0 },
-  { t: 24.6, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
+  // Phrase 2 (22.323): a second picture of the walk. Out and down to the whole rack with the spark high in the frame,
+  // the pole a tightrope over the bench's end and the drop past it, every pair behind it swinging wider with each
+  // landing; then, from the jostle's take-off, one push back in to the pair it has set swinging, close for the knock.
+  { t: 22.1, cells: 5.2, off: [-0.3, 0.65], w: 0 },
+  { t: 23.2, cells: 10.2, off: [-1.0, 2.0], w: 0 },
+  { t: 24.25, cells: 10.6, off: [-1.2, 2.2], w: 0 },
+  { t: 25.35, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
   // Close on the first knock; the draw-back starts on it and eases out over the held beat (never faster than about
   // half a scale a second), down the room to the cat, who is still listening with its head up when it comes in.
   { t: BEAT.knocks[0], cells: 5.35, hold: [-14.45, -0.82], w: 1 },
