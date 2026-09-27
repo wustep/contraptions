@@ -40,10 +40,15 @@ export const house = scenery<null>({
   draw: (p, _s, c) => {
     const { k, ink, weight } = c
     const X = (x: number) => x * k
-    // The rooms: plaster, one tone, and a paler attic.
+    // Plaster in shade at the bookcase, warmer toward the window.
     p.noStroke()
-    p.fill(DUST.wall)
-    p.rect(X(MID_X), X((EAVE + YARD) / 2), X(WALL_R - WALL_L), X(YARD - EAVE))
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const wall = ctx.createLinearGradient(X(WALL_L), 0, X(WALL_R), 0)
+    wall.addColorStop(0, mixHex(DUST.wall, DUST.shade, 0.45))
+    wall.addColorStop(0.55, DUST.wall)
+    wall.addColorStop(1, mixHex(DUST.wall, DUST.light, 0.22))
+    ctx.fillStyle = wall
+    ctx.fillRect(X(WALL_L), X(EAVE), X(WALL_R - WALL_L), X(YARD - EAVE))
     p.fill(DUST.shade)
     p.triangle(X(WALL_L - 0.2), X(EAVE), X(MID_X), X(PEAK + 0.2), X(WALL_R + 0.2), X(EAVE))
     // Murph's room has paper on the walls: a thin stripe, barely there.
@@ -155,17 +160,33 @@ export const house = scenery<null>({
 /** Light from Murph's window: drawn over the room, under everything in it. */
 function lightShaft(p: p5, k: number, t: number): void {
   const X = (x: number) => x * k
-  const Y = X
-  const a = 0.5 * smooth(t, 1.5, 6)
+  const a = smooth(t, 1.5, 6)
   if (a <= 0) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const top = WINDOW.y0 + 0.05
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(X(WINDOW.x0 + 0.02), X(top))
+  ctx.lineTo(X(WINDOW.x1 - 0.02), X(top))
+  ctx.lineTo(X(WINDOW.x1 + 1.35), X(UP))
+  ctx.lineTo(X(WINDOW.x0 + 0.95), X(UP))
+  ctx.closePath()
+  ctx.clip()
+  const beam = ctx.createLinearGradient(0, X(top), 0, X(UP))
+  beam.addColorStop(0, `rgba(255, 244, 214, ${0.6 * a})`)
+  beam.addColorStop(0.55, `rgba(255, 244, 214, ${0.28 * a})`)
+  beam.addColorStop(1, 'rgba(255, 244, 214, 0)')
+  ctx.fillStyle = beam
+  ctx.fillRect(X(WINDOW.x0), X(top), X(WINDOW.x1 + 1.4 - WINDOW.x0), X(UP - top))
+  // Motes catch the beam, with a fade at each end of their repeatable drift.
   p.noStroke()
-  p.fill(alpha(p, DUST.light, a))
-  p.beginShape()
-  p.vertex(X(WINDOW.x0 + 0.02), Y(WINDOW.y0 + 0.05))
-  p.vertex(X(WINDOW.x1 - 0.02), Y(WINDOW.y0 + 0.05))
-  p.vertex(X(WINDOW.x1 + 1.35), Y(UP))
-  p.vertex(X(WINDOW.x0 + 0.95), Y(UP))
-  p.endShape(p.CLOSE)
+  for (let i = 0; i < 28; i++) {
+    const u = (hash(i, 71) + t * (0.025 + 0.015 * hash(i, 72))) % 1
+    const x = WINDOW.x0 + (WINDOW.x1 - WINDOW.x0) * hash(i, 73) + u * 1.1 + 0.035 * Math.sin(t * 0.7 + i)
+    p.fill(alpha(p, i % 3 ? DUST.light : DUST.wood, a * Math.sin(Math.PI * u) * 0.65))
+    p.circle(X(x), X(top + (UP - top) * u), X(0.008 + 0.008 * hash(i, 74)))
+  }
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the shelf */

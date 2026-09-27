@@ -56,9 +56,19 @@ export const voidSky = scenery<VoidState>({
           if (hash(i, j, l * 7 + 1) > 0.55) continue
           const x = ox + (i + hash(i, j, l * 7 + 2)) * L.cell
           const y = oy + (j + hash(i, j, l * 7 + 3)) * L.cell
-          const twinkle = 0.75 + 0.25 * Math.sin(t * (1.3 + hash(i, j, l) * 2) + i)
-          p.fill(alpha(p, '#F4EEDF', L.a * shown * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)))
-          p.circle(X(x), X(y), L.size * (0.6 + hash(i, j, l * 7 + 5) * 0.7))
+          const twinkle = 0.88 + 0.12 * Math.sin(t * (0.7 + hash(i, j, l)) + i)
+          const strength = L.a * shown * twinkle * (0.5 + hash(i, j, l * 7 + 4) * 0.5)
+          const size = L.size * (0.6 + hash(i, j, l * 7 + 5) * 0.7)
+          const tint = hash(i, j, 31) < 0.3 ? DARK.ice : '#F4EEDF'
+          // Only the nearest, brightest stars bloom; the rest stay pinpoints.
+          if (l === 2 && hash(i, j, 32) > 0.86) {
+            p.fill(alpha(p, tint, strength * 0.07))
+            p.circle(X(x), X(y), size * 3.6)
+            p.fill(alpha(p, tint, strength * 0.14))
+            p.circle(X(x), X(y), size * 1.9)
+          }
+          p.fill(alpha(p, tint, strength))
+          p.circle(X(x), X(y), size)
         }
       }
     }
@@ -79,26 +89,42 @@ export const voidSky = scenery<VoidState>({
     const cy = top + R * (1 - 0.1 * settle)
     ctx.save()
     const air = ctx.createRadialGradient(X(cx), X(cy), X(R - 0.1), X(cx), X(cy), X(R + 1.4))
-    air.addColorStop(0, `rgba(143, 198, 230, ${0.6 * (1 - gone)})`)
+    air.addColorStop(0, `rgba(143, 198, 230, ${0.65 * (1 - gone)})`)
+    air.addColorStop(0.18, `rgba(143, 198, 230, ${0.32 * (1 - gone)})`)
+    air.addColorStop(0.5, `rgba(104, 158, 217, ${0.08 * (1 - gone)})`)
     air.addColorStop(1, 'rgba(143, 198, 230, 0)')
     ctx.fillStyle = air
     ctx.beginPath()
     ctx.arc(X(cx), X(cy), X(R + 1.4), 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
-    p.stroke(alpha(p, c.ink, 1 - gone))
-    p.strokeWeight(c.weight)
-    p.fill(mixHex('#35629A', '#1F3A64', smooth(rise, 4, 30)))
-    p.circle(X(cx), X(cy), X(R * 2))
-    // Weather on its face: a few long streaks of cloud along the curve.
+    // Daylight skims the limb; the ocean deepens away from it into night.
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(X(cx), X(cy), X(R), 0, Math.PI * 2)
+    ctx.clip()
+    const ocean = ctx.createRadialGradient(X(cx - R * 0.3), X(cy - R * 0.85), 0, X(cx), X(cy), X(R * 1.1))
+    ocean.addColorStop(0, '#497DA9')
+    ocean.addColorStop(0.32, '#2B507D')
+    ocean.addColorStop(0.7, '#142A49')
+    ocean.addColorStop(1, '#0B152B')
+    ctx.fillStyle = ocean
+    ctx.fillRect(X(cx - R), X(cy - R), X(2 * R), X(2 * R))
+    // Weather follows the planet's curve, in broken bands of differing widths.
     p.noFill()
-    p.stroke(alpha(p, '#E9E4D6', 0.55 * (1 - gone)))
-    p.strokeWeight(Math.max(1.5, k * 0.05))
-    for (let i = 0; i < 7; i++) {
-      const rr = R - 0.35 - i * 0.55 - hash(i, 9) * 0.3
-      const span = (0.8 + hash(i, 5) * 1.6) / rr
-      const a0 = -Math.PI / 2 + ((hash(i, 3) - 0.5) * 9 - (f.cx - cx) * 0.02) / rr
+    p.strokeCap(p.ROUND)
+    for (let i = 0; i < 18; i++) {
+      const rr = R - 0.22 - i * 0.24 - hash(i, 9) * 0.2
+      const span = (0.7 + hash(i, 5) * 3.6) / rr
+      const a0 = -Math.PI / 2 + ((hash(i, 3) - 0.5) * 16 - (f.cx - cx) * 0.02) / rr
+      p.stroke(alpha(p, '#D3E3E8', (0.16 + 0.24 * hash(i, 7)) * (1 - gone)))
+      p.strokeWeight(X(0.012 + 0.028 * hash(i, 8)))
       p.arc(X(cx), X(cy), X(rr * 2), X(rr * 2), a0, a0 + span)
     }
+    ctx.restore()
+    p.noFill()
+    p.stroke(alpha(p, DARK.ice, 0.75 * (1 - gone)))
+    p.strokeWeight(Math.max(0.8, c.weight * 0.7))
+    p.circle(X(cx), X(cy), X(R * 2))
   },
 })
