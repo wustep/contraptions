@@ -198,8 +198,8 @@ export const vision3 = part<null>(
  * glows and thins; the camera comes in, very slowly. She looks at her daughter first, this time. The flutter: Hannah
  * comes across the room to her, skipping on its hardest notes, springs up onto the bench and touches her on its
  * heart (212.312). A second of stillness together; then, as the sun comes through the fog on the water, the camera
- * draws back to the whole window low in the frame, the two of them small at its end, before the credits come over
- * the quiet wall above it, and drifts there to the end.
+ * draws back, slowly, as the tones die, to the whole window low in the frame, the two of them small at its end, before
+ * the credits come in the silence over the quiet wall above it, and drifts there to the end.
  */
 export const ending = part<null>(
   { name: 'ending', draw: () => {} },
@@ -219,9 +219,9 @@ export const ending = part<null>(
     // Drifting with Hannah as she comes; at rest on the touch; then back, slowly, to the whole window, the two of them
     // small at its end.
     on(END.touch, 3.22, [-0.1, -0.5]),
-    // A second together, nearly still; then back, in one smooth ease, to the whole window low in the frame (its top
-    // edge 38% down, the wall and ceiling quiet above it for the credits), before the first card comes; then only a
-    // slow drift to the end.
+    // A second together, nearly still; then back, in one long smooth ease as the held tones die (six seconds), to the
+    // whole window low in the frame (its top edge 38% down, the wall and ceiling quiet above it for the credits), at
+    // rest as the sound goes to nothing and the first card comes; then only a slow drift to the end.
     on(END.touch + 1.0, 3.25, [-0.05, -0.5]),
     { t: CREDITS_AT - 0.3, cells: FINAL.cells, hold: [(WIN.x0 + WIN.x1) / 2, finalY(FINAL.cells)], w: 1 },
     { t: slot.end, cells: FINAL.drift, hold: [(WIN.x0 + WIN.x1) / 2 - 0.08, finalY(FINAL.drift)], w: 1 },
