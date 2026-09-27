@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex } from '../../../../../parts'
-import { sparkIn, wickCatch } from '../fx'
+import { innocent, sparkIn, wickCatch } from '../fx'
 import { alpha, box, frame, hash, scenery, smooth } from '../kit'
 import { THEME, onsetsIn } from '../music'
 import { LOFT } from '../worlds'
@@ -194,7 +194,8 @@ function pools(t: number): Pool[] {
   const s = sparkIn('loft', t)
   if (s) {
     const power = (Math.min(1.3, s.heat) + 0.4 * wickCatch(t)) * (s.hidden ? 0.35 : 1)
-    const flick = 1 + 0.035 * Math.sin(t * 17.3) + 0.025 * Math.sin(t * 29.1 + 2) + 0.02 * (hash(Math.floor(t * 24)) - 0.5)
+    // (Held still with the flame while the cat looks at it: `innocent`.)
+    const flick = 1 + (0.035 * Math.sin(t * 17.3) + 0.025 * Math.sin(t * 29.1 + 2) + 0.02 * (hash(Math.floor(t * 24)) - 0.5)) * (1 - innocent(t))
     const lift = 1 + 0.12 * breath(t)
     const r = (1.45 + 0.8 * power) * lift
     out.push({ x: s.x, y: s.y - 0.1, rx: 3 * r, ry: 3 * r, a: 1.05 * power * flick, rgb: rgbOf(WARM), fall: SPARK_FALL })

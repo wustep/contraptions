@@ -42,14 +42,19 @@ function moonPlace(t: number): { x: number; y: number; d: number } {
 }
 
 /**
- * How bright the moon is, 0..1. Full over the station, the run and the trestle; as the fire takes the night over it
- * recedes: dimmer with the festival (124), dimmer again under the finale's smoke (the crash, 134.25), and from the
- * Titan (144.8) through the silence it is a dull smudge behind the smoke, so the dying ember is the brightest thing in
- * the frame.
+ * How bright the moon is, 0..1. Full over the station, the run and the trestle; dimmer with the festival (124); and on
+ * the coda's first chord (134.254) the mines' smoke rolls over it, so by 135.4 it is all but gone (0.07), a faint
+ * smudge in the smoke with no halo, and it stays gone through the silence. From the crash on the finale owns the whole
+ * sky, and the dying ember is the brightest thing in the frame.
  */
 export function moonLight(t: number): number {
-  return 1 - 0.28 * smooth(t, 124, 128.5) - 0.27 * smooth(t, 134.2, 138) - 0.33 * smooth(t, 144.4, 146.4)
+  return 1 - 0.28 * smooth(t, 124, 128.5) - 0.65 * smooth(t, 134.254, 135.4)
 }
+/**
+ * Under this the moon is not there for the fireworks: shells are placed, and checked, as if the sky had no moon in it
+ * (from about 134.94, as the crash's smoke takes it).
+ */
+export const MOON_GONE = 0.3
 
 /** Where the horizon is on the screen, as a fraction of the frame from the top: the camera's eye, a little low. */
 export const HORIZON = 0.53
@@ -133,7 +138,8 @@ function moon(p: p5, k: number, m: { x: number; y: number; r: number }, t: numbe
   ctx.save()
   // The disc, seen through more and more smoke: fainter, greyer, its edge going soft (a gradient, not a blur filter,
   // which costs a whole frame in software).
-  ctx.globalAlpha = 0.25 + 0.75 * light
+  // Under the finale's smoke the disc all but goes (0.1 of itself), not just greys.
+  ctx.globalAlpha = (0.25 + 0.75 * light) * (0.35 + 0.65 * smooth(light, 0.07, 0.72))
   const edge = 0.015 + 0.3 * dim
   const disc = mixHex(RAILWAY.moon, RAILWAY.moonHalo, 0.5 * dim)
   const [dr, dg, db] = [1, 3, 5].map((i) => parseInt(disc.slice(i, i + 2), 16))

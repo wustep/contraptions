@@ -179,12 +179,18 @@ function drawBlue(p: p5, k: number, n: Pt, f: number): void {
  * on its call (the left on 97.822, the right on 98.573), and all together, long, on the glow (99.322).
  *
  * Each is placed by where it should look to be at the glow in the wide's frame: `u` across and `v` down from the
- * frame's middle, in frame heights; `d` its depth (the size it is drawn, and how far it moves with the camera).
+ * frame's middle, in frame heights; `d` its depth (the size it is drawn, and how far it moves with the camera);
+ * `haze` more haze than its depth gives.
+ *
+ * The top balloon is the one hero: none of them is near its size, none touches its envelope, and none wears a stair
+ * balloon's livery that the spark rode (B1 is saffron with a coral band). The two nearer ones sit low and wide under
+ * it, smaller and hazier than it, so they read as the regatta it is leaving behind.
  */
 interface Mate {
   u: number
   v: number
   d: number
+  haze: number
   b: Balloon
   side: 'L' | 'R'
   seed: number
@@ -192,10 +198,10 @@ interface Mate {
 const mate = (a: string, b: string, band?: string): Balloon => ({ key: 'mate', H: 10.5, Rs: 4.3, silk: { a, b, band, cap: band ?? a } })
 /** Far to near, the order they are drawn in. */
 const MATES: Mate[] = [
-  { u: -0.73, v: -0.02, d: 0.44, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
-  { u: 0.72, v: 0.06, d: 0.48, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
-  { u: -0.5, v: 0.2, d: 0.56, b: mate(REG.coral, REG.ivory), side: 'L', seed: 32 },
-  { u: 0.46, v: 0.26, d: 0.6, b: mate(REG.saffron, REG.saffron, REG.coral), side: 'R', seed: 34 },
+  { u: -0.74, v: -0.04, d: 0.38, haze: 0.04, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
+  { u: 0.74, v: -0.04, d: 0.4, haze: 0.04, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
+  { u: -0.63, v: 0.44, d: 0.43, haze: 0.14, b: mate(REG.coral, REG.ivory), side: 'L', seed: 32 },
+  { u: 0.65, v: 0.47, d: 0.45, haze: 0.14, b: mate(REG.teal, REG.teal, REG.ivory), side: 'R', seed: 34 },
 ]
 /** Their burners' blasts. */
 const mateBlasts = (m: Mate): Blast[] => {
@@ -206,9 +212,63 @@ const mateBlasts = (m: Mate): Blast[] => {
     { on: AT.glow, off: AT.glow + 0.8, i: 1.5 },
   ]
 }
-/** When they are drawn: from B3's vent popping (they are well above the frame then) until the door. */
+/**
+ * When they are drawn: from B3's vent popping (they are well above the frame then) until the push has them gone. They
+ * fade out as the push begins (the great blast), so none is left as half a balloon at the frame's corners into the door.
+ */
 const MATE_FROM = AT.pop3
-const MATE_TO = T1 + 0.3
+const MATE_FADE = 0.5
+const MATE_TO = AT.blast4 + MATE_FADE
+const mateShown = (t: number): number => 1 - ss(t, AT.blast4, AT.blast4 + MATE_FADE)
+
+/**
+ * The layer the mates fade out through: each balloon is silk over wires over a basket, so it is drawn whole into its
+ * own canvas (the stage's transform and drawing modes) and laid on the frame at the fade's alpha, never see-through
+ * part by part. Made once per sketch, and again only when the stage's size changes. (A sketch removes its own
+ * graphics when it goes, so a layer is only ever reused, or removed here, by the sketch that made it.)
+ */
+let mateLayer: { owner: p5; g: p5.Graphics } | null = null
+function layerFor(p: p5): p5.Graphics {
+  const d = p.pixelDensity()
+  const l = mateLayer
+  if (l && l.owner === p) {
+    if (l.g.width === p.width && l.g.height === p.height && l.g.pixelDensity() === d) return l.g
+    l.g.remove()
+  }
+  const g = p.createGraphics(p.width, p.height)
+  g.pixelDensity(d)
+  // The stage's drawing modes (engine.ts `drawingModes`).
+  g.rectMode(p.CENTER)
+  g.angleMode(p.RADIANS)
+  g.strokeCap(p.ROUND)
+  g.strokeJoin(p.ROUND)
+  mateLayer = { owner: p, g }
+  return g
+}
+
+/**
+ * `draw` laid on the frame at `alpha`: straight onto it when whole, else drawn whole into the fade layer first, so
+ * a fading balloon is never see-through part by part (its stripes over its silk, its lines through its basket).
+ */
+function faded(p: p5, alpha: number, draw: (q: p5) => void): void {
+  if (alpha < 0.004) return
+  if (alpha >= 0.999) {
+    draw(p)
+    return
+  }
+  const layer = layerFor(p)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const lctx = layer.drawingContext as CanvasRenderingContext2D
+  lctx.setTransform(1, 0, 0, 1, 0, 0)
+  lctx.clearRect(0, 0, lctx.canvas.width, lctx.canvas.height)
+  lctx.setTransform(ctx.getTransform())
+  draw(layer as unknown as p5)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = alpha
+  ctx.drawImage(lctx.canvas, 0, 0)
+  ctx.restore()
+}
 
 /** Where a mate's basket floor is drawn in the frame `f` at `t`, placed by the reference framing `ref`. */
 function mateAt(m: Mate, f: Frame, t: number, ref: { x: number; y: number; cells: number }): Pt {
@@ -225,7 +285,20 @@ function mateAt(m: Mate, f: Frame, t: number, ref: { x: number; y: number; cells
 
 function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: number; cells: number }): void {
   if (t < MATE_FROM || t > MATE_TO) return
+  const shown = mateShown(t)
+  if (shown < 0.004) return
   const { k } = look
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Fading, the balloons go to their own layer and the lights of their burners (additive, so exact at any alpha) on
+  // the frame under a matching alpha.
+  const layer = shown < 0.999 ? layerFor(p) : null
+  const lctx = layer ? (layer.drawingContext as CanvasRenderingContext2D) : null
+  if (layer && lctx) {
+    lctx.setTransform(1, 0, 0, 1, 0, 0)
+    lctx.clearRect(0, 0, lctx.canvas.width, lctx.canvas.height)
+    lctx.setTransform(ctx.getTransform())
+  }
+  const into = (layer ?? p) as p5
   for (const m of MATES) {
     const [bx, by] = mateAt(m, f, t, ref)
     if (by < f.y0 - 1 || by - 16 * m.d > f.y1 + 1 || bx < f.x0 - 6 * m.d || bx > f.x1 + 6 * m.d) continue
@@ -233,11 +306,12 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
     const roar = roarOf(blasts, t)
     const warm = warmth(blasts, t, AT.land4)
     const drift = 0.25 * Math.sin(t * 0.23 + m.seed)
-    const haze = 0.1 + 0.45 * Math.pow(1 - m.d, 1.4)
+    const haze = Math.min(0.8, 0.1 + 0.45 * Math.pow(1 - m.d, 1.4) + m.haze)
     const nozzle: Pt = [0, -ANAT.floorY]
-    p.push()
-    p.translate((bx + drift * m.d) * k, by * k)
-    p.scale(m.d)
+    const place = (q: p5): void => {
+      q.translate((bx + drift * m.d) * k, by * k)
+      q.scale(m.d)
+    }
     const mateLook: Look = {
       k,
       weight: look.weight * Math.min(1.6, 0.8 / Math.sqrt(m.d)),
@@ -245,7 +319,9 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
       simple: true,
       dusk: dusk(t) * 0.55 * (1 - 0.6 * Math.min(1, warm)),
     }
-    drawBalloon(p, mateLook, m.b, {
+    into.push()
+    place(into)
+    drawBalloon(into, mateLook, m.b, {
       t,
       pose: { n: nozzle, a: 0, fill: 0.98 + swellOf(blasts, t), vent: 0 },
       roar,
@@ -255,9 +331,21 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
       bags: null,
       seed: m.seed,
     })
+    into.pop()
+    p.push()
+    place(p)
+    if (layer) ctx.globalAlpha = shown
     drawThrough(p, k, nozzle, t, roar)
     drawBlue(p, k, nozzle, Math.min(1, roar))
+    ctx.globalAlpha = 1
     p.pop()
+  }
+  if (layer && lctx) {
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalAlpha = shown
+    ctx.drawImage(lctx.canvas, 0, 0)
+    ctx.restore()
   }
 }
 
@@ -438,12 +526,16 @@ function smoothed(t: number, long: number, short: number, mix: number, lean: num
  *   ride up inside B1 and the float to B2 move within the frame. Half the smoothing is long, half short (so the frame
  *   still leans into the ride).
  * - Climb 2 (land2 to land3) low and close: in on B2's basket as the spark floats down onto its pilot, held there
- *   through the ballast and the whoosh, the spark going up the jet into the mouth with the envelope's skirt over the
- *   top of the frame; then up the silk with the glow, close behind it, to the pop and the float to B3.
+ *   for the ballast; then, as the burner roars, back to the balloon whole (`TILT2`): basket and burner low, the
+ *   envelope's lower two thirds over them, so the spark going up the jet and the glow climbing the silk are seen as
+ *   one balloon doing it. A slow tilt that lags the glow: the burner's flame stays in the frame until the glow is
+ *   past halfway up, then the frame goes up after it and closes on the vent for the pop and the float to B3.
  * - Climb 3 (land3 to pop3) side on and wider: B3 in the left third, the sky it is climbing into on the right, so the
- *   step up to B4 (high and to the right) reads as a diagonal; then in on the vent as it pops.
+ *   step up to B4 (high and to the right) reads as a diagonal; on the whoosh the same opening to the balloon whole
+ *   and lagging tilt (`TILT3`), the diagonal kept; then in on the vent as it pops.
  *
- * Keys every 0.2 s, so the camera's own easing follows these lines.
+ * Inside a balloon the glow is kept in Zoom's frame (the middle two thirds) and the envelope under about 70% of the
+ * frame's height until the frame closes on the vent. Keys every 0.2 s, so the camera's own easing follows these lines.
  */
 const STAIR_FROM = AT.whoosh1 + 0.45
 const STAIR_TO = AT.pop3 + 0.45
@@ -453,37 +545,100 @@ const STAIR_CELLS: [number, number][] = [
   [STAIR_FROM, 12],
   [AT.whoosh1 + 1.15, 13.6],
   [AT.pop1, 13],
-  // Climb 2: in on B2's basket as the spark comes down onto it, close through the whoosh, then up the silk.
+  // Climb 2: in on B2's basket as the spark comes down onto it and the ballast goes; back to the balloon whole as the
+  // burner roars and the spark goes up the jet; held wide while the glow climbs; in on the vent for the pop.
   [AT.pop1 + 0.45, 12.4],
   [AT.bags2, 7.5],
-  [AT.whoosh2 + 0.25, 7.6],
-  [AT.pop2 - 0.3, 10.4],
-  [AT.pop2 + 0.25, 9.6],
+  [AT.whoosh2 + 0.55, 12.8],
+  [AT.flare2, 12.7],
+  [AT.pop2 + 0.3, 9.8],
   [AT.land3 - 0.25, 10.2],
-  // Climb 3: side on, then in on the vent as it pops.
+  // Climb 3: side on; back to the balloon whole on the whoosh, held wide while the glow climbs, in on the vent.
   [AT.land3 + 0.35, 11],
-  [AT.flare3, 11],
-  [AT.pop3, 9.6],
+  [AT.whoosh3 - 0.1, 11],
+  [AT.whoosh3 + 0.5, 12.5],
+  [AT.flare3 + 0.15, 12.4],
+  [AT.pop3, 10],
   [STAIR_TO, 10.8],
 ]
+/** A monotone cubic through [t, value] keys (Fritsch-Carlson), flat outside them: no stop at the keys between. */
+function pchip(keys: [number, number][], t: number): number {
+  const n = keys.length
+  if (t <= keys[0][0]) return keys[0][1]
+  if (t >= keys[n - 1][0]) return keys[n - 1][1]
+  const d = keys.slice(0, -1).map(([t0, v0], i) => (keys[i + 1][1] - v0) / (keys[i + 1][0] - t0))
+  const m = keys.map((_, i) => {
+    if (i === 0 || i === n - 1) return 0
+    const a = d[i - 1]
+    const b = d[i]
+    if (a * b <= 0) return 0
+    const h0 = keys[i][0] - keys[i - 1][0]
+    const h1 = keys[i + 1][0] - keys[i][0]
+    return (3 * (h0 + h1)) / ((2 * h1 + h0) / a + (h1 + 2 * h0) / b)
+  })
+  let i = 0
+  while (t > keys[i + 1][0]) i++
+  const h = keys[i + 1][0] - keys[i][0]
+  const u = (t - keys[i][0]) / h
+  const u2 = u * u
+  const u3 = u2 * u
+  return (2 * u3 - 3 * u2 + 1) * keys[i][1] + (u3 - 2 * u2 + u) * h * m[i] + (-2 * u3 + 3 * u2) * keys[i + 1][1] + (u3 - u2) * h * m[i + 1]
+}
 /** Climb 1's frame off its line: a little right of the stair (it steps east), and low enough to centre the ride. */
 const STAIR_OFF: Pt = [0.4, 0.4]
-/** Climb 2, low: the frame's middle off B2's nozzle, so the basket's floor is at the bottom and the mouth high. */
-const LOW2 = (t: number): Pt => add(n2(t), [-0.2, -1.1])
-/** Climb 2, up the silk: the spark followed closely (a short smoothing that leans a little ahead). */
-const RISE2 = (t: number): Pt => add(smoothed(t, 0.45, 0.22, 0.6, 0.1), [0.35, -1.2])
 /**
  * Climb 3, side on: a steady line up the stair, with the spark's balloon in the left third. The frame is low on the
  * sit (the envelope going up out of it) and rises ahead of the glow, so at the pop the crown is low left and B4's
  * basket is in over it, up and to the right.
  */
 const SIDE3 = (t: number): Pt => add(smoothed(t, 0.9, 0.3, 0.6, 0), [3.9, 0.9 - 2.6 * ss(t, AT.whoosh3, AT.pop3 - 0.1)])
+/**
+ * Climb 2 on B2, the frame's middle off its nozzle, [t, across, down]. Low for the ballast (the basket's floor at the
+ * bottom, the mouth high); then back and up with the whoosh to the balloon whole (the floor at 0.93 of the frame, the
+ * envelope over it), and a tilt up after the glow that lags it: the nozzle stays in the frame until the glow is past
+ * halfway up (about `flare2`), then the frame goes up the silk and is under the vent as it pops. After the pop it
+ * goes on up after the spark more slowly than the spark (which floats up out of the frame's top third and slows onto
+ * B3), to where the side-on frame of climb 3 takes it.
+ */
+const TILT2_OUT = AT.land3 + 0.35
+const TILT2_KEYS: [number, number, number][] = [
+  [AT.bags2 + 0.1, -0.2, -1.1],
+  [AT.whoosh2 + 0.2, -0.1, -2.1],
+  [AT.whoosh2 + 0.55, 0, -3.3],
+  [AT.flare2, 0.1, -5.2],
+  [AT.pop2, 0.2, -11.2],
+  [AT.pop2 + 0.45, 0.9, -14.1],
+  // Across, on over the spark's float to the right; the side-on frame's own blend takes it the rest of the way.
+  [TILT2_OUT, 1.4, SIDE3(TILT2_OUT)[1] - n2(TILT2_OUT)[1]],
+]
+const TILT2_X: [number, number][] = TILT2_KEYS.map(([s, x]) => [s, x])
+const TILT2_Y: [number, number][] = TILT2_KEYS.map(([s, , y]) => [s, y])
+const TILT2 = (t: number): Pt => add(n2(t), [pchip(TILT2_X, t), pchip(TILT2_Y, t)])
+/**
+ * Climb 3's ride, on B3: the side-on frame widened to the balloon whole on the whoosh (B3's nozzle kept at 0.3 of
+ * the frame's width, so the diagonal to B4 stays), the floor at 0.93, and the same lagging tilt: the nozzle in the
+ * frame until the glow is past halfway up, then up the silk to the vent, and on after the spark to where the side-on
+ * frame is at the stair's end. Down off B3's nozzle, from where the side-on frame is as it starts.
+ */
+const TILT3_IN = AT.whoosh3 - 0.3
+const TILT3_KEYS: [number, number][] = [
+  [TILT3_IN, SIDE3(TILT3_IN)[1] - n3(TILT3_IN)[1]],
+  [AT.whoosh3 + 0.2, -2.0],
+  [AT.whoosh3 + 0.5, -3.0],
+  [AT.flare3 + 0.15, -5.6],
+  [AT.pop3, -13.0],
+  [STAIR_TO, SIDE3(STAIR_TO)[1] - n3(STAIR_TO)[1]],
+]
+const TILT3 = (t: number): Pt => [
+  smoothed(t, 0.9, 0.3, 0.6, 0)[0] + 0.2 * ((schedule(STAIR_CELLS, t) * 16) / 9),
+  n3(t)[1] + pchip(TILT3_KEYS, t),
+]
 const mix = (a: Pt, b: Pt, u: number): Pt => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
 function stairHold(t: number): Pt {
   let h = add(stairLine(t), STAIR_OFF)
-  h = mix(h, LOW2(t), ss(t, AT.pop1 + 0.45, AT.bags2))
-  h = mix(h, RISE2(t), ss(t, AT.whoosh2 + 0.15, AT.pop2 + 0.25))
-  h = mix(h, SIDE3(t), ss(t, AT.land3 - 0.45, AT.land3 + 0.35))
+  h = mix(h, TILT2(t), ss(t, AT.pop1 + 0.45, AT.bags2))
+  h = mix(h, SIDE3(t), ss(t, AT.land3 - 0.45, TILT2_OUT))
+  if (t > TILT3_IN) h = mix(h, TILT3(t), ss(t, TILT3_IN, AT.whoosh3 + 0.1) * (1 - ss(t, AT.pop3 - 0.05, STAIR_TO)))
   return h
 }
 const STAIR: PartShot[] = (() => {
@@ -560,7 +715,8 @@ export const balloons = part<BalloonsState>(
       drawLand(p, k, f, t)
       drawTiny(p, look, f, t)
       drawFar(p, look, f, t)
-      drawFlock(p, look, f, t, MATE_REF)
+      // The far flock goes with the mates as the push begins, so no half-balloon is left at the frame's edges.
+      faded(p, mateShown(t), (q) => drawFlock(q, look, f, t, MATE_REF))
       drawMates(p, look, f, t, MATE_REF)
       const hero: Look = { k, weight, simple: k < 14, dusk: 0.55 * dusk(t) }
 

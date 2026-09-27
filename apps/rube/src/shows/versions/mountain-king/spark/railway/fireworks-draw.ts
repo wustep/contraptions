@@ -6,6 +6,7 @@ import { FIRES, RAILWAY } from '../worlds'
 import { horizonAt, moonAt, moonLight } from './night'
 import {
   BATTERY_X0,
+  BARRAGE_BURSTS,
   BURSTS,
   CRASH,
   CRASH_AT,
@@ -45,6 +46,7 @@ import {
   SALUTES,
   sparkAt,
   starAt,
+  TITAN_BURST,
   TITAN_FIRE,
   TITAN_W,
   TITAN_X,
@@ -161,7 +163,418 @@ function placedRise(r: Rise): Rise {
 /** A salute's light: warm (a hot gold), never white, so its glow on the smoke and the ground is fire, not fog. */
 const SALUTE_LIGHT = mixHex(FW.fwGold, FW.coalHot, 0.45)
 
+/* ------------------------------------------------------------------ the sky's glow */
+
+/*
+ * From the crash to the silence the finale lights the whole night. Every burst adds its own colour to the sky, laid
+ * on with 'screen' as a vertical gradient strongest at the height its shells are breaking (about 0.3 at the heavy
+ * chords), round them in a wide pool, and it dies over about 0.35 s with a remainder that lasts as long as its stars
+ * burn. Under it all is a thin floor of smoke-lit amber that rises through the coda (0.04 at the crash, 0.09 at the
+ * Titan). It stays a night: the corners keep their navy, and the far plain under the sky takes little of it (a warm
+ * light over navy turns land olive). The Titan warms most of the sky for about 0.6 s. The river, the field, the smoke and
+ * the silhouettes' sky-facing edges all take this light. On the silence everything it lit goes out inside 70 ms and
+ * the night is a notch darker than it was before the festival: the silence is black, and the ember is its one light.
+ */
+
+/** Everything the finale lights goes out with the silence: from 50 ms before it to 20 ms after, 70 ms in all. */
+const KILL_A = HUSH - 0.05
+const KILL_B = HUSH + 0.02
+const hushKill = (t: number): number => 1 - smooth(t, KILL_A, KILL_B)
+/** How far the silence's night has gone dark, 0..1: down with the silence, held to the first door home. */
+const hushDark = (t: number): number => (t > OUT + 0.35 ? 0 : smooth(t, KILL_A, KILL_B))
+/** The silence's night: the sky's navy all but gone to black. */
+const NIGHT_DEEP = '#04060D'
+/**
+ * How much of `NIGHT_DEEP` lies over the sky in the silence: most at the top of the frame, less down to the horizon,
+ * none on the plain, so the far country still stands against the sky and the spark's own light never shows as a disc
+ * on a uniform black.
+ */
+const DEEP_SKY = 0.34
+const DEEP_LOW = 0.1
+
+/** The floor's colour: the finale's smoke lit amber from below by the fire on the field. */
+const FLOOR_SKY = mixHex(FW.coal, FW.fwGold, 0.4)
+/** The Titan's light on the sky: gold gone well toward the fire's orange, so over the navy it reads warm, not khaki or olive. */
+const TITAN_SKY = mixHex(FW.fwGold, FW.coal, 0.4)
+const MINE_SKY = mixHex(FW.fwBlue, FW.fwWhite, 0.3)
+/** The light a burst throws on the sky: its own colour, a white shell's warmed so it lights and does not fog. */
+function skyColOf(b: Burst): string {
+  if (b.kind === 'titan') return TITAN_SKY
+  if (b.kind === 'salute') return SALUTE_LIGHT
+  // The mines' fans are white, blue and violet: their light on the sky is a cold silver, never lilac.
+  if (b.kind === 'mine') return MINE_SKY
+  // Every light a little toward the fire's orange: a gold shell lights the night amber, not khaki.
+  if (b.col === FW.fwWhite) return mixHex(mixHex(FW.fwWhite, FW.fwGold, 0.45), FW.coal, 0.18)
+  return mixHex(mixHex(b.col, FW.fwGold, 0.15), FW.coal, 0.18)
+}
+
+/** The floor under the finale's sky, before the silence takes it. */
+function skyFloor(t: number): number {
+  if (t < CRASH) return 0
+  return smooth(t, CRASH, CRASH + 0.12) * (0.04 + 0.05 * clamp01((t - CRASH) / (TITAN_BURST - CRASH)))
+}
+
+/**
+ * How much burst `b` lights the sky `s` seconds after it breaks, before the cap: a flash that dies on a 0.35 s tau and
+ * a remainder held while its stars burn. It goes by the shell's own flash (`wash`): the battery's heavy-chord shells
+ * (wash 0.85-0.9) reach about 0.3, the barrage's many small-flash shells a few hundredths each (together they tint the
+ * sky each chord's hue), the far ones next to nothing. A salute is a hard short warm hit, so each hammer blow is its
+ * own step; the Titan holds its gold about 0.3 s and lets it go by 0.75.
+ */
+function skyOf(b: Burst, s: number): number {
+  if (s < 0 || b.at < CRASH - 1e-3) return 0
+  const L = lifeOf(b)
+  if (s > L + 1.2) return 0
+  const atk = smooth(s, 0, 0.03)
+  const live = 1 - smooth(s, L * 0.3, L)
+  const shape = 0.8 * Math.exp(-s / 0.35) + 0.2 * live
+  switch (b.kind) {
+    case 'titan':
+      return atk * (0.32 * (1 - smooth(s, 0.3, 0.75)) + 0.06 * live)
+    case 'salute':
+      return atk * 0.17 * (b.wash / 0.6) ** 0.5 * Math.exp(-s / 0.2)
+    case 'small':
+      return atk * 0.006 * shape
+    case 'mine':
+      return atk * (0.02 + 0.2 * Math.min(1, b.wash)) * shape
+    default:
+      return atk * (0.012 + 0.32 * Math.min(1, b.wash) ** 1.1) * shape
+  }
+}
+/** Where a burst's light on the sky is strongest: its break, drooping with its stars; a mine's high over its gun. */
+const skyYOf = (b: Burst, s: number): number => (b.kind === 'mine' ? b.y - 6 : b.y + 0.3 * s)
+
+interface SkyLayer {
+  x: number
+  y: number
+  a: number
+  col: string
+  /** How evenly it lies over the whole sky, 0..1 (the Titan's gold is everywhere). */
+  flat: number
+}
+export interface SkyGlow {
+  /** How lit the sky is, all together (floor and bursts), 0..~0.58. */
+  a: number
+  /** The colour of that light, the strongest bursts' most. */
+  col: string
+  /** Where the light mostly comes from across the field, or NaN when it is only the floor (from all over). */
+  x: number
+  floor: number
+  /** The bursts' light by colour (every shell of one hue together), strongest last; at most `SKY_LAYERS`. */
+  layers: SkyLayer[]
+}
+const SKY_LAYERS = 4
+const NO_SKY: SkyGlow = { a: 0, col: FLOOR_SKY, x: NaN, floor: 0, layers: [] }
+let skyMemo: { t: number; v: SkyGlow } = { t: NaN, v: NO_SKY }
+
+/** The finale's light on the sky at `t` (see above): zero before the crash and from the silence on. */
+export function skyGlow(t: number): SkyGlow {
+  if (skyMemo.t === t) return skyMemo.v
+  let v = NO_SKY
+  const kill = hushKill(t)
+  if (t >= CRASH && kill > 0) {
+    const floor = skyFloor(t)
+    // Every shell of one hue lights the sky as one: summed, at their mean height and place, weighted by light.
+    const byCol = new Map<string, SkyLayer>()
+    let sum = 0
+    let titan = 0
+    for (const b0 of BURSTS) {
+      const s = t - b0.at
+      const a = skyOf(b0, s)
+      if (a < 0.002) continue
+      const b = placed(b0)
+      if (b.kind === 'titan') titan = Math.max(titan, a / 0.48)
+      const col = skyColOf(b)
+      const flat = b.kind === 'titan' ? 0.55 : b.kind === 'mine' ? 0.35 : 0.15
+      const l = byCol.get(col)
+      if (!l) byCol.set(col, { x: b.x * a, y: skyYOf(b, s) * a, a, col, flat: flat * a })
+      else {
+        l.x += b.x * a
+        l.y += skyYOf(b, s) * a
+        l.a += a
+        l.flat += flat * a
+      }
+      sum += a
+    }
+    const layers = [...byCol.values()]
+    for (const l of layers) {
+      l.x /= l.a
+      l.y /= l.a
+      l.flat /= l.a
+    }
+    layers.sort((p, q) => p.a - q.a)
+    // The faintest hues go: what is left is still the sky's light, all of it (renormalised below).
+    const kept = layers.slice(-SKY_LAYERS)
+    const keptSum = kept.reduce((m, l) => m + l.a, 0)
+    // Capped, so a pile of shells lights the sky and never fogs it: 0.32 at most, the Titan's gold 0.52.
+    const cap = 0.32 + 0.2 * clamp01(titan)
+    const total = Math.min(sum, Math.max(0, cap - floor))
+    const scale = keptSum > 0 ? (total / keptSum) * kill : 0
+    let col = FLOOR_SKY
+    let w = floor * floor
+    let xw = 0
+    let xs = 0
+    for (const l of kept) {
+      l.a *= scale
+      const lw = l.a * l.a
+      if (lw > 0) col = mixHex(col, l.col, lw / (w + lw))
+      w += lw
+      xw += l.a * l.x
+      xs += l.a
+    }
+    const fl = floor * kill
+    v = { a: fl + total * kill, col, x: xs > 0.01 ? xw / xs : NaN, floor: fl, layers: kept }
+  }
+  skyMemo = { t, v }
+  return v
+}
+
+/**
+ * A light's colour made vivid: pushed away from its own grey, so light laid on the navy colours it and never greys
+ * it (a pale gold on a blue night is a khaki fog; a deep amber is fire).
+ */
+const VIVID = new Map<string, string>()
+function vivid(col: string): string {
+  let v = VIVID.get(col)
+  if (!v) {
+    const [r, g, b] = rgb(col)
+    const m = (r + g + b) / 3
+    const c = [r, g, b].map((x) => Math.round(Math.max(0, Math.min(255, m + (x - m) * 1.7))))
+    v = '#' + c.map((x) => x.toString(16).padStart(2, '0')).join('')
+    VIVID.set(col, v)
+  }
+  return v
+}
+/** A hue's dark: what the night under that light is tinted toward before the light itself is laid on. */
+const DARK_OF = new Map<string, string>()
+function darkOf(col: string): string {
+  let d = DARK_OF.get(col)
+  if (!d) {
+    d = mixHex(vivid(col), '#000000', 0.78)
+    DARK_OF.set(col, d)
+  }
+  return d
+}
+/** The floor's dark: the night under the finale's smoke goes plum, not grey (amber into navy cancels to grey). */
+const FLOOR_DEEP = '#2B1024'
+
+/**
+ * The sky's glow, laid over the night before anything of the festival's is drawn (so every silhouette stays dark
+ * against it), and in the silence the night taken a notch darker than it was before the festival.
+ *
+ * Each light is laid twice: first the navy is tinted toward that hue's own dark (so a warm light on a blue night makes
+ * a warm night, not a grey-lilac one), then the light is added with 'screen'. Both are one vertical gradient across
+ * the whole frame, strongest at the height the shells are breaking.
+ */
+function drawSky(pen: Pen): void {
+  const { t, ctx, k, f } = pen
+  const dark = hushDark(t)
+  if (dark > 0.002) {
+    const hy0 = horizonAt(pen.p, k)
+    if (hy0 > f.y0) {
+      const gr = ctx.createLinearGradient(0, f.y0 * k, 0, hy0 * k)
+      gr.addColorStop(0, rgba(NIGHT_DEEP, DEEP_SKY * dark))
+      gr.addColorStop(1, rgba(NIGHT_DEEP, DEEP_LOW * dark))
+      ctx.fillStyle = gr
+      ctx.fillRect(f.x0 * k - 2, f.y0 * k - 2, (f.x1 - f.x0) * k + 4, (hy0 - f.y0) * k + 2)
+    }
+  }
+  const g = skyGlow(t)
+  if (g.a < 0.004) return
+  const hy = horizonAt(pen.p, k)
+  // Down to the river's far side: the water and the field are laid over everything below it.
+  const yb = Math.min(f.y1, Math.max(GY - 1.3, hy + 0.08) + 0.05)
+  if (yb <= f.y0 + 0.1) return
+  const W = f.x1 - f.x0
+  const H = f.y1 - f.y0
+  const span = yb - f.y0
+  // The glow has no edges in it, so it is laid at a sixth of the frame's resolution and drawn up over the night in one
+  // image (one fill of the frame instead of one per light).
+  // It overhangs the frame by a few of its own pixels on every side, so its soft edge (where the image is sampled
+  // against nothing) is always outside the picture.
+  const Kd = k / SKY_DOWN
+  const mg = 3 / Kd
+  const pw = Math.max(8, Math.ceil((W + 2 * mg) * Kd))
+  const ph = Math.max(4, Math.ceil((span + 2 * mg) * Kd))
+  const oc = skyCanvas(pw, ph)
+  const c = oc ?? ctx
+  const K = oc ? Kd : k
+  const ox = oc ? f.x0 - mg : 0
+  const oy = oc ? f.y0 - mg : 0
+  const X = (x: number) => (x - ox) * K
+  const Y = (y: number) => (y - oy) * K
+  c.save()
+  if (oc) {
+    c.setTransform(1, 0, 0, 1, 0, 0)
+    c.globalCompositeOperation = 'source-over'
+    c.clearRect(0, 0, pw, ph)
+  }
+  const u = (y: number) => clamp01((y - f.y0) / span)
+  const uh = Math.min(0.97, u(hy))
+  const lay = (y: number, a: number, col: string, flat: number) => {
+    if (a < 0.003) return
+    const gr = c.createLinearGradient(0, Y(f.y0), 0, Y(yb))
+    // Strongest at its height, falling off up to the frame's top and down to the horizon (the plain under it takes
+    // less, and the field is laid over it); `flat` evens it out over the whole sky.
+    const up = Math.max(0.02, Math.min(uh - 0.02, u(y)))
+    gr.addColorStop(0, rgba(col, a * (0.18 + 0.62 * flat)))
+    gr.addColorStop(up, rgba(col, a))
+    gr.addColorStop(uh, rgba(col, a * (0.3 + 0.45 * flat)))
+    gr.addColorStop(1, rgba(col, a * (0.12 + 0.35 * flat)))
+    c.fillStyle = gr
+    c.fillRect(X(f.x0 - mg) - 1, Y(f.y0 - mg) - 1, (W + 2 * mg) * K + 2, (span + 2 * mg) * K + 2)
+  }
+  /**
+   * A hue's light: a very wide ellipse round where its shells are breaking (most of the frame's width and height, the
+   * Titan's wider still), so the sky is lit toward the bursts and keeps some of its night at the far corners; what is
+   * outside the ellipse keeps a little of it, so the whole frame changes colour on the chord.
+   */
+  const pool = (l: SkyLayer, a: number, col: string) => {
+    if (a < 0.003) return
+    const ry = H * (0.46 + 0.6 * l.flat)
+    const rx = W * (0.44 + 0.6 * l.flat)
+    const cy = Math.min(l.y, hy - 0.1 * H)
+    c.save()
+    c.translate(X(l.x), Y(cy))
+    c.scale(rx / ry, 1)
+    const gr = c.createRadialGradient(0, 0, 0, 0, 0, ry * K)
+    const rest = a * (0.04 + 0.5 * l.flat)
+    gr.addColorStop(0, rgba(col, a))
+    gr.addColorStop(0.4, rgba(col, rest + (a - rest) * 0.62))
+    gr.addColorStop(0.75, rgba(col, rest + (a - rest) * 0.2))
+    gr.addColorStop(1, rgba(col, rest))
+    c.fillStyle = gr
+    // The frame (to the river), in the ellipse's own scaled units.
+    const sx = ry / rx
+    c.fillRect((f.x0 - mg - l.x) * K * sx - 1, (f.y0 - mg - cy) * K - 1, (W + 2 * mg) * K * sx + 2, (span + 2 * mg) * K + 2)
+    c.restore()
+  }
+  // The floor lies high over the whole sky: the finale's smoke hanging over the field, lit from below.
+  const fy = f.y0 + (hy - f.y0) * 0.5
+  const ft = Math.min(0.22, 2.2 * g.floor)
+  lay(fy, ft, litOver(FLOOR_DEEP, vivid(FLOOR_SKY), ft, 0.65 * g.floor), 0.6)
+  // Then each hue round its shells, strongest last.
+  // (The Titan's gold goes on at full strength: for its 0.6 s the whole sky is gold, not khaki.)
+  for (const l of g.layers) {
+    const titan = l.flat > 0.5
+    const tau = Math.min(titan ? 0.36 : 0.4, TINT * l.a)
+    pool(l, tau, litOver(darkOf(l.col), vivid(l.col), tau, (titan ? 1 : LIFT) * l.a))
+  }
+  c.restore()
+  if (!oc) return
+  // The land under the sky takes little of it: the far plain stays dark country and is lit only along its skyline, so
+  // gold on the night never turns the plain olive.
+  oc.save()
+  oc.setTransform(1, 0, 0, 1, 0, 0)
+  oc.globalCompositeOperation = 'destination-out'
+  const land = oc.createLinearGradient(0, Y(hy - 0.03 * H), 0, Y(hy + 0.08 * H))
+  land.addColorStop(0, 'rgba(0,0,0,0)')
+  land.addColorStop(1, 'rgba(0,0,0,0.72)')
+  oc.fillStyle = land
+  oc.fillRect(0, Math.max(0, Y(hy - 0.03 * H) - 1), pw, ph)
+  oc.restore()
+  ctx.drawImage(oc.canvas, ox * k, oy * k, (pw / K) * k, (ph / K) * k)
+}
+/** How hard a light tints the night toward its hue, and how much of it is added as light, for its strength. */
+const TINT = 0.8
+const LIFT = 0.72
+/** The sky's glow is laid at 1/SKY_DOWN of the frame's resolution (it has no edges to lose). */
+const SKY_DOWN = 6
+let SKY_CANVAS: HTMLCanvasElement | null = null
+/** The small canvas the sky's glow is laid in, `w` × `h` pixels; none where there is no document. */
+function skyCanvas(w: number, h: number): CanvasRenderingContext2D | null {
+  if (typeof document === 'undefined') return null
+  if (!SKY_CANVAS) SKY_CANVAS = document.createElement('canvas')
+  if (SKY_CANVAS.width !== w) SKY_CANVAS.width = w
+  if (SKY_CANVAS.height !== h) SKY_CANVAS.height = h
+  return SKY_CANVAS.getContext('2d')
+}
+
+/**
+ * One source-over colour that does what tinting the night toward `dark` by `tau` and then screening `light` over it
+ * by `lam` would: on a dark night (under about a fifth of full) screening adds about 0.8 of the light, so the pair is
+ * `dark` + 0.82 × lam / tau × `light`, laid at `tau`. One fill instead of two, and no 'screen' (slow in software).
+ */
+function litOver(dark: string, light: string, tau: number, lam: number): string {
+  if (tau <= 1e-4) return dark
+  const d = rgb(dark)
+  const l = rgb(light)
+  const m = (0.82 * lam) / tau
+  return '#' + [0, 1, 2].map((i) => Math.round(Math.min(255, d[i] + m * l[i])).toString(16).padStart(2, '0')).join('')
+}
+
+/** The sky's light on a silhouette's edges: how strong, what colour, and how much on its left and right flanks. */
+function rimAt(t: number, x: number): { a: number; col: string; left: number; right: number } {
+  const g = skyGlow(t)
+  const a = Math.min(0.7, 1.55 * g.a)
+  const col = mixHex(g.col, FW.fwWhite, 0.3)
+  if (Number.isNaN(g.x)) return { a, col, left: 0.55, right: 0.55 }
+  const right = 0.2 + 0.8 * smooth(g.x - x, -2, 2)
+  return { a, col, left: 1.2 - right, right }
+}
+/** A strip of rim light from `a` (its lit end) to `b`, fading to `fade` of itself there. */
+function rimStrip(pen: Pen, a: Pt, b: Pt, w: number, col: string, al: number, fade = 0.2): void {
+  if (al < 0.01) return
+  const { ctx, k } = pen
+  const gr = ctx.createLinearGradient(a[0] * k, a[1] * k, b[0] * k, b[1] * k)
+  gr.addColorStop(0, rgba(col, al))
+  gr.addColorStop(1, rgba(col, al * fade))
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const l = Math.hypot(dx, dy) || 1
+  const nx = (-dy / l) * (w / 2)
+  const ny = (dx / l) * (w / 2)
+  ctx.fillStyle = gr
+  ctx.beginPath()
+  ctx.moveTo((a[0] + nx) * k, (a[1] + ny) * k)
+  ctx.lineTo((b[0] + nx) * k, (b[1] + ny) * k)
+  ctx.lineTo((b[0] - nx) * k, (b[1] - ny) * k)
+  ctx.lineTo((a[0] - nx) * k, (a[1] - ny) * k)
+  ctx.closePath()
+  ctx.fill()
+}
+/** A tube's mouth catching the sky: the far half of its rim, lit. */
+function rimMouth(pen: Pen, at: Pt, lean: number, rx: number, col: string, al: number): void {
+  if (al < 0.01) return
+  const { ctx, k } = pen
+  ctx.save()
+  ctx.translate(at[0] * k, at[1] * k)
+  ctx.rotate(lean)
+  ctx.strokeStyle = rgba(col, al)
+  ctx.lineWidth = Math.max(0.8, rx * 0.16 * k)
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.ellipse(0, 0, rx * 0.94 * k, rx * 0.34 * k, 0, Math.PI * 1.08, Math.PI * 1.92)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/**
+ * The finale's light inside a bank of smoke at (x, y): the bursts near it, by how bright they are now and how near,
+ * in the colour of the nearest bright one. Zero outside the finale.
+ */
+function smokeLight(t: number, x: number, y: number): { a: number; col: string } {
+  const g = skyGlow(t)
+  if (g.a < 0.004) return { a: 0, col: FLOOR_SKY }
+  let a = 0
+  let best = 0
+  let col = g.col
+  for (const l of g.layers) {
+    const d = Math.hypot(x - l.x, y - l.y)
+    const reach = l.flat > 0.5 ? 9 : 4.5
+    const v = (l.a / 0.33) * Math.exp(-((d / reach) ** 2))
+    a += v
+    if (v > best) {
+      best = v
+      col = l.col
+    }
+  }
+  return { a: Math.min(1, a), col }
+}
+
 /* ------------------------------------------------------------------ light */
+
+const BARRAGE = new Set<Burst>(BARRAGE_BURSTS)
 
 export interface Light {
   x: number
@@ -182,18 +595,26 @@ export function lightsAt(t: number): Light[] {
       out.push({ x, y, r: 1.4 + 1.1 * Math.min(2.6, h), a: 0.55 * Math.min(1, 0.25 + h * 0.4), col: FW.fwGold })
     }
   }
+  // What the shells and their guns throw on the ground goes out with the silence, as the sky's glow does.
+  const kill = hushKill(t)
+  if (kill <= 0) {
+    pushFires(out, t)
+    return out
+  }
   for (const b0 of BURSTS) {
     const s = t - b0.at
     if (s < 0 || s > 1.8) continue
     const b = placed(b0)
-    const size = b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75
+    // The barrage's many shells light the ground little each: together they warm it, and never lift the night field
+    // flat to a pale sand in the close frames of the hammers.
+    const size = (b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75) * (BARRAGE.has(b0) ? 0.3 : 1)
     const decay = b.kind === 'salute' ? Math.exp(-s / 0.12) : 0.75 * Math.exp(-s / 0.3) + 0.25 * Math.exp(-s / 1.1)
-    out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay, col: b.kind === 'salute' ? SALUTE_LIGHT : b.col })
+    out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay * kill, col: b.kind === 'salute' ? SALUTE_LIGHT : b.col })
   }
   for (const r of RISES) {
     const s = t - r.from
     if (s < 0 || s > 0.35) continue
-    out.push({ x: r.a[0], y: r.a[1] - 0.3, r: r.comet ? 1.6 : 2.4, a: (r.comet ? 0.45 : r.col === FW.fwWhite ? 0.25 : 0.7) * Math.exp(-s / 0.08), col: FW.fwGold })
+    out.push({ x: r.a[0], y: r.a[1] - 0.3, r: r.comet ? 1.6 : 2.4, a: (r.comet ? 0.45 : r.col === FW.fwWhite ? 0.25 : 0.7) * Math.exp(-s / 0.08) * kill, col: FW.fwGold })
   }
   const jet = jetTop(t)
   if (jet > 0.05) out.push({ x: GERB[0], y: GERB[1] - jet * 0.5, r: 2 + jet * 0.6, a: 0.5 * clamp01(jet / 2), col: FW.fwGold })
@@ -205,11 +626,15 @@ export function lightsAt(t: number): Light[] {
   if (lit > 0.05) out.push({ x: wheelAt(t)[0], y: wheelAt(t)[1], r: 3.2, a: 0.08 * lit, col: FW.fwWhite })
   const blast = t - TITAN_FIRE
   if (blast >= 0 && blast < 0.8) out.push({ x: TITAN_X, y: LIP - 0.8, r: 5, a: 1.1 * Math.exp(-blast / 0.14), col: FW.fwWhite })
+  pushFires(out, t)
+  return out
+}
+/** The crate's fire and its smoulder: the light that is left in the silence. */
+function pushFires(out: Light[], t: number): void {
   const fire = crateFire(t)
   if (fire > 0.02) out.push({ x: CRATE.x1 - 0.35, y: GY - 0.8, r: 2.2 + 1.4 * fire, a: 0.65 * fire * (0.9 + 0.1 * Math.sin(t * 17)), col: FW.coal })
   const sm = crateSmoulder(t)
   if (sm > 0.02) out.push({ x: CRATE.x1 - 0.25, y: GY - 0.3, r: 1.3, a: 0.2 * sm * breath(t), col: FW.coal })
-  return out
 }
 
 /** How lit a point is, 0..1, and by what colour most. */
@@ -324,20 +749,36 @@ function mouth(pen: Pen, at: Pt, lean: number, rx: number, rim: string, bore: st
  */
 export function drawGround(pen: Pen, L: Light[]): void {
   const { f, t, ctx, k } = pen
+  drawSky(pen)
   const x0 = Math.max(f.x0, STOPS + 0.2)
   const x1 = f.x1
   if (x1 <= x0) return
   const hy = horizonAt(pen.p, k)
   const top = Math.max(GY - 1.3, hy + 0.08)
   const bank = GY - 0.34
+  const sky = skyGlow(t)
+  // In the silence the water and the field go down with the sky.
+  const dark = hushDark(t)
   // The field fades in from under the line's end, so the two grounds meet without a seam.
   const fadeIn = (x: number) => clamp01((x - STOPS - 0.2) / 1.6)
   const edge = ctx.createLinearGradient((STOPS + 0.2) * k, 0, (STOPS + 1.8) * k, 0)
   if (top < bank) {
-    edge.addColorStop(0, rgba(FW.river, 0))
-    edge.addColorStop(1, rgba(FW.river, 1))
+    const water = mixHex(FW.river, NIGHT_DEEP, 0.3 * dark)
+    edge.addColorStop(0, rgba(water, 0))
+    edge.addColorStop(1, rgba(water, 1))
     ctx.fillStyle = edge
     ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (bank - top) * k)
+    // The water gives back the sky: the finale's glow over the whole band, a little more at the far side.
+    if (sky.a > 0.004) {
+      // Water stays dark: its blue is warmed toward the light's hue, and only a little of the light itself is added.
+      const xa = Math.max(x0, STOPS + 1.8)
+      const tau = Math.min(0.55, 1.2 * sky.a)
+      const lift = ctx.createLinearGradient(0, top * k, 0, bank * k)
+      lift.addColorStop(0, rgba(litOver(darkOf(sky.col), sky.col, tau, Math.min(0.12, 0.26 * sky.a)), tau))
+      lift.addColorStop(1, rgba(litOver(darkOf(sky.col), sky.col, tau, Math.min(0.07, 0.15 * sky.a)), tau))
+      ctx.fillStyle = lift
+      ctx.fillRect(xa * k, top * k, (x1 - xa) * k, (bank - top) * k)
+    }
     // The water's own light: a few soft glints, only where something shines on it (the moon, a live burst), in a
     // loose cluster under it, fading with distance from it. Soft tapered smears (a flattened glow), never hairlines, and
     // never at an even pitch. Clipped to the river so none spills on the bank.
@@ -363,7 +804,7 @@ export function drawGround(pen: Pen, L: Light[]): void {
       }
     }
     const m = moonAt(pen.p, k, t)
-    glints(m.x, 0.22 * moonLight(t), 0.7 + 0.8 * m.r, 7, FW.moonHalo, 11)
+    glints(m.x, 0.22 * moonLight(t) * (1 - 0.7 * dark), 0.7 + 0.8 * m.r, 7, FW.moonHalo, 11)
     // What burns in the sky burns in the river too, under it, shivering as the water moves.
     for (const l of L) {
       if (l.y > GY - 1.5 || l.a < 0.04) continue
@@ -371,17 +812,32 @@ export function drawGround(pen: Pen, L: Light[]): void {
       if (a0 < 0.02) continue
       glints(l.x, a0, Math.min(1.6, 0.35 + l.r * 0.3), 4, l.col, 20 + parseInt(l.col.slice(1, 3), 16))
     }
+    drawRiverColumns(pen, top, bank, fadeIn)
     ctx.restore()
   }
+  const ground = mixHex(GROUND, NIGHT_DEEP, 0.12 * dark)
   const g2 = ctx.createLinearGradient((STOPS + 0.2) * k, 0, (STOPS + 1.8) * k, 0)
-  g2.addColorStop(0, rgba(GROUND, 0))
-  g2.addColorStop(1, rgba(GROUND, 1))
+  g2.addColorStop(0, rgba(ground, 0))
+  g2.addColorStop(1, rgba(ground, 1))
   ctx.fillStyle = g2
   ctx.fillRect(x0 * k, bank * k, (x1 - x0) * k, (f.y1 + 1 - bank) * k)
+  // The field takes the sky's light: brightest at the far bank under the bursts, less toward us.
+  const fa = Math.min(0.08, 0.2 * sky.a)
+  if (fa > 0.004) {
+    const xa = Math.max(x0, STOPS + 1.8)
+    // Warmed toward the light's hue as it is lit, so the lit field is a firelit field and not a grey one.
+    const tau = Math.min(0.3, 1.4 * fa)
+    const wash = ctx.createLinearGradient(0, bank * k, 0, (f.y1 + 1) * k)
+    wash.addColorStop(0, rgba(litOver(darkOf(sky.col), sky.col, tau, fa), tau))
+    wash.addColorStop(Math.min(0.9, 1.6 / Math.max(1.7, f.y1 + 1 - bank)), rgba(litOver(darkOf(sky.col), sky.col, tau, fa * 0.72), tau))
+    wash.addColorStop(1, rgba(litOver(darkOf(sky.col), sky.col, tau, fa * 0.35), tau * 0.8))
+    ctx.fillStyle = wash
+    ctx.fillRect(xa * k, bank * k, (x1 - xa) * k, (f.y1 + 1 - bank) * k)
+  }
   // The bank's moonlit lip: a soft band fading down into the field, not a ruled line.
   const g3 = ctx.createLinearGradient(0, (bank - 0.02) * k, 0, (bank + 0.12) * k)
   g3.addColorStop(0, rgba(FW.moonHalo, 0))
-  g3.addColorStop(0.3, rgba(FW.moonHalo, 0.07))
+  g3.addColorStop(0.3, rgba(FW.moonHalo, 0.07 * (1 - 0.7 * dark)))
   g3.addColorStop(1, rgba(FW.moonHalo, 0))
   ctx.fillStyle = g3
   ctx.fillRect(Math.max(x0, STOPS + 1.2) * k, (bank - 0.02) * k, (x1 - Math.max(x0, STOPS + 1.2)) * k, 0.14 * k)
@@ -390,7 +846,8 @@ export function drawGround(pen: Pen, L: Light[]): void {
     if (l.a < 0.03) continue
     const rx = l.r * 1.1
     const d = Math.max(0, GY - l.y)
-    const a = Math.min(0.35, l.a * 0.28 * Math.max(0, 1 - d / (l.r * 1.6))) * fadeIn(l.x)
+    // At most a warm pool: the night field stays dark ground round it, never lit flat from edge to edge.
+    const a = Math.min(l.col === SALUTE_LIGHT ? 0.16 : 0.35, l.a * 0.28 * Math.max(0, 1 - d / (l.r * 1.6))) * fadeIn(l.x)
     if (a < 0.01) continue
     ctx.save()
     ctx.beginPath()
@@ -399,6 +856,86 @@ export function drawGround(pen: Pen, L: Light[]): void {
     glow(pen, l.x, GY - 0.1, rx, l.col, a)
     ctx.restore()
   }
+}
+
+/**
+ * How brightly burst `b` stands in the river `s` seconds after it breaks, 0..~0.8: the flash, then held for as long
+ * as its stars burn, so a flower's column lasts its whole life and does not blink out with the flash.
+ */
+function riverOf(b: Burst, s: number): number {
+  if (s < 0 || b.at < CRASH - 1e-3) return 0
+  const L = lifeOf(b)
+  if (s > L) return 0
+  const atk = smooth(s, 0, 0.04)
+  const live = 1 - smooth(s, L * 0.4, L)
+  const both = 0.35 * Math.exp(-s / 0.25) + 0.65 * live
+  switch (b.kind) {
+    case 'titan':
+      return atk * both
+    case 'salute':
+      return atk * 0.8 * Math.exp(-s / 0.16)
+    case 'small':
+      return atk * 0.25 * both
+    case 'mine':
+      return atk * 0.45 * both
+    default:
+      return atk * 0.9 * (0.35 + 0.65 * Math.min(1, b.wash)) * both
+  }
+}
+
+/**
+ * Every burst in the finale mirrored in the river: a broken vertical column of its colour straight down the water
+ * under it, a stack of short ripples from the far side to the bank, each its own width and brightness and shivering
+ * sideways on its own clock, widening a little toward us, so it is a reflection and never a ruled bar. Clipped to the
+ * river by the caller.
+ */
+function drawRiverColumns(pen: Pen, top: number, bank: number, fadeIn: (x: number) => number): void {
+  const { t, f } = pen
+  const kill = hushKill(t)
+  if (kill <= 0 || t < CRASH) return
+  const band = bank - top
+  if (band < 0.08) return
+  const { ctx, k } = pen
+  const N = Math.max(8, Math.min(22, Math.round(band / 0.05)))
+  const thick = (0.62 * band) / N
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  for (const b0 of BURSTS) {
+    const s = t - b0.at
+    const A = riverOf(b0, s) * kill
+    if (A < 0.02) continue
+    const b = placed(b0)
+    // About the width of the flower's heart (a mine's fan, a salute's flash: narrower).
+    const R = Math.min(5, b.v / b.k) * (1 - Math.exp(-b.k * Math.max(0, s)))
+    const half = Math.min(1.0, b.kind === 'salute' ? 0.35 : b.kind === 'mine' ? 0.3 : 0.14 + 0.1 * R)
+    if (b.x + half * 2 < f.x0 || b.x - half * 2 > f.x1) continue
+    const col = b.kind === 'titan' ? FW.fwGold : b.kind === 'salute' ? SALUTE_LIGHT : b.col === FW.fwWhite ? mixHex(FW.fwWhite, FW.fwGold, 0.3) : b.col
+    const seed = Math.round(b.at * 100) % 997
+    const fx = fadeIn(b.x)
+    for (let i = 0; i < N; i++) {
+      const u = (i + 0.5) / N
+      const h = (m: number) => hash(i, seed, 300 + m)
+      const y = top + band * u + (h(1) - 0.5) * (band / N) * 0.5
+      // Broken: each ripple breathes on its own clock, bright and dim, never quite out.
+      const br = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(t * (2.1 + 2.6 * h(2)) + i * 2.9 + seed)) ** 1.5
+      const a = Math.min(0.95, A * br * (1 - 0.25 * u) * fx)
+      if (a < 0.015) continue
+      const w = half * (0.7 + 0.5 * u) * (0.3 + 0.8 * h(3) ** 1.3)
+      const x = b.x + (h(4) - 0.5) * 0.6 * half + 0.08 * Math.sin(t * (0.9 + 0.8 * h(5)) + i * 1.7)
+      const hh = thick * (0.6 + 0.6 * h(6))
+      ctx.save()
+      ctx.translate(x * k, y * k)
+      ctx.scale(1, hh / w)
+      const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, w * k)
+      gr.addColorStop(0, rgba(col, a))
+      gr.addColorStop(0.45, rgba(col, a * 0.6))
+      gr.addColorStop(1, rgba(col, 0))
+      ctx.fillStyle = gr
+      ctx.fillRect(-w * k, -w * k, 2 * w * k, 2 * w * k)
+      ctx.restore()
+    }
+  }
+  ctx.restore()
 }
 
 /* ------------------------------------------------------------------ the racks and the match */
@@ -719,6 +1256,17 @@ function drawGun(pen: Pen, L: Light[], gun: Gun, base: string): void {
   const a: Pt = [top[0] - dir[0] * gun.h * 0.3, top[1] - dir[1] * gun.h * 0.3]
   const b: Pt = [top[0] - dir[0] * gun.h * 0.18, top[1] - dir[1] * gun.h * 0.18]
   bar(pen, a, b, gun.w * 1.02, shade(L, fired ? mixHex(BAND, CHAR, 0.5) : BAND, FW.signalRed, gun.x, gun.y - gun.h, -0.1))
+  // The sky's light down its flank toward the bursts, fading to the foot, and on the far lip of its mouth.
+  const rim = rimAt(t, gun.x)
+  if (rim.a > 0.01) {
+    const foot: Pt = [gun.x, gun.y - 0.02 + dy]
+    const nrm: Pt = [Math.cos(gun.lean), Math.sin(gun.lean)]
+    for (const [side, amt] of [[-1, rim.left], [1, rim.right]] as const) {
+      const off = gun.w * 0.42 * side
+      rimStrip(pen, [top[0] + nrm[0] * off, top[1] + nrm[1] * off], [foot[0] + nrm[0] * off, foot[1] + nrm[1] * off], gun.w * 0.14, rim.col, 0.8 * rim.a * amt, 0.15)
+    }
+    rimMouth(pen, top, gun.lean, gun.w * 0.58, rim.col, 0.9 * rim.a)
+  }
 }
 
 /** A muzzle's flash as it fires: a short stab of flame and sparks along the tube, `s` seconds after. */
@@ -1029,9 +1577,21 @@ export function drawTitan(pen: Pen, L: Light[]): void {
     const w = hw + 0.06 * u + 0.05
     rectC(pen, x - w, yb + dy, x + w, yb + 0.14 + dy, hoop)
   }
+  // The sky's light: down its edges (the side toward the bursts most), fading to the foot, and on its hoops' tops.
+  const rim = rimAt(t, x)
+  if (rim.a > 0.01) {
+    rimStrip(pen, [x - hw + 0.045, LIP + dy], [x - hw - 0.015, GY], 0.09, rim.col, 0.85 * rim.a * rim.left, 0.12)
+    rimStrip(pen, [x + hw - 0.045, LIP + dy], [x + hw + 0.015, GY], 0.09, rim.col, 0.85 * rim.a * rim.right, 0.12)
+    for (const yb of [LIP + 0.3, LIP + 1.2, GY - 0.7]) {
+      const u = (yb - LIP) / (GY - LIP)
+      const w = hw + 0.06 * u + 0.05
+      rimStrip(pen, [x - w, yb + dy + 0.012], [x + w, yb + dy + 0.012], 0.025, rim.col, 0.7 * rim.a * (1 - 0.5 * u), 1)
+    }
+  }
   // The mouth: the heavy rim, and its bore seen a little from above, glowing while the spark is down it.
   const inside = t > DIVE && t < TITAN_FIRE + 0.2
   mouth(pen, [x, LIP + dy], 0, hw + 0.08, shade(L, FW.iron, IRON_LIT, x, LIP, 0.15), inside ? mixHex(FW.iron, FW.coal, 0.45 + 0.25 * Math.sin(t * 31)) : FW.iron)
+  rimMouth(pen, [x, LIP + dy], 0, hw + 0.08, rim.col, 0.9 * rim.a)
   if (inside) glow(pen, x, LIP - 0.2, 0.7, FW.coal, 0.35 * smooth(t, DIVE, DIVE + 0.2))
   // The cradle: low and heavy, two chocks and a sill either side, bracing the foot.
   for (const sx of [-1, 1]) {
@@ -1187,6 +1747,11 @@ export function crateSmoulder(t: number): number {
 const charred = (t: number): number => smooth(t, TITAN_FIRE + 0.15, HUSH)
 /** The smoulder's slow breath. */
 const breath = (t: number): number => 0.72 + 0.18 * Math.sin(t * 2.3) + 0.1 * Math.sin(t * 5.1 + 1.3)
+/**
+ * How far the crate's and the ash's embers are let down in the silence, 0..1, so the spark lying by them is the
+ * brightest point in the frame and never one coal among theirs: from the hush to the roll's flare.
+ */
+const hushed = (t: number): number => smooth(t, HUSH - 0.1, HUSH + 0.25) * (1 - smooth(t, FLARE - 0.05, FLARE + 0.02))
 
 /** The crate's broken end: a ragged mouth. */
 const crateMouth = (): Pt[] => {
@@ -1210,8 +1775,15 @@ export function drawCrate(pen: Pen, L: Light[]): void {
   // The broken end: a ragged mouth, black inside, a bed of embers in it once it has burnt.
   const mouthPts = crateMouth()
   quad(pen, mouthPts, mixHex(FW.iron, FW.coal, 0.18 * fire + 0.05 * sm))
+  // The sky's light along its top boards and down its whole end, when it faces the bursts.
+  const rim = rimAt(t, (x0 + x1) / 2)
+  if (rim.a > 0.01) {
+    rimStrip(pen, [x0 + 0.02, GY - h + 0.025], [x1 - 0.44, GY - h + 0.025], 0.05, rim.col, 0.75 * rim.a, 0.55)
+    rimStrip(pen, [x0 + 0.025, GY - h + 0.02], [x0 + 0.025, GY], 0.05, rim.col, 0.8 * rim.a * rim.left, 0.12)
+  }
   if (sm <= 0.01) return
-  const b = breath(t) * sm
+  const quiet = 1 - 0.6 * hushed(t)
+  const b = breath(t) * sm * quiet
   additive(pen, () => {
     // The slats smoulder: the seams and the burnt edges glow red where the fire got into them, unevenly, breathing.
     ctx.lineCap = 'round'
@@ -1252,7 +1824,7 @@ export function drawCrate(pen: Pen, L: Light[]): void {
       const x = x1 - 0.32 + 0.3 * hash(i, 125)
       const y = GY - 0.04 - 0.12 * hash(i, 126)
       const on = 0.5 + 0.5 * Math.sin(t * (1.1 + 0.9 * hash(i, 127)) + i * 1.9)
-      ctx.fillStyle = rgba(i % 3 ? FW.coal : FW.coalHot, 0.7 * sm * on)
+      ctx.fillStyle = rgba(i % 3 ? FW.coal : mixHex(FW.coal, FW.coalHot, 1 - hushed(t)), 0.7 * sm * on * quiet)
       ctx.fillRect((x - 0.025) * pen.k, (y - 0.014) * pen.k, 0.05 * pen.k, 0.028 * pen.k)
     }
   })
@@ -1406,7 +1978,9 @@ export function drawAsh(pen: Pen): void {
         const y = GY - hgt(u) * (0.25 + 0.5 * hash(i, 53, hp.seed))
         const br = 0.5 + 0.5 * Math.sin(t * (1.3 + hash(i, 54, hp.seed)) + i * 1.7)
         // Flat smudges of red in the grey, not beads: small, low and dim beside the spark lying in it.
-        glint(pen, x, y, 0.035 + 0.02 * hash(i, 55, hp.seed), i % 4 ? FW.coal : mixHex(FW.coal, FW.coalHot, 0.4), 0.45 * a * br, 0.4)
+        // In the silence the heap by the crate, where the spark lies, is let down to a dull red (`hushed`).
+        const dim = hp.seed === 2 ? 1 - 0.65 * hushed(t) : 1
+        glint(pen, x, y, 0.035 + 0.02 * hash(i, 55, hp.seed), i % 4 ? FW.coal : mixHex(FW.coal, FW.coalHot, 0.4), 0.45 * a * br * dim, 0.4)
       }
     })
   }
@@ -1642,6 +2216,7 @@ function drawStarsOf(pen: Pen, b: Burst, s: number, stars: Stars): void {
       stars(b.n, b.v, b.trail, s < 0.25 ? FW.fwWhite : FW.fwGold, b.tail ?? b.col, 0.07, 1)
       // A pistil of white inside it.
       stars(22, b.v * 0.42, 0.2, FW.fwWhite, FW.fwWhite, 0.05, 7)
+      drawTitanHeart(pen, b, s)
       break
     }
     case 'palm':
@@ -1649,6 +2224,61 @@ function drawStarsOf(pen: Pen, b: Burst, s: number, stars: Stars): void {
       break
     default:
       stars(b.n, b.v, b.trail, b.col, b.tail ?? b.col, b.kind === 'mine' ? 0.075 : 0.065, 1)
+  }
+}
+
+/** The Titan's heart: its inner shell's colours, from a glittering tail (burnt gold) up into the head (gold). */
+const HEART_TAIL = mixHex(FW.fwGold, FW.coal, 0.4)
+const HEART_COL = Array.from({ length: 6 }, (_, q) => mixHex(HEART_TAIL, FW.fwGold, smooth((q + 1) / 6, 0.3, 1)))
+const HEART_N = 120
+
+/**
+ * The Titan's heart: a dense inner shell of short gold glitter thrown out at about half the outer stars' speed (0.24
+ * to 0.6 of it, most near the middle of that), so the flower is full to its middle and never a ring round a hole.
+ * Each star is a short tapered streak twinkling fast, shedding grains that hang and fall behind it; they burn out one
+ * by one before the outer stars do. Kept off the spark, which rides down through it.
+ */
+function drawTitanHeart(pen: Pen, b: Burst, s: number): void {
+  const { t } = pen
+  const L = lifeOf(b)
+  if (s < 0.015 || s > L) return
+  const fadeAll = 1 - smooth(s, L * 0.45, L)
+  const open = smooth(s, 0.02, 0.16)
+  const sp = sparkAt(t)
+  for (let i = 0; i < HEART_N; i++) {
+    const h = (m: number) => hash(i, m, b.seed + 300)
+    const ang = (2 * Math.PI * (i + 0.85 * h(1))) / HEART_N + b.seed * 1.3
+    const v = b.v * (0.24 + 0.36 * h(2) ** 0.8)
+    const vx = Math.cos(ang) * v
+    const vy = Math.sin(ang) * v
+    const end = L * (0.62 + 0.36 * h(3))
+    const own = (1 - smooth(s, end * 0.7, end)) * fadeAll
+    if (own <= 0.01) continue
+    const head = starAt(b, vx, vy, s)
+    // Nothing of it on the spark: it thins out within a cell of it.
+    const clear = smooth(Math.hypot(head[0] - sp[0], head[1] - sp[1]), 0.45, 1.05)
+    if (clear <= 0.01) continue
+    const tw = 0.45 + 0.55 * Math.abs(Math.sin(t * (24 + 26 * h(4)) + i * 1.3))
+    const tr = (0.06 + 0.07 * h(5)) * (0.45 + 0.55 * own)
+    const from = Math.max(s * 0.3, s - tr)
+    const pts: Pt[] = []
+    for (let q = 0; q <= 5; q++) pts.push(starAt(b, vx, vy, from + ((s - from) * q) / 5))
+    const wid = 0.042 * (0.35 + 0.65 * open)
+    ribbon(pen, pts, (u) => wid * (0.3 + 0.7 * u) * (u > 0.9 ? 1 - 3 * (u - 0.9) : 1), (u) => rgba(HEART_COL[Math.max(0, Math.round(u * 5) - 1)], (0.1 + 0.8 * u ** 1.5) * own * tw * clear * (0.4 + 0.6 * open)))
+    // Glitter shed behind it: grains that hang a moment and fall, each twinkling on its own.
+    if (s > 0.1) {
+      for (let g = 0; g < 2; g++) {
+        const ago = 0.06 + 0.3 * h(6 + g)
+        const sb = s - ago
+        if (sb < 0.05) continue
+        const q0 = starAt(b, vx, vy, sb)
+        const gx = q0[0] + (h(8 + g) - 0.5) * 0.14
+        const gy = q0[1] + 0.9 * ago * ago + 0.03
+        if (Math.hypot(gx - sp[0], gy - sp[1]) < 0.7) continue
+        const twg = 0.3 + 0.7 * Math.abs(Math.sin(t * (30 + 20 * h(10 + g)) + g * 2.1 + i))
+        glint(pen, gx, gy, 0.03 + 0.03 * h(12 + g), g ? FW.fwGold : mixHex(FW.fwGold, FW.fwWhite, 0.4), 0.8 * own * twg * (1 - ago / 0.4))
+      }
+    }
   }
 }
 
@@ -1992,12 +2622,21 @@ export function drawPuff(pen: Pen, L: Light[], q: Puff): void {
   const env = smooth(s, 0, 0.5) * (1 - smooth(s, q.life * 0.4, q.life))
   if (env <= 0.01) return
   const lit = litAt(L, x, y)
-  const col = mixHex(FW.smoke, lit.col, Math.min(0.45, lit.a * 0.6))
+  // In the finale the smoke takes the sky's colour, and the bursts near it light it from inside.
+  const sky = skyGlow(t)
+  const inner = smokeLight(t, x, y)
+  // (Low banks lie over the field: less, so the ground stays night.)
+  const low = y > GY - 2.2 ? 0.5 : 1
+  // Lit from within: the bank itself takes the colour of the nearest bright burst (its own lobes, so its shape stays
+  // smoke's), a little brighter for it; the sky's colour over all of it.
+  const within = Math.min(0.6, 0.75 * inner.a) * low
+  const col = mixHex(mixHex(mixHex(FW.smoke, lit.col, Math.min(0.45, lit.a * 0.6)), vivid(inner.col), within), sky.col, Math.min(0.3, 0.6 * sky.a) * low)
+  const lift = 1 + 0.35 * within
   for (let i = 0; i < 3; i++) {
     const ox = (hash(q.seed, i, 81) - 0.5) * r * 1.2
     const oy = (hash(q.seed, i, 82) - 0.5) * r * 0.5
     const rr = r * (0.6 + 0.45 * hash(q.seed, i, 83))
-    const a = q.a * env * (0.5 + 0.3 * hash(q.seed, i, 84))
+    const a = q.a * env * (0.5 + 0.3 * hash(q.seed, i, 84)) * lift
     ctx.save()
     ctx.translate((x + ox) * k, (y + oy) * k)
     ctx.scale(1, 0.68)
@@ -2021,6 +2660,9 @@ export function drawMoonSmoke(pen: Pen): void {
   const m = moonAt(p, k, t)
   const u = (t - 146.2) / (OUT - 146.2)
   const env = smooth(t, 146.2, 146.9)
+  // Lit by the last of the finale's sky, then as dark as the silence's night round it.
+  const sky = skyGlow(t)
+  const smoke = mixHex(mixHex(FW.smoke, sky.col, Math.min(0.4, 0.9 * sky.a)), NIGHT_DEEP, 0.4 * hushDark(t))
   for (let i = 0; i < 4; i++) {
     const x = m.x + m.r * (-4.2 + 4.6 * u + 1.3 * i - 1.2 * hash(i, 101))
     const y = m.y + m.r * (0.6 * (hash(i, 102) - 0.5) + 0.25 * Math.sin(t * 0.6 + i))
@@ -2029,9 +2671,9 @@ export function drawMoonSmoke(pen: Pen): void {
     ctx.translate(x * k, y * k)
     ctx.scale(1, 0.55)
     const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rr * k)
-    gr.addColorStop(0, rgba(FW.smoke, 0.55 * env))
-    gr.addColorStop(0.55, rgba(FW.smoke, 0.35 * env))
-    gr.addColorStop(1, rgba(FW.smoke, 0))
+    gr.addColorStop(0, rgba(smoke, 0.55 * env))
+    gr.addColorStop(0.55, rgba(smoke, 0.35 * env))
+    gr.addColorStop(1, rgba(smoke, 0))
     ctx.fillStyle = gr
     ctx.fillRect(-rr * k, -rr * k, 2 * rr * k, 2 * rr * k)
     ctx.restore()
@@ -2042,6 +2684,9 @@ export function drawMoonSmoke(pen: Pen): void {
 export function drawEmbers(pen: Pen): void {
   const { t, ctx, k } = pen
   if (t < 145.3 || t > OUT + 0.3) return
+  // They go out as the silence falls (a spark in the air cools in a breath), so the ember is its one light.
+  const left = 1 - smooth(t, HUSH - 0.05, HUSH + 0.2)
+  if (left <= 0) return
   const cx = REST[0]
   for (let i = 0; i < 26; i++) {
     const life = 2.2 + 1.4 * hash(i, 91)
@@ -2051,7 +2696,7 @@ export function drawEmbers(pen: Pen): void {
     const x = cx - 4.5 + 9 * hash(i, 93) + WIND[0] * s + 0.1 * Math.sin(s * 2 + i)
     const y = GY - 6.5 + 2.5 * hash(i, 94) + 1.5 * s
     if (y > GY - 0.05) continue
-    const b = (0.6 + 0.4 * Math.sin(t * (7 + 5 * hash(i, 95)) + i)) * (1 - s / life)
+    const b = (0.6 + 0.4 * Math.sin(t * (7 + 5 * hash(i, 95)) + i)) * (1 - s / life) * left
     ctx.fillStyle = rgba(i % 4 ? FW.coal : FW.coalHot, 0.8 * b)
     ctx.fillRect((x - 0.012) * k, (y - 0.012) * k, 0.024 * k, 0.024 * k)
   }
@@ -2098,9 +2743,10 @@ export function drawWash(pen: Pen): void {
       const A = Math.min(0.5, 0.45 * (b.wash / 0.6) ** 0.5)
       const a = A * (0.3 * Math.exp(-s / 0.025) + 0.7 * Math.exp(-s / 0.11))
       if (a < 0.004) continue
-      pools.push({ x: b.x, y: b.y, col: SALUTE_LIGHT, a: 0.62 * a, r: 4.5, mid: 0.4, tail: 0.3 })
-      if (0.16 * a > flat) {
-        flat = 0.16 * a
+      // (The hammers come down close: at 4-6 cells a flash that lit the whole field turned it to pale sand.)
+      pools.push({ x: b.x, y: b.y, col: SALUTE_LIGHT, a: 0.45 * a, r: 4.5, mid: 0.4, tail: 0.3 })
+      if (0.1 * a > flat) {
+        flat = 0.1 * a
         flatCol = mixHex(FW.fwGold, FW.coalHot, 0.3)
       }
       continue
@@ -2133,10 +2779,12 @@ export function drawWash(pen: Pen): void {
     }
     peak = Math.max(peak, sum)
   }
-  const scale = peak > WASH_CAP ? WASH_CAP / peak : 1
+  // Gone with the silence, as the sky's glow is.
+  const kill = hushKill(t)
+  const scale = (peak > WASH_CAP ? WASH_CAP / peak : 1) * kill
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
-  const fa = Math.min(FLAT_CAP, flat)
+  const fa = Math.min(FLAT_CAP, flat) * kill
   if (fa >= 0.004) {
     ctx.fillStyle = rgba(flatCol, fa)
     ctx.fillRect(f.x0 * k, f.y0 * k, w * k, h * k)

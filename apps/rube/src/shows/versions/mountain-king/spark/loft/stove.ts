@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { carried, part, type PartShot } from '../kit'
-import { DOORS, LOFT_SEAM } from '../music'
+import { DOORS, LOFT_SEAM, WINDUP } from '../music'
 import { G } from '../physics'
 import { SEAMS } from '../seams'
 import { CAT_CUES, EAR_NEAR, catTop, tailTop } from './cat'
@@ -25,7 +25,7 @@ import { ON_SPOOL, SPOOL_STEPS, drawSpool, onSpool, spoolCells } from './stove-s
  *   42.455  the tail's tip twitches up right in front of it: it flinches on the reel (42.735). Then it gathers itself
  *           and hops onto the tail itself (43.570), and tiptoes along it (44.958, 45.235, 45.514), up onto the haunch
  *           (46.908), along the breathing back (47.465, 48.027, 49.150) to the shoulders (50.267), where an ear flicks.
- *   51.384  the cat shifts in its sleep, a heave of the shoulders, and the spark is tossed up; at the top of the toss
+ *   51.384  the cat stretches in its sleep, its shoulders rolling up, and the spark is tossed up; at the top of the toss
  *           (51.663) the stove's hot draught takes it, and it rises up the iron face like an ember, swaying, and
  *           settles onto the latch's grip (52.504): the latch lifts, and the firebox door creaks open on the fire.
  *   53.625  it drops onto the sill, backs up three steps (54.180, 54.459, 54.737), bounces twice (55.287, 55.836),
@@ -273,8 +273,13 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   hop([SILL_X, SILL.y - R], ON_SILL)
   for (const [at, x] of BACKUP) step([x, SILL.y - R], at - 0.26, at, 0.06)
   for (const at of BOUNCES) step([LEAP_FROM[0], SILL.y - R], at - 0.3, at, 0.16)
-  // A last settle back and down, gathering, and up into the leap into the fire.
-  step([LEAP_FROM[0] - 0.13, SILL.y - R + 0.09], LEAP_AT - 0.55, LEAP_AT - 0.08, 0)
+  // The wind-up, on the last bar's third and fourth beats: a lean in toward the fire and a crouch, a little up again,
+  // then a deeper one (its flame streams into the draught with each: `fx.ts`), and from it a slow gathering back and
+  // down, held, and up into the leap: the release.
+  step([LEAP_FROM[0] + 0.05, SILL.y - R + 0.04], WINDUP[0] - 0.13, WINDUP[0], 0)
+  step([LEAP_FROM[0] + 0.01, SILL.y - R + 0.015], WINDUP[0] + 0.05, WINDUP[0] + 0.4, 0)
+  step([LEAP_FROM[0] + 0.04, SILL.y - R + 0.1], WINDUP[1] - 0.13, WINDUP[1], 0)
+  step([LEAP_FROM[0] - 0.13, SILL.y - R + 0.09], WINDUP[1] + 0.06, LEAP_AT - 0.08, 0)
   push({ to: LEAP_FROM, dur: 0.08, ease: 'in' }, LEAP_AT)
   hop(FIRE_MOUTH, DOORS.glass)
   return segs
@@ -300,9 +305,12 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     { t: 44.6, cells: 6.2, hold: at(3.2, 9.0), w: 0.93 },
     { t: 46.9, cells: 5.6, hold: at(3.9, 9.1), w: 0.9 },
     { t: 49.7, cells: 5.7, hold: at(4.7, 8.75), w: 0.8 },
-    // The cat and the stove's door in one frame for the heave, and the rise up the hot iron to the latch.
-    { t: 51.15, cells: 8.8, hold: at(6.0, 6.75), w: 0.95 },
-    { t: 52.6, cells: 6.2, hold: at(6.45, 4.55), w: 0.88 },
+    // Held on the cat, whole, with the spark on its shoulders, through its stretch (51.384), so the toss has a cause
+    // in the picture and the cat its goodbye; then up after the spark as it rises up the hot iron, to the latch by
+    // the door's note (52.504).
+    { t: 50.9, cells: 6.2, hold: at(5.1, 8.55), w: 0.9 },
+    { t: 51.5, cells: 6.6, hold: at(5.4, 8.3), w: 0.95 },
+    { t: 52.45, cells: 6.2, hold: at(6.45, 4.55), w: 0.88 },
     // The sill: closer, and closer, into the fire.
     { t: 54.0, cells: 4.2, hold: at(6.15, 4.6), w: 0.8 },
     { t: 56.4, cells: 3.3, hold: at(6.1, 4.55), w: 0.75 },

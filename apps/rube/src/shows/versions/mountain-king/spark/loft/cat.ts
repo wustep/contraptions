@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt } from '../../../../../parts'
 import { smooth } from '../kit'
+import { GAZE } from '../music'
 import { LOFT } from '../worlds'
 import { FLOOR_Y } from './layout'
 import { fireLight, shade, type Light } from './stove-light'
@@ -15,10 +16,11 @@ import { fireLight, shade, type Light } from './stove-light'
  * - `CAT_CUES.ear` (LOFT-A's): the rack's candles knock and it half wakes, eye shut: the head comes up off the paws
  *   and turns toward the sound, both ears prick and swivel, the tail's tip thumps once, and it sinks back by 1.8 s.
  * - `CAT_CUES.stir[0]` (42.455): the tail's tip lifts and flops, right in front of the spark.
- * - `CAT_CUES.stir[1]` (51.384): it shifts in its sleep, a heave of the shoulders, and the spark riding them is tossed
- *   up the stove's hot face.
- * - `CAT_CUES.wake` (149.815): the stove door bangs. Its eye snaps open, it lifts its head and looks at the candle
- *   (a candle burning, as candles do), and by about 154 it is asleep again.
+ * - `CAT_CUES.stir[1]` (51.384): it stretches in its sleep, the shoulders rolling up and a forepaw reaching out, and
+ *   the spark riding them is tossed up the stove's hot face.
+ * - `CAT_CUES.wake` (149.815): the stove door bangs. Its eye snaps open and its head snaps up at the door over it;
+ *   then it turns round onto the candle (`GAZE`) and looks at it, a candle burning as candles do (which holds very
+ *   still while it is looked at), and by about 154 it is asleep again.
  *
  * Everything here is in the loft's world cells; `h` is height above the floor. The spark rides the cat by
  * `catTop` and `tailTop`, which read the same shapes this draws.
@@ -69,12 +71,20 @@ export function spline(pts: Pt[], closed: boolean, n = 6): Pt[] {
 /** The breath: -1..1, about four seconds a breath. */
 export const breath = (t: number): number => Math.sin((2 * Math.PI * (t - 0.4)) / 4.2)
 
-/** The shift in its sleep (51.384): the shoulders heave up, and the whole cat sighs down after. Cells. */
+/**
+ * The shift in its sleep (51.384), a sleepy stretch: the shoulders begin to rise a third of a second before it (the
+ * spark on them is carried up), then roll up hard on the note (which tosses it), half a cell in all, while a forepaw
+ * reaches out along the boards and the head presses down into the paws; then the whole cat sighs down after. Cells.
+ */
 export function heave(t: number): number {
   const s = t - CAT_CUES.stir[1]
-  if (s < 0) return 0
-  return 0.32 * (1 - Math.exp(-s / 0.075)) * Math.exp(-s / 0.5) - 0.06 * smooth(s, 0.35, 0.9) * Math.exp(-Math.max(0, s - 0.9) / 1.4)
+  if (s < -0.35) return 0
+  const gather = 0.18 * smooth(s, -0.35, 0) * (s > 0 ? Math.exp(-s / 0.9) : 1)
+  if (s < 0) return gather
+  return gather + 0.32 * (1 - Math.exp(-s / 0.075)) * Math.exp(-s / 0.6) - 0.06 * smooth(s, 0.45, 1.0) * Math.exp(-Math.max(0, s - 1.0) / 1.4)
 }
+/** How far into the stretch it is, 0..1 (its peak is about half a cell). */
+const stretchOf = (t: number): number => Math.max(0, Math.min(1, heave(t) / 0.46))
 
 /**
  * The startle on the rack's knocks (`CAT_CUES.ear`), 0..1: a third of the wake. The head comes up off the paws at once
@@ -95,11 +105,11 @@ export function startle(t: number): number {
 /**
  * How long the cat listens after each knock (seconds from it): its head held up until the first, and down again by
  * the second. The first knock is seen close on the rack, and the camera draws back from it to the cat over the next
- * three seconds, so the cat holds its head up, listening, long enough to be found doing it, and has only just put it
- * down again when the second knock lifts it.
+ * two and a half seconds (it comes into the frame about 28.1), so the cat holds its head up, listening, long enough to
+ * be found doing it, puts it down, and has only just got it down when the second knock lifts it again: a double take.
  */
 const LISTEN: [number, number][] = [
-  [1.55, 2.95],
+  [2.75, 3.22],
   [0.34, 1.85],
 ]
 
@@ -162,7 +172,27 @@ function earTurn(t: number): number {
   a += flick(t - EAR_NEAR, 0.95) + flick(t - EAR_NEAR - 0.24, 0.6)
   const w = t - CAT_CUES.wake
   if (w >= 0) a += -0.45 * Math.exp(-w / 0.5) * (w < 0.06 ? w / 0.06 : 1)
+  // The bang flicks it too: snapped back and let go, twice.
+  a += flick(w, 0.6) + flick(w - 0.22, 0.35)
   return a
+}
+
+/**
+ * The look on the bang, in two: the head snaps up at the door that banged right over it (nose all but straight up,
+ * by 0.3 s), then comes round and down onto the candle up the room to the west (`GAZE.on`), nose about 40 degrees
+ * over the level with the eye's pupil taking it the rest of the way, and holds there, still, until it tucks back down.
+ * `turn` is how far the head is turned up (radians, clockwise on the screen: the nose up); `onto` is how far it has come
+ * round onto the candle (0..1), which also leans the head out west over its paws, chin first.
+ */
+const LOOK_DOOR = 1.25
+const LOOK_CANDLE = 0.66
+function look(t: number): { turn: number; onto: number } {
+  const w = t - CAT_CUES.wake
+  if (w < 0) return { turn: 0, onto: 0 }
+  const tuck = 1 - smooth(w, 2.55, 3.75)
+  const up = 1 - (1 - Math.min(1, w / 0.3)) ** 3
+  const onto = smooth(t, GAZE.on - 0.4, GAZE.on)
+  return { turn: (LOOK_DOOR * up * (1 - onto) + LOOK_CANDLE * onto) * tuck, onto: onto * tuck }
 }
 
 /**
@@ -175,7 +205,7 @@ function peek(t: number): number {
     const s = t - c
     const [hold, down] = LISTEN[i]
     if (s < 0.12 || s > down + 0.1) return
-    a = Math.max(a, smooth(s, 0.12, 0.3) * (1 - smooth(s, hold * 0.8, Math.min(down, hold + 0.9))))
+    a = Math.max(a, smooth(s, 0.12, 0.3) * (1 - smooth(s, hold - 0.1, Math.min(down, hold + 0.9))))
   })
   return 0.3 * a
 }
@@ -184,10 +214,10 @@ function peek(t: number): number {
 export function awake(t: number): { eye: number; lift: number } {
   const w = t - CAT_CUES.wake
   if (w < 0) return { eye: peek(t), lift: 0 }
-  // The eye snaps open on the bang; the head comes up and it looks; a slow blink half shut, then shut by 154.
+  // The eye snaps open on the bang; the head snaps up (at the door) and it looks; a slow blink half shut, then shut by 154.
   const open = smooth(w, 0, 0.05)
   const blink = 0.55 * smooth(w, 2.9, 3.25) + 0.45 * smooth(w, 3.55, 4.1)
-  const lift = smooth(w, 0.04, 0.55) * (1 - smooth(w, 2.55, 3.75))
+  const lift = smooth(w, 0.02, 0.35) * (1 - smooth(w, 2.55, 3.75))
   return { eye: open * (1 - blink), lift }
 }
 
@@ -515,7 +545,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   vtx(p, k, bodyPoly)
 
   /* The forepaws, under the chin, reaching west along the boards (a little further as it stretches in its sleep). */
-  const reach = 0.4 * Math.max(0, heave(t) / 0.32)
+  const reach = 0.72 * stretchOf(t)
   const paw = (x0: number, x1: number, hh: number, fill: string) => {
     const pts = spline(
       [
@@ -534,25 +564,30 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     p.strokeWeight(w * 0.65)
     vtx(p, k, pts)
   }
-  paw(5.72 - reach * 0.7, 6.95, 0.27, deepAt(6.2, 0.2))
-  paw(5.48 - reach, 6.75, 0.31, furAt(6.0, 0.2))
+  paw(5.72 - reach * 0.45, 6.95, 0.27, deepAt(6.2, 0.2))
+  paw(5.48 - reach, 6.75, 0.31 - 0.04 * stretchOf(t), furAt(6.0, 0.2))
 
   /* The head: tucked, facing west, its chin on its paws; lifted and looking when it wakes. */
   const aw = awake(t)
-  const hb = 0.018 * breath(t) + 0.16 * Math.max(0, heave(t) / 0.32)
+  // Stretching in its sleep it presses its head down into its paws, chin first, rather than lifting it.
+  const press = stretchOf(t)
+  const hb = 0.018 * breath(t) - 0.08 * press
   // Startled, the head comes up and turns up toward the rack, half a cell and about 20 degrees: most of a wake's
   // lift, with only a slit of an eye.
   const st = startle(t)
   const lift = aw.lift + 0.62 * st
-  const turnUp = 0.6 * lift
+  const lk = look(t)
+  const turnUp = 0.6 * 0.62 * st + lk.turn - 0.14 * press
   const rise = hb + 0.8 * lift
+  // Come round onto the candle, the head leans out west, chin first, clear of the stove's legs.
+  const out = -0.3 * lk.onto
   // Where a point of the head (x, h) is drawn, lifted and turned about the nape: for the neck, which joins the two.
   const lifted = (x: number, h: number): Pt => {
     const dx = x - NAPE[0]
     const dy = Y(h) - Y(NAPE[1])
     const c = Math.cos(turnUp)
     const sn = Math.sin(turnUp)
-    return [NAPE[0] + dx * c - dy * sn, Y(NAPE[1]) + dx * sn + dy * c - rise]
+    return [NAPE[0] + out + dx * c - dy * sn, Y(NAPE[1]) + dx * sn + dy * c - rise]
   }
   const H = (dx: number, dh: number): Pt => [HEAD_AT[0] + dx * HS, HEAD_AT[1] + dh * HS]
   // The neck under the head as it comes up, one piece with the body: its throat curving up from the back to the chin,
@@ -581,7 +616,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     }
   }
   p.push()
-  p.translate(NAPE[0] * k, (Y(NAPE[1]) - rise) * k)
+  p.translate((NAPE[0] + out) * k, (Y(NAPE[1]) - rise) * k)
   p.rotate(turnUp)
   p.translate(-NAPE[0] * k, -Y(NAPE[1]) * k)
   // Local head coordinates: centred on HEAD_AT.
@@ -606,8 +641,12 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     vtx(p, k, pts)
   }
   const back = -0.35 * smooth(t - CAT_CUES.wake, 0, 0.04) * Math.exp(-Math.max(0, t - CAT_CUES.wake) / 0.6)
-  const tall = 1 + 0.16 * st
-  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8 + prick(t, true), deepAt(7.0, 2.0), tall)
+  // Snapped up at the bang the ears go back with the head (startled); come round onto the candle they stand up in the
+  // room, not in the head, and lean a little toward it (attentive): turned back against the whole look, so the head
+  // reads as turned to look at it and not tipped back (a head tipped back, ears and all, reads as looking up at the stove).
+  const upright = lk.onto * (lk.turn + 0.08)
+  const tall = 1 + 0.16 * st + 0.1 * lk.onto
+  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8 + prick(t, true) + upright, deepAt(7.0, 2.0), tall)
   p.noStroke()
   p.fill(furAt(6.5, 1.3))
   vtx(p, k, headPts)
@@ -623,7 +662,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   p.stroke(ink)
   p.strokeWeight(w * 0.75)
   vtx(p, k, headPts)
-  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back, furAt(6.4, 2.0), tall)
+  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back + upright, furAt(6.4, 2.0), tall)
   // The eye: shut, a soft downward curve; open, an almond of amber with a slit pupil looking up and west, at the candle.
   const E = H(-0.3, 0.12)
   const ew = 0.3 * HS
@@ -653,17 +692,29 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     p.stroke(ink)
     p.strokeWeight(w * 0.7)
     vtx(p, k, almond)
-    // The slit, toward the eye's west corner and up: it is looking at the candle.
+    // The pupil, toward the eye's west corner and up: it is looking at the candle. A slit when it half wakes on a
+    // knock; on the bang it snaps open a slit and widens round in a fifth of a second as it finds the flame.
     p.noStroke()
     p.fill(LOFT.soot)
-    const px = E[0] - ew * 0.14
-    const pw = 0.022 + 0.018 * Math.exp(-Math.max(0, t - CAT_CUES.wake) / 0.8)
+    const wk = t - CAT_CUES.wake
+    const round = wk < 0 ? 0 : smooth(wk, 0.05, 0.25)
+    const px = E[0] - ew * (0.14 - 0.03 * round)
+    const pw = 0.022 + (0.62 * oh - 0.022) * round
+    const ph = oh * (0.95 - 0.2 * round)
+    const py = E[1] + 0.012 + 0.01 * round
     p.beginShape()
     for (let j = 0; j <= 12; j++) {
       const a = (j / 12) * Math.PI * 2
-      p.vertex((px + Math.cos(a) * pw) * k, Y(E[1] + 0.012 + Math.sin(a) * oh * 0.95) * k)
+      p.vertex((px + Math.cos(a) * pw) * k, Y(py + Math.sin(a) * ph) * k)
     }
     p.endShape(p.CLOSE)
+    // The candle in it: a small catchlight on the side toward the flame, flashing as the eye opens on the bang.
+    if (wk >= 0) {
+      const flash = smooth(wk, 0.02, 0.07) * (0.75 + 0.25 * Math.exp(-Math.max(0, wk - 0.07) / 0.25))
+      const cr = 0.34 * pw
+      p.fill(`rgba(255, 238, 200, ${(0.95 * flash * Math.min(1, aw.eye * 1.5)).toFixed(3)})`)
+      p.circle((px - pw * 0.38) * k, Y(py + ph * 0.42) * k, Math.max(1, 2 * cr * k))
+    }
   }
   // The nose, and the line of the mouth under it.
   p.fill(deepAt(5.8, 1.1))

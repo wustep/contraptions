@@ -1,8 +1,9 @@
 import type p5 from 'p5'
-import { mixHex, type Pt } from '../../../../../parts'
-import { alpha, hash } from '../kit'
-import { REGATTA } from '../worlds'
-import { ANAT, clamp01, DUSK, rot, type Balloon } from './balloons-plan'
+import { mixHex, R, type Pt } from '../../../../../parts'
+import { drawSpark, flameBoost } from '../fx'
+import { alpha, frame, hash } from '../kit'
+import { FLAME_CORE, FLAME_RIM, REGATTA, SPARK } from '../worlds'
+import { ANAT, AT, clamp01, DUSK, rot, ss, type Balloon } from './balloons-plan'
 
 /**
  * How a balloon of the regatta is drawn: the envelope (gores, a band, the parachute vent, the skirt), the burner on
@@ -132,11 +133,196 @@ function band(b: Balloon, pose: Pose, h0: number, h1: number, n = 16): Pt[] {
 }
 
 /**
+ * A ride up through an envelope, as the drawing needs it: `hold` keeps the burner roaring into the mouth (1 from the
+ * whoosh to the pop, then dying away as a blast does), `cut` takes the burner's lantern down while the spark is in the
+ * silk (so the spark is the brightest thing there), and `t` is the show's time for the flicker.
+ */
+export interface Ride {
+  t: number
+  hold: number
+  cut: number
+}
+
+/** Each hero balloon's ride: from the whoosh up the jet to the vent's pop. */
+const RIDES: Record<string, readonly [number, number]> = {
+  b1: [AT.whoosh1, AT.pop1],
+  b2: [AT.whoosh2, AT.pop2],
+  b3: [AT.whoosh3, AT.pop3],
+}
+
+export function rideOf(b: Balloon, t: number): Ride | null {
+  const w = RIDES[b.key]
+  if (!w || t < w[0]) return null
+  const [W, P] = w
+  const hold = t <= P ? clamp01((t - W) / 0.04) : Math.exp(-(t - P) / 0.14)
+  const cut = ss(t, W, W + 0.2) * (t <= P ? 1 : Math.exp(-(t - P) / 0.35))
+  if (hold < 0.004 && cut < 0.004) return null
+  return { t, hold, cut }
+}
+
+/**
+ * A flame's tongue on the canvas (pixels), the shape fx's flame draws: base at (0, `dy`), `h` tall up -y, `w` at its
+ * belly, its tip swung `lean`.
+ */
+function silkTongue(ctx: CanvasRenderingContext2D, w: number, h: number, lean: number, dy = 0): void {
+  ctx.beginPath()
+  const n = 18
+  for (let i = 0; i <= n; i++) {
+    const a = (i / n) * Math.PI * 2
+    const u = (1 - Math.cos(a)) / 2
+    const side = Math.sin(a)
+    const belly = Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
+    const x = side * w * 0.5 * belly + lean * u * u
+    const y = dy - h * u + w * 0.25 * (1 - u) * Math.abs(side) * 0.3
+    if (i === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+}
+
+/**
+ * The spark seen through the silk, as a flame behind a lampshade: the burner's roar coming up through the skirt and
+ * the mouth as a stream of light that runs up the hot air to it, a tight bloom on the silk round it that lights the
+ * gores and seams near it, and over that the spark as it is everywhere else: its orange-gold heart and its flame, in
+ * fx's colours and at fx's size, so it reads as the same flame seen through silk and never as a white bead. Clipped to the envelope and its skirt (`sleeve`). `end` is the spark (or, once it has popped out, the crown
+ * the stream dies away into); `spark` is whether it is still in there.
+ */
+function drawSparkInSilk(
+  p: p5,
+  look: Look,
+  pose: Pose,
+  sleeve: Pt[],
+  end: Pt,
+  spark: boolean,
+  heat: number,
+  ride: Ride | null,
+): void {
+  const { k } = look
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const t = ride?.t ?? 0
+  const hold = ride ? ride.hold : spark ? 1 : 0
+  const fade = 1 - 0.45 * (look.haze ?? 0)
+  const h = Math.max(0.6, Math.min(2.2, heat))
+  ctx.save()
+  pathOf(ctx, k, sleeve)
+  ctx.clip()
+
+  // The stream: from the jet in the skirt, through the mouth, up the hot air to the spark. Wide and white-gold at the
+  // mouth (the short tongue of the roar), slimming to a thread of warm light that widens again into the spark's glow.
+  // Laid out in the envelope's own cells (up its axis, bending over to the spark's sway), so it always stands up the
+  // envelope and never lies across it.
+  const hemH = ANAT.mouthY - ANAT.hemY
+  const h0 = hemH + 0.02
+  const [lx, ly] = rot([end[0] - pose.n[0], end[1] - pose.n[1]], -pose.a)
+  const D = ANAT.mouthY - ly - h0
+  if (D > 0.04 && hold > 0.01) {
+    const fill = Math.max(0.3, pose.fill)
+    const half = (s: number): number => 0.1 + 0.24 * Math.exp(-s / 0.9) + 0.08 * Math.max(0, 1 - (D - s) / 0.5)
+    // Never wider than it is tall: just in through the hem it is a short stub under the spark, not a band across.
+    const cap = 0.05 + 0.45 * D
+    const centre = (s: number): number => lx * ss(s, 0, D) + 0.04 * Math.sin(t * 7 + s * 1.3) * Math.min(1, s) * Math.min(1, (D - s) / 0.5)
+    const at = (x: number, s: number): Pt => toWorld(pose, x / fill, h0 + s)
+    const path = (grow: number) => {
+      ctx.beginPath()
+      const m = 24
+      for (let i = 0; i <= m; i++) {
+        const s = (D * i) / m
+        const [x, y] = at(centre(s) + Math.min(cap, half(s) * grow), s)
+        if (i === 0) ctx.moveTo(x * k, y * k)
+        else ctx.lineTo(x * k, y * k)
+      }
+      for (let i = m; i >= 0; i--) {
+        const s = (D * i) / m
+        const [x, y] = at(centre(s) - Math.min(cap, half(s) * grow), s)
+        ctx.lineTo(x * k, y * k)
+      }
+      ctx.closePath()
+    }
+    const a = hold * fade * ss(D, 0.04, 0.5)
+    const tongueAt = Math.min(0.92, 1.7 / D)
+    const from = at(0, 0)
+    const grad = (m: number) => {
+      const g = ctx.createLinearGradient(from[0] * k, from[1] * k, end[0] * k, end[1] * k)
+      g.addColorStop(0, `rgba(255, 244, 214, ${0.62 * a * m})`)
+      g.addColorStop(tongueAt * 0.5, `rgba(255, 226, 160, ${0.5 * a * m})`)
+      g.addColorStop(tongueAt, `rgba(255, 200, 120, ${0.3 * a * m})`)
+      g.addColorStop(1, `rgba(255, 190, 110, ${0.38 * a * m})`)
+      return g
+    }
+    ctx.globalCompositeOperation = 'screen'
+    // Soft edges first (wider and fainter), then the stream itself: never a hard line.
+    for (const [grow, m] of [[2.6, 0.14], [1.7, 0.26], [1, 1]] as const) {
+      ctx.fillStyle = grad(m)
+      path(grow)
+      ctx.fill()
+    }
+  }
+
+  if (spark) {
+    const [sx, sy] = end
+    // A warm glow in the silk round it, and a tight lantern bloom that lights the gores and seams near it.
+    ctx.globalCompositeOperation = 'source-over'
+    const W0 = 2.5 * k
+    const wg = ctx.createRadialGradient(sx * k, (sy - 0.25) * k, 0, sx * k, (sy - 0.25) * k, W0)
+    wg.addColorStop(0, `rgba(255, 150, 60, ${0.2 * fade})`)
+    wg.addColorStop(1, 'rgba(255, 150, 60, 0)')
+    ctx.fillStyle = wg
+    ctx.fillRect(sx * k - W0, (sy - 0.25) * k - W0, 2 * W0, 2 * W0)
+    ctx.globalCompositeOperation = 'screen'
+    const B0 = 1.45 * k
+    const bg = ctx.createRadialGradient(sx * k, (sy - 0.12) * k, 0, sx * k, (sy - 0.12) * k, B0)
+    bg.addColorStop(0, `rgba(255, 214, 140, ${0.4 * fade})`)
+    bg.addColorStop(0.35, `rgba(255, 196, 120, ${0.26 * fade})`)
+    bg.addColorStop(1, 'rgba(255, 180, 100, 0)')
+    ctx.fillStyle = bg
+    ctx.fillRect(sx * k - B0, (sy - 0.12) * k - B0, 2 * B0, 2 * B0)
+
+    // The spark itself, the same character it is everywhere else (fx's own heart and flame, in fx's colours), only
+    // seen through the silk: its orange-gold heart at its true size, and over it the three tongues of its teardrop
+    // (rim, body, core) as long as they are outside, standing up the envelope's axis and flickering as they do there.
+    // The bloom on the gores under it says "inside"; the flame is never whiter or smaller than it is in the open.
+    ctx.globalCompositeOperation = 'source-over'
+    drawSpark(p, k, sx, sy, t)
+    const f = frame(p, k)
+    const hb = Math.min(f.y1 - f.y0, ((f.x1 - f.x0) * 9) / 16)
+    const boost = flameBoost(t, hb, h)
+    const flick = 0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)
+    const len = R * (2.1 + 0.25 * flick) * h * boost
+    const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick) * Math.sqrt(boost)
+    const lean = 0.05 * Math.sin(t * 7) * R + flick * R * 0.6
+    ctx.save()
+    ctx.translate(sx * k, (sy - R * 0.35) * k)
+    ctx.rotate(pose.a)
+    ctx.globalAlpha = fade
+    for (const [w, l, n, col, dy] of [
+      [1.15, 1.1, 1, FLAME_RIM, 0],
+      [0.8, 0.82, 0.85, SPARK, 0],
+      [0.42, 0.5, 0.6, FLAME_CORE, R * 0.1],
+    ] as const) {
+      ctx.fillStyle = col
+      silkTongue(ctx, wide * w * k, len * l * k, lean * n * k, dy * k)
+      ctx.fill()
+    }
+    ctx.restore()
+  }
+  ctx.restore()
+}
+
+/**
  * The envelope, with everything that is part of it: the gores, a band, the shade and the sunlit rim, its glow from
  * inside, the skirt, the vent. `warm` is the light of the burner in it (0..1.2); `spark` is where the spark is inside
- * it (world), if it is, which glows through the silk.
+ * it (world), if it is, which glows through the silk; `ride`, the ride up through it (see `Ride`).
  */
-export function drawEnvelope(p: p5, look: Look, b: Balloon, pose: Pose, warm: number, spark: Pt | null, sparkHeat = 1): void {
+export function drawEnvelope(
+  p: p5,
+  look: Look,
+  b: Balloon,
+  pose: Pose,
+  warm: number,
+  spark: Pt | null,
+  sparkHeat = 1,
+  ride: Ride | null = null,
+): void {
   const { k, weight } = look
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const top = b.H - CAP
@@ -219,53 +405,47 @@ export function drawEnvelope(p: p5, look: Look, b: Balloon, pose: Pose, warm: nu
   p.fill(rgba(REGATTA.sun, 0.28 * (1 - (look.haze ?? 0)) * (1 - 0.7 * (look.dusk ?? 0))))
   poly(p, k, rim)
 
-  // The light inside: the burner's, from the mouth up, and the spark's own where it is. Only in the silk.
-  if (warm > 0.01 || spark) {
+  // The light inside: the burner's, from the mouth up. Only in the silk. While the spark rides up inside, the lantern
+  // is let down by 30%, so the spark and the bloom round it stand out of it.
+  if (warm > 0.01) {
     ctx.save()
     pathOf(ctx, k, body)
     ctx.clip()
     // Light carries through the haze better than silk does.
     const fade = 1 - 0.45 * (look.haze ?? 0)
-    if (warm > 0.01) {
-      // A lantern: warm from the mouth up, brightest low where the flame goes in.
-      const [cx, cy] = toWorld(pose, 0, b.H * 0.26)
-      const w = Math.min(1.2, warm) * fade
-      const R0 = b.H * 0.9 * k
-      ctx.globalCompositeOperation = 'source-over'
-      const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R0)
-      g.addColorStop(0, `rgba(255, 150, 60, ${0.42 * w})`)
-      g.addColorStop(0.55, `rgba(255, 120, 60, ${0.18 * w})`)
-      g.addColorStop(1, 'rgba(255, 120, 60, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(cx * k - R0, cy * k - R0, 2 * R0, 2 * R0)
-      ctx.globalCompositeOperation = 'screen'
-      const h = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R0 * 0.8)
-      h.addColorStop(0, `rgba(255, 220, 150, ${0.6 * w})`)
-      h.addColorStop(1, 'rgba(255, 220, 150, 0)')
-      ctx.fillStyle = h
-      ctx.fillRect(cx * k - R0, cy * k - R0, 2 * R0, 2 * R0)
-    }
-    if (spark) {
-      // The spark seen through the silk: a long soft flame-shaped light that goes up with it, never a disc.
-      const [sx, sy] = spark
-      const L = 1.45 * Math.min(2.2, sparkHeat)
-      ctx.translate(sx * k, sy * k)
-      ctx.scale(0.55, 1)
-      ctx.globalCompositeOperation = 'source-over'
-      const g = ctx.createRadialGradient(0, -L * 0.3 * k, 0, 0, -L * 0.3 * k, L * k)
-      g.addColorStop(0, 'rgba(255, 140, 50, 0.5)')
-      g.addColorStop(0.5, 'rgba(255, 120, 50, 0.2)')
-      g.addColorStop(1, 'rgba(255, 120, 50, 0)')
-      ctx.fillStyle = g
-      ctx.fillRect(-L * k, -L * 1.4 * k, 2 * L * k, 2.4 * L * k)
-      ctx.globalCompositeOperation = 'screen'
-      const c = ctx.createRadialGradient(0, -L * 0.2 * k, 0, 0, -L * 0.2 * k, L * 0.6 * k)
-      c.addColorStop(0, 'rgba(255, 236, 180, 0.85)')
-      c.addColorStop(1, 'rgba(255, 236, 180, 0)')
-      ctx.fillStyle = c
-      ctx.fillRect(-L * k, -L * 1.4 * k, 2 * L * k, 2.4 * L * k)
-    }
+    // A lantern: warm from the mouth up, brightest low where the flame goes in.
+    const [cx, cy] = toWorld(pose, 0, b.H * 0.26)
+    const w = Math.min(1.2, warm) * fade * (1 - 0.3 * (ride?.cut ?? 0))
+    const R0 = b.H * 0.9 * k
+    ctx.globalCompositeOperation = 'source-over'
+    const g = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R0)
+    g.addColorStop(0, `rgba(255, 150, 60, ${0.42 * w})`)
+    g.addColorStop(0.55, `rgba(255, 120, 60, ${0.18 * w})`)
+    g.addColorStop(1, 'rgba(255, 120, 60, 0)')
+    ctx.fillStyle = g
+    ctx.fillRect(cx * k - R0, cy * k - R0, 2 * R0, 2 * R0)
+    ctx.globalCompositeOperation = 'screen'
+    const h = ctx.createRadialGradient(cx * k, cy * k, 0, cx * k, cy * k, R0 * 0.8)
+    h.addColorStop(0, `rgba(255, 220, 150, ${0.6 * w})`)
+    h.addColorStop(1, 'rgba(255, 220, 150, 0)')
+    ctx.fillStyle = h
+    ctx.fillRect(cx * k - R0, cy * k - R0, 2 * R0, 2 * R0)
     ctx.restore()
+  }
+
+  // The spark in the silk, and the roar's light running up to it (and, once it has popped out, dying away into the
+  // crown). Clipped to the envelope and its skirt, so the stream shows from the jet in the skirt up.
+  const hold = ride?.hold ?? 0
+  const end = spark ?? (hold > 0.01 && pose.vent > 0.02 ? toWorld(pose, 0, top - 0.25) : null)
+  if (end) {
+    const hemH = ANAT.mouthY - ANAT.hemY
+    const sleeve: Pt[] = [...body]
+    const n = 10
+    for (let i = 0; i <= n; i++) {
+      const s = -1 + (2 * i) / n
+      sleeve.push(toWorld(pose, ANAT.hemR * s, hemH - 0.1 * Math.sqrt(1 - s * s)))
+    }
+    drawSparkInSilk(p, look, pose, sleeve, end, spark !== null, sparkHeat, ride)
   }
 
   drawValve(p, look, b, pose, warm)
@@ -670,20 +850,26 @@ export interface Moment {
   seed: number
 }
 
-/** One balloon: basket, burner, jet, wires, envelope, ballast, in that order. */
+/**
+ * One balloon: basket, burner, jet, wires, envelope, ballast, in that order. Through a ride up inside it the burner
+ * keeps roaring into the mouth (at least a full roar), so its flame, the light through the mouth and the spark's glow
+ * make one line.
+ */
 export function drawBalloon(p: p5, look: Look, b: Balloon, m: Moment): void {
   const { k } = look
   const { pose } = m
+  const ride = rideOf(b, m.t)
+  const roar = Math.max(m.roar, ride?.hold ?? 0)
   drawBasket(p, look, pose.n)
   p.push()
   p.translate(pose.n[0] * k, pose.n[1] * k)
   p.rotate(pose.a)
   drawWires(p, look, pose.fill)
-  drawJet(p, k, m.t, m.roar, m.seed)
-  drawBurner(p, look, m.roar)
+  drawJet(p, k, m.t, roar, m.seed)
+  drawBurner(p, look, roar)
   if (m.pilot) drawPilot(p, k, m.t, m.seed)
   p.pop()
-  drawEnvelope(p, look, b, pose, m.warm, m.spark, m.sparkHeat)
+  drawEnvelope(p, look, b, pose, m.warm, m.spark, m.sparkHeat, ride)
   drawSandbag(p, look, pose.n, -1, m.t, m.bags)
   drawSandbag(p, look, pose.n, 1, m.t, m.bags === null ? null : m.bags + 0.06)
 }

@@ -202,8 +202,24 @@ export const FESTIVAL = phrase(16)
 /** Where the loft's two builders hand the spark on: phrase 3, the second B. */
 export const LOFT_SEAM = phrase(3)
 
+/**
+ * On the stove's sill before the leap into the fire: the spark lands there on the bar's first beat (`beat(88)`), and
+ * on the last bar's third and fourth beats it winds up (a lean into the draught, a crouch, deeper on the second) before
+ * it leaps.
+ */
+export const SILL_AT = beat(88)
+export const WINDUP = [beat(93), beat(94)] as const
+
 /** Phrase 2's two big notes, where the rack's candles knock together and the cat half wakes (`CAT_CUES.ear`). */
 export const KNOCKS = [25.653, 28.961] as const
+
+/**
+ * The cat's look on the bang (the second last chord): its head snaps up at the door that banged over it, then turns
+ * round and down onto the candle, where its gaze arrives (`on`) and holds until it tucks back down (`off`). The
+ * candle's flame plays innocent under it (`fx.ts`): it ducks and holds dead still from `on`, and flickers again from
+ * `off`, as the cat's eye shuts.
+ */
+export const GAZE = { on: LAST[1] + 0.82, off: LAST[1] + 3.1 } as const
 
 /** When the credits start: after the last chord has died away, and the cat has looked at the candle and gone back to sleep. */
 export const CREDITS_AT = 154.2

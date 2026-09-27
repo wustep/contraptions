@@ -1,9 +1,10 @@
 import type p5 from 'p5'
-import { R, mixHex } from '../../../../parts'
+import { R, mixHex, type Pt } from '../../../../parts'
 import { drawLick, type Lick } from './fire'
 import { frame, hash, scenery, smooth } from './kit'
 import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
-import { FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
+import { DOORS, FESTIVAL, GAZE, KNOCKS, LAST, ROLL, SILENCE, SILL_AT, THEME, WINDUP, level } from './music'
+import { IN_MOUTH, OUT_MOUTH, type Mouth } from './mouths'
 import type { SparkShow } from './show'
 import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from './worlds'
 
@@ -67,8 +68,31 @@ function freeze(t: number): number {
     if (u <= 0 || u > 1.6) continue
     d = Math.max(d, smooth(u, 0, 0.1) * Math.exp(-Math.max(0, u - 0.1) / 0.32))
   }
-  return 1 - 0.4 * d
+  return (1 - 0.4 * d) * (1 - 0.3 * innocent(t))
 }
+
+/**
+ * The same gag paid off at home: when the woken cat's gaze comes round onto the candle (`GAZE.on`), the flame ducks
+ * as it did on the knocks and holds dead still, no flicker, no lean, playing an ordinary candle; when the cat's eye
+ * shuts (`GAZE.off`) it lets its breath out and flickers again. 0..1: how still it holds.
+ */
+export function innocent(t: number): number {
+  if (t < GAZE.on - 0.05 || t > GAZE.off + 0.8) return 0
+  return smooth(t, GAZE.on - 0.05, GAZE.on + 0.06) * (1 - smooth(t, GAZE.off, GAZE.off + 0.7))
+}
+
+/**
+ * On the stove's sill the draught into the fire pulls at the flame: on each beat of the wind-up it streams in toward
+ * the fire (to the right, where the firebox's mouth is), the second harder, and it stays drawn in until the leap.
+ * Cells of lean at the tip per cell of flame.
+ */
+function sillDraught(t: number): number {
+  if (t < WINDUP[0] - 0.1 || t > DOORS.glass) return 0
+  const pull = (at: number, a: number) => (t < at - 0.08 ? 0 : a * smooth(t, at - 0.08, at) * (0.55 + 0.45 * Math.exp(-Math.max(0, t - at) / 0.3)))
+  return Math.max(pull(WINDUP[0], 0.55), pull(WINDUP[1], 0.85))
+}
+/** How much the spark stands in front of the stove's fire on the sill (for its shadow): from the landing to the leap. */
+const onSill = (t: number): number => smooth(t, SILL_AT - 0.15, SILL_AT + 0.1) * (1 - smooth(t, DOORS.glass - 0.4, DOORS.glass - 0.3))
 
 /* ------------------------------------------------------------------ where the spark is, for the sets it lights */
 
@@ -139,8 +163,8 @@ export const flame = () =>
       if (here.hidden || here.scale <= 0.05) return
       const h = heat(t)
       if (h <= 0.01) return
-      // All but out (the silence): no flame to speak of, but a tiny guttering tongue off the coal that flickers up on
-      // each breath and nearly dies between, so it is still a fire.
+      // All but out (the silence): no flame to speak of, but a small guttering tongue off the dulled heart that never
+      // goes out, rising on each breath and sinking between, so it is still a fire and still the spark.
       const ash = 1 - smooth(h, 0.1, 0.45)
       if (ash > 0.02) guttering(p, c.k, here.x, here.y, t, ash)
       if (ash > 0.98) return
@@ -150,7 +174,7 @@ export const flame = () =>
       const same = show.owner(t - 0.04) === show.owner(t)
       const vx = same ? (b[0] - a[0]) / 0.04 : 0
       const vy = same ? (b[1] - a[1]) / 0.04 : 0
-      const flick = 0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)
+      const flick = (0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)) * (1 - innocent(t))
       const { k } = c
       // Findable at a glance in a wide frame (on a phone held upright the 16:9 band is about 220 px tall): the flame
       // never draws smaller than about 6% of the band, heart and all. The heart keeps its true size, so every socket
@@ -161,7 +185,7 @@ export const flame = () =>
       const len = R * (2.1 + 0.25 * flick) * h * boost
       const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick) * Math.sqrt(boost)
       // Speed lays the flame back along the way it came, up to nearly flat.
-      const lean = Math.max(-1.6, Math.min(1.6, -vx * 0.09)) * len + flick * R * 0.6
+      const lean = Math.max(-1.6, Math.min(1.6, -vx * 0.09 + (s.world === 'loft' ? sillDraught(t) : 0))) * len + flick * R * 0.6
       const up = Math.max(0.35, 1 - Math.max(0, vy) * 0.05)
       const x = here.x
       const y = here.y - R * 0.35
@@ -173,6 +197,12 @@ export const flame = () =>
       if (s.world === 'railway' && t > FESTIVAL - 0.2 && t < SILENCE + 0.3) {
         const on = smooth(t, FESTIVAL - 0.2, FESTIVAL + 0.6) * (1 - smooth(t, SILENCE - 0.3, SILENCE + 0.3))
         shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 3.4, 0.03 * hb), 0.36 * on, [12, 10, 22], 1.55)
+      }
+      // On the stove's sill the firebox is right behind it: the fire goes deeper round the flame (its rim's colour, as
+      // at a door), so the spark stands in front of the fire and not in it.
+      if (s.world === 'loft') {
+        const sill = onSill(t)
+        if (sill > 0.01) shadow(ctx, k, here.x, here.y, R * here.scale, R * here.scale + 0.42, 0.42 * sill, SILL_SHADE, 1.6)
       }
       // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
       // It blooms as the wick catches on the first last chord.
@@ -239,23 +269,29 @@ export function shadow(
   ctx.restore()
 }
 
-/** The ember's last tongue: a small flame off the top of the coal, rising on its breath and all but gone between. */
+/**
+ * The ember's last tongue: a small flame off the top of the coal that never quite goes out. Between breaths it is a
+ * low guttering tongue about a quarter of a candle's flame, leaning and shrinking in the night air; on each breath it
+ * rises to over half again. So in the silence the spark is barely alive, never gone.
+ */
 function guttering(p: p5, k: number, x: number, y: number, t: number, ash: number): void {
   const b = emberBreath(t - 0.12)
   const g = b * b
   const flick = 0.5 + 0.5 * Math.sin(t * 29 + 0.7) * Math.sin(t * 17.3)
-  const len = R * (0.35 + 1.35 * g) * (0.85 + 0.3 * flick)
-  const wide = R * (0.5 + 0.35 * g)
-  const lean = R * 0.35 * Math.sin(t * 3.1) + R * 0.15 * (flick - 0.5)
-  const base = y - R * 0.05
+  // Rooted where the candle's flame is (0.35 R up the heart), so even at its lowest its tip stands clear of the heart.
+  const len = R * (1.25 + 1.0 * g) * (0.88 + 0.24 * flick)
+  const wide = R * (0.55 + 0.3 * g)
+  const lean = R * (0.3 * Math.sin(t * 3.1) + 0.12 * Math.sin(t * 1.3 + 0.4)) + R * 0.15 * (flick - 0.5)
+  const base = y - R * 0.35
   p.push()
   p.noStroke()
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  ctx.globalAlpha = ash * smooth(g, 0.04, 0.5)
-  tongue(p, k, x + R * 0.1, base, wide, len, lean, FLAME_RIM)
-  tongue(p, k, x + R * 0.1, base + R * 0.04, wide * 0.6, len * 0.66, lean * 0.7, SPARK)
-  ctx.globalAlpha = ash * smooth(g, 0.3, 0.9)
-  tongue(p, k, x + R * 0.1, base + R * 0.06, wide * 0.3, len * 0.36, lean * 0.5, FLAME_CORE)
+  ctx.globalAlpha = ash * (0.78 + 0.22 * g)
+  tongue(p, k, x + R * 0.05, base, wide, len, lean, FLAME_RIM)
+  ctx.globalAlpha = ash * (0.62 + 0.38 * g)
+  tongue(p, k, x + R * 0.05, base + R * 0.04, wide * 0.6, len * 0.66, lean * 0.7, SPARK)
+  ctx.globalAlpha = ash * (0.3 + 0.6 * g)
+  tongue(p, k, x + R * 0.05, base + R * 0.06, wide * 0.3, len * 0.36, lean * 0.5, FLAME_CORE)
   p.pop()
 }
 
@@ -313,71 +349,47 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
     ctx.restore()
     return
   }
-  // Going out, it is a coal and not a coin: a small, flat, broken clinker lying in the ash, crusted dark grey, lit
-  // from under where it lies and through its cracks by a red heart that breathes.
-  const n = 8
-  const shrink = 1 - 0.18 * ash
-  const outline: [number, number][] = []
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 + 0.2
-    const lump = 1 + ash * (0.3 * (hash(i, 71) - 0.5))
-    const wide = 1 + 0.22 * ash
-    const flat = 1 - 0.36 * ash
-    outline.push([Math.cos(a) * r * lump * wide * shrink, (Math.sin(a) * lump * flat + 0.3 * ash) * r * shrink])
-  }
-  const path = () => {
+  // Going out, it is still the spark: its round heart, only dulled and crusted with ash over the top, the red of it
+  // breathing up through the crust from underneath where it lies, never a flat pebble or one more coal. (Its tongue of
+  // flame never quite goes out either: `guttering`.)
+  const rr = r * (1 - 0.1 * ash)
+  const dullCore = mixHex(SPARK, FLAME_RIM, 0.55 - 0.35 * breathe)
+  const dullBody = mixHex(FLAME_RIM, ASH, 0.38 - 0.14 * breathe)
+  const dullEdge = mixHex(FLAME_RIM, LOFT.soot, 0.55)
+  const heart = () => {
     ctx.beginPath()
-    for (let i = 0; i <= n; i++) {
-      const [ax, ay] = outline[i % n]
-      const [bx, by] = outline[(i + 1) % n]
-      // Mostly straight broken faces, their corners only a little rounded.
-      const mx = (ax + bx) / 2
-      const my = (ay + by) / 2
-      if (i === 0) ctx.moveTo(mx, my)
-      else {
-        const [px, py] = outline[(i - 1 + n) % n]
-        ctx.lineTo(ax + (px - ax) * 0.18, ay + (py - ay) * 0.18)
-        ctx.quadraticCurveTo(ax, ay, ax + (bx - ax) * 0.18, ay + (by - ay) * 0.18)
-        ctx.lineTo(mx, my)
-      }
-    }
-    ctx.closePath()
+    ctx.arc(0, 0, rr, 0, Math.PI * 2)
   }
-  const crust = mixHex(ASH, LOFT.soot, 0.35)
-  const [er, eg, eb] = rgb(mixHex(FLAME_RIM, SPARK, 0.3 * breathe))
-  path()
-  const g = ctx.createLinearGradient(0, -r * 0.6, 0, r * 0.75)
-  g.addColorStop(0, mixHex(edge, mixHex(crust, ASH, 0.25), ash))
-  g.addColorStop(0.55, mixHex(body, crust, ash))
-  g.addColorStop(1, mixHex(core, mixHex(crust, FLAME_RIM, 0.35 + 0.35 * breathe), ash))
+  heart()
+  const g = ctx.createRadialGradient(0, 0.3 * rr, 0.05 * rr, 0, 0.1 * rr, rr)
+  g.addColorStop(0, mixHex(core, dullCore, ash))
+  g.addColorStop(0.55, mixHex(body, dullBody, ash))
+  g.addColorStop(1, mixHex(edge, dullEdge, ash))
   ctx.fillStyle = g
   ctx.fill()
   ctx.save()
-  path()
+  heart()
   ctx.clip()
-  // Its underside glows where it lies in the ash, swelling and ebbing with each breath.
-  const under = ctx.createRadialGradient(0, 0.9 * r, 0, 0, 0.9 * r, 1.1 * r)
-  under.addColorStop(0, `rgba(${er}, ${eg}, ${eb}, ${((0.35 + 0.55 * breathe) * ash).toFixed(3)})`)
-  under.addColorStop(1, `rgba(${er}, ${eg}, ${eb}, 0)`)
-  ctx.fillStyle = under
-  ctx.fillRect(-r * 1.6, -r * 1.2, r * 3.2, r * 2.6)
-  // Cracks across its crust, glowing through: fine wandering lines that run mostly across it, brighter on the breath.
+  // The ash over its top: a grey film, thickest at the crown and gone by its middle, thinning as it breathes.
+  const [ar, ag, ab] = rgb(mixHex(ASH, LOFT.soot, 0.25))
+  const crust = ctx.createLinearGradient(0, -rr, 0, 0.25 * rr)
+  crust.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, ${((0.85 - 0.3 * breathe) * ash).toFixed(3)})`)
+  crust.addColorStop(0.6, `rgba(${ar}, ${ag}, ${ab}, ${((0.35 - 0.2 * breathe) * ash).toFixed(3)})`)
+  crust.addColorStop(1, `rgba(${ar}, ${ag}, ${ab}, 0)`)
+  ctx.fillStyle = crust
+  ctx.fillRect(-rr, -rr, 2 * rr, 1.3 * rr)
+  // One fine crack across the crust, glowing through it on the breath.
+  const [er, eg, eb] = rgb(mixHex(FLAME_RIM, SPARK, 0.4 * breathe))
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  ctx.strokeStyle = `rgba(${er}, ${eg}, ${eb}, ${((0.2 + 0.6 * breathe) * ash).toFixed(3)})`
-  ctx.lineWidth = Math.max(0.7, 0.06 * r)
-  for (let i = 0; i < 2; i++) {
-    let cx = -0.75 * r + 0.35 * r * hash(i, 81)
-    let cy = (0.05 + 0.3 * i + 0.1 * hash(i, 82)) * r
-    ctx.beginPath()
-    ctx.moveTo(cx, cy)
-    for (let j = 0; j < 5; j++) {
-      cx += (0.22 + 0.16 * hash(i, j, 83)) * r
-      cy += (hash(i, j, 84) - 0.5) * 0.22 * r
-      ctx.lineTo(cx, cy)
-    }
-    ctx.stroke()
-  }
+  ctx.strokeStyle = `rgba(${er}, ${eg}, ${eb}, ${((0.15 + 0.55 * breathe) * ash).toFixed(3)})`
+  ctx.lineWidth = Math.max(0.7, 0.07 * rr)
+  ctx.beginPath()
+  ctx.moveTo(-0.8 * rr, -0.28 * rr)
+  ctx.lineTo(-0.3 * rr, -0.4 * rr)
+  ctx.lineTo(0.1 * rr, -0.3 * rr)
+  ctx.lineTo(0.55 * rr, -0.46 * rr)
+  ctx.stroke()
   ctx.restore()
   ctx.restore()
 }
@@ -418,16 +430,15 @@ export interface VeilState {
 }
 
 /**
- * How long before and after a door its fire is in the frame. The three doors out are a fire the camera goes through
- * with the spark: it comes in from the way the spark is going, covers the frame on the cut, and leaves behind it. The
- * dash home is three doors in a sixth of a second, on the roll's strokes: each is a flash of fire and no more, so the
- * worlds it goes back through are seen, a few frames each (a burner, the glory hole), before the loft.
+ * How long before and after a door its fire is in the frame. The three doors out are an opening the camera flies
+ * through with the spark (`DOORWAY`, below). The dash home is three doors in a sixth of a second, on the roll's
+ * strokes: each is a flash of fire and no more, so the worlds it goes back through are seen, a few frames each (a
+ * burner, the glory hole), before the loft.
  */
-const VEIL = { before: 0.3, after: 0.34 }
 const FLASH = { before: 0.022, after: 0.028 }
 
 /**
- * The veil's licks: scattered at random over the frame (no rows), sized on a power law (a few tall, many short), each
+ * The flash's licks: scattered at random over the frame (no rows), sized on a power law (a few tall, many short), each
  * on its own clock as the band rises through the frame. The first few are big dark-red licks at the back, for depth.
  */
 interface VeilLick {
@@ -452,8 +463,262 @@ type RGB = [number, number, number]
 const lerp3 = (a: RGB, b: RGB, f: number): RGB => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
 const css = (c: RGB, al: number): string => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${Math.max(0, Math.min(1, al))})`
 const palette = (x: { rim: string; body: string; heart: string }): { rim: RGB; body: RGB; heart: RGB } => ({ rim: rgb(x.rim), body: rgb(x.body), heart: rgb(x.heart) })
+/** The loft fire's rim gone deeper: the shadow behind the spark on the stove's sill. */
+const SILL_SHADE: RGB = lerp3(rgb(FIRES.loft.rim), [20, 10, 8], 0.4)
 /** Where one world's fire meets the next at a door: white heat, which any fire's colours go to without turning grey. */
 const HOT: RGB = rgb('#FFF6E0')
+
+/**
+ * A door out, on its own clock (seconds from the cut). From `in0` fire comes up in the old world's mouth (the stove's
+ * doorway, the furnace's port, the top balloon's jet), and the mouth flies at the camera: it grows about the point the
+ * spark goes in by until its jambs have passed the frame's edges at `in1`. From `in1` to `out0`, two frames either
+ * side of the cut, the frame is all fire. Then the new world's mouth (the glory hole, a burner's jet, the chimney)
+ * starts past the frame's edges and closes to its true place by `out1` as the camera backs out of it, its fire going
+ * back to the world's own. Inside the mouth the licks stream out past the spark from a point just ahead of it, in three
+ * depths, so it is a passage and not a wall of fire.
+ */
+const DOORWAY = { in0: -0.24, in1: -0.035, out0: 0.035, out1: 0.3 }
+const VEIL = { before: -DOORWAY.in0, after: DOORWAY.out1 }
+
+/**
+ * The passage's licks: each on its own bearing out from the vanishing point, at one of three depths, flying out and
+ * growing as they come. They stay flames (a flame points up, whichever way it flies), their tips trailing back toward
+ * the middle. The far ones are small, dark and slow; the near ones big, bright and fast, so they pass at different
+ * speeds.
+ */
+interface TunnelLick {
+  a: number
+  layer: number
+  phase: number
+  seed: number
+  size: number
+}
+const TUNNEL_LICKS: TunnelLick[] = Array.from({ length: 60 }, (_, i) => ({
+  a: 2 * Math.PI * ((i * 0.618034 + 0.3 * hash(i, 421)) % 1),
+  layer: i % 3,
+  phase: hash(i, 422),
+  seed: 700 + i * 4.1,
+  size: 0.55 + 0.45 * hash(i, 423),
+}))
+/** The depths: cycles a second; how far out it goes (share of the farthest corner); its height there (share of the frame's). */
+const DEPTHS = [
+  { rate: 1.2, reach: 0.95, h: 0.22, a: 0.42 },
+  { rate: 1.7, reach: 1.1, h: 0.36, a: 0.5 },
+  { rate: 2.4, reach: 1.3, h: 0.58, a: 0.56 },
+]
+/** The mouth's edge is feathered over five rings this far apart (a share of its size): soft, never a drawn line. */
+const FEATHER = 0.05
+/** The passage's resolution, as a share of the frame's. */
+const TUNNEL_RES = 0.5
+
+let TUNNEL: HTMLCanvasElement | null = null
+let TUNNEL_MASK: HTMLCanvasElement | null = null
+function scratch(c: HTMLCanvasElement | null, w: number, h: number): HTMLCanvasElement | null {
+  if (typeof document === 'undefined') return null
+  const cv = c ?? document.createElement('canvas')
+  if (cv.width !== w) cv.width = w
+  if (cv.height !== h) cv.height = h
+  return cv
+}
+
+function insidePoly(poly: Pt[], x: number, y: number): boolean {
+  let yes = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]
+    const [xj, yj] = poly[j]
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) yes = !yes
+  }
+  return yes
+}
+/**
+ * A mouth where it stands at `t`: laid so the spark's place at the door (`atDoor`, in the world's cells) is its
+ * `anchor`, and moved on from there with its balloon or its engine.
+ */
+function mouthAt(m: Mouth, t: number, atDoor: Pt): Mouth {
+  const [ex, ey] = m.drift ? m.drift(t) : [0, 0]
+  const dx = atDoor[0] - m.anchor[0] + ex
+  const dy = atDoor[1] - m.anchor[1] + ey
+  if (Math.abs(dx) + Math.abs(dy) < 1e-6) return m
+  const mv = (q: Pt): Pt => [q[0] + dx, q[1] + dy]
+  return { hole: m.hole.map(mv), at: mv(m.at), anchor: m.anchor, solids: m.solids.map((s) => ({ pts: s.pts.map(mv), hole: s.hole?.map(mv), col: s.col })) }
+}
+/** How far the mouth must grow about its point for its fire (inside the feather) to fill the frame. */
+function coverScale(m: Mouth, f: { x0: number; y0: number; x1: number; y1: number }): number {
+  const mx = (f.x1 - f.x0) * 0.03
+  const my = (f.y1 - f.y0) * 0.03
+  const corners: Pt[] = [
+    [f.x0 - mx, f.y0 - my],
+    [f.x1 + mx, f.y0 - my],
+    [f.x0 - mx, f.y1 + my],
+    [f.x1 + mx, f.y1 + my],
+  ]
+  const [ax, ay] = m.at
+  const fits = (S: number) => corners.every(([x, y]) => insidePoly(m.hole, ax + (x - ax) / S, ay + (y - ay) / S))
+  let lo = 1
+  let hi = 400
+  if (fits(lo)) return 1 / (1 - 2 * FEATHER)
+  if (!fits(hi)) return hi
+  for (let i = 0; i < 24; i++) {
+    const mid = Math.sqrt(lo * hi)
+    if (fits(mid)) hi = mid
+    else lo = mid
+  }
+  return hi / (1 - 2 * FEATHER)
+}
+/** How much the mouth is grown at `d` from the cut, given what fills the frame (`Sc`). */
+function doorScale(d: number, Sc: number): number {
+  const L = Math.log(Math.max(1.0001, Sc))
+  if (d < 0) {
+    if (d <= DOORWAY.in0) return 1
+    const u = Math.min(1, (d - DOORWAY.in0) / (DOORWAY.in1 - DOORWAY.in0))
+    return Math.exp(L * u * u) * (d > DOORWAY.in1 ? Math.exp((d - DOORWAY.in1) * 8) : 1)
+  }
+  if (d >= DOORWAY.out1) return 1
+  const u = Math.max(0, (d - DOORWAY.out0) / (DOORWAY.out1 - DOORWAY.out0))
+  return Math.exp(L * (1 - u) ** 2) * (d < DOORWAY.out0 ? Math.exp((DOORWAY.out0 - d) * 8) : 1)
+}
+const scaled = (q: Pt, at: Pt, S: number): Pt => [at[0] + (q[0] - at[0]) * S, at[1] + (q[1] - at[1]) * S]
+function tracePoly(ctx: CanvasRenderingContext2D, k: number, pts: Pt[], at: Pt, S: number): void {
+  pts.forEach((q, i) => {
+    const [x, y] = scaled(q, at, S)
+    if (i) ctx.lineTo(x * k, y * k)
+    else ctx.moveTo(x * k, y * k)
+  })
+  ctx.closePath()
+}
+
+/**
+ * A door out, `d` seconds from its cut: the mouth (old before the cut, new after) grown to `S` about its point, its
+ * fire a passage streaming out past the spark, feathered to the mouth's opening, its jambs over the fire's edge.
+ * Returns how much of it is in front of the world at the spark (for the spark's shadow).
+ */
+function drawDoorway(p: p5, k: number, t: number, d: number, mouth: Mouth, P: { rim: RGB; body: RGB; heart: RGB }, spark: Pt, v: Pt, atDoor: Pt): number {
+  const on = d < 0 ? smooth(d, DOORWAY.in0, DOORWAY.in0 + 0.1) : 1 - smooth(d, DOORWAY.out1 - 0.11, DOORWAY.out1)
+  if (on < 0.004) return 0
+  const f = frame(p, k)
+  const w = f.x1 - f.x0
+  const hgt = f.y1 - f.y0
+  const m = mouthAt(mouth, t, atDoor)
+  const Sc = coverScale(m, f)
+  const S = doorScale(d, Sc)
+  // White heat either side of the cut: where the old fire gives way to the new.
+  const hot = Math.exp(-((d / 0.045) ** 2))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // The passage is laid in a canvas of its own at half the frame's resolution (it streams past too fast for a hard
+  // edge), then cut to the mouth.
+  const tr = ctx.getTransform()
+  const dens = Math.hypot(tr.a, tr.b) || 1
+  const tw = Math.max(8, Math.ceil(w * k * dens * TUNNEL_RES))
+  const th = Math.max(8, Math.ceil(hgt * k * dens * TUNNEL_RES))
+  const cv = scratch(TUNNEL, tw, th)
+  if (!cv) return 0
+  TUNNEL = cv
+  const oc = cv.getContext('2d')
+  if (!oc) return 0
+  const sa = tw / (w * k)
+  oc.setTransform(1, 0, 0, 1, 0, 0)
+  oc.globalCompositeOperation = 'source-over'
+  oc.globalAlpha = 1
+  oc.clearRect(0, 0, tw, th)
+  oc.setTransform(sa, 0, 0, sa, -f.x0 * k * sa, -f.y0 * k * sa)
+  // The vanishing point: a little ahead of the spark the way it goes, so the fire streams back past it.
+  const vl = Math.hypot(v[0], v[1]) || 1
+  const vp: Pt = [spark[0] + (v[0] / vl) * 0.2 * hgt, spark[1] + (v[1] / vl) * 0.2 * hgt]
+  let D = 0
+  for (const [x, y] of [
+    [f.x0, f.y0],
+    [f.x1, f.y0],
+    [f.x0, f.y1],
+    [f.x1, f.y1],
+  ])
+    D = Math.max(D, Math.hypot(x - vp[0], y - vp[1]))
+  // The body of the fire: its own colour round the middle (no bright core by the spark), deepening to its rim toward
+  // the frame's edges.
+  const g = oc.createRadialGradient(vp[0] * k, vp[1] * k, 0, vp[0] * k, vp[1] * k, D * k)
+  const mid = lerp3(lerp3(P.body, P.heart, 0.2), HOT, 0.2 * hot)
+  g.addColorStop(0, css(mid, 0.95))
+  g.addColorStop(0.3, css(mid, 0.95))
+  g.addColorStop(0.7, css(lerp3(P.body, P.rim, 0.3), 0.95))
+  g.addColorStop(1, css(lerp3(P.rim, [20, 10, 8], 0.15), 0.95))
+  oc.fillStyle = g
+  oc.fillRect(f.x0 * k, f.y0 * k, w * k, hgt * k)
+  // The licks, flying out from the vanishing point and growing.
+  // Laid on additively, so where they cross they burn together into one fire instead of stacking as cut-outs.
+  oc.globalCompositeOperation = 'lighter'
+  {
+    const back = false
+    for (const L of TUNNEL_LICKS) {
+      const Z = DEPTHS[L.layer]
+      const lam = (L.phase + t * Z.rate) % 1
+      const r = D * Z.reach * (0.06 + 0.94 * lam ** 1.4)
+      const h = hgt * Z.h * L.size * (0.35 + 0.9 * lam)
+      const a = Z.a * Math.sin(Math.PI * Math.min(1, lam * 1.05)) ** 0.5
+      if (a < 0.02) continue
+      const hotL = 0.5 * hot
+      const cx = vp[0] + r * Math.cos(L.a)
+      const cy = vp[1] + r * Math.sin(L.a)
+      drawLick(oc, k, {
+        x: cx,
+        y: cy + h * 0.45,
+        w: Math.min(w * 0.08 * (0.6 + L.size), h * 0.3),
+        h,
+        // Its tip trails back toward the middle, the way it flies out from.
+        lean: -Math.cos(L.a) * h * 0.35 + 0.04 * h * Math.sin(t * 2.3 + L.seed),
+        t,
+        seed: L.seed,
+        root: back ? lerp3(P.rim, P.body, 0.5) : lerp3(lerp3(P.heart, P.body, 0.2), HOT, hotL),
+        mid: back ? lerp3(P.rim, [20, 10, 8], 0.2) : lerp3(P.body, HOT, hotL),
+        rim: back ? lerp3(P.rim, [20, 10, 8], 0.45) : lerp3(P.rim, HOT, hotL * 0.6),
+        a,
+        tips: L.size > 0.75 ? (hash(L.seed, 9) > 0.6 ? 3 : 2) : 1,
+      })
+    }
+  }
+  oc.globalCompositeOperation = 'source-over'
+  // Cut to the mouth's opening, feathered: five rings of it laid up in a mask. Not needed once it fills the frame.
+  if (S < Sc) {
+    const mk = scratch(TUNNEL_MASK, tw, th)
+    const mc = mk?.getContext('2d')
+    if (mk && mc) {
+      TUNNEL_MASK = mk
+      mc.setTransform(1, 0, 0, 1, 0, 0)
+      mc.globalCompositeOperation = 'source-over'
+      mc.clearRect(0, 0, tw, th)
+      mc.setTransform(sa, 0, 0, sa, -f.x0 * k * sa, -f.y0 * k * sa)
+      mc.globalCompositeOperation = 'lighter'
+      mc.fillStyle = 'rgba(0, 0, 0, 0.2)'
+      for (let j = -2; j <= 2; j++) {
+        mc.beginPath()
+        tracePoly(mc, k, m.hole, m.at, S * (1 + j * FEATHER))
+        mc.fill()
+      }
+      oc.setTransform(1, 0, 0, 1, 0, 0)
+      oc.globalCompositeOperation = 'destination-in'
+      oc.drawImage(mk, 0, 0)
+    }
+  }
+  ctx.save()
+  ctx.globalAlpha = on
+  ctx.drawImage(cv, f.x0 * k, f.y0 * k, w * k, hgt * k)
+  // The mouth's iron and brick round the fire, grown with it: thick, with a soft edge, passing the frame's edges.
+  const soft = Math.min(0.2 * hgt, 0.07 * S) * k
+  ctx.lineJoin = 'round'
+  for (const s of m.solids) {
+    ctx.beginPath()
+    tracePoly(ctx, k, s.pts, m.at, S)
+    if (s.hole) tracePoly(ctx, k, s.hole, m.at, S)
+    ctx.globalAlpha = on * 0.4
+    ctx.strokeStyle = s.col
+    ctx.lineWidth = soft
+    ctx.stroke()
+    ctx.globalAlpha = on
+    ctx.fillStyle = s.col
+    ctx.fill('evenodd')
+  }
+  ctx.restore()
+  const [sx, sy] = m.at
+  return on * (insidePoly(m.hole, sx + (spark[0] - sx) / S, sy + (spark[1] - sy) / S) ? 1 : 0.2)
+}
 
 /** The fire over the frame at a door, from the world left's fire to the world come to's. */
 export const veil = () =>
@@ -483,6 +748,23 @@ export const veil = () =>
       // The two fires, each in its own world's colours. They never mix: blue and orange mixed are a flat grey.
       const OLD = palette(FIRES[show.legs[best - 1].world])
       const NEW = palette(FIRES[show.legs[best].world])
+      if (!flash) {
+        // A door out: an opening flown through (see `DOORWAY`), the old world's mouth before the cut, the new one's after.
+        const mouth = d < 0 ? OUT_MOUTH[show.legs[best - 1].world] : IN_MOUTH[show.legs[best].world]
+        const here = show.at(t)
+        if (!mouth) return
+        const a0 = show.where(door - 0.03)
+        const b0 = show.where(door - 0.001)
+        const behind = drawDoorway(p, c.k, t, d, mouth, d < 0 ? OLD : NEW, [here.x, here.y], [b0[0] - a0[0], b0[1] - a0[1]], d < 0 ? b0 : show.where(door + 0.001))
+        // The spark stays in front of the fire it goes through, the fire going deeper round its flame.
+        if (!here.hidden && here.scale > 0.05) {
+          const ctx3 = p.drawingContext as CanvasRenderingContext2D
+          const P = d < 0 ? OLD : NEW
+          shadow(ctx3, c.k, here.x, here.y, R * here.scale, R * here.scale + 0.34, 0.22 * behind, lerp3(P.rim, [20, 10, 8], 0.4), 1.6)
+          if (behind > 0.01) drawSpark(p, c.k, here.x, here.y, t, here.scale, here.stretch, here.angle)
+        }
+        return
+      }
 
       const { k } = c
       const f = frame(p, k)
