@@ -47,7 +47,7 @@ function keys(): Key[] {
   const out: Key[] = []
   // The drum, close, with the ball waiting in the lift's cup; then up with it to the first storey as it unfolds.
   const drum: Pt = [(FOOT[0] + 0.9) / 2, -0.7]
-  out.push({ t: 0, cells: 3.3, hold: drum })
+  out.push({ t: 0, cells: 4.1, hold: [drum[0] + 0.25, drum[1] - 0.25] })
   out.push({ t: bar(2, 2), cells: 3.3, hold: drum })
   for (let k = 0; k < STATEMENTS.length; k++) {
     const S = STATEMENTS[k].t

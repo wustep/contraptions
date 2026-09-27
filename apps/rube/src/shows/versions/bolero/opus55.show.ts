@@ -8,7 +8,7 @@ export default defineShow({
   title: 'Ostinato',
   label: 'Opus 5.5',
   about: "Ravel's Boléro as a Rube Goldberg machine: a tower that grows a storey for every turn of the tune, all of it standing on one snare drum.",
-  still: 600,
+  still: 826,
   async load() {
     return (await import('./tower')).performance
   },

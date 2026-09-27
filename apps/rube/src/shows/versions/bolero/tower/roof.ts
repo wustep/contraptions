@@ -92,12 +92,10 @@ function roof(p: p5, c: PieceCtx, t: number, rise: number): void {
     p.rectMode(p.CORNER)
     // Laid from the eave inward.
     p.rect(side < 0 ? 0 : -len * k, -PLANK * k, len * k, PLANK * k, 0.04 * k)
-    // Its rafters' ends, as a row of short ticks under it (the ribs that hold it), few and heavy.
-    outline(p, INK, weight * 0.7)
-    for (let i = 1; i < 6; i++) {
-      const x = (side < 0 ? 1 : -1) * (len * i) / 6
-      p.line(x * k, 0, x * k, 0.12 * k)
-    }
+    // A darker edge along its underside: the plank's thickness.
+    p.noStroke()
+    p.fill(deep(GOLD, 0.3))
+    p.rect(side < 0 ? 0.04 * k : -(len - 0.04) * k, -0.07 * k, (len - 0.08) * k, 0.06 * k)
     p.pop()
   }
 
