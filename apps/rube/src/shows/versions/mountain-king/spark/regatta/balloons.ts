@@ -438,12 +438,16 @@ function smoothed(t: number, long: number, short: number, mix: number, lean: num
  *   ride up inside B1 and the float to B2 move within the frame. Half the smoothing is long, half short (so the frame
  *   still leans into the ride).
  * - Climb 2 (land2 to land3) low and close: in on B2's basket as the spark floats down onto its pilot, held there
- *   through the ballast and the whoosh, the spark going up the jet into the mouth with the envelope's skirt over the
- *   top of the frame; then up the silk with the glow, close behind it, to the pop and the float to B3.
+ *   for the ballast; then, as the burner roars, back to the balloon whole (`TILT2`): basket and burner low, the
+ *   envelope's lower two thirds over them, so the spark going up the jet and the glow climbing the silk are seen as
+ *   one balloon doing it. A slow tilt that lags the glow: the burner's flame stays in the frame until the glow is
+ *   past halfway up, then the frame goes up after it and closes on the vent for the pop and the float to B3.
  * - Climb 3 (land3 to pop3) side on and wider: B3 in the left third, the sky it is climbing into on the right, so the
- *   step up to B4 (high and to the right) reads as a diagonal; then in on the vent as it pops.
+ *   step up to B4 (high and to the right) reads as a diagonal; on the whoosh the same opening to the balloon whole
+ *   and lagging tilt (`TILT3`), the diagonal kept; then in on the vent as it pops.
  *
- * Keys every 0.2 s, so the camera's own easing follows these lines.
+ * Inside a balloon the glow is kept in Zoom's frame (the middle two thirds) and the envelope under about 70% of the
+ * frame's height until the frame closes on the vent. Keys every 0.2 s, so the camera's own easing follows these lines.
  */
 const STAIR_FROM = AT.whoosh1 + 0.45
 const STAIR_TO = AT.pop3 + 0.45
@@ -453,37 +457,100 @@ const STAIR_CELLS: [number, number][] = [
   [STAIR_FROM, 12],
   [AT.whoosh1 + 1.15, 13.6],
   [AT.pop1, 13],
-  // Climb 2: in on B2's basket as the spark comes down onto it, close through the whoosh, then up the silk.
+  // Climb 2: in on B2's basket as the spark comes down onto it and the ballast goes; back to the balloon whole as the
+  // burner roars and the spark goes up the jet; held wide while the glow climbs; in on the vent for the pop.
   [AT.pop1 + 0.45, 12.4],
   [AT.bags2, 7.5],
-  [AT.whoosh2 + 0.25, 7.6],
-  [AT.pop2 - 0.3, 10.4],
-  [AT.pop2 + 0.25, 9.6],
+  [AT.whoosh2 + 0.55, 12.8],
+  [AT.flare2, 12.7],
+  [AT.pop2 + 0.3, 9.8],
   [AT.land3 - 0.25, 10.2],
-  // Climb 3: side on, then in on the vent as it pops.
+  // Climb 3: side on; back to the balloon whole on the whoosh, held wide while the glow climbs, in on the vent.
   [AT.land3 + 0.35, 11],
-  [AT.flare3, 11],
-  [AT.pop3, 9.6],
+  [AT.whoosh3 - 0.1, 11],
+  [AT.whoosh3 + 0.5, 12.5],
+  [AT.flare3 + 0.15, 12.4],
+  [AT.pop3, 10],
   [STAIR_TO, 10.8],
 ]
+/** A monotone cubic through [t, value] keys (Fritsch-Carlson), flat outside them: no stop at the keys between. */
+function pchip(keys: [number, number][], t: number): number {
+  const n = keys.length
+  if (t <= keys[0][0]) return keys[0][1]
+  if (t >= keys[n - 1][0]) return keys[n - 1][1]
+  const d = keys.slice(0, -1).map(([t0, v0], i) => (keys[i + 1][1] - v0) / (keys[i + 1][0] - t0))
+  const m = keys.map((_, i) => {
+    if (i === 0 || i === n - 1) return 0
+    const a = d[i - 1]
+    const b = d[i]
+    if (a * b <= 0) return 0
+    const h0 = keys[i][0] - keys[i - 1][0]
+    const h1 = keys[i + 1][0] - keys[i][0]
+    return (3 * (h0 + h1)) / ((2 * h1 + h0) / a + (h1 + 2 * h0) / b)
+  })
+  let i = 0
+  while (t > keys[i + 1][0]) i++
+  const h = keys[i + 1][0] - keys[i][0]
+  const u = (t - keys[i][0]) / h
+  const u2 = u * u
+  const u3 = u2 * u
+  return (2 * u3 - 3 * u2 + 1) * keys[i][1] + (u3 - 2 * u2 + u) * h * m[i] + (-2 * u3 + 3 * u2) * keys[i + 1][1] + (u3 - u2) * h * m[i + 1]
+}
 /** Climb 1's frame off its line: a little right of the stair (it steps east), and low enough to centre the ride. */
 const STAIR_OFF: Pt = [0.4, 0.4]
-/** Climb 2, low: the frame's middle off B2's nozzle, so the basket's floor is at the bottom and the mouth high. */
-const LOW2 = (t: number): Pt => add(n2(t), [-0.2, -1.1])
-/** Climb 2, up the silk: the spark followed closely (a short smoothing that leans a little ahead). */
-const RISE2 = (t: number): Pt => add(smoothed(t, 0.45, 0.22, 0.6, 0.1), [0.35, -1.2])
 /**
  * Climb 3, side on: a steady line up the stair, with the spark's balloon in the left third. The frame is low on the
  * sit (the envelope going up out of it) and rises ahead of the glow, so at the pop the crown is low left and B4's
  * basket is in over it, up and to the right.
  */
 const SIDE3 = (t: number): Pt => add(smoothed(t, 0.9, 0.3, 0.6, 0), [3.9, 0.9 - 2.6 * ss(t, AT.whoosh3, AT.pop3 - 0.1)])
+/**
+ * Climb 2 on B2, the frame's middle off its nozzle, [t, across, down]. Low for the ballast (the basket's floor at the
+ * bottom, the mouth high); then back and up with the whoosh to the balloon whole (the floor at 0.93 of the frame, the
+ * envelope over it), and a tilt up after the glow that lags it: the nozzle stays in the frame until the glow is past
+ * halfway up (about `flare2`), then the frame goes up the silk and is under the vent as it pops. After the pop it
+ * goes on up after the spark more slowly than the spark (which floats up out of the frame's top third and slows onto
+ * B3), to where the side-on frame of climb 3 takes it.
+ */
+const TILT2_OUT = AT.land3 + 0.35
+const TILT2_KEYS: [number, number, number][] = [
+  [AT.bags2 + 0.1, -0.2, -1.1],
+  [AT.whoosh2 + 0.2, -0.1, -2.1],
+  [AT.whoosh2 + 0.55, 0, -3.3],
+  [AT.flare2, 0.1, -5.2],
+  [AT.pop2, 0.2, -11.2],
+  [AT.pop2 + 0.45, 0.9, -14.1],
+  // Across, on over the spark's float to the right; the side-on frame's own blend takes it the rest of the way.
+  [TILT2_OUT, 1.4, SIDE3(TILT2_OUT)[1] - n2(TILT2_OUT)[1]],
+]
+const TILT2_X: [number, number][] = TILT2_KEYS.map(([s, x]) => [s, x])
+const TILT2_Y: [number, number][] = TILT2_KEYS.map(([s, , y]) => [s, y])
+const TILT2 = (t: number): Pt => add(n2(t), [pchip(TILT2_X, t), pchip(TILT2_Y, t)])
+/**
+ * Climb 3's ride, on B3: the side-on frame widened to the balloon whole on the whoosh (B3's nozzle kept at 0.3 of
+ * the frame's width, so the diagonal to B4 stays), the floor at 0.93, and the same lagging tilt: the nozzle in the
+ * frame until the glow is past halfway up, then up the silk to the vent, and on after the spark to where the side-on
+ * frame is at the stair's end. Down off B3's nozzle, from where the side-on frame is as it starts.
+ */
+const TILT3_IN = AT.whoosh3 - 0.3
+const TILT3_KEYS: [number, number][] = [
+  [TILT3_IN, SIDE3(TILT3_IN)[1] - n3(TILT3_IN)[1]],
+  [AT.whoosh3 + 0.2, -2.0],
+  [AT.whoosh3 + 0.5, -3.0],
+  [AT.flare3 + 0.15, -5.6],
+  [AT.pop3, -13.0],
+  [STAIR_TO, SIDE3(STAIR_TO)[1] - n3(STAIR_TO)[1]],
+]
+const TILT3 = (t: number): Pt => [
+  smoothed(t, 0.9, 0.3, 0.6, 0)[0] + 0.2 * ((schedule(STAIR_CELLS, t) * 16) / 9),
+  n3(t)[1] + pchip(TILT3_KEYS, t),
+]
 const mix = (a: Pt, b: Pt, u: number): Pt => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]
 function stairHold(t: number): Pt {
   let h = add(stairLine(t), STAIR_OFF)
-  h = mix(h, LOW2(t), ss(t, AT.pop1 + 0.45, AT.bags2))
-  h = mix(h, RISE2(t), ss(t, AT.whoosh2 + 0.15, AT.pop2 + 0.25))
-  h = mix(h, SIDE3(t), ss(t, AT.land3 - 0.45, AT.land3 + 0.35))
+  h = mix(h, TILT2(t), ss(t, AT.pop1 + 0.45, AT.bags2))
+  h = mix(h, SIDE3(t), ss(t, AT.land3 - 0.45, TILT2_OUT))
+  if (t > TILT3_IN) h = mix(h, TILT3(t), ss(t, TILT3_IN, AT.whoosh3 + 0.1) * (1 - ss(t, AT.pop3 - 0.05, STAIR_TO)))
   return h
 }
 const STAIR: PartShot[] = (() => {
