@@ -507,7 +507,10 @@ function runnerAt(r: Runner, T: number): { at: Pt; look: TrollLook } | null {
   y = y0
   // The knees give as it comes down from the leap.
   const give = r.land ? 0.06 * r.size * Math.exp(-run / 0.12) * Math.min(1, run / 0.03) : 0
-  return { at: [x, y + give], look: { size: r.size, seed: r.seed, pose: 'run', phase: dist / (0.55 * r.size), face: r.dir, eyes: 1.5, mouth: 0.75, arms: 0.3 * Math.exp(-run / 0.6), slump: -0.1, lit: r.lit } }
+  // One that bolts from a stand leans into it over its first strides (a leaper comes down already leaning).
+  const e = Math.min(1, run / 0.25)
+  const lean = r.land ? 1 : e * e * (3 - 2 * e)
+  return { at: [x, y + give], look: { size: r.size, seed: r.seed, pose: 'run', phase: dist / (0.55 * r.size), lean, face: r.dir, eyes: 1.5, mouth: 0.75, arms: 0.3 * Math.exp(-run / 0.6), slump: -0.1, lit: r.lit } }
 }
 
 /** A dropped club lying on the skin (after falling from the fist onto it): dark timber, thick at the head. */

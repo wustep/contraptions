@@ -62,6 +62,11 @@ export interface TrollLook {
    * together on the phase's blow; between, the left arm's half-cycle lag shrinks, so the change is continuous.
    */
   pair?: number
+  /**
+   * Optional, `run` only: how far into its run's forward lean (0 upright as it stands, 1 the full lean, as unset).
+   * A troll that sets off, or pulls up, eases it, so the upper body never jumps a tenth of its height in one frame.
+   */
+  lean?: number
   /*
    * Optional, for a court of distinct silhouettes (after Kittelsen's trolls, no two alike at a glance): horns, a
    * snout, a hat, three heads, a build, how the moss grows. Unset, every troll is exactly as before.
@@ -148,7 +153,7 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
 
   // Heights (in H): a sitting troll's seat is its feet; it is shorter and wider.
   const shoulder = mix(0.55, 0.72)
-  const lean = pose === 'run' ? 0.1 * dir : 0
+  const lean = pose === 'run' ? 0.1 * dir * Math.max(0, Math.min(1, look.lean ?? 1)) : 0
   const bob = pose === 'run' ? 0.03 * Math.abs(Math.sin(phase * Math.PI * 2)) : 0
   const bodyW = 0.64 * broad * mix(1.1, 1)
   // The head sits low and forward, sunk into the hump, toward where it looks.

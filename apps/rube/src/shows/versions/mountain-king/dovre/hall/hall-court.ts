@@ -169,6 +169,8 @@ interface Pursuit {
   run: boolean
   /** The arms the stand pose shows before it goes (the run pose swings its own). */
   arms: number
+  /** How far into the run's forward lean (it leans into the sprint over its first strides). */
+  lean?: number
 }
 
 /**
@@ -198,7 +200,7 @@ function pursuit(t: number, from: number, was: { arms: number; eyes: number; mou
       rise: 0.9 + 0.1 * ease(t, CHASE.go, CHASE.go + 0.2),
       phase: 2 * beatAt(t),
       slump: 0.25 - 0.15 * ease(t, CHASE.go, CHASE.go + 0.3),
-      face: 1, eyes: 1.5, mouth: 0.75, run: true, arms: 0.22,
+      face: 1, eyes: 1.5, mouth: 0.75, run: true, arms: 0.22, lean: ease(t, CHASE.go, CHASE.go + 0.25),
     }
   }
   const T = OPEN - LURCH
@@ -279,6 +281,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
   let puff = 0
   let pose: TrollLook['pose'] = 'sit'
   let phase = 0
+  let lean = 1
 
   // Asleep, the ostinato: one sleeper's head bobs up on each note (see `bobbed`).
   if (t < WAKE_BEGIN && c.row < 3) slump -= 0.3 * bobbed(t, COURT.indexOf(c))
@@ -336,6 +339,8 @@ export function courtierAt(c: Courtier, t: number): Pose {
       const to2 = c.chase.to + (c.chase.grab ? 0.35 : 1.0)
       x = c.x + (c.chase.to - c.x) * go + (to2 - c.chase.to) * go2
       pose = go > 0.01 && go < 0.99 ? 'run' : 'stand'
+      // Leaning into it as they get going, upright again as they pull up (never a jump of the upper body).
+      lean = Math.min(1, 4 * go * (1 - go))
       // Their feet come down on the eighths: the chase keeps time.
       phase = beatAt(t)
       if (c.chase.grab) {
@@ -365,6 +370,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
     mouth = lead.mouth
     arms = lead.arms
     pose = lead.run ? 'run' : 'stand'
+    lean = lead.lean ?? 1
     // Still breathing hard at the lip.
     if (t > WAKE_END) slump += 0.05 * ease(t, WAKE_END, WAKE_END + 0.6) * (0.5 - 0.5 * Math.cos(t * 4.2 + c.seed)) * Math.exp(-(t - WAKE_END) / 8)
   }
@@ -402,6 +408,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
         y = FL + CHASE.knee * (1 - up) - overHatch(x, 0.45)
         rise = CHASE.kneelRise + (1 - CHASE.kneelRise) * up
         phase += dist / 0.9
+        lean = ease(t, go, go + 0.25)
         face = ease(t, go, go + 0.15)
         slump = slump * (1 - up)
         eyes = 1.5
@@ -415,6 +422,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
       const dist = speed * (run - 0.25 * (1 - Math.exp(-run / 0.25)))
       x = x - dist
       pose = 'run'
+      lean = ease(t, go, go + 0.25)
       phase = dist / 0.9
       face = -1
       rise = 1
@@ -443,6 +451,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
       hide: c.hide,
       ...c.kind,
       phase,
+      lean,
       noTail: true,
     },
     alpha,
@@ -571,6 +580,7 @@ export function kingAt(t: number, hand?: Pt): KingPose {
   let alpha = 1
   let pose: TrollLook['pose'] = 'stand'
   let phase = 0
+  let lean = 1
   if (t >= BELLS - 0.05) {
     const hear = ease(t, BELLS - 0.05, BELLS + 0.3)
     face = face * (1 - hear)
@@ -591,6 +601,7 @@ export function kingAt(t: number, hand?: Pt): KingPose {
       const down = ease(x, DAIS.x1 - 0.7, DAIS.x1 + 0.4)
       y = DAIS.top + (FL - DAIS.top) * down - overHatch(x, 0.55, HATCH.x0 - 0.7, HATCH.x1 + 0.7)
       pose = 'run'
+      lean = ease(t, go, go + 0.3)
       // Whole at the start, so the swing starts from both arms at its middle and both feet down.
       phase = dist / 1.4
       face = ease(t, go, go + 0.18)
@@ -615,6 +626,7 @@ export function kingAt(t: number, hand?: Pt): KingPose {
       seed: 7,
       hide: TROLL.old,
       phase,
+      lean,
       noTail: true,
     },
     sceptre,
