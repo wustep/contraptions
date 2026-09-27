@@ -6,6 +6,7 @@ import type { LifeShow } from './show'
 import { carlAt, INK } from './worlds'
 import { drawBalloon, BALLOON_SIZE } from './props/balloon'
 import { drawBowTie } from './inside/ties-tie'
+import { FUN } from './church/church'
 
 /**
  * The two of them, drawn (the stage draws no ball in this show: `LifeShow.at` hands it none).
@@ -50,8 +51,8 @@ export const BALLOON_REST: Pt = [0.24, -1.42]
  * over `decay` seconds), and a little at the answer.
  */
 export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [
-  { t: AT.church, amp: 0.2, period: 1.7, decay: 1.4 },
-  { t: 198.409, amp: 0.07, period: 1.7, decay: 1.2 },
+  { t: FUN.toll, amp: 0.2, period: 1.7, decay: 1.4 },
+  { t: FUN.answer, amp: 0.07, period: 1.7, decay: 1.2 },
 ]
 /**
  * At home, tied to her chair, it leans the smallest way toward him on the piano's phrase notes once he has sat down

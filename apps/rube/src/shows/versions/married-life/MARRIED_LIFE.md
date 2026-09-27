@@ -60,8 +60,9 @@ the credits over the house.
 
 ## In order
 
-Every scene has one hero mechanism that does something real on the music. There are 240 strikes in all, each on a
-measured beat or onset.
+Every scene has one hero mechanism that does something real on the music. There are 254 strikes in all, each on a
+measured beat or onset. In the waltzes the two of them play the bar between them: Carl, square, keeps the oom (the
+bass, on the one); Ellie, round, answers on the first pah.
 
 ### The wedding (0 to 21.58 s): the church
 
@@ -96,7 +97,8 @@ measured beat or onset.
   just behind them drying as they roll on; right of them it is still the old grey one.
 - Hammer blows fall on bars 7 to 17, each kicking the cart on in a waltz lilt. After each blow the hammer lies on the
   wall a moment; the gear trips it up, quick, into the bar's third beat, where a pawl catches it with a small recoil,
-  and it hangs cocked for the next downbeat. The jib, a telescoping boom, reaches out to his chair
+  and it hangs cocked for the next downbeat. Ellie, riding the deck, is jolted up by every blow and comes down on the
+  two, so the machine plays the whole bar: the blow, her landing, the pawl. The jib, a telescoping boom, reaches out to his chair
   waiting on the lawn and swings it in through the empty bay; then hers, which has ridden on the back of the cart's
   deck beside her like a moving-in-day load, glides in off it. The door is knocked straight, a pane drops in, and the last blow sets the mailbox post.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
@@ -109,8 +111,9 @@ measured beat or onset.
 ### The clouds (49.64 to 63.25 s): the hill
 
 - They lie on a check blanket beside Carl's **toy steam engine**. Its flywheel turns once a bar, its flap lifts,
-  and it chuffs on every downbeat: each chuff is a knot of steam that flies up out of the chimney with a trail behind
-  it, arrives on the next downbeat, joins the shape it belongs to and swells it.
+  and it chuffs on every downbeat: the engine kicks on its bed and coughs a soft puff of steam out of its mouth, and
+  out of the puff a knot of steam flies up with a trail behind it, arrives on the next downbeat and joins the shape it
+  belongs to, and the whole cloud takes a breath as it does. Every downbeat lands twice, at the chimney and in the sky.
 - Bars 32 to 35 build an airship (round nose, finned tail, a gondola slung under it), which sails off left. Bars 35
   to 38 build Paradise Falls in cloud: her tepui, as tall as it is wide, sheer sides of heaped billows, a flat lit
   top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
@@ -146,7 +149,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
 
 - **The yard.** The office's cold light carries across the cut, which opens close on Carl at the back door, the
   office door become this one, and Ellie small on a tall stump far to his left in the grey yard, turned away; the camera
-  settles slowly out to hold the distance between them. Carl watches from inside the back door through the piano alone. He leans into the bookcase, the adventure
+  settles slowly out to hold the distance between them. Carl watches from inside the back door through the piano alone.
+  Nothing strikes, but the wind gusts with the piano: each of its stronger notes is a breath of wind a moment after
+  it, lifting the sheet on the line, the grass and the tree, and dying away. He leans into the bookcase, the adventure
   book tips onto him (a thick old book, a rounded spine, a strap), and he pushes out through the screen door and walks out to her at an
   even pace, round in front of the stump, the book passing under her, easing to a stop where she is looking. **On
   100.36, the waltz's return, the book opens** on his top: its top board swings over on the spine and comes down
@@ -161,7 +166,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   third beat before it, the waltz's pickup), and the cup end
   throws a handful of five coins over the room, spreading and closing up again, turning and catching the light, into
   the jar's slot on the mantle on the next downbeat; each handful puts a visible notch of brass in the glass, the jar
-  clinks in its cradle, and Ellie on the ladder counts each one in with a hop. The camera is close (3.6 cells) on the
+  clinks in its cradle, and Ellie on the ladder counts each one in: up off her tread as it drops into the slot, down
+  on the two. The camera is close (3.6 cells) on the
   plank, the flight and the jar for the four handfuls. The jar stands in **a brass cradle** that turns
   on a sprung knuckle at the mantle's end; under it a tin hopper feeds **a chute** down the wall to a slot, and what
   goes down the chute is gone, paid out of the house. Life breaks it open three times:
@@ -193,7 +199,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   bar 51's third beat into bar 52's downbeat (156.75 to 157.5 s, the loudest of the second half; by bar 53 it is 8 to
   10 dB down). They dance in hold, and through the crest she rolls out along the floor to arm's length on
   52's downbeat, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
-  (1.9 cells) under their wedding photograph on the hall wall. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
+  (1.9 cells) under their wedding photograph on the hall wall. The low evening sun through the front door's glass
+  lays a long warm shaft down the hall: it gathers with the swell and falls full on the two of them on the crest, the
+  light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
 - **The tickets.** The picture lamp lights on her painting, and Carl looks up at it. Ellie goes to the front door,
   opens it and stands out at it looking at the evening, her back to the hall: the tickets are his surprise, and she
@@ -226,7 +234,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   against the pale wall. He has brought her the balloon. The sky in the window goes gold, rose, violet, night. He
   tips to pull the lamp on (182.43). Then he leans to her and gives her the balloon: at the full of his lean the
   string passes from his corner to her, arriving on 184.88, tied short, and the balloon settles to float just over
-  her. On 185.66 she rolls the smallest way toward him, and he answers with a lean. The camera opens a little from the
+  her. On 185.66 she rolls the smallest way toward him, and he answers with a lean that arrives on the
+  next strong note (186.53): her gesture and his each have their note. The camera opens a little from the
   cut in (2.7 cells) as he reaches for the lamp and holds the long-strung balloon whole over him (3.3 cells), then
   comes in with the balloon as it settles, to 2.7 cells on her touch and his answer, the balloon whole under Zoom
   too; then it begins to leave her, one slow draw back through the cut into the empty church.
@@ -242,7 +251,10 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   (under half a cell a second, the seat twice his height), onto the floor on 192.05, and walks the aisle at an old man's pace (about
   half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
-  the frame. Dust sifts down. He goes out in the silence and comes to rest at the foot of the steps.
+  the frame, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
+  of the march, and fade as the bell dies away; the balloon swings aside on its string and sways back; he starts; and
+  the frame itself takes the blow, a small damped drop that settles in half a second (the only one in the show).
+  Dust sifts down. The answer, as the bell swings back, stirs them again, less. He goes out in the silence and comes to rest at the foot of the steps.
 
 ### Alone (201.94 to 258 s): the house, from the street, at dusk
 
@@ -253,7 +265,8 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   the camera widens as he goes in. The bay's glass runs down to the room's floor, so he is seen whole through it,
   and its middle light is one pane from head to floor, so no bar crosses the balloon over her chair. He ties the
   balloon to her chair, so it floats over the empty seat. He sits in his, with a slow settle, and leans to put the
-  lamp on.
+  lamp on. Tied to her chair, the balloon leans the smallest way toward him on three of the piano's phrase notes
+  (219.70, 221.88, 226.20), easing over and back: her last gesture at her bedside was the same.
 - The camera pushes in slowly on the two chairs through the sit, and holds the lit room for a phrase of the piano,
   him in his chair and the balloon over her empty one; then it draws back past the roof before the first card, and
   on at an even rate to the last frame (27 cells): the lit window, the house at dusk, the roof,
@@ -304,6 +317,8 @@ window.
 - **The years:** his blue and her coral grey with age, and hers is the colour she is drawn in.
 - **The balloon:** it comes in with him to the hospital and not before; it is hers at her bedside, from his giving
   it to the cut; it is his again from the church to the end; and it never jumps in a place.
+- **The toll:** the frame takes a blow only there (at most 1.5% of its height); the balloon is stirred only by the toll
+  and its answer; at home it leans only on the piano's own notes, after he sits and before the credits.
 - **The credits:** after he has sat down and gone before the end, set by the page, opening on Directed by Claude
   Opus 5.5 and naming Carl and Ellie Fredricksen, Michael Giacchino, Married Life, Up, Pete Docter and p5.js.
 
@@ -314,11 +329,12 @@ window.
   - `show.ts`: `LifeShow`, after Everything's `MultiverseShow`: legs, cuts as shifts, Ellie's spans, Carl's poses.
   - `score.ts`: the order of the legs and parts, their entry cells, and the camera. Every leg's keys go to one
     director (`camera.ts`, a monotone cubic through the keys) in cells unrolled across the cuts, so it is one take.
+    `JOLTS`: the one blow the frame takes (the toll), a damped swing added under the director's move.
   - `seams.ts`: what the two of them are doing at each cut (velocity, framing, Ellie's offset, what he carries).
   - `cast.ts`: Carl (a rounded square that slides and leans with the slope), Ellie (a ball), their trails, the bow
     tie and the balloon, drawn in every world between the parts' drawings and their fronts; the years' bearing
     (`bearingOfAge`) under every part's pose; the balloon's ties (`show.ties`: to her at the bedside, to her chair
-    at the end).
+    at the end), what stirs it (`STIRS`: the toll and its answer) and its leans toward him at home (`LEANS`).
   - `music.ts`: the measured clock (`BEATS`, `bar`, `beat`, `onsets`, `AT`, `CUT`, `SEAM`) and `AGE`.
   - `kit.ts`: the part contract, Liftoff's and Epilogue's: `part`, `route`, `hop`, `carried`, `lay`, `frame`, and the
     p5 fill-cache guard. `worlds.ts` holds the palettes and the cast's colours.
@@ -404,6 +420,18 @@ window.
   walk, her rise to the pop-up, and the yard's drawings put back where their cells say. Then the lamp he climbs for
   seen going out; the tickets his secret, Ellie out at the door; the balloon tied short to her and the camera closer
   on her touch; her gaze carried across the match cuts; the parked cart out of the prints' close.
+
+- **Craft pass (Opus 5.5, after the first seven rounds).** A pass on the coupling of picture and music, run from
+  probes rather than taste alone: a music audit (strong onsets and beats with nothing on them), a visual-flux probe
+  (the show sought at 30 fps, how much of the picture changes each frame against the measured onsets), and a check of
+  the bar's phase against the audio (the bass moves on beat 1 in 83% of the first waltz's bars and 69% of the
+  second's; beat 2 carries the chord). The worst was the toll: the cue's strongest onset landed on a bell a few pixels
+  tall, and nothing else in the frame changed. Then the chuffs on the hill (none of 15 visible), the crest of the
+  second waltz on a bare wall, and the pahs, strong all through both waltzes and answered by nothing. Changes: the
+  toll through the whole church (the organ, the balloon, one damped blow to the frame); the engine's cough and the
+  cloud's breath; the crest's shaft of evening light; Ellie on the two in the fix-up and at the jar; the yard's wind
+  on the piano; his answer at her bedside on its own note; the balloon's leans at home. Tried and taken out: dust
+  shaken from the nave's rafters at the toll (at the toll's width it read as speckled plaster).
 
 ## Known limits
 
