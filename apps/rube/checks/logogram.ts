@@ -7,7 +7,7 @@ import measured from '../../../scripts/shows/plans/heptapod-b-onsets.json'
 import { STRIKES } from '../src/shows/versions/heptapod-b/logogram/hits'
 import { CREDITS_AT, DURATION, FLUTTER, ONSETS, PULSES, PUSH, PUSH_PEAK, RECORDING, SEAM, TURN, BURST1, hardPulses } from '../src/shows/versions/heptapod-b/logogram/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/heptapod-b/logogram/credits'
-import { VEILED, veilAt } from '../src/shows/versions/heptapod-b/logogram/score'
+import { PUNCHES, VEILED, veilAt } from '../src/shows/versions/heptapod-b/logogram/score'
 import { FIRST } from '../src/shows/versions/heptapod-b/logogram/seams'
 import type { LogogramShow } from '../src/shows/versions/heptapod-b/logogram/show'
 import { R } from '../src/parts'
@@ -104,11 +104,11 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
   for (let t = ZDT; t <= perf.duration; t += ZDT) {
     if (show.owner(t) !== show.owner(t - ZDT)) continue
     if (cameraCuts.some((c) => c > t - ZDT && c <= t + 1e-9)) continue
-    if (t >= TURN - 0.01 && t <= TURN + 0.15) continue
+    if (PUNCHES.some(([at]) => t >= at - 0.01 && t <= at + 0.15)) continue
     const z = Math.abs(Math.log(cam(t).cells / cam(t - ZDT).cells)) / ZDT
     if (z > whip) { whip = z; whipAt = t }
   }
-  check('logogram: the camera never whips: its zoom under 0.6 of a scale a second but for the punch on gravity\'s turn and its cuts',
+  check('logogram: the camera never whips: its zoom under 0.6 of a scale a second but for its punches (gravity\'s turn, the palm, the great ring) and its cuts',
     whip <= 0.6, `${whip.toFixed(2)} log/s at ${whipAt.toFixed(2)} s`)
 
   // The camera's roll: square everywhere but the shaft's mouth, where it is turned a quarter (the shell's +x up the

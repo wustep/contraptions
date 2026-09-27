@@ -156,9 +156,9 @@ export const LAST = pulse(824)
 export const FLUTTER = 212.312
 
 /** When the credits come, once the flutter has rung away. */
-export const CREDITS_AT = 214.6
+export const CREDITS_AT = 216.6
 /** The show's length: the recording, then the credits in the quiet after it. */
-export const DURATION = 246
+export const DURATION = 248
 
 /**
  * The seams: every show time the ball passes from one part to the next. A seam inside a place is a hand-off; one

@@ -3,7 +3,7 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
-import { CREST, DURATION, SEAM, TURN } from './music'
+import { CREST, DURATION, FULL_PEAK, PUSH_PEAK, SEAM, TURN } from './music'
 import { FIRST, SEAMS } from './seams'
 import { LogogramShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
@@ -124,7 +124,14 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
  * The camera takes a few of the show's great moments in the body: on each it pushes in a little, at once (18 ms), and
  * eases back slowly (τ 1 s, gone to nothing by 3.5 s): the hit is sharp, the recovery long and damped.
  */
-const PUNCHES: [number, number][] = [[TURN, 0.8]]
+export const PUNCHES: [number, number][] = [
+  // Gravity turns under her.
+  [TURN, 0.8],
+  // The palm meets her on the glass.
+  [FULL_PEAK, 0.55],
+  // The great logogram closes, hers and theirs.
+  [PUSH_PEAK, 0.7],
+]
 const PUNCH_TAU = 1
 const PUNCH_FOR = 3.5
 function punch(t: number): number {
