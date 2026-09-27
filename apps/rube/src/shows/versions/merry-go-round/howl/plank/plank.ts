@@ -1395,8 +1395,8 @@ export const plank = part<PlankState>(
       // (never parked). The deck about two thirds of the way down (0.68), so the star turns inside the Zoom frame
       // too, with Turnip Head at the right; from the glance the frame widens and tilts up with the star as it
       // gathers for the dive.
-      hold(285.9, 4.8, [CADENZA[0] - 0.2, deckY - 0.18 * 4.8]),
-      hold(GLANCE, 4.45, [CADENZA[0] - 0.12, deckY - 0.18 * 4.45]),
+      hold(285.9, 4.85, [CADENZA[0] - 0.2, deckY - 0.18 * 4.85]),
+      hold(GLANCE, 4.2, [CADENZA[0] - 0.04, deckY - 0.18 * 4.2]),
       hold(slot.end, 5.9, [end[0] + 0.85, end[1] - 1.3]),
     ]
   },
