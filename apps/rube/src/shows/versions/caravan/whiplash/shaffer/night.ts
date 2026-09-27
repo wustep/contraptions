@@ -427,7 +427,7 @@ export const night = part<NightState>(
   },
   (slot: Slot): PartShot[] => [
     // Following him in along the corridor; the room lit, and on with him along the floor.
-    { t: slot.begin, cells: 5, off: [0.9, -0.8] },
+    { t: slot.begin, cells: 5, off: [0.9, -1.55] },
     { t: LAMP_ON + 0.6, cells: 5.8, hold: at([-2.4, -0.45]), w: 0.75 },
     { t: KICK, cells: 5.5, hold: at([-0.5, -0.2]) },
     // The drill, scored to the tune's phrases, and each phrase a step closer: the sticks against the clock on its

@@ -87,6 +87,46 @@ strike is on the music by construction (`whiplash/kit.ts`, after Liftoff's and E
 | 423.34 | rubato | `carnegie/rubato.ts` | The show's heart. A walnut metronome with its works exposed rises behind the kit and he rides the weight on its short arm; he gets onto it with a leap off the crash, crouching into it first (it gives under him and rings after he leaves); the long arm's bob strikes the ride's rim at one end of its swing and the crash's at the other, on every one of the 162 strokes; he climbs as it slows and sits down as it quickens, the way a real metronome's weight sets its period. The hall goes nearly dark round it, one narrow light from the flies on the metronome, at its lowest on the slowest stroke, when the camera trucks to Fletcher on his podium, in his own light keeping its time: his right hand alone, the left at his side, falls into every stroke as the bob strikes and rebounds high, one long slow fall a stroke at the slowest: the conductor keeping the drummer's tempo. The swell is a strobing fan of the rod that widens with the music, the case juddering on its feet, him chattering in the cradle, the hall's light rising and the camera pushing in; the machine crouches, flings him onto the snare on the burst, and the light slams up white. |
 | 504.0 | finale | `carnegie/finale.ts` | The kick march round the toms in near-white light as the metronome sinks, warming back to gold over the long roll and the nod; the drummer's body comes down again, empty, and he leaps onto its collar. The long roll, low and close on the blur of both sticks. Fletcher crosses to the kit, rises on his telescoping column to Andrew's height, and bows his chest toward him in a deep, held nod, the roll's blur still in the frame below them; Andrew's frame dips its answer, and a second, smaller nod. Fletcher stays by the kit; the camera steps back to the whole stage and holds. The last fill; both sticks up through the silence, his hands up for the band; the band's last chord, blowing the frame open to the whole stage on its attack; and the cut-off: his open left hand circles up and comes down hard, closing on the last stroke, the fist by his head with clear wall between the two of them (the drummer's arm is low, its hand pinning the crash from under the cymbal, well clear of his other hand hanging at his side). He holds it, then brings it in to his chest and down to his side. On the cut-off the light cuts off too, in 0.15 s, to a spot on the two of them; under the credits it narrows and fades, evenly, to near black, the two heads last, while the camera goes slowly in. |
 
+## The frame on the music
+
+The strikes were always on the recording. What the craft pass (after Voyage and Everything) changed is how much of
+the picture answers them. A probe that measures how much of the frame changes just after each strong onset, against
+between them, put Everything's fight at 2.3 times and almost every stretch of Caravan at 1.0: the ball landed on
+time, but the kit, the camera and the ball itself did nothing a viewer could see on the beat. Four things now do.
+
+- **The kit's voice.** A struck head flares toward a warm white and its top hoop glints; a struck cymbal flares pale
+  gold and shimmers along its lit edge as it rings; the hi-hat glints; the kick's front head breathes light through
+  its inner band. It is all drawn light (`drums.ts` `strikeFlash`), in the one canonical kit, so every part that shows
+  a kit got it at once, and no seat moved: `headDip` and `cymbalSwing`, which the ball's paths ride, are as they were.
+  Where a roll runs a stroke every 70 ms the head shimmers rather than strobes.
+- **Andrew gives on a blow.** A strike that turns his path (a landing on a stick, a stomp on the treadle, the
+  metronome's swing reversing under him) flattens the ball along the blow, up to 16%, and it rings back through a
+  slight rebound in about a fifth of a second (`show.ts` `squash`). Strikes he rides through, like the drummer's frame's
+  sticks under his collar, barely turn him and leave him round. Shape only: where he is stays where the lanes put him.
+- **Punches.** The camera takes 28 of the band's biggest hits in the body, a push in of up to 4.2% struck in 18 ms and
+  eased back over a third of a second (`score.ts` `PUNCHES`, after All at Once's): the band's entrance, the tutti's
+  peak, the chair, the slaps, the door, the vending machine, the truck and the car coming down, the chorus's hits, the
+  solo's first accent and biggest hit, the knock on the crash, the build's two biggest kicks, the burst, the last fill,
+  the last stroke before the silence, the fist. None in the quiet stretch or the rubato, and none on the last chord,
+  whose frame blows open on its own move.
+- **The drummer's shirt is lit round**, the way the kit's lacquer is (a lifted band a third of the way across from the
+  house's left, the far side rolling into shadow), with its front fold down the breastbone. It is on screen for about
+  a hundred seconds, and the flat cut-out read as a shape rather than a body.
+
+The same pass fixed the worst of what a scrub of the whole show found:
+
+- **The page-turner's insert** (46.9 to 49.1 s) had its left edge through Fletcher on his podium for 3.8 s, cutting
+  him in half, while Tanner was out of shot. It is now the group the part is about: Andrew on his chair, the stand and
+  its turner, Tanner on the snare keeping the time Andrew taps. The seated key before it and the tempo test's chair
+  wide keep Tanner inside the frame's right edge too.
+- **The corridor into the band room and the far door out to the night** are framed low. Centred on him, the section
+  under the floor filled a third to half of the frame as a black slab, like a letterbox. Under the band room's
+  corridor the tiers' floor mass now carries on, so the room's reveal stands on the building.
+
+`check:shows` holds all of it: every punch within 20 ms of a measured hit and none where the frame is to be still,
+the squash only just after a strike and on every hop of the practice groove, a struck head dark again within half a
+second.
+
 ## Craft notes
 
 - **Canonical drawings.** One kit (`drums.ts`, `drawKit`), one conductor (`fletcher.ts`, `drawConductor`), one
@@ -198,7 +238,13 @@ npm run check:shows                               # the Caravan block is apps/ru
 node dev/shot.mjs --from 323 --to 370 --n 24 --out hush.png   # contact sheets (untracked dev/ tools)
 node dev/film.mjs --from 500 --to 575.4 --out end.webm        # 1x film, reports fps
 node dev/caravan-card.mjs                         # this take's share card at its still (528.4 s)
+node dev/couple.mjs --from 40 --to 60             # how much of the frame changes on the onsets, against between
 ```
+
+The craft pass's other probes are untracked `dev/*.ts`, bundled with esbuild like the checks: `audit.ts` (strong
+onsets nothing strikes, strikes on near-silence, long loud gaps), `cam.ts` (the camera's stop-starts and jolts),
+`jerk.ts` (the ball's velocity jumps off the strikes), `edges.ts` (who the frame's edge cuts, and for how long),
+`pace.ts` (stretches where nothing moves), `keys.ts` (every camera key against the click and the onsets).
 
 The share card is `public/shows/caravan/opus55.png` (the still: the bow, Fletcher's chest tipped toward Andrew in the
 drummer's frame over the roll's blur on the snare).

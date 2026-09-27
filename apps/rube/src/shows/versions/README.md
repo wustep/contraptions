@@ -276,7 +276,9 @@ the practice room at night), the road (the competition, the crash on the stop-ti
 sabotage, the solo, the hush, the build, the rubato, the finale). Parts are built to timed slots on the Liftoff kit,
 with company balls for Fletcher, his father and Tanner, and a director's clock for the people at Carnegie
 (`carnegie/conductor.ts`). The tune is on a 280 bpm click; the solo is free, so it strikes the recording's strokes
-drum by drum; the rubato strikes all 162 ride strokes one by one. Everything is measured once by
+drum by drum; the rubato strikes all 162 ride strokes one by one. The picture answers the strikes: the kit lights
+on every stroke, Andrew's ball gives on every blow that turns him, and the camera punches in on 28 of the band's
+biggest hits (`drums.ts` `strikeFlash`, `show.ts` `squash`, `score.ts` `PUNCHES`). Everything is measured once by
 `scripts/shows/caravan-onsets.py` into `scripts/shows/plans/caravan-onsets.json`, and `check:shows` holds every strike
 to it (`apps/rube/checks/caravan.ts`), with the people where the film has them and Fletcher's fist closing only on the
 last cut-off. The report is `apps/rube/src/shows/versions/caravan/CARAVAN.md`.
