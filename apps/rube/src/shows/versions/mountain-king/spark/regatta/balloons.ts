@@ -246,6 +246,30 @@ function layerFor(p: p5): p5.Graphics {
   return g
 }
 
+/**
+ * `draw` laid on the frame at `alpha`: straight onto it when whole, else drawn whole into the fade layer first, so
+ * a fading balloon is never see-through part by part (its stripes over its silk, its lines through its basket).
+ */
+function faded(p: p5, alpha: number, draw: (q: p5) => void): void {
+  if (alpha < 0.004) return
+  if (alpha >= 0.999) {
+    draw(p)
+    return
+  }
+  const layer = layerFor(p)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const lctx = layer.drawingContext as CanvasRenderingContext2D
+  lctx.setTransform(1, 0, 0, 1, 0, 0)
+  lctx.clearRect(0, 0, lctx.canvas.width, lctx.canvas.height)
+  lctx.setTransform(ctx.getTransform())
+  draw(layer as unknown as p5)
+  ctx.save()
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
+  ctx.globalAlpha = alpha
+  ctx.drawImage(lctx.canvas, 0, 0)
+  ctx.restore()
+}
+
 /** Where a mate's basket floor is drawn in the frame `f` at `t`, placed by the reference framing `ref`. */
 function mateAt(m: Mate, f: Frame, t: number, ref: { x: number; y: number; cells: number }): Pt {
   const fh = ref.cells
@@ -691,7 +715,8 @@ export const balloons = part<BalloonsState>(
       drawLand(p, k, f, t)
       drawTiny(p, look, f, t)
       drawFar(p, look, f, t)
-      drawFlock(p, look, f, t, MATE_REF)
+      // The far flock goes with the mates as the push begins, so no half-balloon is left at the frame's edges.
+      faded(p, mateShown(t), (q) => drawFlock(q, look, f, t, MATE_REF))
       drawMates(p, look, f, t, MATE_REF)
       const hero: Look = { k, weight, simple: k < 14, dusk: 0.55 * dusk(t) }
 
