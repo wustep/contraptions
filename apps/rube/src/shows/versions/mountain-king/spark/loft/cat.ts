@@ -16,8 +16,8 @@ import { fireLight, shade, type Light } from './stove-light'
  * - `CAT_CUES.ear` (LOFT-A's): the rack's candles knock and it half wakes, eye shut: the head comes up off the paws
  *   and turns toward the sound, both ears prick and swivel, the tail's tip thumps once, and it sinks back by 1.8 s.
  * - `CAT_CUES.stir[0]` (42.455): the tail's tip lifts and flops, right in front of the spark.
- * - `CAT_CUES.stir[1]` (51.384): it shifts in its sleep, a heave of the shoulders, and the spark riding them is tossed
- *   up the stove's hot face.
+ * - `CAT_CUES.stir[1]` (51.384): it stretches in its sleep, the shoulders rolling up and a forepaw reaching out, and
+ *   the spark riding them is tossed up the stove's hot face.
  * - `CAT_CUES.wake` (149.815): the stove door bangs. Its eye snaps open and its head snaps up at the door over it;
  *   then it turns round onto the candle (`GAZE`) and looks at it, a candle burning as candles do (which holds very
  *   still while it is looked at), and by about 154 it is asleep again.
@@ -71,12 +71,20 @@ export function spline(pts: Pt[], closed: boolean, n = 6): Pt[] {
 /** The breath: -1..1, about four seconds a breath. */
 export const breath = (t: number): number => Math.sin((2 * Math.PI * (t - 0.4)) / 4.2)
 
-/** The shift in its sleep (51.384): the shoulders heave up, and the whole cat sighs down after. Cells. */
+/**
+ * The shift in its sleep (51.384), a sleepy stretch: the shoulders begin to rise a third of a second before it (the
+ * spark on them is carried up), then roll up hard on the note (which tosses it), half a cell in all, while a forepaw
+ * reaches out along the boards and the head presses down into the paws; then the whole cat sighs down after. Cells.
+ */
 export function heave(t: number): number {
   const s = t - CAT_CUES.stir[1]
-  if (s < 0) return 0
-  return 0.32 * (1 - Math.exp(-s / 0.075)) * Math.exp(-s / 0.5) - 0.06 * smooth(s, 0.35, 0.9) * Math.exp(-Math.max(0, s - 0.9) / 1.4)
+  if (s < -0.35) return 0
+  const gather = 0.18 * smooth(s, -0.35, 0) * (s > 0 ? Math.exp(-s / 0.9) : 1)
+  if (s < 0) return gather
+  return gather + 0.32 * (1 - Math.exp(-s / 0.075)) * Math.exp(-s / 0.6) - 0.06 * smooth(s, 0.45, 1.0) * Math.exp(-Math.max(0, s - 1.0) / 1.4)
 }
+/** How far into the stretch it is, 0..1 (its peak is about half a cell). */
+const stretchOf = (t: number): number => Math.max(0, Math.min(1, heave(t) / 0.46))
 
 /**
  * The startle on the rack's knocks (`CAT_CUES.ear`), 0..1: a third of the wake. The head comes up off the paws at once
@@ -537,7 +545,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   vtx(p, k, bodyPoly)
 
   /* The forepaws, under the chin, reaching west along the boards (a little further as it stretches in its sleep). */
-  const reach = 0.4 * Math.max(0, heave(t) / 0.32)
+  const reach = 0.72 * stretchOf(t)
   const paw = (x0: number, x1: number, hh: number, fill: string) => {
     const pts = spline(
       [
@@ -556,18 +564,20 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     p.strokeWeight(w * 0.65)
     vtx(p, k, pts)
   }
-  paw(5.72 - reach * 0.7, 6.95, 0.27, deepAt(6.2, 0.2))
-  paw(5.48 - reach, 6.75, 0.31, furAt(6.0, 0.2))
+  paw(5.72 - reach * 0.45, 6.95, 0.27, deepAt(6.2, 0.2))
+  paw(5.48 - reach, 6.75, 0.31 - 0.04 * stretchOf(t), furAt(6.0, 0.2))
 
   /* The head: tucked, facing west, its chin on its paws; lifted and looking when it wakes. */
   const aw = awake(t)
-  const hb = 0.018 * breath(t) + 0.16 * Math.max(0, heave(t) / 0.32)
+  // Stretching in its sleep it presses its head down into its paws, chin first, rather than lifting it.
+  const press = stretchOf(t)
+  const hb = 0.018 * breath(t) - 0.08 * press
   // Startled, the head comes up and turns up toward the rack, half a cell and about 20 degrees: most of a wake's
   // lift, with only a slit of an eye.
   const st = startle(t)
   const lift = aw.lift + 0.62 * st
   const lk = look(t)
-  const turnUp = 0.6 * 0.62 * st + lk.turn
+  const turnUp = 0.6 * 0.62 * st + lk.turn - 0.14 * press
   const rise = hb + 0.8 * lift
   // Come round onto the candle, the head leans out west, chin first, clear of the stove's legs.
   const out = -0.3 * lk.onto

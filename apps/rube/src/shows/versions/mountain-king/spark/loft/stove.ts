@@ -25,7 +25,7 @@ import { ON_SPOOL, SPOOL_STEPS, drawSpool, onSpool, spoolCells } from './stove-s
  *   42.455  the tail's tip twitches up right in front of it: it flinches on the reel (42.735). Then it gathers itself
  *           and hops onto the tail itself (43.570), and tiptoes along it (44.958, 45.235, 45.514), up onto the haunch
  *           (46.908), along the breathing back (47.465, 48.027, 49.150) to the shoulders (50.267), where an ear flicks.
- *   51.384  the cat shifts in its sleep, a heave of the shoulders, and the spark is tossed up; at the top of the toss
+ *   51.384  the cat stretches in its sleep, its shoulders rolling up, and the spark is tossed up; at the top of the toss
  *           (51.663) the stove's hot draught takes it, and it rises up the iron face like an ember, swaying, and
  *           settles onto the latch's grip (52.504): the latch lifts, and the firebox door creaks open on the fire.
  *   53.625  it drops onto the sill, backs up three steps (54.180, 54.459, 54.737), bounces twice (55.287, 55.836),
@@ -305,9 +305,12 @@ function shots(slot: { begin: number; end: number }): PartShot[] {
     { t: 44.6, cells: 6.2, hold: at(3.2, 9.0), w: 0.93 },
     { t: 46.9, cells: 5.6, hold: at(3.9, 9.1), w: 0.9 },
     { t: 49.7, cells: 5.7, hold: at(4.7, 8.75), w: 0.8 },
-    // The cat and the stove's door in one frame for the heave, and the rise up the hot iron to the latch.
-    { t: 51.15, cells: 8.8, hold: at(6.0, 6.75), w: 0.95 },
-    { t: 52.6, cells: 6.2, hold: at(6.45, 4.55), w: 0.88 },
+    // Held on the cat, whole, with the spark on its shoulders, through its stretch (51.384), so the toss has a cause
+    // in the picture and the cat its goodbye; then up after the spark as it rises up the hot iron, to the latch by
+    // the door's note (52.504).
+    { t: 50.9, cells: 6.2, hold: at(5.1, 8.55), w: 0.9 },
+    { t: 51.5, cells: 6.6, hold: at(5.4, 8.3), w: 0.95 },
+    { t: 52.45, cells: 6.2, hold: at(6.45, 4.55), w: 0.88 },
     // The sill: closer, and closer, into the fire.
     { t: 54.0, cells: 4.2, hold: at(6.15, 4.6), w: 0.8 },
     { t: 56.4, cells: 3.3, hold: at(6.1, 4.55), w: 0.75 },
