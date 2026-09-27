@@ -911,7 +911,7 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   // The trolls in the drum room and the mine, fleeing on the chords as he comes up through their floors.
   if (T < 142) drawRunners(p, c, T, q, f)
 
-  // What comes down, and what is thrown up (the vault's slabs are drawn over the hall's dark, in `over`).
+  // What comes down, and what is thrown up (the vault's slabs are drawn in `over`, in front of the hall, under its dark).
   for (const st of STONES) if (!VAULT_SLABS.includes(st)) stone(p, c, ORIGIN, st, T, q, 0.55)
   for (const b of TUMBLES) drawBlock(p, c, b, T, q, 0.35 + 0.55 * d)
 
@@ -942,8 +942,10 @@ export const fall = part<State>(
         collarFront(p, c, ORIGIN, COL, 33.13, q)
         ctx.restore()
       }
-      drawRuin(p, c, T, ORIGIN, q, () => jet(p, s, c, T, false))
+      // The vault's slabs fall in front of the hall's props and go under its dark with them (over it, their pale
+      // faces lay in the dead hall through the credits).
       for (const st of VAULT_SLABS) stone(p, c, ORIGIN, st, T, q, 0.45)
+      drawRuin(p, c, T, ORIGIN, q, () => jet(p, s, c, T, false))
     },
   },
   (slot) => {

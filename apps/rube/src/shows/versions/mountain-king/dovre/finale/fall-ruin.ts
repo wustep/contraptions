@@ -67,7 +67,7 @@ const VAULT_AT = RUIN.vault
  */
 export const ROOMS: Room[] = [
   { name: 'heart', x0: 44.0, x1: 64.0, y0: 26.3, y1: 36.6, roof: 26.8, floor: 33.13, from: 45.6, to: 62.4, at: HEART_AT, fall: 0.45, out: 0.35, dark: 0.9, slabs: 3, size: [0.6, 1.0] },
-  { name: 'drum', x0: 44.0, x1: 64.0, y0: 18.3, y1: 26.3, roof: 19.0, floor: 25.95, from: 45.6, to: 62.4, at: DRUM_AT[0], then: DRUM_AT[1], fall: 0.45, out: 0.3, dark: 0.9, slabs: 3, size: [0.6, 1.0] },
+  { name: 'drum', x0: 43.6, x1: 64.4, y0: 18.3, y1: 26.3, roof: 19.0, floor: 25.95, from: 45.6, to: 62.4, at: DRUM_AT[0], then: DRUM_AT[1], fall: 0.45, out: 0.3, dark: 0.9, slabs: 3, size: [0.6, 1.0] },
   // The mine's roof is the stope's timbered top (~13.5), not the box's: slabs from higher fell out of solid rock.
   { name: 'mine', x0: 42.0, x1: 74.0, y0: 9.7, y1: 18.3, roof: 13.4, floor: 17.13, from: 44.5, to: 70.5, at: MINE_AT[0], then: MINE_AT[1], fall: 0.7, out: 0.3, dark: 0.9, slabs: 3, size: [0.55, 0.9] },
   // The hall and the tunnels behind it, one box (they go dark together, so no seam where they meet): its dust only
@@ -343,7 +343,8 @@ function soft(ctx: CanvasRenderingContext2D, k: number, fill: () => void): void 
 }
 
 /**
- * Over the rooms (the fall part's `over`): each room's dark, its dust hanging, its slabs coming down, its embers.
+ * Over the rooms (the fall part's `over`): its slabs coming down (under its dark), each room's dark, its dust
+ * hanging, its embers.
  * `jet` redraws the geyser's column over a dark room, clipped to it, so the one line through every room stays the
  * white it was.
  */
@@ -353,7 +354,24 @@ export function drawRuin(p: p5, c: Pen, T: number, o: Pt, q: Pt, jet: () => void
   const X = (v: number) => (v - o[0]) * k
   const Y = (v: number) => (v - o[1]) * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const dark = ROOMS.map((r) => outOf(r, T) * r.dark)
+  // Once the mountain is quiet (the credits), the dead rooms sink the rest of the way into the rock: their lit boxes
+  // stood as paler rectangles under the dawn on a tall phone. Only the embers are left.
+  const deeper = smooth(T, BLOW + 3, BLOW + 12)
+  const dark = ROOMS.map((r) => outOf(r, T) * (r.dark + (0.975 - r.dark) * deeper))
+  // What comes down, and the dust it raises where it lands: the roof's great slabs, and a few stones after them. They
+  // land while the room is lit, and go under its dark with everything else in it (drawn over it, their lit undersides
+  // and pale edges stood in the dead rooms as rows of floating slabs and grey diamonds through the credits).
+  for (const { room, s } of SLABS) {
+    if (T < s.t0 - (s.emerge ?? 0)) continue
+    stone(p, c, o, s, T, q, 0.12 + 0.5 * (1 - outOf(room, T)))
+  }
+  for (const g of GREAT) {
+    const chords = g.room.then !== undefined ? [g.room.at, g.room.then] : [g.room.at]
+    const fl = ruinLight(T, chords).flare
+    const out = outOf(g.room, T)
+    drawGreat(p, c, g, T, o, q, fl, out)
+    drawBurst(ctx, k, g, T, o, fl, out)
+  }
   // The rooms' lights going out: the rock's own dark (STONE.deep) laid over each, box by box, feathered.
   ROOMS.forEach((r, i) => {
     if (dark[i] <= 0.003) return
@@ -369,7 +387,7 @@ export function drawRuin(p: p5, c: Pen, T: number, o: Pt, q: Pt, jet: () => void
     if (since <= 0) return
     // Only in the room's lower half, which is as wide as the room (a vault's arch would show a box's corners).
     const front = smooth(since, 0, 0.9)
-    const a = 0.11 * smooth(since, 0, 0.3) * (1 - 0.5 * smooth(T, BLOW + 4, BLOW + 16))
+    const a = 0.11 * smooth(since, 0, 0.3) * (1 - 0.5 * smooth(T, BLOW + 4, BLOW + 16)) * (1 - 0.8 * deeper)
     const y0 = r.roof + (r.floor - r.roof) * 0.45
     const y1 = y0 + (r.floor - y0) * (0.3 + 0.7 * front)
     soft(ctx, k, () => {
@@ -390,18 +408,6 @@ export function drawRuin(p: p5, c: Pen, T: number, o: Pt, q: Pt, jet: () => void
     ctx.clip()
     jet()
     ctx.restore()
-  }
-  // What comes down, and the dust it raises where it lands: the roof's great slabs, and a few stones after them.
-  for (const { room, s } of SLABS) {
-    if (T < s.t0 - (s.emerge ?? 0)) continue
-    stone(p, c, o, s, T, q, 0.12 + 0.5 * (1 - outOf(room, T)))
-  }
-  for (const g of GREAT) {
-    const chords = g.room.then !== undefined ? [g.room.at, g.room.then] : [g.room.at]
-    const fl = ruinLight(T, chords).flare
-    const out = outOf(g.room, T)
-    drawGreat(p, c, g, T, o, q, fl, out)
-    drawBurst(ctx, k, g, T, o, fl, out)
   }
   // The embers: small, low, warm, breathing; they dim over the credits but never quite go.
   for (const e of EMBERS) {
