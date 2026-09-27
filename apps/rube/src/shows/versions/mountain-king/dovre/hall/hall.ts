@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, frame, hash } from '../kit'
-import { drawLantern, drawTorch, flame, flicker, glow } from '../lantern'
+import { drawLantern, drawTorch, flame, flicker } from '../lantern'
 import { beatAt } from '../music'
 import { quake, stalactite } from '../rock'
 import { drawTroll, type Pen, type TrollDrawn } from '../troll'
@@ -77,6 +77,11 @@ interface Light {
   r: number
   w: number
   col: string
+  /** The pool it lifts the rock to lit stone in (cells; 0 for none), and how much flatter than round it is. */
+  pool: number
+  squash: number
+  /** How far its pool lifts the rock at most (0..1): a fire close to the wall lifts it most, a hung lamp in the air less. */
+  cap: number
 }
 
 /** A lamp catching over a third of a second, from `at`; out over a quarter second after `out`. */
@@ -227,35 +232,59 @@ function heatOf(t: number, who: number): number {
   return (0.55 + 0.25 * breathOut) * (1 - ease(t, HAMMERS[5], 147.3))
 }
 
+/**
+ * The guards' fire-bowl by the trolls' hatch, standing on the floor just inside the east door: banked embers like the
+ * court's, and the only light at the hall's east end. The sceptre's blow stirs it, and when the crack reaches the
+ * hatch the jolt throws its coals up into a fire, so the hatch's lip, the lid swinging down and the elder's dive are
+ * lit shapes, not a dark lump at a dark end.
+ */
+const HATCH_FIRE = { x: HATCH.x1 + 0.95 }
+/** Its flare (0..1): a stir on the blow, a leap as the crack reaches the hatch, settling to a fire that burns on. */
+function hatchFlare(t: number): number {
+  const stir = t >= SMASH ? 0.22 * (1 - Math.exp(-(t - SMASH) / 0.05)) * Math.exp(-(t - SMASH) / 0.5) : 0
+  const s = t - CRACK[1]
+  const leap = s >= 0 ? (1 - Math.exp(-s / 0.06)) * (0.4 + 0.35 * Math.exp(-s / 0.45)) : 0
+  return (stir + leap) * (1 - ease(t, HAMMERS[5], HAMMERS[5] + 1.2))
+}
+/** Its embers, breathing slowly on their own (no sleeper beside it). */
+const hatchHeat = (t: number): number => (0.6 + 0.12 * Math.sin(t * 1.9)) * (1 - ease(t, HAMMERS[5], 147.3))
+
 function lightsAt(t: number, poses: Pose[]): Light[] {
   const out: Light[] = []
   // The tunnels' lantern light spilling in at the west door, once they are lit (the tunnels part lights them).
   const spill = ease(t, 36, 39.5) * (1 - ease(t, HAMMERS[5], HAMMERS[5] + 0.6))
-  if (spill > 0) out.push({ x: 0.1, y: -1.1, s: 0.55 * spill, r: 3.2, w: 0.5, col: LAMP.glow })
+  if (spill > 0) out.push({ x: 0.1, y: -1.1, s: 0.55 * spill, r: 3.2, w: 0.5, col: LAMP.glow, pool: 2.6, squash: 0.85, cap: 0.5 })
   const flare = 1 + 0.35 * shout(t)
+  // A brazier's pool is about 3.5 cells at heat, and wider on a snort's flare.
   for (const b of BRAZIERS) {
     const f = poses[b.who].puff
-    out.push({ x: b.x, y: BRAZIER_Y - 0.1, s: Math.min(1, 0.5 * heatOf(t, b.who) + f), r: 2.1 + 2.4 * f, w: 0.75, col: mixHex(WORKS.rust, LAMP.glow, 0.35 + 0.5 * f) })
+    const heat = heatOf(t, b.who)
+    out.push({ x: b.x, y: BRAZIER_Y - 0.1, s: Math.min(1, 0.4 + 0.55 * heat + f), r: 4.2 + 2.0 * f, w: 0.8, col: mixHex(WORKS.rust, LAMP.glow, 0.35 + 0.5 * f), pool: 2.6 + 1.2 * heat + 1.6 * f, squash: 0.84, cap: 0.86 })
+  }
+  {
+    const f = hatchFlare(t)
+    const heat = hatchHeat(t)
+    if (heat + f > 0.01) out.push({ x: HATCH_FIRE.x, y: FL - 0.95, s: Math.min(1, 0.3 + 0.55 * heat + f), r: 5.2 + 2.2 * f, w: 1.0, col: mixHex(WORKS.rust, LAMP.glow, 0.4 + 0.5 * f), pool: 2.8 + 1.2 * heat + 1.8 * f, squash: 0.8, cap: 0.86 })
   }
   for (const sp of SPILLS) {
     const f = spillFire(sp, t)
     if (f > 0) {
       const { x } = spillAt(sp, t)
-      out.push({ x, y: FL - 0.5, s: Math.min(1, f * (0.85 + 0.15 * flicker(t, sp.b + 20))), r: 6.2, w: 0.95, col: mixHex(LAMP.glow, LAMP.flame, 0.4) })
+      out.push({ x, y: FL - 0.5, s: Math.min(1, f * (0.85 + 0.15 * flicker(t, sp.b + 20))), r: 6.2, w: 0.95, col: mixHex(LAMP.glow, LAMP.flame, 0.4), pool: 4.6, squash: 0.7, cap: 0.8 })
     }
   }
   TORCHES.forEach((tc, i) => {
     const s = burning(t, tc.at, tc.out)
     if (s > 0) {
       const [x, y] = torchFlame(i)
-      out.push({ x, y, s: s * flicker(t, i + 3) * flare, r: 6.4, w: 0.95, col: LAMP.glow })
+      out.push({ x, y, s: s * flicker(t, i + 3) * flare, r: 6.4, w: 0.95, col: LAMP.glow, pool: 5.4, squash: 0.85, cap: 0.72 })
     }
   })
   LANTERNS.forEach((at, i) => {
     const s = burning(t, at + (i === 0 ? 0.12 : 0), HAMMERS[2 + i])
     if (s > 0) {
       const [x, y] = ropeAt(t)(LANTERN_U[i])
-      out.push({ x, y: y + 0.7, s: s * flicker(t, i + 7) * flare, r: 4.4, w: 0.8, col: LAMP.glow })
+      out.push({ x, y: y + 0.7, s: s * flicker(t, i + 7) * flare, r: 4.4, w: 0.8, col: LAMP.glow, pool: 4.6, squash: 0.95, cap: 0.3 })
     }
   })
   const cs = burning(t, CROWN_LAMP, HAMMERS[5])
@@ -263,9 +292,60 @@ function lightsAt(t: number, poses: Pose[]): Light[] {
     // Once it is down on the dais it lights the hall from low, and less far.
     const cr = crownAt(t)
     const low = cr.down >= 0 ? 1 : 0
-    out.push({ x: cr.x, y: cr.y + 0.4 - 0.5 * low, s: cs * flicker(t, 11) * flare * (1 - 0.3 * low), r: 8.6 - 2.4 * low, w: 1.0, col: LAMP.glow })
+    out.push({ x: cr.x, y: cr.y + 0.4 - 0.5 * low, s: cs * flicker(t, 11) * flare * (1 - 0.3 * low), r: 8.6 - 2.4 * low, w: 1.0, col: LAMP.glow, pool: 8.2 - 2.4 * low, squash: 0.95, cap: 0.5 })
   }
   return out
+}
+
+/** Rock in a light's pool: stone lit by the lamps (STONE.mid warmed toward the glow), hotter at the flame's end. */
+const LIT_STONE = mixHex(STONE.mid, LAMP.glow, 0.42)
+const HALF_LIT = mixHex(STONE.mid, LAMP.glow, 0.2)
+const rgbOf = (hex: string): string => {
+  const n = parseInt(hex.slice(1, 7), 16)
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`
+}
+/**
+ * The pools of light on the hall's rock: under each burning light the back wall and the court's ledges are lifted to
+ * lit stone (not a glow laid over the dark), falling off to the rock's own dark between the lights. Only the hollow
+ * is lit (east of the west door's jamb, over the floor): the pier, the floor's slab and the solid mountain stay rock,
+ * and the gallery, high over every light but the torches, stays dark.
+ */
+function drawPools(p: p5, c: Pen, lights: Light[], clip: Pt[][] = [POOL_CLIP], gain = 1): void {
+  const k = c.k
+  const ctx = ctxOf(p)
+  p.push()
+  ctx.save()
+  ctx.beginPath()
+  for (const shape of clip) {
+    shape.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+    ctx.closePath()
+  }
+  ctx.clip()
+  for (const l of lights) {
+    const a = Math.min(l.cap, l.s * l.w * 1.3) * gain
+    if (a < 0.01 || l.pool <= 0) continue
+    const R = l.pool * k
+    const hot = rgbOf(mixHex(STONE.mid, l.col, 0.5))
+    const mid = rgbOf(LIT_STONE)
+    const edge = rgbOf(HALF_LIT)
+    ctx.save()
+    ctx.translate(l.x * k, l.y * k)
+    ctx.scale(1, l.squash)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, R)
+    // A soft bell of light (no plateau, no rim): lit stone at the fire, warm grey half way, the dark at its edge.
+    g.addColorStop(0, `rgba(${hot},${a.toFixed(3)})`)
+    g.addColorStop(0.25, `rgba(${mid},${(a * 0.82).toFixed(3)})`)
+    g.addColorStop(0.5, `rgba(${mid},${(a * 0.47).toFixed(3)})`)
+    g.addColorStop(0.75, `rgba(${edge},${(a * 0.17).toFixed(3)})`)
+    g.addColorStop(1, `rgba(${edge},0)`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(0, 0, R, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  }
+  ctx.restore()
+  p.pop()
 }
 
 /** How lit a point of the hall is, 0 (the dark) to 1, by the lights burning. */
@@ -297,12 +377,11 @@ function poly(p: p5, k: number, pts: Pt[], curve = false): void {
 }
 
 /** The hollow of the hall: the back wall, a step lighter than the rock; the smoke hole going up over the chimney's column. */
-function drawRoom(p: p5, c: Pen, lit: number): void {
-  const k = c.k
-  // From the west wall's inner face: the doorway west of it, and the tunnel beyond, are the tunnels part's to draw.
-  const pts: Pt[] = [[0.3, FL + 0.02], [0.3, -2.6]]
+/** The hollow's outline from x0 east: up the wall, under the vault (round the smoke hole), down the east end. */
+function hollow(x0: number, top: number): Pt[] {
+  const pts: Pt[] = [[x0, FL + 0.02], [x0, top]]
   for (const [x, y] of VAULT) {
-    if (x <= 0.3) continue
+    if (x <= x0) continue
     if (x === CHIMNEY_X) {
       pts.push([x - 0.95, vaultY(x - 0.95)], [x - 0.55, -12.4], [x + 0.55, -12.4], [x + 0.95, vaultY(x + 0.95)])
       continue
@@ -310,9 +389,14 @@ function drawRoom(p: p5, c: Pen, lit: number): void {
     pts.push([x, y])
   }
   pts.push([30.6, FL + 0.02])
+  return pts
+}
+// From the west wall's inner face: the doorway west of it, and the tunnel beyond, are the tunnels part's to draw.
+const ROOM = hollow(0.3, -2.6)
+function drawRoom(p: p5, c: Pen, lit: number): void {
   p.noStroke()
   p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.dark, lit))
-  poly(p, k, pts)
+  poly(p, c.k, ROOM)
 }
 
 /**
@@ -326,8 +410,9 @@ const LEDGES = [
   { x0: 0.3, x1: 11.75 },
   { x0: 0.3, x1: 11.1 },
 ]
-function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number, t: number): void {
+function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number, t: number, part: 'faces' | 'lips', hallLit: number): void {
   const k = c.k
+  const ctx = ctxOf(p)
   const seats = [ROW_Y[0], ROW_Y[1], ROW_Y[2], GALLERY_Y]
   p.noStroke()
   for (let r = 3; r >= 0; r--) {
@@ -361,17 +446,26 @@ function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number, t: n
       [x1 + 0.2 + 0.12 * hash(r, 74), top + 0.62 * h],
       [x1 + 0.32 + 0.1 * hash(r, 75), bottom + 0.02],
     ]
-    const l = 0.3 * lit(6, (top + bottom) / 2)
-    // The rock face under the lip, dark, taking a little of the light.
-    p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * l))
-    poly(p, k, [...lip, ...end, [x0, bottom + 0.02]])
-    // The lip's worn edge, catching the light, following it (a band, not a board).
-    const lipLit = lit(x1 - 3, top)
-    p.fill(mixHex(STONE.dark, STONE.light, 0.12 + 0.55 * Math.min(1, lipLit)))
-    const band = 0.07
-    poly(p, k, [...lip, ...[...lip].reverse().map(([x, y], j): Pt => [x, y + band * (0.7 + 0.6 * hash(r, j, 76))])])
+    if (part === 'faces') {
+      // The rock face under the lip, dark: the lights' pools (`drawPools`, over it) lift it where they reach.
+      const l = 0.3 * lit(6, (top + bottom) / 2)
+      p.fill(mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * l + 0.38 * hallLit))
+      poly(p, k, [...lip, ...end, [x0, bottom + 0.02]])
+    } else {
+      // The lip's worn edge, over the pools, catching the light along it (a band, not a board): lit stone under a
+      // fire, the rock's own grey between.
+      const lipC = (x: number): string => mixHex(STONE.dark, mixHex(STONE.light, LAMP.glow, 0.3), 0.12 + 0.8 * Math.min(1, lit(x, top)))
+      p.fill(lipC((x0 + x1) / 2))
+      const g = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
+      const m = Math.max(1, Math.ceil((x1 - x0) / 0.8))
+      for (let j = 0; j <= m; j++) g.addColorStop(j / m, lipC(x0 + ((x1 - x0) * j) / m))
+      ctx.fillStyle = g
+      const band = 0.07
+      poly(p, k, [...lip, ...[...lip].reverse().map(([x, y], j): Pt => [x, y + band * (0.7 + 0.6 * hash(r, j, 76))])])
+    }
     p.pop()
   }
+  if (part === 'faces') return
   // The court's ways out at the west end of each bench: low dark archways into the trolls' warren (clear of the
   // west door's pier).
   p.fill(mixHex(STONE.deep, TROLL.shade, 0.35))
@@ -412,6 +506,8 @@ const SOFFIT: Pt[] = (() => {
 /** The pier's west face (the tunnel's end), top to the jamb's foot, and its east face (the hall's wall), jamb up. */
 const PIER_WEST: Pt[] = [[DOOR_W - 0.02, -3.45], [DOOR_W + 0.03, -2.8], [DOOR_W - 0.04, -2.5], [DOOR_W + 0.02, -2.05], [DOOR_W - 0.03, -1.62], [DOOR_W + 0.01, DOOR_SPRING - 0.1], [DOOR_W - 0.02, DOOR_SPRING + 0.1], [DOOR_W + 0.05, DOOR_SPRING + 0.16]]
 const PIER_EAST: Pt[] = [[DOOR_E - 0.05, DOOR_SPRING + 0.14], [DOOR_E + 0.02, DOOR_SPRING + 0.09], [DOOR_E - 0.01, DOOR_SPRING - 0.12], [DOOR_E + 0.05, -1.95], [DOOR_E - 0.01, -2.45], [DOOR_E + 0.04, -3.0], [DOOR_E - 0.02, -3.6], [DOOR_E - 0.08, -4.25], [DOOR_E - 0.14, -4.8]]
+/** Where the lights' pools may fall: the hollow east of the pier's east face (the doorway and the pier stay rock). */
+const POOL_CLIP = hollow(DOOR_E + 0.06, -4.8)
 
 /**
  * A rectangle (cells) filled with `col` fading in from alpha 0 at x0 to 1 at x1, eased (a smooth ramp, no bands).
@@ -484,7 +580,8 @@ function drawCover(p: p5, c: Pen, t: number): void {
   const END = 30.9
   if (x0 >= END + 0.5) return
   const k = c.k
-  const [Y0, Y1] = [-12.7, 1.5]
+  // Down to the floor slab's ragged underside, so no strip of lit slab shows under the cover.
+  const [Y0, Y1] = [-12.7, FL + FLOOR_DEPTH + 0.03]
   p.noStroke()
   fadeIn(p, k, x0, x, Y0, Y1, STONE.deep)
   if (x < END) {
@@ -506,7 +603,8 @@ function drawPillar(p: p5, c: Pen, i: number, t: number, lights: Light[]): void 
   const x = PILLARS[i]
   const top = vaultY(x) - 0.4
   const lit = litAt(lights, x, -3)
-  const body = mixHex(mixHex(STONE.deep, STONE.dark, 0.75), STONE.mid, 0.3 * lit)
+  // Dark against the pools behind it, but its face takes some of the fires' light (a torch on each flank of the first).
+  const body = mixHex(mixHex(STONE.deep, STONE.dark, 0.75), mixHex(STONE.mid, LAMP.glow, 0.15), 0.45 * Math.min(1, lit))
   const crackAt = CRACKS[i]
   const fallAt = PILLAR_FALL[i]
   const dir = i === 0 ? -1 : 1
@@ -632,10 +730,10 @@ function bar(p: p5, k: number, a: Pt, b: Pt, w: number): void {
  * a small turned-out foot; a deep bowl with a rolled rim, banked embers heaped in it, the flare. All of it iron, edged
  * darker than itself: in the dark it is a black shape against the ledge, and the light turns it steel.
  */
-function drawBrazier(p: p5, c: Pen, x: number, t: number, heat: number, flare: number, lit: number): void {
+function drawBrazier(p: p5, c: Pen, x: number, t: number, heat: number, flare: number, lit: number, foot = ROW_Y[0]): void {
   const k = c.k
-  const y0 = ROW_Y[0]
-  const yb = BRAZIER_Y
+  const y0 = foot
+  const yb = foot - (ROW_Y[0] - BRAZIER_Y)
   const top = yb - 0.17
   const belly = top + 0.31
   const hot = Math.max(0, Math.min(1, 0.25 + 0.5 * heat + flare))
@@ -931,18 +1029,44 @@ function drawChain(p: p5, k: number, a: Pt, b: Pt, lit: number, w = 0.05): void 
   }
 }
 
-/** The dais: two broad steps of dressed stone. */
-function drawDais(p: p5, c: Pen, lit: number): void {
+/**
+ * The corner of the dais's upper step that the sceptre's blow knocks off (east of where the head comes down): its
+ * top from `CORNER_W` west of the step's east end, down its east face `CORNER_H`, and the fracture back up across.
+ * Once broken the step ends in that raw fracture; the piece itself flies (`drawImpact`).
+ */
+const CORNER_X = DAIS.x1 - DAIS.inset
+const CORNER_W = 0.55
+const CORNER_H = 0.29
+const FRACTURE: Pt[] = [
+  [CORNER_X - CORNER_W, DAIS.top], [CORNER_X - CORNER_W + 0.1, DAIS.top + 0.07], [CORNER_X - 0.22, DAIS.top + 0.1],
+  [CORNER_X - 0.13, DAIS.top + 0.19], [CORNER_X - 0.05, DAIS.top + 0.2], [CORNER_X, DAIS.top + CORNER_H],
+]
+/** The broken-off piece, about its own middle (the step's top edge, its east face, the fracture). */
+const PIECE_MID: Pt = [CORNER_X - 0.16, DAIS.top + 0.09]
+const PIECE: Pt[] = [[CORNER_X - CORNER_W, DAIS.top], [CORNER_X, DAIS.top], ...[...FRACTURE].reverse().slice(0, -1)].map(([x, y]): Pt => [x - PIECE_MID[0], y - PIECE_MID[1]])
+
+/** The dais: two broad steps of dressed stone (from the sceptre's blow, its upper step's east corner broken off). */
+function drawDais(p: p5, c: Pen, lit: number, t: number): void {
   const k = c.k
   const { x0, x1, step, top, inset } = DAIS
+  const broken = t >= SMASH
   p.noStroke()
   p.fill(mixHex(STONE.dark, STONE.mid, 0.35 + 0.65 * lit))
   p.rect(x0 * k, step * k, (x1 - x0) * k, (FL - step) * k)
   p.fill(mixHex(STONE.dark, STONE.mid, 0.45 + 0.55 * lit))
-  p.rect((x0 + inset) * k, top * k, (x1 - x0 - 2 * inset) * k, (step - top) * k)
+  if (!broken) p.rect((x0 + inset) * k, top * k, (x1 - x0 - 2 * inset) * k, (step - top) * k)
+  else poly(p, k, [[x0 + inset, top], ...FRACTURE, [CORNER_X, step], [x0 + inset, step]])
   p.fill(mixHex(STONE.mid, STONE.light, lit))
   p.rect(x0 * k, step * k, (x1 - x0) * k, Math.max(1, 0.05 * k))
-  p.rect((x0 + inset) * k, top * k, (x1 - x0 - 2 * inset) * k, Math.max(1, 0.05 * k))
+  p.rect((x0 + inset) * k, top * k, (x1 - x0 - 2 * inset - (broken ? CORNER_W : 0)) * k, Math.max(1, 0.05 * k))
+  if (broken) {
+    // The raw fracture: fresh stone, paler than the worn step, catching the crown-lamp; a dark seam under it.
+    const face = FRACTURE.map(([x, y], j): Pt => [x + 0.02, y + (j === 0 || j === FRACTURE.length - 1 ? 0 : 0.045)])
+    p.fill(mixHex(STONE.deep, TROLL.shade, 0.3))
+    poly(p, k, [...FRACTURE, ...[...face].reverse().map(([x, y]): Pt => [x - 0.01, y + 0.03])])
+    p.fill(mixHex(STONE.mid, mixHex(STONE.light, LAMP.glow, 0.3), 0.3 + 0.7 * lit))
+    poly(p, k, [...FRACTURE, ...[...face].reverse()])
+  }
 }
 
 /** A tapering horn along a smooth centre line: wide at its root, a point at its tip. */
@@ -1116,10 +1240,12 @@ const floorUnder = (x: number): number => {
   const r = 0.5 + 0.5 * Math.sin(j * 2.3) * Math.sin(j * 1.7 + 1)
   return FL + FLOOR_DEPTH * (0.85 + 0.15 * r)
 }
-const floorFill = (l: number): string => mixHex(mixHex(STONE.deep, STONE.dark, 0.7), STONE.mid, 0.6 * l)
+/** The floor's worn lip at a light level: the rock's grey in the dark, warm lit stone under a fire. */
+const lipOf = (l: number): string => mixHex(STONE.dark, mixHex(STONE.light, LAMP.glow, 0.25), 0.15 + 0.8 * Math.min(1, l))
+const floorFill = (l: number): string => mixHex(mixHex(STONE.deep, STONE.dark, 0.7), mixHex(STONE.mid, LAMP.glow, 0.12), 0.75 * Math.min(1, l))
 
 /** The floor of the hall: the slab, cut (once the crack reaches it) by the hatch's shaft and (from the collapse) the chimney's hole. */
-function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number): void {
+function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number, lights: Light[], poolsUp: number): void {
   const k = c.k
   const pieces: [number, number][] = []
   const broke = t >= FLOOR_BREAK
@@ -1145,26 +1271,35 @@ function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number): void {
     ctx.fillStyle = g
   }
   p.noStroke()
-  for (const [a, b] of pieces) {
-    slab(a, b)
-    p.beginShape()
-    p.vertex(a * k, FL * k)
-    p.vertex(b * k, FL * k)
-    p.vertex(b * k, floorUnder(b) * k)
+  const outline = (a: number, b: number): Pt[] => {
+    const pts: Pt[] = [[a, FL], [b, FL], [b, floorUnder(b)]]
     for (let j = Math.floor(b / FLOOR_STEP); j * FLOOR_STEP > a; j--) {
       const x = j * FLOOR_STEP
-      if (x < b) p.vertex(x * k, floorUnder(x) * k)
+      if (x < b) pts.push([x, floorUnder(x)])
     }
-    p.vertex(a * k, floorUnder(a) * k)
-    p.endShape(p.CLOSE)
-    // Its lit lip, in stretches of a fixed grid, each as lit as the light over it.
-    for (let j = Math.floor(a / 1.5); j * 1.5 < b; j++) {
-      const x0 = Math.max(a, j * 1.5)
-      const x1 = Math.min(b, (j + 1) * 1.5)
-      if (x1 <= x0) continue
-      p.fill(mixHex(STONE.dark, STONE.light, 0.15 + 0.8 * lit(j * 1.5 + 0.75)))
-      p.rect(x0 * k, FL * k, (x1 - x0) * k + (x1 < b ? 1 : 0), Math.max(1, 0.055 * k))
-    }
+    pts.push([a, floorUnder(a)])
+    return pts
+  }
+  for (const [a, b] of pieces) {
+    p.push()
+    slab(a, b)
+    poly(p, k, outline(a, b))
+    p.pop()
+  }
+  // The fires' pools carry on down over the slab's face under them (lit near the floor, the rock's dark lower down).
+  drawPools(p, c, lights, pieces.map(([a, b]) => outline(a, b)), 0.55 * poolsUp)
+  for (const [a, b] of pieces) {
+    // Its lit lip, as lit as the light over it all along (sampled on a fixed grid, so a hole opening beside a stretch
+    // changes nothing but the hole): one smooth run, no steps.
+    p.push()
+    p.fill(lipOf(lit((a + b) / 2)))
+    const g = ctx.createLinearGradient(a * k, 0, b * k, 0)
+    g.addColorStop(0, lipOf(lit(a)))
+    for (let j = Math.ceil(a / 0.5); j * 0.5 < b; j++) g.addColorStop(Math.max(0, Math.min(1, (j * 0.5 - a) / (b - a))), lipOf(lit(j * 0.5)))
+    g.addColorStop(1, lipOf(lit(b)))
+    ctx.fillStyle = g
+    p.rect(a * k, FL * k, (b - a) * k, Math.max(1, 0.055 * k))
+    p.pop()
   }
   if (cut) {
     // The hatch's shaft, the trolls' way down to the mine: the fissure runs down round it through the slab, the stone
@@ -1172,13 +1307,10 @@ function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number): void {
     const u = hatchCut(t)
     const x0 = HATCH.x0
     const w = HATCH.x1 - HATCH.x0
+    p.push()
     slab(x0, HATCH.x1)
-    p.beginShape()
-    p.vertex(x0 * k, FL * k)
-    p.vertex(HATCH.x1 * k, FL * k)
-    p.vertex(HATCH.x1 * k, floorUnder(HATCH.x1) * k)
-    p.vertex(x0 * k, floorUnder(x0) * k)
-    p.endShape(p.CLOSE)
+    poly(p, k, [[x0, FL], [HATCH.x1, FL], [HATCH.x1, floorUnder(HATCH.x1)], [x0, floorUnder(x0)]])
+    p.pop()
     const shaftTop = FL + 0.18
     p.fill(mixHex(STONE.deep, TROLL.shade, 0.25))
     p.rect(x0 * k, shaftTop * k, w * k, (depth + 0.5) * u * k)
@@ -1228,7 +1360,7 @@ function drawHatch(p: p5, c: Pen, t: number, lit: number, floorC: string): void 
   p.rect(-len * k, 0, len * k, 0.18 * k)
   p.noStroke()
   // The floor's worn lip along its top, as on the slab it was cut from.
-  p.fill(mixHex(STONE.dark, STONE.light, 0.15 + 0.8 * lit))
+  p.fill(lipOf(lit))
   p.rect(-len * k, 0, len * k, Math.max(1, 0.055 * k))
   p.fill(mixHex(floorC, mixHex(WORKS.iron, WORKS.steel, 0.4 * lit), u))
   p.rect(-len * k, 0.07 * k, len * 0.85 * k, 0.045 * k)
@@ -1238,8 +1370,21 @@ function drawHatch(p: p5, c: Pen, t: number, lit: number, floorC: string): void 
   p.rect((HATCH.hinge - 0.05) * k, (FL - 0.02) * k, 0.12 * k, 0.1 * k)
 }
 
-/** The crack from where the sceptre fell, along the dais, down its steps and across the floor to the hatch. */
-function drawCrack(p: p5, c: Pen, t: number, from: Pt): void {
+/** The fracture's height at x (the broken corner's raw edge), for the crack running along it. */
+function fractureY(x: number): number {
+  for (let i = 0; i + 1 < FRACTURE.length; i++) {
+    const [ax, ay] = FRACTURE[i]
+    const [bx, by] = FRACTURE[i + 1]
+    if (x >= ax && x <= bx) return ay + ((by - ay) * (x - ax)) / Math.max(1e-6, bx - ax)
+  }
+  return DAIS.top
+}
+
+/**
+ * The crack from where the sceptre fell, along the dais, down its steps and across the floor to the hatch: a fissure
+ * 0.1-0.15 cells open, its upper lip catching the light as it runs east.
+ */
+function drawCrack(p: p5, c: Pen, t: number, from: Pt, lit: (x: number, y: number) => number): void {
   if (t < SMASH) return
   const k = c.k
   const edge = DAIS.x1 + 0.25
@@ -1248,31 +1393,47 @@ function drawCrack(p: p5, c: Pen, t: number, from: Pt): void {
     : t < CRACK[1] - 0.04
       ? edge + (25.3 - edge) * ease(t, CRACK[0] - 0.04, CRACK[0] + 0.06)
       : 25.3 + (HATCH.x0 - 25.3) * ease(t, CRACK[1] - 0.04, CRACK[1] + 0.06)
-  const surf = (x: number): number => (x < DAIS.x1 - DAIS.inset ? DAIS.top : x < DAIS.x1 ? DAIS.step : FL)
+  const surf = (x: number): number =>
+    x < CORNER_X - CORNER_W ? DAIS.top : x < CORNER_X ? fractureY(x) : x < DAIS.x1 ? DAIS.step : FL
   // A fissure, not a line: a dark wedge down into the floor from its surface, widest where the head came down and at
-  // each jump, tapering to the running tip, and opening wider as it settles.
-  const open = 0.55 + 0.45 * ease(t, SMASH, SMASH + 1.2)
+  // each jump, tapering to the running tip, and opening a little more as it settles.
+  const open = 0.7 + 0.3 * ease(t, SMASH, SMASH + 1.2)
   const top: Pt[] = []
   const bot: Pt[] = []
   const jumps = [from[0], DAIS.x1, 25.3]
-  for (let x = from[0]; x < run; x += 0.1) {
-    const y = surf(x) + 0.015
-    const toTip = Math.min(1, (run - x) / 1.2)
+  for (let x = from[0]; x < run; x += 0.08) {
+    const y = surf(x) + 0.012
+    const toTip = Math.min(1, (run - x) / 1.0)
     const near = Math.max(...jumps.map((j) => Math.exp(-Math.abs(x - j) / 0.6)))
-    const d = (0.07 + 0.12 * near) * open * toTip * (0.75 + 0.5 * hash(Math.round(x * 10), 88))
+    // Along the knocked-off corner the break itself is the edge: the fissure goes on from its foot.
+    const corner = x > CORNER_X - CORNER_W + 0.05 && x < CORNER_X - 0.03 ? 0.25 : 1
+    const d = corner * (0.1 + 0.06 * near) * open * (0.35 + 0.65 * toTip) * (0.85 + 0.3 * hash(Math.round(x * 12), 88))
     top.push([x, y])
     bot.push([x + 0.03 * Math.sin(x * 17), y + d])
   }
-  top.push([run, surf(run) + 0.015])
+  top.push([run, surf(run) + 0.012])
   p.noStroke()
   p.fill(mixHex(STONE.deep, TROLL.shade, 0.15))
   poly(p, k, [...top, ...bot.reverse()])
-  // The notch where the head came down.
-  p.noStroke()
-  p.fill(mixHex(STONE.deep, TROLL.shade, 0.3))
-  poly(p, k, [[from[0] - 0.28, DAIS.top], [from[0] - 0.1, DAIS.top + 0.13], [from[0] + 0.12, DAIS.top + 0.1], [from[0] + 0.28, DAIS.top]])
-  // Chips thrown up by the blow and at each jump of the crack.
-  for (const [at, x0, y0] of [[SMASH, from[0], DAIS.top], [CRACK[0], 25.3, FL], [CRACK[1], HATCH.x0, FL]] as const) {
+  // Its upper lip, the broken edge of the floor, catching the lamps above it (behind the running tip, where it is
+  // open): fresh stone, paler than the worn floor's lip, uneven.
+  if (top.length > 3) {
+    const lipC = mixHex(STONE.mid, mixHex(STONE.light, LAMP.glow, 0.35), Math.min(1, 0.25 + 0.9 * lit((from[0] + run) / 2, -0.4)))
+    const lip: Pt[] = []
+    const under: Pt[] = []
+    const n = top.length - 1
+    for (let j = 0; j < n; j++) {
+      const [x, y] = top[j]
+      const w = 0.028 * Math.min(1, (run - x) / 0.6) * (0.7 + 0.6 * hash(j, 89))
+      lip.push([x, y - 0.012])
+      under.push([x, y + w])
+    }
+    lip.push(top[n])
+    p.fill(lipC)
+    poly(p, k, [...lip, ...under.reverse()])
+  }
+  // Grit thrown up at each jump of the crack (the blow's own burst is `drawImpact`).
+  for (const [at, x0, y0] of [[CRACK[0], 25.3, FL], [CRACK[1], HATCH.x0, FL]] as const) {
     const s = t - at
     if (s < 0 || s > 0.6) continue
     for (let j = 0; j < 8; j++) {
@@ -1283,6 +1444,123 @@ function drawCrack(p: p5, c: Pen, t: number, from: Pt): void {
       const r = 0.045 + 0.045 * hash(j, 7)
       poly(p, k, [[px - r, py], [px, py - r * 0.8], [px + r, py + r * 0.2], [px + r * 0.1, py + r]])
     }
+  }
+  drawImpact(p, c, t, from, lit)
+}
+
+/**
+ * The sceptre's blow, big enough to feel at 8 cells: a dark gash where the head came down, the step's corner knocked
+ * off and tumbling east onto the floor, stone chips and a burst of dust thrown up from the step where he was, lit by
+ * the crown-lamp over them. The chips and the dust are gone in about 0.6-0.8 s (the damped recovery); the broken
+ * corner lies where it lands.
+ */
+const G = 14
+function drawImpact(p: p5, c: Pen, t: number, from: Pt, lit: (x: number, y: number) => number): void {
+  const s = t - SMASH
+  if (s < 0) return
+  const k = c.k
+  // As lit as the dais it is broken from (the crown-lamp over the throne).
+  const l = Math.min(1, lit(19.7, -1))
+  const stone = mixHex(STONE.dark, STONE.mid, 0.45 + 0.55 * l)
+  const fresh = mixHex(STONE.mid, mixHex(STONE.light, LAMP.glow, 0.35), 0.3 + 0.7 * l)
+  p.noStroke()
+  // The gash: bitten into the step where the head came down, opening in a few hundredths of a second.
+  const g = ease(t, SMASH, SMASH + 0.05)
+  const [fx, fy] = [from[0], DAIS.top]
+  p.fill(mixHex(STONE.deep, TROLL.shade, 0.3))
+  poly(p, k, [
+    [fx - 0.34, fy], [fx - 0.22, fy + 0.08 * g], [fx - 0.1, fy + 0.19 * g], [fx + 0.02, fy + 0.14 * g], [fx + 0.12, fy + 0.22 * g],
+    [fx + 0.24, fy + 0.09 * g], [fx + 0.34, fy],
+  ])
+  // Its broken edges catching the light either side.
+  p.fill(fresh)
+  poly(p, k, [[fx - 0.34, fy], [fx - 0.22, fy + 0.08 * g], [fx - 0.25, fy + 0.03 * g]])
+  poly(p, k, [[fx + 0.34, fy], [fx + 0.24, fy + 0.09 * g], [fx + 0.28, fy + 0.035 * g]])
+
+  // The corner, knocked east and up off the step: it tumbles over, lands flat on the floor past the dais and rocks
+  // still there.
+  {
+    const vx = 1.75
+    const vy = -2.6
+    const [x0, y0] = [CORNER_X - 0.16, DAIS.top + 0.09]
+    const rest = FL - 0.12
+    const T = (-vy + Math.sqrt(vy * vy + 2 * G * (rest - y0))) / G
+    const spin = 5.8
+    const u = Math.min(s, T)
+    const x = x0 + vx * u + (s > T ? 0.1 * (1 - Math.exp(-(s - T) / 0.08)) : 0)
+    const y = s < T ? y0 + vy * s + 0.5 * G * s * s : rest - 0.05 * Math.exp(-(s - T) / 0.06) * Math.abs(Math.sin((s - T) * 24))
+    const ang = s < T ? spin * s : Math.PI + (spin * T - Math.PI) * Math.exp(-(s - T) / 0.07) * Math.cos((s - T) * 28)
+    p.push()
+    p.translate(x * k, y * k)
+    p.rotate(ang)
+    p.fill(stone)
+    poly(p, k, PIECE)
+    // Its fracture face, fresh stone.
+    p.fill(fresh)
+    const n = PIECE.length
+    poly(p, k, [PIECE[2], ...PIECE.slice(3, n), PIECE[0], ...PIECE.slice(3, n).reverse().map(([a, b]): Pt => [a + 0.03, b - 0.07])])
+    // Its worn top, the step's lit edge, going with it.
+    p.fill(mixHex(STONE.mid, STONE.light, l))
+    poly(p, k, [PIECE[0], PIECE[1], [PIECE[1][0], PIECE[1][1] + 0.045], [PIECE[0][0] + 0.03, PIECE[0][1] + 0.045]])
+    p.pop()
+  }
+
+  // Chips: a dozen, uneven, thrown up 0.5-0.8 cells from the hit, turning, falling back and gone.
+  const CHIPS = 13
+  for (let j = 0; j < CHIPS; j++) {
+    const h = 0.5 + 0.3 * hash(j, 51)
+    const vy = -Math.sqrt(2 * G * h)
+    const side = j % 3 === 0 ? -1 : 1
+    const vx = side * (0.5 + 1.7 * hash(j, 52))
+    const px = fx + (hash(j, 53) - 0.5) * 0.3 + vx * s
+    const py = fy - 0.03 + vy * s + 0.5 * G * s * s
+    const land = px > DAIS.x1 || px < DAIS.x0 ? FL : px > CORNER_X ? DAIS.step : DAIS.top
+    const life = 0.55 + 0.25 * hash(j, 54)
+    if (py > land || s > life) continue
+    const a = 1 - Math.pow(s / life, 3)
+    const r = 0.05 + 0.065 * hash(j, 55)
+    p.push()
+    p.translate(px * k, py * k)
+    p.rotate(s * (6 + 8 * hash(j, 56)) * side)
+    p.fill(alpha(p, j % 2 ? fresh : mixHex(stone, fresh, 0.5), a))
+    poly(p, k, [[-r, -r * 0.2], [-r * 0.4, -r * 0.85], [r * 0.55, -r * 0.7], [r, r * 0.15], [r * 0.3, r * 0.75], [-r * 0.6, r * 0.55]])
+    p.pop()
+  }
+
+  // Dust: a low burst off the step, lit by the lamp above it, spreading sideways and a little up, settling and thinning
+  // out over the recovery. Puffs of uneven sizes, overlapping into one ragged cloud (never a row of beads).
+  const life = 0.85
+  if (s < life) {
+    // Soft puffs (each a bell of alpha, no edge), so they merge into one cloud hugging the step.
+    const dust = rgbOf(mixHex(STONE.light, mixHex('#B8AC96', LAMP.glow, 0.3), 0.5 + 0.5 * l))
+    const fade = Math.pow(1 - s / life, 1.5)
+    const reach = 1 - Math.exp(-s / 0.11)
+    const ctx = ctxOf(p)
+    p.push()
+    ctx.save()
+    for (let j = 0; j < 12; j++) {
+      const up = j < 3
+      const dir = up ? -Math.PI / 2 + (hash(j, 61) - 0.5) * 1.0 : j % 2 ? -0.1 - 0.45 * hash(j, 62) : -Math.PI + 0.1 + 0.45 * hash(j, 62)
+      const R = (up ? 0.4 : 0.5) + 0.3 * hash(j, 63)
+      const dx = Math.cos(dir) * R * reach
+      const dy = Math.sin(dir) * R * reach * 0.75 + 0.1 * s * s
+      const size = (0.16 + 0.18 * hash(j, 64)) * (0.55 + 1.0 * reach)
+      const a = (0.45 + 0.3 * hash(j, 65)) * fade
+      ctx.save()
+      ctx.translate((fx + dx) * k, (fy - 0.08 + dy) * k)
+      ctx.scale(1.5, 1)
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, size * k)
+      g.addColorStop(0, `rgba(${dust},${a.toFixed(3)})`)
+      g.addColorStop(0.5, `rgba(${dust},${(a * 0.55).toFixed(3)})`)
+      g.addColorStop(1, `rgba(${dust},0)`)
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.arc(0, 0, size * k, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    }
+    ctx.restore()
+    p.pop()
   }
 }
 
@@ -1423,7 +1701,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   const seen = (x0: number, x1: number): boolean => x1 > f.x0 - 0.5 && x0 < f.x1 + 0.5
   const [qx, qy] = quake(t)
   // The sceptre's blow and the crack's jumps shake the hall itself.
-  const jolt = 0.05 * ring(t - SMASH, 0.22, 34) + 0.02 * ring(t - CRACK[0], 0.15, 34) + 0.02 * ring(t - CRACK[1], 0.15, 34)
+  const jolt = 0.07 * ring(t - SMASH, 0.24, 34) + 0.02 * ring(t - CRACK[0], 0.15, 34) + 0.02 * ring(t - CRACK[1], 0.15, 34)
   p.push()
   p.translate(qx * k, (qy + jolt) * k)
   p.rectMode(p.CORNER)
@@ -1431,15 +1709,22 @@ export function drawHall(p: p5, c: Pen, t: number): void {
 
   const poses = COURT.map((cr) => courtierAt(cr, t))
   const lights = lightsAt(t, poses)
-  const lit = (x: number, y: number) => litAt(lights, x, y)
+  // How lit the hall is as a whole (each light the chain catches lifts it a step), and the ambient that gives: the
+  // light the fires throw about the hollow, under their pools.
   const hallLit = Math.min(1, lights.reduce((s, l) => s + (l.w > 0.6 ? l.s * 0.2 : 0), 0))
+  // Both come up as the hall's cover opens from the door, so its soft edge never shows a lit wall at the jamb.
+  const poolsUp = ease(t, OPENS - 0.1, OPENS + 1.0)
+  const amb = 0.18 * hallLit * poolsUp
+  const lit = (x: number, y: number) => Math.min(1, litAt(lights, x, y) + amb)
 
   drawRoom(p, c, 0.1 + 0.5 * hallLit)
-  drawDripstones(p, c, t, lights)
-  if (seen(0, 13)) drawTerraces(p, c, lit, t)
+  if (seen(0, 13)) drawTerraces(p, c, lit, t, 'faces', hallLit * poolsUp)
   if (seen(-0.5, 1.5)) drawDoorway(p, c, t, lit, mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * 0.3 * lit(6, (ROW_Y[0] + FL) / 2)))
-  // The pools of light on the rock, before anything they light; the pillars stand dark against them, lit at the rim.
-  for (const l of lights) glow(p, c, l.x, l.y, l.r * 0.95, Math.min(0.45, 0.3 * l.s), l.col)
+  // The pools of light on the rock, before anything they light (the ledges' lips over them catch the light along
+  // their edges); the pillars stand dark against them, lit at the rim.
+  drawPools(p, c, lights, [POOL_CLIP], poolsUp)
+  if (seen(0, 13)) drawTerraces(p, c, lit, t, 'lips', hallLit)
+  drawDripstones(p, c, t, lights)
   for (let i = 0; i < PILLARS.length; i++) if (seen(PILLARS[i] - 3.5, PILLARS[i] + 3.5)) drawPillar(p, c, i, t, lights)
 
   // The gallery and the tiers, back to front, and the court on them.
@@ -1464,7 +1749,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
 
   // The dais, the throne, the King.
   if (seen(DAIS.x0 - 3, DAIS.x1 + 3)) {
-    drawDais(p, c, lit(19.7, -1))
+    drawDais(p, c, lit(19.7, -1), t)
     drawThrone(p, c, t, lit(19.7, -3))
     // His hand, for the blow's angle, is where his troll's arm is drawn.
     const pose0 = kingAt(t)
@@ -1491,6 +1776,8 @@ export function drawHall(p: p5, c: Pen, t: number): void {
     drawBrazier(p, c, b.x, t, tip ? 0 : heatOf(t, b.who), tip ? 0 : poses[b.who].puff, lit(b.x, BRAZIER_Y))
     p.pop()
   })
+  // The guards' fire-bowl by the hatch, on the floor inside the east door.
+  if (seen(HATCH_FIRE.x - 1.5, HATCH_FIRE.x + 1.5)) drawBrazier(p, c, HATCH_FIRE.x, t, hatchHeat(t), hatchFlare(t), lit(HATCH_FIRE.x, FL - 0.8), FL)
   drawSpills(p, c, t)
   ;(['A', 'B', 'C'] as const).forEach((id, i) => {
     const who = [0, 1, 3][i]
@@ -1508,7 +1795,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
   drawSparks(p, c, t, [BRAZIERS[1].x, BRAZIER_Y - 0.15], torchFlame(1), SNORT_B + 0.04, TORCH_B)
 
   // The floor, the hatch, the crack.
-  drawFloor(p, c, t, (x) => lit(x, 0))
+  drawFloor(p, c, t, (x) => lit(x, 0), lights, poolsUp)
   if (seen(HATCH.x0 - 1, HATCH.x1 + 1)) drawHatch(p, c, t, lit(27.5, 0), floorFill(lit((HATCH.x0 + HATCH.x1) / 2, 0)))
   if (t >= SMASH) {
     if (!crackFrom) {
@@ -1517,7 +1804,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
       const reach = SCEPTRE.len * (1 - SCEPTRE.grip)
       crackFrom = [hand[0] + Math.cos(a) * reach, hand[1] + Math.sin(a) * reach]
     }
-    drawCrack(p, c, t, crackFrom)
+    drawCrack(p, c, t, crackFrom, lit)
   }
   drawRubble(p, c, t)
   // Dark before the chain reaches it: until he is at its west door the hall is solid rock to look at, and it opens
