@@ -308,7 +308,7 @@ visited, and nearly every cut a step through the castle's door. The arrangement 
 stretch, so `scripts/shows/merry-go-round-onsets.py` tracks each stretch beat by beat (bars and their place in the
 bar) into `scripts/shows/plans/merry-go-round-onsets.json`; `check:shows` holds every strike to it
 (`apps/rube/checks/merry-go-round.ts`). The report is `apps/rube/src/shows/versions/merry-go-round/MERRY_GO_ROUND.md`.
-`mountain-king/opus55` (in the picker, **Mountain King**, one take, **Opus 5.5**) is Grieg's *In the Hall of the
+`mountain-king/opus55` (in the picker, **Mountain King**, one take, **Opus 5.5 (A)**) is Grieg's *In the Hall of the
 Mountain King* played whole by a chain reaction that grows with the music, from one pebble tipped at the trolls'
 gate to the mountain's own machinery running away and the mountain coming down. It follows Ibsen: Peer Gynt (the
 red ball) and the Woman in Green (the green ball, company) ride a great pig to the Dovre King's hall; the court
@@ -321,7 +321,7 @@ the beat is followed quarter note by quarter note (`scripts/shows/mountain-king-
 `scripts/shows/plans/mountain-king-onsets.json`), and `check:shows` holds every strike against it
 (`apps/rube/checks/mountain-king.ts`). Licences: `apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`; the
 report is `apps/rube/src/shows/versions/mountain-king/MOUNTAIN_KING.md`.
-`mountain-king/opus55-spark` (in the picker, **Mountain King**, take **Spark**) is Grieg's *In the Hall of the
+`mountain-king/opus55-spark` (in the picker, **Mountain King**, take **Opus 5.5 (B)**) is Grieg's *In the Hall of the
 Mountain King* in the Czech National Symphony Orchestra's public-domain Musopen recording, whole, with the credits
 after it in silence: 179 s (`apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`). A candle's flame slips off
 its wick while the cat sleeps, and every fire is a door: out through the stove into a glassworks, a balloon regatta

@@ -28,8 +28,8 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   const cam = perf.camera!
   const data = onsetsFile as unknown as { duration: number; onsets: { t: number; s: number }[]; beats: unknown[] }
 
-  check('mountain king: in the picker it is Mountain King, Opus 5.5, with no note and no byline',
-    version.title === 'Mountain King' && version.label === 'Opus 5.5' && version.note === undefined && !('director' in version))
+  check('mountain king: in the picker it is Mountain King, Opus 5.5 (A), with no note and no byline',
+    version.title === 'Mountain King' && version.label === 'Opus 5.5 (A)' && version.note === undefined && !('director' in version))
   check('mountain king: the whole recording from zero, credited to Grieg and the Czech National Symphony Orchestra for Musopen, public domain, with its upload',
     perf.show === show && near(perf.duration, DURATION) && (perf.soundtrack?.offset ?? 0) === 0 &&
     !!perf.soundtrack?.src?.includes('grieg-mountain-king-musopen') && near(RECORDING, data.duration) && DURATION > RECORDING + 10 &&

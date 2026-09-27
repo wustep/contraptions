@@ -5,7 +5,7 @@ Grieg's "In the Hall of the Mountain King" played whole by a Rube Goldberg machi
 `apps/rube/src/shows/versions/mountain-king/ATTRIBUTION.txt`.
 
 Open it at `/shows/mountain-king/` or `/shows/?show=mountain-king&take=opus55` (add `&music=file` to play the file
-instead of the orchestra's YouTube upload). In the picker it is **Mountain King**, one take, **Opus 5.5**.
+instead of the orchestra's YouTube upload). In the picker it is **Mountain King**, one take, **Opus 5.5 (A)**.
 
 ## What it is
 
