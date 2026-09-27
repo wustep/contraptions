@@ -33,12 +33,14 @@ const LIFT = 0.62
 const script: Omit<Card, 'at'>[] = [
   { hold: 1.8, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 2.8,
+    hold: 3.2,
     role: 'With',
     names: [
       ['Peer Gynt', 'the red ball', PEER],
       ['The Woman in Green', 'the green ball', WOMAN],
       ['The Mountain King', 'and his trolls', `slab:${TROLL.hide}`],
+      // Ibsen's "bridal steed": the way they reach the hall, on screen for the first twenty seconds.
+      ['The great pig', 'her bridal steed', `slab:${TROLL.old}`],
     ],
   },
   { hold: 1.6, role: 'After', names: ['Henrik Ibsen'], notes: ['Peer Gynt (1867), Act Two'] },

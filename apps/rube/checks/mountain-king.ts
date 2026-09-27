@@ -202,6 +202,6 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   check('mountain king: end credits after the last chord, set by the page: directed by Claude Opus 5.5, the cast, Ibsen, the music honestly, p5.js',
     CREDITS_OK && perf.titles === creditsAt && creditsAt(CARDS[0].at - 0.05).length === 0 && creditsAt(perf.duration).length === 0 &&
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && !/Stephen Wu/.test(said) &&
-    ['Peer Gynt', 'The Woman in Green', 'The Mountain King', 'Henrik Ibsen', 'Edvard Grieg', 'In the Hall of the Mountain King', 'Czech National Symphony Orchestra', 'Musopen', 'public domain', 'p5.js'].every((w) => said.includes(w)) &&
+    ['Peer Gynt', 'The Woman in Green', 'The Mountain King', 'The great pig', 'her bridal steed', 'Henrik Ibsen', 'Edvard Grieg', 'In the Hall of the Mountain King', 'Czech National Symphony Orchestra', 'Musopen', 'public domain', 'p5.js'].every((w) => said.includes(w)) &&
     !/tech demo/i.test(said), said)
 }
