@@ -13,10 +13,12 @@ import {
  *   58.02  the troll nearest him (the elder whose tail he trod on) opens its eyes;
  *   58.29 → 59.64  the heads turn to him in a wave, one column of the court a note, west from the throne, the dark
  *          gallery's eyes opening with them; he backs away from them a step with every other column, toward the dais;
- *   60.17  "Slay him!": every mouth, every arm; he jumps back onto the dais's first step, against the second;
- *   61.23  the King's eyes open over him: he jumps off the step, away from the King; she slips away along the dais
- *          and out of the east door; the King rises (a bar), and he creeps back toward the dais after her, a step a
- *          beat; the court's heads nod on the beats, row against row;
+ *   60.17  "Slay him!": every mouth, every arm; he jumps back onto the dais's first step, against the second, and
+ *          she rolls to the dais's lip beside him (their parting: the two of them together, a little space between);
+ *   61.23  the King's eyes open over them: he jumps off the step, away from the King; she stays a note, then rolls
+ *          off east along the dais top, quicker and quicker, and drops off its end out of shot by ~62.9, before the
+ *          King is half risen; the King rises (a bar), and he creeps back toward the dais, a step a beat; the
+ *          court's heads nod on the beats, row against row;
  *   64.37  "Slay him!" again, the King's sceptre up: it blows him back across the floor, and again on the next note;
  *   66.43  the court stands: he backs toward the dais, a hop a beat, as the front row comes down after him;
  *   67.95  he bolts; 68.46 a grab at him closes on air: he is up the dais; 69.46 the King reaches down: he is through
@@ -119,14 +121,15 @@ export const wake = part<{ begin: number }>(
     ],
   }),
   (slot: Slot): PartShot[] => [
-    { t: slot.begin, ...SEAM_SHOT },
-    // West with the wave, as the heads turn to him: the lit court in the frame's west half, he backing away from it
-    // on its east side, the Woman at the frame's east edge on the dais. It turns on the held note before the shout.
-    { t: 59.9, cells: 7.0, hold: [X(12.3), -1.85], w: 1 },
+    // One held frame of the whole court and the dais (the court's own seam is free) from the first note through
+    // "Slay him!": the heads waking in a wave and swinging on every note of the theme, row after row in canon, he
+    // backing up onto the dais's step, the Woman at the King's side. No pan west and back.
+    { t: slot.begin, cells: 11.2, hold: [X(11.9), -3.0], w: 1 },
+    { t: SLAY[0] + 0.1, cells: 10.8, hold: [X(12.3), -2.9], w: 1 },
     // East to the King as his eyes open over him, the nodding court still at the frame's west side; out a little as
     // he rises and roars, and as the court stands.
     // Close (6.3 cells: he is the story, a fifth bigger than at 7), the floor low in the frame. East with her as she
-    // turns to him and goes, the King rising between them; she walks out of its east side before the roar.
+    // leaves him and goes, the King rising behind her; she rolls out of its east side (~62.8) before he is half up.
     { t: 61.65, cells: 6.4, hold: [X(16.6), -1.85], w: 1 },
     { t: 63.45, cells: 6.3, hold: [X(17.7), -1.85], w: 1 },
     // Out and up as he roars, and held there through the chase and the blow: the whole King, the sceptre's head on

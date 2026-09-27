@@ -115,7 +115,7 @@ export const gate = part<GateState>(
       // and both balls read by ~2 s and sit in the frame's lower left, the stair and the gate ahead of them, by the
       // theme's first note (4.36).
       { t: at(0), cells: 44, hold: hold(23.2, -10.2), w: 1 },
-      { t: at(1.5), cells: 30, hold: hold(15.2, -7.2), w: 1 },
+      { t: at(1.5), cells: 27, hold: hold(14.4, -6.8), w: 1 },
       { t: at(4.36), cells: 13.5, hold: hold(10.0, -4.3), off: [3.6, -1.9], w: 1 },
       // Down to them, and after them up the flank.
       { t: at(6.5), cells: 7.8, off: [1.4, -0.9], w: 0 },

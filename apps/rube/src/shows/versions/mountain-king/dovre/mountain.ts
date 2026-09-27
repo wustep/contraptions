@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../parts'
 import { frame, hash, scenery, smooth } from './kit'
-import { CODA, LAST1, LAST2 } from './music'
+import { BLOW, CODA, LAST1, LAST2 } from './music'
 import { LAMP, SKY, STONE, WORKS } from './worlds'
 
 /**
@@ -15,17 +15,21 @@ import { LAMP, SKY, STONE, WORKS } from './worlds'
  * slope up to the summit over the hall (x ≈ 48, y ≈ -21), and the east flank: a grassy shoulder with a hollow in it
  * (`REST`, where Peer comes to rest at sunrise) and the long fall to the valley.
  *
- * The finale blows the summit's cap out on the first of the last two chords: from then the surface has a crater
+ * The finale blows the summit's cap out on the last hammer blow (`BLOW`): from then the surface has a crater
  * (`surface(x, t)`); `skyline(x)` is always the intact mountain.
  */
 
 /** The skyline's corners, world cells: where the mountain's surface is. Between them, a smooth line. */
 export const SKYLINE: Pt[] = [
   [-90, 34], [-60, 26], [-38, 14], [-22, 6.5], [-10, 2.2], [0, 0.13], [8, -1.3], [14, -2.5], [19.8, -3.87],
-  // The cliff over the gate: the gate is cut into its foot.
-  [20.1, -9.5], [26, -12.5], [34, -15.5], [42, -19.5], [48, -21],
+  // The cliff over the gate: the gate is cut into its foot. Then a mountain's slope, not a hump: it climbs in steps
+  // of rock, a steep riser and a long tread (points closer than a cell are joined straight, so a riser is sharp), to
+  // a crown of two blunt rock towers either side of the summit, which the finale's blow-out breaks open between them.
+  [20.1, -9.5], [22.8, -10.15], [23.35, -11.75], [23.95, -11.9], [27.6, -12.9], [28.2, -14.5], [28.85, -14.7], [32.8, -15.6],
+  [33.35, -17.2], [33.95, -17.4], [37.9, -18.3], [38.4, -19.5], [39.05, -19.65], [42.55, -20.2], [43.2, -22.55], [43.95, -22.75],
+  [44.35, -20.85], [44.6, -20.55], [48, -21], [50.4, -20.8], [50.8, -22.45], [51.45, -22.6], [51.9, -20.9],
   // The east flank: down from the summit to a shoulder with a grassy hollow in it, then down to the valley.
-  [52, -20.35], [55.5, -18.9], [58.5, -17.95], [61.5, -18.2], [65, -15.8], [70, -11.2], [82, -2], [96, 9],
+  [52.4, -20.25], [55.5, -18.9], [58.5, -17.95], [61.5, -18.2], [65, -15.8], [70, -11.2], [82, -2], [96, 9],
   [112, 20], [130, 30], [170, 40],
 ]
 
@@ -55,11 +59,11 @@ export const SUMMIT: Pt = [48, -21]
 /** The crater the finale blows in the summit: centred on the chimney (x 47.5), this wide each side, this deep. */
 export const CRATER = { x: 47.5, half: 1.55, depth: 1.8 }
 
-/** How much deeper than `skyline` the surface is at x, once the cap is blown out (LAST1): 0 elsewhere and before. */
+/** How much deeper than `skyline` the surface is at x, once the cap is blown out (BLOW): 0 elsewhere and before. */
 export function crater(x: number, t: number): number {
-  if (t < LAST1) return 0
-  // The first chord blows the cap out; the second tears the crown off after it: the crater widens and deepens.
-  const more = smooth(t, LAST2, LAST2 + 0.15)
+  if (t < BLOW) return 0
+  // The last blow blows the cap out and tears the crown off after it: the crater opens, then widens and deepens.
+  const more = smooth(t, BLOW + 0.05, BLOW + 0.25)
   const half = CRATER.half + 1.25 * more
   const dx = (x - CRATER.x) / half
   if (Math.abs(dx) >= 1) return 0
@@ -68,7 +72,7 @@ export function crater(x: number, t: number): number {
   // Broken, not turned: stepped and uneven, a ledge left on each wall, the rim torn.
   const rough = 1 + 0.12 * Math.sin(dx * 7.3 + 1.1) + 0.07 * Math.sin(dx * 17.9) + 0.05 * Math.sign(Math.sin(dx * 11.7 + 0.4))
   const ledge = 0.22 * Math.exp(-Math.pow((Math.abs(dx) - 0.55) / 0.12, 2))
-  return ((CRATER.depth + 0.8 * more) * u * Math.sqrt(u) * rough - ledge * u) * smooth(t, LAST1, LAST1 + 0.08)
+  return ((CRATER.depth + 0.8 * more) * u * Math.sqrt(u) * rough - ledge * u) * smooth(t, BLOW, BLOW + 0.08)
 }
 
 /** The mountain's surface at world x and show time t: the skyline, and the crater after the summit blows. */
@@ -83,10 +87,11 @@ export const REST: Pt = (() => {
 })()
 
 /**
- * How far the dawn has come at show time `t`: 0 all night; it starts just before Peer bursts out of the summit (so
- * he comes out under the last stars, the east pale) and is full morning as the credits run.
+ * How far the dawn has come at show time `t`: 0 all night; it starts as the hall comes down (so he is thrown out of
+ * the summit under the last stars, the east pale), he lands on the shoulder in its light, and it is full morning as
+ * the credits run.
  */
-export const dawn = (t: number): number => smooth(t, LAST1 - 3, LAST2 + 14)
+export const dawn = (t: number): number => smooth(t, BLOW - 2.2, LAST2 + 9)
 
 /** The morning's high sky: still a deep blue once the sun is up (the zenith stays blue longest). */
 const ZENITH = mixHex(SKY.morning, SKY.night, 0.5)
@@ -175,7 +180,7 @@ export const mountain = scenery<MountainState>({
       const ox = f.cx * (1 - sf)
       const oy = f.cy * (1 - sf)
       p.noStroke()
-      for (let i = 0; i < 90; i++) {
+      for (let i = 0; i < 150; i++) {
         const sx = -80 + 240 * hash(i, 1) + ox
         const sy = -70 + 70 * hash(i, 2) + oy
         if (sx < x0 || sx > x1 || sy < top || sy > bottom) continue
@@ -186,7 +191,7 @@ export const mountain = scenery<MountainState>({
         const col = p.color(SKY.star)
         col.setAlpha(255 * a)
         p.fill(col)
-        const r = (0.03 + 0.04 * hash(i, 5)) * k * (f.y1 - f.y0 > 20 ? 1.4 : 1)
+        const r = Math.max(1.3, (0.03 + 0.04 * hash(i, 5)) * k * (f.y1 - f.y0 > 20 ? 1.6 : 1))
         p.ellipse(sx * k, sy * k, r, r)
       }
     }
@@ -197,10 +202,11 @@ export const mountain = scenery<MountainState>({
     // The sun's light, behind everything on the far layer: a broad warm pool over the east, then the sun itself.
     if (d > 0.02) {
       const sx = SUN_X + ox
-      const sy = ridgeA(SUN_X) + oy + 1.1 - 1.9 * smooth(t, LAST2 + 2, LAST2 + 27)
+      // Its rim breaks the far ridge on the second last chord, then it climbs slowly over the credits.
+      const sy = ridgeA(SUN_X) + oy + 1.12 - 0.3 * smooth(t, LAST2 - 0.5, LAST2 + 0.6) - 1.6 * smooth(t, LAST2 + 0.6, LAST2 + 22)
       const glowR = 13
       const gg = ctx.createRadialGradient(sx * k, sy * k, 0, sx * k, sy * k, glowR * k)
-      const a = 0.55 * d
+      const a = 0.55 * d * (1 + 0.45 * smooth(t, LAST2 - 0.05, LAST2 + 0.05) * Math.exp(-Math.max(0, t - LAST2) / 1.4))
       gg.addColorStop(0, `rgba(255,227,166,${a})`)
       gg.addColorStop(0.3, `rgba(242,196,141,${a * 0.45})`)
       gg.addColorStop(1, 'rgba(242,196,141,0)')
@@ -208,7 +214,7 @@ export const mountain = scenery<MountainState>({
       ctx.fillRect((sx - glowR) * k, (sy - glowR) * k, 2 * glowR * k, 2 * glowR * k)
       // The disc: big and far, rising out of the far peaks (they are drawn over its lower part).
       const disc = p.color(mixHex(SKY.dawn, SKY.sun, 0.75))
-      disc.setAlpha(255 * smooth(d, 0.25, 0.6))
+      disc.setAlpha(255 * Math.max(smooth(d, 0.25, 0.6), smooth(t, LAST2 - 0.3, LAST2 + 0.3)))
       p.noStroke()
       p.fill(disc)
       p.ellipse(sx * k, sy * k, 1.9 * k, 1.9 * k)
@@ -250,6 +256,10 @@ export const mountain = scenery<MountainState>({
     // chord (the bells that send the trolls running) and rings on over the credits.
     drawChurch(p, k, CHURCH[0] + ox, CHURCH[1] + oy, t, d)
 
+    // The mountain breathes: a slow wisp of steam from the summit's smoke hole, the chimney the finale blows open.
+    // Only while the mountain is whole, and only on the sky.
+    if (t < CODA + 1) steam(ctx, k, t)
+
     ctx.restore()
 
     // The upper flanks, from the cliff over the gate eastward: a skin of turf over the rock, dark at night, green in
@@ -271,6 +281,33 @@ export const mountain = scenery<MountainState>({
     }
   },
 })
+
+/** The steam's wisps: born at the summit's smoke hole, rising and drifting east, spreading and thinning. */
+function steam(ctx: CanvasRenderingContext2D, k: number, t: number): void {
+  const fade = 1 - smooth(t, CODA - 0.5, CODA + 1)
+  const PERIOD = 9
+  for (let i = 0; i < 5; i++) {
+    const age = (((t + (i * PERIOD) / 5) % PERIOD) + PERIOD) % PERIOD
+    const u = age / PERIOD
+    const x = 47.6 + 0.45 * age + 0.25 * Math.sin(age * 0.7 + i)
+    const y = -21.25 - 0.55 * age - 0.02 * age * age
+    const w = 0.5 + 0.32 * age
+    const a = 0.2 * Math.min(1, age / 1.2) * (1 - u) * (1 - u) * fade
+    if (a <= 0.004) continue
+    const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, w * k)
+    g.addColorStop(0, `rgba(200,208,224,${a.toFixed(3)})`)
+    g.addColorStop(0.55, `rgba(200,208,224,${(a * 0.45).toFixed(3)})`)
+    g.addColorStop(1, 'rgba(200,208,224,0)')
+    ctx.save()
+    ctx.translate(x * k, y * k)
+    ctx.rotate(-0.25)
+    ctx.scale(1, 0.5)
+    ctx.translate(-x * k, -y * k)
+    ctx.fillStyle = g
+    ctx.fillRect((x - w) * k, (y - w) * k, 2 * w * k, 2 * w * k)
+    ctx.restore()
+  }
+}
 
 /** The turf on the upper flanks, from x0 to x1: a skin of grass over the rock, tufts on it, none in the crater. */
 function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: number, d: number): void {
@@ -297,7 +334,7 @@ function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: num
     p.endShape(p.CLOSE)
   }
   // The crater's broken lip: the rock's lit edge where the cap came off.
-  if (t >= LAST1 && x0 < CRATER.x + CRATER.half && x1 > CRATER.x - CRATER.half) {
+  if (t >= BLOW && x0 < CRATER.x + CRATER.half && x1 > CRATER.x - CRATER.half) {
     p.fill(mixHex(STONE.mid, STONE.light, 0.4 + 0.4 * d))
     p.beginShape()
     const a = CRATER.x - CRATER.half
@@ -413,9 +450,14 @@ function drawChurch(p: p5, k: number, x: number, y: number, t: number, d: number
   p.triangle(u(bx - 0.23), u(-0.6), u(bx + 0.23), u(-0.6), u(bx), u(-1.02))
   p.fill(lit)
   p.triangle(u(bx), u(-1.02), u(bx + 0.23), u(-0.6), u(bx + 0.09), u(-0.6))
-  // It is rung from the first chord and rings on, a long even swing, slowing only at the very end.
-  const ring = t >= CODA ? smooth(t, CODA, CODA + 1.2) * (1 - 0.55 * smooth(t, LAST2 + 20, LAST2 + 29)) : 0
-  const a = 0.95 * ring * Math.sin((t - CODA) * ((Math.PI * 2) / 1.7))
+  // It is rung from the first chord and rings on, a long even swing, slowing only at the very end: its swing is
+  // timed so that it strikes (at the top of a swing) on the first last chord, as Peer lands; the second chord's
+  // stroke jolts it on.
+  const ring = t >= CODA ? smooth(t, CODA, CODA + 1.2) * (1 - 0.55 * smooth(t, LAST2 + 18, LAST2 + 20)) : 0
+  const PERIOD = 1.7
+  const phase = (t - LAST1) * ((Math.PI * 2) / PERIOD) + Math.PI / 2
+  const jolt = t >= LAST2 ? 0.25 * Math.exp(-(t - LAST2) / 0.35) * Math.sin((t - LAST2) * 16) : 0
+  const a = 0.95 * ring * Math.sin(phase) + jolt
   p.push()
   p.translate(u(bx), u(-0.58))
   p.rotate(a)
