@@ -19,8 +19,9 @@ import { TREE_X } from './hill'
  * -  bars 32 to 35: three puffs make an airship (body, tail fins, the gondola slung under it), whole on bar 35; it
  *    sails off left, climbing, behind the tree;
  * -  bars 35 to 39, the loudest of the phrase (a double chuff on 36): Paradise Falls, her tepui in cloud, as tall as it
- *    is wide, the sun on its left; the fifth puff reaches its lip on bar 39 and three falls pour; then a gust takes it
- *    off right, out of the frame by bar 41, while the camera comes down to the two of them;
+ *    is wide, the sun on its left; the fifth puff reaches its lip on bar 39 and three falls pour, held whole in the
+ *    frame through bar 40; then a gust takes it off right, out of the frame by bar 42, while the camera comes down to
+ *    the two of them;
  * -  bars 39 to 45: low over the two of them, big and whole in the frame, a baby sitting up on a cushion of cloud: its
  *    body (bar 40), its leg out in front (41), its head (42: now it is a baby), its arm reaching up and out (43), the
  *    cloud it sits on (44, 45). He starts; she rolls close to him.
@@ -153,7 +154,7 @@ const AIRSHIP: Shape = {
  * On bar 39 three ribbons pour off the lip; then a gust takes it off right.
  */
 const FALLS_CLOUD: Shape = {
-  at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 57.6, 58.6, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
+  at: (t) => [3.4 + 0.03 * (t - BEGIN) + glide(t, 58.1, 59.1, 2.8), -2.35 + 0.03 * Math.sin(t * 0.5 + 1)],
   size: 1.1,
   smooth: false,
   billows: [
@@ -197,9 +198,9 @@ const LIP: Pt = [0.02, -0.5]
 
 /** The falls, three ribbons off the lip on bar 39: where each leaves the lip (its own cells), how wide, how late after the first. */
 const RIBBONS = [
-  { x: 0.02, w: 0.12, late: 0 },
-  { x: -0.19, w: 0.065, late: 0.09 },
-  { x: 0.21, w: 0.055, late: 0.17 },
+  { x: 0.02, w: 0.15, late: 0 },
+  { x: -0.19, w: 0.085, late: 0.09 },
+  { x: 0.21, w: 0.075, late: 0.17 },
 ]
 /** The mist's curls, one under each ribbon (the billows' indices, in the ribbons' order). */
 const CURLS = [22, 21, 23]
@@ -945,8 +946,9 @@ export const clouds = part<CloudsState>(
     return [
       { t: slot.begin + 1.6, cells: 4.4, hold: c(0.6, -1.25) },
       { t: slot.begin + 3.65, cells: 5.2, hold: c(1.4, -1.5) },
-      { t: slot.begin + 7.55, cells: 5.5, hold: c(2.2, -1.62) },
-      { t: slot.begin + 9.45, cells: 4.6, hold: c(0.4, -1.3) },
+      // The falls held whole, pouring, until bar 40; then down to the baby as the gust takes them.
+      { t: bar('waltz', 40), cells: 5.5, hold: c(2.2, -1.62) },
+      { t: 59.6, cells: 4.6, hold: c(0.4, -1.3) },
       { t: slot.begin + 11.35, cells: 4.0, hold: c(0.25, -1.08) },
       { t: slot.end, cells: CUTS.nursery.cells, hold: c(CUTS.nursery.frame[0], CUTS.nursery.frame[1]) },
     ]
