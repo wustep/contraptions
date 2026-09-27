@@ -3,9 +3,9 @@ import type { TrollLook } from '../troll'
 import { beat, beatAt, eighth, note } from '../music'
 import { TROLL } from '../worlds'
 import {
-  BELLS, COURT_UP, CRIES, DAIS, FIRST_EYES, FL, FLEE, FLICK_A, FLICK_B, FLICK_C, GALLERY_Y, GRAB, KING_EYES, KING_GRAB, KING_RISE, KING_UP,
-  OPEN, PEER_PATH, ROW_Y, SLAY, SMASH, SNORT_A, SNORT_B, SNORT_C, STEPS, TAIL_A, TAIL_B, TAIL_C, THRONE, WAKE_BEGIN, WAKE_END, WAVE, accent,
-  ease, kick, ring,
+  BELLS, COURT_UP, CRIES, DAIS, FIRST_EYES, FL, FLEE, FLICK_A, FLICK_B, FLICK_C, GALLERY_Y, GRAB, HATCH, KING_EYES, KING_GRAB, KING_RISE,
+  KING_UP, LURCH, OPEN, PEER_PATH, ROW_Y, SLAY, SMASH, SNORT_A, SNORT_B, SNORT_C, STEPS, TAIL_A, TAIL_B, TAIL_C, THRONE, WAKE_BEGIN, WAKE_END,
+  WAVE, accent, ease, kick, q7, ring,
 } from './hall-clock'
 
 /**
@@ -16,9 +16,12 @@ import {
  * of them react as Peer treads on their tails: a flinch, the tail's flick, a snort into the brazier by their head.
  * Awake (wake): the troll nearest him opens its eyes on the phrase's first note; the heads turn to him in a wave,
  * west from the throne, one column a note; "Slay him!" three times, mouths and arms; they nod on the beats, row
- * against row; they stand on the next downbeat, and the front row comes down after him. After he drops through
- * the floor they stand round, looking where he went. At the bells (the coda) they freeze and look up; on the chord
- * pairs they flee, west along their benches and out through the dark.
+ * against row; they stand on the next downbeat, and the front row comes down after him. The elder, whose grab
+ * missed, keeps after him when the sceptre comes down: along the floor below the dais, and a dive at the hatch as it
+ * swings open, landing belly-down at its lip, a mitt over the hole as he drops (`pursuit`); it kneels there after.
+ * After he drops through the floor the rest stand round, looking where he went. At the bells (the coda) they freeze
+ * and look up; on the chord pairs they flee, west along their benches and out through the dark (the elder east, over
+ * its hatch and out of the east door).
  */
 
 export interface Courtier {
@@ -32,8 +35,8 @@ export interface Courtier {
   doze: number
   /** A station's sleeper: whose tail he treads on, and when. */
   station?: { tail: number; flick: number; snort: number; toward: number }
-  /** Where it goes when the front row comes down after him (x on the floor), and its grab. */
-  chase?: { to: number; grab?: number }
+  /** Where it goes when the front row comes down after him (x on the floor), and its grab; `lead` keeps after him. */
+  chase?: { to: number; grab?: number; lead?: boolean }
   /** Who it is at a glance: horns, snout, hat, heads, build, moss (`troll.ts`); no two neighbours share one. */
   kind?: Pick<TrollLook, 'horns' | 'snout' | 'hat' | 'heads' | 'build' | 'moss'>
 }
@@ -44,7 +47,7 @@ export const COURT: Courtier[] = [
   { row: 0, x: 6.3, size: 1.75, seed: 102, hide: TROLL.bark, doze: -0.55, station: { tail: TAIL_B, flick: FLICK_B, snort: SNORT_B, toward: -1 }, chase: { to: 12.9 }, kind: { horns: 'ram', moss: 'beard' } },
   { row: 0, x: 8.4, size: 1.3, seed: 103, hide: TROLL.rust, doze: 0.18, chase: { to: 14.1 }, kind: { snout: 'pig', hat: 'birch', build: 'tall', moss: 'bare' } },
   // The elder, three-headed (after Kittelsen), the one whose eyes open first.
-  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB }, kind: { heads: 3, moss: 'crest' } },
+  { row: 0, x: 11.2, size: 2.0, seed: 104, hide: TROLL.old, doze: 0.5, station: { tail: TAIL_C, flick: FLICK_C, snort: SNORT_C, toward: 1 }, chase: { to: 14.35, grab: GRAB, lead: true }, kind: { heads: 3, moss: 'crest' } },
   // The ledges: fewer, and no two alike (a big one slumped, small ones leaning in), clear of the pillars (4.3, 9.5).
   // Staggered, so no two stand one over the other in a column (the tiers must not read as shelves).
   { row: 1, x: 3.2, size: 1.05, seed: 111, hide: TROLL.birch, doze: 0.45, kind: { snout: 'wart', hat: 'pot' } },
@@ -123,6 +126,125 @@ function bobbed(t: number, i: number): number {
     v += s < 0.07 ? s / 0.07 : Math.exp(-(s - 0.07) / 0.32)
   }
   return Math.min(1, v)
+}
+
+/* ------------------------------------------------------------------ the pursuit */
+
+/**
+ * The elder keeps after him to the hole. Its grab missed at the dais's west foot (it stands at `from`); on the eighth
+ * after the sceptre's blow it goes, running along the floor below the dais (the front row is downstage of it), on the
+ * sixteenths, gaining; on the lurch it dives, lands belly-down on the swing open, skids to the hole's west lip, its
+ * mitt out over the hole as he drops, and sweeps down after him on air. Then it gets up onto its knees there, looking
+ * down. Its body below the floor's top is under the floor's slab (drawn after the front row), so lying flat is drawn
+ * as a troll sunk to the shoulders: a hump of back, the heads low, the arm out.
+ */
+const CHASE = {
+  /** The eighth after the blow: it goes. Its crouch comes before it, with the shout. */
+  go: q7(20),
+  /** The ramp of its sprint (s). */
+  tau: 0.2,
+  /** Where it leaves the floor (on the lurch), lands (on the swing open), and how far it skids on its belly after. */
+  takeoff: 23.5,
+  land: 25.05,
+  skid: 0.4,
+  /** How high the dive goes, and how far its seat is under the floor's top lying flat, and kneeling. */
+  lift: 0.2,
+  flat: 0.45,
+  knee: 0.05,
+  /** Up onto its knees (s), and how far up (rise). */
+  kneel: [73.8, 75.3] as const,
+  kneelRise: 0.3,
+}
+const sprint = (s: number): number => s - CHASE.tau * (1 - Math.exp(-s / CHASE.tau))
+
+interface Pursuit {
+  x: number
+  y: number
+  rise: number
+  phase: number
+  slump: number
+  face: number
+  eyes: number
+  mouth: number
+  run: boolean
+  /** The arms the stand pose shows before it goes (the run pose swings its own). */
+  arms: number
+}
+
+/**
+ * The lead courtier from the blow on (null before its crouch). `from` is where the grab left it standing; `was` its
+ * face as the court part left it, which the crouch eases from.
+ */
+function pursuit(t: number, from: number, was: { arms: number; eyes: number; mouth: number; slump: number }): Pursuit | null {
+  if (t < SMASH - 0.2) return null
+  const S = LURCH - CHASE.go
+  const V = (CHASE.takeoff - from) / sprint(S)
+  // The crouch before it goes: its arms come down from the shout to where the run's swing starts, its knees give.
+  if (t < CHASE.go) {
+    const g = ease(t, SMASH - 0.2, CHASE.go)
+    const mix = (a: number, b: number): number => a + (b - a) * g
+    return {
+      x: from, y: FL, rise: 1 - 0.1 * g, phase: 0, slump: mix(was.slump, 0.25), face: 1, eyes: mix(was.eyes, 1.5), mouth: Math.max(was.mouth, mix(0, 0.75)), run: false,
+      arms: mix(was.arms, 0.22),
+    }
+  }
+  // The sprint: on the sixteenths (phase 2 a beat), one stride each; the phase is whole on `go` and on the lurch, so
+  // the run pose starts and ends with both arms at the swing's middle and both feet down.
+  if (t < LURCH) {
+    const s = t - CHASE.go
+    return {
+      x: from + V * sprint(s),
+      y: FL,
+      rise: 0.9 + 0.1 * ease(t, CHASE.go, CHASE.go + 0.2),
+      phase: 2 * beatAt(t),
+      slump: 0.25 - 0.15 * ease(t, CHASE.go, CHASE.go + 0.3),
+      face: 1, eyes: 1.5, mouth: 0.75, run: true, arms: 0.22,
+    }
+  }
+  const T = OPEN - LURCH
+  const vUp = V * (1 - Math.exp(-S / CHASE.tau))
+  const a = vUp * T
+  const b = CHASE.land - CHASE.takeoff - a
+  const phase0 = 2 * beatAt(LURCH)
+  // The dive: flat and low, folding as it goes, the legs scrabbling, one mitt thrown forward (the phase's three
+  // quarters is the east arm's furthest reach).
+  if (t < OPEN) {
+    const u = (t - LURCH) / T
+    return {
+      x: CHASE.takeoff + a * u + b * u * u,
+      y: FL - CHASE.lift * 4 * u * (1 - u) + CHASE.flat * ease(u, 0.3, 1),
+      rise: 1 - ease(u, 0, 0.75),
+      phase: phase0 + 0.75 * ease(u, 0, 1),
+      slump: 0.1 + 0.55 * ease(u, 0, 0.8),
+      face: 1, eyes: 1.5, mouth: 0.75 - 0.25 * u, run: true, arms: 0.22,
+    }
+  }
+  // Down on its belly: a skid to the lip (its speed carried on, damped), the thump of the landing, the mitt sweeping
+  // down into the hole after him; then up onto its knees at the lip, looking down.
+  const s = t - OPEN
+  const vLand = (a + 2 * b) / T
+  const tauS = CHASE.skid / Math.max(0.5, vLand)
+  const thump = 0.07 * (s / 0.07) * Math.exp(1 - s / 0.07)
+  const k = ease(t, CHASE.kneel[0], CHASE.kneel[1])
+  return {
+    x: CHASE.land + CHASE.skid * (1 - Math.exp(-s / tauS)),
+    y: FL + CHASE.flat + thump + (CHASE.knee - CHASE.flat) * k,
+    rise: CHASE.kneelRise * k,
+    phase: phase0 + 0.75 + 0.2 * ease(t, OPEN + 0.03, OPEN + 0.4) + 0.05 * k,
+    slump: 0.65 + 0.1 * ease(t, OPEN, OPEN + 0.4) - 0.2 * k,
+    face: 1,
+    eyes: 1.5 - 0.4 * ease(t, OPEN + 0.5, OPEN + 2),
+    mouth: 0.5 * Math.exp(-s / 0.8),
+    run: true,
+    arms: 0.22,
+  }
+}
+/** Where the lead courtier ends up, kneeling at the hole's west lip. */
+const LIP_X = CHASE.land + CHASE.skid
+
+/** Over the open hatch on the way out of the east door: a leap, feet clear of the hole (`h` high, from x0 to x1). */
+function overHatch(x: number, h: number, x0 = HATCH.x0 - 0.45, x1 = HATCH.x1 + 0.45): number {
+  return x > x0 && x < x1 ? h * Math.sin((Math.PI * (x - x0)) / (x1 - x0)) : 0
 }
 
 export interface Pose {
@@ -230,8 +352,25 @@ export function courtierAt(c: Courtier, t: number): Pose {
     if (pose === 'run') arms = 0
   }
 
+  // The lead courtier keeps after him to the hole, and kneels at its lip (`pursuit`).
+  const lead = c.chase?.lead ? pursuit(t, c.chase.to + 0.35, { arms, eyes, mouth, slump }) : null
+  if (lead) {
+    x = lead.x
+    y = lead.y
+    rise = lead.rise
+    phase = lead.phase
+    slump = lead.slump
+    face = lead.face
+    eyes = lead.eyes
+    mouth = lead.mouth
+    arms = lead.arms
+    pose = lead.run ? 'run' : 'stand'
+    // Still breathing hard at the lip.
+    if (t > WAKE_END) slump += 0.05 * ease(t, WAKE_END, WAKE_END + 0.6) * (0.5 - 0.5 * Math.cos(t * 4.2 + c.seed)) * Math.exp(-(t - WAKE_END) / 8)
+  }
+
   // After the drop: standing where they stopped, looking at the hatch; breathing hard, then calmer.
-  if (t > WAKE_END) {
+  if (t > WAKE_END && !lead) {
     const since = t - WAKE_END
     const u = ease(t, WAKE_END, WAKE_END + 1.6)
     const pant = 0.5 - 0.5 * Math.cos(t * 4.2 + c.seed)
@@ -253,7 +392,23 @@ export function courtierAt(c: Courtier, t: number): Pose {
     mouth = 0.35 * hear
     arms = arms + (0.3 - arms) * hear
     const go = FLEE[Math.min(3, c.row)] + 0.08 * (c.seed % 3)
-    if (t >= go) {
+    if (lead) {
+      // The elder, kneeling at the hole: up off its knees, over its own hatch and out of the east door.
+      if (t >= go) {
+        const run = t - go
+        const dist = 5.2 * (run - 0.25 * (1 - Math.exp(-run / 0.25)))
+        const up = ease(t, go, go + 0.3)
+        x = LIP_X + dist
+        y = FL + CHASE.knee * (1 - up) - overHatch(x, 0.45)
+        rise = CHASE.kneelRise + (1 - CHASE.kneelRise) * up
+        phase += dist / 0.9
+        face = ease(t, go, go + 0.15)
+        slump = slump * (1 - up)
+        eyes = 1.5
+        mouth = mouth + (0.6 - mouth) * ease(t, go, go + 0.15)
+      }
+      alpha = Math.max(0, Math.min(1, (29.4 - x) / 0.8))
+    } else if (t >= go) {
       const run = t - go
       const speed = 5.2 - 0.4 * c.row
       // Off the bench (the front row is already on the floor), and away west.
@@ -269,7 +424,7 @@ export function courtierAt(c: Courtier, t: number): Pose {
       slump = 0
     }
     // Into the dark at the west end: gone.
-    alpha = Math.max(0, Math.min(1, (x - 0.1) / 0.7))
+    if (!lead) alpha = Math.max(0, Math.min(1, (x - 0.1) / 0.7))
   }
 
   return {
@@ -422,19 +577,24 @@ export function kingAt(t: number, hand?: Pt): KingPose {
     eyes = 1.5
     slump = slump + (-0.35 - slump) * hear
     mouth = 0.4 * hear
-    const go = FLEE[3] + 0.1
+    // He goes with the court, on the burst up through their floor: a gather on the chord's lead (the held arm comes
+    // down to where the run's swing starts, the knees give), then east along the dais, down its steps, over the open
+    // hatch and out of the east door, so the throne stands empty for its fall.
+    const go = FLEE[1]
+    const gather = ease(t, go - 0.2, go)
+    arms = arms + (0.22 - arms) * gather
+    slump += 0.12 * gather * (1 - ease(t, go, go + 0.3))
     if (t >= go) {
-      // He goes too, east, heavily: along the dais, down, out of the east door.
       const run = t - go
-      const dist = 3.2 * (run - 0.4 * (1 - Math.exp(-run / 0.4)))
+      const dist = 4.5 * (run - 0.25 * (1 - Math.exp(-run / 0.25)))
       x = KING_UP[0] + dist
       const down = ease(x, DAIS.x1 - 0.7, DAIS.x1 + 0.4)
-      y = DAIS.top + (FL - DAIS.top) * down
+      y = DAIS.top + (FL - DAIS.top) * down - overHatch(x, 0.55, HATCH.x0 - 0.7, HATCH.x1 + 0.7)
       pose = 'run'
+      // Whole at the start, so the swing starts from both arms at its middle and both feet down.
       phase = dist / 1.4
-      face = 1
-      slump = 0
-      arms = 0
+      face = ease(t, go, go + 0.18)
+      slump = slump * (1 - ease(t, go, go + 0.3))
       alpha = Math.max(0, Math.min(1, (29.4 - x) / 0.8))
     }
   }
