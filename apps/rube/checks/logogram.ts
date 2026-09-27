@@ -10,6 +10,12 @@ import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/heptapod-b/l
 import { PUNCHES, VEILED, veilAt } from '../src/shows/versions/heptapod-b/logogram/score'
 import { FIRST } from '../src/shows/versions/heptapod-b/logogram/seams'
 import type { LogogramShow } from '../src/shows/versions/heptapod-b/logogram/show'
+import { rollAt } from '../src/shows/versions/heptapod-b/logogram/shell/shaft'
+import { TURN_FOR } from '../src/shows/versions/heptapod-b/logogram/shell/shaft-path'
+import { CLOSE } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-path'
+import { RING_AT, RING_R } from '../src/shows/versions/heptapod-b/logogram/shell/chamber-heptapods'
+import { BROW, V1_AT } from '../src/shows/versions/heptapod-b/logogram/lake/house-plan'
+import { CUT_IN } from '../src/shows/versions/heptapod-b/logogram/valley/depart'
 import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -119,6 +125,33 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
     square && near(rolled(SEAM.shaft + 0.05), -Math.PI / 2, 1e-3) && near(rolled(TURN - 0.4), -Math.PI / 2, 1e-3) && Math.abs(rolled(TURN + 3)) < 1e-6,
     [SEAM.shaft + 0.05, TURN - 0.4, TURN + 0.5, TURN + 3].map((t) => rolled(t).toFixed(3)).join(', '))
 
+  // Gravity's turn: the camera turns after gravity as a heavy body on a spring would, never faster than a whip, and
+  // settles past square by no more than a few degrees.
+  let rollSpeed = 0
+  let rollPast = 0
+  for (let t = TURN; t <= TURN + 3; t += 0.001) {
+    rollSpeed = Math.max(rollSpeed, (Math.abs(rollAt(t + 0.001) - rollAt(t)) / 0.001) * (180 / Math.PI))
+    rollPast = Math.max(rollPast, rollAt(t) * (180 / Math.PI))
+  }
+  const lagging = rollAt(TURN + TURN_FOR) * (180 / Math.PI)
+  check('logogram: the shaft\'s roll follows gravity round and settles: still a third of the way from square when gravity has turned, under 160° a second, no more than 5° past square',
+    lagging < -30 && rollSpeed < 160 && rollPast > 0.5 && rollPast < 5, `${lagging.toFixed(1)}° at TURN + ${TURN_FOR}, ${rollSpeed.toFixed(0)}°/s at most, ${rollPast.toFixed(1)}° past`)
+
+  // The first logogram: its two ends meet on a pulse, and from then until the white takes it the whole ring is in the
+  // frame, for more than three seconds and a half.
+  const inside = show.legs.find((l) => l.key === 'inside')!
+  const room = inside.placed.find((p) => p.start <= CLOSE && p.start + p.span > CLOSE)!
+  const ring: [number, number] = [room.col + room.mirror * RING_AT[0], room.row + RING_AT[1]]
+  const veilFrom = VEILED[1] - 0.7
+  const cropped: string[] = []
+  for (let t = CLOSE; t <= veilFrom; t += 0.05) {
+    const f = cam(t)
+    const reach = RING_R * 1.12
+    if (Math.abs(ring[0] - f.x) + reach > (f.cells * 16) / 9 / 2 || Math.abs(ring[1] - f.y) + reach > f.cells / 2) cropped.push(t.toFixed(2))
+  }
+  check('logogram: the first logogram closes on a pulse and hangs whole in the frame from then until the white, over three seconds and a half',
+    onPulse(CLOSE, 0.005) && hit(CLOSE) && veilFrom - CLOSE > 3.5 && cropped.length === 0, cropped.slice(0, 6).join(', '))
+
   // The two white-outs are white at their cuts, and nothing else is.
   check('logogram: the window\'s glare and the glass\'s light go to white at their cuts, and only there',
     VEILED.every((t) => veilAt(t).a > 0.99) && [5, 30, 100, 150, 200].every((t) => veilAt(t).a === 0) && near(VEILED[0], SEAM.flight) && near(VEILED[1], SEAM.fog1))
@@ -132,6 +165,18 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
     show.legs[0].world === 'lake' && show.legs[show.legs.length - 1].world === 'lake' && near(f0.cells, FIRST.cells, 1e-6) && Math.abs(f1.cells - FIRST.cells) < 0.02 &&
     Math.hypot(f0.x - f1.x, f0.y - f1.y) < 0.02 && Math.hypot(s0[0] - s1[0], s0[1] - s1[1]) < 0.005,
     `${f0.x.toFixed(2)},${f0.y.toFixed(2)} ${f0.cells.toFixed(2)} vs ${f1.x.toFixed(2)},${f1.y.toFixed(2)} ${f1.cells.toFixed(2)}`)
+
+  // And the valley side does not hurry to it: from the cut back in, her place on the screen is already the first
+  // frame's, and the camera only pushes in on her.
+  let slide = 0
+  let slideAt = 0
+  for (let t = CUT_IN + 0.2; t < SEAM.end; t += 0.05) {
+    const s = onScreen(t)
+    const d = Math.hypot(s[0] - s0[0], s[1] - s0[1])
+    if (d > slide) { slide = d; slideAt = t }
+  }
+  check('logogram: into the circle the camera pushes in on her where the first frame has her, never sliding her to her mark',
+    slide < 0.03, `${slide.toFixed(3)} of the frame at ${slideAt.toFixed(2)} s`)
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
   const WIDE: [number, number][] = [[10, 21.5], [44, 66], [108, 115], [130, 131.5], [186, 196.5]]
@@ -202,6 +247,17 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
     check(`logogram: ${who} never jumps`, worst <= 0.2, `${worst.toFixed(3)} at ${worstAt.toFixed(3)} s`)
     check(`logogram: ${who} only comes and goes out of shot, or at a cut`, pops.length === 0, pops.join(', '))
   }
+  // The first vision is a child at play: Hannah in the picture the whole of it, running on the level, nowhere near the
+  // bank down to the water.
+  let v1Out = 0
+  let v1Far = -Infinity
+  for (let t = SEAM.v1; t < SEAM.fog2; t += 0.02) {
+    const h = show.hannah(t)
+    if (!inShot(t, h)) v1Out++
+    if (h) v1Far = Math.max(v1Far, h.x - V1_AT[0])
+  }
+  check('logogram: in the first vision Hannah is in the picture throughout, running ahead on the level, never near the bank',
+    v1Out === 0 && v1Far < BROW - 1.5, `${v1Out} samples out of shot; furthest ${v1Far.toFixed(2)} (brow ${BROW})`)
   const counts = [2, 15, 50, 80, 110, 140, 157, 190, 205].map((t) => (show.at(t).balls ?? []).filter((b) => b.id !== 0).map((b) => b.id))
   check('logogram: never two of anyone', counts.every((ids) => new Set(ids).size === ids.length))
   const worldAt = (t: number) => show.legs[show.owner(t)].world

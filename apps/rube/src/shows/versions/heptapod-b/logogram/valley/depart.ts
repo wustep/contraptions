@@ -29,7 +29,7 @@ export const AFTER_AT: Pt = [14.5, MEADOW - 0.13]
 
 const IAN_GO = pulse(799)
 const TOUCH = pulse(818)
-const CUT_IN = pulse(805)
+export const CUT_IN = pulse(805)
 /** Her glance up, between the cut in and his reaching her. */
 const GLANCE = 193.0
 /** Where Ian waits, by the trucks, and where he comes to. */

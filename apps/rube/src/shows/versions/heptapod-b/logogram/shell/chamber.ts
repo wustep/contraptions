@@ -92,7 +92,7 @@ export const chamber = part<ChamberState>(
     { t: 122.4, cells: 7.4, hold: [X_PALM + 3.75, -2.4], w: 1 },
     { t: 124.3, cells: 7.85, hold: [X_PALM + 4.1, -2.58], w: 1 },
     { t: CLOSE, cells: 8.2, hold: [X_PALM + 4.3, -2.7], w: 1 },
-    { t: 129.5, cells: 7.6, hold: [X_PALM + 3.95, -2.52], w: 1 },
+    { t: 129.6, cells: 7.6, hold: [X_PALM + 3.95, -2.52], w: 1 },
     { t: OUT, cells: SEAMS.fog1.cells, hold: [X_LEAN + SEAMS.fog1.frame[0], SEAMS.fog1.frame[1]], w: 1 },
   ],
 )
