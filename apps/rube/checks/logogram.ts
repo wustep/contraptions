@@ -178,8 +178,9 @@ export function checkLogogram(perf: Performance, version: ShowVersion, check: Ch
   check('logogram: into the circle the camera pushes in on her where the first frame has her, never sliding her to her mark',
     slide < 0.03, `${slide.toFixed(3)} of the frame at ${slideAt.toFixed(2)} s`)
 
-  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen.
-  const WIDE: [number, number][] = [[10, 21.5], [44, 66], [108, 115], [130, 131.5], [186, 196.5]]
+  // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen. The
+  // great wides: the reveal, the slot's burst under the belly, the lift under it, the chamber, the veil, the departure.
+  const WIDE: [number, number][] = [[10, 21.5], [36.3, 38.6], [44, 66], [108, 115], [130, 131.5], [186, 196.5]]
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     if (WIDE.some(([a, b]) => t >= a && t <= b)) continue
