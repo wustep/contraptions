@@ -131,7 +131,7 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
   const end = at(slot.end)
   return [
     { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
-    { t: 167.5, cells: 4.9, off: [0.4, -0.9], w: 0 },
+    { t: 167.5, cells: 4.9, hold: [at(167.5)[0] + 0.5, at(167.5)[1] - 1.25], w: 1 },
     // Stopped at the top of her rise, where the ink begins under her; then the long pull back as the ring is written,
     // her low in the frame, until it is whole, closing (183.182); then in for the cut.
     { t: 168.4, cells: 6.0, hold: [top[0] + 0.7, top[1] - 1.6], w: 1 },

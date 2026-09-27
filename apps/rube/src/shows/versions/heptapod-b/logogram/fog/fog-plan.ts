@@ -418,35 +418,98 @@ export const FOG34 = (() => {
 /** The push's hard pulses: where she presses a blot into her half. */
 export const PUSH_HITS = hardPulses(F4.top - 0.01, 183.7)
 export const G_R = 4.2
-/** How far up the rising side its turn drags her, per unit of turn. */
-const LAG = 0.35
+/**
+ * Her ride in the great ring as it turns (a ball in a turning drum, under G_LOW): the ink's grip carries her up its
+ * rising wall at the turn's speed, as far as the grip will hold (its friction angle, `hold`, where she hangs while the
+ * ring slides on under her); on the first hard pulse of each group the grip lets go and she slips and rolls back down
+ * as a free pendulum, through the rest of the group, until the grip takes her again as she comes back to the bottom
+ * and carries her up once more. The rides are longest before the hardest group; after it she is brought to rest at
+ * the bottom, and is still there when the halves meet. Returns how far up the wall she is (radians from the bottom).
+ */
+const RELEASES = hardPulses(169.9, 181.0)
+const HOLD = mono([[168, 0.24], [172.3, 0.2], [173.3, 0.18], [175.3, 0.25], [176.6, 0.42], [179.4, 0.42], [180.5, 0], [186, 0]])
+function drumRide(t0: number, omega: (t: number) => number, rho: number): (t: number) => number {
+  const letGo = 0.7
+  const grip = (t: number) => {
+    let gr = 1
+    for (const p of RELEASES) {
+      const s = t - p
+      if (s < 0 || s > letGo + 0.7) continue
+      const w = s < 0.05 ? s / 0.05 : s < letGo ? 1 : 1 - sstep((s - letGo) / 0.6)
+      gr = Math.min(gr, 1 - 0.97 * w)
+    }
+    return 6 * gr
+  }
+  const dt = 1 / 960
+  const n = Math.ceil((200 - t0) / dt)
+  const tab = new Float64Array(n + 1)
+  let phi = 0
+  let v = 0
+  for (let i = 0; i < n; i++) {
+    const t = t0 + i * dt
+    const Om = -omega(t)
+    // Toward the ring's own speed while below the friction angle, braked to rest as she reaches it.
+    const w = clamp01((HOLD(t) - phi) / 0.08)
+    v += (-(g / rho) * Math.sin(phi) + grip(t) * (Om * w * w * (3 - 2 * w) - v)) * dt
+    phi += v * dt
+    tab[i + 1] = phi
+  }
+  return (t: number) => {
+    const f = Math.max(0, Math.min(n, (t - t0) / dt))
+    const i = Math.min(n - 1, Math.floor(f))
+    return tab[i] + (tab[i + 1] - tab[i]) * (f - i)
+  }
+}
 export const GREAT = (() => {
   const t0 = F4.top
   const ramp = 0.45
   const slow = F4.still - F4.close
-  // Its turn: from rest, easing up to a steady rate, so that it has turned exactly the half a turn (and her lag) by
-  // the close; then slowing to rest.
+  // Its turn: from rest, easing up to a steady rate, so that it has turned exactly the half a turn (less her first
+  // splash, and wherever she is on its wall then) by the close; then slowing to rest.
   const shape = (t: number) => (t < t0 ? 0 : t < F4.close ? sstep((t - t0) / ramp) : 1 - sstep((t - F4.close) / slow))
   const unit = integrate(shape, t0, F4.close)
-  // Her first splash reaches a little way both sides of her; the rest is written by the turn, so the halves meet on
-  // the close exactly.
+  // Her first splash reaches a little way both sides of her; the rest is written by the turn and her slips, so the
+  // halves meet on the close exactly.
   const SPLASH = [0.45, 0.3]
-  const rate = (Math.PI - SPLASH[0] - SPLASH[1]) / (unit(F4.close) - LAG)
+  const RHO = G_R - 0.33
+  let rate = (Math.PI - SPLASH[0] - SPLASH[1]) / unit(F4.close)
+  let ride = drumRide(t0, (t) => -rate * shape(t), RHO)
+  for (let i = 0; i < 3; i++) {
+    rate = (Math.PI - SPLASH[0] - SPLASH[1] + ride(F4.close)) / unit(F4.close)
+    ride = drumRide(t0, (t) => -rate * shape(t), RHO)
+  }
   const omega = (t: number) => -rate * shape(t)
   // Turned so that she begins on the thinnest stretch of its ink (seed 310, round its own angle 0.25), and so that
   // where she comes to rest, the join, is on a light one.
   const spin = integrate(omega, t0 - 1, 200, Math.PI / 2 - 0.253)
-  const lag = (t: number) => LAG * rate * shape(t)
   const runs = (t: number) => 1 - Math.pow(1 - clamp01((t - t0) / 0.75), 2.5)
-  const her = (t: number) => Math.PI / 2 - lag(t)
-  const own = (t: number) => her(t) - spin(t)
+  const her = (t: number) => Math.PI / 2 - ride(t)
+  // Where on the ring (its own turn) she is: while carried she keeps her place on it, while she slips she runs back
+  // over it and the ink is laid under her; the written end is the furthest she has come.
+  const ownRaw = (t: number) => her(t) - spin(t)
+  const own = (() => {
+    const dt = 1 / 240
+    const n = Math.ceil((200 - t0) / dt)
+    const tab = new Float64Array(n + 1)
+    let m = ownRaw(t0)
+    for (let i = 0; i <= n; i++) {
+      m = Math.max(m, ownRaw(t0 + i * dt))
+      tab[i] = m
+    }
+    return (t: number) => {
+      if (t <= t0) return tab[0]
+      const f = Math.min(n, (t - t0) / dt)
+      const i = Math.min(n - 1, Math.floor(f))
+      return tab[i] + (tab[i + 1] - tab[i]) * (f - i)
+    }
+  })()
   // Her blots: small while the ring is just begun (so its first arc reads as an arc), full in the push, and small
   // again at the join, where the ink is already twice laid.
   const marks: Mark[] = PUSH_HITS.map((at) => {
     const p = PULSES.find((q) => Math.abs(q.t - at) < 1e-6)
     const s = p ? p.g : 1
     const scale = (0.45 + 0.55 * sstep((at - t0) / 3.2)) * (at > 181.5 ? 0.45 : 1)
-    return { a: own(at), size: (0.013 + 0.017 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.045, at }
+    return { a: ownRaw(at), size: (0.013 + 0.017 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.045, at }
   })
   const probe = blank('G', 310, G_R, spin, { marks })
   const rho = rideR(probe, her(t0), t0)
