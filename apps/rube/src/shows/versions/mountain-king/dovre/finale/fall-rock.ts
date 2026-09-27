@@ -150,15 +150,42 @@ export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: numbe
     for (let j = rows.length - 1; j >= 0; j--) p.vertex(X(to(rows[j])), Y(rows[j][2]))
     p.endShape(p.CLOSE)
   }
-  // Once the crater's rubble has closed it, the shaft goes back to the dark of the rock round it (a trace of his way).
-  const back = mixHex(mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet), STONE.deep, 0.96 * (light.shut ?? 0))
+  // Once the crater's rubble has closed it, the shaft goes back to the dark of the rock round it, and shut it is not
+  // drawn at all: the mountain's own dark is round it and the rubble plugs its mouth (a band of it stood in the crater
+  // as a ruled, flat-topped post cutting the flank's dawn face, under every credit). While it shuts it darkens and
+  // thins out together, and its top 1.2 cells fade so the dawn face under the crater's floor reads through: no lid.
+  const shut = light.shut ?? 0
+  if (shut >= 0.99) return
+  const back = mixHex(mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet), STONE.deep, 0.96 * shut)
+  if (shut > 0.01) {
+    // The band in a gradient of its own colour: open at its top as it shuts, full (less what has gone) 1.2 cells down.
+    // A raw fillStyle inside save/restore, so p5's cached fill is untouched.
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const col = p.color(back)
+    const rgba = (a: number) => `rgba(${p.red(col)},${p.green(col)},${p.blue(col)},${a.toFixed(3)})`
+    const full = 1 - smooth(shut, 0.6, 0.99)
+    const g = ctx.createLinearGradient(0, Y(y0), 0, Y(y0 + 1.2))
+    g.addColorStop(0, rgba(full * (1 - shut)))
+    g.addColorStop(1, rgba(full))
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(X(rows[0][0]), Y(rows[0][2]))
+    for (const r of rows) ctx.lineTo(X(r[0]), Y(r[2]))
+    for (let j = rows.length - 1; j >= 0; j--) ctx.lineTo(X(rows[j][1]), Y(rows[j][2]))
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
   p.push()
   p.noStroke()
-  p.fill(back)
-  band((r) => r[0], (r) => r[1])
-  if (light.wet * (1 - (light.shut ?? 0)) > 0.01) {
+  if (shut <= 0.01) {
+    p.fill(back)
+    band((r) => r[0], (r) => r[1])
+  }
+  if (light.wet * (1 - shut) > 0.01) {
     // One side a shade lighter where the rock turns toward us, broad and soft, so it reads as a shaft.
-    p.fill(alpha(p, STONE.mid, 0.2 * light.wet))
+    p.fill(alpha(p, STONE.mid, 0.2 * light.wet * (1 - shut)))
     band((r) => r[0], (r) => r[0] + (r[1] - r[0]) * 0.22)
   }
   p.pop()
