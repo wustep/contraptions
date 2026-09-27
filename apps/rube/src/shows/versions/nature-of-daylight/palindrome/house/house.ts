@@ -7,7 +7,10 @@ import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
 import { drawFloorLight, drawMirror, drawRoom, drawVignette } from './room'
 import {
-  ALONE,
+  EMPTY_DX,
+  NEAR,
+  TURN,
+  ianLook,
   BEGIN,
   BEDSIDE_X,
   CLOCK_STRIKES,
@@ -15,6 +18,7 @@ import {
   GONE as GONE_AT,
   HOME_PUSHES,
   HOME_X,
+  HUG_T,
   ianX,
   NEWS_X,
   PATIENT,
@@ -76,12 +80,19 @@ export const houseSet = scenery<null>({
     const lx = louiseX(T)
     if (lx !== null) balls.push([lx, 0])
     const theta = cradleTheta(T)
-    if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)))
+    // Before the cut the empty cradle stands a little way off, clear of Ian; from it, at its dawn place.
+    const dx = era === 'home' && T < BEGIN ? EMPTY_DX : 0
+    if (era === 'dawn' || era === 'home') shadows.push(CRADLE_HULL.map((q) => pose(theta, q)).map(([x, y]) => [x + dx, y] as Pt))
     if (era === 'bed') shadows.push(BED_HULL, CLOCK_HULL)
     if (era === 'news') shadows.push(TV_HULL)
-    if (era === 'home' && T < ALONE) balls.push([ianX(T), 0])
+    if (era === 'home' && T < BEGIN) balls.push([ianX(T), 0])
     drawRoom(p, k, T)
-    if (era === 'dawn' || era === 'home') drawCradle(p, k, theta, L)
+    if (era === 'dawn' || era === 'home') {
+      p.push()
+      p.translate(dx * k, 0)
+      drawCradle(p, k, theta, L)
+      p.pop()
+    }
     if (era === 'bed') {
       drawBed(p, k, T, L)
       drawClock(p, k, T, L)
@@ -96,7 +107,12 @@ export const houseSet = scenery<null>({
     const T = c.t
     const era = eraOf(T)
     if (era === 'bed') drawBedOver(p, c.k, T, lightAt(T))
-    if (era === 'dawn' || era === 'home') drawCradleOver(p, c.k, cradleTheta(T), lightAt(T))
+    if (era === 'dawn' || era === 'home') {
+      p.push()
+      p.translate((era === 'home' && T < BEGIN ? EMPTY_DX : 0) * c.k, 0)
+      drawCradleOver(p, c.k, cradleTheta(T), lightAt(T))
+      p.pop()
+    }
   },
 })
 
@@ -234,11 +250,14 @@ export const bed: Part<HouseState> = part<HouseState>(
       // In on the two of them by the pillow, the clock's pendulum at the frame's edge; on the swell close on Hannah as
       // she goes; then the empty pillow and Louise beside it, and back to the room.
       { t: 76.185, cells: 3.7, hold: w(1.2, -0.72) },
-      { t: 80.376, cells: 3.2, hold: w(1.24, -0.56) },
-      { t: 85.31, cells: 2.95, hold: w(1.22, -0.5) },
-      { t: 89.281, cells: 2.8, hold: w(1.14, -0.46) },
-      { t: SWELL, cells: 2.55, hold: w(0.98, -0.42) },
-      { t: GONE[1], cells: 2.72, hold: w(0.93, -0.43) },
+      { t: 80.376, cells: 3.2, hold: w(1.26, -0.56) },
+      { t: 85.31, cells: 3.05, hold: w(1.3, -0.55) },
+      // The clock whole beside the bed while it runs down: its last notch and its pendulum settling on the swell.
+      { t: 89.281, cells: 3.55, hold: w(1.95, -0.92) },
+      { t: SWELL, cells: 3.45, hold: w(1.92, -0.9) },
+      { t: 94.6, cells: 3.4, hold: w(1.8, -0.86) },
+      // Then in on her as she goes, and on the empty pillow.
+      { t: GONE[1], cells: 2.72, hold: w(0.95, -0.43) },
       { t: SEAM.news, cells: 4.6, hold: w(BEDSIDE_X + 1.05, -0.95) },
     ]
   },
@@ -259,7 +278,7 @@ export const news: Part<HouseState> = part<HouseState>(
     // Into the screen until its picture fills the frame.
     return [
       { t: slot.begin + 1.9, cells: 2.35, hold: [c[0] - 0.42, c[1] + 0.02] },
-      { t: slot.end, cells: 1.3, hold: c },
+      { t: slot.end, cells: TV.h / 0.85, hold: c },
     ]
   },
 )
@@ -270,13 +289,13 @@ export const home: Part<HouseState> = part<HouseState>(
   { name: 'house-home', draw: nothing },
   (slot) => {
     const o = HOME_AT
-    const { segs, end } = floorLane(homeX, slot, o, [337.85, ...HOME_PUSHES.map((q) => q.t)])
+    const { segs, end } = floorLane(homeX, slot, o, [337.85, TURN, NEAR, ...HOME_PUSHES.map((q) => q.t)])
     const company: Company[] = [
       {
         who: 'ian',
         from: slot.begin,
-        to: ALONE,
-        at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: Math.PI + 0.35 }),
+        to: BEGIN,
+        at: (t) => ({ x: ianX(t) - o[0], y: -o[1], spin: ianLook(t) }),
       },
       {
         who: 'hannah',
@@ -295,14 +314,13 @@ export const home: Part<HouseState> = part<HouseState>(
     const w = (x: number, y: number): Pt => [x - o[0], y - o[1]]
     const first = w(1.05, -0.95)
     const keys: PartShot[] = [
-      // Close on the two of them by the window.
-      { t: 336.2, cells: 3.45, hold: w(HOME_X - 0.42, -0.56) },
-      { t: 337.85, cells: 3.1, hold: w(HOME_X - 0.1, -0.46) },
-      { t: ALONE - 0.05, cells: 2.9, hold: w(HOME_X + 0.02, -0.43) },
-      // Ian is gone: the same room, wider, and the cradle across it.
-      { t: ALONE, cells: 5.6, hold: w(-1.05, -1.2), cut: true },
-      { t: 345.49, cells: 5.5, hold: w(-0.3, -1.14) },
-      { t: BEGIN - 0.05, cells: 6.1, hold: w(-0.1, -1.24) },
+      // Close on the two of them by the long window, the empty cradle whole on their right; as they turn to it and go
+      // toward it, the frame goes with them.
+      { t: 336.4, cells: 3.35, hold: w(0.95, -0.6) },
+      { t: HUG_T, cells: 3.1, hold: w(1.08, -0.53) },
+      { t: TURN, cells: 3.0, hold: w(1.15, -0.51) },
+      { t: NEAR, cells: 2.92, hold: w(1.22, -0.5) },
+      { t: BEGIN - 0.05, cells: 2.85, hold: w(1.26, -0.49) },
       // The opening played backwards: the cut opens close on the cradle at dawn, Hannah in it (the dawn's closest
       // framing); close through the last B-flat; then one long slow draw back, arriving on the first frame exactly on
       // the last attack, and held there to the end.
@@ -325,9 +343,10 @@ export const HOUSE_HITS: number[] = [
   ...CLOCK_STRIKES,
   // The news: the television comes on on the half cadence.
   HALF,
-  // Home: the sun through the glass, the last touch, the cut to her alone, the empty cradle, and the cradle again.
+  // Home: the sun through the glass, the touch, the turn to the empty cradle, the step toward it, and the cradle again.
   SEAM.home,
   337.85,
-  ALONE,
+  TURN,
+  NEAR,
   ...HOME_PUSHES.map((q) => q.t),
 ].sort((a, b) => a - b)

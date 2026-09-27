@@ -219,9 +219,10 @@ export interface HeptapodLook {
   face?: 1 | -1
   /**
    * A limb raised and reaching toward `to` (cells), `u` of the way (0 down, 1 there), its tip opened into a palm by
-   * `open` (0 closed, 1 a hand of seven fingers spread).
+   * `open` (0 closed, 1 a hand of seven fingers spread). `palm` is the hand's reach from its centre in cells (default
+   * 0.15 of its height): smaller when it must meet a ball hand to hand.
    */
-  reach?: { to: Pt; u: number; open?: number }
+  reach?: { to: Pt; u: number; open?: number; palm?: number }
   /** A second seed for its limbs' spread, so Abbott and Costello are not twins. */
   seed?: number
 }
@@ -277,22 +278,39 @@ function limbPath(ctx: Ctx, a: Pt, b: Pt, bow: number, w0: number, w1: number): 
   ctx.closePath()
 }
 
-/** A palm: seven fingers spread in a star from `c` (pixels), `r` long, opened by `open`, turned to `angle`. */
-function palmPath(ctx: Ctx, c: Pt, r: number, open: number, angle: number): void {
-  ctx.beginPath()
+/**
+ * A palm: a solid pad and seven thick fingers with round pads, spread from `c` (pixels), `r` long, opened by `open`
+ * (curled in toward the pad at 0, spread flat at 1), turned to `angle`. Filled in `color`: a hand, never a star.
+ */
+function drawPalm(ctx: Ctx, c: Pt, r: number, open: number, angle: number, color: string): void {
   const n = 7
-  const spread = 0.35 + 0.65 * open
+  const spread = 0.3 + 0.7 * open
+  ctx.fillStyle = color
+  ctx.beginPath()
+  ctx.ellipse(c[0], c[1], r * 0.44, r * 0.4, angle, 0, Math.PI * 2)
+  ctx.fill()
   for (let i = 0; i < n; i++) {
-    const a = angle + (i - (n - 1) / 2) * ((Math.PI * 1.7) / (n - 1)) * spread
-    const len = r * (0.75 + 0.25 * Math.cos((i - 3) * 0.5)) * (0.45 + 0.55 * open)
-    const w = r * 0.19
-    const tip: Pt = [c[0] + Math.cos(a) * len, c[1] + Math.sin(a) * len]
-    ctx.moveTo(c[0] + Math.cos(a + 1.3) * w, c[1] + Math.sin(a + 1.3) * w)
-    ctx.quadraticCurveTo(c[0] + Math.cos(a) * len * 0.55 + Math.cos(a + 1.57) * w * 0.8, c[1] + Math.sin(a) * len * 0.55 + Math.sin(a + 1.57) * w * 0.8, tip[0], tip[1])
-    ctx.quadraticCurveTo(c[0] + Math.cos(a) * len * 0.55 + Math.cos(a - 1.57) * w * 0.8, c[1] + Math.sin(a) * len * 0.55 + Math.sin(a - 1.57) * w * 0.8, c[0] + Math.cos(a - 1.3) * w, c[1] + Math.sin(a - 1.3) * w)
+    const a = angle + (i - (n - 1) / 2) * ((Math.PI * 1.55) / (n - 1)) * spread
+    const len = r * (0.82 + 0.18 * Math.cos((i - 3) * 0.55)) * (0.5 + 0.5 * open)
+    const w0 = r * 0.34
+    const w1 = r * 0.21
+    const ux = Math.cos(a)
+    const uy = Math.sin(a)
+    const nx = -uy
+    const ny = ux
+    const tip: Pt = [c[0] + ux * len, c[1] + uy * len]
+    ctx.beginPath()
+    ctx.moveTo(c[0] + nx * w0 * 0.5, c[1] + ny * w0 * 0.5)
+    ctx.lineTo(tip[0] + nx * w1 * 0.5, tip[1] + ny * w1 * 0.5)
+    ctx.arc(tip[0], tip[1], w1 * 0.5, a + Math.PI / 2, a - Math.PI / 2, true)
+    ctx.lineTo(c[0] - nx * w0 * 0.5, c[1] - ny * w0 * 0.5)
+    ctx.closePath()
+    ctx.fill()
+    // The finger's pad: a little fuller at the tip.
+    ctx.beginPath()
+    ctx.arc(tip[0] - ux * w1 * 0.25, tip[1] - uy * w1 * 0.25, w1 * 0.62, 0, Math.PI * 2)
+    ctx.fill()
   }
-  ctx.moveTo(c[0] + r * 0.2, c[1])
-  ctx.arc(c[0], c[1], r * 0.2, 0, Math.PI * 2)
 }
 
 /**
@@ -353,9 +371,7 @@ export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, 
     const open = clamp01(o.reach.open ?? 0)
     if (open > 0.01) {
       const ang = Math.atan2(tip[1] - from[1], tip[0] - from[0])
-      palmPath(ctx, tip, S * 0.15, open, ang)
-      ctx.fillStyle = col(0)
-      ctx.fill('nonzero')
+      drawPalm(ctx, tip, (o.reach.palm ?? s * 0.15) * k, open, ang, col(0))
     }
   }
   // The body: a heavy dome, rounder on top, narrowing into the limbs below; its crown lighter where the fog's light
@@ -665,7 +681,9 @@ export function drawShellScene(p: p5, k: number, x: number, y: number, w: number
  * `descend`: its centre and its height. What anything that must line up with the picture on a screen reads.
  */
 export function shellOnScreen(x: number, y: number, w: number, h: number, descend = 1): { c: Pt; h: number } {
-  return { c: [x + w * 0.56, y + h * 0.36 - (1 - ease(descend)) * h * 0.6], h: h * 0.46 }
+  // The news picks it up already out of the cloud: its whole descent on a screen is a quarter of the picture, so at
+  // any moment most of it is in the picture, under the cloud at the top.
+  return { c: [x + w * 0.56, y + h * 0.36 - (1 - descend) * h * 0.25], h: h * 0.46 }
 }
 
 export interface ScreenLook {

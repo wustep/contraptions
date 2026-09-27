@@ -133,39 +133,27 @@ interface Guest {
   glass: boolean
   seed: number
 }
-const GUESTS: Guest[] = [
-  // Farthest back.
-  { x: -7.6, d: 0.64, glass: false, seed: 1 },
-  { x: -3.9, d: 0.64, glass: true, seed: 2 },
-  { x: 3.4, d: 0.64, glass: true, seed: 3 },
-  { x: 8.4, d: 0.64, glass: false, seed: 4 },
-  { x: 12.1, d: 0.64, glass: true, seed: 5 },
-  // Far.
-  { x: -6.3, d: 0.76, glass: true, seed: 6 },
-  { x: -5.98, d: 0.76, glass: false, seed: 7 },
-  { x: 4.25, d: 0.76, glass: true, seed: 8 },
-  { x: 4.58, d: 0.76, glass: false, seed: 9 },
-  { x: 6.9, d: 0.76, glass: true, seed: 10 },
-  { x: 9.25, d: 0.76, glass: false, seed: 11 },
-  { x: 9.58, d: 0.76, glass: true, seed: 12 },
-  { x: 11.5, d: 0.76, glass: false, seed: 13 },
-  // Nearer: a knot beyond the tower, and knots across the room.
-  { x: -4.45, d: 0.88, glass: true, seed: 14 },
-  { x: -4.12, d: 0.88, glass: false, seed: 15 },
-  { x: 2.4, d: 0.88, glass: true, seed: 16 },
-  { x: 2.72, d: 0.88, glass: false, seed: 17 },
-  { x: 3.06, d: 0.88, glass: true, seed: 18 },
-  { x: 5.45, d: 0.88, glass: false, seed: 19 },
-  { x: 5.8, d: 0.88, glass: true, seed: 20 },
-  { x: 7.6, d: 0.88, glass: true, seed: 21 },
-  { x: 7.94, d: 0.88, glass: false, seed: 22 },
-  // In her own plane, well away from where she and Shang go: by the tower's far side, and far over on the right.
-  { x: -5.25, d: 1, glass: true, seed: 23 },
-  { x: -4.9, d: 1, glass: false, seed: 24 },
-  { x: -4.58, d: 1, glass: true, seed: 25 },
-  { x: 10.3, d: 1, glass: false, seed: 26 },
-  { x: 10.64, d: 1, glass: true, seed: 27 },
+/**
+ * Knots of guests about the room: [x, depth, how many]. Far ones small and hazy, near ones bigger and darker; singles,
+ * pairs and threes, spaced unevenly. None near where Louise and Shang are at either cut, or on Shang's way to her.
+ */
+const KNOTS: [number, number, number][] = [
+  [-7.9, 0.52, 2], [-6.1, 0.6, 1], [-3.9, 0.55, 3], [3.4, 0.5, 2], [6.3, 0.58, 3], [9.9, 0.52, 2], [12.6, 0.6, 1],
+  [-6.5, 0.74, 2], [2.55, 0.78, 3], [4.95, 0.71, 1], [7.4, 0.8, 2], [10.7, 0.75, 3],
+  [-4.45, 0.9, 2], [4.0, 0.93, 2], [8.9, 0.95, 3],
+  [-5.2, 1, 3], [11.1, 1, 2],
 ]
+const GUESTS: Guest[] = KNOTS.flatMap(([x0, d0, n], i) => {
+  const out: Guest[] = []
+  let x = x0
+  for (let j = 0; j < n; j++) {
+    const seed = i * 7 + j + 1
+    const d = d0 + (hash(seed, 3, 9) - 0.5) * 0.06
+    out.push({ x, d, glass: hash(seed, 5, 9) > 0.55, seed })
+    x += (0.26 + 0.2 * hash(seed, 7, 9)) / Math.max(0.5, d0) * d0
+  }
+  return out
+}).sort((p, q) => p.d - q.d)
 
 function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
   const h = hush(t)
@@ -173,10 +161,11 @@ function crowd(ctx: Ctx, k: number, f: Frame, t: number): void {
   for (const g of GUESTS) {
     const drift = 0.018 * Math.sin(t * 0.35 + g.seed * 1.7)
     const [x, y] = seen(f, g.d, g.x + drift, 0)
-    const r = 0.13 * g.d
+    // People are not all one size; and the nearer, the bigger.
+    const r = 0.13 * g.d * (0.86 + 0.28 * hash(g.seed, 1, 9))
     if (x < f.x0 - 1 || x > f.x1 + 1) continue
-    // Deeper, the more of the room's haze on it; and more again as the room falls back for the whisper.
-    const haze = (1 - g.d) * 0.9 + 0.35 * h
+    // Deeper, the more of the room's haze on it (the far ones well into it); and more again for the whisper.
+    const haze = (1 - g.d) * 1.45 + 0.35 * h
     ctx.fillStyle = mix(body, GALA.roomLit, Math.min(0.85, haze))
     ctx.beginPath()
     ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)

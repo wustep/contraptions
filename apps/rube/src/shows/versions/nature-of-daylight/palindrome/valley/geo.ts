@@ -46,8 +46,10 @@ export function shellAt(t: number): { c: Pt; h: number; vapour: number } {
 
 /** How much of the shell is still to be seen as it rises into the cloud (or came out of it): it pales as a whole. */
 export function shellSeen(t: number): number {
-  const d = shellDown(t)
-  return smooth(d, 0.0, 0.42)
+  // Coming down it is whole: the cloud veil in front of its crown hides what is still up in it. Going up, it pales
+  // into the cloud as a whole, and is gone as the high violins stop.
+  if (t < 200) return 1
+  return 1 - smooth(t, RELEASE - 3.4, RELEASE)
 }
 
 /* ------------------------------------------------------------------ the cloud */
@@ -287,26 +289,31 @@ export function pedalAt(t: number): number {
 
 /* ------------------------------------------------------------------ the daylight */
 
-/** Where the cloud opens, over where the shell went up: the sun comes through there. */
-export const SUN_GAP: Pt = [SHELL_X - 2, -51]
-/** Where she watches the shell go from: the light reaches her there on the chord after it breaks through. */
+/**
+ * Where the cloud breaks: low along the valley's left wall, off to one side of where the shell went. The sun comes in
+ * low through it and rakes across the valley.
+ */
+export const SUN_BREAK: Pt = [-52, -44]
+/** Where she watches the shell go from: the light's edge, sweeping along the floor, reaches her there on the chord. */
 export const WATCH_X = 11
+/** Where the light first lies on the floor as the cloud breaks. */
+const EDGE_FROM = -34
 
 /**
- * How far the daylight has come: `glow` behind the cloud once the shell has gone; `sun` 0..1 as the cloud opens and
- * the light comes through; `reach`, how far along the meadow either way from under the opening the light has spread
- * (cells), reaching her where she watches on the chord after (G.lit).
+ * How far the daylight has come: `glow`, the edge of the cloud along the ridge brightening in the hush; `sun` 0..1, on
+ * at once as the cloud breaks; `edge`, how far along the valley floor from the left the light has swept (a cloud's
+ * shadow racing off), reaching her on the chord after (G.lit) and going on past her.
  */
-export function daylight(t: number): { glow: number; sun: number; reach: number } {
-  if (t < G.gone) return { glow: 0, sun: 0, reach: 0 }
-  const glow = smooth(t, G.gone + 0.3, G.sun + 0.2)
-  // The sun comes on as the cloud tears, at once; what grows after is how far it has reached.
+export function daylight(t: number): { glow: number; sun: number; edge: number } {
+  if (t < G.gone) return { glow: 0, sun: 0, edge: -Infinity }
+  const glow = smooth(t, G.gone + 1.2, G.sun + 0.2)
   const sun = smooth(t, G.sun - 0.05, G.sun + 0.6)
-  const rate = (WATCH_X - SUN_GAP[0]) / (G.lit - G.sun)
+  const rate = (WATCH_X - EDGE_FROM) / (G.lit - G.sun)
   const s = Math.max(0, t - G.sun)
-  // A little slow to start (the light has to find the ground), then on along the valley.
-  const reach = rate * (s - 0.35 * (1 - Math.exp(-s / 0.35))) + 0.35 * rate * (1 - Math.exp(-(G.lit - G.sun) / 0.35)) * smooth(s, 0, G.lit - G.sun)
-  return { glow, sun, reach }
+  // A little slow to start (the light has to find the floor), then racing along it; slower once past her.
+  const lag = 0.4 * (1 - Math.exp(-s / 0.4)) - 0.4 * (1 - Math.exp(-(G.lit - G.sun) / 0.4)) * smooth(s, 0, G.lit - G.sun)
+  const edge = t < G.sun ? -Infinity : EDGE_FROM + rate * (Math.min(s, G.lit - G.sun) - lag) + rate * 0.55 * Math.max(0, s - (G.lit - G.sun))
+  return { glow, sun, edge }
 }
 
 export { SHELL_UP }

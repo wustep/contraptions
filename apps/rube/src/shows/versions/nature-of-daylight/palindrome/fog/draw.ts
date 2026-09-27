@@ -12,7 +12,7 @@ import {
   GREAT,
   greatBloom,
   greatC,
-  greatFade,
+  greatPale,
   greatTendrils,
   greatTurn,
   flood,
@@ -24,7 +24,7 @@ import {
   SMALL_TURN,
   smallBloom,
   smallC,
-  smallFade,
+  smallPale,
   smallR,
   smallTendrils,
   smallU,
@@ -178,20 +178,17 @@ function jet(ctx: Ctx, k: number, t: number): void {
 /** The white a heptapod stands in: the whole frame's width, thickening down from its knees, so its feet are lost. */
 const FLOOR = mix(FOG.white, FOG.grey, 0.22)
 function feetFog(ctx: Ctx, k: number, f: Frame, y: number, s: number): void {
-  const y0 = y - 0.6 * s
-  const y1 = y - 0.12 * s
+  const y0 = y - 0.36 * s
+  const y1 = y - 0.06 * s
   if (y0 > f.y1 + 0.5) return
+  // One fill, the gradient holding its last colour below its end: no seam between a ramp and a solid.
   const g = ctx.createLinearGradient(0, y0 * k, 0, y1 * k)
   for (let i = 0; i <= 8; i++) {
     const u = i / 8
     g.addColorStop(u, rgba(FLOOR, u * u * (3 - 2 * u)))
   }
   ctx.fillStyle = g
-  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (y1 - y0) * k)
-  if (y1 < f.y1 + 1) {
-    ctx.fillStyle = FLOOR
-    ctx.fillRect((f.x0 - 1) * k, y1 * k, (f.x1 - f.x0 + 2) * k, (f.y1 + 1 - y1) * k)
-  }
+  ctx.fillRect((f.x0 - 1) * k, y0 * k, (f.x1 - f.x0 + 2) * k, (Math.max(y1, f.y1 + 1) - y0) * k)
 }
 
 function costello(p: p5, k: number, f: Frame, t: number): void {
@@ -221,7 +218,12 @@ function great(p: p5, k: number, t: number): void {
   p.push()
   p.translate(c[0] * k, c[1] * k)
   p.rotate(greatTurn(t))
-  drawInk(p, k, 0, 0, RG, GREAT, u, { tendrils: greatTendrils(t), bloom: greatBloom(t), fade: greatFade(t) })
+  // Read, it pales where it is: no spreading.
+  const ctx = p.drawingContext as Ctx
+  ctx.save()
+  ctx.globalAlpha *= 1 - greatPale(t)
+  drawInk(p, k, 0, 0, RG, GREAT, u, { tendrils: greatTendrils(t), bloom: greatBloom(t) })
+  ctx.restore()
   p.pop()
 }
 
@@ -232,12 +234,13 @@ function small(p: p5, k: number, f: Frame, t: number): void {
   const R = smallR(t)
   const ctx = p.drawingContext as Ctx
   const diag = Math.hypot(f.x1 - f.x0, f.y1 - f.y0)
-  // As its ends come round to her the fog gathers grey about it...
+  // As its ends come round to her the white round them goes to a grey dusk, deepest at the frame's edges...
   const g = gathering(t)
   if (g > 0.005) {
-    const gr = ctx.createRadialGradient(c[0] * k, c[1] * k, R * 0.9 * k, c[0] * k, c[1] * k, diag * 0.75 * k)
-    gr.addColorStop(0, rgba(FOG.deep, 0))
-    gr.addColorStop(1, rgba(mix(FOG.deep, FOG.shadow, 0.5), g))
+    const dusk = mix(FOG.shadow, FOG.heptapod, 0.4)
+    const gr = ctx.createRadialGradient(c[0] * k, c[1] * k, R * 0.6 * k, c[0] * k, c[1] * k, diag * 0.7 * k)
+    gr.addColorStop(0, rgba(dusk, 0.55 * g))
+    gr.addColorStop(1, rgba(dusk, g))
     ctx.fillStyle = gr
     ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
   }
@@ -255,7 +258,10 @@ function small(p: p5, k: number, f: Frame, t: number): void {
   p.push()
   p.translate(c[0] * k, c[1] * k)
   p.rotate(SMALL_TURN)
-  drawInk(p, k, 0, 0, R, SMALL, u, { tendrils: smallTendrils(t), bloom: smallBloom(t), fade: smallFade(t) })
+  ctx.save()
+  ctx.globalAlpha *= 1 - smallPale(t)
+  drawInk(p, k, 0, 0, R, SMALL, u, { tendrils: smallTendrils(t), bloom: smallBloom(t) })
+  ctx.restore()
   p.pop()
 }
 

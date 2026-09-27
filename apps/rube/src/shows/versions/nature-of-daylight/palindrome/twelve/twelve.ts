@@ -120,17 +120,17 @@ export const call = part<{ begin: number }>(
       // and back to her on the keys for the last of the number and the call key.
       key(at, PRESSES[7], CLOSE, [keys[0] + 0.2, keys[1]], { cut: true }),
       key(at, CALL_KEY, CLOSE, [keys[0] + 0.42, keys[1]]),
-      // On the call, back to the whole ring as it stands again up the right side;
-      on(at, 290.9, 6.5, onCall, [0.12, 0.27]),
-      key(at, 293.0, WIDE[0], WIDE[1]),
-      key(at, 299.9, 13.6, [0.3, -4.0]),
-      // in on the last one hauled up notch by notch, the ring closing at Montana on the loudest bar;
-      on(at, 303.827, 7.6, onCall, [0.25, 0.28]),
-      // back to see it whole, the signal going round it;
-      on(at, 305.6, 10.7, onCall, [0.12, 0.28]),
-      key(at, 307.513, 15.2, [0.3, -4.5]),
-      // and down to her at the phone.
-      on(at, 309.4, 8.2, onCall, [-0.06, 0.27]),
+      // On the call, close still: her at the phone, Montana, China's screen coming up red and standing, the next
+      // coming up the right side; opening out as the ring stands again round it,
+      on(at, 290.3, 4.6, onCall, [0.18, 0.22]),
+      on(at, 292.6, 6.6, onCall, [0.08, 0.29]),
+      on(at, 295.0, 9.2, onCall, [0.11, 0.3]),
+      // to the whole ring by the time the last screen is hauled home and it closes on the loudest bar;
+      key(at, 300.4, 14.6, [0.3, -4.3]),
+      key(at, 303.827, 14.3, [0.3, -4.25]),
+      // held while the signal goes round it, then in to her at the phone.
+      key(at, 306.4, 13.8, [0.35, -4.1]),
+      on(at, 309.2, 8, onCall, [-0.06, 0.27]),
       on(at, slot.end, 4.4, onCall, seam),
     ]
   },

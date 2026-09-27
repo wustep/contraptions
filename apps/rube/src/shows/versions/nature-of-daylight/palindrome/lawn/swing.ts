@@ -150,8 +150,8 @@ export const hannahScale = (t: number): number =>
 
 const dir = (a: number): Pt => [Math.sin(a), Math.cos(a)]
 const tan = (a: number): Pt => [Math.cos(a), -Math.sin(a)]
-export const SEAT_T = 0.1
-export const SEAT_W = 0.16
+export const SEAT_T = 0.085
+export const SEAT_W = 0.105
 
 /** Where a rider sits at `t`: the rope's end, whatever the swing's angle. */
 export function seatedAt(t: number): Pt {

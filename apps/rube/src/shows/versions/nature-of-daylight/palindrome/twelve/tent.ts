@@ -3,9 +3,9 @@ import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { mix, rgba } from '../cast'
 import { frame, hash } from '../kit'
-import { TENT } from '../worlds'
+import { SHANG, TENT } from '../worlds'
 import { CENTRE, drawRing, MONTANA } from './ring'
-import { cablePulses, CALL_KEY, NUMBER, PRESSES, roomLight, voiceFlash, WAKE } from './timeline'
+import { alarm, cablePulses, CALL_KEY, NUMBER, PRESSES, roomLight, voiceFlash, WAKE } from './timeline'
 
 /**
  * The command tent at the camp, at night: canvas walls on a frame of poles, the ring on its rig, and before it a long
@@ -197,6 +197,55 @@ function drawPhone(ctx: CanvasRenderingContext2D, k: number, t: number): void {
 
 /* ------------------------------------------------------------------ the tent */
 
+/** The tent's door, at the far left beyond the table, and the alarm lamp over it. */
+const DOOR: [number, number] = [-8.75, -7.3]
+const DOOR_TOP = -1.95
+const LAMP: Pt = [-8.02, -2.55]
+
+function drawDoor(ctx: CanvasRenderingContext2D, k: number, L: number): void {
+  const [x0, x1] = DOOR
+  // The opening: the dark of the night outside, a flap of canvas tied back across part of it.
+  ctx.fillStyle = TENT.cable
+  ctx.fillRect(x0 * k, DOOR_TOP * k, (x1 - x0) * k, (FLOOR - DOOR_TOP) * k)
+  ctx.fillStyle = mix(TENT.cable, TENT.canvas, 0.5 + 0.4 * L)
+  ctx.beginPath()
+  ctx.moveTo(x1 * k, DOOR_TOP * k)
+  ctx.lineTo(x1 * k, FLOOR * k)
+  ctx.lineTo((x1 - 0.3) * k, FLOOR * k)
+  ctx.quadraticCurveTo((x1 - 0.2) * k, 0.2 * k, (x1 - 0.55) * k, DOOR_TOP * k)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = TENT.frame
+  for (const x of [x0, x1]) ctx.fillRect((x - 0.06) * k, (DOOR_TOP - 0.1) * k, 0.12 * k, (FLOOR - DOOR_TOP + 0.1) * k)
+  ctx.fillRect((x0 - 0.06) * k, (DOOR_TOP - 0.1) * k, (x1 - x0 + 0.12) * k, 0.1 * k)
+}
+
+/** The alarm lamp over the door: a caged red lamp on a bracket, and the red it throws over the tent as it pulses. */
+function drawAlarm(ctx: CanvasRenderingContext2D, k: number, t: number, f: { x0: number; y0: number; x1: number; y1: number }): void {
+  const a = alarm(t)
+  const [lx, ly] = LAMP
+  if (a > 0.01) {
+    // Its red over the whole tent, strongest round the door.
+    ctx.fillStyle = rgba(SHANG, 0.07 * a)
+    ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
+    const g = ctx.createRadialGradient(lx * k, ly * k, 0.2 * k, lx * k, ly * k, 7 * k)
+    g.addColorStop(0, rgba(SHANG, 0.42 * a))
+    g.addColorStop(0.25, rgba(SHANG, 0.16 * a))
+    g.addColorStop(1, rgba(SHANG, 0))
+    ctx.fillStyle = g
+    ctx.fillRect((lx - 7) * k, (ly - 7) * k, 14 * k, 14 * k)
+  }
+  // The bracket, the housing, the lens behind its cage.
+  ctx.fillStyle = TENT.frame
+  ctx.fillRect((lx - 0.03) * k, (ly + 0.08) * k, 0.06 * k, (DOOR_TOP - 0.1 - ly - 0.08) * k)
+  ctx.fillStyle = TENT.cable
+  ctx.fillRect((lx - 0.36) * k, (ly - 0.21) * k, 0.72 * k, 0.42 * k)
+  ctx.fillStyle = a > 0.01 ? mix(mix(TENT.frame, SHANG, 0.5), mix(SHANG, TENT.screenOn, 0.3), a) : mix(TENT.frame, SHANG, 0.35)
+  ctx.fillRect((lx - 0.29) * k, (ly - 0.15) * k, 0.58 * k, 0.3 * k)
+  ctx.fillStyle = TENT.cable
+  for (const dx of [-0.15, 0, 0.15]) ctx.fillRect((lx + dx - 0.02) * k, (ly - 0.15) * k, 0.04 * k, 0.3 * k)
+}
+
 /** Where the canvas's folds fall: uneven, a cell or two apart. */
 const FOLDS: number[] = (() => {
   const out = [-30]
@@ -239,11 +288,13 @@ function drawTent(p: p5, k: number, t: number): void {
   ctx.fillStyle = TENT.frame
   for (const x of [-9.3, 9.9]) ctx.fillRect((x - 0.13) * k, (f.y0 - 1) * k, 0.26 * k, (FLOOR - f.y0 + 1) * k)
   ctx.fillRect(-9.4 * k, -11.7 * k, 19.4 * k, 0.24 * k)
+  drawDoor(ctx, k, L)
   // The floor.
   ctx.fillStyle = TENT.floor
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, (f.y1 - FLOOR + 2) * k)
   ctx.fillStyle = rgba(TENT.cable, 0.6)
   ctx.fillRect((f.x0 - 1) * k, FLOOR * k, (f.x1 - f.x0 + 2) * k, 0.05 * k)
+  drawAlarm(ctx, k, t, f)
   ctx.restore()
 
   drawRing(p, k, t)

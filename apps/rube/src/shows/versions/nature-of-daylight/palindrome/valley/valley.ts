@@ -13,10 +13,11 @@ import { drawValley, drawValleyOver } from './set'
  * (the drawing), `light.ts` (the daylight).
  *
  * - arrive (102.110 → 129.556): the valley opens on the shell as it comes down, the television's picture become the
- *   real thing (the same size, the same place), and it settles as the bass swells: the fog it pushes down rolls out
- *   along the valley floor (106.742). A helicopter comes round the near ridge's shoulder (104.861), a speck against it,
- *   and the camera comes down the valley with it; it flares (108.716) and hangs low over the pad, and she drops out of
- *   its door onto the meadow (110.655). It climbs away and turns (111.624) as she rolls into the decon tent; Ian has
+ *   real thing (the same size, the same place). It comes down through the picture as the bass swells, the camera
+ *   drawing back and up so its height reads against the ridges and the helicopter's speck (round the near ridge's
+ *   shoulder on 104.861); the air it drives down ahead of it rolls out along the valley floor as fog (106.742). The
+ *   helicopter flares over the pad (108.716), a cut in to the camp under the settling belly, and she drops out of its
+ *   door onto the meadow (110.655). It climbs away and turns (111.624) as she rolls into the decon tent; Ian has
  *   come out of it in his suit and gone up the lift's ramp first. She comes out of its far door in hers, its flap
  *   flung back (112.536), rolls up the ramp beside him; it swings up behind her and latches (114.364): the pump kicks
  *   and the scissor surges. Again (118.027): the deck under the belly. A seam of light (120.796); the slot opens
@@ -26,9 +27,10 @@ import { drawValley, drawValleyOver } from './set'
  *   step a beat (313.086, 314.015), onto its base (314.926), where the picture cuts to the valley whole. The shell goes
  *   up the way it came, the cloud it shoulders aside rolling out along the deck (315.971, 316.865), its wake sweeping
  *   the meadow (317.748); it pales into the cloud and the cloud closes over it as the high violins stop (318.711).
- *   Daylight: the cloud glows, then opens where it went (322.606), and the light comes down in shafts and spreads
- *   along the valley floor, reaching her on the next chord (326.258); she goes to meet Ian coming across it, and they
- *   touch (330.170), and hold.
+ *   The cloud churns where it went. Daylight: the cloud breaks low along the valley's left wall (322.606), off to one
+ *   side, and the low sun rakes across the valley, the light sweeping along the floor from the left; it reaches her on
+ *   the chord (326.258), a cut in to them, and she goes to meet Ian coming across it; they touch (330.170), a cut to the
+ *   two of them, and hold. Where the shell was, the cloud only thins.
  */
 
 /* ------------------------------------------------------------------ the set */
@@ -95,12 +97,16 @@ export const arrive = part<ValleyState>(
     const o = ARRIVE_AT
     const deck = (t: number) => deckAt(t)
     const keys: PartShot[] = [
-      // The shell whole, settling: hold on it.
-      hold(o, 103.9, 150, -14, -24),
-      hold(o, 105.9, 138, -6, -21),
-      // Down the valley with the helicopter to the camp at its foot.
-      hold(o, 107.9, 80, 5, -13),
-      hold(o, 109.5, 38, 8, -6),
+      // The valley opens on the television's picture: the shell's belly just out of the cloud at the top of the
+      // frame. It comes down into the picture; the camera draws back and up slowly, so its height reads against the
+      // ridges and the helicopter's speck as it comes down and settles.
+      hold(o, 103.6, 150, -15, 6),
+      hold(o, 105.2, 158, -13, -9),
+      hold(o, 106.8, 168, -11, -19),
+      hold(o, 108.2, 174, -10, -24),
+      // The helicopter flares over the pad: cut in to the camp, the belly settling over it.
+      { ...hold(o, A.flare, 32, 11, -7), cut: true },
+      hold(o, 109.8, 27, 9, -5),
       hold(o, A.touch, 22, 7.2, -3.2),
       hold(o, 112.0, 13, 4.2, -2.0),
       hold(o, 113.2, 10.4, 2.2, -1.9),
@@ -146,20 +152,22 @@ export const going = part<ValleyState>(
       hold(o, 313.6, 7.4, 2.3, -2.2),
       hold(o, 314.5, 7.8, 2.1, -2.3),
       // The deck lands: cut to the valley whole, the shell going up into the cloud the way it came.
-      { ...hold(o, G.down, 72, 3, -31), cut: true },
-      hold(o, 316.8, 74, 3, -33),
-      hold(o, G.gone, 76, 3, -35),
-      // The hush: the cloud churning where it went, and a slow push toward the place, where it will tear.
-      hold(o, 320.7, 71, 1, -32),
-      hold(o, G.sun, 67, -1, -29.5),
-      // The tear; the shafts; the light sweeping along the floor: down with it toward her.
-      hold(o, 324.5, 63, 2, -26.5),
-      hold(o, 326.0, 59, 4, -24.5),
+      { ...hold(o, G.down, 88, 2, -40), cut: true },
+      hold(o, 316.8, 88, 2, -41),
+      hold(o, G.gone, 86, 1, -40),
+      // The hush: the cloud churning where it went; a slow push toward the place.
+      hold(o, 320.7, 78, -1, -36),
+      // The cloud breaks along the left ridge and the low sun rakes across: drift with the light toward her.
+      hold(o, G.sun, 72, -6, -31),
+      hold(o, 324.4, 68, -12, -27),
+      hold(o, 326.0, 64, -8, -24),
       // The light reaches her: cut in to them, the horizon high and the lit meadow under them, as he comes across it.
       { ...hold(o, G.lit, 7.2, 15.2, 1.1), cut: true },
       hold(o, 328.3, 7.0, 14.9, 1.0),
-      hold(o, G.touch, 6.0, 14.7, 0.55),
-      hold(o, 332.2, 5.0, 14.9, -0.25),
+      hold(o, 329.9, 6.8, 14.8, 0.9),
+      // They touch: cut to the two of them, and hold.
+      { ...hold(o, G.touch, 4.55, MEET[0] + 0.8, MEET[1] - 0.75), cut: true },
+      hold(o, 332.2, 4.45, MEET[0] + 0.8, MEET[1] - 0.8),
       // The home seam: 4.4 cells, [0.8, -0.8] on her.
       hold(o, slot.end, 4.4, MEET[0] + 0.8, MEET[1] - 0.8),
     ]

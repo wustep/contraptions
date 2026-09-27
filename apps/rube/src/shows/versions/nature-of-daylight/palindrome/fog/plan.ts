@@ -71,7 +71,7 @@ export const FOG_STRIKES: number[] = [T_TOUCH, T_B1, T_S2, T_S3, T_CLOSE, T_RELE
 
 /** Sentence 253: heavy down its left, thin and clean where it begins and where it closes. */
 export const GREAT: Ring = inkRing(253)
-export const RG = 2.5
+export const RG = 1.25
 
 /**
  * How far the ring is written: a burst out of the jet, then its strokes, each surging and easing: on the chords, and
@@ -106,15 +106,13 @@ export function greatU(t: number): number {
 export const greatTendrils = (t: number): number => easeOut((t - T_CLOSE) / 1.2)
 /** The ink's breath as it settles: over by the time it lets her go. */
 export const greatBloom = (t: number): number => smooth(t, T_CLOSE, T_RELEASE - 0.4)
-/** Read: after her landing it spreads and pales into the white, gone by the cut. */
-export const greatFade = (t: number): number => smooth(t, T_LAND + 0.3, T_OUT - 0.1)
+/** Read: after her landing it pales into the white where it is, gone by the cut. */
+export const greatPale = (t: number): number => smooth(t, T_LAND + 0.3, T_OUT - 0.1)
 
 /** Its drawn radius and band, as `drawInk` has them, at ring angle `a`. */
 function band(a: number, t: number): { mid: number; half: number } {
-  const bloom = greatBloom(t)
-  const fade = greatFade(t)
-  const Rp = RG * (1 + 0.04 * bloom + 0.25 * fade)
-  return { mid: Rp * GREAT.r(a), half: (Rp * GREAT.w(a) * (1 + 0.8 * fade)) / 2 }
+  const Rp = RG * (1 + 0.04 * greatBloom(t))
+  return { mid: Rp * GREAT.r(a), half: (Rp * GREAT.w(a)) / 2 }
 }
 /** How far from its centre a ball riding its inner edge at ring angle `a` is: on the ink's wet edge, not in it. */
 export const rideR = (a: number, t: number): number => {
@@ -132,12 +130,12 @@ export const greatTurn = (t: number): number => PHI0 + Math.PI * smooth(t, T_CLO
 
 /** Where she hangs out of the white, and so where the ring is written round. */
 export const P0: Pt = [-0.5, 0]
-const LIFT = 0.72
+const LIFT = 0.4
 /** The lift the ink gives her on each stroke (a share of LIFT), easing out of each. */
 const LIFT_ENDS = [0, 0.25, 0.4, 0.7, 1]
 const lift = (t: number): number => stroked(t, LIFT_ENDS)
 /** A heave of the ink under her as the jet lands: it takes her weight. */
-const heave = (t: number): number => (t < T_TOUCH ? 0 : 0.14 * Math.sin(Math.min(Math.PI, ((t - T_TOUCH) / 0.9) * Math.PI)) * Math.exp(-(t - T_TOUCH) / 0.9))
+const heave = (t: number): number => (t < T_TOUCH ? 0 : 0.08 * Math.sin(Math.min(Math.PI, ((t - T_TOUCH) / 0.9) * Math.PI)) * Math.exp(-(t - T_TOUCH) / 0.9))
 
 export const G0: Pt = [P0[0], P0[1] - rideR(GREAT.start, T_TOUCH)]
 /** The fall from its top to its bottom, and the gravity of the fog that makes it take exactly the gap to the beat. */
@@ -148,7 +146,7 @@ export const G_FOG = (2 * DROP) / (FALL_T * FALL_T)
 function recoil(t: number): number {
   const s = t - T_LAND
   if (s <= 0) return 0
-  return 0.2 * Math.sin((s / 0.95) * TAU) * Math.exp(-s / 0.42) * (1 - smooth(s, 1.1, 1.75))
+  return 0.1 * Math.sin((s / 0.95) * TAU) * Math.exp(-s / 0.42) * (1 - smooth(s, 1.1, 1.75))
 }
 /** The ring's centre. */
 export function greatC(t: number): Pt {
@@ -163,7 +161,7 @@ const LANDED = G0[1] - LIFT + rideR(GREAT.start + Math.PI, T_RELEASE)
 export const SMALL: Ring = inkRing(205)
 /** Its size when she is shown the swing: small, where Hannah will be; and what it grows to as she reads it. */
 export const RS = 0.36
-const RK = 1.4
+const RK = 1.3
 /** Where she hangs when she is shown the swing (the landing, the ring's spring spent): at rest. */
 const LANDED_AT: Pt = [G0[0], LANDED]
 /** Where Hannah will be on the other side of the cut: at HANNAH_BY from her. */
@@ -193,9 +191,10 @@ export function smallR(t: number): number {
 }
 export const smallTendrils = (t: number): number => easeOut((t - T_KNOW) / 1.1)
 export const smallBloom = (t: number): number => smooth(t, T_KNOW, T_KNOW + 3.2)
-export const smallFade = (t: number): number => 0.8 * smooth(t, T_DOWN, T_GALA + 0.3)
+/** Read: as the vision lets her go it pales where it is, drifting off. */
+export const smallPale = (t: number): number => 0.8 * smooth(t, T_DOWN, T_GALA + 0.3)
 /** Its drawn radius, as `drawInk` has it. */
-const smallRp = (t: number): number => smallR(t) * (1 + 0.04 * smallBloom(t) + 0.25 * smallFade(t))
+const smallRp = (t: number): number => smallR(t) * (1 + 0.04 * smallBloom(t))
 /** The point of its ink nearest her (where its ends meet): it stays put as it grows, so it grows away from her. */
 const NEAR_PT: Pt = [SMALL_AT[0] + DIR[0] * RS * SMALL.r(CLOSE_A), SMALL_AT[1] + DIR[1] * RS * SMALL.r(CLOSE_A)]
 /** Where it is: grown away from her; as the vision lets her go, rising away up on her right. */
@@ -239,8 +238,9 @@ export function smallU(t: number): number {
   }
   return 1
 }
-/** Before she knows: the fog gathers grey round the ring as its ends come round to her. */
-export const gathering = (t: number): number => 0.5 * smooth(t, SMALL_STEPS[2], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW - 0.03, T_KNOW + 0.12))
+/** Before she knows: from the second stroke the white round them goes to a grey dusk as its ends come round to her;
+ * the flood on the chord takes it away. */
+export const gathering = (t: number): number => 0.68 * smooth(t, SMALL_STEPS[1], T_KNOW - 0.05) * (1 - smooth(t, T_KNOW + 0.05, T_KNOW + 0.3))
 /** She knows: on the chord the white floods out from the ring over everything but it and her, holds for a beat, and
  * settles. `a` its strength, `r` how far out it has come (a share of the frame). */
 export function flood(t: number): { a: number; r: number } {
@@ -294,24 +294,30 @@ export const behind = (d: number, off: Pt): Pt => [FC2[0] + (P_SEES[0] + off[0] 
  * then, as the great ring turns, drawn back into the white, where it stands far off on her right, whole in the close
  * frames, holds out its palm and writes the small ring, and holds it there while she is shown, until she has read it.
  */
-const COSTELLO_S = 9.5
-const NEAR: Pt = [G0[0] + 5.3, G0[1] + 7.7]
+const COSTELLO_S = 8.5
+/** The wide on the ring: the whole of it, and Costello's body over it on the right. */
+const WIDE_C: Pt = [G0[0] + 1.0, G0[1] - 0.35]
+/** Near: in the fog on her right, a little back, its body whole beside the ring in the wide, its feet lost below. */
+const NEAR_D = 0.6
+const NEAR: Pt = [WIDE_C[0] + 3.15 / NEAR_D, WIDE_C[1] + (-0.6 + 0.72 * COSTELLO_S * NEAR_D) / NEAR_D]
 const FAR_D = 0.5
 /** Far: standing in the white on her right, whole in the close frames, its feet lost in the fog under her. */
 const FAR: Pt = behind(FAR_D, [6.4, 2.1])
 export function costelloAt(t: number): { at: Pt; d: number; fog: number; s: number } {
   const come = smooth(t, T_IN + 0.2, T_TOUCH - 0.3)
   const go = smooth(t, T_CLOSE + 0.6, T_RELEASE + 0.4)
-  const d = 1 + (FAR_D - 1) * go
+  const d = NEAR_D + (FAR_D - NEAR_D) * go
   const x = NEAR[0] + 2.2 * (1 - come) + (FAR[0] - NEAR[0]) * go
   const y = NEAR[1] + (FAR[1] - NEAR[1]) * go
   const fog = 0.94 - 0.34 * come + 0.08 * go + 0.03 * Math.sin(t * 0.3)
   return { at: [x, y], d, fog, s: COSTELLO_S }
 }
+/** Its first pointing: its tip a little under her on her right, where its jet comes from. */
+const TIP1: Pt = [P0[0] + 0.75, P0[1] + 0.32]
 /** Its pointing limb, in her plane: at her for the first ink; at the small ring's far side for the second. */
 export function costelloReach(t: number): { to: Pt; u: number; open: number } | undefined {
   const u1 = smooth(t, T_IN + 1.0, T_TOUCH - 0.3) * (1 - smooth(t, T_TOUCH + 1.2, T_TOUCH + 4.2))
-  if (u1 > 0.001) return { to: [P0[0] + 1.35, P0[1] + 0.95], u: u1, open: 0.3 * smooth(t, T_TOUCH - 0.9, T_TOUCH - 0.3) }
+  if (u1 > 0.001) return { to: TIP1, u: u1, open: 0.3 * smooth(t, T_TOUCH - 0.9, T_TOUCH - 0.3) }
   const u2 = smooth(t, T_RELEASE + 0.2, T_LAND - 0.1) * (1 - smooth(t, T_DOWN, T_DOWN + 2.2))
   // Its fingers spread wider as she touches the other side of the ring.
   const spread = 0.28 * smooth(t, T_KNOW - 0.25, T_KNOW + 0.35) * (1 - smooth(t, T_DOWN - 0.4, T_DOWN + 0.6))
@@ -321,17 +327,16 @@ export function costelloReach(t: number): { to: Pt; u: number; open: number } | 
 }
 /** The jets: from the limb's tip to where the ink begins, landing on the beat. */
 export const JETS = [
-  { from: T_TOUCH - 0.32, to: T_TOUCH, fade: T_TOUCH + 0.9, tip: [P0[0] + 1.35, P0[1] + 0.95] as Pt, at: [P0[0], P0[1] + RB + 0.08] as Pt, sag: 0.28 },
+  { from: T_TOUCH - 0.32, to: T_TOUCH, fade: T_TOUCH + 0.9, tip: TIP1, at: [P0[0], P0[1] + RB + 0.06] as Pt, sag: 0.16 },
 ]
 /**
  * Abbott: far back on the left, in the white: seen as the frame opens, then sinking and paling as it dies. Placed from
  * the wide's frame: its feet under the frame's foot, its body low on the left, clear of the ring.
  */
-const WIDE_C: Pt = [G0[0] + 1.8, G0[1] - 0.5]
-const ABBOTT_D = 0.45
-export const ABBOTT = { at: [WIDE_C[0] + (-5.1 - WIDE_C[0]) / ABBOTT_D, WIDE_C[1] + (3.0 - WIDE_C[1]) / ABBOTT_D] as Pt, s: 13, seed: 1, depth: ABBOTT_D }
+const ABBOTT_D = 0.3
+export const ABBOTT = { at: [WIDE_C[0] - 3.4 / ABBOTT_D, WIDE_C[1] + 2.5 / ABBOTT_D] as Pt, s: 11, seed: 1, depth: ABBOTT_D }
 export const abbottFog = (t: number): number => 1 - 0.5 * smooth(t, T_TOUCH + 1.3, T_S2 - 0.8) + 0.46 * smooth(t, T_S2 - 0.5, T_LAND)
-export const abbottSink = (t: number): number => 3.6 * smooth(t, T_S2 - 2, T_OUT + 1)
+export const abbottSink = (t: number): number => 2.6 * smooth(t, T_S2 - 2, T_OUT + 1)
 
 /* ------------------------------------------------------------------ the camera, in world cells */
 
@@ -347,12 +352,12 @@ const her = (t: number, off: Pt): Pt => {
 /** The wide: the whole ring and Costello's body over it. */
 const WIDE = (dx: number, dy: number): Pt => [WIDE_C[0] + dx, WIDE_C[1] + dy]
 export const FOG1_SHOTS: WorldShot[] = [
-  { t: T_IN + 1.1, cells: 5.25, hold: her(T_IN, [0.72, -0.8]) },
-  { t: T_TOUCH + 0.4, cells: 7.4, hold: [P0[0] + 1.4, P0[1] - 1.4] },
-  { t: T_S2, cells: 10.6, hold: WIDE(0, 0) },
-  { t: T_CLOSE, cells: 10.2, hold: WIDE(-0.1, -0.2) },
-  { t: T_RELEASE, cells: 9.8, hold: WIDE(-0.25, -0.3) },
-  { t: T_LAND, cells: 7.4, hold: her(T_OUT, [1.0, -1.2]) },
+  { t: T_IN + 1.1, cells: 5.1, hold: her(T_IN, [0.65, -0.75]) },
+  { t: T_TOUCH + 0.4, cells: 5.3, hold: [P0[0] + 0.9, P0[1] - 0.65] },
+  { t: T_S2, cells: 5.5, hold: WIDE(0, 0) },
+  { t: T_CLOSE, cells: 5.4, hold: WIDE(-0.05, -0.1) },
+  { t: T_RELEASE, cells: 5.3, hold: WIDE(-0.1, -0.15) },
+  { t: T_LAND, cells: 5.0, hold: her(T_OUT, [0.8, -0.95]) },
   { t: T_OUT, cells: 4.6, hold: her(T_OUT, [1.05, -0.95]) },
 ]
 /** When she knows: the ring and her, the whole of the frame. */

@@ -9,9 +9,10 @@ import { throwFor } from '../physics'
  * drawing and the lanes cannot disagree.
  *
  * The chamber is seen in section: a long dark room of stone running left to right, the tunnel they came up by at its
- * left, and at its right end the glass, a wall of light standing from the floor to the dark overhead. Beyond the glass
- * is the heptapods' white: their fog, where they come and where their ink hangs. What is understood crosses the glass
- * and hangs, lit, in the dark over the humans' heads: the lexicon.
+ * left, and at its right end the glass, a pane standing from the floor up into the dark. Beyond it is the heptapods'
+ * white: their fog, where they come and write. The language is a machine she drives: she rolls onto a plate by the
+ * glass and her board flips up, and the same plate slips a catch that sends the last word she has read down a rail
+ * along the back wall, a card with their ink on it, to hang in a row with the others.
  */
 
 /* ------------------------------------------------------------------ the room */
@@ -28,18 +29,40 @@ export const JAMB = -0.9
 export const LINTEL = -2.7
 export const CEILING = -11
 
-/** Where her centre is when she touches the glass, and when she stands on the board's plate. */
-export const TOUCH = GX - R - 0.004
-export const PLATE = 4.72
+/** Where her centre is when she touches the glass (flush against it), and when she stands on the plate. */
+export const TOUCH = GX - R - 0.002
+export const PLATE = 5.8
 /**
- * Her board: a pale board on two short legs, hinged at its foot on the floor beside the plate. It lies flat until a
- * ball presses the plate, then flips up to stand facing the glass, and falls flat again after the ball steps off.
+ * Her board: a pale board on two short legs, hinged at its foot on the floor beside the plate. It lies flat until she
+ * presses the plate, then flips up to stand facing the glass, and falls flat again after she steps off.
  */
-export const BOARD = { x: 3.98, w: 0.9, h: 0.6, legs: 0.3 }
+export const BOARD = { x: 4.95, w: 0.8, h: 0.6, legs: 0.3 }
 /** Where she stands to begin with (the threshold), where she comes to rest before the glass, and Ian beside her. */
 export const THRESHOLD = 0
 export const REST = 5.6
 export const IAN_BY = -0.42
+/** Ian's place while she works the machine: behind her board. */
+export const IAN_HOME = 3.6
+
+/* ------------------------------------------------------------------ the rail */
+
+/**
+ * The rail along the back wall over their heads, running from a slot through the glass down to its far end. A word
+ * that comes through the slot hangs on a card by the glass until the catch is slipped; then it runs down the rail and
+ * stops against the words before it.
+ */
+export const RAIL = { x0: 2.85, x1: GX, y1: -2.2, fall: 0.06 }
+export const railY = (x: number): number => RAIL.y1 + (RAIL.x1 - x) * RAIL.fall
+/** A card's side, and the places a card hangs: by the slot, and in the row (the first furthest down the rail). */
+export const CARD = 0.62
+export const WAIT = 6.63
+export const ROW: number[] = [3.28, 3.95, 4.62, 5.29, 5.96, WAIT]
+/** Where a card's middle is, hung from the rail at x. */
+export const cardY = (x: number): number => railY(x) + 0.1 + CARD / 2
+/** The slot through the glass. */
+export const SLOT: Pt = [GX + GT / 2, railY(GX) + 0.02]
+/** Seconds a word takes from the glass in through the slot to its card. */
+export const INTO = 0.9
 
 /* ------------------------------------------------------------------ the clock */
 
@@ -64,10 +87,11 @@ export const T = {
   ianSuit: b(150.181),
   /** The first logogram. */
   first: b(153.06),
-  /** Her lexicon whole: she reads it all back, and her question goes up on the board. */
-  frieze: b(190.943),
+  /** She reads the row back, card by card; her question goes up on her board; she puts it to them. */
+  readback: b(190.943),
   question: b(192.789),
-  /** The last: "weapon". */
+  put: b(194.81),
+  /** The answer: "weapon". */
   weapon: b(196.795),
   out: SEAM.dark,
   /** The bomb: Abbott strikes the glass on the seam's hard beat. */
@@ -82,22 +106,19 @@ export const T = {
   fog: SEAM.fog,
 }
 
-/** The language: her board up (and what was on the glass lifts off, read) and her touch (and they answer). */
-export const BOARDS: { t: number; who: 'louise' | 'ian' }[] = [
-  { t: T.board0, who: 'louise' },
-  { t: b(157.211), who: 'louise' },
-  { t: b(164.792), who: 'louise' },
-  { t: b(173.441), who: 'louise' },
-  // Faster, fuller: Ian takes the plate, and she stays at the glass.
-  { t: b(181.133), who: 'ian' },
-  { t: b(185.08), who: 'ian' },
-  { t: b(188.012), who: 'ian' },
-  // The question, in their writing.
-  { t: T.question, who: 'ian' },
+/** Her board up, each time she lands on the plate; and when she steps off it again. */
+export const BOARDS: { t: number; off: number }[] = [
+  { t: T.board0, off: b(146.141) + 0.2 },
+  { t: b(157.211), off: b(158.134) },
+  { t: b(164.792), off: b(165.692) },
+  { t: b(173.441), off: b(174.428) },
+  { t: b(181.133), off: b(182.149) },
+  { t: b(188.012), off: 189.4 },
+  { t: T.question, off: b(193.817) },
 ]
 
 /** Her touches at the glass after the palm: each one is answered. */
-export const TOUCHES: number[] = [b(161.025), b(169.61), b(177.186), b(181.133), b(182.149), b(185.08), T.frieze, T.weapon]
+export const TOUCHES: number[] = [b(161.025), b(169.61), b(177.186), b(185.08), T.put, T.weapon]
 
 /* ------------------------------------------------------------------ their writing */
 
@@ -110,77 +131,33 @@ export interface Logo {
   who: Writer
   c: Pt
   R: number
-  /** When it lifts off, read, and where it goes to hang in the lexicon (index into LEXICON), or null (it stays). */
-  lift: number | null
-  slot: number
-  /** Turned as it hangs, radians. */
-  turn: number
+  /** Its size on its card. */
+  r: number
+  /** When it goes in through the slot; when its card is sent down the rail (null: it stays by the slot); when it lands. */
+  slotIn: number
+  release: number | null
+  land: number
+  row: number
 }
 
-/** Where each writes, beyond the glass: Abbott low and near, Costello high and further back. */
-const SPOT: Record<Writer, Pt[]> = {
-  abbott: [
-    [9.35, -3.3],
-    [8.75, -2.05],
-    [9.05, -2.75],
-    [8.85, -1.85],
-  ],
-  costello: [
-    [13.9, -4.35],
-    [13.6, -3.55],
-    [14.1, -4.8],
-    [13.8, -4.0],
-  ],
-}
+const logo = (seed: number, born: number, form: number, who: Writer, c: Pt, R: number, r: number, slotIn: number, release: number | null, land: number, row: number): Logo => ({ seed, born, form, who, c, R, r, slotIn, release, land, row })
 
 /**
- * The lexicon: a frieze along the chamber's back wall, over their heads, where each read logogram is pinned up in the
- * order she read it, lit: the first near the glass, the rest going back down the room. Seven, and no two one size.
+ * Six words. The first, big, after the palm; then one answer to each of her touches, and at the last both of them at
+ * once. Each goes in through the slot once it has closed, and her next board sends it down the rail, landing on the
+ * next beat.
  */
-export const FRIEZE_Y = -3.45
-export const LEXICON: { c: Pt; R: number }[] = [
-  { c: [5.9, FRIEZE_Y], R: 0.44 },
-  { c: [4.55, FRIEZE_Y], R: 0.29 },
-  { c: [3.2, FRIEZE_Y], R: 0.38 },
-  { c: [1.85, FRIEZE_Y], R: 0.26 },
-  { c: [0.5, FRIEZE_Y], R: 0.36 },
-  { c: [-0.85, FRIEZE_Y], R: 0.3 },
-  { c: [-2.2, FRIEZE_Y], R: 0.41 },
+export const LOGOS: Logo[] = [
+  logo(1014, T.first, 2.3, 'abbott', [9.35, -3.3], 1.5, 0.24, 155.9, b(157.211), b(158.134), 0),
+  logo(1021, b(161.025), 1.6, 'abbott', [8.3, -1.95], 0.85, 0.2, 163.0, b(164.792), b(165.692), 1),
+  logo(1042, b(169.61), 1.6, 'costello', [8.5, -2.3], 0.8, 0.23, 171.7, b(173.441), b(174.428), 2),
+  logo(1063, b(177.186), 1.5, 'abbott', [8.25, -1.9], 0.82, 0.19, 179.3, b(181.133), b(182.149), 3),
+  logo(1091, b(185.08), 1.2, 'abbott', [8.2, -1.95], 0.78, 0.22, 186.6, b(188.012), b(189.005), 4),
+  logo(1105, b(185.08), 1.3, 'costello', [10.2, -3.2], 0.95, 0.21, 188.45, null, 188.45 + INTO, 5),
 ]
 
-function writings(): Logo[] {
-  const out: Logo[] = []
-  let a = 0
-  let c = 0
-  let slot = 0
-  const add = (born: number, who: Writer, form: number, R: number, seed: number, turn: number) => {
-    const spot = who === 'abbott' ? SPOT.abbott[a++ % SPOT.abbott.length] : SPOT.costello[c++ % SPOT.costello.length]
-    out.push({ seed, born, form, who, c: spot, R, lift: null, slot: -1, turn })
-  }
-  // The first: Abbott, after the palm, big and slow.
-  add(T.first, 'abbott', 2.3, 1.5, 1014, 0)
-  // The slow exchange: Abbott answers each of her touches.
-  add(TOUCHES[0], 'abbott', 1.9, 1.3, 1021, 0.4)
-  add(TOUCHES[1], 'abbott', 1.8, 1.25, 1042, -0.3)
-  add(TOUCHES[2], 'abbott', 1.6, 1.3, 1063, 0.9)
-  // Faster, fuller: Costello writes too.
-  add(TOUCHES[3], 'costello', 1.3, 1.1, 1077, 0.2)
-  add(TOUCHES[4], 'abbott', 1.2, 1.2, 1091, -0.6)
-  add(TOUCHES[5], 'costello', 1.1, 1.05, 1105, 1.1)
-  // Each board lifts off whatever has closed on the glass: read.
-  for (const board of BOARDS) {
-    for (const l of out) {
-      if (l.lift !== null || l.born + l.form > board.t - 0.05 || slot >= LEXICON.length) continue
-      l.lift = board.t
-      l.slot = slot++
-    }
-  }
-  return out
-}
-export const LOGOS: Logo[] = writings()
-
 /** "Weapon": the conversation's last logogram, a ring with a hard spike flung out, low on the glass before her. */
-export const WEAPON = { seed: 1168, born: T.weapon, form: 0.3, c: [8.95, -1.45] as Pt, R: 0.98 }
+export const WEAPON = { seed: 1168, born: T.weapon, form: 0.3, c: [8.5, -1.25] as Pt, R: 0.8 }
 
 /** Abbott's frantic writing before the blast: a jagged ring in bursts on the beats. */
 export const FRANTIC = { seed: 1203, c: [9.4, -3.1] as Pt, R: 1.35, bursts: [b(219.417), b(220.375), b(221.362), b(222.348)] }
@@ -223,19 +200,6 @@ export function costello(t: number): Stand {
 const toSegs = (ways: Way[]): Seg[] => route(ways)
 const at = (t: number, x: number, ease?: Seg['ease'], y = 0): Way => ({ at: t, p: [x, y], ease })
 
-/** A little back from the glass and in again, touching on `t`. */
-function tapWays(ways: Way[], taps: number[], from: number): void {
-  let last = from
-  for (const t of taps) {
-    const gap = t - last
-    const back = Math.min(0.5, 0.18 + 0.12 * gap)
-    const mid = t - Math.min(gap * 0.5, 1.1)
-    ways.push(at(Math.max(last + 0.25, mid), TOUCH - back, 'inout'))
-    ways.push(at(t, TOUCH, 'in'))
-    last = t
-  }
-}
-
 /** Louise in contact, show times, world cells. */
 function contactWays(): Way[] {
   const w: Way[] = []
@@ -251,32 +215,43 @@ function contactWays(): Way[] {
   // The first try: onto the plate, the board up.
   w.push(at(T.board0, PLATE, 'inout'))
   w.push(at(T.suit, PLATE))
-  // The suit falls away; she goes to the glass alone.
+  // The suit falls away; she goes to the glass alone, slowly.
   w.push(at(b(146.141), PLATE))
   w.push(at(T.palm, TOUCH, 'inout'))
   // The palm: she stays pressed to it, eases off, and presses again; the first logogram: she draws back to see it,
   // Ian beside her.
-  w.push(at(T.palm + 1.25, TOUCH - 0.13, 'inout'))
+  w.push(at(T.palm + 1.25, TOUCH - 0.12, 'inout'))
   w.push(at(T.palm + 2.35, TOUCH, 'inout'))
   w.push(at(T.first - 0.25, TOUCH))
   w.push(at(b(154.059), TOUCH - 0.3, 'inout'))
   w.push(at(b(155.109), TOUCH - 0.3))
-  // The exchange, on the chords: back to the plate (her board), forward to the glass (their answer).
+  // The machine, on the chords: back onto the plate (her board, and the word sent down the rail), forward to the
+  // glass (her touch, and their answer).
   const legs: [number, number, number][] = [
     [b(155.109), BOARDS[1].t, PLATE],
-    [b(158.134), TOUCHES[0], TOUCH],
+    [BOARDS[1].off, TOUCHES[0], TOUCH],
     [b(162.029), BOARDS[2].t, PLATE],
-    [b(165.692), TOUCHES[1], TOUCH],
+    [BOARDS[2].off, TOUCHES[1], TOUCH],
     [b(170.62), BOARDS[3].t, PLATE],
-    [b(174.428), TOUCHES[2], TOUCH],
+    [BOARDS[3].off, TOUCHES[2], TOUCH],
+    [b(178.149), BOARDS[4].t, PLATE],
+    [BOARDS[4].off, TOUCHES[3], TOUCH],
+    [b(186.073), BOARDS[5].t, PLATE],
   ]
   for (const [a, t, x] of legs) {
     if (w[w.length - 1].at < a - 1e-6) w.push(at(a, w[w.length - 1].p[0]))
     w.push(at(t, x, 'inout'))
   }
-  // Faster: she stays at the glass, touching, and Ian works the board.
-  tapWays(w, TOUCHES.slice(3), TOUCHES[2])
-  // "Weapon": its spike strikes the glass before her face and she is pushed back; she comes to rest before it.
+  // She reads the row back: down under it, and back along it as the cards light, onto the plate: her question.
+  w.push(at(BOARDS[5].off, PLATE))
+  w.push(at(T.readback, 4.6, 'inout'))
+  w.push(at(T.question, PLATE, 'inout'))
+  // She puts it to them at the glass; eases back; touches again: "weapon".
+  w.push(at(BOARDS[6].off, PLATE))
+  w.push(at(T.put, TOUCH, 'inout'))
+  w.push(at(b(195.75), TOUCH - 0.3, 'inout'))
+  w.push(at(T.weapon, TOUCH, 'in'))
+  // Its spike strikes the glass before her face and she is pushed back; she comes to rest before it.
   w.push(at(T.weapon + 0.32, TOUCH))
   w.push({ at: T.weapon + 2.5, p: [REST, 0], ramp: [(2 * (TOUCH - REST)) / 2.18, 0] })
   w.push(at(T.out, REST))
@@ -293,33 +268,24 @@ function ianContactWays(): Way[] {
   w.push(at(T.abbott + 0.9, 3.44, 'out'))
   w.push(at(T.costello + 0.1, 3.58, 'inout'))
   w.push(at(T.costello + 0.8, 3.5, 'out'))
-  w.push(at(b(143.215), 3.2, 'inout'))
+  w.push(at(b(143.215), 3.3, 'inout'))
   // She has taken her suit off: he starts after her, and stops.
-  w.push(at(T.suit + 0.3, 3.2))
-  w.push(at(T.suit + 1.3, 3.42, 'out'))
-  w.push(at(T.ianSuit - 0.4, 3.3, 'inout'))
+  w.push(at(T.suit + 0.3, 3.3))
+  w.push(at(T.suit + 1.3, 3.55, 'out'))
+  w.push(at(T.ianSuit - 0.4, 3.45, 'inout'))
   // His suit off, he comes up beside her at the glass for the first logogram, and they draw back from it together.
-  w.push(at(T.ianSuit + 0.55, 3.3))
+  w.push(at(T.ianSuit + 0.55, 3.45))
   w.push(at(T.first - 0.25, TOUCH - 0.29, 'inout'))
   w.push(at(b(154.059), TOUCH - 0.59, 'inout'))
   w.push(at(T.first + 1.55, TOUCH - 0.59))
-  w.push(at(T.first + 3.55, 3.22, 'inout'))
-  // Behind her board while she works it, drifting a little.
-  w.push(at(b(166.615), 3.1, 'inout'))
-  w.push(at(b(174.428), 3.22, 'inout'))
-  // He takes the plate: on it for each of his boards, off it between.
-  const ian = BOARDS.filter((x) => x.who === 'ian').map((x) => x.t)
-  w.push(at(b(178.149), 3.22))
-  let last = b(178.149)
-  for (const t of ian) {
-    const off = PLATE - 0.34
-    const mid = t - Math.min((t - last) * 0.5, 0.9)
-    if (last !== b(178.149)) w.push(at(Math.max(last + 0.3, mid), off, 'inout'))
-    w.push(at(t, PLATE, 'inout'))
-    last = t
-  }
+  w.push(at(T.first + 3.55, IAN_HOME, 'inout'))
+  // Behind her board while she works the machine, drifting a little.
+  w.push(at(b(166.615), IAN_HOME - 0.1, 'inout'))
+  w.push(at(b(174.428), IAN_HOME + 0.02, 'inout'))
+  w.push(at(b(182.149), IAN_HOME - 0.1, 'inout'))
+  w.push(at(b(189.005), IAN_HOME, 'inout'))
   // After "weapon": he comes to her side.
-  w.push(at(T.weapon + 0.4, PLATE))
+  w.push(at(T.weapon + 0.4, IAN_HOME))
   w.push(at(T.weapon + 2.6, REST + IAN_BY, 'inout'))
   w.push(at(T.out, REST + IAN_BY))
   return w
@@ -350,7 +316,8 @@ function bombWays(): Way[] {
   w.push(at(T.find + 0.9, REST - 0.02, 'inout'))
   w.push(at(T.frantic + 0.8, REST - 0.12, 'inout'))
   w.push(at(T.blast, REST - 0.1, 'inout'))
-  thrown(w, REST - 0.1, T.blast, [-4.6, -4.4], [-2.4, -1.8], T.shard)
+  // Thrown back down the chamber: an arc, a bounce, a roll to rest.
+  thrown(w, REST - 0.1, T.blast, [-4.2, -4.0], [-2.0, -1.4], T.shard)
   w.push(at(T.fog, w[w.length - 1].p[0]))
   return w
 }
@@ -362,7 +329,8 @@ function ianBombWays(): Way[] {
   w.push(at(T.slam + 0.36, x0 - 0.16, 'out'))
   w.push(at(T.slam + 1.7, x0 - 0.1, 'inout'))
   w.push(at(T.blast, x0 - 0.1))
-  thrown(w, x0 - 0.1, T.blast, [-7.4, -5], [-4, -2.4], T.shard - 0.5)
+  // Further: he lands in the frame, and rolls on out of it by himself.
+  thrown(w, x0 - 0.1, T.blast, [-6, -4.6], [-3.2, -1.8], T.shard + 0.25)
   w.push(at(T.fog, w[w.length - 1].p[0]))
   return w
 }
@@ -421,14 +389,14 @@ export function step(u: number, w = 7, z = 0.42): number {
 }
 
 /**
- * The board's flip: 0 lying flat, 1 standing (a little past on the way up, and a bounce when it falls). It stands when a
- * ball lands on the plate and falls after the ball steps off.
+ * The board's flip: 0 lying flat, 1 standing (a little past on the way up, and a bounce when it falls). It stands when
+ * she lands on the plate and falls after she steps off.
  */
 export function flipAt(t: number): number {
   let v = 0
   for (const bd of BOARDS) {
     v += step(t - bd.t, 9, 0.38)
-    v -= fall(t - plateLeft(bd))
+    v -= fall(t - bd.off)
   }
   // The blast slams it flat, if it was not.
   if (t >= T.blast) v *= Math.exp(-(t - T.blast) / 0.05)
@@ -439,23 +407,10 @@ function fall(u: number): number {
   if (u <= 0) return 0
   return Math.min(1, (u / 0.55) ** 2) + (u > 0.55 ? -0.18 * Math.exp(-(u - 0.55) / 0.12) * Math.sin(((u - 0.55) / 0.12) * 2.2) : 0)
 }
-/** When the ball that pressed the plate for this board steps off it. */
-function plateLeft(bd: { t: number; who: 'louise' | 'ian' }): number {
-  const next = BOARDS.find((x) => x.t > bd.t + 1e-6)
-  if (bd.who === 'louise') {
-    // She leaves for the glass about a beat later.
-    if (bd.t === T.board0) return b(146.141) + 0.2
-    return bd.t + 1.05
-  }
-  return next ? Math.min(next.t - 0.75, bd.t + 1.0) : bd.t + 1.3
-}
 /** How far the plate is pressed, 0 to 1. */
 export function plateAt(t: number): number {
   let v = 0
-  for (const bd of BOARDS) {
-    const off = plateLeft(bd)
-    v += smooth(t, bd.t - 0.12, bd.t) - smooth(t, off - 0.1, off + 0.12)
-  }
+  for (const bd of BOARDS) v += smooth(t, bd.t - 0.12, bd.t) - smooth(t, bd.off - 0.1, bd.off + 0.12)
   return Math.max(0, Math.min(1, v))
 }
 
@@ -486,7 +441,14 @@ export function wakeAt(t: number): number {
   return w
 }
 
-/** The blast's flash, 0 to 1. */
-export const flashAt = (t: number): number => (t < T.blast ? 0 : Math.min(1, (t - T.blast) / 0.04) * Math.exp(-(t - T.blast) / 0.42))
+/** How much of the glass's light reaches a point of the chamber at `x`. */
+export const lightAt = (x: number, t: number): number => Math.max(0, Math.min(1, wakeAt(t))) * (0.08 + 0.92 * Math.exp(-Math.max(0, GX - x) / 3.4))
+
+/** The blast's flash, 0 to 1: white at once, held a moment, then going. */
+export const flashAt = (t: number): number => {
+  if (t < T.blast) return 0
+  const u = t - T.blast
+  return Math.min(1, u / 0.02) * (u < 0.12 ? 1 : Math.exp(-(u - 0.12) / 0.38))
+}
 
 export { smooth, lerp }

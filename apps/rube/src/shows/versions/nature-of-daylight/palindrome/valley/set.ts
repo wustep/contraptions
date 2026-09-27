@@ -3,9 +3,9 @@ import type { Pt } from '../../../../../parts'
 import { drawShell, mix, rgba } from '../cast'
 import { frame, hash, smooth } from '../kit'
 import { SHELL, VALLEY } from '../worlds'
-import { A, CLOUD_HIGH, CLOUD_LOW, daylight, deckAt, G, hingeAt, LIFT, MEADOW, pedalAt, PEDAL, rampFrame, SHELL_X, shellAt, shellSeen, slotAt, SLOT_W, SUN_GAP, TENTS } from './geo'
+import { A, CLOUD_HIGH, CLOUD_LOW, daylight, deckAt, G, hingeAt, LIFT, MEADOW, pedalAt, PEDAL, rampFrame, SHELL_X, shellAt, shellSeen, slotAt, SLOT_W, TENTS } from './geo'
 import { drawHeli, heliAt, washAt } from './heli'
-import { drawAir, drawFarShafts, drawGap, drawHaze, drawRays, drawShadows, drawSunlight, drawSunWash, sunAt } from './light'
+import { drawAir, drawBreak, drawBreakSky, drawFarShafts, drawHaze, drawRays, drawShadows, drawSunlight, drawSunWash, drawValleyShade, sunAt } from './light'
 import { herArrive, herSuited, HER_IN, HER_OUT, ianArrive, IAN_EXIT } from './paths'
 import { drawSuit } from '../chamber/set'
 
@@ -171,6 +171,7 @@ function drawCloudBack(ctx: Ctx, k: number, f: Frame, t: number): void {
   strata(ctx, k, f, t, { y: -86, spread: 7, len: 48, tall: 6, color: body, a: 0.45, seed: 42, drift: 0.38 })
   strata(ctx, k, f, t, { y: -70, spread: 6, len: 40, tall: 4.2, color: mix(shade, body, 0.35), a: 0.35, seed: 43, drift: 0.3 })
   strata(ctx, k, f, t, { y: -56, spread: 5, len: 34, tall: 3, color: shade, a: 0.28, seed: 44, drift: 0.24 })
+  drawBreakSky(ctx, k, t)
 }
 
 /** The cloud deck's near veil, in front of the shell: its crown goes up into it. Smooth, as the television had it. */
@@ -192,7 +193,7 @@ function drawCloud(ctx: Ctx, k: number, f: Frame, t: number): void {
   ctx.fillRect((f.x0 - 1) * k, top * k, (f.x1 - f.x0 + 2) * k, (CLOUD_HIGH - top + 0.5) * k)
   drawHeave(ctx, k, t, true)
   // The daylight: a glow behind the cloud where the shell went in, then the cloud opening there and the sun through.
-  if (d.glow > 0 || d.sun > 0) drawGap(ctx, k, t)
+  if (d.glow > 0 || d.sun > 0) drawBreak(ctx, k, t)
 }
 
 /**
@@ -207,11 +208,13 @@ function drawHeave(ctx: Ctx, k: number, t: number, front: boolean): void {
     // Gone: the cloud closes over the place it went, and goes on churning there through the hush, folding in on
     // itself, darker underneath, until it tears open in the same place.
     const s = t - G.gone
-    const span = G.sun + 0.9 - G.gone
+    const span = G.sun + 4 - G.gone
     if (s < -0.05 || s > span) return
-    const a = smooth(s, -0.05, 0.4) * (1 - smooth(t, G.sun - 0.15, G.sun + 0.9))
+    // After the break it thins away, slowly: no light of its own.
+    const a = smooth(s, -0.05, 0.4) * (1 - smooth(t, G.sun + 0.3, G.sun + 4))
     const u = clamp01(s / span)
-    const [gx, gy] = SUN_GAP
+    const gx = SHELL_X - 1
+    const gy = -54
     // Heavier as it gathers: the cloud there thick and dark underneath, the light behind it.
     const heavy = mix(shade, VALLEY.steelDark, 0.25 + 0.2 * u)
     blob(ctx, k, gx, gy - 2 + 2 * u, 27 - 5 * u, 8, heavy, (0.45 + 0.2 * u) * a, 0.35)
@@ -865,6 +868,7 @@ export function drawValley(p: p5, k: number, t: number): void {
   drawLand(ctx, k, f, t)
   drawHeave(ctx, k, t, false)
   drawTheShell(ctx, p, k, f, t)
+  drawValleyShade(ctx, k, f, t)
   drawCloud(ctx, k, f, t)
   drawAir(ctx, k, t, smooth(f.y1 - f.y0, 8, 40))
   drawCamp(ctx, k, f, t)

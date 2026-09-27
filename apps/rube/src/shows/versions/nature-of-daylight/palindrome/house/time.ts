@@ -41,9 +41,13 @@ export const ERA = {
   news: [SEAM.news, SEAM.arrival] as const,
   home: [SEAM.home, 409] as const,
 }
-/** The cuts inside the last scene: Ian is gone (a time cut), then the first frame again, the baby in the cradle. */
-export const ALONE = 341.618
+/** The last scene's chords before the cut: the two of them turn to the empty cradle (TURN) and step toward it (NEAR);
+ * then the cut onto the cradle at dawn, the baby in it (BEGIN), where Ian leaves the picture. */
+export const TURN = 341.618
+export const NEAR = 345.49
 export const BEGIN = 349.495
+/** Before the cut the empty cradle stands this far to the right of its dawn place, clear of Ian, whole in the frame. */
+export const EMPTY_DX = 1.3
 
 export type Era = 'dawn' | 'bed' | 'news' | 'home' | 'none'
 export function eraOf(T: number): Era {
@@ -133,21 +137,20 @@ export interface Push {
   w: number
 }
 export const DAWN_PUSHES: Push[] = [
-  { t: 1.625, a: 0.1, w: 0.1 },
-  { t: 6.095, a: 0.115, w: 0.11 },
-  { t: 10.095, a: 0.125, w: 0.12 },
-  { t: 14.362, a: 0.12, w: 0.11 },
-  { t: 19.127, a: 0.085, w: 0.08 },
+  { t: 1.625, a: 0.2, w: 0.13 },
+  { t: 6.095, a: 0.19, w: 0.13 },
+  { t: 10.095, a: 0.2, w: 0.14 },
+  { t: 14.362, a: 0.19, w: 0.13 },
+  { t: 19.127, a: 0.15, w: 0.11 },
 ]
 /**
  * At the end: the empty cradle when she comes to it, then with Hannah in it from the cut, dying away with the music.
  * From the last B-flat on she barely moves (the check holds her place and Hannah's to 1% of the frame).
  */
 export const HOME_PUSHES: Push[] = [
-  { t: 345.49, a: 0.11, w: 0 },
-  { t: 349.495, a: 0.1, w: 0.07 },
-  { t: 354.383, a: 0.085, w: 0.06 },
-  { t: TONIC, a: 0.06, w: 0.035 },
+  { t: 349.495, a: 0.15, w: 0.07 },
+  { t: 354.383, a: 0.13, w: 0.07 },
+  { t: TONIC, a: 0.09, w: 0.05 },
   { t: 362.585, a: 0.045, w: 0.022 },
   { t: 367.996, a: 0.036, w: 0.018 },
   { t: LAST, a: 0.028, w: 0.015 },
@@ -205,7 +208,7 @@ export function beatPhase(T: number): number {
  * the swell (the weights have run down) and dies away. */
 export function pendulum(T: number): number {
   const A = 0.085
-  const run = T < SWELL ? 1 : Math.exp(-(T - SWELL) / 1.1)
+  const run = T < SWELL ? 1 : Math.exp(-(T - SWELL) / 0.6)
   // Coming in from the lawn it is already going; the first swing is a whole one.
   return A * run * Math.cos(Math.PI * beatPhase(T))
 }
@@ -298,12 +301,11 @@ export function lightAt(T: number): Light {
     return light(0.12 * g, 0, 1 - 0.3 * g, 0.18 * g, 0, 0.8 + 0.2 * g)
   }
   if (T < ERA.news[1] + 1) return light(0, 0, 0, 1, 0, 0.2)
-  if (T < ALONE) {
+  if (T < BEGIN) {
     // The morning after: the sun comes through the glass.
     const u = ss(T, SEAM.home, SEAM.home + 2.4)
     return light(0, 1, 0, 0, 0.45 + 0.55 * u, 0.3)
   }
-  if (T < BEGIN) return light(0.3, 0.15, 0.55, 0, 0.1, 0.7)
   return FIRST_LIGHT
 }
 
@@ -352,42 +354,28 @@ export function bedX(T: number): number {
 }
 export const NEWS_X = BEDSIDE_X
 
-/** Home: by the window beside Ian; she rolls into him on the chord (the last touch); after the cut she is alone and
- * goes across the room to the empty cradle, rocks it, and from the cut onto the first frame is at her dawn place. */
-export const HOME_X = -2.6
+/**
+ * Home: by the long window beside Ian, the empty cradle a little way off on their right. On the chords she rolls into
+ * him (the touch), and the two of them turn to the cradle and go toward it a step at a time. On the cut (BEGIN) the
+ * cradle is at its dawn place beside her, where Ian stood, the baby in it; she rocks it, and settles at her dawn place.
+ */
+export const HOME_X = -0.35
 export const IAN_X = HOME_X + 0.36
 export const HUG_T = 337.85
-/** Ian beside her: when she rolls into him he gives a little with it and comes back against her, and they rest. */
+const STEP = 0.0925
+/** Their steps toward the cradle: each begins on its chord and takes a long breath. */
+const steps = (T: number, step = STEP): number => step * (s5((T - TURN + 0.1) / 1.3) + s5((T - NEAR + 0.1) / 1.3))
+/** Ian beside her: when she rolls into him he gives a little with it and comes back against her; then they step
+ * together. He looks at her, and from the turn at the cradle. */
 export function ianX(T: number): number {
   const u = T - HUG_T
-  if (u <= 0) return IAN_X
-  return IAN_X + 0.045 * Math.sin(Math.min(u, 1.9) * Math.PI / 1.9) * Math.exp(-u / 1.6)
+  const give = u <= 0 ? 0 : 0.045 * Math.sin((Math.min(u, 1.9) * Math.PI) / 1.9) * Math.exp(-u / 1.6)
+  // He goes a little ahead of her toward it.
+  return IAN_X + give + steps(T - 0.08, 0.14)
 }
+export const ianLook = (T: number): number => Math.PI + 0.35 - (Math.PI + 0.6) * ss(T, TURN - 0.1, TURN + 1.2)
 export function homeX(T: number): number {
-  // Into Ian: from 0.36 apart to touching.
-  const hug = HOME_X + 0.095 * s5((T - (HUG_T - 0.55)) / 0.9)
-  if (T < ALONE + 0.25) return hug
-  // Across the room to the cradle, arriving on the chord with a push in hand.
-  const first = HOME_PUSHES[0]
-  const xc = contactX(cradleTheta(first.t - 1e-6))
-  const start = HOME_X + 0.095
-  const t0 = ALONE + 0.25
-  if (T < first.t) {
-    const d = first.t - t0
-    // Slow to go, steady across, easing into the rocker.
-    const u = (T - t0) / d
-    const e = u < 0.5 ? 2 * u * u * (1 + 0.2 * (1 - 2 * u)) : 1 - 2 * (1 - u) * (1 - u)
-    const reach = start + (xc - start) * clamp01(e * 1.0)
-    return reach
-  }
-  return clear(T, pushPath(T, 0, HOME_PUSHES.slice(1)) + homeSettle(T, xc))
-}
-/** After the first push on the empty cradle she settles back to her dawn place. */
-function homeSettle(T: number, xc: number): number {
-  const t = HOME_PUSHES[0].t
-  const u = T - t
-  if (u < 0) return 0
-  if (u < 0.2) return Math.min(xc + 0.01 * s5(u / 0.2), contactX(cradleTheta(T)))
-  const from = Math.min(xc + 0.01, contactX(cradleTheta(t + 0.2)))
-  return from * (1 - s5((u - 0.2) / 1.5))
+  if (T < BEGIN - 0.5) return HOME_X + 0.095 * s5((T - (HUG_T - 0.55)) / 0.9) + steps(T)
+  // From her last step she is drawn back just as far as her first push on the cradle wants: the push takes it on.
+  return clear(T, pushPath(T, 0, HOME_PUSHES))
 }

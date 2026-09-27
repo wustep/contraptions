@@ -73,17 +73,21 @@ export const swing = part<State>(
     return [
       // Close at the seam, as the dawn left it; held while she goes to the seat and gives the first push.
       k(23.2, 4.6, 60.55, -0.95),
-      k(24.9, 4.8, 60.45, -1.1),
-      // Drawing back as the arcs grow: the whole swing, the limb it hangs from, the lake.
-      k(28.2, 5.4, 60.3, -1.45),
-      k(32.6, 6.0, 60.4, -1.8),
-      k(38.8, 6.6, 60.6, -2.05),
-      // The height: the whole machine, the year going round in the limb's leaves.
-      k(46.6, 6.9, 60.75, -2.2),
-      k(58.5, 7.0, 60.9, -2.2),
-      // The leap and the empty swing, then in, to the seam's framing as the light goes.
-      k(63.4, 6.9, 61.3, -2.1),
-      k(67.6, 5.8, 60.8, -1.45),
+      k(25.0, 4.7, 60.45, -1.0),
+      // Opening just enough for the arc as it grows, on the trunk side, where she pushes: she stays large, and
+      // Hannah on the seat grows from a child to a girl in plain sight.
+      k(30.3, 4.9, 60.35, -1.05),
+      k(34.5, 5.1, 60.2, -1.1),
+      k(38.6, 5.3, 60.1, -1.1),
+      // The height: the whole arc, from her on the bank to the leaves Hannah reaches at its front.
+      k(46.4, 5.45, 60.05, -1.1),
+      k(60.6, 5.55, 60.1, -1.1),
+      // The leap's space: out to where she lands, then in again as she runs back.
+      k(61.6, 6.25, 60.95, -1.3),
+      k(62.7, 6.5, 61.3, -1.35),
+      k(63.6, 6.2, 61.3, -1.25),
+      k(64.7, 5.5, 61.2, -1.1),
+      k(68.2, 5.0, 60.6, -1.0),
       k(71.953, 4.6, 60.55, -0.95),
     ]
   },
@@ -107,9 +111,10 @@ export const sees = part<State>(
     const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
     const end = slot.end
     return [
-      k(250.7, 4.7, SEES_FROM[0] + 1.1, SEES_FROM[1] - 1.0),
-      k(252.9, 7.4, 60.4, -2.35),
-      k(255.4, 7.5, 60.5, -2.3),
+      k(250.7, 4.65, SEES_FROM[0] + 1.08, SEES_FROM[1] - 0.98),
+      // Close: her and Hannah large, the arc and the leaves at its front.
+      k(252.6, 5.3, 60.2, -1.2),
+      k(255.9, 5.4, 60.15, -1.2),
       k(end, 4.6, SEES_TO[0] + 1.05, SEES_TO[1] - 0.95),
     ]
   },

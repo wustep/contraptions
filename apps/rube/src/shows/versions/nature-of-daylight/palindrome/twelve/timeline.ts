@@ -341,6 +341,32 @@ export function voiceFlash(t: number): number {
 /** How lit the tent is: the share of its screens alight. */
 export function roomLight(t: number): number {
   let v = 0
-  for (let i = 0; i < 12; i++) v += screenOn(i, t) * Math.max(0, Math.cos(panelAngle(i, t)))
+  for (let i = 0; i < 12; i++) v += screenOn(i, t)
   return v / 12
+}
+
+/**
+ * The alarm lamp over the tent's door: the world about to go to war. It comes on red as the first link lets go and
+ * pulses on every beat the links fall, burns steady red through the dialing and the relight, and goes out on the
+ * loudest bar, when the ring is whole.
+ */
+export function alarm(t: number): number {
+  if (t < BREAK) return 0
+  if (t >= WHOLE) return Math.max(0, 1 - (t - WHOLE) / 0.25) * 0.75
+  let last = -Infinity
+  for (const at of DARK_HITS) if (at <= t) last = at
+  const pulse = t - last < 1.2 ? Math.exp(-(t - last) / 0.28) : 0
+  // Through the fall it pulses; after it (the call), it burns steady.
+  return t < land(11) + 1.2 ? 0.45 + 0.55 * pulse : 0.75
+}
+
+/** Shang on the line: the first screen to come back, China's, lights red as it rises, then settles to its own picture. */
+export const CHINA = 11
+export function redCast(i: number, t: number): number {
+  if (i !== CHINA) return 0
+  const a = kick(i)
+  const b = lock(i)
+  if (t < a) return 0
+  if (t < b) return Math.min(1, (t - a) / 0.35)
+  return Math.max(0, 1 - (t - b) / 0.8)
 }

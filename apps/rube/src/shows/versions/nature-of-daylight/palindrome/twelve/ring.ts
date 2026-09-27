@@ -1,10 +1,9 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { drawScreen, inkRing, mix, PLACES, rgba } from '../cast'
-import { frame } from '../kit'
 import { level } from '../music'
-import { TENT } from '../worlds'
-import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, pulsesAt, screenFlash, screenOn } from './timeline'
+import { SHANG, TENT } from '../worlds'
+import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, pulsesAt, redCast, screenFlash, screenOn } from './timeline'
 
 /**
  * The ring: twelve screens on one circular rig like a clock face, each showing a shell over its own place, each
@@ -12,9 +11,10 @@ import { closeFlare, linkDrop, linkLit, linkSpan, panelAngle, pulsesAt, screenFl
  * the world talking to itself, written in light.
  *
  * Montana (0) is at the bottom, at six o'clock, just over the table; the rest go clockwise from it. Every screen
- * stands on a hinge along its bottom edge at its mount on the rig; let go, it falls back about it like a domino and
- * lies flat on the stop behind, edge on to us. Every link is an arc of the ring from its mount to the next, hinged at
- * the clockwise end and latched at the other; let go, it drops on its hinge to a stop.
+ * stands on its mount on the rig, hinged at its bottom left corner; let go, it tips over sideways on that corner like
+ * a domino and hangs crooked against its stop, dark, its face still to us. Every link is a cable of light along the
+ * ring from its mount to the next, drawn taut; let go at its latch, it goes slack and sags, a dark cable, until the
+ * call draws it taut and lit again.
  *
  * All in the tent's own cells (the set stands at 0, 0); the table's top is y = 0.13 (a ball on it is at y = 0).
  */
@@ -29,9 +29,12 @@ export const PH = 1.04
 const FR = 0.065
 const GW = PW - 2 * FR
 const GH = PH - 2 * FR
-/** A link's width, and how far it drops when let go (radians). */
+/** A link's width taut and lit; the width of the slack cable it becomes; how far it sags. */
 const LW = 0.25
-const DROP = 0.5
+const ROPE = 0.13
+const SAG = 0.75
+/** How far a fallen screen hangs over on its corner (radians, clockwise). */
+const STOP = 0.85
 
 const RING = inkRing(12)
 /** The ring's radius at an angle, as a share of RM: a logogram's ring, but only a little out of true (it is a rig). */
@@ -72,149 +75,190 @@ function fillBand(ctx: CanvasRenderingContext2D, k: number, b: { outer: Pt[]; in
   ctx.fill()
 }
 
-/** Which way link j drops about its hinge: the way gravity turns it (y down, so + is clockwise on the screen). */
-const DROP_SIGN: number[] = Array.from({ length: 12 }, (_, j) => {
-  const b = band(angleOf(j), angleOf(j + 1), 1)
-  const cx = b.outer.reduce((s, q) => s + q[0], 0) / b.outer.length
-  return cx >= mountAt(j + 1)[0] ? 1 : -1
-})
-
 /** A link's glow: widths (shares of the link's) and the alpha of each. */
 const GLOW: [number, number][] = [[4.2, 0.03], [3.4, 0.035], [2.7, 0.045], [2.1, 0.06], [1.6, 0.08]]
 
 /** The inset of a link's ends from the mounts, radians: room for the hinge blocks. */
 const INSET = 0.05
 
-function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number): void {
-  const drop = linkDrop(j, t)
-  const [hx, hy] = mountAt(j + 1)
-  ctx.save()
-  ctx.translate(hx * k, hy * k)
-  // Hanging on its hinge, it never quite stops: a slow sway, as much as it has dropped.
-  const sway = 0.035 * Math.sin(t * 2.1 + j * 1.9) * drop
-  ctx.rotate(DROP_SIGN[j] * DROP * drop + sway)
-  ctx.translate(-hx * k, -hy * k)
+/** A link as it hangs at t: its middle line from its latch end (u = 0) to its hinge end (u = 1), and its widths. */
+interface Cable {
+  pts: Pt[]
+  nrm: Pt[]
+  w: number[]
+}
+const LN = 32
+function cable(j: number, t: number): Cable {
+  // 0 taut along the ring, 1 slack (and a little more or less as it bounces and sways).
+  const slack = linkDrop(j, t)
   const a0 = angleOf(j) + INSET
   const a1 = angleOf(j + 1) - INSET
+  const p0 = ringAt(a0)
+  const p1 = ringAt(a1)
+  // It sags down, leaning out from the ring: into the ring at the top, out below it at the bottom and the sides.
+  const mid = ringAt((a0 + a1) / 2)
+  const ol = Math.hypot(mid[0] - CENTRE[0], mid[1] - CENTRE[1]) || 1
+  const dx = ((mid[0] - CENTRE[0]) / ol) * 0.8
+  const dy = 1 + ((mid[1] - CENTRE[1]) / ol) * 0.8
+  const dl = Math.hypot(dx, dy) || 1
+  const sag = SAG * slack * (1 + 0.07 * Math.sin(t * 2.1 + j * 1.9))
+  const f = Math.min(1, Math.max(0, slack))
+  const pts: Pt[] = []
+  const w: number[] = []
+  for (let n = 0; n <= LN; n++) {
+    const u = n / LN
+    const a = a0 + (a1 - a0) * u
+    const arc = ringAt(a)
+    const bow = 4 * u * (1 - u) * sag
+    pts.push([arc[0] + (p0[0] + (p1[0] - p0[0]) * u - arc[0]) * f + (dx / dl) * bow, arc[1] + (p0[1] + (p1[1] - p0[1]) * u - arc[1]) * f + (dy / dl) * bow])
+    w.push(LW * Math.max(0.6, Math.min(1.45, RING.w(a) / 0.11)) * (1 - f) + ROPE * f)
+  }
+  const nrm: Pt[] = pts.map((_, n) => {
+    const a = pts[Math.max(0, n - 1)]
+    const b = pts[Math.min(LN, n + 1)]
+    const tx = b[0] - a[0]
+    const ty = b[1] - a[1]
+    const l = Math.hypot(tx, ty) || 1
+    return [-ty / l, tx / l]
+  })
+  return { pts, nrm, w }
+}
+
+/** Fill a stretch of a cable, from u0 to u1, `widen` times its width, tapering at its ends if asked. */
+function fillCable(ctx: CanvasRenderingContext2D, k: number, c: Cable, u0: number, u1: number, widen: number, style: string, taper = 0): void {
+  if (u1 - u0 < 1e-4) return
+  const at = (u: number, side: number): Pt => {
+    const x = Math.max(0, Math.min(LN, u * LN))
+    const n = Math.min(LN - 1, Math.floor(x))
+    const f = x - n
+    const lerp = (a: number, b: number) => a + (b - a) * f
+    const end = taper > 0 ? Math.min(1, Math.min(u - u0, u1 - u) / taper) : 1
+    const w = lerp(c.w[n], c.w[n + 1]) * widen * (taper > 0 ? Math.sqrt(Math.max(0, end * (2 - end))) : 1)
+    return [(lerp(c.pts[n][0], c.pts[n + 1][0]) + side * lerp(c.nrm[n][0], c.nrm[n + 1][0]) * (w / 2)) * k, (lerp(c.pts[n][1], c.pts[n + 1][1]) + side * lerp(c.nrm[n][1], c.nrm[n + 1][1]) * (w / 2)) * k]
+  }
+  const m = Math.max(3, Math.ceil((u1 - u0) * LN))
+  ctx.beginPath()
+  for (let s = 0; s <= m; s++) {
+    const [x, y] = at(u0 + ((u1 - u0) * s) / m, 1)
+    if (s === 0) ctx.moveTo(x, y)
+    else ctx.lineTo(x, y)
+  }
+  for (let s = m; s >= 0; s--) {
+    const [x, y] = at(u0 + ((u1 - u0) * s) / m, -1)
+    ctx.lineTo(x, y)
+  }
+  ctx.closePath()
+  ctx.fillStyle = style
+  ctx.fill()
+}
+
+function drawLink(ctx: CanvasRenderingContext2D, k: number, j: number, t: number): void {
+  const c = cable(j, t)
   const span = linkSpan(j, t)
-  // The lit part of it, from its latch end (0) to its hinge end (1).
-  const l0 = span ? a0 + (a1 - a0) * span.from : 0
-  const l1 = span ? a0 + (a1 - a0) * span.to : 0
-  const lit = span && l1 - l0 > 0.004
   const g = Math.min(2.2, linkLit(j, t))
   // The light in the links breathes with the music.
   const breath = 0.7 + 0.6 * level(t)
-  if (lit) {
-    // Its glow, in soft steps out from it.
-    for (const [w, al] of GLOW) fillBand(ctx, k, band(l0, l1, w, 28, 0.03 * w), rgba(TENT.signal, al * g * breath))
-  }
-  // The link itself: dark metal, catching the room's light along its edge, and the light in it.
-  fillBand(ctx, k, band(a0, a1, 1), TENT.frame)
-  fillBand(ctx, k, band(a0, a1, 0.45), rgba(TENT.canvasLit, 0.3))
+  const lit = !!span && span.to - span.from > 0.002
+  if (lit) for (const [w, al] of GLOW) fillCable(ctx, k, c, span.from, span.to, w, rgba(TENT.signal, al * g * breath), 0.012 * w)
+  // The cable itself, solid and dark; the light in it where it is lit.
+  fillCable(ctx, k, c, 0, 1, 1, mix(TENT.frame, TENT.canvasLit, 0.3))
   if (lit) {
     const core = g > 1 ? mix(TENT.signal, TENT.screenOn, Math.min(1, (g - 1) / 1.4)) : TENT.signal
-    fillBand(ctx, k, band(l0, l1, 0.78), core)
+    fillCable(ctx, k, c, span.from, span.to, 0.78, core)
     if (span.front !== null) {
       // The moving edge of the light, like a fuse's: bright at the front, fading back into the lit part.
-      const dir = a1 > a0 ? 1 : -1
-      const f = a0 + (a1 - a0) * span.front
       const n = 7
       for (let m = 0; m < n; m++) {
-        const b0 = f + dir * m * 0.022
-        const b1 = b0 + dir * 0.022
-        if ((b1 - l1) * dir > 0) break
-        fillBand(ctx, k, band(Math.min(b0, b1), Math.max(b0, b1), 0.7, 3), rgba('#FFFFFF', 0.95 * (1 - m / n) ** 1.5))
+        const b0 = span.front + m * 0.028
+        if (b0 >= span.to) break
+        fillCable(ctx, k, c, b0, Math.min(span.to, b0 + 0.028), 0.72, rgba('#FFFFFF', 0.95 * (1 - m / n) ** 1.5))
       }
     }
   }
-  ctx.restore()
+}
+
+/** A fallen screen's tilt from its angle in the clock (0 upright, π/2 fallen): its turn on its corner hinge. */
+const tilt = (th: number) => (th / (Math.PI / 2)) * STOP
+/** The corner a screen tips over on: its bottom left. */
+const pivotOf = (i: number): Pt => [mountAt(i)[0] - PW / 2, mountAt(i)[1]]
+/** Where a point of screen i (in its own frame, from its pivot) is with it turned by ψ. */
+const turned = (i: number, psi: number, x: number, y: number): Pt => {
+  const [px, py] = pivotOf(i)
+  return [px + x * Math.cos(psi) - y * Math.sin(psi), py + x * Math.sin(psi) + y * Math.cos(psi)]
 }
 
 /**
- * Screen i's panel on its hinge at angle θ (0 up, π/2 flat on its back), its picture `on`. Seen from `eye` (how far
- * the hinge is above the camera's middle, cells): a panel lying flat above the eye shows a sliver of its back under
- * the hinge, one below it a sliver of its face.
+ * Screen i on its corner hinge at angle θ (0 upright, π/2 fallen, hanging over crooked), its picture `on`. Always a
+ * screen: its face to us, lit, dark glass with the room in it, red with Shang on the line, or flashing as it comes home.
  */
-function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: number, eye: number): void {
+function drawPanel(p: p5, k: number, i: number, t: number, th: number, on: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const [hx, hy] = mountAt(i)
-  const c = Math.cos(th)
-  const s = Math.sin(th)
-  const tilt = Math.max(-0.18, Math.min(0.18, -eye * 0.04))
-  const h = c + s * tilt
-  const X = hx * k
-  const Y = hy * k
-  const wb = (PW * k) / 2
-  const wt = wb * (1 - 0.14 * s)
+  const [px, py] = pivotOf(i)
   ctx.save()
-  ctx.translate(X, Y)
-  if (h > 0.004) {
-    // The face, tilting back away from us: shorter, its far edge narrower, darker as it turns from the room.
-    const top = PH * k * h
-    ctx.beginPath()
-    ctx.moveTo(-wb, 0)
-    ctx.lineTo(wb, 0)
-    ctx.lineTo(wt, -top)
-    ctx.lineTo(-wt, -top)
-    ctx.closePath()
-    ctx.clip()
-    ctx.scale(1, h)
-    ctx.fillStyle = TENT.frame
-    ctx.fillRect(-wb, -PH * k, 2 * wb, PH * k)
-    drawScreen(p, k, -GW / 2, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
-    const flash = screenFlash(i, t)
-    if (flash > 0.01) {
-      ctx.fillStyle = rgba('#FFFFFF', 0.55 * flash)
-      ctx.fillRect((-GW / 2) * k, (-PH + FR) * k, GW * k, GH * k)
-    }
-    if (s > 0.01) {
-      ctx.fillStyle = rgba('#000000', 0.6 * s)
-      ctx.fillRect(-wb, -PH * k, 2 * wb, PH * k)
-    }
-  } else if (h < -0.004) {
-    // Its back, from below: a dark plate.
-    const down = PH * k * -h
-    ctx.beginPath()
-    ctx.moveTo(-wb, 0)
-    ctx.lineTo(wb, 0)
-    ctx.lineTo(wt, down)
-    ctx.lineTo(-wt, down)
-    ctx.closePath()
-    ctx.fillStyle = mix(TENT.frame, TENT.cable, 0.5)
-    ctx.fill()
+  ctx.translate(px * k, py * k)
+  ctx.rotate(tilt(th))
+  ctx.fillStyle = TENT.frame
+  ctx.fillRect(0, -PH * k, PW * k, PH * k)
+  drawScreen(p, k, FR, -PH + FR, GW, GH, { on, place: PLACES[i], t, glow: 0, bezel: TENT.frame })
+  if (on < 0.99) {
+    // Dead, it is still a screen: dull glass with the room in it, and a sheen across it.
+    const dead = 1 - on
+    ctx.fillStyle = rgba(mix(TENT.screenOff, TENT.canvasLit, 0.45), 0.8 * dead)
+    ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+    const sh = ctx.createLinearGradient(FR * k, (-PH + FR) * k, (FR + GW * 0.7) * k, -FR * k)
+    sh.addColorStop(0, rgba(TENT.screenOn, 0.2 * dead))
+    sh.addColorStop(0.45, rgba(TENT.screenOn, 0.04 * dead))
+    sh.addColorStop(0.6, rgba(TENT.screenOn, 0.1 * dead))
+    sh.addColorStop(1, rgba(TENT.screenOn, 0))
+    ctx.fillStyle = sh
+    ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
-  // The panel's own thickness along its hinge, seen as it goes edge on.
-  if (s > 0.05) {
-    ctx.fillStyle = mix(TENT.frame, TENT.canvasLit, 0.45)
-    ctx.fillRect(-wb, -0.03 * k, 2 * wb, 0.06 * k * s)
+  const red = redCast(i, t)
+  if (red > 0.01) {
+    // China's screen, with Shang on the line: a red light up out of it before its own picture.
+    const g = ctx.createLinearGradient(0, 0, 0, -PH * k)
+    g.addColorStop(0, rgba(SHANG, 0.85 * red))
+    g.addColorStop(1, rgba(mix(SHANG, TENT.screenOn, 0.35), 0.75 * red))
+    ctx.fillStyle = g
+    ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
+  }
+  const flash = screenFlash(i, t)
+  if (flash > 0.01) {
+    ctx.fillStyle = rgba('#FFFFFF', 0.55 * flash)
+    ctx.fillRect(FR * k, (-PH + FR) * k, GW * k, GH * k)
   }
   ctx.restore()
 }
 
-/** The glow a lit screen casts on the canvas behind it and round it. */
-function drawGlow(ctx: CanvasRenderingContext2D, k: number, i: number, th: number, on: number): void {
-  const c = Math.cos(th)
-  if (on <= 0.01 || c <= 0.05) return
-  const [hx, hy] = mountAt(i)
-  const cx = hx * k
-  const cy = (hy - (PH / 2) * c) * k
+/** The glow a lit screen casts on the canvas behind it and round it (red while Shang is on the line). */
+function drawGlow(ctx: CanvasRenderingContext2D, k: number, i: number, t: number, th: number, on: number): void {
+  const red = redCast(i, t)
+  if (on <= 0.01 && red <= 0.01) return
+  const [cx, cy] = turned(i, tilt(th), PW / 2, -PH / 2)
   const r = PW * 1.25 * k
-  const g = ctx.createRadialGradient(cx, cy, PW * 0.3 * k, cx, cy, r)
-  g.addColorStop(0, rgba(TENT.screenGlow, 0.2 * on * c))
-  g.addColorStop(1, rgba(TENT.screenGlow, 0))
+  const g = ctx.createRadialGradient(cx * k, cy * k, PW * 0.3 * k, cx * k, cy * k, r)
+  const col = red > 0.01 ? mix(TENT.screenGlow, SHANG, red) : TENT.screenGlow
+  g.addColorStop(0, rgba(col, 0.2 * Math.max(on, red)))
+  g.addColorStop(1, rgba(col, 0))
   ctx.fillStyle = g
-  ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r)
+  ctx.fillRect(cx * k - r, cy * k - r, 2 * r, 2 * r)
 }
 
-/** A hinge block at a mount: the rig's hardware, a small dark block with a lit edge. */
+/** A mount on the rig, the block the links meet at (behind its screen). */
 function drawMount(ctx: CanvasRenderingContext2D, k: number, i: number): void {
   const [x, y] = mountAt(i)
-  const w = 0.34
+  const w = 0.3
   const h = 0.13
   ctx.fillStyle = TENT.cable
   ctx.fillRect((x - w / 2) * k, (y - h / 2) * k, w * k, h * k)
   ctx.fillStyle = rgba(TENT.canvasLit, 0.8)
   ctx.fillRect((x - w / 2) * k, (y - h / 2) * k, w * k, 0.025 * k)
+}
+/** The knuckle of a screen's corner hinge, over its corner. */
+function drawKnuckle(ctx: CanvasRenderingContext2D, k: number, i: number): void {
+  const [px, py] = pivotOf(i)
+  ctx.fillStyle = TENT.cable
+  ctx.fillRect((px - 0.07) * k, (py - 0.07) * k, 0.14 * k, 0.14 * k)
 }
 
 /** The ring, all of it, at show time t: the rig, the glows, the links, the screens, their hinges, and the pulses. */
@@ -232,11 +276,10 @@ export function drawRing(p: p5, k: number, t: number): void {
     ctx.stroke()
   }
   fillBand(ctx, k, band(0, Math.PI * 2, 1.45, 180), TENT.frame)
-  const eyeY = frame(p, k).cy
 
   const th = Array.from({ length: 12 }, (_, i) => panelAngle(i, t))
   const on = Array.from({ length: 12 }, (_, i) => screenOn(i, t))
-  for (let i = 0; i < 12; i++) drawGlow(ctx, k, i, th[i], on[i])
+  for (let i = 0; i < 12; i++) drawGlow(ctx, k, i, t, th[i], on[i])
   const flare = closeFlare(t)
   // The flare as it closes: a soft light all round the ring, wider than it, dying away.
   if (flare > 0.01) {
@@ -251,8 +294,11 @@ export function drawRing(p: p5, k: number, t: number): void {
   }
   for (let j = 0; j < 12; j++) drawLink(ctx, k, j, t)
   drawPulses(ctx, k, t)
-  for (let i = 0; i < 12; i++) drawPanel(p, k, i, t, th[i], on[i], eyeY - mountAt(i)[1])
+  // What hangs over goes behind what stands.
+  const order = Array.from({ length: 12 }, (_, i) => i).sort((a, b) => th[b] - th[a])
   for (let i = 0; i < 12; i++) drawMount(ctx, k, i)
+  for (const i of order) drawPanel(p, k, i, t, th[i], on[i])
+  for (let i = 0; i < 12; i++) drawKnuckle(ctx, k, i)
   ctx.restore()
 }
 
