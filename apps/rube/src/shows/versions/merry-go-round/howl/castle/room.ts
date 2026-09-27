@@ -93,6 +93,9 @@ const IRON_DARK = WASTES.ironDark
 const BRASS = WASTES.brass
 const WATER = ROOM.window
 const HERB_DRY = mixHex(ROOM.copper, ROOM.plasterShade, 0.45)
+/** The wainscot: how high its boards run up the back wall from the floor's surface, and their wood (L ≈ 0.08). */
+const WAINSCOT = 1.1
+const PANEL = mixHex(ROOM.woodDark, ROOM.wood, 0.2)
 /** How high the pan's bail rises over its rim, to the ring the trolley's chain holds. */
 const BAIL = 0.22
 
@@ -150,17 +153,40 @@ export const room = scenery<null>({
     p.fill(mixHex(ROOM.soot, ROOM.night, 0.5))
     p.rect(X(f.x0), X(f.y0), X(f.x1 - f.x0), X(f.y1 - f.y0))
 
-    // The back wall: plaster, a wainscot of boards below, and the soot of years over the hearth.
+    // The back wall: plaster above, and a wainscot of dark boards from the floor to a cap rail about 1.1 cells up, so
+    // anyone at the table or on the floor (her grey, Markl's sage, Howl's blue) sits against dark wood, not cream; the
+    // plaster over it keeps the room light. Then the soot of years over the hearth.
+    const top = R.ground - WAINSCOT
     p.fill(tone(ROOM.plaster))
     p.rect(X(R.wallL), X(R.ceil), X(R.wallR - R.wallL), X(R.ground - R.ceil))
-    p.fill(tone(ROOM.plasterShade))
-    p.rect(X(R.wallL), X(-0.95), X(R.wallR - R.wallL), X(R.ground + 0.95))
-    p.stroke(alpha(p, ink, 0.14))
-    p.strokeWeight(W * 0.45)
-    for (let x = R.wallL + 0.45, i = 0; x < R.wallR; x += 0.45 + 0.08 * Math.sin(i * 2.7), i++) p.line(X(x), X(-0.9), X(x), X(R.ground))
+    p.fill(tone(PANEL))
+    p.rect(X(R.wallL), X(top), X(R.wallR - R.wallL), X(WAINSCOT))
+    // The boards: each its own width and a shade of its own, the seams between them dark.
+    for (let x = R.wallL, i = 0; x < R.wallR; i++) {
+      const w = 0.42 + 0.1 * hash(i, 11)
+      const x1 = Math.min(R.wallR, x + w)
+      p.noStroke()
+      p.fill(tone(mixHex(PANEL, hash(i, 13) < 0.5 ? ROOM.woodDark : ROOM.wood, 0.12 + 0.14 * hash(i, 17))))
+      p.rect(X(x), X(top), X(x1 - x), X(WAINSCOT))
+      if (x1 < R.wallR) {
+        p.stroke(alpha(p, ink, 0.45))
+        p.strokeWeight(W * 0.5)
+        p.line(X(x1), X(top + 0.06), X(x1), X(R.ground - 0.1))
+      }
+      x = x1
+    }
+    // The skirting along the floor, and the cap rail: a lighter moulding with its lit edge, inked.
     p.stroke(alpha(p, ink, 0.6))
+    p.strokeWeight(W * 0.6)
+    p.fill(tone(mixHex(ROOM.woodDark, ROOM.night, 0.3)))
+    p.rect(X(R.wallL), X(R.ground - 0.1), X(R.wallR - R.wallL), X(0.1))
+    p.stroke(ink)
     p.strokeWeight(W * 0.8)
-    p.line(X(R.wallL), X(-0.95), X(R.wallR), X(-0.95))
+    p.fill(tone(ROOM.wood))
+    p.rect(X(R.wallL), X(top - 0.07), X(R.wallR - R.wallL), X(0.09))
+    p.noStroke()
+    p.fill(alpha(p, tone(mixHex(ROOM.wood, ROOM.plaster, 0.45)), 0.8))
+    p.rect(X(R.wallL), X(top - 0.07) + W * 0.5, X(R.wallR - R.wallL), Math.max(1, X(0.022)))
     p.noStroke()
     for (let i = 0; i < 6; i++) {
       p.fill(alpha(p, tone(ROOM.soot), 0.05))
