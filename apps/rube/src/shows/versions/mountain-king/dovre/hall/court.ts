@@ -69,17 +69,26 @@ export const court = part<HallState>(
     { t: TORCH_A + 0.1, cells: 5.85, hold: [3.2, -1.85], w: 0.9 },
     // The scurry east along the sleepers' feet.
     { t: 45.6, cells: 6.0, hold: [5.2, -1.2], w: 0.5 },
-    // Station 2, the same, closer to the sleeper: the brazier flares west; the frame opens up and on as the pillar's
-    // other torch catches, and runs on east along the court (one move, no stop) to the goal: the throne, dark.
+    // Station 2, the same, closer to the sleeper: the brazier flares west; the frame opens up a little as the pillar's
+    // other torch catches.
     { t: TAIL_B - 0.1, cells: 5.7, hold: [6.3, -1.0], w: 0.85 },
     { t: SNORT_B, cells: 5.65, hold: [6.5, -1.05], w: 0.9 },
     { t: TORCH_B + 0.2, cells: 6.25, hold: [7.2, -1.9], w: 0.9 },
-    { t: 50.1, cells: 8.1, hold: [13.6, -2.35], w: 0.9 },
-    // Station 3, the elder, close: the rope runs up out of the frame, east, where the throne was.
+    // Then on with him, slowly, the way he tiptoes (one move, no stop, well under half a frame a second): down off the
+    // torch and east along the sleepers' feet to the elder. The throne stays dark and out of the frame: the fire shows
+    // it, not the camera.
+    { t: 50.1, cells: 6.0, hold: [9.75, -1.4], w: 0.85 },
+    // Station 3, the elder, close: the tail, the toss over its knees, the snort into its brazier and the first lantern.
     { t: TAIL_C + 0.05, cells: 5.8, hold: [12.4, -1.05], w: 0.85 },
-    { t: SNORT_C + 0.1, cells: 5.8, hold: [12.7, -1.35], w: 0.9 },
-    // The fire runs to the crown-lamp; the King lit; she goes up to him. Held wide from here into the wake (`wake.ts`):
-    // the whole court and the dais in one frame, so the heads waking and playing the theme are all seen together.
+    { t: SNORT_C + 0.1, cells: 5.8, hold: [12.8, -1.4], w: 0.9 },
+    // The fire leads the camera: up and east along the rope with the flame, a lantern a note (each one caught on the
+    // frame's upper right as it lights), opening as it climbs, and on the crown-lamp's note the throne's wide: the King
+    // lit, asleep under his crown. She goes up to him.
+    { t: LANTERNS[1], cells: 6.7, hold: [13.45, -1.9], w: 0.9 },
+    { t: LANTERNS[2], cells: 8.0, hold: [14.1, -2.6], w: 0.9 },
+    { t: CROWN_LAMP, cells: 9.35, hold: [14.5, -2.93], w: 0.9 },
+    // Held wide from here into the wake (`wake.ts`): the whole court and the dais in one frame, so the heads waking and
+    // playing the theme are all seen together.
     { t: 55.0, cells: 9.6, hold: [14.6, -2.95], w: 0.9 },
     { t: slot.end, ...SEAM_SHOT },
   ],
