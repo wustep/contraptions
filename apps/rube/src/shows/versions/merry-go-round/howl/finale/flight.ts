@@ -462,10 +462,10 @@ const CLOUDS: { x: number; y: number; w: number; s: number }[] = (() => {
     const x = 60 + i * 7 + (hash(i, 61) - 0.5) * 5
     const below = hash(i, 62) < 0.5
     const y = below ? her(x) + 3.2 + TIERS[i % TIERS.length] + 1.2 * hash(i, 64) : her(x) - 3 - hash(i, 63) * 9
-    // None down in the land: one that would be is lifted clear of it by its own amount (a clamp to one height stood
-    // them all on one ruled line along the foot of the credits).
-    const lim = DM[1] - 7
-    out.push({ x, y: y > lim ? lim - 1.2 - 6 * hash(i, 68) : y, w: SIZES[i % SIZES.length] * (0.85 + 0.3 * hash(i, 65)), s: i })
+    // None down in the land: one that would be is left out (a clamp to one height stood them all on one ruled line
+    // along the foot of the credits).
+    if (y > DM[1] - 7) continue
+    out.push({ x, y, w: SIZES[i % SIZES.length] * (0.85 + 0.3 * hash(i, 65)), s: i })
   }
   return out
 })()
