@@ -11,8 +11,8 @@ import { MEADOW } from './geo'
  * is the lift builder's, and its footprint (x -4 to 3) is kept clear. Valley cells, y down, the meadow at y = 0.
  *
  * Left of the lift: the helideck (a raised deck of steel matting on a timber crib, its ramp down to the road), and
- * beyond it the tents and a truck by the road in. Right of the lift, past the open meadow, more tents, a truck and the
- * comms mast.
+ * beyond it the tents and a truck by the road in. Right of the lift, past the open meadow (where Ian waits at the end,
+ * nothing near him), more tents and the comms mast.
  */
 
 /** The helideck: its ends and the top of its matting. The helicopter sets down on it. */
@@ -158,7 +158,6 @@ export const CAMP_PROPS: { x0: number; x1: number; h: number; draw: (p: p5, k: n
   { x0: -62, x1: -54, h: 2.6, draw: (p, k, ink, w) => drawTent(p, k, ink, w, -62, 7.6) },
   { x0: -52.5, x1: -46, h: 2.6, draw: (p, k, ink, w) => drawTent(p, k, ink, w, -52.5, 6.2, mixHex(VALLEY.olive, VALLEY.canvas, 0.4)) },
   { x0: -45, x1: -39.5, h: 2.6, draw: (p, k, ink, w) => drawTruck(p, k, ink, w, -45, 1) },
-  { x0: 22, x1: 27.5, h: 2.6, draw: (p, k, ink, w) => drawTruck(p, k, ink, w, 27.5, -1) },
   { x0: 30, x1: 37.6, h: 2.6, draw: (p, k, ink, w) => drawTent(p, k, ink, w, 30, 7.6) },
   { x0: 39, x1: 44.5, h: 2.6, draw: (p, k, ink, w) => drawTent(p, k, ink, w, 39, 5.5, mixHex(VALLEY.olive, VALLEY.canvas, 0.4)) },
   { x0: 40, x1: 58, h: 20, draw: (p, k, ink, w, t) => drawCommsMast(p, k, ink, w, 49, t) },

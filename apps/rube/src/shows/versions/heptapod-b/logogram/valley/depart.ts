@@ -12,7 +12,7 @@ import { sm } from './set-air'
  *
  * On 186.288 the shell lifts (a cut to the wide to see it go): it rises slowly into the cloud and goes to vapour from
  * its crown down, the cloud opening over the valley and the light coming through, the fog lifting off the meadow
- * (the set draws all of it by show time). Ian, far off by the trucks, sets off toward her on 190.822. On 192.238 the
+ * (the set draws all of it by show time). Ian, far off across the meadow, sets off toward her on 190.822. On 192.238 the
  * camera cuts back in to the two of them; he comes to her side and stops, touching, a sliver of space between them
  * (195.344). The camera comes in on them, the sky where the shell was, to the framing the lake house opens on.
  *
@@ -32,7 +32,7 @@ const TOUCH = pulse(818)
 export const CUT_IN = pulse(805)
 /** Her glance up, between the cut in and his reaching her. */
 const GLANCE = 193.0
-/** Where Ian waits, by the trucks, and where he comes to. */
+/** Where Ian waits, far off across the meadow, and where he comes to. */
 const IAN_FROM = 22.2
 const IAN_TO = 0.36
 
