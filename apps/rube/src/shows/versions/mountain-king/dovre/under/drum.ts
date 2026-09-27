@@ -459,9 +459,11 @@ export const drum = part<DrumState>(
     // banked fires, the kettle, the drums) and not the rock of its west wall.
     { t: slot.begin, ...SEAM_SHOT, off: [1.7, SEAM_SHOT.off[1]] },
     // The kettle's three strokes: the landing settles first (the camera eases out of the dive onto him on the kettle,
-    // a held point, over a beat), and only then leans the way he will be thrown.
-    { t: beat(161.2), cells: 6.1, hold: [-0.2, -0.55], w: 0.75, off: [0.2, -0.3] },
-    { t: beat(162.4), cells: 6.3, hold: [1.2, -1.1], w: 0.35, off: [0.9, -0.9] },
+    // a held point, over a beat), and only then leans the way he will be thrown. The held point is east of him (as the
+    // seam's lean is), so the frame is the room he has fallen into (the kettle at its west side, the fire, the
+    // war-drum), not the rock west of its wall (at -0.2 it was 40% black rock).
+    { t: beat(161.2), cells: 6.1, hold: [1.9, -0.55], w: 0.75, off: [0.2, -0.3] },
+    { t: beat(162.4), cells: 6.3, hold: [2.3, -1.1], w: 0.5, off: [0.9, -0.9] },
     // On the war-drum: close, the drummers over him. Held a little west of him, so the frame runs from the room's west
     // wall to the far war-fire: the kettle whole at its west edge (never half out of it), both fires whole over the
     // floor, and the great drum's gallery out past its east edge. Low enough for the fires, high enough that the
