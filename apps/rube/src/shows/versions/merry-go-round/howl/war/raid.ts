@@ -1785,7 +1785,7 @@ function drawHowl(p: p5, k: number, W: number, ink: string, t: number): void {
   glow(p, k, x, y + 0.1, 0.75 * S, TOWN.fire, 0.16)
   p.push()
   p.translate(x * k, y * k)
-  const wings = { t, spread: 1 - 0.3 * dive, flap: flap + jolt - 0.5 * dive, heading }
+  const wings = { t, spread: 1 - 0.3 * dive, flap: flap + jolt - 0.5 * dive, heading, torso: true }
   // Black, as the film has him, the fire below catching his undersides: the wings a hair lower in the fire's colour
   // first, then the dark wings over them.
   p.push()
