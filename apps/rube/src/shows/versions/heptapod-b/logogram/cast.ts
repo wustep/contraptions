@@ -39,6 +39,9 @@ export interface ShellOpts {
   air?: string
 }
 
+/** How far the belly's oval is sunk below the belly's line and cut flat there: the keel the slot is in. */
+export const KEEL = 0.45
+
 /** The shell's half-width at `u` from its top (0) to its belly (1), as a share of its width: a stone stood on edge. */
 export function shellHalf(u: number): number {
   const v = clamp01(u)
@@ -64,13 +67,15 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   const pts: Pt[] = []
   // Sampled closer together toward its ends, where it turns fastest, so the crown and the belly are round, not cut.
   const at = (i: number) => (1 - Math.cos((Math.PI * i) / n)) / 2
+  // Its underside is a shallow flat keel where the slot is: the oval sunk KEEL cells and cut flat at the belly's line,
+  // so the slot is a clean mouth in a flat patch (about six cells across), not a box on a round bottom.
   for (let i = 0; i <= n; i++) {
     const u = at(i)
-    pts.push([shellHalf(u) * w, -h + u * h])
+    pts.push([shellHalf(u) * w, Math.min(0, -h + u * h + KEEL)])
   }
   for (let i = n; i >= 0; i--) {
     const u = at(i)
-    pts.push([-shellHalf(u) * w, -h + u * h])
+    pts.push([-shellHalf(u) * w, Math.min(0, -h + u * h + KEEL)])
   }
   // As it goes, it thins from the top down: the part still there is below `keep`.
   const keep = vanish <= 0 ? -h - 1 : -h + h * smooth01(vanish * 1.15)
@@ -86,13 +91,13 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   g.addColorStop(0.35, body)
   g.addColorStop(1, bodyDark)
   ctx.fillStyle = g
-  ctx.beginPath()
-  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, Math.max(y, keep) * k) : ctx.moveTo(x * k, Math.max(y, keep) * k)))
-  ctx.closePath()
-  ctx.fill()
+  const hull = new Path2D()
+  pts.forEach(([x, y], i) => (i ? hull.lineTo(x * k, Math.max(y, keep) * k) : hull.moveTo(x * k, Math.max(y, keep) * k)))
+  hull.closePath()
+  ctx.fill(hull)
   // The rim light down its left edge, soft.
   ctx.save()
-  ctx.clip()
+  ctx.clip(hull)
   const rl = ctx.createLinearGradient(-w * 0.5 * k, 0, -w * 0.3 * k, 0)
   rl.addColorStop(0, mixHex(VALLEY.shellLight, air, 0.25 + haze * 0.5))
   rl.addColorStop(1, 'rgba(0,0,0,0)')
@@ -131,10 +136,14 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
     ctx.lineTo(-sw * 1.6 * k, 14 * k)
     ctx.closePath()
     ctx.fill()
+    // The mouth itself is cut into the hull: clipped to its outline, so nothing of it hangs below the round belly.
+    ctx.save()
+    ctx.clip(hull)
     ctx.fillStyle = mixHex(VALLEY.slot, air, haze * 0.6)
-    ctx.fillRect(-sw * 0.5 * k, -sd * k, sw * k, sd * k)
+    ctx.fillRect(-sw * 0.5 * k, -sd * k, sw * k, (sd + 0.05) * k)
     ctx.fillStyle = `rgba(243,241,230,${0.5 * slot * (1 - haze)})`
     ctx.fillRect(-sw * 0.5 * k, -sd * 0.35 * k, sw * k, sd * 0.12 * k)
+    ctx.restore()
   }
   ctx.restore()
   // The vapour it goes to: soft puffs peeling off its edges and rising.
@@ -678,7 +687,7 @@ export function drawSpray(p: p5, k: number, from: Pt, to: Pt, u: number, color =
  * posts and a top rail and mid rail. `over` draws only the near toe board, for a part to draw after the ball.
  * The lift builder and the shaft builder both show it, so it is one deck.
  */
-export function drawDeck(p: p5, k: number, x0: number, x1: number, o: { ink: string; weight: number; steel?: string; over?: boolean }): void {
+export function drawDeck(p: p5, k: number, x0: number, x1: number, o: { ink: string; weight: number; steel?: string; over?: boolean; lamp?: DeckLamp }): void {
   const steel = o.steel ?? VALLEY.steel
   const top = R
   const plate = 0.14
@@ -709,6 +718,63 @@ export function drawDeck(p: p5, k: number, x0: number, x1: number, o: { ink: str
   p.strokeWeight(o.weight)
   p.fill(steel)
   p.rect(x0 * k, top * k, (x1 - x0) * k, plate * k)
+  if (o.lamp) drawDeckLamp(p, k, x1, o.lamp, o.ink, o.weight, steel)
+  p.pop()
+}
+
+/**
+ * Optional (the shaft builder's): the deck's work light. A hooded floodlight on the far (x1) end post's top, looking
+ * up (the deck's own up), its switch a small box on the plate with its button toward the near end, its cable along the
+ * plate and up the post. `on` 0 dark .. 1 lit; `press` 0 .. 1 how far the button is in; `switchAt` the switch's near
+ * face; `tilt` how far the lamp leans toward the near end (radians). The shaft lights it; the lift side can show it
+ * dark (`on: 0`), so the deck is one deck across the cut.
+ */
+export interface DeckLamp {
+  on: number
+  switchAt: number
+  press?: number
+  tilt?: number
+  /** The housing's and the switch's colour (a dark steel, by default). */
+  body?: string
+}
+/** Where the lamp's lens is, from the deck's rest line at its far end: along the deck, and up (the deck's own -y). */
+export const DECK_LAMP_LENS = { back: 0.13, up: 1.32 - R }
+function drawDeckLamp(p: p5, k: number, x1: number, l: DeckLamp, ink: string, weight: number, steel: string): void {
+  const top = R
+  const body = l.body ?? mixHex(VALLEY.steelDark, steel, 0.25)
+  const press = Math.max(0, Math.min(1, l.press ?? 0))
+  const on = Math.max(0, Math.min(1, l.on))
+  const post = x1 - 0.06
+  const railTop = top - 1.05
+  // The switch, and its button toward the near end.
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.8)
+  p.fill(body)
+  p.rect(l.switchAt * k, (top - 0.12) * k, 0.2 * k, 0.12 * k)
+  p.fill(mixHex(steel, SHELL.glow, 0.3))
+  p.rect((l.switchAt - 0.035 * (1 - press) - 0.004) * k, (top - 0.085) * k, (0.035 * (1 - press) + 0.004) * k, 0.05 * k)
+  // Its cable, along the plate and up the far post.
+  p.noFill()
+  p.stroke(alpha(p, ink, 0.55))
+  p.strokeWeight(weight * 0.55)
+  p.beginShape()
+  p.vertex((l.switchAt + 0.2) * k, (top - 0.03) * k)
+  p.vertex((post - 0.05) * k, (top - 0.03) * k)
+  p.vertex((post - 0.05) * k, (railTop + 0.05) * k)
+  p.endShape()
+  // The lamp on a short yoke on the post's top: a hooded box, its lens on the face that looks up.
+  const fu = x1 - DECK_LAMP_LENS.back
+  const fy = railTop - 0.14
+  p.stroke(ink)
+  p.strokeWeight(weight * 0.8)
+  p.line((post - 0.1) * k, railTop * k, (fu - 0.02) * k, (fy + 0.1) * k)
+  p.push()
+  p.translate(fu * k, fy * k)
+  p.rotate(-(l.tilt ?? 0))
+  p.fill(body)
+  p.rect(-0.15 * k, -0.11 * k, 0.3 * k, 0.2 * k)
+  p.fill(mixHex(SHELL.wall, SHELL.glow, on))
+  p.rect(-0.12 * k, -0.15 * k, 0.24 * k, 0.05 * k)
   p.pop()
 }
 
