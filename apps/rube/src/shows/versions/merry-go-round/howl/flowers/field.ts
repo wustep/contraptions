@@ -613,13 +613,14 @@ export const field = part<FieldState>(
       // the mountains. The wide is the hit's alone: from it the camera settles straight in on the two of them as they
       // waltz down, close by the time they land, and stays close through her machine (the mechanism cropped, never
       // her), Howl in the picture with her all the way: below her at the wheel, walking the bank under the flume at
-      // her pace, waiting at the see-saw's foot.
+      // her pace, waiting at the see-saw's foot. Along the flume she rides a little above the middle, so the castle
+      // walking off to sit across the lake is whole over her and the meadow at the foot is no more than it needs.
       { t: STEP_OFF + 1.5, cells: 6.9, off: [1.5, -0.9] },
       { t: LAND, cells: 6.8, off: [1.5, -0.9] },
       { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
-      { t: TIP, cells: 6.8, off: [1.6, 1.2] },
-      { t: GATES[1], cells: 6.6, off: [1.4, 1.1] },
-      { t: TROUGH, cells: 6.8, off: [1.2, 0.55] },
+      { t: TIP, cells: 6.8, off: [1.6, 0.45] },
+      { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },
+      { t: TROUGH, cells: 6.8, off: [1.2, -0.15] },
       { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.1], w: 0.75 },
       { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.3], w: 0.75 },
       // The build: on its first note a cut out wide and up, the fleet coming out over the mountains (and into the
