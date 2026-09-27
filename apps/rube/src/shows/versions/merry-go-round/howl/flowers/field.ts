@@ -673,8 +673,11 @@ export const field = part<FieldState>(
       // longer dips after her and climbs back. The trough does the flume's widening, so the drop sees next to no zoom.
       { t: STEP_OFF + 0.3, cells: VALLEY[0], hold: [4.95, -4.35], w: 1 },
       { t: LAND - 0.03, cells: VALLEY[1], hold: [5.25, -5.3], w: 1 },
-      { t: LAND, cells: 6.8, off: [1.5, -0.9], cut: true },
-      { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
+      // Up the wheel the frame rides high, so the castle walking off round the lake behind her is its house and roofs over
+      // the wheel, not a belly and legs cut by the frame's top, and the meadow at the foot is no more than it needs.
+      { t: LAND, cells: 6.8, off: [1.5, -1.45], cut: true },
+      { t: HOP_UP, cells: 6.6, off: [1.2, -1.52] },
+      { t: s(5) - 0.5, cells: 6.65, off: [1.3, -1.45] },
       { t: TIP, cells: 6.8, off: [1.6, 0.45] },
       { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },
       // (A touch wider than the flume's, its top where it was and its foot lower, so her whole ball stays inside the Zoom
