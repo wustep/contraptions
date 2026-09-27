@@ -104,8 +104,9 @@ bass, on the one); Ellie, round, answers on the first pah.
 - **The mailbox.** Her handprint (a round palm) goes on bar 21, his (a square palm) on bar 22: two small hands,
   fingers up, thumbs reaching toward each other, in the box's own paint pressed darker, so they never read as two
   more of them. He has let the cart go as the mast folded, and it has rolled on past the box alone and braked on bar
-  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps over him and
-  leads up the steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
+  20, so the box stands clear on its post; she springs back to it off the cart's tail. She leaps over him, landing
+  on 23's two (40.77, the strongest attack of the phrase and the first waltz's second-loudest swell), and leads up the
+  steps; he follows a bar behind. On the soft bars 29 to 31 they sit in the two armchairs at the bay
   window.
 
 ### The clouds (49.64 to 63.25 s): the hill
@@ -117,7 +118,7 @@ bass, on the one); Ellie, round, answers on the first pah.
 - Bars 32 to 35 build an airship (round nose, finned tail, a gondola slung under it), which sails off left. Bars 35
   to 38 build Paradise Falls in cloud: her tepui, as tall as it is wide, sheer sides of heaped billows, a flat lit
   top, lit on the left and in shadow on the right. On bar 39 three falls pour off the lip into the mist, which curls
-  up where they land, and a gust takes it off. Bars 39 to 44 build **a
+  up where they land; the camera holds it whole, pouring, through bar 40, and then a gust takes it off. Bars 39 to 44 build **a
   baby**, sitting up in a cushion of cloud, one leg out, an arm reaching, whole over the two of them and placed where
   the mobile will be at the match cut. He starts; she rolls close. The camera stays at most 5.5 cells.
 
@@ -156,8 +157,9 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   even pace, round in front of the stump, the book passing under her, easing to a stop where she is looking. **On
   100.36, the waltz's return, the book opens** on his top: its top board swings over on the spine and comes down
   flat, the pages curling at the gutter, and Paradise Falls rises out of the gutter in cut paper, the camera in close
-  on it and on her turning up to it and leaning in; on bar 1 she rises onto her toes, then hops down and is away
-  home ahead of him. He turns for home on bar 1, the book
+  on it and on her turning up to it and leaning in; on bar 1 she rises onto her toes and stays up on them through the
+  bar, leaning in again on its two (the camera at its closest), then hops down (101.73) and is away home ahead of him,
+  bumping the door in on bar 2's two. He turns for home on bar 1, the book
   open on his top, and walks after her at an even pace (about 1.3 cells a second: an old-fashioned brisk walk, never a
   run), the camera leading him at his pace; the book folds shut, slowly, on bar 2's third beat; he comes in through
   the back door on bar 3, and as he goes past the bookcase the book slides back off his top onto its shelf, on bar 4.
@@ -200,7 +202,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   10 dB down). They dance in hold, and through the crest she rolls out along the floor to arm's length on
   52's downbeat, as the warm pool brightens and the camera, come in with the swell, is closest on the two of them
   (1.9 cells) under their wedding photograph on the hall wall. The low evening sun through the front door's glass
-  lays a long warm shaft down the hall: it gathers with the swell and falls full on the two of them on the crest, the
+  lays two long warm shafts down the hall (the glass's cross bar splits it, so it reads as sun through a window): it gathers with the swell and falls full on the two of them on the crest, the
   light that fell on them at the kiss, and settles as the music falls away. She rolls back in by bar 53, and as they close into each other's arms on bar 55 it cranes out to the desk
   and her painting.
 - **The tickets.** The picture lamp lights on her painting, and Carl looks up at it. Ellie goes to the front door,
@@ -251,7 +253,7 @@ The doll's house cut open: the yard, the back door, the living room, the hall, t
   (under half a cell a second, the seat twice his height), onto the floor on 192.05, and walks the aisle at an old man's pace (about
   half a cell a second) into the porch, where the bell's rope hangs. As it is pulled the camera rises
   and widens with it, and **the bell tolls once, on the cue's strongest onset (197.71)**, the whole empty church in
-  the frame, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
+  the frame from the organ to the steps, and the toll is felt through all of it: the organ's pipes ring gold with it, as they went on every note
   of the march, and fade as the bell dies away; the balloon swings aside on its string and sways back; he starts; and
   the frame itself takes the blow, a small damped drop that settles in half a second (the only one in the show).
   Dust sifts down. The answer, as the bell swings back, stirs them again, less. He goes out in the silence and comes to rest at the foot of the steps.
@@ -430,8 +432,14 @@ window.
   second waltz on a bare wall, and the pahs, strong all through both waltzes and answered by nothing. Changes: the
   toll through the whole church (the organ, the balloon, one damped blow to the frame); the engine's cough and the
   cloud's breath; the crest's shaft of evening light; Ellie on the two in the fix-up and at the jar; the yard's wind
-  on the piano; his answer at her bedside on its own note; the balloon's leans at home. Tried and taken out: dust
-  shaken from the nave's rafters at the toll (at the toll's width it read as speckled plaster).
+  on the piano; his answer at her bedside on its own note; the balloon's leans at home. A search for strikes on weak
+  beats beside strong unstruck ones moved four of hers onto the strong note (her leap at the mailbox, her settle on
+  the ladder, her hop onto the mantle, her step off the plank). Then a fresh critic watched the whole show: the book's
+  payoff held a second longer, the toll's frame moved to hold the organ, the crest's light split into two crisp
+  shafts, the cloud falls held through bar 40. Tried and taken out: dust shaken from the nave's rafters at the toll
+  (at the toll's width it read as speckled plaster), and a deeper veil on the storey under the nursery (the props
+  that poke up at the frame's foot are not under it). Considered and kept: the fix-up's wide from 31 to 36 s, where the
+  two of them are small, because it is the house made new.
 
 ## Known limits
 
@@ -442,5 +450,9 @@ window.
   tree both times; a wide that held the summer place and them years later needs about 9.5 cells.
 - Under Zoom the frame must keep the two of them within a third of its height of its middle, so a close shot always
   shows a sixth of its height below their floor, and the dance keeps them low in the frame.
+- Under Zoom the balloon's top is cut on the home steps (about 205.5 to 208.4 s): a 3.5-cell close under Zoom is 2.33
+  cells, and his feet to the balloon's crown on its 1.3-cell string is about as much. Zoom holds the two of them, not
+  the balloon.
+- The camera's one blow (the toll) is 1% of the frame; it is felt in motion and invisible in a still.
 - Only Chrome on macOS has been watched. The YouTube cue's sync, Safari and a recording export have not been
   measured for this take.
