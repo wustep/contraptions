@@ -664,14 +664,18 @@ export const field = part<FieldState>(
       // her), Howl in the picture with her all the way: below her at the wheel, walking the bank under the flume at
       // her pace, waiting at the see-saw's foot. Along the flume she rides a little above the middle, so the castle
       // walking off to sit across the lake is whole over her and the meadow at the foot is no more than it needs.
+      // Off the spout the camera stops following her: the trough key is a hold with the frame's top edge where the
+      // clack's is, high enough for the whole castle across the lake, the flag on its back turret too. Her drop into
+      // the cup and down to the grass plays inside a still frame (she ends about three quarters down); the frame no
+      // longer dips after her and climbs back. The trough does the flume's widening, so the drop sees next to no zoom.
       { t: STEP_OFF + 1.5, cells: 6.9, off: [1.5, -0.9] },
       { t: LAND, cells: 6.8, off: [1.5, -0.9] },
       { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
       { t: TIP, cells: 6.8, off: [1.6, 0.45] },
       { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },
-      { t: TROUGH, cells: 6.8, off: [1.2, -0.15] },
-      { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.1], w: 0.75 },
-      { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.3], w: 0.75 },
+      { t: TROUGH, cells: 7.05, hold: [X_REST + 0.45, GR - 2.2], w: 1 },
+      { t: CLACK, cells: 7.2, hold: [X_REST + 2.0, GR - 2.77], w: 0.75 },
+      { t: FLEET - 0.03, cells: 7.5, hold: [X_EDGE + 1.7, GR - 2.57], w: 0.75 },
       // The build: on its first note a cut out wide and up, the fleet coming dark over the mountains, the lead ship
       // crossing over the castle's roofline, and its reflection sweeping across the lake under the two of them small
       // at the water's edge looking up at it; on the bar's last strike (his wings) a cut in to the two of them, the
