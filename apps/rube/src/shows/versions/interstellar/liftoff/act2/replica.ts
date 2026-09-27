@@ -399,6 +399,7 @@ export const replica = part<ReplicaState>(
     { t: cue(109), cells: 9.5, hold: toL([3.65, -2.25]), w: 1 },
     // The whole ring.
     { t: cue(112), cells: 46, hold: toL(AX), w: 1 },
+    { t: cue(112.45), cells: 46, hold: toL(AX), w: 1 },
     // Back in, to the front door.
     { t: cue(114), cells: 5, hold: toL([8.6, -0.55]), w: 1 },
     { t: cue(115.6), cells: 5, hold: toL([10.2, -0.8]), w: 0.6 },

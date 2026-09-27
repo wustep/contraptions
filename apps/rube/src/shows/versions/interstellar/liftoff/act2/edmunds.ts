@@ -708,7 +708,7 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
   p.rotate(-0.09)
   ctx2.save()
   // The far side of the disk, lensed over the top of the dark (broad) and under it (thin).
-  for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.7, 0.9], [0.01, Math.PI - 0.01, 1.28, 0.5]]) {
+  for (const [a0, a1, rout, peak] of [[Math.PI + 0.01, TAU - 0.01, 1.55, 0.9], [0.01, Math.PI - 0.01, 1.28, 0.5]]) {
     const g = ctx2.createRadialGradient(0, 0, X(r), 0, 0, X(rout * r))
     g.addColorStop(0, rgba(WHITE, peak))
     g.addColorStop(0.12, rgba(DARK.gold, 0.9 * peak))
@@ -720,6 +720,13 @@ function drawSky(p: p5, c: Ctx, v: View, T: number): void {
     ctx2.arc(0, 0, X(r), a1, a0, true)
     ctx2.closePath()
     ctx2.fill()
+  }
+  ctx2.strokeStyle = rgba(DARK.gold, 0.38)
+  ctx2.lineWidth = X(0.004)
+  for (const scale of [1.1, 1.24]) {
+    ctx2.beginPath()
+    ctx2.ellipse(0, 0, X(r * scale), X(r * scale * 1.02), 0, Math.PI + 0.06, TAU - 0.06)
+    ctx2.stroke()
   }
   ctx2.fillStyle = VOID.bg
   ctx2.beginPath()
@@ -877,11 +884,16 @@ function drawLand(p: p5, c: Ctx, v: View, T: number): void {
         }
       } else if (kind < 0.78) {
         // A crack, or a ripple of sand.
-        const l = (0.4 + 0.9 * hash(i, j, 87)) * sj
+        const l = (0.25 + 0.7 * hash(i, j, 87)) * sj
         if (l < 0.05) continue
-        p.stroke(alpha(p, VOID.bg, 0.32))
+        p.stroke(alpha(p, VOID.bg, 0.2))
         p.strokeWeight(Math.max(0.8, weight * 0.55 * Math.min(1, sj)))
-        p.line(X(x - l / 2), X(yy), X(x + l / 2), X(yy))
+        p.noFill()
+        p.beginShape()
+        p.vertex(X(x - l / 2), X(yy))
+        p.vertex(X(x - l * 0.05), X(yy - 0.012 * sj))
+        p.vertex(X(x + l / 2), X(yy + 0.005 * sj))
+        p.endShape()
       } else if (sj < 1.2) {
         // A crater: a ring squashed by how low we look at it, its far wall lit, its floor in shadow.
         const rx = (0.3 + 0.9 * hash(i, j, 88)) * sj
@@ -1622,15 +1634,26 @@ const LOBES: [number, number, number][] = [
   [-0.65, 0.28, 0.66],
   [0.15, -0.45, 0.62],
 ]
-/** A cloud of dust: flat lobes, no line, the sun catching its top. */
+/** Soft, low lobes of dust, with the light toward their sunward edge. */
 function cloud(p: p5, k: number, x: number, y: number, r: number, a: number): void {
   if (a <= 0.01) return
   const X = (v: number) => v * k
-  p.noStroke()
-  p.fill(alpha(p, DUST, a))
-  for (const [dx, dy, f] of LOBES) p.circle(X(x + dx * r), X(y + dy * r), X(2 * r * f))
-  p.fill(alpha(p, DARK.gold, a * 0.35))
-  p.circle(X(x + 0.3 * r), X(y - 0.35 * r), X(r * 0.9))
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.translate(X(x), X(y))
+  ctx.scale(1, 0.52)
+  for (const [dx, dy, f] of LOBES) {
+    const radius = X(r * f * 1.3)
+    const cx = X(dx * r)
+    const cy = X(dy * r)
+    const haze = ctx.createRadialGradient(cx + radius * 0.15, cy - radius * 0.2, 0, cx, cy, radius)
+    haze.addColorStop(0, rgba(DARK.gold, a * 0.65))
+    haze.addColorStop(0.4, rgba(DUST, a * 0.5))
+    haze.addColorStop(1, rgba(DUST, 0))
+    ctx.fillStyle = haze
+    ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2)
+  }
+  ctx.restore()
 }
 
 function drawDust(p: p5, c: Ctx, T: number, layer: number): void {
@@ -1650,7 +1673,7 @@ function drawDust(p: p5, c: Ctx, T: number, layer: number): void {
     const x = poseAt(born).x + side * (0.35 + dist)
     const y = G - 0.1 - 0.22 * age * hash(i, 7)
     const r = (0.07 + 0.17 * Math.sqrt(age)) * (0.6 + 0.6 * w)
-    cloud(p, k, x, y, r, 0.42 * (1 - age / 2.4) * w)
+    cloud(p, k, x, y, r, (layer ? 0.26 : 0.42) * (1 - age / 2.4) * w)
   }
   // Touchdown: a skirt of it thrown out low along the ground, and hanging a while.
   const td = T - TOUCH
@@ -1663,8 +1686,23 @@ function drawDust(p: p5, c: Ctx, T: number, layer: number): void {
       const x = LX + side * (0.55 + dist)
       const y = G - 0.08 - (0.06 + 0.22 * hash(i, 32)) * Math.sqrt(td)
       const r = (0.08 + 0.14 * hash(i, 33)) * (0.8 + 0.9 * Math.sqrt(Math.min(td, 2)))
-      cloud(p, k, x, y, r, 0.5 * Math.pow(1 - td / 4, 1.6))
+      cloud(p, k, x, y, r, (layer ? 0.3 : 0.5) * Math.pow(1 - td / 4, 1.6))
     }
+  }
+  // Grains skim out of the wash, then settle. Their birth times also work when seeking backwards.
+  p.noStroke()
+  for (let i = 0; i < 36; i++) {
+    if (i % 2 !== layer) continue
+    const born = i < 24 ? FLARE - 0.8 + i * 0.07 : TOUCH + (i - 24) * 0.012
+    const age = T - born
+    if (age <= 0 || age >= 1.4) continue
+    const power = i < 24 ? washAt(born) : 1
+    const side = hash(i, 91) > 0.5 ? 1 : -1
+    const x = poseAt(born).x + side * (0.4 + age * (1.2 + 2 * hash(i, 92)))
+    const lift = (0.25 + 0.3 * hash(i, 93)) * age - 0.45 * age * age
+    if (lift < 0) continue
+    p.fill(alpha(p, i % 3 ? DARK.gold : VOID.ink, power * smooth(age, 0, 0.06) * (1 - age / 1.4) * 0.6))
+    p.ellipse(x * k, (G - 0.025 - lift) * k, (0.012 + 0.016 * hash(i, 94)) * k, 0.009 * k)
   }
 }
 
@@ -1730,6 +1768,20 @@ function drawCamp(p: p5, c: Ctx, v: View, T: number): void {
   p.ellipse(X(dx0 - DOME_R - 0.55), X(G - 0.26), X(0.12), X(0.42))
   solid(p, ink, weight, DARK.hull)
   p.arc(X(dx0), X(G - 0.08), X(2 * DOME_R), X(2 * DOME_R * 0.92), Math.PI, TAU, p.CHORD)
+  // The fabric turns from the cool lamp side to the dawn, leaving the seams readable.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  ctx.ellipse(X(dx0), X(G - 0.08), X(DOME_R - 0.012), X(DOME_R * 0.92 - 0.012), 0, Math.PI, TAU)
+  ctx.closePath()
+  ctx.clip()
+  const fabric = ctx.createLinearGradient(X(dx0 - DOME_R), X(G), X(dx0 + DOME_R * 0.7), X(G - DOME_R))
+  fabric.addColorStop(0, mixHex(DARK.hull, DARK.slate, 0.3))
+  fabric.addColorStop(0.55, DARK.hull)
+  fabric.addColorStop(1, mixHex(DARK.hull, '#FFF1D2', 0.55))
+  ctx.fillStyle = fabric
+  ctx.fillRect(X(dx0 - DOME_R), X(G - DOME_R - 0.1), X(2 * DOME_R), X(DOME_R + 0.1))
+  ctx.restore()
   solid(p, ink, weight * 0.8, DARK.slate)
   p.rect(X(dx0), X(G - 0.04), X(2 * DOME_R + 0.08), X(0.09), X(0.02))
   outline(p, ink, weight * 0.5)
@@ -1908,8 +1960,8 @@ function drawLampLight(p: p5, c: Ctx, v: View, T: number): void {
   const bloom = Math.max(knock(d, 0.4), 0.45 * pulse(T - CAMP_MEET, 0.25, 1.1))
   const lx = MAST_X - 0.13
   const ly = LAMP_Y + 0.02
-  glow(p, X(lx), X(ly), X(2.8 + 2.2 * bloom), DARK.gold, (0.3 + 0.3 * bloom) * on)
-  glow(p, X(lx), X(ly), X(0.55 + 0.3 * bloom), VOID.ink, 0.85 * on)
+  glow(p, X(lx), X(ly), X(2.4 + 1.6 * bloom), DARK.gold, (0.2 + 0.24 * bloom) * on)
+  glow(p, X(lx), X(ly), X(0.42 + 0.25 * bloom), VOID.ink, 0.72 * on)
   // Its pool on the ground, flattened by how low we look, spreading out as it blooms.
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const flat = Math.max(0.07, Math.min(0.3, v.A * 0.22))
