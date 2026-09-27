@@ -1,6 +1,7 @@
 import type { Pt } from '../../../../../parts'
 import { R } from '../../../../../parts'
 import { box, carried, part, scenery, type Company, type PartShot, type Riders, type Slot } from '../kit'
+import { CREDITS_AT } from '../music'
 import { HANNAH_OLDER, HANNAH_SCALE } from '../worlds'
 import { pulse } from '../music'
 import { drawGlare, drawHouse, type Body } from './house-draw'
@@ -83,6 +84,12 @@ const seated = (slot: Slot) => ({ segs: [{ from: SEAT, to: SEAT, dur: slot.end -
 const looking = (fn: (t: number) => number): Riders => (t, hero) => [{ ...hero, spin: fn(t) }]
 /** The room's footprint, for the world's bounds. */
 const ROOM_CELLS = box(WIN.x0 - 3, -4, WIN.x1 + 2, 2)
+/**
+ * The last framing, for the credits: the whole window, its frame's top edge `top` of the way down the picture (the
+ * page sets the cards in the top third), and a slow drift back from `cells` to `drift` to the end.
+ */
+const FINAL = { cells: 7.6, drift: 7.95, top: 0.38 }
+const finalY = (cells: number) => WIN.top - 0.08 + cells * (0.5 - FINAL.top)
 /** A framing held on her, `off` from her. */
 const on = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, hold: [SEAT[0] + off[0], SEAT[1] + off[1]], w: 1 })
 
@@ -191,8 +198,9 @@ export const vision3 = part<null>(
  * The end (196.783 → 246): the first frame again, and this time we know. The held tones die; the fog on the water
  * glows and thins; the camera comes in, very slowly. She looks at her daughter first, this time. The flutter: Hannah
  * comes across the room to her, skipping on its hardest notes, springs up onto the bench and touches her on its
- * heart (212.312). Stillness together; the sun comes through the fog on the water; the camera draws back to the whole
- * window, the two of them small at its end, and holds there for the credits.
+ * heart (212.312). A second of stillness together; then, as the sun comes through the fog on the water, the camera
+ * draws back to the whole window low in the frame, the two of them small at its end, before the credits come over
+ * the quiet wall above it, and drifts there to the end.
  */
 export const ending = part<null>(
   { name: 'ending', draw: () => {} },
@@ -212,8 +220,12 @@ export const ending = part<null>(
     // Drifting with Hannah as she comes; at rest on the touch; then back, slowly, to the whole window, the two of them
     // small at its end.
     on(END.touch, 3.22, [-0.1, -0.5]),
-    { t: 225, cells: 7.3, hold: [(WIN.x0 + WIN.x1) / 2, -1.42], w: 1 },
-    { t: slot.end, cells: 7.75, hold: [(WIN.x0 + WIN.x1) / 2 - 0.08, -1.5], w: 1 },
+    // A second together, nearly still; then back, in one smooth ease, to the whole window low in the frame (its top
+    // edge 38% down, the wall and ceiling quiet above it for the credits), before the first card comes; then only a
+    // slow drift to the end.
+    on(END.touch + 1.0, 3.25, [-0.05, -0.5]),
+    { t: CREDITS_AT - 0.3, cells: FINAL.cells, hold: [(WIN.x0 + WIN.x1) / 2, finalY(FINAL.cells)], w: 1 },
+    { t: slot.end, cells: FINAL.drift, hold: [(WIN.x0 + WIN.x1) / 2 - 0.08, finalY(FINAL.drift)], w: 1 },
   ],
 )
 

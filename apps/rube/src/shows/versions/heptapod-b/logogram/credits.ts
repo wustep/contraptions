@@ -121,8 +121,8 @@ export const credits = scenery<null>({
     ctx.translate(cx, cy)
     ctx.scale(1, 0.42)
     const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
-    g.addColorStop(0, `rgba(30, 36, 40, ${0.16 * bed})`)
-    g.addColorStop(0.6, `rgba(30, 36, 40, ${0.07 * bed})`)
+    g.addColorStop(0, `rgba(30, 36, 40, ${0.09 * bed})`)
+    g.addColorStop(0.6, `rgba(30, 36, 40, ${0.04 * bed})`)
     g.addColorStop(1, 'rgba(30, 36, 40, 0)')
     ctx.fillStyle = g
     ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx)
