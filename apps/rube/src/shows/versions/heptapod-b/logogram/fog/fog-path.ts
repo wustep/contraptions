@@ -131,7 +131,8 @@ export const breathe = (ring: Ring, t: number): number => 1 + 0.01 * Math.sin(t 
 export function marksAt(ring: Ring, t: number): { a: number; size: number; width: number; grow: number }[] | undefined {
   if (!ring.marks.length) return undefined
   const out: { a: number; size: number; width: number; grow: number }[] = []
-  for (const m of ring.marks) if (t > m.at) out.push({ a: m.a, size: m.size, width: m.width, grow: sstep((t - m.at) / 0.11) })
+  // Each pressed in on its pulse with a little more ink than stays, spreading back over a quarter second.
+  for (const m of ring.marks) if (t > m.at) out.push({ a: m.a, size: m.size, width: m.width, grow: sstep((t - m.at) / 0.09) * (1 + 0.35 * Math.exp(-(t - m.at) / 0.25)) })
   return out.length ? out : undefined
 }
 

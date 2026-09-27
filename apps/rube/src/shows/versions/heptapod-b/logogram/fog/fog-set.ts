@@ -238,8 +238,8 @@ function costello(t: number, f: Frame): Staged {
 
 /**
  * Abbott: in fog1, near, its palm under her (the glass gone); it lets her go and draws back into the white until it
- * is gone in it. Through fog2 it is there again far off, behind Costello, paler; in the push, far and pale, and it
- * writes one far answer.
+ * is gone in it. Through fog2 it is there again far off, behind Costello, paler; in the push, far and pale, watching:
+ * the great ring is the only writing then.
  */
 const ABBOTT_H = 15
 const ABBOTT_NEAR: Pt = [P0[0] - 3.5, P0[1] - 3.9]
@@ -273,12 +273,6 @@ function abbott(t: number): Staged | null {
   if (come <= 0.001) return null
   const g = GREAT.ring
   const o: HeptapodOpts = { t, h: ABBOTT_H, who: 0, fog: 1 - 0.32 * come, air: FOG.white, color: FOG.heptapodFar, lean: 0.03 * Math.sin(t * 0.1) }
-  // Its writing limb, reaching toward its far ring as it writes it.
-  const s = t - FAR.born
-  if (s > -1.6 && s < 1.6) {
-    const u = 0.5 * sstep((s + 1.6) / 1.0) * (1 - sstep((s - 0.2) / 1.2))
-    o.reach = { limb: 5, to: [FAR.at[0] - (g.c[0] - 14), FAR.at[1] + FAR.r + 9], u }
-  }
   return { at: [g.c[0] - 14, -9], depth: 0.45, o }
 }
 
@@ -297,9 +291,6 @@ function tipOf(f: Frame, s: Staged, limb: number): Pt {
 }
 
 /* ------------------------------------------------------------------ the writing already in the fog */
-
-/** The logogram Abbott writes far off in the push, behind the great ring: pale, small with distance. */
-const FAR = { seed: 223, r: 1.9, at: [GREAT.ring.c[0] - 15, -7.5] as Pt, born: 175.3, d: 0.42 }
 
 /**
  * Logograms hanging at depth along fog2 (written before, or far off while she goes): paler and smaller with distance,
@@ -359,20 +350,9 @@ export function drawFog(p: p5, k: number, t: number): void {
   p.push()
   p.noStroke()
   drawAir(p, k, f, t)
-  // Far off: Abbott and its writing, and the logograms hanging at depth; then Costello behind her way, the nearer air,
+  // Far off: Abbott, and the logograms hanging at depth; then Costello behind her way, the nearer air,
   // Costello over it; then the white the tops of them go into; then the ink.
   const A = abbott(t)
-  if (A && A.depth < 0.5 && t > 160) {
-    const s = t - FAR.born
-    if (s > -1.2) {
-      const [x, y] = seen(f, FAR.d, FAR.at[0], FAR.at[1])
-      p.push()
-      p.translate(x * k, y * k)
-      drawLogogram(p, k * FAR.d, { r: FAR.r, seed: FAR.seed, t, form: sstep(s / 3.2), color: FOG.inkSoft, light: 0.42 })
-      p.pop()
-      if (s < 0.6) drawSpray(p, k, tipOf(f, A, 5), seen(f, FAR.d, FAR.at[0], FAR.at[1] + FAR.r), (s + 1.2) / 1.2, FOG.inkSoft, 0.6)
-    }
-  }
   if (A) drawStaged(p, k, f, A)
   drawHanging(p, k, f, t)
   const C = costello(t, f)
