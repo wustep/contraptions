@@ -138,8 +138,8 @@ function fireAt(T: number): ReturnType<typeof furnace> {
 }
 
 /**
- * Each mechanism recedes into the wall (its value, a thin shade edge: `asleep`) until the furnace's flare on its
- * first note lights it, and it stays lit: so each phrase the lit machine is visibly bigger, and there is one hero
+ * Each mechanism waits as a dark iron mass against the wall (`silhouette`) until the furnace's flare on its first
+ * note lights it, and it stays lit: so each phrase the lit machine is visibly bigger, and there is one hero
  * silhouette at a time (the hammer, the flywheel, the pumps, the great bellows, the governor).
  */
 const woken = (T: number, at: number): number => smoothstep(T, at - 0.04, at + 0.1)
@@ -239,30 +239,18 @@ function wallAt(T: number, x: number, y: number): string {
   return col
 }
 
-/**
- * A mechanism before its note is in the room's shadow: it takes the wall's own value (at the room's current light),
- * keeps only a thin shade edge, and recedes, so it never out-draws the hero of the phrase it waits through. On its
- * first note the furnace's flare gives it its full value and edge. `fill` and `ink` map its lit colours; `w` is how
- * far it has woken.
- */
-const KEEP = 0.12
+/** How a mechanism is drawn at T: `fill` and `ink` map its lit colours; `w` is how far it has woken (0 to 1). */
 interface Sleep {
   w: number
   fill: (hex: string) => string
   ink: (hex: string) => string
 }
-function asleep(T: number, at: number, x: number, y: number, edge = 0.42): Sleep {
-  const w = woken(T, at)
-  if (w >= 1) return { w, fill: (h) => h, ink: (h) => h }
-  const wall = wallAt(T, x, y)
-  const shade = mixHex(wall, STONE.deep, edge)
-  const u = lerp(KEEP, 1, w)
-  return { w, fill: (h) => mixHex(wall, h, u), ink: (h) => mixHex(shade, h, w) }
-}
 /**
- * The great wheel before its note: asleep, but a shape, not a ghost. A dark iron silhouette against the forge-lit wall
- * (a great wheel waiting), its spokes read by the lit wall between them; on its first note the flare gives it its
- * full value, as `asleep` does.
+ * A mechanism before its note: a dark iron mass against the forge-lit wall, one value for the whole of it and an edge
+ * darker still, so it reads as weight waiting in the shadow and never as a pale drawing on the wall (no light edge, no
+ * light parts). The wall shows through its gaps (the wheel's spokes, the governor's arms), which is what gives it its
+ * shape. On its first note the furnace's flare gives it its full value and edge. Every waiting part of the machine is
+ * drawn this way: the flywheel and its pinion, the pumps and their pipe, the great bellows, the governor, the valve.
  */
 const WAITING = mixHex(SHADOW, IRON_DARK, 0.2)
 function silhouette(T: number, at: number, x: number, y: number): Sleep {
@@ -830,7 +818,7 @@ function greatBlow(T: number): number {
 }
 function drawGreatBellows(p: p5, c: Pen, T: number, lit: number): void {
   const { k } = c
-  const S = asleep(T, BELLOWS, 8.3, 0.4)
+  const S = silhouette(T, BELLOWS, 8.3, 0.4)
   const ink = S.ink(inkOf(c, lit))
   const f = fireAt(T).flare * S.w
   const wood = S.fill(tone(WORKS.wood, lit * 0.9))
@@ -1163,7 +1151,7 @@ function drawPinion(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   let at = pinionAt(T)
   const lit = litAt(L, at[0], lampsAt(T, at[0])) * 0.95
-  const S = asleep(T, FLY, at[0], at[1])
+  const S = silhouette(T, FLY, at[0], at[1])
   const ink = S.ink(inkOf(c, lit))
   // After the break its arm has snapped and it has dropped to the pit's floor.
   const fall = T >= BREAK ? ease((T - BREAK) / 0.35) : 0
@@ -1186,7 +1174,7 @@ function drawPinion(p: p5, c: Pen, T: number, L: number): void {
 function drawPistons(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   const lit = litAt(L, 10.5, lampsAt(T, 10.5))
-  const S = asleep(T, PISTONS, 10.7, 0.9)
+  const S = silhouette(T, PISTONS, 10.7, 0.9)
   const ink = S.ink(inkOf(c, lit))
   const f = fireAt(T).flare * S.w
   const iron = S.fill(warm(tone(IRON_FACE, lit * 0.9), f * 0.5))
@@ -1231,7 +1219,7 @@ function drawPistons(p: p5, c: Pen, T: number, L: number): void {
 function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   const lit = litAt(L, 13, lampsAt(T, 13.5))
-  const S = asleep(T, PISTONS, 13.5, DECK - 0.2)
+  const S = silhouette(T, PISTONS, 13.5, DECK - 0.2)
   const ink = S.ink(inkOf(c, lit))
   const iron = S.fill(tone(IRON, lit))
   const steel = S.fill(tone(WORKS.steel, lit))
@@ -1264,12 +1252,17 @@ function drawPipe(p: p5, c: Pen, T: number, L: number): void {
       }
     }
   }
-  // The valve on the ledge: a squat body on the branch, its spindle, and the weighted lever over it.
+  // The valve on the ledge: a squat body on the branch, its spindle, and the weighted lever over it. It has no job
+  // until it blows, so it waits dark (its own silhouette) until VALVE_AT, when the flare lights it.
   const vx = VALVE.x
-  p.stroke(ink)
-  p.fill(iron)
+  const V = silhouette(T, VALVE_AT, vx, DECK - 0.6)
+  const vIron = V.fill(tone(IRON, lit))
+  const vSteel = V.fill(tone(WORKS.steel, lit))
+  p.stroke(V.ink(inkOf(c, lit)))
+  p.strokeWeight(c.weight)
+  p.fill(vIron)
   p.rect((vx - 0.2) * k, (DECK - 0.3) * k, 0.4 * k, 0.32 * k, 0.05 * k)
-  p.fill(steel)
+  p.fill(vSteel)
   p.rect((vx - 0.25) * k, (DECK - 0.36) * k, 0.5 * k, 0.08 * k, 0.02 * k)
   const lift = valveLift(T)
   const [pvx, pvy] = VALVE.pivot
@@ -1278,9 +1271,9 @@ function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const onLever = pvy - (vx - pvx) * Math.tan(lift)
   p.rect((vx - 0.04) * k, onLever * k, 0.08 * k, (DECK - 0.36 - onLever) * k)
   // The lever's post and the lever.
-  p.fill(S.fill(tone(WORKS.wood, lit)))
+  p.fill(V.fill(tone(WORKS.wood, lit)))
   p.rect((pvx - 0.07) * k, pvy * k, 0.14 * k, (DECK - pvy) * k)
-  p.fill(iron)
+  p.fill(vIron)
   bar(p, k, [pvx - 0.05, pvy], end, 0.1, 0.08)
   // The weight at its end: a flat iron slab hung on a hook (not round).
   const wt: Pt = [end[0] - 0.05, end[1] + 0.12]
@@ -1372,12 +1365,14 @@ function flyingWeight(j: number, T: number): Pt | null {
 }
 
 /**
- * The governor is stowed until its note: hung up on its spindle in the vault's shadow, two cells above its seat, its
- * cap and upper arms up in the rock and its foot clear of the gears in its base. The keeper's lever lets it go, and it
- * drops under its own weight into mesh, landing on GOVERNOR with a short rebound. Cells up.
+ * The governor is stowed until its note: hung up on its spindle wholly inside the vault's rock, so nothing of it is in
+ * the room through the fortissimo (only its base and the keeper's lever stand on the ledge). Its lowest point hung is
+ * the yoke's seat (≈ -0.3 at rest), under the chimney's mouth, the highest reach of the room (-6.5): STOW lifts that
+ * clear with a margin. The keeper reaches for the lever and it lets go: it drops out of the rock under its own weight
+ * (slow for its first moment, then falling hard), and lands in mesh on GOVERNOR with a short rebound. Cells up.
  */
-const STOW = 2
-const STOW_FALL = 0.26
+const STOW = 6.4
+const STOW_FALL = 0.4
 function govStow(T: number): number {
   const t0 = GOVERNOR - STOW_FALL
   if (T < t0) return STOW
@@ -1408,8 +1403,8 @@ function drawGovernorParts(p: p5, c: Pen, T: number, L: number, part: 'back' | '
   const { k } = c
   const on = T >= GOVERNOR
   const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0))
-  // Stowed up in the vault it is fainter still: its edge only a breath darker than the rock.
-  const S = asleep(T, GOVERNOR, GOV.x, -3.4 - hung, 0.3)
+  // Waiting, its base and lever on the ledge are dark iron (the rest is stowed up in the rock); lit as it lands.
+  const S = silhouette(T, GOVERNOR, GOV.x, -2.6)
   const ink = S.ink(inkOf(c, lit))
   const iron = S.fill(tone(IRON_FACE, lit * 0.9))
   const steel = S.fill(tone(WORKS.steel, lit))
@@ -1623,7 +1618,6 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   drawTrolls(p, c, T, lit, 'ledge')
   drawGovernor(p, c, T, L, 'front')
   drawSparks(p, c, T)
-  void VALVE_AT
   p.pop()
   // Dark until he drops into it (the drum's frames look down the pit and must see only rock). As he falls through
   // its ceiling the cover lifts from the top down, a little ahead of him, so he is seen falling into a place: the
