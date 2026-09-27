@@ -666,16 +666,17 @@ export const SHOTS: PartShot[] = [
   { t: 23.2, cells: 10.2, off: [-1.0, 2.0], w: 0 },
   { t: 24.25, cells: 10.6, off: [-1.2, 2.2], w: 0 },
   { t: 25.35, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
-  // Close on the first knock; the draw-back starts on it and eases out over the held beat (never faster than about
-  // half a scale a second), down the room to the cat, who is still listening with its head up when it comes in.
+  // Close on the first knock; the draw-back starts on it and eases out over the held beat, down the room to the cat,
+  // who is still listening with its head up when it comes in (about 28.1: the frame has to be about 17 cells before
+  // Zoom keeps the spark with the cat's head in).
   { t: BEAT.knocks[0], cells: 5.35, hold: [-14.45, -0.82], w: 1 },
-  { t: 27.1, cells: 9.4, hold: [-11.7, 0.95], w: 1 },
-  { t: 27.85, cells: 14.0, hold: [-8.7, 2.05], w: 1 },
-  // The two-shot, settled before the second knock: the spark as far west as Zoom lets it be, so the cat's head is
-  // whole at the east edge until the ear's second flick is done (29.2).
-  // From it, as the cat's head comes up on the second knock, one unhurried move back in to the arm and the wheel,
-  // arriving with the hand-on (not a snap in and a stop).
-  { t: 28.6, cells: 16.9, hold: [-6.45, 3.4], w: 1 },
-  { t: 29.1, cells: 16.85, hold: [-6.5, 3.45], w: 1 },
+  { t: 27.1, cells: 10.6, hold: [-11.0, 1.1], w: 1 },
+  { t: 27.8, cells: 15.8, hold: [-7.2, 2.85], w: 1 },
+  // The two-shot, wide enough that both are whole and clear of the edges: the spark frozen on the pole a cell and more
+  // inside the west edge, the cat's head with room on the east. It is found listening, puts its head down, and the
+  // second knock lifts it again (a double take); held until the ear's flick is done and the head is up.
+  // From it, one unhurried move back in to the arm and the wheel, arriving with the hand-on (not a snap in and a stop).
+  { t: 28.35, cells: 19.3, hold: [-5.85, 3.3], w: 1 },
+  { t: 29.45, cells: 19.15, hold: [-6.15, 3.25], w: 1 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
 ]

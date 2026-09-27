@@ -97,11 +97,11 @@ export function startle(t: number): number {
 /**
  * How long the cat listens after each knock (seconds from it): its head held up until the first, and down again by
  * the second. The first knock is seen close on the rack, and the camera draws back from it to the cat over the next
- * three seconds, so the cat holds its head up, listening, long enough to be found doing it, and has only just put it
- * down again when the second knock lifts it.
+ * two and a half seconds (it comes into the frame about 28.1), so the cat holds its head up, listening, long enough to
+ * be found doing it, puts it down, and has only just got it down when the second knock lifts it again: a double take.
  */
 const LISTEN: [number, number][] = [
-  [1.55, 2.95],
+  [2.75, 3.22],
   [0.34, 1.85],
 ]
 
@@ -197,7 +197,7 @@ function peek(t: number): number {
     const s = t - c
     const [hold, down] = LISTEN[i]
     if (s < 0.12 || s > down + 0.1) return
-    a = Math.max(a, smooth(s, 0.12, 0.3) * (1 - smooth(s, hold * 0.8, Math.min(down, hold + 0.9))))
+    a = Math.max(a, smooth(s, 0.12, 0.3) * (1 - smooth(s, hold - 0.1, Math.min(down, hold + 0.9))))
   })
   return 0.3 * a
 }
