@@ -52,16 +52,20 @@ export const runaway = part<{ begin: number }>(
     // A point in WORLD cells, in this frame.
     const wp = (x: number, y: number): Pt => coda(x - CODA_SHOT.world[0], y - CODA_SHOT.world[1])
     // The machine past control: from the heart and the drum room whole (its drummers still beating), in on the
-    // governor and the yoke that lifts him; out again to both rooms as the valve blows and the keeper rides it (the
-    // drum room shaking over the heart); then in to the whole heart (11 cells) as the governor comes apart, and to the
-    // coda's seam as the spindle splits the flywheel.
-    const close = (t: number, cells: number, x: number, y: number, w = 0.5): PartShot => ({ t, cells, hold: wp(x, y), w })
+    // governor and the yoke that lifts him; then one mid frame (9.2 → 9.8 cells, a slow drift) held on the governor,
+    // the yoke, the valve and its keeper through the story's beats: the valve blows and bucks him off onto the racing
+    // pump heads and back, the keeper rides it and is thrown off. Then out to the whole heart (11 cells) as the
+    // governor comes apart, centred between the mid frame and the coda's seam so the frame opens without swinging east
+    // and back, and to the coda's seam as the spindle splits the flywheel. Through the mid frame it travels
+    // with him across (w 0.5) but holds up and down (wy 0.8), so its top stays under the drum room's floor (world
+    // 25.95) as the yoke lifts him and the valve bucks him.
+    const close = (t: number, cells: number, x: number, y: number, w = 0.5, wy = w): PartShot => ({ t, cells, hold: wp(x, y), w, wy })
     return [
       { t: slot.begin, cells: 18, hold: wp(54.4, 26.9), w: 0.9 },
-      close(kt(262), 9.0, 50.4, 30.6, 0.5),
-      close(kt(268), 9.2, 50.4, 30.5, 0.5),
-      { t: 130.3, cells: 18, hold: wp(54.2, 26.9), w: 0.9 },
-      { t: 132.6, cells: 11, hold: wp(53.2, 30.6), w: 0.86 },
+      close(kt(262), 9.0, 50.4, 30.6),
+      close(kt(268), 9.2, 51.0, 31.1, 0.5, 0.8),
+      close(VALVE_THROW + 0.2, 9.8, 51.2, 31.15, 0.5, 0.8),
+      { t: 132.6, cells: 11, hold: wp(51.6, 30.6), w: 0.86 },
       { t: slot.end, cells: CODA_SHOT.cells, hold: coda(0, 0), w: CODA_SHOT.w },
     ]
   },
