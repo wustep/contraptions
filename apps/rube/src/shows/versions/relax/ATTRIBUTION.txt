@@ -1,0 +1,20 @@
+Relax — Frankie Goes to Hollywood
+The original 7" (1983), as released on Debut Singles (ZTT Records, 2023). ℗ 1983 ZTT Records Limited.
+Written by Peter Gill, Holly Johnson and Mark O'Toole; produced by Trevor Horn; as the label's release credits it.
+Film: Zoolander, directed by Ben Stiller, Paramount Pictures, 2001, in which "Relax" is the song Mugatu makes Derek
+Zoolander's trigger.
+
+The recording is the label's own, as uploaded to YouTube by the label ("Provided to YouTube by Universal Music Group",
+the "Frankie Goes To Hollywood" topic channel, auto-generated), video kpgRJSrfoic:
+https://www.youtube.com/watch?v=kpgRJSrfoic
+Duration 3:54.
+Copyrighted — used for a private Contraptions tech demo only; do not ship to production / public Shows without a
+licence.
+
+Files:
+- apps/rube/src/shows/versions/relax/relax-demo.mp3 — the song as fetched (yt-dlp, audio only, re-encoded at
+  128 kbit/s with ffmpeg; 0 ms against the fetched stream). The show plays it whole from its first sample (offset 0);
+  no edit, no gain change. The show then runs on in silence for its end credits.
+- scripts/shows/plans/relax-onsets.json — the recording's beat (one comb, every beat and off-beat on its own attack),
+  its onsets, its sections and its landmarks, measured by scripts/shows/relax-onsets.py; every strike in the show is
+  held to it.

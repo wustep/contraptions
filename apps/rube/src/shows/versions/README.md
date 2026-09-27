@@ -389,3 +389,19 @@ the end credits from `Performance.titles`). The cue is one pulse that never chan
 every pulse onto its own attack, with the free murmurs' and the coda's onsets, into
 `scripts/shows/plans/heptapod-b-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/logogram.ts`).
 The report is `apps/rube/src/shows/versions/heptapod-b/LOGOGRAM.md`.
+
+`relax/opus55` (in the picker, **Magnum**, one take, **Opus 5.5**) is Frankie Goes to Hollywood's *Relax*, the
+original 7", the song *Zoolander* makes a trigger of, whole, demo only
+(`apps/rube/src/shows/versions/relax/ATTRIBUTION.txt`), and then the end credits in the quiet after it. Every piece is
+new. It follows the film in five places: Derek (the steel-blue ball) loses Male Model of the Year to Hansel (the gold
+ball); Mugatu (the ivory ball) pampers him down a car wash of a day spa and conditions him to strike at a crimson
+target on every line of the song; the walk-off under the lasers, and Hansel's move that cannot be done; Derelicte,
+where the song is played, Derek marches on the Prime Minister (the crimson ball), Hansel climbs the DJ's tower and
+pulls the plug as the band stops dead, and Derek stops Mugatu's throwing star with a look, Magnum, on the splash out
+of the silence; and the Derek Zoolander Center for Kids Who Can't Read Good, a center for ants made three times bigger
+three times. The code is `relax/magnum/`, on Logogram's kit (parts built to timed slots, an authored camera, match
+cuts between places, three of them inside a press camera's flash, the end credits from `Performance.titles`). The
+song runs on a drum machine, so `scripts/shows/relax-onsets.py` fits one comb (115.405 bpm) and moves every beat and
+off-beat onto its own attack, with the free onsets of the intro, the drop and the tail, into
+`scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
+report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
