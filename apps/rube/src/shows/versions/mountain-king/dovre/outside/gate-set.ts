@@ -37,6 +37,7 @@ import {
   slotLamp,
   ring,
   worksLamp,
+  worksOut,
 } from './gate-motion'
 
 /**
@@ -627,10 +628,10 @@ export function drawPawl(p: p5, c: Pen, t: number): void {
 const worksFill = (c: Pen, lit: number): string => mixHex(c.bg, STONE.dark, Math.max(0, Math.min(1, lit)))
 
 /**
- * How much of the gutter's oil is still burning: all of it until the door is down, then it burns down to embers over
- * about two and a half seconds with the slot's lamp, so the works under the path are dark as the tunnels begin.
+ * How much of the gutter's oil is still burning: all of it until the door is down, then it burns down to embers with
+ * the lamps (`worksOut`), so the works under the path are dark as the frame goes in at the door.
  */
-const oilLeft = (t: number): number => 1 - 0.95 * smooth(t, TIMES.open + 0.5, TIMES.open + 3.0)
+const oilLeft = (t: number): number => 1 - 0.95 * worksOut(t)
 
 /** How lit the works are at x: the lamp's pool in the chamber, and the gutter's fire wherever it has run. */
 export function worksLight(t: number, x: number): number {
@@ -639,6 +640,38 @@ export function worksLight(t: number, x: number): number {
   const fire = front === null ? 0 : x <= front + 0.3 ? 0.75 * oilLeft(t) * Math.min(1, (front + 0.3 - x) / 0.6) : 0
   const end = slotLamp(t) * Math.max(0, 1 - Math.abs(x - SLOT_LAMP[0]) / 1.4)
   return Math.min(1, Math.max(lamp, fire, end))
+}
+
+/** The chamber and its pit, hewn: ragged walls and roof (cells). */
+function chamberOutline(): Pt[] {
+  const rag = (i: number, n: number) => 0.07 * (hash(i, n, 91) - 0.5)
+  const out: Pt[] = [[CHAMBER.x0, CHAMBER.y0 + 0.14]]
+  for (let i = 0; i <= 6; i++) {
+    const u = i / 6
+    out.push([CHAMBER.x0 + 0.12 + (CHAMBER.x1 - CHAMBER.x0 - 0.24) * u, CHAMBER.y0 + rag(i, 1) - 0.03 * Math.sin(Math.PI * u)])
+  }
+  out.push([CHAMBER.x1, CHAMBER.y0 + 0.12])
+  for (let i = 1; i <= 3; i++) out.push([CHAMBER.x1 + rag(i, 2), CHAMBER.y0 + 0.12 + ((CHAMBER.y1 - CHAMBER.y0 - 0.12) * i) / 4])
+  out.push([CHAMBER.x1, CHAMBER.y1], [PIT.x1, CHAMBER.y1], [PIT.x1, PIT.y1], [PIT.x0, PIT.y1], [PIT.x0, CHAMBER.y1], [CHAMBER.x0, CHAMBER.y1])
+  for (let i = 3; i >= 1; i--) out.push([CHAMBER.x0 + rag(i, 3), CHAMBER.y0 + 0.14 + ((CHAMBER.y1 - CHAMBER.y0 - 0.14) * i) / 4])
+  return out
+}
+
+/**
+ * Clip what `draw` paints to the works' hollows (the chamber and pit, the channel, the housing under the slot): the
+ * lamps' and the fire's light lies on their walls and never through the solid rock round them.
+ */
+function inHollows(p: p5, k: number, draw: () => void): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  chamberOutline().forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.rect(CHANNEL.x0 * k, CHANNEL.y0 * k, (CHANNEL.x1 - CHANNEL.x0) * k, (CHANNEL.y1 - CHANNEL.y0) * k)
+  ctx.rect((P2[0] - 0.32) * k, SLOT.y1 * k, 1.25 * k, (CHANNEL.y1 - SLOT.y1) * k)
+  ctx.clip('nonzero')
+  draw()
+  ctx.restore()
 }
 
 /** The hollows of the works: the chamber and its pit, the channel under the stair, the pulley's housing under the slot. */
@@ -669,22 +702,8 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   const flash = sparkFlash(t)
   p.fill(worksFill(c, Math.max(lamp, 0.8 * flash)))
   // Hewn, not built: its walls and roof ragged (a room cut in the rock, never a rounded box).
-  const rag = (i: number, n: number) => 0.07 * (hash(i, n, 91) - 0.5)
   p.beginShape()
-  p.vertex(CHAMBER.x0 * k, (CHAMBER.y0 + 0.14) * k)
-  for (let i = 0; i <= 6; i++) {
-    const u = i / 6
-    p.vertex((CHAMBER.x0 + 0.12 + (CHAMBER.x1 - CHAMBER.x0 - 0.24) * u) * k, (CHAMBER.y0 + rag(i, 1) - 0.03 * Math.sin(Math.PI * u)) * k)
-  }
-  p.vertex(CHAMBER.x1 * k, (CHAMBER.y0 + 0.12) * k)
-  for (let i = 1; i <= 3; i++) p.vertex((CHAMBER.x1 + rag(i, 2)) * k, (CHAMBER.y0 + 0.12 + ((CHAMBER.y1 - CHAMBER.y0 - 0.12) * i) / 4) * k)
-  p.vertex(CHAMBER.x1 * k, CHAMBER.y1 * k)
-  p.vertex(PIT.x1 * k, CHAMBER.y1 * k)
-  p.vertex(PIT.x1 * k, PIT.y1 * k)
-  p.vertex(PIT.x0 * k, PIT.y1 * k)
-  p.vertex(PIT.x0 * k, CHAMBER.y1 * k)
-  p.vertex(CHAMBER.x0 * k, CHAMBER.y1 * k)
-  for (let i = 3; i >= 1; i--) p.vertex((CHAMBER.x0 + rag(i, 3)) * k, (CHAMBER.y0 + 0.14 + ((CHAMBER.y1 - CHAMBER.y0 - 0.14) * i) / 4) * k)
+  for (const [x, y] of chamberOutline()) p.vertex(x * k, y * k)
   p.endShape(p.CLOSE)
   // The lamp's light falls off toward the walls: their edges are in shadow, so the room has no hard rim of light.
   if (lamp > 0.01) {
@@ -694,11 +713,12 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
     const vg = (p.drawingContext as CanvasRenderingContext2D).createRadialGradient(cx * k, cy * k, r * 0.35 * k, cx * k, cy * k, r * k)
     vg.addColorStop(0, 'rgba(0,0,0,0)')
     vg.addColorStop(1, `rgba(0,0,0,${(0.45 * lamp).toFixed(3)})`)
-    const cx2 = p.drawingContext as CanvasRenderingContext2D
-    cx2.save()
-    cx2.fillStyle = vg
-    cx2.fillRect((CHAMBER.x0 - 0.1) * k, (CHAMBER.y0 - 0.1) * k, (CHAMBER.x1 - CHAMBER.x0 + 0.2) * k, (CHAMBER.y1 - CHAMBER.y0 + 0.1) * k)
-    cx2.restore()
+    // Inside the chamber only (laid on a box round it, it drew a black frame on the rock outside its walls).
+    inHollows(p, k, () => {
+      const cx2 = p.drawingContext as CanvasRenderingContext2D
+      cx2.fillStyle = vg
+      cx2.fillRect((CHAMBER.x0 - 0.1) * k, (CHAMBER.y0 - 0.1) * k, (CHAMBER.x1 - CHAMBER.x0 + 0.2) * k, (CHAMBER.y1 - CHAMBER.y0 + 0.1) * k)
+    })
   }
   // The pit darkens with depth (the lamp is above it).
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -709,38 +729,67 @@ export function drawWorksHollows(p: p5, c: Pen, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(PIT.x0 * k, CHAMBER.y1 * k, (PIT.x1 - PIT.x0) * k, (PIT.y1 - CHAMBER.y1) * k)
   ctx.restore()
-  // The lamps' pools on the back walls; the fire's glow running along the channel.
-  if (lamp > 0.01) glow(p, c, WORKS_LAMP[0] + 0.25, WORKS_LAMP[1] + 1.0, 1.7, 0.45 * lamp)
-  if (flash > 0.01) glow(p, c, PAN.x - 0.1, PAN.dish - 0.6, 1.3, 0.5 * flash)
-  if (front !== null && front < FLAME.x1 + 0.2) glow(p, c, front, RUN_Y + 0.1, 0.9, 0.5 * Math.min(1, (t - FLAME.t0) / 0.2) * oilLeft(t))
-  if (sl > 0.01) glow(p, c, SLOT_LAMP[0], SLOT_LAMP[1] + 0.25, 1.3, 0.45 * sl)
+  // The lamps' pools on the back walls; the fire's glow running along the channel: on the hollows' walls only.
+  inHollows(p, k, () => {
+    if (lamp > 0.01) glow(p, c, WORKS_LAMP[0] + 0.25, WORKS_LAMP[1] + 1.0, 1.7, 0.45 * lamp)
+    if (flash > 0.01) glow(p, c, PAN.x - 0.1, PAN.dish - 0.6, 1.3, 0.5 * flash)
+    if (front !== null && front < FLAME.x1 + 0.2) glow(p, c, front, RUN_Y + 0.1, 0.9, 0.5 * Math.min(1, (t - FLAME.t0) / 0.2) * oilLeft(t))
+    if (sl > 0.01) glow(p, c, SLOT_LAMP[0], SLOT_LAMP[1] + 0.25, 1.3, 0.45 * sl)
+  })
   p.pop()
 }
 
-/** The ink of something in the works: all but gone where it is dark, full where it is lit. */
-const worksInk = (c: Pen, l: number): Pen => ({ ...c, ink: mixHex(c.bg, c.ink, 0.12 + 0.88 * l) })
+/**
+ * The edge of something in the works: its own shadow, darker than it at every light (never the page's cream, which
+ * made the lit pulley and the pan cream line art under the stair). All but the rock's own dark where it is dark.
+ */
+const IRON_EDGE = mixHex(WORKS.iron, STONE.deep, 0.55)
+const worksInk = (c: Pen, l: number): Pen => ({ ...c, ink: mixHex(c.bg, IRON_EDGE, 0.35 + 0.65 * l) })
 
-/** A pulley: an iron wheel with three spokes, turned by `turn`. */
+/**
+ * A pulley: an iron wheel, turned by `turn`: a heavy rim, five spokes and a hub, the wall showing between them, edged
+ * in its own shadow (three pale spokes on a disc read as a logo, not a wheel).
+ */
 function pulley(p: p5, c: Pen, at: Pt, turn: number, lit: number): void {
   const { k, weight } = c
   const iron = mixHex(mixHex(STONE.deep, STONE.dark, 0.4), WORKS.iron, lit)
-  const edge = mixHex(STONE.dark, WORKS.steel, lit)
+  const face = mixHex(iron, mixHex(WORKS.steel, LAMP.flame, 0.2), 0.35 * lit)
+  const edge = worksInk(c, lit).ink
+  const R = PULLEY_R
+  const r0 = R * 0.7
   p.push()
   p.translate(at[0] * k, at[1] * k)
-  p.stroke(worksInk(c, lit).ink)
-  p.strokeWeight(weight * 0.75)
-  p.fill(iron)
-  p.ellipse(0, 0, 2 * PULLEY_R * k, 2 * PULLEY_R * k)
   p.rotate(turn)
   p.stroke(edge)
-  p.strokeWeight(weight * 0.8)
-  for (let i = 0; i < 3; i++) {
-    const a = (i * Math.PI * 2) / 3
-    p.line(0, 0, Math.cos(a) * PULLEY_R * 0.78 * k, Math.sin(a) * PULLEY_R * 0.78 * k)
+  p.strokeWeight(weight * 0.6)
+  // The spokes, under the rim and the hub.
+  p.fill(iron)
+  for (let i = 0; i < 5; i++) {
+    const a = (i * Math.PI * 2) / 5
+    const [cx, cy] = [Math.cos(a), Math.sin(a)]
+    const w = 0.022
+    p.quad((-cy * w) * k, (cx * w) * k, (cx * r0 - cy * w) * k, (cy * r0 + cx * w) * k, (cx * r0 + cy * w) * k, (cy * r0 - cx * w) * k, (cy * w) * k, (-cx * w) * k)
   }
+  // The rim: a ring (its inside open), its outer face catching the light.
+  p.fill(iron)
+  p.beginShape()
+  for (let i = 0; i <= 28; i++) p.vertex(Math.cos((i / 28) * Math.PI * 2) * R * k, Math.sin((i / 28) * Math.PI * 2) * R * k)
+  p.beginContour()
+  for (let i = 28; i >= 0; i--) p.vertex(Math.cos((i / 28) * Math.PI * 2) * r0 * k, Math.sin((i / 28) * Math.PI * 2) * r0 * k)
+  p.endContour()
+  p.endShape(p.CLOSE)
+  p.noFill()
+  p.stroke(face)
+  p.strokeWeight(Math.max(1, 0.03 * k))
+  p.arc(0, 0, (R + r0) * k, (R + r0) * k, -2.6 - turn, -0.9 - turn)
+  // The hub.
+  p.stroke(edge)
+  p.strokeWeight(weight * 0.6)
+  p.fill(face)
+  p.ellipse(0, 0, 0.11 * k, 0.11 * k)
   p.noStroke()
   p.fill(edge)
-  p.ellipse(0, 0, 0.06 * k, 0.06 * k)
+  p.ellipse(0, 0, 0.035 * k, 0.035 * k)
   p.pop()
 }
 
@@ -841,7 +890,8 @@ function drawPan(p: p5, c: Pen, ringY: number, lit: number): void {
   // The block under the dish: the weight itself.
   const b0 = dish + 0.12
   const b1 = dish + 0.78
-  p.stroke(pen.ink)
+  const rockEdge = mixHex(mixHex(rock, STONE.deep, 0.65), '#000000', 0.15)
+  p.stroke(rockEdge)
   p.strokeWeight(weight * 0.8)
   p.fill(rock)
   p.beginShape()
@@ -852,12 +902,15 @@ function drawPan(p: p5, c: Pen, ringY: number, lit: number): void {
   p.vertex((x - 0.26) * k, (b1 + 0.02) * k)
   p.vertex((x - 0.33) * k, (b1 - 0.12) * k)
   p.endShape(p.CLOSE)
+  p.stroke(pen.ink)
   p.fill(iron)
   p.rect((x - 0.34) * k, (b0 + 0.24) * k, 0.67 * k, 0.1 * k)
-  p.stroke(alpha(p, pen.ink, 0.35))
+  p.stroke(alpha(p, rockEdge, 0.8))
   p.strokeWeight(weight * 0.5)
   p.line((x + 0.08) * k, (b0 + 0.4) * k, (x + 0.15) * k, (b1 - 0.08) * k)
   // The dish: a shallow bowl on top, its rim catching the lamp.
+  p.stroke(pen.ink)
+  p.strokeWeight(weight * 0.8)
   p.fill(iron)
   p.beginShape()
   p.vertex((x - half) * k, dish * k)

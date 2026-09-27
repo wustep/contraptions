@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type PartShot } from '../kit'
 import { BLOW, CODA, LAST1, LAST2, ROLL } from '../music'
+import { CRANE } from '../credits'
 import { dawn, REST, skyline, surface } from '../mountain'
 import { quake } from '../rock'
 import { CODA_SHOT } from '../seams'
@@ -322,23 +323,25 @@ function blockAt(b: Laid, T: number): { at: Pt; angle: number } | null {
 /** Under the cap (world y), where the blocks start. */
 const CAP_Y = -20.4
 /**
- * The cap's blocks. The last hammer blow blows them up and out both sides of the summit, and they come down on the
- * flanks as the silence falls and tumble on down, slowing (the west flank is the steeper, so they go further there;
- * on the east they stop short of the shoulder where he will land). The crown's two great boulders are thrown higher
- * and come down on the roll's two accents, one down each flank. Only those two landings strike.
+ * The cap's blocks. The last hammer blow blows them up and out of the summit, most of them west (his arc east stays
+ * clear of them), and they come down on the flanks as the silence falls and tumble on down, slowing (the west flank
+ * is the steeper, so they go further there). East, one drops back on the summit's shelf by the crater, and the
+ * crown's east boulder comes down hard against the east tower's foot: every one lies west of the last chords' frame (its left edge
+ * is at x ~53.6 on 150.0), so nothing is left lying half in it. The crown's two great boulders are thrown higher and come
+ * down on the roll's two accents, one down each flank. Only those two landings strike.
  */
 const TUMBLES: Laid[] = (
   [
     { from: [47.0, CAP_Y], t0: BLOW, x1: 42.3, t1: 147.36, size: 1.45, seed: 21, roll: -2.6, dur: 1.9 },
-    { from: [48.2, CAP_Y], t0: BLOW, x1: 52.7, t1: 147.42, size: 1.2, seed: 22, roll: 1.3, dur: 1.5 },
+    { from: [48.2, CAP_Y], t0: BLOW, x1: 50.0, t1: 147.42, size: 1.2, seed: 22, roll: -0.15, dur: 0.6 },
     { from: [47.4, CAP_Y - 0.2], t0: BLOW, x1: 42.0, t1: 147.28, size: 0.46, seed: 23, roll: -2.0, dur: 1.5 },
     { from: [46.6, CAP_Y + 0.1], t0: BLOW, x1: 40.4, t1: 147.62, size: 1.9, seed: 24, roll: -3.6, dur: 2.6 },
-    { from: [48.0, CAP_Y - 0.1], t0: BLOW, x1: 53.0, t1: 147.5, size: 0.42, seed: 25, roll: 1.0, dur: 1.2 },
-    { from: [48.6, CAP_Y + 0.1], t0: BLOW, x1: 53.6, t1: 147.7, size: 1.6, seed: 26, roll: 1.5, dur: 2.0 },
+    { from: [48.0, CAP_Y - 0.1], t0: BLOW, x1: 42.2, t1: 147.5, size: 0.42, seed: 25, roll: -1.35, dur: 1.3 },
+    { from: [48.6, CAP_Y + 0.1], t0: BLOW, x1: 42.6, t1: 147.7, size: 1.6, seed: 26, roll: -0.55, dur: 1.2 },
     { from: [47.1, CAP_Y - 0.2], t0: BLOW, x1: 41.6, t1: 147.55, size: 0.56, seed: 27, roll: -3.0, dur: 2.0 },
     // The crown, torn off: two great boulders of it thrown high, one down each flank on the roll.
     { from: [46.0, -20.6], t0: BLOW, x1: 41.9, t1: ROLL, size: 1.35, seed: 28, roll: -2.4, dur: 1.8 },
-    { from: [49.2, -20.8], t0: BLOW, x1: 52.7, t1: 148.491, size: 1.25, seed: 29, roll: 1.2, dur: 1.6 },
+    { from: [49.2, -20.8], t0: BLOW, x1: 52.0, t1: 148.491, size: 1.25, seed: 29, roll: 0.25, dur: 0.9 },
   ] as Tumble[]
 ).map(lay)
 /** The two that strike: the crown's boulders on the roll. */
@@ -908,7 +911,7 @@ function drawFall(p: p5, s: State, c: Pen & { t: number }): void {
   // The trolls in the drum room and the mine, fleeing on the chords as he comes up through their floors.
   if (T < 142) drawRunners(p, c, T, q, f)
 
-  // What comes down, and what is thrown up (the vault's slabs are drawn over the hall's dark, in `over`).
+  // What comes down, and what is thrown up (the vault's slabs are drawn in `over`, in front of the hall, under its dark).
   for (const st of STONES) if (!VAULT_SLABS.includes(st)) stone(p, c, ORIGIN, st, T, q, 0.55)
   for (const b of TUMBLES) drawBlock(p, c, b, T, q, 0.35 + 0.55 * d)
 
@@ -939,8 +942,10 @@ export const fall = part<State>(
         collarFront(p, c, ORIGIN, COL, 33.13, q)
         ctx.restore()
       }
-      drawRuin(p, c, T, ORIGIN, q, () => jet(p, s, c, T, false))
+      // The vault's slabs fall in front of the hall's props and go under its dark with them (over it, their pale
+      // faces lay in the dead hall through the credits).
       for (const st of VAULT_SLABS) stone(p, c, ORIGIN, st, T, q, 0.45)
+      drawRuin(p, c, T, ORIGIN, q, () => jet(p, s, c, T, false))
     },
   },
   (slot) => {
@@ -959,13 +964,17 @@ export const fall = part<State>(
     const w = (x: number, y: number): Pt => [lx(x), ly(y)]
     // Each floor he is pinned under: its crack and burst, where he is pinned (world y), the frame's cells at each, the
     // frame's lift over him, and a key between bursts (time, cells) where the camera follows him free. Wide enough
-    // (11 to 13 cells) that each room's trolls, fleeing on its chords, are in the frame with him.
+    // (11 to 13 cells) that each room's trolls, fleeing on its chords, are in the frame with him. The frame stands
+    // east of him (`east`, cells), where the rooms are: their west walls are only ~3.5 cells west of the chimney, and
+    // the drummers, the great drum and the miners all run east of it, so he rides up the frame's west third (the
+    // drum room and the mine) and, in the hall, a little less, so the King and his throne come in on the right.
     const PIN_HOLD = 0.7
     const PINS: [number, number, number, [number, number], number, [number, number] | null][] = [
       [FLOORS[0].crack, FLOORS[0].burst, 26.68, [10.8, 11.0], -0.9, [137.25, 11.4]],
       [FLOORS[1].crack, FLOORS[1].burst, 18.68, [11.8, 12.0], -0.9, [139.6, 12.3]],
       [FLOORS[2].crack, FLOORS[2].burst, 10.18, [12.6, 13.0], -1.2, null],
     ]
+    const east = [3.0, 2.6, 1.5]
     return [
       // The machine broken over him, wide (the runaway's last keys hold the same): he drops into the collar low in it.
       { t: slot.begin, cells: CODA_SHOT.cells, hold: w(CODA_SHOT.world[0], CODA_SHOT.world[1]), w: CODA_SHOT.w },
@@ -977,38 +986,49 @@ export const fall = part<State>(
       // climb the frame away from him to the burst), and tilts up with him as it lets him go; moving, it leads.
       // (Between two pins it follows him free, its hold passing evenly from one pin to the next, unweighted.)
       ...PINS.flatMap(([crack, burst, y, cells, lift, next], i): PartShot[] => [
-        { t: crack, cells: cells[0], hold: w(COL + 1.5, y + lift), w: PIN_HOLD, off: [0, lift] },
-        { t: burst, cells: cells[1], hold: w(COL + 1.5, y + lift), w: PIN_HOLD, off: [0, lift] },
-        ...(next ? [{ t: next[0], cells: next[1], hold: w(COL + 1.5, (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [0, lift] as Pt }] : []),
+        { t: crack, cells: cells[0], hold: w(COL + 1.5 + east[i], y + lift), w: PIN_HOLD, off: [east[i], lift] },
+        { t: burst, cells: cells[1], hold: w(COL + 1.5 + east[i], y + lift), w: PIN_HOLD, off: [east[i], lift] },
+        ...(next ? [{ t: next[0], cells: next[1], hold: w(COL + 1.5 + east[i], (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [(east[i] + east[i + 1]) / 2, lift] as Pt }] : []),
       ]),
-      // Up through the hall as its court flees, and one eased pull back from the hall to the whole mountain in
-      // cross-section, the summit to the heart's floor, the white jet the one line through every room.
+      // Up through the hall as its court flees, and one eased pull back from the hall to the mountain in
+      // cross-section, the white jet the one line through every room; then the frame climbs with the collapse: on
+      // each room's chord that room is whole at the frame's foot (its floor just inside the bottom edge) with him up
+      // the vent above it, so every room falls as big as the frame allows (the heart at 46 cells, the drum room at 42,
+      // the mine at 40, the hall at 35 to 38 with the summit's towers and the cap over it for all six hammer blows).
+      // The climb quickens as the chords do (0.16 → 0.3 frame heights a second).
       { t: 141.046, cells: 16, hold: w(49.5, 5.0), w: 0.8 },
-      { t: 143.199, cells: 56, hold: w(52, 6.0), w: 1 },
-      // The rooms come down bottom up behind him: the frame lifts a little with the fall as each lower room goes
-      // dark (never more than a few cells a second), so his climb to the cap stays in the frame.
-      { t: 144.12, cells: 56, hold: w(52.2, 4.3), w: 1 },
-      { t: 145.079, cells: 55.5, hold: w(52.5, 2.2), w: 1 },
-      { t: 145.847, cells: 55, hold: w(52.8, 0.1), w: 1 },
-      { t: 146.601, cells: 54, hold: w(53.2, -2.4), w: 1 },
-      // The silence: held on the fallen rooms and their dust (only the slowest creep in), him high in his arc over
-      // the east flank.
-      { t: 147.1, cells: 54, hold: w(53.5, -6.0), w: 1 },
-      { t: 148.1, cells: 51, hold: w(54.0, -7.0), w: 1 },
-      // The roll: one push in to the east shoulder as he comes down to it, the church in the valley beyond, going on
-      // in through the landing and the bounce.
-      { t: LAST1, cells: 24, hold: w(60.4, -19.6), w: 1 },
-      { t: LAST2, cells: 21.5, hold: w(60.6, -19.7), w: 1 },
-      // In on him in the hollow as he rocks to rest, the church and the rising sun in the frame; then one long crane
-      // up and back over the credits to the broken summit at dawn, the valley, the church and the sun: the mountain
-      // is dark inside now (every room fallen), so the frame gives it the lower third and the morning the rest. (It
-      // stays east and high enough that the church, on the far layer, stays over the flank; he stays in the frame
-      // under Zoom.)
-      { t: 151.3, cells: 15, hold: w(60.8, -19.9), w: 1 },
-      { t: 153.5, cells: 14.2, hold: w(61.0, -20.0), w: 1 },
-      { t: 157.0, cells: 17, hold: w(61.4, -20.5), w: 1 },
-      { t: 161.0, cells: 24, hold: w(62.0, -21.2), w: 1 },
-      { t: 165.0, cells: 32, hold: w(62.5, -21.8), w: 1 },
+      { t: 143.199, cells: 46, hold: w(52.5, 10.9), w: 1 },
+      { t: 143.926, cells: 42, hold: w(52.7, 5.7), w: 1 },
+      { t: 144.12, cells: 41.5, hold: w(52.7, 5.1), w: 1 },
+      { t: 144.84, cells: 40.5, hold: w(52.9, -1.6), w: 1 },
+      { t: 145.079, cells: 39.5, hold: w(53.0, -3.0), w: 1 },
+      { t: 145.6, cells: 36.5, hold: w(53.1, -7.8), w: 1 },
+      { t: 146.348, cells: 35, hold: w(53.2, -8.6), w: 1 },
+      { t: 146.601, cells: 35, hold: w(53.4, -9.2), w: 1 },
+      // The silence: the frame goes up with him as he is thrown out (the fallen hall and its dust below, the geyser
+      // falling back), and from the roll one push in and down along his arc to the shoulder, the crown's boulders
+      // landing on both flanks in the frame.
+      { t: 147.1, cells: 33, hold: w(53.7, -11.2), w: 1 },
+      { t: 147.6, cells: 29.5, hold: w(54.2, -13.8), w: 1 },
+      { t: ROLL, cells: 21.8, hold: w(55.3, -17.6), w: 1 },
+      { t: 149.0, cells: 13.5, hold: w(58.0, -18.8), w: 1 },
+      // The last two chords land close: he lands on the shoulder on the first, bounces into the hollow on the
+      // second, the church over the flank on the right with its bell swinging and the sun coming up behind it, the
+      // skyline just under the frame's middle so the dawn has the upper half. Held there (10 cells, creeping in)
+      // while he rocks to rest and the chord rings out, and no closer: the church is on the far layer, so only the
+      // frame's width brings it in, and at 10 cells the whole bell house stays inside the zoomed frame (x ≤ ~5.9
+      // from the middle), him a cell and a quarter inside its west edge. The flank's fallen blocks lie west of it.
+      { t: LAST1, cells: 11.2, hold: w(61.3, -18.3), w: 1 },
+      { t: 150.0, cells: 10.4, hold: w(62.5, -18.3), w: 1 },
+      { t: 151.0, cells: 10.1, hold: w(63.1, -18.3), w: 1 },
+      { t: CRANE, cells: 10.0, hold: w(63.3, -18.35), w: 1 },
+      // Then one long crane up and back over the credits to the broken summit at dawn, the valley, the church and
+      // the sun: the mountain is dark inside now (every room fallen), so the frame gives it the lower third and the
+      // morning the rest. He stays in the frame under Zoom.
+      { t: CRANE + 2.6, cells: 12, hold: w(63.3, -19.5), w: 1 },
+      { t: CRANE + 6.6, cells: 16, hold: w(63.2, -20.6), w: 1 },
+      { t: CRANE + 10.6, cells: 24, hold: w(63.1, -21.5), w: 1 },
+      { t: CRANE + 14.6, cells: 32, hold: w(63.0, -22.0), w: 1 },
       { t: slot.end, cells: 40, hold: w(63.0, -22.2), w: 1 },
     ]
   },

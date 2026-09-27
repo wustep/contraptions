@@ -75,7 +75,8 @@ export const gears = part<{ begin: number }>(
       whole(BELLOWS - 0.05, 10.5, 31.3),
       // The great bellows: its own stage, raised into the furnace's mouth, the furnace white, him surfing the wave.
       close(kt(244), 7.8, 52.6, 31.6, 0.5),
-      close(kt(250), 8.0, 52.3, 31.6, 0.45),
+      // (The pull-back starts half a bar early, so it opens slowly and arrives at the wide on the phrase's downbeat.)
+      close(kt(248), 8.0, 52.3, 31.6, 0.45),
       // Out to the heart and the drum room over it, whole.
       { t: slot.end, cells: 18, hold: wp(54.4, 26.9), w: 0.9 },
     ]

@@ -162,7 +162,9 @@ function drawRags(p: p5, c: Ctx, T: number, L: number, j: number): void {
 
 /**
  * Big shreds of the burst skin, blown up out of the tear and fluttering down (drag on a light, flat piece): the ones
- * over the floor come to rest on it and stay; the ones over the pit sink into its dark after him.
+ * thrown west come down together in a heap at the great drum's west foot, crumpled, in the skin's shade; the rest
+ * sink into the pit's dark after him (none over the floor's far end: flat, evenly spaced and cream, they lay along
+ * the floor as a pale dashed line, the last one in the rock past the east wall).
  */
 interface Shred {
   x0: number
@@ -176,12 +178,12 @@ interface Shred {
 const SHRED_G = 10
 const SHRED_DRAG = 1.2
 const SHREDS: readonly Shred[] = [
-  { x0: -0.55, vx: -3.4, vy: -5.6, at: 0.0, len: 0.46, wid: 0.2, spin: 7 },
-  { x0: 0.5, vx: 2.2, vy: -6.2, at: 0.01, len: 0.4, wid: 0.18, spin: -9 },
-  { x0: -0.3, vx: -1.6, vy: -7.0, at: 0.02, len: 0.34, wid: 0.16, spin: 11 },
+  { x0: -0.55, vx: -3.4, vy: -5.6, at: 0.0, len: 0.52, wid: 0.24, spin: 7 },
+  { x0: 0.5, vx: 0.4, vy: -6.2, at: 0.01, len: 0.4, wid: 0.18, spin: -9 },
+  { x0: -0.3, vx: -2.85, vy: -7.0, at: 0.02, len: 0.3, wid: 0.15, spin: 11 },
   { x0: 0.2, vx: 0.5, vy: -5.0, at: 0.03, len: 0.3, wid: 0.15, spin: -8 },
-  { x0: -0.6, vx: -4.4, vy: -4.2, at: 0.01, len: 0.38, wid: 0.17, spin: -6 },
-  { x0: 0.6, vx: 1.2, vy: -4.6, at: 0.04, len: 0.28, wid: 0.14, spin: 10 },
+  { x0: -0.6, vx: -3.9, vy: -4.2, at: 0.01, len: 0.4, wid: 0.2, spin: -6 },
+  { x0: 0.6, vx: 0.3, vy: -4.6, at: 0.04, len: 0.28, wid: 0.14, spin: 10 },
   { x0: -0.1, vx: -0.4, vy: -6.6, at: 0.02, len: 0.32, wid: 0.15, spin: -12 },
 ]
 const inPit = (x: number): boolean => x > SHAFT.x0 + 0.05 && x < SHAFT.x1 - 0.05
@@ -222,15 +224,18 @@ function drawShreds(p: p5, c: Ctx, T: number, L: number): void {
     const turn = (sh.spin * (1 - Math.exp(-0.8 * Math.min(s, land)))) / 0.8
     const lie = down ? smooth(s, land, land + 0.15) : 0
     const ang = turn + (Math.round(turn / Math.PI) * Math.PI - turn) * lie
-    const face = (0.25 + 0.75 * Math.abs(Math.cos(3.1 * Math.min(s, land) + i))) * (1 - lie) + 0.35 * lie
+    // Down, it is a crumpled piece of hide, not a sliver: thicker, in the skin's shade (the heap's pieces overlap).
+    const face = (0.25 + 0.75 * Math.abs(Math.cos(3.1 * Math.min(s, land) + i))) * (1 - lie) + 0.7 * lie
+    const skin = lit(WORKS.skin, L)
+    const hide = mixHex(skin, mixHex(WORKS.wood, STONE.deep, 0.35), 0.62 * lie)
     p.push()
-    p.translate(x * k, y * k)
+    p.translate(x * k, (y - 0.05 * lie) * k)
     p.rotate(ang)
     p.scale(1, face)
-    p.stroke(alpha(p, mixHex(STONE.deep, c.ink, 0.3 + 0.6 * L), fade))
+    p.stroke(alpha(p, mixHex(hide, STONE.deep, 0.6), fade))
     p.strokeWeight(c.weight * 0.7)
-    p.fill(alpha(p, lit(WORKS.skin, L), fade))
-    const a = (sh.len / 2) * grow
+    p.fill(alpha(p, hide, fade))
+    const a = (sh.len / 2) * grow * (1 - 0.2 * lie)
     const b = (sh.wid / 2) * grow
     const r = (n: number) => 0.75 + 0.35 * hash(i, n, 4)
     p.beginShape()
@@ -328,8 +333,9 @@ function drawCover(p: p5, c: Ctx, T: number): void {
   if (lifted(T)) return
   const k = c.k
   const edge = coverEdge(T)
-  const x0 = -1.0 - 0.2
-  const x1 = 17.0 + 0.2
+  // Round the room's leaning walls (-1.34 to 17.38).
+  const x0 = -1.34 - 0.2
+  const x1 = 17.38 + 0.2
   p.push()
   p.noStroke()
   p.rectMode(p.CORNER)

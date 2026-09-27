@@ -52,13 +52,29 @@ const ROOF: Pt[] = [
   [22.3, -2.55],
   [22.9, -2.3],
 ]
+/**
+ * The stope's end wall over the shaft, from the roof down to the floor: living rock, leaning out and back and ragged
+ * (a ruled vertical here stood beside the shaft with a third of the frame black beyond it, 87-89).
+ */
+export const END_WALL: Pt[] = [
+  [23.12, -1.85],
+  [23.02, -1.3],
+  [23.28, -0.72],
+  [23.15, -0.15],
+  [23.31, 0.45],
+  [23.22, FLOOR_Y + 0.02],
+]
+/** Where the gallery's floor ends at the end wall's foot. */
+const FLOOR_END = END_WALL[END_WALL.length - 1][0]
+/** The tunnel runs on east into the dark past where its light reaches: its rails and floor go on to here, fading. */
+const TUNNEL_END = -7.6
 const ROOM: Pt[] = (() => {
   const out: Pt[] = [
-    [-5.2, FLOOR_Y + 0.02],
-    [-5.2, -1.02],
+    [TUNNEL_END, FLOOR_Y + 0.02],
+    [TUNNEL_END, -1.02],
   ]
   // The tunnel's roof, a little uneven.
-  for (let x = -4.6; x < 1.5; x += 0.7) out.push([x, -1.08 - 0.07 * hash(Math.round(x * 10), 2, 1)])
+  for (let x = -7.0; x < 1.5; x += 0.7) out.push([x, -1.08 - 0.07 * hash(Math.round(x * 10), 2, 1)])
   // The chamber's roof, broken between its corners.
   for (let i = 0; i < ROOF.length; i++) {
     out.push(ROOF[i])
@@ -68,7 +84,7 @@ const ROOM: Pt[] = (() => {
       out.push([(x0 + x1) / 2 + 0.2 * (hash(i, 3, 2) - 0.5), (y0 + y1) / 2 - 0.25 * hash(i, 3, 3)])
     }
   }
-  out.push([22.9, FLOOR_Y + 0.02])
+  out.push(...END_WALL)
   return out
 })()
 
@@ -102,7 +118,14 @@ export function drawRooms(p: p5, c: Pen): void {
   h.addColorStop(0, `rgba(${brgb},0)`)
   h.addColorStop(1, `rgba(${brgb},1)`)
   ctx.fillStyle = h
-  ctx.fillRect(-5.3 * k, -1.3 * k, 4.2 * k, (FLOOR_Y + 1.45) * k)
+  ctx.fillRect((TUNNEL_END - 0.1) * k, -1.3 * k, (-1.1 - TUNNEL_END + 0.1) * k, (FLOOR_Y + 1.45) * k)
+  // The end wall in its own shadow: the torches' light falls off into the rock over the last cell and a half.
+  const e = ctx.createLinearGradient((FLOOR_END + 0.1) * k, 0, (FLOOR_END - 1.5) * k, 0)
+  e.addColorStop(0, `rgba(${brgb},0.7)`)
+  e.addColorStop(0.4, `rgba(${brgb},0.3)`)
+  e.addColorStop(1, `rgba(${brgb},0)`)
+  ctx.fillStyle = e
+  ctx.fillRect((FLOOR_END - 1.5) * k, -3.2 * k, 1.9 * k, (FLOOR_Y + 3.3) * k)
   ctx.restore()
   p.pop()
 }
@@ -267,7 +290,7 @@ export function drawMainLine(p: p5, c: Pen, t: number): void {
   p.rectMode(p.CORNER)
   // The floor: a lit lip where the torchlight falls on it.
   p.noStroke()
-  for (let x = -5.2; x < SHAFT[0]; x += 0.5) {
+  for (let x = TUNNEL_END; x < SHAFT[0]; x += 0.5) {
     const x1 = Math.min(SHAFT[0], x + 0.5)
     const l = lightAt(x + 0.25, FLOOR_Y, t)
     p.fill(shade(STONE.mid, l, STONE.dark, 0.1))
@@ -276,16 +299,24 @@ export function drawMainLine(p: p5, c: Pen, t: number): void {
   for (const x0 of [SHAFT[1]]) {
     const l = lightAt(x0 + 0.2, FLOOR_Y, t)
     p.fill(shade(STONE.mid, l, STONE.dark, 0.1))
-    p.rect(x0 * k, FLOOR_Y * k, (22.9 - x0) * k, 0.07 * k)
+    p.rect(x0 * k, FLOOR_Y * k, (FLOOR_END - x0) * k, 0.07 * k)
   }
-  // Sleepers, end on.
-  for (let x = -5.0; x < STOP_X + 0.1; x += 0.42) {
+  // The ballast under the rails, the floor's own stone in shadow: between the sleepers the lit back wall showed through
+  // as tan dashes, a dashed line along the floor through the whole chase.
+  for (let x = TUNNEL_END; x < STOP_X + 0.15; x += 0.5) {
+    const x1 = Math.min(STOP_X + 0.15, x + 0.5)
+    const l = lightAt(x + 0.25, FLOOR_Y, t)
+    p.fill(shade(mixHex(STONE.dark, STONE.mid, 0.35), l * 0.7, STONE.dark, 0.1))
+    p.rect(x * k, (RAIL + 0.03) * k, (x1 - x + 0.01) * k, (FLOOR_Y - RAIL - 0.02) * k)
+  }
+  // Sleepers, end on: in the timber's shadow, darker than the rails on them.
+  for (let x = TUNNEL_END + 0.2; x < STOP_X + 0.1; x += 0.42) {
     const l = lightAt(x, RAIL, t)
-    p.fill(shade(WORKS.wood, l, STONE.dark, 0.15))
+    p.fill(shade(mixHex(WORKS.wood, STONE.deep, 0.6), l, STONE.dark, 0.15))
     p.rect((x - 0.12) * k, (RAIL + 0.035) * k, 0.24 * k, (FLOOR_Y - RAIL - 0.02) * k)
   }
   // The rail, in lengths from joint to joint: a small gap and a fishplate at each joint.
-  const ends = [-5.2, ...JOINTS.filter((x) => x > -5.2 && x < STOP_X), STOP_X + 0.15]
+  const ends = [TUNNEL_END, ...JOINTS.filter((x) => x > TUNNEL_END && x < STOP_X), STOP_X + 0.15]
   for (let i = 0; i + 1 < ends.length; i++) {
     const a = ends[i] + (i > 0 ? 0.012 : 0)
     const b = ends[i + 1] - (i + 1 < ends.length - 1 ? 0.012 : 0)
@@ -296,7 +327,7 @@ export function drawMainLine(p: p5, c: Pen, t: number): void {
     p.rect(a * k, RAIL * k, (b - a) * k, 0.016 * k)
   }
   for (const x of JOINTS) {
-    if (x < -5.2 || x > STOP_X) continue
+    if (x < TUNNEL_END || x > STOP_X) continue
     const l = lightAt(x, RAIL, t)
     p.fill(shade(WORKS.iron, l * 0.8, STONE.dark, 0.2))
     p.rect((x - 0.06) * k, (RAIL + 0.022) * k, 0.12 * k, 0.03 * k)
@@ -312,11 +343,23 @@ export function drawMainLine(p: p5, c: Pen, t: number): void {
     p.fill(shade(WORKS.iron, l, STONE.dark, 0.2))
     p.rect((STOP_X - 0.02) * k, (RAIL - 0.3) * k, 0.06 * k, 0.12 * k)
   }
-  // The shaft's collar: heavy timbers at its lips.
+  // The shaft's collar: heavy timbers at its lips, set into the rock (short: hung 1.4 cells down, they ended in the
+  // void with no foot).
   for (const x of [SHAFT[0], SHAFT[1]]) {
     const l = lightAt(x, FLOOR_Y, t)
-    beam(p, c, x + (x === SHAFT[0] ? 0.08 : -0.08), FLOOR_Y - 0.02, x + (x === SHAFT[0] ? 0.08 : -0.08), FLOOR_Y + 1.4, 0.16, l * 0.8)
+    beam(p, c, x + (x === SHAFT[0] ? 0.08 : -0.08), FLOOR_Y - 0.02, x + (x === SHAFT[0] ? 0.08 : -0.08), FLOOR_Y + 0.42, 0.16, l * 0.8)
   }
+  // The tunnel's rails and floor run on east into its dark (they ended in a square cut beyond the trolls' cart).
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const bg = p.color(c.bg)
+  const brgb = `${p.red(bg)},${p.green(bg)},${p.blue(bg)}`
+  const h = ctx.createLinearGradient(-4.7 * k, 0, (TUNNEL_END + 0.6) * k, 0)
+  h.addColorStop(0, `rgba(${brgb},0)`)
+  h.addColorStop(1, `rgba(${brgb},1)`)
+  ctx.save()
+  ctx.fillStyle = h
+  ctx.fillRect((TUNNEL_END - 0.1) * k, (RAIL - 0.1) * k, (-4.7 - TUNNEL_END + 0.1) * k, (FLOOR_Y - RAIL + 0.2) * k)
+  ctx.restore()
   p.pop()
 }
 

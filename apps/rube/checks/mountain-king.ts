@@ -145,12 +145,20 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   check('mountain king: at the end Peer lies still in the hollow on the east shoulder, at sunrise',
     Math.hypot(end[0] - REST[0], end[1] - REST[1]) < 0.01 && Math.hypot(end[0] - still[0], end[1] - still[1]) < 0.001)
 
-  // The coda's picture: the mountain comes down bottom up on the hammered chords, a room a chord, in one wide of
-  // the whole mountain, with Peer up the vent over every room as it falls; the last blow throws him out; he lands on
-  // the east shoulder on the first last chord, bounces into the hollow on the second, and is still as it rings out.
+  // The coda's picture: the mountain comes down bottom up on the hammered chords, a room a chord, with Peer up the
+  // vent over every room as it falls, and the frame climbing with the collapse so that each room is whole in it (its
+  // span, roof to floor) on its chord, as big as the frame can hold it with him in it too; the last blow throws him
+  // out; he lands on the east shoulder on the first last chord, bounces into the hollow on the second, and is still
+  // as it rings out.
   const onChord = (t: number) => CODA_CHORDS.some((c) => Math.abs(c.t - t) < 1e-6)
-  const fell = ROOMS.map((r) => ({ r, over: show.where(r.at)[1] < r.y0 - 0.3, wide: cam(r.at).cells >= 50 }))
-  check('mountain king: the mountain comes down bottom up on the hammered chords (a room a chord, him over it, the whole mountain in the frame)',
+  const whole = (r: (typeof ROOMS)[number]) => {
+    const f = cam(r.at)
+    const hw = (f.cells * 16) / 9 / 2
+    const hh = f.cells / 2
+    return r.from >= f.x - hw && r.to <= f.x + hw && r.roof >= f.y - hh && r.floor + 0.5 <= f.y + hh
+  }
+  const fell = ROOMS.map((r) => ({ r, over: show.where(r.at)[1] < r.y0 - 0.3, wide: whole(r) }))
+  check('mountain king: the mountain comes down bottom up on the hammered chords (a room a chord, him over it, the room whole in the frame)',
     ROOMS.every((r, i) => onChord(r.at) && (r.then === undefined || onChord(r.then)) && (i === 0 || r.at >= ROOMS[i - 1].at)) &&
     fell.every((f) => f.over && f.wide) && ROOMS[ROOMS.length - 1].at < BLOW,
     fell.filter((f) => !f.over || !f.wide).map((f) => f.r.name).join(', '))

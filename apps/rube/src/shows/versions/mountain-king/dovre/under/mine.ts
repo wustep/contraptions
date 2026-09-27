@@ -3,6 +3,7 @@ import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { OPEN } from '../hall/hall-clock'
 import { alpha, box, part, type Ctx, type PartShot, type Slot } from '../kit'
 import { flicker, glow } from '../lantern'
+import { RUIN, ruinLight } from '../music'
 import { quake } from '../rock'
 import { SEAM_SHOT } from '../seams'
 import type { Pen } from '../troll'
@@ -13,7 +14,7 @@ import {
 } from './mine-clock'
 import { drawOreCart, drawTrollCart } from './mine-cart'
 import {
-  drawBuffer, drawChock, drawLever, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
+  END_WALL, drawBuffer, drawChock, drawLever, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
 } from './mine-set'
 
 /**
@@ -58,7 +59,7 @@ const ROOF_TOP = -3.8
 /** The areas the cover spans, part frame: the throat under the hatch, the stope and its tunnel, the shaft to the drum. */
 const COVERED: [number, number, number, number][] = [
   [-1.5, COVER_TOP, 0.5, ROOF_TOP],
-  [-5.6, ROOF_TOP, 23.3, COVER_BOTTOM],
+  [-7.9, ROOF_TOP, 23.5, COVER_BOTTOM],
   [SHAFT[0] - 0.15, COVER_BOTTOM, SHAFT[1] + 0.15, 8.3],
 ]
 const coverEdge = (T: number): number => COVER_TOP + (COVER_BOTTOM + COVER_FEATHER - COVER_TOP) * ease(T, OPEN, OPEN + LIFT)
@@ -138,8 +139,8 @@ const ROOF_LINE: Pt[] = [
 ]
 function clipRoom(ctx: CanvasRenderingContext2D, k: number, throat: boolean): void {
   ctx.beginPath()
-  ctx.moveTo(-5.2 * k, (FLOOR_Y + 0.02) * k)
-  ctx.lineTo(-5.2 * k, -1.02 * k)
+  ctx.moveTo(-7.6 * k, (FLOOR_Y + 0.02) * k)
+  ctx.lineTo(-7.6 * k, -1.02 * k)
   if (throat) {
     ctx.lineTo(-1.25 * k, THROAT_FOOT * k)
     ctx.lineTo(-1.25 * k, COVER_TOP * k)
@@ -147,7 +148,7 @@ function clipRoom(ctx: CanvasRenderingContext2D, k: number, throat: boolean): vo
     ctx.lineTo(0.25 * k, THROAT_FOOT * k)
   }
   for (const [x, y] of ROOF_LINE) ctx.lineTo(x * k, y * k)
-  ctx.lineTo(22.9 * k, (FLOOR_Y + 0.02) * k)
+  for (const [x, y] of END_WALL) ctx.lineTo(x * k, y * k)
   ctx.closePath()
   ctx.clip()
 }
@@ -245,6 +246,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   ctx.save()
   clipRoom(ctx, k, false)
   // The torches: how many have caught, and the stretch of gallery they light.
+  const ruin = ruinLight(T, RUIN.mine)
   let n = 0
   let x0 = Infinity
   let x1 = -Infinity
@@ -257,7 +259,8 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   }
   if (n > 0) {
     // The gallery's wash: the rock face between the lit torches, warmer with each; reaching on to the next set.
-    const a = Math.min(0.24, 0.04 + 0.024 * n) * lightsOut(T)
+    // In the mountain's fall the stope is at full light, and its torches leap on its chords as the roof cracks.
+    const a = Math.min(0.36, 0.04 + 0.024 * n + 0.08 * ruin.up + 0.1 * ruin.flare) * lightsOut(T)
     const gx0 = x0 - 2.2
     const gx1 = x1 + 1.4
     const g = ctx.createLinearGradient(gx0 * k, 0, gx1 * k, 0)
@@ -272,7 +275,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   for (const tr of TORCHES) {
     const l = torchLit(tr, T)
     if (l <= 0.01) continue
-    const f = flicker(T, tr.seed)
+    const f = flicker(T, tr.seed) * (1 + 0.7 * ruin.flare)
     const m = Math.min(1, l)
     // The near pool (as it was), and the wide throw on the rock face, flaring as it catches.
     glow(p, c, tr.x + 0.15, tr.y - 0.35, 3.1 * m, 0.2 * l * f)
@@ -284,7 +287,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   fade.addColorStop(0, `rgba(${bg},0)`)
   fade.addColorStop(1, `rgba(${bg},1)`)
   ctx.fillStyle = fade
-  ctx.fillRect(-5.3 * k, -1.3 * k, 4.2 * k, (FLOOR_Y + 1.45) * k)
+  ctx.fillRect(-7.7 * k, -1.3 * k, 6.6 * k, (FLOOR_Y + 1.45) * k)
   ctx.restore()
 }
 
@@ -514,14 +517,18 @@ export const mine = part<MineState>(
   (slot: Slot): PartShot[] => [
     // Landing in the cart, then a look back up the tunnel at the two asleep in theirs, waking.
     { t: slot.begin, ...SEAM_SHOT },
-    { t: BRAKE - 0.2, cells: 5.4, off: [-1.5, -0.75] },
-    // The chase, one push in that never stops. Wide down the tunnel: his cart in the front third, the trolls' cart
-    // coming out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as
-    // the gap closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead
-    // troll leaning out of his bin over him, their cart looming behind his.
-    { t: FIRST_CLACK + 0.5, cells: 8.0, off: [-2.3, -1.3] },
-    { t: LUNGES[0], cells: 6.1, off: [-1.1, -0.85] },
-    { t: LUNGES[1], cells: 5.4, off: [-0.8, -0.85] },
+    // Close on the two carts in the hatch's lit column (the tunnel is barely a cell high, so a wide is a band of
+    // black rock over two small carts): his cart and the trolls' with their brake knocked off, big enough that the
+    // wheels clacking over the joints on the notes are the motion. Pushed in over the whole first bar, arriving as the
+    // brake comes off (a quicker, deeper push, 6 to 4.8 cells in 0.75 s, stopped hard: zoom acceleration 2.1).
+    { t: BRAKE - 0.03, cells: 5.0, off: [-1.5, -0.5] },
+    // The chase, one push in that never stops. Down the tunnel: his cart in the front third, the trolls' cart coming
+    // out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as the gap
+    // closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead troll
+    // leaning out of his bin over him, their cart looming behind his.
+    { t: FIRST_CLACK + 0.5, cells: 5.5, off: [-2.0, -0.6] },
+    { t: LUNGES[0], cells: 5.25, off: [-1.1, -0.7] },
+    { t: LUNGES[1], cells: 5.05, off: [-0.8, -0.8] },
     { t: LUNGES[2] + 0.1, cells: 4.9, off: [-0.55, -0.9] },
     // Phrase 9: on its first note the frame pulls back and ahead over the whole run to come (the switch's lever, the
     // catch ramp and its buffer, the gallery on to the stop block and the shaft), arriving a bar before his wheel

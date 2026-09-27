@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../parts'
 import { frame, hash, scenery, smooth } from './kit'
-import { BLOW, CODA, LAST1, LAST2 } from './music'
+import { BLOW, CODA, END, LAST1, LAST2 } from './music'
 import { LAMP, SKY, STONE, WORKS } from './worlds'
 
 /**
@@ -95,6 +95,8 @@ export const dawn = (t: number): number => smooth(t, BLOW - 2.2, LAST2 + 9)
 
 /** The morning's high sky: still a deep blue once the sun is up (the zenith stays blue longest). */
 const ZENITH = mixHex(SKY.morning, SKY.night, 0.5)
+/** When the crane starts (`credits.ts` `CRANE`, END + 1.1): the sky over the credits deepens from then. */
+const CREDITS_SKY = END + 1.1
 
 /** The sky's colour at world height y and show time t (for a part that paints sky, e.g. through the gate). */
 export function skyAt(y: number, t: number): string {
@@ -117,23 +119,42 @@ export function skyAt(y: number, t: number): string {
 
 /** The far valley's parallax: a far thing at (X, Y) is drawn at X + cx·(1 − F), Y + cy·(1 − F) for a camera at (cx, cy). */
 const FAR = 0.22
-/** The stave church in the east valley, on the far layer (its X there, and the height of the ground it stands on). */
-export const CHURCH: Pt = [19.2, 0.35]
-/** The sun, on the far layer: it comes up behind the far peaks, a little east of the church. */
-const SUN_X = 23.4
+/**
+ * The stave church in the east valley, on the far layer (its X there, and the height of the ground it stands on):
+ * placed for the frame the last chords land in (8 cells on (62, -18.3)), where it stands on its knoll just over the
+ * east flank at the frame's right, bell house inside the edge, so its bell is seen swinging as he lands.
+ */
+export const CHURCH: Pt = [17.9, -1.45]
+/** The sun, on the far layer: it comes up behind the far peaks just east of the church, inside the last chords' frame. */
+const SUN_X = 20.3
 
-/** The far peaks (Rondane), far-layer cells: sharp tops, rounded cols. */
+/** |s| with its corner rounded over r (so a peak made from it has a crest, not a point), 0..1 for s in -1..1. */
+const softAbs = (s: number, r: number): number => (Math.sqrt(s * s + r * r) - r) / (Math.sqrt(1 + r * r) - r)
+/**
+ * The far peaks (Rondane), far-layer cells: rounded crests (the Rondane's are domes, and a pointed |sin| made a row
+ * of straight-sided clip-art triangles), a shoulder on each big peak's east flank, and small breaks down the sides.
+ */
 function ridgeA(X: number): number {
-  const peak = 1 - Math.abs(Math.sin(X * 0.21 + 0.2))
-  const peak2 = 1 - Math.abs(Math.sin(X * 0.47 + 2.1))
-  return -0.9 - 1.9 * Math.pow(peak, 1.6) * (0.7 + 0.3 * Math.sin(X * 0.05 + 1)) - 0.45 * Math.pow(peak2, 2) + 0.2 * Math.sin(X * 1.3)
+  const peak = 1 - softAbs(Math.sin(X * 0.21 + 0.2), 0.14)
+  const peak2 = 1 - softAbs(Math.sin(X * 0.47 + 2.1), 0.3)
+  const shoulder = 0.4 * Math.pow(Math.max(0, Math.sin(X * 0.21 - 0.4)), 8)
+  const rough = 0.07 * Math.sin(X * 2.3 + 1.1) + 0.03 * Math.sin(X * 3.9 + 0.3)
+  return -0.9 - 1.8 * Math.pow(peak, 1.5) * (0.7 + 0.3 * Math.sin(X * 0.05 + 1)) - 0.45 * Math.pow(peak2, 2) + 0.15 * Math.sin(X * 1.3) - shoulder + rough
 }
 
-/** The valley's near hills, far-layer cells: low and rolling, flat where the church stands. */
+/**
+ * The valley's near hills, far-layer cells: low and rolling, with a knoll where the church stands (a round hill
+ * with a flat top under the nave and the bell house, falling away either side into the rolling hills; never a mesa).
+ */
 function ridgeB(X: number): number {
   const h = 0.55 + 0.55 * Math.sin(X * 0.13 + 2) + 0.28 * Math.sin(X * 0.31 + 1) + 0.08 * Math.sin(X * 1.1)
-  const flat = Math.exp(-Math.pow((X - CHURCH[0]) / 1.6, 2))
-  return h * (1 - flat) + CHURCH[1] * flat
+  // The top: flat across the church's footprint (the nave's eaves west, the bell house east).
+  const mid = CHURCH[0] + 0.45
+  const top = Math.exp(-Math.pow((X - mid) / 1.7, 6))
+  // The shoulders: a broad round rise, so the hills climb to it.
+  const rise = Math.exp(-Math.pow((X - mid) / 4.2, 2))
+  const hill = h + (CHURCH[1] - 0.06 - h) * rise
+  return hill * (1 - top) + (CHURCH[1] - 0.06) * top
 }
 
 interface MountainState {
@@ -173,6 +194,26 @@ export const mountain = scenery<MountainState>({
     for (const u of [0, 0.25, 0.5, 0.75, 1]) g.addColorStop(u, skyAt(top + (bottom - top) * u, t))
     ctx.fillStyle = g
     ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (bottom - top) * k)
+    // Over the credits the high sky is the morning's deep blue across the frame's upper half, whatever the frame's
+    // size: the close frame of the last chords sees only the pale band under the zenith, and cream words over it
+    // read at 2:1. The sky at infinity follows the view, so this is laid by the frame (its 16:9 height, so a tall
+    // phone's extra sky is not deepened past its box), fading out above the far ridges so their warm band stays.
+    // It comes in as the crane starts (the move hides it) and is the zenith's own blue, so it vanishes into it later.
+    const deepen = smooth(t, CREDITS_SKY - 0.3, CREDITS_SKY + 1.0)
+    const deepenSky = (): void => {
+      if (deepen <= 0) return
+      const h16 = ((x1 - x0) * 9) / 16
+      const z = p.color(ZENITH)
+      const rgba = (a: number) => `rgba(${p.red(z)},${p.green(z)},${p.blue(z)},${(a * deepen).toFixed(3)})`
+      const reach = 0.84 * h16
+      const gz = ctx.createLinearGradient(0, top * k, 0, (top + reach) * k)
+      gz.addColorStop(0, rgba(0.9))
+      gz.addColorStop(0.5, rgba(0.86))
+      gz.addColorStop(0.74, rgba(0.36))
+      gz.addColorStop(1, rgba(0))
+      ctx.fillStyle = gz
+      ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, reach * k)
+    }
 
     // Stars: few, small, fading with the dawn. On the farthest layer (they barely move).
     if (d < 0.95) {
@@ -212,6 +253,8 @@ export const mountain = scenery<MountainState>({
       gg.addColorStop(1, 'rgba(242,196,141,0)')
       ctx.fillStyle = gg
       ctx.fillRect((sx - glowR) * k, (sy - glowR) * k, 2 * glowR * k, 2 * glowR * k)
+      // The deep high sky over its glow (the glow lit the sky round the words), under the disc.
+      deepenSky()
       // The disc: big and far, rising out of the far peaks (they are drawn over its lower part).
       const disc = p.color(mixHex(SKY.dawn, SKY.sun, 0.75))
       disc.setAlpha(255 * Math.max(smooth(d, 0.25, 0.6), smooth(t, LAST2 - 0.3, LAST2 + 0.3)))
@@ -239,16 +282,32 @@ export const mountain = scenery<MountainState>({
     p.vertex((x0 - 2) * k, bottom * k)
     p.endShape(p.CLOSE)
 
-    // Morning mist lying along the valley floor, drifting east.
+    // Morning mist lying along the valley floor, drifting east: each bank a few long thin streaks, feathered to
+    // nothing at their ends and edges, overlapping (one-value ellipses with hard edges lay on the green like saucers).
     if (d > 0.05) {
       const drift = (t - CODA) * 0.06
+      const mc = p.color(mixHex(SKY.morning, SKY.sun, 0.35))
+      const rgb = `${p.red(mc)},${p.green(mc)},${p.blue(mc)}`
       for (let i = 0; i < 5; i++) {
         const X = CHURCH[0] - 9 + i * 4.6 + drift + 1.3 * Math.sin(i * 2.1)
         const Y = ridgeB(X) + 0.55 + 0.15 * Math.sin(i * 1.7)
-        const mist = p.color(mixHex(SKY.morning, SKY.sun, 0.35))
-        mist.setAlpha(255 * 0.2 * d * (0.7 + 0.3 * Math.sin(i * 3.1 + t * 0.1)))
-        p.fill(mist)
-        p.ellipse((X + ox) * k, (Y + oy) * k, (4.4 + 1.2 * Math.sin(i)) * k, 0.42 * k)
+        const a = 0.17 * d * (0.7 + 0.3 * Math.sin(i * 3.1 + t * 0.1))
+        for (let j = 0; j < 3; j++) {
+          const rx = (1.7 + 0.5 * Math.sin(i * 1.3 + j * 2.1) + (j === 1 ? 0.6 : 0)) * k
+          const ry = (0.09 + 0.03 * Math.sin(i + j)) * k
+          ctx.save()
+          ctx.translate((X + ox + (j - 1) * (1.1 + 0.3 * Math.sin(i * 2.7 + j))) * k, (Y + oy + (j - 1) * 0.1 * Math.sin(i * 1.9 + 1)) * k)
+          ctx.scale(1, ry / rx)
+          const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx)
+          gr.addColorStop(0, `rgba(${rgb},${a.toFixed(3)})`)
+          gr.addColorStop(0.55, `rgba(${rgb},${(a * 0.55).toFixed(3)})`)
+          gr.addColorStop(1, `rgba(${rgb},0)`)
+          ctx.fillStyle = gr
+          ctx.beginPath()
+          ctx.arc(0, 0, rx, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.restore()
+        }
       }
     }
 
@@ -314,6 +373,31 @@ function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: num
   const grass = mixHex(mixHex(SKY.grass, SKY.night, 0.72), SKY.grass, d)
   const earth = mixHex(mixHex(WORKS.wood, STONE.deep, 0.55), mixHex(WORKS.wood, STONE.deep, 0.25), d)
   const thick = 0.17
+  // The dawn on the flank's face: under the turf the rock takes the morning's light for a cell or so, fading into
+  // the mountain's dark, so a close frame of the shoulder is a hillside at sunrise and not a black cut-out. Soft
+  // (blurred inside the mountain's outline, never over the sky); nothing at night.
+  if (d > 0.02) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const face = p.color(mixHex(mixHex(STONE.mid, WORKS.wood, 0.3), SKY.dawn, 0.22))
+    const DEPTH = 1.1
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(x0 * k, surface(x0, t) * k)
+    for (let x = x0; x <= x1 + step; x += step / 2) ctx.lineTo(Math.min(x, x1) * k, surface(Math.min(x, x1), t) * k)
+    ctx.lineTo(x1 * k, (surface(x1, t) + 40) * k)
+    ctx.lineTo(x0 * k, (surface(x0, t) + 40) * k)
+    ctx.closePath()
+    ctx.clip()
+    ctx.filter = `blur(${Math.max(1, 0.45 * k).toFixed(1)}px)`
+    ctx.fillStyle = `rgba(${p.red(face)},${p.green(face)},${p.blue(face)},${(0.5 * d).toFixed(3)})`
+    ctx.beginPath()
+    ctx.moveTo(x0 * k, (surface(x0, t) - 0.5) * k)
+    for (let x = x0; x <= x1 + step; x += step / 2) ctx.lineTo(Math.min(x, x1) * k, (surface(Math.min(x, x1), t) - 0.5) * k)
+    for (let x = x1; x >= x0 - step; x -= step / 2) ctx.lineTo(Math.max(x, x0) * k, (surface(Math.max(x, x0), t) + DEPTH) * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
   p.push()
   p.noStroke()
   // The earth under the grass, then the grass itself, both following the surface; where the crater is, the turf is
