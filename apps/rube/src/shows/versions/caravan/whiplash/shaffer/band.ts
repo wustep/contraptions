@@ -90,10 +90,10 @@ export const band = part<BandState>(
     // the treadle on the downbeat and the arm takes the page over; a slow push in on the desk as the arm swings back;
     // out again with his hop up to the seat, one pull-out that opens past Fletcher's whole figure on the podium and
     // carries on, leaning left, out to the room.
-    { t: FIRST.press - 2 * BEAT - 0.5, cells: 4.3, hold: [19.0, 0.55], w: 1 },
-    { t: FIRST.press, cells: 4.1, hold: [18.95, 0.5], w: 1 },
-    { t: FIRST.page + 0.5, cells: 3.9, hold: [18.9, 0.3], w: 1 },
-    { t: FIRST.down + 0.6, cells: 5.5, hold: [17.5, 0.4], w: 1 },
+    { t: FIRST.press - 2 * BEAT - 0.5, cells: 4.3, hold: [STAND.x + 1.15, 0.55], w: 1 },
+    { t: FIRST.press, cells: 4.1, hold: [STAND.x + 1.1, 0.5], w: 1 },
+    { t: FIRST.page + 0.5, cells: 3.9, hold: [STAND.x + 1.05, 0.3], w: 1 },
+    { t: FIRST.down + 0.6, cells: 5.5, hold: [STAND.x - 0.35, 0.4], w: 1 },
     // Back to take in the saxophones and trombones at work, the conductor, the page turner.
     { t: 51.6, cells: 7.4, hold: [13.3, -0.4], w: 1 },
     { t: 53.95, cells: 7.2, hold: [13.0, -0.7], w: 1 },

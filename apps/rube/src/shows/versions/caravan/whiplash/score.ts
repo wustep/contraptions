@@ -4,6 +4,7 @@ import { director, type Shot } from './camera'
 import { box, lay, standing, type Company } from './kit'
 import { BAND, BUILD, BURST, CARNEGIE, DURATION, HUSH, LOUD, QUIET, RUBATO, SOLO, TEMPO } from './music'
 import { CaravanShow } from './show'
+import { STRIKES } from './hits'
 import { ANDREW, CARNEGIE_HALL, CARNEGIE_THEME, ROADS, ROAD_THEME, SHAFFER, SHAFFER_THEME } from './worlds'
 import { FLETCHER_OUT_CELLS, fletcherOut, practice } from './shaffer/practice'
 import { band } from './shaffer/band'
@@ -159,6 +160,7 @@ export function compose(): { show: CaravanShow; camera: (t: number) => Framing; 
     DURATION,
     [...shaffer.riders, ...road.riders, ...carnegie.riders],
     [...shaffer.company, ...road.company, ...carnegie.company, ...people].sort((a, b) => a.from - b.from),
+    Object.values(STRIKES).flatMap((part: Record<string, number[]>) => Object.values(part).flat()),
   )
 
   let shots: Shot[] = [...shaffer.shots, ...road.shots, ...carnegie.shots]
