@@ -476,11 +476,33 @@ function farWall(cx: number) {
   const face = (y: number) => x0 + 0.3 * Math.sin(y * 1.7) + 0.18 * Math.sin(y * 4.1) + (y - lip) * 0.08
   return { x0, lip, face }
 }
-/** The crag's height over the ledge, from its left foot to where it meets the far wall's top (x from the wall). */
+/**
+ * The crag's height over the ledge, from its left foot to where it meets the far wall's top (x from the wall). Its
+ * long shoulder (from -27.5 to -8) runs back behind the slope, so on the slide down it she and the deck ride against
+ * the dark range from 278 on, never the moor's pale mist (her silver is the mist's own light); the mist lies at its
+ * foot, under the deck.
+ */
 const CRAG_H: [number, number][] = [
-  [-11, -0.8], [-9.4, 0.6], [-8.2, 1.7], [-7.0, 2.1], [-6.0, 2.9], [-5.0, 3.55], [-4.3, 3.45], [-3.5, 4.05], [-2.7, 4.3],
-  [-1.9, 3.95], [-1.2, 3.0], [-0.5, 2.0], [0, 1.5],
+  [-27.5, -0.8], [-25.5, 1.1], [-23.6, 2.3], [-21.4, 3.1], [-19.4, 3.75], [-17.9, 3.6], [-16.4, 3.15], [-14.6, 2.8],
+  [-12.8, 2.6], [-11.0, 2.4], [-9.6, 2.2], [-8.2, 2.15], [-7.0, 2.35], [-6.0, 2.9], [-5.0, 3.55], [-4.3, 3.45],
+  [-3.5, 4.05], [-2.7, 4.3], [-1.9, 3.95], [-1.2, 3.0], [-0.5, 2.0], [0, 1.5],
 ]
+/** A lit band down the crag's skyline, `xa` → `xb` (x from the wall), tapering in over `ta` and out over `tb`. */
+function cragLit(p: p5, k: number, x0: number, sky: (x: number) => number, xa: number, xb: number, ta: number, tb: number) {
+  const th = (x: number) => {
+    const s = x - x0
+    const a = ta > 0 ? smooth(s, xa, xa + ta) : 1
+    const b = tb > 0 ? 1 - smooth(s, xb - tb, xb) : 1
+    return a * b
+  }
+  p.beginShape()
+  for (let x = x0 + xa; x < x0 + xb; x += 0.12) p.vertex(x * k, (sky(x) + 0.02) * k)
+  for (let x = x0 + xb; x > x0 + xa; x -= 0.12) {
+    const w = th(x)
+    p.vertex((x - (0.25 + 0.12 * Math.sin(x * 2.2)) * w) * k, (sky(x) + 0.02 + (0.48 + 0.2 * Math.sin(x * 1.7)) * w) * k)
+  }
+  p.endShape(p.CLOSE)
+}
 function cragH(s: number): number {
   if (s <= CRAG_H[0][0]) return CRAG_H[0][1]
   for (let i = 0; i < CRAG_H.length - 1; i++) {
@@ -538,10 +560,9 @@ function drawCrag(p: p5, k: number, W: number, ink: string, f: View) {
   p.endShape()
   p.noStroke()
   p.fill(alpha(p, mixHex(FAR_MTN, WASTES.mist, 0.15), 0.55))
-  p.beginShape()
-  for (let x = xl + 2.4; x < x0 - 3.1; x += 0.12) p.vertex(x * k, (sky(x) + 0.02) * k)
-  for (let x = x0 - 3.1; x > xl + 2.4; x -= 0.12) p.vertex((x - 0.25 - 0.12 * Math.sin(x * 2.2)) * k, (sky(x) + 0.5 + 0.2 * Math.sin(x * 1.7)) * k)
-  p.endShape(p.CLOSE)
+  // (Up the long shoulder's rise, and down the crag's own face from its saddle, as before.)
+  cragLit(p, k, x0, sky, -25.2, -19.2, 1.2, 1.6)
+  cragLit(p, k, x0, sky, -10.2, -3.1, 1.4, 0)
   // Its lee face in shade, from the summit down toward the far wall.
   p.fill(alpha(p, WASTES.night, 0.2))
   p.beginShape()
@@ -1221,9 +1242,11 @@ export const plank = part<PlankState>(
       // straining in the grate, the boards shedding at the stern, the sparks off the hips, what the feet throw up
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
-      // it and lands on the loudest note; then, as she lifts Calcifer out, a cut in to the reunion: a two-shot on the
-      // deck with the far range behind and the legs out of it, Howl slumped at the right and her carrying Calcifer
-      // in to him from the left, the frame drifting on with her; and a slow push in on the two of them for the heart.
+      // it and lands on the loudest note, the deck line a little under the middle and open sky over it, so his last
+      // swoop and his landing, wings spread, cross the middle of the frame (only the near leg's knee at its foot);
+      // then, as she lifts Calcifer out, a cut in to the reunion: a two-shot on the deck with the far range behind and
+      // the legs out of it, Howl slumped at the right and her carrying Calcifer in to him from the left, the frame
+      // drifting on with her; and a slow push in on the two of them for the heart.
       { ...onDeckShot(c(8), 7.7, -3.1, 0.32), cut: true },
       onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.34),
       onDeckShot(c(10) + 0.4, 7.3, -2.6, 0.36),
@@ -1233,9 +1256,9 @@ export const plank = part<PlankState>(
       { ...run(c(18), 10.6, 2.4, 1.5), cut: true },
       run(c(19) + 0.5, 10.6, 2.2, 1.5),
       run(c(20) - 0.05, 10.4, 2.2, 1.5),
-      { ...onDeckShot(c(20), 6.9, 2.7, 0.36), cut: true },
-      onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.36),
-      onDeckShot(LIFT_OUT - 0.05, 6.6, 2.4, 0.35),
+      { ...onDeckShot(c(20), 6.9, 2.7, 0.54), cut: true },
+      onDeckShot(c(21) + 0.3, 6.7, 2.6, 0.545),
+      onDeckShot(LIFT_OUT - 0.05, 6.6, 2.4, 0.55),
       { ...cross(LIFT_OUT, 4.7, 0.74), cut: true },
       cross(c(24), 4.6, 0.71),
       cross(c(25), 4.45, 0.66),
@@ -1244,12 +1267,14 @@ export const plank = part<PlankState>(
       follow(274.4, 5.2, [0.8, -0.4]),
       // The slide: with it, leading, Turnip Head leaping over the two of them off the stern and bounding on ahead
       // down the slope; then ahead of it to the brink, where he has landed and turns to it, the plank coming in, the
-      // frame tightening on the contact.
-      follow(276.2, 6.8, [2.4, -0.4]),
-      follow(277.6, 7.6, [3.2, -0.5]),
-      follow(279.0, 7.6, [3.8, -0.6]),
-      hold(281.2, 7.6, [end[0] - 1.9, end[1] - 0.4]),
-      hold(282.9, 6.6, [end[0] - 0.5, end[1] - 0.15]),
+      // frame tightening on the contact. Close (6.5 → 6.2 cells, 14–15 px) and low, her 0.4 down the frame, so she
+      // and the deck ride against the crag's long shoulder with the moor's mist under the deck line, at rest on the
+      // brink by 283.0 for the brake's cut.
+      follow(276.2, 6.5, [2.2, 0.1]),
+      follow(277.6, 6.4, [2.9, 0.45]),
+      follow(279.0, 6.35, [3.3, 0.5]),
+      hold(281.2, 6.3, [end[0] - 1.6, end[1] + 0.6]),
+      hold(282.9, 6.2, [end[0] - 0.4, end[1] + 0.55]),
       // The stop: a cut in on the contact, jolted by it; the settling; then in to the cadenza's one still frame.
       { ...hold(IMPACT, 5.2, JOLT_AT), cut: true },
       hold(IMPACT + 0.07, 5.2, [JOLT_AT[0] + 0.04, JOLT_AT[1] + 0.1]),
