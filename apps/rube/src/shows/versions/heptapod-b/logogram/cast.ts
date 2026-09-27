@@ -37,6 +37,11 @@ export interface ShellOpts {
   haze?: number
   /** The colour the air pales it toward (the sky's, by default). */
   air?: string
+  /**
+   * Optional (the valley builder's): whether it draws its own vapour puffs as it goes. Unset, it does; the valley's set
+   * passes false and draws the vapour itself, soft, along the line where it thins.
+   */
+  puffs?: boolean
 }
 
 /** How far the belly's oval is sunk below the belly's line and cut flat there: the keel the slot is in. */
@@ -147,7 +152,7 @@ export function drawShell(p: p5, k: number, o: ShellOpts): void {
   }
   ctx.restore()
   // The vapour it goes to: soft puffs peeling off its edges and rising.
-  if (vanish > 0.02) {
+  if (vanish > 0.02 && o.puffs !== false) {
     const puffs = 42
     for (let i = 0; i < puffs; i++) {
       const u = 0.05 + 0.9 * hash(i, 1, 31)

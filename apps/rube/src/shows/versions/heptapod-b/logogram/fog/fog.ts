@@ -1,28 +1,144 @@
-import type { Pt } from '../../../../../parts'
-import { box, frame, scenery } from '../kit'
-import { stub } from '../stub'
-import { FOG } from '../worlds'
+import type { Pt, Seg } from '../../../../../parts'
+import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
+import { SEAM } from '../music'
+import { drawFog, FOG_EXTENT } from './fog-set'
+import { FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
 
-/** STUB (the fog builder replaces this): beyond the glass. The set, and four stretches of the ball among the ink. */
-export const FOG_BOX = { x0: -30, y0: -40, x1: 140, y1: 30 }
-export const fogSet = scenery<null>({
-  name: 'fog-set',
-  draw: (p, _s, c) => {
-    const { k } = c
-    const f = frame(p, k)
-    p.push()
-    p.noStroke()
-    p.rectMode(p.CORNER)
-    p.fill(FOG.white)
-    p.rect(f.x0 * k, f.y0 * k, (f.x1 - f.x0) * k, (f.y1 - f.y0) * k)
-    p.pop()
-  },
-})
+/**
+ * Beyond the glass (the fog builder's): the fog's standing set, and the four stretches of Louise in it between the
+ * visions of the lake house. The set draws everything there is to see (the air, Abbott and Costello, every ring of
+ * their ink by show time); the stretches are her lanes and the camera's keys, read from the same plan
+ * (`fog-plan.ts`), so she rides exactly the ink that is drawn.
+ *
+ *   fog1 130.409 → 139.476  Abbott's palm lets her go into the first ring; she rocks in it as it closes over her.
+ *   fog2 142.582 → 156.177  Ring to ring, each written where she comes down, each whipping her on; the last straight
+ *                           up into a ring that closes under her, and she stops at its top.
+ *   fog3 160.015 → 163.126  A crescent of ink spun once round on three hard pulses, her pinned in it by its turn.
+ *   fog4 166.243 → 185.330  The push: flung up to where the great ring begins under her; it turns, she and Costello
+ *                           each writing half of it, a blot of hers on every hard pulse; it closes on 183.182.
+ */
+
+export const FOG_BOX = FOG_EXTENT
+export const fogSet = scenery<null>({ name: 'fog-set', draw: (p, _s, c) => drawFog(p, c.k, c.t) })
 export const FOG_CELLS = box(FOG_BOX.x0, FOG_BOX.y0, FOG_BOX.x1, FOG_BOX.y1, 4)
-/** Where each of the four fog stretches starts (the part's origin), fog cells. */
-export const FOG_AT: [Pt, Pt, Pt, Pt] = [[0, 0], [20, 0], [40, 0], [60, 0]]
-export const fog1 = stub('fog1', 6, 0)
-export const fog2 = stub('fog2', 10, 0)
-export const fog3 = stub('fog3', 3, 0)
-export const fog4 = stub('fog4', 16, 0)
-export const FOG_HITS: number[] = []
+
+const T = [SEAM.fog1, SEAM.fog2, SEAM.fog3, SEAM.fog4] as const
+/** Where each stretch's frame is (her place as it begins, the lane's (-0.5, 0)), fog cells. */
+export const FOG_AT: [Pt, Pt, Pt, Pt] = T.map((t) => {
+  const p = herAt(t)
+  return [p[0] + 0.5, p[1]] as Pt
+}) as [Pt, Pt, Pt, Pt]
+
+/** Every strike beyond the glass (show seconds). */
+export const FOG_HITS: number[] = FOG_STRIKES
+
+/** Her lane through one stretch: sampled from the plan, with a joint wherever her motion changes (a catch, a release). */
+function lane(slot: Slot, o: Pt): { segs: Seg[]; end: Pt; lo: Pt; hi: Pt } {
+  const fn = (s: number): Pt => {
+    const p = herAt(slot.begin + s)
+    return [p[0] - o[0], p[1] - o[1]]
+  }
+  const span = slot.end - slot.begin
+  const joints = [0, ...PATH.legs.map((l) => l.t0 - slot.begin).filter((s) => s > 1e-6 && s < span - 1e-6), span]
+  const segs: Seg[] = []
+  for (let i = 0; i < joints.length - 1; i++) {
+    const a = joints[i]
+    const b = joints[i + 1]
+    segs.push(...carried(fn, a, b, Math.max(1, Math.ceil((b - a) * 90))))
+  }
+  const lo: Pt = [Infinity, Infinity]
+  const hi: Pt = [-Infinity, -Infinity]
+  for (const s of segs) {
+    lo[0] = Math.min(lo[0], s.to[0])
+    lo[1] = Math.min(lo[1], s.to[1])
+    hi[0] = Math.max(hi[0], s.to[0])
+    hi[1] = Math.max(hi[1], s.to[1])
+  }
+  return { segs, end: fn(span), lo, hi }
+}
+
+function stretch(i: number, name: string, shots: (slot: Slot, o: Pt, at: (t: number) => Pt) => PartShot[]) {
+  const o = FOG_AT[i]
+  const at = (t: number): Pt => {
+    const p = herAt(t)
+    return [p[0] - o[0], p[1] - o[1]]
+  }
+  return part<null>(
+    { name, draw: () => {} },
+    (slot) => {
+      const { segs, end, lo, hi } = lane(slot, o)
+      const first = FOG_HITS.find((t) => t >= slot.begin - 1e-6 && t <= slot.end + 1e-6)
+      return {
+        cells: box(lo[0] - 3, lo[1] - 4, hi[0] + 3, hi[1] + 2),
+        exit: [end[0] + 0.5, end[1]] as Pt,
+        lane: { segs, fire: (first ?? slot.begin) - slot.begin },
+        state: null,
+      }
+    },
+    (slot) => shots(slot, o, at),
+  )
+}
+
+/** A point of the fog in a stretch's frame. */
+const local = (o: Pt, p: Pt, dx = 0, dy = 0): Pt => [p[0] - o[0] + dx, p[1] - o[1] + dy]
+
+export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
+  const R1 = RINGS.find((r) => r.key === 'R1')!
+  const her0 = at(slot.begin)
+  return [
+    // The veil clears on the palm and her in it, close; then back a little to take in the ring written beside her.
+    { t: 131.3, cells: 3.6, hold: [her0[0] + 0.1, her0[1] - 0.6], w: 1 },
+    { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
+    { t: 134.4, cells: 4.6, hold: local(o, R1.c, 0.0, 0.45), w: 1 },
+    { t: 136.8, cells: 4.8, hold: local(o, R1.c, 0.15, 0.5), w: 1 },
+    // Out with her as she glides through the bottom: the cut's framing, following.
+    { t: 138.5, cells: 4.6, off: [0.7, -0.5], w: 0 },
+    { t: slot.end, cells: 4.5, off: [0.7, -0.5], w: 0 },
+  ]
+})
+
+export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
+  const top = at(slot.end)
+  return [
+    { t: 143.1, cells: 4.8, off: [0.8, -0.6], w: 0 },
+    // Wider for the long arcs, leading her, so the ring written for her is seen before she comes down into it.
+    { t: 145.0, cells: 5.9, off: [1.3, -0.4], w: 0 },
+    { t: 147.7, cells: 6.3, off: [1.5, -0.3], w: 0 },
+    { t: 150.4, cells: 6.3, off: [1.5, -0.4], w: 0 },
+    { t: 153.0, cells: 5.8, off: [0.6, -0.45], w: 0 },
+    // The toss: the frame goes up with her and waits at the top of the ring written round her.
+    { t: 154.6, cells: 5.0, off: [0.2, -0.5], w: 0 },
+    { t: 155.75, cells: 4.3, hold: [top[0] + 0.45, top[1] - 0.5], w: 1 },
+    { t: slot.end, cells: 4.0, hold: [top[0] + 0.5, top[1] - 0.6], w: 1 },
+  ]
+})
+
+export const fog3 = stretch(2, 'fog3', (slot, o, at) => {
+  const W = RINGS.find((r) => r.key === 'W')!
+  const end = at(slot.end)
+  return [
+    { t: 160.5, cells: 4.2, hold: local(o, W.c, 0.4, 0.05), w: 1 },
+    { t: 162.5, cells: 4.3, hold: local(o, W.c, 0.45, 0.0), w: 1 },
+    { t: slot.end, cells: 4.0, hold: [end[0] + 0.5, end[1] - 0.6], w: 1 },
+  ]
+})
+
+export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
+  const top = at(168.136)
+  const c = local(o, GREAT.ring.c)
+  const end = at(slot.end)
+  return [
+    { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
+    { t: 167.5, cells: 4.7, off: [0.4, -0.9], w: 0 },
+    // Stopped at the top of her rise, where the ink begins under her; then the long pull back as the ring is written,
+    // her low in the frame, until it is whole, closing (183.182); then in for the cut.
+    { t: 168.4, cells: 5.0, hold: [top[0] + 0.6, top[1] - 1.1], w: 1 },
+    { t: 170.8, cells: 6.8, hold: [top[0] + 0.8, top[1] - 2.0], w: 1 },
+    { t: 173.6, cells: 9.4, hold: [c[0] + 0.6, c[1] + 1.4], w: 1 },
+    // Both pens in the frame: hers at the bottom, Costello's limb on the top, the two halves coming round.
+    { t: 176.8, cells: 11.5, hold: [c[0] + 0.3, c[1] + 0.6], w: 1 },
+    { t: 181.8, cells: 12.2, hold: [c[0] + 0.2, c[1] + 0.35], w: 1 },
+    { t: 183.182, cells: 11.5, hold: [c[0] + 0.2, c[1] + 0.4], w: 1 },
+    { t: slot.end, cells: 5.0, hold: [end[0] + 0.6, end[1] - 1.2], w: 1 },
+  ]
+})
