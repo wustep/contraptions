@@ -180,10 +180,11 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     cut: true,
     v: [0, 0],
     cells: 3.4,
-    frame: FIRST.frame,
+    // Her place on the screen is FIRST's: the same share of the frame, at 3.4 cells here and 4.8 on the far side.
+    frame: [(FIRST.frame[0] * 3.4) / FIRST.cells, (FIRST.frame[1] * 3.4) / FIRST.cells],
     ian: [0.36, 0],
     hannah: null,
     open: FIRST.cells,
-    what: 'at rest. Valley side: on the meadow with Ian beside her on her right, touching, the sky where the shell was, framed with the camera\'s centre at FIRST.frame from her at 3.4 cells. Lake side: the show\'s first frame exactly (FIRST: the same place, the same framing), which the scale match cut opens on: Louise on the bench by the window, Hannah across the room.',
+    what: 'at rest. Valley side: on the meadow with Ian beside her on her right, touching, the sky where the shell was, framed at 3.4 cells with the camera\'s centre at FIRST.frame × 3.4 / 4.8 = [0.92, -0.71] from her (her place on the screen is then FIRST\'s). Lake side: the show\'s first frame exactly (FIRST: the same place, the same framing), which the scale match cut opens on: Louise on the bench by the window, Hannah across the room.',
   },
 }
