@@ -37,7 +37,7 @@ const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) =>
 }, []))
 const base = `http://localhost:${args.port ?? '8850'}`
 /** The four shows on the Shows page's own card, in reading order. */
-const FOUR = ['interstellar/opus55', 'come-recover/opus55-all-at-once', 'la-la-land/fable51-epilogue', 'gymnopedie/opus55']
+const FOUR = ['interstellar/opus55', 'come-recover/opus55-all-at-once', 'la-la-land/fable5-1', 'gymnopedie/opus55']
 
 /** The browser Playwright keeps, or, when this copy of it wants one not downloaded, any headless Chromium it has. */
 async function launch(pw) {

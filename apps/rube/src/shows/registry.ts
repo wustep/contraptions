@@ -167,7 +167,41 @@ export interface Work {
 
 const PATH = /(?:^|\/)versions\/([a-z0-9][a-z0-9-]*)\/([a-z0-9][a-z0-9-]*)\.show\.ts$/
 /** Takes that should lead their work in the registry, picker and Theater. */
-const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus55-sebs' }
+const PREFERRED_TAKES: Record<string, string> = { 'la-la-land': 'opus5-5', 'cornfield-chase': 'opus55' }
+
+/**
+ * Takes that shipped under another name: work → old take → take. An old link still opens the take (`pickVersion`),
+ * the build still writes a page at the old address (`vite.config.ts`), and Theater keeps an old pool's choices.
+ */
+export const RENAMED_TAKES: Record<string, Record<string, string>> = {
+  'la-la-land': { 'opus55-sebs': 'opus5-5', 'fable51-epilogue': 'fable5-1' },
+  'cornfield-chase': { 'opus55-music-sync': 'opus55', 'tech-demo': 'grok47' },
+}
+
+/** A take by its name now, given any name it has shipped under. */
+export const currentTake = (work: string, take: string): string => RENAMED_TAKES[work]?.[take] ?? take
+
+/**
+ * The shelves the picker and Theater set the works out on, in this order. Machine is the stock machine at its music,
+ * Ambient is music to leave on, and a film's cue is Movies, as a work not named here is.
+ */
+export const SECTIONS = ['Machine', 'Movies', 'Ambient'] as const
+export type Section = (typeof SECTIONS)[number]
+const SHELVED: Record<string, Section> = {
+  'clair-de-lune': 'Machine',
+  'premiere-arabesque': 'Machine',
+  'cornfield-chase': 'Machine',
+  gymnopedie: 'Ambient',
+}
+export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
+
+/** The works by shelf, each shelf by title; empty shelves left out. */
+export function shelves(works: Work[]): { section: Section; works: Work[] }[] {
+  return SECTIONS.map((section) => ({
+    section,
+    works: works.filter((w) => sectionOf(w.work) === section).sort((a, b) => a.title.localeCompare(b.title)),
+  })).filter((s) => s.works.length > 0)
+}
 
 /** `versions/<work>/<take>.show.ts`, or null for a path that is not one. */
 export function versionPath(path: string): { work: string; take: string } | null {
@@ -192,8 +226,8 @@ export function readShows(found: Record<string, unknown>): Registry {
   const works: Work[] = []
   const problems: string[] = []
   // By the take's name, not the file's: `opus55.show.ts` sorts after `opus55-spark.show.ts` ('.' comes after '-'),
-  // but a take is filed after the take its name extends. Epilogue's Opus is the
-  // current take, so keep it first in the registry and every picker built from it.
+  // but a take is filed after the take its name extends. Epilogue's and Cornfield
+  // Chase's Opus takes lead their work (`PREFERRED_TAKES`), here and in every picker.
   const name = (path: string): string => path.replace(/\.show\.ts$/, '')
   const compare = (a: string, b: string): number => {
     const left = versionPath(a)
@@ -247,7 +281,8 @@ export function pickVersion(works: Work[], work: string | null, take: string | n
   const fallback = (w.versions.find((v) => v.take === PREFERRED_TAKES[w.work]) ??
     (w.work === DEFAULT_WORK ? w.versions.find((v) => v.take === DEFAULT_TAKE) : undefined) ??
     w.versions[0])
-  return w.versions.find((v) => v.take === take) ?? fallback ?? null
+  const named = take && currentTake(w.work, take)
+  return w.versions.find((v) => v.take === named) ?? fallback ?? null
 }
 
 /** A loaded version that cannot be played, said plainly; empty when it can. */

@@ -32,7 +32,7 @@ export function checkTheater(check: Check, works: Work[]): void {
   const after = switchLinks(new Set<ShellMode>(['theater']))
   check('once visited it is on the switch, last, after the four', after.length === MODE_LINKS.length + 1 && after[after.length - 1] === tab && MODE_LINKS.every((m, i) => after[i] === m))
   check('its address is its tab, with or without the slash', modeFromPath('/theater/') === 'theater' && modeFromPath('/theater') === 'theater' && modeFromPath('/theater/index.html') === 'theater')
-  check('Shows\' own addresses are still Shows', modeFromPath('/shows/') === 'shows' && modeFromPath('/shows/clair-de-lune/') === 'shows' && modeFromPath('/shows/cornfield-chase/tech-demo/') === 'shows')
+  check('Shows\' own addresses are still Shows', modeFromPath('/shows/') === 'shows' && modeFromPath('/shows/clair-de-lune/') === 'shows' && modeFromPath('/shows/cornfield-chase/grok47/') === 'shows')
   const shell = readFileSync(join(process.cwd(), 'src/ui/shell.ts'), 'utf8')
   check('the switch is built from what this session has visited, and a visit is kept', /const links = switchLinks\(visited\)/.test(shell) && /rememberVisit\(visited, mode\)/.test(shell) && /sessionStorage\.setItem\(VISITED_STORE/.test(shell))
   const page = readFileSync(join(process.cwd(), 'theater/index.html'), 'utf8')

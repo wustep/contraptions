@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Connect, type Plugin } from 'vite'
-import { readShows, type ShowVersion, type Work } from './apps/rube/src/shows/registry'
+import { RENAMED_TAKES, readShows, type ShowVersion, type Work } from './apps/rube/src/shows/registry'
 import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/shows/share'
 
 /**
@@ -10,7 +10,8 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  *   /machine/        Machine (apps/rube)
  *   /explorations/   the generator Machine grew out of (src)
  *   /shows/          Machine set to music (apps/rube/src/shows), and a page per show:
- *                    /shows/<work>/ and /shows/<work>/<take>/ (`showPages`, `share.ts`)
+ *                    /shows/<work>/ and /shows/<work>/<take>/ (`showPages`, `share.ts`), and a
+ *                    renamed take's old address as well
  *   /theater/        every show, shuffled; off the mode switch until visited (`shell.ts`)
  *   /playground/     pieces and worlds waiting to be let into Machine (apps/rube/src/playground)
  *   /builder/        where new pieces and worlds are made (apps/rube/src/builder); not on the switch
@@ -130,7 +131,10 @@ function showPages(): Plugin {
         for (const v of w.versions) {
           if (!existsSync(`${here}public${cardPath(w.work, v.take)}`)) missing.push(cardPath(w.work, v.take))
           const card = showCard(works, w.work, v.take)!
-          for (const path of new Set([showPath(works, w.work, v.take), `/shows/${w.work}/${v.take}/`])) {
+          // A take renamed keeps its old address too, as the same page: an old link still opens it, with its card,
+          // and the page writes the new address back (`RENAMED_TAKES`).
+          const old = Object.entries(RENAMED_TAKES[w.work] ?? {}).filter(([, now]) => now === v.take).map(([was]) => `/shows/${w.work}/${was}/`)
+          for (const path of new Set([showPath(works, w.work, v.take), `/shows/${w.work}/${v.take}/`, ...old])) {
             if (written.has(path)) continue
             written.add(path)
             this.emitFile({ type: 'asset', fileName: `${path.slice(1)}index.html`, source: withCard(html, card) })

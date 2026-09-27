@@ -2,7 +2,7 @@
 
 Copyrighted recordings. This is a private tech demo and a one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it. Attribution: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`.
 
-Open it at `/shows/la-la-land/opus55-sebs/`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
+Open it at `/shows/la-la-land/opus5-5/`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
 
 ## What it is
 
@@ -90,7 +90,7 @@ Each part is handed a slot (the show time the ball arrives, the time it must lea
 
 ## How it is built
 
-- **The version file:** `apps/rube/src/shows/versions/la-la-land/opus55-sebs.show.ts`. Everything with weight is behind `load()`.
+- **The version file:** `apps/rube/src/shows/versions/la-la-land/opus5-5.show.ts`. Everything with weight is behind `load()`.
 - **The show:** `.../la-la-land/sebs/`.
   - `kit.ts`: the part contract (`Slot`, `Built`, `Company`), timed `route` and `carried` lanes, `lay()` with seam checks, and drawing helpers (`frame`, `glow`, `beam`, `ring`).
   - `show.ts`: a `Show` with eleven universes on one clock, and the company merged in.
