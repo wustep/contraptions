@@ -527,10 +527,29 @@ function mass(p: p5, k: number, billows: Billow[]): void {
   ctx.restore()
 }
 
+/**
+ * The whole cloud takes a breath as each puff joins it on its downbeat: it swells by a few hundredths, quick to come and
+ * slow to settle, so every bar lands in the sky as well as at the chimney.
+ */
+function breath(key: ShapeKey, t: number): number {
+  let v = 0
+  for (const puff of PUFFS) {
+    const late = t - puff.join
+    if (puff.shape !== key || late < 0 || late > 2.5) continue
+    v += 0.05 * puff.amp * smooth(late, 0, 0.06) * Math.exp(-late / 0.45)
+  }
+  return v
+}
+
 function drawShape(p: p5, k: number, key: ShapeKey, t: number): void {
   const shape = SHAPES[key]
   const { got, loose } = billowsOf(key, t)
   if (!got.size && !loose.length) return
+  const swell = breath(key, t)
+  if (swell > 0) {
+    const [cx, cy] = shape.at(t)
+    for (const [i, b] of got) got.set(i, { ...b, x: cx + (b.x - cx) * (1 + swell), y: cy + (b.y - cy) * (1 + swell), r: b.r * (1 + swell) })
+  }
   if (key === 'falls') {
     // Each curl of the mist is small until its ribbon reaches it, then rises and swells where the water lands.
     CURLS.forEach((i, j) => {
@@ -652,8 +671,8 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   const g = R
   const P = (v: number) => X(v, k)
   const { ago, amp } = lastChuff(t)
-  // The engine gives a small shudder on each chuff, its boiler lifting on its bed and settling.
-  const kick = ago < 0.6 ? Math.exp(-ago / 0.07) * amp : 0
+  // The engine gives a shudder on each chuff, its boiler kicking up on its bed and settling.
+  const kick = ago < 0.6 ? smooth(ago, 0, 0.03) * Math.exp(-ago / 0.09) * amp : 0
   p.push()
   p.translate(P(E), P(g))
   p.scale(ENGINE.scale)
@@ -665,7 +684,7 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.fill(HOME.wood)
   p.rect(P(E - 0.52), P(g - 0.06), P(1.04), P(0.06), P(0.015))
   p.push()
-  p.translate(0, P(-0.012 * kick))
+  p.translate(0, P(-0.03 * kick))
   // The firebox, and the fire in it.
   p.fill(mixHex(INK, HILL.bark, 0.35))
   p.rect(P(E - 0.46), P(g - 0.24), P(0.44), P(0.18), P(0.02))
@@ -716,6 +735,27 @@ function drawEngine(p: p5, k: number, weight: number, t: number): void {
   p.fill(mixHex(HOME.brass, INK, 0.1))
   p.rect(0, P(-0.025), P(0.13), P(0.025), P(0.01))
   p.pop()
+  // The chuff itself: a cough of steam out of the mouth on the downbeat, round the knot that shoots up out of it,
+  // spreading and thinning in the air by the chimney as the knot goes on.
+  if (ago < 0.7) {
+    const open = 1 - Math.exp(-ago / 0.07)
+    const fade = Math.exp(-ago / 0.2) * Math.min(1, ago / 0.02)
+    const size = 0.75 + 0.4 * amp
+    const seed = Math.round((t - ago) * 1000)
+    const cough: Billow[] = [0, 1, 2, 3].map((j) => {
+      const side = (j - 1.5) / 1.5
+      return {
+        x: cx + side * (0.05 + 0.13 * open) * size + 0.02 * hash(seed, j, 5),
+        y: cy - (0.04 + (0.1 + 0.05 * hash(seed, j, 6)) * open * (1 - 0.4 * Math.abs(side))) * size,
+        r: (0.035 + (0.06 + 0.02 * hash(seed, j, 7)) * open) * size,
+      }
+    })
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    ctx.save()
+    ctx.globalAlpha = 0.9 * fade
+    mass(p, k, cough)
+    ctx.restore()
+  }
   p.pop()
   // The standard that carries the flywheel's axle.
   p.stroke(INK)
