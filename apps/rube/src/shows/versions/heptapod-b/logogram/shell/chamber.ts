@@ -1,5 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, route, type Company, type PartShot } from '../kit'
+import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
 import { IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
@@ -59,10 +60,15 @@ export const chamber = part<ChamberState>(
   (): PartShot[] => [
     // Out of the shaft, the camera easing ahead of her as she slows into the dark; the glass a dim grey slab ahead.
     { t: 87.9, cells: 5.9, hold: [2.4, -1.35], w: 1 },
-    // The glass wakes, and the camera draws back: the room is vast, the glass bigger than the frame.
-    { t: 92.2, cells: 13, hold: [6.8, -3.5], w: 1 },
-    // The long walk: they cross the frame toward it; a slow push toward the glass as the shapes come.
-    { t: 96.6, cells: 12.4, hold: [9.2, -3.35], w: 1 },
+    // The glass wakes, and the camera draws back a little: the glass is bigger than the frame.
+    { t: 89.6, cells: 8.6, hold: [3.6, -2.4], w: 1 },
+    // The long walk: the camera goes with them, a little ahead, pushing in as they go, so the glass's edge comes past
+    // and its light grows toward us; a shadow gathers in the fog.
+    { t: 91.4, cells: 9.4, off: [2.55, -2.6], w: 0 },
+    { t: 93.6, cells: 8.7, off: [2.55, -2.45], w: 0 },
+    { t: 95.8, cells: 7.9, off: [2.45, -2.3], w: 0 },
+    // Abbott out of the white: the camera draws back to take it in.
+    { t: 98.4, cells: 11.9, hold: [9.6, -3.2], w: 1 },
     { t: 99.3, cells: 11.2, hold: [10.6, -3.0], w: 1 },
     { t: 102.2, cells: 12.2, hold: [12.3, -3.3], w: 1 },
     { t: 105.6, cells: 13.2, hold: [14.2, -3.55], w: 1 },
@@ -77,12 +83,14 @@ export const chamber = part<ChamberState>(
     { t: 119.55, cells: 4.5, hold: [X_PALM - 0.1, -1.15], w: 1 },
     { t: 120.25, cells: 4.6, hold: [X_PALM + 0.05, -1.2], w: 1 },
     // Out and over as Costello lifts a limb to write, the ink leaving it, the ring beside the palm.
-    // Then drifting slowly back toward her and the palm as the ring comes round to close on her side.
-    { t: 121.7, cells: 7.4, hold: [X_PALM + 3.9, -2.0], w: 1 },
-    { t: 125.0, cells: 7.1, hold: [X_PALM + 2.9, -1.9], w: 1 },
-    { t: 128.5, cells: 6.9, hold: [X_PALM + 1.9, -1.86], w: 1 },
-    // In on her for the cut, as the light goes white.
-    { t: OUT, cells: 3.6, hold: [X_LEAN + 0.1, -0.6], w: 1 },
+    // Then settling on the two of them together, the ring whole and her at the palm, through its closing on the cue's
+    // loudest swell (a slow drift, never a dead hold).
+    { t: 122.4, cells: 7.5, hold: [X_PALM + 4.0, -2.0], w: 1 },
+    { t: 125.0, cells: 7.2, hold: [X_PALM + 3.55, -1.96], w: 1 },
+    { t: 127.5, cells: 6.9, hold: [X_PALM + 2.55, -1.92], w: 1 },
+    { t: 129.6, cells: 6.55, hold: [X_PALM + 2.15, -1.85], w: 1 },
+    // In on her for the cut, under the white rising (the veil from 129.7): the seam's framing.
+    { t: OUT, cells: SEAMS.fog1.cells, hold: [X_LEAN + SEAMS.fog1.frame[0], SEAMS.fog1.frame[1]], w: 1 },
   ],
 )
 

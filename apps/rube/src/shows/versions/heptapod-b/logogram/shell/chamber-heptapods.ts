@@ -39,6 +39,9 @@ function knots(ks: [number, number][]): (t: number) => number {
  * How deep in the fog a heptapod is: a shadow (`before`) that darkens a little on each unseen footfall (`hints`) and
  * recovers; on `seen` it resolves, quickly at first and then slowly, onto `after`.
  */
+/** How much an unseen footfall darkens its shadow in the fog. */
+const HINT = 0.07
+
 function emerge(seen: number, hints: number[], before: [number, number][], after: [number, number][]): (t: number) => number {
   const pre = knots(before)
   const post = knots(after)
@@ -47,7 +50,7 @@ function emerge(seen: number, hints: number[], before: [number, number][], after
     if (t > seen) f += (post(t) - f) * (1 - Math.exp(-(t - seen) / 0.5))
     for (const h of hints) {
       const a = t - h
-      if (a > 0 && a < 4) f -= 0.05 * (1 - Math.exp(-a / 0.08)) * Math.exp(-a / 0.9)
+      if (a > 0 && a < 4) f -= HINT * (1 - Math.exp(-a / 0.08)) * Math.exp(-a / 0.9)
     }
     return clamp01(f)
   }
@@ -91,11 +94,11 @@ const ABBOTT: Walker = {
   far: [ABBOTT_AT[0] + 3.6, -3.7],
   h: ABBOTT_H,
   hFar: ABBOTT_H * 0.72,
-  a: (t) => sm01((t - 91.2) / (101.0 - 91.2)),
+  a: (t) => sm01((t - 89.6) / (101.0 - 89.6)),
   shift: () => [0, 0],
   // Unseen until the first hard footfalls, a shadow in the white darkening on each, then resolving on 97.239 and
   // coming close.
-  fog: emerge(ABBOTT_SEEN, [pulse(394), pulse(402), pulse(406)], [[91, 1], [93.9, 0.975], [96.9, 0.955], [ABBOTT_SEEN, 0.94]], [[ABBOTT_SEEN, 0.6], [99.7, 0.4], [101.6, 0.28], [104.5, 0.22]]),
+  fog: emerge(ABBOTT_SEEN, [pulse(394), pulse(402), pulse(406)], [[89.4, 1], [91.6, 0.955], [94.0, 0.905], [96.0, 0.865], [97.1, 0.83], [ABBOTT_SEEN, 0.82]], [[ABBOTT_SEEN, 0.58], [99.7, 0.4], [101.6, 0.28], [104.5, 0.22]]),
   steps: [
     // Deep in the fog, unseen.
     step(3, 383, false), step(1, 385, false), step(5, 387, false), step(0, 389, false), step(6, 391, false), step(2, 392, false), step(4, 393, false),
@@ -142,6 +145,9 @@ function bodyOf(w: Walker, t: number): { at: Pt; h: number } {
   const at = lerpPt(w.far, w.near, clamp01(e))
   return { at: [at[0] + s[0], at[1] + s[1]], h: lerp(w.hFar, w.h, a) }
 }
+
+/** Heptapod `j`'s body at `t` (origin on its fog floor, and height), for what is drawn round it: its shadow in the fog. */
+export const bodyAt = (j: 0 | 1, t: number): { at: Pt; h: number } => bodyOf(WALKERS[j], t)
 
 /** Where limb `i`'s foot rests for a body at `t` (world cells). */
 function restOf(w: Walker, i: number, t: number): Pt {

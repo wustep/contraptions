@@ -99,7 +99,7 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     cut: true,
     veil: true,
     v: [0, 0],
-    cells: 3.6,
+    cells: 5.2,
     frame: [0.1, -0.6],
     ian: null,
     hannah: null,

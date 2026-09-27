@@ -4,7 +4,7 @@ import { frame, hash } from '../kit'
 import { level } from '../music'
 import { SHELL } from '../worlds'
 import { CEIL, GLASS_BOT, GLASS_TOP, GLASS_X0, GLASS_X1, OUT, PALM, WAKE, WALL_X, WALL_X1 } from './chamber-path'
-import { drawInk, drawWalker, FOOTFALLS, PALM_AT, WALKERS, type Seen } from './chamber-heptapods'
+import { bodyAt, drawInk, drawWalker, FOOTFALLS, PALM_AT, WALKERS, type Seen } from './chamber-heptapods'
 
 /**
  * The chamber: a vast dark room, its far wall the glass, a great rectangle of white with the fog rolling behind it,
@@ -27,8 +27,9 @@ const rgba = (hex: string, a: number) => `rgba(${rgb(hex)}, ${Math.max(0, Math.m
 const DIM = mixHex(SHELL.wall, SHELL.mist, 0.28)
 
 /** The fog's colour behind the glass, lit: a little greyer high up; what the heptapods fade into. */
-const TOP = mixHex(SHELL.fogLit, SHELL.glowWarm, 0.5)
+// Its top the same as its middle, so a heptapod deep in it is only ever a shade darker than the fog, never lighter.
 const AIR = mixHex(SHELL.glowWarm, SHELL.screen, 0.5)
+const TOP = AIR
 
 /** When the room begins to go white with the glass, and how far it goes before the director's veil takes it. */
 const SWELL = 129.0
@@ -91,9 +92,11 @@ function drawPuffs(ctx: CanvasRenderingContext2D, k: number, t: number, who: 0 |
     const a = t - f.at
     if (a < 0 || a > 2.4) continue
     const w = WALKERS[who]
-    const seen = clamp01(0.35 + (1 - w.fog(f.at)) * 1.6) * g
-    const s = w.h / 13
-    const spread = (0.4 + 1.1 * (1 - Math.exp(-a / 0.45))) * s
+    // Deep in the fog a footfall is only the fog churning: wider, slower, darker than a near one's.
+    const deep = clamp01((w.fog(f.at) - 0.6) / 0.3)
+    const seen = clamp01(0.35 + 0.35 * deep + (1 - w.fog(f.at)) * 1.6) * g
+    const s = (w.h / 13) * (1 + 0.7 * deep)
+    const spread = (0.4 + 1.1 * (1 - Math.exp(-a / (0.45 + 0.3 * deep)))) * s
     const rise = (0.1 + 0.8 * (1 - Math.exp(-a / 0.8))) * s
     const on = (1 - Math.exp(-a / 0.04)) * Math.exp(-a / 0.8)
     const [x, y] = f.p
@@ -101,6 +104,30 @@ function drawPuffs(ctx: CanvasRenderingContext2D, k: number, t: number, who: 0 |
     lobe(ctx, k, x, y - 0.05 * s, spread * 1.15, spread * 0.42, mixHex(SHELL.fogLit, SHELL.mist, 0.8), 0.55 * on * seen)
     for (const d of [-0.55, 0.5]) lobe(ctx, k, x + d * spread, y - rise * (0.7 + 0.3 * Math.abs(d)), spread * 0.8, spread * 0.55, SHELL.screen, 0.6 * on * seen)
   }
+}
+
+/**
+ * A heptapod's shadow in the fog before it can be seen: a great soft darkening where its body is and a low one where
+ * it stands, deepening as it comes, and darker for a moment on each unseen footfall (the fog it stirs). Gone once
+ * the heptapod itself shows through.
+ */
+function drawShadow(ctx: CanvasRenderingContext2D, k: number, t: number, j: 0 | 1, g: number): void {
+  const w = WALKERS[j]
+  const f = w.fog(t)
+  const near = 1 - f
+  const s = sm(near, 0.02, 0.13) * (1 - sm(near, 0.3, 0.55))
+  let beat = 0
+  for (const q of FOOTFALLS) {
+    if (q.who !== j) continue
+    const a = t - q.at
+    if (a > 0 && a < 3) beat += (1 - Math.exp(-a / 0.06)) * Math.exp(-a / 0.8) * (1 - sm(1 - w.fog(q.at), 0.2, 0.4))
+  }
+  const on = Math.min(1, s * (1 + 0.9 * beat)) * g
+  if (on <= 0.004) return
+  const { at, h } = bodyAt(j, t)
+  const shade = mixHex(SHELL.fogLit, SHELL.mist, 0.7)
+  lobe(ctx, k, at[0], at[1] - 0.66 * h, 0.3 * h, 0.42 * h, shade, 0.2 * on)
+  lobe(ctx, k, at[0], at[1] - 0.2 * h, 0.62 * h, 0.22 * h, shade, 0.16 * on)
 }
 
 /**
@@ -198,6 +225,7 @@ function drawGlass(p: p5, k: number, t: number, g: number, wash: number): void {
   const seen: Seen = { air: AIR, wash }
   // Costello behind, then fog between the two, then Abbott close behind the glass.
   if (t > 95) {
+    drawShadow(ctx, k, t, 1, gl)
     drawWalker(p, k, 1, t, seen)
     drawPuffs(ctx, k, t, 1, gl)
     fogLayer(ctx, k, t, fogA * 0.8, 1, 9, 402)
@@ -209,7 +237,8 @@ function drawGlass(p: p5, k: number, t: number, g: number, wash: number): void {
   band.addColorStop(1, rgba(SHELL.screen, 0.9 * gl))
   ctx.fillStyle = band
   ctx.fillRect(X0 * k, (Y1 - 2.8) * k, (X1 - X0) * k, 2.8 * k)
-  if (t > 90) {
+  if (t > 88) {
+    drawShadow(ctx, k, t, 0, gl)
     drawWalker(p, k, 0, t, seen)
     drawPuffs(ctx, k, t, 0, gl)
     drawPress(ctx, k, t, gl)
