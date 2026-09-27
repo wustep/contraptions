@@ -17,6 +17,8 @@ import { AIR, B0, BACKS, BAND, derekAt, FOLLOW_ON, houseAt, LANDS, powerAt, W, w
 type Frame = ReturnType<typeof frame>
 const CROWD = DERELICTE.crowd
 const RIM = mixHex(DERELICTE.crowdRim, DERELICTE.spot, 0.35)
+/** The nearest row is nearer us than the runway: it slides past faster than the set when the camera travels. */
+const FRONT_PARALLAX = -0.45
 const FIRE_RIM = mixHex(DERELICTE.crowdRim, DERELICTE.fire, 0.45)
 const COLD_RIM = mixHex(DERELICTE.crowdRim, DERELICTE.star, 0.55)
 
@@ -41,7 +43,8 @@ const LOW_FAR: Person[] = []
   let i = 0
   const gap = (j: number) => 0.3 + 0.32 * hash(j, 1) + (hash(j, 9) > 0.9 ? 0.3 : 0)
   for (let x = 0.62; x < 12.9; x += gap(i)) BACK.push(person(x, 0.98, i++))
-  for (let x = 0.8; x < 19.55; x += gap(i)) FRONT.push(person(x, 1.47, i++))
+  // (The front row runs on past the runway's ends: it is drawn with parallax, and only the part before the runway shows.)
+  for (let x = -14; x < 40; x += gap(i)) FRONT.push(person(x, 1.47, i++))
   for (let x = 20.3; x < 37; x += gap(i)) LOW_FAR.push(person(x, 2.66, i++))
   for (let x = 20.45; x < 37; x += gap(i)) {
     if (PRESS_FRONT_X.some((px) => Math.abs(px - x) < 0.3)) continue
@@ -80,6 +83,14 @@ function schedule(): void {
     let best = 0
     for (let i = 1; i < PIT_X.length; i++) if (Math.abs(PIT_X[i] - want) < Math.abs(PIT_X[best] - want)) best = i
     fire(pit(best), beat(k))
+  }
+  // In his face as the camera travels with him: a flash on every downbeat and third beat, whoever is at his shoulder.
+  for (let k = 276; k <= 295; k++) {
+    if (k % 4 !== 0 && k % 4 !== 2) continue
+    const x = derekAt(beat(k))[0] + 0.45
+    let best = 0
+    for (let i = 1; i < PIT_X.length; i++) if (Math.abs(PIT_X[i] - x) < Math.abs(PIT_X[best] - x)) best = i
+    if (Math.abs(PIT_X[best] - x) < 1.2) fire(pit(best), beat(k))
   }
   // The end of the runway: the model's stop, and the volley.
   for (const i of [7, 8, 9, 10]) fire(pit(i), beat(296))
@@ -261,7 +272,7 @@ function fillContour(p: p5, k: number, c: Contour, bottom: number, fill: string,
 }
 
 /** A row of the audience, with any press in it, across the part of it in the frame. */
-function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Person[], press: Shooter[], fill: string, rim: number, x0: number, x1: number, base: number, rimColor = RIM): void {
+function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Person[], press: Shooter[], fill: string, rim: number, x0: number, x1: number, base: number, rimColor = RIM, shift = 0): void {
   const a = Math.max(x0, f.x0 - 0.5)
   const b = Math.min(x1, f.x1 + 0.5)
   if (b <= a) return
@@ -269,10 +280,11 @@ function drawRow(p: p5, k: number, f: Frame, t: number, tw: number, people: Pers
   const c = new Contour(a, dx, Math.ceil((b - a) / dx) + 1, base)
   const lv = level(t)
   for (const q of people) {
-    if (q.x < a - 0.6 || q.x > b + 0.6) continue
+    const qx = q.x + shift
+    if (qx < a - 0.6 || qx > b + 0.6) continue
     const heave = 0.05 * lv * (0.5 + 0.5 * Math.sin(tw * (1.7 + 0.6 * hash(q.seed, 4)) + q.seed))
     const settle = 0.04 * (1 - smooth(t, B0, B0 + 3)) * Math.sin(tw * 3 + q.seed)
-    figure(c, q.x, q.head - heave + settle, q.r, q.hat, q.seed)
+    figure(c, qx, q.head - heave + settle, q.r, q.hat, q.seed)
   }
   for (const s of press) {
     if (s.x < a - 0.8 || s.x > b + 0.8) continue
@@ -304,7 +316,7 @@ export function drawCrowd(p: p5, k: number, f: Frame, t: number): void {
   const pitPress = PRESS.filter((s) => !s.low)
   const lowPress = PRESS.filter((s) => s.low)
   drawRow(p, k, f, t, tw, BACK, pitPress, mixHex(CROWD, DERELICTE.roof, 0.45), rim * 0.8, 0.35, 19.75, 1.36, rimColor)
-  drawRow(p, k, f, t, tw, FRONT, [], CROWD, rim, 0.5, 19.72, 1.84, rimColor)
+  drawRow(p, k, f, t, tw, FRONT, [], CROWD, rim, 0.5, 19.72, 1.84, rimColor, FRONT_PARALLAX * (f.cx - 10))
   drawRow(p, k, f, t, tw, LOW_FAR, [], mixHex(CROWD, DERELICTE.roof, 0.4), rim * 0.7, 20.1, 37, 3.05, rimColor)
   drawRow(p, k, f, t, tw, LOW, lowPress, CROWD, rim * 0.5, 20.3, 37, 3.3, rimColor)
   // The reflectors catch the light; then the flashes, over everything.

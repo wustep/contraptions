@@ -56,10 +56,11 @@ export const LAMPS: Lamp[] = [
 export const MUGATU_LAMP: Lamp = {
   at: [-0.72, -3.42],
   aim: (t) => {
-    const d = derekAt(Math.min(t, FOLLOW_ON + 0.3))
+    const d = t < FOLLOW_ON ? derekAt(t) : followAt(t).at
     return [d[0], d[1] + 0.13]
   },
-  on: (t) => (t < TRIGGER ? 0 : (1 + 1.2 * Math.exp(-(t - TRIGGER) / 0.12)) * (1 - smooth(t, FOLLOW_ON, FOLLOW_ON + 0.8))),
+  // Snapped on at the title; once the follow spot has him, kept on him down the whole runway, dimmer; off at its end.
+  on: (t) => (t < TRIGGER ? 0 : (1 + 1.2 * Math.exp(-(t - TRIGGER) / 0.12)) * (1 - 0.5 * smooth(t, FOLLOW_ON, FOLLOW_ON + 0.8)) * (1 - smooth(t, 154.3, 155.4)) * powerAt(t)),
 }
 
 /* ------------------------------------------------------------------ the fires */

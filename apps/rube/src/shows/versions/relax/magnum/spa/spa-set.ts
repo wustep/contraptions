@@ -1,11 +1,11 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
-import { bloom, flashBurst, pool, rgba } from '../cast'
+import { beam, bloom, flashBurst, pool, rgba } from '../cast'
 import { hash } from '../kit'
 import { level } from '../music'
-import { SPA } from '../worlds'
+import { CLUB, SPA } from '../worlds'
 import { BALCONY, CAB, clamp01, DOOR_X, DOORS, DRYER, FLOOR_Y, PRESS_FLASH, ROBES, sm, STRIPS, STRIPS_X, windAt, X_END, XT } from './spa-geo'
-import { ctxOf, box, line, polyline, shape, vwash, type Pen } from './spa-kit'
+import { ctxOf, box, hwash, line, polyline, shape, vwash, type Pen } from './spa-kit'
 
 /**
  * The spa's room (the set, handed show time): black marble to a dark ceiling, a wainscot with a brass rail, candles in
@@ -221,8 +221,10 @@ function drawRobe(pen: Pen, x: number, t: number, i: number): void {
 const PRESS: { x: number; top: number; hair: 'quiff' | 'bob'; cam: boolean; fires: number[] }[] = [
   { x: 1.55, top: 1.84, hair: 'quiff', cam: true, fires: PRESS_FLASH },
 ]
-const NIGHT = mixHex(SPA.marble, SPA.steelDark, 0.35)
-const MASS = SPA.marble
+/** The street at night: blue-black, a touch less dark low down; the photographer darker than it. */
+const NIGHT = mixHex(CLUB.dark, SPA.marble, 0.35)
+const NIGHT_LOW = mixHex(CLUB.dark, SPA.steelDark, 0.2)
+const MASS = CLUB.crowd
 /** A shooter's head (its middle) and the flash gun's reflector over the camera. */
 const headOf = (s: (typeof PRESS)[number]): Pt => [DOOR_X + s.x, FLOOR_Y - s.top + 0.22]
 const reflectorOf = (s: (typeof PRESS)[number]): Pt => {
@@ -232,15 +234,30 @@ const reflectorOf = (s: (typeof PRESS)[number]): Pt => {
 function drawOutside(pen: Pen, out: number, x1: number, open: number): void {
   const { p, k } = pen
   const X = (v: number) => v * k
+  const warm = 0.4 + 0.6 * open
+  // The night: blue-black over the street, a little less dark down at the street's level.
   box(pen, out, CEIL - 1, x1 + 1, FLOOR_Y, NIGHT, 0)
-  vwash(pen, out, x1 + 1, CEIL - 1, FLOOR_Y, [
-    [0, SPA.marble, 0.5],
-    [1, SPA.steelDark, 0.25],
+  vwash(pen, out, x1 + 1, FLOOR_Y - 3, FLOOR_Y, [
+    [0, NIGHT_LOW, 0],
+    [1, NIGHT_LOW, 0.85],
   ])
-  // The pavement, wet: the door's light on it.
-  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 3, mixHex(SPA.marble, SPA.tile, 0.5), 0)
-  line(pen, [out, FLOOR_Y], [x1 + 1, FLOOR_Y], SPA.marbleVein, 0.9)
-  pool(p, k, [out + 0.9, FLOOR_Y + 0.08], 1.6, 0.14, SPA.candle, 0.14 + 0.2 * open)
+  // The spa's warm light, falling out of the doorway onto the street.
+  beam(p, k, [out - 0.05, FLOOR_Y - 1.15], [out + 3.4, FLOOR_Y - 0.25], 2.2, 1.2, SPA.candle, 0.16 * warm)
+  // The pavement, wet: black gloss, its edge catching the light near the door; the door's light pooled on it and
+  // mirrored down into it as a soft streak; a puddle's glint further out.
+  box(pen, out, FLOOR_Y, x1 + 1, FLOOR_LIP + 3, CLUB.dark, 0)
+  vwash(pen, out, x1 + 1, FLOOR_Y, FLOOR_Y + 1.3, [
+    [0, NIGHT_LOW, 0.9],
+    [1, CLUB.dark, 0],
+  ])
+  line(pen, [out, FLOOR_Y], [x1 + 1, FLOOR_Y], NIGHT_LOW, 0.9)
+  hwash(pen, out, out + 2.6, FLOOR_Y - 0.012, FLOOR_Y + 0.02, [
+    [0, SPA.candle, 0.55 * warm],
+    [1, SPA.candle, 0],
+  ])
+  pool(p, k, [out + 1.0, FLOOR_Y + 0.03], 2.0, 0.1, SPA.candle, 0.28 * warm)
+  pool(p, k, [out + 0.45, FLOOR_Y + 0.4], 0.32, 0.75, SPA.candle, 0.12 * warm)
+  pool(p, k, [out + 2.9, FLOOR_Y + 0.05], 0.5, 0.035, SPA.candle, 0.3 * warm)
   // The press, facing the door: one dark mass of shoulders, heads and hats, arms up and cameras at their faces,
   // outlined together and filled together so only its outer edge catches the door's light.
   const shapes = () => {
@@ -362,9 +379,6 @@ export function drawSet(p: p5, k: number, t: number, ink: string, weight: number
     const open = sm(t, DOORS - 0.1, DOORS + 0.5)
     const settle = t > DOORS + 0.5 ? 0.05 * Math.exp(-(t - DOORS - 0.5) / 0.3) * Math.sin((t - DOORS - 0.5) * 12) : 0
     if (x1 > out) drawOutside(pen, out, x1, open)
-    // Its light in through the door as it opens, on the floor inside.
-    pool(p, k, [DOOR_X - 0.9, FLOOR_Y + 0.05], 1.5, 0.15, SPA.towel, 0.25 * open)
-    bloom(p, k, [DOOR_X - 0.2, FLOOR_Y - 0.9], 1.6, SPA.towel, 0.12 * open)
     crossWall(pen, DOOR_X, LINTEL)
     leaf(pen, out, 1, LINTEL, open + settle)
     if (x1 > out) drawFlashes(pen, t)

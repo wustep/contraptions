@@ -22,9 +22,13 @@ type Check = (name: string, ok: boolean, detail?: string) => void
 const WIDE: [number, number][] = [
   // The Center: the model framed alone as a building, before he comes up beside it (a center for ants).
   [204.17, 207.9],
-  // Derelicte: the geography wide (the whole hall, Derek on the runway and Hansel at the tower's foot); the cutaway to
-  // Hansel's last rails and his dart into the booth; the booth close on the rip.
-  [138.05, 140.9],
+  // Derelicte, the ride: the geography wide (the whole hall, Derek on the runway and Hansel at the tower's foot), and
+  // the three watchers cut in on downbeats while he marches: Hansel seeing him, Mugatu on his perch, the Prime Minister.
+  [138.0, 140.8],
+  [141.24, 143.87],
+  [145.93, 148.04],
+  [150.08, 152.19],
+  // Derelicte, the climax: the cutaway to Hansel's last rails and his dart into the booth; the booth close on the rip.
   [177.128, 179.218],
   [182.817, 183.311],
 ]

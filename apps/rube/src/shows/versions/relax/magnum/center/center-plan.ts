@@ -454,7 +454,7 @@ export function duskAt(t: number): number {
 }
 
 /** When each of the six tall windows lights, one by one as the dusk comes (wing windows, left to right). */
-export const WINDOW_LIGHTS = [230.95, 232.35, 231.45, 230.55, 231.85, 232.8]
+export const WINDOW_LIGHTS = [230.95, 236.4, 231.45, 230.55, 231.85, 247.6]
 export const litAt = (i: number, t: number): number => {
   const u = (t - WINDOW_LIGHTS[i]) / 0.3
   return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u)
@@ -466,7 +466,72 @@ export const WINDOW_KIDS: { kid: number; window: number; dx: number }[] = [
   { kid: 0, window: 2, dx: -0.14 },
   { kid: 3, window: 2, dx: 0.12 },
   { kid: 6, window: 4, dx: 0.02 },
+  { kid: 2, window: 1, dx: -0.06 },
+  { kid: 5, window: 5, dx: 0.08 },
 ]
+
+/* ------------------------------------------------------------------ the evening, under the credits */
+
+/** The lantern's two little lights, the last windows to come on. */
+export const LANTERN_LIGHTS = [241.2, 252.4]
+export const lanternLitAt = (i: number, t: number): number => {
+  const u = (t - LANTERN_LIGHTS[i]) / 0.35
+  return u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u)
+}
+
+/**
+ * The first stars, coming out one by one in the deep blue: few, each its own size and brightness, twinkling slowly.
+ * [x, y (world cells, far: they move a little less than the land), size 0..1, warm, when].
+ */
+export const STARS: [number, number, number, boolean, number][] = (() => {
+  const at: [number, number, number, boolean][] = [
+    [-5.2, -9.4, 1.0, true],
+    [12.6, -11.8, 0.62, false],
+    [1.4, -12.9, 0.4, false],
+    [16.2, -9.2, 0.5, true],
+    [-8.4, -12.4, 0.72, false],
+    [7.9, -13.3, 0.3, false],
+    [-1.9, -10.9, 0.34, false],
+    [10.3, -9.6, 0.26, true],
+    [-10.6, -9.9, 0.45, false],
+    [4.9, -10.4, 0.22, false],
+    [14.4, -13.6, 0.38, false],
+    [-6.6, -13.8, 0.25, true],
+    [18.2, -11.4, 0.3, false],
+    [-3.7, -12.3, 0.2, false],
+  ]
+  const gaps = [0, 1.3, 1.5, 1.4, 1.9, 1.6, 2.0, 1.8, 2.3, 1.7, 2.2, 2.5, 2.0, 2.6]
+  let t = 233.7
+  return at.map(([x, y, size, warm], i) => {
+    t += gaps[i]
+    return [x, y, size, warm, t]
+  })
+})()
+/** How bright star `i` is at `t` (0..1), its slow twinkle in. */
+export function starAt(i: number, t: number): number {
+  const on = STARS[i][4]
+  const u = (t - on) / 1.6
+  if (u <= 0) return 0
+  const up = u >= 1 ? 1 : u * u * (3 - 2 * u)
+  const w = 0.7 + 0.45 * ((i * 0.37) % 1)
+  return up * (0.8 + 0.2 * Math.sin(t * w + i * 2.1))
+}
+
+/** The lamps along the path, coming on down the lawn from the Center: [x, when]. */
+export const LAMPS: [number, number][] = [
+  [13.9, 234.9],
+  [-7.6, 236.9],
+  [17.6, 239.5],
+  [-10.8, 242.3],
+]
+export const LAMP_H = 2.9
+export const lampAt = (i: number, t: number): number => {
+  const u = t - LAMPS[i][1]
+  if (u <= 0) return 0
+  // A little stutter as it catches, then on.
+  const catchUp = u < 0.25 ? 0.5 * (u / 0.25) * (0.6 + 0.4 * Math.sin(u * 70)) : 0
+  return u < 0.25 ? catchUp : Math.min(1, 0.5 + (u - 0.25) / 0.5)
+}
 
 /* ------------------------------------------------------------------ the press */
 

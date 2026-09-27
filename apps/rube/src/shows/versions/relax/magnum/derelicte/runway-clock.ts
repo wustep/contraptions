@@ -81,6 +81,16 @@ export const FOLLOW_ON = beat(237)
 export const HITCH = beat(239)
 /** The wash (255): the march becomes a stride. */
 export const STRIDE = beat(255)
+/**
+ * The ride, cut on its downbeats: the geography; Hansel seeing him (his start, 271); Derek close and travelling;
+ * Mugatu delighted on his perch (bar 70); Derek; the Prime Minister applauding (bar 72); Derek to the end.
+ */
+export const RIDE_HANSEL = beat(271)
+export const RIDE_DEREK1 = bar(69)
+export const RIDE_MUGATU = bar(70)
+export const RIDE_DEREK2 = bar(71)
+export const RIDE_PM = bar(72)
+export const RIDE_END = bar(73)
 /** At the runway's end (296), the model's stop; he does not turn back (298: a step to its edge). */
 export const AT_END = beat(296)
 export const TO_EDGE = beat(298)
@@ -283,6 +293,12 @@ function mugatuPath(): Path {
   P.go([px + 0.22, py], beat(256) + 0.3, { ease: 'inout' })
   P.go([px + 0.4, py], beat(258) + 0.1, { ease: 'inout' })
   P.go([px + 0.34, py], beat(260), { ease: 'inout' })
+  // Delight, in his close-up (bar 70): a shimmy along his rail, on the beats.
+  P.rest(RIDE_MUGATU)
+  P.go([px + 0.56, py], beat(281) + 0.05, { ease: 'inout' })
+  P.go([px + 0.2, py], beat(282) + 0.05, { ease: 'inout' })
+  P.go([px + 0.5, py], beat(283) + 0.05, { ease: 'inout' })
+  P.go([px + 0.34, py], beat(284) + 0.3, { ease: 'inout' })
   // Down, while the camera is on the front: to the ladder, down it, and along the runway at a glide.
   P.rest(161.2)
   P.go([LADDER_X, py], 162.6, { ease: 'inout' })
@@ -319,6 +335,12 @@ export function pmAt(t: number): Pt {
   // A small start at the plug, and at the star's stop (he flinches back into his seat).
   const flinch = 0.05 * Math.exp(-Math.max(0, W(t) - STOP) / 0.3) * (t > STOP ? 1 : 0) + 0.04 * smooth(W(t), MAGNUM - 0.3, MAGNUM) * Math.exp(-Math.max(0, W(t) - MAGNUM) / 0.8)
   let lift = 0
+  // Oblivious, applauding the show: a bounce a beat while Derek comes down the last of the runway.
+  for (let k = 288; k <= 297; k++) {
+    const a = beat(k)
+    const b = half(k)
+    if (t > a && t < b) lift += 0.055 * Math.sin((Math.PI * (t - a)) / (b - a))
+  }
   const hopAt = (t0: number, t1: number): number => {
     if (t < t0 || t > t1) return 0
     const u = (t - t0) / (t1 - t0)

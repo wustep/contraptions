@@ -222,8 +222,12 @@ function shots(begin: number): PartShot[] {
     on(PHOTO, 4.2, 3.85, -0.9),
     on(PHOTO + 0.15, 4.22, 3.85, -0.91),
     // And back, slowly, to the whole Center under the sky; a drift for the credits.
-    on(232.8, 15.3, 3.6, -5.25),
-    on(DURATION, 16.3, 3.8, -5.6),
+    on(232.8, 15.3, 3.6, -5.3),
+    // Under the credits the evening comes on (stars, lamps, the last lights) and the camera wanders, slowly.
+    on(240.2, 15.8, 4.5, -5.5),
+    on(248.2, 15.5, 3.7, -5.46),
+    on(256.0, 16.1, 2.9, -5.6),
+    on(DURATION, 16.4, 3.4, -5.7),
   ]
 }
 

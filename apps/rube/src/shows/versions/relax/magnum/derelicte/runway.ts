@@ -16,6 +16,12 @@ import {
   derekSteps,
   FOLLOW_ON,
   HANSEL_LOOK,
+  RIDE_DEREK1,
+  RIDE_DEREK2,
+  RIDE_END,
+  RIDE_HANSEL,
+  RIDE_MUGATU,
+  RIDE_PM,
   HOUSE_DOWN,
   LANDS,
   MAGNUM,
@@ -149,7 +155,7 @@ export const runway = part<RunwayState>(
  */
 function shotsFor(begin: number, end: number): PartShot[] {
   const hold = (t: number, cells: number, at: Pt, cut = false): PartShot => ({ t, cells, hold: at, w: 1, cut })
-  const follow = (t: number, cells: number, off: Pt): PartShot => ({ t, cells, off, w: 0 })
+  const follow = (t: number, cells: number, off: Pt, cut = false): PartShot => ({ t, cells, off, w: 0, cut })
   const d = (t: number) => derekAt(t)
   const seam = SEAMS.center
   const e = d(end)
@@ -166,13 +172,26 @@ function shotsFor(begin: number, end: number): PartShot[] {
     hold(131.4, 7.0, [4.7, -1.65]),
     // The wash: the stride.
     hold(135.2, 8.0, [4.3, -2.0]),
-    // The geography, in time for Hansel to see him (139.169): the whole runway, the front row, the tower.
+    // The ride, cut on its downbeats. The geography first: the runway's length, the front row, the tower.
     hold(139.1, 14.4, [17.9, -3.2]),
-    hold(142.2, 14.1, [18.3, -3.1]),
-    // In with him past the press.
-    follow(145.9, 7.4, [1.6, -1.25]),
-    follow(150.2, 6.8, [1.5, -1.05]),
-    follow(152.1, 6.6, [1.5, -1.0]),
+    hold(RIDE_HANSEL - 0.02, 14.25, [18.1, -3.15]),
+    // Hansel at the tower's foot sees him: his start.
+    hold(RIDE_HANSEL, 4.2, [30.0, 1.25], true),
+    hold(RIDE_DEREK1 - 0.02, 4.05, [29.85, 1.3]),
+    // Derek close and travelling, the press going off in his face, the front row's heads sliding past below.
+    follow(RIDE_DEREK1, 4.0, [0.7, -0.5], true),
+    { t: RIDE_MUGATU - 0.02, cells: 3.9, off: [0.75, -0.5], w: 0 },
+    // Mugatu on his perch, delighted, his lamp kept on Derek.
+    hold(RIDE_MUGATU, 4.0, [-1.2, -2.75], true),
+    hold(RIDE_DEREK2 - 0.02, 3.85, [-1.1, -2.8]),
+    // Derek again.
+    { t: RIDE_DEREK2, cells: 4.0, off: [0.7, -0.5], w: 0, cut: true },
+    { t: RIDE_PM - 0.02, cells: 3.9, off: [0.75, -0.5], w: 0 },
+    // The Prime Minister in the front row, oblivious, applauding the show.
+    hold(RIDE_PM, 4.0, [24.1, 1.05], true),
+    hold(RIDE_END - 0.02, 3.85, [24.05, 1.1]),
+    // Derek down the last of the runway to its end.
+    { t: RIDE_END, cells: 5.4, off: [1.3, -0.8], w: 0, cut: true },
     // The end, the Prime Minister beyond.
     hold(154.7, 6.2, [21.3, -0.3]),
     hold(156.6, 6.3, [21.5, -0.1]),

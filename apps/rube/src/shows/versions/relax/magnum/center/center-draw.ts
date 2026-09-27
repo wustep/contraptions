@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import type { Pt } from '../../../../../parts'
 import { mixHex } from '../../../../../parts'
-import { bloom, flashBurst, glint, rgba } from '../cast'
+import { bloom, flashBurst, glint, pool, rgba } from '../cast'
 import { hash, type Ctx } from '../kit'
 import { level } from '../music'
 import { AWARDS, CENTER, CENTER_THEME } from '../worlds'
@@ -25,6 +25,8 @@ import {
   pedalAngle,
   pedalAt,
   PHOTO,
+  LAMP_H,
+  lanternLitAt,
   litAt,
   PRESS,
   PRESS_FOOT,
@@ -268,7 +270,7 @@ export function drawBuilding(p: p5, c: Ctx, t: number): void {
     [X(8.1), PY(0.85)],
     [X(8.75), PY(0.2)],
   ])
-  drawLantern(p, c, X, PY(0.75), Sl / FULL, lw, thin)
+  drawLantern(p, c, t, X, PY(0.75), Sl / FULL, lw, thin)
 
   // The portico: the columns in the light before the shaded wall, the entablature, the pediment.
   for (const cx of D.columns) {
@@ -337,7 +339,7 @@ function drawWindow(p: p5, c: Ctx, t: number, i: number, X: (v: number) => numbe
 }
 
 /** The lantern on the roof: a drum with two dark lights, a dome and a brass finial. `fl` its own scale over FULL. */
-function drawLantern(p: p5, c: Ctx, X: (v: number) => number, base: number, fl: number, lw: number, thin: number): void {
+function drawLantern(p: p5, c: Ctx, t: number, X: (v: number) => number, base: number, fl: number, lw: number, thin: number): void {
   const { k } = c
   const cx = X(6.75)
   const hw = 0.6 * fl
@@ -345,8 +347,10 @@ function drawLantern(p: p5, c: Ctx, X: (v: number) => number, base: number, fl: 
   inked(p, lw, dk(CENTER.stone, 0.46))
   box(p, k, cx - hw, LY(0), cx + hw, LY(1.0))
   p.noStroke()
-  p.fill(mixHex(dk(CENTER.roof, 0.46), INK, 0.3))
-  for (const o of [-0.26, 0.26]) box(p, k, cx + (o - 0.1) * fl, LY(0.25), cx + (o + 0.1) * fl, LY(0.8))
+  ;[-0.26, 0.26].forEach((o, i) => {
+    p.fill(mixHex(mixHex(dk(CENTER.roof, 0.46), INK, 0.3), LIT, lanternLitAt(i, t)))
+    box(p, k, cx + (o - 0.1) * fl, LY(0.25), cx + (o + 0.1) * fl, LY(0.8))
+  })
   inked(p, lw, dk(CENTER.stone, 0.46))
   box(p, k, cx - hw - 0.08 * fl, LY(0.95), cx + hw + 0.08 * fl, LY(1.08))
   inked(p, lw, dk(CENTER.roof, 0.46))
@@ -588,6 +592,41 @@ export function drawPump(p: p5, c: Ctx, t: number): void {
   inked(p, lw * 0.7, CENTER.brass)
   p.circle(hx * k, hy * k, 0.05 * k)
   p.pop()
+}
+
+/* ------------------------------------------------------------------ the lamps */
+
+/** A lamp on the path: a slim post, a lantern on it, lit `on` 0..1: its glass, its glow and its pool on the path. */
+export function drawLamp(p: p5, c: Ctx, x: number, on: number): void {
+  const { k, weight } = c
+  const lw = weight * 0.7
+  const top = GROUND - LAMP_H
+  const post = mixHex(INK, CENTER.roof, 0.3)
+  p.push()
+  if (on > 0.01) pool(p, k, [x, GROUND + 0.03], 1.7, 0.18, LIT, 0.5 * on)
+  inked(p, lw, post)
+  box(p, k, x - 0.1, GROUND - 0.28, x + 0.1, GROUND)
+  box(p, k, x - 0.035, top + 0.02, x + 0.035, GROUND - 0.28)
+  // The lantern: a little glazed box, its cap and finial.
+  inked(p, lw, mixHex(dk(CENTER.glass, 0.62), LIT, on))
+  poly(p, k, [
+    [x - 0.12, top - 0.36],
+    [x + 0.12, top - 0.36],
+    [x + 0.09, top],
+    [x - 0.09, top],
+  ])
+  inked(p, lw, post)
+  poly(p, k, [
+    [x - 0.17, top - 0.36],
+    [x, top - 0.52],
+    [x + 0.17, top - 0.36],
+  ])
+  box(p, k, x - 0.1, top - 0.02, x + 0.1, top + 0.04)
+  p.pop()
+  if (on > 0.01) {
+    bloom(p, k, [x, top - 0.18], 1.4, LIT, 0.42 * on)
+    bloom(p, k, [x, top - 0.18], 0.36, mixHex(LIT, CENTER.cloud, 0.5), 0.6 * on)
+  }
 }
 
 /* ------------------------------------------------------------------ the press */

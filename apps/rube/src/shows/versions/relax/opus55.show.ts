@@ -8,6 +8,6 @@ export default defineShow({
   title: 'Magnum',
   label: 'Opus 5.5',
   about: "Frankie Goes to Hollywood's Relax, the song Zoolander makes a trigger of, as a Rube Goldberg machine that ends in one look.",
-  still: 186.6,
+  still: 186.62,
   async load() { return (await import('./magnum')).performance },
 })

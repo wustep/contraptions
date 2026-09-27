@@ -1,10 +1,10 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { pool, rgba } from '../cast'
+import { bloom, pool, rgba } from '../cast'
 import { frame, hash, type Ctx } from '../kit'
 import { AWARDS, CENTER } from '../worlds'
-import { dk, drawTree, setDusk } from './center-draw'
-import { duskAt, GROUND } from './center-plan'
+import { dk, drawLamp, drawTree, setDusk } from './center-draw'
+import { duskAt, GROUND, lampAt, LAMPS, starAt, STARS } from './center-plan'
 
 /**
  * The Center's standing set (the CENTER builder's): a bright morning over a lawn. The sky and a few thin clouds, far
@@ -34,6 +34,11 @@ const TREES = [
   { x: 21.6, h: 5.1, w: 3.3, seed: 26 },
 ]
 
+const sm01 = (v: number): number => {
+  const u = Math.max(0, Math.min(1, v))
+  return u * u * (3 - 2 * u)
+}
+
 export function drawSet(p: p5, c: Ctx, t: number): void {
   const { k } = c
   const f = frame(p, k)
@@ -51,6 +56,25 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
   ctx.fillStyle = g
   ctx.fillRect(x0 * k, top * k, (x1 - x0) * k, (HORIZON - top + 0.5) * k)
   ctx.restore()
+  // The first stars, far off (they move a little less than the land), each its own size, twinkling slowly.
+  if (d > 0.5) {
+    const ctxStars = ctx
+    ctxStars.save()
+    STARS.forEach(([sx, sy, size, warm], i) => {
+      const a = starAt(i, t) * sm01((d - 0.5) / 0.4)
+      if (a <= 0.003) return
+      const x = sx + f.cx * 0.12
+      const y = sy + f.cy * 0.12
+      const color = warm ? AWARDS.bulb : CENTER.cloud
+      bloom(p, k, [x, y], 0.07 + 0.16 * size, color, (0.22 + 0.3 * size) * a)
+      const r = Math.max(0.55, (0.5 + 1.1 * size) * (k / 22.5))
+      ctxStars.fillStyle = rgba(color, Math.min(1, (0.55 + 0.45 * size) * a))
+      ctxStars.beginPath()
+      ctxStars.arc(x * k, y * k, r, 0, Math.PI * 2)
+      ctxStars.fill()
+    })
+    ctxStars.restore()
+  }
   // A few thin clouds, drifting.
   const clouds: [number, number, number, number][] = [
     [-6, -8.6, 3.2, 0.34],
@@ -102,6 +126,11 @@ export function drawSet(p: p5, c: Ctx, t: number): void {
     const sway = Math.sin(t * 0.7 + tr.seed) * 0.05 + Math.sin(t * 0.29 + tr.seed * 2) * 0.04
     drawTree(p, k, { x: tr.x, y: GROUND, h: tr.h, w: tr.w, seed: tr.seed, lw: c.weight * 0.6, sway })
   }
+  // The lamps along the path, coming on down the lawn as the evening comes.
+  LAMPS.forEach(([x], i) => {
+    if (x < f.x0 - 2 || x > f.x1 + 2) return
+    drawLamp(p, c, x, lampAt(i, t))
+  })
   // The path, and the lawn in front of it to the frame's foot.
   p.push()
   p.noStroke()
