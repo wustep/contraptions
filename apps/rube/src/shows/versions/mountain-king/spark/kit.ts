@@ -51,6 +51,8 @@ export interface PartShot {
   hold?: Pt
   w?: number
   off?: Pt
+  /** A cut inside the world on this key (`Shot.cut` in `camera.ts`); only on `CAMERA_CUTS`, which the check holds. */
+  cut?: boolean
 }
 
 export interface Part<S = any> {
@@ -167,7 +169,7 @@ export interface Link {
 export interface Chain {
   placed: Placed[]
   /** The camera keys the parts asked for, moved into the world. */
-  shots: { t: number; cells: number; hold?: Pt; w?: number; off?: Pt }[]
+  shots: PartShot[]
   /** The parts' riders, each over its own slot, in world cells. */
   riders: { from: number; to: number; fn: Riders }[]
   /** Where the next link would enter, and when: for a chain carried on in another universe. */

@@ -3,7 +3,7 @@ import { solid } from '../../../../../../../../src/core/draw'
 import { mixHex } from '../../../../../parts'
 import { innocent, sparkIn, wickCatch } from '../fx'
 import { alpha, box, frame, hash, scenery, smooth } from '../kit'
-import { THEME, onsetsIn } from '../music'
+import { CREDITS_AT, GAZE, THEME, onsetsIn } from '../music'
 import { LOFT } from '../worlds'
 import { BENCH, CANDLE, DOOR, FLOOR_Y, ROOM, SKYLIGHT, STOVE, WICK } from './layout'
 import { WICK_BACK, WICK_LEFT, candleLit } from './sneak-beats'
@@ -153,6 +153,13 @@ const SHAFT = (() => {
   const len = (BENCH.top - from[1]) / dir[1]
   return { from, dir, len, width: (SKYLIGHT.x1 - SKYLIGHT.x0) * Math.cos(a) + 0.4, angle: a }
 })()
+/**
+ * How much of the moon is in the room: all of it through the show, then, as the cat's eye shuts and the credits come
+ * up, it goes in (a cloud over it) to a third, so the candle is the one warm light and the rack, the wheel and the
+ * barrel sink into the night. The shaft, its dust and the moon's two pools all follow it.
+ */
+export const moonUp = (t: number): number => 1 - 0.65 * smooth(t, GAZE.off, CREDITS_AT + 2.0)
+
 /** Where the shaft lands on the bench top. */
 const PATCH: [number, number] = [SHAFT.from[0] + SHAFT.dir[0] * SHAFT.len, BENCH.top - 0.1]
 
@@ -187,9 +194,10 @@ const MOON_RGB = rgbOf(MOON)
 function pools(t: number): Pool[] {
   const out: Pool[] = []
   const add = (g: Glow) => out.push({ x: g.x, y: g.y, rx: g.r, ry: g.ry ?? g.r, a: g.a, rgb: rgbOf(g.color ?? WARM) })
-  // The moon: a faint fill round the skylight, and where its shaft lands on the bench.
-  add({ x: SHAFT.from[0] + 1, y: SHAFT.from[1] + 4, r: 13, ry: 11, a: 0.16, color: MOON })
-  add({ x: PATCH[0], y: PATCH[1], r: 3.6, ry: 1.2, a: 0.34, color: MOON })
+  // The moon: a faint fill round the skylight, and where its shaft lands on the bench (going in under the credits).
+  const moon = moonUp(t)
+  add({ x: SHAFT.from[0] + 1, y: SHAFT.from[1] + 4, r: 13, ry: 11, a: 0.16 * moon, color: MOON })
+  add({ x: PATCH[0], y: PATCH[1], r: 3.6, ry: 1.2, a: 0.34 * moon, color: MOON })
   // The spark: the only warm light in the room, wherever it is. It flickers as a flame does, and breathes with the horns.
   const s = sparkIn('loft', t)
   if (s) {
@@ -243,7 +251,7 @@ const SHAFT_A = 0.36
 /** The light at (x, y) as an RGB multiplier, 0..1 a channel: what the map multiplies there. */
 function lightRGB(x: number, y: number, t: number, list: Pool[] = pools(t)): [number, number, number] {
   const out: [number, number, number] = [AMBIENT_RGB[0], AMBIENT_RGB[1], AMBIENT_RGB[2]]
-  const sh = shaftAt(x, y) * SHAFT_A
+  const sh = shaftAt(x, y) * SHAFT_A * moonUp(t)
   for (let i = 0; i < 3; i++) out[i] += MOON_RGB[i] * sh
   for (const pl of list) {
     const u = Math.hypot((x - pl.x) / pl.rx, (y - pl.y) / pl.ry)
@@ -296,9 +304,10 @@ function lightMap(p: p5, k: number, t: number): void {
   const w = (SHAFT.width / 2) * k
   const across = g.createLinearGradient(-w, 0, w, 0)
   const m = `${MOON_RGB[0]}, ${MOON_RGB[1]}, ${MOON_RGB[2]}`
+  const shaftA = SHAFT_A * moonUp(t)
   across.addColorStop(0, `rgba(${m}, 0)`)
-  across.addColorStop(0.225, `rgba(${m}, ${SHAFT_A})`)
-  across.addColorStop(0.775, `rgba(${m}, ${SHAFT_A})`)
+  across.addColorStop(0.225, `rgba(${m}, ${shaftA})`)
+  across.addColorStop(0.775, `rgba(${m}, ${shaftA})`)
   across.addColorStop(1, `rgba(${m}, 0)`)
   g.fillStyle = across
   g.fillRect(-w, -0.5 * k, 2 * w, (SHAFT.len + 0.9) * k)
@@ -339,9 +348,10 @@ function shaftGlow(p: p5, k: number, t: number): void {
   const w = (SHAFT.width / 2) * k
   const across = ctx.createLinearGradient(-w, 0, w, 0)
   const m = `${MOON_RGB[0]}, ${MOON_RGB[1]}, ${MOON_RGB[2]}`
+  const moon = moonUp(t)
   across.addColorStop(0, `rgba(${m}, 0)`)
-  across.addColorStop(0.3, `rgba(${m}, 0.075)`)
-  across.addColorStop(0.7, `rgba(${m}, 0.075)`)
+  across.addColorStop(0.3, `rgba(${m}, ${0.075 * moon})`)
+  across.addColorStop(0.7, `rgba(${m}, ${0.075 * moon})`)
   across.addColorStop(1, `rgba(${m}, 0)`)
   ctx.fillStyle = across
   ctx.fillRect(-w, 0, 2 * w, SHAFT.len * k)
@@ -350,7 +360,7 @@ function shaftGlow(p: p5, k: number, t: number): void {
     const along = ((hash(i, 1) * SHAFT.len + t * (0.12 + 0.08 * hash(i, 2))) % SHAFT.len) * k
     const off = (hash(i, 3) - 0.5) * 0.8 * 2 * w + Math.sin(t * 0.4 + i) * 0.15 * k
     const tw = 0.5 + 0.5 * Math.sin(t * (0.6 + hash(i, 4)) + i * 2.1)
-    ctx.fillStyle = `rgba(${m}, ${0.35 * tw})`
+    ctx.fillStyle = `rgba(${m}, ${0.35 * tw * moon})`
     ctx.fillRect(off, along, 0.028 * k, 0.028 * k)
   }
   ctx.restore()

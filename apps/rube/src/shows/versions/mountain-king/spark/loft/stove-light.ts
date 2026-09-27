@@ -1,8 +1,10 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { sparkIn, wickCatch } from '../fx'
+import { smooth } from '../kit'
 import { LOFT } from '../worlds'
 import { DOOR } from './layout'
+import { moonUp } from './set'
 import { doorOpen, fireRoar } from './stove-door'
 
 /**
@@ -77,10 +79,21 @@ export function fireLight(L: Light, x: number, y: number): number {
 export function shade(L: Light, x: number, y: number, dark: string, lit: string, amb = 0.42, near = true): string {
   const s = near ? sparkLight(L, x, y) : 0
   const f = fireLight(L, x, y)
-  const night = mixHex(LOFT.night, dark, amb)
+  const night = mixHex(LOFT.night, dark, amb * moonFill(L.t, x))
   let c = mixHex(night, lit, Math.min(1, s))
   if (f > 0.003) c = mixHex(c, mixHex(lit, LOFT.ember, 0.45), Math.min(0.85, f))
   return c
+}
+
+/**
+ * How much of the night's fill is left at x, 0..1: the fill at the loft's west end, under the skylight where the wheel
+ * and the vat stand, is the moon's, and none of it is by the stove. When the moon goes in under the credits (`moonUp`,
+ * `set.ts`) the fill there goes down with it, so the wheel and the vat sink into the night with the rack and the
+ * bench, and the candle is the one warm light. Nothing changes before the cat's eye shuts.
+ */
+function moonFill(t: number, x: number): number {
+  const gone = (1 - moonUp(t)) / 0.65
+  return gone <= 0 ? 1 : 1 - 0.45 * gone * smooth(-x, 6, 14)
 }
 
 /* ------------------------------------------------------------------ drawing with light */

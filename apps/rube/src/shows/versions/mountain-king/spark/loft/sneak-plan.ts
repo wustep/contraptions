@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { carried, smooth, type PartShot } from '../kit'
-import { LOFT_SEAM, THEME, inPhrase, onset } from '../music'
+import { CAT_SHOT, LOFT_SEAM, THEME, inPhrase, onset } from '../music'
 import { G } from '../physics'
 import { SEAMS } from '../seams'
 import { BENCH, HANDOFF, RACK, WICK } from './layout'
@@ -19,9 +19,10 @@ import { WICK_LEFT } from './sneak-beats'
  *   13.47      up into the balance's pan; the beam sinks and its far end trips the snuffer's latch (14.583)
  *   15.70      the snuffer's cone clangs down on the other pan and the spark is flung up onto the rack's pole (16.816)
  *   16.8-24.5  the tightrope, hopping the wick of every pair of hanging candles
- *   25.653     a pair it jostled knocks together, seen close: the spark freezes; the camera draws back to the cat
- *   28.961     again, at the pole's end, in a two-shot: the cat's ear flicks, the spark freezes
- *   30.012     it leaps into the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
+ *   25.653     a pair it jostled knocks together, seen close: the spark freezes, and tiptoes on to the pole's end
+ *   28.133     cut to the cat, listening; 28.961 the knock again is heard over it, and its head snaps back up
+ *   29.237     cut back: it crouches on the pole's free end, which gives under it; springs on the pair's knock again (29.513)
+ *   30.012     and lands in the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
  *   31.185     it hops off onto the wheel: `HANDOFF`, moving (0.9, 0.9)
  */
 
@@ -264,6 +265,29 @@ function spanShape(x: number, xl: number): number {
   return s / Math.max(0.3, Math.sin((Math.PI * (a - xl)) / (a - b)))
 }
 
+/**
+ * The last leap, off the pole's free end into the candle arm's dish (landing on `BEAT.cup`). From the cut back (phrase
+ * 2's eighth 25) it sinks into a crouch, low and leaning west, the free end of the pole giving under it; on the pair's
+ * knock again (`BEAT.reknocks[1]`) it springs, already moving, and quickens off the end as the pole flicks up behind
+ * it; then a flat, quick drop into the dish.
+ */
+const LEAP = {
+  /** The cut back to it from the cat (phrase 2's eighth 25). */
+  crouch: CAT_SHOT[1],
+  /** The bottom of the crouch, and how low and how far west it is there. */
+  low: CAT_SHOT[1] + 0.2,
+  dip: 0.04,
+  lean: 0.035,
+  /** The spring: on the knock, moving about 1.5 cells/s, and off the end quickening over `push`. */
+  go: BEAT.reknocks[1],
+  push: 0.06,
+  /** How far the pole's free end gives under the crouch and the push; it rings from the moment it lets go. */
+  give: 0.022,
+}
+/** Where the spark crouches: the pole's free end, a few hundredths from its tip. */
+const CROUCH_X = -16.14
+const ease3 = (u: number): number => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
+
 /** How far the pole has given at x (cells, down), from every landing so far: a quick dip, a damped ring. */
 export function poleSag(x: number, t: number): number {
   let y = 0
@@ -271,6 +295,12 @@ export function poleSag(x: number, t: number): number {
     const u = t - l.t
     if (u <= 0 || u > 2.5) continue
     y += l.give * spanShape(x, l.x) * Math.exp(-u / 0.32) * Math.sin(u * 19)
+  }
+  // The crouch loads the free end, and the spring lets it go.
+  const off = LEAP.go + LEAP.push
+  if (t > LEAP.crouch && t < off + 2.5) {
+    const load = t < off ? ease3((t - LEAP.crouch) / (off - LEAP.crouch)) : Math.exp(-(t - off) / 0.3) * Math.cos((t - off) * 19)
+    y += LEAP.give * spanShape(x, CROUCH_X) * load
   }
   return y
 }
@@ -547,6 +577,60 @@ const LEAP_PUSH = 0.07
  */
 const LOOK = { from: 4.72, reach: q(0, 3), at: [WICK[0] + 0.18, WICK[1] - 0.025] as Pt, duck: q(0, 3) + 0.5 }
 
+/** A cubic from p0 moving v0 to p1 moving v1 over T seconds, at u (0..1). */
+function hermite(p0: Pt, v0: Pt, p1: Pt, v1: Pt, T: number, u: number): Pt {
+  const u2 = u * u
+  const u3 = u2 * u
+  const [a, b, c, d] = [2 * u3 - 3 * u2 + 1, (u3 - 2 * u2 + u) * T, -2 * u3 + 3 * u2, (u3 - u2) * T]
+  return [a * p0[0] + b * v0[0] + c * p1[0] + d * v1[0], a * p0[1] + b * v0[1] + c * p1[1] + d * v1[1]]
+}
+
+/** The last leap's flight is a touch heavier than a hop's, so it leaves the pole's end level, not already falling. */
+const LEAP_G = G * 1.35
+
+/**
+ * The spark from the cut back to leaving the pole's end: standing on the pole's free end (riding its give and the
+ * knock's flinch), it sinks into the crouch leaning west and is already drifting west at the bottom; it comes up out
+ * of it moving about 1.5 cells/s on the knock again, and quickens over `LEAP.push` into the flight that lands in the
+ * dish at `to` on `BEAT.cup`, with that flight's own velocity, so there is no kink anywhere.
+ */
+function leapOff(to: Pt): (t: number) => Pt {
+  const base = (t: number): Pt => onPoleF(CROUCH_X, t)
+  const baseV = (t: number): Pt => {
+    const [a, b] = [base(t - 1e-4), base(t + 1e-4)]
+    return [(b[0] - a[0]) / 2e-4, (b[1] - a[1]) / 2e-4]
+  }
+  // The crouch, relative to where it stands: down and west to the bottom, then coming up, moving west about 1.5.
+  const low: Pt = [-LEAP.lean, LEAP.dip]
+  const vLow: Pt = [-0.3, 0]
+  const up: Pt = [-LEAP.lean - 0.06, LEAP.dip - 0.028]
+  const vUp: Pt = [-1.35, -0.6]
+  const crouch = (t: number): Pt =>
+    t < LEAP.low
+      ? hermite([0, 0], [0, 0], low, vLow, LEAP.low - LEAP.crouch, (t - LEAP.crouch) / (LEAP.low - LEAP.crouch))
+      : hermite(low, vLow, up, vUp, LEAP.go - LEAP.low, (t - LEAP.low) / (LEAP.go - LEAP.low))
+  // The spring: from where the crouch leaves it, quickening to the flight's velocity where the flight begins.
+  const b = base(LEAP.go)
+  const A: Pt = [b[0] + up[0], b[1] + up[1]]
+  const bv = baseV(LEAP.go)
+  const vA: Pt = [bv[0] + vUp[0], bv[1] + vUp[1]]
+  const T = BEAT.cup - (LEAP.go + LEAP.push)
+  let F: Pt = A
+  let vF: Pt = vA
+  for (let i = 0; i < 12; i++) {
+    vF = [(to[0] - F[0]) / T, (to[1] - F[1]) / T - (LEAP_G * T) / 2]
+    F = [A[0] + ((vA[0] + vF[0]) / 2) * LEAP.push, A[1] + ((vA[1] + vF[1]) / 2) * LEAP.push]
+  }
+  return (t: number): Pt => {
+    if (t < LEAP.go) {
+      const [x, y] = base(t)
+      const [dx, dy] = crouch(t)
+      return [x + dx, y + dy]
+    }
+    return hermite(A, vA, F, vF, LEAP.push, (t - LEAP.go) / LEAP.push)
+  }
+}
+
 /** The whole lane, from the wick to `HANDOFF`, and the time of the part's first strike (the landing in the lift). */
 export function buildLane(): { segs: Seg[]; fire: number } {
   const path = new Path(0, WICK)
@@ -590,7 +674,7 @@ export function buildLane(): { segs: Seg[]; fire: number } {
     const keys = POLE_KEYS[i]
     if (keys.length) {
       const x = keyed(keys)
-      const end = i < HOPS.length ? HOPS[i].launch - (HOPS[i].bounce ? 0 : 0.08) : BEAT.cup - 0.552 - LEAP_PUSH
+      const end = i < HOPS.length ? HOPS[i].launch - (HOPS[i].bounce ? 0 : 0.08) : LEAP.crouch
       path.ride(end, (t) => onPoleF(x(t), t))
     }
     if (i === HOPS.length) break
@@ -599,9 +683,11 @@ export function buildLane(): { segs: Seg[]; fire: number } {
     if (h.bounce) path.fly(h.land, at)
     else path.leap(h.launch, h.land, at)
   }
-  // Off the pole's end into the candle arm's socket; the arm sinks; it crouches, and hops off onto the wheel.
+  // Off the pole's end into the candle arm's socket: a crouch, the spring on the knock, a flat quick drop into the
+  // dish. The arm sinks; it crouches again, and hops off onto the wheel.
   const inCup = (t: number): Pt => inSocket(armAngle(t))
-  path.leap(BEAT.cup - 0.552 + 0, BEAT.cup, inCup(BEAT.cup))
+  path.ride(LEAP.go + LEAP.push, leapOff(inCup(BEAT.cup)), 240)
+  path.fly(BEAT.cup, inCup(BEAT.cup), LEAP_G)
   path.ride(BEAT.spring, inCup, 60)
   path.leap(BEAT.leave2, LOFT_SEAM, HANDOFF)
   return { segs: path.segs, fire: BEAT.pan }
@@ -632,12 +718,13 @@ export const HITS: number[] = [
  * the candle for the theme. With the hop into the pan it takes in the windlass and the pan in one frame and holds
  * while the pan goes down a notch a note. Close along the bench; the balance and the snuffer framed whole; with the
  * fling up to the pole; along the tightrope. Close on the rack for the jostle and the first knock (25.653): the pair
- * swinging together and the spark ducking fill the frame. On the knock, the spark frozen, the camera starts to draw
- * back and down the room (the knock again, 26.57, on the way), finds the cat by the stove with its head up listening
- * (a look over the spark's shoulder), and has settled on the two-shot as the spark tiptoes on to the pole's end, so the
- * second knock (28.961) and the cat's head coming up again are in one frame. The cat is 21 cells east and 11 down, and the spark must stay inside the middle two thirds (Zoom), so that
- * two-shot can be no tighter than about 16 cells. From it, in again to the arm and the hop onto the wheel, the whole
- * wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
+ * swinging together and the spark ducking fill the frame. Then a reverse shot on two cuts on the theme's eighths
+ * (`CAT_SHOT`): the camera stays close on the spark as it tiptoes on to the pole's end, cuts to the cat by the stove,
+ * whole, its head up, listening (it settles, and the second knock, 28.961, snaps its head back up and flicks an ear),
+ * and cuts back to the spark frozen at the pole's end, which crouches and leaps for the candle arm. The spark and the
+ * cat are 21 cells apart, so no one frame can hold both close; two cuts show each at a size that reads. From the cut
+ * back, one unhurried move out to the arm and the wheel, arriving with the hand-on (LOFT-B's first framing, 9.4
+ * cells, follows on from it without a bounce).
  */
 export const SHOTS: PartShot[] = [
   // The whole loft for the first horn call, then one push in from it (1.168) that arrives on the candle with the
@@ -666,17 +753,19 @@ export const SHOTS: PartShot[] = [
   { t: 23.2, cells: 10.2, off: [-1.0, 2.0], w: 0 },
   { t: 24.25, cells: 10.6, off: [-1.2, 2.2], w: 0 },
   { t: 25.35, cells: 5.5, hold: [-14.35, -0.8], w: 1 },
-  // Close on the first knock; the draw-back starts on it and eases out over the held beat, down the room to the cat,
-  // who is still listening with its head up when it comes in (about 28.1: the frame has to be about 17 cells before
-  // Zoom keeps the spark with the cat's head in).
+  // Close on the first knock, and staying close: along the pole with it through the knock again (26.570) and the two
+  // tiptoes to its end (27.340, 27.858), easing out a little and still moving as it cuts.
   { t: BEAT.knocks[0], cells: 5.35, hold: [-14.45, -0.82], w: 1 },
-  { t: 27.1, cells: 10.6, hold: [-11.0, 1.1], w: 1 },
-  { t: 27.8, cells: 15.8, hold: [-7.2, 2.85], w: 1 },
-  // The two-shot, wide enough that both are whole and clear of the edges: the spark frozen on the pole a cell and more
-  // inside the west edge, the cat's head with room on the east. It is found listening, puts its head down, and the
-  // second knock lifts it again (a double take); held until the ear's flick is done and the head is up.
-  // From it, one unhurried move back in to the arm and the wheel, arriving with the hand-on (not a snap in and a stop).
-  { t: 28.35, cells: 19.3, hold: [-5.85, 3.3], w: 1 },
-  { t: 29.45, cells: 19.15, hold: [-6.15, 3.25], w: 1 },
+  { t: BEAT.reknocks[0], cells: 5.5, hold: [-14.9, -1.0], w: 1 },
+  { t: CAT_SHOT[0] - 0.001, cells: 5.8, hold: [-15.9, -1.25], w: 1 },
+  // Cut to the cat (the reverse shot): whole, its head a third in from the east edge, the stove's legs and the vent's
+  // glow over it, a band of the floor's section under it; creeping in so the shot never parks. The second knock is
+  // heard over it and seen as the head snapping up and an ear flicking.
+  { t: CAT_SHOT[0], cells: 6.0, hold: [5.25, 9.15], w: 1, cut: true },
+  { t: CAT_SHOT[1] - 0.001, cells: 5.7, hold: [5.3, 9.1], w: 1 },
+  // Cut back to the spark frozen at the pole's end, all but still while it crouches; the one move out to the arm and
+  // the wheel gathers as it springs (29.513), arriving with the hand-on.
+  { t: CAT_SHOT[1], cells: 5.8, hold: [-16.5, -1.25], w: 1, cut: true },
+  { t: BEAT.reknocks[1], cells: 5.85, hold: [-16.56, -1.2], w: 1 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
 ]

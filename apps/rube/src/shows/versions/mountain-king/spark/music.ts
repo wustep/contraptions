@@ -214,6 +214,21 @@ export const WINDUP = [beat(93), beat(94)] as const
 export const KNOCKS = [25.653, 28.961] as const
 
 /**
+ * The knocks' reverse shot (`loft/sneak-plan.ts`): the camera cuts from the spark at the pole's end to the cat on
+ * phrase 2's eighth 21, found listening with its head up, the second knock heard over it and seen as its head snapping
+ * up; and cuts back to the spark, frozen, on eighth 25.
+ */
+export const CAT_SHOT = [inPhrase(2, 21), inPhrase(2, 25)] as const
+/**
+ * The express's last run (`railway/express.ts`): a cut from the trestle's wide to the pursuit, low on the engine, on
+ * phrase 15's first note, and from the pursuit to the firebox on quarter 250, half a beat before the ashpan's suck.
+ */
+export const CHASE_CUT = phrase(15)
+export const FIREBOX_CUT = beat(250)
+/** Every cut the camera makes inside a world, in order; the check holds the show to exactly these. */
+export const CAMERA_CUTS = [CAT_SHOT[0], CAT_SHOT[1], CHASE_CUT, FIREBOX_CUT] as const
+
+/**
  * The cat's look on the bang (the second last chord): its head snaps up at the door that banged over it, then turns
  * round and down onto the candle, where its gaze arrives (`on`) and holds until it tucks back down (`off`). The
  * candle's flame plays innocent under it (`fx.ts`): it ducks and holds dead still from `on`, and flickers again from

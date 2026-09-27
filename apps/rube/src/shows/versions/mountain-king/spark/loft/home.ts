@@ -78,13 +78,15 @@ export const home = part<null>(
       // and the wall shelf over the bench (its jug's top at -4.2) a third of the way down, under the cards and their
       // dark bed (the top 30%), so no word sits on it or on the windlass. The east wall's cut stays out (x1 < 16) and
       // the dipping wheel is whole at the left. It arrives as the first card comes into focus, so the shelf has
-      // passed under the frame's top third before any word is over it.
-      { t: CREDITS_AT + 0.8, cells: 22.6, hold: w(-4.1, 0.15), w: 1 },
-      { t: CREDITS_AT + 3.0, cells: 23.0, hold: w(-4.5, -0.05), w: 1 },
-      // Then it drifts on out the same way, slower and slower, so the room is never still and the picture holds: the
-      // shelf a third down, the floor at the frame's foot, to the end.
-      { t: DURATION - 2, cells: 23.45, hold: w(-4.95, -0.28), w: 1 },
-      { t: DURATION, cells: 23.5, hold: w(-5.0, -0.3), w: 1 },
+      // passed under the frame's top third before any word is over it. Low enough that the floor stands about 0.75
+      // cells above the frame's foot, with the section's joists under the cat (as in the chords' two-shot), and the
+      // skylight is out of the top: the frame is y -11.0..12.0, x -24.94..15.94 in the loft's cells, and the Music
+      // card's fine print ends at y -4.6, clear of the jug's top.
+      { t: CREDITS_AT + 0.8, cells: 22.6, hold: w(-4.1, 0.55), w: 1 },
+      // Then it settles and holds to the end: the last frame is a still, the candle a little right of centre under
+      // the words, the stove on the right third, the cat whole on its floor.
+      { t: CREDITS_AT + 3.0, cells: 23.0, hold: w(-4.5, 0.5), w: 1 },
+      { t: DURATION, cells: 23.0, hold: w(-4.5, 0.5), w: 1 },
     ]
   },
 )

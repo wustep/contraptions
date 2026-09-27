@@ -25,7 +25,10 @@ import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from '.
  */
 export function heat(t: number): number {
   if (t < THEME) return 1
-  const grown = 0.7 + 1.9 * Math.pow(level(t), 1.4)
+  // Holding its breath on the second knock it stops following the orchestra too: dead still, not drifting with it.
+  const hold = held(t)
+  const lv = hold > 0 ? level(t) + (level(HELD.from + 0.1) - level(t)) * hold : level(t)
+  const grown = 0.7 + 1.9 * Math.pow(lv, 1.4)
   // The silence: it sinks to an ember at once (the silence is the stillest frame), and the roll brings it roaring back.
   const out = smooth(t, SILENCE - 0.05, SILENCE + 0.3) * (1 - smooth(t, ROLL, ROLL + 0.12))
   const flare = t >= ROLL ? 1.6 * Math.exp(-(t - ROLL) / 0.8) : 0
@@ -59,26 +62,44 @@ function draught(t: number): number {
 
 /**
  * On the rack, when the candles knock and the cat half wakes (`KNOCKS`), the spark holds its breath: its flame
- * ducks to about 60% at once and comes back over most of a second.
+ * ducks to about 60% at once. On the first knock it comes back over most of a second. On the second, with the cat's
+ * head up and the cut back to the spark, it keeps holding it, dead still (`held`), until it gathers to leap for the
+ * candle arm, and lets it out as it springs.
  */
 function freeze(t: number): number {
-  let d = 0
-  for (const at of KNOCKS) {
-    const u = t - at
-    if (u <= 0 || u > 1.6) continue
-    d = Math.max(d, smooth(u, 0, 0.1) * Math.exp(-Math.max(0, u - 0.1) / 0.32))
-  }
-  return (1 - 0.4 * d) * (1 - 0.3 * innocent(t))
+  const u = t - KNOCKS[0]
+  const first = u <= 0 || u > 1.6 ? 0 : smooth(u, 0, 0.1) * Math.exp(-Math.max(0, u - 0.1) / 0.32)
+  const d = Math.max(first, held(t))
+  return (1 - 0.4 * d) * (1 - 0.3 * gaze(t))
+}
+
+/**
+ * The breath held on the second knock, 0..1: in within 0.1 s of the knock, held flat through the cut back to the
+ * spark (about 29.24), let out over 0.35 s from its crouch before the leap off the pole's end (take-off about 29.45,
+ * `loft/sneak-plan.ts`), so the flame is back to size in the air.
+ */
+const HELD = { from: KNOCKS[1], out: 29.4, back: 29.75 } as const
+function held(t: number): number {
+  if (t <= HELD.from || t >= HELD.back) return 0
+  return smooth(t, HELD.from, HELD.from + 0.1) * (1 - smooth(t, HELD.out, HELD.back))
 }
 
 /**
  * The same gag paid off at home: when the woken cat's gaze comes round onto the candle (`GAZE.on`), the flame ducks
  * as it did on the knocks and holds dead still, no flicker, no lean, playing an ordinary candle; when the cat's eye
- * shuts (`GAZE.off`) it lets its breath out and flickers again. 0..1: how still it holds.
+ * shuts (`GAZE.off`) it lets its breath out and flickers again.
  */
-export function innocent(t: number): number {
+function gaze(t: number): number {
   if (t < GAZE.on - 0.05 || t > GAZE.off + 0.8) return 0
   return smooth(t, GAZE.on - 0.05, GAZE.on + 0.06) * (1 - smooth(t, GAZE.off, GAZE.off + 0.7))
+}
+
+/**
+ * 0..1: how still the flame holds, its flicker (and the flicker of the light it throws, `loft/set.ts`) stopped: under
+ * the cat's gaze at home, and while it holds its breath on the second knock.
+ */
+export function innocent(t: number): number {
+  return Math.max(gaze(t), held(t))
 }
 
 /**
