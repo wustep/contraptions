@@ -402,7 +402,10 @@ export function drawTroll(p: p5, c: Pen, x: number, y: number, look: TrollLook):
       p.fill(bone)
       p.ellipse(ex, eyeY, 0.06 * H, 0.032 * H * open)
       p.fill(TROLL.shade)
-      p.ellipse(ex + face * 0.012 * H, eyeY + 0.002 * H, 0.022 * H, 0.024 * H * Math.min(1, open))
+      // A head thrown back (slump under 0) looks up with its eyes too: the pupils ride up in the slit, which is what
+      // reads as "looking up" at a troll's size (the bells, a court looking up at its King). Upright or sunk, as before.
+      const up = 0.03 * H * Math.min(0, slump) * Math.min(1, open)
+      p.ellipse(ex + face * 0.012 * H, eyeY + 0.002 * H + up, 0.022 * H, 0.024 * H * Math.min(1, open))
     } else {
       p.stroke(inkC)
       p.strokeWeight(w * 0.8)

@@ -738,7 +738,8 @@ function bellShaft(p: p5, c: Pen, T: number): void {
     const f = v / (floor - roof)
     // Brightest a little under the roof, dimming toward the floor; fading in over the first cell under the cut.
     const along = Math.min(1, v / 1.1) * (1 - 0.55 * f) * Math.min(1, Math.max(0, (y0 - cut) / 1.0))
-    const al = 0.24 * a * along
+    // A step brighter than the first thread (0.24): the heart's crew look up at it, so it must read as their cause.
+    const al = 0.32 * a * along
     if (al <= 0.002) continue
     const half = 0.1 + 0.35 * f
     const g = ctx.createLinearGradient((cx - half) * k, 0, (cx + half) * k, 0)
@@ -754,7 +755,7 @@ function bellShaft(p: p5, c: Pen, T: number): void {
   // Where it lands: a small soft pool on the heart's floor round the collar.
   const r = 0.9
   const pool = ctx.createRadialGradient(cx * k, floor * k, 0, cx * k, floor * k, r * k)
-  pool.addColorStop(0, `rgba(${gold},${(0.11 * a).toFixed(3)})`)
+  pool.addColorStop(0, `rgba(${gold},${(0.16 * a).toFixed(3)})`)
   pool.addColorStop(1, `rgba(${gold},0)`)
   ctx.fillStyle = pool
   ctx.fillRect((cx - r) * k, (floor - r) * k, 2 * r * k, 2 * r * k)
