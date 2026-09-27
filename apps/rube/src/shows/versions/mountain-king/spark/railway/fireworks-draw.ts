@@ -6,6 +6,7 @@ import { FIRES, RAILWAY } from '../worlds'
 import { horizonAt, moonAt, moonLight } from './night'
 import {
   BATTERY_X0,
+  BARRAGE_BURSTS,
   BURSTS,
   CRASH,
   CRASH_AT,
@@ -573,6 +574,8 @@ function smokeLight(t: number, x: number, y: number): { a: number; col: string }
 
 /* ------------------------------------------------------------------ light */
 
+const BARRAGE = new Set<Burst>(BARRAGE_BURSTS)
+
 export interface Light {
   x: number
   y: number
@@ -602,7 +605,9 @@ export function lightsAt(t: number): Light[] {
     const s = t - b0.at
     if (s < 0 || s > 1.8) continue
     const b = placed(b0)
-    const size = b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75
+    // The barrage's many shells light the ground little each: together they warm it, and never lift the night field
+    // flat to a pale sand in the close frames of the hammers.
+    const size = (b.kind === 'titan' ? 1.4 : b.kind === 'salute' ? 0.8 : b.kind === 'small' ? 0.25 : b.kind === 'mine' ? 0.28 : 0.75) * (BARRAGE.has(b0) ? 0.3 : 1)
     const decay = b.kind === 'salute' ? Math.exp(-s / 0.12) : 0.75 * Math.exp(-s / 0.3) + 0.25 * Math.exp(-s / 1.1)
     out.push({ x: b.x, y: b.y + (b.kind === 'mine' ? -1.5 : 0.4 * s), r: 2.5 + (b.v / b.k) * 1.2, a: size * decay * kill, col: b.kind === 'salute' ? SALUTE_LIGHT : b.col })
   }
@@ -841,7 +846,8 @@ export function drawGround(pen: Pen, L: Light[]): void {
     if (l.a < 0.03) continue
     const rx = l.r * 1.1
     const d = Math.max(0, GY - l.y)
-    const a = Math.min(0.35, l.a * 0.28 * Math.max(0, 1 - d / (l.r * 1.6))) * fadeIn(l.x)
+    // At most a warm pool: the night field stays dark ground round it, never lit flat from edge to edge.
+    const a = Math.min(l.col === SALUTE_LIGHT ? 0.16 : 0.35, l.a * 0.28 * Math.max(0, 1 - d / (l.r * 1.6))) * fadeIn(l.x)
     if (a < 0.01) continue
     ctx.save()
     ctx.beginPath()
@@ -2729,9 +2735,10 @@ export function drawWash(pen: Pen): void {
       const A = Math.min(0.5, 0.45 * (b.wash / 0.6) ** 0.5)
       const a = A * (0.3 * Math.exp(-s / 0.025) + 0.7 * Math.exp(-s / 0.11))
       if (a < 0.004) continue
-      pools.push({ x: b.x, y: b.y, col: SALUTE_LIGHT, a: 0.62 * a, r: 4.5, mid: 0.4, tail: 0.3 })
-      if (0.16 * a > flat) {
-        flat = 0.16 * a
+      // (The hammers come down close: at 4-6 cells a flash that lit the whole field turned it to pale sand.)
+      pools.push({ x: b.x, y: b.y, col: SALUTE_LIGHT, a: 0.45 * a, r: 4.5, mid: 0.4, tail: 0.3 })
+      if (0.1 * a > flat) {
+        flat = 0.1 * a
         flatCol = mixHex(FW.fwGold, FW.coalHot, 0.3)
       }
       continue
