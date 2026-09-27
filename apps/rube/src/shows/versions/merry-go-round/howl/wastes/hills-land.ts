@@ -109,8 +109,13 @@ function scatter(i: number): { x: number; kind: 'heather' | 'rock' | 'none'; w: 
   return { x, kind: 'none', w, h: 0, c: WASTES.moss }
 }
 
-/** Where the one tree on the moor stands (a wind-bent thorn: the walk's milestone), and the standing stone. */
-const TREE = 47
+/**
+ * Where the one tree on the moor stands (a wind-bent thorn: the walk's milestone), and the standing stone. The tree
+ * stands clear ahead of the castle's front feet as the third great stride's lock-off opens (135.94), so the whole castle
+ * strides up to it and over it in the two bars; drawn a size up (`TREE_SIZE`) so its wind-bent crown reads there.
+ */
+const TREE = 54.5
+const TREE_SIZE = 1.3
 const STONE = 29
 
 /** Fill with a colour at an alpha (0..1). */
@@ -392,8 +397,12 @@ function drawTree(p: p5, k: number, weight: number, ink: string, T: number): voi
   const trunk = landTone(WASTES.wood, T, 1)
   const leaf = landTone(mixHex(WASTES.moss, WASTES.heatherDeep, 0.3), T, 1)
   const sway = Math.sin(T * 0.8) * 0.06
+  p.push()
+  p.translate(TREE * k, y * k)
+  p.scale(TREE_SIZE)
+  p.translate(-TREE * k, -y * k)
   p.stroke(ink)
-  p.strokeWeight(weight)
+  p.strokeWeight(weight / TREE_SIZE)
   p.fill(trunk)
   const bark = spline([[TREE + 0.3, y + 0.1], [TREE + 0.2, y - 1.0], [TREE - 0.3, y - 2.0], [TREE - 1.2, y - 2.7], [TREE - 1.05, y - 2.9], [TREE - 0.05, y - 2.25], [TREE + 0.5, y - 1.1], [TREE + 0.65, y + 0.1]], 4)
   p.beginShape()
@@ -413,6 +422,33 @@ function drawTree(p: p5, k: number, weight: number, ink: string, T: number): voi
   p.beginShape()
   for (const [x, yy] of pts) p.vertex(x * k, yy * k)
   p.endShape(p.CLOSE)
+  // Its foliage: shade under the crown and lighter clumps along its top, in tufts streaming away from the wind (so seen
+  // close, from the porch as the castle walks over it, it is a thorn's crown, never a flat blob).
+  p.noStroke()
+  const shade = landTone(mixHex(WASTES.moss, WASTES.heatherDeep, 0.6), T, 1)
+  const top = landTone(mixHex(WASTES.moss, '#C9D29A', 0.35), T, 1)
+  for (let i = 0; i < 7; i++) {
+    const u = (i + 0.5) / 7
+    const x = cx + (u - 0.5) * 3.1 + sway * 0.5
+    const lump = Math.sin(Math.PI * u)
+    p.fill(shade)
+    p.ellipse(x * k, (cy + 0.28 + 0.06 * hash(i, 71)) * k, (0.75 + 0.35 * hash(i, 72)) * k, (0.32 + 0.12 * lump) * k)
+  }
+  for (let i = 0; i < 6; i++) {
+    const u = (i + 0.3 + 0.4 * hash(i, 73)) / 6
+    const x = cx + (u - 0.5) * 3.0 + sway
+    const lump = Math.sin(Math.PI * u)
+    p.fill(top)
+    p.ellipse(x * k, (cy - 0.42 - 0.22 * lump + 0.08 * hash(i, 74)) * k, (0.55 + 0.3 * hash(i, 75)) * k, (0.24 + 0.1 * lump) * k)
+  }
+  // The outline once more over the tufts, so they sit inside it.
+  p.noFill()
+  p.stroke(ink)
+  p.strokeWeight(weight / TREE_SIZE)
+  p.beginShape()
+  for (const [x, yy] of pts) p.vertex(x * k, yy * k)
+  p.endShape(p.CLOSE)
+  p.pop()
 }
 
 /** A standing stone, taller than the castle's foot. */

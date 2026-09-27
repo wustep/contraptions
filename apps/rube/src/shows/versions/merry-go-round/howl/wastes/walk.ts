@@ -107,7 +107,7 @@ export const walk = part<null>(
     // as her dipping and lifting in the frame.
     const CLOSE = 5.6
     const close: Pt = [0.1 * CLOSE * (16 / 9), -0.04 * CLOSE]
-    // The third great stride is watched from a lock-off: the castle crosses it past the thorn tree (world x 47),
+    // The third great stride is watched from a lock-off: the castle crosses it past the thorn tree (world x 54.5, ahead of its front feet as it opens),
     // whole from its feet to its flag, its feet a cell and a half above the frame's foot.
     const past = castleAt(W(78)).at
     const cross = w([48, past[1] + 1.7 - WHOLE / 2])
