@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../../parts'
 import { box, part, type Companion, type PartShot, type Pose } from '../kit'
-import { bar, beat, CUT } from '../music'
+import { bar, beat, BEATS, CUT } from '../music'
 import { CUTS } from '../seams'
 import { CHAIR } from '../props/chairs'
 import { drawFacadeFront } from './front-house'
@@ -103,6 +103,15 @@ const E = {
   seatUp: 44.15,
   sit: bar('waltz', 27),
 }
+/**
+ * Riding the deck, she answers every blow: the cart kicks on the one, and she is jolted up off the boards and comes
+ * down on the two (the waltz's first pah), before the pawl takes the hammer on the three. The whole bar is played.
+ */
+const BOUNCES: [number, number][] = BLOWS.filter((b) => b > beat('waltz', 5, 3) + 0.5 && b < bar('waltz', 19) - 0.6).map((b) => {
+  const two = BEATS.find((x) => x.stretch === 'waltz' && x.pos === 2 && x.t > b && x.t < b + 0.6)
+  if (!two) throw new Error(`married life: fixup: no two after the blow at ${b}`)
+  return [b, two.t]
+})
 /** Her running start: a little quicker than him, into her leap onto the cart. */
 const eRun = (T: number) => XE + CUTS.house.ellie![0] + V_IN * (T - T0) + 0.45 * (T - T0) ** 2
 /** On the deck: the settle after her landing, the rock back when he shoves, the hop for joy past the house. */
@@ -111,7 +120,11 @@ function onDeck(T: number): Pt {
   const s = T - SHOVE
   const jolt = s > 0 ? -0.08 * (1 - Math.exp(-s / 0.07)) * Math.exp(-s / 0.45) : 0
   const u = (T - (E.joy - 0.38)) / 0.38
-  const hop = u > 0 && u < 1 ? 0.16 * 4 * u * (1 - u) : 0
+  let hop = u > 0 && u < 1 ? 0.16 * 4 * u * (1 - u) : 0
+  for (const [b, two] of BOUNCES) {
+    const v = (T - b) / (two - b)
+    if (v > 0 && v < 1) hop += 0.075 * 4 * v * (1 - v)
+  }
   return [W(T) + CART.ellie + settle + jolt, DECK - hop]
 }
 const deckEnd = onDeck(E.up)
@@ -180,6 +193,7 @@ export const FIXUP_HITS: number[] = [
   CHAIR_LIFT.ellie[2],
   PANE_AT,
   ...FOLD,
+  ...BOUNCES.map(([, two]) => two),
   E.joy,
   BRAKE,
   PRINT_AT.ellie,

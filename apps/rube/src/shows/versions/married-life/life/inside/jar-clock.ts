@@ -31,6 +31,11 @@ export const TOUCHDOWN = 0.1
 /** Carl's strokes on the seesaw (the plank's thump), and where each handful lands in the jar (the next downbeat). */
 export const SLAMS = [J(7), J(8), J(9), J(10), J(16), J(17), J(24), J(25)]
 export const LANDS = [J(8), J(9), J(10), J(11), J(17), J(18), J(25), J(26)]
+/**
+ * Her count: each handful drops into the slot on the downbeat and she is up off her tread with it, coming down on the
+ * waltz's two, the first pah after his oom, so the bar is answered: his stroke on the one, the coins in, her hop on the two.
+ */
+export const COUNTS = [J(8, 2), J(9, 2), J(10, 2), J(11, 2)]
 /** He hops down, pleased, as the fourth handful lands. */
 export const DOWN = J(11)
 /** The tyre blows (after a held breath in the music); the hubcap lands; the car stands level again. */
