@@ -13,6 +13,7 @@ import {
   louiseAt,
   louiseSpin,
   smoother,
+  turned,
   T_END,
   T_IAN_LEAP,
   T_LEAP,
@@ -41,7 +42,8 @@ import {
  * On the great burst (70.513) she leaps from the deck, and gravity turns under her: Earth's pull (down the throat)
  * swings round to the shell's own, toward the wall on her right, over half a second, and she falls in a true curve
  * (the path a throw takes in a gravity that turns) onto that wall, which is now the floor (71.227). The camera turns
- * with her, eased over a second and a half, so the tall tunnel lies down into a long corridor; the dust turns with
+ * after gravity like a heavy body on a spring (`rollAt`): lagging it, a few degrees past square as her first bounce
+ * lands, settling as the bounces die, so the tall tunnel lies down into a long corridor; the dust turns with
  * gravity, lagging as fine dust does. Ian follows a pulse later (70.751), pressed along the deck by the turning pull
  * before he leaps, and lands on the next pulse after hers (71.465). They bounce, damped, three pulses, then two, then
  * one, each a pulse apart from the other (71.941, 72.173, 72.411, 72.644, 72.887): every hard pulse of the burst
@@ -54,12 +56,40 @@ import {
  * chamber's dark. Out at 85.786 at 0.9 c/s along the floor, the camera square, Ian half a cell behind.
  */
 
-/** The camera's roll: a quarter turn in the mouth (the shell's +x up the screen), square again with gravity. */
-export const ROLL_FOR = 1.45
+/**
+ * The camera's roll: a quarter turn in the mouth (the shell's +x up the screen), and square again with gravity. From
+ * the great burst it follows gravity round as a heavy body on a damped spring would: slow to start (gravity's own turn
+ * eases in), lagging it through the turn, carried about three degrees past square as her first bounce lands, and
+ * settling back as the bounces die. The spring's last tenth of a degree is faded out, so it is square exactly by
+ * `ROLL_FOR` after the burst.
+ */
+const ROLL_W = 3.7
+const ROLL_ZETA = 0.72
+export const ROLL_FOR = 2.9
+const ROLL_DT = 1 / 1000
+const ROLL: number[] = (() => {
+  const out: number[] = []
+  let a = -Math.PI / 2
+  let v = 0
+  for (let i = 0; i * ROLL_DT <= ROLL_FOR + ROLL_DT; i++) {
+    out.push(a)
+    // Semi-implicit Euler at a millisecond: the pull toward where gravity points, less the damping.
+    const s = (i + 0.5) * ROLL_DT
+    const pull = -(Math.PI / 2) * (1 - turned(TURN + s))
+    v += (ROLL_W * ROLL_W * (pull - a) - 2 * ROLL_ZETA * ROLL_W * v) * ROLL_DT
+    a += v * ROLL_DT
+  }
+  return out
+})()
 export const rollAt = (t: number): number => {
   if (t < T0) return 0
   if (t <= TURN) return -Math.PI / 2
-  return -(Math.PI / 2) * (1 - smoother((t - TURN) / ROLL_FOR))
+  const s = t - TURN
+  if (s >= ROLL_FOR) return 0
+  const i = s / ROLL_DT
+  const j = Math.floor(i)
+  const a = ROLL[j] + (ROLL[j + 1] - ROLL[j]) * (i - j)
+  return a * (1 - smoother((s - (ROLL_FOR - 0.5)) / 0.5))
 }
 
 /** Every strike, show seconds. */

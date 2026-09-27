@@ -3,7 +3,7 @@ import { box, part, route, type Company, type PartShot } from '../kit'
 import { SEAMS } from '../seams'
 import { drawChamber } from './chamber-glass'
 import { FOOTFALLS } from './chamber-heptapods'
-import { IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
+import { CLOSE, IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, REACH, SPRAY, SURGES, WAKE, X_LEAN, X_PALM, X_REST } from './chamber-path'
 
 /**
  * The chamber (85.786 → 130.409): the chamber builder's. First contact.
@@ -18,9 +18,11 @@ import { IAN_PATH, IN, INK_IN, LOUISE_PATH, OPENS, OUT, PALM, SPRAY, SURGES, WAK
  * whole, the two giants, the two of them tiny at its foot), and Abbott's front limb leaves the fog floor (109.308)
  * and reaches, slowly, up out of the fog and down to her. She sets off to meet it (118.468); its tip opens (118.700);
  * on 119.658 its palm presses flat on the glass right over her as she comes to it: the touch. Ian backs off a little.
- * Costello lifts a limb and sprays ink into the fog (121.330); it reaches the fog beside the palm (122.061) and a ring
- * blooms there, surging on the pulses, turning slowly; she leans toward it; it closes as the glass's light swells to
- * white, and the director's veil takes it into the fog on the cue's loudest swell.
+ * Costello lifts a limb and sprays ink into the fog (121.574); it reaches the fog beside the palm (122.061) and a ring
+ * blooms there, surging on the pulses, turning slowly, as the two giants sink back into the thickening fog; she
+ * leans toward it; its two ends run into each other on the last pulse before the swell (126.131), the whole
+ * logogram in the middle of the glass, and it hangs there putting out its tendrils through the swell until the
+ * glass's light goes to white, and the director's veil takes it into the fog on the cue's loudest moment.
  *
  * The part's frame: the ball comes in at (-0.5, 0) at the shaft's exit, the floor's surface y = FLOOR throughout.
  */
@@ -29,8 +31,8 @@ interface ChamberState {
   begin: number
 }
 
-/** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges. */
-export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES])].sort((a, b) => a - b)
+/** Every strike: the glass's two wakings, the seen footfalls, the limb leaving the floor, the palm opening, the touch, the spray, the ink coming in, the ring's surges, its closing and its tendrils. */
+export const CHAMBER_HITS: number[] = [...new Set([...WAKE, ...FOOTFALLS.map((f) => f.at), OPENS, PALM, SPRAY, INK_IN, ...SURGES, CLOSE, REACH])].sort((a, b) => a - b)
 
 export const chamber = part<ChamberState>(
   {
@@ -82,14 +84,15 @@ export const chamber = part<ChamberState>(
     // The palm on the glass, and her at it; held a moment.
     { t: 119.55, cells: 4.5, hold: [X_PALM - 0.1, -1.15], w: 1 },
     { t: 120.25, cells: 4.6, hold: [X_PALM + 0.05, -1.2], w: 1 },
-    // Out and over as Costello lifts a limb to write, the ink leaving it, the ring beside the palm.
-    // Then settling on the two of them together, the ring whole and her at the palm, through its closing on the cue's
-    // loudest swell (a slow drift, never a dead hold).
-    { t: 122.4, cells: 7.5, hold: [X_PALM + 4.0, -2.0], w: 1 },
-    { t: 125.0, cells: 7.2, hold: [X_PALM + 3.55, -1.96], w: 1 },
-    { t: 127.5, cells: 6.9, hold: [X_PALM + 2.55, -1.92], w: 1 },
-    { t: 129.6, cells: 6.55, hold: [X_PALM + 2.15, -1.85], w: 1 },
-    // In on her for the cut, under the white rising (the veil from 129.7): the seam's framing.
+    // Out and over as Costello lifts a limb to write and the ink comes into the fog, and on back while the ring is
+    // written, so it is always whole in the frame; coming to rest as its two ends meet (CLOSE): the whole logogram
+    // in the middle of the glass, the palm and her small at its left. Then, through the swell, a slow push in on the
+    // two of them and it, and on under the white rising (the veil from 129.7) to the seam's framing. She stays low
+    // and left, never out of the frame under Zoom.
+    { t: 122.4, cells: 7.4, hold: [X_PALM + 3.75, -2.4], w: 1 },
+    { t: 124.3, cells: 7.85, hold: [X_PALM + 4.1, -2.58], w: 1 },
+    { t: CLOSE, cells: 8.2, hold: [X_PALM + 4.3, -2.7], w: 1 },
+    { t: 129.6, cells: 7.75, hold: [X_PALM + 3.95, -2.57], w: 1 },
     { t: OUT, cells: SEAMS.fog1.cells, hold: [X_LEAN + SEAMS.fog1.frame[0], SEAMS.fog1.frame[1]], w: 1 },
   ],
 )

@@ -11,10 +11,10 @@ import { drawBankFront, REVEAL } from './set'
  * On the first great pulse the lake house's window-light goes to white and the white is cloud: the helicopter hangs
  * in it, the two of them on the cabin's bench seen through the door's window (Ian on her right). As the white clears
  * it lurches off (the onset 9.741), the cloud streaming past; on 11.099 it comes out of the cloud's front into clear
- * air (a cut to the outside: the helicopter pushing out of the bank piled on the near ridge). Then the long unhurried
- * pull: the camera draws back and back as it flies on over the ridge, until on 16.283 it crosses the crest (its nose
- * dips) and the valley is open below: the fog pouring over the far ridges, and the shell, whole, hanging over the
- * meadow, the helicopter a speck against it. It holds there. On 18.013 the nose comes up for the descent (a cut in to
+ * air (a cut to the outside: the helicopter pushing out of the bank piled on the near ridge). The camera goes with it
+ * over the ridge, a little further back as it goes, never far enough to see over the crest; on 16.283 it crosses the
+ * crest (its nose dips) and the picture cuts to the valley open below: the fog pouring over the far ridges, and the
+ * shell, whole, hanging over the meadow, the helicopter a speck against it. It holds there. On 18.013 the nose comes up for the descent (a cut in to
  * it), and the camera comes in as it comes down onto the helideck at the camp, the rotor's wash blowing the mist off
  * the matting; the skids touch on 22.059 and the struts take it.
  *
@@ -97,9 +97,9 @@ const S = (u: number) => {
 
 /**
  * The camera. In the cloud: close on the window (the seam's framing), following as it goes. The cut to the outside
- * on 11.099: the helicopter pushing out of the bank, and from there the long pull, even in scale (never faster than
- * half a scale a second), from following it to the great wide of the valley, which it reaches as it crosses the crest.
- * The cut in on the flare, 18.013: with it as it comes down, closing in to the seam's framing at touchdown.
+ * on 11.099: the helicopter pushing out of the bank, followed over the ridge; the cut to the great wide of the valley
+ * on the crest (16.283), the shell first seen whole on the pulse. The cut in on the flare, 18.013: with it as it comes
+ * down, closing in to the seam's framing at touchdown.
  */
 function shotsFor(begin: number, end: number): PartShot[] {
   const keys: PartShot[] = []
@@ -110,21 +110,14 @@ function shotsFor(begin: number, end: number): PartShot[] {
   keys.push({ t: begin + 0.5, cells: seam.cells * 1.02, hold: [h0[0] + seam.frame[0], h0[1] + seam.frame[1]], w: 1 })
   keys.push({ t: 10.35, cells: 3.7, off: [0.4, -0.3], w: 0 })
   keys.push({ t: 11.0, cells: 4.3, off: [0.55, -0.3], w: 0 })
-  // Out of the cloud: the long pull, as a run of held framings (so the move is exactly this curve): from ahead of it,
-  // out to the great wide, which it settles into as it crosses the crest, and drifts in, very slowly, after.
+  // Out of the cloud (a cut to the outside): with it as it flies on over the ridge, a little further back as it goes,
+  // never far enough to see what is over the crest. On the crest's pulse, a cut to the great wide: the valley open,
+  // the shell whole over the meadow, the helicopter a speck against it; held, drifting in very slowly, to the flare.
   const wide = local(REVEAL.at)
-  const z0 = Math.log(30)
-  const z1 = Math.log(REVEAL.cells)
-  const P0 = OUT
-  const P1 = 17.45
-  for (let t = P0; t <= FLARE - 0.05; t += 0.3) {
-    const u = S((t - P0) / (P1 - P0))
-    const z = z0 + (z1 - z0) * u + (t > P1 ? -0.03 * (t - P1) : 0)
-    const b = her(t)
-    const lead: Pt = [b[0] + 8, b[1] + 3]
-    const w = S((t - P0 - 0.3) / (P1 - P0 - 0.6))
-    keys.push({ t, cells: Math.exp(z), hold: [lead[0] + (wide[0] - lead[0]) * w, lead[1] + (wide[1] - lead[1]) * w], w: 1, cut: t === P0 })
-  }
+  keys.push({ t: OUT, cells: 30, off: [6, 2.5], w: 0, cut: true })
+  keys.push({ t: CREST - 0.02, cells: 34, off: [3.5, 2], w: 0 })
+  keys.push({ t: CREST, cells: REVEAL.cells, hold: wide, w: 1, cut: true })
+  keys.push({ t: FLARE - 0.05, cells: REVEAL.cells * 0.95, hold: wide, w: 1 })
   // The flare, and down: from ahead of it and below (the camp coming into the frame) to the seam's framing on her.
   const base = SEAMS.base
   const Q0 = FLARE

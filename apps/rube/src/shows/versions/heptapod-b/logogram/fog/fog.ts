@@ -1,6 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
 import { SEAM } from '../music'
+import { SEAMS } from '../seams'
 import { drawFog, FOG_EXTENT } from './fog-set'
 import { FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
 
@@ -86,7 +87,7 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
   const R1 = RINGS.find((r) => r.key === 'R1')!
   const her0 = at(slot.begin)
   return [
-    // Carried in from the chamber's framing (5.2) under the white; easing in to the palm's cup as the veil clears,
+    // Carried in from the chamber's framing (5.8) under the white; easing in to the palm's cup as the veil clears,
     // then back a little to take in the ring written beside her.
     { t: 131.6, cells: 3.8, hold: [her0[0] + 0.1, her0[1] - 0.55], w: 1 },
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
@@ -101,13 +102,14 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
 export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
   const top = at(slot.end)
   return [
-    { t: 143.1, cells: 4.8, off: [0.8, -0.6], w: 0 },
-    // Wider for the long arcs, leading her, so the ring written for her is seen before she comes down into it.
-    { t: 145.0, cells: 5.9, off: [1.9, -0.4], w: 0 },
-    { t: 147.7, cells: 6.4, off: [2.3, -0.3], w: 0 },
-    { t: 150.4, cells: 6.4, off: [2.3, -0.4], w: 0 },
-    { t: 152.4, cells: 6.0, off: [1.6, -0.4], w: 0 },
-    { t: 153.2, cells: 5.8, off: [0.6, -0.45], w: 0 },
+    { t: 143.1, cells: 5.4, off: [0.9, -0.6], w: 0 },
+    // Wide for the long arcs, leading her, so the ring written for her is seen whole, before she comes down into it,
+    // and the one she leaves is still there behind her.
+    { t: 145.0, cells: 8.0, off: [1.9, -0.4], w: 0 },
+    { t: 147.7, cells: 8.8, off: [2.2, -0.3], w: 0 },
+    { t: 150.4, cells: 8.8, off: [2.2, -0.4], w: 0 },
+    { t: 152.4, cells: 8.2, off: [1.6, -0.4], w: 0 },
+    { t: 153.2, cells: 7.2, off: [0.6, -0.45], w: 0 },
     // The toss: the frame goes up with her and waits at the top of the ring written round her.
     { t: 154.6, cells: 5.0, off: [0.2, -0.5], w: 0 },
     { t: 155.75, cells: 4.3, hold: [top[0] + 0.45, top[1] - 0.5], w: 1 },
@@ -132,16 +134,16 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
   return [
     { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
     { t: 167.5, cells: 4.9, hold: [at(167.5)[0] + 0.5, at(167.5)[1] - 1.25], w: 1 },
-    // Stopped at the top of her rise, where the ink begins under her; then the long pull back as the ring is written,
-    // her low in the frame, until it is whole, closing (183.182); then in for the cut.
+    // Stopped at the top of her rise, where the ink begins under her; then back through the first hard run to the
+    // whole of the ring the two pens will write, hers at the bottom and Costello's limb on the top, and held on it
+    // (a slow breath back) while it turns, her rides up its wall and her falls, and the halves coming round; closing
+    // (183.182); and held on it whole while its tendrils fling out and its turn slows to rest, the last hard pulses of
+    // the push, a breath back from the punch, to the cut.
     { t: 168.4, cells: 6.0, hold: [top[0] + 0.7, top[1] - 1.6], w: 1 },
-    { t: 169.3, cells: 7.4, hold: [top[0] + 0.9, top[1] - 2.2], w: 1 },
-    { t: 171.2, cells: 8.4, hold: [c[0] + 0.7, c[1] + 1.8], w: 1 },
-    { t: 173.6, cells: 9.4, hold: [c[0] + 0.6, c[1] + 1.4], w: 1 },
-    // Both pens in the frame: hers at the bottom, Costello's limb on the top, the two halves coming round.
-    { t: 176.8, cells: 11.5, hold: [c[0] + 0.3, c[1] + 0.6], w: 1 },
-    { t: 181.8, cells: 12.2, hold: [c[0] + 0.2, c[1] + 0.35], w: 1 },
+    { t: 170.3, cells: 11.0, hold: [c[0] + 0.25, c[1] + 0.45], w: 1 },
+    { t: 176.8, cells: 11.6, hold: [c[0] + 0.25, c[1] + 0.4], w: 1 },
+    { t: 181.8, cells: 12.0, hold: [c[0] + 0.2, c[1] + 0.35], w: 1 },
     { t: 183.182, cells: 11.5, hold: [c[0] + 0.2, c[1] + 0.4], w: 1 },
-    { t: slot.end, cells: 5.0, hold: [end[0] + 0.6, end[1] - 1.2], w: 1 },
+    { t: slot.end, cells: SEAMS.after.cells, hold: [end[0] + SEAMS.after.frame[0], end[1] + SEAMS.after.frame[1]], w: 1 },
   ]
 })

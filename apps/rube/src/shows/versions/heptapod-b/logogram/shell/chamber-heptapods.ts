@@ -3,7 +3,7 @@ import { mixHex, type Pt } from '../../../../../parts'
 import { drawHeptapod, drawLogogram, drawSpray, heptapodTip, type HeptapodOpts } from '../cast'
 import { pulse } from '../music'
 import { SHELL } from '../worlds'
-import { ABBOTT_SEEN, CLOSE, COSTELLO_SEEN, INK_IN, OPENS, OUT, PALM, REACH_OFF, SPRAY, SURGES, X_PALM } from './chamber-path'
+import { ABBOTT_SEEN, CLOSE, COSTELLO_SEEN, INK_IN, OPENS, OUT, PALM, REACH, REACH_OFF, SPRAY, SURGES, X_PALM } from './chamber-path'
 
 /**
  * Abbott and Costello behind the glass: how they come out of the white on their limbs, each tip set down on a pulse;
@@ -37,7 +37,8 @@ function knots(ks: [number, number][]): (t: number) => number {
 
 /**
  * How deep in the fog a heptapod is: a shadow (`before`) that darkens a little on each unseen footfall (`hints`) and
- * recovers; on `seen` it resolves, quickly at first and then slowly, onto `after`.
+ * recovers; on `seen` (a hard pulse) it comes out of the white: more than half the way at once, on the pulse, and the
+ * rest slowly, onto `after`.
  */
 /** How much an unseen footfall darkens its shadow in the fog. */
 const HINT = 0.07
@@ -47,7 +48,10 @@ function emerge(seen: number, hints: number[], before: [number, number][], after
   const post = knots(after)
   return (t) => {
     let f = pre(t)
-    if (t > seen) f += (post(t) - f) * (1 - Math.exp(-(t - seen) / 0.5))
+    if (t > seen) {
+      const a = t - seen
+      f += (post(t) - f) * (0.55 * (1 - Math.exp(-a / 0.07)) + 0.45 * (1 - Math.exp(-a / 0.9)))
+    }
     for (const h of hints) {
       const a = t - h
       if (a > 0 && a < 4) f -= HINT * (1 - Math.exp(-a / 0.08)) * Math.exp(-a / 0.9)
@@ -244,33 +248,76 @@ function palmOpen(t: number): number {
   return at + (1 - at) * (1 - Math.exp(-a / 0.09)) + 0.04 * Math.exp(-a / 0.6) * (1 - Math.exp(-a / 0.09))
 }
 
-/** The ring: where it hangs, its size, which sentence. */
-export const RING_AT: Pt = [X_PALM + 3.95, -2.45]
-export const RING_R = 2.2
-const RING_SEED = 1017
+/**
+ * The ring: where it hangs, its size, which sentence. The first logogram is the thing the fullest voices are for: it
+ * hangs in the middle of the glass beside the palm, larger than the palm by far, clear of it, and whole in the frame
+ * from its closing to the white.
+ */
+export const RING_AT: Pt = [X_PALM + 4.35, -3.15]
+export const RING_R = 2.6
+const RING_SEED = 1014
 /** Where Costello's limb holds its tip to write, and when it goes up. */
-const WRITE_AT: Pt = [X_PALM + 7.7, -4.45]
+const WRITE_AT: Pt = [X_PALM + 8.3, -5.3]
 const WRITE_UP = pulse(502)
 /** The ring's slow turn. */
 const spinAt = (t: number) => 0.05 * (t - INK_IN)
-/** Where the ink comes into the ring: the side toward the limb. */
+/** Where the ink comes into the ring: the side toward the limb. Its two ends meet on the far side. */
 const ARRIVE = Math.atan2(WRITE_AT[1] - RING_AT[1], WRITE_AT[0] - RING_AT[0])
+const MEET = ARRIVE + Math.PI
 
-/** How far the ring has formed: a blot where the ink comes in, surges on the pulses, closing at CLOSE, reaching after. */
+/** The inverse of the smoothstep `drawLogogram` puts the ring through (its `form / 0.7`). */
+const unSmooth = (y: number) => 0.5 - Math.sin(Math.asin(1 - 2 * clamp01(y)) / 3)
+
+/**
+ * How much of the ring is written, 0 .. 1 of the way round: a blot where the ink comes in, a push round on each of
+ * the two surges, and a steady spread between, so that the two ends run into each other (not creeping up on it) and
+ * meet on CLOSE.
+ */
+function arcAt(t: number): number {
+  if (t < INK_IN) return 0
+  if (t >= CLOSE) return 1
+  let r = 0.16 * (1 - Math.exp(-(t - INK_IN) / 0.25))
+  for (const s of SURGES) if (t > s) r += 0.16 * (1 - Math.exp(-(t - s) / 0.35))
+  const tails = 0.16 * (1 - Math.exp(-(CLOSE - INK_IN) / 0.25)) + SURGES.reduce((a, s) => a + 0.16 * (1 - Math.exp(-(CLOSE - s) / 0.35)), 0)
+  return Math.min(1, r + (1 - tails) * ((t - INK_IN) / (CLOSE - INK_IN)))
+}
+
+/**
+ * How far the ring has formed, as `drawLogogram` reads it: the arc to CLOSE (0.7, whole); then its tendrils, put out
+ * on REACH and reaching on with the swell until the light takes it.
+ */
 export function ringForm(t: number): number {
   if (t < INK_IN) return 0
-  let f = 0.15 * (1 - Math.exp(-(t - INK_IN) / 0.3))
-  const gains = [0.12, 0.12, 0.11, 0.1]
-  SURGES.forEach((s, i) => {
-    // Each a push of ink round the ring on its pulse: quick, then easing.
-    if (t > s) f += gains[i] * (1 - Math.exp(-(t - s) / 0.4))
-  })
-  // The rest comes in as a steady spread, to close (0.7) on CLOSE; the tendrils after.
-  const base = 0.15 + gains.reduce((a, b) => a + b, 0)
-  f += (0.7 - base) * clamp01((t - INK_IN) / (CLOSE - INK_IN))
-  if (t > CLOSE) f += 0.3 * sm01((t - CLOSE) / 1.3)
+  if (t < CLOSE) return 0.7 * unSmooth(arcAt(t))
+  let f = 0.7
+  if (t > REACH) f += 0.1 * (1 - Math.exp(-(t - REACH) / 0.3)) + 0.2 * sm01((t - REACH) / (OUT - 0.4 - REACH))
   return Math.min(1, f)
 }
+
+/**
+ * The ring's size at `t`: RING_R until it closes, then swelling with the voices, slowly and then faster, a tenth
+ * larger by the loudest moment (the white takes it at its largest).
+ */
+export function ringR(t: number): number {
+  const u = clamp01((t - CLOSE) / (OUT - CLOSE))
+  return RING_R * (1 + 0.09 * u * u)
+}
+
+/** Where the two ends meet the ink pools: a blot that lands on CLOSE and settles. */
+function meetMark(t: number): { a: number; size: number; width: number; grow: number }[] {
+  if (t <= CLOSE) return []
+  const a = t - CLOSE
+  const grow = (1 - Math.exp(-a / 0.07)) * (1 + 0.35 * Math.exp(-a / 0.5))
+  return [{ a: MEET, size: 0.07, width: 0.22, grow }]
+}
+
+/**
+ * While the ring is written the fog thickens round the two of them and they sink back into it, so the ink is the
+ * one dark thing on the glass: the limbs they stand on go furthest (Abbott's arch right through the ring), Costello
+ * behind a little, and Abbott's palm and Costello's pen stay out of it (their `reachFog`). Shares of the way to white.
+ */
+const RECEDE = { body: [0, 0.55], limbs: [0.82, 0.85] } as const
+const receding = (t: number) => sm01((t - INK_IN) / (CLOSE - INK_IN))
 
 /* ------------------------------------------------------------------ drawing */
 
@@ -291,8 +338,11 @@ export function heptapodAt(j: 0 | 1, t: number, seen: Seen): { o: HeptapodOpts; 
     const p = tipOf(j, i, t)
     tips.push([p[0] - at[0], p[1] - at[1]])
   }
-  const fog = Math.min(1, w.fog(t) + (1 - w.fog(t)) * 0.6 * seen.wash)
-  const o: HeptapodOpts = { t, h: b.h, who: w.who, fog, air: seen.air, color: SHELL.heptapod, tips }
+  const back = receding(t)
+  const deep = w.fog(t) + (1 - w.fog(t)) * RECEDE.body[j] * back
+  const fog = Math.min(1, deep + (1 - deep) * 0.6 * seen.wash)
+  const limbFog = back > 0 ? fog + (1 - fog) * RECEDE.limbs[j] * back : undefined
+  const o: HeptapodOpts = { t, h: b.h, who: w.who, fog, air: seen.air, color: SHELL.heptapod, tips, limbFog }
   if (j === 0) {
     // Abbott: the front limb's reach, and its lean toward her as it comes down.
     if (t > REACH_OFF) {
@@ -359,6 +409,6 @@ export function drawInk(p: p5, k: number, t: number, seen: Seen): void {
   const spin = spinAt(t)
   p.push()
   p.translate(RING_AT[0] * k, RING_AT[1] * k)
-  drawLogogram(p, k, { r: RING_R, seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink })
+  drawLogogram(p, k, { r: ringR(t), seed: RING_SEED, t, form, start: ARRIVE, spin, color: ink, marks: meetMark(t) })
   p.pop()
 }

@@ -23,8 +23,8 @@ const rgb = (hex: string) => {
 }
 const rgba = (hex: string, a: number) => `rgba(${rgb(hex)}, ${Math.max(0, Math.min(1, a))})`
 
-/** The glass's face with its fog unlit: a dim grey in the dark. */
-const DIM = mixHex(SHELL.wall, SHELL.mist, 0.28)
+/** The glass's face with its fog unlit: only just a shade lighter than the dark round it, so it wakes out of nothing. */
+const DIM = mixHex(SHELL.wall, SHELL.mist, 0.1)
 
 /** The fog's colour behind the glass, lit: a little greyer high up; what the heptapods fade into. */
 // Its top the same as its middle, so a heptapod deep in it is only ever a shade darker than the fog, never lighter.
@@ -40,7 +40,7 @@ export const swellAt = (t: number): number => sm(t, SWELL, OUT) ** 1.4
  * step on WAKE[0], the second on WAKE[1] (a flare, settling), then breathing with the voices.
  */
 export function glassLight(t: number): number {
-  let g = 0.12
+  let g = 0.05
   const a0 = t - WAKE[0]
   const a1 = t - WAKE[1]
   if (a0 > 0) g += 0.3 * (1 - Math.exp(-a0 / 0.06))
@@ -299,10 +299,11 @@ function drawSwell(p: p5, k: number, t: number): void {
   if (w <= 0.002) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const f = frame(p, k)
-  // From the glass: the light fills the air over the floor first, the floor itself last.
+  // From the glass: the light fills the air over the floor first, and the floor close behind it (never a dark slab
+  // left standing in the white).
   const g = ctx.createLinearGradient(0, (GLASS_BOT - 0.4) * k, 0, (GLASS_BOT + 3) * k)
   g.addColorStop(0, rgba(SHELL.glow, 0.6 * w))
-  g.addColorStop(1, rgba(SHELL.glow, 0.25 * w * w))
+  g.addColorStop(1, rgba(SHELL.glow, 0.85 * w ** 1.5))
   ctx.fillStyle = g
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (f.y1 - f.y0 + 2) * k)
 }

@@ -82,6 +82,8 @@ export const V1 = {
   cut: pulse(584),
   /** Hannah laughing: a leap (off on one pulse, down on another), and a little skip after it. */
   bounce: [pulse(586), pulse(588), pulse(589)],
+  /** Running on ahead: two more little skips, landing on the next two strong pulses. */
+  skips: [pulse(592), pulse(593), pulse(594)],
 }
 export const V2 = {
   /** The cut, and the lean begins; it comes to rest against her. */
@@ -256,11 +258,11 @@ export const along = (lane: Lane, t0: number, t: number): Pt => {
 
 /**
  * The lawn in the first vision's own frame (V1_AT is its origin; she comes in at (-0.5, 0)): the grass's surface
- * `lawnY(x)`, level where she comes in, down a gentle dip, level again at the brow, and then the bank, steep, down to
- * the water's edge. Hannah runs on ahead and over the brow and down the bank out of the picture; Louise reaches the
- * brow on the cut.
+ * `lawnY(x)`, level where she comes in, down a gentle dip, and level on along the shore, the lake beyond it; the bank
+ * down to the water is further on than the picture ever goes. Hannah runs ahead along it, skipping, and never near
+ * the edge: the vision is a child at play and her mother after her, nothing else.
  */
-export const BROW = 2.55
+export const BROW = 7.6
 const BANK = { drop: 2.35, run: 3.45 }
 const smooth01 = (u: number) => {
   const v = Math.max(0, Math.min(1, u))
@@ -287,34 +289,35 @@ export const V1_SPEED = 0.9
 export const louiseLawn = (t: number): Pt => onLawn(-0.5 + V1_SPEED * (t - SCENES.v1.begin), R)
 
 /**
- * Little Hannah on the lawn: a little ahead of her mother as it cuts in, quicker, two little bounces (laughing), on
- * over the brow and down the bank, gathering speed, out of the bottom of the picture before the cut. Integrated once
- * (her contact point along the lawn, and her speed), then read by time.
+ * Little Hannah on the lawn: a little ahead of her mother as it cuts in, quicker, a leap and a skip (laughing), and on
+ * ahead at a child's run, skipping twice more on the pulses, her mother after her: never caught, and still running
+ * when the cut takes her. Integrated once (her contact point along the lawn, and her speed), then read by time.
  */
 const HANNAH_LAWN: { t: number; x: number; lift: number }[] = (() => {
   const out: { t: number; x: number; lift: number }[] = []
   const { begin, end } = SCENES.v1
   const [up, down, skip] = V1.bounce
+  const [s0, s1, s2] = V1.skips
   const hops: [number, number][] = [
     [up, down],
     [down, skip],
+    [s0, s1],
+    [s1, s2],
   ]
+  const RUN = 1.25
+  const ON = 1.05
   let x = -0.5 + 0.85
   let v = V1_SPEED
   const dt = 1 / 480
   for (let t = begin; t <= end + 0.6; t += dt) {
-    // Her speed: up from her mother's to a child's run by the leap, held through it, on to the brow, and down the bank
-    // gravity takes her.
-    const m = lawnSlope(x)
-    const sin = m / Math.sqrt(1 + m * m)
+    // Her speed: up from her mother's to a child's run by the leap, held through it and the skip, then easing a
+    // little to a pace her mother nearly keeps.
     let a = 0
-    if (t < up) a = (1.25 - V1_SPEED) / (up - begin)
-    else if (t < skip) a = 0
-    else if (x < BROW) a = 0.3
-    else a = (5 / 7) * G * sin * 0.8 - 0.1 * v
+    if (t < up) a = (RUN - V1_SPEED) / (up - begin)
+    else if (t >= skip && t < s0) a = (ON - RUN) / (s0 - skip)
     v += a * dt
     x += v * dt
-    // The leap and the skip: parabolas over the lawn under her, each landing on its pulse.
+    // The leap and the skips: parabolas over the lawn under her, each landing on its pulse.
     let lift = 0
     for (const [a0, a1] of hops) if (t > a0 && t < a1) lift = (G / 2) * (t - a0) * (a1 - t)
     out.push({ t, x, lift })

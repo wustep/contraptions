@@ -22,7 +22,8 @@ import { DOOR_OPEN, heliAt, heliPoint, IAN_SEAT } from './heli'
  * the belly (36.13). They stop under the shell, Ian catching up after he has tipped the plank again (32.549).
  *
  * The first burst (36.368 → 37.808): the slot in the belly opens in six steps (the set draws it), its light spilling
- * down on the camp; the camera cuts wide under the belly to see it, and back. The floodlights answer: 38.534, 38.772,
+ * down on the camp; the camera cuts wide under the belly to see it, holds it open, and cuts back in on the floods'
+ * first answer. The floodlights answer: 38.534, 38.772,
  * 39.735. Then up the steps onto the lift's deck, she first (41.848, 42.086, 42.324), Ian after (42.568, 42.8,
  * 43.056): at rest on the deck at 43.758, Ian on her left.
  *
@@ -344,10 +345,11 @@ function shotsFor(begin: number, end: number, lane: { segs: Seg[]; fire: number 
     hold(33.0, 12.8, [-12.2, -4.0]),
     hold(34.7, 15.6, [-11.2, -4.9]),
     hold(36.2, 16.2, [-10.6, -5.05]),
-    // The first burst: cut wide under the belly on its first step, and back in on its last.
-    hold(BURST1[0], 25, [-2.2, -8.1], true),
-    hold(BURST1[5] - 0.1, 25.6, [-2.2, -8.2]),
-    hold(BURST1[5], 16.9, [-2.4, -5.5], true),
+    // The first burst: cut wide under the belly on its first step (the helicopter out of the picture), held on the
+    // slot through all six and open, and back in on the first flood's answer.
+    hold(BURST1[0], 25, [3.4, -8.1], true),
+    hold(FLOOD_ON[0] - 0.1, 25.6, [3.4, -8.2]),
+    hold(FLOOD_ON[0], 16.9, [-2.4, -5.5], true),
     hold(39.9, 16.2, [-2.6, -5.3]),
     hold(41.2, 11, [-3.2, -3.4]),
     hold(42.2, 7.6, [-2.0, -2.6]),

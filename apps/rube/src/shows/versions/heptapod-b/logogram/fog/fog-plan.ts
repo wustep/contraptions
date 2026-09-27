@@ -399,9 +399,9 @@ export const FOG34 = (() => {
     born: 157.2,
     closed: F4.closeW,
     whole: F4.closeW + 2.5,
-    // It hangs under the great ring while that is written, then goes back into the white before the close.
-    fade: F4.closeW + 3,
-    fadeFor: 11,
+    // It hangs under the great ring as that begins, then goes back into the white, so the great ring is written alone.
+    fade: F4.closeW + 0.8,
+    fadeFor: 3.5,
     lo: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 - 0.1], [F4.stop + 0.3, alpha0 - 0.1], [F4.closeW, alpha0 + L - TAU]]),
     hi: mono([[157.2, alpha0 + L - 0.3], [158.4, alpha0 + L], [F4.stop + 0.3, alpha0 + L], [F4.closeW, alpha0 + L]]),
     by: { who: 'costello', limb: 2, t0: 156.5 },
@@ -421,18 +421,24 @@ export const G_R = 4.2
 /**
  * Her ride in the great ring as it turns (a ball in a turning drum, under G_LOW): the ink's grip carries her up its
  * rising wall at the turn's speed, as far as the grip will hold (its friction angle, `hold`, where she hangs while the
- * ring slides on under her); on the first hard pulse of each group the grip lets go and she slips and rolls back down
- * as a free pendulum, through the rest of the group, until the grip takes her again as she comes back to the bottom
- * and carries her up once more. The rides are longest before the hardest group; after it she is brought to rest at
- * the bottom, and is still there when the halves meet. Returns how far up the wall she is (radians from the bottom).
+ * ring slides on under her); on the first hard pulse of each group the ink flicks her off (a push back down the wall,
+ * as big as how high she is) and lets go, and she swings back down as a free pendulum, through the rest of the group
+ * and on through the bottom, until the grip takes her again and carries her up once more. Three rides: a short one
+ * into the first hard run, another, and the longest, up through the quiet middle to a hang, let go on 179.368 into a
+ * long swing through the bottom and up the far side, settling at the bottom as the halves meet. Returns how far up the
+ * wall she is (radians from the bottom).
  */
-const RELEASES = hardPulses(169.9, 181.0)
-const HOLD = mono([[168, 0.24], [172.3, 0.2], [173.3, 0.18], [175.3, 0.25], [176.6, 0.42], [179.4, 0.42], [180.5, 0], [186, 0]])
+const RELEASES: [number, number][] = [
+  [170.051, 0.9],
+  [173.383, 0.9],
+  [179.368, 1.9],
+]
+const FLICK = 0.35
+const HOLD = mono([[168, 0.35], [170, 0.35], [172.3, 0.25], [173.3, 0.2], [174.2, 0.75], [179.37, 0.75], [179.5, 0], [186, 0]])
 function drumRide(t0: number, omega: (t: number) => number, rho: number): (t: number) => number {
-  const letGo = 0.7
   const grip = (t: number) => {
     let gr = 1
-    for (const p of RELEASES) {
+    for (const [p, letGo] of RELEASES) {
       const s = t - p
       if (s < 0 || s > letGo + 0.7) continue
       const w = s < 0.05 ? s / 0.05 : s < letGo ? 1 : 1 - sstep((s - letGo) / 0.6)
@@ -451,6 +457,8 @@ function drumRide(t0: number, omega: (t: number) => number, rho: number): (t: nu
     // Toward the ring's own speed while below the friction angle, braked to rest as she reaches it.
     const w = clamp01((HOLD(t) - phi) / 0.08)
     v += (-(g / rho) * Math.sin(phi) + grip(t) * (Om * w * w * (3 - 2 * w) - v)) * dt
+    // The flick, on the pulse.
+    for (const [p] of RELEASES) if (t < p && t + dt >= p) v -= FLICK * clamp01(phi / 0.3)
     phi += v * dt
     tab[i + 1] = phi
   }
@@ -503,13 +511,14 @@ export const GREAT = (() => {
       return tab[i] + (tab[i + 1] - tab[i]) * (f - i)
     }
   })()
-  // Her blots: small while the ring is just begun (so its first arc reads as an arc), full in the push, and small
-  // again at the join, where the ink is already twice laid.
+  // Her blots, one pressed on every hard pulse, as big as the pulse is hard, so each reads as a press (and lifts her
+  // a little as she rides over it): small while the ring is just begun (so its first arc reads as an arc), full in
+  // the push, and small again at the join, where the ink is already twice laid.
   const marks: Mark[] = PUSH_HITS.map((at) => {
     const p = PULSES.find((q) => Math.abs(q.t - at) < 1e-6)
     const s = p ? p.g : 1
     const scale = (0.45 + 0.55 * sstep((at - t0) / 3.2)) * (at > 181.5 ? 0.45 : 1)
-    return { a: ownRaw(at), size: (0.013 + 0.017 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.045, at }
+    return { a: ownRaw(at), size: (0.022 + 0.03 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.055, at }
   })
   const probe = blank('G', 310, G_R, spin, { marks })
   const rho = rideR(probe, her(t0), t0)
