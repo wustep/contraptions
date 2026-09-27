@@ -378,26 +378,39 @@ function drawBrink(p: p5, k: number, W: number, ink: string, f: View) {
     const y = brinkY(x) + 1.1 + 0.9 * hash(i, 92)
     puff(p, k, x, y, 0.9 + 0.6 * hash(i, 93), WASTES.mist, 0.3, 0.35)
   }
-  // The rock of the rim: a ragged band, its face in shade.
-  p.stroke(ink)
-  p.strokeWeight(W)
+  // The rock of the rim: a ragged band, its face in shade. Where the gorge swings away and the brink goes down into
+  // the mist, the band thins to nothing and its ink fades with it (never an ink line running down into the mist).
+  const fade = (x: number) => 1 - smooth(brinkDrop(x), 1.5, 3.5)
+  const faceT = (x: number) => face(x) * fade(x)
+  p.noStroke()
   p.fill(BRINK_ROCK)
   p.beginShape()
   xs.forEach((x, i) => p.vertex(x * k, ys[i] * k))
-  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + face(xs[i])) * k)
+  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + faceT(xs[i])) * k)
   p.endShape(p.CLOSE)
-  p.noStroke()
   p.fill(alpha(p, WASTES.rockDark, 0.7))
   p.beginShape()
-  xs.forEach((x, i) => p.vertex(x * k, (ys[i] + face(x) * 0.55) * k))
-  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + face(xs[i])) * k)
+  xs.forEach((x, i) => p.vertex(x * k, (ys[i] + faceT(x) * 0.55) * k))
+  for (let i = xs.length - 1; i >= 0; i--) p.vertex(xs[i] * k, (ys[i] + faceT(xs[i])) * k)
   p.endShape(p.CLOSE)
+  // Its outline, top and foot, fading where the band thins.
+  p.noFill()
+  p.strokeWeight(W)
+  p.strokeCap(p.SQUARE)
+  for (let i = 1; i < xs.length; i++) {
+    const a = Math.min(fade(xs[i - 1]), fade(xs[i]))
+    if (a < 0.02) continue
+    p.stroke(alpha(p, ink, a))
+    p.line(xs[i - 1] * k, ys[i - 1] * k, xs[i] * k, ys[i] * k)
+    p.line(xs[i - 1] * k, (ys[i - 1] + faceT(xs[i - 1])) * k, xs[i] * k, (ys[i] + faceT(xs[i])) * k)
+  }
+  p.strokeCap(p.ROUND)
   // Cracks down its face, now and then.
   p.stroke(alpha(p, ink, 0.45))
   p.strokeWeight(W * 0.55)
   for (let i = Math.floor(x0 / 0.9); i <= Math.ceil(x1 / 0.9); i++) {
     const x = i * 0.9 + hash(i, 94) * 0.5
-    if (x < x0 || x > x1 || hash(i, 95) < 0.45) continue
+    if (x < x0 || x > x1 || hash(i, 95) < 0.45 || fade(x) < 0.6) continue
     const y = brinkY(x)
     p.line(x * k, (y + 0.06) * k, (x + 0.06) * k, (y + face(x) * 0.8) * k)
   }
