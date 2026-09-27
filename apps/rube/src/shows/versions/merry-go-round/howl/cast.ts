@@ -43,6 +43,19 @@ export interface CalciferOpts {
   light?: number
 }
 
+/** Calcifer's colour as he weakens (0 his fire .. 1 the water's blue), cooled through value: fire, ember, a smoky
+ * brown-grey, a dark ash-blue, blue. Never through pink or lilac. */
+function calciferTint(weak: number, fire: string, ember: string, smoke: string, ash: string, blue: string): string {
+  const w1 = smoothUnit(weak, 0, 0.35)
+  const w2 = smoothUnit(weak, 0.3, 0.55)
+  const w3 = smoothUnit(weak, 0.5, 0.78)
+  const w4 = smoothUnit(weak, 0.72, 1)
+  return mixHex(mixHex(mixHex(mixHex(fire, ember, w1), smoke, w2), ash, w3), blue, w4)
+}
+
+/** His body's colour at a weakness (for the embers others draw under him, the plank's grate). */
+export const calciferBody = (weak: number): string => calciferTint(weak, CALCIFER.body, '#A4522F', '#4B3E3A', '#4A5774', CALCIFER.weak)
+
 /**
  * Calcifer, the fire demon: a flame with a face. His base sits at the origin (on the log, on Sophie's hands, on
  * the plank's front), and he rises from it: a soft round belly of fire, three tongues that flicker on their own
@@ -58,15 +71,17 @@ export function drawCalcifer(p: p5, k: number, weight: number, ink: string, o: C
   const t = o.t
   const lean = o.lean ?? 0
   if (h < 1 || light <= 0.01) return
-  // Then the hue: his orange dims to an ember, the ember cools to a dark ash-blue, and only far gone is he the
-  // water's blue. Never through pink.
+  // Then the hue, cooled through value, never through pink or lilac (a straight mix of the ember into the ash-blue
+  // passes through a dusty mauve): his orange dims to an ember, the ember darkens to a smoky brown-grey, the smoke
+  // cools to a dark ash-blue, and only far gone is he the water's blue. His heart keeps a small orange core until he
+  // is half gone, so he still reads as fire.
   const w1 = smoothUnit(weak, 0, 0.35)
-  const w2 = smoothUnit(weak, 0.3, 0.6)
-  const w3 = smoothUnit(weak, 0.6, 1)
-  const tint = (fire: string, ember: string, ash: string, blue: string) => mixHex(mixHex(mixHex(fire, ember, w1), ash, w2), blue, w3)
-  const body = tint(CALCIFER.body, '#A4522F', '#56668C', CALCIFER.weak)
-  const core = tint(CALCIFER.core, '#D68A4C', '#8B9DC2', CALCIFER.weakCore)
-  const edge = tint(CALCIFER.edge, '#6E3326', '#3A4466', '#3E5FA8')
+  const w4 = smoothUnit(weak, 0.72, 1)
+  const body = calciferTint(weak, CALCIFER.body, '#A4522F', '#4B3E3A', '#4A5774', CALCIFER.weak)
+  const edge = calciferTint(weak, CALCIFER.edge, '#6E3326', '#332A27', '#343D58', '#3E5FA8')
+  const c1 = smoothUnit(weak, 0.45, 0.65)
+  const c2 = smoothUnit(weak, 0.6, 0.82)
+  const core = mixHex(mixHex(mixHex(mixHex(CALCIFER.core, '#D68A4C', w1), '#6F5E55', c1), '#7F90B4', c2), CALCIFER.weakCore, w4)
   // The silhouette, as a closed curve through points: the belly's half circle, then the three tongues (lower as he
   // weakens).
   const W = 0.34
@@ -107,13 +122,22 @@ export function drawCalcifer(p: p5, k: number, weight: number, ink: string, o: C
   p.noStroke()
   // A soft glow round him, low and wide, so he lights what is near without a bright core of his own.
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(0, -0.3 * h, 0, 0, -0.3 * h, 1.6 * h)
-  const warm = 1 - w2
-  const glow = `${Math.round(120 + 135 * warm)}, ${Math.round(160 + 10 * warm)}, ${Math.round(255 - 175 * warm)}`
-  g.addColorStop(0, `rgba(${glow}, ${0.28 * light * (1 - 0.7 * sink)})`)
-  g.addColorStop(1, `rgba(${glow}, 0)`)
-  ctx.fillStyle = g
-  ctx.fillRect(-1.6 * h, -1.9 * h, 3.2 * h, 3.2 * h)
+  // (The warm glow goes out before the cool one comes up: mixed, the two made a pink halo.)
+  const glowA = 0.28 * light * (1 - 0.7 * sink)
+  ctx.save()
+  for (const [rgb, a] of [
+    ['255, 170, 80', glowA * (1 - smoothUnit(weak, 0.2, 0.5))],
+    ['120, 160, 255', glowA * 0.8 * smoothUnit(weak, 0.62, 0.95)],
+  ] as const) {
+    if (a <= 0.003) continue
+    const g = ctx.createRadialGradient(0, -0.3 * h, 0, 0, -0.3 * h, 1.6 * h)
+    g.addColorStop(0, `rgba(${rgb}, ${a})`)
+    g.addColorStop(1, `rgba(${rgb}, 0)`)
+    ctx.fillStyle = g
+    ctx.fillRect(-1.6 * h, -1.9 * h, 3.2 * h, 3.2 * h)
+  }
+  // (Restored, so p5's cached fill is the canvas's again.)
+  ctx.restore()
   fillShape(shape(1, 0, -0.3 * h), edge, 1)
   fillShape(shape(0.84, 0, -0.26 * h), body, 1)
   fillShape(shape(0.52, 0, -0.18 * h), core, 0.95)

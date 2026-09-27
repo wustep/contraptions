@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { carried, smooth, type PartShot } from '../kit'
-import { LOFT_SEAM, inPhrase, onset } from '../music'
+import { LOFT_SEAM, THEME, inPhrase, onset } from '../music'
 import { G } from '../physics'
 import { SEAMS } from '../seams'
 import { BENCH, HANDOFF, RACK, WICK } from './layout'
@@ -611,9 +611,11 @@ export const HITS: number[] = [
  * wheel in view (LOFT-B's first framing, 9.6 cells, follows on from it without a bounce).
  */
 export const SHOTS: PartShot[] = [
+  // The whole loft for the first horn call, then one push in from it (1.168) that arrives on the candle with the
+  // theme's first note (4.361): the second call is heard mid-push.
   { t: 0.001, cells: 15.6, hold: [-3.0, 4.4], w: 1 },
-  { t: 2.0, cells: 14.8, hold: [-2.6, 4.1], w: 1 },
-  { t: 4.25, cells: 4.3, hold: [-0.75, 0.55], w: 1 },
+  { t: 1.17, cells: 15.4, hold: [-2.9, 4.3], w: 1 },
+  { t: THEME, cells: 4.3, hold: [-0.75, 0.55], w: 1 },
   { t: 5.9, cells: 4.1, hold: [-0.9, 0.5], w: 0.85 },
   { t: 7.15, cells: 6.7, hold: [-1.6, -0.05], w: 0.95 },
   { t: 9.45, cells: 6.5, hold: [-1.7, 0.1], w: 0.95 },
@@ -632,8 +634,9 @@ export const SHOTS: PartShot[] = [
   { t: 27.85, cells: 14.0, hold: [-8.7, 2.05], w: 1 },
   // The two-shot, settled before the second knock: the spark as far west as Zoom lets it be, so the cat's head is
   // whole at the east edge until the ear's second flick is done (29.2).
+  // From it, as the cat's head comes up on the second knock, one unhurried move back in to the arm and the wheel,
+  // arriving with the hand-on (not a snap in and a stop).
   { t: 28.6, cells: 16.9, hold: [-6.45, 3.4], w: 1 },
-  { t: 29.35, cells: 16.85, hold: [-6.5, 3.45], w: 1 },
-  { t: 30.4, cells: 9.2, hold: [-15.4, 2.55], w: 0.85 },
+  { t: 29.1, cells: 16.85, hold: [-6.5, 3.45], w: 1 },
   { t: LOFT_SEAM, cells: 9.4, hold: [-17.4, 2.7], w: 0.85 },
 ]

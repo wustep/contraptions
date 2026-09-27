@@ -244,8 +244,9 @@ export function deck(t: number): Deck {
   // It sits: the knees give on the bar, it sinks on its folded legs, and settles with a bump.
   if (t > BUCKLE) {
     const u = Math.min(1, (t - BUCKLE) / (DOWN - BUCKLE))
-    // A give on the bar (the knees go), then a sink that gathers, touching down on the bar two on.
-    const f = 0.22 * (1 - Math.exp(-u / 0.06)) + 0.78 * u * u
+    // A give on the bar (the knees go, from rest: an eased dip over the first beat and a half, never a drop), then a
+    // sink that gathers, touching down on the bar two on (the touch-down and its ring are the hit).
+    const f = 0.12 * smooth(t, BUCKLE, BUCKLE + 0.45) + 0.88 * u * u
     const h = SIT_H + (KEEL_H - SIT_H) * smooth(t, SLIDE0, SLIDE0 + 0.8)
     const target = sitY(x, h)
     y += (target - (YG - RUN_H)) * Math.min(1, f)

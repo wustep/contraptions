@@ -440,24 +440,29 @@ export const ABOARD_KEYS: number[] = [...CLIMB, CLIMB[CLIMB.length - 1] + 1.0, .
 
 /* ------------------------------------------------------------------ Turnip Head */
 
-/** His hops: take off on the one, land by the three, a hop a bar; [take-off, landing, from x, to x]. */
+/**
+ * His hops, in 3/4 with the waltz: he gathers on the downbeat, takes off on beat two and comes down on the next
+ * downbeat, so his pole's thump is the oom of the oom-pah-pah; a hop a bar. [take-off, landing, from x, to x]
+ */
 const HOPS: [number, number, number, number][] = [
-  // Past her and up the hill ahead of her, a hop a bar, to the hilltop.
-  [W(58), W(58, 3), -1.2, -0.2],
-  [W(59), W(59, 3), -0.2, 0.85],
-  [W(60), W(60, 3), 0.85, 2.75],
-  // He stops up there, looks back into the fog rolling up the lane, and bounds back down past her into it, for the castle.
-  [W(62), W(62, 3), 2.75, -0.35],
-  // Out of the fog ahead of the castle, leading it to her; the castle's foot stamps down where he took off, and he
-  // bounds over her to stand at her side.
-  [W(64), W(64, 3), -0.35, 0.95],
-  [W(65), W(65, 3), 0.95, 3.95],
+  // Past her and up the hill ahead of her, a hop a bar, to the hilltop; the first comes down a third of a cell past
+  // her (never on her).
+  [W(58, 2), W(59), -1.2, 0.35],
+  [W(59, 2), W(60), 0.35, 0.95],
+  [W(60, 2), W(61), 0.95, 2.75],
+  // He stops up there, looks back into the fog rolling up the lane, and bounds back down past her into it, for the
+  // castle, landing in the fog on its first thud.
+  [W(62, 2), W(63), 2.75, -0.35],
+  // Out of the fog ahead of the castle, leading it to her: a foot stamps down beside him, he springs away from it on
+  // the two, the next foot stamps down behind where he lands, and he bounds over her to stand at her side.
+  [W(64, 2), W(65), -0.35, 1.4],
+  [W(65, 2), W(66), 1.4, 3.95],
   // She is aboard: he hops after it, and falls behind.
-  [W(69), W(69, 3), 3.95, 5.3],
-  [W(70), W(70, 3), 5.3, 6.7],
-  [W(71), W(71, 3), 6.7, 8.2],
-  [W(72), W(72, 3), 8.2, 9.6],
-  [W(73), W(73, 3), 9.6, 10.8],
+  [W(69, 2), W(70), 3.95, 5.3],
+  [W(70, 2), W(71), 5.3, 6.7],
+  [W(71, 2), W(72), 6.7, 8.2],
+  [W(72, 2), W(73), 8.2, 9.6],
+  [W(73, 2), W(74), 9.6, 10.8],
 ]
 /** Where he lands upright after the somersault out of the hedge. */
 const LANDING_X = -1.2
@@ -493,7 +498,7 @@ export function turnipAt(T: number): { foot: Pt; lean: number; inHedge: boolean 
     if (T > t0) {
       const u = (T - t0) / (t1 - t0)
       const fx = a + (b - a) * u
-      const fy = ground(a) + (ground(b) - ground(a)) * u - 4 * (Math.abs(b - a) > 2 ? 0.75 : 0.34) * u * (1 - u)
+      const fy = ground(a) + (ground(b) - ground(a)) * u - 4 * (Math.abs(b - a) > 2 ? 0.75 : Math.abs(b - a) > 1.2 ? 0.5 : 0.34) * u * (1 - u)
       // Leaning into the hop, the way he goes.
       return { foot: [fx, fy], lean: 0.14 * Math.sign(b - a) * Math.sin(Math.PI * u), inHedge: false }
     }
@@ -503,6 +508,6 @@ export function turnipAt(T: number): { foot: Pt; lean: number; inHedge: boolean 
   const e = T - lastLand
   let lean = 0.16 * Math.exp(-e / 0.42) * Math.sin((2 * Math.PI * e) / 0.62)
   // Before he goes back for the castle, he turns to look over his shoulder: a lean back toward the fog.
-  lean -= 0.12 * sm((T - W(61)) / 0.5) * (1 - sm((T - (W(62) - 0.1)) / 0.3))
+  lean -= 0.12 * sm((T - W(61) - 0.35) / 0.5) * (1 - sm((T - (W(62, 2) - 0.4)) / 0.3))
   return { foot: [x, ground(x) + 0.02 * Math.exp(-e / 0.15)], lean, inHedge: false }
 }

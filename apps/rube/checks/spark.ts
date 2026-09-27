@@ -8,6 +8,7 @@ import { STRIKES } from '../src/shows/versions/mountain-king/spark/hits'
 import { CODA, CREDITS_AT, DOORS, DURATION, FESTIVAL, GRID, LAST, LOFT_SEAM, MUSIC_END, ROLL, SILENCE, THEME, THEME_END, phrase } from '../src/shows/versions/mountain-king/spark/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/mountain-king/spark/credits'
 import { WICK } from '../src/shows/versions/mountain-king/spark/loft/layout'
+import { BURSTS, sparkAt } from '../src/shows/versions/mountain-king/spark/railway/fireworks-plan'
 import type { SparkShow } from '../src/shows/versions/mountain-king/spark/show'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
@@ -113,6 +114,28 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
     if (hidden > longest) { longest = hidden; longAt = t }
   }
   check('spark: the spark is never hidden for more than 2.5 s', longest <= 2.5, `${longest.toFixed(2)} s at ${longAt.toFixed(2)}`)
+  // No firework breaks on the moon, against the show's own camera (so a camera change that leaves the plan's measured
+  // `CAM` stale fails here): for its first half second each flower, out to its reach, keeps clear of the moon's disc,
+  // which holds 0.77 and 0.23 of the frame. Mines (fans off the ground) and the Titan (smoke laid over the moon) aside.
+  const onMoon: string[] = []
+  for (const b of BURSTS) {
+    if (b.kind === 'mine' || b.kind === 'titan') continue
+    for (let s = 0; s <= Math.min(0.5, b.life) + 1e-9; s += 0.05) {
+      const t = b.at + s
+      const f = cam(t)
+      const w = show.where(t)
+      const sp = sparkAt(t)
+      const mx = f.x - (w[0] - sp[0]) + (0.27 * 16 * f.cells) / 9
+      const my = f.y - (w[1] - sp[1]) - 0.27 * f.cells
+      const E = (1 - Math.exp(-b.k * s)) / b.k
+      const hy = b.y + (b.gs / b.k) * (s - E)
+      if (Math.hypot(b.x - mx, hy - my) < 0.075 * f.cells + b.v / b.k + 0.4) {
+        onMoon.push(`${b.kind} ${b.at.toFixed(2)}`)
+        break
+      }
+    }
+  }
+  check('spark: no firework breaks on the moon', onMoon.length === 0, onMoon.slice(0, 6).join(', '))
   check('spark: one ball on the stage, always', [5, 60, 90, 110, 130, 140, 149, 160].every((t) => (show.at(t).balls ?? []).length <= 1))
 
   // The end credits: words the page sets over the dark loft after the last chord, owing what is owed.

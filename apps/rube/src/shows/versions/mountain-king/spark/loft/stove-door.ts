@@ -40,6 +40,10 @@ const SHUT_FOR = 2.4
 /** The return: bursts open just before the spark comes through (it is under the veil), slams on the last chord. */
 const BURST = DOORS.back[2] - 0.05
 const BANG = LAST[1]
+/** The last swing: it leaves its stop at SWING_FROM, passes square (an edge on, the doorway still clear) at SQUARE, and covers the doorway by BANG. */
+const SWING_FROM = BANG - 0.44
+const SQUARE = BANG - 0.19
+const HALF_PI = Math.PI / 2
 
 /** Ease with a slow start and a long soft finish: a heavy iron door, unlatched, gathering itself and swinging. */
 const creak = (u: number): number => {
@@ -66,10 +70,22 @@ export function doorAngle(t: number): number {
   let a = WIDE * (1 - Math.exp(-b / 0.045))
   a -= 0.22 * Math.exp(-b / 0.16) * Math.max(0, Math.sin(Math.max(0, b - 0.09) * 11))
   if (t < BANG) {
-    // Drawn shut by the fire's draught, late: it hangs wide while the spark lands on its wick, then swings, faster and
-    // faster, and slams on the chord. (Seen face on, a door a quarter open already looks shut, so the swing is short.)
-    const u = Math.max(0, (t - (BANG - 0.55)) / 0.55)
-    return Math.max(0, a * (1 - Math.pow(u, 2.0)))
+    // Drawn shut by the fire's draught, late. It hangs wide while the spark lands on its wick, and its first swing,
+    // from the stop back to square, only turns its sooty inside face to an edge: the doorway stays open and the fire's
+    // light stays full through the first chord. Past square the swing is driven by how much of the doorway the panel
+    // covers on the screen (cos φ), accelerating, so the free edge is at its fastest as it hits the frame and the
+    // firelight is cut on the chord itself, not eased out ahead of it.
+    if (t < SWING_FROM) return a
+    if (t < SQUARE) {
+      const s = (t - SWING_FROM) / (SQUARE - SWING_FROM)
+      return a - (a - HALF_PI) * s * s
+    }
+    // Continuous with the angular speed it had at square (on the screen, there, the edge moves at that speed).
+    const a0 = WIDE * (1 - Math.exp(-(SWING_FROM - BURST) / 0.045))
+    const lead = Math.min(1, (2 * (a0 - HALF_PI)) / (SQUARE - SWING_FROM) * (BANG - SQUARE))
+    const u = (t - SQUARE) / (BANG - SQUARE)
+    const w = lead * u + (1 - lead) * Math.pow(u, 3.5)
+    return Math.acos(Math.min(1, w))
   }
   // After the bang: a small rattle against the frame, and still.
   const s = t - BANG

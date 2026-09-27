@@ -1,9 +1,10 @@
 import { mixHex, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
+import { drawFire as drawLicks } from '../fire'
 import { DOORS } from '../music'
 import { FIRES, GLASS } from '../worlds'
-import { DRAW, FLOOR_Y, FURNACE, GLORY, OVEN, PORT, RINGS, S0, S1, SLAM } from './glass-plan'
-import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, tongue, type Pen } from './glass-pen'
+import { DRAW, FLOOR_Y, FURNACE, GLORY, LEHR, OVEN, PORT, RINGS, S0, S1, SANDBOX, SLAM } from './glass-plan'
+import { arcPts, box4, clipTo, fillWith, glow, rgba, shape, strokeLine, type Pen } from './glass-pen'
 
 /**
  * The glasshouse itself: whitewashed walls and tall windows with the day falling through them, a stone floor, the
@@ -21,8 +22,14 @@ export interface View {
 
 /* ------------------------------------------------------------------ the room */
 
-const WINDOWS = [-8.2, 2.9, 9.2, 14.2]
-const WIN = { half: 1.15, top: -5.4, sill: -1.4 }
+/**
+ * Tall arched windows high in the back wall, a clerestory over the machines: in the lehr's and the carriage's frames
+ * (71.5-80, their tops down to about -3.4) they are above the frame and only their shafts of daylight come down
+ * through it to the floor. None stands by the furnace, so none slides in at the edge as the camera goes up to the
+ * port. A taller frame (a phone held upright) sees them whole.
+ */
+const WINDOWS = [-8.2, 2.9, 9.2]
+const WIN = { half: 1.15, top: -8.4, sill: -4.4 }
 /** The sun comes in from the upper west: the shafts lean east as they fall. */
 const LEAN = 0.5
 
@@ -44,18 +51,87 @@ export function drawRoom(pen: Pen, v: View): void {
     if (wx + WIN.half + LEAN * (FLOOR_Y - WIN.sill) < v.x0 - 1 || wx - WIN.half > v.x1 + 1) continue
     windowAt(pen, wx)
   }
-  // The floor: stone flags.
+  drawFloor(pen, v, x0, x1)
+}
+
+/** What stands on the floor and throws a shadow forward onto it (the sun is high in the west, behind the wall). */
+const FOOT: [number, number][] = [
+  [OVEN.x0, OVEN.x1],
+  [LEHR.x0, LEHR.x1],
+  [SANDBOX.x0, SANDBOX.x1],
+  [FURNACE.x0, FURNACE.x1],
+]
+/** How far toward us each course of flags ends (cells below the floor's back edge): wider as they come nearer. */
+const COURSES = [0.32, 0.75, 1.3, 2.0, 2.9, 4.05, 5.5, 7.3, 9.5, 12.2, 15.5, 19.5]
+
+/**
+ * The floor: stone flags seen from a little above, the back of the floor lit by the day and going a shade darker
+ * toward us. Courses of flags, wider as they come nearer, their joints faint and a little out of true; the pools of
+ * daylight from the windows lying forward across them; a soft shadow thrown forward under the oven, the lehr, the
+ * sand box and the furnace.
+ */
+function drawFloor(pen: Pen, v: View, x0: number, x1: number): void {
+  const { ctx, k } = pen
+  const y0 = FLOOR_Y
+  const y1 = Math.max(v.y1 + 1, FLOOR_Y + 3)
+  if (y0 > v.y1 + 0.5) return
   const floor = mixHex(GLASS.sand, GLASS.wallShade, 0.55)
-  shape(pen, box4(x0, FLOOR_Y, x1, Math.max(v.y1 + 1, FLOOR_Y + 3)), floor, 0)
-  strokeLine(pen, [[x0, FLOOR_Y], [x1, FLOOR_Y]], pen.ink, pen.w * 0.9)
-  // Pools of daylight on the floor, under each window.
+  const near = mixHex(floor, GLASS.iron, 0.13)
+  const g = ctx.createLinearGradient(0, y0 * k, 0, (y0 + 7) * k)
+  g.addColorStop(0, mixHex(floor, GLASS.light, 0.12))
+  g.addColorStop(0.35, floor)
+  g.addColorStop(1, near)
+  fillWith(pen, box4(x0, y0, x1, y1), g)
+  // Shadows thrown forward and a little east by what stands on it.
+  for (const [a, b] of FOOT) {
+    if (b + 1 < v.x0 || a - 1 > v.x1) continue
+    const sg = ctx.createLinearGradient(0, y0 * k, 0, (y0 + 0.6) * k)
+    sg.addColorStop(0, rgba(GLASS.iron, 0.2))
+    sg.addColorStop(1, rgba(GLASS.iron, 0))
+    fillWith(pen, [[a + 0.05, y0], [b, y0], [b + 0.45, y0 + 0.6], [a + 0.35, y0 + 0.6]], sg)
+  }
+  // The day through the windows lies forward across the flags, going on the way the shafts lean, and fades.
   for (const wx of WINDOWS) {
     const dx = LEAN * (FLOOR_Y - WIN.sill)
     const a = wx - WIN.half + dx
     const b = wx + WIN.half + dx
-    if (b + 1 < v.x0 || a - 1 > v.x1) continue
-    fillWith(pen, [[a, FLOOR_Y + 0.02], [b, FLOOR_Y + 0.02], [b + 0.35, FLOOR_Y + 0.5], [a + 0.35, FLOOR_Y + 0.5]], rgba(GLASS.light, 0.35))
+    const deep = 2.6
+    const run = LEAN * deep * 0.6
+    if (b + run + 1 < v.x0 || a - 1 > v.x1) continue
+    const lg = ctx.createLinearGradient(0, y0 * k, 0, (y0 + deep) * k)
+    lg.addColorStop(0, rgba(GLASS.light, 0.42))
+    lg.addColorStop(0.45, rgba(GLASS.light, 0.2))
+    lg.addColorStop(1, rgba(GLASS.light, 0))
+    fillWith(pen, [[a, y0 + 0.01], [b, y0 + 0.01], [b + run, y0 + deep], [a + run, y0 + deep]], lg)
   }
+  // The joints: one faint path, stroked once.
+  ctx.save()
+  ctx.strokeStyle = rgba(GLASS.iron, 0.16)
+  ctx.lineWidth = Math.max(0.6, pen.w * 0.5)
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  let top = y0
+  for (let i = 0; i < COURSES.length && top < v.y1 + 0.5; i++) {
+    const bottom = y0 + COURSES[i]
+    if (bottom > v.y0 - 0.5) {
+      const yb = bottom + 0.04 * (hash(i, 611) - 0.5)
+      ctx.moveTo((v.x0 - 1) * k, yb * k)
+      ctx.lineTo((v.x1 + 1) * k, (bottom + 0.04 * (hash(i, 612) - 0.5)) * k)
+      // Flags wider as they come nearer, laid broken-bond.
+      const w = 1.25 + 0.42 * (COURSES[i] + (i ? COURSES[i - 1] : 0)) * 0.5
+      const off = w * (0.5 * (i % 2) + 0.2 * hash(i, 613))
+      for (let c = Math.floor((v.x0 - 1 - off) / w); c * w + off <= v.x1 + 1; c++) {
+        const x = c * w + off + 0.18 * w * (hash(i, c, 614) - 0.5)
+        const lean = 0.06 * (bottom - top) * (hash(i, c, 615) - 0.5)
+        ctx.moveTo(x * k, top * k)
+        ctx.lineTo((x + lean) * k, bottom * k)
+      }
+    }
+    top = bottom
+  }
+  ctx.stroke()
+  ctx.restore()
+  strokeLine(pen, [[x0, FLOOR_Y], [x1, FLOOR_Y]], pen.ink, pen.w * 0.9)
 }
 
 function windowAt(pen: Pen, wx: number): void {
@@ -127,26 +203,19 @@ function iron(pen: Pen, x0: number, y0: number, x1: number, y1: number): void {
 
 /* ------------------------------------------------------------------ fire */
 
-/** A fire seen through an opening: white-gold at the heart, flames rising, the rim dark red. */
+/**
+ * A fire seen through an opening: the furnace's glow deep inside, darker toward the crown of the arch, and licks of
+ * flame rising through it off the sill (`fire.ts`), forking and burning white where they cross, higher as it roars.
+ */
 function fireIn(pen: Pen, opening: Pt[], cx: number, cy: number, r: number, t: number, flare: number, seed: number): void {
   const { ctx, k } = pen
-  const g = ctx.createRadialGradient(cx * k, (cy + r * 0.3) * k, 0, cx * k, (cy + r * 0.15) * k, r * 1.3 * k)
-  g.addColorStop(0, FIRE.heart)
-  g.addColorStop(0.45, mixHex(FIRE.heart, FIRE.body, 0.5))
-  g.addColorStop(0.8, FIRE.body)
-  g.addColorStop(1, FIRE.rim)
+  const g = ctx.createLinearGradient(0, (cy + r * 1.05) * k, 0, (cy - r * 1.1) * k)
+  g.addColorStop(0, FIRE.body)
+  g.addColorStop(0.45, mixHex(FIRE.body, FIRE.rim, 0.55))
+  g.addColorStop(1, mixHex(FIRE.rim, GLASS.brickDeep, 0.45))
   fillWith(pen, opening, g)
   clipTo(pen, opening, () => {
-    // Tongues of flame licking up through it, each on its own flicker.
-    const n = 8
-    for (let i = 0; i < n; i++) {
-      const u = (i + 0.5) / n
-      const ph = t * (2.1 + hash(i, seed) * 1.7) + hash(i, seed, 3) * 6.28
-      const x = cx - r + 2 * r * u + 0.06 * r * Math.sin(ph * 1.3)
-      const h = r * (0.9 + 0.35 * Math.sin(ph) + 0.25 * hash(i, seed, 5)) * (1 + 0.35 * flare)
-      const col = i % 2 ? rgba(FIRE.heart, 0.6) : rgba(FIRE.body, 0.65)
-      fillWith(pen, tongue(x, cy + r * 1.05, r * 0.42, h, 0.08 * r * Math.sin(ph * 0.8)), col)
-    }
+    drawLicks(ctx, k, { x0: cx - r * 1.1, x1: cx + r * 1.1, y: cy + r * 1.05, h: r * 1.9 * (1 + 0.35 * flare), n: 8, t, seed, pal: FIRE, alpha: 0.72, lean: 0.25 * r * Math.sin(t * 0.9 + seed) })
     // The opening's inner lip in shadow, across its top.
     const sh = ctx.createLinearGradient(0, (cy - r) * k, 0, (cy - r * 0.55) * k)
     sh.addColorStop(0, rgba(FIRE.rim, 0.85))
@@ -157,15 +226,9 @@ function fireIn(pen: Pen, opening: Pt[], cx: number, cy: number, r: number, t: n
 
 /** Flame curling out over the top of an opening and up the brick face: more of it as the fire breathes. */
 function breath(pen: Pen, x: number, y: number, hw: number, t: number, flare: number, seed: number): void {
-  const n = 5
-  for (let i = 0; i < n; i++) {
-    const u = (i + 0.5) / n
-    const ph = t * (1.7 + hash(i, seed) * 1.3) + hash(i, seed, 3) * 6.28
-    const bx = x - hw * 0.75 + hw * 1.5 * u
-    const hgt = (0.3 + 0.3 * Math.sin(ph) ** 2) * (0.5 + 1.1 * flare) * (1 - 0.45 * Math.abs(u - 0.5))
-    if (hgt < 0.05) continue
-    fillWith(pen, tongue(bx, y + 0.25, 0.3 * (hw / 0.8), hgt + 0.25, 0.1 * Math.sin(ph * 0.7)), rgba(i % 2 ? FIRE.body : FIRE.heart, 0.5 + 0.2 * flare))
-  }
+  const h = (0.45 + 0.35 * Math.sin(t * 1.9 + seed) ** 2) * (0.5 + 1.1 * flare)
+  if (h < 0.08) return
+  drawLicks(pen.ctx, pen.k, { x0: x - hw * 0.8, x1: x + hw * 0.8, y: y + 0.25, h: h + 0.25, n: 4, t, seed: seed + 40, pal: FIRE, alpha: 0.55 + 0.2 * Math.min(1, flare), bed: false })
 }
 
 /* ------------------------------------------------------------------ the glory hole */

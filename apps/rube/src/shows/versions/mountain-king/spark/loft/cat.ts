@@ -165,10 +165,25 @@ function earTurn(t: number): number {
   return a
 }
 
+/**
+ * Listening on a knock, the eye comes open a slit (a third of the way: an amber sliver, not the wake's full snap) a
+ * moment after the head comes up, and shuts again as the head goes down.
+ */
+function peek(t: number): number {
+  let a = 0
+  CAT_CUES.ear.forEach((c, i) => {
+    const s = t - c
+    const [hold, down] = LISTEN[i]
+    if (s < 0.12 || s > down + 0.1) return
+    a = Math.max(a, smooth(s, 0.12, 0.3) * (1 - smooth(s, hold * 0.8, Math.min(down, hold + 0.9))))
+  })
+  return 0.3 * a
+}
+
 /** Awake: how open its eye is, how far its head is lifted, 0..1. */
 export function awake(t: number): { eye: number; lift: number } {
   const w = t - CAT_CUES.wake
-  if (w < 0) return { eye: 0, lift: 0 }
+  if (w < 0) return { eye: peek(t), lift: 0 }
   // The eye snaps open on the bang; the head comes up and it looks; a slow blink half shut, then shut by 154.
   const open = smooth(w, 0, 0.05)
   const blink = 0.55 * smooth(w, 2.9, 3.25) + 0.45 * smooth(w, 3.55, 4.1)
@@ -525,9 +540,10 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   /* The head: tucked, facing west, its chin on its paws; lifted and looking when it wakes. */
   const aw = awake(t)
   const hb = 0.018 * breath(t) + 0.16 * Math.max(0, heave(t) / 0.32)
-  // Startled, the head comes up and turns up toward the rack at about a third of the wake (0.35 cells, 15 degrees).
+  // Startled, the head comes up and turns up toward the rack, half a cell and about 20 degrees: most of a wake's
+  // lift, with only a slit of an eye.
   const st = startle(t)
-  const lift = aw.lift + 0.44 * st
+  const lift = aw.lift + 0.62 * st
   const turnUp = 0.6 * lift
   const rise = hb + 0.8 * lift
   // Where a point of the head (x, h) is drawn, lifted and turned about the nape: for the neck, which joins the two.
@@ -601,7 +617,8 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   vtx(p, k, [H(0.12, 0.6), H(0.17, 0.4), H(0.23, 0.41), H(0.28, 0.57)])
   vtx(p, k, [H(0.3, -0.02), H(0.62, 0.02), H(0.6, 0.08), H(0.33, 0.06)])
   furLight(p, k, L, headPts, LOFT.catLit)
-  rim(p, k, headPts.filter(([, h]) => h > HEAD_AT[1] + 0.2 * HS), mixHex(LOFT.catLit, LOFT.ember, 0.25), 0.3, 0.06)
+  // The stove's light along the crown, brighter as the head comes up into it.
+  rim(p, k, headPts.filter(([, h]) => h > HEAD_AT[1] + 0.2 * HS), mixHex(LOFT.catLit, LOFT.ember, 0.25 + 0.2 * st), 0.3 + 0.35 * st, 0.06 + 0.04 * st)
   p.noFill()
   p.stroke(ink)
   p.strokeWeight(w * 0.75)
@@ -631,7 +648,8 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
       const u = j / 10
       almond.push([E[0] - ew / 2 + ew * u, E[1] - oh * 0.8 * Math.sin(Math.PI * u)])
     }
-    p.fill(LOFT.catEye)
+    // A slit of an eye on a knock catches the stove's light.
+    p.fill(mixHex(LOFT.catEye, LOFT.emberHot, 0.35 * st))
     p.stroke(ink)
     p.strokeWeight(w * 0.7)
     vtx(p, k, almond)

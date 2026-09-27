@@ -25,8 +25,10 @@ export interface WitchPose {
   squash?: number
   /** 0 mouth shut, 1 wide (a laugh). */
   mouth?: number
-  /** Her hand out from the fur toward where she faces: 0 in, 1 reaching. */
+  /** Her hand out from the fur toward where she faces: 0 in, 1 reaching, up to 1.4 flung out as far as it goes. */
   hand?: number
+  /** Her glove's fingers spread wide (the curse flung): 0 cupped, 1 wide open. */
+  spread?: number
   /** Where her eyes look: -1..1 each way, and down. */
   look?: Pt
   /** How lit she is (the lamp): a colour sinks toward the night by `dark`. */
@@ -125,7 +127,8 @@ export function drawWitch(p: p5, k: number, weight: number, ink: string, o: Witc
   p.endShape(p.CLOSE)
 
   // Her hand, plump in a dark glove, out of the fur toward where she faces.
-  const hand = Math.max(0, Math.min(1, o.hand ?? 0))
+  const hand = Math.max(0, Math.min(1.4, o.hand ?? 0))
+  const spread = Math.max(0, Math.min(1, o.spread ?? 0))
   if (hand > 0.01) {
     const hx = -0.55 - 0.55 * hand
     const hy = -0.95 + 0.25 * hand
@@ -137,8 +140,13 @@ export function drawWitch(p: p5, k: number, weight: number, ink: string, o: Witc
     p.bezierVertex(X(-0.6), X(-1.15), X(hx + 0.2), X(hy - 0.18), X(hx + 0.06), X(hy - 0.08))
     p.bezierVertex(X(hx + 0.12), X(hy + 0.08), X(-0.4), X(-0.75), X(-0.45), X(-0.85))
     p.endShape(p.CLOSE)
-    // The glove: a plump palm and three fingers spread toward her, the thumb up.
+    // The glove: a plump palm and three fingers spread toward her, the thumb up; flung open, the fingers fan wider
+    // and longer about the palm.
     p.fill(alpha(p, tone(mixHex(WITCH.fur, TOWN.night, 0.35)), L))
+    p.push()
+    p.translate(X(hx + 0.1), X(hy))
+    p.scale(1 + 0.3 * spread, 1 + 0.55 * spread)
+    p.translate(X(-hx - 0.1), X(-hy))
     p.beginShape()
     p.vertex(X(hx + 0.1), X(hy - 0.07))
     p.bezierVertex(X(hx + 0.02), X(hy - 0.1), X(hx - 0.06), X(hy - 0.11), X(hx - 0.2), X(hy - 0.1))
@@ -148,6 +156,7 @@ export function drawWitch(p: p5, k: number, weight: number, ink: string, o: Witc
     p.bezierVertex(X(hx - 0.02), X(hy + 0.08), X(hx + 0.06), X(hy + 0.07), X(hx + 0.1), X(hy + 0.03))
     p.endShape(p.CLOSE)
     p.line(X(hx - 0.02), X(hy - 0.09), X(hx - 0.07), X(hy - 0.17))
+    p.pop()
   }
 
   // The stole heaped round her shoulders: a paler fur in soft lumps.
