@@ -2,7 +2,7 @@
 
 Copyrighted recordings. This is a private tech demo and a one-shot eval take only. Do not ship this audio in a public build. Nothing here claims any right to it. Attribution: `apps/rube/src/shows/versions/la-la-land/SEBS_ATTRIBUTION.txt`.
 
-Open it at `/shows/?show=la-la-land&take=opus55-sebs`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
+Open it at `/shows/la-la-land/opus55-sebs/`. In the Shows picker it is **Opus 5.5**, a take of the work **Epilogue**.
 
 ## What it is
 

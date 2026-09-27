@@ -10,12 +10,42 @@ versions/<work>/<take>.show.ts
 `<work>` is the music (`clair-de-lune`), `<take>` is this run at it (`take-a`),
 both in lower case and hyphens. Drop the file in and it is in the picker at
 `/shows/`, grouped with the other takes of the same work, in file order.
-Nothing else keeps a list. A link to it is `/shows/?show=<work>&take=<take>`.
+Nothing else keeps a list. A link to it is `/shows/<work>/<take>/`, and the
+work's first take is also `/shows/<work>/`. `/shows/?show=<work>&take=<take>`
+still opens it, and `/theater/?show=<work>&take=<take>` starts Theater on it.
 `/shows/` with no work opens Clair de Lune, Take B.
 
 Keep two takes of the same music side by side for as long as you like; they
 share nothing unless you make them share it. To combine them later, write a
 third.
+
+## Names
+
+The folder and file names are addresses, so they are chosen once:
+
+- **Work**: `versions/<work>/`, which is also `/shows/<work>/` and
+  `public/shows/<work>/`. It names the music (`clair-de-lune`, `heptapod-b`),
+  not the picker's title, which is the version file's `title` and can change
+  freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
+  `interstellar` **Voyage**, `la-la-land` **Epilogue**. The write-up says
+  which is which.
+- **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
+  card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
+  `fable51`), or with a letter (`take-a`). A second take by the same hand adds
+  its code name (`opus55-spark`), and so may a take among others (`fable51-epilogue`,
+  `opus55-sebs`). Don't repeat the work's name in it. Takes sort by name, and the
+  first is the work's own page.
+- **Code**: a take that is more than a score file keeps its code in a folder
+  named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
+  the take id carries a code name, the folder uses the same one.
+- **Write-up**: `<NAME>.md`, after the code name or the picker's title
+  (`SPARK.md`, `CARAVAN.md`). It opens with the take's address.
+- **Attribution**: one `ATTRIBUTION.txt` per work. A take with a recording of
+  its own adds `<NAME>_ATTRIBUTION.txt` (`la-la-land/SEBS_ATTRIBUTION.txt`).
+
+A name already shipped stays, even where it misses these (`come-recover/opus55-all-at-once`
+is Everything's only take, with its code name in the id). Renaming a work or a take moves a
+public link and its card, so it waits for a redirect.
 
 ## The file
 

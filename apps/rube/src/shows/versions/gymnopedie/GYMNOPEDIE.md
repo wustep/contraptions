@@ -1,6 +1,6 @@
 # Gymnopédie (Opus 5.5)
 
-`/shows/?show=gymnopedie&take=opus55`, in the picker as **Gymnopédie**, one take, **Opus 5.5**.
+`/shows/gymnopedie/`, in the picker as **Gymnopédie**, one take, **Opus 5.5**.
 
 Satie's Gymnopédie No. 1, Gnossienne No. 1 and Gnossienne No. 3, one after the other, round a small sea planet once
 a period, as a loop with no seam: 634.8 s, and then the same 634.8 s again.
