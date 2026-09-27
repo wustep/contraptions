@@ -93,14 +93,19 @@ export const depart = part<DepartState>(
 
 /**
  * The camera: on her looking up, tilting a little with her; the cut to the wide on the shell's lift (60 cells, her
- * small on the meadow under it), which rises slowly with the shell; the cut back in on 192.238 to the two of them,
- * and in, to the framing the lake house opens on.
+ * small on the meadow under it), which rises slowly with the shell; the cut back in on 192.238, and from there one
+ * steady push in on her to the framing the lake house opens on. Her place on the screen is the first frame's from
+ * the cut back in (the frame scaled about her), so the push only gathers the meadow in round her, Ian coming into
+ * it from her right and the sky where the shell was over them, and it settles on the last clear pulse without ever
+ * sliding her across the picture to her mark.
  */
 function shotsFor(end: number): PartShot[] {
   const w = (x: number, y: number): Pt => [x - AFTER_AT[0], y - AFTER_AT[1]]
   const her: Pt = [-0.5, 0]
   const seam = SEAMS.after
   const last = SEAMS.end
+  // Her place in the first frame, at `cells` tall: the camera's centre from her.
+  const first = (cells: number): Pt => [her[0] + (last.frame[0] * cells) / last.cells, her[1] + (last.frame[1] * cells) / last.cells]
   return [
     { t: 185.9, cells: 5.15, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.2], w: 1 },
     { t: DEPART - 0.02, cells: 5.3, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.35], w: 1 },
@@ -109,12 +114,9 @@ function shotsFor(end: number): PartShot[] {
     { t: DEPART, cells: 172, hold: w(-8, -84), w: 1, cut: true },
     { t: 189.2, cells: 161, hold: w(-8, -78.8), w: 1 },
     { t: CUT_IN - 0.03, cells: 149, hold: w(-8, -72.8), w: 1 },
-    { t: CUT_IN, cells: 11, hold: w(12.6, -3.1), w: 1, cut: true },
-    // With her glance, a little more of the sky over them.
-    { t: 193.75, cells: 8.6, hold: w(13.3, -2.75), w: 1 },
-    { t: 194.7, cells: 6.0, hold: w(13.9, -1.75), w: 1 },
-    { t: 195.4, cells: 4.4, hold: w(14.25, -1.2), w: 1 },
-    { t: end, cells: last.cells, hold: [her[0] + last.frame[0], her[1] + last.frame[1]], w: 1 },
+    { t: CUT_IN, cells: 11, hold: first(11), w: 1, cut: true },
+    { t: 194.5, cells: 5.8, hold: first(5.8), w: 1 },
+    { t: end, cells: last.cells, hold: first(last.cells), w: 1 },
   ]
 }
 
