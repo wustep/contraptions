@@ -191,10 +191,10 @@ async function main(): Promise<void> {
   check('come-recover is Everything, one take, Opus 5.5, with no note',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
-  const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
-  check('la-la-land is Epilogue, two takes, Fable 5.1 then Opus 5.5, with no notes',
-    lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
-    lalaland.map((v) => v.label).join('|') === 'Fable 5.1|Opus 5.5' && epilogueTake?.label === 'Fable 5.1')
+  const epilogueTake = lalaland.find((v) => v.take === 'opus55-sebs')
+  check('la-la-land is Epilogue, two takes, Opus 5.5 then Fable 5.1, with no notes and Opus as default',
+    lalaland.map((v) => v.take).join(',') === 'opus55-sebs,fable51-epilogue' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
+    lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus55-sebs')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
