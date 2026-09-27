@@ -45,6 +45,38 @@ export const BOW_FROM = bar('jar', 48) + 0.6
 export const BALLOON_REST: Pt = [0.24, -1.42]
 
 /**
+ * What stirs the balloon in the still air. The church's one toll goes through it: a sharp swing aside on its string
+ * and a long slow sway back (a damped swing from rest: `amp` cells aside at its fullest, over a `period`, dying away
+ * over `decay` seconds), and a little at the answer.
+ */
+export const STIRS: { t: number; amp: number; period: number; decay: number }[] = [
+  { t: AT.church, amp: 0.2, period: 1.7, decay: 1.4 },
+  { t: 198.409, amp: 0.07, period: 1.7, decay: 1.2 },
+]
+/**
+ * At home, tied to her chair, it leans the smallest way toward him on the piano's phrase notes once he has sat down
+ * (her last gesture at her bedside was the same: the smallest roll toward him). Each lean eases up from nothing to
+ * `amp` cells (negative is toward his chair) at `rise` seconds after the note, and back, slowly.
+ */
+export const LEANS: { t: number; amp: number; rise: number }[] = [
+  { t: 219.696, amp: -0.07, rise: 0.5 },
+  { t: 221.884, amp: -0.06, rise: 0.5 },
+  { t: 226.203, amp: -0.06, rise: 0.55 },
+]
+function stir(t: number): number {
+  let x = 0
+  for (const s of STIRS) {
+    const u = t - s.t
+    if (u > 0) x += s.amp * Math.exp(-u / s.decay) * Math.sin((2 * Math.PI * u) / s.period)
+  }
+  for (const l of LEANS) {
+    const u = (t - l.t) / l.rise
+    if (u > 0) x += l.amp * u * u * Math.exp(2 * (1 - u))
+  }
+  return x
+}
+
+/**
  * How the years sit on them, under whatever a part asks of them: Carl settles (a touch shorter and wider), his
  * corners soften, and when he walks he stoops a little toward where he is going, more as he goes faster; Ellie
  * settles a little onto the floor. All of it follows `AGE`, so it comes on with the years and never pops.
@@ -269,7 +301,7 @@ function riding(show: LifeShow, t: number): { at: Pt; anchor: Pt; sway: number }
   const y = a0[1] + (a1[1] - a0[1]) * f
   const anchor = anchorIn(show, t, leg)
   // The string is taut: the balloon rides it at its length from the knot, drifting a little in the air.
-  const drift = Math.sin(t * 0.9) * 0.05 + Math.sin(t * 0.37 + 1) * 0.04
+  const drift = Math.sin(t * 0.9) * 0.05 + Math.sin(t * 0.37 + 1) * 0.04 + stir(t)
   let dx = x + drift - anchor[0]
   let dy = y - anchor[1]
   const d = Math.hypot(dx, dy) || 1
