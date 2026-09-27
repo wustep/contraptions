@@ -1,0 +1,22 @@
+Near Light — Ólafur Arnalds
+From Living Room Songs (2011), Erased Tapes Records (ERATP037). Composed by Ólafur Arnalds.
+Performed by Ólafur Arnalds (piano, electronics programming, recording, mixing and mastering), Roland Hartwell and
+Margrét Soffía Einarsdóttir (violins), Arndís Hulda Auðunsdóttir (viola), Karl Jóhann Bjarnason (cello), Fríða Ósk
+Arnalds (Juno 106 and drum loop) and Guðrún Pálmadóttir (Korg MS-10), as the Living Room Songs film credits them.
+
+The recording is the label's own, as uploaded to YouTube by Erased Tapes ("Ólafur Arnalds - Near Light", "Taken from
+Living Room Songs by Ólafur Arnalds"), video ejaaxLeUQd4:
+https://www.youtube.com/watch?v=ejaaxLeUQd4
+Duration 3:29.
+Copyrighted — used for a private Contraptions tech demo only; do not ship to production / public Shows without a
+licence.
+
+Files:
+- apps/rube/src/shows/versions/near-light/near-light-demo.mp3 — the song as fetched (yt-dlp, audio only), made into
+  one period of a circle by scripts/shows/near-light-loop.py and encoded at 128 kbit/s: the recording's first 101
+  bars (205.409 s) as they are, with nothing moved and no gain change, and the room it goes on hearing after them
+  (1.2 s, fading) laid back under their start; two seconds of the period's own end before the show's zero and of its
+  start after it. The show loops the period from 2.0 s.
+- scripts/shows/plans/near-light-onsets.json — the recording's click (118.008 beats a minute), its beats, its onsets,
+  its sections and how full its held sound is, measured by scripts/shows/near-light-onsets.py; the show is timed to
+  it and check:shows holds it there.
