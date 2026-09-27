@@ -1,6 +1,7 @@
 import type p5 from 'p5'
 import { R, mixHex, type Pt } from '../../../../../parts'
 import { smooth } from '../kit'
+import { GAZE } from '../music'
 import { LOFT } from '../worlds'
 import { FLOOR_Y } from './layout'
 import { fireLight, shade, type Light } from './stove-light'
@@ -17,8 +18,9 @@ import { fireLight, shade, type Light } from './stove-light'
  * - `CAT_CUES.stir[0]` (42.455): the tail's tip lifts and flops, right in front of the spark.
  * - `CAT_CUES.stir[1]` (51.384): it shifts in its sleep, a heave of the shoulders, and the spark riding them is tossed
  *   up the stove's hot face.
- * - `CAT_CUES.wake` (149.815): the stove door bangs. Its eye snaps open, it lifts its head and looks at the candle
- *   (a candle burning, as candles do), and by about 154 it is asleep again.
+ * - `CAT_CUES.wake` (149.815): the stove door bangs. Its eye snaps open and its head snaps up at the door over it;
+ *   then it turns round onto the candle (`GAZE`) and looks at it, a candle burning as candles do (which holds very
+ *   still while it is looked at), and by about 154 it is asleep again.
  *
  * Everything here is in the loft's world cells; `h` is height above the floor. The spark rides the cat by
  * `catTop` and `tailTop`, which read the same shapes this draws.
@@ -168,13 +170,21 @@ function earTurn(t: number): number {
 }
 
 /**
- * On the bang the head goes on turning up after it has lifted, until its nose is on the candle (as far as a lying
- * cat's neck goes), holds there while it looks, and comes back down with the tuck. Radians, added to the lift's turn.
+ * The look on the bang, in two: the head snaps up at the door that banged right over it (nose all but straight up,
+ * by 0.3 s), then comes round and down onto the candle up the room to the west (`GAZE.on`), nose about 40 degrees
+ * over the level with the eye's pupil taking it the rest of the way, and holds there, still, until it tucks back down.
+ * `turn` is how far the head is turned up (radians, clockwise on the screen: the nose up); `onto` is how far it has come
+ * round onto the candle (0..1), which also leans the head out west over its paws, chin first.
  */
-function seek(t: number): number {
+const LOOK_DOOR = 1.25
+const LOOK_CANDLE = 0.66
+function look(t: number): { turn: number; onto: number } {
   const w = t - CAT_CUES.wake
-  if (w < 0) return 0
-  return 0.3 * smooth(w, 0.3, 1.1) * (1 - smooth(w, 2.55, 3.5))
+  if (w < 0) return { turn: 0, onto: 0 }
+  const tuck = 1 - smooth(w, 2.55, 3.75)
+  const up = 1 - (1 - Math.min(1, w / 0.3)) ** 3
+  const onto = smooth(t, GAZE.on - 0.4, GAZE.on)
+  return { turn: (LOOK_DOOR * up * (1 - onto) + LOOK_CANDLE * onto) * tuck, onto: onto * tuck }
 }
 
 /**
@@ -196,10 +206,10 @@ function peek(t: number): number {
 export function awake(t: number): { eye: number; lift: number } {
   const w = t - CAT_CUES.wake
   if (w < 0) return { eye: peek(t), lift: 0 }
-  // The eye snaps open on the bang; the head comes up and it looks; a slow blink half shut, then shut by 154.
+  // The eye snaps open on the bang; the head snaps up (at the door) and it looks; a slow blink half shut, then shut by 154.
   const open = smooth(w, 0, 0.05)
   const blink = 0.55 * smooth(w, 2.9, 3.25) + 0.45 * smooth(w, 3.55, 4.1)
-  const lift = smooth(w, 0.04, 0.55) * (1 - smooth(w, 2.55, 3.75))
+  const lift = smooth(w, 0.02, 0.35) * (1 - smooth(w, 2.55, 3.75))
   return { eye: open * (1 - blink), lift }
 }
 
@@ -556,15 +566,18 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   // lift, with only a slit of an eye.
   const st = startle(t)
   const lift = aw.lift + 0.62 * st
-  const turnUp = 0.6 * lift + seek(t)
+  const lk = look(t)
+  const turnUp = 0.6 * 0.62 * st + lk.turn
   const rise = hb + 0.8 * lift
+  // Come round onto the candle, the head leans out west, chin first, clear of the stove's legs.
+  const out = -0.3 * lk.onto
   // Where a point of the head (x, h) is drawn, lifted and turned about the nape: for the neck, which joins the two.
   const lifted = (x: number, h: number): Pt => {
     const dx = x - NAPE[0]
     const dy = Y(h) - Y(NAPE[1])
     const c = Math.cos(turnUp)
     const sn = Math.sin(turnUp)
-    return [NAPE[0] + dx * c - dy * sn, Y(NAPE[1]) + dx * sn + dy * c - rise]
+    return [NAPE[0] + out + dx * c - dy * sn, Y(NAPE[1]) + dx * sn + dy * c - rise]
   }
   const H = (dx: number, dh: number): Pt => [HEAD_AT[0] + dx * HS, HEAD_AT[1] + dh * HS]
   // The neck under the head as it comes up, one piece with the body: its throat curving up from the back to the chin,
@@ -593,7 +606,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     }
   }
   p.push()
-  p.translate(NAPE[0] * k, (Y(NAPE[1]) - rise) * k)
+  p.translate((NAPE[0] + out) * k, (Y(NAPE[1]) - rise) * k)
   p.rotate(turnUp)
   p.translate(-NAPE[0] * k, -Y(NAPE[1]) * k)
   // Local head coordinates: centred on HEAD_AT.
@@ -618,8 +631,12 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     vtx(p, k, pts)
   }
   const back = -0.35 * smooth(t - CAT_CUES.wake, 0, 0.04) * Math.exp(-Math.max(0, t - CAT_CUES.wake) / 0.6)
-  const tall = 1 + 0.16 * st
-  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8 + prick(t, true), deepAt(7.0, 2.0), tall)
+  // Snapped up at the bang the ears go back with the head (startled); come round onto the candle they stand up in the
+  // room, not in the head, and lean a little toward it (attentive): turned back against the whole look, so the head
+  // reads as turned to look at it and not tipped back (a head tipped back, ears and all, reads as looking up at the stove).
+  const upright = lk.onto * (lk.turn + 0.08)
+  const tall = 1 + 0.16 * st + 0.1 * lk.onto
+  ear(H(0.18, 0.6), H(0.52, 0.45), H(0.5, 1.02), back * 0.8 + prick(t, true) + upright, deepAt(7.0, 2.0), tall)
   p.noStroke()
   p.fill(furAt(6.5, 1.3))
   vtx(p, k, headPts)
@@ -635,7 +652,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   p.stroke(ink)
   p.strokeWeight(w * 0.75)
   vtx(p, k, headPts)
-  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back, furAt(6.4, 2.0), tall)
+  ear(H(-0.3, 0.5), H(0.08, 0.63), H(-0.12, 1.1), earTurn(t) + back + upright, furAt(6.4, 2.0), tall)
   // The eye: shut, a soft downward curve; open, an almond of amber with a slit pupil looking up and west, at the candle.
   const E = H(-0.3, 0.12)
   const ew = 0.3 * HS

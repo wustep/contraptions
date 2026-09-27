@@ -3,7 +3,7 @@ import { R, mixHex, type Pt } from '../../../../parts'
 import { drawLick, type Lick } from './fire'
 import { frame, hash, scenery, smooth } from './kit'
 import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
-import { DOORS, FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, SILL_AT, THEME, WINDUP, level } from './music'
+import { DOORS, FESTIVAL, GAZE, KNOCKS, LAST, ROLL, SILENCE, SILL_AT, THEME, WINDUP, level } from './music'
 import { IN_MOUTH, OUT_MOUTH, type Mouth } from './mouths'
 import type { SparkShow } from './show'
 import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from './worlds'
@@ -68,7 +68,17 @@ function freeze(t: number): number {
     if (u <= 0 || u > 1.6) continue
     d = Math.max(d, smooth(u, 0, 0.1) * Math.exp(-Math.max(0, u - 0.1) / 0.32))
   }
-  return 1 - 0.4 * d
+  return (1 - 0.4 * d) * (1 - 0.3 * innocent(t))
+}
+
+/**
+ * The same gag paid off at home: when the woken cat's gaze comes round onto the candle (`GAZE.on`), the flame ducks
+ * as it did on the knocks and holds dead still, no flicker, no lean, playing an ordinary candle; when the cat's eye
+ * shuts (`GAZE.off`) it lets its breath out and flickers again. 0..1: how still it holds.
+ */
+export function innocent(t: number): number {
+  if (t < GAZE.on - 0.05 || t > GAZE.off + 0.8) return 0
+  return smooth(t, GAZE.on - 0.05, GAZE.on + 0.06) * (1 - smooth(t, GAZE.off, GAZE.off + 0.7))
 }
 
 /**
@@ -164,7 +174,7 @@ export const flame = () =>
       const same = show.owner(t - 0.04) === show.owner(t)
       const vx = same ? (b[0] - a[0]) / 0.04 : 0
       const vy = same ? (b[1] - a[1]) / 0.04 : 0
-      const flick = 0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)
+      const flick = (0.12 * Math.sin(t * 23 + 1.3) + 0.08 * Math.sin(t * 37.7) + 0.05 * (hash(Math.floor(t * 30)) - 0.5)) * (1 - innocent(t))
       const { k } = c
       // Findable at a glance in a wide frame (on a phone held upright the 16:9 band is about 220 px tall): the flame
       // never draws smaller than about 6% of the band, heart and all. The heart keeps its true size, so every socket

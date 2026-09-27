@@ -213,5 +213,13 @@ export const WINDUP = [beat(93), beat(94)] as const
 /** Phrase 2's two big notes, where the rack's candles knock together and the cat half wakes (`CAT_CUES.ear`). */
 export const KNOCKS = [25.653, 28.961] as const
 
+/**
+ * The cat's look on the bang (the second last chord): its head snaps up at the door that banged over it, then turns
+ * round and down onto the candle, where its gaze arrives (`on`) and holds until it tucks back down (`off`). The
+ * candle's flame plays innocent under it (`fx.ts`): it ducks and holds dead still from `on`, and flickers again from
+ * `off`, as the cat's eye shuts.
+ */
+export const GAZE = { on: LAST[1] + 0.82, off: LAST[1] + 3.1 } as const
+
 /** When the credits start: after the last chord has died away, and the cat has looked at the candle and gone back to sleep. */
 export const CREDITS_AT = 154.2
