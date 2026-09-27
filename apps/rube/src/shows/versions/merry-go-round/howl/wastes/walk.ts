@@ -254,19 +254,21 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
     const sill = onCastle(T, [edge - gap / 2, dy])
     const gapX = sill[0]
     const top = sill[1] - 0.03
-    const g = ctx.createLinearGradient(X(gapX), 0, X(gapX - 2.1), 0)
-    g.addColorStop(0, `rgba(255, 214, 150, ${0.62 * ajar})`)
-    g.addColorStop(0.3, `rgba(255, 204, 138, ${0.36 * ajar})`)
+    // On the planks a soft pool out of the gap, long toward her and short the other way, on the planks' top alone:
+    // never a hard-edged blade with its brightest edge ruled at the door.
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(X(gapX - 2.6), X(top), X(3.4), X(0.3))
+    ctx.clip()
+    ctx.translate(X(gapX - 0.75), X(top + 0.09))
+    ctx.scale(1, 0.1)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, X(1.4))
+    g.addColorStop(0, `rgba(255, 214, 150, ${0.5 * ajar})`)
+    g.addColorStop(0.45, `rgba(255, 204, 138, ${0.3 * ajar})`)
     g.addColorStop(1, 'rgba(255, 196, 128, 0)')
     ctx.fillStyle = g
-    ctx.beginPath()
-    ctx.moveTo(X(gapX + gap / 2), X(top))
-    ctx.lineTo(X(gapX - gap / 2), X(top))
-    ctx.lineTo(X(gapX - 2.1), X(top + 0.14))
-    ctx.lineTo(X(gapX - 2.1), X(top + 0.23))
-    ctx.lineTo(X(gapX + gap / 2), X(top + 0.23))
-    ctx.closePath()
-    ctx.fill()
+    ctx.fillRect(X(-1.4), X(-1.4), X(2.8), X(2.8))
+    ctx.restore()
   }
   // Its chain, and the lantern: a brass cap, four glass panes lit from within, a brass foot, hanging plumb from
   // the chain's end as it swings.
