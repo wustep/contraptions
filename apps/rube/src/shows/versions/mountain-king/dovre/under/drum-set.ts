@@ -126,11 +126,42 @@ function aboveRim(p: p5, c: Ctx, d: Drum, dy: number, allow: number, fn: () => v
 
 /* ------------------------------------------------------------------ the room */
 
-/** The chamber's hollow: a low vault, the mine's shaft coming down through it at the west end, the pit at the east. */
-const ROOM: Poly = [
-  [-1.0, FLOOR],
-  [-1.0, -3.4],
+/**
+ * The chamber's hollow: a low vault, the mine's shaft coming down through it at the west end, the pit at the east.
+ * Its ends are living rock, leaning out and back and ragged, the vault turning down into them round its corners (two
+ * straight walls square to the vault made the room a box cut out of the mountain). West of -1.0 and east of 17.0 are
+ * the kettle's and the east gallery's clearance; the walls only lean outward of them.
+ */
+const WEST_WALL: Poly = [
+  [-1.22, FLOOR],
+  [-1.3, 0.35],
+  [-1.17, -0.35],
+  [-1.34, -1.15],
+  [-1.24, -1.95],
+  [-1.31, -2.7],
+  [-1.13, -3.45],
+  [-1.21, -4.25],
+  [-1.07, -5.05],
+  [-1.12, -5.8],
   [-1.0, -6.5],
+]
+const EAST_WALL: Poly = [
+  [16.2, -6.4],
+  [16.62, -6.28],
+  [16.93, -6.02],
+  [17.14, -5.62],
+  [17.27, -5.05],
+  [17.2, -4.35],
+  [17.33, -3.7],
+  [17.18, -2.95],
+  [17.3, -2.2],
+  [17.38, -1.4],
+  [17.24, -0.65],
+  [17.33, 0.1],
+  [17.26, FLOOR],
+]
+const ROOM: Poly = [
+  ...WEST_WALL,
   [0.35, -6.5],
   [0.5, -5.9],
   [1.4, -6.15],
@@ -140,10 +171,11 @@ const ROOM: Poly = [
   [9.6, -6.5],
   [12.0, -6.45],
   [14.2, -6.5],
-  [16.2, -6.4],
-  [17.0, -5.9],
-  [17.0, FLOOR],
+  ...EAST_WALL,
 ]
+/** Where the room's floor ends at each wall's foot. */
+const FLOOR_W = WEST_WALL[0][0]
+const FLOOR_E = EAST_WALL[EAST_WALL.length - 1][0]
 
 /** Stalactites on the vault: never over the chimney's column, never where he flies high. */
 const STALACTITES: [number, number, number][] = [
@@ -288,18 +320,38 @@ export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
     glow(p, c, x, FIRE_Y - 0.8, (1.6 + 4.2 * L) * f, (0.05 + 0.4 * L * L) * f)
     glow(p, c, x, FIRE_Y - 0.3, (0.8 + 2.4 * L) * flicker(T, i + 7), (0.04 + 0.2 * L) * caught(i, T), LAMP.flame)
   }
+  // The room's ends in their own shadow: the fires' light falls off into the rock at either wall and up into the
+  // vault's corners, so the room fades into the mountain at its ends (lit to its walls, it read as a box).
+  for (const [x0, x1] of [[FLOOR_W - 0.05, FLOOR_W + 1.6], [FLOOR_E + 0.1, FLOOR_E - 1.6]]) {
+    const g = ctx.createLinearGradient(x0 * c.k, 0, x1 * c.k, 0)
+    g.addColorStop(0, 'rgba(21,24,29,0.62)')
+    g.addColorStop(0.4, 'rgba(21,24,29,0.26)')
+    g.addColorStop(1, 'rgba(21,24,29,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(Math.min(x0, x1) * c.k, (VAULT - 0.5) * c.k, Math.abs(x1 - x0) * c.k, (FLOOR - VAULT + 0.6) * c.k)
+  }
   ctx.restore()
   for (const [i, [x, len, w]] of STALACTITES.entries()) stalactite(p, c, x, vaultAt(x) - 0.05, len, w, 0.15 + 0.7 * L, i + 2)
-  // The floor, broken by the pit under the great drum; the pit going down to the heart.
+  // The floor, broken by the pit under the great drum; the pit going down to the heart. It runs on under each wall's
+  // foot and fades into the rock over its last cell (no cut end).
   hollow(p, c, [[SHAFT.x0, FLOOR - 0.02], [SHAFT.x1, FLOOR - 0.02], [SHAFT.x1 - 0.05, 3], [SHAFT.x1, SHAFT.bottom], [SHAFT.x0 + 0.04, SHAFT.bottom], [SHAFT.x0 - 0.04, 3.5]], 0.05 + 0.25 * L)
-  slab(p, c, -1.0, SHAFT.x0, FLOOR, 0.05, 0.2 + 0.7 * L, 3)
-  slab(p, c, SHAFT.x1, 17.0, FLOOR, 0.05, 0.2 + 0.7 * L, 4)
+  slab(p, c, FLOOR_W, SHAFT.x0, FLOOR, 0.05, 0.2 + 0.7 * L, 3)
+  slab(p, c, SHAFT.x1, FLOOR_E, FLOOR, 0.05, 0.2 + 0.7 * L, 4)
+  for (const [x0, x1] of [[FLOOR_W - 0.02, FLOOR_W + 1.0], [FLOOR_E + 0.02, FLOOR_E - 1.0]]) {
+    const g = ctx.createLinearGradient(x0 * c.k, 0, x1 * c.k, 0)
+    g.addColorStop(0, 'rgba(21,24,29,0.92)')
+    g.addColorStop(1, 'rgba(21,24,29,0)')
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(Math.min(x0, x1) * c.k, (FLOOR - 0.02) * c.k, Math.abs(x1 - x0) * c.k, 0.12 * c.k)
+    ctx.restore()
+  }
   drawGalleries(p, c, L, jolt(T))
 }
 
 /** The vault's height at x (the room's polygon, top edge). */
 function vaultAt(x: number): number {
-  const top = ROOM.slice(2, ROOM.length - 1)
+  const top = ROOM.filter(([, y]) => y <= -5.85)
   for (let i = 0; i < top.length - 1; i++) {
     const [x0, y0] = top[i]
     const [x1, y1] = top[i + 1]

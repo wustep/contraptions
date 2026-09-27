@@ -1646,8 +1646,11 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   }
 }
 
-/** The top of the heart's room (frame y), for the cover before its slot. */
-const ROOM_TOP = -6.3
+/**
+ * The top of the heart's room (frame y), for the cover before its slot: over the chimney's mouth in the ceiling too
+ * (-6.5; at -6.3 its notch stood uncovered under the drum room's floor from 89 s, a grey trapezoid in the rock).
+ */
+const ROOM_TOP = -6.6
 const COVER_BOTTOM = PIT + 0.7
 const COVER_FEATHER = 1.0
 /**
