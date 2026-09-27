@@ -50,7 +50,7 @@ import { PREROLL, WARM } from '../src/shows/youtube'
 import { checkLogogram } from './logogram'
 import { checkMagnum } from './magnum'
 import { checkOstinato } from './ostinato'
-import { checkWindowlight } from './windowlight
+import { checkWindowlight } from './windowlight'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
