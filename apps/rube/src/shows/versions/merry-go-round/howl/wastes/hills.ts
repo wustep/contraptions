@@ -19,6 +19,16 @@ import { AT_POLE, HILLS_KEYS, HILLTOP, LANDS, POP, sophieHills, THUD, TUG, TURNI
  * walk takes her.
  */
 
+/**
+ * The castle out of the fog: the wide from the second thud (W64) to the walk's cut in (W66), across the seam (W65).
+ * Its keys in the wastes' cells, at the thud, the seam and just before the cut; the walk reads the last.
+ */
+export const FOG_WIDE: { cells: number; at: Pt }[] = [
+  { cells: 17, at: [HILLTOP[0] + 6.4, HILLTOP[1] - 5.15] },
+  { cells: 16.8, at: [HILLTOP[0] + 6.85, HILLTOP[1] - 5.1] },
+  { cells: 16.6, at: [HILLTOP[0] + 7.3, HILLTOP[1] - 5.05] },
+]
+
 /** Who draws Turnip Head: this part until he has gone back into the fog, then the walk (over the castle). */
 export const TURNIP_TO_WALK = 116.6
 
@@ -76,13 +86,14 @@ export const hills = part<null>(
     { t: 114.3, cells: 5.0, hold: [0.55, -0.95] },
     { t: 117.3, cells: 5.2, hold: [1.35, -1.2] },
     // The fog, and what is in it, framed from her: low on the crest a little left of middle, the fog rolling up the
-    // lane where he went, the first thud in it; on the second thud a cut out, her small on the crest, the castle's legs
-    // and face coming out of the fog over her and cropped by the top of the frame (its size is in the crop), the eye
-    // lighting on her, and a slow push in to her as it comes on (the walk cuts in to her on the next footfall).
+    // lane where he went, the first thud in it; on the second thud a cut out, her small and low-left on the crest, and
+    // over her the castle's face, eye and jaw whole coming out of the fog (the heap on its back cropped by the top: its
+    // size is in the crop), the eye lighting on her. Held, drifting on a little with it, through its first stride out
+    // of the fog (W65, the walk's seam), so that stride lands in the wide; the walk cuts in to her on the next (W66).
     { t: THUD[0], cells: 7.3, hold: [HILLTOP[0] + 0.35, -2.35] },
     { t: THUD[1] - 0.03, cells: 7.7, hold: [HILLTOP[0] + 0.55, -2.5] },
-    { t: THUD[1], cells: 13.5, hold: [HILLTOP[0] + 2.6, -4.95], cut: true },
-    { t: slot.end, cells: 13.2, hold: [HILLTOP[0] + 2.4, -4.85] },
+    { t: THUD[1], cells: FOG_WIDE[0].cells, hold: FOG_WIDE[0].at, cut: true },
+    { t: slot.end, cells: FOG_WIDE[1].cells, hold: FOG_WIDE[1].at },
   ],
 )
 

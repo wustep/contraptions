@@ -6,7 +6,7 @@ import { level, SEAM } from '../music'
 import { G } from '../physics'
 import { CASTLE, drawCastle, drawChimneyFire } from './castle'
 import { WASTES } from '../worlds'
-import { laneThrough, TURNIP_TO_WALK } from './hills'
+import { FOG_WIDE, laneThrough, TURNIP_TO_WALK } from './hills'
 import { drawFog, drawPlume, drawTurnipAt } from './hills-land'
 import {
   ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
@@ -100,9 +100,8 @@ export const walk = part<null>(
     }
     // Her on the hilltop (the lane's start) with the framing's centre moved off her.
     const hill = (dx: number, dy: number): Pt => [-0.5 + dx, dy]
-    // The wide: the whole castle, feet to flag, at one size on the roar and the three great strides.
+    // The wide: the whole castle, feet to flag, at one size on the roar and the third great stride.
     const WHOLE = 30
-    const wide: Pt = [3.4, -7.0]
     // The close: her on the porch a little left of middle, a touch low (the lantern, the hull and the door over and
     // beside her, the legs and the wastes going by under the porch), the camera riding with her, so each drop and heave of the hull reads
     // as her dipping and lifting in the frame.
@@ -122,11 +121,12 @@ export const walk = part<null>(
     const UNDER = 7.6
     const under: Pt = [0.12 * UNDER * (16 / 9), 0.23 * UNDER]
     return [
-      // On the first footfall out of the fog, a cut in to her on the hilltop, low in the frame: the legs stamping
-      // round her and the belly over her, cropped by the top; the stair drops into the frame over her, and in on her
-      // a little as she jumps for its foot.
-      { t: SEAM.walk + 0.002, cells: 7.4, hold: hill(-0.35, -1.95), cut: true },
-      { t: DROP, cells: 7.2, hold: hill(-0.1, -2.05) },
+      // The hills' wide of the castle out of the fog holds through its first stride out of it (W65, this seam); on the
+      // next footfall, as the stair drops, a cut in to her on the hilltop, low in the frame: the legs stamping round
+      // her and the belly over her, cropped by the top; the stair drops into the frame over her, and in on her a
+      // little as she jumps for its foot.
+      { t: DROP - 0.03, cells: FOG_WIDE[2].cells, hold: w(FOG_WIDE[2].at) },
+      { t: DROP, cells: 7.3, hold: hill(-0.2, -2.0), cut: true },
       { t: CATCH, cells: 6.9, hold: hill(0.35, -2.1) },
       // Up the stair with her, a tread a beat, to the porch.
       { t: CLIMB[2], cells: 6.4, off: [0.75, -0.85] },
@@ -135,16 +135,18 @@ export const walk = part<null>(
       // frame, the first time we see the engine; on the next footfall back in to her on the porch.
       { t: ROAR[0], cells: 28.4, off: [2.9, -6.0], cut: true },
       { t: W(72), cells: CLOSE, off: close, cut: true },
-      // The three great strides (131.43, 133.72, 135.94), every other bar: out to the whole castle on each, in to her
-      // on the bar between. The first two travel with it; the third is the lock-off past the thorn tree.
-      { t: W(74), cells: WHOLE, off: wide, cut: true },
-      { t: W(75), cells: CLOSE, off: close, cut: true },
-      { t: W(76), cells: WHOLE, off: wide, cut: true },
-      { t: W(77), cells: CLOSE, off: close, cut: true },
+      // The great strides are one phrase building to the third (135.94, the loudest): the first two (131.43, 133.72)
+      // ridden aboard with no cut, the porch dropping under her on each (the gait's heavier drop) and the camera riding
+      // it, a short dip and a long rise; then one cut out, on the third, to the lock-off past the thorn tree, held
+      // while the whole castle strides across it into the dusk, and back in to her two bars later (W80).
+      { t: W(74) - 0.4, cells: CLOSE - 0.1, off: close },
+      { t: W(76) + 0.5, cells: CLOSE - 0.3, off: [close[0], close[1] + 0.05] },
+      { t: W(78) - 0.03, cells: CLOSE - 0.35, off: [close[0], close[1] + 0.05] },
       { t: W(78), cells: WHOLE, hold: cross, cut: true },
+      { t: W(80) - 0.03, cells: WHOLE - 0.4, hold: [cross[0] + 0.6, cross[1] + 0.1] },
       // Night comes on her: in close under the lantern as the dusk deepens and the windows light, the door easing
       // ajar beside her; a slow breath in and out.
-      { t: W(79), cells: CLOSE, off: close, cut: true },
+      { t: W(80), cells: CLOSE, off: close, cut: true },
       { t: 141.0, cells: 5.2, off: [0.1 * 5.2 * (16 / 9), -0.04 * 5.2] },
       { t: 144.2, cells: 5.5, off: [0.1 * 5.5 * (16 / 9), -0.04 * 5.5] },
       // On a footfall, a cut down under the porch: her high in the frame, the great legs walking on under her into the
