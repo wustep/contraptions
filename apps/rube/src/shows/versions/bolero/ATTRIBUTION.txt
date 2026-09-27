@@ -1,0 +1,24 @@
+Ostinato (versions/bolero/opus55.show.ts)
+
+Music
+  Maurice Ravel (1875–1937), Boléro (1928), for orchestra; first published by Durand, Paris, 1929.
+  Composition: public domain in the United States (published 1929; its term ended on 1 January 2025) and in France
+  and the European Union.
+
+Recording
+  "Boléro – Maurice Ravel", by Omega13a (Wikimedia Commons user), 2025-11-09: made in MuseScore 4 with Muse Sounds from
+  Ravel's score, the players panned as a conductor would hear them.
+  Source: https://commons.wikimedia.org/wiki/File:Bol%C3%A9ro_%E2%80%93_Maurice_Ravel.ogg
+  License: Creative Commons Attribution 4.0 International (CC BY 4.0), https://creativecommons.org/licenses/by/4.0/
+  Changes: the Commons file (Ogg Opus, 48 kHz, 851.99 s) is re-encoded whole to bolero-omega13a.mp3 (MP3, 44.1 kHz,
+  160 kbit/s, constant bit rate, so that a seek lands where the show's clock says) by scripts/shows/bolero-cue.sh.
+  Nothing is cut, faded or levelled.
+
+The tune, note by note
+  Transcribed for the show from the full score: Maurice Ravel, Boléro, Durand, Paris, 1929 (public domain),
+  https://commons.wikimedia.org/wiki/File:Maurice_Ravel_-_Bolero_full_score,_1929,_Durand.pdf
+  (scripts/shows/bolero-onsets.py; every note checked against the recording).
+
+Contraptions audiovisual adaptation: a timed machine drawn over the whole recording. The credit is given beside the
+player and in the show's end credits and documentation, never on the frame. The recording ships with the show under
+its licence; the adaptation is shared under CC BY 4.0.
