@@ -166,10 +166,11 @@ const SALUTE_LIGHT = mixHex(FW.fwGold, FW.coalHot, 0.45)
 
 /*
  * From the crash to the silence the finale lights the whole night. Every burst adds its own colour to the sky, laid
- * on with 'screen' as a vertical gradient strongest at the height its shells are breaking (0.35-0.45 at the heavy
- * chords), and it dies over about 0.35 s with a remainder that lasts as long as its stars burn. Under it all is a floor
- * of smoke-lit amber that rises through the coda (0.08 at the crash, 0.18 at the Titan), so between chords the sky
- * never goes back to plain navy. The Titan turns the whole sky gold for about 0.6 s. The river, the field, the smoke and
+ * on with 'screen' as a vertical gradient strongest at the height its shells are breaking (about 0.3 at the heavy
+ * chords), round them in a wide pool, and it dies over about 0.35 s with a remainder that lasts as long as its stars
+ * burn. Under it all is a thin floor of smoke-lit amber that rises through the coda (0.04 at the crash, 0.09 at the
+ * Titan). It stays a night: the corners keep their navy, and the far plain under the sky takes little of it (a warm
+ * light over navy turns land olive). The Titan warms most of the sky for about 0.6 s. The river, the field, the smoke and
  * the silhouettes' sky-facing edges all take this light. On the silence everything it lit goes out inside 70 ms and
  * the night is a notch darker than it was before the festival: the silence is black, and the ember is its one light.
  */
@@ -192,8 +193,8 @@ const DEEP_LOW = 0.1
 
 /** The floor's colour: the finale's smoke lit amber from below by the fire on the field. */
 const FLOOR_SKY = mixHex(FW.coal, FW.fwGold, 0.4)
-/** The Titan's light on the sky: gold, a little deeper than its stars so the sky reads gold, not khaki. */
-const TITAN_SKY = mixHex(FW.fwGold, FW.coal, 0.18)
+/** The Titan's light on the sky: gold gone well toward the fire's orange, so over the navy it reads warm, not khaki or olive. */
+const TITAN_SKY = mixHex(FW.fwGold, FW.coal, 0.4)
 const MINE_SKY = mixHex(FW.fwBlue, FW.fwWhite, 0.3)
 /** The light a burst throws on the sky: its own colour, a white shell's warmed so it lights and does not fog. */
 function skyColOf(b: Burst): string {
@@ -209,7 +210,7 @@ function skyColOf(b: Burst): string {
 /** The floor under the finale's sky, before the silence takes it. */
 function skyFloor(t: number): number {
   if (t < CRASH) return 0
-  return smooth(t, CRASH, CRASH + 0.12) * (0.08 + 0.1 * clamp01((t - CRASH) / (TITAN_BURST - CRASH)))
+  return smooth(t, CRASH, CRASH + 0.12) * (0.04 + 0.05 * clamp01((t - CRASH) / (TITAN_BURST - CRASH)))
 }
 
 /**
@@ -228,7 +229,7 @@ function skyOf(b: Burst, s: number): number {
   const shape = 0.8 * Math.exp(-s / 0.35) + 0.2 * live
   switch (b.kind) {
     case 'titan':
-      return atk * (0.4 * (1 - smooth(s, 0.3, 0.75)) + 0.08 * live)
+      return atk * (0.32 * (1 - smooth(s, 0.3, 0.75)) + 0.06 * live)
     case 'salute':
       return atk * 0.17 * (b.wash / 0.6) ** 0.5 * Math.exp(-s / 0.2)
     case 'small':
@@ -283,7 +284,7 @@ export function skyGlow(t: number): SkyGlow {
       const b = placed(b0)
       if (b.kind === 'titan') titan = Math.max(titan, a / 0.48)
       const col = skyColOf(b)
-      const flat = b.kind === 'titan' ? 0.75 : b.kind === 'mine' ? 0.35 : 0.15
+      const flat = b.kind === 'titan' ? 0.55 : b.kind === 'mine' ? 0.35 : 0.15
       const l = byCol.get(col)
       if (!l) byCol.set(col, { x: b.x * a, y: skyYOf(b, s) * a, a, col, flat: flat * a })
       else {
@@ -304,8 +305,8 @@ export function skyGlow(t: number): SkyGlow {
     // The faintest hues go: what is left is still the sky's light, all of it (renormalised below).
     const kept = layers.slice(-SKY_LAYERS)
     const keptSum = kept.reduce((m, l) => m + l.a, 0)
-    // Capped, so a pile of shells lights the sky and never fogs it: 0.46 at most, the Titan's gold a little more.
-    const cap = 0.45 + 0.12 * clamp01(titan)
+    // Capped, so a pile of shells lights the sky and never fogs it: 0.32 at most, the Titan's gold 0.52.
+    const cap = 0.32 + 0.2 * clamp01(titan)
     const total = Math.min(sum, Math.max(0, cap - floor))
     const scale = keptSum > 0 ? (total / keptSum) * kill : 0
     let col = FLOOR_SKY
@@ -429,14 +430,14 @@ function drawSky(pen: Pen): void {
    */
   const pool = (l: SkyLayer, a: number, col: string) => {
     if (a < 0.003) return
-    const ry = H * (0.62 + 0.5 * l.flat)
-    const rx = W * (0.6 + 0.5 * l.flat)
+    const ry = H * (0.46 + 0.6 * l.flat)
+    const rx = W * (0.44 + 0.6 * l.flat)
     const cy = Math.min(l.y, hy - 0.1 * H)
     c.save()
     c.translate(X(l.x), Y(cy))
     c.scale(rx / ry, 1)
     const gr = c.createRadialGradient(0, 0, 0, 0, 0, ry * K)
-    const rest = a * (0.12 + 0.45 * l.flat)
+    const rest = a * (0.04 + 0.5 * l.flat)
     gr.addColorStop(0, rgba(col, a))
     gr.addColorStop(0.4, rgba(col, rest + (a - rest) * 0.62))
     gr.addColorStop(0.75, rgba(col, rest + (a - rest) * 0.2))
@@ -449,20 +450,32 @@ function drawSky(pen: Pen): void {
   }
   // The floor lies high over the whole sky: the finale's smoke hanging over the field, lit from below.
   const fy = f.y0 + (hy - f.y0) * 0.5
-  const ft = Math.min(0.45, 2.2 * g.floor)
+  const ft = Math.min(0.22, 2.2 * g.floor)
   lay(fy, ft, litOver(FLOOR_DEEP, vivid(FLOOR_SKY), ft, 0.65 * g.floor), 0.6)
   // Then each hue round its shells, strongest last.
   // (The Titan's gold goes on at full strength: for its 0.6 s the whole sky is gold, not khaki.)
   for (const l of g.layers) {
     const titan = l.flat > 0.5
-    const tau = Math.min(titan ? 0.5 : 0.45, TINT * l.a)
+    const tau = Math.min(titan ? 0.36 : 0.4, TINT * l.a)
     pool(l, tau, litOver(darkOf(l.col), vivid(l.col), tau, (titan ? 1 : LIFT) * l.a))
   }
   c.restore()
-  if (oc) ctx.drawImage(oc.canvas, ox * k, oy * k, (pw / K) * k, (ph / K) * k)
+  if (!oc) return
+  // The land under the sky takes little of it: the far plain stays dark country and is lit only along its skyline, so
+  // gold on the night never turns the plain olive.
+  oc.save()
+  oc.setTransform(1, 0, 0, 1, 0, 0)
+  oc.globalCompositeOperation = 'destination-out'
+  const land = oc.createLinearGradient(0, Y(hy - 0.03 * H), 0, Y(hy + 0.08 * H))
+  land.addColorStop(0, 'rgba(0,0,0,0)')
+  land.addColorStop(1, 'rgba(0,0,0,0.72)')
+  oc.fillStyle = land
+  oc.fillRect(0, Math.max(0, Y(hy - 0.03 * H) - 1), pw, ph)
+  oc.restore()
+  ctx.drawImage(oc.canvas, ox * k, oy * k, (pw / K) * k, (ph / K) * k)
 }
 /** How hard a light tints the night toward its hue, and how much of it is added as light, for its strength. */
-const TINT = 1.0
+const TINT = 0.8
 const LIFT = 0.72
 /** The sky's glow is laid at 1/SKY_DOWN of the frame's resolution (it has no edges to lose). */
 const SKY_DOWN = 6
@@ -804,7 +817,7 @@ export function drawGround(pen: Pen, L: Light[]): void {
   ctx.fillStyle = g2
   ctx.fillRect(x0 * k, bank * k, (x1 - x0) * k, (f.y1 + 1 - bank) * k)
   // The field takes the sky's light: brightest at the far bank under the bursts, less toward us.
-  const fa = Math.min(0.12, 0.26 * sky.a)
+  const fa = Math.min(0.08, 0.2 * sky.a)
   if (fa > 0.004) {
     const xa = Math.max(x0, STOPS + 1.8)
     // Warmed toward the light's hue as it is lit, so the lit field is a firelit field and not a grey one.
