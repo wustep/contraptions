@@ -862,7 +862,7 @@ function shakenLoose(p: p5, k: number, W: number, ink: string, t: number) {
  * rippling across left to right. Drawn over the balls (it lights and shades them too). The plank part's frame.
  */
 function overPorch(p: p5, k: number, t: number) {
-  const fl = smooth(t, CHIMNEY - 0.02, CHIMNEY + 0.04) * Math.exp(-Math.max(0, t - CHIMNEY - 0.04) / 0.7)
+  const fl = smooth(t, CHIMNEY - 0.02, CHIMNEY + 0.04) * Math.exp(-Math.max(0, t - CHIMNEY - 0.04) / 0.45)
   const sh = smooth(t, FLAG - 0.75, FLAG - 0.55) * (1 - smooth(t, FLAG - 0.05, FLAG + 0.15))
   if (fl < 0.01 && sh < 0.01) return
   const L = look(t)
@@ -870,20 +870,20 @@ function overPorch(p: p5, k: number, t: number) {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   if (fl > 0.01) {
     // From the chimney's side, up and right of them out of the frame: a long soft fall of light, no edge anywhere.
-    const [cx, cy] = [hx + 3.4, hy - 4.6]
+    const [cx, cy] = [hx + 3.8, hy - 5.0]
     ctx.save()
-    ctx.globalCompositeOperation = 'screen'
+    ctx.globalCompositeOperation = 'lighter'
     ctx.translate(cx * k, cy * k)
-    ctx.scale(1.5, 1)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 6.2 * k)
-    const warm = rgbHex(mixHex(CALCIFER.body, CALCIFER.core, 0.4))
-    g.addColorStop(0, `rgba(${warm}, ${(0.56 * fl).toFixed(4)})`)
-    g.addColorStop(0.45, `rgba(${warm}, ${(0.36 * fl).toFixed(4)})`)
-    g.addColorStop(0.8, `rgba(${warm}, ${(0.09 * fl).toFixed(4)})`)
+    ctx.scale(1.4, 1)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 5.6 * k)
+    const warm = rgbHex(mixHex(CALCIFER.body, CALCIFER.core, 0.25))
+    g.addColorStop(0, `rgba(${warm}, ${(0.34 * fl).toFixed(4)})`)
+    g.addColorStop(0.45, `rgba(${warm}, ${(0.2 * fl).toFixed(4)})`)
+    g.addColorStop(0.8, `rgba(${warm}, ${(0.05 * fl).toFixed(4)})`)
     g.addColorStop(1, `rgba(${warm}, 0)`)
     ctx.fillStyle = g
     ctx.beginPath()
-    ctx.arc(0, 0, 6.2 * k, 0, Math.PI * 2)
+    ctx.arc(0, 0, 5.6 * k, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
   }
