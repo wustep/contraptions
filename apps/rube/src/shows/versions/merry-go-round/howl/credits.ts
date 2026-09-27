@@ -2,7 +2,8 @@ import { clamp, easeInOutCubic } from '../../../../../../../src/core/ease'
 import type { TitleCard } from '../../../registry'
 import { frame, scenery } from './kit'
 import { CHORD, CREDITS_AT, DURATION } from './music'
-import { CALCIFER, HOWL, MARKL, SOPHIE_SILVER, SOPHIE_YOUNG, TURNIP } from './worlds'
+import { mixHex } from '../../../../parts'
+import { CALCIFER, HOWL, MARKL, SOPHIE_SILVER, SOPHIE_YOUNG, TURNIP, WITCH } from './worlds'
 
 /**
  * The end credits. The last chord has rung and the castle is flying away into the evening; over the sky the credits
@@ -33,15 +34,16 @@ const OVERLAP = 0.25
 const script: Omit<Card, 'at'>[] = [
   { hold: 3.0, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 4.6,
+    hold: 5.0,
     role: 'With',
     place: [0.39, 0.075],
     names: [
-      ['Sophie', 'the chestnut ball, silver at the end', SOPHIE_YOUNG],
+      ['Sophie', 'chestnut, greyed by a curse, silver at the end', SOPHIE_YOUNG],
       ['Howl', 'the cornflower ball', HOWL],
       ['Markl', 'the little sage ball', MARKL],
       ['Calcifer', 'the fire', `slab:${CALCIFER.body}`],
       ['Turnip Head', 'the scarecrow', `slab:${TURNIP.top}`],
+      ['The Witch of the Waste', 'at the shop door', `slab:${mixHex(WITCH.furLight, WITCH.lip, 0.3)}`],
     ],
   },
   {
