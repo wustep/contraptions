@@ -1,18 +1,19 @@
 import type p5 from 'p5'
-import type { Pt, Seg } from '../../../../../parts'
+import { R, mixHex, type Pt, type Seg } from '../../../../../parts'
 import { OPEN } from '../hall/hall-clock'
 import { alpha, box, part, type Ctx, type PartShot, type Slot } from '../kit'
+import { flicker, glow } from '../lantern'
 import { quake } from '../rock'
 import { SEAM_SHOT } from '../seams'
 import type { Pen } from '../troll'
-import { STONE } from '../worlds'
+import { LAMP, STONE } from '../worlds'
 import {
-  BEGIN, BRAKE, CRASH, END, EXIT, FIRST_CLACK, FLOOR_Y, LAND, LUNGES, MINE_STRIKES, ONTO, PEER_CART, PEER_EVENTS, RAIL, SHAFT, STOP, TROLL_CART, WIDE,
-  binTip, ease, jolt, lightAt, peerAt, peerCartX, trollAct, trollCart, trollS,
+  BEGIN, BRAKE, CRASH, END, EXIT, FIRST_CLACK, FLOOR_Y, LAND, LUNGES, MINE_STRIKES, ONTO, PEER_CART, PEER_EVENTS, RAIL, SHAFT, STOP, TORCHES, TRIP,
+  TROLL_CART, WIDE, binTip, type TrollAct, ease, jolt, lightAt, peerAt, peerCartX, torchLit, trollAct, trollCart, trollS,
 } from './mine-clock'
 import { drawOreCart, drawTrollCart } from './mine-cart'
 import {
-  drawBuffer, drawChock, drawLever, drawLight, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
+  drawBuffer, drawChock, drawLever, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
 } from './mine-set'
 
 /**
@@ -110,6 +111,307 @@ function drawThroat(p: p5, c: Pen): void {
   ctx.restore()
 }
 
+/* ------------------------------------------------------------------ light */
+
+const rgbOf = (p: p5, hex: string): string => {
+  const col = p.color(hex)
+  return `${p.red(col)},${p.green(col)},${p.blue(col)}`
+}
+/** After the collapse's last blows the mine's lights go out with the torches (`torchLit`). */
+const lightsOut = (T: number): number => (T > 147 ? Math.max(0, 1 - (T - 147) / 0.6) : 1)
+
+/** Where the trapdoor's throat opens onto the tunnel's roof. */
+const THROAT_FOOT = -1.05
+/** The hall's firelight coming down the open hatch: on as the trapdoor swings open, dimmer once the hall is behind him. */
+function hatchLit(T: number): number {
+  return ease(T, OPEN + 0.02, OPEN + 0.4) * (1 - 0.55 * ease(T, BEGIN + 1, BEGIN + 4)) * lightsOut(T)
+}
+
+/**
+ * The inside of the stope (as `mine-set.ts` ROOM draws it: the low tunnel, the chamber up to its broken roof), and
+ * with `throat` the trapdoor's shaft: light falls on the rock face inside it and never on the solid rock round it.
+ * Only the hatch's own light goes up the throat (the torches lighting its walls stood it up as a lit box).
+ */
+const ROOF_LINE: Pt[] = [
+  [1.55, -1.12], [1.95, -2.0], [2.6, -2.75], [3.8, -3.05], [5.6, -3.2], [7.6, -3.35], [9.8, -3.15], [12.2, -3.45],
+  [14.6, -3.2], [16.6, -3.3], [18.3, -3.05], [19.8, -2.9], [21.1, -2.7], [22.3, -2.55], [22.9, -2.3],
+]
+function clipRoom(ctx: CanvasRenderingContext2D, k: number, throat: boolean): void {
+  ctx.beginPath()
+  ctx.moveTo(-5.2 * k, (FLOOR_Y + 0.02) * k)
+  ctx.lineTo(-5.2 * k, -1.02 * k)
+  if (throat) {
+    ctx.lineTo(-1.25 * k, THROAT_FOOT * k)
+    ctx.lineTo(-1.25 * k, COVER_TOP * k)
+    ctx.lineTo(0.25 * k, COVER_TOP * k)
+    ctx.lineTo(0.25 * k, THROAT_FOOT * k)
+  }
+  for (const [x, y] of ROOF_LINE) ctx.lineTo(x * k, y * k)
+  ctx.lineTo(22.9 * k, (FLOOR_Y + 0.02) * k)
+  ctx.closePath()
+  ctx.clip()
+}
+
+/** Pixels a cell in the columns' own small images (drawn scaled up, smoothed: light has no detail finer than this). */
+const COLUMN_RES = 12
+const columnCanvas: Record<string, HTMLCanvasElement> = {}
+
+/**
+ * A soft column of light from `y0` down to `y1`, centred on `cx(y)`, `hw(y)` wide to where it has gone, `a(y)` strong
+ * in its middle and falling off to nothing at its sides by smoothstep. Computed into a small image and drawn scaled
+ * up: layered gradient fills stacked the canvas's dither into a visible weave, and slices parted into lines.
+ */
+function column(
+  ctx: CanvasRenderingContext2D, k: number, key: string, rgb: string, y0: number, y1: number,
+  cx: (y: number) => number, hw: (y: number) => number, a: (y: number) => number,
+): void {
+  if (typeof document === 'undefined') return
+  let xa = Infinity
+  let xb = -Infinity
+  for (let i = 0; i <= 8; i++) {
+    const y = y0 + ((y1 - y0) * i) / 8
+    xa = Math.min(xa, cx(y) - hw(y))
+    xb = Math.max(xb, cx(y) + hw(y))
+  }
+  const W = Math.max(2, Math.ceil((xb - xa) * COLUMN_RES))
+  const H = Math.max(2, Math.ceil((y1 - y0) * COLUMN_RES))
+  const cv = (columnCanvas[key] ??= document.createElement('canvas'))
+  if (cv.width !== W || cv.height !== H) {
+    cv.width = W
+    cv.height = H
+  }
+  const g = cv.getContext('2d')
+  if (!g) return
+  const img = g.createImageData(W, H)
+  const [r, gg, b] = rgb.split(',').map(Number)
+  for (let j = 0; j < H; j++) {
+    const y = y0 + ((j + 0.5) / H) * (y1 - y0)
+    const A = Math.max(0, Math.min(1, a(y)))
+    const c = cx(y)
+    const w = hw(y)
+    for (let i = 0; i < W; i++) {
+      const x = xa + ((i + 0.5) / W) * (xb - xa)
+      const u = Math.min(1, Math.abs(x - c) / w)
+      const o = (j * W + i) * 4
+      img.data[o] = r
+      img.data[o + 1] = gg
+      img.data[o + 2] = b
+      img.data[o + 3] = Math.round(255 * A * (1 - u * u * (3 - 2 * u)))
+    }
+  }
+  g.putImageData(img, 0, 0)
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(cv, xa * k, y0 * k, (xb - xa) * k, (y1 - y0) * k)
+}
+
+/**
+ * The light in the mine, on the rock face behind everything:
+ *
+ * - the hall's firelight down the open hatch: a wedge out of the throat that opens onto the tunnel and his cart,
+ *   flickering, so the drop is into a lit place and not a black one;
+ * - every torch's pool, as `mine-set.ts` had it, and wider: as each catches it throws its warmth on the rock face
+ *   round it and on along the gallery to the next set, and the gallery between the lit torches fills with a warm
+ *   wash that grows with every torch, so the mine is brighter bar by bar behind and around him.
+ */
+function drawLamps(p: p5, c: Pen, T: number): void {
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const glowRgb = rgbOf(p, LAMP.glow)
+  const fireRgb = rgbOf(p, mixHex(LAMP.flame, LAMP.glow, 0.4))
+  ctx.save()
+  clipRoom(ctx, k, true)
+  // The hatch: firelight falling from the hall's floor through the throat, spreading as it comes out onto the tunnel.
+  const h = hatchLit(T)
+  const b = h
+  if (b > 0.01) {
+    const f = flicker(T, 5)
+    const top = COVER_TOP
+    const span = FLOOR_Y - top
+    column(
+      ctx, k, 'hatch', fireRgb, top, FLOOR_Y,
+      (y) => -0.5 + 0.05 * ((y - top) / span),
+      // Out of the hatch's opening (narrower than the throat, so its walls stay in shadow), fanning onto the tunnel.
+      (y) => (y < THROAT_FOOT ? 0.6 + 0.15 * ((y - top) / (THROAT_FOOT - top)) : 0.75 + 1.0 * ((y - THROAT_FOOT) / (FLOOR_Y - THROAT_FOOT))),
+      (y) => {
+        const u = (y - top) / span
+        // Strong under the hatch, easing as it spreads, a little pool on the floor at its foot.
+        return b * f * (0.42 - 0.26 * u + 0.08 * Math.max(0, (u - 0.85) / 0.15))
+      },
+    )
+    glow(p, c, -0.5, 0.55, 2.0 * b, 0.2 * b * f, LAMP.flame)
+  }
+  ctx.restore()
+  ctx.save()
+  clipRoom(ctx, k, false)
+  // The torches: how many have caught, and the stretch of gallery they light.
+  let n = 0
+  let x0 = Infinity
+  let x1 = -Infinity
+  for (const tr of TORCHES) {
+    const l = Math.min(1, torchLit(tr, T))
+    if (l <= 0.01 || tr.x > SHAFT[0]) continue
+    n += l
+    x0 = Math.min(x0, tr.x)
+    x1 = Math.max(x1, tr.x + 3.2 * l)
+  }
+  if (n > 0) {
+    // The gallery's wash: the rock face between the lit torches, warmer with each; reaching on to the next set.
+    const a = Math.min(0.24, 0.04 + 0.024 * n) * lightsOut(T)
+    const gx0 = x0 - 2.2
+    const gx1 = x1 + 1.4
+    const g = ctx.createLinearGradient(gx0 * k, 0, gx1 * k, 0)
+    const fe = Math.min(0.45, 2.2 / (gx1 - gx0))
+    g.addColorStop(0, `rgba(${glowRgb},0)`)
+    g.addColorStop(fe, `rgba(${glowRgb},${a})`)
+    g.addColorStop(1 - fe, `rgba(${glowRgb},${a})`)
+    g.addColorStop(1, `rgba(${glowRgb},0)`)
+    ctx.fillStyle = g
+    ctx.fillRect(gx0 * k, -3.6 * k, (gx1 - gx0) * k, (FLOOR_Y + 3.7) * k)
+  }
+  for (const tr of TORCHES) {
+    const l = torchLit(tr, T)
+    if (l <= 0.01) continue
+    const f = flicker(T, tr.seed)
+    const m = Math.min(1, l)
+    // The near pool (as it was), and the wide throw on the rock face, flaring as it catches.
+    glow(p, c, tr.x + 0.15, tr.y - 0.35, 3.1 * m, 0.2 * l * f)
+    glow(p, c, tr.x + 0.3, tr.y - 0.1, 4.6 * m, 0.18 * l * f)
+  }
+  // The tunnel behind him still runs on into the dark (as `drawRooms` fades it): the rock closes over the light too.
+  const bg = rgbOf(p, c.bg)
+  const fade = ctx.createLinearGradient(-1.1 * k, 0, -4.4 * k, 0)
+  fade.addColorStop(0, `rgba(${bg},0)`)
+  fade.addColorStop(1, `rgba(${bg},1)`)
+  ctx.fillStyle = fade
+  ctx.fillRect(-5.3 * k, -1.3 * k, 4.2 * k, (FLOOR_Y + 1.45) * k)
+  ctx.restore()
+}
+
+/**
+ * The same torches on the timbers, rails and rock in front of the back wall: a screen of warm light after the
+ * timbering is drawn, so each set shines where its own torch and the next one reach it.
+ */
+function drawTimberLight(p: p5, c: Pen, T: number): void {
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const rgb = rgbOf(p, LAMP.glow)
+  ctx.save()
+  clipRoom(ctx, k, false)
+  ctx.globalCompositeOperation = 'screen'
+  for (const tr of TORCHES) {
+    const l = Math.min(1, torchLit(tr, T))
+    if (l <= 0.01) continue
+    const a = 0.13 * l * flicker(T, tr.seed + 2)
+    const cx = (tr.x + 0.3) * k
+    const cy = (tr.y + 0.1) * k
+    const Rr = 3.4 * k
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Rr)
+    g.addColorStop(0, `rgba(${rgb},${a})`)
+    g.addColorStop(0.45, `rgba(${rgb},${a * 0.45})`)
+    g.addColorStop(1, `rgba(${rgb},0)`)
+    ctx.fillStyle = g
+    ctx.fillRect(cx - Rr, cy - Rr, 2 * Rr, 2 * Rr)
+  }
+  ctx.restore()
+}
+
+/*
+ * The shaft at the end of the line opens into the drum chamber's vault, and the chamber is covered (solid rock) until
+ * he falls into it. What is seen down the shaft is the war-fires' light below: banked embers, a low red-amber glow
+ * rising from under the floor, breathing. It is the part's `over` (the drum's cover is drawn after this part), so it
+ * is kept off him: the ball's own disc is cut out of it.
+ */
+/** The drum chamber's first fire, under the shaft's far side, in this frame (the drum lies 8 below, not mirrored). */
+const EMBER: Pt = [18.9, 8.55]
+function emberLit(T: number): number {
+  // Banked embers all along, breathing; the chamber's own firelight takes over where its cover has lifted.
+  const breath = 0.85 + 0.15 * Math.sin(T * 1.9) * Math.sin(T * 0.7 + 1)
+  return breath * (1 - ease(T, END - 0.3, END)) * lightsOut(T)
+}
+/**
+ * The drum chamber's cover's top edge, in this frame (`drum.ts` `coverEdge`: from its vault, 6.7 over its floor, to
+ * under the floor, from 0.68 s before he lands over 0.42 s, with a cell's feather): the embers' light is only seen
+ * where the chamber is still covered.
+ */
+function drumCoverEdge(T: number): number {
+  return 8 - 6.7 + (0.95 + 0.4 + 1.0 + 6.7) * ease(T, END - 0.68, END - 0.68 + 0.42) - 0.5
+}
+function drawEmbers(p: p5, c: Pen, T: number): void {
+  const e = emberLit(T)
+  if (e <= 0.01) return
+  const k = c.k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const rgb = rgbOf(p, mixHex(LAMP.flame, '#C8552E', 0.35))
+  const [bx, by] = peerAt(T)
+  // Softly, from a cell under the drum's lifting cover: where it has lifted, the chamber is lit by its own fires.
+  const edge = drumCoverEdge(T)
+  const under = (y: number): number => ease(y, edge, edge + 1.2)
+  ctx.save()
+  // Under the stope's floor only, and never over him.
+  ctx.beginPath()
+  ctx.rect(15.5 * k, (FLOOR_Y + 0.1) * k, 9 * k, 9 * k)
+  ctx.arc(bx * k, by * k, R * k + c.weight * 0.6, 0, Math.PI * 2, true)
+  ctx.clip('evenodd')
+  // The shaft's column of warm air, strongest at the bottom where the fire is.
+  column(
+    ctx, k, 'embers', rgb, FLOOR_Y + 0.1, 9.2,
+    // As wide as the shaft all the way down (a shaft full of firelight, not a cone from a lamp).
+    () => (SHAFT[0] + SHAFT[1]) / 2 - 0.1,
+    () => 1.25,
+    (y) => e * under(y) * (0.07 + 0.34 * Math.pow(Math.max(0, (y - FLOOR_Y) / 8.2), 1.2)),
+  )
+  // The embers' own glow, low and wide.
+  const cx = EMBER[0] * k
+  const cy = EMBER[1] * k
+  const Rr = 4.2 * k
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, Rr)
+  const low = under(EMBER[1] - 1)
+  g.addColorStop(0, `rgba(${rgb},${0.3 * e * low})`)
+  g.addColorStop(0.4, `rgba(${rgb},${0.12 * e * low})`)
+  g.addColorStop(1, `rgba(${rgb},0)`)
+  ctx.fillStyle = g
+  ctx.fillRect(cx - Rr, cy - Rr, 2 * Rr, 2 * Rr)
+  ctx.restore()
+}
+
+/* ------------------------------------------------------------------ the chase */
+
+/**
+ * The trolls gain on every lunge (drawn over the clock's cart, which keeps the switch between them): each lunge takes
+ * a little more of the gap, so by the third their bumper is a hand's breadth from his (the lead's mitt a little short of him); on phrase 9 his cart, faster
+ * with the accelerando, pulls the gap back open before the switch.
+ */
+const GAIN = [0.12, 0.1, 0.08]
+function gain(T: number): number {
+  let g = 0
+  LUNGES.forEach((l, i) => {
+    g += GAIN[i] * ease(T, l - 0.4, l + 0.04)
+  })
+  return g * (1 - ease(T, WIDE + 0.1, TRIP - 0.2))
+}
+
+/** A lunge's swell: up over `rise` into the accent, and back over `fall`. */
+const swell = (T: number, at: number, rise: number, fall: number): number => {
+  const d = T - at
+  if (d < 0) return d > -rise ? ease(T, at - rise, at) : 0
+  return Math.exp(-d / fall)
+}
+/** Each lunge reaches further than the last: the lead leans further out of the bin, his mitts low at the rim of his. */
+function lunging(a: TrollAct, T: number): TrollAct {
+  let lean = 0
+  let arms = 0
+  let slide = 0
+  LUNGES.forEach((l, i) => {
+    const w = swell(T, l, 0.24, 0.42)
+    // Low, at his bin's rim, not up at him: the mitt closes short of him.
+    lean += [0.04, 0.06, 0.08][i] * w
+    arms -= [0.02, 0.04, 0.06][i] * w
+    slide += [0.02, 0.03, 0.03][i] * w
+  })
+  return { ...a, lean: a.lean + lean, arms: Math.max(0, a.arms + arms), slide: a.slide + slide }
+}
+
 function drawMine(p: p5, s: MineState, c: Ctx): void {
   const T = c.t + s.begin
   const pen: Pen = { k: c.k, ink: c.ink, weight: c.weight, bg: c.bg }
@@ -123,9 +425,10 @@ function drawMine(p: p5, s: MineState, c: Ctx): void {
     return
   }
   drawRooms(p, pen)
-  drawLight(p, pen, T)
   drawThroat(p, pen)
+  drawLamps(p, pen, T)
   drawTimbers(p, pen, T)
+  drawTimberLight(p, pen, T)
   drawTorches(p, pen, T)
   drawSiding(p, pen, T)
   drawMainLine(p, pen, T)
@@ -133,18 +436,20 @@ function drawMine(p: p5, s: MineState, c: Ctx): void {
   drawSwitch(p, pen, T)
   // The trolls' cart, behind his: in the tunnel, along the gallery, up the siding into the buffer.
   const tc = trollCart(T)
-  const tl = lightAt(tc.x, tc.y - 0.4, T)
+  const gx = gain(T)
+  const tx = tc.x + gx
+  const tl = lightAt(tx, tc.y - 0.4, T)
   const crash = T >= CRASH ? 0.12 * Math.exp(-(T - CRASH) / 0.16) * Math.cos((T - CRASH) * 16) : 0
   const onto = T >= ONTO ? 0.035 * Math.exp(-(T - ONTO) / 0.1) : 0
-  drawTrollCart(p, pen, tc.x, tc.y, {
+  drawTrollCart(p, pen, tx, tc.y, {
     light: 0.12 + 0.88 * tl,
-    turn: trollS(T) / TROLL_CART.wheelR,
+    turn: (trollS(T) + gx) / TROLL_CART.wheelR,
     tilt: tc.angle + crash,
     dip: onto,
-    lead: trollAct(T, true),
+    lead: lunging(trollAct(T, true), T),
     rear: trollAct(T, false),
     brake: ease(T, BRAKE - 0.06, BRAKE + 0.07),
-    trollLight: 0.1 + 0.9 * lightAt(tc.x, tc.y - 1.1, T),
+    trollLight: 0.1 + 0.9 * lightAt(tx, tc.y - 1.1, T),
   })
   drawBuffer(p, pen, T)
   drawChock(p, pen, T)
@@ -167,8 +472,11 @@ function drawMine(p: p5, s: MineState, c: Ctx): void {
 
 function drawMineOver(p: p5, s: MineState, c: Ctx): void {
   const T = c.t + s.begin
-  if (T < OPEN || T < FIRST_CLACK - 0.1 || T > STOP + 2.5) return
+  if (T < OPEN) return
   const pen: Pen = { k: c.k, ink: c.ink, weight: c.weight, bg: c.bg }
+  // Not shaken: it cuts his disc out where the engine draws him.
+  drawEmbers(p, pen, T)
+  if (T < FIRST_CLACK - 0.1 || T > STOP + 2.5) return
   const [qx, qy] = quake(T)
   p.push()
   p.translate(qx * c.k, qy * c.k)
@@ -207,22 +515,23 @@ export const mine = part<MineState>(
     // Landing in the cart, then a look back up the tunnel at the two asleep in theirs, waking.
     { t: slot.begin, ...SEAM_SHOT },
     { t: BRAKE - 0.2, cells: 5.4, off: [-1.5, -0.75] },
-    // The chase in one move. Wide down the tunnel: his cart in the front third, the trolls' cart coming out of the
-    // dark behind, the torches catching ahead of him one by one; then one even push in as the gap closes, 2.4 s of
-    // it, landing close on the first lunge (the trolls a cart's length behind) and still easing in through the grabs,
-    // so the frame arrives with the lunge instead of whipping onto it.
+    // The chase, one push in that never stops. Wide down the tunnel: his cart in the front third, the trolls' cart
+    // coming out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as
+    // the gap closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead
+    // troll leaning out of his bin over him, their cart looming behind his.
     { t: FIRST_CLACK + 0.5, cells: 8.0, off: [-2.3, -1.3] },
-    { t: LUNGES[0], cells: 5.15, off: [-0.9, -0.65] },
-    { t: LUNGES[1] + 0.1, cells: 5.0, off: [-0.7, -0.62] },
-    // Phrase 9: back over the whole stope, the lit gallery behind, the switch ahead; held through the switch and the
-    // buffer. The pull back starts under the third lunge, so it opens evenly over a bar and a half onto the downbeat
-    // instead of lurching out in one.
-    { t: WIDE, cells: 8.2, hold: [11.0, -1.0], w: 0.7 },
-    { t: ONTO, cells: 7.2, hold: [11.2, -0.8], w: 0.7 },
-    { t: CRASH + 0.3, cells: 6.2, hold: [12.1, -0.45], w: 0.7 },
+    { t: LUNGES[0], cells: 6.1, off: [-1.1, -0.85] },
+    { t: LUNGES[1], cells: 5.4, off: [-0.8, -0.85] },
+    { t: LUNGES[2] + 0.1, cells: 4.9, off: [-0.55, -0.9] },
+    // Phrase 9: on its first note the frame pulls back and ahead over the whole run to come (the switch's lever, the
+    // catch ramp and its buffer, the gallery on to the stop block and the shaft), arriving a bar before his wheel
+    // reaches the lever; then it holds while the switch throws and the trolls run up the ramp into the buffer.
+    { t: WIDE, cells: 5.6, off: [0.1, -0.85] },
+    { t: WIDE + 1.3, cells: 9.4, hold: [14.4, -1.0], w: 0.88 },
+    { t: CRASH + 0.35, cells: 9.9, hold: [14.6, -0.95], w: 0.9 },
     // With him to the shaft; the stop; down the shaft with him.
-    { t: STOP - 1.0, cells: 5.6, off: [0.9, -0.5] },
-    { t: STOP, cells: 5.1, off: [0.9, 0.1] },
+    { t: STOP - 1.0, cells: 6.2, off: [0.9, -0.4] },
+    { t: STOP, cells: 5.4, off: [0.9, 0.1] },
     { t: slot.end, ...SEAM_SHOT },
   ],
 )

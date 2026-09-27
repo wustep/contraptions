@@ -39,7 +39,7 @@ import {
   type Balloon,
   type Blast,
 } from './balloons-plan'
-import { drawFar, drawLand, drawSky, drawTiny, persp, type Frame } from './balloons-sky'
+import { drawFar, drawFlock, drawLand, drawSky, drawTiny, persp, type Frame } from './balloons-sky'
 
 /**
  * BALLOONS: the regatta at sunset (phrases 9 to 11, `DOORS.regatta` to `DOORS.railway`). The machine and its clock
@@ -560,6 +560,7 @@ export const balloons = part<BalloonsState>(
       drawLand(p, k, f, t)
       drawTiny(p, look, f, t)
       drawFar(p, look, f, t)
+      drawFlock(p, look, f, t, MATE_REF)
       drawMates(p, look, f, t, MATE_REF)
       const hero: Look = { k, weight, simple: k < 14, dusk: 0.55 * dusk(t) }
 

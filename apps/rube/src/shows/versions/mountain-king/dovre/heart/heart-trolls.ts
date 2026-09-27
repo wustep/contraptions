@@ -5,6 +5,7 @@ import { TROLL } from '../worlds'
 import {
   BELLOWS,
   BREAK,
+  CHIMNEY_X,
   DECK,
   FLY,
   GOVERNOR,
@@ -69,12 +70,26 @@ function peerSeen(T: number): Pt {
 const aim = (x: number, T: number, reach = 2.2): number => Math.max(-1, Math.min(1, (peerSeen(T)[0] - x) / reach))
 
 /** A walk from a to b between t0 and t1, eased; the stride's phase with it. */
-function walk(T: number, t0: number, t1: number, a: number, b: number, stride = 0.55): { x: number; phase: number; moving: boolean } {
+function walk(T: number, t0: number, t1: number, a: number, b: number, stride = 0.55): { x: number; phase: number; moving: boolean; lean: number } {
   const u = clamp01((T - t0) / (t1 - t0))
   const e = ease(u)
   const x = lerp(a, b, e)
-  return { x, phase: Math.abs(x - a) / stride, moving: u > 0 && u < 1 }
+  // Leaning into the run as it gets going, upright again as it pulls up (the run pose's lean never jumps).
+  return { x, phase: Math.abs(x - a) / stride, moving: u > 0 && u < 1, lean: clamp01(Math.min(u, 1 - u) / 0.15) }
 }
+
+/**
+ * The bells (Ibsen's turn, the coda's first chord): every troll in the heart stops dead and looks up, head back,
+ * toward the thread of daylight coming down the chimney, all on the same chord. A unison upward look is what reads as
+ * "heard something above", not "startled by the crash". `h` is how far into it (0..1, over a quarter second); they
+ * hold it, dead still, until they bolt on the pickup and the crash.
+ */
+function hark(T: number, x: number): { h: number; face: number; slump: number; eyes: number; mouth: number; arms: number } {
+  const h = smoothstep(T, BREAK - 0.05, BREAK + 0.25)
+  return { h, face: 0.6 * Math.max(-1, Math.min(1, (CHIMNEY_X - x) / 2.5)), slump: -0.35, eyes: 1.5, mouth: 0.35, arms: 0 }
+}
+/** Out of the look up as one bolts at `go`: the head comes down and round over a fifth of a second (never a snap). */
+const unhark = (T: number, go: number): number => 1 - smoothstep(T, go, go + 0.2)
 
 /** The pumping beat: 1 on each flare, falling back over the beat (the push down on the bellows' board). */
 function push(T: number): number {
@@ -120,7 +135,7 @@ function keeper(T: number): Pose {
     return {
       x: w.x,
       y: DECK,
-      look: { ...base, pose: w.moving ? 'run' : pulled ? 'stand' : 'reach', phase: w.phase, face: -0.8, arms: pulled ? 0.15 * (1 - smoothstep(T, GOVERNOR, GOVERNOR + 0.4)) : 0, slump: pulled ? 0.25 * (1 - smoothstep(T, GOVERNOR, GOVERNOR + 0.5)) : 0, eyes: 1.1 },
+      look: { ...base, pose: w.moving ? 'run' : pulled ? 'stand' : 'reach', phase: w.phase, lean: w.lean, face: -0.8, arms: pulled ? 0.15 * (1 - smoothstep(T, GOVERNOR, GOVERNOR + 0.4)) : 0, slump: pulled ? 0.25 * (1 - smoothstep(T, GOVERNOR, GOVERNOR + 0.5)) : 0, eyes: 1.1 },
     }
   }
   // Peer lands on the yoke by his head: he grabs up at him, and the yoke lifts him out of reach.
@@ -146,7 +161,7 @@ function keeper(T: number): Pose {
     return {
       x: w.x,
       y: lerp(DECK, seatY, sit),
-      look: { ...base, pose: sit > 0.5 ? 'sit' : 'run', phase: w.phase, rise: sit > 0.5 ? 0 : undefined, face: aim(seatX, T, 2) * 0.7, eyes: 1.35, mouth: 0.35 + 0.3 * lift / 0.2, slump: 0.1 },
+      look: { ...base, pose: sit > 0.5 ? 'sit' : 'run', phase: w.phase, lean: w.lean, rise: sit > 0.5 ? 0 : undefined, face: aim(seatX, T, 2) * 0.7, eyes: 1.35, mouth: 0.35 + 0.3 * lift / 0.2, slump: 0.1 },
     }
   }
   // Thrown off: up and back against the wall, down on his rump, dazed.
@@ -158,20 +173,36 @@ function keeper(T: number): Pose {
     const y = lerp(VALVE.pivot[1], DECK, u) - 1.1 * 4 * u * (1 - u)
     return { x, y, rot: 0.3 * Math.sin(u * Math.PI), look: { ...base, pose: 'sit', rise: 0, face: -0.4, eyes: 1.5, mouth: 0.8, arms: 0.8 * (1 - u) } }
   }
-  // Down, dazed; ducking the governor's weights; then the bells: he looks up, and gets up and goes.
-  const bells = T >= BREAK
+  // Down, dazed; ducking the governor's weights; then the bells: he looks up the chimney, and gets up and goes.
+  const hk = hark(T, 15.02)
   const duck = smoothstep(T, GOV_STOPS - 0.1, GOV_STOPS + 0.1) * (1 - smoothstep(T, BREAK - 0.2, BREAK))
   if (T < PICK - 0.25) {
+    const dazed = { face: -0.5, eyes: 0.7 + 0.5 * duck, slump: 0.5 + 0.5 * duck, arms: 0.45 * duck, mouth: 0 }
     return {
       x: 15.02,
       y: DECK,
-      look: { ...base, pose: 'sit', rise: 0, face: bells ? -0.15 : -0.5, eyes: bells ? 1.5 : 0.7 + 0.5 * duck, slump: bells ? 0 : 0.5 + 0.5 * duck, arms: 0.45 * duck, mouth: bells ? 0.6 : 0 },
+      look: {
+        ...base,
+        pose: 'sit',
+        rise: 0,
+        face: lerp(dazed.face, hk.face, hk.h),
+        eyes: lerp(dazed.eyes, hk.eyes, hk.h),
+        slump: lerp(dazed.slump, hk.slump, hk.h),
+        arms: lerp(dazed.arms, hk.arms, hk.h),
+        mouth: lerp(dazed.mouth, hk.mouth, hk.h),
+      },
     }
   }
   // Up on the pickup, and out of the ledge's door on the crash.
   const up = smoothstep(T, PICK - 0.25, PICK + 0.05)
   const w = walk(T, CRASH - 0.05, CRASH + 0.9, 15.02, 16.2, 0.5)
-  return { x: w.x, y: DECK, gone: smoothstep(T, CRASH + 0.35, CRASH + 0.9), look: { ...base, pose: up < 1 ? 'sit' : 'run', rise: up, phase: w.phase, face: 1, eyes: 1.4, mouth: 0.6 } }
+  const held = unhark(T, PICK - 0.25)
+  return {
+    x: w.x,
+    y: DECK,
+    gone: smoothstep(T, CRASH + 0.35, CRASH + 0.9),
+    look: { ...base, pose: up < 1 ? 'sit' : 'run', rise: up, phase: w.phase, lean: w.lean, face: lerp(1, hk.face, held), slump: hk.slump * held, eyes: lerp(1.4, 1.5, held), mouth: lerp(0.6, 0.35, held) },
+  }
 }
 
 /** The coda's pickup and crash (the chord pair after the bells): the crew bolt on them. */
@@ -190,13 +221,21 @@ function stoker(T: number): Pose {
   if (rise < 1) return { x: STOKE.x - 0.1 * (1 - rise), y: PIT, look: { ...base, pose: 'sit', rise, face: 0.2, eyes: 1 + 0.5 * startle } }
   // The pinion: he shoves its arm up into the flywheel's teeth on FLY.
   const shove = smoothstep(T, FLY - 0.35, FLY - 0.08) * (1 - smoothstep(T, FLY + 0.15, FLY + 0.55))
-  // After the bells: frozen, then away to the gallery's door.
-  if (T >= BREAK) {
-    // Frozen by the bells; he bolts on the pickup.
+  // After the bells: he bolts on the pickup, for the gallery's door, the look up coming down off him as he runs.
+  if (T >= PICK - 0.05) {
     const w = walk(T, PICK - 0.05, PICK + 1.35, STOKE.x, DOOR_L, 0.5)
-    return { x: w.x, y: PIT, gone: smoothstep(T, PICK + 0.9, PICK + 1.35), look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: w.moving ? -1 : 0, eyes: 1.5, mouth: 0.5, arms: w.moving ? 0 : 0.7 } }
+    const hk = hark(T, STOKE.x)
+    const held = unhark(T, PICK - 0.05)
+    return {
+      x: w.x,
+      y: PIT,
+      gone: smoothstep(T, PICK + 0.9, PICK + 1.35),
+      look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, lean: w.lean, face: lerp(-1, hk.face, held), slump: hk.slump * held, eyes: 1.5, mouth: lerp(0.5, hk.mouth, held), arms: 0 },
+    }
   }
-  const pump = push(T)
+  // Working the bells into him: whatever he was doing, he stops and looks up the chimney on the chord.
+  const hk = hark(T, STOKE.x)
+  const pump = push(T) * (1 - hk.h)
   // Glances at Peer between strokes; the pumping itself looks down at the board.
   const glance = aim(STOKE.x, T, 3)
   return {
@@ -205,11 +244,11 @@ function stoker(T: number): Pose {
     look: {
       ...base,
       pose: shove > 0.3 ? 'reach' : 'stand',
-      face: shove > 0.3 ? 0.9 : lerp(-0.35, glance, 0.35),
-      arms: shove > 0.3 ? 0 : 0.42 * (1 - pump),
-      slump: 0.25 * pump,
-      eyes: 1.05,
-      mouth: 0.25 * pump,
+      face: lerp(shove > 0.3 ? 0.9 : lerp(-0.35, glance, 0.35), hk.face, hk.h),
+      arms: lerp(shove > 0.3 ? 0 : 0.42 * (1 - pump), hk.arms, hk.h),
+      slump: lerp(0.25 * pump, hk.slump, hk.h),
+      eyes: lerp(1.05, hk.eyes, hk.h),
+      mouth: lerp(0.25 * pump, hk.mouth, hk.h),
     },
   }
 }
@@ -231,7 +270,7 @@ function chaser(j: number, T: number): Pose | null {
   const at = PISTONS - 0.45 + j * 0.35
   if (T < at) {
     const w = walk(T, ch.enter, at, DOOR_L, ch.stand, 0.6)
-    return { x: w.x, y: PIT, gone: 1 - smoothstep(T, ch.enter, ch.enter + 0.5), look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: 1, eyes: 1.15, mouth: 0.35 } }
+    return { x: w.x, y: PIT, gone: 1 - smoothstep(T, ch.enter, ch.enter + 0.5), look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, lean: w.lean, face: 1, eyes: 1.15, mouth: 0.35 } }
   }
   // In front of the pumps: grabbing up at him each time he comes down on a head beside them.
   const toBellows = j === 0 ? BELLOWS - 0.75 : GOVERNOR + 0.8
@@ -258,7 +297,7 @@ function chaser(j: number, T: number): Pose | null {
       look: {
         ...base,
         pose: w.moving ? 'run' : 'stand',
-        phase: w.phase,
+        phase: w.phase, lean: w.lean,
         face: w.moving ? -1 : up ? 0.5 + 0.1 * j : -0.3 + 0.6 * j,
         arms: duck > 0.3 ? 0.5 : up ? 0.2 : 0.42 * (1 - pump),
         slump: 0.25 * pump + 0.8 * duck,
@@ -271,14 +310,24 @@ function chaser(j: number, T: number): Pose | null {
   // freeze them; then away into the tunnel.
   const x0 = ch.pump - 1.5 - 0.7 * j
   const bolt = (j === 0 ? PICK : CRASH) - 0.05
+  const hk = hark(T, x0)
   if (T < bolt) {
     const w = walk(T, GOV_SNAP, GOV_SNAP + 0.55, ch.pump, x0, 0.6)
-    const frozen = T >= BREAK
-    return { x: w.x, y: PIT, look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, face: frozen ? 0 : -1, eyes: 1.5, mouth: 0.7, arms: frozen ? 0.35 : 0.2 } }
+    return {
+      x: w.x,
+      y: PIT,
+      look: { ...base, pose: w.moving ? 'run' : 'stand', phase: w.phase, lean: w.lean, face: lerp(-1, hk.face, hk.h), slump: hk.slump * hk.h, eyes: 1.5, mouth: lerp(0.7, hk.mouth, hk.h), arms: lerp(0.2, hk.arms, hk.h) },
+    }
   }
   // The bells freeze them; they bolt on the pickup and the crash, one each, for the tunnel.
   const w = walk(T, bolt, bolt + 1.5 + 0.2 * j, x0, DOOR_L, 0.6)
-  return { x: w.x, y: PIT, gone: smoothstep(T, bolt + 1.0 + 0.2 * j, bolt + 1.5 + 0.2 * j), look: { ...base, pose: 'run', phase: w.phase, face: -1, eyes: 1.4, mouth: 0.6 } }
+  const held = unhark(T, bolt)
+  return {
+    x: w.x,
+    y: PIT,
+    gone: smoothstep(T, bolt + 1.0 + 0.2 * j, bolt + 1.5 + 0.2 * j),
+    look: { ...base, pose: 'run', phase: w.phase, lean: w.lean, face: lerp(-1, hk.face, held), slump: hk.slump * held, eyes: lerp(1.4, 1.5, held), mouth: lerp(0.6, hk.mouth, held) },
+  }
 }
 
 /* ------------------------------------------------------------------ drawing */

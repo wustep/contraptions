@@ -3,7 +3,7 @@ import { modeFromPath } from './mode-path'
 import { clientNavigation, createShell, type Shell, type ShellMode } from './shell'
 
 /**
- * One document for the four tabs. Each page still has its own address and
+ * One document for the four tabs, and Theater once it is on the switch. Each page still has its own address and
  * its own entry, so a deep link loads that mode directly. A tab click does
  * not. The chrome is built once; the mode that is leaving stops its clock,
  * its keys and its canvas; the one that is arriving fills the same panel
@@ -20,6 +20,7 @@ const TITLE: Record<ShellMode, string> = {
   shows: 'contraptions · shows',
   builder: 'contraptions · builder',
   playground: 'contraptions · playground',
+  theater: 'contraptions · theater',
 }
 
 const mounts = new Map<ShellMode, ModeMount>()
@@ -46,6 +47,9 @@ async function loadMount(mode: ShellMode): Promise<ModeMount> {
       break
     case 'playground':
       await import('../../apps/rube/src/playground/main')
+      break
+    case 'theater':
+      await import('../../apps/rube/src/shows/theater')
       break
     default:
       throw new Error(`No client mode for ${mode}`)

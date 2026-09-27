@@ -1,6 +1,6 @@
 /**
  * A show's clock. It runs from zero to the show's length and stops there,
- * at one speed or two, and it has two ways of knowing the time.
+ * at any of the transport's speeds, and it has two ways of knowing the time.
  *
  * On its own it counts the wall clock, the way Machine's does. With a
  * soundtrack it is told the time instead: `heard` answers with where the
@@ -15,8 +15,10 @@
  * Pure: the wall clock is handed in, so the headless checks can drive it.
  */
 
-/** The transport's stops. Two, since a doubled recording still sounds like the music; a quartered one does not. */
-export const SHOW_SPEEDS = [1, 2]
+import { SPEEDS } from '../../../../src/ui/view'
+
+/** The transport's stops: Machine's, so every mode offers the same six. */
+export const SHOW_SPEEDS = SPEEDS
 
 export interface TransportOptions {
   /** Seconds of show. */

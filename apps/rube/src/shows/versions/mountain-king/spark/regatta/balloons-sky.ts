@@ -27,8 +27,15 @@ export interface Frame {
   cy: number
 }
 
-/** The horizon's height in the frame. */
-export const horizon = (f: Frame): number => f.cy + TILT * (f.y1 - f.y0)
+/**
+ * The view tipping up in phrase 11: from the top balloon's landing the camera looks up after the regatta rising into
+ * the sunset, so the horizon (and the land, the clouds and the sun under it) sinks down the frame and out of it by the
+ * fortissimo, and only the sky and the balloons are left. The balloons aloft keep `TILT` (they were placed by it).
+ */
+const tiltAt = (t: number): number => TILT + 0.28 * ss(t, AT.land4, AT.glow) + 0.34 * ss(t, AT.glow - 0.2, AT.blast4)
+
+/** The horizon's height in the frame (at show time `t`, for the land and the sky). */
+export const horizon = (f: Frame, t?: number): number => f.cy + (t === undefined ? TILT : tiltAt(t)) * (f.y1 - f.y0)
 
 /** A point at depth `d` (true cells) to where it is drawn. */
 export function persp(f: Frame, x: number, y: number, d: number): Pt {
@@ -48,7 +55,7 @@ export function drawSky(p: p5, k: number, t: number): Frame {
   const X = (v: number) => v * k
   const fw = f.x1 - f.x0
   const fh = f.y1 - f.y0
-  const hy = horizon(f)
+  const hy = horizon(f, t)
   // The sky: violet overhead, coral, then gold down to the horizon; the dusk comes down it from the top.
   const dk = dusk(t)
   const g = ctx.createLinearGradient(0, X(f.y0), 0, X(hy))
@@ -125,14 +132,14 @@ export function drawSky(p: p5, k: number, t: number): Frame {
  * away below as they would from a real balloon's height and go small.
  */
 function eyeOf(f: Frame, t: number): number {
-  const E = Math.max(0.05, GROUND - horizon(f))
+  const E = Math.max(0.05, GROUND - horizon(f, t))
   // In phrase 11 the whole regatta goes up together, far higher than the stair's own cells: the land drops away.
   return E * (1 + 2.4 * ss(GROUND - f.cy, 9, 60)) * (1 + 0.9 * ss(t, AT.land4, T1 + 1.5))
 }
 
 /** Where the land is drawn at depth `d` (1/D): the meadow at 1 is the machine's own ground; toward 0, the horizon. */
 export function groundY(f: Frame, d: number, t: number): number {
-  return horizon(f) + eyeOf(f, t) * d
+  return horizon(f, t) + eyeOf(f, t) * d
 }
 
 /** The land's rows, near to far: each a little deeper than the last, so the fields foreshorten as they go away. */
@@ -189,7 +196,7 @@ const RIVER_W = 30
 
 export function drawLand(p: p5, k: number, f: Frame, t: number): void {
   const dk = dusk(t)
-  const hy = horizon(f)
+  const hy = horizon(f, t)
   if (hy > f.y1 + 0.5) return
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const E = eyeOf(f, t)
@@ -421,9 +428,6 @@ const TINY: Tiny[] = (() => {
 })()
 
 export function drawTiny(p: p5, look: Look, f: Frame, t: number): void {
-  const { k } = look
-  const X = (v: number) => v * k
-  p.noStroke()
   for (const tb of TINY) {
     const up = tb.speed * (climbInt(t) - climbInt(T0))
     const [bx, by] = persp(f, tb.x, tb.y - up, tb.d)
@@ -431,44 +435,135 @@ export function drawTiny(p: p5, look: Look, f: Frame, t: number): void {
     if (by < f.y0 - 1 || by - 16 * s > f.y1 + 1 || bx < f.x0 - 5 * s || bx > f.x1 + 5 * s) continue
     const call = tb.group === 'A' ? AT.bags4 : AT.groupB
     const roar = roarOf([{ on: call, off: call + 0.3 }, { on: AT.glow, off: AT.glow + 0.6 }], t)
-    const lit = Math.min(1, roar)
-    const haze = (0.3 + 0.3 * (1 - (tb.d - 0.1) / 0.15)) * (1 - 0.45 * lit)
-    const dk = dusk(t) * (1 - lit)
-    const warm = (c: string) => mixHex(mixHex(mixHex(c, mixHex(REGATTA.saffron, REGATTA.sun, 0.5), 0.65 * lit), REGATTA.haze, haze), DUSK, dk * 0.7)
-    const H = 10.5 * s
-    const Rs = 4.4 * s
-    const mouth = by - 4.5 * s
-    // The envelope: a round top on a body that narrows to the mouth.
-    const pts: Pt[] = []
-    const n = 12
-    for (let j = 0; j <= n; j++) {
-      const h = H * Math.sin((Math.PI / 2) * (j / n))
-      const hc = H - Rs
-      const r = h >= hc ? Math.sqrt(Math.max(0, Rs * Rs - (h - hc) * (h - hc))) : s + (Rs - s) * (1 - Math.pow(1 - h / hc, 1.75))
-      pts.push([r, h])
-    }
-    p.fill(warm(tb.a))
+    tinyBalloon(p, look.k, bx, by, s, tb.a, tb.b, roar, 0.3 + 0.3 * (1 - (tb.d - 0.1) / 0.15), t)
+  }
+}
+
+/** A far balloon as a silhouette: its envelope with two stripes, its basket, and its burner when it roars. */
+function tinyBalloon(p: p5, k: number, bx: number, by: number, s: number, a: string, b: string, roar: number, haze0: number, t: number): void {
+  const X = (v: number) => v * k
+  p.noStroke()
+  const lit = Math.min(1, roar)
+  const haze = haze0 * (1 - 0.45 * lit)
+  const dk = dusk(t) * (1 - lit)
+  const warm = (c: string) => mixHex(mixHex(mixHex(c, mixHex(REGATTA.saffron, REGATTA.sun, 0.5), 0.65 * lit), REGATTA.haze, haze), DUSK, dk * 0.7)
+  const H = 10.5 * s
+  const Rs = 4.4 * s
+  const mouth = by - 4.5 * s
+  // The envelope: a round top on a body that narrows to the mouth.
+  const pts: Pt[] = []
+  const n = 12
+  for (let j = 0; j <= n; j++) {
+    const h = H * Math.sin((Math.PI / 2) * (j / n))
+    const hc = H - Rs
+    const r = h >= hc ? Math.sqrt(Math.max(0, Rs * Rs - (h - hc) * (h - hc))) : s + (Rs - s) * (1 - Math.pow(1 - h / hc, 1.75))
+    pts.push([r, h])
+  }
+  p.fill(warm(a))
+  p.beginShape()
+  for (const [r, h] of pts) p.vertex(X(bx + r), X(mouth - h))
+  for (let j = pts.length - 1; j >= 0; j--) p.vertex(X(bx - pts[j][0]), X(mouth - pts[j][1]))
+  p.endShape(p.CLOSE)
+  // Two stripes in the other silk.
+  p.fill(warm(b))
+  for (const [s0, s1] of [[-0.62, -0.25], [0.12, 0.5]]) {
     p.beginShape()
-    for (const [r, h] of pts) p.vertex(X(bx + r), X(mouth - h))
-    for (let j = pts.length - 1; j >= 0; j--) p.vertex(X(bx - pts[j][0]), X(mouth - pts[j][1]))
+    for (const [r, h] of pts) p.vertex(X(bx + r * s0), X(mouth - h))
+    for (let j = pts.length - 1; j >= 0; j--) p.vertex(X(bx + pts[j][0] * s1), X(mouth - pts[j][1]))
     p.endShape(p.CLOSE)
-    // Two stripes in the other silk.
-    p.fill(warm(tb.b))
-    for (const [s0, s1] of [[-0.62, -0.25], [0.12, 0.5]]) {
-      p.beginShape()
-      for (const [r, h] of pts) p.vertex(X(bx + r * s0), X(mouth - h))
-      for (let j = pts.length - 1; j >= 0; j--) p.vertex(X(bx + pts[j][0] * s1), X(mouth - pts[j][1]))
-      p.endShape(p.CLOSE)
-    }
-    // The basket, and the flame when it roars.
-    p.fill(warm(REGATTA.wickerDeep))
-    p.rectMode(p.CORNER)
-    p.rect(X(bx - 0.7 * s), X(by - 1.3 * s), X(1.4 * s), X(1.3 * s))
-    p.rectMode(p.CENTER)
-    if (roar > 0.05) {
-      p.fill(mixHex(REGATTA.propaneTip, REGATTA.haze, haze * 0.5))
-      p.triangle(X(bx - 0.35 * s), X(by - 2.2 * s), X(bx + 0.35 * s), X(by - 2.2 * s), X(bx), X(by - (2.2 + 2.2 * Math.min(1.2, roar)) * s))
-    }
+  }
+  // The basket, hung from the mouth on its lines.
+  const lines = warm(REGATTA.wickerDeep)
+  p.stroke(lines)
+  p.strokeWeight(Math.max(0.5, 0.06 * s * k))
+  p.line(X(bx - 0.62 * s), X(by - 1.3 * s), X(bx - 1.05 * s), X(mouth + 0.05 * s))
+  p.line(X(bx + 0.62 * s), X(by - 1.3 * s), X(bx + 1.05 * s), X(mouth + 0.05 * s))
+  p.noStroke()
+  p.fill(warm(REGATTA.wickerDeep))
+  p.rectMode(p.CORNER)
+  p.rect(X(bx - 0.7 * s), X(by - 1.3 * s), X(1.4 * s), X(1.3 * s))
+  p.rectMode(p.CENTER)
+  if (roar <= 0.05) return
+  // The burner: a warm glow up into the envelope, and a blue jet going gold at its tip, up into the mouth.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const r = Math.min(1.2, roar)
+  const gy = mouth - 2.2 * s
+  const g = ctx.createRadialGradient(X(bx), X(gy), 0, X(bx), X(gy), X(3.6 * s))
+  g.addColorStop(0, `rgba(255, 214, 140, ${(0.55 * lit).toFixed(3)})`)
+  g.addColorStop(0.6, `rgba(255, 190, 110, ${(0.18 * lit).toFixed(3)})`)
+  g.addColorStop(1, 'rgba(255, 190, 110, 0)')
+  ctx.save()
+  ctx.globalCompositeOperation = 'screen'
+  ctx.fillStyle = g
+  ctx.fillRect(X(bx - 3.6 * s), X(gy - 3.6 * s), X(7.2 * s), X(7.2 * s))
+  const base = by - 1.35 * s
+  const top = base - (1.6 + 2.2 * r) * s
+  const jet = ctx.createLinearGradient(0, X(base), 0, X(top))
+  jet.addColorStop(0, rgba(REGATTA.propane, 0.95))
+  jet.addColorStop(0.6, rgba(REGATTA.propaneTip, 0.9))
+  jet.addColorStop(1, 'rgba(255, 214, 140, 0)')
+  ctx.fillStyle = jet
+  const w = 0.32 * s * (0.9 + 0.1 * Math.sin(t * 41 + bx))
+  ctx.beginPath()
+  ctx.moveTo(X(bx - w), X(base))
+  ctx.quadraticCurveTo(X(bx - w * 1.1), X((base + top) / 2), X(bx), X(top))
+  ctx.quadraticCurveTo(X(bx + w * 1.1), X((base + top) / 2), X(bx + w), X(base))
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
+/**
+ * The regatta round the top balloon in phrase 11, far off in the sky of its own framing (placed by `ref`, the frame at
+ * the glow, as the four mates are): a flock of small balloons rising with it, answering the calls, and on the glow
+ * every one of their burners firing, one after another over a quarter of a second, for most of a second.
+ */
+interface Flock {
+  u: number
+  v: number
+  d: number
+  a: string
+  b: string
+  group: 'A' | 'B'
+  speed: number
+  seed: number
+}
+const FLOCK: Flock[] = (() => {
+  const out: Flock[] = []
+  let n = 0
+  while (out.length < 12 && n < 600) {
+    n++
+    const u = -0.86 + 1.72 * hash(n, 1, 61)
+    const v = -0.5 + 0.95 * hash(n, 2, 61)
+    // Clear of the top balloon over the spark, and of each other.
+    if (Math.abs(u) < 0.34 && v < 0.2) continue
+    if (Math.abs(u) < 0.2) continue
+    if (out.some((o) => Math.hypot(o.u - u, o.v - v) < 0.26)) continue
+    const a = SILKS[Math.floor(hash(n, 5, 61) * SILKS.length)]
+    let b = SILKS[Math.floor(hash(n, 6, 61) * SILKS.length)]
+    if (b === a) b = R.ivory === a ? R.coral : R.ivory
+    out.push({ u, v, d: 0.13 + 0.14 * hash(n, 3, 61), a, b, group: u < 0 ? 'A' : 'B', speed: 0.85 + 0.3 * hash(n, 4, 61), seed: 60 + out.length })
+  }
+  return out.sort((p, q) => p.d - q.d)
+})()
+
+export function drawFlock(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: number; cells: number }): void {
+  if (t < AT.pop3 || t > T1 + 0.3) return
+  const fh = ref.cells
+  const fw = (fh * 16) / 9
+  const r: Frame = { x0: ref.x - fw / 2, x1: ref.x + fw / 2, y0: ref.y - fh / 2, y1: ref.y + fh / 2, cx: ref.x, cy: ref.y }
+  for (const fb of FLOCK) {
+    const [ox, oy] = persp(r, ref.x, ref.y, fb.d)
+    const x = ref.x + (ref.x + fb.u * fh - ox) / fb.d
+    const y = ref.y + (ref.y + fb.v * fh - oy) / fb.d
+    const up = fb.speed * (climbInt(t) - climbInt(AT.glow))
+    const [bx, by] = persp(f, x, y - up, fb.d)
+    const s = fb.d
+    if (by < f.y0 - 1 || by - 16 * s > f.y1 + 1 || bx < f.x0 - 5 * s || bx > f.x1 + 5 * s) continue
+    const call = fb.group === 'A' ? AT.bags4 : AT.groupB
+    const on = AT.glow + 0.25 * hash(fb.seed, 71)
+    const roar = roarOf([{ on: call, off: call + 0.3 }, { on, off: on + 0.8 }], t)
+    tinyBalloon(p, look.k, bx, by, s, fb.a, fb.b, roar, 0.2 + 0.35 * (1 - (fb.d - 0.13) / 0.14), t)
   }
 }
 

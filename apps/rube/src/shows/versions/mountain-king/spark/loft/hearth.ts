@@ -1,7 +1,8 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { box, frame, hash, scenery, smooth } from '../kit'
-import { LOFT } from '../worlds'
+import { drawFire as drawLicks } from '../fire'
+import { FIRES, LOFT } from '../worlds'
 import { CAT_CUES, drawCat } from './cat'
 import { DOOR, FLOOR_Y, STOVE } from './layout'
 import { LOFT_LIGHT, type Glow } from './set'
@@ -107,21 +108,6 @@ function leg(x: number, side: number, splay: number): Pt[] {
 
 /* ------------------------------------------------------------------ the fire */
 
-/** A flame's tongue: base at (x, y), `h` tall, `w` at its belly, its tip swung by `lean`. */
-function tongue(p: p5, k: number, x: number, y: number, w: number, h: number, lean: number, fill: string): void {
-  p.fill(fill)
-  p.beginShape()
-  const n = 16
-  for (let i = 0; i <= n; i++) {
-    const a = (i / n) * Math.PI * 2
-    const u = (1 - Math.cos(a)) / 2
-    const side = Math.sin(a)
-    const belly = Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
-    p.vertex((x + side * w * 0.5 * belly + lean * u * u) * k, (y - h * u) * k)
-  }
-  p.endShape(p.CLOSE)
-}
-
 /** The fire in the firebox: its bed of coals and its flames, seen through the doorway. Taller as it roars. */
 function drawFire(p: p5, k: number, t: number, roar: number): void {
   const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -144,40 +130,12 @@ function drawFire(p: p5, k: number, t: number, roar: number): void {
   back.addColorStop(1, rgba(LOFT.ember, 0))
   ctx.fillStyle = back
   ctx.fillRect(x0 * k, y0 * k, w * k, (y1 - y0) * k)
-  // Flames off the coals: a dim back row, and a front row of tongues each its own width, height and sway, taller
-  // as the fire roars, leaning a little toward the doorway's west side, where the spark stands.
-  p.push()
-  p.noStroke()
-  const back_: [number, number, number][] = [
-    [0.12, 0.7, 1.1],
-    [0.38, 0.85, 1.5],
-    [0.66, 0.75, 1.25],
-    [0.9, 0.6, 0.9],
-  ]
-  const front: [number, number, number][] = [
-    [0.08, 0.42, 0.65],
-    [0.27, 0.55, 1.05],
-    [0.47, 0.62, 1.35],
-    [0.64, 0.46, 0.8],
-    [0.8, 0.58, 1.15],
-    [0.95, 0.4, 0.6],
-  ]
+  // The fire off the coals: a few big dark-red licks at the back, then the fire itself, licks of every size rooted
+  // anywhere along the bed, forking and curling as they rise and burning white where they cross, taller as it roars
+  // and leaning a little toward the doorway's west side, where the spark stands. Never the spark's own teardrop.
   const grow = 0.8 + 1.7 * roar
-  back_.forEach(([u, wd, ht], i) => {
-    const sway = Math.sin(t * (2.1 + 0.7 * i) + i * 2.3)
-    const h = ht * grow * (0.85 + 0.15 * Math.sin(t * (4.3 + i) + i))
-    tongue(p, k, x0 + w * u, y1 - 0.3, wd, h, 0.12 * sway - 0.1 * roar, rgba(mixHex(LOFT.ember, LOFT.soot, 0.25), 0.8))
-  })
-  front.forEach(([u, wd, ht], i) => {
-    const sway = Math.sin(t * (2.7 + 0.9 * i) + i * 1.7)
-    const flick = 0.82 + 0.12 * Math.sin(t * (6.1 + 1.3 * i) + i * 2.9) + 0.06 * Math.sin(t * (11.3 + i) + i)
-    const h = ht * grow * flick
-    const x = x0 + w * u + 0.05 * sway
-    const lean = 0.1 * sway - 0.16 * roar
-    tongue(p, k, x, y1 - 0.34, wd, h, lean, rgba(LOFT.ember, 0.92))
-    tongue(p, k, x + 0.02, y1 - 0.3, wd * 0.55, h * 0.62, lean * 0.8, rgba(LOFT.emberHot, 0.9))
-  })
-  p.pop()
+  drawLicks(ctx, k, { x0: x0 - 0.15, x1: x1 + 0.15, y: y1 - 0.28, h: 1.7 * grow, n: 4, t: t * 0.8, seed: 3, pal: { rim: LOFT.soot, body: mixHex(LOFT.ember, LOFT.soot, 0.45), heart: LOFT.ember }, alpha: 0.9, mode: 'source-over', wisps: false, bed: false, lean: -0.15 * roar })
+  drawLicks(ctx, k, { x0: x0 + 0.05, x1: x1 - 0.05, y: y1 - 0.3, h: 1.5 * grow, n: 9, t, seed: 5, pal: FIRES.loft, alpha: 0.8, lean: -0.3 * roar })
   // The bed of coals: a heaped row of dark lumps, none round and none alike, glowing in the seams between them. Dark,
   // so the spark on the sill in front of it is the brightest thing there.
   const bed = ctx.createLinearGradient(0, (y1 - 0.5) * k, 0, y1 * k)

@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { R, mixHex } from '../../../../parts'
+import { drawLick, type Lick } from './fire'
 import { frame, hash, scenery, smooth } from './kit'
 import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
 import { FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
@@ -18,7 +19,8 @@ import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from '.
 /**
  * How big the spark's flame is at `t`: 1 is a candle's flame. It follows the orchestra (`level`), so the spark grows
  * as the music does, from a careful flicker in the loft to a comet on the night express. In the silence it all but
- * goes out; the roll fans it back; on the first last chord it is a candle's flame again, on its wick.
+ * goes out; the roll fans it back; on the first last chord the wick catches (a flare that settles to a candle's
+ * flame), and on the second the slam's draught makes it flinch.
  */
 export function heat(t: number): number {
   if (t < THEME) return 1
@@ -26,9 +28,32 @@ export function heat(t: number): number {
   // The silence: it sinks to an ember at once (the silence is the stillest frame), and the roll brings it roaring back.
   const out = smooth(t, SILENCE - 0.05, SILENCE + 0.3) * (1 - smooth(t, ROLL, ROLL + 0.12))
   const flare = t >= ROLL ? 1.6 * Math.exp(-(t - ROLL) / 0.8) : 0
-  const home = smooth(t, LAST[0] - 0.05, LAST[0] + 0.9)
+  // Nothing shrinks before the chord: the ease down to a candle's flame starts on it, under the wick's catch.
+  const home = smooth(t, LAST[0], LAST[0] + 0.9)
   const live = grown * (1 - out) + 0.06 * out + flare
-  return (live * (1 - home) + 1 * home) * freeze(t)
+  return (live * (1 - home) + 1 * home + catching(t)) * freeze(t) * draught(t)
+}
+
+/** The wick catching on the first last chord: a flare up in 25 ms, dying back with the ease (tau 0.35 s). */
+function catching(t: number): number {
+  return 1.1 * wickCatch(t)
+}
+
+/**
+ * The wick catching, 0..1: up in 25 ms on the first last chord, dying back over about a second. The flame flares by
+ * it, and the loft's light lifts with it (`set.ts`, `stove-light.ts`), which otherwise tops out below the spark's heat.
+ */
+export function wickCatch(t: number): number {
+  const u = t - LAST[0]
+  if (u <= 0 || u > 2.5) return 0
+  return smooth(u, 0, 0.025) * Math.exp(-Math.max(0, u - 0.025) / 0.35)
+}
+
+/** The stove door's slam on the second last chord: its draught ducks the flame to about 70%, back within 0.4 s. */
+function draught(t: number): number {
+  const u = t - LAST[1]
+  if (u <= 0 || u > 2) return 1
+  return 1 - 0.3 * smooth(u, 0, 0.02) * Math.exp(-Math.max(0, u - 0.02) / 0.14)
 }
 
 /**
@@ -147,13 +172,15 @@ export const flame = () =>
       // in front of the fire instead of being one more spark of it. No edge: it fades in off the heart and out again.
       if (s.world === 'railway' && t > FESTIVAL - 0.2 && t < SILENCE + 0.3) {
         const on = smooth(t, FESTIVAL - 0.2, FESTIVAL + 0.6) * (1 - smooth(t, SILENCE - 0.3, SILENCE + 0.3))
-        shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 4, 0.036 * hb), 0.5 * on)
+        shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 3.4, 0.03 * hb), 0.36 * on, [12, 10, 22], 1.55)
       }
       // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
-      const glow = Math.max(R * (5 + 6 * Math.min(2.5, h)), 0.11 * hb * Math.min(1, boost)) * k
+      // It blooms as the wick catches on the first last chord.
+      const caught = wickCatch(t)
+      const glow = Math.max(R * (5 + 6 * Math.min(2.5, h)), 0.11 * hb * Math.min(1, boost)) * (1 + 0.3 * caught) * k
       const g = ctx.createRadialGradient(x * k, y * k, R * k, x * k, y * k, glow)
       const dark = s.world === 'loft' || s.world === 'railway'
-      g.addColorStop(0, `rgba(255, 196, 120, ${(dark ? 0.2 : 0.1) * (1 - 0.45 * ash)})`)
+      g.addColorStop(0, `rgba(255, 196, 120, ${((dark ? 0.2 : 0.1) + 0.12 * caught) * (1 - 0.45 * ash)})`)
       g.addColorStop(1, 'rgba(255, 196, 120, 0)')
       ctx.fillStyle = g
       ctx.fillRect(x * k - glow, y * k - glow, glow * 2, glow * 2)
@@ -181,19 +208,34 @@ export const flame = () =>
 
 /**
  * A soft shadow round the spark (cells: the heart's radius `r`, the shadow's reach `out`), clear of the heart itself
- * so it never dulls it: what lifts it off a bright fire behind it. Drawn before the flame.
+ * so it never dulls it: what lifts it off a bright fire behind it. Drawn before the flame. It takes the flame's shape,
+ * not a disc's: `tall` draws it out upward along the flame (its middle a little up the flame), so it reads as the
+ * fire behind giving way round the flame and never as a dark ring or a hole. `col` is its colour: the darkest of
+ * whatever it lies on (a fire's rim at a door, the night at the festival).
  */
-export function shadow(ctx: CanvasRenderingContext2D, k: number, x: number, y: number, r: number, out: number, a: number): void {
+export function shadow(
+  ctx: CanvasRenderingContext2D,
+  k: number,
+  x: number,
+  y: number,
+  r: number,
+  out: number,
+  a: number,
+  col: [number, number, number] = [12, 10, 22],
+  tall = 1,
+): void {
   if (a <= 0.01 || out <= r) return
-  const g = ctx.createRadialGradient(x * k, y * k, r * 0.95 * k, x * k, y * k, out * k)
-  const col = '12, 10, 22'
-  g.addColorStop(0, `rgba(${col}, 0)`)
-  g.addColorStop(Math.min(0.5, (r * 0.6) / out + 0.08), `rgba(${col}, ${(a * 0.9).toFixed(3)})`)
-  g.addColorStop(0.55, `rgba(${col}, ${(a * 0.45).toFixed(3)})`)
-  g.addColorStop(1, `rgba(${col}, 0)`)
+  const c = col.map((v) => Math.round(v)).join(', ')
+  const g = ctx.createRadialGradient(0, 0, r * 0.95 * k, 0, 0, out * k)
+  g.addColorStop(0, `rgba(${c}, 0)`)
+  g.addColorStop(Math.min(0.5, (r * 0.6) / out + 0.08), `rgba(${c}, ${(a * 0.9).toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(${c}, ${(a * 0.45).toFixed(3)})`)
+  g.addColorStop(1, `rgba(${c}, 0)`)
   ctx.save()
+  ctx.translate(x * k, (y - (tall - 1) * out * 0.45) * k)
+  ctx.scale(1, tall)
   ctx.fillStyle = g
-  ctx.fillRect((x - out) * k, (y - out) * k, out * 2 * k, out * 2 * k)
+  ctx.fillRect(-out * k, -out * k, out * 2 * k, out * 2 * k)
   ctx.restore()
 }
 
@@ -224,8 +266,8 @@ const rgb = (hex: string): [number, number, number] => [1, 3, 5].map((i) => pars
 /**
  * The spark's heart: the ball, drawn here instead of by the stage (the show hands the stage no ball, `SparkShow.at`),
  * so it is a flame's heart and not a marble: no ink ring, no spinning dot, no trail of beads. Hot, it is gold going to
- * orange at its edge; in the silence it is an ember gone to ash with a dull red heart that breathes. Drawn out along
- * its way at a door, as the stage would.
+ * orange at its edge; in the silence it is an ember gone to ash with a dull red heart that breathes. At a door it
+ * stays round and trails a short smear behind it (`stretch` says how much, `angle` which way it is going).
  */
 export function drawSpark(p: p5, k: number, x: number, y: number, t: number, scale = 1, stretch = 1, angle = 0): void {
   if (scale <= 0.02) return
@@ -240,7 +282,25 @@ export function drawSpark(p: p5, k: number, x: number, y: number, t: number, sca
   ctx.save()
   ctx.translate(x * k, y * k)
   ctx.rotate(angle)
-  ctx.scale(Math.max(1, stretch), 1)
+  // Through a door the heart stays round. What it went through trails off it: a short smear behind it along the way
+  // it came, from its own colour at the heart to nothing, never more than a heart and a half long.
+  if (stretch > 1.01 && ash < 0.5) {
+    const tail = r + Math.min(2, (stretch - 1) * 1.5) * r
+    const half = r * 0.8
+    const [br, bg, bb] = rgb(body)
+    const [xr, xg, xb] = rgb(edge)
+    const sg = ctx.createLinearGradient(0, 0, -tail, 0)
+    sg.addColorStop(0, `rgba(${br}, ${bg}, ${bb}, 0.85)`)
+    sg.addColorStop(0.5, `rgba(${xr}, ${xg}, ${xb}, 0.4)`)
+    sg.addColorStop(1, `rgba(${xr}, ${xg}, ${xb}, 0)`)
+    ctx.fillStyle = sg
+    ctx.beginPath()
+    ctx.moveTo(0, -half)
+    ctx.quadraticCurveTo(-tail * 0.45, -half * 0.7, -tail, 0)
+    ctx.quadraticCurveTo(-tail * 0.45, half * 0.7, 0, half)
+    ctx.closePath()
+    ctx.fill()
+  }
   if (ash < 0.02) {
     const g = ctx.createRadialGradient(0, -0.25 * r, 0.05 * r, 0, 0, r)
     g.addColorStop(0, core)
@@ -366,41 +426,27 @@ export interface VeilState {
 const VEIL = { before: 0.3, after: 0.34 }
 const FLASH = { before: 0.022, after: 0.028 }
 
-/** A tongue of the veil: where its base is (shares of the frame), how big, its colour's place from rim to heart, its clock. */
-interface Tongue {
+/**
+ * The veil's licks: scattered at random over the frame (no rows), sized on a power law (a few tall, many short), each
+ * on its own clock as the band rises through the frame. The first few are big dark-red licks at the back, for depth.
+ */
+interface VeilLick {
   u: number
   v: number
-  w: number
-  h: number
-  hot: number
+  size: number
   rate: number
-  phase: number
+  seed: number
+  back: boolean
 }
-const TONGUES: Tongue[] = (() => {
-  const out: Tongue[] = []
-  // Three layers, back to front: big dark tongues, then the body, then small hot ones.
-  const layers = [
-    { cols: 6, rows: 3, w: 0.27, h: 0.7, hot: 0 },
-    { cols: 8, rows: 3, w: 0.17, h: 0.55, hot: 0.5 },
-    { cols: 9, rows: 2, w: 0.085, h: 0.42, hot: 1 },
-  ]
-  layers.forEach((L, n) => {
-    for (let j = 0; j < L.rows; j++)
-      for (let i = 0; i < L.cols; i++) {
-        const seed = n * 100 + j * 20 + i
-        out.push({
-          u: (i + 0.5 + 0.7 * (hash(seed, 1) - 0.5)) / L.cols,
-          v: (j + 0.75 + 0.6 * (hash(seed, 2) - 0.5)) / L.rows + 0.12,
-          w: L.w * (0.75 + 0.5 * hash(seed, 3)),
-          h: L.h * (0.7 + 0.6 * hash(seed, 4)),
-          hot: L.hot,
-          rate: 1.6 + 1.4 * hash(seed, 5),
-          phase: hash(seed, 6),
-        })
-      }
-  })
-  return out
-})()
+const VEIL_BACK = 6
+const VEIL_LICKS: VeilLick[] = Array.from({ length: 34 }, (_, i) => ({
+  u: hash(i, 401),
+  v: hash(i, 402),
+  size: i < VEIL_BACK ? 0.75 + 0.25 * hash(i, 403) : 0.32 + 0.68 * Math.pow(hash(i, 403), 2.2),
+  rate: 0.75 + 0.5 * hash(i, 404),
+  seed: 500 + i * 3.7,
+  back: i < VEIL_BACK,
+}))
 
 type RGB = [number, number, number]
 const lerp3 = (a: RGB, b: RGB, f: number): RGB => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
@@ -483,29 +529,58 @@ export const veil = () =>
       ctx.fillStyle = g
       ctx.fillRect(f.x0 * k, f.y0 * k, w * k, hgt * k)
       ctx.restore()
-      // The tongues, rising through it and flickering, hotter toward the middle of the fire. Each is one fire's or the
-      // other's, whole; the line between them is ragged.
-      p.push()
-      p.noStroke()
-      for (const tg of TONGUES) {
-        const life = (t * tg.rate * 0.9 + tg.phase) % 1
-        const bx = f.x0 + w * tg.u + 0.03 * w * Math.sin(t * 7 + tg.phase * 20)
-        const by = f.y0 + hgt * (tg.v - 0.22 * life)
-        const sv = sOf(bx, by - hgt * tg.h * 0.4)
-        const cv = cover(sv)
-        if (cv < 0.03) continue
-        const side = sideOf(sv + 0.22 * (tg.phase - 0.5))
-        const P = side < 0 ? OLD : NEW
-        const fade = Math.sin(Math.PI * life)
-        const hh = hgt * tg.h * (0.55 + 0.45 * cv) * (0.8 + 0.2 * Math.sin(t * 13 * tg.rate + tg.phase * 9))
-        const ww = w * tg.w * 0.5 * (0.6 + 0.4 * cv)
-        const hot = Math.min(1, tg.hot * (0.4 + 0.6 * cv))
-        const base = hot < 0.5 ? lerp3(P.rim, P.body, hot * 2) : lerp3(P.body, P.heart, (hot - 0.5) * 2)
-        tongue(p, k, bx, by, ww, hh, Math.sin(t * 3 + tg.phase * 12) * w * 0.02, css(lerp3(base, HOT, 0.6 * seam(side)), 0.8 * cv * fade))
+      // The licks, rising through it: the band climbs the frame, its tips drifting up and off the top, hotter toward
+      // the middle of the fire. Each is one fire's or the other's, whole; the line between them is ragged. The big dark
+      // ones burn at the back.
+      const ctx2 = p.drawingContext as CanvasRenderingContext2D
+      const since = d + span.before
+      for (const pass of [true, false]) {
+        ctx2.save()
+        ctx2.globalCompositeOperation = pass ? 'source-over' : 'screen'
+        for (const L of VEIL_LICKS) {
+          if (L.back !== pass) continue
+          // Where its root is now: coming up from under the frame and rising off its top.
+          const life = (L.v + since * L.rate * 1.1) % 1
+          const bx = f.x0 + w * (-0.05 + 1.1 * L.u)
+          const by = f.y1 + hgt * (0.3 - 1.25 * life)
+          const hh = hgt * (L.back ? 0.75 : 0.55) * L.size
+          const sv = sOf(bx, by - hh * 0.4)
+          const cv = cover(sv)
+          if (cv < 0.03) continue
+          const side = sideOf(sv + 0.22 * (hash(L.seed, 7) - 0.5))
+          const P = side < 0 ? OLD : NEW
+          const hot = 0.6 * seam(side)
+          const fade = Math.sin(Math.PI * Math.min(1, life * 1.15))
+          const lick: Lick = {
+            x: bx,
+            y: by,
+            w: Math.min(w * 0.075 * (0.6 + L.size), hh * 0.4),
+            h: hh * (0.55 + 0.45 * cv),
+            lean: w * 0.03 * Math.sin(t * 2.3 + L.seed),
+            t,
+            seed: L.seed,
+            root: L.back ? lerp3(P.rim, P.body, 0.5) : lerp3(lerp3(P.heart, P.body, 0.2), HOT, hot),
+            mid: L.back ? lerp3(P.rim, [20, 10, 8], 0.2) : lerp3(P.body, HOT, hot),
+            rim: L.back ? lerp3(P.rim, [20, 10, 8], 0.45) : lerp3(P.rim, HOT, hot * 0.6),
+            a: (L.back ? 0.7 : 0.75) * cv * fade,
+            tips: L.size > 0.55 ? (hash(L.seed, 9) > 0.6 ? 3 : 2) : 1,
+          }
+          drawLick(ctx2, k, lick)
+        }
+        ctx2.restore()
       }
-      p.pop()
       // The spark itself stays in front of its fire: a door never hides it.
+      // A soft shadow round it first (no edge), so its clean teardrop and gold heart stand in front of the fire.
       const here = show.at(t)
-      if (!here.hidden && here.scale > 0.05) drawSpark(p, k, here.x, here.y, t, here.scale, here.stretch, here.angle)
+      if (!here.hidden && here.scale > 0.05) {
+        // Only as much as the fire is behind it (none once the new world shows through), in the darkest of that
+        // fire's colours, so on a fire it is the fire going deeper round the flame and never a navy hole or a grey disc.
+        const at = sOf(here.x, here.y)
+        const behind = cover(at)
+        const P = sideOf(at) < 0 ? OLD : NEW
+        const deep = lerp3(P.rim, [20, 10, 8], 0.4)
+        shadow(ctx2, k, here.x, here.y, R * here.scale, R * here.scale + 0.42, 0.5 * behind * (flash ? 0.6 : 1), deep, 1.6)
+        drawSpark(p, k, here.x, here.y, t, here.scale, here.stretch, here.angle)
+      }
     },
   })

@@ -124,10 +124,16 @@ export const FLEE = [chord(140.05), chord(140.27), chord(141.05), chord(141.05)]
 /** The pillars crack on the next pairs; the floor over the chimney's column breaks open. */
 export const CRACKS = [chord(139.07), chord(139.33), chord(140.05)]
 export const FLOOR_BREAK = chord(140.27)
-/** The pillars come down, one a chord: P1, P2, P3. */
-export const PILLAR_FALL = [chord(143.2), chord(144.12), chord(145.08)]
-/** The six hammer blows: the throne topples, the vault drops its stalactites, the lights go out one a blow. */
+/**
+ * The six hammer blows, as the mountain comes down bottom up under him (`fall-ruin.ts`): the court's ledges slump on
+ * the first two, the throne topples and the pillars come down on the next two, the vault on the fifth; the lights go
+ * out one a blow.
+ */
 export const HAMMERS = CODA_CHORDS.filter((c) => c.t >= 145.3).map((c) => c.t)
+/** The pillars come down (their tops landing) with the throne: P1 and P2 on the third blow, P3 on the fourth. */
+export const PILLAR_FALL = [HAMMERS[2], HAMMERS[2], HAMMERS[3]]
+/** The court's ledges slump: the upper two on the first blow, the lower two on the second. */
+export const LEDGE_FALL = [HAMMERS[1], HAMMERS[1], HAMMERS[0], HAMMERS[0]]
 
 /* ------------------------------------------------------------------ paths */
 
@@ -170,6 +176,11 @@ export class Path {
     const T = t1 - this.t
     const h = lift ?? (G_EARTH * T * T) / 8
     return this.add(t1, (u) => [a[0] + (to[0] - a[0]) * u, a[1] + (to[1] - a[1]) * u - h * 4 * u * (1 - u)])
+  }
+  /** A move of its own shape, in show time: `f` runs from this move's start (where it must be at `this.p`) to `t1`. */
+  along(t1: number, f: (t: number) => Pt): this {
+    const t0 = this.t
+    return this.add(t1, (u) => f(t0 + (t1 - t0) * u))
   }
   /** Straight down from rest under constant gravity, arriving at `t1`. */
   fall(to: Pt, t1: number): this {
@@ -293,6 +304,34 @@ export const PEER_PATH: Path = (() => {
 
 /* ------------------------------------------------------------------ the Woman in Green */
 
+/** When she is gone (down off the dais's east end, out of shot, on toward the east door). */
+export const WOMAN_GONE = 65.2
+/** Where she comes to on "Slay him!": the dais's west lip, just over the step Peer jumps back onto (16.62). */
+const WOMAN_LIP = 17.02
+/**
+ * Her leaving: from rest at the lip on the note after the King's eyes open, her speed growing smoothly over `ramp`
+ * seconds to `v` (cells a second), along the dais's top to its east end (`edge`, where it steps down), which she
+ * reaches on `t1`, a note into the King's rise, at the frame's east edge; off it she drops under gravity past the
+ * step to the floor, out of shot, and on east at the same speed.
+ */
+const LEAVE = (() => {
+  const t0 = q6(13)
+  const t1 = q6(18)
+  const ramp = 0.6
+  const edge = DAIS.x1 - DAIS.inset
+  const v = (edge - WOMAN_LIP) / (ramp / 2 + (t1 - t0 - ramp))
+  return { t0, t1, ramp, edge, v }
+})()
+function leaving(t: number): Pt {
+  const { t0, t1, ramp, v } = LEAVE
+  const s = Math.min(1, (t - t0) / ramp)
+  // Velocity v·(3s² − 2s³) over the ramp, integrated; then constant.
+  const x = WOMAN_LIP + (t - t0 < ramp ? v * ramp * (s * s * s - (s * s * s * s) / 2) : v * (ramp / 2 + (t - t0 - ramp)))
+  const top = on(DAIS.top)
+  const y = t <= t1 ? top : Math.min(0, top + 0.5 * G_EARTH * (t - t1) * (t - t1))
+  return [x, y]
+}
+
 export const WOMAN_PATH: Path = (() => {
   const w = new Path(COURT_BEGIN, [0.5, 0])
   w.rest(COURT_BEGIN + 0.55)
@@ -316,21 +355,17 @@ export const WOMAN_PATH: Path = (() => {
   w.hop([16.75, on(DAIS.step)], 55.1, 0.22)
   w.hop([17.35, on(DAIS.top)], 55.45, 0.22)
   w.go([17.9, on(DAIS.top)], 56.1, 'out')
-  // At his side as the court wakes. As her father's eyes open she turns to Peer (a lean his way, held a beat: her
-  // last look at him), then goes east along the dais at a walk, on the notes, down its steps, and away toward the
-  // east tunnel: out of the frame before the roar, out of the east door after it.
-  w.rest(q6(12))
-  w.go([17.62, on(DAIS.top)], q6(13), 'out')
-  w.rest(q6(14))
-  w.go([22.55, on(DAIS.top)], q6(20), 'inout')
-  w.hop([23.05, on(DAIS.step)], q6(21), 0.14)
-  w.hop([23.6, 0], q6(22), 0.14)
-  w.go([27.2, 0], 64.75, 'in')
-  w.go([31.5, 0], 65.2, 'out')
+  // At her father's side as the court wakes. On "Slay him!" she comes to Peer: a whole cell west along the dais to
+  // its lip, over him as he jumps back onto the step below it (a little space kept between them). The two of them
+  // there together while the court shouts and her father's eyes open; Peer jumps away, she stays a note longer: her
+  // parting. Then she is gone east along the dais, quickly (`LEAVE`), and off its end at the frame's east edge, so
+  // the King's rise has the frame to itself.
+  w.rest(SLAY[0])
+  w.go([WOMAN_LIP, on(DAIS.top)], q6(10), 'inout')
+  w.rest(LEAVE.t0)
+  w.along(WOMAN_GONE, leaving)
   return w
 })()
-/** When she is gone (out of the east door, out of shot). */
-export const WOMAN_GONE = 65.2
 
 /* ------------------------------------------------------------------ helpers for the drawing */
 
