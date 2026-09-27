@@ -388,7 +388,8 @@ function hollow(x0: number, top: number): Pt[] {
     }
     pts.push([x, y])
   }
-  pts.push([30.6, FL + 0.02])
+  // The east end: the living rock, leaning out a little and back, not a ruled line down to the floor.
+  pts.push([30.78, -1.55], [30.9, -0.95], [30.8, -0.4], [30.7, FL - 0.25], [30.6, FL + 0.02])
   return pts
 }
 // From the west wall's inner face: the doorway west of it, and the tunnel beyond, are the tunnels part's to draw.
@@ -1263,11 +1264,20 @@ function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number, lights:
   // The slab is shaded by the light along it (not one flat shade a piece), so it has no seams, and a hole opening in
   // it changes nothing but the hole.
   const ctx = ctxOf(p)
+  // At the hall's east end the slab runs on into the rock: its cut face fades into the mountain's dark over its
+  // last cell, so no ruled edge stands where the room ends.
+  const EAST = 30.6
+  const FADE = 0.9
   const slab = (a: number, b: number): void => {
     p.fill(floorFill(lit((a + b) / 2)))
     const g = ctx.createLinearGradient(a * k, 0, b * k, 0)
     const n = Math.max(1, Math.ceil(b - a))
-    for (let j = 0; j <= n; j++) g.addColorStop(j / n, floorFill(lit(a + ((b - a) * j) / n)))
+    const fade = b >= EAST - 0.01 ? Math.max(0, (b - FADE - a) / (b - a)) : 2
+    for (let j = 0; j <= n; j++) if (j / n < fade) g.addColorStop(j / n, floorFill(lit(a + ((b - a) * j) / n)))
+    if (fade <= 1) {
+      g.addColorStop(fade, floorFill(lit(b - FADE)))
+      g.addColorStop(1, mixHex(floorFill(lit(b)), STONE.deep, 0.92))
+    }
     ctx.fillStyle = g
   }
   p.noStroke()
@@ -1295,8 +1305,10 @@ function drawFloor(p: p5, c: Pen, t: number, lit: (x: number) => number, lights:
     p.fill(lipOf(lit((a + b) / 2)))
     const g = ctx.createLinearGradient(a * k, 0, b * k, 0)
     g.addColorStop(0, lipOf(lit(a)))
-    for (let j = Math.ceil(a / 0.5); j * 0.5 < b; j++) g.addColorStop(Math.max(0, Math.min(1, (j * 0.5 - a) / (b - a))), lipOf(lit(j * 0.5)))
-    g.addColorStop(1, lipOf(lit(b)))
+    const end = b >= EAST - 0.01 ? b - FADE : b
+    for (let j = Math.ceil(a / 0.5); j * 0.5 < end; j++) g.addColorStop(Math.max(0, Math.min(1, (j * 0.5 - a) / (b - a))), lipOf(lit(j * 0.5)))
+    g.addColorStop(Math.max(0, Math.min(1, (end - a) / (b - a))), lipOf(lit(end)))
+    g.addColorStop(1, end < b ? mixHex(lipOf(lit(b)), STONE.deep, 0.92) : lipOf(lit(b)))
     ctx.fillStyle = g
     p.rect(a * k, FL * k, (b - a) * k, Math.max(1, 0.055 * k))
     p.pop()
