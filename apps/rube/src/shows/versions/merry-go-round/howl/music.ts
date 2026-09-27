@@ -154,6 +154,11 @@ export const CADENZA = 285.87
 export const FINALE = 292.734
 /** The last chord, struck three times. */
 export const CHORD = [302.243, 302.41, 302.57] as const
+/**
+ * The castle's footfalls on the air after the chord's first stroke (its first foot comes down on that stroke), until
+ * it takes its own slowing pace (`finale/flight.ts`); Turnip Head hops the castle off on them from the brink.
+ */
+export const AIR_STEPS = [303.444, 304.431, 305.459] as const
 /** When the credits come, once the chord has rung. */
 export const CREDITS_AT = 304.2
 

@@ -90,13 +90,18 @@ const PUNCHES: [number, number][] = [
   [LAST[0], 0.6],
   [LAST[1], 1],
 ]
-function punch(t: number): number {
+/**
+ * How much the hits take off the frame's height at `t` (a push in; negative, a throw back). `back[i]` says whether the
+ * camera is already drawing back through hit `i`: then the blow throws it further back by the same amount instead of
+ * pushing in against the move, which reads as a hitch in the move, not a blow.
+ */
+function punch(t: number, back: boolean[]): number {
   let v = 0
-  for (const [at, s] of PUNCHES) {
+  PUNCHES.forEach(([at, s], i) => {
     const u = t - at
-    if (u < 0 || u > 1.5) continue
-    v += 0.045 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.32)
-  }
+    if (u < 0 || u > 1.5) return
+    v += (back[i] ? -1 : 1) * 0.045 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.32)
+  })
   return v
 }
 
@@ -182,9 +187,12 @@ export function compose(): { show: SparkShow; camera: (t: number) => Framing } {
     const where = (s: number): Pt => show.where(Math.max(leg.from, Math.min(leg.to - 1e-6, s)))
     cams.push(director(where, keys, DURATION))
   })
+  const base = (t: number): Framing => cams[show.owner(t)](t)
+  // Drawing back through a hit: the frame grows by more than 1% over the tenth of a second round it (0.1 log/s).
+  const back = PUNCHES.map(([at]) => Math.log(base(at + 0.05).cells / base(at - 0.05).cells) > 0.01)
   const camera = (t: number): Framing => {
-    const f = cams[show.owner(t)](t)
-    return { ...f, cells: f.cells * (1 - punch(t)) }
+    const f = base(t)
+    return { ...f, cells: f.cells * (1 - punch(t, back)) }
   }
   return { show, camera }
 }

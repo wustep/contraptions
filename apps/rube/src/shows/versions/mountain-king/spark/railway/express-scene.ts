@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
-import { RAILWAY } from '../worlds'
+import { RAILWAY, RAILWAY_THEME } from '../worlds'
 import { BUFFER_STOP, HALT, LEAD, POLES, RAIL_Y, SIGNAL_X, TRESTLE, TURN, T_STOP } from './express-line'
 import { HORIZON, moonAt } from './night'
 
@@ -207,36 +207,83 @@ export function terminus(p: p5, k: number, f: View, w: number, t: number): void 
   // The engine hits them at the festival: they take it with a shudder, rammed back a hair and ringing to rest.
   const hit = t - T_STOP
   if (hit > 0) p.translate(X(0.06 * Math.sin(Math.min(Math.PI / 2, hit * 30)) * Math.exp(-hit / 0.12) + 0.025 * Math.sin(hit * 34) * Math.exp(-hit / 0.3)), 0)
-  // Two old rails bent up into a frame, a heavy baulk across them at buffer height, painted red, a lamp on it.
-  p.stroke(mixHex(RAILWAY.rail, RAILWAY.iron, 0.35))
-  p.strokeWeight(X(0.09))
+  // Buffer stops at the end of the line, seen side on: two old rails bent up into a braced frame, a broad red baulk
+  // across them at the engine's buffer height, a sprung buffer on its face that takes the hit (its head rams in and
+  // springs back), and a lamp on a short post. The buffer's face is at `x`, where the engine's buffers meet it.
+  const yb = RAIL_Y - 1.4
+  const railCol = mixHex(RAILWAY.rail, RAILWAY.iron, 0.6)
+  const railLit = mixHex(RAILWAY.rail, RAILWAY.moon, 0.2)
+  const bar = (a: Pt, b: Pt, wide: number, far = false) => {
+    p.stroke(far ? mixHex(railCol, RAILWAY.iron, 0.6) : railCol)
+    p.strokeWeight(X(wide))
+    p.line(X(a[0]), X(a[1]), X(b[0]), X(b[1]))
+    if (far) return
+    p.stroke(railLit)
+    p.strokeWeight(Math.max(0.6, X(wide * 0.25)))
+    p.line(X(a[0]), X(a[1] - wide * 0.32), X(b[0]), X(b[1] - wide * 0.32))
+  }
   p.noFill()
-  p.line(X(x + 0.2), X(RAIL_Y - 1.0), X(x + 1.9), X(RAIL_Y - 0.05))
-  p.line(X(x + 0.2), X(RAIL_Y - 1.7), X(x + 0.5), X(RAIL_Y - 0.05))
-  p.line(X(x + 0.2), X(RAIL_Y - 1.2), X(x + 0.2), X(RAIL_Y - 0.05))
+  // The frame: each running rail bent up in a long curve to the baulk's back, a post under its front, a brace between;
+  // the far side's a little behind and in shadow, so it reads as a frame and not a stick.
+  const bend: Pt[] = []
+  for (let i = 0; i <= 10; i++) {
+    const u = i / 10
+    bend.push([x + 2.35 - 1.45 * u, RAIL_Y - 0.02 - (RAIL_Y - 0.02 - (yb - 0.22)) * Math.pow(u, 1.6)])
+  }
+  for (const far of [true, false]) {
+    const o = far ? 0.16 : 0
+    for (let i = 0; i < bend.length - 1; i++) bar([bend[i][0] + o, bend[i][1] - o * 0.4], [bend[i + 1][0] + o, bend[i + 1][1] - o * 0.4], 0.14, far)
+    bar([x + 0.55 + o, yb + 0.3], [x + 0.55 + o, RAIL_Y - 0.02], 0.13, far)
+    bar([x + 0.66 + o, yb + 0.25], [x + 1.6 + o, RAIL_Y - 0.3], 0.1, far)
+  }
   p.noStroke()
+  // The sole they are bolted to, on the ballast.
+  p.rectMode(p.CORNER)
   p.fill(TIMBER)
-  p.rect(X(x + 0.24), X(RAIL_Y - 1.4), X(0.48), X(0.8))
-  p.fill(RAILWAY.wheel)
-  p.rect(X(x + 0.24), X(RAIL_Y - 1.4), X(0.48), X(0.5))
-  p.fill(RAILWAY.fwWhite)
-  p.rect(X(x + 0.24), X(RAIL_Y - 1.4), X(0.48), X(0.08))
-  p.stroke(TIMBER_LIT)
-  p.strokeWeight(w * 0.5)
-  p.line(X(x), X(RAIL_Y - 1.8), X(x + 0.48), X(RAIL_Y - 1.8))
+  p.rect(X(x + 0.35), X(RAIL_Y - 0.1), X(2.2), X(0.14))
+  p.fill(TIMBER_LIT)
+  p.rect(X(x + 0.35), X(RAIL_Y - 0.1), X(2.2), X(0.03))
+  p.rectMode(p.CENTER)
+  // The baulk: a broad beam, painted red, lit along its top, in a dark outline.
+  p.rectMode(p.CORNER)
+  p.stroke(RAILWAY_THEME.ink)
+  p.strokeWeight(w * 0.7)
+  p.fill(mixHex(RAILWAY.signalRed, RAILWAY.iron, 0.3))
+  p.rect(X(x + 0.36), X(yb - 0.36), X(0.62), X(0.72))
   p.noStroke()
-  const lamp: Pt = [x + 0.24, RAIL_Y - 2.1]
+  p.fill(mixHex(RAILWAY.signalRed, RAILWAY.moon, 0.3))
+  p.rect(X(x + 0.36), X(yb - 0.36), X(0.62), X(0.07))
+  p.fill(mixHex(RAILWAY.signalRed, RAILWAY.iron, 0.55))
+  p.rect(X(x + 0.36), X(yb + 0.24), X(0.62), X(0.12))
+  // The buffer: a housing on the baulk, the stock sliding in it, and the round-faced head. It rams in on the hit.
+  const ram = hit > 0 ? 0.13 * Math.sin(Math.min(Math.PI / 2, hit * 26)) * Math.exp(-hit / 0.16) : 0
+  p.stroke(RAILWAY_THEME.ink)
+  p.strokeWeight(w * 0.6)
+  p.fill(RAILWAY.iron)
+  p.rect(X(x + 0.2), X(yb - 0.13), X(0.17), X(0.26))
+  p.fill(mixHex(RAILWAY.iron, RAILWAY.rail, 0.5))
+  p.rect(X(x + 0.06 + ram), X(yb - 0.08), X(0.16 - ram), X(0.16))
+  p.fill(mixHex(RAILWAY.iron, RAILWAY.moon, 0.2))
+  p.rect(X(x + ram), X(yb - 0.26), X(0.07), X(0.52), X(0.03))
+  p.noStroke()
+  p.rectMode(p.CENTER)
+  // The lamp on its post over the baulk, its red lens toward the line.
+  const lamp: Pt = [x + 0.62, yb - 0.82]
+  p.stroke(railCol)
+  p.strokeWeight(X(0.06))
+  p.line(X(lamp[0]), X(yb - 0.36), X(lamp[0]), X(lamp[1] + 0.17))
+  p.noStroke()
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const g = ctx.createRadialGradient(X(lamp[0]), X(lamp[1]), 0, X(lamp[0]), X(lamp[1]), X(1.4))
+  const g = ctx.createRadialGradient(X(lamp[0] - 0.1), X(lamp[1]), 0, X(lamp[0] - 0.1), X(lamp[1]), X(1.4))
   g.addColorStop(0, 'rgba(229, 70, 59, 0.3)')
   g.addColorStop(1, 'rgba(229, 70, 59, 0)')
   ctx.fillStyle = g
-  ctx.fillRect(X(lamp[0] - 1.4), X(lamp[1] - 1.4), X(2.8), X(2.8))
+  ctx.fillRect(X(lamp[0] - 1.5), X(lamp[1] - 1.4), X(2.8), X(2.8))
   p.fill(RAILWAY.iron)
   p.rect(X(lamp[0]), X(lamp[1]), X(0.3), X(0.34))
   p.triangle(X(lamp[0] - 0.2), X(lamp[1] - 0.17), X(lamp[0] + 0.2), X(lamp[1] - 0.17), X(lamp[0]), X(lamp[1] - 0.34))
   p.fill(RAILWAY.signalRed)
-  p.rect(X(lamp[0]), X(lamp[1]), X(0.18), X(0.2))
+  p.rect(X(lamp[0] - 0.07), X(lamp[1]), X(0.16), X(0.2))
   p.pop()
 }
 

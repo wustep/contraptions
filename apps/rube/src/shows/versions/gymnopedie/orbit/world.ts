@@ -3,6 +3,7 @@ import type { Theme } from '../../../../../../../src/core/themes'
 import { mixHex, type Pt } from '../../../../parts'
 import type { World } from '../../../../worlds'
 import { PERIOD, wrap } from './music'
+export { osc } from './music'
 import { RADIUS } from './path'
 
 /**
@@ -55,15 +56,6 @@ export function unpolar(x: number, y: number): { u: number; h: number } {
   let a = Math.atan2(x, -y)
   if (a < 0) a += Math.PI * 2
   return { u: a * RADIUS, h: Math.hypot(x, y) - RADIUS }
-}
-
-/**
- * A slow oscillation that comes round with the period: the nearest whole number of cycles a period to `hz`. What
- * anything that shimmers or sways runs on, so that nothing jumps at the end of the period.
- */
-export const osc = (t: number, hz: number, phase = 0): number => {
-  const n = Math.max(1, Math.round(hz * PERIOD))
-  return Math.sin((2 * Math.PI * n * wrap(t)) / PERIOD + phase)
 }
 
 /** 0 until `a`, 1 from `b`, smooth between. */

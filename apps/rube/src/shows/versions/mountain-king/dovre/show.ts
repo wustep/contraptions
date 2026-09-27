@@ -6,7 +6,7 @@ import type { World } from '../../../../worlds'
 import type { Theme } from '../../../../../../../src/core/themes'
 import type { Company, Who } from './kit'
 import { PEER, WOMAN, WOMAN_ID } from './worlds'
-import { LAST2 } from './music'
+import { BLOW } from './music'
 
 /** The crash that blows him out of the standpipe on the geyser (`fall.ts`). */
 const GEYSER = 135.411
@@ -58,9 +58,9 @@ const PEOPLE: Record<Who, { id: number; color: string }> = {
 export class MountainShow extends Show {
   /** Peer's trail is one streak, not four discs: at the fast drops and the geyser's surges the discs read as more balls. */
   override readonly trail = 'smear' as const
-  /** No streak while he rides the geyser (the crash to the second last chord): down the white column it read as a stain. */
+  /** No streak while he rides the geyser (the crash to the blow-out): down the white column it read as a stain. */
   override trailOff(t: number): boolean {
-    return t >= GEYSER && t < LAST2
+    return t >= GEYSER && t < BLOW
   }
   private readonly stages: Stage[]
   private readonly worlds: Universe[]

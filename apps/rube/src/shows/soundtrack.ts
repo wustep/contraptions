@@ -4,12 +4,15 @@ import { createYouTubeSoundtrack } from './youtube'
 /**
  * The music. One audio element for the page's life, handed a new recording
  * when the version changes: a browser that wants a gesture before it will
- * play anything wants it once an element, not once a song.
+ * play anything wants it once an element, not once a song. A play asked
+ * while the file is still loading waits for canplay, as YouTube waits for
+ * its players: otherwise a deep link's first play fails on an empty element
+ * and the visit never starts the sound.
  *
  * It is the show's clock while it plays (`clock.ts`), so what it is asked
- * most is where it is. A doubled recording is time-stretched, not pitched
- * up (`preservesPitch`), which is why this is an element and not a buffer
- * source: 2× still sounds like the music.
+ * most is where it is. A recording off 1× is time-stretched, not pitched
+ * (`preservesPitch`), which is why this is an element and not a buffer
+ * source: ½× and 2× still sound like the music.
  */
 
 /**
@@ -66,6 +69,9 @@ export interface Soundtrack {
   onChange(fn: () => void): void
 }
 
+/** YouTube's player plays ¼× to 2×; it rounds anything faster down to 2×. */
+const YOUTUBE_MAX_SPEED = 2
+
 /** Where a show's music is coming from: the site's own file, or YouTube's player. */
 export type MusicSource = 'file' | 'youtube'
 
@@ -112,13 +118,16 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
     changed()
   })
   const other = (): Soundtrack => (active === file ? tube : file)
+  let speed = 1
+  /** YouTube for a version that names its upload, unless the speed is one its player cannot play and there is a file that can. */
+  const wantsTube = (next: SoundtrackSpec | null) =>
+    !!next?.youtube?.length && prefer === 'youtube' && (speed <= YOUTUBE_MAX_SPEED || !next.src)
   return {
     load(next) {
       spec = next
       fell = false
       wanted = false
-      const wantsTube = !!next?.youtube?.length && prefer === 'youtube'
-      active = wantsTube ? tube : file
+      active = wantsTube(next) ? tube : file
       other().load(null)
       active.load(next)
     },
@@ -143,9 +152,19 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
       active.pause()
     },
     seek: (at) => active.seek(at),
-    setSpeed(speed) {
-      file.setSpeed(speed)
-      tube.setSpeed(speed)
+    setSpeed(next) {
+      speed = next
+      file.setSpeed(next)
+      tube.setSpeed(next)
+      // Past YouTube's fastest its player would round down, and the picture, which follows the music, with it.
+      // The file plays any speed: it takes over where the show is, and keeps the version from then on.
+      if (active === tube && !wantsTube(spec) && spec) {
+        active = file
+        tube.load(null)
+        file.load(spec)
+        if (wanted && !asking) void file.play(shown)
+        changed()
+      }
     },
     setMuted(muted) {
       file.setMuted(muted)
@@ -164,10 +183,10 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
 /**
  * A loop's music, played round without a seam. An element cannot: it stops at its end and is sent back, and the
  * gap is heard. So a looping recording is also decoded whole and played from a buffer that loops on the sample,
- * between `offset` and `offset + loop`. The element is kept for what the buffer cannot do: 2×, which it plays
+ * between `offset` and `offset + loop`. The element is kept for what the buffer cannot do: any speed but 1×, which it plays
  * time-stretched (a looped buffer would only play it an octave up), the seconds before the buffer is decoded, and a
  * visit the browser will only let play muted (an audio context wants a gesture, muted or not). Wherever the element
- * plays a loop it is sent back a period when it runs past the end: the same music, so only a hitch is heard, at 2×.
+ * plays a loop it is sent back a period when it runs past the end: the same music, so only a hitch is heard, off 1×.
  */
 interface Looper {
   /** The decoded recording, once it is. */
@@ -206,6 +225,11 @@ function createFileSoundtrack(): Soundtrack {
   const audio = new Audio()
   audio.preload = 'auto'
   audio.preservesPitch = true
+  // Keep it in the document: a detached element loses muted autoplay in Chromium, so a deep
+  // link's held-sound path (mute, then play) would fail the same way an unmuted play does.
+  audio.setAttribute('playsinline', '')
+  audio.hidden = true
+  document.body.append(audio)
   let spec: SoundtrackSpec | null = null
   let status: SoundtrackState = 'none'
   let speed = 1
@@ -288,9 +312,16 @@ function createFileSoundtrack(): Soundtrack {
     }
   }
 
+  /** Plays asked for while the recording was still loading. */
+  let waiting: (() => void)[] = []
   const set = (next: SoundtrackState) => {
     if (next === status) return
     status = next
+    if (next !== 'loading') {
+      const now = waiting
+      waiting = []
+      for (const fn of now) fn()
+    }
     changed()
   }
   audio.addEventListener('canplay', () => { if (spec) set('ready') })
@@ -301,6 +332,9 @@ function createFileSoundtrack(): Soundtrack {
       audio.pause()
       stopBuffer()
       looper.buffer = null
+      const left = waiting
+      waiting = []
+      for (const fn of left) fn()
       spec = next
       ear.reset()
       if (next?.loop) {
@@ -342,6 +376,17 @@ function createFileSoundtrack(): Soundtrack {
     },
     async play(at) {
       if (!spec || status === 'failed') return 'silent'
+      // YouTube waits for its players; the file must wait for canplay too. A play asked
+      // for on a deep link lands in the same breath as load(), and a NotAllowedError on an
+      // empty element looks like an autoplay block — the visit then never retries once ready.
+      if (status === 'loading') {
+        const mine = spec
+        await new Promise<void>((resolve) => {
+          waiting.push(resolve)
+        })
+        // Read again: the wait may have changed it (TypeScript narrowed it to 'loading' above).
+        if (spec !== mine || (status as SoundtrackState) !== 'ready') return 'silent'
+      }
       if (buffered()) {
         const mine = spec
         if (await startBuffer(at)) {
@@ -351,13 +396,12 @@ function createFileSoundtrack(): Soundtrack {
         }
         // Not allowed to start the context yet: the element, which a muted page may still play.
       }
-      const want = offset() + Math.max(0, at)
-      if (Math.abs(audio.currentTime - want) > 0.03) audio.currentTime = want
+      // Seek before play drops readyState back to HAVE_METADATA in Chromium, and a play on that
+      // empty-looking element is refused even when muted. Play first, then put it where the show is.
       audio.playbackRate = speed
       ear.reset()
       try {
         await audio.play()
-        return 'playing'
       } catch (err) {
         const name = (err as DOMException | null)?.name
         if (name === 'NotAllowedError') return 'blocked'
@@ -366,6 +410,12 @@ function createFileSoundtrack(): Soundtrack {
         set('failed')
         return 'silent'
       }
+      const want = offset() + Math.max(0, at)
+      if (Math.abs(audio.currentTime - want) > 0.03) {
+        audio.currentTime = want
+        ear.reset()
+      }
+      return 'playing'
     },
     follow() {},
     pause() {
@@ -382,7 +432,7 @@ function createFileSoundtrack(): Soundtrack {
       ear.reset()
     },
     setSpeed(next) {
-      // A loop changes engine with the speed: the buffer at 1×, the element (time-stretched) at 2×.
+      // A loop changes engine with the speed: the buffer at 1×, the element (time-stretched) at any other.
       const playing = !!looper.started || !audio.paused
       const at = looper.started ? bufferPosition() : null
       speed = next

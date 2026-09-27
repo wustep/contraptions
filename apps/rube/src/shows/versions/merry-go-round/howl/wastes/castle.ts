@@ -94,6 +94,11 @@ export interface CastlePose {
   /** The door: how open, and its dial (counting along `DIAL_ORDER`: 0 green, where the castle stands). */
   door?: number
   dial?: number
+  /**
+   * Anyone standing inside the open door, drawn in the door's frame (the sill's middle at the origin, y up negative)
+   * over the room's warm dark and under the leaf, so the leaf swinging open shows them. Default nobody.
+   */
+  doorView?: (p: p5, b: { x0: number; y0: number; x1: number; y1: number }) => void
   /** The collapse: per module, how it has moved. Missing modules are in place. */
   modules?: Partial<Record<ModuleId, ModuleMove>>
   /** Leave the legs out (the plank builder draws its own plank on legs). */
@@ -1122,6 +1127,7 @@ export function drawCastle(p: p5, k: number, weight: number, ink: string, pose: 
         q.rect(X(b.x0), X(b.y0), X(b.x1 - b.x0), X(b.y1 - b.y0))
         puff(q, k, b.x1 - 0.1, b.y1 - 0.5, 1.7, CALCIFER.body, 0.6 * glow)
         puff(q, k, b.x1 - 0.2, b.y1 - 0.4, 0.8, WASTES.window, 0.55 * glow)
+        pose.doorView?.(q, b)
       },
     })
     p.pop()

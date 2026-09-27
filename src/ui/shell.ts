@@ -24,9 +24,15 @@
  * anything else standing on the stage — for the piece alone, and the
  * backtick again puts back exactly what was there. The switch is four
  * icon-only buttons, each named on hover. The Builder is off it for now.
+ * Theater (every show, shuffled, one after another) is a fifth that is not
+ * on the switch until it has been visited: once `/theater/` has been open
+ * in this session, it sits at the end of the switch in every mode.
  */
 
-export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground'
+import { createListbox } from './listbox'
+import { SPEEDS, speedLabel } from './view'
+
+export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground' | 'theater'
 
 interface ModeLink {
   mode: ShellMode
@@ -42,6 +48,38 @@ export const MODE_LINKS: readonly ModeLink[] = [
   { mode: 'playground', label: 'Playground', path: '/playground/' },
   { mode: 'shows', label: 'Shows', path: '/shows/' },
 ]
+
+/** Tabs that are only on the switch once they have been visited this session: found by their address, not by looking. */
+export const HIDDEN_LINKS: readonly ModeLink[] = [
+  { mode: 'theater', label: 'Theater', path: '/theater/' },
+]
+
+/** The switch: the four, and after them each hidden tab that has been visited. */
+export function switchLinks(visited: ReadonlySet<ShellMode>): ModeLink[] {
+  return [...MODE_LINKS, ...HIDDEN_LINKS.filter((m) => visited.has(m.mode))]
+}
+
+/** Which hidden tabs this session has visited. */
+const VISITED_STORE = 'contraptions:visited'
+
+function visitedModes(): Set<ShellMode> {
+  try {
+    const v = sessionStorage.getItem(VISITED_STORE)
+    return new Set(v ? (v.split(',') as ShellMode[]) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function rememberVisit(visited: Set<ShellMode>, mode: ShellMode): void {
+  if (!HIDDEN_LINKS.some((m) => m.mode === mode) || visited.has(mode)) return
+  visited.add(mode)
+  try {
+    sessionStorage.setItem(VISITED_STORE, [...visited].join(','))
+  } catch {
+    // Best effort: this page still shows the tab, since it is on it.
+  }
+}
 
 export interface Shell {
   /** Light the tab for `mode`. The chrome stays; only the mark moves. */
@@ -116,6 +154,12 @@ export const ICON = {
   shows: ['M9 4.5 21 2v14.5a3.5 2.8 0 1 1-2.5-2.7V7L11.5 8.5v10a3.5 2.8 0 1 1-2.5-2.7z'],
   builder: ['M3 3h11l6 5-3 3-4-3H3z', 'M7 10h4v11H7z'],
   playground: ['M6.5 3a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z', 'M1.6 12.4 2.4 10l20 6.6-.8 2.4z', 'M12 15.5 17 22H7z'],
+  // A proscenium: the valance, and a curtain drawn back to either side.
+  theater: ['M2 3h20v3.5H2z', 'M3 7.5h5.5c-.3 5.5-2.2 10.5-5.5 13.5z', 'M21 7.5h-5.5c.3 5.5 2.2 10.5 5.5 13.5z'],
+  next: ['M5 5l9 7-9 7z', 'M15.5 5H19v14h-3.5z'],
+  // Four corners going out to the edges, and the same four drawn back in.
+  fullscreen: ['M3 3h7v3H6v4H3z', 'M14 3h7v7h-3V6h-4z', 'M3 14h3v4h4v3H3z', 'M18 14h3v7h-7v-3h4z'],
+  windowed: ['M7 3h3v7H3V7h4z', 'M14 3h3v4h4v3h-7z', 'M3 14h7v7H7v-4H3z', 'M14 14h7v3h-4v4h-3z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */
@@ -146,6 +190,36 @@ export function segmented(
     node,
     set(current) {
       for (const { v, b } of buttons) b.classList.toggle('on', v === current)
+    },
+  }
+}
+
+/**
+ * The transport's speed, as a dropdown beside Play. Six stops are too many
+ * for a segmented row to read at a glance, and every mode shares them.
+ */
+export function speedPicker(onPick: (v: number) => void): {
+  node: HTMLElement
+  set(current: number): void
+  setDisabled(off: boolean): void
+} {
+  const box = createListbox({
+    items: SPEEDS.map((v) => ({ value: String(v), label: speedLabel(v) })),
+    value: '1',
+    label: 'Speed',
+    onChange: (v) => onPick(Number(v)),
+  })
+  box.node.classList.add('speed')
+  const trigger = box.node.querySelector<HTMLElement>('.lb-trigger')!
+  trigger.title = 'Playback speed'
+  return {
+    node: box.node,
+    set: (current) => box.set(String(current)),
+    setDisabled(off) {
+      box.node.classList.toggle('disabled', off)
+      trigger.tabIndex = off ? -1 : 0
+      trigger.setAttribute('aria-disabled', String(off))
+      if (off && document.activeElement === trigger) trigger.blur()
     },
   }
 }
@@ -323,7 +397,9 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     hideTip()
   }
   let currentMode = mode
-  const links = MODE_LINKS.map((m) => {
+  const visited = visitedModes()
+  rememberVisit(visited, mode)
+  const makeLink = (m: ModeLink) => {
     const a = el('a', { href: m.path, class: `mode-tab${m.mode === mode ? ' on' : ''}` })
     dress(a, m)
     a.addEventListener('pointerenter', () => showTip(a, m.label))
@@ -346,9 +422,18 @@ export function createShell(root: HTMLElement, mode: ShellMode): Shell {
     })
     if (m.mode === mode) a.setAttribute('aria-current', 'page')
     return { m, a }
-  })
+  }
+  const links = switchLinks(visited).map(makeLink)
   const setMode = (next: ShellMode) => {
     currentMode = next
+    // A hidden tab arrived at by the back button, having been visited in this document: it joins the switch.
+    rememberVisit(visited, next)
+    for (const m of switchLinks(visited)) {
+      if (links.some((l) => l.m === m)) continue
+      const link = makeLink(m)
+      links.push(link)
+      switcher.append(link.a)
+    }
     for (const { m, a } of links) {
       const on = m.mode === next
       a.classList.toggle('on', on)

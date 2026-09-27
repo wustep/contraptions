@@ -15,8 +15,9 @@ export interface ViewState {
   grid: boolean
 }
 
-/** The transport's stops, in both modes. */
-export const SPEEDS = [0.25, 0.5, 1, 2, 4]
+/** The transport's stops, in every mode that has one: Machine, Explorations, the Playground and Shows. */
+export const SPEEDS = [0.25, 0.5, 1, 1.5, 2, 4]
+/** Quarters and halves as fractions, the rest as a rate: ¼, ½, 1×, 1.5×, 2×, 4×. */
 export const speedLabel = (v: number): string => (v === 0.25 ? '¼' : v === 0.5 ? '½' : `${v}×`)
 export const EXPORT_SCALES = [1, 2, 4]
 

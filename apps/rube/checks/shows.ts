@@ -10,6 +10,7 @@ import { join } from 'node:path'
 import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
+import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
@@ -43,6 +44,7 @@ import { checkCaravan } from './caravan'
 import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
+import { checkTheater } from './theater'
 import { checkLogogram } from './logogram'
 
 let failures = 0
@@ -75,11 +77,14 @@ async function main(): Promise<void> {
   check('Machine is its own page', machinePage.includes('src="/apps/rube/src/main.ts"'))
   check('the Builder is not a tab', modeFromPath('/builder/') === null)
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
-  const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
+  const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
   const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))
   check('a visit starts the show', /if \(current\) void open\(current, linked \? 'link' : true\)/.test(player) && /else void play\(\)/.test(player))
   check('a named show link plays, and holds the sound only when the browser refuses it', /const linked = !!pathShow \|\| !!params\.get\('show'\)/.test(player) && /async function playLinked/.test(player) && /soundHeld = true/.test(player) && player.includes('The browser is holding the sound'))
+  const soundtrack = readFileSync(join(process.cwd(), 'apps/rube/src/shows/soundtrack.ts'), 'utf8')
+  check('a file play waits for canplay, as YouTube waits for its players', soundtrack.includes('status === \'loading\'') && soundtrack.includes('waiting.push') && soundtrack.includes('deep link'))
+  check('a deep link with the sound held keeps a Sound button on the stage', player.includes("soundHeld ? 'Sound'") && player.includes('Tap for sound'))
   check('Zoom sits half as close again as the follow camera', /export const FOLLOW_ZOOM = 1\.5/.test(stage) && stage.includes('cam.cells / FOLLOW_ZOOM'))
   check('a work with one take has no Version row to pick from', /work\.versions\.length === 1\) takeField\.hidden = true/.test(player))
   check('no take has a byline in the panel', !/byline/.test(player) && !/director/.test(player))
@@ -628,7 +633,8 @@ async function main(): Promise<void> {
   /* ------------------------------------------------------------------ the clock */
 
   console.log('\nthe clock')
-  check('the speeds are 1× and 2×', SHOW_SPEEDS.join(',') === '1,2')
+  check('the speeds are Machine\'s six, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
+  check('the speeds read ¼ ½ 1× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.5× 2× 4×')
   {
     let wall = 0
     const c = new Transport({ duration: 10, wall: () => wall })
@@ -748,6 +754,8 @@ async function main(): Promise<void> {
     check('silent until the first strike, then heard', silentBefore && peak > 8000, `peak ${peak}`)
     check('and never clipped', peak < 32767, `peak ${peak}`)
   }
+
+  checkTheater(check, shipped.works)
 
   console.log(failures ? `\n${failures} failure(s)` : '\nall good')
   process.exit(failures ? 1 : 0)

@@ -454,14 +454,20 @@ export const express = part<State>(
       // Phrase 13: out to the whole engine side on, running away with the telegraph poles whipping past a backbeat
       // apart, the spark a light going along the rods. The camera rides with the engine, not the spark, so the crank
       // circles inside a steady picture.
-      ...riding(bb(210), bb(214.5), 9.0, 9.4, -2.9, 2.2),
-      // Then three pictures of the motion, still riding with the engine: close on the crosshead shuttling in its
-      // guides, the frame leading on to the cylinder; a low ride, the rail on the lower third and the poles whipping
-      // past above, as the spark climbs the main rod and runs back along the coupling rod; close on the trailing
-      // crank, its pin going round with the spark on it. Then out for the whistle and the trestle.
-      ...riding(bb(217.25), bb(218.5), 3.4, 3.3, -0.15, 1.45),
-      ...riding(bb(220), bb(221.25), 6.0, 6.2, -1.9, 1.05, -2.6, 1.05),
-      ...riding(bb(223), bb(224), 3.0, 3.2, -4.5, 1.12),
+      ...riding(bb(210), bb(214), 9.0, 9.4, -2.9, 2.2),
+      // Then one push in, landing on the backbeat close on the crosshead shuttling in its guides (the frame leading
+      // on to the cylinder), and a ride along the motion at that scale: the camera stays close and pans back and down
+      // with the spark as it climbs the main rod and runs back along the coupling rod, still riding with the engine,
+      // and gathers in a little onto the trailing crank on the backbeat, its pin going round with the spark on it.
+      // Then one pull out for the whistle and the trestle.
+      on(bb(217), 3.4, -0.15, 1.45),
+      on(bb(218), 3.45, -0.15, 1.45),
+      on(bb(219), 3.6, -0.55, 1.4),
+      on(bb(220), 3.85, -1.6, 1.22),
+      on(bb(221), 4.0, -2.65, 1.1),
+      on(bb(222), 3.7, -3.7, 1.1),
+      on(bb(223), 3.0, -4.5, 1.12),
+      on(bb(224), 3.2, -4.5, 1.12),
       // The whistle, and the line opens out ahead: back to following the spark before the trestle's wide.
       { t: bb(225.3), cells: 5.0, hold: [engineX(bb(225.3)) - 2.5, RAIL_Y - 1.15], w: 0, off: [0.4, -0.4] },
       // The trestle: out to the whole train, and the camera lags it, so the train crosses the frame and the moon's
@@ -502,6 +508,11 @@ function riding(a: number, b: number, c0: number, c1: number, u: number, v: numb
     out.push({ t, cells: c0 + (c1 - c0) * f, hold: [engineX(t) + u + (u1 - u) * e, RAIL_Y - (v + (v1 - v) * e)], w: 1 })
   }
   return out
+}
+
+/** One camera key riding with the engine at `t`: `cells` high, held on the engine's point (u along it, v up from the rail). */
+function on(t: number, cells: number, u: number, v: number): PartShot {
+  return { t, cells, hold: [engineX(t) + u, RAIL_Y - v], w: 1 }
 }
 
 /** For the check and the director: where the spark leaves the express (world cells), and its velocity then. */

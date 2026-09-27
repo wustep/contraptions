@@ -7,7 +7,7 @@ import { quake } from '../rock'
 import { HEART_SHOT, PLAN, SEAM_SHOT } from '../seams'
 import { STONE, WORKS } from '../worlds'
 import { BEGIN, BLOWS, BURST, BURST_B, BURST_X, DRUM2, DRUM3, DRUMMERS, END, FLOOR, LANDINGS, SHAFT, THROUGH, farEdge, landY, onSkin, type Drummer } from './drum-clock'
-import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light } from './drum-set'
+import { FIRES, drawFire, drawDrum, drawDrummer, drawDust, drawKettle, drawRoom, jolt, light, withGreatTilt } from './drum-set'
 
 /**
  * The trolls' drum (89.23 → 101.95; phrases 10 and 11, A A, the accelerando, the crescendo to the fortissimo).
@@ -390,7 +390,7 @@ export const drum = part<DrumState>(
       drawDrum(p, c, DRUM2, 2, T, L, 'back', j, peerX)
       for (const d of DRUMMERS) if (d.drum === 2) drawDrummer(p, c, d, T, L, peerX, j)
       drawDrum(p, c, DRUM3, 3, T, L, 'back', j, peerX)
-      drawTear(p, c, T, L, j, 'all')
+      withGreatTilt(p, c, T, j, () => drawTear(p, c, T, L, j, 'all'))
       for (const d of DRUMMERS) {
         if (d.drum !== 3) continue
         if (T > BURST) drawThrown(p, c, d, T, L, peerX, j)
@@ -418,8 +418,10 @@ export const drum = part<DrumState>(
       drawDrum(p, c, DRUM2, 2, T, L, 'front', j, peerX)
       drawDrum(p, c, DRUM3, 3, T, L, 'front', j, peerX)
       if (T > BURST) {
-        drawTear(p, c, T, L, j, 'near')
-        drawRags(p, c, T, L, j)
+        withGreatTilt(p, c, T, j, () => {
+          drawTear(p, c, T, L, j, 'near')
+          drawRags(p, c, T, L, j)
+        })
         drawShreds(p, c, T, L)
       }
       drawCeiling(p, c, T)
@@ -453,11 +455,15 @@ export const drum = part<DrumState>(
     }
   },
   (slot): PartShot[] => [
-    { t: slot.begin, ...SEAM_SHOT },
+    // The seam's framing (6 cells, following), leaning east into the room he falls into, so the room is seen (its
+    // banked fires, the kettle, the drums) and not the rock of its west wall.
+    { t: slot.begin, ...SEAM_SHOT, off: [1.7, SEAM_SHOT.off[1]] },
     // The kettle's three strokes: the landing settles first (the camera eases out of the dive onto him on the kettle,
-    // a held point, over a beat), and only then leans the way he will be thrown.
-    { t: beat(161.2), cells: 6.1, hold: [-0.2, -0.55], w: 0.75, off: [0.2, -0.3] },
-    { t: beat(162.4), cells: 6.3, hold: [1.2, -1.1], w: 0.35, off: [0.9, -0.9] },
+    // a held point, over a beat), and only then leans the way he will be thrown. The held point is east of him (as the
+    // seam's lean is), so the frame is the room he has fallen into (the kettle at its west side, the fire, the
+    // war-drum), not the rock west of its wall (at -0.2 it was 40% black rock).
+    { t: beat(161.2), cells: 6.1, hold: [1.9, -0.55], w: 0.75, off: [0.2, -0.3] },
+    { t: beat(162.4), cells: 6.3, hold: [2.3, -1.1], w: 0.5, off: [0.9, -0.9] },
     // On the war-drum: close, the drummers over him. Held a little west of him, so the frame runs from the room's west
     // wall to the far war-fire: the kettle whole at its west edge (never half out of it), both fires whole over the
     // floor, and the great drum's gallery out past its east edge. Low enough for the fires, high enough that the

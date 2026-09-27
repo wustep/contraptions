@@ -143,9 +143,11 @@ function shots(begin: number): PartShot[] {
     // Up the rail with it, a little ahead, so each bottle is in before the hammer comes down on it.
     { t: RINGS[1], cells: 5.0, off: [1.0, 0.45], w: 0 },
     { t: RINGS[3], cells: 5.6, off: [1.2, 0.5], w: 0 },
-    // Out to the whole machine for the slam: the buffer, the demijohn, the wheel, the crucible landing in the sand.
-    { t: SLAM - 0.25, cells: 7.0, hold: [ORGAN[ORGAN.length - 1].x - 0.1, SANDBOX.top - 2.95], w: 0.9 },
-    { t: SLAM + 0.05, cells: 7.0, hold: [ORGAN[ORGAN.length - 1].x + 0.05, SANDBOX.top - 3.2], w: 0.9 },
+    // Out to the whole machine for the slam, still travelling up the rail with the carriage (a follow, half weighted
+    // to where the slam will be framed) so it runs into a moving frame and the hit stops both: the buffer, the
+    // demijohn, the wheel, and the crucible landing in its sand box, all inside the frame.
+    { t: SLAM - 0.25, cells: 7.3, hold: [ORGAN[ORGAN.length - 1].x - 0.1, SANDBOX.top - 2.7], off: [1.2, 0.7], w: 0.4 },
+    { t: SLAM + 0.05, cells: 7.8, hold: [ORGAN[ORGAN.length - 1].x + 0.05, SANDBOX.top - 2.75], w: 0.9 },
     { t: SLAM + 0.55, cells: 6.2, hold: [ORGAN[ORGAN.length - 1].x + 0.3, -1.1], w: 0.55 },
     // Up with it to the port as the draught takes it (81.12); into the fire: close on the spark, the flame filling it.
     { t: DRAW + 0.45, cells: 3.2, off: [0, -0.3], w: 0 },

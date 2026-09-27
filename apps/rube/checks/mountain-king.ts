@@ -15,8 +15,10 @@ import { ORDER } from '../src/shows/versions/mountain-king/dovre/score'
 import { STRIKES } from '../src/shows/versions/mountain-king/dovre/hits'
 import { CODA_SHOT, HEART_SHOT, PLAN, SEAM_SHOT, WOMAN_LEAD } from '../src/shows/versions/mountain-king/dovre/seams'
 import { CARDS, CREDITS_OK, DURATION, creditsAt } from '../src/shows/versions/mountain-king/dovre/credits'
-import { BEATS, CODA, CODA_CHORDS, LAST1, LAST2, P, RECORDING, THEME_START, TUNE_END, beatAt, eighth } from '../src/shows/versions/mountain-king/dovre/music'
-import { REST } from '../src/shows/versions/mountain-king/dovre/mountain'
+import { BEATS, BLOW, CODA, CODA_CHORDS, END, LAST1, LAST2, P, RECORDING, THEME_START, TUNE_END, beatAt, eighth } from '../src/shows/versions/mountain-king/dovre/music'
+import { REST, skyline } from '../src/shows/versions/mountain-king/dovre/mountain'
+import { ROOMS } from '../src/shows/versions/mountain-king/dovre/finale/fall-ruin'
+import { R } from '../src/parts'
 
 type Check = (name: string, ok: boolean, detail?: string) => void
 const near = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps
@@ -143,6 +145,24 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   check('mountain king: at the end Peer lies still in the hollow on the east shoulder, at sunrise',
     Math.hypot(end[0] - REST[0], end[1] - REST[1]) < 0.01 && Math.hypot(end[0] - still[0], end[1] - still[1]) < 0.001)
 
+  // The coda's picture: the mountain comes down bottom up on the hammered chords, a room a chord, in one wide of
+  // the whole mountain, with Peer up the vent over every room as it falls; the last blow throws him out; he lands on
+  // the east shoulder on the first last chord, bounces into the hollow on the second, and is still as it rings out.
+  const onChord = (t: number) => CODA_CHORDS.some((c) => Math.abs(c.t - t) < 1e-6)
+  const fell = ROOMS.map((r) => ({ r, over: show.where(r.at)[1] < r.y0 - 0.3, wide: cam(r.at).cells >= 50 }))
+  check('mountain king: the mountain comes down bottom up on the hammered chords (a room a chord, him over it, the whole mountain in the frame)',
+    ROOMS.every((r, i) => onChord(r.at) && (r.then === undefined || onChord(r.then)) && (i === 0 || r.at >= ROOMS[i - 1].at)) &&
+    fell.every((f) => f.over && f.wide) && ROOMS[ROOMS.length - 1].at < BLOW,
+    fell.filter((f) => !f.over || !f.wide).map((f) => f.r.name).join(', '))
+  const ground = (t: number) => { const [x, y] = show.where(t); return Math.abs(y - (skyline(x) - R)) < 0.02 }
+  const [lx1] = show.where(LAST1)
+  const [lx2] = show.where(LAST2)
+  const rest = show.where(END)
+  check('mountain king: thrown out on the last blow, he lands on the shoulder on the first last chord and bounces into the hollow on the second, still as it rings out',
+    show.where(BLOW - 0.3)[1] > skyline(47.5) && show.where(BLOW + 0.8)[1] < skyline(show.where(BLOW + 0.8)[0]) - 1 &&
+    ground(LAST1) && ground(LAST2) && lx1 < lx2 && lx2 < REST[0] + 0.5 && Math.hypot(rest[0] - REST[0], rest[1] - REST[1]) < 0.01,
+    `${lx1.toFixed(2)} ${lx2.toFixed(2)} rest ${rest.map((v) => v.toFixed(2)).join(',')}`)
+
   // The Woman in Green: she never jumps where she can be seen, comes and goes only out of shot, rests WOMAN_LEAD
   // ahead of Peer at the rest seams she is at, and is gone before the chase goes under the hall.
   const inShot = (t: number, b: { x: number; y: number; scale?: number } | null) => {
@@ -182,6 +202,6 @@ export function checkMountainKing(perf: Performance, version: Version, check: Ch
   check('mountain king: end credits after the last chord, set by the page: directed by Claude Opus 5.5, the cast, Ibsen, the music honestly, p5.js',
     CREDITS_OK && perf.titles === creditsAt && creditsAt(CARDS[0].at - 0.05).length === 0 && creditsAt(perf.duration).length === 0 &&
     CARDS[0].role === 'Directed by' && CARDS[0].names.join() === 'Claude Opus 5.5' && !/Stephen Wu/.test(said) &&
-    ['Peer Gynt', 'The Woman in Green', 'The Mountain King', 'Henrik Ibsen', 'Edvard Grieg', 'In the Hall of the Mountain King', 'Czech National Symphony Orchestra', 'Musopen', 'public domain', 'p5.js'].every((w) => said.includes(w)) &&
+    ['Peer Gynt', 'The Woman in Green', 'The Mountain King', 'The great pig', 'her bridal steed', 'Henrik Ibsen', 'Edvard Grieg', 'In the Hall of the Mountain King', 'Czech National Symphony Orchestra', 'Musopen', 'public domain', 'p5.js'].every((w) => said.includes(w)) &&
     !/tech demo/i.test(said), said)
 }

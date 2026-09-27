@@ -4,7 +4,7 @@ import { END, LAST2 } from './music'
 import { PEER, TROLL, WOMAN } from './worlds'
 
 /**
- * The end credits: once he has landed on the shoulder, over the dawn, a card at a time, set by the page
+ * The end credits: once he has come to rest in the hollow and the last chord has rung out, over the dawn, a card at a time, set by the page
  * (`Performance.titles`), since a show's canvas sets no type. They come up high in the frame, over the sky, a size up
  * and in cream (amber on the pale sky read weakly); on a tall phone they go up into the sky over the 16:9 box. The
  * last is gone before the end.
@@ -20,35 +20,37 @@ export interface Card {
   notes?: string[]
 }
 
-const FORM = 1.0
-const GO = 0.8
-const OVERLAP = 0.2
+const FORM = 0.9
+const GO = 0.7
+const OVERLAP = 0.3
 
-/** The credits start once the last chord has rung out and he has come down on the shoulder (153.17) and bounced. */
-export const CREDITS_AT = Math.max(END + 0.5, 153.7)
+/** The credits start as the last chord has rung out (151.3) and he lies still in the hollow. */
+export const CREDITS_AT = END + 0.5
 /** A size up from the page's usual, and how far into a tall stage's extra sky they go. */
 const SCALE = 1.3
 const LIFT = 0.62
 
 const script: Omit<Card, 'at'>[] = [
-  { hold: 2.2, role: 'Directed by', names: ['Claude Opus 5.5'] },
+  { hold: 1.8, role: 'Directed by', names: ['Claude Opus 5.5'] },
   {
-    hold: 3.4,
+    hold: 3.2,
     role: 'With',
     names: [
       ['Peer Gynt', 'the red ball', PEER],
       ['The Woman in Green', 'the green ball', WOMAN],
       ['The Mountain King', 'and his trolls', `slab:${TROLL.hide}`],
+      // Ibsen's "bridal steed": the way they reach the hall, on screen for the first twenty seconds.
+      ['The great pig', 'her bridal steed', `slab:${TROLL.old}`],
     ],
   },
-  { hold: 2.0, role: 'After', names: ['Henrik Ibsen'], notes: ['Peer Gynt (1867), Act Two'] },
+  { hold: 1.6, role: 'After', names: ['Henrik Ibsen'], notes: ['Peer Gynt (1867), Act Two'] },
   {
-    hold: 3.2,
+    hold: 2.8,
     role: 'Music',
     names: ['Edvard Grieg'],
     notes: ['“In the Hall of the Mountain King”, from Peer Gynt', 'Czech National Symphony Orchestra, for Musopen · public domain'],
   },
-  { hold: 1.8, role: 'Drawn with', names: ['p5.js'] },
+  { hold: 1.4, role: 'Drawn with', names: ['p5.js'] },
 ]
 
 export const CARDS: Card[] = (() => {
@@ -68,7 +70,7 @@ export const LAST_GONE = (() => {
 })()
 
 /** The show's length: the recording's last chord, its ring, and the credits over the dawn after it. */
-export const DURATION = Math.ceil(LAST_GONE + 1.5 - 1e-6)
+export const DURATION = Math.ceil(LAST_GONE + 1.0 - 1e-6)
 
 /** Where a card's top middle sits, as shares of the 16:9 frame: the middle, high, over the sky. */
 const AT: [number, number] = [0.5, 0.07]

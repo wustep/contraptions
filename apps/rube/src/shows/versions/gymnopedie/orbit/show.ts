@@ -4,7 +4,7 @@ import { Show, type ShowPoint } from '../../../../show'
 import type { Universe } from '../../../../universe'
 import type { World } from '../../../../worlds'
 import { PERIOD, wrap } from './music'
-import { LENGTH, RADIUS, along, ballLocal } from './path'
+import { LENGTH, RADIUS, along, ballLocal, squash } from './path'
 import { BALL, THEME, WORLD, polar } from './world'
 
 /**
@@ -83,7 +83,10 @@ export class GymnopedieShow extends Show {
   override at(t: number): ShowPoint {
     const time = wrap(t)
     const b = ballLocal(time)
-    const [x, y] = polar(b.u, b.h)
+    // Coming down on a note it gives a little of its height, as far as the note was played, and gets it back: its
+    // foot stays on the stone, so its middle goes down with it.
+    const q = squash(time)
+    const [x, y] = polar(b.u, b.h - BALL_R * q)
     const u = along(time)
     this.spin.x = x
     // Rolling: its distance along the sea over its radius, and the angle it has gone round; rounded to whole turns a
@@ -93,9 +96,10 @@ export class GymnopedieShow extends Show {
     return {
       x,
       y,
-      scale: 1,
-      stretch: 1,
-      angle: 0,
+      // Squashed along the sea: as wide again as it is shorter.
+      scale: 1 - q,
+      stretch: (1 + q) / (1 - q),
+      angle: b.u / RADIUS,
       hidden: false,
       seg: 0,
       s: 0,

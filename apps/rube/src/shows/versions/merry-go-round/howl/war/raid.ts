@@ -25,7 +25,8 @@ import { ash, beam, bomb, embers, fire, flak, glow, rgba, skyGlow, smoke, sparks
  *   212.99   Howl comes in out of the dark and tears through the lead bomber (212.99, 213.20); it falls burning
  *            beyond the roofs (214.67); a searchlight from the street's far end finds him low over the roofs across
  *            from her (215.29), flak beside him; she stops the engine and glances up at him (a hop back, 216.78)
- *   217.62   a bomber dives on the street and lets a bomb go at her (218.02): she darts back behind the engine
+ *   217.62   a bomber dives low along the street at her and, pulling up, tosses its bomb on the downbeat: she darts
+ *            back behind the engine's end
  *   218.42   Howl strikes it aside with his wing right over her head; it bursts in the street further up (218.88) and
  *            she ducks, a short skid back
  *   the waltz again, loud (bars of 1.1 s)
@@ -68,8 +69,8 @@ const TEAR = [at(212.985), at(213.2)] as const
 const CRASH = b(11, 3)
 /** A searchlight finds him; flak beside him. */
 const CAUGHT = at(215.29)
-/** The bomber's bomb: let go low over the street, struck aside, bursting in the street. */
-const RELEASE = b(14, 2)
+/** The bomber's bomb: let go low over the street on the downbeat, struck aside, bursting in the street. */
+const RELEASE = b(14)
 const TURNED = at(218.424)
 const STREET = b(15)
 /** The fire in the crater takes the house behind it. */
@@ -244,10 +245,10 @@ const farBombs = FAR_STICK.map((land) => {
 /* ------------------------------------------------------------------ the bombers */
 
 /**
- * The war comes down over the street: the flight, and Howl's fight with it, fly this much lower than they would over
- * the roofs, so that the camera can hold Sophie in the street and them over her in one frame.
+ * The flight comes in low, but over the roofs, never in front of them: the camera looks up at it from the street (a
+ * frame of sky with the roofline along its foot), so each bomber is a black shape against the fire-lit smoke.
  */
-const LOW = 3.6
+const LOW = 0.4
 /** A flight of four coming in low from the right: [x at 207, height, phase]. */
 const FLIGHT: [number, number, number][] = [
   [25.5, -12.0 + LOW, 0],
@@ -256,7 +257,9 @@ const FLIGHT: [number, number, number][] = [
   [35.0, -12.8 + LOW, 0.7],
 ]
 const FLIGHT_V = -2.2
-const BOMBER_SIZE = 1.8
+const BOMBER_SIZE = 2.1
+/** The fleet against the burning sky: nearly black, a breath of the iron's blue in it. */
+const FLEET_DARK = mixHex('#0F0D16', WASTES.warship, 0.16)
 const inFormation = (i: number, t: number): Pt => [FLIGHT[i][0] + FLIGHT_V * (t - 207), FLIGHT[i][1] + 0.22 * Math.sin(1.4 * t + FLIGHT[i][2])]
 
 /** The lead bomber after Howl tears it: knocked over, spinning, trailing smoke, down beyond the roofs. */
@@ -273,14 +276,19 @@ const leadFall = (() => {
   }
 })()
 
-/** The third bomber's dive on the street: out of the flight, down, the bomb let go, and up and away to the left. */
+/**
+ * The third bomber's dive on the street: out of the flight, down low along the street at her (into her frame whole,
+ * from the right, never a wing cut by its top), and pulling up it tosses its bomb at her (let go climbing, so it arcs
+ * up a little before it falls), and climbs away to the left.
+ */
 const DIVE = path([
   { t: 207, p: inFormation(2, 207), v: [FLIGHT_V, 0] },
   { t: 215.6, p: inFormation(2, 215.6), v: [FLIGHT_V, 0.2] },
-  { t: 216.9, p: [11.4, -7.7], v: [-2.4, 2.4] },
-  { t: RELEASE, p: [7.1, -5.6], v: [-4.2, 0.9] },
-  { t: 218.5, p: [5.2, -6.8], v: [-3.2, -3.8] },
-  { t: 219.3, p: [2.8, -10.2], v: [-3.0, -4.6] },
+  { t: 216.9, p: [12.8, -4.3], v: [-5.4, 3.0] },
+  { t: 217.3, p: [9.2, -2.75], v: [-5.8, 0.4] },
+  { t: RELEASE, p: [7.1, -3.3], v: [-3.4, -2.2] },
+  { t: 218.2, p: [5.3, -6.0], v: [-2.8, -4.6] },
+  { t: 219.3, p: [2.5, -10.6], v: [-2.5, -3.6] },
   { t: 220.5, p: [-1.6, -14.6], v: [-4.0, -2.4] },
   { t: 222.5, p: [-10.5, -17.2], v: [-4.5, -0.6] },
 ])
@@ -327,16 +335,17 @@ function theBomb(t: number): { p: Pt; ang: number } | null {
 /* ------------------------------------------------------------------ the great warship */
 
 /**
- * The great warship, low over the roofs through the waltz: its keel's height and size. It comes as low as it can and
- * still bomb the roofs (its bay under a cell over the tallest ridge), so a medium on Sophie holds its belly and bay.
+ * The great warship over the roofs through the waltz: its keel's height and size. High enough that, looking up from
+ * the street, the whole of it (mast to oars) stands clear over the roofline, the hat shop's tall gable too, black
+ * against the burning sky; its stick takes a second to come down through the roofs.
  */
-const SHIP_LOW = 2.6
+const SHIP_LOW = -1.8
 const W2 = { y: -14.2 + SHIP_LOW, s: 2.4 }
 /** Its bomb bay, in the drawing's own units (before it is turned to face left): the opening's middle and half-width. */
 const BAY = { x: 0.2, y: 0.36, w: 0.34 }
 /** The stick: the roofs across the street, from the far end to the one across from the shop, a bomb a bar. */
 const STICK_ROOFS: Pt[] = [5, 4, 3, 2, 1, 0].map(roofOf)
-const STICK_FALL = 0.75
+const STICK_FALL = 1.0
 /** The ship is over each roof (a little past it: the bombs keep its way) as it lets that one go. */
 const W2X = path([
   { t: 214.5, p: [55, 0], v: [-6.6, 0] },
@@ -440,7 +449,8 @@ const SMOKES: Smoke[] = SITES.map((s) => ({
   size: s.far ? 0.62 : 0.75,
   life: s.far ? 7 : 7.5,
   seed: s.seed,
-  lit: 0.7,
+  // Beyond the roofs the smoke stands dark against the burning sky; over the street's roofs it is lit from the fire.
+  lit: s.far ? 0.4 : 0.7,
   a: s.far ? 0.32 : 0.42,
 }))
 
@@ -513,14 +523,16 @@ const HOWL_KEYS: Key[] = [
   { t: 212.15, p: [27.0, -16.2 + LOW], v: [-11, 3.0] },
   { t: TEAR[0], p: [inFormation(0, TEAR[0])[0] + 0.75, inFormation(0, TEAR[0])[1] + 0.05], v: [-8.5, 0.7] },
   { t: TEAR[1], p: [inFormation(0, TEAR[1])[0] - 0.95, inFormation(0, TEAR[1])[1] + 0.1], v: [-8.0, -0.3], out: [-5.5, -4.2] },
-  // Low over the roofs across from her, a cell over the ridge, so the searchlight holds him in the frame she is in.
-  { t: b(11), p: [8.4, -9.9], v: [-2.8, -1.2] },
-  { t: 214.6, p: [7.0, -9.65], v: [-0.6, 0.1] },
-  { t: CAUGHT, p: [7.4, -9.4], v: [1.2, 0.5] },
-  { t: b(12, 3), p: [8.3, -9.1], v: [1.2, 0.4], out: [-0.8, 3.0] },
-  { t: 216.573, p: [7.7, -8.6], v: [-0.9, -0.5] },
-  { t: 217.414, p: [6.3, -8.7], v: [-2.2, 2.8] },
-  { t: RELEASE, p: [4.5, -6.6], v: [-0.4, 5.2] },
+  // Over the roofs across from her, two cells over the tallest ridge, where the searchlight finds him against the
+  // burning sky.
+  { t: b(11), p: [8.6, -13.0], v: [-2.8, -0.6] },
+  { t: 214.6, p: [7.0, -12.9], v: [-0.6, 0.2] },
+  { t: CAUGHT, p: [7.4, -12.5], v: [1.2, 0.5] },
+  { t: b(12, 3), p: [8.3, -12.2], v: [1.2, 0.4], out: [-0.8, 3.0] },
+  { t: 216.573, p: [7.5, -10.9], v: [-1.4, 1.2] },
+  // He stoops on the diving bomber, down past the eaves into the street, and meets its bomb over her head.
+  { t: 217.15, p: [5.4, -7.6], v: [-3.0, 5.8] },
+  { t: RELEASE, p: [3.3, -4.0], v: [0.2, 5.0] },
   { t: TURNED, p: [STRUCK[0] - 0.26, STRUCK[1] - 0.1], v: [3.0, 5.6], out: [5.5, -5.5] },
   { t: 219.3, p: [9.0, -6.6], v: [3.6, -3.4] },
   { t: 220.4, p: [11.8, -9.4 + SHIP_LOW * 0.5], v: [2.0, -2.2] },
@@ -543,7 +555,7 @@ const HOWL = path(HOWL_KEYS)
 const HOWL_FROM = HOWL_KEYS[0].t
 const HOWL_TO = HOWL_KEYS[HOWL_KEYS.length - 1].t
 /** He is losing himself to the bird: his wings grow as he fights. */
-const wingScale = (t: number) => 1.45 + 0.55 * smooth(t, 219, 231.8)
+const wingScale = (t: number) => 1.65 + 0.45 * smooth(t, 219, 231.8)
 /** His blows: each a jolt through his wings, sharp and damped. */
 const HOWL_BLOWS = [...TEAR, TURNED, BOW, DOORS, BLOWN]
 /**
@@ -560,9 +572,9 @@ const FEATHERS: [number, number][] = (() => {
 /** The flak bursts: [time, x, y, size]. */
 const FLAK: [number, number, number, number][] = [
   [at(212.341), 16.0, -14.6 + LOW, 1.1],
-  [b(11), 9.6, -9.4, 1.2],
-  [b(12, 3), 9.1, -9.7, 1.2],
-  [at(216.573), 13.4, -12.6 + LOW * 0.8, 1],
+  [b(11), 9.8, -12.4, 1.2],
+  [b(12, 3), 9.1, -12.8, 1.2],
+  [at(216.573), 13.4, -13.4, 1],
   [FLUNG, 2.05, -11.1 + SHIP_LOW, 1.35],
 ]
 
@@ -650,12 +662,13 @@ function journey(): Journey {
   go(b(13, 3), 0, 0, 0.13)
   // The bomber dives on the street and lets its bomb go at her: she darts back from the engine. His wing turns it
   // aside over her, and as it bursts up the street she ducks, a short skid back, low.
+  // (Short: back behind the engine's end, no further, so the close on her holds the crater's fire too.)
   t = RELEASE
-  keys.push({ t, p: [x, 0], v: [0, 0], out: [-1.9, 0] })
+  keys.push({ t, p: [x, 0], v: [0, 0], out: [-1.3, 0] })
   hits.push(RELEASE)
-  v = -1.9
-  go(TURNED, -1.6, -0.25, 0.12)
-  go(STREET, 0, -1.4, 0, false)
+  v = -1.3
+  go(TURNED, -0.9, -0.25, 0.12)
+  go(STREET, 0, -0.9, 0, false)
   go(at(219.312), -0.3, -0.3, 0.04)
   go(bar('return', 0, 2), 0, 0, 0, false)
   // The house behind the crater takes fire. She steps up to the engine and springs onto its brake.
@@ -673,7 +686,9 @@ function journey(): Journey {
   keys.push({ t: r(2), p: [LX, BRAKE.up], v: [0, fall] })
   hits.push(r(2))
   keys.push({ t: r(2) + 0.24, p: [LX, BRAKE.up + 0.15], v: [0, 0] })
+  // The beam back level under her on the bar's three: she stands on it, frozen, looking up (the cut back to her).
   keys.push({ t: r(2, 3), p: [LX, BRAKE.up], v: [0, 0] })
+  hits.push(r(2, 3))
   fall = 0.8
   // Pumping: a stroke a bar. Down on the one with her weight (the water goes), the brake bottoming on the two; it
   // springs back up by the three and throws her up off it, and she comes down on it again on the next one: a true
@@ -721,14 +736,30 @@ function sophieAt(t: number): Pt {
   const bob = JOURNEY.bobs.find(([a, c]) => t > a && t < c)
   return bob ? [x, y - bob[2] * Math.sin((Math.PI * (t - bob[0])) / (bob[1] - bob[0]))] : [x, y]
 }
+/**
+ * The camera's looks up from the street (each a cut on a strike, and back on one): the sky's war over the roofline,
+ * and the close on Howl as he stoops. She is in the street under the frame's foot, out of the picture, so her ball is
+ * hidden while it lasts (each under 2 s).
+ */
+const LOOKS: [number, number][] = [
+  [b(10), b(11, 2)],
+  [b(12), b(12, 3)],
+  [RELEASE, TURNED],
+  [BAY_OPEN, r(2, 3)],
+  [r(10, 3), r(12)],
+]
+const looking = (t: number) => LOOKS.some(([a, c]) => t >= a && t < c)
 /** Her lane: the same way, sampled finely between the times where it turns, so it lands on them exactly. */
 function lane(): Seg[] {
-  const cuts = [...JOURNEY.keys.map((q) => q.t), ...JOURNEY.bobs.flatMap(([a, c]) => [a, c])]
+  const cuts = [...JOURNEY.keys.map((q) => q.t), ...JOURNEY.bobs.flatMap(([a, c]) => [a, c]), ...LOOKS.flat()]
     .filter((q) => q >= B && q <= E)
     .sort((a, c) => a - c)
     .filter((q, i, all) => i === 0 || q - all[i - 1] > 1e-6)
   const segs: Seg[] = []
-  for (let i = 1; i < cuts.length; i++) segs.push(...carried(sophieAt, cuts[i - 1], cuts[i], Math.max(1, Math.ceil((cuts[i] - cuts[i - 1]) * 60))))
+  for (let i = 1; i < cuts.length; i++) {
+    const [a, c] = [cuts[i - 1], cuts[i]]
+    segs.push(...carried(sophieAt, a, c, Math.max(1, Math.ceil((c - a) * 60)), looking((a + c) / 2)))
+  }
   return segs
 }
 const SOPHIE = { hits: JOURNEY.hits }
@@ -876,7 +907,8 @@ function flashAt(t: number): number {
   for (const s of FAR_FLASHES) add(s, 0.11, 0.24)
   for (const s of FAR_STICK) add(s, 0.045)
   add(CRASH, 0.06)
-  add(STREET, 0.22, 0.22)
+  // The burst in the street is close, but the dark is kept: its fire lights her, the flash only warms the frame.
+  add(STREET, 0.14, 0.2)
   add(CATCH, 0.05)
   for (const s of STICK) add(s, 0.07)
   add(BLOWN, 0.16, 0.25)
@@ -987,20 +1019,49 @@ function drawSky(p: p5, k: number, t: number, f: Frame): void {
   const burning = 0.1 + 0.12 * smooth(t, 206, 232)
   skyGlow(p, k, f.x0, f.x1, -7.6, 6.5, TOWN.ember, burning)
   skyGlow(p, k, f.x0, f.x1, -8.6, 3.5, TOWN.fire, burning * 0.5)
-  // The smoke over the town: long low banks drifting left, lit from under.
+  // Over the roofline (clipped to the sky, so the roofs stand black against it): the burning town's light, up from
+  // behind the ridges and fading into the night, stronger as the town burns.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const back = 0.1 + 0.16 * smooth(t, 209, 214) + 0.06 * smooth(t, 222, 231)
   p.push()
-  p.noStroke()
-  for (let i = 0; i < 24; i++) {
-    const w = 3.2 + 3.4 * hash(i, 1, 7)
+  clipAboveRoofs(ctx, k, f)
+  // The town beyond the roofs goes down into the night first (its gables caught the glow and stood paler than the
+  // sky, a ghost roofline over the real one), so only the street's own roofs stand against the light.
+  const veil = ctx.createLinearGradient(0, -5.2 * k, 0, -15 * k)
+  veil.addColorStop(0, rgba(INDIGO, 0.9))
+  veil.addColorStop(0.6, rgba(INDIGO, 0.78))
+  veil.addColorStop(1, rgba(INDIGO, 0))
+  ctx.fillStyle = veil
+  ctx.fillRect(f.x0 * k, -15 * k, (f.x1 - f.x0) * k, 9.8 * k)
+  ctx.globalCompositeOperation = 'lighter'
+  const g = ctx.createLinearGradient(0, -7.4 * k, 0, -19 * k)
+  g.addColorStop(0, rgba(TOWN.fire, back * 0.9))
+  g.addColorStop(0.18, rgba(TOWN.ember, back))
+  g.addColorStop(0.55, rgba(TOWN.ember, back * 0.4))
+  g.addColorStop(1, rgba(TOWN.ember, 0))
+  ctx.fillStyle = g
+  ctx.fillRect(f.x0 * k, -19 * k, (f.x1 - f.x0) * k, 11.6 * k)
+  p.pop()
+  // The smoke over the town: long low banks drifting left, each a heap of soft puffs of uneven size, dark on top and
+  // lit orange underneath by the fires below, the lower banks the more.
+  for (let i = 0; i < 18; i++) {
+    const w = 3.0 + 3.2 * hash(i, 1, 7)
     const span = 70
     const x = ((((hash(i, 2, 7) * span - 0.35 * t - 20) % span) + span) % span) - 24
-    if (x + w < f.x0 || x - w > f.x1) continue
+    if (x + w + 2 < f.x0 || x - w - 2 > f.x1) continue
     const y = -11.4 - 6 * hash(i, 3, 7) + 0.3 * Math.sin(t * 0.3 + i)
-    const lit = Math.max(0, Math.min(1, (y + 17.5) / 6))
-    p.fill(alpha(p, mixHex(TOWN.smoke, TOWN.ember, 0.35 * lit), 0.16 + 0.1 * hash(i, 4, 7)))
-    p.ellipse(x * k, y * k, 2 * w * k, (0.9 + 0.9 * hash(i, 5, 7)) * k)
+    const lit = Math.max(0, Math.min(1, (y + 18.5) / 7))
+    const a = 0.2 + 0.12 * hash(i, 4, 7)
+    const n = 3 + Math.floor(3 * hash(i, 5, 7))
+    for (let j = 0; j < n; j++) {
+      const u = n === 1 ? 0.5 : j / (n - 1)
+      const px = x - w + 2 * w * u + 0.5 * (hash(i, 10 + j, 7) - 0.5)
+      const r = (0.55 + 0.6 * hash(i, 20 + j, 7)) * (0.55 + 0.45 * Math.sin(Math.PI * (0.15 + 0.7 * u))) * 1.5
+      const py = y - 0.25 * r * hash(i, 30 + j, 7)
+      puff(p, k, px, py, r, mixHex(TOWN.smoke, TOWN.nightHigh, 0.35), a, 0.55)
+      puff(p, k, px + 0.3 * (hash(i, 40 + j, 7) - 0.5), py + 0.42 * r, r * 1.05, mixHex(TOWN.ember, TOWN.fire, 0.25), a * 0.6 * lit * (0.4 + 0.6 * smooth(t, 209, 214)), 0.5)
+    }
   }
-  p.pop()
 }
 
 /** A soft round volume of smoke: dense at its middle, gone at its edge. Never outlined. */
@@ -1154,7 +1215,7 @@ function drawBombers(p: p5, k: number, W: number, ink: string, t: number): void 
     p.push()
     p.translate(x * k, y * k)
     p.rotate(bm.ang)
-    drawBomber(p, k * BOMBER_SIZE, W * 0.8, ink, { t: t + i * 0.37, face: -1, color: mixHex(WASTES.warship, TOWN.nightHigh, 0.2) })
+    drawBomber(p, k * BOMBER_SIZE, W * 0.8, ink, { t: t + i * 0.37, face: -1, color: FLEET_DARK })
     p.pop()
     glow(p, k, x, y + 0.25, 1.1, TOWN.ember, 0.12, 0.5)
     if (bm.burning) {
@@ -1403,7 +1464,7 @@ function drawRoofFire(p: p5, k: number, W: number, s: Site, t: number): void {
 function drawShip(p: p5, k: number, W: number, ink: string, t: number): void {
   const s = ship(t)
   if (s.x < -30 || s.x > 60) return
-  const night = mixHex(WASTES.warship, TOWN.nightHigh, 0.3)
+  const night = FLEET_DARK
   p.push()
   p.translate(s.x * k, s.y * k)
   p.rotate(s.roll)
@@ -1803,6 +1864,7 @@ function drawShade(p: p5, k: number, t: number): void {
   puff(p, k, (HUSH[0] + HUSH[1]) / 2 - 0.2, GROUND - 1.9, 2.9, mixHex(INDIGO, TOWN.smoke, 0.25), a, 0.62)
 }
 function drawRim(p: p5, k: number, W: number, t: number): void {
+  if (looking(t)) return
   const [sx, sy] = sophieAt(t)
   const crater = craterLight(t)
   const street = 0.45 * smooth(t, 207, 209.5) * (1 - smooth(t, 233.5, 235.5))
@@ -1950,7 +2012,7 @@ export const raid = part<{ begin: number }>(
       embers(p, k, CRATER[0] - 1, CRATER[0] + 1, GROUND - 0.5, t, STREET, 5, 6)
       // Her shadow on the cobbles, so she stands out of them; the fire engine she works, and its water.
       const [sx, sy] = sophieAt(t)
-      puff(p, k, sx, GROUND - 0.01, 0.34, TOWN.nightHigh, 0.5 * (1 - smooth(-sy, 0.1, 1.6)), 0.22)
+      if (!looking(t)) puff(p, k, sx, GROUND - 0.01, 0.34, TOWN.nightHigh, 0.5 * (1 - smooth(-sy, 0.1, 1.6)), 0.22)
       drawEngine(p, k, W, ink, t)
       drawJet(p, k, t)
       ash(p, k, f, t, 1)
@@ -2013,63 +2075,75 @@ export const raid = part<{ begin: number }>(
     }
   },
   () => {
-    // Close on her out of the door and up to the engine. Then the war as event and reaction, on the downbeats: the
-    // sky's event wide or medium, then in on her answering it, with her never smaller than 7 px across at 640x360
-    // for more than a moment (93.6 / cells px). Only two wides (16 cells, each under 2.5 s beyond 13.4 cells): the
-    // tear (212.3 → 213.8) and the ship's end (231.0 → 232.8). Between them the frame is on her: mediums of 13 cells
-    // with her low (a little under a fifth up, the Zoom margin) for the searchlight holding him and the bay opening;
-    // and closes and long holds of 8 to 11 cells with her a third up, where she glances up at him, ducks under the
-    // bomb he turns aside (the bomb and the bird inside her frame), freezes on the beam, and pumps under the stick.
-    const on = (t: number, cells: number, lead: number, low = 0.26): PartShot => ({ t, cells, hold: [WAY(t).p[0] + lead, -low * cells] })
-    const at = (t: number, cells: number, x: number, low = 0.295): PartShot => ({ t, cells, hold: [x, -low * cells] })
+    // Close on her out of the door and up to the engine, and on her all through; the war over her is seen by looking
+    // up, a cut on a strike each way: a frame of sky with the roofline along its foot, the bombers, the warship and
+    // Howl black against the burning smoke (her ball hidden while she is under its foot, `LOOKS`). Four looks up: the
+    // tear, the searchlight finding him, the bay opening and the ship blowing; and one close on Howl as he stoops
+    // through the street and strikes the bomb aside over her head. Her frames are closes (5 cells or less at the
+    // raid's heart, 19 px and more at 640x360), their foot at the kerb (a sixth of the frame of cobbles, the Zoom
+    // margin) and their top under the eaves, so no roof is ever cut by the frame's edge: the burning roofs are seen
+    // whole in the looks up, or from her beam as the fire takes the upper floors.
     /** A hold with her `up` of the way up the frame from its foot, standing at height `y`. */
     const her = (t: number, cells: number, x: number, up: number, y = 0): PartShot => ({ t, cells, hold: [x, y - (0.5 - up) * cells] })
+    /** A look up: `cells` tall, the roofline along its foot (the foot at `foot`). */
+    const sky = (t: number, cells: number, x: number, foot: number, cut = false): PartShot => ({ t, cells, hold: [x, foot - cells / 2], cut })
     /** Her height while she pumps, between the beam's up and down. */
     const PUMP = -1.5
     const LX = JOURNEY.x1 - BRAKE.reach
     const sx = (t: number) => WAY(t).p[0]
+    const UP = 0.19
     return [
       { t: 206.3, cells: 4.7, off: [0.9, -0.82] },
-      on(207.3, 5.4, 1.2, 0.2),
-      on(208.4, 6.2, 1.5, 0.22),
-      at(209.9, 8.6, 4.6, 0.25),
-      // Out as the lights go out down the street, to the first wide: the flight over the roofs, the flak, Howl
-      // tearing through the lead bomber.
-      her(b(9), 10.4, sx(b(9)) + 2.6, 0.27),
-      her(b(10), 15.6, 9.4, 0.2),
-      her(213.45, 15.8, 9.0, 0.21),
-      // In to a medium on her pushing, low in the frame, the searchlight's long diagonal up the street to him over
-      // the roofs across from her.
-      her(214.35, 13.0, 7.45, 0.185),
-      her(215.6, 12.8, 7.4, 0.185),
-      // Cut in on her (on her push, the bar's third beat): she glances up at him (216.78), the bomber dives into her
-      // frame, his wing turns its bomb aside over her head, it bursts up the street and she ducks; the fire takes the
-      // house over the crater.
-      { ...her(b(12, 3), 8.8, sx(b(13)) + 2.0, 0.25), cut: true },
-      her(b(14), 9.4, 7.2, 0.22),
-      her(b(15), 9.4, 7.0, 0.29),
-      her(r(1), 9.6, 7.3, 0.31),
-      // Out to a medium as she lands on the beam and freezes: the ship's belly over the far roofs, its bay opening,
-      // and the stick's first bomb through the far roof.
-      her(r(2), 13.0, LX + 6.7, 0.2, BRAKE.up),
-      her(r(3), 12.8, LX + 6.2, 0.24, BRAKE.up),
-      // In on her pumping, a stroke a bar, the water over into the fire.
-      her(r(4), 8.2, LX + 1.8, 0.33, PUMP),
-      her(r(5), 8.5, LX + 1.9, 0.33, PUMP),
-      // A medium over her as the stick comes down the roofs to the one over her and on to the shop's.
-      her(r(6), 11.0, LX + 1.3, 0.33, PUMP),
-      her(r(8), 11.0, LX + 0.5, 0.33, PUMP),
-      // In on her again as he tears at the bay; then, on her step down (the bar's third beat), a cut out to the second
-      // wide, so the ship blows (231.805) in the whole frame.
-      her(r(9), 8.6, LX + 1.4, 0.33, PUMP),
-      her(r(10), 9.6, LX + 0.9, 0.345, PUMP),
-      { ...her(r(10, 3), 15.4, 3.0, 0.185), cut: true },
-      her(r(11), 15.6, 2.9, 0.185),
-      her(232.35, 16.0, 2.2, 0.185),
-      // In on her, running home.
-      her(233.35, 10.4, sx(233.35) - 1.2, 0.29),
-      on(234.6, 7.6, -0.6, 0.23),
-      on(235.6, 6.2, -0.3, 0.2),
+      { t: 207.3, cells: 5.4, hold: [sx(207.3) + 1.2, -0.2 * 5.4] },
+      her(208.4, 5.9, sx(208.4) + 1.5, 0.22),
+      // Pushing the engine up the street, the lights going out along it behind her, the far stick's flashes on her.
+      her(209.9, 6.2, sx(209.9) + 1.8, UP),
+      her(b(9), 6.2, sx(b(9)) + 1.8, UP),
+      her(212.35, 6.2, sx(212.35) + 1.8, UP),
+      // Look up on the downbeat: the flight coming in over the roofline, Howl out of the dark tearing through the
+      // lead bomber (212.985, 213.2) and it going down burning behind the roofs.
+      sky(b(10), 9.0, 16.2, -7.85, true),
+      sky(213.5, 9.2, 15.0, -7.85),
+      sky(214.2, 9.3, 14.4, -7.85),
+      // Back on her pushing; up again as the searchlight swings onto him (215.29) and the flak bursts beside him.
+      { ...her(b(11, 2), 5.6, sx(b(11, 2)) + 1.7, UP), cut: true },
+      her(215.05, 5.6, sx(215.05) + 1.7, UP),
+      sky(b(12), 6.4, 7.4, -9.35, true),
+      sky(215.88, 6.5, 7.9, -9.35),
+      // In on her and the engine as she stops it: she glances up at him (216.78).
+      { ...her(b(12, 3), 4.8, sx(b(12, 3)) + 1.55, 0.185), cut: true },
+      her(217.55, 4.8, 6.85, 0.185),
+      // On Howl as the bomber tosses its bomb at her: he stoops into the street and strikes it aside.
+      { t: RELEASE, cells: 3.4, hold: [5.55, -0.45 - 1.7], cut: true },
+      { t: TURNED - 0.02, cells: 3.35, hold: [5.15, -0.45 - 1.675] },
+      // On her as it goes over her head: she ducks, it bursts up the street (218.88) and its fire lights her from the
+      // right; the fire takes the house over it; she steps up to the engine and springs onto its beam.
+      { ...her(TURNED, 4.9, 6.7, 0.18), cut: true },
+      her(219.9, 4.9, 6.7, 0.18),
+      her(221.3, 5.0, 7.05, 0.18),
+      // Look up as she lands on it: the great warship over the roofs, its bay opening, the searchlight on it.
+      sky(BAY_OPEN, 13.0, 17.4, -7.55, true),
+      sky(222.2, 13.1, 16.9, -7.55),
+      // Back on her, frozen on the beam looking up; she drives it down (222.65), and pumps, a stroke a bar.
+      { ...her(r(2, 3), 5.0, LX + 1.9, 0.57, BRAKE.up), cut: true },
+      her(r(4), 7.0, LX + 1.8, 0.4, PUMP),
+      her(r(5), 7.3, LX + 1.9, 0.41, PUMP),
+      her(r(6), 7.4, LX + 1.6, 0.41, PUMP),
+      her(r(7) - 0.03, 7.4, LX + 1.4, 0.41, PUMP),
+      // On r7 a cut out to the whole street, two bars, the roofs whole with the sky over them, as the stick comes down
+      // the roofs a bomb a downbeat to the one over her and on toward the shop's; on r9 back in to her on the beam.
+      { ...her(r(7), 13.4, LX + 0.2, 0.22, PUMP), cut: true },
+      her(r(9) - 0.03, 13.6, LX - 0.2, 0.22, PUMP),
+      { ...her(r(9), 7.3, LX + 1.4, 0.41, PUMP), cut: true },
+      her(r(10), 7.4, LX + 0.9, 0.41, PUMP),
+      // Look up on her step down: Howl goes into the bay and the ship blows (231.805, 232.153) over the hat shop.
+      sky(r(10, 3), 13.0, 1.2, -7.55, true),
+      sky(232.45, 13.4, 0.9, -7.55),
+      // On her, running home.
+      { ...her(r(12), 6.2, sx(r(12)) - 1.1, 0.2), cut: true },
+      her(233.6, 6.2, sx(233.6) - 1.0, 0.2),
+      her(234.6, 5.9, sx(234.6) - 0.6, 0.2),
+      her(235.6, 5.4, sx(235.6) - 0.3, 0.21),
       { t: E, cells: SEAMS.hearth.cells, hold: [INSIDE[0] + SEAMS.hearth.frame[0], SEAMS.hearth.frame[1]] },
     ]
   },

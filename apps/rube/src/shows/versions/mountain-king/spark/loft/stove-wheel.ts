@@ -52,32 +52,48 @@ export const SEAT = LANDED[0] - (C[0] + RIM * Math.cos(THETA0))
 
 /* ------------------------------------------------------------------ the turn */
 
+/**
+ * The ratchet. Between two notes the spark's weight creeps the wheel round, slowly, as the pawl rides up a tooth; it
+ * slows as the pawl nears the crest. Off the crest the pawl drops, the wheel lurches the rest of the notch, faster and
+ * faster, and the pawl lands in the root on the note: the speed's peak is the click. Then it creeps again from rest.
+ */
+/** The share of a notch the wheel creeps (the pawl riding up a tooth); it drops the rest on the note. */
+const CREEP = 0.68
+/** How long the drop takes, ending on the note. */
+export const DROP = 0.06
+/** The creep's speed at the crest, as a share of its mean: it slows as the pawl rides up. */
+const CREST = 0.5
+
 /** Hermite on the unit interval with end slopes m0, m1. */
 const herm = (u: number, m0: number, m1: number): number => {
   const u2 = u * u
   const u3 = u2 * u
   return m0 * (u3 - 2 * u2 + u) + (-2 * u3 + 3 * u2) + m1 * (u3 - u2)
 }
-/** How much slower the wheel is at a click than on average: it surges between the clicks and sags on them. */
-const SAG = 0.5
 
-/** How far the wheel has turned since the spark landed, radians (clockwise). */
-export function turn(t: number): number {
-  if (t <= LAND) return 0
+/** Where the wheel is in its current notch at `t`: which notch (0-based), and how far through it (0..1). */
+function notchAt(t: number): { i: number; f: number; crest: number; b: number } {
   const ends = [LAND, ...CLICKS]
   const last = ends.length - 1
-  if (t >= ends[last]) return last * NOTCH
+  if (t <= LAND) return { i: 0, f: 0, crest: ends[1] - DROP, b: ends[1] }
+  if (t >= ends[last]) return { i: last, f: 0, crest: Infinity, b: Infinity }
   let i = 0
   while (i + 1 < last && t >= ends[i + 1]) i++
   const a = ends[i]
   const b = ends[i + 1]
-  const u = (t - a) / (b - a)
-  // Every click is at the same sagging speed; each interval's end slopes are that speed in its own time units.
-  const T = (j: number) => ends[j + 1] - ends[j]
-  let f: number
-  if (i === 0) f = herm(u, 0, ((1 - SAG) * T(0)) / T(1)) // From rest, into the first click.
-  else if (i === last - 1) f = herm(u, ((1 - SAG) * T(i)) / T(i - 1), 0) // Into the last click, and rest.
-  else f = u - (SAG * Math.sin(2 * Math.PI * u)) / (2 * Math.PI)
+  const crest = b - DROP
+  const Tc = crest - a
+  if (t < crest) return { i, f: CREEP * herm((t - a) / Tc, 0, CREST), crest, b }
+  // Off the crest: from the creep's last speed, a steady acceleration that covers the rest of the notch by the note.
+  const s = t - crest
+  const vc = (CREEP * CREST) / Tc
+  const acc = (2 * (1 - CREEP - vc * DROP)) / (DROP * DROP)
+  return { i, f: CREEP + vc * s + 0.5 * acc * s * s, crest, b }
+}
+
+/** How far the wheel has turned since the spark landed, radians (clockwise). */
+export function turn(t: number): number {
+  const { i, f } = notchAt(t)
   return (i + f) * NOTCH
 }
 
@@ -91,37 +107,80 @@ export const pivotOf = (k: number, t: number): Pt => {
 
 /* ------------------------------------------------------------------ the frames' swing */
 
+/** The vat: a tall tub of staves and hoops, its rim, the warm tallow in it. */
+export const VAT = { x0: -23.35, x1: -18.55, rim: 6.3, wax: 6.52, lip: 0.2 }
+/** How far a frame's candles hang below its pin, to their feet (cells). */
+const DEPTH = 2.45
+/** How deep in the tallow frame `k`'s candles are at `t`, 0 (clear) to 1 (half a cell or more). */
+const dipOf = (k: number, t: number): number => {
+  const [x, y] = pivotOf(k, t)
+  if (x < VAT.x0 || x > VAT.x1) return 0
+  return Math.max(0, Math.min(1, (y + DEPTH - VAT.wax) / 0.5))
+}
+
 /**
- * Each frame is a pendulum hung from a moving pivot, damped: it lags as the wheel surges, swings on after it sags,
- * and settles. Integrated once, over the time the wheel moves and a while after, and read back by time.
+ * Each frame is a damped pendulum on its pin. While the wheel creeps it hangs, leaning a little as the pivot eases
+ * off and on. The drop is too quick for it to lag, so it rides the lurch with its arm; when the wheel stops dead on
+ * the note it swings on the way it was going, a long damped sway (`TAU`), and the spark rides its frame's swing.
+ * The spark's frame also tips on its load: the spark stands east of its middle, so a stop going down dips that end.
+ * A frame whose candles are down in the tallow is held by it: it swings less and settles sooner (the last click, with
+ * the spark's frame low over the vat, comes to rest).
+ * Integrated once, over the time the wheel moves and a while after, and read back by time.
  */
 const SWING = { from: LAND - 0.2, to: 70, dt: 0.001, every: 5 }
-const ELL = 1.5
-const DAMP = 0.9
+/** The frame's length for the pivot's pull (cells), its sway's period (s) and its decay's time constant (s). */
+const LEN = 1.5
+const PERIOD = 1.0
+const TAU = 0.4
+const K = (2 * Math.PI / PERIOD) ** 2
+/** How much of the pivot's speed at the stop the frame carries on with (a stiff pin keeps it from all of it). */
+const KICK = 0.24
+/** The spark's weight on its frame, east of the middle: its lean (radians, at rest) and its lever on a stop. */
+const LEAN = 0.05
+const LEVER = 0.2
 const swings: Float32Array[] = []
 function integrate(): void {
   const steps = Math.round((SWING.to - SWING.from) / SWING.dt)
   const h = 0.002
+  const vel = (k: number, t: number): Pt => {
+    const p0 = pivotOf(k, t - 2e-4)
+    const p1 = pivotOf(k, t - 1e-4)
+    return [(p1[0] - p0[0]) / 1e-4, (p1[1] - p0[1]) / 1e-4]
+  }
   for (let k = 0; k < ARMS; k++) {
     const out = new Float32Array(Math.floor(steps / SWING.every) + 2)
     let a = 0
     let w = 0
+    let next = 0
     for (let s = 0; s <= steps; s++) {
       const t = SWING.from + s * SWING.dt
       if (s % SWING.every === 0) out[s / SWING.every] = a
-      const p0 = pivotOf(k, t - h)
-      const p1 = pivotOf(k, t)
-      const p2 = pivotOf(k, t + h)
-      const ax = (p2[0] - 2 * p1[0] + p0[0]) / (h * h)
-      const ay = (p2[1] - 2 * p1[1] + p0[1]) / (h * h)
-      // The spark's weight on frame 0, east of its middle, while it rides: a small lean and a kick as it lands.
-      const load = k === 0 && t >= LAND && t < TAKEOFF ? 0.32 : 0
-      let acc = (-G * Math.sin(a) + ax * Math.cos(a) + ay * Math.sin(a)) / ELL - DAMP * w + load * Math.cos(a)
+      const laden = k === 0 && t >= LAND && t < TAKEOFF
+      // The pivot's pull, except over a drop: the frame is carried through the lurch with its arm.
+      const inDrop = CLICKS.some((c) => t > c - DROP - 2 * h && t < c + 2 * h)
+      let force = 0
+      if (!inDrop) {
+        const p0 = pivotOf(k, t - h)
+        const p1 = pivotOf(k, t)
+        const p2 = pivotOf(k, t + h)
+        const ax = (p2[0] - 2 * p1[0] + p0[0]) / (h * h)
+        const ay = (p2[1] - 2 * p1[1] + p0[1]) / (h * h)
+        force = (ax * Math.cos(a) + ay * Math.sin(a)) / LEN
+      }
+      const dip = dipOf(k, t)
+      let acc = -K * Math.sin(a) + force - ((2 + 4 * dip) / TAU) * w + (laden ? K * LEAN * Math.cos(a) : 0)
       if (!Number.isFinite(acc)) acc = 0
       w += acc * SWING.dt
       a += w * SWING.dt
-      if (k === 0 && Math.abs(t - LAND) < SWING.dt / 2) w += 0.28
-      if (k === 0 && Math.abs(t - TAKEOFF) < SWING.dt / 2) w -= 0.2
+      // The stop on the note: the frame swings on with the speed its pin had (and the spark's frame tips on its load).
+      if (next < CLICKS.length && t >= CLICKS[next]) {
+        const [vx, vy] = vel(k, CLICKS[next])
+        const held = 1 - 0.45 * dip
+        w += held * ((KICK * -(vx * Math.cos(a) + vy * Math.sin(a))) / LEN + (laden ? (LEVER * vy) / LEN : 0))
+        next++
+      }
+      if (k === 0 && Math.abs(t - LAND) < SWING.dt / 2) w += 0.6
+      if (k === 0 && Math.abs(t - TAKEOFF) < SWING.dt / 2) w -= 0.45
     }
     swings.push(out)
   }
@@ -152,8 +211,6 @@ export const seatAt = (t: number): Pt => onFrame(0, t, SEAT, HANG - R)
 
 /* ------------------------------------------------------------------ the vat and the ladle */
 
-/** The vat: a tall tub of staves and hoops, its rim, the warm tallow in it. */
-export const VAT = { x0: -23.35, x1: -18.55, rim: 6.3, wax: 6.52, lip: 0.2 }
 /** The ladle leaning on the vat: its bowl hooked over the east rim, its handle's end on the floor. */
 export const LADLE = { top: [VAT.x1 + 0.12, VAT.rim + 0.14] as Pt, foot: [-13.2, FLOOR_Y - 0.06] as Pt, thick: 0.19 }
 const LDX = LADLE.foot[0] - LADLE.top[0]
@@ -164,6 +221,99 @@ const LU: Pt = [LDX / LADLE_LEN, LDY / LADLE_LEN]
 export const onLadle = (s: number): Pt => {
   const off = R + LADLE.thick / 2
   return [LADLE.top[0] + LU[0] * s + LU[1] * off, LADLE.top[1] + LU[1] * s - LU[0] * off]
+}
+
+/* ------------------------------------------------------------------ the ratchet and its pawl */
+
+/** The ratchet's teeth: root and crest radii, and the steep face's share of a notch. */
+const ROOT = 0.745
+const TOP = 0.88
+const FACE = 0.06
+/** The pawl: its hinge from the axle, its length. Its angle `pa` points hinge → tip (y down); smaller is lifted. */
+const HINGE: Pt = [-1.02, -0.88]
+const PAWL = 0.64
+const tipOf = (pa: number): Pt => [HINGE[0] + PAWL * Math.cos(pa), HINGE[1] + PAWL * Math.sin(pa)]
+/** The pawl's angle with its tip on a crest; the teeth are laid so a crest is under it as each drop begins. */
+const PA_C = (() => {
+  let lo = -0.3
+  let hi = 0.7
+  for (let n = 0; n < 40; n++) {
+    const m = (lo + hi) / 2
+    if (Math.hypot(...tipOf(m)) > TOP) lo = m
+    else hi = m
+  }
+  return (lo + hi) / 2
+})()
+/** Where the teeth sit on the wheel: set so the pawl slips off a crest just as each drop begins (calibrated below). */
+let PHI_C = Math.atan2(tipOf(PA_C)[1], tipOf(PA_C)[0])
+
+/** The teeth's radius at angle `phi` (about the axle) when the wheel has turned `rot`. */
+function toothR(phi: number, rot: number): number {
+  const N = NOTCH
+  let psi = (phi - rot - PHI_C) % N
+  if (psi < 0) psi += N
+  const u = psi / N
+  if (u < 1 - CREEP - FACE) return ROOT
+  if (u < 1 - CREEP) return ROOT + ((TOP - ROOT) * (u - (1 - CREEP - FACE))) / FACE
+  return TOP - ((TOP - ROOT) * (u - (1 - CREEP))) / CREEP
+}
+
+/** Where the pawl rests on the teeth at a turn `rot`: lowered from lifted until its tip first touches. */
+function restPa(rot: number): number {
+  const touches = (pa: number) => {
+    const [x, y] = tipOf(pa)
+    return Math.hypot(x, y) <= toothR(Math.atan2(y, x), rot)
+  }
+  let lo = -0.3
+  let hi = lo
+  for (let pa = -0.3; pa <= 0.7; pa += 0.01) {
+    if (touches(pa)) {
+      hi = pa
+      break
+    }
+    lo = pa
+    hi = 0.7
+  }
+  for (let n = 0; n < 8; n++) {
+    const m = (lo + hi) / 2
+    if (touches(m)) hi = m
+    else lo = m
+  }
+  return lo
+}
+
+// The tip meets the crest a hair before the arithmetic says (it is a point, and swings as it lifts): find where it
+// slips off, and turn the teeth back by that much and a little more, so it leaves the crest inside the drop.
+{
+  let lo = 0.4 * NOTCH
+  let hi = CREEP * NOTCH
+  const high = restPa(lo)
+  for (let n = 0; n < 30; n++) {
+    const m = (lo + hi) / 2
+    if (restPa(m) - high < 0.1) lo = m
+    else hi = m
+  }
+  PHI_C -= CREEP * NOTCH - lo + 0.004 * NOTCH
+}
+
+/**
+ * The pawl's angle at `t`. It rides up each tooth's ramp as the wheel creeps; off the crest it falls (gravity: slow,
+ * then fast) while the wheel lurches, and lands on the next tooth on the note, bouncing twice, smaller.
+ */
+export function pawlAngle(t: number): number {
+  let pa = restPa(turn(t))
+  const { crest, b } = notchAt(t)
+  if (t > crest && t < b) {
+    const top = restPa(turn(crest))
+    const land = restPa(turn(b))
+    const x = (t - crest) / DROP
+    pa = Math.min(pa, top + (land - top) * x * x)
+  }
+  for (const c of CLICKS) {
+    const dt = t - c
+    if (dt >= 0 && dt < 0.3) pa -= 0.07 * Math.exp(-dt / 0.06) * Math.abs(Math.sin((Math.PI * dt) / 0.055))
+  }
+  return pa
 }
 
 /* ------------------------------------------------------------------ drawing */
@@ -268,12 +418,14 @@ export function drawWheel(p: p5, k: number, ink: string, weight: number, L: Ligh
       [C[0] + c * 0.4 - nx, C[1] + s * 0.4 - ny],
     ])
   }
-  // The ratchet: sixteen teeth, raked the way it turns.
+  // The ratchet: sixteen teeth, raked the way it turns (a long ramp the pawl rides up, a short steep face it drops off).
+  const a0 = rot + PHI_C
   const teeth: Pt[] = []
   for (let j = 0; j < 16; j++) {
-    const a = base + rot + j * NOTCH
-    teeth.push([C[0] + Math.cos(a) * 0.62, C[1] + Math.sin(a) * 0.62])
-    teeth.push([C[0] + Math.cos(a + NOTCH * 0.85) * 0.82, C[1] + Math.sin(a + NOTCH * 0.85) * 0.82])
+    const a = a0 + j * NOTCH
+    for (const [f, r] of [[0, ROOT], [1 - CREEP - FACE, ROOT], [1 - CREEP, TOP]] as const) {
+      teeth.push([C[0] + Math.cos(a + f * NOTCH) * r, C[1] + Math.sin(a + f * NOTCH) * r])
+    }
   }
   p.fill(iron(C[0], C[1]))
   p.strokeWeight(w * 0.7)
@@ -290,13 +442,10 @@ export function drawWheel(p: p5, k: number, ink: string, weight: number, L: Ligh
     [C[0] + (-ca + sa) * q, C[1] + (-sa - ca) * q],
     [C[0] + (ca + sa) * q, C[1] + (sa - ca) * q],
   ])
-  // The pawl: hinged on a bracket off the axle's block, its tip dropped on the teeth. A tooth coming lifts it, and it
-  // falls into the notch behind on the click.
-  const phase = rot / NOTCH - Math.floor(rot / NOTCH + 1e-6)
-  const lift = rot > 0 && rot < CLICKS.length * NOTCH - 1e-6 ? Math.pow(phase, 1.8) * 0.32 : 0
-  const hinge: Pt = [C[0] - 1.02, C[1] - 0.88]
-  const pa = 0.47 - lift
-  const tip: Pt = [hinge[0] + 0.64 * Math.cos(pa), hinge[1] + 0.64 * Math.sin(pa)]
+  // The pawl: hinged on a bracket off the axle's block, its tip riding the teeth (see `pawlAngle`).
+  const hinge: Pt = [C[0] + HINGE[0], C[1] + HINGE[1]]
+  const pa = pawlAngle(t)
+  const tip: Pt = [hinge[0] + PAWL * Math.cos(pa), hinge[1] + PAWL * Math.sin(pa)]
   const ux = Math.cos(pa)
   const uy = Math.sin(pa)
   p.fill(iron(hinge[0], hinge[1]))

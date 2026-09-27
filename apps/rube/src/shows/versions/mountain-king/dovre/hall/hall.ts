@@ -7,7 +7,7 @@ import { quake, stalactite } from '../rock'
 import { drawTroll, type Pen, type TrollDrawn } from '../troll'
 import { GOLD, LAMP, STONE, TROLL, WORKS } from '../worlds'
 import {
-  CHIMNEY_X, COURT_UP, CRACK, CRACKS, CROWN_LAMP, DAIS, FL, FLOOR_BREAK, GALLERY_Y, HAMMERS, HATCH, LANTERNS, LURCH, OPEN, PILLARS, PILLAR_FALL,
+  CHIMNEY_X, COURT_UP, CRACK, CRACKS, CROWN_LAMP, DAIS, FL, FLOOR_BREAK, GALLERY_Y, HAMMERS, HATCH, LANTERNS, LEDGE_FALL, LURCH, OPEN, PILLARS, PILLAR_FALL,
   ROW_Y, SMASH, SNORT_A, SNORT_B, STEPS, TAILS, THRONE, TORCH_A, TORCH_B, ease, ring, type Tail,
 } from './hall-clock'
 import { COURT, SCEPTRE, courtierAt, kingAt, shout, type KingPose, type Pose } from './hall-court'
@@ -26,8 +26,9 @@ import { COURT, SCEPTRE, courtierAt, kingAt, shout, type KingPose, type Pose } f
  *     the elder's snort catches the first, and the fire runs along the rope to the crown-lamp, and the King is lit.
  *
  * Then the wake, the chase, the King's sceptre on the dais, the crack, the hatch (the trolls' way down to the mine)
- * opening under Peer. And in the coda: the court freezes at the bells and flees; the pillars crack and fall, one a
- * chord; the throne lurches and topples on two blows; stalactites fall from the vault; the lights go out one a hammer blow. The chimney's
+ * opening under Peer. And in the coda: the court freezes at the bells and flees; the pillars crack; on the hammer
+ * blows the ledges slump, the throne lurches and topples and the pillars come down with it, stalactites fall from the
+ * vault, and the lights go out one a blow, the spilled fires dying to embers in the silence. The chimney's
  * column (x 7.5) is kept clear: its floor breaks open at `FLOOR_BREAK` so Peer can come up through it, and the vault
  * over it has always had its smoke hole.
  */
@@ -118,7 +119,7 @@ function tipOf(b: number, t: number): number {
 function spillFire(sp: (typeof SPILLS)[number], t: number): number {
   if (t < sp.at + 0.08) return 0
   const a = t - sp.at - 0.08
-  return Math.min(1, a / 0.35) * (1 - 0.85 * ease(t, 150, 158))
+  return Math.min(1, a / 0.35) * (1 - 0.88 * ease(t, HAMMERS[5], HAMMERS[5] + 1.6))
 }
 /** Where a spill's fire lies on the floor: its middle and half-width. */
 function spillAt(sp: (typeof SPILLS)[number], t: number): { x: number; half: number } {
@@ -325,11 +326,23 @@ const LEDGES = [
   { x0: 0.3, x1: 11.75 },
   { x0: 0.3, x1: 11.1 },
 ]
-function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number): void {
+function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number, t: number): void {
   const k = c.k
   const seats = [ROW_Y[0], ROW_Y[1], ROW_Y[2], GALLERY_Y]
   p.noStroke()
   for (let r = 3; r >= 0; r--) {
+    // In the coda each tier slumps on its blow: it drops off the wall, its east end furthest, and settles, damped.
+    const at = LEDGE_FALL[r]
+    const s = t - at
+    p.push()
+    if (s > 0) {
+      const fall = Math.min(1, s / 0.28)
+      const drop = (0.55 - 0.1 * r) * fall * fall + 0.04 * Math.exp(-Math.max(0, s - 0.28) / 0.12) * Math.sin(Math.max(0, s - 0.28) * 30) * (s > 0.28 ? 1 : 0)
+      const tilt = (0.05 + 0.012 * r) * fall * fall
+      p.translate(LEDGES[r].x0 * k, drop * k)
+      p.rotate(tilt)
+      p.translate(-LEDGES[r].x0 * k, 0)
+    }
     const top = seats[r]
     const bottom = r === 0 ? FL : seats[r - 1]
     const { x0, x1 } = LEDGES[r]
@@ -357,6 +370,7 @@ function drawTerraces(p: p5, c: Pen, lit: (x: number, y: number) => number): voi
     p.fill(mixHex(STONE.dark, STONE.light, 0.12 + 0.55 * Math.min(1, lipLit)))
     const band = 0.07
     poly(p, k, [...lip, ...[...lip].reverse().map(([x, y], j): Pt => [x, y + band * (0.7 + 0.6 * hash(r, j, 76))])])
+    p.pop()
   }
   // The court's ways out at the west end of each bench: low dark archways into the trolls' warren (clear of the
   // west door's pier).
@@ -951,9 +965,9 @@ function horn(p: p5, k: number, line: Pt[], root: number): void {
 /** How far the throne leans east (rad) about its dais corner: two blows to bring it down, and a long rock on its tusks. */
 const LYING = 1.35
 const THRONE_LEAN = 0.3
-const THRONE_LANDS = HAMMERS[2]
+const THRONE_LANDS = HAMMERS[4]
 function throneTilt(t: number): number {
-  const [h0, h1] = HAMMERS
+  const [h0, h1] = [HAMMERS[2], HAMMERS[3]]
   if (t < h0) return 0
   if (t < h1) {
     // The first blow lurches it east on its corner; it rocks half way back and hangs there, off balance.
@@ -975,8 +989,8 @@ function throneTilt(t: number): number {
 
 /**
  * The throne: a seat hewn from the mountain, its back crested with three peaks (the Dovre's), gold on their tips, and
- * two great tusks rising behind it. The first hammer blow lurches it, the second topples it east (landing on the
- * third), and it rocks to rest. Its edge and tusks are kept in the rock's and the hide's range: it frames the King,
+ * two great tusks rising behind it. The third hammer blow lurches it, the fourth topples it east (landing on the
+ * fifth), and it rocks to rest. Its edge and tusks are kept in the rock's and the hide's range: it frames the King,
  * it does not out-shine him.
  */
 function drawThrone(p: p5, c: Pen, t: number, lit: number): void {
@@ -1422,7 +1436,7 @@ export function drawHall(p: p5, c: Pen, t: number): void {
 
   drawRoom(p, c, 0.1 + 0.5 * hallLit)
   drawDripstones(p, c, t, lights)
-  if (seen(0, 13)) drawTerraces(p, c, lit)
+  if (seen(0, 13)) drawTerraces(p, c, lit, t)
   if (seen(-0.5, 1.5)) drawDoorway(p, c, t, lit, mixHex(mixHex(STONE.deep, STONE.dark, 0.5), STONE.mid, 0.04 + 0.45 * 0.3 * lit(6, (ROW_Y[0] + FL) / 2)))
   // The pools of light on the rock, before anything they light; the pillars stand dark against them, lit at the rim.
   for (const l of lights) glow(p, c, l.x, l.y, l.r * 0.95, Math.min(0.45, 0.3 * l.s), l.col)

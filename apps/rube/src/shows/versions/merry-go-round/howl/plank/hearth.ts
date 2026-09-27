@@ -15,9 +15,12 @@ import { ROOM, TOWN, WASTES } from '../worlds'
  * flares through the shut door's cracks. Dust pours from the beams, the crockery on the mantel jumps, the lantern
  * swings, and Calcifer cowers small in his grate, shutting his eyes at each one. The floor bucks on the biggest
  * (239.81): the camera comes to rest just before it and is knocked, the crockery is thrown off the shelf, Calcifer
- * off his log, and she off the boards, landing on the next onset; then the camera pushes on with her to the hearth. In the breath after the last hit she eases in to him, and on its
- * one note (243.008) she scoops him up out of the grate and hops back with him in her hands. The cut comes on the
- * climax (243.635): she is at rest, holding him, and the castle falls apart round her (`plank.ts`).
+ * off his log, and she off the boards, landing on the next onset; then the camera pushes on with her to the hearth.
+ * In the breath after the last hit the room goes still (the shaking, the dust, the camera), he sinks spent on his
+ * log, and she reaches all the way into the grate for him: on its one
+ * note (243.008) her ball is at the lip against him, his eyes fly open onto her, and she draws him back out in her
+ * hands, her move carrying him. It is her choice, never his leap. The cut comes on the climax (243.635): she is at
+ * rest, holding him, and the castle falls apart round her (`plank.ts`).
  *
  * The part's frame is the room's own, moved by `HEARTH_AT`: she comes in at (-0.5, 0), which is the middle of the
  * door (`ROOM_AT.door`). Everything here is drawn only while this part has the room (237 → 243.635, with a little
@@ -45,16 +48,23 @@ const fx = (x: number) => x - HEARTH_AT[0]
 
 /* ------------------------------------------------------------------ her way across */
 
+/** Where she reaches him: right into the grate's mouth, her ball at the log's lip against his belly. There his base is
+ * already all but at her hands (`CALCIFER_HELD`), so taking him is a lift, never a jump of his own. */
+const REACH = ROOM_AT.log[0] - 0.14
+/** Where she stands with him on the cut: 0.85 short of the log (`plank-collapse.ts` hangs the room on the wall from it). */
+const HELD_AT = ROOM_AT.log[0] - 0.85
+/** When she has backed out with him and stands at rest for the cut. */
+const SETTLED = 243.56
+
 /**
  * Sophie's route, in room cells: she stands in the doorway, sets off slowly across the shaking room (her pace scaled
  * to however far the hearth is), is thrown into a little hop by the floor on the biggest hit, slows to the hearth's
- * mouth for the breath, eases in to the grate, and hops back with him.
+ * mouth, and in the still of the breath reaches all the way into the grate for him, and draws back out with him.
  */
 function ways(): Way[] {
   const door = ROOM_AT.door[0]
-  const log = ROOM_AT.log[0]
-  const reach = log - 0.3
-  const mouth = reach - 0.5
+  const reach = REACH
+  const mouth = ROOM_AT.log[0] - 0.8
   // The floor bucks her up on the biggest hit and she comes down on the next onset.
   const hopT = BUCK_DOWN - JOLT
   const t1 = JOLT - 237.35
@@ -71,13 +81,13 @@ function ways(): Way[] {
   // Thrown clear of the boards: a real hop, landing on the next onset.
   at(JOLT + hopT, x, { arc: 0.25 })
   at(241.964, mouth, { ramp: [v, 0] })
-  // The breath: she waits, then eases in to him.
-  at(242.35, mouth)
-  at(242.9, reach, { ease: 'inout' })
-  at(LIFT, reach)
-  // The lift: she draws back out of the grate with him in her hands, rising as she takes his weight, and settles.
-  w.push({ at: LIFT + 0.3 - T0, p: [fx(reach - 0.36), -0.12], ease: 'out' })
-  w.push({ at: T1 - T0, p: [fx(reach - 0.55), 0], ease: 'inout' })
+  // The breath: the room still, she gathers herself and reaches all the way in to him, slowing into the touch on
+  // its note.
+  at(242.25, mouth)
+  at(LIFT, reach, { ease: 'inout' })
+  // And draws back out of the grate with him in her hands, rising a little as she takes his weight, to rest.
+  at(SETTLED, HELD_AT, { ease: 'inout', arc: 0.12 })
+  at(T1, HELD_AT)
   return w
 }
 
@@ -98,15 +108,20 @@ function hop(u: number, h: number, g = 30): number {
   const v = u - t1
   return v < t2 ? (g / 2) * v * (t2 - v) : 0
 }
-/** How hard the room is shaking at `t` (0..1): the sum of the hits' fading knocks. */
+/** How hard the room is shaking at `t` (0..1): the sum of the hits' fading knocks, gone for the breath. */
 function shaking(t: number): number {
   let v = 0
   HIT.forEach((h, i) => {
     const u = t - h
     if (u >= 0) v += (i === 3 ? 1 : i === 0 ? 0.7 : 0.55) * Math.exp(-u / 0.5)
   })
-  return Math.min(1, v)
+  return Math.min(1, v) * calm(t)
 }
+/**
+ * The breath (from the last onset, 241.964): the room settles, the dust with it, so her reach into the grate is the
+ * only thing moving in the frame. 1 while the bombs fall, 0 once it is still.
+ */
+const calm = (t: number) => 1 - smooth(t, 241.8, 242.4)
 
 /**
  * Dust shaken out from between the beams on every hit: each gap lets go a clump that falls, spreads and thins as it
@@ -133,15 +148,17 @@ function dust(p: p5, k: number, t: number, top: number) {
     ctx.arc(x * k, y * k, r * k, 0, Math.PI * 2)
     ctx.fill()
   }
+  // The dust settles for the breath: what is still in the air thins away with the last haze on the boards.
+  const still = calm(t)
   HIT.forEach((h, i) => {
     const u = t - h
-    if (u < 0 || u > 3.2) return
+    if (u < 0 || u > 3.2 || still <= 0) return
     const n = i === 3 ? 6 : 3
     for (let j = 0; j < n; j++) {
       const x = -0.4 + hash(i, j, 3) * 8.2
       const s0 = u - hash(i, j, 5) * 0.2
       if (s0 < 0) continue
-      const fade = (1 - smooth(s0, 1.0, 2.8)) * (0.22 + 0.12 * hash(i, j, 9))
+      const fade = (1 - smooth(s0, 1.0, 2.8)) * (0.22 + 0.12 * hash(i, j, 9)) * still
       // The clump and what sifts off it behind: puffs let go one after another, each falling on its own.
       for (let q = 0; q < 5; q++) {
         const s = s0 - q * 0.14
@@ -472,8 +489,9 @@ export const hearth = part<HearthState>(
       lantern(p, k, W, ink, t)
       mantel(p, k, W, ink, t)
 
-      // Calcifer: cowering small in the grate, flinching at every hit and looking to her as she comes; then in her
-      // hands.
+      // Calcifer: cowering small in the grate, flinching at every hit and looking to her as she comes. In the still
+      // of the breath he sinks, spent, his eyes half shut on his log, until her touch: on the note his eyes fly open
+      // onto her, his mouth drops open and he flares, and she draws him out, carried in her hands (`CALCIFER_HELD`).
       const at = laneAt(s.lane, t - T0)
       const her: Pt = [at.x + HEARTH_AT[0], at.y]
       let flinch = 0
@@ -481,24 +499,46 @@ export const hearth = part<HearthState>(
         const u = t - h
         if (u >= 0) flinch = Math.max(flinch, Math.exp(-u / 0.45))
       }
+      // Her ball is at the lip against his belly on the note, so his base is all but in her hands already: the lift
+      // takes him the last few hundredths up into them, and from there on he goes wherever she does.
       const lifted = smooth(t, LIFT - 0.02, LIFT + 0.14)
       const [lx, ly] = ROOM_AT.log
       const heldX = her[0] + CALCIFER_HELD.at[0]
       const heldY = her[1] + CALCIFER_HELD.at[1]
       const near = 1 - smooth(Math.abs(lx - her[0]), 0.6, 3.5)
-      const size = (0.45 - 0.08 * flinch) * (1 - lifted) + CALCIFER_HELD.size * lifted
+      // He grows into her hands as she draws him out (his grate size to his held size by the time she is at rest),
+      // with a small flare of surprise at the touch that dies away before the cut.
+      const since = t - LIFT
+      const startle = since < 0 ? 0 : (1 - Math.exp(-since / 0.05)) * Math.exp(-since / 0.18)
+      const grow = smooth(t, LIFT, SETTLED)
+      const size = ((0.45 - 0.08 * flinch) * (1 - grow) + CALCIFER_HELD.size * grow) * (1 + 0.08 * startle)
       // The buck throws him up off his log too.
       const bounce = hop(t - JOLT, 0.09) * (1 - lifted)
+      const cx = lx + (heldX - lx) * lifted
+      const cy = ly + (heldY - ly) * lifted - bounce
+      // His look, onto her: from his eyes toward her middle, as far as the eye allows.
+      const eyeY = cy - 0.36 * size
+      const dx = her[0] - cx
+      const dy = her[1] - eyeY
+      const dl = Math.max(0.05, Math.hypot(dx, dy))
+      const onHer = Math.max(near, lifted)
+      const toHer: Pt = [(1.4 * dx * onHer) / dl, (1.4 * dy * onHer) / dl]
+      // In the breath, before her touch, spent: his eyes sink half shut and his look drops to the log.
+      const spent = smooth(t, 241.9, 242.7) * (1 - smooth(t, LIFT - 0.03, LIFT + 0.05))
+      const woke = smooth(t, LIFT - 0.03, LIFT + 0.05)
+      // As she pulls him back out he streams against the way she goes, her motion carrying him.
+      const vx = (laneAt(s.lane, t - T0 + 0.01).x - laneAt(s.lane, t - T0 - 0.01).x) / 0.02
       p.push()
-      p.translate((lx + (heldX - lx) * lifted) * k, (ly + (heldY - ly) * lifted - bounce) * k)
+      p.translate(cx * k, cy * k)
       drawCalcifer(p, k, W, ink, {
         t,
         size,
-        weak: 0.18 * (1 - lifted) + 0.1 * shake,
-        shut: 0.9 * flinch * (1 - near * 0.6),
-        look: lifted > 0.5 ? [-0.6, -0.4] : [-near, -0.3 * near],
-        mouth: lifted > 0.2 ? 0.2 + 0.6 * (1 - smooth(t, LIFT + 0.3, T1)) : 0.1 + 0.15 * flinch,
-        lean: -0.15 * shake,
+        // Held, the colour he has on the far side of the cut.
+        weak: 0.18 * (1 - lifted) + 0.15 * lifted + 0.1 * shake,
+        shut: Math.max(0.9 * flinch * (1 - near * 0.6), 0.5 * spent) * (1 - woke),
+        look: [toHer[0] * (1 - spent * 0.7), toHer[1] + (1.2 - toHer[1]) * spent * 0.7],
+        mouth: woke > 0 ? 0.08 + 0.62 * woke - 0.35 * smooth(t, LIFT + 0.15, T1) : 0.1 + 0.15 * flinch - 0.05 * spent,
+        lean: -0.15 * shake + Math.max(-0.5, Math.min(0.5, -0.22 * vx * lifted)),
       })
       p.pop()
 
@@ -522,19 +562,20 @@ export const hearth = part<HearthState>(
   (slot, built) => {
     // Two moves across the room with her, from the doorway's framing to her and him at the hearth. Through the first
     // bombs it drifts a little way in and comes to rest just as the floor bucks; the buck knocks the whole room in
-    // the frame, sharp, and rings down in about 0.6 s; then, the room settling, it pushes on in to the hearth.
+    // the frame, sharp, and rings down in about 0.6 s; then, the room settling, it pushes on in to the hearth and
+    // comes to rest there as the breath begins (242.4), so her reach into the grate is the only move in the frame.
     const x = (t: number) => laneAt(built.lane, Math.min(slot.end, t) - slot.begin).x + HEARTH_AT[0]
     const from = x(slot.begin) + 0.9
     const rest = x(slot.end)
-    const along = (t: number) => from + (rest - from) * (0.3 * smooth(t, slot.begin, JOLT) + 0.7 * smooth(t, JOLT + 0.4, 243.3))
-    // The height and the size, as before: eased through these by the camera's own curve.
+    const STILL = 242.4
+    const along = (t: number) => from + (rest - from) * (0.3 * smooth(t, slot.begin, JOLT) + 0.7 * smooth(t, JOLT + 0.4, STILL))
+    // The height and the size: eased through these by the camera's own curve.
     const coarse: [number, number, number][] = [
       [237.6, -0.72, 4.0],
       [JOLT, -0.7, 3.86],
       [241.2, -0.64, 3.7],
-      [242.5, -0.36, 3.5],
       // Low enough that the door's dial is wholly out of the top of the frame, never half on its edge.
-      [243.45, -0.3, 3.4],
+      [STILL, -0.3, 3.4],
       [slot.end, -0.3, 3.4],
     ]
     const base = director(() => [0, 0], coarse.map(([t, hy, cells]): Shot => ({ t, cells, hold: [0, hy], w: 1 })), slot.end + 1)
@@ -549,7 +590,7 @@ export const hearth = part<HearthState>(
       [0.48, -0.003, 0.003, 1],
       [0.62, 0, 0, 1],
     ]
-    const times = [237.6, 238.3, 239.0, 239.5, ...knock.map(([u]) => JOLT + u), 241.0, 241.6, 242.1, 242.5, 243.0, 243.45, slot.end]
+    const times = [237.6, 238.3, 239.0, 239.5, ...knock.map(([u]) => JOLT + u), 241.0, 241.5, 241.95, STILL, 243.0, slot.end]
     return times.map((t): PartShot => {
       const b = base(t)
       const [, kx, ky, kc] = knock.find(([u]) => Math.abs(JOLT + u - t) < 1e-9) ?? [0, 0, 0, 1]

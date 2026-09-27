@@ -9,7 +9,7 @@ import { WASTES } from '../worlds'
 import { laneThrough, TURNIP_TO_WALK } from './hills'
 import { drawFog, drawPlume, drawTurnipAt } from './hills-land'
 import {
-  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
+  ABOARD_KEYS, castleAt, CATCH, CLIMB, DROP, HILLTOP, LAST, LATCH, onCastle, ROAR, SETTLE, sophieAboard,
   stepAt, TAKEOFF, TURNIP_LANDINGS, W, WIDE,
 } from './walk-plan'
 
@@ -98,8 +98,16 @@ export const walk = part<null>(
       const [x, y] = onCastle(T, CASTLE.door)
       return w([x + dx, y - FLOOR + dy])
     }
-    // The wide the strides are held in: the whole castle, feet to flag, at one size for all three.
+    // Her on the hilltop (the lane's start) with the framing's centre moved off her.
+    const hill = (dx: number, dy: number): Pt => [-0.5 + dx, dy]
+    // The wide: the whole castle, feet to flag, at one size on the roar and the three great strides.
     const WHOLE = 30
+    const wide: Pt = [3.4, -7.0]
+    // The close: her on the porch a little left of middle, a touch low (the lantern, the hull and the door over and
+    // beside her, the legs and the wastes going by under the porch), the camera riding with her, so each drop and heave of the hull reads
+    // as her dipping and lifting in the frame.
+    const CLOSE = 5.6
+    const close: Pt = [0.1 * CLOSE * (16 / 9), -0.04 * CLOSE]
     // The third great stride is watched from a lock-off: the castle crosses it past the thorn tree (world x 47),
     // whole from its feet to its flag, its feet a cell and a half above the frame's foot.
     const past = castleAt(W(78)).at
@@ -109,40 +117,47 @@ export const walk = part<null>(
     const seat = castleAt(SETTLE + 1).at
     const NIGHT = WHOLE + 2
     const night = w([seat[0] + 0.4, seat[1] + 3.5 - NIGHT / 2])
+    // Under the porch at night: her high in the frame, the great legs striding under her into the dark (at 7.6 cells
+    // she holds the lead's floor, 12 px at 640x360).
+    const UNDER = 7.6
+    const under: Pt = [0.12 * UNDER * (16 / 9), 0.23 * UNDER]
     return [
-      // The castle over her on the hill, its stair dropping; in on her as she jumps for it and climbs.
-      { t: DROP, cells: 12.6, hold: w([HILLTOP[0] + 2.1, -4.55]) },
-      { t: 123.5, cells: 11.6, hold: w([HILLTOP[0] + 1.6, -3.85]) },
-      { t: CATCH, cells: 10.5, hold: w([HILLTOP[0] + 1.1, -2.9]) },
-      // With her up the stair (she climbs across the frame), and as she nears the porch the camera starts back, one
-      // long pull (2.7 s) that is still easing out through the roar (128.0, 128.37) instead of braking into it: the
-      // whole castle, from its feet to Calcifer's fire leaping out of the chimney at the top of the frame, her small
-      // and low on the porch under the lantern, the first time we see the engine.
-      { t: 125.3, cells: 10.5, off: [1.0, -1.6] },
-      { t: ROAR[0], cells: 28.4, off: [2.9, -6.0] },
-      { t: 129.3, cells: 29.7, off: [3.2, -6.6] },
-      // The three great strides (131.43, 133.72, 135.94), held whole at one size so each hull drop and its dust read
-      // alike: the first two alongside it, the camera travelling with it; for the third it lets the castle go and
-      // settles into the lock-off a stride early, so the castle strides past the thorn tree across a still frame.
-      { t: W(74), cells: WHOLE, off: [3.4, -7.0] },
-      { t: W(77), cells: WHOLE, hold: cross },
-      { t: 136.3, cells: WHOLE, hold: cross },
-      // Night comes: one long move in (136.3 → 140.4, one even swell never faster than half a log a second; the two
-      // keys between are placed so it neither dips nor surges) to her on the porch, a third from the left and a
-      // third up, the lantern over her and the door beside her, the dark land sliding by under the porch, as the
-      // windows light; then a slow creep on in.
-      { t: 138.2, cells: 15, off: [2.3, -2.6] },
-      { t: 139.4, cells: 9.75, off: [1.95, -1.6] },
-      { t: 140.4, cells: 7.4, off: [1.75, -1.1] },
-      { t: 141.6, cells: 6.6, off: [1.75, -1.08] },
-      { t: 143.2, cells: 6.2, off: [1.7, -1.05] },
-      // Then, on a footfall, a cut out to the whole castle small against the night, feet to flag with the night over
-      // it: it walks on into the middle of a still frame, its windows lit and the porch's lantern the brightest thing
-      // in it, slows as the music fades, and sits on the last note (148.805); a breath, and on the latch (150.686) a cut
-      // in to the door, which opens on the room's light.
-      { t: W(86), cells: NIGHT, hold: night, cut: true },
-      { t: LATCH - 0.3, cells: NIGHT - 2.5, hold: [night[0], night[1] + 1.1] },
-      { t: LATCH, cells: 6.4, hold: door(LATCH, 0.1, -0.95), cut: true },
+      // On the first footfall out of the fog, a cut in to her on the hilltop, low in the frame: the legs stamping
+      // round her and the belly over her, cropped by the top; the stair drops into the frame over her, and in on her
+      // a little as she jumps for its foot.
+      { t: SEAM.walk + 0.002, cells: 7.4, hold: hill(-0.35, -1.95), cut: true },
+      { t: DROP, cells: 7.2, hold: hill(-0.1, -2.05) },
+      { t: CATCH, cells: 6.9, hold: hill(0.35, -2.1) },
+      // Up the stair with her, a tread a beat, to the porch.
+      { t: CLIMB[2], cells: 6.4, off: [0.75, -0.85] },
+      { t: CLIMB[6], cells: CLOSE, off: close },
+      // Calcifer's roar (128.0): a cut out to the whole castle, his fire leaping out of the chimney at the top of the
+      // frame, the first time we see the engine; on the next footfall back in to her on the porch.
+      { t: ROAR[0], cells: 28.4, off: [2.9, -6.0], cut: true },
+      { t: W(72), cells: CLOSE, off: close, cut: true },
+      // The three great strides (131.43, 133.72, 135.94), every other bar: out to the whole castle on each, in to her
+      // on the bar between. The first two travel with it; the third is the lock-off past the thorn tree.
+      { t: W(74), cells: WHOLE, off: wide, cut: true },
+      { t: W(75), cells: CLOSE, off: close, cut: true },
+      { t: W(76), cells: WHOLE, off: wide, cut: true },
+      { t: W(77), cells: CLOSE, off: close, cut: true },
+      { t: W(78), cells: WHOLE, hold: cross, cut: true },
+      // Night comes on her: in close under the lantern as the dusk deepens and the windows light, the door easing
+      // ajar beside her; a slow breath in and out.
+      { t: W(79), cells: CLOSE, off: close, cut: true },
+      { t: 141.0, cells: 5.2, off: [0.1 * 5.2 * (16 / 9), -0.04 * 5.2] },
+      { t: 144.2, cells: 5.5, off: [0.1 * 5.5 * (16 / 9), -0.04 * 5.5] },
+      // On a footfall, a cut down under the porch: her high in the frame, the great legs walking on under her into the
+      // dark as it slows.
+      { t: W(86), cells: UNDER, off: under, cut: true },
+      { t: W(87) + 0.6, cells: UNDER + 0.15, off: [under[0], under[1] + 0.1] },
+      // On the last footfall, out to the whole castle small against the night, its windows lit, folding down onto its
+      // seat; on the last note (the sit), back in to her on the porch beside the door, and on to the door as the latch
+      // lifts and it opens on the room's light.
+      { t: LAST, cells: NIGHT, hold: night, cut: true },
+      { t: SETTLE - 0.2, cells: NIGHT - 1.2, hold: [night[0], night[1] + 0.5] },
+      { t: SETTLE, cells: 6.0, hold: door(SETTLE, -0.55, -0.9), cut: true },
+      { t: LATCH, cells: 5.4, hold: door(LATCH, 0.1, -0.95) },
       { t: slot.end, cells: 4, off: [0.9, -0.7] },
     ]
   },
@@ -161,9 +176,9 @@ const ajarAt = (T: number): number => smooth(T, 139.6, 141.2)
 
 /**
  * The porch lantern: a small square brass lantern hung on a short chain from the left end of the hood over the door,
- * two cells over where she rides, swinging to the gait. Lit as she climbs, and full as the dusk comes on, it lays a
- * soft warm oval on the iron and the planks round her (centred on her, soft and wide, never a core), so at night
- * she reads as a small figure in its light, never lost on the grey iron. From nightfall a blade of warm light from
+ * two cells over where she rides, swinging to the gait. Lit as she climbs, and full as the dusk comes on, its light
+ * falls down: a flat warm pool on the porch planks round her feet, while the iron right behind her stays in shade,
+ * so at night she reads pale on dark, never lost on lit grey iron. From nightfall a blade of warm light from
  * the door standing ajar falls across the porch planks behind her. (Square, and two cells over her head: never a
  * round bright thing near her.)
  */
@@ -182,26 +197,44 @@ function drawLantern(p: p5, k: number, weight: number, ink: string, T: number): 
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   p.push()
+  // How dark it has got: the pool reads, and the iron behind her goes into shadow, as the dusk comes on.
+  const dusk = smooth(T, 136.4, 139.6)
   if (lit > 0.01) {
-    // The light on the iron and the porch, behind everything that stands on it: a soft warm oval centred where she
-    // rides, a plateau that fades out, never a core. A wider, fainter wash ties it to the lantern.
+    // The iron right behind her in the shade of the lantern's cap and the hood (the light falls down, not back): a
+    // soft darkening at her height, wider than tall, so her silver reads pale on dark iron, never on lit iron.
     const [px, py] = onCastle(T, [CASTLE.ride[0], CASTLE.ride[1] - FLOOR])
+    if (dusk > 0.01) {
+      ctx.save()
+      ctx.translate(X(px), X(py - 0.06))
+      ctx.scale(1, 0.72)
+      const d = ctx.createRadialGradient(0, 0, 0, 0, 0, X(0.75))
+      d.addColorStop(0, `rgba(18, 20, 30, ${0.5 * dusk})`)
+      d.addColorStop(0.45, `rgba(18, 20, 30, ${0.36 * dusk})`)
+      d.addColorStop(1, 'rgba(18, 20, 30, 0)')
+      ctx.fillStyle = d
+      ctx.fillRect(X(-0.75), X(-0.75), X(1.5), X(1.5))
+      ctx.restore()
+    }
+    // The lantern's pool on the porch: a flat warm oval on the planks round her feet (and down the planks' face),
+    // brightest round her and running out along the porch toward the door (it stops short of the porch's open end), never up the wall behind her.
+    const [fx, fy] = onCastle(T, CASTLE.ride)
+    const glow = lit * (0.3 + 0.7 * dusk)
     ctx.save()
-    ctx.translate(X(px), X(py))
-    ctx.scale(1, 0.8)
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, X(1.3))
-    g.addColorStop(0, `rgba(255, 208, 140, ${0.6 * lit})`)
-    g.addColorStop(0.35, `rgba(255, 204, 136, ${0.5 * lit})`)
-    g.addColorStop(0.7, `rgba(255, 196, 128, ${0.2 * lit})`)
+    ctx.translate(X(fx + 0.2), X(fy + 0.03))
+    ctx.scale(1, 0.17)
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, X(1.05))
+    g.addColorStop(0, `rgba(255, 214, 148, ${0.85 * glow})`)
+    g.addColorStop(0.4, `rgba(255, 204, 136, ${0.55 * glow})`)
     g.addColorStop(1, 'rgba(255, 190, 120, 0)')
     ctx.fillStyle = g
-    ctx.fillRect(X(-1.35), X(-1.35), X(2.7), X(2.7))
+    ctx.fillRect(X(-1.05), X(-1.05), X(2.1), X(2.1))
     ctx.restore()
-    const h = ctx.createRadialGradient(X(lx), X(ly + 0.9), 0, X(lx), X(ly + 0.9), X(2.4))
-    h.addColorStop(0, `rgba(255, 206, 140, ${0.14 * lit})`)
+    // A faint warm wash round the lantern itself and the hood it hangs from, gone before it reaches her.
+    const h = ctx.createRadialGradient(X(lx), X(ly + 0.1), 0, X(lx), X(ly + 0.1), X(1.1))
+    h.addColorStop(0, `rgba(255, 206, 140, ${0.16 * lit})`)
     h.addColorStop(1, 'rgba(255, 190, 120, 0)')
     ctx.fillStyle = h
-    ctx.fillRect(X(lx - 2.4), X(ly - 1.5), X(4.8), X(4.8))
+    ctx.fillRect(X(lx - 1.1), X(ly - 1.0), X(2.2), X(2.2))
   }
   const ajar = ajarAt(T)
   if (ajar > 0.01) {

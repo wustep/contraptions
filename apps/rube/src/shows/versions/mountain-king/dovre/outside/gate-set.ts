@@ -513,6 +513,21 @@ export function drawDoor(p: p5, c: Pen, t: number, drop: number, knock: number):
   const edge = mixHex(ink, STONE.deep, 0.7)
   p.push()
   p.rectMode(p.CORNER)
+  // While it is shut, a thread of lamplight round it: the works' lamp behind the slab shows at its edges (the one warm
+  // thing in the opening's wide, where the eye should go). Gone as it sinks.
+  const leak = Math.max(0, 1 - drop / 0.35)
+  if (leak > 0.01) {
+    glow(p, c, (x0 + x1) / 2, top + 0.3, 2.6, 0.09 * leak, LAMP.glow)
+    p.noFill()
+    p.stroke(alpha(p, mixHex(LAMP.glow, LAMP.core, 0.3), 0.8 * leak))
+    p.strokeWeight(Math.max(1.2, 0.05 * k))
+    p.beginShape()
+    p.vertex((x0 - 0.03) * k, (bottom - 0.2) * k)
+    p.vertex((x0 - 0.03) * k, (top + 0.08) * k)
+    p.vertex((x0 + 0.08) * k, (top - 0.03) * k)
+    p.vertex((x1 - 0.1) * k, (top - 0.03) * k)
+    p.endShape()
+  }
   // The slab, its edges a little broken.
   p.stroke(edge)
   p.strokeWeight(weight * 0.8)
