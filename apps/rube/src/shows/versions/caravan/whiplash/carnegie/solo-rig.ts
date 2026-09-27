@@ -425,6 +425,37 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, H: Pt, drop: number, slum
   g.addColorStop(1, SHIRT_LOW)
   ctx.fillStyle = g
   ctx.fill()
+  const lit = 1 - 0.5 * slump
+  // Round, not flat: the stage's light from above and the house's left across the chest, as the kit's shells take
+  // it (a lifted band a third of the way across, the far side rolling off into shadow), and the shirt's front fold
+  // from the collar down the breastbone, a shade darker with a hair of light beside it. Clipped to the shirt. On
+  // screen for a hundred seconds of the solo and the hush, the flat cut-out read as a shape, not as a body in a shirt.
+  ctx.save()
+  ctx.clip()
+  const x0 = Math.min(l[0], r[0], left.from[0]) - 0.3
+  const x1 = Math.max(l[0], r[0], right.from[0]) + 0.3
+  const round = ctx.createLinearGradient(x0 * k, 0, x1 * k, 0)
+  round.addColorStop(0, css(SHIRT_EDGE, 0.55))
+  round.addColorStop(0.16, css(SHIRT_EDGE, 0))
+  round.addColorStop(0.32, css(RIM, 0.13 * lit))
+  round.addColorStop(0.48, css(RIM, 0))
+  round.addColorStop(0.74, css(SHIRT_EDGE, 0.12))
+  round.addColorStop(1, css(SHIRT_EDGE, 0.6))
+  ctx.fillStyle = round
+  ctx.fillRect(x0 * k, (h[1] - 0.2) * k, (x1 - x0) * k, (0.4 - h[1]) * k)
+  const fold = (dx: number, col: string, a: number, w: number): void => {
+    ctx.beginPath()
+    ctx.moveTo((h[0] + dx) * k, (h[1] + 0.19) * k)
+    ctx.quadraticCurveTo((h[0] * 0.55 + dx) * k, (h[1] * 0.55) * k, (h[0] * 0.2 + dx) * k, (h[1] * 0.18) * k)
+    ctx.lineCap = 'round'
+    ctx.lineWidth = weight * w
+    ctx.strokeStyle = css(col, a)
+    ctx.stroke()
+  }
+  fold(0, SHIRT_EDGE, 0.7, 1.1)
+  fold(-0.035, RIM, 0.14 * lit, 0.7)
+  ctx.restore()
+  outline()
   ctx.lineWidth = weight * 0.8
   ctx.strokeStyle = SHIRT_EDGE
   ctx.stroke()
@@ -443,7 +474,6 @@ export function drawTorso(p: p5, c: Ctx, L: Pt, R: Pt, H: Pt, drop: number, slum
       ctx.stroke()
     }
   }
-  const lit = 1 - 0.5 * slump
   rim(3.0, 0.18 * lit)
   rim(1.1, 0.62 * lit)
   ctx.restore()
