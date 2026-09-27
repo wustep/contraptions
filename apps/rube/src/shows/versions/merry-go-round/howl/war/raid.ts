@@ -1712,14 +1712,33 @@ function drawHowl(p: p5, k: number, W: number, ink: string, t: number): void {
   const flap = Math.asin(Math.max(-1, Math.min(1, beat * Math.sin(t * 2 * Math.PI * 2.1))))
   let jolt = 0
   for (const blow of HOWL_BLOWS) jolt += ring(t - blow, 0.35, 22, 0.16)
-  const S = wingScale(t)
+  // Seen looking up (and in the war's first wide) he is the one silhouette in the sky, bigger across than a bomber; in
+  // her frames in the street, where he stoops over her head, as he was. The change is only ever at a cut.
+  const S = wingScale(t) * (skyward(t) ? LOOK_WINGS : 1)
   // The fire's light behind him, so he reads against the dark.
   glow(p, k, x, y + 0.1, 0.75 * S, TOWN.fire, 0.16)
   p.push()
   p.translate(x * k, y * k)
-  drawWings(p, k * S, W * 0.9, ink, { t, spread: 1 - 0.3 * dive, flap: flap + jolt - 0.5 * dive, heading })
+  const wings = { t, spread: 1 - 0.3 * dive, flap: flap + jolt - 0.5 * dive, heading }
+  // Black, as the film has him, the fire below catching his undersides: the wings a hair lower in the fire's colour
+  // first, then the dark wings over them.
+  p.push()
+  p.translate(0, 0.045 * k)
+  drawWings(p, k * S, W * 0.9, ink, { ...wings, body: BIRD_RIM, edge: BIRD_RIM, line: BIRD_RIM })
+  p.pop()
+  drawWings(p, k * S, W * 0.9, ink, { ...wings, body: BIRD_BLACK, edge: BIRD_EDGE })
   p.pop()
 }
+/** Howl the bird in the war: near black, a breath lighter on every other blade, and the fire's light on his undersides. */
+const BIRD_BLACK = '#16141E'
+const BIRD_EDGE = '#262233'
+const BIRD_RIM = mixHex(TOWN.fire, BIRD_EDGE, 0.5)
+/** His body (the stage's ball), as dark as his wings. */
+const BIRD_BODY = mixHex(HOWL_BIRD, BIRD_BLACK, 0.6)
+/** How much bigger he is drawn in the sky's frames than in hers. */
+const LOOK_WINGS = 2.0
+/** Whether the camera is on the sky (a look up, or the war's first wide) rather than on her in the street. */
+const skyward = (t: number): boolean => looking(t) || (t >= b(6) && t < b(7))
 
 /** The blasts she hears close: each shakes dust down out of the jetties' beams along the street. */
 const SHAKES = [DOOR_BURST, ...FAR_FLASHES]
@@ -2223,7 +2242,7 @@ export const raid = part<{ begin: number }>(
       to: HOWL_TO,
       at: (t) => {
         const [x, y] = HOWL(t).p
-        return { x, y, color: HOWL_BIRD }
+        return { x, y, color: BIRD_BODY }
       },
     }
     return {

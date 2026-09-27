@@ -336,6 +336,14 @@ export interface WingsOpts {
   /** The way he flies, radians (0 right). */
   heading?: number
   light?: number
+  /**
+   * Optional colours (each part that leaves them out keeps the bird as it was): the blades' body and their lighter
+   * alternate, and the outline (the ink when left out). The war draws him near black, and draws the same wings a
+   * hair lower in the fire's colour first, so the fire below catches his undersides.
+   */
+  body?: string
+  edge?: string
+  line?: string
 }
 
 /**
@@ -348,16 +356,17 @@ export function drawWings(p: p5, k: number, weight: number, ink: string, o: Wing
   if (s <= 0.01) return
   const light = o.light ?? 1
   const beat = o.flap === undefined ? 0.15 : Math.sin(o.flap)
-  const edge = mixHex(HOWL_BIRD, '#6F6A86', 0.5)
+  const body = o.body ?? HOWL_BIRD
+  const edge = o.edge ?? mixHex(HOWL_BIRD, '#6F6A86', 0.5)
   p.push()
   p.rotate(o.heading ?? 0)
-  p.stroke(alpha(p, ink, 0.9 * light))
+  p.stroke(alpha(p, o.line ?? ink, 0.9 * light))
   p.strokeWeight(weight * 0.55)
   // The tail: five feathers fanned behind.
   for (let i = -2; i <= 2; i++) {
     p.push()
     p.rotate(Math.PI + i * 0.16 * s)
-    p.fill(alpha(p, i % 2 ? edge : HOWL_BIRD, light))
+    p.fill(alpha(p, i % 2 ? edge : body, light))
     p.beginShape()
     p.vertex(0.06 * k, -0.03 * k)
     p.quadraticVertex(0.3 * k * s, -0.05 * k, 0.46 * k * s, 0)
@@ -374,7 +383,7 @@ export function drawWings(p: p5, k: number, weight: number, ink: string, o: Wing
       const len = (0.34 + 0.07 * i - 0.004 * i * i) * s
       p.push()
       p.rotate(-0.18 + i * 0.1)
-      p.fill(alpha(p, i % 2 ? HOWL_BIRD : edge, light))
+      p.fill(alpha(p, i % 2 ? body : edge, light))
       p.beginShape()
       p.vertex(0.05 * k, -0.035 * k)
       p.quadraticVertex(len * 0.6 * k, -0.07 * k, len * k, 0)
