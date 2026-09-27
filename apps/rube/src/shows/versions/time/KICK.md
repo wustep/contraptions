@@ -123,16 +123,16 @@ Times are show seconds; bar *n* is `bar(n)`, beat *k* is `beat(k)`.
 | **61.342** | the pulse | the plane | *Cut, a jolt*: first class at night, the silver case between his seat and Ariadne's, a drop in its chamber on every beat, a bead of light down every line. |
 | 65.162 | | | He sinks his weight on the plunger; the drip quickens to the eighths; the lamp goes out on bar 18 as the blink comes down. |
 | **68.970** | | the rain | *Through the blink*: under an awning in the rain. Fischer's taxi; he is knocked into the van. |
-| 76.586 | | | **The freight train** tears down the middle of the street out of the rain and smashes the taxi; Mal still on the pavement. |
+| 75.165 → 76.586 | | | **The freight train**: its headlight stabs up the street through the rain (Mal, still on the pavement, lit once by it), and a black wall of locomotive tears down the middle of the street, flings the waiting cars and smashes the taxi high over the van; everything near it shakes. |
 | 80.388 → 88.010 | | | The van pulls away in front of the wagons and onto the bridge; the case opens. |
-| 88.010 → **91.824** | the brass | down | The van's bench goes soft; they sink through it and the deck, fall into the river, through its bed and the dark of sleep. |
+| 86.129 → **91.824** | the brass | down | *Close*: the three lie back in the van, the case's lines to their wrists; the bench goes soft under them (88.010) and they sink through it and the deck, fall into the river, through its bed and the dark of sleep. |
 | 91.824 | | the hotel | Through the hotel's roof onto the top floor. |
 | 95.632 → 103.254 | | | **The corridor turns** as the van flips: a drum of the corridor, end-on, that stands still on the screen while the building wheels round it; they run up its wall, across its ceiling and down. |
 | 103.254 → 107.068 | | (the rain) | The van coming out of its flip over the deck, landing, rolling to the broken end. |
 | **107.068** | | | It goes off the end: **weightless**. They drift down the corridor; a trolley's bottle knocked adrift; Arthur towing the sleepers on a line. |
 | 118.498 → **122.294** | the swell | down | Drawn down through the suite's floor, the rooms under it and the lobby, into the dark. |
-| 122.294 → 141.340 | | the snow | Out of the sky onto the shoulder under the summit; **the run**: over the cornice, over the fortress roof, the hairpin, the crevasse, guards on snowmobiles behind them, to the fortress's gate. |
-| **145.154** | | | **Mal's shot** from the piste above: Fischer goes down through the floor at the vault's door. |
+| 122.294 → 141.340 | | the snow | Out of the sky onto the shoulder under the summit in low cold sun; **the run**, the camera leading them down the face: over the cornice, the great air over the fortress roof (a held wide, bar 34), the hairpin, the air over the crevasse (bar 36), guards on snowmobiles behind them, to the fortress's gate. |
+| 143.279 → **145.154** | | | *Cut to Mal* on the piste above in the rock's blue shadow, the rifle coming up; **the shot**; *cut back* (145.642): Fischer going down through the floor at the vault's door, Cobb in the air off the ledge. |
 | 148.951 → **152.770** | the peak | down | They lie by the gate; the floor goes soft; into the dark after him. |
 | 152.770 → 160.392 | the drums | limbo | They fall into limbo's sea as its city calves on the drums, tower after tower sliding into the water in white plumes; washed up on the shore **at the show's first frame** (the circle). |
 | 163.719 → 168.009 | | | Up the tower in the lift, the city falling round it. |
@@ -196,8 +196,8 @@ Christopher Nolan (2010); Drawn with p5.js. There is no title card. After the la
   biggest punch is the river's; the blink and the veil full at their cuts and only there; the cut to black on the last
   chord;
 - Cobb in the frame under Zoom and findable outside a few declared shots (the fold's wide; limbo's garden cutaways and
-  its great wide of the fall; the hotel's cutaway to the van; the director's great wide of the stack; the top alone at
-  the end); never hidden long;
+  its great wide of the fall; the hotel's cutaway to the van; the snow's cut to Mal; the director's great wide of the
+  stack; the top alone at the end); never hidden long;
 - Ariadne, Fischer, Mal and the children where the story has them;
 - the end credits' words, and the onset file being this recording's.
 
@@ -240,6 +240,12 @@ because of it:
 - **The hotel's drum** held the three of them as specks: framed closer; the cutaway to the van starts on bar 27 so its
   flip is seen.
 - **The plane's hall** was pale on pale: it has depth and the morning city, and the stamp is seen to land on the page.
+- **The train** was a small dark shape far off: it is a black wall bearing down the street behind its headlight, the
+  impact big in the frame; **going under in the van**, invisible through its side at 5 cells, is a close-up of the
+  bench going soft under the three of them.
+- **The snow's run** held the three as specks on white: the camera leads them down the face, the two great airs are
+  held wides; the mountain has low cold sun, blue shade, layered ranges; **Mal's shot** is a cut to her, close, on the
+  piste above, and back.
 - **Bar 18**, the one chord nobody struck, is the plane's lamp dying as the blink shuts.
 
 ## Inception nods
