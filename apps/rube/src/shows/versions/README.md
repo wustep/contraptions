@@ -28,7 +28,8 @@ The folder and file names are addresses, so they are chosen once:
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
   `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
-  `near-light` **Windowlight**. The write-up says which is which.
+  `near-light` **Windowlight**, `nature-of-daylight` **Palindrome**. The write-up
+  says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -436,3 +437,21 @@ ball all but stops as the last note dies, across the seam. Outside, the aurora i
 `near-light/windowlight/` (on Gymnopédie's loop plumbing: `Performance.loop`, `SoundtrackSpec.loop`); `check:shows`
 holds it to the music (`apps/rube/checks/windowlight.ts`). The report is
 `apps/rube/src/shows/versions/near-light/WINDOWLIGHT.md`.
+
+`nature-of-daylight/opus55` (in the picker, **Palindrome**, one take, **Opus 5.5**) is Max Richter's *On the Nature of
+Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, whole, demo only
+(`apps/rube/src/shows/versions/nature-of-daylight/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
+Every piece is new. It tells the whole film in order, and ends on its own first frame: the lake house at dawn, Louise
+(the gold ball) and baby Hannah (the rose ball, who grows); the swing by the lake; the bed by the window, where Hannah
+goes on the lament's swell; the television at night, whose picture of a shell becomes the real one over Montana on the
+double bass (a match cut on the shell); the camp, the chamber and the glass, the heptapods, contact and the language;
+the world's twelve links falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
+shown Hannah grown; the gala years on, where General Shang (the red ball) tells her what to say; the call, on the
+loudest bars, when the dominoes stand again in the order they fell, backwards; the shell going up the way it came
+down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
+(parts built to timed slots, an authored camera, match cuts between six places, a white-out, the end credits from
+`Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
+tracks the beats one by one and finds every change of chord from the harmony itself, into
+`scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike to it, nearly every change of
+chord to a strike, and the palindromes to their mirror (`apps/rube/checks/palindrome.ts`). The report is
+`apps/rube/src/shows/versions/nature-of-daylight/PALINDROME.md`.

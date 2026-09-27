@@ -1,0 +1,21 @@
+On the Nature of Daylight — Max Richter
+From The Blue Notebooks (130701 / FatCat Records, 2004); the recording Arrival opens and closes on.
+Composed by Max Richter; the album's own recording (strings), as the label released it.
+Film: Arrival, directed by Denis Villeneuve, Paramount Pictures, 2016; screenplay by Eric Heisserer, from Ted Chiang's
+"Story of Your Life" (1998). The film's soundtrack album is by Jóhann Jóhannsson (Deutsche Grammophon, 2016); this cue
+is Richter's own recording, used in the film's opening and closing scenes.
+
+The recording is the album's own, as uploaded to YouTube by the label (FatCat Records' channel, "Max Richter - On the
+Nature of Daylight", "Taken from 'Max Richter: The Blue Notebooks'"), video rVN1B-tUpgs:
+https://www.youtube.com/watch?v=rVN1B-tUpgs
+Duration 6:14.9 (the music from 1.6 s; silent by 372.8 s).
+Copyrighted — used for a private Contraptions tech demo only; do not ship to production / public Shows without a
+licence.
+
+Files:
+- apps/rube/src/shows/versions/nature-of-daylight/nature-of-daylight-demo.mp3 — the cue as fetched (yt-dlp, audio
+  only, re-encoded at 128 kbit/s with ffmpeg). The show plays it whole from its first sample (offset 0); no edit, no
+  gain change. The show then runs on in silence for its end credits.
+- scripts/shows/plans/nature-of-daylight-onsets.json — the recording's beats (tracked beat by beat, each on its own
+  attack), its changes of chord, its onsets and its landmarks, measured by scripts/shows/nature-of-daylight-onsets.py;
+  every strike in the show is held to it.
