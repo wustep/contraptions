@@ -316,18 +316,20 @@ export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, 
   // The body: tall and heavy, high on its limbs, breathing a little.
   const bx = X + lean * S * 0.1
   const by = Y - S * (0.72 + 0.008 * Math.sin(t * 0.8 + seed * 2))
-  const bw = S * 0.17
-  const bh = S * 0.28
+  const bw = S * 0.2
+  const bh = S * 0.27
   const col = (back: number) => mix(base, fogC, Math.min(0.92, depth * 0.85 + back * 0.32))
   ctx.save()
   // The limbs, the far ones first: from under the body, bowing out like a great tree's roots, down into the fog.
   const limbs = limbsOf(seed)
   for (const L of limbs) {
-    const a: Pt = [bx + L.from * bw * 0.85 * face, by + bh * 0.6]
-    const b: Pt = [X + L.foot * S * 0.44 * face, Y]
-    const w0 = S * (0.1 - 0.03 * L.back)
-    const w1 = S * (0.03 - 0.01 * L.back)
-    limbPath(ctx, a, b, (0.04 + L.bow * 0.28) * (L.from < 0 ? -1 : 1) * face, w0, w1)
+    // Springing from all round the underside, like fingers from a palm: a hand standing on its fingertips.
+    const th = Math.PI / 2 - (L.from / 0.55) * 1.2
+    const a: Pt = [bx + Math.cos(th) * bw * 0.6 * face, by + Math.sin(th) * bh * 0.5]
+    const b: Pt = [X + L.foot * S * 0.5 * face, Y]
+    const w0 = S * (0.125 - 0.035 * L.back)
+    const w1 = S * (0.032 - 0.01 * L.back)
+    limbPath(ctx, a, b, (0.05 + L.bow * 0.3) * (L.from < 0 ? -1 : 1) * face, w0, w1)
     const g = ctx.createLinearGradient(0, a[1], 0, b[1])
     g.addColorStop(0, col(L.back))
     g.addColorStop(0.55, mix(col(L.back), fogC, 0.2))
@@ -385,12 +387,20 @@ export function drawHeptapod(p: p5, k: number, x: number, y: number, s: number, 
   ctx.fillStyle = under
   ctx.fillRect(bx - bw * 1.2, by, bw * 2.4, bh * 1.1)
   ctx.restore()
-  // The fog at their feet, always: a low band of white the limbs go into.
-  const f = ctx.createLinearGradient(0, Y - S * 0.26, 0, Y + S * 0.04)
-  f.addColorStop(0, rgba(fogC, 0))
-  f.addColorStop(1, rgba(fogC, 0.9))
+  // The fog at their feet, always: a low bank of white the limbs go into, fading out at its ends as well as its top,
+  // so it never shows an edge against whatever is behind.
+  ctx.save()
+  ctx.translate(X, Y)
+  ctx.scale(1, 0.32)
+  const f = ctx.createRadialGradient(0, 0, 0, 0, 0, S * 0.95)
+  f.addColorStop(0, rgba(fogC, 0.92))
+  f.addColorStop(0.55, rgba(fogC, 0.8))
+  f.addColorStop(1, rgba(fogC, 0))
   ctx.fillStyle = f
-  ctx.fillRect(X - S * 0.9, Y - S * 0.26, S * 1.8, S * 0.3)
+  ctx.beginPath()
+  ctx.arc(0, 0, S * 0.95, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
   ctx.restore()
 }
 
@@ -478,7 +488,7 @@ export function drawInk(p: p5, k: number, cx: number, cy: number, R: number, rin
     for (let i = 0; i <= n; i++) {
       const a = a0 + ((a1 - a0) * i) / n
       // The fronts swell a little as they come: fatter near the leading end while it is still forming.
-      const lead = g < 1 ? Math.exp(-((Math.min(Math.abs(a - (ring.start + reach)), Math.abs(a - (ring.start - reach)))) ** 2) / 0.02) * 0.6 : 0
+      const lead = g < 1 ? Math.exp(-((Math.min(Math.abs(a - (ring.start + reach)), Math.abs(a - (ring.start - reach)))) ** 2) / 0.012) * 0.3 : 0
       const r = Rp * ring.r(a)
       const w = Rp * ring.w(a) * (1 + lead) * widen * (1 + 0.8 * fade)
       outer.push([X + Math.cos(a) * (r + w / 2), Y + Math.sin(a) * (r + w / 2)])
@@ -501,14 +511,14 @@ export function drawInk(p: p5, k: number, cx: number, cy: number, R: number, rin
   if (g < 1) {
     for (const a of [ring.start + reach, ring.start - reach]) {
       const [hx, hy] = [X + Math.cos(a) * Rp * ring.r(a), Y + Math.sin(a) * Rp * ring.r(a)]
-      const hr = Rp * ring.w(a) * 0.95
-      const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, hr * 1.8)
-      hg.addColorStop(0, rgba(color, 0.95 * (1 - fade)))
-      hg.addColorStop(0.5, rgba(color, 0.6 * (1 - fade)))
+      const hr = Rp * ring.w(a) * 0.62
+      const hg = ctx.createRadialGradient(hx, hy, 0, hx, hy, hr * 1.35)
+      hg.addColorStop(0, rgba(color, 0.9 * (1 - fade)))
+      hg.addColorStop(0.55, rgba(color, 0.45 * (1 - fade)))
       hg.addColorStop(1, rgba(color, 0))
       ctx.fillStyle = hg
       ctx.beginPath()
-      ctx.arc(hx, hy, hr * 1.8, 0, Math.PI * 2)
+      ctx.arc(hx, hy, hr * 1.35, 0, Math.PI * 2)
       ctx.fill()
     }
   }
@@ -633,11 +643,11 @@ export function drawShellScene(p: p5, k: number, x: number, y: number, w: number
     ctx.fillRect(X, hz, W, H)
     if (place === 'island') land(hz + H * 0.02, H * 0.06, c.far, 3, 0.2)
   } else land(hz + H * 0.04, H * 0.05, c.ground, 7, 2.1)
-  // The shell: a fifth of the screen tall, hanging over the land, coming down out of the top on the news.
-  const sh = h * 0.46
-  const down = ease(descend)
-  const scy = y + h * 0.36 - (1 - down) * h * 0.6
-  drawShell(p, k, x + w * 0.56, scy, sh, { light: 0.5, mist: place === 'snow' || place === 'sea' ? 0.3 : 0.15, mistColor: c.sky })
+  // The shell: hanging over the land, coming down out of the top on the news.
+  const spot = shellOnScreen(x, y, w, h, descend)
+  const sh = spot.h
+  const scy = spot.c[1]
+  drawShell(p, k, spot.c[0], scy, sh, { light: 0.5, mist: place === 'snow' || place === 'sea' ? 0.3 : 0.15, mistColor: c.sky })
   if (descend < 1) {
     // The cloud it comes out of: the top of the screen soft white.
     const cl = ctx.createLinearGradient(0, Y, 0, Y + H * 0.35)
@@ -648,6 +658,14 @@ export function drawShellScene(p: p5, k: number, x: number, y: number, w: number
   }
   void t
   ctx.restore()
+}
+
+/**
+ * Where `drawShellScene` puts the shell in a screen's rect (x, y, w, h, cells, top-left), lowered out of the cloud by
+ * `descend`: its centre and its height. What anything that must line up with the picture on a screen reads.
+ */
+export function shellOnScreen(x: number, y: number, w: number, h: number, descend = 1): { c: Pt; h: number } {
+  return { c: [x + w * 0.56, y + h * 0.36 - (1 - ease(descend)) * h * 0.6], h: h * 0.46 }
 }
 
 export interface ScreenLook {

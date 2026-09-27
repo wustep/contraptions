@@ -1,36 +1,129 @@
-import type { Pt } from '../../../../../parts'
-import { box, scenery } from '../kit'
-import { HANNAH_BY } from '../seams'
-import { stub } from '../stub'
-import { HOUSE } from '../worlds'
+import type { Pt, Seg } from '../../../../../parts'
+import { box, part, scenery, type Company, type PartShot, type Slot } from '../kit'
+import { lawnDraw, lawnOver } from './set'
+import { BRUSHES, hannahAt, hannahLook, LANDS, LEAP, louiseLanes, SEES_FROM, SEES_TO, SEES_TOUCHES, SWING_AT as AT, SWING_TOUCHES } from './swing'
 
 /**
- * The lawn by the lake (the LAWN builder's): the swing on the tree at the water's edge, the house's glass behind.
- * STUB: replace everything here, keeping the export names the score imports.
+ * The lawn by the lake (the LAWN builder's): the swing on the great tree's long limb, the bank behind it rising toward
+ * the glass house (out of the picture; its lamps come on over the bank at dusk), the grey lake, the fog on the water,
+ * the far pines. The far shore sits where the room's long window has it, so at the cuts in from the dawn and out to
+ * the bed the same shore holds still behind her while the room becomes the lawn and back. Two legs:
+ *
+ *   swing  22.111 → 71.953  Hannah's childhood, in one machine. A pendulum a bar long: Louise, on the bank behind it,
+ *                           rises to the seat at the back of every arc and pushes it on the chord (her first push from
+ *                           the still swing on the beat 24.131); half a bar on, once Hannah is a girl and the arcs are
+ *                           high (the second voice), she reaches the leaves at the end of the limb. The year goes round
+ *                           in the tree: summer, autumn, a winter's bare boughs, spring. From the top of the last big
+ *                           arc she leaps (61.365), up out through the leaves and down on the beat (62.357), and runs
+ *                           back; Louise catches the empty seat (63.286) and steadies it as Hannah climbs back on
+ *                           (68.011); the swing settles, still, as the light goes.
+ *   sees   250.120 → 257.683 What Louise is shown in the fog: the same swing on a summer evening, Hannah grown, well,
+ *                           going already; Louise pushes (254.108) and Hannah reaches the leaves on the chord (255.866).
+ *
+ * The whole place (and the swing itself) is drawn by `lawnSet` from show time, so the two legs, which are the same
+ * place years apart, share one tree; the parts only carry Louise and Hannah.
  */
 
-/** Every cell the lawn claims. It is in the house's world, away from the room. */
-export const LAWN_CELLS: Pt[] = box(48, -10, 90, 4, 2)
+export { SWING_AT } from './swing'
 
-export const lawnSet = scenery<null>({
-  name: 'lawn-set',
-  draw: (p, _s, c) => {
-    p.push()
-    p.noStroke()
-    p.rectMode(p.CORNER)
-    p.fill(HOUSE.day)
-    p.rect(48 * c.k, -10 * c.k, 42 * c.k, 10.13 * c.k)
-    p.fill(HOUSE.grass)
-    p.rect(48 * c.k, 0.13 * c.k, 42 * c.k, 4 * c.k)
-    p.pop()
+/** Every cell the lawn claims (the house's world, far from the room). */
+export const LAWN_CELLS: Pt[] = box(40, -14, 80, 6, 2)
+
+export const lawnSet = scenery<null>({ name: 'lawn-set', draw: (p, _s, c) => lawnDraw(p, c.k, c.t), over: (p, _s, c) => lawnOver(p, c.k, c.t) })
+
+/** The vision's first moment: the swing at the back of its arc, Louise at rest a cell behind it on the bank. */
+export const SEES_AT: Pt = [SEES_FROM[0] + 0.5, SEES_FROM[1]]
+
+const shift = (segs: Seg[], o: Pt): Seg[] =>
+  segs.map((s) => ({ ...s, from: [s.from[0] - o[0], s.from[1] - o[1]] as Pt, to: [s.to[0] - o[0], s.to[1] - o[1]] as Pt }))
+
+const hannah = (o: Pt, slot: Slot): Company[] => [
+  {
+    who: 'hannah',
+    from: slot.begin,
+    to: slot.end,
+    at: (t) => {
+      const h = hannahAt(t)
+      return h ? { x: h.x - o[0], y: h.y - o[1], scale: h.scale, spin: hannahLook(t) } : null
+    },
   },
-})
+]
 
-/** Where the swing leg and the vision start, in the house's world cells. */
-export const SWING_AT: Pt = [60, 0]
-export const SEES_AT: Pt = [72, 0]
+interface State {
+  begin: number
+}
+const nothing = () => {}
 
-export const swing = stub('swing', 3, 0, { hannah: HANNAH_BY })
-export const sees = stub('sees', 0.6, 0, { hannah: HANNAH_BY })
+/** The childhood. */
+export const swing = part<State>(
+  { name: 'lawn-swing', draw: nothing },
+  (slot) => {
+    const segs = shift(louiseLanes().swing, AT)
+    return {
+      cells: box(-4, -6, 6, 1),
+      exit: [0, 0] as Pt,
+      lane: { segs, fire: SWING_TOUCHES[0].t - slot.begin },
+      state: { begin: slot.begin },
+      company: hannah(AT, slot),
+    }
+  },
+  () => {
+    const o = AT
+    const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
+    return [
+      // Close at the seam, as the dawn left it; held while she goes to the seat and gives the first push.
+      k(23.2, 4.6, 60.55, -0.95),
+      k(24.9, 4.8, 60.45, -1.1),
+      // Drawing back as the arcs grow: the whole swing, the limb it hangs from, the lake.
+      k(28.2, 5.4, 60.3, -1.45),
+      k(32.6, 6.0, 60.4, -1.8),
+      k(38.8, 6.6, 60.6, -2.05),
+      // The height: the whole machine, the year going round in the limb's leaves.
+      k(46.6, 6.9, 60.75, -2.2),
+      k(58.5, 7.0, 60.9, -2.2),
+      // The leap and the empty swing, then in, to the seam's framing as the light goes.
+      k(63.4, 6.9, 61.3, -2.1),
+      k(67.6, 5.8, 60.8, -1.45),
+      k(71.953, 4.6, 60.55, -0.95),
+    ]
+  },
+)
 
-export const LAWN_HITS: number[] = []
+/** What she sees. */
+export const sees = part<State>(
+  { name: 'lawn-sees', draw: nothing },
+  (slot) => {
+    const segs = shift(louiseLanes().sees, SEES_AT)
+    return {
+      cells: box(-3, -6, 7, 1),
+      exit: [SEES_TO[0] - SEES_AT[0] + 0.5, SEES_TO[1] - SEES_AT[1]] as Pt,
+      lane: { segs, fire: SEES_TOUCHES[0].t - slot.begin },
+      state: { begin: slot.begin },
+      company: hannah(SEES_AT, slot),
+    }
+  },
+  (slot) => {
+    const o = SEES_AT
+    const k = (t: number, cells: number, x: number, y: number): PartShot => ({ t, cells, hold: [x - o[0], y - o[1]], w: 1 })
+    const end = slot.end
+    return [
+      k(250.7, 4.7, SEES_FROM[0] + 1.1, SEES_FROM[1] - 1.0),
+      k(252.9, 7.4, 60.4, -2.35),
+      k(255.4, 7.5, 60.5, -2.3),
+      k(end, 4.6, SEES_TO[0] + 1.05, SEES_TO[1] - 0.95),
+    ]
+  },
+)
+
+/**
+ * Every strike on the lawn: her pushes on the chords (her first from the bottom, on the beat 24.131), the leaves
+ * half a bar on once the arcs reach them, the leap and its landing, the catch, the steadying; in the vision her push
+ * and the leaves on the chord.
+ */
+export const LAWN_HITS: number[] = [
+  ...SWING_TOUCHES.map((x) => x.t),
+  ...BRUSHES.map((b) => b.t),
+  LEAP,
+  LANDS,
+  ...SEES_TOUCHES.map((x) => x.t),
+].filter((t, i, all) => all.indexOf(t) === i).sort((a, b) => a - b)

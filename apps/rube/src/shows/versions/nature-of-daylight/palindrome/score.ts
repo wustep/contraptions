@@ -3,7 +3,7 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { credits } from './credits'
 import { frame, lay, scenery, standing, type Chain, type Link } from './kit'
-import { BLAST, DURATION, SEAM } from './music'
+import { BLAST, DURATION, PEAK, SEAM } from './music'
 import { FIRST, SEAMS } from './seams'
 import { PalindromeShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
 import { LOUISE, type WorldKey } from './worlds'
@@ -114,6 +114,8 @@ const SETS = (): Partial<Record<WorldKey, WorldSet>> => ({
 export const PUNCHES: [number, number][] = [
   // The blast in the chamber.
   [BLAST, 0.9],
+  // The ring whole again, on the loudest bar.
+  [PEAK, 0.55],
 ]
 const PUNCH_TAU = 1
 const PUNCH_FOR = 3.5

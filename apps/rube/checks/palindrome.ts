@@ -6,7 +6,7 @@
 import type { Performance, ShowVersion } from '../src/shows/registry'
 import measured from '../../../scripts/shows/plans/nature-of-daylight-onsets.json'
 import { STRIKES } from '../src/shows/versions/nature-of-daylight/palindrome/hits'
-import { ARRIVAL, BEATS, BLAST, CALL, CHORDS, CREDITS_AT, DURATION, LAST, ONSETS, PEAK, RECORDING, RELEASE, SEAM, SILENT, SWELL, TONIC, TURN, beats } from '../src/shows/versions/nature-of-daylight/palindrome/music'
+import { ARRIVAL, BEATS, BLAST, CALL, CHORDS, CREDITS_AT, DURATION, HALF, LAST, ONSETS, PEAK, RECORDING, RELEASE, SEAM, SILENT, SWELL, TONIC, TURN, beats } from '../src/shows/versions/nature-of-daylight/palindrome/music'
 import { CARDS, CREDITS_OK, creditsAt } from '../src/shows/versions/nature-of-daylight/palindrome/credits'
 import { PUNCHES, VEILED, veilAt } from '../src/shows/versions/nature-of-daylight/palindrome/score'
 import { FIRST, HANNAH_BY, SEAMS } from '../src/shows/versions/nature-of-daylight/palindrome/seams'
@@ -99,8 +99,8 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
     const b = shellAt(SHELL_UP[1] - u * up)
     mirror = Math.max(mirror, Math.hypot(a.c[0] - b.c[0], a.c[1] - b.c[1]) + Math.abs(a.h - b.h))
   }
-  check('palindrome: the shell goes up the way it came down: its path out is its path in, backwards, and it is gone when the high violins stop',
-    down > 3 && Math.abs(up - down) < 0.5 && mirror < 1e-3 && near(SHELL_DOWN[0], ARRIVAL, 1e-3) && Math.abs(SHELL_UP[1] - RELEASE) < 0.05,
+  check('palindrome: the shell goes up the way it came down (on the television from the half cadence, then over the valley): its path out is its path in, backwards, and it is gone when the high violins stop',
+    down > 3 && Math.abs(up - down) < 0.5 && mirror < 1e-3 && near(SHELL_DOWN[0], HALF, 1e-3) && Math.abs(SHELL_UP[1] - RELEASE) < 0.05,
     `in ${down.toFixed(2)} s, out ${up.toFixed(2)} s, off by ${mirror.toFixed(4)}`)
   const fallOrder = [...FALLS].sort((a, b) => a.t - b.t).map((f) => f.screen)
   const riseOrder = [...RISES].sort((a, b) => a.t - b.t).map((f) => f.screen)
@@ -180,7 +180,7 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
 
   // Under Zoom (half as close again as the show's camera) the ball stays in the frame wherever it is to be seen. The
   // great wides are the builders' to list here.
-  const WIDE: [number, number][] = [[ARRIVAL - 3.7, ARRIVAL + 14], [RELEASE - 8, RELEASE + 4]]
+  const WIDE: [number, number][] = [[ARRIVAL - 3.7, ARRIVAL + 14], [RELEASE - 8, RELEASE + 9.3]]
   const outOfZoom: string[] = []
   for (let t = 0; t <= perf.duration; t += 0.05) {
     if (WIDE.some(([a, b]) => t >= a && t <= b)) continue
