@@ -2,6 +2,7 @@ import type p5 from 'p5'
 import { laneAt, mixHex, R, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, smooth, type PartShot } from '../kit'
 import { BLOW, CODA, LAST1, LAST2, ROLL } from '../music'
+import { CRANE } from '../credits'
 import { dawn, REST, skyline, surface } from '../mountain'
 import { quake } from '../rock'
 import { CODA_SHOT } from '../seams'
@@ -981,34 +982,43 @@ export const fall = part<State>(
         { t: burst, cells: cells[1], hold: w(COL + 1.5, y + lift), w: PIN_HOLD, off: [0, lift] },
         ...(next ? [{ t: next[0], cells: next[1], hold: w(COL + 1.5, (y + PINS[i + 1][2]) / 2 + lift), w: 0, off: [0, lift] as Pt }] : []),
       ]),
-      // Up through the hall as its court flees, and one eased pull back from the hall to the whole mountain in
-      // cross-section, the summit to the heart's floor, the white jet the one line through every room.
+      // Up through the hall as its court flees, and one eased pull back from the hall to the mountain in
+      // cross-section, the white jet the one line through every room; then the frame climbs with the collapse: on
+      // each room's chord that room is whole at the frame's foot (its floor just inside the bottom edge) with him up
+      // the vent above it, so every room falls as big as the frame allows (the heart at 46 cells, the drum room at 42,
+      // the mine at 40, the hall at 35 to 38 with the summit's towers and the cap over it for all six hammer blows).
+      // The climb quickens as the chords do (0.16 → 0.3 frame heights a second).
       { t: 141.046, cells: 16, hold: w(49.5, 5.0), w: 0.8 },
-      { t: 143.199, cells: 56, hold: w(52, 6.0), w: 1 },
-      // The rooms come down bottom up behind him: the frame lifts a little with the fall as each lower room goes
-      // dark (never more than a few cells a second), so his climb to the cap stays in the frame.
-      { t: 144.12, cells: 56, hold: w(52.2, 4.3), w: 1 },
-      { t: 145.079, cells: 55.5, hold: w(52.5, 2.2), w: 1 },
-      { t: 145.847, cells: 55, hold: w(52.8, 0.1), w: 1 },
-      { t: 146.601, cells: 54, hold: w(53.2, -2.4), w: 1 },
-      // The silence: held on the fallen rooms and their dust (only the slowest creep in), him high in his arc over
-      // the east flank.
-      { t: 147.1, cells: 54, hold: w(53.5, -6.0), w: 1 },
-      { t: 148.1, cells: 51, hold: w(54.0, -7.0), w: 1 },
-      // The roll: one push in to the east shoulder as he comes down to it, the church in the valley beyond, going on
-      // in through the landing and the bounce.
-      { t: LAST1, cells: 24, hold: w(60.4, -19.6), w: 1 },
-      { t: LAST2, cells: 21.5, hold: w(60.6, -19.7), w: 1 },
-      // In on him in the hollow as he rocks to rest, the church and the rising sun in the frame; then one long crane
-      // up and back over the credits to the broken summit at dawn, the valley, the church and the sun: the mountain
-      // is dark inside now (every room fallen), so the frame gives it the lower third and the morning the rest. (It
-      // stays east and high enough that the church, on the far layer, stays over the flank; he stays in the frame
-      // under Zoom.)
-      { t: 151.3, cells: 15, hold: w(60.8, -19.9), w: 1 },
-      { t: 153.5, cells: 14.2, hold: w(61.0, -20.0), w: 1 },
-      { t: 157.0, cells: 17, hold: w(61.4, -20.5), w: 1 },
-      { t: 161.0, cells: 24, hold: w(62.0, -21.2), w: 1 },
-      { t: 165.0, cells: 32, hold: w(62.5, -21.8), w: 1 },
+      { t: 143.199, cells: 46, hold: w(52.5, 10.9), w: 1 },
+      { t: 143.926, cells: 42, hold: w(52.7, 5.7), w: 1 },
+      { t: 144.12, cells: 41.5, hold: w(52.7, 5.1), w: 1 },
+      { t: 144.84, cells: 40.5, hold: w(52.9, -1.6), w: 1 },
+      { t: 145.079, cells: 39.5, hold: w(53.0, -3.0), w: 1 },
+      { t: 145.6, cells: 36.5, hold: w(53.1, -7.8), w: 1 },
+      { t: 146.348, cells: 35, hold: w(53.2, -8.6), w: 1 },
+      { t: 146.601, cells: 35, hold: w(53.4, -9.2), w: 1 },
+      // The silence: the frame goes up with him as he is thrown out (the fallen hall and its dust below, the geyser
+      // falling back), and from the roll one push in and down along his arc to the shoulder, the crown's boulders
+      // landing on both flanks in the frame.
+      { t: 147.1, cells: 33, hold: w(53.7, -11.2), w: 1 },
+      { t: 147.6, cells: 29.5, hold: w(54.2, -13.8), w: 1 },
+      { t: ROLL, cells: 21.8, hold: w(55.3, -17.6), w: 1 },
+      { t: 149.0, cells: 13.5, hold: w(57.6, -18.8), w: 1 },
+      // The last two chords land close: he lands on the shoulder on the first (10 cells), bounces into the hollow
+      // on the second (9), the church over the flank on the right with its bell swinging and the sun coming up
+      // behind it, the skyline just under the frame's middle so the dawn has the upper half. Held there, creeping
+      // in, while he rocks to rest and the chord rings out.
+      { t: LAST1, cells: 10.0, hold: w(60.4, -18.3), w: 1 },
+      { t: 150.0, cells: 8.6, hold: w(61.3, -18.3), w: 1 },
+      { t: 151.0, cells: 8.0, hold: w(61.8, -18.3), w: 1 },
+      { t: CRANE, cells: 7.7, hold: w(62.0, -18.35), w: 1 },
+      // Then one long crane up and back over the credits to the broken summit at dawn, the valley, the church and
+      // the sun: the mountain is dark inside now (every room fallen), so the frame gives it the lower third and the
+      // morning the rest. He stays in the frame under Zoom.
+      { t: CRANE + 2.6, cells: 10, hold: w(62.3, -19.4), w: 1 },
+      { t: CRANE + 6.6, cells: 16, hold: w(62.6, -20.6), w: 1 },
+      { t: CRANE + 10.6, cells: 24, hold: w(62.8, -21.5), w: 1 },
+      { t: CRANE + 14.6, cells: 32, hold: w(63.0, -22.0), w: 1 },
       { t: slot.end, cells: 40, hold: w(63.0, -22.2), w: 1 },
     ]
   },

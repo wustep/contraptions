@@ -117,10 +117,14 @@ export function skyAt(y: number, t: number): string {
 
 /** The far valley's parallax: a far thing at (X, Y) is drawn at X + cx·(1 − F), Y + cy·(1 − F) for a camera at (cx, cy). */
 const FAR = 0.22
-/** The stave church in the east valley, on the far layer (its X there, and the height of the ground it stands on). */
-export const CHURCH: Pt = [19.2, 0.35]
-/** The sun, on the far layer: it comes up behind the far peaks, a little east of the church. */
-const SUN_X = 23.4
+/**
+ * The stave church in the east valley, on the far layer (its X there, and the height of the ground it stands on):
+ * placed for the frame the last chords land in (8 cells on (62, -18.3)), where it stands on its knoll just over the
+ * east flank at the frame's right, bell house inside the edge, so its bell is seen swinging as he lands.
+ */
+export const CHURCH: Pt = [17.9, -1.45]
+/** The sun, on the far layer: it comes up behind the far peaks just east of the church, inside the last chords' frame. */
+const SUN_X = 20.3
 
 /** The far peaks (Rondane), far-layer cells: sharp tops, rounded cols. */
 function ridgeA(X: number): number {
@@ -129,11 +133,19 @@ function ridgeA(X: number): number {
   return -0.9 - 1.9 * Math.pow(peak, 1.6) * (0.7 + 0.3 * Math.sin(X * 0.05 + 1)) - 0.45 * Math.pow(peak2, 2) + 0.2 * Math.sin(X * 1.3)
 }
 
-/** The valley's near hills, far-layer cells: low and rolling, flat where the church stands. */
+/**
+ * The valley's near hills, far-layer cells: low and rolling, with a knoll where the church stands (a round hill
+ * with a flat top under the nave and the bell house, falling away either side into the rolling hills; never a mesa).
+ */
 function ridgeB(X: number): number {
   const h = 0.55 + 0.55 * Math.sin(X * 0.13 + 2) + 0.28 * Math.sin(X * 0.31 + 1) + 0.08 * Math.sin(X * 1.1)
-  const flat = Math.exp(-Math.pow((X - CHURCH[0]) / 1.6, 2))
-  return h * (1 - flat) + CHURCH[1] * flat
+  // The top: flat across the church's footprint (the nave's eaves west, the bell house east).
+  const mid = CHURCH[0] + 0.45
+  const top = Math.exp(-Math.pow((X - mid) / 1.7, 6))
+  // The shoulders: a broad round rise, so the hills climb to it.
+  const rise = Math.exp(-Math.pow((X - mid) / 4.2, 2))
+  const hill = h + (CHURCH[1] - 0.06 - h) * rise
+  return hill * (1 - top) + (CHURCH[1] - 0.06) * top
 }
 
 interface MountainState {
@@ -314,6 +326,31 @@ function drawTurf(p: p5, k: number, x0: number, x1: number, step: number, t: num
   const grass = mixHex(mixHex(SKY.grass, SKY.night, 0.72), SKY.grass, d)
   const earth = mixHex(mixHex(WORKS.wood, STONE.deep, 0.55), mixHex(WORKS.wood, STONE.deep, 0.25), d)
   const thick = 0.17
+  // The dawn on the flank's face: under the turf the rock takes the morning's light for a cell or so, fading into
+  // the mountain's dark, so a close frame of the shoulder is a hillside at sunrise and not a black cut-out. Soft
+  // (blurred inside the mountain's outline, never over the sky); nothing at night.
+  if (d > 0.02) {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const face = p.color(mixHex(mixHex(STONE.mid, WORKS.wood, 0.3), SKY.dawn, 0.22))
+    const DEPTH = 1.1
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(x0 * k, surface(x0, t) * k)
+    for (let x = x0; x <= x1 + step; x += step / 2) ctx.lineTo(Math.min(x, x1) * k, surface(Math.min(x, x1), t) * k)
+    ctx.lineTo(x1 * k, (surface(x1, t) + 40) * k)
+    ctx.lineTo(x0 * k, (surface(x0, t) + 40) * k)
+    ctx.closePath()
+    ctx.clip()
+    ctx.filter = `blur(${Math.max(1, 0.45 * k).toFixed(1)}px)`
+    ctx.fillStyle = `rgba(${p.red(face)},${p.green(face)},${p.blue(face)},${(0.5 * d).toFixed(3)})`
+    ctx.beginPath()
+    ctx.moveTo(x0 * k, (surface(x0, t) - 0.5) * k)
+    for (let x = x0; x <= x1 + step; x += step / 2) ctx.lineTo(Math.min(x, x1) * k, (surface(Math.min(x, x1), t) - 0.5) * k)
+    for (let x = x1; x >= x0 - step; x -= step / 2) ctx.lineTo(Math.max(x, x0) * k, (surface(Math.max(x, x0), t) + DEPTH) * k)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
   p.push()
   p.noStroke()
   // The earth under the grass, then the grass itself, both following the surface; where the crater is, the turf is

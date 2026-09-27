@@ -24,8 +24,14 @@ const FORM = 0.9
 const GO = 0.7
 const OVERLAP = 0.3
 
-/** The credits start as the last chord has rung out (151.3) and he lies still in the hollow. */
-export const CREDITS_AT = END + 0.5
+/**
+ * The last chords are seen close (he lands and bounces in a frame of the shoulder, the church and the sun), held while
+ * the last chord rings out (151.3) and he lies still in the hollow; then the camera cranes up and back (`fall.ts`)
+ * and the credits come up with it, into the deep blue the crane raises over the frame (at the close frame's top the
+ * sky is the pale warm band, where cream words read weakly).
+ */
+export const CRANE = END + 1.1
+export const CREDITS_AT = CRANE + 0.2
 /** A size up from the page's usual, and how far into a tall stage's extra sky they go. */
 const SCALE = 1.3
 const LIFT = 0.62
