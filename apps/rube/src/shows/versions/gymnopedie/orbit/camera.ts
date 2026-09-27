@@ -1,5 +1,5 @@
 import type { Framing } from '../../../registry'
-import { MELODY, PERIOD, PIECES, wrap } from './music'
+import { BREATHS, MELODY, PERIOD, PIECES, wrap } from './music'
 import { RADIUS, along } from './path'
 import { polar, smooth } from './world'
 
@@ -19,6 +19,11 @@ import { polar, smooth } from './world'
  * frame), eased in even steps of scale, and taken round the circle. Once the
  * frame is much wider than the stones, it drifts from the ball to the planet's
  * middle, so the whole planet is framed and not its top.
+ *
+ * Over that it breathes with the melody (`breath`): out a little on a held
+ * note, more on a longer one, and in again as the next phrase begins; so it
+ * stays close through a run of quick notes and eases back through a run of
+ * long ones, as the Gymnopédie alternates them.
  */
 
 const [G1, GN1, GN3] = PIECES
@@ -34,7 +39,6 @@ const KEYS: [number, number][] = [
   [52, 5.6],
   [64, 8.5],
   [78, 5.8],
-  [96, 6.2],
   // The second half of the Gymnopédie: out along the colonnade, and back in.
   [G1.bars[39] - 4, 7],
   [G1.bars[39] + 9, 15],
@@ -46,6 +50,12 @@ const KEYS: [number, number][] = [
   [GN1.bars[16], 5],
   [GN1.bars[20], 9.5],
   [GN1.bars[26], 5.2],
+  // The high phrase, twice: close as the ball climbs to its top, back over the thread of lamps as it comes down.
+  [GN1.bars[27] + 0.3, 5.1],
+  [GN1.bars[30], 7.4],
+  [GN1.bars[32] + 0.2, 5.3],
+  [GN1.bars[35], 7.4],
+  [GN1.bars[38], 5.2],
   [GN1.bars[52], 5.2],
   [GN1.bars[60], 11],
   [GN1.bars[68], 6],
@@ -62,7 +72,44 @@ const KEYS: [number, number][] = [
   [PERIOD, WHOLE],
 ]
 
-/** Cells top to bottom of the 16:9 frame at show time `t`. */
+/** How far out a breath takes the camera at its fullest: a tenth. */
+const BREATH = 0.1
+
+/**
+ * How far into a breath the camera is at show time `t`, 0 to 1. Each held note asks for one, the longer the more
+ * (a Gymnopédie long note 0.4, the longest rests all of it), from just after its attack until the next phrase's first
+ * note; the camera answers that ask as a slow spring would, a second or so behind, so a run of long notes is one
+ * long breath and a phrase's quick notes draw it in. Worked out once, round the circle, and looked up.
+ */
+export const breath: (t: number) => number = (() => {
+  const STEP = 0.05
+  const n = Math.round(PERIOD / STEP)
+  const ask = new Float64Array(n)
+  for (const b of BREATHS) {
+    const want = Math.min(1, 0.4 + 0.12 * (b.next - b.at - 2))
+    for (let i = Math.ceil((b.at + 0.25) / STEP); i * STEP < b.next; i++) ask[i % n] = Math.max(ask[i % n], want)
+  }
+  // Two passes of a critically damped spring (time constant `tau`), round the circle twice so it has settled at the seam.
+  const tau = 0.9
+  const a = 1 - Math.exp(-STEP / tau)
+  let x = 0
+  let y = 0
+  const out = new Float64Array(n)
+  for (let turn = 0; turn < 3; turn++) {
+    for (let i = 0; i < n; i++) {
+      x += (ask[i] - x) * a
+      y += (x - y) * a
+      out[i] = y
+    }
+  }
+  return (t: number) => {
+    const f = wrap(t) / STEP
+    const i = Math.floor(f)
+    return out[i % n] + (out[(i + 1) % n] - out[i % n]) * (f - i)
+  }
+})()
+
+/** Cells top to bottom of the 16:9 frame at show time `t`: the keys, and the breath over them. */
 export function cellsAt(t: number): number {
   const u = wrap(t)
   let i = 0
@@ -70,11 +117,21 @@ export function cellsAt(t: number): number {
   const [t0, c0] = KEYS[i]
   const [t1, c1] = KEYS[i + 1]
   const f = smooth(u, t0, t1)
-  return Math.exp(Math.log(c0) + (Math.log(c1) - Math.log(c0)) * f)
+  const keyed = Math.exp(Math.log(c0) + (Math.log(c1) - Math.log(c0)) * f)
+  // The breath is the phrases', close in: none once the camera is drawing away from the stones.
+  const near = 1 - smooth(Math.log(keyed), Math.log(12), Math.log(20))
+  return keyed * (1 + BREATH * breath(u) * near)
 }
 
 /** How much of the frame is the whole planet: 0 close on the ball, 1 at the whole. */
 export const wideAt = (cells: number): number => smooth(Math.log(cells), Math.log(34), Math.log(WHOLE * 0.85))
+
+/**
+ * How far the frame has slid from the ball to the planet's middle: none until the planet is nearly all in it, so on
+ * the way out the ball's horizon is in the picture, curving away under the stars, and not the dark of the planet's
+ * face; and all of it at the whole.
+ */
+const slideAt = (cells: number): number => smooth(Math.log(cells), Math.log(66), Math.log(WHOLE))
 
 /** Where the frame's middle is over the sea when close: a little over the stones' middle height. */
 const LOOK = 1.75
@@ -83,7 +140,7 @@ const LEAD = 0.55
 
 export function camera(t: number): Framing {
   const cells = cellsAt(t)
-  const w = wideAt(cells)
+  const w = slideAt(cells)
   const u = along(t) + LEAD
   // Close, the frame's middle is over the ball's way; wide, it slides to the planet's middle.
   const [fx, fy] = polar(u, LOOK)
