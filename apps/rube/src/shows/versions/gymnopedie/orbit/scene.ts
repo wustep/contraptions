@@ -662,11 +662,11 @@ export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   // A grace note's spark, just ahead of the ball.
   for (const g of SPARKS) {
     const s = since(c.t, g.t)
-    if (s < 0 || s > 0.5) continue
-    const a = (1 - Math.exp(-s / 0.012)) * Math.exp(-s / 0.13)
+    if (s < 0 || s > 0.7) continue
+    const a = (1 - Math.exp(-s / 0.012)) * Math.exp(-s / 0.2)
     const [x, y] = polar(g.u, g.h)
     ctx.save()
-    const r = k * (0.05 + 0.06 * Math.min(1, s / 0.2))
+    const r = k * (0.08 + 0.12 * Math.min(1, s / 0.25))
     const glow = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
     glow.addColorStop(0, `rgba(255, 246, 220, ${(0.95 * a).toFixed(3)})`)
     glow.addColorStop(0.3, `rgba(255, 214, 150, ${(0.5 * a).toFixed(3)})`)
