@@ -143,6 +143,9 @@ first note is struck, and every coda chord but one pickup brings something down.
   with the first card, so the cards rise into the deep blue it lifts over the frame.
 - **The credits need a dark ground.** Cream words on a pale morning sky read weakly. The morning's high sky stays a
   deep blue (`mountain.ts` `ZENITH`), the warmth kept in a band over the far ridges, which is also truer to a dawn.
+  The close frame of the last chords sees only the pale band under the zenith, so as the crane starts the sky over
+  the frame's upper half deepens to the zenith's blue (laid by the frame, as a sky at infinity is): every card reads
+  at 3.5:1 or better at 16:9 and on a phone (it was 1.9 to 2.4).
 - **The court is a hall of individuals** (after Kittelsen). Guarded looks on the canonical troll (`TrollLook`
   `horns`, `snout`, `hat`, `heads`, `build`, `moss`; unset, every troll is as before): ram's curls, a tall broken
   horn, a cow's pair; a long hooked nose, a pig's snout, a wart; a birch-bark cone, an iron pot, a crown of twigs, a
@@ -196,7 +199,16 @@ first note is struck, and every coda chord but one pickup brings something down.
   the drum room's embers up the mine's shaft, the drum room's banked fires as he falls into it, the heart's forge.
 - **Each mechanism is dark until it is lit.** In the heart every part stands as a near-black silhouette until the
   furnace's flare on its first note lights it, and the room steps up with each: the idle governor no longer stands
-  lit for twenty seconds, and each phrase has one hero silhouette.
+  lit for twenty seconds, and each phrase has one hero silhouette. Waiting parts are dark iron, never a pale ghost
+  of themselves on the wall; the governor waits wholly up in the rock and drops out of the chimney's mouth onto its
+  note, and the valve waits dark until it blows.
+- **Rooms end in living rock.** A room's end wall is never a ruled vertical square to its roof: the hall's east end,
+  the drum room's two ends and the mine's end wall lean out and back and are ragged, the vault rounds down into them,
+  the light falls off into the rock over the last cell, and the floor fades at the wall's foot. The mine's tunnel
+  runs on east into its dark past the trolls' cart, rails and all.
+- **No dashed lines on the ground.** Anything laid in a row along a floor reads as a dashed line: the mine's track
+  lies on dark ballast (the lit wall between the sleepers was the dash), the burst skin comes down in one crumpled
+  heap at the great drum's foot or down the pit, and the dead rooms' fallen slabs go dark with the room.
 - **The machine escalates with the music.** In the third statement each phrase pushes in close (7 to 8 cells) on
   the mechanism its first note lights and travels with him, then pulls back on its last bar to a bigger machine (9.5,
   10, 10.5 cells of the heart, then the heart and the whole drum room over it, its drummers still beating), and the
@@ -292,4 +304,9 @@ round (five fixers: the tunnels' fire running down to the waterwheel, the court'
 throne, the hall's lights lifting the rock and the sceptre breaking the dais, the drum room lit from its fires, the
 fall into a lit forge) with a director's pass on music and motion (the frame climbing with the collapse, each room lit
 for its fall and its roof coming down in great slabs, the last chords close with the church and its bell, the
-runaway's wide held a bar, the second statement opening on a push, the chase's first bars close on the carts).
+runaway's wide held a bar, the second statement opening on a push, the chase's first bars close on the carts); and a
+ninth round (five fixers: the heart's waiting machinery dark iron, the rope burning through before the King wakes,
+the runaway held on the machine, the shut vent gone from the crater, the last chords wide enough for the church)
+with a director's pass on frames and detail (the credits on the deep blue, the dead rooms dark to the last stone,
+the gate's works in their own shadow and out before the door, the drum room's and the mine's ends in living rock,
+no dashed lines along the floors, the far peaks and the valley's mist).
