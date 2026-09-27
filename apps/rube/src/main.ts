@@ -2,9 +2,9 @@ import '../../../src/ui/styles.css'
 import { randomSeed } from '../../../src/core/seed'
 import { registerMode } from '../../../src/ui/mode-host'
 import { modeFromPath } from '../../../src/ui/mode-path'
-import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, type Shell } from '../../../src/ui/shell'
+import { ICON, copyButton, el, guardWheel, icon, section, seedCard, segmented, speedPicker, type Shell } from '../../../src/ui/shell'
 import { webmMime } from '../../../src/core/capture'
-import { EXPORT_SCALES, SPEEDS, loadView, saveView, speedLabel } from '../../../src/ui/view'
+import { EXPORT_SCALES, loadView, saveView } from '../../../src/ui/view'
 import { folderBuilds } from './builder/discover'
 import { installBuilds } from './builder/registry'
 import { catalogOrder, createCatalog, type Entry } from './catalog'
@@ -398,8 +398,8 @@ window.addEventListener('pointercancel', endScrub)
 const play = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 play.addEventListener('click', () => setPaused(!paused))
 // The same five stops as Explorations; the clock is continuous, so any rate is fine.
-const speedSeg = segmented(SPEEDS, speedLabel, setSpeed)
-transport.append(scrub, el('div', { class: 'row deck' }, [play, speedSeg.node]))
+const speedBox = speedPicker(setSpeed)
+transport.append(scrub, el('div', { class: 'row deck' }, [play, speedBox.node]))
 
 // Export — the same two as Explorations: the frame, and the loop. The
 // loop here is a world, from the cut that opens it to the cut that closes it.
@@ -475,7 +475,7 @@ function sync(): void {
   if (document.activeElement !== seedInput) seedInput.value = seed
   play.replaceChildren(paused ? playIcon : pauseIcon)
   play.classList.toggle('paused', paused)
-  speedSeg.set(speed)
+  speedBox.set(speed)
   overviewBtn.classList.toggle('on', overview)
   pinBtn.textContent = world ? 'Unpin' : 'Pin'
   pinBtn.classList.toggle('on', !!world)

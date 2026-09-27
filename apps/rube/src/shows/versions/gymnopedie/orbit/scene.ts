@@ -1,7 +1,7 @@
 import type p5 from 'p5'
-import { mixHex, type Piece, type PieceCtx } from '../../../../parts'
-import { BASS, GRACES, PERIOD, wrap } from './music'
-import { LENGTH, RADIUS, STONES, TOUCHES, along, ballLocal, since, sink, stonesIn, type Stone } from './path'
+import { R as BALL_R, mixHex, type Piece, type PieceCtx } from '../../../../parts'
+import { CHORDS, GRACES, MELODY, PERIOD, loudness, wrap } from './music'
+import { LENGTH, RADIUS, along, ballLocal, crest, float, since, sink, stonesIn, swell, type Stone } from './path'
 import { wideAt } from './camera'
 import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
 
@@ -12,14 +12,23 @@ import { alpha, hash, osc, polar, skyAt, smooth, type Sky } from './world'
  *   arcs, the stars, and, as the camera draws out, space round the planet.
  * - The stones: the melody, one material to a piece. The Gymnopédie's are
  *   columns of pale stone, the long notes lintels on two columns; the first
- *   Gnossienne's dark stelae, each with a lamp the ball lights as it lands,
- *   which burns down slowly behind it; the third's lotus leaves on stems, the
- *   longest with a flower that opens when the ball comes.
+ *   Gnossienne's dark stelae, each with a lamp the ball lights as it lands;
+ *   the third's lotus leaves on stems, floating, the longest with a flower
+ *   that opens when the ball comes. What the ball does at night stays done
+ *   until dawn: the lamps burn and the flowers stay open behind it, so its way
+ *   is a thread of light, and seen from far off, round the planet.
  * - The sea, over the stones' feet: the swell that each bass note sends out
- *   from under the ball, the stones' reflections, and a ring on the water
- *   under every landing.
- * - Over the ball: the glint of a grace note, and, once the planet is small
- *   in the frame, a light round the ball so it can still be found.
+ *   from under the ball, its crests catching the light; the stones'
+ *   reflections; and the light on the water, under the sun, the lamps and the
+ *   moon, which the chords set sparkling.
+ * - Over the ball: a spark where it is about to land, struck by a grace note;
+ *   the lamps seen from far off; and, once the planet is small in the frame, a
+ *   light round the ball so it can still be found.
+ *
+ * One job to a voice: the melody is the stones and the ball's landings, the
+ * bass the sea's swell, the chords the light on the water, a grace note a
+ * spark. How full the music is (`loudness`) is how high the swell stands and
+ * how bright the water's light.
  */
 
 const scenery = <S>(name: string, draw: (p: p5, s: S, c: PieceCtx) => void, over?: (p: p5, s: S, c: PieceCtx) => void): Piece<S> => ({
@@ -77,6 +86,33 @@ function atSea(p: p5, k: number, u: number): void {
 const sunAngle = (t: number): number => 1.82 - (3.64 * wrap(t)) / 222
 const moonAngle = (t: number): number => (wrap(t) < 430 ? 3 : 1.8 - (3.6 * (wrap(t) - 430)) / (PERIOD - 430))
 
+/** The sun or the moon in the frame: where it is on the canvas (device pixels), and how much it lights. */
+interface Body {
+  x: number
+  y: number
+  light: number
+  sun: boolean
+  /** How far from overhead, radians. */
+  angle: number
+}
+
+/** The sun and the moon at `t`, on their arcs over the horizon; they light nothing once the planet is small in the frame. */
+function bodies(ctx: Ctx2D, c: PieceCtx, v: View, day: Sky): Body[] {
+  const H = ctx.canvas.height
+  const [hx, hy] = onCanvas(ctx, c.k, ...polar(along(c.t) + 0.55, 0))
+  const reach = H * 0.62
+  // Only close: once the planet draws away they are its sky's, not the frame's.
+  const near = 1 - smooth(v.wide, 0, 0.25)
+  const at = (angle: number, light: number, sun: boolean): Body => ({
+    x: hx + Math.sin(angle) * reach * 1.25,
+    y: hy - Math.cos(angle) * reach,
+    light: Math.abs(angle) > 1.9 ? 0 : light,
+    sun,
+    angle,
+  })
+  return [at(sunAngle(c.t), near * (1 - day.night * 0.8), true), at(moonAngle(c.t), near * day.night, false)]
+}
+
 export const sky = scenery<null>('sky', (p, _s, c) => {
   const ctx = p.drawingContext as Ctx2D
   const v = viewOf(p, c)
@@ -85,7 +121,9 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   const H = ctx.canvas.height
   // The horizon on the canvas: the sea under the frame's middle.
   const u = along(c.t)
-  const [hx, hy] = onCanvas(ctx, c.k, ...polar(u + 0.55, 0))
+  const [, hy] = onCanvas(ctx, c.k, ...polar(u + 0.55, 0))
+  // Where they are is worked out in the world's own transform, before the sky is painted square to the canvas.
+  const [sun, moon] = bodies(ctx, c, v, day)
   const m = ctx.getTransform()
   const roll = Math.atan2(m.b, m.a)
   ctx.save()
@@ -125,11 +163,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
   }
 
   // The sun and the moon, on arcs over the horizon; gone when the planet is small (they are its sky, not space's).
-  const reach = H * 0.62
-  const body = (angle: number, radius: number, core: string, glow: string, light: number) => {
-    if (Math.abs(angle) > 1.9 || light <= 0.01) return
-    const bx = hx + Math.sin(angle) * reach * 1.25
-    const by = hy - Math.cos(angle) * reach
+  const body = ({ x: bx, y: by, light }: Body, radius: number, core: string, glow: string) => {
+    if (light <= 0.01) return
     const glowR = radius * 7
     const halo = ctx.createRadialGradient(bx, by, radius * 0.6, bx, by, glowR)
     halo.addColorStop(0, glow.replace('A', (0.55 * light).toFixed(3)))
@@ -143,10 +178,8 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
     ctx.fill()
     ctx.globalAlpha = 1
   }
-  // Only close: once the planet draws away they are its sky's, not the frame's.
-  const near = 1 - smooth(v.wide, 0, 0.25)
-  body(sunAngle(c.t), H * 0.045, '#FFF1D6', 'rgba(255, 214, 160, A)', near * (1 - day.night * 0.8))
-  body(moonAngle(c.t), H * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)', near * day.night)
+  body(sun, H * 0.045, '#FFF1D6', 'rgba(255, 214, 160, A)')
+  body(moon, H * 0.03, '#F2EEE2', 'rgba(200, 214, 240, A)')
   ctx.restore()
 
   // Wide: the air round the planet, lit the colour of its day.
@@ -164,8 +197,43 @@ export const sky = scenery<null>('sky', (p, _s, c) => {
 
 // ---------------------------------------------------------------- the stones
 
-/** 0 before the ball has landed on a stone, then how long ago it did (seconds), round the circle. */
-const landed = (stone: Stone, t: number): number => since(t, stone.touches[0])
+/** Show time dawn puts out what the night lit: each lamp goes out, and each flower closes, at its own moment in here. */
+const DAWN_FROM = 7
+const DAWN_TO = 34
+
+/**
+ * The night's hold on `stone` at `t`: how long ago the ball came to it (seconds), and how much of the night is still
+ * on it (1, down to 0 as the dawn comes to it). The lamps the ball lights burn, and the flowers it opens stay open,
+ * until the sun comes up; before the ball comes to it this time round it is last night's, going out with the dawn,
+ * and then nothing. Only the Gnossiennes' stones: the night's.
+ */
+function tonight(stone: Stone, t: number): { age: number; left: number } | null {
+  const u = wrap(t)
+  const at = stone.touches[0]
+  if (u >= at) return { age: u - at, left: 1 }
+  const out = DAWN_FROM + hash(stone.index, 7) * (DAWN_TO - DAWN_FROM - 6)
+  const left = 1 - smooth(u, out, out + 6)
+  return left > 0 ? { age: u + PERIOD - at, left } : null
+}
+
+/**
+ * How bright a lamp burns, 0 to 1: it catches as the ball comes down on it, flares as hard as the note was played,
+ * and settles to burn, a little unsteadily, until dawn.
+ */
+export function lampLight(stone: Stone, t: number): number {
+  const night = tonight(stone, t)
+  if (!night) return 0
+  const s = night.age
+  const burn = 0.56 * smooth(s, 0, 0.3) * (1 + 0.07 * osc(t, 0.37, stone.index * 1.7))
+  const flare = 0.55 * stone.weight[0] * (1 - Math.exp(-s / 0.03)) * Math.exp(-s / 1.6)
+  return night.left * Math.min(1, burn + flare + 0.45 * pulse(stone, t))
+}
+
+/** How far a flower is open, 0 a bud to 1: it opens as the ball comes, and closes again at dawn. */
+export function bloom(stone: Stone, t: number): number {
+  const night = tonight(stone, t)
+  return night ? night.left * smooth(night.age, 0, 2.2) : 0
+}
 
 /** A restrike's pulse: the chord striking the held note's key again, answered by the stone. */
 function pulse(stone: Stone, t: number): number {
@@ -286,19 +354,32 @@ function lotus(p: p5, k: number, w: number, h: number, day: Sky, weight: number,
   p.vertex(K(0.03), K(-h))
   p.endShape(p.CLOSE)
   if (!flower) return
-  // The flower at the leaf's far end: a bud until the ball comes, then open.
+  // The flower at the leaf's far end: a small closed bud, green at its foot, until the ball comes; then open, pale,
+  // and lit a little by the moon, so the way the ball has come is a line of flowers and the way ahead is buds.
   const fx = w - Math.min(0.24, w * 0.25)
   const fy = -h - 0.02
+  if (open > 0.02) {
+    const ctx = p.drawingContext as Ctx2D
+    const r = K(0.34)
+    const cy = K(fy - 0.09)
+    const g = ctx.createRadialGradient(K(fx), cy, 0, K(fx), cy, r)
+    g.addColorStop(0, `rgba(246, 226, 232, ${(0.22 * open).toFixed(3)})`)
+    g.addColorStop(1, 'rgba(246, 226, 232, 0)')
+    ctx.save()
+    ctx.fillStyle = g
+    ctx.fillRect(K(fx) - r, cy - r, 2 * r, 2 * r)
+    ctx.restore()
+  }
   p.stroke(ink)
   p.strokeWeight(weight * 0.8)
   for (const i of [-2, 2, -1, 1, 0]) {
-    const a = i * (0.16 + 0.34 * open)
-    const len = 0.16 + 0.04 * open - Math.abs(i) * 0.018
+    const a = i * (0.1 + 0.4 * open)
+    const len = 0.12 + 0.09 * open - Math.abs(i) * 0.018
     p.push()
     p.translate(K(fx), K(fy))
     p.rotate(a)
-    p.fill(mixHex('#E4B9C0', '#F7E9E6', Math.abs(i) / 3))
-    p.ellipse(0, K(-len / 2), K(0.06 + 0.025 * open), K(len))
+    p.fill(mixHex(mixHex('#9DB59A', '#D8A9B3', 0.55), mixHex('#EFC6CD', '#FBF1EE', Math.abs(i) / 3), open))
+    p.ellipse(0, K(-len / 2), K(0.05 + 0.035 * open), K(len))
     p.pop()
   }
 }
@@ -315,8 +396,7 @@ export const stones = scenery<null>('stones', (p, _s, c) => {
     const w = stone.u1 - stone.u0
     // Too small to be anything but a mark.
     if (w * k < 1.5 && v.wide > 0.9) continue
-    const h = stone.h - sink(stone, c.t)
-    const s = landed(stone, c.t)
+    const h = stone.h - sink(stone, c.t) + float(stone, c.t)
     const n = Math.max(1, Math.ceil(w / SEGMENT[stone.piece]))
     const gap = n > 1 ? 0.07 : 0
     const sw = (w - gap * (n - 1)) / n
@@ -327,36 +407,85 @@ export const stones = scenery<null>('stones', (p, _s, c) => {
       if (stone.piece === 0) {
         column(p, k, sw, h, day, c.weight, 0.7 * pulse(stone, c.t))
       } else if (stone.piece === 1) {
-        // Lit by the ball, and burning down slowly behind it: Ariadne's thread in lamps.
-        const lamp = s < 0 ? 0 : Math.min(1, 0.5 * Math.exp(-s / 70) + 0.5 * Math.exp(-s / 1.8) + 0.45 * pulse(stone, c.t))
-        stele(p, k, sw, h, day, c.weight, lamp, j === 0)
+        // Lit by the ball, and burning on behind it until dawn: Ariadne's thread in lamps.
+        stele(p, k, sw, h, day, c.weight, lampLight(stone, c.t), j === 0)
       } else {
         const sway = 0.03 * osc(c.t, 0.11, stone.index + j)
-        const open = s < 0 ? 0 : smooth(s, 0, 2.2)
-        lotus(p, k, sw, h, day, c.weight, sway, open, j === n - 1 && w > 0.9)
+        lotus(p, k, sw, h, day, c.weight, sway, bloom(stone, c.t), j === n - 1 && w > 0.9)
       }
       p.pop()
     }
   }
 })
 
-// ---------------------------------------------------------------- the sea
+// ---------------------------------------------------------------- the light on the water
 
-/** How high the sea stands at `u` at show time `t`: the swell each bass note sends out from under the ball, and a slow breath. */
-function swell(u: number, t: number): number {
-  let y = 0.018 * osc(t, 0.09, u * 0.9) + 0.012 * osc(t, 0.21, -u * 2.3)
-  for (const b of BASS) {
-    const s = since(t, b.t)
-    if (s < 0 || s > 12) continue
-    const from = along(b.t)
-    let d = Math.abs(u - from) % LENGTH
-    d = Math.min(d, LENGTH - d)
-    const front = 0.85 * s
-    const env = Math.exp(-s / 4.2) * (b.v / 46)
-    y += 0.07 * env * Math.exp(-(((d - front) / 0.8) ** 2))
-  }
-  return y
+/** A chord still sounding on the water: which one, how long ago, and how hard it was played (a middling chord is 1). */
+interface Sounding {
+  i: number
+  s: number
+  v: number
 }
+
+let soundingAt = Number.NaN
+let soundingNow: Sounding[] = []
+
+/** The chords that have lately sounded at `t`. Asked for many times a frame, for one time: kept for that time. */
+function sounding(t: number): Sounding[] {
+  if (t === soundingAt) return soundingNow
+  const out: Sounding[] = []
+  for (let i = 0; i < CHORDS.length; i++) {
+    const s = since(t, CHORDS[i].t)
+    if (s >= 0 && s < 2.4) out.push({ i, s, v: CHORDS[i].v / 32 })
+  }
+  soundingAt = t
+  soundingNow = out
+  return out
+}
+
+/**
+ * How bright glint `id` of a path of light on the water is at `t`: a slow shimmer, brighter as the music is fuller,
+ * and a flash when a chord catches it. Each chord catches a different few, as hard as it was played, and they die
+ * away over half a second.
+ */
+function glint(id: number, t: number, full: number, chords: Sounding[]): number {
+  let a = (0.26 + 0.14 * osc(t, 0.19 + 0.35 * hash(id, 11), 6.28 * hash(id, 12))) * (0.4 + 0.6 * full)
+  for (const ch of chords) {
+    if (hash(id, ch.i, 13) > 0.45) continue
+    a += 1.1 * ch.v * (1 - Math.exp(-ch.s / 0.02)) * Math.exp(-ch.s / 0.5)
+  }
+  return a
+}
+
+/**
+ * A path of light on the water, drawn in a stone's frame at `u` (cells along): short strokes of `rgb` in rows going
+ * down from the surface, spreading as they come nearer, as bright as `light`. The chords set it sparkling.
+ */
+function waterLight(p: p5, c: PieceCtx, u: number, light: number, rgb: string, rows: number, spread: number, seed: number): void {
+  const ctx = p.drawingContext as Ctx2D
+  const k = c.k
+  const full = loudness(c.t)
+  const chords = sounding(c.t)
+  const top = -swell(u, c.t)
+  const thick = Math.max(1.2, c.weight * 1.1)
+  ctx.save()
+  for (let j = 0; j < rows; j++) {
+    const d = 0.06 + 0.07 * j + 0.0035 * j * j
+    const fade = 1 - j / (rows + 1)
+    for (let i = 0; i < 3; i++) {
+      const id = seed * 131 + j * 3 + i
+      const a = Math.min(0.95, light * fade * glint(id, c.t, full, chords))
+      if (a < 0.015) continue
+      const x = (hash(id, 14) - 0.5) * 2 * spread * (0.5 + d) + 0.025 * osc(c.t, 0.23, id)
+      const len = (0.04 + 0.1 * hash(id, 15)) * (0.7 + 0.6 * d)
+      ctx.fillStyle = `rgba(${rgb}, ${a.toFixed(3)})`
+      ctx.fillRect(k * (x - len / 2), k * (top + d), k * len, thick)
+    }
+  }
+  ctx.restore()
+}
+
+// ---------------------------------------------------------------- the sea
 
 const DEPTH = 5
 
@@ -412,13 +541,13 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
   }
 
   if (!whole) {
-    // Reflections: each stone a soft light going down into the water; a lit lamp a longer, warmer one.
+    // Reflections: each stone a soft light going down into the water; a lit lamp a longer, warmer one, with its
+    // path of light on the water.
     const ctx2 = p.drawingContext as Ctx2D
     for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
       const w = stone.u1 - stone.u0
-      const h = stone.h - sink(stone, c.t)
-      const ago = since(c.t, stone.touches[0])
-      const lit = stone.piece === 1 && ago >= 0 ? 0.5 * Math.exp(-ago / 70) + 0.5 * Math.exp(-ago / 1.8) : 0
+      const h = stone.h - sink(stone, c.t) + float(stone, c.t)
+      const lit = stone.piece === 1 ? lampLight(stone, c.t) : 0
       p.push()
       atSea(p, k, stone.u0 + shift)
       const col = stone.piece === 0 ? day.lit : stone.piece === 1 ? '#8D7A5E' : '#7FA894'
@@ -438,10 +567,30 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
         ctx2.fillStyle = lg
         const lx = w > 0.42 ? 0.1 : w / 2
         ctx2.fillRect(k * (lx - 0.05 + wob), k * 0.02, k * 0.1, depth * 1.2)
+        p.translate(k * (lx + wob), 0)
+        waterLight(p, c, stone.u0 + shift + lx, lit, '255, 206, 132', 6, 0.05, stone.index)
       }
       p.pop()
     }
-    // The surface: a line of light where the sky meets it.
+    // The sun's and the moon's paths of light on the water, under them.
+    {
+      const m = ctx.getTransform()
+      const cell = Math.hypot(m.a, m.b) * k
+      const uh = along(c.t) + 0.55
+      const [hx] = onCanvas(ctx, k, ...polar(uh, 0))
+      for (const b of bodies(ctx, c, v, day)) {
+        // Low over the sea it lays a long bright path; high, a fainter one; at the horizon it goes.
+        const light = b.light * smooth(1.85 - Math.abs(b.angle), 0, 0.35) * (0.55 + 0.45 * Math.min(1, Math.abs(b.angle) / 1.2))
+        if (light < 0.02) continue
+        const ub = uh + (b.x - hx) / cell
+        if (ub < v.u0 || ub > v.u1) continue
+        p.push()
+        atSea(p, k, ub)
+        waterLight(p, c, ub, light, b.sun ? '255, 226, 178' : '226, 234, 248', 16, b.sun ? 0.22 : 0.16, b.sun ? 1 : 2)
+        p.pop()
+      }
+    }
+    // The surface: a line of light where the sky meets it, brighter along the swells' crests.
     p.noFill()
     p.stroke(alpha(p, day.low, 0.55))
     p.strokeWeight(Math.max(1, c.weight * 0.8))
@@ -452,71 +601,126 @@ export const sea = scenery<null>('sea', (p, _s, c) => {
       p.vertex(x * k, y * k)
     }
     p.endShape()
-    // A ring on the water under every landing.
-    for (const touch of TOUCHES) {
-      if (touch.kind === 'restrike') continue
-      const s = since(c.t, touch.t)
-      if (s < 0 || s > 3.2) continue
-      const stone = STONES[touch.stone]
-      let uc = (stone.u0 + stone.u1) / 2
-      while (uc - along(c.t) > LENGTH / 2) uc -= LENGTH
-      while (along(c.t) - uc > LENGTH / 2) uc += LENGTH
-      if (uc < v.u0 || uc > v.u1) continue
-      p.push()
-      atSea(p, k, uc)
-      p.noFill()
-      p.stroke(alpha(p, day.low, 0.6 * (1 - s / 3.2)))
-      p.strokeWeight(Math.max(1, c.weight * 0.7))
-      const r = 0.12 + s * 0.42
-      p.ellipse(0, k * swell(uc, c.t) * -1, k * r * 2, k * r * 0.22)
-      p.pop()
+    ctx.save()
+    ctx.lineCap = 'round'
+    ctx.lineWidth = Math.max(1, c.weight * 1.25)
+    const foam = mixHex(day.low, '#FFF7EA', 0.6)
+    const [fr, fg, fb] = [1, 3, 5].map((i) => parseInt(foam.slice(i, i + 2), 16))
+    for (let i = 0; i < n; i++) {
+      const ua = u0 + ((u1 - u0) * i) / n
+      const ub = u0 + ((u1 - u0) * (i + 1)) / n
+      const lift = crest((ua + ub) / 2, c.t)
+      if (lift < 0.04) continue
+      const [xa, ya] = polar(ua, swell(ua, c.t))
+      const [xb, yb] = polar(ub, swell(ub, c.t))
+      ctx.strokeStyle = `rgba(${fr}, ${fg}, ${fb}, ${(0.75 * lift).toFixed(3)})`
+      ctx.beginPath()
+      ctx.moveTo(xa * k, ya * k)
+      ctx.lineTo(xb * k, yb * k)
+      ctx.stroke()
     }
+    ctx.restore()
   }
 })
 
 // ---------------------------------------------------------------- over the ball
 
+/**
+ * A grace note's spark: the grace leans on the melody note after it, a breath ahead of it, and strikes a light
+ * where the ball is about to come down on that note, a lamp's wick in the first Gnossienne.
+ */
+const SPARKS = GRACES.map((g) => {
+  const on = MELODY.find((n) => n.t > g.t) ?? MELODY[0]
+  const b = ballLocal(on.t)
+  return { t: g.t, u: b.u, h: b.h - BALL_R }
+})
+
+/** A soft round light, drawn once and stamped: a lamp, or an open flower, seen from far off. */
+const halos = new Map<string, HTMLCanvasElement>()
+function haloSprite(core: string, mid: string, edge: string): HTMLCanvasElement {
+  const key = core + mid
+  const got = halos.get(key)
+  if (got) return got
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const g = c.getContext('2d')!
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32)
+  r.addColorStop(0, `rgba(${core}, 1)`)
+  r.addColorStop(0.12, `rgba(${mid}, 0.85)`)
+  r.addColorStop(0.4, `rgba(${edge}, 0.22)`)
+  r.addColorStop(1, `rgba(${edge}, 0)`)
+  g.fillStyle = r
+  g.fillRect(0, 0, 64, 64)
+  halos.set(key, c)
+  return c
+}
+
 export const glints = scenery<null>('glints', () => {}, (p, _s, c) => {
   const v = viewOf(p, c)
   const k = c.k
-  // A grace note: the ball catches the light, just before it lands.
-  for (const g of GRACES) {
+  const ctx = p.drawingContext as Ctx2D
+  // A grace note's spark, just ahead of the ball.
+  for (const g of SPARKS) {
     const s = since(c.t, g.t)
-    if (s < 0 || s > 0.45) continue
-    const b = ballLocal(g.t)
-    const [x, y] = polar(b.u, b.h + 0.2)
-    const a = 1 - s / 0.45
-    p.push()
-    p.translate(x * k, y * k)
-    p.rotate(b.u / RADIUS)
-    p.stroke(alpha(p, '#FFF3D6', a))
-    p.strokeWeight(Math.max(1, c.weight * 0.9))
-    // A small four-pointed star, opening and fading.
-    const r = k * (0.04 + 0.05 * (s / 0.45))
-    p.noStroke()
-    p.fill(alpha(p, '#FFF3D6', a))
-    p.beginShape()
-    for (let i = 0; i < 8; i++) {
-      const rr = i % 2 ? r * 0.22 : r
-      const th = (i * Math.PI) / 4
-      p.vertex(Math.sin(th) * rr, -Math.cos(th) * rr)
+    if (s < 0 || s > 0.7) continue
+    const a = (1 - Math.exp(-s / 0.012)) * Math.exp(-s / 0.2)
+    const [x, y] = polar(g.u, g.h)
+    ctx.save()
+    const r = k * (0.08 + 0.12 * Math.min(1, s / 0.25))
+    const glow = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
+    glow.addColorStop(0, `rgba(255, 246, 220, ${(0.95 * a).toFixed(3)})`)
+    glow.addColorStop(0.3, `rgba(255, 214, 150, ${(0.5 * a).toFixed(3)})`)
+    glow.addColorStop(1, 'rgba(255, 214, 150, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(x * k - r, y * k - r, 2 * r, 2 * r)
+    ctx.restore()
+  }
+  // Far off: the lamps the ball has lit tonight, a thread of lights round the planet, and after them, fainter, the
+  // flowers it has opened.
+  const afar = smooth(v.cells, 10, 26)
+  if (afar > 0.01) {
+    const lamp = haloSprite('255, 236, 196', '255, 214, 150', '242, 170, 80')
+    const flower = haloSprite('250, 236, 238', '240, 204, 212', '214, 170, 196')
+    const H = ctx.canvas.height
+    const spots: [number, number, number, HTMLCanvasElement][] = []
+    for (const { stone, shift } of stonesIn(v.u0, v.u1)) {
+      if (stone.piece === 1) {
+        const light = lampLight(stone, c.t)
+        if (light < 0.02) continue
+        const [x, y] = onCanvas(ctx, k, ...polar(stone.u0 + shift + 0.1, stone.h - sink(stone, c.t) + 0.08))
+        spots.push([x, y, light, lamp])
+      } else if (stone.piece === 2 && stone.u1 - stone.u0 > 0.9) {
+        const open = bloom(stone, c.t)
+        if (open < 0.02) continue
+        const w = stone.u1 - stone.u0
+        const fx = w - Math.min(0.24, (w / Math.ceil(w / SEGMENT[2])) * 0.25)
+        const [x, y] = onCanvas(ctx, k, ...polar(stone.u0 + shift + fx, stone.h + float(stone, c.t) + 0.05))
+        spots.push([x, y, 0.55 * open, flower])
+      }
     }
-    p.endShape(p.CLOSE)
-    p.pop()
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    for (const [x, y, light, sprite] of spots) {
+      const r = H * (0.006 + 0.008 * light)
+      ctx.globalAlpha = Math.min(1, afar * light * 1.3)
+      ctx.drawImage(sprite, x - r, y - r, 2 * r, 2 * r)
+    }
+    ctx.restore()
   }
   // Wide: a light round the ball, so the eye can find it on the small planet.
   if (v.wide > 0.02) {
     const b = ballLocal(c.t)
     const [x, y] = polar(b.u, b.h)
-    const ctx = p.drawingContext as Ctx2D
     const r = 22 * Math.max(1, p.width / 1600)
     const g = ctx.createRadialGradient(x * k, y * k, 0, x * k, y * k, r)
     g.addColorStop(0, `rgba(255, 240, 210, ${(0.85 * v.wide).toFixed(3)})`)
     g.addColorStop(0.2, `rgba(255, 228, 180, ${(0.35 * v.wide).toFixed(3)})`)
     g.addColorStop(1, 'rgba(255, 228, 180, 0)')
+    ctx.save()
     ctx.fillStyle = g
     ctx.beginPath()
     ctx.arc(x * k, y * k, r, 0, Math.PI * 2)
     ctx.fill()
+    ctx.restore()
   }
 })

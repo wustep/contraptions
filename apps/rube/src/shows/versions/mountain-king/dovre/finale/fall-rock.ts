@@ -151,7 +151,7 @@ export function vent(p: p5, c: Pen, o: Pt, x: number, q: Pt, light: { wet: numbe
     p.endShape(p.CLOSE)
   }
   // Once the crater's rubble has closed it, the shaft goes back to the dark of the rock round it (a trace of his way).
-  const back = mixHex(mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet), STONE.deep, 0.7 * (light.shut ?? 0))
+  const back = mixHex(mixHex(hollowOf(0.2), STONE.mid, 0.2 * light.wet), STONE.deep, 0.96 * (light.shut ?? 0))
   p.push()
   p.noStroke()
   p.fill(back)

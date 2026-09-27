@@ -97,9 +97,6 @@ export const CX_PARKED = 16.9
 /** The chimney the finale lifts him up (the director's), in this frame: keep it clear. */
 export const CHIMNEY_X = 19.5
 
-/** The trolls' cart parked up the tunnel behind him. */
-const TROLL_S0 = -3.1
-
 /** The switch: the blade's hinge, its length and its raised angle; the catch siding's angle up to its buffer. */
 export const BLADE_L = 0.62
 export const BLADE_UP = 0.42
@@ -224,20 +221,28 @@ function hops(t: number): number {
 /* ------------------------------------------------------------------ the trolls' cart */
 
 /**
- * Their cart is parked up the tunnel behind his (its middle at -3.1 on the main line) until the brake comes off.
- * Then it runs down the tunnel's steeper grade, gaining on him, the lead troll lunging on the accents; it drops back
- * a little as his cart gathers speed (enough for the switch to be thrown between them); and at the switch it runs
- * up the catch siding into the buffer, stopping dead on 84.816.
+ * Their cart is parked far up the tunnel behind his, near its end wall, until the brake comes off. Then it runs
+ * down the tunnel's steeper grade, faster than his: the gap of two carts' lengths closes over the phrase's first
+ * bars (a stranger sees them gain), until their bumper rides half a cell off his for the lunges; it drops back a
+ * little as his cart gathers speed (enough for the switch to be thrown between them); and at the switch it runs up
+ * the catch siding into the buffer, stopping dead on 84.816.
  */
 const trollDrive = driven([
   [BRAKE, 0],
-  [FIRST_CLACK, 1.0],
-  [at8(16), 1.45],
-  [LUNGES[0], 1.56],
-  [LUNGES[2], 1.7],
-  [TRIP, 1.7],
+  [FIRST_CLACK, 1.2],
+  [at8(12), 1.72],
+  [at8(16), 1.6],
+  [LUNGES[0], 1.35],
+  [LUNGES[1], 1.55],
+  [LUNGES[2], 1.75],
+  [WIDE, 1.9],
+  [TRIP, 2.05],
   [ONTO, 1.78],
 ])
+/** Their cart's middle as it reaches the switch: the switch, the siding and the timbering around them stand here. */
+const S_ONTO = 8.9870785
+/** The park up the tunnel: wherever the drive has to start from to reach the switch on ONTO. */
+const TROLL_S0 = S_ONTO - trollDrive.dist(ONTO)
 /** Their cart's distance along its track (its middle): the main line, then (from the switch) the blade and the siding. */
 const trollMain = (t: number): number => TROLL_S0 + trollDrive.dist(t)
 /** The switch blade's hinge: where their front wheel is when it reaches the raised blade. */
@@ -344,13 +349,23 @@ export function trollAct(t: number, lead: boolean): TrollAct {
   if (lead) {
     // The brake: an arm swung down on it.
     arms += 0.35 * wave(t, BRAKE, 0.15, 0.25)
+    // Each lunge is aimed at him: the arms swing up and out, the body leans out of the bin after them, and the mitt
+    // comes open behind him at his height on the accent, a little short, closing on air as his cart runs on; then
+    // the arm drops back (0.1 at most once the swing is done), never resting on his cart. Between lunges the lead
+    // stands a step back in the bin, so the hanging mitt falls inside their own bin's front, not onto his.
+    let back = 1
     for (const l of LUNGES) {
-      const w = wave(t, l, 0.22, 0.38)
-      arms += 0.16 * w
-      lean += 0.1 * w
-      mouth += 0.7 * w
+      const reach = wave(t, l, 0.24, 0.17)
+      const body = wave(t, l, 0.26, 0.32)
+      arms += 0.74 * reach
+      lean += 0.23 * body
+      slide += 0.05 * body
+      mouth += 0.7 * body
+      back -= body
     }
-    arms += 0.2 * ease(t, FIRST_CLACK, FIRST_CLACK + 0.6) * (1 - ease(t, ONTO, ONTO + 0.1))
+    const chase = ease(t, FIRST_CLACK, FIRST_CLACK + 0.6) * (1 - ease(t, ONTO, ONTO + 0.1))
+    arms += 0.02 * chase
+    slide -= 0.12 * ease(t, FIRST_CLACK, FIRST_CLACK + 0.6) * (1 - ease(t, TRIP, ONTO)) * clamp01(back)
   } else {
     // The one behind shakes both fists over its head on the beats.
     const fists = ease(t, at8(10), at8(10) + 0.4) * (1 - ease(t, ONTO - 0.1, ONTO + 0.05))

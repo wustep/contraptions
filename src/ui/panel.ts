@@ -12,8 +12,8 @@ import {
   type Options,
 } from '../core/composition'
 import { createListbox } from './listbox'
-import { ICON, copyButton, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented, type Shell } from './shell'
-import { EXPORT_SCALES, SPEEDS, speedLabel, type ViewState } from './view'
+import { ICON, copyButton, credit, el, field, icon, guardWheel, section as sectionIn, seedCard, segmented, speedPicker, type Shell } from './shell'
+import { EXPORT_SCALES, type ViewState } from './view'
 
 export interface PanelHandlers {
   onChange(patch: Partial<Options>): void
@@ -323,12 +323,12 @@ export function createPanel(
   guardWheel(shell.root, scrub)
   const play = el('button', { class: 'tbtn play', title: 'Play / pause (K)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
   play.addEventListener('click', () => handlers.onView({ paused: !lastView.paused }))
-  const speedSeg = segmented(SPEEDS, speedLabel, (v) => handlers.onView({ speed: v }))
+  const speedBox = speedPicker((v) => handlers.onView({ speed: v }))
   // Play sits with the speeds: one row for "is it running and how fast".
   // Stepping a beat stays on shift+← / shift+→.
   transport.append(
     scrub,
-    el('div', { class: 'row deck' }, [play, speedSeg.node]),
+    el('div', { class: 'row deck' }, [play, speedBox.node]),
   )
 
   // Export
@@ -413,7 +413,7 @@ export function createPanel(
       gridBtn.classList.toggle('on', view.grid)
       play.replaceChildren(view.paused ? playIcon : pauseIcon)
       play.classList.toggle('paused', view.paused)
-      speedSeg.set(view.speed)
+      speedBox.set(view.speed)
       scaleSeg.set(view.exportScale)
       const edge = handlers.exportSize(view.exportScale)
       const loopSec = Math.min(comp.loop / FPS, LOOP_EXPORT_MAX_SECONDS)

@@ -1,5 +1,5 @@
 import { R as BALL_R } from '../../../../parts'
-import { MELODY, PERIOD, wrap, type Note } from './music'
+import { BASS, MELODY, PERIOD, loudness, osc, wrap, type Note } from './music'
 
 /**
  * The ball's way round: one orbit of a small sea planet, once a period.
@@ -35,6 +35,8 @@ export interface Stone {
   touches: number[]
   /** Which of those the ball bounces into (true) rather than only riding over (false; the first is the landing). */
   bounced: boolean[]
+  /** How hard each of those was played, as a share of a middling touch (velocity 50). */
+  weight: number[]
   /** Show time the ball leaves it. */
   leave: number
 }
@@ -176,6 +178,7 @@ export const TOUCHES: Touch[] = []
       u1: along(leave) + PAD,
       touches: own.map((l) => l.t),
       bounced: own.map((l) => l.kind === 'bounce'),
+      weight: own.map((l) => l.note.v / 50),
       leave,
     })
     for (const l of own) TOUCHES.push({ t: l.t, stone: s, kind: l.kind, note: l.note })
@@ -203,8 +206,8 @@ export function since(t: number, at: number): number {
 }
 
 /**
- * How far a stone has sunk under the ball's landings at `t`, cells (positive is down): each landing presses it in
- * and it comes back up on a damped spring. The ball rides it down and up.
+ * How far a stone has sunk under the ball's landings at `t`, cells (positive is down): each landing presses it in, as
+ * far as its note was played hard, and it comes back up on a damped spring. The ball rides it down and up.
  */
 export function sink(stone: Stone, t: number): number {
   let d = 0
@@ -213,10 +216,73 @@ export function sink(stone: Stone, t: number): number {
     if (s < 0 || s > 4) continue
     const depth = i === 0 ? 0.055 : stone.bounced[i] ? 0.03 : 0
     if (!depth) continue
-    d += depth * Math.exp(-s / 0.45) * Math.sin(s * ((2 * Math.PI) / 1.05))
+    d += depth * stone.weight[i] ** 1.5 * Math.exp(-s / 0.45) * Math.sin(s * ((2 * Math.PI) / 1.05))
   }
   return d
 }
+
+// ---------------------------------------------------------------- the sea
+
+/**
+ * A swell: what one bass note sends out across the sea. It wells up under the ball as the note sounds and parts into
+ * two crests running out along the sea either way, dying as they go; the fuller the music at the time, the higher it
+ * stands.
+ */
+interface Wave {
+  /** Where it rose, cells along, and how long ago. */
+  from: number
+  s: number
+  /** How high it stands now, cells. */
+  a: number
+}
+
+/** Cells a second the crests run out at (twice the ball's pace, so they leave it), and how wide a crest is. */
+const CREST_SPEED = 2.1
+const CREST_WIDTH = 0.7
+
+let wavesAt = Number.NaN
+let wavesNow: Wave[] = []
+
+/** The swells on the sea at show time `t`. Asked for many times a frame, for one time: kept for that time. */
+function waves(t: number): Wave[] {
+  if (t === wavesAt) return wavesNow
+  const out: Wave[] = []
+  for (const b of BASS) {
+    const s = since(t, b.t)
+    if (s <= 0 || s > 12) continue
+    const a = 0.12 * (b.v / 46) * (0.55 + 0.7 * loudness(b.t)) * (1 - Math.exp(-s / 0.22)) * Math.exp(-s / 3)
+    out.push({ from: along(b.t), s, a })
+  }
+  wavesAt = t
+  wavesNow = out
+  return out
+}
+
+/** How high the sea stands at `u` at show time `t`, cells: a slow breath, and the swells the bass notes send out. */
+export function swell(u: number, t: number): number {
+  let y = 0.018 * osc(t, 0.09, u * 0.9) + 0.012 * osc(t, 0.21, -u * 2.3)
+  for (const w of waves(t)) {
+    let d = Math.abs(u - w.from) % LENGTH
+    d = Math.min(d, LENGTH - d)
+    y += w.a * Math.exp(-(((d - CREST_SPEED * w.s) / CREST_WIDTH) ** 2))
+  }
+  return y
+}
+
+/** How much of a swell's crest is at `u` at show time `t`, 0 to 1: where the sea catches the light. */
+export function crest(u: number, t: number): number {
+  let c = 0
+  for (const w of waves(t)) {
+    let d = Math.abs(u - w.from) % LENGTH
+    d = Math.min(d, LENGTH - d)
+    c += (w.a / 0.1) * Math.exp(-(((d - CREST_SPEED * w.s) / (CREST_WIDTH * 0.7)) ** 2))
+  }
+  return Math.min(1, c)
+}
+
+/** How far a stone rides up on the swell, cells: the third Gnossienne's leaves float; the stones stand. */
+export const float = (stone: Stone, t: number): number =>
+  stone.piece === 2 ? 0.8 * swell((stone.u0 + stone.u1) / 2, t) : 0
 
 const stoneStart = STONES.map((s) => s.touches[0])
 
@@ -244,8 +310,8 @@ export interface BallLocal {
   flying: boolean
 }
 
-/** Height of the ball's centre riding stone `s` at `t`. */
-const riding = (s: Stone, t: number): number => s.h + BALL_R - sink(s, t)
+/** Height of the ball's centre riding stone `s` at `t`: its top, pressed down by the landings and lifted by the sea. */
+export const riding = (s: Stone, t: number): number => s.h + BALL_R - sink(s, t) + float(s, t)
 
 /**
  * Where the ball is at show time `t`: how far round, and how high. On a stone it rides its top (and its sinking);
@@ -280,7 +346,7 @@ export function ballLocal(t: number): BallLocal {
   const T = land - s.leave
   const q = Math.max(0, Math.min(1, (tt - s.leave) / T))
   const y0 = riding(s, s.leave)
-  const y1 = n.h + BALL_R
+  const y1 = riding(n, land)
   // Low gravity: a slow, high arc, and always coming down onto the stone.
   const g = 5.2
   const A = Math.max((g * T * T) / 8, (y1 - y0) / 4 + 0.05 + 0.1 * T)
@@ -302,4 +368,24 @@ export function stonesIn(u0: number, u1: number): { stone: Stone; shift: number 
     }
   }
   return out
+}
+
+/**
+ * The ball's squash as it comes down on a note, 0 when it is round: a share of its height it gives up, as far as the
+ * note was played hard, and the little rebound after; each landing and bounce, none for a restrike (the ball is
+ * already there).
+ */
+export function squash(t: number): number {
+  const w = wrap(t)
+  const i = stoneAt(w)
+  let q = 0
+  for (const s of [STONES[i], STONES[(i + STONES.length - 1) % STONES.length]]) {
+    for (let j = 0; j < s.touches.length; j++) {
+      if (j > 0 && !s.bounced[j]) continue
+      const ago = since(t, s.touches[j])
+      if (ago < 0 || ago > 0.6) continue
+      q += 0.13 * s.weight[j] * (1 - Math.exp(-ago / 0.014)) * Math.exp(-ago / 0.085) * Math.cos((2 * Math.PI * ago) / 0.34)
+    }
+  }
+  return q
 }
