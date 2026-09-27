@@ -1204,12 +1204,12 @@ export const plank = part<PlankState>(
       // coming in at the foot); out to the whole machine and the size of the wastes as the bird comes down out of the
       // sky (c18, two bars); in to the two of them on the prow (the stern out of the frame) as he glides down into
       // it and lands on the loudest note.
-      { ...onDeckShot(c(8), 7.7, -3.1, 0.3), cut: true },
-      onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.28),
-      onDeckShot(c(10) + 0.4, 7.7, -2.6, 0.27),
-      onDeckShot(c(12) + 0.3, 7.7, 0.3, 0.27),
-      onDeckShot(c(16) + 0.3, 7.7, 0.7, 0.27),
-      onDeckShot(c(18) - 0.05, 7.7, 0.8, 0.27),
+      { ...onDeckShot(c(8), 7.7, -3.1, 0.32), cut: true },
+      onDeckShot(c(9) + 0.3, 7.7, -3.0, 0.34),
+      onDeckShot(c(10) + 0.4, 7.3, -2.6, 0.36),
+      onDeckShot(c(12) + 0.3, 6.5, 0.3, 0.37),
+      onDeckShot(c(16) + 0.3, 6.3, 0.5, 0.37),
+      onDeckShot(c(18) - 0.05, 6.3, 0.6, 0.37),
       { ...run(c(18), 10.6, 2.4, 1.5), cut: true },
       run(c(19) + 0.5, 10.6, 2.2, 1.5),
       run(c(20) - 0.05, 10.4, 2.2, 1.5),
