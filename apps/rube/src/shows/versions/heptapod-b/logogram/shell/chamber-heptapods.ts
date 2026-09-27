@@ -37,7 +37,8 @@ function knots(ks: [number, number][]): (t: number) => number {
 
 /**
  * How deep in the fog a heptapod is: a shadow (`before`) that darkens a little on each unseen footfall (`hints`) and
- * recovers; on `seen` it resolves, quickly at first and then slowly, onto `after`.
+ * recovers; on `seen` (a hard pulse) it comes out of the white: more than half the way at once, on the pulse, and the
+ * rest slowly, onto `after`.
  */
 /** How much an unseen footfall darkens its shadow in the fog. */
 const HINT = 0.07
@@ -47,7 +48,10 @@ function emerge(seen: number, hints: number[], before: [number, number][], after
   const post = knots(after)
   return (t) => {
     let f = pre(t)
-    if (t > seen) f += (post(t) - f) * (1 - Math.exp(-(t - seen) / 0.5))
+    if (t > seen) {
+      const a = t - seen
+      f += (post(t) - f) * (0.55 * (1 - Math.exp(-a / 0.07)) + 0.45 * (1 - Math.exp(-a / 0.9)))
+    }
     for (const h of hints) {
       const a = t - h
       if (a > 0 && a < 4) f -= HINT * (1 - Math.exp(-a / 0.08)) * Math.exp(-a / 0.9)
