@@ -10,6 +10,7 @@ import { join } from 'node:path'
 import { modeFromPath } from '../../../src/ui/mode-path'
 import { MODE_LINKS } from '../../../src/ui/shell'
 import { SHOW_SPEEDS, Transport, clockText } from '../src/shows/clock'
+import { SPEEDS, speedLabel } from '../../../src/ui/view'
 import { performanceProblems, pickVersion, readShows, versionPath, type Performance, type ShowVersion } from '../src/shows/registry'
 import { renderWav } from '../src/shows/ticks'
 import { RetimedShow, knotProblems, musicTimeOf, timeMap } from '../src/shows/timemap'
@@ -626,7 +627,8 @@ async function main(): Promise<void> {
   /* ------------------------------------------------------------------ the clock */
 
   console.log('\nthe clock')
-  check('the speeds are 1× and 2×', SHOW_SPEEDS.join(',') === '1,2')
+  check('the speeds are Machine\'s six, ¼× to 4×', SHOW_SPEEDS.join(',') === '0.25,0.5,1,1.5,2,4' && SHOW_SPEEDS === SPEEDS)
+  check('the speeds read ¼ ½ 1× 1.5× 2× 4×', SHOW_SPEEDS.map(speedLabel).join(' ') === '¼ ½ 1× 1.5× 2× 4×')
   {
     let wall = 0
     const c = new Transport({ duration: 10, wall: () => wall })

@@ -1,8 +1,8 @@
 import '../../../../src/ui/styles.css'
 import { registerMode } from '../../../../src/ui/mode-host'
-import { ICON, el, guardWheel, icon, section, segmented, type Shell } from '../../../../src/ui/shell'
+import { ICON, el, guardWheel, icon, section, segmented, speedPicker, type Shell } from '../../../../src/ui/shell'
 import { createListbox } from '../../../../src/ui/listbox'
-import { SHOW_SPEEDS, Transport, clockText } from './clock'
+import { Transport, clockText } from './clock'
 import { discoverShows } from './discover'
 import { recordingFormat } from './record'
 import { performanceProblems, pickVersion, type Performance, type TitleCard, type Version } from './registry'
@@ -16,8 +16,8 @@ import { FRAME_SIZES, createShowStage, type FrameSize } from './stage'
  * piece of music, the soundtrack locked to it — in the same chrome as the
  * other modes: brand, mode switch, and then the show's own sections. Which
  * show and which version of it, since the same music may have several takes
- * side by side (`registry.ts`); a transport over the whole show, at 1× or
- * 2×, with the music on unless it is turned off; and Export, which saves the
+ * side by side (`registry.ts`); a transport over the whole show, from ¼× to
+ * 4×, with the music on unless it is turned off; and Export, which saves the
  * frame or the whole show as **picture and music only**. Nothing is ever
  * written on a show's canvas (`stage.ts`), so what is in the panel — the
  * title, the credit, the clock — is in the panel and nowhere else.
@@ -371,7 +371,7 @@ window.addEventListener('pointerup', endScrub)
 window.addEventListener('pointercancel', endScrub)
 const playBtn = el('button', { class: 'tbtn play', title: 'Play / pause (space)', 'aria-label': 'Play or pause' }, [icon(ICON.pause)])
 playBtn.addEventListener('click', toggle)
-const speedSeg = segmented(SHOW_SPEEDS, (v) => `${v}×`, setSpeed)
+const speedBox = speedPicker(setSpeed)
 const musicBtn = el('button', { type: 'button', class: 'chip music' })
 musicBtn.addEventListener('click', () => {
   if (!soundHeld) {
@@ -389,7 +389,7 @@ overviewBtn.addEventListener('click', () => setOverview(!overview))
 const zoomBtn = el('button', { title: 'Zoom in on the action (Z)', 'aria-pressed': 'false' }, ['Zoom', el('kbd', {}, ['Z'])])
 zoomBtn.addEventListener('click', () => setZoom(!zoom))
 const transportNote = el('div', { class: 'status' })
-transportSec.append(scrub, el('div', { class: 'row deck' }, [playBtn, speedSeg.node, musicBtn]), el('div', { class: 'row' }, [restartBtn, overviewBtn, zoomBtn]), transportNote)
+transportSec.append(scrub, el('div', { class: 'row deck' }, [playBtn, speedBox.node, musicBtn]), el('div', { class: 'row' }, [restartBtn, overviewBtn, zoomBtn]), transportNote)
 
 // Export — the frame, and the show. Picture and music; nothing written on either.
 const exportSec = section(panelRoot, 'Export')
@@ -526,8 +526,8 @@ function sync(): void {
   overviewBtn.setAttribute('aria-pressed', String(overview))
   zoomBtn.classList.toggle('on', zoom)
   zoomBtn.setAttribute('aria-pressed', String(zoom))
-  speedSeg.set(speed)
-  for (const b of speedSeg.node.querySelectorAll('button')) b.disabled = busy
+  speedBox.set(speed)
+  speedBox.setDisabled(busy)
   const hasMusic = !!perf?.soundtrack && music.state() !== 'failed'
   musicBtn.disabled = !hasMusic
   musicBtn.classList.toggle('on', hasMusic && !muted && !soundHeld)
@@ -730,6 +730,9 @@ const onKey = (e: KeyboardEvent) => {
       break
     case '2':
       setSpeed(2)
+      break
+    case '4':
+      setSpeed(4)
       break
     case '[':
       step(-1)

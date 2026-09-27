@@ -10,9 +10,9 @@ import { createYouTubeSoundtrack } from './youtube'
  * and the visit never starts the sound.
  *
  * It is the show's clock while it plays (`clock.ts`), so what it is asked
- * most is where it is. A doubled recording is time-stretched, not pitched
- * up (`preservesPitch`), which is why this is an element and not a buffer
- * source: 2× still sounds like the music.
+ * most is where it is. A recording off 1× is time-stretched, not pitched
+ * (`preservesPitch`), which is why this is an element and not a buffer
+ * source: ½× and 2× still sound like the music.
  */
 
 /**
@@ -69,6 +69,9 @@ export interface Soundtrack {
   onChange(fn: () => void): void
 }
 
+/** YouTube's player plays ¼× to 2×; it rounds anything faster down to 2×. */
+const YOUTUBE_MAX_SPEED = 2
+
 /** Where a show's music is coming from: the site's own file, or YouTube's player. */
 export type MusicSource = 'file' | 'youtube'
 
@@ -115,13 +118,16 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
     changed()
   })
   const other = (): Soundtrack => (active === file ? tube : file)
+  let speed = 1
+  /** YouTube for a version that names its upload, unless the speed is one its player cannot play and there is a file that can. */
+  const wantsTube = (next: SoundtrackSpec | null) =>
+    !!next?.youtube?.length && prefer === 'youtube' && (speed <= YOUTUBE_MAX_SPEED || !next.src)
   return {
     load(next) {
       spec = next
       fell = false
       wanted = false
-      const wantsTube = !!next?.youtube?.length && prefer === 'youtube'
-      active = wantsTube ? tube : file
+      active = wantsTube(next) ? tube : file
       other().load(null)
       active.load(next)
     },
@@ -146,9 +152,19 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
       active.pause()
     },
     seek: (at) => active.seek(at),
-    setSpeed(speed) {
-      file.setSpeed(speed)
-      tube.setSpeed(speed)
+    setSpeed(next) {
+      speed = next
+      file.setSpeed(next)
+      tube.setSpeed(next)
+      // Past YouTube's fastest its player would round down, and the picture, which follows the music, with it.
+      // The file plays any speed: it takes over where the show is, and keeps the version from then on.
+      if (active === tube && !wantsTube(spec) && spec) {
+        active = file
+        tube.load(null)
+        file.load(spec)
+        if (wanted && !asking) void file.play(shown)
+        changed()
+      }
     },
     setMuted(muted) {
       file.setMuted(muted)
@@ -167,10 +183,10 @@ export function createSoundtrack(host: HTMLElement, prefer: MusicSource = 'youtu
 /**
  * A loop's music, played round without a seam. An element cannot: it stops at its end and is sent back, and the
  * gap is heard. So a looping recording is also decoded whole and played from a buffer that loops on the sample,
- * between `offset` and `offset + loop`. The element is kept for what the buffer cannot do: 2×, which it plays
+ * between `offset` and `offset + loop`. The element is kept for what the buffer cannot do: any speed but 1×, which it plays
  * time-stretched (a looped buffer would only play it an octave up), the seconds before the buffer is decoded, and a
  * visit the browser will only let play muted (an audio context wants a gesture, muted or not). Wherever the element
- * plays a loop it is sent back a period when it runs past the end: the same music, so only a hitch is heard, at 2×.
+ * plays a loop it is sent back a period when it runs past the end: the same music, so only a hitch is heard, off 1×.
  */
 interface Looper {
   /** The decoded recording, once it is. */
@@ -416,7 +432,7 @@ function createFileSoundtrack(): Soundtrack {
       ear.reset()
     },
     setSpeed(next) {
-      // A loop changes engine with the speed: the buffer at 1×, the element (time-stretched) at 2×.
+      // A loop changes engine with the speed: the buffer at 1×, the element (time-stretched) at any other.
       const playing = !!looper.started || !audio.paused
       const at = looper.started ? bufferPosition() : null
       speed = next
