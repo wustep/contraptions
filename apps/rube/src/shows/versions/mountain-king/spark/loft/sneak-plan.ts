@@ -12,7 +12,8 @@ import { WICK_LEFT } from './sneak-beats'
  * laid at [0, 0], so its frame is the loft's world cells (the wick is `WICK`). `sneak-draw.ts` draws from this.
  *
  *   0-4.36     the candle burning; the loft wide, then close on the candle
- *   4.36       it stirs, leans, looks east at the cat, and hops off its wick into the pan lift (6.706)
+ *   4.36       it stirs, stretches east toward the stove and the cat and holds, looking; ducks; leans west and hops
+ *              off its wick into the pan lift (6.706)
  *   7.28-9.56  the windlass lets the pan down a notch a note, to the bench
  *   10.69      out onto the bench, two tiptoes, a careful hop over a hank of wick (12.351)
  *   13.47      up into the balance's pan; the beam sinks and its far end trips the snuffer's latch (14.583)
@@ -30,8 +31,6 @@ const q = (n: number, j: number) => inPhrase(n, j)
 
 export const BEAT = {
   stir: q(0, 0),
-  leanWest: q(0, 2),
-  look: q(0, 4),
   leave: WICK_LEFT,
   pan: q(0, 8),
   notches: [q(0, 10), q(0, 12), q(0, 14), q(0, 16)],
@@ -443,13 +442,27 @@ const liftLean = keyed([
   [9.7, -0.05],
   [BEAT.out - 0.2, 0],
 ])
-/** In the balance's pan: it settles, looks up west at the snuffer as it falls, and braces. */
+/** How long before the clap the spark cowers from the bell. */
+const COWER = 0.2
+/** In the balance's pan: it settles, looks up west at the snuffer as it falls, and shrinks from it, east. */
 const balLean = keyed([
   [BEAT.balance + 0.05, 0],
   [BEAT.trip + 0.15, -0.02],
   [BEAT.trip + 0.45, -0.07],
-  [BEAT.clang - 0.25, -0.07],
-  [BEAT.clang - 0.05, 0.03],
+  [BEAT.clang - COWER, -0.07],
+  [BEAT.clang - COWER + 0.045, 0.025],
+  [BEAT.clang - 0.03, 0.04],
+])
+/**
+ * As the bell comes down, the last and fastest of its fall, the spark ducks into its pan behind the lip, its flame
+ * knocked flat by the drop, and stays down (never through the pan's floor) until the clap flings it: the one moment
+ * the loft's snuffer is what it is for.
+ */
+const balDuck = keyed([
+  [BEAT.clang - COWER, 0],
+  [BEAT.clang - COWER + 0.035, 0.04],
+  [BEAT.clang - 0.06, 0.035],
+  [BEAT.clang, 0],
 ])
 
 /** A flinch on a knock: the flame ducks at once and comes up slowly. */
@@ -527,17 +540,28 @@ const POLE_KEYS: [number, number][][] = [
 ]
 const LEAP_PUSH = 0.07
 
+/**
+ * The look before it goes: from the stir it stretches east off its wick toward the stove (and the cat asleep under
+ * it), a quarter of a cell and up on its toes, arriving on phrase 0's fourth eighth; holds half a second, looking;
+ * ducks at once, the knock's freeze in small; and from there leans west into the crouch it hops from.
+ */
+const LOOK = { from: 4.72, reach: q(0, 3), at: [WICK[0] + 0.18, WICK[1] - 0.025] as Pt, duck: q(0, 3) + 0.5 }
+
 /** The whole lane, from the wick to `HANDOFF`, and the time of the part's first strike (the landing in the lift). */
 export function buildLane(): { segs: Seg[]; fire: number } {
   const path = new Path(0, WICK)
-  // The candle, burning. It stirs on the theme's first note, leans west, looks east at the cat, crouches, and hops.
+  // The candle, burning. It stirs on the theme's first note; it stretches east off its wick toward the stove, where
+  // the cat sleeps, and holds there, looking; it ducks (the knock's freeze in small: did it stir?); then it leans west,
+  // crouches, and hops.
   path.hold(BEAT.stir)
-  path.move(BEAT.stir + 0.26, [WICK[0], WICK[1] - 0.035])
-  path.move(BEAT.leanWest - 0.02, WICK)
-  path.move(BEAT.leanWest + 0.36, [WICK[0] - 0.1, WICK[1] + 0.015])
-  path.hold(BEAT.look - 0.04)
-  path.move(BEAT.look + 0.28, [WICK[0] + 0.11, WICK[1] - 0.015])
-  path.hold(5.9)
+  path.move(BEAT.stir + 0.22, [WICK[0], WICK[1] - 0.035])
+  path.move(LOOK.from - 0.03, WICK)
+  path.move(LOOK.reach, LOOK.at, 'inout')
+  // Held, not parked: it leans in a hair more while it looks.
+  path.move(LOOK.duck, [LOOK.at[0] + 0.012, LOOK.at[1] - 0.012], 'inout')
+  // The duck: all at once, as the knocks' flinch is, and eased at the bottom.
+  path.move(LOOK.duck + 0.06, [LOOK.at[0] - 0.02, WICK[1] + 0.03], 'out')
+  path.move(LOOK.duck + 0.16, [LOOK.at[0] - 0.05, WICK[1] + 0.02], 'inout')
   path.move(BEAT.leave - LEAP_PUSH, [WICK[0] - 0.04, WICK[1] + 0.04])
   const inPan = (t: number): Pt => [LIFT.x + liftLean(t), panY(t) - R]
   path.leap(BEAT.leave, BEAT.pan, inPan(BEAT.pan))
@@ -554,11 +578,12 @@ export function buildLane(): { segs: Seg[]; fire: number } {
   // Up into the balance's east pan.
   const inBal = (t: number): Pt => {
     const [x, y] = panUnder(beamEnd(beamTilt(t), 1))
-    return [x + balLean(t), y - R]
+    return [x + balLean(t), y - R + balDuck(t)]
   }
   path.leap(BEAT.balGo, BEAT.balance, inBal(BEAT.balance))
-  path.ride(BEAT.clang, inBal, 60)
-  // Flung: over the balance and the snuffer, up onto the rack's pole.
+  // Carried up by its pan as the clap throws it (the pan never passes it), and flung off it at its fastest:
+  // over the balance and the snuffer, up onto the rack's pole.
+  path.ride(BEAT.clang + 0.03, inBal, 60)
   path.fly(BEAT.pole, onPoleF(POLE_IN, BEAT.pole))
   // The tightrope.
   for (let i = 0; i <= HOPS.length; i++) {
@@ -620,7 +645,12 @@ export const SHOTS: PartShot[] = [
   { t: 0.001, cells: 15.6, hold: [-3.0, 4.4], w: 1 },
   { t: 1.17, cells: 15.4, hold: [-2.9, 4.3], w: 1 },
   { t: THEME, cells: 4.3, hold: [-0.75, 0.55], w: 1 },
-  { t: 5.9, cells: 4.1, hold: [-0.9, 0.5], w: 0.85 },
+  // As it stretches east to look, the frame goes with its look, a cell east and a touch out, so the stove's iron (the
+  // cat asleep under it) comes in at the right edge: what it is looking at. Still creeping east through the held look and
+  // the duck, it turns after the spark as it hops west out of the frame.
+  { t: 4.8, cells: 4.3, hold: [-0.72, 0.54], w: 1 },
+  { t: 5.7, cells: 4.82, hold: [0.38, 0.45], w: 1 },
+  { t: 6.1, cells: 4.9, hold: [0.5, 0.44], w: 1 },
   { t: 7.15, cells: 6.7, hold: [-1.6, -0.05], w: 0.95 },
   { t: 9.45, cells: 6.5, hold: [-1.7, 0.1], w: 0.95 },
   { t: 10.6, cells: 4.6, hold: [-2.5, 1.3], w: 0.8 },
