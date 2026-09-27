@@ -150,20 +150,21 @@ export function checkPalindrome(perf: Performance, version: ShowVersion, check: 
   check('palindrome: the blast\'s dust goes to white at the cut into the fog, and only there',
     VEILED.length === 1 && near(VEILED[0], SEAM.fog) && veilAt(SEAM.fog).a > 0.99 && [5, 100, 150, 210, 223, 260, 300, 350].every((t) => veilAt(t).a === 0))
 
-  // The circle: the show's last frame is its first. From the last B-flat to the end the camera is on FIRST, Louise
-  // where she was, baby Hannah in the cradle where she was.
+  // The circle: the show's last frame is its first. The camera arrives on FIRST on the last chord's last attack (having
+  // drawn back to it from the cradle, the opening's push in played backwards), and from there to the end it is FIRST,
+  // Louise where she was, baby Hannah in the cradle where she was.
   const f0 = cam(0)
   const s0 = onScreen(0)
   const h0 = show.hannah(0)
   let drift = 0
-  for (let t = TONIC + 1; t <= perf.duration; t += 0.25) {
+  for (let t = LAST; t <= perf.duration; t += 0.25) {
     const f = cam(t)
     const s = onScreen(t)
     const h = show.hannah(t)
     const hs = h && h0 ? Math.hypot((h.x - f.x) / f.cells - (h0.x - f0.x) / f0.cells, (h.y - f.y) / f.cells - (h0.y - f0.y) / f0.cells) : 1
     drift = Math.max(drift, Math.abs(f.cells - f0.cells) / f0.cells, Math.hypot(s[0] - s0[0], s[1] - s0[1]), hs)
   }
-  check('palindrome: the last frame is the first: from the last B-flat on, the same framing, Louise and baby Hannah where they were',
+  check('palindrome: the last frame is the first: from the last attack on, the same framing, Louise and baby Hannah where they were',
     near(f0.cells, FIRST.cells) && !!h0 && near(h0.scale ?? 0, HANNAH_AGE.baby, 1e-6) && near(show.hannah(perf.duration)?.scale ?? 0, HANNAH_AGE.baby, 1e-6) && drift < 0.01,
     `off by ${drift.toFixed(4)}`)
   // Hannah's rhyme: at each cut into or out of the lake house, on Louise's right a little above her (the cradle, the

@@ -1,7 +1,7 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { mix } from '../cast'
 import { box, part, scenery, type Company, type Part, type PartShot, type Slot } from '../kit'
-import { HALF, SEAM, SWELL } from '../music'
+import { HALF, LAST, SEAM, SWELL, TONIC } from '../music'
 import type { ShellSpot } from '../seams'
 import { HANNAH, HANNAH_AGE, HOUSE, HOUSE_THEME } from '../worlds'
 import { CLOCK_HULL, CRADLE_HULL, BED_HULL, TV_HULL, drawBed, drawBedOver, drawClock, drawCradle, drawCradleOver, drawTV, drawTVGlow, tvShell } from './props'
@@ -303,8 +303,12 @@ export const home: Part<HouseState> = part<HouseState>(
       { t: ALONE, cells: 5.6, hold: w(-1.05, -1.2), cut: true },
       { t: 345.49, cells: 5.5, hold: w(-0.3, -1.14) },
       { t: BEGIN - 0.05, cells: 6.1, hold: w(-0.1, -1.24) },
-      // The first frame: the cradle at dawn, and Hannah in it.
-      { t: BEGIN, cells: 4.6, hold: first, cut: true },
+      // The opening played backwards: the cut opens close on the cradle at dawn, Hannah in it (the dawn's closest
+      // framing); close through the last B-flat; then one long slow draw back, arriving on the first frame exactly on
+      // the last attack, and held there to the end.
+      { t: BEGIN, cells: 2.6, hold: w(0.7, -0.4), cut: true },
+      { t: TONIC, cells: 2.7, hold: w(0.69, -0.41) },
+      { t: LAST, cells: 4.6, hold: first },
       { t: slot.end, cells: 4.6, hold: first },
     ]
     return keys
