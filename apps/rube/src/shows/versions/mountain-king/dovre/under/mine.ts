@@ -14,7 +14,7 @@ import {
 } from './mine-clock'
 import { drawOreCart, drawTrollCart } from './mine-cart'
 import {
-  drawBuffer, drawChock, drawLever, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
+  END_WALL, drawBuffer, drawChock, drawLever, drawMainLine, drawRooms, drawSiding, drawSparks, drawSpill, drawSwitch, drawTimbers, drawTorches,
 } from './mine-set'
 
 /**
@@ -59,7 +59,7 @@ const ROOF_TOP = -3.8
 /** The areas the cover spans, part frame: the throat under the hatch, the stope and its tunnel, the shaft to the drum. */
 const COVERED: [number, number, number, number][] = [
   [-1.5, COVER_TOP, 0.5, ROOF_TOP],
-  [-5.6, ROOF_TOP, 23.3, COVER_BOTTOM],
+  [-7.9, ROOF_TOP, 23.5, COVER_BOTTOM],
   [SHAFT[0] - 0.15, COVER_BOTTOM, SHAFT[1] + 0.15, 8.3],
 ]
 const coverEdge = (T: number): number => COVER_TOP + (COVER_BOTTOM + COVER_FEATHER - COVER_TOP) * ease(T, OPEN, OPEN + LIFT)
@@ -139,8 +139,8 @@ const ROOF_LINE: Pt[] = [
 ]
 function clipRoom(ctx: CanvasRenderingContext2D, k: number, throat: boolean): void {
   ctx.beginPath()
-  ctx.moveTo(-5.2 * k, (FLOOR_Y + 0.02) * k)
-  ctx.lineTo(-5.2 * k, -1.02 * k)
+  ctx.moveTo(-7.6 * k, (FLOOR_Y + 0.02) * k)
+  ctx.lineTo(-7.6 * k, -1.02 * k)
   if (throat) {
     ctx.lineTo(-1.25 * k, THROAT_FOOT * k)
     ctx.lineTo(-1.25 * k, COVER_TOP * k)
@@ -148,7 +148,7 @@ function clipRoom(ctx: CanvasRenderingContext2D, k: number, throat: boolean): vo
     ctx.lineTo(0.25 * k, THROAT_FOOT * k)
   }
   for (const [x, y] of ROOF_LINE) ctx.lineTo(x * k, y * k)
-  ctx.lineTo(22.9 * k, (FLOOR_Y + 0.02) * k)
+  for (const [x, y] of END_WALL) ctx.lineTo(x * k, y * k)
   ctx.closePath()
   ctx.clip()
 }
@@ -287,7 +287,7 @@ function drawLamps(p: p5, c: Pen, T: number): void {
   fade.addColorStop(0, `rgba(${bg},0)`)
   fade.addColorStop(1, `rgba(${bg},1)`)
   ctx.fillStyle = fade
-  ctx.fillRect(-5.3 * k, -1.3 * k, 4.2 * k, (FLOOR_Y + 1.45) * k)
+  ctx.fillRect(-7.7 * k, -1.3 * k, 6.6 * k, (FLOOR_Y + 1.45) * k)
   ctx.restore()
 }
 
