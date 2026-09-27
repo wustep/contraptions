@@ -51,8 +51,8 @@ export const runaway = part<{ begin: number }>(
     const coda = (dx: number, dy: number): Pt => [PLAN.runaway.exit[0] - 0.5 - (CODA_SHOT.world[0] + dx - 47.5), CODA_SHOT.world[1] + dy - 33]
     // A point in WORLD cells, in this frame.
     const wp = (x: number, y: number): Pt => coda(x - CODA_SHOT.world[0], y - CODA_SHOT.world[1])
-    // The machine past control: from the heart and the drum room whole (its drummers still beating), in on the
-    // governor and the yoke that lifts him; then one mid frame (9.2 → 9.8 cells, a slow drift) held on the governor,
+    // The machine past control: from the heart and the drum room whole (its drummers still beating), held a bar, then
+    // in on the governor and the yoke that lifts him; then one mid frame (9.2 → 9.8 cells, a slow drift) held on the governor,
     // the yoke, the valve and its keeper through the story's beats: the valve blows and bucks him off onto the racing
     // pump heads and back, the keeper rides it and is thrown off. Then out to the whole heart (11 cells) as the
     // governor comes apart, centred between the mid frame and the coda's seam so the frame opens without swinging east
@@ -62,7 +62,10 @@ export const runaway = part<{ begin: number }>(
     const close = (t: number, cells: number, x: number, y: number, w = 0.5, wy = w): PartShot => ({ t, cells, hold: wp(x, y), w, wy })
     return [
       { t: slot.begin, cells: 18, hold: wp(54.4, 26.9), w: 0.9 },
-      close(kt(262), 9.0, 50.4, 30.6),
+      // The wide held through the fastest phrase's first bar (a slow creep, so the pull-back lands on its downbeat
+      // and stays): the governor thrown in and the pump flinging him onto its yoke, with the drummers over it all.
+      { t: kt(259), cells: 17, hold: wp(54.1, 27.4), w: 0.9 },
+      close(kt(265), 9.0, 50.4, 30.6),
       close(kt(268), 9.2, 51.0, 31.1, 0.5, 0.8),
       close(VALVE_THROW + 0.2, 9.8, 51.2, 31.15, 0.5, 0.8),
       { t: 132.6, cells: 11, hold: wp(51.6, 30.6), w: 0.86 },
