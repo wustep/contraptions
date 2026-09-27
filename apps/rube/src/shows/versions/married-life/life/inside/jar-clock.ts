@@ -23,9 +23,9 @@ function onset(t: number): number {
 export const BEGIN = SEAM.jar
 export const END = SEAM.ties
 
-/** Ellie leaps onto the ladder's first tread; she settles. */
+/** Ellie leaps onto the ladder's first tread; she settles, on the next bar's two (its accent, hers). */
 export const PERCH = J(5)
-export const SETTLE = J(6)
+export const SETTLE = J(6, 2)
 /** He lands on his end this long before the stroke; the plank thumps the floor on the beat. */
 export const TOUCHDOWN = 0.1
 /** Carl's strokes on the seesaw (the plank's thump), and where each handful lands in the jar (the next downbeat). */
@@ -42,8 +42,12 @@ export const DOWN = J(11)
 export const TYRE = J(11, 3)
 export const HUBCAP = J(12)
 export const FIXED = onset(117.702)
-/** Ellie up the ladder to the jar and over: tread 2, the mantle, the push. */
-export const UP1 = [J(13), J(14)]
+/**
+ * Ellie up the ladder to the jar and over: tread 2; the mantle, off the ladder on 13's third beat and landing on the
+ * strongest attack of the next bar (just after its downbeat); the push.
+ */
+export const UP1 = [J(13), onset(115.496)]
+export const MANTLE_OFF = J(13, 3)
 export const PUSH1 = J(15)
 /** The refill's second stroke shakes the lamp out; he climbs; the ladder kicks; he falls. */
 export const LAMP_OUT = J(17, 2)

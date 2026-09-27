@@ -7,7 +7,7 @@ import { drawStormOver, type Figure } from './jar-storm'
 import {
   BEGIN, BOARDS, C_OFF, CLIMB, COCKED, DOWN, END, E_OFF, FALL, FELL, FIXED, FLASH1, FLASH2, FOOT, HIS, HUBCAP, KICK, LAMP_OUT,
   COUNTS, LANDS, ONTO_PLANK, PERCH, POURS, PUSH1, PUSH2, SEAT, SETTLE, SLAMS, SUN, T1, T2, THUNDER, TO_HIM, TOPPLE, TOUCH, TREE, TYRE,
-  UP1, UP2, WINCH, AGAINST, TOUCHDOWN, SKIP, plankAt, ring, smoothstep, standing,
+  MANTLE_OFF, UP1, UP2, WINCH, AGAINST, TOUCHDOWN, SKIP, plankAt, ring, smoothstep, standing,
 } from './jar-clock'
 
 /**
@@ -176,8 +176,8 @@ function elliePath(carlX: (t: number) => number): Path {
   for (let i = 0; i < 4; i++) e.bob(COUNTS[i], COUNTS[i] - LANDS[i], 0.1 + 0.025 * i)
   // The tyre: a start; then up to the jar and over with it.
   e.hold(TYRE).hop(T1, HUBCAP, 0.08)
-  e.hold(113.85).hop(T2, UP1[0]).hold(114.7).hop(SEAT, UP1[1])
-  e.hold(115.45).glide(AGAINST[0], PUSH1, 0.3).glide(AGAINST[0] + 0.07, PUSH1 + 0.3, 0)
+  e.hold(113.85).hop(T2, UP1[0]).hold(MANTLE_OFF).hop(SEAT, UP1[1])
+  e.hold(115.75).glide(AGAINST[0], PUSH1, 0.3).glide(AGAINST[0] + 0.07, PUSH1 + 0.3, 0)
   e.hold(116.9).glide(SEAT[0], 118.0, 0)
   // He falls: down to him; she touches him; the bandage. Then up again, and she gives the jar over a second time.
   e.hold(120.85).hop([3.6, 0], TO_HIM).glide(FELL[0] + 0.37, TOUCH, 0)
