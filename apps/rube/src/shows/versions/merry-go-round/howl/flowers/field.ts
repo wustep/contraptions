@@ -51,6 +51,8 @@ import { FLOWERS, HOWL, HOWL_BIRD, ROOM, TOWN, WASTES } from '../worlds'
 /* ------------------------------------------------------------------ the clock */
 
 const s = (n: number, pos = 1): number => bar('slow', n, pos)
+/** The valley held on the hit (it opens at `SEAMS.field.open`): how many cells tall as they step off, and as they land. */
+const VALLEY = [23.3, 22.8] as const
 const b = (n: number, pos = 1): number => bar('build', n, pos)
 
 /** The door bangs wide: the slow waltz's hit. */
@@ -658,18 +660,20 @@ export const field = part<FieldState>(
   () => {
     const keys: PartShot[] = [
       // The door bangs wide on the slow waltz's hit and the picture opens wide on it (the score's scale match cut,
-      // `SEAMS.field.open`): the castle sat in the valley, the two of them small at its door, the wheel, the lake and
-      // the mountains. The wide is the hit's alone: from it the camera settles straight in on the two of them as they
-      // waltz down, close by the time they land, and stays close through her machine (the mechanism cropped, never
-      // her), Howl in the picture with her all the way: below her at the wheel, walking the bank under the flume at
+      // `SEAMS.field.open`): the castle sat in the valley, the two of them small at its door, the flowers, the wheel,
+      // the lake and the snowy range. Held while they waltz down arm in arm into the flowers, drawing in only a little
+      // and tilting up with the castle as it gets up off its haunches behind them; as they land (bar 2's second beat)
+      // a cut in to the two of them in the flowers, the castle's legs going over them, and close on her from there through her machine (the mechanism cropped, never her), Howl in
+      // the picture with her all the way: below her at the wheel, walking the bank under the flume at
       // her pace, waiting at the see-saw's foot. Along the flume she rides a little above the middle, so the castle
       // walking off to sit across the lake is whole over her and the meadow at the foot is no more than it needs.
       // Off the spout the camera stops following her: the trough key is a hold with the frame's top edge where the
       // clack's is, high enough for the whole castle across the lake, the flag on its back turret too. Her drop into
       // the cup and down to the grass plays inside a still frame (she ends about three quarters down); the frame no
       // longer dips after her and climbs back. The trough does the flume's widening, so the drop sees next to no zoom.
-      { t: STEP_OFF + 1.5, cells: 6.9, off: [1.5, -0.9] },
-      { t: LAND, cells: 6.8, off: [1.5, -0.9] },
+      { t: STEP_OFF + 0.3, cells: VALLEY[0], hold: [4.95, -4.35], w: 1 },
+      { t: LAND - 0.03, cells: VALLEY[1], hold: [5.25, -5.3], w: 1 },
+      { t: LAND, cells: 6.8, off: [1.5, -0.9], cut: true },
       { t: HOP_UP, cells: 6.6, off: [1.2, -1.0] },
       { t: TIP, cells: 6.8, off: [1.6, 0.45] },
       { t: GATES[1], cells: 6.6, off: [1.4, 0.3] },

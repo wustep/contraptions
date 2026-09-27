@@ -106,7 +106,7 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     frame: [0.9, -0.7],
     howl: [0.36, 0],
     markl: null,
-    open: 15,
+    open: 24,
     what: 'walking right, level, through the door a step behind Howl (the dial turned); on the far side, out of the castle\'s door onto the flower field, the picture opening wide on the hit (the valley, the lake, the mountains) with her held where she was on the screen',
   },
   raid: {
