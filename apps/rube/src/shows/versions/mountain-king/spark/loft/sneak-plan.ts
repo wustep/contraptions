@@ -21,7 +21,8 @@ import { WICK_LEFT } from './sneak-beats'
  *   16.8-24.5  the tightrope, hopping the wick of every pair of hanging candles
  *   25.653     a pair it jostled knocks together, seen close: the spark freezes; the camera draws back to the cat
  *   28.961     again, at the pole's end, in a two-shot: the cat's ear flicks, the spark freezes
- *   30.012     it leaps into the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
+ *   29.24      it crouches on the pole's free end, which gives under it; springs on the pair's knock again (29.513)
+ *   30.012     and lands in the dish of a counterweighted candle arm, which sinks under it toward the dipping wheel
  *   31.185     it hops off onto the wheel: `HANDOFF`, moving (0.9, 0.9)
  */
 
@@ -264,6 +265,28 @@ function spanShape(x: number, xl: number): number {
   return s / Math.max(0.3, Math.sin((Math.PI * (a - xl)) / (a - b)))
 }
 
+/**
+ * The last leap, off the pole's free end into the candle arm's dish (landing on `BEAT.cup`). From the cut back (phrase
+ * 2's eighth 25) it sinks into a crouch, low and leaning west, the free end of the pole giving under it; on the pair's
+ * knock again (`BEAT.reknocks[1]`) it springs, already moving, and quickens off the end as the pole flicks up behind
+ * it; then a flat, quick drop into the dish.
+ */
+const LEAP = {
+  crouch: q(2, 25),
+  /** The bottom of the crouch, and how low and how far west it is there. */
+  low: q(2, 25) + 0.2,
+  dip: 0.04,
+  lean: 0.035,
+  /** The spring: on the knock, moving about 1.5 cells/s, and off the end quickening over `push`. */
+  go: BEAT.reknocks[1],
+  push: 0.06,
+  /** How far the pole's free end gives under the crouch and the push; it rings from the moment it lets go. */
+  give: 0.022,
+}
+/** Where the spark crouches: the pole's free end, a few hundredths from its tip. */
+const CROUCH_X = -16.14
+const ease3 = (u: number): number => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u))
+
 /** How far the pole has given at x (cells, down), from every landing so far: a quick dip, a damped ring. */
 export function poleSag(x: number, t: number): number {
   let y = 0
@@ -271,6 +294,12 @@ export function poleSag(x: number, t: number): number {
     const u = t - l.t
     if (u <= 0 || u > 2.5) continue
     y += l.give * spanShape(x, l.x) * Math.exp(-u / 0.32) * Math.sin(u * 19)
+  }
+  // The crouch loads the free end, and the spring lets it go.
+  const off = LEAP.go + LEAP.push
+  if (t > LEAP.crouch && t < off + 2.5) {
+    const load = t < off ? ease3((t - LEAP.crouch) / (off - LEAP.crouch)) : Math.exp(-(t - off) / 0.3) * Math.cos((t - off) * 19)
+    y += LEAP.give * spanShape(x, CROUCH_X) * load
   }
   return y
 }
@@ -547,6 +576,60 @@ const LEAP_PUSH = 0.07
  */
 const LOOK = { from: 4.72, reach: q(0, 3), at: [WICK[0] + 0.18, WICK[1] - 0.025] as Pt, duck: q(0, 3) + 0.5 }
 
+/** A cubic from p0 moving v0 to p1 moving v1 over T seconds, at u (0..1). */
+function hermite(p0: Pt, v0: Pt, p1: Pt, v1: Pt, T: number, u: number): Pt {
+  const u2 = u * u
+  const u3 = u2 * u
+  const [a, b, c, d] = [2 * u3 - 3 * u2 + 1, (u3 - 2 * u2 + u) * T, -2 * u3 + 3 * u2, (u3 - u2) * T]
+  return [a * p0[0] + b * v0[0] + c * p1[0] + d * v1[0], a * p0[1] + b * v0[1] + c * p1[1] + d * v1[1]]
+}
+
+/** The last leap's flight is a touch heavier than a hop's, so it leaves the pole's end level, not already falling. */
+const LEAP_G = G * 1.35
+
+/**
+ * The spark from the cut back to leaving the pole's end: standing on the pole's free end (riding its give and the
+ * knock's flinch), it sinks into the crouch leaning west and is already drifting west at the bottom; it comes up out
+ * of it moving about 1.5 cells/s on the knock again, and quickens over `LEAP.push` into the flight that lands in the
+ * dish at `to` on `BEAT.cup`, with that flight's own velocity, so there is no kink anywhere.
+ */
+function leapOff(to: Pt): (t: number) => Pt {
+  const base = (t: number): Pt => onPoleF(CROUCH_X, t)
+  const baseV = (t: number): Pt => {
+    const [a, b] = [base(t - 1e-4), base(t + 1e-4)]
+    return [(b[0] - a[0]) / 2e-4, (b[1] - a[1]) / 2e-4]
+  }
+  // The crouch, relative to where it stands: down and west to the bottom, then coming up, moving west about 1.5.
+  const low: Pt = [-LEAP.lean, LEAP.dip]
+  const vLow: Pt = [-0.3, 0]
+  const up: Pt = [-LEAP.lean - 0.06, LEAP.dip - 0.028]
+  const vUp: Pt = [-1.35, -0.6]
+  const crouch = (t: number): Pt =>
+    t < LEAP.low
+      ? hermite([0, 0], [0, 0], low, vLow, LEAP.low - LEAP.crouch, (t - LEAP.crouch) / (LEAP.low - LEAP.crouch))
+      : hermite(low, vLow, up, vUp, LEAP.go - LEAP.low, (t - LEAP.low) / (LEAP.go - LEAP.low))
+  // The spring: from where the crouch leaves it, quickening to the flight's velocity where the flight begins.
+  const b = base(LEAP.go)
+  const A: Pt = [b[0] + up[0], b[1] + up[1]]
+  const bv = baseV(LEAP.go)
+  const vA: Pt = [bv[0] + vUp[0], bv[1] + vUp[1]]
+  const T = BEAT.cup - (LEAP.go + LEAP.push)
+  let F: Pt = A
+  let vF: Pt = vA
+  for (let i = 0; i < 12; i++) {
+    vF = [(to[0] - F[0]) / T, (to[1] - F[1]) / T - (LEAP_G * T) / 2]
+    F = [A[0] + ((vA[0] + vF[0]) / 2) * LEAP.push, A[1] + ((vA[1] + vF[1]) / 2) * LEAP.push]
+  }
+  return (t: number): Pt => {
+    if (t < LEAP.go) {
+      const [x, y] = base(t)
+      const [dx, dy] = crouch(t)
+      return [x + dx, y + dy]
+    }
+    return hermite(A, vA, F, vF, LEAP.push, (t - LEAP.go) / LEAP.push)
+  }
+}
+
 /** The whole lane, from the wick to `HANDOFF`, and the time of the part's first strike (the landing in the lift). */
 export function buildLane(): { segs: Seg[]; fire: number } {
   const path = new Path(0, WICK)
@@ -590,7 +673,7 @@ export function buildLane(): { segs: Seg[]; fire: number } {
     const keys = POLE_KEYS[i]
     if (keys.length) {
       const x = keyed(keys)
-      const end = i < HOPS.length ? HOPS[i].launch - (HOPS[i].bounce ? 0 : 0.08) : BEAT.cup - 0.552 - LEAP_PUSH
+      const end = i < HOPS.length ? HOPS[i].launch - (HOPS[i].bounce ? 0 : 0.08) : LEAP.crouch
       path.ride(end, (t) => onPoleF(x(t), t))
     }
     if (i === HOPS.length) break
@@ -599,9 +682,11 @@ export function buildLane(): { segs: Seg[]; fire: number } {
     if (h.bounce) path.fly(h.land, at)
     else path.leap(h.launch, h.land, at)
   }
-  // Off the pole's end into the candle arm's socket; the arm sinks; it crouches, and hops off onto the wheel.
+  // Off the pole's end into the candle arm's socket: a crouch, the spring on the knock, a flat quick drop into the
+  // dish. The arm sinks; it crouches again, and hops off onto the wheel.
   const inCup = (t: number): Pt => inSocket(armAngle(t))
-  path.leap(BEAT.cup - 0.552 + 0, BEAT.cup, inCup(BEAT.cup))
+  path.ride(LEAP.go + LEAP.push, leapOff(inCup(BEAT.cup)), 240)
+  path.fly(BEAT.cup, inCup(BEAT.cup), LEAP_G)
   path.ride(BEAT.spring, inCup, 60)
   path.leap(BEAT.leave2, LOFT_SEAM, HANDOFF)
   return { segs: path.segs, fire: BEAT.pan }
