@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, part, smooth, type Companion, type Ctx, type Pose } from '../kit'
-import { AT, bar, beat, beatsIn, CUT, SEAM } from '../music'
+import { AT, bar, beat, beatsIn, CUT, PIANO, SEAM } from '../music'
 import { HOME, INK } from '../worlds'
 import { drawBook } from '../props/book'
 import { INSIDE } from './inside'
@@ -369,8 +369,20 @@ const px = (p: p5, k: number, x0: number, y0: number, x1: number, y1: number, r 
 
 /** How grey the yard is: greyed with the sky through the loss, back with the waltz. */
 const greyAt = (T: number): number => smooth(T, B, B + 2) * (1 - smooth(T, 95, 101))
-/** The wind: gusting through the loss, falling away as the waltz comes back. It blows out from the house. */
-const windAt = (T: number): number => (0.55 + 0.25 * Math.sin(T * 0.8) + 0.15 * Math.sin(T * 2.1 + 1.3)) * (1 - 0.6 * smooth(T, 98.5, 101.5))
+/**
+ * The wind, blowing out from the house: it gusts with the piano through the loss. Each of its stronger notes is a
+ * breath of wind that follows the note (gathering over half a second, dying away over two), so the sheet, the grass
+ * and the tree move with the music and nothing strikes; it falls away as the waltz comes back.
+ */
+const GUSTS = PIANO.filter((n) => n.t > 84 && n.t < 100.5 && n.s >= 0.45)
+const windAt = (T: number): number => {
+  let g = 0
+  for (const n of GUSTS) {
+    const u = (T - n.t) / 0.55
+    if (u > 0) g += Math.min(1.3, n.s) * u * u * Math.exp(2 * (1 - u))
+  }
+  return (0.4 + 0.32 * Math.min(1.6, g)) * (1 - 0.6 * smooth(T, 98.5, 101.5))
+}
 const grey = (hex: string, g: number): string => mixHex(hex, '#A9AEA8', 0.32 * g)
 
 /** The big tree: a trunk and two limbs, and a canopy of soft masses, swaying a little. */
