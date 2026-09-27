@@ -3,7 +3,7 @@ import type { Framing } from '../../../registry'
 import { director, follower, type Shot } from './camera'
 import { black } from './credits'
 import { box, frame, lay, scenery, standing, type Chain, type Link } from './kit'
-import { DURATION, KICK, PEAK, SEAM } from './music'
+import { DURATION, KICK, PEAK, SEAM, bar } from './music'
 import { FIRST, SEAMS } from './seams'
 import { sleep, SLEEP_CELLS } from './sleep'
 import { KickShow, type Leg, type Riders, type Spans, type WorldSet } from './show'
@@ -152,6 +152,27 @@ function punch(t: number): number {
   return v
 }
 
+/**
+ * The director's great wides of the stack (the dream's thesis): the whole dream seen at once, the four levels one under
+ * the other in the dark of sleep, each with the kick it holds. On the summit's first downbeat, limbo's kick, the camera
+ * cuts out to all four (the tower on the shore, the fortress on the mountain, the lift in its shaft with Arthur's charges,
+ * the van hanging off the bridge over the frozen river), and eases in a little while they rise from limbo into the vault;
+ * it cuts back in on the paddles (bar 49). Each wide: its span, its keys, and the framing it cuts back in to (a part's
+ * key at `to` when there is one; else a follow at `backCells` offset `backOff`).
+ */
+const STACK_WIDES: { from: number; to: number; keys: Shot[]; backCells: number; backOff: [number, number] }[] = [
+  {
+    from: KICK.limbo,
+    to: bar(49),
+    keys: [
+      { t: KICK.limbo, cells: 104, hold: [3, 41.5], cut: true },
+      { t: bar(49) - 0.02, cells: 95, hold: [2.4, 43.5] },
+    ],
+    backCells: 5.0,
+    backOff: [0.6, -0.4],
+  },
+]
+
 /** The camera's roll at `t`: Paris's street as it folds over, and the hotel's corridor as it turns (each 0 outside its own stretch). */
 export const rollAt = (t: number): number => parisRoll(t) + hotelRoll(t)
 
@@ -213,7 +234,22 @@ export function compose(): { show: KickShow; camera: (t: number) => Framing } {
   legs.forEach((leg, i) => {
     const chain = chains[i]
     const slots = chain.placed.map((pl) => [pl.start, pl.start + pl.span] as const)
-    const keys: Shot[] = chain.shots.filter((s) => s.t > leg.from + 1e-6 && s.t <= leg.to + 1e-6 && slots.some(([a, b]) => s.t >= a - 1e-6 && s.t <= b + 1e-6))
+    let keys: Shot[] = chain.shots.filter((s) => s.t > leg.from + 1e-6 && s.t <= leg.to + 1e-6 && slots.some(([a, b]) => s.t >= a - 1e-6 && s.t <= b + 1e-6))
+    // The director's great wides of the stack, in the dream: the parts' keys inside each are dropped, the wide's laid in,
+    // and the camera cuts out to it and back in on strikes.
+    if (leg.world === 'dream') {
+      for (const w of STACK_WIDES) {
+        if (w.from < leg.from || w.to > leg.to) continue
+        const back = keys.find((k) => Math.abs(k.t - w.to) < 1e-6)
+        // The part's own framing on the moment of the cut out is kept a hair before it, so the camera goes on as the
+        // part had it right up to the cut.
+        const out = keys.find((k) => Math.abs(k.t - w.from) < 1e-6)
+        keys = keys.filter((k) => k.t < w.from - 1e-6 || k.t > w.to + 1e-6)
+        if (out) keys.push({ ...out, t: w.from - 0.02, cut: false })
+        keys.push(...w.keys, back ? { ...back, cut: true } : { t: w.to, cells: w.backCells, off: w.backOff, w: 0, cut: true })
+      }
+      keys.sort((a, b) => a.t - b.t)
+    }
     const a0 = show.where(leg.from)
     const a1 = show.where(Math.min(leg.to - 1e-6, leg.from + 0.02))
     const b1 = show.where(leg.to - 1e-6)

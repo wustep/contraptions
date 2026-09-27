@@ -9,7 +9,7 @@ import { BEATS, BRASS, CREDITS_AT, DURATION, HALVES, KICK, LAST, ONSETS, PEAK, P
 import { CARDS, CREDITS_OK, blackAt, creditsAt } from '../src/shows/versions/time/kick/credits'
 import { COVERED, PUNCHES, coverAt, rollAt } from '../src/shows/versions/time/kick/score'
 import { FIRST } from '../src/shows/versions/time/kick/seams'
-import { BAND, COLUMN, DOWN, OFF, SLEEP_BANDS, SPLASH, UP, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
+import { BAND, COLUMN, DOWN, OFF, RAIN_GEO, SLEEP_BANDS, SPLASH, UP, VAN, clock, depthAt, vanAt, weightless, LEVELS, DEPTH } from '../src/shows/versions/time/kick/stack'
 import type { KickShow } from '../src/shows/versions/time/kick/show'
 import type { Who } from '../src/shows/versions/time/kick/kit'
 import { KID_ID } from '../src/shows/versions/time/kick/worlds'
@@ -21,7 +21,24 @@ type Check = (name: string, ok: boolean, detail?: string) => void
  * Where Cobb may be small or out of the Zoom frame: the great wides of the stack and the cutaways to the van while he
  * is below it. Each is a stretch of show seconds, said by the part that frames it.
  */
-const WIDE: [number, number][] = []
+const WIDE: [number, number][] = [
+  // The director's great wide of the stack, on the summit's first downbeat: the whole dream at once, while they rise
+  // from limbo into the vault.
+  [183.247, 187.061],
+  // Paris: the fold's wide, the far quai's fronts coming up and over (he is at the curve's foot).
+  [41.2, 43.5],
+  // Limbo: the garden, cut to while he is in their room (the prologue's, and the return's before he lets her go); the
+  // great wide of the fall into the sea as the city calves (he is under the water).
+  [23.25, 27.052],
+  [172.298, 174.69],
+  [155.4, 158.6],
+  // The snow: the cut to Mal on the piste above, the rifle, the shot (he is on the ledge below).
+  [143.279, 145.642],
+  // The hotel: the cutaway up to the van coming out of its flip, landing and rolling to the broken end (he is in the drum).
+  [103.254, 107.068],
+  // Home: the camera leaves him with the children and holds on the top, alone, to the last chord.
+  [265.1, 274.62],
+]
 
 export function checkKick(perf: Performance, version: ShowVersion, check: Check): void {
   const show = perf.show as KickShow
@@ -116,9 +133,11 @@ export function checkKick(perf: Performance, version: ShowVersion, check: Check)
   check('kick: time in the rain runs at its own pace while he is in it, twenty times slower from the hotel, and all but stops from the snow down',
     Math.abs(rainRate(75, 85) - 1) < 1e-6 && Math.abs(rainRate(110, 120) - 1 / 20) < 0.002 && rainRate(130, 150) < 0.003 && rainRate(160, 180) < 0.001 && Math.abs(rainRate(201, 205) - 1) < 1e-3,
     [rainRate(75, 85), rainRate(110, 120), rainRate(130, 150), rainRate(160, 180), rainRate(201, 205)].map((v) => v.toFixed(4)).join(', '))
-  const hang = [125, 150, 170, 185].map((t) => vanAt(t).y - vanAt(OFF).y)
-  check('kick: the van hangs off the bridge while he is deeper, and is in the river on the rain\'s kick',
-    hang.every((d) => d < 0.6) && vanAt(SPLASH - 0.01).y > vanAt(OFF).y + 6 && near(SPLASH, KICK.rain) && weightless(120) === 1 && weightless(OFF - 0.1) === 0 && weightless(SPLASH + 0.01) === 0,
+  // Off the deck's broken end (x 0) and barely moving while he is deeper: within a fifth of a cell of where it tipped to.
+  const hang = [125, 150, 170, 185].map((t) => Math.hypot(vanAt(t).x - VAN.hang[0], vanAt(t).y - VAN.hang[1]))
+  check('kick: the van hangs off the bridge\'s end while he is deeper, and is in the river on the rain\'s kick',
+    hang.every((d) => d < 0.2) && [125, 185].every((t) => vanAt(t).x - VAN.size[0] / 2 > RAIN_GEO.deckEnd - 1.2 && vanAt(t).air) &&
+    vanAt(SPLASH - 0.01).y > VAN.hang[1] + 6 && near(SPLASH, KICK.rain) && weightless(120) === 1 && weightless(OFF - 0.1) === 0 && weightless(SPLASH + 0.01) === 0,
     hang.map((d) => d.toFixed(3)).join(', '))
 
   // Every strike lands on something the recording has: a beat or an off-beat, or a measured onset.

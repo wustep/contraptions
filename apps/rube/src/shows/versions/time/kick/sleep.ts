@@ -65,7 +65,10 @@ export const sleep = scenery<null>({
       if (u < -0.8 || u > 2.2) continue
       const at: Pt = [cr.at[0], cr.at[1] + cr.v[1] * u * 0.3]
       const a = cr.up ? 0.5 * Math.exp(-Math.abs(u) / 0.25) : 0.22 * Math.exp(-Math.abs(u) / 0.7)
-      bloom(p, k, at, cr.up ? 1.6 : 2.4, SLEEP.mote, a)
+      // Seen from far off (the great wides), a thrown one is a spark climbing through the dark: its glow grows with the
+      // frame so it is still found at a hundred cells.
+      const far = Math.max(1, (f.y1 - f.y0) / 24)
+      bloom(p, k, at, (cr.up ? 1.6 : 2.4) * (cr.up ? far : 1), SLEEP.mote, a * (cr.up ? Math.min(1.6, 0.8 + far * 0.2) : 1))
     }
   },
 })

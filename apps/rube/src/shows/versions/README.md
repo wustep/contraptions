@@ -27,7 +27,7 @@ The folder and file names are addresses, so they are chosen once:
   `public/shows/<work>/`. It names the music (`clair-de-lune`, `heptapod-b`),
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
-  `interstellar` **Voyage**, `la-la-land` **Epilogue**. The write-up says
+  `interstellar` **Voyage**, `la-la-land` **Epilogue**, `relax` **Magnum**, `time` **Kick**. The write-up says
   which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
@@ -405,3 +405,18 @@ song runs on a drum machine, so `scripts/shows/relax-onsets.py` fits one comb (1
 off-beat onto its own attack, with the free onsets of the intro, the drop and the tail, into
 `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
 report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
+
+`time/opus55` (in the picker, **Kick**, one take, **Opus 5.5**) is Hans Zimmer's *Time*, the last cue of *Inception*,
+whole, demo only (`apps/rube/src/shows/versions/time/ATTRIBUTION.txt`), and then the end credits in the dark after it.
+Every piece is new. It tells the film after *Inception* as one machine: limbo's shore and the top that never stops; the
+architect's lesson in Paris, where the street folds over; the plane and the silver case; and then **the dream as one
+world stacked four levels deep** (the rain city, the hotel, the snow fortress, limbo, the dark of sleep between them),
+which Cobb (the orange ball) sinks down through on the cue's layers, lets Mal go at the bottom of, and is kicked back up
+through on the summit's four hardest downbeats, one column of kicks; each level's set runs on its own clock, twenty
+times slower a level above him, so the van hangs off the bridge for the whole climax. Awake on the plane, home, the
+children turn, the top wobbles, and the picture cuts to black on the last chord. The code is `time/kick/`, on Magnum's
+kit (parts built to timed slots, an authored camera with a roll, match cuts between worlds, the end credits from
+`Performance.titles`) with `kick/stack.ts` for the stacked world. *Time* is one four-chord loop on a click, so
+`scripts/shows/time-onsets.py` fits one comb (63.01 bpm) and moves every beat and off-beat onto its own attack, with
+the turns, the layers' downbeats and the free onsets, into `scripts/shows/plans/time-onsets.json`; `check:shows` holds
+every strike to it (`apps/rube/checks/kick.ts`). The report is `apps/rube/src/shows/versions/time/KICK.md`.

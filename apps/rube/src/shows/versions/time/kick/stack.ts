@@ -312,30 +312,46 @@ export function clock(level: Level, t: number): number {
  * centre is, its tilt (radians, clockwise on the screen) and whether it is in the air. The van is 2.6 long and 1.15
  * tall; its floor is 0.42 under its centre when it sits level.
  *
- * - At `DOWN.hotel.t` it is on the bridge's deck at x -10, moving right (they sink through its floor here).
- * - The rain's time slows twenty times: it creeps on toward the deck's end. At `ROLL.from` it swerves and begins to
- *   tumble, end over end, through the railing; it turns once right round, slowly, by `OFF`.
- * - At `OFF` it leaves the deck (the hotel goes weightless: `weightless`), and falls, still turning a little, in slow
- *   motion (the rain's clock) toward the river in front of the bridge.
- * - At `SPLASH`, the rain's kick, it hits the water.
+ * - At `DOWN.hotel.t` it is on the bridge's deck at x -10, driving right (they sink through its floor here).
+ * - The rain's time slows twenty times: it creeps on. At `ROLL.from` it hits something in the road and **flips**, end
+ *   over end, once right round in the air over the deck (nose down first: clockwise), slow as a dream, and comes down
+ *   on its wheels at `ROLL.to` (the hotel's corridor turns with it: `corridorAngle`).
+ * - It rolls on to the deck's broken end, and at `OFF` goes off it (the hotel goes weightless: `weightless`); over the
+ *   next three seconds it tips, nose down, clear of the edge, and then falls on the rain's own clock: while he is
+ *   deeper it **hangs in the air off the bridge's end, over the river**, barely moving.
+ * - At `SPLASH`, the rain's kick, it hits the water in front of the bridge; then it sinks, nose down, to the bed.
  */
 export const VAN = {
   under: [-10, -0.62] as Pt,
   rollFrom: beat(100),
+  rollTo: beat(110),
   off: bar(28),
   splash: KICK.rain,
+  /** Where it hangs once it has tipped off the edge (its centre), and its tilt then. */
+  hang: [1.6, 0.4] as Pt,
+  hangTilt: 0.45,
   /** Where it hits the water (its centre), and its tilt then. */
-  water: [2.2, 7.4] as Pt,
+  water: [2.4, 7.3] as Pt,
+  waterTilt: 0.9,
   size: [2.6, 1.15] as Pt,
 }
 export const OFF = VAN.off
 export const SPLASH = VAN.splash
-export const ROLL = { from: VAN.rollFrom, to: VAN.off }
+export const ROLL = { from: VAN.rollFrom, to: VAN.rollTo }
+/** How long the van takes to tip clear of the edge after `OFF` (show seconds; slow, dreamlike). */
+const TIP = 3
 
 const smoothstep = (u: number) => {
   const v = Math.max(0, Math.min(1, u))
   return v * v * (3 - 2 * v)
 }
+
+/** Where the flip starts and lands on the deck, and how high its centre rises. */
+const FLIP_FROM = -6.2
+const FLIP_TO = -2.4
+const FLIP_LIFT = 1.75
+/** Where its centre is as it goes off the edge. */
+const EDGE = 0.2
 
 /**
  * The van's pose at show time `t` (from `DOWN.hotel.t` on; before it the rain builder drives it and must meet this
@@ -343,34 +359,44 @@ const smoothstep = (u: number) => {
  */
 export function vanAt(t: number): { x: number; y: number; angle: number; air: boolean } {
   const [x0, y0] = VAN.under
+  const TAU = Math.PI * 2
+  if (t <= ROLL.from) {
+    // Creeping on at the rain's pace (it is slow now), easing into the flip.
+    const u = Math.max(0, Math.min(1, (t - DOWN.hotel.t) / (ROLL.from - DOWN.hotel.t)))
+    return { x: x0 + (FLIP_FROM - x0) * (1 - (1 - u) * (1 - u) * 0.35 - 0.65 * (1 - u)), y: y0, angle: 0, air: false }
+  }
+  if (t <= ROLL.to) {
+    // The flip: its centre arcs up and down while it turns once round, nose first.
+    const u = (t - ROLL.from) / (ROLL.to - ROLL.from)
+    const e = smoothstep(u)
+    return { x: FLIP_FROM + (FLIP_TO - FLIP_FROM) * u, y: y0 - FLIP_LIFT * Math.sin(Math.PI * u), angle: e * TAU, air: true }
+  }
   if (t <= OFF) {
-    // Creeping on at the rain's pace to the deck's end: rain time is slow now, so the few cells take till OFF.
-    const u = smoothstep((t - DOWN.hotel.t) / (OFF - DOWN.hotel.t))
-    const x = x0 + (-0.9 - x0) * (1 - (1 - u) * (1 - u))
-    // The tumble: once round, end over end, starting slow, from ROLL.from to OFF (turning clockwise: its nose goes
-    // down over the edge first).
-    const r = smoothstep((t - ROLL.from) / (OFF - ROLL.from))
-    const lift = Math.sin(Math.PI * r) * 0.55
-    return { x, y: y0 - lift, angle: r * Math.PI * 2, air: false }
+    // Down on its wheels with a settle, and on to the broken end.
+    const u = (t - ROLL.to) / (OFF - ROLL.to)
+    const settle = 0.08 * Math.sin(Math.PI * Math.min(1, u * 3)) * (1 - u)
+    return { x: FLIP_TO + (EDGE - FLIP_TO) * u, y: y0 + settle, angle: TAU, air: false }
+  }
+  if (t <= OFF + TIP) {
+    // Tipping off the edge, nose down, clear of it: slow, as the rain's time is slow now.
+    const u = smoothstep((t - OFF) / TIP)
+    const [hx, hy] = VAN.hang
+    return { x: EDGE + (hx - EDGE) * u, y: y0 + (hy - y0) * u * u, angle: TAU + VAN.hangTilt * u, air: true }
   }
   if (t <= SPLASH) {
-    // The fall, on the rain's own clock: its progress is the rain's time since OFF over the rain's time to the splash,
-    // squared (it gathers speed as anything falling does), so while he is deeper it hangs in the air off the bridge.
-    const c0 = clock('rain', OFF)
+    // The fall, on the rain's own clock: its progress is the rain's time since it tipped over the rain's time to the
+    // splash, squared (it gathers speed as anything falling does), so while he is deeper it hangs off the bridge.
+    const c0 = clock('rain', OFF + TIP)
     const c1 = clock('rain', SPLASH)
     const p = Math.max(0, Math.min(1, (clock('rain', t) - c0) / (c1 - c0)))
-    const q = p * p
+    const [hx, hy] = VAN.hang
     const [wx, wy] = VAN.water
-    // A throw off the edge: steady across, gathering speed down.
-    const x = -0.9 + (wx + 0.9) * p
-    const y = y0 + (wy - y0) * q
-    // Still turning a little as it falls: a quarter turn more, nose to the water at the end.
-    return { x, y, angle: Math.PI * 2 + p * 0.55, air: true }
+    return { x: hx + (wx - hx) * p, y: hy + (wy - hy) * p * p, angle: TAU + VAN.hangTilt + (VAN.waterTilt - VAN.hangTilt) * p, air: true }
   }
   // Sinking after the splash: down through the river to the bed over ten seconds, settling.
   const s = smoothstep((t - SPLASH) / 10)
   const [wx, wy] = VAN.water
-  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - 0.6 - wy) * s, angle: Math.PI * 2 + 0.55 + 0.25 * s, air: false }
+  return { x: wx + 0.4 * s, y: wy + (RAIN_GEO.bed - 0.6 - wy) * s, angle: TAU + VAN.waterTilt + 0.2 * s, air: false }
 }
 
 /**
@@ -383,8 +409,9 @@ export function weightless(t: number): number {
 }
 
 /**
- * How far the hotel's top-floor corridor has turned at `t`, radians, clockwise: with the van as it tumbles (the film's
- * turning corridor), once right round from `ROLL.from` to `OFF`, and then only as the van turns in its fall.
+ * How far the hotel's top-floor corridor has turned at `t`, radians, clockwise: with the van as it flips (the film's
+ * turning corridor), once right round from `ROLL.from` to `ROLL.to`, and then only as the van tips and turns in its
+ * fall (a little under a sixth of a turn more, most of it over the three seconds after `OFF`).
  */
 export function corridorAngle(t: number): number {
   if (t < ROLL.from) return 0
