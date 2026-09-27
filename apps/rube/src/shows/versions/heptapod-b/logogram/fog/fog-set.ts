@@ -3,9 +3,10 @@ import type { Pt } from '../../../../../parts'
 import { mixHex } from '../../../../../parts'
 import { drawHeptapod, drawLogogram, drawSpray, heptapodTip, type HeptapodOpts } from '../cast'
 import { frame, hash } from '../kit'
+import { SEAM } from '../music'
 import { FOG } from '../worlds'
 import { clamp01, inkAt, marksAt, mono, onInk, sstep, type Ring } from './fog-path'
-import { costelloNib, F3, F4, FOG1, GREAT, P0, RINGS } from './fog-plan'
+import { costelloNib, F3, F4, FOG1, GREAT, herAt, P0, RINGS } from './fog-plan'
 
 /**
  * Beyond the glass, drawn: white fog without a floor, soft volumes drifting at several depths, a denser white far
@@ -107,20 +108,61 @@ interface Staged {
 /** The seven limbs' standing feet (the canonical drawing's), as shares of its height from its origin. */
 const FEET_X = [-0.62, -0.4, -0.2, 0.02, 0.22, 0.43, 0.6]
 
+/** fog2's span, when she goes ring to ring and the fog around her is full of them. */
+const F2A = SEAM.fog2
+const F2B = SEAM.v2
+const inFog2 = (t: number) => t > F2A - 0.3 && t < F2B + 0.3
+
+/** Her way through fog2, smoothed over a couple of seconds (fog cells): what the far presences keep near. */
+const wayAt = (() => {
+  const xs: [number, number][] = []
+  const ys: [number, number][] = []
+  for (let t = F2A - 0.6; t <= F2B + 0.6; t += 0.5) {
+    let sx = 0
+    let sy = 0
+    let n = 0
+    for (let d = -1.2; d <= 1.2001; d += 0.1) {
+      const q = herAt(Math.max(F2A, Math.min(F2B, t + d)))
+      sx += q[0]
+      sy += q[1]
+      n++
+    }
+    xs.push([t, sx / n])
+    ys.push([t, sy / n])
+  }
+  const x = mono(xs)
+  const y = mono(ys)
+  return (t: number): Pt => [x(t), y(t)]
+})()
+
+/** A point of a layer at depth `d` placed so that, seen from her way, it is at `off` from it (layer cells). */
+const behind = (t: number, d: number, off: Pt): Pt => {
+  const w = wayAt(t)
+  return [w[0] + off[0] / d, w[1] + off[1] / d]
+}
+
 /**
- * Costello: where it stands by show time (its origin, fog cells). It stands high over her way, its feet just above
- * the close frames, so what comes down into them is only what it does: a limb reaching, a jet of ink. It keeps up
- * with her slowly, and moves on while the lake house is on the screen.
+ * Costello: where it stands by show time (its origin). Over fog1, and over the crescent and the great ring, it stands
+ * high over her way in her own depth, its feet just above the close frames, so what comes down into them is what it
+ * does: a limb reaching, a jet of ink. Through fog2 it is behind her way instead, a vast soft shape in the white whose
+ * body rises behind her as she goes ring to ring, drifting back past her (it is further off: it moves less).
  */
-const costelloAt = (() => {
+const costelloHigh = (() => {
   const g = GREAT.ring
-  const x = mono([[130, 7.5], [139.6, 8.2], [142.3, 19], [148, 26], [152.5, 32], [156.3, 36.5], [159.9, g.c[0] + 1.2], [186, g.c[0] + 1.6]])
-  const y = mono([[130, -4.6], [139.6, -4.8], [142.3, -12.6], [148, -12.9], [152.5, -13.4], [156.3, -14.3], [159.9, g.c[1] - g.r - 1.8], [186, g.c[1] - g.r - 1.6]])
+  const x = mono([[130, 7.5], [139.6, 8.2], [159.9, g.c[0] + 1.2], [186, g.c[0] + 1.6]])
+  const y = mono([[130, -4.6], [139.6, -4.8], [159.9, g.c[1] - g.r - 1.8], [186, g.c[1] - g.r - 1.6]])
   return (t: number): Pt => [x(t), y(t)]
 })()
 const COSTELLO_H = 16
+const COSTELLO_FAR = { d: 0.5, h: 18 }
+const costelloFarAt = (t: number): Pt => {
+  const u = clamp01((t - F2A) / (F2B - F2A))
+  // Its body a soft mass in the right of the frame, its shoulders a little over her, its near limbs coming down
+  // behind her way; it slides slowly back as she goes on.
+  return behind(t, COSTELLO_FAR.d, [6.4 - 2.6 * u, 3.4 - 0.4 * u])
+}
 
-/** The limb whose foot is nearest `x` (fog cells), for a heptapod standing at `at`. */
+/** The limb whose foot is nearest `x` (layer cells), for a heptapod of height `h` standing at `at`. */
 const nearestLimb = (at: Pt, h: number, x: number, skip = -1): number => {
   let best = 0
   for (let i = 1; i < 7; i++) if (i !== skip && Math.abs(at[0] + FEET_X[i] * h - x) < Math.abs(at[0] + FEET_X[best] * h - x)) best = i
@@ -130,16 +172,25 @@ const nearestLimb = (at: Pt, h: number, x: number, skip = -1): number => {
 /** Where a ring's first ink lands (fog cells): the point its writing jet goes to. */
 const firstInk = (r: Ring): Pt => onInk(r, (r.lo(r.born) + r.hi(r.born)) / 2 + r.spin(r.born), r.born)
 
+/** A reach toward `P` (in her plane) for a heptapod at `at` in a layer at depth `d`, arching up over its way down. */
+function reachFor(f: Frame, at: Pt, d: number, limb: number, P: Pt, u: number): { limb: number; to: Pt; u: number; bow: number } {
+  const X: Pt = [f.cx + (P[0] - f.cx) / d, f.cy + (P[1] - f.cy) / d]
+  const to: Pt = [X[0] - at[0], X[1] - at[1]]
+  const rootX = (limb - 3) * 0.036
+  return { limb, to, u, bow: to[0] < rootX ? 0.13 : -0.13 }
+}
+
 /** What Costello's reaching limb is doing at `t`: writing a ring, spinning the crescent, or the great ring's pen. */
-function costelloReach(t: number, at: Pt): { limb: number; to: Pt; u: number } | undefined {
-  // Writing: the limb nearest reaches down toward where the ring will be while its jet goes, then draws back.
+function costelloReach(t: number, f: Frame, at: Pt, h: number, d: number): HeptapodOpts['reach'] {
+  // Writing: the limb nearest reaches toward where the ring will be while its jet goes, then draws back.
   for (const r of RINGS) {
     if (!r.by || r.by.who !== 'costello' || r.key === 'G') continue
     const t0 = r.by.t0
     if (t < t0 - 0.9 || t > r.born + 1.5) continue
-    const target = firstInk(r)
+    const P = firstInk(r)
+    const X = f.cx + (P[0] - f.cx) / d
     const u = 0.6 * sstep((t - (t0 - 0.9)) / 0.9) * (1 - sstep((t - (r.born + 0.2)) / 1.3))
-    return { limb: nearestLimb(costelloAt(t0), COSTELLO_H, target[0], 3), to: [target[0] - at[0], target[1] - at[1]], u }
+    return reachFor(f, at, d, nearestLimb(at, h, X, 3), P, u)
   }
   // Spinning the crescent (fog3's three pushes, fog4's kick): its front limb comes down, its tip on the rim, and
   // pushes it round, carried with it a little way, and lifts off.
@@ -151,46 +202,50 @@ function costelloReach(t: number, at: Pt): { limb: number; to: Pt; u: number } |
       const on = sstep((t - (a - 1.1)) / 1.1) * (1 - sstep((t - b) / 0.8))
       // The crescent's tail (its upper end, on its left side), pushed down and round, carried with its turn.
       const tail = W.hi(a) - 0.25
-      const ang = tail + W.spin(Math.min(Math.max(t, a), b))
-      const rim = onInk(W, ang, t)
-      return { limb: 3, to: [rim[0] - at[0], rim[1] - at[1]], u: on }
+      const rim = onInk(W, tail + W.spin(Math.min(Math.max(t, a), b)), t)
+      return reachFor(f, at, d, 3, rim, on)
     }
   }
   // The great ring's second pen: its front limb on the ring's top from the first ink to the close, then back.
   if (t > F4.stop - 0.2 && t < F4.close + 2.2) {
     const nib = costelloNib(Math.max(F4.top, Math.min(t, F4.close)))
     const u = sstep((t - (F4.stop - 0.2)) / (F4.top - F4.stop + 0.2)) * (1 - sstep((t - (F4.close + 0.2)) / 1.8))
-    return { limb: 3, to: [nib[0] - at[0], nib[1] - at[1]], u }
+    return reachFor(f, at, d, 3, nib, u)
   }
   return undefined
 }
 
-function costello(t: number): Staged {
-  const at = costelloAt(t)
+function costello(t: number, f: Frame): Staged {
+  const far = inFog2(t)
+  const at = far ? costelloFarAt(t) : costelloHigh(t)
+  const d = far ? COSTELLO_FAR.d : 1
+  const h = far ? COSTELLO_FAR.h : COSTELLO_H
   const o: HeptapodOpts = {
     t,
-    h: COSTELLO_H,
+    h,
     who: 1,
-    fog: 0.42,
+    // Behind her way it is a soft mass in the white; over it, a shape in fog.
+    fog: far ? 0.5 : 0.42,
     air: FOG.white,
     color: FOG.heptapod,
-    reach: costelloReach(t, at),
+    reach: costelloReach(t, f, at, h, d),
     // What it does comes out of the fog: the reaching limb clearer than the body it leaves.
-    reachFog: 0.24,
+    reachFog: far ? 0.42 : 0.24,
     lean: 0.05 * Math.sin(t * 0.13),
   }
-  return { at, depth: 1, o }
+  return { at, depth: d, o }
 }
 
 /**
  * Abbott: in fog1, near, its palm under her (the glass gone); it lets her go and draws back into the white until it
- * is gone in it. In the push it is there again, far off and pale, and writes one far answer.
+ * is gone in it. Through fog2 it is there again far off, behind Costello, paler; in the push, far and pale, and it
+ * writes one far answer.
  */
 const ABBOTT_H = 15
 const ABBOTT_NEAR: Pt = [P0[0] - 3.5, P0[1] - 3.9]
 function abbott(t: number): Staged | null {
   const rel = FOG1.release
-  if (t < 160) {
+  if (t < F2A - 0.3) {
     const back = sstep((t - (rel + 0.3)) / 6.5)
     if (back >= 0.999) return null
     const reachU = 1 - sstep((t - (rel - 0.1)) / 2.4)
@@ -208,6 +263,12 @@ function abbott(t: number): Staged | null {
     }
     return { at: [ABBOTT_NEAR[0] - 2.5 * back, ABBOTT_NEAR[1] - 3 * back], depth: 1 - 0.35 * back, o }
   }
+  if (inFog2(t)) {
+    const u = clamp01((t - F2A) / (F2B - F2A))
+    const o: HeptapodOpts = { t, h: 18, who: 0, fog: 0.84, air: FOG.white, color: FOG.heptapodFar, lean: 0.03 * Math.sin(t * 0.1) }
+    return { at: behind(t, 0.3, [-3.6 - 2.4 * u, 3.4]), depth: 0.3, o }
+  }
+  if (t < 160) return null
   const come = sstep((t - 169.5) / 4)
   if (come <= 0.001) return null
   const g = GREAT.ring
@@ -235,10 +296,35 @@ function tipOf(f: Frame, s: Staged, limb: number): Pt {
   return seen(f, s.depth, s.at[0] + tx, s.at[1] + ty)
 }
 
-/* ------------------------------------------------------------------ Abbott's far writing */
+/* ------------------------------------------------------------------ the writing already in the fog */
 
 /** The logogram Abbott writes far off in the push, behind the great ring: pale, small with distance. */
 const FAR = { seed: 223, r: 1.9, at: [GREAT.ring.c[0] - 15, -7.5] as Pt, born: 175.3, d: 0.42 }
+
+/**
+ * Logograms hanging at depth along fog2 (written before, or far off while she goes): paler and smaller with distance,
+ * each placed to be seen from her way at `tc` at `off` from her, so the fog fills with writing as the show goes.
+ */
+const HANGING = [
+  { seed: 401, r: 2.6, d: 0.36, born: 126.5, tc: 143.6, off: [3.9, -2.2] as Pt },
+  { seed: 419, r: 2.9, d: 0.34, born: 140.5, tc: 147.6, off: [4.4, 2.0] as Pt },
+  { seed: 421, r: 2.3, d: 0.4, born: 146.9, tc: 150.6, off: [-4.2, -2.1] as Pt },
+  { seed: 431, r: 2.7, d: 0.35, born: 149.4, tc: 153.3, off: [4.0, -2.6] as Pt },
+].map((h) => ({ ...h, at: behind(h.tc, h.d, h.off) }))
+
+function drawHanging(p: p5, k: number, f: Frame, t: number): void {
+  if (!inFog2(t)) return
+  for (const w of HANGING) {
+    const s = t - w.born
+    if (s < 0) continue
+    const [x, y] = seen(f, w.d, w.at[0], w.at[1])
+    if (x + w.r * w.d < f.x0 - 1 || x - w.r * w.d > f.x1 + 1 || y + w.r * w.d < f.y0 - 1 || y - w.r * w.d > f.y1 + 1) continue
+    p.push()
+    p.translate(x * k, y * k)
+    drawLogogram(p, k * w.d, { r: w.r, seed: w.seed, t, form: 0.35 + 0.65 * sstep(s / 3.4), start: hash(w.seed, 1) * TAU, spin: 0.02 * t, fade: clamp01((s - 30) / 40), color: mixHex(FOG.inkSoft, FOG.white, 0.3), light: 0.3 })
+    p.pop()
+  }
+}
 
 /* ------------------------------------------------------------------ the rings */
 
@@ -273,9 +359,10 @@ export function drawFog(p: p5, k: number, t: number): void {
   p.push()
   p.noStroke()
   drawAir(p, k, f, t)
-  // Abbott (and its far writing), then the middle air, then Costello, then a last thin veil, then the ink.
+  // Far off: Abbott and its writing, and the logograms hanging at depth; then Costello behind her way, the nearer air,
+  // Costello over it; then the white the tops of them go into; then the ink.
   const A = abbott(t)
-  if (A && A.depth < 0.5) {
+  if (A && A.depth < 0.5 && t > 160) {
     const s = t - FAR.born
     if (s > -1.2) {
       const [x, y] = seen(f, FAR.d, FAR.at[0], FAR.at[1])
@@ -287,15 +374,20 @@ export function drawFog(p: p5, k: number, t: number): void {
     }
   }
   if (A) drawStaged(p, k, f, A)
+  drawHanging(p, k, f, t)
+  const C = costello(t, f)
+  if (C.depth < 1) drawStaged(p, k, f, C)
   drawLayer(p, k, f, LAYERS[2], t)
-  const C = costello(t)
-  drawStaged(p, k, f, C)
-  // The white they stand in: the upper frame thickens to it, so a limb comes down out of the fog, not from the edge.
+  if (C.depth >= 1) drawStaged(p, k, f, C)
+  // The white they stand in: the upper frame thickens to it, so a limb comes down out of the fog, not from the edge
+  // (less in the wide frames, where the heptapods are far up it).
   const ctx = p.drawingContext as CanvasRenderingContext2D
-  const vh = (f.y1 - f.y0) * 0.42
+  const wide = sstep((f.y1 - f.y0 - 7) / 4)
+  const vh = (f.y1 - f.y0) * (0.52 - 0.1 * wide)
   const veil = ctx.createLinearGradient(0, f.y0 * k, 0, (f.y0 + vh) * k)
-  veil.addColorStop(0, `rgba(${rgb(FOG.white)}, 0.66)`)
-  veil.addColorStop(0.28, `rgba(${rgb(FOG.white)}, 0.2)`)
+  veil.addColorStop(0, `rgba(${rgb(FOG.white)}, ${0.84 - 0.2 * wide})`)
+  veil.addColorStop(0.3, `rgba(${rgb(FOG.white)}, ${0.42 - 0.2 * wide})`)
+  veil.addColorStop(0.62, `rgba(${rgb(FOG.white)}, ${0.1 - 0.05 * wide})`)
   veil.addColorStop(1, `rgba(${rgb(FOG.white)}, 0)`)
   ctx.fillStyle = veil
   ctx.fillRect((f.x0 - 1) * k, (f.y0 - 1) * k, (f.x1 - f.x0 + 2) * k, (vh + 1) * k)

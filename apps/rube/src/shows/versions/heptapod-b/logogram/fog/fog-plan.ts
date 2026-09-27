@@ -194,10 +194,10 @@ export const E2: Pt = [9.5, -0.6]
  * catches her than this one lets her go (`climb`), when its first ink lands (`born`) and when it closes (`close`).
  */
 export const F2 = [
-  { key: 'R2', seed: 61, tc: T2, whips: [T2, 143.302], tx: 143.679, leave: 27, climb: 0.35, born: 139.9, close: 146.431, guess: [3.208033, 7.280508] },
-  { key: 'R3', seed: 67, tc: 146.193, whips: [146.431], tx: 147.151, leave: 27, climb: 0.45, born: 145.223, close: 148.294, guess: [2.171722, 1.854417] },
-  { key: 'R4', seed: 73, tc: 149.728, whips: [149.728], tx: 150.773, leave: 25, climb: 0.3, born: 148.544, close: 152.961, guess: [2.734875, 2.917062] },
-  { key: 'R5', seed: 83, tc: 153.675, whips: [153.913], tx: 154.262, leave: 0, climb: 0, born: 152.741, close: 155.585, guess: [1.291576, 3.253255] },
+  { key: 'R2', seed: 61, tc: T2, whips: [T2, 143.302], tx: 143.679, leave: 27, climb: 0.35, born: 139.9, close: 146.431, guess: [3.208033, 7.280508], turn: 0 },
+  { key: 'R3', seed: 67, tc: 146.193, whips: [146.431], tx: 147.151, leave: 27, climb: 1.0, born: 145.223, close: 148.294, guess: [2.041178, 1.01769], turn: 1.74 },
+  { key: 'R4', seed: 73, tc: 149.728, whips: [149.728], tx: 150.773, leave: 25, climb: 0.8, born: 147.859, close: 152.961, guess: [2.286952, 1.705343], turn: 0.79 },
+  { key: 'R5', seed: 83, tc: 153.316, whips: [153.913], tx: 154.262, leave: 0, climb: 0, born: 151.859, close: 155.585, guess: [1.656268, 7.382691], turn: 1.79 },
 ]
 export const FV = { born: 153.913, surge: [154.627, 154.877], close: 155.115, top: T2E }
 
@@ -221,7 +221,9 @@ export const FOG2 = (() => {
     const T = next ? next.tc - s.tx : 0
     const last = !next
     const build = (r: number, A: number) => {
-      const spin = turning(0.12, s.whips.map((w) => [w, A * 0.05] as [number, number]))
+      // (Each is turned so that none of its own blots lies on the stretch she rides: she would be thrown by it.)
+      const turn = turning(0.12, s.whips.map((w) => [w, A * 0.05] as [number, number]))
+      const spin = (t: number) => turn(t) + s.turn
       let ring = blank(s.key, s.seed, r, spin)
       let ac = Math.PI / 2
       let w0: number
@@ -263,7 +265,7 @@ export const FOG2 = (() => {
       const sr = (J[1][1] * F[0] - J[0][1] * F[1]) / det
       const sa = (-J[1][0] * F[0] + J[0][0] * F[1]) / det
       const k = Math.min(1, 0.08 / Math.max(Math.abs(sr), Math.abs(sa) / 8))
-      r = Math.max(1.25, Math.min(3.4, r - sr * k))
+      r = Math.max(1.5, Math.min(3.4, r - sr * k))
       A = Math.max(0, Math.min(40, A - sa * k))
     }
     const b = build(r, A)
@@ -321,7 +323,7 @@ export const FOG2 = (() => {
   // The toss: straight up into the ring written round her from its top down, to stop at its top.
   const last = FOG2[FOG2.length - 1]
   const apex = flight(last.px, last.vx, last.tx)(FV.top)
-  let V = placeRing(blank('V', 89, 1.45, turning(0.05), { by: { who: 'costello', limb: 6, t0: FV.born - 0.75 } }), apex, -Math.PI / 2, FV.top)
+  let V = placeRing(blank('V', 89, 1.55, turning(0.05), { by: { who: 'costello', limb: 6, t0: FV.born - 0.75 } }), apex, -Math.PI / 2, FV.top)
   const aTop = -Math.PI / 2 - V.spin(FV.born)
   // Its arms run down from its top round her rise, surging on the two strong onsets, and meet under her on the third.
   const span = mono([[FV.born, 0], [154.5, 0.32 * Math.PI], [FV.surge[0] + 0.14, 0.6 * Math.PI], [FV.surge[1] + 0.12, 0.84 * Math.PI], [FV.close, Math.PI]])
@@ -371,7 +373,7 @@ function wOmega(rho: number) {
     return 0
   }
 }
-const W_R = 1.2
+const W_R = 1.5
 export const FOG34 = (() => {
   // Her place on the crescent (its own turn) is fixed: pinned by its turn, she goes round with it.
   const probe = blank('W', 330, W_R, () => 0)
@@ -428,18 +430,23 @@ export const GREAT = (() => {
   const unit = integrate(shape, t0, F4.close)
   // Her first splash reaches a little way both sides of her; the rest is written by the turn, so the halves meet on
   // the close exactly.
-  const SPLASH = [0.2, 0.09]
+  const SPLASH = [0.45, 0.3]
   const rate = (Math.PI - SPLASH[0] - SPLASH[1]) / (unit(F4.close) - LAG)
   const omega = (t: number) => -rate * shape(t)
-  const spin = integrate(omega, t0 - 1, 200, 0)
+  // Turned so that she begins on the thinnest stretch of its ink (seed 310, round its own angle 0.25), and so that
+  // where she comes to rest, the join, is on a light one.
+  const spin = integrate(omega, t0 - 1, 200, Math.PI / 2 - 0.253)
   const lag = (t: number) => LAG * rate * shape(t)
+  const runs = (t: number) => 1 - Math.pow(1 - clamp01((t - t0) / 0.75), 2.5)
   const her = (t: number) => Math.PI / 2 - lag(t)
   const own = (t: number) => her(t) - spin(t)
+  // Her blots: small while the ring is just begun (so its first arc reads as an arc), full in the push, and small
+  // again at the join, where the ink is already twice laid.
   const marks: Mark[] = PUSH_HITS.map((at) => {
     const p = PULSES.find((q) => Math.abs(q.t - at) < 1e-6)
     const s = p ? p.g : 1
-    const first = Math.abs(at - t0) < 1e-6
-    return { a: own(at), size: first ? 0.02 : 0.014 + 0.018 * clamp01((s - 0.8) / 0.5), width: first ? 0.12 : 0.045, at }
+    const scale = (0.45 + 0.55 * sstep((at - t0) / 3.2)) * (at > 181.5 ? 0.45 : 1)
+    return { a: own(at), size: (0.013 + 0.017 * clamp01((s - 0.8) / 0.5)) * scale, width: 0.045, at }
   })
   const probe = blank('G', 310, G_R, spin, { marks })
   const rho = rideR(probe, her(t0), t0)
@@ -447,14 +454,16 @@ export const GREAT = (() => {
   const ring: Ring = {
     ...probe,
     c,
-    taper: 0.06,
+    taper: 0.14,
     born: t0,
     closed: F4.close,
     whole: F4.close + 1.3,
     fade: 1e9,
     // Her first ink splashes a little way back under her as she comes down on it; then it runs from her pen.
-    lo: (t) => own(t0) - SPLASH[0] * sstep((t - t0) / 0.22),
-    hi: (t) => own(Math.min(t, F4.close)) + SPLASH[1] * sstep((t - t0) / 0.22),
+    // Her first ink runs out along the ring's line both ways from under her as she comes down on it (fast, slowing),
+    // a little further behind than ahead; from then on the turn writes it, the ink running just ahead of her.
+    lo: (t) => own(t0) - SPLASH[0] * runs(t),
+    hi: (t) => own(Math.min(t, F4.close)) + SPLASH[1] * runs(t),
   }
   return { ring, spin, her, own, rate, marks }
 })()

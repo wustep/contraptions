@@ -86,8 +86,9 @@ export const fog1 = stretch(0, 'fog1', (slot, o, at) => {
   const R1 = RINGS.find((r) => r.key === 'R1')!
   const her0 = at(slot.begin)
   return [
-    // The veil clears on the palm and her in it, close; then back a little to take in the ring written beside her.
-    { t: 131.3, cells: 3.6, hold: [her0[0] + 0.1, her0[1] - 0.6], w: 1 },
+    // Carried in from the chamber's framing (5.2) under the white; easing in to the palm's cup as the veil clears,
+    // then back a little to take in the ring written beside her.
+    { t: 131.6, cells: 3.8, hold: [her0[0] + 0.1, her0[1] - 0.55], w: 1 },
     { t: 132.7, cells: 3.9, hold: local(o, R1.c, -0.9, -0.95), w: 1 },
     { t: 134.4, cells: 4.6, hold: local(o, R1.c, 0.0, 0.45), w: 1 },
     { t: 136.8, cells: 4.8, hold: local(o, R1.c, 0.15, 0.5), w: 1 },
@@ -102,10 +103,11 @@ export const fog2 = stretch(1, 'fog2', (slot, _o, at) => {
   return [
     { t: 143.1, cells: 4.8, off: [0.8, -0.6], w: 0 },
     // Wider for the long arcs, leading her, so the ring written for her is seen before she comes down into it.
-    { t: 145.0, cells: 5.9, off: [1.3, -0.4], w: 0 },
-    { t: 147.7, cells: 6.3, off: [1.5, -0.3], w: 0 },
-    { t: 150.4, cells: 6.3, off: [1.5, -0.4], w: 0 },
-    { t: 153.0, cells: 5.8, off: [0.6, -0.45], w: 0 },
+    { t: 145.0, cells: 5.9, off: [1.9, -0.4], w: 0 },
+    { t: 147.7, cells: 6.4, off: [2.3, -0.3], w: 0 },
+    { t: 150.4, cells: 6.4, off: [2.3, -0.4], w: 0 },
+    { t: 152.4, cells: 6.0, off: [1.6, -0.4], w: 0 },
+    { t: 153.2, cells: 5.8, off: [0.6, -0.45], w: 0 },
     // The toss: the frame goes up with her and waits at the top of the ring written round her.
     { t: 154.6, cells: 5.0, off: [0.2, -0.5], w: 0 },
     { t: 155.75, cells: 4.3, hold: [top[0] + 0.45, top[1] - 0.5], w: 1 },
@@ -129,11 +131,12 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
   const end = at(slot.end)
   return [
     { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
-    { t: 167.5, cells: 4.7, off: [0.4, -0.9], w: 0 },
+    { t: 167.5, cells: 4.9, off: [0.4, -0.9], w: 0 },
     // Stopped at the top of her rise, where the ink begins under her; then the long pull back as the ring is written,
     // her low in the frame, until it is whole, closing (183.182); then in for the cut.
-    { t: 168.4, cells: 5.0, hold: [top[0] + 0.6, top[1] - 1.1], w: 1 },
-    { t: 170.8, cells: 6.8, hold: [top[0] + 0.8, top[1] - 2.0], w: 1 },
+    { t: 168.4, cells: 6.0, hold: [top[0] + 0.7, top[1] - 1.6], w: 1 },
+    { t: 169.3, cells: 7.4, hold: [top[0] + 0.9, top[1] - 2.2], w: 1 },
+    { t: 171.2, cells: 8.4, hold: [c[0] + 0.7, c[1] + 1.8], w: 1 },
     { t: 173.6, cells: 9.4, hold: [c[0] + 0.6, c[1] + 1.4], w: 1 },
     // Both pens in the frame: hers at the bottom, Costello's limb on the top, the two halves coming round.
     { t: 176.8, cells: 11.5, hold: [c[0] + 0.3, c[1] + 0.6], w: 1 },
