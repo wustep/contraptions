@@ -123,7 +123,7 @@ export const SEAMS: Record<keyof typeof SEAM, Seam> = {
     frame: [0.7, -0.5],
     ian: null,
     hannah: null,
-    what: 'moving right at 0.9 cells a second: back from the grass (Hannah out of this framing) into the fog, gliding on.',
+    what: 'moving right at 0.9 cells a second: back from the grass (Hannah still running ahead of her, taken away by the cut) into the fog, gliding on.',
   },
   v2: {
     t: SEAM.v2,

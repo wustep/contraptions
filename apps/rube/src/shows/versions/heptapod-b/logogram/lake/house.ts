@@ -128,9 +128,8 @@ export const prologue = part<null>(
 )
 
 /**
- * The first vision (139.476 → 142.582): summer, the lawn going down to the lake, bright. Little Hannah runs ahead,
- * laughing (two little bounces), over the brow and down the bank out of the picture; Louise after her, reaching the
- * brow on the cut.
+ * The first vision (139.476 → 142.582): summer, the lawn along the lake, bright. Little Hannah runs ahead, laughing (a
+ * leap, a skip, two skips more on the pulses), Louise after her; the cut takes it away with Hannah still running.
  */
 export const vision1 = part<null>(
   { name: 'vision1', draw: () => {} },
@@ -242,9 +241,10 @@ export const LAKE_HITS: number[] = [
   // The first great pulse (8.911): the glare on the water has swelled to white, the frame all light (the director's
   // veil peaks on it) and the place changes inside it.
   pulse(37),
-  // The first vision: the cut, and Hannah's leap (off, down) and skip.
+  // The first vision: the cut, Hannah's leap (off, down) and skip, and her two skips running on.
   V1.cut,
   ...V1.bounce,
+  ...V1.skips,
   // The second: the lean, at rest against her, she goes, and lands on the floor off the bench's end.
   V2.lean,
   V2.rest,
