@@ -517,14 +517,17 @@ export const mine = part<MineState>(
   (slot: Slot): PartShot[] => [
     // Landing in the cart, then a look back up the tunnel at the two asleep in theirs, waking.
     { t: slot.begin, ...SEAM_SHOT },
-    { t: BRAKE - 0.2, cells: 5.4, off: [-1.5, -0.75] },
-    // The chase, one push in that never stops. Wide down the tunnel: his cart in the front third, the trolls' cart
-    // coming out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as
-    // the gap closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead
-    // troll leaning out of his bin over him, their cart looming behind his.
-    { t: FIRST_CLACK + 0.5, cells: 8.0, off: [-2.3, -1.3] },
-    { t: LUNGES[0], cells: 6.1, off: [-1.1, -0.85] },
-    { t: LUNGES[1], cells: 5.4, off: [-0.8, -0.85] },
+    // Close on the two carts in the hatch's lit column (the tunnel is barely a cell high, so a wide is a band of
+    // black rock over two small carts): his cart and the trolls' with their brake knocked off, big enough that the
+    // wheels clacking over the joints on the notes are the motion.
+    { t: BRAKE - 0.2, cells: 4.8, off: [-1.5, -0.5] },
+    // The chase, one push in that never stops. Down the tunnel: his cart in the front third, the trolls' cart coming
+    // out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as the gap
+    // closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead troll
+    // leaning out of his bin over him, their cart looming behind his.
+    { t: FIRST_CLACK + 0.5, cells: 5.5, off: [-2.0, -0.6] },
+    { t: LUNGES[0], cells: 5.25, off: [-1.1, -0.7] },
+    { t: LUNGES[1], cells: 5.05, off: [-0.8, -0.8] },
     { t: LUNGES[2] + 0.1, cells: 4.9, off: [-0.55, -0.9] },
     // Phrase 9: on its first note the frame pulls back and ahead over the whole run to come (the switch's lever, the
     // catch ramp and its buffer, the gallery on to the stop block and the shaft), arriving a bar before his wheel
