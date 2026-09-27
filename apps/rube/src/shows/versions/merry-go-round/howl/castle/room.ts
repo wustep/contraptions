@@ -258,10 +258,8 @@ export const room = scenery<null>({
     const open = shuttersAt(t)
     if (day > 0.01 && open > 0.05) {
       p.noStroke()
-      p.fill(alpha(p, ROOM.sun, 0.2 * day * open))
-      p.quad(X(wx0), X(wy1), X(wx1), X(wy1), X(wx1 - 2.4), X(R.ground), X(wx0 - 3.6), X(R.ground))
-      p.fill(alpha(p, ROOM.sun, 0.1 * day * open))
-      p.quad(X(wx0), X(wy0), X(wx1), X(wy0), X(wx1 - 2.4), X(R.ground), X(wx0 - 3.6), X(R.ground))
+      softShaft(p, X, [[wx0, wy1], [wx1, wy1], [wx1 - 2.4, R.ground], [wx0 - 3.6, R.ground]], ROOM.sun, 0.2 * day * open)
+      softShaft(p, X, [[wx0, wy0], [wx1, wy0], [wx1 - 2.4, R.ground], [wx0 - 3.6, R.ground]], ROOM.sun, 0.1 * day * open)
       // Dust in the beam, shaken off the beams by the running shaft.
       for (let i = 0; i < 26; i++) {
         const u = (hash(i, 3) + t * (0.02 + 0.03 * hash(i, 5))) % 1
@@ -278,12 +276,31 @@ export const room = scenery<null>({
     if (war > 0) {
       const flick = 0.5 + 0.5 * Math.sin(t * 7) * Math.sin(t * 3.1 + 1)
       p.noStroke()
-      p.fill(alpha(p, ROOM.warLight, 0.12 + 0.1 * flick))
-      p.quad(X(wx0), X(wy1), X(wx1), X(wy1), X(wx1 - 2.4), X(R.ground), X(wx0 - 3.6), X(R.ground))
+      softShaft(p, X, [[wx0, wy1], [wx1, wy1], [wx1 - 2.4, R.ground], [wx0 - 3.6, R.ground]], ROOM.warLight, 0.12 + 0.1 * flick)
     }
     p.pop()
   },
 })
+
+/**
+ * The window's light as a shaft with soft sides, never a hard-edged wedge: the quad (its top at the window, its foot on
+ * the floor: top left, top right, foot right, foot left) laid down as thin layers, each narrower toward the shaft's
+ * middle, so the light ramps up from nothing at its sides to `a` over its middle third. Its top and foot stay where
+ * the light really stops (the window, the floor).
+ */
+function softShaft(p: p5, X: (v: number) => number, q: [Pt, Pt, Pt, Pt], color: string, a: number): void {
+  const LAYERS = 10
+  const lerp = (u: Pt, v: Pt, f: number): Pt => [u[0] + (v[0] - u[0]) * f, u[1] + (v[1] - u[1]) * f]
+  p.fill(alpha(p, color, a / LAYERS))
+  for (let i = 0; i < LAYERS; i++) {
+    const f = (0.34 * i) / (LAYERS - 1)
+    const tl = lerp(q[0], q[1], f)
+    const tr = lerp(q[1], q[0], f)
+    const br = lerp(q[2], q[3], f)
+    const bl = lerp(q[3], q[2], f)
+    p.quad(X(tl[0]), X(tl[1]), X(tr[0]), X(tr[1]), X(br[0]), X(br[1]), X(bl[0]), X(bl[1]))
+  }
+}
 
 /* ------------------------------------------------------------------ the window */
 
@@ -827,6 +844,11 @@ function drawSink(p: p5, c: C, tone: Tone, ink: string, t: number): void {
 
 /* ------------------------------------------------------------------ the rocking chair and the bellows */
 
+/** The bellows: dark tan leather, boards of dark oak, a dulled brass nozzle (all in the hearth's shade). */
+const BELLOWS_LEATHER = mixHex('#6E4B31', ROOM.woodDark, 0.35)
+const BELLOWS_BOARD = mixHex(ROOM.woodDark, ROOM.hearth, 0.2)
+const BELLOWS_BRASS = mixHex('#B48A45', ROOM.woodDark, 0.3)
+
 function drawChair(p: p5, c: C, tone: Tone, ink: string, t: number): void {
   const { k, weight: W } = c
   const X = (v: number) => v * k
@@ -842,35 +864,71 @@ function drawChair(p: p5, c: C, tone: Tone, ink: string, t: number): void {
     }
     p.endShape(p.CLOSE)
   }
-  // The bellows first (under the rocker): two boards hinged at the nozzle, leather between, pressed as she rocks.
+  // The bellows first (under the rocker), on the floor in the hearth's shade: two thick boards hinged at the front, the
+  // top one with a short handle off its rear end, dark leather between them folded in pleats, and a long brass nozzle
+  // at the fire. Pressed as she rocks. Darker than the lit boards, so it never pulls the eye from Calcifer.
   const press = bellowsAt(t)
   const { rear, hinge, tip } = BELLOWS
   const floor = R.ground
   const lift = 0.3 - 0.2 * press
   const topRear: Pt = [rear, floor - 0.04 - lift]
+  const lowTop = floor - 0.05
+  const hingeY = floor - 0.075
+  const poly = (pts: Pt[]) => {
+    p.beginShape()
+    for (const [x, y] of pts) p.vertex(X(x), X(y))
+    p.endShape(p.CLOSE)
+  }
   p.stroke(ink)
   p.strokeWeight(W)
-  p.fill(tone(ROOM.cloth))
-  p.beginShape()
-  p.vertex(X(rear + 0.02), X(floor - 0.04))
-  p.vertex(X(hinge), X(floor - 0.06))
-  p.vertex(X(hinge), X(floor - 0.1))
-  p.vertex(X(topRear[0] + 0.02), X(topRear[1] + 0.03))
-  p.endShape(p.CLOSE)
-  p.fill(tone(ROOM.woodDark))
-  p.beginShape()
-  p.vertex(X(topRear[0] - 0.03), X(topRear[1]))
-  p.vertex(X(hinge + 0.02), X(floor - 0.12))
-  p.vertex(X(hinge + 0.02), X(floor - 0.09))
-  p.vertex(X(topRear[0] - 0.03), X(topRear[1] + 0.035))
-  p.endShape(p.CLOSE)
-  p.rect(X(rear - 0.03), X(floor - 0.05), X(hinge - rear + 0.05), X(0.035))
-  p.fill(tone(ROOM.copper))
-  p.beginShape()
-  p.vertex(X(hinge), X(floor - 0.06))
-  p.vertex(X(tip), X(floor - 0.09))
-  p.vertex(X(hinge), X(floor - 0.12))
-  p.endShape(p.CLOSE)
+  // The leather: from the lower board's top to the upper board's underside, its rear edge folded in and out.
+  const folds = 6
+  const leatherPts: Pt[] = [[hinge, hingeY]]
+  for (let i = 0; i <= folds; i++) {
+    const y = lowTop + (topRear[1] - lowTop) * (i / folds)
+    leatherPts.push([rear + 0.01 - (i % 2 ? 0.04 : 0.005), y])
+  }
+  p.fill(tone(BELLOWS_LEATHER))
+  poly(leatherPts)
+  // The pleats: a crease in from each inner fold, fading toward the hinge.
+  p.stroke(alpha(p, ink, 0.55))
+  p.strokeWeight(W * 0.55)
+  for (let i = 2; i < folds; i += 2) {
+    const [fx, fy] = leatherPts[1 + i]
+    line([fx, fy], [fx + (hinge - fx) * 0.55, fy + (hingeY - fy) * 0.55])
+  }
+  p.stroke(ink)
+  p.strokeWeight(W)
+  p.fill(tone(BELLOWS_BOARD))
+  // The lower board, lying on the floor.
+  p.rect(X(rear - 0.06), X(lowTop), X(hinge - rear + 0.08), X(0.048), X(0.012))
+  // The upper board, hinged at the front, and its handle.
+  const th = 0.045
+  poly([
+    [hinge + 0.02, hingeY - 0.002],
+    [topRear[0] - 0.05, topRear[1]],
+    [topRear[0] - 0.05, topRear[1] - th],
+    [hinge + 0.02, hingeY - th + 0.004],
+  ])
+  const hy = topRear[1] - th * 0.5
+  poly([
+    [topRear[0] - 0.05, hy - 0.013],
+    [topRear[0] - 0.15, hy - 0.022],
+    [topRear[0] - 0.15, hy + 0.006],
+    [topRear[0] - 0.05, hy + 0.013],
+  ])
+  p.circle(X(topRear[0] - 0.165), X(hy - 0.008), X(0.042))
+  // The nozzle: a long tapered brass tube at the fire, with a collar where it leaves the boards.
+  const tipX = tip + 0.08
+  const tipY = hingeY - 0.03
+  p.fill(tone(BELLOWS_BRASS))
+  poly([
+    [hinge - 0.01, hingeY - 0.03],
+    [tipX, tipY - 0.011],
+    [tipX, tipY + 0.011],
+    [hinge - 0.01, hingeY + 0.012],
+  ])
+  p.rect(X(hinge), X(hingeY - 0.04), X(0.03), X(0.062), X(0.008))
   // The rockers: an arc under the chair, rolling on the floor.
   const c0y = floor - rr
   const arc: Pt[] = []
