@@ -1,7 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, type Company, type PartShot } from '../kit'
 import { TURN } from '../music'
-import { drawDeckOver, drawDeckRig, drawDust, drawFaces, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
+import { drawDeckOver, drawDeckRig, drawDust, drawMist, drawMistFront, drawPuffs, drawStone } from './shaft-draw'
 import {
   I_HOPS,
   I_TOUCH,
@@ -97,7 +97,6 @@ export const shaft = part<ShaftState>(
       const t = s.begin + c.t
       drawStone(p, c, t)
       drawMist(p, c, t)
-      drawFaces(p, c, t)
       drawDeckRig(p, c, t)
       drawDust(p, c, t)
       drawPuffs(p, c, t)
