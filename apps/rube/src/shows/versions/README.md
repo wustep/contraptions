@@ -27,8 +27,8 @@ The folder and file names are addresses, so they are chosen once:
   `public/shows/<work>/`. It names the music (`clair-de-lune`, `heptapod-b`),
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
-  `interstellar` **Voyage**, `la-la-land` **Epilogue**. The write-up says
-  which is which.
+  `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**.
+  The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -37,7 +37,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
   (Gymnopédie). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
@@ -405,3 +405,19 @@ song runs on a drum machine, so `scripts/shows/relax-onsets.py` fits one comb (1
 off-beat onto its own attack, with the free onsets of the intro, the drop and the tail, into
 `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
 report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
+
+`bolero/opus55` (in the picker, **Ostinato**, on the Machine shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
+as one machine that grows with it: a tower of storeys standing on a single side drum, a storey for each pair of the
+tune's eighteen statements (A A B B four times, then one each for the last A and B), each wider than the one under it.
+The recording is Omega13a's, made in MuseScore 4 with Muse Sounds from Ravel's score and released on Wikimedia Commons
+under CC BY 4.0, so it ships with the show (`apps/rube/src/shows/versions/bolero/ATTRIBUTION.txt`); it keeps the
+score's tempo from the first bar to the last, so the whole piece is one comb, measured once by
+`scripts/shows/bolero-onsets.py` into `scripts/shows/plans/bolero-onsets.json` with both themes note by note from the
+1929 Durand score. The drum is played by a wheel with the rhythm on its rim as pins, all 169 times; each storey is one
+loop of keyed rails, a key for every note, and the ball plays each statement by rolling once round a storey, climbing
+between them on a lift that steps on the drum's strokes; each storey's engine is let in on its second statement and
+runs from then on, so by the end ten engines play under the tune, and from the ninth statement the storeys below play
+along with it. E major is a gold roof the ball climbs a beat at a time; on the collapse the tower splits down its mast
+and falls away round the drum, and the ball lands on the drum head on the last chord. The code is `bolero/tower/`;
+`check:shows` holds every strike to the comb (`apps/rube/checks/ostinato.ts`). The report is
+`apps/rube/src/shows/versions/bolero/OSTINATO.md`.

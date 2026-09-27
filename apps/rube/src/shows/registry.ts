@@ -188,6 +188,7 @@ export const currentTake = (work: string, take: string): string => RENAMED_TAKES
 export const SECTIONS = ['Machine', 'Movies', 'Ambient'] as const
 export type Section = (typeof SECTIONS)[number]
 const SHELVED: Record<string, Section> = {
+  bolero: 'Machine',
   'clair-de-lune': 'Machine',
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',

@@ -57,7 +57,9 @@ export const PIZZ: readonly [number, 'low' | 'mid' | 'high'][] = data.pizz
 export const STATEMENTS: readonly Statement[] = data.statements
 /** A note of the tune: quarters from its statement's downbeat, and its pitch (MIDI). */
 export type Note = [number, number]
-export const THEMES: { A: readonly Note[]; B: readonly Note[] } = data.themes
+/** The measured file keeps quarters to four places; the score's are on the grid of twelfths (a triplet sixteenth is four). */
+const onGrid = (notes: [number, number][]): Note[] => notes.map(([q, m]) => [Math.round(q * 12) / 12, m])
+export const THEMES: { A: readonly Note[]; B: readonly Note[] } = { A: onGrid(data.themes.A), B: onGrid(data.themes.B) }
 export const FORM = data.form
 /** The tune's first note in each statement. */
 export const statementAt = (k: number): number => STATEMENTS[k].t

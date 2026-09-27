@@ -251,7 +251,7 @@ export function monotone(knots: [number, number][]): (x: number) => number {
   }
 }
 
-export const ALONG = LOOPS.map((l) => monotone(l.knots))
+export const ARC = LOOPS.map((l) => monotone(l.knots))
 
 /* ------------------------------------------------------------------ the lift */
 

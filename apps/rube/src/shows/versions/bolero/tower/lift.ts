@@ -3,7 +3,7 @@ import { outline, solid } from '../../../../../../../src/core/draw'
 import type { Pt } from '../../../../parts'
 import { STROKES, lastIndex } from './music'
 import { FOOT, LIFT_LINE, R, RIDES, TOWER, liftA, liftB, onLift, rideAt, type Ride } from './plan'
-import { BRASS, INK, IRON, pale, smooth } from './look'
+import { BRASS, INK, IRON, deep, pale, smooth } from './look'
 import { LAST_RIDE } from './finale'
 import { openOf } from './storey'
 
@@ -80,18 +80,19 @@ export function drawRack(p: p5, k: number, weight: number, n: number, t: number)
   const pts: Pt[] = []
   for (let s = from; s < to; s += 0.08) pts.push(onLift(s))
   pts.push(onLift(to))
-  outline(p, INK, weight * 1.2)
-  p.stroke(IRON)
+  // The rack: an iron bar, its teeth a fine comb along the cup's side.
   p.noFill()
-  p.beginShape()
-  for (const [x, y] of pts) p.vertex((x - 0.1) * k, y * k)
-  p.endShape()
-  // Its teeth, fine, on the cup's side.
-  outline(p, INK, weight * 0.6)
-  for (let s = from + 0.05; s < to; s += 0.11) {
+  outline(p, INK, weight * 0.55)
+  p.stroke(IRON)
+  for (let s = from + 0.03; s < to; s += 0.07) {
     const [x, y] = onLift(s)
-    p.line((x - 0.1) * k, y * k, (x - 0.045) * k, (y - 0.035) * k)
+    p.line((x - 0.1) * k, y * k, (x - 0.06) * k, (y - 0.02) * k)
   }
+  outline(p, INK, weight * 1.5)
+  p.stroke(deep(IRON, 0.25))
+  p.beginShape()
+  for (const [x, y] of pts) p.vertex((x - 0.12) * k, y * k)
+  p.endShape()
   void LIFT_LINE
 }
 

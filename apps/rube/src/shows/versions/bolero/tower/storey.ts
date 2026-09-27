@@ -66,7 +66,9 @@ function railAt(st: Storey, s: number): { x: number; y: number; a: number } {
 export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
   const st = TOWER[n]
   const open = openOf(n, t)
-  if (open <= 0) return
+  // Folded, it is the bud on top of the tower, once the storey under it has opened: its floor's two halves standing
+  // up against the mast. Before that, nothing.
+  if (open <= 0 && n > 0 && openOf(n - 1, t) < 1) return
   const { k, weight } = c
   const color = STOREY_COLORS[n]
   const loop = LOOPS[n]
@@ -94,7 +96,15 @@ export function drawStorey(p: p5, n: number, c: PieceCtx, t: number): void {
     p.rect(side < 0 ? -(st.w / 2) * k : 0, -0.06 * k, (st.w / 2) * k, 0.12 * k, 0.03 * k)
     p.pop()
   }
-  if (posts <= 0) return
+  if (posts <= 0) {
+    // The bud's cap, binding the folded halves together at their tips.
+    if (floorOpen < 0.02) {
+      solid(p, INK, weight, deep(color, 0.2))
+      p.rectMode(p.CENTER)
+      p.rect(0, (st.floor - st.w / 2 + 0.06) * k, 0.34 * k, 0.16 * k, 0.04 * k)
+    }
+    return
+  }
 
   // The posts at the ends, slanting out to the storey over it (or standing straight at the top).
   const next = TOWER[n + 1]

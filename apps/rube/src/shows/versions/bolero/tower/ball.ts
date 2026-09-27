@@ -1,6 +1,6 @@
 import type { Pt } from '../../../../parts'
 import { BEAT, STATEMENTS } from './music'
-import { ALONG, FOOT, INTO_CUP, LOOPS, R, RIDES, TOWER, lapOf, onLoop, rideAt, sOf, type Ride } from './plan'
+import { ARC, FOOT, INTO_CUP, LOOPS, R, RIDES, TOWER, lapOf, onLoop, rideAt, sOf, type Ride } from './plan'
 import { FINALE_FROM, finaleAt } from './finale'
 
 /**
@@ -65,7 +65,7 @@ export function where(t: number): Where {
     if (t <= end) {
       const n = lapOf(k).storey
       const q = (t - STATEMENTS[k].t) / BEAT
-      const s = ALONG[n](q)
+      const s = ARC[n](q)
       const at = onLoop(TOWER[n], LOOPS[n], s)
       return { p: at.p, angle: at.angle, phase: 'lap', k, turned: BASE[k] + rolled(n, s) }
     }

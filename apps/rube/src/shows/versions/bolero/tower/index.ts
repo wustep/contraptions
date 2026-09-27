@@ -1,13 +1,15 @@
 import recording from '../bolero-omega13a.mp3'
 import type { Performance } from '../../../registry'
-import { camera } from './camera'
+import { makeCamera } from './camera'
 import { scenery } from './scene'
 import { OstinatoShow } from './show'
-import { RECORDING } from './music'
+import { DURATION, creditsAt } from './credits'
 
-export const DURATION = Math.ceil(RECORDING + 8)
+export { DURATION }
 
 export const show = new OstinatoShow(scenery(DURATION), DURATION)
+
+export const camera = makeCamera((t) => show.where(t), DURATION)
 
 export const performance: Performance = {
   show,
@@ -15,6 +17,8 @@ export const performance: Performance = {
   camera,
   // One tower, one path, one take: no portal and no cut.
   cuts: () => false,
+  // The end credits' words, which the page sets in the night over the ruins after the last chord.
+  titles: creditsAt,
   soundtrack: {
     src: recording,
     offset: 0,

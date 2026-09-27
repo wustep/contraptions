@@ -3,7 +3,8 @@ import { outline, solid } from '../../../../../../../src/core/draw'
 import type { PieceCtx } from '../../../../parts'
 import { BAR, BEAT, COLLAPSE, LAST, SNARE, STROKES, T0, lastIndex, loud, pluck } from './music'
 import { DRUM } from './plan'
-import { BRASS, DRUM_RED, INK, IRON, PAPER, alpha, deep, pale, ring } from './look'
+import { BRASS, DRUM_RED, INK, IRON, NIGHT, PAPER, alpha, deep, frameOf, honest, pale, ring, smooth } from './look'
+import { DUSK } from './credits'
 
 /**
  * The ground and the one thing that stands on it: the side drum, which plays the rhythm all show and carries the
@@ -17,8 +18,10 @@ import { BRASS, DRUM_RED, INK, IRON, PAPER, alpha, deep, pale, ring } from './lo
  */
 
 export const WHEEL = { x: 1.62, y: -0.72, r: 0.42 }
-const PIVOT = { x: 1.02, y: -1.22 }
-const TIP = { x: 0.22, y: DRUM.head - 0.02 }
+const PIVOT = { x: 1.06, y: -1.12 }
+const TIP = { x: 0.46, y: DRUM.head - 0.03 }
+/** The tail's length past the pivot: its foot rides the pins at the wheel's top. */
+const TAIL = 0.5
 export const BOX = { x: 3.05, w: 0.86, h: 0.46 }
 
 /** The wheel's turn at `t`, radians: once every two bars, pin `i` at the top on its stroke. */
@@ -46,6 +49,7 @@ export function stickLift(t: number): number {
 
 export function drawGround(p: p5, c: PieceCtx): void {
   const { k, weight } = c
+  dusk(p, k, c.t)
   p.push()
   p.noStroke()
   p.fill(pale(IRON, 0.86))
@@ -102,17 +106,28 @@ export function drawBase(p: p5, c: PieceCtx, t: number): void {
   const rest = Math.atan2(TIP.y - PIVOT.y, TIP.x - PIVOT.x)
   const a = rest + Math.asin(Math.min(0.9, lift / reach))
   const tip = { x: PIVOT.x + Math.cos(a) * reach, y: PIVOT.y + Math.sin(a) * reach }
-  const tail = { x: PIVOT.x - Math.cos(a) * 0.62, y: PIVOT.y - Math.sin(a) * 0.62 }
-  // Its post.
+  const tail = { x: PIVOT.x - Math.cos(a) * TAIL, y: PIVOT.y - Math.sin(a) * TAIL }
+  // Its post, on the drum's rim.
   outline(p, INK, weight * 1.1)
-  p.line(PIVOT.x * k, PIVOT.y * k, (PIVOT.x + 0.08) * k, (DRUM.head + 0.3) * k)
-  outline(p, INK, weight * 2.1)
-  p.stroke(deep('#C9A36A', 0.1))
-  p.line(tail.x * k, tail.y * k, tip.x * k, tip.y * k)
-  outline(p, INK, weight * 0.8)
-  p.noFill()
+  p.line(PIVOT.x * k, PIVOT.y * k, (DRUM.w / 2 - 0.02) * k, (DRUM.head + 0.02) * k)
+  // The stick: a turned stick, thick at the butt, with its bead at the tip.
+  p.push()
+  p.translate(tail.x * k, tail.y * k)
+  p.rotate(Math.atan2(tip.y - tail.y, tip.x - tail.x))
+  const len = Math.hypot(tip.x - tail.x, tip.y - tail.y)
+  solid(p, INK, weight * 0.8, '#D7B27A')
+  p.beginShape()
+  p.vertex(0, -0.035 * k)
+  p.vertex(len * k, -0.018 * k)
+  p.vertex(len * k, 0.018 * k)
+  p.vertex(0, 0.035 * k)
+  p.endShape(p.CLOSE)
+  p.pop()
   solid(p, INK, weight * 0.8, '#E7D2A8')
-  p.circle(tip.x * k, tip.y * k, 0.09 * k)
+  p.ellipse(tip.x * k, tip.y * k, 0.1 * k, 0.07 * k)
+  // The tail's foot, on the pins.
+  solid(p, INK, weight * 0.8, IRON)
+  p.rect(tail.x * k, (tail.y + 0.03) * k, 0.09 * k, 0.05 * k, 0.015 * k)
   solid(p, INK, weight * 0.8, BRASS)
   p.circle(PIVOT.x * k, PIVOT.y * k, 0.08 * k)
 
@@ -183,4 +198,25 @@ function mallet(p: p5, k: number, weight: number, pivot: { x: number; y: number 
   p.pop()
   solid(p, INK, weight * 0.8, BRASS)
   p.circle(pivot.x * k, pivot.y * k, 0.07 * k)
+}
+
+/** Night coming down over the ruins after the last chord: the frame dims, and the sky darkens from the top. */
+function dusk(p: p5, k: number, t: number): void {
+  const u = smooth(t, DUSK, DUSK + 2.6)
+  if (u <= 0) return
+  honest(p)
+  const f = frameOf(p, k)
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const top = f.y0 * k
+  const bottom = f.y1 * k
+  const g = ctx.createLinearGradient(0, top, 0, top + (bottom - top) * 0.72)
+  const c = p.color(NIGHT)
+  const rgb = `${p.red(c)}, ${p.green(c)}, ${p.blue(c)}`
+  g.addColorStop(0, `rgba(${rgb}, ${(0.97 * u).toFixed(3)})`)
+  g.addColorStop(0.55, `rgba(${rgb}, ${(0.72 * u).toFixed(3)})`)
+  g.addColorStop(1, `rgba(${rgb}, ${(0.12 * u).toFixed(3)})`)
+  ctx.save()
+  ctx.fillStyle = g
+  ctx.fillRect(f.x0 * k, top, (f.x1 - f.x0) * k, bottom - top)
+  ctx.restore()
 }
