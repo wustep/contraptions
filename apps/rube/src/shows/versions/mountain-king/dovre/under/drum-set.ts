@@ -240,14 +240,53 @@ function drawGalleries(p: p5, c: Ctx, L: number, dy: number): void {
   p.pop()
 }
 
+/** The back wall in the war-fires' full light: the lit rock, warmed (the heart's `WALL_LIT`, warmer: all its light is fire). */
+const WALL_LIT = mixHex(mixHex(STONE.mid, STONE.light, 0.25), LAMP.glow, 0.26)
+
+/**
+ * How far the fires have lifted the back wall toward `WALL_LIT`, 0..1: nothing while they are banked (the room waits
+ * dark for him), most of the way as the kettle's stroke fans the first fire, a little more with each drummer (the
+ * rest of the crescendo's light is the fires' own, in `drawRoom`'s washes and pools).
+ */
+function wallLift(T: number, L: number): number {
+  const fanned = smooth(T, BEGIN - 0.02, BEGIN + 0.3)
+  const drummed = Math.max(0, Math.min(1, (L - 0.3) / 0.7))
+  return 0.35 * fanned + 0.26 * drummed
+}
+
+/** Trace the room's hollow as a canvas path (for clipping the fires' light to the rock they fall on). */
+function roomPath(ctx: CanvasRenderingContext2D, k: number): void {
+  ctx.beginPath()
+  for (const [i, [x, y]] of ROOM.entries()) {
+    if (i === 0) ctx.moveTo(x * k, y * k)
+    else ctx.lineTo(x * k, y * k)
+  }
+  ctx.closePath()
+}
+
 export function drawRoom(p: p5, c: Ctx, T: number, L: number): void {
-  hollow(p, c, ROOM, 0.12 + 0.75 * L)
-  // The fire's light on the rock, over the hollow, before anything it lights.
+  // The back wall: the dark hollow, warmed toward lit rock as the fires catch and the drumming fans them.
+  const base = mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, Math.min(1, 0.12 + 0.75 * L))
+  p.push()
+  p.noStroke()
+  p.fill(mixHex(base, WALL_LIT, wallLift(T, L)))
+  shape(p, c, ROOM)
+  p.pop()
+  // The fire's light on the rock, over the wall, before anything it lights; held inside the hollow, so the solid
+  // rock round the room and the pit under it stay the mountain's own dark.
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  roomPath(ctx, c.k)
+  ctx.clip()
   for (const [i, x] of FIRES.entries()) {
     const f = flicker(T, i * 3 + 1) * caught(i, T)
-    glow(p, c, x, FIRE_Y - 0.5, (1.6 + 4.8 * L) * f, (0.05 + 0.21 * L) * f)
-    glow(p, c, x, FIRE_Y - 0.2, (0.8 + 2.2 * L) * flicker(T, i + 7), (0.04 + 0.15 * L) * caught(i, T), LAMP.flame)
+    // The broad wash: the whole room warmed from its fires, fading up into the vault and out to its ends.
+    glow(p, c, x, FIRE_Y - 1.2, 8.5, (0.07 + 0.11 * L) * f)
+    // The pool: the fire's own blaze on the wall behind it, growing with every drummer.
+    glow(p, c, x, FIRE_Y - 0.8, (1.6 + 4.2 * L) * f, (0.05 + 0.4 * L * L) * f)
+    glow(p, c, x, FIRE_Y - 0.3, (0.8 + 2.4 * L) * flicker(T, i + 7), (0.04 + 0.2 * L) * caught(i, T), LAMP.flame)
   }
+  ctx.restore()
   for (const [i, [x, len, w]] of STALACTITES.entries()) stalactite(p, c, x, vaultAt(x) - 0.05, len, w, 0.15 + 0.7 * L, i + 2)
   // The floor, broken by the pit under the great drum; the pit going down to the heart.
   hollow(p, c, [[SHAFT.x0, FLOOR - 0.02], [SHAFT.x1, FLOOR - 0.02], [SHAFT.x1 - 0.05, 3], [SHAFT.x1, SHAFT.bottom], [SHAFT.x0 + 0.04, SHAFT.bottom], [SHAFT.x0 - 0.04, 3.5]], 0.05 + 0.25 * L)
