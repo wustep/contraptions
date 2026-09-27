@@ -44,6 +44,7 @@ import { checkCaravan } from './caravan'
 import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
+import { checkTheater } from './theater'
 
 let failures = 0
 function check(name: string, ok: boolean, detail = ''): void {
@@ -75,7 +76,7 @@ async function main(): Promise<void> {
   check('Machine is its own page', machinePage.includes('src="/apps/rube/src/main.ts"'))
   check('the Builder is not a tab', modeFromPath('/builder/') === null)
   const page = readFileSync(join(process.cwd(), 'shows/index.html'), 'utf8')
-  const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/main.ts'), 'utf8')
+  const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
   const stage = readFileSync(join(process.cwd(), 'apps/rube/src/shows/stage.ts'), 'utf8')
   check('the page loads the player itself', page.includes('src="/apps/rube/src/shows/main.ts"'))
   check('a visit starts the show', /if \(current\) void open\(current, linked \? 'link' : true\)/.test(player) && /else void play\(\)/.test(player))
@@ -748,6 +749,8 @@ async function main(): Promise<void> {
     check('silent until the first strike, then heard', silentBefore && peak > 8000, `peak ${peak}`)
     check('and never clipped', peak < 32767, `peak ${peak}`)
   }
+
+  checkTheater(check, shipped.works)
 
   console.log(failures ? `\n${failures} failure(s)` : '\nall good')
   process.exit(failures ? 1 : 0)
