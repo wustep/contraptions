@@ -19,7 +19,15 @@ type Check = (name: string, ok: boolean, detail?: string) => void
  * Where Derek may be small or out of the Zoom frame: the great wides, and the shots of Hansel on his way up the tower
  * while Derek is on the runway below. Each is a stretch of show seconds, said by the part that frames it.
  */
-const WIDE: [number, number][] = []
+const WIDE: [number, number][] = [
+  // The Center: the model framed alone as a building, before he comes up beside it (a center for ants).
+  [204.17, 207.9],
+  // Derelicte: the geography wide (the whole hall, Derek on the runway and Hansel at the tower's foot); the cutaway to
+  // Hansel's last rails and his dart into the booth; the booth close on the rip.
+  [138.05, 140.9],
+  [177.128, 179.218],
+  [182.817, 183.311],
+]
 
 export function checkMagnum(perf: Performance, version: ShowVersion, check: Check): void {
   const show = perf.show as MagnumShow

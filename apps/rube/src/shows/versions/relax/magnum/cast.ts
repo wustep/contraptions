@@ -60,8 +60,9 @@ export function pool(p: p5, k: number, at: Pt, rx: number, ry: number, color: st
 
 /**
  * A spotlight's beam: a cone of light from its lens at `from` to `to`, `w0` cells wide at the lens and `w1` at the far
- * end, brightest at the lens and paling along its length, soft at its sides (three cones laid over each other, the
- * widest faintest). Air, not a shape: never outlined. `a` 0..1.
+ * end, brightest at the lens and paling along its length, soft at its sides (eight cones laid over each other, each a
+ * little narrower, so across the beam the light rises evenly from nothing at its edge to `a` on its axis). Air, not a
+ * shape: never outlined. `a` 0..1.
  */
 export function beam(p: p5, k: number, from: Pt, to: Pt, w0: number, w1: number, color: string, a: number): void {
   if (a <= 0.003) return
@@ -73,11 +74,14 @@ export function beam(p: p5, k: number, from: Pt, to: Pt, w0: number, w1: number,
   const nx = -dy / L
   const ny = dx / L
   ctx.save()
-  for (const [spread, share] of [[1.35, 0.3], [1.0, 0.45], [0.62, 0.55]] as const) {
+  const n = 8
+  for (let i = 0; i < n; i++) {
+    const spread = 1.5 - (i * 1.2) / (n - 1)
+    const share = 1 / n
     const g = ctx.createLinearGradient(from[0] * k, from[1] * k, to[0] * k, to[1] * k)
     g.addColorStop(0, rgba(color, a * share))
     g.addColorStop(0.7, rgba(color, a * share * 0.45))
-    g.addColorStop(1, rgba(color, a * share * 0.18))
+    g.addColorStop(1, rgba(color, a * share * 0.08))
     const h0 = (w0 * spread) / 2
     const h1 = (w1 * spread) / 2
     ctx.beginPath()
