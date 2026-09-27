@@ -162,7 +162,19 @@ function earTurn(t: number): number {
   a += flick(t - EAR_NEAR, 0.95) + flick(t - EAR_NEAR - 0.24, 0.6)
   const w = t - CAT_CUES.wake
   if (w >= 0) a += -0.45 * Math.exp(-w / 0.5) * (w < 0.06 ? w / 0.06 : 1)
+  // The bang flicks it too: snapped back and let go, twice.
+  a += flick(w, 0.6) + flick(w - 0.22, 0.35)
   return a
+}
+
+/**
+ * On the bang the head goes on turning up after it has lifted, until its nose is on the candle (as far as a lying
+ * cat's neck goes), holds there while it looks, and comes back down with the tuck. Radians, added to the lift's turn.
+ */
+function seek(t: number): number {
+  const w = t - CAT_CUES.wake
+  if (w < 0) return 0
+  return 0.3 * smooth(w, 0.3, 1.1) * (1 - smooth(w, 2.55, 3.5))
 }
 
 /**
@@ -544,7 +556,7 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
   // lift, with only a slit of an eye.
   const st = startle(t)
   const lift = aw.lift + 0.62 * st
-  const turnUp = 0.6 * lift
+  const turnUp = 0.6 * lift + seek(t)
   const rise = hb + 0.8 * lift
   // Where a point of the head (x, h) is drawn, lifted and turned about the nape: for the neck, which joins the two.
   const lifted = (x: number, h: number): Pt => {
@@ -653,17 +665,29 @@ export function drawCat(p: p5, k: number, ink: string, weight: number, L: Light,
     p.stroke(ink)
     p.strokeWeight(w * 0.7)
     vtx(p, k, almond)
-    // The slit, toward the eye's west corner and up: it is looking at the candle.
+    // The pupil, toward the eye's west corner and up: it is looking at the candle. A slit when it half wakes on a
+    // knock; on the bang it snaps open a slit and widens round in a fifth of a second as it finds the flame.
     p.noStroke()
     p.fill(LOFT.soot)
-    const px = E[0] - ew * 0.14
-    const pw = 0.022 + 0.018 * Math.exp(-Math.max(0, t - CAT_CUES.wake) / 0.8)
+    const wk = t - CAT_CUES.wake
+    const round = wk < 0 ? 0 : smooth(wk, 0.05, 0.25)
+    const px = E[0] - ew * (0.14 - 0.03 * round)
+    const pw = 0.022 + (0.62 * oh - 0.022) * round
+    const ph = oh * (0.95 - 0.2 * round)
+    const py = E[1] + 0.012 + 0.01 * round
     p.beginShape()
     for (let j = 0; j <= 12; j++) {
       const a = (j / 12) * Math.PI * 2
-      p.vertex((px + Math.cos(a) * pw) * k, Y(E[1] + 0.012 + Math.sin(a) * oh * 0.95) * k)
+      p.vertex((px + Math.cos(a) * pw) * k, Y(py + Math.sin(a) * ph) * k)
     }
     p.endShape(p.CLOSE)
+    // The candle in it: a small catchlight on the side toward the flame, flashing as the eye opens on the bang.
+    if (wk >= 0) {
+      const flash = smooth(wk, 0.02, 0.07) * (0.75 + 0.25 * Math.exp(-Math.max(0, wk - 0.07) / 0.25))
+      const cr = 0.34 * pw
+      p.fill(`rgba(255, 238, 200, ${(0.95 * flash * Math.min(1, aw.eye * 1.5)).toFixed(3)})`)
+      p.circle((px - pw * 0.38) * k, Y(py + ph * 0.42) * k, Math.max(1, 2 * cr * k))
+    }
   }
   // The nose, and the line of the mouth under it.
   p.fill(deepAt(5.8, 1.1))
