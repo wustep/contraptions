@@ -1,5 +1,5 @@
 /**
- * The checks for Mountain King · Spark (`versions/mountain-king/opus55-spark.show.ts`), run by `check:shows`: one
+ * The checks for Mountain King · Opus 5.5 (B) (`versions/mountain-king/opus55-spark.show.ts`), run by `check:shows`: one
  * spark through four worlds by their fires, on the recording's own onsets and tracked beat.
  */
 import type { Performance, Version } from '../src/shows/registry'
@@ -19,8 +19,8 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
   const show = perf.show as SparkShow
   const cam = perf.camera!
 
-  check('spark: in the picker it is Mountain King, Spark, with no note and no byline',
-    version.title === 'Mountain King' && version.label === 'Spark' && version.note === undefined && !('director' in version) &&
+  check('spark: in the picker it is Mountain King, Opus 5.5 (B), with no note and no byline',
+    version.title === 'Mountain King' && version.label === 'Opus 5.5 (B)' && version.note === undefined && !('director' in version) &&
     typeof version.about === 'string' && typeof version.still === 'number')
   check('spark: the whole recording from zero, credited to Grieg and the orchestra, then the credits in silence',
     near(MUSIC_END, 154.091, 1e-3) && near(perf.duration, DURATION) && DURATION > MUSIC_END + 20 && DURATION < 185 && (perf.soundtrack?.offset ?? 0) === 0 &&

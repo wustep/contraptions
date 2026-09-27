@@ -417,8 +417,9 @@ function rain(p: p5, k: number, t: number, L: Light): void {
     const hit = Math.exp(-s / 0.07)
     const running = Math.min(1, Math.max(0, s - d.hold) * 2)
     bead(ctx, k, at.x, at.y, at.r * (1 + 0.6 * hit), at.r * (1 - 0.3 * hit + 0.25 * running), lit, dark, 1)
-    // The instant it lands, the glass round it catches the light.
-    if (hit > 0.02) soft(ctx, k, at.x, at.y, d.r * 3.4, d.r * 2.2, lit, 0.35 * hit)
+    // The instant it lands, the glass round it catches the light: the pulse, seen.
+    const glint = Math.exp(-s / 0.12)
+    if (glint > 0.02) soft(ctx, k, at.x, at.y, d.r * 3.6, d.r * 2.4, lit, 0.55 * glint)
   }
 }
 
@@ -452,12 +453,13 @@ function room(p: p5, c: Ctx, f: Frame, t: number, L: Light, balls: Body[]): void
   ctx.rect(X(WIN.x0), X(WIN.top), X(WIN.x1 - WIN.x0), X(WIN.sill - WIN.top))
   ctx.clip()
   view(p, k, f, L)
-  rain(p, k, t, L)
-  // At dusk the room's dark reaches into the glass a little.
+  // At dusk the room's dark reaches into the glass a little; the rain on the glass is over it, catching what light
+  // there is.
   if (L.kind === 'dusk') {
     ctx.fillStyle = rgba(LAKE.night, 0.22)
     ctx.fillRect(X(WIN.x0), X(WIN.top), X(WIN.x1 - WIN.x0), X(WIN.sill - WIN.top))
   }
+  rain(p, k, t, L)
   ctx.restore()
 
   // The ceiling going away over us: dim, catching a little of the window's light near the wall.

@@ -45,6 +45,7 @@ import { checkMarriedLife } from './married-life'
 import { checkSpark } from './spark'
 import { checkMerryGoRound } from './merry-go-round'
 import { checkTheater } from './theater'
+import { PREROLL, WARM } from '../src/shows/youtube'
 import { checkLogogram } from './logogram'
 import { checkMagnum } from './magnum'
 
@@ -188,17 +189,17 @@ async function main(): Promise<void> {
   check('relax is Magnum, one take, Opus 5.5, with no note',
     magnum.map((v) => v.take).join(',') === 'opus55' && magnum[0].title === 'Magnum' && magnum[0].label === 'Opus 5.5' && magnum[0].note === undefined)
   const mountainKing = shipped.works.find((w) => w.work === 'mountain-king')?.versions ?? []
-  check('mountain-king is Mountain King, takes Opus 5.5 and Spark, with no notes',
-    mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5|Spark')
+  check('mountain-king is Mountain King, takes Opus 5.5 (A) and Opus 5.5 (B), with no notes',
+    mountainKing.map((v) => v.take).join(',') === 'opus55,opus55-spark' && mountainKing.every((v) => v.title === 'Mountain King' && v.note === undefined) && mountainKing.map((v) => v.label).join('|') === 'Opus 5.5 (A)|Opus 5.5 (B)')
 
   const allAtOnce = shipped.works.find((w) => w.work === 'come-recover')?.versions ?? []
   check('come-recover is Everything, one take, Opus 5.5, with no note',
     allAtOnce.map((v) => v.take).join(',') === 'opus55-all-at-once' && allAtOnce[0].title === 'Everything' && allAtOnce[0].label === 'Opus 5.5' && allAtOnce[0].note === undefined)
   const lalaland = shipped.works.find((w) => w.work === 'la-la-land')?.versions ?? []
-  const epilogueTake = lalaland.find((v) => v.take === 'fable51-epilogue')
-  check('la-la-land is Epilogue, two takes, Fable 5.1 then Opus 5.5, with no notes',
-    lalaland.map((v) => v.take).join(',') === 'fable51-epilogue,opus55-sebs' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
-    lalaland.map((v) => v.label).join('|') === 'Fable 5.1|Opus 5.5' && epilogueTake?.label === 'Fable 5.1')
+  const epilogueTake = lalaland.find((v) => v.take === 'opus55-sebs')
+  check('la-la-land is Epilogue, two takes, Opus 5.5 then Fable 5.1, with no notes and Opus as default',
+    lalaland.map((v) => v.take).join(',') === 'opus55-sebs,fable51-epilogue' && lalaland.every((v) => v.title === 'Epilogue' && v.note === undefined) &&
+    lalaland.map((v) => v.label).join('|') === 'Opus 5.5|Fable 5.1' && epilogueTake?.label === 'Opus 5.5' && pickVersion(shipped.works, 'la-la-land', null)?.take === 'opus55-sebs')
   check('Cornfield Chase is the two music-sync takes', shipped.works.find((w) => w.work === 'cornfield-chase')?.versions.map((v) => v.take).join(',') === 'opus55-music-sync,tech-demo')
   const cornfield = shipped.works.find((w) => w.work === 'cornfield-chase')?.versions ?? []
   check('Cornfield Chase labels are the two models', cornfield.map((v) => v.label).join('|') === 'Opus 5.5|Grok 4.7')
@@ -634,6 +635,14 @@ async function main(): Promise<void> {
       }
     }
   }
+
+  /* ------------------------------------------------------------------ the music, ahead */
+
+  console.log('\nthe music, ahead')
+  // A cue is warmed (fetched, then parked) before it is run early, and runs early long enough for YouTube to come
+  // out of a seek and be put on time before it is heard.
+  check('a YouTube cue runs early for several seconds before its entry', PREROLL >= 6)
+  check('a YouTube cue is warmed well before it runs early', WARM >= PREROLL * 3)
 
   /* ------------------------------------------------------------------ the clock */
 

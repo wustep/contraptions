@@ -641,8 +641,8 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
   for (const at of BURST1) if (t >= at) flash = Math.max(flash, Math.exp(-(t - at) / 0.14))
   const sw = SLOT_W * slot
   const fall = ctx.createLinearGradient(0, y0 * k, 0, MEADOW * k)
-  fall.addColorStop(0, `rgba(${light}, ${(0.3 + 0.25 * flash) * a})`)
-  fall.addColorStop(0.55, `rgba(${light}, ${(0.12 + 0.1 * flash) * a})`)
+  fall.addColorStop(0, `rgba(${light}, ${(0.3 + 0.45 * flash) * a})`)
+  fall.addColorStop(0.55, `rgba(${light}, ${(0.12 + 0.18 * flash) * a})`)
   fall.addColorStop(1, `rgba(${light}, ${0.05 * a})`)
   ctx.fillStyle = fall
   for (const [grow, al] of [[1.9, 0.45], [1, 1]] as const) {
@@ -657,7 +657,7 @@ function drawSlotLight(ctx: CanvasRenderingContext2D, k: number, f: F, t: number
     ctx.globalAlpha /= al
   }
   // The bloom at its mouth, the belly lit round it, the pool on the meadow.
-  lobe(ctx, k, SHELL_X, y0 + 0.2, sw * 0.9 + 0.8, 0.9, light, (0.55 + 0.35 * flash) * a, 0.3)
+  lobe(ctx, k, SHELL_X, y0 + 0.2, sw * 0.9 + 0.8, 0.9, light, (0.55 + 0.6 * flash) * a, 0.3)
   lobe(ctx, k, SHELL_X, y0 - 0.4, sw * 1.6 + 2.5, 1.1, light, 0.16 * a, 0.4)
   lobe(ctx, k, SHELL_X, MEADOW - 0.25, sw * 2.2 + 3, 0.7, light, (0.3 + 0.15 * flash) * a, 0.4)
 }

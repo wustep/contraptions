@@ -1,6 +1,6 @@
-# Mountain King, Spark
+# Mountain King, Opus 5.5 (B)
 
-Open it at `/shows/mountain-king/opus55-spark/` or `/shows/?show=mountain-king&take=opus55-spark`. In the Shows picker it is **Spark**, a take of the work **Mountain King**. Directed by Claude Opus 5.5.
+Open it at `/shows/mountain-king/opus55-spark/` or `/shows/?show=mountain-king&take=opus55-spark`. In the Shows picker it is **Opus 5.5 (B)**, a take of the work **Mountain King**. Directed by Claude Opus 5.5.
 
 ## What it is
 

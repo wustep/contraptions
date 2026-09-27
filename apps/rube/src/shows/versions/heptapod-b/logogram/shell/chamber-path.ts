@@ -43,9 +43,14 @@ export const PALM = pulse(501)
 /** Costello's ink leaves its limb (509); it reaches the fog and the ring begins (511); the ring's surges. */
 export const SPRAY = pulse(509)
 export const INK_IN = pulse(511)
-export const SURGES: readonly number[] = [pulse(516), pulse(520), pulse(528), pulse(533)]
-/** The ring closes, its two ends meeting on the side toward her, as the light begins to swell (pulse 540). */
-export const CLOSE = pulse(540)
+export const SURGES: readonly number[] = [pulse(516), pulse(520)]
+/**
+ * The ring closes, its two ends meeting on the side toward her, on the last pulse with an attack before the swell
+ * (528): after it the pulse sinks under the held voices, and the whole logogram hangs there through the swell (four
+ * seconds) before the light takes it. Its tendrils put out on the next (533), and go on reaching with the swell.
+ */
+export const CLOSE = pulse(528)
+export const REACH = pulse(533)
 /** Her lean toward the ring (pulse 520: its second surge). */
 export const LEAN = pulse(520)
 /** The cut: through the glass into the fog, on the cue's loudest swell. */

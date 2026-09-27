@@ -141,6 +141,10 @@ function mount(shell: Shell): () => void {
       const id = playlist.next()
       return id ? byId.get(id)! : null
     },
+    upNext() {
+      const id = playlist.peek()
+      return id ? byId.get(id)! : null
+    },
     opened(version) {
       // A take put on by the host has already been counted; one that got here another way is counted now.
       if (playlist.current !== idOf(version)) playlist.play(idOf(version))
@@ -155,8 +159,15 @@ function mount(shell: Shell): () => void {
       nextBtn.addEventListener('click', skip)
       const upNext = el('div', { class: 'row up-next' }, [el('div', { class: 'readout' }, ['Up next', el('br'), nextName]), nextBtn])
       const list = el('div', { class: 'pool', role: 'group', 'aria-label': 'Shows in the running order' })
-      // By name, as it reads: the folders sort by work, and a work's folder is not always its title.
-      rows = [...takes].sort((a, b) => nameOf(a).localeCompare(nameOf(b))).map((v) => {
+      // By title, as it reads: a work's folder is not always its title. Within a work,
+      // keep the registry's take order so the preferred take leads here too.
+      const versionOrder = new Map(takes.map((v, i) => [idOf(v), i]))
+      rows = [...takes].sort((a, b) => {
+        const byTitle = a.title.localeCompare(b.title)
+        if (byTitle) return byTitle
+        if (a.work === b.work) return versionOrder.get(idOf(a))! - versionOrder.get(idOf(b))!
+        return nameOf(a).localeCompare(nameOf(b))
+      }).map((v) => {
         const id = idOf(v)
         const box = el('input', { type: 'checkbox' })
         box.addEventListener('change', () => setIn(id, box.checked))
