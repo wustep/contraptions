@@ -107,8 +107,9 @@ function shotsFor(end: number): PartShot[] {
   // Her place in the first frame, at `cells` tall: the camera's centre from her.
   const first = (cells: number): Pt => [her[0] + (last.frame[0] * cells) / last.cells, her[1] + (last.frame[1] * cells) / last.cells]
   return [
-    { t: 185.9, cells: 5.15, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.2], w: 1 },
-    { t: DEPART - 0.02, cells: 5.3, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.35], w: 1 },
+    // Wide from the cut (the great logogram's framing, carried): the meadow round her, the sky over her; a breath back.
+    { t: 185.9, cells: 11.9, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.05], w: 1 },
+    { t: DEPART - 0.02, cells: 12.1, hold: [her[0] + seam.frame[0], her[1] + seam.frame[1] - 0.12], w: 1 },
     // The wide: the whole shell over the meadow, as it was revealed, now going up into the cloud.
     // A slow push in as it goes, the meadow held at the frame's foot, its crown going up out of the top into the cloud.
     { t: DEPART, cells: 172, hold: w(-8, -84), w: 1, cut: true },

@@ -1,6 +1,7 @@
 import type { Pt, Seg } from '../../../../../parts'
 import { box, carried, part, scenery, type PartShot, type Slot } from '../kit'
 import { SEAM } from '../music'
+import { SEAMS } from '../seams'
 import { drawFog, FOG_EXTENT } from './fog-set'
 import { FOG_STRIKES, GREAT, herAt, PATH, RINGS } from './fog-plan'
 
@@ -133,7 +134,8 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
     { t: 166.7, cells: 4.3, hold: [at(166.7)[0] + 0.6, at(166.7)[1] - 0.9], w: 1 },
     { t: 167.5, cells: 4.9, hold: [at(167.5)[0] + 0.5, at(167.5)[1] - 1.25], w: 1 },
     // Stopped at the top of her rise, where the ink begins under her; then the long pull back as the ring is written,
-    // her low in the frame, until it is whole, closing (183.182); then in for the cut.
+    // her low in the frame, until it is whole, closing (183.182); and held on it whole while its tendrils fling out and
+    // its turn slows to rest, the last hard pulses of the push, a breath back from the punch, to the cut.
     { t: 168.4, cells: 6.0, hold: [top[0] + 0.7, top[1] - 1.6], w: 1 },
     { t: 169.3, cells: 7.4, hold: [top[0] + 0.9, top[1] - 2.2], w: 1 },
     { t: 171.2, cells: 8.4, hold: [c[0] + 0.7, c[1] + 1.8], w: 1 },
@@ -142,6 +144,6 @@ export const fog4 = stretch(3, 'fog4', (slot, o, at) => {
     { t: 176.8, cells: 11.5, hold: [c[0] + 0.3, c[1] + 0.6], w: 1 },
     { t: 181.8, cells: 12.2, hold: [c[0] + 0.2, c[1] + 0.35], w: 1 },
     { t: 183.182, cells: 11.5, hold: [c[0] + 0.2, c[1] + 0.4], w: 1 },
-    { t: slot.end, cells: 5.0, hold: [end[0] + 0.6, end[1] - 1.2], w: 1 },
+    { t: slot.end, cells: SEAMS.after.cells, hold: [end[0] + SEAMS.after.frame[0], end[1] + SEAMS.after.frame[1]], w: 1 },
   ]
 })
