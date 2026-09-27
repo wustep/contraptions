@@ -202,6 +202,14 @@ export const FESTIVAL = phrase(16)
 /** Where the loft's two builders hand the spark on: phrase 3, the second B. */
 export const LOFT_SEAM = phrase(3)
 
+/**
+ * On the stove's sill before the leap into the fire: the spark lands there on the bar's first beat (`beat(88)`), and
+ * on the last bar's third and fourth beats it winds up (a lean into the draught, a crouch, deeper on the second) before
+ * it leaps.
+ */
+export const SILL_AT = beat(88)
+export const WINDUP = [beat(93), beat(94)] as const
+
 /** Phrase 2's two big notes, where the rack's candles knock together and the cat half wakes (`CAT_CUES.ear`). */
 export const KNOCKS = [25.653, 28.961] as const
 

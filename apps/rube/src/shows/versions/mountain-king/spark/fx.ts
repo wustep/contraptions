@@ -3,7 +3,7 @@ import { R, mixHex, type Pt } from '../../../../parts'
 import { drawLick, type Lick } from './fire'
 import { frame, hash, scenery, smooth } from './kit'
 import { WICK_BACK, WICK_LEFT } from './loft/sneak-beats'
-import { FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, THEME, level } from './music'
+import { DOORS, FESTIVAL, KNOCKS, LAST, ROLL, SILENCE, SILL_AT, THEME, WINDUP, level } from './music'
 import { IN_MOUTH, OUT_MOUTH, type Mouth } from './mouths'
 import type { SparkShow } from './show'
 import { ASH, FIRES, FLAME_CORE, FLAME_RIM, LOFT, SPARK, type WorldKey } from './worlds'
@@ -70,6 +70,19 @@ function freeze(t: number): number {
   }
   return 1 - 0.4 * d
 }
+
+/**
+ * On the stove's sill the draught into the fire pulls at the flame: on each beat of the wind-up it streams in toward
+ * the fire (to the right, where the firebox's mouth is), the second harder, and it stays drawn in until the leap.
+ * Cells of lean at the tip per cell of flame.
+ */
+function sillDraught(t: number): number {
+  if (t < WINDUP[0] - 0.1 || t > DOORS.glass) return 0
+  const pull = (at: number, a: number) => (t < at - 0.08 ? 0 : a * smooth(t, at - 0.08, at) * (0.55 + 0.45 * Math.exp(-Math.max(0, t - at) / 0.3)))
+  return Math.max(pull(WINDUP[0], 0.55), pull(WINDUP[1], 0.85))
+}
+/** How much the spark stands in front of the stove's fire on the sill (for its shadow): from the landing to the leap. */
+const onSill = (t: number): number => smooth(t, SILL_AT - 0.15, SILL_AT + 0.1) * (1 - smooth(t, DOORS.glass - 0.4, DOORS.glass - 0.3))
 
 /* ------------------------------------------------------------------ where the spark is, for the sets it lights */
 
@@ -162,7 +175,7 @@ export const flame = () =>
       const len = R * (2.1 + 0.25 * flick) * h * boost
       const wide = R * 1.55 * Math.sqrt(h) * (1 + 0.1 * flick) * Math.sqrt(boost)
       // Speed lays the flame back along the way it came, up to nearly flat.
-      const lean = Math.max(-1.6, Math.min(1.6, -vx * 0.09)) * len + flick * R * 0.6
+      const lean = Math.max(-1.6, Math.min(1.6, -vx * 0.09 + (s.world === 'loft' ? sillDraught(t) : 0))) * len + flick * R * 0.6
       const up = Math.max(0.35, 1 - Math.max(0, vy) * 0.05)
       const x = here.x
       const y = here.y - R * 0.35
@@ -174,6 +187,12 @@ export const flame = () =>
       if (s.world === 'railway' && t > FESTIVAL - 0.2 && t < SILENCE + 0.3) {
         const on = smooth(t, FESTIVAL - 0.2, FESTIVAL + 0.6) * (1 - smooth(t, SILENCE - 0.3, SILENCE + 0.3))
         shadow(ctx, k, here.x, here.y, R * here.scale, Math.max(R * 3.4, 0.03 * hb), 0.36 * on, [12, 10, 22], 1.55)
+      }
+      // On the stove's sill the firebox is right behind it: the fire goes deeper round the flame (its rim's colour, as
+      // at a door), so the spark stands in front of the fire and not in it.
+      if (s.world === 'loft') {
+        const sill = onSill(t)
+        if (sill > 0.01) shadow(ctx, k, here.x, here.y, R * here.scale, R * here.scale + 0.42, 0.42 * sill, SILL_SHADE, 1.6)
       }
       // A soft warm light round it, wide and faint: never a bright core of its own. It too keeps a size on the screen.
       // It blooms as the wick catches on the first last chord.
@@ -452,6 +471,8 @@ type RGB = [number, number, number]
 const lerp3 = (a: RGB, b: RGB, f: number): RGB => [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]
 const css = (c: RGB, al: number): string => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${Math.max(0, Math.min(1, al))})`
 const palette = (x: { rim: string; body: string; heart: string }): { rim: RGB; body: RGB; heart: RGB } => ({ rim: rgb(x.rim), body: rgb(x.body), heart: rgb(x.heart) })
+/** The loft fire's rim gone deeper: the shadow behind the spark on the stove's sill. */
+const SILL_SHADE: RGB = lerp3(rgb(FIRES.loft.rim), [20, 10, 8], 0.4)
 /** Where one world's fire meets the next at a door: white heat, which any fire's colours go to without turning grey. */
 const HOT: RGB = rgb('#FFF6E0')
 

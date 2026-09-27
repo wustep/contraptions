@@ -1,6 +1,6 @@
 import { R, type Pt, type Seg } from '../../../../../parts'
 import { carried, part, type PartShot } from '../kit'
-import { DOORS, LOFT_SEAM } from '../music'
+import { DOORS, LOFT_SEAM, WINDUP } from '../music'
 import { G } from '../physics'
 import { SEAMS } from '../seams'
 import { CAT_CUES, EAR_NEAR, catTop, tailTop } from './cat'
@@ -273,8 +273,13 @@ function lane(slot: { begin: number; end: number }): Seg[] {
   hop([SILL_X, SILL.y - R], ON_SILL)
   for (const [at, x] of BACKUP) step([x, SILL.y - R], at - 0.26, at, 0.06)
   for (const at of BOUNCES) step([LEAP_FROM[0], SILL.y - R], at - 0.3, at, 0.16)
-  // A last settle back and down, gathering, and up into the leap into the fire.
-  step([LEAP_FROM[0] - 0.13, SILL.y - R + 0.09], LEAP_AT - 0.55, LEAP_AT - 0.08, 0)
+  // The wind-up, on the last bar's third and fourth beats: a lean in toward the fire and a crouch, a little up again,
+  // then a deeper one (its flame streams into the draught with each: `fx.ts`), and from it a slow gathering back and
+  // down, held, and up into the leap: the release.
+  step([LEAP_FROM[0] + 0.05, SILL.y - R + 0.04], WINDUP[0] - 0.13, WINDUP[0], 0)
+  step([LEAP_FROM[0] + 0.01, SILL.y - R + 0.015], WINDUP[0] + 0.05, WINDUP[0] + 0.4, 0)
+  step([LEAP_FROM[0] + 0.04, SILL.y - R + 0.1], WINDUP[1] - 0.13, WINDUP[1], 0)
+  step([LEAP_FROM[0] - 0.13, SILL.y - R + 0.09], WINDUP[1] + 0.06, LEAP_AT - 0.08, 0)
   push({ to: LEAP_FROM, dur: 0.08, ease: 'in' }, LEAP_AT)
   hop(FIRE_MOUTH, DOORS.glass)
   return segs
