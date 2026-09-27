@@ -137,17 +137,20 @@ function shots(begin: number): PartShot[] {
     // Down the lehr, its fires under the belt, and back to see the whole shop: the lehr, the rack, the furnace.
     { t: PINGS[0], cells: 5.0, off: [0.9, 1.15], w: 0 },
     { t: PINGS[2] - 0.2, cells: 8.8, hold: [END_X + 2.4, 0.9], w: 0.9 },
-    // The carriage at rest on its rail over the first bottles; the spark hops up into its cup.
-    { t: BELT_STOP + 0.2, cells: 5.2, hold: [END_X + 1.5, 0.9], w: 0.75 },
-    { t: CATCH, cells: 5.0, hold: [END_X + 1.9, 0.75], w: 0.8 },
-    // Up the rail with it, a little ahead, so each bottle is in before the hammer comes down on it.
-    { t: RINGS[1], cells: 5.0, off: [1.0, 0.45], w: 0 },
-    { t: RINGS[3], cells: 5.6, off: [1.2, 0.5], w: 0 },
+    // The carriage at rest on its rail over the first bottles; the spark hops up into its cup. Framed low enough that
+    // the lehr's bottle, its beat done, stands whole on the belt's end under the hop, not cut by the frame's foot.
+    { t: BELT_STOP + 0.2, cells: 5.6, hold: [END_X + 1.5, 1.62], w: 0.75 },
+    { t: CATCH, cells: 5.8, hold: [END_X + 1.9, 1.74], w: 0.85 },
+    // Along the rail with it, ahead, so each bottle is in before the hammer comes down on it; kept low (the frame's
+    // foot under the belt) while the lehr's bottle slides out whole at the left, and only then up with the climb.
+    { t: RINGS[1], cells: 5.8, off: [1.8, 1.36], w: 0 },
+    { t: RINGS[2], cells: 5.8, off: [2.45, 1.42], w: 0 },
+    { t: RINGS[3], cells: 5.8, off: [1.4, 0.5], w: 0 },
     // Out to the whole machine for the slam, still travelling up the rail with the carriage (a follow, half weighted
     // to where the slam will be framed) so it runs into a moving frame and the hit stops both: the buffer, the
     // demijohn, the wheel, and the crucible landing in its sand box, all inside the frame.
     { t: SLAM - 0.25, cells: 7.3, hold: [ORGAN[ORGAN.length - 1].x - 0.1, SANDBOX.top - 2.7], off: [1.2, 0.7], w: 0.4 },
-    { t: SLAM + 0.05, cells: 7.8, hold: [ORGAN[ORGAN.length - 1].x + 0.05, SANDBOX.top - 2.75], w: 0.9 },
+    { t: SLAM + 0.05, cells: 7.8, hold: [ORGAN[ORGAN.length - 1].x + 0.32, SANDBOX.top - 2.75], w: 0.9 },
     { t: SLAM + 0.55, cells: 6.2, hold: [ORGAN[ORGAN.length - 1].x + 0.3, -1.1], w: 0.55 },
     // Up with it to the port as the draught takes it (81.12); into the fire: close on the spark, the flame filling it.
     { t: DRAW + 0.45, cells: 3.2, off: [0, -0.3], w: 0 },
