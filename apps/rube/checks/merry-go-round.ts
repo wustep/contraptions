@@ -29,6 +29,7 @@ export const WIDES: { what: string; a: number; b: number }[] = [
   { what: 'the castle sits down in the night', a: 147.203, b: 148.805 },
   { what: 'the valley opens on the slow waltz\'s hit', a: 178.051, b: 179.95 },
   { what: 'the fleet over the mountains', a: 199.639, b: 201.189 },
+  { what: 'the castle wades back across the lake for her and kneels', a: 203.064, b: 204.44 },
   { what: 'the bombs walk down the roofs toward the shop', a: 227.103, b: 229.28 },
   { what: 'the whole castle tearing apart', a: 245.197, b: 247.461 },
   { what: 'the cottage and the face go down', a: 249.655, b: 251.797 },

@@ -682,11 +682,14 @@ export const field = part<FieldState>(
       { t: WINGS, cells: 6.9, off: [0.85, -1.4], cut: true },
       { t: GO, cells: 6.9, off: [0.85, -1.45] },
       { t: TURN, cells: 7.0, off: [0.85, -1.65] },
-      { t: STONES[0], cells: 6.4, off: [0.9, -0.6] },
-      // The kneel: framed low, the lake and its reflection the bottom half and the hull's keel at the middle, the
-      // door coming ajar on the war's red light over the water.
-      { t: b(3, 3), cells: 6.2, off: [0.7, 0.2] },
-      { t: b(4), cells: 6.0, off: [0.6, 0.25] },
+      // The castle comes back for her: on her first stone a cut out to the castle wading in across the lake to her,
+      // hull, face and lit house, its legs folding under it as it lets itself down into the water, her small on the
+      // stones at its foot against the bright lake (a bar, a named wide). On her second stone, as it lands kneeling, a
+      // cut back in low on her: the lake and its reflection the bottom half, the hull's keel at the middle, the door
+      // coming ajar on the war's red light over the water, and her last leap onto the porch.
+      { t: STONES[0], cells: 15.8, hold: [X_C1 + 0.4, M - 4.9], w: 1, cut: true },
+      { t: STONES[1] - 0.03, cells: 15.3, hold: [X_C1 + 0.3, M - 4.8], w: 1 },
+      { t: STONES[1], cells: 6.0, off: [0.6, 0.25], cut: true },
       { t: PORCH, cells: 5.2, off: [0.8, -0.4] },
       { t: END, cells: 4.5, off: [0.9, -0.8] },
     ]
