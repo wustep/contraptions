@@ -157,6 +157,9 @@ export const ICON = {
   // A proscenium: the valance, and a curtain drawn back to either side.
   theater: ['M2 3h20v3.5H2z', 'M3 7.5h5.5c-.3 5.5-2.2 10.5-5.5 13.5z', 'M21 7.5h-5.5c.3 5.5 2.2 10.5 5.5 13.5z'],
   next: ['M5 5l9 7-9 7z', 'M15.5 5H19v14h-3.5z'],
+  // Four corners going out to the edges, and the same four drawn back in.
+  fullscreen: ['M3 3h7v3H6v4H3z', 'M14 3h7v7h-3V6h-4z', 'M3 14h3v4h4v3H3z', 'M18 14h3v7h-7v-3h4z'],
+  windowed: ['M7 3h3v7H3V7h4z', 'M14 3h3v4h4v3h-7z', 'M3 14h7v7H7v-4H3z', 'M14 14h7v3h-4v4h-3z'],
 }
 
 /** A titled section appended to the panel. The title row takes readouts on its right. */
