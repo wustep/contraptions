@@ -519,8 +519,9 @@ export const mine = part<MineState>(
     { t: slot.begin, ...SEAM_SHOT },
     // Close on the two carts in the hatch's lit column (the tunnel is barely a cell high, so a wide is a band of
     // black rock over two small carts): his cart and the trolls' with their brake knocked off, big enough that the
-    // wheels clacking over the joints on the notes are the motion.
-    { t: BRAKE - 0.2, cells: 4.8, off: [-1.5, -0.5] },
+    // wheels clacking over the joints on the notes are the motion. Pushed in over the whole first bar, arriving as the
+    // brake comes off (a quicker, deeper push, 6 to 4.8 cells in 0.75 s, stopped hard: zoom acceleration 2.1).
+    { t: BRAKE - 0.03, cells: 5.0, off: [-1.5, -0.5] },
     // The chase, one push in that never stops. Down the tunnel: his cart in the front third, the trolls' cart coming
     // out of the dark behind, the torches catching ahead of him one by one; then in a step on every lunge as the gap
     // closes, lower each time, until the third lunge is in a low close frame: the rail at its foot, the lead troll
