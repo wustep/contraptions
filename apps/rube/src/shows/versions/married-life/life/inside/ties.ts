@@ -7,7 +7,7 @@ import { BOW_FROM, HALF } from '../cast'
 import { CHURCH, HOME, INK } from '../worlds'
 import { BASKET, drawBasket } from '../props/basket'
 import { CUTS } from '../seams'
-import { DESK, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
+import { DESK, DOOR, drawDesk, drawDoor, drawDusk, drawSunWedge, drawGramophone, drawHanger, drawLampLight, drawPainting, drawTicket, drawWheelFrame, FLOOR, MACHINE, PEDAL, WHEEL } from './ties-set'
 import { BOW, drawTie } from './ties-tie'
 
 /**
@@ -812,6 +812,55 @@ function drawPool(p: p5, k: number, x: number, a: number): void {
   ctx.restore()
 }
 
+/**
+ * The crest's light: the low evening sun through the front door's glass, a long warm shaft down the hall onto the floor
+ * they dance on (the glass's top lands behind him, its foot in front of her as she turns out). It gathers with the
+ * swell, falls full on the two of them on 52's downbeat, the loudest of the second waltz, and settles as the music
+ * falls away, going with the evening as they close into the embrace: the light that fell on them at the kiss, years
+ * later.
+ */
+const CREST = { from: 3.6, to: 5.35 }
+const crestAt = (T: number): number => {
+  const come = smooth(T, DANCE[0] - 0.3, DANCE[1])
+  const bloom = T >= DANCE[1] ? 0.5 * Math.min(1, (T - DANCE[1]) / 0.04) * Math.exp(-(T - DANCE[1]) / 0.55) : 0
+  const settle = 1 - 0.45 * smooth(T, DANCE[1] + 0.3, DANCE[2] + 0.4)
+  return (come * settle + bloom) * (1 - smooth(T, EMBRACE - 0.3, LAMP + 0.4))
+}
+function drawCrestLight(p: p5, k: number, a: number): void {
+  if (a <= 0.002) return
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const gx = DOOR.x
+  const gTop = DOOR.top + 0.2
+  const gFoot = DOOR.top + 1.0
+  ctx.save()
+  // The shaft through the air, in three layers for a soft edge (a penumbra, not a cut), warmest at the glass.
+  for (let i = 0; i < 3; i++) {
+    const pad = 0.1 * (2 - i)
+    const g = ctx.createLinearGradient(gx * k, 0, CREST.from * k, 0)
+    g.addColorStop(0, `rgba(255, 214, 150, ${0.14 * a})`)
+    g.addColorStop(1, `rgba(255, 214, 150, ${0.09 * a})`)
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.moveTo(gx * k, (gTop - pad * 0.5) * k)
+    ctx.lineTo((CREST.from - pad) * k, FLOOR * k)
+    ctx.lineTo((CREST.to + pad) * k, FLOOR * k)
+    ctx.lineTo(gx * k, (gFoot + pad * 0.5) * k)
+    ctx.closePath()
+    ctx.fill()
+  }
+  // Where it lands: a warm glow on the wall low behind them, and the floor lit.
+  const mid = (CREST.from + CREST.to) / 2
+  const r = 1.1 * k
+  ctx.translate(mid * k, (FLOOR - 0.25) * k)
+  ctx.scale(1.35, 0.5)
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+  g.addColorStop(0, `rgba(255, 222, 160, ${0.4 * a})`)
+  g.addColorStop(1, 'rgba(255, 222, 160, 0)')
+  ctx.fillStyle = g
+  ctx.fillRect(-r, -r, 2 * r, 2 * r)
+  ctx.restore()
+}
+
 /* ------------------------------------------------------------------ their wedding photograph */
 
 /**
@@ -967,6 +1016,7 @@ export const ties = part<TiesState>(
       drawDoorLight(p, k, T)
       drawSunWedge(p, k, sunAt(T), 5.6 - 1.4 * smooth(T, 158.6, 161.4))
       drawPool(p, k, pairAt(T) + 0.2 + 0.5 * TURN_OUT * turnOutAt(T), poolAt(T))
+      drawCrestLight(p, k, crestAt(T))
       drawPainting(p, k, weight, age)
       drawWeddingPhoto(p, k, weight, age)
       const [cx] = carlAt(T)
