@@ -100,7 +100,7 @@ export const POURS: Pour[] = Array.from({ length: COUNT }, (_, i) => {
  * The arm's lean after a catch, 0 to 1 of the way to its stop: slow while the felt damper holds it, faster as the
  * weight wins, meeting the stop with some speed.
  */
-const lean = (u: number): number => Math.pow(Math.max(0, Math.min(1, u)), 2.2)
+const lean = (u: number): number => Math.pow(Math.max(0, Math.min(1, u)), 1.6)
 
 /** Cup `i`'s arm at show time `t`, radians (clockwise from level; positive is the cup end down). */
 export function arm(i: number, t: number): number {

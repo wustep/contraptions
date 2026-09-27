@@ -17,6 +17,7 @@ import { CHUTE_CREST_V, LAND, OVER_CREST, run } from '../src/shows/versions/near
 import { LEGS, spin, squash, where } from '../src/shows/versions/near-light/windowlight/route'
 import { auroraLight } from '../src/shows/versions/near-light/windowlight/room'
 import { cellsAt } from '../src/shows/versions/near-light/windowlight/camera'
+import { lampBreath } from '../src/shows/versions/near-light/windowlight/light'
 import { CARDS, TITLES_OK, titlesAt } from '../src/shows/versions/near-light/windowlight/titles'
 import { GONDOLAS, LAMP, RAIL_TO, TROUGH_LEFT, TROUGH_LIP, WHEEL_R } from '../src/shows/versions/near-light/windowlight/layout'
 
@@ -145,6 +146,15 @@ export function checkWindowlight(perf: Performance, version: Version, check: Che
     auroraLight(section('strings').t0 - 5) === 0 && auroraLight(section('coda').t0 + 1) === 0 && auroraLight(20) === 0 &&
     auroraLight(section('beat').t0 + 10) > 0.6 && auroraLight(section('beat').t0 + 10) > auroraLight(section('strings').t0 + 12) &&
     near(auroraLight(0), auroraLight(PERIOD - 1e-6), 1e-6))
+
+  // The lamp: the arpeggios.
+  let stray = 0
+  for (let t = 0; t < PERIOD; t += 0.05) {
+    // The coda's last chord dies away across the seam, into the first seconds of the intro.
+    if (lampBreath(t) > 1e-6 && t > 3.5 && t < section('arpeggios').t0) stray++
+  }
+  check('windowlight: the lamp swells on the arpeggios\' accents and the coda\'s last chord (dying away over the seam), and nowhere else',
+    stray === 0 && lampBreath(BOARD + 2.1) > 0.3 && near(lampBreath(0), lampBreath(PERIOD - 1e-6), 1e-5))
 
   // The camera: never a jump in or out.
   let zoom = 0

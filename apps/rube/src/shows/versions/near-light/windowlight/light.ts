@@ -1,8 +1,24 @@
 import { LAMP } from './layout'
+import { ONSETS, section, since } from './music'
 import { where } from './route'
 import { scenery, viewOf, type Ctx2D } from './world'
 import { WIDE_CELLS } from './room'
 import { smooth } from './kit'
+
+/**
+ * The arpeggios' accents (their downbeats, and the coda's last chord): the lamp answers each, swelling a little and
+ * settling over a second and a half, while the ball goes round it. Nowhere else does it move.
+ */
+const ACCENTS = ONSETS.filter((o) => (o.in === 'arpeggios' && o.s >= 1) || (o.in === 'coda' && o.s >= 1.5 && o.t < section('coda').t0 + 6))
+export function lampBreath(t: number): number {
+  let b = 0
+  for (const o of ACCENTS) {
+    const s = since(t, o.t)
+    if (s < 0 || s > 8) continue
+    b += Math.min(1.4, o.s) * (1 - Math.exp(-s / 0.05)) * Math.exp(-s / 1.4) * (1 - smooth(s, 5, 8))
+  }
+  return Math.min(1.2, b)
+}
 
 /**
  * The lamp's light, over everything near it, the ball included: warm, and soft at its edge. And, once the window is
@@ -16,14 +32,15 @@ export const light = scenery<null>('light', () => {}, (p, _s, c) => {
   ctx.globalCompositeOperation = 'lighter'
   const x = LAMP[0] * k
   const y = LAMP[1] * k
+  const swell = 1 + 0.45 * lampBreath(c.t)
   const wide = ctx.createRadialGradient(x, y, 0.2 * k, x, y, 9 * k)
-  wide.addColorStop(0, 'rgba(255, 196, 120, 0.22)')
-  wide.addColorStop(0.25, 'rgba(255, 180, 100, 0.09)')
+  wide.addColorStop(0, `rgba(255, 196, 120, ${(0.22 * swell).toFixed(3)})`)
+  wide.addColorStop(0.25, `rgba(255, 180, 100, ${(0.09 * swell).toFixed(3)})`)
   wide.addColorStop(1, 'rgba(255, 170, 90, 0)')
   ctx.fillStyle = wide
   ctx.fillRect(x - 9 * k, y - 9 * k, 18 * k, 18 * k)
   const near = ctx.createRadialGradient(x, y, 0, x, y, 1.2 * k)
-  near.addColorStop(0, 'rgba(255, 236, 190, 0.5)')
+  near.addColorStop(0, `rgba(255, 236, 190, ${Math.min(1, 0.5 * swell).toFixed(3)})`)
   near.addColorStop(1, 'rgba(255, 220, 160, 0)')
   ctx.fillStyle = near
   ctx.fillRect(x - 1.2 * k, y - 1.2 * k, 2.4 * k, 2.4 * k)

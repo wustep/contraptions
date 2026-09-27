@@ -9,6 +9,7 @@ import { BOARD } from './rail'
 import { ALIGHT } from './wheel'
 import { CARDS, LAST_GONE } from './titles'
 import { CATCH, INTO_SCREW, TROUGH_C } from './trough'
+import { CATCHES } from './cups'
 import { TROUGH_R } from './layout'
 
 /**
@@ -66,7 +67,7 @@ const TROUGH_BASE: Pt = [TROUGH_C[0] + 0.6, TROUGH_C[1] + TROUGH_R - 1.35]
 const SWING = gauss(2.2)
 function troughAim(t: number): Pt {
   const s = read(SWING, t)
-  return [TROUGH_BASE[0] + 0.2 * (s[0] - TROUGH_BASE[0]), TROUGH_BASE[1] - 1.1 * auroraLight(t)]
+  return [TROUGH_BASE[0] + 0.2 * (s[0] - TROUGH_BASE[0]), TROUGH_BASE[1] - 0.8 * auroraLight(t)]
 }
 function lampAim(t: number): Pt {
   const u = wrap(t)
@@ -93,7 +94,12 @@ const KEYS: [number, number][] = [
   [0, WIDE_CELLS],
   [1.2, WIDE_CELLS],
   [7.8, 5.8],
-  [CATCH - 3, 5.8],
+  // The piano's two long breaths: the camera leans in on the cup that holds the ball, and comes back as it pours.
+  [CATCHES[5] + 0.5, 5.8],
+  [CATCHES[6] - 0.6, 5.0],
+  [CATCHES[6] + 2, 5.7],
+  [CATCHES[7] + 0.5, 5.7],
+  [CATCH - 3.5, 4.9],
   [CATCH + 3, 7.2],
   [CATCH + 30, 7.8],
   [INTO_SCREW - 6, 8.8],
