@@ -43,7 +43,63 @@ import { ARCH, LIP } from './carnegie/stage'
 /** Show times at which the stage changes place: to the road, and to Carnegie Hall. */
 export const SWITCH = { road: LOUD, carnegie: CARNEGIE }
 
-export function compose(): { show: CaravanShow; camera: (t: number) => Framing } {
+/**
+ * The camera takes the band's biggest hits in the body, the way the film's cutting lands on them: a push in of a few
+ * percent, struck on the hit and eased back over a third of a second (after All at Once's `PUNCHES`). Only the hits
+ * the whole band plays, and the few in the solo that stop the room; none in the quiet stretch, the hush or the
+ * rubato, where the score asks the frame to be still. [show s, strength 0..1]
+ */
+export const PUNCHES: readonly [number, number][] = [
+  // The band room: the band comes in, the bump on the pit rail, the tutti and its peak, Fletcher's "you".
+  [30.652, 0.7],
+  [40.378, 0.45],
+  [55.491, 0.55],
+  [57.73, 1],
+  [75.214, 0.5],
+  // Not quite my tempo: the chair thrown, the three slaps on the hoop, the door slammed on the band's last hit.
+  [97.927, 1],
+  [102.641, 0.35],
+  [106.08, 0.45],
+  [108.232, 0.7],
+  [128.781, 0.9],
+  // Overbrook: his shoulder into the vending machine; Fletcher sending him to the kit.
+  [178.708, 0.7],
+  [185.992, 0.5],
+  // The crash: the truck, two of the breaks, and the car coming down on its roof.
+  [227.148, 1],
+  [230.994, 0.5],
+  [232.064, 0.6],
+  [233.985, 1],
+  // Carnegie: the light settling on the chorus, the chart landing, the chorus's last hit as the door opens.
+  [243.297, 0.7],
+  [248.163, 0.5],
+  [261.133, 0.8],
+  // The solo's first accent and its biggest hit; the knock on the crash in the hush.
+  [271.393, 0.9],
+  [290.499, 1],
+  [327.84, 0.45],
+  // The build's two biggest kicks.
+  [377.487, 0.7],
+  [394.617, 0.6],
+  // The burst out of the swell; the last fill, the last stroke before the silence; the fist.
+  [504.0, 1],
+  [539.974, 0.6],
+  [541.49, 0.8],
+  [548.555, 0.8],
+]
+
+/** How far the frame is pushed in at `t` by the punches, as a fraction of its height. */
+export function punch(t: number): number {
+  let v = 0
+  for (const [at, s] of PUNCHES) {
+    const u = t - at
+    if (u < 0 || u > 1.6) continue
+    v += 0.042 * s * (1 - Math.exp(-u / 0.018)) * Math.exp(-u / 0.3)
+  }
+  return v
+}
+
+export function compose(): { show: CaravanShow; camera: (t: number) => Framing; shots: Shot[] } {
   const shaffer = lay({ col: 0, row: 0, begin: 0, ball: { color: ANDREW, ghost: false, id: 0 } }, [
     { part: practice, end: BAND },
     { part: band, end: TEMPO },
@@ -119,7 +175,12 @@ export function compose(): { show: CaravanShow; camera: (t: number) => Framing }
   // wins, so no seam is a cut: the camera is one continuous take.
   shots = shots.filter((s, i) => !shots.some((o, j) => j > i && Math.abs(o.t - s.t) < 1e-6))
   const follow = director((t) => show.where(t) as Pt, shots, DURATION)
-  return { show, camera: follow }
+  const camera = (t: number): Framing => {
+    const f = follow(t)
+    const q = punch(t)
+    return q > 0 ? { ...f, cells: f.cells * (1 - q) } : f
+  }
+  return { show, camera, shots }
 }
 
 /** The part names in order, for the check and the log. */
