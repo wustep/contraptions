@@ -225,11 +225,14 @@ function cracks(p: p5, k: number, t: number, open: number) {
   const ctx = p.drawingContext as CanvasRenderingContext2D
   ctx.save()
   ctx.lineCap = 'butt'
-  // One gap: a soft wide glow and a hot thin core, each brighter and dimmer along it where the boards are warped.
+  // One gap: a soft glow round it in widening faint layers and a hot thin core, each brighter and dimmer along it where
+  // the boards are warped (light through a crack, never a ruled line).
   const gap = (x0: number, y0: number, x1: number, y1: number, seed: number, strength: number) => {
     for (const [wid, a, rgb] of [
-      [0.075, 0.28, '240, 138, 58'],
-      [0.022, 1, '255, 214, 140'],
+      [0.2, 0.07, '240, 138, 58'],
+      [0.12, 0.12, '240, 138, 58'],
+      [0.06, 0.2, '246, 160, 80'],
+      [0.018, 0.9, '255, 214, 140'],
     ] as const) {
       const g = ctx.createLinearGradient(x0 * k, y0 * k, x1 * k, y1 * k)
       for (let i = 0; i <= 6; i++) {
@@ -608,13 +611,29 @@ export const hearth = part<HearthState>(
         view: (q, b) => street(q, k, t, b),
       })
       p.pop()
-      // The fire's light from the open door on the boards, gone when it shuts.
+      // The fire's light from the open door on the boards, gone when it shuts: a soft pool thrown in across the floor
+      // from the sill, never a hard-edged wedge. (Its raw gradient inside save and restore: p5's fill cache stays true.)
       if (open > 0.02) {
         const dx = ROOM_AT.door[0]
         const g = ROOM_AT.ground
-        p.noStroke()
-        p.fill(alpha(p, TOWN.fire, 0.22 * open))
-        p.quad((dx - 0.47) * k, g * k, (dx + 0.47) * k, g * k, (dx + 1.6) * k, (g + 0.6) * k, (dx - 0.2) * k, (g + 0.6) * k)
+        const ctx = p.drawingContext as CanvasRenderingContext2D
+        const n = parseInt(TOWN.fire.slice(1, 7), 16)
+        const rgb = `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`
+        const a = 0.3 * Math.sqrt(open)
+        const r = (0.8 + 0.45 * open) * k
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect((dx - 3) * k, g * k, 6 * k, 1.5 * k)
+        ctx.clip()
+        ctx.translate((dx + 0.5) * k, (g + 0.2) * k)
+        ctx.scale(1, 0.34)
+        const pool = ctx.createRadialGradient(0, 0, 0, 0, 0, r)
+        pool.addColorStop(0, `rgba(${rgb}, ${a})`)
+        pool.addColorStop(0.4, `rgba(${rgb}, ${a * 0.5})`)
+        pool.addColorStop(1, `rgba(${rgb}, 0)`)
+        ctx.fillStyle = pool
+        ctx.fillRect(-r, -r, 2 * r, 2 * r)
+        ctx.restore()
       }
 
       lantern(p, k, W, ink, t)
