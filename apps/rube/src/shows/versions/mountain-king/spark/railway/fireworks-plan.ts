@@ -1,4 +1,4 @@
-import { R, type Pt } from '../../../../../parts'
+import { mixHex, R, type Pt } from '../../../../../parts'
 import { hash, smooth } from '../kit'
 import { beat, beatAt, CODA, DOORS, FESTIVAL, onset, ROLL } from '../music'
 import { G_RAIL } from '../physics'
@@ -511,6 +511,8 @@ const shell = (from: number, to: number, a: Pt, b: Pt, burst: Omit<Burst, 'at' |
 
 /** Rises and bursts whose smoke is made here rather than by the loop at the end (so it stays thin, and far). */
 const OWN_SMOKE = new Set<Rise | Burst>()
+/** Rises and bursts that leave no smoke of their own (the finale's barrage: its haze is laid once, below). */
+const NO_SMOKE = new Set<Rise | Burst>()
 const SKY_COLS = [FW.fwGold, FW.fwRed, FW.fwGreen, FW.fwViolet, FW.fwBlue, FW.fwWhite]
 
 /*
@@ -641,9 +643,9 @@ function clearOfMoon(at: number, x: number, y: number, sh: Shape): boolean {
   }
   return true
 }
-/** Under the frame's top: its highest stars stay 0.3 cells inside the frame for the first 0.3 s, while it is a flower. */
-function underTop(at: number, y: number, sh: Shape): boolean {
-  for (let s = 0; s <= 0.3 + 1e-9; s += 0.05) if (y - reachOf(sh) - 0.3 < frameTop(at + s)) return false
+/** Under the frame's top: its highest stars stay 0.3 cells inside the frame for the first 0.3 s (or `win`), while it is a flower. */
+function underTop(at: number, y: number, sh: Shape, win = 0.3): boolean {
+  for (let s = 0; s <= win + 1e-9; s += 0.05) if (y - reachOf(sh) - 0.3 < frameTop(at + s)) return false
   return true
 }
 /** The heart's nearest pass by the spark over the burst's first half second. */
@@ -926,6 +928,236 @@ SALUTES.forEach((s, j) => {
   BURSTS.push({ ...SALUTE, at: s.at, x: s.b[0], y: s.b[1], wash: j === 5 ? 0.9 : 0.6, seed: 300 + j })
 })
 
+/*
+ * The finale's barrage. The coda is the loudest minute of the music, so the whole sky goes up with it: on every chord
+ * the crews along the river fire across the frame's whole width, a shell or more in each third of it, placed against
+ * the show's own camera (`camAt`) so each breaks whole where the audience can see it. Three depths, so the sky has
+ * room in it:
+ *   FAR  across the river, low over the far trees: small, dim and quick (a small shell's few strokes, no light to
+ *        speak of, no flash, no rising tail, no smoke of its own), about half the battery's size.
+ *   MID  the battery's size, on its rising tail up off the far bank, breaking whole under the frame's top.
+ *   NEAR over the audience: a few big stars on long trails breaking past the frame's top and sides, so the camera is
+ *        inside the flower (no rising tail: it goes up behind the camera).
+ * The heavy chords (s 5.5 and more) take seven or eight shells, the middling ones about five, the light ones two or
+ * three. Each chord has one hue, or two, so each one reads as the sky changing colour; the Titan's is gold. From
+ * 140.273 the crowns are long willows and brocades that hang and fall across the sky through the second crescendo
+ * while the spark climbs the leader. Each hammer blow is a salvo right across the frame in one hue: one near, two mid,
+ * two far. None breaks on the spark (`sparkGap`) or the moon, and every star is out by the silence (`lifeOf`).
+ */
+type Depth = 'far' | 'mid' | 'near'
+/** Where the far country meets the sky, as a share of the frame from its top (`night.ts`'s `HORIZON`). */
+const HORIZON_F = 0.53
+const [GOLD, RED, GREEN, VIOLET, BLUE, WHITE] = [FW.fwGold, FW.fwRed, FW.fwGreen, FW.fwViolet, FW.fwBlue, FW.fwWhite]
+/** A far shell's colour: its own, taken toward the night (it is across the water, through the haze). */
+const farCol = (c: string): string => mixHex(c, FW.sky, 0.42)
+
+/** How big a shell of each depth breaks (its stars' reach, cells), for a frame `h` cells high. */
+function reachFor(depth: Depth, h: number): number {
+  if (depth === 'far') return Math.max(0.9, Math.min(2.3, 0.19 * h))
+  if (depth === 'mid') return Math.max(1.8, Math.min(4.6, 0.34 * h))
+  return Math.max(4.0, Math.min(9.0, 0.72 * h))
+}
+/**
+ * A shell's make-up. `crown`: a willow or brocade that hangs and falls for three seconds and more. `bang`: a hammer's
+ * salvo, quick to open and quick to go. `heavy`: a heavy chord's, flashing a little harder.
+ */
+function shapeFor(depth: Depth, kind: Kind, col: string, reach: number, at: number, o: { crown?: boolean; bang?: boolean; heavy?: boolean; salt: number }): Shape {
+  const h = (n: number) => hash(o.salt, n, 47)
+  if (depth === 'far') {
+    const n = 20 + Math.round(8 * h(1))
+    // A small shell burns on 0.35 s past its life (`drawSmall`); with no time left before the silence, a little peony.
+    const room = HUSH - 0.04 - at - 0.35
+    // (A small shell's stars go out to about 0.55-0.75 of v/k, under its own heavier drag.)
+    if (room >= 0.7) return { kind: 'small', col: farCol(col), n, v: 1.3 * reach * 3.2, k: 3.2, gs: 5, life: Math.min(1.3, room), trail: 0.2, wash: 0 }
+    return { kind: 'peony', col: farCol(col), n: n - 6, v: reach * 4.2, k: 4.2, gs: 5, life: 1.0, trail: 0.16, wash: 0 }
+  }
+  // Under the Titan's 170 stars, the shells round it are leaner (the frame rate holds).
+  const lean = (n: number): number => Math.round(at >= TITAN_BURST - 0.01 ? 0.7 * n : n)
+  // Their flashes are small: the sky stays night between the chords (the battery's own shells carry the big flashes).
+  const wash = depth === 'near' ? (o.bang ? 0.06 : 0.09) : o.heavy ? 0.05 : 0.025
+  if (o.crown) {
+    // Long-burning gold: a willow's drooping strands or a brocade's glittering crown, both falling slowly for seconds.
+    const k = depth === 'near' ? 1.9 : 2.2
+    if (kind === 'chrys') return { kind: 'chrys', col: GOLD, tail: GOLD, n: depth === 'near' ? 30 : 40, v: reach * k, k, gs: 3.4, life: 3.2 + 0.3 * h(2), trail: 0.9, wash }
+    return { kind: 'willow', col: GOLD, tail: GOLD, n: depth === 'near' ? 24 : 34, v: reach * k, k, gs: 3.1, life: 3.3 + 0.2 * h(2), trail: depth === 'near' ? 1.25 : 1.05, wash }
+  }
+  if (depth === 'near') {
+    // A few big stars with long trails: a palm's heavy comets, or a peony of few, slow stars.
+    if (kind === 'palm' && !o.bang) return { kind, col, tail: GOLD, n: lean(11 + Math.round(3 * h(3))), v: reach * 1.8, k: 1.8, gs: 3.4, life: o.bang ? 1.6 : 2.3, trail: 0.95, wash }
+    const k = o.bang ? 3.0 : 2.5
+    return { kind: 'peony', col, tail: col === WHITE ? GOLD : undefined, n: o.bang ? 14 + Math.round(3 * h(3)) : 16 + Math.round(4 * h(3)), v: reach * k, k, gs: 4.2, life: o.bang ? 1.3 : 1.9, trail: 0.6, wash }
+  }
+  if (o.bang) return { kind: 'peony', col, n: 24 + Math.round(6 * h(4)), v: reach * 4.4, k: 4.4, gs: 6, life: 1.2, trail: 0.24, wash }
+  switch (kind) {
+    case 'chrys':
+      return { kind, col, tail: GOLD, n: lean(44), v: reach * 3.3, k: 3.3, gs: 5.5, life: 1.9, trail: 0.45, wash }
+    case 'palm':
+      return { kind, col, tail: GOLD, n: 9, v: reach * 2.0, k: 2.0, gs: 4.5, life: 2.0, trail: 0.6, wash }
+    case 'crossette':
+      // Its children fly on past the parent's reach: a little smaller, so the whole of it is the size of its depth.
+      return { kind, col, n: 10, v: reach * 0.8 * 1.9, k: 1.9, gs: 5, life: 1.6, trail: 0.2, wash }
+    case 'willow':
+      return { kind, col: GOLD, tail: GOLD, n: lean(32), v: reach * 2.7, k: 2.7, gs: 5.2, life: 2.3, trail: 0.8, wash }
+    default:
+      return { kind: 'peony', col, tail: col === WHITE ? GOLD : undefined, n: lean(38 + Math.round(8 * h(5))), v: reach * 3.6, k: 3.6, gs: 6, life: 1.6, trail: 0.3, wash }
+  }
+}
+
+/** What is in the sky already while the barrage places a shell: its heart, reach, depth and life. */
+interface Held {
+  at: number
+  x: number
+  y: number
+  r: number
+  depth: Depth
+  life: number
+}
+const HELD: Held[] = BURSTS.filter((b) => b.at > CRASH - 1 && b.kind !== 'mine').map((b) => ({ at: b.at, x: b.x, y: b.y, r: reachOf(b), depth: b.kind === 'titan' ? 'near' : 'mid', life: b.life }))
+
+/**
+ * Where a shell of this depth breaks in this third of the frame at `at`: near where it is aimed (a little off the
+ * third's middle, its own way), in its depth's band of sky, off the moon, clear of the spark, and apart from what is
+ * already burning (well apart at the same depth, a little at another). Null if the third has no such place.
+ */
+function barragePlace(at: number, depth: Depth, third: number, sh: Shape, salt: number, quick = false): Pt | null {
+  const c = camAt(at)
+  const W = (16 * c.h) / 9
+  const fx0 = c.x - W / 2
+  const r = reachOf(sh)
+  const xa = fx0 + (W * third) / 3
+  const xb = fx0 + (W * (third + 1)) / 3
+  // The camera may be pushing in or going down as it breaks: its band is measured against the frame over the flower's
+  // first 0.3 s (the lowest top) and first 0.6 s (the highest horizon, and line of the water under the far bank). The
+  // hammers' quick shells break under a camera going down through them at 12 cells a second, so they sweep up the
+  // frame and out of its top as it falls: each is placed whole in the frame it breaks in (its first 0.1 s).
+  const win = quick ? 0.1 : 0.3
+  let fy0 = -Infinity
+  let hy = Infinity
+  let water = Infinity
+  for (let s = 0; s <= (quick ? 0.1 : 0.6) + 1e-9; s += 0.05) {
+    const q = camAt(at + s)
+    if (s <= win + 1e-9) fy0 = Math.max(fy0, q.y - q.h / 2)
+    const hq = q.y - q.h / 2 + HORIZON_F * q.h
+    hy = Math.min(hy, hq)
+    water = Math.min(water, Math.max(GY - 1.3, hq + 0.08))
+  }
+  // Its band of sky: a far shell's flower sits low over the far bank, its lowest stars just over the water; a mid
+  // one's breaks whole under the top; a near one's heart is high, so the flower overflows the top and sides.
+  const vis = sh.kind === 'small' ? 0.8 * r : 1.05 * r
+  const band: [number, number] =
+    depth === 'far'
+      ? [water - 0.15 - vis - 0.2 * c.h, water - 0.15 - vis]
+      : depth === 'mid'
+        ? [fy0 + r + 0.35, Math.min(hy - 0.06 * c.h, fy0 + r + 0.35 + 0.25 * c.h)]
+        : [fy0 + 0.03 * c.h, fy0 + 0.42 * c.h]
+  if (band[1] < band[0]) return null
+  const px = xa + (0.3 + 0.4 * hash(salt, 1, 53)) * (xb - xa)
+  const py = band[0] + (0.2 + 0.6 * hash(salt, 2, 53)) * (band[1] - band[0])
+  const cands: Pt[] = []
+  for (let i = 0; i <= 10; i++) for (let j = 0; j <= 6; j++) cands.push([xa + ((xb - xa) * (0.04 + 0.92 * i)) / 10, band[0] + ((band[1] - band[0]) * j) / 6])
+  cands.sort((p, q) => Math.hypot((p[0] - px) / W, (p[1] - py) / c.h) - Math.hypot((q[0] - px) / W, (q[1] - py) / c.h))
+  const gapNeed = depth === 'far' ? r + 0.7 : depth === 'mid' ? 0.55 * r + 1.0 : 0.35 * r + 1.4
+  for (const [x, y] of cands) {
+    // A far or mid flower stays inside the frame's sides; a near one only needs its heart in.
+    const side = depth === 'near' ? 0.4 : depth === 'mid' ? 0.35 * r : 0.5 * vis
+    if (Math.abs(x - c.x) > W / 2 - side) continue
+    if (!clearOfMoon(at, x, y, sh)) continue
+    if (depth !== 'near' && !underTop(at, y, sh, win)) continue
+    if (sparkGap(at, x, y, sh) < gapNeed) continue
+    let apart = true
+    for (const o of HELD) {
+      if (o.at > at + 0.05 || o.at + 0.55 * o.life < at) continue
+      const f = o.depth !== depth ? (depth === 'near' || o.depth === 'near' ? 0.15 : 0.22) : depth === 'near' ? 0.35 : Math.abs(o.at - at) < 0.05 ? 0.5 : 0.36
+      if (Math.hypot(x - o.x, y - o.y) < f * (r + o.r)) {
+        apart = false
+        break
+      }
+    }
+    if (apart) return [x, y]
+  }
+  return null
+}
+
+/** Each chord's shells: `code` is depth (F, M, N) and third (0 left, 1 middle, 2 right), `c` for a crown; biggest first. */
+const BARRAGE: { i: number; hues: string[]; code: string; t?: number }[] = [
+  { i: 0, hues: [BLUE, WHITE], code: 'F0 F2' },
+  { i: 1, hues: [VIOLET], code: 'M0 F2' },
+  { i: 2, hues: [GOLD, WHITE], code: 'N0 N1 M0 M2 F0 F1 F2' },
+  { i: 3, hues: [RED, VIOLET], code: 'N0 N2 M1 M0 M2 F0 F1 F2' },
+  { i: 4, hues: [GREEN, GOLD], code: 'N1 M0 F1 F2' },
+  { i: 5, hues: [VIOLET, BLUE], code: 'M1 F2' },
+  // The wheel's crescendo between the chords: the far crews go up on its notes, left, right, left, right.
+  { i: -1, t: DRIVERS_AT[5], hues: [VIOLET], code: 'F0' },
+  { i: -1, t: DRIVERS_AT[7], hues: [BLUE], code: 'F2' },
+  { i: -1, t: T5_AT, hues: [VIOLET], code: 'F0' },
+  { i: -1, t: T6_AT, hues: [BLUE], code: 'F2' },
+  { i: 6, hues: [BLUE], code: 'M1 F0 F2' },
+  { i: 7, hues: [BLUE, WHITE], code: 'N0 M1 F0 F2' },
+  { i: 8, hues: [GOLD, GREEN], code: 'N1 N0 M0 M1 M2 F0 F1 F2' },
+  { i: 9, hues: [WHITE, RED], code: 'M2 F0' },
+  { i: 10, hues: [GOLD, GREEN], code: 'N0c N1c M0c M1c M2c F0 F2' },
+  { i: 11, hues: [GOLD], code: 'M1c M0c F2' },
+  { i: 12, hues: [RED, VIOLET], code: 'N1 M0 M2 F0 F2' },
+  { i: 13, hues: [WHITE], code: 'F0 F2' },
+  { i: 14, hues: [RED, BLUE], code: 'M2 F0 F2' },
+  { i: 15, hues: [GOLD, GOLD, WHITE], code: 'N0 N2 M0 M1 M2 F0 F1 F2' },
+  { i: 16, hues: [WHITE, GOLD], code: 'F0 F2' },
+  // The hammers: a salvo each, one hue a blow.
+  { i: 17, hues: [RED], code: 'N0 M0 M2 F0 F2' },
+  { i: 18, hues: [GREEN], code: 'N2 M0 M2 F0 F2' },
+  { i: 19, hues: [BLUE], code: 'N1 M0 M2 F0 F2' },
+  { i: 20, hues: [VIOLET], code: 'N0 M0 M2 F0 F2' },
+  { i: 21, hues: [GOLD], code: 'N2 M0 M2 F0 F2' },
+  { i: 22, hues: [WHITE], code: 'N1 M0 M2 F0 F2' },
+]
+const MID_KINDS: Kind[] = ['peony', 'chrys', 'palm', 'peony', 'crossette', 'chrys', 'willow']
+const HEAVY = 5.5
+/** The barrage's bursts, for the probes. */
+export const BARRAGE_BURSTS: Burst[] = []
+for (const { i, hues, code, t } of BARRAGE) {
+  const at = t ?? C(i)
+  const bang = i >= CODA.length - 6
+  const heavy = i >= 0 && CODA[i].s >= HEAVY
+  const h = camAt(at).h
+  code.split(' ').forEach((cell, j) => {
+    const depth: Depth = cell[0] === 'F' ? 'far' : cell[0] === 'M' ? 'mid' : 'near'
+    const third = Number(cell[1])
+    const crown = cell[2] === 'c'
+    const salt = Math.round(at * 100) * 7 + j
+    // One or two hues a chord, the first the more (the second on every third shell).
+    const col = hues.length === 1 ? hues[0] : hues[j % 3 === 1 ? 1 : 0]
+    const kind: Kind = crown ? (j % 2 ? 'chrys' : 'willow') : depth === 'near' ? (j % 2 ? 'peony' : 'palm') : MID_KINDS[(i + j) % MID_KINDS.length]
+    // The nearest third it fits in, at its size or a little smaller.
+    let got: { p: Pt; sh: Shape } | null = null
+    const thirds = depth === 'near' ? [third, (third + 1) % 3, (third + 2) % 3] : [third]
+    search: for (const th of thirds) {
+      for (const scale of depth === 'mid' ? [1, 0.85, 0.7, 0.55] : [1, 0.85, 0.7]) {
+        const reach = reachFor(depth, h) * scale * (0.9 + 0.2 * hash(salt, 3, 59))
+        const sh = shapeFor(depth, kind, col, reach, at, { crown, bang, heavy, salt })
+        const p = barragePlace(at, depth, th, sh, salt, bang)
+        if (p) {
+          got = { p, sh }
+          break search
+        }
+      }
+    }
+    if (!got) return
+    const { p, sh } = got
+    const b: Burst = { ...sh, at, x: p[0], y: p[1], seed: BURSTS.length + 1 }
+    BURSTS.push(b)
+    BARRAGE_BURSTS.push(b)
+    NO_SMOKE.add(b)
+    HELD.push({ at, x: p[0], y: p[1], r: reachOf(sh), depth, life: sh.life })
+    // A mid shell climbs off the far bank on its glittering tail (ending a hair before its break, so a hammer's salute
+    // never claims it: `placedRise`).
+    if (depth === 'mid' && FAR_BANK - p[1] > 1.2) {
+      const rise: Rise = { from: at - 0.78 - 0.18 * hash(salt, 4, 61), to: at - 0.002, a: [p[0] + (hash(salt, 5, 61) - 0.5) * 1.1, FAR_BANK], b: p, col: WHITE }
+      RISES.push(rise)
+      NO_SMOKE.add(rise)
+    }
+  })
+}
+
 BURSTS.sort((a, b) => a.at - b.at)
 
 /** A star's place `s` seconds after its burst, with linear drag `k` and gravity `gs`. */
@@ -957,12 +1189,14 @@ export const WIND: Pt = [0.32, -0.06]
 export const PUFFS: Puff[] = []
 const puff = (at: number, x: number, y: number, r0: number, r1: number, life: number, a: number) => PUFFS.push({ at, x, y, r0, r1, life, a, seed: PUFFS.length + 1 })
 for (const r of RISES) {
+  if (NO_SMOKE.has(r)) continue
   if (!OWN_SMOKE.has(r)) puff(r.from + 0.03, r.a[0], r.a[1] - 0.2, 0.25, r.comet ? 0.8 : 1.2, r.comet ? 4 : 7, r.comet ? 0.22 : r.col === FW.fwWhite ? 0.14 : 0.32)
   // A candle's repeat: a wisp off its mouth. A far shell: haze hanging over the far bank (drawn behind the field).
   else if (r.comet) puff(r.from + 0.03, r.a[0], r.a[1] - 0.2, 0.15, 0.5, 3, 0.08)
   else puff(r.from + 0.05, r.a[0], GY - 2.3, 0.3, 1.1, 6, 0.08)
 }
 for (const b of BURSTS) {
+  if (NO_SMOKE.has(b)) continue
   if (OWN_SMOKE.has(b)) puff(b.at + 0.4, b.x, b.y + 0.3, 0.5, b.kind === 'small' ? 0.8 : 1.5, 6, b.kind === 'small' ? 0.05 : 0.06)
   else if (b.kind === 'mine') puff(b.at + 0.12, b.x, b.y - 0.6, 0.5, 2.4, 10, 0.34)
   else if (b.kind === 'salute') puff(b.at + 0.18, b.x, b.y, 0.7, 1.8, 7, 0.22)
@@ -990,4 +1224,15 @@ puff(TITAN_BURST + 0.7, TITAN_X + 10.0, GY - 8.6, 1.0, 2.4, 9, 0.32)
 puff(TITAN_BURST + 1.05, TITAN_X + 9.0, GY - 4.9, 0.8, 2.0, 9, 0.3)
 puff(TITAN_FIRE + 0.05, TITAN_X, LIP - 0.6, 0.6, 2.4, 10, 0.45)
 puff(TITAN_FIRE + 0.15, TITAN_X + 0.5, GY - 0.3, 0.5, 1.8, 9, 0.3)
+/*
+ * The barrage's haze: its shells leave none of their own (a hundred puffs would cost the frame rate), so the smoke of
+ * the whole display is laid as a few thin banks low over the far bank, drawn in front of the sky (below `GY - 2.2`, so
+ * after the bursts): the far shells break across the river behind it, and their lowest stars sink into it.
+ */
+for (const i of [2, 3, 8, 10, 14]) {
+  const at = C(i)
+  const c = camAt(at + 0.4)
+  const W = (16 * c.h) / 9
+  for (let j = 0; j < 3; j++) puff(at + 0.4 + 0.15 * j, c.x + W * (-0.36 + 0.36 * j + 0.08 * (hash(i, j, 71) - 0.5)), GY - 2.15, 1.4, 2.6 + 0.8 * hash(i, j, 72), 8, 0.09)
+}
 PUFFS.sort((a, b) => a.at - b.at)
