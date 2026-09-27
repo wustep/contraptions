@@ -131,13 +131,11 @@ function fireAt(T: number): ReturnType<typeof furnace> {
 }
 
 /**
- * Each mechanism is a near-black silhouette (the rock's own colour, no lit edge) until the furnace's flare on its
+ * Each mechanism recedes into the wall (its value, a thin shade edge: `asleep`) until the furnace's flare on its
  * first note lights it, and it stays lit: so each phrase the lit machine is visibly bigger, and there is one hero
- * silhouette at a time (the flywheel, the pumps, the great bellows, the governor).
+ * silhouette at a time (the hammer, the flywheel, the pumps, the great bellows, the governor).
  */
-const SLEEP = 0.1
 const woken = (T: number, at: number): number => smoothstep(T, at - 0.04, at + 0.1)
-const awake = (T: number, at: number): number => lerp(SLEEP, 1, woken(T, at))
 /**
  * How far the machine has grown (0 to 1): a step for each phrase's new mechanism (the flywheel, the pumps, the great
  * bellows, the governor, the valve blowing), so the room brightens a step a phrase and the runaway is the brightest
@@ -169,6 +167,94 @@ function lampsAt(T: number, x: number): number {
   let l = 0
   for (const lp of LAMPS) l += lampLit(T, lp.on) * Math.max(0, 1 - Math.abs(x - lp.at[0]) / 2.6) * 0.25
   return l
+}
+
+/* ------------------------------------------------------------------ the wall, and what sleeps against it */
+
+/** The back wall's own colour: dark rock, lighter and warmer with each mechanism the fire has lit. */
+const wallBase = (L: number, lift: number): string => mixHex(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L), WALL_LIT, 0.78 * clamp01(lift))
+/** A soft pool of light laid over the room: centre, radius, alpha at its middle, colour (as `glow` draws it). */
+type Pool = [number, number, number, number, string]
+/**
+ * The light the room lays over its back wall at T, in the order it is drawn: the forge's wash over the whole room,
+ * the forge's pools over the pit (the fire's blaze on the wall behind the flywheel's lower half), and each lamp's own
+ * small pool. `drawHeart` draws exactly these, and `wallAt` reads them, so a sleeping mechanism takes the same value
+ * as the rock behind it.
+ */
+function roomPools(T: number, lift: number): Pool[] {
+  const fire = fireAt(T)
+  const s = surge(T)
+  const out: Pool[] = [
+    [FURNACE.x + 1.5, -1.6, 11, 0.27 * lift * (0.8 + 0.2 * fire.flare), LAMP.glow],
+    [FURNACE.x, 1.3, 5.4 + 0.8 * fire.heat, 0.05 + 0.12 * fire.base + 0.1 * fire.flare, LAMP.glow],
+    [FURNACE.x, 1.4, 3.4, 0.1 * fire.base + 0.3 * fire.flare, WORKS.rust],
+    [FURNACE.x, -0.45, 3.1 + 0.3 * fire.heat, clamp01(0.3 * fire.base + 0.22 * fire.flare + 0.12 * fire.heat), WORKS.rust],
+    [FURNACE.x, -0.3, 2.3, clamp01(0.22 * fire.base + 0.26 * fire.flare), LAMP.flame],
+  ]
+  if (T < PAH[0]) out.push([FURNACE.x, 2.2, 1.6, 0.12, WORKS.rust])
+  for (const l of LAMPS) {
+    const on = lampLit(T, l.on)
+    if (on > 0) out.push([l.at[0], l.at[1] + l.hang + 0.25, 0.8 + 0.25 * s + 1.2 * lift, clamp01(0.3 * on * flicker(T, l.at[0]) * (1 + 0.6 * s)), LAMP.glow])
+  }
+  return out
+}
+/** The wall and its pools at T, worked out once a frame. */
+let field: { T: number; base: string; pools: Pool[] } | null = null
+function wallField(T: number): { base: string; pools: Pool[] } {
+  if (field?.T !== T) {
+    const lift = mechanisms(T)
+    field = { T, base: wallBase(roomLight(T).lit, lift), pools: roomPools(T, lift) }
+  }
+  return field
+}
+/** What the back wall looks like at (x, y) at T: its rock, with every pool of light over it (`glow`'s falloff). */
+function wallAt(T: number, x: number, y: number): string {
+  const { base, pools } = wallField(T)
+  let col = base
+  for (const [gx, gy, r, a, hex] of pools) {
+    if (a <= 0.003 || r <= 0) continue
+    const d = Math.hypot(x - gx, y - gy) / r
+    if (d >= 1) continue
+    col = mixHex(col, hex, d < 0.35 ? lerp(a, 0.55 * a, d / 0.35) : lerp(0.55 * a, 0, (d - 0.35) / 0.65))
+  }
+  return col
+}
+
+/**
+ * A mechanism before its note is in the room's shadow: it takes the wall's own value (at the room's current light),
+ * keeps only a thin shade edge, and recedes, so it never out-draws the hero of the phrase it waits through. On its
+ * first note the furnace's flare gives it its full value and edge. `fill` and `ink` map its lit colours; `w` is how
+ * far it has woken.
+ */
+const KEEP = 0.12
+interface Sleep {
+  w: number
+  fill: (hex: string) => string
+  ink: (hex: string) => string
+}
+function asleep(T: number, at: number, x: number, y: number, edge = 0.42): Sleep {
+  const w = woken(T, at)
+  if (w >= 1) return { w, fill: (h) => h, ink: (h) => h }
+  const wall = wallAt(T, x, y)
+  const shade = mixHex(wall, STONE.deep, edge)
+  const u = lerp(KEEP, 1, w)
+  return { w, fill: (h) => mixHex(wall, h, u), ink: (h) => mixHex(shade, h, w) }
+}
+/**
+ * The wall's value as a paint over a big part (the flywheel stands half in the forge's blaze and half in the dark):
+ * a radial gradient from the fire's blaze on the wall, its stops the wall's colour going up from it, taken toward the
+ * part's lit colour as it wakes. In the frame translated to `o`.
+ */
+function wallPaint(p: p5, c: Pen, T: number, o: Pt, hex: string, w: number): CanvasGradient {
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const cx = FURNACE.x
+  const cy = 0.4
+  const R = 6
+  const g = ctx.createRadialGradient((cx - o[0]) * k, (cy - o[1]) * k, 0, (cx - o[0]) * k, (cy - o[1]) * k, R * k)
+  const u = lerp(KEEP, 1, w)
+  for (let i = 0; i <= 8; i++) g.addColorStop(i / 8, mixHex(wallAt(T, cx, cy - (R * i) / 8), hex, u))
+  return g
 }
 
 /* ------------------------------------------------------------------ small drawing helpers */
@@ -216,9 +302,14 @@ function gear(
   r: number,
   teeth: number,
   angle: number,
-  o: { fill: string; ink: string; w: number; spokes?: number; rim?: number; hub?: number; blur?: number; lip?: string; spoke?: number },
+  o: { fill: string; ink: string; w: number; spokes?: number; rim?: number; hub?: number; blur?: number; lip?: string; spoke?: number; paint?: CanvasGradient },
 ): void {
   const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // A sleeping part is painted with the wall behind it (`wallPaint`) wherever it would be filled with its iron.
+  const painted = () => {
+    if (o.paint) ctx.fillStyle = o.paint
+  }
   const add = 0.11
   const ded = 0.1
   const blur = clamp01(o.blur ?? 0)
@@ -229,6 +320,7 @@ function gear(
   p.stroke(o.ink)
   p.strokeWeight(o.w)
   p.fill(o.fill)
+  painted()
   const w = (Math.PI * 2) / teeth
   p.beginShape()
   for (let j = 0; j < teeth; j++) {
@@ -278,6 +370,7 @@ function gear(
         p.strokeWeight(o.w)
       } else p.noStroke()
       alphaFill(p, o.fill, a)
+      if (a >= 1) painted()
       for (let s = 0; s < o.spokes!; s++) {
         const aa = angle + off + (s / o.spokes!) * Math.PI * 2
         const ca = Math.cos(aa)
@@ -309,6 +402,7 @@ function gear(
     p.stroke(o.ink)
     p.strokeWeight(o.w)
     p.fill(o.fill)
+    painted()
     p.circle(0, 0, hub * 2 * k)
     p.fill(mixHex(o.fill, o.ink, 0.22))
     p.push()
@@ -390,7 +484,7 @@ function drawRoom(p: p5, c: Pen, L: number, lift = 0): void {
   p.noStroke()
   // The back wall: dark rock, lighter and warmer with each mechanism the fire has lit (the runaway is the brightest
   // room in the mountain: its walls in the forge's light).
-  p.fill(mixHex(mixHex(mixHex(STONE.deep, STONE.dark, 0.45), STONE.dark, L), WALL_LIT, 0.78 * clamp01(lift)))
+  p.fill(wallBase(L, lift))
   poly(p, k, HOLLOW)
   // The tunnel mouths: a dark arch with a lit jamb.
   for (const d of DOORS) {
@@ -700,27 +794,170 @@ function bellows(p: p5, c: Pen, x0: number, x1: number, floor: number, open: num
 }
 
 /**
- * The great bellows (118.72, "everything"): two cells long, raised on a trestle at its nozzle end so it points up
- * into the furnace's mouth, its boards closing hard on every stroke. Drawn in front of the troll who works it.
+ * The great bellows (118.72, "everything"), on its own stage: raised on a timber trestle into the furnace's mouth, its
+ * nozzle in the fire and the back of its top board at the pump heads' height, two cells long. On every 2 and 4 the
+ * stroke drives its top board down: the leather sides swell hard with the air and the furnace's flare blows from the
+ * nozzle into the fire; then the leather slackens into folds and the board lifts, drawing in again. The troll who
+ * works it stands behind it.
  */
-const GREAT = { x0: 7.05, x1: 9.05, tilt: 0.2, size: 1.45 }
+const GREAT = { hinge: [7.15, 1.14] as Pt, back: [9.2, 0.82] as Pt, nozzle: 0.8, gape: 1.2, board: 0.19 }
+/** How hard the air is in it (0..1): rising as the board is driven down onto the flare, spent just after. */
+function greatBlow(T: number): number {
+  if (T < BELLOWS - 0.2) return 0
+  const { i, ago } = since(PAH, T)
+  const next = PAH[i + 1]
+  let b = 0
+  if (next !== undefined && next - T < 0.13 && next > BELLOWS - 0.2) b = (1 - (next - T) / 0.13) ** 2
+  if (i >= 0 && PAH[i] > BELLOWS - 0.2) b = Math.max(b, Math.exp(-ago / 0.09))
+  return b
+}
 function drawGreatBellows(p: p5, c: Pen, T: number, lit: number): void {
   const { k } = c
-  const open = T < BELLOWS - 0.2 ? 0.8 : bellowsOpen(T, BELLOWS - 0.2)
-  const pivot: Pt = [GREAT.x1, PIT - 0.08]
-  // The trestle under the raised nozzle end: two splayed legs and a cross-bar.
-  const lift = (GREAT.x1 - GREAT.x0 - 0.35) * Math.sin(GREAT.tilt)
-  const lx = GREAT.x0 + 0.45
-  p.stroke(inkOf(c, lit))
+  const S = asleep(T, BELLOWS, 8.3, 0.4)
+  const ink = S.ink(inkOf(c, lit))
+  const f = fireAt(T).flare * S.w
+  const wood = S.fill(tone(WORKS.wood, lit * 0.9))
+  const board = S.fill(warm(tone(mixHex(WORKS.wood, WORKS.timber, 0.35), lit), f))
+  const boardLit = S.fill(warm(tone(WORKS.timber, lit), f * 1.5))
+  const iron = S.fill(tone(IRON, lit))
+  // Oxblood leather, darker and redder than the lit rock behind it, so the body reads as one mass.
+  const leather = S.fill(warm(tone(mixHex(WORKS.wood, WORKS.rust, 0.4), lit * 0.9), f * 0.6))
+  const [hx, hy] = GREAT.hinge
+  const [bx, by] = GREAT.back
+  const Lb = Math.hypot(bx - hx, by - hy)
+  const dir: Pt = [(bx - hx) / Lb, (by - hy) / Lb]
+  const on = (u: number): Pt => [hx + dir[0] * u, hy + dir[1] * u]
+
+  // The trestle: two splayed timber A-frames under the bottom board, and a rail between them.
+  p.stroke(ink)
   p.strokeWeight(c.weight)
-  p.fill(tone(WORKS.wood, lit * 0.9))
-  bar(p, k, [lx - 0.22, PIT], [lx, PIT - 0.1 - lift], 0.1, 0.08)
-  bar(p, k, [lx + 0.22, PIT], [lx, PIT - 0.1 - lift], 0.1, 0.08)
+  p.fill(wood)
+  const feet: Pt[] = []
+  for (const u of [0.42, Lb - 0.42]) {
+    const [x, y] = on(u)
+    bar(p, k, [x - 0.34, PIT], [x - 0.04, y + 0.06], 0.12, 0.1)
+    bar(p, k, [x + 0.34, PIT], [x + 0.04, y + 0.06], 0.12, 0.1)
+    feet.push([x, y])
+  }
+  bar(p, k, [feet[0][0] - 0.2, 1.95], [feet[1][0] + 0.2, 1.95], 0.1)
+  bar(p, k, [feet[0][0] + 0.12, 1.95], [feet[1][0] - 0.1, feet[1][1] + 0.2], 0.08)
+
+  // The body, in the bottom board's frame: x along it from the hinge, y down.
+  const open = T < BELLOWS - 0.2 ? 0.85 : bellowsOpen(T, BELLOWS - 0.2)
+  const blow = greatBlow(T) * S.w
+  const slack = clamp01(1 - open / 0.85) * (1 - blow)
+  const h = 0.14 + GREAT.gape * open
+  const a = Math.asin(Math.min(0.95, h / Lb))
+  const top = (u: number): Pt => [u * Math.cos(a), -u * Math.sin(a)]
+  const tb = top(Lb)
   p.push()
-  p.translate(pivot[0] * k, pivot[1] * k)
-  p.rotate(GREAT.tilt)
-  p.translate(-pivot[0] * k, -pivot[1] * k)
-  bellows(p, c, GREAT.x0, GREAT.x1, PIT, open, false, lit, GREAT.size)
+  p.translate(hx * k, hy * k)
+  p.rotate(Math.atan2(dir[1], dir[0]))
+  const V = (q: Pt) => p.vertex(q[0] * k, q[1] * k)
+  // The leather: bowed out at the back as the air fills it; pleated in two folds when it goes slack.
+  const bulge = 0.05 + 0.22 * blow
+  const fold = 0.14 * slack
+  const b0: Pt = [Lb - 0.02, -0.06]
+  const b1: Pt = [tb[0] - 0.02, tb[1] + 0.06]
+  const mid = (u: number): Pt => [lerp(b0[0], b1[0], u), lerp(b0[1], b1[1], u)]
+  const out = (q: Pt, d: number): Pt => [q[0] + d * Math.cos(a / 2), q[1] - d * Math.sin(a / 2) * 0.3]
+  p.stroke(ink)
+  p.fill(leather)
+  p.beginShape()
+  V([0.12, -0.05])
+  V(b0)
+  if (fold > 0.01) {
+    V(out(mid(0.25), fold + bulge * 0.4))
+    V(out(mid(0.5), bulge * 0.3))
+    V(out(mid(0.75), fold + bulge * 0.4))
+  } else {
+    const m0 = out(mid(0.3), bulge * 1.33)
+    const m1 = out(mid(0.7), bulge * 1.33)
+    p.bezierVertex(m0[0] * k, m0[1] * k, m1[0] * k, m1[1] * k, b1[0] * k, b1[1] * k)
+  }
+  V(b1)
+  V(top(0.14))
+  p.endShape(p.CLOSE)
+  // Its swell: a lit belly across the middle of the side, full when the air is hard in it.
+  p.noStroke()
+  alphaFill(p, S.fill(warm(mixHex(leather, WORKS.rope, 0.45), f)), 0.3 + 0.55 * blow)
+  const belly = (u: number, side: number): Pt => {
+    const yb = -0.08
+    const yt = top(u)[1] + 0.08
+    const m = (yb + yt) / 2
+    const half = ((yb - yt) / 2) * (0.25 + 0.45 * blow) * Math.sin((Math.PI * (u - 0.25)) / (Lb - 0.25))
+    return [u, m + side * half]
+  }
+  p.beginShape()
+  for (let j = 0; j <= 8; j++) V(belly(lerp(0.3, Lb - 0.1, j / 8), 1))
+  for (let j = 8; j >= 0; j--) V(belly(lerp(0.3, Lb - 0.1, j / 8), -1))
+  p.endShape(p.CLOSE)
+  // Slack, it creases: two dark folds fanning from the hinge to the back.
+  if (slack > 0.02) {
+    alphaFill(p, mixHex(leather, STONE.deep, 0.55), 0.7 * slack)
+    for (const u of [0.36, 0.68]) {
+      const e = out(mid(u), 0.02)
+      const w = 0.05 * slack
+      poly(p, k, [[0.35, -0.05], [e[0] - w, e[1] - w], [e[0] - 0.02, e[1] + w * 0.6]])
+    }
+  }
+  // The boards, iron-strapped, and the nozzle.
+  p.stroke(ink)
+  p.strokeWeight(c.weight)
+  const B = GREAT.board
+  p.fill(board)
+  bar(p, k, [-0.04, B / 2 - 0.06], [Lb + 0.1, B / 2 - 0.06], B)
+  const tb2 = top(Lb + 0.1)
+  const up: Pt = [-Math.sin(a) * (B / 2 - 0.04), -Math.cos(a) * (B / 2 - 0.04)]
+  bar(p, k, [up[0], up[1]], [tb2[0] + up[0], tb2[1] + up[1]], B)
+  // The top board's upper face catches the fire.
+  p.noStroke()
+  p.fill(boardLit)
+  const up2: Pt = [up[0] * 1.9, up[1] * 1.9]
+  bar(p, k, [0.1 * Math.cos(a) + up2[0], -0.1 * Math.sin(a) + up2[1]], [tb2[0] + up2[0] - 0.04, tb2[1] + up2[1]], 0.045)
+  p.stroke(ink)
+  p.fill(iron)
+  for (const u of [0.62, Lb - 0.45]) {
+    bar(p, k, [u - 0.05, B / 2 - 0.06], [u + 0.05, B / 2 - 0.06], B + 0.05)
+    const q = top(u)
+    bar(p, k, [q[0] + up[0] - 0.05, q[1] + up[1]], [q[0] + up[0] + 0.05, q[1] + up[1]], B + 0.05)
+  }
+  // The nozzle: a tapered iron pipe from the hinge block down into the fire.
+  const tip: Pt = [-GREAT.nozzle, 0.2]
+  poly(p, k, [[0.2, -0.26], [0.2, 0.16], [tip[0], tip[1] + 0.07], [tip[0], tip[1] - 0.07]])
+  p.rectMode(p.CENTER)
+  p.rect(0.14 * k, -0.05 * k, 0.24 * k, 0.46 * k, 0.03 * k)
+
+  // The flare blowing from the nozzle into the fire on each stroke: a hot tongue, widening and gone in a beat.
+  if (blow > 0.02) {
+    const nd = Math.hypot(tip[0] - 0.16, tip[1] + 0.04)
+    const ux = (tip[0] - 0.16) / nd
+    const uy = (tip[1] + 0.04) / nd
+    const tongue = (len: number, wid: number, hex: string, al: number, seed: number) => {
+      const wav = 0.06 * Math.sin(T * 37 + seed)
+      const pts: Pt[] = []
+      for (let j = 0; j <= 10; j++) {
+        const u = j / 10
+        const wv = wid * Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
+        const cx = tip[0] + ux * len * u
+        const cy = tip[1] + uy * len * u + wav * u * u
+        pts.push([cx - uy * wv, cy + ux * wv])
+      }
+      for (let j = 10; j >= 0; j--) {
+        const u = j / 10
+        const wv = wid * Math.sin(Math.PI * Math.pow(u, 0.7)) * (1 - 0.35 * u)
+        const cx = tip[0] + ux * len * u
+        const cy = tip[1] + uy * len * u + wav * u * u
+        pts.push([cx + uy * wv, cy - ux * wv])
+      }
+      alphaFill(p, hex, al)
+      poly(p, k, pts)
+    }
+    p.noStroke()
+    tongue(0.6 + 1.3 * blow, 0.14 + 0.24 * blow, WORKS.rust, 0.6 * blow, 1)
+    tongue(0.5 + 1.1 * blow, 0.09 + 0.16 * blow, LAMP.flame, 0.9 * blow, 2)
+    tongue(0.35 + 0.75 * blow, 0.04 + 0.07 * blow, mixHex(LAMP.core, '#FFFFFF', 0.35), 0.95 * blow, 3)
+  }
   p.pop()
 }
 
@@ -749,12 +986,12 @@ const PIN_PHASE = (() => {
   return MESH + Math.PI - pinionAngle(FLY) - frac(0.5 - uf) * PIN_W
 })()
 
-function drawFlywheelFrame(p: p5, c: Pen, lit: number): void {
+function drawFlywheelFrame(p: p5, c: Pen, lit: number, S: Sleep): void {
   const { k } = c
   const [fx, fy] = FLYWHEEL.at
-  p.stroke(inkOf(c, lit))
+  p.stroke(S.ink(inkOf(c, lit)))
   p.strokeWeight(c.weight)
-  p.fill(tone(WORKS.wood, lit * 0.9))
+  p.fill(S.fill(tone(WORKS.wood, lit * 0.9)))
   bar(p, k, [fx - 1.35, PIT], [fx - 0.12, fy + 0.1], 0.32, 0.22)
   bar(p, k, [fx + 1.35, PIT], [fx + 0.12, fy + 0.1], 0.32, 0.22)
   bar(p, k, [fx - 0.92, 0.95], [fx + 0.92, 0.95], 0.14)
@@ -806,18 +1043,21 @@ function halfPose(side: number, T: number): { x: number; y: number; turn: number
 function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   const [fx, fy] = FLYWHEEL.at
-  const aw = awake(T, FLY)
-  const lit = litAt(L, fx, lampsAt(T, fx)) * aw
-  const ink = inkOf(c, lit)
-  const f = fireAt(T).flare * aw
-  // The hero's weight: a near-black silhouette against the fire until it engages; then a lit iron face (about 0.6
-  // of full light), warmed on the flares; its lower half stands dark against the fire behind it.
-  const face = clamp01(L * 1.25) * 0.64 * aw
-  const iron = warm(tone(IRON_FACE, face), f * 0.5)
-  drawFlywheelFrame(p, c, lit)
+  // Before its note it takes the wall's value (the forge's blaze on its lower half, the dark rock on its upper), so
+  // the hammer is the one hero of the first phrase; then a lit iron face (about 0.6 of full light), warmed on the
+  // flares, its lower half standing dark against the fire behind it.
+  const S = asleep(T, FLY, fx, fy)
+  const lit = litAt(L, fx, lampsAt(T, fx))
+  const ink = S.ink(inkOf(c, lit))
+  const f = fireAt(T).flare * S.w
+  const face = clamp01(L * 1.25) * 0.64
+  const litIron = warm(tone(IRON_FACE, face), f * 0.5)
+  const iron = S.fill(litIron)
+  drawFlywheelFrame(p, c, lit, asleep(T, FLY, fx, 0.9))
   const spin = Math.abs(flySpin(T))
-  const lip = mixHex(iron, warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), woken(T, FLY))
-  const opts = { fill: iron, ink, w: c.weight * 0.9, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip, spoke: 0.44 }
+  const lip = mixHex(iron, warm(mixHex(tone(WORKS.steel, face + 0.2), LAMP.glow, 0.25), f), S.w)
+  const paint = S.w < 1 ? wallPaint(p, c, T, FLYWHEEL.at, litIron, S.w) : undefined
+  const opts = { fill: iron, ink, w: c.weight * 0.9, spokes: FLYWHEEL.spokes, rim: 0.62, hub: 0.62, blur: clamp01((spin - 2.2) / 3.5), lip, spoke: 0.44, paint }
   const angle = FLY_PHASE + flyAngle(T)
   const split = flySplit(T)
   if (split <= 0) {
@@ -866,7 +1106,7 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
   if (split <= 0) {
     p.stroke(ink)
     p.strokeWeight(c.weight)
-    p.fill(tone(WORKS.steel, lit * 0.9))
+    p.fill(S.fill(tone(WORKS.steel, lit * 0.9)))
     p.rectMode(p.CENTER)
     p.rect(fx * k, (fy - 0.02) * k, 0.28 * k, 0.28 * k, 0.03 * k)
   }
@@ -875,20 +1115,21 @@ function drawFlywheel(p: p5, c: Pen, T: number, L: number): void {
 function drawPinion(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
   let at = pinionAt(T)
-  const lit = litAt(L, at[0], lampsAt(T, at[0])) * 0.95 * awake(T, FLY)
-  const ink = inkOf(c, lit)
+  const lit = litAt(L, at[0], lampsAt(T, at[0])) * 0.95
+  const S = asleep(T, FLY, at[0], at[1])
+  const ink = S.ink(inkOf(c, lit))
   // After the break its arm has snapped and it has dropped to the pit's floor.
   const fall = T >= BREAK ? ease((T - BREAK) / 0.35) : 0
   if (fall > 0) at = [at[0] + 0.25 * fall, lerp(at[1], PIT - PINION_R - 0.11, fall)]
   p.stroke(ink)
   p.strokeWeight(c.weight)
-  p.fill(tone(STONE.light, lit * 0.8))
+  p.fill(S.fill(tone(STONE.light, lit * 0.8)))
   poly(p, k, [[PINION_PIVOT[0] - 0.3, PINION_PIVOT[1] + 0.2], [PINION_PIVOT[0] + 0.3, PINION_PIVOT[1] + 0.2], [PINION_PIVOT[0] + 0.38, PIT], [PINION_PIVOT[0] - 0.38, PIT]])
-  p.fill(tone(IRON, lit))
+  p.fill(S.fill(tone(IRON, lit)))
   if (fall <= 0) bar(p, k, PINION_PIVOT, at, 0.2, 0.16)
   else bar(p, k, PINION_PIVOT, [PINION_PIVOT[0] + 0.45, PINION_PIVOT[1] - 0.35], 0.2, 0.17)
-  gear(p, c, at, PINION_R, PINION.teeth, PIN_PHASE + pinionAngle(Math.min(T, BREAK)) + fall * 0.6, { fill: tone(WORKS.steel, lit * 0.85), ink, w: c.weight, hub: 0.13 })
-  p.fill(tone(WORKS.steel, lit))
+  gear(p, c, at, PINION_R, PINION.teeth, PIN_PHASE + pinionAngle(Math.min(T, BREAK)) + fall * 0.6, { fill: S.fill(tone(WORKS.steel, lit * 0.85)), ink, w: c.weight, hub: 0.13 })
+  p.fill(S.fill(tone(WORKS.steel, lit)))
   p.rectMode(p.CENTER)
   p.rect(PINION_PIVOT[0] * k, PINION_PIVOT[1] * k, 0.18 * k, 0.18 * k, 0.03 * k)
 }
@@ -897,12 +1138,13 @@ function drawPinion(p: p5, c: Pen, T: number, L: number): void {
 
 function drawPistons(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
-  const lit = litAt(L, 10.5, lampsAt(T, 10.5)) * awake(T, PISTONS)
-  const ink = inkOf(c, lit)
-  const f = fireAt(T).flare * woken(T, PISTONS)
-  const iron = warm(tone(IRON_FACE, lit * 0.9), f * 0.5)
-  const dark = tone(IRON, lit * 0.8)
-  const steel = tone(WORKS.steel, lit)
+  const lit = litAt(L, 10.5, lampsAt(T, 10.5))
+  const S = asleep(T, PISTONS, 10.7, 0.9)
+  const ink = S.ink(inkOf(c, lit))
+  const f = fireAt(T).flare * S.w
+  const iron = S.fill(warm(tone(IRON_FACE, lit * 0.9), f * 0.5))
+  const dark = S.fill(tone(IRON, lit * 0.8))
+  const steel = S.fill(tone(WORKS.steel, lit))
   p.stroke(ink)
   p.strokeWeight(c.weight)
   p.rectMode(p.CORNER)
@@ -941,10 +1183,11 @@ function drawPistons(p: p5, c: Pen, T: number, L: number): void {
 /** The pipe from the pumps under the ledge to the rising main at the chimney's foot, and the valve on it. */
 function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const { k } = c
-  const lit = litAt(L, 13, lampsAt(T, 13.5)) * awake(T, PISTONS)
-  const ink = inkOf(c, lit)
-  const iron = tone(IRON, lit)
-  const steel = tone(WORKS.steel, lit)
+  const lit = litAt(L, 13, lampsAt(T, 13.5))
+  const S = asleep(T, PISTONS, 13.5, DECK - 0.2)
+  const ink = S.ink(inkOf(c, lit))
+  const iron = S.fill(tone(IRON, lit))
+  const steel = S.fill(tone(WORKS.steel, lit))
   const x0 = PISTON_X[2] + 0.6
   const r = 0.11
   p.stroke(ink)
@@ -988,7 +1231,7 @@ function drawPipe(p: p5, c: Pen, T: number, L: number): void {
   const onLever = pvy - (vx - pvx) * Math.tan(lift)
   p.rect((vx - 0.04) * k, onLever * k, 0.08 * k, (DECK - 0.36 - onLever) * k)
   // The lever's post and the lever.
-  p.fill(tone(WORKS.wood, lit))
+  p.fill(S.fill(tone(WORKS.wood, lit)))
   p.rect((pvx - 0.07) * k, pvy * k, 0.14 * k, (DECK - pvy) * k)
   p.fill(iron)
   bar(p, k, [pvx - 0.05, pvy], end, 0.1, 0.08)
@@ -1081,18 +1324,57 @@ function flyingWeight(j: number, T: number): Pt | null {
   return [x, floor - 0.12 * Math.max(0, Math.sin(after * 11)) * Math.exp(-after / 0.12)]
 }
 
+/**
+ * The governor is stowed until its note: hung up on its spindle in the vault's shadow, two cells above its seat, its
+ * cap and upper arms up in the rock and its foot clear of the gears in its base. The keeper's lever lets it go, and it
+ * drops under its own weight into mesh, landing on GOVERNOR with a short rebound. Cells up.
+ */
+const STOW = 2
+const STOW_FALL = 0.26
+function govStow(T: number): number {
+  const t0 = GOVERNOR - STOW_FALL
+  if (T < t0) return STOW
+  if (T < GOVERNOR) {
+    const u = (T - t0) / STOW_FALL
+    return STOW * (1 - u * u)
+  }
+  const a = T - GOVERNOR
+  return a > 0.6 ? 0 : 0.07 * Math.exp(-a / 0.09) * Math.abs(Math.sin(a * 24))
+}
+
 function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front'): void {
+  const hung = govStow(T)
+  if (hung <= 0.001) return drawGovernorParts(p, c, T, L, part, 0)
+  // Stowed or dropping: what is up in the vault is behind its rock.
+  const { k } = c
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  ctx.save()
+  ctx.beginPath()
+  HOLLOW.forEach(([x, y], i) => (i ? ctx.lineTo(x * k, y * k) : ctx.moveTo(x * k, y * k)))
+  ctx.closePath()
+  ctx.clip()
+  drawGovernorParts(p, c, T, L, part, hung)
+  ctx.restore()
+}
+
+function drawGovernorParts(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front', hung: number): void {
   const { k } = c
   const on = T >= GOVERNOR
-  const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0)) * awake(T, GOVERNOR)
-  const ink = inkOf(c, lit)
-  const iron = tone(IRON_FACE, lit * 0.9)
-  const steel = tone(WORKS.steel, lit)
+  const lit = litAt(L, GOV.x, lampsAt(T, GOV.x) + (on ? 0.1 : 0))
+  // Stowed up in the vault it is fainter still: its edge only a breath darker than the rock.
+  const S = asleep(T, GOVERNOR, GOV.x, -3.4 - hung, 0.3)
+  const ink = S.ink(inkOf(c, lit))
+  const iron = S.fill(tone(IRON_FACE, lit * 0.9))
+  const steel = S.fill(tone(WORKS.steel, lit))
   const gx = GOV.x
   const foot: Pt = [gx, DECK - 0.55]
   const fall = spindleFall(T)
-  // Every point above the base turns with the spindle's fall (about its foot).
-  const tp = (q: Pt): Pt => (fall ? rotAbout(q, foot, fall) : q)
+  // Every point above the base is hung up with it while it is stowed, and turns with the spindle's fall (about its
+  // foot) at the end.
+  const tp = (q: Pt): Pt => {
+    const u: Pt = [q[0], q[1] - hung]
+    return fall ? rotAbout(u, foot, fall) : u
+  }
   const alpha = govAlpha(Math.min(T, GOV_SNAP))
   const spin = govSpin(Math.min(T, GOV_SNAP + 0.3))
   const a = GOV.arm
@@ -1142,7 +1424,7 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     // The base on the ledge (its bevel gears inside), and the lever the keeper throws.
     p.stroke(ink)
     p.strokeWeight(c.weight)
-    p.fill(tone(IRON_DARK, lit))
+    p.fill(S.fill(tone(IRON_DARK, lit)))
     p.rectMode(p.CORNER)
     p.rect((gx - 0.38) * k, (DECK - 0.5) * k, 0.76 * k, 0.5 * k, 0.05 * k)
     p.fill(steel)
@@ -1152,7 +1434,7 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     const lend: Pt = [lv.pivot[0] + lv.len * Math.sin(la), lv.pivot[1] - lv.len * Math.cos(la)]
     p.fill(iron)
     bar(p, k, lv.pivot, lend, 0.09, 0.07)
-    p.fill(tone(WORKS.wood, lit))
+    p.fill(S.fill(tone(WORKS.wood, lit)))
     bar(p, k, lend, [lend[0] + 0.12 * Math.sin(la), lend[1] - 0.12 * Math.cos(la)], 0.12)
     for (const wt of wts) if (!wt.front) {
       arms(wt)
@@ -1209,6 +1491,18 @@ function drawGovernor(p: p5, c: Pen, T: number, L: number, part: 'back' | 'front
     poly(p, k, [hang([0.16, seat]), hang([YOKE_SEAT + 0.42 - gx, end]), hang([YOKE_SEAT + 0.42 - gx, end + 0.1]), hang([0.16, seat + 0.1])])
     poly(p, k, [hang([YOKE_SEAT + 0.34 - gx, end - 0.12]), hang([YOKE_SEAT + 0.42 - gx, end - 0.12]), hang([YOKE_SEAT + 0.42 - gx, end]), hang([YOKE_SEAT + 0.34 - gx, end])])
   }
+  // It lands in its base on the note: the ledge's dust puffs out from under it, low, and thins.
+  if (part === 'front' && T >= GOVERNOR && T < GOVERNOR + 0.9) {
+    const a0 = T - GOVERNOR
+    p.noStroke()
+    for (let s = 0; s < 4; s++) {
+      const side = s % 2 ? 1 : -1
+      const out = (0.3 + 0.55 * (1 - Math.exp(-a0 / 0.18))) * (0.8 + 0.3 * hash(s, 71))
+      const r = 0.12 + 0.3 * (1 - Math.exp(-a0 / 0.25)) + 0.06 * hash(s, 72)
+      alphaFill(p, STONE.light, 0.2 * Math.exp(-a0 / 0.3) * smoothstep(a0, 0, 0.05))
+      p.ellipse((gx + side * out) * k, (DECK - 0.12 - 0.12 * a0 - 0.05 * s) * k, r * 2.4 * k, r * 1.2 * k)
+    }
+  }
   // The stops: a clang off the pivot, a brief warm flash on the iron and a spray of sparks falling away (no ring of
   // rays).
   if (part === 'front' && T >= GOV_STOPS && T < GOV_STOPS + 0.7) {
@@ -1246,22 +1540,9 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   const lift = mechanisms(T)
   drawRoom(p, c, L, lift)
   drawPitLight(p, c, T)
-  const fire = fireAt(T)
-  const s = surge(T)
-  // The fire's light over the whole room, stepping up with each mechanism it has lit.
-  glow(p, c, FURNACE.x + 1.5, -1.6, 11, 0.27 * lift * (0.8 + 0.2 * fire.flare), LAMP.glow)
-  // The forge is the light: a low warm pool over the pit (not a haze over the room), and the fire's own blaze on the
-  // back wall right behind the flywheel's lower half, so the wheel stands dark against it.
-  glow(p, c, FURNACE.x, 1.3, 5.4 + 0.8 * fire.heat, 0.05 + 0.12 * fire.base + 0.1 * fire.flare)
-  glow(p, c, FURNACE.x, 1.4, 3.4, 0.1 * fire.base + 0.3 * fire.flare, WORKS.rust)
-  glow(p, c, FURNACE.x, -0.45, 3.1 + 0.3 * fire.heat, clamp01(0.3 * fire.base + 0.22 * fire.flare + 0.12 * fire.heat), WORKS.rust)
-  glow(p, c, FURNACE.x, -0.3, 2.3, clamp01(0.22 * fire.base + 0.26 * fire.flare), LAMP.flame)
-  if (T < PAH[0]) glow(p, c, FURNACE.x, 2.2, 1.6, 0.12, WORKS.rust)
-  // The lamps' pools are small: each lights its own bit of rock, and swells on the surges.
-  for (const l of LAMPS) {
-    const on = lampLit(T, l.on)
-    if (on > 0) glow(p, c, l.at[0], l.at[1] + l.hang + 0.25, 0.8 + 0.25 * s + 1.2 * lift, clamp01(0.3 * on * flicker(T, l.at[0]) * (1 + 0.6 * s)))
-  }
+  // The fire's light over the whole room, stepping up with each mechanism it has lit; the forge's pools over the pit
+  // and its blaze on the back wall behind the flywheel's lower half; the lamps' small pools (`roomPools`).
+  for (const [x, y, r, a, col] of wallField(T).pools) glow(p, c, x, y, r, a, col)
   for (const l of LAMPS) {
     const on = lampLit(T, l.on)
     const swing = 0.04 * Math.sin(T * 1.7 + l.at[0]) * smoothstep(T, T0, T0 + 3) + 0.3 * quake(T)[0]
@@ -1282,7 +1563,7 @@ export function drawHeart(p: p5, c: Pen, T: number): void {
   drawHammer(p, c, T, L)
   drawTrolls(p, c, T, lit, 'pit')
   // The great bellows in front of the troll who works it (he stands at its back end, behind it).
-  drawGreatBellows(p, c, T, lit(8.2) * awake(T, BELLOWS))
+  drawGreatBellows(p, c, T, lit(8.2))
   drawTrolls(p, c, T, lit, 'ledge')
   drawGovernor(p, c, T, L, 'front')
   drawSparks(p, c, T)
