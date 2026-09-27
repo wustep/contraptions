@@ -44,6 +44,8 @@ export function checkTheater(check: Check, works: Work[]): void {
   const player = readFileSync(join(process.cwd(), 'apps/rube/src/shows/player.ts'), 'utf8')
   check('a show that plays through puts the next one on, where the player already stops it', /if \(through && host\) \{\s*advance\(\)/.test(player) && /host\.next\(\)/.test(player))
   check('the next one goes on the way a link does: sound if allowed, the picture regardless', /if \(next\) void open\(next, 'link'\)/.test(player))
+  const theater = readFileSync(join(process.cwd(), 'apps/rube/src/shows/theater.ts'), 'utf8')
+  check('the panel has a Fullscreen button that follows Esc and the browser\'s own exit', /'Exit fullscreen' : 'Fullscreen'/.test(theater) && /addEventListener\('fullscreenchange', syncFullscreen\)/.test(theater) && /removeEventListener\('fullscreenchange', syncFullscreen\)/.test(theater))
   check('the take going off is unloaded before the next goes on', /music\.load\(null\)\s*\n\s*stage\.set\(null\)/.test(player))
 
   console.log('\ntheater: the running order')
