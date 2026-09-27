@@ -209,6 +209,11 @@ export interface HeptapodOpts {
   reachFog?: number
   /** How open the reaching limb's palm is, 0 a closed tip .. 1 the seven fingers splayed flat on the glass. */
   palm?: number
+  /**
+   * Optional (the director's, for the first logogram): how deep in the fog the limbs it stands on are, when deeper
+   * than its body: the fog thickening round its feet while its reaching limb and its body stay as they are.
+   */
+  limbFog?: number
   /** Lean, radians, the whole body (a slow sway toward something). */
   lean?: number
   /**
@@ -329,10 +334,11 @@ export function drawHeptapod(p: p5, k: number, o: HeptapodOpts): void {
       px = x
       py = y
     }
+    const standing = o.limbFog !== undefined && reaching <= 0 ? clamp01(Math.max(fog, o.limbFog)) : fog
     const col =
       reaching > 0 && o.reachFog !== undefined
         ? mixHex(base, air, Math.min(1, fog + (clamp01(o.reachFog) - fog) * reaching + d * 0.35 * (1 - fog)))
-        : colorAt(d)
+        : mixHex(base, air, Math.min(1, standing + d * 0.35 * (1 - standing)))
     // Its root, rounded, so the front limb (drawn over the body) never shows a square end.
     p.fill(alpha(p, col, 0.95))
     p.ellipse(root[0] * k, root[1] * k, w0 * 2.05 * k, w0 * 2.05 * k)
