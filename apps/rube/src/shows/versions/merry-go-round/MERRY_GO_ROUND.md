@@ -21,7 +21,8 @@ in all.
   bright silver `#E4E1EE` from the moment she gives Howl his heart: young, her hair gone silver.
 - **Howl is the cornflower ball** `#4D7FD4`, company: he rides, leads and follows, and never makes a machine go.
   As the bird he goes to ink `#2C2E46` with wings under him (`drawWings`); in the war, near black, the fire below
-  catching his undersides, the film's creature.
+  catching his undersides, the film's creature, drawn whole (`torso`): a body from a wedge of tail to a hooked beak,
+  broad arms of wings with the long feathers at the hand.
 - **Markl is the small sage ball** `#6DAA78`, at breakfast on his own stool beside her, and home in the open door at
   the end.
 - Everyone else is drawn: **Calcifer** (a flame with a face, never a disc; the castle's engine, whose size is its
@@ -135,10 +136,14 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   again on successive bars (a strobe of dark and light): a phrase that builds is ridden in one frame. The raid also
   cuts up to the sky three times, her ball hidden below the frame's foot for under 2 s each.
 - **Soft volume.** Smoke, steam, fog, dust and clouds are radial puffs, never outlined, uneven in size, never a row.
-  The finale's clouds are drawn as the town's are: two heaps of uneven size on a long soft underside.
+  The finale's clouds are drawn as the town's are: two heaps of uneven size on a long soft underside, big and small
+  side by side at heights in tiers, with open sky between.
+- **No trail.** No ball draws a trail (`CastleShow.trailOff`): the camera rides with her on the porch, the deck, the
+  air and the tub, and a trail samples her past places in the world, so it hung a string of ghost balls off her.
 - **Light has a source.** The war's sky is lit from below by the burning town, so the fleet and the bird stand black
   against it, their undersides catching the fire; the street's fronts are lit from above by it. The room in the
-  bombing is lit by Calcifer alone, a warm pool round the grate she walks into.
+  bombing is lit by Calcifer alone, a warm pool round the grate she walks into. Light through a door or a window
+  lands as a soft pool or a soft-sided shaft, and glows out of a crack; never a hard-edged wedge or a ruled line.
 - **Fire sits in what burns.** A roof's fire comes up out of a ragged hole in its slates, lit from inside, the slates
   round it warm and the roof's edges catching the light; the town burning beyond the roofs goes down behind their line.
 - **On a phone held upright** every set ends soft: the town's stone sinks into the night below the street, the land
@@ -166,8 +171,8 @@ the deck line a moment after each landing (`onBody` follows it, so riders and th
   every part striking; 75% of the waltz's downbeats under the walk on the air, 80% of the castle's while it walks,
   75% of the climax's, every downbeat of the last tutti; the curse, the slow waltz's hit, the climax, the heart and the
   last chord struck; every seam and cut on the recording; the places in the story's order; Sophie never jumping in
-  a place and holding still on the screen at every cut between places (1 ms steps); the camera's own cuts only on strikes, and its zoom never faster than 0.6 of a scale a second outside the punches and the floor's knock; the whole castle inside the Zoom frame under the credits; never hidden more than 2 s; never under 12 px across for more than 0.3 s outside the named wides, each two bars of its own music or less; in the frame under
-  Zoom; Howl and Markl never jumping, and coming and going only out of shot or at a cut; Howl not in the town at
+  a place and holding still on the screen at every cut between places (1 ms steps); the camera's own cuts only on strikes, and its zoom never faster than 0.6 of a scale a second outside the punches and the floor's knock; the whole castle inside the Zoom frame under the credits; never hidden more than 2 s; never under 12 px across for more than 0.3 s outside the named wides, each two bars of its own music or less; her whole ball inside the frame under
+  Zoom with a margin (its far edge within 0.9 of the half-frame; her centre in it in the named wides); Howl and Markl never jumping, and coming and going only out of shot or at a cut; Howl not in the town at
   dawn, the shop at night or the hills; Sophie's age story; the credits' words and timing.
 
 ## How to run and look
