@@ -842,6 +842,57 @@ VOLLEY_N.forEach((m, v) => {
   }
 })
 
+/*
+ * The hero machine keeps its sky. While the spark rides the Catherine wheel (and is thrown off it) the wheel is the
+ * picture, so no mid or near flower breaks within reach of it: the disc, its spokes and the drivers' fire at its rim
+ * stand against dark sky, and the sky's shells fill the thirds round it. While the spark climbs the Titan's leader,
+ * nothing breaks over the mortar's column (the leader up its side, the mortar, and the sky over its lip, where the
+ * spark goes in), so the climb is a lit fuse up a dark gun between two hangings of willows.
+ */
+/** How far the wheel reaches: its rim, the spark riding it, and the drivers' fire at its mouths. */
+const WHEEL_REACH = ORBIT + 0.5
+/** How far a flower's stars keep off it. */
+const WHEEL_KEEP = 1.2
+/** The Titan's column: from the leader (and the spark on it) on its left to the mortar's right wall, from the ground up. */
+const COLUMN: [number, number] = [LEADER_FOOT[0] - R - 0.2, TITAN_X + TITAN_W / 2 + 0.15]
+const COLUMN_KEEP = 0.5
+/** How far a flower's stars are seen to fly (a small shell's go out to about 0.8 of its reach, under its drag). */
+const seenReach = (sh: Shape): number => (sh.kind === 'small' ? 0.8 : 1) * reachOf(sh)
+/** A flower's nearest pass by the wheel's hub over its first half second, less its reach and the wheel's. */
+function wheelGap(x: number, y: number, sh: Shape): number {
+  let d = Infinity
+  for (let s = 0; s <= 0.5 + 1e-9; s += 0.05) d = Math.min(d, Math.hypot(x - WHEEL[0], heartY(y, sh, s) - WHEEL[1]))
+  return d - seenReach(sh) - WHEEL_REACH
+}
+/** Whether the machine's sky is kept at `at`: the wheel's while it turns and throws, the column's while it is climbed. */
+const wheelSky = (at: number): boolean => at >= WHEEL_AT && at < FLING + 0.3
+/** (A shell broken a little before the climb whose stars still burn there when the spark reaches the leader counts.) */
+const columnSky = (at: number, life = 0): boolean => at < DIVE && at + life >= LEADER_AT + 0.15
+/** The nearest a straight rise from `a` to `b` passes the point `p`. */
+function segGap(p: Pt, a: Pt, b: Pt): number {
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+  const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(a[0] + dx * u - p[0], a[1] + dy * u - p[1])
+}
+/**
+ * Whether a shell breaking at (x, y) at `at` keeps off the hero machine of that moment. `far`: one of the far crews'
+ * little shells across the river, which keeps off the wheel a little less. `from`: where its rise comes up from, the
+ * far bank under it (`'bank'`) or a gun, so the rise never streaks through the wheel's disc either.
+ */
+function offHero(at: number, x: number, y: number, sh: Shape, o: { far?: boolean; from?: Pt | 'bank' } = {}): boolean {
+  if (wheelSky(at)) {
+    if (wheelGap(x, y, sh) < (o.far ? 0.5 : WHEEL_KEEP)) return false
+    if (o.from === 'bank' && Math.abs(x - WHEEL[0]) < WHEEL_REACH + 0.9 && y < WHEEL[1] + WHEEL_REACH) return false
+    if (Array.isArray(o.from) && segGap(WHEEL, o.from, [x, y]) < WHEEL_REACH + 0.3) return false
+  }
+  if (columnSky(at, sh.life)) {
+    const r = seenReach(sh)
+    if (x + r > COLUMN[0] - COLUMN_KEEP && x - r < COLUMN[1] + COLUMN_KEEP) return false
+  }
+  return true
+}
+
 /* The finale's battery: eight guns in a long rack, chain-fused down the coda. */
 export const BATTERY_X0 = CRASH_AT[0] + 0.95
 export const GUN_H = 1.3
@@ -859,8 +910,34 @@ const BATTERY_BURSTS: Shape[] = [
   { kind: 'chrys', col: FW.fwGreen, tail: FW.fwGold, n: 60, v: 15, k: 3.3, gs: 5.5, life: 2.0, trail: 0.5, wash: 0.9 },
 ]
 /**
+ * For a battery shell set by hand that breaks while the wheel keeps its sky: where it was set if its flower, and its
+ * rise off the gun (from `gun`), keep off the wheel; else the nearest place that does, going away from the hub first,
+ * with the whole flower inside the frame's sides, no further past the frame's top than it was set, its heart well up
+ * off the ground, and no nearer the spark. Where the frame has no such place it stays where it was set.
+ */
+function offWheel(at: number, p: Pt, sh: Shape, gun: Pt): Pt {
+  if (!wheelSky(at) || offHero(at, p[0], p[1], sh, { from: gun })) return p
+  const keep = Math.min(sparkGap(at, p[0], p[1], sh), 0.9 * reachOf(sh))
+  const away = Math.atan2(p[1] - WHEEL[1], p[0] - WHEEL[0])
+  const c = camAt(at)
+  const W = (16 * c.h) / 9
+  // No higher past the frame's top than where it was set (a flower that broke whole still does).
+  const top = Math.max(c.y - c.h / 2 + 0.5, Math.min(p[1], c.y - c.h / 2 + reachOf(sh) + 0.3))
+  for (let d = 0.25; d <= 9; d += 0.25) {
+    for (let i = 0; i < 24; i++) {
+      const turn = (i % 2 ? -1 : 1) * Math.ceil(i / 2) * (Math.PI / 12)
+      const x = p[0] + d * Math.cos(away + turn)
+      const y = p[1] + d * Math.sin(away + turn)
+      if (Math.abs(x - c.x) > W / 2 - 0.35 * reachOf(sh) || y < top || y > GY - 2) continue
+      if (offHero(at, x, y, sh, { from: gun }) && clearOfMoon(at, x, y, sh) && sparkGap(at, x, y, sh) >= keep) return [x, y]
+    }
+  }
+  return p
+}
+/**
  * Where each battery shell bursts: over the battery and the wheel, rippling right with the chain toward the Titan, and
- * each moved off the moon if the camera has brought the moon there (`offMoon`).
+ * each moved off the moon if the camera has brought the moon there (`offMoon`), and off the wheel while it turns
+ * (`offWheel`).
  */
 const BATTERY_B: Pt[] = ([
   [WHEEL[0] - 5.2, GY - 7.3],
@@ -871,7 +948,7 @@ const BATTERY_B: Pt[] = ([
   [WHEEL[0] + 5.4, GY - 6.8],
   [LEADER_FOOT[0] - 3.8, GY - 5.8],
   [LEADER_FOOT[0] + 0.4, GY - 5.7],
-] as Pt[]).map((b, i) => offMoon(BURST_AT[i], b, BATTERY_BURSTS[i]))
+] as Pt[]).map((b, i) => offWheel(BURST_AT[i], offMoon(BURST_AT[i], b, BATTERY_BURSTS[i]), BATTERY_BURSTS[i], [BATTERY_X0 + 0.66 * i, GY - GUN_H]))
 /** Each gun is laid toward where its shell will burst. */
 export const GUNS: Gun[] = LAUNCH.map((at, i) => {
   const x = BATTERY_X0 + 0.66 * i
@@ -1017,6 +1094,7 @@ interface Held {
 }
 const HELD: Held[] = BURSTS.filter((b) => b.at > CRASH - 1 && b.kind !== 'mine').map((b) => ({ at: b.at, x: b.x, y: b.y, r: reachOf(b), depth: b.kind === 'titan' ? 'near' : 'mid', life: b.life }))
 
+
 /**
  * Where a shell of this depth breaks in this third of the frame at `at`: near where it is aimed (a little off the
  * third's middle, its own way), in its depth's band of sky, off the moon, clear of the spark, and apart from what is
@@ -1067,6 +1145,7 @@ function barragePlace(at: number, depth: Depth, third: number, sh: Shape, salt: 
     if (!clearOfMoon(at, x, y, sh)) continue
     if (depth !== 'near' && !underTop(at, y, sh, win)) continue
     if (sparkGap(at, x, y, sh) < gapNeed) continue
+    if (!offHero(at, x, y, sh, { far: depth === 'far', from: depth === 'mid' ? 'bank' : undefined })) continue
     let apart = true
     for (const o of HELD) {
       if (o.at > at + 0.05 || o.at + 0.55 * o.life < at) continue
@@ -1082,7 +1161,7 @@ function barragePlace(at: number, depth: Depth, third: number, sh: Shape, salt: 
 }
 
 /** Each chord's shells: `code` is depth (F, M, N) and third (0 left, 1 middle, 2 right), `c` for a crown; biggest first. */
-const BARRAGE: { i: number; hues: string[]; code: string; t?: number }[] = [
+const BARRAGE: { i: number; hues: string[]; far?: string[]; code: string; t?: number }[] = [
   { i: 0, hues: [BLUE, WHITE], code: 'F0 F2' },
   { i: 1, hues: [VIOLET], code: 'M0 F2' },
   { i: 2, hues: [GOLD, WHITE], code: 'N0 N1 M0 M2 F0 F1 F2' },
@@ -1105,19 +1184,20 @@ const BARRAGE: { i: number; hues: string[]; code: string; t?: number }[] = [
   { i: 14, hues: [RED, BLUE], code: 'M2 F0 F2' },
   { i: 15, hues: [GOLD, GOLD, WHITE], code: 'N0 N2 M0 M1 M2 F0 F1 F2' },
   { i: 16, hues: [WHITE, GOLD], code: 'F0 F2' },
-  // The hammers: a salvo each, one hue a blow.
+  // The hammers: a salvo each, one hue a blow. The spark falls through them, a warm gold-white point, so round it
+  // the sky is cool (red, green, blue, violet); gold and white go up only across the river, low over the far bank.
   { i: 17, hues: [RED], code: 'N0 M0 M2 F0 F2' },
   { i: 18, hues: [GREEN], code: 'N2 M0 M2 F0 F2' },
   { i: 19, hues: [BLUE], code: 'N1 M0 M2 F0 F2' },
   { i: 20, hues: [VIOLET], code: 'N0 M0 M2 F0 F2' },
-  { i: 21, hues: [GOLD], code: 'N2 M0 M2 F0 F2' },
-  { i: 22, hues: [WHITE], code: 'N1 M0 M2 F0 F2' },
+  { i: 21, hues: [RED], far: [GOLD], code: 'N2 M0 M2 F0 F2' },
+  { i: 22, hues: [BLUE], far: [WHITE], code: 'N1 M0 M2 F0 F2' },
 ]
 const MID_KINDS: Kind[] = ['peony', 'chrys', 'palm', 'peony', 'crossette', 'chrys', 'willow']
 const HEAVY = 5.5
 /** The barrage's bursts, for the probes. */
 export const BARRAGE_BURSTS: Burst[] = []
-for (const { i, hues, code, t } of BARRAGE) {
+for (const { i, hues: own, far, code, t } of BARRAGE) {
   const at = t ?? C(i)
   const bang = i >= CODA.length - 6
   const heavy = i >= 0 && CODA[i].s >= HEAVY
@@ -1126,15 +1206,19 @@ for (const { i, hues, code, t } of BARRAGE) {
     const depth: Depth = cell[0] === 'F' ? 'far' : cell[0] === 'M' ? 'mid' : 'near'
     const third = Number(cell[1])
     const crown = cell[2] === 'c'
+    const hues = depth === 'far' && far ? far : own
     const salt = Math.round(at * 100) * 7 + j
     // One or two hues a chord, the first the more (the second on every third shell).
     const col = hues.length === 1 ? hues[0] : hues[j % 3 === 1 ? 1 : 0]
     const kind: Kind = crown ? (j % 2 ? 'chrys' : 'willow') : depth === 'near' ? (j % 2 ? 'peony' : 'palm') : MID_KINDS[(i + j) % MID_KINDS.length]
-    // The nearest third it fits in, at its size or a little smaller.
+    // The nearest third it fits in, at its size or a little smaller. While the wheel or the Titan's column keeps its
+    // sky (`offHero`), a shell kept off it goes to another third, a little smaller if it must, so the chord still fills
+    // the sky round the machine in its own colour.
     let got: { p: Pt; sh: Shape } | null = null
-    const thirds = depth === 'near' ? [third, (third + 1) % 3, (third + 2) % 3] : [third]
+    const hero = wheelSky(at) || columnSky(at, 3.5)
+    const thirds = depth === 'near' || hero ? [third, (third + 1) % 3, (third + 2) % 3] : [third]
     search: for (const th of thirds) {
-      for (const scale of depth === 'mid' ? [1, 0.85, 0.7, 0.55] : [1, 0.85, 0.7]) {
+      for (const scale of depth === 'mid' || hero ? [1, 0.85, 0.7, 0.55] : [1, 0.85, 0.7]) {
         const reach = reachFor(depth, h) * scale * (0.9 + 0.2 * hash(salt, 3, 59))
         const sh = shapeFor(depth, kind, col, reach, at, { crown, bang, heavy, salt })
         const p = barragePlace(at, depth, th, sh, salt, bang)
