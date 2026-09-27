@@ -25,14 +25,18 @@ import { PLAN } from '../seams'
  *           head, cocked in the dark, falls at once
  *   102.32  the first blow, on the first crash of the cymbals: sparks into the furnace, which catches with a flare,
  *           and the tail flings him high; the stoker and the keeper wake, the lamps catch behind them
- *   103–106 the hammer bats him up on the blows (every 1 and 3 from 103.43), and at 106.30 flings him across the room
- *   107.75  he lands on the flywheel's rim as the pinion goes into its teeth: the flywheel lurches into motion
- *   107–112 carried up and over the top of the great wheel; 112.66 a tooth flicks him off its shoulder
- *   113.36  onto the first pump as the pumps start: from head to head, landing on 1 and 3, flung off on 2 and 4
+ *   103–107 he rides the hammer's head: jolted off it on every blow (an eighth note, a hair high) and caught as it
+ *           rises; at the top of its lift (107.4) he hops up onto the flywheel's side
+ *   107.75  the pinion goes into the flywheel's teeth under him: the flywheel lurches into motion
+ *   107–112 carried up its side, rolling ahead of it over its top (≈111.6) and down its far side in the teeth; on the
+ *           blow at 112.66 it kicks him out and he falls down its face onto the first pump's head, on the crash
+ *   113.36  the pumps start: from head to head, landing on 1 and 3, flung off on 2 and 4
  *   118.72  the great bellows: the furnace roars white, the strokes double, he is bounced higher, end to end
  *   124.01  back on the first head; the keeper throws the governor in; the head flings him onto its yoke (125.30)
- *   125–133 the governor spins up and lifts him toward the chimney, the yoke bucking under him on the blows
- *   129.11  the pipe's safety valve blows: the keeper sits on it; 131.58 it throws him off
+ *   125–129 the governor spins up and lifts him toward the chimney, the yoke bucking under him on the blows
+ *   129.11  the pipe's safety valve blows and bucks him off the yoke onto the racing pump heads, a head a beat,
+ *           back onto the yoke on beat 278, which bucks him on 280, 282, 284; the keeper sits on the valve and is
+ *           thrown off (131.58)
  *   132.79  the governor's arms hit their stops; 133.09, 133.38 its weights fly off; 133.52 the yoke drops him
  *   133.67  the spindle snaps and topples; 134.25 its top comes down on the flywheel, which splits, as he lands
  *           straight down at the chimney's foot on the coda's first chord

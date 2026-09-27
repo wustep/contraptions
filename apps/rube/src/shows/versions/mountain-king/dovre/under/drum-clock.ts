@@ -194,8 +194,10 @@ export const DRUMMERS: readonly Drummer[] = [
   { x: 7.2, drum: 2, size: 1.45, seed: 3, up: 164 },
   { x: 3.6, drum: 2, size: 1.5, seed: 8, up: 168 },
   { x: 16.45, drum: 3, size: 1.3, seed: 11, up: 172 },
-  { x: 12.65, drum: 3, size: 2.15, seed: 14, hide: TROLL.old, up: 181 },
-  { x: 11.65, drum: 3, size: 1.7, seed: 5, up: 184 },
+  // The west gallery's two stand well apart (1.9 cells), so they are two silhouettes, never one troll with two heads
+  // and four clubs: the old one nearer the skin's middle, the young one at the gallery's far end by its ladder.
+  { x: 13.0, drum: 3, size: 2.15, seed: 14, hide: TROLL.old, up: 181 },
+  { x: 11.1, drum: 3, size: 1.7, seed: 5, up: 184 },
 ]
 /** How long a drummer takes to climb up the drum's back, seconds. */
 export const CLIMB = 0.95

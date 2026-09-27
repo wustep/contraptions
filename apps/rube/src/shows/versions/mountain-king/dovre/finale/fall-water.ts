@@ -1,7 +1,7 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
 import { alpha, hash, smooth } from '../kit'
-import { LAST2, ROLL } from '../music'
+import { BLOW } from '../music'
 import type { Pen } from '../troll'
 import { SKY, STONE } from '../worlds'
 
@@ -11,10 +11,9 @@ import { SKY, STONE } from '../worlds'
  * frame, cells; y down. Flat fills and alpha, from the palette's wet stone and starlight; the dawn lights its east side.
  *
  * The water keeps its own clock inside the calls (T is show time), so the caller only says where the column stands:
- * - through the silence it lets go of him (`below`): the last hammer blow throws him on up the vent, the water falls
- *   back away under him, and on the roll a fresh jet comes up the dark vent and slams into him;
- * - after the second of the last two chords it bursts out of the summit past the top of the frame (`burst`), falls
- *   back from the top down over the ring-out, raining spray on the crater, and is gone before the credits (153.7).
+ * it carries him up to the summit's cap, and on the last hammer blow (`BLOW`) it bursts out of the summit as it
+ * throws him east (`burst`), falls back from the top down through the silence, raining spray on the crater, and is
+ * gone before the roll is over.
  */
 
 /** The column's body: the wet stone's blue, deeper, so the froth on it reads. */
@@ -25,24 +24,12 @@ const frac = (v: number) => v - Math.floor(v)
 
 /* ------------------------------------------------------------------ the water's own clock */
 
-/** When the water stops carrying him (a beat after the last hammer blow's throw), and how hard it then falls back. */
-const LET_GO = 146.85
-const SAG = 14
-/** How fast the roll's fresh jet comes up the vent (cells/s): it reaches him on the roll. */
-const JET = 24
-
-/** How far below where the caller puts the column's top the water really is: 0 while it carries him. */
-function below(T: number): number {
-  if (T <= LET_GO || T >= ROLL) return 0
-  return Math.min(0.5 * SAG * (T - LET_GO) * (T - LET_GO), JET * (ROLL - T))
-}
-
 /**
- * After the last chord (u = T - LAST2): how far the burst's jet climbs over the caller's top (then falls back), how
+ * After the last blow (u = T - BLOW): how far the burst's jet climbs over the caller's top (then falls back), how
  * open its head is, and how much of it is left. The jet climbs for about 0.7 s, then its top falls back under about
  * half of gravity (the water under it still rising into it) and runs down the column from the top for about a second
- * and a half, down into the crater and the vent, while the last chord rings out; what is left thins after that and is
- * gone well before the credits (153.7).
+ * and a half, down into the crater and the vent, through the silence; what is left thins after that and is
+ * gone as the roll comes in.
  */
 function burst(u: number): { up: number; open: number; left: number } {
   const s = Math.min(1, Math.max(0, u / 0.65))
@@ -84,11 +71,11 @@ interface Row {
  */
 export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T: number, force: number, sun = 0, wide = 1): void {
   const k = c.k
-  let yTop = yTop0 + below(T)
+  let yTop = yTop0
   let open = 0
   let a = 1
-  if (T >= LAST2) {
-    const b = burst(T - LAST2)
+  if (T >= BLOW) {
+    const b = burst(T - BLOW)
     yTop = yTop0 - b.up
     open = b.open * b.left
     a = b.left
@@ -97,9 +84,9 @@ export function column(p: p5, c: Pen, x: number, yBase: number, yTop0: number, T
   const len = yBase - yTop
   if (len <= 0.02) return
   // Loose: the top is not pushing anything (he is away above it, or it is out in the open on its own).
-  const loose = Math.max(smooth(below(T), 0.03, 0.4), T >= LAST2 ? 1 : 0)
+  const loose = T >= BLOW ? 1 : 0
   // 0..1 how much a loose head is falling back (1) rather than driving up (0).
-  const falling = T >= LAST2 ? smooth(T - LAST2, 0.6, 1.1) : T > LET_GO && T < ROLL && 0.5 * SAG * (T - LET_GO) ** 2 < JET * (ROLL - T) ? 1 : 0
+  const falling = T >= BLOW ? smooth(T - BLOW, 0.6, 1.1) : 0
   const n = Math.max(10, Math.min(420, Math.ceil(len * 12)))
   const rows: Row[] = []
   for (let i = 0; i <= n; i++) {
@@ -260,11 +247,7 @@ export function crown(p: p5, c: Pen, bx: number, by: number, T: number, force: n
     p.pop()
     return
   }
-  const held = 1 - smooth(below(T), 0.03, 0.4)
-  if (held <= 0.01) {
-    p.pop()
-    return
-  }
+  const held = 1
   const w = 0.36 + 0.07 * force
   const rim = by - 0.01 + 0.012 * Math.sin(T * 11)
   const depth = 0.24 + 0.06 * force
@@ -318,14 +301,14 @@ export function crown(p: p5, c: Pen, bx: number, by: number, T: number, force: n
 /* ------------------------------------------------------------------ the burst */
 
 /**
- * Out of the summit on the second of the last two chords: the jet (drawn by `column`) climbs past the top of the
+ * Out of the summit on the last hammer blow: the jet (drawn by `column`) climbs past the top of the
  * frame and bursts, throwing spray up and out in streaks that arc over and fall back to the flanks (to `ground(x)` of
- * the caller's frame); then it all falls back and is gone by the credits. (x, yBase) is the crater; `yTop` the
+ * the caller's frame); then it all falls back through the silence. (x, yBase) is the crater; `yTop` the
  * caller's top for the column (the burst climbs over it); `sun` the dawn on its east side. The caller's own
  * envelope (`_h`) is replaced by the burst's clock.
  */
 export function plume(p: p5, c: Pen, x: number, yBase: number, yTop: number, T: number, sun: number, ground: (x: number) => number): void {
-  const u = T - LAST2
+  const u = T - BLOW
   if (u < 0 || yBase - yTop < 0.05) return
   const { left } = burst(u)
   if (left <= 0.005) return

@@ -44,6 +44,11 @@ export const TROLL = {
   bone: '#E6DDC0',
   /** The deep shadow in a troll's mouth and under its brow. */
   shade: '#2A2A22',
+  /** The court's other hides, apart in value and hue so a row of them is not one silhouette repeated. */
+  bark: '#5B4634',
+  slate: '#58616A',
+  rust: '#7D5E3B',
+  birch: '#8E8B74',
 }
 
 /** The Mountain King's gold: his crown, the throne's studs, the court's treasure. Duller than any light. */

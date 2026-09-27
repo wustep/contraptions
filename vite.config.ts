@@ -13,6 +13,8 @@ import { cardPath, showCard, showPath, type ShareCard } from './apps/rube/src/sh
  * pieces and worlds for Machine are made (`/builder/`, built from
  * apps/rube/src/builder); the Playground is where pieces and worlds wait to
  * be let into Machine (`/playground/`, built from apps/rube/src/playground).
+ * Theater (`/theater/`) is every show, shuffled, one after another; it is
+ * off the mode switch until visited.
  * `/sandbox/` is where Explorations used to live and `/rube/` where Machine
  * did; both only redirect, keeping the seed. One dev server serves all of
  * it, and one `vite build` writes all of it into dist/ with the core the
@@ -41,7 +43,7 @@ function rootToMachine(): Plugin {
 /** A page path without the slash goes to the directory, as a static host would send it. */
 function trailingSlash(): Plugin {
   const redirect: Connect.NextHandleFunction = (req, res, next) => {
-    const m = /^\/(explorations|machine|shows|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
+    const m = /^\/(explorations|machine|shows|theater|builder|playground|sandbox|rube|shows\/[a-z0-9-]+(?:\/[a-z0-9-]+)?)(\?.*)?$/.exec(req.url ?? '')
     if (!m) return next()
     res.writeHead(302, { Location: `/${m[1]}/${m[2] ?? ''}` })
     res.end()
@@ -193,6 +195,7 @@ export default defineConfig({
         shows: `${here}shows/index.html`,
         builder: `${here}builder/index.html`,
         playground: `${here}playground/index.html`,
+        theater: `${here}theater/index.html`,
         sandbox: `${here}sandbox/index.html`,
         rube: `${here}rube/index.html`,
       },

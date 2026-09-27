@@ -2,7 +2,7 @@ import type p5 from 'p5'
 import { mixHex, type Pt } from '../../../../../parts'
 import { alpha, hash, knock, lastOf, smooth, type Ctx } from '../kit'
 import { flame, flicker, glow } from '../lantern'
-import { beat, CODA, FF } from '../music'
+import { beat, CODA, FF, RUIN } from '../music'
 import { hollow, quake, slab, stalactite } from '../rock'
 import { drawTroll } from '../troll'
 import { LAMP, STONE, TROLL, WORKS } from '../worlds'
@@ -49,7 +49,8 @@ import {
  * light grow bar by bar with the crescendo, and stay.
  */
 export function light(T: number): number {
-  let a = 0.06
+  // The banked fires' own glow: enough to see the room by as he falls into it (it has been waiting in the dark).
+  let a = 0.11
   a += 0.18 * smooth(T, BEGIN - 0.02, BEGIN + 0.7)
   for (const d of DRUMMERS) a += 0.12 * smooth(T, beat(d.up) - 0.35, beat(d.up) + 0.8)
   a += 0.1 * smooth(T, FF - 1.4, FF + 0.4)
@@ -277,7 +278,10 @@ export function drawFire(p: p5, c: Ctx, x: number, T: number, L: number, seed: n
   const lit1 = caught(seed - 1, T)
   const y = FLOOR + jolt * 0.3
   const inkC = edgeC(L)
-  const glowing = mixHex(mixHex(STONE.deep, WORKS.rust, 0.35 + 0.25 * lit1), LAMP.flame, (0.1 + 0.55 * L) * lit1)
+  const bank = 0.5 + 0.5 * Math.sin(T * 1.3 + seed * 2.1)
+  const glowing = mixHex(mixHex(STONE.deep, WORKS.rust, 0.55 + 0.1 * bank + 0.1 * lit1), LAMP.flame, (0.1 + 0.55 * L) * lit1)
+  // Banked, the embers breathe a low red glow onto the floor and the barrels near them.
+  if (lit1 < 0.99) glow(p, c, x, y - 0.15, 1.5, (0.1 + 0.05 * bank) * (1 - lit1), WORKS.rust)
   p.push()
   p.strokeJoin(p.ROUND)
   // The embers' bed, then two logs crossed over it, their ends glowing.
@@ -527,14 +531,56 @@ export function drawKettle(p: p5, c: Ctx, T: number, L: number, layer: 'back' | 
  * `front` the near half of the skin again, its hoop, and the barrel, over the ball. (`_peerX` is unused: the dents are
  * where the clubs aim, not where the drummers look.)
  */
+/**
+ * The great drum in the mountain's fall (its room's great thing, on `RUIN.drum`, while the room is still lit): the
+ * trestle's east legs buckle into the pit's mouth and the drum lurches east about the west trestle, its east end
+ * going down into the pit (faster as it goes, a damped rock as it wedges); on the room's second chord it slips
+ * further in. How far it has turned (radians, east end down); 0 before.
+ */
+export function greatTilt(T: number): number {
+  const a = T - RUIN.drum[0]
+  if (a <= 0) return 0
+  const FALL = 0.38
+  const u = Math.min(1, a / FALL)
+  const b = Math.max(0, a - FALL)
+  let tilt = 0.45 * u * u + (b > 0 ? 0.035 * Math.exp(-b / 0.12) * Math.sin(b * 22) : 0)
+  const c2 = T - RUIN.drum[1]
+  if (c2 > 0) {
+    const v = Math.min(1, c2 / 0.3)
+    tilt += 0.12 * v * v + (c2 > 0.3 ? 0.02 * Math.exp(-(c2 - 0.3) / 0.12) * Math.sin((c2 - 0.3) * 22) : 0)
+  }
+  return tilt
+}
+/** What the great drum turns about as it goes: the west trestle's top. */
+function greatPivot(d: Drum, jolt: number): Pt {
+  return [d.cx - (d.rx - 0.28), d.bottom + jolt + d.ry * 0.5]
+}
+/** Draw `fn` turned with the great drum (its skin, barrel, the burst's tear and rags go with it). */
+export function withGreatTilt(p: p5, c: Ctx, T: number, jolt: number, fn: () => void): void {
+  const a = greatTilt(T)
+  if (a === 0) return fn()
+  const [px, py] = greatPivot(DRUM3, jolt)
+  p.push()
+  p.translate(px * c.k, py * c.k)
+  p.rotate(a)
+  p.translate(-px * c.k, -py * c.k)
+  fn()
+  p.pop()
+}
+
 export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number, layer: 'back' | 'front', jolt: number, _peerX?: number): void {
+  if (layer === 'back' && n === 3) drawTrestle(p, c, d, L, jolt, T)
+  if (n === 3) withGreatTilt(p, c, T, jolt, () => drumBody(p, c, d, n, T, L, layer, jolt))
+  else drumBody(p, c, d, n, T, L, layer, jolt)
+}
+
+function drumBody(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number, layer: 'back' | 'front', jolt: number): void {
   const { k, weight } = c
   const inkC = edgeC(L)
   const skinC = lit(WORKS.skin, L)
   const cy = d.skin + jolt
   const burst = n === 3 ? smooth(T, BURST - 0.005, BURST + 0.08) : 0
   const hole = { x: BURST_X, y: cy + 0.01, rx: 0.62 * burst, ry: 0.23 * burst }
-  if (layer === 'back' && n === 3) drawTrestle(p, c, d, L, jolt)
   p.push()
   p.strokeJoin(p.ROUND)
   if (layer === 'back') {
@@ -660,15 +706,26 @@ export function drawDrum(p: p5, c: Ctx, d: Drum, n: 2 | 3, T: number, L: number,
 }
 
 /** The great drum's trestle: two A-legs on the floor either side of the pit, a cross-piece on each. */
-function drawTrestle(p: p5, c: Ctx, d: Drum, L: number, jolt: number): void {
+function drawTrestle(p: p5, c: Ctx, d: Drum, L: number, jolt: number, T = 0): void {
   const { weight } = c
   const inkC = edgeC(L)
   const wood = lit(WORKS.wood, L)
   const y0 = d.bottom + jolt + d.ry * 0.5
+  // In the mountain's fall the east A-leg buckles out from under the drum, into the pit's mouth, as the drum tips.
+  const tilt = greatTilt(T)
+  const buckle = Math.min(1.25, 2.6 * tilt)
   p.push()
   p.strokeJoin(p.ROUND)
   for (const s of [-1, 1]) {
     const x = d.cx + s * (d.rx - 0.28)
+    const th = s > 0 ? -buckle : 0
+    // A point of this A-leg, turned about its feet' middle on the floor.
+    const at = (q: Pt): [number, number] => {
+      if (!th) return q
+      const dx = q[0] - x
+      const dy = q[1] - FLOOR
+      return [x + dx * Math.cos(th) - dy * Math.sin(th), FLOOR + dx * Math.sin(th) + dy * Math.cos(th)]
+    }
     p.stroke(inkC)
     p.strokeWeight(weight)
     p.fill(wood)
@@ -676,10 +733,10 @@ function drawTrestle(p: p5, c: Ctx, d: Drum, L: number, jolt: number): void {
       const top: Pt = [x + e * 0.12, y0]
       const foot: Pt = [x + e * 0.34, FLOOR]
       const w = 0.075
-      shape(p, c, [[top[0] - w, top[1]], [top[0] + w, top[1]], [foot[0] + w, foot[1]], [foot[0] - w, foot[1]]])
+      shape(p, c, [at([top[0] - w, top[1]]), at([top[0] + w, top[1]]), at([foot[0] + w, foot[1]]), at([foot[0] - w, foot[1]])])
     }
     const ym = y0 + (FLOOR - y0) * 0.55
-    shape(p, c, [[x - 0.3, ym - 0.05], [x + 0.3, ym - 0.05], [x + 0.3, ym + 0.05], [x - 0.3, ym + 0.05]])
+    shape(p, c, [at([x - 0.3, ym - 0.05]), at([x + 0.3, ym - 0.05]), at([x + 0.3, ym + 0.05]), at([x - 0.3, ym + 0.05])])
   }
   p.pop()
 }
