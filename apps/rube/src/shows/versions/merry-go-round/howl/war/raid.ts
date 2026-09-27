@@ -232,6 +232,18 @@ const fallFrom = (p0: Pt, v0: Pt, u: number): Pt => [p0[0] + v0[0] * u, p0[1] + 
 /** The far warship: small and hazed, crossing right to left over the roofs through the build. */
 const W1 = { y: -14.0, s: 1.1, v: -2.4 }
 const w1x = (t: number) => 10.5 + W1.v * (t - 210.257)
+/**
+ * The same ship in the war's establishing wide (b6 → b7), the only frame it is seen in whole: lower and a little
+ * smaller, slower across, over the roofs on the left (stacks to hull between 0.12 and 0.35 of the frame's height, inside
+ * the Zoom box), the flight crossing in front of it. After the cut in to her it eases back to its stick's way (out of
+ * every frame; done before the stick lets go).
+ */
+const W1_WIDE = { x: 5.8, y: -11.05, s: 1.0, v: -1.1 }
+function farShip(t: number): { x: number; y: number; s: number } {
+  const u = smooth(t, 208.8, 210.0)
+  const wx = W1_WIDE.x + W1_WIDE.v * (t - b(6))
+  return { x: wx + (w1x(t) - wx) * u, y: W1_WIDE.y + (W1.y - W1_WIDE.y) * u, s: W1_WIDE.s + (W1.s - W1_WIDE.s) * u }
+}
 const W1_FALL = 0.78
 /** Where its stick comes down, beyond the low roof in the middle of the row. */
 const FAR_Y = -8.8
@@ -263,7 +275,29 @@ const BOMBER_SIZE = 2.1
 const FLEET_DARK = mixHex('#0C0A12', WASTES.warship, 0.08)
 /** The fires' light caught along their undersides. */
 const FLEET_RIM = mixHex(TOWN.fire, TOWN.fireHot, 0.2)
-const inFormation = (i: number, t: number): Pt => [FLIGHT[i][0] + FLIGHT_V * (t - 207), FLIGHT[i][1] + 0.22 * Math.sin(1.4 * t + FLIGHT[i][2])]
+/**
+ * The flight in the war's establishing wide (b6 → b7): [x on b6, height]. Low through the band of sky over the roofs
+ * (the ridges at -8 to -10.4, the Zoom box's top at -12.9), in two heights, crossing the frame's middle third with
+ * Howl between the second and third; behind them the far warship over the roofs on the left. Once the wide cuts in to her (her closes' tops are
+ * under the eaves, so none of this is in them) they ease back to the flight the tear finds, well before the look up.
+ */
+const WIDE_FLIGHT: [number, number][] = [
+  [11.8, -10.85],
+  [14.9, -11.8],
+  [20.1, -10.8],
+  // The fourth still up in the dark over the frame (the wide holds three and the bird, never a wing cut by an edge).
+  [25.0, -18.8],
+]
+/** How far the fleet has gone from the wide's places back to the tear's (0 through the wide, 1 by the look up). */
+const unwide = (t: number) => smooth(t, 208.8, 211.2)
+const inFormation = (i: number, t: number): Pt => {
+  const bob = Math.sin(1.4 * t + FLIGHT[i][2])
+  const late: Pt = [FLIGHT[i][0] + FLIGHT_V * (t - 207), FLIGHT[i][1] + 0.22 * bob]
+  const u = unwide(t)
+  if (u >= 1) return late
+  const wide: Pt = [WIDE_FLIGHT[i][0] + FLIGHT_V * (t - b(6)), WIDE_FLIGHT[i][1] + 0.12 * bob]
+  return [wide[0] + (late[0] - wide[0]) * u, wide[1] + (late[1] - wide[1]) * u]
+}
 
 /** The lead bomber after Howl tears it: knocked over, spinning, trailing smoke, down beyond the roofs. */
 const LEAD_DOWN: Pt = [13.6, -7.3]
@@ -285,7 +319,7 @@ const leadFall = (() => {
  * up a little before it falls), and climbs away to the left.
  */
 const DIVE = path([
-  { t: 207, p: inFormation(2, 207), v: [FLIGHT_V, 0] },
+  { t: 214.6, p: inFormation(2, 214.6), v: [FLIGHT_V, 0] },
   { t: 215.6, p: inFormation(2, 215.6), v: [FLIGHT_V, 0.2] },
   { t: 216.9, p: [12.8, -3.7], v: [-5.4, 2.6] },
   { t: 217.3, p: [9.2, -2.45], v: [-5.8, 0.4] },
@@ -305,6 +339,8 @@ function bomber(i: number, t: number): { p: Pt; ang: number; burning?: boolean }
     return { p: f.p, ang: f.ang, burning: true }
   }
   if (i === 2) {
+    // In the flight until it peels off (the dive's first key is the flight's own place, so it is continuous there).
+    if (t < 214.6) return { p: inFormation(2, t), ang: 0.03 * Math.sin(t * 1.5 + 2) }
     const d = DIVE(t)
     // Facing left, a dive tips its nose down: anticlockwise on the screen.
     return { p: d.p, ang: -0.8 * Math.atan2(d.v[1], -d.v[0]) }
@@ -540,10 +576,13 @@ const WAR_WIDE = 20
  * into the smoke after the ship.
  */
 const HOWL_KEYS: Key[] = [
-  { t: 206.9, p: [31.8, -15.4], v: [-3.4, 0.5] },
-  { t: 207.9, p: [28.4, -13.9], v: [-3.0, 0.9] },
-  { t: 208.9, p: [25.8, -14.6], v: [-1.8, -1.6] },
-  { t: 210.2, p: [30.5, -20.5], v: [5.5, -2.5] },
+  // Low through the wide's band of sky, a little faster than the flight, overtaking it between the second and third.
+  { t: 206.9, p: [18.5, -10.25], v: [-3.0, 0.0] },
+  { t: 207.9, p: [15.5, -10.4], v: [-3.1, -0.3] },
+  { t: 208.9, p: [12.9, -11.2], v: [-2.4, -1.6] },
+  // Up and away into the dark (out of her closes), round, and in from the right on the lead bomber.
+  { t: 210.2, p: [16.5, -19.5], v: [5.5, -1.8] },
+  { t: 211.2, p: [29.0, -19.6], v: [6.5, 1.2] },
   { t: 212.15, p: [27.0, -16.2 + LOW], v: [-11, 3.0] },
   { t: TEAR[0], p: [inFormation(0, TEAR[0])[0] + 0.75, inFormation(0, TEAR[0])[1] + 0.05], v: [-8.5, 0.7] },
   { t: TEAR[1], p: [inFormation(0, TEAR[1])[0] - 0.95, inFormation(0, TEAR[1])[1] + 0.1], v: [-8.0, -0.3], out: [-5.5, -4.2] },
@@ -1256,23 +1295,45 @@ function drawQuarter(p: p5, k: number, t: number, f: Frame): void {
     const r = 1.2 + 1.2 * hash(i, 4, 46) + 1.4 * age
     puff(p, k, x, y, r, mixHex(TOWN.smoke, TOWN.nightHigh, 0.25 + 0.3 * age), 0.55 * Math.sin(Math.PI * age))
   }
-  // Fire along its foot, and its light on the cobbles and up the smoke: soft pools of it, no edge anywhere.
+  // A faint warmth all along its foot (so the gaps are smoke lit from somewhere, never black), and its fires' own
+  // light where they burn: soft pools of it, no edge anywhere.
   for (let i = 0; i < cols + 2; i++) {
     const x = x0 - 1 + i * 1.5 + 0.4 * hash(i, 8, 41)
-    glow(p, k, x, GROUND - 0.6, 2.6 + 0.6 * hash(i, 9, 41), TOWN.fire, 0.16 * Math.min(1, (i + 0.5) / 2.5), 0.7)
+    glow(p, k, x, GROUND - 0.6, 2.6 + 0.6 * hash(i, 9, 41), TOWN.fire, 0.06 * Math.min(1, (i + 0.5) / 2.5), 0.7)
   }
-  // The fires themselves: a few, of every size, in uneven clumps with gaps of smoke between (never a row of the same
-  // flame along the ground), the far ones smaller and lower in the smoke.
-  let x = x0 + 0.5
-  for (let i = 0; i < 9; i++) {
-    x += 0.9 + 2.1 * hash(i, 5, 41)
-    if (x > f.x1 + 2) break
-    if (hash(i, 3, 41) < 0.3) continue
-    const far = hash(i, 4, 41)
-    const h = (0.7 + 2.0 * hash(i, 7, 41) * (1 - 0.5 * far)) * (0.85 + 0.15 * wobble(t * 1.3, i))
-    fire(p, k, x, GROUND + 0.1 - 0.5 * far, (0.9 + 1.2 * hash(i, 6, 41)) * (1 - 0.35 * far), h, { t, seed: 200 + i, lean: 0.2, light: 0.95 - 0.35 * far })
+  for (const [dx, back, , h] of QUARTER_FIRES) {
+    const x = x0 + dx
+    if (x - 3 > f.x1) continue
+    glow(p, k, x, GROUND - 0.35 - back - 0.35 * h, 1.2 + 1.1 * h, TOWN.fire, 0.05 + 0.05 * h * (1 - 0.5 * back), 0.7)
   }
+  // The fires themselves, in clumps with gaps of smoke between: a tall one and its brood by the street's end, a middling
+  // clump further back, a low, small one far off (never a row of the same flame along one line of ground).
+  QUARTER_FIRES.forEach(([dx, back, w, h], i) => {
+    const x = x0 + dx
+    if (x - w > f.x1 + 1) return
+    const lick = 0.85 + 0.15 * wobble(t * (1.1 + 0.25 * (i % 3)), i)
+    fire(p, k, x, GROUND + 0.1 - back, w, h * lick, { t, seed: 200 + i, lean: 0.2 - 0.04 * (i % 3), light: 0.95 - 0.5 * back })
+  })
 }
+/**
+ * The burning quarter's fires, from the street's end out: [x past it, how far back (its foot raised into the smoke),
+ * width, height]. Three clumps with smoke between them, the flames 3:1 in size, the tallest two the nearest; the first
+ * clear of the street's end, so the whole-street wide's edge never halves a flame.
+ */
+const QUARTER_FIRES: [number, number, number, number][] = [
+  // By the street's end: one tall, a middling one leaning on it, a small one at its foot.
+  [3.3, 0.0, 1.35, 2.7],
+  [4.35, 0.22, 0.85, 1.35],
+  [2.55, -0.05, 0.5, 0.75],
+  // Further back, past a gap of smoke: a second tall one, and a low one beside it.
+  [7.6, 0.5, 1.05, 2.05],
+  [8.55, 0.35, 0.6, 0.8],
+  // Far off, low in the smoke.
+  [12.0, 0.95, 0.75, 0.95],
+  [12.9, 1.05, 0.45, 0.6],
+  // Further, for the widest frames.
+  [17.2, 1.2, 0.6, 0.8],
+]
 
 /** The lights of the houses across the street going out, and then the fire in their windows. */
 function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void {
@@ -1332,16 +1393,20 @@ function drawWindows(p: p5, k: number, W: number, ink: string, t: number): void 
   })
 }
 
-function drawFarShip(p: p5, k: number, W: number, ink: string, t: number): void {
-  const x = w1x(t)
+function drawFarShip(p: p5, k: number, W: number, ink: string, t: number, f: Frame): void {
+  const { x, y, s } = farShip(t)
   if (x < -30 || x > 40) return
   const haze = mixHex(WASTES.warship, TOWN.nightHigh, 0.45)
+  // Beyond the roofs: an oar's tip that dips past a ridge goes down behind it. (p5's push and pop round the clip, so
+  // its cached fill never goes stale.)
   p.push()
-  p.translate(x * k, W1.y * k)
+  clipAboveRoofs(p.drawingContext as CanvasRenderingContext2D, k, f)
+  p.push()
+  p.translate(x * k, y * k)
   p.rotate(0.01 * Math.sin(t * 0.8))
-  drawWarship(p, k * W1.s, W * 0.6, ink, { t, face: -1, color: haze, light: 0.85 })
+  drawWarship(p, k * s, W * 0.6, ink, { t, face: -1, color: haze, light: 0.85 })
   p.pop()
-  glow(p, k, x, W1.y + 0.6, 3.0, TOWN.ember, 0.08, 0.35)
+  glow(p, k, x, y + 0.6, 3.0, TOWN.ember, 0.08, 0.35)
   // Its bombs, falling beyond the roofs.
   for (const fb of farBombs) {
     if (t < fb.rel || t >= fb.land) continue
@@ -1350,6 +1415,7 @@ function drawFarShip(p: p5, k: number, W: number, ink: string, t: number): void 
     const fade = 1 - smooth(u, W1_FALL * 0.75, W1_FALL)
     bomb(p, k, W, ink, bx, by, Math.atan2(fb.v0[1] + G * u, fb.v0[0]), 0.8, 0.8 * fade)
   }
+  p.pop()
 }
 
 function drawBombers(p: p5, k: number, W: number, ink: string, t: number): void {
@@ -2162,7 +2228,7 @@ export const raid = part<{ begin: number }>(
       drawShopSide(p, k, t, f)
       drawFacadeGlow(p, k, t, f)
       drawSky(p, k, t, f)
-      drawFarShip(p, k, W, ink, t)
+      drawFarShip(p, k, W, ink, t, f)
       // Beyond the roofs: fires and their smoke, and the burning quarter past the street's end.
       drawFarFires(p, k, t, f)
       drawQuarter(p, k, t, f)
@@ -2278,8 +2344,8 @@ export const raid = part<{ begin: number }>(
       // right to left, the far warship's bulk over the roofs, Howl a black bird among the bombers, the far bombs'
       // flashes behind the roofs, the street's windows still lit, and her small at the foot, going for the engine; on
       // b7, as she reaches its push bar and the first light goes out, back in to her.
-      { ...her(b(6), WAR_WIDE, sx(b(6)) + 11.2, 0.18), cut: true },
-      her(b(7) - 0.03, WAR_WIDE - 0.3, sx(b(7)) + 11.0, 0.18),
+      { ...her(b(6), WAR_WIDE, sx(b(6)) + 10.0, 0.18), cut: true },
+      her(b(7) - 0.03, WAR_WIDE - 0.3, sx(b(7)) + 9.8, 0.18),
       { ...her(b(7), 5.9, sx(b(7)) + 1.5, 0.22), cut: true },
       // Pushing the engine up the street, the lights going out along it behind her, the far stick's flashes on her.
       her(209.9, 6.2, sx(209.9) + 1.8, UP),
