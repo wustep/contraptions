@@ -41,10 +41,11 @@ export function checkSpark(perf: Performance, version: Version, check: Check): v
   check('spark: the dash home is on the roll\'s strokes, after the silence, before the first last chord',
     DOORS.back.every((t) => t > ROLL && t < LAST[0] && onOnset(t, 0.3, 0.012)) && show.legs.slice(4).every((l, i) => near(l.from, DOORS.back[i])))
   check('spark: no portal iris drawn', [0, 58.1, 101.9, 134.3, 148.5, 170].every((t) => perf.cuts?.(t) === false))
-  // The camera cuts inside a world only where the score says (the knocks' reverse shot), each on an eighth of the
-  // theme's tracked beat, and the cutaway to the cat is short.
+  // The camera cuts inside a world only where the score says (the knocks' reverse shot; the express's last run, into
+  // the pursuit and out of it to the firebox), each on an eighth of the theme's tracked beat, and the cutaway to the
+  // cat is short.
   const cuts = show.cameraCuts
-  check('spark: the camera cuts inside a world only for the knocks\' reverse shot, each on an eighth of the theme, the cutaway under 1.5 s',
+  check('spark: the camera cuts inside a world only for the knocks\' reverse shot and the express\'s last run, each on an eighth of the theme, the cutaway under 1.5 s',
     cuts.length === CAMERA_CUTS.length && cuts.every((c, i) => near(c, CAMERA_CUTS[i])) &&
     cuts.every((c) => GRID.some((g) => Math.abs(g - c) <= 0.005)) && CAT_SHOT[1] - CAT_SHOT[0] < 1.5,
     cuts.map((c) => c.toFixed(3)).join(', '))

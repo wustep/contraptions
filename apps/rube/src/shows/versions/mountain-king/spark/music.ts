@@ -219,7 +219,14 @@ export const KNOCKS = [25.653, 28.961] as const
  * up; and cuts back to the spark, frozen, on eighth 25.
  */
 export const CAT_SHOT = [inPhrase(2, 21), inPhrase(2, 25)] as const
-export const CAMERA_CUTS = [CAT_SHOT[0], CAT_SHOT[1]] as const
+/**
+ * The express's last run (`railway/express.ts`): a cut from the trestle's wide to the pursuit, low on the engine, on
+ * phrase 15's first note, and from the pursuit to the firebox on quarter 250, half a beat before the ashpan's suck.
+ */
+export const CHASE_CUT = phrase(15)
+export const FIREBOX_CUT = beat(250)
+/** Every cut the camera makes inside a world, in order; the check holds the show to exactly these. */
+export const CAMERA_CUTS = [CAT_SHOT[0], CAT_SHOT[1], CHASE_CUT, FIREBOX_CUT] as const
 
 /**
  * The cat's look on the bang (the second last chord): its head snaps up at the door that banged over it, then turns
