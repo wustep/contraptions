@@ -533,11 +533,13 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 
 .transport .time { font-family: var(--mono); font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums; }
 
-/* Play rides with the speeds: it keeps its own width, the segment takes the
+/* Play rides with the speed: it keeps its own width, the dropdown takes the
    rest of the line. */
 .deck { align-items: center; }
 .deck > .tbtn { flex: 0 0 auto; }
-.deck > .seg { flex: 1; }
+.deck > .lb.speed { flex: 1; }
+.lb.speed .lb-label { font-family: var(--mono); font-size: 11px; }
+.lb.speed .lb-trigger { height: 30px; box-sizing: border-box; }
 .tbtn { width: 44px; height: 32px; padding: 0; }
 .tbtn svg { width: 13px; height: 13px; fill: currentColor; display: block; }
 .tbtn.play { width: 52px; height: 30px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
@@ -712,9 +714,9 @@ button.chip { padding: 3px 8px; font-size: 11px; flex: none; }
 .show-frame { position: absolute; inset: 0; z-index: 10; background: var(--bg); }
 .show-frame canvas { width: 100% !important; height: 100% !important; object-fit: contain; }
 
-/* Music rides with play and the speeds, and keeps its own width. */
+/* Music rides with play and the speed, and keeps its own width. */
 .deck > .chip.music { flex: 0 0 auto; padding: 6px 9px; white-space: nowrap; }
-/* The picker while a recording runs. */
+/* The work picker and the speed while a recording runs. */
 .lb.disabled { opacity: 0.55; pointer-events: none; }
 .show-card .readout a.more { font-family: inherit; }
 

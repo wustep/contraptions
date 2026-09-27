@@ -26,6 +26,9 @@
  * icon-only buttons, each named on hover. The Builder is off it for now.
  */
 
+import { createListbox } from './listbox'
+import { SPEEDS, speedLabel } from './view'
+
 export type ShellMode = 'machine' | 'explorations' | 'shows' | 'builder' | 'playground'
 
 interface ModeLink {
@@ -146,6 +149,36 @@ export function segmented(
     node,
     set(current) {
       for (const { v, b } of buttons) b.classList.toggle('on', v === current)
+    },
+  }
+}
+
+/**
+ * The transport's speed, as a dropdown beside Play. Six stops are too many
+ * for a segmented row to read at a glance, and every mode shares them.
+ */
+export function speedPicker(onPick: (v: number) => void): {
+  node: HTMLElement
+  set(current: number): void
+  setDisabled(off: boolean): void
+} {
+  const box = createListbox({
+    items: SPEEDS.map((v) => ({ value: String(v), label: speedLabel(v) })),
+    value: '1',
+    label: 'Speed',
+    onChange: (v) => onPick(Number(v)),
+  })
+  box.node.classList.add('speed')
+  const trigger = box.node.querySelector<HTMLElement>('.lb-trigger')!
+  trigger.title = 'Playback speed'
+  return {
+    node: box.node,
+    set: (current) => box.set(String(current)),
+    setDisabled(off) {
+      box.node.classList.toggle('disabled', off)
+      trigger.tabIndex = off ? -1 : 0
+      trigger.setAttribute('aria-disabled', String(off))
+      if (off && document.activeElement === trigger) trigger.blur()
     },
   }
 }
