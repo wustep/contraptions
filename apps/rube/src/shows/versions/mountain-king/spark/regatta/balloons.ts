@@ -179,12 +179,18 @@ function drawBlue(p: p5, k: number, n: Pt, f: number): void {
  * on its call (the left on 97.822, the right on 98.573), and all together, long, on the glow (99.322).
  *
  * Each is placed by where it should look to be at the glow in the wide's frame: `u` across and `v` down from the
- * frame's middle, in frame heights; `d` its depth (the size it is drawn, and how far it moves with the camera).
+ * frame's middle, in frame heights; `d` its depth (the size it is drawn, and how far it moves with the camera);
+ * `haze` more haze than its depth gives.
+ *
+ * The top balloon is the one hero: none of them is near its size, none touches its envelope, and none wears a stair
+ * balloon's livery that the spark rode (B1 is saffron with a coral band). The two nearer ones sit low and wide under
+ * it, smaller and hazier than it, so they read as the regatta it is leaving behind.
  */
 interface Mate {
   u: number
   v: number
   d: number
+  haze: number
   b: Balloon
   side: 'L' | 'R'
   seed: number
@@ -192,10 +198,10 @@ interface Mate {
 const mate = (a: string, b: string, band?: string): Balloon => ({ key: 'mate', H: 10.5, Rs: 4.3, silk: { a, b, band, cap: band ?? a } })
 /** Far to near, the order they are drawn in. */
 const MATES: Mate[] = [
-  { u: -0.73, v: -0.02, d: 0.44, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
-  { u: 0.72, v: 0.06, d: 0.48, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
-  { u: -0.5, v: 0.2, d: 0.56, b: mate(REG.coral, REG.ivory), side: 'L', seed: 32 },
-  { u: 0.46, v: 0.26, d: 0.6, b: mate(REG.saffron, REG.saffron, REG.coral), side: 'R', seed: 34 },
+  { u: -0.74, v: -0.04, d: 0.38, haze: 0.04, b: mate(REG.teal, REG.ivory), side: 'L', seed: 31 },
+  { u: 0.74, v: -0.04, d: 0.4, haze: 0.04, b: mate(REG.indigo, REG.ivory, REG.coral), side: 'R', seed: 33 },
+  { u: -0.63, v: 0.44, d: 0.43, haze: 0.14, b: mate(REG.coral, REG.ivory), side: 'L', seed: 32 },
+  { u: 0.65, v: 0.47, d: 0.45, haze: 0.14, b: mate(REG.teal, REG.teal, REG.ivory), side: 'R', seed: 34 },
 ]
 /** Their burners' blasts. */
 const mateBlasts = (m: Mate): Blast[] => {
@@ -206,9 +212,39 @@ const mateBlasts = (m: Mate): Blast[] => {
     { on: AT.glow, off: AT.glow + 0.8, i: 1.5 },
   ]
 }
-/** When they are drawn: from B3's vent popping (they are well above the frame then) until the door. */
+/**
+ * When they are drawn: from B3's vent popping (they are well above the frame then) until the push has them gone. They
+ * fade out as the push begins (the great blast), so none is left as half a balloon at the frame's corners into the door.
+ */
 const MATE_FROM = AT.pop3
-const MATE_TO = T1 + 0.3
+const MATE_FADE = 0.5
+const MATE_TO = AT.blast4 + MATE_FADE
+const mateShown = (t: number): number => 1 - ss(t, AT.blast4, AT.blast4 + MATE_FADE)
+
+/**
+ * The layer the mates fade out through: each balloon is silk over wires over a basket, so it is drawn whole into its
+ * own canvas (the stage's transform and drawing modes) and laid on the frame at the fade's alpha, never see-through
+ * part by part. Made once per sketch, and again only when the stage's size changes. (A sketch removes its own
+ * graphics when it goes, so a layer is only ever reused, or removed here, by the sketch that made it.)
+ */
+let mateLayer: { owner: p5; g: p5.Graphics } | null = null
+function layerFor(p: p5): p5.Graphics {
+  const d = p.pixelDensity()
+  const l = mateLayer
+  if (l && l.owner === p) {
+    if (l.g.width === p.width && l.g.height === p.height && l.g.pixelDensity() === d) return l.g
+    l.g.remove()
+  }
+  const g = p.createGraphics(p.width, p.height)
+  g.pixelDensity(d)
+  // The stage's drawing modes (engine.ts `drawingModes`).
+  g.rectMode(p.CENTER)
+  g.angleMode(p.RADIANS)
+  g.strokeCap(p.ROUND)
+  g.strokeJoin(p.ROUND)
+  mateLayer = { owner: p, g }
+  return g
+}
 
 /** Where a mate's basket floor is drawn in the frame `f` at `t`, placed by the reference framing `ref`. */
 function mateAt(m: Mate, f: Frame, t: number, ref: { x: number; y: number; cells: number }): Pt {
@@ -225,7 +261,20 @@ function mateAt(m: Mate, f: Frame, t: number, ref: { x: number; y: number; cells
 
 function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: number; cells: number }): void {
   if (t < MATE_FROM || t > MATE_TO) return
+  const shown = mateShown(t)
+  if (shown < 0.004) return
   const { k } = look
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  // Fading, the balloons go to their own layer and the lights of their burners (additive, so exact at any alpha) on
+  // the frame under a matching alpha.
+  const layer = shown < 0.999 ? layerFor(p) : null
+  const lctx = layer ? (layer.drawingContext as CanvasRenderingContext2D) : null
+  if (layer && lctx) {
+    lctx.setTransform(1, 0, 0, 1, 0, 0)
+    lctx.clearRect(0, 0, lctx.canvas.width, lctx.canvas.height)
+    lctx.setTransform(ctx.getTransform())
+  }
+  const into = (layer ?? p) as p5
   for (const m of MATES) {
     const [bx, by] = mateAt(m, f, t, ref)
     if (by < f.y0 - 1 || by - 16 * m.d > f.y1 + 1 || bx < f.x0 - 6 * m.d || bx > f.x1 + 6 * m.d) continue
@@ -233,11 +282,12 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
     const roar = roarOf(blasts, t)
     const warm = warmth(blasts, t, AT.land4)
     const drift = 0.25 * Math.sin(t * 0.23 + m.seed)
-    const haze = 0.1 + 0.45 * Math.pow(1 - m.d, 1.4)
+    const haze = Math.min(0.8, 0.1 + 0.45 * Math.pow(1 - m.d, 1.4) + m.haze)
     const nozzle: Pt = [0, -ANAT.floorY]
-    p.push()
-    p.translate((bx + drift * m.d) * k, by * k)
-    p.scale(m.d)
+    const place = (q: p5): void => {
+      q.translate((bx + drift * m.d) * k, by * k)
+      q.scale(m.d)
+    }
     const mateLook: Look = {
       k,
       weight: look.weight * Math.min(1.6, 0.8 / Math.sqrt(m.d)),
@@ -245,7 +295,9 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
       simple: true,
       dusk: dusk(t) * 0.55 * (1 - 0.6 * Math.min(1, warm)),
     }
-    drawBalloon(p, mateLook, m.b, {
+    into.push()
+    place(into)
+    drawBalloon(into, mateLook, m.b, {
       t,
       pose: { n: nozzle, a: 0, fill: 0.98 + swellOf(blasts, t), vent: 0 },
       roar,
@@ -255,9 +307,21 @@ function drawMates(p: p5, look: Look, f: Frame, t: number, ref: { x: number; y: 
       bags: null,
       seed: m.seed,
     })
+    into.pop()
+    p.push()
+    place(p)
+    if (layer) ctx.globalAlpha = shown
     drawThrough(p, k, nozzle, t, roar)
     drawBlue(p, k, nozzle, Math.min(1, roar))
+    ctx.globalAlpha = 1
     p.pop()
+  }
+  if (layer && lctx) {
+    ctx.save()
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalAlpha = shown
+    ctx.drawImage(lctx.canvas, 0, 0)
+    ctx.restore()
   }
 }
 
