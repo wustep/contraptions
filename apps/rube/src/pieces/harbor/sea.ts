@@ -111,8 +111,10 @@ export function seabed(p: p5, k: number, ink: string, weight: number, x0: number
 /**
  * A splash at (x, y): drops on short arcs either side, up and then down,
  * `f` from 0 (the instant) to 1 (gone). In the colour, so it reads as water.
+ * With `ring`, a ring spreads on the water where it went in; a splash off
+ * the head of a jet, up in the air, has no water to ring.
  */
-export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1): void {
+export function splash(p: p5, k: number, color: string, weight: number, x: number, y: number, f: number, size = 1, ring = true): void {
   if (f <= 0 || f >= 1) return
   p.push()
   p.noStroke()
@@ -128,6 +130,7 @@ export function splash(p: p5, k: number, color: string, weight: number, x: numbe
     p.circle(px * k, py * k, r * 2 * k * (1 - f * 0.5))
   }
   p.pop()
+  if (!ring) return
   // A ring on the water where it went in.
   p.push()
   p.noFill()
