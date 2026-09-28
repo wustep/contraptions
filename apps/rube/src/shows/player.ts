@@ -155,6 +155,9 @@ function writeUrl(): void {
 
 /* ------------------------------------------------------------------ transport */
 
+/** A phone: the panel stacks under the stage. */
+const phone = window.matchMedia('(max-width: 820px)')
+
 async function play(): Promise<void> {
   if (!transport || recording) return
   if (transport.ended) seek(0)
@@ -179,7 +182,19 @@ function pause(): void {
   sync()
 }
 
-const toggle = () => (transport?.playing ? pause() : void play())
+// A pause by hand, so the press that picks the show back up is known from its first start. On a phone that press puts
+// the panel away at once, before the picture has moved a frame; the pause that brought the panel out stays as it was.
+let pausedByHand = false
+function toggle(): void {
+  if (transport?.playing) {
+    pausedByHand = true
+    pause()
+    return
+  }
+  if (pausedByHand && phone.matches) shell.setPanel(false)
+  pausedByHand = false
+  void play()
+}
 
 function seek(t: number): void {
   if (!transport) return
@@ -276,6 +291,7 @@ function setZoom(on: boolean): void {
 async function open(version: Version, thenPlay: boolean | 'link'): Promise<void> {
   if (!alive) return
   const mine = ++generation
+  pausedByHand = false
   // The hold belonged to the arrival. A show chosen from here is heard the way the visitor left the sound.
   if (soundHeld) {
     soundHeld = false
@@ -404,7 +420,6 @@ stageRoot.addEventListener('click', onStageClick)
 
 // On a phone the panel stacks under the stage: away while a show plays, back when it stops. At a desk the panel's
 // tab stands out while paused. Only on a change, so the panel can still be opened or closed by hand in between.
-const phone = window.matchMedia('(max-width: 820px)')
 let wasPlaying: boolean | null = null
 function followPanel(playing: boolean): void {
   if (playing === wasPlaying) return
