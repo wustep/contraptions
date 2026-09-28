@@ -637,7 +637,7 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.arc(0, 0, X(r), a1, a0, true)
     ctx.closePath()
     const g = ctx.createRadialGradient(X(-0.07 * r), 0, X(0.98 * r), X(-0.07 * r), 0, X(reach * r))
-    g.addColorStop(0, rgba(WHITE, peak))
+    g.addColorStop(0, rgba(WHITE, peak * A * A))
     g.addColorStop(0.07, rgba(DARK.gold, 0.95 * peak))
     g.addColorStop(0.45, rgba(DARK.gold, 0.62 * peak))
     g.addColorStop(0.62, rgba(DARK.amber, 0.3 * peak))
@@ -669,7 +669,8 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   p.noFill()
   // The photon ring: a crisp hair of light right at the edge of the dark.
   if (A > 0.004) {
-    p.stroke(alpha(p, WHITE, 0.8 * A))
+    // (As the dark opens, the hottest light goes first: faded straight, white over the dark would go grey.)
+    p.stroke(alpha(p, WHITE, 0.8 * A * A * A))
     p.strokeWeight(Math.max(1, X(0.016 * r)))
     p.circle(0, 0, X(2 * 1.015 * r))
   }
@@ -681,10 +682,11 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.save()
     const g = ctx.createLinearGradient(X(-L), 0, X(L), 0)
     const a = Math.min(1, A * (1 + 0.5 * bright))
+    const hot = a * a * a
     g.addColorStop(0, rgba(DARK.amber, 0))
     g.addColorStop(0.2, rgba(DARK.amber, 0.6 * a))
-    g.addColorStop(0.4, rgba(DARK.gold, a))
-    g.addColorStop(0.5, rgba(WHITE, a))
+    g.addColorStop(0.4, rgba(DARK.gold, a * a))
+    g.addColorStop(0.5, rgba(WHITE, hot))
     g.addColorStop(0.6, rgba(DARK.gold, 0.75 * a))
     g.addColorStop(0.8, rgba(DARK.amber, 0.35 * a))
     g.addColorStop(1, rgba(DARK.amber, 0))
@@ -700,8 +702,8 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     ctx.save()
     const streams = ctx.createLinearGradient(X(-L), 0, X(L), 0)
     streams.addColorStop(0, rgba(WHITE, 0))
-    streams.addColorStop(0.34, rgba(WHITE, 0.85 * a))
-    streams.addColorStop(0.6, rgba(WHITE, 0.4 * a))
+    streams.addColorStop(0.34, rgba(WHITE, 0.85 * hot))
+    streams.addColorStop(0.6, rgba(WHITE, 0.4 * hot))
     streams.addColorStop(1, rgba(DARK.gold, 0))
     ctx.strokeStyle = streams
     ctx.lineWidth = Math.max(0.5, X(0.009 * r))

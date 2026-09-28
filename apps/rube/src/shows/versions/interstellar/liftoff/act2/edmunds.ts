@@ -390,8 +390,10 @@ const HELMET_X = CAIRN_X + 0.88
  * from the cairn. Where each of them rests: close, a hand's breadth apart,
  * not pressed together.
  */
-const STOP_DOWN: [number, number] = [LAMP + 0.3, LAMP + 0.48]
-const MEET_H: Pt = [PLATE_X + 0.42, G - R]
+const STOP_DOWN: [number, number] = [LAMP + 0.2, LAMP + 0.36]
+/** He rests just clear of the lamp's tripod, so no leg of it runs through the light between them: the lamp stands at
+ * their backs, over them. (It stood in the gap, one leg crossing it.) */
+const MEET_H: Pt = [PLATE_X + 0.77, G - R]
 /** Light between them that reads at any size, past the width of both outlines: close, never touching. */
 const MEET_GAP = 0.13
 const MEET_B: Pt = [MEET_H[0] + 2 * R + MEET_GAP, G - R]
