@@ -1,10 +1,11 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
-import { FLOOR, R, ROLL, ball, laneAt, puff, type Lane, type Pt, type Seg } from '../../../../../parts'
+import { FLOOR, R, ROLL, ball, laneAt, mixHex, type Lane, type Pt, type Seg } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx, type PartShot, type Way } from '../kit'
 import { beat, ORIGIN, PERIOD } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
+import { softPuff } from './dust'
 import { cornWall, stalk, stubble } from './corn'
 
 /**
@@ -589,8 +590,8 @@ function drawBale(p: p5, s: CombineState, c: Ctx, t: number): void {
     const [ex] = onPlank(bx, PLANK_HALF, LEAN)
     p.push()
     p.drawingContext.globalAlpha = 1 - since
-    puff(p, k, ink, weight * 0.6, DUST.bone, ex + 0.05 + since * 0.25, GROUND - 0.06 - since * 0.12, 0.05 + since * 0.1)
-    puff(p, k, ink, weight * 0.6, DUST.bone, ex - 0.25 - since * 0.2, GROUND - 0.05 - since * 0.1, 0.04 + since * 0.08)
+    softPuff(p, k, DUST.bone, ex + 0.05 + since * 0.25, GROUND - 0.06 - since * 0.12, 0.05 + since * 0.1)
+    softPuff(p, k, DUST.bone, ex - 0.25 - since * 0.2, GROUND - 0.05 - since * 0.1, 0.04 + since * 0.08)
     p.pop()
   }
 }
@@ -980,7 +981,7 @@ function drawHeader(p: p5, c: Ctx, t: number): void {
     if (age < 0 || age > 0.9) continue
     p.push()
     p.drawingContext.globalAlpha = 1 - age / 0.9
-    for (const side of [-1, 1]) puff(p, k, ink, weight * 0.5, DUST.husk, px + side * (0.1 + age * 0.35) * big, FLOOR - 0.1 - age * 0.25, (0.035 + age * 0.07) * big)
+    for (const side of [-1, 1]) softPuff(p, k, mixHex(DUST.husk, DUST.light, 0.45), px + side * (0.1 + age * 0.35) * big, FLOOR - 0.1 - age * 0.25, (0.035 + age * 0.07) * big)
     p.pop()
   }
   drawFeeder(p, c, t)
@@ -1078,7 +1079,7 @@ function drawChaff(p: p5, c: Ctx, t: number): void {
     p.push()
     p.drawingContext.globalAlpha = (1 - u) * (big ? 0.9 : 0.55)
     const r = (big ? 0.1 : 0.05) + age * (big ? 0.16 : 0.08)
-    puff(p, k, ink, weight * 0.5, DUST.husk, BODY_BACK + 0.3 + age * 0.6, 0.12 + age * 0.12 - age * age * 0.1, r)
+    softPuff(p, k, mixHex(DUST.husk, DUST.light, 0.45), BODY_BACK + 0.3 + age * 0.6, 0.12 + age * 0.12 - age * age * 0.1, r)
     p.pop()
     // Straw out of the spreader with it: a few short slivers thrown back, turning over, falling to the stubble.
     for (let q = 0; q < 3; q++) {

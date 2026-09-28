@@ -1,13 +1,14 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, laneAt, mixHex, R, puff, type Lane, type Pt } from '../../../../../parts'
+import { FLOOR, laneAt, mixHex, R, type Lane, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat, IGNITION } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { KNOCK, KNOCK_BACK, TOWER_FOOT, V_SEAM } from './gantry'
 import { drawDrone } from './drone'
+import { softPuff } from './dust'
 import { stubble } from './corn'
 
 /**
@@ -759,7 +760,7 @@ function drone(d: Draw, s: GateState, f: { x0: number; x1: number; y0: number })
       const age = t - TOUCH
       p.push()
       p.drawingContext.globalAlpha = 1 - age / 0.8
-      for (const side of [-1, 1]) puff(p, k, ink, weight * 0.6, DUST.bone, s.touch + side * (0.12 + age * 0.5), ROOF - 0.05 - age * 0.12, 0.05 + age * 0.08)
+      for (const side of [-1, 1]) softPuff(p, k, DUST.bone, s.touch + side * (0.12 + age * 0.5), ROOF - 0.05 - age * 0.12, 0.05 + age * 0.08)
       p.pop()
     }
   }
@@ -886,7 +887,7 @@ function sweep(d: Draw, s: GateState): void {
     const age = t - FLING
     p.push()
     p.drawingContext.globalAlpha = 1 - age / 0.9
-    for (const side of [-1, 1]) puff(p, d.k, ink, weight * 0.6, DUST.bone, landed[0] + side * (0.3 + age * 0.6), FLOOR - 0.12 - age * 0.18, 0.06 + age * 0.12)
+    for (const side of [-1, 1]) softPuff(p, d.k, DUST.bone, landed[0] + side * (0.3 + age * 0.6), FLOOR - 0.12 - age * 0.18, 0.06 + age * 0.12)
     p.pop()
   }
 }
@@ -982,7 +983,7 @@ function barrier(d: Draw, s: GateState): void {
     const pin = pinAt(gx, SET)
     p.push()
     p.drawingContext.globalAlpha = 1 - age / 0.6
-    for (const side of [-1, 1]) puff(p, d.k, ink, weight * 0.5, DUST.bone, pin[0] + side * (0.2 + age * 0.4), FLOOR - 0.05 - age * 0.1, 0.045 + age * 0.08)
+    for (const side of [-1, 1]) softPuff(p, d.k, DUST.bone, pin[0] + side * (0.2 + age * 0.4), FLOOR - 0.05 - age * 0.1, 0.045 + age * 0.08)
     p.pop()
   }
   // The pail's bail and its far rim, behind the ball; its body goes over it.

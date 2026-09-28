@@ -1,11 +1,12 @@
 import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp, easeInQuad, easeOutCubic } from '../../../../../../../../src/core/ease'
-import { FLOOR, mixHex, R, puff, type Pt } from '../../../../../parts'
+import { FLOOR, mixHex, R, type Pt } from '../../../../../parts'
 import { alpha, box, carried, frame, hash, knock, lastOf, part, route, smooth, type Companion, type Ctx, type Way } from '../kit'
 import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
+import { softPuff } from './dust'
 import { cornWall, stalk } from './corn'
 import { bankShade } from './field'
 
@@ -743,11 +744,26 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     const wx = dx0 + 0.1 + ((i * 0.37 + t * 0.2) % (dx1 - dx0 - 0.2))
     p.line(X(wx), X(GROUND + 0.28), X(wx + 0.12), X(GROUND + 0.28))
   }
-  // The dam: the road stops at a concrete lip, and the face goes down.
-  solid(p, ink, weight, DUST.bone)
-  p.rect(X(s.edge + 0.08), X(GROUND + 1.5), X(0.16), X(3))
-  outline(p, ink, weight * 0.6)
-  for (let y = GROUND + 0.4; y < GROUND + 3; y += 0.5) p.line(X(s.edge), X(y), X(s.edge + 0.16), X(y))
+  // The dam: the road stops at a concrete lip, and the dam goes down, seen in section: a wedge of concrete, its face
+  // battered back toward the valley, lit at the lip and going into shade as it goes down. One mass, not a post.
+  {
+    const ctx = p.drawingContext as CanvasRenderingContext2D
+    const face = (d: number) => s.edge + 0.22 + 0.13 * d
+    const g = ctx.createLinearGradient(0, X(GROUND), 0, X(GROUND + 3))
+    g.addColorStop(0, mixHex(DUST.bone, DUST.shade, 0.25))
+    g.addColorStop(0.4, DUST.shade)
+    g.addColorStop(1, mixHex(DUST.shade, ink, 0.18))
+    solid(p, ink, weight, DUST.shade)
+    ctx.fillStyle = g
+    p.beginShape()
+    p.vertex(X(s.edge), X(GROUND))
+    p.vertex(X(face(0)), X(GROUND))
+    p.vertex(X(face(3)), X(GROUND + 3))
+    p.vertex(X(s.edge), X(GROUND + 3))
+    p.endShape(p.CLOSE)
+    solid(p, ink, weight * 0.9, DUST.bone)
+    p.rect(X(s.edge + 0.1), X(GROUND - 0.03), X(0.3), X(0.07), X(0.01))
+  }
 
   // The fence: two posts and two rails across the field; on the downbeat the grille takes the rails and they go end over end.
   {
@@ -820,7 +836,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     const cx = rearAt(s.b0, at) + (at === STOP ? LEN + 0.1 : 0.3) - age * (at === STOP ? -0.3 : 0.35)
     p.push()
     p.drawingContext.globalAlpha = (1 - u) * (1 - u) * (at < DROP ? 0.45 : 0.85)
-    puff(p, k, alpha(p, ink, 0.5).toString(), weight * 0.6, DUST.husk, cx, GROUND - 0.18 - age * 0.3, 0.16 + age * 0.3)
+    softPuff(p, k, mixHex(DUST.husk, DUST.light, 0.45), cx, GROUND - 0.18 - age * 0.3, 0.16 + age * 0.3)
     p.pop()
   }
 
@@ -842,7 +858,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
     p.push()
     const big = at === CATCH || at === REV || at === DROP ? 1.5 : 1
     p.drawingContext.globalAlpha = 1 - u
-    puff(p, k, ink, weight * 0.8, DUST.bone, pipe[0] - 0.15 - age * 0.5 * big, pipe[1] - age * 0.35, (0.08 + age * 0.12) * big)
+    softPuff(p, k, DUST.bone, pipe[0] - 0.15 - age * 0.5 * big, pipe[1] - age * 0.35, (0.08 + age * 0.12) * big)
     p.pop()
   }
 }
