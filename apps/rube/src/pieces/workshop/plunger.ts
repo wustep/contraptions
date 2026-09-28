@@ -83,16 +83,10 @@ export const plunger = definePiece<{ color: string }>({
     p.line(LIP * k, FLOOR * k, LIP * k, (FLOOR - 0.06) * k)
     rail(p, k, ink, weight, 1.5, 2.5)
     p.line(1.5 * k, (FLOOR - 0.06) * k, 1.5 * k, (FLOOR + 0.06) * k)
-    // Posts either side of the gap, and a hazard board.
+    // Posts either side of the gap. The gap is the posts and the air between
+    // them; a striped hazard board hung in it on nothing is gone.
     p.line(LIP * k, FLOOR * k, LIP * k, 0.5 * k)
     p.line(1.5 * k, FLOOR * k, 1.5 * k, 0.5 * k)
-    solid(p, ink, weight, s.color)
-    p.rect(1.0 * k, 0.4 * k, 0.5 * k, 0.09 * k)
-    p.push()
-    p.stroke(ink)
-    p.strokeWeight(weight)
-    for (let x = 0.8; x < 1.22; x += 0.1) p.line(x * k, 0.36 * k, (x + 0.05) * k, 0.44 * k)
-    p.pop()
     // The dimple the ball waits in.
     outline(p, ink, weight)
     p.line((SEAT - 0.1) * k, FLOOR * k, (SEAT - 0.05) * k, (FLOOR + 0.02) * k)
