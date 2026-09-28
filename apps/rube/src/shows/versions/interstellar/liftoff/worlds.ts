@@ -31,10 +31,11 @@ export const GREY = '#9A958A'
 export const MURPH = '#7C8C9C'
 export const MURPH_ID = 98
 /**
- * Murph, young: the same slate, before the years: lighter and bluer, and smaller (a child). She rocks on the porch
- * while he goes, sneaks into the truck's bed, follows him to the base, and is kept back at the tower by TARS.
+ * Murph, young: the same slate, before the years: lighter and a touch bluer, and smaller (a child). She rocks on the
+ * porch while he goes, sneaks into the truck's bed, follows him to the base, and is kept back at the tower by TARS.
+ * Slate, not sky: a blue ball on the farm would be taken for Brand, whose first blue is her entrance at the base.
  */
-export const MURPH_YOUNG = '#8FA8C4'
+export const MURPH_YOUNG = '#98A8BA'
 export const MURPH_SMALL = 0.8
 
 export const FARM: Theme = {
