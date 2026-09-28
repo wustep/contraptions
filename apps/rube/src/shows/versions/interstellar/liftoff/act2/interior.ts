@@ -48,8 +48,9 @@ export const interior = scenery<InteriorState>({
     // The air inside: brightest round the spindle, a warm haze down by the land.
     const air = ctx.createRadialGradient(X(ax), X(ay), X(0.5), X(ax), X(ay), X(RIM_R))
     air.addColorStop(0, mixHex('#3B4660', '#F7F4EA', lit))
-    air.addColorStop(0.55, mixHex('#2E3850', '#E4E8E2', lit))
-    air.addColorStop(1, mixHex('#2A2E3E', '#EADFC4', lit))
+    air.addColorStop(0.5, mixHex('#2E3850', '#DCE5E1', lit))
+    air.addColorStop(0.86, mixHex('#2A2E3E', '#E5DDC6', lit))
+    air.addColorStop(1, mixHex('#252938', '#CDBA94', lit))
     ctx.fillStyle = air
     ctx.beginPath()
     ctx.arc(X(ax), X(ay), X(RIM_R), 0, Math.PI * 2)
@@ -71,6 +72,13 @@ export const interior = scenery<InteriorState>({
       p.strokeWeight(Math.max(1, weight * 0.6))
       p.line(X(pts[0][0]), X(pts[0][1]), X(pts[1][0]), X(pts[1][1]))
       p.line(X(pts[2][0]), X(pts[2][1]), X(pts[3][0]), X(pts[3][1]))
+      // Collars make the long tubes read at the ring's widest framing.
+      p.stroke(alpha(p, ink, 0.1 + 0.08 * lit))
+      for (let r = 2.6; r < RIM_R - 0.8; r += 2.4) {
+        const x = ax + Math.cos(a) * r
+        const y = ay + Math.sin(a) * r
+        p.line(X(x - Math.sin(a) * 0.18), X(y + Math.cos(a) * 0.18), X(x + Math.sin(a) * 0.18), X(y - Math.cos(a) * 0.18))
+      }
     }
 
     // The land: soil, then hull, all the way round.
@@ -84,7 +92,11 @@ export const interior = scenery<InteriorState>({
     ctx.closePath()
     ctx.fillStyle = DUST.husk
     ctx.fill()
-    ctx.fillStyle = '#3A4257'
+    const hull = ctx.createRadialGradient(X(ax), X(ay), X(RIM_R + SOIL), X(ax), X(ay), X(RIM_R + SOIL + HULL))
+    hull.addColorStop(0, '#657080')
+    hull.addColorStop(0.22, '#404C60')
+    hull.addColorStop(1, '#202939')
+    ctx.fillStyle = hull
     ctx.beginPath()
     ctx.arc(X(ax), X(ay), X(RIM_R + SOIL + HULL), 0, Math.PI * 2)
     ctx.arc(X(ax), X(ay), X(RIM_R + SOIL), Math.PI * 2, 0, true)
@@ -93,6 +105,16 @@ export const interior = scenery<InteriorState>({
     p.noFill()
     p.circle(X(ax), X(ay), X(2 * RIM_R))
     p.circle(X(ax), X(ay), X(2 * (RIM_R + SOIL + HULL)))
+    // Recessed panel seams and an inner lip separate the pressure hull from the soil.
+    p.stroke(alpha(p, '#A9B8C7', 0.42))
+    p.strokeWeight(Math.max(0.6, weight * 0.4))
+    p.circle(X(ax), X(ay), X(2 * (RIM_R + SOIL + 0.06)))
+    p.stroke(alpha(p, '#0B0F1D', 0.45))
+    for (let i = 0; i < 72; i++) {
+      const a = (i / 72) * Math.PI * 2
+      const r = RIM_R + SOIL + 0.09
+      p.line(X(ax + Math.cos(a) * r), X(ay + Math.sin(a) * r), X(ax + Math.cos(a) * (r + HULL - 0.12)), X(ay + Math.sin(a) * (r + HULL - 0.12)))
+    }
 
     // What grows and stands on the land, all round: rows of corn, trees, small houses. Far away, so small and
     // plain; nothing within a few cells of the replica house at the bottom, which is drawn by the parts.

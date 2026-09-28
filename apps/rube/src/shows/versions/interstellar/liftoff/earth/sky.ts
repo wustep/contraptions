@@ -1,6 +1,6 @@
 import type p5 from 'p5'
 import { mixHex } from '../../../../../parts'
-import { alpha, frame, scenery, smooth } from '../kit'
+import { alpha, frame, hash, scenery, smooth } from '../kit'
 import { DUST } from '../worlds'
 import { GHOST_REST } from './house'
 
@@ -57,9 +57,13 @@ export const sky = scenery<SkyState>({
     // The sun: low, pale, a disc behind the dust.
     const sunX = f.cx - 3.2 + 0.1 * t * 0.02
     const sunY = hy - 0.4 - 1.6 * smooth(t, 2, 30)
+    const sun = ctx.createRadialGradient(X(sunX), X(sunY), X(0.18), X(sunX), X(sunY), X(1.1))
+    sun.addColorStop(0, `rgba(255, 243, 209, ${0.44 * day * (1 - up)})`)
+    sun.addColorStop(0.32, `rgba(255, 243, 209, ${0.15 * day * (1 - up)})`)
+    sun.addColorStop(1, 'rgba(255, 243, 209, 0)')
+    ctx.fillStyle = sun
+    ctx.fillRect(X(sunX - 1.1), X(sunY - 1.1), X(2.2), X(2.2))
     p.noStroke()
-    p.fill(alpha(p, '#FFF3D1', 0.35 * day * (1 - up)))
-    p.circle(X(sunX), X(sunY), X(0.75))
     p.fill(alpha(p, '#FFF7E4', 0.6 * day * (1 - up)))
     p.circle(X(sunX), X(sunY), X(0.46))
 
@@ -79,8 +83,12 @@ export const sky = scenery<SkyState>({
     p.endShape(p.CLOSE)
 
     // The land: from the horizon down, the far corn a wash with a grain to it.
-    p.fill(DUST.husk)
-    p.rect(X(f.cx), X(hy + (f.y1 - hy + 2) / 2), X(f.x1 - f.x0 + 2), X(f.y1 - hy + 2))
+    const land = ctx.createLinearGradient(0, X(hy), 0, X(Math.max(hy + 0.1, f.y1)))
+    land.addColorStop(0, '#DFCEA0')
+    land.addColorStop(0.35, DUST.husk)
+    land.addColorStop(1, '#CBB06E')
+    ctx.fillStyle = land
+    ctx.fillRect(X(f.x0 - 1), X(hy), X(f.x1 - f.x0 + 2), X(Math.max(0.1, f.y1 - hy + 2)))
     p.stroke(alpha(p, '#B69A5A', 0.55))
     p.strokeWeight(Math.max(1, k * 0.01))
     for (let row = 0; row < 3; row++) {
@@ -123,6 +131,19 @@ export const sky = scenery<SkyState>({
     for (const dx of [-0.25, 0.25]) p.line(X(tx + dx), X(ty), X(tx + dx * 0.6), X(ty - 0.9))
     p.ellipse(X(tx), X(ty - 1.05), X(0.8), X(0.36))
     p.line(X(tx - 0.4), X(ty - 1.05), X(tx - 0.4), X(ty - 0.95))
+
+    // Windborne dust in the distance; indexed in world space so seeking gives the same air.
+    p.noStroke()
+    const drift = t * 0.09
+    const firstDust = Math.floor(f.x0 - shift - drift) - 1
+    for (let i = firstDust; i <= Math.ceil(f.x1 - shift - drift) + 1; i++) {
+      for (let j = 0; j < 3; j++) {
+        const x = shift + drift + i + hash(i, j, 81)
+        const y = hy - 0.06 - hash(i, j, 82) * 1.15 + 0.04 * Math.sin(t * 0.5 + i)
+        p.fill(alpha(p, j ? DUST.light : DUST.wood, (0.12 + 0.2 * hash(i, j, 83)) * storm * (1 - up)))
+        p.ellipse(X(x), X(y), X(0.014 + 0.018 * hash(i, j, 84)), X(0.009))
+      }
+    }
   },
 })
 
