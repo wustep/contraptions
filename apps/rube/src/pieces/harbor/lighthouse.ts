@@ -218,20 +218,23 @@ export const lighthouse = definePiece<LighthouseState>({
     // The gallery door the ball comes out of, in the room's far wall: as tall as the ball.
     solid(p, ink, weight, galleryDoor ? ink : s.color)
     p.rect(turn * (ROOM - 0.03) * k, (gallery - 0.06 - ROOM_H / 2) * k, 0.06 * k, (ROOM_H - 0.04) * k)
-    // The lamp, and its beam turning.
+    // The lamp, and its beam turning: slow, faint, and about a cell long, so
+    // it lights its own stretch of the harbor. A beam a cell and a half out at
+    // twice the alpha swept the next machines along for four seconds and was
+    // the biggest shape in the frame after the ball had gone.
     const lampY = gallery - 0.06 - ROOM_H / 2
     if (lit > 0.02) {
       const beam = p.color(s.color)
-      beam.setAlpha(70 * lit)
+      beam.setAlpha(42 * lit)
       p.push()
       p.translate(0, lampY * k)
-      p.rotate(since * 2.2)
+      p.rotate(since * 1.4)
       p.noStroke()
       p.fill(beam)
       for (const side of [0, Math.PI]) {
         p.push()
         p.rotate(side)
-        p.triangle(0, 0, 1.6 * k, -0.22 * k, 1.6 * k, 0.22 * k)
+        p.triangle(0, 0, 1.05 * k, -0.13 * k, 1.05 * k, 0.13 * k)
         p.pop()
       }
       p.pop()
