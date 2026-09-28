@@ -1,6 +1,6 @@
 import type { Framing } from '../../../registry'
 import { SILL } from './desk'
-import { MUSIC_END, TRACKS, barTime } from './music'
+import { TRACKS, barTime } from './music'
 import { LAPS, ballAt } from './route'
 
 /**
@@ -106,9 +106,9 @@ function plan(): void {
       at(b.to - 0.75 * bar, GROOVE[order[phrase % order.length]])
     }
     if (lap.lob === null) {
-      // The last track: the ball stays; the camera draws back to the room as the music ends.
-      at(barTime(tr, tr.exit) + bar, GROOVE[1])
-      at(MUSIC_END - 16, WIDE)
+      // The last track: the ball stays; as the drums leave, the camera draws back to the room, and the credits stand on
+      // its dark wall while the last track rings out.
+      at(barTime(tr, tr.exit) - 0.5 * bar, WIDE)
       continue
     }
     // The lob: back out a bar before, so the whole of its arc is in the frame.

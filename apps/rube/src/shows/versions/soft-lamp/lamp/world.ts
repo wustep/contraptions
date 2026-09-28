@@ -64,14 +64,19 @@ export function lightAt(x: number, y: number, soft = 0): number {
   return Math.min(1, cone * fall * 1.5 + spill)
 }
 
+/** When the lamp comes on: as the first track's first chord sounds. */
+export const LAMP_ON = TRACKS[0].from
+
 /**
- * How bright the lamp is at `t`: steady, breathing a few per cent with the held sound (the pad and the keys under
- * each track), and, once the last track has rung out, going down to a glow as the show ends.
+ * How bright the lamp is at `t`: off as the show opens (the room lit only by the window), warming up over a second
+ * and a half as the first chord sounds, steady then, breathing a few per cent with the held sound (the pad and the keys
+ * under each track), and, once the last track has rung out, going down to a glow as the show ends.
  */
 export function lampAt(t: number): number {
   const breath = 0.965 + 0.05 * heldAt(t)
-  const out = 1 - 0.72 * smooth(t, MUSIC_END - 1.5, MUSIC_END + 4.5)
-  return breath * out
+  const on = 0.04 + 0.96 * smooth(t, LAMP_ON - 0.1, LAMP_ON + 1.5) ** 1.3
+  const out = 1 - 0.8 * smooth(t, MUSIC_END - 1.5, MUSIC_END + 4.5)
+  return breath * on * out
 }
 
 /**
