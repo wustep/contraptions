@@ -197,6 +197,7 @@ const SHELVED: Record<string, Section> = {
   'premiere-arabesque': 'Machine',
   'cornfield-chase': 'Machine',
   gymnopedie: 'Ambient',
+  'soft-lamp': 'Ambient',
 }
 export const sectionOf = (work: string): Section => SHELVED[work] ?? 'Movies'
 
