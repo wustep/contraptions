@@ -8,6 +8,7 @@ import { G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { KNOCK, KNOCK_BACK, TOWER_FOOT, V_SEAM } from './gantry'
 import { drawDrone } from './drone'
+import { stubble } from './corn'
 
 /**
  * The fence line, and the gate of the base behind it. A chain of machines,
@@ -778,23 +779,10 @@ function ground(d: Draw, s: GateState, f: { x0: number; x1: number }): void {
   outline(p, ink, weight)
   p.line(X(-0.6), X(FLOOR), X(s.pit[0]), X(FLOOR))
   p.line(X(s.pit[1]), X(FLOOR), X(pave), X(FLOOR))
-  p.stroke(alpha(p, ink, 0.3))
-  for (let i = Math.floor(f.x0 / 0.41); i < f.x1 / 0.41; i++) {
-    const x = i * 0.41 + hash(i, 5) * 0.2
-    if (x < -0.5 || x > pave - 0.2 || (x > s.pit[0] - 0.2 && x < s.pit[1] + 0.05)) continue
-    p.line(X(x), X(FLOOR + 0.08), X(x + 0.13), X(FLOOR + 0.08))
-  }
-  // Stubble where the field was cut, thinning out toward the fence.
-  p.stroke(alpha(p, ink, 0.5))
-  p.strokeWeight(Math.max(1, weight * 0.6))
-  for (let i = 0; i < 70; i++) {
-    const x = -0.5 + i * 0.11 + hash(i, 3) * 0.05
-    if (x > s.pit[0] - 0.1 && x < s.pit[1] + 0.1) continue
-    if (x > s.sweep[0] + 0.6) break
-    if (hash(i, 4) < (x - 3) / 4) continue
-    const h = 0.05 + hash(i, 6) * 0.07
-    p.line(X(x), X(FLOOR), X(x + 0.012), X(FLOOR - h))
-  }
+  // Stubble where the field was cut, thinning out toward the fence (and none over the grid's pit).
+  const thin = (x: number) => (x > s.pit[0] - 0.1 && x < s.pit[1] + 0.1 ? 0 : clamp(1 - (x - 3) / 4))
+  stubble(p, d.k, Math.max(-0.5, f.x0 - 0.5), Math.min(s.pit[0] - 0.1, f.x1 + 0.5), FLOOR, 0.1, 3, thin)
+  stubble(p, d.k, Math.max(s.pit[1] + 0.1, f.x0 - 0.5), Math.min(s.sweep[0] + 0.6, f.x1 + 0.5), FLOOR, 0.1, 5, thin)
 }
 
 /** The cattle grid: a pit across the track and a row of bars over it. The ones the ball skips on ring. */
@@ -1101,15 +1089,6 @@ function bunker(d: Draw, s: GateState): void {
   p.endShape(p.CLOSE)
   solid(p, ink, weight, DUST.bone)
   rect4(d, a + 0.1, ROOF, b - 0.1, ROOF + 0.12)
-  // Aggregate in the cut face.
-  p.stroke(alpha(p, ink, 0.35))
-  p.strokeWeight(Math.max(1, weight * 0.7))
-  for (let i = 0; i < Math.round(10 * (b - a)); i++) {
-    const y = ROOF + 0.2 + hash(i, 42) * (lin - 0.2 - ROOF - 0.2)
-    const inset = 0.2 * (1 - (y - ROOF) / (lin - ROOF))
-    const x = a + 0.12 + inset + hash(i, 41) * (b - a - 0.24 - 2 * inset)
-    p.point(X(x), X(y))
-  }
   // The tunnel through it, dark, lit by one lamp once the power is on.
   p.noStroke()
   p.fill(alpha(p, ink, 0.72))
@@ -1210,9 +1189,6 @@ function overGate(p: p5, s: GateState, c: Ctx): void {
   p.noStroke()
   p.fill(DUST.shade)
   rect4(d, a0 + DOORWAY, lin, b0 - DOORWAY, FLOOR)
-  p.stroke(alpha(p, ink, 0.35))
-  p.strokeWeight(Math.max(1, weight * 0.7))
-  for (let i = 0; i < 4; i++) p.point(X(a0 + DOORWAY + 0.1 + hash(i, 43) * (b0 - a0 - 2 * DOORWAY - 0.2)), X(lin + 0.08 + hash(i, 44) * (TUNNEL - 0.16)))
   outline(p, ink, weight)
   p.line(X(a0 + DOORWAY), X(lin), X(a0 + DOORWAY), X(FLOOR))
   p.line(X(b0 - DOORWAY), X(lin), X(b0 - DOORWAY), X(FLOOR))

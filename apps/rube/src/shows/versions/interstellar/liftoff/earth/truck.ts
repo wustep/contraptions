@@ -7,6 +7,7 @@ import { beat, beats, DROP } from '../music'
 import { dropTime, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { cornWall, stalk } from './corn'
+import { bankShade } from './field'
 
 /**
  * The truck, and Cooper drives it. It is waiting on the field road under the
@@ -116,12 +117,16 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
     const wy = pk.road - WHEEL_R - pk.air
     solid(p, ink, weight, ink)
     p.circle(X(wx), X(wy), X(WHEEL_R * 2))
-    solid(p, ink, weight * 0.6, DUST.bone)
-    p.circle(X(wx), X(wy), X(WHEEL_R * 0.95))
-    outline(p, ink, weight * 0.6)
-    for (let j = 0; j < 3; j++) {
-      const a = pk.turn + (j * Math.PI * 2) / 3
-      p.line(X(wx), X(wy), X(wx + Math.cos(a) * WHEEL_R * 0.45), X(wy + Math.sin(a) * WHEEL_R * 0.45))
+    // A pressed-steel wheel: the rim, the hub cap, and five lug nuts that show it turning.
+    solid(p, ink, weight * 0.6, mixHex(DUST.tin, DUST.bone, 0.35))
+    p.circle(X(wx), X(wy), X(WHEEL_R * 1.1))
+    solid(p, ink, weight * 0.45, DUST.tin)
+    p.circle(X(wx), X(wy), X(WHEEL_R * 0.5))
+    p.noStroke()
+    p.fill(ink)
+    for (let j = 0; j < 5; j++) {
+      const a = pk.turn + (j * Math.PI * 2) / 5
+      p.circle(X(wx + Math.cos(a) * WHEEL_R * 0.38), X(wy + Math.sin(a) * WHEEL_R * 0.38), X(0.035))
     }
   }
   // The bed's far side, its rail along the top; the body's lower band; the cab; the hood.
@@ -148,8 +153,9 @@ export function drawPickup(p: p5, k: number, ink: string, weight: number, pk: Pi
   p.pop()
   shape([[HOOD_U, 0.4], [LEN, 0.4], [LEN, HOOD - 0.1], [LEN - 0.12, HOOD], [HOOD_U, HOOD]], DUST.denim)
   // Bumpers, the lamp and its beam, the mirror, the tailgate.
-  shape([[LEN - 0.02, 0.36], [LEN + 0.08, 0.36], [LEN + 0.08, 0.5], [LEN - 0.02, 0.5]], DUST.bone, weight * 0.8)
-  shape([[-0.08, 0.36], [0.02, 0.36], [0.02, 0.5], [-0.08, 0.5]], DUST.bone, weight * 0.8)
+  // Bumpers: a bar of dull chrome across each end, low on the frame.
+  shape([[LEN - 0.04, 0.35], [LEN + 0.07, 0.35], [LEN + 0.08, 0.37], [LEN + 0.08, 0.45], [LEN + 0.07, 0.47], [LEN - 0.04, 0.47]], mixHex(DUST.tin, DUST.bone, 0.3), weight * 0.8)
+  shape([[0.04, 0.35], [-0.07, 0.35], [-0.08, 0.37], [-0.08, 0.45], [-0.07, 0.47], [0.04, 0.47]], mixHex(DUST.tin, DUST.bone, 0.3), weight * 0.8)
   const lamp = B(LEN - 0.05, 0.84)
   if (pk.lamp > 0.01) {
     const ctx = p.drawingContext as CanvasRenderingContext2D
@@ -690,6 +696,7 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   // The bank the corn track runs along, the same earth as the track's, sloping down to the road.
   const toe = s.b0 + 0.25
   solid(p, ink, weight, DUST.shade)
+  bankShade(p, k, ink, FLOOR, GROUND)
   p.beginShape()
   p.vertex(X(-0.5), X(FLOOR))
   p.vertex(X(toe - 0.75), X(FLOOR))
@@ -735,14 +742,6 @@ function drawTruck(p: p5, s: TruckState, c: Ctx): void {
   for (let i = 0; i < 3; i++) {
     const wx = dx0 + 0.1 + ((i * 0.37 + t * 0.2) % (dx1 - dx0 - 0.2))
     p.line(X(wx), X(GROUND + 0.28), X(wx + 0.12), X(GROUND + 0.28))
-  }
-  outline(p, ink, weight)
-  p.stroke(alpha(p, ink, 0.3))
-  for (let i = Math.floor(f.x0 / 0.45); i < f.x1 / 0.45; i++) {
-    const x = i * 0.45 + hash(i, 9) * 0.2
-    // Along the road only: from where it starts (under the flume) to the dam.
-    if (x < -1.5 || x > s.edge - 0.2) continue
-    p.line(X(x), X(GROUND + 0.08), X(x + 0.14), X(GROUND + 0.08))
   }
   // The dam: the road stops at a concrete lip, and the face goes down.
   solid(p, ink, weight, DUST.bone)

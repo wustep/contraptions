@@ -89,18 +89,14 @@ export const sky = scenery<SkyState>({
     land.addColorStop(1, '#CBB06E')
     ctx.fillStyle = land
     ctx.fillRect(X(f.x0 - 1), X(hy), X(f.x1 - f.x0 + 2), X(Math.max(0.1, f.y1 - hy + 2)))
-    p.stroke(alpha(p, '#B69A5A', 0.55))
-    p.strokeWeight(Math.max(1, k * 0.01))
-    for (let row = 0; row < 3; row++) {
-      const y = hy + 0.08 + row * 0.16
-      const gap = 0.13 + row * 0.06
-      for (let x = Math.floor((f.x0 - shift) / gap) * gap; x < f.x1 - shift + gap; x += gap) {
-        const sx = x + shift
-        p.line(X(sx), X(y), X(sx), X(y - 0.05 - row * 0.02))
-      }
+    // Two far rows of crop, as bands of shade that open out toward us: planes, not a grain of ticks.
+    p.noStroke()
+    for (const [y, h, a] of [[0.07, 0.035, 0.28], [0.26, 0.06, 0.2]] as const) {
+      p.fill(alpha(p, '#B69A5A', a))
+      p.rect(X((f.x0 + f.x1) / 2), X(hy + y + h / 2), X(f.x1 - f.x0 + 2), X(h))
     }
-    p.stroke(ink)
-    p.strokeWeight(Math.max(1, k * 0.018))
+    p.stroke(alpha(p, ink, 0.5))
+    p.strokeWeight(Math.max(1, k * 0.014))
     p.line(X(f.x0), X(hy), X(f.x1), X(hy))
 
     // A road's telegraph poles, and a water tower, all far and slow.

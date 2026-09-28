@@ -1,5 +1,6 @@
 import type p5 from 'p5'
 import { solid } from '../../../../../../../../src/core/draw'
+import { mixHex } from '../../../../../parts'
 import { hash } from '../kit'
 import { DUST } from '../worlds'
 
@@ -116,74 +117,141 @@ export function leafTip(s: Stalk, i: number): [number, number] {
 }
 
 /**
- * A wall of corn behind the track, as one shape: a flat band with a ragged
- * top of leaf tips, a stem line here and there, and tassels standing clear of
- * it. The field reads as a field without a thousand leaves to look at; only
- * the stalks the ball or the truck touches are drawn stalk by stalk.
+ * A wall of corn behind the track, as one shape: a band of leaves whose top is
+ * a run of arching leaves, each drooping into the next, and a few tassels
+ * standing clear of it. It is drawn as a plane of light, not of strokes: sunlit
+ * along its top and going into shade toward its foot, inked once along its top
+ * and nowhere else. The field reads as a field without a thousand leaves (or a
+ * thousand stems) to look at; only the stalks the ball or the truck touches are
+ * drawn stalk by stalk.
  */
 export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number] }): void {
-  const step = 0.2
+  const step = 0.24
   const X = (x: number) => x * k
   const i0 = Math.floor(o.x0 / step) - 1
   const i1 = Math.ceil(o.x1 / step) + 1
   // Where the field starts and stops, it comes up out of nothing over a cell or so rather than ending in a wall.
   const edge = (x: number) => (o.taper ? Math.min(1, Math.max(0, (x - o.taper[0]) / 1.2), Math.max(0, (o.taper[1] - x) / 1.2)) : 1)
-  const top = (i: number) => {
-    const x = i * step
-    const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.05
+  // Each leaf's tip: a little off the grid, a little higher or lower, all of them leaning the same way in the wind.
+  const tip = (i: number) => {
+    const x = i * step + (hash(i, o.seed, 5) - 0.5) * 0.08
+    const sway = Math.sin(o.t * 0.9 + x * 0.55) * 0.04
     const e = edge(x)
     const k2 = e * e * (3 - 2 * e)
-    return { x: x + sway, y: o.foot - o.h * (0.86 + 0.14 * hash(i, o.seed)) * k2, k: k2 }
+    return { x: x + sway, y: o.foot - o.h * (0.93 + 0.07 * hash(i, o.seed)) * k2, k: k2 }
   }
+  const ctx = p.drawingContext as CanvasRenderingContext2D
   p.push()
-  if (o.alpha !== undefined) p.drawingContext.globalAlpha = o.alpha
-  // The wall's leafy top, a leaf tip and then the dip between two. Filled down to its foot, but only the top is inked:
-  // the foot is the ground's to draw, and a line along it would be a second road line (or a bare line where the
-  // wall has no height yet).
-  const profile: [number, number][] = []
-  for (let i = i0; i <= i1; i++) {
-    const a = top(i)
-    const b = top(i + 1)
-    profile.push([X(a.x), X(a.y)])
-    profile.push([X((a.x + b.x) / 2 + 0.03), X(Math.min(o.foot, (a.y + b.y) / 2 + (0.16 + 0.06 * hash(i, o.seed, 2)) * Math.min(a.k, b.k)))])
+  if (o.alpha !== undefined) ctx.globalAlpha = o.alpha
+  // The canopy's edge, as curves: from a tip, the leaf arches on and droops into the dip; from the dip, the next leaf
+  // rises to its tip. The dips are shallow, so the top reads as leaves, not teeth.
+  const path = new Path2D()
+  const edgeRuns: Path2D[] = []
+  let run: Path2D | null = null
+  const first = tip(i0)
+  path.moveTo(X(first.x), X(o.foot))
+  path.lineTo(X(first.x), X(first.y))
+  for (let i = i0; i < i1; i++) {
+    const a = tip(i)
+    const b = tip(i + 1)
+    const depth = (0.08 + 0.06 * hash(i, o.seed, 2)) * Math.min(a.k, b.k)
+    const dx = b.x - a.x
+    // A leaf arches over from its tip and droops into the dip; the next rises out of it steeply to its own tip, so
+    // each tip is a point and they all lean one way, like a field in the wind.
+    const dip: [number, number] = [a.x + dx * 0.72, Math.min(o.foot, Math.max(a.y, b.y) + depth)]
+    const c1: [number, number] = [a.x + dx * 0.32, a.y - 0.012 * a.k]
+    const c2: [number, number] = [b.x - dx * 0.04, dip[1] - depth * 0.15]
+    path.quadraticCurveTo(X(c1[0]), X(c1[1]), X(dip[0]), X(dip[1]))
+    path.quadraticCurveTo(X(c2[0]), X(c2[1]), X(b.x), X(b.y))
+    // Inked only where the wall stands: a wall of no height would be a bare line along its foot.
+    const stands = Math.min(a.k, b.k) > 0.05
+    if (stands) {
+      if (!run) {
+        run = new Path2D()
+        run.moveTo(X(a.x), X(a.y))
+        edgeRuns.push(run)
+      }
+      run.quadraticCurveTo(X(c1[0]), X(c1[1]), X(dip[0]), X(dip[1]))
+      run.quadraticCurveTo(X(c2[0]), X(c2[1]), X(b.x), X(b.y))
+    } else run = null
   }
-  p.noStroke()
-  p.fill(o.fill)
-  p.beginShape()
-  p.vertex(X(i0 * step), X(o.foot))
-  for (const [vx, vy] of profile) p.vertex(vx, vy)
-  p.vertex(X(i1 * step), X(o.foot))
-  p.endShape(p.CLOSE)
-  p.noFill()
-  p.stroke(ink)
-  p.strokeWeight(weight * 0.8)
-  // Only where the wall stands: from where it first has height to where it last has.
-  let run: [number, number][] = []
-  const flush = () => {
-    if (run.length > 1) {
-      p.beginShape()
-      for (const [vx, vy] of run) p.vertex(vx, vy)
-      p.endShape()
+  const last = tip(i1)
+  path.lineTo(X(last.x), X(o.foot))
+  path.closePath()
+  // Sunlit along the top, into the shade of its own leaves toward the foot.
+  const top = o.foot - o.h
+  const g = ctx.createLinearGradient(0, X(top), 0, X(o.foot))
+  g.addColorStop(0, mixHex(o.fill, DUST.light, 0.22))
+  g.addColorStop(0.45, o.fill)
+  g.addColorStop(1, mixHex(o.fill, ink, 0.14))
+  ctx.fillStyle = g
+  ctx.fill(path)
+  // A soft band of shade just under the leafy top, where the canopy overhangs itself: depth without a line.
+  ctx.save()
+  ctx.clip(path)
+  const s = ctx.createLinearGradient(0, X(top), 0, X(top + o.h * 0.45))
+  s.addColorStop(0, 'rgba(0, 0, 0, 0)')
+  s.addColorStop(0.35, alphaHex(ink, 0.07))
+  s.addColorStop(1, 'rgba(0, 0, 0, 0)')
+  ctx.fillStyle = s
+  ctx.fillRect(X(o.x0 - 1), X(top), X(o.x1 - o.x0 + 2), X(o.h * 0.5))
+  ctx.restore()
+  // The one line: the top, lighter than a machine's.
+  ctx.strokeStyle = alphaHex(ink, 0.75)
+  ctx.lineWidth = weight * 0.6
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
+  for (const r of edgeRuns) ctx.stroke(r)
+  // A tassel here and there above the leaves: a fine spray, fewer than the leaves by far.
+  if (o.tassels !== false) {
+    ctx.strokeStyle = alphaHex(ink, 0.55)
+    ctx.lineWidth = weight * 0.45
+    for (let i = i0; i <= i1; i++) {
+      if (hash(i, o.seed, 4) > 0.24 || edge(i * step) < 0.9) continue
+      const a = tip(i)
+      const tx = a.x
+      const ty = a.y - 0.01
+      ctx.beginPath()
+      for (let j = -1; j <= 1; j++) {
+        ctx.moveTo(X(tx), X(ty))
+        ctx.lineTo(X(tx + j * 0.05 + Math.sin(o.t + i) * 0.01), X(ty - 0.14 + Math.abs(j) * 0.04))
+      }
+      ctx.stroke()
     }
-    run = []
-  }
-  for (const pt of profile) {
-    if (pt[1] >= X(o.foot) - 0.5) flush()
-    else run.push(pt)
-  }
-  flush()
-  // A stem line now and then, and the tassels above the leaves.
-  p.stroke(ink)
-  for (let i = i0; i <= i1; i++) {
-    if (hash(i, o.seed, 4) > 0.45 || edge(i * step) < 0.9) continue
-    const a = top(i)
-    p.strokeWeight(weight * 0.5)
-    p.line(X(a.x - 0.02), X(o.foot - 0.05), X(a.x), X(a.y + 0.15))
-    if (o.tassels === false) continue
-    p.strokeWeight(weight * 0.6)
-    const tx = a.x
-    const ty = a.y - 0.02
-    for (let j = -1; j <= 1; j++) p.line(X(tx), X(ty), X(tx + j * 0.06 + Math.sin(o.t + i) * 0.01), X(ty - 0.16 + Math.abs(j) * 0.05))
   }
   p.pop()
+}
+
+/** `#rrggbb` at an alpha, as a CSS colour. */
+function alphaHex(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+}
+
+/**
+ * Stubble where a field has been cut, seen side on: a low band just over the ground line, a shade darker than the
+ * earth, with a soft uneven top and no line round it. It says "cut corn" as a plane, where a row of ticks would be
+ * texture. `fade` gives its height (0..1) along x, so it can thin out toward a fence or a track.
+ */
+export function stubble(p: p5, k: number, x0: number, x1: number, foot: number, h: number, seed: number, fade: (x: number) => number = () => 1): void {
+  if (x1 <= x0) return
+  const X = (x: number) => x * k
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, X(foot - h), 0, X(foot))
+  g.addColorStop(0, alphaHex(mixHex(DUST.husk, DUST.wood, 0.45), 0))
+  g.addColorStop(0.35, alphaHex(mixHex(DUST.husk, DUST.wood, 0.45), 0.55))
+  g.addColorStop(1, alphaHex(mixHex(DUST.husk, DUST.wood, 0.6), 0.8))
+  ctx.fillStyle = g
+  ctx.beginPath()
+  ctx.moveTo(X(x0), X(foot))
+  const step = 0.12
+  for (let x = x0; x <= x1 + step; x += step) {
+    const u = Math.min(x, x1)
+    const i = Math.round(u / step)
+    const top = h * fade(u) * (0.7 + 0.3 * hash(i, seed, 8))
+    ctx.lineTo(X(u), X(foot - top))
+  }
+  ctx.lineTo(X(x1), X(foot))
+  ctx.closePath()
+  ctx.fill()
 }

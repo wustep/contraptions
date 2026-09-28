@@ -1,6 +1,7 @@
+import type p5 from 'p5'
 import { outline, solid } from '../../../../../../../../src/core/draw'
 import { clamp } from '../../../../../../../../src/core/ease'
-import { FLOOR, R, laneAt, type Pt } from '../../../../../parts'
+import { FLOOR, R, laneAt, mixHex, type Pt } from '../../../../../parts'
 import { alpha, box, frame, hash, part, route, smooth, type Way } from '../kit'
 import { DUST } from '../worlds'
 import { cornWall, stalk } from './corn'
@@ -94,8 +95,10 @@ export const cornrow = part<RowState>(
         if (x > s.length) break
         stalk(p, k, ink, weight, { x, foot: FLOOR - 0.12, h: 1.9 + hash(i, 4) * 0.5, seed: 40 + i, sway: 0.12 + Math.sin(t * 0.9 + i) * 0.03, plain: i % 2 === 1 })
       }
-      // The bank's face down to the field road: one clean face, its foot exactly on the road's line.
+      // The bank's face down to the field road: one clean face, its foot exactly on the road's line, lit along its top
+      // edge and going into shade toward the road, so it reads as a bank of earth and not a flat card.
       solid(p, ink, weight, DUST.shade)
+      bankShade(p, k, ink, FLOOR, 1 + FLOOR)
       p.beginShape()
       p.vertex((HEAD - 0.4) * k, (1 + FLOOR) * k)
       p.vertex(HEAD * k, FLOOR * k)
@@ -245,3 +248,13 @@ export const cornrow = part<RowState>(
     }
   },
 )
+
+/** Fill the next shape with the bank's earth, lit at `top` and shaded toward `foot` (cells). Call after `solid`. */
+export function bankShade(p: p5, k: number, ink: string, top: number, foot: number): void {
+  const ctx = p.drawingContext as CanvasRenderingContext2D
+  const g = ctx.createLinearGradient(0, top * k, 0, foot * k)
+  g.addColorStop(0, mixHex(DUST.shade, DUST.light, 0.3))
+  g.addColorStop(0.3, DUST.shade)
+  g.addColorStop(1, mixHex(DUST.shade, ink, 0.1))
+  ctx.fillStyle = g
+}

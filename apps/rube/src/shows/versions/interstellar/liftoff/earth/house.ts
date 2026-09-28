@@ -7,6 +7,7 @@ import { dropTime, G_EARTH, hop } from '../physics'
 import { DUST, MURPH_SMALL, MURPH_YOUNG } from '../worlds'
 import { drawWatch, WATCH_ON_SHELF } from './watch'
 import { BED } from '../act2/station'
+import { drawRocker, ROCKER } from './furniture'
 
 /**
  * The farmhouse, cut open: Murph's room upstairs, the stairs, the kitchen
@@ -90,15 +91,20 @@ export const house = scenery<null>({
     p.rect(X((WALL_L + WALL_R) / 2), X(DOWN + 0.08), X(WALL_R - WALL_L), X(0.16))
     // The ceiling under the attic.
     p.rect(X(MID_X), X(EAVE + 0.06), X(WALL_R - WALL_L), X(0.12))
-    // The stone footing the ground floor sits on, a step up from the yard.
-    solid(p, ink, weight, DUST.shade)
-    p.rect(X(MID_X), X((DOWN + 0.16 + YARD) / 2), X(WALL_R - WALL_L + 0.1), X(YARD - DOWN - 0.16))
-    outline(p, ink, weight * 0.6)
-    for (let x = WALL_L + 0.3, i = 0; x < WALL_R; x += 0.55, i++) {
-      p.line(X(x), X(DOWN + 0.16), X(x), X(YARD))
-      p.line(X(x + 0.27), X((DOWN + 0.16 + YARD) / 2), X(x + 0.27 + (i % 2 ? 0.02 : -0.02)), X(YARD))
-    }
-    p.line(X(WALL_L), X((DOWN + 0.16 + YARD) / 2), X(WALL_R), X((DOWN + 0.16 + YARD) / 2))
+    // The stone footing the ground floor sits on, a step up from the yard: one mass of stone in the floor's shadow,
+    // lighter where the day reaches its foot. No joints: it is the house's plinth, not a pattern.
+    const foot0 = DOWN + 0.16
+    const stone = ctx.createLinearGradient(0, X(foot0), 0, X(YARD))
+    stone.addColorStop(0, mixHex(DUST.shade, ink, 0.16))
+    stone.addColorStop(0.35, DUST.shade)
+    stone.addColorStop(1, mixHex(DUST.shade, DUST.wall, 0.4))
+    p.stroke(ink)
+    p.strokeWeight(weight)
+    ctx.fillStyle = stone
+    ctx.beginPath()
+    ctx.rect(X(WALL_L - 0.05), X(foot0), X(WALL_R - WALL_L + 0.1), X(YARD - foot0))
+    ctx.fill()
+    ctx.stroke()
 
     // The stair: a stringer and four treads.
     solid(p, ink, weight, DUST.wood)
@@ -316,10 +322,17 @@ const shiver = (since: number): number => (since < -0.34 || since >= 0 ? 0 : 0.0
  * fall. The opening leaves them so, and the end of Act I (the ghost knocking
  * them off from behind) leaves them exactly so again.
  */
+/**
+ * Where each lands, along the floor (its middle), in the order they fall: six down on the boards, and four across
+ * the gaps between them, so the heap is never more than two deep and stays low in front of the bottom shelf. (Left
+ * to its own, each book lay on the one before and the heap climbed like a stair to the middle shelf.)
+ */
+const BOOK_LANDS = [-0.215, 0.075, -0.07, 0.43, 0.785, 0.66, 1.14, 1.0, 1.56, 1.5]
+
 export function bookRests(): Fallen[] {
   const rests: { x0: number; x1: number; top: number }[] = []
   return stayRow().map((b, j) => {
-    const lx = b.x + (hash(j, 7) - 0.5) * 0.16 + (j % 2 ? 0.05 : -0.05)
+    const lx = BOOK_LANDS[j] + (hash(j, 7) - 0.5) * 0.02
     const x0 = lx - b.h / 2
     const x1 = lx + b.h / 2
     let floor = FLOOR
@@ -518,11 +531,7 @@ function drawShelf(p: p5, s: ShelfState, c: Ctx): void {
     x += w + 0.01
   }
   book(p, c, x + 0.17, MID, 0.1, 0.3, DUST.sage, 0.45)
-  // A jar of pencils and a box on the bottom shelf, and a stack lying down.
-  solid(p, ink, weight, DUST.light)
-  p.rect(X(1.55), X(MID + 0.05 + 0.13), X(0.18), X(0.22), X(0.02))
-  outline(p, ink, weight * 0.8)
-  for (const dx of [-0.04, 0.0, 0.05]) p.line(X(1.55 + dx), X(MID + 0.1), X(1.55 + dx * 1.8), X(MID - 0.02))
+  // A box on the bottom shelf, and a stack lying down.
   for (let j = 0; j < 3; j++) {
     const w = 0.5 - j * 0.06
     solid(p, ink, weight, [DUST.teal, DUST.rust, DUST.corn][j])
@@ -984,7 +993,7 @@ function truckBack(p: p5, c: { k: number; ink: string; weight: number }, g: Rig)
   const d0 = onTruck(g, 0.215, 0.17)
   const d1 = onTruck(g, 0.215, ROOF - 0.04)
   p.line(X(d0[0]), X(d0[1]), X(d1[0]), X(d1[1]))
-  poly([[-0.03, 0.11], [0.04, 0.11], [0.04, 0.18], [-0.03, 0.18]], DUST.bone, weight * 0.7)
+  poly([[-0.03, 0.12], [0.04, 0.12], [0.04, 0.17], [-0.03, 0.17]], DUST.tin, weight * 0.7)
   // The box behind the ball: its headboard, its floor, and the tailgate, which hangs from its top and swings open as it tips.
   poly([[BOX_U, HINGE_V], [LEN, HINGE_V], [LEN, BOX_FLOOR], [BOX_U, BOX_FLOOR]], DUST.rust, weight * 0.8, true)
   poly([[BOX_U, HINGE_V], [BOX_U + 0.035, HINGE_V], [BOX_U + 0.035, BOX_SIDE + 0.06], [BOX_U, BOX_SIDE + 0.06]], DUST.rust, weight * 0.8, true)
@@ -1015,15 +1024,22 @@ function truckFront(p: p5, c: { k: number; ink: string; weight: number }, g: Rig
   p.line(X(r0[0]), X(r0[1]), X(r1[0]), X(r1[1]))
   // The key, in the chassis under the box: a butterfly of tin on a short stem, turning a quarter with each lurch.
   const [kx, ky] = onTruck(g, (AXLES[0] + AXLES[1]) / 2 + 0.03, 0.16)
+  // Tin, like the truck: a bow of two pierced lobes on a stem, so it reads as a key and not as a pair of eyes.
   p.push()
   p.translate(X(kx), X(ky))
   p.rotate(g.key)
-  solid(p, ink, weight * 0.6, DUST.bone)
-  p.ellipse(X(-0.045), 0, X(0.07), X(0.045))
-  p.ellipse(X(0.045), 0, X(0.07), X(0.045))
+  solid(p, ink, weight * 0.55, DUST.tin)
+  p.rect(0, 0, X(0.07), X(0.018))
+  for (const side of [-1, 1]) {
+    solid(p, ink, weight * 0.55, DUST.tin)
+    p.ellipse(X(side * 0.05), 0, X(0.055), X(0.042))
+    p.noStroke()
+    p.fill(mixHex(DUST.tin, ink, 0.55))
+    p.ellipse(X(side * 0.052), 0, X(0.018), X(0.014))
+  }
   p.pop()
-  solid(p, ink, weight * 0.6, DUST.tin)
-  p.circle(X(kx), X(ky), X(0.025))
+  solid(p, ink, weight * 0.6, mixHex(DUST.tin, ink, 0.25))
+  p.circle(X(kx), X(ky), X(0.022))
 }
 
 /**
@@ -1242,8 +1258,9 @@ interface PorchState {
 const PORCH_NOTES = [18.669, 18.901, 19.127]
 export const PORCH_STEPS = PORCH_NOTES
 const DECK_END = 1.9
-/** The chair's runners' middle, on the deck. */
+/** The chair's runners' middle, on the deck, and how big it is drawn. */
 const CHAIR_X = 1.05
+const PORCH_CHAIR = 0.7
 /** He clips the runner (show time). */
 const CLIP = 18.065
 
@@ -1303,11 +1320,6 @@ function drawPorch(p: p5, s: PorchState, c: Ctx): void {
   p.line(X(DECK_END), X(FLOOR + 0.1), X(DECK_END + 0.8), X(1 + FLOOR))
   // The ground of the yard from the bottom step on.
   p.line(X(DECK_END + 0.8), X(1 + FLOOR), X(4.5), X(1 + FLOOR))
-  for (let i = 0; i < 6; i++) {
-    const gx = DECK_END + 1 + i * 0.4 + hash(i, 3) * 0.2
-    p.line(X(gx), X(1 + FLOOR), X(gx - 0.03), X(1 + FLOOR - 0.06))
-    p.line(X(gx + 0.03), X(1 + FLOOR), X(gx + 0.05), X(1 + FLOOR - 0.05))
-  }
   // The porch roof, off the front wall on a post.
   solid(p, ink, weight, DUST.rust)
   p.quad(X(wall), X(-1.45), X(DECK_END + 0.35), X(-1.2), X(DECK_END + 0.35), X(-1.12), X(wall), X(-1.35))
@@ -1316,23 +1328,16 @@ function drawPorch(p: p5, s: PorchState, c: Ctx): void {
   solid(p, ink, weight * 0.8, DUST.light)
   p.rect(X(wall + 0.12), X((-1.02 + FLOOR) / 2), X(0.08), X(FLOOR + 1.02))
 
-  // The rocking chair: the ball clips a runner going by, and it rocks a while after.
+  // The rocking chair (the one old Murph has on the station, years on): the ball clips a runner going by, and it
+  // rolls on its rockers a while after.
   const rock = chairRock(t - s.out + CLIP)
-  const cx = CHAIR_X
+  const rr = ROCKER.r * PORCH_CHAIR
   p.push()
-  p.translate(X(cx), X(FLOOR))
+  p.translate(X(CHAIR_X + rr * rock), X(FLOOR - rr))
   p.rotate(rock)
-  outline(p, ink, weight)
-  // Runners, seat, back, arms.
-  p.noFill()
-  p.arc(0, X(-0.55), X(1.2), X(1.1), Math.PI * 0.36, Math.PI * 0.64)
-  solid(p, ink, weight, DUST.teal)
-  p.rect(0, X(-0.3), X(0.34), X(0.05))
-  p.quad(X(-0.16), X(-0.3), X(-0.24), X(-0.78), X(-0.18), X(-0.8), X(-0.1), X(-0.3))
-  outline(p, ink, weight)
-  for (const dx of [-0.13, 0.13]) p.line(X(dx), X(-0.3), X(dx * 1.1), X(-0.05))
-  p.line(X(-0.2), X(-0.52), X(0.17), X(-0.46))
-  p.line(X(0.17), X(-0.46), X(0.15), X(-0.3))
+  p.translate(0, X(rr))
+  p.scale(PORCH_CHAIR)
+  drawRocker(p, k, ink, weight / PORCH_CHAIR, false)
   p.pop()
 
   // Scuffs on the steps.

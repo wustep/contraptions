@@ -114,7 +114,8 @@ export function compose(): { show: LiftoffShow; camera: (t: number) => Framing }
       const x = rear(Math.min(t, beat(84))) - 5 * (1 - lead) + ahead * lead + gone * 9
       const y = road - 3.6 * (1 - lead) + (-2.55 + 0.1 * Math.sin(t * 1.7)) * lead - gone * 1.5
       const bank = -0.04 * (1 - lead) + 0.05 * Math.sin(t * 0.9) * lead - gone * 0.12
-      return { p: [x, y], bank, seen: 1 - smooth(t, beat(86), beat(86) + 1.4), ground: gone > 0.2 ? null : road - 2, glint: glintAt(t) }
+      // No shadow over the corn: seen side on, a shadow on the canopy's top would hang in the air in front of the field.
+      return { p: [x, y], bank, seen: 1 - smooth(t, beat(86), beat(86) + 1.4), ground: null, glint: glintAt(t) }
     },
   }
 

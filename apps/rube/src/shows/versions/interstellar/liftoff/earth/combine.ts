@@ -5,7 +5,7 @@ import { alpha, box, carried, frame, hash, knock, part, route, smooth, type Ctx,
 import { beat, ORIGIN, PERIOD } from '../music'
 import { G_EARTH, hop } from '../physics'
 import { DUST } from '../worlds'
-import { cornWall, stalk } from './corn'
+import { cornWall, stalk, stubble } from './corn'
 
 /**
  * The combine. It has come to the end of the field on its own, header up,
@@ -541,15 +541,7 @@ function drawCombine(p: p5, s: CombineState, c: Ctx): void {
   // The ground, and the stubble the combine left behind it.
   outline(p, ink, weight)
   p.line(x(-2.75), x(GROUND), x(s.end + 0.4), x(GROUND))
-  p.stroke(alpha(p, ink, 0.55))
-  p.strokeWeight(weight * 0.55)
-  const s0 = Math.max(-0.95, f.x0 - 0.5)
-  const s1 = Math.min(s.end + 0.35, f.x1 + 0.5)
-  for (let i = Math.floor(s0 / 0.17); i < s1 / 0.17; i++) {
-    const sx = i * 0.17 + hash(i, 3) * 0.07
-    const h = 0.07 + hash(i, 4) * 0.07
-    p.line(x(sx), x(GROUND), x(sx + 0.015), x(GROUND - h))
-  }
+  stubble(p, k, Math.max(-0.95, f.x0 - 0.5), Math.min(s.end + 0.35, f.x1 + 0.5), GROUND, 0.12, 3)
 
   // The corn it has not cut yet, standing in front of the header.
   for (const st of s.crop) {

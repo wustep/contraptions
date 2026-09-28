@@ -292,16 +292,10 @@ function drawYard(p: p5, s: YardState, c: Ctx): void {
   const t = c.t + s.begin
   const X = (x: number) => x * k
 
-  // The yard: hard earth, a tuft or two.
+  // The yard: hard earth, one line.
   outline(p, ink, weight)
   const ground = EXIT_X + 0.5 - HEAD_BACK
   p.line(X(-0.5), X(FLOOR), X(ground), X(FLOOR))
-  for (let i = 0; i < 7; i++) {
-    const gx = -0.2 + i * 1.1 + hash(i, 5) * 0.4
-    if (gx > ground - 0.15) continue
-    p.line(X(gx), X(FLOOR), X(gx - 0.03), X(FLOOR - 0.07))
-    p.line(X(gx + 0.03), X(FLOOR), X(gx + 0.06), X(FLOOR - 0.06))
-  }
   drawHens(p, c, t)
 
   // The windmill: a wooden lattice tower, the wheel of blades turning in the dawn wind, the tail behind it.
