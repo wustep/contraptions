@@ -98,7 +98,8 @@ A lap a track, the same round each time, timed to that track's own shape (`lamp/
 2. **The drop.** It goes over the end (it pivots on the corner and falls) and lands on the top book as the drums come
    in, exactly on their first downbeat.
 3. **The stair.** It rolls to the book's edge and steps down, a half bar a step, each landing on a strong beat (one or
-   three), the last onto the cup's cushion, and it settles into the cup's hollow with a few damped rocks.
+   three). The bottom book is the thick one and the cup lies a little in front of its end, so the last step is a drop
+   into the cup's hollow, landing on its beat with a squash, and one small damped rock settles it.
 4. **The cup.** Through the groove it sits there like a listener. On a kick struck on one or three (as hard as it was
    struck, as full as the bar is) the cushion pushes it up a little and it comes back down with a small second bob, so a
    nod settles rather than stops dead. It sways slowly side to side, a sway every two bars. Through a break there are no
@@ -170,6 +171,10 @@ What each round of scrubbing found, worst first, and what changed:
 11. **The sill walk all but stopped halfway** on the longest gap (the Hermite's ends were faster than its middle). Now
     an even walk, eased at both ends.
 12. **Zoom lost the ball 22% of the time**: now 0.1%.
+13. **The last step was not a step.** The bottom book's top stood level with the cushion, so the ball crept to the
+    corner, lingered, rolled onto the cushion's rim on the beat and only then down into the seat, its arrival late.
+    The bottom book is thicker (the stair's risers stay even) and the cup lies in front of its corner: the ball tips
+    off and drops into the hollow on beat three.
 
 **Subtracted:** the light cone; the pages turning on each track (considered and not built: the page is the notebook's
 second job); a cable from the headphones; a drinking bird that would have lifted the ball (a character, and a gag);

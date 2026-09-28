@@ -150,8 +150,8 @@ export function hollowY(dx: number): number {
   return CUP.top - R + 1.5 * (a - SHOULDER) ** 2
 }
 
-/** Where it first touches the cushion, off the last book: on the cushion's near slope. */
-const CUP_LAND_DX = -0.26
+/** Where it comes down in the cushion off the last book: in the hollow, a little on the near side. */
+const CUP_LAND_DX = -0.1
 
 /* ------------------------------------------------------------------ the cup */
 
@@ -291,7 +291,7 @@ function build(): void {
       const start = at
       LEGS.push({ from: start, to: rollTo, kind: 'roll', track: tr.n, at: (t) => r(t - start) })
       LEGS.push({ from: rollTo, to: landAt, kind: 'fall', track: tr.n, at: (t) => fall.at(t - rollTo) })
-      LANDINGS.push({ t: landAt, s: next ? 0.4 : 0.3, on: next ? 'book' : 'cup', book: next ? i + 1 : undefined })
+      LANDINGS.push({ t: landAt, s: next ? 0.4 : 0.5, on: next ? 'book' : 'cup', book: next ? i + 1 : undefined })
       at = landAt
       x = fall.x
       v = fall.vx * 0.6

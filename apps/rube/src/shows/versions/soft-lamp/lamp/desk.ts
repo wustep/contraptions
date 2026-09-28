@@ -35,19 +35,23 @@ export interface Book {
   pages: string
 }
 
-/** The stair, top step first: each book stands out to the right of the one on it by a step. */
+/**
+ * The stair, top step first: each book stands out to the right of the one on it by a step. The bottom one is the
+ * thick one, so its top stands a little over the cup's cushion and the last step is a drop into the seat.
+ */
 export const BOOKS: Book[] = [
-  { x0: 0.34, x1: 1.4, top: -0.88, bottom: -0.62, cover: '#4B5B6B', pages: '#D9CDB5' },
-  { x0: 0.2, x1: 1.86, top: -0.62, bottom: -0.36, cover: '#7A4A37', pages: '#DCD0B8' },
-  { x0: 0.06, x1: 2.3, top: -0.36, bottom: 0, cover: '#6E6150', pages: '#E3D8C2' },
+  { x0: 0.34, x1: 1.4, top: -0.92, bottom: -0.66, cover: '#4B5B6B', pages: '#D9CDB5' },
+  { x0: 0.2, x1: 1.86, top: -0.66, bottom: -0.4, cover: '#7A4A37', pages: '#DCD0B8' },
+  { x0: 0.06, x1: 2.3, top: -0.4, bottom: 0, cover: '#6E6150', pages: '#E3D8C2' },
 ]
 
 /**
  * The headphones, set down: the near cup lying on its back with its cushion up (the ball's seat), the band rising from
  * its far side in an arch, and the far cup standing on its edge at the band's other end, cushion toward the near one.
- * The near cup: its middle, half width, the cushion's top, and how deep its hollow is.
+ * The near cup: its middle, half width, the cushion's top, and how deep its hollow is. It lies a little in front of the
+ * bottom book's end, so the ball going over that book's edge comes down in the hollow.
  */
-export const CUP = { x: 2.66, halfW: 0.36, top: -0.34, hollow: 0.06 }
+export const CUP = { x: 2.52, halfW: 0.36, top: -0.34, hollow: 0.06 }
 /** Where the ball rests in the cup (its middle). */
 export const IN_CUP = { x: CUP.x, y: CUP.top + CUP.hollow - R }
 /** The far cup, standing: its middle, half its thickness, and its height. */
