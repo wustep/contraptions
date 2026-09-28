@@ -278,10 +278,34 @@ export const replica = part<ReplicaState>(
     const inCar = (t: number): Pt => H([IN_CAR_X, inCarY(carY(t))])
     const into = inCar(b(105))
     const onGang: Pt = H([BED.pillow.x0 - 0.02, BED.top - R])
+    // Over the pillow's edge: level on the pillow, down its rounded side, and level again on the gangway, one S (a
+    // cubic), so he comes down onto the boards without a knock: a leg straight to the edge and another along the
+    // gangway met at a corner, and he stopped falling in a frame.
+    const d2 = Math.hypot(into[0] - onGang[0], into[1] - onGang[1])
+    const gang: Pt = [(into[0] - onGang[0]) / d2, (into[1] - onGang[1]) / d2]
+    const chord = Math.hypot(onGang[0] - rest[0], onGang[1] - rest[1])
+    const lead = Math.sign(onGang[0] - rest[0]) * (chord / 3)
+    const S = [rest, [rest[0] + lead, rest[1]], [onGang[0] - gang[0] * (chord / 3), onGang[1] - gang[1] * (chord / 3)], onGang] as Pt[]
+    const sAt = (u: number): Pt => {
+      const w = [(1 - u) ** 3, 3 * u * (1 - u) ** 2, 3 * u * u * (1 - u), u ** 3]
+      return [w.reduce((a, k, i) => a + k * S[i][0], 0), w.reduce((a, k, i) => a + k * S[i][1], 0)]
+    }
+    const over: { u: number; s: number }[] = [{ u: 0, s: 0 }]
+    for (let i = 1; i <= 32; i++) {
+      const [x0, y0] = sAt((i - 1) / 32)
+      const [x1, y1] = sAt(i / 32)
+      over.push({ u: i / 32, s: over[i - 1].s + Math.hypot(x1 - x0, y1 - y0) })
+    }
+    const d1 = over[32].s
+    const atLength = (s: number): Pt => {
+      let i = 1
+      while (i < 32 && over[i].s < s) i++
+      const a = over[i - 1]
+      const z = over[i]
+      return sAt(a.u + ((z.u - a.u) * (s - a.s)) / Math.max(1e-9, z.s - a.s))
+    }
     // One continuous roll: from rest, gathering to a speed v at the pillow's edge, and on at that same speed down
     // the gangway, easing to a touch against the gate. v is solved so the two legs fill the time exactly.
-    const d1 = Math.hypot(onGang[0] - rest[0], onGang[1] - rest[1])
-    const d2 = Math.hypot(into[0] - onGang[0], into[1] - onGang[1])
     const V_END = 0.1
     const total = b(105) - off
     let vLo = 0.01
@@ -293,14 +317,15 @@ export const replica = part<ReplicaState>(
     }
     const v = (vLo + vHi) / 2
     const edge = off + (2 * d1) / v
-    segs.push(
-      ...route([
-        { at: 0, p: rest },
-        { at: off, p: rest },
-        { at: edge, p: onGang, ramp: [0, v], arc: 0.03 },
-        { at: b(105), p: into, ramp: [v, V_END] },
-      ]),
-    )
+    const T2 = b(105) - edge
+    const roll = (t: number): Pt => {
+      if (t <= edge) return atLength((d1 * ((t - off) / (edge - off)) ** 2))
+      const tau = t - edge
+      const s = v * tau + ((V_END - v) * tau * tau) / (2 * T2)
+      return [onGang[0] + gang[0] * s, onGang[1] + gang[1] * s]
+    }
+    segs.push(...route([{ at: 0, p: rest }, { at: off, p: rest }]))
+    segs.push(...carried(roll, off, b(105), 48))
     // In the car: the dip, the fall, the buffer.
     const sitOut = b(107) + 0.1
     segs.push(...carried(inCar, b(105), b(106), 10))
