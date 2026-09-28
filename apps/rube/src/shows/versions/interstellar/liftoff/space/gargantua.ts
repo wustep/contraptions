@@ -130,6 +130,9 @@ const CLOSE = PULL0 + 0.85
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
 
+/** The ghost's outline on Murph's lit case: a warm grey between the dark's pale ink and the farm's. */
+const GHOST_RIM = mixHex(VOID.ink, FARM.ink, 0.55)
+
 /** The strikes, on the music. */
 export const GARGANTUA_HITS = [CATCH, LATCH, NODE_A, SWALLOW, BEHIND, NODE_B, CREST, NODE_A2, BEHIND2, NODE_B2, RELEASE, HORIZON, PASS_A, PASS_B, LAND, TOUCH]
 
@@ -465,8 +468,11 @@ export const gargantua = part<GargState>(
       }
       // Each push is a lean away from us, into the lander and each book.
       const lean = shoveAt(t)
-      if (Math.abs(lean) < 0.002) return null
-      return [{ ...hero, scale: (hero.scale ?? 1) * (1 + lean) }]
+      // On Murph's lit case the dark's pale ink is paper on paper: his dashes take a warm grey there, so the ghost
+      // keeps its edge against the room's light, and go back to the pale ink as the case falls away into the dark.
+      const lit = smooth(t, PASS_B - 0.1, PASS_B + 0.3) * (1 - smooth(t, CLOSE, CLOSE + 0.35))
+      if (Math.abs(lean) < 0.002 && lit < 0.002) return null
+      return [{ ...hero, scale: (hero.scale ?? 1) * (1 + lean), rim: mixHex(VOID.ink, GHOST_RIM, lit) }]
     }
     return {
       cells: box(-9, -5, 9, 4),
@@ -1611,14 +1617,16 @@ function drawOver(p: p5, s: GargState, c: Ctx): void {
   const ghost = smooth(T, HORIZON, HORIZON + 0.35) * (1 - smooth(T, WAKE - 0.05, WAKE + 0.25))
   if (ghost > 0.005) {
     const push = Math.max(0, -shoveAt(T) - 0.05 * leanPulse(T - TOUCH)) / 0.07
-    const a = ghost * (0.4 + 0.25 * push)
+    // Close to him: a light he gives off, not a blob he sits in, so the dashed ghost keeps its edge in the close-ups.
+    const a = ghost * (0.24 + 0.2 * push)
     const x = X(at.x)
     const y = X(at.y)
-    const g = ctx.createRadialGradient(x, y, 0, x, y, 0.45 * k)
+    const g = ctx.createRadialGradient(x, y, 0.8 * R * k, x, y, 0.3 * k)
     g.addColorStop(0, `rgba(255, 246, 214, ${a})`)
-    g.addColorStop(0.35, `rgba(255, 236, 190, ${a * 0.5})`)
     g.addColorStop(1, 'rgba(255, 236, 190, 0)')
+    ctx.save()
     ctx.fillStyle = g
-    ctx.fillRect(x - 0.45 * k, y - 0.45 * k, 0.9 * k, 0.9 * k)
+    ctx.fillRect(x - 0.3 * k, y - 0.3 * k, 0.6 * k, 0.6 * k)
+    ctx.restore()
   }
 }
