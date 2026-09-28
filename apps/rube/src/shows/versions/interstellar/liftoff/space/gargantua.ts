@@ -626,7 +626,7 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
   // film made famous. Not a ring round the dark: light that hugs the dark at its pole and flares out wide at either
   // side, down to where the disk's plane takes it on, so the whole reads as a hat of light over the dark and a thinner
   // brim under it. Filled, hottest against the dark and fading outward, a little hotter to the left (the side coming
-  // at us), with one fine bright edge where the lensing folds it over.
+  // at us). No line inside it: a hairline along the band read as a second outline round the dark.
   const crescent = (rx: number, ry: number, upper: boolean, reach: number, peak: number) => {
     if (peak <= 0.004) return
     const a0 = upper ? Math.PI : 0
@@ -644,19 +644,6 @@ function holeSolid(p: p5, c: Ctx, h: HoleLook, bright = 0, fade = 1): void {
     g.addColorStop(1, rgba(DARK.amber, 0))
     ctx.fillStyle = g
     ctx.fill()
-    // The fold: a hair of hot light along the band, following its shape and not the dark's.
-    const fold = ctx.createLinearGradient(X(-rx * r), 0, X(rx * r), 0)
-    fold.addColorStop(0, rgba(WHITE, 0))
-    fold.addColorStop(0.25, rgba(WHITE, 0.4 * peak))
-    fold.addColorStop(0.6, rgba(WHITE, 0.2 * peak))
-    fold.addColorStop(1, rgba(WHITE, 0))
-    ctx.strokeStyle = fold
-    ctx.lineWidth = Math.max(0.6, X(0.012 * r))
-    ctx.beginPath()
-    const fx = 1 + (rx - 1) * 0.42
-    const fy = 1 + (ry - 1) * 0.42
-    ctx.ellipse(0, 0, X(fx * r), X(fy * r), 0, a0 + 0.05, a1 - 0.05)
-    ctx.stroke()
     ctx.restore()
   }
   const lit = (m: number) => Math.min(1, m * A * (1 + 0.4 * bright))
@@ -730,7 +717,8 @@ function drawGargantua(p: p5, _s: GargState, c: Ctx, T: number): void {
   const h = holeLook(T)
   // Its light goes first as the dark opens.
   const fade = 1 - smooth(T, HORIZON - 0.02, HORIZON + 0.22)
-  glow(p, X(h.cx), X(h.cy), X(4.6 * h.r), DARK.amber, 0.16 * fade)
+  // A breath of its light in the space round it; the silhouette is the hat, the brim and the band, not a haze.
+  glow(p, X(h.cx), X(h.cy), X(3.4 * h.r), DARK.amber, 0.07 * fade)
 
   // Behind the hole: the Ranger and the ball's tether when they are on the far side.
   const sw = swingAt(T)
