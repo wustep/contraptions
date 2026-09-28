@@ -125,8 +125,10 @@ export function leafTip(s: Stalk, i: number): [number, number] {
  * thousand stems) to look at; only the stalks the ball or the truck touches are
  * drawn stalk by stalk.
  */
-export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number] }): void {
-  const step = 0.24
+export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0: number; x1: number; foot: number; h: number; t: number; fill: string; seed: number; tassels?: boolean; alpha?: number; taper?: [number, number]; step?: number; line?: number }): void {
+  // How wide a leaf is along the top, and how strong its one line (a far wall wants fewer, bigger leaves and less ink).
+  const step = o.step ?? 0.24
+  const line = o.line ?? 1
   const X = (x: number) => x * k
   const i0 = Math.floor(o.x0 / step) - 1
   const i1 = Math.ceil(o.x1 / step) + 1
@@ -197,17 +199,17 @@ export function cornWall(p: p5, k: number, ink: string, weight: number, o: { x0:
   ctx.fillRect(X(o.x0 - 1), X(top), X(o.x1 - o.x0 + 2), X(o.h * 0.5))
   ctx.restore()
   // The one line: the top, lighter than a machine's.
-  ctx.strokeStyle = alphaHex(ink, 0.75)
+  ctx.strokeStyle = alphaHex(ink, 0.75 * line)
   ctx.lineWidth = weight * 0.6
   ctx.lineJoin = 'round'
   ctx.lineCap = 'round'
   for (const r of edgeRuns) ctx.stroke(r)
   // A tassel here and there above the leaves: a fine spray, fewer than the leaves by far.
   if (o.tassels !== false) {
-    ctx.strokeStyle = alphaHex(ink, 0.55)
+    ctx.strokeStyle = alphaHex(ink, 0.55 * line)
     ctx.lineWidth = weight * 0.45
     for (let i = i0; i <= i1; i++) {
-      if (hash(i, o.seed, 4) > 0.24 || edge(i * step) < 0.9) continue
+      if (hash(i, o.seed, 4) > 0.24 * (0.24 / step) || edge(i * step) < 0.9) continue
       const a = tip(i)
       const tx = a.x
       const ty = a.y - 0.01
