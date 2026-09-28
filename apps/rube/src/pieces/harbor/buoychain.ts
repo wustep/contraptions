@@ -295,8 +295,8 @@ export const buoychain = definePiece<{ colors: string[]; band: string }>({
     })
 
     // The sea's line in front of them, so they stand in it: still by the pilings, where every pier has it, and heaved up with the swell along the row.
-    water(p, k, ink, weight, -0.5, x0)
-    water(p, k, ink, weight, x1, 2.5)
+    water(p, k, ink, bg, weight, -0.5, x0)
+    water(p, k, ink, bg, weight, x1, 2.5)
     outline(p, ink, weight * 0.8)
     p.beginShape()
     for (let j = 0; j <= n; j++) {

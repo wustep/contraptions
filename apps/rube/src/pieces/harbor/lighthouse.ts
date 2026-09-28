@@ -92,13 +92,13 @@ export const lighthouse = definePiece<LighthouseState>({
     }
     return null
   },
-  draw: (p, s, { k, ink, weight }) => {
+  draw: (p, s, { k, ink, bg, weight }) => {
     const { floors, turn } = s
     const gallery = -floors + FLOOR
     const ctx = p.drawingContext as CanvasRenderingContext2D
 
     // The pier to the door, over water, and the ground the tower stands on.
-    water(p, k, ink, weight, -0.5, -BASE)
+    water(p, k, ink, bg, weight, -0.5, -BASE)
     rail(p, k, ink, weight, -0.5, -BASE)
     piling(p, k, ink, weight, -0.4)
     outline(p, ink, weight)

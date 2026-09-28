@@ -227,7 +227,7 @@ export const deckchair = definePiece<DeckchairState>({
     p.pop()
 
     // The shallows, in front of its legs; a slap of water where it comes down.
-    water(p, k, ink, weight, -0.5, x1)
+    water(p, k, ink, bg, weight, -0.5, x1)
     const down = FIRE + SNAP + STAND + KEEL
     splash(p, k, seaWater(theme), weight, f.footE[0] + 0.35, WATER, clamp((t - down + 0.06) / 0.5), 0.9)
   },

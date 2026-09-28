@@ -290,7 +290,7 @@ export const diaphone = definePiece<{ color: string; plunger: string }>({
     seabed(p, k, ink, weight, 1.5, 2.5)
     outline(p, ink, weight)
     p.line(1.5 * k, 0.5 * k, 1.5 * k, BED * k)
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     rail(p, k, ink, weight, -0.5, EDGE)
     piling(p, k, ink, weight, -0.4, FLOOR, BED)
     rail(p, k, ink, weight, PIER, 2.5)

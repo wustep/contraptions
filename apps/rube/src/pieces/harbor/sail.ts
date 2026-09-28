@@ -160,7 +160,7 @@ export const sail = definePiece<SailState>({
     }
     return null
   },
-  draw: (p, s, { k, t, since, ink, weight, color, theme }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, color, theme }) => {
     const x1 = s.long ? 1.5 : 0.5
     const top = topAt(t)
     const r = radiusAt(t)
@@ -231,6 +231,6 @@ export const sail = definePiece<SailState>({
 
     // The hull, in front of her mast's foot and the roll come down to her gunwale; and the sea, in front of the hull.
     hull(p, k, ink, weight, s.color)
-    water(p, k, ink, weight, -0.5, x1, sea)
+    water(p, k, ink, bg, weight, -0.5, x1, sea)
   },
 })

@@ -208,7 +208,7 @@ export const dinghy = definePiece<{ color: string }>({
     p.pop()
 
     // The water in front of her, the curl at her stem and the wake astern while she has way on.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     const way = since < 0 || t > T_BUMP ? 0 : Math.sin(Math.PI * Math.pow(over(t, FIRE, T_BUMP), 0.8))
     if (way > 0.05) {
       const bow = afloat([LEN - 0.03, WATER - 0.01], t)

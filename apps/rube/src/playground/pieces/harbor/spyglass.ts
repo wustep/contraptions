@@ -120,9 +120,9 @@ export const spyglass = definePiece<{ color: string }>({
     if (!fits(cells, [2, 0])) return null
     return { cells, exit: { at: [2, 0], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, _s, { k, t, ink, weight }) => {
+  draw: (p, _s, { k, t, ink, bg, weight }) => {
     // The two piers, the stand's post under the yoke, and the crutch on its own post off the far pier's end.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     rail(p, k, ink, weight, -0.5, PIVOT[0] + MOUTH)
     piling(p, k, ink, weight, -0.36)
     rail(p, k, ink, weight, EAST, 1.5)

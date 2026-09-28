@@ -122,7 +122,7 @@ export const breach = definePiece<{ color: string; band: string }>({
     const pale = theme.colors.filter((c) => c !== body && c !== ball.color).sort((a, b) => parseInt(b.slice(1, 3), 16) + parseInt(b.slice(3, 5), 16) - parseInt(a.slice(1, 3), 16) - parseInt(a.slice(3, 5), 16))[0]
     return { cells, exit: { at: [2, -1], dir: 1 }, lane: LANE, state: { color: body, band: pale ?? theme.bg } }
   },
-  draw: (p, s, { k, t, since, ink, weight, theme }) => {
+  draw: (p, s, { k, t, since, ink, bg, weight, theme }) => {
     const sea = seaWater(theme)
     const head = headAt(t)
     const lean = leanAt(t)
@@ -182,7 +182,7 @@ export const breach = definePiece<{ color: string; band: string }>({
     p.pop()
 
     // The sea, and what is done to it: the ball going in, the buoy coming out with the sea pouring off it, and going back.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     splash(p, k, sea, weight, WET[0] + 0.03, WATER, over(t, T_EDGE + T_WET, T_EDGE + T_WET + 0.5), 0.9)
     const breaking = T_OUT - (LEN * 0.9) / V_OUT
     splash(p, k, sea, weight, BX, WATER, over(t, breaking, breaking + 0.6), 1.5)

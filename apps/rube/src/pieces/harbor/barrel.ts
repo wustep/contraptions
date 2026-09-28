@@ -120,14 +120,14 @@ export const barrel = definePiece<{ color: string }>({
     if (!fits(cells, [2, 1])) return null
     return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: bodyColor(theme, color, ball.color) } }
   },
-  draw: (p, _s, { k, t, ink, weight }) => {
+  draw: (p, _s, { k, t, ink, bg, weight }) => {
     // The upper deck over its water, on a piling and a post at its corner; the lower pier a floor down over the sea, on its own.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     rail(p, k, ink, weight, -0.5, CORNER[0])
     piling(p, k, ink, weight, -0.3)
     outline(p, ink, weight)
     p.line(CORNER[0] * k, CORNER[1] * k, CORNER[0] * k, 0.5 * k)
-    water(p, k, ink, weight, 0.5, 1.5, 1 + WATER)
+    water(p, k, ink, bg, weight, 0.5, 1.5, 1 + WATER)
     seabed(p, k, ink, weight, 0.5, 1.5, 1.5)
     rail(p, k, ink, weight, 0.5, 1.5, DECK)
     piling(p, k, ink, weight, 0.62, DECK, 1.5)

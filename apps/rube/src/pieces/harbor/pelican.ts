@@ -373,7 +373,7 @@ export const pelican = definePiece<{ color: string }>({
   draw: (p, s, { k, t, ink, bg, weight }) => {
     const q = poseAt(t)
     // The two decks, the water between, the pilings, and the two mooring posts standing in the water.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     rail(p, k, ink, weight, -0.5, EDGE)
     rail(p, k, ink, weight, DECK2, 2.5)
     piling(p, k, ink, weight, EDGE - 0.07)

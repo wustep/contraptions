@@ -41,7 +41,7 @@ export const octopus = definePiece<{ color: string; paint: string }>({
     solid(p, ink, weight, bg)
     p.arc(-0.42 * k, 0.5 * k, 0.34 * k, 0.4 * k, Math.PI, Math.PI * 2, p.CHORD)
     p.arc(0.44 * k, 0.5 * k, 0.3 * k, 0.32 * k, Math.PI, Math.PI * 2, p.CHORD)
-    water(p, k, ink, weight, -0.26, 0.3, 0.42)
+    water(p, k, ink, bg, weight, -0.26, 0.3, 0.42)
     outline(p, ink, weight)
     p.line(-0.5 * k, 0.5 * k, 0.5 * k, 0.5 * k)
 

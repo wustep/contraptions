@@ -42,7 +42,7 @@ export const oyster = definePiece<{ color: string; pearl: string }>({
   draw: (p, s, { k, since, ink, bg, weight }) => {
     const shut = since > 0.06 && since < SHUT
 
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     piling(p, k, ink, weight, -0.36)
     piling(p, k, ink, weight, 0.4)
     rail(p, k, ink, weight, -0.5, -0.24)

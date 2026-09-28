@@ -549,14 +549,15 @@ function drawBackdrop(
     for (let r = r0; r <= r1; r++) p.line(view.x, sy(r + 0.5), view.x + W, sy(r + 0.5))
     for (let c = c0; c <= c1; c++) p.line(sx(c + 0.5), view.y, sx(c + 0.5), view.y + H)
   } else if (u.backdrop === 'waves') {
-    // The harbor's distance: a short wave-mark or two a cell, scattered, like a chart's.
-    ink.setAlpha(40)
+    // The harbor's distance: a short wave-mark here and there, scattered, like a chart's. Sparse: every pier
+    // already has its waterline, and marks in half the cells stood level with them.
+    ink.setAlpha(34)
     p.stroke(ink)
     p.strokeWeight(Math.max(1, k * 0.012))
     p.noFill()
     for (let c = c0; c <= c1; c++) {
       for (let r = r0; r <= r1; r++) {
-        if (hash(c, r, 3) > 0.55) continue
+        if (hash(c, r, 3) > 0.3) continue
         const x = c - 0.5 + 0.15 + hash(c, r, 11) * 0.5
         const y = r - 0.5 + 0.15 + hash(c, r, 21) * 0.7
         const w = 0.16 + hash(c, r, 31) * 0.1

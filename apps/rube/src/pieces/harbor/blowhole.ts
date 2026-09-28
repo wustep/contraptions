@@ -93,7 +93,7 @@ export const blowhole = definePiece<{ color: string; spout: string }>({
     p.ellipse(0, (TOP + 0.01) * k, 0.14 * k, 0.045 * k)
     p.pop()
     // The sea, in front of the whale: what is under the line is under water.
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
 
     // Bubbles up the blowhole while it rumbles.
     if (t > ARRIVE && since < 0) {

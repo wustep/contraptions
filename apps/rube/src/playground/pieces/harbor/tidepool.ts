@@ -322,14 +322,14 @@ export const tidepool = definePiece<{ color: string; sea: string; mark: string }
     const mark = theme.colors.find((c) => c !== rock && c !== blue && c !== ball.color) ?? theme.bg
     return { cells, exit: { at: [2, 1], dir: 1 }, lane: LANE, state: { color: rock, sea: blue === ball.color ? mixHex(blue, theme.ink, 0.3) : blue, mark } }
   },
-  draw: (p, s, { k, t, ink, weight }) => {
+  draw: (p, s, { k, t, ink, bg, weight }) => {
     const broken = t > FIRE
 
     // The deck below on its piling; the sea a floor down, and its bed. The deck in needs no piling: its end lies on the crag.
     rail(p, k, ink, weight, DECK_X, 1.5, 1 + FLOOR)
     piling(p, k, ink, weight, POST_X, 1 + FLOOR, BED)
     seabed(p, k, ink, weight, -0.5, 1.5, BED)
-    water(p, k, ink, weight, -0.5, 1.5, SEA)
+    water(p, k, ink, bg, weight, -0.5, 1.5, SEA)
 
     // The pool's water, from wall to wall and out over the sill once the rim has gone: the rock is drawn over its foot.
     const reach = broken ? RIM_IN + (LIP[0] - RIM_IN) * over(t, FIRE, FIRE + OPEN) : RIM_IN

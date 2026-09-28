@@ -106,7 +106,7 @@ export const breakwater = definePiece<BreakwaterState>({
     }
     return null
   },
-  draw: (p, s, { k, t, ink, weight, theme }) => {
+  draw: (p, s, { k, t, ink, bg, weight, theme }) => {
     const sea = seaWater(theme)
     const x1 = s.long ? 1.5 : 0.5
 
@@ -139,7 +139,7 @@ export const breakwater = definePiece<BreakwaterState>({
     p.pop()
     seabed(p, k, ink, weight, -0.5, x1, 2.5)
     // The sea in front of the heap's foot.
-    water(p, k, ink, weight, -0.5, x1, 2 + WATER)
+    water(p, k, ink, bg, weight, -0.5, x1, 2 + WATER)
 
     // The knocks off the dry boulders, where the ball met them, and the splash off the awash one.
     for (const [hit, at] of [

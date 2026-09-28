@@ -173,6 +173,6 @@ export const serpent = definePiece<{ color: string }>({
     p.pop()
 
     // The sea, over where the serpent goes into it.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
   },
 })

@@ -171,7 +171,7 @@ export const jellyfish = definePiece<{ color: string; light: string }>({
     }
 
     // The sea in front: what is under the line is under water.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     // The water the bell shoves aside as it is pressed down, and again as it rings.
     splash(p, k, seaWater(theme), weight, JX - HALF - 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)
     splash(p, k, seaWater(theme), weight, JX + HALF + 0.08, 0.37, over(t, T_TOUCH + 0.03, T_TOUCH + 0.55), 0.7)

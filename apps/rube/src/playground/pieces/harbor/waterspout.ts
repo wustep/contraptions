@@ -195,7 +195,7 @@ export const waterspout = definePiece<SpoutState>({
     p.endShape(p.CLOSE)
 
     // The sea, heaped up a little round the spout's foot while there is one.
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     if (left > 0.3) {
       outline(p, ink, weight * 0.8)
       for (const side of [-1, 1]) {

@@ -142,7 +142,7 @@ export const hawser = definePiece<{ color: string }>({
     // The deck the ball comes off; the sea a floor below, and the pier down there.
     rail(p, k, ink, weight, -0.5, WEST)
     seabed(p, k, ink, weight, HEAD[0] - 0.12, 2.5, 1.5)
-    water(p, k, ink, weight, HEAD[0] - 0.12, 2.5, 1 + WATER)
+    water(p, k, ink, bg, weight, HEAD[0] - 0.12, 2.5, 1 + WATER)
     rail(p, k, ink, weight, PIER, 2.5, 1 + FLOOR)
     piling(p, k, ink, weight, PIER + 0.26, 1 + FLOOR, 1.5)
     // The samson post at the deck's end, and the post on the pier: both stand on the bed of the sea.

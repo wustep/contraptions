@@ -74,7 +74,7 @@ export const whirlpool = definePiece<{ color: string }>({
   },
   draw: (p, s, { k, t, since, ink, bg, weight }) => {
     // The deck in, over the sea, to the rim.
-    water(p, k, ink, weight, -0.5, -RIM)
+    water(p, k, ink, bg, weight, -0.5, -RIM)
     rail(p, k, ink, weight, -0.5, -RIM)
     // The tank: one T — the basin, open at the top and level with the deck,
     // and the drain pipe out of its floor — paper inside.
@@ -127,6 +127,6 @@ export const whirlpool = definePiece<{ color: string }>({
     p.translate(0, 1 * k)
     catchBend(p, k, ink, weight, s.color, -1, ARC, squash)
     p.pop()
-    water(p, k, ink, weight, -0.5, -0.4, 1.37)
+    water(p, k, ink, bg, weight, -0.5, -0.4, 1.37)
   },
 })

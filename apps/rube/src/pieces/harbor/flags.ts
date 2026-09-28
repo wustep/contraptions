@@ -104,7 +104,7 @@ export const flags = definePiece<{ color: string }>({
     const at = Math.max(0, bold.indexOf(s.color))
     const colours = Array.from({ length: FLAGS }, (_, i) => bold[(at + i) % bold.length])
 
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
     piling(p, k, ink, weight, 0.36)
     // The deck, with the treadle let into it.
     rail(p, k, ink, weight, -0.5, HINGE)

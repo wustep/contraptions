@@ -67,13 +67,13 @@ export const anchor = definePiece<AnchorState>({
     const landed = since - fall
 
     // The deck either side of the hatch at the top, and the deck below.
-    water(p, k, ink, weight, -0.5, -HATCH)
-    water(p, k, ink, weight, HATCH, 0.5)
+    water(p, k, ink, bg, weight, -0.5, -HATCH)
+    water(p, k, ink, bg, weight, HATCH, 0.5)
     rail(p, k, ink, weight, -0.5, -HATCH)
     rail(p, k, ink, weight, HATCH, 0.5)
     piling(p, k, ink, weight, -HATCH - 0.06)
     piling(p, k, ink, weight, HATCH + 0.06)
-    for (let i = 1; i < floors; i++) water(p, k, ink, weight, -0.5, 0.5, i + 0.37)
+    for (let i = 1; i < floors; i++) water(p, k, ink, bg, weight, -0.5, 0.5, i + 0.37)
     rail(p, k, ink, weight, turn * HATCH, turn * 0.5, floors + FLOOR)
     piling(p, k, ink, weight, turn * (HATCH + 0.06), floors + FLOOR, floors + 0.5)
     seabed(p, k, ink, weight, -0.5, 0.5, floors + 0.5)

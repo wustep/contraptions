@@ -82,7 +82,7 @@ export const crab = definePiece<{ color: string }>({
     const twitch = t > ARRIVE && t < FIRE ? 0.06 * Math.sin(t * 24) : 0
 
     // The pier: the deck to the water, the deck beyond, the gap between.
-    water(p, k, ink, weight, -0.5, 2.5)
+    water(p, k, ink, bg, weight, -0.5, 2.5)
     rail(p, k, ink, weight, -0.5, 0.75)
     rail(p, k, ink, weight, 1.55, 2.5)
     piling(p, k, ink, weight, 0.7)

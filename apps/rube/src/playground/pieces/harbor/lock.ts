@@ -106,7 +106,7 @@ export const lock = definePiece<{ color: string; sea: string }>({
     const flowing = open * (1 - over(since, DUR - 0.1, DUR + 0.25))
 
     // The low deck in, on its piling over the lower pound, and the sill the gate shuts on.
-    water(p, k, ink, weight, -0.5, -0.3)
+    water(p, k, ink, bg, weight, -0.5, -0.3)
     rail(p, k, ink, weight, -0.5, SILL)
     piling(p, k, ink, weight, -0.42)
     solid(p, ink, weight, bg)
@@ -151,7 +151,7 @@ export const lock = definePiece<{ color: string; sea: string }>({
     p.pop()
 
     // The upper pound over the quay, the upper deck on its piling, and the plug on its line up through the deck.
-    water(p, k, ink, weight, QUAY + 0.08, 1.5, -1 + WATER)
+    water(p, k, ink, bg, weight, QUAY + 0.08, 1.5, -1 + WATER)
     rail(p, k, ink, weight, QUAY, 1.5, -1 + FLOOR)
     piling(p, k, ink, weight, 1.4, -1 + FLOOR, -0.5)
     const lift = 0.09 * open
@@ -246,7 +246,7 @@ export const lock = definePiece<{ color: string; sea: string }>({
     p.rect(0, 0.02 * k, HALF * 2 * k, 0.04 * k, 0.008 * k)
     p.pop()
     // The surface, in front of the barrels.
-    water(p, k, ink, weight, x0, QUAY, level)
+    water(p, k, ink, bg, weight, x0, QUAY, level)
     // The stop under the quay's lip that the raft meets.
     solid(p, ink, weight, ink)
     p.rect((QUAY - 0.015) * k, (-1 + FLOOR + 0.07) * k, 0.03 * k, 0.05 * k)

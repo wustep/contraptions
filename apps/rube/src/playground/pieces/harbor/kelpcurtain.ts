@@ -295,7 +295,7 @@ export const kelpcurtain = definePiece<{ color: string }>({
       piling(p, k, ink, weight, x, LINE_Y - 0.06, FLOOR)
     }
     piling(p, k, ink, weight, 0.5)
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
     seabed(p, k, ink, weight, -0.5, 1.5)
     // The blades that hang beyond the ball, let down toward the paper; then the line they all hang on.
     const beyond = mixHex(s.color, bg, 0.45)

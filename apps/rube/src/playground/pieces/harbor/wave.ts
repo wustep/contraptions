@@ -211,7 +211,7 @@ export const wave = definePiece<{ color: string; at: number[] }>({
     p.beginShape()
     for (const [x, y] of pts) p.vertex(x * k, y * k)
     p.endShape()
-    water(p, k, ink, weight, TOE, 1.5, SEA)
+    water(p, k, ink, bg, weight, TOE, 1.5, SEA)
 
     // The pier the ball comes off, its line carried on through the neck of
     // the wave to where the face comes out from under the curl, so the ball

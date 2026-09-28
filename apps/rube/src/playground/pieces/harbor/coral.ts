@@ -81,7 +81,7 @@ export const coral = definePiece<{ color: string }>({
     // The heads, standing up out of the sea; the water in front of them.
     solid(p, ink, weight, s.color)
     for (const h of HEADS) head(p, k, h.x, h.y, h.r, h.seed)
-    water(p, k, ink, weight, -0.5, 1.5)
+    water(p, k, ink, bg, weight, -0.5, 1.5)
 
     // Each hit: a puff off the crown, and a ring on the water round the head.
     for (const [hit, at, h] of [

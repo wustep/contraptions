@@ -179,7 +179,7 @@ export const anemone = definePiece<{ color: string }>({
     p.fill(ink)
     p.ellipse(0, (RIM_Y - 0.002) * k, 0.12 * k, 0.026 * k)
   },
-  over: (p, s, { k, t, since, ink, weight }) => {
+  over: (p, s, { k, t, since, ink, bg, weight }) => {
     const ballX = t < 0 ? -0.5 + t * ROLL : laneAt(LANE, t).x
     // The crown's near lip, so the ball sits in it and not on it.
     outline(p, ink, weight)
@@ -187,7 +187,7 @@ export const anemone = definePiece<{ color: string }>({
     // The fringe, in front of the ball: down the column's lip, or up and over with the rest of the fist.
     tentacles(p, k, ink, weight, s.color, FRINGE, t, since, ballX)
     // The pool's water, in front of everything in it.
-    water(p, k, ink, weight, -0.17, 0.19, 0.43)
+    water(p, k, ink, bg, weight, -0.17, 0.19, 0.43)
 
     // Motes of the colour drifting up as it opens.
     if (since > HOLD && since < HOLD + 1.3) {

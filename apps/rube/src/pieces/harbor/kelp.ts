@@ -102,7 +102,7 @@ export const kelp = definePiece<KelpState>({
     const ballY = RISE0 + (top - RISE0) * upF
 
     // The pier in, to the tank's wall; the ground the tank stands on.
-    water(p, k, ink, weight, -0.5, -WALL)
+    water(p, k, ink, bg, weight, -0.5, -WALL)
     rail(p, k, ink, weight, -0.5, -WALL)
     outline(p, ink, weight)
     p.line(-0.36 * k, 0.5 * k, 0.36 * k, 0.5 * k)

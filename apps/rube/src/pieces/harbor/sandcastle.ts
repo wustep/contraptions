@@ -496,7 +496,7 @@ export const sandcastle = definePiece<{ color: string }>({
     // The bank's top again, over the heaps' feet, so the ground is one line; and the sea, lapping its flanks.
     outline(p, ink, weight)
     p.line((-BANK + 0.04) * k, FLOOR * k, (BANK - 0.04) * k, FLOOR * k)
-    water(p, k, ink, weight, -0.5, 0.5)
+    water(p, k, ink, bg, weight, -0.5, 0.5)
 
     if (since <= 0 || since > REBUILD + 1) return
 
