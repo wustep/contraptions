@@ -125,7 +125,7 @@ const TOUCH = beat(196.5)
 /** The grand pull-back from the watch, once its hand has ticked twice, out to the tesseract's rooms going on every way. */
 const PULL0 = TOUCH + 0.6
 /** Then it lets him go: the bridge, the fall back through it and the dark into the bed (IN_BED), and the wake (WAKE). */
-const CLOSE = PULL0 + 0.85
+const CLOSE = PULL0 + 1.03
 /** The warm light he drifts toward, and the room opening out of it round him. */
 const GLOW_ON = CLOSE + 0.5
 const OPEN0 = CLOSE + 0.9
@@ -507,15 +507,18 @@ export const gargantua = part<GargState>(
       { t: AT_WATCH + 0.1, cells: 1.35, hold: [(SHORT_OF_WATCH[0] + WATCH_X) / 2, Y_BALL - 0.06], w: 1 },
       { t: TOUCH + 0.25, cells: 0.95, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
       { t: PULL0, cells: 0.9, hold: [WATCH_X - 0.08, Y_BALL - 0.04], w: 1 },
-      // The grand pull-back: Murph's bookcase is one of rooms going on every way, into the depth.
-      { t: CLOSE, cells: 9.5, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
+      // The grand pull-back: Murph's bookcase is one of rooms going on every way, into the depth. Most of the way out in
+      // three quarters of a second, then still going, slower and slower, so the widest of it is seen, not passed.
+      { t: CLOSE - 0.32, cells: 9.0, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
+      { t: CLOSE, cells: 9.9, hold: [back(0.75), Y_BALL - 0.25], w: 1 },
       // It lets him go: with him as he falls back through it, closer, looking the way he goes; the room opens under him.
       { t: CLOSE + 0.55, cells: 4.6, off: [0.05, 0.45], w: 0 },
       { t: OPEN0, cells: 3.0, off: [0.05, 0.45], w: 0 },
       // Down with him out of the tesseract, to the room at night, a little wide, the bed and the window. While he lies
       // awake the camera comes in on him, slowly, the whole of the decay, and arrives on the framing Act II opens on.
+      // One move from the landing to the cue's end (no key between: a hold there left the push to its last third of a
+      // second, a snap), so it carries the fall's speed in and settles on the framing.
       { t: IN_BED + 0.15, cells: ROOM_CELLS + 0.5, hold: roomPt([ROOM_HOLD[0] - 0.08, ROOM_HOLD[1] + 0.12]), w: 1 },
-      { t: WAKE + 0.8, cells: ROOM_CELLS + 0.46, hold: roomPt([ROOM_HOLD[0] - 0.07, ROOM_HOLD[1] + 0.11]), w: 1 },
       { t: ACT1_END, cells: ROOM_CELLS, hold: roomPt(ROOM_HOLD), w: 1 },
     ]
     return shots
@@ -1123,7 +1126,7 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
         p.push()
         p.translate(X(vp[0] + (ox - vp[0]) * sc), X(vp[1] + (oy - vp[1]) * sc))
         p.scale(-sc, sc)
-        miniCase(p, k, ink, c.weight, a, HOURS[Math.floor(hash(i + 40, j + 40, Math.round(d * 10) + 7) * HOURS.length)], sc > 0.45)
+        miniCase(p, k, ink, c.weight, a, HOURS[Math.floor(hash(i + 40, j + 40, Math.round(d * 10) + 7) * HOURS.length)], sc > 0.45, Math.min(1, a / 0.3))
         p.pop()
       }
     }
@@ -1135,13 +1138,21 @@ function drawRooms(p: p5, c: Ctx, T: number, on: number): void {
 /** The hours the tesseract's rooms are lit at: lamplight (none), moonlight, dawn, and the sepia of years before. */
 const HOURS: (string | null)[] = [null, null, '#7E93BF', '#E3A48A', '#A8845A']
 
-function miniCase(p: p5, k: number, ink: string, weight: number, a: number, hour: string | null = null, spill = true): void {
+function miniCase(p: p5, k: number, ink: string, weight: number, a: number, hour: string | null = null, spill = true, hide = 0): void {
   const X = (v: number) => v * k
   const ctx = p.drawingContext as CanvasRenderingContext2D
   const was = ctx.globalAlpha
-  ctx.globalAlpha = was * a
   const CAP = SHELF_TOP - 0.6
   const MIDY = SHELF_TOP + 0.46
+  // A room stands in front of the rooms behind it: `hide` of the dark first, over its footprint, so the deeper ones
+  // show only in the gaps between (depth) and not through it (a double exposure).
+  if (hide > 0) {
+    ctx.globalAlpha = was * hide
+    p.noStroke()
+    p.fill(VOID.bg)
+    p.rect(X(0.775), X((CAP + FLOOR) / 2), X(2.52), X(FLOOR - CAP + 0.1))
+  }
+  ctx.globalAlpha = was * a
   const light = hour ? mixHex(mixHex(DUST.light, DARK.amber, 0.4), hour, 0.45) : mixHex(DUST.light, DARK.amber, 0.4)
   // Its room's light behind it, and a little of it spilling round the case into the dark (warm, so that seen dim over
   // the dark it goes amber, not grey; small, so a hundred of them do not fog the dark between). The far ones do not
