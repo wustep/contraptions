@@ -582,13 +582,14 @@ function drawBackdrop(
       }
     }
   } else if (u.backdrop === 'sprigs') {
-    // The garden's paper: a sprig — two little leaves on a stalk — here and there.
-    ink.setAlpha(46)
+    // The garden's paper: a sprig — two little leaves on a stalk — here and there. Sparse and faint: the ground
+    // under the pieces has its own tufts, and a sprig in every other cell turned the paper to hatching.
+    ink.setAlpha(36)
     p.stroke(ink)
     p.strokeWeight(Math.max(1, k * 0.012))
     for (let c = c0; c <= c1; c++) {
       for (let r = r0; r <= r1; r++) {
-        if (hash(c, r, 4) > 0.5) continue
+        if (hash(c, r, 4) > 0.28) continue
         const x = sx(c - 0.5 + 0.15 + hash(c, r, 12) * 0.7)
         const y = sy(r - 0.5 + 0.15 + hash(c, r, 22) * 0.7)
         const s = k * (0.05 + hash(c, r, 32) * 0.03)
