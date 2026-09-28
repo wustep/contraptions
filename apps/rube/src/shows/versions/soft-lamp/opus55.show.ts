@@ -9,6 +9,6 @@ export default defineShow({
   title: 'Soft Lamp',
   label: 'Opus 5.5',
   about: "Half an hour of Lofi Girl's lofi hip hop, as a Rube Goldberg machine on a study desk by a rainy window: a ball that walks the sill, steps down the books when the drums come in, and nods in the headphones.",
-  still: 660,
+  still: 99.9,
   async load() { return (await import('./lamp')).performance },
 })

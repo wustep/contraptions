@@ -1,0 +1,31 @@
+Soft Lamp — the music
+
+Lofi Girl, "Best of lofi hip hop 2021 ✨ [beats to relax/study to]", the label's own upload to YouTube:
+https://www.youtube.com/watch?v=n61ULEU7CO0
+The show plays its first twelve tracks, from the video's zero to 30:12.4, from that upload only.
+
+  1  morning moon — Kanisan, Wishes and Dreams
+  2  Lavender — Kupla
+  3  Destination Unknown — amies
+  4  Overgrown — Tenno
+  5  Magical Connection — Peak Twilight, Prithvi
+  6  Blooming Dales — Krynoze, Diiolme
+  7  Exhale — No Spirit
+  8  Stargazing — kyu
+  9  Breathtaking — Purrple Cat
+  10 takeoff — stream_error
+  11 Daydream — kyu
+  12 Passing By — Casiio, Sleepermane
+
+Released by Lofi Girl on the compilation "Best of lofi hip hop 2021" (2021). The tracklist and artists are the album's
+own. Copyrighted; no rights are claimed. The compilation's artwork and animation (Margaux Peltat, Andreas Provoost)
+are not used: every picture in the show is drawn for it.
+
+Playback: YouTube only. No recording of the mix is shipped, and none is committed.
+
+Files:
+- scripts/shows/soft-lamp-onsets.py — measures the mix once from a local analysis copy of the video's first forty
+  minutes (fetched with yt-dlp into the git-ignored out/soft-lamp/, never committed): each track's edges, its grid,
+  its downbeats, its drum bars, its kicks and cracks, and the loudness and held sound.
+- scripts/shows/plans/soft-lamp-onsets.json — what it measured: the show is timed to it and check:shows holds the show
+  to it. It holds times and numbers only, no audio.
