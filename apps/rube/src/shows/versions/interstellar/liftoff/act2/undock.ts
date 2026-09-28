@@ -629,13 +629,13 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
     p.pop()
   }
   rings(false)
-  // A thin haze of light round the day side's limb.
-  const haze = ctx.createRadialGradient(X(sx), X(sy), X(SAT_R - 0.05), X(sx), X(sy), X(SAT_R + 0.9))
-  haze.addColorStop(0, `rgba(${GOLD_RGB}, 0.45)`)
+  // A thin haze of light round the day side's limb: an atmosphere's edge, not a glow round a sticker.
+  const haze = ctx.createRadialGradient(X(sx), X(sy), X(SAT_R - 0.05), X(sx), X(sy), X(SAT_R + 0.6))
+  haze.addColorStop(0, `rgba(${GOLD_RGB}, 0.22)`)
   haze.addColorStop(1, `rgba(${GOLD_RGB}, 0)`)
   ctx.fillStyle = haze
   ctx.beginPath()
-  ctx.arc(X(sx), X(sy), X(SAT_R + 0.9), 0, TAU)
+  ctx.arc(X(sx), X(sy), X(SAT_R + 0.6), 0, TAU)
   ctx.fill()
   // The globe, and its bands: each a strip between two latitudes, bowed as the pole leans toward us.
   solid(p, ink, weight, DARK.gold)
@@ -668,7 +668,8 @@ function drawSaturn(p: p5, c: Ctx, f: Frame): void {
   for (const [p1, p2, fill, a] of bands) {
     ctx.fillStyle = rgba(fill, a)
     ctx.beginPath()
-    const n = 28
+    // Fine enough that the bands curve even where the camera has only the limb in frame (at 28 they were facets).
+    const n = 120
     for (let i = 0; i <= n; i++) {
       const u = -SAT_R + (2 * SAT_R * i) / n
       if (i === 0) ctx.moveTo(X(u), X(lat(u, p1 * deg)))
