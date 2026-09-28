@@ -37,6 +37,15 @@ export const PREROLL = 8
 export const WARM = 45
 /** How long a warming cue plays before it is parked: enough for YouTube to have fetched well past its start. */
 const WARM_FOR = 1500
+/**
+ * A soundtrack of more cues than this (a whole album, cue by cue) does not have every cue's player at once: thirty
+ * iframes is too many for a page to hold. Each is made `AHEAD` before its entry and dropped once the show has gone by.
+ */
+export const LAZY_OVER = 4
+/** How long before its entry, seconds of show, a cue's player is made when players are made as they are needed. */
+export const AHEAD = 90
+/** How long the show must have been moving steadily (not scrubbed about) before players are made or dropped for it. */
+const SETTLE = 400
 /** How far a cue running early may be off the show's time before it is put back on it. */
 const TRUE = 0.02
 /** How long a play may sit unstarted before it counts as refused. One still buffering is waited for, to a limit. */
@@ -186,6 +195,8 @@ interface Deck {
   /** Warming ahead of its entry (`WARM`): 'on' while it plays silently, 'done' once parked, buffered. */
   warm: 'no' | 'on' | 'done'
   ear: ReturnType<typeof listener>
+  /** Plays waiting for this cue's player to be made and ready. */
+  waiters: (() => void)[]
 }
 
 /** A cue with its gaps filled: in at 0, from the video's start, to the video's end, no fades. */
@@ -217,6 +228,14 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   let patience = 0
   /** Plays asked for while the players were still loading. */
   let waiting: (() => void)[] = []
+  /** YouTube's API, once it has come. */
+  let tube: YTNamespace | null = null
+  /** Players are made as the show comes to them (`LAZY_OVER`), and dropped once it has gone by. */
+  let lazy = false
+  /** A loop's length in seconds of show, or 0: its first cue is next in as the period runs out. */
+  let period = 0
+  /** When the show was last moved by more than a step (a scrub, a seek, a loop's seam): players are not made or dropped until it is steady. */
+  let steadyAt = 0
 
   const set = (next: SoundtrackState) => {
     if (next === status) return
@@ -226,7 +245,15 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       waiting = []
       for (const fn of now) fn()
     }
+    if (next === 'failed') for (const d of decks) flush(d)
     changed()
+  }
+
+  /** Let go the plays waiting on a cue's player: each looks again at what it is waiting for. */
+  const flush = (d: Deck) => {
+    const now = d.waiters
+    d.waiters = []
+    for (const fn of now) fn()
   }
 
   /** The cue the show is in at `t`: the last to have come in. */
@@ -244,6 +271,17 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
   const end = (d: Deck): number => {
     const length = d.player && d.ready ? d.player.getDuration() : 0
     return length > 0 ? Math.min(d.cue.until, d.cue.at + length - d.cue.from - 0.05) : d.cue.until
+  }
+
+  /**
+   * How long until a cue comes in, seconds of show: negative once it has. Round a loop's seam the first cue is next in
+   * as the period runs out, so it is warmed then and the loop comes round with the music already waiting.
+   */
+  const leadOf = (d: Deck, t: number): number => {
+    const lead = d.cue.at - t
+    if (lead > 0 || !period) return lead
+    const round = d.cue.at + period - t
+    return round > 0 && round <= AHEAD * speed ? round : lead
   }
 
   /** Where a cue's video should be at show time `t`. */
@@ -331,6 +369,93 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     for (const d of decks) d.box.classList.toggle('on', d === (top ?? decks[0]))
   }
 
+  /** Make a cue's player. Its video is cued at its start, and it is ready when YouTube says so. */
+  const build = (d: Deck) => {
+    if (!tube || d.player) return
+    const mine = generation
+    const mount = document.createElement('div')
+    d.box.replaceChildren(mount)
+    const p: YTPlayer = new tube.Player(mount, {
+      host: 'https://www.youtube-nocookie.com',
+      width: '100%',
+      height: '100%',
+      videoId: d.cue.id,
+      playerVars: {
+        playsinline: 1,
+        controls: 0,
+        disablekb: 1,
+        rel: 0,
+        iv_load_policy: 3,
+        fs: 0,
+        start: Math.floor(d.cue.from),
+        origin: location.origin,
+      },
+      events: {
+        onReady: () => {
+          if (mine !== generation || d.player !== p) return
+          d.ready = true
+          p.getIframe().title = 'The music, on YouTube'
+          if (status === 'loading' && decks.every((x) => x.ready || (lazy && !x.player))) set('ready')
+          flush(d)
+        },
+        onStateChange: (e) => {
+          if (mine === generation && d.player === p) stateChange(d, e.data)
+        },
+        onError: (e) => {
+          if (mine !== generation || d.player !== p) return
+          console.warn(`shows: YouTube would not play ${d.cue.id} (error ${e.data})`)
+          settleRefusal('silent')
+          set('failed')
+        },
+      },
+    })
+    d.player = p
+  }
+
+  /** Let a cue's player go, its iframe with it; it is made again if the show comes back to it. */
+  const drop = (d: Deck) => {
+    const p = d.player
+    d.player = null
+    d.ready = false
+    d.state = UNSTARTED
+    d.running = false
+    d.early = false
+    d.warm = 'no'
+    d.volume = -1
+    d.movingAt = 0
+    d.lead = 0
+    d.ear.reset()
+    try {
+      p?.destroy()
+    } catch {
+      // Already gone with its iframe.
+    }
+    d.box.replaceChildren()
+    flush(d)
+  }
+
+  /**
+   * The players of a soundtrack of many cues at show time `t`: the one the show is in, and any coming in within
+   * `AHEAD`, made; the rest dropped, unless still sounding. Not while the show is being scrubbed about (`force` puts
+   * that off), so a drag across the timeline does not make and drop players on the way.
+   */
+  const tend = (t: number, force = false) => {
+    if (!lazy || !tube) return
+    if (!force && performance.now() < steadyAt) return
+    const now = at(t)
+    for (const d of decks) {
+      const lead = leadOf(d, t)
+      const keep = d === now || (lead > 0 && lead <= AHEAD * speed) || d.running || d.warm === 'on'
+      if (keep) build(d)
+      else if (d.player) drop(d)
+    }
+  }
+
+  /** Note that the show has been moved to `t`, and by more than the clock carries it in a frame or two. */
+  const moved = (t: number) => {
+    if (Math.abs(t - shown) > 1.5 * Math.max(1, speed)) steadyAt = performance.now() + SETTLE
+  }
+
   /** Put every cue where the show is at `t`: the one it is in running, the rest stopped, the next one ready. */
   const arrange = (t: number) => {
     const now = at(t)
@@ -397,6 +522,15 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     })
   }
 
+  /** Begin, once the cue the show is in has its player: only players made as they are needed (`LAZY_OVER`) can be without one. */
+  function beginWhenReady(mine: number): Promise<PlayResult> {
+    const d = at(shown)
+    if (!lazy || !d || d.ready) return begin()
+    return new Promise<PlayResult>((resolve) => {
+      d.waiters.push(() => resolve(mine === generation && wanted && status === 'ready' ? beginWhenReady(mine) : 'silent'))
+    })
+  }
+
   /** When the show's time was last followed, so a hidden tab can carry it on. */
   let followedAt = 0
   let api: YouTubeSoundtrack
@@ -427,7 +561,10 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       const left = waiting
       waiting = []
       for (const fn of left) fn()
-      for (const d of decks) d.player?.destroy()
+      for (const d of decks) {
+        d.player?.destroy()
+        flush(d)
+      }
       host.replaceChildren()
       decks = []
       shown = 0
@@ -438,54 +575,24 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       }
       status = 'loading'
       changed()
+      lazy = spec.youtube.length > LAZY_OVER
+      period = spec.loop ?? 0
+      tube = null
+      steadyAt = 0
       decks = spec.youtube.map((c) => {
         const box = document.createElement('div')
         box.className = 'yt-deck'
-        const mount = document.createElement('div')
-        box.append(mount)
         host.append(box)
-        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', ear: listener() }
+        return { cue: settle(c), player: null, box, ready: false, state: UNSTARTED, running: false, early: false, volume: -1, toldAt: 0, lead: 0, movingAt: 0, warm: 'no', ear: listener(), waiters: [] }
       })
       raise(null)
       loadApi().then(
         (YT) => {
           if (mine !== generation) return
-          for (const d of decks) {
-            const mount = d.box.firstElementChild as HTMLElement
-            d.player = new YT.Player(mount, {
-              host: 'https://www.youtube-nocookie.com',
-              width: '100%',
-              height: '100%',
-              videoId: d.cue.id,
-              playerVars: {
-                playsinline: 1,
-                controls: 0,
-                disablekb: 1,
-                rel: 0,
-                iv_load_policy: 3,
-                fs: 0,
-                start: Math.floor(d.cue.from),
-                origin: location.origin,
-              },
-              events: {
-                onReady: () => {
-                  if (mine !== generation) return
-                  d.ready = true
-                  d.player!.getIframe().title = 'The music, on YouTube'
-                  if (decks.every((x) => x.ready)) set('ready')
-                },
-                onStateChange: (e) => {
-                  if (mine === generation) stateChange(d, e.data)
-                },
-                onError: (e) => {
-                  if (mine !== generation) return
-                  console.warn(`shows: YouTube would not play ${d.cue.id} (error ${e.data})`)
-                  settleRefusal('silent')
-                  set('failed')
-                },
-              },
-            })
-          }
+          tube = YT
+          // A soundtrack of many cues starts with the one the show opens in; the rest are made as it comes to them.
+          if (lazy) tend(shown, true)
+          else for (const d of decks) build(d)
         },
         (err) => {
           if (mine !== generation) return
@@ -507,13 +614,15 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       return Math.max(heard, shown)
     },
     follow(t) {
+      moved(t)
       shown = t
       followedAt = performance.now()
+      tend(t)
       if (!wanted || status !== 'ready') return
       const now = at(t)
       for (const d of decks) {
         if (!d.player || !d.ready) continue
-        const lead = d.cue.at - t
+        const lead = leadOf(d, t)
         if (d === now) {
           if (t >= end(d)) {
             if (d.running) stop(d)
@@ -541,6 +650,9 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
         } else if (lead > 0 && lead <= WARM * speed && d.warm === 'no' && !d.running) {
           // Coming up: fetch it now, while there is time, rather than at its entry.
           warmUp(d)
+        } else if (lead > 0 && d.running && !d.early) {
+          // Running for an entry the show has since come round from (a loop's seam): put it away.
+          stop(d)
         } else if (lead <= 0 && d.running) {
           // Still sounding after the next has come in: it plays out to its own end and fade.
           setVolume(d, level(d, t))
@@ -551,18 +663,20 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
     play(t) {
       if (!decks.length || status === 'failed') return Promise.resolve<PlayResult>('silent')
       wanted = true
+      moved(t)
       shown = Math.max(0, t)
       followedAt = performance.now()
       keepTime(true)
       settleRefusal('playing')
+      tend(shown, true)
+      const mine = generation
       if (status !== 'ready') {
         // The players are still coming. The music is asked for, so the picture waits for it, as it waits for a file.
-        const mine = generation
         return new Promise<PlayResult>((resolve) => {
-          waiting.push(() => resolve(mine === generation && wanted && status === 'ready' ? begin() : 'silent'))
+          waiting.push(() => resolve(mine === generation && wanted && status === 'ready' ? beginWhenReady(mine) : 'silent'))
         })
       }
-      return begin()
+      return beginWhenReady(mine)
     },
     pause() {
       wanted = false
@@ -572,7 +686,9 @@ export function createYouTubeSoundtrack(host: HTMLElement): YouTubeSoundtrack {
       for (const d of decks) if (d.running || d.warm === 'on' || d.state === PLAYING || d.state === BUFFERING) stop(d)
     },
     seek(t) {
+      moved(t)
       shown = Math.max(0, t)
+      tend(shown)
       for (const d of decks) d.ear.reset()
       if (wanted) arrange(shown)
       else raise(at(shown))

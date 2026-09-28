@@ -1,0 +1,51 @@
+No music is shipped with the Goldberg Variations show. It plays the recording from YouTube.
+
+Composition: Johann Sebastian Bach, Aria mit verschiedenen Veränderungen (Goldberg Variations), BWV 988 (published 1741).
+Public domain.
+
+Recording: Víkingur Ólafsson, piano, Goldberg Variations (Deutsche Grammophon, 2023). All rights in the
+recording remain with its owners. Nothing of it is in this repository: the show only asks YouTube's
+embedded player to play the album's own uploads (the "Víkingur Ólafsson – Topic" channel's one video to a track, 32 of
+them), and the sound comes from YouTube, not from this site. The show links the album:
+  https://www.youtube.com/playlist?list=OLAK5uy_mOEy0EiYFYA0c4_9nxobe-c5EGO7F50oo
+
+The tracks laid end to end on the show's timeline (rotunda/music.ts; each cue plays its video from its own start; each
+video's length is the video's own, so each cue is where the one before it ends). One time through is 4446.52 s,
+and the show goes round again from the Aria (Performance.loop):
+
+      0.00 s  Aria                                   https://www.youtube.com/watch?v=hMGIncslU6g
+    245.36 s  Variatio 1                             https://www.youtube.com/watch?v=Eb_iPtjn9bo
+    335.44 s  Variatio 2                             https://www.youtube.com/watch?v=95K_ANac-uA
+    421.16 s  Variatio 3 (Canone all’Unisono)        https://www.youtube.com/watch?v=YOjVr5LqaGo
+    531.96 s  Variatio 4                             https://www.youtube.com/watch?v=rf2npzmSWGM
+    588.00 s  Variatio 5                             https://www.youtube.com/watch?v=5DuprBnTGGc
+    659.72 s  Variatio 6 (Canone alla Seconda)       https://www.youtube.com/watch?v=gpe5CHCxcP8
+    728.64 s  Variatio 7 (al tempo di Giga)          https://www.youtube.com/watch?v=LxyMkERXTyM
+    860.76 s  Variatio 8                             https://www.youtube.com/watch?v=XZ5_ItNgNSM
+    958.00 s  Variatio 9 (Canone alla Terza)         https://www.youtube.com/watch?v=m_GTBYJ9jAo
+   1054.32 s  Variatio 10 (Fughetta)                 https://www.youtube.com/watch?v=U94hKuy4Eag
+   1146.96 s  Variatio 11                            https://www.youtube.com/watch?v=o5hecPvd6pg
+   1246.96 s  Variatio 12 (Canone alla Quarta)       https://www.youtube.com/watch?v=Z_o8mMAyEys
+   1359.88 s  Variatio 13                            https://www.youtube.com/watch?v=F3kK8w3kEQU
+   1606.00 s  Variatio 14                            https://www.youtube.com/watch?v=1bSQB0k__K8
+   1728.36 s  Variatio 15 (Canone alla Quinta)       https://www.youtube.com/watch?v=ehD9MA7-TcY
+   2065.72 s  Variatio 16 (Ouverture)                https://www.youtube.com/watch?v=g_10y72173I
+   2226.48 s  Variatio 17                            https://www.youtube.com/watch?v=GRefng3n2jU
+   2342.04 s  Variatio 18 (Canone alla Sesta)        https://www.youtube.com/watch?v=DLjbQyPgkGU
+   2429.88 s  Variatio 19                            https://www.youtube.com/watch?v=-0aJgyUe8d4
+   2497.00 s  Variatio 20                            https://www.youtube.com/watch?v=yAOrL_rKv0I
+   2606.00 s  Variatio 21 (Canone alla Settima)      https://www.youtube.com/watch?v=fJR-G700WH8
+   2801.24 s  Variatio 22 (alla breve)               https://www.youtube.com/watch?v=6br6ScteLOY
+   2877.32 s  Variatio 23                            https://www.youtube.com/watch?v=C25C-Z_ocxw
+   2991.68 s  Variatio 24 (Canone all’Ottava)        https://www.youtube.com/watch?v=UzJFFev7Xbk
+   3159.72 s  Variatio 25 (Adagio)                   https://www.youtube.com/watch?v=LFsGcBeWAzM
+   3747.72 s  Variatio 26                            https://www.youtube.com/watch?v=Xq742QgK0s0
+   3851.44 s  Variatio 27 (Canone alla Nona)         https://www.youtube.com/watch?v=2CfPuGV3aPU
+   3943.24 s  Variatio 28                            https://www.youtube.com/watch?v=RMjKv55O2j0
+   4067.32 s  Variatio 29                            https://www.youtube.com/watch?v=Rml-zLW4vLU
+   4174.44 s  Variatio 30 (Quodlibet)                https://www.youtube.com/watch?v=uekqDiCScT0
+   4290.56 s  Aria da Capo                           https://www.youtube.com/watch?v=TDKcWVFzIpU
+   4446.52 s  (the end of the Aria da Capo; the loop goes back to the Aria at 0 s)
+
+Picture: drawn for this show with p5.js; no film, score image or recording is reproduced. Show code: Stephen Wu and
+Claude Sonnet 5.5.

@@ -307,6 +307,18 @@ and the flowers it opens under the moon stay lit and open until dawn, so the sea
 its night. The code is `gymnopedie/orbit/`. Licences:
 `apps/rube/src/shows/versions/gymnopedie/ATTRIBUTION.txt`; the report is `apps/rube/src/shows/versions/gymnopedie/GYMNOPEDIE.md`.
 
+`goldberg-variations/sonnet55` (in the picker's Ambient group, **Goldberg Variations**, one take, **Sonnet 5.5**) is
+Bach's Goldberg Variations whole (the Aria, Variations 1 to 30, the Aria da capo) and round again, as Víkingur
+Ólafsson played them for Deutsche Grammophon in 2023, from the album's own YouTube uploads: 32 `youtube` cues, one
+video to a track, laid end to end (4446.52 s), no `src`, nothing of the recording shipped
+(`goldberg-variations/ATTRIBUTION.txt`). It is a lit round colonnade of thirty-two columns, one to a bar of the ground
+bass, and the ball goes once round its rail in every variation at the recording's pace; the lamps it lights stay lit, the
+floor is engraved with a ring for each variation, canons have their second voice a column behind, and the room is dark
+at both ends of the period so the loop closes. A soundtrack of more than four YouTube cues makes each cue's player
+90 s before its entry and drops it once the show has gone by (`youtube.ts`), instead of thirty-two iframes at once,
+and a loop's first cue is warmed before the seam. The code is `goldberg-variations/rotunda/`; the check is
+`apps/rube/checks/goldberg.ts`; the report is `apps/rube/src/shows/versions/goldberg-variations/GOLDBERG.md`.
+
 `caravan/opus55` (in the picker, **Caravan**, one take, **Opus 5.5**) is "Caravan" from the *Whiplash* soundtrack
 (Juan Tizol, Duke Ellington and Irving Mills, arranged by John Wasson), the film's finale and drum solo, played whole
 from its first sample and demo only (`apps/rube/src/shows/versions/caravan/ATTRIBUTION.txt`), with the credits after
