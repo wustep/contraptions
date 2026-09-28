@@ -27,8 +27,8 @@ The folder and file names are addresses, so they are chosen once:
   `public/shows/<work>/`. It names the music (`clair-de-lune`, `heptapod-b`),
   not the picker's title, which is the version file's `title` and can change
   freely: `come-recover` is **Everything**, `heptapod-b` **Logogram**,
-  `interstellar` **Voyage**, `la-la-land` **Epilogue**. The write-up says
-  which is which.
+  `interstellar` **Voyage**, `la-la-land` **Epilogue**, `bolero` **Ostinato**,
+  `nature-of-daylight` **Palindrome**, `relax` **Magnum**, `time` **Kick**. The write-up says which is which.
 - **Take**: `<take>.show.ts`, which is also `/shows/<work>/<take>/` and the
   card `public/shows/<work>/<take>.png`. Name it for who made it (`opus55`,
   `fable51`, `grok47`), or with a letter (`take-a`). La La Land's two keep the
@@ -37,7 +37,7 @@ The folder and file names are addresses, so they are chosen once:
   Takes sort by name, and the first is the work's own page, unless the registry
   puts another first (`PREFERRED_TAKES`: Epilogue's and Cornfield Chase's Opus).
 - **Shelf**: the picker and Theater set the works out as **Machine** (Clair de
-  Lune, Première Arabesque, Cornfield Chase), **Movies** and **Ambient**
+  Lune, Première Arabesque, Cornfield Chase, Ostinato), **Movies** and **Ambient**
   (Gymnopédie). A work is Movies unless `SHELVED` in `../registry.ts` names it.
 - **Code**: a take that is more than a score file keeps its code in a folder
   named for its code name (`caravan/whiplash/`, `mountain-king/spark/`). Where
@@ -405,3 +405,52 @@ song runs on a drum machine, so `scripts/shows/relax-onsets.py` fits one comb (1
 off-beat onto its own attack, with the free onsets of the intro, the drop and the tail, into
 `scripts/shows/plans/relax-onsets.json`; `check:shows` holds every strike to it (`apps/rube/checks/magnum.ts`). The
 report is `apps/rube/src/shows/versions/relax/MAGNUM.md`.
+
+`bolero/opus55` (in the picker, **Ostinato**, on the Machine shelf, one take, **Opus 5.5**) is Ravel's *Boléro*, whole,
+as one machine that grows with it: a tower of storeys standing on a single side drum, a storey for each pair of the
+tune's eighteen statements (A A B B four times, then one each for the last A and B), each wider than the one under it.
+The recording is Omega13a's, made in MuseScore 4 with Muse Sounds from Ravel's score and released on Wikimedia Commons
+under CC BY 4.0, so it ships with the show (`apps/rube/src/shows/versions/bolero/ATTRIBUTION.txt`); it keeps the
+score's tempo from the first bar to the last, so the whole piece is one comb, measured once by
+`scripts/shows/bolero-onsets.py` into `scripts/shows/plans/bolero-onsets.json` with both themes note by note from the
+1929 Durand score. The drum is played by a wheel with the rhythm on its rim as pins, all 169 times; each storey is one
+loop of keyed rails, a key for every note, and the ball plays each statement by rolling once round a storey, climbing
+between them on a lift that steps on the drum's strokes; each storey's engine is let in on its second statement and
+runs from then on, so by the end ten engines play under the tune, and from the ninth statement the storeys below play
+along with it. E major is a gold roof the ball climbs a beat at a time; on the collapse the tower splits down its mast
+and falls away round the drum, and the ball lands on the drum head on the last chord. The code is `bolero/tower/`;
+`check:shows` holds every strike to the comb (`apps/rube/checks/ostinato.ts`). The report is
+`apps/rube/src/shows/versions/bolero/OSTINATO.md`.
+
+`nature-of-daylight/opus55` (in the picker, **Palindrome**, one take, **Opus 5.5**) is Max Richter's *On the Nature of
+Daylight*, the *Blue Notebooks* recording that *Arrival* opens and closes on, whole, demo only
+(`apps/rube/src/shows/versions/nature-of-daylight/ATTRIBUTION.txt`), and then the end credits in the quiet after it.
+Every piece is new. It tells the whole film in order, and ends on its own first frame: the lake house at dawn, Louise
+(the gold ball) and baby Hannah (the rose ball, who grows); the swing by the lake; the bed by the window, where Hannah
+goes on the lament's swell; the television at night, whose picture of a shell becomes the real one over Montana on the
+double bass (a match cut on the shell); the camp, the chamber and the glass, the heptapods, contact and the language;
+the world's twelve links falling like dominoes when the bass drops out; the bomb; the fog beyond the glass, where she is
+shown Hannah grown; the gala years on, where General Shang (the red ball) tells her what to say; the call, on the
+loudest bars, when the dominoes stand again in the order they fell, backwards; the shell going up the way it came
+down; daylight; Ian (the blue ball); and home. The code is `nature-of-daylight/palindrome/`, on the same kit as Logogram
+(parts built to timed slots, an authored camera, match cuts between six places, a white-out, the end credits from
+`Performance.titles`). The playing is free (a beat is 0.87 to 1.1 s), so `scripts/shows/nature-of-daylight-onsets.py`
+tracks the beats one by one and finds every change of chord from the harmony itself, into
+`scripts/shows/plans/nature-of-daylight-onsets.json`; `check:shows` holds every strike to it, nearly every change of
+chord to a strike, and the palindromes to their mirror (`apps/rube/checks/palindrome.ts`). The report is
+`apps/rube/src/shows/versions/nature-of-daylight/PALINDROME.md`.
+
+`time/opus55` (in the picker, **Kick**, one take, **Opus 5.5**) is Hans Zimmer's *Time*, the last cue of *Inception*,
+whole, demo only (`apps/rube/src/shows/versions/time/ATTRIBUTION.txt`), and then the end credits in the dark after it.
+Every piece is new. It tells the film after *Inception* as one machine: limbo's shore and the top that never stops; the
+architect's lesson in Paris, where the street folds over; the plane and the silver case; and then **the dream as one
+world stacked four levels deep** (the rain city, the hotel, the snow fortress, limbo, the dark of sleep between them),
+which Cobb (the orange ball) sinks down through on the cue's layers, lets Mal go at the bottom of, and is kicked back up
+through on the summit's four hardest downbeats, one column of kicks; each level's set runs on its own clock, twenty
+times slower a level above him, so the van hangs off the bridge for the whole climax. Awake on the plane, home, the
+children turn, the top wobbles, and the picture cuts to black on the last chord. The code is `time/kick/`, on Magnum's
+kit (parts built to timed slots, an authored camera with a roll, match cuts between worlds, the end credits from
+`Performance.titles`) with `kick/stack.ts` for the stacked world. *Time* is one four-chord loop on a click, so
+`scripts/shows/time-onsets.py` fits one comb (63.01 bpm) and moves every beat and off-beat onto its own attack, with
+the turns, the layers' downbeats and the free onsets, into `scripts/shows/plans/time-onsets.json`; `check:shows` holds
+every strike to it (`apps/rube/checks/kick.ts`). The report is `apps/rube/src/shows/versions/time/KICK.md`.
